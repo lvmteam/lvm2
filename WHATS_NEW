@@ -1,5 +1,6 @@
 Version 2.02.46 - 
 ================================
+  Enable use of cached metadata for pvs and pvdisplay commands.
   Add missing 'device-mapper' internal subdir build dependency.
   Fix memory leak in mirror allocation code.
   Save and restore the previous logging level when log level is changed.

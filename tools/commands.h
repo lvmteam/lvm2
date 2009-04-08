@@ -497,7 +497,7 @@ xx(pvdata,
 
 xx(pvdisplay,
    "Display various attributes of physical volume(s)",
-   0,
+   CACHE_VGMETADATA,
    "pvdisplay\n"
    "\t[-c|--colon]\n"
    "\t[-d|--debug]\n"
@@ -571,7 +571,7 @@ xx(pvremove,
 
 xx(pvs,
    "Display information about physical volumes",
-   0,
+   CACHE_VGMETADATA,
    "pvs" "\n"
    "\t[--aligned]\n"
    "\t[-a|--all]\n"

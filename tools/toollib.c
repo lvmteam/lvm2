@@ -633,6 +633,11 @@ static int _process_all_devs(struct cmd_context *cmd, void *handle,
 	return ret_max;
 }
 
+/*
+ * If the lock_type is LCK_VG_READ (used only in reporting commands),
+ * we lock VG_GLOBAL to enable use of metadata cache.
+ * This can pause alongide pvscan or vgscan process for a while.
+ */
 int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 		    struct volume_group *vg, uint32_t lock_type,
 		    int scan_label_only, void *handle,
@@ -644,6 +649,7 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 	int opt = 0;
 	int ret_max = ECMD_PROCESSED;
 	int ret = 0;
+	int lock_global = lock_type == LCK_VG_READ;
 
 	struct pv_list *pvl;
 	struct physical_volume *pv;
@@ -655,6 +661,11 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 	int scanned = 0;
 
 	dm_list_init(&tags);
+
+	if (lock_global && !lock_vol(cmd, VG_GLOBAL, lock_type)) {
+		log_error("Unable to obtain global lock.");
+		return ECMD_FAILED;
+	}
 
 	if (argc) {
 		log_verbose("Using physical volume(s) on command line");
@@ -673,7 +684,7 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 						  dm_pool_strdup(cmd->mem,
 							      tagname))) {
 					log_error("strlist allocation failed");
-					return ECMD_FAILED;
+					goto bad;
 				}
 				continue;
 			}
@@ -727,7 +738,7 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 			if (ret > ret_max)
 				ret_max = ret;
 			if (sigint_caught())
-				return ret_max;
+				goto out;
 		}
 		if (!dm_list_empty(&tags) && (vgnames = get_vgnames(cmd, 0)) &&
 			   !dm_list_empty(vgnames)) {
@@ -761,7 +772,7 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 				if (ret > ret_max)
 					ret_max = ret;
 				if (sigint_caught())
-					return ret_max;
+					goto out;
 			}
 		}
 	} else {
@@ -773,17 +784,18 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 			if (ret > ret_max)
 				ret_max = ret;
 			if (sigint_caught())
-				return ret_max;
+				goto out;
 		} else if (arg_count(cmd, all_ARG)) {
 			ret = _process_all_devs(cmd, handle, process_single);
 			if (ret > ret_max)
 				ret_max = ret;
 			if (sigint_caught())
-				return ret_max;
+				goto out;
 		} else {
 			log_verbose("Scanning for physical volume names");
+
 			if (!(pvslist = get_pvs(cmd)))
-				return ECMD_FAILED;
+				goto bad;
 
 			dm_list_iterate_items(pvl, pvslist) {
 				ret = process_single(cmd, NULL, pvl->pv,
@@ -791,12 +803,19 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 				if (ret > ret_max)
 					ret_max = ret;
 				if (sigint_caught())
-					return ret_max;
+					goto out;
 			}
 		}
 	}
-
+out:
+	if (lock_global)
+		unlock_vg(cmd, VG_GLOBAL);
 	return ret_max;
+bad:
+	if (lock_global)
+		unlock_vg(cmd, VG_GLOBAL);
+
+	return ECMD_FAILED;
 }
 
 /*
