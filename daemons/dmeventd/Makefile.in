@@ -17,7 +17,9 @@ VPATH = @srcdir@
 
 SOURCES = libdevmapper-event.c
 
+ifeq ("@STATIC_LINK@", "yes")
 LIB_STATIC = libdevmapper-event.a
+endif
 LIB_VERSION = $(LIB_VERSION_DM)
 
 ifeq ("@LIB_SUFFIX@","dylib")
@@ -37,7 +39,7 @@ endif
 include $(top_srcdir)/make.tmpl
 
 all: dmeventd
-device-mapper: dmeventd
+device-mapper: dmeventd $(LIB_STATIC)
 
 LDFLAGS += -ldl -ldevmapper -lpthread
 CLDFLAGS += -ldl -ldevmapper -lpthread

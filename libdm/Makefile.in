@@ -34,7 +34,9 @@ SOURCES =\
 
 INCLUDES = -I$(interface) -I.
 
+ifeq ("@STATIC_LINK@", "yes")
 LIB_STATIC = $(interface)/libdevmapper.a
+endif
 
 ifeq ("@LIB_SUFFIX@","dylib")
   LIB_SHARED = $(interface)/libdevmapper.dylib
