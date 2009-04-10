@@ -1,5 +1,6 @@
 Version 2.02.46 - 
 ================================
+  Fix mirror log convert validation question.
   Avoid referencing files from DESTDIR during build process.
   Avoid creating some static libraries without static_link.
   Enable use of cached metadata for pvs and pvdisplay commands.
