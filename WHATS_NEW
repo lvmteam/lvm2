@@ -1,5 +1,6 @@
 Version 2.02.46 - 
 ================================
+  Use copy of PV structure when manipulating with global PV lists.
   Always return exit error status when locking of volume group fails.
   Fix mirror log convert validation question.
   Avoid referencing files from DESTDIR during build process.
