@@ -326,6 +326,7 @@ int backup_restore_from_file(struct cmd_context *cmd, const char *vg_name,
 			     const char *file)
 {
 	struct volume_group *vg;
+	int r = 0;
 
 	/*
 	 * Read in the volume group from the text file.
@@ -336,10 +337,11 @@ int backup_restore_from_file(struct cmd_context *cmd, const char *vg_name,
 	/*
 	 * If PV is missing, there is already message from read above
 	 */
-	if (vg_missing_pv_count(vg))
-		return_0;
+	if (!vg_missing_pv_count(vg))
+		r = backup_restore_vg(cmd, vg);
 
-	return backup_restore_vg(cmd, vg);
+	vg_release(vg);
+	return r;
 }
 
 int backup_restore(struct cmd_context *cmd, const char *vg_name)
@@ -414,12 +416,15 @@ void check_current_backup(struct volume_group *vg)
 	    (vg->seqno == vg_backup->seqno) &&
 	    (id_equal(&vg->id, &vg_backup->id))) {
 		log_suppress(old_suppress);
+		vg_release(vg_backup);
 		return;
 	}
 	log_suppress(old_suppress);
 
-	if (vg_backup)
+	if (vg_backup) {
 		archive(vg_backup);
+		vg_release(vg_backup);
+	}
 	archive(vg);
 	backup(vg);
 }
