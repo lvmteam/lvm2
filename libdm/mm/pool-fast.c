@@ -21,6 +21,7 @@ struct chunk {
 };
 
 struct dm_pool {
+	struct dm_list list;
 	struct chunk *chunk, *spare_chunk;	/* spare_chunk is a one entry free
 						   list to stop 'bobbling' */
 	size_t chunk_size;
@@ -51,6 +52,7 @@ struct dm_pool *dm_pool_create(const char *name, size_t chunk_hint)
 	while (new_size < p->chunk_size)
 		new_size <<= 1;
 	p->chunk_size = new_size;
+	dm_list_add(&_dm_pools, &p->list);
 	return p;
 }
 
@@ -65,6 +67,7 @@ void dm_pool_destroy(struct dm_pool *p)
 		c = pr;
 	}
 
+	dm_list_del(&p->list);
 	dm_free(p);
 }
 
