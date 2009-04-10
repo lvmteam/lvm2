@@ -517,17 +517,21 @@ struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name,
 			       int pv_count, char **pv_names)
 {
 	struct volume_group *vg;
-	struct dm_pool *mem = cmd->mem;
 	int consistent = 0;
-
-	if (!(vg = dm_pool_zalloc(mem, sizeof(*vg))))
-		return_NULL;
+	struct dm_pool *mem;
 
 	/* is this vg name already in use ? */
-	if (vg_read_internal(cmd, vg_name, NULL, &consistent)) {
+	if ((vg = vg_read_internal(cmd, vg_name, NULL, &consistent))) {
 		log_err("A volume group called '%s' already exists.", vg_name);
-		goto bad;
+		vg_release(vg);
+		return NULL;
 	}
+
+	if (!(mem = dm_pool_create("lvm2 vg_create", VG_MEMPOOL_CHUNK)))
+		return_NULL;
+
+	if (!(vg = dm_pool_zalloc(mem, sizeof(*vg))))
+		goto_bad;
 
 	if (!id_create(&vg->id)) {
 		log_err("Couldn't create uuid for volume group '%s'.", vg_name);
@@ -537,6 +541,7 @@ struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name,
 	/* Strip dev_dir if present */
 	vg_name = strip_dir(vg_name, cmd->dev_dir);
 
+	vg->vgmem = mem;
 	vg->cmd = cmd;
 
 	if (!(vg->name = dm_pool_strdup(mem, vg_name)))
@@ -589,7 +594,7 @@ struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name,
 	return vg;
 
       bad:
-	dm_pool_free(mem, vg);
+	dm_pool_destroy(mem);
 	return NULL;
 }
 
@@ -1643,23 +1648,28 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd,
 	struct pv_list *pvl;
 	struct volume_group *vg;
 	struct physical_volume *pv;
+	struct dm_pool *mem;
 
 	lvmcache_label_scan(cmd, 0);
 
 	if (!(vginfo = vginfo_from_vgname(orphan_vgname, NULL)))
 		return_NULL;
 
-	if (!(vg = dm_pool_zalloc(cmd->mem, sizeof(*vg)))) {
+	if (!(mem = dm_pool_create("vg_read orphan", VG_MEMPOOL_CHUNK)))
+		return_NULL;
+
+	if (!(vg = dm_pool_zalloc(mem, sizeof(*vg)))) {
 		log_error("vg allocation failed");
 		return NULL;
 	}
 	dm_list_init(&vg->pvs);
 	dm_list_init(&vg->lvs);
 	dm_list_init(&vg->tags);
+	vg->vgmem = mem;
 	vg->cmd = cmd;
-	if (!(vg->name = dm_pool_strdup(cmd->mem, orphan_vgname))) {
+	if (!(vg->name = dm_pool_strdup(mem, orphan_vgname))) {
 		log_error("vg name allocation failed");
-		return NULL;
+		goto bad;
 	}
 
 	/* create format instance with appropriate metadata area */
@@ -1667,17 +1677,16 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd,
 							  orphan_vgname, NULL,
 							  NULL))) {
 		log_error("Failed to create format instance");
-		dm_pool_free(cmd->mem, vg);
-		return NULL;
+		goto bad;
 	}
 
 	dm_list_iterate_items(info, &vginfo->infos) {
 		if (!(pv = _pv_read(cmd, dev_name(info->dev), NULL, NULL, 1, 0))) {
 			continue;
 		}
-		if (!(pvl = dm_pool_zalloc(cmd->mem, sizeof(*pvl)))) {
+		if (!(pvl = dm_pool_zalloc(mem, sizeof(*pvl)))) {
 			log_error("pv_list allocation failed");
-			return NULL;
+			goto bad;
 		}
 		pvl->pv = pv;
 		dm_list_add(&vg->pvs, &pvl->list);
@@ -1685,6 +1694,9 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd,
 	}
 
 	return vg;
+bad:
+	dm_pool_destroy(mem);
+	return NULL;
 }
 
 static int _update_pv_list(struct dm_pool *pvmem, struct dm_list *all_pvs, struct volume_group *vg)
@@ -2038,6 +2050,18 @@ struct volume_group *vg_read_internal(struct cmd_context *cmd, const char *vgnam
 	}
 
 	return vg;
+}
+
+void vg_release(struct volume_group *vg)
+{
+	if (!vg || !vg->vgmem)
+		return;
+
+	if (vg->vgmem == vg->cmd->mem)
+		log_error("Internal error: global memory pool used for VG %s",
+			  vg->name);
+
+	dm_pool_destroy(vg->vgmem);
 }
 
 /* This is only called by lv_from_lvid, which is only called from
