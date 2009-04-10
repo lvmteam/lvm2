@@ -113,6 +113,7 @@ static struct volume_group *_build_vg_from_pds(struct format_instance
 	}
 
 	vg->cmd = fid->fmt->cmd;
+	vg->vgmem = mem;
 	vg->fid = fid;
 	vg->name = NULL;
 	vg->status = 0;
@@ -160,7 +161,7 @@ static struct volume_group *_pool_vg_read(struct format_instance *fid,
 				     const char *vg_name,
 				     struct metadata_area *mda __attribute((unused)))
 {
-	struct dm_pool *mem = dm_pool_create("pool vg_read", 1024);
+	struct dm_pool *mem = dm_pool_create("pool vg_read", VG_MEMPOOL_CHUNK);
 	struct dm_list pds;
 	struct volume_group *vg = NULL;
 
@@ -182,9 +183,10 @@ static struct volume_group *_pool_vg_read(struct format_instance *fid,
 	if (!(vg = _build_vg_from_pds(fid, mem, &pds)))
 		goto_out;
 
-      out:
-	dm_pool_destroy(mem);
 	return vg;
+out:
+	dm_pool_destroy(mem);
+	return NULL;
 }
 
 static int _pool_pv_setup(const struct format_type *fmt __attribute((unused)),

@@ -212,6 +212,7 @@ struct format_instance {
 
 struct volume_group {
 	struct cmd_context *cmd;
+	struct dm_pool *vgmem;
 	struct format_instance *fid;
 	uint32_t seqno;		/* Metadata sequence number */
 
@@ -437,6 +438,7 @@ int vg_change_pesize(struct cmd_context *cmd, struct volume_group *vg,
 int vg_split_mdas(struct cmd_context *cmd, struct volume_group *vg_from,
 		  struct volume_group *vg_to);
 
+void vg_release(struct volume_group *vg);
 /* Manipulate LVs */
 struct logical_volume *lv_create_empty(const char *name,
 				       union lvid *lvid,

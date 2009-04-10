@@ -111,9 +111,9 @@ static int _check_vgs(struct dm_list *pvs)
 }
 
 static struct volume_group *_build_vg(struct format_instance *fid,
-				      struct dm_list *pvs)
+				      struct dm_list *pvs,
+				      struct dm_pool *mem)
 {
-	struct dm_pool *mem = fid->fmt->cmd->mem;
 	struct volume_group *vg = dm_pool_alloc(mem, sizeof(*vg));
 	struct disk_list *dl;
 
@@ -126,6 +126,7 @@ static struct volume_group *_build_vg(struct format_instance *fid,
 	memset(vg, 0, sizeof(*vg));
 
 	vg->cmd = fid->fmt->cmd;
+	vg->vgmem = mem;
 	vg->fid = fid;
 	vg->seqno = 0;
 	dm_list_init(&vg->pvs);
@@ -163,7 +164,7 @@ static struct volume_group *_format1_vg_read(struct format_instance *fid,
 				     const char *vg_name,
 				     struct metadata_area *mda __attribute((unused)))
 {
-	struct dm_pool *mem = dm_pool_create("lvm1 vg_read", 1024 * 10);
+	struct dm_pool *mem = dm_pool_create("lvm1 vg_read", VG_MEMPOOL_CHUNK);
 	struct dm_list pvs;
 	struct volume_group *vg = NULL;
 	dm_list_init(&pvs);
@@ -178,12 +179,13 @@ static struct volume_group *_format1_vg_read(struct format_instance *fid,
 	    (fid->fmt, vg_name, fid->fmt->cmd->filter, mem, &pvs))
 		goto_bad;
 
-	if (!(vg = _build_vg(fid, &pvs)))
+	if (!(vg = _build_vg(fid, &pvs, mem)))
 		goto_bad;
 
-      bad:
-	dm_pool_destroy(mem);
 	return vg;
+bad:
+	dm_pool_destroy(mem);
+	return NULL;
 }
 
 static struct disk_list *_flatten_pv(struct format_instance *fid,
@@ -240,7 +242,7 @@ static int _flatten_vg(struct format_instance *fid, struct dm_pool *mem,
 static int _format1_vg_write(struct format_instance *fid, struct volume_group *vg,
 		     struct metadata_area *mda __attribute((unused)))
 {
-	struct dm_pool *mem = dm_pool_create("lvm1 vg_write", 1024 * 10);
+	struct dm_pool *mem = dm_pool_create("lvm1 vg_write", VG_MEMPOOL_CHUNK);
 	struct dm_list pvds;
 	int r = 0;
 

@@ -662,18 +662,23 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 	struct config_node *vgn, *cn;
 	struct volume_group *vg;
 	struct dm_hash_table *pv_hash = NULL;
-	struct dm_pool *mem = fid->fmt->cmd->mem;
+	struct dm_pool *mem = dm_pool_create("lvm2 vg_read", VG_MEMPOOL_CHUNK);
+
+	if (!mem)
+		return_NULL;
 
 	/* skip any top-level values */
 	for (vgn = cft->root; (vgn && vgn->v); vgn = vgn->sib) ;
 
 	if (!vgn) {
 		log_error("Couldn't find volume group in file.");
-		return NULL;
+		goto bad;
 	}
 
 	if (!(vg = dm_pool_zalloc(mem, sizeof(*vg))))
-		return_NULL;
+		goto_bad;
+
+	vg->vgmem = mem;
 	vg->cmd = fid->fmt->cmd;
 
 	/* FIXME Determine format type from file contents */
@@ -807,7 +812,7 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 	if (pv_hash)
 		dm_hash_destroy(pv_hash);
 
-	dm_pool_free(mem, vg);
+	dm_pool_destroy(mem);
 	return NULL;
 }
 

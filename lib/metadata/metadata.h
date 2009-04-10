@@ -35,6 +35,7 @@
 //#define PV_MIN_SIZE ( 512L * 1024L >> SECTOR_SHIFT)	/* 512 KB in sectors */
 //#define MAX_RESTRICTED_LVS 255	/* Used by FMT_RESTRICTED_LVIDS */
 #define MIRROR_LOG_OFFSET	2	/* sectors */
+#define VG_MEMPOOL_CHUNK	10240	/* in bytes, hint only */
 
 /*
  * Ceiling(n / sz)
