@@ -724,6 +724,7 @@ void lvm_do_backup(const char *vgname)
 	else
 		log_error("Error backing up metadata, can't find VG for group %s", vgname);
 
+	vg_release(vg);
 	dm_pool_empty(cmd->mem);
 
 	pthread_mutex_unlock(&lvm_lock);
