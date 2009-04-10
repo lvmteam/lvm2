@@ -32,11 +32,13 @@ static int _pv_resize_single(struct cmd_context *cmd,
 	int consistent = 1;
 	uint64_t size = 0;
 	uint32_t new_pe_count = 0;
+	int r = 0;
 	struct dm_list mdas;
 	const char *pv_name = pv_dev_name(pv);
 	const char *vg_name;
 	struct lvmcache_info *info;
 	int mda_count = 0;
+	struct volume_group *old_vg = vg;
 
 	dm_list_init(&mdas);
 
@@ -69,52 +71,45 @@ static int _pv_resize_single(struct cmd_context *cmd,
 			return 0;
 		}
 
-		if (!vg_check_status(vg, CLUSTERED | EXPORTED_VG | LVM_WRITE)) {
-			unlock_vg(cmd, vg_name);
-			return 0;
-		}
+		if (!vg_check_status(vg, CLUSTERED | EXPORTED_VG | LVM_WRITE))
+			goto bad;
 
 		if (!(pvl = find_pv_in_vg(vg, pv_name))) {
-			unlock_vg(cmd, vg_name);
 			log_error("Unable to find \"%s\" in volume group \"%s\"",
 				  pv_name, vg->name);
-			return 0;
+			goto bad;
 		}
 
 		pv = pvl->pv;
 
 		if (!(info = info_from_pvid(pv->dev->pvid, 0))) {
-			unlock_vg(cmd, vg_name);
 			log_error("Can't get info for PV %s in volume group %s",
 				  pv_name, vg->name);
-			return 0;
+			goto bad;
 		}
 
 		mda_count = dm_list_size(&info->mdas);
 
 		if (!archive(vg))
-			return 0;
+			goto bad;
 	}
 
 	/* FIXME Create function to test compatibility properly */
 	if (mda_count > 1) {
 		log_error("%s: too many metadata areas for pvresize", pv_name);
-		unlock_vg(cmd, vg_name);
-		return 0;
+		goto bad;
 	}
 
 	if (!(pv->fmt->features & FMT_RESIZE_PV)) {
 		log_error("Physical volume %s format does not support resizing.",
 			  pv_name);
-		unlock_vg(cmd, vg_name);
-		return 0;
+		goto bad;
 	}
 
 	/* Get new size */
 	if (!dev_get_size(pv_dev(pv), &size)) {
 		log_error("%s: Couldn't get size.", pv_name);
-		unlock_vg(cmd, vg_name);
-		return 0;
+		goto bad;
 	}
 	
 	if (new_size) {
@@ -129,15 +124,13 @@ static int _pv_resize_single(struct cmd_context *cmd,
 	if (size < PV_MIN_SIZE) {
 		log_error("%s: Size must exceed minimum of %ld sectors.",
 			  pv_name, PV_MIN_SIZE);
-		unlock_vg(cmd, vg_name);
-		return 0;
+		goto bad;
 	}
 
 	if (size < pv_pe_start(pv)) {
 		log_error("%s: Size must exceed physical extent start of "
 			  "%" PRIu64 " sectors.", pv_name, pv_pe_start(pv));
-		unlock_vg(cmd, vg_name);
-		return 0;
+		goto bad;
 	}
 
 	pv->size = size;
@@ -151,14 +144,11 @@ static int _pv_resize_single(struct cmd_context *cmd,
 				  "least one physical extent of "
 				  "%" PRIu32 " sectors.", pv_name,
 				  pv_pe_size(pv));
-			unlock_vg(cmd, vg_name);
-			return 0;
+			goto bad;
 		}
 
-		if (!pv_resize(pv, vg, new_pe_count)) {
-			unlock_vg(cmd, vg_name);
-			return_0;
-		}
+		if (!pv_resize(pv, vg, new_pe_count))
+			goto_bad;
 	}
 
 	log_verbose("Resizing volume \"%s\" to %" PRIu64 " sectors.",
@@ -167,25 +157,25 @@ static int _pv_resize_single(struct cmd_context *cmd,
 	log_verbose("Updating physical volume \"%s\"", pv_name);
 	if (!is_orphan_vg(pv_vg_name(pv))) {
 		if (!vg_write(vg) || !vg_commit(vg)) {
-			unlock_vg(cmd, pv_vg_name(pv));
 			log_error("Failed to store physical volume \"%s\" in "
 				  "volume group \"%s\"", pv_name, vg->name);
-			return 0;
+			goto bad;
 		}
 		backup(vg);
-		unlock_vg(cmd, vg_name);
-	} else {
-		if (!(pv_write(cmd, pv, NULL, INT64_C(-1)))) {
-			unlock_vg(cmd, VG_ORPHANS);
-			log_error("Failed to store physical volume \"%s\"",
-				  pv_name);
-			return 0;
-		}
-		unlock_vg(cmd, vg_name);
+	} else if (!(pv_write(cmd, pv, NULL, INT64_C(-1)))) {
+		log_error("Failed to store physical volume \"%s\"",
+			  pv_name);
+		goto bad;;
 	}
 
 	log_print("Physical volume \"%s\" changed", pv_name);
-	return 1;
+	r = 1;
+
+bad:
+	unlock_vg(cmd, vg_name);
+	if (!old_vg)
+		vg_release(vg);
+	return r;
 }
 
 static int _pvresize_single(struct cmd_context *cmd,

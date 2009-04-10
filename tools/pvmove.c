@@ -355,6 +355,7 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 	struct logical_volume *lv_mirr;
 	unsigned first_time = 1;
 	unsigned exclusive;
+	int r = ECMD_FAILED;
 
 	pv_name_arg = argv[0];
 	argc--;
@@ -397,27 +398,22 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 		if (!(lvs_changed = lvs_using_lv(cmd, vg, lv_mirr))) {
 			log_error
 			    ("ABORTING: Failed to generate list of moving LVs");
-			unlock_vg(cmd, pv_vg_name(pv));
-			return ECMD_FAILED;
+			goto out;
 		}
 
 		/* Ensure mirror LV is active */
 		if (!_activate_lv(cmd, lv_mirr, exclusive)) {
 			log_error
 			    ("ABORTING: Temporary mirror activation failed.");
-			unlock_vg(cmd, pv_vg_name(pv));
-			return ECMD_FAILED;
+			goto out;
 		}
 
 		first_time = 0;
 	} else {
 		/* Determine PE ranges to be moved */
 		if (!(source_pvl = create_pv_list(cmd->mem, vg, 1,
-						  &pv_name_arg, 0))) {
-			stack;
-			unlock_vg(cmd, pv_vg_name(pv));
-			return ECMD_FAILED;
-		}
+						  &pv_name_arg, 0)))
+			goto_out;
 
 		alloc = arg_uint_value(cmd, alloc_ARG, ALLOC_INHERIT);
 		if (alloc == ALLOC_INHERIT)
@@ -425,33 +421,21 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 
 		/* Get PVs we can use for allocation */
 		if (!(allocatable_pvs = _get_allocatable_pvs(cmd, argc, argv,
-							     vg, pv, alloc))) {
-			stack;
-			unlock_vg(cmd, pv_vg_name(pv));
-			return ECMD_FAILED;
-		}
+							     vg, pv, alloc)))
+			goto_out;
 
-		if (!archive(vg)) {
-			unlock_vg(cmd, pv_vg_name(pv));
-			stack;
-			return ECMD_FAILED;
-		}
+		if (!archive(vg))
+			goto_out;
 
 		if (!(lv_mirr = _set_up_pvmove_lv(cmd, vg, source_pvl, lv_name,
 						  allocatable_pvs, alloc,
-						  &lvs_changed))) {
-			stack;
-			unlock_vg(cmd, pv_vg_name(pv));
-			return ECMD_FAILED;
-		}
+						  &lvs_changed)))
+			goto_out;
 	}
 
 	/* Lock lvs_changed and activate (with old metadata) */
-	if (!activate_lvs(cmd, lvs_changed, exclusive)) {
-		stack;
-		unlock_vg(cmd, pv_vg_name(pv));
-		return ECMD_FAILED;
-	}
+	if (!activate_lvs(cmd, lvs_changed, exclusive))
+		goto_out;
 
 	/* FIXME Presence of a mirror once set PVMOVE - now remove associated logic */
 	/* init_pvmove(1); */
@@ -459,17 +443,15 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 
 	if (first_time) {
 		if (!_update_metadata
-		    (cmd, vg, lv_mirr, lvs_changed, PVMOVE_FIRST_TIME)) {
-			stack;
-			unlock_vg(cmd, pv_vg_name(pv));
-			return ECMD_FAILED;
-		}
+		    (cmd, vg, lv_mirr, lvs_changed, PVMOVE_FIRST_TIME))
+			goto_out;
 	}
 
 	/* LVs are all in status LOCKED */
-	unlock_vg(cmd, pv_vg_name(pv));
-
-	return ECMD_PROCESSED;
+	r = ECMD_PROCESSED;
+out:
+	unlock_release_vg(cmd, vg, pv_vg_name(pv));
+	return r;
 }
 
 static int _finish_pvmove(struct cmd_context *cmd, struct volume_group *vg,

@@ -19,6 +19,7 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 {
 	char *vg_name;
 	struct volume_group *vg = NULL;
+	int r = ECMD_FAILED;
 
 	if (!argc) {
 		log_error("Please enter volume group name and "
@@ -45,7 +46,7 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 				    CLUSTERED | EXPORTED_VG |
 				    LVM_WRITE | RESIZEABLE_VG,
 				    CORRECT_INCONSISTENT | FAIL_INCONSISTENT))) {
-		 unlock_vg(cmd, VG_ORPHANS);
+		unlock_vg(cmd, VG_ORPHANS);
 		return ECMD_FAILED;
 	 }
 /********** FIXME
@@ -71,16 +72,11 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 		goto error;
 
 	backup(vg);
-
-	unlock_vg(cmd, vg_name);
-	unlock_vg(cmd, VG_ORPHANS);
-
 	log_print("Volume group \"%s\" successfully extended", vg_name);
+	r = ECMD_PROCESSED;
 
-	return ECMD_PROCESSED;
-
-      error:
-	unlock_vg(cmd, vg_name);
+error:
+	unlock_release_vg(cmd, vg, vg_name);
 	unlock_vg(cmd, VG_ORPHANS);
-	return ECMD_FAILED;
+	return r;
 }

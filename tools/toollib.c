@@ -279,6 +279,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 		}
 	}
 
+	vg = NULL;
 	dm_list_iterate_items(strl, vgnames) {
 		vgname = strl->str;
 		if (is_orphan_vg(vgname))
@@ -301,21 +302,24 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 				if (!vg_check_status(vg, CLUSTERED)) {
 					if (ret_max < ECMD_FAILED)
 						ret_max = ECMD_FAILED;
+					vg_release(vg);
 					continue;
 				}
 				log_error("Volume group \"%s\" "
 					  "inconsistent", vgname);
 			}
 
+			vg_release(vg);
 			if (!vg || !(vg = recover_vg(cmd, vgname, lock_type))) {
 				if (ret_max < ECMD_FAILED)
 					ret_max = ECMD_FAILED;
+				vg_release(vg);
 				continue;
 			}
 		}
 
 		if (!vg_check_status(vg, CLUSTERED)) {
-			unlock_vg(cmd, vgname);
+			unlock_release_vg(cmd, vg, vgname);
 			if (ret_max < ECMD_FAILED)
 				ret_max = ECMD_FAILED;
 			continue;
@@ -338,6 +342,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 						  dm_pool_strdup(cmd->mem,
 							      lv_name + 1))) {
 					log_error("strlist allocation failed");
+					vg_release(vg);
 					return ECMD_FAILED;
 				}
 			}
@@ -345,7 +350,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 
 		ret = process_each_lv_in_vg(cmd, vg, &lvnames, tags_arg,
 					    handle, process_single);
-		unlock_vg(cmd, vgname);
+		unlock_release_vg(cmd, vg, vgname);
 		if (ret > ret_max)
 			ret_max = ret;
 		if (sigint_caught())
@@ -369,6 +374,7 @@ int process_each_segment_in_pv(struct cmd_context *cmd,
 	const char *vg_name = NULL;
 	int ret_max = ECMD_PROCESSED;
 	int ret;
+	struct volume_group *old_vg = vg;
 
 	if (!vg && !is_orphan(pv)) {
 		vg_name = pv_vg_name(pv);
@@ -386,6 +392,7 @@ int process_each_segment_in_pv(struct cmd_context *cmd,
 		if (!(pvl = find_pv_in_vg(vg, pv_dev_name(pv)))) {
 			 log_error("Unable to find %s in volume group %s",
 				   pv_dev_name(pv), vg_name);
+			vg_release(vg);
 			return ECMD_FAILED;
 		}
 
@@ -402,6 +409,8 @@ int process_each_segment_in_pv(struct cmd_context *cmd,
 
 	if (vg_name)
 		unlock_vg(cmd, vg_name);
+	if (!old_vg)
+		vg_release(vg);
 
 	return ret_max;
 }
@@ -454,7 +463,7 @@ static int _process_one_vg(struct cmd_context *cmd, const char *vg_name,
 	}
 
 	if (!vg_check_status(vg, CLUSTERED)) {
-		unlock_vg(cmd, vg_name);
+		unlock_release_vg(cmd, vg, vg_name);
 		return ECMD_FAILED;
 	}
 
@@ -462,7 +471,7 @@ static int _process_one_vg(struct cmd_context *cmd, const char *vg_name,
 		/* Only process if a tag matches or it's on arg_vgnames */
 		if (!str_list_match_item(arg_vgnames, vg_name) &&
 		    !str_list_match_list(tags, &vg->tags)) {
-			unlock_vg(cmd, vg_name);
+			unlock_release_vg(cmd, vg, vg_name);
 			return ret_max;
 		}
 	}
@@ -472,7 +481,7 @@ static int _process_one_vg(struct cmd_context *cmd, const char *vg_name,
 		ret_max = ret;
 	}
 
-	unlock_vg(cmd, vg_name);
+	unlock_release_vg(cmd, vg, vg_name);
 
 	return ret_max;
 }
@@ -756,12 +765,12 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 					continue;
 				}
 				if (!consistent) {
-					unlock_vg(cmd, sll->str);
+					unlock_release_vg(cmd, vg, sll->str);
 					continue;
 				}
 
 				if (!vg_check_status(vg, CLUSTERED)) {
-					unlock_vg(cmd, sll->str);
+					unlock_release_vg(cmd, vg, sll->str);
 					continue;
 				}
 
@@ -769,7 +778,7 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 							    handle,
 							    process_single);
 
-				unlock_vg(cmd, sll->str);
+				unlock_release_vg(cmd, vg, sll->str);
 
 				if (ret > ret_max)
 					ret_max = ret;

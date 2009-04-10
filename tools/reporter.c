@@ -124,6 +124,7 @@ static int _pvs_single(struct cmd_context *cmd, struct volume_group *vg,
 	struct pv_list *pvl;
 	int ret = ECMD_PROCESSED;
 	const char *vg_name = NULL;
+	struct volume_group *old_vg = vg;
 
 	if (is_pv(pv) && !is_orphan(pv) && !vg) {
 		vg_name = pv_vg_name(pv);
@@ -154,6 +155,9 @@ static int _pvs_single(struct cmd_context *cmd, struct volume_group *vg,
 out:
 	if (vg_name)
 		unlock_vg(cmd, vg_name);
+
+	if (!old_vg)
+		vg_release(vg);
 
 	return ret;
 }

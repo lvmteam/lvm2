@@ -20,6 +20,7 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 {
 	struct volume_group *vg_to, *vg_from;
 	struct lv_list *lvl1, *lvl2;
+	int r = ECMD_FAILED;
 
 	if (!strcmp(vg_name_to, vg_name_from)) {
 		log_error("Duplicate volume group name \"%s\"", vg_name_from);
@@ -37,7 +38,7 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 					 LCK_VG_WRITE | LCK_NONBLOCK,
 					 CLUSTERED | EXPORTED_VG | LVM_WRITE,
 					 CORRECT_INCONSISTENT | FAIL_INCONSISTENT))) {
-		unlock_vg(cmd, vg_name_to);
+		unlock_release_vg(cmd, vg_to, vg_name_to);
 		return ECMD_FAILED;
 	}
 
@@ -114,18 +115,13 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 	/* FIXME Remove /dev/vgfrom */
 
 	backup(vg_to);
-
-	unlock_vg(cmd, vg_name_from);
-	unlock_vg(cmd, vg_name_to);
-
 	log_print("Volume group \"%s\" successfully merged into \"%s\"",
 		  vg_from->name, vg_to->name);
-	return ECMD_PROCESSED;
-
-      bad:
-	unlock_vg(cmd, vg_name_from);
-	unlock_vg(cmd, vg_name_to);
-	return ECMD_FAILED;
+	r = ECMD_PROCESSED;
+bad:
+	unlock_release_vg(cmd, vg_from, vg_name_from);
+	unlock_release_vg(cmd, vg_to, vg_name_to);
+	return r;
 }
 
 int vgmerge(struct cmd_context *cmd, int argc, char **argv)

@@ -286,10 +286,11 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	struct vgcreate_params vp_new;
 	struct vgcreate_params vp_def;
 	char *vg_name_from, *vg_name_to;
-	struct volume_group *vg_to, *vg_from;
+	struct volume_group *vg_to = NULL, *vg_from = NULL;
 	int opt;
 	int existing_vg;
 	int consistent;
+	int r = ECMD_FAILED;
 	const char *lv_name;
 
 	if ((arg_count(cmd, name_ARG) + argc) < 3) {
@@ -329,7 +330,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	log_verbose("Checking for new volume group \"%s\"", vg_name_to);
 	if (!lock_vol(cmd, vg_name_to, LCK_VG_WRITE | LCK_NONBLOCK)) {
 		log_error("Can't get lock for %s", vg_name_to);
-		unlock_vg(cmd, vg_name_from);
+		unlock_release_vg(cmd, vg_from, vg_name_from);
 		return ECMD_FAILED;
 	}
 
@@ -358,15 +359,13 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		vp_def.clustered = 0;
 
 		if (fill_vg_create_params(cmd, vg_name_to, &vp_new, &vp_def)) {
-			unlock_vg(cmd, vg_name_from);
-			unlock_vg(cmd, vg_name_to);
-			return EINVALID_CMD_LINE;
+			r = EINVALID_CMD_LINE;
+			goto bad;
 		}
 
 		if (validate_vg_create_params(cmd, &vp_new)) {
-			unlock_vg(cmd, vg_name_from);
-			unlock_vg(cmd, vg_name_to);
-			return EINVALID_CMD_LINE;
+			r = EINVALID_CMD_LINE;
+			goto bad;
 		}
 
 		if (!(vg_to = vg_create(cmd, vg_name_to, vp_new.extent_size,
@@ -450,12 +449,14 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	 * Finally, remove the EXPORTED flag from the new VG and write it out.
 	 */
 	consistent = 1;
-	if (!test_mode() &&
-	    (!(vg_to = vg_read_internal(cmd, vg_name_to, NULL, &consistent)) ||
-	     !consistent)) {
-		log_error("Volume group \"%s\" became inconsistent: please "
-			  "fix manually", vg_name_to);
-		goto_bad;
+	if (!test_mode()) {
+		vg_release(vg_to);
+		if (!(vg_to = vg_read_internal(cmd, vg_name_to, NULL, &consistent)) ||
+		    !consistent) {
+			log_error("Volume group \"%s\" became inconsistent: please "
+				  "fix manually", vg_name_to);
+			goto_bad;
+		}
 	}
 
 	vg_to->status &= ~EXPORTED_VG;
@@ -465,16 +466,14 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 
 	backup(vg_to);
 
-	unlock_vg(cmd, vg_name_from);
-	unlock_vg(cmd, vg_name_to);
-
 	log_print("%s volume group \"%s\" successfully split from \"%s\"",
 		  existing_vg ? "Existing" : "New",
 		  vg_to->name, vg_from->name);
-	return ECMD_PROCESSED;
 
-      bad:
-	unlock_vg(cmd, vg_name_from);
-	unlock_vg(cmd, vg_name_to);
-	return ECMD_FAILED;
+	r = ECMD_PROCESSED;
+
+bad:
+	unlock_release_vg(cmd, vg_from, vg_name_from);
+	unlock_release_vg(cmd, vg_to, vg_name_to);
+	return r;
 }
