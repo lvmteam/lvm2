@@ -285,6 +285,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 			continue;	/* FIXME Unnecessary? */
 		if (!lock_vol(cmd, vgname, lock_type)) {
 			log_error("Can't lock %s: skipping", vgname);
+			ret_max = ECMD_FAILED;
 			continue;
 		}
 		if (lock_type & LCK_WRITE)
@@ -442,7 +443,7 @@ static int _process_one_vg(struct cmd_context *cmd, const char *vg_name,
 
 	if (!lock_vol(cmd, vg_name, lock_type)) {
 		log_error("Can't lock volume group %s: skipping", vg_name);
-		return ret_max;
+		return ECMD_FAILED;
 	}
 
 	log_verbose("Finding volume group \"%s\"", vg_name);
@@ -745,6 +746,7 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 			dm_list_iterate_items(sll, vgnames) {
 				if (!lock_vol(cmd, sll->str, lock_type)) {
 					log_error("Can't lock %s: skipping", sll->str);
+					ret_max = ECMD_FAILED;
 					continue;
 				}
 				if (!(vg = vg_read_internal(cmd, sll->str, NULL, &consistent))) {
