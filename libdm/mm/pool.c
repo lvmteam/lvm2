@@ -15,6 +15,10 @@
 
 #include "dmlib.h"
 
+/* FIXME: thread unsafe */
+static DM_LIST_INIT(_dm_pools);
+void dm_pools_check_leaks(void);
+
 #ifdef DEBUG_POOL
 #include "pool-debug.c"
 #else
@@ -51,4 +55,23 @@ void *dm_pool_zalloc(struct dm_pool *p, size_t s)
 		memset(ptr, 0, s);
 
 	return ptr;
+}
+
+void dm_pools_check_leaks(void)
+{
+	struct dm_pool *p;
+
+	if (dm_list_empty(&_dm_pools))
+		return;
+
+	log_error("You have a memory leak (not released memory pool):");
+	dm_list_iterate_items(p, &_dm_pools) {
+#ifdef DEBUG_POOL
+		log_error(" [%p] %s (%u bytes)",
+			  p->orig_pool,
+			  p->name, p->stats.bytes);
+#else
+		log_error(" [%p]", p);
+#endif
+	}
 }

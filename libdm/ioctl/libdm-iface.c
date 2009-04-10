@@ -1817,12 +1817,15 @@ void dm_lib_release(void)
 	update_devs();
 }
 
+void dm_pools_check_leaks(void);
+
 void dm_lib_exit(void)
 {
 	dm_lib_release();
 	if (_dm_bitset)
 		dm_bitset_destroy(_dm_bitset);
 	_dm_bitset = NULL;
+	dm_pools_check_leaks();
 	dm_dump_memory();
 	_version_ok = 1;
 	_version_checked = 0;

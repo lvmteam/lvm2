@@ -30,7 +30,9 @@ typedef struct {
 } pool_stats;
 
 struct dm_pool {
+	struct dm_list list;
 	const char *name;
+	void *orig_pool;	/* to pair it with first allocation call */
 
 	int begun;
 	struct block *object;
@@ -65,10 +67,13 @@ struct dm_pool *dm_pool_create(const char *name, size_t chunk_hint)
 	mem->stats.bytes = 0;
 	mem->stats.maxbytes = 0;
 
+	mem->orig_pool = mem;
+
 #ifdef DEBUG_POOL
 	log_debug("Created mempool %s", name);
 #endif
 
+	dm_list_add(&_dm_pools, &mem->list);
 	return mem;
 }
 
@@ -103,6 +108,7 @@ void dm_pool_destroy(struct dm_pool *p)
 {
 	_pool_stats(p, "Destroying");
 	_free_blocks(p, p->blocks);
+	dm_list_del(&p->list);
 	dm_free(p);
 }
 
