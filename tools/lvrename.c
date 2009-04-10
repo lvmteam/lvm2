@@ -27,8 +27,9 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 	char *lv_name_old, *lv_name_new;
 	const char *vg_name, *vg_name_new, *vg_name_old;
 	char *st;
+	int r = ECMD_FAILED;
 
-	struct volume_group *vg;
+	struct volume_group *vg = NULL;
 	struct lv_list *lvl;
 
 	if (argc == 3) {
@@ -115,14 +116,11 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 	if (!lv_rename(cmd, lvl->lv, lv_name_new))
 		goto error;
 
-	unlock_vg(cmd, vg_name);
-
 	log_print("Renamed \"%s\" to \"%s\" in volume group \"%s\"",
 		  lv_name_old, lv_name_new, vg_name);
 
-	return ECMD_PROCESSED;
-
-      error:
-	unlock_vg(cmd, vg_name);
-	return ECMD_FAILED;
+	r = ECMD_PROCESSED;
+error:
+	unlock_release_vg(cmd, vg, vg_name);
+	return r;
 }

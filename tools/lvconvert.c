@@ -772,11 +772,12 @@ bad:
 	if (ret == ECMD_PROCESSED && lp.need_polling) {
 		if (!lv_info(cmd, lvl->lv, &info, 1, 0) || !info.exists) {
 			log_print("Conversion starts after activation");
-			return ret;
+			goto out;
 		}
 		ret = lvconvert_poll(cmd, lp.lv_name_full,
 				     lp.wait_completion ? 0 : 1U);
 	}
-
+out:
+	vg_release(vg);
 	return ret;
 }

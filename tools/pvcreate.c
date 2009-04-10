@@ -310,6 +310,7 @@ static int pvcreate_validate_params(struct cmd_context *cmd,
 		pp->pe_start = pv_pe_start(existing_pv);
 		pp->extent_size = pv_pe_size(existing_pv);
 		pp->extent_count = pv_pe_count(existing_pv);
+		vg_release(vg);
 	}
 
 	if (arg_count(cmd, yes_ARG) && !arg_count(cmd, force_ARG)) {

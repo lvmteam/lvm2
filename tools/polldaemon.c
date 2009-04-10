@@ -157,17 +157,17 @@ static int _wait_for_single_mirror(struct cmd_context *cmd, const char *name,
 							     parms->lv_type))) {
 			log_error("ABORTING: Can't find mirror LV in %s for %s",
 				  vg->name, name);
-			unlock_vg(cmd, vg->name);
+			unlock_release_vg(cmd, vg, vg->name);
 			return 0;
 		}
 
 		if (!_check_mirror_status(cmd, vg, lv_mirr, name, parms,
 					  &finished)) {
-			unlock_vg(cmd, vg->name);
+			unlock_release_vg(cmd, vg, vg->name);
 			return 0;
 		}
 
-		unlock_vg(cmd, vg->name);
+		unlock_release_vg(cmd, vg, vg->name);
 	}
 
 	return 1;

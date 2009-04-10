@@ -22,6 +22,7 @@ static int _pvdisplay_single(struct cmd_context *cmd,
 	struct pv_list *pvl;
 	int ret = ECMD_PROCESSED;
 	uint64_t size;
+	struct volume_group *old_vg = vg;
 
 	const char *pv_name = pv_dev_name(pv);
 	const char *vg_name = NULL;
@@ -82,6 +83,8 @@ static int _pvdisplay_single(struct cmd_context *cmd,
 out:
 	if (vg_name)
 		unlock_vg(cmd, vg_name);
+	if (!old_vg)
+		vg_release(vg);
 
 	return ret;
 }

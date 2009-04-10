@@ -36,6 +36,7 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 
 	int allocatable = 0;
 	int tagarg = 0;
+	int r = 0;
 
 	if (arg_count(cmd, addtag_ARG))
 		tagarg = addtag_ARG;
@@ -62,27 +63,24 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 			return_0;
 
 		if (!(pvl = find_pv_in_vg(vg, pv_name))) {
-			unlock_vg(cmd, vg_name);
 			log_error
 			    ("Unable to find \"%s\" in volume group \"%s\"",
 			     pv_name, vg->name);
-			return 0;
+			goto out;
 		}
 		if (tagarg && !(vg->fid->fmt->features & FMT_TAGS)) {
-			unlock_vg(cmd, vg_name);
 			log_error("Volume group containing %s does not "
 				  "support tags", pv_name);
-			return 0;
+			goto out;
 		}
 		if (arg_count(cmd, uuid_ARG) && lvs_in_vg_activated(vg)) {
-			unlock_vg(cmd, vg_name);
 			log_error("Volume group containing %s has active "
 				  "logical volumes", pv_name);
-			return 0;
+			goto out;
 		}
 		pv = pvl->pv;
 		if (!archive(vg))
-			return 0;
+			goto out;
 	} else {
 		if (tagarg) {
 			log_error("Can't change tag on Physical Volume %s not "
@@ -109,23 +107,22 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 		    !(pv->fmt->features & FMT_ORPHAN_ALLOCATABLE)) {
 			log_error("Allocatability not supported by orphan "
 				  "%s format PV %s", pv->fmt->name, pv_name);
-			unlock_vg(cmd, vg_name);
-			return 0;
+			goto out;
 		}
 
 		/* change allocatability for a PV */
 		if (allocatable && (pv_status(pv) & ALLOCATABLE_PV)) {
 			log_error("Physical volume \"%s\" is already "
 				  "allocatable", pv_name);
-			unlock_vg(cmd, vg_name);
-			return 1;
+			r = 1;
+			goto out;
 		}
 
 		if (!allocatable && !(pv_status(pv) & ALLOCATABLE_PV)) {
 			log_error("Physical volume \"%s\" is already "
 				  "unallocatable", pv_name);
-			unlock_vg(cmd, vg_name);
-			return 1;
+			r = 1;
+			goto out;
 		}
 
 		if (allocatable) {
@@ -143,15 +140,13 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 			if (!str_list_add(cmd->mem, &pv->tags, tag)) {
 				log_error("Failed to add tag %s to physical "
 					  "volume %s", tag, pv_name);
-				unlock_vg(cmd, vg_name);
-				return 0;
+				goto out;
 			}
 		} else {
 			if (!str_list_del(&pv->tags, tag)) {
 				log_error("Failed to remove tag %s from "
 					  "physical volume" "%s", tag, pv_name);
-				unlock_vg(cmd, vg_name);
-				return 0;
+				goto out;
 			}
 		}
 	} else {
@@ -159,13 +154,10 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 		if (!id_create(&pv->id)) {
 			log_error("Failed to generate new random UUID for %s.",
 				  pv_name);
-			unlock_vg(cmd, vg_name);
-			return 0;
+			goto out;
 		}
-		if (!id_write_format(&pv->id, uuid, sizeof(uuid))) {
-			unlock_vg(cmd, vg_name);
-			return_0;
-		}
+		if (!id_write_format(&pv->id, uuid, sizeof(uuid)))
+			goto_out;
 		log_verbose("Changing uuid of %s to %s.", pv_name, uuid);
 		if (!is_orphan(pv)) {
 			orig_vg_name = pv_vg_name(pv);
@@ -181,8 +173,7 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 			if (!(pv_write(cmd, pv, NULL, INT64_C(-1)))) {
 				log_error("pv_write with new uuid failed "
 					  "for %s.", pv_name);
-				unlock_vg(cmd, vg_name);
-				return 0;
+				goto out;
 			}
 			pv->vg_name = orig_vg_name;
 			pv->pe_alloc_count = orig_pe_alloc_count;
@@ -196,24 +187,23 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 	log_verbose("Updating physical volume \"%s\"", pv_name);
 	if (!is_orphan(pv)) {
 		if (!vg_write(vg) || !vg_commit(vg)) {
-			unlock_vg(cmd, vg_name);
 			log_error("Failed to store physical volume \"%s\" in "
 				  "volume group \"%s\"", pv_name, vg->name);
-			return 0;
+			goto out;
 		}
 		backup(vg);
 	} else if (!(pv_write(cmd, pv, NULL, INT64_C(-1)))) {
-		unlock_vg(cmd, vg_name);
 		log_error("Failed to store physical volume \"%s\"",
 			  pv_name);
-		return 0;
+		goto out;
 	}
 
-	unlock_vg(cmd, vg_name);
-
 	log_print("Physical volume \"%s\" changed", pv_name);
+	r = 1;
+out:
+	unlock_release_vg(cmd, vg, vg_name);
+	return r;
 
-	return 1;
 }
 
 int pvchange(struct cmd_context *cmd, int argc, char **argv)

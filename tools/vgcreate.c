@@ -116,9 +116,11 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	log_print("%s%colume group \"%s\" successfully created",
 		  clustered_message, *clustered_message ? 'v' : 'V', vg->name);
 
+	vg_release(vg);
 	return ECMD_PROCESSED;
 
 bad:
+	vg_release(vg);
 	unlock_vg(cmd, vp_new.vg_name);
 	unlock_vg(cmd, VG_ORPHANS);
 	return ECMD_FAILED;
