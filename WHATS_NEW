@@ -1,5 +1,6 @@
 Version 2.02.46 - 
 ================================
+  Add MMC (mmcblk) device type to filters.
   Introduce memory pools per volume group (to reduce memory for large VGs).
   Add memory pool leaks detection.
   Use copy of PV structure when manipulating with global PV lists.
