@@ -25,7 +25,7 @@ endif
 
 TARGETS = test
 
-LVMLIBS = -llvm
+LVMLIBS = -llvm -ldevmapper
 
 DEFS += -D_REENTRANT
 CFLAGS += -fno-strict-aliasing
