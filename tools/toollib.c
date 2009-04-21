@@ -376,7 +376,7 @@ int process_each_segment_in_pv(struct cmd_context *cmd,
 	int ret;
 	struct volume_group *old_vg = vg;
 
-	if (!vg && !is_orphan(pv)) {
+	if (is_pv(pv) && !vg && !is_orphan(pv)) {
 		vg_name = pv_vg_name(pv);
 
 		if (!(vg = vg_lock_and_read(cmd, vg_name, NULL, LCK_VG_READ,
