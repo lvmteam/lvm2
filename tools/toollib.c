@@ -375,6 +375,7 @@ int process_each_segment_in_pv(struct cmd_context *cmd,
 	int ret_max = ECMD_PROCESSED;
 	int ret;
 	struct volume_group *old_vg = vg;
+	struct pv_segment _free_pv_segment = { .pv = pv };
 
 	if (is_pv(pv) && !vg && !is_orphan(pv)) {
 		vg_name = pv_vg_name(pv);
@@ -399,13 +400,18 @@ int process_each_segment_in_pv(struct cmd_context *cmd,
 		pv = pvl->pv;
 	}
 
-	dm_list_iterate_items(pvseg, &pv->segments) {
-		ret = process_single(cmd, vg, pvseg, handle);
+	if (dm_list_empty(&pv->segments)) {
+		ret = process_single(cmd, NULL, &_free_pv_segment, handle);
 		if (ret > ret_max)
 			ret_max = ret;
-		if (sigint_caught())
-			break;
-	}
+	} else
+		dm_list_iterate_items(pvseg, &pv->segments) {
+			ret = process_single(cmd, vg, pvseg, handle);
+			if (ret > ret_max)
+				ret_max = ret;
+			if (sigint_caught())
+				break;
+		}
 
 	if (vg_name)
 		unlock_vg(cmd, vg_name);
