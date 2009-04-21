@@ -280,6 +280,7 @@ static int _update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 {
 	unsigned exclusive = _pvmove_is_exclusive(cmd, vg);
 	unsigned first_time = (flags & PVMOVE_FIRST_TIME) ? 1 : 0;
+	int r = 0;
 
 	log_verbose("Updating volume group metadata");
 	if (!vg_write(vg)) {
@@ -287,19 +288,16 @@ static int _update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 		return 0;
 	}
 
-	backup(vg);
-
 	/* Suspend lvs_changed */
 	if (!suspend_lvs(cmd, lvs_changed))
-		return_0;
+		goto_out;
 
 	/* Suspend mirrors on subsequent calls */
 	if (!first_time) {
 		if (!suspend_lv(cmd, lv_mirr)) {
-			stack;
 			resume_lvs(cmd, lvs_changed);
 			vg_revert(vg);
-			return 0;
+			goto_out;
 		}
 	}
 
@@ -309,7 +307,7 @@ static int _update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 		if (!first_time)
 			resume_lv(cmd, lv_mirr);
 		resume_lvs(cmd, lvs_changed);
-		return 0;
+		goto out;
 	}
 
 	/* Activate the temporary mirror LV */
@@ -323,22 +321,25 @@ static int _update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 					  "Run pvmove --abort.");
 			/* FIXME Resume using *original* metadata here! */
 			resume_lvs(cmd, lvs_changed);
-			return 0;
+			goto out;
 		}
 	} else if (!resume_lv(cmd, lv_mirr)) {
 		log_error("Unable to reactivate logical volume \"%s\"",
 			  lv_mirr->name);
 		resume_lvs(cmd, lvs_changed);
-		return 0;
+		goto out;
 	}
 
 	/* Unsuspend LVs */
 	if (!resume_lvs(cmd, lvs_changed)) {
 		log_error("Unable to resume logical volumes");
-		return 0;
+		goto out;
 	}
 
-	return 1;
+	r = 1;
+out:
+	backup(vg);
+	return r;
 }
 
 static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,

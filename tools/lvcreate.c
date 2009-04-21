@@ -786,13 +786,10 @@ static int _lvcreate(struct cmd_context *cmd, struct volume_group *vg,
 	}
 
 	/* store vg on disk(s) */
-	if (!vg_write(vg))
+	if (!vg_write(vg) || !vg_commit(vg))
 		return_0;
 
 	backup(vg);
-
-	if (!vg_commit(vg))
-		return_0;
 
 	if (lp->snapshot) {
 		if (!activate_lv_excl(cmd, lv)) {
@@ -878,9 +875,12 @@ deactivate_and_revert_new_lv:
 
 revert_new_lv:
 	/* FIXME Better to revert to backup of metadata? */
-	if (!lv_remove(lv) || !vg_write(vg) || (backup(vg), !vg_commit(vg)))
+	if (!lv_remove(lv) || !vg_write(vg) || !vg_commit(vg))
 		log_error("Manual intervention may be required to remove "
 			  "abandoned LV(s) before retrying.");
+	else
+		backup(vg);
+
 	return 0;
 }
 
