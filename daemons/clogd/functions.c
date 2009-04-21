@@ -11,6 +11,7 @@
 #include <linux/kdev_t.h>
 #define __USE_GNU /* for O_DIRECT */
 #include <fcntl.h>
+#include <time.h>
 #include "linux/dm-clog-tfr.h"
 #include "list.h"
 #include "functions.h"
@@ -50,6 +51,7 @@ struct log_c {
 	char uuid[DM_UUID_LEN];
 	uint32_t ref_count;
 
+	time_t delay; /* limits how fast a resume can happen after suspend */
 	int touched;
 	uint32_t region_size;
 	uint32_t region_count;
@@ -60,6 +62,7 @@ struct log_c {
 	uint32_t *sync_bits;
 	uint32_t recoverer;
 	uint64_t recovering_region; /* -1 means not recovering */
+	uint64_t skip_bit_warning; /* used to warn if region skipped */
 	int sync_search;
 
 	int resume_override;
@@ -429,6 +432,7 @@ static int _clog_ctr(int argc, char **argv, uint64_t device_size)
 	lc->block_on_error = block_on_error;
 	lc->sync_search = 0;
 	lc->recovering_region = (uint64_t)-1;
+	lc->skip_bit_warning = region_count;
 	lc->disk_fd = -1;
 	lc->log_dev_failed = 0;
 	lc->ref_count = 1;
@@ -645,7 +649,6 @@ static int clog_presuspend(struct clog_tfr *tfr)
 	if (lc->touched)
 		LOG_DBG("WARNING: log still marked as 'touched' during suspend");
 
-	lc->state = LOG_SUSPENDED;
 	lc->recovery_halted = 1;
 
 	return 0;
@@ -666,8 +669,10 @@ static int clog_postsuspend(struct clog_tfr *tfr)
 	LOG_DBG("[%s] clog_postsuspend: leaving CPG", SHORT_UUID(lc->uuid));
 	destroy_cluster_cpg(tfr->uuid);
 
+	lc->state = LOG_SUSPENDED;
 	lc->recovering_region = (uint64_t)-1;
 	lc->recoverer = (uint32_t)-1;
+	lc->delay = time(NULL);
 
 	return 0;
 }
@@ -714,6 +719,9 @@ static int clog_resume(struct clog_tfr *tfr)
 	case 1000:
 		LOG_ERROR("[%s] Additional resume issued before suspend",
 			  SHORT_UUID(tfr->uuid));
+#ifdef DEBUG
+		kill(getpid(), SIGUSR1);
+#endif
 		return 0;
 	case 0:
 		lc->resume_override = 1000;
@@ -806,8 +814,8 @@ out:
 
 	lc->sync_count = count_bits32(lc->sync_bits, lc->bitset_uint32_count);
 
-	LOG_DBG("[%s] Initial sync_count = %llu",
-		SHORT_UUID(lc->uuid), (unsigned long long)lc->sync_count);
+	LOG_SPRINT("[%s] Initial sync_count = %llu",
+		   SHORT_UUID(lc->uuid), (unsigned long long)lc->sync_count);
 	lc->sync_search = 0;
 	lc->state = LOG_RESUMED;
 	lc->recovery_halted = 0;
@@ -826,6 +834,7 @@ out:
 int local_resume(struct clog_tfr *tfr)
 {
 	int r;
+	time_t t;
 	struct log_c *lc = get_log(tfr->uuid);
 
 	if (!lc) {
@@ -835,6 +844,34 @@ int local_resume(struct clog_tfr *tfr)
 			LOG_ERROR("clog_resume called on log that is not official or pending");
 			return -EINVAL;
 		}
+
+		t = time(NULL);
+		t -= lc->delay;
+		/*
+		 * This should be considered a temporary fix.  It addresses
+		 * a problem that exists when nodes suspend/resume in rapid
+		 * succession.  While the problem is very rare, it has been
+		 * seen to happen in real-world-like testing.
+		 *
+		 * The problem:
+		 * - Node A joins cluster
+		 * - Node B joins cluster
+		 * - Node A prepares checkpoint
+		 * - Node A gets ready to write checkpoint
+		 * - Node B leaves
+		 * - Node B joins
+		 * - Node A finishes write of checkpoint
+		 * - Node B receives checkpoint meant for previous session
+		 * -- Node B can now be non-coherent
+		 *
+		 * This timer will solve the problem for now, but could be
+		 * replaced by a generation number sent with the resume
+		 * command from the kernel.  The generation number would
+		 * be included in the name of the checkpoint to prevent
+		 * reading stale data.
+		 */
+		if ((t < 3) && (t >= 0))
+			sleep(3 - t);
 
 		/* Join the CPG */
 		r = create_cluster_cpg(tfr->uuid);
@@ -1155,6 +1192,7 @@ static int clog_get_resync_work(struct clog_tfr *tfr)
 				   (unsigned long long)lc->recovering_region);
 			pkg->r = lc->recovering_region;
 			pkg->i = 1;
+			LOG_COND(log_resend_requests, "***** RE-REQUEST *****");
 		} else {
 			LOG_SPRINT("GET - SEQ#=%u, UUID=%s, nodeid = %u:: "
 				   "Someone already recovering (%llu)",
@@ -1233,10 +1271,30 @@ static int clog_set_region_sync(struct clog_tfr *tfr)
 		} else {
 			log_set_bit(lc, lc->sync_bits, pkg->region);
 			lc->sync_count++;
+
+			/* The rest of this section is all for debugging */
 			LOG_SPRINT("SET - SEQ#=%u, UUID=%s, nodeid = %u:: "
 				   "Setting region (%llu)",
 				   tfr->seq, SHORT_UUID(lc->uuid), tfr->originator,
 				   (unsigned long long)pkg->region);
+			if (pkg->region == lc->skip_bit_warning)
+				lc->skip_bit_warning = lc->region_count;
+
+			if (pkg->region > (lc->skip_bit_warning + 5)) {
+				LOG_ERROR("*** Region #%llu skipped during recovery ***",
+					  (unsigned long long)lc->skip_bit_warning);
+				lc->skip_bit_warning = lc->region_count;
+#ifdef DEBUG
+				kill(getpid(), SIGUSR1);
+#endif
+			}
+
+			if (!log_test_bit(lc->sync_bits,
+					  (pkg->region) ? pkg->region - 1 : 0)) {
+				LOG_SPRINT("*** Previous bit not set ***");
+				lc->skip_bit_warning = (pkg->region) ?
+					pkg->region - 1 : 0;
+			}
 		}
 	} else if (log_test_bit(lc->sync_bits, pkg->region)) {
 		lc->sync_count--;
@@ -1254,6 +1312,9 @@ static int clog_set_region_sync(struct clog_tfr *tfr)
 			   "sync_count(%llu) != bitmap count(%llu)",
 			   tfr->seq, SHORT_UUID(lc->uuid), tfr->originator,
 			   (unsigned long long)lc->sync_count, reset);
+#ifdef DEBUG
+		kill(getpid(), SIGUSR1);
+#endif
 		lc->sync_count = reset;
 	}
 
@@ -1290,6 +1351,19 @@ static int clog_get_sync_count(struct clog_tfr *tfr)
 	*sync_count = lc->sync_count;
 
 	tfr->data_size = sizeof(*sync_count);
+
+	if (lc->sync_count != count_bits32(lc->sync_bits, lc->bitset_uint32_count)) {
+		unsigned long long reset = count_bits32(lc->sync_bits, lc->bitset_uint32_count);
+
+		LOG_SPRINT("get_sync_count - SEQ#=%u, UUID=%s, nodeid = %u:: "
+			   "sync_count(%llu) != bitmap count(%llu)",
+			   tfr->seq, SHORT_UUID(lc->uuid), tfr->originator,
+			   (unsigned long long)lc->sync_count, reset);
+#ifdef DEBUG
+		kill(getpid(), SIGUSR1);
+#endif
+		lc->sync_count = reset;
+	}
 
 	return 0;
 }
@@ -1593,7 +1667,7 @@ static void print_bits(char *buf, int size, int print)
 }
 
 /* int store_bits(const char *uuid, const char *which, char **buf)*/
-int push_state(const char *uuid, const char *which, char **buf)
+int push_state(const char *uuid, const char *which, char **buf, uint32_t debug_who)
 {
 	int bitset_size;
 	struct log_c *lc;
@@ -1614,10 +1688,12 @@ int push_state(const char *uuid, const char *which, char **buf)
 		sprintf(*buf, "%llu %u", (unsigned long long)lc->recovering_region,
 			lc->recoverer);
 
-		LOG_SPRINT("CKPT SEND - SEQ#=X, UUID=%s, nodeid = X:: "
-			   "recovering_region=%llu, recoverer=%u",
-			   SHORT_UUID(lc->uuid),
-			   (unsigned long long)lc->recovering_region, lc->recoverer);
+		LOG_SPRINT("CKPT SEND - SEQ#=X, UUID=%s, nodeid = %u:: "
+			   "recovering_region=%llu, recoverer=%u, sync_count=%llu",
+			   SHORT_UUID(lc->uuid), debug_who,
+			   (unsigned long long)lc->recovering_region,
+			   lc->recoverer,
+			   (unsigned long long)count_bits32(lc->sync_bits, lc->bitset_uint32_count));
 		return 64;
 	}
 

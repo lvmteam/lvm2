@@ -10,7 +10,7 @@ int local_resume(struct clog_tfr *tfr);
 int cluster_postsuspend(char *);
 
 int do_request(struct clog_tfr *tfr, int server);
-int push_state(const char *uuid, const char *which, char **buf);
+int push_state(const char *uuid, const char *which, char **buf, uint32_t debug_who);
 int pull_state(const char *uuid, const char *which, char *buf, int size);
 
 int log_get_state(struct clog_tfr *tfr);
