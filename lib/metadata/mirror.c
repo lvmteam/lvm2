@@ -270,13 +270,10 @@ static int _init_mirror_log(struct cmd_context *cmd,
 		}
 
 	/* store mirror log on disk(s) */
-	if (!vg_write(log_lv->vg))
+	if (!vg_write(log_lv->vg) || !vg_commit(log_lv->vg))
 		goto activate_lv;
 
 	backup(log_lv->vg);
-
-	if (!vg_commit(log_lv->vg))
-		goto activate_lv;
 
 	if (!activate_lv(cmd, log_lv)) {
 		log_error("Aborting. Failed to activate mirror log.");
@@ -334,10 +331,12 @@ revert_new_lv:
 		return 0;
 	}
 
-	if (!vg_write(log_lv->vg) ||
-	    (backup(log_lv->vg), !vg_commit(log_lv->vg)))
+	if (!vg_write(log_lv->vg) || !vg_commit(log_lv->vg))
 		log_error("Manual intervention may be required to "
 			  "remove/restore abandoned log LV before retrying.");
+	else
+		backup(log_lv->vg);
+
 activate_lv:
 	if (was_active && !remove_on_failure && !activate_lv(cmd, log_lv))
 		return_0;
@@ -1504,11 +1503,15 @@ int add_mirror_images(struct cmd_context *cmd, struct logical_volume *lv,
 	return 1;
 
   out_remove_log:
-	if (log_lv && (!lv_remove(log_lv) || !vg_write(log_lv->vg) ||
-		       (backup(log_lv->vg), !vg_commit(log_lv->vg))))
-		log_error("Manual intervention may be required to remove "
-			  "abandoned log LV before retrying.");
-
+	if (log_lv) {
+		if (!lv_remove(log_lv) ||
+		    !vg_write(log_lv->vg) ||
+		    !vg_commit(log_lv->vg))
+			log_error("Manual intervention may be required to remove "
+				  "abandoned log LV before retrying.");
+		else
+			backup(log_lv->vg);
+	}
   out_remove_imgs:
 	alloc_destroy(ah);
 	return 0;

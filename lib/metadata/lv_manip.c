@@ -1736,6 +1736,7 @@ int lv_rename(struct cmd_context *cmd, struct logical_volume *lv,
 {
 	struct volume_group *vg = lv->vg;
 	struct lv_names lv_names;
+	int r = 0;
 
 	/* rename is not allowed on sub LVs */
 	if (!lv_is_displayable(lv)) {
@@ -1773,23 +1774,21 @@ int lv_rename(struct cmd_context *cmd, struct logical_volume *lv,
 	if (!vg_write(vg))
 		return 0;
 
-	backup(vg);
-
 	if (!suspend_lv(cmd, lv)) {
-		stack;
 		vg_revert(vg);
-		return 0;
+		goto_out;
 	}
 
 	if (!vg_commit(vg)) {
-		stack;
 		resume_lv(cmd, lv);
-		return 0;
+		goto_out;
 	}
 
 	resume_lv(cmd, lv);
-
-	return 1;
+	r = 1;
+out:
+	backup(vg);
+	return r;
 }
 
 char *generate_lv_name(struct volume_group *vg, const char *format,
@@ -2051,13 +2050,10 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	/* store it on disks */
-	if (!vg_write(vg))
-		return 0;
+	if (!vg_write(vg) || !vg_commit(vg))
+		return_0;
 
 	backup(vg);
-
-	if (!vg_commit(vg))
-		return 0;
 
 	/* If no snapshots left, reload without -real. */
 	if (origin && !lv_is_origin(origin)) {

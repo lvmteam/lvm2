@@ -20,6 +20,7 @@ static int lvchange_permission(struct cmd_context *cmd,
 {
 	uint32_t lv_access;
 	struct lvinfo info;
+	int r = 0;
 
 	lv_access = arg_uint_value(cmd, permission_ARG, 0);
 
@@ -56,26 +57,27 @@ static int lvchange_permission(struct cmd_context *cmd,
 	if (!vg_write(lv->vg))
 		return_0;
 
-	backup(lv->vg);
-
 	if (!suspend_lv(cmd, lv)) {
 		log_error("Failed to lock %s", lv->name);
 		vg_revert(lv->vg);
-		return 0;
+		goto out;
 	}
 
 	if (!vg_commit(lv->vg)) {
 		resume_lv(cmd, lv);
-		return 0;
+		goto_out;
 	}
 
 	log_very_verbose("Updating permissions for \"%s\" in kernel", lv->name);
 	if (!resume_lv(cmd, lv)) {
 		log_error("Problem reactivating %s", lv->name);
-		return 0;
+		goto out;
 	}
 
-	return 1;
+	r = 1;	
+out:
+	backup(lv->vg);
+	return r;
 }
 
 static int lvchange_monitoring(struct cmd_context *cmd,
@@ -274,8 +276,6 @@ static int lvchange_resync(struct cmd_context *cmd,
 			return 0;
 		}
 
-		backup(lv->vg);
-
 		if (!vg_commit(lv->vg)) {
 			log_error("Failed to commit intermediate VG metadata.");
 			if (!attach_mirror_log(first_seg(lv), log_lv))
@@ -284,6 +284,8 @@ static int lvchange_resync(struct cmd_context *cmd,
 				stack;
 			return 0;
 		}
+
+		backup(lv->vg);
 
 		if (!activate_lv(cmd, log_lv)) {
 			log_error("Unable to activate %s for mirror log resync",
@@ -349,14 +351,11 @@ static int lvchange_alloc(struct cmd_context *cmd, struct logical_volume *lv)
 
 	log_very_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
 
-	if (!vg_write(lv->vg))
+	/* No need to suspend LV for this change */
+	if (!vg_write(lv->vg) || !vg_commit(lv->vg))
 		return_0;
 
 	backup(lv->vg);
-
-	/* No need to suspend LV for this change */
-	if (!vg_commit(lv->vg))
-		return_0;
 
 	return 1;
 }
@@ -366,6 +365,7 @@ static int lvchange_readahead(struct cmd_context *cmd,
 {
 	unsigned read_ahead = 0;
 	unsigned pagesize = (unsigned) lvm_getpagesize() >> SECTOR_SHIFT;
+	int r = 0;
 
 	read_ahead = arg_uint_value(cmd, readahead_ARG, 0);
 
@@ -401,26 +401,27 @@ static int lvchange_readahead(struct cmd_context *cmd,
 	if (!vg_write(lv->vg))
 		return_0;
 
-	backup(lv->vg);
-
 	if (!suspend_lv(cmd, lv)) {
 		log_error("Failed to lock %s", lv->name);
 		vg_revert(lv->vg);
-		return 0;
+		goto out;
 	}
 
 	if (!vg_commit(lv->vg)) {
 		resume_lv(cmd, lv);
-		return 0;
+		goto_out;
 	}
 
 	log_very_verbose("Updating permissions for \"%s\" in kernel", lv->name);
 	if (!resume_lv(cmd, lv)) {
 		log_error("Problem reactivating %s", lv->name);
-		return 0;
+		goto out;
 	}
 
-	return 1;
+	r = 1;
+out:
+	backup(lv->vg);
+	return r;
 }
 
 static int lvchange_persistent(struct cmd_context *cmd,
@@ -477,13 +478,10 @@ static int lvchange_persistent(struct cmd_context *cmd,
 	}
 
 	log_very_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
-	if (!vg_write(lv->vg))
+	if (!vg_write(lv->vg) || !vg_commit(lv->vg))
 		return_0;
 
 	backup(lv->vg);
-
-	if (!vg_commit(lv->vg))
-		return_0;
 
 	if (active) {
 		log_verbose("Re-activating logical volume \"%s\"", lv->name);
@@ -527,14 +525,12 @@ static int lvchange_tag(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	log_very_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
-	if (!vg_write(lv->vg))
+
+	/* No need to suspend LV for this change */
+	if (!vg_write(lv->vg) || !vg_commit(lv->vg))
 		return_0;
 
 	backup(lv->vg);
-
-	/* No need to suspend LV for this change */
-	if (!vg_commit(lv->vg))
-		return_0;
 
 	return 1;
 }

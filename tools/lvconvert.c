@@ -269,6 +269,8 @@ static int _finish_lvconvert_mirror(struct cmd_context *cmd,
 				    struct logical_volume *lv,
 				    struct dm_list *lvs_changed __attribute((unused)))
 {
+	int r = 0;
+
 	if (!collapse_mirrored_lv(lv)) {
 		log_error("Failed to remove temporary sync layer.");
 		return 0;
@@ -281,29 +283,29 @@ static int _finish_lvconvert_mirror(struct cmd_context *cmd,
 	if (!vg_write(vg))
 		return_0;
 
-	backup(vg);
-
 	if (!suspend_lv(cmd, lv)) {
 		log_error("Failed to lock %s", lv->name);
 		vg_revert(vg);
-		return 0;
+		goto out;
 	}
 
 	if (!vg_commit(vg)) {
 		resume_lv(cmd, lv);
-		return 0;
+		goto_out;
 	}
 
 	log_very_verbose("Updating \"%s\" in kernel", lv->name);
 
 	if (!resume_lv(cmd, lv)) {
 		log_error("Problem reactivating %s", lv->name);
-		return 0;
+		goto out;
 	}
 
+	r = 1;
 	log_print("Logical volume %s converted.", lv->name);
-
-	return 1;
+out:
+	backup(vg);
+	return r;
 }
 
 static struct poll_functions _lvconvert_mirror_fns = {
@@ -383,6 +385,7 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 	const char *mirrorlog;
 	unsigned corelog = 0;
 	struct logical_volume *original_lv;
+	int r = 0;
 
 	seg = first_seg(lv);
 	existing_mirrors = lv_mirror_count(lv);
@@ -589,30 +592,31 @@ commit_changes:
 	if (!vg_write(lv->vg))
 		return_0;
 
-	backup(lv->vg);
-
 	if (!suspend_lv(cmd, lv)) {
 		log_error("Failed to lock %s", lv->name);
 		vg_revert(lv->vg);
-		return 0;
+		goto out;
 	}
 
 	if (!vg_commit(lv->vg)) {
 		resume_lv(cmd, lv);
-		return 0;
+		goto_out;
 	}
 
 	log_very_verbose("Updating \"%s\" in kernel", lv->name);
 
 	if (!resume_lv(cmd, lv)) {
 		log_error("Problem reactivating %s", lv->name);
-		return 0;
+		goto out;
 	}
 
 	if (!lp->need_polling)
 		log_print("Logical volume %s converted.", lv->name);
 
-	return 1;
+	r = 1;
+out:
+	backup(lv->vg);
+	return r;
 }
 
 static int lvconvert_snapshot(struct cmd_context *cmd,
@@ -620,6 +624,7 @@ static int lvconvert_snapshot(struct cmd_context *cmd,
 			      struct lvconvert_params *lp)
 {
 	struct logical_volume *org;
+	int r = 0;
 
 	if (!(org = find_lv(lv->vg, lp->origin))) {
 		log_error("Couldn't find origin volume '%s'.", lp->origin);
@@ -664,25 +669,25 @@ static int lvconvert_snapshot(struct cmd_context *cmd,
 	if (!vg_write(lv->vg))
 		return_0;
 
-	backup(lv->vg);
-
 	if (!suspend_lv(cmd, org)) {
 		log_error("Failed to suspend origin %s", org->name);
 		vg_revert(lv->vg);
-		return 0;
+		goto out;
 	}
 
 	if (!vg_commit(lv->vg))
-		return_0;
+		goto_out;
 
 	if (!resume_lv(cmd, org)) {
 		log_error("Problem reactivating origin %s", org->name);
-		return 0;
+		goto out;
 	}
 
 	log_print("Logical volume %s converted to snapshot.", lv->name);
-
-	return 1;
+	r = 1;
+out:
+	backup(lv->vg);
+	return r;
 }
 
 static int lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,

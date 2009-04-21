@@ -626,8 +626,6 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 		return ECMD_FAILED;
 	}
 
-	backup(vg);
-
 	/* If snapshot, must suspend all associated devices */
 	if (lv_is_cow(lv))
 		lock_lv = origin_from_cow(lv);
@@ -637,19 +635,24 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 	if (!suspend_lv(cmd, lock_lv)) {
 		log_error("Failed to suspend %s", lp->lv_name);
 		vg_revert(vg);
+		backup(vg);
 		return ECMD_FAILED;
 	}
 
 	if (!vg_commit(vg)) {
 		stack;
 		resume_lv(cmd, lock_lv);
+		backup(vg);
 		return ECMD_FAILED;
 	}
 
 	if (!resume_lv(cmd, lock_lv)) {
 		log_error("Problem reactivating %s", lp->lv_name);
+		backup(vg);
 		return ECMD_FAILED;
 	}
+
+	backup(vg);
 
 	log_print("Logical volume %s successfully resized", lp->lv_name);
 
