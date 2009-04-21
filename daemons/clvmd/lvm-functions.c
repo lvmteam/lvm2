@@ -157,32 +157,79 @@ char *get_last_lvm_error()
 	return last_error;
 }
 
-/* Return the mode a lock is currently held at (or -1 if not held) */
-static int get_current_lock(char *resource)
+/*
+ * Hash lock info helpers
+ */
+static struct lv_info *lookup_info(const char *resource)
 {
 	struct lv_info *lvi;
 
 	pthread_mutex_lock(&lv_hash_lock);
 	lvi = dm_hash_lookup(lv_hash, resource);
 	pthread_mutex_unlock(&lv_hash_lock);
-	if (lvi) {
+
+	return lvi;
+}
+
+static void insert_info(const char *resource, struct lv_info *lvi)
+{
+	pthread_mutex_lock(&lv_hash_lock);
+	dm_hash_insert(lv_hash, resource, lvi);
+	pthread_mutex_unlock(&lv_hash_lock);
+}
+
+static void remove_info(const char *resource)
+{
+	pthread_mutex_lock(&lv_hash_lock);
+	dm_hash_remove(lv_hash, resource);
+	pthread_mutex_unlock(&lv_hash_lock);
+}
+
+/*
+ * Return the mode a lock is currently held at (or -1 if not held)
+ */
+static int get_current_lock(char *resource)
+{
+	struct lv_info *lvi;
+
+	if ((lvi = lookup_info(resource)))
 		return lvi->lock_mode;
-	} else {
-		return -1;
-	}
+
+	return -1;
+}
+
+
+void init_lvhash()
+{
+	/* Create hash table for keeping LV locks & status */
+	lv_hash = dm_hash_create(100);
+	pthread_mutex_init(&lv_hash_lock, NULL);
+	pthread_mutex_init(&lvm_lock, NULL);
 }
 
 /* Called at shutdown to tidy the lockspace */
-void unlock_all()
+void destroy_lvhash()
 {
 	struct dm_hash_node *v;
+	struct lv_info *lvi;
+	char *resource;
+	int status;
 
 	pthread_mutex_lock(&lv_hash_lock);
-	dm_hash_iterate(v, lv_hash) {
-		struct lv_info *lvi = dm_hash_get_data(lv_hash, v);
 
-		sync_unlock(dm_hash_get_key(lv_hash, v), lvi->lock_id);
+	dm_hash_iterate(v, lv_hash) {
+		lvi = dm_hash_get_data(lv_hash, v);
+		resource = dm_hash_get_key(lv_hash, v);
+
+		if ((status = sync_unlock(resource, lvi->lock_id)))
+			DEBUGLOG("unlock_all. unlock failed(%d): %s\n",
+				 status,  strerror(errno));
+		free(lvi);
 	}
+
+	dm_hash_destroy(lv_hash);
+	lv_hash = NULL;
+
 	pthread_mutex_unlock(&lv_hash_lock);
 }
 
@@ -195,10 +242,7 @@ int hold_lock(char *resource, int mode, int flags)
 
 	flags &= LKF_NOQUEUE;	/* Only LKF_NOQUEUE is valid here */
 
-	pthread_mutex_lock(&lv_hash_lock);
-	lvi = dm_hash_lookup(lv_hash, resource);
-	pthread_mutex_unlock(&lv_hash_lock);
-	if (lvi) {
+	if ((lvi = lookup_info(resource))) {
 		/* Already exists - convert it */
 		status =
 		    sync_lock(resource, mode, LKF_CONVERT | flags,
@@ -224,11 +268,9 @@ int hold_lock(char *resource, int mode, int flags)
 			free(lvi);
 			DEBUGLOG("hold_lock. lock at %d failed: %s\n", mode,
 				 strerror(errno));
-		} else {
-		        pthread_mutex_lock(&lv_hash_lock);
-			dm_hash_insert(lv_hash, resource, lvi);
-			pthread_mutex_unlock(&lv_hash_lock);
-		}
+		} else
+			insert_info(resource, lvi);
+
 		errno = saved_errno;
 	}
 	return status;
@@ -241,10 +283,7 @@ int hold_unlock(char *resource)
 	int status;
 	int saved_errno;
 
-	pthread_mutex_lock(&lv_hash_lock);
-	lvi = dm_hash_lookup(lv_hash, resource);
-	pthread_mutex_unlock(&lv_hash_lock);
-	if (!lvi) {
+	if (!(lvi = lookup_info(resource))) {
 		DEBUGLOG("hold_unlock, lock not already held\n");
 		return 0;
 	}
@@ -252,9 +291,7 @@ int hold_unlock(char *resource)
 	status = sync_unlock(resource, lvi->lock_id);
 	saved_errno = errno;
 	if (!status) {
-	    	pthread_mutex_lock(&lv_hash_lock);
-		dm_hash_remove(lv_hash, resource);
-		pthread_mutex_unlock(&lv_hash_lock);
+		remove_info(resource);
 		free(lvi);
 	} else {
 		DEBUGLOG("hold_unlock. unlock failed(%d): %s\n", status,
@@ -697,14 +734,6 @@ static void check_config()
 		return;
 	}
 	log_error("locking_type not set correctly in lvm.conf, cluster operations will not work.");
-}
-
-void init_lvhash()
-{
-	/* Create hash table for keeping LV locks & status */
-	lv_hash = dm_hash_create(100);
-	pthread_mutex_init(&lv_hash_lock, NULL);
-	pthread_mutex_init(&lvm_lock, NULL);
 }
 
 /* Backups up the LVM metadata if it's changed */

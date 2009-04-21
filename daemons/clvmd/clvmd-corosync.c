@@ -359,7 +359,7 @@ static int _init_cluster(void)
 static void _cluster_closedown(void)
 {
 	DEBUGLOG("cluster_closedown\n");
-	unlock_all();
+	destroy_lvhash();
 
 	dlm_release_lockspace(LOCKSPACE_NAME, lockspace, 1);
 	cpg_finalize(cpg_handle);
