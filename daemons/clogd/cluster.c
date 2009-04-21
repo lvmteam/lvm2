@@ -68,9 +68,14 @@ static SaCkptHandleT ckpt_handle = 0;
 static SaCkptCallbacksT callbacks = { 0, 0 };
 static SaVersionT version = { 'B', 1, 1 };
 
-#define DEBUGGING_HISTORY 50
+#define DEBUGGING_HISTORY 100
 static char debugging[DEBUGGING_HISTORY][128];
 static int idx = 0;
+#define LOG_SPRINT(f, arg...) do {\
+		idx++; \
+		idx = idx % DEBUGGING_HISTORY; \
+		sprintf(debugging[idx], f, ## arg); \
+	} while (0)
 
 static int log_resp_rec = 0;
 
@@ -213,9 +218,18 @@ static int handle_cluster_request(struct clog_cpg *entry,
 	 * a cluster action to co-ordinate reading
 	 * the disk and checkpointing
 	 */
-	if ((t->request_type != DM_CLOG_RESUME) ||
-	    (t->originator == my_cluster_id))
-		r = do_request(t, server);
+	if (t->request_type == DM_CLOG_RESUME) {
+		if (t->originator == my_cluster_id) {
+			r = do_request(t, server);
+
+			r = kernel_send(t);
+			if (r < 0)
+				LOG_ERROR("Failed to send resume response to kernel");
+		}
+		return r;
+	}
+
+	r = do_request(t, server);
 
 	if (server &&
 	    (t->request_type != DM_CLOG_CLEAR_REGION) &&
@@ -337,7 +351,7 @@ static struct checkpoint_data *prepare_checkpoint(struct clog_cpg *entry,
 	strncpy(new->uuid, entry->name.value, entry->name.length);
 
 	new->bitmap_size = push_state(entry->name.value, "clean_bits",
-				      &new->clean_bits);
+				      &new->clean_bits, cp_requester);
 	if (new->bitmap_size <= 0) {
 		LOG_ERROR("Failed to store clean_bits to checkpoint for node %u",
 			  new->requester);
@@ -346,7 +360,7 @@ static struct checkpoint_data *prepare_checkpoint(struct clog_cpg *entry,
 	}
 
 	new->bitmap_size = push_state(entry->name.value,
-				      "sync_bits", &new->sync_bits);
+				      "sync_bits", &new->sync_bits, cp_requester);
 	if (new->bitmap_size <= 0) {
 		LOG_ERROR("Failed to store sync_bits to checkpoint for node %u",
 			  new->requester);
@@ -355,7 +369,7 @@ static struct checkpoint_data *prepare_checkpoint(struct clog_cpg *entry,
 		return NULL;
 	}
 
-	r = push_state(entry->name.value, "recovering_region", &new->recovering_region);
+	r = push_state(entry->name.value, "recovering_region", &new->recovering_region, cp_requester);
 	if (r <= 0) {
 		LOG_ERROR("Failed to store recovering_region to checkpoint for node %u",
 			  new->requester);
@@ -541,6 +555,7 @@ rr_create_retry:
 	tfr->request_type = DM_CLOG_CHECKPOINT_READY;
 	tfr->originator = cp->requester;  /* FIXME: hack to overload meaning of originator */
 	strncpy(tfr->uuid, cp->uuid, CPG_MAX_NAME_LENGTH);
+	tfr->seq = my_cluster_id;
 
 	r = cluster_send(tfr);
 	if (r)
@@ -704,15 +719,11 @@ no_read:
 	return rtn;
 }
 
-static void do_checkpoints(struct clog_cpg *entry)
+static void do_checkpoints(struct clog_cpg *entry, int leaving)
 {
 	struct checkpoint_data *cp;
 
 	for (cp = entry->checkpoint_list; cp;) {
-		LOG_COND(log_checkpoint,
-			 "[%s] Checkpoint data available for node %u",
-			 SHORT_UUID(entry->name.value), cp->requester);
-
 		/*
 		 * FIXME: Check return code.  Could send failure
 		 * notice in tfr in export_checkpoint function
@@ -720,18 +731,34 @@ static void do_checkpoints(struct clog_cpg *entry)
 		 */
 		switch (export_checkpoint(cp)) {
 		case -EEXIST:
+			LOG_SPRINT("[%s] Checkpoint for %u already handled%s",
+				   SHORT_UUID(entry->name.value), cp->requester,
+				   (leaving) ? "(L)": "");
 			LOG_COND(log_checkpoint,
-				 "[%s] Checkpoint for %u already handled",
-				 SHORT_UUID(entry->name.value), cp->requester);
+				 "[%s] Checkpoint for %u already handled%s",
+				 SHORT_UUID(entry->name.value), cp->requester,
+				 (leaving) ? "(L)": "");
+			entry->checkpoint_list = cp->next;
+			free_checkpoint(cp);
+			cp = entry->checkpoint_list;
+			break;
 		case 0:
+			LOG_SPRINT("[%s] Checkpoint data available for node %u%s",
+				   SHORT_UUID(entry->name.value), cp->requester,
+				   (leaving) ? "(L)": "");
+			LOG_COND(log_checkpoint,
+				 "[%s] Checkpoint data available for node %u%s",
+				 SHORT_UUID(entry->name.value), cp->requester,
+				 (leaving) ? "(L)": "");
 			entry->checkpoint_list = cp->next;
 			free_checkpoint(cp);
 			cp = entry->checkpoint_list;
 			break;
 		default:
 			/* FIXME: Skipping will cause list corruption */
-			LOG_ERROR("[%s] Failed to export checkpoint for %u",
-				  SHORT_UUID(entry->name.value), cp->requester);
+			LOG_ERROR("[%s] Failed to export checkpoint for %u%s",
+				  SHORT_UUID(entry->name.value), cp->requester,
+				  (leaving) ? "(L)": "");
 		}
 	}
 }
@@ -763,8 +790,6 @@ static int resend_requests(struct clog_cpg *entry)
 		}
 
 		switch (tfr->request_type) {
-		case DM_CLOG_RESUME:
-			/* We are only concerned about this request locally */
 		case DM_CLOG_SET_REGION_SYNC:
 			/*
 			 * Some requests simply do not need to be resent.
@@ -776,11 +801,10 @@ static int resend_requests(struct clog_cpg *entry)
 				 "[%s] Skipping resend of %s/#%u...",
 				 SHORT_UUID(entry->name.value),
 				 _RQ_TYPE(tfr->request_type), tfr->seq);
-			idx++;
-			idx = idx % DEBUGGING_HISTORY;
-			sprintf(debugging[idx], "###  No resend: [%s] %s/%u ###",
-				SHORT_UUID(entry->name.value), _RQ_TYPE(tfr->request_type),
-				tfr->seq);
+			LOG_SPRINT("###  No resend: [%s] %s/%u ###",
+				   SHORT_UUID(entry->name.value),
+				   _RQ_TYPE(tfr->request_type), tfr->seq);
+
 			tfr->data_size = 0;
 			kernel_send(tfr);
 				
@@ -796,11 +820,9 @@ static int resend_requests(struct clog_cpg *entry)
 				 SHORT_UUID(entry->name.value),
 				 _RQ_TYPE(tfr->request_type),
 				 tfr->seq, entry->lowest_id);
-			idx++;
-			idx = idx % DEBUGGING_HISTORY;
-			sprintf(debugging[idx], "***  Resending: [%s] %s/%u ***",
-				SHORT_UUID(entry->name.value), _RQ_TYPE(tfr->request_type),
-				tfr->seq);
+			LOG_SPRINT("***  Resending: [%s] %s/%u ***",
+				   SHORT_UUID(entry->name.value),
+				   _RQ_TYPE(tfr->request_type),	tfr->seq);
 			r = cluster_send(tfr);
 			if (r < 0)
 				LOG_ERROR("Failed resend");
@@ -825,7 +847,7 @@ static int do_cluster_work(void *data)
 			free(entry);
 			continue;
 		}
-		do_checkpoints(entry);
+		do_checkpoints(entry, 0);
 
 		resend_requests(entry);
 	}
@@ -858,6 +880,8 @@ static int flush_startup_list(struct clog_cpg *entry)
 				free(tfr);
 				continue;
 			}
+			LOG_SPRINT("[%s] Checkpoint prepared for %u",
+				 SHORT_UUID(entry->name.value), tfr->originator);
 			LOG_COND(log_checkpoint, "[%s] Checkpoint prepared for %u",
 				 SHORT_UUID(entry->name.value), tfr->originator);
 			new->next = entry->checkpoint_list;
@@ -878,6 +902,7 @@ static int flush_startup_list(struct clog_cpg *entry)
 		}
 		free(tfr);
 	}
+
 	return 0;
 }
 
@@ -901,6 +926,7 @@ static void cpg_message_callback(cpg_handle_t handle, struct cpg_name *gname,
 
 	if ((nodeid == my_cluster_id) &&
 	    !(tfr->request_type & DM_CLOG_RESPONSE) &&
+	    (tfr->request_type != DM_CLOG_RESUME) &&
 	    (tfr->request_type != DM_CLOG_CLEAR_REGION) &&
 	    (tfr->request_type != DM_CLOG_CHECKPOINT_READY)) {
 		tmp_tfr = malloc(DM_CLOG_TFR_SIZE);
@@ -915,6 +941,7 @@ static void cpg_message_callback(cpg_handle_t handle, struct cpg_name *gname,
 			return;
 		}
 		memcpy(tmp_tfr, tfr, sizeof(*tfr) + tfr->data_size);
+		INIT_LIST_HEAD((struct list_head *)&tmp_tfr->private);
 		list_add_tail((struct list_head *)&tmp_tfr->private, &match->working_list);
 	}
 
@@ -952,6 +979,7 @@ static void cpg_message_callback(cpg_handle_t handle, struct cpg_name *gname,
 				LOG_COND(log_resend_requests, "[%s] %u is leaving, delay = %d",
 					 SHORT_UUID(tfr->uuid), nodeid, match->delay);
 			}
+			tfr->originator = nodeid; /* don't really need this, but nice for debug */
 			goto out;
 		}
 	}
@@ -969,44 +997,32 @@ static void cpg_message_callback(cpg_handle_t handle, struct cpg_name *gname,
 	if (tfr->request_type == DM_CLOG_CHECKPOINT_READY) {
 		if (my_cluster_id == tfr->originator) {
 			/* Redundant checkpoints ignored if match->valid */
+			LOG_SPRINT("[%s] CHECKPOINT_READY notification from %u",
+				   SHORT_UUID(tfr->uuid), nodeid);
 			if (import_checkpoint(match, (match->state != INVALID))) {
+				LOG_SPRINT("[%s] Failed to import checkpoint from %u",
+					   SHORT_UUID(tfr->uuid), nodeid);
 				LOG_ERROR("[%s] Failed to import checkpoint from %u",
 					  SHORT_UUID(tfr->uuid), nodeid);
+				kill(getpid(), SIGUSR1);
 				/* Could we retry? */
 				goto out;
 			} else if (match->state == INVALID) {
+				LOG_SPRINT("[%s] Checkpoint data received from %u.  Log is now valid",
+					   SHORT_UUID(match->name.value), nodeid);
 				LOG_COND(log_checkpoint,
 					 "[%s] Checkpoint data received from %u.  Log is now valid",
 					 SHORT_UUID(match->name.value), nodeid);
 				match->state = VALID;
 
 				flush_startup_list(match);
+			} else {
+				LOG_SPRINT("[%s] Redundant checkpoint from %u ignored.",
+					   SHORT_UUID(tfr->uuid), nodeid);
 			}
 		}
 		goto out;
 	}
-
-	/*
-	 * If the log is now valid, we can queue the checkpoints
-	 */
-	for (i = match->checkpoints_needed; i; ) {
-		struct checkpoint_data *new;
-
-		i--;
-		new = prepare_checkpoint(match, match->checkpoint_requesters[i]);
-		if (!new) {
-			/* FIXME: Need better error handling */
-			LOG_ERROR("[%s] Failed to prepare checkpoint for %u!!!",
-				  SHORT_UUID(tfr->uuid), match->checkpoint_requesters[i]);
-			break;
-		}
-		LOG_COND(log_checkpoint, "[%s] Checkpoint prepared for %u*",
-			 SHORT_UUID(tfr->uuid), match->checkpoint_requesters[i]);
-		match->checkpoints_needed--;
-
-		new->next = match->checkpoint_list;
-		match->checkpoint_list = new;
-	}		
 
 	if (tfr->request_type & DM_CLOG_RESPONSE) {
 		response = 1;
@@ -1033,6 +1049,7 @@ static void cpg_message_callback(cpg_handle_t handle, struct cpg_name *gname,
 
 			memcpy(tmp_tfr, tfr, sizeof(*tfr) + tfr->data_size);
 			tmp_tfr->error = match->lowest_id;
+			INIT_LIST_HEAD((struct list_head *)&tmp_tfr->private);
 			list_add_tail((struct list_head *)&tmp_tfr->private,
 				      &match->startup_list);
 			goto out;
@@ -1040,6 +1057,37 @@ static void cpg_message_callback(cpg_handle_t handle, struct cpg_name *gname,
 
 		r = handle_cluster_request(match, tfr, i_am_server);
 	}
+
+	/*
+	 * If the log is now valid, we can queue the checkpoints
+	 */
+	for (i = match->checkpoints_needed; i; ) {
+		struct checkpoint_data *new;
+
+		if (log_get_state(tfr) != LOG_RESUMED) {
+			LOG_DBG("[%s] Withholding checkpoints until log is valid (%s from %u)",
+				SHORT_UUID(tfr->uuid), _RQ_TYPE(tfr->request_type), nodeid);
+			break;
+		}
+
+		i--;
+		new = prepare_checkpoint(match, match->checkpoint_requesters[i]);
+		if (!new) {
+			/* FIXME: Need better error handling */
+			LOG_ERROR("[%s] Failed to prepare checkpoint for %u!!!",
+				  SHORT_UUID(tfr->uuid), match->checkpoint_requesters[i]);
+			break;
+		}
+		LOG_SPRINT("[%s] Checkpoint prepared for %u* (%s)",
+			   SHORT_UUID(tfr->uuid), match->checkpoint_requesters[i],
+			   (log_get_state(tfr) != LOG_RESUMED)? "LOG_RESUMED": "LOG_SUSPENDED");
+		LOG_COND(log_checkpoint, "[%s] Checkpoint prepared for %u*",
+			 SHORT_UUID(tfr->uuid), match->checkpoint_requesters[i]);
+		match->checkpoints_needed--;
+
+		new->next = match->checkpoint_list;
+		match->checkpoint_list = new;
+	}		
 
 out:
 	/* nothing happens after this point.  It is just for debugging */
@@ -1066,17 +1114,17 @@ out:
                }
        } else if (!(tfr->request_type & DM_CLOG_RESPONSE) ||
                   (tfr->originator == my_cluster_id)) {
-               int len;
-               idx++;
-               idx = idx % DEBUGGING_HISTORY;
-               len = sprintf(debugging[idx],
-                             "SEQ#=%u, UUID=%s, TYPE=%s, ORIG=%u, RESP=%s",
-                             tfr->seq,
-                             SHORT_UUID(tfr->uuid),
-                             _RQ_TYPE(tfr->request_type),
-                             tfr->originator, (response) ? "YES" : "NO");
-               if (response)
-                       sprintf(debugging[idx] + len, ", RSPR=%u", nodeid);
+		if (!response)
+			LOG_SPRINT("SEQ#=%u, UUID=%s, TYPE=%s, ORIG=%u, RESP=%s",
+				   tfr->seq, SHORT_UUID(tfr->uuid),
+				   _RQ_TYPE(tfr->request_type),
+				   tfr->originator, (response) ? "YES" : "NO");
+		else
+			LOG_SPRINT("SEQ#=%u, UUID=%s, TYPE=%s, ORIG=%u, RESP=%s, RSPR=%u",
+				   tfr->seq, SHORT_UUID(tfr->uuid),
+				   _RQ_TYPE(tfr->request_type),
+				   tfr->originator, (response) ? "YES" : "NO",
+				   nodeid);
 	}
 }
 
@@ -1089,6 +1137,7 @@ static void cpg_join_callback(struct clog_cpg *match,
 	int my_pid = getpid();
 	uint32_t lowest = match->lowest_id;
 	struct clog_tfr *tfr;
+	char dbuf[32];
 
 	/* Assign my_cluster_id */
 	if ((my_cluster_id == 0xDEAD) && (joined->pid == my_pid))
@@ -1104,8 +1153,12 @@ static void cpg_join_callback(struct clog_cpg *match,
 	if (joined->nodeid == my_cluster_id)
 		goto out;
 
-	LOG_COND(log_checkpoint, "[%s] Joining node, %u needs checkpoint",
-		 SHORT_UUID(match->name.value), joined->nodeid);
+	memset(dbuf, 0, sizeof(dbuf));
+	for (i = 0; i < (member_list_entries-1); i++)
+		sprintf(dbuf+strlen(dbuf), "%u-", member_list[i].nodeid);
+	sprintf(dbuf+strlen(dbuf), "(%u)", joined->nodeid);
+	LOG_COND(log_checkpoint, "[%s] Joining node, %u needs checkpoint [%s]",
+		 SHORT_UUID(match->name.value), joined->nodeid, dbuf);
 
 	/*
 	 * FIXME: remove checkpoint_requesters/checkpoints_needed, and use
@@ -1127,6 +1180,7 @@ static void cpg_join_callback(struct clog_cpg *match,
 	}
 	tfr->request_type = DM_CLOG_MEMBER_JOIN;
 	tfr->originator   = joined->nodeid;
+	INIT_LIST_HEAD((struct list_head *)&tfr->private);
 	list_add_tail((struct list_head *)&tfr->private, &match->startup_list);
 
 out:
@@ -1149,10 +1203,8 @@ out:
 		LOG_COND(log_membership_change, "[%s]  Server unchanged at %u (%u joined)",
 			 SHORT_UUID(match->name.value),
 			 lowest, joined->nodeid);
-	idx++;
-	idx = idx % DEBUGGING_HISTORY;
-	sprintf(debugging[idx], "+++  UUID=%s  %u join  +++",
-		SHORT_UUID(match->name.value), joined->nodeid);
+	LOG_SPRINT("+++  UUID=%s  %u join  +++",
+		   SHORT_UUID(match->name.value), joined->nodeid);
 }
 
 static void cpg_leave_callback(struct clog_cpg *match,
@@ -1160,17 +1212,14 @@ static void cpg_leave_callback(struct clog_cpg *match,
 			       struct cpg_address *member_list,
 			       int member_list_entries)
 {
-	int i, fd;
+	int i, j, fd;
 	struct list_head *p, *n;
 	uint32_t lowest = match->lowest_id;
 	struct clog_tfr *tfr;
+	struct checkpoint_data *p_cp, *c_cp;
 
-	{
-               idx++;
-               idx = idx % DEBUGGING_HISTORY;
-               sprintf(debugging[idx], "---  UUID=%s  %u left  ---",
-		       SHORT_UUID(match->name.value), left->nodeid);
-	}
+	LOG_SPRINT("---  UUID=%s  %u left  ---",
+		   SHORT_UUID(match->name.value), left->nodeid);
 
 	/* Am I leaving? */
 	if (my_cluster_id == left->nodeid) {
@@ -1197,6 +1246,42 @@ static void cpg_leave_callback(struct clog_cpg *match,
 		match->lowest_id = 0xDEAD;
 		match->state = INVALID;
 	}			
+
+	/* Remove any pending checkpoints for the leaving node. */
+	for (p_cp = NULL, c_cp = match->checkpoint_list;
+	     c_cp && (c_cp->requester != left->nodeid);
+	     p_cp = c_cp, c_cp = c_cp->next);
+	if (c_cp) {
+		if (p_cp)
+			p_cp->next = c_cp->next;
+		else
+			match->checkpoint_list = c_cp->next;
+
+		LOG_COND(log_checkpoint,
+			 "[%s] Removing pending checkpoint (%u is leaving)",
+			 SHORT_UUID(match->name.value), left->nodeid);
+		free_checkpoint(c_cp);
+	}
+	list_for_each_safe(p, n, &match->startup_list) {
+		tfr = (struct clog_tfr *)p;
+		if ((tfr->request_type == DM_CLOG_MEMBER_JOIN) &&
+		    (tfr->originator == left->nodeid)) {
+			LOG_COND(log_checkpoint,
+				 "[%s] Removing pending ckpt from startup list (%u is leaving)",
+				 SHORT_UUID(match->name.value), left->nodeid);
+			list_del_init(p);
+			free(tfr);
+		}
+	}
+	for (i = 0, j = 0; i < match->checkpoints_needed; i++, j++) {
+		match->checkpoint_requesters[j] = match->checkpoint_requesters[i];
+		if (match->checkpoint_requesters[i] == left->nodeid) {
+			LOG_ERROR("[%s] Removing pending ckpt from needed list (%u is leaving)",
+				  SHORT_UUID(match->name.value), left->nodeid);
+			j--;
+		}
+	}
+	match->checkpoints_needed = j;			
 
 	if (left->nodeid < my_cluster_id) {
 		match->delay = (match->delay > 0) ? match->delay - 1 : 0;
@@ -1379,9 +1464,7 @@ int create_cluster_cpg(char *str)
 	new->name.length = size;
 
 	/*
-	 * Look for checkpoints before joining to see if
-	 * someone wrote a checkpoint after I left a previous
-	 * session.
+	 * Ensure there are no stale checkpoints around before we join
 	 */
 	if (remove_checkpoint(new) == 1)
 		LOG_COND(log_checkpoint,
@@ -1437,6 +1520,7 @@ static void abort_startup(struct clog_cpg *del)
 static int _destroy_cluster_cpg(struct clog_cpg *del)
 {
 	int r;
+	int state;
 	
 	LOG_COND(log_resend_requests, "[%s] I am leaving.2.....",
 		 SHORT_UUID(del->name.value));
@@ -1445,13 +1529,27 @@ static int _destroy_cluster_cpg(struct clog_cpg *del)
 	 * We must send any left over checkpoints before
 	 * leaving.  If we don't, an incoming node could
 	 * be stuck with no checkpoint and stall.
+	do_checkpoints(del); --- THIS COULD BE CAUSING OUR PROBLEMS:
+
+	- Incoming node deletes old checkpoints before joining
+	- A stale checkpoint is issued here by leaving node
+	- (leaving node leaves)
+	- Incoming node joins cluster and finds stale checkpoint.
+	- (leaving node leaves - option 2)
 	 */
-	do_checkpoints(del);
+	do_checkpoints(del, 1);
+
+	state = del->state;
 
 	del->cpg_state = INVALID;
 	del->state = LEAVING;
 
-	if (!list_empty(&del->startup_list))
+	/*
+	 * If the state is VALID, we might be processing the
+	 * startup list.  If so, we certainly don't want to
+	 * clear the startup_list here by calling abort_startup
+	 */
+	if (!list_empty(&del->startup_list) && (state != VALID))
 		abort_startup(del);
 
 	r = cpg_leave(del->handle, &del->name);
@@ -1473,13 +1571,11 @@ int destroy_cluster_cpg(char *str)
 
 int init_cluster(void)
 {
+	int i;
 	SaAisErrorT rv;
 
-	{
-		int i;
-		for (i = 0; i < DEBUGGING_HISTORY; i++)
-			debugging[i][0] = '\0';
-	}
+	for (i = 0; i < DEBUGGING_HISTORY; i++)
+		debugging[i][0] = '\0';
 
 	INIT_LIST_HEAD(&clog_cpg_list);
 	rv = saCkptInitialize(&ckpt_handle, &callbacks, &version);
