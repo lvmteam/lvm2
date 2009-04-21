@@ -263,7 +263,7 @@ static void _add_up_node(const char *csid)
 
 static void _cluster_closedown()
 {
-	unlock_all();
+	destroy_lvhash();
 	dlm_release_lockspace(LOCKSPACE_NAME, lockspace, 1);
 	cman_finish(c_handle);
 }

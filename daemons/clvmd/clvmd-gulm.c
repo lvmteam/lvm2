@@ -248,7 +248,7 @@ static void _cluster_closedown(void)
 {
     DEBUGLOG("cluster_closedown\n");
     in_shutdown = 1;
-    unlock_all();
+    destroy_lvhash();
     lg_lock_logout(gulm_if);
     lg_core_logout(gulm_if);
     lg_release(gulm_if);

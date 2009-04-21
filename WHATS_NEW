@@ -1,5 +1,6 @@
 Version 2.02.46 - 
 ================================
+  Tidy clvmd volume lock cache functions.
   Fix pvs report for orphan PVs when segment attributes are requested.
   Fix pvs -a output to not read volume groups from non-PV devices.
   Add MMC (mmcblk) device type to filters.
