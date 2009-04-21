@@ -54,15 +54,20 @@ static int _segs_single(struct cmd_context *cmd __attribute((unused)),
 	return ECMD_PROCESSED;
 }
 
-static int _pvsegs_sub_single(struct cmd_context *cmd __attribute((unused)),
+static int _pvsegs_sub_single(struct cmd_context *cmd,
 			      struct volume_group *vg,
 			      struct pv_segment *pvseg, void *handle)
 {
 	int ret = ECMD_PROCESSED;
 	struct lv_segment *seg = pvseg->lvseg;
 
+	struct volume_group _free_vg = {
+		.cmd = cmd,
+		.name = (char *)"",
+	};
+
 	struct logical_volume _free_logical_volume = {
-		.vg = vg,
+		.vg = vg ?: &_free_vg,
 		.name = (char *) "",
 	        .snapshot = NULL,
 		.status = VISIBLE_LV,
@@ -88,6 +93,9 @@ static int _pvsegs_sub_single(struct cmd_context *cmd __attribute((unused)),
 
         _free_lv_segment.segtype = get_segtype_from_string(cmd, "free");
 	_free_lv_segment.len = pvseg->len;
+	dm_list_init(&_free_vg.pvs);
+	dm_list_init(&_free_vg.lvs);
+	dm_list_init(&_free_vg.tags);
 	dm_list_init(&_free_lv_segment.tags);
 	dm_list_init(&_free_lv_segment.origin_list);
 	dm_list_init(&_free_logical_volume.tags);
