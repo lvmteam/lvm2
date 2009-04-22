@@ -46,6 +46,7 @@ void backup_exit(struct cmd_context *cmd);
 
 void backup_enable(struct cmd_context *cmd, int flag);
 int backup(struct volume_group *vg);
+int backup_locally(struct volume_group *vg);
 int backup_remove(struct cmd_context *cmd, const char *vg_name);
 
 struct volume_group *backup_read_vg(struct cmd_context *cmd,
