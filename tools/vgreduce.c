@@ -556,11 +556,13 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 		}
 		backup(vg);
 
-		if (fixed)
+		if (fixed) {
 			log_print("Wrote out consistent volume group %s",
 				  vg_name);
+			ret = ECMD_PROCESSED;
+		} else
+			ret = ECMD_FAILED;
 
-		ret = ECMD_PROCESSED;
 	} else {
 		if (!vg_check_status(vg, EXPORTED_VG | LVM_WRITE | RESIZEABLE_VG))
 			goto out;
