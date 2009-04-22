@@ -159,7 +159,11 @@ int do_command(struct local_client *client, struct clvm_header *msg, int msglen,
 		break;
 
 	case CLVMD_CMD_VG_BACKUP:
-		lvm_do_backup(&args[2]);
+		/*
+		 * Do not run backup on local node, caller should do that.
+		 */
+		if (!client)
+			lvm_do_backup(&args[2]);
 		break;
 
 	default:

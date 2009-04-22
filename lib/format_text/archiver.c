@@ -20,6 +20,7 @@
 #include "lvm-string.h"
 #include "lvmcache.h"
 #include "toolcontext.h"
+#include "locking.h"
 
 #include <unistd.h>
 
@@ -202,7 +203,7 @@ static int __backup(struct volume_group *vg)
 	return backup_to_file(name, desc, vg);
 }
 
-int backup(struct volume_group *vg)
+int backup_locally(struct volume_group *vg)
 {
 	if (!vg->cmd->backup_params->enabled || !vg->cmd->backup_params->dir) {
 		log_warn("WARNING: This metadata update is NOT backed up");
@@ -229,6 +230,14 @@ int backup(struct volume_group *vg)
 	}
 
 	return 1;
+}
+
+int backup(struct volume_group *vg)
+{
+	if (vg_is_clustered(vg))
+		remote_backup_metadata(vg);
+
+	return backup_locally(vg);
 }
 
 int backup_remove(struct cmd_context *cmd, const char *vg_name)
@@ -426,5 +435,5 @@ void check_current_backup(struct volume_group *vg)
 		vg_release(vg_backup);
 	}
 	archive(vg);
-	backup(vg);
+	backup_locally(vg);
 }

@@ -1,5 +1,6 @@
 Version 2.02.46 - 
 ================================
+  Fix remote metadata backup for clvmd.
   Alloc PV internal structure from VG mempool if possible.
   Fix metadata backup to run after vg_commit always.
   Tidy clvmd volume lock cache functions.

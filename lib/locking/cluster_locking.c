@@ -385,6 +385,13 @@ int lock_resource(struct cmd_context *cmd, const char *resource, uint32_t flags)
 
 	switch (flags & LCK_SCOPE_MASK) {
 	case LCK_VG:
+		if (flags == LCK_VG_BACKUP) {
+			log_very_verbose("Requesting backup of VG metadata for %s",
+					 resource);
+			return _lock_for_cluster(CLVMD_CMD_VG_BACKUP,
+						 LCK_CLUSTER_VG, resource);
+		}
+
 		/* If the VG name is empty then lock the unused PVs */
 		if (*resource == '#' || (flags & LCK_CACHE))
 			dm_snprintf(lockname, sizeof(lockname), "P_%s",
@@ -434,14 +441,6 @@ int lock_resource(struct cmd_context *cmd, const char *resource, uint32_t flags)
 		log_error("Unrecognised lock type: %u",
 			  flags & LCK_TYPE_MASK);
 		return 0;
-	}
-
-	/* If we are unlocking a clustered VG, then trigger remote metadata backups */
-	if (clvmd_cmd == CLVMD_CMD_LOCK_VG &&
-	    ((flags & LCK_TYPE_MASK) == LCK_UNLOCK) &&
-	    (flags & LCK_CLUSTER_VG)) {
-		log_very_verbose("Requesing backup of VG metadata for %s", resource);
-		_lock_for_cluster(CLVMD_CMD_VG_BACKUP, LCK_CLUSTER_VG, resource);
 	}
 
 	log_very_verbose("Locking %s %s %s %s%s%s%s (0x%x)", lock_scope, lockname,
