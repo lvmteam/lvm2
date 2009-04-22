@@ -221,44 +221,44 @@ static const char *decode_cmd(unsigned char cmdl)
 	const char *command;
 
 	switch (cmdl) {
-	case CLVMD_CMD_TEST:		
-		command = "TEST";	
+	case CLVMD_CMD_TEST:
+		command = "TEST";
 		break;
-	case CLVMD_CMD_LOCK_VG:		
-		command = "LOCK_VG";	
+	case CLVMD_CMD_LOCK_VG:
+		command = "LOCK_VG";
 		break;
-	case CLVMD_CMD_LOCK_LV:		
-		command = "LOCK_LV";	
+	case CLVMD_CMD_LOCK_LV:
+		command = "LOCK_LV";
 		break;
-	case CLVMD_CMD_REFRESH:		
-		command = "REFRESH";	
+	case CLVMD_CMD_REFRESH:
+		command = "REFRESH";
 		break;
-	case CLVMD_CMD_SET_DEBUG:	
-		command = "SET_DEBUG";	
+	case CLVMD_CMD_SET_DEBUG:
+		command = "SET_DEBUG";
 		break;
-	case CLVMD_CMD_GET_CLUSTERNAME:	
+	case CLVMD_CMD_GET_CLUSTERNAME:
 		command = "GET_CLUSTERNAME";
 		break;
-	case CLVMD_CMD_VG_BACKUP:	
-		command = "VG_BACKUP";	
+	case CLVMD_CMD_VG_BACKUP:
+		command = "VG_BACKUP";
 		break;
-	case CLVMD_CMD_REPLY:		
-		command = "REPLY";	
+	case CLVMD_CMD_REPLY:
+		command = "REPLY";
 		break;
-	case CLVMD_CMD_VERSION:		
-		command = "VERSION";	
+	case CLVMD_CMD_VERSION:
+		command = "VERSION";
 		break;
-	case CLVMD_CMD_GOAWAY:		
-		command = "GOAWAY";	
+	case CLVMD_CMD_GOAWAY:
+		command = "GOAWAY";
 		break;
-	case CLVMD_CMD_LOCK:		
-		command = "LOCK";	
+	case CLVMD_CMD_LOCK:
+		command = "LOCK";
 		break;
-	case CLVMD_CMD_UNLOCK:		
-		command = "UNLOCK";	
+	case CLVMD_CMD_UNLOCK:
+		command = "UNLOCK";
 		break;
-	default:			
-		command = "unknown";    
+	default:
+		command = "unknown";
 		break;
 	}
 
