@@ -74,7 +74,7 @@ static int lvchange_permission(struct cmd_context *cmd,
 		goto out;
 	}
 
-	r = 1;	
+	r = 1;
 out:
 	backup(lv->vg);
 	return r;

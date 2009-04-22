@@ -1087,7 +1087,7 @@ static void cpg_message_callback(cpg_handle_t handle, struct cpg_name *gname,
 
 		new->next = match->checkpoint_list;
 		match->checkpoint_list = new;
-	}		
+	}
 
 out:
 	/* nothing happens after this point.  It is just for debugging */
@@ -1281,7 +1281,7 @@ static void cpg_leave_callback(struct clog_cpg *match,
 			j--;
 		}
 	}
-	match->checkpoints_needed = j;			
+	match->checkpoints_needed = j;
 
 	if (left->nodeid < my_cluster_id) {
 		match->delay = (match->delay > 0) ? match->delay - 1 : 0;
