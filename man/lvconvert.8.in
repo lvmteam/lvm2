@@ -29,7 +29,7 @@ It is also used to add and remove disk logs from mirror devices.
 .SH OPTIONS
 See \fBlvm\fP for common options.
 .br
-Exactly one of \-\-mirrors or \-\-snapshot arguments required.
+Exactly one of \-\-mirrors, \-\-repair or \-\-snapshot arguments required.
 .br
 .TP
 .I \-m, \-\-mirrors Mirrors
@@ -59,6 +59,12 @@ Run the daemon in the background.
 .TP
 .I \-i, \-\-interval Seconds
 Report progress as a percentage at regular intervals.
+.br
+.TP
+.I \-\-repair
+Repair a mirror that has suffered a disk failure. The mirror will be brought
+back into a consistent state, and if possible, the original number of
+mirrors will be restored.
 .br
 .TP
 .I \-s, \-\-snapshot

@@ -366,6 +366,60 @@ static int _insert_lvconvert_layer(struct cmd_context *cmd,
 	return 1;
 }
 
+static int _area_missing(struct lv_segment *lvseg, int s)
+{
+	if (seg_type(lvseg, s) == AREA_LV) {
+		if (seg_lv(lvseg, s)->status & PARTIAL_LV)
+			return 1;
+	} else if (seg_type(lvseg, s) == AREA_PV) {
+		if (seg_pv(lvseg, s)->status & MISSING_PV)
+			return 1;
+	}
+	return 0;
+}
+
+/* FIXME we want to handle mirror stacks here... */
+static int _count_failed_mirrors(struct logical_volume *lv)
+{
+	struct lv_segment *lvseg;
+	int ret = 0;
+	int s;
+	dm_list_iterate_items(lvseg, &lv->segments) {
+		if (!seg_is_mirrored(lvseg))
+			return -1;
+		for(s = 0; s < lvseg->area_count; ++s) {
+			if (_area_missing(lvseg, s))
+				++ ret;
+		}
+	}
+	return ret;
+}
+
+static struct dm_list *_failed_pv_list(struct volume_group *vg)
+{
+	struct dm_list *r;
+	struct pv_list *pvl, *new_pvl;
+
+	if (!(r = dm_pool_alloc(vg->vgmem, sizeof(*r)))) {
+		log_error("Allocation of list failed");
+		return_0;
+	}
+
+	dm_list_init(r);
+	dm_list_iterate_items(pvl, &vg->pvs) {
+		if (!(pvl->pv->status & MISSING_PV))
+			continue;
+
+		if (!(new_pvl = dm_pool_alloc(vg->vgmem, sizeof(*new_pvl)))) {
+			log_error("Unable to allocate physical volume list.");
+			return_0;
+		}
+		new_pvl->pv = pvl->pv;
+		dm_list_add(r, &new_pvl->list);
+	}
+	return r;
+}
+
 /* walk down the stacked mirror LV to the original mirror LV */
 static struct logical_volume *_original_lv(struct logical_volume *lv)
 {
@@ -386,15 +440,24 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 	unsigned corelog = 0;
 	struct logical_volume *original_lv;
 	int r = 0;
+	struct logical_volume *log_lv;
+	int failed_mirrors = 0, failed_log = 0;
+	struct dm_list *old_pvh, *remove_pvs = NULL;
 
 	seg = first_seg(lv);
 	existing_mirrors = lv_mirror_count(lv);
 
 	/* If called with no argument, try collapsing the resync layers */
 	if (!arg_count(cmd, mirrors_ARG) && !arg_count(cmd, mirrorlog_ARG) &&
-	    !arg_count(cmd, corelog_ARG) && !arg_count(cmd, regionsize_ARG)) {
+	    !arg_count(cmd, corelog_ARG) && !arg_count(cmd, regionsize_ARG) &&
+	    !arg_count(cmd, repair_ARG)) {
 		lp->need_polling = 1;
 		return 1;
+	}
+
+	if (arg_count(cmd, mirrors_ARG) && arg_count(cmd, repair_ARG)) {
+		log_error("You can only use one of -m, --repair.");
+		return 0;
 	}
 
 	/*
@@ -414,38 +477,59 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 	else
 		lp->mirrors += 1;
 
-	/*
-	 * Did the user try to subtract more legs than available?
-	 */
-	if (lp->mirrors < 1) {
-		log_error("Logical volume %s only has %" PRIu32 " mirrors.",
-			  lv->name, existing_mirrors);
-		return 0;
-	}
-
-	/*
-	 * Adjust log type
-	 */
-	if (arg_count(cmd, corelog_ARG))
-		corelog = 1;
-
-	mirrorlog = arg_str_value(cmd, mirrorlog_ARG,
-				  corelog ? "core" : DEFAULT_MIRRORLOG);
-	if (!strcmp("disk", mirrorlog)) {
-		if (corelog) {
-			log_error("--mirrorlog disk and --corelog "
-				  "are incompatible");
+	if (arg_count(cmd,repair_ARG)) {
+		cmd->handles_missing_pvs = 1;
+		cmd->partial_activation = 1;
+		lp->need_polling = 0;
+		if (!(lv->status & PARTIAL_LV)) {
+			log_error("The mirror is consistent, nothing to repair.");
 			return 0;
 		}
-		corelog = 0;
-	} else if (!strcmp("core", mirrorlog))
-		corelog = 1;
-	else {
-		log_error("Unknown mirrorlog type: %s", mirrorlog);
-		return 0;
-	}
+		if ((failed_mirrors = _count_failed_mirrors(lv)) < 0)
+			return_0;
+		lp->mirrors -= failed_mirrors;
+		log_error("Mirror status: %d/%d legs failed.",
+			  failed_mirrors, existing_mirrors);
+		old_pvh = lp->pvh;
+		if (!(lp->pvh = _failed_pv_list(lv->vg)))
+			return_0;
+		log_lv=first_seg(lv)->log_lv;
+		if (!log_lv || log_lv->status & PARTIAL_LV)
+			failed_log = corelog = 1;
+	} else {
+		/*
+		 * Did the user try to subtract more legs than available?
+		 */
+		if (lp->mirrors < 1) {
+			log_error("Logical volume %s only has %" PRIu32 " mirrors.",
+				  lv->name, existing_mirrors);
+			return 0;
+		}
+		
+		/*
+		 * Adjust log type
+		 */
+		if (arg_count(cmd, corelog_ARG))
+			corelog = 1;
+		
+		mirrorlog = arg_str_value(cmd, mirrorlog_ARG,
+					  corelog ? "core" : DEFAULT_MIRRORLOG);
+		if (!strcmp("disk", mirrorlog)) {
+			if (corelog) {
+				log_error("--mirrorlog disk and --corelog "
+					  "are incompatible");
+				return 0;
+			}
+			corelog = 0;
+		} else if (!strcmp("core", mirrorlog))
+			corelog = 1;
+		else {
+			log_error("Unknown mirrorlog type: %s", mirrorlog);
+			return 0;
+		}
 
-	log_verbose("Setting logging type to %s", mirrorlog);
+		log_verbose("Setting logging type to %s", mirrorlog);
+	}
 
 	/*
 	 * Region size must not change on existing mirrors
@@ -458,6 +542,18 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 	}
 
 	/*
+	 * FIXME This check used to precede mirror->mirror conversion
+	 * but didn't affect mirror->linear or linear->mirror. I do
+	 * not understand what is its intention, in fact.
+	 */
+	if (dm_list_size(&lv->segments) != 1) {
+		log_error("Logical volume %s has multiple "
+			  "mirror segments.", lv->name);
+		return 0;
+	}
+	
+ restart:
+	/*
 	 * Converting from mirror to linear
 	 */
 	if ((lp->mirrors == 1)) {
@@ -466,17 +562,24 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 				  lv->name);
 			return 1;
 		}
-
-		if (!lv_remove_mirrors(cmd, lv, existing_mirrors - 1, 1,
-				       lp->pv_count ? lp->pvh : NULL, 0))
-			return_0;
-		goto commit_changes;
 	}
 
 	/*
-	 * Converting from linear to mirror
+	 * Downconversion.
 	 */
-	if (!(lv->status & MIRRORED)) {
+	if (lp->mirrors < existing_mirrors) {
+		/* Reduce number of mirrors */
+		if (arg_count(cmd, repair_ARG) || lp->pv_count)
+			remove_pvs = lp->pvh;
+		if (!lv_remove_mirrors(cmd, lv, existing_mirrors - lp->mirrors,
+				       (corelog || lp->mirrors == 1) ? 1U : 0U,
+				       remove_pvs, 0))
+			return_0;
+	} else if (!(lv->status & MIRRORED)) {
+		/*
+		 * Converting from linear to mirror
+		 */
+	
 		/* FIXME Share code with lvcreate */
 
 		/* FIXME Why is this restriction here?  Fix it! */
@@ -487,6 +590,11 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 			}
 		}
 
+		/*
+		 * FIXME should we give not only lp->pvh, but also all PVs
+		 * currently taken by the mirror? Would make more sense from
+		 * user perspective.
+		 */
 		if (!lv_add_mirrors(cmd, lv, lp->mirrors - 1, 1,
 				    adjusted_mirror_region_size(
 						lv->vg->extent_size,
@@ -497,46 +605,7 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 			return_0;
 		if (lp->wait_completion)
 			lp->need_polling = 1;
-		goto commit_changes;
-	}
-
-	/*
-	 * Converting from mirror to mirror with different leg count,
-	 * or different log type.
-	 */
-	if (dm_list_size(&lv->segments) != 1) {
-		log_error("Logical volume %s has multiple "
-			  "mirror segments.", lv->name);
-		return 0;
-	}
-
-	if (lp->mirrors == existing_mirrors) {
-		/*
-		 * Convert Mirror log type
-		 */
-		original_lv = _original_lv(lv);
-		if (!first_seg(original_lv)->log_lv && !corelog) {
-			if (!add_mirror_log(cmd, original_lv, 1,
-					    adjusted_mirror_region_size(
-							lv->vg->extent_size,
-							lv->le_count,
-							lp->region_size),
-					    lp->pvh, lp->alloc))
-				return_0;
-		} else if (first_seg(original_lv)->log_lv && corelog) {
-			if (!remove_mirror_log(cmd, original_lv,
-					       lp->pv_count ? lp->pvh : NULL))
-				return_0;
-		} else {
-			/* No change */
-			log_error("Logical volume %s already has %"
-				  PRIu32 " mirror(s).", lv->name,
-				  lp->mirrors - 1);
-			if (lv->status & CONVERTING)
-				lp->need_polling = 1;
-			return 1;
-		}
-	} else if (lp->mirrors > existing_mirrors) {
+	} else if (lp->mirrors > existing_mirrors || failed_mirrors) {
 		if (lv->status & MIRROR_NOTSYNCED) {
 			log_error("Not adding mirror to mirrored LV "
 				  "without initial resync");
@@ -578,15 +647,36 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 			return_0;
 		lv->status |= CONVERTING;
 		lp->need_polling = 1;
-	} else {
-		/* Reduce number of mirrors */
-		if (!lv_remove_mirrors(cmd, lv, existing_mirrors - lp->mirrors,
-				       corelog ? 1U : 0U,
-				       lp->pv_count ? lp->pvh : NULL, 0))
-			return_0;
 	}
 
-commit_changes:
+	if (lp->mirrors == existing_mirrors) {
+		/*
+		 * Convert Mirror log type
+		 */
+		original_lv = _original_lv(lv);
+		if (!first_seg(original_lv)->log_lv && !corelog) {
+			if (!add_mirror_log(cmd, original_lv, 1,
+					    adjusted_mirror_region_size(
+							lv->vg->extent_size,
+							lv->le_count,
+							lp->region_size),
+					    lp->pvh, lp->alloc))
+				return_0;
+		} else if (first_seg(original_lv)->log_lv && corelog) {
+			if (!remove_mirror_log(cmd, original_lv,
+					       lp->pv_count ? lp->pvh : NULL))
+				return_0;
+		} else {
+			/* No change */
+			log_error("Logical volume %s already has %"
+				  PRIu32 " mirror(s).", lv->name,
+				  lp->mirrors - 1);
+			if (lv->status & CONVERTING)
+				lp->need_polling = 1;
+			return 1;
+		}
+	}
+
 	log_very_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
 
 	if (!vg_write(lv->vg))
@@ -608,6 +698,17 @@ commit_changes:
 	if (!resume_lv(cmd, lv)) {
 		log_error("Problem reactivating %s", lv->name);
 		goto out;
+	}
+
+	if (failed_log || failed_mirrors) {
+		lp->pvh = old_pvh;
+		if (failed_log)
+			failed_log = corelog = 0;
+		lp->mirrors += failed_mirrors;
+		failed_mirrors = 0;
+		existing_mirrors = lv_mirror_count(lv);
+		/* Now replace missing devices. */
+		goto restart;
 	}
 
 	if (!lp->need_polling)
