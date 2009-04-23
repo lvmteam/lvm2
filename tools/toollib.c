@@ -1047,6 +1047,11 @@ static int _create_pv_entry(struct dm_pool *mem, struct pv_list *pvl,
 		return 1;
 	}
 
+	if (allocatable_only && (pvl->pv->status & MISSING_PV)) {
+		log_error("Physical volume %s is missing", pvname);
+		return 1;
+	}
+
 	if (allocatable_only &&
 	    (pvl->pv->pe_count == pvl->pv->pe_alloc_count)) {
 		log_err("No free extents on physical volume \"%s\"", pvname);
