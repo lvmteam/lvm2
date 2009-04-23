@@ -440,7 +440,12 @@ static int _is_mirror_image_removable(struct logical_volume *mimage_lv,
 
 			pv_found = 0;
 			dm_list_iterate_items(pvl, removable_pvs) {
-				if (pv->dev->dev == pvl->pv->dev->dev) {
+				if (id_equal(&pv->id, &pvl->pv->id)) {
+					pv_found = 1;
+					break;
+				}
+				if (pvl->pv->dev && pv->dev &&
+				    pv->dev->dev == pvl->pv->dev->dev) {
 					pv_found = 1;
 					break;
 				}
