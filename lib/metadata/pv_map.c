@@ -129,6 +129,9 @@ static int _create_maps(struct dm_pool *mem, struct dm_list *pvs, struct dm_list
 	dm_list_iterate_items(pvl, pvs) {
 		if (!(pvl->pv->status & ALLOCATABLE_PV))
 			continue;
+		if (pvl->pv->status & MISSING_PV)
+			continue;
+		assert(pvl->pv->dev);
 
 		pvm = NULL;
 
