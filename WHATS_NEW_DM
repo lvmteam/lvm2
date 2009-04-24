@@ -1,5 +1,6 @@
 Version 1.02.32 - 
 ================================
+  Fix segfault when using -U, -G and -M options in dmsetup.
 
 Version 1.02.31 - 3rd March 2009
 ================================
