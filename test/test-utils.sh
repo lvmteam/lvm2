@@ -179,7 +179,7 @@ prepare_lvmconf() {
   devices {
     dir = "$G_dev_"
     scan = "$G_dev_"
-    filter = [ "a/dev\/mirror/", "a/dev\/mapper/", "r/.*/" ]
+    filter = [ "a/dev\/mirror/", "a/dev\/mapper\/.*pv[0-9_]*$/", "r/.*/" ]
     cache_dir = "$G_root_/etc"
     sysfs_scan = 0
   }
