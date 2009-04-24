@@ -522,6 +522,7 @@ struct volume_group *lvmcache_get_vg(const char *vgid, unsigned precommitted)
 	if (!(vg = import_vg_from_buffer(vginfo->vgmetadata, fid)) ||
 	    !vg_validate(vg)) {
 		_free_cached_vgmetadata(vginfo);
+		vg_release(vg);
 		return_NULL;
 	}
 
