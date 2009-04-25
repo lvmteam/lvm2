@@ -25,7 +25,9 @@ VolumeGroupName [PhysicalVolumePath...]
 {\-l|\-\-extents LogicalExtentsNumber[%{VG|FREE}] |
  \-L|\-\-size LogicalVolumeSize[kKmMgGtT]}
 [\-c|\-\-chunksize ChunkSize]
-\-s|\-\-snapshot \-n|\-\-name SnapshotLogicalVolumeName OriginalLogicalVolumePath
+\-n|\-\-name SnapshotLogicalVolumeName 
+\-s|\-\-snapshot
+[OriginalLogicalVolumePath | VolumeGroupName \-\-virtualoriginsize VirtualOriginSize]
 .SH DESCRIPTION
 lvcreate creates a new logical volume in a volume group ( see
 .B vgcreate(8), vgchange(8)
@@ -144,6 +146,19 @@ to grow it. Shrinking a snapshot is supported by
 as well. Run
 .B lvdisplay(8)
 on the snapshot in order to check how much data is allocated to it.
+Note that a small amount of the space you allocate to the snapshot is
+used to track the locations of the chunks of data, so you should 
+allocate slightly more space than you actually need and monitor the
+rate at which the snapshot data is growing so you can avoid running out
+of space.
+.TP
+.I \-\-virtualoriginsize VirtualOriginSize
+In conjunction with \-\-snapshot, create a sparse device of the given size
+(in MB by default).  Anything written to the device will be returned when
+reading from it.  Reading from other areas of the device will return
+blocks of zeros.  It is implemented by creating a hidden virtual device of the
+requested size using the zero target.  A suffix of _vorigin is used for
+this device.
 .TP
 .I \-Z, \-\-zero y|n
 Controls zeroing of the first KB of data in the new logical volume.
@@ -179,6 +194,11 @@ at snapshot logical volume creation time. If the original logical volume
 contains a file system, you can mount the snapshot logical volume on an
 arbitrary directory in order to access the contents of the filesystem to run
 a backup while the original filesystem continues to get updated.
+
+"lvcreate --virtualoriginsize 1T --size 100M --snapshot --name sparse vg1"
+.br
+creates a sparse device named /dev/vg1/sparse of size 1TB with space for just
+under 100MB of actual data on it.
 
 .SH SEE ALSO
 .BR lvm (8), 

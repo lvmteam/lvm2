@@ -471,20 +471,6 @@ static int _segtype_disp(struct dm_report *rh __attribute((unused)),
 	return 1;
 }
 
-static int _origin_disp(struct dm_report *rh, struct dm_pool *mem __attribute((unused)),
-			struct dm_report_field *field,
-			const void *data, void *private __attribute((unused)))
-{
-	const struct logical_volume *lv = (const struct logical_volume *) data;
-
-	if (lv_is_cow(lv))
-		return dm_report_field_string(rh, field,
-					      (const char **) &origin_from_cow(lv)->name);
-
-	dm_report_field_set_value(field, "", NULL);
-	return 1;
-}
-
 static int _loglv_disp(struct dm_report *rh, struct dm_pool *mem __attribute((unused)),
 		       struct dm_report_field *field,
 		       const void *data, void *private __attribute((unused)))
@@ -534,6 +520,19 @@ static int _lvname_disp(struct dm_report *rh, struct dm_pool *mem,
 
 	dm_report_field_set_value(field, repstr, lvname);
 
+	return 1;
+}
+
+static int _origin_disp(struct dm_report *rh, struct dm_pool *mem,
+			struct dm_report_field *field,
+			const void *data, void *private)
+{
+	const struct logical_volume *lv = (const struct logical_volume *) data;
+
+	if (lv_is_cow(lv))
+		return _lvname_disp(rh, mem, field, origin_from_cow(lv), private);
+
+	dm_report_field_set_value(field, "", NULL);
 	return 1;
 }
 
@@ -723,7 +722,24 @@ static int _chunksize_disp(struct dm_report *rh, struct dm_pool *mem,
 	if (lv_is_cow(seg->lv))
 		size = (uint64_t) find_cow(seg->lv)->chunk_size;
 	else
-		size = 0;
+		size = UINT64_C(0);
+
+	return _size64_disp(rh, mem, field, &size, private);
+}
+
+static int _originsize_disp(struct dm_report *rh, struct dm_pool *mem,
+			    struct dm_report_field *field,
+			    const void *data, void *private)
+{
+	const struct logical_volume *lv = (const struct logical_volume *) data;
+	uint64_t size;
+
+	if (lv_is_cow(lv))
+		size = (uint64_t) find_cow(lv)->len * lv->vg->extent_size;
+	else if (lv_is_origin(lv))
+		size = lv->size;
+	else
+		size = UINT64_C(0);
 
 	return _size64_disp(rh, mem, field, &size, private);
 }

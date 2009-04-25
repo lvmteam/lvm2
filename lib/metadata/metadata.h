@@ -81,6 +81,7 @@
 
 #define POSTORDER_FLAG		0x02000000U /* Not real flags, reserved for  */
 #define POSTORDER_OPEN_FLAG	0x04000000U /* temporary use inside vg_read_internal. */
+#define VIRTUAL_ORIGIN		0x08000000U	/* LV - internal use only */
 
 //#define LVM_READ              	0x00000100U	/* LV VG */
 //#define LVM_WRITE             	0x00000200U	/* LV VG */
