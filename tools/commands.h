@@ -163,13 +163,15 @@ xx(lvcreate,
    "\t[-t|--test]\n"
    "\t[-v|--verbose]\n"
    "\t[--version]\n"
-   "\tOriginalLogicalVolume[Path] [PhysicalVolumePath...]\n\n",
+   "\t[OriginalLogicalVolume[Path] |\n"
+   "\t VolumeGroupName[Path] --virtualoriginsize VirtualOriginSize]]\n"
+   "\t[PhysicalVolumePath...]\n\n",
 
    addtag_ARG, alloc_ARG, autobackup_ARG, chunksize_ARG, contiguous_ARG,
    corelog_ARG, extents_ARG, major_ARG, minor_ARG, mirrorlog_ARG, mirrors_ARG,
    name_ARG, nosync_ARG, permission_ARG, persistent_ARG, readahead_ARG,
    regionsize_ARG, size_ARG, snapshot_ARG, stripes_ARG, stripesize_ARG,
-   test_ARG, type_ARG, zero_ARG)
+   test_ARG, type_ARG, virtualoriginsize_ARG, zero_ARG)
 
 xx(lvdisplay,
    "Display information about a logical volume",

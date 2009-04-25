@@ -65,6 +65,7 @@ static struct flag _lv_flags[] = {
 	{CONVERTING, NULL, 0},
 	{PARTIAL_LV, NULL, 0},
 	{POSTORDER_FLAG, NULL, 0},
+	{VIRTUAL_ORIGIN, NULL, 0},
 	{0, NULL, 0}
 };
 

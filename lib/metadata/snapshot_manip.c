@@ -44,6 +44,12 @@ int lv_is_displayable(const struct logical_volume *lv)
 	return (lv->status & VISIBLE_LV) || lv_is_cow(lv) ? 1 : 0;
 }
 
+int lv_is_virtual_origin(const struct logical_volume *lv)
+{
+	return (lv->status & VIRTUAL_ORIGIN) ? 1 : 0;
+}
+
+
 /* Given a cow LV, return the snapshot lv_segment that uses it */
 struct lv_segment *find_cow(const struct logical_volume *lv)
 {
@@ -104,6 +110,10 @@ int vg_add_snapshot(const char *name, struct logical_volume *origin,
 	cow->snapshot = seg;
 
 	cow->status &= ~VISIBLE_LV;
+
+        /* FIXME Assumes an invisible origin belongs to a sparse device */
+        if (!lv_is_visible(origin))
+                origin->status |= VIRTUAL_ORIGIN;
 
 	dm_list_add(&origin->snapshot_segs, &seg->origin_list);
 

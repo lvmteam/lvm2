@@ -1,5 +1,8 @@
 Version 2.02.46 - 
 ================================
+  Add sparse devices: lvcreate -s --virtualoriginsize (hidden zero origin).
+  Add lvs origin_size field.
+  Fix linux configure --enable-debug to exclude -O2.
   Implement lvconvert --repair, for repairing partially failed mirrors.
   Fix vgreduce --removemissing failure exit code.
   Fix remote metadata backup for clvmd.

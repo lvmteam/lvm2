@@ -77,6 +77,7 @@ struct pv_segment;
 
 //#define POSTORDER_FLAG	0x02000000U /* Not real flags, reserved for
 //#define POSTORDER_OPEN_FLAG	0x04000000U    temporary use inside vg_read_internal. */
+//#define VIRTUAL_ORIGIN	0x08000000U	/* LV - internal use only */
 
 #define LVM_READ              	0x00000100U	/* LV VG */
 #define LVM_WRITE             	0x00000200U	/* LV VG */
@@ -531,6 +532,7 @@ struct lv_segment *first_seg(const struct logical_volume *lv);
 * Useful functions for managing snapshots.
 */
 int lv_is_origin(const struct logical_volume *lv);
+int lv_is_virtual_origin(const struct logical_volume *lv);
 int lv_is_cow(const struct logical_volume *lv);
 int lv_is_visible(const struct logical_volume *lv);
 

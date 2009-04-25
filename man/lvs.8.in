@@ -39,7 +39,7 @@ Comma-separated ordered list of columns.  Precede the list with '+' to append
 to the default selection of columns instead of replacing it.  Column names are: 
 lv_uuid, lv_name, lv_attr, lv_major, lv_minor, lv_kernel_major, lv_kernel_minor,
 lv_size, seg_count, origin, snap_percent,
-copy_percent, move_pv, lv_tags,
+copy_percent, move_pv, lv_tags, origin_size,
 segtype, stripes,
 stripesize, chunksize, seg_start, seg_size, seg_tags, devices,
 regionsize, mirror_log, modules.
