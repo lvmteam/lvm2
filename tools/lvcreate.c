@@ -725,7 +725,7 @@ static int _lvcreate(struct cmd_context *cmd, struct volume_group *vg,
 					  lp->origin);
 				return 0;
 			}
-			if (lv_is_virtual_origin(lv)) {
+			if (lv_is_virtual_origin(org)) {
 				log_error("Can't share virtual origins. "
 					  "Use --virtualoriginsize.");
 				return 0;
