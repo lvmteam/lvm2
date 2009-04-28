@@ -2595,7 +2595,7 @@ static vg_t *_vg_make_handle(struct cmd_context *cmd,
 	struct dm_pool *vgmem;
 
 	if (!vg) {
-		if (!(vgmem = dm_pool_create("lvm2 vg_handle", VG_MEMPOOL_CHUNK)) &&
+		if (!(vgmem = dm_pool_create("lvm2 vg_handle", VG_MEMPOOL_CHUNK)) ||
 		    !(vg = dm_pool_zalloc(vgmem, sizeof(*vg)))) {
 			log_error("Error allocating vg handle.");
 			if (vgmem)
