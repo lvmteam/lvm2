@@ -505,13 +505,13 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 				  lv->name, existing_mirrors);
 			return 0;
 		}
-		
+
 		/*
 		 * Adjust log type
 		 */
 		if (arg_count(cmd, corelog_ARG))
 			corelog = 1;
-		
+
 		mirrorlog = arg_str_value(cmd, mirrorlog_ARG,
 					  corelog ? "core" : DEFAULT_MIRRORLOG);
 		if (!strcmp("disk", mirrorlog)) {
@@ -551,7 +551,7 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 			  "mirror segments.", lv->name);
 		return 0;
 	}
-	
+
  restart:
 	/*
 	 * Converting from mirror to linear
@@ -579,7 +579,7 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 		/*
 		 * Converting from linear to mirror
 		 */
-	
+
 		/* FIXME Share code with lvcreate */
 
 		/* FIXME Why is this restriction here?  Fix it! */
