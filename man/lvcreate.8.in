@@ -147,7 +147,7 @@ as well. Run
 .B lvdisplay(8)
 on the snapshot in order to check how much data is allocated to it.
 Note that a small amount of the space you allocate to the snapshot is
-used to track the locations of the chunks of data, so you should 
+used to track the locations of the chunks of data, so you should
 allocate slightly more space than you actually need and monitor the
 rate at which the snapshot data is growing so you can avoid running out
 of space.

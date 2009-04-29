@@ -563,7 +563,7 @@ static struct logical_volume *_create_virtual_origin(struct cmd_context *cmd,
 	size_t len;
 	char *vorigin_name;
 	struct logical_volume *lv;
-	
+
 	if (!(segtype = get_segtype_from_string(cmd, "zero"))) {
 		log_error("Zero segment type for virtual origin not found");
 		return 0;
@@ -747,7 +747,7 @@ static int _lvcreate(struct cmd_context *cmd, struct volume_group *vg,
 					  "be mixed.");
 				return 0;
 			}
-	
+
 			if (!lv_info(cmd, org, &info, 0, 0)) {
 				log_error("Check for existence of snapshot "
 					  "origin '%s' failed.", org->name);
