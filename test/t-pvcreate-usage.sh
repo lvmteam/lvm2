@@ -94,6 +94,12 @@ check_pv_field_ $dev1 pe_start 512.00K
 pvcreate --metadatasize 100k --dataalignment 100k $dev1
 check_pv_field_ $dev1 pe_start 200.00K
 
+pvcreate --metadatasize 128k --dataalignment 3.5k $dev1
+check_pv_field_ $dev1 pe_start 133.00K
+
+pvcreate --metadatasize 128k --metadatacopies 2 --dataalignment 3.5k $dev1
+check_pv_field_ $dev1 pe_start 133.00K
+
 #COMM 'pv with LVM1 compatible data alignment can be convereted'
 #compatible == LVM1_PE_ALIGN == 64k
 pvcreate --dataalignment 256k $dev1
