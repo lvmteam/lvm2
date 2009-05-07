@@ -445,7 +445,7 @@ struct dev_manager *dev_manager_create(struct cmd_context *cmd,
 	if (!(mem = dm_pool_create("dev_manager", 16 * 1024)))
 		return_NULL;
 
-	if (!(dm = dm_pool_alloc(mem, sizeof(*dm))))
+	if (!(dm = dm_pool_zalloc(mem, sizeof(*dm))))
 		goto_bad;
 
 	dm->cmd = cmd;
