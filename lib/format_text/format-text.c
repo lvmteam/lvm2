@@ -1372,7 +1372,9 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 	dm_list_iterate_items(mda, &info->mdas) {
 		mdac = (struct mda_context *) mda->metadata_locn;
 		if (pv->dev == mdac->area.dev &&
-		    (mdac->area.start <= (pv->pe_start << SECTOR_SHIFT)) &&
+		    ((mdac->area.start <= (pv->pe_start << SECTOR_SHIFT)) ||
+		    (mdac->area.start <= lvm_getpagesize() &&
+		     pv->pe_start < (lvm_getpagesize() >> SECTOR_SHIFT))) &&
 		    (mdac->area.start + mdac->area.size >
 		     (pv->pe_start << SECTOR_SHIFT))) {
 			pv->pe_start = (mdac->area.start + mdac->area.size)
