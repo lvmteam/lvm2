@@ -29,6 +29,13 @@ not pvcreate --metadatasize -1024 $dev1
 pvcreate --metadatasize 0 $dev1
 pvremove $dev1
 
+#Verify vg_mda_size is smaller pv_mda_size
+pvcreate --metadatasize 512K $dev1
+pvcreate --metadatasize 96K $dev2
+vgcreate $vg $dev1 $dev2
+compare_two_fields_ vgs $vg vg_mda_size pvs $dev2 pv_mda_size
+vgremove -ff $vg
+
 # x. metadatasize too large
 # For some reason we allow this, even though there's no room for data?
 ##COMM  'pvcreate rejects metadatasize too large' 
