@@ -66,3 +66,16 @@ grep "^  Number of volumes may not exceed 255\$" err
 
 #COMM "vgcreate fails when the only pv has --metadatacopies 0"
 not vgcreate $vg $dev3
+
+# Test default (4MB) vg_extent_size as well as limits of extent_size
+not vgcreate --physicalextentsize 0K $vg $dev1 $dev2
+vgcreate $vg $dev1 $dev2
+check_vg_field_ $vg vg_extent_size 4.00M
+vgremove -ff $vg
+vgcreate --physicalextentsize 1K $vg $dev1 $dev2
+check_vg_field_ $vg vg_extent_size 1.00K
+vgremove -ff $vg
+not vgcreate --physicalextentsize 3K $vg $dev1 $dev2
+not vgcreate --physicalextentsize 1024T $vg $dev1 $dev2
+#not vgcreate --physicalextentsize 1T $vg $dev1 $dev2
+# FIXME: vgcreate allows physicalextentsize larger than pv size!
