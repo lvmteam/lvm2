@@ -67,3 +67,20 @@ not lvcreate -l1 -n $lv4 $vg
 vgs $vg
 lvremove -ff $vg
 vgchange -l 0 $vg
+
+# lvcreate rejects invalid chunksize, accepts between 4K and 512K
+# validate origin_size
+vgremove -ff $vg
+vgcreate -cn $vg $devs
+lvcreate -L 32M -n $lv1 $vg
+not lvcreate -L 8M -n $lv2 -s --chunksize 3K $vg/$lv1
+not lvcreate -L 8M -n $lv2 -s --chunksize 1024K $vg/$lv1
+lvcreate -L 8M -n $lv2 -s --chunksize 4K $vg/$lv1
+check_lv_field_ $vg/$lv2 chunk_size 4.00K
+check_lv_field_ $vg/$lv2 origin_size 32.00M
+lvcreate -L 8M -n $lv3 -s --chunksize 512K $vg/$lv1
+check_lv_field_ $vg/$lv3 chunk_size 512.00K
+check_lv_field_ $vg/$lv3 origin_size 32.00M
+lvremove -ff $vg
+vgchange -l 0 $vg
+
