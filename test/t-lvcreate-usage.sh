@@ -13,7 +13,7 @@
 
 . ./test-utils.sh
 
-aux prepare_pvs 2
+aux prepare_pvs 4
 aux pvcreate --metadatacopies 0 $dev1
 vgcreate -cn $vg $devs
 
@@ -48,10 +48,6 @@ lvremove -ff $vg
 not lvcreate -L 64M -n $lv -i129 $vg 2>err
 grep "^  Number of stripes (129) must be between 1 and 128\$" err
 
-# 'lvcreate rejects an invalid regionsize (bz186013)' 
-not lvcreate -L 64M -n $lv -R0 $vg 2>err
-grep "Non-zero region size must be supplied." err
-
 # The case on lvdisplay output is to verify that the LV was not created.
 # 'lvcreate rejects an invalid stripe size'
 not lvcreate -L 64M -n $lv -i2 --stripesize 3 $vg 2>err
@@ -83,4 +79,19 @@ check_lv_field_ $vg/$lv3 chunk_size 512.00K
 check_lv_field_ $vg/$lv3 origin_size 32.00M
 lvremove -ff $vg
 vgchange -l 0 $vg
+
+# regionsize must be
+# - nonzero (bz186013)
+# - a power of 2 and a multiple of page size
+# - <= size of LV
+not lvcreate -L 32M -n $lv -R0 $vg 2>err
+grep "Non-zero region size must be supplied." err
+not lvcreate -L 32M -n $lv -R 11k $vg
+not lvcreate -L 32M -n $lv -R 1k $vg
+lvcreate -L 32M -n $lv --regionsize 128M  -m 1 $vg
+check_lv_field_ $vg/$lv regionsize "32.00M"
+lvremove -ff $vg
+lvcreate -L 32M -n $lv --regionsize 4M -m 1 $vg
+check_lv_field_ $vg/$lv regionsize "4.00M"
+lvremove -ff $vg
 
