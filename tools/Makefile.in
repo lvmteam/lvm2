@@ -66,12 +66,15 @@ TARGETS =\
 	.commands \
 	lvm
 
+TARGETS_DM = dmsetup
+
 INSTALL_LVM_TARGETS = install_tools_dynamic
 INSTALL_DMSETUP_TARGETS = install_dmsetup_dynamic
 INSTALL_CMDLIB_TARGETS = install_cmdlib_dynamic
 
 ifeq ("@STATIC_LINK@", "yes")
-  TARGETS += lvm.static dmsetup.static
+  TARGETS += lvm.static
+  TARGETS_DM += dmsetup.static
   INSTALL_LVM_TARGETS += install_tools_static
   INSTALL_DMSETUP_TARGETS += install_dmsetup_static
   INSTALL_CMDLIB_TARGETS += install_cmdlib_static
@@ -82,7 +85,7 @@ LVMLIBS = -llvm-internal
 CLEAN_TARGETS = liblvm2cmd.$(LIB_SUFFIX) liblvm2cmd.a liblvm2cmd-static.a lvm lvm.o \
 		lvm2cmd.o lvm2cmd-static.o lvm2cmdlib.o lvm.static \
 		lvm.cflow lvm.xref lvm.tree lvm.rxref lvm.rtree \
-		lvmcmdlib.o lvm-static.o dmsetup.o dmsetup
+		lvmcmdlib.o lvm-static.o dmsetup.o $(TARGETS_DM)
 
 ifeq ("@CMDLIB@", "yes")
 	TARGETS += liblvm2cmd.$(LIB_SUFFIX)
@@ -99,7 +102,7 @@ DEFS += -DLVM_SHARED_PATH=\"$(exec_prefix)/sbin/lvm\"
 
 include $(top_srcdir)/make.tmpl
 
-device-mapper: dmsetup
+device-mapper: $(TARGETS_DM)
 
 dmsetup: dmsetup.o $(top_srcdir)/libdm/libdevmapper.$(LIB_SUFFIX)
 	$(CC) -o $@ dmsetup.o $(CFLAGS) $(LDFLAGS) \
