@@ -80,3 +80,22 @@ lvextend -l +100%PVS $vg/$lv $extend_pvs >out
 grep "^  Logical volume $lv successfully resized\$" out 
 check_lv_field_ $vg/$lv lv_size "72.00M"
 
+# Simple seg_count validation; initially create the LV with half the # of
+# extents (should be 1 lv segment), extend it (should go to 2 segments),
+# then reduce (should be back to 1)
+# FIXME: test other segment fields such as seg_size, pvseg_start, pvseg_size
+lvremove -f $vg/$lv
+pe_count=$(pvs -o pv_pe_count --noheadings $dev1)
+pe1=$(( $pe_count / 2 ))
+lvcreate -l $pe1 -n $lv $vg
+pesize=$(lvs -ovg_extent_size --units b --nosuffix --noheadings $vg/$lv)
+segsize=$(( $pe1 * $pesize / 1024 / 1024 ))M
+check_lv_field_ $vg/$lv seg_count 1
+check_lv_field_ $vg/$lv seg_start 0
+check_lv_field_ $vg/$lv seg_start_pe 0
+#check_lv_field_ $vg/$lv seg_size $segsize
+lvextend -l +$(( $pe_count * 1 )) $vg/$lv
+check_lv_field_ $vg/$lv seg_count 2
+lvreduce -f -l -$(( $pe_count * 1 )) $vg/$lv
+check_lv_field_ $vg/$lv seg_count 1
+
