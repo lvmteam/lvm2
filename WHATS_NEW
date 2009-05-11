@@ -1,5 +1,6 @@
 Version 2.02.46 - 
 ================================
+  Add make install_lvm2 as complement to device-mapper install.
   Reject missing PVs from allocation in toollib.
   Fix PV datalignment for values starting prior to MDA area. (2.02.45)
   Add sparse devices: lvcreate -s --virtualoriginsize (hidden zero origin).

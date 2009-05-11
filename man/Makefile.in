@@ -57,7 +57,7 @@ $(MAN5) $(MAN8) $(MAN8CLUSTER):	Makefile
 %: %.in
 	$(SED) -e "s/#VERSION#/$(LVM_VERSION)/" $< > $@
 
-install: install_device-mapper
+install_lvm2:
 	@echo "Installing $(MAN8) in $(MAN8DIR)"
 	@for f in $(MAN8); \
 	do \
@@ -87,3 +87,5 @@ install_device-mapper:
 	   $(RM) $(MAN8DIR)/$$f; \
 	   @INSTALL@ -D $(OWNER) $(GROUP) -m 444 $$f $(MAN8DIR)/$$f; \
 	done
+
+install: install_lvm2 install_device-mapper

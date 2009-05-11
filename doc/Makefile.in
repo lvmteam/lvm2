@@ -20,10 +20,11 @@ CONFDEST=lvm.conf
 
 include $(top_srcdir)/make.tmpl
 
-install:
+install_lvm2:
 	@if [ ! -e $(confdir)/$(CONFDEST) ]; then \
 		echo "Installing $(CONFSRC) as $(confdir)/$(CONFDEST)"; \
 		@INSTALL@ -D $(OWNER) $(GROUP) -m 644 $(CONFSRC) \
 			$(confdir)/$(CONFDEST); \
 	fi
 
+install: install_lvm2

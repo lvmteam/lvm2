@@ -126,7 +126,7 @@ OBJECTS = $(SOURCES:%.c=%.o)
 POTFILES = $(SOURCES:%.c=%.pot)
 
 .PHONY: all install install_cluster pofile distclean clean cflow device-mapper 
-.PHONY: install_device-mapper
+.PHONY: install_device-mapper install_lvm2
 .PHONY: $(SUBDIRS) $(SUBDIRS.install) $(SUBDIRS.clean) $(SUBDIRS.distclean)
 .PHONY: $(SUBDIRS.pofile) $(SUBDIRS.install_cluster) $(SUBDIRS.cflow)
 .PHONY: $(SUBDIRS.device-mapper) $(SUBDIRS.install-device-mapper)
@@ -135,6 +135,7 @@ SUBDIRS.device-mapper := $(SUBDIRS:=.device-mapper)
 SUBDIRS.install := $(SUBDIRS:=.install)
 SUBDIRS.install_cluster := $(SUBDIRS:=.install_cluster)
 SUBDIRS.install_device-mapper := $(SUBDIRS:=.install_device-mapper)
+SUBDIRS.install_lvm2 := $(SUBDIRS:=.install_lvm2)
 SUBDIRS.pofile := $(SUBDIRS:=.pofile)
 SUBDIRS.cflow := $(SUBDIRS:=.cflow)
 SUBDIRS.clean := $(SUBDIRS:=.clean)
@@ -147,6 +148,7 @@ all: $(SUBDIRS) $(TARGETS)
 install: all $(SUBDIRS.install)
 install_cluster: all $(SUBDIRS.install_cluster)
 install_device-mapper: $(SUBDIRS.install_device-mapper)
+install_lvm2: $(SUBDIRS.install_lvm2)
 
 $(SUBDIRS): $(SUBDIRS.device-mapper)
 	$(MAKE) -C $@
@@ -162,6 +164,9 @@ $(SUBDIRS.install_cluster): $(SUBDIRS)
 
 $(SUBDIRS.install_device-mapper): device-mapper
 	$(MAKE) -C $(@:.install_device-mapper=) install_device-mapper
+
+$(SUBDIRS.install_lvm2): $(SUBDIRS)
+	$(MAKE) -C $(@:.install_lvm2=) install_lvm2
 
 $(SUBDIRS.clean):
 	-$(MAKE) -C $(@:.clean=) clean
