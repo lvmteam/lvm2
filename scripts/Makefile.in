@@ -17,6 +17,8 @@ VPATH = @srcdir@
 
 include $(top_srcdir)/make.tmpl
 
+install_lvm2: install
+
 install:
 	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) lvm_dump.sh \
 		$(sbindir)/lvmdump

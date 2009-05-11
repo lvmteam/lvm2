@@ -45,5 +45,7 @@ install_cluster:
 
 install_device-mapper:
 
+install_lvm2:
+
 cflow:
 
