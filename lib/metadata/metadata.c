@@ -1108,12 +1108,12 @@ struct lv_segment *find_seg_by_le(const struct logical_volume *lv, uint32_t le)
 
 struct lv_segment *first_seg(const struct logical_volume *lv)
 {
-	struct lv_segment *seg = NULL;
+	struct lv_segment *seg;
 
 	dm_list_iterate_items(seg, &lv->segments)
-		break;
+		return seg;
 
-	return seg;
+	return NULL;
 }
 
 /* Find segment at a given physical extent in a PV */
