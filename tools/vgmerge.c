@@ -102,8 +102,6 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 	}
 
 	vg_to->lv_count += vg_from->lv_count;
-	vg_to->snapshot_count += vg_from->snapshot_count;
-
 	vg_to->extent_count += vg_from->extent_count;
 	vg_to->free_count += vg_from->free_count;
 

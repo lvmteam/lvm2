@@ -991,6 +991,18 @@ static int _lvsegcount_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _uint32_disp(rh, mem, field, &count, private);
 }
 
+static int _snapcount_disp(struct dm_report *rh, struct dm_pool *mem,
+			   struct dm_report_field *field,
+			   const void *data, void *private)
+{
+	const struct volume_group *vg = (const struct volume_group *) data;
+	uint32_t count;
+
+	count = snapshot_count(vg);
+
+	return _uint32_disp(rh, mem, field, &count, private);
+}
+
 static int _snpercent_disp(struct dm_report *rh __attribute((unused)), struct dm_pool *mem,
 			   struct dm_report_field *field,
 			   const void *data, void *private __attribute((unused)))

@@ -106,7 +106,6 @@ int vg_add_snapshot(const char *name, struct logical_volume *origin,
 	seg->lv->status |= SNAPSHOT;
 
 	origin->origin_count++;
-	origin->vg->snapshot_count++;
 	cow->snapshot = seg;
 
 	cow->status &= ~VISIBLE_LV;
@@ -133,7 +132,6 @@ int vg_remove_snapshot(struct logical_volume *cow)
 
 	cow->snapshot = NULL;
 
-	cow->vg->snapshot_count--;
 	cow->vg->lv_count++;
 	cow->status |= VISIBLE_LV;
 

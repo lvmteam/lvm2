@@ -574,8 +574,6 @@ struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name,
 	vg->lv_count = 0;
 	dm_list_init(&vg->lvs);
 
-	vg->snapshot_count = 0;
-
 	dm_list_init(&vg->tags);
 
 	if (!(vg->fid = cmd->fmt->ops->create_instance(cmd->fmt, vg_name,
@@ -1155,6 +1153,18 @@ unsigned displayable_lvs_in_vg(const struct volume_group *vg)
 	return lv_count;
 }
 
+unsigned snapshot_count(const struct volume_group *vg)
+{
+	struct lv_list *lvl;
+	unsigned lv_count = 0;
+
+	dm_list_iterate_items(lvl, &vg->lvs)
+		if (lv_is_cow(lvl->lv))
+			lv_count++;
+
+	return lv_count;
+}
+
 /*
  * Determine whether two vgs are compatible for merging.
  */
@@ -1445,11 +1455,11 @@ int vg_validate(struct volume_group *vg)
 	}
 
 	if ((lv_count = (uint32_t) dm_list_size(&vg->lvs)) !=
-	    vg->lv_count + 2 * vg->snapshot_count) {
+	    vg->lv_count + 2 * snapshot_count(vg)) {
 		log_error("Internal error: #internal LVs (%u) != #LVs (%"
 			  PRIu32 ") + 2 * #snapshots (%" PRIu32 ") in VG %s",
 			  dm_list_size(&vg->lvs), vg->lv_count,
-			  vg->snapshot_count, vg->name);
+			  snapshot_count(vg), vg->name);
 		r = 0;
 	}
 

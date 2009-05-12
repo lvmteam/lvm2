@@ -345,6 +345,11 @@ struct lv_segment *get_only_segment_using_this_lv(struct logical_volume *lv);
 unsigned displayable_lvs_in_vg(const struct volume_group *vg);
 
 /*
+ * Count snapshot LVs.
+ */
+unsigned snapshot_count(const struct volume_group *vg);
+
+/*
  * For internal metadata caching.
  */
 int export_vg_to_buffer(struct volume_group *vg, char **buf);

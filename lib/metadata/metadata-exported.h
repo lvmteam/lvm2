@@ -243,8 +243,7 @@ struct volume_group {
 	 * Snapshots consist of 2 instances of "struct logical_volume":
 	 * - cow (lv_name is visible to the user)
 	 * - snapshot (lv_name is 'snapshotN')
-	 * Neither of these instances is reflected in lv_count, but we
-	 * multiply the snapshot_count by 2.
+	 * Neither of these instances is reflected in lv_count.
 	 *
 	 * Mirrors consist of multiple instances of "struct logical_volume":
 	 * - one for the mirror log
@@ -253,7 +252,6 @@ struct volume_group {
 	 * all of the instances are reflected in lv_count.
 	 */
 	uint32_t lv_count;
-	uint32_t snapshot_count;
 	struct dm_list lvs;
 
 	struct dm_list tags;
