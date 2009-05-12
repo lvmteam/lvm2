@@ -1,5 +1,6 @@
 Version 2.02.46 - 
 ================================
+  Remove snapshot_count from VG and use function instead.
   Fix first_seg() call for empty segment list.
   Add make install_lvm2 as complement to device-mapper install.
   Reject missing PVs from allocation in toollib.
