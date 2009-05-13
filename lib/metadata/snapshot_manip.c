@@ -62,7 +62,31 @@ struct logical_volume *origin_from_cow(const struct logical_volume *lv)
 	return lv->snapshot->origin;
 }
 
-int vg_add_snapshot(const char *name, struct logical_volume *origin,
+void init_snapshot_seg(struct lv_segment *seg, struct logical_volume *origin,
+		       struct logical_volume *cow, uint32_t chunk_size)
+{
+	seg->chunk_size = chunk_size;
+	seg->origin = origin;
+	seg->cow = cow;
+
+	// FIXME: direct count manipulation to be removed later
+	cow->status &= ~VISIBLE_LV;
+	cow->vg->lv_count--;
+	cow->snapshot = seg;
+
+	origin->origin_count++;
+	origin->vg->lv_count--;
+
+	/* FIXME Assumes an invisible origin belongs to a sparse device */
+	if (!lv_is_visible(origin))
+		origin->status |= VIRTUAL_ORIGIN;
+
+	seg->lv->status |= (SNAPSHOT | VIRTUAL);
+
+	dm_list_add(&origin->snapshot_segs, &seg->origin_list);
+}
+
+int vg_add_snapshot(struct logical_volume *origin,
 		    struct logical_volume *cow, union lvid *lvid,
 		    uint32_t extent_count, uint32_t chunk_size)
 {
@@ -82,39 +106,18 @@ int vg_add_snapshot(const char *name, struct logical_volume *origin,
 		return 0;
 	}
 
-	/*
-	 * Set origin lv count in advance to prevent fail because
-	 * of temporary violation of LV limits.
-	 */
-	origin->vg->lv_count--;
-
-	if (!(snap = lv_create_empty(name ? name : "snapshot%d",
+	if (!(snap = lv_create_empty("snapshot%d",
 				     lvid, LVM_READ | LVM_WRITE | VISIBLE_LV,
-				     ALLOC_INHERIT, 1, origin->vg))) {
-		origin->vg->lv_count++;
+				     ALLOC_INHERIT, 1, origin->vg)))
 		return_0;
-	}
 
 	snap->le_count = extent_count;
 
 	if (!(seg = alloc_snapshot_seg(snap, 0, 0)))
 		return_0;
 
-	seg->chunk_size = chunk_size;
-	seg->origin = origin;
-	seg->cow = cow;
-	seg->lv->status |= SNAPSHOT;
-
-	origin->origin_count++;
-	cow->snapshot = seg;
-
-	cow->status &= ~VISIBLE_LV;
-
-        /* FIXME Assumes an invisible origin belongs to a sparse device */
-        if (!lv_is_visible(origin))
-                origin->status |= VIRTUAL_ORIGIN;
-
-	dm_list_add(&origin->snapshot_segs, &seg->origin_list);
+	origin->vg->lv_count++;
+	init_snapshot_seg(seg, origin, cow, chunk_size);
 
 	return 1;
 }
