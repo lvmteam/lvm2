@@ -1804,6 +1804,20 @@ char *generate_lv_name(struct volume_group *vg, const char *format,
 	return buffer;
 }
 
+int vg_max_lv_reached(struct volume_group *vg)
+{
+	if (!vg->max_lv)
+		return 0;
+
+	if (vg->max_lv > vg_visible_lvs(vg))
+		return 0;
+
+	log_verbose("Maximum number of logical volumes (%u) reached "
+		    "in volume group %s", vg->max_lv, vg->name);
+
+	return 1;
+}
+
 /*
  * Create a new empty LV.
  */
@@ -1817,11 +1831,8 @@ struct logical_volume *lv_create_empty(const char *name,
 	struct logical_volume *lv;
 	char dname[NAME_LEN];
 
-	if (vg->max_lv && (vg->max_lv == vg_visible_lvs(vg))) {
-		log_error("Maximum number of logical volumes (%u) reached "
-			  "in volume group %s", vg->max_lv, vg->name);
-		return NULL;
-	}
+	if (vg_max_lv_reached(vg))
+		stack;
 
 	if (strstr(name, "%d") &&
 	    !(name = generate_lv_name(vg, name, dname, sizeof(dname)))) {
@@ -1935,6 +1946,9 @@ struct dm_list *build_parallel_areas_from_lv(struct cmd_context *cmd,
 int link_lv_to_vg(struct volume_group *vg, struct logical_volume *lv)
 {
 	struct lv_list *lvl;
+
+	if (vg_max_lv_reached(vg))
+		stack;
 
 	if (!(lvl = dm_pool_zalloc(vg->vgmem, sizeof(*lvl))))
 		return_0;

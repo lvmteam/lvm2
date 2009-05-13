@@ -565,6 +565,11 @@ int vg_check_status(const struct volume_group *vg, uint32_t status);
 unsigned vg_visible_lvs(const struct volume_group *vg);
 
 /*
+ * Check if the VG reached maximal LVs count (if set)
+ */
+int vg_max_lv_reached(struct volume_group *vg);
+
+/*
 * Mirroring functions
 */
 struct lv_segment *find_mirror_seg(struct lv_segment *seg);
