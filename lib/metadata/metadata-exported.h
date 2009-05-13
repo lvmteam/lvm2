@@ -373,6 +373,8 @@ struct dm_list *get_pvs(struct cmd_context *cmd);
  */
 int link_lv_to_vg(struct volume_group *vg, struct logical_volume *lv);
 int unlink_lv_from_vg(struct logical_volume *lv);
+void lv_set_visible(struct logical_volume *lv);
+void lv_set_invisible(struct logical_volume *lv);
 
 /* Set full_scan to 1 to re-read every (filtered) device label */
 struct dm_list *get_vgnames(struct cmd_context *cmd, int full_scan);

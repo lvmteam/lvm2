@@ -76,7 +76,8 @@ void init_snapshot_seg(struct lv_segment *seg, struct logical_volume *origin,
 	seg->origin = origin;
 	seg->cow = cow;
 
-	cow->status &= ~VISIBLE_LV;
+	lv_set_invisible(cow);
+
 	cow->snapshot = seg;
 
 	origin->origin_count++;
@@ -137,7 +138,7 @@ int vg_remove_snapshot(struct logical_volume *cow)
 	}
 
 	cow->snapshot = NULL;
-	cow->status |= VISIBLE_LV;
+	lv_set_visible(cow);
 
 	return 1;
 }

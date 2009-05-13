@@ -647,7 +647,7 @@ static int _lvs_in_vg_activated(struct volume_group *vg, unsigned by_uuid_only)
 		return 0;
 
 	dm_list_iterate_items(lvl, &vg->lvs) {
-		if (lvl->lv->status & VISIBLE_LV)
+		if (lv_is_visible(lvl->lv))
 			count += (_lv_active(vg->cmd, lvl->lv, by_uuid_only) == 1);
 	}
 
@@ -996,7 +996,7 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s)
 		goto out;
 	}
 
-	if (info.open_count && (lv->status & VISIBLE_LV)) {
+	if (info.open_count && lv_is_visible(lv)) {
 		log_error("LV %s/%s in use: not deactivating", lv->vg->name,
 			  lv->name);
 		goto out;

@@ -260,7 +260,7 @@ static int _init_mirror_log(struct cmd_context *cmd,
 	}
 
 	/* Temporary make it visible for set_lv() */
-	log_lv->status |= VISIBLE_LV;
+	lv_set_visible(log_lv);
 
 	/* Temporary tag mirror log for activation */
 	dm_list_iterate_items(sl, tags)
@@ -303,7 +303,7 @@ static int _init_mirror_log(struct cmd_context *cmd,
 		return 0;
 	}
 
-	log_lv->status &= ~VISIBLE_LV;
+	lv_set_invisible(log_lv);
 
 	if (was_active && !activate_lv(cmd, log_lv))
 		return_0;
@@ -410,7 +410,7 @@ struct logical_volume *detach_mirror_log(struct lv_segment *mirrored_seg)
 
 	log_lv = mirrored_seg->log_lv;
 	mirrored_seg->log_lv = NULL;
-	log_lv->status |= VISIBLE_LV;
+	lv_set_visible(log_lv);
 	log_lv->status &= ~MIRROR_LOG;
 	remove_seg_from_segs_using_this_lv(log_lv, mirrored_seg);
 
@@ -536,7 +536,7 @@ static int _remove_mirror_images(struct logical_volume *lv,
 	dm_list_init(&tmp_orphan_lvs);
 	for (m = new_area_count; m < mirrored_seg->area_count; m++) {
 		seg_lv(mirrored_seg, m)->status &= ~MIRROR_IMAGE;
-		seg_lv(mirrored_seg, m)->status |= VISIBLE_LV;
+		lv_set_visible(seg_lv(mirrored_seg, m));
 		if (!(lvl = dm_pool_alloc(lv->vg->cmd->mem, sizeof(*lvl)))) {
 			log_error("lv_list alloc failed");
 			return 0;
@@ -554,7 +554,7 @@ static int _remove_mirror_images(struct logical_volume *lv,
 	if (new_area_count == 1 && !is_temporary_mirror_layer(lv)) {
 		lv1 = seg_lv(mirrored_seg, 0);
 		lv1->status &= ~MIRROR_IMAGE;
-		lv1->status |= VISIBLE_LV;
+		lv_set_visible(lv1);
 		detached_log_lv = detach_mirror_log(mirrored_seg);
 		if (!remove_layer_from_lv(lv, lv1))
 			return_0;
@@ -1340,7 +1340,7 @@ int attach_mirror_log(struct lv_segment *seg, struct logical_volume *log_lv)
 {
 	seg->log_lv = log_lv;
 	log_lv->status |= MIRROR_LOG;
-	log_lv->status &= ~VISIBLE_LV;
+	lv_set_invisible(log_lv);
 	return add_seg_to_segs_using_this_lv(log_lv, seg);
 }
 
