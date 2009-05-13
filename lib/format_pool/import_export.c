@@ -49,7 +49,6 @@ int import_pool_vg(struct volume_group *vg, struct dm_pool *mem, struct dm_list 
 		vg->max_lv = 1;
 		vg->max_pv = POOL_MAX_DEVICES;
 		vg->alloc = ALLOC_NORMAL;
-		vg->lv_count = 0;
 	}
 
 	return 1;
@@ -117,7 +116,6 @@ int import_pool_lvs(struct volume_group *vg, struct dm_pool *mem, struct dm_list
 	lv->le_count = lv->size / POOL_PE_SIZE;
 	lvl->lv = lv;
 	dm_list_add(&vg->lvs, &lvl->list);
-	vg->lv_count++;
 
 	return 1;
 }

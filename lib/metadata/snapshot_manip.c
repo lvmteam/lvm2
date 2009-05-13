@@ -69,13 +69,10 @@ void init_snapshot_seg(struct lv_segment *seg, struct logical_volume *origin,
 	seg->origin = origin;
 	seg->cow = cow;
 
-	// FIXME: direct count manipulation to be removed later
 	cow->status &= ~VISIBLE_LV;
-	cow->vg->lv_count--;
 	cow->snapshot = seg;
 
 	origin->origin_count++;
-	origin->vg->lv_count--;
 
 	/* FIXME Assumes an invisible origin belongs to a sparse device */
 	if (!lv_is_visible(origin))
@@ -116,7 +113,6 @@ int vg_add_snapshot(struct logical_volume *origin,
 	if (!(seg = alloc_snapshot_seg(snap, 0, 0)))
 		return_0;
 
-	origin->vg->lv_count++;
 	init_snapshot_seg(seg, origin, cow, chunk_size);
 
 	return 1;
@@ -134,8 +130,6 @@ int vg_remove_snapshot(struct logical_volume *cow)
 	}
 
 	cow->snapshot = NULL;
-
-	cow->vg->lv_count++;
 	cow->status |= VISIBLE_LV;
 
 	return 1;

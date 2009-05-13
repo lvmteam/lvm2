@@ -282,7 +282,7 @@ int export_vg(struct vg_disk *vgd, struct volume_group *vg)
 		vgd->vg_status |= VG_EXTENDABLE;
 
 	vgd->lv_max = vg->max_lv;
-	vgd->lv_cur = vg->lv_count + snapshot_count(vg);
+	vgd->lv_cur = volumes_count(vg) + snapshot_count(vg);
 
 	vgd->pv_max = vg->max_pv;
 	vgd->pv_cur = vg->pv_count;
@@ -469,7 +469,6 @@ static struct logical_volume *_add_lv(struct dm_pool *mem,
 		return_NULL;
 
 	dm_list_add(&vg->lvs, &ll->list);
-	vg->lv_count++;
 
 	return lv;
 }

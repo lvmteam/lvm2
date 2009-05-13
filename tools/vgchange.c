@@ -308,9 +308,9 @@ static int _vgchange_logicalvolume(struct cmd_context *cmd,
 		}
 	}
 
-	if (max_lv && max_lv < vg->lv_count) {
+	if (max_lv && max_lv < volumes_count(vg)) {
 		log_error("MaxLogicalVolume is less than the current number "
-			  "%d of LVs for \"%s\"", vg->lv_count,
+			  "%d of LVs for %s", volumes_count(vg),
 			  vg->name);
 		return ECMD_FAILED;
 	}

@@ -106,12 +106,8 @@ static int _move_one_lv(struct volume_group *vg_from,
 		return 0;
 	}
 
-	if (!(lv->status & SNAPSHOT) && !lv_is_cow(lv)) {
-		vg_from->lv_count--;
-		vg_to->lv_count++;
-	}
 	return 1;
-}	
+}
 
 static int _move_lvs(struct volume_group *vg_from, struct volume_group *vg_to)
 {
