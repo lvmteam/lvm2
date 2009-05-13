@@ -294,10 +294,9 @@ int export_vg(struct vg_disk *vgd, struct volume_group *vg)
 	return 1;
 }
 
-int import_lv(struct dm_pool *mem, struct logical_volume *lv, struct lv_disk *lvd)
+int import_lv(struct cmd_context *cmd, struct dm_pool *mem,
+	      struct logical_volume *lv, struct lv_disk *lvd)
 {
-	lvid_from_lvnum(&lv->lvid, &lv->vg->id, lvd->lv_number);
-
 	if (!(lv->name = _create_lv_name(mem, (char *)lvd->lv_name)))
 		return_0;
 
@@ -331,7 +330,7 @@ int import_lv(struct dm_pool *mem, struct logical_volume *lv, struct lv_disk *lv
 		lv->alloc = ALLOC_NORMAL;
 
 	if (!lvd->lv_read_ahead)
-		lv->read_ahead = lv->vg->cmd->default_settings.read_ahead;
+		lv->read_ahead = cmd->default_settings.read_ahead;
 	else
 		lv->read_ahead = lvd->lv_read_ahead;
 
@@ -465,8 +464,12 @@ static struct logical_volume *_add_lv(struct dm_pool *mem,
 	lv = ll->lv;
 	lv->vg = vg;
 
-	if (!import_lv(mem, lv, lvd))
+	lvid_from_lvnum(&lv->lvid, &vg->id, lvd->lv_number);
+
+	if (!import_lv(vg->cmd, mem, lv, lvd)) {
+		dm_pool_free(mem, ll);
 		return_NULL;
+	}
 
 	dm_list_add(&vg->lvs, &ll->list);
 
