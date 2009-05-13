@@ -30,8 +30,15 @@ int lv_is_cow(const struct logical_volume *lv)
 
 int lv_is_visible(const struct logical_volume *lv)
 {
-	if (lv_is_cow(lv))
-		return lv_is_visible(find_cow(lv)->lv);
+	if (lv->status & SNAPSHOT)
+		return 0;
+
+	if (lv_is_cow(lv)) {
+		if (lv_is_virtual_origin(origin_from_cow(lv)))
+			return 1;
+
+		return lv_is_visible(origin_from_cow(lv));
+	}
 
 	return lv->status & VISIBLE_LV ? 1 : 0;
 }
