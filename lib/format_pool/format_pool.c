@@ -119,7 +119,6 @@ static struct volume_group *_build_vg_from_pds(struct format_instance
 	vg->status = 0;
 	vg->extent_count = 0;
 	vg->pv_count = 0;
-	vg->lv_count = 0;
 	vg->seqno = 1;
 	vg->system_id = NULL;
 	dm_list_init(&vg->pvs);

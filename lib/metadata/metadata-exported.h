@@ -251,7 +251,6 @@ struct volume_group {
 	 * - one for the user-visible mirror LV
 	 * all of the instances are reflected in lv_count.
 	 */
-	uint32_t lv_count;
 	struct dm_list lvs;
 
 	struct dm_list tags;
@@ -555,6 +554,8 @@ int vg_add_snapshot(struct logical_volume *origin, struct logical_volume *cow,
 int vg_remove_snapshot(struct logical_volume *cow);
 
 int vg_check_status(const struct volume_group *vg, uint32_t status);
+
+unsigned volumes_count(const struct volume_group *vg);
 
 /*
 * Mirroring functions

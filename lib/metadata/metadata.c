@@ -571,7 +571,6 @@ struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name,
 	vg->pv_count = 0;
 	dm_list_init(&vg->pvs);
 
-	vg->lv_count = 0;
 	dm_list_init(&vg->lvs);
 
 	dm_list_init(&vg->tags);
@@ -1165,6 +1164,22 @@ unsigned snapshot_count(const struct volume_group *vg)
 	return num_snapshots;
 }
 
+unsigned volumes_count(const struct volume_group *vg)
+{
+	struct lv_list *lvl;
+	unsigned lv_count = 0;
+
+	dm_list_iterate_items(lvl, &vg->lvs) {
+		if (lv_is_cow(lvl->lv))
+			continue;
+		if (lvl->lv->status & SNAPSHOT)
+			continue;
+		lv_count++;
+	}
+
+	return lv_count;
+}
+
 /*
  * Determine whether two vgs are compatible for merging.
  */
@@ -1199,7 +1214,7 @@ int vgs_are_compatible(struct cmd_context *cmd __attribute((unused)),
 	}
 
 	if (vg_to->max_lv &&
-	    (vg_to->max_lv < vg_to->lv_count + vg_from->lv_count)) {
+	    (vg_to->max_lv < volumes_count(vg_to) + volumes_count(vg_from))) {
 		log_error("Maximum number of logical volumes (%d) exceeded "
 			  " for \"%s\" and \"%s\"", vg_to->max_lv, vg_to->name,
 			  vg_from->name);
@@ -1455,10 +1470,10 @@ int vg_validate(struct volume_group *vg)
 	}
 
 	if ((lv_count = (uint32_t) dm_list_size(&vg->lvs)) !=
-	    vg->lv_count + 2 * snapshot_count(vg)) {
+	    volumes_count(vg) + 2 * snapshot_count(vg)) {
 		log_error("Internal error: #internal LVs (%u) != #LVs (%"
 			  PRIu32 ") + 2 * #snapshots (%" PRIu32 ") in VG %s",
-			  dm_list_size(&vg->lvs), vg->lv_count,
+			  dm_list_size(&vg->lvs), volumes_count(vg),
 			  snapshot_count(vg), vg->name);
 		r = 0;
 	}
@@ -1502,10 +1517,10 @@ int vg_validate(struct volume_group *vg)
 		r = 0;
 	}
 
-	if (vg->max_lv && (vg->max_lv < vg->lv_count)) {
+	if (vg->max_lv && (vg->max_lv < volumes_count(vg))) {
 		log_error("Internal error: Volume group %s contains %u volumes"
 			  " but the limit is set to %u.",
-			  vg->name, vg->lv_count, vg->max_lv);
+			  vg->name, volumes_count(vg), vg->max_lv);
 		r = 0;
 	}
 

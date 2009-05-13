@@ -438,9 +438,6 @@ static int _lv_reduce(struct logical_volume *lv, uint32_t extents, int delete)
 			return_0;
 
 		dm_list_del(&lvl->list);
-
-		if (!(lv->status & SNAPSHOT))
-			lv->vg->lv_count--;
 	} else if (lv->vg->fid->fmt->ops->lv_setup &&
 		   !lv->vg->fid->fmt->ops->lv_setup(lv->vg->fid, lv))
 		return_0;
@@ -1827,7 +1824,7 @@ struct logical_volume *lv_create_empty(const char *name,
 	struct logical_volume *lv;
 	char dname[NAME_LEN];
 
-	if (vg->max_lv && (vg->max_lv == vg->lv_count)) {
+	if (vg->max_lv && (vg->max_lv == volumes_count(vg))) {
 		log_error("Maximum number of logical volumes (%u) reached "
 			  "in volume group %s", vg->max_lv, vg->name);
 		return NULL;
@@ -1882,9 +1879,6 @@ struct logical_volume *lv_create_empty(const char *name,
 			dm_pool_free(cmd->mem, ll);
 		return_NULL;
 	}
-
-	if (!import)
-		vg->lv_count++;
 
 	dm_list_add(&vg->lvs, &ll->list);
 

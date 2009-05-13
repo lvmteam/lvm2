@@ -562,7 +562,6 @@ static int _read_lvnames(struct format_instance *fid __attribute((unused)),
 	}
 
 	lv->vg = vg;
-	vg->lv_count++;
 	dm_list_add(&vg->lvs, &lvl->list);
 
 	return 1;

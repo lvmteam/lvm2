@@ -1,5 +1,6 @@
 Version 2.02.46 - 
 ================================
+  Remove lv_count from VG and use counter function instead.
   Fix snapshot segment import to not use duplicate segments & replace.
   Do not query nonexistent devices for readahead.
   Remove NON_BLOCKING lock flag from tools and set a policy to auto-set.
