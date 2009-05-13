@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2009 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -35,7 +35,7 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 
 	log_verbose("Checking for volume group \"%s\"", vg_name_from);
 	if (!(vg_from = vg_lock_and_read(cmd, vg_name_from, NULL,
-					 LCK_VG_WRITE | LCK_NONBLOCK,
+					 LCK_VG_WRITE,
 					 CLUSTERED | EXPORTED_VG | LVM_WRITE,
 					 CORRECT_INCONSISTENT | FAIL_INCONSISTENT))) {
 		unlock_release_vg(cmd, vg_to, vg_name_to);
