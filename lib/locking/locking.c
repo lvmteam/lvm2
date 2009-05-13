@@ -376,6 +376,14 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags)
 
 	switch (flags & LCK_SCOPE_MASK) {
 	case LCK_VG:
+		/*
+		 * Automatically set LCK_NONBLOCK if one or more VGs locked.
+		 * This will enforce correctness and prevent deadlocks rather
+		 * than relying on the caller to set the flag properly.
+		 */
+		if (vgs_locked())
+			flags |= LCK_NONBLOCK;
+
 		/* Lock VG to change on-disk metadata. */
 		/* If LVM1 driver knows about the VG, it can't be accessed. */
 		if (!check_lvm1_vg_inactive(cmd, vol))

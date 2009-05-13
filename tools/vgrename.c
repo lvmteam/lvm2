@@ -100,7 +100,7 @@ static int vg_rename_path(struct cmd_context *cmd, const char *old_vg_path,
 
 	log_verbose("Checking for new volume group \"%s\"", vg_name_new);
 
-	if (!lock_vol(cmd, vg_name_new, LCK_VG_WRITE | LCK_NONBLOCK)) {
+	if (!lock_vol(cmd, vg_name_new, LCK_VG_WRITE)) {
 		unlock_release_vg(cmd, vg, vg_name_old);
 		log_error("Can't get lock for %s", vg_name_new);
 		return 0;
