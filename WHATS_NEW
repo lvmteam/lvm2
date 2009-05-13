@@ -1,5 +1,6 @@
 Version 2.02.46 - 
 ================================
+  Remove unneeded import parameter from lv_create_empty.
   Merge lv_is_displayable and lv_is_visible functions.
   Introduce lv_set_visible & lv_set_invisible functions.
   Fix lv_is_visible to handle virtual origin.

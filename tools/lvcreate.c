@@ -577,7 +577,7 @@ static struct logical_volume *_create_virtual_origin(struct cmd_context *cmd,
 	}
 
 	if (!(lv = lv_create_empty(vorigin_name, NULL, permission,
-				   ALLOC_INHERIT, 0, vg)))
+				   ALLOC_INHERIT, vg)))
 		return_0;
 
 	if (!lv_extend(lv, segtype, 1, 0, 1, voriginextents, NULL, 0u, 0u,
@@ -824,7 +824,7 @@ static int _lvcreate(struct cmd_context *cmd, struct volume_group *vg,
 	}
 
 	if (!(lv = lv_create_empty(lv_name ? lv_name : "lvol%d", NULL,
-				   status, lp->alloc, 0, vg)))
+				   status, lp->alloc, vg)))
 		return_0;
 
 	if (lp->read_ahead) {

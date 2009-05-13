@@ -448,7 +448,6 @@ struct logical_volume *lv_create_empty(const char *name,
 				       union lvid *lvid,
 				       uint32_t status,
 				       alloc_policy_t alloc,
-				       int import,
 				       struct volume_group *vg);
 
 /* Write out LV contents */

@@ -105,7 +105,7 @@ int vg_add_snapshot(struct logical_volume *origin,
 
 	if (!(snap = lv_create_empty("snapshot%d",
 				     lvid, LVM_READ | LVM_WRITE | VISIBLE_LV,
-				     ALLOC_INHERIT, 1, origin->vg)))
+				     ALLOC_INHERIT, origin->vg)))
 		return_0;
 
 	snap->le_count = extent_count;
