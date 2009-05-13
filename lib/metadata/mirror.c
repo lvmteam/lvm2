@@ -932,7 +932,7 @@ static int _create_mimage_lvs(struct alloc_handle *ah,
 	for (m = 0; m < num_mirrors; m++) {
 		if (!(img_lvs[m] = lv_create_empty(img_name,
 					     NULL, LVM_READ | LVM_WRITE,
-					     ALLOC_INHERIT, 0, lv->vg))) {
+					     ALLOC_INHERIT, lv->vg))) {
 			log_error("Aborting. Failed to create mirror image LV. "
 				  "Remove new LV and retry.");
 			return 0;
@@ -1266,7 +1266,7 @@ static struct logical_volume *_create_mirror_log(struct logical_volume *lv,
 
 	if (!(log_lv = lv_create_empty(log_name, NULL,
 				       VISIBLE_LV | LVM_READ | LVM_WRITE,
-				       alloc, 0, lv->vg)))
+				       alloc, lv->vg)))
 		return_NULL;
 
 	if (!lv_add_log_segment(ah, log_lv))

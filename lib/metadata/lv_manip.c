@@ -1811,7 +1811,6 @@ struct logical_volume *lv_create_empty(const char *name,
 				       union lvid *lvid,
 				       uint32_t status,
 				       alloc_policy_t alloc,
-				       int import,
 				       struct volume_group *vg)
 {
 	struct format_instance *fi = vg->fid;
@@ -1831,8 +1830,7 @@ struct logical_volume *lv_create_empty(const char *name,
 		return NULL;
 	}
 
-	if (!import)
-		log_verbose("Creating logical volume %s", name);
+	log_verbose("Creating logical volume %s", name);
 
 	if (!(lv = dm_pool_zalloc(vg->vgmem, sizeof(*lv))))
 		return_NULL;
@@ -2417,7 +2415,7 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 	}
 
 	if (!(layer_lv = lv_create_empty(name, NULL, LVM_READ | LVM_WRITE,
-					 ALLOC_INHERIT, 0, lv_where->vg))) {
+					 ALLOC_INHERIT, lv_where->vg))) {
 		log_error("Creation of layer LV failed");
 		return NULL;
 	}
