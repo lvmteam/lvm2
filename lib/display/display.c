@@ -606,7 +606,7 @@ void vgdisplay_full(const struct volume_group *vg)
 	}
 
 	log_print("MAX LV                %u", vg->max_lv);
-	log_print("Cur LV                %u", displayable_lvs_in_vg(vg));
+	log_print("Cur LV                %u", vg_visible_lvs(vg));
 	log_print("Open LV               %u", lvs_in_vg_opened(vg));
 /****** FIXME Max LV Size
       log_print ( "MAX LV Size           %s",
@@ -681,7 +681,7 @@ void vgdisplay_colons(const struct volume_group *vg)
 		vg->status,
 		/* internal volume group number; obsolete */
 		vg->max_lv,
-		displayable_lvs_in_vg(vg),
+		vg_visible_lvs(vg),
 		lvs_in_vg_opened(vg),
 		/* FIXME: maximum logical volume size */
 		vg->max_pv,

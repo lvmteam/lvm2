@@ -238,18 +238,16 @@ struct volume_group {
 	/*
 	 * logical volumes
 	 * The following relationship should always hold:
-	 * dm_list_size(lvs) = lv_count + 2 * snapshot_count
+	 * dm_list_size(lvs) = user visible lv_count + snapshot_count + other invisible LVs
 	 *
 	 * Snapshots consist of 2 instances of "struct logical_volume":
 	 * - cow (lv_name is visible to the user)
 	 * - snapshot (lv_name is 'snapshotN')
-	 * Neither of these instances is reflected in lv_count.
 	 *
 	 * Mirrors consist of multiple instances of "struct logical_volume":
 	 * - one for the mirror log
 	 * - one for each mirror leg
 	 * - one for the user-visible mirror LV
-	 * all of the instances are reflected in lv_count.
 	 */
 	struct dm_list lvs;
 
@@ -539,10 +537,9 @@ struct lv_segment *first_seg(const struct logical_volume *lv);
 int lv_is_origin(const struct logical_volume *lv);
 int lv_is_virtual_origin(const struct logical_volume *lv);
 int lv_is_cow(const struct logical_volume *lv);
-int lv_is_visible(const struct logical_volume *lv);
 
 /* Test if given LV is visible from user's perspective */
-int lv_is_displayable(const struct logical_volume *lv);
+int lv_is_visible(const struct logical_volume *lv);
 
 int pv_is_in_vg(struct volume_group *vg, struct physical_volume *pv);
 
@@ -563,7 +560,10 @@ int vg_remove_snapshot(struct logical_volume *cow);
 
 int vg_check_status(const struct volume_group *vg, uint32_t status);
 
-unsigned volumes_count(const struct volume_group *vg);
+/*
+ * Returns visible LV count - number of LVs from user perspective
+ */
+unsigned vg_visible_lvs(const struct volume_group *vg);
 
 /*
 * Mirroring functions

@@ -340,11 +340,6 @@ int remove_seg_from_segs_using_this_lv(struct logical_volume *lv, struct lv_segm
 struct lv_segment *get_only_segment_using_this_lv(struct logical_volume *lv);
 
 /*
- * Count LVs that are visible from user's perspective.
- */
-unsigned displayable_lvs_in_vg(const struct volume_group *vg);
-
-/*
  * Count snapshot LVs.
  */
 unsigned snapshot_count(const struct volume_group *vg);

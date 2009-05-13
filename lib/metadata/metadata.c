@@ -376,7 +376,7 @@ int vg_remove_single(struct cmd_context *cmd, const char *vg_name,
 	if (!vg_check_status(vg, EXPORTED_VG))
 		return 0;
 
-	lv_count = displayable_lvs_in_vg(vg);
+	lv_count = vg_visible_lvs(vg);
 
 	if (lv_count) {
 		if ((force == PROMPT) &&
@@ -391,8 +391,8 @@ int vg_remove_single(struct cmd_context *cmd, const char *vg_name,
 			return 0;
 	}
 
-	lv_count = displayable_lvs_in_vg(vg);
-	
+	lv_count = vg_visible_lvs(vg);
+
 	if (lv_count) {
 		log_error("Volume group \"%s\" still contains %u "
 			  "logical volume(s)", vg_name, lv_count);
@@ -1140,18 +1140,6 @@ int vg_remove(struct volume_group *vg)
 	return 1;
 }
 
-unsigned displayable_lvs_in_vg(const struct volume_group *vg)
-{
-	struct lv_list *lvl;
-	unsigned lv_count = 0;
-
-	dm_list_iterate_items(lvl, &vg->lvs)
-		if (lv_is_displayable(lvl->lv))
-			lv_count++;
-
-	return lv_count;
-}
-
 unsigned snapshot_count(const struct volume_group *vg)
 {
 	struct lv_list *lvl;
@@ -1164,17 +1152,14 @@ unsigned snapshot_count(const struct volume_group *vg)
 	return num_snapshots;
 }
 
-unsigned volumes_count(const struct volume_group *vg)
+unsigned vg_visible_lvs(const struct volume_group *vg)
 {
 	struct lv_list *lvl;
 	unsigned lv_count = 0;
 
 	dm_list_iterate_items(lvl, &vg->lvs) {
-		if (lv_is_cow(lvl->lv))
-			continue;
-		if (lvl->lv->status & SNAPSHOT)
-			continue;
-		lv_count++;
+		if (lv_is_visible(lvl->lv))
+			lv_count++;
 	}
 
 	return lv_count;
@@ -1214,7 +1199,7 @@ int vgs_are_compatible(struct cmd_context *cmd __attribute((unused)),
 	}
 
 	if (vg_to->max_lv &&
-	    (vg_to->max_lv < volumes_count(vg_to) + volumes_count(vg_from))) {
+	    (vg_to->max_lv < vg_visible_lvs(vg_to) + vg_visible_lvs(vg_from))) {
 		log_error("Maximum number of logical volumes (%d) exceeded "
 			  " for \"%s\" and \"%s\"", vg_to->max_lv, vg_to->name,
 			  vg_from->name);
@@ -1469,12 +1454,38 @@ int vg_validate(struct volume_group *vg)
 		r = 0;
 	}
 
-	if ((lv_count = (uint32_t) dm_list_size(&vg->lvs)) !=
-	    volumes_count(vg) + 2 * snapshot_count(vg)) {
+	/*
+	 * Count all non-snapshot invisible LVs
+	 */
+	lv_count = 0;
+	dm_list_iterate_items(lvl, &vg->lvs) {
+		if (lvl->lv->status & VISIBLE_LV)
+			continue;
+
+		/* snapshots */
+		if (lv_is_cow(lvl->lv) || lv_is_origin(lvl->lv))
+			continue;
+
+		/* count other non-snapshot invisible volumes */
+		lv_count++;
+
+		/*
+		 *  FIXME: add check for unreferenced invisible LVs
+		 *   - snapshot cow & origin
+		 *   - mirror log & images
+		 *   - mirror conversion volumes (_mimagetmp*)
+		 */
+	}
+
+	/*
+	 * all volumes = visible LVs + snapshot_cows + invisible LVs
+	 */
+	if (((uint32_t) dm_list_size(&vg->lvs)) !=
+	    vg_visible_lvs(vg) + snapshot_count(vg) + lv_count) {
 		log_error("Internal error: #internal LVs (%u) != #LVs (%"
-			  PRIu32 ") + 2 * #snapshots (%" PRIu32 ") in VG %s",
-			  dm_list_size(&vg->lvs), volumes_count(vg),
-			  snapshot_count(vg), vg->name);
+			  PRIu32 ") + #snapshots (%" PRIu32 ") + #invisible LVs %u in VG %s",
+			  dm_list_size(&vg->lvs), vg_visible_lvs(vg),
+			  snapshot_count(vg), lv_count, vg->name);
 		r = 0;
 	}
 
@@ -1517,10 +1528,10 @@ int vg_validate(struct volume_group *vg)
 		r = 0;
 	}
 
-	if (vg->max_lv && (vg->max_lv < volumes_count(vg))) {
+	if (vg->max_lv && (vg->max_lv < vg_visible_lvs(vg))) {
 		log_error("Internal error: Volume group %s contains %u volumes"
 			  " but the limit is set to %u.",
-			  vg->name, volumes_count(vg), vg->max_lv);
+			  vg->name, vg_visible_lvs(vg), vg->max_lv);
 		r = 0;
 	}
 
