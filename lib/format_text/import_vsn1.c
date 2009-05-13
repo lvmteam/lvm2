@@ -603,16 +603,6 @@ static int _read_lvsegs(struct format_instance *fid __attribute((unused)),
 
 	lv->size = (uint64_t) lv->le_count * (uint64_t) vg->extent_size;
 
-	/*
-	 * FIXME We now have 2 LVs for each snapshot. The real one was
-	 * created by vg_add_snapshot from the segment text_import.
-	 */
-	if (lv->status & SNAPSHOT) {
-		vg->lv_count--;
-		dm_list_del(&lvl->list);
-		return 1;
-	}
-
 	lv->minor = -1;
 	if ((lv->status & FIXED_MINOR) &&
 	    !_read_int32(lvn, "minor", &lv->minor)) {

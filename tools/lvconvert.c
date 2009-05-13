@@ -760,8 +760,7 @@ static int lvconvert_snapshot(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (!vg_add_snapshot(NULL, org, lv, NULL, org->le_count,
-			     lp->chunk_size)) {
+	if (!vg_add_snapshot(org, lv, NULL, org->le_count, lp->chunk_size)) {
 		log_error("Couldn't create snapshot.");
 		return 0;
 	}

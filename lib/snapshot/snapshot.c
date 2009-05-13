@@ -39,8 +39,6 @@ static int _snap_text_import(struct lv_segment *seg, const struct config_node *s
 	struct logical_volume *org, *cow;
 	int old_suppress;
 
-	seg->lv->status |= SNAPSHOT;
-
 	if (!get_config_uint32(sn, "chunk_size", &chunk_size)) {
 		log_error("Couldn't read chunk size for snapshot.");
 		return 0;
@@ -74,9 +72,7 @@ static int _snap_text_import(struct lv_segment *seg, const struct config_node *s
 		return 0;
 	}
 
-	if (!vg_add_snapshot(seg->lv->name, org, cow,
-			     &seg->lv->lvid, seg->len, chunk_size))
-		return_0;
+	init_snapshot_seg(seg, org, cow, chunk_size);
 
 	return 1;
 }

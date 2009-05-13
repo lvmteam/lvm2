@@ -918,7 +918,7 @@ static int _lvcreate(struct cmd_context *cmd, struct volume_group *vg,
 
 		/* cow LV remains active and becomes snapshot LV */
 
-		if (!vg_add_snapshot(NULL, org, lv, NULL,
+		if (!vg_add_snapshot(org, lv, NULL,
 				     org->le_count, lp->chunk_size)) {
 			log_error("Couldn't create snapshot.");
 			goto deactivate_and_revert_new_lv;
