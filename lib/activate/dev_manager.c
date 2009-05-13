@@ -141,7 +141,7 @@ static int _info_run(const char *name, const char *dlid, struct dm_info *info,
 	if (!dm_task_get_info(dmt, info))
 		goto_out;
 
-	if (with_read_ahead) {
+	if (with_read_ahead && info->exists) {
 		if (!dm_task_get_read_ahead(dmt, read_ahead))
 			goto_out;
 	} else if (read_ahead)
