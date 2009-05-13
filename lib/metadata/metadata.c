@@ -1156,13 +1156,13 @@ unsigned displayable_lvs_in_vg(const struct volume_group *vg)
 unsigned snapshot_count(const struct volume_group *vg)
 {
 	struct lv_list *lvl;
-	unsigned lv_count = 0;
+	unsigned num_snapshots = 0;
 
 	dm_list_iterate_items(lvl, &vg->lvs)
 		if (lv_is_cow(lvl->lv))
-			lv_count++;
+			num_snapshots++;
 
-	return lv_count;
+	return num_snapshots;
 }
 
 /*
