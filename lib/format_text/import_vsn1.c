@@ -495,14 +495,10 @@ static int _read_lvnames(struct format_instance *fid __attribute((unused)),
 			 struct dm_hash_table *pv_hash __attribute((unused)))
 {
 	struct logical_volume *lv;
-	struct lv_list *lvl;
 	struct config_node *cn;
 
-	if (!(lvl = dm_pool_zalloc(mem, sizeof(*lvl))) ||
-	    !(lvl->lv = dm_pool_zalloc(mem, sizeof(*lvl->lv))))
+	if (!(lv = dm_pool_zalloc(mem, sizeof(*lv))))
 		return_0;
-
-	lv = lvl->lv;
 
 	if (!(lv->name = dm_pool_strdup(mem, lvn->key)))
 		return_0;
@@ -561,10 +557,7 @@ static int _read_lvnames(struct format_instance *fid __attribute((unused)),
 		return 0;
 	}
 
-	lv->vg = vg;
-	dm_list_add(&vg->lvs, &lvl->list);
-
-	return 1;
+	return link_lv_to_vg(vg, lv);
 }
 
 static int _read_lvsegs(struct format_instance *fid __attribute((unused)),
