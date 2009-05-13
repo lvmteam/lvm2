@@ -1,5 +1,6 @@
 Version 2.02.46 - 
 ================================
+  Do not query nonexistent devices for readahead.
   Remove NON_BLOCKING lock flag from tools and set a policy to auto-set.
   Remove snapshot_count from VG and use function instead.
   Fix first_seg() call for empty segment list.
