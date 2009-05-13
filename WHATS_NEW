@@ -1,5 +1,6 @@
 Version 2.02.46 - 
 ================================
+  Introduce lv_set_visible & lv_set_invisible functions.
   Fix lv_is_visible to handle virtual origin.
   Introduce link_lv_to_vg and unlink_lv_from_vg functions.
   Remove lv_count from VG and use counter function instead.

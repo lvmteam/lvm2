@@ -1503,7 +1503,7 @@ int lv_add_mirror_lvs(struct logical_volume *lv,
 		if (!set_lv_segment_area_lv(seg, m, sub_lvs[m - old_area_count],
 					    0, status))
 			return_0;
-		sub_lvs[m - old_area_count]->status &= ~VISIBLE_LV;
+		lv_set_invisible(sub_lvs[m - old_area_count]);
 	}
 
 	lv->status |= MIRRORED;
@@ -1958,6 +1958,26 @@ int unlink_lv_from_vg(struct logical_volume *lv)
 	dm_list_del(&lvl->list);
 
 	return 1;
+}
+
+void lv_set_visible(struct logical_volume *lv)
+{
+	if (lv_is_visible(lv))
+		return;
+
+	lv->status |= VISIBLE_LV;
+
+	log_debug("LV %s in VG %s is now visible.",  lv->name, lv->vg->name);
+}
+
+void lv_set_invisible(struct logical_volume *lv)
+{
+	if (!lv_is_visible(lv))
+		return;
+
+	lv->status &= ~VISIBLE_LV;
+
+	log_debug("LV %s in VG %s is now invisible.",  lv->name, lv->vg->name);
 }
 
 int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
