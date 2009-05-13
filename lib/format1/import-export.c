@@ -455,25 +455,23 @@ static struct logical_volume *_add_lv(struct dm_pool *mem,
 				      struct volume_group *vg,
 				      struct lv_disk *lvd)
 {
-	struct lv_list *ll;
 	struct logical_volume *lv;
 
-	if (!(ll = dm_pool_zalloc(mem, sizeof(*ll))) ||
-	    !(ll->lv = dm_pool_zalloc(mem, sizeof(*ll->lv))))
+	if (!(lv = dm_pool_zalloc(mem, sizeof(*lv))))
 		return_NULL;
-	lv = ll->lv;
-	lv->vg = vg;
 
 	lvid_from_lvnum(&lv->lvid, &vg->id, lvd->lv_number);
 
-	if (!import_lv(vg->cmd, mem, lv, lvd)) {
-		dm_pool_free(mem, ll);
-		return_NULL;
-	}
+	if (!import_lv(vg->cmd, mem, lv, lvd)) 
+		goto_bad;
 
-	dm_list_add(&vg->lvs, &ll->list);
+	if (!link_lv_to_vg(vg, lv))
+		goto_bad;
 
 	return lv;
+bad:
+	dm_pool_free(mem, lv);
+	return NULL;
 }
 
 int import_lvs(struct dm_pool *mem, struct volume_group *vg, struct dm_list *pvds)

@@ -402,7 +402,6 @@ static int _lv_segment_reduce(struct lv_segment *seg, uint32_t reduction)
  */
 static int _lv_reduce(struct logical_volume *lv, uint32_t extents, int delete)
 {
-	struct lv_list *lvl;
 	struct lv_segment *seg;
 	uint32_t count = extents;
 	uint32_t reduction;
@@ -433,12 +432,9 @@ static int _lv_reduce(struct logical_volume *lv, uint32_t extents, int delete)
 		return 1;
 
 	/* Remove the LV if it is now empty */
-	if (!lv->le_count) {
-		if (!(lvl = find_lv_in_vg(lv->vg, lv->name)))
-			return_0;
-
-		dm_list_del(&lvl->list);
-	} else if (lv->vg->fid->fmt->ops->lv_setup &&
+	if (!lv->le_count && !unlink_lv_from_vg(lv))
+		return_0;
+	else if (lv->vg->fid->fmt->ops->lv_setup &&
 		   !lv->vg->fid->fmt->ops->lv_setup(lv->vg->fid, lv))
 		return_0;
 
@@ -1819,8 +1815,6 @@ struct logical_volume *lv_create_empty(const char *name,
 				       struct volume_group *vg)
 {
 	struct format_instance *fi = vg->fid;
-	struct cmd_context *cmd = vg->cmd;
-	struct lv_list *ll = NULL;
 	struct logical_volume *lv;
 	char dname[NAME_LEN];
 
@@ -1840,23 +1834,11 @@ struct logical_volume *lv_create_empty(const char *name,
 	if (!import)
 		log_verbose("Creating logical volume %s", name);
 
-	if (!(ll = dm_pool_zalloc(cmd->mem, sizeof(*ll))) ||
-	    !(ll->lv = dm_pool_zalloc(cmd->mem, sizeof(*ll->lv)))) {
-		log_error("lv_list allocation failed");
-		if (ll)
-			dm_pool_free(cmd->mem, ll);
-		return NULL;
-	}
+	if (!(lv = dm_pool_zalloc(vg->vgmem, sizeof(*lv))))
+		return_NULL;
 
-	lv = ll->lv;
-	lv->vg = vg;
-
-	if (!(lv->name = dm_pool_strdup(cmd->mem, name))) {
-		log_error("lv name strdup failed");
-		if (ll)
-			dm_pool_free(cmd->mem, ll);
-		return NULL;
-	}
+	if (!(lv->name = dm_pool_strdup(vg->vgmem, name)))
+		goto_bad;
 
 	lv->status = status;
 	lv->alloc = alloc;
@@ -1874,15 +1856,16 @@ struct logical_volume *lv_create_empty(const char *name,
 	if (lvid)
 		lv->lvid = *lvid;
 
-	if (fi->fmt->ops->lv_setup && !fi->fmt->ops->lv_setup(fi, lv)) {
-		if (ll)
-			dm_pool_free(cmd->mem, ll);
-		return_NULL;
-	}
-
-	dm_list_add(&vg->lvs, &ll->list);
-
+	if (!link_lv_to_vg(vg, lv))
+		goto_bad;
+ 
+	if (fi->fmt->ops->lv_setup && !fi->fmt->ops->lv_setup(fi, lv))
+		goto_bad;
+ 
 	return lv;
+bad:
+	dm_pool_free(vg->vgmem, lv);
+	return NULL;
 }
 
 static int _add_pvs(struct cmd_context *cmd, struct pv_segment *peg,
@@ -1949,6 +1932,32 @@ struct dm_list *build_parallel_areas_from_lv(struct cmd_context *cmd,
 	/* FIXME Merge adjacent segments with identical PV lists (avoids need for contiguous allocation attempts between successful allocations) */
 
 	return parallel_areas;
+}
+
+int link_lv_to_vg(struct volume_group *vg, struct logical_volume *lv)
+{
+	struct lv_list *lvl;
+
+	if (!(lvl = dm_pool_zalloc(vg->vgmem, sizeof(*lvl))))
+		return_0;
+
+	lvl->lv = lv;
+	lv->vg = vg;
+	dm_list_add(&vg->lvs, &lvl->list);
+
+	return 1;
+}
+
+int unlink_lv_from_vg(struct logical_volume *lv)
+{
+	struct lv_list *lvl;
+
+	if (!(lvl = find_lv_in_vg(lv->vg, lv->name)))
+		return_0;
+
+	dm_list_del(&lvl->list);
+
+	return 1;
 }
 
 int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,

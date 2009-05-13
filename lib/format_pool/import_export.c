@@ -57,22 +57,14 @@ int import_pool_vg(struct volume_group *vg, struct dm_pool *mem, struct dm_list 
 int import_pool_lvs(struct volume_group *vg, struct dm_pool *mem, struct dm_list *pls)
 {
 	struct pool_list *pl;
-	struct lv_list *lvl = dm_pool_zalloc(mem, sizeof(*lvl));
 	struct logical_volume *lv;
 
-	if (!lvl) {
-		log_error("Unable to allocate lv list structure");
-		return 0;
-	}
-
-	if (!(lvl->lv = dm_pool_zalloc(mem, sizeof(*lvl->lv)))) {
+	if (!(lv = dm_pool_zalloc(mem, sizeof(*lv)))) {
 		log_error("Unable to allocate logical volume structure");
 		return 0;
 	}
 
-	lv = lvl->lv;
 	lv->status = 0;
-	lv->vg = vg;
 	lv->alloc = ALLOC_NORMAL;
 	lv->size = 0;
 	lv->name = NULL;
@@ -114,10 +106,8 @@ int import_pool_lvs(struct volume_group *vg, struct dm_pool *mem, struct dm_list
 	}
 
 	lv->le_count = lv->size / POOL_PE_SIZE;
-	lvl->lv = lv;
-	dm_list_add(&vg->lvs, &lvl->list);
 
-	return 1;
+	return link_lv_to_vg(vg, lv);
 }
 
 int import_pool_pvs(const struct format_type *fmt, struct volume_group *vg,
