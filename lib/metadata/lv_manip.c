@@ -1732,7 +1732,7 @@ int lv_rename(struct cmd_context *cmd, struct logical_volume *lv,
 	int r = 0;
 
 	/* rename is not allowed on sub LVs */
-	if (!lv_is_displayable(lv)) {
+	if (!lv_is_visible(lv)) {
 		log_error("Cannot rename internal LV \"%s\".", lv->name);
 		return 0;
 	}
@@ -1818,7 +1818,7 @@ struct logical_volume *lv_create_empty(const char *name,
 	struct logical_volume *lv;
 	char dname[NAME_LEN];
 
-	if (vg->max_lv && (vg->max_lv == volumes_count(vg))) {
+	if (vg->max_lv && (vg->max_lv == vg_visible_lvs(vg))) {
 		log_error("Maximum number of logical volumes (%u) reached "
 			  "in volume group %s", vg->max_lv, vg->name);
 		return NULL;

@@ -43,14 +43,6 @@ int lv_is_visible(const struct logical_volume *lv)
 	return lv->status & VISIBLE_LV ? 1 : 0;
 }
 
-int lv_is_displayable(const struct logical_volume *lv)
-{
-	if (lv->status & SNAPSHOT)
-		return 0;
-
-	return (lv->status & VISIBLE_LV) || lv_is_cow(lv) ? 1 : 0;
-}
-
 int lv_is_virtual_origin(const struct logical_volume *lv)
 {
 	return (lv->status & VIRTUAL_ORIGIN) ? 1 : 0;

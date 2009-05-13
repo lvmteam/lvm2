@@ -592,14 +592,14 @@ static int _print_lvs(struct formatter *f, struct volume_group *vg)
 	 * Write visible LVs first
 	 */
 	dm_list_iterate_items(lvl, &vg->lvs) {
-		if (!(lv_is_displayable(lvl->lv)))
+		if (!(lv_is_visible(lvl->lv)))
 			continue;
 		if (!_print_lv(f, lvl->lv))
 			return_0;
 	}
 
 	dm_list_iterate_items(lvl, &vg->lvs) {
-		if ((lv_is_displayable(lvl->lv)))
+		if ((lv_is_visible(lvl->lv)))
 			continue;
 		if (!_print_lv(f, lvl->lv))
 			return_0;
