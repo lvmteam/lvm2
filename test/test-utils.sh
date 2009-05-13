@@ -130,6 +130,7 @@ prepare_devs() {
 	lv1=LV1
 	lv2=LV2
 	lv3=LV3
+	lv4=LV4
 }
 
 disable_dev() {

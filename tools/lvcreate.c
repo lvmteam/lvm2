@@ -613,6 +613,12 @@ static int _lvcreate(struct cmd_context *cmd, struct volume_group *vg,
 		return 0;
 	}
 
+	if (vg_max_lv_reached(vg)) {
+		log_error("Maximum number of logical volumes (%u) reached "
+			  "in volume group %s", vg->max_lv, vg->name);
+		return 0;
+	}
+
 	if (lp->mirrors > 1 && !(vg->fid->fmt->features & FMT_SEGMENTS)) {
 		log_error("Metadata does not support mirroring.");
 		return 0;

@@ -1528,12 +1528,8 @@ int vg_validate(struct volume_group *vg)
 		r = 0;
 	}
 
-	if (vg->max_lv && (vg->max_lv < vg_visible_lvs(vg))) {
-		log_error("Internal error: Volume group %s contains %u volumes"
-			  " but the limit is set to %u.",
-			  vg->name, vg_visible_lvs(vg), vg->max_lv);
-		r = 0;
-	}
+	if (vg_max_lv_reached(vg))
+		stack;
 
 	return r;
 }

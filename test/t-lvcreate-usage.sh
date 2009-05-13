@@ -55,12 +55,33 @@ grep "^  Invalid stripe size 3\.00 KB\$" err
 case $(lvdisplay $vg) in "") true ;; *) false ;; esac
 
 # Setting max_lv works. (bz490298)
-vgchange -l 4 $vg
+lvremove -ff $vg
+vgchange -l 3 $vg
 lvcreate -l1 -n $lv1 $vg
 lvcreate -l1 -s -n $lv2 $vg/$lv1
 lvcreate -l1 -n $lv3 $vg
 not lvcreate -l1 -n $lv4 $vg
+
+lvremove -ff $vg/$lv3
+lvcreate -l1 -s -n $lv3 $vg/$lv1
+not lvcreate -l1 -n $lv4 $vg
+not lvcreate -l1 -m1 -n $lv4 $vg
+
+lvremove -ff $vg/$lv3
+lvcreate -l1 -m1 -n $lv3 $vg
+lvs
+vgs -o +max_lv
+not lvcreate -l1 -n $lv4 $vg
+not lvcreate -l1 -m1 -n $lv4 $vg
+
+lvconvert -m0 $vg/$lv3
+lvconvert -m2 -i 1 $vg/$lv3
+lvconvert -m1 $vg/$lv3
+
+not vgchange -l 2
+vgchange -l 4
 vgs $vg
+
 lvremove -ff $vg
 vgchange -l 0 $vg
 
