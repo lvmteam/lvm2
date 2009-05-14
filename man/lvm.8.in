@@ -95,6 +95,8 @@ The following commands implement the core LVM functionality.
 .TP
 \fBvgimport\fP \(em Make exported volume groups known to the system.
 .TP
+\fBvgimportclone\fP \(em Import and rename duplicated volume group (e.g. a hardware snapshot).
+.TP
 \fBvgmerge\fP \(em Merge two volume groups.
 .TP
 \fBvgmknodes\fP \(em Recreate volume group directory and logical volume special files
@@ -307,6 +309,7 @@ All tools return a status code of zero on success or non-zero on failure.
 .BR vgdisplay (8),
 .BR vgextend (8),
 .BR vgimport (8),
+.BR vgimportclone (8),
 .BR vgmerge (8),
 .BR vgmknodes (8),
 .BR vgreduce (8),
