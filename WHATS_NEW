@@ -1,5 +1,6 @@
 Version 2.02.46 - 
 ================================
+  Add vgimportclone and install it and the man page by default.
   Force max_lv restriction only for newly created LV.
   Remove unneeded import parameter from lv_create_empty.
   Merge lv_is_displayable and lv_is_visible functions.
