@@ -442,7 +442,7 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 	int r = 0;
 	struct logical_volume *log_lv;
 	int failed_mirrors = 0, failed_log = 0;
-	struct dm_list *old_pvh, *remove_pvs = NULL;
+	struct dm_list *old_pvh = NULL, *remove_pvs = NULL;
 
 	seg = first_seg(lv);
 	existing_mirrors = lv_mirror_count(lv);
