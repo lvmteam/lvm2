@@ -1,5 +1,6 @@
 Version 2.02.46 - 
 ================================
+  Fix pvmove to revert operation if temporary mirror creation fails.
   Fix metadata export for VG with missing PVs.
   Add vgimportclone and install it and the man page by default.
   Force max_lv restriction only for newly created LV.

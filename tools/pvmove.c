@@ -274,6 +274,10 @@ static int _activate_lv(struct cmd_context *cmd, struct logical_volume *lv_mirr,
 	return activate_lv(cmd, lv_mirr);
 }
 
+static int _finish_pvmove(struct cmd_context *cmd, struct volume_group *vg,
+			  struct logical_volume *lv_mirr,
+			  struct dm_list *lvs_changed);
+
 static int _update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 			    struct logical_volume *lv_mirr,
 			    struct dm_list *lvs_changed, unsigned flags)
@@ -315,12 +319,16 @@ static int _update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 	/* FIXME: Add option to use a log */
 	if (first_time) {
 		if (!_activate_lv(cmd, lv_mirr, exclusive)) {
-			if (!test_mode())
-				log_error("ABORTING: Temporary mirror "
-					  "activation failed.  "
-					  "Run pvmove --abort.");
-			/* FIXME Resume using *original* metadata here! */
-			resume_lvs(cmd, lvs_changed);
+			if (test_mode())
+				goto out;
+
+			/*
+			 * Nothing changed yet, try to revert pvmove.
+			 */
+			log_error("Temporary pvmove mirror activation failed.");
+			if (!_finish_pvmove(cmd, vg, lv_mirr, lvs_changed))
+				log_error("ABORTING: Restoring original configuration "
+					  "before pvmove failed. Run pvmove --abort.");
 			goto out;
 		}
 	} else if (!resume_lv(cmd, lv_mirr)) {
