@@ -434,6 +434,26 @@ static int do_deactivate_lv(char *resource, unsigned char lock_flags)
 	return 0;
 }
 
+const char *do_lock_query(char *resource)
+{
+	int mode;
+	const char *type = NULL;
+
+	mode = get_current_lock(resource);
+	switch (mode) {
+		case LKM_NLMODE: type = "NL"; break;
+		case LKM_CRMODE: type = "CR"; break;
+		case LKM_CWMODE: type = "CW"; break;
+		case LKM_PRMODE: type = "PR"; break;
+		case LKM_PWMODE: type = "PW"; break;
+		case LKM_EXMODE: type = "EX"; break;
+	}
+
+	DEBUGLOG("do_lock_query: resource '%s', mode %i (%s)\n", resource, mode, type ?: "?");
+
+	return type;
+}
+
 /* This is the LOCK_LV part that happens on all nodes in the cluster -
    it is responsible for the interaction with device-mapper and LVM */
 int do_lock_lv(unsigned char command, unsigned char lock_flags, char *resource)

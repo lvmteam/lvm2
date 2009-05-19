@@ -482,3 +482,21 @@ int locking_is_clustered(void)
 	return (_locking.flags & LCK_CLUSTERED) ? 1 : 0;
 }
 
+int remote_lock_held(const char *vol)
+{
+	int mode = LCK_NULL;
+
+	if (!locking_is_clustered())
+		return 0;
+
+	/*
+	 * If an error occured, expect that volume is active
+	 */
+	if (!_locking.lock_resource_query ||
+	    !_locking.lock_resource_query(vol, &mode)) {
+		stack;
+		return 1;
+	}
+
+	return mode == LCK_NULL ? 0 : 1;
+}

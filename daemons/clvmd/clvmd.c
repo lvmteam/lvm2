@@ -257,6 +257,9 @@ static const char *decode_cmd(unsigned char cmdl)
 	case CLVMD_CMD_UNLOCK:
 		command = "UNLOCK";
 		break;
+	case CLVMD_CMD_LOCK_QUERY:
+		command = "LOCK_QUERY";
+		break;
 	default:
 		command = "unknown";
 		break;

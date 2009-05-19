@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2002-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2009 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -33,6 +33,7 @@
 
 #ifndef CLUSTER_LOCKING_INTERNAL
 int lock_resource(struct cmd_context *cmd, const char *resource, uint32_t flags);
+int lock_resource_query(const char *resource, int *mode);
 void locking_end(void);
 int locking_init(int type, struct config_tree *cf, uint32_t *flags);
 #endif
@@ -455,6 +456,69 @@ int lock_resource(struct cmd_context *cmd, const char *resource, uint32_t flags)
 	return _lock_for_cluster(clvmd_cmd, flags, lockname);
 }
 
+static int decode_lock_type(const char *response)
+{
+	if (!response)
+		return LCK_NULL;
+	else if (strcmp(response, "EX"))
+		return LCK_EXCL;
+	else if (strcmp(response, "CR"))
+		return LCK_READ;
+	else if (strcmp(response, "PR"))
+		return LCK_PREAD;
+
+	stack;
+	return 0;
+}
+
+#ifdef CLUSTER_LOCKING_INTERNAL
+static int _lock_resource_query(const char *resource, int *mode)
+#else
+int lock_resource_query(const char *resource, int *mode)
+#endif
+{
+	int i, status, len, num_responses, saved_errno;
+	const char *node = "";
+	char *args;
+	lvm_response_t *response = NULL;
+
+	saved_errno = errno;
+	len = strlen(resource) + 3;
+	args = alloca(len);
+	strcpy(args + 2, resource);
+
+	args[0] = 0;
+	args[1] = LCK_CLUSTER_VG;
+
+	status = _cluster_request(CLVMD_CMD_LOCK_QUERY, node, args, len,
+				  &response, &num_responses);
+	*mode = LCK_NULL;
+	for (i = 0; i < num_responses; i++) {
+		if (response[i].status == EHOSTDOWN)
+			continue;
+
+		if (!response[i].response[0])
+			continue;
+
+		/*
+		 * All nodes should use CR, or exactly one node
+		 * should held EX. (PR is obsolete)
+		 * If two nodes node reports different locks,
+		 * something is broken - just return more important mode.
+		 */
+		if (decode_lock_type(response[i].response) > *mode)
+			*mode = decode_lock_type(response[i].response);
+
+		log_debug("Lock held for %s, node %s : %s", resource,
+			  response[i].node, response[i].response);
+	}
+
+	_cluster_free_request(response, num_responses);
+	errno = saved_errno;
+
+	return status;
+}
+
 #ifdef CLUSTER_LOCKING_INTERNAL
 static void _locking_end(void)
 #else
@@ -485,6 +549,7 @@ void reset_locking(void)
 int init_cluster_locking(struct locking_type *locking, struct cmd_context *cmd)
 {
 	locking->lock_resource = _lock_resource;
+	locking->lock_resource_query = _lock_resource_query;
 	locking->fin_locking = _locking_end;
 	locking->reset_locking = _reset_locking;
 	locking->flags = LCK_PRE_MEMLOCK | LCK_CLUSTERED;
