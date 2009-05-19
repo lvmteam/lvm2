@@ -335,7 +335,7 @@ int backup_restore_from_file(struct cmd_context *cmd, const char *vg_name,
 			     const char *file)
 {
 	struct volume_group *vg;
-	int r = 0;
+	int missing_pvs, r = 0;
 
 	/*
 	 * Read in the volume group from the text file.
@@ -343,11 +343,12 @@ int backup_restore_from_file(struct cmd_context *cmd, const char *vg_name,
 	if (!(vg = backup_read_vg(cmd, vg_name, file)))
 		return_0;
 
-	/*
-	 * If PV is missing, there is already message from read above
-	 */
-	if (!vg_missing_pv_count(vg))
+	missing_pvs = vg_missing_pv_count(vg);
+	if (missing_pvs == 0)
 		r = backup_restore_vg(cmd, vg);
+	else
+		log_error("Cannot restore Volume Group %s with %i PVs "
+			  "marked as missing.", vg->name, missing_pvs);
 
 	vg_release(vg);
 	return r;
