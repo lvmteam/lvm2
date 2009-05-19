@@ -542,11 +542,10 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 	}
 
 	/*
-	 * FIXME This check used to precede mirror->mirror conversion
-	 * but didn't affect mirror->linear or linear->mirror. I do
-	 * not understand what is its intention, in fact.
+	 * For the most part, we cannot handle multi-segment mirrors. Bail out
+	 * early if we have encountered one.
 	 */
-	if (dm_list_size(&lv->segments) != 1) {
+	if ((lv->status & MIRRORED) && dm_list_size(&lv->segments) != 1) {
 		log_error("Logical volume %s has multiple "
 			  "mirror segments.", lv->name);
 		return 0;
