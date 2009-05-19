@@ -312,4 +312,12 @@ lvcreate -l2 -m1 -n$lv1 --nosync $vg
 lvconvert -m0 $vg/$lv1
 lvconvert -m1 $vg/$lv1
 lvs --noheadings -o attr $vg/$lv1 | grep '^ *m'
+check_and_cleanup_lvs_
 
+# lvconvert from linear (on multiple PVs) to mirror
+prepare_lvs_
+lvcreate -l 8 -n $lv1 $vg $dev1:0-3 $dev2:0-3
+lvconvert -m1 $vg/$lv1
+check_mirror_count_ $vg/$lv1 2
+check_mirror_log_ $vg/$lv1
+check_and_cleanup_lvs_
