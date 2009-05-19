@@ -695,21 +695,7 @@ int lv_is_active(struct logical_volume *lv)
 	if (!vg_is_clustered(lv->vg))
 		return 0;
 
-	/*
-	 * FIXME: Cluster does not report per-node LV activation status.
-	 * Currently the best we can do is try exclusive local activation.
-	 * If that succeeds, we know the LV is not active elsewhere in the
-	 * cluster.
-	 */
-	if (activate_lv_excl(lv->vg->cmd, lv)) {
-		deactivate_lv(lv->vg->cmd, lv);
-		return 0;
-	}
-
-	/*
-	 * Exclusive local activation failed so assume it is active elsewhere.
-	 */
-	return 1;
+	return remote_lock_held(lv->lvid.s);
 }
 
 /*

@@ -1,5 +1,6 @@
 Version 2.02.46 - 
 ================================
+  Introduce CLVMD_CMD_LOCK_QUERY command for clvmd.
   Use lvconvert --repair in dmeventd mirror DSO.
   Fix pvmove to revert operation if temporary mirror creation fails.
   Fix metadata export for VG with missing PVs.

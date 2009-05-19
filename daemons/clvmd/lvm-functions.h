@@ -22,6 +22,7 @@ extern int pre_lock_lv(unsigned char lock_cmd, unsigned char lock_flags,
 		       char *resource);
 extern int do_lock_lv(unsigned char lock_cmd, unsigned char lock_flags,
 		      char *resource);
+extern const char *do_lock_query(char *resource);
 extern int post_lock_lv(unsigned char lock_cmd, unsigned char lock_flags,
 			char *resource);
 extern int do_check_lvm1(const char *vgname);
