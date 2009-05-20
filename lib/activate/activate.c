@@ -589,7 +589,7 @@ static int _lv_activate_lv(struct logical_volume *lv)
 	return r;
 }
 
-static int _lv_preload(struct logical_volume *lv)
+static int _lv_preload(struct logical_volume *lv, int *flush_required)
 {
 	int r;
 	struct dev_manager *dm;
@@ -597,7 +597,7 @@ static int _lv_preload(struct logical_volume *lv)
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name)))
 		return_0;
 
-	if (!(r = dev_manager_preload(dm, lv)))
+	if (!(r = dev_manager_preload(dm, lv, flush_required)))
 		stack;
 
 	dev_manager_destroy(dm);
@@ -619,7 +619,7 @@ static int _lv_deactivate(struct logical_volume *lv)
 	return r;
 }
 
-static int _lv_suspend_lv(struct logical_volume *lv, int lockfs)
+static int _lv_suspend_lv(struct logical_volume *lv, int lockfs, int flush_required)
 {
 	int r;
 	struct dev_manager *dm;
@@ -627,7 +627,7 @@ static int _lv_suspend_lv(struct logical_volume *lv, int lockfs)
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name)))
 		return_0;
 
-	if (!(r = dev_manager_suspend(dm, lv, lockfs)))
+	if (!(r = dev_manager_suspend(dm, lv, lockfs, flush_required)))
 		stack;
 
 	dev_manager_destroy(dm);
@@ -831,7 +831,7 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 {
 	struct logical_volume *lv = NULL, *lv_pre = NULL;
 	struct lvinfo info;
-	int r = 0, lockfs = 0;
+	int r = 0, lockfs = 0, flush_required = 0;
 
 	if (!activation())
 		return 1;
@@ -859,7 +859,7 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 
 	/* If VG was precommitted, preload devices for the LV */
 	if ((lv_pre->vg->status & PRECOMMITTED)) {
-		if (!_lv_preload(lv_pre)) {
+		if (!_lv_preload(lv_pre, &flush_required)) {
 			/* FIXME Revert preloading */
 			goto_out;
 		}
@@ -874,7 +874,7 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 	if (lv_is_origin(lv_pre) || lv_is_cow(lv_pre))
 		lockfs = 1;
 
-	if (!_lv_suspend_lv(lv, lockfs)) {
+	if (!_lv_suspend_lv(lv, lockfs, flush_required)) {
 		memlock_dec();
 		fs_unlock();
 		goto out;

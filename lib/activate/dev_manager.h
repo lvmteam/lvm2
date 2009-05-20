@@ -49,9 +49,10 @@ int dev_manager_mirror_percent(struct dev_manager *dm,
 			       struct logical_volume *lv, int wait,
 			       float *percent, uint32_t *event_nr);
 int dev_manager_suspend(struct dev_manager *dm, struct logical_volume *lv,
-			int lockfs);
+			int lockfs, int flush_required);
 int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv);
-int dev_manager_preload(struct dev_manager *dm, struct logical_volume *lv);
+int dev_manager_preload(struct dev_manager *dm, struct logical_volume *lv,
+			int *flush_required);
 int dev_manager_deactivate(struct dev_manager *dm, struct logical_volume *lv);
 
 int dev_manager_lv_mknodes(const struct logical_volume *lv);

@@ -550,12 +550,6 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 		lp->resize = LV_EXTEND;
 	}
 
-	if (lp->mirrors && activation() &&
-	    lv_info(cmd, lv, &info, 0, 0) && info.exists) {
-		log_error("Mirrors cannot be resized while active yet.");
-		return ECMD_FAILED;
-	}
-
 	if (lv_is_origin(lv)) {
 		if (lp->resize == LV_REDUCE) {
 			log_error("Snapshot origin volumes cannot be reduced "
