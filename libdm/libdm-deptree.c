@@ -640,6 +640,11 @@ void *dm_tree_node_get_context(struct dm_tree_node *node)
 	return node->context;
 }
 
+int dm_tree_node_size_changed(struct dm_tree_node *dnode)
+{
+	return dnode->props.size_changed;
+}
+
 int dm_tree_node_num_children(struct dm_tree_node *node, uint32_t inverted)
 {
 	if (inverted) {
@@ -1480,6 +1485,10 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 				return 0;
 			}
 		}
+
+		/* Propagate device size change change */
+		if (child->props.size_changed)
+			dnode->props.size_changed = 1;
 
 		/* Resume device immediately if it has parents and its size changed */
 		if (!dm_tree_node_num_children(child, 1) || !child->props.size_changed)

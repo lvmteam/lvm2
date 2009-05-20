@@ -49,6 +49,7 @@ struct dev_manager {
 
 	void *target_state;
 	uint32_t pvmove_mirror_count;
+	int flush_required;
 
 	char *vg_name;
 };
@@ -1164,7 +1165,7 @@ static int _tree_action(struct dev_manager *dm, struct logical_volume *lv, actio
 		break;
 	case SUSPEND:
 		dm_tree_skip_lockfs(root);
-		if ((lv->status & MIRRORED) && !(lv->status & PVMOVE))
+		if (!dm->flush_required && (lv->status & MIRRORED) && !(lv->status & PVMOVE))
 			dm_tree_use_no_flush_suspend(root);
 	case SUSPEND_WITH_LOCKFS:
 		if (!dm_tree_suspend_children(root, dlid, ID_LEN + sizeof(UUID_PREFIX) - 1))
@@ -1179,6 +1180,9 @@ static int _tree_action(struct dev_manager *dm, struct logical_volume *lv, actio
 		/* Preload any devices required before any suspensions */
 		if (!dm_tree_preload_children(root, dlid, ID_LEN + sizeof(UUID_PREFIX) - 1))
 			goto_out;
+
+		if (dm_tree_node_size_changed(root))
+			dm->flush_required = 1;
 
 		if ((action == ACTIVATE) &&
 		    !dm_tree_activate_children(root, dlid, ID_LEN + sizeof(UUID_PREFIX) - 1))
@@ -1210,13 +1214,19 @@ int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv)
 	return _tree_action(dm, lv, CLEAN);
 }
 
-int dev_manager_preload(struct dev_manager *dm, struct logical_volume *lv)
+int dev_manager_preload(struct dev_manager *dm, struct logical_volume *lv,
+			int *flush_required)
 {
 	/* FIXME Update the pvmove implementation! */
 	if ((lv->status & PVMOVE) || (lv->status & LOCKED))
 		return 1;
 
-	return _tree_action(dm, lv, PRELOAD);
+	if (!_tree_action(dm, lv, PRELOAD))
+		return 0;
+
+	*flush_required = dm->flush_required;
+
+	return 1;
 }
 
 int dev_manager_deactivate(struct dev_manager *dm, struct logical_volume *lv)
@@ -1231,8 +1241,10 @@ int dev_manager_deactivate(struct dev_manager *dm, struct logical_volume *lv)
 }
 
 int dev_manager_suspend(struct dev_manager *dm, struct logical_volume *lv,
-			int lockfs)
+			int lockfs, int flush_required)
 {
+	dm->flush_required = flush_required;
+
 	return _tree_action(dm, lv, lockfs ? SUSPEND_WITH_LOCKFS : SUSPEND);
 }
 

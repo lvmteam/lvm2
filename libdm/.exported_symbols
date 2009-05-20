@@ -49,6 +49,7 @@ dm_tree_node_get_name
 dm_tree_node_get_uuid
 dm_tree_node_get_info
 dm_tree_node_get_context
+dm_tree_node_size_changed
 dm_tree_node_num_children
 dm_tree_node_num_parents
 dm_tree_find_node

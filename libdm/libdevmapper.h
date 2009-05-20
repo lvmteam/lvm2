@@ -288,6 +288,7 @@ const char *dm_tree_node_get_name(struct dm_tree_node *node);
 const char *dm_tree_node_get_uuid(struct dm_tree_node *node);
 const struct dm_info *dm_tree_node_get_info(struct dm_tree_node *node);
 void *dm_tree_node_get_context(struct dm_tree_node *node);
+int dm_tree_node_size_changed(struct dm_tree_node *dnode);
 
 /*
  * Returns the number of children of the given node (excluding the root node).
