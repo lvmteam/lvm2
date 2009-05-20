@@ -1,6 +1,10 @@
 Version 1.02.32 - 
 ================================
-  Fix segfault when using -U, -G and -M options in dmsetup.
+  Only generate libdevmapper.a when configured to link statically.
+  Export dm_tree_node_size_changed() from libdevmapper.
+  Propagate the table size_changed property up the dm device tree.
+  Detect failure to free memory pools when releasing the library.
+  Fix segfault when getopt processes dmsetup -U, -G and -M options.
 
 Version 1.02.31 - 3rd March 2009
 ================================
