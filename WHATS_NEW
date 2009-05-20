@@ -5,7 +5,6 @@ Version 2.02.46 -
   Enable online resizing of mirrors.
   Use suspend with flush when device size was changed during table preload.
   Introduce CLVMD_CMD_LOCK_QUERY command for clvmd.
-  Use lvconvert --repair in dmeventd mirror DSO.
   Fix pvmove to revert operation if temporary mirror creation fails.
   Fix metadata export for VG with missing PVs.
   Add vgimportclone and install it and the man page by default.
