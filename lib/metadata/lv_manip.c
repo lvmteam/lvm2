@@ -2036,28 +2036,13 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 			return 0;
 		}
 
-		/*
-		 * Check for confirmation prompts in the following cases:
-		 * 1) Clustered VG, and some remote nodes have the LV active
-		 * 2) Non-clustered VG, but LV active locally
-		 */
-		if (vg_is_clustered(vg) && !activate_lv_excl(cmd, lv) &&
-		    (force == PROMPT)) {
-			if (yes_no_prompt("Logical volume \"%s\" is active on other "
-					  "cluster nodes.  Really remove? [y/n]: ",
-					  lv->name) == 'n') {
-				log_print("Logical volume \"%s\" not removed",
-					  lv->name);
-				return 0;
-			}
-		} else if (info.exists && (force == PROMPT)) {
-			 if (yes_no_prompt("Do you really want to remove active "
-					   "logical volume \"%s\"? [y/n]: ",
-					   lv->name) == 'n') {
-				log_print("Logical volume \"%s\" not removed",
-					  lv->name);
-				return 0;
-			 }
+		if (lv_is_active(lv) && (force == PROMPT) &&
+		    yes_no_prompt("Do you really want to remove active "
+				  "%slogical volume %s? [y/n]: ",
+				  vg_is_clustered(vg) ? "clustered " : "",
+				  lv->name) == 'n') {
+			log_print("Logical volume %s not removed", lv->name);
+			return 0;
 		}
 	}
 
