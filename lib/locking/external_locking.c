@@ -26,6 +26,7 @@ static int (*_lock_fn) (struct cmd_context * cmd, const char *resource,
 			uint32_t flags) = NULL;
 static int (*_init_fn) (int type, struct config_tree * cft,
 			uint32_t *flags) = NULL;
+static int (*_lock_query_fn) (const char *resource, int *mode) = NULL;
 
 static int _lock_resource(struct cmd_context *cmd, const char *resource,
 			  uint32_t flags)
@@ -87,6 +88,10 @@ int init_external_locking(struct locking_type *locking, struct cmd_context *cmd)
 		_locking_lib = NULL;
 		return 0;
 	}
+
+	if (!(_lock_query_fn = dlsym(_locking_lib, "lock_resource_query")))
+		log_warn("WARNING: %s: _lock_resource_query() missing: "
+			 "Using inferior activation method.", libname);
 
 	log_verbose("Loaded external locking library %s", libname);
 	return _init_fn(2, cmd->cft, &locking->flags);
