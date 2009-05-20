@@ -40,6 +40,7 @@ struct device {
 	int fd;
 	int open_count;
 	int block_size;
+	int read_ahead;
 	uint32_t flags;
 	uint64_t end;
 	struct dm_list open_list;
@@ -64,6 +65,7 @@ struct device_area {
  */
 int dev_get_size(const struct device *dev, uint64_t *size);
 int dev_get_sectsize(struct device *dev, uint32_t *size);
+int dev_get_read_ahead(struct device *dev, uint32_t *read_ahead);
 
 /* Use quiet version if device number could change e.g. when opening LV */
 int dev_open(struct device *dev);

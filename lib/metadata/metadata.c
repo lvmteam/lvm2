@@ -1414,6 +1414,35 @@ static int _vg_mark_partial_lvs(struct volume_group *vg)
 	return 1;
 }
 
+/*
+ * Be sure that all PV devices have cached read ahead in dev-cache
+ * Currently it takes read_ahead from first PV segment only
+ */
+static int _lv_read_ahead_single(struct logical_volume *lv, void *data)
+{
+	struct lv_segment *seg = first_seg(lv);
+	uint32_t seg_read_ahead = 0, *read_ahead = data;
+
+	if (seg && seg_type(seg, 0) == AREA_PV)
+		dev_get_read_ahead(seg_pv(seg, 0)->dev, &seg_read_ahead);
+
+	if (seg_read_ahead > *read_ahead)
+		*read_ahead = seg_read_ahead;
+
+	return 1;
+}
+
+uint32_t lv_calculate_readhead(const struct logical_volume *lv)
+{
+	uint32_t read_ahead = 0;
+
+	if (lv->read_ahead == DM_READ_AHEAD_AUTO)
+		_lv_postorder((struct logical_volume *)lv, _lv_read_ahead_single, &read_ahead);
+
+	log_debug("Calculated readahead of LV %s is %u", lv->name, read_ahead);
+	return read_ahead;
+}
+
 int vg_validate(struct volume_group *vg)
 {
 	struct pv_list *pvl, *pvl2;

@@ -1,5 +1,6 @@
 Version 2.02.46 - 
 ================================
+  Inherit read ahead from underlying device.
   Use lock query instead of activate_lv_excl.
   Enable online resizing of mirrors.
   Use suspend with flush when device size was changed during table preload.
