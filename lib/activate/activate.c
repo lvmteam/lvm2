@@ -469,6 +469,11 @@ static int _lv_info(struct cmd_context *cmd, const struct logical_volume *lv, in
 	info->live_table = dminfo.live_table;
 	info->inactive_table = dminfo.inactive_table;
 
+	/*
+	 * Cache read ahead value for PV devices now (before possible suspend)
+	 */
+	(void)lv_calculate_readhead(lv);
+
 	if (name)
 		dm_pool_free(cmd->mem, name);
 

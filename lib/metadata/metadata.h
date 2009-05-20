@@ -345,6 +345,11 @@ struct lv_segment *get_only_segment_using_this_lv(struct logical_volume *lv);
 unsigned snapshot_count(const struct volume_group *vg);
 
 /*
+ * Calculate readahead from underlying PV devices
+ */
+uint32_t lv_calculate_readhead(const struct logical_volume *lv);
+
+/*
  * For internal metadata caching.
  */
 int export_vg_to_buffer(struct volume_group *vg, char **buf);
