@@ -201,7 +201,7 @@ static int lvchange_resync(struct cmd_context *cmd,
 		if (info.open_count) {
 			log_error("Can't resync open logical volume \"%s\"",
 				  lv->name);
-			return ECMD_FAILED;
+			return 0;
 		}
 
 		if (info.exists) {
@@ -211,11 +211,11 @@ static int lvchange_resync(struct cmd_context *cmd,
 					  lv->name) == 'n') {
 				log_print("Logical volume \"%s\" not resynced",
 					  lv->name);
-				return ECMD_FAILED;
+				return 0;
 			}
 
 			if (sigint_caught())
-				return ECMD_FAILED;
+				return 0;
 
 			active = 1;
 		}
@@ -225,14 +225,14 @@ static int lvchange_resync(struct cmd_context *cmd,
 	monitored = dmeventd_monitor_mode();
 	init_dmeventd_monitor(0);
 
-	if (vg_is_clustered(lv->vg) && !activate_lv_excl(cmd, lv)) {
-		log_error("Can't get exclusive access to clustered volume %s",
-			  lv->name);
-		return ECMD_FAILED;
-	}
-
 	if (!deactivate_lv(cmd, lv)) {
 		log_error("Unable to deactivate %s for resync", lv->name);
+		return 0;
+	}
+
+	if (vg_is_clustered(lv->vg) && lv_is_active(lv)) {
+		log_error("Can't get exclusive access to clustered volume %s",
+			  lv->name);
 		return 0;
 	}
 
