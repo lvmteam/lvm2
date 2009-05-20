@@ -694,13 +694,30 @@ int lvs_in_vg_opened(const struct volume_group *vg)
  */
 int lv_is_active(struct logical_volume *lv)
 {
+	int ret;
+
 	if (_lv_active(lv->vg->cmd, lv, 0))
 		return 1;
 
 	if (!vg_is_clustered(lv->vg))
 		return 0;
 
-	return remote_lock_held(lv->lvid.s);
+	if ((ret = remote_lock_held(lv->lvid.s)) >= 0)
+		return ret;
+
+	/*
+	 * Old compatibility code if locking doesn't support lock query
+	 * FIXME: check status to not deactivate already activate device
+	 */
+	if (activate_lv_excl(lv->vg->cmd, lv)) {
+		deactivate_lv(lv->vg->cmd, lv);
+			return 0;
+	}
+
+	/*
+	 * Exclusive local activation failed so assume it is active elsewhere.
+	 */
+	return 1;
 }
 
 /*
