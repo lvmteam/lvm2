@@ -47,6 +47,8 @@ lvremove -ff "$vg"
 blockdev --setra 768 $dev1
 lvcreate -n $lv -L4M $vg $dev1
 test $(blockdev --getra $G_dev_/$vg/$lv) -eq 768
+lvremove -ff $vg
+
 # Check default, active/inactive values for read_ahead / kernel_read_ahead
 lvcreate -n $lv -l 50%FREE $vg
 lvchange -an $vg/$lv
