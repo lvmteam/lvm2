@@ -319,7 +319,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 		}
 
 		if (!vg_check_status(vg, CLUSTERED)) {
-			unlock_release_vg(cmd, vg, vgname);
+			unlock_and_release_vg(cmd, vg, vgname);
 			if (ret_max < ECMD_FAILED)
 				ret_max = ECMD_FAILED;
 			continue;
@@ -350,7 +350,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 
 		ret = process_each_lv_in_vg(cmd, vg, &lvnames, tags_arg,
 					    handle, process_single);
-		unlock_release_vg(cmd, vg, vgname);
+		unlock_and_release_vg(cmd, vg, vgname);
 		if (ret > ret_max)
 			ret_max = ret;
 		if (sigint_caught())
@@ -469,7 +469,7 @@ static int _process_one_vg(struct cmd_context *cmd, const char *vg_name,
 	}
 
 	if (!vg_check_status(vg, CLUSTERED)) {
-		unlock_release_vg(cmd, vg, vg_name);
+		unlock_and_release_vg(cmd, vg, vg_name);
 		return ECMD_FAILED;
 	}
 
@@ -477,7 +477,7 @@ static int _process_one_vg(struct cmd_context *cmd, const char *vg_name,
 		/* Only process if a tag matches or it's on arg_vgnames */
 		if (!str_list_match_item(arg_vgnames, vg_name) &&
 		    !str_list_match_list(tags, &vg->tags)) {
-			unlock_release_vg(cmd, vg, vg_name);
+			unlock_and_release_vg(cmd, vg, vg_name);
 			return ret_max;
 		}
 	}
@@ -487,7 +487,7 @@ static int _process_one_vg(struct cmd_context *cmd, const char *vg_name,
 		ret_max = ret;
 	}
 
-	unlock_release_vg(cmd, vg, vg_name);
+	unlock_and_release_vg(cmd, vg, vg_name);
 
 	return ret_max;
 }
@@ -771,12 +771,12 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 					continue;
 				}
 				if (!consistent) {
-					unlock_release_vg(cmd, vg, sll->str);
+					unlock_and_release_vg(cmd, vg, sll->str);
 					continue;
 				}
 
 				if (!vg_check_status(vg, CLUSTERED)) {
-					unlock_release_vg(cmd, vg, sll->str);
+					unlock_and_release_vg(cmd, vg, sll->str);
 					continue;
 				}
 
@@ -784,7 +784,7 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 							    handle,
 							    process_single);
 
-				unlock_release_vg(cmd, vg, sll->str);
+				unlock_and_release_vg(cmd, vg, sll->str);
 
 				if (ret > ret_max)
 					ret_max = ret;

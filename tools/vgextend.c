@@ -76,7 +76,7 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 	r = ECMD_PROCESSED;
 
 error:
-	unlock_release_vg(cmd, vg, vg_name);
+	unlock_and_release_vg(cmd, vg, vg_name);
 	unlock_vg(cmd, VG_ORPHANS);
 	return r;
 }

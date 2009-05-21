@@ -489,13 +489,13 @@ int remote_lock_held(const char *vol)
 	if (!locking_is_clustered())
 		return 0;
 
-	if (!_locking.lock_resource_query)
+	if (!_locking.query_resource)
 		return -1;
 
 	/*
 	 * If an error occured, expect that volume is active
 	 */
-	if (!_locking.lock_resource_query(vol, &mode)) {
+	if (!_locking.query_resource(vol, &mode)) {
 		stack;
 		return 1;
 	}

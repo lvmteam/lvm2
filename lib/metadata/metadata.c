@@ -2633,12 +2633,12 @@ vg_t *vg_lock_and_read(struct cmd_context *cmd, const char *vg_name,
 	if (!(vg = vg_read_internal(cmd, vg_name, vgid, &consistent)) ||
 	    ((misc_flags & FAIL_INCONSISTENT) && !consistent)) {
 		log_error("Volume group \"%s\" not found", vg_name);
-		unlock_release_vg(cmd, vg, vg_name);
+		unlock_and_release_vg(cmd, vg, vg_name);
 		return NULL;
 	}
 
 	if (!vg_check_status(vg, status_flags)) {
-		unlock_release_vg(cmd, vg, vg_name);
+		unlock_and_release_vg(cmd, vg, vg_name);
 		return NULL;
 	}
 

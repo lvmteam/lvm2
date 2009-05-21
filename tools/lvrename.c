@@ -121,6 +121,6 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 
 	r = ECMD_PROCESSED;
 error:
-	unlock_release_vg(cmd, vg, vg_name);
+	unlock_and_release_vg(cmd, vg, vg_name);
 	return r;
 }

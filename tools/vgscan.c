@@ -25,7 +25,7 @@ static int vgscan_single(struct cmd_context *cmd, const char *vg_name,
 	}
 
 	if (!consistent) {
-		unlock_release_vg(cmd, vg, vg_name);
+		unlock_and_release_vg(cmd, vg, vg_name);
 		dev_close_all();
 		log_error("Volume group \"%s\" inconsistent", vg_name);
 		/* Don't allow partial switch to this program */

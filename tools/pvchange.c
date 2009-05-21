@@ -201,7 +201,7 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 	log_print("Physical volume \"%s\" changed", pv_name);
 	r = 1;
 out:
-	unlock_release_vg(cmd, vg, vg_name);
+	unlock_and_release_vg(cmd, vg, vg_name);
 	return r;
 
 }

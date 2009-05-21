@@ -83,7 +83,7 @@ static int vg_rename_path(struct cmd_context *cmd, const char *old_vg_path,
 	}
 
 	if (!vg_check_status(vg, CLUSTERED | LVM_WRITE)) {
-		unlock_release_vg(cmd, vg, vg_name_old);
+		unlock_and_release_vg(cmd, vg, vg_name_old);
 		return 0;
 	}
 
@@ -91,7 +91,7 @@ static int vg_rename_path(struct cmd_context *cmd, const char *old_vg_path,
 	vg_check_status(vg, EXPORTED_VG);
 
 	if (lvs_in_vg_activated_by_uuid_only(vg)) {
-		unlock_release_vg(cmd, vg, vg_name_old);
+		unlock_and_release_vg(cmd, vg, vg_name_old);
 		log_error("Volume group \"%s\" still has active LVs",
 			  vg_name_old);
 		/* FIXME Remove this restriction */
@@ -101,7 +101,7 @@ static int vg_rename_path(struct cmd_context *cmd, const char *old_vg_path,
 	log_verbose("Checking for new volume group \"%s\"", vg_name_new);
 
 	if (!lock_vol(cmd, vg_name_new, LCK_VG_WRITE)) {
-		unlock_release_vg(cmd, vg, vg_name_old);
+		unlock_and_release_vg(cmd, vg, vg_name_old);
 		log_error("Can't get lock for %s", vg_name_new);
 		return 0;
 	}
@@ -151,8 +151,8 @@ static int vg_rename_path(struct cmd_context *cmd, const char *old_vg_path,
 	backup(vg);
 	backup_remove(cmd, vg_name_old);
 
-	unlock_release_vg(cmd, vg_new, vg_name_new);
-	unlock_release_vg(cmd, vg, vg_name_old);
+	unlock_and_release_vg(cmd, vg_new, vg_name_new);
+	unlock_and_release_vg(cmd, vg, vg_name_old);
 
 	log_print("Volume group \"%s\" successfully renamed to \"%s\"",
 		  vg_name_old, vg_name_new);
@@ -164,8 +164,8 @@ static int vg_rename_path(struct cmd_context *cmd, const char *old_vg_path,
 	return 1;
 
       error:
-	unlock_release_vg(cmd, vg_new, vg_name_new);
-	unlock_release_vg(cmd, vg, vg_name_old);
+	unlock_and_release_vg(cmd, vg_new, vg_name_new);
+	unlock_and_release_vg(cmd, vg, vg_name_old);
 	return 0;
 }
 

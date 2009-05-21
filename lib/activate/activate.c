@@ -711,7 +711,7 @@ int lv_is_active(struct logical_volume *lv)
 	 */
 	if (activate_lv_excl(lv->vg->cmd, lv)) {
 		deactivate_lv(lv->vg->cmd, lv);
-			return 0;
+		return 0;
 	}
 
 	/*
