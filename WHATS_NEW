@@ -1,9 +1,11 @@
-Version 2.02.46 - 
-================================
-  Inherit read ahead from underlying device.
-  Use lock query instead of activate_lv_excl.
+Version 2.02.46 - 21st May 2009
+===============================
+  Inherit readahead setting from underlying devices during activation.
+  Detect LVs active on remote nodes by querying locks if supported.
   Enable online resizing of mirrors.
   Use suspend with flush when device size was changed during table preload.
+  Implement query_resource_fn for cluster_locking.
+  Support query_resource_fn in locking modules.
   Introduce CLVMD_CMD_LOCK_QUERY command for clvmd.
   Fix pvmove to revert operation if temporary mirror creation fails.
   Fix metadata export for VG with missing PVs.
@@ -11,7 +13,7 @@ Version 2.02.46 -
   Force max_lv restriction only for newly created LV.
   Remove unneeded import parameter from lv_create_empty.
   Merge lv_is_displayable and lv_is_visible functions.
-  Introduce lv_set_visible & lv_set_invisible functions.
+  Introduce lv_set_visible & lv_set_hidden functions.
   Fix lv_is_visible to handle virtual origin.
   Introduce link_lv_to_vg and unlink_lv_from_vg functions.
   Remove lv_count from VG and use counter function instead.
@@ -20,15 +22,18 @@ Version 2.02.46 -
   Remove NON_BLOCKING lock flag from tools and set a policy to auto-set.
   Remove snapshot_count from VG and use function instead.
   Fix first_seg() call for empty segment list.
-  Add make install_lvm2 as complement to device-mapper install.
+  Add install_lvm2 makefile target to install only the LVM2 components.
   Reject missing PVs from allocation in toollib.
   Fix PV datalignment for values starting prior to MDA area. (2.02.45)
   Add sparse devices: lvcreate -s --virtualoriginsize (hidden zero origin).
+  Fix minimum width of devices column in reports.
   Add lvs origin_size field.
   Fix linux configure --enable-debug to exclude -O2.
-  Implement lvconvert --repair, for repairing partially failed mirrors.
+  Implement lvconvert --repair for repairing partially-failed mirrors.
   Fix vgreduce --removemissing failure exit code.
   Fix remote metadata backup for clvmd.
+  Introduce unlock_and_release_vg macro.
+  Introduce vg_release() to be called to free every struct volume_group.
   Alloc PV internal structure from VG mempool if possible.
   Fix metadata backup to run after vg_commit always.
   Tidy clvmd volume lock cache functions.
@@ -36,12 +41,11 @@ Version 2.02.46 -
   Fix pvs -a output to not read volume groups from non-PV devices.
   Add MMC (mmcblk) device type to filters.
   Introduce memory pools per volume group (to reduce memory for large VGs).
-  Add memory pool leaks detection.
-  Use copy of PV structure when manipulating with global PV lists.
+  Use copy of PV structure when manipulating global PV lists.
   Always return exit error status when locking of volume group fails.
   Fix mirror log convert validation question.
   Avoid referencing files from DESTDIR during build process.
-  Avoid creating some static libraries without static_link.
+  Avoid creating some static libraries unless configured --enable-static_link.
   Enable use of cached metadata for pvs and pvdisplay commands.
   Add missing 'device-mapper' internal subdir build dependency.
   Fix memory leak in mirror allocation code.
@@ -52,14 +56,15 @@ Version 2.02.46 -
   Block SIGTERM & SIGINT in clvmd subthreads.
   Detect and conditionally wipe swapspace signatures in pvcreate.
   Fix maximal volume count check for snapshots if max_lv set for volume group.
-  Fix lvcreate to remove cow volume if the snapshot creation fails.
+  Fix lvcreate to remove unused cow volume if the snapshot creation fails.
   Fix error messages when PV uuid or pe_start reading fails.
-  Rename liblvm.a to liblvm-internal.a and build new application library.
+  Build new liblvm application-level library.
+  Rename liblvm.a to liblvm-internal.a.
   Flush memory pool and fix locking in clvmd refresh and backup command.
-  Fix unlocks in clvmd-corosync. Broken in 2.02.45.
+  Fix unlocks in clvmd-corosync. (2.02.45)
   Fix error message when adding metadata directory to internal list fails.
   Fix size and error message of memory allocation at backup initialization.
-  Remove old metadata backup file after renaming vg.
+  Remove old metadata backup file after renaming VG.
   Restore log_suppress state when metadata backup file is up-to-date.
 
 Version 2.02.45 - 3rd March 2009

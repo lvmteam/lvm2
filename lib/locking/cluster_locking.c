@@ -33,7 +33,7 @@
 
 #ifndef CLUSTER_LOCKING_INTERNAL
 int lock_resource(struct cmd_context *cmd, const char *resource, uint32_t flags);
-int lock_resource_query(const char *resource, int *mode);
+int query_resource(const char *resource, int *mode);
 void locking_end(void);
 int locking_init(int type, struct config_tree *cf, uint32_t *flags);
 #endif
@@ -472,9 +472,9 @@ static int decode_lock_type(const char *response)
 }
 
 #ifdef CLUSTER_LOCKING_INTERNAL
-static int _lock_resource_query(const char *resource, int *mode)
+static int _query_resource(const char *resource, int *mode)
 #else
-int lock_resource_query(const char *resource, int *mode)
+int query_resource(const char *resource, int *mode)
 #endif
 {
 	int i, status, len, num_responses, saved_errno;
@@ -549,7 +549,7 @@ void reset_locking(void)
 int init_cluster_locking(struct locking_type *locking, struct cmd_context *cmd)
 {
 	locking->lock_resource = _lock_resource;
-	locking->lock_resource_query = _lock_resource_query;
+	locking->query_resource = _query_resource;
 	locking->fin_locking = _locking_end;
 	locking->reset_locking = _reset_locking;
 	locking->flags = LCK_PRE_MEMLOCK | LCK_CLUSTERED;

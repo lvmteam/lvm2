@@ -118,9 +118,11 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 	lock_vol(cmd, (lv)->lvid.s, flags | LCK_LV_CLUSTERED(lv))
 
 #define unlock_vg(cmd, vol)	lock_vol(cmd, vol, LCK_VG_UNLOCK)
-#define unlock_release_vg(cmd, vg, vol) do { unlock_vg(cmd, vol); \
-					     vg_release(vg); \
-					} while (0)
+#define unlock_and_release_vg(cmd, vg, vol) \
+	do { \
+		unlock_vg(cmd, vol); \
+		vg_release(vg); \
+	} while (0)
 
 #define resume_lv(cmd, lv)	lock_lv_vol(cmd, lv, LCK_LV_RESUME)
 #define suspend_lv(cmd, lv)	lock_lv_vol(cmd, lv, LCK_LV_SUSPEND | LCK_HOLD)

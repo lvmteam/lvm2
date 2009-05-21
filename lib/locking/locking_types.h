@@ -18,7 +18,7 @@
 
 typedef int (*lock_resource_fn) (struct cmd_context * cmd, const char *resource,
 				 uint32_t flags);
-typedef int (*lock_resource_query_fn) (const char *resource, int *mode);
+typedef int (*query_resource_fn) (const char *resource, int *mode);
 
 typedef void (*fin_lock_fn) (void);
 typedef void (*reset_lock_fn) (void);
@@ -29,7 +29,7 @@ typedef void (*reset_lock_fn) (void);
 struct locking_type {
 	uint32_t flags;
 	lock_resource_fn lock_resource;
-	lock_resource_query_fn lock_resource_query;
+	query_resource_fn query_resource;
 
 	reset_lock_fn reset_locking;
 	fin_lock_fn fin_locking;

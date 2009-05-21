@@ -68,7 +68,7 @@ void init_snapshot_seg(struct lv_segment *seg, struct logical_volume *origin,
 	seg->origin = origin;
 	seg->cow = cow;
 
-	lv_set_invisible(cow);
+	lv_set_hidden(cow);
 
 	cow->snapshot = seg;
 

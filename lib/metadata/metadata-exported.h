@@ -372,7 +372,7 @@ struct dm_list *get_pvs(struct cmd_context *cmd);
 int link_lv_to_vg(struct volume_group *vg, struct logical_volume *lv);
 int unlink_lv_from_vg(struct logical_volume *lv);
 void lv_set_visible(struct logical_volume *lv);
-void lv_set_invisible(struct logical_volume *lv);
+void lv_set_hidden(struct logical_volume *lv);
 
 /* Set full_scan to 1 to re-read every (filtered) device label */
 struct dm_list *get_vgnames(struct cmd_context *cmd, int full_scan);
@@ -442,7 +442,12 @@ int vg_change_pesize(struct cmd_context *cmd, struct volume_group *vg,
 int vg_split_mdas(struct cmd_context *cmd, struct volume_group *vg_from,
 		  struct volume_group *vg_to);
 
+/*
+ * vg_release() must be called on every struct volume_group allocated
+ * by vg_create() or vg_read_internal() to free it when no longer required.
+ */
 void vg_release(struct volume_group *vg);
+
 /* Manipulate LVs */
 struct logical_volume *lv_create_empty(const char *name,
 				       union lvid *lvid,

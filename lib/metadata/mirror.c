@@ -303,7 +303,7 @@ static int _init_mirror_log(struct cmd_context *cmd,
 		return 0;
 	}
 
-	lv_set_invisible(log_lv);
+	lv_set_hidden(log_lv);
 
 	if (was_active && !activate_lv(cmd, log_lv))
 		return_0;
@@ -1340,7 +1340,7 @@ int attach_mirror_log(struct lv_segment *seg, struct logical_volume *log_lv)
 {
 	seg->log_lv = log_lv;
 	log_lv->status |= MIRROR_LOG;
-	lv_set_invisible(log_lv);
+	lv_set_hidden(log_lv);
 	return add_seg_to_segs_using_this_lv(log_lv, seg);
 }
 
@@ -1466,7 +1466,7 @@ int add_mirror_images(struct cmd_context *cmd, struct logical_volume *lv,
 	    !(log_lv = _set_up_mirror_log(cmd, ah, lv, log_count, region_size,
 					  alloc, mirror_in_sync()))) {
 		stack;
-		goto out_remove_imgs;
+		goto out_remove_images;
 	}
 
 	/* The log initialization involves vg metadata commit.
@@ -1498,7 +1498,7 @@ int add_mirror_images(struct cmd_context *cmd, struct logical_volume *lv,
 			       region_size)) {
 		log_error("Aborting. Failed to add mirror segment. "
 			  "Remove new LV and retry.");
-		goto out_remove_imgs;
+		goto out_remove_images;
 	}
 
 	if (log_count && !attach_mirror_log(first_seg(lv), log_lv))
@@ -1517,7 +1517,7 @@ int add_mirror_images(struct cmd_context *cmd, struct logical_volume *lv,
 		else
 			backup(log_lv->vg);
 	}
-  out_remove_imgs:
+  out_remove_images:
 	alloc_destroy(ah);
 	return 0;
 }

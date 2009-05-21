@@ -38,7 +38,7 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 					 LCK_VG_WRITE,
 					 CLUSTERED | EXPORTED_VG | LVM_WRITE,
 					 CORRECT_INCONSISTENT | FAIL_INCONSISTENT))) {
-		unlock_release_vg(cmd, vg_to, vg_name_to);
+		unlock_and_release_vg(cmd, vg_to, vg_name_to);
 		return ECMD_FAILED;
 	}
 
@@ -116,8 +116,8 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 		  vg_from->name, vg_to->name);
 	r = ECMD_PROCESSED;
 bad:
-	unlock_release_vg(cmd, vg_from, vg_name_from);
-	unlock_release_vg(cmd, vg_to, vg_name_to);
+	unlock_and_release_vg(cmd, vg_from, vg_name_from);
+	unlock_and_release_vg(cmd, vg_to, vg_name_to);
 	return r;
 }
 

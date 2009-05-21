@@ -681,7 +681,7 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 	if (!(r = _lvresize(cmd, vg, &lp)))
 		stack;
 
-	unlock_release_vg(cmd, vg, lp.vg_name);
+	unlock_and_release_vg(cmd, vg, lp.vg_name);
 
 	return r;
 }

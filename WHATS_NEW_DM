@@ -1,5 +1,5 @@
-Version 1.02.32 - 
-================================
+Version 1.02.32 - 21st May 2009
+===============================
   Only generate libdevmapper.a when configured to link statically.
   Export dm_tree_node_size_changed() from libdevmapper.
   Propagate the table size_changed property up the dm device tree.

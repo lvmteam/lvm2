@@ -371,56 +371,61 @@ static int _area_missing(struct lv_segment *lvseg, int s)
 	if (seg_type(lvseg, s) == AREA_LV) {
 		if (seg_lv(lvseg, s)->status & PARTIAL_LV)
 			return 1;
-	} else if (seg_type(lvseg, s) == AREA_PV) {
-		if (seg_pv(lvseg, s)->status & MISSING_PV)
-			return 1;
-	}
+	} else if ((seg_type(lvseg, s) == AREA_PV) &&
+		   (seg_pv(lvseg, s)->status & MISSING_PV))
+		return 1;
+
 	return 0;
 }
 
 /* FIXME we want to handle mirror stacks here... */
-static int _count_failed_mirrors(struct logical_volume *lv)
+static int _failed_mirrors_count(struct logical_volume *lv)
 {
 	struct lv_segment *lvseg;
 	int ret = 0;
 	int s;
+
 	dm_list_iterate_items(lvseg, &lv->segments) {
 		if (!seg_is_mirrored(lvseg))
 			return -1;
-		for(s = 0; s < lvseg->area_count; ++s) {
+		for (s = 0; s < lvseg->area_count; s++)
 			if (_area_missing(lvseg, s))
-				++ ret;
-		}
+				ret++;
 	}
+
 	return ret;
 }
 
 static struct dm_list *_failed_pv_list(struct volume_group *vg)
 {
-	struct dm_list *r;
+	struct dm_list *failed_pvs;
 	struct pv_list *pvl, *new_pvl;
 
-	if (!(r = dm_pool_alloc(vg->vgmem, sizeof(*r)))) {
-		log_error("Allocation of list failed");
-		return_0;
+	if (!(failed_pvs = dm_pool_alloc(vg->vgmem, sizeof(*failed_pvs)))) {
+		log_error("Allocation of list of failed_pvs failed.");
+		return_NULL;
 	}
 
-	dm_list_init(r);
+	dm_list_init(failed_pvs);
+
 	dm_list_iterate_items(pvl, &vg->pvs) {
 		if (!(pvl->pv->status & MISSING_PV))
 			continue;
 
 		if (!(new_pvl = dm_pool_alloc(vg->vgmem, sizeof(*new_pvl)))) {
-			log_error("Unable to allocate physical volume list.");
-			return_0;
+			log_error("Allocation of failed_pvs list entry failed.");
+			return_NULL;
 		}
 		new_pvl->pv = pvl->pv;
-		dm_list_add(r, &new_pvl->list);
+		dm_list_add(failed_pvs, &new_pvl->list);
 	}
-	return r;
+
+	return failed_pvs;
 }
 
-/* walk down the stacked mirror LV to the original mirror LV */
+/*
+ * Walk down the stacked mirror LV to the original mirror LV.
+ */
 static struct logical_volume *_original_lv(struct logical_volume *lv)
 {
 	struct logical_volume *next_lv = lv, *tmp_lv;
@@ -431,8 +436,8 @@ static struct logical_volume *_original_lv(struct logical_volume *lv)
 	return next_lv;
 }
 
-static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * lv,
-			     struct lvconvert_params *lp)
+static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv,
+			      struct lvconvert_params *lp)
 {
 	struct lv_segment *seg;
 	uint32_t existing_mirrors;
@@ -485,7 +490,7 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 			log_error("The mirror is consistent, nothing to repair.");
 			return 0;
 		}
-		if ((failed_mirrors = _count_failed_mirrors(lv)) < 0)
+		if ((failed_mirrors = _failed_mirrors_count(lv)) < 0)
 			return_0;
 		lp->mirrors -= failed_mirrors;
 		log_error("Mirror status: %d/%d legs failed.",
@@ -828,7 +833,7 @@ static int lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 	} else if (arg_count(cmd, mirrors_ARG) || (lv->status & MIRRORED)) {
 		if (!archive(lv->vg))
 			return ECMD_FAILED;
-		if (!lvconvert_mirrors(cmd, lv, lp))
+		if (!_lvconvert_mirrors(cmd, lv, lp))
 			return ECMD_FAILED;
 	}
 

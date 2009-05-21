@@ -29,18 +29,17 @@
  * 3. Field type.  This must be either 'STR' or 'NUM'.
  * 4. Report heading.  This is the field heading that is displayed by the
  * reporting commands.
- * 5. Data value pointer.  This argument is is always a member of the
- * containing struct.  In some cases, the member points to the data value
- * of the field (for example, lv_uuid - see _uuid_disp()).  In other cases
- * it is pointer that may be used to derive the data value (for example,
- * seg_count - see _lvsegcount_disp()).  In the FIELD macro definition,
- * this is used in an offset calculation to derive the offset to the
- * data value from the containing struct base address.  Note that in some
+ * 5. Data value pointer.  This argument is always a member of the
+ * containing struct.  It may point directly to the data value (for example,
+ * lv_uuid - see _uuid_disp()) or may be used to derive the data value (for
+ * example, seg_count - see _lvsegcount_disp()).  In the FIELD macro
+ * definition, it is used in an offset calculation to derive the offset to
+ * the data value from the containing struct base address.  Note that in some
  * cases, the argument is the first member of the struct, in which case the
  * data value pointer points to the start of the struct itself (for example,
  * 'lvid' field of struct 'lv').
  * 6. Minimum display width.  This is the minimum width used to display
- * the field value.
+ * the field value, typically matching the width of the column heading.
  * 7. Display function identifier.  Used to derive the full name of the
  * function that displays this field.  Derivation is done by appending '_'
  * then prepending this argument to '_disp'.  For example, if this argument
