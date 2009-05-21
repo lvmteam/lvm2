@@ -1,3 +1,7 @@
+Version 2.02.47 - 21st May 2009
+===============================
+  Reinstate version in liblvm2cmd.so soname. (2.02.44)
+
 Version 2.02.46 - 21st May 2009
 ===============================
   Inherit readahead setting from underlying devices during activation.
