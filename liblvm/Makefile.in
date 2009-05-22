@@ -19,7 +19,7 @@ VPATH = @srcdir@
 SOURCES =\
 	lvm_base.c
 
-LIB_NAME = liblvm
+LIB_NAME = liblvm2app
 LIB_VERSION = $(LIB_VERSION_LVM)
 VERSIONED_SHLIB = $(LIB_NAME).$(LIB_SUFFIX).$(LIB_VERSION_LVM)
 

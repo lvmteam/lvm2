@@ -1,5 +1,6 @@
-Version 2.02.47 - 21st May 2009
+Version 2.02.47 - 22nd May 2009
 ===============================
+  Rename liblvm.so to liblvm2app.so and use configure --enable-applib.
   Reinstate version in liblvm2cmd.so soname. (2.02.44)
 
 Version 2.02.46 - 21st May 2009
