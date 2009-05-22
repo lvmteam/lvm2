@@ -22,7 +22,11 @@ ifeq ("@INTL@", "yes")
   SUBDIRS += po
 endif
 
-SUBDIRS += lib tools daemons libdm liblvm
+SUBDIRS += lib tools daemons libdm
+
+ifeq ("@APPLIB@", "yes")
+  SUBDIRS += liblvm
+endif
 
 ifeq ($(MAKECMDGOALS),distclean)
   SUBDIRS += daemons/clvmd \
@@ -46,7 +50,7 @@ libdm: include
 lib: libdm
 liblvm: lib
 daemons: lib tools
-tools: lib device-mapper liblvm
+tools: lib device-mapper
 po: tools daemons
 
 libdm.device-mapper: include.device-mapper

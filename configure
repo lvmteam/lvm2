@@ -690,9 +690,11 @@ CLDWHOLEARCHIVE
 CLDNOWHOLEARCHIVE
 CLDFLAGS
 BUILD_DMEVENTD
+APPLIB
 MODPROBE_CMD
 MSGFMT
 LVM2CMD_LIB
+LVM2APP_LIB
 GENHTML
 LCOV
 CPG_LIBS
@@ -800,6 +802,7 @@ enable_devmapper
 enable_compat
 enable_ioctl
 enable_o_direct
+enable_applib
 enable_cmdlib
 enable_pkgconfig
 enable_fsadm
@@ -1467,6 +1470,7 @@ Optional Features:
   --enable-compat         Enable support for old device-mapper versions
   --disable-driver        Disable calls to device-mapper in the kernel
   --disable-o_direct      Disable O_DIRECT
+  --enable-applib         Build application library
   --enable-cmdlib         Build shared command library
   --enable-pkgconfig      Install pkgconfig support
   --enable-fsadm          Enable fsadm
@@ -9707,6 +9711,23 @@ _ACEOF
 fi
 
 ################################################################################
+{ $as_echo "$as_me:$LINENO: checking whether to build liblvm2app.so application library" >&5
+$as_echo_n "checking whether to build liblvm2app.so application library... " >&6; }
+# Check whether --enable-applib was given.
+if test "${enable_applib+set}" = set; then
+  enableval=$enable_applib; APPLIB=$enableval
+else
+  APPLIB=no
+fi
+
+{ $as_echo "$as_me:$LINENO: result: $APPLIB" >&5
+$as_echo "$APPLIB" >&6; }
+
+test x$APPLIB = xyes \
+  && LVM2APP_LIB=-llvm2app \
+  || LVM2APP_LIB=
+
+################################################################################
 { $as_echo "$as_me:$LINENO: checking whether to compile liblvm2cmd.so" >&5
 $as_echo_n "checking whether to compile liblvm2cmd.so... " >&6; }
 # Check whether --enable-cmdlib was given.
@@ -12594,6 +12615,7 @@ LVM_MINOR=`echo "$VER" | $AWK -F '.' '{print $2}'`
 LVM_PATCHLEVEL=`echo "$VER" | $AWK -F '.' '{print $3}'`
 
 ################################################################################
+
 
 
 

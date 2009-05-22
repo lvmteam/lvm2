@@ -25,7 +25,7 @@ endif
 
 TARGETS = test
 
-LVMLIBS = -llvm -ldevmapper
+LVMLIBS = @LVM2APP_LIB@ -ldevmapper
 
 DEFS += -D_REENTRANT
 CFLAGS += -fno-strict-aliasing
@@ -35,6 +35,6 @@ include $(top_srcdir)/make.tmpl
 LDFLAGS = -L$(top_srcdir)/libdm -L$(top_srcdir)/liblvm
 CLDFLAGS = -L$(top_srcdir)/libdm -L$(top_srcdir)/liblvm
 
-test: $(OBJECTS) $(top_srcdir)/liblvm/liblvm.so $(top_srcdir)/libdm/libdevmapper.so
+test: $(OBJECTS) $(top_srcdir)/liblvm/liblvm2app.so $(top_srcdir)/libdm/libdevmapper.so
 	$(CC) -o test $(OBJECTS) $(CFLAGS) $(LDFLAGS) $(LVMLIBS) $(LIBS)
 

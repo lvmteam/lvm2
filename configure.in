@@ -424,6 +424,18 @@ if test x$ODIRECT = xyes; then
 fi
 
 ################################################################################
+dnl -- Enable liblvm2app.so
+AC_MSG_CHECKING(whether to build liblvm2app.so application library)
+AC_ARG_ENABLE(applib,
+  [  --enable-applib         Build application library],
+  APPLIB=$enableval, APPLIB=no)
+AC_MSG_RESULT($APPLIB)
+AC_SUBST([LVM2APP_LIB])
+test x$APPLIB = xyes \
+  && LVM2APP_LIB=-llvm2app \
+  || LVM2APP_LIB=
+
+################################################################################
 dnl -- Enable cmdlib
 AC_MSG_CHECKING(whether to compile liblvm2cmd.so)
 AC_ARG_ENABLE(cmdlib, [  --enable-cmdlib         Build shared command library],
@@ -747,6 +759,7 @@ LVM_MINOR=`echo "$VER" | $AWK -F '.' '{print $2}'`
 LVM_PATCHLEVEL=`echo "$VER" | $AWK -F '.' '{print $3}'`
 
 ################################################################################
+AC_SUBST(APPLIB)
 AC_SUBST(BUILD_DMEVENTD)
 AC_SUBST(CFLAGS)
 AC_SUBST(CFLOW_CMD)
