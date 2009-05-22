@@ -1,3 +1,6 @@
+Version 1.02.33 - 
+===============================
+
 Version 1.02.32 - 21st May 2009
 ===============================
   Only generate libdevmapper.a when configured to link statically.
