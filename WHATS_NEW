@@ -1,3 +1,6 @@
+Version 2.02.48 - 
+===============================
+
 Version 2.02.47 - 22nd May 2009
 ===============================
   Rename liblvm.so to liblvm2app.so and use configure --enable-applib.
