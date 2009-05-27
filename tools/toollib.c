@@ -122,7 +122,7 @@ int process_each_lv_in_vg(struct cmd_context *cmd,
 		if (lvl->lv->status & SNAPSHOT)
 			continue;
 
-		if (lv_is_virtual_origin(lvl->lv))
+		if (lv_is_virtual_origin(lvl->lv) && !arg_count(cmd, all_ARG))
 			continue;
 
 		/* Should we process this LV? */
