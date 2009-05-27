@@ -122,6 +122,9 @@ int process_each_lv_in_vg(struct cmd_context *cmd,
 		if (lvl->lv->status & SNAPSHOT)
 			continue;
 
+		if (lv_is_virtual_origin(lvl->lv))
+			continue;
+
 		/* Should we process this LV? */
 		if (process_all)
 			process_lv = 1;
