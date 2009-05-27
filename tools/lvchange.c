@@ -540,6 +540,7 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 {
 	int doit = 0, docmds = 0;
 	int archived = 0;
+	struct logical_volume *origin;
 
 	if (!(lv->vg->status & LVM_WRITE) &&
 	    (arg_count(cmd, contiguous_ARG) || arg_count(cmd, permission_ARG) ||
@@ -584,7 +585,12 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return ECMD_FAILED;
 	}
 
-	if (!(lv_is_visible(lv))) {
+	/* If LV is sparse, activate origin instead */
+	if (arg_count(cmd, available_ARG) && lv_is_cow(lv) &&
+	    lv_is_virtual_origin(origin = origin_from_cow(lv)))
+		lv = origin;
+
+	if (!(lv_is_visible(lv)) && !lv_is_virtual_origin(lv)) {
 		log_error("Unable to change internal LV %s directly",
 			  lv->name);
 		return ECMD_FAILED;

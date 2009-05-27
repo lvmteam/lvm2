@@ -1,8 +1,11 @@
 Version 2.02.48 - 
 ===============================
+  Suppress 'removed' messages displayed when internal LVs are removed.
+  Fix lvchange -a and -p for sparse LVs.
+  Fix lvcreate --virtualsize to activate the new device immediately.
   Make --snapshot optional with lvcreate --virtualsize.
   Generalise --virtualoriginsize to --virtualsize.
-  Skip virtual origins in process_each_lv_in_vg().
+  Skip virtual origins in process_each_lv_in_vg() without --all.
   Fix counting of virtual origin LVs in vg_validate.
   Attempt to load dm-zero module if zero target needed but not present.
 

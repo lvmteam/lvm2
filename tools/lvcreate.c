@@ -910,12 +910,16 @@ static int _lvcreate(struct cmd_context *cmd, struct volume_group *vg,
 			return 0;
 		}
 
+		/* A virtual origin must be activated explicitly. */
 		if (lp->voriginsize &&
-		    !(org = _create_virtual_origin(cmd, vg, lv->name,
-						   lp->permission,
-						   lp->voriginextents))) {
+		    (!(org = _create_virtual_origin(cmd, vg, lv->name,
+						    lp->permission,
+						    lp->voriginextents)) ||
+		     !activate_lv(cmd, org))) {
 			log_error("Couldn't create virtual origin for LV %s",
 				  lv->name);
+			if (org && !lv_remove(org))
+				stack;
 			goto deactivate_and_revert_new_lv;
 		}
 

@@ -2037,6 +2037,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		}
 
 		if (lv_is_active(lv) && (force == PROMPT) &&
+		    lv_is_visible(lv) &&
 		    yes_no_prompt("Do you really want to remove active "
 				  "%slogical volume %s? [y/n]: ",
 				  vg_is_clustered(vg) ? "clustered " : "",
@@ -2083,7 +2084,9 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 			log_error("Failed to resume %s.", origin->name);
 	}
 
-	log_print("Logical volume \"%s\" successfully removed", lv->name);
+	if (lv_is_visible(lv))
+		log_print("Logical volume \"%s\" successfully removed", lv->name);
+
 	return 1;
 }
 
