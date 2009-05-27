@@ -816,7 +816,8 @@ static int _get_settings(struct cmd_context *cmd)
 	/* Handle synonyms */
 	if (!_merge_synonym(cmd, resizable_ARG, resizeable_ARG) ||
 	    !_merge_synonym(cmd, allocation_ARG, allocatable_ARG) ||
-	    !_merge_synonym(cmd, allocation_ARG, resizeable_ARG))
+	    !_merge_synonym(cmd, allocation_ARG, resizeable_ARG) ||
+	    !_merge_synonym(cmd, virtualoriginsize_ARG, virtualsize_ARG))
 		return EINVALID_CMD_LINE;
 
 	/* Zero indicates success */

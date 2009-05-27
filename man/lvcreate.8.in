@@ -26,8 +26,10 @@ VolumeGroupName [PhysicalVolumePath...]
  \-L|\-\-size LogicalVolumeSize[kKmMgGtT]}
 [\-c|\-\-chunksize ChunkSize]
 \-n|\-\-name SnapshotLogicalVolumeName
-\-s|\-\-snapshot
-[OriginalLogicalVolumePath | VolumeGroupName \-\-virtualoriginsize VirtualOriginSize]
+{{\-s|\-\-snapshot}
+OriginalLogicalVolumePath | 
+[\-s|\-\-snapshot]
+VolumeGroupName \-\-virtualsize VirtualSize}
 .SH DESCRIPTION
 lvcreate creates a new logical volume in a volume group ( see
 .B vgcreate(8), vgchange(8)
@@ -152,11 +154,11 @@ allocate slightly more space than you actually need and monitor the
 rate at which the snapshot data is growing so you can avoid running out
 of space.
 .TP
-.I \-\-virtualoriginsize VirtualOriginSize
-In conjunction with \-\-snapshot, create a sparse device of the given size
-(in MB by default).  Anything written to the device will be returned when
-reading from it.  Reading from other areas of the device will return
-blocks of zeros.  It is implemented by creating a hidden virtual device of the
+.I \-\-virtualsize VirtualSize
+Create a sparse device of the given size (in MB by default) using a snapshot.  
+Anything written to the device will be returned when reading from it.
+Reading from other areas of the device will return blocks of zeros.
+It is implemented by creating a hidden virtual device of the
 requested size using the zero target.  A suffix of _vorigin is used for
 this device.
 .TP
