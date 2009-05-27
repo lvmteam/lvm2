@@ -66,7 +66,7 @@ static int _lvcreate_name_params(struct lvcreate_params *lp,
 	if (arg_count(cmd, name_ARG))
 		lp->lv_name = arg_value(cmd, name_ARG);
 
-	if (lp->snapshot && !arg_count(cmd, virtualoriginsize_ARG)) {
+	if (lp->snapshot && !arg_count(cmd, virtualsize_ARG)) {
 		if (!argc) {
 			log_err("Please specify a logical volume to act as "
 				"the snapshot origin.");
@@ -178,12 +178,12 @@ static int _read_size_params(struct lvcreate_params *lp,
 	}
 
 	/* Size returned in kilobyte units; held in sectors */
-	if (arg_count(cmd, virtualoriginsize_ARG)) {
-		if (arg_sign_value(cmd, virtualoriginsize_ARG, 0) == SIGN_MINUS) {
+	if (arg_count(cmd, virtualsize_ARG)) {
+		if (arg_sign_value(cmd, virtualsize_ARG, 0) == SIGN_MINUS) {
 			log_error("Negative virtual origin size is invalid");
 			return 0;
 		}
-		lp->voriginsize = arg_uint64_value(cmd, virtualoriginsize_ARG,
+		lp->voriginsize = arg_uint64_value(cmd, virtualsize_ARG,
 						   UINT64_C(0));
 		if (!lp->voriginsize) {
 			log_error("Virtual origin size may not be zero");
@@ -362,7 +362,8 @@ static int _lvcreate_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 	if (arg_count(cmd, stripes_ARG) && lp->stripes == 1)
 		log_print("Redundant stripes argument: default is 1");
 
-	if (arg_count(cmd, snapshot_ARG) || seg_is_snapshot(lp))
+	if (arg_count(cmd, snapshot_ARG) || seg_is_snapshot(lp) ||
+	    arg_count(cmd, virtualsize_ARG))
 		lp->snapshot = 1;
 
 	lp->mirrors = 1;
@@ -404,10 +405,6 @@ static int _lvcreate_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 	} else {
 		if (arg_count(cmd, chunksize_ARG)) {
 			log_error("-c is only available with snapshots");
-			return 0;
-		}
-		if (arg_count(cmd, virtualoriginsize_ARG)) {
-			log_error("--virtualoriginsize is only available with snapshots");
 			return 0;
 		}
 	}
@@ -722,7 +719,7 @@ static int _lvcreate(struct cmd_context *cmd, struct volume_group *vg,
 		/* Must zero cow */
 		status |= LVM_WRITE;
 
-		if (arg_count(cmd, virtualoriginsize_ARG))
+		if (arg_count(cmd, virtualsize_ARG))
 			origin_active = 1;
 		else {
 
@@ -733,7 +730,7 @@ static int _lvcreate(struct cmd_context *cmd, struct volume_group *vg,
 			}
 			if (lv_is_virtual_origin(org)) {
 				log_error("Can't share virtual origins. "
-					  "Use --virtualoriginsize.");
+					  "Use --virtualsize.");
 				return 0;
 			}
 			if (lv_is_cow(org)) {
