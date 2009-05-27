@@ -1449,7 +1449,7 @@ int vg_validate(struct volume_group *vg)
 	struct lv_list *lvl, *lvl2;
 	char uuid[64] __attribute((aligned(8)));
 	int r = 1;
-	uint32_t lv_count;
+	uint32_t hidden_lv_count = 0;
 
 	/* FIXME Also check there's no data/metadata overlap */
 
@@ -1486,17 +1486,20 @@ int vg_validate(struct volume_group *vg)
 	/*
 	 * Count all non-snapshot invisible LVs
 	 */
-	lv_count = 0;
 	dm_list_iterate_items(lvl, &vg->lvs) {
 		if (lvl->lv->status & VISIBLE_LV)
 			continue;
 
 		/* snapshots */
-		if (lv_is_cow(lvl->lv) || lv_is_origin(lvl->lv))
+		if (lv_is_cow(lvl->lv))
+			continue;
+
+		/* virtual origins are always hidden */
+		if (lv_is_origin(lvl->lv) && !lv_is_virtual_origin(lvl->lv))
 			continue;
 
 		/* count other non-snapshot invisible volumes */
-		lv_count++;
+		hidden_lv_count++;
 
 		/*
 		 *  FIXME: add check for unreferenced invisible LVs
@@ -1510,11 +1513,11 @@ int vg_validate(struct volume_group *vg)
 	 * all volumes = visible LVs + snapshot_cows + invisible LVs
 	 */
 	if (((uint32_t) dm_list_size(&vg->lvs)) !=
-	    vg_visible_lvs(vg) + snapshot_count(vg) + lv_count) {
+	    vg_visible_lvs(vg) + snapshot_count(vg) + hidden_lv_count) {
 		log_error("Internal error: #internal LVs (%u) != #LVs (%"
-			  PRIu32 ") + #snapshots (%" PRIu32 ") + #invisible LVs %u in VG %s",
+			  PRIu32 ") + #snapshots (%" PRIu32 ") + #internal LVs %u in VG %s",
 			  dm_list_size(&vg->lvs), vg_visible_lvs(vg),
-			  snapshot_count(vg), lv_count, vg->name);
+			  snapshot_count(vg), hidden_lv_count, vg->name);
 		r = 0;
 	}
 
