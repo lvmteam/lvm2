@@ -1,5 +1,6 @@
 Version 2.02.48 - 
 ===============================
+  Fix counting of virtual origin LVs in vg_validate.
   Attempt to load dm-zero module if zero target needed but not present.
 
 Version 2.02.47 - 22nd May 2009
