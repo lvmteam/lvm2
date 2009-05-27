@@ -566,27 +566,27 @@ static struct logical_volume *_create_virtual_origin(struct cmd_context *cmd,
 
 	if (!(segtype = get_segtype_from_string(cmd, "zero"))) {
 		log_error("Zero segment type for virtual origin not found");
-		return 0;
+		return NULL;
 	}
 
 	len = strlen(lv_name) + 32;
 	if (!(vorigin_name = alloca(len)) ||
 	    dm_snprintf(vorigin_name, len, "%s_vorigin", lv_name) < 0) {
 		log_error("Virtual origin name allocation failed.");
-		return 0;
+		return NULL;
 	}
 
 	if (!(lv = lv_create_empty(vorigin_name, NULL, permission,
 				   ALLOC_INHERIT, vg)))
-		return_0;
+		return_NULL;
 
 	if (!lv_extend(lv, segtype, 1, 0, 1, voriginextents, NULL, 0u, 0u,
 		       NULL, ALLOC_INHERIT))
-		return_0;
+		return_NULL;
 
 	/* store vg on disk(s) */
 	if (!vg_write(vg) || !vg_commit(vg))
-		return_0;
+		return_NULL;
 
 	backup(vg);
 
