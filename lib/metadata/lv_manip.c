@@ -1844,6 +1844,10 @@ struct logical_volume *lv_create_empty(const char *name,
 		log_error("Failed to generate unique name for the new "
 			  "logical volume");
 		return NULL;
+	} else if (find_lv_in_vg(vg, name)) {
+		log_error("Unable to create LV %s in Volume Group %s: "
+			  "name already in use.", name, vg->name);
+		return NULL;
 	}
 
 	log_verbose("Creating logical volume %s", name);

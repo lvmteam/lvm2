@@ -1,5 +1,6 @@
 Version 2.02.48 - 
 ===============================
+  When creating new LV, double-check that name is not already in use.
   Remove /dev/vgname/lvname symlink automatically if LV is no longer visible.
   Rename internal vorigin LV to match visible LV.
   Suppress 'removed' messages displayed when internal LVs are removed.
