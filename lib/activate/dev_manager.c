@@ -1067,7 +1067,14 @@ static int _create_lv_symlinks(struct dev_manager *dm, struct dm_tree_node *root
 			}
 			if (!fs_rename_lv(lvlayer->lv, name, old_vgname, old_lvname))
 				r = 0;
-		} else if (!dev_manager_lv_mknodes(lvlayer->lv))
+			continue;
+		}
+		if (lv_is_visible(lvlayer->lv)) {
+			if (!dev_manager_lv_mknodes(lvlayer->lv))
+				r = 0;
+			continue;
+		}
+		if (!dev_manager_lv_rmnodes(lvlayer->lv))
 			r = 0;
 	}
 
