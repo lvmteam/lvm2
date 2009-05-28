@@ -1700,19 +1700,24 @@ static int _for_each_sub_lv(struct cmd_context *cmd, struct logical_volume *lv,
 					void *data),
 			    void *data)
 {
+	struct logical_volume *org;
 	struct lv_segment *seg;
 	uint32_t s;
 
+	if (lv_is_cow(lv) && lv_is_virtual_origin(org = origin_from_cow(lv)))
+		if (!func(cmd, org, data))
+			return_0;
+
 	dm_list_iterate_items(seg, &lv->segments) {
 		if (seg->log_lv && !func(cmd, seg->log_lv, data))
-			return 0;
+			return_0;
 		for (s = 0; s < seg->area_count; s++) {
 			if (seg_type(seg, s) != AREA_LV)
 				continue;
 			if (!func(cmd, seg_lv(seg, s), data))
-				return 0;
+				return_0;
 			if (!_for_each_sub_lv(cmd, seg_lv(seg, s), func, data))
-				return 0;
+				return_0;
 		}
 	}
 

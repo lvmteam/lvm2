@@ -1,5 +1,6 @@
 Version 2.02.48 - 
 ===============================
+  Rename internal vorigin LV to match visible LV.
   Suppress 'removed' messages displayed when internal LVs are removed.
   Fix lvchange -a and -p for sparse LVs.
   Fix lvcreate --virtualsize to activate the new device immediately.
