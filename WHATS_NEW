@@ -1,5 +1,6 @@
 Version 2.02.48 - 
 ===============================
+  Remove /dev/vgname/lvname symlink automatically if LV is no longer visible.
   Rename internal vorigin LV to match visible LV.
   Suppress 'removed' messages displayed when internal LVs are removed.
   Fix lvchange -a and -p for sparse LVs.
