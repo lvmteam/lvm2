@@ -1330,10 +1330,9 @@ static int _lv_postorder_visit(struct logical_volume *lv,
 	baton.fn = fn;
 	baton.data = data;
 	r = _lv_each_dependency(lv, _lv_postorder_level, &baton);
-	if (r) {
+	if (r)
 		r = fn(lv, data);
-		log_verbose("visited %s", lv->name);
-	}
+
 	return r;
 }
 
