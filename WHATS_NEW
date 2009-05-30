@@ -1,6 +1,7 @@
 Version 2.02.48 - 
 ===============================
-  Fix rpmlint in clvmd initscript
+  Handle multi-extent mirror log allocation when smallest PV has only 1 extent.
+  Add LSB standard headers and functions (incl. reload) to clvmd initscript.
   When creating new LV, double-check that name is not already in use.
   Remove /dev/vgname/lvname symlink automatically if LV is no longer visible.
   Rename internal vorigin LV to match visible LV.
