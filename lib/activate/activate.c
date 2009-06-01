@@ -469,11 +469,6 @@ static int _lv_info(struct cmd_context *cmd, const struct logical_volume *lv, in
 	info->live_table = dminfo.live_table;
 	info->inactive_table = dminfo.inactive_table;
 
-	/*
-	 * Cache read ahead value for PV devices now (before possible suspend)
-	 */
-	(void)lv_calculate_readhead(lv);
-
 	if (name)
 		dm_pool_free(cmd->mem, name);
 
@@ -879,6 +874,8 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 		goto out;
 	}
 
+	lv_calculate_readahead(lv, NULL);
+
 	/* If VG was precommitted, preload devices for the LV */
 	if ((lv_pre->vg->status & PRECOMMITTED)) {
 		if (!_lv_preload(lv_pre, &flush_required)) {
@@ -1010,6 +1007,8 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s)
 		goto out;
 	}
 
+	lv_calculate_readahead(lv, NULL);
+
 	if (!monitor_dev_for_events(cmd, lv, 0))
 		stack;
 
@@ -1092,6 +1091,8 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 		r = 1;
 		goto out;
 	}
+
+	lv_calculate_readahead(lv, NULL);
 
 	if (exclusive)
 		lv->status |= ACTIVATE_EXCL;
