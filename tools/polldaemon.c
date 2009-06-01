@@ -129,7 +129,7 @@ static int _check_mirror_status(struct cmd_context *cmd,
 	return 1;
 }
 
-static int _wait_for_single_mirror(struct cmd_context *cmd, const char *name,
+static int _wait_for_single_mirror(struct cmd_context *cmd, const char *name, const char *uuid,
 				   struct daemon_parms *parms)
 {
 	struct volume_group *vg;
@@ -147,13 +147,13 @@ static int _wait_for_single_mirror(struct cmd_context *cmd, const char *name,
 		}
 
 		/* Locks the (possibly renamed) VG again */
-		if (!(vg = parms->poll_fns->get_copy_vg(cmd, name))) {
+		if (!(vg = parms->poll_fns->get_copy_vg(cmd, name, uuid))) {
 			log_error("ABORTING: Can't reread VG for %s", name);
 			/* What more could we do here? */
 			return 0;
 		}
 
-		if (!(lv_mirr = parms->poll_fns->get_copy_lv(cmd, vg, name,
+		if (!(lv_mirr = parms->poll_fns->get_copy_lv(cmd, vg, name, uuid,
 							     parms->lv_type))) {
 			log_error("ABORTING: Can't find mirror LV in %s for %s",
 				  vg->name, name);
@@ -225,7 +225,8 @@ static void _poll_for_all_vgs(struct cmd_context *cmd,
 	}
 }
 
-int poll_daemon(struct cmd_context *cmd, const char *name, unsigned background,
+int poll_daemon(struct cmd_context *cmd, const char *name, const char *uuid,
+		unsigned background,
 		uint32_t lv_type, struct poll_functions *poll_fns,
 		const char *progress_title)
 {
@@ -260,7 +261,7 @@ int poll_daemon(struct cmd_context *cmd, const char *name, unsigned background,
 	}
 
 	if (name) {
-		if (!_wait_for_single_mirror(cmd, name, &parms))
+		if (!_wait_for_single_mirror(cmd, name, uuid, &parms))
 			return ECMD_FAILED;
 	} else
 		_poll_for_all_vgs(cmd, &parms);

@@ -21,10 +21,12 @@
 struct poll_functions {
 	const char *(*get_copy_name_from_lv) (struct logical_volume *lv_mirr);
 	struct volume_group *(*get_copy_vg) (struct cmd_context *cmd,
-					     const char *name);
+					     const char *name,
+					     const char *uuid);
 	struct logical_volume *(*get_copy_lv) (struct cmd_context *cmd,
 					       struct volume_group *vg,
 					       const char *name,
+					       const char *uuid,
 					       uint32_t lv_type);
 	int (*update_metadata) (struct cmd_context *cmd,
 				struct volume_group *vg,
@@ -47,7 +49,8 @@ struct daemon_parms {
 	struct poll_functions *poll_fns;
 };
 
-int poll_daemon(struct cmd_context *cmd, const char *name, unsigned background,
+int poll_daemon(struct cmd_context *cmd, const char *name, const char *uuid,
+		unsigned background,
 		uint32_t lv_type, struct poll_functions *poll_fns,
 		const char *progress_title);
 

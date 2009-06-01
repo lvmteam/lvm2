@@ -551,7 +551,7 @@ static int _finish_pvmove(struct cmd_context *cmd, struct volume_group *vg,
 }
 
 static struct volume_group *_get_move_vg(struct cmd_context *cmd,
-					 const char *name)
+					 const char *name, const char *uuid)
 {
 	struct physical_volume *pv;
 
@@ -576,7 +576,7 @@ static struct poll_functions _pvmove_fns = {
 int pvmove_poll(struct cmd_context *cmd, const char *pv_name,
 		unsigned background)
 {
-	return poll_daemon(cmd, pv_name, background, PVMOVE, &_pvmove_fns,
+	return poll_daemon(cmd, pv_name, NULL, background, PVMOVE, &_pvmove_fns,
 			   "Moved");
 }
 

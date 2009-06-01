@@ -1058,9 +1058,10 @@ struct logical_volume *find_pvmove_lv(struct volume_group *vg,
 }
 
 struct logical_volume *find_pvmove_lv_from_pvname(struct cmd_context *cmd,
-					 	  struct volume_group *vg,
-				      		  const char *name,
-				      		  uint32_t lv_type)
+						  struct volume_group *vg,
+						  const char *name,
+						  const char *uuid __attribute((unused)),
+						  uint32_t lv_type)
 {
 	struct physical_volume *pv;
 

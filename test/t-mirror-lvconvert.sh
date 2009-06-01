@@ -280,20 +280,19 @@ mirrorlog_is_on_ $vg/$lv1 $dev3
 check_and_cleanup_lvs_
 
 # "remove from original mirror (the original becomes linear)"
-# FIXME: enable this test later
-#prepare_lvs_ 
-#lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0-1 
-#check_mirror_count_ $vg/$lv1 2 
-#check_mirror_log_ $vg/$lv1 
-#lvconvert -m+1 -b $vg/$lv1 $dev4 
-#lvconvert -m-1 $vg/$lv1 $dev2 
-#lvconvert -i1 $vg/$lv1 
-#wait_conversion_ $vg/$lv1 
-#check_no_tmplvs_ $vg/$lv1 
-#check_mirror_count_ $vg/$lv1 2 
-#mimages_are_redundant_ $vg $lv1 
-#mirrorlog_is_on_ $vg/$lv1 $dev3 
-#check_and_cleanup_lvs_
+prepare_lvs_ 
+lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0-1 
+check_mirror_count_ $vg/$lv1 2 
+check_mirror_log_ $vg/$lv1 
+lvconvert -m+1 -b $vg/$lv1 $dev4 
+lvconvert -m-1 $vg/$lv1 $dev2 
+lvconvert -i1 $vg/$lv1 
+wait_conversion_ $vg/$lv1 
+check_no_tmplvs_ $vg/$lv1 
+check_mirror_count_ $vg/$lv1 2 
+mimages_are_redundant_ $vg $lv1 
+mirrorlog_is_on_ $vg/$lv1 $dev3 
+check_and_cleanup_lvs_
 
 # ---------------------------------------------------------------------
 
