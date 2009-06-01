@@ -1124,6 +1124,13 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 		if ((contiguous || cling) && (preferred_count < ix_offset))
 			break;
 
+		log_needs_allocating = (ah->log_count && !ah->log_area.len) ?
+				       1 : 0;
+
+		if (ix + ix_offset < ah->area_count +
+		   (log_needs_allocating ? ah->log_count : 0))
+			break;
+
 		/* sort the areas so we allocate from the biggest */
 		if (ix > 1)
 			qsort(areas + ix_offset, ix, sizeof(*areas),
@@ -1135,9 +1142,6 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 		 *
 		 * FIXME decide which PV to use at top of function instead
 		 */
-
-		log_needs_allocating = (ah->log_count && !ah->log_area.len) ?
-				       1 : 0;
 
 		too_small_for_log_count = 0;
 
