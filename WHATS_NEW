@@ -1,5 +1,6 @@
 Version 2.02.48 - 
 ===============================
+  Fix rename of active snapshot with virtual origin.
   Fix convert polling to ignore LV with different UUID.
   Cache underlying device readahead only before activation calls.
   Fix segfault when calculating readahead on missing device in vgreduce.

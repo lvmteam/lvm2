@@ -1765,6 +1765,8 @@ int lv_rename(struct cmd_context *cmd, struct logical_volume *lv,
 {
 	struct volume_group *vg = lv->vg;
 	struct lv_names lv_names;
+	DM_LIST_INIT(lvs_changed);
+	struct lv_list lvl, lvl2;
 	int r = 0;
 
 	/* rename is not allowed on sub LVs */
@@ -1799,22 +1801,27 @@ int lv_rename(struct cmd_context *cmd, struct logical_volume *lv,
 		return 0;
 	}
 
+	lvl.lv = lv;
+	dm_list_add(&lvs_changed, &lvl.list);
+
+	/* rename active virtual origin too */
+	if (lv_is_cow(lv) && lv_is_virtual_origin(lvl2.lv = origin_from_cow(lv)))
+		dm_list_add(&lvs_changed, &lvl2.list);
+
 	log_verbose("Writing out updated volume group");
 	if (!vg_write(vg))
 		return 0;
 
-	if (!suspend_lv(cmd, lv)) {
+
+	if (!suspend_lvs(cmd, &lvs_changed)) {
 		vg_revert(vg);
 		goto_out;
 	}
 
-	if (!vg_commit(vg)) {
-		resume_lv(cmd, lv);
-		goto_out;
-	}
+	if (!(r = vg_commit(vg)))
+		stack;
 
-	resume_lv(cmd, lv);
-	r = 1;
+	resume_lvs(cmd, &lvs_changed);
 out:
 	backup(vg);
 	return r;
