@@ -1023,7 +1023,7 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		/* we need RA at least twice a whole stripe - see the comment in md/raid0.c */
 		read_ahead = max_stripe_size * 2;
 		if (!read_ahead)
-			read_ahead = lv_calculate_readhead(lv);
+			lv_calculate_readahead(lv, &read_ahead);
 		read_ahead_flags = DM_READ_AHEAD_MINIMUM_FLAG;
 	}
 

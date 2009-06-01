@@ -1,5 +1,7 @@
 Version 2.02.48 - 
 ===============================
+  Cache underlying device readahead only before activation calls.
+  Fix segfault when calculating readahead on missing device in vgreduce.
   Remove verbose 'visited' messages.
   Handle multi-extent mirror log allocation when smallest PV has only 1 extent.
   Add LSB standard headers and functions (incl. reload) to clvmd initscript.

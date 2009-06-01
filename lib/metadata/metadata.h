@@ -347,7 +347,7 @@ unsigned snapshot_count(const struct volume_group *vg);
 /*
  * Calculate readahead from underlying PV devices
  */
-uint32_t lv_calculate_readhead(const struct logical_volume *lv);
+void lv_calculate_readahead(const struct logical_volume *lv, uint32_t *read_ahead);
 
 /*
  * For internal metadata caching.
