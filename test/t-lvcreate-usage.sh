@@ -116,3 +116,10 @@ lvcreate -L 32M -n $lv --regionsize 4M -m 1 $vg
 check_lv_field_ $vg/$lv regionsize "4.00M"
 lvremove -ff $vg
 
+# snapshot with virtual origin works
+lvcreate -s --virtualoriginsize 64M -L 32M -n $lv1 $vg
+lvrename $vg/$lv1 $vg/$lv2
+lvcreate -s --virtualoriginsize 64M -L 32M -n $lv1 $vg
+lvchange -a n $vg/$lv1
+lvremove $vg/$lv1
+lvremove -ff $vg
