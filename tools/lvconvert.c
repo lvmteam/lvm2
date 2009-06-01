@@ -234,14 +234,16 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 	return 1;
 }
 
-
 static struct volume_group *_get_lvconvert_vg(struct cmd_context *cmd,
-					      const char *lv_name)
+					      const char *lv_name, const char *uuid)
 {
 	dev_close_all();
 
+	/*
+	 * uuid is here LV uuid, but vg_read will use only first part.
+	 */
         return vg_lock_and_read(cmd, extract_vgname(cmd, lv_name),
-				NULL, LCK_VG_WRITE,
+				uuid, LCK_VG_WRITE,
  				CLUSTERED | EXPORTED_VG | LVM_WRITE,
 				CORRECT_INCONSISTENT | FAIL_INCONSISTENT);
 }
@@ -249,9 +251,15 @@ static struct volume_group *_get_lvconvert_vg(struct cmd_context *cmd,
 static struct logical_volume *_get_lvconvert_lv(struct cmd_context *cmd __attribute((unused)),
 						struct volume_group *vg,
 						const char *name,
+						const char *uuid,
 						uint32_t lv_type __attribute((unused)))
 {
-	return find_lv(vg, name);
+	struct logical_volume *lv = find_lv(vg, name);
+
+	if (!lv || (uuid && strcmp(uuid, (char *)&lv->lvid)))
+		return NULL;
+
+	return lv;
 }
 
 static int _update_lvconvert_mirror(struct cmd_context *cmd __attribute((unused)),
@@ -315,11 +323,24 @@ static struct poll_functions _lvconvert_mirror_fns = {
 	.finish_copy = _finish_lvconvert_mirror,
 };
 
-int lvconvert_poll(struct cmd_context *cmd, const char *lv_name,
+int lvconvert_poll(struct cmd_context *cmd, struct logical_volume *lv,
 		   unsigned background)
 {
-	return poll_daemon(cmd, lv_name, background, 0, &_lvconvert_mirror_fns,
-			   "Converted");
+	int len = strlen(lv->vg->name) + strlen(lv->name) + 2;
+	char *uuid = alloca(sizeof(lv->lvid));
+	char *lv_full_name = alloca(len);
+
+
+	if (!uuid || !lv_full_name)
+		return_0;
+
+	if (!dm_snprintf(lv_full_name, len, "%s/%s", lv->vg->name, lv->name))
+		return_0;
+
+	memcpy(uuid, &lv->lvid, sizeof(lv->lvid));
+
+	return poll_daemon(cmd, lv_full_name, uuid, background, 0,
+			   &_lvconvert_mirror_fns, "Converted");
 }
 
 static int _insert_lvconvert_layer(struct cmd_context *cmd,
@@ -883,7 +904,7 @@ bad:
 			log_print("Conversion starts after activation");
 			goto out;
 		}
-		ret = lvconvert_poll(cmd, lp.lv_name_full,
+		ret = lvconvert_poll(cmd, lvl->lv,
 				     lp.wait_completion ? 0 : 1U);
 	}
 out:

@@ -106,8 +106,6 @@ static int lvchange_availability(struct cmd_context *cmd,
 {
 	int activate;
 	const char *pvname;
-	char *lv_full_name;
-	uint32_t len;
 
 	activate = arg_uint_value(cmd, available_ARG, 0);
 
@@ -152,15 +150,9 @@ static int lvchange_availability(struct cmd_context *cmd,
 		}
 
 		if (lv->status & CONVERTING) {
-			len = strlen(lv->vg->name) + strlen(lv->name) + 2;
-			if (!(lv_full_name = alloca(len)))
-				return_0;
-			if (!dm_snprintf(lv_full_name, len, "%s/%s",
-					 lv->vg->name, lv->name))
-				return_0;
 			log_verbose("Spawning background lvconvert process for %s",
 				    lv->name);
-			lvconvert_poll(cmd, lv_full_name, 1);
+			lvconvert_poll(cmd, lv, 1);
 		}
 	}
 
