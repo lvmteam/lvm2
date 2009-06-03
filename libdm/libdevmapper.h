@@ -819,6 +819,8 @@ int dm_set_selinux_context(const char *path, mode_t mode);
 /*
  * Break up the name of a mapped device into its constituent
  * Volume Group, Logical Volume and Layer (if present).
+ * If mem is supplied, the result is allocated from the mempool.
+ * Otherwise the strings are changed in situ.
  */
 int dm_split_lvm_name(struct dm_pool *mem, const char *dmname,
 		      char **vgname, char **lvname, char **layer);
