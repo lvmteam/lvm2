@@ -56,16 +56,16 @@
 #define LOCKSPACE_NAME "clvmd"
 
 static void cpg_deliver_callback (cpg_handle_t handle,
-				  struct cpg_name *groupName,
+				  const struct cpg_name *groupName,
 				  uint32_t nodeid,
 				  uint32_t pid,
 				  void *msg,
-				  int msg_len);
+				  size_t msg_len);
 static void cpg_confchg_callback(cpg_handle_t handle,
-				 struct cpg_name *groupName,
-				 struct cpg_address *member_list, int member_list_entries,
-				 struct cpg_address *left_list, int left_list_entries,
-				 struct cpg_address *joined_list, int joined_list_entries);
+				 const struct cpg_name *groupName,
+				 const struct cpg_address *member_list, size_t member_list_entries,
+				 const struct cpg_address *left_list, size_t left_list_entries,
+				 const struct cpg_address *joined_list, size_t joined_list_entries);
 static void _cluster_closedown(void);
 
 /* Hash list of nodes in the cluster */
@@ -206,17 +206,17 @@ static char *print_corosync_csid(const char *csid)
 }
 
 static void cpg_deliver_callback (cpg_handle_t handle,
-				  struct cpg_name *groupName,
+				  const struct cpg_name *groupName,
 				  uint32_t nodeid,
 				  uint32_t pid,
 				  void *msg,
-				  int msg_len)
+				  size_t msg_len)
 {
 	int target_nodeid;
 
 	memcpy(&target_nodeid, msg, COROSYNC_CSID_LEN);
 
-	DEBUGLOG("%u got message from nodeid %d for %d. len %d\n",
+	DEBUGLOG("%u got message from nodeid %d for %d. len %zd\n",
 		 our_nodeid, nodeid, target_nodeid, msg_len-4);
 
 	if (nodeid != our_nodeid)
@@ -226,15 +226,15 @@ static void cpg_deliver_callback (cpg_handle_t handle,
 }
 
 static void cpg_confchg_callback(cpg_handle_t handle,
-				 struct cpg_name *groupName,
-				 struct cpg_address *member_list, int member_list_entries,
-				 struct cpg_address *left_list, int left_list_entries,
-				 struct cpg_address *joined_list, int joined_list_entries)
+				 const struct cpg_name *groupName,
+				 const struct cpg_address *member_list, size_t member_list_entries,
+				 const struct cpg_address *left_list, size_t left_list_entries,
+				 const struct cpg_address *joined_list, size_t joined_list_entries)
 {
 	int i;
 	struct node_info *ninfo;
 
-	DEBUGLOG("confchg callback. %d joined, %d left, %d members\n",
+	DEBUGLOG("confchg callback. %zd joined, %zd left, %zd members\n",
 		 joined_list_entries, left_list_entries, member_list_entries);
 
 	for (i=0; i<joined_list_entries; i++) {
@@ -580,7 +580,7 @@ static int _get_cluster_name(char *buf, int buflen)
 {
 	confdb_handle_t handle;
 	int result;
-	int namelen = buflen;
+	size_t namelen = buflen;
 	hdb_handle_t cluster_handle;
 	confdb_callbacks_t callbacks = {
 		.confdb_key_change_notify_fn = NULL,
