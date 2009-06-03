@@ -1,5 +1,6 @@
 Version 1.02.33 - 
 ===============================
+  Make mempool optional in dm_split_lvm_name().
 
 Version 1.02.32 - 21st May 2009
 ===============================
