@@ -143,11 +143,11 @@ endif
 LIB_NAME = liblvm-internal
 LIB_STATIC = $(LIB_NAME).a
 
-$(SUBDIRS): $(LIB_STATIC)
-
 CLEAN_TARGETS += $(LIB_NAME).cflow
 
 include $(top_srcdir)/make.tmpl
+
+$(SUBDIRS): $(LIB_STATIC)
 
 $(LIB_NAME).cflow: $(SOURCES)
 	set -e; (echo -n "SOURCES += "; \
