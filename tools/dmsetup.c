@@ -303,14 +303,14 @@ static struct dm_task *_get_deps_task(int major, int minor)
 	return NULL;
 }
 
-static char *_extract_uuid_prefix(const char *uuid)
+static char *_extract_uuid_prefix(const char *uuid, const int separator)
 {
 	char *ptr = NULL;
 	char *uuid_prefix = NULL;
 	size_t len;
 
 	if (uuid)
-		ptr = strchr(uuid, '-');
+		ptr = strchr(uuid, separator);
 
 	len = ptr ? ptr - uuid : 0;
 	if (!(uuid_prefix = dm_malloc(len + 1))) {
@@ -324,7 +324,8 @@ static char *_extract_uuid_prefix(const char *uuid)
 	return uuid_prefix;
 }
 
-static struct dm_split_name *_get_split_name(const char *uuid, const char *name)
+static struct dm_split_name *_get_split_name(const char *uuid, const char *name,
+					     int separator)
 {
 	struct dm_split_name *split_name;
 
@@ -334,7 +335,7 @@ static struct dm_split_name *_get_split_name(const char *uuid, const char *name)
 		return NULL;
 	}
 
-	split_name->subsystem = _extract_uuid_prefix(uuid);
+	split_name->subsystem = _extract_uuid_prefix(uuid, separator);
 	split_name->vg_name = split_name->lv_name =
 	    split_name->lv_layer = (char *) "";
 
@@ -383,7 +384,7 @@ static int _display_info_cols(struct dm_task *dmt, struct dm_info *info)
 		obj.deps_task = _get_deps_task(info->major, info->minor);
 
 	if (_report_type & DR_NAME)
-		obj.split_name = _get_split_name(dm_task_get_uuid(dmt), dm_task_get_name(dmt));
+		obj.split_name = _get_split_name(dm_task_get_uuid(dmt), dm_task_get_name(dmt), '-');
 
 	if (!dm_report_object(_report, &obj))
 		goto out;
@@ -717,6 +718,24 @@ static int _setgeometry(int argc, char **argv, void *data __attribute((unused)))
 
       out:
 	dm_task_destroy(dmt);
+
+	return r;
+}
+
+static int _splitname(int argc, char **argv, void *data __attribute((unused)))
+{
+	struct dmsetup_report_obj obj;
+	int r = 1;
+
+	obj.task = NULL;
+	obj.info = NULL;
+	obj.deps_task = NULL;
+	obj.tree_node = NULL;
+	obj.split_name = _get_split_name((argc == 3) ? argv[2] : "LVM",
+					 argv[1], '\0');
+
+	r = dm_report_object(_report, &obj);
+	_destroy_split_name(obj.split_name);
 
 	return r;
 }
@@ -2090,6 +2109,7 @@ FIELD_O(NAME, dm_split_name, STR, "LVLayer", lv_layer, 7, dm_lv_layer_name, "lv_
 #undef FIELD_F
 
 static const char *default_report_options = "name,major,minor,attr,open,segments,events,uuid";
+static const char *splitname_report_options = "vg_name,lv_name,lv_layer";
 
 static int _report_init(struct command *c)
 {
@@ -2101,6 +2121,9 @@ static int _report_init(struct command *c)
 	uint32_t flags = 0;
 	size_t len = 0;
 	int r = 0;
+
+	if (!strcmp(c->name, "splitname"))
+		options = (char *) splitname_report_options;
 
 	/* emulate old dmsetup behaviour */
 	if (_switches[NOHEADINGS_ARG]) {
@@ -2241,6 +2264,7 @@ static struct command _commands[] = {
 	{"targets", "", 0, 0, _targets},
 	{"version", "", 0, 0, _version},
 	{"setgeometry", "<device> <cyl> <head> <sect> <start>", 5, 5, _setgeometry},
+	{"splitname", "<device> [<subsystem>]", 1, 2, _splitname},
 	{NULL, NULL, 0, 0, NULL}
 };
 
@@ -2857,6 +2881,9 @@ int main(int argc, char **argv)
 		_usage(stderr);
 		goto out;
 	}
+
+	if (!_switches[COLS_ARG] && !strcmp(c->name, "splitname"))
+		_switches[COLS_ARG]++;
 
 	if (_switches[COLS_ARG] && !_report_init(c))
 		goto out;
