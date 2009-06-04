@@ -63,8 +63,14 @@ Report progress as a percentage at regular intervals.
 .TP
 .I \-\-repair
 Repair a mirror that has suffered a disk failure. The mirror will be brought
-back into a consistent state, and if possible, the original number of
-mirrors will be restored.
+back into a consistent state, and if possible, the original number of mirrors
+will be restored, if so desired. By default, lvconvert will prompt you whether
+to perform the replacement. If you instead wish to unconditionally replace
+missing devices, you may specify \-y on the commandline and if you instead want
+no replacement to happen at all, you may provide \-f. Additionally, you may use
+"--use-policies" - this option will use the device replacement policy specified
+in lvm.conf, specifically "activation/mirror_log_fault_policy" and
+"activation/mirror_device_fault_policy".
 .br
 .TP
 .I \-s, \-\-snapshot

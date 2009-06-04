@@ -22,19 +22,19 @@ disable_dev $dev1
 lvchange --partial -a y $vg/mirror
 
 not vgreduce -v --removemissing $vg
-lvconvert -i 1 --repair $vg/mirror
+lvconvert -y -i 1 --repair $vg/mirror
 vgreduce --removemissing $vg
 
 enable_dev $dev1
 vgextend $vg $dev1
 disable_dev $dev2
-lvconvert -i 1 --repair $vg/mirror
+lvconvert -y -i 1 --repair $vg/mirror
 vgreduce --removemissing $vg
 
 enable_dev $dev2
 vgextend $vg $dev2
 disable_dev $dev3
-lvconvert -i 1 --repair $vg/mirror
+lvconvert -y -i 1 --repair $vg/mirror
 vgreduce --removemissing $vg
 
 enable_dev $dev3
@@ -42,5 +42,5 @@ vgextend $vg $dev3
 lvcreate -m 2 -l 1 -n mirror2 $vg $dev1 $dev2 $dev3 $dev4
 vgchange -a n $vg
 pvremove -ff -y $dev4
-echo 'y' | not lvconvert -i 1 --repair $vg/mirror2
+echo 'y' | not lvconvert -y -i 1 --repair $vg/mirror2
 vgs
