@@ -126,4 +126,7 @@
 #define DEFAULT_SEGS_SORT "vg_name,lv_name,seg_start"
 #define DEFAULT_PVSEGS_SORT "pv_name,pvseg_start"
 
+#define DEFAULT_MIRROR_DEVICE_FAULT_POLICY "remove"
+#define DEFAULT_MIRROR_LOG_FAULT_POLICY "allocate"
+
 #endif				/* _LVM_DEFAULTS_H */

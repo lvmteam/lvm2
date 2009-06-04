@@ -457,6 +457,49 @@ static struct logical_volume *_original_lv(struct logical_volume *lv)
 	return next_lv;
 }
 
+static void _lvconvert_mirrors_repair_ask(struct cmd_context *cmd,
+					  int failed_log, int failed_mirrors,
+					  int *replace_log, int *replace_mirrors)
+{
+	const char *leg_policy = NULL, *log_policy = NULL;
+
+	int force = arg_count(cmd, force_ARG);
+	int yes = arg_count(cmd, yes_ARG);
+
+	*replace_log = *replace_mirrors = 1;
+
+	if (arg_count(cmd, use_policies_ARG)) {
+		leg_policy = find_config_tree_str(cmd,
+					"activation/mirror_device_fault_policy",
+					DEFAULT_MIRROR_DEVICE_FAULT_POLICY);
+		log_policy = find_config_tree_str(cmd,
+					"activation/mirror_log_fault_policy",
+					DEFAULT_MIRROR_LOG_FAULT_POLICY);
+		*replace_mirrors = strcmp(leg_policy, "remove");
+		*replace_log = strcmp(log_policy, "remove");
+		return;
+	}
+
+	if (yes)
+		return;
+
+	if (force != PROMPT) {
+		*replace_log = *replace_mirrors = 0;
+		return;
+	}
+
+	if (failed_log &&
+	    yes_no_prompt("Attempt to replace failed mirror log? [y/n]: ") == 'n') {
+		*replace_log = 0;
+	}
+
+	if (failed_mirrors &&
+	    yes_no_prompt("Attempt to replace failed mirror images "
+			  "(requires full device resync)? [y/n]: ") == 'n') {
+		*replace_mirrors = 0;
+	}
+}
+
 static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv,
 			      struct lvconvert_params *lp)
 {
@@ -470,18 +513,21 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 	int failed_mirrors = 0, failed_log = 0;
 	struct dm_list *old_pvh = NULL, *remove_pvs = NULL;
 
+	int repair = arg_count(cmd, repair_ARG);
+	int replace_log = 1, replace_mirrors = 1;
+
 	seg = first_seg(lv);
 	existing_mirrors = lv_mirror_count(lv);
 
 	/* If called with no argument, try collapsing the resync layers */
 	if (!arg_count(cmd, mirrors_ARG) && !arg_count(cmd, mirrorlog_ARG) &&
 	    !arg_count(cmd, corelog_ARG) && !arg_count(cmd, regionsize_ARG) &&
-	    !arg_count(cmd, repair_ARG)) {
+	    !repair) {
 		lp->need_polling = 1;
 		return 1;
 	}
 
-	if (arg_count(cmd, mirrors_ARG) && arg_count(cmd, repair_ARG)) {
+	if (arg_count(cmd, mirrors_ARG) && repair) {
 		log_error("You can only use one of -m, --repair.");
 		return 0;
 	}
@@ -503,7 +549,7 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 	else
 		lp->mirrors += 1;
 
-	if (arg_count(cmd,repair_ARG)) {
+	if (repair) {
 		cmd->handles_missing_pvs = 1;
 		cmd->partial_activation = 1;
 		lp->need_polling = 0;
@@ -514,7 +560,7 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 		if ((failed_mirrors = _failed_mirrors_count(lv)) < 0)
 			return_0;
 		lp->mirrors -= failed_mirrors;
-		log_error("Mirror status: %d/%d legs failed.",
+		log_error("Mirror status: %d/%d images failed.",
 			  failed_mirrors, existing_mirrors);
 		old_pvh = lp->pvh;
 		if (!(lp->pvh = _failed_pv_list(lv->vg)))
@@ -577,6 +623,10 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 		return 0;
 	}
 
+	if (repair)
+		_lvconvert_mirrors_repair_ask(cmd, failed_log, failed_mirrors,
+					      &replace_log, &replace_mirrors);
+
  restart:
 	/*
 	 * Converting from mirror to linear
@@ -594,7 +644,7 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 	 */
 	if (lp->mirrors < existing_mirrors) {
 		/* Reduce number of mirrors */
-		if (arg_count(cmd, repair_ARG) || lp->pv_count)
+		if (repair || lp->pv_count)
 			remove_pvs = lp->pvh;
 		if (!lv_remove_mirrors(cmd, lv, existing_mirrors - lp->mirrors,
 				       (corelog || lp->mirrors == 1) ? 1U : 0U,
@@ -727,13 +777,15 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 
 	if (failed_log || failed_mirrors) {
 		lp->pvh = old_pvh;
-		if (failed_log)
+		if (failed_log && replace_log)
 			failed_log = corelog = 0;
-		lp->mirrors += failed_mirrors;
+		if (replace_mirrors)
+			lp->mirrors += failed_mirrors;
 		failed_mirrors = 0;
 		existing_mirrors = lv_mirror_count(lv);
 		/* Now replace missing devices. */
-		goto restart;
+		if (replace_log || replace_mirrors)
+			goto restart;
 	}
 
 	if (!lp->need_polling)

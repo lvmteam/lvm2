@@ -1,5 +1,7 @@
 Version 2.02.48 - 
 ===============================
+  Use lvconvert --repair instead of vgreduce in mirror dmeventd DSO.
+  Introduce lvconvert --use_policies (repair policy according to lvm.conf).
   Fix clvmd-corosync to match new corosync API.
   Fix makefile to build also shared libraries when running plain make.
   Fix rename of active snapshot with virtual origin.
