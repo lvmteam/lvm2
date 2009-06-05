@@ -27,3 +27,11 @@ check_vg_field_ $vg1 vg_uuid $UUID
 vgrename $UUID $vg2
 check_vg_field_ $vg2 vg_name $vg2
 vgremove $vg2
+
+# vgrename fails - new vg already exists
+vgcreate $vg1 $dev1
+vgcreate $vg2 $dev2
+not vgrename $vg1 $vg2
+vgremove $vg1
+vgremove $vg2
+
