@@ -20,11 +20,6 @@ static int _vgs_single(struct cmd_context *cmd __attribute((unused)),
 		       const char *vg_name, struct volume_group *vg,
 		       int consistent __attribute((unused)), void *handle)
 {
-	if (!vg) {
-		log_error("Volume group %s not found", vg_name);
-		return ECMD_FAILED;
-	}
-
 	if (!report_object(handle, vg, NULL, NULL, NULL, NULL))
 		return ECMD_FAILED;
 
@@ -184,11 +179,6 @@ static int _pvs_in_vg(struct cmd_context *cmd, const char *vg_name,
 		      int consistent __attribute((unused)),
 		      void *handle)
 {
-	if (!vg) {
-		log_error("Volume group %s not found", vg_name);
-		return ECMD_FAILED;
-	}
-
 	return process_each_pv_in_vg(cmd, vg, NULL, handle, &_pvs_single);
 }
 
@@ -197,11 +187,6 @@ static int _pvsegs_in_vg(struct cmd_context *cmd, const char *vg_name,
 			 int consistent __attribute((unused)),
 			 void *handle)
 {
-	if (!vg) {
-		log_error("Volume group %s not found", vg_name);
-		return ECMD_FAILED;
-	}
-
 	return process_each_pv_in_vg(cmd, vg, NULL, handle, &_pvsegs_single);
 }
 
@@ -382,7 +367,8 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 				    &_lvs_single);
 		break;
 	case VGS:
-		r = process_each_vg(cmd, argc, argv, LCK_VG_READ, 0,
+		r = process_each_vg(cmd, argc, argv, LCK_VG_READ,
+				    VG_INCONSISTENT_CONTINUE,
 				    report_handle, &_vgs_single);
 		break;
 	case LABEL:
@@ -394,7 +380,8 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 			r = process_each_pv(cmd, argc, argv, NULL, LCK_VG_READ,
 					    0, report_handle, &_pvs_single);
 		else
-			r = process_each_vg(cmd, argc, argv, LCK_VG_READ, 0,
+			r = process_each_vg(cmd, argc, argv, LCK_VG_READ,
+					    VG_INCONSISTENT_CONTINUE,
 					    report_handle, &_pvs_in_vg);
 		break;
 	case SEGS:
@@ -406,7 +393,8 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 			r = process_each_pv(cmd, argc, argv, NULL, LCK_VG_READ,
 					    0, report_handle, &_pvsegs_single);
 		else
-			r = process_each_vg(cmd, argc, argv, LCK_VG_READ, 0,
+			r = process_each_vg(cmd, argc, argv, LCK_VG_READ,
+					    VG_INCONSISTENT_CONTINUE,
 					    report_handle, &_pvsegs_in_vg);
 		break;
 	}

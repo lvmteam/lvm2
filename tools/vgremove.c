@@ -40,8 +40,10 @@ int vgremove(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	ret = process_each_vg(cmd, argc, argv,
-			      LCK_VG_WRITE, 1,
+	ret = process_each_vg(cmd, argc, argv, LCK_VG_WRITE,
+			      arg_count(cmd, force_ARG) ?
+			      VG_INCONSISTENT_REPAIR :
+			      VG_INCONSISTENT_ABORT,
 			      NULL, &vgremove_single);
 
 	unlock_vg(cmd, VG_ORPHANS);

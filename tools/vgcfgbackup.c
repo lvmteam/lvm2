@@ -54,14 +54,6 @@ static int vg_backup_single(struct cmd_context *cmd, const char *vg_name,
 	char **last_filename = (char **)handle;
 	char *filename;
 
-	if (!vg) {
-		log_error("Volume group \"%s\" not found", vg_name);
-		return ECMD_FAILED;
-	}
-
-	if (!consistent)
-		log_error("WARNING: Volume group \"%s\" inconsistent", vg_name);
-
 	if (arg_count(cmd, file_ARG)) {
 		if (!(filename = _expand_filename(arg_value(cmd, file_ARG),
 						  vg->name, last_filename))) {
@@ -98,8 +90,9 @@ int vgcfgbackup(struct cmd_context *cmd, int argc, char **argv)
 
 	init_pvmove(1);
 
-	ret = process_each_vg(cmd, argc, argv, LCK_VG_READ, 0, &last_filename,
-			      &vg_backup_single);
+	ret = process_each_vg(cmd, argc, argv, LCK_VG_READ,
+			      VG_INCONSISTENT_CONTINUE,
+			      &last_filename, &vg_backup_single);
 
 	dm_free(last_filename);
 
