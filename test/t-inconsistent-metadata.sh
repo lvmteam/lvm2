@@ -26,7 +26,7 @@ init() {
 	lvresize -L 8192K $vg/resized
 	restore_dev $dev1
 }
-	
+
 check() {
 	lvs -o lv_name,lv_size --units k $vg | tee lvs.out
 	grep resized lvs.out | grep 8192
@@ -43,20 +43,20 @@ check
 # vgdisplay doesn't change anything
 init
 vgdisplay 2>&1 | tee cmd.out
-grep "Volume group \"$vg\" inconsistent" cmd.out
+grep "Volume group $vg inconsistent" cmd.out
 vgdisplay 2>&1 | tee cmd.out
-grep "Volume group \"$vg\" inconsistent" cmd.out
+grep "Volume group $vg inconsistent" cmd.out
 
 # lvs fixes up
 init
 lvs 2>&1 | tee cmd.out
 grep "Inconsistent metadata found for VG $vg - updating" cmd.out
 vgdisplay 2>&1 | tee cmd.out
-not grep "Volume group \"$vg\" inconsistent" cmd.out
+not grep "Volume group $vg inconsistent" cmd.out
 check
 
 # vgs doesn't fix up... (why?)
 init
 vgs 2>&1 | tee cmd.out
 vgdisplay 2>&1 | tee cmd.out
-grep "Volume group \"$vg\" inconsistent" cmd.out
+grep "Volume group $vg inconsistent" cmd.out

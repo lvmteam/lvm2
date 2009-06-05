@@ -23,16 +23,6 @@ static int vgexport_single(struct cmd_context *cmd __attribute((unused)),
 	struct pv_list *pvl;
 	struct physical_volume *pv;
 
-	if (!vg) {
-		log_error("Unable to find volume group \"%s\"", vg_name);
-		goto error;
-	}
-
-	if (!consistent) {
-		log_error("Volume group %s inconsistent", vg_name);
-		goto error;
-	}
-
 	if (!vg_check_status(vg, EXPORTED_VG | LVM_WRITE)) {
 		goto error;
 	}
@@ -78,6 +68,7 @@ int vgexport(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	return process_each_vg(cmd, argc, argv, LCK_VG_WRITE, 1, NULL,
+	return process_each_vg(cmd, argc, argv, LCK_VG_WRITE,
+			       VG_INCONSISTENT_ABORT, NULL,
 			       &vgexport_single);
 }

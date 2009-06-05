@@ -1,5 +1,9 @@
 Version 2.02.48 - 
 ===============================
+  Try to repair vg before actual vgremove when force flag provided.
+  Fix possible double release of VG after recovery.
+  Add parameter to process_each_vg specifying what to do with inconsistent VG.
+  Unify error messages when procesing inconsistent volume group.
   Use lvconvert --repair instead of vgreduce in mirror dmeventd DSO.
   Introduce lvconvert --use_policies (repair policy according to lvm.conf).
   Fix clvmd-corosync to match new corosync API.

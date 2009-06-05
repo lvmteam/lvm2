@@ -449,7 +449,7 @@ int process_each_segment_in_lv(struct cmd_context *cmd,
 static int _process_one_vg(struct cmd_context *cmd, const char *vg_name,
 			   const char *vgid,
 			   struct dm_list *tags, struct dm_list *arg_vgnames,
-			   uint32_t lock_type, int consistent, void *handle,
+			   uint32_t lock_type, inconsistent_t repair_vg, void *handle,
 			   int ret_max,
 			   int (*process_single) (struct cmd_context * cmd,
 						  const char *vg_name,
@@ -457,6 +457,7 @@ static int _process_one_vg(struct cmd_context *cmd, const char *vg_name,
 						  int consistent, void *handle))
 {
 	struct volume_group *vg;
+	int consistent = 0;
 	int ret = 0;
 
 	if (!lock_vol(cmd, vg_name, lock_type)) {
@@ -472,31 +473,48 @@ static int _process_one_vg(struct cmd_context *cmd, const char *vg_name,
 	}
 
 	if (!vg_check_status(vg, CLUSTERED)) {
-		unlock_and_release_vg(cmd, vg, vg_name);
-		return ECMD_FAILED;
+		ret_max = ECMD_FAILED;
+		goto out;
 	}
 
 	if (!dm_list_empty(tags)) {
 		/* Only process if a tag matches or it's on arg_vgnames */
 		if (!str_list_match_item(arg_vgnames, vg_name) &&
-		    !str_list_match_list(tags, &vg->tags)) {
-			unlock_and_release_vg(cmd, vg, vg_name);
-			return ret_max;
-		}
+		    !str_list_match_list(tags, &vg->tags))
+			goto out;
 	}
+
+	if (!consistent)
+		switch (repair_vg) {
+		case VG_INCONSISTENT_ABORT:
+			log_error("Volume group %s inconsistent - skipping", vg_name);
+			ret_max = ECMD_FAILED;
+			goto out;
+		case VG_INCONSISTENT_CONTINUE:
+			log_error("Volume group %s inconsistent", vg_name);
+			break;
+		case VG_INCONSISTENT_REPAIR:
+			unlock_and_release_vg(cmd, vg, vg_name);
+			dev_close_all();
+			log_error("Volume group %s inconsistent", vg_name);
+			if (!(vg = recover_vg(cmd, vg_name, LCK_VG_WRITE)))
+				return ECMD_FAILED;
+			consistent = 1;
+			break;
+		}
 
 	if ((ret = process_single(cmd, vg_name, vg, consistent,
 				  handle)) > ret_max) {
 		ret_max = ret;
 	}
 
+out:
 	unlock_and_release_vg(cmd, vg, vg_name);
-
 	return ret_max;
 }
 
 int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
-		    uint32_t lock_type, int consistent, void *handle,
+		    uint32_t lock_type, inconsistent_t repair_vg, void *handle,
 		    int (*process_single) (struct cmd_context * cmd,
 					   const char *vg_name,
 					   struct volume_group * vg,
@@ -563,7 +581,7 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 				continue;
 			ret_max = _process_one_vg(cmd, vg_name, vgid, &tags,
 						  &arg_vgnames,
-					  	  lock_type, consistent, handle,
+					  	  lock_type, repair_vg, handle,
 					  	  ret_max, process_single);
 			if (sigint_caught())
 				return ret_max;
@@ -575,7 +593,7 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 				continue;	/* FIXME Unnecessary? */
 			ret_max = _process_one_vg(cmd, vg_name, NULL, &tags,
 						  &arg_vgnames,
-					  	  lock_type, consistent, handle,
+					  	  lock_type, repair_vg, handle,
 					  	  ret_max, process_single);
 			if (sigint_caught())
 				return ret_max;

@@ -153,6 +153,16 @@ typedef enum {
 	DONT_PROMPT_OVERRIDE = 2 /* Skip prompt + override a second condition */
 } force_t;
 
+/*
+ * What to do if VG is inconsistent
+ * FIXME: remove this after vg_read changes
+ */
+typedef enum {
+	VG_INCONSISTENT_ABORT    = 0, /* Abort operation */
+	VG_INCONSISTENT_CONTINUE = 1, /* Process operation but do not try repair */
+	VG_INCONSISTENT_REPAIR   = 2  /* Try to repair VG before processing */
+} inconsistent_t;
+
 struct cmd_context;
 struct format_handler;
 struct labeller;

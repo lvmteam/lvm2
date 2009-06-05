@@ -21,16 +21,6 @@ static int vgck_single(struct cmd_context *cmd __attribute((unused)),
 		       struct volume_group *vg, int consistent,
 		       void *handle __attribute((unused)))
 {
-	if (!vg) {
-		log_error("Volume group \"%s\" not found", vg_name);
-		return ECMD_FAILED;
-	}
-
-	if (!consistent) {
-		log_error("Volume group \"%s\" inconsistent", vg_name);
-		return ECMD_FAILED;
-	}
-
 	if (!vg_check_status(vg, EXPORTED_VG))
 		return ECMD_FAILED;
 
@@ -42,6 +32,7 @@ static int vgck_single(struct cmd_context *cmd __attribute((unused)),
 
 int vgck(struct cmd_context *cmd, int argc, char **argv)
 {
-	return process_each_vg(cmd, argc, argv, LCK_VG_READ, 0, NULL,
+	return process_each_vg(cmd, argc, argv, LCK_VG_READ,
+			       VG_INCONSISTENT_ABORT, NULL,
 			       &vgck_single);
 }
