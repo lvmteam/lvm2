@@ -39,8 +39,8 @@ lvdisplay "$vg"/"$lv"
 lvchange -r auto "$vg"/"$lv" 2>&1 | grep auto
 check_lvs_ lv_read_ahead auto
 check_lvs_ lv_kernel_read_ahead 5120
-lvchange -r 400 "$vg/$lv"
-check_lvs_ lv_read_ahead 400
+lvchange -r 640 "$vg/$lv"
+check_lvs_ lv_read_ahead 640
 lvremove -ff "$vg"
 
 #COMM "read ahead is properly inherited from underlying PV"

@@ -10,6 +10,7 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 test_description='Test pvcreate option values'
+PAGESIZE=$(getconf PAGESIZE)
 
 . ./test-utils.sh
 
@@ -101,11 +102,19 @@ check_pv_field_ $dev1 pe_start 512.00K
 pvcreate --metadatasize 100k --dataalignment 100k $dev1
 check_pv_field_ $dev1 pe_start 200.00K
 
+# metadata area start is aligned according to pagesize
+# pagesize should be 64k or 4k ...
+if [ $PAGESIZE -eq 65536 ] ; then
+	pv_align="192.50K"
+else
+	pv_align="133.00K"
+fi
+
 pvcreate --metadatasize 128k --dataalignment 3.5k $dev1
-check_pv_field_ $dev1 pe_start 133.00K
+check_pv_field_ $dev1 pe_start $pv_align
 
 pvcreate --metadatasize 128k --metadatacopies 2 --dataalignment 3.5k $dev1
-check_pv_field_ $dev1 pe_start 133.00K
+check_pv_field_ $dev1 pe_start $pv_align
 
 #COMM 'pv with LVM1 compatible data alignment can be convereted'
 #compatible == LVM1_PE_ALIGN == 64k
