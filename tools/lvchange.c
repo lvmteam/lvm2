@@ -370,9 +370,12 @@ static int lvchange_readahead(struct cmd_context *cmd,
 
 	if (read_ahead != DM_READ_AHEAD_AUTO &&
 	    read_ahead != DM_READ_AHEAD_NONE && read_ahead % pagesize) {
-		read_ahead = (read_ahead / pagesize) * pagesize;
-		log_verbose("Rounding down readahead to %u sectors, a multiple "
-			    "of page size %u.", read_ahead, pagesize);
+		if (read_ahead < pagesize)
+			read_ahead = pagesize;
+		else
+			read_ahead = (read_ahead / pagesize) * pagesize;
+		log_warn("WARNING: Overriding readahead to %u sectors, a multiple "
+			    "of %uK page size.", read_ahead, pagesize >> 1);
 	}
 
 	if (lv->read_ahead == read_ahead) {
