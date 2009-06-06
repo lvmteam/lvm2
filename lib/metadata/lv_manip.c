@@ -1806,7 +1806,7 @@ int lv_rename(struct cmd_context *cmd, struct logical_volume *lv,
 
 	/* rename active virtual origin too */
 	if (lv_is_cow(lv) && lv_is_virtual_origin(lvl2.lv = origin_from_cow(lv)))
-		dm_list_add(&lvs_changed, &lvl2.list);
+		dm_list_add_h(&lvs_changed, &lvl2.list);
 
 	log_verbose("Writing out updated volume group");
 	if (!vg_write(vg))
