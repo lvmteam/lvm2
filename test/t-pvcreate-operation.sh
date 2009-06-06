@@ -112,6 +112,6 @@ not pvcreate --uuid $uuid2 --restorefile $backupfile $dev2
 # pvcreate wipes swap signature when forced
 dd if=/dev/zero of=$dev1 bs=1024 count=64
 mkswap $dev1
-file -s $dev1 | grep "swap file"
+blkid -c /dev/null $dev1 | grep "swap"
 pvcreate -f $dev1
-file -s $dev1 | not grep "swap file"
+blkid -c /dev/null $dev1 | not grep "swap"
