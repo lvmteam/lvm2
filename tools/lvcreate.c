@@ -477,9 +477,12 @@ static int _lvcreate_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 	if (lp->read_ahead != DM_READ_AHEAD_AUTO &&
 	    lp->read_ahead != DM_READ_AHEAD_NONE &&
 	    lp->read_ahead % pagesize) {
-		lp->read_ahead = (lp->read_ahead / pagesize) * pagesize;
-		log_verbose("Rounding down readahead to %u sectors, a multiple "
-			    "of page size %u.", lp->read_ahead, pagesize);
+		if (lp->read_ahead < pagesize)
+			lp->read_ahead = pagesize;
+		else
+			lp->read_ahead = (lp->read_ahead / pagesize) * pagesize;
+		log_warn("WARNING: Overriding readahead to %u sectors, a multiple "
+			    "of %uK page size.", lp->read_ahead, pagesize >> 1);
 	}
 
 	/*
