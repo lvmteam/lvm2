@@ -1,5 +1,6 @@
 Version 2.02.48 - 
 ===============================
+  Round up requested readahead to at least one page and print warning.
   Try to repair vg before actual vgremove when force flag provided.
   Fix possible double release of VG after recovery.
   Add parameter to process_each_vg specifying what to do with inconsistent VG.
