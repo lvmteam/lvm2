@@ -28,7 +28,8 @@
 
 /* Supported segment types */
 enum {
-	SEG_ERROR, 
+	SEG_CRYPT,
+	SEG_ERROR,
 	SEG_LINEAR,
 	SEG_MIRRORED,
 	SEG_SNAPSHOT,
@@ -43,6 +44,7 @@ struct {
 	unsigned type;
 	const char *target;
 } dm_segtypes[] = {
+	{ SEG_CRYPT, "crypt" },
 	{ SEG_ERROR, "error" },
 	{ SEG_LINEAR, "linear" },
 	{ SEG_MIRRORED, "mirror" },
@@ -69,8 +71,8 @@ struct load_segment {
 
 	uint64_t size;
 
-	unsigned area_count;		/* Linear + Striped + Mirrored */
-	struct dm_list areas;		/* Linear + Striped + Mirrored */
+	unsigned area_count;		/* Linear + Striped + Mirrored + Crypt */
+	struct dm_list areas;		/* Linear + Striped + Mirrored + Crypt */
 
 	uint32_t stripe_size;		/* Striped */
 
@@ -85,6 +87,12 @@ struct load_segment {
 	unsigned mirror_area_count;	/* Mirror */
 	uint32_t flags;			/* Mirror log */
 	char *uuid;			/* Clustered mirror log */
+
+	const char *cipher;		/* Crypt */
+	const char *chainmode;		/* Crypt */
+	const char *iv;			/* Crypt */
+	uint64_t iv_offset;		/* Crypt */
+	const char *key;		/* Crypt */
 };
 
 /* Per-device properties */
@@ -1328,6 +1336,13 @@ static int _emit_segment_line(struct dm_task *dmt, struct load_segment *seg, uin
 	case SEG_STRIPED:
 		EMIT_PARAMS(pos, "%u %u", seg->area_count, seg->stripe_size);
 		break;
+	case SEG_CRYPT:
+		EMIT_PARAMS(pos, "%s%s%s%s%s %s %" PRIu64, seg->cipher,
+			    seg->chainmode ? "-" : "", seg->chainmode ?: "",
+			    seg->iv ? "-" : "", seg->iv ?: "", seg->key,
+			    seg->iv_offset != DM_CRYPT_IV_DEFAULT ?
+			    seg->iv_offset : *seg_start);
+		break;
 	}
 
 	switch(seg->type) {
@@ -1336,6 +1351,7 @@ static int _emit_segment_line(struct dm_task *dmt, struct load_segment *seg, uin
 	case SEG_SNAPSHOT_ORIGIN:
 	case SEG_ZERO:
 		break;
+	case SEG_CRYPT:
 	case SEG_LINEAR:
 	case SEG_MIRRORED:
 	case SEG_STRIPED:
@@ -1669,6 +1685,28 @@ int dm_tree_node_add_striped_target(struct dm_tree_node *node,
 		return_0;
 
 	seg->stripe_size = stripe_size;
+
+	return 1;
+}
+
+int dm_tree_node_add_crypt_target(struct dm_tree_node *node,
+				  uint64_t size,
+				  const char *cipher,
+				  const char *chainmode,
+				  const char *iv,
+				  uint64_t iv_offset,
+				  const char *key)
+{
+	struct load_segment *seg;
+
+	if (!(seg = _add_segment(node, SEG_CRYPT, size)))
+		return_0;
+
+	seg->cipher = cipher;
+	seg->chainmode = chainmode;
+	seg->iv = iv;
+	seg->iv_offset = iv_offset;
+	seg->key = key;
 
 	return 1;
 }
