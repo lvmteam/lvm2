@@ -48,7 +48,8 @@ READLINK_E="-e"
 FSCK=fsck
 XFS_CHECK=xfs_check
 
-LVRESIZE=lvresize
+# user may override lvm location by setting LVM_BINARY
+LVM=${LVM_BINARY-lvm}
 
 YES=
 DRY=0
@@ -66,6 +67,9 @@ MOUNTED=
 REMOUNT=
 
 IFS_OLD=$IFS
+# without bash $'\n'
+NL='
+'
 
 tool_usage() {
 	echo "${TOOL}: Utility to resize or check the filesystem on a device"
@@ -124,7 +128,7 @@ cleanup() {
 	# start LVRESIZE with the filesystem modification flag
 	# and allow recursive call of fsadm
 	unset FSADM_RUNNING
-	test "$DO_LVRESIZE" -eq 2 && exec $LVRESIZE $VERB -r -L$(( $NEWSIZE / 1048576 )) $VOLUME
+	test "$DO_LVRESIZE" -eq 2 && exec $LVM lvresize $VERB -r -L$(( $NEWSIZE / 1048576 )) $VOLUME
 	exit ${1:-0}
 }
 
@@ -155,7 +159,9 @@ decode_size() {
 # dereference device name if it is symbolic link
 detect_fs() {
         VOLUME=${1#/dev/}
-	VOLUME=$($READLINK $READLINK_E -n "/dev/$VOLUME") || error "Cannot get readlink $1"
+	VOLUME=$($READLINK $READLINK_E "/dev/$VOLUME") || error "Cannot get readlink $1"
+	# strip newline from volume name
+	VOLUME=${VOLUME%%$NL}
 	# use /dev/null as cache file to be sure about the result
 	# not using option '-o value' to be compatible with older version of blkid
 	FSTYPE=$($BLKID -c /dev/null -s TYPE "$VOLUME") || error "Cannot get FSTYPE of \"$VOLUME\""
@@ -324,8 +330,7 @@ resize() {
 	#if [ -n "$NEWSIZE" -a $NEWSIZE <
 	test -z "$NEWSIZE" && NEWSIZE=${DEVSIZE}b
 	trap cleanup 2
-	#IFS=$'\n'  # don't use bash-ism ??
-	IFS="$(printf \"\\n\")"  # needed for parsing output
+	IFS=$NL
 	case "$FSTYPE" in
 	  "ext3"|"ext2"|"ext4") resize_ext $NEWSIZE ;;
 	  "reiserfs") resize_reiser $NEWSIZE ;;
@@ -359,10 +364,11 @@ test -n "$FSADM_RUNNING" && exit 0
 test -n "$TUNE_EXT" -a -n "$RESIZE_EXT" -a -n "$TUNE_REISER" -a -n "$RESIZE_REISER" \
   -a -n "$TUNE_XFS" -a -n "$RESIZE_XFS" -a -n "$MOUNT" -a -n "$UMOUNT" -a -n "$MKDIR" \
   -a -n "$RMDIR" -a -n "$BLOCKDEV" -a -n "$BLKID" -a -n "$GREP" -a -n "$READLINK" \
-  -a -n "$FSCK" -a -n "$XFS_CHECK" -a -n "LVRESIZE" \
+  -a -n "$FSCK" -a -n "$XFS_CHECK" -a -n "LVM" \
   || error "Required command definitions in the script are missing!"
 
-$($READLINK -e -n / >/dev/null 2>&1) || READLINK_E="-f"
+$LVM version >/dev/null 2>&1 || error "Could not run lvm binary '$LVM'"
+$($READLINK -e / >/dev/null 2>&1) || READLINK_E="-f"
 TEST64BIT=$(( 1000 * 1000000000000 ))
 test $TEST64BIT -eq 1000000000000000 || error "Shell does not handle 64bit arithmetic"
 $(echo Y | $GREP Y >/dev/null) || error "Grep does not work properly"
