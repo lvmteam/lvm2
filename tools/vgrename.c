@@ -28,7 +28,8 @@ static int vg_rename_path(struct cmd_context *cmd, const char *old_vg_path,
 	char *vg_name_new;
 	const char *vgid = NULL, *vg_name, *vg_name_old;
 	char old_path[NAME_LEN], new_path[NAME_LEN];
-	struct volume_group *vg = NULL, *vg_new = NULL;
+	struct volume_group *vg = NULL;
+	uint32_t rc;
 
 	vg_name_old = skip_dev_dir(cmd, old_vg_path, NULL);
 	vg_name_new = skip_dev_dir(cmd, new_vg_path, NULL);
@@ -100,17 +101,19 @@ static int vg_rename_path(struct cmd_context *cmd, const char *old_vg_path,
 
 	log_verbose("Checking for new volume group \"%s\"", vg_name_new);
 
-	if (!lock_vol(cmd, vg_name_new, LCK_VG_WRITE)) {
+	rc = vg_lock_newname(cmd, vg_name_new);
+
+	if (rc == FAILED_LOCKING) {
 		unlock_and_release_vg(cmd, vg, vg_name_old);
 		log_error("Can't get lock for %s", vg_name_new);
 		return 0;
 	}
 
-	consistent = 0;
-	if ((vg_new = vg_read_internal(cmd, vg_name_new, NULL, &consistent))) {
+	if (rc == FAILED_EXIST) {
 		log_error("New volume group \"%s\" already exists",
 			  vg_name_new);
-		goto error;
+		unlock_and_release_vg(cmd, vg, vg_name_old);
+		return 0;
 	}
 
 	if (!archive(vg))
@@ -151,7 +154,7 @@ static int vg_rename_path(struct cmd_context *cmd, const char *old_vg_path,
 	backup(vg);
 	backup_remove(cmd, vg_name_old);
 
-	unlock_and_release_vg(cmd, vg_new, vg_name_new);
+	unlock_vg(cmd, vg_name_new);
 	unlock_and_release_vg(cmd, vg, vg_name_old);
 
 	log_print("Volume group \"%s\" successfully renamed to \"%s\"",
@@ -164,7 +167,7 @@ static int vg_rename_path(struct cmd_context *cmd, const char *old_vg_path,
 	return 1;
 
       error:
-	unlock_and_release_vg(cmd, vg_new, vg_name_new);
+	unlock_vg(cmd, vg_name_new);
 	unlock_and_release_vg(cmd, vg, vg_name_old);
 	return 0;
 }
