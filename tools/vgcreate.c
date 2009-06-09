@@ -51,7 +51,7 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	if (!lock_vol(cmd, vp_new.vg_name, LCK_VG_WRITE)) {
+	if (vg_lock_newname(cmd, vp_new.vg_name) != SUCCESS) {
 		log_error("Can't get lock for %s", vp_new.vg_name);
 		unlock_vg(cmd, VG_ORPHANS);
 		return ECMD_FAILED;
