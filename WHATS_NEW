@@ -1,5 +1,7 @@
 Version 2.02.48 - 
 ===============================
+  Update vgrename, vgsplit, and vgcreate to use vg_lock_newname.
+  Add vg_lock_newname() library function.
   Round up requested readahead to at least one page and print warning.
   Try to repair vg before actual vgremove when force flag provided.
   Fix possible double release of VG after recovery.
