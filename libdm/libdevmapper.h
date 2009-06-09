@@ -374,6 +374,21 @@ int dm_tree_node_add_linear_target(struct dm_tree_node *node,
 int dm_tree_node_add_striped_target(struct dm_tree_node *node,
 				       uint64_t size,
 				       uint32_t stripe_size);
+
+#define DM_CRYPT_IV_DEFAULT	UINT64_C(-1)	/* iv_offset == seg offset */
+/*
+ * Function accepts one string in cipher specification
+ * (chainmode and iv should be NULL because included in cipher string)
+ *   or
+ * separate arguments which will be joined to "cipher-chainmode-iv"
+ */
+int dm_tree_node_add_crypt_target(struct dm_tree_node *node,
+				  uint64_t size,
+				  const char *cipher,
+				  const char *chainmode,
+				  const char *iv,
+				  uint64_t iv_offset,
+				  const char *key);
 int dm_tree_node_add_mirror_target(struct dm_tree_node *node,
 				      uint64_t size);
  
