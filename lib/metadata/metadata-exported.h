@@ -127,6 +127,8 @@ struct pv_segment;
 #define FAILED_RESIZEABLE	0x00000020U
 #define FAILED_CLUSTERED	0x00000040U
 #define FAILED_ALLOCATION	0x00000080U
+#define FAILED_EXIST		0x00000100U
+#define SUCCESS			0x00000000U
 
 /* Ordered list - see lv_manip.c */
 typedef enum {
@@ -401,6 +403,7 @@ vg_t *vg_lock_and_read(struct cmd_context *cmd, const char *vg_name,
 		       const char *vgid,
 		       uint32_t lock_flags, uint32_t status_flags,
 		       uint32_t misc_flags);
+uint32_t vg_lock_newname(struct cmd_context *cmd, const char *vgname);
 
 /*
  * Return a handle to VG metadata.

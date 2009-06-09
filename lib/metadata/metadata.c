@@ -2909,6 +2909,52 @@ uint32_t vg_might_exist(vg_t *vg_handle)
 }
 
 /*
+ * Lock a vgname and/or check for existence.
+ * Takes a WRITE lock on the vgname before scanning.
+ * If scanning fails or vgname found, release the lock.
+ * NOTE: If you find the return codes confusing, you might think of this
+ * function as similar to an open() call with O_CREAT and O_EXCL flags
+ * (open returns fail with -EEXIST if file already exists).
+ *
+ * Returns:
+ * FAILED_LOCKING - Cannot lock name
+ * FAILED_EXIST - VG name already exists - cannot reserve
+ * SUCCESS - VG name does not exist in system and WRITE lock held
+ */
+uint32_t vg_lock_newname(struct cmd_context *cmd, const char *vgname)
+{
+	if (!lock_vol(cmd, vgname, LCK_VG_WRITE)) {
+		return FAILED_LOCKING;
+	}
+
+	/* Find the vgname in the cache */
+	/* If it's not there we must do full scan to be completely sure */
+	if (!fmt_from_vgname(vgname, NULL)) {
+		lvmcache_label_scan(cmd, 0);
+		if (!fmt_from_vgname(vgname, NULL)) {
+			if (memlock()) {
+				/*
+				 * FIXME: Disallow calling this function if
+				 * memlock() is true.
+				 */
+				unlock_vg(cmd, vgname);
+				return FAILED_LOCKING;
+			}
+			lvmcache_label_scan(cmd, 2);
+			if (!fmt_from_vgname(vgname, NULL)) {
+				/* vgname not found after scanning */
+				return SUCCESS;
+			}
+		}
+	}
+
+	/* Found vgname, cannot reserve */
+	unlock_vg(cmd, vgname);
+	return FAILED_EXIST;
+}
+
+
+/*
  * Gets/Sets for external LVM library
  */
 struct id pv_id(const pv_t *pv)
