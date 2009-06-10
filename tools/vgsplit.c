@@ -281,7 +281,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	char *vg_name_from, *vg_name_to;
 	struct volume_group *vg_to = NULL, *vg_from = NULL;
 	int opt;
-	int existing_vg;
+	int existing_vg = 0;
 	int consistent;
 	int r = ECMD_FAILED;
 	const char *lv_name;
