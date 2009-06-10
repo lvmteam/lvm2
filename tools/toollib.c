@@ -497,8 +497,10 @@ static int _process_one_vg(struct cmd_context *cmd, const char *vg_name,
 			unlock_and_release_vg(cmd, vg, vg_name);
 			dev_close_all();
 			log_error("Volume group %s inconsistent", vg_name);
-			if (!(vg = recover_vg(cmd, vg_name, LCK_VG_WRITE)))
+			if (!(vg = recover_vg(cmd, vg_name, LCK_VG_WRITE))) {
+				unlock_vg(cmd, vg_name);
 				return ECMD_FAILED;
+			}
 			consistent = 1;
 			break;
 		}
