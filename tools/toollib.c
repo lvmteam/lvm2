@@ -497,10 +497,8 @@ static int _process_one_vg(struct cmd_context *cmd, const char *vg_name,
 			unlock_and_release_vg(cmd, vg, vg_name);
 			dev_close_all();
 			log_error("Volume group %s inconsistent", vg_name);
-			if (!(vg = recover_vg(cmd, vg_name, LCK_VG_WRITE))) {
-				unlock_vg(cmd, vg_name);
+			if (!(vg = recover_vg(cmd, vg_name, LCK_VG_WRITE)))
 				return ECMD_FAILED;
-			}
 			consistent = 1;
 			break;
 		}
@@ -1209,6 +1207,7 @@ struct volume_group *recover_vg(struct cmd_context *cmd, const char *vgname,
 				uint32_t lock_type)
 {
 	int consistent = 1;
+	struct volume_group *vg;
 
 	/* Don't attempt automatic recovery without proper locking */
 	if (lockingfailed())
@@ -1223,7 +1222,10 @@ struct volume_group *recover_vg(struct cmd_context *cmd, const char *vgname,
 		return NULL;
 	}
 
-	return vg_read_internal(cmd, vgname, NULL, &consistent);
+	if (!(vg = vg_read_internal(cmd, vgname, NULL, &consistent)))
+		unlock_vg(cmd, vgname);
+
+	return vg;
 }
 
 int apply_lvname_restrictions(const char *name)
