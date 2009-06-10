@@ -2772,7 +2772,8 @@ static vg_t *_vg_lock_and_read(struct cmd_context *cmd, const char *vg_name,
 		goto_bad;
 	}
 
-	if (vg_is_clustered(vg) && !locking_is_clustered()) {
+	if (vg_is_clustered(vg) && !locking_is_clustered() &&
+	    !lockingfailed()) {
 		log_error("Skipping clustered volume group %s", vg->name);
 		failure |= FAILED_CLUSTERED;
 		goto_bad;
@@ -2790,7 +2791,7 @@ static vg_t *_vg_lock_and_read(struct cmd_context *cmd, const char *vg_name,
 	}
 	
 
-	failure |= _vg_bad_status_bits(vg, status_flags & ~CLUSTERED);
+	failure |= _vg_bad_status_bits(vg, status_flags);
 	if (failure)
 		goto_bad;
 
@@ -2837,7 +2838,7 @@ bad:
 vg_t *vg_read(struct cmd_context *cmd, const char *vg_name,
 	      const char *vgid, uint32_t flags)
 {
-	uint32_t status = CLUSTERED;
+	uint32_t status = 0;
 	uint32_t lock_flags = LCK_VG_READ;
 
 	if (flags & READ_FOR_UPDATE) {
