@@ -894,6 +894,11 @@ static int lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return ECMD_FAILED;
 	}
 
+	if (arg_count(cmd, repair_ARG) && !(lv->status & MIRRORED)) {
+		log_error("Can't repair non-mirrored LV \"%s\".", lv->name);
+		return ECMD_FAILED;
+	}
+
 	if (lp->snapshot) {
 		if (lv->status & MIRRORED) {
 			log_error("Unable to convert mirrored LV \"%s\" into a snapshot.", lv->name);
