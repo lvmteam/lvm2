@@ -1835,6 +1835,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	int inconsistent_vgid = 0;
 	int inconsistent_pvs = 0;
 	unsigned use_precommitted = precommitted;
+	unsigned saved_handles_missing_pvs = cmd->handles_missing_pvs;
 	struct dm_list *pvids;
 	struct pv_list *pvl, *pvl2;
 	struct dm_list all_pvs;
@@ -2076,11 +2077,14 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		log_warn("WARNING: Inconsistent metadata found for VG %s - updating "
 			 "to use version %u", vgname, correct_vg->seqno);
 
+		cmd->handles_missing_pvs = 1;
 		if (!vg_write(correct_vg)) {
 			log_error("Automatic metadata correction failed");
 			vg_release(correct_vg);
+			cmd->handles_missing_pvs = saved_handles_missing_pvs;
 			return NULL;
 		}
+		cmd->handles_missing_pvs = saved_handles_missing_pvs;
 
 		if (!vg_commit(correct_vg)) {
 			log_error("Automatic metadata correction commit "
