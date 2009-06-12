@@ -24,6 +24,7 @@
 #include "lvm-string.h"
 #include "locking.h"
 #include "locking_types.h"
+#include "toolcontext.h"
 
 #include <assert.h>
 #include <stddef.h>
@@ -298,7 +299,8 @@ static int _cluster_free_request(lvm_response_t * response, int num)
 	return 1;
 }
 
-static int _lock_for_cluster(unsigned char clvmd_cmd, uint32_t flags, const char *name)
+static int _lock_for_cluster(struct cmd_context *cmd, unsigned char clvmd_cmd,
+			     uint32_t flags, const char *name)
 {
 	int status;
 	int i;
@@ -323,6 +325,9 @@ static int _lock_for_cluster(unsigned char clvmd_cmd, uint32_t flags, const char
 
 	if (dmeventd_monitor_mode())
 		args[1] |= LCK_DMEVENTD_MONITOR_MODE;
+
+	if (cmd->partial_activation)
+		args[1] |= LCK_PARTIAL_MODE;
 
 	/*
 	 * VG locks are just that: locks, and have no side effects
@@ -389,7 +394,7 @@ int lock_resource(struct cmd_context *cmd, const char *resource, uint32_t flags)
 		if (flags == LCK_VG_BACKUP) {
 			log_very_verbose("Requesting backup of VG metadata for %s",
 					 resource);
-			return _lock_for_cluster(CLVMD_CMD_VG_BACKUP,
+			return _lock_for_cluster(cmd, CLVMD_CMD_VG_BACKUP,
 						 LCK_CLUSTER_VG, resource);
 		}
 
@@ -453,7 +458,7 @@ int lock_resource(struct cmd_context *cmd, const char *resource, uint32_t flags)
 			 flags);
 
 	/* Send a message to the cluster manager */
-	return _lock_for_cluster(clvmd_cmd, flags, lockname);
+	return _lock_for_cluster(cmd, clvmd_cmd, flags, lockname);
 }
 
 static int decode_lock_type(const char *response)
