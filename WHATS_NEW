@@ -1,6 +1,7 @@
 Version 2.02.48 - 
 ===============================
   Re-instate partial activation support in clustered mode. (2.02.40)
+  Allow metadata correction even when PVs are missing.
   Use 'lvm lvresize' instead of 'lvresize' in fsadm.
   Do not use '-n' realine option in fsadm for busybox compatiblity.
   Update vgrename, vgsplit, and vgcreate to use vg_lock_newname.
