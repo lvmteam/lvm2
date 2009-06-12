@@ -145,7 +145,8 @@ static const char *decode_flags(unsigned char flags)
 {
 	static char buf[128];
 
-	sprintf(buf, "0x%x (%s%s)", flags,
+	sprintf(buf, "0x%x (%s%s%s)", flags,
+		flags & LCK_PARTIAL_MODE	  ? "PARTIAL_MODE " : "",
 		flags & LCK_MIRROR_NOSYNC_MODE	  ? "MIRROR_NOSYNC " : "",
 		flags & LCK_DMEVENTD_MONITOR_MODE ? "DMEVENTD_MONITOR " : "");
 
@@ -478,6 +479,8 @@ int do_lock_lv(unsigned char command, unsigned char lock_flags, char *resource)
 	if (!(lock_flags & LCK_DMEVENTD_MONITOR_MODE))
 		init_dmeventd_monitor(0);
 
+	cmd->partial_activation = (lock_flags & LCK_PARTIAL_MODE) ? 1 : 0;
+
 	switch (command) {
 	case LCK_LV_EXCLUSIVE:
 		status = do_activate_lv(resource, lock_flags, LKM_EXMODE);
@@ -515,6 +518,8 @@ int do_lock_lv(unsigned char command, unsigned char lock_flags, char *resource)
 
 	if (!(lock_flags & LCK_DMEVENTD_MONITOR_MODE))
 		init_dmeventd_monitor(DEFAULT_DMEVENTD_MONITOR);
+
+	cmd->partial_activation = 0;
 
 	/* clean the pool for another command */
 	dm_pool_empty(cmd->mem);
