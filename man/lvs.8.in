@@ -36,18 +36,22 @@ if processing the output.
 .TP
 .I \-o, \-\-options
 Comma-separated ordered list of columns.  Precede the list with '+' to append
-to the default selection of columns instead of replacing it.  Column names are: 
-lv_uuid, lv_name, lv_attr, lv_major, lv_minor, lv_kernel_major, lv_kernel_minor,
-lv_size, seg_count, origin, snap_percent,
-copy_percent, move_pv, lv_tags, origin_size,
-segtype, stripes,
-stripesize, chunksize, seg_start, seg_size, seg_tags, devices,
-regionsize, mirror_log, modules.
+to the default selection of columns instead of replacing it.
+.IP
+Use \fb-o lv_all\fP to select all logical volume columns, and \fb-o seg_all\fP to select all
+logical segment columns.
+.IP
+Use \fb-o help\fP to view the full list of columns available.
+.IP
+Column names include:
+lv_uuid, lv_name, lv_attr, lv_major, lv_minor, lv_read_ahead, lv_kernel_major, lv_kernel_minor,
+lv_kernel_read_ahead, lv_size, seg_count, origin, origin_size, snap_percent, copy_percent, move_pv,
+convert_lv, lv_tags, mirror_log, modules, segtype, stripes, stripesize, regionsize, chunksize, seg_start,
+seg_start_pe, seg_size, seg_tags, seg_pe_ranges, devices.
 .IP
 With \-\-segments, any "seg_" prefixes are optional; otherwise any "lv_"
 prefixes are optional.  Columns mentioned in \fBvgs (8)\fP 
 can also be chosen.
-Use \fb-o help\fP to view the full list of fields available.
 .IP
 The lv_attr bits are: 
 .RS

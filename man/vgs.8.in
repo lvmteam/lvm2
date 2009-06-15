@@ -36,14 +36,20 @@ if processing the output.
 .TP
 .I \-o, \-\-options
 Comma-separated ordered list of columns.  Precede the list with '+' to append
-to the default selection of columns.  Column names are: vg_fmt, vg_uuid,
-vg_name, vg_attr, vg_size, vg_free, vg_sysid, vg_extent_size, vg_extent_count,
-vg_free_count, max_lv, max_pv, pv_count, lv_count, snap_count, vg_seqno,
-vg_tags, vg_mda_count, vg_mda_free, and vg_mda_size.
+to the default selection of columns.
+.IP
+Use \fb-o vg_all\fP to select all volume group columns.
+.IP
+Use \fb-o help\fP to view the full list of columns available.
+.IP
+Column names include: vg_fmt, vg_uuid, vg_name, vg_attr, vg_size, vg_free,
+vg_sysid, vg_extent_size, vg_extent_count, vg_free_count, max_lv, max_pv,
+pv_count, lv_count, snap_count, vg_seqno, vg_tags, vg_mda_count, vg_mda_free,
+and vg_mda_size.
+.IP
 Any "vg_" prefixes are optional.  Columns mentioned in either \fBpvs (8)\fP 
 or \fBlvs (8)\fP can also be chosen, but columns cannot be taken from both
 at the same time.  
-Use \fb-o help\fP to view the full list of fields available.
 .IP
 The vg_attr bits are:
 .RS
