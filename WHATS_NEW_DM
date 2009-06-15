@@ -1,5 +1,6 @@
 Version 1.02.33 -
 ===============================
+  Do not fork daemon when dmeventd cannot be found.
   Add crypt target handling to libdevmapper node.
   Add splitname command to dmsetup.
   Add subsystem, vg_name, lv_name, lv_layer fields to dmsetup reports.
