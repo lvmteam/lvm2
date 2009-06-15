@@ -28,6 +28,7 @@ extern int post_lock_lv(unsigned char lock_cmd, unsigned char lock_flags,
 extern int do_check_lvm1(const char *vgname);
 extern int do_refresh_cache(void);
 extern int init_lvm(int using_gulm);
+extern void destroy_lvm(void);
 extern void init_lvhash(void);
 extern void destroy_lvhash(void);
 extern void lvm_do_backup(const char *vgname);

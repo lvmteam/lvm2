@@ -481,6 +481,8 @@ int main(int argc, char *argv[])
 	/* Do some work */
 	main_loop(local_sock, cmd_timeout);
 
+	destroy_lvm();
+
 	return 0;
 }
 
