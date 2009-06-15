@@ -926,18 +926,22 @@ int lvconvert(struct cmd_context * cmd, int argc, char **argv)
 	struct lvconvert_params lp;
 	int ret = ECMD_FAILED;
 	struct lvinfo info;
+	int saved_ignore_suspended_devices = ignore_suspended_devices();
 
 	if (!_read_params(&lp, cmd, argc, argv)) {
 		stack;
 		return EINVALID_CMD_LINE;
 	}
 
+	if (arg_count(cmd, repair_ARG))
+		init_ignore_suspended_devices(1);
+
 	log_verbose("Checking for existing volume group \"%s\"", lp.vg_name);
 
 	if (!(vg = vg_lock_and_read(cmd, lp.vg_name, NULL, LCK_VG_WRITE,
 				    CLUSTERED | EXPORTED_VG | LVM_WRITE,
 				    CORRECT_INCONSISTENT)))
-		return ECMD_FAILED;
+		goto out;
 
 	if (!(lvl = find_lv_in_vg(vg, lp.lv_name))) {
 		log_error("Logical volume \"%s\" not found in "
@@ -966,6 +970,7 @@ bad:
 				     lp.wait_completion ? 0 : 1U);
 	}
 out:
+	init_ignore_suspended_devices(saved_ignore_suspended_devices);
 	vg_release(vg);
 	return ret;
 }

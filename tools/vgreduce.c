@@ -466,6 +466,7 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 	int consistent = 1;
 	int fixed = 1;
 	int repairing = arg_count(cmd, removemissing_ARG);
+	int saved_ignore_suspended_devices = ignore_suspended_devices();
 
 	if (!argc && !repairing) {
 		log_error("Please give volume group name and "
@@ -514,6 +515,9 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 		log_error("Can't get lock for %s", vg_name);
 		return ECMD_FAILED;
 	}
+
+	if (repairing)
+		init_ignore_suspended_devices(1);
 
 	if ((!(vg = vg_read_internal(cmd, vg_name, NULL, &consistent)) || !consistent)
 	    && !repairing) {
@@ -574,6 +578,7 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 
 	}
 out:
+	init_ignore_suspended_devices(saved_ignore_suspended_devices);
 	unlock_and_release_vg(cmd, vg, vg_name);
 
 	return ret;
