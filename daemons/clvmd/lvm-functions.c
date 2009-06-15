@@ -811,3 +811,10 @@ int init_lvm(int using_gulm)
 
 	return 1;
 }
+
+void destroy_lvm(void)
+{
+	if (cmd)
+		destroy_toolcontext(cmd);
+	cmd = NULL;
+}

@@ -1,5 +1,6 @@
 Version 2.02.48 - 
 ===============================
+  Destroy toolcontext on exit in clvmd (fixes memory pool leaks).
   Fix lvconvert to not poll mirror if no conversion in progress.
   Fix memory leaks in toolcontext error path.
   Re-instate partial activation support in clustered mode. (2.02.40)
