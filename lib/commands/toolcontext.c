@@ -516,13 +516,13 @@ static void _destroy_tag_configs(struct cmd_context *cmd)
 {
 	struct config_tree_list *cfl;
 
+	dm_list_iterate_items(cfl, &cmd->config_files) {
+		destroy_config_tree(cfl->cft);
+	}
+
 	if (cmd->cft && cmd->cft->root) {
 		destroy_config_tree(cmd->cft);
 		cmd->cft = NULL;
-	}
-
-	dm_list_iterate_items(cfl, &cmd->config_files) {
-		destroy_config_tree(cfl->cft);
 	}
 
 	dm_list_init(&cmd->config_files);
@@ -1110,6 +1110,14 @@ struct cmd_context *create_toolcontext(unsigned is_long_lived,
 	return cmd;
 
       error:
+	_destroy_tag_configs(cmd);
+	dev_cache_exit();
+	if (cmd->filter)
+		cmd->filter->destroy(cmd->filter);
+	if (cmd->mem)
+		dm_pool_destroy(cmd->mem);
+	if (cmd->libmem)
+		dm_pool_destroy(cmd->libmem);
 	dm_free(cmd);
 	return NULL;
 }
