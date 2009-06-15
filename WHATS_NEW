@@ -1,5 +1,7 @@
 Version 2.02.48 - 
 ===============================
+  Ignore suspended devices during repair.
+  Call vgreduce --removemissing automatically to clean up bad PVs in dmeventd.
   Suggest use lvchange --resync when up converting not yet synced mirror.
   Destroy toolcontext on exit in clvmd (fixes memory pool leaks).
   Fix lvconvert to not poll mirror if no conversion in progress.
