@@ -523,7 +523,8 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 	if (!arg_count(cmd, mirrors_ARG) && !arg_count(cmd, mirrorlog_ARG) &&
 	    !arg_count(cmd, corelog_ARG) && !arg_count(cmd, regionsize_ARG) &&
 	    !repair) {
-		lp->need_polling = 1;
+		if (find_temporary_mirror(lv) || (lv->status & CONVERTING))
+			lp->need_polling = 1;
 		return 1;
 	}
 

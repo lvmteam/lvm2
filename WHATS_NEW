@@ -1,5 +1,6 @@
 Version 2.02.48 - 
 ===============================
+  Fix lvconvert to not poll mirror if no conversion in progress.
   Fix memory leaks in toolcontext error path.
   Re-instate partial activation support in clustered mode. (2.02.40)
   Allow metadata correction even when PVs are missing.
