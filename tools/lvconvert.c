@@ -683,8 +683,8 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 			lp->need_polling = 1;
 	} else if (lp->mirrors > existing_mirrors || failed_mirrors) {
 		if (lv->status & MIRROR_NOTSYNCED) {
-			log_error("Not adding mirror to mirrored LV "
-				  "without initial resync");
+			log_error("Can't add mirror to out-of-sync mirrored "
+				  "LV: use lvchange --resync first.");
 			return 0;
 		}
 		/*

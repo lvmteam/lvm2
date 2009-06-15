@@ -1,5 +1,6 @@
 Version 2.02.48 - 
 ===============================
+  Suggest use lvchange --resync when up converting not yet synced mirror.
   Destroy toolcontext on exit in clvmd (fixes memory pool leaks).
   Fix lvconvert to not poll mirror if no conversion in progress.
   Fix memory leaks in toolcontext error path.
