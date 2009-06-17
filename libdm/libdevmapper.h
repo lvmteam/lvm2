@@ -145,6 +145,7 @@ int dm_task_set_ro(struct dm_task *dmt);
 int dm_task_set_newname(struct dm_task *dmt, const char *newname);
 int dm_task_set_minor(struct dm_task *dmt, int minor);
 int dm_task_set_major(struct dm_task *dmt, int major);
+int dm_task_set_major_minor(struct dm_task *dmt, int major, int minor, int allow_default_major_fallback);
 int dm_task_set_uid(struct dm_task *dmt, uid_t uid);
 int dm_task_set_gid(struct dm_task *dmt, gid_t gid);
 int dm_task_set_mode(struct dm_task *dmt, mode_t mode);

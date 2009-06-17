@@ -1,5 +1,6 @@
 Version 1.02.33 -
 ===============================
+  Do not fallback to default major number, provide new function instead (1.02.31)
   Do not fork daemon when dmeventd cannot be found.
   Add crypt target handling to libdevmapper node.
   Add splitname command to dmsetup.

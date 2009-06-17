@@ -1335,7 +1335,8 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 			goto bad;
 		}
 
-		if (!_dm_multiple_major_support && dmt->major != _dm_device_major) {
+		if (!_dm_multiple_major_support && dmt->allow_default_major_fallback &&
+		    dmt->major != _dm_device_major) {
 			log_verbose("Overriding major number of %" PRIu32 
 				    " with %" PRIu32 " for persistent device.",
 				    dmt->major, _dm_device_major);
