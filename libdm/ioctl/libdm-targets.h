@@ -41,6 +41,7 @@ struct dm_task {
 	uint32_t event_nr;
 	int major;
 	int minor;
+	int allow_default_major_fallback;
 	uid_t uid;
 	gid_t gid;
 	mode_t mode;

@@ -111,10 +111,8 @@ static struct dm_task *_setup_task(const char *name, const char *uuid,
 	if (event_nr)
 		dm_task_set_event_nr(dmt, *event_nr);
 
-	if (major) {
-		dm_task_set_major(dmt, major);
-		dm_task_set_minor(dmt, minor);
-	}
+	if (major)
+		dm_task_set_major_minor(dmt, major, minor, 1);
 
 	return dmt;
 }
@@ -171,7 +169,7 @@ int device_is_usable(dev_t dev)
 		return 0;
 	}
 
-	if (!dm_task_set_major(dmt, MAJOR(dev)) || !dm_task_set_minor(dmt, MINOR(dev)))
+	if (!dm_task_set_major_minor(dmt, MAJOR(dev), MINOR(dev), 1))
 		goto_out;
 
 	if (!dm_task_run(dmt)) {

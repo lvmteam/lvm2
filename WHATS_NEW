@@ -1,5 +1,6 @@
 Version 2.02.48 - 
 ===============================
+  Explicitly request fallback to default major number in device mapper.
   Ignore suspended devices during repair.
   Call vgreduce --removemissing automatically to clean up bad PVs in dmeventd.
   Suggest use lvchange --resync when up converting not yet synced mirror.

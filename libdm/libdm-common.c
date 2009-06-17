@@ -118,6 +118,7 @@ struct dm_task *dm_task_create(int type)
 	dmt->type = type;
 	dmt->minor = -1;
 	dmt->major = -1;
+	dmt->allow_default_major_fallback = 1;
 	dmt->uid = DM_DEVICE_UID;
 	dmt->gid = DM_DEVICE_GID;
 	dmt->mode = DM_DEVICE_MODE;
@@ -190,6 +191,7 @@ int dm_task_set_uuid(struct dm_task *dmt, const char *uuid)
 int dm_task_set_major(struct dm_task *dmt, int major)
 {
 	dmt->major = major;
+	dmt->allow_default_major_fallback = 0;
 
 	return 1;
 }
@@ -197,6 +199,16 @@ int dm_task_set_major(struct dm_task *dmt, int major)
 int dm_task_set_minor(struct dm_task *dmt, int minor)
 {
 	dmt->minor = minor;
+
+	return 1;
+}
+
+int dm_task_set_major_minor(struct dm_task *dmt, int major, int minor,
+			    int allow_default_major_fallback)
+{
+	dmt->major = major;
+	dmt->minor = minor;
+	dmt->allow_default_major_fallback = allow_default_major_fallback;
 
 	return 1;
 }
