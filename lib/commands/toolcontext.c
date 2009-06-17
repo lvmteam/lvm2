@@ -517,10 +517,12 @@ static void _destroy_tag_configs(struct cmd_context *cmd)
 	struct config_tree_list *cfl;
 
 	dm_list_iterate_items(cfl, &cmd->config_files) {
+		if (cfl->cft == cmd->cft)
+			cmd->cft = NULL;
 		destroy_config_tree(cfl->cft);
 	}
 
-	if (cmd->cft && cmd->cft->root) {
+	if (cmd->cft) {
 		destroy_config_tree(cmd->cft);
 		cmd->cft = NULL;
 	}
