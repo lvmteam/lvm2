@@ -42,12 +42,13 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	log_verbose("Checking for volume group \"%s\"", vg_name);
- 	vg = vg_read_for_update(cmd, vg_name, NULL,
- 				READ_REQUIRE_RESIZEABLE | LOCK_NONBLOCKING);
- 	if (vg_read_error(vg)) {
- 		unlock_vg(cmd, VG_ORPHANS);
+	if (!(vg = vg_lock_and_read(cmd, vg_name, NULL, LCK_VG_WRITE,
+				    CLUSTERED | EXPORTED_VG |
+				    LVM_WRITE | RESIZEABLE_VG,
+				    CORRECT_INCONSISTENT | FAIL_INCONSISTENT))) {
+		unlock_vg(cmd, VG_ORPHANS);
 		return ECMD_FAILED;
-	}
+	 }
 /********** FIXME
 	log_print("maximum logical volume size is %s",
 		  (dummy = lvm_show_size(LVM_LV_SIZE_MAX(vg) / 2, LONG)));

@@ -57,8 +57,9 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 
 		log_verbose("Finding volume group %s of physical volume %s",
 			    vg_name, pv_name);
-		vg = vg_read_for_update(cmd, vg_name, NULL, 0);
-		if (vg_read_error(vg))
+		if (!(vg = vg_lock_and_read(cmd, vg_name, NULL, LCK_VG_WRITE,
+					    CLUSTERED | EXPORTED_VG | LVM_WRITE,
+					    CORRECT_INCONSISTENT | FAIL_INCONSISTENT)))
 			return_0;
 
 		if (!(pvl = find_pv_in_vg(vg, pv_name))) {

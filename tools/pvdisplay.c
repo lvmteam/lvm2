@@ -29,8 +29,8 @@ static int _pvdisplay_single(struct cmd_context *cmd,
 
 	if (!is_orphan(pv) && !vg) {
 		vg_name = pv_vg_name(pv);
-		vg = vg_read(cmd, vg_name, (char *)&pv->vgid, 0);
-		if (vg_read_error(vg)) {
+		if (!(vg = vg_lock_and_read(cmd, vg_name, (char *)&pv->vgid,
+					    LCK_VG_READ, CLUSTERED, 0))) {
 		 	log_error("Skipping volume group %s", vg_name);
 			/* FIXME If CLUSTERED should return ECMD_PROCESSED here */
 		 	return ECMD_FAILED;
