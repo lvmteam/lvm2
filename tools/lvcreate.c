@@ -996,7 +996,7 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 	log_verbose("Finding volume group \"%s\"", lp.vg_name);
 	if (!(vg = vg_lock_and_read(cmd, lp.vg_name, NULL, LCK_VG_WRITE,
 				    CLUSTERED | EXPORTED_VG | LVM_WRITE,
-				    CORRECT_INCONSISTENT)))
+				    CORRECT_INCONSISTENT | FAIL_INCONSISTENT)))
 		return ECMD_FAILED;
 
 	if (!_lvcreate(cmd, vg, &lp))
