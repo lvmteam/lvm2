@@ -242,8 +242,10 @@ static struct volume_group *_get_lvconvert_vg(struct cmd_context *cmd,
 	/*
 	 * uuid is here LV uuid, but vg_read will use only first part.
 	 */
-	return vg_read_for_update(cmd, extract_vgname(cmd, lv_name),
-				  NULL, 0);
+        return vg_lock_and_read(cmd, extract_vgname(cmd, lv_name),
+                               uuid, LCK_VG_WRITE,
+                               CLUSTERED | EXPORTED_VG | LVM_WRITE,
+                               CORRECT_INCONSISTENT | FAIL_INCONSISTENT);
 }
 
 static struct logical_volume *_get_lvconvert_lv(struct cmd_context *cmd __attribute((unused)),
