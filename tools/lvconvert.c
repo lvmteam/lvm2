@@ -940,7 +940,7 @@ int lvconvert(struct cmd_context * cmd, int argc, char **argv)
 
 	if (!(vg = vg_lock_and_read(cmd, lp.vg_name, NULL, LCK_VG_WRITE,
 				    CLUSTERED | EXPORTED_VG | LVM_WRITE,
-				    CORRECT_INCONSISTENT)))
+				    CORRECT_INCONSISTENT | FAIL_INCONSISTENT)))
 		goto out;
 
 	if (!(lvl = find_lv_in_vg(vg, lp.lv_name))) {
