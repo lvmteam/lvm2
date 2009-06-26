@@ -59,7 +59,7 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 			    vg_name, pv_name);
 		if (!(vg = vg_lock_and_read(cmd, vg_name, NULL, LCK_VG_WRITE,
 					    CLUSTERED | EXPORTED_VG | LVM_WRITE,
-					    CORRECT_INCONSISTENT)))
+					    CORRECT_INCONSISTENT | FAIL_INCONSISTENT)))
 			return_0;
 
 		if (!(pvl = find_pv_in_vg(vg, pv_name))) {
