@@ -1,5 +1,6 @@
 Version 2.02.48 - 
 ===============================
+  Abort operation if automatic metadata correction in lvconvert fails.
   Explicitly request fallback to default major number in device mapper.
   Ignore suspended devices during repair.
   Call vgreduce --removemissing automatically to clean up bad PVs in dmeventd.
