@@ -1,5 +1,5 @@
-Version 2.02.48 - 
-===============================
+Version 2.02.48 - 26th June 2009
+================================
   Abort if automatic metadata correction fails when reading VG to update it.
   Explicitly request fallback to default major number in device mapper.
   Ignore suspended devices during repair.
