@@ -1,27 +1,26 @@
-Version 2.02.48 - 26th June 2009
+Version 2.02.48 - 29th June 2009
 ================================
   Abort if automatic metadata correction fails when reading VG to update it.
   Explicitly request fallback to default major number in device mapper.
   Ignore suspended devices during repair.
-  Call vgreduce --removemissing automatically to clean up bad PVs in dmeventd.
-  Suggest use lvchange --resync when up converting not yet synced mirror.
-  Destroy toolcontext on exit in clvmd (fixes memory pool leaks).
-  Fix lvconvert to not poll mirror if no conversion in progress.
+  Call vgreduce --removemissing automatically to fix missing PVs in dmeventd.
+  Suggest using lvchange --resync when adding leg to not-yet-synced mirror.
+  Destroy toolcontext on clvmd exit to avoid memory pool leaks.
+  Fix lvconvert not to poll mirror if no conversion in progress.
   Fix memory leaks in toolcontext error path.
-  Re-instate partial activation support in clustered mode. (2.02.40)
+  Reinstate partial activation support in clustered mode. (2.02.40)
   Allow metadata correction even when PVs are missing.
   Use 'lvm lvresize' instead of 'lvresize' in fsadm.
   Do not use '-n' realine option in fsadm for busybox compatiblity.
-  Update vgrename, vgsplit, and vgcreate to use vg_lock_newname.
-  Add vg_lock_newname() library function.
+  Add vg_lock_newname() library function for vgrename, vgsplit and vgcreate.
   Round up requested readahead to at least one page and print warning.
   Try to repair vg before actual vgremove when force flag provided.
   Fix possible double release of VG after recovery.
   Add parameter to process_each_vg specifying what to do with inconsistent VG.
-  Unify error messages when procesing inconsistent volume group.
+  Unify error messages when processing inconsistent volume group.
   Use lvconvert --repair instead of vgreduce in mirror dmeventd DSO.
   Introduce lvconvert --use_policies (repair policy according to lvm.conf).
-  Fix clvmd-corosync to match new corosync API.
+  Update clvmd-corosync to match new corosync API.
   Fix makefile to build also shared libraries when running plain make.
   Fix rename of active snapshot with virtual origin.
   Fix convert polling to ignore LV with different UUID.

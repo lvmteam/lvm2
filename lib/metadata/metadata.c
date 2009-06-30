@@ -2953,11 +2953,10 @@ uint32_t vg_lock_newname(struct cmd_context *cmd, const char *vgname)
 		}
 	}
 
-	/* Found vgname, cannot reserve */
+	/* Found vgname so cannot reserve. */
 	unlock_vg(cmd, vgname);
 	return FAILED_EXIST;
 }
-
 
 /*
  * Gets/Sets for external LVM library
