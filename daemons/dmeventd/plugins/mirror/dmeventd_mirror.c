@@ -13,6 +13,7 @@
  */
 
 #include "lvm2cmd.h"
+#include "errors.h"
 
 #include <libdevmapper.h>
 #include <libdevmapper-event.h>
@@ -161,14 +162,14 @@ static int _remove_failed_devices(const char *device)
 
 	r = lvm2_run(_lvm_handle, cmd_str);
 
-	if (r == 1) {
+	if (r == ECMD_PROCESSED) {
 		snprintf(cmd_str, CMD_SIZE, "vgreduce --removemissing %s", vg);
 		if (lvm2_run(_lvm_handle, cmd_str) != 1)
 			syslog(LOG_ERR, "Unable to remove failed PVs from VG %s", vg);
 	}
 
 	dm_pool_empty(_mem_pool);  /* FIXME: not safe with multiple threads */
-	return (r == 1) ? 0 : -1;
+	return (r == ECMD_PROCESSED) ? 0 : -1;
 }
 
 void process_event(struct dm_task *dmt,

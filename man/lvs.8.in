@@ -38,16 +38,17 @@ if processing the output.
 Comma-separated ordered list of columns.  Precede the list with '+' to append
 to the default selection of columns instead of replacing it.
 .IP
-Use \fb-o lv_all\fP to select all logical volume columns, and \fb-o seg_all\fP to select all
-logical segment columns.
+Use \fb-o lv_all\fP to select all logical volume columns, and \fb-o seg_all\fP
+to select all logical volume segment columns.
 .IP
 Use \fb-o help\fP to view the full list of columns available.
 .IP
 Column names include:
-lv_uuid, lv_name, lv_attr, lv_major, lv_minor, lv_read_ahead, lv_kernel_major, lv_kernel_minor,
-lv_kernel_read_ahead, lv_size, seg_count, origin, origin_size, snap_percent, copy_percent, move_pv,
-convert_lv, lv_tags, mirror_log, modules, segtype, stripes, stripesize, regionsize, chunksize, seg_start,
-seg_start_pe, seg_size, seg_tags, seg_pe_ranges, devices.
+lv_uuid, lv_name, lv_attr, lv_major, lv_minor, lv_read_ahead, lv_kernel_major,
+lv_kernel_minor, lv_kernel_read_ahead, lv_size, seg_count, origin, origin_size,
+snap_percent, copy_percent, move_pv, convert_lv, lv_tags, mirror_log, modules,
+segtype, stripes, stripesize, regionsize, chunksize, seg_start, seg_start_pe,
+seg_size, seg_tags, seg_pe_ranges, devices.
 .IP
 With \-\-segments, any "seg_" prefixes are optional; otherwise any "lv_"
 prefixes are optional.  Columns mentioned in \fBvgs (8)\fP 
@@ -56,9 +57,9 @@ can also be chosen.
 The lv_attr bits are: 
 .RS
 .IP 1 3
-Volume type: (m)irrored, (M)irrored without initial sync, (o)rigin, (p)vmove, (s)napshot, 
-invalid (S)napshot, (v)irtual, mirror (i)mage, mirror (I)mage out-of-sync,
-under (c)onversion
+Volume type: (m)irrored, (M)irrored without initial sync, (o)rigin, (p)vmove,
+(s)napshot, invalid (S)napshot, (v)irtual, mirror (i)mage, mirror (I)mage
+out-of-sync, under (c)onversion
 .IP 2 3
 Permissions: (w)riteable, (r)ead-only
 .IP 3 3

@@ -5,11 +5,10 @@ lvconvert \- convert a logical volume from linear to mirror or snapshot
 .B lvconvert
 \-m|\-\-mirrors Mirrors [\-\-mirrorlog {disk|core}] [\-\-corelog] [\-R|\-\-regionsize MirrorLogRegionSize]
 [\-A|\-\-alloc AllocationPolicy]
-[\-b|\-\-background] [\-i|\-\-interval Seconds]
+[\-b|\-\-background] [\-f|\-\-force] [\-i|\-\-interval Seconds]
 [\-h|\-?|\-\-help]
-[\-v|\-\-verbose]
+[\-v|\-\-verbose] [\-y|\-\-yes]
 [\-\-version]
-.br
 LogicalVolume[Path] [PhysicalVolume[Path]...]
 .br
 
@@ -62,15 +61,13 @@ Report progress as a percentage at regular intervals.
 .br
 .TP
 .I \-\-repair
-Repair a mirror that has suffered a disk failure. The mirror will be brought
-back into a consistent state, and if possible, the original number of mirrors
-will be restored, if so desired. By default, lvconvert will prompt you whether
-to perform the replacement. If you instead wish to unconditionally replace
-missing devices, you may specify \-y on the commandline and if you instead want
-no replacement to happen at all, you may provide \-f. Additionally, you may use
-"--use-policies" - this option will use the device replacement policy specified
-in lvm.conf, specifically "activation/mirror_log_fault_policy" and
-"activation/mirror_device_fault_policy".
+Repair a mirror after suffering a disk failure. The mirror will be brought back
+into a consistent state.  By default, the original number of mirrors will be
+restored if possible.  Specify \-y on the command line to skip the prompts.
+Use \-f if you do not want any replacement.  Additionally, you may use
+\-\-use-policies to use the device replacement policy specified in lvm.conf,
+viz. activation/mirror_log_fault_policy or
+activation/mirror_device_fault_policy.
 .br
 .TP
 .I \-s, \-\-snapshot

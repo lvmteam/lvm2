@@ -39,7 +39,7 @@ Comma-separated ordered list of columns.  Precede the list with '+' to append
 to the default selection of columns.
 .IP
 Use \fb-o pv_all\fP to select all physical volume columns, and \fb-o pvseg_all\fP
-to select all physical segment columns.
+to select all Physical Volume segment columns.
 .IP
 Use \fb-o help\fP to view the full list of columns available.
 .IP

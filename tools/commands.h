@@ -99,9 +99,11 @@ xx(lvconvert,
    "\t[--alloc AllocationPolicy]\n"
    "\t[-b|--background]\n"
    "\t[-d|--debug]\n"
+   "\t[-f|--force]\n"
    "\t[-h|-?|--help]\n"
    "\t[-i|--interval seconds]\n"
    "\t[-v|--verbose]\n"
+   "\t[-y|--yes]\n"
    "\t[--version]" "\n"
    "\tLogicalVolume[Path] [PhysicalVolume[Path]...]\n\n"
 

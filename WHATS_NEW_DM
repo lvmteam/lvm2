@@ -1,8 +1,8 @@
-Version 1.02.33 - 26th June 2009
+Version 1.02.33 - 29th June 2009
 ================================
-  Do not fallback to default major number, provide new function instead (1.02.31)
+  Don't fallback to default major number: use dm_task_set_major_minor. (1.02.31)
   Do not fork daemon when dmeventd cannot be found.
-  Add crypt target handling to libdevmapper node.
+  Add crypt target handling to libdevmapper tree nodes.
   Add splitname command to dmsetup.
   Add subsystem, vg_name, lv_name, lv_layer fields to dmsetup reports.
   Make mempool optional in dm_split_lvm_name().

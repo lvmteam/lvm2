@@ -21,4 +21,6 @@
 #define EINVALID_CMD_LINE	3
 #define ECMD_FAILED		5
 
+/* FIXME Also returned by cmdlib. */
+
 #endif

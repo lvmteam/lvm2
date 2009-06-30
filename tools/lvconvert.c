@@ -111,9 +111,10 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 	memset(lp, 0, sizeof(*lp));
 
 	if (arg_count(cmd, snapshot_ARG) &&
-	    (arg_count(cmd, mirrorlog_ARG) || arg_count(cmd, mirrors_ARG))) {
-		log_error("--snapshots argument cannot be mixed "
-			  "with --mirrors or --log");
+	    (arg_count(cmd, mirrorlog_ARG) || arg_count(cmd, mirrors_ARG) ||
+	     arg_count(cmd, repair_ARG))) {
+		log_error("--snapshot argument cannot be mixed "
+			  "with --mirrors, --repair or --log");
 		return 0;
 	}
 
@@ -529,7 +530,7 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 	}
 
 	if (arg_count(cmd, mirrors_ARG) && repair) {
-		log_error("You can only use one of -m, --repair.");
+		log_error("You may only use one of --mirrors and --repair.");
 		return 0;
 	}
 
