@@ -357,7 +357,7 @@ static int remove_lvs_in_vg(struct cmd_context *cmd,
 
 /* FIXME: remove redundant vg_name */
 int vg_remove_single(struct cmd_context *cmd, const char *vg_name,
-		     struct volume_group *vg, int consistent,
+		     struct volume_group *vg,
 		     force_t force __attribute((unused)))
 {
 	struct physical_volume *pv;
@@ -365,7 +365,7 @@ int vg_remove_single(struct cmd_context *cmd, const char *vg_name,
 	unsigned lv_count;
 	int ret = 1;
 
-	if (!vg || !consistent || vg_missing_pv_count(vg)) {
+	if (vg_read_error(vg) || vg_missing_pv_count(vg)) {
 		log_error("Volume group \"%s\" not found, is inconsistent "
 			  "or has PVs missing.", vg_name);
 		log_error("Consider vgreduce --removemissing if metadata "

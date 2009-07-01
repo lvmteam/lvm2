@@ -18,7 +18,7 @@
 
 static int vgck_single(struct cmd_context *cmd __attribute((unused)),
 		       const char *vg_name,
-		       struct volume_group *vg, int consistent,
+		       struct volume_group *vg,
 		       void *handle __attribute((unused)))
 {
 	if (!vg_check_status(vg, EXPORTED_VG))
@@ -32,7 +32,6 @@ static int vgck_single(struct cmd_context *cmd __attribute((unused)),
 
 int vgck(struct cmd_context *cmd, int argc, char **argv)
 {
-	return process_each_vg(cmd, argc, argv, LCK_VG_READ,
-			       VG_INCONSISTENT_ABORT, NULL,
+	return process_each_vg(cmd, argc, argv, 0, NULL,
 			       &vgck_single);
 }

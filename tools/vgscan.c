@@ -16,9 +16,12 @@
 #include "tools.h"
 
 static int vgscan_single(struct cmd_context *cmd, const char *vg_name,
-			 struct volume_group *vg, int consistent,
+			 struct volume_group *vg,
 			 void *handle __attribute((unused)))
 {
+	if (vg_read_error(vg))
+		return ECMD_FAILED;
+
 	log_print("Found %svolume group \"%s\" using metadata type %s",
 		  (vg_status(vg) & EXPORTED_VG) ? "exported " : "", vg_name,
 		  vg->fid->fmt->name);
@@ -47,8 +50,7 @@ int vgscan(struct cmd_context *cmd, int argc, char **argv)
 
 	log_print("Reading all physical volumes.  This may take a while...");
 
-	maxret = process_each_vg(cmd, argc, argv, LCK_VG_READ,
-				 VG_INCONSISTENT_REPAIR, NULL,
+	maxret = process_each_vg(cmd, argc, argv, 0, NULL,
 				 &vgscan_single);
 
 	if (arg_count(cmd, mknodes_ARG)) {
