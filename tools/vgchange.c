@@ -521,15 +521,13 @@ static int _vgchange_refresh(struct cmd_context *cmd, struct volume_group *vg)
 }
 
 static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
-			   struct volume_group *vg, int consistent,
+			   struct volume_group *vg,
 			   void *handle __attribute((unused)))
 {
 	int r = ECMD_FAILED;
 
-	if (!(vg_status(vg) & LVM_WRITE) && !arg_count(cmd, available_ARG)) {
-		log_error("Volume group \"%s\" is read-only", vg->name);
+	if (vg_read_error(vg))
 		return ECMD_FAILED;
-	}
 
 	if (vg_status(vg) & EXPORTED_VG) {
 		log_error("Volume group \"%s\" is exported", vg_name);
@@ -620,7 +618,7 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 
 	return process_each_vg(cmd, argc, argv,
 			       (arg_count(cmd, available_ARG)) ?
-			       LCK_VG_READ : LCK_VG_WRITE,
-			       VG_INCONSISTENT_REPAIR, NULL,
+			       0 : READ_FOR_UPDATE,
+			       NULL,
 			       &vgchange_single);
 }

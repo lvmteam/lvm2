@@ -16,10 +16,12 @@
 #include "tools.h"
 
 static int vgdisplay_single(struct cmd_context *cmd, const char *vg_name,
-			    struct volume_group *vg, int consistent,
+			    struct volume_group *vg,
 			    void *handle __attribute((unused)))
 {
 	/* FIXME Do the active check here if activevolumegroups_ARG ? */
+	if (vg_read_error(vg))
+		return ECMD_FAILED;
 
 	vg_check_status(vg, EXPORTED_VG);
 
@@ -91,8 +93,7 @@ int vgdisplay(struct cmd_context *cmd, int argc, char **argv)
 	}
 **********/
 
-	return process_each_vg(cmd, argc, argv, LCK_VG_READ,
-			       VG_INCONSISTENT_CONTINUE, NULL,
+	return process_each_vg(cmd, argc, argv, 0, NULL,
 			       vgdisplay_single);
 
 /******** FIXME Need to count number processed

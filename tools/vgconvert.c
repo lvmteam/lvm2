@@ -16,7 +16,7 @@
 #include "tools.h"
 
 static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
-			    struct volume_group *vg, int consistent,
+			    struct volume_group *vg,
 			    void *handle __attribute((unused)))
 {
 	struct physical_volume *pv, *existing_pv;
@@ -31,6 +31,9 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 	int change_made = 0;
 	struct lvinfo info;
 	int active = 0;
+
+	if (vg_read_error(vg))
+		return ECMD_FAILED;
 
 	if (!vg_check_status(vg, LVM_WRITE | EXPORTED_VG))
 		return ECMD_FAILED;
@@ -220,7 +223,6 @@ int vgconvert(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	return process_each_vg(cmd, argc, argv, LCK_VG_WRITE,
-			       VG_INCONSISTENT_REPAIR, NULL,
+	return process_each_vg(cmd, argc, argv, READ_FOR_UPDATE, NULL,
 			       &vgconvert_single);
 }

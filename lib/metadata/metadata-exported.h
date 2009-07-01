@@ -155,16 +155,6 @@ typedef enum {
 	DONT_PROMPT_OVERRIDE = 2 /* Skip prompt + override a second condition */
 } force_t;
 
-/*
- * What to do if VG is inconsistent
- * FIXME: remove this after vg_read changes
- */
-typedef enum {
-	VG_INCONSISTENT_ABORT    = 0, /* Abort operation */
-	VG_INCONSISTENT_CONTINUE = 1, /* Process operation but do not try repair */
-	VG_INCONSISTENT_REPAIR   = 2  /* Try to repair VG before processing */
-} inconsistent_t;
-
 struct cmd_context;
 struct format_handler;
 struct labeller;
@@ -445,7 +435,7 @@ struct volume_group *vg_create(struct cmd_context *cmd, const char *name,
 			       int pv_count, char **pv_names);
 int vg_remove(struct volume_group *vg);
 int vg_remove_single(struct cmd_context *cmd, const char *vg_name,
-		     struct volume_group *vg, int consistent,
+		     struct volume_group *vg,
 		     force_t force);
 int vg_rename(struct cmd_context *cmd, struct volume_group *vg,
 	      const char *new_name);

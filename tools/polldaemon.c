@@ -175,7 +175,7 @@ static int _wait_for_single_mirror(struct cmd_context *cmd, const char *name, co
 }
 
 static int _poll_vg(struct cmd_context *cmd, const char *vgname,
-		    struct volume_group *vg, int consistent, void *handle)
+		    struct volume_group *vg, void *handle)
 {
 	struct daemon_parms *parms = (struct daemon_parms *) handle;
 	struct lv_list *lvl;
@@ -183,7 +183,7 @@ static int _poll_vg(struct cmd_context *cmd, const char *vgname,
 	const char *name;
 	int finished;
 
-	if (!vg_check_status(vg, EXPORTED_VG))
+	if (vg_read_error(vg))
 		return ECMD_FAILED;
 
 	dm_list_iterate_items(lvl, &vg->lvs) {
@@ -208,9 +208,7 @@ static void _poll_for_all_vgs(struct cmd_context *cmd,
 {
 	while (1) {
 		parms->outstanding_count = 0;
-		/* FIXME Should we silently recover it here or not? */
-		process_each_vg(cmd, 0, NULL, LCK_VG_WRITE,
-				VG_INCONSISTENT_ABORT, parms, _poll_vg);
+		process_each_vg(cmd, 0, NULL, READ_FOR_UPDATE, parms, _poll_vg);
 		if (!parms->outstanding_count)
 			break;
 		sleep(parms->interval);

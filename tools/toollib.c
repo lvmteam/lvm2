@@ -164,7 +164,7 @@ int process_each_lv_in_vg(struct cmd_context *cmd,
 }
 
 int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
-		    uint32_t lock_type, void *handle,
+		    uint32_t flags, void *handle,
 		    int (*process_single) (struct cmd_context * cmd,
 					   struct logical_volume * lv,
 					   void *handle))
@@ -172,7 +172,6 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 	int opt = 0;
 	int ret_max = ECMD_PROCESSED;
 	int ret = 0;
-	int consistent;
 
 	struct dm_list *tags_arg;
 	struct dm_list *vgnames;	/* VGs to process */
@@ -287,44 +286,14 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 		vgname = strl->str;
 		if (is_orphan_vg(vgname))
 			continue;	/* FIXME Unnecessary? */
-		if (!lock_vol(cmd, vgname, lock_type)) {
-			log_error("Can't lock %s: skipping", vgname);
-			ret_max = ECMD_FAILED;
-			continue;
-		}
-		if (lock_type & LCK_WRITE)
-			consistent = 1;
-		else
-			consistent = 0;
-		if (!(vg = vg_read_internal(cmd, vgname, NULL, &consistent)) || !consistent) {
-			unlock_vg(cmd, vgname);
-			if (!vg)
-				log_error("Volume group \"%s\" "
-					  "not found", vgname);
-			else {
-				if (!vg_check_status(vg, CLUSTERED)) {
-					if (ret_max < ECMD_FAILED)
-						ret_max = ECMD_FAILED;
-					vg_release(vg);
-					continue;
-				}
-				log_error("Volume group \"%s\" "
-					  "inconsistent", vgname);
-			}
+		vg = vg_read(cmd, vgname, NULL, flags);
 
+		if (vg_read_error(vg)) {
 			vg_release(vg);
-			if (!vg || !(vg = recover_vg(cmd, vgname, lock_type))) {
-				if (ret_max < ECMD_FAILED)
-					ret_max = ECMD_FAILED;
-				vg_release(vg);
-				continue;
-			}
-		}
-
-		if (!vg_check_status(vg, CLUSTERED)) {
-			unlock_and_release_vg(cmd, vg, vgname);
-			if (ret_max < ECMD_FAILED)
+			if (ret_max < ECMD_FAILED) {
+				log_error("Skipping volume group %s", vgname);
 				ret_max = ECMD_FAILED;
+			}
 			continue;
 		}
 
@@ -383,8 +352,8 @@ int process_each_segment_in_pv(struct cmd_context *cmd,
 	if (is_pv(pv) && !vg && !is_orphan(pv)) {
 		vg_name = pv_vg_name(pv);
 
-		if (!(vg = vg_lock_and_read(cmd, vg_name, NULL, LCK_VG_READ,
-					    CLUSTERED, 0))) {
+		vg = vg_read(cmd, vg_name, NULL, 0);
+		if (vg_read_error(vg)) {
 			log_error("Skipping volume group %s", vg_name);
 			return ECMD_FAILED;
 		}
@@ -449,33 +418,18 @@ int process_each_segment_in_lv(struct cmd_context *cmd,
 static int _process_one_vg(struct cmd_context *cmd, const char *vg_name,
 			   const char *vgid,
 			   struct dm_list *tags, struct dm_list *arg_vgnames,
-			   uint32_t lock_type, inconsistent_t repair_vg, void *handle,
-			   int ret_max,
+			   uint32_t flags, void *handle, int ret_max,
 			   int (*process_single) (struct cmd_context * cmd,
 						  const char *vg_name,
 						  struct volume_group * vg,
-						  int consistent, void *handle))
+						  void *handle))
 {
 	struct volume_group *vg;
-	int consistent = 0;
 	int ret = 0;
 
-	if (!lock_vol(cmd, vg_name, lock_type)) {
-		log_error("Can't lock volume group %s: skipping", vg_name);
-		return ECMD_FAILED;
-	}
-
 	log_verbose("Finding volume group \"%s\"", vg_name);
-	if (!(vg = vg_read_internal(cmd, vg_name, vgid, &consistent))) {
-		log_error("Volume group \"%s\" not found", vg_name);
-		unlock_vg(cmd, vg_name);
-		return ECMD_FAILED;
-	}
 
-	if (!vg_check_status(vg, CLUSTERED)) {
-		ret_max = ECMD_FAILED;
-		goto out;
-	}
+	vg = vg_read(cmd, vg_name, vgid, flags);
 
 	if (!dm_list_empty(tags)) {
 		/* Only process if a tag matches or it's on arg_vgnames */
@@ -484,26 +438,7 @@ static int _process_one_vg(struct cmd_context *cmd, const char *vg_name,
 			goto out;
 	}
 
-	if (!consistent)
-		switch (repair_vg) {
-		case VG_INCONSISTENT_ABORT:
-			log_error("Volume group %s inconsistent - skipping", vg_name);
-			ret_max = ECMD_FAILED;
-			goto out;
-		case VG_INCONSISTENT_CONTINUE:
-			log_error("Volume group %s inconsistent", vg_name);
-			break;
-		case VG_INCONSISTENT_REPAIR:
-			unlock_and_release_vg(cmd, vg, vg_name);
-			dev_close_all();
-			log_error("Volume group %s inconsistent", vg_name);
-			if (!(vg = recover_vg(cmd, vg_name, LCK_VG_WRITE)))
-				return ECMD_FAILED;
-			consistent = 1;
-			break;
-		}
-
-	if ((ret = process_single(cmd, vg_name, vg, consistent,
+	if ((ret = process_single(cmd, vg_name, vg,
 				  handle)) > ret_max) {
 		ret_max = ret;
 	}
@@ -514,11 +449,11 @@ out:
 }
 
 int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
-		    uint32_t lock_type, inconsistent_t repair_vg, void *handle,
+		    uint32_t flags, void *handle,
 		    int (*process_single) (struct cmd_context * cmd,
 					   const char *vg_name,
 					   struct volume_group * vg,
-					   int consistent, void *handle))
+					   void *handle))
 {
 	int opt = 0;
 	int ret_max = ECMD_PROCESSED;
@@ -581,7 +516,7 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 				continue;
 			ret_max = _process_one_vg(cmd, vg_name, vgid, &tags,
 						  &arg_vgnames,
-					  	  lock_type, repair_vg, handle,
+						  flags, handle,
 					  	  ret_max, process_single);
 			if (sigint_caught())
 				return ret_max;
@@ -593,7 +528,7 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 				continue;	/* FIXME Unnecessary? */
 			ret_max = _process_one_vg(cmd, vg_name, NULL, &tags,
 						  &arg_vgnames,
-					  	  lock_type, repair_vg, handle,
+						  flags, handle,
 					  	  ret_max, process_single);
 			if (sigint_caught())
 				return ret_max;
@@ -1198,34 +1133,6 @@ struct dm_list *clone_pv_list(struct dm_pool *mem, struct dm_list *pvsl)
 	}
 
 	return r;
-}
-
-/*
- * Attempt metadata recovery
- */
-struct volume_group *recover_vg(struct cmd_context *cmd, const char *vgname,
-				uint32_t lock_type)
-{
-	int consistent = 1;
-	struct volume_group *vg;
-
-	/* Don't attempt automatic recovery without proper locking */
-	if (lockingfailed())
-		return NULL;
-
-	lock_type &= ~LCK_TYPE_MASK;
-	lock_type |= LCK_WRITE;
-
-	if (!lock_vol(cmd, vgname, lock_type)) {
-		log_error("Can't lock %s for metadata recovery: skipping",
-			  vgname);
-		return NULL;
-	}
-
-	if (!(vg = vg_read_internal(cmd, vgname, NULL, &consistent)))
-		unlock_vg(cmd, vgname);
-
-	return vg;
 }
 
 int apply_lvname_restrictions(const char *name)

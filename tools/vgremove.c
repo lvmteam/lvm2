@@ -16,10 +16,10 @@
 #include "tools.h"
 
 static int vgremove_single(struct cmd_context *cmd, const char *vg_name,
-			   struct volume_group *vg, int consistent,
+			   struct volume_group *vg,
 			   void *handle __attribute((unused)))
 {
-	if (!vg_remove_single(cmd, vg_name, vg, consistent,
+	if (!vg_remove_single(cmd, vg_name, vg,
 			      arg_count(cmd, force_ARG)))
 		return ECMD_FAILED;
 
@@ -40,10 +40,8 @@ int vgremove(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	ret = process_each_vg(cmd, argc, argv, LCK_VG_WRITE,
-			      arg_count(cmd, force_ARG) ?
-			      VG_INCONSISTENT_REPAIR :
-			      VG_INCONSISTENT_ABORT,
+	ret = process_each_vg(cmd, argc, argv,
+			      READ_FOR_UPDATE | LOCK_NONBLOCKING,
 			      NULL, &vgremove_single);
 
 	unlock_vg(cmd, VG_ORPHANS);
