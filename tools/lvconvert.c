@@ -240,13 +240,8 @@ static struct volume_group *_get_lvconvert_vg(struct cmd_context *cmd,
 {
 	dev_close_all();
 
-	/*
-	 * uuid is here LV uuid, but vg_read will use only first part.
-	 */
-        return vg_lock_and_read(cmd, extract_vgname(cmd, lv_name),
-                               uuid, LCK_VG_WRITE,
-                               CLUSTERED | EXPORTED_VG | LVM_WRITE,
-                               CORRECT_INCONSISTENT | FAIL_INCONSISTENT);
+        return vg_read_for_update(cmd, extract_vgname(cmd, lv_name),
+				  NULL, 0);
 }
 
 static struct logical_volume *_get_lvconvert_lv(struct cmd_context *cmd __attribute((unused)),
@@ -939,9 +934,8 @@ int lvconvert(struct cmd_context * cmd, int argc, char **argv)
 
 	log_verbose("Checking for existing volume group \"%s\"", lp.vg_name);
 
-	if (!(vg = vg_lock_and_read(cmd, lp.vg_name, NULL, LCK_VG_WRITE,
-				    CLUSTERED | EXPORTED_VG | LVM_WRITE,
-				    CORRECT_INCONSISTENT | FAIL_INCONSISTENT)))
+	vg = vg_read_for_update(cmd, lp.vg_name, NULL, 0);
+	if (vg_read_error(vg))
 		goto out;
 
 	if (!(lvl = find_lv_in_vg(vg, lp.lv_name))) {
