@@ -2165,7 +2165,7 @@ void vg_release(struct volume_group *vg)
 	if (!vg || !vg->vgmem)
 		return;
 
-	if (vg->vgmem == vg->cmd->mem)
+	if (vg->cmd && vg->vgmem == vg->cmd->mem)
 		log_error("Internal error: global memory pool used for VG %s",
 			  vg->name);
 
