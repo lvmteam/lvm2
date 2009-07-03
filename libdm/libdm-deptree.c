@@ -1263,7 +1263,10 @@ static int _emit_areas_line(struct dm_task *dmt __attribute((unused)),
 	return 1;
 }
 
-static int _emit_segment_line(struct dm_task *dmt, struct load_segment *seg, uint64_t *seg_start, char *params, size_t paramsize)
+static int _emit_segment_line(struct dm_task *dmt, uint32_t major,
+			      uint32_t minor, struct load_segment *seg,
+			      uint64_t *seg_start, char *params,
+			      size_t paramsize)
 {
 	unsigned log_parm_count;
 	int pos = 0;
@@ -1362,7 +1365,8 @@ static int _emit_segment_line(struct dm_task *dmt, struct load_segment *seg, uin
 		break;
 	}
 
-	log_debug("Adding target: %" PRIu64 " %" PRIu64 " %s %s",
+	log_debug("Adding target to (%" PRIu32 ":%" PRIu32 "): %" PRIu64
+		  " %" PRIu64 " %s %s", major, minor,
 		  *seg_start, seg->size, dm_segtypes[seg->type].target, params);
 
 	if (!dm_task_add_target(dmt, *seg_start, seg->size, dm_segtypes[seg->type].target, params))
@@ -1375,8 +1379,8 @@ static int _emit_segment_line(struct dm_task *dmt, struct load_segment *seg, uin
 
 #undef EMIT_PARAMS
 
-static int _emit_segment(struct dm_task *dmt, struct load_segment *seg,
-			 uint64_t *seg_start)
+static int _emit_segment(struct dm_task *dmt, uint32_t major, uint32_t minor,
+			 struct load_segment *seg, uint64_t *seg_start)
 {
 	char *params;
 	size_t paramsize = 4096;
@@ -1389,7 +1393,8 @@ static int _emit_segment(struct dm_task *dmt, struct load_segment *seg,
 		}
 
 		params[0] = '\0';
-		ret = _emit_segment_line(dmt, seg, seg_start, params, paramsize);
+		ret = _emit_segment_line(dmt, major, minor, seg, seg_start,
+					 params, paramsize);
 		dm_free(params);
 
 		if (!ret)
@@ -1415,7 +1420,8 @@ static int _load_node(struct dm_tree_node *dnode)
 	struct load_segment *seg;
 	uint64_t seg_start = 0;
 
-	log_verbose("Loading %s table", dnode->name);
+	log_verbose("Loading %s table (%" PRIu32 ":%" PRIu32 ")", dnode->name,
+		    dnode->info.major, dnode->info.minor);
 
 	if (!(dmt = dm_task_create(DM_DEVICE_RELOAD))) {
 		log_error("Reload dm_task creation failed for %s", dnode->name);
@@ -1437,7 +1443,8 @@ static int _load_node(struct dm_tree_node *dnode)
 		log_error("Failed to disable open_count");
 
 	dm_list_iterate_items(seg, &dnode->props.segs)
-		if (!_emit_segment(dmt, seg, &seg_start))
+		if (!_emit_segment(dmt, dnode->info.major, dnode->info.minor,
+				   seg, &seg_start))
 			goto_out;
 
 	if (!dm_task_suppress_identical_reload(dmt))
