@@ -134,8 +134,8 @@ superblocks. This doesn't always work satisfactorily e.g. if a device
 has been reused without wiping the md superblocks first.
 .IP
 \fBmd_chunk_alignment\fP \(em If set to 1, and a Physical Volume is placed
-directly upon an md device, LVM2 will align its data blocks with the the
-chunk_size exposed in sysfs.
+directly upon an md device, LVM2 will align its data blocks with the
+md device's stripe-width.
 .IP
 \fBdata_alignment\fP \(em Default alignment (in KB) of start of data area
 when creating a new Physical Volume using the \fBlvm2\fP format.

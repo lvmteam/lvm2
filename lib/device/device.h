@@ -96,7 +96,7 @@ const char *dev_name_confirmed(struct device *dev, int quiet);
 /* Does device contain md superblock?  If so, where? */
 int dev_is_md(struct device *dev, uint64_t *sb);
 int dev_is_swap(struct device *dev, uint64_t *signature);
-unsigned long dev_md_chunk_size(const char *sysfs_dir, struct device *dev);
+unsigned long dev_md_stripe_width(const char *sysfs_dir, struct device *dev);
 
 int is_partitioned_dev(struct device *dev);
 

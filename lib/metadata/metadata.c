@@ -81,13 +81,13 @@ unsigned long set_pe_align(struct physical_volume *pv, unsigned long data_alignm
 		goto out;
 
 	/*
-	 * Align to chunk size of underlying md device if present
+	 * Align to stripe-width of underlying md device if present
 	 */
 	if (find_config_tree_bool(pv->fmt->cmd, "devices/md_chunk_alignment",
 				  DEFAULT_MD_CHUNK_ALIGNMENT))
 		pv->pe_align = MAX(pv->pe_align,
-				   dev_md_chunk_size(pv->fmt->cmd->sysfs_dir,
-						     pv->dev));
+				   dev_md_stripe_width(pv->fmt->cmd->sysfs_dir,
+						       pv->dev));
 
 	log_very_verbose("%s: Setting PE alignment to %lu sectors.",
 			 dev_name(pv->dev), pv->pe_align);
