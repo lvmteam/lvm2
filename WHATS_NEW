@@ -1,5 +1,6 @@
 Version 2.02.49 - 
 ================================
+  Update 'md_chunk_alignment' to use stripe-width to align PV data area.
   Update test/t-inconsistent-metadata.sh to match new vg_read interface.
   Add lvmcache_init() to polldaemon initialization.
   Convert tools to use new vg_read / vg_read_for_update.
