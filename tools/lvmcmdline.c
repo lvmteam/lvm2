@@ -239,9 +239,10 @@ static int _size_arg(struct cmd_context *cmd __attribute((unused)), struct arg *
 {
 	char *ptr;
 	int i;
-	static const char *suffixes = "kmgtpe";
+	static const char *suffixes = "kmgtpebs";
 	char *val;
 	double v;
+	uint64_t v_tmp, adjustment;
 
 	a->percent = PERCENT_NONE;
 
@@ -272,13 +273,29 @@ static int _size_arg(struct cmd_context *cmd __attribute((unused)), struct arg *
 			if (suffixes[i] == tolower((int) *ptr))
 				break;
 
-		if (i < 0)
+		if (i < 0) {
 			return 0;
-
-		while (i-- > 0)
-			v *= 1024;
-
-		v *= 2;
+		} else if (i == 7) {
+			/* sectors */
+			v = v;
+		} else if (i == 6) {
+			/* bytes */
+			v_tmp = (uint64_t) v;
+			adjustment = v_tmp % 512;
+			if (adjustment) {
+				v_tmp += (512 - adjustment);
+				log_error("Size is not a multiple of 512. "
+					  "Try using %lu or %lu.",
+					  v_tmp - 512, v_tmp);
+				return 0;
+			}
+			v /= 512;
+		} else {
+			/* all other units: kmgtpe */
+			while (i-- > 0)
+				v *= 1024;
+			v *= 2;
+		}
 	} else
 		v *= factor;
 

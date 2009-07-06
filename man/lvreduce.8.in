@@ -6,7 +6,7 @@ lvreduce \- reduce the size of a logical volume
 [\-A|\-\-autobackup y|n] [\-d|\-\-debug] [\-f|\-\-force]
 [\-h|\-?|\-\-help]
 {\-l|\-\-extents [\-]LogicalExtentsNumber[%{VG|LV|FREE}] |
-\-L|\-\-size [\-]LogicalVolumeSize[kKmMgGtT]}
+\-L|\-\-size [\-]LogicalVolumeSize[bBsSkKmMgGtTpPeE]}
 [\-t|\-\-test]
 [\-v|\-\-verbose] LogicalVolume[Path]
 .SH DESCRIPTION
@@ -46,7 +46,7 @@ in the Volume Group with the suffix %VG or relative to the existing
 size of the Logical Volume with the suffix %LV or as a percentage of the remaining
 free space in the Volume Group with the suffix %FREE.
 .TP
-.I \-L, \-\-size [\-]LogicalVolumeSize[kKmMgGtTpPeE]
+.I \-L, \-\-size [\-]LogicalVolumeSize[bBsSkKmMgGtTpPeE]
 Reduce or set the logical volume size in units of megabyte by default.
 A size suffix of k for kilobyte, m for megabyte, 
 g for gigabytes, t for terabytes, p for petabytes 
