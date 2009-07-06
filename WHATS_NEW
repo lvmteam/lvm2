@@ -1,5 +1,7 @@
 Version 2.02.49 - 
 ================================
+  Update the man pages to document size units uniformly.
+  Allow specifying commandline sizes in terms of bytes and sectors.
   Update 'md_chunk_alignment' to use stripe-width to align PV data area.
   Update test/t-inconsistent-metadata.sh to match new vg_read interface.
   Add lvmcache_init() to polldaemon initialization.
