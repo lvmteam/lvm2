@@ -317,8 +317,10 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 
 	vg_from = vg_read_for_update(cmd, vg_name_from, NULL,
 				     READ_REQUIRE_RESIZEABLE);
-	if (vg_read_error(vg_from))
+	if (vg_read_error(vg_from)) {
+		vg_release(vg_from);
 		return ECMD_FAILED;
+	}
 
 	log_verbose("Checking for new volume group \"%s\"", vg_name_to);
 	/*
