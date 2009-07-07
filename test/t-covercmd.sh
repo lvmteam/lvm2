@@ -41,7 +41,7 @@ lvscan
 lvmdiskscan
 vgdisplay --units k
 lvdisplay --units g
-for i in b k m g t p e H B K M G T P E ; do
+for i in h b s k m g t p e H B S K M G T P E ; do
     pvdisplay --units "$i" "$dev1"
 done
 

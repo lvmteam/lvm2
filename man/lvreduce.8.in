@@ -47,7 +47,7 @@ size of the Logical Volume with the suffix %LV or as a percentage of the remaini
 free space in the Volume Group with the suffix %FREE.
 .TP
 .I \-L, \-\-size [\-]LogicalVolumeSize[bBsSkKmMgGtTpPeE]
-Reduce or set the logical volume size in units of megabyte by default.
+Reduce or set the logical volume size in units of megabytes.
 A size suffix of k for kilobyte, m for megabyte, 
 g for gigabytes, t for terabytes, p for petabytes 
 or e for exabytes is optional.
