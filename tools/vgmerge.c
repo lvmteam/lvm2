@@ -29,13 +29,16 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 
 	log_verbose("Checking for volume group \"%s\"", vg_name_to);
 	vg_to = vg_read_for_update(cmd, vg_name_to, NULL, 0);
-	if (vg_read_error(vg_to))
-		 return ECMD_FAILED;
+	if (vg_read_error(vg_to)) {
+		vg_release(vg_to);
+		return ECMD_FAILED;
+	}
 
 	log_verbose("Checking for volume group \"%s\"", vg_name_from);
 	vg_from = vg_read_for_update(cmd, vg_name_from, NULL,
 				     LOCK_NONBLOCKING);
 	if (vg_read_error(vg_from)) {
+		vg_release(vg_from);
 		unlock_and_release_vg(cmd, vg_to, vg_name_to);
 		return ECMD_FAILED;
 	}

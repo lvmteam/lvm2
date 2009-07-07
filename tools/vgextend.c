@@ -45,6 +45,7 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 	vg = vg_read_for_update(cmd, vg_name, NULL,
 				READ_REQUIRE_RESIZEABLE | LOCK_NONBLOCKING);
 	if (vg_read_error(vg)) {
+		vg_release(vg);
 		unlock_vg(cmd, VG_ORPHANS);
 		return ECMD_FAILED;
 	}

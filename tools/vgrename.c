@@ -73,8 +73,10 @@ static int vg_rename_path(struct cmd_context *cmd, const char *old_vg_path,
 	/* FIXME we used to print an error about EXPORTED, but proceeded
 	   nevertheless. */
 	vg = vg_read_for_update(cmd, vg_name_old, vgid, READ_ALLOW_EXPORTED);
-	if (vg_read_error(vg))
+	if (vg_read_error(vg)) {
+		vg_release(vg);
 		return_0;
+	}
 
 	if (lvs_in_vg_activated_by_uuid_only(vg)) {
 		unlock_and_release_vg(cmd, vg, vg_name_old);

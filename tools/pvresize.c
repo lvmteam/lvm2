@@ -100,7 +100,7 @@ static int _pv_resize_single(struct cmd_context *cmd,
 		log_error("%s: Couldn't get size.", pv_name);
 		goto bad;
 	}
-	
+
 	if (new_size) {
 		if (new_size > size)
 			log_warn("WARNING: %s: Overriding real size. "
@@ -127,7 +127,7 @@ static int _pv_resize_single(struct cmd_context *cmd,
 	if (vg) {
 		pv->size -= pv_pe_start(pv);
 		new_pe_count = pv_size(pv) / vg->extent_size;
-		
+
  		if (!new_pe_count) {
 			log_error("%s: Size must leave space for at "
 				  "least one physical extent of "
