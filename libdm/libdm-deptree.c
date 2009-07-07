@@ -1252,12 +1252,16 @@ static int _emit_areas_line(struct dm_task *dmt __attribute((unused)),
 {
 	struct seg_area *area;
 	char devbuf[DM_FORMAT_DEV_BUFSIZE];
+	unsigned first_time = 1;
 
 	dm_list_iterate_items(area, &seg->areas) {
 		if (!_build_dev_string(devbuf, sizeof(devbuf), area->dev_node))
 			return_0;
 
-		EMIT_PARAMS(*pos, " %s %" PRIu64, devbuf, area->offset);
+		EMIT_PARAMS(*pos, "%s%s %" PRIu64, first_time ? "" : " ",
+			    devbuf, area->offset);
+
+		first_time = 0;
 	}
 
 	return 1;
@@ -1320,7 +1324,7 @@ static int _emit_segment_line(struct dm_task *dmt, uint32_t major,
 		if ((seg->flags & DM_BLOCK_ON_ERROR))
 			EMIT_PARAMS(pos, " block_on_error");
 
-		EMIT_PARAMS(pos, " %u", seg->mirror_area_count);
+		EMIT_PARAMS(pos, " %u ", seg->mirror_area_count);
 
 		break;
 	case SEG_SNAPSHOT:
@@ -1337,10 +1341,10 @@ static int _emit_segment_line(struct dm_task *dmt, uint32_t major,
 		EMIT_PARAMS(pos, "%s", originbuf);
 		break;
 	case SEG_STRIPED:
-		EMIT_PARAMS(pos, "%u %u", seg->area_count, seg->stripe_size);
+		EMIT_PARAMS(pos, "%u %u ", seg->area_count, seg->stripe_size);
 		break;
 	case SEG_CRYPT:
-		EMIT_PARAMS(pos, "%s%s%s%s%s %s %" PRIu64, seg->cipher,
+		EMIT_PARAMS(pos, "%s%s%s%s%s %s %" PRIu64 " ", seg->cipher,
 			    seg->chainmode ? "-" : "", seg->chainmode ?: "",
 			    seg->iv ? "-" : "", seg->iv ?: "", seg->key,
 			    seg->iv_offset != DM_CRYPT_IV_DEFAULT ?
