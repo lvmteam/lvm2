@@ -285,7 +285,7 @@ static int _size_arg(struct cmd_context *cmd __attribute((unused)), struct arg *
 			if (adjustment) {
 				v_tmp += (512 - adjustment);
 				log_error("Size is not a multiple of 512. "
-					  "Try using %lu or %lu.",
+					  "Try using %"PRIu64" or %"PRIu64".",
 					  v_tmp - 512, v_tmp);
 				return 0;
 			}
