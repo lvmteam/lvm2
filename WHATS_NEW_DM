@@ -1,5 +1,6 @@
 Version 1.02.34 - 
 ================================
+  Fix whitespace in linear target line to fix identical table line detection.
   Add device number to more log messages during activation.
 
 Version 1.02.33 - 30th June 2009
