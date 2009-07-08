@@ -2754,9 +2754,6 @@ static vg_t *_vg_lock_and_read(struct cmd_context *cmd, const char *vg_name,
 	if (is_orphan_vg(vg_name))
 		status_flags &= ~LVM_WRITE;
 
-	if (misc_flags & READ_CHECK_EXISTENCE)
-		consistent = 0;
-
 	consistent_in = consistent;
 
 	/* If consistent == 1, we get NULL here if correction fails. */
@@ -2767,10 +2764,7 @@ static vg_t *_vg_lock_and_read(struct cmd_context *cmd, const char *vg_name,
 			goto_bad;
 		}
 
-		if (!(misc_flags & READ_CHECK_EXISTENCE))
-			log_error("Volume group \"%s\" not found", vg_name);
-		else
-			failure |= READ_CHECK_EXISTENCE;
+		log_error("Volume group \"%s\" not found", vg_name);
 
 		failure |= FAILED_NOTFOUND;
 		goto_bad;
@@ -2801,8 +2795,7 @@ static vg_t *_vg_lock_and_read(struct cmd_context *cmd, const char *vg_name,
 	return _vg_make_handle(cmd, vg, failure);
 
 bad:
-	if (failure != (FAILED_NOTFOUND | READ_CHECK_EXISTENCE) &&
-	    !already_locked)
+	if (!already_locked)
 		unlock_vg(cmd, lock_name);
 
 	return _vg_make_handle(cmd, vg, failure);
@@ -2821,7 +2814,6 @@ bad:
  *  - locking failed: FAILED_LOCKING
  *
  * On failures, all locks are released, unless one of the following applies:
- *  - failure == (FAILED_NOTFOUND | READ_CHECK_EXISTENCE)
  *  - vgname_is_locked(lock_name) is true
  * FIXME: remove the above 2 conditions if possible and make an error always
  * release the lock.
@@ -2829,12 +2821,6 @@ bad:
  * Volume groups are opened read-only unless flags contains READ_FOR_UPDATE.
  *
  * Checking for VG existence:
- *
- * If READ_CHECK_EXISTENCE is set in flags, if the VG exists, a non-NULL struct
- * volume_group will be returned every time, but if it has INCONSISTENT_VG set,
- * the other fields will be uninitialized.  You must check for INCONSISTENT_VG
- * if passing READ_CHECK_EXISTENCE.  You also must not use it if it has
- * INCONSISTENT_VG set.
  *
  * FIXME: We want vg_read to attempt automatic recovery after acquiring a
  * temporary write lock: if that fails, we bail out as usual, with failed &
@@ -2878,42 +2864,13 @@ vg_t *vg_read_for_update(struct cmd_context *cmd, const char *vg_name,
 
 /*
  * Test the validity of a VG handle returned by vg_read() or vg_read_for_update().
- *
- * If READ_CHECK_EXISTENCE was supplied the non-existence of the volume group
- * is not considered an error.
- *
- * !vg_read_error() && vg_might_exist() => valid handle to VG.
- * vg_read_error() && vg_might_exist() => handle invalid, but VG might
- *					  exist but cannot be read.
- * !vg_read_error() && !vg_might_exist() => the VG does not exist
- * vg_read_error() && !vg_might_exist() is impossible.
  */
 uint32_t vg_read_error(vg_t *vg_handle)
 {
 	if (!vg_handle)
 		return FAILED_ALLOCATION;
 
-	if (vg_handle->read_status & READ_CHECK_EXISTENCE)
-		return vg_handle->read_status &
-		       ~(READ_CHECK_EXISTENCE | FAILED_NOTFOUND);
-
 	return vg_handle->read_status;
-}
-
-/*
- * Returns true if the volume group already exists.
- * If unsure, it will return true. It might exist but the read failed
- * for some other reason.
- */
-uint32_t vg_might_exist(vg_t *vg_handle)
-{
-	if (!vg_handle)
-		return 1;
-
-	if (vg_handle->read_status == (FAILED_NOTFOUND | READ_CHECK_EXISTENCE))
-		return 0;
-
-	return 1;
 }
 
 /*

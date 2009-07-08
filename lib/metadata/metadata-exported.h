@@ -109,7 +109,6 @@ struct pv_segment;
 #define READ_ALLOW_INCONSISTENT	0x00010000U
 #define READ_ALLOW_EXPORTED	0x00020000U
 #define READ_REQUIRE_RESIZEABLE	0x00040000U
-#define READ_CHECK_EXISTENCE	0x00080000U	/* Also used in vg->read_status */
 
 /* FIXME Deduce these next requirements internally instead of having caller specify. */
 #define LOCK_NONBLOCKING	0x00000100U	/* Fail if not available immediately. */
@@ -406,7 +405,6 @@ vg_t *vg_read_for_update(struct cmd_context *cmd, const char *vg_name,
  * Test validity of a VG handle.
  */
 uint32_t vg_read_error(vg_t *vg_handle);
-uint32_t vg_might_exist(vg_t *vg_handle);
 
 /* pe_start and pe_end relate to any existing data so that new metadata
 * areas can avoid overlap */
