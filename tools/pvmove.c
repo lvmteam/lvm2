@@ -400,15 +400,13 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 			log_error("Ignoring remaining command line arguments");
 
 		if (!(lvs_changed = lvs_using_lv(cmd, vg, lv_mirr))) {
-			log_error
-			    ("ABORTING: Failed to generate list of moving LVs");
+			log_error("ABORTING: Failed to generate list of moving LVs");
 			goto out;
 		}
 
 		/* Ensure mirror LV is active */
 		if (!_activate_lv(cmd, lv_mirr, exclusive)) {
-			log_error
-			    ("ABORTING: Temporary mirror activation failed.");
+			log_error("ABORTING: Temporary mirror activation failed.");
 			goto out;
 		}
 

@@ -64,9 +64,8 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 		}
 
 		if (!(pvl = find_pv_in_vg(vg, pv_name))) {
-			log_error
-			    ("Unable to find \"%s\" in volume group \"%s\"",
-			     pv_name, vg->name);
+			log_error("Unable to find \"%s\" in volume group \"%s\"",
+				  pv_name, vg->name);
 			goto out;
 		}
 		if (tagarg && !(vg->fid->fmt->features & FMT_TAGS)) {
