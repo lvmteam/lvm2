@@ -424,7 +424,7 @@ static int _vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 	vg->extent_count -= pv_pe_count(pv);
 
 	orphan_vg = vg_read_for_update(cmd, vg->fid->fmt->orphan_vg_name,
-				       NULL, LOCK_NONBLOCKING);
+				       NULL, 0);
 
 	if (vg_read_error(orphan_vg))
 		goto bad;

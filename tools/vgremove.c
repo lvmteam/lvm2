@@ -41,7 +41,7 @@ int vgremove(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	ret = process_each_vg(cmd, argc, argv,
-			      READ_FOR_UPDATE | LOCK_NONBLOCKING,
+			      READ_FOR_UPDATE,
 			      NULL, &vgremove_single);
 
 	unlock_vg(cmd, VG_ORPHANS);
