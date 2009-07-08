@@ -177,13 +177,17 @@ static void _write_array(struct pfilter *pf, FILE *fp, const char *path,
 
 int persistent_filter_dump(struct dev_filter *f)
 {
-	struct pfilter *pf = (struct pfilter *) f->private;
+	struct pfilter *pf;
 	char *tmp_file;
 	struct stat info, info2;
 	struct config_tree *cft = NULL;
 	FILE *fp;
 	int lockfd;
 	int r = 0;
+
+	if (!f)
+		return_0;
+	pf = (struct pfilter *) f->private;
 
 	if (!dm_hash_get_num_entries(pf->devices)) {
 		log_very_verbose("Internal persistent device cache empty "
