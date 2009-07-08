@@ -110,9 +110,6 @@ struct pv_segment;
 #define READ_ALLOW_EXPORTED	0x00020000U
 #define READ_REQUIRE_RESIZEABLE	0x00040000U
 
-/* FIXME Deduce these next requirements internally instead of having caller specify. */
-#define LOCK_NONBLOCKING	0x00000100U	/* Fail if not available immediately. */
-
 /* A meta-flag, useful with toollib for_each_* functions. */
 #define READ_FOR_UPDATE 	0x00100000U
 

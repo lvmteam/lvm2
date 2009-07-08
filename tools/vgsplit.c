@@ -341,8 +341,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	if (rc == FAILED_EXIST) {
 		existing_vg = 1;
 		vg_to = vg_read_for_update(cmd, vg_name_to, NULL,
-					   READ_REQUIRE_RESIZEABLE |
-					   LOCK_NONBLOCKING);
+					   READ_REQUIRE_RESIZEABLE);
 
 		if (vg_read_error(vg_to)) {
 			vg_release(vg_to);
