@@ -342,11 +342,13 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		existing_vg = 1;
 		vg_to = vg_read_for_update(cmd, vg_name_to, NULL,
 					   READ_REQUIRE_RESIZEABLE |
-					   LOCK_NONBLOCKING | LOCK_KEEP |
-					   READ_CHECK_EXISTENCE);
+					   LOCK_NONBLOCKING);
 
-		if (vg_read_error(vg_to))
-			goto_bad;
+		if (vg_read_error(vg_to)) {
+			vg_release(vg_to);
+			stack;
+			goto bad2;
+		}
 
 		if (new_vg_option_specified(cmd)) {
 			log_error("Volume group \"%s\" exists, but new VG "
@@ -483,7 +485,8 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	r = ECMD_PROCESSED;
 
 bad:
-	unlock_and_release_vg(cmd, vg_from, vg_name_from);
 	unlock_and_release_vg(cmd, vg_to, vg_name_to);
+bad2:
+	unlock_and_release_vg(cmd, vg_from, vg_name_from);
 	return r;
 }
