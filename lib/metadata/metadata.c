@@ -2793,7 +2793,6 @@ static vg_t *_vg_lock_and_read(struct cmd_context *cmd, const char *vg_name,
 			goto_bad;
 		}
 	}
-	
 
 	failure |= _vg_bad_status_bits(vg, status_flags);
 	if (failure)
@@ -2803,7 +2802,7 @@ static vg_t *_vg_lock_and_read(struct cmd_context *cmd, const char *vg_name,
 
 bad:
 	if (failure != (FAILED_NOTFOUND | READ_CHECK_EXISTENCE) &&
-	    !(misc_flags & LOCK_KEEP) && !already_locked)
+	    !already_locked)
 		unlock_vg(cmd, lock_name);
 
 	return _vg_make_handle(cmd, vg, failure);
@@ -2821,7 +2820,11 @@ bad:
  *    FAILED_RESIZEABLE
  *  - locking failed: FAILED_LOCKING
  *
- * On failures, all locks are released, unless LOCK_KEEP has been supplied.
+ * On failures, all locks are released, unless one of the following applies:
+ *  - failure == (FAILED_NOTFOUND | READ_CHECK_EXISTENCE)
+ *  - vgname_is_locked(lock_name) is true
+ * FIXME: remove the above 2 conditions if possible and make an error always
+ * release the lock.
  *
  * Volume groups are opened read-only unless flags contains READ_FOR_UPDATE.
  *
