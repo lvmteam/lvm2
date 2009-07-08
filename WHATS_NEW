@@ -1,5 +1,6 @@
 Version 2.02.49 - 
 ================================
+  Make exit/cleanup code more robust when some lvm init function fails.
   Use implicit set of LCK_NONBLOCK instead of explicit vg_read() flag.
   Remove unnecessary locking and existence code from new vg_read() interface.
   Permit several segment types to be registered by a single shared object.
