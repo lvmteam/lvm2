@@ -47,13 +47,13 @@ struct dev_manager;
 #define segtype_is_virtual(segtype)	((segtype)->flags & SEG_VIRTUAL ? 1 : 0)
 
 struct segment_type {
-	struct dm_list list;
-	struct cmd_context *cmd;
+	struct dm_list list;		/* Internal */
+	struct cmd_context *cmd;	/* lvm_register_segtype() sets this. */
 	uint32_t flags;
 	struct segtype_handler *ops;
 	const char *name;
-	void *library;
-	void *private;
+	void *library;			/* lvm_register_segtype() sets this. */
+	void *private;			/* For the segtype handler to use. */
 };
 
 struct segtype_handler {
@@ -92,6 +92,10 @@ struct segtype_handler {
 
 struct segment_type *get_segtype_from_string(struct cmd_context *cmd,
 					     const char *str);
+
+struct segtype_library;
+int lvm_register_segtype(struct segtype_library *seglib,
+			 struct segment_type *segtype);
 
 struct segment_type *init_striped_segtype(struct cmd_context *cmd);
 struct segment_type *init_zero_segtype(struct cmd_context *cmd);

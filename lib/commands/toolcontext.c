@@ -806,12 +806,59 @@ int init_lvmcache_orphans(struct cmd_context *cmd)
 	return 1;
 }
 
+struct segtype_library {
+	struct cmd_context *cmd;
+	void *lib;
+	const char *libname;
+};
+
+int lvm_register_segtype(struct segtype_library *seglib,
+			 struct segment_type *segtype)
+{
+	struct segment_type *segtype2;
+
+	segtype->library = seglib->lib;
+	segtype->cmd = seglib->cmd;
+
+	dm_list_iterate_items(segtype2, &seglib->cmd->segtypes) {
+		if (strcmp(segtype2->name, segtype->name))
+			continue;
+		log_error("Duplicate segment type %s: "
+			  "unloading shared library %s",
+			  segtype->name, seglib->libname);
+		segtype->ops->destroy(segtype);
+		return 0;
+	}
+
+	dm_list_add(&seglib->cmd->segtypes, &segtype->list);
+
+	return 1;
+}
+
+static int _init_single_segtype(struct segtype_library *seglib)
+{
+	struct segment_type *(*init_segtype_fn) (struct cmd_context *);
+	struct segment_type *segtype;
+
+	if (!(init_segtype_fn = dlsym(seglib->lib, "init_segtype"))) {
+		log_error("Shared library %s does not contain segment type "
+			  "functions", seglib->libname);
+		return 0;
+	}
+
+	if (!(segtype = init_segtype_fn(seglib->cmd)))
+		return_0;
+
+	return lvm_register_segtype(seglib, segtype);
+}
+
 static int _init_segtypes(struct cmd_context *cmd)
 {
 	struct segment_type *segtype;
 
 #ifdef HAVE_LIBDL
 	const struct config_node *cn;
+	struct segtype_library seglib;
 #endif
 
 	if (!(segtype = init_striped_segtype(cmd)))
@@ -854,9 +901,9 @@ static int _init_segtypes(struct cmd_context *cmd)
 	    (cn = find_config_tree_node(cmd, "global/segment_libraries"))) {
 
 		struct config_value *cv;
-		struct segment_type *(*init_segtype_fn) (struct cmd_context *);
-		void *lib;
-		struct segment_type *segtype2;
+		int (*init_multiple_segtypes_fn) (struct segtype_library *);
+
+		seglib.cmd = cmd;
 
 		for (cv = cn->v; cv; cv = cv->next) {
 			if (cv->type != CFG_STRING) {
@@ -864,32 +911,37 @@ static int _init_segtypes(struct cmd_context *cmd)
 					  "global/segment_libraries");
 				return 0;
 			}
-			if (!(lib = load_shared_library(cmd, cv->v.str,
+			seglib.libname = cv->v.str;
+			if (!(seglib.lib = load_shared_library(cmd,
+							seglib.libname,
 							"segment type", 0)))
 				return_0;
 
-			if (!(init_segtype_fn = dlsym(lib, "init_segtype"))) {
-				log_error("Shared library %s does not contain "
-					  "segment type functions", cv->v.str);
-				dlclose(lib);
-				return 0;
-			}
-
-			if (!(segtype = init_segtype_fn(cmd)))
-				return 0;
-			segtype->library = lib;
-			dm_list_add(&cmd->segtypes, &segtype->list);
-
-			dm_list_iterate_items(segtype2, &cmd->segtypes) {
-				if ((segtype == segtype2) ||
-				     strcmp(segtype2->name, segtype->name))
-					continue;
-				log_error("Duplicate segment type %s: "
-					  "unloading shared library %s",
-					  segtype->name, cv->v.str);
-				dm_list_del(&segtype->list);
-				segtype->ops->destroy(segtype);
-				dlclose(lib);
+			if ((init_multiple_segtypes_fn =
+			    dlsym(seglib.lib, "init_multiple_segtypes"))) {
+				if (dlsym(seglib.lib, "init_segtype"))
+					log_warn("WARNING: Shared lib %s has "
+						 "conflicting init fns.  Using"
+						 " init_multiple_segtypes().",
+						 seglib.libname);
+			} else
+				init_multiple_segtypes_fn =
+				    _init_single_segtype;
+ 
+			if (!init_multiple_segtypes_fn(&seglib)) {
+				struct dm_list *sgtl, *tmp;
+				log_error("init_multiple_segtypes() failed: "
+					  "Unloading shared library %s",
+					  seglib.libname);
+				dm_list_iterate_safe(sgtl, tmp, &cmd->segtypes) {
+					segtype = dm_list_item(sgtl, struct segment_type);
+					if (segtype->library == seglib.lib) {
+						dm_list_del(&segtype->list);
+						segtype->ops->destroy(segtype);
+					}
+				}
+				dlclose(seglib.lib);
+				return_0;
 			}
 		}
 	}
@@ -1154,8 +1206,18 @@ static void _destroy_segtypes(struct dm_list *segtypes)
 		lib = segtype->library;
 		segtype->ops->destroy(segtype);
 #ifdef HAVE_LIBDL
-		if (lib)
+		/*
+		 * If no segtypes remain from this library, close it.
+		 */
+		if (lib) {
+			struct segment_type *segtype2;
+			dm_list_iterate_items(segtype2, segtypes)
+				if (segtype2->library == lib)
+					goto skip_dlclose;
 			dlclose(lib);
+skip_dlclose:
+			;
+		}
 #endif
 	}
 }

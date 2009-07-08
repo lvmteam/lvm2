@@ -1,5 +1,6 @@
 Version 2.02.49 - 
 ================================
+  Permit several segment types to be registered by a single shared object.
   Update the man pages to document size units uniformly.
   Allow commandline sizes to be specified in terms of bytes and sectors.
   Update 'md_chunk_alignment' to use stripe-width to align PV data area.
