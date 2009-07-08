@@ -1302,12 +1302,15 @@ void destroy_toolcontext(struct cmd_context *cmd)
 	label_exit();
 	_destroy_segtypes(&cmd->segtypes);
 	_destroy_formats(&cmd->formats);
-	cmd->filter->destroy(cmd->filter);
-	dm_pool_destroy(cmd->mem);
+	if (cmd->filter)
+		cmd->filter->destroy(cmd->filter);
+	if (cmd->mem)
+		dm_pool_destroy(cmd->mem);
 	dev_cache_exit();
 	_destroy_tags(cmd);
 	_destroy_tag_configs(cmd);
-	dm_pool_destroy(cmd->libmem);
+	if (cmd->libmem)
+		dm_pool_destroy(cmd->libmem);
 	dm_free(cmd);
 
 	release_log_memory();
