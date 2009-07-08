@@ -1,5 +1,7 @@
 Version 2.02.49 - 
 ================================
+  Use implicit set of LCK_NONBLOCK instead of explicit vg_read() flag.
+  Remove unnecessary locking and existence code from new vg_read() interface.
   Permit several segment types to be registered by a single shared object.
   Update the man pages to document size units uniformly.
   Allow commandline sizes to be specified in terms of bytes and sectors.
