@@ -113,7 +113,6 @@ struct pv_segment;
 
 /* FIXME Deduce these next requirements internally instead of having caller specify. */
 #define LOCK_NONBLOCKING	0x00000100U	/* Fail if not available immediately. */
-#define LOCK_KEEP		0x00000200U	/* Do not unlock upon read failure. */
 
 /* A meta-flag, useful with toollib for_each_* functions. */
 #define READ_FOR_UPDATE 	0x00100000U
