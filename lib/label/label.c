@@ -72,7 +72,7 @@ void label_exit(void)
 	struct dm_list *c, *n;
 	struct labeller_i *li;
 
-	for (c = _labellers.n; c != &_labellers; c = n) {
+	for (c = _labellers.n; c && c != &_labellers; c = n) {
 		n = c->n;
 		li = dm_list_item(c, struct labeller_i);
 		li->l->ops->destroy(li->l);
