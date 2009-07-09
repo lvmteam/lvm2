@@ -636,6 +636,36 @@ int vg_change_pesize(struct cmd_context *cmd __attribute((unused)),
 	struct pv_segment *pvseg;
 	uint32_t s;
 
+	if (!(vg_status(vg) & RESIZEABLE_VG)) {
+		log_error("Volume group \"%s\" must be resizeable "
+			  "to change PE size", vg->name);
+		return 0;
+	}
+
+	if (!new_size) {
+		log_error("Physical extent size may not be zero");
+		return 0;
+	}
+
+	if (new_size == vg->extent_size) {
+		log_error("Physical extent size of VG %s is already %s",
+			  vg->name, display_size(vg->cmd, (uint64_t) new_size));
+		return 1;
+	}
+
+	if (new_size & (new_size - 1)) {
+		log_error("Physical extent size must be a power of 2.");
+		return 0;
+	}
+
+	if (new_size > vg->extent_size) {
+		if ((uint64_t) vg->extent_size * vg->extent_count % new_size) {
+			/* FIXME Adjust used PV sizes instead */
+			log_error("New extent size is not a perfect fit");
+			return 0;
+		}
+	}
+
 	vg->extent_size = new_size;
 
 	if (vg->fid->fmt->ops->vg_setup &&
