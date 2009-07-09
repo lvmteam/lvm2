@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2009 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -100,7 +100,7 @@ static int _move_one_lv(struct volume_group *vg_from,
 	struct logical_volume *lv = dm_list_item(lvh, struct lv_list)->lv;
 
 	dm_list_move(&vg_to->lvs, lvh);
-	
+
 	if (lv_is_active(lv)) {
 		log_error("Logical volume \"%s\" must be inactive", lv->name);
 		return 0;
@@ -162,7 +162,7 @@ static int _move_lvs(struct volume_group *vg_from, struct volume_group *vg_to)
 			}
 
 		}
-			
+
 		if (vg_with == vg_from)
 			continue;
 
@@ -245,7 +245,7 @@ static int _move_mirrors(struct volume_group *vg_from,
 			    seg_in++;
 
 		log_in = (!seg->log_lv || _lv_is_in_vg(vg_to, seg->log_lv));
-		
+
 		if ((seg_in && seg_in < seg->area_count) ||
 		    (seg_in && seg->log_lv && !log_in) ||
 		    (!seg_in && seg->log_lv && log_in)) {
@@ -461,6 +461,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	 * Finally, remove the EXPORTED flag from the new VG and write it out.
 	 */
 	if (!test_mode()) {
+		vg_release(vg_to);
 		vg_to = vg_read_for_update(cmd, vg_name_to, NULL,
 					   READ_ALLOW_EXPORTED);
 		if (vg_read_error(vg_to)) {
