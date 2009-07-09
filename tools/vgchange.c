@@ -179,22 +179,17 @@ static int _vgchange_alloc(struct cmd_context *cmd, struct volume_group *vg)
 
 	alloc = arg_uint_value(cmd, alloc_ARG, ALLOC_NORMAL);
 
-	if (alloc == ALLOC_INHERIT) {
-		log_error("Volume Group allocation policy cannot inherit "
-			  "from anything");
-		return EINVALID_CMD_LINE;
-	}
+	if (!archive(vg))
+		return ECMD_FAILED;
 
+	/* FIXME: make consistent with vg_set_alloc_policy() */
 	if (alloc == vg->alloc) {
 		log_error("Volume group allocation policy is already %s",
 			  get_alloc_string(vg->alloc));
 		return ECMD_FAILED;
 	}
-
-	if (!archive(vg))
+	if (!vg_set_alloc_policy(vg, alloc))
 		return ECMD_FAILED;
-
-	vg->alloc = alloc;
 
 	if (!vg_write(vg) || !vg_commit(vg))
 		return ECMD_FAILED;
