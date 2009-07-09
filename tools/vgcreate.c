@@ -46,22 +46,26 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	if (validate_vg_create_params(cmd, &vp_new))
 	    return EINVALID_CMD_LINE;
 
+	/* FIXME: orphan lock needs tied to vg handle or inside library call */
 	if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE)) {
 		log_error("Can't get lock for orphan PVs");
 		return ECMD_FAILED;
 	}
 
-	if (vg_lock_newname(cmd, vp_new.vg_name) != SUCCESS) {
-		log_error("Can't get lock for %s", vp_new.vg_name);
-		unlock_vg(cmd, VG_ORPHANS);
-		return ECMD_FAILED;
-	}
-
 	/* Create the new VG */
-	if (!(vg = vg_create(cmd, vp_new.vg_name, vp_new.extent_size,
-			     vp_new.max_pv, vp_new.max_lv, vp_new.alloc,
-			     argc - 1, argv + 1)))
-		goto bad;
+	vg = vg_create(cmd, vp_new.vg_name);
+	if (vg_read_error(vg))
+		goto_bad;
+
+	if (!vg_set_extent_size(vg, vp_new.extent_size) ||
+	    !vg_set_max_lv(vg, vp_new.max_lv) ||
+	    !vg_set_max_pv(vg, vp_new.max_pv) ||
+	    !vg_set_alloc_policy(vg, vp_new.alloc))
+		goto_bad;
+
+	/* attach the pv's */
+	if (!vg_extend(vg, argc - 1, argv + 1))
+		goto_bad;
 
 	if (vp_new.max_lv != vg->max_lv)
 		log_warn("WARNING: Setting maxlogicalvolumes to %d "

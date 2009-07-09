@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2009 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -66,6 +66,10 @@ static struct pv_list *_find_pv_in_vg(const struct volume_group *vg,
 
 static struct physical_volume *_find_pv_in_vg_by_uuid(const struct volume_group *vg,
 						      const struct id *id);
+
+static vg_t *_vg_make_handle(struct cmd_context *cmd,
+			     struct volume_group *vg,
+			     uint32_t failure);
 
 unsigned long set_pe_align(struct physical_volume *pv, unsigned long data_alignment)
 {
@@ -515,24 +519,43 @@ int validate_vg_create_params(struct cmd_context *cmd,
 	return 0;
 }
 
-struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name,
-			       uint32_t extent_size, uint32_t max_pv,
-			       uint32_t max_lv, alloc_policy_t alloc,
-			       int pv_count, char **pv_names)
+/*
+ * Create a VG with default parameters.
+ * Returns:
+ * - vg_t* with SUCCESS code: VG structure created
+ * - NULL or vg_t* with FAILED_* code: error creating VG structure
+ * Use vg_read_error() to determine success or failure.
+ * FIXME: cleanup usage of _vg_make_handle()
+ */
+vg_t *vg_create(struct cmd_context *cmd, const char *vg_name)
 {
-	struct volume_group *vg;
+	vg_t *vg;
 	int consistent = 0;
 	struct dm_pool *mem;
+	uint32_t rc;
 
-	/* is this vg name already in use ? */
-	if ((vg = vg_read_internal(cmd, vg_name, NULL, &consistent))) {
-		log_err("A volume group called '%s' already exists.", vg_name);
-		vg_release(vg);
+	if (!validate_name(vg_name)) {
+		log_error("Invalid vg name %s", vg_name);
+		/* FIXME: use _vg_make_handle() w/proper error code */
 		return NULL;
 	}
 
+	rc = vg_lock_newname(cmd, vg_name);
+	if (rc != SUCCESS)
+		/* NOTE: let caller decide - this may be check for existence */
+		return _vg_make_handle(cmd, NULL, rc);
+
+	/* FIXME: Is this vg_read_internal necessary? Move it inside
+	   vg_lock_newname? */
+	/* is this vg name already in use ? */
+	if ((vg = vg_read_internal(cmd, vg_name, NULL, &consistent))) {
+		log_error("A volume group called '%s' already exists.", vg_name);
+		unlock_and_release_vg(cmd, vg, vg_name);
+		return _vg_make_handle(cmd, NULL, FAILED_EXIST);
+	}
+
 	if (!(mem = dm_pool_create("lvm2 vg_create", VG_MEMPOOL_CHUNK)))
-		return_NULL;
+		goto_bad;
 
 	if (!(vg = dm_pool_zalloc(mem, sizeof(*vg))))
 		goto_bad;
@@ -559,14 +582,14 @@ struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name,
 
 	*vg->system_id = '\0';
 
-	vg->extent_size = extent_size;
+	vg->extent_size = DEFAULT_EXTENT_SIZE * 2;
 	vg->extent_count = 0;
 	vg->free_count = 0;
 
-	vg->max_lv = max_lv;
-	vg->max_pv = max_pv;
+	vg->max_lv = DEFAULT_MAX_LV;
+	vg->max_pv = DEFAULT_MAX_PV;
 
-	vg->alloc = alloc;
+	vg->alloc = DEFAULT_ALLOC_POLICY;
 
 	vg->pv_count = 0;
 	dm_list_init(&vg->pvs);
@@ -587,15 +610,11 @@ struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name,
 			  vg_name);
 		goto bad;
 	}
+	return _vg_make_handle(cmd, vg, SUCCESS);
 
-	/* attach the pv's */
-	if (!vg_extend(vg, pv_count, pv_names))
-		goto_bad;
-
-	return vg;
-
-      bad:
-	dm_pool_destroy(mem);
+bad:
+	unlock_and_release_vg(cmd, vg, vg_name);
+	/* FIXME: use _vg_make_handle() w/proper error code */
 	return NULL;
 }
 

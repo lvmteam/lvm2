@@ -423,10 +423,7 @@ int pv_analyze(struct cmd_context *cmd, const char *pv_name,
 /* FIXME: move internal to library */
 uint32_t pv_list_extents_free(const struct dm_list *pvh);
 
-struct volume_group *vg_create(struct cmd_context *cmd, const char *name,
-			       uint32_t extent_size, uint32_t max_pv,
-			       uint32_t max_lv, alloc_policy_t alloc,
-			       int pv_count, char **pv_names);
+vg_t *vg_create(struct cmd_context *cmd, const char *vg_name);
 int vg_remove(struct volume_group *vg);
 int vg_remove_single(struct cmd_context *cmd, const char *vg_name,
 		     struct volume_group *vg,

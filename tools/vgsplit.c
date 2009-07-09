@@ -284,7 +284,6 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	int existing_vg = 0;
 	int r = ECMD_FAILED;
 	const char *lv_name;
-	uint32_t rc;
 
 	if ((arg_count(cmd, name_ARG) + argc) < 3) {
 		log_error("Existing VG, new VG and either physical volumes "
@@ -322,24 +321,34 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
+	/*
+	 * Set metadata format of original VG.
+	 * NOTE: We must set the format before calling vg_create()
+	 * since vg_create() calls the per-format constructor.
+	 */
+	cmd->fmt = vg_from->fid->fmt;
+
 	log_verbose("Checking for new volume group \"%s\"", vg_name_to);
 	/*
-	 * Try to lock the name of the new VG.  If we cannot reserve it,
-	 * then we assume it exists, and we will not be holding a lock.
-	 * We then try to read it - the vgsplit will be into an existing VG.
+	 * First try to create a new VG.  If we cannot create it,
+	 * and we get FAILED_EXIST (we will not be holding a lock),
+	 * a VG must already exist with this name.  We then try to
+	 * read the existing VG - the vgsplit will be into an existing VG.
 	 *
 	 * Otherwise, if the lock was successful, it must be the case that
 	 * we obtained a WRITE lock and could not find the vgname in the
 	 * system.  Thus, the split will be into a new VG.
 	 */
-	rc = vg_lock_newname(cmd, vg_name_to);
-	if (rc == FAILED_LOCKING) {
+	vg_to = vg_create(cmd, vg_name_to);
+	if (vg_read_error(vg_to) == FAILED_LOCKING) {
 		log_error("Can't get lock for %s", vg_name_to);
+		vg_release(vg_to);
 		unlock_and_release_vg(cmd, vg_from, vg_name_from);
 		return ECMD_FAILED;
 	}
-	if (rc == FAILED_EXIST) {
+	if (vg_read_error(vg_to) == FAILED_EXIST) {
 		existing_vg = 1;
+		vg_release(vg_to);
 		vg_to = vg_read_for_update(cmd, vg_name_to, NULL,
 					   READ_REQUIRE_RESIZEABLE);
 
@@ -356,12 +365,8 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		}
 		if (!vgs_are_compatible(cmd, vg_from,vg_to))
 			goto_bad;
-	} else if (rc == SUCCESS) {
+	} else if (vg_read_error(vg_to) == SUCCESS) {
 		existing_vg = 0;
-
-		/* Set metadata format of original VG */
-		/* FIXME: need some common logic */
-		cmd->fmt = vg_from->fid->fmt;
 
 		vp_def.vg_name = NULL;
 		vp_def.extent_size = vg_from->extent_size;
@@ -380,9 +385,10 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 			goto bad;
 		}
 
-		if (!(vg_to = vg_create(cmd, vg_name_to, vp_new.extent_size,
-					vp_new.max_pv, vp_new.max_lv,
-					vp_new.alloc, 0, NULL)))
+		if (!vg_set_extent_size(vg_to, vp_new.extent_size) ||
+		    !vg_set_max_lv(vg_to, vp_new.max_lv) ||
+		    !vg_set_max_pv(vg_to, vp_new.max_pv) ||
+		    !vg_set_alloc_policy(vg_to, vp_new.alloc))
 			goto_bad;
 
 		if (vg_is_clustered(vg_from))
