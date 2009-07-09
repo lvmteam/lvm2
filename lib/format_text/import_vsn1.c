@@ -377,32 +377,29 @@ int text_import_areas(struct lv_segment *seg, const struct config_node *sn,
 	unsigned int s;
 	struct config_value *cv;
 	struct logical_volume *lv1;
-	const char *seg_name = sn->key;
+	struct physical_volume *pv;
+	const char *seg_name = config_parent_name(sn);
 
 	if (!seg->area_count) {
-		log_error("Zero areas not allowed for segment '%s'", sn->key);
+		log_error("Zero areas not allowed for segment %s", seg_name);
 		return 0;
 	}
 
 	for (cv = cn->v, s = 0; cv && s < seg->area_count; s++, cv = cv->next) {
 
 		/* first we read the pv */
-		const char *bad = "Badly formed areas array for "
-		    "segment '%s'.";
-		struct physical_volume *pv;
-
 		if (cv->type != CFG_STRING) {
-			log_error(bad, sn->key);
+			log_error("Bad volume name in areas array for segment %s.", seg_name);
 			return 0;
 		}
 
 		if (!cv->next) {
-			log_error(bad, sn->key);
+			log_error("Missing offset in areas array for segment %s.", seg_name);
 			return 0;
 		}
 
 		if (cv->next->type != CFG_INT) {
-			log_error(bad, sn->key);
+			log_error("Bad offset in areas array for segment %s.", seg_name);
 			return 0;
 		}
 
