@@ -57,6 +57,7 @@ static const device_info_t device_info[] = {
 	{"ide", 64},		/* IDE disk */
 	{"sd", 16},		/* SCSI disk */
 	{"md", 1},		/* Multiple Disk driver (SoftRAID) */
+	{"mdp", 1},		/* Partitionable MD */
 	{"loop", 1},		/* Loop device */
 	{"dasd", 4},		/* DASD disk (IBM S/390, zSeries) */
 	{"dac960", 8},		/* DAC960 */
@@ -79,6 +80,7 @@ static const device_info_t device_info[] = {
 	{"ps3disk", 16},	/* PlayStation 3 internal disk */
 	{"virtblk", 8},		/* VirtIO disk */
 	{"mmc", 16},		/* MMC block device */
+	{"blkext", 1},		/* Extended device partitions */
 	{NULL, 0}
 };
 
