@@ -43,6 +43,10 @@ static int _is_partitionable(struct device *dev)
 {
 	int parts = max_partitions(MAJOR(dev->dev));
 
+	/* All MD devices are partitionable via blkext (as of 2.6.28) */
+	if (MAJOR(dev->dev) == md_major())
+		return 1;
+
 	if ((parts <= 1) || (MINOR(dev->dev) % parts))
 		return 0;
 
