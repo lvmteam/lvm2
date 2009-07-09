@@ -36,10 +36,10 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 
 	vp_def.vg_name = NULL;
 	vp_def.extent_size = DEFAULT_EXTENT_SIZE * 2;
-	vp_def.max_pv = 0;
-	vp_def.max_lv = 0;
-	vp_def.alloc = ALLOC_NORMAL;
-	vp_def.clustered = 0;
+	vp_def.max_pv = DEFAULT_MAX_PV;
+	vp_def.max_lv = DEFAULT_MAX_LV;
+	vp_def.alloc = DEFAULT_ALLOC_POLICY;
+	vp_def.clustered = DEFAULT_CLUSTERED;
 	if (fill_vg_create_params(cmd, argv[0], &vp_new, &vp_def))
 		return EINVALID_CMD_LINE;
 
