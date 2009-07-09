@@ -1,5 +1,6 @@
 Version 2.02.49 - 
 ================================
+  Check MD devices for a partition table during device scan.
   Add extended device (blkext) and MD partition (mdp) types to filters.
   Fix and precise metadata read errors for segment areas.
   Fix segment metadata read function errors to use proper segment name.
