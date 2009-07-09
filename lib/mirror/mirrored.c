@@ -78,7 +78,7 @@ static int _mirrored_text_import_area_count(struct config_node *sn, uint32_t *ar
 {
 	if (!get_config_uint32(sn, "mirror_count", area_count)) {
 		log_error("Couldn't read 'mirror_count' for "
-			  "segment '%s'.", sn->key);
+			  "segment '%s'.", config_parent_name(sn));
 		return 0;
 	}
 
@@ -97,7 +97,8 @@ static int _mirrored_text_import(struct lv_segment *seg, const struct config_nod
 			seg->status |= PVMOVE;
 		else {
 			log_error("Couldn't read 'extents_moved' for "
-				  "segment '%s'.", sn->key);
+				  "segment %s of logical volume %s.",
+				  config_parent_name(sn), seg->lv->name);
 			return 0;
 		}
 	}
@@ -106,7 +107,8 @@ static int _mirrored_text_import(struct lv_segment *seg, const struct config_nod
 		if (!get_config_uint32(sn, "region_size",
 				      &seg->region_size)) {
 			log_error("Couldn't read 'region_size' for "
-				  "segment '%s'.", sn->key);
+				  "segment %s of logical volume %s.",
+				  config_parent_name(sn), seg->lv->name);
 			return 0;
 		}
 	}
@@ -118,22 +120,25 @@ static int _mirrored_text_import(struct lv_segment *seg, const struct config_nod
 		}
 		logname = cn->v->v.str;
 		if (!(seg->log_lv = find_lv(seg->lv->vg, logname))) {
-			log_error("Unrecognised mirror log in segment %s.",
-				  sn->key);
+			log_error("Unrecognised mirror log in "
+				  "segment %s of logical volume %s.",
+				  config_parent_name(sn), seg->lv->name);
 			return 0;
 		}
 		seg->log_lv->status |= MIRROR_LOG;
 	}
 
 	if (logname && !seg->region_size) {
-		log_error("Missing region size for mirror log for segment "
-			  "'%s'.", sn->key);
+		log_error("Missing region size for mirror log for "
+			  "segment %s of logical volume %s.",
+			  config_parent_name(sn), seg->lv->name);
 		return 0;
 	}
 
 	if (!(cn = find_config_node(sn, "mirrors"))) {
-		log_error("Couldn't find mirrors array for segment "
-			  "'%s'.", sn->key);
+		log_error("Couldn't find mirrors array for "
+			  "segment %s of logical volume %s.",
+			  config_parent_name(sn), seg->lv->name);
 		return 0;
 	}
 
