@@ -1,5 +1,10 @@
 Version 2.02.49 - 
 ================================
+  Update vgsplit and vgcreate to call the new vg_create, then call 'set' fns.
+  Change vg_create to take minimal parameters, obtain a lock, and return vg_t.
+  Refactor vgchange extent_size, max_lv, max_pv, and alloc_policy for liblvm.
+  Update t-vgcreate-usage.sh to test for default vg properties.
+  Fix memory leak in vgsplit when re-reading the vg.
   Make exit/cleanup code more robust when some lvm init function fails.
   Use implicit set of LCK_NONBLOCK instead of explicit vg_read() flag.
   Remove unnecessary locking and existence code from new vg_read() interface.
