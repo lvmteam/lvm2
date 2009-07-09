@@ -624,8 +624,7 @@ static int _recalc_extents(uint32_t *extents, const char *desc1,
 	return 1;
 }
 
-int vg_change_pesize(struct cmd_context *cmd __attribute((unused)),
-		     struct volume_group *vg, uint32_t new_size)
+int vg_change_pesize(struct volume_group *vg, uint32_t new_size)
 {
 	uint32_t old_size = vg->extent_size;
 	struct pv_list *pvl;

@@ -397,7 +397,7 @@ static int _vgchange_pesize(struct cmd_context *cmd, struct volume_group *vg)
 	if (!archive(vg))
 		return ECMD_FAILED;
 
-	if (!vg_change_pesize(cmd, vg, extent_size)) {
+	if (!vg_change_pesize(vg, extent_size)) {
 		stack;
 		return EINVALID_CMD_LINE;
 	}
