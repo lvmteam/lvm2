@@ -293,32 +293,32 @@ static int _read_segment(struct dm_pool *mem, struct volume_group *vg,
 {
 	uint32_t area_count = 0u;
 	struct lv_segment *seg;
-	struct config_node *cn;
+	struct config_node *cn, *sn_child = sn->child;
 	struct config_value *cv;
 	uint32_t start_extent, extent_count;
 	struct segment_type *segtype;
 	const char *segtype_str;
 
-	if (!(sn = sn->child)) {
+	if (!sn_child) {
 		log_error("Empty segment section.");
 		return 0;
 	}
 
-	if (!_read_int32(sn, "start_extent", &start_extent)) {
-		log_error("Couldn't read 'start_extent' for segment '%s'.",
-			  sn->key);
+	if (!_read_int32(sn_child, "start_extent", &start_extent)) {
+		log_error("Couldn't read 'start_extent' for segment '%s' "
+			  "of logical volume %s.", sn->key, lv->name);
 		return 0;
 	}
 
-	if (!_read_int32(sn, "extent_count", &extent_count)) {
-		log_error("Couldn't read 'extent_count' for segment '%s'.",
-			  sn->key);
+	if (!_read_int32(sn_child, "extent_count", &extent_count)) {
+		log_error("Couldn't read 'extent_count' for segment '%s' "
+			  "of logical volume %s.", sn->key, lv->name);
 		return 0;
 	}
 
 	segtype_str = "striped";
 
-	if ((cn = find_config_node(sn, "type"))) {
+	if ((cn = find_config_node(sn_child, "type"))) {
 		cv = cn->v;
 		if (!cv || !cv->v.str) {
 			log_error("Segment type must be a string.");
@@ -331,7 +331,7 @@ static int _read_segment(struct dm_pool *mem, struct volume_group *vg,
 		return_0;
 
 	if (segtype->ops->text_import_area_count &&
-	    !segtype->ops->text_import_area_count(sn, &area_count))
+	    !segtype->ops->text_import_area_count(sn_child, &area_count))
 		return_0;
 
 	if (!(seg = alloc_lv_segment(mem, segtype, lv, start_extent,
@@ -342,11 +342,11 @@ static int _read_segment(struct dm_pool *mem, struct volume_group *vg,
 	}
 
 	if (seg->segtype->ops->text_import &&
-	    !seg->segtype->ops->text_import(seg, sn, pv_hash))
+	    !seg->segtype->ops->text_import(seg, sn_child, pv_hash))
 		return_0;
 
 	/* Optional tags */
-	if ((cn = find_config_node(sn, "tags")) &&
+	if ((cn = find_config_node(sn_child, "tags")) &&
 	    !(read_tags(mem, &seg->tags, cn->v))) {
 		log_error("Couldn't read tags for a segment of %s/%s.",
 			  vg->name, lv->name);
@@ -463,13 +463,14 @@ static int _read_segments(struct dm_pool *mem, struct volume_group *vg,
 	}
 
 	if (!_read_int32(lvn, "segment_count", &seg_count)) {
-		log_error("Couldn't read segment count for logical volume.");
+		log_error("Couldn't read segment count for logical volume %s.",
+			  lv->name);
 		return 0;
 	}
 
 	if (seg_count != count) {
 		log_error("segment_count and actual number of segments "
-			  "disagree.");
+			  "disagree for logical volume %s.", lv->name);
 		return 0;
 	}
 

@@ -1,5 +1,6 @@
 Version 2.02.49 - 
 ================================
+  Fix segment import functions to print segment name and logical volume name.
   Update vgsplit and vgcreate to call the new vg_create, then call 'set' fns.
   Change vg_create to take minimal parameters, obtain a lock, and return vg_t.
   Refactor vgchange extent_size, max_lv, max_pv, and alloc_policy for liblvm.
