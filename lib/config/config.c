@@ -546,6 +546,7 @@ static struct config_node *_file(struct parser *p)
 			root = n;
 		else
 			l->sib = n;
+		n->parent = root;
 		l = n;
 	}
 	return root;
@@ -573,6 +574,7 @@ static struct config_node *_section(struct parser *p)
 				root->child = n;
 			else
 				l->sib = n;
+			n->parent = root;
 			l = n;
 		}
 		match(TOK_SECTION_E);
@@ -1251,6 +1253,10 @@ static unsigned _count_tokens(const char *str, unsigned len, int type)
 	return count_chars(str, len, c);
 }
 
+const char *config_parent_name(const struct config_node *n)
+{
+	return (n->parent ? n->parent->key : "(root)");
+}
 /*
  * Heuristic function to make a quick guess as to whether a text
  * region probably contains a valid config "section".  (Useful for

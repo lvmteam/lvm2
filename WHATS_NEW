@@ -1,5 +1,7 @@
 Version 2.02.49 - 
 ================================
+  Fix segment metadata read function errors to use proper segment name.
+  Add parent node to config_node structure.
   Fix segment import functions to print segment name and logical volume name.
   Update vgsplit and vgcreate to call the new vg_create, then call 'set' fns.
   Change vg_create to take minimal parameters, obtain a lock, and return vg_t.

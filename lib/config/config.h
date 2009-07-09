@@ -40,7 +40,7 @@ struct config_value {
 
 struct config_node {
 	char *key;
-	struct config_node *sib, *child;
+	struct config_node *parent, *sib, *child;
 	struct config_value *v;
 };
 
@@ -109,5 +109,7 @@ int get_config_str(const struct config_node *cn, const char *path,
 		   char **result);
 
 unsigned maybe_config_section(const char *str, unsigned len);
+
+const char *config_parent_name(const struct config_node *n);
 
 #endif
