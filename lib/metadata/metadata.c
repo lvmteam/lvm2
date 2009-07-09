@@ -829,6 +829,24 @@ int vg_set_max_pv(vg_t *vg, uint32_t max_pv)
 	return 1;
 }
 
+int vg_set_alloc_policy(vg_t *vg, alloc_policy_t alloc)
+{
+	if (alloc == ALLOC_INHERIT) {
+		log_error("Volume Group allocation policy cannot inherit "
+			  "from anything");
+		return 0;
+	}
+
+	if (alloc == vg->alloc) {
+		log_print("Volume group allocation policy is already %s",
+			  get_alloc_string(vg->alloc));
+		return 1;
+	}
+	vg->alloc = alloc;
+	return 1;
+}
+
+
 /*
  * Separate metadata areas after splitting a VG.
  * Also accepts orphan VG as destination (for vgreduce).
