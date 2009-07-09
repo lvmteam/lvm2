@@ -368,7 +368,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		vp_def.max_pv = vg_from->max_pv;
 		vp_def.max_lv = vg_from->max_lv;
 		vp_def.alloc = vg_from->alloc;
-		vp_def.clustered = 0;
+		vp_def.clustered = DEFAULT_CLUSTERED;
 
 		if (fill_vg_create_params(cmd, vg_name_to, &vp_new, &vp_def)) {
 			r = EINVALID_CMD_LINE;
