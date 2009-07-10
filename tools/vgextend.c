@@ -36,17 +36,11 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 	argc--;
 	argv++;
 
-	if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE)) {
-		log_error("Can't get lock for orphan PVs");
-		return ECMD_FAILED;
-	}
-
 	log_verbose("Checking for volume group \"%s\"", vg_name);
 	vg = vg_read_for_update(cmd, vg_name, NULL,
 				READ_REQUIRE_RESIZEABLE);
 	if (vg_read_error(vg)) {
 		vg_release(vg);
-		unlock_vg(cmd, VG_ORPHANS);
 		return ECMD_FAILED;
 	}
 /********** FIXME
@@ -77,6 +71,5 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 
 error:
 	unlock_and_release_vg(cmd, vg, vg_name);
-	unlock_vg(cmd, VG_ORPHANS);
 	return r;
 }

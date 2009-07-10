@@ -46,12 +46,6 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	if (validate_vg_create_params(cmd, &vp_new))
 	    return EINVALID_CMD_LINE;
 
-	/* FIXME: orphan lock needs tied to vg handle or inside library call */
-	if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE)) {
-		log_error("Can't get lock for orphan PVs");
-		return ECMD_FAILED;
-	}
-
 	/* Create the new VG */
 	vg = vg_create(cmd, vp_new.vg_name);
 	if (vg_read_error(vg))
@@ -113,7 +107,6 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	unlock_vg(cmd, vp_new.vg_name);
-	unlock_vg(cmd, VG_ORPHANS);
 
 	backup(vg);
 
@@ -126,6 +119,5 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 bad:
 	vg_release(vg);
 	unlock_vg(cmd, vp_new.vg_name);
-	unlock_vg(cmd, VG_ORPHANS);
 	return ECMD_FAILED;
 }
