@@ -19,8 +19,15 @@
 #include "libdevmapper.h"
 
 extern dm_log_fn dm_log;
+extern dm_log_with_errno_fn dm_log_with_errno;
 
-#define plog(l, x...) dm_log(l, __FILE__, __LINE__, ## x)
+#define LOG_LINE(l, x...) \
+	do { \
+		if (dm_log_is_non_default()) \
+			dm_log(l, __FILE__, __LINE__, ## x); \
+		else \
+			dm_log_with_errno(l, __FILE__, __LINE__, 0, ## x); \
+	} while (0)
 
 #include "log.h"
 

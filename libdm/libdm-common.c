@@ -42,10 +42,12 @@ static int _verbose = 0;
  * Library users can provide their own logging
  * function.
  */
-static void _default_log(int level, const char *file __attribute((unused)),
-			 int line __attribute((unused)), const char *f, ...)
+
+static void _default_log_line(int level,
+	    const char *file __attribute((unused)),
+	    int line __attribute((unused)), int dm_errno, 
+	    const char *f, va_list ap)
 {
-	va_list ap;
 	int use_stderr = level & _LOG_STDERR;
 
 	level &= ~_LOG_STDERR;
@@ -53,14 +55,10 @@ static void _default_log(int level, const char *file __attribute((unused)),
 	if (level > _LOG_WARN && !_verbose)
 		return;
 
-	va_start(ap, f);
-
 	if (level < _LOG_WARN)
 		vfprintf(stderr, f, ap);
 	else
 		vfprintf(use_stderr ? stderr : stdout, f, ap);
-
-	va_end(ap);
 
 	if (level < _LOG_WARN)
 		fprintf(stderr, "\n");
@@ -68,7 +66,30 @@ static void _default_log(int level, const char *file __attribute((unused)),
 		fprintf(use_stderr ? stderr : stdout, "\n");
 }
 
+static void _default_log_with_errno(int level,
+	    const char *file __attribute((unused)),
+	    int line __attribute((unused)), int dm_errno, 
+	    const char *f, ...)
+{
+	va_list ap;
+
+	va_start(ap, f);
+	_default_log_line(level, file, line, dm_errno, f, ap);
+	va_end(ap);
+}
+
+static void _default_log(int level, const char *file,
+			 int line, const char *f, ...)
+{
+	va_list ap;
+
+	va_start(ap, f);
+	_default_log_line(level, file, line, 0, f, ap);
+	va_end(ap);
+}
+
 dm_log_fn dm_log = _default_log;
+dm_log_with_errno_fn dm_log_with_errno = _default_log_with_errno;
 
 void dm_log_init(dm_log_fn fn)
 {
@@ -76,6 +97,23 @@ void dm_log_init(dm_log_fn fn)
 		dm_log = fn;
 	else
 		dm_log = _default_log;
+
+	dm_log_with_errno = _default_log_with_errno;
+}
+
+int dm_log_is_non_default(void)
+{
+	return (dm_log == _default_log) ? 0 : 1;
+}
+
+void dm_log_with_errno_init(dm_log_with_errno_fn fn)
+{
+	if (fn)
+		dm_log_with_errno = fn;
+	else
+		dm_log_with_errno = _default_log_with_errno;
+
+	dm_log = _default_log;
 }
 
 void dm_log_init_verbose(int level)

@@ -6,6 +6,9 @@ dm_fclose
 dm_get_library_version
 dm_log
 dm_log_init
+dm_log_is_non_default
+dm_log_with_errno
+dm_log_with_errno_init
 dm_log_init_verbose
 dm_task_create
 dm_task_destroy

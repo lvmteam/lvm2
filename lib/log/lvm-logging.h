@@ -19,7 +19,7 @@
 void print_log(int level, const char *file, int line, const char *format, ...)
     __attribute__ ((format(printf, 4, 5)));
 
-#define plog(l, x...) print_log(l, __FILE__, __LINE__ , ## x)
+#define LOG_LINE(l, x...) print_log(l, __FILE__, __LINE__ , ## x)
 
 #include "log.h"
 
