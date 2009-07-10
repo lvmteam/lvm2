@@ -388,8 +388,14 @@ int vg_remove_single(vg_t *vg)
 	if (!archive(vg))
 		return 0;
 
+	if (!lock_vol(vg->cmd, VG_ORPHANS, LCK_VG_WRITE)) {
+		log_error("Can't get lock for orphan PVs");
+		return 0;
+	}
+
 	if (!vg_remove(vg)) {
 		log_error("vg_remove %s failed", vg->name);
+		unlock_vg(vg->cmd, VG_ORPHANS);
 		return 0;
 	}
 
@@ -423,6 +429,7 @@ int vg_remove_single(vg_t *vg)
 	else
 		log_error("Volume group \"%s\" not properly removed", vg->name);
 
+	unlock_vg(vg->cmd, VG_ORPHANS);
 	return ret;
 }
 
