@@ -1,5 +1,7 @@
 Version 2.02.49 - 
 ================================
+  Refactor vg_remove_single for use in liblvm.
+  Make all tools consistent with lock ordering - obtain VG_ORPHAN lock second.
   Check MD devices for a partition table during device scan.
   Add extended device (blkext) and MD partition (mdp) types to filters.
   Fix and precise metadata read errors for segment areas.
