@@ -30,30 +30,40 @@
 #include <stdio.h>
 
 /*****************************************************************
- * The first section of this file provides direct access to the 
- * individual device-mapper ioctls.
+ * The first section of this file provides direct access to the
+ * individual device-mapper ioctls.  Since it is quite laborious to
+ * build the ioctl arguments for the device-mapper, people are
+ * encouraged to use this library.
  ****************************************************************/
 
 /*
- * Since it is quite laborious to build the ioctl
- * arguments for the device-mapper people are
- * encouraged to use this library.
- *
- * You will need to build a struct dm_task for
- * each ioctl command you want to execute.
+ * The library user may wish to register their own
+ * logging function.  By default errors go to stderr.
+ * Use dm_log_with_errno_init(NULL) to restore the default log fn.
  */
 
+typedef void (*dm_log_with_errno_fn) (int level, const char *file, int line,
+				      int dm_errno, const char *f, ...)
+    __attribute__ ((format(printf, 5, 6)));
+
+void dm_log_with_errno_init(dm_log_with_errno_fn fn);
+void dm_log_init_verbose(int level);
+
+/*
+ * Original version of this function.
+ * dm_errno is set to 0.
+ *
+ * Deprecated: Use the _with_errno_ versions above instead.
+ */
 typedef void (*dm_log_fn) (int level, const char *file, int line,
 			   const char *f, ...)
     __attribute__ ((format(printf, 4, 5)));
-
-/*
- * The library user may wish to register their own
- * logging function, by default errors go to stderr.
- * Use dm_log_init(NULL) to restore the default log fn.
- */
 void dm_log_init(dm_log_fn fn);
-void dm_log_init_verbose(int level);
+/*
+ * For backward-compatibility, indicate that dm_log_init() was used
+ * to set a non-default value of dm_log().
+ */
+int dm_log_is_non_default(void);
 
 enum {
 	DM_DEVICE_CREATE,
@@ -86,6 +96,11 @@ enum {
 
 	DM_DEVICE_SET_GEOMETRY
 };
+
+/*
+ * You will need to build a struct dm_task for
+ * each ioctl command you want to execute.
+ */
 
 struct dm_task;
 

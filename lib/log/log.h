@@ -50,17 +50,17 @@
 #define _LOG_ERR 3
 #define _LOG_FATAL 2
 
-#define log_debug(x...) plog(_LOG_DEBUG, x)
-#define log_info(x...) plog(_LOG_INFO, x)
-#define log_notice(x...) plog(_LOG_NOTICE, x)
-#define log_warn(x...) plog(_LOG_WARN | _LOG_STDERR, x)
-#define log_err(x...) plog(_LOG_ERR, x)
-#define log_fatal(x...) plog(_LOG_FATAL, x)
+#define log_debug(x...) LOG_LINE(_LOG_DEBUG, x)
+#define log_info(x...) LOG_LINE(_LOG_INFO, x)
+#define log_notice(x...) LOG_LINE(_LOG_NOTICE, x)
+#define log_warn(x...) LOG_LINE(_LOG_WARN | _LOG_STDERR, x)
+#define log_err(x...) LOG_LINE(_LOG_ERR, x)
+#define log_fatal(x...) LOG_LINE(_LOG_FATAL, x)
 
 #define stack log_debug("<backtrace>")	/* Backtrace on error */
 #define log_very_verbose(args...) log_info(args)
 #define log_verbose(args...) log_notice(args)
-#define log_print(args...) plog(_LOG_WARN, args)
+#define log_print(args...) LOG_LINE(_LOG_WARN, args)
 #define log_error(args...) log_err(args)
 
 /* System call equivalents */
