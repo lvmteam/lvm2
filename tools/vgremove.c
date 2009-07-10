@@ -19,7 +19,29 @@ static int vgremove_single(struct cmd_context *cmd, const char *vg_name,
 			   struct volume_group *vg,
 			   void *handle __attribute((unused)))
 {
-	if (!vg_remove_single(vg, arg_count(cmd, force_ARG)))
+	unsigned lv_count;
+	force_t force;
+
+	if (!vg_check_status(vg, EXPORTED_VG))
+		return ECMD_FAILED;
+
+	lv_count = vg_visible_lvs(vg);
+
+	force = arg_count(cmd, force_ARG);
+	if (lv_count) {
+		if ((force == PROMPT) &&
+		    (yes_no_prompt("Do you really want to remove volume "
+				   "group \"%s\" containing %u "
+				   "logical volumes? [y/n]: ",
+				   vg_name, lv_count) == 'n')) {
+			log_print("Volume group \"%s\" not removed", vg_name);
+			return ECMD_FAILED;
+		}
+		if (!remove_lvs_in_vg(cmd, vg, force))
+			return ECMD_FAILED;
+	}
+
+	if (!vg_remove_single(vg))
 		return ECMD_FAILED;
 
 	return ECMD_PROCESSED;

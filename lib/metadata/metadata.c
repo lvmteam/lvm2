@@ -343,9 +343,9 @@ int vg_rename(struct cmd_context *cmd, struct volume_group *vg,
 	return 1;
 }
 
-static int remove_lvs_in_vg(struct cmd_context *cmd,
-			    struct volume_group *vg,
-			    force_t force)
+int remove_lvs_in_vg(struct cmd_context *cmd,
+		     struct volume_group *vg,
+		     force_t force)
 {
 	struct dm_list *lst;
 	struct lv_list *lvl;
@@ -359,7 +359,7 @@ static int remove_lvs_in_vg(struct cmd_context *cmd,
 	return 1;
 }
 
-int vg_remove_single(vg_t *vg, force_t force)
+int vg_remove_single(vg_t *vg)
 {
 	struct physical_volume *pv;
 	struct pv_list *pvl;
@@ -376,21 +376,6 @@ int vg_remove_single(vg_t *vg, force_t force)
 
 	if (!vg_check_status(vg, EXPORTED_VG))
 		return 0;
-
-	lv_count = vg_visible_lvs(vg);
-
-	if (lv_count) {
-		if ((force == PROMPT) &&
-		    (yes_no_prompt("Do you really want to remove volume "
-				   "group \"%s\" containing %u "
-				   "logical volumes? [y/n]: ",
-				   vg->name, lv_count) == 'n')) {
-			log_print("Volume group \"%s\" not removed", vg_name);
-			return 0;
-		}
-		if (!remove_lvs_in_vg(vg->cmd, vg, force))
-			return 0;
-	}
 
 	lv_count = vg_visible_lvs(vg);
 
