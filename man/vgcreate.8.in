@@ -90,7 +90,7 @@ The 2.4 kernel has a limitation of 2TB per block device.
 To create a volume group named
 .B test_vg 
 using physical volumes
-.BR /dev/hdk1 ", and " /dev/hdl1
+.BR /dev/sdk1 ", and " /dev/sdl1
 with default physical extent size of 4MB:
 .nf
 
