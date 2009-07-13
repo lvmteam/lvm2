@@ -918,7 +918,7 @@ static void _apply_settings(struct cmd_context *cmd)
 	cmd->handles_missing_pvs = 0;
 }
 
-static char *_copy_command_line(struct cmd_context *cmd, int argc, char **argv)
+static const char *_copy_command_line(struct cmd_context *cmd, int argc, char **argv)
 {
 	int i, space;
 

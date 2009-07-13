@@ -795,7 +795,7 @@ int init_lvm(int using_gulm)
 	/* Use LOG_DAEMON for syslog messages instead of LOG_USER */
 	init_syslog(LOG_DAEMON);
 	openlog("clvmd", LOG_PID, LOG_DAEMON);
-	cmd->cmd_line = (char *)"clvmd";
+	cmd->cmd_line = "clvmd";
 
 	/* Check lvm.conf is setup for cluster-LVM */
 	check_config();
