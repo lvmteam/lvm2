@@ -1,5 +1,7 @@
 Version 2.02.49 - 
 ================================
+  Changed exit() to _exit() after fork(); avoid flushing libc buffers twice.
+  Fixed invalid type being passed as printf argument on Sparc64.
   Make cmd->cmd_line const.
   Fix dev name mismatch in vgcreate man page example.
   Refactor vg_remove_single for use in liblvm.
