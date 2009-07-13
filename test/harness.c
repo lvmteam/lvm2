@@ -90,7 +90,8 @@ void run(int i, char *f) {
 		dup2(fds[0], 2);
 		execlp("bash", "bash", f, NULL);
 		perror("execlp");
-		exit(202);
+		fflush(stderr);
+		_exit(202);
 	} else {
 		char buf[128];
 		snprintf(buf, 128, "%s ...", f);
