@@ -1,5 +1,6 @@
 Version 2.02.49 - 
 ================================
+  Make cmd->cmd_line const.
   Fix dev name mismatch in vgcreate man page example.
   Refactor vg_remove_single for use in liblvm.
   Make all tools consistent with lock ordering - obtain VG_ORPHAN lock second.

@@ -63,7 +63,7 @@ struct cmd_context {
 	const char *kernel_vsn;
 
 	unsigned rand_seed;
-	char *cmd_line;
+	const char *cmd_line;
 	struct command *command;
 	char **argv;
 	unsigned is_long_lived:1;	/* Optimises persistent_filter handling */
