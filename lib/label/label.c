@@ -138,7 +138,7 @@ static struct labeller *_find_labeller(struct device *dev, char *buf,
 				log_info("%s: Label for sector %" PRIu64
 					 " found at sector %" PRIu64
 					 " - ignoring", dev_name(dev),
-					 xlate64(lh->sector_xl),
+					 (uint64_t)xlate64(lh->sector_xl),
 					 sector + scan_sector);
 				continue;
 			}
