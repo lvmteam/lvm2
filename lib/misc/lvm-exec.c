@@ -68,7 +68,7 @@ int exec_cmd(struct cmd_context *cmd, const char *const argv[])
 		/* FIXME Use execve directly */
 		execvp(argv[0], (char **const) argv);
 		log_sys_error("execvp", argv[0]);
-		exit(errno);
+		_exit(errno);
 	}
 
 	/* Parent */

@@ -1055,7 +1055,7 @@ static int _exec_command(const char *name)
 
 	if (!(pid = fork())) {
 		execvp(args[0], args);
-		exit(127);
+		_exit(127);
 	} else if (pid < (pid_t) 0)
 		return 0;
 
