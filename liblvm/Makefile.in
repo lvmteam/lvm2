@@ -17,7 +17,8 @@ top_srcdir = @top_srcdir@
 VPATH = @srcdir@
 
 SOURCES =\
-	lvm_base.c
+	lvm_base.c \
+	lvm_vg.c
 
 LIB_NAME = liblvm2app
 LIB_VERSION = $(LIB_VERSION_LVM)

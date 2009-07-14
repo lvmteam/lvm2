@@ -42,6 +42,9 @@ typedef struct lvm *lvm_t;
 /**
  * Create a LVM handle.
  *
+ * Once all LVM operations have been completed, use lvm_destroy to release
+ * the handle and any associated resources.
+ *
  * \param   system_dir
  *          Set an alternative LVM system directory. Use NULL to use the 
  *          default value. If the environment variable LVM_SYSTEM_DIR is set, 
@@ -68,5 +71,99 @@ void lvm_destroy(lvm_t libh);
  */
 int lvm_reload_config(lvm_t libh);
 
+/**
+ * Create a VG with default parameters.
+ *
+ * This API requires calling lvm_vg_write to commit the change to disk.
+ * Upon success, other APIs may be used to set non-default parameters.
+ * For example, to set a non-default extent size, use lvm_vg_set_extent_size.
+ * Next, to add physical storage devices to the volume group, use
+ * lvm_vg_extend for each device.
+ * Once all parameters are set appropriately and all devices are added to the
+ * VG, use lvm_vg_write to commit the new VG to disk, and lvm_vg_close to
+ * release the VG handle.
+ *
+ * \param   libh
+ *          Handle obtained from lvm_create.
+ *
+ * \return  A VG handle with error code set appropriately.
+ * FIXME: Update error handling description after errno and logging patches
+ */
+vg_t *lvm_vg_create(lvm_t libh, const char *vg_name);
+
+/**
+ * Extend a VG by adding a device.
+ *
+ * This API requires calling lvm_vg_write to commit the change to disk.
+ * After successfully adding a device, use lvm_vg_write to commit the new VG
+ * to disk.  Upon failure, retry the operation or release the VG handle with
+ * lvm_vg_close.
+ *
+ * \param   vg
+ *          VG handle obtained from lvm_vg_create.
+ *
+ * \param   device
+ *          Name of device to add to VG.
+ *
+ * \return  Status code of 1 (success) or 0 (failure).
+ */
+int lvm_vg_extend(vg_t *vg, const char *device);
+
+/**
+ * Set the extent size of a VG.
+ *
+ * This API requires calling lvm_vg_write to commit the change to disk.
+ * After successfully setting a new extent size, use lvm_vg_write to commit
+ * the new VG to disk.  Upon failure, retry the operation or release the VG
+ * handle with lvm_vg_close.
+ *
+ * \param   vg
+ *          VG handle obtained from lvm_vg_create.
+ *
+ * \param   new_size
+ *          New extent size to set (in sectors).
+ *
+ * \return  Status code of 1 (success) or 0 (failure).
+ */
+int lvm_vg_set_extent_size(vg_t *vg, uint32_t new_size);
+
+/**
+ * Write a VG to disk.
+ *
+ * This API commits the VG to disk.
+ * Upon failure, retry the operation and/or release the VG handle with
+ * lvm_vg_close.
+ *
+ * \param   vg
+ *          VG handle obtained from lvm_vg_create.
+ *
+ * \return  Status code of 1 (success) or 0 (failure).
+ */
+int lvm_vg_write(vg_t *vg);
+
+/**
+ * Remove a VG from the system.
+ *
+ * This API commits the change to disk and does not require calling
+ * lvm_vg_write.
+ *
+ * \param   vg
+ *          VG handle obtained from lvm_vg_create.
+ *
+ * \return  Status code of 1 (success) or 0 (failure).
+ */
+int lvm_vg_remove(vg_t *vg);
+
+/**
+ * Close a VG opened with lvm_vg_create
+ *
+ * This API releases a VG handle and any resources associated with the handle.
+ *
+ * \param   vg
+ *          VG handle obtained from lvm_vg_create.
+ *
+ * \return  Status code of 1 (success) or 0 (failure).
+ */
+int lvm_vg_close(vg_t *vg);
 
 #endif /* _LIB_LVM_H */
