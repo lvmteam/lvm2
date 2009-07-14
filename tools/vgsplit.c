@@ -15,72 +15,6 @@
 
 #include "tools.h"
 
-static int _move_pv(struct volume_group *vg_from, struct volume_group *vg_to,
-		    const char *pv_name)
-{
-	struct physical_volume *pv;
-	struct pv_list *pvl;
-
-	/* FIXME: handle tags */
-	if (!(pvl = find_pv_in_vg(vg_from, pv_name))) {
-		log_error("Physical volume %s not in volume group %s",
-			  pv_name, vg_from->name);
-		return 0;
-	}
-
-	dm_list_move(&vg_to->pvs, &pvl->list);
-
-	vg_from->pv_count--;
-	vg_to->pv_count++;
-
-	pv = pvl->pv;
-
-	vg_from->extent_count -= pv_pe_count(pv);
-	vg_to->extent_count += pv_pe_count(pv);
-
-	vg_from->free_count -= pv_pe_count(pv) - pv_pe_alloc_count(pv);
-	vg_to->free_count += pv_pe_count(pv) - pv_pe_alloc_count(pv);
-
-	return 1;
-}
-
-static int _move_pvs_used_by_lv(struct volume_group *vg_from,
-				   struct volume_group *vg_to,
-				   const char *lv_name)
-{
-	struct lv_segment *lvseg;
-	unsigned s;
-	struct lv_list *lvl;
-	struct logical_volume *lv;
-
-	/* FIXME: handle tags */
-	if (!(lvl = find_lv_in_vg(vg_from, lv_name))) {
-		log_error("Logical volume %s not in volume group %s",
-			  lv_name, vg_from->name);
-		return 0;
-	}
-
-	dm_list_iterate_items(lvseg, &lvl->lv->segments) {
-		if (lvseg->log_lv)
-			if (!_move_pvs_used_by_lv(vg_from, vg_to,
-						     lvseg->log_lv->name))
-				return_0;
-		for (s = 0; s < lvseg->area_count; s++) {
-			if (seg_type(lvseg, s) == AREA_PV) {
-				if (!_move_pv(vg_from, vg_to,
-					      pv_dev_name(seg_pv(lvseg, s))))
-					return_0;
-			} else if (seg_type(lvseg, s) == AREA_LV) {
-				lv = seg_lv(lvseg, s);
-				if (!_move_pvs_used_by_lv(vg_from, vg_to,
-							     lv->name))
-				    return_0;
-			}
-		}
-	}
-	return 1;
-}
-
 /* FIXME Why not (lv->vg == vg) ? */
 static int _lv_is_in_vg(struct volume_group *vg, struct logical_volume *lv)
 {
@@ -401,12 +335,12 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 
 	/* Move PVs across to new structure */
 	for (opt = 0; opt < argc; opt++) {
-		if (!_move_pv(vg_from, vg_to, argv[opt]))
+		if (!move_pv(vg_from, vg_to, argv[opt]))
 			goto_bad;
 	}
 
 	/* If an LV given on the cmdline, move used_by PVs */
-	if (lv_name && !_move_pvs_used_by_lv(vg_from, vg_to, lv_name))
+	if (lv_name && !move_pvs_used_by_lv(vg_from, vg_to, lv_name))
 		goto_bad;
 
 	/* Move required LVs across, checking consistency */
