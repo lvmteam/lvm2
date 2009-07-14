@@ -1,3 +1,9 @@
 lvm_create
 lvm_destroy
 lvm_reload_config
+lvm_vg_create
+lvm_vg_extend
+lvm_vg_set_extent_size
+lvm_vg_write
+lvm_vg_close
+lvm_vg_remove
