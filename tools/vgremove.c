@@ -22,6 +22,9 @@ static int vgremove_single(struct cmd_context *cmd, const char *vg_name,
 	unsigned lv_count;
 	force_t force;
 
+	if (vg_read_error(vg))
+		return ECMD_FAILED;
+
 	if (!vg_check_status(vg, EXPORTED_VG))
 		return ECMD_FAILED;
 
