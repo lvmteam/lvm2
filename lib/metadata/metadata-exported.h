@@ -22,16 +22,7 @@
 #define _LVM_METADATA_EXPORTED_H
 
 #include "uuid.h"
-
-struct physical_volume;
-typedef struct physical_volume pv_t;
-struct volume_group;
-typedef struct volume_group vg_t;
-
-struct logical_volume;
-
-struct lv_segment;
-struct pv_segment;
+#include "lvm.h"
 
 #define MAX_STRIPES 128U
 #define SECTOR_SHIFT 9L
