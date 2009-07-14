@@ -189,10 +189,12 @@ void reset_locking(void)
 		_unblock_signals();
 }
 
-static void _update_vg_lock_count(uint32_t flags)
+static void _update_vg_lock_count(const char *resource, uint32_t flags)
 {
+	/* Ignore locks not associated with updating VG metadata */
 	if ((flags & LCK_SCOPE_MASK) != LCK_VG ||
-	    (flags & LCK_CACHE))
+	    (flags & LCK_CACHE) ||
+	    !strcmp(resource, VG_GLOBAL))
 		return;
 
 	if ((flags & LCK_TYPE_MASK) == LCK_UNLOCK)
@@ -356,7 +358,7 @@ static int _lock_vol(struct cmd_context *cmd, const char *resource, uint32_t fla
 								== LCK_READ);
 		}
 
-		_update_vg_lock_count(flags);
+		_update_vg_lock_count(resource, flags);
 	}
 
 	_unlock_memory(flags);
