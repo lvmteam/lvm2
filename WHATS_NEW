@@ -1,5 +1,6 @@
 Version 2.02.49 - 
 ================================
+  Refactor vgsplit and vgextend to remove READ_REQUIRE_RESIZEABLE flag.
   Changed exit() to _exit() after fork(); avoid flushing libc buffers twice.
   Fixed invalid type being passed as printf argument on Sparc64.
   Make cmd->cmd_line const.
