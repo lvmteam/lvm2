@@ -45,6 +45,12 @@ lvm_t lvm_create(const char *system_dir)
 		lvm_destroy((lvm_t) cmd);
 		return NULL;
 	}
+	/*
+	 * FIXME: Use cmd->cmd_line as audit trail for liblvm calls.  Used in
+	 * archive() call.  Possible example:
+	 * cmd_line = "lvm_vg_create: vg1\nlvm_vg_extend vg1 /dev/sda1\n"
+	 */
+	cmd->cmd_line = (char *)"liblvm";
 
 	return (lvm_t) cmd;
 }
