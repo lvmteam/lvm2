@@ -2994,9 +2994,6 @@ vg_t *vg_read(struct cmd_context *cmd, const char *vg_name,
 	if (flags & READ_ALLOW_EXPORTED)
 		status &= ~EXPORTED_VG;
 
-	if (flags & READ_REQUIRE_RESIZEABLE)
-		status |= RESIZEABLE_VG;
-
 	return _vg_lock_and_read(cmd, vg_name, vgid, lock_flags, status, flags);
 }
 
