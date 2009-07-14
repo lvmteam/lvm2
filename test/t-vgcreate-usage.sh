@@ -21,6 +21,9 @@ pvcreate --metadatacopies 0 $dev3
 vgcreate $vg --physicalextentsize 8.00M $dev1 $dev2 
 check_vg_field_ $vg vg_extent_size 8.00M 
 vgremove $vg
+# try vgck and to remove it again - should fail (but not segfault)
+not vgremove $vg
+not vgck $vg
 
 #COMM 'vgcreate accepts smaller (128) maxlogicalvolumes for VG'
 vgcreate $vg --maxlogicalvolumes 128 $dev1 $dev2 
