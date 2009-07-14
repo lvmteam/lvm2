@@ -37,8 +37,7 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 	argv++;
 
 	log_verbose("Checking for volume group \"%s\"", vg_name);
-	vg = vg_read_for_update(cmd, vg_name, NULL,
-				READ_REQUIRE_RESIZEABLE);
+	vg = vg_read_for_update(cmd, vg_name, NULL, 0);
 	if (vg_read_error(vg)) {
 		vg_release(vg);
 		return ECMD_FAILED;
