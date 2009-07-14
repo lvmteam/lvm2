@@ -16,9 +16,6 @@ pvcreate $dev1
 pvcreate --metadatacopies 0 $dev2
 pvcreate --metadatacopies 2 $dev3
 
-# check pvremove fails when bogus pv given
-not pvremove $dev2 bogus
-
 # failing, but still removing everything what can be removed
 # is somewhat odd as default, what do we have -f for?
 pvs | not grep $dev2
@@ -32,6 +29,8 @@ for mdacp in 0 1 2; do
     # check pvremove truly wipes the label (pvscan wont find) (---metadatacopies $mdacp)
     pvcreate --metadatacopies $mdacp $dev3
     pvremove $dev3
+    # try to remove agail - should fail cleanly
+    not pvremove $dev3
     pvscan | not grep $dev3
 
 	# bz179473 refuse to wipe non-PV device without -f

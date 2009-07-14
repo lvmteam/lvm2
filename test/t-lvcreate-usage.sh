@@ -21,6 +21,8 @@ vgcreate -cn $vg $devs
 lvcreate -n $lv -l 4 $vg 
 not lvcreate -n $lv -l 4 $vg
 lvremove -ff $vg/$lv
+# try to remove it again - should fail (but not segfault)
+not lvremove -ff $vg/$lv
 
 # "lvcreate rejects a negative stripe_size"
 not lvcreate -L 64M -n $lv -i2 --stripesize -4 $vg 2>err;
