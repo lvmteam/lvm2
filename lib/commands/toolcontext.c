@@ -855,10 +855,10 @@ static int _init_single_segtype(struct segtype_library *seglib)
 static int _init_segtypes(struct cmd_context *cmd)
 {
 	struct segment_type *segtype;
+	struct segtype_library seglib = { .cmd = cmd };
 
 #ifdef HAVE_LIBDL
 	const struct config_node *cn;
-	struct segtype_library seglib;
 #endif
 
 	if (!(segtype = init_striped_segtype(cmd)))
