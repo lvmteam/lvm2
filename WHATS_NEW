@@ -1,12 +1,13 @@
 Version 2.02.49 - 
 ================================
+  Exclude VG_GLOBAL from vg_write_lock_held so scans open devs read-only again.
   Add unit test case for liblvm VG create/delete APIs.
   Add liblvm APIs to implement creation and deletion of VGs.
-  Initialize cmd->cmd_line to "liblvm".
-  Place handles to liblvm objects for pv, vg, lv, lvseg, pvseg inside lvm.h
+  Initialize cmd->cmd_line to "liblvm" in new liblvm library.
+  Place handles to liblvm objects for pv, vg, lv, lvseg, pvseg inside lvm.h.
   Refactor vgsplit and vgextend to remove READ_REQUIRE_RESIZEABLE flag.
-  Changed exit() to _exit() after fork(); avoid flushing libc buffers twice.
-  Fixed invalid type being passed as printf argument on Sparc64.
+  Changed exit() to _exit() after fork() to avoid flushing libc buffers twice.
+  Add cast to log_info arg in _find_labeller to avoid Sparc64 warning.
   Make cmd->cmd_line const.
   Fix dev name mismatch in vgcreate man page example.
   Refactor vg_remove_single for use in liblvm.
