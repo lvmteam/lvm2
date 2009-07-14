@@ -15,6 +15,7 @@ aux prepare_devs 3
 pvcreate $dev1
 pvcreate --metadatacopies 0 $dev2
 pvcreate --metadatacopies 2 $dev3
+pvremove $dev2
 
 # failing, but still removing everything what can be removed
 # is somewhat odd as default, what do we have -f for?
