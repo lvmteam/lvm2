@@ -248,8 +248,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 
 	log_verbose("Checking for volume group \"%s\"", vg_name_from);
 
-	vg_from = vg_read_for_update(cmd, vg_name_from, NULL,
-				     READ_REQUIRE_RESIZEABLE);
+	vg_from = vg_read_for_update(cmd, vg_name_from, NULL, 0);
 	if (vg_read_error(vg_from)) {
 		vg_release(vg_from);
 		return ECMD_FAILED;
@@ -283,8 +282,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	if (vg_read_error(vg_to) == FAILED_EXIST) {
 		existing_vg = 1;
 		vg_release(vg_to);
-		vg_to = vg_read_for_update(cmd, vg_name_to, NULL,
-					   READ_REQUIRE_RESIZEABLE);
+		vg_to = vg_read_for_update(cmd, vg_name_to, NULL, 0);
 
 		if (vg_read_error(vg_to)) {
 			vg_release(vg_to);
