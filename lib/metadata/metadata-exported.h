@@ -375,6 +375,11 @@ int scan_vgs_for_pvs(struct cmd_context *cmd);
 int pv_write(struct cmd_context *cmd, struct physical_volume *pv,
 	     struct dm_list *mdas, int64_t label_sector);
 int is_pv(pv_t *pv);
+int move_pv(struct volume_group *vg_from, struct volume_group *vg_to,
+	    const char *pv_name);
+int move_pvs_used_by_lv(struct volume_group *vg_from,
+			struct volume_group *vg_to,
+			const char *lv_name);
 int is_orphan_vg(const char *vg_name);
 int is_orphan(const pv_t *pv);
 int vgs_are_compatible(struct cmd_context *cmd,
