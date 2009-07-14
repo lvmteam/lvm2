@@ -1,5 +1,6 @@
 Version 2.02.49 - 
 ================================
+  Fix vgck and vgremove segfault if non-existent vg given.
   Enable use of new multi-segment registration for static registration too.
   Exclude VG_GLOBAL from vg_write_lock_held so scans open devs read-only again.
   Add unit test case for liblvm VG create/delete APIs.
