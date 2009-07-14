@@ -1,5 +1,9 @@
 Version 2.02.49 - 
 ================================
+  Add unit test case for liblvm VG create/delete APIs.
+  Add liblvm APIs to implement creation and deletion of VGs.
+  Initialize cmd->cmd_line to "liblvm".
+  Place handles to liblvm objects for pv, vg, lv, lvseg, pvseg inside lvm.h
   Refactor vgsplit and vgextend to remove READ_REQUIRE_RESIZEABLE flag.
   Changed exit() to _exit() after fork(); avoid flushing libc buffers twice.
   Fixed invalid type being passed as printf argument on Sparc64.
