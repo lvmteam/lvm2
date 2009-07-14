@@ -70,6 +70,8 @@ static struct physical_volume *_find_pv_in_vg_by_uuid(const struct volume_group 
 static vg_t *_vg_make_handle(struct cmd_context *cmd,
 			     struct volume_group *vg,
 			     uint32_t failure);
+static uint32_t _vg_bad_status_bits(const struct volume_group *vg,
+				    uint32_t status);
 
 unsigned long set_pe_align(struct physical_volume *pv, unsigned long data_alignment)
 {
@@ -287,6 +289,10 @@ int move_pv(struct volume_group *vg_from, struct volume_group *vg_to,
 		return 0;
 	}
 
+	if (_vg_bad_status_bits(vg_from, RESIZEABLE_VG) ||
+	    _vg_bad_status_bits(vg_to, RESIZEABLE_VG))
+		return 0;
+
 	dm_list_move(&vg_to->pvs, &pvl->list);
 
 	vg_from->pv_count--;
@@ -318,6 +324,10 @@ int move_pvs_used_by_lv(struct volume_group *vg_from,
 			  lv_name, vg_from->name);
 		return 0;
 	}
+
+	if (_vg_bad_status_bits(vg_from, RESIZEABLE_VG) ||
+	    _vg_bad_status_bits(vg_to, RESIZEABLE_VG))
+		return 0;
 
 	dm_list_iterate_items(lvseg, &lvl->lv->segments) {
 		if (lvseg->log_lv)
