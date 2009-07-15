@@ -723,6 +723,7 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 				vg = vg_read(cmd, sll->str, NULL, flags);
 				if (vg_read_error(vg)) {
 					ret_max = ECMD_FAILED;
+					vg_release(vg);
 					continue;
 				}
 
