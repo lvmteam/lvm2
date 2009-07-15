@@ -190,7 +190,7 @@ static void _init_logging(struct cmd_context *cmd)
 
 	/* Tell device-mapper about our logging */
 #ifdef DEVMAPPER_SUPPORT
-	dm_log_init(print_log);
+	dm_log_with_errno_init(print_log);
 #endif
 }
 
@@ -1161,6 +1161,7 @@ struct cmd_context *create_toolcontext(unsigned is_long_lived,
 	cmd->current_settings = cmd->default_settings;
 
 	cmd->config_valid = 1;
+	reset_lvm_errno(1);  /* FIXME Move to top when cmd returned on error */
 	return cmd;
 
       error:
@@ -1288,6 +1289,8 @@ int refresh_toolcontext(struct cmd_context *cmd)
 		persistent_filter_dump(cmd->filter);
 
 	cmd->config_valid = 1;
+
+	reset_lvm_errno(1);
 	return 1;
 }
 
@@ -1317,4 +1320,5 @@ void destroy_toolcontext(struct cmd_context *cmd)
 	activation_exit();
 	fin_log();
 	fin_syslog();
+	reset_lvm_errno(0);
 }

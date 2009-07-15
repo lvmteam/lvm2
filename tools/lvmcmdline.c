@@ -1054,6 +1054,8 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	 */
 	dm_pool_empty(cmd->mem);
 
+	reset_lvm_errno(1);
+
 	return ret;
 }
 
