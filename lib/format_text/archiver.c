@@ -250,7 +250,7 @@ int backup_remove(struct cmd_context *cmd, const char *vg_name)
 
 	if (dm_snprintf(path, sizeof(path), "%s/%s",
 			 cmd->backup_params->dir, vg_name) < 0) {
-		log_err("Failed to generate backup filename (for removal).");
+		log_error("Failed to generate backup filename (for removal).");
 		return 0;
 	}
 
@@ -364,7 +364,7 @@ int backup_restore(struct cmd_context *cmd, const char *vg_name)
 
 	if (dm_snprintf(path, sizeof(path), "%s/%s",
 			 cmd->backup_params->dir, vg_name) < 0) {
-		log_err("Failed to generate backup filename (for restore).");
+		log_error("Failed to generate backup filename (for restore).");
 		return 0;
 	}
 

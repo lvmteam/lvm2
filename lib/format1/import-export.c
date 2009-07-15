@@ -579,15 +579,15 @@ int import_snapshots(struct dm_pool *mem __attribute((unused)), struct volume_gr
 			lvnum = lvd->lv_number;
 
 			if (lvnum >= MAX_LV) {
-				log_err("Logical volume number "
-					"out of bounds.");
+				log_error("Logical volume number "
+					  "out of bounds.");
 				return 0;
 			}
 
 			if (!lvs[lvnum] &&
 			    !(lvs[lvnum] = find_lv(vg, (char *)lvd->lv_name))) {
-				log_err("Couldn't find logical volume '%s'.",
-					lvd->lv_name);
+				log_error("Couldn't find logical volume '%s'.",
+					  lvd->lv_name);
 				return 0;
 			}
 		}
@@ -606,8 +606,8 @@ int import_snapshots(struct dm_pool *mem __attribute((unused)), struct volume_gr
 			lvnum = lvd->lv_number;
 			cow = lvs[lvnum];
 			if (!(org = lvs[lvd->lv_snapshot_minor])) {
-				log_err("Couldn't find origin logical volume "
-					"for snapshot '%s'.", lvd->lv_name);
+				log_error("Couldn't find origin logical volume "
+					  "for snapshot '%s'.", lvd->lv_name);
 				return 0;
 			}
 
@@ -619,7 +619,7 @@ int import_snapshots(struct dm_pool *mem __attribute((unused)), struct volume_gr
 			if (!vg_add_snapshot(org, cow, NULL,
 					     org->le_count,
 					     lvd->lv_chunk_size)) {
-				log_err("Couldn't add snapshot.");
+				log_error("Couldn't add snapshot.");
 				return 0;
 			}
 		}

@@ -1001,7 +1001,7 @@ static int _create_pv_entry(struct dm_pool *mem, struct pv_list *pvl,
 
 	if (allocatable_only &&
 	    (pvl->pv->pe_count == pvl->pv->pe_alloc_count)) {
-		log_err("No free extents on physical volume \"%s\"", pvname);
+		log_error("No free extents on physical volume \"%s\"", pvname);
 		return 1;
 	}
 
@@ -1013,7 +1013,7 @@ static int _create_pv_entry(struct dm_pool *mem, struct pv_list *pvl,
 	
 	if (!new_pvl) {
 		if (!(new_pvl = dm_pool_alloc(mem, sizeof(*new_pvl)))) {
-			log_err("Unable to allocate physical volume list.");
+			log_error("Unable to allocate physical volume list.");
 			return 0;
 		}
 
@@ -1087,8 +1087,8 @@ struct dm_list *create_pv_list(struct dm_pool *mem, struct volume_group *vg, int
 		}
 
 		if (!(pvl = find_pv_in_vg(vg, pvname))) {
-			log_err("Physical Volume \"%s\" not found in "
-				"Volume Group \"%s\"", pvname, vg->name);
+			log_error("Physical Volume \"%s\" not found in "
+				  "Volume Group \"%s\"", pvname, vg->name);
 			return NULL;
 		}
 		if (!_create_pv_entry(mem, pvl, colon, allocatable_only, r))

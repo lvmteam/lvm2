@@ -26,8 +26,8 @@
 
 static void _not_supported(const char *op)
 {
-	log_err("The '%s' operation is not supported for the lvm1 labeller.",
-		op);
+	log_error("The '%s' operation is not supported for the lvm1 labeller.",
+		  op);
 }
 
 static int _lvm1_can_handle(struct labeller *l __attribute((unused)), void *buf, uint64_t sector)
@@ -119,7 +119,7 @@ struct labeller *lvm1_labeller_create(struct format_type *fmt)
 	struct labeller *l;
 
 	if (!(l = dm_malloc(sizeof(*l)))) {
-		log_err("Couldn't allocate labeller object.");
+		log_error("Couldn't allocate labeller object.");
 		return NULL;
 	}
 

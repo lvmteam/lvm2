@@ -799,8 +799,8 @@ static struct volume_group *_vg_read_file_name(struct format_instance *fid,
 	 */
 	if (vgname && strcmp(vgname, vg->name)) {
 		dm_pool_free(fid->fmt->cmd->mem, vg);
-		log_err("'%s' does not contain volume group '%s'.",
-			read_path, vgname);
+		log_error("'%s' does not contain volume group '%s'.",
+			  read_path, vgname);
 		return NULL;
 	} else
 		log_debug("Read volume group %s from %s", vg->name, read_path);
@@ -858,7 +858,7 @@ static int _vg_write_file(struct format_instance *fid __attribute((unused)),
 
 	if (!create_temp_name(temp_dir, temp_file, sizeof(temp_file), &fd,
 			      &vg->cmd->rand_seed)) {
-		log_err("Couldn't create temporary text file name.");
+		log_error("Couldn't create temporary text file name.");
 		return 0;
 	}
 
@@ -1860,7 +1860,7 @@ void *create_text_context(struct cmd_context *cmd, const char *path,
       bad:
 	dm_pool_free(cmd->mem, tc);
 
-	log_err("Couldn't allocate text format context object.");
+	log_error("Couldn't allocate text format context object.");
 	return NULL;
 }
 
@@ -1936,9 +1936,10 @@ static int _get_config_disk_area(struct cmd_context *cmd,
 		char buffer[64] __attribute((aligned(8)));
 
 		if (!id_write_format(&id, buffer, sizeof(buffer)))
-			log_err("Couldn't find device.");
+			log_error("Couldn't find device.");
 		else
-			log_err("Couldn't find device with uuid '%s'.", buffer);
+			log_error("Couldn't find device with uuid '%s'.",
+				  buffer);
 
 		return 0;
 	}

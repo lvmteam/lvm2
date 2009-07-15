@@ -625,7 +625,7 @@ static int _write_pvd(struct disk_list *data)
 	   happy (idea from AED) */
 	buf = dm_malloc(size);
 	if (!buf) {
-		log_err("Couldn't allocate temporary PV buffer.");
+		log_error("Couldn't allocate temporary PV buffer.");
 		return 0;
 	}
 

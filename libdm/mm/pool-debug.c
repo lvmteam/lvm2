@@ -149,12 +149,12 @@ static struct block *_new_block(size_t s, unsigned alignment)
 	assert(alignment == DEFAULT_ALIGNMENT);
 
 	if (!b) {
-		log_err("Out of memory");
+		log_error("Out of memory");
 		return NULL;
 	}
 
 	if (!(b->data = dm_malloc(s))) {
-		log_err("Out of memory");
+		log_error("Out of memory");
 		dm_free(b);
 		return NULL;
 	}
@@ -237,7 +237,7 @@ int dm_pool_grow_object(struct dm_pool *p, const void *extra, size_t delta)
 		new_size = delta;
 
 	if (!(new = _new_block(new_size, DEFAULT_ALIGNMENT))) {
-		log_err("Couldn't extend object.");
+		log_error("Couldn't extend object.");
 		return 0;
 	}
 

@@ -955,7 +955,7 @@ static const char *_copy_command_line(struct cmd_context *cmd, int argc, char **
 	return dm_pool_end_object(cmd->mem);
 
       bad:
-	log_err("Couldn't copy command line.");
+	log_error("Couldn't copy command line.");
 	dm_pool_abandon_object(cmd->mem);
 	return NULL;
 }

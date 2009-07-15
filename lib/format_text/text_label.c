@@ -343,7 +343,7 @@ struct labeller *text_labeller_create(const struct format_type *fmt)
 	struct labeller *l;
 
 	if (!(l = dm_malloc(sizeof(*l)))) {
-		log_err("Couldn't allocate labeller object.");
+		log_error("Couldn't allocate labeller object.");
 		return NULL;
 	}
 

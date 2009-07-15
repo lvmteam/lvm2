@@ -298,19 +298,19 @@ static int _insert_dev(const char *path, dev_t d)
 			return_0;
 
 		if (!(btree_insert(_cache.devices, (uint32_t) d, dev))) {
-			log_err("Couldn't insert device into binary tree.");
+			log_error("Couldn't insert device into binary tree.");
 			_free(dev);
 			return 0;
 		}
 	}
 
 	if (!loopfile && !_add_alias(dev, path)) {
-		log_err("Couldn't add alias to dev cache.");
+		log_error("Couldn't add alias to dev cache.");
 		return 0;
 	}
 
 	if (!dm_hash_insert(_cache.names, path, dev)) {
-		log_err("Couldn't add name to hash in dev cache.");
+		log_error("Couldn't add name to hash in dev cache.");
 		return 0;
 	}
 
@@ -541,7 +541,7 @@ int dev_cache_init(struct cmd_context *cmd)
 	}
 
 	if (!(_cache.devices = btree_create(_cache.mem))) {
-		log_err("Couldn't create binary tree for dev-cache.");
+		log_error("Couldn't create binary tree for dev-cache.");
 		goto bad;
 	}
 
@@ -561,7 +561,7 @@ int dev_cache_init(struct cmd_context *cmd)
 static void _check_closed(struct device *dev)
 {
 	if (dev->fd >= 0)
-		log_err("Device '%s' has been left open.", dev_name(dev));
+		log_error("Device '%s' has been left open.", dev_name(dev));
 }
 
 static void _check_for_open_devices(void)
