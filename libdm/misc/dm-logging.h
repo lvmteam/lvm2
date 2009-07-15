@@ -21,13 +21,15 @@
 extern dm_log_fn dm_log;
 extern dm_log_with_errno_fn dm_log_with_errno;
 
-#define LOG_LINE(l, x...) \
+#define LOG_MESG(l, f, ln, x...) \
 	do { \
 		if (dm_log_is_non_default()) \
-			dm_log(l, __FILE__, __LINE__, ## x); \
+			dm_log(l, f, ln, ## x); \
 		else \
-			dm_log_with_errno(l, __FILE__, __LINE__, 0, ## x); \
+			dm_log_with_errno(l, f, ln, 0, ## x); \
 	} while (0)
+
+#define LOG_LINE(l, x...) LOG_MESG(l, __FILE__, __LINE__, ## x)
 
 #include "log.h"
 

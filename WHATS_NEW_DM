@@ -1,6 +1,7 @@
 Version 1.02.34 - 15th July 2009
 ================================
-  Rename plog macro to LOG_LINE and use in dm_dump_memory_debug.
+  Use _exit() not exit() after forking to avoid flushing libc buffers twice.
+  Rename plog macro to LOG_LINE & add LOG_MESG variant for dm_dump_memory_debug.
   Change plog to use dm_log_with_errno unless deprecated dm_log_init was used.
   Add dm_log_with_errno and dm_log_with_errno_init, deprecating the old fns.
   Fix whitespace in linear target line to fix identical table line detection.
