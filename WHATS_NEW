@@ -1,4 +1,4 @@
-Version 2.02.49 - 
+Version 2.02.49 - 15th July 2009
 ================================
   Fix vgck and vgremove segfault if non-existent vg given.
   Enable use of new multi-segment registration for static registration too.
