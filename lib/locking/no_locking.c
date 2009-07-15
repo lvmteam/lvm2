@@ -70,7 +70,7 @@ static int _readonly_lock_resource(struct cmd_context *cmd,
 				   const char *resource,
 				   uint32_t flags)
 {
-	if (flags & LCK_TYPE_MASK == LCK_WRITE) {
+	if ((flags & LCK_TYPE_MASK) == LCK_WRITE) {
 		log_error("Write locks are prohibited with --ignorelockingfailure.");
 		return 0;
 	}
