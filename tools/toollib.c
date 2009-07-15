@@ -431,6 +431,9 @@ static int _process_one_vg(struct cmd_context *cmd, const char *vg_name,
 	log_verbose("Finding volume group \"%s\"", vg_name);
 
 	vg = vg_read(cmd, vg_name, vgid, flags);
+	if (vg_read_error(vg) == FAILED_ALLOCATION ||
+	    vg_read_error(vg) == FAILED_NOTFOUND)
+		return ECMD_FAILED;
 
 	if (!dm_list_empty(tags)) {
 		/* Only process if a tag matches or it's on arg_vgnames */
