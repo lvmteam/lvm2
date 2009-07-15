@@ -732,6 +732,7 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	return process_each_lv(cmd, argc, argv, READ_FOR_UPDATE, NULL,
+	return process_each_lv(cmd, argc, argv,
+			       avail_only ? 0 : READ_FOR_UPDATE, NULL,
 			       &lvchange_single);
 }
