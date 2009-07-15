@@ -2940,6 +2940,14 @@ static vg_t *_vg_lock_and_read(struct cmd_context *cmd, const char *vg_name,
 		}
 	}
 
+	if (!cmd->handles_missing_pvs && vg_missing_pv_count(vg) &&
+	    (lock_flags & LCK_WRITE)) {
+		log_error("Cannot change VG %s while PVs are missing!",
+			  vg->name);
+		failure |= FAILED_INCONSISTENT; /* FIXME new failure code here? */
+		goto_bad;
+	}
+
 	failure |= _vg_bad_status_bits(vg, status_flags);
 	if (failure)
 		goto_bad;

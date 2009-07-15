@@ -126,6 +126,12 @@ static int _vgchange_available(struct cmd_context *cmd, struct volume_group *vg)
 	int available;
 	int activate = 1;
 
+	/*
+	 * Safe, since we never write out new metadata here. Required for
+	 * partial activation to work.
+	 */
+	cmd->handles_missing_pvs = 1;
+
 	available = arg_uint_value(cmd, available_ARG, 0);
 
 	if ((available == CHANGE_AN) || (available == CHANGE_ALN))

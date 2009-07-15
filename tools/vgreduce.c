@@ -510,8 +510,10 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 
 	log_verbose("Finding volume group \"%s\"", vg_name);
 
-	if (repairing)
+	if (repairing) {
 		init_ignore_suspended_devices(1);
+		cmd->handles_missing_pvs = 1;
+	}
 
 	vg = vg_read_for_update(cmd, vg_name, NULL, READ_ALLOW_EXPORTED);
 	if (vg_read_error(vg) == FAILED_ALLOCATION ||

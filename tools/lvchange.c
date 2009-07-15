@@ -696,14 +696,20 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(cmd, ignorelockingfailure_ARG) &&
-	    (arg_count(cmd, contiguous_ARG) || arg_count(cmd, permission_ARG) ||
+	int avail_only =
+	    !(arg_count(cmd, contiguous_ARG) || arg_count(cmd, permission_ARG) ||
 	     arg_count(cmd, readahead_ARG) || arg_count(cmd, persistent_ARG) ||
 	     arg_count(cmd, addtag_ARG) || arg_count(cmd, deltag_ARG) ||
-	     arg_count(cmd, refresh_ARG) || arg_count(cmd, alloc_ARG))) {
+	     arg_count(cmd, refresh_ARG) || arg_count(cmd, alloc_ARG) ||
+	     arg_count(cmd, resync_ARG));
+
+	if (arg_count(cmd, ignorelockingfailure_ARG) && !avail_only) {
 		log_error("Only -a permitted with --ignorelockingfailure");
 		return EINVALID_CMD_LINE;
 	}
+
+	if (avail_only)
+		cmd->handles_missing_pvs = 1;
 
 	if (!argc) {
 		log_error("Please give logical volume path(s)");

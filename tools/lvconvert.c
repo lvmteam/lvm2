@@ -929,8 +929,10 @@ int lvconvert(struct cmd_context * cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(cmd, repair_ARG))
+	if (arg_count(cmd, repair_ARG)) {
 		init_ignore_suspended_devices(1);
+		cmd->handles_missing_pvs = 1;
+	}
 
 	log_verbose("Checking for existing volume group \"%s\"", lp.vg_name);
 
