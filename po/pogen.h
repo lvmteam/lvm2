@@ -19,8 +19,8 @@
  * different architectures.
  */
 
-#define print_log(level, file, line, format, args...) print_log(format, args)
+#define print_log(level, dm_errno, file, line, format, args...) print_log(format, args)
 #define dm_log(level, file, line, format, args...) dm_log(format, args)
-#define dm_log_with_errno(level, file, line, format, dm_errno, args...) \
-    dm_log(format, args)
+#define dm_log_with_errno(level, dm_errno, file, line, format, args...) \
+    dm_log(level, file, line, format, args)
 

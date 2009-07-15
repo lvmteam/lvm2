@@ -714,7 +714,7 @@ static void *get_initial_state()
 	return NULL;
 }
 
-static void lvm2_log_fn(int level, const char *file, int line,
+static void lvm2_log_fn(int level, const char *file, int line, int dm_errno,
 			const char *message)
 {
 
@@ -723,7 +723,7 @@ static void lvm2_log_fn(int level, const char *file, int line,
  	   We need to NULL the function ptr otherwise it will just call
 	   back into here! */
 	init_log_fn(NULL);
-	print_log(level, file, line, "%s", message);
+	print_log(level, file, line, dm_errno, "%s", message);
 	init_log_fn(lvm2_log_fn);
 
 	/*

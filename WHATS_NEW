@@ -1,5 +1,6 @@
 Version 2.02.50 - 
 ================================
+  Store any errno and error messages issued while processing each command.
   Use log_error macro consistently throughout in place of log_err.
 
 Version 2.02.49 - 15th July 2009
