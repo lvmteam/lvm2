@@ -999,8 +999,8 @@ static int _init_backup(struct cmd_context *cmd)
 	if (dm_snprintf
 	    (default_dir, sizeof(default_dir), "%s/%s", cmd->system_dir,
 	     DEFAULT_ARCHIVE_SUBDIR) == -1) {
-		log_err("Couldn't create default archive path '%s/%s'.",
-			cmd->system_dir, DEFAULT_ARCHIVE_SUBDIR);
+		log_error("Couldn't create default archive path '%s/%s'.",
+			  cmd->system_dir, DEFAULT_ARCHIVE_SUBDIR);
 		return 0;
 	}
 
@@ -1021,8 +1021,8 @@ static int _init_backup(struct cmd_context *cmd)
 	if (dm_snprintf
 	    (default_dir, sizeof(default_dir), "%s/%s", cmd->system_dir,
 	     DEFAULT_BACKUP_SUBDIR) == -1) {
-		log_err("Couldn't create default backup path '%s/%s'.",
-			cmd->system_dir, DEFAULT_BACKUP_SUBDIR);
+		log_error("Couldn't create default backup path '%s/%s'.",
+			  cmd->system_dir, DEFAULT_BACKUP_SUBDIR);
 		return 0;
 	}
 

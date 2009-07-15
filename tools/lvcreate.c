@@ -68,16 +68,16 @@ static int _lvcreate_name_params(struct lvcreate_params *lp,
 
 	if (lp->snapshot && !arg_count(cmd, virtualsize_ARG)) {
 		if (!argc) {
-			log_err("Please specify a logical volume to act as "
-				"the snapshot origin.");
+			log_error("Please specify a logical volume to act as "
+				  "the snapshot origin.");
 			return 0;
 		}
 
 		lp->origin = argv[0];
 		(*pargv)++, (*pargc)--;
 		if (!(lp->vg_name = extract_vgname(cmd, lp->origin))) {
-			log_err("The origin name should include the "
-				"volume group.");
+			log_error("The origin name should include the "
+				  "volume group.");
 			return 0;
 		}
 
@@ -92,7 +92,7 @@ static int _lvcreate_name_params(struct lvcreate_params *lp,
 		 */
 		if (!argc) {
 			if (!(lp->vg_name = extract_vgname(cmd, lp->lv_name))) {
-				log_err("Please provide a volume group name");
+				log_error("Please provide a volume group name");
 				return 0;
 			}
 

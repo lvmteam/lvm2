@@ -26,7 +26,7 @@ int vgcfgrestore(struct cmd_context *cmd, int argc, char **argv)
 			return ECMD_FAILED;
 		}
 	} else if (!(arg_count(cmd, list_ARG) && arg_count(cmd, file_ARG))) {
-		log_err("Please specify a *single* volume group to restore.");
+		log_error("Please specify a *single* volume group to restore.");
 		return ECMD_FAILED;
 	}
 
@@ -60,7 +60,7 @@ int vgcfgrestore(struct cmd_context *cmd, int argc, char **argv)
 	      backup_restore(cmd, vg_name))) {
 		unlock_vg(cmd, vg_name);
 		unlock_vg(cmd, VG_ORPHANS);
-		log_err("Restore failed.");
+		log_error("Restore failed.");
 		return ECMD_FAILED;
 	}
 

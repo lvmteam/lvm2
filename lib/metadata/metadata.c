@@ -636,7 +636,8 @@ vg_t *vg_create(struct cmd_context *cmd, const char *vg_name)
 		goto_bad;
 
 	if (!id_create(&vg->id)) {
-		log_err("Couldn't create uuid for volume group '%s'.", vg_name);
+		log_error("Couldn't create uuid for volume group '%s'.",
+			  vg_name);
 		goto bad;
 	}
 

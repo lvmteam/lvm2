@@ -304,7 +304,7 @@ int label_write(struct device *dev, struct label *label)
 	int r = 1;
 
 	if (!label->labeller->ops->write) {
-		log_err("Label handler does not support label writes");
+		log_error("Label handler does not support label writes");
 		return 0;
 	}
 

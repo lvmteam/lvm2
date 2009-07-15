@@ -139,7 +139,7 @@ static struct dm_list *_scan_archive(struct dm_pool *mem,
 
 	/* Sort fails beyond 5-digit indexes */
 	if ((count = scandir(dir, &dirent, NULL, alphasort)) < 0) {
-		log_err("Couldn't scan the archive directory (%s).", dir);
+		log_error("Couldn't scan the archive directory (%s).", dir);
 		return 0;
 	}
 
@@ -164,7 +164,7 @@ static struct dm_list *_scan_archive(struct dm_pool *mem,
 		 * Create a new archive_file.
 		 */
 		if (!(af = dm_pool_alloc(mem, sizeof(*af)))) {
-			log_err("Couldn't create new archive file.");
+			log_error("Couldn't create new archive file.");
 			results = NULL;
 			goto out;
 		}
@@ -238,12 +238,12 @@ int archive_vg(struct volume_group *vg,
 	 */
 	if (!create_temp_name(dir, temp_file, sizeof(temp_file), &fd,
 			      &vg->cmd->rand_seed)) {
-		log_err("Couldn't create temporary archive name.");
+		log_error("Couldn't create temporary archive name.");
 		return 0;
 	}
 
 	if (!(fp = fdopen(fd, "w"))) {
-		log_err("Couldn't create FILE object for archive.");
+		log_error("Couldn't create FILE object for archive.");
 		if (close(fd))
 			log_sys_error("close", temp_file);
 		return 0;
@@ -356,7 +356,7 @@ int archive_list_file(struct cmd_context *cmd, const char *file)
 	af.path = (char *)file;
 
 	if (!path_exists(af.path)) {
-		log_err("Archive file %s not found.", af.path);
+		log_error("Archive file %s not found.", af.path);
 		return 0;
 	}
 

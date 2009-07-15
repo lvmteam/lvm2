@@ -94,7 +94,7 @@ int vg_add_snapshot(struct logical_volume *origin,
 	 * Is the cow device already being used ?
 	 */
 	if (lv_is_cow(cow)) {
-		log_err("'%s' is already in use as a snapshot.", cow->name);
+		log_error("'%s' is already in use as a snapshot.", cow->name);
 		return 0;
 	}
 

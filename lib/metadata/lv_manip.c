@@ -1237,7 +1237,7 @@ static int _allocate(struct alloc_handle *ah,
 
 	/* Allocate an array of pv_areas to hold the largest space on each PV */
 	if (!(areas = dm_malloc(sizeof(*areas) * areas_size))) {
-		log_err("Couldn't allocate areas array.");
+		log_error("Couldn't allocate areas array.");
 		return 0;
 	}
 
@@ -1375,8 +1375,8 @@ int lv_add_segment(struct alloc_handle *ah,
 		return_0;
 
 	if ((segtype->flags & SEG_CAN_SPLIT) && !lv_merge_segments(lv)) {
-		log_err("Couldn't merge segments after extending "
-			"logical volume.");
+		log_error("Couldn't merge segments after extending "
+			  "logical volume.");
 		return 0;
 	}
 
