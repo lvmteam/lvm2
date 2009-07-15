@@ -2897,7 +2897,8 @@ static vg_t *_vg_lock_and_read(struct cmd_context *cmd, const char *vg_name,
 	lock_name = is_orphan_vg(vg_name) ? VG_ORPHANS : vg_name;
 	already_locked = vgname_is_locked(lock_name);
 
-	if (!already_locked && !lock_vol(cmd, lock_name, lock_flags)) {
+	if (!already_locked && !(misc_flags & READ_WITHOUT_LOCK) &&
+	    !lock_vol(cmd, lock_name, lock_flags)) {
 		log_error("Can't get lock for %s", vg_name);
 		return _vg_make_handle(cmd, vg, FAILED_LOCKING);
 	}
@@ -2953,7 +2954,7 @@ static vg_t *_vg_lock_and_read(struct cmd_context *cmd, const char *vg_name,
 	return _vg_make_handle(cmd, vg, failure);
 
 bad:
-	if (!already_locked)
+	if (!already_locked && !(misc_flags & READ_WITHOUT_LOCK))
 		unlock_vg(cmd, lock_name);
 
 	return _vg_make_handle(cmd, vg, failure);

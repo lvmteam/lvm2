@@ -615,7 +615,7 @@ static int _process_all_devs(struct cmd_context *cmd, void *handle,
  * This can pause alongide pvscan or vgscan process for a while.
  */
 int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
-		    struct volume_group *vg, uint32_t lock_type,
+		    struct volume_group *vg, uint32_t flags,
 		    int scan_label_only, void *handle,
 		    int (*process_single) (struct cmd_context * cmd,
 					   struct volume_group * vg,
@@ -625,7 +625,7 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 	int opt = 0;
 	int ret_max = ECMD_PROCESSED;
 	int ret = 0;
-	int lock_global = lock_type == LCK_VG_READ;
+	int lock_global = !(flags & READ_WITHOUT_LOCK) && !(flags & READ_FOR_UPDATE);
 
 	struct pv_list *pvl;
 	struct physical_volume *pv;
@@ -633,12 +633,11 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 	struct dm_list tags;
 	struct str_list *sll;
 	char *tagname;
-	int consistent = 1;
 	int scanned = 0;
 
 	dm_list_init(&tags);
 
-	if (lock_global && !lock_vol(cmd, VG_GLOBAL, lock_type)) {
+	if (lock_global && !lock_vol(cmd, VG_GLOBAL, LCK_READ)) {
 		log_error("Unable to obtain global lock.");
 		return ECMD_FAILED;
 	}
@@ -719,24 +718,9 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 		if (!dm_list_empty(&tags) && (vgnames = get_vgnames(cmd, 0)) &&
 			   !dm_list_empty(vgnames)) {
 			dm_list_iterate_items(sll, vgnames) {
-				if (!lock_vol(cmd, sll->str, lock_type)) {
-					log_error("Can't lock %s: skipping", sll->str);
+				vg = vg_read(cmd, sll->str, NULL, flags);
+				if (vg_read_error(vg)) {
 					ret_max = ECMD_FAILED;
-					continue;
-				}
-				if (!(vg = vg_read_internal(cmd, sll->str, NULL, &consistent))) {
-					log_error("Volume group \"%s\" not found", sll->str);
-					unlock_vg(cmd, sll->str);
-					ret_max = ECMD_FAILED;
-					continue;
-				}
-				if (!consistent) {
-					unlock_and_release_vg(cmd, vg, sll->str);
-					continue;
-				}
-
-				if (!vg_check_status(vg, CLUSTERED)) {
-					unlock_and_release_vg(cmd, vg, sll->str);
 					continue;
 				}
 
