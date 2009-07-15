@@ -31,7 +31,6 @@ static int _trust_cache = 0; /* Don't scan when incomplete VGs encountered */
 static int _debug_level = 0;
 static int _log_cmd_name = 0;
 static int _ignorelockingfailure = 0;
-static int _lockingfailed = 0;
 static int _security_level = SECURITY_LEVEL;
 static char _cmd_name[30] = "";
 static int _mirror_in_sync = 0;
@@ -75,11 +74,6 @@ void init_trust_cache(int trustcache)
 void init_ignorelockingfailure(int level)
 {
 	_ignorelockingfailure = level;
-}
-
-void init_lockingfailed(int level)
-{
-	_lockingfailed = level;
 }
 
 void init_security_level(int level)
@@ -159,11 +153,6 @@ int full_scan_done()
 int trust_cache()
 {
 	return _trust_cache;
-}
-
-int lockingfailed()
-{
-	return _lockingfailed;
 }
 
 int ignorelockingfailure()

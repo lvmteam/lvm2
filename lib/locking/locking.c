@@ -215,8 +215,6 @@ static void _update_vg_lock_count(const char *resource, uint32_t flags)
  */
 int init_locking(int type, struct cmd_context *cmd)
 {
-	init_lockingfailed(0);
-
 	if (type < 0)
 		type = find_config_tree_int(cmd, "global/locking_type", 1);
 		
@@ -279,9 +277,7 @@ int init_locking(int type, struct cmd_context *cmd)
 
 	/* FIXME Ensure only read ops are permitted */
 	log_verbose("Locking disabled - only read operations permitted.");
-
-	init_no_locking(&_locking, cmd);
-	init_lockingfailed(1);
+	init_readonly_locking(&_locking, cmd);
 
 	return 1;
 }

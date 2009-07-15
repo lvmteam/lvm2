@@ -119,12 +119,6 @@ static int lvchange_availability(struct cmd_context *cmd,
 		if (!deactivate_lv(cmd, lv))
 			return_0;
 	} else {
-		if (lockingfailed() && (vg_is_clustered(lv->vg))) {
-			log_verbose("Locking failed: ignoring clustered "
-				    "logical volume %s", lv->name);
-			return 0;
-		}
-
 		if (lv_is_origin(lv) || (activate == CHANGE_AE)) {
 			log_verbose("Activating logical volume \"%s\" "
 				    "exclusively", lv->name);
