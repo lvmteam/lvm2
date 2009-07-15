@@ -54,7 +54,7 @@ static int vg_backup_single(struct cmd_context *cmd, const char *vg_name,
 	char **last_filename = (char **)handle;
 	char *filename;
 
-	if (vg_read_error(vg) && !vg_read_error(vg) == FAILED_INCONSISTENT)
+	if (vg_read_error(vg) && (vg_read_error(vg) != FAILED_INCONSISTENT))
 		return ECMD_FAILED;
 
 	if (arg_count(cmd, file_ARG)) {
