@@ -40,7 +40,7 @@ struct locking_type {
  */
 int init_no_locking(struct locking_type *locking, struct cmd_context *cmd);
 
-int init_boottime_locking(struct locking_type *locking, struct cmd_context *cmd);
+int init_readonly_locking(struct locking_type *locking, struct cmd_context *cmd);
 
 int init_file_locking(struct locking_type *locking, struct cmd_context *cmd);
 
