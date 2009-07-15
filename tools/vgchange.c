@@ -144,14 +144,8 @@ static int _vgchange_available(struct cmd_context *cmd, struct volume_group *vg)
 		return ECMD_FAILED;
 	}
 
-	if (activate && lockingfailed() && (vg_is_clustered(vg))) {
-		log_error("Locking inactive: ignoring clustered "
-			  "volume group %s", vg->name);
-		return ECMD_FAILED;
-	}
-
 	/* FIXME Move into library where clvmd can use it */
-	if (activate && !lockingfailed())
+	if (activate)
 		check_current_backup(vg);
 
 	if (activate && (active = lvs_in_vg_activated(vg))) {

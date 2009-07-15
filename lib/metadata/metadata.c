@@ -2772,8 +2772,7 @@ static uint32_t _vg_bad_status_bits(const struct volume_group *vg,
 	uint32_t failure = 0;
 
 	if ((status & CLUSTERED) &&
-	    (vg_is_clustered(vg)) && !locking_is_clustered() &&
-	    !lockingfailed()) {
+	    (vg_is_clustered(vg)) && !locking_is_clustered()) {
 		log_error("Skipping clustered volume group %s", vg->name);
 		/* Return because other flags are considered undefined. */
 		return FAILED_CLUSTERED;
@@ -2922,8 +2921,7 @@ static vg_t *_vg_lock_and_read(struct cmd_context *cmd, const char *vg_name,
 		goto_bad;
 	}
 
-	if (vg_is_clustered(vg) && !locking_is_clustered() &&
-	    !lockingfailed()) {
+	if (vg_is_clustered(vg) && !locking_is_clustered()) {
 		log_error("Skipping clustered volume group %s", vg->name);
 		failure |= FAILED_CLUSTERED;
 		goto_bad;
