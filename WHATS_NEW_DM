@@ -1,3 +1,6 @@
+Version 1.02.35 - 
+================================
+
 Version 1.02.34 - 15th July 2009
 ================================
   Use _exit() not exit() after forking to avoid flushing libc buffers twice.
