@@ -113,6 +113,6 @@ int pvdisplay(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	return process_each_pv(cmd, argc, argv, NULL, LCK_VG_READ, 0, NULL,
+	return process_each_pv(cmd, argc, argv, NULL, 0, 0, NULL,
 			       _pvdisplay_single);
 }
