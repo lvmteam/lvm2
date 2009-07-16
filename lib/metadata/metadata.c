@@ -741,11 +741,8 @@ int vg_set_extent_size(vg_t *vg, uint32_t new_size)
 		return 0;
 	}
 
-	if (new_size == vg->extent_size) {
-		log_verbose("Physical extent size of VG %s is already %s",
-			  vg->name, display_size(vg->cmd, (uint64_t) new_size));
+	if (new_size == vg->extent_size)
 		return 1;
-	}
 
 	if (new_size & (new_size - 1)) {
 		log_error("Physical extent size must be a power of 2.");
@@ -932,11 +929,9 @@ int vg_set_alloc_policy(vg_t *vg, alloc_policy_t alloc)
 		return 0;
 	}
 
-	if (alloc == vg->alloc) {
-		log_verbose("Volume group allocation policy is already %s",
-			  get_alloc_string(vg->alloc));
+	if (alloc == vg->alloc)
 		return 1;
-	}
+
 	vg->alloc = alloc;
 	return 1;
 }
