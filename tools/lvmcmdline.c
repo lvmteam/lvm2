@@ -1181,6 +1181,11 @@ struct cmd_context *init_lvm(void)
 	if (!(cmd = create_toolcontext(0, NULL)))
 		return_NULL;
 
+	if (stored_errno()) {
+		destroy_toolcontext(cmd);
+		return_NULL;
+	}
+
 	return cmd;
 }
 

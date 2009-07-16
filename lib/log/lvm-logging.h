@@ -20,7 +20,8 @@ void print_log(int level, const char *file, int line, int dm_errno,
 	       const char *format, ...)
     __attribute__ ((format(printf, 5, 6)));
 
-#define LOG_LINE(l, x...) print_log(l, __FILE__, __LINE__ , 0, ## x)
+#define EUNCLASSIFIED -1	/* Generic error code */
+#define LOG_LINE(l, x...) print_log(l, __FILE__, __LINE__ , EUNCLASSIFIED, ## x)
 
 #include "log.h"
 
@@ -44,8 +45,8 @@ void fin_syslog(void);
 
 int error_message_produced(void);
 void reset_lvm_errno(int store_errmsg);
-int lvm_errno(void);
-const char *lvm_errmsg(void);
+int stored_errno(void);
+const char *stored_errmsg(void);
 
 /* Suppress messages to stdout/stderr (1) or everywhere (2) */
 /* Returns previous setting */

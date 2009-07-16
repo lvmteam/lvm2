@@ -792,6 +792,11 @@ int init_lvm(int using_gulm)
 		return 0;
 	}
 
+	if (stored_errno()) {
+		destroy_toolcontext(cmd);
+		return 0;
+	}
+
 	/* Use LOG_DAEMON for syslog messages instead of LOG_USER */
 	init_syslog(LOG_DAEMON);
 	openlog("clvmd", LOG_PID, LOG_DAEMON);

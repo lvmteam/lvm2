@@ -29,6 +29,10 @@ lvm_t lvm_create(const char *system_dir)
 	cmd = create_toolcontext(1, system_dir);
 	if (!cmd)
 		return NULL;
+
+	if (stored_errno())
+		return (lvm_t) cmd;
+
 	/*
 	 * FIXME: if an non memory error occured, return the cmd (maybe some
 	 * cleanup needed).
@@ -65,4 +69,14 @@ int lvm_reload_config(lvm_t libh)
 {
 	/* FIXME: re-init locking needed here? */
 	return refresh_toolcontext((struct cmd_context *)libh);
+}
+
+int lvm_errno(lvm_t libh)
+{
+	return stored_errno();
+}
+
+const char *lvm_errmsg(lvm_t libh)
+{
+	return stored_errmsg();
 }

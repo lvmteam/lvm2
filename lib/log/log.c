@@ -152,12 +152,12 @@ void reset_lvm_errno(int store_errmsg)
 	_store_errmsg = store_errmsg;
 }
 
-int lvm_errno(void)
+int stored_errno(void)
 {
 	return _lvm_errno;
 }
 
-const char *lvm_errmsg(void)
+const char *stored_errmsg(void)
 {
 	return _lvm_errmsg ? : "";
 }
