@@ -16,6 +16,8 @@
 #ifndef _LVM_LOG_H
 #define _LVM_LOG_H
 
+#include <errno.h>
+
 /*
  * printf()-style macros to use for messages:
  *
@@ -62,6 +64,7 @@
 #define log_verbose(args...) log_notice(args)
 #define log_print(args...) LOG_LINE(_LOG_WARN, args)
 #define log_error(args...) log_err(args)
+#define log_errno(args...) LOG_LINE_WITH_ERRNO(_LOG_ERR, args)
 
 /* System call equivalents */
 #define log_sys_error(x, y) \

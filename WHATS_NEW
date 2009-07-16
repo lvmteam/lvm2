@@ -1,5 +1,6 @@
 Version 2.02.50 - 
 ================================
+  Add log_errno to set a specific errno and replace log_error in due course.
   Add lvm_errno and lvm_errmsg to liblvm to obtain failure information.
   Change create_toolcontext to still return an object if it fails part-way.
   Add EUNCLASSIFIED (-1) as the default LVM errno code.
