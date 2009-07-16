@@ -186,7 +186,7 @@ void print_log(int level, const char *file, int line, int dm_errno,
 	if (dm_errno && !_lvm_errno)
 		_lvm_errno = dm_errno;
 
-	if (_lvm2_log_fn || (_store_errmsg && (level == _LOG_ERR))) {
+	if (_lvm2_log_fn || (_store_errmsg && (level <= _LOG_ERR))) {
 		va_start(ap, format);
 		n = vsnprintf(buf2, sizeof(buf2) - 1, trformat, ap);
 		va_end(ap);
@@ -201,7 +201,7 @@ void print_log(int level, const char *file, int line, int dm_errno,
 		message = &buf2[0];
 	}
 
-	if (_store_errmsg && (level == _LOG_ERR)) {
+	if (_store_errmsg && (level <= _LOG_ERR)) {
 		if (!_lvm_errmsg)
 			_lvm_errmsg = dm_strdup(message);
 		else if ((newbuf = dm_realloc(_lvm_errmsg,

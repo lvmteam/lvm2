@@ -43,6 +43,8 @@
 #include <string.h>		/* strerror() */
 #include <errno.h>
 
+#define EUNCLASSIFIED -1	/* Generic error code */
+
 #define _LOG_STDERR 128 /* force things to go to stderr, even if loglevel
 			   would make them go to stdout */
 #define _LOG_DEBUG 7
@@ -56,8 +58,8 @@
 #define log_info(x...) LOG_LINE(_LOG_INFO, x)
 #define log_notice(x...) LOG_LINE(_LOG_NOTICE, x)
 #define log_warn(x...) LOG_LINE(_LOG_WARN | _LOG_STDERR, x)
-#define log_err(x...) LOG_LINE(_LOG_ERR, x)
-#define log_fatal(x...) LOG_LINE(_LOG_FATAL, x)
+#define log_err(x...) LOG_LINE_WITH_ERRNO(_LOG_ERR, EUNCLASSIFIED, x)
+#define log_fatal(x...) LOG_LINE_WITH_ERRNO(_LOG_FATAL, EUNCLASSIFIED, x)
 
 #define stack log_debug("<backtrace>")	/* Backtrace on error */
 #define log_very_verbose(args...) log_info(args)
