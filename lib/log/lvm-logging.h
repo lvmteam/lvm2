@@ -16,14 +16,12 @@
 #ifndef _LVM_LOGGING_H
 #define _LVM_LOGGING_H
 
-#define EUNCLASSIFIED -1	/* Generic error code */
-
 void print_log(int level, const char *file, int line, int dm_errno,
 	       const char *format, ...)
     __attribute__ ((format(printf, 5, 6)));
 
 #define LOG_LINE(l, x...) \
-    print_log(l, __FILE__, __LINE__ , EUNCLASSIFIED, ## x)
+    print_log(l, __FILE__, __LINE__ , 0, ## x)
 
 #define LOG_LINE_WITH_ERRNO(l, e, x...) \
     print_log(l, __FILE__, __LINE__ , e, ## x)
