@@ -72,6 +72,30 @@ void lvm_destroy(lvm_t libh);
 int lvm_reload_config(lvm_t libh);
 
 /**
+ * Return stored error no describing last LVM API error.
+ *
+ * Users of liblvm should use lvm_errno to determine success or failure
+ * of the last call, unless the API indicates another method of determining
+ * success or failure.
+ *
+ * \param   libh
+ *          Handle obtained from lvm_create.
+ *
+ * \return  An errno value describing the last LVM error.
+ */
+int lvm_errno(lvm_t libh);
+
+/**
+ * Return stored error message describing last LVM error.
+ *
+ * \param   libh
+ *          Handle obtained from lvm_create.
+ *
+ * \return  An error string describing the last LVM error.
+ */
+const char *lvm_errmsg(lvm_t libh);
+
+/**
  * Create a VG with default parameters.
  *
  * This API requires calling lvm_vg_write to commit the change to disk.
