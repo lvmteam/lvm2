@@ -1083,6 +1083,9 @@ struct cmd_context *create_toolcontext(unsigned is_long_lived,
 	dm_list_init(&cmd->tags);
 	dm_list_init(&cmd->config_files);
 
+	/* FIXME Make this configurable? */
+	reset_lvm_errno(1);
+
 	/*
 	 * Environment variable LVM_SYSTEM_DIR overrides this below.
 	 */
@@ -1092,7 +1095,7 @@ struct cmd_context *create_toolcontext(unsigned is_long_lived,
 		strcpy(cmd->system_dir, DEFAULT_SYS_DIR);
 
 	if (!_get_env_vars(cmd))
-		goto error;
+		goto_out;
 
 	/* Create system directory if it doesn't already exist */
 	if (*cmd->system_dir && !dm_create_dir(cmd->system_dir)) {
@@ -1100,58 +1103,58 @@ struct cmd_context *create_toolcontext(unsigned is_long_lived,
 			  "files and internal cache.");
 		log_error("Set environment variable LVM_SYSTEM_DIR to alternative location "
 			  "or empty string.");
-		goto error;
+		goto out;
 	}
 
 	if (!(cmd->libmem = dm_pool_create("library", 4 * 1024))) {
 		log_error("Library memory pool creation failed");
-		goto error;
+		goto out;
 	}
 
 	if (!_init_lvm_conf(cmd))
-		goto error;
+		goto_out;
 
 	_init_logging(cmd);
 
 	if (!_init_hostname(cmd))
-		goto error;
+		goto_out;
 
 	if (!_init_tags(cmd, cmd->cft))
-		goto error;
+		goto_out;
 
 	if (!_init_tag_configs(cmd))
-		goto error;
+		goto_out;
 
 	if (!_merge_config_files(cmd))
-		goto error;
+		goto_out;
 
 	if (!_process_config(cmd))
-		goto error;
+		goto_out;
 
 	if (!_init_dev_cache(cmd))
-		goto error;
+		goto_out;
 
 	if (!_init_filters(cmd, 1))
-		goto error;
+		goto_out;
 
 	if (!(cmd->mem = dm_pool_create("command", 4 * 1024))) {
 		log_error("Command memory pool creation failed");
-		goto error;
+		goto out;
 	}
 
 	memlock_init(cmd);
 
 	if (!_init_formats(cmd))
-		goto error;
+		goto_out;
 
 	if (!init_lvmcache_orphans(cmd))
-		goto error;
+		goto_out;
 
 	if (!_init_segtypes(cmd))
-		goto error;
+		goto_out;
 
 	if (!_init_backup(cmd))
-		goto error;
+		goto_out;
 
 	_init_rand(cmd);
 
@@ -1161,20 +1164,8 @@ struct cmd_context *create_toolcontext(unsigned is_long_lived,
 	cmd->current_settings = cmd->default_settings;
 
 	cmd->config_valid = 1;
-	reset_lvm_errno(1);  /* FIXME Move to top when cmd returned on error */
+out:
 	return cmd;
-
-      error:
-	_destroy_tag_configs(cmd);
-	dev_cache_exit();
-	if (cmd->filter)
-		cmd->filter->destroy(cmd->filter);
-	if (cmd->mem)
-		dm_pool_destroy(cmd->mem);
-	if (cmd->libmem)
-		dm_pool_destroy(cmd->libmem);
-	dm_free(cmd);
-	return NULL;
 }
 
 static void _destroy_formats(struct dm_list *formats)

@@ -1,5 +1,8 @@
 Version 2.02.50 - 
 ================================
+  Add lvm_errno and lvm_errmsg to liblvm to obtain failure information.
+  Change create_toolcontext to still return an object if it fails part-way.
+  Add EUNCLASSIFIED (-1) as the default LVM errno code.
   Store any errno and error messages issued while processing each command.
   Use log_error macro consistently throughout in place of log_err.
 
