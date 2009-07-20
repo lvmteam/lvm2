@@ -139,8 +139,8 @@ static int _md_sysfs_attribute_snprintf(char *path, size_t size,
 	if (!sysfs_dir || !*sysfs_dir)
 		return ret;
 
-	ret = dm_snprintf(path, size, "%s/dev/block/%d:%d/md/%s",
-	      sysfs_dir, MAJOR(dev->dev), MINOR(dev->dev), attribute);
+	ret = dm_snprintf(path, size, "%s/dev/block/%d:%d/md/%s", sysfs_dir,
+			  (int)MAJOR(dev->dev), (int)MINOR(dev->dev), attribute);
 	if (ret < 0) {
 		log_error("dm_snprintf md %s failed", attribute);
 		return ret;
