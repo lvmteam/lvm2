@@ -149,7 +149,7 @@ static int _md_sysfs_attribute_snprintf(char *path, size_t size,
 	if (stat(path, &info) < 0) {
 		/* old sysfs structure */
 		ret = dm_snprintf(path, size, "%s/block/md%d/md/%s",
-				  sysfs_dir, MINOR(dev->dev), attribute);
+				  sysfs_dir, (int)MINOR(dev->dev), attribute);
 		if (ret < 0) {
 			log_error("dm_snprintf old md %s failed", attribute);
 			return ret;
