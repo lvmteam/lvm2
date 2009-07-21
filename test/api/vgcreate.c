@@ -19,12 +19,13 @@
  */
 #include <stdio.h>
 #include <unistd.h>
+#include <inttypes.h>
 #include "lvm.h"
 
 lvm_t handle;
 vg_t *vg;
-char *vg_name = "my_vg";
-char *device = "/dev/loop3";
+const char *vg_name = "my_vg";
+const char *device = "/dev/loop3";
 uint64_t size = 1024;
 
 int main(int argc, char *argv[])
@@ -55,11 +56,11 @@ int main(int argc, char *argv[])
 		goto bad;
 	}
 
-	printf("Setting VG %s extent_size to %d\n", vg_name, size);
+	printf("Setting VG %s extent_size to %"PRIu64"\n", vg_name, size);
 	status = lvm_vg_set_extent_size(vg, size);
 	if (!status) {
 		fprintf(stderr, "Can not set physical extent "
-			"size '%ld' for '%s'\n",
+			"size '%"PRIu64"' for '%s'\n",
 			size, vg_name);
 		goto bad;
 	}
