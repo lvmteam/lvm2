@@ -8,7 +8,7 @@
 #include <linux/connector.h>
 #include <linux/netlink.h>
 
-#include "linux/dm-clog-tfr.h"
+#include "linux/dm-log-userspace.h"
 #include "functions.h"
 #include "cluster.h"
 #include "common.h"
@@ -18,14 +18,14 @@
 
 static int cn_fd;  /* Connector (netlink) socket fd */
 static char recv_buf[2048];
+static char send_buf[2048];
 
 
 /* FIXME: merge this function with kernel_send_helper */
 static int kernel_ack(uint32_t seq, int error)
 {
 	int r;
-	unsigned char buf[sizeof(struct nlmsghdr) + sizeof(struct cn_msg)];
-	struct nlmsghdr *nlh = (struct nlmsghdr *)buf;
+	struct nlmsghdr *nlh = (struct nlmsghdr *)send_buf;
 	struct cn_msg *msg = NLMSG_DATA(nlh);
 
 	if (error < 0) {
@@ -33,7 +33,7 @@ static int kernel_ack(uint32_t seq, int error)
 		return -EINVAL;
 	}
 
-	memset(buf, 0, sizeof(buf));
+	memset(send_buf, 0, sizeof(send_buf));
 
 	nlh->nlmsg_seq = 0;
 	nlh->nlmsg_pid = getpid();
@@ -42,8 +42,8 @@ static int kernel_ack(uint32_t seq, int error)
 	nlh->nlmsg_flags = 0;
 
 	msg->len = 0;
-	msg->id.idx = 0x4;
-	msg->id.val = 0x1;
+	msg->id.idx = CN_IDX_DM;
+	msg->id.val = CN_VAL_DM_USERSPACE_LOG;
 	msg->seq = seq;
 	msg->ack = error;
 
@@ -58,23 +58,24 @@ static int kernel_ack(uint32_t seq, int error)
 
 /*
  * kernel_recv
- * @tfr: the newly allocated request from kernel
+ * @rq: the newly allocated request from kernel
  *
  * Read requests from the kernel and allocate space for the new request.
- * If there is no request from the kernel, *tfr is NULL.
+ * If there is no request from the kernel, *rq is NULL.
  *
  * This function is not thread safe due to returned stack pointer.  In fact,
  * the returned pointer must not be in-use when this function is called again.
  *
  * Returns: 0 on success, -EXXX on error
  */
-static int kernel_recv(struct clog_tfr **tfr)
+static int kernel_recv(struct clog_request **rq)
 {
 	int r = 0;
 	int len;
 	struct cn_msg *msg;
+	struct dm_ulog_request *u_rq;
 
-	*tfr = NULL;
+	*rq = NULL;
 	memset(recv_buf, 0, sizeof(recv_buf));
 
 	len = recv(cn_fd, recv_buf, sizeof(recv_buf), 0);
@@ -99,9 +100,9 @@ static int kernel_recv(struct clog_tfr **tfr)
 			goto fail;
 		}
 
-		if (msg->len > DM_CLOG_TFR_SIZE) {
+		if (msg->len > DM_ULOG_REQUEST_SIZE) {
 			LOG_ERROR("Not enough space to receive kernel request (%d/%d)",
-				  msg->len, DM_CLOG_TFR_SIZE);
+				  msg->len, DM_ULOG_REQUEST_SIZE);
 			r = -EBADE;
 			goto fail;
 		}
@@ -115,10 +116,11 @@ static int kernel_recv(struct clog_tfr **tfr)
 			LOG_ERROR("len = %d, msg->len = %d", len, msg->len);
 
 		msg->data[msg->len] = '\0'; /* Cleaner way to ensure this? */
-		*tfr = (struct clog_tfr *)msg->data;
+		u_rq = (struct dm_ulog_request *)msg->data;
 
-		if (!(*tfr)->request_type) {
-			LOG_DBG("Bad transmission, requesting resend [%u]", msg->seq);
+		if (!u_rq->request_type) {
+			LOG_DBG("Bad transmission, requesting resend [%u]",
+				msg->seq);
 			r = -EAGAIN;
 
 			if (kernel_ack(msg->seq, EAGAIN)) {
@@ -127,6 +129,25 @@ static int kernel_recv(struct clog_tfr **tfr)
 				r = -EBADE;
 			}
 		}
+
+		/*
+		 * Now we've got sizeof(struct cn_msg) + sizeof(struct nlmsghdr)
+		 * worth of space that precede the request structure from the
+		 * kernel.  Since that space isn't going to be used again, we
+		 * can take it for our purposes; rather than allocating a whole
+		 * new structure and doing a memcpy.
+		 *
+		 * We should really make sure 'clog_request' doesn't grow
+		 * beyond what is available to us, but we need only check it
+		 * once... perhaps at compile time?
+		 */
+//		*rq = container_of(u_rq, struct clog_request, u_rq);
+		*rq = (void *)u_rq -
+			(sizeof(struct clog_request) -
+			 sizeof(struct dm_ulog_request));
+
+		/* Clear the wrapper container fields */
+		memset(*rq, 0, (void *)u_rq - (void *)(*rq));
 		break;
 	default:
 		LOG_ERROR("Unknown nlmsg_type");
@@ -135,7 +156,7 @@ static int kernel_recv(struct clog_tfr **tfr)
 
 fail:
 	if (r)
-		*tfr = NULL;
+		*rq = NULL;
 
 	return (r == -EAGAIN) ? 0 : r;
 }
@@ -145,11 +166,10 @@ static int kernel_send_helper(void *data, int out_size)
 	int r;
 	struct nlmsghdr *nlh;
 	struct cn_msg *msg;
-	unsigned char buf[2048];
 
-	memset(buf, 0, sizeof(buf));
+	memset(send_buf, 0, sizeof(send_buf));
 
-	nlh = (struct nlmsghdr *)buf;
+	nlh = (struct nlmsghdr *)send_buf;
 	nlh->nlmsg_seq = 0;  /* FIXME: Is this used? */
 	nlh->nlmsg_pid = getpid();
 	nlh->nlmsg_type = NLMSG_DONE;
@@ -159,8 +179,8 @@ static int kernel_send_helper(void *data, int out_size)
 	msg = NLMSG_DATA(nlh);
 	memcpy(msg->data, data, out_size);
 	msg->len = out_size;
-	msg->id.idx = 0x4;
-	msg->id.val = 0x1;
+	msg->id.idx = CN_IDX_DM;
+	msg->id.val = CN_VAL_DM_USERSPACE_LOG;
 	msg->seq = 0;
 
 	r = send(cn_fd, nlh, NLMSG_LENGTH(out_size + sizeof(struct cn_msg)), 0);
@@ -174,7 +194,7 @@ static int kernel_send_helper(void *data, int out_size)
 /*
  * do_local_work
  *
- * Any processing errors are placed in the 'tfr'
+ * Any processing errors are placed in the 'rq'
  * structure to be reported back to the kernel.
  * It may be pointless for this function to
  * return an int.
@@ -184,73 +204,76 @@ static int kernel_send_helper(void *data, int out_size)
 static int do_local_work(void *data)
 {
 	int r;
-	struct clog_tfr *tfr = NULL;
+	struct clog_request *rq;
+	struct dm_ulog_request *u_rq = NULL;
 
-	r = kernel_recv(&tfr);
+	r = kernel_recv(&rq);
 	if (r)
 		return r;
 
-	if (!tfr)
+	if (!rq)
 		return 0;
 
+	u_rq = &rq->u_rq;
 	LOG_DBG("[%s]  Request from kernel received: [%s/%u]",
-		SHORT_UUID(tfr->uuid), RQ_TYPE(tfr->request_type),
-		tfr->seq);
-	switch (tfr->request_type) {
-	case DM_CLOG_CTR:
-	case DM_CLOG_DTR:
-	case DM_CLOG_IN_SYNC:
-	case DM_CLOG_GET_SYNC_COUNT:
-	case DM_CLOG_STATUS_INFO:
-	case DM_CLOG_STATUS_TABLE:
-	case DM_CLOG_PRESUSPEND:
+		SHORT_UUID(u_rq->uuid), RQ_TYPE(u_rq->request_type),
+		u_rq->seq);
+	switch (u_rq->request_type) {
+	case DM_ULOG_CTR:
+	case DM_ULOG_DTR:
+	case DM_ULOG_GET_REGION_SIZE:
+	case DM_ULOG_IN_SYNC:
+	case DM_ULOG_GET_SYNC_COUNT:
+	case DM_ULOG_STATUS_INFO:
+	case DM_ULOG_STATUS_TABLE:
+	case DM_ULOG_PRESUSPEND:
 		/* We do not specify ourselves as server here */
-		r = do_request(tfr, 0);
+		r = do_request(rq, 0);
 		if (r)
 			LOG_DBG("Returning failed request to kernel [%s]",
-				RQ_TYPE(tfr->request_type));
-		r = kernel_send(tfr);
+				RQ_TYPE(u_rq->request_type));
+		r = kernel_send(u_rq);
 		if (r)
 			LOG_ERROR("Failed to respond to kernel [%s]",
-				  RQ_TYPE(tfr->request_type));
+				  RQ_TYPE(u_rq->request_type));
 			
 		break;
-	case DM_CLOG_RESUME:
+	case DM_ULOG_RESUME:
 		/*
 		 * Resume is a special case that requires a local
 		 * component to join the CPG, and a cluster component
 		 * to handle the request.
 		 */
-		r = local_resume(tfr);
+		r = local_resume(u_rq);
 		if (r) {
 			LOG_DBG("Returning failed request to kernel [%s]",
-				RQ_TYPE(tfr->request_type));
-			r = kernel_send(tfr);
+				RQ_TYPE(u_rq->request_type));
+			r = kernel_send(u_rq);
 			if (r)
 				LOG_ERROR("Failed to respond to kernel [%s]",
-					  RQ_TYPE(tfr->request_type));
+					  RQ_TYPE(u_rq->request_type));
 			break;
 		}
 		/* ELSE, fall through */
-	case DM_CLOG_IS_CLEAN:
-	case DM_CLOG_FLUSH:
-	case DM_CLOG_MARK_REGION:
-	case DM_CLOG_GET_RESYNC_WORK:
-	case DM_CLOG_SET_REGION_SYNC:
-	case DM_CLOG_IS_REMOTE_RECOVERING:
-	case DM_CLOG_POSTSUSPEND:
-		r = cluster_send(tfr);
+	case DM_ULOG_IS_CLEAN:
+	case DM_ULOG_FLUSH:
+	case DM_ULOG_MARK_REGION:
+	case DM_ULOG_GET_RESYNC_WORK:
+	case DM_ULOG_SET_REGION_SYNC:
+	case DM_ULOG_IS_REMOTE_RECOVERING:
+	case DM_ULOG_POSTSUSPEND:
+		r = cluster_send(rq);
 		if (r) {
-			tfr->data_size = 0;
-			tfr->error = r;
-			kernel_send(tfr);
+			u_rq->data_size = 0;
+			u_rq->error = r;
+			kernel_send(u_rq);
 		}
 
 		break;
-	case DM_CLOG_CLEAR_REGION:
-		r = kernel_ack(tfr->seq, 0);
+	case DM_ULOG_CLEAR_REGION:
+		r = kernel_ack(u_rq->seq, 0);
 
-		r = cluster_send(tfr);
+		r = cluster_send(rq);
 		if (r) {
 			/*
 			 * FIXME: store error for delivery on flush
@@ -260,24 +283,24 @@ static int do_local_work(void *data)
 		}
 
 		break;
-	case DM_CLOG_GET_REGION_SIZE:
 	default:
-		LOG_ERROR("Invalid log request received, ignoring.");
+		LOG_ERROR("Invalid log request received (%u), ignoring.",
+			  u_rq->request_type);
 
 		return 0;
 	}
 
-	if (r && !tfr->error)
-		tfr->error = r;
+	if (r && !u_rq->error)
+		u_rq->error = r;
 
 	return r;
 }
 
 /*
  * kernel_send
- * @tfr: result to pass back to kernel
+ * @u_rq: result to pass back to kernel
  *
- * This function returns the tfr structure
+ * This function returns the u_rq structure
  * (containing the results) to the kernel.
  * It then frees the structure.
  *
@@ -288,21 +311,21 @@ static int do_local_work(void *data)
  *
  * Returns: 0 on success, -EXXX on failure
  */
-int kernel_send(struct clog_tfr *tfr)
+int kernel_send(struct dm_ulog_request *u_rq)
 {
 	int r;
 	int size;
 
-	if (!tfr)
+	if (!u_rq)
 		return -EINVAL;
 
-	size = sizeof(struct clog_tfr) + tfr->data_size;
+	size = sizeof(struct dm_ulog_request) + u_rq->data_size;
 
-	if (!tfr->data_size && !tfr->error) {
+	if (!u_rq->data_size && !u_rq->error) {
 		/* An ACK is all that is needed */
 
 		/* FIXME: add ACK code */
-	} else if (size > DM_CLOG_TFR_SIZE) {
+	} else if (size > DM_ULOG_REQUEST_SIZE) {
 		/*
 		 * If we gotten here, we've already overrun
 		 * our allotted space somewhere.
@@ -311,11 +334,11 @@ int kernel_send(struct clog_tfr *tfr)
 		 * is waiting for a response.
 		 */
 		LOG_ERROR("Not enough space to respond to server");
-		tfr->error = -ENOSPC;
-		size = sizeof(struct clog_tfr);
+		u_rq->error = -ENOSPC;
+		size = sizeof(struct dm_ulog_request);
 	}
 
-	r = kernel_send_helper(tfr, size);
+	r = kernel_send_helper(u_rq, size);
 	if (r)
 		LOG_ERROR("Failed to send msg to kernel.");
 
@@ -337,26 +360,26 @@ int init_local(void)
 
 	cn_fd = socket(PF_NETLINK, SOCK_DGRAM, NETLINK_CONNECTOR);
 	if (cn_fd < 0)
-		return EXIT_KERNEL_TFR_SOCKET;
+		return EXIT_KERNEL_SOCKET;
 
 	/* memset to fix valgrind complaint */
 	memset(&addr, 0, sizeof(struct sockaddr_nl));
 
 	addr.nl_family = AF_NETLINK;
-	addr.nl_groups = 0x4;
+	addr.nl_groups = CN_IDX_DM;
 	addr.nl_pid = 0;
 
 	r = bind(cn_fd, (struct sockaddr *) &addr, sizeof(addr));
 	if (r < 0) {
 		close(cn_fd);
-		return EXIT_KERNEL_TFR_BIND;
+		return EXIT_KERNEL_BIND;
 	}
 
 	opt = addr.nl_groups;
 	r = setsockopt(cn_fd, 270, NETLINK_ADD_MEMBERSHIP, &opt, sizeof(opt));
 	if (r) {
 		close(cn_fd);
-		return EXIT_KERNEL_TFR_SETSOCKOPT;
+		return EXIT_KERNEL_SETSOCKOPT;
 	}
 
 	/*
