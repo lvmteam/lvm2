@@ -31,6 +31,9 @@
 /* SHORT_UUID - print last 8 chars of a string */
 #define SHORT_UUID(x) (strlen(x) > 8) ? ((x) + (strlen(x) - 8)) : (x)
 
+extern char *__rq_types_off_by_one[];
+#define RQ_TYPE(x) __rq_types_off_by_one[(x) - 1]
+
 extern int log_tabbing;
 extern int log_is_open;
 extern int log_membership_change;

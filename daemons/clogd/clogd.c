@@ -13,7 +13,7 @@
 #include <linux/types.h>
 #include <sys/socket.h>
 #include <linux/netlink.h>
-#include <linux/dm-clog-tfr.h>
+#include <linux/dm-log-userspace.h>
 #include <linux/dm-ioctl.h>
 
 #include "functions.h"
@@ -190,13 +190,13 @@ static void daemonize(void)
 			LOG_ERROR("Failed to create lockfile");
 			LOG_ERROR("Process already running?");
 			break;
-		case EXIT_KERNEL_TFR_SOCKET:
+		case EXIT_KERNEL_SOCKET:
 			LOG_ERROR("Unable to create netlink socket");
 			break;
-		case EXIT_KERNEL_TFR_BIND:
+		case EXIT_KERNEL_BIND:
 			LOG_ERROR("Unable to bind to netlink socket");
 			break;
-		case EXIT_KERNEL_TFR_SETSOCKOPT:
+		case EXIT_KERNEL_SETSOCKOPT:
 			LOG_ERROR("Unable to setsockopt on netlink socket");
 			break;
 		case EXIT_CLUSTER_CKPT_INIT:
