@@ -12,7 +12,7 @@
 
 SOURCES = clogd.c cluster.c functions.c link_mon.c local.c logging.c
 
-TARGET = $(shell if [ ! -e /usr/include/linux/dm-clog-tfr.h ]; then \
+TARGET = $(shell if [ ! -e /usr/include/linux/dm-log-userspace.h ]; then \
 		echo 'no_clogd_kernel_headers'; \
 	elif [ ! -e /usr/include/linux/ext2_fs.h ]; then \
 		echo 'no_e2fsprogs_devel'; \

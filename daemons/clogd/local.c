@@ -263,6 +263,7 @@ static int do_local_work(void *data)
 	case DM_CLOG_GET_REGION_SIZE:
 	default:
 		LOG_ERROR("Invalid log request received, ignoring.");
+
 		return 0;
 	}
 
