@@ -835,7 +835,8 @@ int lvm_register_segtype(struct segtype_library *seglib,
 	return 1;
 }
 
-static int _init_single_segtype(struct segtype_library *seglib)
+static int _init_single_segtype(struct cmd_context *cmd,
+				struct segtype_library *seglib)
 {
 	struct segment_type *(*init_segtype_fn) (struct cmd_context *);
 	struct segment_type *segtype;
@@ -901,9 +902,8 @@ static int _init_segtypes(struct cmd_context *cmd)
 	    (cn = find_config_tree_node(cmd, "global/segment_libraries"))) {
 
 		struct config_value *cv;
-		int (*init_multiple_segtypes_fn) (struct segtype_library *);
-
-		seglib.cmd = cmd;
+		int (*init_multiple_segtypes_fn) (struct cmd_context *,
+						  struct segtype_library *);
 
 		for (cv = cn->v; cv; cv = cv->next) {
 			if (cv->type != CFG_STRING) {
@@ -928,7 +928,7 @@ static int _init_segtypes(struct cmd_context *cmd)
 				init_multiple_segtypes_fn =
 				    _init_single_segtype;
  
-			if (!init_multiple_segtypes_fn(&seglib)) {
+			if (!init_multiple_segtypes_fn(cmd, &seglib)) {
 				struct dm_list *sgtl, *tmp;
 				log_error("init_multiple_segtypes() failed: "
 					  "Unloading shared library %s",
