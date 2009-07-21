@@ -482,6 +482,8 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 				if (!validate_name(vg_name + 1)) {
 					log_error("Skipping invalid tag %s",
 						  vg_name);
+					if (ret_max < EINVALID_CMD_LINE)
+						ret_max = EINVALID_CMD_LINE;
 					continue;
 				}
 				if (!str_list_add(cmd->mem, &tags,
@@ -497,6 +499,8 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 			if (strchr(vg_name, '/')) {
 				log_error("Invalid volume group name: %s",
 					  vg_name);
+				if (ret_max < EINVALID_CMD_LINE)
+					ret_max = EINVALID_CMD_LINE;
 				continue;
 			}
 			if (!str_list_add(cmd->mem, &arg_vgnames,

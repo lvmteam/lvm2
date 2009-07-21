@@ -1,5 +1,6 @@
 Version 2.02.50 - 
 ================================
+  Return EINVALID_CMD_LINE not success when invalid VG name format is used.
   Remove unnecessary messages after vgcreate/vgsplit refactor (2.02.49).
   Add log_errno to set a specific errno and replace log_error in due course.
   Add lvm_errno and lvm_errmsg to liblvm to obtain failure information.
