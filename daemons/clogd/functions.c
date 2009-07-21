@@ -31,12 +31,12 @@
 #define LOG_OFFSET 2
 
 #define RESYNC_HISTORY 50
-static char resync_history[RESYNC_HISTORY][128];
-static int idx = 0;
-#define LOG_SPRINT(f, arg...) do {\
-		idx++; \
-		idx = idx % RESYNC_HISTORY; \
-		sprintf(resync_history[idx], f, ## arg); \
+//static char resync_history[RESYNC_HISTORY][128];
+//static int idx = 0;
+#define LOG_SPRINT(_lc, f, arg...) do {		\
+		lc->idx++; \
+		lc->idx = lc->idx % RESYNC_HISTORY; \
+		sprintf(lc->resync_history[lc->idx], f, ## arg); \
 	} while (0)
 
 struct log_header {
@@ -86,6 +86,8 @@ struct log_c {
 	uint64_t disk_nr_regions;
 	size_t disk_size;       /* size of disk_buffer in bytes */
 	void *disk_buffer;      /* aligned memory for O_DIRECT */
+	int idx;
+	char resync_history[RESYNC_HISTORY][128];
 };
 
 struct mark_entry {
@@ -545,8 +547,9 @@ static int clog_ctr(struct clog_tfr *tfr)
 
 	if (strlen(tfr->data) != tfr->data_size) {
 		LOG_ERROR("Received constructor request with bad data");
-		LOG_ERROR("strlen(tfr->data)[%d] != tfr->data_size[%d]",
-			  (int)strlen(tfr->data), tfr->data_size);
+		LOG_ERROR("strlen(tfr->data)[%d] != tfr->data_size[%llu]",
+			  (int)strlen(tfr->data),
+			  (unsigned long long)tfr->data_size);
 		LOG_ERROR("tfr->data = '%s' [%d]",
 			  tfr->data, (int)strlen(tfr->data));
 		return -EINVAL;
@@ -814,7 +817,7 @@ out:
 
 	lc->sync_count = count_bits32(lc->sync_bits, lc->bitset_uint32_count);
 
-	LOG_SPRINT("[%s] Initial sync_count = %llu",
+	LOG_SPRINT(lc, "[%s] Initial sync_count = %llu",
 		   SHORT_UUID(lc->uuid), (unsigned long long)lc->sync_count);
 	lc->sync_search = 0;
 	lc->state = LOG_RESUMED;
@@ -1164,7 +1167,11 @@ static int clog_clear_region(struct clog_tfr *tfr)
  */
 static int clog_get_resync_work(struct clog_tfr *tfr)
 {
-	struct {int i; uint64_t r; } *pkg = (void *)tfr->data;
+	struct {
+		int32_t i;
+		uint32_t arch_padding;
+		uint64_t r;
+	} *pkg = (void *)tfr->data;
 	struct log_c *lc = get_log(tfr->uuid);
 
 	if (!lc)
@@ -1178,7 +1185,7 @@ static int clog_get_resync_work(struct clog_tfr *tfr)
 		 * FIXME: handle intermittent errors during recovery
 		 * by resetting sync_search... but not to many times.
 		 */
-		LOG_SPRINT("GET - SEQ#=%u, UUID=%s, nodeid = %u:: "
+		LOG_SPRINT(lc, "GET - SEQ#=%u, UUID=%s, nodeid = %u:: "
 			   "Recovery finished",
 			   tfr->seq, SHORT_UUID(lc->uuid), tfr->originator);
 		return 0;
@@ -1186,7 +1193,7 @@ static int clog_get_resync_work(struct clog_tfr *tfr)
 
 	if (lc->recovering_region != (uint64_t)-1) {
 		if (lc->recoverer == tfr->originator) {
-			LOG_SPRINT("GET - SEQ#=%u, UUID=%s, nodeid = %u:: "
+			LOG_SPRINT(lc, "GET - SEQ#=%u, UUID=%s, nodeid = %u:: "
 				   "Re-requesting work (%llu)",
 				   tfr->seq, SHORT_UUID(lc->uuid), tfr->originator,
 				   (unsigned long long)lc->recovering_region);
@@ -1194,7 +1201,7 @@ static int clog_get_resync_work(struct clog_tfr *tfr)
 			pkg->i = 1;
 			LOG_COND(log_resend_requests, "***** RE-REQUEST *****");
 		} else {
-			LOG_SPRINT("GET - SEQ#=%u, UUID=%s, nodeid = %u:: "
+			LOG_SPRINT(lc, "GET - SEQ#=%u, UUID=%s, nodeid = %u:: "
 				   "Someone already recovering (%llu)",
 				   tfr->seq, SHORT_UUID(lc->uuid), tfr->originator,
 				   (unsigned long long)lc->recovering_region);
@@ -1213,7 +1220,7 @@ static int clog_get_resync_work(struct clog_tfr *tfr)
 		free(del);
 
 		if (!log_test_bit(lc->sync_bits, pkg->r)) {
-			LOG_SPRINT("GET - SEQ#=%u, UUID=%s, nodeid = %u:: "
+			LOG_SPRINT(lc, "GET - SEQ#=%u, UUID=%s, nodeid = %u:: "
 				   "Assigning priority resync work (%llu)",
 				   tfr->seq, SHORT_UUID(lc->uuid), tfr->originator,
 				   (unsigned long long)pkg->r);
@@ -1229,7 +1236,7 @@ static int clog_get_resync_work(struct clog_tfr *tfr)
 				    lc->sync_search);
 
 	if (pkg->r >= lc->region_count) {
-		LOG_SPRINT("GET - SEQ#=%u, UUID=%s, nodeid = %u:: "
+		LOG_SPRINT(lc, "GET - SEQ#=%u, UUID=%s, nodeid = %u:: "
 			   "Resync work complete.",
 			   tfr->seq, SHORT_UUID(lc->uuid), tfr->originator);
 		return 0;
@@ -1237,7 +1244,7 @@ static int clog_get_resync_work(struct clog_tfr *tfr)
 
 	lc->sync_search = pkg->r + 1;
 
-	LOG_SPRINT("GET - SEQ#=%u, UUID=%s, nodeid = %u:: "
+	LOG_SPRINT(lc, "GET - SEQ#=%u, UUID=%s, nodeid = %u:: "
 		   "Assigning resync work (%llu)",
 		   tfr->seq, SHORT_UUID(lc->uuid), tfr->originator,
 		   (unsigned long long)pkg->r);
@@ -1254,7 +1261,11 @@ static int clog_get_resync_work(struct clog_tfr *tfr)
  */
 static int clog_set_region_sync(struct clog_tfr *tfr)
 {
-	struct { uint64_t region; int in_sync; } *pkg = (void *)tfr->data;
+	struct {
+		uint64_t region;
+		uint32_t arch_padding;
+		int32_t in_sync;
+	} *pkg = (void *)tfr->data;
 	struct log_c *lc = get_log(tfr->uuid);
 
 	if (!lc)
@@ -1264,7 +1275,7 @@ static int clog_set_region_sync(struct clog_tfr *tfr)
 
 	if (pkg->in_sync) {
 		if (log_test_bit(lc->sync_bits, pkg->region)) {
-			LOG_SPRINT("SET - SEQ#=%u, UUID=%s, nodeid = %u:: "
+			LOG_SPRINT(lc, "SET - SEQ#=%u, UUID=%s, nodeid = %u:: "
 				   "Region already set (%llu)",
 				   tfr->seq, SHORT_UUID(lc->uuid), tfr->originator,
 				   (unsigned long long)pkg->region);
@@ -1273,7 +1284,7 @@ static int clog_set_region_sync(struct clog_tfr *tfr)
 			lc->sync_count++;
 
 			/* The rest of this section is all for debugging */
-			LOG_SPRINT("SET - SEQ#=%u, UUID=%s, nodeid = %u:: "
+			LOG_SPRINT(lc, "SET - SEQ#=%u, UUID=%s, nodeid = %u:: "
 				   "Setting region (%llu)",
 				   tfr->seq, SHORT_UUID(lc->uuid), tfr->originator,
 				   (unsigned long long)pkg->region);
@@ -1291,7 +1302,7 @@ static int clog_set_region_sync(struct clog_tfr *tfr)
 
 			if (!log_test_bit(lc->sync_bits,
 					  (pkg->region) ? pkg->region - 1 : 0)) {
-				LOG_SPRINT("*** Previous bit not set ***");
+				LOG_SPRINT(lc, "*** Previous bit not set ***");
 				lc->skip_bit_warning = (pkg->region) ?
 					pkg->region - 1 : 0;
 			}
@@ -1299,7 +1310,7 @@ static int clog_set_region_sync(struct clog_tfr *tfr)
 	} else if (log_test_bit(lc->sync_bits, pkg->region)) {
 		lc->sync_count--;
 		log_clear_bit(lc, lc->sync_bits, pkg->region);
-		LOG_SPRINT("SET - SEQ#=%u, UUID=%s, nodeid = %u:: "
+		LOG_SPRINT(lc, "SET - SEQ#=%u, UUID=%s, nodeid = %u:: "
 			   "Unsetting region (%llu)",
 			   tfr->seq, SHORT_UUID(lc->uuid), tfr->originator,
 			   (unsigned long long)pkg->region);
@@ -1308,7 +1319,7 @@ static int clog_set_region_sync(struct clog_tfr *tfr)
 	if (lc->sync_count != count_bits32(lc->sync_bits, lc->bitset_uint32_count)) {
 		unsigned long long reset = count_bits32(lc->sync_bits, lc->bitset_uint32_count);
 
-		LOG_SPRINT("SET - SEQ#=%u, UUID=%s, nodeid = %u:: "
+		LOG_SPRINT(lc, "SET - SEQ#=%u, UUID=%s, nodeid = %u:: "
 			   "sync_count(%llu) != bitmap count(%llu)",
 			   tfr->seq, SHORT_UUID(lc->uuid), tfr->originator,
 			   (unsigned long long)lc->sync_count, reset);
@@ -1319,7 +1330,7 @@ static int clog_set_region_sync(struct clog_tfr *tfr)
 	}
 
 	if (lc->sync_count > lc->region_count)
-		LOG_SPRINT("SET - SEQ#=%u, UUID=%s, nodeid = %u:: "
+		LOG_SPRINT(lc, "SET - SEQ#=%u, UUID=%s, nodeid = %u:: "
 			   "(lc->sync_count > lc->region_count) - this is bad",
 			   tfr->seq, SHORT_UUID(lc->uuid), tfr->originator);
 
@@ -1355,7 +1366,7 @@ static int clog_get_sync_count(struct clog_tfr *tfr)
 	if (lc->sync_count != count_bits32(lc->sync_bits, lc->bitset_uint32_count)) {
 		unsigned long long reset = count_bits32(lc->sync_bits, lc->bitset_uint32_count);
 
-		LOG_SPRINT("get_sync_count - SEQ#=%u, UUID=%s, nodeid = %u:: "
+		LOG_SPRINT(lc, "get_sync_count - SEQ#=%u, UUID=%s, nodeid = %u:: "
 			   "sync_count(%llu) != bitmap count(%llu)",
 			   tfr->seq, SHORT_UUID(lc->uuid), tfr->originator,
 			   (unsigned long long)lc->sync_count, reset);
@@ -1485,7 +1496,11 @@ static int clog_status_table(struct clog_tfr *tfr)
 static int clog_is_remote_recovering(struct clog_tfr *tfr)
 {
 	uint64_t region = *((uint64_t *)(tfr->data));
-	struct { int is_recovering; uint64_t in_sync_hint; } *pkg = (void *)tfr->data;
+	struct {
+		int32_t is_recovering;
+		uint32_t arch_padding;
+		uint64_t in_sync_hint;
+	} *pkg = (void *)tfr->data;
 	struct log_c *lc = get_log(tfr->uuid);
 
 	if (!lc)
@@ -1505,9 +1520,9 @@ static int clog_is_remote_recovering(struct clog_tfr *tfr)
 		/*
 		 * Remember, 'lc->sync_search' is 1 plus the region
 		 * currently being recovered.  So, we must take off 1
-		 * to account for that.
+		 * to account for that; but only if 'sync_search > 1'.
 		 */
-		pkg->in_sync_hint = (lc->sync_search - 1);
+		pkg->in_sync_hint = lc->sync_search ? (lc->sync_search - 1) : 0;
 		LOG_DBG("[%s] Region is %s: %llu",
 			SHORT_UUID(lc->uuid),
 			(region == lc->recovering_region) ?
@@ -1688,7 +1703,7 @@ int push_state(const char *uuid, const char *which, char **buf, uint32_t debug_w
 		sprintf(*buf, "%llu %u", (unsigned long long)lc->recovering_region,
 			lc->recoverer);
 
-		LOG_SPRINT("CKPT SEND - SEQ#=X, UUID=%s, nodeid = %u:: "
+		LOG_SPRINT(lc, "CKPT SEND - SEQ#=X, UUID=%s, nodeid = %u:: "
 			   "recovering_region=%llu, recoverer=%u, sync_count=%llu",
 			   SHORT_UUID(lc->uuid), debug_who,
 			   (unsigned long long)lc->recovering_region,
@@ -1738,7 +1753,7 @@ int pull_state(const char *uuid, const char *which, char *buf, int size)
 	if (!strncmp(which, "recovering_region", 17)) {
 		sscanf(buf, "%llu %u", (unsigned long long *)&lc->recovering_region,
 		       &lc->recoverer);
-		LOG_SPRINT("CKPT INIT - SEQ#=X, UUID=%s, nodeid = X:: "
+		LOG_SPRINT(lc, "CKPT INIT - SEQ#=X, UUID=%s, nodeid = X:: "
 			   "recovering_region=%llu, recoverer=%u",
 			   SHORT_UUID(lc->uuid),
 			   (unsigned long long)lc->recovering_region, lc->recoverer);
@@ -1808,22 +1823,6 @@ void log_debug(void)
 	LOG_ERROR("");
 	LOG_ERROR("LOG COMPONENT DEBUGGING::");
 	LOG_ERROR("Official log list:");
-	__list_for_each(l, &log_list) {
-		lc = list_entry(l, struct log_c, list);
-		LOG_ERROR("%s", lc->uuid);
-		LOG_ERROR("  recoverer        : %u", lc->recoverer);
-		LOG_ERROR("  recovering_region: %llu",
-			  (unsigned long long)lc->recovering_region);
-		LOG_ERROR("  recovery_halted  : %s", (lc->recovery_halted) ?
-			  "YES" : "NO");
-		LOG_ERROR("sync_bits:");
-		print_bits((char *)lc->sync_bits,
-			   lc->bitset_uint32_count * sizeof(*lc->sync_bits), 1);
-		LOG_ERROR("clean_bits:");
-		print_bits((char *)lc->clean_bits,
-			   lc->bitset_uint32_count * sizeof(*lc->clean_bits), 1);
-	}
-
 	LOG_ERROR("Pending log list:");
 	__list_for_each(l, &log_pending_list) {
 		lc = list_entry(l, struct log_c, list);
@@ -1838,6 +1837,20 @@ void log_debug(void)
 
 	__list_for_each(l, &log_list) {
 		lc = list_entry(l, struct log_c, list);
+		LOG_ERROR("%s", lc->uuid);
+		LOG_ERROR("  recoverer        : %u", lc->recoverer);
+		LOG_ERROR("  recovering_region: %llu",
+			  (unsigned long long)lc->recovering_region);
+		LOG_ERROR("  recovery_halted  : %s", (lc->recovery_halted) ?
+			  "YES" : "NO");
+		LOG_ERROR("sync_bits:");
+		print_bits((char *)lc->sync_bits,
+			   lc->bitset_uint32_count * sizeof(*lc->sync_bits), 1);
+		LOG_ERROR("clean_bits:");
+		print_bits((char *)lc->clean_bits,
+			   lc->bitset_uint32_count * sizeof(*lc->clean_bits), 1);
+
+		lc = list_entry(l, struct log_c, list);
 		LOG_ERROR("Validating %s::", SHORT_UUID(lc->uuid));
 		r = find_next_zero_bit(lc->sync_bits, lc->region_count, 0);
 		LOG_ERROR("  lc->region_count = %llu",
@@ -1851,14 +1864,15 @@ void log_debug(void)
 			LOG_ERROR("ADJUSTING SYNC_COUNT");
 			lc->sync_count = lc->region_count;
 		}
-	}
 
-	LOG_ERROR("Resync request history:");
-	for (i = 0; i < RESYNC_HISTORY; i++) {
-		idx++;
-		idx = idx % RESYNC_HISTORY;
-		if (resync_history[idx][0] == '\0')
-			continue;
-		LOG_ERROR("%d:%d) %s", i, idx, resync_history[idx]);
+		LOG_ERROR("Resync request history:");
+		for (i = 0; i < RESYNC_HISTORY; i++) {
+			lc->idx++;
+			lc->idx = lc->idx % RESYNC_HISTORY;
+			if (lc->resync_history[lc->idx][0] == '\0')
+				continue;
+			LOG_ERROR("%d:%d) %s", i, lc->idx,
+				  lc->resync_history[lc->idx]);
+		}
 	}
 }
