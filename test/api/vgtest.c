@@ -74,6 +74,20 @@ int main(int argc, char *argv[])
 		goto bad;
 	}
 
+	printf("Closing VG %s\n", vg_name);
+	if (!lvm_vg_close(vg))
+		goto bad;
+	printf("Re-opening VG %s for reading\n", vg_name);
+	vg = lvm_vg_open(handle, vg_name, "r", 0);
+	if (!vg)
+		goto bad;
+	printf("Closing VG %s\n", vg_name);
+	if (!lvm_vg_close(vg))
+		goto bad;
+	printf("Re-opening VG %s for writing\n", vg_name);
+	vg = lvm_vg_open(handle, vg_name, "w", 0);
+	if (!vg)
+		goto bad;
 	printf("Removing VG %s from system\n", vg_name);
 	status = lvm_vg_remove(vg);
 	if (lvm_errno(handle)) {
