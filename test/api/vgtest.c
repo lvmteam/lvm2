@@ -43,38 +43,34 @@ int main(int argc, char *argv[])
 
 	printf("Creating VG %s\n", vg_name);
 	vg = lvm_vg_create(handle, vg_name);
-	if (lvm_errno(handle)) {
+	if (!vg) {
 		fprintf(stderr, "Error creating volume group %s\n", vg_name);
-		fprintf(stderr, "LVM Error: %s\n", lvm_errmsg(handle));
 		goto bad;
 	}
 
 	printf("Extending VG %s\n", vg_name);
 	status = lvm_vg_extend(vg, device);
-	if (lvm_errno(handle)) {
+	if (!status) {
 		fprintf(stderr, "Error extending volume group %s "
 			"with device %s\n", vg_name, device);
-		fprintf(stderr, "LVM Error: %s\n", lvm_errmsg(handle));
 		goto bad;
 	}
 
 	printf("Setting VG %s extent_size to %"PRIu64"\n", vg_name, size);
 	status = lvm_vg_set_extent_size(vg, size);
-	if (lvm_errno(handle)) {
+	if (!status) {
 		fprintf(stderr, "Can not set physical extent "
 			"size '%"PRIu64"' for '%s'\n",
 			size, vg_name);
-		fprintf(stderr, "LVM Error: %s\n", lvm_errmsg(handle));
 		goto bad;
 	}
 
 	printf("Committing VG %s to disk\n", vg_name);
 	status = lvm_vg_write(vg);
-	if (lvm_errno(handle)) {
+	if (!status) {
 		fprintf(stderr, "Creation of volume group '%s' on "
 			"device '%s' failed\n",
 			vg_name, device);
-		fprintf(stderr, "LVM Error: %s\n", lvm_errmsg(handle));
 		goto bad;
 	}
 
@@ -83,7 +79,6 @@ int main(int argc, char *argv[])
 	if (lvm_errno(handle)) {
 		fprintf(stderr, "Revmoval of volume group '%s' failed\n",
 			vg_name);
-		fprintf(stderr, "LVM Error: %s\n", lvm_errmsg(handle));
 		goto bad;
 	}
 
@@ -93,6 +88,8 @@ int main(int argc, char *argv[])
 	_exit(0);
 bad:
 	printf("liblvm vgcreate unit test FAIL\n");
+	if (handle && lvm_errno(handle))
+		fprintf(stderr, "LVM Error: %s\n", lvm_errmsg(handle));
 	if (vg)
 		lvm_vg_close(vg);
 	if (handle)
