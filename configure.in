@@ -852,6 +852,7 @@ lib/snapshot/Makefile
 libdm/Makefile
 libdm/libdevmapper.pc
 liblvm/Makefile
+liblvm/liblvm2app.pc
 man/Makefile
 po/Makefile
 scripts/clvmd_init_red_hat

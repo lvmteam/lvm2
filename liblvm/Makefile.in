@@ -25,9 +25,14 @@ LIB_VERSION = $(LIB_VERSION_APP)
 VERSIONED_SHLIB = $(LIB_NAME).$(LIB_SUFFIX).$(LIB_VERSION_APP)
 
 ifeq ("@STATIC_LINK@", "yes")
-LIB_STATIC = $(LIB_NAME).a
+  LIB_STATIC = $(LIB_NAME).a
 endif
-LIB_SHARED = $(LIB_NAME).so
+
+ifeq ("@LIB_SUFFIX@","dylib")
+  LIB_SHARED = $(LIB_NAME).dylib
+else
+  LIB_SHARED = $(LIB_NAME).so
+endif
 
 CLEAN_TARGETS += liblvm.cflow
 
@@ -35,9 +40,42 @@ include $(top_srcdir)/make.tmpl
 
 LIBS += -ldevmapper -llvm-internal
 
-$(VERSIONED_SHLIB): %.$(LIB_SUFFIX).$(LIB_VERSION): %.$(LIB_SUFFIX)
+$(VERSIONED_SHLIB): %.$(LIB_SUFFIX).$(LIB_VERSION_APP): %.$(LIB_SUFFIX)
 	rm -f $@
 	$(LN_S) $< $@
+
+.PHONY: install_dynamic install_static install_include install_pkgconfig \
+	distclean_lib distclean
+
+INSTALL_TYPE = install_dynamic
+
+ifeq ("@STATIC_LINK@", "yes")
+  INSTALL_TYPE += install_static
+endif
+
+ifeq ("@PKGCONFIG@", "yes")
+  INSTALL_TYPE += install_pkgconfig
+endif
+
+install: $(INSTALL_TYPE) install_include
+
+install_include:
+	$(INSTALL) -D $(OWNER) $(GROUP) -m 444 lvm.h $(includedir)/lvm.h
+
+install_dynamic: $(LIB_SHARED)
+	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) $< \
+		$(libdir)/$(LIB_SHARED).$(LIB_VERSION_APP)
+	$(LN_S) -f $(LIB_SHARED).$(LIB_VERSION_APP) \
+		$(libdir)/$(LIB_SHARED)
+
+install_static: $(LIB_STATIC)
+	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) $< \
+		$(libdir)/$(LIB_STATIC).$(LIB_VERSION_APP)
+	$(LN_S) -f $(LIB_STATIC).$(LIB_VERSION_APP) $(libdir)/$(LIB_STATIC)
+
+install_pkgconfig:
+	$(INSTALL) -D $(OWNER) $(GROUP) -m 444 $(LIB_NAME).pc \
+		$(usrlibdir)/pkgconfig/$(LIB_NAME).pc
 
 liblvm.cflow: $(SOURCES)
 	set -e; (echo -n "SOURCES += "; \
@@ -46,3 +84,10 @@ liblvm.cflow: $(SOURCES)
 		 ) > $@
 
 cflow: liblvm.cflow
+
+CLEAN_TARGETS += $(LIB_NAME).$(LIB_SUFFIX)
+
+distclean_lib:
+	$(RM) $(LIB_NAME).pc
+
+distclean: distclean_lib
