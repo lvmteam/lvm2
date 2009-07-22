@@ -5,6 +5,7 @@ lvm_vg_create
 lvm_vg_extend
 lvm_vg_set_extent_size
 lvm_vg_write
+lvm_vg_open
 lvm_vg_close
 lvm_vg_remove
 lvm_errno

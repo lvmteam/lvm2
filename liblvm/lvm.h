@@ -190,4 +190,27 @@ int lvm_vg_remove(vg_t *vg);
  */
 int lvm_vg_close(vg_t *vg);
 
+/**
+ * Open an existing VG.
+ *
+ * Open a VG for reading or writing.
+ *
+ * \param   libh
+ *          Handle obtained from lvm_create.
+ *
+ * \param   vgname
+ *          Name of the VG to open.
+ *
+ * \param   mode
+ *          Open mode - either "r" (read) or "w" (read/write).
+ *          Any other character results in an error with EINVAL set.
+ *
+ * \param   flags
+ *          Open flags - currently ignored.
+ *
+ * \return  non-NULL VG handle (success) or NULL (failure).
+ */
+vg_t *lvm_vg_open(lvm_t libh, const char *vgname, const char *mode,
+		  uint32_t flags);
+
 #endif /* _LIB_LVM_H */
