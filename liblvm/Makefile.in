@@ -42,7 +42,7 @@ $(VERSIONED_SHLIB): %.$(LIB_SUFFIX).$(LIB_VERSION): %.$(LIB_SUFFIX)
 liblvm.cflow: $(SOURCES)
 	set -e; (echo -n "SOURCES += "; \
 		 echo $(SOURCES) | \
-		 sed "s/^/ /;s/ / $(top_srcdir)\/lib\//g;s/$$//"; \
+		 sed "s/^/ /;s/ / $(top_srcdir)\/liblvm\//g;s/$$//"; \
 		 ) > $@
 
 cflow: liblvm.cflow
