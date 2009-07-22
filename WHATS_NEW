@@ -1,5 +1,7 @@
 Version 2.02.50 - 
 ================================
+  Add liblvm2app Makefile installation targets.
+  Add liblvm pkgconfig file.
   Use newly-independent LVM_LIBAPI in liblvm soname.  E.g. liblvm2app.so.2.1.
   Add an API version number, LVM_LIBAPI, to the VERSION string for liblvm.
   Pass a pointer to struct cmd_context to init_multiple_segtypes
