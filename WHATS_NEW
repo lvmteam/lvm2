@@ -1,5 +1,6 @@
 Version 2.02.50 - 
 ================================
+  Add an API version number, LVM_LIBAPI, to the VERSION string for liblvm.
   Pass a pointer to struct cmd_context to init_multiple_segtypes
   Return EINVALID_CMD_LINE not success when invalid VG name format is used.
   Remove unnecessary messages after vgcreate/vgsplit refactor (2.02.49).

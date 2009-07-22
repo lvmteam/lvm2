@@ -657,6 +657,7 @@ LVM_RELEASE
 LVM_PATCHLEVEL
 LVM_MINOR
 LVM_MAJOR
+LVM_LIBAPI
 LVM_VERSION
 LVM1_FALLBACK
 LVM1
@@ -12606,15 +12607,17 @@ DM_LIB_PATCHLEVEL=`cat VERSION_DM | $AWK -F '[-. ]' '{printf "%s.%s.%s",$1,$2,$3
 LVM_VERSION="\"`cat VERSION 2>/dev/null || echo Unknown`\""
 
 VER=`cat VERSION`
-LVM_RELEASE_DATE="\"`echo $VER | $SED 's/.*(//;s/).*//'`\""
+LVM_RELEASE_DATE="\"`echo $VER | $SED 's/.* (//;s/).*//'`\""
 VER=`echo "$VER" | $AWK '{print $1}'`
 LVM_RELEASE="\"`echo "$VER" | $AWK -F '-' '{print $2}'`\""
 VER=`echo "$VER" | $AWK -F '-' '{print $1}'`
 LVM_MAJOR=`echo "$VER" | $AWK -F '.' '{print $1}'`
 LVM_MINOR=`echo "$VER" | $AWK -F '.' '{print $2}'`
-LVM_PATCHLEVEL=`echo "$VER" | $AWK -F '.' '{print $3}'`
+LVM_PATCHLEVEL=`echo "$VER" | $AWK -F '[(.]' '{print $3}'`
+LVM_LIBAPI=`echo "$VER" | $AWK -F '[()]' '{print $2}'`
 
 ################################################################################
+
 
 
 

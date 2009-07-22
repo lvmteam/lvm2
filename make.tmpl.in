@@ -116,6 +116,9 @@ LIB_VERSION_LVM := $(shell cat $(top_srcdir)/VERSION | \
 LIB_VERSION_DM := $(shell cat $(top_srcdir)/VERSION_DM | \
 		    awk -F '.' '{printf "%s.%s",$$1,$$2}')
 
+LIB_VERSION_APP := $(shell cat $(top_srcdir)/VERSION | \
+		     awk -F '[(). ]' '{printf "%s.%s",$$1,$$4}')
+
 INCLUDES += -I. -I$(top_srcdir)/include
 
 INC_LNS = $(top_srcdir)/include/.symlinks_created

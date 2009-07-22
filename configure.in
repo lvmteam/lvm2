@@ -750,13 +750,14 @@ DM_LIB_PATCHLEVEL=`cat VERSION_DM | $AWK -F '[[-. ]]' '{printf "%s.%s.%s",$1,$2,
 LVM_VERSION="\"`cat VERSION 2>/dev/null || echo Unknown`\""
 
 VER=`cat VERSION`
-LVM_RELEASE_DATE="\"`echo $VER | $SED 's/.*(//;s/).*//'`\""
+LVM_RELEASE_DATE="\"`echo $VER | $SED 's/.* (//;s/).*//'`\""
 VER=`echo "$VER" | $AWK '{print $1}'`
 LVM_RELEASE="\"`echo "$VER" | $AWK -F '-' '{print $2}'`\""
 VER=`echo "$VER" | $AWK -F '-' '{print $1}'`
 LVM_MAJOR=`echo "$VER" | $AWK -F '.' '{print $1}'`
 LVM_MINOR=`echo "$VER" | $AWK -F '.' '{print $2}'`
-LVM_PATCHLEVEL=`echo "$VER" | $AWK -F '.' '{print $3}'`
+LVM_PATCHLEVEL=`echo "$VER" | $AWK -F '[[(.]]' '{print $3}'`
+LVM_LIBAPI=`echo "$VER" | $AWK -F '[[()]]' '{print $2}'`
 
 ################################################################################
 AC_SUBST(APPLIB)
@@ -801,6 +802,7 @@ AC_SUBST(LOCALEDIR)
 AC_SUBST(LVM1)
 AC_SUBST(LVM1_FALLBACK)
 AC_SUBST(LVM_VERSION)
+AC_SUBST(LVM_LIBAPI)
 AC_SUBST(LVM_MAJOR)
 AC_SUBST(LVM_MINOR)
 AC_SUBST(LVM_PATCHLEVEL)
