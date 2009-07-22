@@ -7,3 +7,5 @@ lvm_vg_set_extent_size
 lvm_vg_write
 lvm_vg_close
 lvm_vg_remove
+lvm_errno
+lvm_errmsg
