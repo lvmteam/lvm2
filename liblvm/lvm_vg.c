@@ -64,13 +64,11 @@ bad:
 
 int lvm_vg_close(vg_t *vg)
 {
-	if (vg_read_error(vg))
-		goto_bad;
-
-	unlock_and_release_vg(vg->cmd, vg, vg->name);
+	if (vg_read_error(vg) == FAILED_LOCKING)
+		vg_release(vg);
+	else
+		unlock_and_release_vg(vg->cmd, vg, vg->name);
 	return 1;
-bad:
-	return 0;
 }
 
 int lvm_vg_remove(vg_t *vg)
