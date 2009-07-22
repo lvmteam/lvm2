@@ -12,6 +12,9 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <errno.h>
+#include <string.h>
+
 #include "lib.h"
 #include "lvm.h"
 #include "toolcontext.h"
@@ -79,4 +82,27 @@ int lvm_vg_remove(vg_t *vg)
 	return vg_remove_single(vg);
 bad:
 	return 0;
+}
+
+vg_t *lvm_vg_open(lvm_t libh, const char *vgname, const char *mode,
+		  uint32_t flags)
+{
+	uint32_t internal_flags = 0;
+	vg_t *vg;
+
+	if (!strncmp(mode, "w", 1))
+		internal_flags |= READ_FOR_UPDATE;
+	else if (strncmp(mode, "r", 1)) {
+		log_errno(EINVAL, "Invalid VG open mode");
+		return NULL;
+	}
+
+	vg = vg_read((struct cmd_context *)libh, vgname, NULL, internal_flags);
+	if (vg_read_error(vg)) {
+		/* FIXME: use log_errno either here in inside vg_read */
+		vg_release(vg);
+		return NULL;
+	}
+
+	return vg;
 }
