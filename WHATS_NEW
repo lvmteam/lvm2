@@ -1,5 +1,6 @@
 Version 2.02.50 - 
 ================================
+  Use newly-independent LVM_LIBAPI in liblvm soname.  E.g. liblvm2app.so.2.1.
   Add an API version number, LVM_LIBAPI, to the VERSION string for liblvm.
   Pass a pointer to struct cmd_context to init_multiple_segtypes
   Return EINVALID_CMD_LINE not success when invalid VG name format is used.
