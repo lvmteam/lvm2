@@ -15,6 +15,7 @@
 #define _LIB_LVM_H
 
 #include "lvm-version.h"
+#include "libdevmapper.h"
 
 #include <stdint.h>
 
@@ -27,6 +28,22 @@ struct logical_volume;
 typedef struct volume_group vg_t;
 typedef struct physical_volume pv_t;
 typedef struct logical_volume lv_t;
+
+typedef struct lvm_vg_list {
+	struct dm_list list;
+	vg_t *vg;
+} vg_list_t;
+
+typedef struct lvm_pv_list {
+	struct dm_list list;
+	pv_t *pv;
+} pv_list_t;
+
+typedef struct lvm_lv_list {
+	struct dm_list list;
+	lv_t *lv;
+} lv_list_t;
+
 
 struct lvm; /* internal data */
 
