@@ -44,6 +44,13 @@ typedef struct lvm_lv_list {
 	lv_t *lv;
 } lv_list_t;
 
+/**
+ * Return a list of LV handles for a given VG handle.
+ *
+ * \return  A list of lv_list_t structures containing lv handles for this vg.
+ *          If no LVs exist on the given VG, NULL is returned.
+ */
+struct dm_list *lvm_vg_list_lvs(vg_t *vg);
 
 struct lvm; /* internal data */
 
@@ -224,5 +231,13 @@ int lvm_vg_close(vg_t *vg);
  */
 vg_t *lvm_vg_open(lvm_t libh, const char *vgname, const char *mode,
 		  uint32_t flags);
+
+/**
+ * Return a list of PV handles for a given VG handle.
+ *
+ * \return  A list of pv_list_t structures containing pv handles for this vg.
+ *          If no PVs exist on the given VG, NULL is returned.
+ */
+struct dm_list *lvm_vg_list_pvs(vg_t *vg);
 
 #endif /* _LIB_LVM_H */
