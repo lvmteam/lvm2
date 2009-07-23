@@ -21,6 +21,7 @@
 #include "metadata-exported.h"
 #include "archiver.h"
 #include "locking.h"
+#include "lvm-string.h"
 
 vg_t *lvm_vg_create(lvm_t libh, const char *vg_name)
 {
@@ -165,4 +166,25 @@ struct dm_list *lvm_vg_list_lvs(vg_t *vg)
 		dm_list_add(list, &lvs->list);
 	}
 	return list;
+}
+
+char *lvm_vg_get_uuid(const vg_t *vg)
+{
+	char uuid[64] __attribute((aligned(8)));
+
+	if (!id_write_format(&vg->id, uuid, sizeof(uuid))) {
+		log_error("Internal error converting uuid");
+		return NULL;
+	}
+	return strndup((const char *)uuid, 64);
+}
+
+char *lvm_vg_get_name(const vg_t *vg)
+{
+	char *name;
+
+	name = malloc(NAME_LEN + 1);
+	strncpy(name, (const char *)vg->name, NAME_LEN);
+	name[NAME_LEN] = '\0';
+	return name;
 }
