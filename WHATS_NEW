@@ -1,5 +1,9 @@
 Version 2.02.50 - 
 ================================
+  Add lvm_{pv|vg|lv}_get_{name|uuid} liblvm functions.
+  Add lvm_vg_list_pvs and lvm_vg_list_lvs liblvm functions.
+  Remove unused handles lvseg, pvseg inside liblvm/lvm.h.
+  Add lvm_vg_open liblvm function.
   Add liblvm2app Makefile installation targets.
   Add liblvm pkgconfig file.
   Use newly-independent LVM_LIBAPI in liblvm soname.  E.g. liblvm2app.so.2.1.
