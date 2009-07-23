@@ -198,6 +198,22 @@ int lvm_vg_write(vg_t *vg);
 int lvm_vg_remove(vg_t *vg);
 
 /**
+ * Get the current name or uuid of a PV, VG, or LV.
+ *
+ * Returns a copy of the current name or uuid for the given PV,
+ * VG, or LV.
+ *
+ * Memory is allocated using malloc() and caller must free the memory
+ * using free().
+ */
+char *lvm_pv_get_uuid(const pv_t *pv);
+char *lvm_vg_get_uuid(const vg_t *vg);
+char *lvm_lv_get_uuid(const lv_t *lv);
+char *lvm_pv_get_name(const pv_t *pv);
+char *lvm_vg_get_name(const vg_t *vg);
+char *lvm_lv_get_name(const lv_t *lv);
+
+/**
  * Close a VG opened with lvm_vg_create
  *
  * This API releases a VG handle and any resources associated with the handle.

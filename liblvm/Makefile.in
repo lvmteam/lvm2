@@ -18,6 +18,8 @@ VPATH = @srcdir@
 
 SOURCES =\
 	lvm_base.c \
+	lvm_lv.c \
+	lvm_pv.c \
 	lvm_vg.c
 
 LIB_NAME = liblvm2app
