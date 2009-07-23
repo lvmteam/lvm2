@@ -22,15 +22,11 @@
 struct volume_group;
 struct physical_volume;
 struct logical_volume;
-struct lv_segment;
-struct pv_segment;
 
 /* liblvm handles to objects pv, vg, lv, pvseg, lvseg */
 typedef struct volume_group vg_t;
 typedef struct physical_volume pv_t;
 typedef struct logical_volume lv_t;
-typedef struct pv_segment pvseg_t;
-typedef struct lv_segment lvseg_t;
 
 struct lvm; /* internal data */
 
