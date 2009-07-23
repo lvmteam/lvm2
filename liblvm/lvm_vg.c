@@ -114,3 +114,55 @@ vg_t *lvm_vg_open(lvm_t libh, const char *vgname, const char *mode,
 
 	return vg;
 }
+
+struct dm_list *lvm_vg_list_pvs(vg_t *vg)
+{
+	struct dm_list *list;
+	pv_list_t *pvs;
+	struct pv_list *pvl;
+
+	if (dm_list_empty(&vg->pvs))
+		return NULL;
+
+	if (!(list = dm_pool_zalloc(vg->vgmem, sizeof(*list)))) {
+		log_error("Memory allocation fail for dm_list.\n");
+		return NULL;
+	}
+	dm_list_init(list);
+
+	dm_list_iterate_items(pvl, &vg->pvs) {
+		if (!(pvs = dm_pool_zalloc(vg->vgmem, sizeof(*pvs)))) {
+			log_error("Memory allocation fail for lvm_pv_list.\n");
+			return NULL;
+		}
+		pvs->pv = pvl->pv;
+		dm_list_add(list, &pvs->list);
+	}
+	return list;
+}
+
+struct dm_list *lvm_vg_list_lvs(vg_t *vg)
+{
+	struct dm_list *list;
+	lv_list_t *lvs;
+	struct lv_list *lvl;
+
+	if (dm_list_empty(&vg->lvs))
+		return NULL;
+
+	if (!(list = dm_pool_zalloc(vg->vgmem, sizeof(*list)))) {
+		log_error("Memory allocation fail for dm_list.\n");
+		return NULL;
+	}
+	dm_list_init(list);
+
+	dm_list_iterate_items(lvl, &vg->lvs) {
+		if (!(lvs = dm_pool_zalloc(vg->vgmem, sizeof(*lvs)))) {
+			log_error("Memory allocation fail for lvm_lv_list.\n");
+			return NULL;
+		}
+		lvs->lv = lvl->lv;
+		dm_list_add(list, &lvs->list);
+	}
+	return list;
+}

@@ -10,3 +10,5 @@ lvm_vg_close
 lvm_vg_remove
 lvm_errno
 lvm_errmsg
+lvm_vg_list_pvs
+lvm_vg_list_lvs
