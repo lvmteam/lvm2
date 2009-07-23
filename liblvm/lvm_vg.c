@@ -24,7 +24,15 @@
 
 vg_t *lvm_vg_create(lvm_t libh, const char *vg_name)
 {
-	return vg_create((struct cmd_context *)libh, vg_name);
+	vg_t *vg;
+
+	vg = vg_create((struct cmd_context *)libh, vg_name);
+	/* FIXME: error handling is still TBD */
+	if (vg_read_error(vg)) {
+		vg_release(vg);
+		return NULL;
+	}
+	return vg;
 }
 
 int lvm_vg_extend(vg_t *vg, const char *device)

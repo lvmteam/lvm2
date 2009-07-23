@@ -110,8 +110,7 @@ const char *lvm_errmsg(lvm_t libh);
  * \param   libh
  *          Handle obtained from lvm_create.
  *
- * \return  A VG handle with error code set appropriately.
- * FIXME: Update error handling description after errno and logging patches
+ * \return  non-NULL vg handle (success) or NULL (failure)
  */
 vg_t *lvm_vg_create(lvm_t libh, const char *vg_name);
 
