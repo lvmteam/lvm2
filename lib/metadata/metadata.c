@@ -513,7 +513,6 @@ int vg_extend(struct volume_group *vg, int pv_count, char **pv_names)
 {
 	int i;
 	struct physical_volume *pv;
-	struct cmd_context *cmd = vg->cmd;
 
 	if (_vg_bad_status_bits(vg, RESIZEABLE_VG))
 		return 0;
