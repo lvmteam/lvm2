@@ -50,6 +50,12 @@ static int lvm_split(char *str, int *argc, char **argv, int max)
 
 static void _show_help(void)
 {
+	printf("'scan_vgs': "
+	       "Scan the system for LVM metadata\n");
+	printf("'vg_list_names': "
+	       "List the names of the VGs that exist in the system\n");
+	printf("'vg_list_ids': "
+	       "List the uuids of the VGs that exist in the system\n");
 	printf("'vg_list_pvs vgname': "
 	       "List the PVs that exist in VG vgname\n");
 	printf("'vg_list_lvs vgname': "
@@ -230,6 +236,40 @@ static void _pvs_in_vg(char **argv, int argc)
 	}
 }
 
+static void _scan_vgs(lvm_t libh)
+{
+	lvm_scan_vgs(libh);
+}
+
+static void _vg_list_names(lvm_t libh)
+{
+	struct dm_list *list;
+	struct lvm_str_list *strl;
+	const char *tmp;
+
+	list = lvm_list_vg_names(libh);
+	printf("VG names:\n");
+	dm_list_iterate_items(strl, list) {
+		tmp = strl->str;
+		printf("%s\n", tmp);
+	}
+}
+
+static void _vg_list_ids(lvm_t libh)
+{
+	struct dm_list *list;
+	struct lvm_str_list *strl;
+	const char *tmp;
+
+	list = lvm_list_vg_ids(libh);
+	printf("VG uuids:\n");
+	dm_list_iterate_items(strl, list) {
+		tmp = strl->str;
+		printf("%s\n", tmp);
+	}
+}
+
+
 static void _lvs_in_vg(char **argv, int argc)
 {
 	struct dm_list *lvs;
@@ -301,6 +341,12 @@ static int lvmapi_test_shell(lvm_t libh)
 			_pvs_in_vg(argv, argc);
 		} else if (!strcmp(argv[0], "vg_list_lvs")) {
 			_lvs_in_vg(argv, argc);
+		} else if (!strcmp(argv[0], "vg_list_names")) {
+			_vg_list_names(libh);
+		} else if (!strcmp(argv[0], "vg_list_ids")) {
+			_vg_list_ids(libh);
+		} else if (!strcmp(argv[0], "scan_vgs")) {
+			_scan_vgs(libh);
 		} else {
 			printf ("Unrecognized command %s\n", argv[0]);
 		}
