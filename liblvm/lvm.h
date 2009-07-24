@@ -44,6 +44,11 @@ typedef struct lvm_lv_list {
 	lv_t *lv;
 } lv_list_t;
 
+struct lvm_str_list {
+	struct dm_list list;
+	const char *str;
+};
+
 /**
  * Return a list of LV handles for a given VG handle.
  *
@@ -255,5 +260,31 @@ vg_t *lvm_vg_open(lvm_t libh, const char *vgname, const char *mode,
  *          If no PVs exist on the given VG, NULL is returned.
  */
 struct dm_list *lvm_vg_list_pvs(vg_t *vg);
+
+/**
+ * Return a list of VG names or VG uuids in the system.
+ *
+ * NOTE: This function will _NOT_ scan devices in the system for LVM metadata.
+ * To process the list, use the dm_list iterator functions.  For example:
+ *      vg_t *vg;
+ *      struct dm_list *vgnames;
+ *      struct lvm_str_list *strl;
+ *
+ *      vgnames = lvm_list_vg_names(libh);
+ *	dm_list_iterate_items(strl, vgnames) {
+ *		vgname = strl->str;
+ *              vg = lvm_vg_open(libh, vgname, "r");
+ *              // do something with vg
+ *              lvm_vg_close(vg);
+ *      }
+ *
+ *
+ * \return  A list of struct lvm_str_list
+ *          If no VGs exist on the system, NULL is returned.
+ * FIXME: handle list memory cleanup
+ */
+struct dm_list *lvm_list_vg_names(lvm_t libh);
+struct dm_list *lvm_list_vg_ids(lvm_t libh);
+
 
 #endif /* _LIB_LVM_H */
