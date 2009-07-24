@@ -106,17 +106,19 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 #define LCK_VG_DROP_CACHE	(LCK_VG | LCK_WRITE | LCK_CACHE)
 #define LCK_VG_BACKUP		(LCK_VG | LCK_CACHE)
 
-#define LCK_LV_EXCLUSIVE	(LCK_LV | LCK_EXCL | LCK_NONBLOCK)
-#define LCK_LV_SUSPEND		(LCK_LV | LCK_WRITE | LCK_NONBLOCK)
-#define LCK_LV_RESUME		(LCK_LV | LCK_UNLOCK | LCK_NONBLOCK)
-#define LCK_LV_ACTIVATE		(LCK_LV | LCK_READ | LCK_NONBLOCK)
-#define LCK_LV_DEACTIVATE	(LCK_LV | LCK_NULL | LCK_NONBLOCK)
+#define LCK_LV_EXCLUSIVE	(LCK_LV | LCK_EXCL)
+#define LCK_LV_SUSPEND		(LCK_LV | LCK_WRITE)
+#define LCK_LV_RESUME		(LCK_LV | LCK_UNLOCK)
+#define LCK_LV_ACTIVATE		(LCK_LV | LCK_READ)
+#define LCK_LV_DEACTIVATE	(LCK_LV | LCK_NULL)
+
+#define LCK_MASK (LCK_TYPE_MASK | LCK_SCOPE_MASK)
 
 #define LCK_LV_CLUSTERED(lv)	\
 	(vg_is_clustered((lv)->vg) ? LCK_CLUSTER_VG : 0)
 
 #define lock_lv_vol(cmd, lv, flags)	\
-	lock_vol(cmd, (lv)->lvid.s, flags | LCK_LV_CLUSTERED(lv))
+	lock_vol(cmd, (lv)->lvid.s, flags | LCK_LV_CLUSTERED(lv) | LCK_NONBLOCK)
 
 #define unlock_vg(cmd, vol)	lock_vol(cmd, vol, LCK_VG_UNLOCK)
 #define unlock_and_release_vg(cmd, vg, vol) \
