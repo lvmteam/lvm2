@@ -57,6 +57,11 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	    !vg_set_alloc_policy(vg, vp_new.alloc))
 		goto_bad;
 
+	if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE)) {
+		log_error("Can't get lock for orphan PVs");
+		goto bad_orphan;
+	}
+
 	/* attach the pv's */
 	if (!vg_extend(vg, argc - 1, argv + 1))
 		goto_bad;
@@ -106,6 +111,7 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 		goto bad;
 	}
 
+	unlock_vg(cmd, VG_ORPHANS);
 	unlock_vg(cmd, vp_new.vg_name);
 
 	backup(vg);
@@ -117,6 +123,8 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	return ECMD_PROCESSED;
 
 bad:
+	unlock_vg(cmd, VG_ORPHANS);
+bad_orphan:
 	vg_release(vg);
 	unlock_vg(cmd, vp_new.vg_name);
 	return ECMD_FAILED;

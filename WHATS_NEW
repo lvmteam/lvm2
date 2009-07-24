@@ -1,5 +1,7 @@
 Version 2.02.50 - 
 ================================
+  Fix race condition with vgcreate and vgextend on same device (2.02.49).
+  Remove redundant validate_name call from vgreduce.
   Add lvm_{pv|vg|lv}_get_{name|uuid} liblvm functions.
   Add lvm_vg_list_pvs and lvm_vg_list_lvs liblvm functions.
   Remove unused handles lvseg, pvseg inside liblvm/lvm.h.

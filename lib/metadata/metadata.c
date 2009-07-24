@@ -518,11 +518,6 @@ int vg_extend(struct volume_group *vg, int pv_count, char **pv_names)
 	if (_vg_bad_status_bits(vg, RESIZEABLE_VG))
 		return 0;
 
-	if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE)) {
-		log_error("Can't get lock for orphan PVs");
-		return 0;
-	}
-
 	/* attach each pv */
 	for (i = 0; i < pv_count; i++) {
 		if (!(pv = pv_by_path(vg->fid->fmt->cmd, pv_names[i]))) {
@@ -536,13 +531,11 @@ int vg_extend(struct volume_group *vg, int pv_count, char **pv_names)
 
 /* FIXME Decide whether to initialise and add new mdahs to format instance */
 
-	unlock_vg(cmd, VG_ORPHANS);
 	return 1;
 
       bad:
 	log_error("Unable to add physical volume '%s' to "
 		  "volume group '%s'.", pv_names[i], vg->name);
-	unlock_vg(cmd, VG_ORPHANS);
 	return 0;
 }
 
