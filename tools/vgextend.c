@@ -42,6 +42,7 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 		vg_release(vg);
 		return ECMD_FAILED;
 	}
+
 /********** FIXME
 	log_print("maximum logical volume size is %s",
 		  (dummy = lvm_show_size(LVM_LV_SIZE_MAX(vg) / 2, LONG)));
@@ -51,6 +52,11 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 
 	if (!archive(vg))
 		goto error;
+
+	if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE)) {
+		log_error("Can't get lock for orphan PVs");
+		return ECMD_FAILED;
+	}
 
 	/* extend vg */
 	if (!vg_extend(vg, argc, argv))
@@ -69,6 +75,7 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 	r = ECMD_PROCESSED;
 
 error:
+	unlock_vg(cmd, VG_ORPHANS);
 	unlock_and_release_vg(cmd, vg, vg_name);
 	return r;
 }
