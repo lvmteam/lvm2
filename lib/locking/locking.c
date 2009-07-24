@@ -35,6 +35,7 @@ static sigset_t _oldset;
 static int _vg_lock_count = 0;		/* Number of locks held */
 static int _vg_write_lock_held = 0;	/* VG write lock held? */
 static int _signals_blocked = 0;
+static int _blocking_supported = 0;
 
 static volatile sig_atomic_t _sigint_caught = 0;
 static volatile sig_atomic_t _handler_installed;
@@ -217,7 +218,9 @@ int init_locking(int type, struct cmd_context *cmd)
 {
 	if (type < 0)
 		type = find_config_tree_int(cmd, "global/locking_type", 1);
-		
+
+	_blocking_supported = find_config_tree_int(cmd,
+	    "global/wait_for_locks", DEFAULT_WAIT_FOR_LOCKS);
 	
 	switch (type) {
 	case 0:
@@ -227,7 +230,9 @@ int init_locking(int type, struct cmd_context *cmd)
 		return 1;
 
 	case 1:
-		log_very_verbose("File-based locking selected.");
+		log_very_verbose("%sFile-based locking selected.",
+				 _blocking_supported ? "" : "Non-blocking ");
+
 		if (!init_file_locking(&_locking, cmd))
 			break;
 		return 1;
@@ -379,7 +384,7 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags)
 		 * This will enforce correctness and prevent deadlocks rather
 		 * than relying on the caller to set the flag properly.
 		 */
-		if (vgs_locked())
+		if (!_blocking_supported || vgs_locked())
 			flags |= LCK_NONBLOCK;
 
 		/* Lock VG to change on-disk metadata. */

@@ -270,6 +270,10 @@ If the tools were configured \fB--with-cluster=internal\fP
 All changes to logical volumes and their states are communicated
 using locks.
 .IP
+\fBwait_for_locks\fP \(em When set to 1, the default, the tools
+wait if a lock request cannot be satisfied immediately.
+When set to 0, the operation is aborted instead.
+.IP
 \fBlocking_dir\fP \(em The directory LVM2 places its file locks
 if \fBlocking_type\fP is set to 1.  The default is \fB/var/lock/lvm\fP.
 .IP
