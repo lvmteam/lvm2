@@ -265,6 +265,8 @@ struct dm_list *lvm_vg_list_pvs(vg_t *vg);
  * Return a list of VG names or VG uuids in the system.
  *
  * NOTE: This function will _NOT_ scan devices in the system for LVM metadata.
+ * To scan the system, use lvm_scan_vgs.
+ *
  * To process the list, use the dm_list iterator functions.  For example:
  *      vg_t *vg;
  *      struct dm_list *vgnames;
@@ -286,5 +288,11 @@ struct dm_list *lvm_vg_list_pvs(vg_t *vg);
 struct dm_list *lvm_list_vg_names(lvm_t libh);
 struct dm_list *lvm_list_vg_ids(lvm_t libh);
 
+/**
+ * Scan all devices on the system for VGs and LVM metadata.
+ *
+ * \return  Status code of 1 (success) or 0 (failure).
+ */
+int lvm_scan_vgs(lvm_t libh);
 
 #endif /* _LIB_LVM_H */

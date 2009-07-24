@@ -22,6 +22,7 @@
 #include "archiver.h"
 #include "locking.h"
 #include "lvm-string.h"
+#include "lvmcache.h"
 
 vg_t *lvm_vg_create(lvm_t libh, const char *vg_name)
 {
@@ -197,4 +198,9 @@ struct dm_list *lvm_list_vg_names(lvm_t libh)
 struct dm_list *lvm_list_vg_ids(lvm_t libh)
 {
 	return get_vgids((struct cmd_context *)libh, 0);
+}
+
+int lvm_scan_vgs(lvm_t libh)
+{
+	return lvmcache_label_scan((struct cmd_context *)libh, 2);
 }
