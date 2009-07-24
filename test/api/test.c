@@ -124,14 +124,28 @@ static vg_t *_lookup_vg_by_name(char **argv, int argc)
 	}
 	return vg;
 }
+static void _add_lvs_to_lvname_hash(struct dm_list *lvs)
+{
+	struct lvm_lv_list *lvl;
+	dm_list_iterate_items(lvl, lvs) {
+		/* Concatenate VG name with LV name */
+		dm_hash_insert(_lvname_hash, lvm_lv_get_name(lvl->lv), lvl->lv);
+	}
+}
+
+static void _add_pvs_to_pvname_hash(struct dm_list *pvs)
+{
+	struct lvm_pv_list *pvl;
+	dm_list_iterate_items(pvl, pvs) {
+		dm_hash_insert(_pvname_hash, lvm_pv_get_name(pvl->pv), pvl->pv);
+	}
+}
 
 static void _vg_open(char **argv, int argc, lvm_t libh)
 {
 	vg_t *vg;
 	struct dm_list *lvs;
-	struct lvm_lv_list *lvl;
 	struct dm_list *pvs;
-	struct lvm_pv_list *pvl;
 
 	if (argc < 2) {
 		printf ("Please enter vg_name\n");
@@ -157,14 +171,11 @@ static void _vg_open(char **argv, int argc, lvm_t libh)
 	 * Add the LVs and PVs into the hashes for lookups
 	 */
 	lvs = lvm_vg_list_lvs(vg);
-	dm_list_iterate_items(lvl, lvs) {
-		/* Concatenate VG name with LV name */
-		dm_hash_insert(_lvname_hash, lvm_lv_get_name(lvl->lv), lvl->lv);
-	}
+	if (lvs && !dm_list_empty(lvs))
+		_add_lvs_to_lvname_hash(lvs);
 	pvs = lvm_vg_list_pvs(vg);
-	dm_list_iterate_items(pvl, pvs) {
-		dm_hash_insert(_pvname_hash, lvm_pv_get_name(pvl->pv), pvl->pv);
-	}
+	if (pvs && !dm_list_empty(pvs))
+		_add_pvs_to_pvname_hash(pvs);
 }
 
 static void _vg_close(char **argv, int argc)
