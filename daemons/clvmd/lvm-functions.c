@@ -65,8 +65,6 @@ struct lv_info {
 	int lock_mode;
 };
 
-#define LCK_MASK (LCK_TYPE_MASK | LCK_SCOPE_MASK)
-
 static const char *decode_locking_cmd(unsigned char cmdl)
 {
 	static char buf[128];
@@ -482,28 +480,28 @@ int do_lock_lv(unsigned char command, unsigned char lock_flags, char *resource)
 	cmd->partial_activation = (lock_flags & LCK_PARTIAL_MODE) ? 1 : 0;
 
 	switch (command) {
-	case LCK_LV_EXCLUSIVE:
+	case LCK_LV_EXCLUSIVE & LCK_MASK:
 		status = do_activate_lv(resource, lock_flags, LKM_EXMODE);
 		break;
 
-	case LCK_LV_SUSPEND:
+	case LCK_LV_SUSPEND & LCK_MASK:
 		status = do_suspend_lv(resource);
 		if (!status)
 			suspended++;
 		break;
 
 	case LCK_UNLOCK:
-	case LCK_LV_RESUME:	/* if active */
+	case LCK_LV_RESUME & LCK_MASK:	/* if active */
 		status = do_resume_lv(resource);
 		if (!status)
 			suspended--;
 		break;
 
-	case LCK_LV_ACTIVATE:
+	case LCK_LV_ACTIVATE & LCK_MASK:
 		status = do_activate_lv(resource, lock_flags, LKM_CRMODE);
 		break;
 
-	case LCK_LV_DEACTIVATE:
+	case LCK_LV_DEACTIVATE & LCK_MASK:
 		status = do_deactivate_lv(resource, lock_flags);
 		break;
 

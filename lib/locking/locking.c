@@ -386,15 +386,18 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags)
 		/* If LVM1 driver knows about the VG, it can't be accessed. */
 		if (!check_lvm1_vg_inactive(cmd, vol))
 			return 0;
+		break;
 	case LCK_LV:
-		/* Suspend LV if it's active. */
-		strncpy(resource, vol, sizeof(resource));
+		/* All LV locks are non-blocking. */
+		flags |= LCK_NONBLOCK;
 		break;
 	default:
 		log_error("Unrecognised lock scope: %d",
 			  flags & LCK_SCOPE_MASK);
 		return 0;
 	}
+
+	strncpy(resource, vol, sizeof(resource));
 
 	if (!_lock_vol(cmd, resource, flags))
 		return 0;
