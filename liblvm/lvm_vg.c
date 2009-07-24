@@ -40,11 +40,23 @@ vg_t *lvm_vg_create(lvm_t libh, const char *vg_name)
 int lvm_vg_extend(vg_t *vg, const char *device)
 {
 	if (vg_read_error(vg))
-		goto_bad;
+		return 0;
 
-	return vg_extend(vg, 1, (char **) &device);
-bad:
-	return 0;
+	if (!lock_vol(vg->cmd, VG_ORPHANS, LCK_VG_WRITE)) {
+		log_error("Can't get lock for orphan PVs");
+		return 0;
+	}
+
+	if (!vg_extend(vg, 1, (char **) &device)) {
+		unlock_vg(vg->cmd, VG_ORPHANS);
+		return 0;
+	}
+	/*
+	 * FIXME: Either commit to disk, or keep holding VG_ORPHANS and
+	 * release in lvm_vg_close().
+	 */
+	unlock_vg(vg->cmd, VG_ORPHANS);
+	return 1;
 }
 
 int lvm_vg_set_extent_size(vg_t *vg, uint32_t new_size)
