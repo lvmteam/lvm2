@@ -162,8 +162,10 @@ static void _vg_open(char **argv, int argc, lvm_t libh)
 		printf ("VG already open\n");
 		return;
 	}
-	/* FIXME: allow different open modes */
-	vg = lvm_vg_open(libh, argv[1], "r", 0);
+	if (argc < 3)
+		vg = lvm_vg_open(libh, argv[1], "r", 0);
+	else
+		vg = lvm_vg_open(libh, argv[1], argv[2], 0);
 	if (!vg || !lvm_vg_get_name(vg)) {
 		printf("Error opening %s\n", argv[1]);
 		return;
