@@ -758,7 +758,7 @@ int vg_set_extent_size(vg_t *vg, uint32_t new_size)
 	}
 
 	if (new_size > vg->extent_size) {
-		if ((uint64_t) vg->extent_size * vg->extent_count % new_size) {
+		if ((uint64_t) vg_size(vg) % new_size) {
 			/* FIXME Adjust used PV sizes instead */
 			log_error("New extent size is not a perfect fit");
 			return 0;
