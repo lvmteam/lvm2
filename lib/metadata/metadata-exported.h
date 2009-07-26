@@ -337,6 +337,25 @@ struct lv_list {
 	struct logical_volume *lv;
 };
 
+struct pvcreate_params {
+	int zero;
+	uint64_t size;
+	uint64_t data_alignment;
+	int pvmetadatacopies;
+	uint64_t pvmetadatasize;
+	int64_t labelsector;
+	struct id id; /* FIXME: redundant */
+	struct id *idp; /* 0 if no --uuid option */
+	uint64_t pe_start;
+	uint32_t extent_count;
+	uint32_t extent_size;
+	const char *restorefile; /* 0 if no --restorefile option */
+	force_t force;
+	unsigned yes;
+};
+
+int pvcreate_single(struct cmd_context *cmd, const char *pv_name, void *handle);
+
 /*
 * Utility functions
 */
