@@ -22,7 +22,7 @@ lvm_vg_write
 lvm_vg_open
 lvm_vg_close
 lvm_vg_remove
-lvm_scan_vgs
+lvm_scan
 lvm_errno
 lvm_errmsg
 lvm_vg_list_pvs

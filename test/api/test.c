@@ -264,7 +264,7 @@ static void _pvs_in_vg(char **argv, int argc)
 
 static void _scan_vgs(lvm_t libh)
 {
-	lvm_scan_vgs(libh);
+	lvm_scan(libh);
 }
 
 static void _list_vg_names(lvm_t libh)

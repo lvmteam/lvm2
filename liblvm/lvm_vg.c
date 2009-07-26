@@ -252,7 +252,7 @@ struct dm_list *lvm_list_vg_uuids(lvm_t libh)
 	return get_vgids((struct cmd_context *)libh, 0);
 }
 
-int lvm_scan_vgs(lvm_t libh)
+int lvm_scan(lvm_t libh)
 {
 	return lvmcache_label_scan((struct cmd_context *)libh, 2);
 }

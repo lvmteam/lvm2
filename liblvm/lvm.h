@@ -176,7 +176,7 @@ const char *lvm_errmsg(lvm_t libh);
  *
  * \return  Status code of 1 (success) or 0 (failure).
  */
-int lvm_scan_vgs(lvm_t libh);
+int lvm_scan(lvm_t libh);
 
 /*************************** volume group handling **************************/
 
@@ -184,7 +184,7 @@ int lvm_scan_vgs(lvm_t libh);
  * Return the list of volume group names.
  *
  * NOTE: This function will _NOT_ scan devices in the system for LVM metadata.
- * To scan the system, use lvm_scan_vgs.
+ * To scan the system, use lvm_scan.
  *
  * To process the list, use the dm_list iterator functions.  For example:
  *      vg_t *vg;
@@ -211,7 +211,7 @@ struct dm_list *lvm_list_vg_names(lvm_t libh);
  * Return the list of volume group uuids.
  *
  * NOTE: This function will _NOT_ scan devices in the system for LVM metadata.
- * To scan the system, use lvm_scan_vgs.
+ * To scan the system, use lvm_scan.
  *
  * \param   libh
  *          Handle obtained from lvm_create.
