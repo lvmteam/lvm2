@@ -211,7 +211,7 @@ uint64_t lvm_vg_get_extent_count(const vg_t *vg)
 	return vg_extent_count(vg);
 }
 
-uint64_t lvm_vg_get_free_count(const vg_t *vg)
+uint64_t lvm_vg_get_free_extent_count(const vg_t *vg)
 {
 	return vg_free_count(vg);
 }
