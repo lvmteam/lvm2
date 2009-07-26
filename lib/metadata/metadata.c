@@ -680,6 +680,28 @@ bad:
 	return NULL;
 }
 
+uint64_t extents_from_size(struct cmd_context *cmd, uint64_t size,
+			   uint32_t extent_size)
+{
+	if (size % extent_size) {
+		size += extent_size - size % extent_size;
+		log_print("Rounding up size to full physical extent %s",
+			  display_size(cmd, size));
+	}
+
+	if (size > (uint64_t) UINT32_MAX * extent_size) {
+		log_error("Volume too large (%s) for extent size %s. "
+			  "Upper limit is %s.",
+			  display_size(cmd, size),
+			  display_size(cmd, (uint64_t) extent_size),
+			  display_size(cmd, (uint64_t) UINT32_MAX *
+				       extent_size));
+		return 0;
+	}
+
+	return (uint64_t) size / extent_size;
+}
+
 static int _recalc_extents(uint32_t *extents, const char *desc1,
 			   const char *desc2, uint32_t old_size,
 			   uint32_t new_size)
