@@ -443,6 +443,31 @@ struct dm_list *lvm_vg_list_lvs(vg_t *vg);
 lv_t *lvm_vg_create_lv_linear(vg_t *vg, const char *name, uint64_t size);
 
 /**
+ * Activate a logical volume.
+ *
+ * This API is the equivalent of the lvm command "lvchange -ay".
+ *
+ * NOTE: This API cannot currently handle LVs with an in-progress pvmove or
+ * lvconvert.
+ *
+ * \param   lv
+ *          Logical volume handle.
+ * \return  0 (success) or -1 (failure).
+ */
+int lvm_lv_activate(lv_t *lv);
+
+/**
+ * Deactivate a logical volume.
+ *
+ * This API is the equivalent of the lvm command "lvchange -an".
+ *
+ * \param   lv
+ *          Logical volume handle.
+ * \return  0 (success) or -1 (failure).
+ */
+int lvm_lv_deactivate(lv_t *lv);
+
+/**
  * Remove a logical volume from a volume group.
  *
  * This function commits the change to disk and does _not_ require calling
