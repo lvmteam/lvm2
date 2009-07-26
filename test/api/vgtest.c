@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
 
 	printf("Extending VG %s\n", vg_name);
 	status = lvm_vg_extend(vg, device);
-	if (!status) {
+	if (status) {
 		fprintf(stderr, "Error extending volume group %s "
 			"with device %s\n", vg_name, device);
 		goto bad;
@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
 
 	printf("Setting VG %s extent_size to %"PRIu64"\n", vg_name, size);
 	status = lvm_vg_set_extent_size(vg, size);
-	if (!status) {
+	if (status) {
 		fprintf(stderr, "Can not set physical extent "
 			"size '%"PRIu64"' for '%s'\n",
 			size, vg_name);
@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
 
 	printf("Committing VG %s to disk\n", vg_name);
 	status = lvm_vg_write(vg);
-	if (!status) {
+	if (status) {
 		fprintf(stderr, "Creation of volume group '%s' on "
 			"device '%s' failed\n",
 			vg_name, device);
@@ -75,14 +75,14 @@ int main(int argc, char *argv[])
 	}
 
 	printf("Closing VG %s\n", vg_name);
-	if (!lvm_vg_close(vg))
+	if (lvm_vg_close(vg))
 		goto bad;
 	printf("Re-opening VG %s for reading\n", vg_name);
 	vg = lvm_vg_open(handle, vg_name, "r", 0);
 	if (!vg)
 		goto bad;
 	printf("Closing VG %s\n", vg_name);
-	if (!lvm_vg_close(vg))
+	if (lvm_vg_close(vg))
 		goto bad;
 	printf("Re-opening VG %s for writing\n", vg_name);
 	vg = lvm_vg_open(handle, vg_name, "w", 0);
@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
 		goto bad;
 	printf("Removing VG %s from system\n", vg_name);
 	status = lvm_vg_remove(vg);
-	if (lvm_errno(handle)) {
+	if (status) {
 		fprintf(stderr, "Revmoval of volume group '%s' failed\n",
 			vg_name);
 		goto bad;

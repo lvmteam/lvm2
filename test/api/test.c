@@ -327,7 +327,7 @@ static void _vg_remove_lv(char **argv, int argc)
 	}
 	if (!(lv = _lookup_lv_by_name(argv[2])))
 		return;
-	if (!lvm_vg_remove_lv(lv))
+	if (lvm_vg_remove_lv(lv))
 		printf("Error ");
 	else {
 		printf("Success ");
