@@ -97,6 +97,26 @@ void lvm_destroy(lvm_t libh);
 int lvm_reload_config(lvm_t libh);
 
 /**
+ * Create a linear logical volume.
+ * This API commits the change to disk and does _not_ require calling
+ * lvm_vg_write.
+ * FIXME: This API should probably not commit to disk but require calling
+ * lvm_vg_write.  However, this appears to be non-trivial change until
+ * lv_create_single is refactored by segtype.
+ *
+ * \param   vg
+ *          VG handle obtained from lvm_vg_create or lvm_vg_open.
+ *
+ * \param   name
+ *          Name of logical volume to create.
+ *
+ * \param   size
+ *          Size of logical volume in extents.
+ *
+ */
+lv_t *lvm_vg_create_lv_linear(vg_t *vg, const char *name, uint64_t size);
+
+/**
  * Return stored error no describing last LVM API error.
  *
  * Users of liblvm should use lvm_errno to determine success or failure
