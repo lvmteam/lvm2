@@ -196,7 +196,7 @@ uint64_t lvm_vg_get_size(const vg_t *vg)
 	return vg_size(vg);
 }
 
-uint64_t lvm_vg_get_free(const vg_t *vg)
+uint64_t lvm_vg_get_free_size(const vg_t *vg)
 {
 	return vg_free(vg);
 }
