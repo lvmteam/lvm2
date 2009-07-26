@@ -210,9 +210,10 @@ static void _vg_close(char **argv, int argc)
 
 static void _show_one_vg(vg_t *vg)
 {
-	/* FIXME: uuid is not null terminated */
-	printf("%s (%s): mode = %s\n", lvm_vg_get_name(vg),
-	       lvm_vg_get_uuid(vg), "READ");
+	printf("%s (%s): size=%"PRIu64", free=%"PRIu64", #pv=%"PRIu64"\n",
+		lvm_vg_get_name(vg), lvm_vg_get_uuid(vg),
+		lvm_vg_get_size(vg), lvm_vg_get_free(vg),
+		lvm_vg_get_pv_count(vg));
 }
 
 static void _list_open_vgs(void)
@@ -235,8 +236,9 @@ static void _pvs_in_vg(char **argv, int argc)
 	}
 	printf("PVs in VG %s:\n", lvm_vg_get_name(vg));
 	dm_list_iterate_items(pvl, pvs) {
-		printf("%s (%s)\n",
-		       lvm_pv_get_name(pvl->pv), lvm_pv_get_uuid(pvl->pv));
+		printf("%s (%s): mda_count=%"PRIu64"\n",
+		       lvm_pv_get_name(pvl->pv), lvm_pv_get_uuid(pvl->pv),
+			lvm_pv_get_mda_count(pvl->pv));
 	}
 }
 
@@ -289,8 +291,9 @@ static void _lvs_in_vg(char **argv, int argc)
 	}
 	printf("LVs in VG %s:\n", lvm_vg_get_name(vg));
 	dm_list_iterate_items(lvl, lvs) {
-		printf("%s/%s (%s)\n", lvm_vg_get_name(vg),
-		       lvm_lv_get_name(lvl->lv), lvm_lv_get_uuid(lvl->lv));
+		printf("%s/%s (%s): size=%"PRIu64"\n", lvm_vg_get_name(vg),
+			lvm_lv_get_name(lvl->lv), lvm_lv_get_uuid(lvl->lv),
+			lvm_lv_get_size(lvl->lv));
 	}
 }
 
