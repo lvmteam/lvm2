@@ -516,6 +516,24 @@ char *lvm_lv_get_name(const lv_t *lv);
  */
 uint64_t lvm_lv_get_size(const lv_t *lv);
 
+/**
+ * Get the current activation state of a logical volume.
+ *
+ * \param   lv
+ *          Logical volume handle.
+ * \return  1 if the LV is active in the kernel, 0 if not
+ */
+uint64_t lvm_lv_is_active(const lv_t *lv);
+
+/**
+ * Get the current suspended state of a logical volume.
+ *
+ * \param   lv
+ *          Logical volume handle.
+ * \return  1 if the LV is suspended in the kernel, 0 if not
+ */
+uint64_t lvm_lv_is_suspended(const lv_t *lv);
+
 /************************** physical volume handling ************************/
 
 /**

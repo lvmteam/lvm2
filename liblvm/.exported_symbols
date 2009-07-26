@@ -17,6 +17,8 @@ lvm_lv_deactivate
 lvm_lv_get_uuid
 lvm_lv_get_name
 lvm_lv_get_size
+lvm_lv_is_active
+lvm_lv_is_suspended
 lvm_vg_create
 lvm_vg_extend
 lvm_vg_set_extent_size

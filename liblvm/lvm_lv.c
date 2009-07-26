@@ -19,6 +19,7 @@
 #include "defaults.h"
 #include "segtype.h"
 #include "locking.h"
+#include "activate.h"
 
 #include <string.h>
 
@@ -47,6 +48,24 @@ char *lvm_lv_get_name(const lv_t *lv)
 	strncpy(name, (const char *)lv->name, NAME_LEN);
 	name[NAME_LEN] = '\0';
 	return name;
+}
+
+uint64_t lvm_lv_is_active(const lv_t *lv)
+{
+	struct lvinfo info;
+	if (lv_info(lv->vg->cmd, lv, &info, 1, 0) &&
+	    info.exists && info.live_table)
+		return 1;
+	return 0;
+}
+
+uint64_t lvm_lv_is_suspended(const lv_t *lv)
+{
+	struct lvinfo info;
+	if (lv_info(lv->vg->cmd, lv, &info, 1, 0) &&
+	    info.exists && info.suspended)
+		return 1;
+	return 0;
 }
 
 /* Set defaults for non-segment specific LV parameters */
