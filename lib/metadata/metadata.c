@@ -1119,19 +1119,16 @@ static void fill_default_pvcreate_params(struct pvcreate_params *pp)
  * pv_t * (non-NULL): handle to physical volume created
  */
 pv_t * pvcreate_single(struct cmd_context *cmd, const char *pv_name,
-		       void *handle)
+		       struct pvcreate_params *pp)
 {
-	struct pvcreate_params *pp;
 	void *pv;
 	struct device *dev;
 	struct dm_list mdas;
 	struct pvcreate_params default_pp;
 
 	fill_default_pvcreate_params(&default_pp);
-	if (!handle)
+	if (!pp)
 		pp = &default_pp;
-	else
-		pp = (struct pvcreate_params *) handle;
 
 	if (pp->idp) {
 		if ((dev = device_from_pvid(cmd, pp->idp)) &&

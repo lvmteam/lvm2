@@ -355,7 +355,7 @@ struct pvcreate_params {
 };
 
 pv_t * pvcreate_single(struct cmd_context *cmd, const char *pv_name,
-		       void *handle);
+		       struct pvcreate_params *pp);
 
 /*
 * Utility functions
