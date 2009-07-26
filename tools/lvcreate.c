@@ -25,9 +25,6 @@ struct lvcreate_cmdline_params {
 	int pv_count;
 };
 
-static uint64_t _extents_from_size(struct cmd_context *cmd, uint64_t size,
-				   uint32_t extent_size);
-
 static int _lvcreate_name_params(struct lvcreate_params *lp,
 				 struct cmd_context *cmd,
 				 int *pargc, char ***pargv)
@@ -136,12 +133,12 @@ static int _update_extents_params(struct volume_group *vg,
 	uint32_t pv_extent_count;
 
 	if (lcp->size &&
-	    !(lp->extents = _extents_from_size(vg->cmd, lcp->size,
+	    !(lp->extents = extents_from_size(vg->cmd, lcp->size,
 					       vg->extent_size)))
 		return_0;
 
 	if (lp->voriginsize &&
-	    !(lp->voriginextents = _extents_from_size(vg->cmd, lp->voriginsize,
+	    !(lp->voriginextents = extents_from_size(vg->cmd, lp->voriginsize,
 						      vg->extent_size)))
 		return_0;
 
@@ -571,28 +568,6 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 	lcp->pvs = argv;
 
 	return 1;
-}
-
-static uint64_t _extents_from_size(struct cmd_context *cmd, uint64_t size,
-				   uint32_t extent_size)
-{
-	if (size % extent_size) {
-		size += extent_size - size % extent_size;
-		log_print("Rounding up size to full physical extent %s",
-			  display_size(cmd, size));
-	}
-
-	if (size > (uint64_t) UINT32_MAX * extent_size) {
-		log_error("Volume too large (%s) for extent size %s. "
-			  "Upper limit is %s.",
-			  display_size(cmd, size),
-			  display_size(cmd, (uint64_t) extent_size),
-			  display_size(cmd, (uint64_t) UINT32_MAX *
-				       extent_size));
-		return 0;
-	}
-
-	return (uint64_t) size / extent_size;
 }
 
 int lvcreate(struct cmd_context *cmd, int argc, char **argv)
