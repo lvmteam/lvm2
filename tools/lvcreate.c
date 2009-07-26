@@ -20,6 +20,7 @@
 
 struct lvcreate_cmdline_params {
 	percent_t percent;
+	uint64_t size;
 };
 
 /* FIXME: refactor and reduce the size of this struct! */
@@ -47,7 +48,6 @@ struct lvcreate_params {
 
 	/* size */
 	uint32_t extents;
-	uint64_t size;
 	uint32_t voriginextents;
 	uint64_t voriginsize;
 	struct dm_list *pvh;
@@ -171,8 +171,8 @@ static int _update_extents_params(struct volume_group *vg,
 {
 	uint32_t pv_extent_count;
 
-	if (lp->size &&
-	    !(lp->extents = _extents_from_size(vg->cmd, lp->size,
+	if (lcp->size &&
+	    !(lp->extents = _extents_from_size(vg->cmd, lcp->size,
 					       vg->extent_size)))
 		return_0;
 
@@ -242,7 +242,7 @@ static int _read_size_params(struct lvcreate_params *lp,
 			log_error("Negative size is invalid");
 			return 0;
 		}
-		lp->size = arg_uint64_value(cmd, size_ARG, UINT64_C(0));
+		lcp->size = arg_uint64_value(cmd, size_ARG, UINT64_C(0));
 		lcp->percent = PERCENT_NONE;
 	}
 
