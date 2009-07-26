@@ -261,7 +261,7 @@ char *lvm_lv_get_name(const lv_t *lv);
  */
 uint64_t lvm_pv_get_mda_count(const pv_t *pv);
 uint64_t lvm_vg_get_size(const vg_t *vg);
-uint64_t lvm_vg_get_free(const vg_t *vg);
+uint64_t lvm_vg_get_free_size(const vg_t *vg);
 uint64_t lvm_vg_get_extent_size(const vg_t *vg);
 uint64_t lvm_vg_get_extent_count(const vg_t *vg);
 uint64_t lvm_vg_get_free_extent_count(const vg_t *vg);

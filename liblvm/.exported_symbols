@@ -7,7 +7,7 @@ lvm_pv_get_mda_count
 lvm_vg_get_name
 lvm_vg_get_uuid
 lvm_vg_get_size
-lvm_vg_get_free
+lvm_vg_get_free_size
 lvm_vg_get_extent_size
 lvm_vg_get_extent_count
 lvm_vg_get_free_extent_count
