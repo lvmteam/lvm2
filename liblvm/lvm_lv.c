@@ -96,3 +96,9 @@ lv_t *lvm_vg_create_lv_linear(vg_t *vg, const char *name, uint64_t size)
 	return lvl->lv;
 }
 
+int lvm_vg_remove_lv(lv_t *lv)
+{
+	if (!lv || !lv->vg || vg_read_error(lv->vg))
+		return 0;
+	return lv_remove_single(lv->vg->cmd, lv, DONT_PROMPT);
+}

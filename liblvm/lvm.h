@@ -117,6 +117,17 @@ int lvm_reload_config(lvm_t libh);
 lv_t *lvm_vg_create_lv_linear(vg_t *vg, const char *name, uint64_t size);
 
 /**
+ * Remove a logical volume from a volume group.
+ * This API commits the change to disk and does _not_ require calling
+ * lvm_vg_write.
+ * Currently only removing linear LVs are possible.
+ *
+ * FIXME: This API should probably not commit to disk but require calling
+ * lvm_vg_write.
+ */
+int lvm_vg_remove_lv(lv_t *lv);
+
+/**
  * Return stored error no describing last LVM API error.
  *
  * Users of liblvm should use lvm_errno to determine success or failure
