@@ -3364,9 +3364,52 @@ uint32_t pv_pe_alloc_count(const pv_t *pv)
 	return pv_field(pv, pe_alloc_count);
 }
 
+uint32_t pv_mda_count(const pv_t *pv)
+{
+	struct lvmcache_info *info;
+
+	info = info_from_pvid((const char *)&pv->id.uuid, 0);
+	return info ? dm_list_size(&info->mdas) : UINT64_C(0);
+}
+
 uint32_t vg_status(const vg_t *vg)
 {
 	return vg->status;
+}
+
+uint64_t vg_size(const vg_t *vg)
+{
+	return (uint64_t) vg->extent_count * vg->extent_size;
+}
+
+uint64_t vg_free(const vg_t *vg)
+{
+	return (uint64_t) vg->free_count * vg->extent_size;
+}
+
+uint64_t vg_extent_size(const vg_t *vg)
+{
+	return (uint64_t) vg->extent_size;
+}
+
+uint64_t vg_extent_count(const vg_t *vg)
+{
+	return (uint64_t) vg->extent_count;
+}
+
+uint64_t vg_free_count(const vg_t *vg)
+{
+	return (uint64_t) vg->free_count;
+}
+
+uint64_t vg_pv_count(const vg_t *vg)
+{
+	return (uint64_t) vg->pv_count;
+}
+
+uint64_t lv_size(const lv_t *lv)
+{
+	return lv->size;
 }
 
 /**
