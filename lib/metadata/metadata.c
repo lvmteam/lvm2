@@ -1142,11 +1142,6 @@ pv_t * pvcreate_single(struct cmd_context *cmd, const char *pv_name,
 		}
 	}
 
-	if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE)) {
-		log_error("Can't get lock for orphan PVs");
-		return NULL;
-	}
-
 	if (!pvcreate_check(cmd, pv_name, pp))
 		goto error;
 
@@ -1203,11 +1198,9 @@ pv_t * pvcreate_single(struct cmd_context *cmd, const char *pv_name,
 
 	log_print("Physical volume \"%s\" successfully created", pv_name);
 
-	unlock_vg(cmd, VG_ORPHANS);
 	return pv;
 
       error:
-	unlock_vg(cmd, VG_ORPHANS);
 	return NULL;
 }
 
