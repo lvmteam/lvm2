@@ -287,7 +287,7 @@ static void _list_vg_ids(lvm_t libh)
 	struct lvm_str_list *strl;
 	const char *tmp;
 
-	list = lvm_list_vg_ids(libh);
+	list = lvm_list_vg_uuids(libh);
 	printf("VG uuids:\n");
 	dm_list_iterate_items(strl, list) {
 		tmp = strl->str;

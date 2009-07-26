@@ -336,7 +336,7 @@ struct dm_list *lvm_vg_list_pvs(vg_t *vg);
  * FIXME: handle list memory cleanup
  */
 struct dm_list *lvm_list_vg_names(lvm_t libh);
-struct dm_list *lvm_list_vg_ids(lvm_t libh);
+struct dm_list *lvm_list_vg_uuids(lvm_t libh);
 
 /**
  * Scan all devices on the system for VGs and LVM metadata.
