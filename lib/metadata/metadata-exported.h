@@ -495,6 +495,45 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 int lv_rename(struct cmd_context *cmd, struct logical_volume *lv,
 	      const char *new_name);
 
+/* FIXME: refactor and reduce the size of this struct! */
+struct lvcreate_params {
+	/* flags */
+	int snapshot; /* snap */
+	int zero; /* all */
+	int major; /* all */
+	int minor; /* all */
+	int corelog; /* mirror */
+	int nosync; /* mirror */
+
+	char *origin; /* snap */
+	const char *vg_name; /* all */
+	const char *lv_name; /* all */
+
+	uint32_t stripes; /* striped */
+	uint32_t stripe_size; /* striped */
+	uint32_t chunk_size; /* snapshot */
+	uint32_t region_size; /* mirror */
+
+	uint32_t mirrors; /* mirror */
+
+	const struct segment_type *segtype; /* all */
+
+	/* size */
+	uint32_t extents; /* all */
+	uint32_t voriginextents; /* snapshot */
+	uint64_t voriginsize; /* snapshot */
+	struct dm_list *pvh; /* all */
+
+	uint32_t permission; /* all */
+	uint32_t read_ahead; /* all */
+	alloc_policy_t alloc; /* all */
+
+	const char *tag; /* all */
+};
+
+int lv_create_single(struct volume_group *vg,
+		     struct lvcreate_params *lp);
+
 /*
  * Functions for layer manipulation
  */
