@@ -110,13 +110,6 @@ struct lvm_str_list {
 	const char *str;
 };
 
-/**
- * Return a list of LV handles for a given VG handle.
- *
- * \return  A list of lv_list_t structures containing lv handles for this vg.
- *          If no LVs exist on the given VG, NULL is returned.
- */
-struct dm_list *lvm_vg_list_lvs(vg_t *vg);
 /*************************** generic lvm handling ***************************/
 
 /**
@@ -146,41 +139,13 @@ void lvm_destroy(lvm_t libh);
 /**
  * Reload the original configuration from the system directory.
  *
+ * This function should be used when any system configuration changes,
+ * and the change is needed by the application.
+ *
  * \param   libh
  *          Handle obtained from lvm_create.
  */
 int lvm_reload_config(lvm_t libh);
-
-/**
- * Create a linear logical volume.
- * This API commits the change to disk and does _not_ require calling
- * lvm_vg_write.
- * FIXME: This API should probably not commit to disk but require calling
- * lvm_vg_write.  However, this appears to be non-trivial change until
- * lv_create_single is refactored by segtype.
- *
- * \param   vg
- *          VG handle obtained from lvm_vg_create or lvm_vg_open.
- *
- * \param   name
- *          Name of logical volume to create.
- *
- * \param   size
- *          Size of logical volume in extents.
- *
- */
-lv_t *lvm_vg_create_lv_linear(vg_t *vg, const char *name, uint64_t size);
-
-/**
- * Remove a logical volume from a volume group.
- * This API commits the change to disk and does _not_ require calling
- * lvm_vg_write.
- * Currently only removing linear LVs are possible.
- *
- * FIXME: This API should probably not commit to disk but require calling
- * lvm_vg_write.
- */
-int lvm_vg_remove_lv(lv_t *lv);
 
 /**
  * Return stored error no describing last LVM API error.
@@ -207,167 +172,16 @@ int lvm_errno(lvm_t libh);
 const char *lvm_errmsg(lvm_t libh);
 
 /**
- * Create a VG with default parameters.
- *
- * This API requires calling lvm_vg_write to commit the change to disk.
- * Upon success, other APIs may be used to set non-default parameters.
- * For example, to set a non-default extent size, use lvm_vg_set_extent_size.
- * Next, to add physical storage devices to the volume group, use
- * lvm_vg_extend for each device.
- * Once all parameters are set appropriately and all devices are added to the
- * VG, use lvm_vg_write to commit the new VG to disk, and lvm_vg_close to
- * release the VG handle.
- *
- * \param   libh
- *          Handle obtained from lvm_create.
- *
- * \return  non-NULL vg handle (success) or NULL (failure)
- */
-vg_t *lvm_vg_create(lvm_t libh, const char *vg_name);
-
-/**
- * Extend a VG by adding a device.
- *
- * This API requires calling lvm_vg_write to commit the change to disk.
- * After successfully adding a device, use lvm_vg_write to commit the new VG
- * to disk.  Upon failure, retry the operation or release the VG handle with
- * lvm_vg_close.
- * If the device is not initialized for LVM use, it will be initialized
- * before adding to the VG.  Although some internal checks are done,
- * the caller should be sure the device is not in use by other subsystems
- * before calling lvm_vg_extend.
- *
- * \param   vg
- *          VG handle obtained from lvm_vg_create.
- *
- * \param   device
- *          Name of device to add to VG.
+ * Scan all devices on the system for VGs and LVM metadata.
  *
  * \return  Status code of 1 (success) or 0 (failure).
  */
-int lvm_vg_extend(vg_t *vg, const char *device);
+int lvm_scan_vgs(lvm_t libh);
+
+/*************************** volume group handling **************************/
 
 /**
- * Set the extent size of a VG.
- *
- * This API requires calling lvm_vg_write to commit the change to disk.
- * After successfully setting a new extent size, use lvm_vg_write to commit
- * the new VG to disk.  Upon failure, retry the operation or release the VG
- * handle with lvm_vg_close.
- *
- * \param   vg
- *          VG handle obtained from lvm_vg_create.
- *
- * \param   new_size
- *          New extent size to set (in sectors).
- *
- * \return  Status code of 1 (success) or 0 (failure).
- */
-int lvm_vg_set_extent_size(vg_t *vg, uint32_t new_size);
-
-/**
- * Write a VG to disk.
- *
- * This API commits the VG to disk.
- * Upon failure, retry the operation and/or release the VG handle with
- * lvm_vg_close.
- *
- * \param   vg
- *          VG handle obtained from lvm_vg_create.
- *
- * \return  Status code of 1 (success) or 0 (failure).
- */
-int lvm_vg_write(vg_t *vg);
-
-/**
- * Remove a VG from the system.
- *
- * This API commits the change to disk and does not require calling
- * lvm_vg_write.
- *
- * \param   vg
- *          VG handle obtained from lvm_vg_create.
- *
- * \return  Status code of 1 (success) or 0 (failure).
- */
-int lvm_vg_remove(vg_t *vg);
-
-/**
- * Get the current name or uuid of a PV, VG, or LV.
- *
- * Returns a copy of the current name or uuid for the given PV,
- * VG, or LV.
- *
- * Memory is allocated using malloc() and caller must free the memory
- * using free().
- */
-char *lvm_pv_get_uuid(const pv_t *pv);
-char *lvm_vg_get_uuid(const vg_t *vg);
-char *lvm_lv_get_uuid(const lv_t *lv);
-char *lvm_pv_get_name(const pv_t *pv);
-char *lvm_vg_get_name(const vg_t *vg);
-char *lvm_lv_get_name(const lv_t *lv);
-
-/**
- * Get various pv, vg, or lv properties.
- * For full description of each property, consult the man pages for pvs,
- * vgs, and lvs.
- * FIXME: What value to return for invalid handle or other errors?
- */
-uint64_t lvm_pv_get_mda_count(const pv_t *pv);
-uint64_t lvm_vg_get_size(const vg_t *vg);
-uint64_t lvm_vg_get_free_size(const vg_t *vg);
-uint64_t lvm_vg_get_extent_size(const vg_t *vg);
-uint64_t lvm_vg_get_extent_count(const vg_t *vg);
-uint64_t lvm_vg_get_free_extent_count(const vg_t *vg);
-uint64_t lvm_vg_get_pv_count(const vg_t *vg);
-uint64_t lvm_lv_get_size(const lv_t *lv);
-
-/**
- * Close a VG opened with lvm_vg_create
- *
- * This API releases a VG handle and any resources associated with the handle.
- *
- * \param   vg
- *          VG handle obtained from lvm_vg_create.
- *
- * \return  Status code of 1 (success) or 0 (failure).
- */
-int lvm_vg_close(vg_t *vg);
-
-/**
- * Open an existing VG.
- *
- * Open a VG for reading or writing.
- *
- * \param   libh
- *          Handle obtained from lvm_create.
- *
- * \param   vgname
- *          Name of the VG to open.
- *
- * \param   mode
- *          Open mode - either "r" (read) or "w" (read/write).
- *          Any other character results in an error with EINVAL set.
- *
- * \param   flags
- *          Open flags - currently ignored.
- *
- * \return  non-NULL VG handle (success) or NULL (failure).
- */
-vg_t *lvm_vg_open(lvm_t libh, const char *vgname, const char *mode,
-		  uint32_t flags);
-
-/**
- * Return a list of PV handles for a given VG handle.
- *
- * \return  A list of pv_list_t structures containing pv handles for this vg.
- *          If no PVs exist on the given VG, NULL is returned.
- */
-struct dm_list *lvm_vg_list_pvs(vg_t *vg);
-
-/**
- * Return a list of VG names or VG uuids in the system.
+ * Return the list of volume group names.
  *
  * NOTE: This function will _NOT_ scan devices in the system for LVM metadata.
  * To scan the system, use lvm_scan_vgs.
@@ -388,16 +202,342 @@ struct dm_list *lvm_vg_list_pvs(vg_t *vg);
  *
  * \return  A list of struct lvm_str_list
  *          If no VGs exist on the system, NULL is returned.
+ *
  * FIXME: handle list memory cleanup
  */
 struct dm_list *lvm_list_vg_names(lvm_t libh);
+
+/**
+ * Return the list of volume group uuids.
+ *
+ * NOTE: This function will _NOT_ scan devices in the system for LVM metadata.
+ * To scan the system, use lvm_scan_vgs.
+ *
+ * \param   libh
+ *          Handle obtained from lvm_create.
+ *
+ * \return  List of copied uuid strings.
+ */
 struct dm_list *lvm_list_vg_uuids(lvm_t libh);
 
 /**
- * Scan all devices on the system for VGs and LVM metadata.
+ * Open an existing VG.
  *
+ * Open a VG for reading or writing.
+ *
+ * \param   libh
+ *          Handle obtained from lvm_create.
+ * \param   vgname
+ *          Name of the VG to open.
+ * \param   mode
+ *          Open mode - either "r" (read) or "w" (read/write).
+ *          Any other character results in an error with EINVAL set.
+ * \param   flags
+ *          Open flags - currently ignored.
+ * \return  non-NULL VG handle (success) or NULL (failure).
+ */
+vg_t *lvm_vg_open(lvm_t libh, const char *vgname, const char *mode,
+		  uint32_t flags);
+
+/**
+ * Create a VG with default parameters.
+ *
+ * This API requires calling lvm_vg_write to commit the change to disk.
+ * Upon success, other APIs may be used to set non-default parameters.
+ * For example, to set a non-default extent size, use lvm_vg_set_extent_size.
+ * Next, to add physical storage devices to the volume group, use
+ * lvm_vg_extend for each device.
+ * Once all parameters are set appropriately and all devices are added to the
+ * VG, use lvm_vg_write to commit the new VG to disk, and lvm_vg_close to
+ * release the VG handle.
+ *
+ * \param   libh
+ *          Handle obtained from lvm_create.
+ * \param   vg_name
+ *          Name of the VG to open.
+ * \return  non-NULL vg handle (success) or NULL (failure)
+ */
+vg_t *lvm_vg_create(lvm_t libh, const char *vg_name);
+
+ /**
+ * Write a VG to disk.
+ *
+ * This API commits the VG to disk.
+ * Upon failure, retry the operation and/or release the VG handle with
+ * lvm_vg_close.
+ *
+ * \param   vg
+ *          VG handle obtained from lvm_vg_create or lvm_vg_open.
  * \return  Status code of 1 (success) or 0 (failure).
  */
-int lvm_scan_vgs(lvm_t libh);
+int lvm_vg_write(vg_t *vg);
+
+/**
+ * Remove a VG from the system.
+ *
+ * This API commits the change to disk and does not require calling
+ * lvm_vg_write.
+ *
+ * \param   vg
+ *          VG handle obtained from lvm_vg_create or lvm_vg_open.
+ * \return  Status code of 1 (success) or 0 (failure).
+ */
+int lvm_vg_remove(vg_t *vg);
+
+/**
+ * Close a VG opened with lvm_vg_create
+ *
+ * This API releases a VG handle and any resources associated with the handle.
+ *
+ * \param   vg
+ *          VG handle obtained from lvm_vg_create or lvm_vg_open.
+ * \return  Status code of 1 (success) or 0 (failure).
+ */
+int lvm_vg_close(vg_t *vg);
+
+/**
+ * Extend a VG by adding a device.
+ *
+ * This API requires calling lvm_vg_write to commit the change to disk.
+ * After successfully adding a device, use lvm_vg_write to commit the new VG
+ * to disk.  Upon failure, retry the operation or release the VG handle with
+ * lvm_vg_close.
+ * If the device is not initialized for LVM use, it will be initialized
+ * before adding to the VG.  Although some internal checks are done,
+ * the caller should be sure the device is not in use by other subsystems
+ * before calling lvm_vg_extend.
+ *
+ * \param   vg
+ *          VG handle obtained from lvm_vg_create or lvm_vg_open.
+ * \param   device
+ *          Name of device to add to VG.
+ * \return  Status code of 1 (success) or 0 (failure).
+ */
+int lvm_vg_extend(vg_t *vg, const char *device);
+
+/**
+ * Set the extent size of a VG.
+ *
+ * This API requires calling lvm_vg_write to commit the change to disk.
+ * After successfully setting a new extent size, use lvm_vg_write to commit
+ * the new VG to disk.  Upon failure, retry the operation or release the VG
+ * handle with lvm_vg_close.
+ *
+ * \param   vg
+ *          VG handle obtained from lvm_vg_create or lvm_vg_open.
+ * \param   new_size
+ *          New extent size to set (in sectors).
+ * \return  Status code of 1 (success) or 0 (failure).
+ */
+int lvm_vg_set_extent_size(vg_t *vg, uint32_t new_size);
+
+/**
+ * Get the current name of a volume group.
+ *
+ * Memory is allocated using malloc() and caller must free the memory
+ * using free().
+ *
+ * \param   vg
+ *          VG handle obtained from lvm_vg_create or lvm_vg_open.
+ * \return  Copy of the uuid string.
+ */
+char *lvm_vg_get_uuid(const vg_t *vg);
+
+/**
+ * Get the current uuid of a volume group.
+ *
+ * Memory is allocated using malloc() and caller must free the memory
+ * using free().
+ *
+ * \param   vg
+ *          VG handle obtained from lvm_vg_create or lvm_vg_open.
+ * \return  Copy of the name.
+ */
+char *lvm_vg_get_name(const vg_t *vg);
+
+/**
+ * Get the current size in bytes of a volume group.
+ *
+ * \param   vg
+ *          VG handle obtained from lvm_vg_create or lvm_vg_open.
+ * \return  Size in bytes.
+ */
+uint64_t lvm_vg_get_size(const vg_t *vg);
+
+/**
+ * Get the current unallocated space in bytes of a volume group.
+ *
+ * \param   vg
+ *          VG handle obtained from lvm_vg_create or lvm_vg_open.
+ * \return  Free size in bytes.
+ */
+uint64_t lvm_vg_get_free_size(const vg_t *vg);
+
+/**
+ * Get the current extent size in bytes of a volume group.
+ *
+ * \param   vg
+ *          VG handle obtained from lvm_vg_create or lvm_vg_open.
+ * \return  Extent size in bytes.
+ */
+uint64_t lvm_vg_get_extent_size(const vg_t *vg);
+
+/**
+ * Get the current number of total extents of a volume group.
+ *
+ * \param   vg
+ *          VG handle obtained from lvm_vg_create or lvm_vg_open.
+ * \return  Extent count.
+ */
+uint64_t lvm_vg_get_extent_count(const vg_t *vg);
+
+/**
+ * Get the current number of free extents of a volume group.
+ *
+ * \param   vg
+ *          VG handle obtained from lvm_vg_create or lvm_vg_open.
+ * \return  Free extent count.
+ */
+uint64_t lvm_vg_get_free_extent_count(const vg_t *vg);
+
+/**
+ * Get the current number of physical volumes of a volume group.
+ *
+ * \param   vg
+ *          VG handle obtained from lvm_vg_create or lvm_vg_open.
+ * \return  Physical volume count.
+ */
+uint64_t lvm_vg_get_pv_count(const vg_t *vg);
+
+/************************** logical volume handling *************************/
+
+/**
+ * Return a list of LV handles for a given VG handle.
+ *
+ * \param   vg
+ *          VG handle obtained from lvm_vg_create or lvm_vg_open.
+ * \return  A list of lv_list_t structures containing lv handles for this vg.
+ *          If no LVs exist on the given VG, NULL is returned.
+ */
+struct dm_list *lvm_vg_list_lvs(vg_t *vg);
+
+/**
+ * Create a linear logical volume.
+ * This API commits the change to disk and does _not_ require calling
+ * lvm_vg_write.
+ * FIXME: This API should probably not commit to disk but require calling
+ * lvm_vg_write.  However, this appears to be non-trivial change until
+ * lv_create_single is refactored by segtype.
+ *
+ * \param   vg
+ *          VG handle obtained from lvm_vg_create or lvm_vg_open.
+ * \param   name
+ *          Name of logical volume to create.
+ * \param   size
+ *          Size of logical volume in extents.
+ * \return  LV object
+ *
+ */
+lv_t *lvm_vg_create_lv_linear(vg_t *vg, const char *name, uint64_t size);
+
+/**
+ * Remove a logical volume from a volume group.
+ *
+ * This function commits the change to disk and does _not_ require calling
+ * lvm_vg_write.
+ * Currently only removing linear LVs are possible.
+ *
+ * FIXME: This API should probably not commit to disk but require calling
+ * lvm_vg_write.
+ *
+ * \param   lv
+ *          Logical volume handle.
+ * \return  Status code of 1 (success) or 0 (failure).
+ */
+int lvm_vg_remove_lv(lv_t *lv);
+
+/**
+ * Get the current name of a logical volume.
+ *
+ * Memory is allocated using malloc() and caller must free the memory
+ * using free().
+ *
+ * \param   lv
+ *          Logical volume handle.
+ * \return  Copy of the uuid string.
+ */
+char *lvm_lv_get_uuid(const lv_t *lv);
+
+/**
+ * Get the current uuid of a logical volume.
+ *
+ * Memory is allocated using malloc() and caller must free the memory
+ * using free().
+ *
+ * \param   lv
+ *          Logical volume handle.
+ * \return  Copy of the name.
+ */
+char *lvm_lv_get_name(const lv_t *lv);
+
+/**
+ * Get the current size in bytes of a logical volume.
+ *
+ * \param   lv
+ *          Logical volume handle.
+ * \return  Size in bytes.
+ */
+uint64_t lvm_lv_get_size(const lv_t *lv);
+
+/************************** physical volume handling ************************/
+
+/**
+ * Physical volume handling should not be needed anymore. Only physical volumes
+ * bound to a vg contain useful information. Therefore the creation,
+ * modification and the removal of orphan physical volumes is not suported.
+ */
+
+/**
+ * Return a list of PV handles for a given VG handle.
+ *
+ * \param   vg
+ *          VG handle obtained from lvm_vg_create or lvm_vg_open.
+ * \return  A list of pv_list_t structures containing pv handles for this vg.
+ *          If no PVs exist on the given VG, NULL is returned.
+ */
+struct dm_list *lvm_vg_list_pvs(vg_t *vg);
+
+/**
+ * Get the current uuid of a logical volume.
+ *
+ * Memory is allocated using malloc() and caller must free the memory
+ * using free().
+ *
+ * \param   pv
+ *          Physical volume handle.
+ * \return  Copy of the uuid string.
+ */
+char *lvm_pv_get_uuid(const pv_t *pv);
+
+/**
+ * Get the current name of a logical volume.
+ *
+ * Memory is allocated using malloc() and caller must free the memory
+ * using free().
+ *
+ * \param   pv
+ *          Physical volume handle.
+ * \return  Copy of the name.
+ */
+char *lvm_pv_get_name(const pv_t *pv);
+
+/**
+ * Get the current number of metadata areas in the physical volume.
+ *
+ * \param   pv
+ *          Physical volume handle.
+ * \return  metadata area count.
+ */
+uint64_t lvm_pv_get_mda_count(const pv_t *pv);
 
 #endif /* _LIB_LVM_H */
