@@ -672,7 +672,7 @@ static int _vgsize_disp(struct dm_report *rh, struct dm_pool *mem,
 	const struct volume_group *vg = (const struct volume_group *) data;
 	uint64_t size;
 
-	size = (uint64_t) vg->extent_count * vg->extent_size;
+	size = (uint64_t) vg_size(vg);
 
 	return _size64_disp(rh, mem, field, &size, private);
 }
@@ -812,7 +812,7 @@ static int _vgfree_disp(struct dm_report *rh, struct dm_pool *mem,
 	const struct volume_group *vg = (const struct volume_group *) data;
 	uint64_t freespace;
 
-	freespace = (uint64_t) vg->free_count * vg->extent_size;
+	freespace = (uint64_t) vg_free(vg);
 
 	return _size64_disp(rh, mem, field, &freespace, private);
 }
@@ -853,12 +853,11 @@ static int _pvmdas_disp(struct dm_report *rh, struct dm_pool *mem,
 			struct dm_report_field *field,
 			const void *data, void *private)
 {
-	struct lvmcache_info *info;
 	uint32_t count;
-	const char *pvid = (const char *)(&((struct id *) data)->uuid);
+	const struct physical_volume *pv =
+	    (const struct physical_volume *) data;
 
-	info = info_from_pvid(pvid, 0);
-	count = info ? dm_list_size(&info->mdas) : 0;
+	count = pv_mda_count(pv);
 
 	return _uint32_disp(rh, mem, field, &count, private);
 }
