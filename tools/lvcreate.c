@@ -26,39 +26,39 @@ struct lvcreate_cmdline_params {
 /* FIXME: refactor and reduce the size of this struct! */
 struct lvcreate_params {
 	/* flags */
-	int snapshot;
-	int zero;
-	int major;
-	int minor;
-	int corelog;
-	int nosync;
+	int snapshot; /* snap */
+	int zero; /* all */
+	int major; /* all */
+	int minor; /* all */
+	int corelog; /* mirror */
+	int nosync; /* mirror */
 
-	char *origin;
-	const char *vg_name;
-	const char *lv_name;
+	char *origin; /* snap */
+	const char *vg_name; /* all */
+	const char *lv_name; /* all */
 
-	uint32_t stripes;
-	uint32_t stripe_size;
-	uint32_t chunk_size;
-	uint32_t region_size;
+	uint32_t stripes; /* striped */
+	uint32_t stripe_size; /* striped */
+	uint32_t chunk_size; /* snapshot */
+	uint32_t region_size; /* mirror */
 
-	uint32_t mirrors;
+	uint32_t mirrors; /* mirror */
 
-	const struct segment_type *segtype;
+	const struct segment_type *segtype; /* all */
 
 	/* size */
-	uint32_t extents;
-	uint32_t voriginextents;
-	uint64_t voriginsize;
-	struct dm_list *pvh;
+	uint32_t extents; /* all */
+	uint32_t voriginextents; /* snapshot */
+	uint64_t voriginsize; /* snapshot */
+	struct dm_list *pvh; /* all */
 
-	uint32_t permission;
-	uint32_t read_ahead;
-	alloc_policy_t alloc;
+	uint32_t permission; /* all */
+	uint32_t read_ahead; /* all */
+	alloc_policy_t alloc; /* all */
 
-	int pv_count;
-	char **pvs;
-	const char *tag;
+	int pv_count; /* all; redundant? */
+	char **pvs; /* all; redundant? */
+	const char *tag; /* all */
 };
 
 static uint64_t _extents_from_size(struct cmd_context *cmd, uint64_t size,
