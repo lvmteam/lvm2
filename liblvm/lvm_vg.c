@@ -190,6 +190,37 @@ struct dm_list *lvm_vg_list_lvs(vg_t *vg)
 	return list;
 }
 
+/* FIXME: invalid handle? return INTMAX? */
+uint64_t lvm_vg_get_size(const vg_t *vg)
+{
+	return vg_size(vg);
+}
+
+uint64_t lvm_vg_get_free(const vg_t *vg)
+{
+	return vg_free(vg);
+}
+
+uint64_t lvm_vg_get_extent_size(const vg_t *vg)
+{
+	return vg_extent_size(vg);
+}
+
+uint64_t lvm_vg_get_extent_count(const vg_t *vg)
+{
+	return vg_extent_count(vg);
+}
+
+uint64_t lvm_vg_get_free_count(const vg_t *vg)
+{
+	return vg_free_count(vg);
+}
+
+uint64_t lvm_vg_get_pv_count(const vg_t *vg)
+{
+	return vg_pv_count(vg);
+}
+
 char *lvm_vg_get_uuid(const vg_t *vg)
 {
 	char uuid[64] __attribute((aligned(8)));
