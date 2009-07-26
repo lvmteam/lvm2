@@ -16,6 +16,9 @@
 #include "lvm.h"
 #include "metadata-exported.h"
 #include "lvm-string.h"
+#include "defaults.h"
+#include "segtype.h"
+#include <string.h>
 
 char *lvm_lv_get_uuid(const lv_t *lv)
 {
@@ -36,5 +39,54 @@ char *lvm_lv_get_name(const lv_t *lv)
 	strncpy(name, (const char *)lv->name, NAME_LEN);
 	name[NAME_LEN] = '\0';
 	return name;
+}
+
+/* Set defaults for non-segment specific LV parameters */
+static void _lv_set_default_params(struct lvcreate_params *lp,
+				   vg_t *vg, const char *lvname,
+				   uint64_t extents)
+{
+	lp->zero = 1;
+	lp->major = -1;
+	lp->minor = -1;
+	lp->vg_name = vg->name;
+	lp->lv_name = lvname; /* FIXME: check this for safety */
+	lp->pvh = &vg->pvs;
+
+	lp->extents = extents;
+	lp->permission = LVM_READ | LVM_WRITE;
+	lp->read_ahead = DM_READ_AHEAD_NONE;
+	lp->alloc = ALLOC_INHERIT;
+	lp->tag = NULL;
+}
+
+/* Set default for linear segment specific LV parameters */
+static void _lv_set_default_linear_params(struct cmd_context *cmd,
+					  struct lvcreate_params *lp)
+{
+	lp->segtype = get_segtype_from_string(cmd, "striped");
+	lp->stripes = 1;
+	lp->stripe_size = DEFAULT_STRIPESIZE * 2;
+}
+
+lv_t *lvm_vg_create_lv_linear(vg_t *vg, const char *name, uint64_t size)
+{
+	struct lvcreate_params lp;
+	uint64_t extents;
+	struct lv_list *lvl;
+
+	/* FIXME: check for proper VG access */
+	if (vg_read_error(vg))
+		return NULL;
+	memset(&lp, 0, sizeof(lp));
+	extents = extents_from_size(vg->cmd, size, vg->extent_size);
+	_lv_set_default_params(&lp, vg, name, extents);
+	_lv_set_default_linear_params(vg->cmd, &lp);
+	if (!lv_create_single(vg, &lp))
+		return NULL;
+	lvl = find_lv_in_vg(vg, name);
+	if (!lvl)
+		return NULL;
+	return lvl->lv;
 }
 
