@@ -20,6 +20,12 @@
 #include "segtype.h"
 #include <string.h>
 
+/* FIXME: have lib/report/report.c _disp function call lv_size()? */
+uint64_t lvm_lv_get_size(const lv_t *lv)
+{
+	return lv_size(lv);
+}
+
 char *lvm_lv_get_uuid(const lv_t *lv)
 {
 	char uuid[64] __attribute((aligned(8)));

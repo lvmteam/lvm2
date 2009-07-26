@@ -243,6 +243,21 @@ char *lvm_vg_get_name(const vg_t *vg);
 char *lvm_lv_get_name(const lv_t *lv);
 
 /**
+ * Get various pv, vg, or lv properties.
+ * For full description of each property, consult the man pages for pvs,
+ * vgs, and lvs.
+ * FIXME: What value to return for invalid handle or other errors?
+ */
+uint64_t lvm_pv_get_mda_count(const pv_t *pv);
+uint64_t lvm_vg_get_size(const vg_t *vg);
+uint64_t lvm_vg_get_free(const vg_t *vg);
+uint64_t lvm_vg_get_extent_size(const vg_t *vg);
+uint64_t lvm_vg_get_extent_count(const vg_t *vg);
+uint64_t lvm_vg_get_free_count(const vg_t *vg);
+uint64_t lvm_vg_get_pv_count(const vg_t *vg);
+uint64_t lvm_lv_get_size(const lv_t *lv);
+
+/**
  * Close a VG opened with lvm_vg_create
  *
  * This API releases a VG handle and any resources associated with the handle.

@@ -38,3 +38,7 @@ char *lvm_pv_get_name(const pv_t *pv)
 	return name;
 }
 
+uint64_t lvm_pv_get_mda_count(const pv_t *pv)
+{
+	return (uint64_t) pv_mda_count(pv);
+}
