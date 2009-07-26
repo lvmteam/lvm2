@@ -18,6 +18,8 @@
 #include "lvm-string.h"
 #include "defaults.h"
 #include "segtype.h"
+#include "locking.h"
+
 #include <string.h>
 
 /* FIXME: have lib/report/report.c _disp function call lv_size()? */
@@ -102,5 +104,53 @@ int lvm_vg_remove_lv(lv_t *lv)
 		return -1;
 	if (!lv_remove_single(lv->vg->cmd, lv, DONT_PROMPT))
 		return -1;
+	return 0;
+}
+
+int lvm_lv_activate(lv_t *lv)
+{
+	if (!lv || !lv->vg || vg_read_error(lv->vg) || !lv->vg->cmd)
+		return -1;
+
+	/* FIXME: handle pvmove stuff later */
+	if (lv->status & LOCKED) {
+		log_error("Unable to activate locked LV\n");
+		return -1;
+	}
+
+	/* FIXME: handle lvconvert stuff later */
+	if (lv->status & CONVERTING) {
+		log_error("Unable to activate LV with in-progress lvconvert\n");
+		return -1;
+	}
+
+	if (lv_is_origin(lv)) {
+		log_verbose("Activating logical volume \"%s\" "
+			    "exclusively", lv->name);
+		if (!activate_lv_excl(lv->vg->cmd, lv)) {
+			log_error("Activate exclusive failed.\n");
+			return -1;
+		}
+	} else {
+		log_verbose("Activating logical volume \"%s\"",
+			    lv->name);
+		if (!activate_lv(lv->vg->cmd, lv)) {
+			log_error("Activate failed.\n");
+			return -1;
+		}
+	}
+	return 0;
+}
+
+int lvm_lv_deactivate(lv_t *lv)
+{
+	if (!lv || !lv->vg || vg_read_error(lv->vg) || !lv->vg->cmd)
+		return -1;
+
+	log_verbose("Deactivating logical volume \"%s\"", lv->name);
+	if (!deactivate_lv(lv->vg->cmd, lv)) {
+		log_error("Deactivate failed.\n");
+		return -1;
+	}
 	return 0;
 }
