@@ -50,6 +50,10 @@ static int lvm_split(char *str, int *argc, char **argv, int max)
 
 static void _show_help(void)
 {
+	printf("'lv_activate vgname lvname: "
+	       "Activate an LV\n");
+	printf("'lv_deactivate vgname lvname: "
+	       "Deactivate an LV\n");
 	printf("'vg_remove_lv vgname lvname': "
 	       "Remove a LV\n");
 	printf("'vg_create_lv_linear vgname lvname size_in_bytes': "
@@ -317,6 +321,42 @@ static void _lvs_in_vg(char **argv, int argc)
 	}
 }
 
+static void _lv_deactivate(char **argv, int argc)
+{
+	lv_t *lv;
+
+	if (argc < 3) {
+		printf("Please enter vgname, lvname\n");
+		return;
+	}
+	if (!(lv = _lookup_lv_by_name(argv[2])))
+		return;
+	if (lvm_lv_deactivate(lv))
+		printf("Error ");
+	else {
+		printf("Success ");
+	}
+	printf("De-activating LV %s in VG %s\n",
+		argv[2], argv[1]);
+}
+static void _lv_activate(char **argv, int argc)
+{
+	lv_t *lv;
+
+	if (argc < 3) {
+		printf("Please enter vgname, lvname\n");
+		return;
+	}
+	if (!(lv = _lookup_lv_by_name(argv[2])))
+		return;
+	if (lvm_lv_activate(lv))
+		printf("Error ");
+	else {
+		printf("Success ");
+	}
+	printf("activating LV %s in VG %s\n",
+		argv[2], argv[1]);
+}
 static void _vg_remove_lv(char **argv, int argc)
 {
 	lv_t *lv;
@@ -404,6 +444,10 @@ static int lvmapi_test_shell(lvm_t libh)
 			_vg_open(argv, argc, libh);
 		} else if (!strcmp(argv[0], "vg_close")) {
 			_vg_close(argv, argc);
+		} else if (!strcmp(argv[0], "lv_activate")) {
+			_lv_activate(argv, argc);
+		} else if (!strcmp(argv[0], "lv_deactivate")) {
+			_lv_deactivate(argv, argc);
 		} else if (!strcmp(argv[0], "vg_remove_lv")) {
 			_vg_remove_lv(argv, argc);
 		} else if (!strcmp(argv[0], "vgs_open")) {
