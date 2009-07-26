@@ -38,11 +38,11 @@ typedef struct lvm *lvm_t;
 /**
  * Physical volume object.
  *
- * This object can be either a read-only object or a read-write object and
- * depends on the mode of the volume group.  This object can not be
- * written to disk independently, and changes will be written to disk
- * when the volume group gets committed to disk. The open mode is the
- * same as the volume group object it was created from.
+ * This object can be either a read-only object or a read-write object
+ * depending on the mode it was returned by a function. This object can not be
+ * written to disk independently, it is bound to a volume group and changes
+ * will be written to disk when the volume group gets committed to disk. The
+ * open mode is the same as the volume group object is was created of.
  */
 typedef struct physical_volume pv_t;
 
@@ -326,7 +326,7 @@ int lvm_vg_extend(vg_t *vg, const char *device);
  * \param   vg
  *          VG handle obtained from lvm_vg_create or lvm_vg_open.
  * \param   new_size
- *          New extent size to set (in sectors).
+ *          New extent size in bytes.
  * \return  Status code of 1 (success) or 0 (failure).
  */
 int lvm_vg_set_extent_size(vg_t *vg, uint32_t new_size);
