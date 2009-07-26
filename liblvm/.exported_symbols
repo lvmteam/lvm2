@@ -30,3 +30,4 @@ lvm_vg_list_lvs
 lvm_list_vg_names
 lvm_list_vg_ids
 lvm_vg_create_lv_linear
+lvm_vg_remove_lv
