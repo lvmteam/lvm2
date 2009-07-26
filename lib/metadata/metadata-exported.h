@@ -354,7 +354,8 @@ struct pvcreate_params {
 	unsigned yes;
 };
 
-int pvcreate_single(struct cmd_context *cmd, const char *pv_name, void *handle);
+pv_t * pvcreate_single(struct cmd_context *cmd, const char *pv_name,
+		       void *handle);
 
 /*
 * Utility functions

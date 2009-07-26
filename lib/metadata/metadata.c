@@ -1107,7 +1107,19 @@ static void fill_default_pvcreate_params(struct pvcreate_params *pp)
 	pp->yes = 0;
 }
 
-int pvcreate_single(struct cmd_context *cmd, const char *pv_name, void *handle)
+/*
+ * pvcreate_single() - initialize a device with PV label and metadata
+ *
+ * Parameters:
+ * - pv_name: device path to initialize
+ * - handle: options to pass to pv_create; NULL indicates use defaults
+ *
+ * Returns:
+ * NULL: error
+ * pv_t * (non-NULL): handle to physical volume created
+ */
+pv_t * pvcreate_single(struct cmd_context *cmd, const char *pv_name,
+		       void *handle)
 {
 	struct pvcreate_params *pp;
 	void *pv;
@@ -1126,13 +1138,13 @@ int pvcreate_single(struct cmd_context *cmd, const char *pv_name, void *handle)
 		    (dev != dev_cache_get(pv_name, cmd->filter))) {
 			log_error("uuid %s already in use on \"%s\"",
 				  pp->idp->uuid, dev_name(dev));
-			return 0;
+			return NULL;
 		}
 	}
 
 	if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE)) {
 		log_error("Can't get lock for orphan PVs");
-		return 0;
+		return NULL;
 	}
 
 	if (!pvcreate_check(cmd, pv_name, pp))
@@ -1192,11 +1204,11 @@ int pvcreate_single(struct cmd_context *cmd, const char *pv_name, void *handle)
 	log_print("Physical volume \"%s\" successfully created", pv_name);
 
 	unlock_vg(cmd, VG_ORPHANS);
-	return 1;
+	return pv;
 
       error:
 	unlock_vg(cmd, VG_ORPHANS);
-	return 0;
+	return NULL;
 }
 
 static void _free_pv(struct dm_pool *mem, struct physical_volume *pv)
