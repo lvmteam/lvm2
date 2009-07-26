@@ -57,7 +57,7 @@ struct archive_file {
 /*
  * Extract vg name and version number from a filename.
  */
-static int _split_vg(const char *filename, char *vgname, size_t vg_size,
+static int _split_vg(const char *filename, char *vgname, size_t vgsize,
 		     uint32_t *ix)
 {
 	size_t len, vg_len;
@@ -78,7 +78,7 @@ static int _split_vg(const char *filename, char *vgname, size_t vg_size,
 		return 0;
 
 	vg_len = underscore - filename;
-	if (vg_len + 1 > vg_size)
+	if (vg_len + 1 > vgsize)
 		return 0;
 
 	strncpy(vgname, filename, vg_len);
