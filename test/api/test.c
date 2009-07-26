@@ -315,9 +315,12 @@ static void _lvs_in_vg(char **argv, int argc)
 	}
 	printf("LVs in VG %s:\n", lvm_vg_get_name(vg));
 	dm_list_iterate_items(lvl, lvs) {
-		printf("%s/%s (%s): size=%"PRIu64"\n", lvm_vg_get_name(vg),
+		printf("%s/%s (%s): size=%"PRIu64", %sACTIVE / %sSUSPENDED\n",
+			lvm_vg_get_name(vg),
 			lvm_lv_get_name(lvl->lv), lvm_lv_get_uuid(lvl->lv),
-			lvm_lv_get_size(lvl->lv));
+			lvm_lv_get_size(lvl->lv),
+			lvm_lv_is_active(lvl->lv) ? "" : "IN",
+			lvm_lv_is_suspended(lvl->lv) ? "" : "NOT ");
 	}
 }
 
