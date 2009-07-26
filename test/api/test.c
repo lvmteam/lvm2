@@ -50,6 +50,8 @@ static int lvm_split(char *str, int *argc, char **argv, int max)
 
 static void _show_help(void)
 {
+	printf("'vg_create_lv_linear vgname lvname size_in_bytes': "
+	       "Create a linear LV\n");
 	printf("'scan_vgs': "
 	       "Scan the system for LVM metadata\n");
 	printf("'vg_list_names': "
@@ -292,6 +294,26 @@ static void _lvs_in_vg(char **argv, int argc)
 	}
 }
 
+static void _vg_create_lv_linear(char **argv, int argc)
+{
+	vg_t *vg;
+	lv_t *lv;
+
+	if (argc < 4) {
+		printf("Please enter vgname, lvname, and size\n");
+		return;
+	}
+	if (!(vg = _lookup_vg_by_name(argv, argc)))
+		return;
+	lv = lvm_vg_create_lv_linear(vg, argv[2], atol(argv[3]));
+	if (!lv)
+		printf("Error ");
+	else
+		printf("Success ");
+	printf("creating LV %s in VG %s\n",
+		argv[2], lvm_vg_get_name(vg));
+}
+
 static int lvmapi_test_shell(lvm_t libh)
 {
 	int argc;
@@ -349,6 +371,8 @@ static int lvmapi_test_shell(lvm_t libh)
 			_vg_list_ids(libh);
 		} else if (!strcmp(argv[0], "scan_vgs")) {
 			_scan_vgs(libh);
+		} else if (!strcmp(argv[0], "vg_create_lv_linear")) {
+			_vg_create_lv_linear(argv, argc);
 		} else {
 			printf ("Unrecognized command %s\n", argv[0]);
 		}
