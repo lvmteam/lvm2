@@ -54,9 +54,9 @@ static void _show_help(void)
 	       "Create a linear LV\n");
 	printf("'scan_vgs': "
 	       "Scan the system for LVM metadata\n");
-	printf("'vg_list_names': "
+	printf("'list_vg_names': "
 	       "List the names of the VGs that exist in the system\n");
-	printf("'vg_list_ids': "
+	printf("'list_vg_ids': "
 	       "List the uuids of the VGs that exist in the system\n");
 	printf("'vg_list_pvs vgname': "
 	       "List the PVs that exist in VG vgname\n");
@@ -247,7 +247,7 @@ static void _scan_vgs(lvm_t libh)
 	lvm_scan_vgs(libh);
 }
 
-static void _vg_list_names(lvm_t libh)
+static void _list_vg_names(lvm_t libh)
 {
 	struct dm_list *list;
 	struct lvm_str_list *strl;
@@ -261,7 +261,7 @@ static void _vg_list_names(lvm_t libh)
 	}
 }
 
-static void _vg_list_ids(lvm_t libh)
+static void _list_vg_ids(lvm_t libh)
 {
 	struct dm_list *list;
 	struct lvm_str_list *strl;
@@ -368,10 +368,10 @@ static int lvmapi_test_shell(lvm_t libh)
 			_pvs_in_vg(argv, argc);
 		} else if (!strcmp(argv[0], "vg_list_lvs")) {
 			_lvs_in_vg(argv, argc);
-		} else if (!strcmp(argv[0], "vg_list_names")) {
-			_vg_list_names(libh);
-		} else if (!strcmp(argv[0], "vg_list_ids")) {
-			_vg_list_ids(libh);
+		} else if (!strcmp(argv[0], "list_vg_names")) {
+			_list_vg_names(libh);
+		} else if (!strcmp(argv[0], "list_vg_ids")) {
+			_list_vg_ids(libh);
 		} else if (!strcmp(argv[0], "scan_vgs")) {
 			_scan_vgs(libh);
 		} else if (!strcmp(argv[0], "vg_create_lv_linear")) {
