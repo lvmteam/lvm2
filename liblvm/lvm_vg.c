@@ -41,11 +41,11 @@ vg_t *lvm_vg_create(lvm_t libh, const char *vg_name)
 int lvm_vg_extend(vg_t *vg, const char *device)
 {
 	if (vg_read_error(vg))
-		return 0;
+		return -1;
 
 	if (!lock_vol(vg->cmd, VG_ORPHANS, LCK_VG_WRITE)) {
 		log_error("Can't get lock for orphan PVs");
-		return 0;
+		return -1;
 	}
 
 	/* If device not initialized, pvcreate it */
@@ -53,46 +53,42 @@ int lvm_vg_extend(vg_t *vg, const char *device)
 	   (!pvcreate_single(vg->cmd, device, NULL))) {
 		log_error("Unable to initialize device for LVM use\n");
 		unlock_vg(vg->cmd, VG_ORPHANS);
-		return 0;
+		return -1;
 	}
 
 	if (!vg_extend(vg, 1, (char **) &device)) {
 		unlock_vg(vg->cmd, VG_ORPHANS);
-		return 0;
+		return -1;
 	}
 	/*
 	 * FIXME: Either commit to disk, or keep holding VG_ORPHANS and
 	 * release in lvm_vg_close().
 	 */
 	unlock_vg(vg->cmd, VG_ORPHANS);
-	return 1;
+	return 0;
 }
 
 int lvm_vg_set_extent_size(vg_t *vg, uint32_t new_size)
 {
 	if (vg_read_error(vg))
-		goto_bad;
+		return -1;
 
-	return vg_set_extent_size(vg, new_size);
-bad:
+	if (!vg_set_extent_size(vg, new_size))
+		return -1;
 	return 0;
 }
 
 int lvm_vg_write(vg_t *vg)
 {
 	if (vg_read_error(vg))
-		goto_bad;
+		return -1;
 
-	if (!archive(vg)) {
-		goto_bad;
-	}
+	if (!archive(vg))
+		return -1;
 
 	/* Store VG on disk(s) */
-	if (!vg_write(vg) || !vg_commit(vg)) {
-		goto_bad;
-	}
-	return 1;
-bad:
+	if (!vg_write(vg) || !vg_commit(vg))
+		return -1;
 	return 0;
 }
 
@@ -102,16 +98,16 @@ int lvm_vg_close(vg_t *vg)
 		vg_release(vg);
 	else
 		unlock_and_release_vg(vg->cmd, vg, vg->name);
-	return 1;
+	return 0;
 }
 
 int lvm_vg_remove(vg_t *vg)
 {
 	if (vg_read_error(vg))
-		goto_bad;
+		return -1;
 
-	return vg_remove_single(vg);
-bad:
+	if (!vg_remove_single(vg))
+		return -1;
 	return 0;
 }
 
@@ -254,5 +250,7 @@ struct dm_list *lvm_list_vg_uuids(lvm_t libh)
 
 int lvm_scan(lvm_t libh)
 {
-	return lvmcache_label_scan((struct cmd_context *)libh, 2);
+	if (!lvmcache_label_scan((struct cmd_context *)libh, 2))
+		return -1;
+	return 0;
 }

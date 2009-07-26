@@ -144,6 +144,7 @@ void lvm_destroy(lvm_t libh);
  *
  * \param   libh
  *          Handle obtained from lvm_create.
+ * \return  0 (success) or -1 (failure).
  */
 int lvm_reload_config(lvm_t libh);
 
@@ -174,7 +175,7 @@ const char *lvm_errmsg(lvm_t libh);
 /**
  * Scan all devices on the system for VGs and LVM metadata.
  *
- * \return  Status code of 1 (success) or 0 (failure).
+ * \return  0 (success) or -1 (failure).
  */
 int lvm_scan(lvm_t libh);
 
@@ -217,6 +218,7 @@ struct dm_list *lvm_list_vg_names(lvm_t libh);
  *          Handle obtained from lvm_create.
  *
  * \return  List of copied uuid strings.
+ *          If no VGs exist on the system, NULL is returned.
  */
 struct dm_list *lvm_list_vg_uuids(lvm_t libh);
 
@@ -268,7 +270,7 @@ vg_t *lvm_vg_create(lvm_t libh, const char *vg_name);
  *
  * \param   vg
  *          VG handle obtained from lvm_vg_create or lvm_vg_open.
- * \return  Status code of 1 (success) or 0 (failure).
+ * \return  0 (success) or -1 (failure).
  */
 int lvm_vg_write(vg_t *vg);
 
@@ -280,7 +282,7 @@ int lvm_vg_write(vg_t *vg);
  *
  * \param   vg
  *          VG handle obtained from lvm_vg_create or lvm_vg_open.
- * \return  Status code of 1 (success) or 0 (failure).
+ * \return  0 (success) or -1 (failure).
  */
 int lvm_vg_remove(vg_t *vg);
 
@@ -291,7 +293,7 @@ int lvm_vg_remove(vg_t *vg);
  *
  * \param   vg
  *          VG handle obtained from lvm_vg_create or lvm_vg_open.
- * \return  Status code of 1 (success) or 0 (failure).
+ * \return  0 (success) or -1 (failure).
  */
 int lvm_vg_close(vg_t *vg);
 
@@ -311,7 +313,7 @@ int lvm_vg_close(vg_t *vg);
  *          VG handle obtained from lvm_vg_create or lvm_vg_open.
  * \param   device
  *          Name of device to add to VG.
- * \return  Status code of 1 (success) or 0 (failure).
+ * \return  0 (success) or -1 (failure).
  */
 int lvm_vg_extend(vg_t *vg, const char *device);
 
@@ -327,7 +329,7 @@ int lvm_vg_extend(vg_t *vg, const char *device);
  *          VG handle obtained from lvm_vg_create or lvm_vg_open.
  * \param   new_size
  *          New extent size in bytes.
- * \return  Status code of 1 (success) or 0 (failure).
+ * \return  0 (success) or -1 (failure).
  */
 int lvm_vg_set_extent_size(vg_t *vg, uint32_t new_size);
 
@@ -452,7 +454,7 @@ lv_t *lvm_vg_create_lv_linear(vg_t *vg, const char *name, uint64_t size);
  *
  * \param   lv
  *          Logical volume handle.
- * \return  Status code of 1 (success) or 0 (failure).
+ * \return  0 (success) or -1 (failure).
  */
 int lvm_vg_remove_lv(lv_t *lv);
 

@@ -61,14 +61,15 @@ lvm_t lvm_create(const char *system_dir)
 
 void lvm_destroy(lvm_t libh)
 {
-	/* FIXME: error handling */
 	destroy_toolcontext((struct cmd_context *)libh);
 }
 
 int lvm_reload_config(lvm_t libh)
 {
 	/* FIXME: re-init locking needed here? */
-	return refresh_toolcontext((struct cmd_context *)libh);
+	if (refresh_toolcontext((struct cmd_context *)libh))
+		return -1;
+	return 0;
 }
 
 int lvm_errno(lvm_t libh)
