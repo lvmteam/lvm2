@@ -1,5 +1,13 @@
 Version 2.02.50 - 
 ================================
+  Update liblvm unit tests in test/api for latest liblvm changes.
+  Add lvm_lv_is_active and lvm_lv_is_suspended liblvm APIs.
+  Add lvm_lv_activate and lvm_lv_deactivate liblvm APIs.
+  Add lvm_scan liblvm function.
+  Update lvm.h to clarify API behavior and return codes.
+  Add lvm_vg_remove_lv liblvm function.
+  Add numeric liblvm 'get' functions required by anaconda.
+  Refactor vg_size, vg_free, and pv_mda_count field calculations for liblvm.
   Update test/api/test.c to call new liblvm functions.
   Add liblvm function lvm_vg_create_lv_linear.
   Update lvm_vg_extend to do an implicit pvcreate on the device.
