@@ -1,5 +1,9 @@
 Version 2.02.50 - 
 ================================
+  Update test/api/test.c to call new liblvm functions.
+  Add liblvm function lvm_vg_create_lv_linear.
+  Update lvm_vg_extend to do an implicit pvcreate on the device.
+  Refactor pvcreate and lvcreate for liblvm.
   Add global/wait_for_locks to lvm.conf so blocking for locks can be disabled.
   All LV locks are non-blocking so remove LCK_NONBLOCK from separate macros.
   Fix race condition with vgcreate and vgextend on same device (2.02.49).
