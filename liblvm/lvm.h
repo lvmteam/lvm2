@@ -146,6 +146,10 @@ vg_t *lvm_vg_create(lvm_t libh, const char *vg_name);
  * After successfully adding a device, use lvm_vg_write to commit the new VG
  * to disk.  Upon failure, retry the operation or release the VG handle with
  * lvm_vg_close.
+ * If the device is not initialized for LVM use, it will be initialized
+ * before adding to the VG.  Although some internal checks are done,
+ * the caller should be sure the device is not in use by other subsystems
+ * before calling lvm_vg_extend.
  *
  * \param   vg
  *          VG handle obtained from lvm_vg_create.

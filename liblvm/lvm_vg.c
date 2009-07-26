@@ -12,9 +12,6 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <errno.h>
-#include <string.h>
-
 #include "lib.h"
 #include "lvm.h"
 #include "toolcontext.h"
@@ -23,6 +20,10 @@
 #include "locking.h"
 #include "lvm-string.h"
 #include "lvmcache.h"
+#include "metadata.h"
+
+#include <errno.h>
+#include <string.h>
 
 vg_t *lvm_vg_create(lvm_t libh, const char *vg_name)
 {
@@ -44,6 +45,14 @@ int lvm_vg_extend(vg_t *vg, const char *device)
 
 	if (!lock_vol(vg->cmd, VG_ORPHANS, LCK_VG_WRITE)) {
 		log_error("Can't get lock for orphan PVs");
+		return 0;
+	}
+
+	/* If device not initialized, pvcreate it */
+	if (!pv_by_path(vg->cmd, device) &&
+	   (!pvcreate_single(vg->cmd, device, NULL))) {
+		log_error("Unable to initialize device for LVM use\n");
+		unlock_vg(vg->cmd, VG_ORPHANS);
 		return 0;
 	}
 
