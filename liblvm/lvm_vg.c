@@ -144,14 +144,15 @@ struct dm_list *lvm_vg_list_pvs(vg_t *vg)
 		return NULL;
 
 	if (!(list = dm_pool_zalloc(vg->vgmem, sizeof(*list)))) {
-		log_error("Memory allocation fail for dm_list.\n");
+		log_errno(ENOMEM, "Memory allocation fail for dm_list.\n");
 		return NULL;
 	}
 	dm_list_init(list);
 
 	dm_list_iterate_items(pvl, &vg->pvs) {
 		if (!(pvs = dm_pool_zalloc(vg->vgmem, sizeof(*pvs)))) {
-			log_error("Memory allocation fail for lvm_pv_list.\n");
+			log_errno(ENOMEM,
+				"Memory allocation fail for lvm_pv_list.\n");
 			return NULL;
 		}
 		pvs->pv = pvl->pv;
@@ -170,14 +171,15 @@ struct dm_list *lvm_vg_list_lvs(vg_t *vg)
 		return NULL;
 
 	if (!(list = dm_pool_zalloc(vg->vgmem, sizeof(*list)))) {
-		log_error("Memory allocation fail for dm_list.\n");
+		log_errno(ENOMEM, "Memory allocation fail for dm_list.\n");
 		return NULL;
 	}
 	dm_list_init(list);
 
 	dm_list_iterate_items(lvl, &vg->lvs) {
 		if (!(lvs = dm_pool_zalloc(vg->vgmem, sizeof(*lvs)))) {
-			log_error("Memory allocation fail for lvm_lv_list.\n");
+			log_errno(ENOMEM,
+				"Memory allocation fail for lvm_lv_list.\n");
 			return NULL;
 		}
 		lvs->lv = lvl->lv;
