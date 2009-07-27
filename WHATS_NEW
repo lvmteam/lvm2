@@ -1,5 +1,17 @@
 Version 2.02.50 - 
 ================================
+  Remove unnecessary \n's from log_error in liblvm.
+  Add config_reload and config_override to test.c, change prompt.
+  Add lvm_config_override - allow caller to override LVM config.
+  Refactor _override_settings into override_config_tree_from_string and move.
+  Add skeletons of lvm_lv_resize and lvm_pv_resize - not yet implemented.
+  Update test/api/test.c to include lvm_vg_reduce and lvm_vg_extend.
+  Add lvm_vg_reduce to liblvm.
+  Add vg_reduce to metadata.c and metadata-exported.h.
+  Update error return and comments for lvm_list_vg_names/uuids.
+  Rename lvm_reload_config to lvm_config_reload.
+  Update display.c to use vg_free(vg) instead of duplicating the calculation.
+  More liblvm header file cleanups.
   Update liblvm unit tests in test/api for latest liblvm changes.
   Add lvm_lv_is_active and lvm_lv_is_suspended liblvm APIs.
   Add lvm_lv_activate and lvm_lv_deactivate liblvm APIs.
