@@ -186,6 +186,17 @@ struct config_tree *create_config_tree_from_string(struct cmd_context *cmd __att
 	return cft;
 }
 
+int override_config_tree_from_string(struct cmd_context *cmd,
+				     const char *config_settings)
+{
+	if (!(cmd->cft_override = create_config_tree_from_string(cmd,config_settings))) {
+		log_error("Failed to set overridden configuration entries.");
+		return 1;
+	}
+
+	return 0;
+}
+
 int read_config_fd(struct config_tree *cft, struct device *dev,
 		   off_t offset, size_t size, off_t offset2, size_t size2,
 		   checksum_fn_t checksum_fn, uint32_t checksum)
