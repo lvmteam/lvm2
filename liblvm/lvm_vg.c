@@ -68,6 +68,16 @@ int lvm_vg_extend(vg_t *vg, const char *device)
 	return 0;
 }
 
+int lvm_vg_reduce(vg_t *vg, const char *device)
+{
+	if (vg_read_error(vg))
+		return -1;
+
+	if (!vg_reduce(vg, (char *)device))
+		return -1;
+	return 0;
+}
+
 int lvm_vg_set_extent_size(vg_t *vg, uint32_t new_size)
 {
 	if (vg_read_error(vg))
@@ -80,8 +90,23 @@ int lvm_vg_set_extent_size(vg_t *vg, uint32_t new_size)
 
 int lvm_vg_write(vg_t *vg)
 {
+	struct pv_list *pvl;
+
 	if (vg_read_error(vg))
 		return -1;
+
+	if (dm_list_empty(&vg->pvs)) {
+		log_error("Volume group %s does not contain any "
+			  "physical volumes.\n", vg->name);
+		return -1;
+	}
+
+	if (! dm_list_empty(&vg->removed_pvs)) {
+		if (!lock_vol(vg->cmd, VG_ORPHANS, LCK_VG_WRITE)) {
+			log_error("Can't get lock for orphan PVs");
+			return 0;
+		}
+	}
 
 	if (!archive(vg))
 		return -1;
@@ -89,6 +114,16 @@ int lvm_vg_write(vg_t *vg)
 	/* Store VG on disk(s) */
 	if (!vg_write(vg) || !vg_commit(vg))
 		return -1;
+
+	if (! dm_list_empty(&vg->removed_pvs)) {
+		dm_list_iterate_items(pvl, &vg->removed_pvs) {
+			pv_write_orphan(vg->cmd, pvl->pv);
+			/* FIXME: do pvremove / label_remove()? */
+		}
+		dm_list_init(&vg->removed_pvs);
+		unlock_vg(vg->cmd, VG_ORPHANS);
+	}
+
 	return 0;
 }
 

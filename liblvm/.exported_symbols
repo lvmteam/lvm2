@@ -21,6 +21,7 @@ lvm_lv_is_active
 lvm_lv_is_suspended
 lvm_vg_create
 lvm_vg_extend
+lvm_vg_reduce
 lvm_vg_set_extent_size
 lvm_vg_write
 lvm_vg_open
