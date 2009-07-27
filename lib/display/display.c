@@ -636,8 +636,7 @@ void vgdisplay_full(const struct volume_group *vg)
 			       vg->extent_size));
 
 	log_print("Free  PE / Size       %u / %s", vg->free_count,
-		  display_size(vg->cmd,
-			       (uint64_t) vg->free_count * vg->extent_size));
+		  display_size(vg->cmd, vg_free(vg)));
 
 	if (!id_write_format(&vg->id, uuid, sizeof(uuid))) {
 		stack;
@@ -708,8 +707,7 @@ void vgdisplay_short(const struct volume_group *vg)
 		  display_size(vg->cmd,
 			       ((uint64_t) vg->extent_count -
 				vg->free_count) * vg->extent_size),
-		  display_size(vg->cmd,
-			       (uint64_t) vg->free_count * vg->extent_size));
+		  display_size(vg->cmd, vg_free(vg)));
 	return;
 }
 
