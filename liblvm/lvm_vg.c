@@ -51,7 +51,7 @@ int lvm_vg_extend(vg_t *vg, const char *device)
 	/* If device not initialized, pvcreate it */
 	if (!pv_by_path(vg->cmd, device) &&
 	   (!pvcreate_single(vg->cmd, device, NULL))) {
-		log_error("Unable to initialize device for LVM use\n");
+		log_error("Unable to initialize device for LVM use");
 		unlock_vg(vg->cmd, VG_ORPHANS);
 		return -1;
 	}
@@ -97,7 +97,7 @@ int lvm_vg_write(vg_t *vg)
 
 	if (dm_list_empty(&vg->pvs)) {
 		log_error("Volume group %s does not contain any "
-			  "physical volumes.\n", vg->name);
+			  "physical volumes.", vg->name);
 		return -1;
 	}
 
@@ -179,7 +179,7 @@ struct dm_list *lvm_vg_list_pvs(vg_t *vg)
 		return NULL;
 
 	if (!(list = dm_pool_zalloc(vg->vgmem, sizeof(*list)))) {
-		log_errno(ENOMEM, "Memory allocation fail for dm_list.\n");
+		log_errno(ENOMEM, "Memory allocation fail for dm_list.");
 		return NULL;
 	}
 	dm_list_init(list);
@@ -187,7 +187,7 @@ struct dm_list *lvm_vg_list_pvs(vg_t *vg)
 	dm_list_iterate_items(pvl, &vg->pvs) {
 		if (!(pvs = dm_pool_zalloc(vg->vgmem, sizeof(*pvs)))) {
 			log_errno(ENOMEM,
-				"Memory allocation fail for lvm_pv_list.\n");
+				"Memory allocation fail for lvm_pv_list.");
 			return NULL;
 		}
 		pvs->pv = pvl->pv;
@@ -206,7 +206,7 @@ struct dm_list *lvm_vg_list_lvs(vg_t *vg)
 		return NULL;
 
 	if (!(list = dm_pool_zalloc(vg->vgmem, sizeof(*list)))) {
-		log_errno(ENOMEM, "Memory allocation fail for dm_list.\n");
+		log_errno(ENOMEM, "Memory allocation fail for dm_list.");
 		return NULL;
 	}
 	dm_list_init(list);
@@ -214,7 +214,7 @@ struct dm_list *lvm_vg_list_lvs(vg_t *vg)
 	dm_list_iterate_items(lvl, &vg->lvs) {
 		if (!(lvs = dm_pool_zalloc(vg->vgmem, sizeof(*lvs)))) {
 			log_errno(ENOMEM,
-				"Memory allocation fail for lvm_lv_list.\n");
+				"Memory allocation fail for lvm_lv_list.");
 			return NULL;
 		}
 		lvs->lv = lvl->lv;
