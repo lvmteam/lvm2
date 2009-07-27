@@ -331,6 +331,24 @@ int lvm_vg_close(vg_t *vg);
 int lvm_vg_extend(vg_t *vg, const char *device);
 
 /**
+ * Reduce a VG by removing an unused device.
+ *
+ * This API requires calling lvm_vg_write to commit the change to disk.
+ * After successfully removing a device, use lvm_vg_write to commit the new VG
+ * to disk.  Upon failure, retry the operation or release the VG handle with
+ * lvm_vg_close.
+ *
+ * \param   vg
+ *          VG handle obtained from lvm_vg_create or lvm_vg_open.
+ *
+ * \param   device
+ *          Name of device to remove from VG.
+ *
+ * \return  0 (success) or -1 (failure).
+ */
+int lvm_vg_reduce(vg_t *vg, const char *device);
+
+/**
  * Set the extent size of a VG.
  *
  * This API requires calling lvm_vg_write to commit the change to disk.
