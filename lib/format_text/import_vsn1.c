@@ -753,6 +753,7 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 
 	dm_list_init(&vg->lvs);
 	dm_list_init(&vg->tags);
+	dm_list_init(&vg->removed_pvs);
 
 	/* Optional tags */
 	if ((cn = find_config_node(vgn, "tags")) &&

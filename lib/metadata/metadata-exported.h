@@ -243,6 +243,12 @@ struct volume_group {
 	 */
 
 	/*
+	 * List of removed physical volumes by pvreduce.
+	 * They have to get cleared on vg_commit.
+	 */
+	struct dm_list removed_pvs;
+
+	/*
 	 * Store result of the last vg_read().
 	 * 0 for success else appropriate FAILURE_* bits set.
 	 */
@@ -437,6 +443,7 @@ int vg_remove_single(vg_t *vg);
 int vg_rename(struct cmd_context *cmd, struct volume_group *vg,
 	      const char *new_name);
 int vg_extend(struct volume_group *vg, int pv_count, char **pv_names);
+int vg_reduce(struct volume_group *vg, char *pv_name);
 int vg_set_extent_size(vg_t *vg, uint32_t new_extent_size);
 int vg_set_max_lv(vg_t *vg, uint32_t max_lv);
 int vg_set_max_pv(vg_t *vg, uint32_t max_pv);
