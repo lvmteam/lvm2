@@ -64,7 +64,7 @@ void lvm_destroy(lvm_t libh)
 	destroy_toolcontext((struct cmd_context *)libh);
 }
 
-int lvm_reload_config(lvm_t libh)
+int lvm_config_reload(lvm_t libh)
 {
 	/* FIXME: re-init locking needed here? */
 	if (refresh_toolcontext((struct cmd_context *)libh))
