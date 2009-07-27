@@ -132,6 +132,7 @@ static struct volume_group *_build_vg(struct format_instance *fid,
 	dm_list_init(&vg->pvs);
 	dm_list_init(&vg->lvs);
 	dm_list_init(&vg->tags);
+	dm_list_init(&vg->removed_pvs);
 
 	if (!_check_vgs(pvs))
 		goto_bad;

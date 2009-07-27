@@ -532,6 +532,54 @@ int vg_extend(struct volume_group *vg, int pv_count, char **pv_names)
 	return 0;
 }
 
+/* FIXME: use this inside vgreduce_single? */
+int vg_reduce(struct volume_group *vg, char *pv_name)
+{
+	struct physical_volume *pv;
+	struct pv_list *pvl;
+
+	if (_vg_bad_status_bits(vg, RESIZEABLE_VG))
+		return 0;
+
+	if (!archive(vg))
+		goto bad;
+
+	/* remove each pv */
+	if (!(pvl = find_pv_in_vg(vg, pv_name))) {
+		log_error("Physical volume %s not in volume group %s.",
+			  pv_name, vg->name);
+		goto bad;
+	}
+
+	pv = pvl->pv;
+
+	if (pv_pe_alloc_count(pv)) {
+		log_error("Physical volume %s still in use.",
+			  pv_name);
+		goto bad;
+	}
+
+	if (!dev_get_size(pv_dev(pv), &pv->size)) {
+		log_error("%s: Couldn't get size.", pv_name);
+		goto bad;
+	}
+
+	vg->pv_count--;
+	vg->free_count -= pv_pe_count(pv) - pv_pe_alloc_count(pv);
+	vg->extent_count -= pv_pe_count(pv);
+
+	/* add pv to the remove_pvs list */
+	dm_list_del(&pvl->list);
+	dm_list_add(&vg->removed_pvs, &pvl->list);
+
+	return 1;
+
+      bad:
+	log_error("Unable to remove physical volume '%s' from "
+		  "volume group '%s'.", pv_name, vg->name);
+	return 0;
+}
+
 const char *strip_dir(const char *vg_name, const char *dev_dir)
 {
 	size_t len = strlen(dev_dir);
@@ -659,6 +707,9 @@ vg_t *vg_create(struct cmd_context *cmd, const char *vg_name)
 	dm_list_init(&vg->lvs);
 
 	dm_list_init(&vg->tags);
+
+	/* initialize removed_pvs list */
+	dm_list_init(&vg->removed_pvs);
 
 	if (!(vg->fid = cmd->fmt->ops->create_instance(cmd->fmt, vg_name,
 						       NULL, NULL))) {
@@ -2165,6 +2216,7 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd,
 	dm_list_init(&vg->pvs);
 	dm_list_init(&vg->lvs);
 	dm_list_init(&vg->tags);
+	dm_list_init(&vg->removed_pvs);
 	vg->vgmem = mem;
 	vg->cmd = cmd;
 	if (!(vg->name = dm_pool_strdup(mem, orphan_vgname))) {
