@@ -565,6 +565,18 @@ uint64_t lvm_lv_is_active(const lv_t *lv);
  */
 uint64_t lvm_lv_is_suspended(const lv_t *lv);
 
+/**
+ * Resize logical volume to new_size bytes.
+ *
+ * \param   lv
+ *          Logical volume handle.
+ * \param   new_size
+ *          New size in bytes.
+ * \return  0 (success) or -1 (failure).
+ *
+ */
+int lvm_lv_resize(const lv_t *lv, uint64_t new_size);
+
 /************************** physical volume handling ************************/
 
 /**
@@ -615,5 +627,17 @@ char *lvm_pv_get_name(const pv_t *pv);
  * \return  metadata area count.
  */
 uint64_t lvm_pv_get_mda_count(const pv_t *pv);
+
+/**
+ * Resize physical volume to new_size bytes.
+ *
+ * \param   pv
+ *          Physical volume handle.
+ * \param   new_size
+ *          New size in bytes.
+ * \return  0 (success) or -1 (failure).
+ *
+ */
+int lvm_pv_resize(const pv_t *pv, uint64_t new_size);
 
 #endif /* _LIB_LVM_H */

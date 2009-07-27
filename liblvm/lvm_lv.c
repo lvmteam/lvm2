@@ -173,3 +173,10 @@ int lvm_lv_deactivate(lv_t *lv)
 	}
 	return 0;
 }
+
+int lvm_lv_resize(const lv_t *lv, uint64_t new_size)
+{
+	/* FIXME: add lv resize code here */
+	log_error("NOT IMPLEMENTED YET\n");
+	return -1;
+}
