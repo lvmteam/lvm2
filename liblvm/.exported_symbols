@@ -1,6 +1,7 @@
 lvm_create
 lvm_destroy
-lvm_reload_config
+lvm_config_reload
+lvm_config_override
 lvm_pv_get_name
 lvm_pv_get_uuid
 lvm_pv_get_mda_count

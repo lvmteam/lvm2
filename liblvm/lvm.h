@@ -149,6 +149,22 @@ void lvm_destroy(lvm_t libh);
 int lvm_config_reload(lvm_t libh);
 
 /**
+ * Override the LVM configuration with a configuration string.
+ *
+ * This API is equivalent to the --config option on lvm commands.
+ * FIXME: submit a patch to document the --config option
+ * Once this API has been used to over-ride the configuration,
+ * you should use lvm_config_reload to apply the new settings.
+ * \param   libh
+ *          Handle obtained from lvm_create.
+ * \param   config_settings
+ *          LVM configuration string to apply.  See the lvm.conf file man page
+ *          for the format of the config string.
+ * \return  0 (success) or -1 (failure).
+ */
+int lvm_config_override(lvm_t libh, const char *config_string);
+
+/**
  * Return stored error no describing last LVM API error.
  *
  * Users of liblvm should use lvm_errno to determine success or failure

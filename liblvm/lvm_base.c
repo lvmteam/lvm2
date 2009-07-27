@@ -72,6 +72,14 @@ int lvm_config_reload(lvm_t libh)
 	return 0;
 }
 
+int lvm_config_override(lvm_t libh, const char *config_settings)
+{
+	struct cmd_context *cmd = (struct cmd_context *)libh;
+	if (override_config_tree_from_string(cmd, config_settings))
+		return -1;
+	return 0;
+}
+
 int lvm_errno(lvm_t libh)
 {
 	return stored_errno();
