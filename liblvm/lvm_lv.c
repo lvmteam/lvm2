@@ -133,13 +133,13 @@ int lvm_lv_activate(lv_t *lv)
 
 	/* FIXME: handle pvmove stuff later */
 	if (lv->status & LOCKED) {
-		log_error("Unable to activate locked LV\n");
+		log_error("Unable to activate locked LV");
 		return -1;
 	}
 
 	/* FIXME: handle lvconvert stuff later */
 	if (lv->status & CONVERTING) {
-		log_error("Unable to activate LV with in-progress lvconvert\n");
+		log_error("Unable to activate LV with in-progress lvconvert");
 		return -1;
 	}
 
@@ -147,14 +147,14 @@ int lvm_lv_activate(lv_t *lv)
 		log_verbose("Activating logical volume \"%s\" "
 			    "exclusively", lv->name);
 		if (!activate_lv_excl(lv->vg->cmd, lv)) {
-			log_error("Activate exclusive failed.\n");
+			log_error("Activate exclusive failed.");
 			return -1;
 		}
 	} else {
 		log_verbose("Activating logical volume \"%s\"",
 			    lv->name);
 		if (!activate_lv(lv->vg->cmd, lv)) {
-			log_error("Activate failed.\n");
+			log_error("Activate failed.");
 			return -1;
 		}
 	}
@@ -168,7 +168,7 @@ int lvm_lv_deactivate(lv_t *lv)
 
 	log_verbose("Deactivating logical volume \"%s\"", lv->name);
 	if (!deactivate_lv(lv->vg->cmd, lv)) {
-		log_error("Deactivate failed.\n");
+		log_error("Deactivate failed.");
 		return -1;
 	}
 	return 0;
@@ -177,6 +177,6 @@ int lvm_lv_deactivate(lv_t *lv)
 int lvm_lv_resize(const lv_t *lv, uint64_t new_size)
 {
 	/* FIXME: add lv resize code here */
-	log_error("NOT IMPLEMENTED YET\n");
+	log_error("NOT IMPLEMENTED YET");
 	return -1;
 }
