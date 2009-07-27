@@ -119,8 +119,8 @@ struct lvm_str_list {
  * the handle and any associated resources.
  *
  * \param   system_dir
- *          Set an alternative LVM system directory. Use NULL to use the 
- *          default value. If the environment variable LVM_SYSTEM_DIR is set, 
+ *          Set an alternative LVM system directory. Use NULL to use the
+ *          default value. If the environment variable LVM_SYSTEM_DIR is set,
  *          it will override any LVM system directory setting.
  * \return  A valid LVM handle is returned or NULL if there has been a
  *          memory allocation problem. You have to check if an error occured
@@ -146,7 +146,7 @@ void lvm_destroy(lvm_t libh);
  *          Handle obtained from lvm_create.
  * \return  0 (success) or -1 (failure).
  */
-int lvm_reload_config(lvm_t libh);
+int lvm_config_reload(lvm_t libh);
 
 /**
  * Return stored error no describing last LVM API error.
@@ -174,6 +174,7 @@ const char *lvm_errmsg(lvm_t libh);
 
 /**
  * Scan all devices on the system for VGs and LVM metadata.
+ * FIXME: Elaborate on when to use, side-effects, .cache file, etc
  *
  * \return  0 (success) or -1 (failure).
  */
