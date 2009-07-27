@@ -240,6 +240,11 @@ char *lvm_vg_get_name(const vg_t *vg)
 	return name;
 }
 
+/*
+ * FIXME: These functions currently return hidden VGs.  We should either filter
+ * these out and not return them in the list, or export something like
+ * is_orphan_vg and tell the caller to filter.
+ */
 struct dm_list *lvm_list_vg_names(lvm_t libh)
 {
 	return get_vgnames((struct cmd_context *)libh, 0);

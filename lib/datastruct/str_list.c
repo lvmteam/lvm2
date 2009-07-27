@@ -20,8 +20,10 @@ struct dm_list *str_list_create(struct dm_pool *mem)
 {
 	struct dm_list *sl;
 
-	if (!(sl = dm_pool_alloc(mem, sizeof(struct dm_list))))
-		return_NULL;
+	if (!(sl = dm_pool_alloc(mem, sizeof(struct dm_list)))) {
+		log_errno(ENOMEM, "str_list allocation failed");
+		return NULL;
+	}
 
 	dm_list_init(sl);
 
