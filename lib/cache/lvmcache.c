@@ -563,14 +563,14 @@ struct dm_list *lvmcache_get_vgnames(struct cmd_context *cmd, int full_scan)
 	lvmcache_label_scan(cmd, full_scan);
 
 	if (!(vgnames = str_list_create(cmd->mem))) {
-		log_error("vgnames list allocation failed");
+		log_errno(ENOMEM, "vgnames list allocation failed");
 		return NULL;
 	}
 
 	dm_list_iterate_items(vginfo, &_vginfos) {
 		if (!str_list_add(cmd->mem, vgnames,
 				  dm_pool_strdup(cmd->mem, vginfo->vgname))) {
-			log_error("strlist allocation failed");
+			log_errno(ENOMEM, "strlist allocation failed");
 			return NULL;
 		}
 	}

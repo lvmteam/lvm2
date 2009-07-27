@@ -185,8 +185,13 @@ int lvm_scan(lvm_t libh);
 /**
  * Return the list of volume group names.
  *
+ * The memory allocated for the list is tied to the lvm_t handle and will be
+ * released when lvm_destroy is called.
+ *
  * NOTE: This function will _NOT_ scan devices in the system for LVM metadata.
  * To scan the system, use lvm_scan.
+ * NOTE: This function currently returns hidden VG names.  These names always
+ * begin with a "#" and should be filtered out and not used.
  *
  * To process the list, use the dm_list iterator functions.  For example:
  *      vg_t *vg;
@@ -203,23 +208,30 @@ int lvm_scan(lvm_t libh);
  *
  *
  * \return  A list of struct lvm_str_list
- *          If no VGs exist on the system, NULL is returned.
- *
- * FIXME: handle list memory cleanup
+ *          NULL is returned if unable to allocate memory.
+ *          An empty list (verify with dm_list_empty) is returned if no VGs
+ *          exist on the system.
  */
 struct dm_list *lvm_list_vg_names(lvm_t libh);
 
 /**
  * Return the list of volume group uuids.
  *
+ * The memory allocated for the list is tied to the lvm_t handle and will be
+ * released when lvm_destroy is called.
+ *
  * NOTE: This function will _NOT_ scan devices in the system for LVM metadata.
  * To scan the system, use lvm_scan.
+ * NOTE: This function currently returns hidden VG names.  These names always
+ * begin with a "#" and should be filtered out and not used.
  *
  * \param   libh
  *          Handle obtained from lvm_create.
  *
  * \return  List of copied uuid strings.
- *          If no VGs exist on the system, NULL is returned.
+ *          NULL is returned if unable to allocate memory.
+ *          An empty list (verify with dm_list_empty) is returned if no VGs
+ *          exist on the system.
  */
 struct dm_list *lvm_list_vg_uuids(lvm_t libh);
 
