@@ -38,11 +38,11 @@ typedef struct lvm *lvm_t;
 /**
  * Physical volume object.
  *
- * This object can be either a read-only object or a read-write object
- * depending on the mode it was returned by a function. This object can not be
- * written to disk independently, it is bound to a volume group and changes
- * will be written to disk when the volume group gets committed to disk. The
- * open mode is the same as the volume group object is was created of.
+ * This object can be either a read-only object or a read-write object and
+ * depends on the mode of the volume group.  This object can not be
+ * written to disk independently, and changes will be written to disk
+ * when the volume group gets committed to disk. The open mode is the
+ * same as the volume group object it was created from.
  */
 typedef struct physical_volume pv_t;
 
@@ -60,10 +60,10 @@ typedef struct volume_group vg_t;
  * Logical Volume object.
  *
  * This object can be either a read-only object or a read-write object
- * depending on the mode it was returned by a function. This object can not be
+ * depending on the mode of the volume group. This object can not be
  * written to disk independently, it is bound to a volume group and changes
  * will be written to disk when the volume group gets committed to disk. The
- * open mode is the same as the volume group object is was created of.
+ * open mode is the same as the volume group object is was created from.
  */
 typedef struct logical_volume lv_t;
 
@@ -287,7 +287,7 @@ int lvm_vg_write(vg_t *vg);
 int lvm_vg_remove(vg_t *vg);
 
 /**
- * Close a VG opened with lvm_vg_create
+ * Close a VG opened with lvm_vg_create or lvm_vg_open.
  *
  * This API releases a VG handle and any resources associated with the handle.
  *
