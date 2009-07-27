@@ -887,9 +887,9 @@ int help(struct cmd_context *cmd __attribute((unused)), int argc, char **argv)
 	return ret;
 }
 
-static int _override_settings(struct cmd_context *cmd)
+static int _override_settings(struct cmd_context *cmd, const char *config_settings)
 {
-	if (!(cmd->cft_override = create_config_tree_from_string(cmd, arg_str_value(cmd, config_ARG, "")))) {
+	if (!(cmd->cft_override = create_config_tree_from_string(cmd, config_settings))) {
 		log_error("Failed to set overridden configuration entries.");
 		return EINVALID_CMD_LINE;
 	}
@@ -986,7 +986,8 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	set_cmd_name(cmd->command->name);
 
 	if (arg_count(cmd, config_ARG))
-		if ((ret = _override_settings(cmd)))
+		if ((ret = _override_settings(cmd,
+				arg_str_value(cmd, config_ARG, ""))))
 			goto_out;
 
 	if (arg_count(cmd, config_ARG) || !cmd->config_valid || config_files_changed(cmd)) {
