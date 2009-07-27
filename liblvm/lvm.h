@@ -19,6 +19,16 @@
 
 #include <stdint.h>
 
+
+/******************************** WARNING ********************************/
+/*
+ * NOTE: This API is under development and subject to change at any time.
+ *
+ * Please send feedback to lvm-devel@redhat.com
+ */
+/******************************** WARNING ********************************/
+
+
 /******************************** structures ********************************/
 
 /* Internal object structures - do not use directly */
