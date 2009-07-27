@@ -80,6 +80,10 @@ static void _show_help(void)
 	       "Issue a lvm_vg_open() API call on VG 'vgname'\n");
 	printf("'vg_close vgname': "
 	       "Issue a lvm_vg_close() API call on VG 'vgname'\n");
+	printf("'config_reload': "
+	       "Issue a lvm_config_reload() API to reload LVM config\n");
+	printf("'config_override' device: "
+	       "Issue a lvm_config_override() with accept device filter\n");
 	printf("'quit': exit the program\n");
 }
 
@@ -219,6 +223,35 @@ static void _vg_reduce(char **argv, int argc, lvm_t libh)
 	pvs = lvm_vg_list_pvs(vg);
 	if (pvs && !dm_list_empty(pvs))
 		_remove_device_from_pvname_hash(pvs, argv[2]);
+}
+
+static void _config_override(char **argv, int argc, lvm_t libh)
+{
+	int rc;
+	char tmp[64];
+
+	if (argc < 2) {
+		printf ("Please enter device\n");
+		return;
+	}
+	snprintf(tmp, 63, "devices{filter=[\"a|%s|\", \"r|.*|\"]}", argv[1]);
+	rc = lvm_config_override(libh, tmp);
+	if (rc)
+		printf("Error ");
+	else
+		printf("Success ");
+	printf("overriding LVM configuration\n");
+}
+
+static void _config_reload(char **argv, int argc, lvm_t libh)
+{
+	int rc;
+	rc = lvm_config_reload(libh);
+	if (rc)
+		printf("Error ");
+	else
+		printf("Success ");
+	printf("reloading LVM configuration\n");
 }
 
 static void _vg_extend(char **argv, int argc, lvm_t libh)
@@ -489,7 +522,7 @@ static int lvmapi_test_shell(lvm_t libh)
 	argc=0;
 	while (1) {
 		free(input);
-		input = readline("lvm> ");
+		input = readline("liblvm> ");
 
 		/* EOF */
 		if (!input) {
@@ -521,6 +554,10 @@ static int lvmapi_test_shell(lvm_t libh)
 			break;
 		} else if (!strcmp(argv[0], "?") || !strcmp(argv[0], "help")) {
 			_show_help();
+		} else if (!strcmp(argv[0], "config_reload")) {
+			_config_reload(argv, argc, libh);
+		} else if (!strcmp(argv[0], "config_override")) {
+			_config_override(argv, argc, libh);
 		} else if (!strcmp(argv[0], "vg_extend")) {
 			_vg_extend(argv, argc, libh);
 		} else if (!strcmp(argv[0], "vg_reduce")) {
