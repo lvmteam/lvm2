@@ -101,6 +101,7 @@ struct clog_cpg {
 	uint32_t lowest_id;
 	cpg_handle_t handle;
 	struct cpg_name name;
+	uint64_t luid;
 
 	/* Are we the first, or have we received checkpoint? */
 	int state;
@@ -146,6 +147,12 @@ int cluster_send(struct clog_request *rq)
 		rq->u_rq.error = -ENOENT;
 		return -ENOENT;
 	}
+
+	/*
+	 * Once the request heads for the cluster, the luid looses
+	 * all its meaning.
+	 */
+	rq->u_rq.luid = 0;
 
 	iov.iov_base = rq;
 	iov.iov_len = sizeof(struct clog_request) + rq->u_rq.data_size;
@@ -357,7 +364,8 @@ static struct checkpoint_data *prepare_checkpoint(struct clog_cpg *entry,
 	new->requester = cp_requester;
 	strncpy(new->uuid, entry->name.value, entry->name.length);
 
-	new->bitmap_size = push_state(entry->name.value, "clean_bits",
+	new->bitmap_size = push_state(entry->name.value, entry->luid,
+				      "clean_bits",
 				      &new->clean_bits, cp_requester);
 	if (new->bitmap_size <= 0) {
 		LOG_ERROR("Failed to store clean_bits to checkpoint for node %u",
@@ -366,8 +374,9 @@ static struct checkpoint_data *prepare_checkpoint(struct clog_cpg *entry,
 		return NULL;
 	}
 
-	new->bitmap_size = push_state(entry->name.value,
-				      "sync_bits", &new->sync_bits, cp_requester);
+	new->bitmap_size = push_state(entry->name.value, entry->luid,
+				      "sync_bits",
+				      &new->sync_bits, cp_requester);
 	if (new->bitmap_size <= 0) {
 		LOG_ERROR("Failed to store sync_bits to checkpoint for node %u",
 			  new->requester);
@@ -376,7 +385,9 @@ static struct checkpoint_data *prepare_checkpoint(struct clog_cpg *entry,
 		return NULL;
 	}
 
-	r = push_state(entry->name.value, "recovering_region", &new->recovering_region, cp_requester);
+	r = push_state(entry->name.value, entry->luid,
+		       "recovering_region",
+		       &new->recovering_region, cp_requester);
 	if (r <= 0) {
 		LOG_ERROR("Failed to store recovering_region to checkpoint for node %u",
 			  new->requester);
@@ -703,7 +714,7 @@ init_retry:
 		}
 
 		if (iov.readSize) {
-			if (pull_state(entry->name.value,
+			if (pull_state(entry->name.value, entry->luid,
 				       (char *)desc.sectionId.id, bitmap,
 				       iov.readSize)) {
 				LOG_ERROR("Error loading state");
@@ -1235,7 +1246,7 @@ static void cpg_leave_callback(struct clog_cpg *match,
 		cpg_fd_get(match->handle, &fd);
 		links_unregister(fd);
 
-		cluster_postsuspend(match->name.value);
+		cluster_postsuspend(match->name.value, match->luid);
 
 		list_for_each_entry_safe(rq, n, &match->working_list, list) {
 			list_del_init(&rq->list);
@@ -1437,7 +1448,7 @@ unlink_retry:
 	return 1;
 }
 
-int create_cluster_cpg(char *str)
+int create_cluster_cpg(char *uuid, uint64_t luid)
 {
 	int r;
 	int size;
@@ -1445,8 +1456,8 @@ int create_cluster_cpg(char *str)
 	struct clog_cpg *tmp, *tmp2;
 
 	list_for_each_entry_safe(tmp, tmp2, &clog_cpg_list, list)
-		if (!strncmp(tmp->name.value, str, CPG_MAX_NAME_LENGTH)) {
-			LOG_ERROR("Log entry already exists: %s", str);
+		if (!strncmp(tmp->name.value, uuid, CPG_MAX_NAME_LENGTH)) {
+			LOG_ERROR("Log entry already exists: %s", uuid);
 			return -EEXIST;
 		}
 
@@ -1461,10 +1472,11 @@ int create_cluster_cpg(char *str)
 	INIT_LIST_HEAD(&new->startup_list);
 	INIT_LIST_HEAD(&new->working_list);
 
-	size = ((strlen(str) + 1) > CPG_MAX_NAME_LENGTH) ?
-		CPG_MAX_NAME_LENGTH : (strlen(str) + 1);
-	strncpy(new->name.value, str, size);
+	size = ((strlen(uuid) + 1) > CPG_MAX_NAME_LENGTH) ?
+		CPG_MAX_NAME_LENGTH : (strlen(uuid) + 1);
+	strncpy(new->name.value, uuid, size);
 	new->name.length = size;
+	new->luid = luid;
 
 	/*
 	 * Ensure there are no stale checkpoints around before we join
@@ -1560,12 +1572,12 @@ static int _destroy_cluster_cpg(struct clog_cpg *del)
 	return 0;
 }
 
-int destroy_cluster_cpg(char *str)
+int destroy_cluster_cpg(char *uuid)
 {
 	struct clog_cpg *del, *tmp;
 
 	list_for_each_entry_safe(del, tmp, &clog_cpg_list, list)
-		if (!strncmp(del->name.value, str, CPG_MAX_NAME_LENGTH))
+		if (!strncmp(del->name.value, uuid, CPG_MAX_NAME_LENGTH))
 			_destroy_cluster_cpg(del);
 
 	return 0;
