@@ -407,8 +407,8 @@ int lvm_vg_set_extent_size(vg_t *vg, uint32_t new_size);
 /**
  * Get the current name of a volume group.
  *
- * Memory is allocated using malloc() and caller must free the memory
- * using free().
+ * Memory is allocated using dm_malloc() and caller must free the memory
+ * using dm_free().
  *
  * \param   vg
  *          VG handle obtained from lvm_vg_create or lvm_vg_open.
@@ -419,8 +419,8 @@ char *lvm_vg_get_uuid(const vg_t *vg);
 /**
  * Get the current uuid of a volume group.
  *
- * Memory is allocated using malloc() and caller must free the memory
- * using free().
+ * Memory is allocated using dm_malloc() and caller must free the memory
+ * using dm_free().
  *
  * \param   vg
  *          VG handle obtained from lvm_vg_create or lvm_vg_open.
@@ -557,8 +557,8 @@ int lvm_vg_remove_lv(lv_t *lv);
 /**
  * Get the current name of a logical volume.
  *
- * Memory is allocated using malloc() and caller must free the memory
- * using free().
+ * Memory is allocated using dm_malloc() and caller must free the memory
+ * using dm_free().
  *
  * \param   lv
  *          Logical volume handle.
@@ -569,8 +569,8 @@ char *lvm_lv_get_uuid(const lv_t *lv);
 /**
  * Get the current uuid of a logical volume.
  *
- * Memory is allocated using malloc() and caller must free the memory
- * using free().
+ * Memory is allocated using dm_malloc() and caller must free the memory
+ * using dm_free().
  *
  * \param   lv
  *          Logical volume handle.
@@ -638,8 +638,8 @@ struct dm_list *lvm_vg_list_pvs(vg_t *vg);
 /**
  * Get the current uuid of a logical volume.
  *
- * Memory is allocated using malloc() and caller must free the memory
- * using free().
+ * Memory is allocated using dm_malloc() and caller must free the memory
+ * using dm_free().
  *
  * \param   pv
  *          Physical volume handle.
@@ -650,8 +650,8 @@ char *lvm_pv_get_uuid(const pv_t *pv);
 /**
  * Get the current name of a logical volume.
  *
- * Memory is allocated using malloc() and caller must free the memory
- * using free().
+ * Memory is allocated using dm_malloc() and caller must free the memory
+ * using dm_free().
  *
  * \param   pv
  *          Physical volume handle.

@@ -44,7 +44,7 @@ char *lvm_lv_get_name(const lv_t *lv)
 {
 	char *name;
 
-	name = malloc(NAME_LEN + 1);
+	name = dm_malloc(NAME_LEN + 1);
 	strncpy(name, (const char *)lv->name, NAME_LEN);
 	name[NAME_LEN] = '\0';
 	return name;
