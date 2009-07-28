@@ -1,5 +1,7 @@
-Version 1.02.35 - 
+Version 1.02.35 - 28th July 2009
 ================================
+  Add LOG_LINE_WITH_ERRNO macro.
+  Use log_error macro consistently throughout in place of log_err.
 
 Version 1.02.34 - 15th July 2009
 ================================
