@@ -30,7 +30,9 @@
 
 /*************************** Design Overview ********************************/
 
-/*
+/**
+ * \mainpage LVM library API
+ *
  * The API is designed around the following basic LVM objects:
  * 1) Physical Volume (PV) 2) Volume Group (VG) 3) Logical Volume (LV).
  *
