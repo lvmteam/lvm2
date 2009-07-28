@@ -1,3 +1,6 @@
+Version 2.02.51 - 
+================================
+
 Version 2.02.50 - 28th July 2009
 ================================
   Change test/api/test.c prompt so it's not confused with the main lvm prompt.
