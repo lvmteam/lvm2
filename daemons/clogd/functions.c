@@ -49,7 +49,7 @@ struct log_c {
 	struct list_head list;
 
 	char uuid[DM_UUID_LEN];
-	uint32_t ref_count;
+	uint64_t luid;
 
 	time_t delay; /* limits how fast a resume can happen after suspend */
 	int touched;
@@ -146,11 +146,10 @@ static uint64_t count_bits32(uint32_t *addr, uint32_t count)
 
 /*
  * get_log
- * @rq
  *
  * Returns: log if found, NULL otherwise
  */
-static struct log_c *get_log(const char *uuid)
+static struct log_c *get_log(const char *uuid, uint64_t luid)
 {
 	struct list_head *l;
 	struct log_c *lc;
@@ -158,7 +157,8 @@ static struct log_c *get_log(const char *uuid)
 	/* FIXME: Need prefetch to do this right */
 	__list_for_each(l, &log_list) {
 		lc = list_entry(l, struct log_c, list);
-		if (!strcmp(lc->uuid, uuid))
+		if (!strcmp(lc->uuid, uuid) &&
+		    (!luid || (luid == lc->luid)))
 			return lc;
 	}
 
@@ -167,14 +167,13 @@ static struct log_c *get_log(const char *uuid)
 
 /*
  * get_pending_log
- * @rq
  *
  * Pending logs are logs that have been 'clog_ctr'ed, but
  * have not joined the CPG (via clog_resume).
  *
  * Returns: log if found, NULL otherwise
  */
-static struct log_c *get_pending_log(const char *uuid)
+static struct log_c *get_pending_log(const char *uuid, uint64_t luid)
 {
 	struct list_head *l;
 	struct log_c *lc;
@@ -182,7 +181,8 @@ static struct log_c *get_pending_log(const char *uuid)
 	/* FIXME: Need prefetch to do this right */
 	__list_for_each(l, &log_pending_list) {
 		lc = list_entry(l, struct log_c, list);
-		if (!strcmp(lc->uuid, uuid))
+		if (!strcmp(lc->uuid, uuid) &&
+		    (!luid || (luid == lc->luid)))
 			return lc;
 	}
 
@@ -358,7 +358,8 @@ static int find_disk_path(char *major_minor_str, char *path_rtn, int *unlink_pat
 	return r ? -errno : 0;
 }
 
-static int _clog_ctr(char *uuid, int argc, char **argv, uint64_t device_size)
+static int _clog_ctr(char *uuid, uint64_t luid,
+		     int argc, char **argv, uint64_t device_size)
 {
 	int i;
 	int r = 0;
@@ -447,16 +448,15 @@ static int _clog_ctr(char *uuid, int argc, char **argv, uint64_t device_size)
 	lc->skip_bit_warning = region_count;
 	lc->disk_fd = -1;
 	lc->log_dev_failed = 0;
-	lc->ref_count = 1;
 	strncpy(lc->uuid, uuid, DM_UUID_LEN);
+	lc->luid = luid;
 
-	if ((dup = get_log(lc->uuid)) ||
-	    (dup = get_pending_log(lc->uuid))) {
-		LOG_DBG("[%s] Inc reference count on cluster log",
-			SHORT_UUID(lc->uuid));
+	if ((dup = get_log(lc->uuid, lc->luid)) ||
+	    (dup = get_pending_log(lc->uuid, lc->luid))) {
+		LOG_ERROR("[%s/%llu] Log already exists, unable to create.",
+			  SHORT_UUID(lc->uuid), lc->luid);
 		free(lc);
-		dup->ref_count++;
-		return 0;
+		return -EINVAL;
 	}
 
 	INIT_LIST_HEAD(&lc->mark_list);
@@ -590,7 +590,7 @@ static int clog_ctr(struct dm_ulog_request *rq)
 	}
 
 	argc--;  /* We pass in the device_size separate */
-	r = _clog_ctr(rq->uuid, argc - 1, argv + 1, device_size);
+	r = _clog_ctr(rq->uuid, rq->luid, argc - 1, argv + 1, device_size);
 
 	/* We join the CPG when we resume */
 
@@ -617,30 +617,19 @@ static int clog_ctr(struct dm_ulog_request *rq)
  */
 static int clog_dtr(struct dm_ulog_request *rq)
 {
-	struct log_c *lc = get_log(rq->uuid);
+	struct log_c *lc = get_log(rq->uuid, rq->luid);
 
 	if (lc) {
 		/*
 		 * The log should not be on the official list.  There
 		 * should have been a suspend first.
 		 */
-		lc->ref_count--;
-		if (!lc->ref_count) {
-			LOG_ERROR("[%s] DTR before SUS: leaving CPG",
-				  SHORT_UUID(rq->uuid));
-			destroy_cluster_cpg(rq->uuid);
-		}
-	} else if ((lc = get_pending_log(rq->uuid))) {
-		lc->ref_count--;
-	} else {
+		LOG_ERROR("[%s] DTR before SUS: leaving CPG",
+			  SHORT_UUID(rq->uuid));
+		destroy_cluster_cpg(rq->uuid);
+	} else if (!(lc = get_pending_log(rq->uuid, rq->luid))) {
 		LOG_ERROR("clog_dtr called on log that is not official or pending");
 		return -EINVAL;
-	}
-
-	if (lc->ref_count) {
-		LOG_DBG("[%s] Dec reference count on cluster log",
-			SHORT_UUID(lc->uuid));
-		return 0;
 	}
 
 	LOG_DBG("[%s] Cluster log removed", SHORT_UUID(lc->uuid));
@@ -664,7 +653,7 @@ static int clog_dtr(struct dm_ulog_request *rq)
  */
 static int clog_presuspend(struct dm_ulog_request *rq)
 {
-	struct log_c *lc = get_log(rq->uuid);
+	struct log_c *lc = get_log(rq->uuid, rq->luid);
 
 	if (!lc)
 		return -EINVAL;
@@ -684,7 +673,7 @@ static int clog_presuspend(struct dm_ulog_request *rq)
  */
 static int clog_postsuspend(struct dm_ulog_request *rq)
 {
-	struct log_c *lc = get_log(rq->uuid);
+	struct log_c *lc = get_log(rq->uuid, rq->luid);
 
 	if (!lc)
 		return -EINVAL;
@@ -705,9 +694,9 @@ static int clog_postsuspend(struct dm_ulog_request *rq)
  * @rq
  *
  */
-int cluster_postsuspend(char *uuid)
+int cluster_postsuspend(char *uuid, uint64_t luid)
 {
-	struct log_c *lc = get_log(uuid);
+	struct log_c *lc = get_log(uuid, luid);
 
 	if (!lc)
 		return -EINVAL;
@@ -732,7 +721,7 @@ static int clog_resume(struct dm_ulog_request *rq)
 {
 	uint32_t i;
 	int commit_log = 0;
-	struct log_c *lc = get_log(rq->uuid);
+	struct log_c *lc = get_log(rq->uuid, rq->luid);
 	size_t size = lc->bitset_uint32_count * sizeof(uint32_t);
 
 	if (!lc)
@@ -770,7 +759,8 @@ static int clog_resume(struct dm_ulog_request *rq)
 		lc->resume_override = 1000;
 		goto out;
 	default:
-		LOG_ERROR("Error:: multiple loading of bits (%d)", lc->resume_override);
+		LOG_ERROR("Error:: multiple loading of bits (%d)",
+			  lc->resume_override);
 		return -EINVAL;
 	}
 
@@ -791,8 +781,8 @@ static int clog_resume(struct dm_ulog_request *rq)
 				SHORT_UUID(lc->uuid));
 		break;		
 	case -EINVAL:
-		LOG_PRINT("[%s] (Re)initializing mirror log - resync issued.",
-			  SHORT_UUID(lc->uuid));
+		LOG_DBG("[%s] (Re)initializing mirror log - resync issued.",
+			SHORT_UUID(lc->uuid));
 		lc->disk_nr_regions = 0;
 		break;
 	default:
@@ -858,11 +848,11 @@ int local_resume(struct dm_ulog_request *rq)
 {
 	int r;
 	time_t t;
-	struct log_c *lc = get_log(rq->uuid);
+	struct log_c *lc = get_log(rq->uuid, rq->luid);
 
 	if (!lc) {
 		/* Is the log in the pending list? */
-		lc = get_pending_log(rq->uuid);
+		lc = get_pending_log(rq->uuid, rq->luid);
 		if (!lc) {
 			LOG_ERROR("clog_resume called on log that is not official or pending");
 			return -EINVAL;
@@ -897,7 +887,7 @@ int local_resume(struct dm_ulog_request *rq)
 			sleep(3 - t);
 
 		/* Join the CPG */
-		r = create_cluster_cpg(rq->uuid);
+		r = create_cluster_cpg(rq->uuid, rq->luid);
 		if (r) {
 			LOG_ERROR("clog_resume:  Failed to create cluster CPG");
 			return r;
@@ -924,9 +914,9 @@ int local_resume(struct dm_ulog_request *rq)
 static int clog_get_region_size(struct dm_ulog_request *rq)
 {
 	uint64_t *rtn = (uint64_t *)rq->data;
-	struct log_c *lc = get_log(rq->uuid);
+	struct log_c *lc = get_log(rq->uuid, rq->luid);
 
-	if (!lc && !(lc = get_pending_log(rq->uuid)))
+	if (!lc && !(lc = get_pending_log(rq->uuid, rq->luid)))
 		return -EINVAL;
 
 	*rtn = lc->region_size;
@@ -945,7 +935,7 @@ static int clog_is_clean(struct dm_ulog_request *rq)
 {
 	int64_t *rtn = (int64_t *)rq->data;
 	uint64_t region = *((uint64_t *)(rq->data));
-	struct log_c *lc = get_log(rq->uuid);
+	struct log_c *lc = get_log(rq->uuid, rq->luid);
 
 	if (!lc)
 		return -EINVAL;
@@ -970,7 +960,7 @@ static int clog_in_sync(struct dm_ulog_request *rq)
 {
 	int64_t *rtn = (int64_t *)rq->data;
 	uint64_t region = *((uint64_t *)(rq->data));
-	struct log_c *lc = get_log(rq->uuid);
+	struct log_c *lc = get_log(rq->uuid, rq->luid);
 
 	if (!lc)
 		return -EINVAL;
@@ -999,7 +989,7 @@ static int clog_in_sync(struct dm_ulog_request *rq)
 static int clog_flush(struct dm_ulog_request *rq, int server)
 {
 	int r = 0;
-	struct log_c *lc = get_log(rq->uuid);
+	struct log_c *lc = get_log(rq->uuid, rq->luid);
 	
 	if (!lc)
 		return -EINVAL;
@@ -1087,7 +1077,7 @@ static int clog_mark_region(struct dm_ulog_request *rq, uint32_t originator)
 	int r;
 	int count;
 	uint64_t *region;
-	struct log_c *lc = get_log(rq->uuid);
+	struct log_c *lc = get_log(rq->uuid, rq->luid);
 
 	if (!lc)
 		return -EINVAL;
@@ -1154,7 +1144,7 @@ static int clog_clear_region(struct dm_ulog_request *rq, uint32_t originator)
 	int r;
 	int count;
 	uint64_t *region;
-	struct log_c *lc = get_log(rq->uuid);
+	struct log_c *lc = get_log(rq->uuid, rq->luid);
 
 	if (!lc)
 		return -EINVAL;
@@ -1189,7 +1179,7 @@ static int clog_get_resync_work(struct dm_ulog_request *rq, uint32_t originator)
 		int64_t i;
 		uint64_t r;
 	} *pkg = (void *)rq->data;
-	struct log_c *lc = get_log(rq->uuid);
+	struct log_c *lc = get_log(rq->uuid, rq->luid);
 
 	if (!lc)
 		return -EINVAL;
@@ -1282,7 +1272,7 @@ static int clog_set_region_sync(struct dm_ulog_request *rq, uint32_t originator)
 		uint64_t region;
 		int64_t in_sync;
 	} *pkg = (void *)rq->data;
-	struct log_c *lc = get_log(rq->uuid);
+	struct log_c *lc = get_log(rq->uuid, rq->luid);
 
 	if (!lc)
 		return -EINVAL;
@@ -1361,7 +1351,7 @@ static int clog_set_region_sync(struct dm_ulog_request *rq, uint32_t originator)
 static int clog_get_sync_count(struct dm_ulog_request *rq, uint32_t originator)
 {
 	uint64_t *sync_count = (uint64_t *)rq->data;
-	struct log_c *lc = get_log(rq->uuid);
+	struct log_c *lc = get_log(rq->uuid, rq->luid);
 
 	/*
 	 * FIXME: Mirror requires us to be able to ask for
@@ -1370,7 +1360,7 @@ static int clog_get_sync_count(struct dm_ulog_request *rq, uint32_t originator)
 	 * the stored value may not be accurate.
 	 */
 	if (!lc)
-		lc = get_pending_log(rq->uuid);
+		lc = get_pending_log(rq->uuid, rq->luid);
 
 	if (!lc)
 		return -EINVAL;
@@ -1429,10 +1419,10 @@ static int disk_status_info(struct log_c *lc, struct dm_ulog_request *rq)
 static int clog_status_info(struct dm_ulog_request *rq)
 {
 	int r;
-	struct log_c *lc = get_log(rq->uuid);
+	struct log_c *lc = get_log(rq->uuid, rq->luid);
 
 	if (!lc)
-		lc = get_pending_log(rq->uuid);
+		lc = get_pending_log(rq->uuid, rq->luid);
 
 	if (!lc)
 		return -EINVAL;
@@ -1484,10 +1474,10 @@ static int disk_status_table(struct log_c *lc, struct dm_ulog_request *rq)
 static int clog_status_table(struct dm_ulog_request *rq)
 {
 	int r;
-	struct log_c *lc = get_log(rq->uuid);
+	struct log_c *lc = get_log(rq->uuid, rq->luid);
 
 	if (!lc)
-		lc = get_pending_log(rq->uuid);
+		lc = get_pending_log(rq->uuid, rq->luid);
 
 	if (!lc)
 		return -EINVAL;
@@ -1512,7 +1502,7 @@ static int clog_is_remote_recovering(struct dm_ulog_request *rq)
 		int64_t is_recovering;
 		uint64_t in_sync_hint;
 	} *pkg = (void *)rq->data;
-	struct log_c *lc = get_log(rq->uuid);
+	struct log_c *lc = get_log(rq->uuid, rq->luid);
 
 	if (!lc)
 		return -EINVAL;
@@ -1693,7 +1683,8 @@ static void print_bits(char *buf, int size, int print)
 }
 
 /* int store_bits(const char *uuid, const char *which, char **buf)*/
-int push_state(const char *uuid, const char *which, char **buf, uint32_t debug_who)
+int push_state(const char *uuid, uint64_t luid,
+	       const char *which, char **buf, uint32_t debug_who)
 {
 	int bitset_size;
 	struct log_c *lc;
@@ -1701,7 +1692,7 @@ int push_state(const char *uuid, const char *which, char **buf, uint32_t debug_w
 	if (*buf)
 		LOG_ERROR("store_bits: *buf != NULL");
 
-	lc = get_log(uuid);
+	lc = get_log(uuid, luid);
 	if (!lc) {
 		LOG_ERROR("store_bits: No log found for %s", uuid);
 		return -EINVAL;
@@ -1747,7 +1738,8 @@ int push_state(const char *uuid, const char *which, char **buf, uint32_t debug_w
 }
 
 /*int load_bits(const char *uuid, const char *which, char *buf, int size)*/
-int pull_state(const char *uuid, const char *which, char *buf, int size)
+int pull_state(const char *uuid, uint64_t luid,
+	       const char *which, char *buf, int size)
 {
 	int bitset_size;
 	struct log_c *lc;
@@ -1755,7 +1747,7 @@ int pull_state(const char *uuid, const char *which, char *buf, int size)
 	if (!buf)
 		LOG_ERROR("pull_state: buf == NULL");
 
-	lc = get_log(uuid);
+	lc = get_log(uuid, luid);
 	if (!lc) {
 		LOG_ERROR("pull_state: No log found for %s", uuid);
 		return -EINVAL;
@@ -1799,7 +1791,7 @@ int log_get_state(struct dm_ulog_request *rq)
 {
 	struct log_c *lc;
 
-	lc = get_log(rq->uuid);
+	lc = get_log(rq->uuid, rq->luid);
 	if (!lc)
 		return -EINVAL;
 

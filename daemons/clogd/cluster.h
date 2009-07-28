@@ -38,8 +38,8 @@ int init_cluster(void);
 void cleanup_cluster(void);
 void cluster_debug(void);
 
-int create_cluster_cpg(char *str);
-int destroy_cluster_cpg(char *str);
+int create_cluster_cpg(char *uuid, uint64_t luid);
+int destroy_cluster_cpg(char *uuid);
 
 int cluster_send(struct clog_request *rq);
 
