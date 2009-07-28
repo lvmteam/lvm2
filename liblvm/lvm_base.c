@@ -77,6 +77,9 @@ int lvm_config_reload(lvm_t libh)
 	return 0;
 }
 
+/*
+ * FIXME: submit a patch to document the --config option
+ */
 int lvm_config_override(lvm_t libh, const char *config_settings)
 {
 	struct cmd_context *cmd = (struct cmd_context *)libh;
