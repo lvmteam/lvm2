@@ -223,6 +223,11 @@ struct dm_list *lvm_vg_list_lvs(vg_t *vg)
 	return list;
 }
 
+uint64_t lvm_vg_get_seqno(const vg_t *vg)
+{
+	return vg_seqno(vg);
+}
+
 /* FIXME: invalid handle? return INTMAX? */
 uint64_t lvm_vg_get_size(const vg_t *vg)
 {

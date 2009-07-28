@@ -345,10 +345,11 @@ static void _vg_close(char **argv, int argc)
 
 static void _show_one_vg(vg_t *vg)
 {
-	printf("%s (%s): size=%"PRIu64", free=%"PRIu64", #pv=%"PRIu64"\n",
+	printf("%s (%s): sz=%"PRIu64", free=%"PRIu64", #pv=%"PRIu64
+		", seq#=%"PRIu64"\n",
 		lvm_vg_get_name(vg), lvm_vg_get_uuid(vg),
 		lvm_vg_get_size(vg), lvm_vg_get_free_size(vg),
-		lvm_vg_get_pv_count(vg));
+		lvm_vg_get_pv_count(vg), lvm_vg_get_seqno(vg));
 }
 
 static void _list_open_vgs(void)

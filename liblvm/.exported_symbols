@@ -6,6 +6,7 @@ lvm_config_override
 lvm_pv_get_name
 lvm_pv_get_uuid
 lvm_pv_get_mda_count
+lvm_vg_get_seqno
 lvm_vg_get_name
 lvm_vg_get_uuid
 lvm_vg_get_size

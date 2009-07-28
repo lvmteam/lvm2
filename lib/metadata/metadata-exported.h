@@ -705,6 +705,7 @@ uint32_t pv_mda_count(const pv_t *pv);
 uint64_t lv_size(const lv_t *lv);
 
 int vg_missing_pv_count(const vg_t *vg);
+uint32_t vg_seqno(const vg_t *vg);
 uint32_t vg_status(const vg_t *vg);
 uint64_t vg_size(const vg_t *vg);
 uint64_t vg_free(const vg_t *vg);
