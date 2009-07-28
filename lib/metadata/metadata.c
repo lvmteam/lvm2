@@ -3424,6 +3424,11 @@ uint32_t pv_mda_count(const pv_t *pv)
 	return info ? dm_list_size(&info->mdas) : UINT64_C(0);
 }
 
+uint32_t vg_seqno(const vg_t *vg)
+{
+	return vg->seqno;
+}
+
 uint32_t vg_status(const vg_t *vg)
 {
 	return vg->status;

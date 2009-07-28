@@ -49,6 +49,17 @@
  * A volume group handle may be obtained with read or write permission.
  * Any attempt to change a property of a pv_t, vg_t, or lv_t without
  * obtaining write permission on the vg_t will fail with EPERM.
+ *
+ * An application first opening a VG read-only, then later wanting to change
+ * a property of an object must first close the VG and re-open with write
+ * permission. Currently liblvm provides no mechanism to determine whether
+ * the VG has changed on-disk in between these operations - this is the
+ * application's responsiblity. One way the application can ensure the VG
+ * has not changed is to save the "vg_seqno" field after opening the VG with
+ * READ permission. If the application later needs to modify the VG, it can
+ * close the VG and re-open with WRITE permission. It should then check
+ * whether the original "vg_seqno" obtained with READ permission matches
+ * the new one obtained with WRITE permission.
  */
 
 /**
@@ -468,6 +479,21 @@ int lvm_vg_reduce(vg_t *vg, const char *device);
  * 0 (success) or -1 (failure).
  */
 int lvm_vg_set_extent_size(vg_t *vg, uint32_t new_size);
+
+/**
+ * Get the current metadata sequence number of a volume group.
+ *
+ * The metadata sequence number is incrented for each metadata change.
+ * Applications may use the sequence number to determine if any LVM objects
+ * have changed from a prior query.
+ *
+ * \param   vg
+ * VG handle obtained from lvm_vg_create or lvm_vg_open.
+ *
+ * \return
+ * Metadata sequence number.
+ */
+uint64_t lvm_vg_get_seqno(const vg_t *vg);
 
 /**
  * Get the current name of a volume group.
