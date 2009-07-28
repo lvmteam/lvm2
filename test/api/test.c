@@ -601,7 +601,7 @@ int main (int argc, char *argv[])
 {
 	lvm_t libh;
 
-	libh = lvm_create(NULL);
+	libh = lvm_init(NULL);
 	if (!libh) {
 		printf("Unable to open lvm library instance\n");
 		return 1;
@@ -609,7 +609,7 @@ int main (int argc, char *argv[])
 
 	lvmapi_test_shell(libh);
 
-	lvm_destroy(libh);
+	lvm_quit(libh);
 	return 0;
 }
 
