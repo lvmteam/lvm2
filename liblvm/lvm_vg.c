@@ -269,7 +269,7 @@ char *lvm_vg_get_name(const vg_t *vg)
 {
 	char *name;
 
-	name = malloc(NAME_LEN + 1);
+	name = dm_malloc(NAME_LEN + 1);
 	strncpy(name, (const char *)vg->name, NAME_LEN);
 	name[NAME_LEN] = '\0';
 	return name;

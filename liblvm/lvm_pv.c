@@ -32,7 +32,7 @@ char *lvm_pv_get_name(const pv_t *pv)
 {
 	char *name;
 
-	name = malloc(NAME_LEN + 1);
+	name = dm_malloc(NAME_LEN + 1);
 	strncpy(name, (const char *)pv_dev_name(pv), NAME_LEN);
 	name[NAME_LEN] = '\0';
 	return name;
