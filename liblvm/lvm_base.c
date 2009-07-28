@@ -17,7 +17,7 @@
 #include "toolcontext.h"
 #include "locking.h"
 
-lvm_t lvm_create(const char *system_dir)
+lvm_t lvm_init(const char *system_dir)
 {
 	struct cmd_context *cmd;
 
@@ -46,7 +46,7 @@ lvm_t lvm_create(const char *system_dir)
 	if (!init_locking(-1, cmd)) {
 		/* FIXME: use EAGAIN as error code here */
 		log_error("Locking initialisation failed.");
-		lvm_destroy((lvm_t) cmd);
+		lvm_quit((lvm_t) cmd);
 		return NULL;
 	}
 	/*
@@ -59,7 +59,7 @@ lvm_t lvm_create(const char *system_dir)
 	return (lvm_t) cmd;
 }
 
-void lvm_destroy(lvm_t libh)
+void lvm_quit(lvm_t libh)
 {
 	destroy_toolcontext((struct cmd_context *)libh);
 }

@@ -119,7 +119,7 @@ struct lvm_str_list {
 /**
  * Create a LVM handle.
  *
- * Once all LVM operations have been completed, use lvm_destroy to release
+ * Once all LVM operations have been completed, use lvm_quit to release
  * the handle and any associated resources.
  *
  * \param   system_dir
@@ -132,11 +132,11 @@ struct lvm_str_list {
  */
 // FIXME: Sort out this alignment.  "Set an" directly below "system_dir"
 // looks awful.  Indent differently?  More blank lines?
-lvm_t lvm_create(const char *system_dir);
+lvm_t lvm_init(const char *system_dir);
 // FIXME Find a better name.  lvm_init.
 
 /**
- * Destroy a LVM handle allocated with lvm_create.
+ * Destroy a LVM handle allocated with lvm_init.
  *
  * This function should be used after all LVM operations are complete or after
  * an unrecoverable error.  Destroying the LVM handle frees the memory and
@@ -144,9 +144,9 @@ lvm_t lvm_create(const char *system_dir);
  * cannot be used subsequently.
  *
  * \param   libh
- *          Handle obtained from lvm_create.
+ *          Handle obtained from lvm_init.
  */
-void lvm_destroy(lvm_t libh);
+void lvm_quit(lvm_t libh);
 
 /**
  * Reload the original configuration from the system directory.
@@ -156,7 +156,7 @@ void lvm_destroy(lvm_t libh);
  * the application.
  *
  * \param   libh
- *          Handle obtained from lvm_create.
+ *          Handle obtained from lvm_init.
  * \return  0 (success) or -1 (failure).
  */
 int lvm_config_reload(lvm_t libh);
@@ -170,7 +170,7 @@ int lvm_config_reload(lvm_t libh);
  * you should use lvm_config_reload to apply the new settings.
  *
  * \param   libh
- *          Handle obtained from lvm_create.
+ *          Handle obtained from lvm_init.
  * \param   config_string
  *          LVM configuration string to apply.  See the lvm.conf file man page
  *          for the format of the config string.
@@ -190,7 +190,7 @@ int lvm_config_override(lvm_t libh, const char *config_string);
  * returns a value.
  *
  * \param   libh
- *          Handle obtained from lvm_create.
+ *          Handle obtained from lvm_init.
  *
  * \return  An errno value describing the last LVM error.
  */
@@ -203,7 +203,7 @@ int lvm_errno(lvm_t libh);
  * specific error information for a function that is known to have failed.
  *
  * \param   libh
- *          Handle obtained from lvm_create.
+ *          Handle obtained from lvm_init.
  *
  * \return  An error string describing the last LVM error.
  */
@@ -223,7 +223,7 @@ int lvm_scan(lvm_t libh);
  * Return the list of volume group names.
  *
  * The memory allocated for the list is tied to the lvm_t handle and will be
- * released when lvm_destroy is called.
+ * released when lvm_quit is called.
  *
  * NOTE: This function normally does not scan devices in the system for LVM
  * metadata.  To scan the system, use lvm_scan.
@@ -256,7 +256,7 @@ struct dm_list *lvm_list_vg_names(lvm_t libh);
  * Return the list of volume group uuids.
  *
  * The memory allocated for the list is tied to the lvm_t handle and will be
- * released when lvm_destroy is called.
+ * released when lvm_quit is called.
  *
  * NOTE: This function normally does not scan devices in the system for LVM
  * metadata.  To scan the system, use lvm_scan.
@@ -264,7 +264,7 @@ struct dm_list *lvm_list_vg_names(lvm_t libh);
  * begin with a "#" and should be filtered out and not used.
  *
  * \param   libh
- *          Handle obtained from lvm_create.
+ *          Handle obtained from lvm_init.
  *
  * \return  A list with entries of type struct lvm_str_list, containing the
  *          VG UUID strings of the Volume Groups known to the system.
@@ -280,7 +280,7 @@ struct dm_list *lvm_list_vg_uuids(lvm_t libh);
  * Open a VG for reading or writing.
  *
  * \param   libh
- *          Handle obtained from lvm_create.
+ *          Handle obtained from lvm_init.
  * \param   vgname
  *          Name of the VG to open.
  * \param   mode
@@ -306,7 +306,7 @@ vg_t *lvm_vg_open(lvm_t libh, const char *vgname, const char *mode,
  * release the VG handle.
  *
  * \param   libh
- *          Handle obtained from lvm_create.
+ *          Handle obtained from lvm_init.
  * \param   vg_name
  *          Name of the VG to open.
  * \return  non-NULL vg handle (success) or NULL (failure)

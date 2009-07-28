@@ -90,9 +90,9 @@ int main(int argc, char *argv[])
 	/* FIXME: input vgname, etc from cmdline */
 	/* FIXME: make the below messages verbose-only and print PASS/FAIL*/
 	printf("Opening LVM\n");
-	handle = lvm_create(NULL);
+	handle = lvm_init(NULL);
 	if (!handle) {
-		fprintf(stderr, "Unable to lvm_create\n");
+		fprintf(stderr, "Unable to lvm_init\n");
 		goto bad;
 	}
 
@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
 	vg_remove(vg);
 	vg_close(vg);
 
-	lvm_destroy(handle);
+	lvm_quit(handle);
 	printf("liblvm vgcreate unit test PASS\n");
 	_exit(0);
 bad:
@@ -139,6 +139,6 @@ bad:
 	if (vg)
 		lvm_vg_close(vg);
 	if (handle)
-		lvm_destroy(handle);
+		lvm_quit(handle);
 	_exit(-1);
 }
