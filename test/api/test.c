@@ -329,11 +329,11 @@ static vg_t *_lookup_and_remove_vg(const char *vgname)
 {
 	vg_t *vg=NULL;
 
-	while((vg = dm_hash_lookup(_vgname_hash, vgname))) {
+	if ((vg = dm_hash_lookup(_vgname_hash, vgname))) {
 		dm_hash_remove(_vgid_hash, lvm_vg_get_uuid(vg));
 		dm_hash_remove(_vgname_hash, lvm_vg_get_name(vg));
 	}
-	while(vg && (vg = dm_hash_lookup(_vgid_hash, vgname))) {
+	if (!vg && (vg = dm_hash_lookup(_vgid_hash, vgname))) {
 		dm_hash_remove(_vgid_hash, lvm_vg_get_uuid(vg));
 		dm_hash_remove(_vgname_hash, lvm_vg_get_name(vg));
 	}
