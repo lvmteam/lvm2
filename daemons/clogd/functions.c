@@ -13,7 +13,6 @@
 #include <fcntl.h>
 #include <time.h>
 #include "linux/dm-log-userspace.h"
-#include "list.h"
 #include "functions.h"
 #include "common.h"
 #include "cluster.h"
@@ -46,7 +45,7 @@ struct log_header {
 };
 
 struct log_c {
-	struct list_head list;
+	struct dm_list list;
 
 	char uuid[DM_UUID_LEN];
 	uint64_t luid;
@@ -76,7 +75,7 @@ struct log_c {
 
 	uint32_t state;         /* current operational state of the log */
 
-	struct list_head mark_list;
+	struct dm_list mark_list;
 
 	uint32_t recovery_halted;
 	struct recovery_request *recovery_request_list;
@@ -91,7 +90,7 @@ struct log_c {
 };
 
 struct mark_entry {
-	struct list_head list;
+	struct dm_list list;
 	uint32_t nodeid;
 	uint64_t region;
 };
@@ -101,9 +100,8 @@ struct recovery_request {
 	struct recovery_request *next;
 };
 
-static struct list_head log_list = LIST_HEAD_INIT(log_list);
-static struct list_head log_pending_list = LIST_HEAD_INIT(log_pending_list);
-
+static DM_LIST_INIT(log_list);
+static DM_LIST_INIT(log_pending_list);
 
 static int log_test_bit(uint32_t *bs, unsigned bit)
 {
@@ -151,16 +149,12 @@ static uint64_t count_bits32(uint32_t *addr, uint32_t count)
  */
 static struct log_c *get_log(const char *uuid, uint64_t luid)
 {
-	struct list_head *l;
 	struct log_c *lc;
 
-	/* FIXME: Need prefetch to do this right */
-	__list_for_each(l, &log_list) {
-		lc = list_entry(l, struct log_c, list);
+	dm_list_iterate_items(lc, &log_list)
 		if (!strcmp(lc->uuid, uuid) &&
 		    (!luid || (luid == lc->luid)))
 			return lc;
-	}
 
 	return NULL;
 }
@@ -175,16 +169,12 @@ static struct log_c *get_log(const char *uuid, uint64_t luid)
  */
 static struct log_c *get_pending_log(const char *uuid, uint64_t luid)
 {
-	struct list_head *l;
 	struct log_c *lc;
 
-	/* FIXME: Need prefetch to do this right */
-	__list_for_each(l, &log_pending_list) {
-		lc = list_entry(l, struct log_c, list);
+	dm_list_iterate_items(lc, &log_pending_list)
 		if (!strcmp(lc->uuid, uuid) &&
 		    (!luid || (luid == lc->luid)))
 			return lc;
-	}
 
 	return NULL;
 }
@@ -459,7 +449,7 @@ static int _clog_ctr(char *uuid, uint64_t luid,
 		return -EINVAL;
 	}
 
-	INIT_LIST_HEAD(&lc->mark_list);
+	dm_list_init(&lc->mark_list);
 
 	lc->bitset_uint32_count = region_count / 
 		(sizeof(*lc->clean_bits) << BYTE_SHIFT);
@@ -513,7 +503,7 @@ static int _clog_ctr(char *uuid, uint64_t luid,
 		LOG_DBG("Disk log ready");
 	}
 
-	list_add(&lc->list, &log_pending_list);
+	dm_list_add(&log_pending_list, &lc->list);
 
 	return 0;
 fail:
@@ -634,7 +624,7 @@ static int clog_dtr(struct dm_ulog_request *rq)
 
 	LOG_DBG("[%s] Cluster log removed", SHORT_UUID(lc->uuid));
 
-	list_del_init(&lc->list);
+	dm_list_del(&lc->list);
 	if (lc->disk_fd != -1)
 		close(lc->disk_fd);
 	if (lc->disk_buffer)
@@ -705,8 +695,8 @@ int cluster_postsuspend(char *uuid, uint64_t luid)
 	lc->resume_override = 0;
 
 	/* move log to pending list */
-	list_del_init(&lc->list);
-	list_add(&lc->list, &log_pending_list);
+	dm_list_del(&lc->list);
+	dm_list_add(&log_pending_list, &lc->list);
 
 	return 0;
 }
@@ -894,8 +884,8 @@ int local_resume(struct dm_ulog_request *rq)
 		}
 
 		/* move log to official list */
-		list_del_init(&lc->list);
-		list_add(&lc->list, &log_list);
+		dm_list_del(&lc->list);
+		dm_list_add(&log_list, &lc->list);
 	}
 
 	return 0;
@@ -1030,17 +1020,13 @@ static int mark_region(struct log_c *lc, uint64_t region, uint32_t who)
 {
 	int found = 0;
 	struct mark_entry *m;
-	struct list_head *p, *n;
 
-	list_for_each_safe(p, n, &lc->mark_list) {
-		/* FIXME: Use proper macros */
-		m = (struct mark_entry *)p;
+	dm_list_iterate_items(m, &lc->mark_list)
 		if (m->region == region) {
 			found = 1;
 			if (m->nodeid == who)
 				return 0;
 		}
-	}
 
 	if (!found)
 		log_clear_bit(lc, lc->clean_bits, region);
@@ -1058,7 +1044,7 @@ static int mark_region(struct log_c *lc, uint64_t region, uint32_t who)
 
 	m->nodeid = who;
 	m->region = region;
-	list_add_tail(&m->list, &lc->mark_list);
+	dm_list_add(&lc->mark_list, &m->list);
 
 	return 0;
 }
@@ -1104,20 +1090,16 @@ static int clog_mark_region(struct dm_ulog_request *rq, uint32_t originator)
 static int clear_region(struct log_c *lc, uint64_t region, uint32_t who)
 {
 	int other_matches = 0;
-	struct mark_entry *m;
-	struct list_head *p, *n;
+	struct mark_entry *m, *n;
 
-	list_for_each_safe(p, n, &lc->mark_list) {
-		/* FIXME: Use proper macros */
-		m = (struct mark_entry *)p;
+	dm_list_iterate_items_safe(m, n, &lc->mark_list)
 		if (m->region == region) {
 			if (m->nodeid == who) {
-				list_del_init(&m->list);
+				dm_list_del(&m->list);
 				free(m);
 			} else
 				other_matches = 1;
 		}
-	}			
 
 	/*
 	 * Clear region if:
@@ -1805,12 +1787,7 @@ int log_get_state(struct dm_ulog_request *rq)
  */
 int log_status(void)
 {
-	struct list_head *l;
-
-	__list_for_each(l, &log_list)
-		return 1;
-
-	__list_for_each(l, &log_pending_list)
+	if (!dm_list_empty(&log_list) || !dm_list_empty(&log_pending_list))
 		return 1;
 
 	return 0;
@@ -1818,7 +1795,6 @@ int log_status(void)
 
 void log_debug(void)
 {
-	struct list_head *l;
 	struct log_c *lc;
 	uint64_t r;
 	int i;
@@ -1827,8 +1803,7 @@ void log_debug(void)
 	LOG_ERROR("LOG COMPONENT DEBUGGING::");
 	LOG_ERROR("Official log list:");
 	LOG_ERROR("Pending log list:");
-	__list_for_each(l, &log_pending_list) {
-		lc = list_entry(l, struct log_c, list);
+	dm_list_iterate_items(lc, &log_pending_list) {
 		LOG_ERROR("%s", lc->uuid);
 		LOG_ERROR("sync_bits:");
 		print_bits((char *)lc->sync_bits,
@@ -1838,8 +1813,7 @@ void log_debug(void)
 			   lc->bitset_uint32_count * sizeof(*lc->clean_bits), 1);
 	}
 
-	__list_for_each(l, &log_list) {
-		lc = list_entry(l, struct log_c, list);
+	dm_list_iterate_items(lc, &log_list) {
 		LOG_ERROR("%s", lc->uuid);
 		LOG_ERROR("  recoverer        : %u", lc->recoverer);
 		LOG_ERROR("  recovering_region: %llu",
@@ -1853,7 +1827,6 @@ void log_debug(void)
 		print_bits((char *)lc->clean_bits,
 			   lc->bitset_uint32_count * sizeof(*lc->clean_bits), 1);
 
-		lc = list_entry(l, struct log_c, list);
 		LOG_ERROR("Validating %s::", SHORT_UUID(lc->uuid));
 		r = find_next_zero_bit(lc->sync_bits, lc->region_count, 0);
 		LOG_ERROR("  lc->region_count = %llu",
