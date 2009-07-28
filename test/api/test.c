@@ -607,6 +607,7 @@ int main (int argc, char *argv[])
 		return 1;
 	}
 
+	printf("Library version: %s\n", lvm_library_get_version());
 	lvmapi_test_shell(libh);
 
 	lvm_quit(libh);

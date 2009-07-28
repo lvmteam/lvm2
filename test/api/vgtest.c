@@ -96,6 +96,7 @@ int main(int argc, char *argv[])
 		goto bad;
 	}
 
+	printf("Library version: %s\n", lvm_library_get_version());
 	vg_create(vg_name);
 	vg_extend(vg, device);
 
