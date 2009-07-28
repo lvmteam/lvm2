@@ -247,6 +247,7 @@ struct volume_group {
 	 * They have to get cleared on vg_commit.
 	 */
 	struct dm_list removed_pvs;
+	uint32_t open_mode; /* FIXME: read or write - check lock type? */
 
 	/*
 	 * Store result of the last vg_read().
@@ -713,6 +714,7 @@ uint64_t vg_extent_size(const vg_t *vg);
 uint64_t vg_extent_count(const vg_t *vg);
 uint64_t vg_free_count(const vg_t *vg);
 uint64_t vg_pv_count(const vg_t *vg);
+int vg_check_write_mode(vg_t *vg);
 #define vg_is_clustered(vg) (vg_status((vg)) & CLUSTERED)
 
 struct vgcreate_params {
