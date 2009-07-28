@@ -96,6 +96,11 @@ static void _lv_set_default_linear_params(struct cmd_context *cmd,
 	lp->stripe_size = DEFAULT_STRIPESIZE * 2;
 }
 
+/*
+ * FIXME: This function should probably not commit to disk but require calling
+ * lvm_vg_write.  However, this appears to be non-trivial change until
+ * lv_create_single is refactored by segtype.
+ */
 lv_t *lvm_vg_create_lv_linear(vg_t *vg, const char *name, uint64_t size)
 {
 	struct lvcreate_params lp;
@@ -117,6 +122,10 @@ lv_t *lvm_vg_create_lv_linear(vg_t *vg, const char *name, uint64_t size)
 	return lvl->lv;
 }
 
+/*
+ * FIXME: This function should probably not commit to disk but require calling
+ * lvm_vg_write.
+ */
 int lvm_vg_remove_lv(lv_t *lv)
 {
 	if (!lv || !lv->vg || vg_read_error(lv->vg))

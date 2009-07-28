@@ -20,13 +20,36 @@
 #include <stdint.h>
 
 
-/******************************** WARNING ********************************/
-/*
+/******************************** WARNING ***********************************
+ *
  * NOTE: This API is under development and subject to change at any time.
  *
  * Please send feedback to lvm-devel@redhat.com
+ *
+ *********************************** WARNING ********************************/
+
+/*************************** Design Overview ********************************/
+
+/*
+ * The API is designed around the following basic LVM objects:
+ * 1) Physical Volume (PV) 2) Volume Group (VG) 3) Logical Volume (LV).
+ *
+ * The library provides functions to list the objects in a system,
+ * get and set object properties (such as names, UUIDs, and sizes), as well
+ * as create/remove objects and perform more complex operations and
+ * transformations. Each object instance is represented by a handle, and
+ * handles are passed to and from the functions to perform the operations.
+ *
+ * A central object in the library is the Volume Group, represented by the
+ * VG handle, vg_t. Performing an operation on a PV or LV object first
+ * requires obtaining a VG handle. Once the vg_t has been obtained, it can
+ * be used to enumerate the pv_t's and lv_t's within that vg_t. Attributes
+ * of these objects can then be queried.
+ *
+ * A volume group handle may be obtained with read or write permission.
+ * Any attempt to change a property of a pv_t, vg_t, or lv_t without
+ * obtaining write permission on the vg_t will fail with EPERM.
  */
-/******************************** WARNING ********************************/
 
 /**
  * Retrieve the library version.
@@ -180,9 +203,8 @@ int lvm_config_reload(lvm_t libh);
  * Override the LVM configuration with a configuration string.
  *
  * This function is equivalent to the --config option on lvm commands.
- * FIXME: submit a patch to document the --config option
  * Once this API has been used to over-ride the configuration,
- * you should use lvm_config_reload to apply the new settings.
+ * use lvm_config_reload to apply the new settings.
  *
  * \param   libh
  * Handle obtained from lvm_init.
@@ -559,9 +581,8 @@ struct dm_list *lvm_vg_list_lvs(vg_t *vg);
  * Create a linear logical volume.
  * This function commits the change to disk and does _not_ require calling
  * lvm_vg_write.
- * FIXME: This function should probably not commit to disk but require calling
- * lvm_vg_write.  However, this appears to be non-trivial change until
- * lv_create_single is refactored by segtype.
+ * NOTE: The commit behavior of this function is subject to change
+ * as the API is developed.
  *
  * \param   vg
  * VG handle obtained from lvm_vg_create or lvm_vg_open.
@@ -612,10 +633,9 @@ int lvm_lv_deactivate(lv_t *lv);
  *
  * This function commits the change to disk and does _not_ require calling
  * lvm_vg_write.
+ * NOTE: The commit behavior of this function is subject to change
+ * as the API is developed.
  * Currently only removing linear LVs are possible.
- *
- * FIXME: This function should probably not commit to disk but require calling
- * lvm_vg_write.
  *
  * \param   lv
  * Logical volume handle.
@@ -688,6 +708,8 @@ uint64_t lvm_lv_is_suspended(const lv_t *lv);
 
 /**
  * Resize logical volume to new_size bytes.
+ *
+ * NOTE: This function is currently not implemented.
  *
  * \param   lv
  * Logical volume handle.
@@ -762,6 +784,8 @@ uint64_t lvm_pv_get_mda_count(const pv_t *pv);
 
 /**
  * Resize physical volume to new_size bytes.
+ *
+ * NOTE: This function is currently not implemented.
  *
  * \param   pv
  * Physical volume handle.
