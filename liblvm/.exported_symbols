@@ -1,3 +1,4 @@
+lvm_library_get_version
 lvm_init
 lvm_quit
 lvm_config_reload

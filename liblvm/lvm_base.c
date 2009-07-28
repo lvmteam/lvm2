@@ -17,6 +17,11 @@
 #include "toolcontext.h"
 #include "locking.h"
 
+const char *lvm_library_get_version(void)
+{
+	return LVM_VERSION;
+}
+
 lvm_t lvm_init(const char *system_dir)
 {
 	struct cmd_context *cmd;

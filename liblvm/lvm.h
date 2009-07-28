@@ -28,6 +28,20 @@
  */
 /******************************** WARNING ********************************/
 
+/**
+ * Retrieve the library version.
+ *
+ * The library version is the same format as the full LVM version.
+ * The format is as follows:
+ *    LVM_MAJOR.LVM_MINOR.LVM_PATCHLEVEL(LVM_LIBAPI)[-LVM_RELEASE]
+ * An application wishing to determine compatibility with a particular version
+ * of the library should check at least the LVM_MAJOR, LVM_MINOR, and
+ * LVM_LIBAPI numbers.  For example, assume the full LVM version is
+ * 2.02.50(1)-1.  The application should verify the "2.02" and the "(1)".
+ *
+ * \return  A string describing the library version.
+ */
+const char *lvm_library_get_version(void);
 
 /******************************** structures ********************************/
 
