@@ -3042,6 +3042,16 @@ int pv_analyze(struct cmd_context *cmd, const char *pv_name,
 	return 1;
 }
 
+/* FIXME: remove / combine this with locking? */
+int vg_check_write_mode(vg_t *vg)
+{
+	if (vg->open_mode != 'w') {
+		log_errno(EPERM, "Attempt to modify a read-only VG\n");
+		return 0;
+	}
+	return 1;
+}
+
 /*
  * Performs a set of checks against a VG according to bits set in status
  * and returns FAILED_* bits for those that aren't acceptable.

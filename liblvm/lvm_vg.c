@@ -35,12 +35,16 @@ vg_t *lvm_vg_create(lvm_t libh, const char *vg_name)
 		vg_release(vg);
 		return NULL;
 	}
+	vg->open_mode = 'w';
 	return vg;
 }
 
 int lvm_vg_extend(vg_t *vg, const char *device)
 {
 	if (vg_read_error(vg))
+		return -1;
+
+	if (!vg_check_write_mode(vg))
 		return -1;
 
 	if (!lock_vol(vg->cmd, VG_ORPHANS, LCK_VG_WRITE)) {
@@ -72,6 +76,8 @@ int lvm_vg_reduce(vg_t *vg, const char *device)
 {
 	if (vg_read_error(vg))
 		return -1;
+	if (!vg_check_write_mode(vg))
+		return -1;
 
 	if (!vg_reduce(vg, (char *)device))
 		return -1;
@@ -81,6 +87,8 @@ int lvm_vg_reduce(vg_t *vg, const char *device)
 int lvm_vg_set_extent_size(vg_t *vg, uint32_t new_size)
 {
 	if (vg_read_error(vg))
+		return -1;
+	if (!vg_check_write_mode(vg))
 		return -1;
 
 	if (!vg_set_extent_size(vg, new_size))
@@ -93,6 +101,8 @@ int lvm_vg_write(vg_t *vg)
 	struct pv_list *pvl;
 
 	if (vg_read_error(vg))
+		return -1;
+	if (!vg_check_write_mode(vg))
 		return -1;
 
 	if (dm_list_empty(&vg->pvs)) {
@@ -140,6 +150,8 @@ int lvm_vg_remove(vg_t *vg)
 {
 	if (vg_read_error(vg))
 		return -1;
+	if (!vg_check_write_mode(vg))
+		return -1;
 
 	if (!vg_remove_single(vg))
 		return -1;
@@ -165,6 +177,8 @@ vg_t *lvm_vg_open(lvm_t libh, const char *vgname, const char *mode,
 		vg_release(vg);
 		return NULL;
 	}
+	/* FIXME: combine this with locking ? */
+	vg->open_mode = mode[0];
 
 	return vg;
 }
