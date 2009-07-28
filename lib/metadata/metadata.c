@@ -3046,7 +3046,7 @@ int pv_analyze(struct cmd_context *cmd, const char *pv_name,
 int vg_check_write_mode(vg_t *vg)
 {
 	if (vg->open_mode != 'w') {
-		log_errno(EPERM, "Attempt to modify a read-only VG\n");
+		log_errno(EPERM, "Attempt to modify a read-only VG");
 		return 0;
 	}
 	return 1;
