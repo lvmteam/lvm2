@@ -1,4 +1,4 @@
-Version 2.02.50 - 
+Version 2.02.50 - 28th July 2009
 ================================
   Remove unnecessary \n's from log_error in liblvm.
   Add config_reload and config_override to test.c, change prompt.
