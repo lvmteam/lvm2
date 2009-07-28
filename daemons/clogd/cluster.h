@@ -1,7 +1,7 @@
 #ifndef __CLUSTER_LOG_CLUSTER_DOT_H__
 #define __CLUSTER_LOG_CLUSTER_DOT_H__
 
-#include "list.h"
+#include <libdevmapper.h>
 #include <linux/dm-log-userspace.h>
 
 /*
@@ -12,7 +12,7 @@
  * available.
  */
 struct clog_request {
-	struct list_head list;
+	struct dm_list list;
 
 	/*
 	 * 'originator' is the machine from which the requests

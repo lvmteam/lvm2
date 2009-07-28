@@ -4,30 +4,6 @@
 #include <stdio.h>
 #include <syslog.h>
 
-#if (BITS_PER_LONG == 64)
-#define PRIu64 "lu"
-#define PRId64 "ld"
-#define PRIo64 "lo"
-#define PRIx64 "lx"
-#define PRIX64 "lX"
-#define SCNu64 "lu"
-#define SCNd64 "ld"
-#define SCNo64 "lo"
-#define SCNx64 "lx"
-#define SCNX64 "lX"
-#else
-#define PRIu64 "Lu"
-#define PRId64 "Ld"
-#define PRIo64 "Lo"
-#define PRIx64 "Lx"
-#define PRIX64 "LX"
-#define SCNu64 "Lu"
-#define SCNd64 "Ld"
-#define SCNo64 "Lo"
-#define SCNx64 "Lx"
-#define SCNX64 "LX"
-#endif
-
 /* SHORT_UUID - print last 8 chars of a string */
 #define SHORT_UUID(x) (strlen(x) > 8) ? ((x) + (strlen(x) - 8)) : (x)
 

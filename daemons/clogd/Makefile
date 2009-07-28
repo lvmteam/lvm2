@@ -41,11 +41,11 @@ endif
 CFLAGS += -g
 
 LDFLAGS += $(shell if [ -e /usr/lib64/openais ]; then \
-		echo '-L/usr/lib64/openais -L/usr/lib64'; \
+		echo '-L/usr/lib64/openais -L/usr/lib64 -L/lib64'; \
 	else \
-		echo '-L/usr/lib/openais -L/usr/lib'; \
+		echo '-L/usr/lib/openais -L/usr/lib -L/lib'; \
 	fi)
-LDFLAGS += -lcpg -lSaCkpt -lext2fs
+LDFLAGS += -lcpg -lSaCkpt -lext2fs -ldevmapper
 
 all: ${TARGET}
 
