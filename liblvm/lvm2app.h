@@ -14,7 +14,6 @@
 #ifndef _LIB_LVM2APP_H
 #define _LIB_LVM2APP_H
 
-#include "lvm-version.h"
 #include "libdevmapper.h"
 
 #include <stdint.h>

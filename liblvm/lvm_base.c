@@ -16,6 +16,7 @@
 #include "lvm2app.h"
 #include "toolcontext.h"
 #include "locking.h"
+#include "lvm-version.h"
 
 const char *lvm_library_get_version(void)
 {
