@@ -120,7 +120,7 @@ lv_t *lvm_vg_create_lv_linear(vg_t *vg, const char *name, uint64_t size)
 	lvl = find_lv_in_vg(vg, name);
 	if (!lvl)
 		return NULL;
-	return (struct lv_t *) lvl->lv;
+	return (lv_t *) lvl->lv;
 }
 
 /*
