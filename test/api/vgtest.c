@@ -20,7 +20,8 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <inttypes.h>
-#include "lvm.h"
+
+#include "lvm2app.h"
 
 lvm_t handle;
 vg_t *vg;

@@ -16,7 +16,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <readline/readline.h>
-#include "lvm.h"
+
+#include "lvm2app.h"
 
 #define MAX_ARGS 64
 
