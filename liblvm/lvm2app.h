@@ -11,8 +11,8 @@
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#ifndef _LIB_LVM_H
-#define _LIB_LVM_H
+#ifndef _LIB_LVM2APP_H
+#define _LIB_LVM2APP_H
 
 #include "lvm-version.h"
 #include "libdevmapper.h"
@@ -826,4 +826,4 @@ uint64_t lvm_pv_get_mda_count(const pv_t *pv);
  */
 int lvm_pv_resize(const pv_t *pv, uint64_t new_size);
 
-#endif /* _LIB_LVM_H */
+#endif /* _LIB_LVM2APP_H */

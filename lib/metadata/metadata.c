@@ -58,9 +58,6 @@ static struct pv_list *_find_pv_in_vg(const struct volume_group *vg,
 static struct physical_volume *_find_pv_in_vg_by_uuid(const struct volume_group *vg,
 						      const struct id *id);
 
-static vg_t *_vg_make_handle(struct cmd_context *cmd,
-			     struct volume_group *vg,
-			     uint32_t failure);
 static uint32_t _vg_bad_status_bits(const struct volume_group *vg,
 				    uint32_t status);
 
@@ -429,7 +426,7 @@ int remove_lvs_in_vg(struct cmd_context *cmd,
 	return 1;
 }
 
-int vg_remove_single(vg_t *vg)
+int vg_remove_single(struct volume_group *vg)
 {
 	struct physical_volume *pv;
 	struct pv_list *pvl;
@@ -629,16 +626,42 @@ int validate_vg_create_params(struct cmd_context *cmd,
 }
 
 /*
+ * Create a (struct volume_group) volume group handle from a struct volume_group pointer and a
+ * possible failure code or zero for success.
+ */
+static struct volume_group *_vg_make_handle(struct cmd_context *cmd,
+			     struct volume_group *vg,
+			     uint32_t failure)
+{
+	struct dm_pool *vgmem;
+
+	if (!vg) {
+		if (!(vgmem = dm_pool_create("lvm2 vg_handle", VG_MEMPOOL_CHUNK)) ||
+		    !(vg = dm_pool_zalloc(vgmem, sizeof(*vg)))) {
+			log_error("Error allocating vg handle.");
+			if (vgmem)
+				dm_pool_destroy(vgmem);
+			return_NULL;
+		}
+		vg->vgmem = vgmem;
+	}
+
+	vg->read_status = failure;
+
+	return (struct volume_group *)vg;
+}
+
+/*
  * Create a VG with default parameters.
  * Returns:
- * - vg_t* with SUCCESS code: VG structure created
- * - NULL or vg_t* with FAILED_* code: error creating VG structure
+ * - struct volume_group* with SUCCESS code: VG structure created
+ * - NULL or struct volume_group* with FAILED_* code: error creating VG structure
  * Use vg_read_error() to determine success or failure.
  * FIXME: cleanup usage of _vg_make_handle()
  */
-vg_t *vg_create(struct cmd_context *cmd, const char *vg_name)
+struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name)
 {
-	vg_t *vg;
+	struct volume_group *vg;
 	int consistent = 0;
 	struct dm_pool *mem;
 	uint32_t rc;
@@ -778,7 +801,7 @@ static int _recalc_extents(uint32_t *extents, const char *desc1,
 	return 1;
 }
 
-int vg_set_extent_size(vg_t *vg, uint32_t new_size)
+int vg_set_extent_size(struct volume_group *vg, uint32_t new_size)
 {
 	uint32_t old_size = vg->extent_size;
 	struct pv_list *pvl;
@@ -925,7 +948,7 @@ int vg_set_extent_size(vg_t *vg, uint32_t new_size)
 	return 1;
 }
 
-int vg_set_max_lv(vg_t *vg, uint32_t max_lv)
+int vg_set_max_lv(struct volume_group *vg, uint32_t max_lv)
 {
 	if (!(vg_status(vg) & RESIZEABLE_VG)) {
 		log_error("Volume group \"%s\" must be resizeable "
@@ -953,7 +976,7 @@ int vg_set_max_lv(vg_t *vg, uint32_t max_lv)
 	return 1;
 }
 
-int vg_set_max_pv(vg_t *vg, uint32_t max_pv)
+int vg_set_max_pv(struct volume_group *vg, uint32_t max_pv)
 {
 	if (!(vg_status(vg) & RESIZEABLE_VG)) {
 		log_error("Volume group \"%s\" must be resizeable "
@@ -980,7 +1003,7 @@ int vg_set_max_pv(vg_t *vg, uint32_t max_pv)
 	return 1;
 }
 
-int vg_set_alloc_policy(vg_t *vg, alloc_policy_t alloc)
+int vg_set_alloc_policy(struct volume_group *vg, alloc_policy_t alloc)
 {
 	if (alloc == ALLOC_INHERIT) {
 		log_error("Volume Group allocation policy cannot inherit "
@@ -1189,9 +1212,9 @@ static void fill_default_pvcreate_params(struct pvcreate_params *pp)
  *
  * Returns:
  * NULL: error
- * pv_t * (non-NULL): handle to physical volume created
+ * struct physical_volume * (non-NULL): handle to physical volume created
  */
-pv_t * pvcreate_single(struct cmd_context *cmd, const char *pv_name,
+struct physical_volume * pvcreate_single(struct cmd_context *cmd, const char *pv_name,
 		       struct pvcreate_params *pp)
 {
 	void *pv;
@@ -1452,7 +1475,7 @@ int pv_is_in_vg(struct volume_group *vg, struct physical_volume *pv)
  * Note
  *   FIXME - liblvm todo - make into function that takes VG handle
  */
-pv_t *find_pv_in_vg_by_uuid(const struct volume_group *vg,
+struct physical_volume *find_pv_in_vg_by_uuid(const struct volume_group *vg,
 			    const struct id *id)
 {
 	return _find_pv_in_vg_by_uuid(vg, id);
@@ -2277,7 +2300,7 @@ static int _update_pv_list(struct dm_pool *pvmem, struct dm_list *all_pvs, struc
 	return 1;
 }
 
-int vg_missing_pv_count(const vg_t *vg)
+int vg_missing_pv_count(const struct volume_group *vg)
 {
 	int ret = 0;
 	struct pv_list *pvl;
@@ -2986,7 +3009,7 @@ int is_orphan_vg(const char *vg_name)
  * is_orphan - Determine whether a pv is an orphan based on its vg_name
  * @pv: handle to the physical volume
  */
-int is_orphan(const pv_t *pv)
+int is_orphan(const struct physical_volume *pv)
 {
 	return is_orphan_vg(pv_field(pv, vg_name));
 }
@@ -2995,7 +3018,7 @@ int is_orphan(const pv_t *pv)
  * is_pv - Determine whether a pv is a real pv or dummy one
  * @pv: handle to device
  */
-int is_pv(pv_t *pv)
+int is_pv(struct physical_volume *pv)
 {
 	return (pv_field(pv, vg_name) ? 1 : 0);
 }
@@ -3043,7 +3066,7 @@ int pv_analyze(struct cmd_context *cmd, const char *pv_name,
 }
 
 /* FIXME: remove / combine this with locking? */
-int vg_check_write_mode(vg_t *vg)
+int vg_check_write_mode(struct volume_group *vg)
 {
 	if (vg->open_mode != 'w') {
 		log_errno(EPERM, "Attempt to modify a read-only VG");
@@ -3101,33 +3124,7 @@ int vg_check_status(const struct volume_group *vg, uint32_t status)
 	return !_vg_bad_status_bits(vg, status);
 }
 
-/*
- * Create a (vg_t) volume group handle from a struct volume_group pointer and a
- * possible failure code or zero for success.
- */
-static vg_t *_vg_make_handle(struct cmd_context *cmd,
-			     struct volume_group *vg,
-			     uint32_t failure)
-{
-	struct dm_pool *vgmem;
-
-	if (!vg) {
-		if (!(vgmem = dm_pool_create("lvm2 vg_handle", VG_MEMPOOL_CHUNK)) ||
-		    !(vg = dm_pool_zalloc(vgmem, sizeof(*vg)))) {
-			log_error("Error allocating vg handle.");
-			if (vgmem)
-				dm_pool_destroy(vgmem);
-			return_NULL;
-		}
-		vg->vgmem = vgmem;
-	}
-
-	vg->read_status = failure;
-
-	return (vg_t *)vg;
-}
-
-static vg_t *_recover_vg(struct cmd_context *cmd, const char *lock_name,
+static struct volume_group *_recover_vg(struct cmd_context *cmd, const char *lock_name,
 			 const char *vg_name, const char *vgid,
 			 uint32_t lock_flags)
 {
@@ -3152,7 +3149,7 @@ static vg_t *_recover_vg(struct cmd_context *cmd, const char *lock_name,
 		return_NULL;
 	}
 
-	return (vg_t *)vg;
+	return (struct volume_group *)vg;
 }
 
 /*
@@ -3166,7 +3163,7 @@ static vg_t *_recover_vg(struct cmd_context *cmd, const char *lock_name,
  * problems reading the volume group.
  * Zero value means that the VG is open and appropriate locks are held.
  */
-static vg_t *_vg_lock_and_read(struct cmd_context *cmd, const char *vg_name,
+static struct volume_group *_vg_lock_and_read(struct cmd_context *cmd, const char *vg_name,
 			       const char *vgid, uint32_t lock_flags,
 			       uint32_t status_flags, uint32_t misc_flags)
 {
@@ -3279,7 +3276,7 @@ bad:
  * toollib just set lock_flags to LCK_VG_WRITE and called vg_read_internal with
  * *consistent = 1.
  */
-vg_t *vg_read(struct cmd_context *cmd, const char *vg_name,
+struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name,
 	      const char *vgid, uint32_t flags)
 {
 	uint32_t status = 0;
@@ -3301,7 +3298,7 @@ vg_t *vg_read(struct cmd_context *cmd, const char *vg_name,
  * later update (this means the user code can change the metadata and later
  * request the new metadata to be written and committed).
  */
-vg_t *vg_read_for_update(struct cmd_context *cmd, const char *vg_name,
+struct volume_group *vg_read_for_update(struct cmd_context *cmd, const char *vg_name,
 			 const char *vgid, uint32_t flags)
 {
 	return vg_read(cmd, vg_name, vgid, flags | READ_FOR_UPDATE);
@@ -3310,7 +3307,7 @@ vg_t *vg_read_for_update(struct cmd_context *cmd, const char *vg_name,
 /*
  * Test the validity of a VG handle returned by vg_read() or vg_read_for_update().
  */
-uint32_t vg_read_error(vg_t *vg_handle)
+uint32_t vg_read_error(struct volume_group *vg_handle)
 {
 	if (!vg_handle)
 		return FAILED_ALLOCATION;
@@ -3366,67 +3363,67 @@ uint32_t vg_lock_newname(struct cmd_context *cmd, const char *vgname)
 /*
  * Gets/Sets for external LVM library
  */
-struct id pv_id(const pv_t *pv)
+struct id pv_id(const struct physical_volume *pv)
 {
 	return pv_field(pv, id);
 }
 
-const struct format_type *pv_format_type(const pv_t *pv)
+const struct format_type *pv_format_type(const struct physical_volume *pv)
 {
 	return pv_field(pv, fmt);
 }
 
-struct id pv_vgid(const pv_t *pv)
+struct id pv_vgid(const struct physical_volume *pv)
 {
 	return pv_field(pv, vgid);
 }
 
-struct device *pv_dev(const pv_t *pv)
+struct device *pv_dev(const struct physical_volume *pv)
 {
 	return pv_field(pv, dev);
 }
 
-const char *pv_vg_name(const pv_t *pv)
+const char *pv_vg_name(const struct physical_volume *pv)
 {
 	return pv_field(pv, vg_name);
 }
 
-const char *pv_dev_name(const pv_t *pv)
+const char *pv_dev_name(const struct physical_volume *pv)
 {
 	return dev_name(pv_dev(pv));
 }
 
-uint64_t pv_size(const pv_t *pv)
+uint64_t pv_size(const struct physical_volume *pv)
 {
 	return pv_field(pv, size);
 }
 
-uint32_t pv_status(const pv_t *pv)
+uint32_t pv_status(const struct physical_volume *pv)
 {
 	return pv_field(pv, status);
 }
 
-uint32_t pv_pe_size(const pv_t *pv)
+uint32_t pv_pe_size(const struct physical_volume *pv)
 {
 	return pv_field(pv, pe_size);
 }
 
-uint64_t pv_pe_start(const pv_t *pv)
+uint64_t pv_pe_start(const struct physical_volume *pv)
 {
 	return pv_field(pv, pe_start);
 }
 
-uint32_t pv_pe_count(const pv_t *pv)
+uint32_t pv_pe_count(const struct physical_volume *pv)
 {
 	return pv_field(pv, pe_count);
 }
 
-uint32_t pv_pe_alloc_count(const pv_t *pv)
+uint32_t pv_pe_alloc_count(const struct physical_volume *pv)
 {
 	return pv_field(pv, pe_alloc_count);
 }
 
-uint32_t pv_mda_count(const pv_t *pv)
+uint32_t pv_mda_count(const struct physical_volume *pv)
 {
 	struct lvmcache_info *info;
 
@@ -3434,47 +3431,47 @@ uint32_t pv_mda_count(const pv_t *pv)
 	return info ? dm_list_size(&info->mdas) : UINT64_C(0);
 }
 
-uint32_t vg_seqno(const vg_t *vg)
+uint32_t vg_seqno(const struct volume_group *vg)
 {
 	return vg->seqno;
 }
 
-uint32_t vg_status(const vg_t *vg)
+uint32_t vg_status(const struct volume_group *vg)
 {
 	return vg->status;
 }
 
-uint64_t vg_size(const vg_t *vg)
+uint64_t vg_size(const struct volume_group *vg)
 {
 	return (uint64_t) vg->extent_count * vg->extent_size;
 }
 
-uint64_t vg_free(const vg_t *vg)
+uint64_t vg_free(const struct volume_group *vg)
 {
 	return (uint64_t) vg->free_count * vg->extent_size;
 }
 
-uint64_t vg_extent_size(const vg_t *vg)
+uint64_t vg_extent_size(const struct volume_group *vg)
 {
 	return (uint64_t) vg->extent_size;
 }
 
-uint64_t vg_extent_count(const vg_t *vg)
+uint64_t vg_extent_count(const struct volume_group *vg)
 {
 	return (uint64_t) vg->extent_count;
 }
 
-uint64_t vg_free_count(const vg_t *vg)
+uint64_t vg_free_count(const struct volume_group *vg)
 {
 	return (uint64_t) vg->free_count;
 }
 
-uint64_t vg_pv_count(const vg_t *vg)
+uint64_t vg_pv_count(const struct volume_group *vg)
 {
 	return (uint64_t) vg->pv_count;
 }
 
-uint64_t lv_size(const lv_t *lv)
+uint64_t lv_size(const struct logical_volume *lv)
 {
 	return lv->size;
 }
@@ -3490,7 +3487,7 @@ uint64_t lv_size(const lv_t *lv)
  *
  * FIXME: merge with find_pv_by_name ?
  */
-pv_t *pv_by_path(struct cmd_context *cmd, const char *pv_name)
+struct physical_volume *pv_by_path(struct cmd_context *cmd, const char *pv_name)
 {
 	struct dm_list mdas;
 

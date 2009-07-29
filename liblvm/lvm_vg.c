@@ -13,7 +13,7 @@
  */
 
 #include "lib.h"
-#include "lvm.h"
+#include "lvm2app.h"
 #include "toolcontext.h"
 #include "metadata-exported.h"
 #include "archiver.h"
@@ -36,7 +36,7 @@ vg_t *lvm_vg_create(lvm_t libh, const char *vg_name)
 		return NULL;
 	}
 	vg->open_mode = 'w';
-	return vg;
+	return (vg_t *) vg;
 }
 
 int lvm_vg_extend(vg_t *vg, const char *device)
@@ -180,7 +180,7 @@ vg_t *lvm_vg_open(lvm_t libh, const char *vgname, const char *mode,
 	/* FIXME: combine this with locking ? */
 	vg->open_mode = mode[0];
 
-	return vg;
+	return (vg_t *) vg;
 }
 
 struct dm_list *lvm_vg_list_pvs(vg_t *vg)

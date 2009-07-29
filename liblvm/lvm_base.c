@@ -13,7 +13,7 @@
  */
 
 #include "lib.h"
-#include "lvm.h"
+#include "lvm2app.h"
 #include "toolcontext.h"
 #include "locking.h"
 
