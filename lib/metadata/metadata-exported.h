@@ -22,7 +22,6 @@
 #define _LVM_METADATA_EXPORTED_H
 
 #include "uuid.h"
-#include "lvm.h"
 
 #define MAX_STRIPES 128U
 #define SECTOR_SHIFT 9L
@@ -238,8 +237,7 @@ struct volume_group {
 	struct dm_list tags;
 
 	/*
-	 * vg_t handle fields.
-	 * FIXME: Split these out.
+	 * FIXME: Move the next fields into a different struct?
 	 */
 
 	/*
@@ -361,8 +359,9 @@ struct pvcreate_params {
 	unsigned yes;
 };
 
-pv_t * pvcreate_single(struct cmd_context *cmd, const char *pv_name,
-		       struct pvcreate_params *pp);
+struct physical_volume *pvcreate_single(struct cmd_context *cmd,
+					const char *pv_name,
+					struct pvcreate_params *pp);
 
 /*
 * Utility functions
@@ -392,14 +391,14 @@ int scan_vgs_for_pvs(struct cmd_context *cmd);
 
 int pv_write(struct cmd_context *cmd, struct physical_volume *pv,
 	     struct dm_list *mdas, int64_t label_sector);
-int is_pv(pv_t *pv);
+int is_pv(struct physical_volume *pv);
 int move_pv(struct volume_group *vg_from, struct volume_group *vg_to,
 	    const char *pv_name);
 int move_pvs_used_by_lv(struct volume_group *vg_from,
 			struct volume_group *vg_to,
 			const char *lv_name);
 int is_orphan_vg(const char *vg_name);
-int is_orphan(const pv_t *pv);
+int is_orphan(const struct physical_volume *pv);
 int vgs_are_compatible(struct cmd_context *cmd,
 		       struct volume_group *vg_from,
 		       struct volume_group *vg_to);
@@ -408,19 +407,19 @@ uint32_t vg_lock_newname(struct cmd_context *cmd, const char *vgname);
 /*
  * Return a handle to VG metadata.
  */
-vg_t *vg_read(struct cmd_context *cmd, const char *vg_name,
+struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name,
               const char *vgid, uint32_t flags);
-vg_t *vg_read_for_update(struct cmd_context *cmd, const char *vg_name,
+struct volume_group *vg_read_for_update(struct cmd_context *cmd, const char *vg_name,
                          const char *vgid, uint32_t flags);
 
 /* 
  * Test validity of a VG handle.
  */
-uint32_t vg_read_error(vg_t *vg_handle);
+uint32_t vg_read_error(struct volume_group *vg_handle);
 
 /* pe_start and pe_end relate to any existing data so that new metadata
 * areas can avoid overlap */
-pv_t *pv_create(const struct cmd_context *cmd,
+struct physical_volume *pv_create(const struct cmd_context *cmd,
 		      struct device *dev,
 		      struct id *id,
 		      uint64_t size,
@@ -438,17 +437,17 @@ int pv_analyze(struct cmd_context *cmd, const char *pv_name,
 /* FIXME: move internal to library */
 uint32_t pv_list_extents_free(const struct dm_list *pvh);
 
-vg_t *vg_create(struct cmd_context *cmd, const char *vg_name);
+struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name);
 int vg_remove(struct volume_group *vg);
-int vg_remove_single(vg_t *vg);
+int vg_remove_single(struct volume_group *vg);
 int vg_rename(struct cmd_context *cmd, struct volume_group *vg,
 	      const char *new_name);
 int vg_extend(struct volume_group *vg, int pv_count, char **pv_names);
 int vg_reduce(struct volume_group *vg, char *pv_name);
-int vg_set_extent_size(vg_t *vg, uint32_t new_extent_size);
-int vg_set_max_lv(vg_t *vg, uint32_t max_lv);
-int vg_set_max_pv(vg_t *vg, uint32_t max_pv);
-int vg_set_alloc_policy(vg_t *vg, alloc_policy_t alloc);
+int vg_set_extent_size(struct volume_group *vg, uint32_t new_extent_size);
+int vg_set_max_lv(struct volume_group *vg, uint32_t max_lv);
+int vg_set_max_pv(struct volume_group *vg, uint32_t max_pv);
+int vg_set_alloc_policy(struct volume_group *vg, alloc_policy_t alloc);
 int vg_split_mdas(struct cmd_context *cmd, struct volume_group *vg_from,
 		  struct volume_group *vg_to);
 
@@ -574,7 +573,7 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 /* Find a PV within a given VG */
 struct pv_list *find_pv_in_vg(const struct volume_group *vg,
 			      const char *pv_name);
-pv_t *find_pv_in_vg_by_uuid(const struct volume_group *vg,
+struct physical_volume *find_pv_in_vg_by_uuid(const struct volume_group *vg,
 			    const struct id *id);
 
 /* Find an LV within a given VG */
@@ -692,29 +691,29 @@ char *generate_lv_name(struct volume_group *vg, const char *format,
 /*
 * Begin skeleton for external LVM library
 */
-struct device *pv_dev(const pv_t *pv);
-const char *pv_vg_name(const pv_t *pv);
-const char *pv_dev_name(const pv_t *pv);
-uint64_t pv_size(const pv_t *pv);
-uint32_t pv_status(const pv_t *pv);
-uint32_t pv_pe_size(const pv_t *pv);
-uint64_t pv_pe_start(const pv_t *pv);
-uint32_t pv_pe_count(const pv_t *pv);
-uint32_t pv_pe_alloc_count(const pv_t *pv);
-uint32_t pv_mda_count(const pv_t *pv);
+struct device *pv_dev(const struct physical_volume *pv);
+const char *pv_vg_name(const struct physical_volume *pv);
+const char *pv_dev_name(const struct physical_volume *pv);
+uint64_t pv_size(const struct physical_volume *pv);
+uint32_t pv_status(const struct physical_volume *pv);
+uint32_t pv_pe_size(const struct physical_volume *pv);
+uint64_t pv_pe_start(const struct physical_volume *pv);
+uint32_t pv_pe_count(const struct physical_volume *pv);
+uint32_t pv_pe_alloc_count(const struct physical_volume *pv);
+uint32_t pv_mda_count(const struct physical_volume *pv);
 
-uint64_t lv_size(const lv_t *lv);
+uint64_t lv_size(const struct logical_volume *lv);
 
-int vg_missing_pv_count(const vg_t *vg);
-uint32_t vg_seqno(const vg_t *vg);
-uint32_t vg_status(const vg_t *vg);
-uint64_t vg_size(const vg_t *vg);
-uint64_t vg_free(const vg_t *vg);
-uint64_t vg_extent_size(const vg_t *vg);
-uint64_t vg_extent_count(const vg_t *vg);
-uint64_t vg_free_count(const vg_t *vg);
-uint64_t vg_pv_count(const vg_t *vg);
-int vg_check_write_mode(vg_t *vg);
+int vg_missing_pv_count(const struct volume_group *vg);
+uint32_t vg_seqno(const struct volume_group *vg);
+uint32_t vg_status(const struct volume_group *vg);
+uint64_t vg_size(const struct volume_group *vg);
+uint64_t vg_free(const struct volume_group *vg);
+uint64_t vg_extent_size(const struct volume_group *vg);
+uint64_t vg_extent_count(const struct volume_group *vg);
+uint64_t vg_free_count(const struct volume_group *vg);
+uint64_t vg_pv_count(const struct volume_group *vg);
+int vg_check_write_mode(struct volume_group *vg);
 #define vg_is_clustered(vg) (vg_status((vg)) & CLUSTERED)
 
 struct vgcreate_params {

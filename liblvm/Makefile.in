@@ -62,7 +62,7 @@ endif
 install: $(INSTALL_TYPE) install_include
 
 install_include:
-	$(INSTALL) -D $(OWNER) $(GROUP) -m 444 lvm.h $(includedir)/lvm.h
+	$(INSTALL) -D $(OWNER) $(GROUP) -m 444 lvm2app.h $(includedir)/lvm2app.h
 
 install_dynamic: $(LIB_SHARED)
 	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) $< \

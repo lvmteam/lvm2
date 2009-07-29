@@ -1,5 +1,7 @@
 Version 2.02.51 - 
 ================================
+  Remove pv_t, vg_t & lv_t handles from lib.  Only liblvm uses them.
+  Rename lvm.h to lvm2app.h for now.
 
 Version 2.02.50 - 28th July 2009
 ================================
