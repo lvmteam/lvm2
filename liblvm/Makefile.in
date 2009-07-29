@@ -77,7 +77,7 @@ install_static: $(LIB_STATIC)
 
 install_pkgconfig:
 	$(INSTALL) -D $(OWNER) $(GROUP) -m 444 $(LIB_NAME).pc \
-		$(usrlibdir)/pkgconfig/$(LIB_NAME).pc
+		$(usrlibdir)/pkgconfig/lvm2app.pc
 
 liblvm.cflow: $(SOURCES)
 	set -e; (echo -n "SOURCES += "; \
