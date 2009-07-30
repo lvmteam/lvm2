@@ -1327,7 +1327,6 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 	char buf[MDA_HEADER_SIZE] __attribute((aligned(8)));
 	struct mda_header *mdah = (struct mda_header *) buf;
 	uint64_t adjustment;
-	struct data_area_list *da;
 
 	/* FIXME Test mode don't update cache? */
 
@@ -1364,16 +1363,9 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 		dm_list_init(&info->mdas);
 	}
 
-	/*
-	 * If no pe_start supplied but PV already exists,
-	 * preserve existing value.
-	 */
-	if (info->das.n) {
-		if (!pv->pe_start)
-			dm_list_iterate_items(da, &info->das)
-				pv->pe_start = da->disk_locn.offset >> SECTOR_SHIFT;
+	if (info->das.n)
 		del_das(&info->das);
-	} else
+	else
 		dm_list_init(&info->das);
 
 	/*
