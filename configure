@@ -9190,7 +9190,7 @@ if  test x$CLVMD != xnone && test x$CLUSTER = xnone; then
 	CLUSTER=internal
 fi
 
-if [ "x$CLVMD" = xall -o `expr x"$CLVMD" : '.*cman.*'` != 0 ]; then
+if [ "x$CLVMD" = xall -o `expr x"$CLVMD" : '.*corosync.*'` != 0 ]; then
 
 
 if test "x$ac_cv_env_PKG_CONFIG_set" != "xset"; then
