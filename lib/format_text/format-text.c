@@ -1214,6 +1214,15 @@ static int _mda_setup(const struct format_type *fmt,
 			start1 += (pagesize - mda_adjustment);
 	}
 
+	/* Round up to pe_align boundary */
+	mda_adjustment = (mda_size1 + start1) % alignment;
+	if (mda_adjustment) {
+		mda_size1 += (alignment - mda_adjustment);
+		/* Revert if it's now too large */
+		if (start1 + mda_size1 > disk_size)
+			mda_size1 -= (alignment - mda_adjustment);
+	}
+
 	/* Ensure it's not going to be bigger than the disk! */
 	if (start1 + mda_size1 > disk_size) {
 		log_warn("WARNING: metadata area fills disk leaving no "
@@ -1221,14 +1230,18 @@ static int _mda_setup(const struct format_type *fmt,
 		/* Leave some free space for rounding */
 		/* Avoid empty data area as could cause tools problems */
 		mda_size1 = disk_size - start1 - alignment * 2;
+		if (start1 + mda_size1 > disk_size) {
+			log_error("Insufficient space for first mda on %s",
+				  pv_dev_name(pv));
+			return 0;
+		}
+		/* Round up to pe_align boundary */
+		mda_adjustment = (mda_size1 + start1) % alignment;
+		if (mda_adjustment)
+			mda_size1 += (alignment - mda_adjustment);
 		/* Only have 1 mda in this case */
 		pvmetadatacopies = 1;
 	}
-
-	/* Round up to pe_align() boundary */
-	mda_adjustment = (mda_size1 + start1) % alignment;
-	if (mda_adjustment)
-		mda_size1 += (alignment - mda_adjustment);
 
 	/* If we already have PEs, avoid overlap */
 	if (pe_start || pe_end) {
