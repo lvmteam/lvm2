@@ -1368,12 +1368,17 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 	else
 		dm_list_init(&info->das);
 
+	if (pv->pe_start) {
+		log_very_verbose("%s: preserving pe_start=%lu",
+				 pv_dev_name(pv), pv->pe_start);
+		goto preserve_pe_start;
+	}
+
 	/*
 	 * If pe_start is still unset, set it to first aligned
 	 * sector after any metadata areas that begin before pe_start.
 	 */
-	if (!pv->pe_start)
-		pv->pe_start = pv->pe_align;
+	pv->pe_start = pv->pe_align;
 	dm_list_iterate_items(mda, &info->mdas) {
 		mdac = (struct mda_context *) mda->metadata_locn;
 		if (pv->dev == mdac->area.dev &&
@@ -1389,6 +1394,8 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 				pv->pe_start += pv->pe_align - adjustment;
 		}
 	}
+
+ preserve_pe_start:
 	if (!add_da
 	    (NULL, &info->das, pv->pe_start << SECTOR_SHIFT, UINT64_C(0)))
 		return_0;
@@ -1700,8 +1707,10 @@ static int _text_pv_setup(const struct format_type *fmt,
 		/* FIXME Default from config file? vgextend cmdline flag? */
 		pv->status |= ALLOCATABLE_PV;
 	} else {
-		if (pe_start)
+		if (pe_start) {
 			pv->pe_start = pe_start;
+			goto preserve_pe_start;
+		}
 
 		if (!data_alignment)
 			data_alignment = find_config_tree_int(pv->fmt->cmd,
@@ -1714,6 +1723,7 @@ static int _text_pv_setup(const struct format_type *fmt,
 				 "%lu sectors (requested %lu sectors)",
 				 pv_dev_name(pv), pv->pe_align, data_alignment);
 
+	preserve_pe_start:
 		if (extent_count)
 			pe_end = pe_start + extent_count * extent_size - 1;
 		if (!_mda_setup(fmt, pe_start, pe_end, pvmetadatacopies,
