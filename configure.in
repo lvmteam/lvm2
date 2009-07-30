@@ -340,7 +340,7 @@ if  test x$CLVMD != xnone && test x$CLUSTER = xnone; then
 fi
 
 dnl -- Look for corosync libraries if required.
-if [[ "x$CLVMD" = xcorosync -o "x$CLVMD" = xall ]]; then
+if [[ "x$CLVMD" = xall -o `expr x"$CLVMD" : '.*cman.*'` != 0 ]]; then
 	PKG_CHECK_MODULES(QUORUM, libquorum, [],
 		[AC_MSG_RESULT([no pkg for quorum library, using -lquorum]);
 		QUORUM_LIBS="-lquorum"])
