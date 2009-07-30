@@ -1,5 +1,6 @@
 Version 2.02.51 - 
 ================================
+  Document -I option of clvmd in the man page.
   Fix configure script to handle multiple clvmd selections.
   Fix lvm2app.pc installation filename.
   Remove pv_t, vg_t & lv_t handles from lib.  Only liblvm uses them.
