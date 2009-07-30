@@ -1735,10 +1735,8 @@ static int _text_pv_setup(const struct format_type *fmt,
 		/* FIXME Default from config file? vgextend cmdline flag? */
 		pv->status |= ALLOCATABLE_PV;
 	} else {
-		if (pe_start) {
+		if (pe_start)
 			pv->pe_start = pe_start;
-			goto preserve_pe_start;
-		}
 
 		if (!data_alignment)
 			data_alignment = find_config_tree_int(pv->fmt->cmd,
@@ -1760,7 +1758,6 @@ static int _text_pv_setup(const struct format_type *fmt,
 			return 0;
 		}
 
-	preserve_pe_start:
 		if (extent_count)
 			pe_end = pe_start + extent_count * extent_size - 1;
 		if (!_mda_setup(fmt, pe_start, pe_end, pvmetadatacopies,
