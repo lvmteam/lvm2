@@ -1595,6 +1595,13 @@ static struct metadata_area_ops _metadata_text_raw_ops = {
 };
 
 /* pvmetadatasize in sectors */
+/*
+ * pe_start policy:
+ * - In cases where a pre-existing pe_start is provided (pvcreate --restorefile
+ *   and vgconvert): pe_start must not be changed (so pv->pe_start = pe_start).
+ * - In cases where pe_start is 0: leave pv->pe_start as 0 and defer the
+ *   setting of pv->pe_start to .pv_write
+ */
 static int _text_pv_setup(const struct format_type *fmt,
 		     uint64_t pe_start, uint32_t extent_count,
 		     uint32_t extent_size, unsigned long data_alignment,
@@ -1701,9 +1708,6 @@ static int _text_pv_setup(const struct format_type *fmt,
 			log_warn("WARNING: %s: Overriding data alignment to "
 				 "%lu sectors (requested %lu sectors)",
 				 pv_dev_name(pv), pv->pe_align, data_alignment);
-
-		if (pv->pe_start < pv->pe_align)
-			pv->pe_start = pv->pe_align;
 
 		if (extent_count)
 			pe_end = pe_start + extent_count * extent_size - 1;
