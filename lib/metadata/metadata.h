@@ -213,6 +213,7 @@ struct format_handler {
 	int (*pv_setup) (const struct format_type * fmt,
 			 uint64_t pe_start, uint32_t extent_count,
 			 uint32_t extent_size, unsigned long data_alignment,
+			 unsigned long data_alignment_offset,
 			 int pvmetadatacopies,
 			 uint64_t pvmetadatasize, struct dm_list * mdas,
 			 struct physical_volume * pv, struct volume_group * vg);
@@ -267,6 +268,8 @@ struct format_handler {
  * Utility functions
  */
 unsigned long set_pe_align(struct physical_volume *pv, unsigned long data_alignment);
+unsigned long set_pe_align_offset(struct physical_volume *pv,
+				  unsigned long data_alignment_offset);
 int vg_validate(struct volume_group *vg);
 
 int pv_write_orphan(struct cmd_context *cmd, struct physical_volume *pv);

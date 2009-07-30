@@ -93,6 +93,25 @@ out:
 	return pv->pe_align;
 }
 
+unsigned long set_pe_align_offset(struct physical_volume *pv,
+				  unsigned long data_alignment_offset)
+{
+	if (pv->pe_align_offset)
+		goto out;
+
+	if (data_alignment_offset)
+		pv->pe_align_offset = data_alignment_offset;
+
+	if (!pv->dev)
+		goto out;
+
+	log_very_verbose("%s: Setting PE alignment offset to %lu sectors.",
+			 dev_name(pv->dev), pv->pe_align_offset);
+
+out:
+	return pv->pe_align_offset;
+}
+
 /**
  * add_pv_to_vg - Add a physical volume to a volume group
  * @vg - volume group to add to
@@ -154,7 +173,7 @@ int add_pv_to_vg(struct volume_group *vg, const char *pv_name,
 	pv->pe_alloc_count = 0;
 
 	if (!fid->fmt->ops->pv_setup(fid->fmt, UINT64_C(0), 0,
-				     vg->extent_size, 0, 0UL, UINT64_C(0),
+				     vg->extent_size, 0, 0, 0UL, UINT64_C(0),
 				     &fid->metadata_areas, pv, vg)) {
 		log_error("Format-specific setup of physical volume '%s' "
 			  "failed.", pv_name);
@@ -1191,6 +1210,7 @@ static void fill_default_pvcreate_params(struct pvcreate_params *pp)
 	pp->zero = 0;
 	pp->size = 0;
 	pp->data_alignment = UINT64_C(0);
+	pp->data_alignment_offset = UINT64_C(0);
 	pp->pvmetadatacopies = DEFAULT_PVMETADATACOPIES;
 	pp->pvmetadatasize = DEFAULT_PVMETADATASIZE;
 	pp->labelsector = DEFAULT_LABELSECTOR;
@@ -1249,8 +1269,8 @@ struct physical_volume * pvcreate_single(struct cmd_context *cmd, const char *pv
 
 	dm_list_init(&mdas);
 	if (!(pv = pv_create(cmd, dev, pp->idp, pp->size,
-			     pp->data_alignment, pp->pe_start,
-			     pp->extent_count, pp->extent_size,
+			     pp->data_alignment, pp->data_alignment_offset,
+			     pp->pe_start, pp->extent_count, pp->extent_size,
 			     pp->pvmetadatacopies,
 			     pp->pvmetadatasize,&mdas))) {
 		log_error("Failed to setup physical volume \"%s\"", pv_name);
@@ -1319,6 +1339,7 @@ static struct physical_volume *_alloc_pv(struct dm_pool *mem, struct device *dev
 	pv->pe_count = 0;
 	pv->pe_alloc_count = 0;
 	pv->pe_align = 0;
+	pv->pe_align_offset = 0;
 	pv->fmt = NULL;
 	pv->dev = dev;
 
@@ -1337,6 +1358,7 @@ static struct physical_volume *_alloc_pv(struct dm_pool *mem, struct device *dev
  * @dev: PV device to initialize
  * @size: size of the PV in sectors
  * @data_alignment: requested alignment of data
+ * @data_alignment_offset: requested offset to aligned data
  * @pe_start: physical extent start
  * @existing_extent_count
  * @existing_extent_size
@@ -1355,6 +1377,7 @@ struct physical_volume *pv_create(const struct cmd_context *cmd,
 				  struct device *dev,
 				  struct id *id, uint64_t size,
 				  unsigned long data_alignment,
+				  unsigned long data_alignment_offset,
 				  uint64_t pe_start,
 				  uint32_t existing_extent_count,
 				  uint32_t existing_extent_size,
@@ -1407,6 +1430,7 @@ struct physical_volume *pv_create(const struct cmd_context *cmd,
 
 	if (!fmt->ops->pv_setup(fmt, pe_start, existing_extent_count,
 				existing_extent_size, data_alignment,
+				data_alignment_offset,
 				pvmetadatacopies, pvmetadatasize, mdas,
 				pv, NULL)) {
 		log_error("%s: Format-specific setup of physical volume "

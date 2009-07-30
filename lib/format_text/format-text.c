@@ -1180,7 +1180,7 @@ static int _mda_setup(const struct format_type *fmt,
 		      struct physical_volume *pv,
 		      struct volume_group *vg __attribute((unused)))
 {
-	uint64_t mda_adjustment, disk_size, alignment;
+	uint64_t mda_adjustment, disk_size, alignment, alignment_offset;
 	uint64_t start1, mda_size1;	/* First area - start of disk */
 	uint64_t start2, mda_size2;	/* Second area - end of disk */
 	uint64_t wipe_size = 8 << SECTOR_SHIFT;
@@ -1190,6 +1190,7 @@ static int _mda_setup(const struct format_type *fmt,
 		return 1;
 
 	alignment = pv->pe_align << SECTOR_SHIFT;
+	alignment_offset = pv->pe_align_offset << SECTOR_SHIFT;
 	disk_size = pv->size << SECTOR_SHIFT;
 	pe_start <<= SECTOR_SHIFT;
 	pe_end <<= SECTOR_SHIFT;
@@ -1221,6 +1222,15 @@ static int _mda_setup(const struct format_type *fmt,
 		/* Revert if it's now too large */
 		if (start1 + mda_size1 > disk_size)
 			mda_size1 -= (alignment - mda_adjustment);
+	}
+
+	/* Add pe_align_offset if on pe_align boundary */
+	if (alignment_offset &&
+	    (((start1 + mda_size1) % alignment) == 0)) {
+		mda_size1 += alignment_offset;
+		/* Revert if it's now too large */
+		if (start1 + mda_size1 > disk_size)
+			mda_size1 -= alignment_offset;
 	}
 
 	/* Ensure it's not going to be bigger than the disk! */
@@ -1379,6 +1389,8 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 	 * sector after any metadata areas that begin before pe_start.
 	 */
 	pv->pe_start = pv->pe_align;
+	if (pv->pe_align_offset)
+		pv->pe_start += pv->pe_align_offset;
 	dm_list_iterate_items(mda, &info->mdas) {
 		mdac = (struct mda_context *) mda->metadata_locn;
 		if (pv->dev == mdac->area.dev &&
@@ -1389,10 +1401,25 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 		     (pv->pe_start << SECTOR_SHIFT))) {
 			pv->pe_start = (mdac->area.start + mdac->area.size)
 			    >> SECTOR_SHIFT;
-			adjustment = pv->pe_start % pv->pe_align;
+			/* Adjust pe_start to: (N * pe_align) + pe_align_offset */
+			adjustment =
+				(pv->pe_start - pv->pe_align_offset) % pv->pe_align;
 			if (adjustment)
 				pv->pe_start += pv->pe_align - adjustment;
+			log_very_verbose("%s: setting pe_start=%lu (orig_pe_start=%lu, "
+					 "pe_align=%lu, pe_align_offset=%lu, "
+					 "adjustment=%" PRIu64 ")",
+					 pv_dev_name(pv), pv->pe_start,
+					 (adjustment ?
+					  pv->pe_start -= pv->pe_align - adjustment :
+					  pv->pe_start),
+					 pv->pe_align, pv->pe_align_offset, adjustment);
 		}
+	}
+	if (pv->pe_start >= pv->size) {
+		log_error("Data area is beyond end of device %s!",
+			  pv_dev_name(pv));
+		return 0;
 	}
 
  preserve_pe_start:
@@ -1617,6 +1644,7 @@ static struct metadata_area_ops _metadata_text_raw_ops = {
 static int _text_pv_setup(const struct format_type *fmt,
 		     uint64_t pe_start, uint32_t extent_count,
 		     uint32_t extent_size, unsigned long data_alignment,
+		     unsigned long data_alignment_offset,
 		     int pvmetadatacopies,
 		     uint64_t pvmetadatasize, struct dm_list *mdas,
 		     struct physical_volume *pv, struct volume_group *vg)
@@ -1722,6 +1750,15 @@ static int _text_pv_setup(const struct format_type *fmt,
 			log_warn("WARNING: %s: Overriding data alignment to "
 				 "%lu sectors (requested %lu sectors)",
 				 pv_dev_name(pv), pv->pe_align, data_alignment);
+
+		set_pe_align_offset(pv, data_alignment_offset);
+
+		if (pv->pe_align < pv->pe_align_offset) {
+			log_error("%s: pe_align (%lu sectors) must not be less "
+				  "than pe_align_offset (%lu sectors)",
+				  pv_dev_name(pv), pv->pe_align, pv->pe_align_offset);
+			return 0;
+		}
 
 	preserve_pe_start:
 		if (extent_count)
