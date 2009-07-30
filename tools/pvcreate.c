@@ -96,7 +96,8 @@ static int pvcreate_validate_params(struct cmd_context *cmd,
 	if (!(cmd->fmt->features & FMT_MDAS) &&
 	    (arg_count(cmd, metadatacopies_ARG) ||
 	     arg_count(cmd, metadatasize_ARG)   ||
-	     arg_count(cmd, dataalignment_ARG))) {
+	     arg_count(cmd, dataalignment_ARG)  ||
+	     arg_count(cmd, dataalignmentoffset_ARG))) {
 		log_error("Metadata and data alignment parameters only "
 			  "apply to text format.");
 		return 0;
@@ -138,6 +139,24 @@ static int pvcreate_validate_params(struct cmd_context *cmd,
 				 " incompatible with --restorefile value (%"
 				 PRIu64").", pp->data_alignment, pp->pe_start);
 		pp->data_alignment = 0;
+	}
+
+	if (arg_sign_value(cmd, dataalignmentoffset_ARG, 0) == SIGN_MINUS) {
+		log_error("Physical volume data alignment offset may not be negative");
+		return 0;
+	}
+	pp->data_alignment_offset = arg_uint64_value(cmd, dataalignmentoffset_ARG, UINT64_C(0));
+
+	if (pp->data_alignment_offset > ULONG_MAX) {
+		log_error("Physical volume data alignment offset is too big.");
+		return 0;
+	}
+
+	if (pp->data_alignment_offset && pp->pe_start) {
+		log_warn("WARNING: Ignoring data alignment offset %" PRIu64
+			 " incompatible with --restorefile value (%"
+			 PRIu64").", pp->data_alignment_offset, pp->pe_start);
+		pp->data_alignment_offset = 0;
 	}
 
 	if (arg_sign_value(cmd, metadatasize_ARG, 0) == SIGN_MINUS) {

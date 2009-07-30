@@ -183,6 +183,7 @@ struct physical_volume {
 	uint32_t pe_count;
 	uint32_t pe_alloc_count;
 	unsigned long pe_align;
+	unsigned long pe_align_offset;
 
 	struct dm_list segments;	/* Ordered pv_segments covering complete PV */
 	struct dm_list tags;
@@ -346,6 +347,7 @@ struct pvcreate_params {
 	int zero;
 	uint64_t size;
 	uint64_t data_alignment;
+	uint64_t data_alignment_offset;
 	int pvmetadatacopies;
 	uint64_t pvmetadatasize;
 	int64_t labelsector;
@@ -424,6 +426,7 @@ struct physical_volume *pv_create(const struct cmd_context *cmd,
 		      struct id *id,
 		      uint64_t size,
 		      unsigned long data_alignment,
+		      unsigned long data_alignment_offset,
 		      uint64_t pe_start,
 		      uint32_t existing_extent_count,
 		      uint32_t existing_extent_size,

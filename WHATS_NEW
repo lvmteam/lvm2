@@ -1,5 +1,6 @@
 Version 2.02.51 - 
 ================================
+  Add --dataalignmentoffset to pvcreate to shift start of aligned data area.
   Preserve pe_start in .pv_setup and .pv_write if pe_start was supplied.
   Fix _mda_setup() to not check first mda's size before pe_align rounding.
   Formalize pe_start policy as split between .pv_setup and .pv_write.
