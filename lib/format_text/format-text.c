@@ -1337,6 +1337,7 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 	char buf[MDA_HEADER_SIZE] __attribute((aligned(8)));
 	struct mda_header *mdah = (struct mda_header *) buf;
 	uint64_t adjustment;
+	struct data_area_list *da;
 
 	/* FIXME Test mode don't update cache? */
 
@@ -1373,24 +1374,42 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 		dm_list_init(&info->mdas);
 	}
 
-	if (info->das.n)
+	/*
+	 * If no pe_start supplied but PV already exists,
+	 * get existing value; use-cases include:
+	 * - pvcreate on PV without prior pvremove
+	 * - vgremove on VG with PV(s) that have pe_start=0 (hacked cfg)
+	 */
+	if (info->das.n) {
+		if (!pv->pe_start)
+			dm_list_iterate_items(da, &info->das)
+				pv->pe_start = da->disk_locn.offset >> SECTOR_SHIFT;
 		del_das(&info->das);
-	else
+	} else
 		dm_list_init(&info->das);
 
+#if 0
+	/*
+	 * FIXME: ideally a pre-existing pe_start seen in .pv_write
+	 * would always be preserved BUT 'pvcreate on PV without prior pvremove'
+	 * could easily cause the pe_start to overlap with the first mda!
+	 */
 	if (pv->pe_start) {
 		log_very_verbose("%s: preserving pe_start=%lu",
 				 pv_dev_name(pv), pv->pe_start);
 		goto preserve_pe_start;
 	}
+#endif
 
 	/*
 	 * If pe_start is still unset, set it to first aligned
 	 * sector after any metadata areas that begin before pe_start.
 	 */
-	pv->pe_start = pv->pe_align;
-	if (pv->pe_align_offset)
-		pv->pe_start += pv->pe_align_offset;
+	if (!pv->pe_start) {
+		pv->pe_start = pv->pe_align;
+		if (pv->pe_align_offset)
+			pv->pe_start += pv->pe_align_offset;
+	}
 	dm_list_iterate_items(mda, &info->mdas) {
 		mdac = (struct mda_context *) mda->metadata_locn;
 		if (pv->dev == mdac->area.dev &&
@@ -1402,11 +1421,14 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 			pv->pe_start = (mdac->area.start + mdac->area.size)
 			    >> SECTOR_SHIFT;
 			/* Adjust pe_start to: (N * pe_align) + pe_align_offset */
-			adjustment =
+			if (pv->pe_align) {
+				adjustment =
 				(pv->pe_start - pv->pe_align_offset) % pv->pe_align;
-			if (adjustment)
-				pv->pe_start += pv->pe_align - adjustment;
-			log_very_verbose("%s: setting pe_start=%lu (orig_pe_start=%lu, "
+				if (adjustment)
+					pv->pe_start += pv->pe_align - adjustment;
+
+				log_very_verbose("%s: setting pe_start=%lu "
+					 "(orig_pe_start=%lu, "
 					 "pe_align=%lu, pe_align_offset=%lu, "
 					 "adjustment=%" PRIu64 ")",
 					 pv_dev_name(pv), pv->pe_start,
@@ -1414,6 +1436,7 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 					  pv->pe_start -= pv->pe_align - adjustment :
 					  pv->pe_start),
 					 pv->pe_align, pv->pe_align_offset, adjustment);
+			}
 		}
 	}
 	if (pv->pe_start >= pv->size) {
@@ -1422,7 +1445,7 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 		return 0;
 	}
 
- preserve_pe_start:
+	/* FIXME: preserve_pe_start: */
 	if (!add_da
 	    (NULL, &info->das, pv->pe_start << SECTOR_SHIFT, UINT64_C(0)))
 		return_0;
@@ -1635,7 +1658,7 @@ static struct metadata_area_ops _metadata_text_raw_ops = {
 
 /* pvmetadatasize in sectors */
 /*
- * pe_start policy:
+ * pe_start goal: FIXME -- reality of .pv_write complexity undermines this goal
  * - In cases where a pre-existing pe_start is provided (pvcreate --restorefile
  *   and vgconvert): pe_start must not be changed (so pv->pe_start = pe_start).
  * - In cases where pe_start is 0: leave pv->pe_start as 0 and defer the
@@ -1757,6 +1780,18 @@ static int _text_pv_setup(const struct format_type *fmt,
 				  pv_dev_name(pv), pv->pe_align, pv->pe_align_offset);
 			return 0;
 		}
+
+		/*
+		 * This initialization has a side-effect of allowing
+		 * orphaned PVs to be created with the proper alignment.
+		 * Setting pv->pe_start here circumvents .pv_write's
+		 * "pvcreate on PV without prior pvremove" retreival of
+		 * the PV's previous pe_start.
+		 * - Without this you get actual != expected pe_start
+		 *   failures in the testsuite.
+		 */
+		if (!pe_start && pv->pe_start < pv->pe_align)
+			pv->pe_start = pv->pe_align;
 
 		if (extent_count)
 			pe_end = pe_start + extent_count * extent_size - 1;
