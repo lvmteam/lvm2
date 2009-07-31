@@ -1427,8 +1427,8 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 				if (adjustment)
 					pv->pe_start += pv->pe_align - adjustment;
 
-				log_very_verbose("%s: setting pe_start=%lu "
-					 "(orig_pe_start=%lu, "
+				log_very_verbose("%s: setting pe_start=%" PRIu64
+					 " (orig_pe_start=%" PRIu64 ", "
 					 "pe_align=%lu, pe_align_offset=%lu, "
 					 "adjustment=%" PRIu64 ")",
 					 pv_dev_name(pv), pv->pe_start,
