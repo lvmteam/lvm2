@@ -79,6 +79,8 @@ dm_tree_node_add_target_area
 dm_tree_node_set_read_ahead
 dm_tree_skip_lockfs
 dm_tree_use_no_flush_suspend
+dm_tree_set_cookie
+dm_tree_get_cookie
 dm_is_dm_major
 dm_mknodes
 dm_malloc_aux
