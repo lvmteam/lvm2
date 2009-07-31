@@ -688,7 +688,10 @@ AC_ARG_WITH(udev_prefix,
             [ udev_prefix="$withval"],
             [ udev_prefix='${exec_prefix}' ])
 
-udevdir='${udev_prefix}/lib/udev/rules.d'
+AC_ARG_WITH(udevdir,
+	    [  --with-udevdir=DIR      udev rules in DIR [[UPREFIX/lib/udev/rules.d]]],
+	    [ udevdir="$withval"],
+	    [ udevdir='${udev_prefix}/lib/udev/rules.d' ])
 
 ################################################################################
 dnl -- Ensure additional headers required

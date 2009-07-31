@@ -821,6 +821,7 @@ with_staticdir
 with_usrlibdir
 with_usrsbindir
 with_udev_prefix
+with_udevdir
 with_dmeventd_pidfile
 with_dmeventd_path
 with_interface
@@ -1514,6 +1515,7 @@ Optional Packages:
   --with-usrlibdir=DIR
   --with-usrsbindir=DIR
   --with-udev-prefix=UPREFIX      Install udev rule files in UPREFIX [EPREFIX]
+  --with-udevdir=DIR      udev rules in DIR [UPREFIX/lib/udev/rules.d]
   --with-dmeventd-pidfile=PATH    dmeventd pidfile [/var/run/dmeventd.pid]
   --with-dmeventd-path=PATH       dmeventd path [EPREFIX/sbin/dmeventd]
   --with-interface=IFACE  Choose kernel interface (ioctl) [ioctl]
@@ -11052,7 +11054,14 @@ else
 fi
 
 
-udevdir='${udev_prefix}/lib/udev/rules.d'
+
+# Check whether --with-udevdir was given.
+if test "${with_udevdir+set}" = set; then
+  withval=$with_udevdir;  udevdir="$withval"
+else
+   udevdir='${udev_prefix}/lib/udev/rules.d'
+fi
+
 
 ################################################################################
 if test x$READLINE = xyes; then
