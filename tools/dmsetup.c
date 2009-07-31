@@ -119,6 +119,7 @@ enum {
 	NOLOCKFS_ARG,
 	NOOPENCOUNT_ARG,
 	NOTABLE_ARG,
+	NOUDEVSYNC_ARG,
 	OPTIONS_ARG,
 	READAHEAD_ARG,
 	ROWS_ARG,
@@ -540,6 +541,7 @@ static int _create(int argc, char **argv, void *data __attribute((unused)))
 	int r = 0;
 	struct dm_task *dmt;
 	const char *file = NULL;
+	uint32_t cookie = 0;
 
 	if (argc == 3)
 		file = argv[2];
@@ -582,8 +584,16 @@ static int _create(int argc, char **argv, void *data __attribute((unused)))
 				    _read_ahead_flags))
 		goto out;
 
-	if (!dm_task_run(dmt))
+	if (_switches[NOTABLE_ARG])
+		dm_udev_set_sync_support(0);
+
+	if (!dm_task_set_cookie(dmt, &cookie) ||
+	    !dm_task_run(dmt)) {
+		(void) dm_udev_cleanup(cookie);
 		goto out;
+	}
+
+	dm_udev_wait(cookie);
 
 	r = 1;
 
@@ -600,6 +610,7 @@ static int _rename(int argc, char **argv, void *data __attribute((unused)))
 {
 	int r = 0;
 	struct dm_task *dmt;
+	uint32_t cookie = 0;
 
 	if (!(dmt = dm_task_create(DM_DEVICE_RENAME)))
 		return 0;
@@ -614,8 +625,13 @@ static int _rename(int argc, char **argv, void *data __attribute((unused)))
 	if (_switches[NOOPENCOUNT_ARG] && !dm_task_no_open_count(dmt))
 		goto out;
 
-	if (!dm_task_run(dmt))
+	if (!dm_task_set_cookie(dmt, &cookie) ||
+	    !dm_task_run(dmt)) {
+		(void) dm_udev_cleanup(cookie);
 		goto out;
+	}
+
+	dm_udev_wait(cookie);
 
 	r = 1;
 
@@ -740,6 +756,19 @@ static int _splitname(int argc, char **argv, void *data __attribute((unused)))
 	return r;
 }
 
+static int _udevcomplete(int argc, char **argv, void *data __attribute((unused)))
+{
+	uint32_t cookie;
+	char *p;
+
+	if (!(cookie = (uint32_t) strtoul(argv[1], &p, 0)) || *p) {
+		err("Incorrect cookie value");
+		return 0;
+	}
+
+	return dm_udev_complete(cookie);
+}
+
 static int _version(int argc __attribute((unused)), char **argv __attribute((unused)), void *data __attribute((unused)))
 {
 	char version[80];
@@ -757,6 +786,9 @@ static int _version(int argc __attribute((unused)), char **argv __attribute((unu
 
 static int _simple(int task, const char *name, uint32_t event_nr, int display)
 {
+	uint32_t cookie = 0;
+	int udev_wait_flag = task == DM_DEVICE_RESUME ||
+			     task == DM_DEVICE_REMOVE;
 	int r = 0;
 
 	struct dm_task *dmt;
@@ -784,7 +816,19 @@ static int _simple(int task, const char *name, uint32_t event_nr, int display)
 				    _read_ahead_flags))
 		goto out;
 
+	if (udev_wait_flag && !dm_task_set_cookie(dmt, &cookie)) {
+		(void) dm_udev_cleanup(cookie);
+		goto out;
+	}
+
 	r = dm_task_run(dmt);
+
+	if (udev_wait_flag) {
+		if (r)
+			(void) dm_udev_wait(cookie);
+		else
+			(void) dm_udev_cleanup(cookie);
+	}
 
 	if (r && display && _switches[VERBOSE_ARG])
 		r = _display_info(dmt);
@@ -2261,6 +2305,7 @@ static struct command _commands[] = {
 	{"table", "[<device>] [--target <target_type>] [--showkeys]", 0, 1, _status},
 	{"wait", "<device> [<event_nr>]", 0, 2, _wait},
 	{"mknodes", "[<device>]", 0, 1, _mknodes},
+	{"udevcomplete", "<cookie>", 1, 1, _udevcomplete},
 	{"targets", "", 0, 0, _targets},
 	{"version", "", 0, 0, _version},
 	{"setgeometry", "<device> <cyl> <head> <sect> <start>", 5, 5, _setgeometry},
@@ -2275,7 +2320,7 @@ static void _usage(FILE *out)
 	fprintf(out, "Usage:\n\n");
 	fprintf(out, "dmsetup [--version] [-v|--verbose [-v|--verbose ...]]\n"
 		"        [-r|--readonly] [--noopencount] [--nolockfs]\n"
-		"        [--readahead [+]<sectors>|auto|none]\n"
+		"        [--noudevsync] [--readahead [+]<sectors>|auto|none]\n"
 		"        [-c|-C|--columns] [-o <fields>] [-O|--sort <sort_fields>]\n"
 		"        [--nameprefixes] [--noheadings] [--separator <separator>]\n\n");
 	for (i = 0; _commands[i].name; i++)
@@ -2639,6 +2684,7 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 		{"nolockfs", 0, &ind, NOLOCKFS_ARG},
 		{"noopencount", 0, &ind, NOOPENCOUNT_ARG},
 		{"notable", 0, &ind, NOTABLE_ARG},
+		{"noudevsync", 0, &ind, NOUDEVSYNC_ARG},
 		{"options", 1, &ind, OPTIONS_ARG},
 		{"readahead", 1, &ind, READAHEAD_ARG},
 		{"rows", 0, &ind, ROWS_ARG},
@@ -2747,6 +2793,8 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 			_switches[UUID_ARG]++;
 			_uuid = optarg;
 		}
+		if (ind == NOUDEVSYNC_ARG)
+			_switches[NOUDEVSYNC_ARG]++;
 		if (c == 'G' || ind == GID_ARG) {
 			_switches[GID_ARG]++;
 			_int_args[GID_ARG] = atoi(optarg);
@@ -2887,6 +2935,9 @@ int main(int argc, char **argv)
 
 	if (_switches[COLS_ARG] && !_report_init(c))
 		goto out;
+
+	if (_switches[NOUDEVSYNC_ARG])
+		dm_udev_set_sync_support(0);
 
       doit:
 	if (!c->fn(argc, argv, NULL)) {

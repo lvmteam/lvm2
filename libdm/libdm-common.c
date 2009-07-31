@@ -789,7 +789,7 @@ int dm_task_set_cookie(struct dm_task *dmt, uint32_t *cookie)
 	return 1;
 }
 
-int dm_udev_notify(uint32_t cookie)
+int dm_udev_complete(uint32_t cookie)
 {
 	return 1;
 }
@@ -983,7 +983,7 @@ bad:
 	return 0;
 }
 
-int dm_udev_notify(uint32_t cookie)
+int dm_udev_complete(uint32_t cookie)
 {
 	int semid;
 

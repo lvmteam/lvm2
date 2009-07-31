@@ -157,6 +157,6 @@ dm_list_next
 dm_list_size
 dm_udev_set_sync_support
 dm_udev_get_sync_support
-dm_udev_notify
+dm_udev_complete
 dm_udev_wait
 dm_udev_cleanup
