@@ -39,6 +39,7 @@ LIB_SUFFIX = @LIB_SUFFIX@
 # Setup directory variables
 prefix = @prefix@
 exec_prefix = @exec_prefix@
+udev_prefix = @udev_prefix@
 bindir = $(DESTDIR)@bindir@
 confdir = $(DESTDIR)@CONFDIR@/lvm
 includedir = $(DESTDIR)@includedir@
@@ -50,6 +51,7 @@ infodir = $(DESTDIR)@infodir@
 mandir = $(DESTDIR)@mandir@
 localedir = $(DESTDIR)@LOCALEDIR@
 staticdir = $(DESTDIR)@STATICDIR@
+udevdir = $(DESTDIR)@udevdir@
 
 interface = @interface@
 interfacedir = $(top_srcdir)/libdm/$(interface)

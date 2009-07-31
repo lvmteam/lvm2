@@ -1,5 +1,7 @@
 Version 2.02.51 - 
 ================================
+  Added configure --enable-udev_rules --enable-udev_sync --with-udev-prefix.
+  Added udev dir to hold udev rules.
   Add --dataalignmentoffset to pvcreate to shift start of aligned data area.
   Fix _mda_setup() to not check first mda's size before pe_align rounding.
   Document -I option of clvmd in the man page.
