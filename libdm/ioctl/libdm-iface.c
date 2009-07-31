@@ -864,6 +864,13 @@ int dm_check_version(void)
 	return 0;
 }
 
+int dm_cookie_supported(void)
+{
+	return (dm_check_version() &&
+	        _dm_version >= 4 &&
+	        _dm_version_minor >= 15);
+}
+
 void *dm_get_next_target(struct dm_task *dmt, void *next,
 			 uint64_t *start, uint64_t *length,
 			 char **target_type, char **params)

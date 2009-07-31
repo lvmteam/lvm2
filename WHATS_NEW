@@ -1,5 +1,6 @@
 Version 2.02.51 - 
 ================================
+  Add libdevmapper functions to support synchronisation with udev.
   Added configure --enable-udev_rules --enable-udev_sync.
   Added configure --with-udev-prefix --with-udevdir.
   Added udev dir to hold udev rules.
