@@ -24,6 +24,7 @@ dm_task_get_uuid
 dm_task_get_read_ahead
 dm_task_set_ro
 dm_task_set_newname
+dm_task_set_cookie
 dm_task_set_event_nr
 dm_task_set_major
 dm_task_set_minor
@@ -154,3 +155,8 @@ dm_list_last
 dm_list_prev
 dm_list_next
 dm_list_size
+dm_udev_set_sync_support
+dm_udev_get_sync_support
+dm_udev_notify
+dm_udev_wait
+dm_udev_cleanup

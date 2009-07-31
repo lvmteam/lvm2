@@ -164,6 +164,7 @@ int dm_task_set_major_minor(struct dm_task *dmt, int major, int minor, int allow
 int dm_task_set_uid(struct dm_task *dmt, uid_t uid);
 int dm_task_set_gid(struct dm_task *dmt, gid_t gid);
 int dm_task_set_mode(struct dm_task *dmt, mode_t mode);
+int dm_task_set_cookie(struct dm_task *dmt, uint32_t *cookie);
 int dm_task_set_event_nr(struct dm_task *dmt, uint32_t event_nr);
 int dm_task_set_geometry(struct dm_task *dmt, const char *cylinders, const char *heads, const char *sectors, const char *start);
 int dm_task_set_message(struct dm_task *dmt, const char *message);
@@ -1009,5 +1010,16 @@ int dm_report_field_uint64(struct dm_report *rh, struct dm_report_field *field,
  */
 void dm_report_field_set_value(struct dm_report_field *field, const void *value,
 			       const void *sortvalue);
+
+int dm_cookie_supported(void);
+
+/*
+ * Udev notification functions.
+ */
+void dm_udev_set_sync_support(int sync_with_udev);
+int dm_udev_get_sync_support(void);
+int dm_udev_notify(uint32_t cookie);
+int dm_udev_wait(uint32_t cookie);
+int dm_udev_cleanup(uint32_t cookie);
 
 #endif				/* LIB_DEVICE_MAPPER_H */
