@@ -403,6 +403,23 @@ if test x$DEVMAPPER = xyes; then
 fi
 
 ################################################################################
+dnl -- Enable udev synchronisation
+AC_MSG_CHECKING(whether to enable synchronisation with udev processing)
+AC_ARG_ENABLE(udev_sync, [  --enable-udev_sync      Enable synchronisation with udev processing],
+UDEV_SYNC=$enableval, UDEV_SYNC=no)
+AC_MSG_RESULT($UDEV_SYNC)
+
+if test x$UDEV_SYNC = xyes; then
+	AC_DEFINE([UDEV_SYNC_SUPPORT], 1, [Define to 1 to enable synchronisation with udev processing.])
+fi
+
+dnl -- Enable udev rules
+AC_MSG_CHECKING(whether to enable installation of udev rules required for synchronisation)
+AC_ARG_ENABLE(udev_rules, [  --enable-udev_rules     Install rule files needed for udev synchronisation],
+UDEV_RULES=$enableval, UDEV_RULES=$UDEV_SYNC)
+AC_MSG_RESULT($UDEV_RULES)
+
+################################################################################
 dnl -- Compatibility mode
 AC_ARG_ENABLE(compat,   [  --enable-compat         Enable support for old device-mapper versions],
   DM_COMPAT=$enableval, DM_COMPAT=no)
@@ -646,12 +663,12 @@ fi
 
 ################################################################################
 AC_ARG_WITH(confdir,
-	    [  --with-confdir=DIR      Configuration files in DIR [/etc]],
+	    [  --with-confdir=DIR      Configuration files in DIR [[/etc]]],
 	    [ CONFDIR="$withval" ],
 	    [ CONFDIR='/etc' ])
 
 AC_ARG_WITH(staticdir,
-	    [  --with-staticdir=DIR    Static binary in DIR [EXEC_PREFIX/sbin]],
+	    [  --with-staticdir=DIR    Static binary in DIR [[EPREFIX/sbin]]],
 	    [ STATICDIR="$withval" ],
 	    [ STATICDIR='${exec_prefix}/sbin' ])
 
@@ -664,6 +681,14 @@ AC_ARG_WITH(usrsbindir,
 	    [  --with-usrsbindir=DIR],
 	    [ usrsbindir="$withval"],
 	    [ usrsbindir='${prefix}/sbin' ])
+
+################################################################################
+AC_ARG_WITH(udev_prefix,
+	    [  --with-udev-prefix=UPREFIX      Install udev rule files in UPREFIX [[EPREFIX]]],
+            [ udev_prefix="$withval"],
+            [ udev_prefix='${exec_prefix}' ])
+
+udevdir='${udev_prefix}/lib/udev/rules.d'
 
 ################################################################################
 dnl -- Ensure additional headers required
@@ -696,6 +721,10 @@ if test x$HAVE_SELINUX = xyes; then
 	AC_CHECK_HEADERS(selinux/selinux.h,,AC_MSG_ERROR(bailing out))
 fi
 
+if test x$UDEV_SYNC = xyes; then
+	AC_CHECK_HEADERS(sys/ipc.h sys/sem.h,,AC_MSG_ERROR(bailing out))
+fi
+
 ################################################################################
 AC_PATH_PROG(MODPROBE_CMD, modprobe)
 
@@ -723,7 +752,7 @@ if test "$BUILD_DMEVENTD" = yes; then
                 dmeventd_prefix=""
         fi
 	AC_ARG_WITH(dmeventd-path,
-		    [  --with-dmeventd-path=PATH       dmeventd path [[${exec_prefix}/sbin/dmeventd]] ],
+		    [  --with-dmeventd-path=PATH       dmeventd path [[EPREFIX/sbin/dmeventd]] ],
 		    [ AC_DEFINE_UNQUOTED(DMEVENTD_PATH,"$withval") ],
 		    [ AC_DEFINE_UNQUOTED(DMEVENTD_PATH,"$dmeventd_prefix/sbin/dmeventd") ])
 fi
@@ -818,12 +847,15 @@ AC_SUBST(QUORUM_LIBS)
 AC_SUBST(SNAPSHOTS)
 AC_SUBST(STATICDIR)
 AC_SUBST(STATIC_LINK)
+AC_SUBST(UDEV_RULES)
 AC_SUBST([LIB_PTHREAD])
 AC_SUBST(interface)
 AC_SUBST(kerneldir)
 AC_SUBST(missingkernel)
 AC_SUBST(kernelvsn)
 AC_SUBST(tmpdir)
+AC_SUBST(udev_prefix)
+AC_SUBST(udevdir)
 AC_SUBST(usrlibdir)
 AC_SUBST(usrsbindir)
 
@@ -860,6 +892,7 @@ scripts/Makefile
 test/Makefile
 test/api/Makefile
 tools/Makefile
+udev/Makefile
 ])
 AC_OUTPUT
 

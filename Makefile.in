@@ -18,6 +18,10 @@ VPATH = @srcdir@
 
 SUBDIRS = doc include man scripts
 
+ifeq ("@UDEV_RULES@", "yes")
+  SUBDIRS += udev
+endif
+
 ifeq ("@INTL@", "yes")
   SUBDIRS += po
 endif
