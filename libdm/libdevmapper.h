@@ -433,6 +433,9 @@ void dm_tree_node_set_read_ahead(struct dm_tree_node *dnode,
 				 uint32_t read_ahead,
 				 uint32_t read_ahead_flags);
 
+void dm_tree_set_cookie(struct dm_tree_node *node, uint32_t cookie);
+uint32_t dm_tree_get_cookie(struct dm_tree_node *node);
+
 /*****************************************************************************
  * Library functions
  *****************************************************************************/

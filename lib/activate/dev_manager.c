@@ -1131,8 +1131,12 @@ static int _clean_tree(struct dev_manager *dm, struct dm_tree_node *root)
 		if (!*layer)
 			continue;
 
-		if (!dm_tree_deactivate_children(root, uuid, strlen(uuid)))
+		dm_tree_set_cookie(root, 0);
+		if (!dm_tree_deactivate_children(root, uuid, strlen(uuid))) {
+			dm_udev_cleanup(dm_tree_get_cookie(root));
 			return_0;
+		}
+		dm_udev_wait(dm_tree_get_cookie(root));
 	}
 
 	return 1;
@@ -1165,8 +1169,12 @@ static int _tree_action(struct dev_manager *dm, struct logical_volume *lv, actio
 		break;
 	case DEACTIVATE:
  		/* Deactivate LV and all devices it references that nothing else has open. */
-		if (!dm_tree_deactivate_children(root, dlid, ID_LEN + sizeof(UUID_PREFIX) - 1))
+		dm_tree_set_cookie(root, 0);
+		if (!dm_tree_deactivate_children(root, dlid, ID_LEN + sizeof(UUID_PREFIX) - 1)) {
+			dm_udev_cleanup(dm_tree_get_cookie(root));
 			goto_out;
+		}
+		dm_udev_wait(dm_tree_get_cookie(root));
 		if (!_remove_lv_symlinks(dm, root))
 			log_error("Failed to remove all device symlinks associated with %s.", lv->name);
 		break;
@@ -1185,15 +1193,24 @@ static int _tree_action(struct dev_manager *dm, struct logical_volume *lv, actio
 			goto_out;
 
 		/* Preload any devices required before any suspensions */
-		if (!dm_tree_preload_children(root, dlid, ID_LEN + sizeof(UUID_PREFIX) - 1))
+		dm_tree_set_cookie(root, 0);
+		if (!dm_tree_preload_children(root, dlid, ID_LEN + sizeof(UUID_PREFIX) - 1)) {
+			dm_udev_cleanup(dm_tree_get_cookie(root));
 			goto_out;
+		}
+		dm_udev_wait(dm_tree_get_cookie(root));
 
 		if (dm_tree_node_size_changed(root))
 			dm->flush_required = 1;
 
-		if ((action == ACTIVATE) &&
-		    !dm_tree_activate_children(root, dlid, ID_LEN + sizeof(UUID_PREFIX) - 1))
-			goto_out;
+		if (action == ACTIVATE) {
+			dm_tree_set_cookie(root, 0);
+			if (!dm_tree_activate_children(root, dlid, ID_LEN + sizeof(UUID_PREFIX) - 1)) {
+				dm_udev_cleanup(dm_tree_get_cookie(root));
+				goto_out;
+			}
+			dm_udev_wait(dm_tree_get_cookie(root));
+		}
 
 		if (!_create_lv_symlinks(dm, root)) {
 			log_error("Failed to create symlinks for %s.", lv->name);

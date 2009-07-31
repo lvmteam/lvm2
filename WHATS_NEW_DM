@@ -1,5 +1,7 @@
 Version 1.02.36 -
 ================================
+  Add udevcomplete and --noudevwait to dmsetup.
+  Add libdevmapper functions to support synchronisation with udev.
 
 Version 1.02.35 - 28th July 2009
 ================================
