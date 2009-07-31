@@ -818,6 +818,7 @@ int dm_udev_get_sync_support(void)
 
 static int _get_cookie_sem(uint32_t cookie, int *semid)
 {
+	/* FIXME Ensure cookie has COOKIE_MAGIC prefix */
 	if ((*semid = semget((key_t) cookie, 1, 0)) >= 0)
 		return 1;
 
