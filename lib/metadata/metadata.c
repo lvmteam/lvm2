@@ -105,6 +105,14 @@ unsigned long set_pe_align_offset(struct physical_volume *pv,
 	if (!pv->dev)
 		goto out;
 
+	if (find_config_tree_bool(pv->fmt->cmd,
+				  "devices/data_alignment_offset_detection",
+				  DEFAULT_DATA_ALIGNMENT_OFFSET_DETECTION))
+		pv->pe_align_offset =
+			MAX(pv->pe_align_offset,
+			    dev_alignment_offset(pv->fmt->cmd->sysfs_dir,
+						 pv->dev));
+
 	log_very_verbose("%s: Setting PE alignment offset to %lu sectors.",
 			 dev_name(pv->dev), pv->pe_align_offset);
 

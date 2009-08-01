@@ -1772,7 +1772,11 @@ static int _text_pv_setup(const struct format_type *fmt,
 				 "%lu sectors (requested %lu sectors)",
 				 pv_dev_name(pv), pv->pe_align, data_alignment);
 
-		set_pe_align_offset(pv, data_alignment_offset);
+		if (set_pe_align_offset(pv, data_alignment_offset) != data_alignment_offset &&
+		    data_alignment_offset)
+			log_warn("WARNING: %s: Overriding data alignment offset to "
+				 "%lu sectors (requested %lu sectors)",
+				 pv_dev_name(pv), pv->pe_align_offset, data_alignment_offset);
 
 		if (pv->pe_align < pv->pe_align_offset) {
 			log_error("%s: pe_align (%lu sectors) must not be less "
