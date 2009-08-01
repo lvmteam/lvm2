@@ -151,7 +151,11 @@ check_md_major:
 		return ret;
 	}
 
-	if (stat(path, &info) < 0) {
+	if (stat(path, &info) == -1) {
+		if (errno != ENOENT) {
+			log_sys_error("stat", path);
+			return ret;
+		}
 		/* old sysfs structure */
 		ret = dm_snprintf(path, size, "%s/block/md%d/md/%s",
 				  sysfs_dir, (int)MINOR(dev), attribute);

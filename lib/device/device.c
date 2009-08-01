@@ -304,8 +304,11 @@ int get_primary_dev(const char *sysfs_dir,
 		return ret;
 	}
 
-	if (stat(path, &info) < 0)
+	if (stat(path, &info) == -1) {
+		if (errno != ENOENT)
+			log_sys_error("stat", path);
 		return ret;
+	}
 
 	/*
 	 * extract parent's path from the partition's symlink, e.g.:
@@ -326,8 +329,11 @@ int get_primary_dev(const char *sysfs_dir,
 	}
 
 	/* finally, parse 'dev' attribute and create corresponding dev_t */
-	if (stat(path, &info) < 0) {
-		log_error("sysfs file %s does not exist", path);
+	if (stat(path, &info) == -1) {
+		if (errno == ENOENT)
+			log_error("sysfs file %s does not exist", path);
+		else
+			log_sys_error("stat", path);
 		return ret;
 	}
 
@@ -386,7 +392,11 @@ static unsigned long _dev_topology_attribute(const char *attribute,
 	 * - if not: either the kernel doesn't have topology support
 	 *   or the device could be a partition
 	 */
-	if (stat(path, &info) < 0) {
+	if (stat(path, &info) == -1) {
+		if (errno != ENOENT) {
+			log_sys_error("stat", path);
+			return 0;
+		}
 		if (!get_primary_dev(sysfs_dir, dev, &primary))
 			return 0;
 
@@ -397,8 +407,11 @@ static unsigned long _dev_topology_attribute(const char *attribute,
 			log_error("primary dm_snprintf %s failed", attribute);
 			return 0;
 		}
-		if (stat(path, &info) < 0)
+		if (stat(path, &info) == -1) {
+			if (errno != ENOENT)
+				log_sys_error("stat", path);
 			return 0;
+		}
 	}
 
 	if (!(fp = fopen(path, "r"))) {
