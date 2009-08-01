@@ -285,13 +285,36 @@ int _get_partition_type(struct dev_mgr *dm, struct device *d)
 
 #ifdef linux
 
+static int _primary_dev(const char *sysfs_dir,
+			struct device *dev, dev_t *result)
+{
+	char path[PATH_MAX+1];
+	struct stat info;
+
+	/* check if dev is a partition */
+	if (dm_snprintf(path, PATH_MAX, "%s/dev/block/%d:%d/partition",
+			sysfs_dir, (int)MAJOR(dev->dev), (int)MINOR(dev->dev)) < 0) {
+		log_error("dm_snprintf partition failed");
+		return 0;
+	}
+
+	if (stat(path, &info) < 0)
+		return 0;
+
+	*result = dev->dev -
+		(MINOR(dev->dev) % max_partitions(MAJOR(dev->dev)));
+	return 1;
+}
+
 static unsigned long _dev_topology_attribute(const char *attribute,
 					     const char *sysfs_dir,
 					     struct device *dev)
 {
+	const char *sysfs_fmt_str = "%s/dev/block/%d:%d/%s";
 	char path[PATH_MAX+1], buffer[64];
 	FILE *fp;
 	struct stat info;
+	dev_t uninitialized_var(primary);
 	unsigned long result = 0UL;
 
 	if (!attribute || !*attribute)
@@ -300,16 +323,32 @@ static unsigned long _dev_topology_attribute(const char *attribute,
 	if (!sysfs_dir || !*sysfs_dir)
 		return_0;
 
-	if (dm_snprintf(path, PATH_MAX, "%s/dev/block/%d:%d/%s",
-			sysfs_dir, (int)MAJOR(dev->dev), (int)MINOR(dev->dev),
+	if (dm_snprintf(path, PATH_MAX, sysfs_fmt_str, sysfs_dir,
+			(int)MAJOR(dev->dev), (int)MINOR(dev->dev),
 			attribute) < 0) {
 		log_error("dm_snprintf %s failed", attribute);
 		return 0;
 	}
 
-	/* check if the desired sysfs attribute exists */
-	if (stat(path, &info) < 0)
-		return 0;
+	/*
+	 * check if the desired sysfs attribute exists
+	 * - if not: either the kernel doesn't have topology support
+	 *   or the device could be a partition
+	 */
+	if (stat(path, &info) < 0) {
+		if (!_primary_dev(sysfs_dir, dev, &primary))
+			return 0;
+
+		/* get attribute from partition's primary device */
+		if (dm_snprintf(path, PATH_MAX, sysfs_fmt_str, sysfs_dir,
+				(int)MAJOR(primary), (int)MINOR(primary),
+				attribute) < 0) {
+			log_error("primary dm_snprintf %s failed", attribute);
+			return 0;
+		}
+		if (stat(path, &info) < 0)
+			return 0;
+	}
 
 	if (!(fp = fopen(path, "r"))) {
 		log_sys_error("fopen", path);
@@ -344,10 +383,36 @@ unsigned long dev_alignment_offset(const char *sysfs_dir,
 				       sysfs_dir, dev);
 }
 
+unsigned long dev_minimum_io_size(const char *sysfs_dir,
+				  struct device *dev)
+{
+	return _dev_topology_attribute("queue/minimum_io_size",
+				       sysfs_dir, dev);
+}
+
+unsigned long dev_optimal_io_size(const char *sysfs_dir,
+				  struct device *dev)
+{
+	return _dev_topology_attribute("queue/optimal_io_size",
+				       sysfs_dir, dev);
+}
+
 #else
 
 unsigned long dev_alignment_offset(const char *sysfs_dir,
 				   struct device *dev)
+{
+	return 0UL;
+}
+
+unsigned long dev_minimum_io_size(const char *sysfs_dir,
+				  struct device *dev)
+{
+	return 0UL;
+}
+
+unsigned long dev_optimal_io_size(const char *sysfs_dir,
+				  struct device *dev)
 {
 	return 0UL;
 }
