@@ -103,4 +103,10 @@ int is_partitioned_dev(struct device *dev);
 unsigned long dev_alignment_offset(const char *sysfs_dir,
 				   struct device *dev);
 
+unsigned long dev_minimum_io_size(const char *sysfs_dir,
+				  struct device *dev);
+
+unsigned long dev_optimal_io_size(const char *sysfs_dir,
+				  struct device *dev);
+
 #endif

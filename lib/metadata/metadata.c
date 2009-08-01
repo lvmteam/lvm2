@@ -86,6 +86,25 @@ unsigned long set_pe_align(struct physical_volume *pv, unsigned long data_alignm
 				   dev_md_stripe_width(pv->fmt->cmd->sysfs_dir,
 						       pv->dev));
 
+	/*
+	 * Align to topology's minimum_io_size or optimal_io_size if present
+	 * - minimum_io_size - the smallest request the device can perform
+	 *   w/o incurring a read-modify-write penalty (e.g. MD's chunk size)
+	 * - optimal_io_size - the device's preferred unit of receiving I/O
+	 *   (e.g. MD's stripe width)
+	 */
+	if (find_config_tree_bool(pv->fmt->cmd,
+				  "devices/data_alignment_detection",
+				  DEFAULT_DATA_ALIGNMENT_DETECTION)) {
+		pv->pe_align = MAX(pv->pe_align,
+				   dev_minimum_io_size(pv->fmt->cmd->sysfs_dir,
+						       pv->dev));
+
+		pv->pe_align = MAX(pv->pe_align,
+				   dev_optimal_io_size(pv->fmt->cmd->sysfs_dir,
+						       pv->dev));
+	}
+
 	log_very_verbose("%s: Setting PE alignment to %lu sectors.",
 			 dev_name(pv->dev), pv->pe_align);
 
