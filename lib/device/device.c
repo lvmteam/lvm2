@@ -286,8 +286,8 @@ int _get_partition_type(struct dev_mgr *dm, struct device *d)
 
 #ifdef linux
 
-static int _primary_dev(const char *sysfs_dir,
-			struct device *dev, dev_t *result)
+int get_primary_dev(const char *sysfs_dir,
+		    struct device *dev, dev_t *result)
 {
 	char path[PATH_MAX+1];
 	char temp_path[PATH_MAX+1];
@@ -387,7 +387,7 @@ static unsigned long _dev_topology_attribute(const char *attribute,
 	 *   or the device could be a partition
 	 */
 	if (stat(path, &info) < 0) {
-		if (!_primary_dev(sysfs_dir, dev, &primary))
+		if (!get_primary_dev(sysfs_dir, dev, &primary))
 			return 0;
 
 		/* get attribute from partition's primary device */
@@ -449,6 +449,12 @@ unsigned long dev_optimal_io_size(const char *sysfs_dir,
 }
 
 #else
+
+int get_primary_dev(const char *sysfs_dir,
+		    struct device *dev, dev_t *result)
+{
+	return 0;
+}
 
 unsigned long dev_alignment_offset(const char *sysfs_dir,
 				   struct device *dev)

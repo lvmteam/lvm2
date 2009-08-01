@@ -127,20 +127,25 @@ out:
 
 static int _md_sysfs_attribute_snprintf(char *path, size_t size,
 					const char *sysfs_dir,
-					struct device *dev,
+					struct device *blkdev,
 					const char *attribute)
 {
 	struct stat info;
+	dev_t dev = blkdev->dev;
 	int ret = -1;
-
-	if (MAJOR(dev->dev) != md_major())
-		return ret;
 
 	if (!sysfs_dir || !*sysfs_dir)
 		return ret;
 
+check_md_major:
+	if (MAJOR(dev) != md_major()) {
+		if (get_primary_dev(sysfs_dir, blkdev, &dev))
+			goto check_md_major;
+		return ret;
+	}
+
 	ret = dm_snprintf(path, size, "%s/dev/block/%d:%d/md/%s", sysfs_dir,
-			  (int)MAJOR(dev->dev), (int)MINOR(dev->dev), attribute);
+			  (int)MAJOR(dev), (int)MINOR(dev), attribute);
 	if (ret < 0) {
 		log_error("dm_snprintf md %s failed", attribute);
 		return ret;
@@ -149,7 +154,7 @@ static int _md_sysfs_attribute_snprintf(char *path, size_t size,
 	if (stat(path, &info) < 0) {
 		/* old sysfs structure */
 		ret = dm_snprintf(path, size, "%s/block/md%d/md/%s",
-				  sysfs_dir, (int)MINOR(dev->dev), attribute);
+				  sysfs_dir, (int)MINOR(dev), attribute);
 		if (ret < 0) {
 			log_error("dm_snprintf old md %s failed", attribute);
 			return ret;
