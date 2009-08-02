@@ -673,6 +673,9 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 				       (corelog || lp->mirrors == 1) ? 1U : 0U,
 				       remove_pvs, 0))
 			return_0;
+		if (lp->mirrors > 1 &&
+		    !_lv_update_log_type(cmd, lp, lv, corelog))
+			return_0;
 	} else if (!(lv->status & MIRRORED)) {
 		/*
 		 * Converting from linear to mirror
