@@ -21,6 +21,13 @@ LogicalVolume[Path] [PhysicalVolume[Path]...]
 [\-\-version]
 .br
 OriginalLogicalVolume[Path] SnapshotLogicalVolume[Path]
+
+.B lvconvert
+\-\-repair
+[\-h|\-?|\-\-help]
+[\-v|\-\-verbose]
+[\-\-version]
+LogicalVolume[Path] [PhysicalVolume[Path]...]
 .SH DESCRIPTION
 lvconvert will change a linear logical volume to a mirror
 logical volume or to a snapshot of linear volume and vice versa.
