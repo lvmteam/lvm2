@@ -178,11 +178,14 @@ prepare_vg() {
 }
 
 prepare_lvmconf() {
+	local filter="$1"
+	test -z "$filter" && \
+		filter='[ "a/dev\/mirror/", "a/dev\/mapper\/.*pv[0-9_]*$/", "r/.*/" ]'
 	cat > $G_root_/etc/lvm.conf <<-EOF
   devices {
     dir = "$G_dev_"
     scan = "$G_dev_"
-    filter = [ "a/dev\/mirror/", "a/dev\/mapper\/.*pv[0-9_]*$/", "r/.*/" ]
+    filter = $filter
     cache_dir = "$G_root_/etc"
     sysfs_scan = 0
   }
