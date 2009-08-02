@@ -1,5 +1,6 @@
 Version 2.02.51 - 
 ================================
+  Allow LV suspend while --ignorelockingfailure is in force.
   Update synopsis in lvconvert manpage to mention --repair.
   Set cookies in activation code and wait for udev to complete processing.
   Added configure --enable-udev_rules --enable-udev_sync.
