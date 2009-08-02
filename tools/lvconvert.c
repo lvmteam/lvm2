@@ -496,6 +496,33 @@ static void _lvconvert_mirrors_repair_ask(struct cmd_context *cmd,
 	}
 }
 
+static int _using_corelog(struct logical_volume *lv)
+{
+	return !first_seg(_original_lv(lv))->log_lv;
+}
+
+static int _lv_update_log_type(struct cmd_context *cmd,
+			       struct lvconvert_params *lp,
+			       struct logical_volume *lv,
+			       int corelog)
+{
+	struct logical_volume *original_lv = _original_lv(lv);
+	if (_using_corelog(lv) && !corelog) {
+		if (!add_mirror_log(cmd, original_lv, 1,
+				    adjusted_mirror_region_size(
+					lv->vg->extent_size,
+					lv->le_count,
+					lp->region_size),
+				    lp->pvh, lp->alloc))
+			return_0;
+	} else if (!_using_corelog(lv) && corelog) {
+		if (!remove_mirror_log(cmd, original_lv,
+				       lp->pv_count ? lp->pvh : NULL))
+			return_0;
+	}
+	return 1;
+}
+
 static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv,
 			      struct lvconvert_params *lp)
 {
@@ -503,7 +530,6 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 	uint32_t existing_mirrors;
 	const char *mirrorlog;
 	unsigned corelog = 0;
-	struct logical_volume *original_lv;
 	int r = 0;
 	struct logical_volume *log_lv;
 	int failed_mirrors = 0, failed_log = 0;
@@ -688,20 +714,8 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 		 * insertion to make the end result consistent with
 		 * linear-to-mirror conversion.
 		 */
-		original_lv = _original_lv(lv);
-		if (!first_seg(original_lv)->log_lv && !corelog) {
-			if (!add_mirror_log(cmd, original_lv, 1,
-					    adjusted_mirror_region_size(
-							lv->vg->extent_size,
-							lv->le_count,
-							lp->region_size),
-					    lp->pvh, lp->alloc))
-				return_0;
-		} else if (first_seg(original_lv)->log_lv && corelog) {
-			if (!remove_mirror_log(cmd, original_lv,
-					       lp->pv_count ? lp->pvh : NULL))
-				return_0;
-		}
+		if (!_lv_update_log_type(cmd, lp, lv, corelog))
+			return_0;
 		/* Insert a temporary layer for syncing,
 		 * only if the original lv is using disk log. */
 		if (seg->log_lv && !_insert_lvconvert_layer(cmd, lv)) {
@@ -722,24 +736,10 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 	}
 
 	if (lp->mirrors == existing_mirrors) {
-		/*
-		 * Convert Mirror log type
-		 */
-		original_lv = _original_lv(lv);
-		if (!first_seg(original_lv)->log_lv && !corelog) {
-			if (!add_mirror_log(cmd, original_lv, 1,
-					    adjusted_mirror_region_size(
-							lv->vg->extent_size,
-							lv->le_count,
-							lp->region_size),
-					    lp->pvh, lp->alloc))
-				return_0;
-		} else if (first_seg(original_lv)->log_lv && corelog) {
-			if (!remove_mirror_log(cmd, original_lv,
-					       lp->pv_count ? lp->pvh : NULL))
+		if (_using_corelog(lv) != corelog) {
+			if (!_lv_update_log_type(cmd, lp, lv, corelog))
 				return_0;
 		} else {
-			/* No change */
 			log_error("Logical volume %s already has %"
 				  PRIu32 " mirror(s).", lv->name,
 				  lp->mirrors - 1);
