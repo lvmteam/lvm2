@@ -1742,9 +1742,18 @@ int dm_task_run(struct dm_task *dmt)
 	if (!_open_control())
 		return 0;
 
+	/* FIXME Detect and warn if cookie set but should not be. */
 repeat_ioctl:
-	if (!(dmi = _do_dm_ioctl(dmt, command, _ioctl_buffer_double_factor)))
+	if (!(dmi = _do_dm_ioctl(dmt, command, _ioctl_buffer_double_factor))) {
+		/*
+		 * If an operation that uses a cookie fails, decrement the 
+		 * semaphore instead of udev.
+		 * FIXME Review error paths: found one where uevent fired too.
+		 */
+		if (dmt->cookie_set)
+			dm_udev_complete(dmt->event_nr);
 		return 0;
+	}
 
 	if (dmi->flags & DM_BUFFER_FULL_FLAG) {
 		switch (dmt->type) {

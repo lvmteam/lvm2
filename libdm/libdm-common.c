@@ -174,6 +174,7 @@ struct dm_task *dm_task_create(int type)
 	dmt->no_open_count = 0;
 	dmt->read_ahead = DM_READ_AHEAD_AUTO;
 	dmt->read_ahead_flags = 0;
+	dmt->cookie_set = 0;
 
 	return dmt;
 }
@@ -799,11 +800,6 @@ int dm_udev_wait(uint32_t cookie)
 	return 1;
 }
 
-int dm_udev_cleanup(uint32_t cookie)
-{
-	return 1;
-}
-
 #else		/* UDEV_SYNC_SUPPORT */
 
 void dm_udev_set_sync_support(int sync_with_udev)
@@ -821,7 +817,8 @@ static int _get_cookie_sem(uint32_t cookie, int *semid)
 	if (!(cookie >> 16 & COOKIE_MAGIC)) {
 		log_error("Could not continue to access notification "
 			  "semaphore identified by cookie value %"
-			  PRIu32 " (0x%x). Incorrect cookie prefix.");
+			  PRIu32 " (0x%x). Incorrect cookie prefix.",
+			  cookie, cookie);
 		return 0;
 	}
 
@@ -952,7 +949,7 @@ static int _udev_notify_sem_create(uint32_t *cookie, int *semid)
 		log_error("semid %d: semctl failed: %s", gen_semid, strerror(errno));
 		/* We have to destroy just created semaphore
 		 * so it won't stay in the system. */
-		_udev_notify_sem_destroy(gen_semid, gen_cookie);
+		(void) _udev_notify_sem_destroy(gen_semid, gen_cookie);
 		goto bad;
 	}
 
@@ -996,6 +993,7 @@ int dm_task_set_cookie(struct dm_task *dmt, uint32_t *cookie)
 	}
 
 	dmt->event_nr = *cookie;
+	dmt->cookie_set = 1;
 	return 1;
 
 bad:
@@ -1039,7 +1037,7 @@ int dm_udev_wait(uint32_t cookie)
 			  "semaphore identified by cookie value %" PRIu32 " (0x%x) "
 			  "to initialize waiting for incoming notifications.",
 			  cookie, cookie);
-		_udev_notify_sem_destroy(semid, cookie);
+		(void) _udev_notify_sem_destroy(semid, cookie);
 		return 0;
 	}
 
@@ -1050,23 +1048,11 @@ repeat_wait:
 		log_error("Could not set wait state for notification semaphore "
 			  "identified by cookie value %" PRIu32 " (0x%x): %s",
 			  cookie, cookie, strerror(errno));
-		_udev_notify_sem_destroy(semid, cookie);
+		(void) _udev_notify_sem_destroy(semid, cookie);
 		return 0;
 	}
 
 	return _udev_notify_sem_destroy(semid, cookie);
 }
 
-int dm_udev_cleanup(uint32_t cookie)
-{
-	int semid;
-
-	if (!cookie || !dm_udev_get_sync_support() || !dm_cookie_supported())
-		return 1;
-
-	if (!_get_cookie_sem(cookie, &semid))
-		return_0;
-
-	return _udev_notify_sem_destroy(semid, cookie);
-}
 #endif		/* UDEV_SYNC_SUPPORT */

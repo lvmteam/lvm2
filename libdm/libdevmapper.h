@@ -1023,6 +1023,5 @@ void dm_udev_set_sync_support(int sync_with_udev);
 int dm_udev_get_sync_support(void);
 int dm_udev_complete(uint32_t cookie);
 int dm_udev_wait(uint32_t cookie);
-int dm_udev_cleanup(uint32_t cookie);
 
 #endif				/* LIB_DEVICE_MAPPER_H */

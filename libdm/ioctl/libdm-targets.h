@@ -60,6 +60,7 @@ struct dm_task {
 	int skip_lockfs;
 	int suppress_identical_reload;
 	uint64_t existing_table_size;
+	int cookie_set;
 
 	char *uuid;
 };
