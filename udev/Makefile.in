@@ -14,3 +14,32 @@
 srcdir = .
 top_srcdir = ..
 
+
+DM_RULES=10-dm.rules 12-dm-disk.rules 95-dm-notify.rules
+LVM_RULES=11-lvm.rules
+DM_DIR=$(shell grep "\#define DM_DIR" $(top_srcdir)/libdm/misc/dm-ioctl.h | awk '{print $$3}')
+
+CLEAN_TARGETS=10-dm.rules
+
+include $(top_srcdir)/make.tmpl
+
+%: %.in
+	$(SED) -e "s/(DM_DIR)/$(DM_DIR)/" $< >$@
+
+install_lvm2: $(LVM_RULES)
+	@echo "Installing $(LVM_RULES) in $(udevdir)"
+	@for f in $(LVM_RULES); \
+	do \
+	   $(RM) $(udevdir)/$$f; \
+	   $(INSTALL) -c -D $(OWNER) $(GROUP) -m 644 $$f $(udevdir)/$$f; \
+	done
+
+install_device-mapper: $(DM_RULES)
+	@echo "Installing $(DM_RULES) in $(udevdir)"
+	@for f in $(DM_RULES); \
+	do \
+	   $(RM) $(udevdir)/$$f; \
+	   $(INSTALL) -c -D $(OWNER) $(GROUP) -m 644 $$f $(udevdir)/$$f; \
+	done
+
+install: install_lvm2 install_device-mapper

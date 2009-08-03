@@ -1,0 +1,30 @@
+# Udev rules for device-mapper devices.
+#
+# These rules create symlinks in /dev/disk directory.
+# Symlinks that depend on probing filesystem type,
+# label and uuid are created only if the device is not
+# suspended.
+
+SUBSYSTEM!="block", GOTO="dm_end"
+KERNEL!="dm-[0-9]*", GOTO="dm_end"
+ACTION!="add|change", GOTO="dm_end"
+ENV{DM_NAME}!="?*", GOTO="dm_end"
+
+# Normally, we operate on "change" events only. But when
+# coldplugging, there's an "add" event present. We have to
+# recognize this and do our actions in this particular
+# situation, too.
+ACTION=="add", ENV{STARTUP}!="1", GOTO="dm_end"
+
+SYMLINK+="disk/by-id/dm-name-$env{DM_NAME}"
+ENV{DM_UUID}=="?*", SYMLINK+="disk/by-id/dm-uuid-$env{DM_UUID}"
+
+ENV{DM_SUSPENDED}=="1", GOTO="dm_end"
+
+IMPORT{program}="vol_id --export $tempnode"
+OPTIONS="link_priority=-100"
+ENV{DM_LV_LAYER}=="?*", OPTIONS="link_priority=-90"
+ENV{ID_FS_USAGE}=="filesystem|other|crypto", ENV{ID_FS_UUID_ENC}=="?*", SYMLINK+="disk/by-uuid/$env{ID_FS_UUID_ENC}"
+ENV{ID_FS_USAGE}=="filesystem|other", ENV{ID_FS_LABEL_ENC}=="?*", SYMLINK+="disk/by-label/$env{ID_FS_LABEL_ENC}"
+
+LABEL="dm_end"
