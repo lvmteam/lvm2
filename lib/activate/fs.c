@@ -194,9 +194,14 @@ static int _rm_link(const char *dev_dir, const char *vg_name,
 		return 0;
 	}
 
-	if (lstat(lv_path, &buf) || !S_ISLNK(buf.st_mode)) {
-		if (errno == ENOENT)
-			return 1;
+	if (lstat(lv_path, &buf) && errno == ENOENT)
+		return 1;
+	else if (dm_udev_get_sync_support())
+		log_warn("The link %s should have been removed by udev "
+			 "but it is still present. Falling back to "
+			 "direct link removal.", lv_path);
+
+	if (!S_ISLNK(buf.st_mode)) {
 		log_error("%s not symbolic link - not removing", lv_path);
 		return 0;
 	}
