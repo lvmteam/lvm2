@@ -588,12 +588,8 @@ static int _create(int argc, char **argv, void *data __attribute((unused)))
 		dm_udev_set_sync_support(0);
 
 	if (!dm_task_set_cookie(dmt, &cookie) ||
-	    !dm_task_run(dmt)) {
-		(void) dm_udev_cleanup(cookie);
+	    !dm_task_run(dmt))
 		goto out;
-	}
-
-	(void) dm_udev_wait(cookie);
 
 	r = 1;
 
@@ -601,6 +597,7 @@ static int _create(int argc, char **argv, void *data __attribute((unused)))
 		r = _display_info(dmt);
 
       out:
+	(void) dm_udev_wait(cookie);
 	dm_task_destroy(dmt);
 
 	return r;
@@ -626,16 +623,13 @@ static int _rename(int argc, char **argv, void *data __attribute((unused)))
 		goto out;
 
 	if (!dm_task_set_cookie(dmt, &cookie) ||
-	    !dm_task_run(dmt)) {
-		(void) dm_udev_cleanup(cookie);
+	    !dm_task_run(dmt))
 		goto out;
-	}
-
-	(void) dm_udev_wait(cookie);
 
 	r = 1;
 
       out:
+	(void) dm_udev_wait(cookie);
 	dm_task_destroy(dmt);
 
 	return r;
@@ -816,24 +810,18 @@ static int _simple(int task, const char *name, uint32_t event_nr, int display)
 				    _read_ahead_flags))
 		goto out;
 
-	if (udev_wait_flag && !dm_task_set_cookie(dmt, &cookie)) {
-		(void) dm_udev_cleanup(cookie);
+	if (udev_wait_flag && !dm_task_set_cookie(dmt, &cookie))
 		goto out;
-	}
 
 	r = dm_task_run(dmt);
-
-	if (udev_wait_flag) {
-		if (r)
-			(void) dm_udev_wait(cookie);
-		else
-			(void) dm_udev_cleanup(cookie);
-	}
 
 	if (r && display && _switches[VERBOSE_ARG])
 		r = _display_info(dmt);
 
       out:
+	if (udev_wait_flag)
+		(void) dm_udev_wait(cookie);
+
 	dm_task_destroy(dmt);
 	return r;
 }

@@ -845,9 +845,6 @@ static int _deactivate_node(const char *name, uint32_t major, uint32_t minor, ui
 
 	r = dm_task_run(dmt);
 
-	if (!r)
-		(void) dm_udev_complete(*cookie);
-
 	/* FIXME Until kernel returns actual name so dm-ioctl.c can handle it */
 	rm_dev_node(name);
 
@@ -887,9 +884,6 @@ static int _rename_node(const char *old_name, const char *new_name, uint32_t maj
 		goto out;
 
 	r = dm_task_run(dmt);
-
-	if (!r)
-		(void) dm_udev_complete(*cookie);
 
 out:
 	dm_task_destroy(dmt);
@@ -934,8 +928,6 @@ static int _resume_node(const char *name, uint32_t major, uint32_t minor,
 
 	if ((r = dm_task_run(dmt)))
 		r = dm_task_get_info(dmt, newinfo);
-	else
-		(void) dm_udev_complete(*cookie);
 
 out:
 	dm_task_destroy(dmt);

@@ -1114,6 +1114,7 @@ static int _clean_tree(struct dev_manager *dm, struct dm_tree_node *root)
 	struct dm_tree_node *child;
 	char *vgname, *lvname, *layer;
 	const char *name, *uuid;
+	int r;
 
 	while ((child = dm_tree_next_child(&handle, root, 0))) {
 		if (!(name = dm_tree_node_get_name(child)))
@@ -1132,12 +1133,12 @@ static int _clean_tree(struct dev_manager *dm, struct dm_tree_node *root)
 			continue;
 
 		dm_tree_set_cookie(root, 0);
-		if (!dm_tree_deactivate_children(root, uuid, strlen(uuid))) {
-			(void) dm_udev_cleanup(dm_tree_get_cookie(root));
-			return_0;
-		}
+		r = dm_tree_deactivate_children(root, uuid, strlen(uuid));
 		if (!dm_udev_wait(dm_tree_get_cookie(root)))
 			stack;
+
+		if (!r)
+			return_0;
 	}
 
 	return 1;
@@ -1171,12 +1172,11 @@ static int _tree_action(struct dev_manager *dm, struct logical_volume *lv, actio
 	case DEACTIVATE:
  		/* Deactivate LV and all devices it references that nothing else has open. */
 		dm_tree_set_cookie(root, 0);
-		if (!dm_tree_deactivate_children(root, dlid, ID_LEN + sizeof(UUID_PREFIX) - 1)) {
-			(void) dm_udev_cleanup(dm_tree_get_cookie(root));
-			goto_out;
-		}
+		r = dm_tree_deactivate_children(root, dlid, ID_LEN + sizeof(UUID_PREFIX) - 1);
 		if (!dm_udev_wait(dm_tree_get_cookie(root)))
 			stack;
+		if (!r)
+			goto_out;
 		if (!_remove_lv_symlinks(dm, root))
 			log_error("Failed to remove all device symlinks associated with %s.", lv->name);
 		break;
@@ -1196,24 +1196,22 @@ static int _tree_action(struct dev_manager *dm, struct logical_volume *lv, actio
 
 		/* Preload any devices required before any suspensions */
 		dm_tree_set_cookie(root, 0);
-		if (!dm_tree_preload_children(root, dlid, ID_LEN + sizeof(UUID_PREFIX) - 1)) {
-			(void) dm_udev_cleanup(dm_tree_get_cookie(root));
-			goto_out;
-		}
+		r = dm_tree_preload_children(root, dlid, ID_LEN + sizeof(UUID_PREFIX) - 1);
 		if (!dm_udev_wait(dm_tree_get_cookie(root)))
 			stack;
+		if (!r)
+			goto_out;
 
 		if (dm_tree_node_size_changed(root))
 			dm->flush_required = 1;
 
 		if (action == ACTIVATE) {
 			dm_tree_set_cookie(root, 0);
-			if (!dm_tree_activate_children(root, dlid, ID_LEN + sizeof(UUID_PREFIX) - 1)) {
-				(void) dm_udev_cleanup(dm_tree_get_cookie(root));
-				goto_out;
-			}
+			r = dm_tree_activate_children(root, dlid, ID_LEN + sizeof(UUID_PREFIX) - 1);
 			if (!dm_udev_wait(dm_tree_get_cookie(root)))
 				stack;
+			if (!r)
+				goto_out;
 		}
 
 		if (!_create_lv_symlinks(dm, root)) {
