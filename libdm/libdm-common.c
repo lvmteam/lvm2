@@ -1065,7 +1065,7 @@ int dm_udev_cleanup(uint32_t cookie)
 		return 1;
 
 	if (!_get_cookie_sem(cookie, &semid))
-		return 0;
+		return_0;
 
 	return _udev_notify_sem_destroy(semid, cookie);
 }

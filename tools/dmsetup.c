@@ -593,7 +593,7 @@ static int _create(int argc, char **argv, void *data __attribute((unused)))
 		goto out;
 	}
 
-	dm_udev_wait(cookie);
+	(void) dm_udev_wait(cookie);
 
 	r = 1;
 
@@ -631,7 +631,7 @@ static int _rename(int argc, char **argv, void *data __attribute((unused)))
 		goto out;
 	}
 
-	dm_udev_wait(cookie);
+	(void) dm_udev_wait(cookie);
 
 	r = 1;
 
