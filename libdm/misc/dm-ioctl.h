@@ -125,6 +125,16 @@ struct dm_ioctl {
 	uint32_t target_count;	/* in/out */
 	int32_t open_count;	/* out */
 	uint32_t flags;		/* in/out */
+
+	/*
+	 * event_nr holds either the event number (input and output) or the
+	 * udev cookie value (input only).
+	 * The DM_DEV_WAIT ioctl takes an event number as input.
+	 * The DM_SUSPEND, DM_DEV_REMOVE and DM_DEV_RENAME ioctls
+	 * use the field as a cookie to return in the DM_COOKIE
+	 * variable with the uevents they issue.
+	 * For output, the ioctls return the event number, not the cookie.
+	 */
 	uint32_t event_nr;      	/* in/out */
 	uint32_t padding;
 
@@ -258,9 +268,9 @@ enum {
 #define DM_DEV_SET_GEOMETRY	_IOWR(DM_IOCTL, DM_DEV_SET_GEOMETRY_CMD, struct dm_ioctl)
 
 #define DM_VERSION_MAJOR	4
-#define DM_VERSION_MINOR	14
+#define DM_VERSION_MINOR	15
 #define DM_VERSION_PATCHLEVEL	0
-#define DM_VERSION_EXTRA	"-ioctl (2008-04-23)"
+#define DM_VERSION_EXTRA	"-ioctl (2009-04-01)"
 
 /* Status bits */
 #define DM_READONLY_FLAG	(1 << 0) /* In/Out */
