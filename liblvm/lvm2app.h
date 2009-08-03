@@ -265,7 +265,6 @@ const char *lvm_errmsg(lvm_t libh);
 
 /**
  * Scan all devices on the system for VGs and LVM metadata.
- * FIXME: Elaborate on when to use, side-effects, .cache file, etc
  *
  * \return
  * 0 (success) or -1 (failure).

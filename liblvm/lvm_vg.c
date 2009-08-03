@@ -309,6 +309,9 @@ struct dm_list *lvm_list_vg_uuids(lvm_t libh)
 	return get_vgids((struct cmd_context *)libh, 0);
 }
 
+/*
+ * FIXME: Elaborate on when to use, side-effects, .cache file, etc
+ */
 int lvm_scan(lvm_t libh)
 {
 	if (!lvmcache_label_scan((struct cmd_context *)libh, 2))
