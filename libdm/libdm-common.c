@@ -355,7 +355,9 @@ static int _add_dev_node(const char *dev_name, uint32_t major, uint32_t minor,
 				  dev_name);
 			return 0;
 		}
-	}
+	} else if (dm_udev_get_sync_support())
+		log_warn("%s not set up by udev: Falling back to direct "
+			 "node creation.", path);
 
 	old_mask = umask(0);
 	if (mknod(path, S_IFBLK | mode, dev) < 0) {
@@ -426,6 +428,9 @@ static int _rm_dev_node(const char *dev_name)
 
 	if (stat(path, &info) < 0)
 		return 1;
+	else if (dm_udev_get_sync_support())
+		log_warn("Node %s was not removed by udev. "
+			 "Falling back to direct node removal.", path);
 
 	if (unlink(path) < 0) {
 		log_error("Unable to unlink device node for '%s'", dev_name);
