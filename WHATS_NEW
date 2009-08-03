@@ -1,5 +1,6 @@
 Version 2.02.51 - 
 ================================
+  Only change LV symlinks on ACTIVATE not PRELOAD.
   Make lvconvert honour log mirror options combined with downconversion.
   Allow LV suspend while --ignorelockingfailure is in force.
   Update synopsis in lvconvert manpage to mention --repair.

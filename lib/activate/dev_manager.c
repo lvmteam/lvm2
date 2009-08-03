@@ -1212,12 +1212,12 @@ static int _tree_action(struct dev_manager *dm, struct logical_volume *lv, actio
 				stack;
 			if (!r)
 				goto_out;
+			if (!_create_lv_symlinks(dm, root)) {
+				log_error("Failed to create symlinks for %s.", lv->name);
+				goto out;
+			}
 		}
 
-		if (!_create_lv_symlinks(dm, root)) {
-			log_error("Failed to create symlinks for %s.", lv->name);
-			goto out;
-		}
 		break;
 	default:
 		log_error("_tree_action: Action %u not supported.", action);
