@@ -265,6 +265,10 @@ static int _process_config(struct cmd_context *cmd)
 		return 0;
 	}
 
+	cmd->default_settings.udev_sync = find_config_tree_int(cmd,
+								"activation/udev_sync",
+								DEFAULT_UDEV_SYNC);
+
 	cmd->stripe_filler = find_config_tree_str(cmd,
 						  "activation/missing_stripe_filler",
 						  DEFAULT_STRIPE_FILLER);

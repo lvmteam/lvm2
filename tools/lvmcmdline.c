@@ -830,6 +830,9 @@ static int _get_settings(struct cmd_context *cmd)
 	} else
 		init_trust_cache(0);
 
+	if (arg_count(cmd, noudevsync_ARG))
+		cmd->current_settings.udev_sync = 0;
+
 	/* Handle synonyms */
 	if (!_merge_synonym(cmd, resizable_ARG, resizeable_ARG) ||
 	    !_merge_synonym(cmd, allocation_ARG, allocatable_ARG) ||
