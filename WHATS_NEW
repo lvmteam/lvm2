@@ -1,5 +1,6 @@
 Version 2.02.51 - 
 ================================
+  Add --noudevsync option for relevant LVM tools.
   Add activation/udev_sync to lvm.conf.
   Only change LV symlinks on ACTIVATE not PRELOAD.
   Make lvconvert honour log mirror options combined with downconversion.
