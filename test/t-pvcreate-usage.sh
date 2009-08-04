@@ -116,6 +116,18 @@ check_pv_field_ $dev1 pe_start $pv_align
 pvcreate --metadatasize 128k --metadatacopies 2 --dataalignment 3.5k $dev1
 check_pv_field_ $dev1 pe_start $pv_align
 
+# data area is aligned to 64k by default,
+# data area start is shifted by the specified alignment_offset
+pv_align="195.50K"
+pvcreate --metadatasize 128k --dataalignmentoffset 7s $dev1
+check_pv_field_ $dev1 pe_start $pv_align
+
+# 2nd metadata area is created without problems when
+# data area start is shifted by the specified alignment_offset
+pvcreate --metadatasize 128k --metadatacopies 2 --dataalignmentoffset 7s $dev1
+check_pv_field_ $dev1 pv_mda_count 2
+# FIXME: compare start of 2nd mda with and without --dataalignmentoffset
+
 #COMM 'pv with LVM1 compatible data alignment can be convereted'
 #compatible == LVM1_PE_ALIGN == 64k
 pvcreate --dataalignment 256k $dev1
