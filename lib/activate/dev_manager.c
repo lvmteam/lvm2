@@ -455,6 +455,8 @@ struct dev_manager *dev_manager_create(struct cmd_context *cmd,
 
 	dm->target_state = NULL;
 
+	dm_udev_set_sync_support(cmd->current_settings.udev_sync);
+
 	return dm;
 
       bad:
