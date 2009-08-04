@@ -18,6 +18,7 @@ vgchange \- change attributes of a volume group
 .RB [ \-h | \-\-help]
 .RB [ \-\-ignorelockingfailure]
 .RB [ \-\-ignoremonitoring]
+.RB [ \-\-noudevsync ]
 .RB [ \-l | \-\-logicalvolume
 .IR MaxLogicalVolumes ]
 .RB [ -p | \-\-maxphysicalvolumes
@@ -85,6 +86,13 @@ and
 .BR mirror_log_fault_policy
 set in 
 .BR lvm.conf (5).
+.TP
+.BR \-\-noudevsync
+Disable udev synchronisation. The
+process will not wait for notification from udev.
+It will continue irrespective of any possible udev processing
+in the background.  You should only use this if udev is not running
+or has rules that ignore the devices LVM2 creates.
 .TP
 .BR \-\-ignoremonitoring
 Make no attempt to interact with dmeventd unless 

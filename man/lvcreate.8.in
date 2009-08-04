@@ -6,7 +6,7 @@ lvcreate \- create a logical volume in an existing volume group
 [\-\-addtag Tag]
 [\-\-alloc AllocationPolicy]
 [\-A|\-\-autobackup y|n] [\-C|\-\-contiguous y|n] [\-d|\-\-debug]
-[\-h|\-?|\-\-help]
+[\-h|\-?|\-\-help] [\-\-noudevsync]
 [\-i|\-\-stripes Stripes [\-I|\-\-stripesize StripeSize]]
 {\-l|\-\-extents LogicalExtentsNumber[%{VG|PVS|FREE}] |
  \-L|\-\-size LogicalVolumeSize[bBsSkKmMgGtTpPeE]}
@@ -25,6 +25,7 @@ VolumeGroupName [PhysicalVolumePath...]
 {\-l|\-\-extents LogicalExtentsNumber[%{VG|FREE}] |
  \-L|\-\-size LogicalVolumeSize[bBsSkKmMgGtTpPeE]}
 [\-c|\-\-chunksize ChunkSize]
+[\-\-noudevsync]
 \-n|\-\-name SnapshotLogicalVolumeName
 {{\-s|\-\-snapshot}
 OriginalLogicalVolumePath | 
@@ -116,6 +117,13 @@ The name for the new logical volume.
 .br
 Without this option a default names of "lvol#" will be generated where
 # is the LVM internal number of the logical volume.
+.TP
+.I \-\-noudevsync
+Disable udev synchronisation. The
+process will not wait for notification from udev.
+It will continue irrespective of any possible udev processing
+in the background.  You should only use this if udev is not running
+or has rules that ignore the devices LVM2 creates.
 .TP
 .I \-p, \-\-permission r|rw
 Set access permissions to read only or read and write.
