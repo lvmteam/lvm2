@@ -26,7 +26,7 @@ ACTION=="add", ENV{STARTUP}!="1", NAME="", GOTO="dm_end"
 # only (kernels >= 2.6.29). We have to check for its existence
 # and use dmsetup tool instead to get the DM name, uuid and 
 # suspended state if the "dm" subdirectory is not present.
-# The "suspended" item was added even later (kernels >= ???),
+# The "suspended" item was added even later (kernels >= 2.6.31),
 # so we also have to call dmsetup if the kernel version used
 # is in between these releases.
 TEST=="dm", ENV{DM_NAME}="$attr{dm/name}", ENV{DM_UUID}="$attr{dm/uuid}", ENV{DM_SUSPENDED}="$attr{dm/suspended}"
