@@ -62,6 +62,7 @@ arg(dataalignment_ARG, '\0', "dataalignment", size_kb_arg, 0)
 arg(dataalignmentoffset_ARG, '\0', "dataalignmentoffset", size_kb_arg, 0)
 arg(virtualoriginsize_ARG, '\0', "virtualoriginsize", size_mb_arg, 0)
 arg(virtualsize_ARG, '\0', "virtualsize", size_mb_arg, 0)
+arg(noudevsync_ARG, '\0', "noudevsync", NULL, 0)
 
 /* Allow some variations */
 arg(resizable_ARG, '\0', "resizable", yes_no_arg, 0)
