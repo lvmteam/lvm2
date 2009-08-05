@@ -186,7 +186,7 @@ static int _mk_link(const char *dev_dir, const char *vg_name,
 			return 0;
 		}
 	} else if (dm_udev_get_sync_support())
-		log_warn("The link should had been created by udev "
+		log_warn("The link %s should had been created by udev "
 			  "but it was not found. Falling back to "
 			  "direct link creation.", lv_path);
 
