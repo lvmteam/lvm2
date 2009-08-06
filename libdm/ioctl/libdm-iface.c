@@ -1486,6 +1486,18 @@ static int _mknodes_v4(struct dm_task *dmt)
 	return _process_all_v4(dmt);
 }
 
+/*
+ * If an operation that uses a cookie fails, decrement the
+ * semaphore instead of udev.
+ */
+static int _udev_complete(struct dm_task *dmt)
+{
+	if (dmt->cookie_set)
+		return dm_udev_complete(dmt->event_nr);
+
+	return 1;
+}
+
 static int _create_and_load_v4(struct dm_task *dmt)
 {
 	struct dm_task *task;
@@ -1494,17 +1506,20 @@ static int _create_and_load_v4(struct dm_task *dmt)
 	/* Use new task struct to create the device */
 	if (!(task = dm_task_create(DM_DEVICE_CREATE))) {
 		log_error("Failed to create device-mapper task struct");
+		_udev_complete(dmt);
 		return 0;
 	}
 
 	/* Copy across relevant fields */
 	if (dmt->dev_name && !dm_task_set_name(task, dmt->dev_name)) {
 		dm_task_destroy(task);
+		_udev_complete(dmt);
 		return 0;
 	}
 
 	if (dmt->uuid && !dm_task_set_uuid(task, dmt->uuid)) {
 		dm_task_destroy(task);
+		_udev_complete(dmt);
 		return 0;
 	}
 
@@ -1516,18 +1531,22 @@ static int _create_and_load_v4(struct dm_task *dmt)
 
 	r = dm_task_run(task);
 	dm_task_destroy(task);
-	if (!r)
-		return r;
+	if (!r) {
+		_udev_complete(dmt);
+		return 0;
+	}
 
 	/* Next load the table */
 	if (!(task = dm_task_create(DM_DEVICE_RELOAD))) {
 		log_error("Failed to create device-mapper task struct");
+		_udev_complete(dmt);
 		return 0;
 	}
 
 	/* Copy across relevant fields */
 	if (dmt->dev_name && !dm_task_set_name(task, dmt->dev_name)) {
 		dm_task_destroy(task);
+		_udev_complete(dmt);
 		return 0;
 	}
 
@@ -1540,8 +1559,10 @@ static int _create_and_load_v4(struct dm_task *dmt)
 	task->head = NULL;
 	task->tail = NULL;
 	dm_task_destroy(task);
-	if (!r)
+	if (!r) {
+		_udev_complete(dmt);
 		goto revert;
+	}
 
 	/* Use the original structure last so the info will be correct */
 	dmt->type = DM_DEVICE_RESUME;
@@ -1557,6 +1578,7 @@ static int _create_and_load_v4(struct dm_task *dmt)
  	dmt->type = DM_DEVICE_REMOVE;
 	dm_free(dmt->uuid);
 	dmt->uuid = NULL;
+	dmt->cookie_set = 0;
 
 	if (!dm_task_run(dmt))
 		log_error("Failed to revert device creation.");
@@ -1739,19 +1761,15 @@ int dm_task_run(struct dm_task *dmt)
 	if ((dmt->type == DM_DEVICE_RELOAD) && dmt->suppress_identical_reload)
 		return _reload_with_suppression_v4(dmt);
 
-	if (!_open_control())
+	if (!_open_control()) {
+		_udev_complete(dmt);
 		return 0;
+	}
 
 	/* FIXME Detect and warn if cookie set but should not be. */
 repeat_ioctl:
 	if (!(dmi = _do_dm_ioctl(dmt, command, _ioctl_buffer_double_factor))) {
-		/*
-		 * If an operation that uses a cookie fails, decrement the 
-		 * semaphore instead of udev.
-		 * FIXME Review error paths: found one where uevent fired too.
-		 */
-		if (dmt->cookie_set)
-			dm_udev_complete(dmt->event_nr);
+		_udev_complete(dmt);
 		return 0;
 	}
 
