@@ -40,6 +40,12 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 
+#ifdef UDEV_SYNC_SUPPORT
+#  include <sys/types.h>
+#  include <sys/ipc.h>
+#  include <sys/sem.h>
+#endif
+
 /* FIXME Unused so far */
 #undef HAVE_SYS_STATVFS_H
 
@@ -272,6 +278,34 @@ struct dmsetup_report_obj {
 	struct dm_tree_node *tree_node;
 	struct dm_split_name *split_name;
 };
+
+static char _yes_no_prompt(const char *prompt, ...)
+{
+	int c = 0, ret = 0;
+	va_list ap;
+
+	do {
+		if (c == '\n' || !c) {
+			va_start(ap, prompt);
+			vprintf(prompt, ap);
+			va_end(ap);
+		}
+
+		if ((c = getchar()) == EOF) {
+			ret = 'n';
+			break;
+		}
+
+		c = tolower(c);
+		if ((c == 'y') || (c == 'n'))
+			ret = c;
+	} while (!ret || c != '\n');
+
+	if (c != '\n')
+		printf("\n");
+
+	return ret;
+}
 
 static struct dm_task *_get_deps_task(int major, int minor)
 {
@@ -762,6 +796,62 @@ static int _udevcomplete(int argc, char **argv, void *data __attribute((unused))
 
 	return dm_udev_complete(cookie);
 }
+
+#ifndef UDEV_SYNC_SUPPORT
+static int _udevcomplete_all(int argc __attribute((unused)), char **argv __attribute((unused)), void *data __attribute((unused)))
+{
+	return 1;
+}
+
+#else
+
+static int _udevcomplete_all(int argc __attribute((unused)), char **argv __attribute((unused)), void *data __attribute((unused)))
+{
+	int max_id, id, sid;
+	struct seminfo sinfo;
+	struct semid_ds sdata;
+	int counter = 0;
+
+	log_warn("This operation will destroy all semaphores with keys "
+		 "that have a prefix %" PRIu16 " (0x%" PRIx16 ").",
+		 DM_COOKIE_MAGIC, DM_COOKIE_MAGIC);
+
+	if (_yes_no_prompt("Do you really want to continue? [y/n]: ") == 'n') {
+		log_print("Semaphores with keys prefixed by %" PRIu16
+			  " (0x%" PRIx16 ") NOT destroyed.",
+			  DM_COOKIE_MAGIC, DM_COOKIE_MAGIC);
+		return 1;
+	}
+
+	if ((max_id = semctl(0, 0, SEM_INFO, &sinfo)) < 0) {
+		log_sys_error("semctl", "SEM_INFO");
+		return 0;
+	}
+
+	for (id = 0; id <= max_id; id++) {
+		if ((sid = semctl(id, 0, SEM_STAT, &sdata)) < 0)
+			continue;
+
+		if (sdata.sem_perm.__key >> 16 == DM_COOKIE_MAGIC) {
+			if (semctl(sid, 0, IPC_RMID, 0) < 0) {
+				log_error("Could not cleanup notification semaphore "
+					  "with semid %d and cookie value "
+					  "%" PRIu32 " (0x%" PRIx32 ")", sid,
+					  sdata.sem_perm.__key, sdata.sem_perm.__key);
+				continue;
+			}
+
+			counter++;
+		}
+	}
+
+	log_print("%d semaphores with keys prefixed by "
+		  "%" PRIu16 " (0x%" PRIx16 ") destroyed.",
+		  counter, DM_COOKIE_MAGIC, DM_COOKIE_MAGIC);
+
+	return 1;
+}
+#endif
 
 static int _version(int argc __attribute((unused)), char **argv __attribute((unused)), void *data __attribute((unused)))
 {
@@ -2294,6 +2384,7 @@ static struct command _commands[] = {
 	{"wait", "<device> [<event_nr>]", 0, 2, _wait},
 	{"mknodes", "[<device>]", 0, 1, _mknodes},
 	{"udevcomplete", "<cookie>", 1, 1, _udevcomplete},
+	{"udevcomplete_all", "", 0, 0, _udevcomplete_all},
 	{"targets", "", 0, 0, _targets},
 	{"version", "", 0, 0, _version},
 	{"setgeometry", "<device> <cyl> <head> <sect> <start>", 5, 5, _setgeometry},
