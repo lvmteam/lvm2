@@ -1,5 +1,5 @@
-Version 2.02.51 - 
-================================
+Version 2.02.51 - 6th August 2009
+=================================
   Fix locking in clvmd (2.02.50).
   Add --noudevsync option for relevant LVM tools.
   Add activation/udev_sync to lvm.conf.
