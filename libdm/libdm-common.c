@@ -39,7 +39,6 @@
 #endif
 
 #define DEV_DIR "/dev/"
-#define COOKIE_MAGIC 0x0D4D
 
 static char _dm_dir[PATH_MAX] = DEV_DIR DM_DIR;
 
@@ -837,7 +836,7 @@ int dm_udev_get_sync_support(void)
 
 static int _get_cookie_sem(uint32_t cookie, int *semid)
 {
-	if (!(cookie >> 16 & COOKIE_MAGIC)) {
+	if (cookie >> 16 != DM_COOKIE_MAGIC) {
 		log_error("Could not continue to access notification "
 			  "semaphore identified by cookie value %"
 			  PRIu32 " (0x%x). Incorrect cookie prefix.",
@@ -952,7 +951,7 @@ static int _udev_notify_sem_create(uint32_t *cookie, int *semid)
 			goto bad;
 		}
 
-		gen_cookie = COOKIE_MAGIC << 16 | base_cookie;
+		gen_cookie = DM_COOKIE_MAGIC << 16 | base_cookie;
 
 		if (base_cookie && (gen_semid = semget((key_t) gen_cookie,
 				    1, 0600 | IPC_CREAT | IPC_EXCL)) < 0) {
@@ -1093,6 +1092,9 @@ repeat_wait:
 	if (semop(semid, &sb, 1) < 0) {
 		if (errno == EINTR)
 			goto repeat_wait;
+		else if (errno == EIDRM)
+			return 1;
+
 		log_error("Could not set wait state for notification semaphore "
 			  "identified by cookie value %" PRIu32 " (0x%x): %s",
 			  cookie, cookie, strerror(errno));

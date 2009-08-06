@@ -1014,6 +1014,8 @@ int dm_report_field_uint64(struct dm_report *rh, struct dm_report_field *field,
 void dm_report_field_set_value(struct dm_report_field *field, const void *value,
 			       const void *sortvalue);
 
+#define DM_COOKIE_MAGIC 0x0D4D
+
 int dm_cookie_supported(void);
 
 /*
