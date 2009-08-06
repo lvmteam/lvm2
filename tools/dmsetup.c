@@ -36,6 +36,7 @@
 #include <sys/param.h>
 #include <locale.h>
 #include <langinfo.h>
+#include <time.h>
 
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -852,6 +853,45 @@ static int _udevcomplete_all(int argc __attribute((unused)), char **argv __attri
 	return 1;
 }
 #endif
+
+static int _udevcookies(int argc __attribute((unused)), char **argv __attribute((unused)), void *data __attribute((unused)))
+{
+	int max_id, id, sid;
+	struct seminfo sinfo;
+	struct semid_ds sdata;
+	int val;
+	char *time_str;
+
+	if ((max_id = semctl(0, 0, SEM_INFO, &sinfo)) < 0) {
+		log_sys_error("sem_ctl", "SEM_INFO");
+		return 0;
+	}
+
+	printf("cookie       semid      value      last_semop_time\n");
+
+	for (id = 0; id <= max_id; id++) {
+		if ((sid = semctl(id, 0, SEM_STAT, &sdata)) < 0)
+			continue;
+
+		if (sdata.sem_perm.__key >> 16 == DM_COOKIE_MAGIC) {
+			if ((val = semctl(sid, 0, GETVAL)) < 0) {
+				log_error("semid %d: sem_ctl failed for "
+					  "cookie 0x%" PRIx32 ": %s",
+					  sid, sdata.sem_perm.__key,
+					  strerror(errno));
+				continue;
+			}
+
+			time_str = ctime((const time_t *) &sdata.sem_otime);
+
+			printf("0x%-10x %-10d %-10d %s", sdata.sem_perm.__key,
+				sid, val, time_str ? time_str : "unknown");
+		}
+	}
+
+	return 1;
+}
+
 
 static int _version(int argc __attribute((unused)), char **argv __attribute((unused)), void *data __attribute((unused)))
 {
@@ -2385,6 +2425,7 @@ static struct command _commands[] = {
 	{"mknodes", "[<device>]", 0, 1, _mknodes},
 	{"udevcomplete", "<cookie>", 1, 1, _udevcomplete},
 	{"udevcomplete_all", "", 0, 0, _udevcomplete_all},
+	{"udevcookies", "", 0, 0, _udevcookies},
 	{"targets", "", 0, 0, _targets},
 	{"version", "", 0, 0, _version},
 	{"setgeometry", "<device> <cyl> <head> <sect> <start>", 5, 5, _setgeometry},
