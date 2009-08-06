@@ -280,34 +280,6 @@ struct dmsetup_report_obj {
 	struct dm_split_name *split_name;
 };
 
-static char _yes_no_prompt(const char *prompt, ...)
-{
-	int c = 0, ret = 0;
-	va_list ap;
-
-	do {
-		if (c == '\n' || !c) {
-			va_start(ap, prompt);
-			vprintf(prompt, ap);
-			va_end(ap);
-		}
-
-		if ((c = getchar()) == EOF) {
-			ret = 'n';
-			break;
-		}
-
-		c = tolower(c);
-		if ((c == 'y') || (c == 'n'))
-			ret = c;
-	} while (!ret || c != '\n');
-
-	if (c != '\n')
-		printf("\n");
-
-	return ret;
-}
-
 static struct dm_task *_get_deps_task(int major, int minor)
 {
 	struct dm_task *dmt;
@@ -804,7 +776,40 @@ static int _udevcomplete_all(int argc __attribute((unused)), char **argv __attri
 	return 1;
 }
 
+static int _udevcookies(int argc __attribute((unused)), char **argv __attribute((unused)), void *data __attribute((unused)))
+{
+	return 1;
+}
+
 #else
+
+static char _yes_no_prompt(const char *prompt, ...)
+{
+	int c = 0, ret = 0;
+	va_list ap;
+
+	do {
+		if (c == '\n' || !c) {
+			va_start(ap, prompt);
+			vprintf(prompt, ap);
+			va_end(ap);
+		}
+
+		if ((c = getchar()) == EOF) {
+			ret = 'n';
+			break;
+		}
+
+		c = tolower(c);
+		if ((c == 'y') || (c == 'n'))
+			ret = c;
+	} while (!ret || c != '\n');
+
+	if (c != '\n')
+		printf("\n");
+
+	return ret;
+}
 
 static int _udevcomplete_all(int argc __attribute((unused)), char **argv __attribute((unused)), void *data __attribute((unused)))
 {
@@ -852,7 +857,6 @@ static int _udevcomplete_all(int argc __attribute((unused)), char **argv __attri
 
 	return 1;
 }
-#endif
 
 static int _udevcookies(int argc __attribute((unused)), char **argv __attribute((unused)), void *data __attribute((unused)))
 {
@@ -891,7 +895,7 @@ static int _udevcookies(int argc __attribute((unused)), char **argv __attribute(
 
 	return 1;
 }
-
+#endif
 
 static int _version(int argc __attribute((unused)), char **argv __attribute((unused)), void *data __attribute((unused)))
 {
