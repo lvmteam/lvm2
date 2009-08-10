@@ -17,7 +17,7 @@ lvcreate \- create a logical volume in an existing volume group
 [\-p|\-\-permission r|rw] [\-r|\-\-readahead ReadAheadSectors|auto|none]
 [\-t|\-\-test]
 [\-v|\-\-verbose] [\-Z|\-\-zero y|n]
-VolumeGroupName [PhysicalVolumePath...]
+VolumeGroupName [PhysicalVolumePath[:PE[-PE]]...]
 .br
 
 .br
@@ -209,6 +209,13 @@ a backup while the original filesystem continues to get updated.
 .br
 creates a sparse device named /dev/vg1/sparse of size 1TB with space for just
 under 100MB of actual data on it.
+.br
+
+"lvcreate -L 64M -n lvol1 vg00 /dev/sda:0-7 /dev/sdb:0-7"
+.br
+creates a linear logical volume "vg00/lvol1" using physical extents
+/dev/sda:0-7 and /dev/sdb:0-7 for allocation of extents.
+
 
 .SH SEE ALSO
 .BR lvm (8), 

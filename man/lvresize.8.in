@@ -10,7 +10,7 @@ lvresize \- resize a logical volume
 {\-l|\-\-extents [+]LogicalExtentsNumber[%{VG|LV|PVS|FREE}] |
 \-L|\-\-size [+]LogicalVolumeSize[bBsSkKmMgGtTpPeE]}
 [\-t|\-\-test]
-[\-v|\-\-verbose] LogicalVolumePath [PhysicalVolumePath...]
+[\-v|\-\-verbose] LogicalVolumePath [PhysicalVolumePath[:PE[-PE]]...]
 .SH DESCRIPTION
 lvresize allows you to resize a logical volume.
 Be careful when reducing a logical volume's size, because data in the reduced
@@ -66,6 +66,13 @@ Not applicable to LVs using the original metadata LVM format, which
 must use a single value throughout.
 .br
 StripeSize must be 2^n (n = 2 to 9)
+.SH Examples
+.br
+"lvresize -L+16M vg1/lv1 /dev/sda:0-1 /dev/sdb:0-1"
+.br
+tries to extend a logical volume "vg1/lv1" by 16MB using physical extents
+/dev/sda:0-1 and /dev/sdb:0-1 for allocation of extents.
+
 .SH SEE ALSO
 .BR lvm (8), 
 .BR lvconvert (8),

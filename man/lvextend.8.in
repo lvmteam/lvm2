@@ -10,7 +10,7 @@ lvextend \- extend the size of a logical volume
 {\-l|\-\-extents [+]LogicalExtentsNumber[%{VG|LV|PVS|FREE}] |
 \-L|\-\-size [+]LogicalVolumeSize[bBsSkKmMgGtTpPeE]}
 [\-t|\-\-test]
-[\-v|\-\-verbose] LogicalVolumePath [PhysicalVolumePath...]
+[\-v|\-\-verbose] LogicalVolumePath [PhysicalVolumePath[:PE[-PE]]...]
 .SH DESCRIPTION
 lvextend allows you to extend the size of a logical volume.
 Extension of snapshot logical volumes (see
@@ -68,6 +68,13 @@ there are enough free physical extents in it.
 "lvextend /dev/vg01/lvol01 /dev/sdk3" tries to extend the size of that
 logical volume by the amount of free space on physical volume /dev/sdk3.
 This is equivalent to specifying "-l +100%PVS" on the command line.
+
+.br
+"lvextend -L+16M vg01/lvol01 /dev/sda:8-9 /dev/sdb:8-9"
+.br
+tries to extend a logical volume "vg01/lvol01" by 16MB using physical extents
+/dev/sda:8-9 and /dev/sdb:8-9 for allocation of extents.
+
 .SH SEE ALSO
 .BR lvm (8), 
 .BR lvcreate (8), 
