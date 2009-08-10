@@ -10,7 +10,8 @@ lvconvert \- convert a logical volume from linear to mirror or snapshot
 [\-\-noudevsync]
 [\-v|\-\-verbose] [\-y|\-\-yes]
 [\-\-version]
-LogicalVolume[Path] [PhysicalVolume[Path]...]
+.br
+LogicalVolume[Path] [PhysicalVolume[Path][:PE[-PE]]...]
 .br
 
 .br
@@ -123,6 +124,12 @@ volume.
 "lvconvert -s vg00/lvol1 vg00/lvol2"
 .br
 converts logical volume "vg00/lvol2" to snapshot of original volume "vg00/lvol1"
+
+.br
+"lvconvert -m1 vg00/lvol1 /dev/sda:0-15 /dev/sdb:0-15"
+.br
+converts linear logical volume "vg00/lvol1" to a two-way mirror, using physical
+extents /dev/sda:0-15 and /dev/sdb:0-15 for allocation of new extents.
 
 .SH SEE ALSO
 .BR lvm (8),
