@@ -45,10 +45,6 @@ static struct physical_volume *_pv_read(struct cmd_context *cmd,
 					uint64_t *label_sector,
 					int warnings, int scan_label_only);
 
-static int _pv_write(struct cmd_context *cmd __attribute((unused)),
-		     struct physical_volume *pv,
-	     	     struct dm_list *mdas, int64_t label_sector);
-
 static struct physical_volume *_find_pv_by_name(struct cmd_context *cmd,
 			 			const char *pv_name);
 
@@ -2995,17 +2991,9 @@ int scan_vgs_for_pvs(struct cmd_context *cmd)
 	return _get_pvs(cmd, NULL);
 }
 
-/* FIXME: liblvm todo - make into function that takes handle */
 int pv_write(struct cmd_context *cmd __attribute((unused)),
 	     struct physical_volume *pv,
 	     struct dm_list *mdas, int64_t label_sector)
-{
-	return _pv_write(cmd, pv, mdas, label_sector);
-}
-
-static int _pv_write(struct cmd_context *cmd __attribute((unused)),
-		     struct physical_volume *pv,
-	     	     struct dm_list *mdas, int64_t label_sector)
 {
 	if (!pv->fmt->ops->pv_write) {
 		log_error("Format does not support writing physical volumes");
@@ -3037,7 +3025,7 @@ int pv_write_orphan(struct cmd_context *cmd, struct physical_volume *pv)
 		return 0;
 	}
 
-	if (!_pv_write(cmd, pv, NULL, INT64_C(-1))) {
+	if (!pv_write(cmd, pv, NULL, INT64_C(-1))) {
 		log_error("Failed to clear metadata from physical "
 			  "volume \"%s\" after removal from \"%s\"",
 			  pv_dev_name(pv), old_vg_name);
