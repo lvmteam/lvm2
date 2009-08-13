@@ -55,6 +55,7 @@
 ../libdm/libdevmapper.h
 ../libdm/misc/dm-ioctl.h
 ../libdm/misc/dm-logging.h
+../libdm/misc/dm-log-userspace.h
 ../libdm/misc/dmlib.h
 ../libdm/misc/kdev_t.h
 ../po/pogen.h

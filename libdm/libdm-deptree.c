@@ -20,6 +20,7 @@
 
 #include <stdarg.h>
 #include <sys/param.h>
+#include <sys/utsname.h>
 
 #define MAX_TARGET_PARAMSIZE 500000
 
@@ -1278,17 +1279,132 @@ static int _emit_areas_line(struct dm_task *dmt __attribute((unused)),
 	return 1;
 }
 
+static int mirror_emit_segment_line(struct dm_task *dmt, uint32_t major,
+				    uint32_t minor, struct load_segment *seg,
+				    uint64_t *seg_start, char *params,
+				    size_t paramsize)
+{
+	int r;
+	int block_on_error = 0;
+	int handle_errors = 0;
+	int dm_log_userspace = 0;
+	struct utsname uts;
+	unsigned log_parm_count;
+	int pos = 0;
+	char logbuf[DM_FORMAT_DEV_BUFSIZE];
+	const char *logtype;
+
+	r = uname(&uts);
+	if (r)
+		return_0;
+
+	if ((seg->flags & DM_BLOCK_ON_ERROR)) {
+		/*
+		 * Originally, block_on_error was an argument to the log
+		 * portion of the mirror CTR table.  It was renamed to
+		 * "handle_errors" and now resides in the 'features'
+		 * section of the mirror CTR table (i.e. at the end).
+		 *
+		 * We can identify whether to use "block_on_error" or
+		 * "handle_errors" by the dm-mirror module's version
+		 * number (>= 1.12) or by the kernel version (>= 2.6.22).
+		 */
+		if (strncmp(uts.release, "2.6.22", 6) >= 0)
+			handle_errors = 1;
+		else
+			block_on_error = 1;
+	}
+
+	if (seg->clustered) {
+		/* Cluster mirrors require a UUID */
+		if (!seg->uuid)
+			return_0;
+
+		/*
+		 * Cluster mirrors used to have their own log
+		 * types.  Now they are accessed through the
+		 * userspace log type.
+		 *
+		 * The dm-log-userspace module was added to the
+		 * 2.6.31 kernel.
+		 */
+		if (strncmp(uts.release, "2.6.31", 6) >= 0)
+			dm_log_userspace = 1;
+	}
+
+	/* Region size */
+	log_parm_count = 1;
+
+	/* [no]sync, block_on_error etc. */
+	log_parm_count += hweight32(seg->flags);
+
+	/* "handle_errors" is a feature arg now */
+	if (handle_errors)
+		log_parm_count--;
+
+	/* DM_CORELOG does not count in the param list */
+	if (seg->flags & DM_CORELOG)
+		log_parm_count--;
+
+	if (seg->clustered) {
+		log_parm_count++; /* For UUID */
+
+		if (!dm_log_userspace)
+			EMIT_PARAMS(pos, "clustered-");
+	}
+
+	if (!seg->log)
+		logtype = "core";
+	else {
+		logtype = "disk";
+		log_parm_count++;
+		if (!_build_dev_string(logbuf, sizeof(logbuf), seg->log))
+			return_0;
+	}
+
+	if (dm_log_userspace)
+		EMIT_PARAMS(pos, "userspace %u %s clustered-%s",
+			    log_parm_count, seg->uuid, logtype);
+	else
+		EMIT_PARAMS(pos, "%s %u", logtype, log_parm_count);
+
+	if (seg->log)
+		EMIT_PARAMS(pos, " %s", logbuf);
+
+	EMIT_PARAMS(pos, " %u", seg->region_size);
+
+	if (seg->clustered && !dm_log_userspace)
+		EMIT_PARAMS(pos, " %s", seg->uuid);
+
+	if ((seg->flags & DM_NOSYNC))
+		EMIT_PARAMS(pos, " nosync");
+	else if ((seg->flags & DM_FORCESYNC))
+		EMIT_PARAMS(pos, " sync");
+
+	if (block_on_error)
+		EMIT_PARAMS(pos, " block_on_error");
+
+	EMIT_PARAMS(pos, " %u ", seg->mirror_area_count);
+
+	if ((r = _emit_areas_line(dmt, seg, params, paramsize, &pos)) <= 0) {
+		stack;
+		return r;
+	}
+
+	if (handle_errors)
+		EMIT_PARAMS(pos, " 1 handle_errors");
+
+	return 0;
+}
+
 static int _emit_segment_line(struct dm_task *dmt, uint32_t major,
 			      uint32_t minor, struct load_segment *seg,
 			      uint64_t *seg_start, char *params,
 			      size_t paramsize)
 {
-	unsigned log_parm_count;
 	int pos = 0;
 	int r;
 	char originbuf[DM_FORMAT_DEV_BUFSIZE], cowbuf[DM_FORMAT_DEV_BUFSIZE];
-	char logbuf[DM_FORMAT_DEV_BUFSIZE];
-	const char *logtype;
 
 	switch(seg->type) {
 	case SEG_ERROR:
@@ -1296,47 +1412,11 @@ static int _emit_segment_line(struct dm_task *dmt, uint32_t major,
 	case SEG_LINEAR:
 		break;
 	case SEG_MIRRORED:
-		log_parm_count = 1;	/* Region size */
-		log_parm_count += hweight32(seg->flags);	/* [no]sync, block_on_error etc. */
-
-		if (seg->flags & DM_CORELOG)
-			log_parm_count--;   /* DM_CORELOG does not count in the param list */
-
-		if (seg->clustered) {
-			if (seg->uuid)
-				log_parm_count++;
-			EMIT_PARAMS(pos, "clustered-");
-		}
-
-		if (!seg->log)
-			logtype = "core";
-		else {
-			logtype = "disk";
-			log_parm_count++;
-			if (!_build_dev_string(logbuf, sizeof(logbuf), seg->log))
-				return_0;
-		}
-
-		EMIT_PARAMS(pos, "%s %u", logtype, log_parm_count);
-
-		if (seg->log)
-			EMIT_PARAMS(pos, " %s", logbuf);
-
-		EMIT_PARAMS(pos, " %u", seg->region_size);
-
-		if (seg->clustered && seg->uuid)
-			EMIT_PARAMS(pos, " %s", seg->uuid);
-
-		if ((seg->flags & DM_NOSYNC))
-			EMIT_PARAMS(pos, " nosync");
-		else if ((seg->flags & DM_FORCESYNC))
-			EMIT_PARAMS(pos, " sync");
-
-		if ((seg->flags & DM_BLOCK_ON_ERROR))
-			EMIT_PARAMS(pos, " block_on_error");
-
-		EMIT_PARAMS(pos, " %u ", seg->mirror_area_count);
-
+		/* Mirrors are pretty complicated - now in separate function */
+		r = mirror_emit_segment_line(dmt, major, minor, seg, seg_start,
+					     params, paramsize);
+		if (r)
+			return r;
 		break;
 	case SEG_SNAPSHOT:
 		if (!_build_dev_string(originbuf, sizeof(originbuf), seg->origin))
@@ -1371,7 +1451,6 @@ static int _emit_segment_line(struct dm_task *dmt, uint32_t major,
 		break;
 	case SEG_CRYPT:
 	case SEG_LINEAR:
-	case SEG_MIRRORED:
 	case SEG_STRIPED:
 		if ((r = _emit_areas_line(dmt, seg, params, paramsize, &pos)) <= 0) {
 			stack;
