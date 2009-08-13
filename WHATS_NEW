@@ -1,5 +1,6 @@
 Version 2.02.52 -
 =================================
+  Make lvm2app pv_t, lv_t, vg_t handle definitions consistent with lvm_t.
   Fix vgextend error path - if ORPHAN lock fails, unlock / release vg (2.02.49).
   Fix compile warning in clvmd.
   Update lv{convert|create|extend|resize} man pages - clarify use of PE ranges.
