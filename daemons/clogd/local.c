@@ -1,3 +1,14 @@
+/*
+ * Copyright (C) 2004-2009 Red Hat, Inc. All rights reserved.
+ *
+ * This copyrighted material is made available to anyone wishing to use,
+ * modify, copy, or redistribute it subject to the terms and conditions
+ * of the GNU Lesser General Public License v.2.1.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program; if not, write to the Free Software Foundation,
+ * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
@@ -8,13 +19,19 @@
 #include <linux/connector.h>
 #include <linux/netlink.h>
 
-#include "linux/dm-log-userspace.h"
+#include "dm-log-userspace.h"
 #include "functions.h"
 #include "cluster.h"
 #include "common.h"
 #include "logging.h"
 #include "link_mon.h"
 #include "local.h"
+
+#ifndef CN_IDX_DM
+#warning Kernel should be at least 2.6.31
+#define CN_IDX_DM                       0x7     /* Device Mapper */
+#define CN_VAL_DM_USERSPACE_LOG         0x1
+#endif
 
 static int cn_fd;  /* Connector (netlink) socket fd */
 static char recv_buf[2048];
