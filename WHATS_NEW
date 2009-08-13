@@ -1,5 +1,6 @@
 Version 2.02.52 -
 =================================
+  Fix compile warning in clvmd.
 
 Version 2.02.51 - 6th August 2009
 =================================
