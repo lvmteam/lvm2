@@ -690,12 +690,11 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	int avail_only =
+	int avail_only = /* i.e. only one of -a or --refresh is given */
 	    !(arg_count(cmd, contiguous_ARG) || arg_count(cmd, permission_ARG) ||
 	     arg_count(cmd, readahead_ARG) || arg_count(cmd, persistent_ARG) ||
 	     arg_count(cmd, addtag_ARG) || arg_count(cmd, deltag_ARG) ||
-	     arg_count(cmd, refresh_ARG) || arg_count(cmd, alloc_ARG) ||
-	     arg_count(cmd, resync_ARG));
+	     arg_count(cmd, resync_ARG) || arg_count(cmd, alloc_ARG));
 
 	if (arg_count(cmd, ignorelockingfailure_ARG) && !avail_only) {
 		log_error("Only -a permitted with --ignorelockingfailure");
