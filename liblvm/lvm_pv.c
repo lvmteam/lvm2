@@ -17,7 +17,7 @@
 #include "metadata-exported.h"
 #include "lvm-string.h"
 
-char *lvm_pv_get_uuid(const pv_t *pv)
+char *lvm_pv_get_uuid(const pv_t pv)
 {
 	char uuid[64] __attribute((aligned(8)));
 
@@ -28,7 +28,7 @@ char *lvm_pv_get_uuid(const pv_t *pv)
 	return strndup((const char *)uuid, 64);
 }
 
-char *lvm_pv_get_name(const pv_t *pv)
+char *lvm_pv_get_name(const pv_t pv)
 {
 	char *name;
 
@@ -38,12 +38,12 @@ char *lvm_pv_get_name(const pv_t *pv)
 	return name;
 }
 
-uint64_t lvm_pv_get_mda_count(const pv_t *pv)
+uint64_t lvm_pv_get_mda_count(const pv_t pv)
 {
 	return (uint64_t) pv_mda_count(pv);
 }
 
-int lvm_pv_resize(const pv_t *pv, uint64_t new_size)
+int lvm_pv_resize(const pv_t pv, uint64_t new_size)
 {
 	/* FIXME: add pv resize code here */
 	log_error("NOT IMPLEMENTED YET");

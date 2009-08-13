@@ -130,7 +130,7 @@ typedef struct logical_volume *lv_t;
  * group.  Changes will be written to disk when the volume group gets
  * committed to disk.
  */
-typedef struct physical_volume pv_t;
+typedef struct physical_volume *pv_t;
 
 /**
  * Logical Volume object list.
@@ -149,7 +149,7 @@ typedef struct lvm_lv_list {
  */
 typedef struct lvm_pv_list {
 	struct dm_list list;
-	pv_t *pv;
+	pv_t pv;
 } pv_list_t;
 
 /**
@@ -781,7 +781,7 @@ struct dm_list *lvm_vg_list_pvs(vg_t vg);
  * \return
  * Copy of the uuid string.
  */
-char *lvm_pv_get_uuid(const pv_t *pv);
+char *lvm_pv_get_uuid(const pv_t pv);
 
 /**
  * Get the current name of a logical volume.
@@ -795,7 +795,7 @@ char *lvm_pv_get_uuid(const pv_t *pv);
  * \return
  * Copy of the name.
  */
-char *lvm_pv_get_name(const pv_t *pv);
+char *lvm_pv_get_name(const pv_t pv);
 
 /**
  * Get the current number of metadata areas in the physical volume.
@@ -806,7 +806,7 @@ char *lvm_pv_get_name(const pv_t *pv);
  * \return
  * Number of metadata areas in the PV.
  */
-uint64_t lvm_pv_get_mda_count(const pv_t *pv);
+uint64_t lvm_pv_get_mda_count(const pv_t pv);
 
 /**
  * Resize physical volume to new_size bytes.
@@ -822,6 +822,6 @@ uint64_t lvm_pv_get_mda_count(const pv_t *pv);
  * \return
  * 0 (success) or -1 (failure).
  */
-int lvm_pv_resize(const pv_t *pv, uint64_t new_size);
+int lvm_pv_resize(const pv_t pv, uint64_t new_size);
 
 #endif /* _LIB_LVM2APP_H */
