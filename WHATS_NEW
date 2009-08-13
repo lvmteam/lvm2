@@ -1,6 +1,10 @@
 Version 2.02.52 -
 =================================
+  Fix vgextend error path - if ORPHAN lock fails, unlock / release vg (2.02.49).
   Fix compile warning in clvmd.
+  Update lv{convert|create|extend|resize} man pages - clarify use of PE ranges.
+  Remove useless _pv_write wrapper.
+  Update test/api/test.c to call lvm_vg_create and lvm_vg_remove.
 
 Version 2.02.51 - 6th August 2009
 =================================
