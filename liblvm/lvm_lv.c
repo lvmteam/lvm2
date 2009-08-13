@@ -24,12 +24,12 @@
 #include <string.h>
 
 /* FIXME: have lib/report/report.c _disp function call lv_size()? */
-uint64_t lvm_lv_get_size(const lv_t *lv)
+uint64_t lvm_lv_get_size(const lv_t lv)
 {
 	return lv_size(lv);
 }
 
-char *lvm_lv_get_uuid(const lv_t *lv)
+char *lvm_lv_get_uuid(const lv_t lv)
 {
 	char uuid[64] __attribute((aligned(8)));
 
@@ -40,7 +40,7 @@ char *lvm_lv_get_uuid(const lv_t *lv)
 	return strndup((const char *)uuid, 64);
 }
 
-char *lvm_lv_get_name(const lv_t *lv)
+char *lvm_lv_get_name(const lv_t lv)
 {
 	char *name;
 
@@ -50,7 +50,7 @@ char *lvm_lv_get_name(const lv_t *lv)
 	return name;
 }
 
-uint64_t lvm_lv_is_active(const lv_t *lv)
+uint64_t lvm_lv_is_active(const lv_t lv)
 {
 	struct lvinfo info;
 	if (lv_info(lv->vg->cmd, lv, &info, 1, 0) &&
@@ -59,7 +59,7 @@ uint64_t lvm_lv_is_active(const lv_t *lv)
 	return 0;
 }
 
-uint64_t lvm_lv_is_suspended(const lv_t *lv)
+uint64_t lvm_lv_is_suspended(const lv_t lv)
 {
 	struct lvinfo info;
 	if (lv_info(lv->vg->cmd, lv, &info, 1, 0) &&
@@ -101,7 +101,7 @@ static void _lv_set_default_linear_params(struct cmd_context *cmd,
  * lvm_vg_write.  However, this appears to be non-trivial change until
  * lv_create_single is refactored by segtype.
  */
-lv_t *lvm_vg_create_lv_linear(vg_t vg, const char *name, uint64_t size)
+lv_t lvm_vg_create_lv_linear(vg_t vg, const char *name, uint64_t size)
 {
 	struct lvcreate_params lp;
 	uint64_t extents;
@@ -120,14 +120,14 @@ lv_t *lvm_vg_create_lv_linear(vg_t vg, const char *name, uint64_t size)
 	lvl = find_lv_in_vg(vg, name);
 	if (!lvl)
 		return NULL;
-	return (lv_t *) lvl->lv;
+	return (lv_t) lvl->lv;
 }
 
 /*
  * FIXME: This function should probably not commit to disk but require calling
  * lvm_vg_write.
  */
-int lvm_vg_remove_lv(lv_t *lv)
+int lvm_vg_remove_lv(lv_t lv)
 {
 	if (!lv || !lv->vg || vg_read_error(lv->vg))
 		return -1;
@@ -138,7 +138,7 @@ int lvm_vg_remove_lv(lv_t *lv)
 	return 0;
 }
 
-int lvm_lv_activate(lv_t *lv)
+int lvm_lv_activate(lv_t lv)
 {
 	if (!lv || !lv->vg || vg_read_error(lv->vg) || !lv->vg->cmd)
 		return -1;
@@ -173,7 +173,7 @@ int lvm_lv_activate(lv_t *lv)
 	return 0;
 }
 
-int lvm_lv_deactivate(lv_t *lv)
+int lvm_lv_deactivate(lv_t lv)
 {
 	if (!lv || !lv->vg || vg_read_error(lv->vg) || !lv->vg->cmd)
 		return -1;
@@ -186,7 +186,7 @@ int lvm_lv_deactivate(lv_t *lv)
 	return 0;
 }
 
-int lvm_lv_resize(const lv_t *lv, uint64_t new_size)
+int lvm_lv_resize(const lv_t lv, uint64_t new_size)
 {
 	/* FIXME: add lv resize code here */
 	log_error("NOT IMPLEMENTED YET");

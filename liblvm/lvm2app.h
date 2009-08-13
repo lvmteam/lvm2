@@ -121,7 +121,7 @@ typedef struct volume_group *vg_t;
  * group.  Changes will be written to disk when the volume group gets
  * committed to disk.
  */
-typedef struct logical_volume lv_t;
+typedef struct logical_volume *lv_t;
 
 /**
  * Physical volume object.
@@ -139,7 +139,7 @@ typedef struct physical_volume pv_t;
  */
 typedef struct lvm_lv_list {
 	struct dm_list list;
-	lv_t *lv;
+	lv_t lv;
 } lv_list_t;
 
 /**
@@ -623,7 +623,7 @@ struct dm_list *lvm_vg_list_lvs(vg_t vg);
  * non-NULL handle to an LV object created, or NULL if creation fails.
  *
  */
-lv_t *lvm_vg_create_lv_linear(vg_t vg, const char *name, uint64_t size);
+lv_t lvm_vg_create_lv_linear(vg_t vg, const char *name, uint64_t size);
 
 /**
  * Activate a logical volume.
@@ -639,7 +639,7 @@ lv_t *lvm_vg_create_lv_linear(vg_t vg, const char *name, uint64_t size);
  * \return
  * 0 (success) or -1 (failure).
  */
-int lvm_lv_activate(lv_t *lv);
+int lvm_lv_activate(lv_t lv);
 
 /**
  * Deactivate a logical volume.
@@ -652,7 +652,7 @@ int lvm_lv_activate(lv_t *lv);
  * \return
  * 0 (success) or -1 (failure).
  */
-int lvm_lv_deactivate(lv_t *lv);
+int lvm_lv_deactivate(lv_t lv);
 
 /**
  * Remove a logical volume from a volume group.
@@ -669,7 +669,7 @@ int lvm_lv_deactivate(lv_t *lv);
  * \return
  * 0 (success) or -1 (failure).
  */
-int lvm_vg_remove_lv(lv_t *lv);
+int lvm_vg_remove_lv(lv_t lv);
 
 /**
  * Get the current name of a logical volume.
@@ -683,7 +683,7 @@ int lvm_vg_remove_lv(lv_t *lv);
  * \return
  * Copy of the uuid string.
  */
-char *lvm_lv_get_uuid(const lv_t *lv);
+char *lvm_lv_get_uuid(const lv_t lv);
 
 /**
  * Get the current uuid of a logical volume.
@@ -697,7 +697,7 @@ char *lvm_lv_get_uuid(const lv_t *lv);
  * \return
  * Copy of the name.
  */
-char *lvm_lv_get_name(const lv_t *lv);
+char *lvm_lv_get_name(const lv_t lv);
 
 /**
  * Get the current size in bytes of a logical volume.
@@ -708,7 +708,7 @@ char *lvm_lv_get_name(const lv_t *lv);
  * \return
  * Size in bytes.
  */
-uint64_t lvm_lv_get_size(const lv_t *lv);
+uint64_t lvm_lv_get_size(const lv_t lv);
 
 /**
  * Get the current activation state of a logical volume.
@@ -719,7 +719,7 @@ uint64_t lvm_lv_get_size(const lv_t *lv);
  * \return
  * 1 if the LV is active in the kernel, 0 if not
  */
-uint64_t lvm_lv_is_active(const lv_t *lv);
+uint64_t lvm_lv_is_active(const lv_t lv);
 
 /**
  * Get the current suspended state of a logical volume.
@@ -730,7 +730,7 @@ uint64_t lvm_lv_is_active(const lv_t *lv);
  * \return
  * 1 if the LV is suspended in the kernel, 0 if not
  */
-uint64_t lvm_lv_is_suspended(const lv_t *lv);
+uint64_t lvm_lv_is_suspended(const lv_t lv);
 
 /**
  * Resize logical volume to new_size bytes.
@@ -747,7 +747,7 @@ uint64_t lvm_lv_is_suspended(const lv_t *lv);
  * 0 (success) or -1 (failure).
  *
  */
-int lvm_lv_resize(const lv_t *lv, uint64_t new_size);
+int lvm_lv_resize(const lv_t lv, uint64_t new_size);
 
 /************************** physical volume handling ************************/
 

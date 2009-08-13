@@ -136,9 +136,9 @@ static int _hash_create(void)
 }
 
 /* FIXME: this should be per vg */
-static lv_t *_lookup_lv_by_name(const char *name)
+static lv_t _lookup_lv_by_name(const char *name)
 {
-	lv_t *lv;
+	lv_t lv;
 
 	if (!name) {
 		printf ("Invalid LV name\n");
@@ -516,7 +516,7 @@ static void _lvs_in_vg(char **argv, int argc)
 
 static void _lv_deactivate(char **argv, int argc)
 {
-	lv_t *lv;
+	lv_t lv;
 	int rc=0;
 
 	if (argc < 3) {
@@ -532,7 +532,7 @@ static void _lv_deactivate(char **argv, int argc)
 }
 static void _lv_activate(char **argv, int argc)
 {
-	lv_t *lv;
+	lv_t lv;
 	int rc=0;
 
 	if (argc < 3) {
@@ -548,7 +548,7 @@ static void _lv_activate(char **argv, int argc)
 }
 static void _vg_remove_lv(char **argv, int argc)
 {
-	lv_t *lv;
+	lv_t lv;
 
 	if (argc < 3) {
 		printf("Please enter vgname, lvname\n");
@@ -569,7 +569,7 @@ static void _vg_remove_lv(char **argv, int argc)
 static void _vg_create_lv_linear(char **argv, int argc)
 {
 	vg_t vg;
-	lv_t *lv;
+	lv_t lv;
 
 	if (argc < 4) {
 		printf("Please enter vgname, lvname, and size\n");
