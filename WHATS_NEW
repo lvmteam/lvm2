@@ -1,5 +1,6 @@
 Version 2.02.52 -
 =================================
+  Fix vgcfgrestore error paths when locking fails (2.02.49).
   Added configure --enable-clogd to conditionally build the cluster log daemon.
   Make lvchange --refresh only take a read lock on volume group.
   Fix bug where non-blocking file locks could be granted in error.
