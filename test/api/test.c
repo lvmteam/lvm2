@@ -152,9 +152,9 @@ static lv_t *_lookup_lv_by_name(const char *name)
 	return lv;
 }
 
-static vg_t *_lookup_vg_by_name(char **argv, int argc)
+static vg_t _lookup_vg_by_name(char **argv, int argc)
 {
-	vg_t *vg;
+	vg_t vg;
 
 	if (argc < 2) {
 		printf ("Please enter vg_name\n");
@@ -203,7 +203,7 @@ static void _add_device_to_pvname_hash(struct dm_list *pvs, const char *name)
 }
 static void _vg_reduce(char **argv, int argc, lvm_t libh)
 {
-	vg_t *vg;
+	vg_t vg;
 	struct dm_list *pvs;
 
 	if (argc < 2) {
@@ -264,7 +264,7 @@ static void _config_reload(char **argv, int argc, lvm_t libh)
 
 static void _vg_extend(char **argv, int argc, lvm_t libh)
 {
-	vg_t *vg;
+	vg_t vg;
 	struct dm_list *pvs;
 
 	if (argc < 2) {
@@ -293,7 +293,7 @@ static void _vg_extend(char **argv, int argc, lvm_t libh)
 
 static void _vg_open(char **argv, int argc, lvm_t libh)
 {
-	vg_t *vg;
+	vg_t vg;
 	struct dm_list *lvs;
 	struct dm_list *pvs;
 
@@ -330,9 +330,9 @@ static void _vg_open(char **argv, int argc, lvm_t libh)
 		_add_pvs_to_pvname_hash(pvs);
 }
 /* Lookup the vg and remove it from the vgname and vgid hashes */
-static vg_t *_lookup_and_remove_vg(const char *vgname)
+static vg_t _lookup_and_remove_vg(const char *vgname)
 {
-	vg_t *vg=NULL;
+	vg_t vg=NULL;
 
 	if ((vg = dm_hash_lookup(_vgname_hash, vgname))) {
 		dm_hash_remove(_vgid_hash, lvm_vg_get_uuid(vg));
@@ -347,7 +347,7 @@ static vg_t *_lookup_and_remove_vg(const char *vgname)
 
 static void _vg_write(char **argv, int argc)
 {
-	vg_t *vg;
+	vg_t vg;
 	int rc = 0;
 
 	if (argc < 2) {
@@ -366,7 +366,7 @@ static void _vg_write(char **argv, int argc)
 
 static void _vg_create(char **argv, int argc, lvm_t libh)
 {
-	vg_t *vg;
+	vg_t vg;
 
 	if (argc < 2) {
 		printf ("Please enter vg_name\n");
@@ -385,7 +385,7 @@ static void _vg_create(char **argv, int argc, lvm_t libh)
 
 static void _vg_remove(char **argv, int argc)
 {
-	vg_t *vg;
+	vg_t vg;
 	int rc = 0;
 
 	if (argc < 2) {
@@ -404,7 +404,7 @@ static void _vg_remove(char **argv, int argc)
 
 static void _vg_close(char **argv, int argc)
 {
-	vg_t *vg;
+	vg_t vg;
 	int rc = 0;
 
 	if (argc < 2) {
@@ -421,7 +421,7 @@ static void _vg_close(char **argv, int argc)
 	printf("closing VG\n");
 }
 
-static void _show_one_vg(vg_t *vg)
+static void _show_one_vg(vg_t vg)
 {
 	printf("%s (%s): sz=%"PRIu64", free=%"PRIu64", #pv=%"PRIu64
 		", seq#=%"PRIu64"\n",
@@ -439,7 +439,7 @@ static void _pvs_in_vg(char **argv, int argc)
 {
 	struct dm_list *pvs;
 	struct lvm_pv_list *pvl;
-	vg_t *vg;
+	vg_t vg;
 
 	if (!(vg = _lookup_vg_by_name(argv, argc)))
 		return;
@@ -494,7 +494,7 @@ static void _lvs_in_vg(char **argv, int argc)
 {
 	struct dm_list *lvs;
 	struct lvm_lv_list *lvl;
-	vg_t *vg;
+	vg_t vg;
 
 	if (!(vg = _lookup_vg_by_name(argv, argc)))
 		return;
@@ -568,7 +568,7 @@ static void _vg_remove_lv(char **argv, int argc)
 
 static void _vg_create_lv_linear(char **argv, int argc)
 {
-	vg_t *vg;
+	vg_t vg;
 	lv_t *lv;
 
 	if (argc < 4) {

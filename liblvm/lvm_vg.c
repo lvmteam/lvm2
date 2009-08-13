@@ -25,9 +25,9 @@
 #include <errno.h>
 #include <string.h>
 
-vg_t *lvm_vg_create(lvm_t libh, const char *vg_name)
+vg_t lvm_vg_create(lvm_t libh, const char *vg_name)
 {
-	vg_t *vg;
+	struct volume_group *vg;
 
 	vg = vg_create((struct cmd_context *)libh, vg_name);
 	/* FIXME: error handling is still TBD */
@@ -36,10 +36,10 @@ vg_t *lvm_vg_create(lvm_t libh, const char *vg_name)
 		return NULL;
 	}
 	vg->open_mode = 'w';
-	return (vg_t *) vg;
+	return (vg_t) vg;
 }
 
-int lvm_vg_extend(vg_t *vg, const char *device)
+int lvm_vg_extend(vg_t vg, const char *device)
 {
 	if (vg_read_error(vg))
 		return -1;
@@ -72,7 +72,7 @@ int lvm_vg_extend(vg_t *vg, const char *device)
 	return 0;
 }
 
-int lvm_vg_reduce(vg_t *vg, const char *device)
+int lvm_vg_reduce(vg_t vg, const char *device)
 {
 	if (vg_read_error(vg))
 		return -1;
@@ -84,7 +84,7 @@ int lvm_vg_reduce(vg_t *vg, const char *device)
 	return 0;
 }
 
-int lvm_vg_set_extent_size(vg_t *vg, uint32_t new_size)
+int lvm_vg_set_extent_size(vg_t vg, uint32_t new_size)
 {
 	if (vg_read_error(vg))
 		return -1;
@@ -96,7 +96,7 @@ int lvm_vg_set_extent_size(vg_t *vg, uint32_t new_size)
 	return 0;
 }
 
-int lvm_vg_write(vg_t *vg)
+int lvm_vg_write(vg_t vg)
 {
 	struct pv_list *pvl;
 
@@ -137,7 +137,7 @@ int lvm_vg_write(vg_t *vg)
 	return 0;
 }
 
-int lvm_vg_close(vg_t *vg)
+int lvm_vg_close(vg_t vg)
 {
 	if (vg_read_error(vg) == FAILED_LOCKING)
 		vg_release(vg);
@@ -146,7 +146,7 @@ int lvm_vg_close(vg_t *vg)
 	return 0;
 }
 
-int lvm_vg_remove(vg_t *vg)
+int lvm_vg_remove(vg_t vg)
 {
 	if (vg_read_error(vg))
 		return -1;
@@ -158,11 +158,11 @@ int lvm_vg_remove(vg_t *vg)
 	return 0;
 }
 
-vg_t *lvm_vg_open(lvm_t libh, const char *vgname, const char *mode,
+vg_t lvm_vg_open(lvm_t libh, const char *vgname, const char *mode,
 		  uint32_t flags)
 {
 	uint32_t internal_flags = 0;
-	vg_t *vg;
+	struct volume_group *vg;
 
 	if (!strncmp(mode, "w", 1))
 		internal_flags |= READ_FOR_UPDATE;
@@ -180,10 +180,10 @@ vg_t *lvm_vg_open(lvm_t libh, const char *vgname, const char *mode,
 	/* FIXME: combine this with locking ? */
 	vg->open_mode = mode[0];
 
-	return (vg_t *) vg;
+	return (vg_t) vg;
 }
 
-struct dm_list *lvm_vg_list_pvs(vg_t *vg)
+struct dm_list *lvm_vg_list_pvs(vg_t vg)
 {
 	struct dm_list *list;
 	pv_list_t *pvs;
@@ -210,7 +210,7 @@ struct dm_list *lvm_vg_list_pvs(vg_t *vg)
 	return list;
 }
 
-struct dm_list *lvm_vg_list_lvs(vg_t *vg)
+struct dm_list *lvm_vg_list_lvs(vg_t vg)
 {
 	struct dm_list *list;
 	lv_list_t *lvs;
@@ -237,43 +237,43 @@ struct dm_list *lvm_vg_list_lvs(vg_t *vg)
 	return list;
 }
 
-uint64_t lvm_vg_get_seqno(const vg_t *vg)
+uint64_t lvm_vg_get_seqno(const vg_t vg)
 {
 	return vg_seqno(vg);
 }
 
 /* FIXME: invalid handle? return INTMAX? */
-uint64_t lvm_vg_get_size(const vg_t *vg)
+uint64_t lvm_vg_get_size(const vg_t vg)
 {
 	return vg_size(vg);
 }
 
-uint64_t lvm_vg_get_free_size(const vg_t *vg)
+uint64_t lvm_vg_get_free_size(const vg_t vg)
 {
 	return vg_free(vg);
 }
 
-uint64_t lvm_vg_get_extent_size(const vg_t *vg)
+uint64_t lvm_vg_get_extent_size(const vg_t vg)
 {
 	return vg_extent_size(vg);
 }
 
-uint64_t lvm_vg_get_extent_count(const vg_t *vg)
+uint64_t lvm_vg_get_extent_count(const vg_t vg)
 {
 	return vg_extent_count(vg);
 }
 
-uint64_t lvm_vg_get_free_extent_count(const vg_t *vg)
+uint64_t lvm_vg_get_free_extent_count(const vg_t vg)
 {
 	return vg_free_count(vg);
 }
 
-uint64_t lvm_vg_get_pv_count(const vg_t *vg)
+uint64_t lvm_vg_get_pv_count(const vg_t vg)
 {
 	return vg_pv_count(vg);
 }
 
-char *lvm_vg_get_uuid(const vg_t *vg)
+char *lvm_vg_get_uuid(const vg_t vg)
 {
 	char uuid[64] __attribute((aligned(8)));
 
@@ -284,7 +284,7 @@ char *lvm_vg_get_uuid(const vg_t *vg)
 	return strndup((const char *)uuid, 64);
 }
 
-char *lvm_vg_get_name(const vg_t *vg)
+char *lvm_vg_get_name(const vg_t vg)
 {
 	char *name;
 
