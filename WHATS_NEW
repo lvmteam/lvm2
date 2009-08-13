@@ -1,5 +1,6 @@
 Version 2.02.52 -
 =================================
+  Added configure --enable-clogd to conditionally build the cluster log daemon.
   Make lvchange --refresh only take a read lock on volume group.
   Fix bug where non-blocking file locks could be granted in error.
   Make lvm2app pv_t, lv_t, vg_t handle definitions consistent with lvm_t.
