@@ -6,13 +6,12 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <signal.h>
-#include <ext2fs/ext2_fs.h>
-#include <ext2fs/ext2fs.h>
 #include <linux/kdev_t.h>
 #define __USE_GNU /* for O_DIRECT */
 #include <fcntl.h>
 #include <time.h>
-#include "linux/dm-log-userspace.h"
+#include "libdevmapper.h"
+#include "dm-log-userspace.h"
 #include "functions.h"
 #include "common.h"
 #include "cluster.h"
@@ -57,8 +56,8 @@ struct log_c {
 	uint64_t sync_count;
 	uint32_t bitset_uint32_count;
 
-	uint32_t *clean_bits;
-	uint32_t *sync_bits;
+	dm_bitset_t clean_bits;
+	dm_bitset_t sync_bits;
 	uint32_t recoverer;
 	uint64_t recovering_region; /* -1 means not recovering */
 	uint64_t skip_bit_warning; /* used to warn if region skipped */
@@ -103,43 +102,41 @@ struct recovery_request {
 static DM_LIST_INIT(log_list);
 static DM_LIST_INIT(log_pending_list);
 
-static int log_test_bit(uint32_t *bs, unsigned bit)
+static int log_test_bit(dm_bitset_t bs, int bit)
 {
-	return ext2fs_test_bit(bit, (unsigned int *) bs) ? 1 : 0;
+	return dm_bit(bs, i);
 }
 
-static void log_set_bit(struct log_c *lc, uint32_t *bs, unsigned bit)
+static void log_set_bit(struct log_c *lc, dm_bitset_t bs, int bit)
 {
-	ext2fs_set_bit(bit, (unsigned int *) bs);
+	dm_bit_set(bs, i);
 	lc->touched = 1;
 }
 
-static void log_clear_bit(struct log_c *lc, uint32_t *bs, unsigned bit)
+static void log_clear_bit(struct log_c *lc, dm_bitset_t bs, int bit)
 {
-	ext2fs_clear_bit(bit, (unsigned int *) bs);
+	dm_bit_clear(bs, i);
 	lc->touched = 1;
 }
 
-/* FIXME: Why aren't count and start the same type? */
-static uint64_t find_next_zero_bit(uint32_t *bits, uint32_t count, int start)
+static int find_next_zero_bit(dm_bitset_t bs, int start)
 {
-	for(; (start < count) && log_test_bit(bits, start); start++);
-	return start;
+	while (dm_bit(bs, start++))
+		if (start >= (int)bs[0])
+			return -1;
+
+	return start - 1;
 }
 
-static uint64_t count_bits32(uint32_t *addr, uint32_t count)
+static uint64_t count_bits32(dm_bitset_t bs)
 {
-	int j;
-	uint32_t i;
-	uint64_t rtn = 0;
+	int i, size = ((int)bs[0]/DM_BITS_PER_INT + 1);
+	unsigned count = 0;
 
-	for (i = 0; i < count; i++) {
-		if (!addr[i])
-			continue;
-		for (j = 0; j < 32; j++)
-			rtn += (addr[i] & (1<<j)) ? 1 : 0;
-	}
-	return rtn;
+	for (i = 1; i <= size; i++)
+		count += hweight32(bs[i]);
+
+	return (uint64_t)count;
 }
 
 /*
