@@ -34,6 +34,7 @@ endif
 
 ifeq ($(MAKECMDGOALS),distclean)
   SUBDIRS += daemons/clvmd \
+	     daemons/clogd \
 	     daemons/dmeventd/plugins \
 	     daemons/dmeventd \
 	     lib/format1 \

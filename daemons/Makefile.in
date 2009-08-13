@@ -21,6 +21,10 @@ ifneq ("@CLVMD@", "none")
   SUBDIRS = clvmd
 endif
 
+ifeq ("@CLOGD@", "yes")
+  SUBDIRS += clogd
+endif
+
 ifeq ("@DMEVENTD@", "yes")
   SUBDIRS += dmeventd
 endif

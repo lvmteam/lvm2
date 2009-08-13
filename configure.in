@@ -63,7 +63,7 @@ esac
 
 ################################################################################
 dnl -- Checks for programs.
-AC_PROG_SED
+m4_pattern_allow(AC_PROG_SED)
 AC_PROG_AWK
 AC_PROG_CC
 
@@ -72,7 +72,7 @@ AC_PROG_GCC_TRADITIONAL
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
-AC_PROG_MKDIR_P
+m4_pattern_allow(AC_PROG_MKDIR_P)
 AC_PROG_RANLIB
 AC_PATH_PROG(CFLOW_CMD, cflow)
 AC_PATH_PROG(CSCOPE_CMD, cscope)
@@ -347,6 +347,23 @@ if [[ "x$CLVMD" = xall -o `expr x"$CLVMD" : '.*corosync.*'` != 0 ]]; then
 	PKG_CHECK_MODULES(CONFDB, libconfdb, [],
 		[AC_MSG_RESULT([no pkg for confdb library, using -lconfdb]);
 		CONFDB_LIBS="-lconfdb"])
+	PKG_CHECK_MODULES(CPG, libcpg, [],
+		[AC_MSG_RESULT([no pkg for libcpg library, using -lcpg]);
+		CPG_LIBS="-lcpg"])
+fi
+
+################################################################################
+dnl -- Build cluster log daemon
+AC_MSG_CHECKING(whether to build cluster log daemon)
+AC_ARG_ENABLE(clogd, [  --enable-clogd          Enable the cluster log daemon],
+CLOGD=$enableval)
+AC_MSG_RESULT($CLOGD)
+
+dnl -- Look for corosync libraries if required.
+if [[ "x$CLOGD" = xall -o `expr x"$CLOGD" : '.*corosync.*'` != 0 ]]; then
+#
+#       FIXME: ALSO NEED TO CHECK FOR CHECKPOINT MODULE
+#
 	PKG_CHECK_MODULES(CPG, libcpg, [],
 		[AC_MSG_RESULT([no pkg for libcpg library, using -lcpg]);
 		CPG_LIBS="-lcpg"])
@@ -801,6 +818,7 @@ AC_SUBST(CLDNOWHOLEARCHIVE)
 AC_SUBST(CLDWHOLEARCHIVE)
 AC_SUBST(CLUSTER)
 AC_SUBST(CLVMD)
+AC_SUBST(CLOGD)
 AC_SUBST(CMDLIB)
 AC_SUBST(CONFDB_CFLAGS)
 AC_SUBST(CONFDB_LIBS)
@@ -870,6 +888,7 @@ Makefile
 make.tmpl
 daemons/Makefile
 daemons/clvmd/Makefile
+daemons/clogd/Makefile
 daemons/dmeventd/Makefile
 daemons/dmeventd/libdevmapper-event.pc
 daemons/dmeventd/plugins/Makefile
