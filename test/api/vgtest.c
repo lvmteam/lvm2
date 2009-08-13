@@ -24,7 +24,7 @@
 #include "lvm2app.h"
 
 lvm_t handle;
-vg_t *vg;
+vg_t vg;
 const char *vg_name = "my_vg";
 const char *device = "/dev/loop3";
 const char *device2 = "/dev/loop4";

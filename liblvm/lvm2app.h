@@ -112,7 +112,7 @@ typedef struct lvm *lvm_t;
  * return a read-write object, but open functions have the argument mode to
  * define if the object can be modified or not.
  */
-typedef struct volume_group vg_t;
+typedef struct volume_group *vg_t;
 
 /**
  * Logical Volume object.
@@ -285,7 +285,7 @@ int lvm_scan(lvm_t libh);
  * begin with a "#" and should be filtered out and not used.
  *
  * To process the list, use the dm_list iterator functions.  For example:
- *      vg_t *vg;
+ *      vg_t vg;
  *      struct dm_list *vgnames;
  *      struct lvm_str_list *strl;
  *
@@ -350,7 +350,7 @@ struct dm_list *lvm_list_vg_uuids(lvm_t libh);
  *
  * \return  non-NULL VG handle (success) or NULL (failure).
  */
-vg_t *lvm_vg_open(lvm_t libh, const char *vgname, const char *mode,
+vg_t lvm_vg_open(lvm_t libh, const char *vgname, const char *mode,
 		  uint32_t flags);
 
 /**
@@ -374,7 +374,7 @@ vg_t *lvm_vg_open(lvm_t libh, const char *vgname, const char *mode,
  * \return
  * non-NULL vg handle (success) or NULL (failure)
  */
-vg_t *lvm_vg_create(lvm_t libh, const char *vg_name);
+vg_t lvm_vg_create(lvm_t libh, const char *vg_name);
 
  /**
  * Write a VG to disk.
@@ -389,7 +389,7 @@ vg_t *lvm_vg_create(lvm_t libh, const char *vg_name);
  * \return
  * 0 (success) or -1 (failure).
  */
-int lvm_vg_write(vg_t *vg);
+int lvm_vg_write(vg_t vg);
 
 /**
  * Remove a VG from the system.
@@ -403,7 +403,7 @@ int lvm_vg_write(vg_t *vg);
  * \return
  * 0 (success) or -1 (failure).
  */
-int lvm_vg_remove(vg_t *vg);
+int lvm_vg_remove(vg_t vg);
 
 /**
  * Close a VG opened with lvm_vg_create or lvm_vg_open.
@@ -417,7 +417,7 @@ int lvm_vg_remove(vg_t *vg);
  * \return
  * 0 (success) or -1 (failure).
  */
-int lvm_vg_close(vg_t *vg);
+int lvm_vg_close(vg_t vg);
 
 /**
  * Extend a VG by adding a device.
@@ -440,7 +440,7 @@ int lvm_vg_close(vg_t *vg);
  * \return
  * 0 (success) or -1 (failure).
  */
-int lvm_vg_extend(vg_t *vg, const char *device);
+int lvm_vg_extend(vg_t vg, const char *device);
 
 /**
  * Reduce a VG by removing an unused device.
@@ -459,7 +459,7 @@ int lvm_vg_extend(vg_t *vg, const char *device);
  * \return
  * 0 (success) or -1 (failure).
  */
-int lvm_vg_reduce(vg_t *vg, const char *device);
+int lvm_vg_reduce(vg_t vg, const char *device);
 
 /**
  * Set the extent size of a VG.
@@ -478,7 +478,7 @@ int lvm_vg_reduce(vg_t *vg, const char *device);
  * \return
  * 0 (success) or -1 (failure).
  */
-int lvm_vg_set_extent_size(vg_t *vg, uint32_t new_size);
+int lvm_vg_set_extent_size(vg_t vg, uint32_t new_size);
 
 /**
  * Get the current metadata sequence number of a volume group.
@@ -493,7 +493,7 @@ int lvm_vg_set_extent_size(vg_t *vg, uint32_t new_size);
  * \return
  * Metadata sequence number.
  */
-uint64_t lvm_vg_get_seqno(const vg_t *vg);
+uint64_t lvm_vg_get_seqno(const vg_t vg);
 
 /**
  * Get the current name of a volume group.
@@ -507,7 +507,7 @@ uint64_t lvm_vg_get_seqno(const vg_t *vg);
  * \return
  * Copy of the uuid string.
  */
-char *lvm_vg_get_uuid(const vg_t *vg);
+char *lvm_vg_get_uuid(const vg_t vg);
 
 /**
  * Get the current uuid of a volume group.
@@ -521,7 +521,7 @@ char *lvm_vg_get_uuid(const vg_t *vg);
  * \return
  * Copy of the name.
  */
-char *lvm_vg_get_name(const vg_t *vg);
+char *lvm_vg_get_name(const vg_t vg);
 
 /**
  * Get the current size in bytes of a volume group.
@@ -532,7 +532,7 @@ char *lvm_vg_get_name(const vg_t *vg);
  * \return
  * Size in bytes.
  */
-uint64_t lvm_vg_get_size(const vg_t *vg);
+uint64_t lvm_vg_get_size(const vg_t vg);
 
 /**
  * Get the current unallocated space in bytes of a volume group.
@@ -543,7 +543,7 @@ uint64_t lvm_vg_get_size(const vg_t *vg);
  * \return
  * Free size in bytes.
  */
-uint64_t lvm_vg_get_free_size(const vg_t *vg);
+uint64_t lvm_vg_get_free_size(const vg_t vg);
 
 /**
  * Get the current extent size in bytes of a volume group.
@@ -554,7 +554,7 @@ uint64_t lvm_vg_get_free_size(const vg_t *vg);
  * \return
  * Extent size in bytes.
  */
-uint64_t lvm_vg_get_extent_size(const vg_t *vg);
+uint64_t lvm_vg_get_extent_size(const vg_t vg);
 
 /**
  * Get the current number of total extents of a volume group.
@@ -565,7 +565,7 @@ uint64_t lvm_vg_get_extent_size(const vg_t *vg);
  * \return
  * Extent count.
  */
-uint64_t lvm_vg_get_extent_count(const vg_t *vg);
+uint64_t lvm_vg_get_extent_count(const vg_t vg);
 
 /**
  * Get the current number of free extents of a volume group.
@@ -576,7 +576,7 @@ uint64_t lvm_vg_get_extent_count(const vg_t *vg);
  * \return
  * Free extent count.
  */
-uint64_t lvm_vg_get_free_extent_count(const vg_t *vg);
+uint64_t lvm_vg_get_free_extent_count(const vg_t vg);
 
 /**
  * Get the current number of physical volumes of a volume group.
@@ -587,7 +587,7 @@ uint64_t lvm_vg_get_free_extent_count(const vg_t *vg);
  * \return
  * Physical volume count.
  */
-uint64_t lvm_vg_get_pv_count(const vg_t *vg);
+uint64_t lvm_vg_get_pv_count(const vg_t vg);
 
 /************************** logical volume handling *************************/
 
@@ -601,7 +601,7 @@ uint64_t lvm_vg_get_pv_count(const vg_t *vg);
  * A list of lv_list_t structures containing lv handles for this vg.
  * If no LVs exist on the given VG, NULL is returned.
  */
-struct dm_list *lvm_vg_list_lvs(vg_t *vg);
+struct dm_list *lvm_vg_list_lvs(vg_t vg);
 
 /**
  * Create a linear logical volume.
@@ -623,7 +623,7 @@ struct dm_list *lvm_vg_list_lvs(vg_t *vg);
  * non-NULL handle to an LV object created, or NULL if creation fails.
  *
  */
-lv_t *lvm_vg_create_lv_linear(vg_t *vg, const char *name, uint64_t size);
+lv_t *lvm_vg_create_lv_linear(vg_t vg, const char *name, uint64_t size);
 
 /**
  * Activate a logical volume.
@@ -767,7 +767,7 @@ int lvm_lv_resize(const lv_t *lv, uint64_t new_size);
  * A list of pv_list_t structures containing pv handles for this vg.
  * If no PVs exist on the given VG, NULL is returned.
  */
-struct dm_list *lvm_vg_list_pvs(vg_t *vg);
+struct dm_list *lvm_vg_list_pvs(vg_t vg);
 
 /**
  * Get the current uuid of a logical volume.

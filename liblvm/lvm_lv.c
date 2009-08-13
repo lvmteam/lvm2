@@ -70,7 +70,7 @@ uint64_t lvm_lv_is_suspended(const lv_t *lv)
 
 /* Set defaults for non-segment specific LV parameters */
 static void _lv_set_default_params(struct lvcreate_params *lp,
-				   vg_t *vg, const char *lvname,
+				   vg_t vg, const char *lvname,
 				   uint64_t extents)
 {
 	lp->zero = 1;
@@ -101,7 +101,7 @@ static void _lv_set_default_linear_params(struct cmd_context *cmd,
  * lvm_vg_write.  However, this appears to be non-trivial change until
  * lv_create_single is refactored by segtype.
  */
-lv_t *lvm_vg_create_lv_linear(vg_t *vg, const char *name, uint64_t size)
+lv_t *lvm_vg_create_lv_linear(vg_t vg, const char *name, uint64_t size)
 {
 	struct lvcreate_params lp;
 	uint64_t extents;
