@@ -137,12 +137,14 @@ static int _md_sysfs_attribute_snprintf(char *path, size_t size,
 	if (!sysfs_dir || !*sysfs_dir)
 		return ret;
 
-check_md_major:
-	if (MAJOR(dev) != md_major()) {
-		if (get_primary_dev(sysfs_dir, blkdev, &dev))
-			goto check_md_major;
-		return ret;
+	if (MAJOR(dev) == blkext_major()) {
+		/* lookup parent MD device from blkext partition */
+		if (!get_primary_dev(sysfs_dir, blkdev, &dev))
+			return ret;
 	}
+
+	if (MAJOR(dev) != md_major())
+		return ret;
 
 	ret = dm_snprintf(path, size, "%s/dev/block/%d:%d/md/%s", sysfs_dir,
 			  (int)MAJOR(dev), (int)MINOR(dev), attribute);

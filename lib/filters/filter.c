@@ -38,11 +38,17 @@ typedef struct {
 } device_info_t;
 
 static int _md_major = -1;
+static int _blkext_major = -1;
 static int _device_mapper_major = -1;
 
 int md_major(void)
 {
 	return _md_major;
+}
+
+int blkext_major(void)
+{
+	return _blkext_major;
 }
 
 /*
@@ -196,6 +202,10 @@ static int _scan_proc_dev(const char *proc, const struct config_node *cn)
 		/* Look for md device */
 		if (!strncmp("md", line + i, 2) && isspace(*(line + i + 2)))
 			_md_major = line_maj;
+
+		/* Look for blkext device */
+		if (!strncmp("blkext", line + i, 6) && isspace(*(line + i + 6)))
+			_blkext_major = line_maj;
 
 		/* Look for device-mapper device */
 		/* FIXME Cope with multiple majors */
