@@ -1264,6 +1264,7 @@ struct physical_volume * pvcreate_single(struct cmd_context *cmd, const char *pv
 	struct device *dev;
 	struct dm_list mdas;
 	struct pvcreate_params default_pp;
+	char buffer[64] __attribute((aligned(8)));
 
 	fill_default_pvcreate_params(&default_pp);
 	if (!pp)
@@ -1272,8 +1273,11 @@ struct physical_volume * pvcreate_single(struct cmd_context *cmd, const char *pv
 	if (pp->idp) {
 		if ((dev = device_from_pvid(cmd, pp->idp)) &&
 		    (dev != dev_cache_get(pv_name, cmd->filter))) {
-			log_error("uuid %s already in use on \"%s\"",
-				  pp->idp->uuid, dev_name(dev));
+			if (!id_write_format((const struct id*)&pp->idp->uuid,
+			    buffer, sizeof(buffer)))
+				return_NULL;
+			log_error("uuid %s already in use on \"%s\"", buffer,
+				  dev_name(dev));
 			return NULL;
 		}
 	}
