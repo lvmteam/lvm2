@@ -1,5 +1,6 @@
 Version 2.02.52 -
 =================================
+  Fix global locking in PV reporting commands (2.02.49).
   Fix pvcreate string termination in duplicate uuid warning message.
   Fix pvcreate on a partition (2.02.51).
   Fix vgcfgrestore error paths when locking fails (2.02.49).
