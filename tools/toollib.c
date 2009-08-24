@@ -643,7 +643,7 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 
 	dm_list_init(&tags);
 
-	if (lock_global && !lock_vol(cmd, VG_GLOBAL, LCK_READ)) {
+	if (lock_global && !lock_vol(cmd, VG_GLOBAL, LCK_VG_READ)) {
 		log_error("Unable to obtain global lock.");
 		return ECMD_FAILED;
 	}
