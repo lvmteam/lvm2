@@ -688,13 +688,13 @@ DEBUG
 COPTIMISE_FLAG
 CONFDIR
 CMDLIB
-CLOGD
 CLVMD
 CLUSTER
 CLDWHOLEARCHIVE
 CLDNOWHOLEARCHIVE
 CLDFLAGS
 BUILD_DMEVENTD
+BUILD_CMIRRORD
 APPLIB
 MODPROBE_CMD
 MSGFMT
@@ -814,7 +814,8 @@ with_mirrors
 enable_readline
 enable_realtime
 with_clvmd
-enable_clogd
+enable_cmirrord
+with_cmirrord_pidfile
 enable_debug
 with_optimisation
 enable_profiling
@@ -1502,7 +1503,7 @@ Optional Features:
                           device-mapper is missing from the kernel
   --disable-readline      Disable readline support
   --disable-realtime      Disable realtime clock support
-  --enable-clogd          Enable the cluster log daemon
+  --enable-cmirrord       Enable the cluster mirror log daemon
   --enable-debug          Enable debugging
   --enable-profiling      Gather gcov profiling data
   --disable-devmapper     Disable LVM2 device-mapper interaction
@@ -1545,6 +1546,7 @@ Optional Packages:
                            * all                   (autodetect)
                            * none                  (disable build)
                           TYPE=none
+  --with-cmirrord-pidfile=PATH    cmirrord pidfile [/var/run/cmirrord.pid]
   --with-optimisation=OPT C optimisation flag [OPT=-O2]
   --with-localedir=DIR    Translation files in DIR [PREFIX/share/locale]
   --with-confdir=DIR      Configuration files in DIR [/etc]
@@ -11653,19 +11655,45 @@ $as_echo "Enabling clvmd openais backend" >&6; }
 fi
 
 ################################################################################
-{ $as_echo "$as_me:$LINENO: checking whether to build cluster log daemon" >&5
-$as_echo_n "checking whether to build cluster log daemon... " >&6; }
-# Check whether --enable-clogd was given.
-if test "${enable_clogd+set}" = set; then
-  enableval=$enable_clogd; CLOGD=$enableval
+{ $as_echo "$as_me:$LINENO: checking whether to build cluster mirror log daemon" >&5
+$as_echo_n "checking whether to build cluster mirror log daemon... " >&6; }
+# Check whether --enable-cmirrord was given.
+if test "${enable_cmirrord+set}" = set; then
+  enableval=$enable_cmirrord; CMIRRORD=$enableval
+else
+  CMIRRORD=no
 fi
 
-{ $as_echo "$as_me:$LINENO: result: $CLOGD" >&5
-$as_echo "$CLOGD" >&6; }
+{ $as_echo "$as_me:$LINENO: result: $CMIRRORD" >&5
+$as_echo "$CMIRRORD" >&6; }
 
-if [ "x$CLOGD" = xall -o `expr x"$CLOGD" : '.*corosync.*'` != 0 ]; then
+BUILD_CMIRRORD=$CMIRRORD
+
+################################################################################
+
+
+if test "x$BUILD_CMIRRORD" = xyes; then
+
+# Check whether --with-cmirrord-pidfile was given.
+if test "${with_cmirrord_pidfile+set}" = set; then
+  withval=$with_cmirrord_pidfile;  cat >>confdefs.h <<_ACEOF
+#define CMIRRORD_PIDFILE "$withval"
+_ACEOF
+
+else
+   cat >>confdefs.h <<_ACEOF
+#define CMIRRORD_PIDFILE "/var/run/cmirrord.pid"
+_ACEOF
+
+fi
+
+fi
+
+################################################################################
+if [ "x$BUILD_CMIRRORD" = xyes ]; then
 #
 #       FIXME: ALSO NEED TO CHECK FOR CHECKPOINT MODULE
+#       FIXME: Merge this with the new clvmd logic
 #
 
 pkg_failed=no

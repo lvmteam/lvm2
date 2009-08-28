@@ -6,6 +6,9 @@
 /* Define to 1 to include built-in support for clustered LVM locking. */
 #undef CLUSTER_LOCKING_INTERNAL
 
+/* Path to cmirrord pidfile. */
+#undef CMIRRORD_PIDFILE
+
 /* Define to one of `_getb67', `GETB67', `getb67' for Cray-2 and Cray-YMP
    systems. This function is required for `alloca.c' support on those systems.
    */

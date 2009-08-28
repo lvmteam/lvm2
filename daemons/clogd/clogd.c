@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 	/* Parent can now exit, we're ready to handle requests */
 	kill(getppid(), SIGTERM);
 
-	LOG_PRINT("Starting clogd:");
+	LOG_PRINT("Starting cmirrord:");
 	LOG_PRINT(" Built: "__DATE__" "__TIME__"\n");
 	LOG_DBG(" Compiled with debugging.");
 
@@ -233,9 +233,9 @@ static void daemonize(void)
 	open("/dev/null", O_WRONLY); /* reopen stdout */
 	open("/dev/null", O_WRONLY); /* reopen stderr */
 
-	LOG_OPEN("clogd", LOG_PID, LOG_DAEMON);
+	LOG_OPEN("cmirrord", LOG_PID, LOG_DAEMON);
 
-	if (create_lockfile("/var/run/clogd.pid"))
+	if (create_lockfile(CMIRRORD_PIDFILE))
 		exit(EXIT_LOCKFILE);
 
 	signal(SIGINT, &sig_handler);
