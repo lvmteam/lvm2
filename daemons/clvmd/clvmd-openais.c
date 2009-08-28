@@ -1,7 +1,7 @@
 /******************************************************************************
 *******************************************************************************
 **
-**  Copyright (C) 2007 Red Hat, Inc. All rights reserved.
+**  Copyright (C) 2007-2009 Red Hat, Inc. All rights reserved.
 **
 *******************************************************************************
 ******************************************************************************/
@@ -41,7 +41,9 @@
 
 #include <openais/saAis.h>
 #include <openais/saLck.h>
-#include <openais/cpg.h>
+
+#include <corosync/corotypes.h>
+#include <corosync/cpg.h>
 
 #include "locking.h"
 #include "lvm-logging.h"
@@ -53,17 +55,18 @@
 /* Timeout value for several openais calls */
 #define TIMEOUT 10
 
-static void cpg_deliver_callback (cpg_handle_t handle,
-				  struct cpg_name *groupName,
+static void openais_cpg_deliver_callback (cpg_handle_t handle,
+				  const struct cpg_name *groupName,
 				  uint32_t nodeid,
 				  uint32_t pid,
 				  void *msg,
-				  int msg_len);
-static void cpg_confchg_callback(cpg_handle_t handle,
-				 struct cpg_name *groupName,
-				 struct cpg_address *member_list, int member_list_entries,
-				 struct cpg_address *left_list, int left_list_entries,
-				 struct cpg_address *joined_list, int joined_list_entries);
+				  size_t msg_len);
+static void openais_cpg_confchg_callback(cpg_handle_t handle,
+				 const struct cpg_name *groupName,
+				 const struct cpg_address *member_list, size_t member_list_entries,
+				 const struct cpg_address *left_list, size_t left_list_entries,
+				 const struct cpg_address *joined_list, size_t joined_list_entries);
+
 static void _cluster_closedown(void);
 
 /* Hash list of nodes in the cluster */
@@ -85,9 +88,9 @@ static SaLckHandleT lck_handle;
 static struct cpg_name cpg_group_name;
 
 /* Openais callback structs */
-cpg_callbacks_t cpg_callbacks = {
-	.cpg_deliver_fn =            cpg_deliver_callback,
-	.cpg_confchg_fn =            cpg_confchg_callback,
+cpg_callbacks_t openais_cpg_callbacks = {
+	.cpg_deliver_fn =            openais_cpg_deliver_callback,
+	.cpg_confchg_fn =            openais_cpg_confchg_callback,
 };
 
 struct node_info
@@ -230,12 +233,12 @@ static int add_internal_client(int fd, fd_callback_t callback)
 	return 0;
 }
 
-static void cpg_deliver_callback (cpg_handle_t handle,
-				  struct cpg_name *groupName,
+static void openais_cpg_deliver_callback (cpg_handle_t handle,
+				  const struct cpg_name *groupName,
 				  uint32_t nodeid,
 				  uint32_t pid,
 				  void *msg,
-				  int msg_len)
+				  size_t msg_len)
 {
 	int target_nodeid;
 
@@ -250,11 +253,11 @@ static void cpg_deliver_callback (cpg_handle_t handle,
 					msg_len-OPENAIS_CSID_LEN, (char*)&nodeid);
 }
 
-static void cpg_confchg_callback(cpg_handle_t handle,
-				 struct cpg_name *groupName,
-				 struct cpg_address *member_list, int member_list_entries,
-				 struct cpg_address *left_list, int left_list_entries,
-				 struct cpg_address *joined_list, int joined_list_entries)
+static void openais_cpg_confchg_callback(cpg_handle_t handle,
+				 const struct cpg_name *groupName,
+				 const struct cpg_address *member_list, size_t member_list_entries,
+				 const struct cpg_address *left_list, size_t left_list_entries,
+				 const struct cpg_address *joined_list, size_t joined_list_entries)
 {
 	int i;
 	struct node_info *ninfo;
@@ -330,7 +333,7 @@ static int _init_cluster(void)
 	lock_hash = dm_hash_create(10);
 
 	err = cpg_initialize(&cpg_handle,
-			     &cpg_callbacks);
+			     &openais_cpg_callbacks);
 	if (err != SA_AIS_OK) {
 		syslog(LOG_ERR, "Cannot initialise OpenAIS CPG service: %d",
 		       err);
@@ -342,7 +345,7 @@ static int _init_cluster(void)
 					NULL,
 			      &ver);
 	if (err != SA_AIS_OK) {
-		cpg_initialize(&cpg_handle, &cpg_callbacks);
+		cpg_initialize(&cpg_handle, &openais_cpg_callbacks);
 		syslog(LOG_ERR, "Cannot initialise OpenAIS lock service: %d",
 		       err);
 		DEBUGLOG("Cannot initialise OpenAIS lock service: %d\n\n", err);

@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2002-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2009 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -77,7 +77,7 @@ struct cluster_ops *init_cman_cluster(void);
 
 #ifdef USE_OPENAIS
 #  include <openais/saAis.h>
-#  include <openais/totem/totem.h>
+#  include <corosync/totem/totem.h>
 #  define OPENAIS_CSID_LEN (sizeof(int))
 #  define OPENAIS_MAX_CLUSTER_MESSAGE         MESSAGE_SIZE_MAX
 #  define OPENAIS_MAX_CLUSTER_MEMBER_NAME_LEN SA_MAX_NAME_LENGTH
