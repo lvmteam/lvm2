@@ -17,22 +17,17 @@ VPATH = @srcdir@
 
 SOURCES = clogd.c cluster.c functions.c link_mon.c local.c logging.c
 
-ifeq ("@DEBUG@", "yes")
-	DEFS += -DDEBUG
-endif
-
-TARGETS = clogd
+TARGETS = cmirrord
 
 include $(top_srcdir)/make.tmpl
 
 LDFLAGS += -L$(usrlibdir)/openais
 LIBS += -lcpg -lSaCkpt -ldevmapper
 
-clogd: $(OBJECTS) $(top_srcdir)/lib/liblvm-internal.a
-	echo $(LIBS)
-	$(CC) -o clogd $(OBJECTS) $(CFLAGS) $(LDFLAGS) \
+cmirrord: $(OBJECTS) $(top_srcdir)/lib/liblvm-internal.a
+	$(CC) -o cmirrord $(OBJECTS) $(CFLAGS) $(LDFLAGS) \
 		$(LVMLIBS) $(LMLIBS) $(LIBS)
 
 install: $(TARGETS)
-	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) clogd \
-		$(usrsbindir)/clogd
+	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) cmirrord \
+		$(usrsbindir)/cmirrord
