@@ -540,6 +540,7 @@ static int clog_ctr(struct dm_ulog_request *rq)
 {
 	int argc, i, r = 0;
 	char *p, **argv = NULL;
+	char *dev_size_str;
 	uint64_t device_size;
 
 	/* Sanity checks */
@@ -559,14 +560,16 @@ static int clog_ctr(struct dm_ulog_request *rq)
 	}
 
 	/* Split up args */
-	for (argc = 1, p = rq->data; (p = strstr(p, " ")); p++, argc++)
+	for (argc = 0, p = rq->data; (p = strstr(p, " ")); p++, argc++)
 		*p = '\0';
 
 	argv = malloc(argc * sizeof(char *));
 	if (!argv)
 		return -ENOMEM;
 
-	for (i = 0, p = rq->data; i < argc; i++, p = p + strlen(p) + 1)
+	p = dev_size_str = rq->data;
+	p += strlen(p) + 1;
+	for (i = 0; i < argc; i++, p = p + strlen(p) + 1)
 		argv[i] = p;
 
 	if (strcmp(argv[0], "clustered_disk") &&
@@ -576,13 +579,12 @@ static int clog_ctr(struct dm_ulog_request *rq)
 		return -EINVAL;
 	}
 
-	if (!(device_size = strtoll(argv[argc - 1], &p, 0)) || *p) {
-		LOG_ERROR("Invalid device size argument: %s", argv[argc - 1]);
+	if (!(device_size = strtoll(dev_size_str, &p, 0)) || *p) {
+		LOG_ERROR("Invalid device size argument: %s", dev_size_str);
 		free(argv);
 		return -EINVAL;
 	}
 
-	argc--;  /* We pass in the device_size separate */
 	r = _clog_ctr(rq->uuid, rq->luid, argc - 1, argv + 1, device_size);
 
 	/* We join the CPG when we resume */
