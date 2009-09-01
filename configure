@@ -1539,7 +1539,7 @@ Optional Packages:
   --with-mirrors=TYPE     Mirror support: internal/shared/none
                           TYPE=internal
   --with-clvmd=TYPE       Build cluster LVM Daemon.
-                          The following locking combinations are valid:
+                          The following cluster manager combinations are valid:
                            * cman,gulm             (RHEL4 or equivalent)
                            * cman                  (RHEL5 or equivalent)
                            * cman,corosync,openais (or selection of them)
@@ -11623,35 +11623,39 @@ fi
 fi
 
 if test x$CLVMD = xall; then
+	CLVMD=none
 	if test x$HAVE_CCS = xyes && \
 	   test x$HAVE_GULM = xyes; then
-		{ $as_echo "$as_me:$LINENO: result: Enabling clvmd gulm backend" >&5
-$as_echo "Enabling clvmd gulm backend" >&6; }
-		NEWCLVMD="$NEWCLVMD,gulm"
+		{ $as_echo "$as_me:$LINENO: result: Enabling clvmd gulm cluster manager" >&5
+$as_echo "Enabling clvmd gulm cluster manager" >&6; }
+		CLVMD="$CLVMD,gulm"
 	fi
 	if test x$HAVE_CMAN = xyes && \
 	   test x$HAVE_DLM = xyes; then
-		{ $as_echo "$as_me:$LINENO: result: Enabling clvmd cman backend" >&5
-$as_echo "Enabling clvmd cman backend" >&6; }
-		NEWCLVMD="$NEWCLVMD,cman"
+		{ $as_echo "$as_me:$LINENO: result: Enabling clvmd cman cluster manager" >&5
+$as_echo "Enabling clvmd cman cluster manager" >&6; }
+		CLVMD="$CLVMD,cman"
 	fi
 	if test x$HAVE_COROSYNC = xyes && \
 	   test x$HAVE_QUORUM = xyes && \
 	   test x$HAVE_CPG = xyes && \
 	   test x$HAVE_DLM = xyes && \
 	   test x$HAVE_CONFDB = xyes; then
-		{ $as_echo "$as_me:$LINENO: result: Enabling clvmd corosync backend" >&5
-$as_echo "Enabling clvmd corosync backend" >&6; }
-		NEWCLVMD="$NEWCLVMD,corosync"
+		{ $as_echo "$as_me:$LINENO: result: Enabling clvmd corosync cluster manager" >&5
+$as_echo "Enabling clvmd corosync cluster manager" >&6; }
+		CLVMD="$CLVMD,corosync"
 	fi
 	if test x$HAVE_COROSYNC = xyes && \
 	   test x$HAVE_CPG = xyes && \
 	   test x$HAVE_SALCK = xyes; then
-		{ $as_echo "$as_me:$LINENO: result: Enabling clvmd openais backend" >&5
-$as_echo "Enabling clvmd openais backend" >&6; }
-		NEWCLVMD="$NEWCLVMD,openais"
+		{ $as_echo "$as_me:$LINENO: result: Enabling clvmd openais cluster manager" >&5
+$as_echo "Enabling clvmd openais cluster manager" >&6; }
+		CLVMD="$CLVMD,openais"
 	fi
-	CLVMD="$NEWCLVMD"
+	if test x$CLVMD = xnone; then
+		{ $as_echo "$as_me:$LINENO: result: Disabling clvmd build. No cluster manager detected." >&5
+$as_echo "Disabling clvmd build. No cluster manager detected." >&6; }
+	fi
 fi
 
 ################################################################################

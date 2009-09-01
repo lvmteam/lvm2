@@ -1,5 +1,6 @@
 Version 2.02.52 -
 =================================
+  Fix clvmd autodetection check and cleanup related configure messages.
   Fix Makefile distclean target.
   Make clvmd check corosync to see what cluster interface it should use.
   Rewrite clvmd configuration code to cope with all combinations of libs.

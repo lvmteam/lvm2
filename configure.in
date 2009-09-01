@@ -326,7 +326,7 @@ dnl -- Build cluster LVM daemon
 AC_MSG_CHECKING(whether to build cluster LVM daemon)
 AC_ARG_WITH(clvmd,
   [  --with-clvmd=TYPE       Build cluster LVM Daemon.
-                          The following locking combinations are valid:
+                          The following cluster manager combinations are valid:
                            * cman,gulm             (RHEL4 or equivalent)
                            * cman                  (RHEL5 or equivalent)
                            * cman,corosync,openais (or selection of them)
@@ -522,31 +522,34 @@ fi
 dnl -- If we are autodetecting, we need to re-create
 dnl -- the depedencies checks and set a proper CLVMD.
 if test x$CLVMD = xall; then
+	CLVMD=none
 	if test x$HAVE_CCS = xyes && \
 	   test x$HAVE_GULM = xyes; then
-		AC_MSG_RESULT([Enabling clvmd gulm backend])
-		NEWCLVMD="$NEWCLVMD,gulm"
+		AC_MSG_RESULT([Enabling clvmd gulm cluster manager])
+		CLVMD="$CLVMD,gulm"
 	fi
 	if test x$HAVE_CMAN = xyes && \
 	   test x$HAVE_DLM = xyes; then
-		AC_MSG_RESULT([Enabling clvmd cman backend])
-		NEWCLVMD="$NEWCLVMD,cman"
+		AC_MSG_RESULT([Enabling clvmd cman cluster manager])
+		CLVMD="$CLVMD,cman"
 	fi
 	if test x$HAVE_COROSYNC = xyes && \
 	   test x$HAVE_QUORUM = xyes && \
 	   test x$HAVE_CPG = xyes && \
 	   test x$HAVE_DLM = xyes && \
 	   test x$HAVE_CONFDB = xyes; then
-		AC_MSG_RESULT([Enabling clvmd corosync backend])
-		NEWCLVMD="$NEWCLVMD,corosync"
+		AC_MSG_RESULT([Enabling clvmd corosync cluster manager])
+		CLVMD="$CLVMD,corosync"
 	fi
 	if test x$HAVE_COROSYNC = xyes && \
 	   test x$HAVE_CPG = xyes && \
 	   test x$HAVE_SALCK = xyes; then
-		AC_MSG_RESULT([Enabling clvmd openais backend])
-		NEWCLVMD="$NEWCLVMD,openais"
+		AC_MSG_RESULT([Enabling clvmd openais cluster manager])
+		CLVMD="$CLVMD,openais"
 	fi
-	CLVMD="$NEWCLVMD"
+	if test x$CLVMD = xnone; then
+		AC_MSG_RESULT([Disabling clvmd build. No cluster manager detected.])
+	fi
 fi
 
 ################################################################################
