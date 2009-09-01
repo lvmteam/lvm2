@@ -93,3 +93,4 @@ distclean_lib:
 	$(RM) $(LIB_NAME).pc
 
 distclean: distclean_lib
+	$(RM) -f Makefile

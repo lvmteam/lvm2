@@ -42,6 +42,8 @@ ifeq ($(MAKECMDGOALS),distclean)
 	     lib/locking \
 	     lib/mirror \
 	     lib/snapshot \
+	     liblvm \
+	     udev \
 	     test/api \
 	     test \
 	     po
