@@ -250,7 +250,7 @@ distclean: $(SUBDIRS.distclean)
 	      $(SOURCES:%.c=%.gcda) $(LDDEPS) \
 	      config.cache config.log config.status \
 	      Makefile make.tmpl core \
-	      lvm-version.h lvm2.po
+	      lvm-version.h
 
 .export.sym: .exported_symbols
 	set -e; (echo "Base {"; echo "	global:"; \
