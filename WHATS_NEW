@@ -1,5 +1,7 @@
 Version 2.02.52 -
 =================================
+  Enforce an alphabetical lock ordering for vgname locks.
+  Refactor vgsplit, vgmerge, and vgrename to obey vgname ordering rules.
   Implement write lock prioritisation for file locking and make it default.
   Fix clogd build direcory.
   Drop unrequired clogd Makefile.

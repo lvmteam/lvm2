@@ -186,6 +186,45 @@ void lvmcache_drop_metadata(const char *vgname)
 		_drop_metadata(vgname);
 }
 
+/*
+ * Ensure vgname2 comes after vgname1 alphabetically.
+ * Special VG names beginning with '#' don't count.
+ */
+static int _vgname_order_correct(const char *vgname1, const char *vgname2)
+{
+	if ((*vgname1 == '#')|(*vgname2 == '#'))
+		return 1;
+
+	if (strcmp(vgname1, vgname2) < 0)
+		return 1;
+	return 0;
+}
+
+/*
+ * Ensure VG locks are acquired in alphabetical order.
+ */
+int lvmcache_verify_lock_order(const char *vgname)
+{
+	struct dm_hash_node *n;
+	const char *vgname2;
+
+	if (!_lock_hash)
+		return_0;
+
+	dm_hash_iterate(n, _lock_hash) {
+		if (!dm_hash_get_data(_lock_hash, n))
+			return_0;
+		vgname2 = dm_hash_get_key(_lock_hash, n);
+		if (!_vgname_order_correct(vgname2, vgname)) {
+			log_errno(EDEADLK, "Internal error: VG lock %s must "
+				  "be requested before %s, not after.",
+				  vgname, vgname2);
+			return_0;
+		}
+	}
+	return 1;
+}
+
 void lvmcache_lock_vgname(const char *vgname, int read_only __attribute((unused)))
 {
 	if (!_lock_hash && !lvmcache_init()) {
@@ -196,7 +235,7 @@ void lvmcache_lock_vgname(const char *vgname, int read_only __attribute((unused)
 	if (dm_hash_lookup(_lock_hash, vgname))
 		log_error("Internal error: Nested locking attempted on VG %s.",
 			  vgname);
-		
+
 	if (!dm_hash_insert(_lock_hash, vgname, (void *) 1))
 		log_error("Cache locking failure for %s", vgname);
 

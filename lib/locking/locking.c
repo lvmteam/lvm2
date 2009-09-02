@@ -387,6 +387,12 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags)
 		if (!_blocking_supported || vgs_locked())
 			flags |= LCK_NONBLOCK;
 
+		if (vol[0] != '#' &&
+		    ((flags & LCK_TYPE_MASK) != LCK_UNLOCK) &&
+		    (!(flags & LCK_CACHE)) &&
+		    !lvmcache_verify_lock_order(vol))
+			return 0;
+
 		/* Lock VG to change on-disk metadata. */
 		/* If LVM1 driver knows about the VG, it can't be accessed. */
 		if (!check_lvm1_vg_inactive(cmd, vol))

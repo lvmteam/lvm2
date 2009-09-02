@@ -34,6 +34,8 @@ int remote_lock_held(const char *vol);
  *   Use VG_GLOBAL as a global lock and to wipe the internal cache.
  *   char *vol holds volume group name.
  *   Set the LCK_CACHE flag to invalidate 'vol' in the internal cache.
+ *   If more than one lock needs to be held simultaneously, they must be
+ *   acquired in alphabetical order of 'vol' (to avoid deadlocks).
  *
  * LCK_LV:
  *   Lock/unlock an individual logical volume
