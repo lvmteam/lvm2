@@ -314,6 +314,9 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
+	if (strcmp(vg_name_to, vg_name_from) < 0)
+		lock_vg_from_first = 0;
+
 	if (lock_vg_from_first) {
 		vg_from = _vgsplit_from(cmd, vg_name_from);
 		if (!vg_from)
