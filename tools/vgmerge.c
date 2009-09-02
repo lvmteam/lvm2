@@ -41,14 +41,28 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 		return ECMD_FAILED;
 	}
 
-	vg_to = _vgmerge_vg_read(cmd, vg_name_to);
-	if (!vg_to)
-		return ECMD_FAILED;
+	if (strcmp(vg_name_to, vg_name_from) > 0)
+		lock_vg_from_first = 1;
 
-	vg_from = _vgmerge_vg_read(cmd, vg_name_from);
-	if (!vg_from) {
-		unlock_and_release_vg(cmd, vg_to, vg_name_to);
-		return ECMD_FAILED;
+	if (lock_vg_from_first) {
+		vg_from = _vgmerge_vg_read(cmd, vg_name_from);
+		if (!vg_from)
+			return ECMD_FAILED;
+		vg_to = _vgmerge_vg_read(cmd, vg_name_to);
+		if (!vg_to) {
+			unlock_and_release_vg(cmd, vg_from, vg_name_from);
+			return ECMD_FAILED;
+		}
+	} else {
+		vg_to = _vgmerge_vg_read(cmd, vg_name_to);
+		if (!vg_to)
+			return ECMD_FAILED;
+
+		vg_from = _vgmerge_vg_read(cmd, vg_name_from);
+		if (!vg_from) {
+			unlock_and_release_vg(cmd, vg_to, vg_name_to);
+			return ECMD_FAILED;
+		}
 	}
 
 	if (!vgs_are_compatible(cmd, vg_from, vg_to))
