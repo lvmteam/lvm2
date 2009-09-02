@@ -106,9 +106,9 @@ int lvm_vg_write(vg_t vg)
 		return -1;
 
 	if (dm_list_empty(&vg->pvs)) {
-		log_error("Volume group %s does not contain any "
-			  "physical volumes.", vg->name);
-		return -1;
+		if (!vg_remove(vg))
+			return -1;
+		return 0;
 	}
 
 	if (! dm_list_empty(&vg->removed_pvs)) {
@@ -156,8 +156,6 @@ int lvm_vg_remove(vg_t vg)
 	if (!vg_remove_check(vg))
 		return -1;
 
-	if (!vg_remove(vg))
-		return -1;
 	return 0;
 }
 
