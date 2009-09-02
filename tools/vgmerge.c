@@ -21,6 +21,7 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 	struct volume_group *vg_to, *vg_from;
 	struct lv_list *lvl1, *lvl2;
 	int r = ECMD_FAILED;
+	int lock_vg_from_first = 0;
 
 	if (!strcmp(vg_name_to, vg_name_from)) {
 		log_error("Duplicate volume group name \"%s\"", vg_name_from);
@@ -116,8 +117,13 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 		  vg_from->name, vg_to->name);
 	r = ECMD_PROCESSED;
 bad:
-	unlock_and_release_vg(cmd, vg_from, vg_name_from);
-	unlock_and_release_vg(cmd, vg_to, vg_name_to);
+	if (lock_vg_from_first) {
+		unlock_and_release_vg(cmd, vg_to, vg_name_to);
+		unlock_and_release_vg(cmd, vg_from, vg_name_from);
+	} else {
+		unlock_and_release_vg(cmd, vg_from, vg_name_from);
+		unlock_and_release_vg(cmd, vg_to, vg_name_to);
+	}
 	return r;
 }
 
