@@ -315,8 +315,11 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	vg_from = _vgsplit_from(cmd, vg_name_from);
-	if (!vg_from)
+	if (!vg_from) {
+		if (!lock_vg_from_first)
+			unlock_and_release_vg(cmd, vg_to, vg_name_to);
 		return ECMD_FAILED;
+	}
 
 	/*
 	 * Set metadata format of original VG.
@@ -327,7 +330,8 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 
 	vg_to = _vgsplit_to(cmd, vg_name_to, &existing_vg);
 	if (!vg_to) {
-		unlock_and_release_vg(cmd, vg_from, vg_name_from);
+		if (lock_vg_from_first)
+			unlock_and_release_vg(cmd, vg_from, vg_name_from);
 		return ECMD_FAILED;
 	}
 	if (existing_vg) {
