@@ -74,7 +74,7 @@ static int vg_rename_path(struct cmd_context *cmd, const char *old_vg_path,
 	const char *vgid = NULL, *vg_name, *vg_name_old;
 	char old_path[NAME_LEN], new_path[NAME_LEN];
 	struct volume_group *vg = NULL;
-	uint32_t rc;
+	int lock_vg_old_first = 1;
 
 	vg_name_old = skip_dev_dir(cmd, old_vg_path, NULL);
 	vg_name_new = skip_dev_dir(cmd, new_vg_path, NULL);
@@ -116,13 +116,26 @@ static int vg_rename_path(struct cmd_context *cmd, const char *old_vg_path,
 	} else
 		vgid = NULL;
 
-	vg = vg_rename_old(cmd, vg_name_old, vgid);
-	if (!vg)
-		return 0;
+	if (strcmp(vg_name_new, vg_name_old) < 0)
+		lock_vg_old_first = 0;
 
-	if (!vg_rename_new(cmd, vg_name_new)) {
-		unlock_and_release_vg(cmd, vg, vg_name_old);
-		return 0;
+	if (lock_vg_old_first) {
+		vg = vg_rename_old(cmd, vg_name_old, vgid);
+		if (!vg)
+			return 0;
+
+		if (!vg_rename_new(cmd, vg_name_new)) {
+			unlock_and_release_vg(cmd, vg, vg_name_old);
+			return 0;
+		}
+	} else {
+		if (!vg_rename_new(cmd, vg_name_new)) {
+			return 0;
+		}
+
+		vg = vg_rename_old(cmd, vg_name_old, vgid);
+		if (!vg)
+			return 0;
 	}
 
 	if (!archive(vg))
@@ -176,8 +189,13 @@ static int vg_rename_path(struct cmd_context *cmd, const char *old_vg_path,
 	return 1;
 
       error:
-	unlock_vg(cmd, vg_name_new);
-	unlock_and_release_vg(cmd, vg, vg_name_old);
+	if (lock_vg_old_first) {
+		unlock_vg(cmd, vg_name_new);
+		unlock_and_release_vg(cmd, vg, vg_name_old);
+	} else {
+		unlock_and_release_vg(cmd, vg, vg_name_old);
+		unlock_vg(cmd, vg_name_new);
+	}
 	return 0;
 }
 
