@@ -290,6 +290,11 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 			goto bad2;
 		}
 
+	} else if (vg_read_error(vg_to) == SUCCESS) {
+		existing_vg = 0;
+	}
+
+	if (existing_vg) {
 		if (new_vg_option_specified(cmd)) {
 			log_error("Volume group \"%s\" exists, but new VG "
 				    "option specified", vg_name_to);
@@ -297,9 +302,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		}
 		if (!vgs_are_compatible(cmd, vg_from,vg_to))
 			goto_bad;
-	} else if (vg_read_error(vg_to) == SUCCESS) {
-		existing_vg = 0;
-
+	} else {
 		vp_def.vg_name = NULL;
 		vp_def.extent_size = vg_from->extent_size;
 		vp_def.max_pv = vg_from->max_pv;
