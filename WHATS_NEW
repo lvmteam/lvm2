@@ -1,5 +1,6 @@
 Version 2.02.52 -
 =================================
+  Implement write lock prioritisation for file locking and make it default.
   Fix clogd build direcory.
   Drop unrequired clogd Makefile.
   Fix clvmd autodetection check and cleanup related configure messages.

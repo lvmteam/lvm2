@@ -38,6 +38,7 @@ struct lock_list {
 
 static struct dm_list _lock_list;
 static char _lock_dir[NAME_LEN];
+static int _prioritise_write_locks;
 
 static sig_t _oldhandler;
 static sigset_t _fullsigset, _intsigset;
@@ -47,6 +48,7 @@ static void _undo_flock(const char *file, int fd)
 {
 	struct stat buf1, buf2;
 
+	log_debug("_undo_flock %s", file);
 	if (!flock(fd, LOCK_NB | LOCK_EX) &&
 	    !stat(file, &buf1) &&
 	    !fstat(fd, &buf2) &&
@@ -135,6 +137,8 @@ static int _do_flock(const char *file, int *fd, int operation, uint32_t nonblock
 	int old_errno;
 	struct stat buf1, buf2;
 
+	log_debug("_do_flock %s %c%c",
+		  file, operation == LOCK_EX ? 'W' : 'R', nonblock ? ' ' : 'B');
 	do {
 		if ((*fd > -1) && close(*fd))
 			log_sys_error("close", file);
@@ -167,6 +171,29 @@ static int _do_flock(const char *file, int *fd, int operation, uint32_t nonblock
 	} while (!nonblock);
 
 	return_0;
+}
+
+#define AUX_LOCK_SUFFIX ":aux"
+
+static int _do_write_priority_flock(const char *file, int *fd, int operation, uint32_t nonblock)
+{
+	int r, fd_aux = -1;
+	char *file_aux = alloca(strlen(file) + sizeof(AUX_LOCK_SUFFIX));
+
+	strcpy(file_aux, file);
+	strcat(file_aux, AUX_LOCK_SUFFIX);
+
+	if ((r = _do_flock(file_aux, &fd_aux, LOCK_EX, 0))) {
+		if (operation == LOCK_EX) {
+			r = _do_flock(file, fd, operation, nonblock);
+			_undo_flock(file_aux, fd_aux);
+		} else {
+			_undo_flock(file_aux, fd_aux);
+			r = _do_flock(file, fd, operation, nonblock);
+		}
+	}
+
+	return r;
 }
 
 static int _lock_file(const char *file, uint32_t flags)
@@ -207,7 +234,11 @@ static int _lock_file(const char *file, uint32_t flags)
 	log_very_verbose("Locking %s %c%c", ll->res, state,
 			 nonblock ? ' ' : 'B');
 
-	r = _do_flock(file, &ll->lf, operation, nonblock);
+	if (_prioritise_write_locks)
+		r = _do_write_priority_flock(file, &ll->lf, operation, nonblock);
+	else 
+		r = _do_flock(file, &ll->lf, operation, nonblock);
+
 	if (r)
 		dm_list_add(&_lock_list, &ll->list);
 	else {
@@ -298,6 +329,10 @@ int init_file_locking(struct locking_type *locking, struct cmd_context *cmd)
 	strncpy(_lock_dir, find_config_tree_str(cmd, "global/locking_dir",
 						DEFAULT_LOCK_DIR),
 		sizeof(_lock_dir));
+
+	_prioritise_write_locks =
+	    find_config_tree_bool(cmd, "global/prioritise_write_locks",
+				  DEFAULT_PRIORITISE_WRITE_LOCKS);
 
 	if (!dm_create_dir(_lock_dir))
 		return 0;
