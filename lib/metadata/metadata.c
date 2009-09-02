@@ -468,12 +468,9 @@ int remove_lvs_in_vg(struct cmd_context *cmd,
 	return 1;
 }
 
-int vg_remove_single(struct volume_group *vg)
+int vg_remove_check(struct volume_group *vg)
 {
-	struct physical_volume *pv;
-	struct pv_list *pvl;
 	unsigned lv_count;
-	int ret = 1;
 
 	if (vg_read_error(vg) || vg_missing_pv_count(vg)) {
 		log_error("Volume group \"%s\" not found, is inconsistent "
@@ -496,6 +493,15 @@ int vg_remove_single(struct volume_group *vg)
 
 	if (!archive(vg))
 		return 0;
+
+	return 1;
+}
+
+int vg_remove(struct volume_group *vg)
+{
+	struct physical_volume *pv;
+	struct pv_list *pvl;
+	int ret = 1;
 
 	if (!lock_vol(vg->cmd, VG_ORPHANS, LCK_VG_WRITE)) {
 		log_error("Can't get lock for orphan PVs");

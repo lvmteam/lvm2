@@ -153,7 +153,10 @@ int lvm_vg_remove(vg_t vg)
 	if (!vg_check_write_mode(vg))
 		return -1;
 
-	if (!vg_remove_single(vg))
+	if (!vg_remove_check(vg))
+		return -1;
+
+	if (!vg_remove(vg))
 		return -1;
 	return 0;
 }
