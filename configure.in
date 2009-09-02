@@ -1112,7 +1112,7 @@ Makefile
 make.tmpl
 daemons/Makefile
 daemons/clvmd/Makefile
-daemons/clogd/Makefile
+daemons/cmirrord/Makefile
 daemons/dmeventd/Makefile
 daemons/dmeventd/libdevmapper-event.pc
 daemons/dmeventd/plugins/Makefile
