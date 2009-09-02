@@ -502,8 +502,8 @@ int vg_remove_single(struct volume_group *vg)
 		return 0;
 	}
 
-	if (!vg_remove(vg)) {
-		log_error("vg_remove %s failed", vg->name);
+	if (!vg_remove_mdas(vg)) {
+		log_error("vg_remove_mdas %s failed", vg->name);
 		unlock_vg(vg->cmd, VG_ORPHANS);
 		return 0;
 	}
@@ -1676,7 +1676,7 @@ struct pv_segment *find_peg_by_pe(const struct physical_volume *pv, uint32_t pe)
 	return NULL;
 }
 
-int vg_remove(struct volume_group *vg)
+int vg_remove_mdas(struct volume_group *vg)
 {
 	struct metadata_area *mda;
 
