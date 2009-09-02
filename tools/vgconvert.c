@@ -167,7 +167,7 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 	}
 
 	log_verbose("Deleting existing metadata for VG %s", vg_name);
-	if (!vg_remove(vg)) {
+	if (!vg_remove_mdas(vg)) {
 		log_error("Removal of existing metadata for %s failed.",
 			  vg_name);
 		log_error("Use pvcreate and vgcfgrestore to repair "
