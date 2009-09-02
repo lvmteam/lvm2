@@ -471,6 +471,7 @@ int remove_lvs_in_vg(struct cmd_context *cmd,
 int vg_remove_check(struct volume_group *vg)
 {
 	unsigned lv_count;
+	struct pv_list *pvl, *tpvl;
 
 	if (vg_read_error(vg) || vg_missing_pv_count(vg)) {
 		log_error("Volume group \"%s\" not found, is inconsistent "
@@ -494,6 +495,10 @@ int vg_remove_check(struct volume_group *vg)
 	if (!archive(vg))
 		return 0;
 
+	dm_list_iterate_items_safe(pvl, tpvl, &vg->pvs) {
+		dm_list_del(&pvl->list);
+		dm_list_add(&vg->removed_pvs, &pvl->list);
+	}
 	return 1;
 }
 
@@ -515,7 +520,7 @@ int vg_remove(struct volume_group *vg)
 	}
 
 	/* init physical volumes */
-	dm_list_iterate_items(pvl, &vg->pvs) {
+	dm_list_iterate_items(pvl, &vg->removed_pvs) {
 		pv = pvl->pv;
 		log_verbose("Removing physical volume \"%s\" from "
 			    "volume group \"%s\"", pv_dev_name(pv), vg->name);
