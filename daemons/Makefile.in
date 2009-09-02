@@ -22,7 +22,7 @@ ifneq ("@CLVMD@", "none")
 endif
 
 ifeq ("@BUILD_CMIRRORD@", "yes")
-  SUBDIRS += cmirrord
+  SUBDIRS += clogd
 endif
 
 ifeq ("@BUILD_DMEVENTD@", "yes")
