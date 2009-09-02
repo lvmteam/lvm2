@@ -394,8 +394,8 @@ int lvm_vg_write(vg_t vg);
 /**
  * Remove a VG from the system.
  *
- * This function commits the change to disk and does not require calling
- * lvm_vg_write.
+ * This function removes a Volume Group object in memory, and requires
+ * calling lvm_vg_write to commit the removal to disk.
  *
  * \param   vg
  * VG handle obtained from lvm_vg_create or lvm_vg_open.
