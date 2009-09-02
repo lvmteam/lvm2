@@ -244,6 +244,27 @@ static struct volume_group *_vgsplit_to(struct cmd_context *cmd,
 }
 
 /*
+ * Open the source of the vgsplit operation.
+ * Returns
+ * - non-NULL: VG handle w/VG lock held
+ * - NULL: no VG lock held
+ */
+static struct volume_group *_vgsplit_from(struct cmd_context *cmd,
+					  const char *vg_name_from)
+{
+	struct volume_group *vg_from;
+
+	log_verbose("Checking for volume group \"%s\"", vg_name_from);
+
+	vg_from = vg_read_for_update(cmd, vg_name_from, NULL, 0);
+	if (vg_read_error(vg_from)) {
+		vg_release(vg_from);
+		return NULL;
+	}
+	return vg_from;
+}
+
+/*
  * Has the user given an option related to a new vg as the split destination?
  */
 static int new_vg_option_specified(struct cmd_context *cmd)
@@ -293,13 +314,9 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	log_verbose("Checking for volume group \"%s\"", vg_name_from);
-
-	vg_from = vg_read_for_update(cmd, vg_name_from, NULL, 0);
-	if (vg_read_error(vg_from)) {
-		vg_release(vg_from);
+	vg_from = _vgsplit_from(cmd, vg_name_from);
+	if (!vg_from)
 		return ECMD_FAILED;
-	}
 
 	/*
 	 * Set metadata format of original VG.
