@@ -314,26 +314,40 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	vg_from = _vgsplit_from(cmd, vg_name_from);
-	if (!vg_from) {
-		if (!lock_vg_from_first)
-			unlock_and_release_vg(cmd, vg_to, vg_name_to);
-		return ECMD_FAILED;
-	}
+	if (lock_vg_from_first) {
+		vg_from = _vgsplit_from(cmd, vg_name_from);
+		if (!vg_from)
+			return ECMD_FAILED;
+		/*
+		 * Set metadata format of original VG.
+		 * NOTE: We must set the format before calling vg_create()
+		 * since vg_create() calls the per-format constructor.
+		 */
+		cmd->fmt = vg_from->fid->fmt;
 
-	/*
-	 * Set metadata format of original VG.
-	 * NOTE: We must set the format before calling vg_create()
-	 * since vg_create() calls the per-format constructor.
-	 */
-	cmd->fmt = vg_from->fid->fmt;
-
-	vg_to = _vgsplit_to(cmd, vg_name_to, &existing_vg);
-	if (!vg_to) {
-		if (lock_vg_from_first)
+		vg_to = _vgsplit_to(cmd, vg_name_to, &existing_vg);
+		if (!vg_to) {
 			unlock_and_release_vg(cmd, vg_from, vg_name_from);
-		return ECMD_FAILED;
+			return ECMD_FAILED;
+		}
+	} else {
+		vg_to = _vgsplit_to(cmd, vg_name_to, &existing_vg);
+		if (!vg_to)
+			return ECMD_FAILED;
+		vg_from = _vgsplit_from(cmd, vg_name_from);
+		if (!vg_from) {
+			unlock_and_release_vg(cmd, vg_to, vg_name_to);
+			return ECMD_FAILED;
+		}
+
+		if (cmd->fmt != vg_from->fid->fmt) {
+			/* In this case we don't know the vg_from->fid->fmt */
+			log_error("Unable to set new VG metadata type based on "
+				  "source VG format - use -M option.");
+			goto bad;
+		}
 	}
+
 	if (existing_vg) {
 		if (new_vg_option_specified(cmd)) {
 			log_error("Volume group \"%s\" exists, but new VG "
