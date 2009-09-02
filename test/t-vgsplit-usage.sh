@@ -21,12 +21,13 @@ do
 pvcreate -M$mdatype $devs
 
 # ensure name order does not matter
+# NOTE: if we're using lvm1, we must use -M on vgsplit
 vgcreate -M$mdatype $vg1 $devs
-vgsplit $vg1 $vg2 $dev1
+vgsplit -M$mdatype $vg1 $vg2 $dev1
 vgremove $vg1
 vgremove $vg2
 vgcreate -M$mdatype $vg2 $devs
-vgsplit $vg2 $vg1 $dev1
+vgsplit -M$mdatype $vg2 $vg1 $dev1
 vgremove $vg1
 vgremove $vg2
 
