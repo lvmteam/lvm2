@@ -287,7 +287,8 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		if (vg_read_error(vg_to)) {
 			vg_release(vg_to);
 			stack;
-			goto bad2;
+			unlock_and_release_vg(cmd, vg_from, vg_name_from);
+			return ECMD_FAILED;
 		}
 
 	} else if (vg_read_error(vg_to) == SUCCESS) {
@@ -427,7 +428,6 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 
 bad:
 	unlock_and_release_vg(cmd, vg_to, vg_name_to);
-bad2:
 	unlock_and_release_vg(cmd, vg_from, vg_name_from);
 	return r;
 }
