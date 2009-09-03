@@ -360,6 +360,7 @@ static int _add_dev_node(const char *dev_name, uint32_t major, uint32_t minor,
 
 	old_mask = umask(0);
 	if (mknod(path, S_IFBLK | mode, dev) < 0) {
+		umask(old_mask);
 		log_error("Unable to make device node for '%s'", dev_name);
 		return 0;
 	}
