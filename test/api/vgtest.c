@@ -25,9 +25,9 @@
 
 lvm_t handle;
 vg_t vg;
-const char *vg_name = "my_vg";
-const char *device = "/dev/loop3";
-const char *device2 = "/dev/loop4";
+const char *vg_name;
+#define MAX_DEVICES 16
+const char *device[MAX_DEVICES];
 uint64_t size = 1024;
 
 #define vg_create(vg_name) \
@@ -51,7 +51,7 @@ uint64_t size = 1024;
 	if (status) { \
 		fprintf(stderr, "Creation of volume group '%s' on " \
 			"device '%s' failed\n", \
-			lvm_vg_get_name(vg), device); \
+			lvm_vg_get_name(vg), device[0]); \
 		goto bad; \
 	}
 #define vg_open(vg_name, mode) \
@@ -84,11 +84,29 @@ uint64_t size = 1024;
 		goto bad; \
 	}
 
+int init_vgtest(int argc, char *argv[])
+{
+	int i;
+
+	if (argc < 4) {
+		fprintf(stderr, "Usage: %s <vgname> <pv1> <pv2> [... <pvN> ]",
+			argv[0]);
+		return -1;
+	}
+	vg_name = argv[1];
+	for(i=2; i<MAX_DEVICES && i < argc; i++) {
+		device[i-2] = argv[i];
+	}
+	return 0;
+}
+
 int main(int argc, char *argv[])
 {
 	int status;
 
-	/* FIXME: input vgname, etc from cmdline */
+	if (init_vgtest(argc, argv) < 0)
+		goto bad;
+
 	/* FIXME: make the below messages verbose-only and print PASS/FAIL*/
 	printf("Opening LVM\n");
 	handle = lvm_init(NULL);
@@ -99,7 +117,7 @@ int main(int argc, char *argv[])
 
 	printf("Library version: %s\n", lvm_library_get_version());
 	vg_create(vg_name);
-	vg_extend(vg, device);
+	vg_extend(vg, device[0]);
 
 	printf("Setting VG %s extent_size to %"PRIu64"\n", vg_name, size);
 	status = lvm_vg_set_extent_size(vg, size);
@@ -117,13 +135,13 @@ int main(int argc, char *argv[])
 	vg_close(vg);
 
 	vg_open(vg_name, "w");
-	vg_extend(vg, device2);
-	vg_reduce(vg, device);
+	vg_extend(vg, device[1]);
+	vg_reduce(vg, device[0]);
 	vg_commit(vg);
 	vg_close(vg);
 
 	vg_open(vg_name, "w");
-	vg_extend(vg, device);
+	vg_extend(vg, device[0]);
 	vg_commit(vg);
 	vg_close(vg);
 
