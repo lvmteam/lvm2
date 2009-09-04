@@ -19,7 +19,7 @@ ifeq ("@DEBUG@", "yes")
 	DEFS += -DDEBUG
 endif
 
-TARGETS = test vgtest
+TARGETS = vgtest
 test_SOURCES = test.c
 vgtest_SOURCES = vgtest.c
 INCLUDES += -I${top_srcdir}/include
