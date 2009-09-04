@@ -20,4 +20,4 @@ pvcreate $dev1 $dev2
 
 echo `pwd`
 ls -lR `pwd`
-../api/vgtest $vg1 $dev1 $dev2
+$abs_srcdir/api/vgtest $vg1 $dev1 $dev2
