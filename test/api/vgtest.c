@@ -84,7 +84,7 @@ uint64_t size = 1024;
 		goto bad; \
 	}
 
-int init_vgtest(int argc, char *argv[])
+static int init_vgtest(int argc, char *argv[])
 {
 	int i;
 
