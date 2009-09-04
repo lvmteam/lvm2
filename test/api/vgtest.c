@@ -49,9 +49,8 @@ uint64_t size = 1024;
 	printf("Committing VG %s to disk\n", vg_name); \
 	status = lvm_vg_write(vg); \
 	if (status) { \
-		fprintf(stderr, "Creation of volume group '%s' on " \
-			"device '%s' failed\n", \
-			lvm_vg_get_name(vg), device[0]); \
+		fprintf(stderr, "Commit of volume group '%s' failed\n", \
+			lvm_vg_get_name(vg)); \
 		goto bad; \
 	}
 #define vg_open(vg_name, mode) \
@@ -147,6 +146,7 @@ int main(int argc, char *argv[])
 
 	vg_open(vg_name, "w");
 	vg_remove(vg);
+	vg_commit(vg);
 	vg_close(vg);
 
 	lvm_quit(handle);
