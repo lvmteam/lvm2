@@ -1,5 +1,6 @@
 Version 2.02.52 -
 =================================
+  Add lvm2app.sh to nightly tests conditional upon configure --enable-applib.
   Update lvm_vg_remove to require lvm_vg_write to commit remove to disk.
   Enforce an alphabetical lock ordering for vgname locks.
   Refactor vgsplit, vgmerge, and vgrename to obey vgname ordering rules.
