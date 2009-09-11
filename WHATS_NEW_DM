@@ -1,5 +1,6 @@
 Version 1.02.37 -
 =================================
+  Add y|--yes option for dmsetup to provide a default 'YES' answer to questions.
   Fix Makefile to take into account dmsetup's reconfiguration.
   Restore umask when device node creation fails.
   Fix mirror table CTR code to handle 'block_on_error' and 'cluster' features

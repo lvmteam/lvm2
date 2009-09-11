@@ -142,6 +142,7 @@ enum {
 	UUID_ARG,
 	VERBOSE_ARG,
 	VERSION_ARG,
+	YES_ARG,
 	NUM_SWITCHES
 };
 
@@ -771,17 +772,23 @@ static int _udevcomplete(int argc, char **argv, void *data __attribute((unused))
 }
 
 #ifndef UDEV_SYNC_SUPPORT
+static const char _cmd_not_supported[] = "Command not supported. Recompile with \"--enable-udev-sync\" to enable.";
+
 static int _udevcomplete_all(int argc __attribute((unused)), char **argv __attribute((unused)), void *data __attribute((unused)))
 {
-	return 1;
+	log_error(_cmd_not_supported);
+
+	return 0;
 }
 
 static int _udevcookies(int argc __attribute((unused)), char **argv __attribute((unused)), void *data __attribute((unused)))
 {
-	return 1;
+	log_error(_cmd_not_supported);
+
+	return 0;
 }
 
-#else
+#else	/* UDEV_SYNC_SUPPORT */
 
 static char _yes_no_prompt(const char *prompt, ...)
 {
@@ -818,15 +825,17 @@ static int _udevcomplete_all(int argc __attribute((unused)), char **argv __attri
 	struct semid_ds sdata;
 	int counter = 0;
 
-	log_warn("This operation will destroy all semaphores with keys "
-		 "that have a prefix %" PRIu16 " (0x%" PRIx16 ").",
-		 DM_COOKIE_MAGIC, DM_COOKIE_MAGIC);
+	if (!_switches[YES_ARG]) {
+		log_warn("This operation will destroy all semaphores with keys "
+			 "that have a prefix %" PRIu16 " (0x%" PRIx16 ").",
+			 DM_COOKIE_MAGIC, DM_COOKIE_MAGIC);
 
-	if (_yes_no_prompt("Do you really want to continue? [y/n]: ") == 'n') {
-		log_print("Semaphores with keys prefixed by %" PRIu16
-			  " (0x%" PRIx16 ") NOT destroyed.",
-			  DM_COOKIE_MAGIC, DM_COOKIE_MAGIC);
-		return 1;
+		if (_yes_no_prompt("Do you really want to continue? [y/n]: ") == 'n') {
+			log_print("Semaphores with keys prefixed by %" PRIu16
+				  " (0x%" PRIx16 ") NOT destroyed.",
+				  DM_COOKIE_MAGIC, DM_COOKIE_MAGIC);
+			return 1;
+		}
 	}
 
 	if ((max_id = semctl(0, 0, SEM_INFO, &sinfo)) < 0) {
@@ -889,13 +898,13 @@ static int _udevcookies(int argc __attribute((unused)), char **argv __attribute(
 			time_str = ctime((const time_t *) &sdata.sem_otime);
 
 			printf("0x%-10x %-10d %-10d %s", sdata.sem_perm.__key,
-				sid, val, time_str ? time_str : "unknown");
+				sid, val, time_str ? time_str : "unknown\n");
 		}
 	}
 
 	return 1;
 }
-#endif
+#endif	/* UDEV_SYNC_SUPPORT */
 
 static int _version(int argc __attribute((unused)), char **argv __attribute((unused)), void *data __attribute((unused)))
 {
@@ -2444,7 +2453,7 @@ static void _usage(FILE *out)
 	fprintf(out, "Usage:\n\n");
 	fprintf(out, "dmsetup [--version] [-v|--verbose [-v|--verbose ...]]\n"
 		"        [-r|--readonly] [--noopencount] [--nolockfs]\n"
-		"        [--noudevsync] [--readahead [+]<sectors>|auto|none]\n"
+		"        [--noudevsync] [-y|--yes] [--readahead [+]<sectors>|auto|none]\n"
 		"        [-c|-C|--columns] [-o <fields>] [-O|--sort <sort_fields>]\n"
 		"        [--nameprefixes] [--noheadings] [--separator <separator>]\n\n");
 	for (i = 0; _commands[i].name; i++)
@@ -2824,6 +2833,7 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 		{"unquoted", 0, &ind, UNQUOTED_ARG},
 		{"verbose", 1, &ind, VERBOSE_ARG},
 		{"version", 0, &ind, VERSION_ARG},
+		{"yes", 0, &ind, YES_ARG},
 		{0, 0, 0, 0}
 	};
 #else
@@ -2879,7 +2889,7 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 
 	optarg = 0;
 	optind = OPTIND_INIT;
-	while ((ind = -1, c = GETOPTLONG_FN(*argc, *argv, "cCfG:j:m:M:no:O:ru:U:v",
+	while ((ind = -1, c = GETOPTLONG_FN(*argc, *argv, "cCfG:j:m:M:no:O:ru:U:vy",
 					    long_options, NULL)) != -1) {
 		if (c == ':' || c == '?')
 			return 0;
@@ -2917,6 +2927,8 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 			_switches[UUID_ARG]++;
 			_uuid = optarg;
 		}
+		if (c == 'y' || ind == YES_ARG)
+			_switches[YES_ARG]++;
 		if (ind == NOUDEVSYNC_ARG)
 			_switches[NOUDEVSYNC_ARG]++;
 		if (c == 'G' || ind == GID_ARG) {
