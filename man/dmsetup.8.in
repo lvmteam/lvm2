@@ -67,6 +67,10 @@ dmsetup \- low level logical volume management
 .B dmsetup udevcomplete
 .I cookie
 .br
+.B dmsetup udevcomplete_all
+.br
+.B dmsetup udevcookies
+.br
 .B dmsetup targets
 .br
 .B dmsetup version
@@ -290,6 +294,13 @@ Displays the names and versions of the currently-loaded targets.
 .I cookie
 .br
 Wake any processes that are waiting for udev to complete processing the specified cookie.
+.br
+.IP \fBudevcomplete_all
+Remove all cookies. Any process waiting on a cookie will be resumed immediately.
+.br
+.IP \fBudevcookies
+List all existing cookies. Cookies are system-wide semaphores with keys
+prefixed by two predefined bytes (0x0D4D).
 .br
 .IP \fBversion
 .br

@@ -1,5 +1,6 @@
 Version 2.02.52 -
 =================================
+  Add manpage entry for dmsetup's udevcomplete_all and udevcookies commands.
   Add DM_UDEV_RULES_VSN udev enviroment variable.
   Check that udev is running and set internal state appropriately.
   Add libudev configuration check.
