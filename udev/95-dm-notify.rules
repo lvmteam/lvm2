@@ -11,6 +11,6 @@ KERNEL!="dm-[0-9]*", GOTO="dm_end"
 ACTION!="change|remove", GOTO="dm_end"
 
 ACTION=="change", OWNER:="root", GROUP:="root", MODE:="600"
-ENV{DM_COOKIE}=="?*", RUN+="/sbin/dmsetup udevcomplete $env{DM_COOKIE}"
+ENV{DM_COOKIE}=="?*", RUN+="$env{DM_SBIN_PATH}/dmsetup udevcomplete $env{DM_COOKIE}"
 
 LABEL="dm_end"

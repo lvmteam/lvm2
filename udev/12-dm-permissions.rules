@@ -2,6 +2,7 @@
 #
 # These rules set permissions for DM devices. There are some environment
 # variables set that can be used:
+#   DM_UDEV_RULES_VSN - DM udev rules version
 #   DM_NAME - actual DM device's name
 #   DM_UUID - UUID set for DM device (blank if not specified)
 #   DM_SUSPENDED - suspended state of DM device (0 or 1)
@@ -12,6 +13,7 @@
 SUBSYSTEM!="block", GOTO="dm_end"
 KERNEL!="dm-[0-9]*", GOTO="dm_end"
 ACTION!="change", GOTO="dm_end"
+ENV{DM_UDEV_RULES_VSN}!="?*", GOTO="dm_end"
 
 #ENV{DM_NAME}=="my_device", OWNER:="peter", GROUP:="peter", MODE:="644"
 

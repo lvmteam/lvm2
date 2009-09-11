@@ -1,5 +1,6 @@
 Version 2.02.52 -
 =================================
+  Add DM_UDEV_RULES_VSN udev enviroment variable.
   Check that udev is running and set internal state appropriately.
   Add libudev configuration check.
   Add lvm2app.sh to nightly tests conditional upon configure --enable-applib.
