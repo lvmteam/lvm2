@@ -28,6 +28,9 @@
 #  include <sys/types.h>
 #  include <sys/ipc.h>
 #  include <sys/sem.h>
+#ifdef HAVE_UDEV_QUEUE_GET_UDEV_IS_ACTIVE
+#  include <libudev.h>
+#endif
 #endif
 
 #ifdef linux
@@ -45,6 +48,7 @@ static char _dm_dir[PATH_MAX] = DEV_DIR DM_DIR;
 static int _verbose = 0;
 
 #ifdef UDEV_SYNC_SUPPORT
+static int _udev_running = -1;
 static int _sync_with_udev = 1;
 #endif
 
@@ -825,14 +829,58 @@ int dm_udev_wait(uint32_t cookie)
 
 #else		/* UDEV_SYNC_SUPPORT */
 
+
+static int _check_udev_is_running(void)
+{
+	#ifndef HAVE_UDEV_QUEUE_GET_UDEV_IS_ACTIVE
+	log_debug("Could not get udev state because libudev library "
+		  "was not found and it was not compiled in. "
+		  "Assuming udev is not running.");
+	return 0;
+	#else	/* HAVE_UDEV_QUEUE_GET_UDEV_IS_ACTIVE */
+	struct udev *udev;
+	struct udev_queue *udev_queue;
+	int r;
+
+	if (!(udev = udev_new()))
+		goto error;
+
+	if (!(udev_queue = udev_queue_new(udev))) {
+		udev_unref(udev);
+		goto error;
+	}
+
+	r = udev_queue_get_udev_is_active(udev_queue);
+
+	if (!r)
+		log_debug("Udev is not running. "
+			  "Not using udev synchronisation code.");
+
+	udev_queue_unref(udev_queue);
+	udev_unref(udev);
+
+	return r;
+
+error:
+	log_debug("Could not get udev state. Assuming udev is not running.");
+	return 0;
+	#endif	/* HAVE_UDEV_QUEUE_GET_UDEV_IS_ACTIVE */
+}
+
 void dm_udev_set_sync_support(int sync_with_udev)
 {
+	if (_udev_running < 0)
+		_udev_running = _check_udev_is_running();
+
 	_sync_with_udev = sync_with_udev;
 }
 
 int dm_udev_get_sync_support(void)
 {
-	return _sync_with_udev;
+	if (_udev_running < 0)
+		_udev_running = _check_udev_is_running();
+
+	return _udev_running && _sync_with_udev;
 }
 
 static int _get_cookie_sem(uint32_t cookie, int *semid)
