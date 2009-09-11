@@ -1,5 +1,6 @@
 Version 2.02.52 -
 =================================
+  Check that udev is running and set internal state appropriately.
   Add libudev configuration check.
   Add lvm2app.sh to nightly tests conditional upon configure --enable-applib.
   Update lvm_vg_remove to require lvm_vg_write to commit remove to disk.
