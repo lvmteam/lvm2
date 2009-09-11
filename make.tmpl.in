@@ -239,14 +239,14 @@ $(LIB_STATIC): $(OBJECTS)
 
 clean: $(SUBDIRS.clean)
 	$(RM) $(OBJECTS) $(TARGETS) $(CLEAN_TARGETS) $(SOURCES:%.c=%.d) \
-	      $(SOURCES:%.c=%.pot) $(SOURCES:%.c=%.gcno) \
+	      $(SOURCES2:%.c=%.d) $(SOURCES:%.c=%.pot) $(SOURCES:%.c=%.gcno) \
 	      $(SOURCES:%.c=%.gcda) $(LDDEPS)
 
 distclean: $(SUBDIRS.distclean)
 	$(RM) -rf $(DISTCLEAN_DIRS)
 	$(RM) $(DISTCLEAN_TARGETS) \
 	      $(OBJECTS) $(TARGETS) $(CLEAN_TARGETS) $(SOURCES:%.c=%.d) \
-	      $(SOURCES:%.c=%.pot) $(SOURCES:%.c=%.gcno) \
+	      $(SOURCES2:%.c=%.d) $(SOURCES:%.c=%.pot) $(SOURCES:%.c=%.gcno) \
 	      $(SOURCES:%.c=%.gcda) $(LDDEPS) \
 	      config.cache config.log config.status \
 	      Makefile make.tmpl core \
@@ -261,6 +261,9 @@ ifneq ($(MAKECMDGOALS),clean)
   ifneq ($(MAKECMDGOALS),distclean)
     ifdef SOURCES
        -include $(SOURCES:.c=.d)
+    endif
+    ifdef SOURCES2
+       -include $(SOURCES2:.c=.d)
     endif
   endif
 endif
