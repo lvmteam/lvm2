@@ -651,6 +651,20 @@ UDEV_RULES=$enableval, UDEV_RULES=$UDEV_SYNC)
 AC_MSG_RESULT($UDEV_RULES)
 
 ################################################################################
+dnl -- Check for libudev's udev_queue_get_udev_is_active function when udev synchronisation is enabled
+
+if test x$UDEV_SYNC = xyes; then
+	AC_CHECK_LIB(udev, udev_queue_get_udev_is_active, HAVE_UDEV_QUEUE_GET_UDEV_IS_ACTIVE=yes,
+		HAVE_UDEV_QUEUE_GET_UDEV_IS_ACTIVE=no)
+
+		if test x$HAVE_UDEV_QUEUE_GET_UDEV_IS_ACTIVE = xyes; then
+			AC_DEFINE([HAVE_UDEV_QUEUE_GET_UDEV_IS_ACTIVE], 1,
+			  [Define to 1 if libudev's udev_queue_get_udev_is_active function is available.])
+			LIBS="-ludev $LIBS"
+		fi
+fi
+
+################################################################################
 dnl -- Compatibility mode
 AC_ARG_ENABLE(compat,   [  --enable-compat         Enable support for old device-mapper versions],
   DM_COMPAT=$enableval, DM_COMPAT=no)
