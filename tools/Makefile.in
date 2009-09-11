@@ -62,6 +62,9 @@ SOURCES =\
 	vgscan.c \
 	vgsplit.c
 
+SOURCES2 =\
+	dmsetup.c
+
 TARGETS =\
 	.commands \
 	lvm
