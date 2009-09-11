@@ -881,7 +881,7 @@ int dm_udev_get_sync_support(void)
 	if (_udev_running < 0)
 		_udev_running = _check_udev_is_running();
 
-	return _udev_running && _sync_with_udev;
+	return dm_cookie_supported() && _udev_running && _sync_with_udev;
 }
 
 static int _get_cookie_sem(uint32_t cookie, int *semid)
@@ -1064,7 +1064,7 @@ int dm_task_set_cookie(struct dm_task *dmt, uint32_t *cookie)
 {
 	int semid;
 
-	if (!dm_udev_get_sync_support() || !dm_cookie_supported()) {
+	if (!dm_udev_get_sync_support()) {
 		dmt->event_nr = *cookie = 0;
 		return 1;
 	}
@@ -1099,7 +1099,7 @@ int dm_udev_complete(uint32_t cookie)
 {
 	int semid;
 
-	if (!cookie || !dm_udev_get_sync_support() || !dm_cookie_supported())
+	if (!cookie || !dm_udev_get_sync_support())
 		return 1;
 
 	if (!_get_cookie_sem(cookie, &semid))
@@ -1120,7 +1120,7 @@ int dm_udev_wait(uint32_t cookie)
 	int semid;
 	struct sembuf sb = {0, 0, 0};
 
-	if (!cookie || !dm_udev_get_sync_support() || !dm_cookie_supported())
+	if (!cookie || !dm_udev_get_sync_support())
 		return 1;
 
 	if (!_get_cookie_sem(cookie, &semid))
