@@ -29,6 +29,7 @@
 #  include <sys/ipc.h>
 #  include <sys/sem.h>
 #ifdef HAVE_UDEV_QUEUE_GET_UDEV_IS_ACTIVE
+#  define LIBUDEV_I_KNOW_THE_API_IS_SUBJECT_TO_CHANGE
 #  include <libudev.h>
 #endif
 #endif
