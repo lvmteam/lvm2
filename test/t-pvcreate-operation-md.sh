@@ -14,6 +14,7 @@ which sfdisk || exit 200
 which perl || exit 200
 which awk || exit 200
 which cut || exit 200
+test -f /proc/mdstat || exit 200
 
 . ./test-utils.sh
 
