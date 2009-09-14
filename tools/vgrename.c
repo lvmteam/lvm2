@@ -206,8 +206,10 @@ int vgrename(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (!vg_rename_path(cmd, argv[0], argv[1]))
+	if (!vg_rename_path(cmd, argv[0], argv[1])) {
+		stack;
 		return ECMD_FAILED;
+	}
 
 	return ECMD_PROCESSED;
 }

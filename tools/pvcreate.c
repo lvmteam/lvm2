@@ -195,8 +195,10 @@ int pvcreate(struct cmd_context *cmd, int argc, char **argv)
 			return ECMD_FAILED;
 		}
 
-		if (!pvcreate_single(cmd, argv[i], &pp))
+		if (!pvcreate_single(cmd, argv[i], &pp)) {
+			stack;
 			ret = ECMD_FAILED;
+		}
 
 		unlock_vg(cmd, VG_ORPHANS);
 		if (sigint_caught())

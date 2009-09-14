@@ -105,6 +105,7 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 	vg = vg_read_for_update(cmd, vg_name, NULL, 0);
 	if (vg_read_error(vg)) {
 		vg_release(vg);
+		stack;
 		return ECMD_FAILED;
 	}
 

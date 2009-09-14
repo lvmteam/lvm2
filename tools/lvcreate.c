@@ -586,14 +586,19 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 	vg = vg_read_for_update(cmd, lp.vg_name, NULL, 0);
 	if (vg_read_error(vg)) {
 		vg_release(vg);
+		stack;
 		return ECMD_FAILED;
 	}
 
-	if (!_update_extents_params(vg, &lp, &lcp))
+	if (!_update_extents_params(vg, &lp, &lcp)) {
+		stack;
 		return ECMD_FAILED;
+	}
 
-	if (!lv_create_single(vg, &lp))
+	if (!lv_create_single(vg, &lp)) {
+		stack;
 		r = ECMD_FAILED;
+	}
 
 	unlock_and_release_vg(cmd, vg, lp.vg_name);
 	return r;

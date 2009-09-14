@@ -20,11 +20,15 @@ static int _vgs_single(struct cmd_context *cmd __attribute((unused)),
 		       const char *vg_name, struct volume_group *vg,
 		       void *handle)
 {
-	if (vg_read_error(vg))
+	if (vg_read_error(vg)) {
+		stack;
 		return ECMD_FAILED;
+	}
 
-	if (!report_object(handle, vg, NULL, NULL, NULL, NULL))
+	if (!report_object(handle, vg, NULL, NULL, NULL, NULL)) {
+		stack;
 		return ECMD_FAILED;
+	}
 
 	check_current_backup(vg);
 
@@ -37,8 +41,10 @@ static int _lvs_single(struct cmd_context *cmd, struct logical_volume *lv,
 	if (!arg_count(cmd, all_ARG) && !lv_is_visible(lv))
 		return ECMD_PROCESSED;
 
-	if (!report_object(handle, lv->vg, lv, NULL, NULL, NULL))
+	if (!report_object(handle, lv->vg, lv, NULL, NULL, NULL)) {
+		stack;
 		return ECMD_FAILED;
+	}
 
 	return ECMD_PROCESSED;
 }
@@ -46,8 +52,10 @@ static int _lvs_single(struct cmd_context *cmd, struct logical_volume *lv,
 static int _segs_single(struct cmd_context *cmd __attribute((unused)),
 			struct lv_segment *seg, void *handle)
 {
-	if (!report_object(handle, seg->lv->vg, seg->lv, NULL, seg, NULL))
+	if (!report_object(handle, seg->lv->vg, seg->lv, NULL, seg, NULL)) {
+		stack;
 		return ECMD_FAILED;
+	}
 
 	return ECMD_PROCESSED;
 }
@@ -102,8 +110,10 @@ static int _pvsegs_sub_single(struct cmd_context *cmd,
 	dm_list_init(&_free_logical_volume.snapshot_segs);
 
 	if (!report_object(handle, vg, seg ? seg->lv : &_free_logical_volume, pvseg->pv,
-			   seg ? : &_free_lv_segment, pvseg))
+			   seg ? : &_free_lv_segment, pvseg)) {
+		stack;
 		ret = ECMD_FAILED;
+	}
 
 	return ret;
 }
@@ -155,8 +165,10 @@ static int _pvs_single(struct cmd_context *cmd, struct volume_group *vg,
 		 pv = pvl->pv;
 	}
 
-	if (!report_object(handle, vg, NULL, pv, NULL, NULL))
+	if (!report_object(handle, vg, NULL, pv, NULL, NULL)) {
+		stack;
 		ret = ECMD_FAILED;
+	}
 
 out:
 	if (vg_name)
@@ -171,8 +183,10 @@ out:
 static int _label_single(struct cmd_context *cmd, struct volume_group *vg,
 		       struct physical_volume *pv, void *handle)
 {
-	if (!report_object(handle, vg, NULL, pv, NULL, NULL))
+	if (!report_object(handle, vg, NULL, pv, NULL, NULL)) {
+		stack;
 		return ECMD_FAILED;
+	}
 
 	return ECMD_PROCESSED;
 }
@@ -181,8 +195,10 @@ static int _pvs_in_vg(struct cmd_context *cmd, const char *vg_name,
 		      struct volume_group *vg,
 		      void *handle)
 {
-	if (vg_read_error(vg))
+	if (vg_read_error(vg)) {
+		stack;
 		return ECMD_FAILED;
+	}
 
 	return process_each_pv_in_vg(cmd, vg, NULL, handle, &_pvs_single);
 }
@@ -191,8 +207,10 @@ static int _pvsegs_in_vg(struct cmd_context *cmd, const char *vg_name,
 			 struct volume_group *vg,
 			 void *handle)
 {
-	if (vg_read_error(vg))
+	if (vg_read_error(vg)) {
+		stack;
 		return ECMD_FAILED;
+	}
 
 	return process_each_pv_in_vg(cmd, vg, NULL, handle, &_pvsegs_single);
 }

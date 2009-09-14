@@ -36,10 +36,12 @@ int vgcfgrestore(struct cmd_context *cmd, int argc, char **argv)
 	 */
 	if (arg_count(cmd, list_ARG)) {
 		if (!(arg_count(cmd,file_ARG) ?
-			archive_display_file(cmd,
-					arg_str_value(cmd, file_ARG, "")) :
-			archive_display(cmd, vg_name)))
+			    archive_display_file(cmd,
+				arg_str_value(cmd, file_ARG, "")) :
+			    archive_display(cmd, vg_name))) {
+			stack;
 			return ECMD_FAILED;
+		}
 		return ECMD_PROCESSED;
 	}
 

@@ -24,20 +24,20 @@ static int vgimport_single(struct cmd_context *cmd __attribute((unused)),
 	struct physical_volume *pv;
 
 	if (vg_read_error(vg))
-		goto error;
+		goto_bad;
 
 	if (!vg_is_exported(vg)) {
 		log_error("Volume group \"%s\" is not exported", vg_name);
-		goto error;
+		goto bad;
 	}
 
 	if (vg_status(vg) & PARTIAL_VG) {
 		log_error("Volume group \"%s\" is partially missing", vg_name);
-		goto error;
+		goto bad;
 	}
 
 	if (!archive(vg))
-		goto error;
+		goto_bad;
 
 	vg->status &= ~EXPORTED_VG;
 
@@ -47,7 +47,7 @@ static int vgimport_single(struct cmd_context *cmd __attribute((unused)),
 	}
 
 	if (!vg_write(vg) || !vg_commit(vg))
-		goto error;
+		goto_bad;
 
 	backup(vg);
 
@@ -55,7 +55,7 @@ static int vgimport_single(struct cmd_context *cmd __attribute((unused)),
 
 	return ECMD_PROCESSED;
 
-      error:
+bad:
 	return ECMD_FAILED;
 }
 

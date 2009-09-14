@@ -20,8 +20,10 @@ static int vgdisplay_single(struct cmd_context *cmd, const char *vg_name,
 			    void *handle __attribute((unused)))
 {
 	/* FIXME Do the active check here if activevolumegroups_ARG ? */
-	if (vg_read_error(vg))
+	if (vg_read_error(vg)) {
+		stack;
 		return ECMD_FAILED;
+	}
 
 	vg_check_status(vg, EXPORTED_VG);
 

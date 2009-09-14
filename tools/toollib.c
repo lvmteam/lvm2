@@ -293,7 +293,8 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 			if (ret_max < ECMD_FAILED) {
 				log_error("Skipping volume group %s", vgname);
 				ret_max = ECMD_FAILED;
-			}
+			} else
+				stack;
 			continue;
 		}
 
@@ -431,9 +432,10 @@ static int _process_one_vg(struct cmd_context *cmd, const char *vg_name,
 	log_verbose("Finding volume group \"%s\"", vg_name);
 
 	vg = vg_read(cmd, vg_name, vgid, flags);
-	if (vg_read_error(vg) == FAILED_ALLOCATION ||
-	    vg_read_error(vg) == FAILED_NOTFOUND) {
+	/* Allow FAILED_INCONSISTENT through only for vgcfgrestore */
+	if (vg_read_error(vg) && (vg_read_error(vg) != FAILED_INCONSISTENT)) {
 		vg_release(vg);
+		stack;
 		return ECMD_FAILED;
 	}
 
@@ -445,9 +447,8 @@ static int _process_one_vg(struct cmd_context *cmd, const char *vg_name,
 	}
 
 	if ((ret = process_single(cmd, vg_name, vg,
-				  handle)) > ret_max) {
+				  handle)) > ret_max)
 		ret_max = ret;
-	}
 
 out:
 	unlock_and_release_vg(cmd, vg, vg_name);
@@ -728,6 +729,7 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 				if (vg_read_error(vg)) {
 					ret_max = ECMD_FAILED;
 					vg_release(vg);
+					stack;
 					continue;
 				}
 

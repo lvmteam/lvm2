@@ -1,5 +1,8 @@
 Version 2.02.52 -
 =================================
+  Add lots of missing stack debug messages to tools.
+  Make readonly locking available as locking type 4.
+  Fix readonly locking to permit writeable global locks (for vgscan). (2.02.49)
   Add manpage entry for dmsetup's udevcomplete_all and udevcookies commands.
   Add DM_UDEV_RULES_VSN udev enviroment variable.
   Check that udev is running and set internal state appropriately.
@@ -97,6 +100,7 @@ Version 2.02.50 - 28th July 2009
 
 Version 2.02.49 - 15th July 2009
 ================================
+  Add readonly locking type to replace implementation of --ignorelockingfailure.
   Exclude VG_GLOBAL from vg_write_lock_held so scans open devs read-only again.
   Add unit test case for liblvm VG create/delete APIs.
   Add liblvm APIs to implement creation and deletion of VGs.

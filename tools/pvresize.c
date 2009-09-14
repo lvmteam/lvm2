@@ -176,8 +176,10 @@ static int _pvresize_single(struct cmd_context *cmd,
 
 	params->total++;
 
-	if (!_pv_resize_single(cmd, vg, pv, params->new_size))
+	if (!_pv_resize_single(cmd, vg, pv, params->new_size)) {
+		stack;
 		return ECMD_FAILED;
+	}
 	
 	params->done++;
 

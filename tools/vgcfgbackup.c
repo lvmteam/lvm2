@@ -54,9 +54,6 @@ static int vg_backup_single(struct cmd_context *cmd, const char *vg_name,
 	char **last_filename = (char **)handle;
 	char *filename;
 
-	if (vg_read_error(vg) && (vg_read_error(vg) != FAILED_INCONSISTENT))
-		return ECMD_FAILED;
-
 	if (arg_count(cmd, file_ARG)) {
 		if (!(filename = _expand_filename(arg_value(cmd, file_ARG),
 						  vg->name, last_filename))) {
@@ -64,8 +61,10 @@ static int vg_backup_single(struct cmd_context *cmd, const char *vg_name,
 			return ECMD_FAILED;
 		}
 
-		if (!backup_to_file(filename, vg->cmd->cmd_line, vg))
+		if (!backup_to_file(filename, vg->cmd->cmd_line, vg)) {
+			stack;
 			return ECMD_FAILED;
+		}
 	} else {
 		if (vg_read_error(vg) == FAILED_INCONSISTENT) {
 			log_error("No backup taken: specify filename with -f "
