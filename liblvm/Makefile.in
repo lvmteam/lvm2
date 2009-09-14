@@ -42,6 +42,10 @@ include $(top_srcdir)/make.tmpl
 
 LIBS += -ldevmapper -llvm-internal
 
+ifeq ("@DMEVENTD@", "yes")
+  LIBS += -ldevmapper-event
+endif
+
 $(VERSIONED_SHLIB): %.$(LIB_SUFFIX).$(LIB_VERSION_APP): %.$(LIB_SUFFIX)
 	rm -f $@
 	$(LN_S) $< $@

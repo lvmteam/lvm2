@@ -33,6 +33,11 @@ include $(top_srcdir)/make.tmpl
 
 LDFLAGS = -L$(top_srcdir)/libdm -L$(top_srcdir)/liblvm
 
+ifeq ("@DMEVENTD@", "yes")
+	LVMLIBS += -ldevmapper-event -lpthread
+	LDFLAGS += -L$(top_srcdir)/daemons/dmeventd
+endif
+
 test_OBJECTS = $(test_SOURCES:.c=.o)
 vgtest_OBJECTS = $(vgtest_SOURCES:.c=.o)
 OBJECTS = $(test_OBJECTS) $(vgtest_OBJECTS)
