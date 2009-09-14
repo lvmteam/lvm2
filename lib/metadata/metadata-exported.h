@@ -717,6 +717,8 @@ uint64_t vg_extent_size(const struct volume_group *vg);
 uint64_t vg_extent_count(const struct volume_group *vg);
 uint64_t vg_free_count(const struct volume_group *vg);
 uint64_t vg_pv_count(const struct volume_group *vg);
+uint64_t vg_max_pv(const struct volume_group *vg);
+uint64_t vg_max_lv(const struct volume_group *vg);
 int vg_check_write_mode(struct volume_group *vg);
 #define vg_is_clustered(vg) (vg_status((vg)) & CLUSTERED)
 

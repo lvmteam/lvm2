@@ -589,6 +589,28 @@ uint64_t lvm_vg_get_free_extent_count(const vg_t vg);
  */
 uint64_t lvm_vg_get_pv_count(const vg_t vg);
 
+/**
+ * Get the maximum number of physical volumes allowed in a volume group.
+ *
+ * \param   vg
+ * VG handle obtained from lvm_vg_create or lvm_vg_open.
+ *
+ * \return
+ * Maximum number of physical volumes allowed in a volume group.
+ */
+uint64_t lvm_vg_get_max_pv(const vg_t vg);
+
+/**
+ * Get the maximum number of logical volumes allowed in a volume group.
+ *
+ * \param   vg
+ * VG handle obtained from lvm_vg_create or lvm_vg_open.
+ *
+ * \return
+ * Maximum number of logical volumes allowed in a volume group.
+ */
+uint64_t lvm_vg_get_max_lv(const vg_t vg);
+
 /************************** logical volume handling *************************/
 
 /**
