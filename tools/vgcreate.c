@@ -102,14 +102,12 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 			clustered_message = "Non-clustered ";
 	}
 
-	if (!archive(vg)) {
-		goto bad;
-	}
+	if (!archive(vg))
+		goto_bad;
 
 	/* Store VG on disk(s) */
-	if (!vg_write(vg) || !vg_commit(vg)) {
-		goto bad;
-	}
+	if (!vg_write(vg) || !vg_commit(vg))
+		goto_bad;
 
 	unlock_vg(cmd, VG_ORPHANS);
 	unlock_vg(cmd, vp_new.vg_name);

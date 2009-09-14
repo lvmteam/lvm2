@@ -22,8 +22,10 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 	if (arg_count(cmd, file_ARG))
 		file = arg_str_value(cmd, file_ARG, "");
 
-	if (!write_config_file(cmd->cft, file, argc, argv))
+	if (!write_config_file(cmd->cft, file, argc, argv)) {
+		stack;
 		return ECMD_FAILED;
+	}
 
 	return ECMD_PROCESSED;
 }

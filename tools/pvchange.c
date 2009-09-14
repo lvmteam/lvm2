@@ -274,6 +274,7 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 	} else {
 		log_verbose("Scanning for physical volume names");
 		if (!(pvslist = get_pvs(cmd))) {
+			stack;
 			return ECMD_FAILED;
 		}
 

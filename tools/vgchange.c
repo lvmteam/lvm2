@@ -179,8 +179,10 @@ static int _vgchange_alloc(struct cmd_context *cmd, struct volume_group *vg)
 
 	alloc = arg_uint_value(cmd, alloc_ARG, ALLOC_NORMAL);
 
-	if (!archive(vg))
+	if (!archive(vg)) {
+		stack;
 		return ECMD_FAILED;
+	}
 
 	/* FIXME: make consistent with vg_set_alloc_policy() */
 	if (alloc == vg->alloc) {
@@ -188,11 +190,15 @@ static int _vgchange_alloc(struct cmd_context *cmd, struct volume_group *vg)
 			  get_alloc_string(vg->alloc));
 		return ECMD_FAILED;
 	}
-	if (!vg_set_alloc_policy(vg, alloc))
+	if (!vg_set_alloc_policy(vg, alloc)) {
+		stack;
 		return ECMD_FAILED;
+	}
 
-	if (!vg_write(vg) || !vg_commit(vg))
+	if (!vg_write(vg) || !vg_commit(vg)) {
+		stack;
 		return ECMD_FAILED;
+	}
 
 	backup(vg);
 
@@ -218,16 +224,20 @@ static int _vgchange_resizeable(struct cmd_context *cmd,
 		return ECMD_FAILED;
 	}
 
-	if (!archive(vg))
+	if (!archive(vg)) {
+		stack;
 		return ECMD_FAILED;
+	}
 
 	if (resizeable)
 		vg->status |= RESIZEABLE_VG;
 	else
 		vg->status &= ~RESIZEABLE_VG;
 
-	if (!vg_write(vg) || !vg_commit(vg))
+	if (!vg_write(vg) || !vg_commit(vg)) {
+		stack;
 		return ECMD_FAILED;
+	}
 
 	backup(vg);
 
@@ -265,16 +275,20 @@ static int _vgchange_clustered(struct cmd_context *cmd,
 		}
 	}
 
-	if (!archive(vg))
+	if (!archive(vg)) {
+		stack;
 		return ECMD_FAILED;
+	}
 
 	if (clustered)
 		vg->status |= CLUSTERED;
 	else
 		vg->status &= ~CLUSTERED;
 
-	if (!vg_write(vg) || !vg_commit(vg))
+	if (!vg_write(vg) || !vg_commit(vg)) {
+		stack;
 		return ECMD_FAILED;
+	}
 
 	backup(vg);
 
@@ -288,14 +302,20 @@ static int _vgchange_logicalvolume(struct cmd_context *cmd,
 {
 	uint32_t max_lv = arg_uint_value(cmd, logicalvolume_ARG, 0);
 
-	if (!archive(vg))
+	if (!archive(vg)) {
+		stack;
 		return ECMD_FAILED;
+	}
 
-	if (!vg_set_max_lv(vg, max_lv))
+	if (!vg_set_max_lv(vg, max_lv)) {
+		stack;
 		return ECMD_FAILED;
+	}
 
-	if (!vg_write(vg) || !vg_commit(vg))
+	if (!vg_write(vg) || !vg_commit(vg)) {
+		stack;
 		return ECMD_FAILED;
+	}
 
 	backup(vg);
 
@@ -314,14 +334,20 @@ static int _vgchange_physicalvolumes(struct cmd_context *cmd,
 		return EINVALID_CMD_LINE;
 	}
 
-	if (!archive(vg))
+	if (!archive(vg)) {
+		stack;
 		return ECMD_FAILED;
+	}
 
-	if (!vg_set_max_pv(vg, max_pv))
+	if (!vg_set_max_pv(vg, max_pv)) {
+		stack;
 		return ECMD_FAILED;
+	}
 
-	if (!vg_write(vg) || !vg_commit(vg))
+	if (!vg_write(vg) || !vg_commit(vg)) {
+		stack;
 		return ECMD_FAILED;
+	}
 
 	backup(vg);
 
@@ -347,16 +373,20 @@ static int _vgchange_pesize(struct cmd_context *cmd, struct volume_group *vg)
 		return ECMD_PROCESSED;
 	}
 
-	if (!archive(vg))
+	if (!archive(vg)) {
+		stack;
 		return ECMD_FAILED;
+	}
 
 	if (!vg_set_extent_size(vg, extent_size)) {
 		stack;
 		return EINVALID_CMD_LINE;
 	}
 
-	if (!vg_write(vg) || !vg_commit(vg))
+	if (!vg_write(vg) || !vg_commit(vg)) {
+		stack;
 		return ECMD_FAILED;
+	}
 
 	backup(vg);
 
@@ -380,8 +410,10 @@ static int _vgchange_tag(struct cmd_context *cmd, struct volume_group *vg,
 		return ECMD_FAILED;
 	}
 
-	if (!archive(vg))
+	if (!archive(vg)) {
+		stack;
 		return ECMD_FAILED;
+	}
 
 	if ((arg == addtag_ARG)) {
 		if (!str_list_add(cmd->mem, &vg->tags, tag)) {
@@ -397,8 +429,10 @@ static int _vgchange_tag(struct cmd_context *cmd, struct volume_group *vg,
 		}
 	}
 
-	if (!vg_write(vg) || !vg_commit(vg))
+	if (!vg_write(vg) || !vg_commit(vg)) {
+		stack;
 		return ECMD_FAILED;
+	}
 
 	backup(vg);
 
@@ -417,8 +451,10 @@ static int _vgchange_uuid(struct cmd_context *cmd __attribute((unused)),
 		return ECMD_FAILED;
 	}
 
-	if (!archive(vg))
+	if (!archive(vg)) {
+		stack;
 		return ECMD_FAILED;
+	}
 
 	if (!id_create(&vg->id)) {
 		log_error("Failed to generate new random UUID for VG %s.",
@@ -430,8 +466,10 @@ static int _vgchange_uuid(struct cmd_context *cmd __attribute((unused)),
 		memcpy(&lvl->lv->lvid, &vg->id, sizeof(vg->id));
 	}
 
-	if (!vg_write(vg) || !vg_commit(vg))
+	if (!vg_write(vg) || !vg_commit(vg)) {
+		stack;
 		return ECMD_FAILED;
+	}
 
 	backup(vg);
 
@@ -444,8 +482,10 @@ static int _vgchange_refresh(struct cmd_context *cmd, struct volume_group *vg)
 {
 	log_verbose("Refreshing volume group \"%s\"", vg->name);
 
-	if (!vg_refresh_visible(cmd, vg))
+	if (!vg_refresh_visible(cmd, vg)) {
+		stack;
 		return ECMD_FAILED;
+	}
 
 	return ECMD_PROCESSED;
 }
@@ -456,8 +496,10 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 {
 	int r = ECMD_FAILED;
 
-	if (vg_read_error(vg))
+	if (vg_read_error(vg)) {
+		stack;
 		return ECMD_FAILED;
+	}
 
 	if (vg_is_exported(vg)) {
 		log_error("Volume group \"%s\" is exported", vg_name);

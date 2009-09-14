@@ -19,8 +19,10 @@ static int vgscan_single(struct cmd_context *cmd, const char *vg_name,
 			 struct volume_group *vg,
 			 void *handle __attribute((unused)))
 {
-	if (vg_read_error(vg))
+	if (vg_read_error(vg)) {
+		stack;
 		return ECMD_FAILED;
+	}
 
 	log_print("Found %svolume group \"%s\" using metadata type %s",
 		  vg_is_exported(vg) ? "exported " : "", vg_name,

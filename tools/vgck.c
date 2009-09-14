@@ -21,14 +21,20 @@ static int vgck_single(struct cmd_context *cmd __attribute((unused)),
 		       struct volume_group *vg,
 		       void *handle __attribute((unused)))
 {
-	if (vg_read_error(vg))
+	if (vg_read_error(vg)) {
+		stack;
 		return ECMD_FAILED;
+	}
 
-	if (!vg_check_status(vg, EXPORTED_VG))
+	if (!vg_check_status(vg, EXPORTED_VG)) {
+		stack;
 		return ECMD_FAILED;
+	}
 
-	if (!vg_validate(vg))
+	if (!vg_validate(vg)) {
+		stack;
 		return ECMD_FAILED;
+	}
 
 	return ECMD_PROCESSED;
 }

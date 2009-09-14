@@ -46,20 +46,26 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 
 	if (lock_vg_from_first) {
 		vg_from = _vgmerge_vg_read(cmd, vg_name_from);
-		if (!vg_from)
+		if (!vg_from) {
+			stack;
 			return ECMD_FAILED;
+		}
 		vg_to = _vgmerge_vg_read(cmd, vg_name_to);
 		if (!vg_to) {
+			stack;
 			unlock_and_release_vg(cmd, vg_from, vg_name_from);
 			return ECMD_FAILED;
 		}
 	} else {
 		vg_to = _vgmerge_vg_read(cmd, vg_name_to);
-		if (!vg_to)
+		if (!vg_to) {
+			stack;
 			return ECMD_FAILED;
+		}
 
 		vg_from = _vgmerge_vg_read(cmd, vg_name_from);
 		if (!vg_from) {
+			stack;
 			unlock_and_release_vg(cmd, vg_to, vg_name_to);
 			return ECMD_FAILED;
 		}

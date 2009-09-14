@@ -904,15 +904,23 @@ static int lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 			log_error("Unable to convert mirrored LV \"%s\" into a snapshot.", lv->name);
 			return ECMD_FAILED;
 		}
-		if (!archive(lv->vg))
+		if (!archive(lv->vg)) {
+			stack;
 			return ECMD_FAILED;
-		if (!lvconvert_snapshot(cmd, lv, lp))
+		}
+		if (!lvconvert_snapshot(cmd, lv, lp)) {
+			stack;
 			return ECMD_FAILED;
+		}
 	} else if (arg_count(cmd, mirrors_ARG) || (lv->status & MIRRORED)) {
-		if (!archive(lv->vg))
+		if (!archive(lv->vg)) {
+			stack;
 			return ECMD_FAILED;
-		if (!_lvconvert_mirrors(cmd, lv, lp))
+		}
+		if (!_lvconvert_mirrors(cmd, lv, lp)) {
+			stack;
 			return ECMD_FAILED;
+		}
 	}
 
 	return ECMD_PROCESSED;

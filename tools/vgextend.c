@@ -40,6 +40,7 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 	vg = vg_read_for_update(cmd, vg_name, NULL, 0);
 	if (vg_read_error(vg)) {
 		vg_release(vg);
+		stack;
 		return ECMD_FAILED;
 	}
 
@@ -50,11 +51,11 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	if (!archive(vg))
-		goto error;
+		goto_bad;
 
 	/* extend vg */
 	if (!vg_extend(vg, argc, argv))
-		goto error;
+		goto_bad;
 
 	/* ret > 0 */
 	log_verbose("Volume group \"%s\" will be extended by %d new "
@@ -62,13 +63,13 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 
 	/* store vg on disk(s) */
 	if (!vg_write(vg) || !vg_commit(vg))
-		goto error;
+		goto_bad;
 
 	backup(vg);
 	log_print("Volume group \"%s\" successfully extended", vg_name);
 	r = ECMD_PROCESSED;
 
-error:
+bad:
 	unlock_vg(cmd, VG_ORPHANS);
 	unlock_and_release_vg(cmd, vg, vg_name);
 	return r;

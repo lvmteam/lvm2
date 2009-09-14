@@ -404,7 +404,7 @@ static int _vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 	pvl = find_pv_in_vg(vg, name);
 
 	if (!archive(vg))
-		goto bad;
+		goto_bad;
 
 	log_verbose("Removing \"%s\" from volume group \"%s\"", name, vg->name);
 
@@ -512,12 +512,12 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 	vg = vg_read_for_update(cmd, vg_name, NULL, READ_ALLOW_EXPORTED);
 	if (vg_read_error(vg) == FAILED_ALLOCATION ||
 	    vg_read_error(vg) == FAILED_NOTFOUND)
-		goto out;
+		goto_out;
 
 	/* FIXME We want to allow read-only VGs to be changed here? */
 	if (vg_read_error(vg) && vg_read_error(vg) != FAILED_READ_ONLY
 	    && !arg_count(cmd, removemissing_ARG))
-		goto out;
+		goto_out;
 
 	if (repairing) {
 		if (!vg_read_error(vg) && !vg_missing_pv_count(vg)) {
@@ -536,14 +536,14 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 
 		if (vg_read_error(vg) && vg_read_error(vg) != FAILED_READ_ONLY
 		    && vg_read_error(vg) != FAILED_INCONSISTENT)
-			goto out;
+			goto_out;
 
 		if (!archive(vg))
-			goto out;
+			goto_out;
 
 		if (arg_count(cmd, force_ARG)) {
 			if (!_make_vg_consistent(cmd, vg))
-				goto out;
+				goto_out;
 		} else
 			fixed = _consolidate_vg(cmd, vg);
 
@@ -563,7 +563,7 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 
 	} else {
 		if (!vg_check_status(vg, EXPORTED_VG | LVM_WRITE | RESIZEABLE_VG))
-			goto out;
+			goto_out;
 
 		/* FIXME: Pass private struct through to all these functions */
 		/* and update in batch here? */

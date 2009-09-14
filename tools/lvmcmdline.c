@@ -963,8 +963,10 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	/* each command should start out with sigint flag cleared */
 	sigint_clear();
 
-	if (!(cmd->cmd_line = _copy_command_line(cmd, argc, argv)))
+	if (!(cmd->cmd_line = _copy_command_line(cmd, argc, argv))) {
+		stack;
 		return ECMD_FAILED;
+	}
 
 	log_debug("Parsing: %s", cmd->cmd_line);
 

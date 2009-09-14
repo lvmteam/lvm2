@@ -319,8 +319,10 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 
 	if (lock_vg_from_first) {
 		vg_from = _vgsplit_from(cmd, vg_name_from);
-		if (!vg_from)
+		if (!vg_from) {
+			stack;
 			return ECMD_FAILED;
+		}
 		/*
 		 * Set metadata format of original VG.
 		 * NOTE: We must set the format before calling vg_create()
@@ -331,15 +333,19 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		vg_to = _vgsplit_to(cmd, vg_name_to, &existing_vg);
 		if (!vg_to) {
 			unlock_and_release_vg(cmd, vg_from, vg_name_from);
+			stack;
 			return ECMD_FAILED;
 		}
 	} else {
 		vg_to = _vgsplit_to(cmd, vg_name_to, &existing_vg);
-		if (!vg_to)
+		if (!vg_to) {
+			stack;
 			return ECMD_FAILED;
+		}
 		vg_from = _vgsplit_from(cmd, vg_name_from);
 		if (!vg_from) {
 			unlock_and_release_vg(cmd, vg_to, vg_name_to);
+			stack;
 			return ECMD_FAILED;
 		}
 
@@ -355,7 +361,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		if (new_vg_option_specified(cmd)) {
 			log_error("Volume group \"%s\" exists, but new VG "
 				    "option specified", vg_name_to);
-			goto_bad;
+			goto bad;
 		}
 		if (!vgs_are_compatible(cmd, vg_from,vg_to))
 			goto_bad;
@@ -369,12 +375,12 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 
 		if (fill_vg_create_params(cmd, vg_name_to, &vp_new, &vp_def)) {
 			r = EINVALID_CMD_LINE;
-			goto bad;
+			goto_bad;
 		}
 
 		if (validate_vg_create_params(cmd, &vp_new)) {
 			r = EINVALID_CMD_LINE;
-			goto bad;
+			goto_bad;
 		}
 
 		if (!vg_set_extent_size(vg_to, vp_new.extent_size) ||
@@ -416,7 +422,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	/* Split metadata areas and check if both vgs have at least one area */
 	if (!(vg_split_mdas(cmd, vg_from, vg_to)) && vg_from->pv_count) {
 		log_error("Cannot split: Nowhere to store metadata for new Volume Group");
-		goto_bad;
+		goto bad;
 	}
 
 	/* Set proper name for all PVs in new VG */
@@ -465,7 +471,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		if (vg_read_error(vg_to)) {
 			log_error("Volume group \"%s\" became inconsistent: "
 				  "please fix manually", vg_name_to);
-			goto_bad;
+			goto bad;
 		}
 	}
 

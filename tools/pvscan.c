@@ -135,6 +135,7 @@ int pvscan(struct cmd_context *cmd, int argc __attribute((unused)),
 	log_verbose("Walking through all physical volumes");
 	if (!(pvslist = get_pvs(cmd))) {
 		unlock_vg(cmd, VG_GLOBAL);
+		stack;
 		return ECMD_FAILED;
 	}
 

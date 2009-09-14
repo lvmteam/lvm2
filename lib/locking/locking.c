@@ -261,6 +261,13 @@ int init_locking(int type, struct cmd_context *cmd)
 		return 1;
 #endif
 
+	case 4:
+		log_verbose("Read-only locking selected. "
+			    "Only read operations permitted.");
+		if (!init_readonly_locking(&_locking, cmd))
+			break;
+		return 1;
+
 	default:
 		log_error("Unknown locking type requested.");
 		return 0;
@@ -280,7 +287,6 @@ int init_locking(int type, struct cmd_context *cmd)
 	if (!ignorelockingfailure())
 		return 0;
 
-	/* FIXME Ensure only read ops are permitted */
 	log_verbose("Locking disabled - only read operations permitted.");
 	init_readonly_locking(&_locking, cmd);
 
