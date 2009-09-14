@@ -182,8 +182,9 @@ See
 .TP
 \fB-P | --partial\fP
 When set, the tools will do their best to provide access to volume groups
-that are only partially available.  Where part of a logical volume is 
-missing, \fB/dev/ioerror\fP will be substituted, and you could use
+that are only partially available (one or more physical volumes belonging
+to the volume group are missing from the system).  Where part of a logical
+volume is missing, \fB/dev/ioerror\fP will be substituted, and you could use
 \fBdmsetup (8)\fP to set this up to return I/O errors when accessed,
 or create it as a large block device of nulls.  Metadata may not be
 changed with this option. To insert a replacement physical volume
