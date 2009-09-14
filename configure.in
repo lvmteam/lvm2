@@ -322,6 +322,17 @@ REALTIME=$enableval)
 AC_MSG_RESULT($REALTIME)
 
 ################################################################################
+dnl -- Init pkg-config with dummy invokation:
+dnl -- this is required because PKG_CHECK_MODULES macro is expanded
+dnl -- to initialize the pkg-config environment only at the first invokation,
+dnl -- that would be conditional in this configure.in.
+pkg_config_init() {
+	PKG_CHECK_MODULES(PKGCONFIGINIT, pkgconfiginit, [],
+		[AC_MSG_RESULT([pkg-config initialized])])
+	PKGCONFIG_INIT=1
+}
+
+################################################################################
 dnl -- Build cluster LVM daemon
 AC_MSG_CHECKING(whether to build cluster LVM daemon)
 AC_ARG_WITH(clvmd,
@@ -345,6 +356,12 @@ if  test x$CLVMD != xnone && test x$CLUSTER = xnone; then
 	CLUSTER=internal
 fi
 
+dnl -- init pkgconfig if required
+if  test x$CLVMD != xnone && test x$PKGCONFIG_INIT != x1; then
+	pkg_config_init
+fi
+
+
 dnl -- define build types
 if [[ `expr x"$CLVMD" : '.*gulm.*'` != 0 ]]; then
 	BUILDGULM=yes
@@ -365,15 +382,6 @@ if test x$BUILDGULM = xyes; then
 	   test x$BUILDOPENAIS = xyes; then
 		AC_MSG_ERROR([requested clvmd configuration is not valid])
 	fi
-fi
-
-dnl -- Init pkg-config with dummy invokation:
-dnl -- this is required because PKG_CHECK_MODULES macro is expanded
-dnl -- to initialize the pkg-config environment only at the first invokation,
-dnl -- that would be conditional in this configure.in.
-if  test x$CLVMD != xnone; then
-	PKG_CHECK_MODULES(PKGCONFIGINIT, pkgconfiginit, [],
-		[AC_MSG_RESULT([pkg-config initialized])])
 fi
 
 dnl -- define a soft bailout if we are autodetecting
@@ -574,13 +582,14 @@ fi
 ################################################################################
 dnl -- Look for corosync libraries if required.
 if [[ "x$BUILD_CMIRRORD" = xyes ]]; then
-#
-#       FIXME: ALSO NEED TO CHECK FOR CHECKPOINT MODULE
-#       FIXME: Merge this with the new clvmd logic
-#
-	PKG_CHECK_MODULES(CPG, libcpg, [],
-		[AC_MSG_RESULT([no pkg for libcpg library, using -lcpg]);
-		CPG_LIBS="-lcpg"])
+	dnl -- init pkgconfig if required
+	if  test x$PKGCONFIG_INIT != x1; then
+		pkg_config_init
+	fi
+	PKG_CHECK_MODULES(SACKPT, libSaCkpt)
+	if test x$HAVE_CPG != xyes; then
+		PKG_CHECK_MODULES(CPG, libcpg)
+	fi
 fi
 
 ################################################################################
@@ -1101,6 +1110,8 @@ AC_SUBST(PKGCONFIG)
 AC_SUBST(POOL)
 AC_SUBST(QUORUM_CFLAGS)
 AC_SUBST(QUORUM_LIBS)
+AC_SUBST(SACKPT_CFLAGS)
+AC_SUBST(SACKPT_LIBS)
 AC_SUBST(SALCK_CFLAGS)
 AC_SUBST(SALCK_LIBS)
 AC_SUBST(SNAPSHOTS)
