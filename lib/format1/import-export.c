@@ -160,7 +160,7 @@ int export_pv(struct cmd_context *cmd, struct dm_pool *mem __attribute((unused))
 		strncpy((char *)pvd->system_id, vg->system_id, sizeof(pvd->system_id));
 
 	/* Is VG already exported or being exported? */
-	if (vg && (vg->status & EXPORTED_VG)) {
+	if (vg && vg_is_exported(vg)) {
 		/* Does system_id need setting? */
 		if (!*vg->system_id ||
 		    strncmp(vg->system_id, EXPORTED_TAG,
@@ -178,7 +178,7 @@ int export_pv(struct cmd_context *cmd, struct dm_pool *mem __attribute((unused))
 	}
 
 	/* Is VG being imported? */
-	if (vg && !(vg->status & EXPORTED_VG) && *vg->system_id &&
+	if (vg && !vg_is_exported(vg) && *vg->system_id &&
 	    !strncmp(vg->system_id, EXPORTED_TAG, sizeof(EXPORTED_TAG) - 1)) {
 		if (!_system_id(cmd, (char *)pvd->system_id, IMPORTED_TAG))
 			return_0;
@@ -275,7 +275,7 @@ int export_vg(struct vg_disk *vgd, struct volume_group *vg)
 	if (vg->status & SHARED)
 		vgd->vg_access |= VG_SHARED;
 
-	if (vg->status & EXPORTED_VG)
+	if (vg_is_exported(vg))
 		vgd->vg_status |= VG_EXPORTED;
 
 	if (vg->status & RESIZEABLE_VG)
