@@ -243,6 +243,21 @@ uint64_t lvm_vg_get_seqno(const vg_t vg)
 	return vg_seqno(vg);
 }
 
+uint64_t lvm_vg_is_clustered(const vg_t vg)
+{
+	return vg_is_clustered(vg);
+}
+
+uint64_t lvm_vg_is_exported(const vg_t vg)
+{
+	return vg_is_exported(vg);
+}
+
+uint64_t lvm_vg_is_partial(const vg_t vg)
+{
+	return (vg_missing_pv_count(vg) != 0);
+}
+
 /* FIXME: invalid handle? return INTMAX? */
 uint64_t lvm_vg_get_size(const vg_t vg)
 {

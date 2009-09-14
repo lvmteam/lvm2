@@ -481,6 +481,43 @@ int lvm_vg_reduce(vg_t vg, const char *device);
 int lvm_vg_set_extent_size(vg_t vg, uint32_t new_size);
 
 /**
+ * Get whether or not a volume group is clustered.
+ *
+ * \param   vg
+ * VG handle obtained from lvm_vg_create or lvm_vg_open.
+ *
+ * \return
+ * 1 if the VG is clustered, 0 if not
+ */
+uint64_t lvm_vg_is_clustered(vg_t vg);
+
+/**
+ * Get whether or not a volume group is exported.
+ *
+ * \param   vg
+ * VG handle obtained from lvm_vg_create or lvm_vg_open.
+ *
+ * \return
+ * 1 if the VG is exported, 0 if not
+ */
+uint64_t lvm_vg_is_exported(vg_t vg);
+
+/**
+ * Get whether or not a volume group is a partial volume group.
+ *
+ * When one or more physical volumes belonging to the volume group
+ * are missing from the system the volume group is a partial volume
+ * group.
+ *
+ * \param   vg
+ * VG handle obtained from lvm_vg_create or lvm_vg_open.
+ *
+ * \return
+ * 1 if the VG is PVs, 0 if not
+ */
+uint64_t lvm_vg_is_partial(vg_t vg);
+
+/**
  * Get the current metadata sequence number of a volume group.
  *
  * The metadata sequence number is incrented for each metadata change.
