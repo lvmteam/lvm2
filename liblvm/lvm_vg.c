@@ -274,6 +274,16 @@ uint64_t lvm_vg_get_pv_count(const vg_t vg)
 	return vg_pv_count(vg);
 }
 
+uint64_t lvm_vg_get_max_pv(const vg_t vg)
+{
+	return vg_max_pv(vg);
+}
+
+uint64_t lvm_vg_get_max_lv(const vg_t vg)
+{
+	return vg_max_lv(vg);
+}
+
 char *lvm_vg_get_uuid(const vg_t vg)
 {
 	char uuid[64] __attribute((aligned(8)));
