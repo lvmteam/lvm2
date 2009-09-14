@@ -446,7 +446,7 @@ static int _vgchange_refresh(struct cmd_context *cmd, struct volume_group *vg)
 
 	if (!vg_refresh_visible(cmd, vg))
 		return ECMD_FAILED;
-	
+
 	return ECMD_PROCESSED;
 }
 
@@ -459,7 +459,7 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 	if (vg_read_error(vg))
 		return ECMD_FAILED;
 
-	if (vg_status(vg) & EXPORTED_VG) {
+	if (vg_is_exported(vg)) {
 		log_error("Volume group \"%s\" is exported", vg_name);
 		return ECMD_FAILED;
 	}

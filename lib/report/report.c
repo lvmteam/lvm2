@@ -434,7 +434,7 @@ static int _vgstatus_disp(struct dm_report *rh __attribute((unused)), struct dm_
 	else
 		repstr[1] = '-';
 
-	if (vg->status & EXPORTED_VG)
+	if (vg_is_exported(vg))
 		repstr[2] = 'x';
 	else
 		repstr[2] = '-';

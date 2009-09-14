@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2009 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -26,7 +26,7 @@ static int vgimport_single(struct cmd_context *cmd __attribute((unused)),
 	if (vg_read_error(vg))
 		goto error;
 
-	if (!(vg_status(vg) & EXPORTED_VG)) {
+	if (!vg_is_exported(vg)) {
 		log_error("Volume group \"%s\" is not exported", vg_name);
 		goto error;
 	}

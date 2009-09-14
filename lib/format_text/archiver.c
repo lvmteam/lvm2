@@ -415,7 +415,7 @@ void check_current_backup(struct volume_group *vg)
 	struct volume_group *vg_backup;
 	int old_suppress;
 
-	if (vg->status & EXPORTED_VG)
+	if (vg_is_exported(vg))
 		return;
 
 	if (dm_snprintf(path, sizeof(path), "%s/%s",
