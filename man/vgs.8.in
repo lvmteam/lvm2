@@ -60,7 +60,8 @@ Resi(z)eable
 .IP 3 3
 E(x)ported
 .IP 4 3
-(p)artial
+(p)artial: one or more physical volumes belonging to the volume group
+are missing from the system
 .IP 5 3
 Allocation policy: (c)ontiguous, c(l)ing, (n)ormal, (a)nywhere, (i)nherited
 .IP 6 3
