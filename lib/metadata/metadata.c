@@ -865,7 +865,7 @@ int vg_set_extent_size(struct volume_group *vg, uint32_t new_size)
 	struct pv_segment *pvseg;
 	uint32_t s;
 
-	if (!(vg_status(vg) & RESIZEABLE_VG)) {
+	if (!vg_is_resizeable(vg)) {
 		log_error("Volume group \"%s\" must be resizeable "
 			  "to change PE size", vg->name);
 		return 0;
@@ -1003,7 +1003,7 @@ int vg_set_extent_size(struct volume_group *vg, uint32_t new_size)
 
 int vg_set_max_lv(struct volume_group *vg, uint32_t max_lv)
 {
-	if (!(vg_status(vg) & RESIZEABLE_VG)) {
+	if (!vg_is_resizeable(vg)) {
 		log_error("Volume group \"%s\" must be resizeable "
 			  "to change MaxLogicalVolume", vg->name);
 		return 0;
@@ -1031,7 +1031,7 @@ int vg_set_max_lv(struct volume_group *vg, uint32_t max_lv)
 
 int vg_set_max_pv(struct volume_group *vg, uint32_t max_pv)
 {
-	if (!(vg_status(vg) & RESIZEABLE_VG)) {
+	if (!vg_is_resizeable(vg)) {
 		log_error("Volume group \"%s\" must be resizeable "
 			  "to change MaxPhysicalVolumes", vg->name);
 		return 0;
@@ -3148,7 +3148,7 @@ static uint32_t _vg_bad_status_bits(const struct volume_group *vg,
 	}
 
 	if ((status & EXPORTED_VG) &&
-	    (vg->status & EXPORTED_VG)) {
+	    vg_is_exported(vg)) {
 		log_error("Volume group %s is exported", vg->name);
 		failure |= FAILED_EXPORTED;
 	}
@@ -3160,7 +3160,7 @@ static uint32_t _vg_bad_status_bits(const struct volume_group *vg,
 	}
 
 	if ((status & RESIZEABLE_VG) &&
-	    !(vg->status & RESIZEABLE_VG)) {
+	    !vg_is_resizeable(vg)) {
 		log_error("Volume group %s is not resizeable.", vg->name);
 		failure |= FAILED_RESIZEABLE;
 	}
@@ -3311,8 +3311,7 @@ bad:
  *  - metadata inconsistent and automatic correction failed: FAILED_INCONSISTENT
  *  - VG is read-only: FAILED_READ_ONLY
  *  - VG is EXPORTED, unless flags has READ_ALLOW_EXPORTED: FAILED_EXPORTED
- *  - VG is not RESIZEABLE, unless flags has ALLOW_NONRESIZEABLE:
- *    FAILED_RESIZEABLE
+ *  - VG is not RESIZEABLE: FAILED_RESIZEABLE
  *  - locking failed: FAILED_LOCKING
  *
  * On failures, all locks are released, unless one of the following applies:

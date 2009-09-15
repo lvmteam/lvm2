@@ -278,7 +278,7 @@ int export_vg(struct vg_disk *vgd, struct volume_group *vg)
 	if (vg_is_exported(vg))
 		vgd->vg_status |= VG_EXPORTED;
 
-	if (vg->status & RESIZEABLE_VG)
+	if (vg_is_resizeable(vg))
 		vgd->vg_status |= VG_EXTENDABLE;
 
 	vgd->lv_max = vg->max_lv;
