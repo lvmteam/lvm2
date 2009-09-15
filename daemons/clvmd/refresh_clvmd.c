@@ -15,7 +15,6 @@
 
 /*
  * Tell all clvmds in a cluster to refresh their toolcontext
- *
  */
 
 #define _GNU_SOURCE
