@@ -4,31 +4,32 @@ Version 2.02.52 - 15th September 2009
   Add lots of missing stack debug messages to tools.
   Make readonly locking available as locking type 4.
   Fix readonly locking to permit writeable global locks (for vgscan). (2.02.49)
-  Add lvm_vg_is_clustered, lvm_vg_is_exported, and lvm_vg_is_partial.
-  Add DM_UDEV_RULES_VSN udev enviroment variable.
-  Add libudev configuration check.
-  Add lvm2app.sh to nightly tests conditional upon configure --enable-applib.
-  Update lvm_vg_remove to require lvm_vg_write to commit remove to disk.
-  Enforce an alphabetical lock ordering for vgname locks.
-  Refactor vgsplit, vgmerge, and vgrename to obey vgname ordering rules.
-  Implement write lock prioritisation for file locking and make it default.
-  Fix clvmd autodetection check and cleanup related configure messages.
-  Fix Makefile distclean target.
-  Make clvmd check corosync to see what cluster interface it should use.
-  Rewrite clvmd configuration code to cope with all combinations of libs.
+  Add DM_UDEV_RULES_VSN environment variable to udev rules.
+  Update vgsplit, vgmerge, and vgrename to obey new vgname ordering rules.
+  Make lvm2app pv_t, lv_t, vg_t handle definitions consistent with lvm_t.
+  Enforce an alphabetical lock ordering on vgname locking.
+  Prioritise write locks over read locks by default for file locking.
+  Add local lock files with suffix ':aux' to serialise locking requests.
   Fix global locking in PV reporting commands (2.02.49).
   Fix pvcreate string termination in duplicate uuid warning message.
-  Fix pvcreate on a partition (2.02.51).
+  Don't loop reading sysfs with pvcreate on a non-blkext partition (2.02.51).
   Fix vgcfgrestore error paths when locking fails (2.02.49).
+  Update Makefile distclean target.
+  Add libudev configuration check.
+  Make clvmd check corosync to see what cluster interface it should use.
+  Add clvmd autodetection check and cleanup related configure messages.
+  Rewrite clvmd configuration code to cope with all combinations of libs.
   Added configure --enable-cmirrord to build the cluster mirror log daemon.
   Rename clogd to cmirrord.
   Make lvchange --refresh only take a read lock on volume group.
-  Fix bug where non-blocking file locks could be granted in error.
-  Make lvm2app pv_t, lv_t, vg_t handle definitions consistent with lvm_t.
+  Fix race where non-blocking file locks could be granted in error.
   Fix vgextend error path - if ORPHAN lock fails, unlock / release vg (2.02.49).
   Fix compile warning in clvmd.
-  Update lv{convert|create|extend|resize} man pages - clarify use of PE ranges.
+  Clarify use of PE ranges in lv{convert|create|extend|resize} man pages.
   Remove useless _pv_write wrapper.
+  Add lvm2app.sh to tests conditional upon configure --enable-applib.
+  Add lvm_vg_is_clustered, lvm_vg_is_exported, and lvm_vg_is_partial.
+  Update lvm_vg_remove to require lvm_vg_write to commit remove to disk.
   Update test/api/test.c to call lvm_vg_create and lvm_vg_remove.
 
 Version 2.02.51 - 6th August 2009

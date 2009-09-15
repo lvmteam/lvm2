@@ -192,11 +192,12 @@ void lvmcache_drop_metadata(const char *vgname)
  */
 static int _vgname_order_correct(const char *vgname1, const char *vgname2)
 {
-	if ((*vgname1 == '#')|(*vgname2 == '#'))
+	if ((*vgname1 == '#') || (*vgname2 == '#'))
 		return 1;
 
 	if (strcmp(vgname1, vgname2) < 0)
 		return 1;
+
 	return 0;
 }
 
@@ -214,7 +215,9 @@ int lvmcache_verify_lock_order(const char *vgname)
 	dm_hash_iterate(n, _lock_hash) {
 		if (!dm_hash_get_data(_lock_hash, n))
 			return_0;
+
 		vgname2 = dm_hash_get_key(_lock_hash, n);
+
 		if (!_vgname_order_correct(vgname2, vgname)) {
 			log_errno(EDEADLK, "Internal error: VG lock %s must "
 				  "be requested before %s, not after.",
@@ -222,6 +225,7 @@ int lvmcache_verify_lock_order(const char *vgname)
 			return_0;
 		}
 	}
+
 	return 1;
 }
 

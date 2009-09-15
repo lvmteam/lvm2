@@ -434,10 +434,10 @@ static int _process_one_vg(struct cmd_context *cmd, const char *vg_name,
 	vg = vg_read(cmd, vg_name, vgid, flags);
 	/* Allow FAILED_INCONSISTENT through only for vgcfgrestore */
 	if (vg_read_error(vg) &&
-	    !((vg_read_error(vg) == FAILED_INCONSISTENT)&&(flags & READ_ALLOW_INCONSISTENT))) {
+	    !((vg_read_error(vg) == FAILED_INCONSISTENT) &&
+	      (flags & READ_ALLOW_INCONSISTENT))) {
 		ret_max = ECMD_FAILED;
-		stack;
-		goto out;
+		goto_out;
 	}
 
 	if (!dm_list_empty(tags)) {
