@@ -1,13 +1,20 @@
-/******************************************************************************
-*******************************************************************************
-**
-**  Copyright (C) Sistina Software, Inc.  2002-2003  All rights reserved.
-**  Copyright (C) 2004-2005 Red Hat, Inc. All rights reserved.
-**
-*******************************************************************************
-******************************************************************************/
+/*
+ * Copyright (C) 2002-2003 Sistina Software, Inc. All rights reserved.
+ * Copyright (C) 2004-2009 Red Hat, Inc. All rights reserved.
+ *
+ * This file is part of LVM2.
+ *
+ * This copyrighted material is made available to anyone wishing to use,
+ * modify, copy, or redistribute it subject to the terms and conditions
+ * of the GNU Lesser General Public License v.2.1.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program; if not, write to the Free Software Foundation,
+ * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
 
-/* This provides the interface between clvmd and gulm as the cluster
+/*
+ * This provides the interface between clvmd and gulm as the cluster
  * and lock manager.
  *
  * It also provides the "liblm" functions too as it's hard (and pointless)
@@ -16,7 +23,6 @@
  * What it does /not/ provide is the communications between clvmd daemons
  * on the cluster nodes. That is done in tcp-comms.c
  */
-
 
 #include <pthread.h>
 #include <sys/types.h>
