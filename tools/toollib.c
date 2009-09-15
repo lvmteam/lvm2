@@ -433,10 +433,11 @@ static int _process_one_vg(struct cmd_context *cmd, const char *vg_name,
 
 	vg = vg_read(cmd, vg_name, vgid, flags);
 	/* Allow FAILED_INCONSISTENT through only for vgcfgrestore */
-	if (vg_read_error(vg) && (vg_read_error(vg) != FAILED_INCONSISTENT)) {
-		vg_release(vg);
+	if (vg_read_error(vg) &&
+	    !((vg_read_error(vg) == FAILED_INCONSISTENT)&&(flags & READ_ALLOW_INCONSISTENT))) {
+		ret_max = ECMD_FAILED;
 		stack;
-		return ECMD_FAILED;
+		goto out;
 	}
 
 	if (!dm_list_empty(tags)) {
@@ -451,7 +452,11 @@ static int _process_one_vg(struct cmd_context *cmd, const char *vg_name,
 		ret_max = ret;
 
 out:
-	unlock_and_release_vg(cmd, vg, vg_name);
+	if ((vg_read_error(vg) == FAILED_ALLOCATION)||
+	    (vg_read_error(vg) == FAILED_LOCKING))
+		vg_release(vg);
+	else
+		unlock_and_release_vg(cmd, vg, vg_name);
 	return ret_max;
 }
 
