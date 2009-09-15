@@ -429,7 +429,7 @@ static int _vgstatus_disp(struct dm_report *rh __attribute((unused)), struct dm_
 	else
 		repstr[0] = 'r';
 
-	if (vg->status & RESIZEABLE_VG)
+	if (vg_is_resizeable(vg))
 		repstr[1] = 'z';
 	else
 		repstr[1] = '-';

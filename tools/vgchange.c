@@ -212,13 +212,13 @@ static int _vgchange_resizeable(struct cmd_context *cmd,
 {
 	int resizeable = !strcmp(arg_str_value(cmd, resizeable_ARG, "n"), "y");
 
-	if (resizeable && (vg_status(vg) & RESIZEABLE_VG)) {
+	if (resizeable && vg_is_resizeable(vg)) {
 		log_error("Volume group \"%s\" is already resizeable",
 			  vg->name);
 		return ECMD_FAILED;
 	}
 
-	if (!resizeable && !(vg_status(vg) & RESIZEABLE_VG)) {
+	if (!resizeable && !vg_is_resizeable(vg)) {
 		log_error("Volume group \"%s\" is already not resizeable",
 			  vg->name);
 		return ECMD_FAILED;

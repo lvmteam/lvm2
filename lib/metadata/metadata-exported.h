@@ -722,6 +722,7 @@ uint64_t vg_max_lv(const struct volume_group *vg);
 int vg_check_write_mode(struct volume_group *vg);
 #define vg_is_clustered(vg) (vg_status((vg)) & CLUSTERED)
 #define vg_is_exported(vg) (vg_status((vg)) & EXPORTED_VG)
+#define vg_is_resizeable(vg) (vg_status((vg)) & RESIZEABLE_VG)
 
 struct vgcreate_params {
 	char *vg_name;

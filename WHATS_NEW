@@ -1,5 +1,6 @@
 Version 2.02.53 - 
 =====================================
+  Add vg_is_resizeable() and cleanup reference to VG_RESIZEABLE.
 
 Version 2.02.52 - 15th September 2009
 =====================================

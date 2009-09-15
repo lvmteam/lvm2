@@ -598,7 +598,7 @@ void vgdisplay_full(const struct volume_group *vg)
 		  access_str == 0 ? "error" : "");
 	log_print("VG Status             %s%sresizable",
 		  vg_is_exported(vg) ? "exported/" : "",
-		  vg->status & RESIZEABLE_VG ? "" : "NOT ");
+		  vg_is_resizeable(vg) ? "" : "NOT ");
 	/* vg number not part of LVM2 design
 	   log_print ("VG #                  %u\n", vg->vg_number);
 	 */
