@@ -53,7 +53,10 @@ SHELL_PATH_SQ = $(subst ','\'',$(SHELL_PATH))
 T = $(wildcard t-*.sh)
 
 ifeq ("@APPLIB@", "yes")
-  T += lvm2app.sh
+T += lvm2app.sh
+all: api/vgtest
+api/vgtest:
+	$(MAKE) -C api vgtest
 endif
 
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
