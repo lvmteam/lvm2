@@ -1,8 +1,10 @@
 Version 2.02.52 -
 =================================
+  Update _process_one_vg to cleanup properly after vg_read_error.
   Add lots of missing stack debug messages to tools.
   Make readonly locking available as locking type 4.
   Fix readonly locking to permit writeable global locks (for vgscan). (2.02.49)
+  Add lvm_vg_is_clustered, lvm_vg_is_exported, and lvm_vg_is_partial.
   Add manpage entry for dmsetup's udevcomplete_all and udevcookies commands.
   Add DM_UDEV_RULES_VSN udev enviroment variable.
   Check that udev is running and set internal state appropriately.

@@ -185,11 +185,6 @@ static int _poll_vg(struct cmd_context *cmd, const char *vgname,
 	const char *name;
 	int finished;
 
-	if (vg_read_error(vg)) {
-		stack;
-		return ECMD_FAILED;
-	}
-
 	dm_list_iterate_items(lvl, &vg->lvs) {
 		lv_mirr = lvl->lv;
 		if (!(lv_mirr->status & parms->lv_type))

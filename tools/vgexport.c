@@ -23,9 +23,6 @@ static int vgexport_single(struct cmd_context *cmd __attribute((unused)),
 	struct pv_list *pvl;
 	struct physical_volume *pv;
 
-	if (vg_read_error(vg))
-		goto_bad;
-
 	if (lvs_in_vg_activated(vg)) {
 		log_error("Volume group \"%s\" has active logical volumes",
 			  vg_name);

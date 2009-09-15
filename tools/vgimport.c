@@ -23,9 +23,6 @@ static int vgimport_single(struct cmd_context *cmd __attribute((unused)),
 	struct pv_list *pvl;
 	struct physical_volume *pv;
 
-	if (vg_read_error(vg))
-		goto_bad;
-
 	if (!vg_is_exported(vg)) {
 		log_error("Volume group \"%s\" is not exported", vg_name);
 		goto bad;

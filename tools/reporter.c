@@ -20,11 +20,6 @@ static int _vgs_single(struct cmd_context *cmd __attribute((unused)),
 		       const char *vg_name, struct volume_group *vg,
 		       void *handle)
 {
-	if (vg_read_error(vg)) {
-		stack;
-		return ECMD_FAILED;
-	}
-
 	if (!report_object(handle, vg, NULL, NULL, NULL, NULL)) {
 		stack;
 		return ECMD_FAILED;

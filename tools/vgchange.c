@@ -496,11 +496,6 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 {
 	int r = ECMD_FAILED;
 
-	if (vg_read_error(vg)) {
-		stack;
-		return ECMD_FAILED;
-	}
-
 	if (vg_is_exported(vg)) {
 		log_error("Volume group \"%s\" is exported", vg_name);
 		return ECMD_FAILED;
