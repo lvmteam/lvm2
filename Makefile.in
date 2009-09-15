@@ -30,7 +30,6 @@ SUBDIRS += lib tools daemons libdm
 
 ifeq ("@APPLIB@", "yes")
   SUBDIRS += liblvm
-  SUBDIRS += test/api
 endif
 
 ifeq ($(MAKECMDGOALS),distclean)
