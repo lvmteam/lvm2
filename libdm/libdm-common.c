@@ -833,27 +833,29 @@ int dm_udev_wait(uint32_t cookie)
 
 static int _check_udev_is_running(void)
 {
-	#ifndef HAVE_UDEV_QUEUE_GET_UDEV_IS_ACTIVE
+
+#  ifndef HAVE_UDEV_QUEUE_GET_UDEV_IS_ACTIVE
+
 	log_debug("Could not get udev state because libudev library "
 		  "was not found and it was not compiled in. "
 		  "Assuming udev is not running.");
 	return 0;
-	#else	/* HAVE_UDEV_QUEUE_GET_UDEV_IS_ACTIVE */
+
+#  else	/* HAVE_UDEV_QUEUE_GET_UDEV_IS_ACTIVE */
+
 	struct udev *udev;
 	struct udev_queue *udev_queue;
 	int r;
 
 	if (!(udev = udev_new()))
-		goto error;
+		goto_bad;
 
 	if (!(udev_queue = udev_queue_new(udev))) {
 		udev_unref(udev);
-		goto error;
+		goto_bad;
 	}
 
-	r = udev_queue_get_udev_is_active(udev_queue);
-
-	if (!r)
+	if (!(r = udev_queue_get_udev_is_active(udev_queue)))
 		log_debug("Udev is not running. "
 			  "Not using udev synchronisation code.");
 
@@ -862,10 +864,12 @@ static int _check_udev_is_running(void)
 
 	return r;
 
-error:
-	log_debug("Could not get udev state. Assuming udev is not running.");
+bad:
+	log_error("Could not get udev state. Assuming udev is not running.");
 	return 0;
-	#endif	/* HAVE_UDEV_QUEUE_GET_UDEV_IS_ACTIVE */
+
+#  endif	/* HAVE_UDEV_QUEUE_GET_UDEV_IS_ACTIVE */
+
 }
 
 void dm_udev_set_sync_support(int sync_with_udev)

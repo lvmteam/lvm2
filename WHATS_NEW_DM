@@ -1,9 +1,12 @@
 Version 1.02.37 - 15th September 2009
-====================================
-  Add y|--yes option for dmsetup to provide a default 'YES' answer to questions.
-  Fix Makefile to take into account dmsetup's reconfiguration.
+=====================================
+  Add dmsetup manpage entries for udevcomplete_all and udevcookies.
+  Check udev is running when processing cookies and retain state internally.
+  Add y|--yes option to dmsetup for default 'yes' answer to prompts.
+  Fix tools Makefile to process dmsetup sources separately.
   Restore umask when device node creation fails.
-  Fix mirror table CTR code to handle 'block_on_error' and 'cluster' features
+  Check kernel vsn to use 'block_on_error' or 'handle_errors' in mirror table.
+  Add dm-log-userspace.h to tree for cmirrord builds.
 
 Version 1.02.36 - 6th August 2009
 =================================
