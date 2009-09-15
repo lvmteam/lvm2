@@ -1,5 +1,5 @@
-Version 2.02.52 -
-=================================
+Version 2.02.52 - 15th September 2009
+=====================================
   Update _process_one_vg to cleanup properly after vg_read_error.
   Add lots of missing stack debug messages to tools.
   Make readonly locking available as locking type 4.
