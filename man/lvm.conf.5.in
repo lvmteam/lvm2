@@ -286,6 +286,8 @@ If set to 2, the tools will load the external \fBlocking_library\fP
 (see below).
 If the tools were configured \fB--with-cluster=internal\fP 
 (the default) then 3 means to use built-in cluster-wide locking.
+Type 4 enforces read-only metadata and forbids any operations that
+might want to modify Volume Group metadata.
 All changes to logical volumes and their states are communicated
 using locks.
 .IP
