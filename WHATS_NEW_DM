@@ -1,5 +1,5 @@
-Version 1.02.37 -
-=================================
+Version 1.02.37 - 15th September 2009
+====================================
   Add y|--yes option for dmsetup to provide a default 'YES' answer to questions.
   Fix Makefile to take into account dmsetup's reconfiguration.
   Restore umask when device node creation fails.
