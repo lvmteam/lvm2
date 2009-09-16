@@ -21,7 +21,7 @@
 # For Red-Hat-based distributions such as Fedora, RHEL, CentOS.
 #	       
 ### BEGIN INIT INFO
-# Provides: lvm2-monitoring
+# Provides: lvm2-monitor
 # Required-Start: $local_fs
 # Required-Stop: $local_fs
 # Default-Start: 1 2 3 4 5
@@ -31,7 +31,7 @@
 
 . /etc/init.d/functions
 
-DAEMON=lvm2_monitoring
+DAEMON=lvm2_monitor
 
 exec_prefix=@exec_prefix@
 sbindir=@sbindir@
