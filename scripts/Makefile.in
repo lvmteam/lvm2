@@ -29,4 +29,4 @@ endif
 
 install_lvm2: install
 
-DISTCLEAN_TARGETS += clvmd_init_red_hat
+DISTCLEAN_TARGETS += clvmd_init_red_hat lvm2_monitoring_init_red_hat
