@@ -57,6 +57,7 @@ static pthread_mutex_t _event_mutex = PTHREAD_MUTEX_INITIALIZER;
 static void _temporary_log_fn(int level,
 			      const char *file __attribute((unused)),
 			      int line __attribute((unused)),
+			      int dm_errno __attribute((unused)),
 			      const char *format)
 {
 	if (!strncmp(format, "WARNING: ", 9) && (level < 5))
