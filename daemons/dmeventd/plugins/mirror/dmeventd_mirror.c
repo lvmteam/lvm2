@@ -126,8 +126,10 @@ out_parse:
 	return ME_IGNORE;
 }
 
-static void _temporary_log_fn(int level, const char *file __attribute((unused)),
+static void _temporary_log_fn(int level,
+			      const char *file __attribute((unused)),
 			      int line __attribute((unused)),
+			      int dm_errno __attribute((unused)),
 			      const char *format)
 {
 	if (!strncmp(format, "WARNING: ", 9) && (level < 5))
