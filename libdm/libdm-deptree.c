@@ -1258,6 +1258,11 @@ do {\
 	p += w;\
 } while (0)
 
+/*
+ * _emit_areas_line
+ *
+ * Returns: 1 on success, 0 on failure
+ */
 static int _emit_areas_line(struct dm_task *dmt __attribute((unused)),
 			    struct load_segment *seg, char *params,
 			    size_t paramsize, int *pos)
@@ -1279,6 +1284,11 @@ static int _emit_areas_line(struct dm_task *dmt __attribute((unused)),
 	return 1;
 }
 
+/*
+ * mirror_emit_segment_line
+ *
+ * Returns: 1 on success, 0 on failure
+ */
 static int mirror_emit_segment_line(struct dm_task *dmt, uint32_t major,
 				    uint32_t minor, struct load_segment *seg,
 				    uint64_t *seg_start, char *params,
@@ -1386,15 +1396,13 @@ static int mirror_emit_segment_line(struct dm_task *dmt, uint32_t major,
 
 	EMIT_PARAMS(pos, " %u ", seg->mirror_area_count);
 
-	if ((r = _emit_areas_line(dmt, seg, params, paramsize, &pos)) <= 0) {
-		stack;
-		return r;
-	}
+	if ((r = _emit_areas_line(dmt, seg, params, paramsize, &pos)) <= 0)
+		return_0;
 
 	if (handle_errors)
 		EMIT_PARAMS(pos, " 1 handle_errors");
 
-	return 0;
+	return 1;
 }
 
 static int _emit_segment_line(struct dm_task *dmt, uint32_t major,
@@ -1415,8 +1423,8 @@ static int _emit_segment_line(struct dm_task *dmt, uint32_t major,
 		/* Mirrors are pretty complicated - now in separate function */
 		r = mirror_emit_segment_line(dmt, major, minor, seg, seg_start,
 					     params, paramsize);
-		if (r)
-			return r;
+		if (!r)
+			return_0;
 		break;
 	case SEG_SNAPSHOT:
 		if (!_build_dev_string(originbuf, sizeof(originbuf), seg->origin))
