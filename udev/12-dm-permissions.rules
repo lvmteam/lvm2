@@ -1,7 +1,12 @@
 # Udev rules for device-mapper devices.
 #
-# These rules set permissions for DM devices. There are some environment
-# variables set that can be used:
+# These rules set permissions for DM devices.
+#
+# This file is considered to be a template where users can put their
+# own entries and then put a copy of it manually to a usual place with
+# user-edited udev rules (usually /etc/udev/rules.d).
+#
+# There are some environment variables set that can be used:
 #   DM_UDEV_RULES_VSN - DM udev rules version
 #   DM_NAME - actual DM device's name
 #   DM_UUID - UUID set for DM device (blank if not specified)
@@ -15,6 +20,7 @@ KERNEL!="dm-[0-9]*", GOTO="dm_end"
 ACTION!="change", GOTO="dm_end"
 ENV{DM_UDEV_RULES_VSN}!="?*", GOTO="dm_end"
 
-#ENV{DM_NAME}=="my_device", OWNER:="peter", GROUP:="peter", MODE:="644"
+# Just an example...
+# ENV{DM_NAME}=="my_device", OWNER:="peter", GROUP:="peter", MODE:="644"
 
 LABEL="dm_end"
