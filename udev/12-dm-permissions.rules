@@ -20,7 +20,56 @@ KERNEL!="dm-[0-9]*", GOTO="dm_end"
 ACTION!="change", GOTO="dm_end"
 ENV{DM_UDEV_RULES_VSN}!="?*", GOTO="dm_end"
 
-# Just an example...
-# ENV{DM_NAME}=="my_device", OWNER:="peter", GROUP:="peter", MODE:="644"
+# A few demonstrational examples...
+
+
+# PLAIN DM DEVICES
+#
+# Set permissions for a DM device named 'my_device' exactly
+# ENV{DM_NAME}=="my_device", OWNER:="root", GROUP:="root", MODE:="660"
+
+# Set permissions for all DM devices having 'MY_UUID-' UUID prefix
+# ENV{DM_UUID}=="MY_UUID-?*", OWNER:="root", GROUP:="root", MODE:="660"
+
+
+# LVM DEVICES
+#
+# Set permissions for all LVM devices
+# ENV{DM_UUID}=="LVM-?*", OWNER:="root", GROUP:="root", MODE:="660"
+
+# Set permissions for all devices that belong to one LVM VG
+# ENV{DM_VG_NAME}=="VolGroup00", OWNER:="root", GROUP:="root", MODE:="660"
+
+# Set permissions for an LVM device with VG named VolGroup00 and LV named LogVol00 exactly
+# ENV{DM_VG_NAME}=="VolGroup00", ENV{DM_LV_NAME}=="LogVol00", OWNER:="root", GROUP:="root", MODE:="660"
+
+# Set permissions for all LVM devices that does not belong to a VG named VolGroup00
+# ENV{DM_VG_NAME}!="VolGroup00", OWNER:="root", GROUP:="root", MODE:="660"
+
+
+# ENCRYPTED DEVICES (using cryptsetup >= 1.1)
+#
+# Set permissions for all encrypted devices created by cryptsetup (plain devices)
+# ENV{DM_UUID}=="CRYPT-PLAIN-?*", OWNER:="root", GROUP:="root", MODE:="660"
+
+# Set permissions for all encrypted devices created by cryptsetup (LUKS extension)
+# ENV{DM_UUID}=="CRYPT-LUKS1-?*", OWNER:="root", GROUP:="root", MODE:="660"
+
+# Set permissions for an encrypted device created by cryptsetup and having an exact luks UUID
+# ENV{DM_UUID}=="CRYPT-LUKS1-22fce5c8313c43c68d84b50a3b0fee78-?*", OWNER:="root", GROUP:="root", MODE:="660"
+
+
+# MULTIPATH DEVICES
+#
+# Set permissions for all multipath devices
+# ENV{DM_UUID}=="mpath-?*", OWNER:="root", GROUP:="root", MODE:="660"
+
+# Set permissions for first two partitions created on a multipath device (and detected by kpartx)
+# ENV{DM_UUID}=="part[1-2]-mpath-?*", OWNER:="root", GROUP:="root", MODE:="660"
+
+
+# ...you can use any combination of the comparisons with the environment variables
+# listed at the beginning of this file (udev provides simple pattern matching by
+# using *, ? and [] that you can use, see 'man udev' for more information).
 
 LABEL="dm_end"
