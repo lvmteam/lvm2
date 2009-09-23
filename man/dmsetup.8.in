@@ -78,6 +78,10 @@ dmsetup \- low level logical volume management
 .B dmsetup setgeometry
 .I device_name cyl head sect start
 .br
+.B dmsetup splitname
+.I device_name
+.I [subsystem]
+.br
 
 .B devmap_name
 .I major minor
@@ -138,6 +142,9 @@ Specify a one-line table directly on the command line.
 .IP \fB-u|--uuid
 .br
 Specify the uuid.
+.IP \fB-y|--yes
+.br
+Answer yes to all prompts automatically.
 .IP \fB-v|--verbose\ [-v|--verbose]
 .br
 Produce additional output.
@@ -260,6 +267,12 @@ Postponed I/O then gets re-queued for processing.
 .I device_name cyl head sect start
 .br
 Sets the device geometry to C/H/S.
+.IP \fBsplitname
+.I device_name
+.I [subsystem]
+.br
+Splits given device name into subsystem constituents.
+Default subsystem is LVM.
 .IP \fBstatus
 .I [--target target_type]
 .I [device_name]
