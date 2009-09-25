@@ -217,7 +217,9 @@ static char *_find_dm_name_of_device(dev_t st_rdev)
 			continue;
 
 		if (buf.st_rdev == st_rdev) {
-			new_name = dm_strdup(name);
+			if (!(new_name = dm_strdup(name)))
+				log_error("dm_task_set_name: strdup(%s) failed",
+					  name);
 			break;
 		}
 	}
