@@ -234,7 +234,7 @@ static int _create_control(const char *control, uint32_t major, uint32_t minor)
 	if (!major)
 		return 0;
 
-	old_umask = umask(0022);
+	old_umask = umask(DM_DEV_DIR_UMASK);
 	ret = dm_create_dir(dm_dir());
 	umask(old_umask);
 
