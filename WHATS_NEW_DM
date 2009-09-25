@@ -1,5 +1,6 @@
 Version 1.02.38 - 
 =====================================
+  Handle any path supplied to dm_task_set_name() by looking up in /dev/mapper.
 
 Version 1.02.37 - 15th September 2009
 =====================================
