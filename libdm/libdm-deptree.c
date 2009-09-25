@@ -1285,14 +1285,12 @@ static int _emit_areas_line(struct dm_task *dmt __attribute((unused)),
 }
 
 /*
- * mirror_emit_segment_line
- *
  * Returns: 1 on success, 0 on failure
  */
-static int mirror_emit_segment_line(struct dm_task *dmt, uint32_t major,
-				    uint32_t minor, struct load_segment *seg,
-				    uint64_t *seg_start, char *params,
-				    size_t paramsize)
+static int _mirror_emit_segment_line(struct dm_task *dmt, uint32_t major,
+				     uint32_t minor, struct load_segment *seg,
+				     uint64_t *seg_start, char *params,
+				     size_t paramsize)
 {
 	int r;
 	int block_on_error = 0;
@@ -1421,8 +1419,8 @@ static int _emit_segment_line(struct dm_task *dmt, uint32_t major,
 		break;
 	case SEG_MIRRORED:
 		/* Mirrors are pretty complicated - now in separate function */
-		r = mirror_emit_segment_line(dmt, major, minor, seg, seg_start,
-					     params, paramsize);
+		r = _mirror_emit_segment_line(dmt, major, minor, seg, seg_start,
+					      params, paramsize);
 		if (!r)
 			return_0;
 		break;
