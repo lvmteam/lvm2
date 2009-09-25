@@ -1,5 +1,6 @@
 Version 1.02.38 - 25th September 2009
 =====================================
+  Export DM_DEV_DIR_UMASK, the default umask for /dev directories created.
   Handle any path supplied to dm_task_set_name by looking up in /dev/mapper.
   Add several examples to 12-dm-permissions.rules.
   Add splitname and --yes to dmsetup man page.
