@@ -187,7 +187,7 @@ struct dm_task *dm_task_create(int type)
 /*
  * Find the name associated with a given device number by scanning _dm_dir.
  */
-static char *_translate_name(dev_t st_rdev, const char *devname)
+static char *_find_dm_name_of_device(dev_t st_rdev)
 {
 	const char *name;
 	char path[PATH_MAX];
@@ -257,13 +257,13 @@ int dm_task_set_name(struct dm_task *dmt, const char *name)
 		/*
 		 * If supplied path points to same device as last component
 		 * under /dev/mapper, use that name directly.  Otherwise call
-		 * _translate_name() to scan _dm_dir for a match.
+		 * _find_dm_name_of_device() to scan _dm_dir for a match.
 		 */
 		snprintf(path, sizeof(path), "%s/%s", _dm_dir, pos + 1);
 
 		if (!stat(path, &st2) && (st1.st_rdev == st2.st_rdev))
 			name = pos + 1;
-		else if ((new_name = _translate_name(st1.st_rdev, pos + 1)))
+		else if ((new_name = _find_dm_name_of_device(st1.st_rdev)))
 			name = new_name;
 		else {
 			log_error("Device %s not found", name);
