@@ -261,7 +261,11 @@ int dm_task_set_name(struct dm_task *dmt, const char *name)
 		 * under /dev/mapper, use that name directly.  Otherwise call
 		 * _find_dm_name_of_device() to scan _dm_dir for a match.
 		 */
-		snprintf(path, sizeof(path), "%s/%s", _dm_dir, pos + 1);
+		if (dm_snprintf(path, sizeof(path), "%s/%s", _dm_dir,
+				pos + 1) == -1) {
+			log_error("Couldn't create path for %s", pos + 1);
+			return 0;
+		}
 
 		if (!stat(path, &st2) && (st1.st_rdev == st2.st_rdev))
 			name = pos + 1;
