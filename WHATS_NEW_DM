@@ -1,6 +1,10 @@
-Version 1.02.38 - 
+Version 1.02.38 - 25th September 2009
 =====================================
-  Handle any path supplied to dm_task_set_name() by looking up in /dev/mapper.
+  Handle any path supplied to dm_task_set_name by looking up in /dev/mapper.
+  Add several examples to 12-dm-permissions.rules.
+  Add splitname and --yes to dmsetup man page.
+  Fix _mirror_emit_segment_line return code.
+  Fix dmeventd _temporary_log_fn parameters. (2.02.50)
 
 Version 1.02.37 - 15th September 2009
 =====================================
