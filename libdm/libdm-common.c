@@ -23,6 +23,7 @@
 #include <sys/param.h>
 #include <sys/ioctl.h>
 #include <fcntl.h>
+#include <dirent.h>
 
 #ifdef UDEV_SYNC_SUPPORT
 #  include <sys/types.h>
@@ -183,9 +184,54 @@ struct dm_task *dm_task_create(int type)
 	return dmt;
 }
 
+/*
+ * Find the name associated with a given device number by scanning _dm_dir.
+ */
+static char *_translate_name(dev_t st_rdev, const char *devname)
+{
+	const char *name;
+	char path[PATH_MAX];
+	struct dirent *dirent;
+	DIR *d;
+	struct stat buf;
+	char *new_name = NULL;
+
+	if (!(d = opendir(_dm_dir))) {
+		log_sys_error("opendir", _dm_dir);
+		return NULL;
+	}
+
+	while ((dirent = readdir(d))) {
+		name = dirent->d_name;
+
+		if (!strcmp(name, ".") || !strcmp(name, ".."))
+			continue;
+
+		if (dm_snprintf(path, sizeof(path), "%s/%s", _dm_dir,
+				name) == -1) {
+			log_error("Couldn't create path for %s", name);
+			continue;
+		}
+
+		if (stat(path, &buf))
+			continue;
+
+		if (buf.st_rdev == st_rdev) {
+			new_name = dm_strdup(name);
+			break;
+		}
+	}
+
+	if (closedir(d))
+		log_sys_error("closedir", _dm_dir);
+
+	return new_name;
+}
+
 int dm_task_set_name(struct dm_task *dmt, const char *name)
 {
 	char *pos;
+	char *new_name = NULL;
 	char path[PATH_MAX];
 	struct stat st1, st2;
 
@@ -194,8 +240,8 @@ int dm_task_set_name(struct dm_task *dmt, const char *name)
 		dmt->dev_name = NULL;
 	}
 
-	/* If path was supplied, remove it if it points to the same device
-	 * as its last component.
+	/*
+	 * Path supplied for existing device?
 	 */
 	if ((pos = strrchr(name, '/'))) {
 		if (dmt->type == DM_DEVICE_CREATE) {
@@ -203,23 +249,38 @@ int dm_task_set_name(struct dm_task *dmt, const char *name)
 			return 0;
 		}
 
-		snprintf(path, sizeof(path), "%s/%s", _dm_dir, pos + 1);
-
-		if (stat(name, &st1) || stat(path, &st2) ||
-		    !(st1.st_dev == st2.st_dev)) {
+		if (stat(name, &st1)) {
 			log_error("Device %s not found", name);
 			return 0;
 		}
 
-		name = pos + 1;
+		/*
+		 * If supplied path points to same device as last component
+		 * under /dev/mapper, use that name directly.  Otherwise call
+		 * _translate_name() to scan _dm_dir for a match.
+		 */
+		snprintf(path, sizeof(path), "%s/%s", _dm_dir, pos + 1);
+
+		if (!stat(path, &st2) && (st1.st_rdev == st2.st_rdev))
+			name = pos + 1;
+		else if ((new_name = _translate_name(st1.st_rdev, pos + 1)))
+			name = new_name;
+		else {
+			log_error("Device %s not found", name);
+			return 0;
+		}
 	}
 
 	if (strlen(name) >= DM_NAME_LEN) {
 		log_error("Name \"%s\" too long", name);
+		if (new_name)
+			dm_free(new_name);
 		return 0;
 	}
 
-	if (!(dmt->dev_name = dm_strdup(name))) {
+	if (new_name)
+		dmt->dev_name = new_name;
+	else if (!(dmt->dev_name = dm_strdup(name))) {
 		log_error("dm_task_set_name: strdup(%s) failed", name);
 		return 0;
 	}
