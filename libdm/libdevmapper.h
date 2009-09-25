@@ -1026,4 +1026,6 @@ int dm_udev_get_sync_support(void);
 int dm_udev_complete(uint32_t cookie);
 int dm_udev_wait(uint32_t cookie);
 
+#define DM_DEV_DIR_UMASK 0022
+
 #endif				/* LIB_DEVICE_MAPPER_H */

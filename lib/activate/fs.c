@@ -29,6 +29,7 @@
 static int _mk_dir(const char *dev_dir, const char *vg_name)
 {
 	char vg_path[PATH_MAX];
+	mode_t old_umask;
 
 	if (dm_snprintf(vg_path, sizeof(vg_path), "%s%s",
 			 dev_dir, vg_name) == -1) {
@@ -41,10 +42,14 @@ static int _mk_dir(const char *dev_dir, const char *vg_name)
 		return 1;
 
 	log_very_verbose("Creating directory %s", vg_path);
+
+	old_umask = umask(DM_DEV_DIR_UMASK);
 	if (mkdir(vg_path, 0777)) {
 		log_sys_error("mkdir", vg_path);
+		umask(old_umask);
 		return 0;
 	}
+	umask(old_umask);
 
 	return 1;
 }
