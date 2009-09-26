@@ -18,7 +18,8 @@
 
 #ifndef _LVM_LOG_H
 typedef void (*lvm2_log_fn_t) (int level, const char *file, int line,
-			       const char *message);
+                               int dm_errno, const char *message);
+
 #endif
 
 #define LVM2_LOG_SUPPRESS	0
