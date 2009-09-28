@@ -40,7 +40,14 @@ static void _striped_display(const struct lv_segment *seg)
 		display_stripe(seg, 0, "  ");
 	else {
 		log_print("  Stripes\t\t%u", seg->area_count);
-		log_print("  Stripe size\t\t%u KB", seg->stripe_size / 2);
+
+		if (seg->lv->vg->cmd->si_unit_consistency)
+			log_print("  Stripe size\t\t%s",
+				  display_size(seg->lv->vg->cmd,
+					       (uint64_t) seg->stripe_size));
+		else
+			log_print("  Stripe size\t\t%u KB",
+				  seg->stripe_size / 2);
 
 		for (s = 0; s < seg->area_count; s++) {
 			log_print("  Stripe %d:", s);

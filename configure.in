@@ -679,6 +679,17 @@ AC_ARG_ENABLE(compat,   [  --enable-compat         Enable support for old device
   DM_COMPAT=$enableval, DM_COMPAT=no)
 
 ################################################################################
+dnl -- Compatible units suffix mode
+AC_ARG_ENABLE(units-compat,
+  [  --enable-units-compat   Enable output compatibility with old versions that
+                          that don't use KiB-style unit suffixes],
+  UNITS_COMPAT=$enableval, UNITS_COMPAT=no)
+
+if test x$UNITS_COMPAT = xyes; then
+	AC_DEFINE([DEFAULT_SI_UNIT_CONSISTENCY], 0, [Define to 0 to reinstate the pre-2.02.54 handling of unit suffixes.])
+fi
+
+################################################################################
 dnl -- Disable ioctl
 AC_ARG_ENABLE(ioctl,   [  --disable-driver        Disable calls to device-mapper in the kernel],
   DM_IOCTLS=$enableval)

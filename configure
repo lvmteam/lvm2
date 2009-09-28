@@ -825,6 +825,7 @@ enable_devmapper
 enable_udev_sync
 enable_udev_rules
 enable_compat
+enable_units_compat
 enable_ioctl
 enable_o_direct
 enable_applib
@@ -1514,6 +1515,8 @@ Optional Features:
   --enable-udev_sync      Enable synchronisation with udev processing
   --enable-udev_rules     Install rule files needed for udev synchronisation
   --enable-compat         Enable support for old device-mapper versions
+  --enable-units-compat   Enable output compatibility with old versions that
+                          that don't use KiB-style unit suffixes
   --disable-driver        Disable calls to device-mapper in the kernel
   --disable-o_direct      Disable O_DIRECT
   --enable-applib         Build application library
@@ -12214,6 +12217,23 @@ else
   DM_COMPAT=no
 fi
 
+
+################################################################################
+# Check whether --enable-units-compat was given.
+if test "${enable_units_compat+set}" = set; then
+  enableval=$enable_units_compat; UNITS_COMPAT=$enableval
+else
+  UNITS_COMPAT=no
+fi
+
+
+if test x$UNITS_COMPAT = xyes; then
+
+cat >>confdefs.h <<\_ACEOF
+#define DEFAULT_SI_UNIT_CONSISTENCY 0
+_ACEOF
+
+fi
 
 ################################################################################
 # Check whether --enable-ioctl was given.

@@ -17,6 +17,9 @@
 /* Define to 1 if using `alloca.c'. */
 #undef C_ALLOCA
 
+/* Define to 0 to reinstate the pre-2.02.54 handling of unit suffixes. */
+#undef DEFAULT_SI_UNIT_CONSISTENCY
+
 /* Define to 1 to enable LVM2 device-mapper interaction. */
 #undef DEVMAPPER_SUPPORT
 
