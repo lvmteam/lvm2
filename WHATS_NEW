@@ -1,5 +1,6 @@
 Version 2.02.54 -
 =====================================
+  Provide alternative implementation of obsolete siginterrupt().
   Consolidate LV allocation into alloc_lv().
   Treat input units of both 's' and 'S' as 512-byte sectors.  (2.02.49)
   Use standard output units for 'PE Size' and 'Stripe size' in pv/lvdisplay.

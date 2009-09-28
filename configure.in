@@ -118,6 +118,7 @@ dnl -- Check for functions
 AC_CHECK_FUNCS([gethostname getpagesize memset mkdir rmdir munmap setlocale \
   strcasecmp strchr strdup strncasecmp strerror strrchr strstr strtol strtoul \
   uname], , [AC_MSG_ERROR(bailing out)])
+AC_CHECK_FUNCS(siginterrupt)
 AC_FUNC_ALLOCA
 AC_FUNC_CLOSEDIR_VOID
 AC_FUNC_FORK
