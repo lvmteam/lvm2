@@ -293,6 +293,10 @@ static int _process_config(struct cmd_context *cmd)
 		}
 	}
 
+	cmd->si_unit_consistency = find_config_tree_int(cmd,
+						  "global/si_unit_consistency",
+						  DEFAULT_SI_UNIT_CONSISTENCY);
+
 	return 1;
 }
 

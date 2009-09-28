@@ -344,7 +344,12 @@ void pvdisplay_full(const struct cmd_context *cmd,
 	/* LV count is no longer available when displaying PV
 	   log_print("Cur LV                %u", vg->lv_count);
 	 */
-	log_print("PE Size (KByte)       %" PRIu32, pv->pe_size / 2);
+
+	if (cmd->si_unit_consistency)
+		log_print("PE Size               %s", display_size(cmd, (uint64_t) pv->pe_size));
+	else
+		log_print("PE Size (KByte)       %" PRIu32, pv->pe_size / 2);
+
 	log_print("Total PE              %u", pv->pe_count);
 	log_print("Free PE               %" PRIu32, pe_free);
 	log_print("Allocated PE          %u", pv->pe_alloc_count);
@@ -489,7 +494,7 @@ int lvdisplay_full(struct cmd_context *cmd,
 	log_print("Segments               %u", dm_list_size(&lv->segments));
 
 /********* FIXME Stripes & stripesize for each segment
-	log_print("Stripe size (KByte)    %u", lv->stripesize / 2);
+	log_print("Stripe size            %s", display_size(cmd, (uint64_t) lv->stripesize));
 ***********/
 
 	log_print("Allocation             %s", get_alloc_string(lv->alloc));
