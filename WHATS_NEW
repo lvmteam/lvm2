@@ -1,5 +1,6 @@
 Version 2.02.54 -
 =====================================
+  Consolidate LV allocation into alloc_lv().
   Treat input units of both 's' and 'S' as 512-byte sectors.  (2.02.49)
   Use standard output units for 'PE Size' and 'Stripe size' in pv/lvdisplay.
   Add configure --enable-units-compat to set si_unit_consistency off by default.

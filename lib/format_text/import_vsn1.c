@@ -495,7 +495,7 @@ static int _read_lvnames(struct format_instance *fid __attribute((unused)),
 	struct logical_volume *lv;
 	struct config_node *cn;
 
-	if (!(lv = dm_pool_zalloc(mem, sizeof(*lv))))
+	if (!(lv = alloc_lv(mem)))
 		return_0;
 
 	if (!(lv->name = dm_pool_strdup(mem, lvn->key)))
@@ -540,12 +540,6 @@ static int _read_lvnames(struct format_instance *fid __attribute((unused)),
 			;
 		}
 	}
-
-	lv->snapshot = NULL;
-	dm_list_init(&lv->snapshot_segs);
-	dm_list_init(&lv->segments);
-	dm_list_init(&lv->tags);
-	dm_list_init(&lv->segs_using_this_lv);
 
 	/* Optional tags */
 	if ((cn = find_config_node(lvn, "tags")) &&

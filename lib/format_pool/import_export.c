@@ -59,10 +59,8 @@ int import_pool_lvs(struct volume_group *vg, struct dm_pool *mem, struct dm_list
 	struct pool_list *pl;
 	struct logical_volume *lv;
 
-	if (!(lv = dm_pool_zalloc(mem, sizeof(*lv)))) {
-		log_error("Unable to allocate logical volume structure");
-		return 0;
-	}
+	if (!(lv = alloc_lv(mem)))
+		return_0;
 
 	lv->status = 0;
 	lv->alloc = ALLOC_NORMAL;
@@ -70,11 +68,6 @@ int import_pool_lvs(struct volume_group *vg, struct dm_pool *mem, struct dm_list
 	lv->name = NULL;
 	lv->le_count = 0;
 	lv->read_ahead = vg->cmd->default_settings.read_ahead;
-	lv->snapshot = NULL;
-	dm_list_init(&lv->snapshot_segs);
-	dm_list_init(&lv->segments);
-	dm_list_init(&lv->tags);
-	dm_list_init(&lv->segs_using_this_lv);
 
 	dm_list_iterate_items(pl, pls) {
 		lv->size += pl->pd.pl_blocks;
@@ -99,10 +92,6 @@ int import_pool_lvs(struct volume_group *vg, struct dm_pool *mem, struct dm_list
 		} else {
 			lv->minor = -1;
 		}
-		lv->snapshot = NULL;
-		dm_list_init(&lv->snapshot_segs);
-		dm_list_init(&lv->segments);
-		dm_list_init(&lv->tags);
 	}
 
 	lv->le_count = lv->size / POOL_PE_SIZE;

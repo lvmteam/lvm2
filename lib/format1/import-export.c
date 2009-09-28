@@ -337,12 +337,6 @@ int import_lv(struct cmd_context *cmd, struct dm_pool *mem,
 	lv->size = lvd->lv_size;
 	lv->le_count = lvd->lv_allocated_le;
 
-	lv->snapshot = NULL;
-	dm_list_init(&lv->snapshot_segs);
-	dm_list_init(&lv->segments);
-	dm_list_init(&lv->tags);
-	dm_list_init(&lv->segs_using_this_lv);
-
 	return 1;
 }
 
@@ -457,7 +451,7 @@ static struct logical_volume *_add_lv(struct dm_pool *mem,
 {
 	struct logical_volume *lv;
 
-	if (!(lv = dm_pool_zalloc(mem, sizeof(*lv))))
+	if (!(lv = alloc_lv(mem)))
 		return_NULL;
 
 	lvid_from_lvnum(&lv->lvid, &vg->id, lvd->lv_number);

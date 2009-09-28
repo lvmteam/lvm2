@@ -316,6 +316,8 @@ struct pv_segment *find_peg_by_pe(const struct physical_volume *pv, uint32_t pe)
  */
 const char *strip_dir(const char *vg_name, const char *dir);
 
+struct logical_volume *alloc_lv(struct dm_pool *mem);
+
 /*
  * Checks that an lv has no gaps or overlapping segments.
  * Set complete_vg to perform additional VG level checks.
