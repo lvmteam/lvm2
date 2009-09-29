@@ -975,6 +975,29 @@ int lv_resume(struct cmd_context *cmd, const char *lvid_s)
 	return _lv_resume(cmd, lvid_s, 1);
 }
 
+static int _lv_has_open_snapshots(struct logical_volume *lv)
+{
+	struct lv_segment *snap_seg;
+	struct lvinfo info;
+	int r = 0;
+
+	dm_list_iterate_items_gen(snap_seg, &lv->snapshot_segs, origin_list) {
+		if (!lv_info(lv->vg->cmd, snap_seg->cow, &info, 1, 0)) {
+			r = 1;
+			continue;
+		}
+
+		if (info.exists && info.open_count) {
+			log_error("LV %s/%s has open snapshot %s: "
+				  "not deactivating", lv->vg->name, lv->name,
+				  snap_seg->cow->name);
+			r = 1;
+		}
+	}
+
+	return r;
+}
+
 int lv_deactivate(struct cmd_context *cmd, const char *lvid_s)
 {
 	struct logical_volume *lv;
@@ -1001,10 +1024,14 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s)
 		goto out;
 	}
 
-	if (info.open_count && lv_is_visible(lv)) {
-		log_error("LV %s/%s in use: not deactivating", lv->vg->name,
-			  lv->name);
-		goto out;
+	if (lv_is_visible(lv)) {
+		if (info.open_count) {
+			log_error("LV %s/%s in use: not deactivating",
+				  lv->vg->name, lv->name);
+			goto out;
+		}
+		if (lv_is_origin(lv) && _lv_has_open_snapshots(lv))
+			goto_out;
 	}
 
 	lv_calculate_readahead(lv, NULL);
