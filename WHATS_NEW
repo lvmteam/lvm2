@@ -1,5 +1,6 @@
 Version 2.02.54 -
 =====================================
+  Return fail if lv_deactivate fails to remove device from kernel.
   Provide alternative implementation of obsolete siginterrupt().
   Consolidate LV allocation into alloc_lv().
   Treat input units of both 's' and 'S' as 512-byte sectors.  (2.02.49)

@@ -1017,6 +1017,8 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s)
 	memlock_dec();
 	fs_unlock();
 
+	if (!lv_info(cmd, lv, &info, 1, 0) || info.exists)
+		r = 0;
 out:
 	if (lv)
 		vg_release(lv->vg);
