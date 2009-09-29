@@ -1,5 +1,6 @@
 Version 2.02.54 -
 =====================================
+  Generalise polldaemon code by changing mirror-specific variable names.
   Don't attempt to deactivate an LV if any of its snapshots are in use.
   Return fail if lv_deactivate fails to remove device from kernel.
   Provide alternative implementation of obsolete siginterrupt().
