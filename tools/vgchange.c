@@ -91,13 +91,9 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd,
 		} else if (!activate_lv(cmd, lv))
 			continue;
 
-		if ((lv->status & PVMOVE) &&
-		    (pvname = get_pvmove_pvname_from_lv_mirr(lv))) {
-			log_verbose("Spawning background process for %s %s",
-				    lv->name, pvname);
-			pvmove_poll(cmd, pvname, 1);
-			continue;
-		}
+		if (activate != CHANGE_AN && activate != CHANGE_ALN &&
+		    (lv->status & (PVMOVE|CONVERTING)))
+			lv_spawn_background_polling(cmd, lv);
 
 		count++;
 	}

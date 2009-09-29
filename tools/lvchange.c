@@ -105,7 +105,6 @@ static int lvchange_availability(struct cmd_context *cmd,
 				 struct logical_volume *lv)
 {
 	int activate;
-	const char *pvname;
 
 	activate = arg_uint_value(cmd, available_ARG, 0);
 
@@ -136,18 +135,7 @@ static int lvchange_availability(struct cmd_context *cmd,
 				return_0;
 		}
 
-		if ((lv->status & LOCKED) &&
-		    (pvname = get_pvmove_pvname_from_lv(lv))) {
-			log_verbose("Spawning background pvmove process for %s",
-				    pvname);
-			pvmove_poll(cmd, pvname, 1);
-		}
-
-		if (lv->status & CONVERTING) {
-			log_verbose("Spawning background lvconvert process for %s",
-				    lv->name);
-			lvconvert_poll(cmd, lv, 1);
-		}
+		lv_spawn_background_polling(cmd, lv);
 	}
 
 	return 1;

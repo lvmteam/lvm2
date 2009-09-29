@@ -1247,3 +1247,22 @@ int vg_refresh_visible(struct cmd_context *cmd, struct volume_group *vg)
 	
 	return r;
 }
+
+void lv_spawn_background_polling(struct cmd_context *cmd,
+				 struct logical_volume *lv)
+{
+	const char *pvname;
+
+	if ((lv->status & LOCKED) &&
+	    (pvname = get_pvmove_pvname_from_lv(lv))) {
+		log_verbose("Spawning background pvmove process for %s",
+			    pvname);
+		pvmove_poll(cmd, pvname, 1);
+	}
+
+	if (lv->status & CONVERTING) {
+		log_verbose("Spawning background lvconvert process for %s",
+			lv->name);
+		lvconvert_poll(cmd, lv, 1);
+	}
+}
