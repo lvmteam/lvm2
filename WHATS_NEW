@@ -1,6 +1,5 @@
 Version 2.02.54 -
 =====================================
-  Don't attempt to restart pvmoves when deactivating LVs in vgchange.
   Restart lvconverts in vgchange by sharing lv_spawn_background_polling.
   Generalise polldaemon code by changing mirror-specific variable names.
   Don't attempt to deactivate an LV if any of its snapshots are in use.

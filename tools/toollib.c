@@ -1253,7 +1253,12 @@ void lv_spawn_background_polling(struct cmd_context *cmd,
 {
 	const char *pvname;
 
-	if ((lv->status & LOCKED) &&
+	if ((lv->status & PVMOVE) &&
+	    (pvname = get_pvmove_pvname_from_lv_mirr(lv))) {
+		log_verbose("Spawning background pvmove process for %s",
+			    pvname);
+		pvmove_poll(cmd, pvname, 1);
+	} else if ((lv->status & LOCKED) &&
 	    (pvname = get_pvmove_pvname_from_lv(lv))) {
 		log_verbose("Spawning background pvmove process for %s",
 			    pvname);
