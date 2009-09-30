@@ -45,7 +45,7 @@ lvremove -ff "$vg"
 
 #COMM "read ahead is properly inherited from underlying PV"
 blockdev --setra 768 $dev1
-lvcreate -n $lv -L4M $vg $dev1
+lvcreate -n $lv -L4m $vg $dev1
 test $(blockdev --getra $G_dev_/$vg/$lv) -eq 768
 lvremove -ff $vg
 
@@ -56,6 +56,6 @@ check_lv_field_ $vg/$lv lv_read_ahead auto
 check_lv_field_ $vg/$lv lv_kernel_read_ahead -1
 lvchange -r 512 $vg/$lv
 lvchange -ay $vg/$lv
-check_lv_field_ $vg/$lv lv_read_ahead 256.00K
-check_lv_field_ $vg/$lv lv_kernel_read_ahead 256.00K
+check_lv_field_ $vg/$lv lv_read_ahead 256.00k
+check_lv_field_ $vg/$lv lv_kernel_read_ahead 256.00k
 lvremove -ff $vg

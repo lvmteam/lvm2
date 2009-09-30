@@ -17,9 +17,9 @@ aux prepare_devs 3
 pvcreate $dev1 $dev2
 pvcreate --metadatacopies 0 $dev3
 
-#COMM 'vgcreate accepts 8.00M physicalextentsize for VG'
-vgcreate $vg --physicalextentsize 8.00M $dev1 $dev2 
-check_vg_field_ $vg vg_extent_size 8.00M 
+#COMM 'vgcreate accepts 8.00m physicalextentsize for VG'
+vgcreate $vg --physicalextentsize 8.00m $dev1 $dev2
+check_vg_field_ $vg vg_extent_size 8.00m
 vgremove $vg
 # try vgck and to remove it again - should fail (but not segfault)
 not vgremove $vg
@@ -71,18 +71,18 @@ grep "^  Number of volumes may not exceed 255\$" err
 not vgcreate $vg $dev3
 
 # Test default (4MB) vg_extent_size as well as limits of extent_size
-not vgcreate --physicalextentsize 0K $vg $dev1 $dev2
-vgcreate --physicalextentsize 1K $vg $dev1 $dev2
-check_vg_field_ $vg vg_extent_size 1.00K
+not vgcreate --physicalextentsize 0k $vg $dev1 $dev2
+vgcreate --physicalextentsize 1k $vg $dev1 $dev2
+check_vg_field_ $vg vg_extent_size 1.00k
 vgremove -ff $vg
 not vgcreate --physicalextentsize 3K $vg $dev1 $dev2
-not vgcreate --physicalextentsize 1024T $vg $dev1 $dev2
+not vgcreate --physicalextentsize 1024t $vg $dev1 $dev2
 #not vgcreate --physicalextentsize 1T $vg $dev1 $dev2
 # FIXME: vgcreate allows physicalextentsize larger than pv size!
 
 # Test default max_lv, max_pv, extent_size, alloc_policy, clustered
 vgcreate $vg $dev1 $dev2
-check_vg_field_ $vg vg_extent_size 4.00M
+check_vg_field_ $vg vg_extent_size 4.00m
 check_vg_field_ $vg max_lv 0
 check_vg_field_ $vg max_pv 0
 check_vg_field_ $vg vg_attr "wz--n-"
