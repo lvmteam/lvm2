@@ -63,13 +63,6 @@ static int _become_daemon(struct cmd_context *cmd)
 	return 1;
 }
 
-typedef enum {
-	PROGRESS_CHECK_FAILED = 0,
-	PROGRESS_UNFINISHED = 1,
-	PROGRESS_FINISHED_SEGMENT = 2,
-	PROGRESS_FINISHED_ALL = 3
-} progress_t;
-
 progress_t poll_mirror_progress(struct cmd_context *cmd,
 				struct logical_volume *lv, const char *name,
 				struct daemon_parms *parms)
@@ -122,7 +115,7 @@ static int _check_lv_status(struct cmd_context *cmd,
 		return 0;
 	}
 
-	progress = poll_mirror_progress(cmd, lv, name, parms);
+	progress = parms->poll_fns->poll_progress(cmd, lv, name, parms);
 	if (progress == PROGRESS_CHECK_FAILED)
 		return_0;
 
