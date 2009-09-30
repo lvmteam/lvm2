@@ -1,5 +1,6 @@
 Version 2.02.54 -
 =====================================
+  Distinguish between powers of 1000 and powers of 1024 in unit suffixes.
   Restart lvconverts in vgchange by sharing lv_spawn_background_polling.
   Generalise polldaemon code by changing mirror-specific variable names.
   Don't attempt to deactivate an LV if any of its snapshots are in use.
