@@ -562,6 +562,7 @@ static struct poll_functions _pvmove_fns = {
 	.get_copy_name_from_lv = get_pvmove_pvname_from_lv_mirr,
 	.get_copy_vg = _get_move_vg,
 	.get_copy_lv = find_pvmove_lv_from_pvname,
+	.poll_progress = poll_mirror_progress,
 	.update_metadata = _update_metadata,
 	.finish_copy = _finish_pvmove,
 };

@@ -18,6 +18,15 @@
 
 #include "metadata-exported.h"
 
+typedef enum {
+	PROGRESS_CHECK_FAILED = 0,
+	PROGRESS_UNFINISHED = 1,
+	PROGRESS_FINISHED_SEGMENT = 2,
+	PROGRESS_FINISHED_ALL = 3
+} progress_t;
+
+struct daemon_parms;
+
 struct poll_functions {
 	const char *(*get_copy_name_from_lv) (struct logical_volume *lv);
 	struct volume_group *(*get_copy_vg) (struct cmd_context *cmd,
@@ -28,6 +37,10 @@ struct poll_functions {
 					       const char *name,
 					       const char *uuid,
 					       uint32_t lv_type);
+	progress_t (*poll_progress)(struct cmd_context *cmd,
+				    struct logical_volume *lv,
+				    const char *name,
+				    struct daemon_parms *parms);
 	int (*update_metadata) (struct cmd_context *cmd,
 				struct volume_group *vg,
 				struct logical_volume *lv,
@@ -53,5 +66,9 @@ int poll_daemon(struct cmd_context *cmd, const char *name, const char *uuid,
 		unsigned background,
 		uint32_t lv_type, struct poll_functions *poll_fns,
 		const char *progress_title);
+
+progress_t poll_mirror_progress(struct cmd_context *cmd,
+				struct logical_volume *lv, const char *name,
+				struct daemon_parms *parms);
 
 #endif
