@@ -56,7 +56,6 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd,
 {
 	struct lv_list *lvl;
 	struct logical_volume *lv;
-	const char *pvname;
 	int count = 0;
 
 	dm_list_iterate_items(lvl, &vg->lvs) {
