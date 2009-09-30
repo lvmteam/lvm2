@@ -63,6 +63,43 @@ static int _become_daemon(struct cmd_context *cmd)
 	return 1;
 }
 
+typedef enum {
+	PROGRESS_CHECK_FAILED = 0,
+	PROGRESS_UNFINISHED = 1,
+	PROGRESS_FINISHED_SEGMENT = 2,
+	PROGRESS_FINISHED_ALL = 3
+} progress_t;
+
+progress_t poll_mirror_progress(struct cmd_context *cmd,
+				struct logical_volume *lv, const char *name,
+				struct daemon_parms *parms)
+{
+	float segment_percent = 0.0, overall_percent = 0.0;
+	uint32_t event_nr = 0;
+
+	if (!lv_mirror_percent(cmd, lv, !parms->interval, &segment_percent,
+			       &event_nr)) {
+		log_error("ABORTING: Mirror percentage check failed.");
+		return PROGRESS_CHECK_FAILED;
+	}
+
+	overall_percent = copy_percent(lv);
+	if (parms->progress_display)
+		log_print("%s: %s: %.1f%%", name, parms->progress_title,
+			  overall_percent);
+	else
+		log_verbose("%s: %s: %.1f%%", name, parms->progress_title,
+			    overall_percent);
+
+	if (segment_percent < 100.0)
+		return PROGRESS_UNFINISHED;
+
+	if (overall_percent >= 100.0)
+		return PROGRESS_FINISHED_ALL;
+
+	return PROGRESS_FINISHED_SEGMENT;
+}
+
 static int _check_lv_status(struct cmd_context *cmd,
 			    struct volume_group *vg,
 			    struct logical_volume *lv,
@@ -70,8 +107,7 @@ static int _check_lv_status(struct cmd_context *cmd,
 			    int *finished)
 {
 	struct dm_list *lvs_changed;
-	float segment_percent = 0.0, overall_percent = 0.0;
-	uint32_t event_nr = 0;
+	progress_t progress;
 
 	/* By default, caller should not retry */
 	*finished = 1;
@@ -86,21 +122,11 @@ static int _check_lv_status(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (!lv_mirror_percent(cmd, lv, !parms->interval, &segment_percent,
-			       &event_nr)) {
-		log_error("ABORTING: Mirror percentage check failed.");
-		return 0;
-	}
+	progress = poll_mirror_progress(cmd, lv, name, parms);
+	if (progress == PROGRESS_CHECK_FAILED)
+		return_0;
 
-	overall_percent = copy_percent(lv);
-	if (parms->progress_display)
-		log_print("%s: %s: %.1f%%", name, parms->progress_title,
-			  overall_percent);
-	else
-		log_verbose("%s: %s: %.1f%%", name, parms->progress_title,
-			    overall_percent);
-
-	if (segment_percent < 100.0) {
+	if (progress == PROGRESS_UNFINISHED) {
 		/* The only case the caller *should* try again later */
 		*finished = 0;
 		return 1;
@@ -112,7 +138,7 @@ static int _check_lv_status(struct cmd_context *cmd,
 	}
 
 	/* Finished? Or progress to next segment? */
-	if (overall_percent >= 100.0) {
+	if (progress == PROGRESS_FINISHED_ALL) {
 		if (!parms->poll_fns->finish_copy(cmd, vg, lv, lvs_changed))
 			return 0;
 	} else {
