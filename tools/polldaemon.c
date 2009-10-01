@@ -68,10 +68,12 @@ progress_t poll_mirror_progress(struct cmd_context *cmd,
 				struct daemon_parms *parms)
 {
 	float segment_percent = 0.0, overall_percent = 0.0;
+	percent_range_t percent_range;
 	uint32_t event_nr = 0;
 
 	if (!lv_mirror_percent(cmd, lv, !parms->interval, &segment_percent,
-			       &event_nr)) {
+			       &percent_range, &event_nr) ||
+	    (percent_range == PERCENT_INVALID)) {
 		log_error("ABORTING: Mirror percentage check failed.");
 		return PROGRESS_CHECK_FAILED;
 	}
@@ -84,7 +86,7 @@ progress_t poll_mirror_progress(struct cmd_context *cmd,
 		log_verbose("%s: %s: %.1f%%", name, parms->progress_title,
 			    overall_percent);
 
-	if (segment_percent < 100.0)
+	if (percent_range != PERCENT_100)
 		return PROGRESS_UNFINISHED;
 
 	if (overall_percent >= 100.0)

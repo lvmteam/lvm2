@@ -275,18 +275,17 @@ static int _lvkmin_disp(struct dm_report *rh, struct dm_pool *mem __attribute((u
 static int _lv_mimage_in_sync(const struct logical_volume *lv)
 {
 	float percent;
+	percent_range_t percent_range;
 	struct lv_segment *mirror_seg = find_mirror_seg(first_seg(lv));
 
 	if (!(lv->status & MIRROR_IMAGE) || !mirror_seg)
 		return_0;
 
-	if (!lv_mirror_percent(lv->vg->cmd, mirror_seg->lv, 0, &percent, NULL))
+	if (!lv_mirror_percent(lv->vg->cmd, mirror_seg->lv, 0, &percent,
+			       &percent_range, NULL))
 		return_0;
 
-	if (percent >= 100.0)
-		return 1;
-
-	return 0;
+	return (percent_range == PERCENT_100) ? 1 : 0;
 }
 
 static int _lvstatus_disp(struct dm_report *rh __attribute((unused)), struct dm_pool *mem,
@@ -297,6 +296,7 @@ static int _lvstatus_disp(struct dm_report *rh __attribute((unused)), struct dm_
 	struct lvinfo info;
 	char *repstr;
 	float snap_percent;
+	percent_range_t percent_range;
 
 	if (!(repstr = dm_pool_zalloc(mem, 7))) {
 		log_error("dm_pool_alloc failed");
@@ -363,8 +363,8 @@ static int _lvstatus_disp(struct dm_report *rh __attribute((unused)), struct dm_
 
 		/* Snapshot dropped? */
 		if (info.live_table && lv_is_cow(lv) &&
-		    (!lv_snapshot_percent(lv, &snap_percent) ||
-		     snap_percent < 0 || snap_percent >= 100)) {
+		    (!lv_snapshot_percent(lv, &snap_percent, &percent_range) ||
+		     percent_range == PERCENT_INVALID)) {
 			repstr[0] = toupper(repstr[0]);
 			if (info.suspended)
 				repstr[4] = 'S'; /* Susp Inv snapshot */
@@ -1009,6 +1009,7 @@ static int _snpercent_disp(struct dm_report *rh __attribute((unused)), struct dm
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 	struct lvinfo info;
 	float snap_percent;
+	percent_range_t percent_range;
 	uint64_t *sortval;
 	char *repstr;
 
@@ -1030,7 +1031,8 @@ static int _snpercent_disp(struct dm_report *rh __attribute((unused)), struct dm
 		return 1;
 	}
 
-	if (!lv_snapshot_percent(lv, &snap_percent) || snap_percent < 0) {
+	if (!lv_snapshot_percent(lv, &snap_percent, &percent_range) ||
+				 (percent_range == PERCENT_INVALID)) {
 		*sortval = UINT64_C(100);
 		dm_report_field_set_value(field, "100.00", sortval);
 		return 1;
@@ -1058,6 +1060,7 @@ static int _copypercent_disp(struct dm_report *rh __attribute((unused)), struct 
 {
 	struct logical_volume *lv = (struct logical_volume *) data;
 	float percent;
+	percent_range_t percent_range;
 	uint64_t *sortval;
 	char *repstr;
 
@@ -1067,7 +1070,8 @@ static int _copypercent_disp(struct dm_report *rh __attribute((unused)), struct 
 	}
 
 	if ((!(lv->status & PVMOVE) && !(lv->status & MIRRORED)) ||
-	    !lv_mirror_percent(lv->vg->cmd, lv, 0, &percent, NULL)) {
+	    !lv_mirror_percent(lv->vg->cmd, lv, 0, &percent, &percent_range,
+			       NULL) || (percent_range == PERCENT_INVALID)) {
 		*sortval = UINT64_C(0);
 		dm_report_field_set_value(field, "", sortval);
 		return 1;

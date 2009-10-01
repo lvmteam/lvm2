@@ -1,5 +1,6 @@
 Version 2.02.54 -
 =====================================
+  Introduce percent_range_t and centralise snapshot full/mirror in-sync checks.
   Factor out poll_mirror_progress and introduce progress_t.
   Distinguish between powers of 1000 and powers of 1024 in unit suffixes.
   Restart lvconverts in vgchange by sharing lv_spawn_background_polling.
