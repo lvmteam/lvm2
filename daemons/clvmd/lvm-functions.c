@@ -143,10 +143,11 @@ static const char *decode_flags(unsigned char flags)
 {
 	static char buf[128];
 
-	sprintf(buf, "0x%x (%s%s%s)", flags,
+	sprintf(buf, "0x%x (%s%s%s%s)", flags,
 		flags & LCK_PARTIAL_MODE	  ? "PARTIAL_MODE " : "",
 		flags & LCK_MIRROR_NOSYNC_MODE	  ? "MIRROR_NOSYNC " : "",
-		flags & LCK_DMEVENTD_MONITOR_MODE ? "DMEVENTD_MONITOR " : "");
+		flags & LCK_DMEVENTD_MONITOR_MODE ? "DMEVENTD_MONITOR " : "",
+		flags & LCK_CONVERT ? "CONVERT " : "");
 
 	return buf;
 }
@@ -239,13 +240,20 @@ int hold_lock(char *resource, int mode, int flags)
 	int saved_errno;
 	struct lv_info *lvi;
 
-	flags &= LKF_NOQUEUE;	/* Only LKF_NOQUEUE is valid here */
+	/* Mask off invalid options */
+	flags &= LKF_NOQUEUE | LKF_CONVERT;
 
-	if ((lvi = lookup_info(resource))) {
+	lvi = lookup_info(resource);
+
+	/* Only allow explicit conversions */
+	if (lvi && !(flags & LKF_CONVERT)) {
+		errno = EBUSY;
+		return -1;
+	}
+	if (lvi) {
 		/* Already exists - convert it */
 		status =
-		    sync_lock(resource, mode, LKF_CONVERT | flags,
-			      &lvi->lock_id);
+		    sync_lock(resource, mode, flags, &lvi->lock_id);
 		saved_errno = errno;
 		if (!status)
 			lvi->lock_mode = mode;
@@ -337,7 +345,7 @@ static int do_activate_lv(char *resource, unsigned char lock_flags, int mode)
 
 	/* Try to get the lock if it's a clustered volume group */
 	if (lock_flags & LCK_CLUSTER_VG) {
-		status = hold_lock(resource, mode, LKF_NOQUEUE);
+		status = hold_lock(resource, mode, LKF_NOQUEUE | (lock_flags & LCK_CONVERT?LKF_CONVERT:0));
 		if (status) {
 			/* Return an LVM-sensible error for this.
 			 * Forcing EIO makes the upper level return this text
@@ -538,7 +546,7 @@ int pre_lock_lv(unsigned char command, unsigned char lock_flags, char *resource)
 		DEBUGLOG("pre_lock_lv: resource '%s', cmd = %s, flags = %s\n",
 			 resource, decode_locking_cmd(command), decode_flags(lock_flags));
 
-		if (hold_lock(resource, LKM_PWMODE, LKF_NOQUEUE))
+		if (hold_lock(resource, LKM_PWMODE, LKF_NOQUEUE| (lock_flags & LCK_CONVERT?LKF_CONVERT:0)))
 			return errno;
 	}
 	return 0;
@@ -570,7 +578,7 @@ int post_lock_lv(unsigned char command, unsigned char lock_flags,
 				return EIO;
 
 			if (lvi.exists) {
-				if (hold_lock(resource, LKM_CRMODE, 0))
+				if (hold_lock(resource, LKM_CRMODE, lock_flags & LCK_CONVERT?LKF_CONVERT:0))
 					return errno;
 			} else {
 				if (hold_unlock(resource))
