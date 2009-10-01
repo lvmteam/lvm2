@@ -88,11 +88,12 @@ static int _snap_text_export(const struct lv_segment *seg, struct formatter *f)
 
 #ifdef DEVMAPPER_SUPPORT
 static int _snap_target_percent(void **target_state __attribute((unused)),
-			   struct dm_pool *mem __attribute((unused)),
-			   struct cmd_context *cmd __attribute((unused)),
-			   struct lv_segment *seg __attribute((unused)),
-			   char *params, uint64_t *total_numerator,
-			   uint64_t *total_denominator)
+				percent_range_t *percent_range,
+				struct dm_pool *mem __attribute((unused)),
+				struct cmd_context *cmd __attribute((unused)),
+				struct lv_segment *seg __attribute((unused)),
+				char *params, uint64_t *total_numerator,
+				uint64_t *total_denominator)
 {
 	uint64_t numerator, denominator;
 
@@ -100,7 +101,16 @@ static int _snap_target_percent(void **target_state __attribute((unused)),
 		   &numerator, &denominator) == 2) {
 		*total_numerator += numerator;
 		*total_denominator += denominator;
-	}
+		if (!numerator)
+			*percent_range = PERCENT_0;
+		else if (numerator == denominator)
+			*percent_range = PERCENT_100;
+		else
+			*percent_range = PERCENT_0_TO_100;
+	} else if (!strcmp(params, "Invalid"))
+		*percent_range = PERCENT_INVALID;
+	else
+		return 0;
 
 	return 1;
 }

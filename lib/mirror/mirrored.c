@@ -178,10 +178,13 @@ static struct mirror_state *_mirrored_init_target(struct dm_pool *mem,
 	return mirr_state;
 }
 
-static int _mirrored_target_percent(void **target_state, struct dm_pool *mem,
-			   struct cmd_context *cmd, struct lv_segment *seg,
-			   char *params, uint64_t *total_numerator,
-			   uint64_t *total_denominator)
+static int _mirrored_target_percent(void **target_state,
+				    percent_range_t *percent_range,
+				    struct dm_pool *mem,
+				    struct cmd_context *cmd,
+				    struct lv_segment *seg, char *params,
+				    uint64_t *total_numerator,
+				    uint64_t *total_denominator)
 {
 	struct mirror_state *mirr_state;
 	uint64_t numerator, denominator;
@@ -225,6 +228,13 @@ static int _mirrored_target_percent(void **target_state, struct dm_pool *mem,
 
 	if (seg)
 		seg->extents_copied = seg->area_len * numerator / denominator;
+
+	if (numerator == denominator)
+		*percent_range = PERCENT_100;
+	else if (numerator == 0)
+		*percent_range = PERCENT_0;
+	else
+		*percent_range = PERCENT_0_TO_100;
 
 	return 1;
 }

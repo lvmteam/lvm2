@@ -16,6 +16,8 @@
 #ifndef _SEGTYPES_H
 #define _SEGTYPES_H
 
+#include "metadata-exported.h"
+
 struct segtype_handler;
 struct cmd_context;
 struct config_tree;
@@ -73,7 +75,9 @@ struct segtype_handler {
                                 struct lv_segment *seg,
                                 struct dm_tree_node *node, uint64_t len,
                                 uint32_t *pvmove_mirror_count);
-	int (*target_percent) (void **target_state, struct dm_pool * mem,
+	int (*target_percent) (void **target_state,
+			       percent_range_t *percent_range,
+			       struct dm_pool * mem,
 			       struct cmd_context *cmd,
 			       struct lv_segment *seg, char *params,
 			       uint64_t *total_numerator,

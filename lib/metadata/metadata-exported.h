@@ -136,6 +136,13 @@ typedef enum {
 	DONT_PROMPT_OVERRIDE = 2 /* Skip prompt + override a second condition */
 } force_t;
 
+typedef enum {
+	PERCENT_0 = 0,
+	PERCENT_0_TO_100 = 1,
+	PERCENT_100 = 2,
+	PERCENT_INVALID = 3
+} percent_range_t;
+
 struct cmd_context;
 struct format_handler;
 struct labeller;
