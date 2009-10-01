@@ -90,6 +90,7 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 #define LCK_PARTIAL_MODE        0x00000001U	/* Partial activation? */
 #define LCK_MIRROR_NOSYNC_MODE	0x00000002U	/* Mirrors don't require sync */
 #define LCK_DMEVENTD_MONITOR_MODE	0x00000004U	/* Register with dmeventd */
+#define LCK_CONVERT		0x00000008U	/* Convert existing lock */
 
 /*
  * Special cases of VG locks.
