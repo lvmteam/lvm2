@@ -1114,7 +1114,8 @@ struct dm_list *lvs_using_lv(struct cmd_context *cmd, struct volume_group *vg,
 	return lvs;
 }
 
-float copy_percent(struct logical_volume *lv_mirr)
+float copy_percent(struct logical_volume *lv_mirr,
+		   percent_range_t *percent_range)
 {
 	uint32_t numerator = 0u, denominator = 0u;
 	struct lv_segment *seg;
@@ -1128,6 +1129,13 @@ float copy_percent(struct logical_volume *lv_mirr)
 			numerator += seg->area_len;
 	}
 
+	if (!denominator || (numerator == denominator))
+		*percent_range = PERCENT_100;
+	else if (numerator == 0)
+		*percent_range = PERCENT_0;
+	else
+		*percent_range = PERCENT_0_TO_100;
+		
 	return denominator ? (float) numerator *100 / denominator : 100.0;
 }
 

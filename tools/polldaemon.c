@@ -68,7 +68,7 @@ progress_t poll_mirror_progress(struct cmd_context *cmd,
 				struct daemon_parms *parms)
 {
 	float segment_percent = 0.0, overall_percent = 0.0;
-	percent_range_t percent_range;
+	percent_range_t percent_range, overall_percent_range;
 	uint32_t event_nr = 0;
 
 	if (!lv_mirror_percent(cmd, lv, !parms->interval, &segment_percent,
@@ -78,7 +78,7 @@ progress_t poll_mirror_progress(struct cmd_context *cmd,
 		return PROGRESS_CHECK_FAILED;
 	}
 
-	overall_percent = copy_percent(lv);
+	overall_percent = copy_percent(lv, &overall_percent_range);
 	if (parms->progress_display)
 		log_print("%s: %s: %.1f%%", name, parms->progress_title,
 			  overall_percent);
@@ -89,7 +89,7 @@ progress_t poll_mirror_progress(struct cmd_context *cmd,
 	if (percent_range != PERCENT_100)
 		return PROGRESS_UNFINISHED;
 
-	if (overall_percent >= 100.0)
+	if (overall_percent_range == PERCENT_100)
 		return PROGRESS_FINISHED_ALL;
 
 	return PROGRESS_FINISHED_SEGMENT;
