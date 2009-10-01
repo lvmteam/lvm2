@@ -1054,7 +1054,8 @@ static int _snpercent_disp(struct dm_report *rh __attribute((unused)), struct dm
 	return 1;
 }
 
-static int _copypercent_disp(struct dm_report *rh __attribute((unused)), struct dm_pool *mem,
+static int _copypercent_disp(struct dm_report *rh __attribute((unused)),
+			     struct dm_pool *mem,
 			     struct dm_report_field *field,
 			     const void *data, void *private __attribute((unused)))
 {
@@ -1077,7 +1078,7 @@ static int _copypercent_disp(struct dm_report *rh __attribute((unused)), struct 
 		return 1;
 	}
 
-	percent = copy_percent(lv);
+	percent = copy_percent(lv, &percent_range);
 
 	if (!(repstr = dm_pool_zalloc(mem, 8))) {
 		log_error("dm_pool_alloc failed");
