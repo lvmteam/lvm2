@@ -223,3 +223,13 @@ memcheck: test-programs
 ruby-test:
 	$(RUBY) report-generators/test/ts.rb
 endif
+
+ifneq ($(shell which ctags),)
+.PHONY: tags
+all: tags
+tags:
+	test -z "$(shell find $(top_srcdir) -type f -name '*.[ch]' -newer tags | head -1)" || $(RM) tags
+	test -f tags || find $(top_srcdir) -maxdepth 4 -type f -name '*.[ch]' -exec ctags -a '{}' +
+
+DISTCLEAN_TARGETS += tags
+endif
