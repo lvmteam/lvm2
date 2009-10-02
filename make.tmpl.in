@@ -85,12 +85,12 @@ ifeq ("@INTL@", "yes")
   DEFS += -DINTL_PACKAGE=\"@INTL_PACKAGE@\" -DLOCALEDIR=\"@LOCALEDIR@\"
 endif
 
-LDFLAGS += -L$(top_srcdir)/libdm -L$(top_srcdir)/lib
-CLDFLAGS += -L$(top_srcdir)/libdm -L$(top_srcdir)/lib
+LDFLAGS += -L$(top_builddir)/libdm -L$(top_builddir)/lib
+CLDFLAGS += -L$(top_builddir)/libdm -L$(top_builddir)/lib
 
 ifeq ("@DMEVENTD@", "yes")
-  LDFLAGS += -L$(top_srcdir)/daemons/dmeventd
-  CLDFLAGS += -L$(top_srcdir)/daemons/dmeventd
+  LDFLAGS += -L$(top_builddir)/daemons/dmeventd
+  CLDFLAGS += -L$(top_builddir)/daemons/dmeventd
 endif
 
 ifeq ("@DM_COMPAT@", "yes")
@@ -121,11 +121,12 @@ LIB_VERSION_DM := $(shell cat $(top_srcdir)/VERSION_DM | \
 LIB_VERSION_APP := $(shell cat $(top_srcdir)/VERSION | \
 		     awk -F '[(). ]' '{printf "%s.%s",$$1,$$4}')
 
-INCLUDES += -I. -I$(top_srcdir)/include
+INCLUDES += -I. -I$(top_builddir)/include
 
-INC_LNS = $(top_srcdir)/include/.symlinks_created
+INC_LNS = $(top_builddir)/include/.symlinks_created
 
-DEPS = $(top_srcdir)/make.tmpl $(top_srcdir)/VERSION Makefile $(INC_LNS)
+DEPS = $(top_builddir)/make.tmpl $(top_srcdir)/VERSION \
+       $(top_builddir)/Makefile $(INC_LNS)
 
 OBJECTS = $(SOURCES:%.c=%.o)
 POTFILES = $(SOURCES:%.c=%.pot)
@@ -227,11 +228,12 @@ $(LIB_STATIC): $(OBJECTS)
 	$(AR) rs $@ $(OBJECTS)
 
 %.d: %.c
+	$(MKDIR_P) $(dir $@); \
 	set -e; \
 	FILE=`echo $@ | sed 's/\\//\\\\\\//g;s/\\.d//g'`; \
 	DEPS=`echo $(DEPS) | sed -e 's/\\//\\\\\\//g'`; \
-	$(CC) -MM $(INCLUDES) $(DEFS) $(CFLAGS) $< | \
-	sed "s/\(.*\)\.o[ :]*/$$FILE.o $$FILE.d $$FILE.pot: $$DEPS /g" > $@; \
+	$(CC) -MM $(INCLUDES) $(DEFS) $(CFLAGS) -o $@ $<; \
+	sed -i "s/\(.*\)\.o[ :]*/$$FILE.o $$FILE.d $$FILE.pot: $$DEPS /g" $@; \
 	[ -s $@ ] || $(RM) $@
 
 %.mo: %.po

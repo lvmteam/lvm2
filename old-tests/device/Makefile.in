@@ -14,6 +14,7 @@
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
+top_builddir = @top_builddir@
 VPATH = @srcdir@
 
 SOURCES=\
@@ -21,7 +22,7 @@ SOURCES=\
 
 TARGETS=dev_cache_t
 
-include $(top_srcdir)/make.tmpl
+include ../../make.tmpl
 
 dev_cache_t: dev_cache_t.o $(top_srcdir)/lib/liblvm.a
 	$(CC) -o dev_cache_t dev_cache_t.o -L$(top_srcdir)/lib -llvm

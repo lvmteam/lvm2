@@ -14,6 +14,7 @@
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
+top_builddir = @top_builddir@
 VPATH = @srcdir@
 
 SOURCES=\
@@ -24,7 +25,7 @@ TARGETS=\
 	rfilter_t \
 	pfilter_t
 
-include $(top_srcdir)/make.tmpl
+include ../../make.tmpl
 
 rfilter_t: rfilter_t.o $(top_srcdir)/lib/liblvm.a
 	$(CC) -o rfilter_t rfilter_t.o -L$(top_srcdir)/lib -llvm

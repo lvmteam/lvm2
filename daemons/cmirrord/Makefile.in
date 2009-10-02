@@ -13,6 +13,7 @@
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
+top_builddir = @top_builddir@
 VPATH = @srcdir@
 
 CPG_LIBS = @CPG_LIBS@
@@ -24,13 +25,13 @@ SOURCES = clogd.c cluster.c functions.c link_mon.c local.c logging.c
 
 TARGETS = cmirrord
 
-include $(top_srcdir)/make.tmpl
+include ../../make.tmpl
 
 LIBS += -ldevmapper
 LMLIBS += $(CPG_LIBS) $(SACKPT_LIBS)
 CFLAGS += $(CPG_CFLAGS) $(SACKPT_CFLAGS)
 
-cmirrord: $(OBJECTS) $(top_srcdir)/lib/liblvm-internal.a
+cmirrord: $(OBJECTS) $(top_builddir)/lib/liblvm-internal.a
 	$(CC) -o cmirrord $(OBJECTS) $(LDFLAGS) \
 		$(LVMLIBS) $(LMLIBS) $(LIBS)
 

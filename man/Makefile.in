@@ -14,6 +14,7 @@
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
+top_builddir = @top_builddir@
 VPATH = @srcdir@
 
 ifeq ("@FSADM@", "yes")
@@ -38,7 +39,7 @@ MAN8DIR=${mandir}/man8
 
 CLEAN_TARGETS=$(MAN5) $(MAN8) $(MAN8CLUSTER) $(FSADMMAN) $(MAN8DM)
 
-include $(top_srcdir)/make.tmpl
+include ../make.tmpl
 
 ifneq ("@CLVMD@", "none")
   install: install_cluster

@@ -14,6 +14,7 @@
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
+top_builddir = @top_builddir@
 VPATH = @srcdir@
 
 SOURCES=\
@@ -21,7 +22,7 @@ SOURCES=\
 
 TARGETS=dbg_malloc_t
 
-include $(top_srcdir)/make.tmpl
+include ../../make.tmpl
 
 dbg_malloc_t: dbg_malloc_t.o
 	$(CC) $(CFLAGS) -o dbg_malloc_t dbg_malloc_t.o \
