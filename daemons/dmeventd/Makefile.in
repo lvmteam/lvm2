@@ -13,6 +13,7 @@
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
+top_builddir = @top_builddir@
 VPATH = @srcdir@
 
 SOURCES = libdevmapper-event.c
@@ -36,7 +37,7 @@ ifneq ($(MAKECMDGOALS),device-mapper)
   SUBDIRS+=plugins
 endif
 
-include $(top_srcdir)/make.tmpl
+include ../../make.tmpl
 
 all: dmeventd
 device-mapper: dmeventd $(LIB_STATIC)
@@ -66,7 +67,7 @@ install: $(INSTALL_TYPE) install_include install_dmeventd
 install_device-mapper: $(INSTALL_TYPE) install_include install_dmeventd
 
 install_include:
-	$(INSTALL) -D $(OWNER) $(GROUP) -m 444 libdevmapper-event.h \
+	$(INSTALL) -D $(OWNER) $(GROUP) -m 444 $(srcdir)/libdevmapper-event.h \
 		$(includedir)/libdevmapper-event.h
 
 install_dynamic: libdevmapper-event.$(LIB_SUFFIX)

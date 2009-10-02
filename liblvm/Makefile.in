@@ -14,6 +14,7 @@
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
+top_builddir = @top_builddir@
 VPATH = @srcdir@
 
 SOURCES =\
@@ -38,7 +39,7 @@ endif
 
 CLEAN_TARGETS += liblvm.cflow
 
-include $(top_srcdir)/make.tmpl
+include ../make.tmpl
 
 LIBS += -ldevmapper -llvm-internal
 
@@ -66,7 +67,7 @@ endif
 install: $(INSTALL_TYPE) install_include
 
 install_include:
-	$(INSTALL) -D $(OWNER) $(GROUP) -m 444 lvm2app.h $(includedir)/lvm2app.h
+	$(INSTALL) -D $(OWNER) $(GROUP) -m 444 $(srcdir)/lvm2app.h $(includedir)/lvm2app.h
 
 install_dynamic: $(LIB_SHARED)
 	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) $< \

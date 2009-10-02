@@ -14,6 +14,7 @@
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
+top_builddir = @top_builddir@
 VPATH = @srcdir@
 
 SOURCES =\
@@ -32,7 +33,7 @@ SOURCES =\
 	regex/ttree.c \
 	$(interface)/libdm-iface.c
 
-INCLUDES = -I$(interface) -I.
+INCLUDES = -I$(srcdir)/$(interface) -I$(srcdir)
 
 ifeq ("@STATIC_LINK@", "yes")
 LIB_STATIC = $(interface)/libdevmapper.a
@@ -72,7 +73,7 @@ install: $(INSTALL_TYPE) install_include
 install_device-mapper: install
 
 install_include:
-	$(INSTALL) -D $(OWNER) $(GROUP) -m 444 libdevmapper.h \
+	$(INSTALL) -D $(OWNER) $(GROUP) -m 444 $(srcdir)/libdevmapper.h \
 		$(includedir)/libdevmapper.h
 
 install_dynamic: install_@interface@

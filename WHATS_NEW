@@ -1,5 +1,6 @@
 Version 2.02.54 -
 =====================================
+  Allow for a build directory separate from the source.
   Update distclean target for rename clogd to cmirrord. (2.02.52)
   Only do lock conversions in clvmd if we are explicitly asked for one.
   Introduce percent_range_t and centralise snapshot full/mirror in-sync checks.

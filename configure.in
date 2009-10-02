@@ -1040,14 +1040,14 @@ fi
 AC_MSG_RESULT($interface)
 
 ################################################################################
-DM_LIB_VERSION="\"`cat VERSION_DM 2>/dev/null || echo Unknown`\""
+DM_LIB_VERSION="\"`cat "$srcdir"/VERSION_DM 2>/dev/null || echo Unknown`\""
 AC_DEFINE_UNQUOTED(DM_LIB_VERSION, $DM_LIB_VERSION, [Library version])
 
-DM_LIB_PATCHLEVEL=`cat VERSION_DM | $AWK -F '[[-. ]]' '{printf "%s.%s.%s",$1,$2,$3}'`
+DM_LIB_PATCHLEVEL=`cat "$srcdir"/VERSION_DM | $AWK -F '[[-. ]]' '{printf "%s.%s.%s",$1,$2,$3}'`
 
-LVM_VERSION="\"`cat VERSION 2>/dev/null || echo Unknown`\""
+LVM_VERSION="\"`cat "$srcdir"/VERSION 2>/dev/null || echo Unknown`\""
 
-VER=`cat VERSION`
+VER=`cat "$srcdir"/VERSION`
 LVM_RELEASE_DATE="\"`echo $VER | $SED 's/.* (//;s/).*//'`\""
 VER=`echo "$VER" | $AWK '{print $1}'`
 LVM_RELEASE="\"`echo "$VER" | $AWK -F '-' '{print $2}'`\""
@@ -1156,6 +1156,7 @@ daemons/dmeventd/plugins/Makefile
 daemons/dmeventd/plugins/mirror/Makefile
 daemons/dmeventd/plugins/snapshot/Makefile
 doc/Makefile
+include/.symlinks
 include/Makefile
 lib/Makefile
 lib/format1/Makefile
