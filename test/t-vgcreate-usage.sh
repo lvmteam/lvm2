@@ -87,3 +87,60 @@ check_vg_field_ $vg max_lv 0
 check_vg_field_ $vg max_pv 0
 check_vg_field_ $vg vg_attr "wz--n-"
 vgremove -ff $vg
+
+# Implicit pvcreate tests, test pvcreate options on vgcreate
+# --force, --yes, --metadata{size|copies|type}, --zero
+# --dataalignment[offset]
+pvremove $dev1 $dev2
+vgcreate --force --yes --zero y $vg $dev1 $dev2
+vgremove -f $vg
+pvremove -f $dev1
+
+for i in 0 1 2 3
+do
+# vgcreate (lvm2) succeeds writing LVM label at sector $i
+    vgcreate --labelsector $i $vg $dev1
+    dd if=$dev1 bs=512 skip=$i count=1 2>/dev/null | strings | grep -q LABELONE;
+    vgremove -f $vg
+    pvremove -f $dev1
+done
+
+# metadatacopies
+for i in 1 2
+do
+    vgcreate --metadatacopies $i $vg $dev1
+    check_pv_field_ $dev1 pv_mda_count $i
+    vgremove -f $vg
+    pvremove -f $dev1
+done
+not vgcreate --metadatacopies 0 $vg $dev1
+pvcreate --metadatacopies 1 $dev2
+vgcreate --metadatacopies 0 $vg $dev1 $dev2
+check_pv_field_ $dev1 pv_mda_count 0
+check_pv_field_ $dev2 pv_mda_count 1
+vgremove -f $vg
+pvremove -f $dev1
+
+# metadatasize, dataalignment, dataalignmentoffset
+#COMM 'pvcreate sets data offset next to mda area'
+vgcreate --metadatasize 100k --dataalignment 100k $vg $dev1
+check_pv_field_ $dev1 pe_start 200.00k
+vgremove -f $vg
+pvremove -f $dev1
+
+# data area is aligned to 64k by default,
+# data area start is shifted by the specified alignment_offset
+pv_align="195.50k"
+vgcreate --metadatasize 128k --dataalignmentoffset 7s $vg $dev1
+check_pv_field_ $dev1 pe_start $pv_align
+vgremove -f $vg
+pvremove -f $dev1
+
+# metadatatype
+for i in 1 2
+do
+    vgcreate -M $i $vg $dev1
+    check_vg_field_ $vg vg_fmt lvm$i
+    vgremove -f $vg
+    pvremove -f $dev1
+done
