@@ -559,16 +559,23 @@ int vg_remove(struct volume_group *vg)
  * Parameters:
  * - vg: handle of volume group to extend by 'pv_name'
  * - pv_name: device path of PV to add to VG
+ * - pp: parameters to pass to implicit pvcreate; if NULL, do not pvcreate
  *
  */
-static int vg_extend_single_pv(struct volume_group *vg, char *pv_name)
+static int vg_extend_single_pv(struct volume_group *vg, char *pv_name,
+			       struct pvcreate_params *pp)
 {
 	struct physical_volume *pv;
 
-	if (!(pv = pv_by_path(vg->fid->fmt->cmd, pv_name))) {
+	pv = pv_by_path(vg->fid->fmt->cmd, pv_name);
+	if (!pv && !pp) {
 		log_error("%s not identified as an existing "
 			  "physical volume", pv_name);
 		return 0;
+	} else if (!pv && pp) {
+		pv = pvcreate_single(vg->cmd, pv_name, pp);
+		if (!pv)
+			return 0;
 	}
 	if (!add_pv_to_vg(vg, pv_name, pv))
 		return 0;
@@ -584,7 +591,7 @@ int vg_extend(struct volume_group *vg, int pv_count, char **pv_names)
 
 	/* attach each pv */
 	for (i = 0; i < pv_count; i++) {
-		if (!vg_extend_single_pv(vg, pv_names[i]))
+		if (!vg_extend_single_pv(vg, pv_names[i], NULL))
 			goto bad;
 	}
 
