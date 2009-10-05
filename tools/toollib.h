@@ -107,5 +107,8 @@ int lv_refresh(struct cmd_context *cmd, struct logical_volume *lv);
 int vg_refresh_visible(struct cmd_context *cmd, struct volume_group *vg);
 void lv_spawn_background_polling(struct cmd_context *cmd,
 				 struct logical_volume *lv);
+int pvcreate_validate_params(struct cmd_context *cmd,
+			     int argc, char **argv,
+			     struct pvcreate_params *pp);
 
 #endif
