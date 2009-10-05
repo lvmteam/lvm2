@@ -41,6 +41,8 @@ vg_t lvm_vg_create(lvm_t libh, const char *vg_name)
 
 int lvm_vg_extend(vg_t vg, const char *device)
 {
+	struct pvcreate_params pp;
+
 	if (vg_read_error(vg))
 		return -1;
 
@@ -52,15 +54,8 @@ int lvm_vg_extend(vg_t vg, const char *device)
 		return -1;
 	}
 
-	/* If device not initialized, pvcreate it */
-	if (!pv_by_path(vg->cmd, device) &&
-	   (!pvcreate_single(vg->cmd, device, NULL))) {
-		log_error("Unable to initialize device for LVM use");
-		unlock_vg(vg->cmd, VG_ORPHANS);
-		return -1;
-	}
-
-	if (!vg_extend(vg, 1, (char **) &device, NULL)) {
+	fill_default_pvcreate_params(&pp);
+	if (!vg_extend(vg, 1, (char **) &device, &pp)) {
 		unlock_vg(vg->cmd, VG_ORPHANS);
 		return -1;
 	}
