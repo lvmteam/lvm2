@@ -20,6 +20,7 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 	char *vg_name;
 	struct volume_group *vg = NULL;
 	int r = ECMD_FAILED;
+	struct pvcreate_params pp;
 
 	if (!argc) {
 		log_error("Please enter volume group name and "
@@ -31,8 +32,8 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 	argc--;
 	argv++;
 
-	if (argc == 0) {
-		log_error("Please enter physical volume(s)");
+	fill_default_pvcreate_params(&pp);
+	if (!pvcreate_validate_params(cmd, argc, argv, &pp)) {
 		return EINVALID_CMD_LINE;
 	}
 
@@ -54,7 +55,7 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 		goto_bad;
 
 	/* extend vg */
-	if (!vg_extend(vg, argc, argv, NULL))
+	if (!vg_extend(vg, argc, argv, &pp))
 		goto_bad;
 
 	/* ret > 0 */
