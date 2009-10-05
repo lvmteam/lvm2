@@ -553,22 +553,38 @@ int vg_remove(struct volume_group *vg)
 	return ret;
 }
 
+/*
+ * Extend a VG by a single PV / device path
+ *
+ * Parameters:
+ * - vg: handle of volume group to extend by 'pv_name'
+ * - pv_name: device path of PV to add to VG
+ *
+ */
+static int vg_extend_single_pv(struct volume_group *vg, char *pv_name)
+{
+	struct physical_volume *pv;
+
+	if (!(pv = pv_by_path(vg->fid->fmt->cmd, pv_name))) {
+		log_error("%s not identified as an existing "
+			  "physical volume", pv_name);
+		return 0;
+	}
+	if (!add_pv_to_vg(vg, pv_name, pv))
+		return 0;
+	return 1;
+}
+
 int vg_extend(struct volume_group *vg, int pv_count, char **pv_names)
 {
 	int i;
-	struct physical_volume *pv;
 
 	if (_vg_bad_status_bits(vg, RESIZEABLE_VG))
 		return 0;
 
 	/* attach each pv */
 	for (i = 0; i < pv_count; i++) {
-		if (!(pv = pv_by_path(vg->fid->fmt->cmd, pv_names[i]))) {
-			log_error("%s not identified as an existing "
-				  "physical volume", pv_names[i]);
-			goto bad;
-		}
-		if (!add_pv_to_vg(vg, pv_names[i], pv))
+		if (!vg_extend_single_pv(vg, pv_names[i]))
 			goto bad;
 	}
 
