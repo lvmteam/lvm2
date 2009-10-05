@@ -21,16 +21,24 @@ vgcreate \- create a volume group
 .RB [ \-t | \-\-test ]
 .RB [ \-v | \-\-verbose ]
 .RB [ \-\-version ]
-.I VolumeGroupName PhysicalVolumePath
-.RI [ PhysicalVolumePath ...]
+.RB [ PHYSICAL DEVICE OPTIONS ]
+.I VolumeGroupName PhysicalDevicePath
+.RI [ PhysicalDevicePath ...]
 .SH DESCRIPTION
 .B vgcreate
 creates a new volume group called
 .I VolumeGroupName
-using the block special device
-.IR PhysicalVolumePath
-previously configured for LVM with
-.BR pvcreate (8).
+using the block special device \fIPhysicalDevicePath\fP.
+.sp
+If \fIPhysicalDevicePath\fP was not previously configured for LVM with
+\fBpvcreate (8)\fP, the device will be initialized with the same
+default values used with \fBpvcreate\fP.  If non-default
+\fPpvcreate\fP values are are desired, they may be given on the
+commandline with the same options as \fPpvcreate\fP.  See
+\fBPHYSICAL DEVICE OPTIONS\fP for available options.  Note
+that the restore-related options such as --restorefile, --uuid,
+and --physicalvolumesize are not available.  If a restore operation
+is needed, use \fBpvcreate (8)\fP and \fBvgcfgrestore (8)\fP.
 .SH OPTIONS
 See \fBlvm\fP for common options.
 .TP
@@ -86,6 +94,25 @@ but having a large number of extents will slow down the tools but have no
 impact on I/O performance to the logical volume.  The smallest PE is 1KB.
 
 The 2.4 kernel has a limitation of 2TB per block device.
+.SH PHYSICAL DEVICE OPTIONS
+The following options are available for initializing physical devices in the
+volume group.  These options are further described in the pvcreate man page.
+.TP
+.BR \-f ", " \-\-force
+.TP
+.BR \-y ", " \-\-yes
+.TP
+.BR \-Z ", " \-\-zero " y|n"
+.TP
+.BR \-\-labelsector " sector"
+.TP
+.BR \-\-metadatasize " size"
+.TP
+.BR \-\-metadatacopies " copies"
+.TP
+.BR \-\-dataalignment " alignment"
+.TP
+.BR \-\-dataalignmentoffset " alignment_offset"
 .SH EXAMPLES
 To create a volume group named
 .B test_vg 
