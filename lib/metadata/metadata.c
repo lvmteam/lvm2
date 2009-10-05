@@ -1275,7 +1275,7 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name,
 void fill_default_pvcreate_params(struct pvcreate_params *pp)
 {
 	memset(pp, 0, sizeof(*pp));
-	pp->zero = 0;
+	pp->zero = 1;
 	pp->size = 0;
 	pp->data_alignment = UINT64_C(0);
 	pp->data_alignment_offset = UINT64_C(0);
