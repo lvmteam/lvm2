@@ -58,11 +58,7 @@
 #  define DEFAULT_FALLBACK_TO_LVM1 0
 #endif
 
-#ifdef LVM1_SUPPORT
-#  define DEFAULT_FORMAT "lvm1"
-#else
-#  define DEFAULT_FORMAT "lvm2"
-#endif
+#define DEFAULT_FORMAT "lvm2"
 
 #define DEFAULT_STRIPESIZE 64	/* KB */
 #define DEFAULT_PVMETADATASIZE 255

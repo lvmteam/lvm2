@@ -1,5 +1,7 @@
 Version 2.02.54 -
 =====================================
+  Correct example.conf to indicate that lvm2 not lvm1 is the default format.
+  Remove an unused stray LVM1_SUPPORT ifdef.
   Only include selinux libs in libdevmapper.pc when selinux build enabled.
   Allow for a build directory separate from the source.
   Update distclean target for rename clogd to cmirrord. (2.02.52)
