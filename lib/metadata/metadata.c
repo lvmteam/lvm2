@@ -1272,7 +1272,7 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name,
 	return 1;
 }
 
-static void fill_default_pvcreate_params(struct pvcreate_params *pp)
+void fill_default_pvcreate_params(struct pvcreate_params *pp)
 {
 	memset(pp, 0, sizeof(*pp));
 	pp->zero = 0;
