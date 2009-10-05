@@ -27,14 +27,14 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (argc == 1) {
-		log_error("Please enter physical volume(s)");
-		return EINVALID_CMD_LINE;
-	}
-
 	vg_name = skip_dev_dir(cmd, argv[0], NULL);
 	argc--;
 	argv++;
+
+	if (argc == 0) {
+		log_error("Please enter physical volume(s)");
+		return EINVALID_CMD_LINE;
+	}
 
 	log_verbose("Checking for volume group \"%s\"", vg_name);
 	vg = vg_read_for_update(cmd, vg_name, NULL, 0);
