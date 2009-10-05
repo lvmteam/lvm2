@@ -113,7 +113,7 @@ removes this restriction: there is then no limit.
 If you have a large number of physical volumes in
 a volume group with metadata in lvm2 format,
 for tool performance reasons, you should consider
-some use of \fB--metadatacopies 0\fP
+some use of \fB--pvmetadatacopies 0\fP
 as described in \fBpvcreate(8)\fP.
 .TP
 .BR \-s ", " \-\-physicalextentsize " " \fIPhysicalExtentSize\fR[\fBbBsSkKmMgGtTpPeE\fR]

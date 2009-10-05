@@ -105,17 +105,17 @@ do
     pvremove -f $dev1
 done
 
-# metadatacopies
+# pvmetadatacopies
 for i in 1 2
 do
-    vgcreate --metadatacopies $i $vg $dev1
+    vgcreate --pvmetadatacopies $i $vg $dev1
     check_pv_field_ $dev1 pv_mda_count $i
     vgremove -f $vg
     pvremove -f $dev1
 done
 not vgcreate --metadatacopies 0 $vg $dev1
 pvcreate --metadatacopies 1 $dev2
-vgcreate --metadatacopies 0 $vg $dev1 $dev2
+vgcreate --pvmetadatacopies 0 $vg $dev1 $dev2
 check_pv_field_ $dev1 pv_mda_count 0
 check_pv_field_ $dev2 pv_mda_count 1
 vgremove -f $vg

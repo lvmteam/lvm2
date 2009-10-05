@@ -1305,7 +1305,7 @@ int pvcreate_validate_params(struct cmd_context *cmd,
 	}
 
 	if (!(cmd->fmt->features & FMT_MDAS) &&
-	    (arg_count(cmd, metadatacopies_ARG) ||
+	    (arg_count(cmd, pvmetadatacopies_ARG) ||
 	     arg_count(cmd, metadatasize_ARG)   ||
 	     arg_count(cmd, dataalignment_ARG)  ||
 	     arg_count(cmd, dataalignmentoffset_ARG))) {
@@ -1314,8 +1314,8 @@ int pvcreate_validate_params(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (arg_count(cmd, metadatacopies_ARG) &&
-	    arg_int_value(cmd, metadatacopies_ARG, -1) > 2) {
+	if (arg_count(cmd, pvmetadatacopies_ARG) &&
+	    arg_int_value(cmd, pvmetadatacopies_ARG, -1) > 2) {
 		log_error("Metadatacopies may only be 0, 1 or 2");
 		return 0;
 	}
@@ -1371,7 +1371,7 @@ int pvcreate_validate_params(struct cmd_context *cmd,
 						 "metadata/pvmetadatasize",
 						 DEFAULT_PVMETADATASIZE);
 
-	pp->pvmetadatacopies = arg_int_value(cmd, metadatacopies_ARG, -1);
+	pp->pvmetadatacopies = arg_int_value(cmd, pvmetadatacopies_ARG, -1);
 	if (pp->pvmetadatacopies < 0)
 		pp->pvmetadatacopies = find_config_tree_int(cmd,
 						   "metadata/pvmetadatacopies",

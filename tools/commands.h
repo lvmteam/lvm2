@@ -479,7 +479,7 @@ xx(pvcreate,
    "\t[-h|-?|--help] " "\n"
    "\t[--labelsector sector] " "\n"
    "\t[-M|--metadatatype 1|2]" "\n"
-   "\t[--metadatacopies #copies]" "\n"
+   "\t[--pvmetadatacopies #copies]" "\n"
    "\t[--metadatasize MetadataSize[bBsSkKmMgGtTpPeE]]" "\n"
    "\t[--dataalignment Alignment[bBsSkKmMgGtTpPeE]]" "\n"
    "\t[--dataalignmentoffset AlignmentOffset[bBsSkKmMgGtTpPeE]]" "\n"
@@ -493,8 +493,9 @@ xx(pvcreate,
    "\tPhysicalVolume [PhysicalVolume...]\n",
 
    dataalignment_ARG, dataalignmentoffset_ARG, force_ARG, test_ARG,
-   labelsector_ARG, metadatatype_ARG, metadatacopies_ARG, metadatasize_ARG,
-   physicalvolumesize_ARG, restorefile_ARG, uuidstr_ARG, yes_ARG, zero_ARG)
+   labelsector_ARG, metadatatype_ARG, metadatacopies_ARG, pvmetadatacopies_ARG,
+   metadatasize_ARG, physicalvolumesize_ARG, restorefile_ARG, uuidstr_ARG,
+   yes_ARG, zero_ARG)
 
 xx(pvdata,
    "Display the on-disk metadata for physical volume(s)",
@@ -727,7 +728,7 @@ xx(vgconvert,
    "\t[-h|--help] " "\n"
    "\t[--labelsector sector] " "\n"
    "\t[-M|--metadatatype 1|2]" "\n"
-   "\t[--metadatacopies #copies]" "\n"
+   "\t[--pvmetadatacopies #copies]" "\n"
    "\t[--metadatasize MetadataSize[bBsSkKmMgGtTpPeE]]" "\n"
    "\t[-t|--test] " "\n"
    "\t[-v|--verbose] " "\n"
@@ -735,7 +736,7 @@ xx(vgconvert,
    "\tVolumeGroupName [VolumeGroupName...]\n",
 
    force_ARG, test_ARG, labelsector_ARG, metadatatype_ARG, metadatacopies_ARG,
-   metadatasize_ARG )
+   pvmetadatacopies_ARG, metadatasize_ARG )
 
 xx(vgcreate,
    "Create a volume group",
@@ -760,7 +761,8 @@ xx(vgcreate,
    addtag_ARG, alloc_ARG, autobackup_ARG, clustered_ARG, maxlogicalvolumes_ARG,
    maxphysicalvolumes_ARG, metadatatype_ARG, physicalextentsize_ARG, test_ARG,
    force_ARG, yes_ARG, zero_ARG, labelsector_ARG, metadatasize_ARG,
-   metadatacopies_ARG, dataalignment_ARG, dataalignmentoffset_ARG)
+   pvmetadatacopies_ARG, metadatacopies_ARG, dataalignment_ARG,
+   dataalignmentoffset_ARG)
 
 xx(vgdisplay,
    "Display volume group information",
@@ -826,8 +828,8 @@ xx(vgextend,
 
    autobackup_ARG, test_ARG,
    force_ARG, yes_ARG, zero_ARG, labelsector_ARG, metadatatype_ARG,
-   metadatasize_ARG, metadatacopies_ARG, dataalignment_ARG,
-   dataalignmentoffset_ARG)
+   metadatasize_ARG, pvmetadatacopies_ARG, metadatacopies_ARG,
+   dataalignment_ARG, dataalignmentoffset_ARG)
 
 xx(vgimport,
    "Register exported volume group with system",
