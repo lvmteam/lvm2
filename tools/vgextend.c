@@ -54,7 +54,7 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 		goto_bad;
 
 	/* extend vg */
-	if (!vg_extend(vg, argc, argv))
+	if (!vg_extend(vg, argc, argv, NULL))
 		goto_bad;
 
 	/* ret > 0 */

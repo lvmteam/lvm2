@@ -582,7 +582,18 @@ static int vg_extend_single_pv(struct volume_group *vg, char *pv_name,
 	return 1;
 }
 
-int vg_extend(struct volume_group *vg, int pv_count, char **pv_names)
+/*
+ * Extend a VG by a single PV / device path
+ *
+ * Parameters:
+ * - vg: handle of volume group to extend by 'pv_name'
+ * - pv_count: count of device paths of PVs
+ * - pv_names: device paths of PVs to add to VG
+ * - pp: parameters to pass to implicit pvcreate; if NULL, do not pvcreate
+ *
+ */
+int vg_extend(struct volume_group *vg, int pv_count, char **pv_names,
+	      struct pvcreate_params *pp)
 {
 	int i;
 
@@ -591,7 +602,7 @@ int vg_extend(struct volume_group *vg, int pv_count, char **pv_names)
 
 	/* attach each pv */
 	for (i = 0; i < pv_count; i++) {
-		if (!vg_extend_single_pv(vg, pv_names[i], NULL))
+		if (!vg_extend_single_pv(vg, pv_names[i], pp))
 			goto bad;
 	}
 

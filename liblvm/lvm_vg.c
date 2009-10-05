@@ -60,7 +60,7 @@ int lvm_vg_extend(vg_t vg, const char *device)
 		return -1;
 	}
 
-	if (!vg_extend(vg, 1, (char **) &device)) {
+	if (!vg_extend(vg, 1, (char **) &device, NULL)) {
 		unlock_vg(vg->cmd, VG_ORPHANS);
 		return -1;
 	}
