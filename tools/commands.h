@@ -754,7 +754,8 @@ xx(vgcreate,
    "\t[-t|--test] " "\n"
    "\t[-v|--verbose]" "\n"
    "\t[--version] " "\n"
-   "\tVolumeGroupName PhysicalVolume [PhysicalVolume...]\n",
+   "\t[ PHYSICAL DEVICE OPTIONS ] " "\n"
+   "\tVolumeGroupName PhysicalDevicePath [PhysicalDevicePath...]\n",
 
    addtag_ARG, alloc_ARG, autobackup_ARG, clustered_ARG, maxlogicalvolumes_ARG,
    maxphysicalvolumes_ARG, metadatatype_ARG, physicalextentsize_ARG, test_ARG,
@@ -820,6 +821,7 @@ xx(vgextend,
    "\t[-t|--test]\n"
    "\t[-v|--verbose]\n"
    "\t[--version]" "\n"
+   "\t[ PHYSICAL DEVICE OPTIONS ] " "\n"
    "\tVolumeGroupName PhysicalDevicePath [PhysicalDevicePath...]\n",
 
    autobackup_ARG, test_ARG,
