@@ -23,6 +23,7 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	const char *tag;
 	const char *clustered_message = "";
 	char *vg_name;
+	struct pvcreate_params pp;
 
 	if (!argc) {
 		log_error("Please provide volume group name and "
@@ -34,8 +35,8 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	argc--;
 	argv++;
 
-	if (argc == 0) {
-		log_error("Please enter physical volume name(s)");
+	fill_default_pvcreate_params(&pp);
+	if (!pvcreate_validate_params(cmd, argc, argv, &pp)) {
 		return EINVALID_CMD_LINE;
 	}
 
@@ -68,7 +69,7 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	/* attach the pv's */
-	if (!vg_extend(vg, argc, argv, NULL))
+	if (!vg_extend(vg, argc, argv, &pp))
 		goto_bad;
 
 	if (vp_new.max_lv != vg->max_lv)
