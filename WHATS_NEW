@@ -1,5 +1,6 @@
 Version 2.02.54 -
 =====================================
+  Only include selinux libs in libdevmapper.pc when selinux build enabled.
   Allow for a build directory separate from the source.
   Update distclean target for rename clogd to cmirrord. (2.02.52)
   Only do lock conversions in clvmd if we are explicitly asked for one.

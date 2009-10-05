@@ -651,6 +651,7 @@ UDEV_RULES
 STATIC_LINK
 STATICDIR
 SNAPSHOTS
+SELINUX_LIBS
 POOL
 PKGCONFIG
 OWNER
@@ -12910,7 +12911,7 @@ cat >>confdefs.h <<\_ACEOF
 #define HAVE_SEPOL 1
 _ACEOF
 
-		LIBS="-lsepol $LIBS"
+		SELINUX_LIBS="-lsepol $SELINUX_LIBS"
 	fi
 
 	{ $as_echo "$as_me:$LINENO: checking for is_selinux_enabled in -lselinux" >&5
@@ -12991,11 +12992,12 @@ cat >>confdefs.h <<\_ACEOF
 #define HAVE_SELINUX 1
 _ACEOF
 
-		LIBS="-lselinux $LIBS"
+		SELINUX_LIBS="-lselinux $SELINUX_LIBS"
 	else
 		{ $as_echo "$as_me:$LINENO: WARNING: Disabling selinux" >&5
 $as_echo "$as_me: WARNING: Disabling selinux" >&2;}
 	fi
+	LIBS="$SELINUX_LIBS $LIBS"
 
 	# With --enable-static_link and selinux enabled, linking
 	# fails on at least Debian unstable due to unsatisfied references
@@ -15441,6 +15443,7 @@ LVM_PATCHLEVEL=`echo "$VER" | $AWK -F '[(.]' '{print $3}'`
 LVM_LIBAPI=`echo "$VER" | $AWK -F '[()]' '{print $2}'`
 
 ################################################################################
+
 
 
 
