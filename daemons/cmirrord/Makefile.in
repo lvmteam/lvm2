@@ -32,7 +32,7 @@ LMLIBS += $(CPG_LIBS) $(SACKPT_LIBS)
 CFLAGS += $(CPG_CFLAGS) $(SACKPT_CFLAGS)
 
 cmirrord: $(OBJECTS) $(top_builddir)/lib/liblvm-internal.a
-	$(CC) -o cmirrord $(OBJECTS) $(LDFLAGS) \
+	$(CC) $(CFLAGS) $(LDFLAGS) -o cmirrord $(OBJECTS) \
 		$(LVMLIBS) $(LMLIBS) $(LIBS)
 
 install: $(TARGETS)

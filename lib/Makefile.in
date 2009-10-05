@@ -138,7 +138,8 @@ ifeq ("@HAVE_LIBDL@", "yes")
 endif
 
 ifeq ("@DMEVENTD@", "yes")
-  CLDFLAGS += -ldevmapper-event
+  CLDFLAGS += -L../daemons/dmeventd
+  LIBS += -ldevmapper-event
 endif
 
 LIB_NAME = liblvm-internal
