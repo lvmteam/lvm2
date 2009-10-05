@@ -46,15 +46,18 @@ vgremove -ff $vg
 not pvcreate --metadatacopies -1 $dev1
 
 #COMM 'pvcreate accepts metadatacopies = 0, 1, 2'
-pvcreate --metadatacopies 0 $dev1 
-pvcreate --metadatacopies 1 $dev2 
-pvcreate --metadatacopies 2 $dev3 
-check_pv_field_ $dev1 pv_mda_count 0 
-check_pv_field_ $dev2 pv_mda_count 1 
-check_pv_field_ $dev3 pv_mda_count 2 
+for j in metadatacopies pvmetadatacopies
+do
+pvcreate --$j 0 $dev1
+pvcreate --$j 1 $dev2
+pvcreate --$j 2 $dev3
+check_pv_field_ $dev1 pv_mda_count 0
+check_pv_field_ $dev2 pv_mda_count 1
+check_pv_field_ $dev3 pv_mda_count 2
 pvremove $dev1 
 pvremove $dev2 
 pvremove $dev3
+done
 
 #COMM 'pvcreate rejects metadatacopies > 2'
 not pvcreate --metadatacopies 3 $dev1

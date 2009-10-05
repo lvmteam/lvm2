@@ -51,10 +51,10 @@ do
     pvremove -f $dev1
 done
 
-# metadatacopies
+# pvmetadatacopies
 for i in 0 1 2
 do
-    vgextend --metadatacopies $i $vg $dev1
+    vgextend --pvmetadatacopies $i $vg $dev1
     check_pv_field_ $dev1 pv_mda_count $i
     vgreduce $vg $dev1
     pvremove -f $dev1

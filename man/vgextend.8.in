@@ -42,7 +42,7 @@ volume group.  These options are further described in the pvcreate man page.
 .TP
 .BR \-\-metadatasize " size"
 .TP
-.BR \-\-metadatacopies " copies"
+.BR \-\-pvmetadatacopies " copies"
 .TP
 .BR \-\-dataalignment " alignment"
 .TP

@@ -32,6 +32,11 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 	argc--;
 	argv++;
 
+	if (arg_count(cmd, metadatacopies_ARG)) {
+		log_error("Invalid option --metadatacopies, "
+			  "use --pvmetadatacopies instead.");
+		return EINVALID_CMD_LINE;
+	}
 	fill_default_pvcreate_params(&pp);
 	if (!pvcreate_validate_params(cmd, argc, argv, &pp)) {
 		return EINVALID_CMD_LINE;

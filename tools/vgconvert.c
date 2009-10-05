@@ -57,7 +57,7 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 					    "metadata/pvmetadatasize",
 					    DEFAULT_PVMETADATASIZE);
 
-		pvmetadatacopies = arg_int_value(cmd, metadatacopies_ARG, -1);
+		pvmetadatacopies = arg_int_value(cmd, pvmetadatacopies_ARG, -1);
 		if (pvmetadatacopies < 0)
 			pvmetadatacopies =
 			    find_config_tree_int(cmd,
@@ -211,15 +211,20 @@ int vgconvert(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
+	if (arg_count(cmd, metadatacopies_ARG)) {
+		log_error("Invalid option --metadatacopies, "
+			  "use --pvmetadatacopies instead.");
+		return EINVALID_CMD_LINE;
+	}
 	if (!(cmd->fmt->features & FMT_MDAS) &&
-	    (arg_count(cmd, metadatacopies_ARG) ||
+	    (arg_count(cmd, pvmetadatacopies_ARG) ||
 	     arg_count(cmd, metadatasize_ARG))) {
 		log_error("Metadata parameters only apply to text format");
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(cmd, metadatacopies_ARG) &&
-	    arg_int_value(cmd, metadatacopies_ARG, -1) > 2) {
+	if (arg_count(cmd, pvmetadatacopies_ARG) &&
+	    arg_int_value(cmd, pvmetadatacopies_ARG, -1) > 2) {
 		log_error("Metadatacopies may only be 0, 1 or 2");
 		return EINVALID_CMD_LINE;
 	}

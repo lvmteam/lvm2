@@ -11,7 +11,7 @@ pvcreate \- initialize a disk or partition for use by LVM
 .RB [ \-v | \-\-verbose ]
 .RB [ \-\-labelsector ]
 .RB [ \-M | \-\-metadatatype type ]
-.RB [ \-\-metadatacopies #copies ]
+.RB [ \-\-[pv]metadatacopies #copies ]
 .RB [ \-\-metadatasize size ]
 .RB [ \-\-dataalignment alignment ]
 .RB [ \-\-dataalignmentoffset alignment_offset ]
@@ -105,7 +105,7 @@ use \fBpvs -o +pe_start\fP .  It will be a multiple of the requested
 .BR \-\-dataalignmentoffset " alignment_offset"
 Shift the start of the data area by this additional \fBalignment_offset\fP.
 .TP
-.BR \-\-metadatacopies " copies"
+.BR \-\-[pv]metadatacopies " copies"
 The number of metadata areas to set aside on each PV.  Currently
 this can be 0, 1 or 2.  
 If set to 2, two copies of the volume group metadata 
