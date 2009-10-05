@@ -92,7 +92,7 @@ INSTALL_TARGETS = \
 	install_clvmd
 
 clvmd: $(OBJECTS) $(top_builddir)/lib/liblvm-internal.a
-	$(CC) -o clvmd $(OBJECTS) $(CFLAGS) $(LDFLAGS) \
+	$(CC) $(CFLAGS) $(LDFLAGS) -o clvmd $(OBJECTS) \
 		$(LVMLIBS) $(LMLIBS) $(LIBS)
 
 .PHONY: install_clvmd

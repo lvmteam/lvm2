@@ -18,7 +18,8 @@ top_builddir = @top_builddir@
 VPATH = @srcdir@
 
 INCLUDES += -I${top_srcdir}/tools
-CLDFLAGS += -L${top_builddir}/tools -ldevmapper @LVM2CMD_LIB@
+CLDFLAGS += -L${top_builddir}/tools
+LIBS += -ldevmapper @LIB_PTHREAD@ @LVM2CMD_LIB@
 
 SOURCES = dmeventd_mirror.c
 
