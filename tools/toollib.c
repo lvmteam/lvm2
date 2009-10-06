@@ -1021,7 +1021,7 @@ static int _create_pv_entry(struct dm_pool *mem, struct pv_list *pvl,
 			new_pvl = pvl2;
 			break;
 		}
-	
+
 	if (!new_pvl) {
 		if (!(new_pvl = dm_pool_alloc(mem, sizeof(*new_pvl)))) {
 			log_error("Unable to allocate physical volume list.");
@@ -1239,12 +1239,12 @@ int vg_refresh_visible(struct cmd_context *cmd, struct volume_group *vg)
 {
 	struct lv_list *lvl;
 	int r = 1;
-	
+
 	dm_list_iterate_items(lvl, &vg->lvs)
 		if (lv_is_visible(lvl->lv))
 			if (!lv_refresh(cmd, lvl->lv))
 				r = 0;
-	
+
 	return r;
 }
 

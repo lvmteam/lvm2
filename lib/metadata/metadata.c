@@ -67,7 +67,7 @@ unsigned long set_pe_align(struct physical_volume *pv, unsigned long data_alignm
 
 	if (data_alignment)
 		pv->pe_align = data_alignment;
-	else 
+	else
 		pv->pe_align = MAX(65536UL, lvm_getpagesize()) >> SECTOR_SHIFT;
 
 	if (!pv->dev)
@@ -1292,18 +1292,19 @@ void fill_default_pvcreate_params(struct pvcreate_params *pp)
 }
 
 /*
- * pvcreate_single() - initialize a device with PV label and metadata
+ * pvcreate_single() - initialize a device with PV label and metadata area
  *
  * Parameters:
  * - pv_name: device path to initialize
- * - handle: options to pass to pv_create; NULL indicates use defaults
+ * - pp: parameters to pass to pv_create; if NULL, use default values
  *
  * Returns:
  * NULL: error
  * struct physical_volume * (non-NULL): handle to physical volume created
  */
-struct physical_volume * pvcreate_single(struct cmd_context *cmd, const char *pv_name,
-		       struct pvcreate_params *pp)
+struct physical_volume * pvcreate_single(struct cmd_context *cmd,
+					 const char *pv_name,
+					 struct pvcreate_params *pp)
 {
 	void *pv;
 	struct device *dev;
