@@ -204,7 +204,7 @@ $(TARGETS): $(OBJECTS)
 		$(DEFS) $(CFLAGS) $< > $@
 
 %.so: %.o
-	$(CC) -c $(INCLUDES) $(DEFS) $(CFLAGS) $< -o $@
+	$(CC) -c $(INCLUDES) $(DEFS) $(CFLAGS) $(CLDFLAGS) $< $(LIBS) -o $@
 
 ifeq ("@LIB_SUFFIX@","so")
 $(LIB_SHARED): $(OBJECTS) $(LDDEPS)
