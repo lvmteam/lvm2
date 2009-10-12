@@ -303,7 +303,7 @@ int main(int argc, char *argv[])
 			exit(0);
 
 		case 'R':
-			return refresh_clvmd();
+			return refresh_clvmd()==1?0:1;
 
 		case 'C':
 			clusterwide_opt = 1;
@@ -354,7 +354,7 @@ int main(int argc, char *argv[])
 		/* Sending to stderr makes no sense for a detached daemon */
 		if (debug == DEBUG_STDERR)
 			debug = DEBUG_SYSLOG;
-		return debug_clvmd(debug, clusterwide_opt);
+		return debug_clvmd(debug, clusterwide_opt)==1?0:1;
 	}
 
 	/* Fork into the background (unless requested not to) */

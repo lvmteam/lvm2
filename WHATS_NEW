@@ -1,5 +1,6 @@
 Version 2.02.54 -
 =====================================
+  Make clvmd return 0 on success rather than 1.
   Add --pvmetadatacopies for pvcreate, vgcreate, vgextend, vgconvert.
   Add implict pvcreate support to vgcreate and vgextend.
   Correct example.conf to indicate that lvm2 not lvm1 is the default format.
