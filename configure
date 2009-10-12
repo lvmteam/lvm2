@@ -1508,7 +1508,7 @@ Optional Features:
   --enable-lvm1_fallback  Use this to fall back and use LVM1 binaries if
                           device-mapper is missing from the kernel
   --disable-readline      Disable readline support
-  --disable-realtime      Disable realtime clock support
+  --enable-realtime       Enable realtime clock support
   --enable-cmirrord       Enable the cluster mirror log daemon
   --enable-debug          Enable debugging
   --enable-profiling      Gather gcov profiling data
@@ -2226,7 +2226,6 @@ case "$host_os" in
 		ODIRECT=yes
 		DM_IOCTLS=yes
 		SELINUX=yes
-		REALTIME=yes
 		CLUSTER=internal
 		FSADM=yes
 		;;
@@ -2241,7 +2240,6 @@ case "$host_os" in
 		ODIRECT=no
 		DM_IOCTLS=no
 		SELINUX=no
-		REALTIME=no
 		CLUSTER=none
 		FSADM=no
 		;;
