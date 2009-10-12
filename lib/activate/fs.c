@@ -201,10 +201,8 @@ static int _mk_link(const char *dev_dir, const char *vg_name,
 		return 0;
 	}
 
-#ifdef HAVE_SELINUX
 	if (!dm_set_selinux_context(lv_path, S_IFLNK))
 		return_0;
-#endif
 
 	return 1;
 }
