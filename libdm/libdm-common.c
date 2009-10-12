@@ -373,9 +373,9 @@ int dm_task_add_target(struct dm_task *dmt, uint64_t start, uint64_t size,
 	return 1;
 }
 
-#ifdef HAVE_SELINUX
 int dm_set_selinux_context(const char *path, mode_t mode)
 {
+#ifdef HAVE_SELINUX
 	security_context_t scontext;
 
 	if (is_selinux_enabled() <= 0)
@@ -396,9 +396,9 @@ int dm_set_selinux_context(const char *path, mode_t mode)
 	}
 
 	freecon(scontext);
+#endif
 	return 1;
 }
-#endif
 
 static int _add_dev_node(const char *dev_name, uint32_t major, uint32_t minor,
 			 uid_t uid, gid_t gid, mode_t mode)
@@ -445,10 +445,8 @@ static int _add_dev_node(const char *dev_name, uint32_t major, uint32_t minor,
 
 	log_debug("Created %s", path);
 
-#ifdef HAVE_SELINUX
 	if (!dm_set_selinux_context(path, S_IFBLK))
 		return 0;
-#endif
 
 	return 1;
 }
