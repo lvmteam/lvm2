@@ -1,5 +1,6 @@
 Version 2.02.54 -
 =====================================
+  Disable realtime support code by default.
   Make clvmd return 0 on success rather than 1.
   Add --pvmetadatacopies for pvcreate, vgcreate, vgextend, vgconvert.
   Add implict pvcreate support to vgcreate and vgextend.
