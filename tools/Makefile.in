@@ -112,13 +112,12 @@ include ../make.tmpl
 device-mapper: $(TARGETS_DM)
 
 dmsetup: dmsetup.o $(top_builddir)/libdm/libdevmapper.$(LIB_SUFFIX)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ dmsetup.o \
-	      -L$(top_builddir)/libdm -ldevmapper $(LIBS) $(LIB_PTHREAD)
+	$(CC) $(CFLAGS) $(LDFLAGS) -L$(top_builddir)/libdm \
+	      -o $@ dmsetup.o -ldevmapper $(LIBS) $(LIB_PTHREAD)
 
 dmsetup.static: dmsetup.o $(interfacedir)/libdevmapper.a
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ dmsetup.o -static \
-	      -L$(interfacedir) -ldevmapper $(LIBS) \
-	      $(LIB_PTHREAD)
+	$(CC) $(CFLAGS) $(LDFLAGS) -static -L$(interfacedir) \
+	      -o $@ dmsetup.o -ldevmapper $(LIBS) $(LIB_PTHREAD)
 
 all: device-mapper
 
@@ -127,8 +126,9 @@ lvm: $(OBJECTS) lvm.o $(top_builddir)/lib/liblvm-internal.a
 		$(LVMLIBS) $(LIBS) $(LIB_PTHREAD) -rdynamic
 
 lvm.static: $(OBJECTS) lvm-static.o $(top_builddir)/lib/liblvm-internal.a  $(interfacedir)/libdevmapper.a
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJECTS) lvm-static.o -static \
-		-L$(interfacedir) $(LVMLIBS) $(LIBS) $(LIB_PTHREAD) -rdynamic
+	$(CC) $(CFLAGS) $(LDFLAGS) -static -L$(interfacedir) -o $@ \
+	      $(OBJECTS) lvm-static.o $(LVMLIBS) $(LIBS) $(LIB_PTHREAD) \
+	      -rdynamic
 
 liblvm2cmd.a: $(top_builddir)/lib/liblvm-internal.a $(OBJECTS) lvmcmdlib.o lvm2cmd.o
 	cat $(top_builddir)/lib/liblvm-internal.a > $@

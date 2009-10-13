@@ -45,8 +45,8 @@ device-mapper: dmeventd $(LIB_STATIC)
 LIBS += -ldl -ldevmapper -lpthread
 
 dmeventd: $(LIB_SHARED) $(VERSIONED_SHLIB) dmeventd.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ dmeventd.o \
-	-L. -ldevmapper-event $(LIBS) -rdynamic
+	$(CC) $(CFLAGS) $(LDFLAGS) -L. -o $@ dmeventd.o \
+	-ldevmapper-event $(LIBS) -rdynamic
 
 .PHONY: install_dynamic install_static install_include \
 	install_pkgconfig install_dmeventd
