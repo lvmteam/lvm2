@@ -144,10 +144,10 @@ AC_PREFIX_DEFAULT(/usr)
 ################################################################################
 dnl -- Setup the ownership of the files
 AC_MSG_CHECKING(file owner)
-OWNER="root"
+OWNER=""
 
 AC_ARG_WITH(user,
-  [  --with-user=USER        Set the owner of installed files [[USER=root]] ],
+  [  --with-user=USER        Set the owner of installed files [[USER=]] ],
   [ OWNER="$withval" ])
 AC_MSG_RESULT($OWNER)
 
@@ -158,9 +158,9 @@ fi
 ################################################################################
 dnl -- Setup the group ownership of the files
 AC_MSG_CHECKING(group owner)
-GROUP="root"
+GROUP=""
 AC_ARG_WITH(group,
-  [  --with-group=GROUP      Set the group owner of installed files [[GROUP=root]] ],
+  [  --with-group=GROUP      Set the group owner of installed files [[GROUP=]] ],
   [ GROUP="$withval" ])
 AC_MSG_RESULT($GROUP)
 
