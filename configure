@@ -1531,8 +1531,8 @@ Optional Features:
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
-  --with-user=USER        Set the owner of installed files [USER=root]
-  --with-group=GROUP      Set the group owner of installed files [GROUP=root]
+  --with-user=USER        Set the owner of installed files [USER=]
+  --with-group=GROUP      Set the group owner of installed files [GROUP=]
   --with-device-uid=UID   Set the owner used for new device nodes [UID=0]
   --with-device-gid=UID   Set the group used for new device nodes [GID=0]
   --with-device-mode=MODE Set the mode used for new device nodes [MODE=0600]
@@ -9078,7 +9078,7 @@ $as_echo "$STATIC_LINK" >&6; }
 ################################################################################
 { $as_echo "$as_me:$LINENO: checking file owner" >&5
 $as_echo_n "checking file owner... " >&6; }
-OWNER="root"
+OWNER=""
 
 
 # Check whether --with-user was given.
@@ -9096,7 +9096,7 @@ fi
 ################################################################################
 { $as_echo "$as_me:$LINENO: checking group owner" >&5
 $as_echo_n "checking group owner... " >&6; }
-GROUP="root"
+GROUP=""
 
 # Check whether --with-group was given.
 if test "${with_group+set}" = set; then

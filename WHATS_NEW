@@ -1,5 +1,6 @@
 Version 2.02.54 -
 =====================================
+  Set default owner and group to null.
   Add dmeventd.static to the build.
   Disable realtime support code by default.
   Make clvmd return 0 on success rather than 1.
