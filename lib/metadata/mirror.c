@@ -1228,8 +1228,8 @@ int remove_mirror_log(struct cmd_context *cmd,
 			return 0;
 		}
 	} else if (vg_is_clustered(vg)) {
-		log_error("Unable to convert the log of inactive "
-			  "cluster mirror %s", lv->name);
+		log_error("Unable to convert the log of an inactive "
+			  "cluster mirror, %s", lv->name);
 		return 0;
 	} else if (yes_no_prompt("Full resync required to convert "
 				 "inactive mirror %s to core log. "
