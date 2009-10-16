@@ -69,6 +69,10 @@ int read_config_fd(struct config_tree *cft, struct device *dev,
 int read_config_file(struct config_tree *cft);
 int write_config_file(struct config_tree *cft, const char *file,
 		      int argc, char **argv);
+
+typedef int (*putline_fn)(const char *line, void *baton);
+int write_config_node(struct config_node *cn, putline_fn putline, void *baton);
+
 time_t config_file_timestamp(struct config_tree *cft);
 int config_file_changed(struct config_tree *cft);
 int merge_config_tree(struct cmd_context *cmd, struct config_tree *cft,
@@ -114,4 +118,6 @@ unsigned maybe_config_section(const char *str, unsigned len);
 
 const char *config_parent_name(const struct config_node *n);
 
+struct config_node *clone_config_node(struct dm_pool *mem, const struct config_node *cn,
+				      int siblings);
 #endif

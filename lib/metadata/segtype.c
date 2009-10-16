@@ -27,6 +27,11 @@ struct segment_type *get_segtype_from_string(struct cmd_context *cmd,
 			return segtype;
 	}
 
-	log_error("Unrecognised segment type %s", str);
-	return NULL;
+	if (!(segtype = init_unknown_segtype(cmd, str)))
+		return_NULL;
+
+	segtype->library = NULL;
+	dm_list_add(&cmd->segtypes, &segtype->list);
+	log_warn("WARNING: Unrecognised segment type %s", str);
+	return segtype;
 }

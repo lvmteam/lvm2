@@ -298,6 +298,7 @@ struct lv_segment {
 	uint32_t region_size;	/* For mirrors - in sectors */
 	uint32_t extents_copied;
 	struct logical_volume *log_lv;
+	void *segtype_private;
 
 	struct dm_list tags;
 
@@ -733,6 +734,9 @@ int vg_check_write_mode(struct volume_group *vg);
 #define vg_is_clustered(vg) (vg_status((vg)) & CLUSTERED)
 #define vg_is_exported(vg) (vg_status((vg)) & EXPORTED_VG)
 #define vg_is_resizeable(vg) (vg_status((vg)) & RESIZEABLE_VG)
+
+int lv_has_unknown_segments(const struct logical_volume *lv);
+int vg_has_unknown_segments(const struct volume_group *vg);
 
 struct vgcreate_params {
 	char *vg_name;

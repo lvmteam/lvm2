@@ -293,6 +293,16 @@ int out_text(struct formatter *f, const char *fmt, ...)
 	return r;
 }
 
+static int _out_line(const char *line, void *_f) {
+	struct formatter *f = (struct formatter *) _f;
+	return out_text(f, "%s", line);
+}
+
+int out_config_node(struct formatter *f, const struct config_node *cn)
+{
+	return write_config_node(cn, _out_line, f);
+}
+
 static int _print_header(struct formatter *f,
 			 const char *desc)
 {
