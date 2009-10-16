@@ -23,6 +23,7 @@
 #include "memlock.h"
 #include "str_list.h"
 #include "pv_alloc.h"
+#include "segtype.h"
 #include "activate.h"
 #include "display.h"
 #include "locking.h"
@@ -736,6 +737,27 @@ static struct volume_group *_vg_make_handle(struct cmd_context *cmd,
 	vg->read_status = failure;
 
 	return (struct volume_group *)vg;
+}
+
+int lv_has_unknown_segments(const struct logical_volume *lv)
+{
+	struct lv_segment *seg;
+	/* foreach segment */
+	dm_list_iterate_items(seg, &lv->segments)
+		if (seg_unknown(seg))
+			return 1;
+	return 0;
+}
+
+int vg_has_unknown_segments(const struct volume_group *vg)
+{
+	struct lv_list *lvl;
+
+	/* foreach LV */
+	dm_list_iterate_items(lvl, &vg->lvs)
+		if (lv_has_unknown_segments(lvl->lv))
+			return 1;
+	return 0;
 }
 
 /*
@@ -2192,6 +2214,13 @@ int vg_write(struct volume_group *vg)
 		return 0;
 	}
 
+	if (vg_has_unknown_segments(vg) && !vg->cmd->handles_unknown_segments) {
+		log_error("Cannot update volume group %s with unknown segments in it!",
+			  vg->name);
+		return 0;
+	}
+
+
 	if (dm_list_empty(&vg->fid->metadata_areas)) {
 		log_error("Aborting vg_write: No metadata areas to write to!");
 		return 0;
@@ -3317,9 +3346,22 @@ static struct volume_group *_vg_lock_and_read(struct cmd_context *cmd, const cha
 		}
 	}
 
+	/*
+	 * Check that the tool can handle tricky cases -- missing PVs and
+	 * unknown segment types.
+	 */
+
 	if (!cmd->handles_missing_pvs && vg_missing_pv_count(vg) &&
 	    (lock_flags & LCK_WRITE)) {
 		log_error("Cannot change VG %s while PVs are missing!",
+			  vg->name);
+		failure |= FAILED_INCONSISTENT; /* FIXME new failure code here? */
+		goto_bad;
+	}
+
+	if (!cmd->handles_unknown_segments && vg_has_unknown_segments(vg) &&
+	    (lock_flags & LCK_WRITE)) {
+		log_error("Cannot change VG %s with unknown segments in it!",
 			  vg->name);
 		failure |= FAILED_INCONSISTENT; /* FIXME new failure code here? */
 		goto_bad;

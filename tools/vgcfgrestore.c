@@ -56,6 +56,8 @@ int vgcfgrestore(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
+	cmd->handles_unknown_segments = 1;
+
 	if (!(arg_count(cmd, file_ARG) ?
 	      backup_restore_from_file(cmd, vg_name,
 				       arg_str_value(cmd, file_ARG, "")) :

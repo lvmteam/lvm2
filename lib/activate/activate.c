@@ -1112,6 +1112,12 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 		goto_out;
 	}
 
+	if (lv_has_unknown_segments(lv)) {
+		log_error("Refusing activation of LV %s containing "
+			  "an unrecognised segment.", lv->name);
+		goto_out;
+	}
+
 	if (test_mode()) {
 		_skip("Activating '%s'.", lv->name);
 		r = 1;

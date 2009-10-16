@@ -1,5 +1,6 @@
 Version 2.02.54 -
 =====================================
+  Handle metadata with unknown segment types more gracefully.
   Set default owner and group to null.
   Add dmeventd.static to the build.
   Disable realtime support code by default.

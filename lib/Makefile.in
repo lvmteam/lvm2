@@ -47,6 +47,7 @@ SOURCES =\
 	device/device.c \
 	display/display.c \
 	error/errseg.c \
+	unknown/unknown.c \
 	filters/filter-composite.c \
 	filters/filter-persistent.c \
 	filters/filter-regex.c \
