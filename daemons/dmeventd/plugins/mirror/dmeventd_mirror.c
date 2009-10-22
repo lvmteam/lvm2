@@ -243,8 +243,6 @@ int register_device(const char *device,
 
 	pthread_mutex_lock(&_register_mutex);
 
-	syslog(LOG_INFO, "Monitoring mirror device %s for events\n", device);
-
 	/*
 	 * Need some space for allocations.  1024 should be more
 	 * than enough for what we need (device mapper name splitting)
@@ -263,6 +261,8 @@ int register_device(const char *device,
 		/* FIXME Temporary: move to dmeventd core */
 		lvm2_run(_lvm_handle, "_memlock_inc");
 	}
+
+	syslog(LOG_INFO, "Monitoring mirror device %s for events\n", device);
 
 	_register_count++;
 	r = 1;
