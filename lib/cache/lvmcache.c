@@ -52,8 +52,15 @@ int lvmcache_init(void)
 	if (!(_lock_hash = dm_hash_create(128)))
 		return 0;
 
-	if (_vg_global_lock_held)
+	/*
+	 * Reinitialising the cache clears the internal record of
+	 * which locks are held.  The global lock can be held during
+	 * this operation so its state must be restored afterwards.
+	 */
+	if (_vg_global_lock_held) {
 		lvmcache_lock_vgname(VG_GLOBAL, 0);
+		_vg_global_lock_held = 0;
+	}
 
 	return 1;
 }
