@@ -15,9 +15,8 @@
 #   DM_VG_NAME - volume group name (not set if LVM device not present)
 #   DM_LV_LAYER - logical volume layer (not set if LVM device not present)
 
-SUBSYSTEM!="block", GOTO="dm_end"
-KERNEL!="dm-[0-9]*", GOTO="dm_end"
-ACTION!="change", GOTO="dm_end"
+# "add" event is processed on coldplug only!
+ACTION!="add|change", GOTO="dm_end"
 ENV{DM_UDEV_RULES_VSN}!="?*", GOTO="dm_end"
 
 # A few demonstrational examples...
@@ -71,5 +70,8 @@ ENV{DM_UDEV_RULES_VSN}!="?*", GOTO="dm_end"
 # ...you can use any combination of the comparisons with the environment variables
 # listed at the beginning of this file (udev provides simple pattern matching by
 # using *, ? and [] that you can use, see 'man udev' for more information).
+
+# Set default permissions for all DM devices if not set before.
+# OWNER:="root", GROUP:="root", MODE:="660"
 
 LABEL="dm_end"
