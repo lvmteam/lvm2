@@ -1,5 +1,6 @@
 Version 1.02.39 - 
 =====================================
+  Remove strict default permissions for DM devices from 95-dm-notify.rules.
   Add dmsetup udevflags command to decode udev flags in given cookie value.
   Add udev flags support in libdevmapper.
   Make libdm ABI consistent when built with/without selinux support.
