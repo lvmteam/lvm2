@@ -595,7 +595,7 @@ static int _create(int argc, char **argv, void *data __attribute((unused)))
 	if (_switches[NOTABLE_ARG])
 		dm_udev_set_sync_support(0);
 
-	if (!dm_task_set_cookie(dmt, &cookie) ||
+	if (!dm_task_set_cookie(dmt, &cookie, 0) ||
 	    !dm_task_run(dmt))
 		goto out;
 
@@ -630,7 +630,7 @@ static int _rename(int argc, char **argv, void *data __attribute((unused)))
 	if (_switches[NOOPENCOUNT_ARG] && !dm_task_no_open_count(dmt))
 		goto out;
 
-	if (!dm_task_set_cookie(dmt, &cookie) ||
+	if (!dm_task_set_cookie(dmt, &cookie, 0) ||
 	    !dm_task_run(dmt))
 		goto out;
 
@@ -758,15 +758,70 @@ static int _splitname(int argc, char **argv, void *data __attribute((unused)))
 	return r;
 }
 
-static int _udevcomplete(int argc, char **argv, void *data __attribute((unused)))
+static uint32_t _get_cookie_value(char *str_value)
 {
-	uint32_t cookie;
+	unsigned long int value;
 	char *p;
 
-	if (!(cookie = (uint32_t) strtoul(argv[1], &p, 0)) || *p) {
+	if (!(value = strtoul(str_value, &p, 0)) ||
+	    *p ||
+	    (value == ULONG_MAX && errno == ERANGE) ||
+	    value > 0xFFFFFFFF) {
 		err("Incorrect cookie value");
 		return 0;
 	}
+	else
+		return (uint32_t) value;
+}
+
+static int _udevflags(int args, char **argv, void *data __attribute((unused)))
+{
+	uint32_t cookie;
+	uint16_t flags;
+	int i;
+	static const char *dm_flag_names[] = {"DISABLE_SUBSYSTEM_RULES",
+					      "DISABLE_DISK_RULES",
+					      "LOW_PRIORITY",
+					       0, 0, 0, 0, 0};
+
+	if (!(cookie = _get_cookie_value(argv[1])))
+		return 0;
+
+	flags = cookie >> DM_UDEV_FLAGS_SHIFT;
+
+	for (i = 0; i < DM_UDEV_FLAGS_SHIFT; i++)
+		if (1 << i & flags) {
+			if (i < DM_UDEV_FLAGS_SHIFT / 2 && dm_flag_names[i])
+				printf("DM_UDEV_%s_FLAG='1'\n", dm_flag_names[i]);
+			else if (i < DM_UDEV_FLAGS_SHIFT / 2)
+				/*
+				 * This is just a fallback. Each new DM flag
+				 * should have its symbolic name assigned.
+				 */
+				printf("DM_UDEV_FLAG%d='1'\n", i);
+			else
+				/*
+				 * We can't assign symbolic names to subsystem
+				 * flags. Their semantics vary based on the
+				 * subsystem that is currently used.
+				 */
+				printf("DM_SUBSYSTEM_UDEV_FLAG%d='1'\n",
+					i - DM_UDEV_FLAGS_SHIFT / 2);
+		}
+
+	return 1;
+}
+
+static int _udevcomplete(int argc, char **argv, void *data __attribute((unused)))
+{
+	uint32_t cookie;
+
+	if (!(cookie = _get_cookie_value(argv[1])))
+		return 0;
+
+	/* strip flags from the cookie and use cookie magic instead */
+	cookie = (cookie & ~DM_UDEV_FLAGS_MASK) |
+		  (DM_COOKIE_MAGIC << DM_UDEV_FLAGS_SHIFT);
 
 	return dm_udev_complete(cookie);
 }
@@ -953,7 +1008,7 @@ static int _simple(int task, const char *name, uint32_t event_nr, int display)
 				    _read_ahead_flags))
 		goto out;
 
-	if (udev_wait_flag && !dm_task_set_cookie(dmt, &cookie))
+	if (udev_wait_flag && !dm_task_set_cookie(dmt, &cookie, 0))
 		goto out;
 
 	r = dm_task_run(dmt);
@@ -2436,6 +2491,7 @@ static struct command _commands[] = {
 	{"table", "[<device>] [--target <target_type>] [--showkeys]", 0, 1, _status},
 	{"wait", "<device> [<event_nr>]", 0, 2, _wait},
 	{"mknodes", "[<device>]", 0, 1, _mknodes},
+	{"udevflags", "<cookie>", 1, 1, _udevflags},
 	{"udevcomplete", "<cookie>", 1, 1, _udevcomplete},
 	{"udevcomplete_all", "", 0, 0, _udevcomplete_all},
 	{"udevcookies", "", 0, 0, _udevcookies},

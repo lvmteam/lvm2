@@ -841,7 +841,7 @@ static int _deactivate_node(const char *name, uint32_t major, uint32_t minor, ui
 	if (!dm_task_no_open_count(dmt))
 		log_error("Failed to disable open_count");
 
-	if (!dm_task_set_cookie(dmt, cookie))
+	if (!dm_task_set_cookie(dmt, cookie, 0))
 		goto out;
 
 	r = dm_task_run(dmt);
@@ -881,7 +881,7 @@ static int _rename_node(const char *old_name, const char *new_name, uint32_t maj
 	if (!dm_task_no_open_count(dmt))
 		log_error("Failed to disable open_count");
 
-	if (!dm_task_set_cookie(dmt, cookie))
+	if (!dm_task_set_cookie(dmt, cookie, 0))
 		goto out;
 
 	r = dm_task_run(dmt);
@@ -924,7 +924,7 @@ static int _resume_node(const char *name, uint32_t major, uint32_t minor,
 	if (!dm_task_set_read_ahead(dmt, read_ahead, read_ahead_flags))
 		log_error("Failed to set read ahead");
 
-	if (!dm_task_set_cookie(dmt, cookie))
+	if (!dm_task_set_cookie(dmt, cookie, 0))
 		goto out;
 
 	if ((r = dm_task_run(dmt)))

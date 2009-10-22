@@ -1492,8 +1492,14 @@ static int _mknodes_v4(struct dm_task *dmt)
  */
 static int _udev_complete(struct dm_task *dmt)
 {
-	if (dmt->cookie_set)
-		return dm_udev_complete(dmt->event_nr);
+	uint32_t cookie;
+
+	if (dmt->cookie_set) {
+		/* strip flags from the cookie and use cookie magic instead */
+		cookie = (dmt->event_nr & ~DM_UDEV_FLAGS_MASK) |
+			  (DM_COOKIE_MAGIC << DM_UDEV_FLAGS_SHIFT);
+		return dm_udev_complete(cookie);
+	}
 
 	return 1;
 }

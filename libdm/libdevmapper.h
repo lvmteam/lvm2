@@ -164,7 +164,7 @@ int dm_task_set_major_minor(struct dm_task *dmt, int major, int minor, int allow
 int dm_task_set_uid(struct dm_task *dmt, uid_t uid);
 int dm_task_set_gid(struct dm_task *dmt, gid_t gid);
 int dm_task_set_mode(struct dm_task *dmt, mode_t mode);
-int dm_task_set_cookie(struct dm_task *dmt, uint32_t *cookie);
+int dm_task_set_cookie(struct dm_task *dmt, uint32_t *cookie, uint16_t flags);
 int dm_task_set_event_nr(struct dm_task *dmt, uint32_t event_nr);
 int dm_task_set_geometry(struct dm_task *dmt, const char *cylinders, const char *heads, const char *sectors, const char *start);
 int dm_task_set_message(struct dm_task *dmt, const char *message);
@@ -1014,7 +1014,38 @@ int dm_report_field_uint64(struct dm_report *rh, struct dm_report_field *field,
 void dm_report_field_set_value(struct dm_report_field *field, const void *value,
 			       const void *sortvalue);
 
+/* Cookie prefixes.
+ * The cookie value consists of a prefix (16 bits) and a base (16 bits).
+ * We can use the prefix to store the flags. These flags are sent to
+ * kernel within given dm task. When returned back to userspace in
+ * DM_COOKIE udev environment variable, we can control several aspects
+ * of udev rules we use by decoding the cookie prefix. When doing the
+ * notification, we replace the cookie prefix with DM_COOKIE_MAGIC,
+ * so we notify the right semaphore.
+ */
 #define DM_COOKIE_MAGIC 0x0D4D
+#define DM_UDEV_FLAGS_MASK 0xFFFF0000
+#define DM_UDEV_FLAGS_SHIFT 16
+/*
+ * DM_UDEV_DISABLE_SUBSYTEM_RULES_FLAG is set in case we need to disable
+ * subsystem udev rules, but still we need the general DM udev rules to
+ * be applied (to create the nodes and symlinks under /dev and /dev/disk).
+ */
+#define DM_UDEV_DISABLE_SUBSYSTEM_RULES_FLAG 0x0001
+/*
+ * DM_UDEV_DISABLE_DISK_RULES_FLAG is set in case we need to disable
+ * general DM rules that set symlinks in /dev/disk directory.
+ */
+#define DM_UDEV_DISABLE_DISK_RULES_FLAG 0x0002
+/*
+ * DM_UDEV_LOW_PRIORITY_FLAG is set in case we need to instruct the
+ * udev rules to give low priority to the device that is currently
+ * processed. For example, this provides a way to select which symlinks
+ * could be overwritten by high priority ones if their names are equal.
+ * Common situation is a name based on FS UUID while using origin and
+ * snapshot devices.
+ */
+#define DM_UDEV_LOW_PRIORITY_FLAG 0x0004
 
 int dm_cookie_supported(void);
 
