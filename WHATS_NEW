@@ -1,5 +1,6 @@
 Version 2.02.54 -
 =====================================
+  Use udev flags support in LVM.
   Delay announcing mirror monitoring to syslog until initialisation succeeded.
   Handle metadata with unknown segment types more gracefully.
   Set default owner and group to null.

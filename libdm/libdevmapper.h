@@ -277,6 +277,15 @@ struct dm_tree_node *dm_tree_add_new_dev(struct dm_tree *tree,
 					 int read_only,
 					 int clear_inactive,
 					 void *context);
+struct dm_tree_node *dm_tree_add_new_dev_with_udev_flags(struct dm_tree *tree,
+							 const char *name,
+							 const char *uuid,
+							 uint32_t major,
+							 uint32_t minor,
+							 int read_only,
+							 int clear_inactive,
+							 void *context,
+							 uint16_t udev_flags);
 
 /*
  * Search for a node in the tree.

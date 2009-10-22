@@ -130,6 +130,8 @@ struct dm_tree_node {
 
 	int activation_priority;	/* 0 gets activated first */
 
+	uint16_t udev_flags;		/* Udev control flags */
+
 	void *context;			/* External supplied context */
 
 	struct load_properties props;	/* For creation/table (re)load */
@@ -301,7 +303,8 @@ static struct dm_tree_node *_create_dm_tree_node(struct dm_tree *dtree,
 						 const char *name,
 						 const char *uuid,
 						 struct dm_info *info,
-						 void *context)
+						 void *context,
+						 uint16_t udev_flags)
 {
 	struct dm_tree_node *node;
 	uint64_t dev;
@@ -317,6 +320,7 @@ static struct dm_tree_node *_create_dm_tree_node(struct dm_tree *dtree,
 	node->uuid = uuid;
 	node->info = *info;
 	node->context = context;
+	node->udev_flags = udev_flags;
 	node->activation_priority = 0;
 
 	dm_list_init(&node->uses);
@@ -466,8 +470,8 @@ static struct dm_tree_node *_add_dev(struct dm_tree *dtree,
 		if (!_deps(&dmt, dtree->mem, major, minor, &name, &uuid, &info, &deps))
 			return_NULL;
 
-		if (!(node = _create_dm_tree_node(dtree, name, uuid,
-						  &info, NULL)))
+		if (!(node = _create_dm_tree_node(dtree, name, uuid, &info,
+						  NULL, 0)))
 			goto_out;
 		new = 1;
 	}
@@ -585,8 +589,8 @@ struct dm_tree_node *dm_tree_add_new_dev(struct dm_tree *dtree,
 		info.inactive_table = 0;
 		info.read_only = 0;
 
-		if (!(dnode = _create_dm_tree_node(dtree, name2, uuid2,
-						   &info, context)))
+		if (!(dnode = _create_dm_tree_node(dtree, name2, uuid2, &info,
+						   context, 0)))
 			return_NULL;
 
 		/* Attach to root node until a table is supplied */
@@ -613,9 +617,30 @@ struct dm_tree_node *dm_tree_add_new_dev(struct dm_tree *dtree,
 		return_NULL;
 
 	dnode->context = context;
+	dnode->udev_flags = 0;
 
 	return dnode;
 }
+
+struct dm_tree_node *dm_tree_add_new_dev_with_udev_flags(struct dm_tree *dtree,
+							 const char *name,
+							 const char *uuid,
+							 uint32_t major,
+							 uint32_t minor,
+							 int read_only,
+							 int clear_inactive,
+							 void *context,
+							 uint16_t udev_flags)
+{
+	struct dm_tree_node *node;
+
+	if ((node = dm_tree_add_new_dev(dtree, name, uuid, major, minor, read_only,
+				       clear_inactive, context)))
+		node->udev_flags = udev_flags;
+
+	return node;
+}
+
 
 void dm_tree_node_set_read_ahead(struct dm_tree_node *dnode,
 				 uint32_t read_ahead,
@@ -821,7 +846,8 @@ static int _info_by_dev(uint32_t major, uint32_t minor, int with_open_count,
 	return r;
 }
 
-static int _deactivate_node(const char *name, uint32_t major, uint32_t minor, uint32_t *cookie)
+static int _deactivate_node(const char *name, uint32_t major, uint32_t minor,
+			    uint32_t *cookie, uint16_t udev_flags)
 {
 	struct dm_task *dmt;
 	int r = 0;
@@ -841,7 +867,7 @@ static int _deactivate_node(const char *name, uint32_t major, uint32_t minor, ui
 	if (!dm_task_no_open_count(dmt))
 		log_error("Failed to disable open_count");
 
-	if (!dm_task_set_cookie(dmt, cookie, 0))
+	if (!dm_task_set_cookie(dmt, cookie, udev_flags))
 		goto out;
 
 	r = dm_task_run(dmt);
@@ -858,7 +884,7 @@ out:
 }
 
 static int _rename_node(const char *old_name, const char *new_name, uint32_t major,
-			uint32_t minor, uint32_t *cookie)
+			uint32_t minor, uint32_t *cookie, uint16_t udev_flags)
 {
 	struct dm_task *dmt;
 	int r = 0;
@@ -881,7 +907,7 @@ static int _rename_node(const char *old_name, const char *new_name, uint32_t maj
 	if (!dm_task_no_open_count(dmt))
 		log_error("Failed to disable open_count");
 
-	if (!dm_task_set_cookie(dmt, cookie, 0))
+	if (!dm_task_set_cookie(dmt, cookie, udev_flags))
 		goto out;
 
 	r = dm_task_run(dmt);
@@ -895,7 +921,8 @@ out:
 /* FIXME Merge with _suspend_node? */
 static int _resume_node(const char *name, uint32_t major, uint32_t minor,
 			uint32_t read_ahead, uint32_t read_ahead_flags,
-			struct dm_info *newinfo, uint32_t *cookie)
+			struct dm_info *newinfo, uint32_t *cookie,
+			uint16_t udev_flags)
 {
 	struct dm_task *dmt;
 	int r = 0;
@@ -924,7 +951,7 @@ static int _resume_node(const char *name, uint32_t major, uint32_t minor,
 	if (!dm_task_set_read_ahead(dmt, read_ahead, read_ahead_flags))
 		log_error("Failed to set read ahead");
 
-	if (!dm_task_set_cookie(dmt, cookie, 0))
+	if (!dm_task_set_cookie(dmt, cookie, udev_flags))
 		goto out;
 
 	if ((r = dm_task_run(dmt)))
@@ -1011,7 +1038,8 @@ int dm_tree_deactivate_children(struct dm_tree_node *dnode,
 		    !info.exists || info.open_count)
 			continue;
 
-		if (!_deactivate_node(name, info.major, info.minor, &dnode->dtree->cookie)) {
+		if (!_deactivate_node(name, info.major, info.minor,
+				      &dnode->dtree->cookie, dnode->udev_flags)) {
 			log_error("Unable to deactivate %s (%" PRIu32
 				  ":%" PRIu32 ")", name, info.major,
 				  info.minor);
@@ -1156,7 +1184,8 @@ int dm_tree_activate_children(struct dm_tree_node *dnode,
 			/* Rename? */
 			if (child->props.new_name) {
 				if (!_rename_node(name, child->props.new_name, child->info.major,
-						  child->info.minor, &child->dtree->cookie)) {
+						  child->info.minor, &child->dtree->cookie,
+						  child->udev_flags)) {
 					log_error("Failed to rename %s (%" PRIu32
 						  ":%" PRIu32 ") to %s", name, child->info.major,
 						  child->info.minor, child->props.new_name);
@@ -1171,7 +1200,7 @@ int dm_tree_activate_children(struct dm_tree_node *dnode,
 
 			if (!_resume_node(child->name, child->info.major, child->info.minor,
 					  child->props.read_ahead, child->props.read_ahead_flags,
-					  &newinfo, &child->dtree->cookie)) {
+					  &newinfo, &child->dtree->cookie, child->udev_flags)) {
 				log_error("Unable to resume %s (%" PRIu32
 					  ":%" PRIu32 ")", child->name, child->info.major,
 					  child->info.minor);
@@ -1622,7 +1651,7 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 
 		if (!_resume_node(child->name, child->info.major, child->info.minor,
 				  child->props.read_ahead, child->props.read_ahead_flags,
-				  &newinfo, &child->dtree->cookie)) {
+				  &newinfo, &child->dtree->cookie, child->udev_flags)) {
 			log_error("Unable to resume %s (%" PRIu32
 				  ":%" PRIu32 ")", child->name, child->info.major,
 				  child->info.minor);
