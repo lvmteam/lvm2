@@ -1,5 +1,7 @@
 Version 1.02.39 - 
 =====================================
+  Add dmsetup udevflags command to decode udev flags in given cookie value.
+  Add udev flags support in libdevmapper.
   Make libdm ABI consistent when built with/without selinux support.
 
 Version 1.02.38 - 25th September 2009
