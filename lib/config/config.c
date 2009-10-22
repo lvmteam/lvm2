@@ -451,7 +451,7 @@ static int _write_value(struct output_line *outline, struct config_value *v)
 	return 1;
 }
 
-static int _write_config(struct config_node *n, int only_one,
+static int _write_config(const struct config_node *n, int only_one,
 			 struct output_line *outline, int level)
 {
 	char space[MAX_INDENT + 1];
@@ -504,7 +504,7 @@ static int _write_config(struct config_node *n, int only_one,
 	return 1;
 }
 
-int write_config_node(struct config_node *cn, putline_fn putline, void *baton)
+int write_config_node(const struct config_node *cn, putline_fn putline, void *baton)
 {
 	struct output_line outline;
 	outline.fp = NULL;

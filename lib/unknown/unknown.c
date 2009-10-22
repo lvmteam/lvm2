@@ -35,7 +35,8 @@ static const char *_unknown_name(const struct lv_segment *seg)
 static int _unknown_text_import(struct lv_segment *seg, const struct config_node *sn,
 				struct dm_hash_table *pv_hash)
 {
-	struct config_node *new, *last = NULL, *current, *head = NULL;
+	struct config_node *new, *last = NULL, *head = NULL;
+	const struct config_node *current;
 	log_verbose("importing unknown segment");
 	for (current = sn; current != NULL; current = current->sib) {
 		if (!strcmp(current->key, "type") || !strcmp(current->key, "start_extent") ||

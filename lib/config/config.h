@@ -71,7 +71,7 @@ int write_config_file(struct config_tree *cft, const char *file,
 		      int argc, char **argv);
 
 typedef int (*putline_fn)(const char *line, void *baton);
-int write_config_node(struct config_node *cn, putline_fn putline, void *baton);
+int write_config_node(const struct config_node *cn, putline_fn putline, void *baton);
 
 time_t config_file_timestamp(struct config_tree *cft);
 int config_file_changed(struct config_tree *cft);
