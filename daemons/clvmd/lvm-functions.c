@@ -601,20 +601,23 @@ int do_check_lvm1(const char *vgname)
 
 int do_refresh_cache()
 {
-	int ret;
 	DEBUGLOG("Refreshing context\n");
 	log_notice("Refreshing context");
 
 	pthread_mutex_lock(&lvm_lock);
 
-	ret = refresh_toolcontext(cmd);
+	if (!refresh_toolcontext(cmd)) {
+		pthread_mutex_unlock(&lvm_lock);
+		return -1;
+	}
+
 	init_full_scan_done(0);
 	lvmcache_label_scan(cmd, 2);
 	dm_pool_empty(cmd->mem);
 
 	pthread_mutex_unlock(&lvm_lock);
 
-	return ret==1?0:-1;
+	return 0;
 }
 
 

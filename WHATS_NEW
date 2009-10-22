@@ -1,5 +1,6 @@
 Version 2.02.54 -
 =====================================
+  Fix clvmd segfault when refresh_toolcontext fails.
   Remember to clear 'global lock held during cache refresh' state after use.
   Use udev flags support in LVM.
   Delay announcing mirror monitoring to syslog until initialisation succeeded.
