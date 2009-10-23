@@ -532,7 +532,7 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 	const char *mirrorlog;
 	unsigned corelog = 0;
 	int r = 0;
-	struct logical_volume *log_lv;
+	struct logical_volume *log_lv, *layer_lv;
 	int failed_mirrors = 0, failed_log = 0;
 	struct dm_list *old_pvh = NULL, *remove_pvs = NULL;
 
@@ -733,8 +733,21 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 						lv->le_count,
 						lp->region_size),
 				    0U, lp->pvh, lp->alloc,
-				    MIRROR_BY_LV))
+				    MIRROR_BY_LV)) {
+			layer_lv = seg_lv(first_seg(lv), 0);
+			if (!remove_layer_from_lv(lv, layer_lv) ||
+			    !deactivate_lv(cmd, layer_lv) ||
+			    !lv_remove(layer_lv) || !vg_write(lv->vg) ||
+			    !vg_commit(lv->vg)) {
+				log_error("ABORTING: Failed to remove "
+					  "temporary mirror layer %s.",
+					  layer_lv->name);
+				log_error("Manual cleanup with vgcfgrestore "
+					  "and dmsetup may be required.");
+				return 0;
+			}
 			return_0;
+		}
 		lv->status |= CONVERTING;
 		lp->need_polling = 1;
 	}

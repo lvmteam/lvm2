@@ -1,5 +1,6 @@
 Version 2.02.54 -
 =====================================
+  Cleanup mimagetmp LV if allocation fails for new lvconvert mimage.
   Fix clvmd segfault when refresh_toolcontext fails.
   Remember to clear 'global lock held during cache refresh' state after use.
   Use udev flags support in LVM.
