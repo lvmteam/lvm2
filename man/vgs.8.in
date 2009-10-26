@@ -3,6 +3,7 @@
 vgs \- report information about volume groups
 .SH SYNOPSIS
 .B vgs
+[\-a|\-\-all]
 [\-\-aligned] [\-d|\-\-debug] [\-h|\-?|\-\-help]
 [\-\-ignorelockingfailure] [\-\-nameprefixes] [\-\-noheadings] [\-\-nosuffix]
 [\-o|\-\-options [+]Field[,Field]]
@@ -17,6 +18,9 @@ vgs \- report information about volume groups
 vgs produces formatted output about volume groups.
 .SH OPTIONS
 See \fBlvm\fP for common options.
+.TP
+.I \-\-all
+List all volume groups.  Equivalent to not specifying any volume groups.
 .TP
 .I \-\-aligned
 Use with \-\-separator to align the output columns.

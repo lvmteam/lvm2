@@ -3,12 +3,14 @@
 lvs \- report information about logical volumes
 .SH SYNOPSIS
 .B lvs
+[\-a|\-\-all]
 [\-\-aligned] [\-d|\-\-debug] [\-h|\-?|\-\-help]
 [\-\-ignorelockingfailure] [\-\-nameprefixes] [\-\-noheadings] [\-\-nosuffix]
 [\-o|\-\-options [+]Field[,Field]]
 [\-O|\-\-sort [+|-]Key1[,[+|-]Key2[,...]]]
 [\-P|\-\-partial] [\-\-rows] [\-\-segments]
-[\-\-separator Separator] [\-\-unbuffered]
+[\-\-separator Separator]
+[\-\-unbuffered]
 [\-\-units hHbBsSkKmMgGtTpPeE]
 [\-\-unquoted]
 [\-v|\-\-verbose] 
@@ -17,6 +19,15 @@ lvs \- report information about logical volumes
 lvs produces formatted output about logical volumes.
 .SH OPTIONS
 See \fBlvm\fP for common options.
+.TP
+.I \-\-all
+Include information in the output about internal Logical Volumes that
+are components of normally-accessible Logical Volumes, such as mirrors,
+but which are not independently accessible (e.g. not mountable).
+The names of such Logical Volumes are enclosed within square brackets
+in the output.  For example, after creating a mirror using 'lvcreate -m1
+--mirrorlog disk', this option will reveal three internal Logical
+Volumes, with suffixes mimage_0, mimage_1, and mlog.
 .TP
 .I \-\-aligned
 Use with \-\-separator to align the output columns.
