@@ -480,7 +480,7 @@ int lvdisplay_full(struct cmd_context *cmd,
 	struct lvinfo info;
 	int inkernel, snap_active = 0;
 	char uuid[64] __attribute((aligned(8)));
-	struct lv_segment *snap_seg = NULL;
+	struct lv_segment *snap_seg = NULL, *mirror_seg = NULL;
 	float snap_percent;	/* fused, fsize; */
 	percent_range_t percent_range;
 
@@ -561,6 +561,13 @@ int lvdisplay_full(struct cmd_context *cmd,
 
 		log_print("Snapshot chunk size    %s",
 			  display_size(cmd, (uint64_t) snap_seg->chunk_size));
+	}
+
+	if (lv->status & MIRRORED) {
+ 		mirror_seg = first_seg(lv);
+		log_print("Mirrored volumes       %" PRIu32, mirror_seg->area_count);
+		if (lv->status & CONVERTING)
+			log_print("LV type        Mirror undergoing conversion");
 	}
 
 	log_print("Segments               %u", dm_list_size(&lv->segments));

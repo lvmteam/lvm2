@@ -2936,11 +2936,12 @@ int lv_create_single(struct volume_group *vg,
 					  "supported yet");
 				return 0;
 			}
-			if (org->status & MIRROR_IMAGE ||
-			    org->status & MIRROR_LOG ||
-			    org->status & MIRRORED) {
-				log_error("Snapshots and mirrors may not yet "
-					  "be mixed.");
+			if ((org->status & MIRROR_IMAGE) ||
+			    (org->status & MIRROR_LOG)) {
+				log_error("Snapshots of mirror %ss "
+					  "are not supported",
+					  (org->status & MIRROR_LOG) ?
+					  "log" : "image");
 				return 0;
 			}
 

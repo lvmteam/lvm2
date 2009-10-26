@@ -713,6 +713,20 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 				  "LV: use lvchange --resync first.");
 			return 0;
 		}
+
+		/*
+		 * We allow snapshots of mirrors, but for now, we
+		 * do not allow up converting mirrors that are under
+		 * snapshots.  The layering logic is somewhat complex,
+		 * and preliminary test show that the conversion can't
+		 * seem to get the correct %'age of completion.
+		 */
+		if (lv_is_origin(lv)) {
+			log_error("Can't add additional mirror images to "
+				  "mirrors that are under snapshots");
+			return 0;
+		}
+
 		/*
 		 * Log addition/removal should be done before the layer
 		 * insertion to make the end result consistent with
@@ -888,12 +902,6 @@ static int lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 	if (lv->status & LOCKED) {
 		log_error("Cannot convert locked LV %s", lv->name);
-		return ECMD_FAILED;
-	}
-
-	if (lv_is_origin(lv)) {
-		log_error("Can't convert logical volume \"%s\" under snapshot",
-			  lv->name);
 		return ECMD_FAILED;
 	}
 
