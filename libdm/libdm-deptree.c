@@ -873,7 +873,7 @@ static int _deactivate_node(const char *name, uint32_t major, uint32_t minor,
 	r = dm_task_run(dmt);
 
 	/* FIXME Until kernel returns actual name so dm-ioctl.c can handle it */
-	rm_dev_node(name);
+	rm_dev_node(name, dmt->cookie_set);
 
 	/* FIXME Remove node from tree or mark invalid? */
 

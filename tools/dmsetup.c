@@ -779,10 +779,12 @@ static int _udevflags(int args, char **argv, void *data __attribute((unused)))
 	uint32_t cookie;
 	uint16_t flags;
 	int i;
-	static const char *dm_flag_names[] = {"DISABLE_SUBSYSTEM_RULES",
+	static const char *dm_flag_names[] = {"DISABLE_DM_RULES",
+					      "DISABLE_SUBSYSTEM_RULES",
 					      "DISABLE_DISK_RULES",
+					      "DISABLE_OTHER_RULES",
 					      "LOW_PRIORITY",
-					       0, 0, 0, 0, 0};
+					       0, 0, 0};
 
 	if (!(cookie = _get_cookie_value(argv[1])))
 		return 0;

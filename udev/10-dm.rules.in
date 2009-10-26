@@ -21,7 +21,15 @@ TEST!="$env{DM_SBIN_PATH}/dmsetup", ENV{DM_SBIN_PATH}="/usr/sbin"
 TEST!="$env{DM_SBIN_PATH}/dmsetup", GOTO="dm_end"
 
 # Decode udev control flags and set environment variables appropriately.
+# These flags are encoded in DM_COOKIE variable that was introduced in
+# kernel version 2.6.31. Therefore, we can use this feature with
+# kernels >= 2.6.31 only.
 ENV{DM_COOKIE}=="?*", IMPORT{program}="$env{DM_SBIN_PATH}/dmsetup udevflags $env{DM_COOKIE}"
+
+# Normally, we would test for DM_UDEV_DISABLE_DM_RULES_FLAG here and skip
+# the rules if set. However, we need to set DM_* environment variables
+# for now to properly filter out inappropriate events. This dependency
+# might be removed in the future.
 
 ACTION!="add|change", GOTO="dm_end"
 
@@ -58,18 +66,19 @@ ENV{DM_SUSPENDED}=="Suspended", ENV{DM_SUSPENDED}="1"
 # possible future changes.
 ENV{DM_UDEV_RULES_VSN}="1"
 
-ENV{DM_NAME}=="?*", SYMLINK+="(DM_DIR)/$env{DM_NAME}"
+ENV{DM_UDEV_DISABLE_DM_RULES_FLAG}!="1", ENV{DM_NAME}=="?*", SYMLINK+="(DM_DIR)/$env{DM_NAME}"
 
 # We have to ignore further rule application for inappropriate events
 # and devices. But still send the notification if cookie exists.
-ENV{DM_UUID}=="mpath-?*", ENV{DM_ACTION}=="PATH_FAILED", GOTO="dm_last_rule"
-ENV{DM_UUID}=="CRYPT-TEMP-?*", GOTO="dm_last_rule"
-ENV{DM_UUID}!="?*", ENV{DM_NAME}=="temporary-cryptsetup-?*", GOTO="dm_last_rule"
+ENV{DM_UUID}=="mpath-?*", ENV{DM_ACTION}=="PATH_FAILED", GOTO="dm_disable"
+ENV{DM_UUID}=="CRYPT-TEMP-?*", GOTO="dm_disable"
+ENV{DM_UUID}!="?*", ENV{DM_NAME}=="temporary-cryptsetup-?*", GOTO="dm_disable"
 
 GOTO="dm_end"
 
-LABEL="dm_last_rule"
-ENV{DM_COOKIE}=="?*", RUN+="$env{DM_SBIN_PATH}/dmsetup udevcomplete $env{DM_COOKIE}"
-OPTIONS+="last_rule"
+LABEL="dm_disable"
+ENV{DM_UDEV_DISABLE_SUBSYSTEM_RULES_FLAG}="1"
+ENV{DM_UDEV_DISABLE_DISK_RULES_FLAG}="1"
+ENV{DM_UDEV_DISABLE_OTHER_RULES_FLAG}="1"
 
 LABEL="dm_end"

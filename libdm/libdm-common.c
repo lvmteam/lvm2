@@ -179,6 +179,7 @@ struct dm_task *dm_task_create(int type)
 	dmt->no_open_count = 0;
 	dmt->read_ahead = DM_READ_AHEAD_AUTO;
 	dmt->read_ahead_flags = 0;
+	dmt->event_nr = 0;
 	dmt->cookie_set = 0;
 
 	return dmt;
@@ -401,7 +402,7 @@ int dm_set_selinux_context(const char *path, mode_t mode)
 }
 
 static int _add_dev_node(const char *dev_name, uint32_t major, uint32_t minor,
-			 uid_t uid, gid_t gid, mode_t mode)
+			 uid_t uid, gid_t gid, mode_t mode, int check_udev)
 {
 	char path[PATH_MAX];
 	struct stat info;
@@ -426,7 +427,7 @@ static int _add_dev_node(const char *dev_name, uint32_t major, uint32_t minor,
 				  dev_name);
 			return 0;
 		}
-	} else if (dm_udev_get_sync_support())
+	} else if (dm_udev_get_sync_support() && check_udev)
 		log_warn("%s not set up by udev: Falling back to direct "
 			 "node creation.", path);
 
@@ -451,7 +452,7 @@ static int _add_dev_node(const char *dev_name, uint32_t major, uint32_t minor,
 	return 1;
 }
 
-static int _rm_dev_node(const char *dev_name)
+static int _rm_dev_node(const char *dev_name, int check_udev)
 {
 	char path[PATH_MAX];
 	struct stat info;
@@ -460,7 +461,7 @@ static int _rm_dev_node(const char *dev_name)
 
 	if (stat(path, &info) < 0)
 		return 1;
-	else if (dm_udev_get_sync_support())
+	else if (dm_udev_get_sync_support() && check_udev)
 		log_warn("Node %s was not removed by udev. "
 			 "Falling back to direct node removal.", path);
 
@@ -474,7 +475,8 @@ static int _rm_dev_node(const char *dev_name)
 	return 1;
 }
 
-static int _rename_dev_node(const char *old_name, const char *new_name)
+static int _rename_dev_node(const char *old_name, const char *new_name,
+			    int check_udev)
 {
 	char oldpath[PATH_MAX];
 	char newpath[PATH_MAX];
@@ -489,7 +491,7 @@ static int _rename_dev_node(const char *old_name, const char *new_name)
 				  "is already present", newpath);
 			return 0;
 		}
-		else if (dm_udev_get_sync_support()) {
+		else if (dm_udev_get_sync_support() && check_udev) {
 			if (stat(oldpath, &info) < 0 &&
 				 errno == ENOENT)
 				/* assume udev already deleted this */
@@ -499,7 +501,7 @@ static int _rename_dev_node(const char *old_name, const char *new_name)
 					 "by udev but old node is still present. "
 					 "Falling back to direct old node removal.",
 					 oldpath, newpath);
-				return _rm_dev_node(old_name);
+				return _rm_dev_node(old_name, 0);
 			}
 		}
 
@@ -513,7 +515,7 @@ static int _rename_dev_node(const char *old_name, const char *new_name)
 			return 0;
 		}
 	}
-	else if (dm_udev_get_sync_support())
+	else if (dm_udev_get_sync_support() && check_udev)
 		log_warn("The node %s should have been renamed to %s "
 			 "by udev but new node is not present. "
 			 "Falling back to direct node rename.",
@@ -652,15 +654,16 @@ typedef enum {
 static int _do_node_op(node_op_t type, const char *dev_name, uint32_t major,
 		       uint32_t minor, uid_t uid, gid_t gid, mode_t mode,
 		       const char *old_name, uint32_t read_ahead,
-		       uint32_t read_ahead_flags)
+		       uint32_t read_ahead_flags, int check_udev)
 {
 	switch (type) {
 	case NODE_ADD:
-		return _add_dev_node(dev_name, major, minor, uid, gid, mode);
+		return _add_dev_node(dev_name, major, minor, uid, gid,
+				     mode, check_udev);
 	case NODE_DEL:
-		return _rm_dev_node(dev_name);
+		return _rm_dev_node(dev_name, check_udev);
 	case NODE_RENAME:
-		return _rename_dev_node(old_name, dev_name);
+		return _rename_dev_node(old_name, dev_name, check_udev);
 	case NODE_READ_AHEAD:
 		return _set_dev_node_read_ahead(dev_name, read_ahead,
 						read_ahead_flags);
@@ -683,6 +686,7 @@ struct node_op_parms {
 	uint32_t read_ahead;
 	uint32_t read_ahead_flags;
 	char *old_name;
+	int check_udev;
 	char names[0];
 };
 
@@ -696,7 +700,7 @@ static void _store_str(char **pos, char **ptr, const char *str)
 static int _stack_node_op(node_op_t type, const char *dev_name, uint32_t major,
 			  uint32_t minor, uid_t uid, gid_t gid, mode_t mode,
 			  const char *old_name, uint32_t read_ahead,
-			  uint32_t read_ahead_flags)
+			  uint32_t read_ahead_flags, int check_udev)
 {
 	struct node_op_parms *nop;
 	struct dm_list *noph, *nopht;
@@ -730,6 +734,7 @@ static int _stack_node_op(node_op_t type, const char *dev_name, uint32_t major,
 	nop->mode = mode;
 	nop->read_ahead = read_ahead;
 	nop->read_ahead_flags = read_ahead_flags;
+	nop->check_udev = check_udev;
 
 	_store_str(&pos, &nop->dev_name, dev_name);
 	_store_str(&pos, &nop->old_name, old_name);
@@ -748,35 +753,37 @@ static void _pop_node_ops(void)
 		nop = dm_list_item(noph, struct node_op_parms);
 		_do_node_op(nop->type, nop->dev_name, nop->major, nop->minor,
 			    nop->uid, nop->gid, nop->mode, nop->old_name,
-			    nop->read_ahead, nop->read_ahead_flags);
+			    nop->read_ahead, nop->read_ahead_flags,
+			    nop->check_udev);
 		dm_list_del(&nop->list);
 		dm_free(nop);
 	}
 }
 
 int add_dev_node(const char *dev_name, uint32_t major, uint32_t minor,
-		 uid_t uid, gid_t gid, mode_t mode)
+		 uid_t uid, gid_t gid, mode_t mode, int check_udev)
 {
 	log_debug("%s: Stacking NODE_ADD (%" PRIu32 ",%" PRIu32 ") %u:%u 0%o",
 		  dev_name, major, minor, uid, gid, mode);
 
-	return _stack_node_op(NODE_ADD, dev_name, major, minor, uid, gid, mode,
-			      "", 0, 0);
+	return _stack_node_op(NODE_ADD, dev_name, major, minor, uid,
+			      gid, mode, "", 0, 0, check_udev);
 }
 
-int rename_dev_node(const char *old_name, const char *new_name)
+int rename_dev_node(const char *old_name, const char *new_name, int check_udev)
 {
 	log_debug("%s: Stacking NODE_RENAME to %s", old_name, new_name);
 
-	return _stack_node_op(NODE_RENAME, new_name, 0, 0, 0, 0, 0, old_name,
-			      0, 0);
+	return _stack_node_op(NODE_RENAME, new_name, 0, 0, 0,
+			      0, 0, old_name, 0, 0, check_udev);
 }
 
-int rm_dev_node(const char *dev_name)
+int rm_dev_node(const char *dev_name, int check_udev)
 {
 	log_debug("%s: Stacking NODE_DEL (replaces other stacked ops)", dev_name);
 
-	return _stack_node_op(NODE_DEL, dev_name, 0, 0, 0, 0, 0, "", 0, 0);
+	return _stack_node_op(NODE_DEL, dev_name, 0, 0, 0,
+			      0, 0, "", 0, 0, check_udev);
 }
 
 int set_dev_node_read_ahead(const char *dev_name, uint32_t read_ahead,
@@ -788,8 +795,8 @@ int set_dev_node_read_ahead(const char *dev_name, uint32_t read_ahead,
 	log_debug("%s: Stacking NODE_READ_AHEAD %" PRIu32 " (flags=%" PRIu32
 		  ")", dev_name, read_ahead, read_ahead_flags);
 
-	return _stack_node_op(NODE_READ_AHEAD, dev_name, 0, 0, 0, 0, 0, "",
-			      read_ahead, read_ahead_flags);
+	return _stack_node_op(NODE_READ_AHEAD, dev_name, 0, 0, 0, 0,
+                              0, "", read_ahead, read_ahead_flags, 0);
 }
 
 void update_devs(void)
