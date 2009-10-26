@@ -551,16 +551,17 @@ int dev_manager_mirror_percent(struct dev_manager *dm,
 {
 	char *name;
 	const char *dlid;
+	const char *suffix = (lv_is_origin(lv)) ? "real" : NULL;
 
 	/*
 	 * Build a name for the top layer.
 	 */
-	if (!(name = build_dm_name(dm->mem, lv->vg->name, lv->name, NULL)))
+	if (!(name = build_dm_name(dm->mem, lv->vg->name, lv->name, suffix)))
 		return_0;
 
 	/* FIXME dm_pool_free ? */
 
-	if (!(dlid = build_dlid(dm, lv->lvid.s, NULL))) {
+	if (!(dlid = build_dlid(dm, lv->lvid.s, suffix))) {
 		log_error("dlid build failed for %s", lv->name);
 		return 0;
 	}

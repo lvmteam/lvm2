@@ -411,12 +411,13 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	if (!(_move_lvs(vg_from, vg_to)))
 		goto_bad;
 
-	/* Move required snapshots across */
-	if (!(_move_snapshots(vg_from, vg_to)))
-		goto_bad;
-
+	/* FIXME Separate the 'move' from the 'validation' to fix dev stacks */
 	/* Move required mirrors across */
 	if (!(_move_mirrors(vg_from, vg_to)))
+		goto_bad;
+
+	/* Move required snapshots across */
+	if (!(_move_snapshots(vg_from, vg_to)))
 		goto_bad;
 
 	/* Split metadata areas and check if both vgs have at least one area */
