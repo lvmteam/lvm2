@@ -1,5 +1,5 @@
-Version 2.02.54 -
-=====================================
+Version 2.02.54 - 26th October 2009
+===================================
   Update lvcreate/lvconvert man pages to explain PhysicalVolume parameter.
   Document --all option in man pages, cleanup {pv|vg|lv}{s|display} man pages.
   Permit snapshots of mirrors.
