@@ -41,7 +41,9 @@ the volume group can be extended ( see
 ) with other physical volumes or by reducing existing logical volumes
 of this volume group in size ( see
 .B lvreduce(8)
-).
+). If you specify one or more PhysicalVolumes, allocation of physical
+extents will be restricted to these volumes.
+.br
 .br
 The second form supports the creation of snapshot logical volumes which 
 keep the contents of the original logical volume for backup purposes.
