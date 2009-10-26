@@ -21,7 +21,7 @@ vgcreate \- create a volume group
 .RB [ \-t | \-\-test ]
 .RB [ \-v | \-\-verbose ]
 .RB [ \-\-version ]
-.RB [ PHYSICAL DEVICE OPTIONS ]
+[ \fIPHYSICAL DEVICE OPTIONS\fP ]
 .I VolumeGroupName PhysicalDevicePath
 .RI [ PhysicalDevicePath ...]
 .SH DESCRIPTION

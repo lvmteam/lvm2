@@ -6,7 +6,7 @@ vgextend \- add physical volumes to a volume group
 [\-A|\-\-autobackup y|n] [\-d|\-\-debug] [\-h|\-?|\-\-help] 
 [\-t|\-\-test]
 [\-v|\-\-verbose]
-.RB [ PHYSICAL DEVICE OPTIONS ]
+[ \fIPHYSICAL DEVICE OPTIONS\fP ]
 VolumeGroupName PhysicalDevicePath [PhysicalDevicePath...]
 .SH DESCRIPTION
 vgextend allows you to add one or more initialized physical volumes ( see
