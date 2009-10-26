@@ -1158,7 +1158,8 @@ int dm_task_set_cookie(struct dm_task *dmt, uint32_t *cookie, uint16_t flags)
 		goto bad;
 	}
 
-	dmt->event_nr = (0x0000FFFF & *cookie) | (flags << 16);
+	dmt->event_nr = (~DM_UDEV_FLAGS_MASK & *cookie) |
+			(flags << DM_UDEV_FLAGS_SHIFT);
 	dmt->cookie_set = 1;
 
 	log_debug("Udev cookie 0x%" PRIx32 " (semid %d) assigned to dm_task "
