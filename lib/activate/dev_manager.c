@@ -1026,7 +1026,8 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 
 	if (layer || !lv_is_visible(lv))
 		udev_flags |= DM_UDEV_DISABLE_SUBSYSTEM_RULES_FLAG |
-			      DM_UDEV_DISABLE_DISK_RULES_FLAG;
+			      DM_UDEV_DISABLE_DISK_RULES_FLAG |
+			      DM_UDEV_DISABLE_OTHER_RULES_FLAG;
 
 	if (lv_is_cow(lv))
 		udev_flags |= DM_UDEV_LOW_PRIORITY_FLAG;

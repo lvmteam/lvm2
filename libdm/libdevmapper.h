@@ -1035,17 +1035,33 @@ void dm_report_field_set_value(struct dm_report_field *field, const void *value,
 #define DM_COOKIE_MAGIC 0x0D4D
 #define DM_UDEV_FLAGS_MASK 0xFFFF0000
 #define DM_UDEV_FLAGS_SHIFT 16
+
+/*
+ * DM_UDEV_DISABLE_DM_RULES_FLAG is set in case we need to disable
+ * basic device-mapper udev rules that create symlinks in /dev/<DM_DIR>
+ * directory. However, we can't reliably prevent creating default
+ * nodes by udev (commonly /dev/dm-X, where X is a number).
+ */
+#define DM_UDEV_DISABLE_DM_RULES_FLAG 0x0001
 /*
  * DM_UDEV_DISABLE_SUBSYTEM_RULES_FLAG is set in case we need to disable
  * subsystem udev rules, but still we need the general DM udev rules to
  * be applied (to create the nodes and symlinks under /dev and /dev/disk).
  */
-#define DM_UDEV_DISABLE_SUBSYSTEM_RULES_FLAG 0x0001
+#define DM_UDEV_DISABLE_SUBSYSTEM_RULES_FLAG 0x0002
 /*
  * DM_UDEV_DISABLE_DISK_RULES_FLAG is set in case we need to disable
  * general DM rules that set symlinks in /dev/disk directory.
  */
-#define DM_UDEV_DISABLE_DISK_RULES_FLAG 0x0002
+#define DM_UDEV_DISABLE_DISK_RULES_FLAG 0x0004
+/*
+ * DM_UDEV_DISABLE_OTHER_RULES_FLAG is set in case we need to disable
+ * all the other rules that are not general device-mapper nor subsystem
+ * related (the rules belong to other software or packages). Use this
+ * flag with care since it will cutoff the rule processing after the
+ * last device-mapper/subsytem rule is applied.
+ */
+#define DM_UDEV_DISABLE_OTHER_RULES_FLAG 0x0008
 /*
  * DM_UDEV_LOW_PRIORITY_FLAG is set in case we need to instruct the
  * udev rules to give low priority to the device that is currently
@@ -1054,7 +1070,7 @@ void dm_report_field_set_value(struct dm_report_field *field, const void *value,
  * Common situation is a name based on FS UUID while using origin and
  * snapshot devices.
  */
-#define DM_UDEV_LOW_PRIORITY_FLAG 0x0004
+#define DM_UDEV_LOW_PRIORITY_FLAG 0x0010
 
 int dm_cookie_supported(void);
 

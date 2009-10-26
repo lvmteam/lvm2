@@ -16,8 +16,8 @@ top_srcdir = @top_srcdir@
 top_builddir = @top_builddir@
 VPATH = @srcdir@
 
-DM_RULES=10-dm.rules 12-dm-disk.rules 95-dm-notify.rules
-LVM_RULES=11-lvm.rules
+DM_RULES=10-dm.rules 13-dm-disk.rules 95-dm-notify.rules
+LVM_RULES=11-dm-lvm.rules
 DM_DIR=$(shell grep "\#define DM_DIR" $(top_srcdir)/libdm/misc/dm-ioctl.h | awk '{print $$3}')
 
 CLEAN_TARGETS=10-dm.rules

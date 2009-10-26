@@ -731,24 +731,24 @@ static int _dm_task_run_v1(struct dm_task *dmt)
 	switch (dmt->type) {
 	case DM_DEVICE_CREATE:
 		add_dev_node(dmt->dev_name, MAJOR(dmi->dev), MINOR(dmi->dev),
-			     dmt->uid, dmt->gid, dmt->mode);
+			     dmt->uid, dmt->gid, dmt->mode, 0);
 		break;
 
 	case DM_DEVICE_REMOVE:
-		rm_dev_node(dmt->dev_name);
+		rm_dev_node(dmt->dev_name, 0);
 		break;
 
 	case DM_DEVICE_RENAME:
-		rename_dev_node(dmt->dev_name, dmt->newname);
+		rename_dev_node(dmt->dev_name, dmt->newname, 0);
 		break;
 
 	case DM_DEVICE_MKNODES:
 		if (dmi->flags & DM_EXISTS_FLAG)
 			add_dev_node(dmt->dev_name, MAJOR(dmi->dev),
-				     MINOR(dmi->dev),
-				     dmt->uid, dmt->gid, dmt->mode);
+				     MINOR(dmi->dev), dmt->uid,
+				     dmt->gid, dmt->mode, 0);
 		else
-			rm_dev_node(dmt->dev_name);
+			rm_dev_node(dmt->dev_name, 0);
 		break;
 
 	case DM_DEVICE_STATUS:
@@ -1534,6 +1534,8 @@ static int _create_and_load_v4(struct dm_task *dmt)
 	task->uid = dmt->uid;
 	task->gid = dmt->gid;
 	task->mode = dmt->mode;
+	/* FIXME: Just for udev_check in dm_task_run. Can we avoid this? */
+	task->cookie_set = dmt->cookie_set;
 
 	r = dm_task_run(task);
 	dm_task_destroy(task);
@@ -1690,6 +1692,36 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 	if (dmt->no_open_count)
 		dmi->flags |= DM_SKIP_BDGET_FLAG;
 
+	/*
+	 * Prevent udev vs. libdevmapper race when processing nodes and
+	 * symlinks. This can happen when the udev rules are installed and
+	 * udev synchronisation code is enabled in libdevmapper but the
+	 * software using libdevmapper does not make use of it (by not calling
+	 * dm_task_set_cookie before). We need to instruct the udev rules not
+	 * to be applied at all in this situation so we can gracefully fallback
+	 * to libdevmapper's node and symlink creation code.
+	 */
+	if (dm_udev_get_sync_support() && !dmt->cookie_set &&
+	    (dmt->type == DM_DEVICE_RESUME ||
+	     dmt->type == DM_DEVICE_REMOVE ||
+	     dmt->type == DM_DEVICE_RENAME)) {
+		log_debug("Cookie value is not set while trying to call "
+			  "DM_DEVICE_RESUME, DM_DEVICE_REMOVE or DM_DEVICE_RENAME "
+			  "ioctl. Please, consider using libdevmapper's udev "
+			  "synchronisation interface or disable it explicitly "
+			  "by calling dm_udev_set_sync_support(0).");
+		log_debug("Switching off device-mapper and all subsystem related "
+			  "udev rules. Falling back to libdevmapper node creation.");
+		/*
+		 * Disable general dm and subsystem rules but keep dm disk rules
+		 * if not flagged out explicitly before. We need /dev/disk content
+		 * for the software that expects it.
+		*/
+		dmi->event_nr |= (DM_UDEV_DISABLE_DM_RULES_FLAG |
+				  DM_UDEV_DISABLE_SUBSYSTEM_RULES_FLAG) <<
+				 DM_UDEV_FLAGS_SHIFT;
+	}
+
 	log_debug("dm %s %s %s%s%s %s%.0d%s%.0d%s"
 		  "%s%c%c%s %.0" PRIu64 " %s [%u]",
 		  _cmd_data_v4[dmt->type].name,
@@ -1741,6 +1773,7 @@ int dm_task_run(struct dm_task *dmt)
 {
 	struct dm_ioctl *dmi;
 	unsigned command;
+	int check_udev;
 
 #ifdef DM_COMPAT
 	if (_dm_version == 1)
@@ -1795,24 +1828,28 @@ repeat_ioctl:
 		}
 	}
 
+	check_udev = dmt->cookie_set &&
+		     !(dmt->event_nr >> DM_UDEV_FLAGS_SHIFT &
+		       DM_UDEV_DISABLE_DM_RULES_FLAG);
+
 	switch (dmt->type) {
 	case DM_DEVICE_CREATE:
 		if (dmt->dev_name && *dmt->dev_name)
 			add_dev_node(dmt->dev_name, MAJOR(dmi->dev),
 				     MINOR(dmi->dev), dmt->uid, dmt->gid,
-				     dmt->mode);
+				     dmt->mode, check_udev);
 		break;
-
 	case DM_DEVICE_REMOVE:
 		/* FIXME Kernel needs to fill in dmi->name */
 		if (dmt->dev_name)
-			rm_dev_node(dmt->dev_name);
+			rm_dev_node(dmt->dev_name, check_udev);
 		break;
 
 	case DM_DEVICE_RENAME:
 		/* FIXME Kernel needs to fill in dmi->name */
 		if (dmt->dev_name)
-			rename_dev_node(dmt->dev_name, dmt->newname);
+			rename_dev_node(dmt->dev_name, dmt->newname,
+					check_udev);
 		break;
 
 	case DM_DEVICE_RESUME:
@@ -1824,10 +1861,10 @@ repeat_ioctl:
 	case DM_DEVICE_MKNODES:
 		if (dmi->flags & DM_EXISTS_FLAG)
 			add_dev_node(dmi->name, MAJOR(dmi->dev),
-				     MINOR(dmi->dev),
-				     dmt->uid, dmt->gid, dmt->mode);
+				     MINOR(dmi->dev), dmt->uid,
+				     dmt->gid, dmt->mode, 0);
 		else if (dmt->dev_name)
-			rm_dev_node(dmt->dev_name);
+			rm_dev_node(dmt->dev_name, 0);
 		break;
 
 	case DM_DEVICE_STATUS:
