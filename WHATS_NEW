@@ -1,5 +1,7 @@
 Version 2.02.54 -
 =====================================
+  Update lvcreate/lvconvert man pages to explain PhysicalVolume parameter.
+  Document --all option in man pages, cleanup {pv|vg|lv}{s|display} man pages.
   Permit snapshots of mirrors.
   Cleanup mimagetmp LV if allocation fails for new lvconvert mimage.
   Fix clvmd segfault when refresh_toolcontext fails.

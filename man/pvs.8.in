@@ -3,12 +3,16 @@
 pvs \- report information about physical volumes
 .SH SYNOPSIS
 .B pvs
+[\-a|\-\-all]
 [\-\-aligned] [\-d|\-\-debug] [\-h|\-?|\-\-help]
 [\-\-ignorelockingfailure] [\-\-nameprefixes] [\-\-noheadings] [\-\-nosuffix]
 [\-o|\-\-options [+]Field[,Field]]
 [\-O|\-\-sort [+|-]Key1[,[+|-]Key2[,...]]]
-[\-\-rows] [\-\-segments]
-[\-\-separator Separator] [\-\-unbuffered]
+[\-P|\-\-partial]
+[\-\-rows]
+[\-\-segments]
+[\-\-separator Separator]
+[\-\-unbuffered]
 [\-\-units hHbBsSkKmMgGtTpPeE]
 [\-\-unquoted]
 [\-v|\-\-verbose] 
@@ -17,6 +21,11 @@ pvs \- report information about physical volumes
 pvs produces formatted output about physical volumes.
 .SH OPTIONS
 See \fBlvm\fP for common options.
+\fB\-\-columns\fP.
+.TP
+.I \-\-all
+Include information in the output about devices that have not been
+initialized with \fBpvcreate\fP.
 .TP
 .I \-\-aligned
 Use with \-\-separator to align the output columns.
