@@ -39,6 +39,7 @@ typedef struct {
 
 static int _md_major = -1;
 static int _blkext_major = -1;
+static int _drbd_major = -1;
 static int _device_mapper_major = -1;
 
 int md_major(void)
@@ -49,6 +50,31 @@ int md_major(void)
 int blkext_major(void)
 {
 	return _blkext_major;
+}
+
+int dev_subsystem_part_major(const struct device *dev)
+{
+	if (MAJOR(dev->dev) == -1)
+		return 0;
+
+	if (MAJOR(dev->dev) == _md_major)
+		return 1;
+
+	if (MAJOR(dev->dev) == _drbd_major)
+		return 1;
+
+	return 0;
+}
+
+const char *dev_subsystem_name(const struct device *dev)
+{
+	if (MAJOR(dev->dev) == _md_major)
+		return "MD";
+
+	if (MAJOR(dev->dev) == _drbd_major)
+		return "DRBD";
+
+	return "";
 }
 
 /*
@@ -206,6 +232,10 @@ static int _scan_proc_dev(const char *proc, const struct config_node *cn)
 		/* Look for blkext device */
 		if (!strncmp("blkext", line + i, 6) && isspace(*(line + i + 6)))
 			_blkext_major = line_maj;
+
+		/* Look for drbd device */
+		if (!strncmp("drbd", line + i, 4) && isspace(*(line + i + 4)))
+			_drbd_major = line_maj;
 
 		/* Look for device-mapper device */
 		/* FIXME Cope with multiple majors */

@@ -1,5 +1,6 @@
 Version 2.02.55 -
 ===================================
+  Recognise DRBD device part and handle it similar to MD devices.
 
 Version 2.02.54 - 26th October 2009
 ===================================
