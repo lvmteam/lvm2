@@ -6,7 +6,7 @@ Version 2.02.54 - 26th October 2009
   Cleanup mimagetmp LV if allocation fails for new lvconvert mimage.
   Fix clvmd segfault when refresh_toolcontext fails.
   Remember to clear 'global lock held during cache refresh' state after use.
-  Use udev flags support in LVM.
+  Use udev flags support in LVM and apply various fixes to udev rules.
   Delay announcing mirror monitoring to syslog until initialisation succeeded.
   Handle metadata with unknown segment types more gracefully.
   Set default owner and group to null.
@@ -27,7 +27,7 @@ Version 2.02.54 - 26th October 2009
   Restart lvconverts in vgchange by sharing lv_spawn_background_polling.
   Generalise polldaemon code by changing mirror-specific variable names.
   Don't attempt to deactivate an LV if any of its snapshots are in use.
-  Return fail if lv_deactivate fails to remove device from kernel.
+  Return error if lv_deactivate fails to remove device from kernel.
   Provide alternative implementation of obsolete siginterrupt().
   Consolidate LV allocation into alloc_lv().
   Treat input units of both 's' and 'S' as 512-byte sectors.  (2.02.49)
