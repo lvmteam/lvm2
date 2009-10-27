@@ -435,14 +435,15 @@ static void _add_pv_to_list(struct dm_list *head, struct disk_list *data)
 		pvd = &diskl->pvd;
 		if (!strncmp((char *)data->pvd.pv_uuid, (char *)pvd->pv_uuid,
 			     sizeof(pvd->pv_uuid))) {
-			if (MAJOR(data->dev->dev) != md_major()) {
+			if (!dev_subsystem_part_major(data->dev)) {
 				log_very_verbose("Ignoring duplicate PV %s on "
 						 "%s", pvd->pv_uuid,
 						 dev_name(data->dev));
 				return;
 			}
-			log_very_verbose("Duplicate PV %s - using md %s",
-					 pvd->pv_uuid, dev_name(data->dev));
+			log_very_verbose("Duplicate PV %s - using %s %s",
+					 pvd->pv_uuid, dev_subsystem_name(data->dev),
+					 dev_name(data->dev));
 			dm_list_del(&diskl->list);
 			break;
 		}

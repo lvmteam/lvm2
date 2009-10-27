@@ -1173,11 +1173,12 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 	} else {
 		if (existing->dev != dev) {
 			/* Is the existing entry a duplicate pvid e.g. md ? */
-			if (MAJOR(existing->dev->dev) == md_major() &&
-			    MAJOR(dev->dev) != md_major()) {
+			if (dev_subsystem_part_major(existing->dev) &&
+			    !dev_subsystem_part_major(dev)) {
 				log_very_verbose("Ignoring duplicate PV %s on "
-						 "%s - using md %s",
+						 "%s - using %s %s",
 						 pvid, dev_name(dev),
+						 dev_subsystem_name(existing->dev),
 						 dev_name(existing->dev));
 				return NULL;
 			} else if (dm_is_dm_major(MAJOR(existing->dev->dev)) &&
@@ -1187,11 +1188,12 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 						 pvid, dev_name(dev),
 						 dev_name(existing->dev));
 				return NULL;
-			} else if (MAJOR(existing->dev->dev) != md_major() &&
-				   MAJOR(dev->dev) == md_major())
+			} else if (!dev_subsystem_part_major(existing->dev) &&
+				   dev_subsystem_part_major(dev))
 				log_very_verbose("Duplicate PV %s on %s - "
-						 "using md %s", pvid,
+						 "using %s %s", pvid,
 						 dev_name(existing->dev),
+						 dev_subsystem_name(existing->dev),
 						 dev_name(dev));
 			else if (!dm_is_dm_major(MAJOR(existing->dev->dev)) &&
 				 dm_is_dm_major(MAJOR(dev->dev)))
