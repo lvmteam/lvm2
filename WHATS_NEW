@@ -1,3 +1,6 @@
+Version 2.02.55 -
+===================================
+
 Version 2.02.54 - 26th October 2009
 ===================================
   Update lvcreate/lvconvert man pages to explain PhysicalVolume parameter.
