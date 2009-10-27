@@ -1,3 +1,6 @@
+Version 1.02.40 - 
+===================================
+
 Version 1.02.39 - 26th October 2009
 ===================================
   Remove strict default permissions for DM devices from 95-dm-notify.rules.
