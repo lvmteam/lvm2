@@ -936,7 +936,7 @@ static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
 		return 1;
 
 	if (!(lv = lv_from_lvid(cmd, lvid_s, 0)))
-		goto out;
+		goto_out;
 
 	if (test_mode()) {
 		_skip("Resuming '%s'.", lv->name);
@@ -949,11 +949,11 @@ static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
 
 	if (!info.exists || !info.suspended) {
 		r = error_if_not_active ? 0 : 1;
-		goto out;
+		goto_out;
 	}
 
 	if (!_lv_activate_lv(lv))
-		goto out;
+		goto_out;
 
 	memlock_dec();
 	fs_unlock();
@@ -1138,7 +1138,8 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 		lv->status |= ACTIVATE_EXCL;
 
 	memlock_inc();
-	r = _lv_activate_lv(lv);
+	if (!(r = _lv_activate_lv(lv)))
+		stack;
 	memlock_dec();
 	fs_unlock();
 
@@ -1155,13 +1156,19 @@ out:
 /* Activate LV */
 int lv_activate(struct cmd_context *cmd, const char *lvid_s, int exclusive)
 {
-	return _lv_activate(cmd, lvid_s, exclusive, 0);
+	if (!_lv_activate(cmd, lvid_s, exclusive, 0))
+		return_0;
+
+	return 1;
 }
 
 /* Activate LV only if it passes filter */
 int lv_activate_with_filter(struct cmd_context *cmd, const char *lvid_s, int exclusive)
 {
-	return _lv_activate(cmd, lvid_s, exclusive, 1);
+	if (!_lv_activate(cmd, lvid_s, exclusive, 1))
+		return_0;
+
+	return 1;
 }
 
 int lv_mknodes(struct cmd_context *cmd, const struct logical_volume *lv)
