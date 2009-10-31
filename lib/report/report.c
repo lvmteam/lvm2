@@ -870,7 +870,7 @@ static int _vgmdas_disp(struct dm_report *rh, struct dm_pool *mem,
 	const struct volume_group *vg = (const struct volume_group *) data;
 	uint32_t count;
 
-	count = dm_list_size(&vg->fid->metadata_areas);
+	count = vg_mda_count(vg);
 
 	return _uint32_disp(rh, mem, field, &count, private);
 }

@@ -3611,6 +3611,11 @@ uint64_t vg_max_lv(const struct volume_group *vg)
 	return (uint64_t) vg->max_lv;
 }
 
+uint32_t vg_mda_count(const struct volume_group *vg)
+{
+	return dm_list_size(&vg->fid->metadata_areas);
+}
+
 uint64_t lv_size(const struct logical_volume *lv)
 {
 	return lv->size;
