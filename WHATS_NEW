@@ -1,5 +1,8 @@
 Version 2.02.55 -
 ===================================
+  Update vgsplit and vgcreate to use vg_set_clustered.
+  Add vg_mda_count and vg_set_clustered library function.
+  Add more vgcreate and vgsplit nightly tests.
   Insert some missing stack macros into activation code.
   Recognise DRBD device part and handle it similar to MD devices.
 

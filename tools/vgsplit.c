@@ -371,7 +371,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		vp_def.max_pv = vg_from->max_pv;
 		vp_def.max_lv = vg_from->max_lv;
 		vp_def.alloc = vg_from->alloc;
-		vp_def.clustered = DEFAULT_CLUSTERED;
+		vp_def.clustered = vg_is_clustered(vg_from);
 
 		if (fill_vg_create_params(cmd, vg_name_to, &vp_new, &vp_def)) {
 			r = EINVALID_CMD_LINE;
@@ -386,11 +386,9 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		if (!vg_set_extent_size(vg_to, vp_new.extent_size) ||
 		    !vg_set_max_lv(vg_to, vp_new.max_lv) ||
 		    !vg_set_max_pv(vg_to, vp_new.max_pv) ||
-		    !vg_set_alloc_policy(vg_to, vp_new.alloc))
+		    !vg_set_alloc_policy(vg_to, vp_new.alloc) ||
+		    !vg_set_clustered(vg_to, vp_new.clustered))
 			goto_bad;
-
-		if (vg_is_clustered(vg_from))
-			vg_to->status |= CLUSTERED;
 	}
 
 	/* Archive vg_from before changing it */
