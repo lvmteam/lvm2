@@ -1127,6 +1127,26 @@ int vg_set_alloc_policy(struct volume_group *vg, alloc_policy_t alloc)
 	return 1;
 }
 
+int vg_set_clustered(struct volume_group *vg, int clustered)
+{
+	struct lv_list *lvl;
+	if (clustered) {
+		dm_list_iterate_items(lvl, &vg->lvs) {
+			if (lv_is_origin(lvl->lv) || lv_is_cow(lvl->lv)) {
+				log_error("Volume group %s contains snapshots "
+					  "that are not yet supported.",
+					  vg->name);
+				return 0;
+			}
+		}
+	}
+
+	if (clustered)
+		vg->status |= CLUSTERED;
+	else
+		vg->status &= ~CLUSTERED;
+	return 1;
+}
 
 /*
  * Separate metadata areas after splitting a VG.

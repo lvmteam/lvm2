@@ -462,6 +462,7 @@ int vg_set_extent_size(struct volume_group *vg, uint32_t new_extent_size);
 int vg_set_max_lv(struct volume_group *vg, uint32_t max_lv);
 int vg_set_max_pv(struct volume_group *vg, uint32_t max_pv);
 int vg_set_alloc_policy(struct volume_group *vg, alloc_policy_t alloc);
+int vg_set_clustered(struct volume_group *vg, int clustered);
 int vg_split_mdas(struct cmd_context *cmd, struct volume_group *vg_from,
 		  struct volume_group *vg_to);
 
