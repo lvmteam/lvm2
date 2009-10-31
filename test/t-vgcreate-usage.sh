@@ -144,3 +144,18 @@ do
     vgremove -f $vg
     pvremove -f $dev1
 done
+
+# vgcreate fails if pv belongs to existing vg
+vgcreate $vg1 $dev1 $dev2
+not vgcreate $vg2 $dev2
+vgremove -f $vg1
+pvremove -f $dev1 $dev2
+
+# all PVs exist in the VG after created
+pvcreate $dev1
+vgcreate $vg1 $dev1 $dev2 $dev3
+check_pv_field_ $dev1 vg_name $vg1
+check_pv_field_ $dev2 vg_name $vg1
+check_pv_field_ $dev3 vg_name $vg1
+vgremove -f $vg1
+pvremove -f $dev1 $dev2 $dev3

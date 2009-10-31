@@ -75,3 +75,27 @@ check_pv_field_ $dev1 pe_start $pv_align
 vgremove -f $vg
 pvremove -f $dev1
 
+# vgextend fails if pv belongs to existing vg
+vgcreate $vg1 $dev1 $dev3
+vgcreate $vg2 $dev2
+not vgextend $vg2 $dev3
+vgremove -f $vg1
+vgremove -f $vg2
+pvremove -f $dev1 $dev2 $dev3
+
+#vgextend fails if vg is not resizeable
+vgcreate $vg1 $dev1 $dev2
+vgchange --resizeable n $vg1
+not vgextend $vg1 $dev3
+vgremove -f $vg1
+pvremove -f $dev1 $dev2
+
+# all PVs exist in the VG after extended
+pvcreate $dev1
+vgcreate $vg1 $dev2
+vgextend $vg1 $dev1 $dev3
+check_pv_field_ $dev1 vg_name $vg1
+check_pv_field_ $dev2 vg_name $vg1
+check_pv_field_ $dev3 vg_name $vg1
+vgremove -f $vg1
+pvremove -f $dev1 $dev2 $dev3
