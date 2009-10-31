@@ -65,7 +65,8 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	if (!vg_set_extent_size(vg, vp_new.extent_size) ||
 	    !vg_set_max_lv(vg, vp_new.max_lv) ||
 	    !vg_set_max_pv(vg, vp_new.max_pv) ||
-	    !vg_set_alloc_policy(vg, vp_new.alloc))
+	    !vg_set_alloc_policy(vg, vp_new.alloc) ||
+	    !vg_set_clustered(vg, vp_new.clustered))
 		goto_bad;
 
 	if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE)) {
@@ -103,12 +104,9 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 		}
 	}
 
-	/* FIXME: move this inside vg_create? */
-	if (vp_new.clustered) {
-		vg->status |= CLUSTERED;
+	if (vg_is_clustered(vg)) {
 		clustered_message = "Clustered ";
 	} else {
-		vg->status &= ~CLUSTERED;
 		if (locking_is_clustered())
 			clustered_message = "Non-clustered ";
 	}
