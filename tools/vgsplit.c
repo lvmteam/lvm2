@@ -366,13 +366,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		if (!vgs_are_compatible(cmd, vg_from,vg_to))
 			goto_bad;
 	} else {
-		vp_def.vg_name = NULL;
-		vp_def.extent_size = vg_from->extent_size;
-		vp_def.max_pv = vg_from->max_pv;
-		vp_def.max_lv = vg_from->max_lv;
-		vp_def.alloc = vg_from->alloc;
-		vp_def.clustered = vg_is_clustered(vg_from);
-
+		vgcreate_params_set_defaults(&vp_def, vg_from);
 		if (fill_vg_create_params(cmd, vg_name_to, &vp_new, &vp_def)) {
 			r = EINVALID_CMD_LINE;
 			goto_bad;

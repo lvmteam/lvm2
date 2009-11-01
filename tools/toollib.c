@@ -1183,6 +1183,26 @@ int is_reserved_lvname(const char *name)
 	return rc;
 }
 
+void vgcreate_params_set_defaults(struct vgcreate_params *vp_def,
+				  struct volume_group *vg)
+{
+	if (vg) {
+		vp_def->vg_name = NULL;
+		vp_def->extent_size = vg->extent_size;
+		vp_def->max_pv = vg->max_pv;
+		vp_def->max_lv = vg->max_lv;
+		vp_def->alloc = vg->alloc;
+		vp_def->clustered = vg_is_clustered(vg);
+	} else {
+		vp_def->vg_name = NULL;
+		vp_def->extent_size = DEFAULT_EXTENT_SIZE * 2;
+		vp_def->max_pv = DEFAULT_MAX_PV;
+		vp_def->max_lv = DEFAULT_MAX_LV;
+		vp_def->alloc = DEFAULT_ALLOC_POLICY;
+		vp_def->clustered = DEFAULT_CLUSTERED;
+	}
+}
+
 /*
  * Set members of struct vgcreate_params from cmdline.
  * Do preliminary validation with arg_*() interface.
