@@ -9,10 +9,4 @@
 # a cookie value sent within "change" and "remove" events (the cookie
 # value is set before by that process for every action requested).
 
-SUBSYSTEM!="block", GOTO="dm_end"
-KERNEL!="dm-[0-9]*", GOTO="dm_end"
-ACTION!="change|remove", GOTO="dm_end"
-
 ENV{DM_COOKIE}=="?*", RUN+="$env{DM_SBIN_PATH}/dmsetup udevcomplete $env{DM_COOKIE}"
-
-LABEL="dm_end"
