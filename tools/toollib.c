@@ -1204,16 +1204,16 @@ void vgcreate_params_set_defaults(struct vgcreate_params *vp_def,
 }
 
 /*
- * Set members of struct vgcreate_params from cmdline.
+ * Set members of struct vgcreate_params from cmdline arguments.
  * Do preliminary validation with arg_*() interface.
  * Further, more generic validation is done in validate_vgcreate_params().
  * This function is to remain in tools directory.
  */
-int fill_vg_create_params(struct cmd_context *cmd,
-			  char *vg_name, struct vgcreate_params *vp_new,
-			  struct vgcreate_params *vp_def)
+int vgcreate_params_set_from_args(struct cmd_context *cmd,
+				  struct vgcreate_params *vp_new,
+				  struct vgcreate_params *vp_def)
 {
-	vp_new->vg_name = skip_dev_dir(cmd, vg_name, NULL);
+	vp_new->vg_name = skip_dev_dir(cmd, vp_def->vg_name, NULL);
 	vp_new->max_lv = arg_uint_value(cmd, maxlogicalvolumes_ARG,
 					vp_def->max_lv);
 	vp_new->max_pv = arg_uint_value(cmd, maxphysicalvolumes_ARG,
