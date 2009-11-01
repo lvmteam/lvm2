@@ -23,7 +23,7 @@
  * Output arguments:
  * pp: structure allocated by caller, fields written / validated here
  */
-static int pvcreate_validate_restore_params(struct cmd_context *cmd,
+static int pvcreate_restore_params_validate(struct cmd_context *cmd,
 					    int argc, char **argv,
 					    struct pvcreate_params *pp)
 {
@@ -84,12 +84,12 @@ int pvcreate(struct cmd_context *cmd, int argc, char **argv)
 	int ret = ECMD_PROCESSED;
 	struct pvcreate_params pp;
 
-	fill_default_pvcreate_params(&pp);
+	pvcreate_params_set_defaults(&pp);
 
-	if (!pvcreate_validate_restore_params(cmd, argc, argv, &pp)) {
+	if (!pvcreate_restore_params_validate(cmd, argc, argv, &pp)) {
 		return EINVALID_CMD_LINE;
 	}
-	if (!pvcreate_validate_params(cmd, argc, argv, &pp)) {
+	if (!pvcreate_params_validate(cmd, argc, argv, &pp)) {
 		return EINVALID_CMD_LINE;
 	}
 

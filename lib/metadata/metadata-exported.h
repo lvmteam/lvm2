@@ -372,7 +372,7 @@ struct pvcreate_params {
 struct physical_volume *pvcreate_single(struct cmd_context *cmd,
 					const char *pv_name,
 					struct pvcreate_params *pp);
-void fill_default_pvcreate_params(struct pvcreate_params *pp);
+void pvcreate_params_set_defaults(struct pvcreate_params *pp);
 
 /*
 * Utility functions

@@ -1278,7 +1278,7 @@ void lv_spawn_background_polling(struct cmd_context *cmd,
  * Output arguments:
  * pp: structure allocated by caller, fields written / validated here
  */
-int pvcreate_validate_params(struct cmd_context *cmd,
+int pvcreate_params_validate(struct cmd_context *cmd,
 			     int argc, char **argv,
 			     struct pvcreate_params *pp)
 {
