@@ -50,7 +50,7 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	if (vgcreate_params_set_from_args(cmd, &vp_new, &vp_def))
 		return EINVALID_CMD_LINE;
 
-	if (validate_vg_create_params(cmd, &vp_new))
+	if (vgcreate_params_validate(cmd, &vp_new))
 	    return EINVALID_CMD_LINE;
 
 	/* Create the new VG */
