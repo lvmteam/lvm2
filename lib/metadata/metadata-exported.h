@@ -749,8 +749,8 @@ struct vgcreate_params {
 	int clustered; /* FIXME: put this into a 'status' variable instead? */
 };
 
-int validate_vg_create_params(struct cmd_context *cmd,
-			      struct vgcreate_params *vp);
+int vgcreate_params_validate(struct cmd_context *cmd,
+			     struct vgcreate_params *vp);
 
 int validate_vg_rename_params(struct cmd_context *cmd,
 			      const char *vg_name_old,

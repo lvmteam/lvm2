@@ -373,7 +373,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 			goto_bad;
 		}
 
-		if (validate_vg_create_params(cmd, &vp_new)) {
+		if (vgcreate_params_validate(cmd, &vp_new)) {
 			r = EINVALID_CMD_LINE;
 			goto_bad;
 		}

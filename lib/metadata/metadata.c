@@ -679,8 +679,8 @@ const char *strip_dir(const char *vg_name, const char *dev_dir)
  * FIXME: Move inside vg_create library function.
  * FIXME: Change vgcreate_params struct to individual gets/sets
  */
-int validate_vg_create_params(struct cmd_context *cmd,
-			      struct vgcreate_params *vp)
+int vgcreate_params_validate(struct cmd_context *cmd,
+			     struct vgcreate_params *vp)
 {
 	if (!validate_new_vg_name(cmd, vp->vg_name)) {
 		log_error("New volume group name \"%s\" is invalid",
