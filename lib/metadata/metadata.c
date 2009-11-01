@@ -1314,7 +1314,7 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name,
 	return 1;
 }
 
-void fill_default_pvcreate_params(struct pvcreate_params *pp)
+void pvcreate_params_set_defaults(struct pvcreate_params *pp)
 {
 	memset(pp, 0, sizeof(*pp));
 	pp->zero = 1;
@@ -1354,7 +1354,7 @@ struct physical_volume * pvcreate_single(struct cmd_context *cmd,
 	struct pvcreate_params default_pp;
 	char buffer[64] __attribute((aligned(8)));
 
-	fill_default_pvcreate_params(&default_pp);
+	pvcreate_params_set_defaults(&default_pp);
 	if (!pp)
 		pp = &default_pp;
 

@@ -40,8 +40,8 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 			  "use --pvmetadatacopies instead.");
 		return EINVALID_CMD_LINE;
 	}
-	fill_default_pvcreate_params(&pp);
-	if (!pvcreate_validate_params(cmd, argc, argv, &pp)) {
+	pvcreate_params_set_defaults(&pp);
+	if (!pvcreate_params_validate(cmd, argc, argv, &pp)) {
 		return EINVALID_CMD_LINE;
 	}
 
