@@ -99,6 +99,8 @@ struct dm_list *clone_pv_list(struct dm_pool *mem, struct dm_list *pvs);
 int apply_lvname_restrictions(const char *name);
 int is_reserved_lvname(const char *name);
 
+void vgcreate_params_set_defaults(struct vgcreate_params *vp_def,
+				 struct volume_group *vg);
 int fill_vg_create_params(struct cmd_context *cmd,
 			  char *vg_name, struct vgcreate_params *vp_new,
 			  struct vgcreate_params *vp_def);
