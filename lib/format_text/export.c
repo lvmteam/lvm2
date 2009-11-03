@@ -235,6 +235,24 @@ static int _sectors_to_units(uint64_t sectors, char *buffer, size_t s)
 	return dm_snprintf(buffer, s, "# %g %s", d, _units[i]) > 0;
 }
 
+/* increment indention level */
+void out_inc_indent(struct formatter *f)
+{
+	_inc_indent(f);
+}
+
+/* decrement indention level */
+void out_dec_indent(struct formatter *f)
+{
+	_dec_indent(f);
+}
+
+/* insert new line */
+int out_newline(struct formatter *f)
+{
+	return f->nl(f);
+}
+
 /*
  * Appends a comment giving a size in more easily
  * readable form (eg, 4M instead of 8096).

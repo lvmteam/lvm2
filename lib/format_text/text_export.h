@@ -17,7 +17,7 @@
 #define _LVM_TEXT_EXPORT_H
 
 #define outf(args...) do {if (!out_text(args)) return_0;} while (0)
-#define outnl(f) do {if (!f->nl(f)) return_0;} while (0)
+#define outnl(f) do {if (!out_newline(f)) return_0;} while (0)
 
 struct formatter;
 struct lv_segment;
@@ -36,5 +36,9 @@ int out_config_node(struct formatter *f, const struct config_node *cn);
 
 int out_areas(struct formatter *f, const struct lv_segment *seg,
 	      const char *type);
+
+void out_inc_indent(struct formatter *f);
+void out_dec_indent(struct formatter *f);
+int out_newline(struct formatter *f);
 
 #endif
