@@ -22,10 +22,6 @@ commandline with the same options as \fPpvcreate\fP.  See
 that the restore-related options such as --restorefile, --uuid,
 and --physicalvolumesize are not available.  If a restore operation
 is needed, use \fBpvcreate (8)\fP and \fBvgcfgrestore (8)\fP.
-\fBpvcreate (8)\fP, the device will be initialized with the same
-default values used with \fBpvcreate\fP.  If non-default
-\fPpvcreate\fP values are are desired, \fBpvcreate\fP should be explicitly
-called prior to calling \fBvgcreate\fP.
 .SH OPTIONS
 See \fBlvm\fP for common options.
 .SH PHYSICAL DEVICE OPTIONS
