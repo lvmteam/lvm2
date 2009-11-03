@@ -239,7 +239,7 @@ int poll_daemon(struct cmd_context *cmd, const char *name, const char *uuid,
 {
 	struct daemon_parms parms;
 
-	parms.aborting = arg_count(cmd, abort_ARG) ? 1 : 0;
+	parms.aborting = arg_is_set(cmd, abort_ARG);
 	parms.background = background;
 	parms.interval = arg_uint_value(cmd, interval_ARG, DEFAULT_INTERVAL);
 	parms.progress_display = 1;

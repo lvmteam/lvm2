@@ -327,11 +327,9 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 	}
 
 	/* -O overrides default sort settings */
-	if (arg_count(cmd, sort_ARG))
-		keys = arg_str_value(cmd, sort_ARG, "");
+	keys = arg_str_value(cmd, sort_ARG, keys);
 
-	if (arg_count(cmd, separator_ARG))
-		separator = arg_str_value(cmd, separator_ARG, " ");
+	separator = arg_str_value(cmd, separator_ARG, separator);
 	if (arg_count(cmd, separator_ARG))
 		aligned = 0;
 	if (arg_count(cmd, aligned_ARG))

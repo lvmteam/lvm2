@@ -17,10 +17,7 @@
 
 int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 {
-	const char *file = NULL;
-
-	if (arg_count(cmd, file_ARG))
-		file = arg_str_value(cmd, file_ARG, "");
+	const char *file = arg_str_value(cmd, file_ARG, NULL);
 
 	if (!write_config_file(cmd->cft, file, argc, argv)) {
 		stack;
