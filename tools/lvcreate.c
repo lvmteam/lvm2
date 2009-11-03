@@ -33,8 +33,7 @@ static int _lvcreate_name_params(struct lvcreate_params *lp,
 	char **argv = *pargv, *ptr;
 	char *vg_name;
 
-	if (arg_count(cmd, name_ARG))
-		lp->lv_name = arg_value(cmd, name_ARG);
+	lp->lv_name = arg_str_value(cmd, name_ARG, NULL);
 
 	if (lp->snapshot && !arg_count(cmd, virtualsize_ARG)) {
 		if (!argc) {
@@ -347,7 +346,7 @@ static int _read_mirror_params(struct lvcreate_params *lp,
 
 	log_verbose("Setting logging type to %s", mirrorlog);
 
-	lp->nosync = arg_count(cmd, nosync_ARG) ? 1 : 0;
+	lp->nosync = arg_is_set(cmd, nosync_ARG);
 
 	if (arg_count(cmd, regionsize_ARG)) {
 		if (arg_sign_value(cmd, regionsize_ARG, 0) == SIGN_MINUS) {
@@ -521,10 +520,8 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 	/*
 	 * Permissions.
 	 */
-	if (arg_count(cmd, permission_ARG))
-		lp->permission = arg_uint_value(cmd, permission_ARG, 0);
-	else
-		lp->permission = LVM_READ | LVM_WRITE;
+	lp->permission = arg_uint_value(cmd, permission_ARG,
+					LVM_READ | LVM_WRITE);
 
 	/* Must not zero read only volume */
 	if (!(lp->permission & LVM_WRITE))
@@ -558,11 +555,7 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 		return 0;
 	}
 
-	if (arg_count(cmd, addtag_ARG) &&
-	    !(lp->tag = arg_str_value(cmd, addtag_ARG, NULL))) {
-		log_error("Failed to get tag");
-		return 0;
-	}
+	lp->tag = arg_str_value(cmd, addtag_ARG, NULL);
 
 	lcp->pv_count = argc;
 	lcp->pvs = argv;

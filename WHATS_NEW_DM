@@ -1,5 +1,6 @@
 Version 1.02.40 - 
 ===================================
+  Fix hash lookup segfault when keys compared are different lengths.
 
 Version 1.02.39 - 26th October 2009
 ===================================

@@ -1,5 +1,6 @@
 Version 2.02.55 -
 ===================================
+  Tidy some uses of arg_count and introduce arg_is_set.
   Export outnl and indent functions for modules.
   Flush stdout after yes/no prompt.
   Update vgsplit and vgcreate to use vg_set_clustered.

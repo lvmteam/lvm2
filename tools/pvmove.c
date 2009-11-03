@@ -608,6 +608,5 @@ int pvmove(struct cmd_context *cmd, int argc, char **argv)
 		}
 	}
 
-	return pvmove_poll(cmd, pv_name,
-			   arg_count(cmd, background_ARG) ? 1U : 0);
+	return pvmove_poll(cmd, pv_name, arg_is_set(cmd, background_ARG));
 }
