@@ -824,6 +824,7 @@ char yes_no_prompt(const char *prompt, ...)
 			va_start(ap, prompt);
 			vprintf(prompt, ap);
 			va_end(ap);
+			fflush(stdout);
 		}
 
 		if ((c = getchar()) == EOF) {
