@@ -143,9 +143,13 @@ static struct dm_hash_node **_find(struct dm_hash_table *t, const char *key,
 	unsigned h = _hash(key, len) & (t->num_slots - 1);
 	struct dm_hash_node **c;
 
-	for (c = &t->slots[h]; *c; c = &((*c)->next))
+	for (c = &t->slots[h]; *c; c = &((*c)->next)) {
+		if ((*c)->keylen != len)
+			continue;
+
 		if (!memcmp(key, (*c)->key, len))
 			break;
+	}
 
 	return c;
 }
