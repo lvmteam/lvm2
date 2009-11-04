@@ -359,7 +359,7 @@ static int _percent_run(struct dev_manager *dm, const char *name,
 	struct dm_list *segh = &lv->segments;
 	struct lv_segment *seg = NULL;
 	struct segment_type *segtype;
-	percent_range_t percent_range, combined_percent_range;
+	percent_range_t percent_range = 0, combined_percent_range = 0;
 	int first_time = 1;
 
 	uint64_t total_numerator = 0, total_denominator = 0;
