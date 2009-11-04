@@ -610,7 +610,7 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 		docmds++;
 	}
 
-	/* read ahead sector change */
+	/* persistent device number change */
 	if (arg_count(cmd, persistent_ARG)) {
 		if (!archived && !archive(lv->vg)) {
 			stack;
