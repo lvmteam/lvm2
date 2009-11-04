@@ -367,8 +367,11 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 			lp->extents = lp->extents * lv->le_count / 100;
 			break;
 		case PERCENT_PVS:
-			pv_extent_count = pv_list_extents_free(pvh);
-			lp->extents = lp->extents * pv_extent_count / 100;
+			if (lp->argc) {
+				pv_extent_count = pv_list_extents_free(pvh);
+				lp->extents = lp->extents * pv_extent_count / 100;
+			} else
+				lp->extents = lp->extents * vg->extent_count / 100;
 			break;
 		case PERCENT_NONE:
 			break;
