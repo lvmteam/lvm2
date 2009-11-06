@@ -117,6 +117,7 @@ enum {
 	EXEC_ARG,
 	FORCE_ARG,
 	GID_ARG,
+	INACTIVE_ARG,
 	MAJOR_ARG,
 	MINOR_ARG,
 	MODE_ARG,
@@ -294,6 +295,9 @@ static struct dm_task *_get_deps_task(int major, int minor)
 		goto err;
 
 	if (_switches[NOOPENCOUNT_ARG] && !dm_task_no_open_count(dmt))
+		goto err;
+
+	if (_switches[INACTIVE_ARG] && !dm_task_query_inactive_table(dmt))
 		goto err;
 
 	if (!dm_task_run(dmt))
@@ -530,6 +534,9 @@ static int _load(int argc, char **argv, void *data __attribute((unused)))
 	if (_switches[NOOPENCOUNT_ARG] && !dm_task_no_open_count(dmt))
 		goto out;
 
+	if (_switches[INACTIVE_ARG] && !dm_task_query_inactive_table(dmt))
+		goto out;
+
 	if (!dm_task_run(dmt))
 		goto out;
 
@@ -587,6 +594,9 @@ static int _create(int argc, char **argv, void *data __attribute((unused)))
 	if (_switches[NOOPENCOUNT_ARG] && !dm_task_no_open_count(dmt))
 		goto out;
 
+	if (_switches[INACTIVE_ARG] && !dm_task_query_inactive_table(dmt))
+		goto out;
+
 	if (_switches[READAHEAD_ARG] &&
 	    !dm_task_set_read_ahead(dmt, _int_args[READAHEAD_ARG],
 				    _read_ahead_flags))
@@ -628,6 +638,9 @@ static int _rename(int argc, char **argv, void *data __attribute((unused)))
 		goto out;
 
 	if (_switches[NOOPENCOUNT_ARG] && !dm_task_no_open_count(dmt))
+		goto out;
+
+	if (_switches[INACTIVE_ARG] && !dm_task_query_inactive_table(dmt))
 		goto out;
 
 	if (!dm_task_set_cookie(dmt, &cookie, 0) ||
@@ -696,6 +709,9 @@ static int _message(int argc, char **argv, void *data __attribute((unused)))
 	if (_switches[NOOPENCOUNT_ARG] && !dm_task_no_open_count(dmt))
 		goto out;
 
+	if (_switches[INACTIVE_ARG] && !dm_task_query_inactive_table(dmt))
+		goto out;
+
 	if (!dm_task_run(dmt))
 		goto out;
 
@@ -726,6 +742,12 @@ static int _setgeometry(int argc, char **argv, void *data __attribute((unused)))
 	}
 
 	if (!dm_task_set_geometry(dmt, argv[1], argv[2], argv[3], argv[4]))
+		goto out;
+
+	if (_switches[NOOPENCOUNT_ARG] && !dm_task_no_open_count(dmt))
+		goto out;
+
+	if (_switches[INACTIVE_ARG] && !dm_task_query_inactive_table(dmt))
 		goto out;
 
 	/* run the task */
@@ -1002,6 +1024,9 @@ static int _simple(int task, const char *name, uint32_t event_nr, int display)
 	if (_switches[NOOPENCOUNT_ARG] && !dm_task_no_open_count(dmt))
 		goto out;
 
+	if (_switches[INACTIVE_ARG] && !dm_task_query_inactive_table(dmt))
+		goto out;
+
 	if (_switches[NOLOCKFS_ARG] && !dm_task_skip_lockfs(dmt))
 		goto out;
 
@@ -1115,6 +1140,9 @@ static uint64_t _get_device_size(const char *name)
 	if (_switches[NOOPENCOUNT_ARG] && !dm_task_no_open_count(dmt))
 		goto out;
 
+	if (_switches[INACTIVE_ARG] && !dm_task_query_inactive_table(dmt))
+		goto out;
+
 	if (!dm_task_run(dmt))
 		goto out;
 
@@ -1160,6 +1188,9 @@ static int _error_device(int argc __attribute((unused)), char **argv __attribute
 		goto error;
 
 	if (_switches[NOOPENCOUNT_ARG] && !dm_task_no_open_count(dmt))
+		goto error;
+
+	if (_switches[INACTIVE_ARG] && !dm_task_query_inactive_table(dmt))
 		goto error;
 
 	if (!dm_task_run(dmt))
@@ -1337,6 +1368,9 @@ static int _status(int argc, char **argv, void *data)
 	if (_switches[NOOPENCOUNT_ARG] && !dm_task_no_open_count(dmt))
 		goto out;
 
+	if (_switches[INACTIVE_ARG] && !dm_task_query_inactive_table(dmt))
+		goto out;
+
 	if (!dm_task_run(dmt))
 		goto out;
 
@@ -1458,6 +1492,9 @@ static int _info(int argc, char **argv, void *data)
 	if (_switches[NOOPENCOUNT_ARG] && !dm_task_no_open_count(dmt))
 		goto out;
 
+	if (_switches[INACTIVE_ARG] && !dm_task_query_inactive_table(dmt))
+		goto out;
+
 	if (!dm_task_run(dmt))
 		goto out;
 
@@ -1494,6 +1531,9 @@ static int _deps(int argc, char **argv, void *data)
 		goto out;
 
 	if (_switches[NOOPENCOUNT_ARG] && !dm_task_no_open_count(dmt))
+		goto out;
+
+	if (_switches[INACTIVE_ARG] && !dm_task_query_inactive_table(dmt))
 		goto out;
 
 	if (!dm_task_run(dmt))
@@ -2510,7 +2550,7 @@ static void _usage(FILE *out)
 
 	fprintf(out, "Usage:\n\n");
 	fprintf(out, "dmsetup [--version] [-v|--verbose [-v|--verbose ...]]\n"
-		"        [-r|--readonly] [--noopencount] [--nolockfs]\n"
+		"        [-r|--readonly] [--noopencount] [--nolockfs] [--inactive]\n"
 		"        [--noudevsync] [-y|--yes] [--readahead [+]<sectors>|auto|none]\n"
 		"        [-c|-C|--columns] [-o <fields>] [-O|--sort <sort_fields>]\n"
 		"        [--nameprefixes] [--noheadings] [--separator <separator>]\n\n");
@@ -2866,6 +2906,7 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 		{"exec", 1, &ind, EXEC_ARG},
 		{"force", 0, &ind, FORCE_ARG},
 		{"gid", 1, &ind, GID_ARG},
+		{"inactive", 0, &ind, INACTIVE_ARG},
 		{"major", 1, &ind, MAJOR_ARG},
 		{"minor", 1, &ind, MINOR_ARG},
 		{"mode", 1, &ind, MODE_ARG},
@@ -3010,6 +3051,8 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 			_switches[TARGET_ARG]++;
 			_target = optarg;
 		}
+		if ((ind == INACTIVE_ARG))
+			_switches[INACTIVE_ARG]++;
 		if ((ind == NAMEPREFIXES_ARG))
 			_switches[NAMEPREFIXES_ARG]++;
 		if ((ind == NOFLUSH_ARG))
