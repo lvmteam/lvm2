@@ -282,7 +282,7 @@ Sets the device geometry to C/H/S.
 Splits given device name into subsystem constituents.
 Default subsystem is LVM.
 .IP \fBstatus
-.I [--target target_type] [--inactive]
+.I [--target target_type]
 .I [device_name]
 .br
 Outputs status information for each of the device's targets.
@@ -301,7 +301,7 @@ Some targets such as recent (October 2006) versions of multipath may support
 the --noflush option.  This lets outstanding I/O that has not yet reached the
 device to remain unflushed.
 .IP \fBtable
-.I [--target target_type] [--inactive]
+.I [--target target_type]
 .I [device_name]
 .br
 Outputs the current table for the device in a format that can be fed
