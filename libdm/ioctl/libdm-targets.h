@@ -58,6 +58,7 @@ struct dm_task {
 	int no_flush;
 	int no_open_count;
 	int skip_lockfs;
+	int query_inactive_table;
 	int suppress_identical_reload;
 	uint64_t existing_table_size;
 	int cookie_set;

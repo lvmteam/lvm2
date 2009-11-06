@@ -181,6 +181,7 @@ struct dm_task *dm_task_create(int type)
 	dmt->read_ahead_flags = 0;
 	dmt->event_nr = 0;
 	dmt->cookie_set = 0;
+	dmt->query_inactive_table = 0;
 
 	return dmt;
 }

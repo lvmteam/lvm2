@@ -1135,6 +1135,13 @@ int dm_task_skip_lockfs(struct dm_task *dmt)
 	return 1;
 }
 
+int dm_task_query_inactive_table(struct dm_task *dmt)
+{
+	dmt->query_inactive_table = 1;
+
+	return 1;
+}
+
 int dm_task_set_event_nr(struct dm_task *dmt, uint32_t event_nr)
 {
 	dmt->event_nr = event_nr;
@@ -1382,6 +1389,12 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 		dmi->flags |= DM_READONLY_FLAG;
 	if (dmt->skip_lockfs)
 		dmi->flags |= DM_SKIP_LOCKFS_FLAG;
+	if (dmt->query_inactive_table) {
+		if (_dm_version_minor < 16)
+			log_warn("WARNING: Inactive table query unsupported "
+				 "by kernel.  It will use live table.");
+		dmi->flags |= DM_QUERY_INACTIVE_TABLE_FLAG;
+	}
 
 	dmi->target_count = count;
 	dmi->event_nr = dmt->event_nr;
@@ -1723,7 +1736,7 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 	}
 
 	log_debug("dm %s %s %s%s%s %s%.0d%s%.0d%s"
-		  "%s%c%c%s %.0" PRIu64 " %s [%u]",
+		  "%s%c%c%s%s %.0" PRIu64 " %s [%u]",
 		  _cmd_data_v4[dmt->type].name,
 		  dmi->name, dmi->uuid, dmt->newname ? " " : "",
 		  dmt->newname ? dmt->newname : "",
@@ -1736,6 +1749,7 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 		  dmt->no_open_count ? 'N' : 'O',
 		  dmt->no_flush ? 'N' : 'F',
 		  dmt->skip_lockfs ? "S " : "",
+		  dmt->query_inactive_table ? "I " : "",
 		  dmt->sector, dmt->message ? dmt->message : "",
 		  dmi->data_size);
 #ifdef DM_IOCTLS
