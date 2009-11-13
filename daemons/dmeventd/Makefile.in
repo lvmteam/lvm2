@@ -103,7 +103,7 @@ install_dmeventd: $(INSTALL_DMEVENTD_TARGETS)
 
 install: install_include install_lib install_dmeventd
 
-install_device-mapper: install
+install_device-mapper: install_include install_lib install_dmeventd
 
 .PHONY: distclean_lib distclean
 
