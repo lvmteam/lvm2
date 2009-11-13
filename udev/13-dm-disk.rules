@@ -10,27 +10,18 @@
 # suspended.
 
 # "add" event is processed on coldplug only!
-ACTION!="add|change", GOTO="dm_other"
-ENV{DM_UDEV_RULES_VSN}!="?*", GOTO="dm_other"
-ENV{DM_UDEV_DISABLE_DISK_RULES_FLAG}=="1", GOTO="dm_other"
+ACTION!="add|change", GOTO="dm_end"
+ENV{DM_UDEV_RULES_VSN}!="?*", GOTO="dm_end"
+ENV{DM_UDEV_DISABLE_DISK_RULES_FLAG}=="1", GOTO="dm_end"
 
 SYMLINK+="disk/by-id/dm-name-$env{DM_NAME}"
 ENV{DM_UUID}=="?*", SYMLINK+="disk/by-id/dm-uuid-$env{DM_UUID}"
 
-ENV{DM_SUSPENDED}=="1", GOTO="dm_other"
+ENV{DM_SUSPENDED}=="1", GOTO="dm_end"
 
 IMPORT{program}="$env{DM_SBIN_PATH}/blkid -o udev -p $tempnode"
 ENV{DM_UDEV_LOW_PRIORITY_FLAG}=="1", OPTIONS="link_priority=-100"
 ENV{ID_FS_USAGE}=="filesystem|other|crypto", ENV{ID_FS_UUID_ENC}=="?*", SYMLINK+="disk/by-uuid/$env{ID_FS_UUID_ENC}"
 ENV{ID_FS_USAGE}=="filesystem|other", ENV{ID_FS_LABEL_ENC}=="?*", SYMLINK+="disk/by-label/$env{ID_FS_LABEL_ENC}"
-
-# Cutoff all subsequent rules if instructed by a flag.
-# This flag should be used in well-founded situations only to prevent
-# any problems that could arise when processing this event further by
-# foreign rules (various temporary and hidden devices mostly).
-LABEL="dm_other"
-ENV{DM_UDEV_DISABLE_OTHER_RULES_FLAG}!="1", GOTO="dm_end"
-ENV{DM_COOKIE}=="?*", RUN+="$env{DM_SBIN_PATH}/dmsetup udevcomplete $env{DM_COOKIE}"
-OPTIONS+="last_rule"
 
 LABEL="dm_end"
