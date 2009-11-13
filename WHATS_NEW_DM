@@ -1,5 +1,6 @@
 Version 1.02.40 - 
 ===================================
+  Fix install_device-mapper Makefile target to not build dmeventd plugins.
   Support udev flags even when udev_sync is disabled or not compiled in.
   Remove 'last_rule' from udev rules: honor ENV{DM_UDEV_DISABLE_OTHER_RULES_FLAG}.
   Add dmsetup --inactive support.
