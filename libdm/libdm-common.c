@@ -886,6 +886,8 @@ int dm_udev_get_sync_support(void)
 
 int dm_task_set_cookie(struct dm_task *dmt, uint32_t *cookie, uint16_t flags)
 {
+	if (dm_cookie_supported())
+		dmt->event_nr = flags << DM_UDEV_FLAGS_SHIFT;
 	*cookie = 0;
 
 	return 1;
@@ -1141,8 +1143,11 @@ int dm_task_set_cookie(struct dm_task *dmt, uint32_t *cookie, uint16_t flags)
 {
 	int semid;
 
+	if (dm_cookie_supported())
+		dmt->event_nr = flags << DM_UDEV_FLAGS_SHIFT;
+
 	if (!dm_udev_get_sync_support()) {
-		dmt->event_nr = *cookie = 0;
+		*cookie = 0;
 		return 1;
 	}
 
@@ -1159,8 +1164,7 @@ int dm_task_set_cookie(struct dm_task *dmt, uint32_t *cookie, uint16_t flags)
 		goto bad;
 	}
 
-	dmt->event_nr = (~DM_UDEV_FLAGS_MASK & *cookie) |
-			(flags << DM_UDEV_FLAGS_SHIFT);
+	dmt->event_nr |= ~DM_UDEV_FLAGS_MASK & *cookie;
 	dmt->cookie_set = 1;
 
 	log_debug("Udev cookie 0x%" PRIx32 " (semid %d) assigned to dm_task "

@@ -1039,7 +1039,7 @@ int dm_tree_deactivate_children(struct dm_tree_node *dnode,
 			continue;
 
 		if (!_deactivate_node(name, info.major, info.minor,
-				      &dnode->dtree->cookie, dnode->udev_flags)) {
+				      &child->dtree->cookie, child->udev_flags)) {
 			log_error("Unable to deactivate %s (%" PRIu32
 				  ":%" PRIu32 ")", name, info.major,
 				  info.minor);

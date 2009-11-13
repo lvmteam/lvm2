@@ -1548,6 +1548,7 @@ static int _create_and_load_v4(struct dm_task *dmt)
 	task->gid = dmt->gid;
 	task->mode = dmt->mode;
 	/* FIXME: Just for udev_check in dm_task_run. Can we avoid this? */
+	task->event_nr = dmt->event_nr & DM_UDEV_FLAGS_MASK;
 	task->cookie_set = dmt->cookie_set;
 
 	r = dm_task_run(task);
