@@ -1058,9 +1058,9 @@ void dm_report_field_set_value(struct dm_report_field *field, const void *value,
 /*
  * DM_UDEV_DISABLE_OTHER_RULES_FLAG is set in case we need to disable
  * all the other rules that are not general device-mapper nor subsystem
- * related (the rules belong to other software or packages). Use this
- * flag with care since it will cutoff the rule processing after the
- * last device-mapper/subsytem rule is applied.
+ * related (the rules belong to other software or packages). All foreign
+ * rules should check this flag directly and they should ignore further
+ * rule processing for such event.
  */
 #define DM_UDEV_DISABLE_OTHER_RULES_FLAG 0x0008
 /*
