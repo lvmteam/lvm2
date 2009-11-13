@@ -843,9 +843,17 @@ static int _udevcomplete(int argc, char **argv, void *data __attribute((unused))
 	if (!(cookie = _get_cookie_value(argv[1])))
 		return 0;
 
-	/* strip flags from the cookie and use cookie magic instead */
-	cookie = (cookie & ~DM_UDEV_FLAGS_MASK) |
-		  (DM_COOKIE_MAGIC << DM_UDEV_FLAGS_SHIFT);
+	/*
+	 * Strip flags from the cookie and use cookie magic instead.
+	 * If the cookie has non-zero prefix and the base is zero then
+	 * this one carries flags to control udev rules only and it is
+	 * not meant to be for notification. Return with success in this
+	 * situation.
+	 */
+	if (!(cookie &= ~DM_UDEV_FLAGS_MASK))
+		return 1;
+
+	cookie |= DM_COOKIE_MAGIC << DM_UDEV_FLAGS_SHIFT;
 
 	return dm_udev_complete(cookie);
 }

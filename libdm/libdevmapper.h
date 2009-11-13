@@ -1032,6 +1032,10 @@ void dm_report_field_set_value(struct dm_report_field *field, const void *value,
  * of udev rules we use by decoding the cookie prefix. When doing the
  * notification, we replace the cookie prefix with DM_COOKIE_MAGIC,
  * so we notify the right semaphore.
+ * It is still possible to use cookies for passing the flags to udev
+ * rules even when udev_sync is disabled. The base part of the cookie
+ * will be zero (there's no notification semaphore) and prefix will be
+ * set then. However, having udev_sync enabled is highly recommended.
  */
 #define DM_COOKIE_MAGIC 0x0D4D
 #define DM_UDEV_FLAGS_MASK 0xFFFF0000
@@ -1076,7 +1080,7 @@ void dm_report_field_set_value(struct dm_report_field *field, const void *value,
 int dm_cookie_supported(void);
 
 /*
- * Udev notification functions.
+ * Udev synchronisation functions.
  */
 void dm_udev_set_sync_support(int sync_with_udev);
 int dm_udev_get_sync_support(void);
