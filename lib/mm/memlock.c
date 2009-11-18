@@ -135,6 +135,8 @@ void memlock_dec(void)
 	if (_memlock_count && (!--_memlock_count))
 		_unlock_mem();
 	log_debug("memlock_count dec to %d", _memlock_count);
+	if (_memlock_count < 0)
+		log_error("Internal error: _memlock_count has dropped below 0.");
 }
 
 int memlock(void)
