@@ -61,6 +61,9 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd,
 	dm_list_iterate_items(lvl, &vg->lvs) {
 		lv = lvl->lv;
 
+		if (!lv_is_visible(lv))
+			continue;
+
 		/* Only request activation of snapshot origin devices */
 		if ((lv->status & SNAPSHOT) || lv_is_cow(lv))
 			continue;

@@ -1,5 +1,6 @@
 Version 2.02.55 -
 ===================================
+  Do not activate directly not visible volumes in vgchange.
   Fix pvmove region_size oveflow for very large PVs.
   Fix lvcreate and lvresize processing of %PVS argument.
   Tidy some uses of arg_count and introduce arg_is_set.
