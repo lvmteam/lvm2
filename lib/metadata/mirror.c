@@ -612,6 +612,17 @@ static int _remove_mirror_images(struct logical_volume *lv,
 		return 0;
 	}
 
+	/*
+	 * The code above calls a suspend_lv once, however we now need to
+	 * resume 2 LVs, due to image removal: the mirror image itself above,
+	 * and now the remaining mirror LV. Since suspend_lv/resume_lv call
+	 * memlock_inc/memlock_dec and these need to be balanced, we need to
+	 * call an extra memlock_inc() here to balance for the second resume,
+	 * which could otherwise either deadlock due to suspended devices, or
+	 * alternatively drop memlock_count below 0.
+	 */
+	memlock_inc();
+
 	if (!resume_lv(mirrored_seg->lv->vg->cmd, mirrored_seg->lv)) {
 		log_error("Problem reactivating %s", mirrored_seg->lv->name);
 		return 0;
