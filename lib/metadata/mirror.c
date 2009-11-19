@@ -608,21 +608,24 @@ static int _remove_mirror_images(struct logical_volume *lv,
 	 * As it's now detached from mirrored_seg->lv we must resume it
 	 * explicitly.
 	 */
-	if (lv1 && !resume_lv(lv1->vg->cmd, lv1)) {
-		log_error("Problem resuming temporary LV, %s", lv1->name);
-		return 0;
-	}
+	if (lv1) {
+		if (!resume_lv(lv1->vg->cmd, lv1)) {
+			log_error("Problem resuming temporary LV, %s", lv1->name);
+			return 0;
+		}
 
-	/*
-	 * The code above calls a suspend_lv once, however we now need to
-	 * resume 2 LVs, due to image removal: the mirror image itself above,
-	 * and now the remaining mirror LV. Since suspend_lv/resume_lv call
-	 * memlock_inc/memlock_dec and these need to be balanced, we need to
-	 * call an extra memlock_inc() here to balance for the second resume,
-	 * which could otherwise either deadlock due to suspended devices, or
-	 * alternatively drop memlock_count below 0.
-	 */
-	memlock_inc();
+		/*
+		 * The code above calls a suspend_lv once, however we now need
+		 * to resume 2 LVs, due to image removal: the mirror image
+		 * itself here, and now the remaining mirror LV. Since
+		 * suspend_lv/resume_lv call memlock_inc/memlock_dec and these
+		 * need to be balanced, we need to call an extra memlock_inc()
+		 * here to balance for the this extra resume -- the following
+		 * one could otherwise either deadlock due to suspended
+		 * devices, or alternatively drop memlock_count below 0.
+		 */
+		memlock_inc();
+	}
 
 	if (!resume_lv(mirrored_seg->lv->vg->cmd, mirrored_seg->lv)) {
 		log_error("Problem reactivating %s", mirrored_seg->lv->name);
