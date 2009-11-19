@@ -24,6 +24,7 @@
 #include "lvm-string.h"
 #include "str_list.h"
 #include "locking.h"	/* FIXME Should not be used in this file */
+#include "memlock.h"
 
 #include "defaults.h" /* FIXME: should this be defaults.h? */
 
