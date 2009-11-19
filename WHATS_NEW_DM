@@ -2,7 +2,7 @@ Version 1.02.40 - 19th November 2009
 ====================================
   Fix install_device-mapper Makefile target to not build dmeventd plugins.
   Support udev flags even when udev_sync is disabled or not compiled in.
-  Remove 'last_rule' from udev rules: honor ENV{DM_UDEV_DISABLE_OTHER_RULES_FLAG}.
+  Remove 'last_rule' from udev rules: honour DM_UDEV_DISABLE_OTHER_RULES_FLAG.
   Add dmsetup --inactive support.
   Add dm_task_query_inactive_table to libdevmapper for kernel driver >= 4.16.
   Fix hash lookup segfault when keys compared are different lengths.

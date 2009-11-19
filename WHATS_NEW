@@ -1,18 +1,18 @@
 Version 2.02.55 - 19th November 2009
 ====================================
-  Fix a possible deadlock in mirror code due to memlock refcount mismatch.
-  Enable dmeventd event handlers to properly scan devices.
-  Do not activate directly not visible volumes in vgchange.
-  Fix pvmove region_size oveflow for very large PVs.
-  Fix lvcreate and lvresize processing of %PVS argument.
+  Fix deadlock when changing mirrors due to unpaired memlock refcount changes.
+  Use separate memlock counter for dmeventd handlers to permit device scanning.
+  Directly restrict vgchange to activating visible LVs.
+  Fix pvmove region_size overflow for very large PVs.
+  Fix lvcreate and lvresize %PVS argument always to use sensible total size.
   Tidy some uses of arg_count and introduce arg_is_set.
   Export outnl and indent functions for modules.
   Flush stdout after yes/no prompt.
   Update vgsplit and vgcreate to use vg_set_clustered.
-  Add vg_mda_count and vg_set_clustered library function.
+  Add vg_mda_count and vg_set_clustered library functions.
   Add more vgcreate and vgsplit nightly tests.
   Insert some missing stack macros into activation code.
-  Recognise DRBD device part and handle it similar to MD devices.
+  Recognise DRBD devices and handle them like md devices.
 
 Version 2.02.54 - 26th October 2009
 ===================================
