@@ -1,5 +1,7 @@
 Version 2.02.55 -
 ===================================
+  Fix a possible deadlock in mirror code due to memlock refcount mismatch.
+  Enable dmeventd event handlers to properly scan devices.
   Do not activate directly not visible volumes in vgchange.
   Fix pvmove region_size oveflow for very large PVs.
   Fix lvcreate and lvresize processing of %PVS argument.
