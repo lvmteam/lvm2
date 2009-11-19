@@ -380,8 +380,6 @@ void pvcreate_params_set_defaults(struct pvcreate_params *pp);
 int vg_write(struct volume_group *vg);
 int vg_commit(struct volume_group *vg);
 int vg_revert(struct volume_group *vg);
-struct volume_group *vg_read_internal(struct cmd_context *cmd, const char *vg_name,
-			     const char *vgid, int *consistent);
 struct physical_volume *pv_read(struct cmd_context *cmd, const char *pv_name,
 				struct dm_list *mdas, uint64_t *label_sector,
 				int warnings, int scan_label_only);
@@ -472,7 +470,7 @@ int remove_lvs_in_vg(struct cmd_context *cmd,
 		     force_t force);
 /*
  * vg_release() must be called on every struct volume_group allocated
- * by vg_create() or vg_read_internal() to free it when no longer required.
+ * by vg_create() or vg_read() to free it when no longer required.
  */
 void vg_release(struct volume_group *vg);
 

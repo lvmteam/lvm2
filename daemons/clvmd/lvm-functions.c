@@ -774,15 +774,14 @@ static void check_config()
 void lvm_do_backup(const char *vgname)
 {
 	struct volume_group * vg;
-	int consistent = 0;
 
 	DEBUGLOG("Triggering backup of VG metadata for %s. suspended=%d\n", vgname, suspended);
 
 	pthread_mutex_lock(&lvm_lock);
 
-	vg = vg_read_internal(cmd, vgname, NULL /*vgid*/, &consistent);
+	vg = vg_read(cmd, vgname, NULL /*vgid*/, 0 /*flags*/);
 
-	if (vg && consistent)
+	if (!vg_read_error(vg))
 		check_current_backup(vg);
 	else
 		log_error("Error backing up metadata, can't find VG for group %s", vgname);
