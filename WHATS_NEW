@@ -1,5 +1,5 @@
-Version 2.02.55 -
-===================================
+Version 2.02.55 - 19th November 2009
+====================================
   Fix a possible deadlock in mirror code due to memlock refcount mismatch.
   Enable dmeventd event handlers to properly scan devices.
   Do not activate directly not visible volumes in vgchange.
