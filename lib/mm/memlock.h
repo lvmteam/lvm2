@@ -20,6 +20,8 @@ struct cmd_context;
 
 void memlock_inc(void);
 void memlock_dec(void);
+void memlock_inc_daemon(void);
+void memlock_dec_daemon(void);
 int memlock(void);
 void memlock_init(struct cmd_context *cmd);
 

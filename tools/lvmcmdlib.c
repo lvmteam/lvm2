@@ -82,9 +82,9 @@ int lvm2_run(void *handle, const char *cmdline)
 	/* FIXME Temporary - move to libdevmapper */
 	ret = ECMD_PROCESSED;
 	if (!strcmp(cmdline, "_memlock_inc"))
-		memlock_inc();
+		memlock_inc_daemon();
 	else if (!strcmp(cmdline, "_memlock_dec"))
-		memlock_dec();
+		memlock_dec_daemon();
 	else
 		ret = lvm_run_command(cmd, argc, argv);
 
