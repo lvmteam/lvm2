@@ -3378,8 +3378,8 @@ static struct volume_group *_vg_lock_and_read(struct cmd_context *cmd, const cha
 
 	if (!cmd->handles_missing_pvs && vg_missing_pv_count(vg) &&
 	    (lock_flags & LCK_WRITE)) {
-		log_error("Cannot change VG %s while PVs are missing!",
-			  vg->name);
+		log_error("Cannot change VG %s while PVs are missing.", vg->name);
+		log_error("Consider vgreduce --removemissing.");
 		failure |= FAILED_INCONSISTENT; /* FIXME new failure code here? */
 		goto_bad;
 	}
