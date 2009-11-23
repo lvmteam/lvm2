@@ -1,5 +1,6 @@
 Version 2.02.56 - 
 ====================================
+  Revert vg_read_internal change, clvmd cannot use vg_read now. (2.02.55)
 
 Version 2.02.55 - 19th November 2009
 ====================================
