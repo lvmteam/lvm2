@@ -452,8 +452,7 @@ static int _process_one_vg(struct cmd_context *cmd, const char *vg_name,
 		ret_max = ret;
 
 out:
-	if ((vg_read_error(vg) == FAILED_ALLOCATION)||
-	    (vg_read_error(vg) == FAILED_LOCKING))
+	if (vg_read_error(vg))
 		vg_release(vg);
 	else
 		unlock_and_release_vg(cmd, vg, vg_name);
