@@ -1,5 +1,6 @@
 Version 2.02.56 - 
 ====================================
+  Return error status if vgchange fails to activate some volume.
   Fix memory lock imbalance in locking code.
   Revert vg_read_internal change, clvmd cannot use vg_read now. (2.02.55)
 

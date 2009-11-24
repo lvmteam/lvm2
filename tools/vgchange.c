@@ -56,7 +56,7 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd,
 {
 	struct lv_list *lvl;
 	struct logical_volume *lv;
-	int count = 0;
+	int count = 0, expected_count = 0;
 
 	dm_list_iterate_items(lvl, &vg->lvs) {
 		lv = lvl->lv;
@@ -77,6 +77,8 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd,
 		if (((activate == CHANGE_AN) || (activate == CHANGE_ALN)) &&
 		    ((lv->status & PVMOVE) ))
 			continue;
+
+		expected_count++;
 
 		if (activate == CHANGE_AN) {
 			if (!deactivate_lv(cmd, lv))
@@ -100,7 +102,12 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd,
 		count++;
 	}
 
-	return count;
+	if (expected_count)
+		log_verbose("%s %d logical volumes in volume group %s",
+			    activate ? "Activated" : "Deactivated",
+			    count, vg->name);
+
+	return (expected_count != count) ? ECMD_FAILED : ECMD_PROCESSED;
 }
 
 static int _vgchange_monitoring(struct cmd_context *cmd, struct volume_group *vg)
@@ -121,7 +128,7 @@ static int _vgchange_monitoring(struct cmd_context *cmd, struct volume_group *vg
 static int _vgchange_available(struct cmd_context *cmd, struct volume_group *vg)
 {
 	int lv_open, active, monitored;
-	int available;
+	int available, ret;
 	int activate = 1;
 
 	/*
@@ -158,17 +165,11 @@ static int _vgchange_available(struct cmd_context *cmd, struct volume_group *vg)
 		}
 	}
 
-	if (activate && _activate_lvs_in_vg(cmd, vg, available))
-		log_verbose("Activated logical volumes in "
-			    "volume group \"%s\"", vg->name);
-
-	if (!activate && _activate_lvs_in_vg(cmd, vg, available))
-		log_verbose("Deactivated logical volumes in "
-			    "volume group \"%s\"", vg->name);
+	ret = _activate_lvs_in_vg(cmd, vg, available);
 
 	log_print("%d logical volume(s) in volume group \"%s\" now active",
 		  lvs_in_vg_activated(vg), vg->name);
-	return ECMD_PROCESSED;
+	return ret;
 }
 
 static int _vgchange_alloc(struct cmd_context *cmd, struct volume_group *vg)
