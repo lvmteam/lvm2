@@ -51,14 +51,14 @@ struct text_vg_version_ops {
 			   time_t *when, char **desc);
 	const char *(*read_vgname) (const struct format_type *fmt,
 				    struct config_tree *cft,
-				    struct id *vgid, uint32_t *vgstatus,
+				    struct id *vgid, uint64_t *vgstatus,
 				    char **creation_host);
 };
 
 struct text_vg_version_ops *text_vg_vsn1_init(void);
 
-int print_flags(uint32_t status, int type, char *buffer, size_t size);
-int read_flags(uint32_t *status, int type, struct config_value *cv);
+int print_flags(uint64_t status, int type, char *buffer, size_t size);
+int read_flags(uint64_t *status, int type, struct config_value *cv);
 
 int print_tags(struct dm_list *tags, char *buffer, size_t size);
 int read_tags(struct dm_pool *mem, struct dm_list *tags, struct config_value *cv);
@@ -81,7 +81,7 @@ const char *text_vgname_import(const struct format_type *fmt,
                                off_t offset, uint32_t size,
                                off_t offset2, uint32_t size2,
                                checksum_fn_t checksum_fn, uint32_t checksum,
-                               struct id *vgid, uint32_t *vgstatus,
+                               struct id *vgid, uint64_t *vgstatus,
 			       char **creation_host);
 
 #endif

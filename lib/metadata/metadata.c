@@ -56,7 +56,7 @@ static struct physical_volume *_find_pv_in_vg_by_uuid(const struct volume_group 
 						      const struct id *id);
 
 static uint32_t _vg_bad_status_bits(const struct volume_group *vg,
-				    uint32_t status);
+				    uint64_t status);
 
 const char _really_init[] =
     "Really INITIALIZE physical volume \"%s\" of volume group \"%s\" [y/n]? ";
@@ -3220,7 +3220,7 @@ int vg_check_write_mode(struct volume_group *vg)
  * FIXME Remove the unnecessary duplicate definitions and return bits directly.
  */
 static uint32_t _vg_bad_status_bits(const struct volume_group *vg,
-				    uint32_t status)
+				    uint64_t status)
 {
 	uint32_t failure = 0;
 
@@ -3257,7 +3257,7 @@ static uint32_t _vg_bad_status_bits(const struct volume_group *vg,
  * @vg - volume group to check status flags
  * @status - specific status flags to check (e.g. EXPORTED_VG)
  */
-int vg_check_status(const struct volume_group *vg, uint32_t status)
+int vg_check_status(const struct volume_group *vg, uint64_t status)
 {
 	return !_vg_bad_status_bits(vg, status);
 }
@@ -3303,7 +3303,7 @@ static struct volume_group *_recover_vg(struct cmd_context *cmd, const char *loc
  */
 static struct volume_group *_vg_lock_and_read(struct cmd_context *cmd, const char *vg_name,
 			       const char *vgid, uint32_t lock_flags,
-			       uint32_t status_flags, uint32_t misc_flags)
+			       uint64_t status_flags, uint32_t misc_flags)
 {
 	struct volume_group *vg = NULL;
 	const char *lock_name;
@@ -3429,7 +3429,7 @@ bad:
 struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name,
 	      const char *vgid, uint32_t flags)
 {
-	uint32_t status = 0;
+	uint64_t status = UINT64_C(0);
 	uint32_t lock_flags = LCK_VG_READ;
 
 	if (flags & READ_FOR_UPDATE) {
@@ -3548,7 +3548,7 @@ uint64_t pv_size(const struct physical_volume *pv)
 	return pv_field(pv, size);
 }
 
-uint32_t pv_status(const struct physical_volume *pv)
+uint64_t pv_status(const struct physical_volume *pv)
 {
 	return pv_field(pv, status);
 }
@@ -3586,7 +3586,7 @@ uint32_t vg_seqno(const struct volume_group *vg)
 	return vg->seqno;
 }
 
-uint32_t vg_status(const struct volume_group *vg)
+uint64_t vg_status(const struct volume_group *vg)
 {
 	return vg->status;
 }

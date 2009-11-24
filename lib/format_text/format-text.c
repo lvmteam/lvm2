@@ -1037,7 +1037,7 @@ static int _scan_file(const struct format_type *fmt)
 
 const char *vgname_from_mda(const struct format_type *fmt,
 			    struct device_area *dev_area, struct id *vgid,
-			    uint32_t *vgstatus, char **creation_host,
+			    uint64_t *vgstatus, char **creation_host,
 			    uint64_t *mda_free_sectors)
 {
 	struct raw_locn *rlocn;
@@ -1146,7 +1146,7 @@ static int _scan_raw(const struct format_type *fmt)
 	struct volume_group *vg;
 	struct format_instance fid;
 	struct id vgid;
-	uint32_t vgstatus;
+	uint64_t vgstatus;
 
 	raw_list = &((struct mda_lists *) fmt->private)->raws;
 

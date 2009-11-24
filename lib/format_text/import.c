@@ -40,7 +40,7 @@ const char *text_vgname_import(const struct format_type *fmt,
 			       off_t offset, uint32_t size,
 			       off_t offset2, uint32_t size2,
 			       checksum_fn_t checksum_fn, uint32_t checksum,
-			       struct id *vgid, uint32_t *vgstatus,
+			       struct id *vgid, uint64_t *vgstatus,
 			       char **creation_host)
 {
 	struct config_tree *cft;

@@ -167,7 +167,7 @@ struct lv_segment *alloc_lv_segment(struct dm_pool *mem,
 				    const struct segment_type *segtype,
 				    struct logical_volume *lv,
 				    uint32_t le, uint32_t len,
-				    uint32_t status,
+				    uint64_t status,
 				    uint32_t stripe_size,
 				    struct logical_volume *log_lv,
 				    uint32_t area_count,
@@ -213,7 +213,7 @@ struct lv_segment *alloc_lv_segment(struct dm_pool *mem,
 }
 
 struct lv_segment *alloc_snapshot_seg(struct logical_volume *lv,
-				      uint32_t status, uint32_t old_le_count)
+				      uint64_t status, uint32_t old_le_count)
 {
 	struct lv_segment *seg;
 	const struct segment_type *segtype;
@@ -639,7 +639,7 @@ static int _log_parallel_areas(struct dm_pool *mem, struct dm_list *parallel_are
 	return 1;
 }
 
-static int _setup_alloced_segment(struct logical_volume *lv, uint32_t status,
+static int _setup_alloced_segment(struct logical_volume *lv, uint64_t status,
 				  uint32_t area_count,
 				  uint32_t stripe_size,
 				  const struct segment_type *segtype,
@@ -682,7 +682,7 @@ static int _setup_alloced_segment(struct logical_volume *lv, uint32_t status,
 static int _setup_alloced_segments(struct logical_volume *lv,
 				   struct dm_list *alloced_areas,
 				   uint32_t area_count,
-				   uint32_t status,
+				   uint64_t status,
 				   uint32_t stripe_size,
 				   const struct segment_type *segtype,
 				   uint32_t region_size,
@@ -1278,7 +1278,7 @@ static int _allocate(struct alloc_handle *ah,
 	return r;
 }
 
-int lv_add_virtual_segment(struct logical_volume *lv, uint32_t status,
+int lv_add_virtual_segment(struct logical_volume *lv, uint64_t status,
 			   uint32_t extents, const struct segment_type *segtype)
 {
 	struct lv_segment *seg;
@@ -1355,7 +1355,7 @@ int lv_add_segment(struct alloc_handle *ah,
 		   struct logical_volume *lv,
 		   const struct segment_type *segtype,
 		   uint32_t stripe_size,
-		   uint32_t status,
+		   uint64_t status,
 		   uint32_t region_size,
 		   struct logical_volume *log_lv)
 {
@@ -1495,7 +1495,7 @@ int lv_add_mirror_areas(struct alloc_handle *ah,
 int lv_add_mirror_lvs(struct logical_volume *lv,
 		      struct logical_volume **sub_lvs,
 		      uint32_t num_extra_areas,
-		      uint32_t status, uint32_t region_size)
+		      uint64_t status, uint32_t region_size)
 {
 	struct lv_segment *seg;
 	uint32_t old_area_count, new_area_count;
@@ -1620,7 +1620,7 @@ int lv_extend(struct logical_volume *lv,
 	      uint32_t mirrors, uint32_t extents,
 	      struct physical_volume *mirrored_pv __attribute((unused)),
 	      uint32_t mirrored_pe __attribute((unused)),
-	      uint32_t status, struct dm_list *allocatable_pvs,
+	      uint64_t status, struct dm_list *allocatable_pvs,
 	      alloc_policy_t alloc)
 {
 	int r = 1;
@@ -1885,7 +1885,7 @@ struct logical_volume *alloc_lv(struct dm_pool *mem)
  */
 struct logical_volume *lv_create_empty(const char *name,
 				       union lvid *lvid,
-				       uint32_t status,
+				       uint64_t status,
 				       alloc_policy_t alloc,
 				       struct volume_group *vg)
 {
@@ -2266,7 +2266,7 @@ int split_parent_segments_for_layer(struct cmd_context *cmd,
 int remove_layers_for_segments(struct cmd_context *cmd,
 			       struct logical_volume *lv,
 			       struct logical_volume *layer_lv,
-			       uint32_t status_mask, struct dm_list *lvs_changed)
+			       uint64_t status_mask, struct dm_list *lvs_changed)
 {
 	struct lv_segment *seg, *lseg;
 	uint32_t s;
@@ -2298,7 +2298,7 @@ int remove_layers_for_segments(struct cmd_context *cmd,
 			}
 			if ((lseg->status & status_mask) != status_mask) {
 				log_error("Layer status does not match: "
-					  "%s:%" PRIu32 " status: 0x%x/0x%x",
+					  "%s:%" PRIu32 " status: 0x%" PRIx64 "/0x%" PRIx64,
 					  layer_lv->name, lseg->le,
 					  lseg->status, status_mask);
 				return 0;
@@ -2347,7 +2347,7 @@ int remove_layers_for_segments(struct cmd_context *cmd,
 /* Remove a layer */
 int remove_layers_for_segments_all(struct cmd_context *cmd,
 				   struct logical_volume *layer_lv,
-				   uint32_t status_mask,
+				   uint64_t status_mask,
 				   struct dm_list *lvs_changed)
 {
 	struct lv_list *lvl;
@@ -2372,7 +2372,7 @@ int remove_layers_for_segments_all(struct cmd_context *cmd,
 
 static int _move_lv_segments(struct logical_volume *lv_to,
 			     struct logical_volume *lv_from,
-			     uint32_t set_status, uint32_t reset_status)
+			     uint64_t set_status, uint64_t reset_status)
 {
 	struct lv_segment *seg;
 
@@ -2454,7 +2454,7 @@ int remove_layer_from_lv(struct logical_volume *lv,
  */
 struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 					   struct logical_volume *lv_where,
-					   uint32_t status,
+					   uint64_t status,
 					   const char *layer_suffix)
 {
 	struct logical_volume *layer_lv;
@@ -2543,7 +2543,7 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
  */
 static int _extend_layer_lv_for_segment(struct logical_volume *layer_lv,
 					struct lv_segment *seg, uint32_t s,
-					uint32_t status)
+					uint64_t status)
 {
 	struct lv_segment *mapseg;
 	struct segment_type *segtype;
@@ -2690,7 +2690,7 @@ static int _align_segment_boundary_to_pe_range(struct logical_volume *lv_where,
 int insert_layer_for_segments_on_pv(struct cmd_context *cmd,
 				    struct logical_volume *lv_where,
 				    struct logical_volume *layer_lv,
-				    uint32_t status,
+				    uint64_t status,
 				    struct pv_list *pvl,
 				    struct dm_list *lvs_changed)
 {
@@ -2833,7 +2833,7 @@ int lv_create_single(struct volume_group *vg,
 {
 	struct cmd_context *cmd = vg->cmd;
 	uint32_t size_rest;
-	uint32_t status = 0;
+	uint64_t status = UINT64_C(0);
 	struct logical_volume *lv, *org = NULL;
 	int origin_active = 0;
 	char lv_name_buf[128];

@@ -23,7 +23,7 @@
  * converted into arrays of strings.
  */
 struct flag {
-	const int mask;
+	const uint64_t mask;
 	const char *description;
 	int kind;
 };
@@ -91,7 +91,7 @@ static struct flag *_get_flags(int type)
  * using one of the tables defined at the top of
  * the file.
  */
-int print_flags(uint32_t status, int type, char *buffer, size_t size)
+int print_flags(uint64_t status, int type, char *buffer, size_t size)
 {
 	int f, first = 1;
 	struct flag *flags;
@@ -135,10 +135,10 @@ int print_flags(uint32_t status, int type, char *buffer, size_t size)
 	return 1;
 }
 
-int read_flags(uint32_t *status, int type, struct config_value *cv)
+int read_flags(uint64_t *status, int type, struct config_value *cv)
 {
 	int f;
-	uint32_t s = 0;
+	uint64_t s = UINT64_C(0);
 	struct flag *flags;
 
 	if (!(flags = _get_flags(type)))

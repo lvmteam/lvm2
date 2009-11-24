@@ -973,7 +973,7 @@ static int _create_mimage_lvs(struct alloc_handle *ah,
  * has the status bits on.
  */
 int remove_mirrors_from_segments(struct logical_volume *lv,
-				 uint32_t new_mirrors, uint32_t status_mask)
+				 uint32_t new_mirrors, uint64_t status_mask)
 {
 	struct lv_segment *seg;
 	uint32_t s;
@@ -986,7 +986,7 @@ int remove_mirrors_from_segments(struct logical_volume *lv,
 			return 0;
 		} if ((seg->status & status_mask) != status_mask) {
 			log_error("Segment status does not match: %s:%" PRIu32
-				  " status:0x%x/0x%x", lv->name, seg->le,
+				  " status:0x%" PRIx64 "/0x%" PRIx64, lv->name, seg->le,
 				  seg->status, status_mask);
 			return 0;
 		}
@@ -1609,7 +1609,7 @@ int lv_add_mirrors(struct cmd_context *cmd, struct logical_volume *lv,
 int lv_remove_mirrors(struct cmd_context *cmd __attribute((unused)),
 		      struct logical_volume *lv,
 		      uint32_t mirrors, uint32_t log_count, struct dm_list *pvs,
-		      uint32_t status_mask)
+		      uint64_t status_mask)
 {
 	uint32_t new_mirrors;
 	struct lv_segment *seg;
