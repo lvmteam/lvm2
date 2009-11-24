@@ -125,7 +125,7 @@ static int _read_id(struct id *id, struct config_node *cn, const char *path)
 	return 1;
 }
 
-static int _read_flag_config(struct config_node *n, uint32_t *status, int type)
+static int _read_flag_config(struct config_node *n, uint64_t *status, int type)
 {
 	struct config_node *cn;
 	*status = 0;
@@ -809,7 +809,7 @@ static void _read_desc(struct dm_pool *mem,
 
 static const char *_read_vgname(const struct format_type *fmt,
 				struct config_tree *cft, struct id *vgid,
-				uint32_t *vgstatus, char **creation_host)
+				uint64_t *vgstatus, char **creation_host)
 {
 	struct config_node *vgn;
 	struct dm_pool *mem = fmt->cmd->mem;

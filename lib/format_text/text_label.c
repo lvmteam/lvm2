@@ -259,7 +259,7 @@ static int _text_read(struct labeller *l, struct device *dev, void *buf,
 	struct id vgid;
 	struct mda_context *mdac;
 	const char *vgname;
-	uint32_t vgstatus;
+	uint64_t vgstatus;
 	char *creation_host;
 
 	pvhdr = (struct pv_header *) ((void *) buf + xlate32(lh->offset_xl));

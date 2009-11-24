@@ -349,7 +349,7 @@ static int _print_header(struct formatter *f,
 	return 1;
 }
 
-static int _print_flag_config(struct formatter *f, int status, int type)
+static int _print_flag_config(struct formatter *f, uint64_t status, int type)
 {
 	char buffer[4096];
 	if (!print_flags(status, type | STATUS_FLAG, buffer, sizeof(buffer)))
