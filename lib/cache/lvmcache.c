@@ -20,6 +20,7 @@
 #include "locking.h"
 #include "metadata.h"
 #include "filter.h"
+#include "filter-persistent.h"
 #include "memlock.h"
 #include "str_list.h"
 #include "format-text.h"
@@ -532,6 +533,13 @@ int lvmcache_label_scan(struct cmd_context *cmd, int full_scan)
 		if (fmt->ops->scan && !fmt->ops->scan(fmt))
 			goto out;
 	}
+
+	/*
+	 * If we are a long-lived process, write out the updated persistent
+	 * device cache for the benefit of short-lived processes.
+	 */
+	if (full_scan == 2 && cmd->is_long_lived && cmd->dump_filter)
+		persistent_filter_dump(cmd->filter);
 
 	r = 1;
 

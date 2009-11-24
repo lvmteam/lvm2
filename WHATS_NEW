@@ -1,5 +1,6 @@
 Version 2.02.56 - 
 ====================================
+  Move persistent filter dump to more appropriate place.
   Refresh device filters before full device rescan in lvmcache.
   Return error status if vgchange fails to activate some volume.
   Fix memory lock imbalance in locking code.
