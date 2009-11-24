@@ -31,10 +31,11 @@ static int _pvdisplay_single(struct cmd_context *cmd,
 		vg_name = pv_vg_name(pv);
 		vg = vg_read(cmd, vg_name, (char *)&pv->vgid, 0);
 		if (vg_read_error(vg)) {
-		 	log_error("Skipping volume group %s", vg_name);
+			log_error("Skipping volume group %s", vg_name);
+			vg_release(vg);
 			/* FIXME If CLUSTERED should return ECMD_PROCESSED here */
-		 	return ECMD_FAILED;
-	 	}
+			return ECMD_FAILED;
+		}
 
 	 	/*
 		 * Replace possibly incomplete PV structure with new one
