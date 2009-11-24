@@ -1,6 +1,3 @@
-Version 1.02.41 - 
-====================================
-
 Version 1.02.40 - 19th November 2009
 ====================================
   Fix install_device-mapper Makefile target to not build dmeventd plugins.
