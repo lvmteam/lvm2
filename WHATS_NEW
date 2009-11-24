@@ -2,11 +2,11 @@ Version 2.02.56 - 24th November 2009
 ====================================
   Add missing vg_release to pvs and pvdisplay to fix memory leak.
   Do not try to unlock VG which is not locked in _process_one_vg.
-  Move persistent filter dump to more appropriate place.
+  Move is_long_lived persistent_filter_dump to happen after every full scan.
   Refresh device filters before full device rescan in lvmcache.
   Return error status if vgchange fails to activate some volume.
-  Fix memory lock imbalance in locking code.
-  Revert vg_read_internal change, clvmd cannot use vg_read now. (2.02.55)
+  Fix suspend/resume lock type test causing unbalanced memory locking.
+  Revert vg_read_internal change as clvmd was not ready for vg_read. (2.02.55)
 
 Version 2.02.55 - 19th November 2009
 ====================================
