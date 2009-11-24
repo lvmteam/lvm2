@@ -1,4 +1,4 @@
-Version 2.02.56 - 
+Version 2.02.56 - 24th November 2009
 ====================================
   Add missing vg_release to pvs and pvdisplay to fix memory leak.
   Do not try to unlock VG which is not locked in _process_one_vg.
