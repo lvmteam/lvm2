@@ -1223,6 +1223,16 @@ skip_dlclose:
 	}
 }
 
+int refresh_filters(struct cmd_context *cmd)
+{
+	if (cmd->filter) {
+		cmd->filter->destroy(cmd->filter);
+		cmd->filter = NULL;
+	}
+
+	return _init_filters(cmd, 0);
+}
+
 int refresh_toolcontext(struct cmd_context *cmd)
 {
 	log_verbose("Reloading config files");
