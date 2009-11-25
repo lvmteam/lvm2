@@ -1,6 +1,7 @@
 Version 2.02.57 -
 ====================================
- Switch status from 32-bit to 64-bit.
+  Log failure type and recognise type 'F' (flush) in dmeventd mirror plugin.
+  Extend internal PV/VG/LV/segment status variables from 32-bit to 64-bit.
 
 Version 2.02.56 - 24th November 2009
 ====================================

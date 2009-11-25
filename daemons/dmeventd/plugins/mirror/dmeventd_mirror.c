@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2005-2009 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -27,6 +27,8 @@
 
 #include <syslog.h> /* FIXME Replace syslog with multilog */
 /* FIXME Missing openlog? */
+/* FIXME Replace most syslogs with log_error() style messages and add complete context. */
+/* FIXME Reformat to 80 char lines. */
 
 #define ME_IGNORE    0
 #define ME_INSYNC    1
@@ -50,6 +52,36 @@ static void *_lvm_handle = NULL;
  * Currently only one event can be processed at a time.
  */
 static pthread_mutex_t _event_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+static int _process_status_code(const char status_code, const char *dev_name,
+				const char *dev_type, int r)
+{
+	/*
+	 *    A => Alive - No failures
+	 *    D => Dead - A write failure occurred leaving mirror out-of-sync
+	 *    F => Flush failed.
+	 *    S => Sync - A sychronization failure occurred, mirror out-of-sync
+	 *    R => Read - A read failure occurred, mirror data unaffected
+	 *    U => Unclassified failure (bug)
+	 */ 
+	if (status_code == 'F') {
+		syslog(LOG_ERR, "%s device %s flush failed.\n",
+		       dev_type, dev_name);
+		r = ME_FAILURE;
+	} else if (status_code == 'S')
+		syslog(LOG_ERR, "%s device %s sync failed.\n",
+		       dev_type, dev_name);
+	else if (status_code == 'R')
+		syslog(LOG_ERR, "%s device %s read failed.\n",
+		       dev_type, dev_name);
+	else if (status_code != 'A') {
+		syslog(LOG_ERR, "%s device %s has failed (%c).\n",
+		       dev_type, dev_name, status_code);
+		r = ME_FAILURE;
+	}
+
+	return r;
+}
 
 static int _get_mirror_event(char *params)
 {
@@ -90,17 +122,14 @@ static int _get_mirror_event(char *params)
 
 	/* Check for bad mirror devices */
 	for (i = 0; i < num_devs; i++)
-		if (dev_status_str[i] == 'D') {
-			syslog(LOG_ERR, "Mirror device, %s, has failed.\n", args[i]);
-			r = ME_FAILURE;
-		}
+		r = _process_status_code(dev_status_str[i], args[i],
+			i ? "Secondary mirror" : "Primary mirror", r);
 
 	/* Check for bad disk log device */
-	if (log_argc > 1 && log_status_str[0] == 'D') {
-		syslog(LOG_ERR, "Log device, %s, has failed.\n",
-		       args[2 + num_devs + log_argc]);
-		r = ME_FAILURE;
-	}
+	if (log_argc > 1)
+		r = _process_status_code(log_status_str[0],
+					 args[2 + num_devs + log_argc],
+					 "Log", r);
 
 	if (r == ME_FAILURE)
 		goto out;
