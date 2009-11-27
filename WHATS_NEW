@@ -1,5 +1,6 @@
 Version 2.02.57 -
 ====================================
+  Use locking_type 3 (compiled in cluster locking) in lvmconf.
   Remove duplicate dm_list macros and functions.
   Log failure type and recognise type 'F' (flush) in dmeventd mirror plugin.
   Extend internal PV/VG/LV/segment status variables from 32-bit to 64-bit.
