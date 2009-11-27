@@ -571,6 +571,12 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 	else
 		lp->mirrors += 1;
 
+	if (lp->mirrors > DEFAULT_MIRROR_MAX_IMAGES) {
+		log_error("Only up to %d images in mirror supported currently.",
+			  DEFAULT_MIRROR_MAX_IMAGES);
+		return 0;
+	}
+
 	if (repair) {
 		cmd->handles_missing_pvs = 1;
 		cmd->partial_activation = 1;
