@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright (C) 2004-2009 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2004-2006 Red Hat, Inc. All rights reserved.
 #
 # This file is part of the lvm2-cluster package.
 #
@@ -36,7 +36,7 @@ function parse_args
     while [ -n "$1" ]; do
         case $1 in
             --enable-cluster)
-                LOCKING_TYPE=3
+                LOCKING_TYPE=2
                 shift
                 ;;
             --disable-cluster)
@@ -94,18 +94,20 @@ function validate_args
 
     if [ -n "$LOCKINGLIBDIR" ]; then
 
+        [ -z "$LOCKINGLIB" ] && LOCKINGLIB="liblvm2clusterlock.so"
+            
         if [ "${LOCKINGLIBDIR:0:1}" != "/" ]
             then
             echo "Prefix must be an absolute path name (starting with a /)"
             exit 12
         fi
-
-        if [ -n "$LOCKINGLIB" ] && [ ! -f "$LOCKINGLIBDIR/$LOCKINGLIB" ]
+    
+        if [ ! -f "$LOCKINGLIBDIR/$LOCKINGLIB" ]
             then
             echo "$LOCKINGLIBDIR/$LOCKINGLIB does not exist, did you do a \"make install\" ?"
             exit 11
         fi
-
+        
     fi
 
     if [ "$LOCKING_TYPE" = "1" ] && [ -n "$LOCKINGLIBDIR" -o -n "$LOCKINGLIB" ]; then
@@ -147,7 +149,7 @@ then
     # See if we can find it...
     grep -q '^[[:blank:]]*global[[:blank:]]*{' $CONFIGFILE
     have_global=$?
-
+    
     if [ "$have_global" = "1" ] 
 	then
 	echo "global keys but no 'global {' found, can't edit file"
@@ -168,29 +170,13 @@ then
     if [ -z "$LOCKING_TYPE" ]; then
 	LOCKING_TYPE=1
     fi
-    if [ "$LOCKING_TYPE" = "3" ] || [ "$LOCKING_TYPE" = "2" ]; then
+    if [ "$LOCKING_TYPE" = "2" ]; then
         cat $CONFIGFILE - <<EOF > $TMPFILE
 global {
     # Enable locking for cluster LVM
     locking_type = $LOCKING_TYPE
     library_dir = "$LOCKINGLIBDIR"
-EOF
-        if [ $? != 0 ]
-        then
-    	    echo "failed to create temporary config file, $CONFIGFILE not updated"
-	    exit 14
-        fi
-	if [ -n "$LOCKINGLIB" ]; then
-	    cat - <<EOF >> $TMPFILE
     locking_library = "$LOCKINGLIB"
-EOF
-            if [ $? != 0 ]
-            then
-	        echo "failed to create temporary config file, $CONFIGFILE not updated"
-	        exit 16
-            fi
-	fi
-	cat - <<EOF >> $TMPFILE
 }
 EOF
     fi # if we aren't setting cluster locking, we don't need to create a global section
@@ -198,7 +184,7 @@ EOF
     if [ $? != 0 ]
     then
 	echo "failed to create temporary config file, $CONFIGFILE not updated"
-	exit 17
+	exit 14
     fi
 else
     #
@@ -214,7 +200,7 @@ else
 	    SEDCMD=" /global[[:blank:]]*{/a\ \ \ \ locking_type = $LOCKING_TYPE"
 	fi
     fi
-
+    
     if [ -n "$LOCKINGLIBDIR" ]; then
         if [ "$have_dir" = "0" ] 
             then
@@ -222,14 +208,25 @@ else
         else
             SEDCMD="${SEDCMD}\n/global[[:blank:]]*{/a\ \ \ \ library_dir = \"$LOCKINGLIBDIR\""
         fi
-    fi
 
-    if [ -n "$LOCKINGLIB" ]; then
-        if [ "$have_library" = "0" ]
+        if [ "$have_library" = "0" ] 
             then
             SEDCMD="${SEDCMD}\ns/^[[:blank:]]*locking_library[[:blank:]]*=.*/\ \ \ \ locking_library = \"$LOCKINGLIB\"/g"
         else
             SEDCMD="${SEDCMD}\n/global[[:blank:]]*{/a\ \ \ \ locking_library = \"$LOCKINGLIB\""
+        fi
+    fi
+
+    if [ "$LOCKING_TYPE" = "1" ]; then
+        # if we're not using cluster locking, remove the library dir and locking library name
+        if [ "$have_dir" = "0" ] 
+            then
+            SEDCMD="${SEDCMD}\n/^[[:blank:]]*library_dir[[:blank:]]*=.*/d"
+        fi
+
+        if [ "$have_library" = "0" ] 
+            then
+            SEDCMD="${SEDCMD}\n/^[[:blank:]]*locking_library[[:blank:]]*=.*/d"
         fi
     fi
 
