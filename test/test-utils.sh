@@ -199,8 +199,9 @@ prepare_lvmconf() {
     archive = 0
   }
   global {
+    abort_on_internal_errors = 1
     library_dir = "$G_root_/lib"
-     locking_dir = "$G_root_/var/lock/lvm"
+    locking_dir = "$G_root_/var/lock/lvm"
   }
 EOF
 }

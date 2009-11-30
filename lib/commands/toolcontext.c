@@ -147,7 +147,9 @@ static void _init_logging(struct cmd_context *cmd)
 
 	/* Log message formatting */
 	init_indent(find_config_tree_int(cmd, "log/indent",
-				    DEFAULT_INDENT));
+					 DEFAULT_INDENT));
+	init_abort_on_internal_errors(find_config_tree_int(cmd, "global/abort_on_internal_errors",
+							   DEFAULT_ABORT_ON_INTERNAL_ERRORS));
 
 	cmd->default_settings.msg_prefix = find_config_tree_str(cmd,
 							   "log/prefix",
