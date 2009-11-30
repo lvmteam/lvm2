@@ -58,9 +58,9 @@ init.sh: $(srcdir)/Makefile.in $(srcdir)/test-utils.sh .bin-dir-stamp bin/not bi
 	echo 'export PATH' >> $@-t
 	chmod a-w $@-t
 	mv $@-t $@
-	test "$(srcdir)" != "." && cp $(srcdir)/test-utils.sh \
-	                              $(srcdir)/test-lib.sh \
-	                              $(T) .
+	if test "$(srcdir)" != "."; then cp $(srcdir)/test-utils.sh \
+	                                    $(srcdir)/test-lib.sh \
+	                                    $(T) .; fi
 
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
