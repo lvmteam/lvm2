@@ -183,7 +183,8 @@ void print_log(int level, const char *file, int line, int dm_errno,
 
 	level &= ~_LOG_STDERR;
 
-	if (!strncmp(format, "Internal error:",
+	if (_abort_on_internal_errors &&
+	    !strncmp(format, "Internal error:",
 		     strlen("Internal error:")))
 		internal_error = 1;
 
@@ -244,7 +245,7 @@ void print_log(int level, const char *file, int line, int dm_errno,
 			if (!strcmp("<backtrace>", format) &&
 			    verbose_level() <= _LOG_DEBUG)
 				break;
-			if (verbose_level() >= _LOG_DEBUG) {
+			if (internal_error || verbose_level() >= _LOG_DEBUG) {
 				fprintf(stderr, "%s%s%s", locn, log_command_name(),
 					_msg_prefix);
 				if (_indent)
@@ -255,7 +256,7 @@ void print_log(int level, const char *file, int line, int dm_errno,
 			break;
 
 		case _LOG_INFO:
-			if (verbose_level() >= _LOG_INFO) {
+			if (internal_error || verbose_level() >= _LOG_INFO) {
 				fprintf(stderr, "%s%s%s", locn, log_command_name(),
 					_msg_prefix);
 				if (_indent)
@@ -265,7 +266,7 @@ void print_log(int level, const char *file, int line, int dm_errno,
 			}
 			break;
 		case _LOG_NOTICE:
-			if (verbose_level() >= _LOG_NOTICE) {
+			if (internal_error || verbose_level() >= _LOG_NOTICE) {
 				fprintf(stderr, "%s%s%s", locn, log_command_name(),
 					_msg_prefix);
 				if (_indent)
@@ -275,7 +276,7 @@ void print_log(int level, const char *file, int line, int dm_errno,
 			}
 			break;
 		case _LOG_WARN:
-			if (verbose_level() >= _LOG_WARN) {
+			if (internal_error || verbose_level() >= _LOG_WARN) {
 				fprintf(use_stderr ? stderr : stdout, "%s%s",
 					log_command_name(), _msg_prefix);
 				vfprintf(use_stderr ? stderr : stdout, trformat, ap);
@@ -283,7 +284,7 @@ void print_log(int level, const char *file, int line, int dm_errno,
 			}
 			break;
 		case _LOG_ERR:
-			if (verbose_level() >= _LOG_ERR) {
+			if (internal_error || verbose_level() >= _LOG_ERR) {
 				fprintf(stderr, "%s%s%s", locn, log_command_name(),
 					_msg_prefix);
 				vfprintf(stderr, trformat, ap);
@@ -292,7 +293,7 @@ void print_log(int level, const char *file, int line, int dm_errno,
 			break;
 		case _LOG_FATAL:
 		default:
-			if (verbose_level() >= _LOG_FATAL) {
+			if (internal_error || verbose_level() >= _LOG_FATAL) {
 				fprintf(stderr, "%s%s%s", locn, log_command_name(),
 					_msg_prefix);
 				vfprintf(stderr, trformat, ap);
@@ -303,7 +304,7 @@ void print_log(int level, const char *file, int line, int dm_errno,
 		va_end(ap);
 	}
 
-	if (internal_error && _abort_on_internal_errors)
+	if (internal_error)
 		abort();
 
 	if (level > debug_level())
