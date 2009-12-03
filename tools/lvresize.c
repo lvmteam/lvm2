@@ -120,7 +120,7 @@ static int _request_confirmation(struct cmd_context *cmd,
 	if (!arg_count(cmd, force_ARG)) {
 		if (yes_no_prompt("Do you really want to reduce %s? [y/n]: ",
 				  lp->lv_name) == 'n') {
-			log_print("Logical volume %s NOT reduced", lp->lv_name);
+			log_error("Logical volume %s NOT reduced", lp->lv_name);
 			return 0;
 		}
 		if (sigint_caught())

@@ -183,7 +183,7 @@ static int lvchange_resync(struct cmd_context *cmd,
 			    yes_no_prompt("Do you really want to deactivate "
 					  "logical volume %s to resync it? [y/n]: ",
 					  lv->name) == 'n') {
-				log_print("Logical volume \"%s\" not resynced",
+				log_error("Logical volume \"%s\" not resynced",
 					  lv->name);
 				return 0;
 			}
@@ -433,7 +433,7 @@ static int lvchange_persistent(struct cmd_context *cmd,
 		    yes_no_prompt("Logical volume %s will be "
 				  "deactivated temporarily. "
 				  "Continue? [y/n]: ", lv->name) == 'n') {
-			log_print("%s device number not changed.",
+			log_error("%s device number not changed.",
 				  lv->name);
 			return 0;
 		}

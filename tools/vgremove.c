@@ -36,7 +36,7 @@ static int vgremove_single(struct cmd_context *cmd, const char *vg_name,
 				   "group \"%s\" containing %u "
 				   "logical volumes? [y/n]: ",
 				   vg_name, lv_count) == 'n')) {
-			log_print("Volume group \"%s\" not removed", vg_name);
+			log_error("Volume group \"%s\" not removed", vg_name);
 			return ECMD_FAILED;
 		}
 		if (!remove_lvs_in_vg(cmd, vg, force)) {

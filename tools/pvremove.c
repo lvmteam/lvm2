@@ -74,7 +74,7 @@ static int pvremove_check(struct cmd_context *cmd, const char *name)
 	/* prompt */
 	if (!arg_count(cmd, yes_ARG) &&
 	    yes_no_prompt(_really_wipe, name, pv_vg_name(pv)) == 'n') {
-		log_print("%s: physical volume label not removed", name);
+		log_error("%s: physical volume label not removed", name);
 		return 0;
 	}
 
