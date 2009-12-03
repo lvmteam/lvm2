@@ -1095,7 +1095,7 @@ static int _create_lv_symlinks(struct dev_manager *dm, struct dm_tree_node *root
 	int r = 1;
 
 	while ((child = dm_tree_next_child(&handle, root, 0))) {
-		if (!(lvlayer = (struct lv_layer *) dm_tree_node_get_context(child)))
+		if (!(lvlayer = dm_tree_node_get_context(child)))
 			continue;
 
 		/* Detect rename */
