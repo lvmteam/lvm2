@@ -1,5 +1,6 @@
 Version 2.02.57 -
 ====================================
+  Fix lvcreate --readahead.
   Fix clvmd memory leak in lv_info_by_lvid.
   Do not allow creating mirrors of more than 8 images.
   Use locking_type 3 (compiled in cluster locking) in lvmconf.

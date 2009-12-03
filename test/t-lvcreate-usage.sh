@@ -125,3 +125,18 @@ lvcreate -s --virtualoriginsize 64m -L 32m -n $lv1 $vg
 lvchange -a n $vg/$lv1
 lvremove $vg/$lv1
 lvremove -ff $vg
+
+# readahead default (auto), none, #, auto
+lvcreate -L 32m -n $lv $vg
+check_lv_field_ $vg/$lv lv_read_ahead "auto"
+lvremove -ff $vg
+lvcreate -L 32m -n $lv --readahead none $vg
+check_lv_field_ $vg/$lv lv_read_ahead "0"
+lvremove -ff $vg
+lvcreate -L 32m -n $lv --readahead 8k $vg
+check_lv_field_ $vg/$lv lv_read_ahead "8.00k"
+lvremove -ff $vg
+lvcreate -L 32m -n $lv --readahead auto $vg
+check_lv_field_ $vg/$lv lv_read_ahead "auto"
+lvremove -ff $vg
+
