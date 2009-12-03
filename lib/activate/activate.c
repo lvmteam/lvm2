@@ -879,7 +879,11 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 		goto_out;
 
 	if (!info.exists || info.suspended) {
-		r = error_if_not_suspended ? 0 : 1;
+		if (!error_if_not_suspended) {
+			r = 1;
+			if (info.suspended)
+				memlock_inc();
+		}
 		goto out;
 	}
 
