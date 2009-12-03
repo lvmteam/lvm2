@@ -3019,7 +3019,7 @@ int lv_create_single(struct volume_group *vg,
 				   status, lp->alloc, vg)))
 		return_0;
 
-	if (lp->read_ahead) {
+	if (lp->read_ahead != lv->read_ahead) {
 		log_verbose("Setting read ahead sectors");
 		lv->read_ahead = lp->read_ahead;
 	}
