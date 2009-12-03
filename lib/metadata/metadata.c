@@ -1223,7 +1223,7 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name,
 	/* prompt */
 	if (pv && !is_orphan(pv) && !pp->yes &&
 	    yes_no_prompt(_really_init, name, pv_vg_name(pv)) == 'n') {
-		log_print("%s: physical volume not initialized", name);
+		log_error("%s: physical volume not initialized", name);
 		return 0;
 	}
 

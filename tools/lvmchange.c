@@ -18,6 +18,6 @@
 int lvmchange(struct cmd_context *cmd __attribute((unused)),
 	      int argc __attribute((unused)), char **argv __attribute((unused)))
 {
-	log_print("With LVM2 and the device mapper, this program is obsolete.");
+	log_error("With LVM2 and the device mapper, this program is obsolete.");
 	return ECMD_FAILED;
 }

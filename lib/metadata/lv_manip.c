@@ -2103,7 +2103,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 				  "%slogical volume %s? [y/n]: ",
 				  vg_is_clustered(vg) ? "clustered " : "",
 				  lv->name) == 'n') {
-			log_print("Logical volume %s not removed", lv->name);
+			log_error("Logical volume %s not removed", lv->name);
 			return 0;
 		}
 	}
