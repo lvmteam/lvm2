@@ -971,7 +971,8 @@ static int _add_segment_to_dtree(struct dev_manager *dm,
 		/* Add any LVs used by this segment */
 		for (s = 0; s < seg->area_count; s++)
 			if ((seg_type(seg, s) == AREA_LV) &&
-			    (!_add_new_lv_to_dtree(dm, dtree, seg_lv(seg, s), NULL)))
+			    (!_add_new_lv_to_dtree(dm, dtree, seg_lv(seg, s),
+						   NULL)))
 				return_0;
 	}
 
@@ -1018,7 +1019,8 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		return 1;
 
 	if (!(lvlayer = dm_pool_alloc(dm->mem, sizeof(*lvlayer)))) {
-		log_error("_add_new_lv_to_dtree: pool alloc failed for %s %s.", lv->name, layer);
+		log_error("_add_new_lv_to_dtree: pool alloc failed for %s %s.",
+			  lv->name, layer);
 		return 0;
 	}
 
