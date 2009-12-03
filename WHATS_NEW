@@ -1,5 +1,6 @@
 Version 2.02.57 -
 ====================================
+  Fix pvmove test mode to not fail and do not poll.
   Fix error message if VG already exist in vgcreate.
   Fix tools to use log_error when stopped by user.
   Fix lvcreate --readahead.

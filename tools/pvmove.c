@@ -312,8 +312,10 @@ static int _update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 	/* FIXME: Add option to use a log */
 	if (first_time) {
 		if (!_activate_lv(cmd, lv_mirr, exclusive)) {
-			if (test_mode())
+			if (test_mode()) {
+				r = 1;
 				goto out;
+			}
 
 			/*
 			 * Nothing changed yet, try to revert pvmove.
@@ -570,6 +572,9 @@ static struct poll_functions _pvmove_fns = {
 int pvmove_poll(struct cmd_context *cmd, const char *pv_name,
 		unsigned background)
 {
+	if (test_mode())
+		return ECMD_PROCESSED;
+
 	return poll_daemon(cmd, pv_name, NULL, background, PVMOVE, &_pvmove_fns,
 			   "Moved");
 }
