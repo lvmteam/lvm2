@@ -1,5 +1,6 @@
 Version 2.02.57 -
 ====================================
+  Fix error message if VG already exist in vgcreate.
   Fix tools to use log_error when stopped by user.
   Fix lvcreate --readahead.
   Fix clvmd memory leak in lv_info_by_lvid.

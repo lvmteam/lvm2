@@ -55,8 +55,13 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 
 	/* Create the new VG */
 	vg = vg_create(cmd, vp_new.vg_name);
-	if (vg_read_error(vg))
-		goto_bad;
+	if (vg_read_error(vg)) {
+		if (vg_read_error(vg) == FAILED_EXIST)
+			log_error("A volume group called %s already exists.", vp_new.vg_name);
+		else
+			log_error("Can't get lock for %s.", vp_new.vg_name);
+		goto bad;
+	}
 
 	if (!vg_set_extent_size(vg, vp_new.extent_size) ||
 	    !vg_set_max_lv(vg, vp_new.max_lv) ||
