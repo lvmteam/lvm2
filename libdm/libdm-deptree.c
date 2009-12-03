@@ -645,7 +645,7 @@ struct dm_tree_node *dm_tree_add_new_dev_with_udev_flags(struct dm_tree *dtree,
 void dm_tree_node_set_read_ahead(struct dm_tree_node *dnode,
 				 uint32_t read_ahead,
 				 uint32_t read_ahead_flags)
-{                          
+{
 	dnode->props.read_ahead = read_ahead;
 	dnode->props.read_ahead_flags = read_ahead_flags;
 }
@@ -1064,8 +1064,8 @@ void dm_tree_use_no_flush_suspend(struct dm_tree_node *dnode)
 }
 
 int dm_tree_suspend_children(struct dm_tree_node *dnode,
-				   const char *uuid_prefix,
-				   size_t uuid_prefix_len)
+			     const char *uuid_prefix,
+			     size_t uuid_prefix_len)
 {
 	void *handle = NULL;
 	struct dm_tree_node *child = dnode;
@@ -1849,7 +1849,7 @@ int dm_tree_node_add_crypt_target(struct dm_tree_node *node,
 
 int dm_tree_node_add_mirror_target_log(struct dm_tree_node *node,
 					  uint32_t region_size,
-					  unsigned clustered, 
+					  unsigned clustered,
 					  const char *log_uuid,
 					  unsigned area_count,
 					  uint32_t flags)

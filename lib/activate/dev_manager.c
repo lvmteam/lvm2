@@ -783,7 +783,7 @@ static char *_add_error_device(struct dev_manager *dm, struct dm_tree *dtree,
 
 	sprintf(errid, "missing_%d_%d", segno, s);
 
-	if (!(id = build_dlid(dm, seg->lv->lvid.s, errid))) 
+	if (!(id = build_dlid(dm, seg->lv->lvid.s, errid)))
 		return_NULL;
 
 	if (!(name = build_dm_name(dm->mem, seg->lv->vg->name,
@@ -1269,7 +1269,7 @@ static int _tree_action(struct dev_manager *dm, struct logical_volume *lv, actio
 	default:
 		log_error("_tree_action: Action %u not supported.", action);
 		goto out;
-	}	
+	}
 
 	r = 1;
 
