@@ -333,7 +333,7 @@ int set_lv_segment_area_pv(struct lv_segment *seg, uint32_t area_num,
  */
 int set_lv_segment_area_lv(struct lv_segment *seg, uint32_t area_num,
 			   struct logical_volume *lv, uint32_t le,
-			   uint32_t flags)
+			   uint64_t status)
 {
 	log_very_verbose("Stack %s:%" PRIu32 "[%" PRIu32 "] on LV %s:%" PRIu32,
 			 seg->lv->name, seg->le, area_num, lv->name, le);
@@ -341,7 +341,7 @@ int set_lv_segment_area_lv(struct lv_segment *seg, uint32_t area_num,
 	seg->areas[area_num].type = AREA_LV;
 	seg_lv(seg, area_num) = lv;
 	seg_le(seg, area_num) = le;
-	lv->status |= flags;
+	lv->status |= status;
 
 	if (!add_seg_to_segs_using_this_lv(lv, seg))
 		return_0;

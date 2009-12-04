@@ -21,6 +21,6 @@ struct config_node;
 
 int text_import_areas(struct lv_segment *seg, const struct config_node *sn,
 		      const struct config_node *cn, struct dm_hash_table *pv_hash,
-		      uint32_t flags);
+		      uint64_t status);
 
 #endif
