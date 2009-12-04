@@ -1,5 +1,6 @@
 Version 2.02.57 -
 ====================================
+  Give better error message for pvmove when all data is skipped.
   Fix memory lock imbalance in lv_suspend if already suspended.
   Fix pvmove test mode to not fail and do not poll.
   Fix error message if VG already exist in vgcreate.
