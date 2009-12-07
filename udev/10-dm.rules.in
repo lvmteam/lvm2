@@ -19,6 +19,13 @@ KERNEL=="device-mapper", NAME="(DM_DIR)/control"
 SUBSYSTEM!="block", GOTO="dm_end"
 KERNEL!="dm-[0-9]*", GOTO="dm_end"
 
+# There is a new change event generated in block layer since kernel
+# version 2.6.32. It adds notification for changes in read-only
+# attribute. We don't want to misinterpret the regular meaning of change
+# events for DM devices and we don't want to apply the rules prematurely,
+# therefore we disable them in this situation.
+ENV{DISK_RO}=="1", GOTO="dm_disable"
+
 # Set proper sbin path, /sbin has higher priority than /usr/sbin.
 ENV{DM_SBIN_PATH}="/sbin"
 TEST!="$env{DM_SBIN_PATH}/dmsetup", ENV{DM_SBIN_PATH}="/usr/sbin"
