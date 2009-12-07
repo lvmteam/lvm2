@@ -104,8 +104,8 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd,
 
 	if (expected_count)
 		log_verbose("%s %d logical volumes in volume group %s",
-			    activate ? "Activated" : "Deactivated",
-			    count, vg->name);
+			    (activate == CHANGE_AN || activate == CHANGE_ALN)?
+			    "Deactivated" : "Activated", count, vg->name);
 
 	return (expected_count != count) ? ECMD_FAILED : ECMD_PROCESSED;
 }
