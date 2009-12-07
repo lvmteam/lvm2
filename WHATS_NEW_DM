@@ -1,5 +1,6 @@
 Version 1.02.41 -
 ====================================
+  Disable udev rules for change events with DISK_RO set.
 
 Version 1.02.40 - 19th November 2009
 ====================================
