@@ -317,8 +317,9 @@ static int _lock_for_cluster(struct cmd_context *cmd, unsigned char clvmd_cmd,
 	args = alloca(len);
 	strcpy(args + 2, name);
 
-	args[0] = flags & 0x7F; /* Maskoff lock flags */
-	args[1] = flags & 0xC0; /* Bitmap flags */
+	/* Maskoff lock flags */
+	args[0] = flags & (LCK_SCOPE_MASK | LCK_TYPE_MASK | LCK_NONBLOCK | LCK_HOLD); 
+	args[1] = flags & (LCK_LOCAL | LCK_CLUSTER_VG);
 
 	if (mirror_in_sync())
 		args[1] |= LCK_MIRROR_NOSYNC_MODE;
