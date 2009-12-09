@@ -274,7 +274,7 @@ int hold_lock(char *resource, int mode, int flags)
 			return -1;
 
 		lvi->lock_mode = mode;
-		status = sync_lock(resource, mode, flags, &lvi->lock_id);
+		status = sync_lock(resource, mode, flags & ~LKF_CONVERT, &lvi->lock_id);
 		saved_errno = errno;
 		if (status) {
 			free(lvi);
@@ -348,7 +348,11 @@ static int do_activate_lv(char *resource, unsigned char lock_flags, int mode)
 		mode = LKM_EXMODE;
 	}
 
-	/* Try to get the lock if it's a clustered volume group */
+	/*
+	 * Try to get the lock if it's a clustered volume group.
+	 * Use lock conversion only if requested, to prevent implicit conversion
+	 * of exclusive lock to shared one during activation.
+	 */
 	if (lock_flags & LCK_CLUSTER_VG) {
 		status = hold_lock(resource, mode, LKF_NOQUEUE | (lock_flags & LCK_CONVERT?LKF_CONVERT:0));
 		if (status) {
@@ -546,12 +550,13 @@ int pre_lock_lv(unsigned char command, unsigned char lock_flags, char *resource)
 	/* Nearly all the stuff happens cluster-wide. Apart from SUSPEND. Here we get the
 	   lock out on this node (because we are the node modifying the metadata)
 	   before suspending cluster-wide.
+	   LKF_CONVERT is used always, local node is going to modify metadata
 	 */
 	if ((command & (LCK_SCOPE_MASK | LCK_TYPE_MASK)) == LCK_LV_SUSPEND) {
 		DEBUGLOG("pre_lock_lv: resource '%s', cmd = %s, flags = %s\n",
 			 resource, decode_locking_cmd(command), decode_flags(lock_flags));
 
-		if (hold_lock(resource, LKM_PWMODE, LKF_NOQUEUE| (lock_flags & LCK_CONVERT?LKF_CONVERT:0)))
+		if (hold_lock(resource, LKM_PWMODE, LKF_NOQUEUE | LKF_CONVERT))
 			return errno;
 	}
 	return 0;
@@ -583,7 +588,7 @@ int post_lock_lv(unsigned char command, unsigned char lock_flags,
 				return EIO;
 
 			if (lvi.exists) {
-				if (hold_lock(resource, LKM_CRMODE, lock_flags & LCK_CONVERT?LKF_CONVERT:0))
+				if (hold_lock(resource, LKM_CRMODE, LKF_CONVERT))
 					return errno;
 			} else {
 				if (hold_unlock(resource))
