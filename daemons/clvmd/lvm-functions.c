@@ -542,7 +542,7 @@ int pre_lock_lv(unsigned char command, unsigned char lock_flags, char *resource)
 	   lock out on this node (because we are the node modifying the metadata)
 	   before suspending cluster-wide.
 	 */
-	if (command == LCK_LV_SUSPEND) {
+	if ((command & (LCK_SCOPE_MASK | LCK_TYPE_MASK)) == LCK_LV_SUSPEND) {
 		DEBUGLOG("pre_lock_lv: resource '%s', cmd = %s, flags = %s\n",
 			 resource, decode_locking_cmd(command), decode_flags(lock_flags));
 
@@ -559,7 +559,7 @@ int post_lock_lv(unsigned char command, unsigned char lock_flags,
 	int status;
 
 	/* Opposite of above, done on resume after a metadata update */
-	if (command == LCK_LV_RESUME) {
+	if ((command & (LCK_SCOPE_MASK | LCK_TYPE_MASK)) == LCK_LV_RESUME) {
 		int oldmode;
 
 		DEBUGLOG
