@@ -603,6 +603,16 @@ static int _remove_mirror_images(struct logical_volume *lv,
 		return 0;
 	}
 
+	/* FIXME: second suspend should not be needed
+	 * Explicitly suspend temporary LV
+	 * This balance memlock_inc() calls with memlock_dec() in resume
+	 * (both localy and in cluster) and also properly propagates precommited
+	 * metadata into dm table on other nodes.
+	 * (visible flag set causes the suspend is not properly propagated?)
+	 */
+	if (temp_layer_lv && !suspend_lv(temp_layer_lv->vg->cmd, temp_layer_lv))
+		log_error("Problem suspending temporary LV %s", temp_layer_lv->name);
+
 	if (!vg_commit(mirrored_seg->lv->vg)) {
 		resume_lv(mirrored_seg->lv->vg->cmd, mirrored_seg->lv);
 		return 0;
@@ -616,23 +626,9 @@ static int _remove_mirror_images(struct logical_volume *lv,
 	 * As it's now detached from mirrored_seg->lv we must resume it
 	 * explicitly.
 	 */
-	if (temp_layer_lv) {
-		if (!resume_lv(temp_layer_lv->vg->cmd, temp_layer_lv)) {
-			log_error("Problem resuming temporary LV, %s", temp_layer_lv->name);
-			return 0;
-		}
-
-		/*
-		 * The code above calls a suspend_lv once, however we now need
-		 * to resume 2 LVs, due to image removal: the mirror image
-		 * itself here, and now the remaining mirror LV. Since
-		 * suspend_lv/resume_lv call memlock_inc/memlock_dec and these
-		 * need to be balanced, we need to call an extra memlock_inc()
-		 * here to balance for the this extra resume -- the following
-		 * one could otherwise either deadlock due to suspended
-		 * devices, or alternatively drop memlock_count below 0.
-		 */
-		memlock_inc();
+	if (temp_layer_lv && !resume_lv(temp_layer_lv->vg->cmd, temp_layer_lv)) {
+		log_error("Problem resuming temporary LV, %s", temp_layer_lv->name);
+		return 0;
 	}
 
 	if (!resume_lv(mirrored_seg->lv->vg->cmd, mirrored_seg->lv)) {
