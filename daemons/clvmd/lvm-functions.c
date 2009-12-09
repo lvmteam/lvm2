@@ -52,6 +52,7 @@
 #include "locking.h"
 #include "archiver.h"
 #include "defaults.h"
+#include "memlock.h"
 
 static struct cmd_context *cmd = NULL;
 static struct dm_hash_table *lv_hash = NULL;
