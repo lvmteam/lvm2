@@ -2481,6 +2481,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	int inconsistent = 0;
 	int inconsistent_vgid = 0;
 	int inconsistent_pvs = 0;
+	int inconsistent_seqno = 0;
 	unsigned use_precommitted = precommitted;
 	unsigned saved_handles_missing_pvs = cmd->handles_missing_pvs;
 	struct dm_list *pvids;
@@ -2556,6 +2557,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		/* FIXME Also ensure contents same - checksum compare? */
 		if (correct_vg->seqno != vg->seqno) {
 			inconsistent = 1;
+			inconsistent_seqno = 1;
 			if (vg->seqno > correct_vg->seqno) {
 				vg_release(correct_vg);
 				correct_vg = vg;
@@ -2679,6 +2681,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 			/* FIXME Also ensure contents same - checksums same? */
 			if (correct_vg->seqno != vg->seqno) {
 				inconsistent = 1;
+				inconsistent_seqno = 1;
 				if (!_update_pv_list(cmd->mem, &all_pvs, vg)) {
 					vg_release(vg);
 					vg_release(correct_vg);
@@ -2706,6 +2709,16 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		if (use_precommitted) {
 			log_error("Inconsistent pre-commit metadata copies "
 				  "for volume group %s", vgname);
+			/* FIXME: during repair, there is inconsistent flag set because some metadata areas
+			 * are missing (on missing PVs). Code should create list of missing PVs, compare it
+			 * with PV marked missing in metadata and if equals, use it as consistent vg.
+			 * For now, return precommited metadata if remainng seq match here to allow
+			 * preloading table in suspend call.
+			 */
+			if (!inconsistent_seqno) {
+				*consistent = 0;
+				return correct_vg;
+			}
 			vg_release(correct_vg);
 			return NULL;
 		}

@@ -1,5 +1,6 @@
 Version 2.02.57 -
 ====================================
+  Allow use precommited metadata when a PV is missing.
   Add memlock information to do_lock_lv debug output.
   Never use distributed lock for LV in non-clustered VG.
   Allow implicit lock conversion in pre/post callbacks on local node.
