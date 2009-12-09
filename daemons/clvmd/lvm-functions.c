@@ -331,7 +331,8 @@ static int do_activate_lv(char *resource, unsigned char lock_flags, int mode)
 
 	/* Is it already open ? */
 	oldmode = get_current_lock(resource);
-	if (oldmode == mode) {
+	if (oldmode == mode && (lock_flags & LCK_CLUSTER_VG)) {
+		DEBUGLOG("do_activate_lv, lock already held at %d\n", oldmode);
 		return 0;	/* Nothing to do */
 	}
 
@@ -384,13 +385,13 @@ static int do_activate_lv(char *resource, unsigned char lock_flags, int mode)
 }
 
 /* Resume the LV if it was active */
-static int do_resume_lv(char *resource)
+static int do_resume_lv(char *resource, unsigned char lock_flags)
 {
 	int oldmode;
 
 	/* Is it open ? */
 	oldmode = get_current_lock(resource);
-	if (oldmode == -1) {
+	if (oldmode == -1 && (lock_flags & LCK_CLUSTER_VG)) {
 		DEBUGLOG("do_resume_lv, lock not already held\n");
 		return 0;	/* We don't need to do anything */
 	}
@@ -402,15 +403,15 @@ static int do_resume_lv(char *resource)
 }
 
 /* Suspend the device if active */
-static int do_suspend_lv(char *resource)
+static int do_suspend_lv(char *resource, unsigned char lock_flags)
 {
 	int oldmode;
 	struct lvinfo lvi;
 
 	/* Is it open ? */
 	oldmode = get_current_lock(resource);
-	if (oldmode == -1) {
-		DEBUGLOG("do_suspend_lv, lock held at %d\n", oldmode);
+	if (oldmode == -1 && (lock_flags & LCK_CLUSTER_VG)) {
+		DEBUGLOG("do_suspend_lv, lock not already held\n");
 		return 0; /* Not active, so it's OK */
 	}
 
@@ -502,14 +503,14 @@ int do_lock_lv(unsigned char command, unsigned char lock_flags, char *resource)
 		break;
 
 	case LCK_LV_SUSPEND:
-		status = do_suspend_lv(resource);
+		status = do_suspend_lv(resource, lock_flags);
 		if (!status)
 			suspended++;
 		break;
 
 	case LCK_UNLOCK:
 	case LCK_LV_RESUME:	/* if active */
-		status = do_resume_lv(resource);
+		status = do_resume_lv(resource, lock_flags);
 		if (!status)
 			suspended--;
 		break;
@@ -552,7 +553,8 @@ int pre_lock_lv(unsigned char command, unsigned char lock_flags, char *resource)
 	   before suspending cluster-wide.
 	   LKF_CONVERT is used always, local node is going to modify metadata
 	 */
-	if ((command & (LCK_SCOPE_MASK | LCK_TYPE_MASK)) == LCK_LV_SUSPEND) {
+	if ((command & (LCK_SCOPE_MASK | LCK_TYPE_MASK)) == LCK_LV_SUSPEND &&
+	    (lock_flags & LCK_CLUSTER_VG)) {
 		DEBUGLOG("pre_lock_lv: resource '%s', cmd = %s, flags = %s\n",
 			 resource, decode_locking_cmd(command), decode_flags(lock_flags));
 
@@ -569,7 +571,8 @@ int post_lock_lv(unsigned char command, unsigned char lock_flags,
 	int status;
 
 	/* Opposite of above, done on resume after a metadata update */
-	if ((command & (LCK_SCOPE_MASK | LCK_TYPE_MASK)) == LCK_LV_RESUME) {
+	if ((command & (LCK_SCOPE_MASK | LCK_TYPE_MASK)) == LCK_LV_RESUME &&
+	    (lock_flags & LCK_CLUSTER_VG)) {
 		int oldmode;
 
 		DEBUGLOG
