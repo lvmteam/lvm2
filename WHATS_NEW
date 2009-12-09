@@ -1,5 +1,6 @@
 Version 2.02.57 -
 ====================================
+  Explicitly call suspend for temporary mirror layer.
   Allow use precommited metadata when a PV is missing.
   Add memlock information to do_lock_lv debug output.
   Never use distributed lock for LV in non-clustered VG.
