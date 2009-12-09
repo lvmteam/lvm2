@@ -255,8 +255,16 @@ static int _init_mirror_log(struct cmd_context *cmd,
 
 	/* If the LV is active, deactivate it first. */
 	if (lv_info(cmd, log_lv, &info, 0, 0) && info.exists) {
-		if (!deactivate_lv(cmd, log_lv))
-			return_0;
+		(void)deactivate_lv(cmd, log_lv);
+		/*
+		 * FIXME: workaround to fail early
+		 * Ensure that log is really deactivated because deactivate_lv
+		 * on cluster do not fail if there is log_lv with different UUID.
+		 */
+		if (lv_info(cmd, log_lv, &info, 0, 0) && info.exists) {
+			log_error("Aborting. Unable to deactivate mirror log.");
+			goto revert_new_lv;
+		}
 		was_active = 1;
 	}
 
@@ -1354,7 +1362,7 @@ static struct logical_volume *_set_up_mirror_log(struct cmd_context *cmd,
 	}
 
 	if (!_init_mirror_log(cmd, log_lv, in_sync, &lv->tags, 1)) {
-		log_error("Failed to create mirror log.");
+		log_error("Failed to initialise mirror log.");
 		return NULL;
 	}
 
