@@ -415,7 +415,7 @@ int lock_resource(struct cmd_context *cmd, const char *resource, uint32_t flags)
 		clvmd_cmd = CLVMD_CMD_LOCK_LV;
 		strcpy(lockname, resource);
 		lock_scope = "LV";
-		flags &= 0xffdf;	/* Mask off HOLD flag */
+		flags &= ~LCK_HOLD;	/* Mask off HOLD flag */
 		break;
 
 	default:
