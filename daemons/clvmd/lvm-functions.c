@@ -245,6 +245,11 @@ int hold_lock(char *resource, int mode, int flags)
 
 	lvi = lookup_info(resource);
 
+	if (lvi && lvi->lock_mode == mode) {
+		DEBUGLOG("hold_lock, lock mode %d already held\n", mode);
+		return 0;
+	}
+
 	/* Only allow explicit conversions */
 	if (lvi && !(flags & LKF_CONVERT)) {
 		errno = EBUSY;
