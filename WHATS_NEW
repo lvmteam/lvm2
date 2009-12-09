@@ -1,5 +1,6 @@
 Version 2.02.57 -
 ====================================
+  Replace magic masks in cluster locking code by defined masks.
   Remove log volume from metadata if initial deactivation fails.
   Give better error message for pvmove when all data is skipped.
   Fix memory lock imbalance in lv_suspend if already suspended.

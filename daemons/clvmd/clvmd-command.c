@@ -132,7 +132,7 @@ int do_command(struct local_client *client, struct clvm_header *msg, int msglen,
 
 	case CLVMD_CMD_LOCK_LV:
 		/* This is the biggie */
-		lock_cmd = args[0] & 0x3F;
+		lock_cmd = args[0] & (LCK_NONBLOCK | LCK_HOLD | LCK_SCOPE_MASK | LCK_TYPE_MASK);
 		lock_flags = args[1];
 		lockname = &args[2];
 		status = do_lock_lv(lock_cmd, lock_flags, lockname);
@@ -214,7 +214,7 @@ static int lock_vg(struct local_client *client)
 	client->bits.localsock.private = (void *)lock_hash;
     }
 
-    lock_cmd = args[0] & 0x3F;
+    lock_cmd = args[0] & (LCK_NONBLOCK | LCK_HOLD | LCK_SCOPE_MASK | LCK_TYPE_MASK);
     lock_flags = args[1];
     lockname = &args[2];
     DEBUGLOG("doing PRE command LOCK_VG '%s' at %x (client=%p)\n", lockname, lock_cmd, client);
@@ -237,7 +237,7 @@ static int lock_vg(struct local_client *client)
 	    lock_cmd &= ~LCK_TYPE_MASK;
 	    lock_cmd |= LCK_PREAD;
 	}
-	status = sync_lock(lockname, (int)lock_cmd, (lock_flags & LCK_NONBLOCK) ? LKF_NOQUEUE : 0, &lkid);
+	status = sync_lock(lockname, (int)lock_cmd, (lock_cmd & LCK_NONBLOCK) ? LKF_NOQUEUE : 0, &lkid);
 	if (status)
 	    status = errno;
 	else
