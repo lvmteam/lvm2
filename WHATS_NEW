@@ -1,5 +1,6 @@
 Version 2.02.57 -
 ====================================
+  Allow implicit lock conversion in pre/post callbacks on local node.
   Allow implicit convert to the same cluster lock mode.
   Replace magic masks in cluster locking code by defined masks.
   Remove log volume from metadata if initial deactivation fails.
