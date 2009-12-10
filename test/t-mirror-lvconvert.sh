@@ -87,7 +87,7 @@ check_mirror_log_()
 {
   local lv=$1
   local mlog=$(lvs --noheadings -omirror_log $lv | sed -e 's/ //g')
-  [ "$(basename $lv)_mlog" = "$mlog" ]
+  [ "$(basename $lv)_mlog" == "$mlog" ]
 }
 
 wait_conversion_()
