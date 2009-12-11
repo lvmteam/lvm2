@@ -268,7 +268,7 @@ static int _add_to_toplevel(struct dm_tree_node *node)
 
 static void _remove_from_toplevel(struct dm_tree_node *node)
 {
-	return _unlink_nodes(&node->dtree->root, node);
+	_unlink_nodes(&node->dtree->root, node);
 }
 
 static int _add_to_bottomlevel(struct dm_tree_node *node)
@@ -278,7 +278,7 @@ static int _add_to_bottomlevel(struct dm_tree_node *node)
 
 static void _remove_from_bottomlevel(struct dm_tree_node *node)
 {
-	return _unlink_nodes(node, &node->dtree->root);
+	_unlink_nodes(node, &node->dtree->root);
 }
 
 static int _link_tree_nodes(struct dm_tree_node *parent, struct dm_tree_node *child)

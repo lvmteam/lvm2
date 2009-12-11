@@ -94,7 +94,6 @@ static void _pvscan_display_single(struct cmd_context *cmd,
 		  display_size(cmd, (uint64_t) (pv_pe_count(pv) -
 						pv_pe_alloc_count(pv)) *
 					   pv_pe_size(pv)));
-	return;
 }
 
 int pvscan(struct cmd_context *cmd, int argc __attribute((unused)),
