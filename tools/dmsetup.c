@@ -2402,7 +2402,7 @@ static int _report_init(struct command *c)
 	size_t len = 0;
 	int r = 0;
 
-	if (!strcmp(c->name, "splitname"))
+	if (c && !strcmp(c->name, "splitname"))
 		options = (char *) splitname_report_options;
 
 	/* emulate old dmsetup behaviour */
@@ -2591,7 +2591,11 @@ static int _help(int argc __attribute((unused)),
 		_switches[OPTIONS_ARG] = 1;
 		_string_args[OPTIONS_ARG] = (char *) "help";
 		_switches[SORT_ARG] = 0;
-	
+
+		if (_report) {
+			dm_report_free(_report);
+			_report = NULL;
+		}
 		(void) _report_init(NULL);
 	}
 
