@@ -60,8 +60,12 @@ static int _pv_resize_single(struct cmd_context *cmd,
 
 		vg = vg_read_for_update(cmd, vg_name, NULL, 0);
 
-		if (vg_read_error(vg))
-			goto bad;
+		if (vg_read_error(vg)) {
+			vg_release(vg);
+			log_error("Unable to read volume group \"%s\".",
+				  vg_name);
+			return 0;
+		}
 
 		if (!(pvl = find_pv_in_vg(vg, pv_name))) {
 			log_error("Unable to find \"%s\" in volume group \"%s\"",

@@ -1,5 +1,6 @@
 Version 2.02.57 -
 ====================================
+  Fix unlocking vg in some pvresize and toollib error paths.
   Explicitly call suspend for temporary mirror layer.
   Allow use precommited metadata when a PV is missing.
   Add memlock information to do_lock_lv debug output.

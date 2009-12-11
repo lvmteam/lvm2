@@ -315,7 +315,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 						  dm_pool_strdup(cmd->mem,
 							      lv_name + 1))) {
 					log_error("strlist allocation failed");
-					vg_release(vg);
+					unlock_and_release_vg(cmd, vg, vgname);
 					return ECMD_FAILED;
 				}
 			}
@@ -367,8 +367,8 @@ int process_each_segment_in_pv(struct cmd_context *cmd,
 		if (!(pvl = find_pv_in_vg(vg, pv_dev_name(pv)))) {
 			 log_error("Unable to find %s in volume group %s",
 				   pv_dev_name(pv), vg_name);
-			vg_release(vg);
-			return ECMD_FAILED;
+			 unlock_and_release_vg(cmd, vg, vg_name);
+			 return ECMD_FAILED;
 		}
 
 		pv = pvl->pv;
