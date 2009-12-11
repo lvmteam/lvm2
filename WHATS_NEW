@@ -1,5 +1,6 @@
 Version 2.02.57 -
 ====================================
+  Destroy allocated mempool in _vg_read_orphans() error path.
   Fix unlocking vg in some pvresize and toollib error paths.
   Explicitly call suspend for temporary mirror layer.
   Allow use precommited metadata when a PV is missing.
