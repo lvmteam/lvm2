@@ -2380,7 +2380,7 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd,
 
 	if (!(vg = dm_pool_zalloc(mem, sizeof(*vg)))) {
 		log_error("vg allocation failed");
-		return NULL;
+		goto bad;
 	}
 	dm_list_init(&vg->pvs);
 	dm_list_init(&vg->lvs);
