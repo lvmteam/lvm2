@@ -331,5 +331,4 @@ struct dev_filter *lvm_type_filter_create(const char *proc,
 void lvm_type_filter_destroy(struct dev_filter *f)
 {
 	dm_free(f);
-	return;
 }

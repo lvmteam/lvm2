@@ -96,7 +96,6 @@ static int _lvm1_initialise_label(struct labeller *l __attribute((unused)), stru
 
 static void _lvm1_destroy_label(struct labeller *l __attribute((unused)), struct label *label __attribute((unused)))
 {
-	return;
 }
 
 static void _lvm1_destroy(struct labeller *l)

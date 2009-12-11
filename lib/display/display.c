@@ -327,8 +327,6 @@ void pvdisplay_colons(const struct physical_volume *pv)
 		  pv->pe_count,
 		  pv->pe_count - pv->pe_alloc_count,
 		  pv->pe_alloc_count, *uuid ? uuid : "none");
-
-	return;
 }
 
 void pvdisplay_segments(const struct physical_volume *pv)
@@ -355,7 +353,6 @@ void pvdisplay_segments(const struct physical_volume *pv)
 	}
 
 	log_print(" ");
-	return;
 }
 
 /* FIXME Include label fields */
@@ -424,8 +421,6 @@ void pvdisplay_full(const struct cmd_context *cmd,
 	log_print("Allocated PE          %u", pv->pe_alloc_count);
 	log_print("PV UUID               %s", *uuid ? uuid : "none");
 	log_print(" ");
-
-	return;
 }
 
 int pvdisplay_short(const struct cmd_context *cmd __attribute((unused)),
@@ -470,7 +465,6 @@ void lvdisplay_colons(const struct logical_volume *lv)
 		  /* FIXME Add num allocated to struct! lv->lv_allocated_le, */
 		  (lv->alloc == ALLOC_CONTIGUOUS ? 2 : 0), lv->read_ahead,
 		  inkernel ? info.major : -1, inkernel ? info.minor : -1);
-	return;
 }
 
 int lvdisplay_full(struct cmd_context *cmd,
@@ -654,7 +648,6 @@ int lvdisplay_segments(const struct logical_volume *lv)
 
 void vgdisplay_extents(const struct volume_group *vg __attribute((unused)))
 {
-	return;
 }
 
 void vgdisplay_full(const struct volume_group *vg)
@@ -729,8 +722,6 @@ void vgdisplay_full(const struct volume_group *vg)
 
 	log_print("VG UUID               %s", uuid);
 	log_print(" ");
-
-	return;
 }
 
 void vgdisplay_colons(const struct volume_group *vg)
@@ -779,7 +770,6 @@ void vgdisplay_colons(const struct volume_group *vg)
 		vg->extent_count - vg->free_count,
 		vg->free_count,
 		uuid[0] ? uuid : "none");
-	return;
 }
 
 void vgdisplay_short(const struct volume_group *vg)
@@ -792,7 +782,6 @@ void vgdisplay_short(const struct volume_group *vg)
 			       ((uint64_t) vg->extent_count -
 				vg->free_count) * vg->extent_size),
 		  display_size(vg->cmd, vg_free(vg)));
-	return;
 }
 
 void display_formats(const struct cmd_context *cmd)

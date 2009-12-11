@@ -145,8 +145,6 @@ static void _block_signals(uint32_t flags __attribute((unused)))
 	}
 
 	_signals_blocked = 1;
-
-	return;
 }
 
 static void _unblock_signals(void)
@@ -161,8 +159,6 @@ static void _unblock_signals(void)
 	}
 
 	_signals_blocked = 0;
-
-	return;
 }
 
 static void _lock_memory(lv_operation_t lv_op)

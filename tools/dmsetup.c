@@ -2571,7 +2571,6 @@ static void _usage(FILE *out)
 	fprintf(out, "Tree options are: ascii, utf, vt100; compact, inverted, notrunc;\n"
 		     "                  [no]device, active, open, rw and uuid.\n");
 	fprintf(out, "\n");
-	return;
 }
 
 static void _losetup_usage(FILE *out)

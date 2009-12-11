@@ -281,7 +281,6 @@ static struct format_instance *_pool_create_instance(const struct format_type *f
 
 static void _pool_destroy_instance(struct format_instance *fid __attribute((unused)))
 {
-	return;
 }
 
 static void _pool_destroy(const struct format_type *fmt)

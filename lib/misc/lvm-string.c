@@ -125,7 +125,7 @@ static void _unquote_characters(char *src, const int orig_char,
  */
 static void _quote_hyphens(char **out, const char *src)
 {
-	return _quote_characters(out, src, '-', '-', 0);
+	_quote_characters(out, src, '-', '-', 0);
 }
 
 /*

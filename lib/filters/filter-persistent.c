@@ -171,8 +171,6 @@ static void _write_array(struct pfilter *pf, FILE *fp, const char *path,
 
 	if (!first)
 		fprintf(fp, "\n\t]\n");
-
-	return;
 }
 
 int persistent_filter_dump(struct dev_filter *f)

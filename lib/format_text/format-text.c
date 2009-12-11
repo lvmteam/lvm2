@@ -1593,7 +1593,6 @@ static int _text_pv_read(const struct format_type *fmt, const char *pv_name,
 
 static void _text_destroy_instance(struct format_instance *fid __attribute((unused)))
 {
-	return;
 }
 
 static void _free_dirs(struct dm_list *dir_list)

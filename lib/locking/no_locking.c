@@ -27,12 +27,10 @@
 
 static void _no_fin_locking(void)
 {
-	return;
 }
 
 static void _no_reset_locking(void)
 {
-	return;
 }
 
 static int _no_lock_resource(struct cmd_context *cmd, const char *resource,

@@ -102,8 +102,6 @@ void lvm2_log_level(void *handle, int level)
 	struct cmd_context *cmd = (struct cmd_context *) handle;
 
 	cmd->default_settings.verbose = level - VERBOSE_BASE_LEVEL;
-
-	return;
 }
 
 void lvm2_log_fn(lvm2_log_fn_t log_fn)

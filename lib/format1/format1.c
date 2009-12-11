@@ -480,7 +480,6 @@ static struct format_instance *_format1_create_instance(const struct format_type
 
 static void _format1_destroy_instance(struct format_instance *fid __attribute((unused)))
 {
-	return;
 }
 
 static void _format1_destroy(const struct format_type *fmt)

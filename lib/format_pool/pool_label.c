@@ -73,7 +73,6 @@ static int _pool_initialise_label(struct labeller *l __attribute((unused)), stru
 
 static void _pool_destroy_label(struct labeller *l __attribute((unused)), struct label *label __attribute((unused)))
 {
-	return;
 }
 
 static void _label_pool_destroy(struct labeller *l)
