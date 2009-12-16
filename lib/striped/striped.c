@@ -168,7 +168,7 @@ static int _striped_add_target_line(struct dev_manager *dm,
 				uint32_t *pvmove_mirror_count __attribute((unused)))
 {
 	if (!seg->area_count) {
-		log_error("Internal error: striped add_target_line called "
+		log_error(INTERNAL_ERROR "striped add_target_line called "
 			  "with no areas for %s.", seg->lv->name);
 		return 0;
 	}

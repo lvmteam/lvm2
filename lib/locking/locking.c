@@ -349,12 +349,12 @@ static int _lock_vol(struct cmd_context *cmd, const char *resource,
 	assert(resource);
 
 	if (!*resource) {
-		log_error("Internal error: Use of P_orphans is deprecated.");
+		log_error(INTERNAL_ERROR "Use of P_orphans is deprecated.");
 		return 0;
 	}
 
 	if (*resource == '#' && (flags & LCK_CACHE)) {
-		log_error("Internal error: P_%s referenced", resource);
+		log_error(INTERNAL_ERROR "P_%s referenced", resource);
 		return 0;
 	}
 
@@ -394,7 +394,7 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags)
 
 
 	if (flags == LCK_NONE) {
-		log_debug("Internal error: %s: LCK_NONE lock requested", vol);
+		log_debug(INTERNAL_ERROR "%s: LCK_NONE lock requested", vol);
 		return 1;
 	}
 

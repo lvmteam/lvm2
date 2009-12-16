@@ -144,7 +144,7 @@ void memlock_inc(void)
 void memlock_dec(void)
 {
 	if (!_memlock_count)
-		log_error("Internal error: _memlock_count has dropped below 0.");
+		log_error(INTERNAL_ERROR "_memlock_count has dropped below 0.");
 	--_memlock_count;
 	_unlock_mem_if_possible();
 	log_debug("memlock_count dec to %d", _memlock_count);
@@ -167,7 +167,7 @@ void memlock_inc_daemon(void)
 void memlock_dec_daemon(void)
 {
 	if (!_memlock_count_daemon)
-		log_error("Internal error: _memlock_count_daemon has dropped below 0.");
+		log_error(INTERNAL_ERROR "_memlock_count_daemon has dropped below 0.");
 	--_memlock_count_daemon;
 	_unlock_mem_if_possible();
 	log_debug("memlock_count_daemon dec to %d", _memlock_count_daemon);

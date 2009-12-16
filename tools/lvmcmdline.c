@@ -1243,7 +1243,7 @@ static int _run_script(struct cmd_context *cmd, int argc, char **argv)
 		ret = lvm_run_command(cmd, argc, argv);
 		if (ret != ECMD_PROCESSED) {
 			if (!error_message_produced()) {
-				log_debug("Internal error: Failed command did not use log_error");
+				log_debug(INTERNAL_ERROR "Failed command did not use log_error");
 				log_error("Command failed with status code %d.", ret);
 			}
 			break;
@@ -1368,7 +1368,7 @@ int lvm2_main(int argc, char **argv)
 		log_error("No such command.  Try 'help'.");
 
 	if ((ret != ECMD_PROCESSED) && !error_message_produced()) {
-		log_debug("Internal error: Failed command did not use log_error");
+		log_debug(INTERNAL_ERROR "Failed command did not use log_error");
 		log_error("Command failed with status code %d.", ret);
 	}
 
