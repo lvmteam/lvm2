@@ -3520,7 +3520,6 @@ uint32_t vg_lock_newname(struct cmd_context *cmd, const char *vgname)
 
 	/* Found vgname so cannot reserve. */
 	unlock_vg(cmd, vgname);
-	log_error("A volume group called '%s' already exists.", vg_name);
 	return FAILED_EXIST;
 }
 
