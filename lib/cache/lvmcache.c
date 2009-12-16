@@ -227,7 +227,7 @@ int lvmcache_verify_lock_order(const char *vgname)
 		vgname2 = dm_hash_get_key(_lock_hash, n);
 
 		if (!_vgname_order_correct(vgname2, vgname)) {
-			log_errno(EDEADLK, "Internal error: VG lock %s must "
+			log_errno(EDEADLK, INTERNAL_ERROR "VG lock %s must "
 				  "be requested before %s, not after.",
 				  vgname, vgname2);
 			return_0;
@@ -245,7 +245,7 @@ void lvmcache_lock_vgname(const char *vgname, int read_only __attribute((unused)
 	}
 
 	if (dm_hash_lookup(_lock_hash, vgname))
-		log_error("Internal error: Nested locking attempted on VG %s.",
+		log_error(INTERNAL_ERROR "Nested locking attempted on VG %s.",
 			  vgname);
 
 	if (!dm_hash_insert(_lock_hash, vgname, (void *) 1))
@@ -268,7 +268,7 @@ int vgname_is_locked(const char *vgname)
 void lvmcache_unlock_vgname(const char *vgname)
 {
 	if (!dm_hash_lookup(_lock_hash, vgname))
-		log_error("Internal error: Attempt to unlock unlocked VG %s.",
+		log_error(INTERNAL_ERROR "Attempt to unlock unlocked VG %s.",
 			  vgname);
 
 	_update_cache_lock_state(vgname, 0);
@@ -1102,7 +1102,7 @@ int lvmcache_update_vgname_and_id(struct lvmcache_info *info,
 				  uint32_t vgstatus, const char *creation_host)
 {
 	if (!vgname && !info->vginfo) {
-		log_error("Internal error: NULL vgname handed to cache");
+		log_error(INTERNAL_ERROR "NULL vgname handed to cache");
 		/* FIXME Remove this */
 		vgname = info->fmt->orphan_vg_name;
 		vgid = vgname;
@@ -1296,7 +1296,7 @@ static void _lvmcache_destroy_lockname(struct dm_hash_node *n)
 	if (!strcmp(vgname, VG_GLOBAL))
 		_vg_global_lock_held = 1;
 	else
-		log_error("Internal error: Volume Group %s was not unlocked",
+		log_error(INTERNAL_ERROR "Volume Group %s was not unlocked",
 			  dm_hash_get_key(_lock_hash, n));
 }
 
@@ -1333,7 +1333,7 @@ void lvmcache_destroy(struct cmd_context *cmd, int retain_orphans)
 	}
 
 	if (!dm_list_empty(&_vginfos))
-		log_error("Internal error: _vginfos list should be empty");
+		log_error(INTERNAL_ERROR "_vginfos list should be empty");
 	dm_list_init(&_vginfos);
 
 	if (retain_orphans)

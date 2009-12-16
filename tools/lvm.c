@@ -237,7 +237,7 @@ int lvm_shell(struct cmd_context *cmd, struct cmdline_context *cmdline)
 				  argv[0]);
 
                 if ((ret != ECMD_PROCESSED) && !error_message_produced()) {
-			log_debug("Internal error: Failed command did not use log_error");
+			log_debug(INTERNAL_ERROR "Failed command did not use log_error");
 			log_error("Command failed with status code %d.", ret);
 		}
 		_write_history();

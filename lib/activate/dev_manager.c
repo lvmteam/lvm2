@@ -852,7 +852,7 @@ int add_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 			dm_tree_node_add_target_area(node, NULL, dlid,
 							extent_size * seg_le(seg, s));
 		} else {
-			log_error("Internal error: Unassigned area found in LV %s.",
+			log_error(INTERNAL_ERROR "Unassigned area found in LV %s.",
 				  seg->lv->name);
 			return 0;
 		}
@@ -911,7 +911,7 @@ static int _add_target_to_dtree(struct dev_manager *dm,
 	uint64_t extent_size = seg->lv->vg->extent_size;
 
 	if (!seg->segtype->ops->add_target_line) {
-		log_error("_emit_target: Internal error: Can't handle "
+		log_error(INTERNAL_ERROR "_emit_target cannot handle "
 			  "segment type %s", seg->segtype->name);
 		return 0;
 	}

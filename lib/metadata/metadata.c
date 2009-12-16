@@ -2107,7 +2107,7 @@ int vg_validate(struct volume_group *vg)
 				if (!id_write_format(&pvl->pv->id, uuid,
 						     sizeof(uuid)))
 					 stack;
-				log_error("Internal error: Duplicate PV id "
+				log_error(INTERNAL_ERROR "Duplicate PV id "
 					  "%s detected for %s in %s.",
 					  uuid, pv_dev_name(pvl->pv),
 					  vg->name);
@@ -2116,14 +2116,14 @@ int vg_validate(struct volume_group *vg)
 		}
 
 		if (strcmp(pvl->pv->vg_name, vg->name)) {
-			log_error("Internal error: VG name for PV %s is corrupted",
+			log_error(INTERNAL_ERROR "VG name for PV %s is corrupted",
 				  pv_dev_name(pvl->pv));
 			r = 0;
 		}
 	}
 
 	if (!check_pv_segments(vg)) {
-		log_error("Internal error: PV segments corrupted in %s.",
+		log_error(INTERNAL_ERROR "PV segments corrupted in %s.",
 			  vg->name);
 		r = 0;
 	}
@@ -2159,7 +2159,7 @@ int vg_validate(struct volume_group *vg)
 	 */
 	if (((uint32_t) dm_list_size(&vg->lvs)) !=
 	    vg_visible_lvs(vg) + snapshot_count(vg) + hidden_lv_count) {
-		log_error("Internal error: #internal LVs (%u) != #LVs (%"
+		log_error(INTERNAL_ERROR "#internal LVs (%u) != #LVs (%"
 			  PRIu32 ") + #snapshots (%" PRIu32 ") + #internal LVs %u in VG %s",
 			  dm_list_size(&vg->lvs), vg_visible_lvs(vg),
 			  snapshot_count(vg), hidden_lv_count, vg->name);
@@ -2171,7 +2171,7 @@ int vg_validate(struct volume_group *vg)
 			if (lvl == lvl2)
 				break;
 			if (!strcmp(lvl->lv->name, lvl2->lv->name)) {
-				log_error("Internal error: Duplicate LV name "
+				log_error(INTERNAL_ERROR "Duplicate LV name "
 					  "%s detected in %s.", lvl->lv->name,
 					  vg->name);
 				r = 0;
@@ -2181,7 +2181,7 @@ int vg_validate(struct volume_group *vg)
 				if (!id_write_format(&lvl->lv->lvid.id[1], uuid,
 						     sizeof(uuid)))
 					 stack;
-				log_error("Internal error: Duplicate LV id "
+				log_error(INTERNAL_ERROR "Duplicate LV id "
 					  "%s detected for %s and %s in %s.",
 					  uuid, lvl->lv->name, lvl2->lv->name,
 					  vg->name);
@@ -2192,7 +2192,7 @@ int vg_validate(struct volume_group *vg)
 
 	dm_list_iterate_items(lvl, &vg->lvs) {
 		if (!check_lv_segments(lvl->lv, 1)) {
-			log_error("Internal error: LV segments corrupted in %s.",
+			log_error(INTERNAL_ERROR "LV segments corrupted in %s.",
 				  lvl->lv->name);
 			r = 0;
 		}
@@ -2200,7 +2200,7 @@ int vg_validate(struct volume_group *vg)
 
 	if (!(vg->fid->fmt->features & FMT_UNLIMITED_VOLS) &&
 	    (!vg->max_lv || !vg->max_pv)) {
-		log_error("Internal error: Volume group %s has limited PV/LV count"
+		log_error(INTERNAL_ERROR "Volume group %s has limited PV/LV count"
 			  " but limit is not set.", vg->name);
 		r = 0;
 	}
@@ -2311,7 +2311,7 @@ int vg_commit(struct volume_group *vg)
 	int failed = 0;
 
 	if (!vgname_is_locked(vg->name)) {
-		log_error("Internal error: Attempt to write new VG metadata "
+		log_error(INTERNAL_ERROR "Attempt to write new VG metadata "
 			  "without locking %s", vg->name);
 		return cache_updated;
 	}
@@ -2491,7 +2491,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 
 	if (is_orphan_vg(vgname)) {
 		if (use_precommitted) {
-			log_error("Internal error: vg_read_internal requires vgname "
+			log_error(INTERNAL_ERROR "vg_read_internal requires vgname "
 				  "with pre-commit.");
 			return NULL;
 		}
@@ -2802,7 +2802,7 @@ struct volume_group *vg_read_internal(struct cmd_context *cmd, const char *vgnam
 		return NULL;
 
 	if (!check_pv_segments(vg)) {
-		log_error("Internal error: PV segments corrupted in %s.",
+		log_error(INTERNAL_ERROR "PV segments corrupted in %s.",
 			  vg->name);
 		vg_release(vg);
 		return NULL;
@@ -2810,7 +2810,7 @@ struct volume_group *vg_read_internal(struct cmd_context *cmd, const char *vgnam
 
 	dm_list_iterate_items(lvl, &vg->lvs) {
 		if (!check_lv_segments(lvl->lv, 1)) {
-			log_error("Internal error: LV segments corrupted in %s.",
+			log_error(INTERNAL_ERROR "LV segments corrupted in %s.",
 				  lvl->lv->name);
 			vg_release(vg);
 			return NULL;
@@ -2826,7 +2826,7 @@ void vg_release(struct volume_group *vg)
 		return;
 
 	if (vg->cmd && vg->vgmem == vg->cmd->mem)
-		log_error("Internal error: global memory pool used for VG %s",
+		log_error(INTERNAL_ERROR "global memory pool used for VG %s",
 			  vg->name);
 
 	dm_pool_destroy(vg->vgmem);
@@ -3520,6 +3520,7 @@ uint32_t vg_lock_newname(struct cmd_context *cmd, const char *vgname)
 
 	/* Found vgname so cannot reserve. */
 	unlock_vg(cmd, vgname);
+	log_error("A volume group called '%s' already exists.", vg_name);
 	return FAILED_EXIST;
 }
 

@@ -53,6 +53,7 @@
 #define _LOG_WARN 4
 #define _LOG_ERR 3
 #define _LOG_FATAL 2
+#define INTERNAL_ERROR "Internal error: "
 
 #define log_debug(x...) LOG_LINE(_LOG_DEBUG, x)
 #define log_info(x...) LOG_LINE(_LOG_INFO, x)

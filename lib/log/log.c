@@ -184,8 +184,8 @@ void print_log(int level, const char *file, int line, int dm_errno,
 	level &= ~_LOG_STDERR;
 
 	if (_abort_on_internal_errors &&
-	    !strncmp(format, "Internal error:",
-		     strlen("Internal error:")))
+	    !strncmp(format, INTERNAL_ERROR,
+		     strlen(INTERNAL_ERROR)))
 		internal_error = 1;
 
 	if (_log_suppress == 2)

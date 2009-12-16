@@ -137,7 +137,7 @@ static int _text_write(struct label *label, void *buf)
 		  mda2 ? "s)" : "");
 
 	if (da1 < 0) {
-		log_error("Internal error: %s label header currently requires "
+		log_error(INTERNAL_ERROR "%s label header currently requires "
 			  "a data area.", dev_name(info->dev));
 		return 0;
 	}

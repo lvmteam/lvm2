@@ -99,7 +99,7 @@ static void _inc_indent(struct formatter *f)
 static void _dec_indent(struct formatter *f)
 {
 	if (!f->indent--) {
-		log_error("Internal error tracking indentation");
+		log_error(INTERNAL_ERROR "problem tracking indentation");
 		f->indent = 0;
 	}
 }
