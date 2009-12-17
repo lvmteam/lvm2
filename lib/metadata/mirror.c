@@ -533,6 +533,7 @@ static int _remove_mirror_images(struct logical_volume *lv,
 			    _is_mirror_image_removable(sub_lv, removable_pvs)) {
 				if (!shift_mirror_images(mirrored_seg, s))
 					return_0;
+				s--; /* adjust counter after shifting */
 				new_area_count--;
 			}
 		}
@@ -783,7 +784,7 @@ static int get_mirror_fault_policy(struct cmd_context *cmd __attribute((unused))
 					 DEFAULT_MIRROR_LOG_FAULT_POLICY);
 	else
 		policy = find_config_str(NULL, "activation/mirror_device_fault_policy",
-					 DEFAULT_MIRROR_DEV_FAULT_POLICY);
+					 DEFAULT_MIRROR_IMAGE_FAULT_POLICY);
 
 	if (!strcmp(policy, "remove"))
 		return MIRROR_REMOVE;
