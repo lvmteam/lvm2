@@ -224,7 +224,7 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 	 */
 	dm_list_iterate_safe(pvh, pvht, &vg->pvs) {
 		pvl = dm_list_item(pvh, struct pv_list);
-		if (pvl->pv->dev)
+		if (pvl->pv->dev && !(pvl->pv->status & MISSING_PV))
 			continue;
 		if (!_remove_pv(vg, pvl, 0))
 			return_0;
