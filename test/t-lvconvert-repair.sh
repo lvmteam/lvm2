@@ -11,9 +11,36 @@
 
 . ./test-utils.sh
 
-prepare_vg 4
+prepare_vg 5
 
-vgreduce $vg $dev4
+# fail multiple devices
+
+lvcreate -m 3 -L 1 -n 3way $vg
+disable_dev $dev2 $dev4
+echo n | lvconvert -i 1 --repair $vg/3way
+lvs -a -o +devices > lvlist
+not grep unknown lvlist
+vgreduce --removemissing $vg
+enable_dev $dev2 $dev4
+lvchange -a n $vg/3way
+
+vgremove -ff $vg
+vgcreate $vg $dev1 $dev2 $dev3 $dev4
+
+lvcreate -m 2 -L 1 -n 4way $vg
+disable_dev $dev1 $dev2
+echo n | lvconvert -i 1 --repair $vg/4way
+lvs -a -o +devices > lvlist
+not grep unknown lvlist
+vgreduce --removemissing $vg
+enable_dev $dev1 $dev2
+lvchange -a n $vg/4way
+
+# fail single devices
+
+vgremove -ff $vg
+vgcreate $vg $dev1 $dev2 $dev3
+
 lvcreate -m 1 -L 1 -n mirror $vg
 
 lvchange -a n $vg/mirror
