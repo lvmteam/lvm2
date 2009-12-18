@@ -2794,6 +2794,9 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 				vg_release(correct_vg);
 				return_NULL;
 			}
+
+			/* Refresh metadata after orphan write */
+			drop_cached_metadata(correct_vg);
       next_pv:
 			;
 		}
