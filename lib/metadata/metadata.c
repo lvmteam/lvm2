@@ -2457,6 +2457,25 @@ int vg_missing_pv_count(const struct volume_group *vg)
 	return ret;
 }
 
+static void check_reappeared_pv(struct volume_group *correct_vg,
+				struct physical_volume *pv)
+{
+	struct pv_list *pvl;
+
+	dm_list_iterate_items(pvl, &correct_vg->pvs)
+		if (pv->dev == pvl->pv->dev && pvl->pv->status & MISSING_PV) {
+			log_warn("Missing device %s reappeared, updating "
+				 "metadata for VG %s to version %u.",
+				 pv_dev_name(pvl->pv),  pv_vg_name(pvl->pv), 
+				 correct_vg->seqno);
+			if (pvl->pv->pe_alloc_count == 0) {
+				pv->status &= ~MISSING_PV;
+				pvl->pv->status &= ~MISSING_PV;
+			} else
+				log_warn("Device still marked missing because of alocated data "
+					 "on it, remove volumes and consider vgreduce --removemissing.");
+		}
+}
 /* Caller sets consistent to 1 if it's safe for vg_read_internal to correct
  * inconsistent metadata on disk (i.e. the VG write lock is held).
  * This guarantees only consistent metadata is returned.
@@ -2736,6 +2755,13 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 
 		log_warn("WARNING: Inconsistent metadata found for VG %s - updating "
 			 "to use version %u", vgname, correct_vg->seqno);
+
+		/*
+		 * If PV is marked missing but we found it,
+		 * update metadata and remove MISSING flag
+		 */
+		dm_list_iterate_items(pvl, &all_pvs)
+			check_reappeared_pv(correct_vg, pvl->pv);
 
 		cmd->handles_missing_pvs = 1;
 		if (!vg_write(correct_vg)) {
