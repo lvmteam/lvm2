@@ -25,7 +25,7 @@ enable_dev $dev2 $dev4
 lvchange -a n $vg/3way
 
 vgremove -ff $vg
-vgcreate $vg $dev1 $dev2 $dev3 $dev4
+vgcreate -c n $vg $dev1 $dev2 $dev3 $dev4
 
 lvcreate -m 2 -L 1 -n 4way $vg
 disable_dev $dev1 $dev2
@@ -39,7 +39,7 @@ lvchange -a n $vg/4way
 # fail single devices
 
 vgremove -ff $vg
-vgcreate $vg $dev1 $dev2 $dev3
+vgcreate -c n $vg $dev1 $dev2 $dev3
 
 lvcreate -m 1 -L 1 -n mirror $vg
 

@@ -174,7 +174,7 @@ prepare_pvs() {
 
 prepare_vg() {
 	prepare_pvs "$@"
-	vgcreate $vg $devs
+	vgcreate -c n $vg $devs
 }
 
 prepare_lvmconf() {
