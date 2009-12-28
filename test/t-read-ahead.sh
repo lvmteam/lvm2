@@ -45,6 +45,7 @@ lvremove -ff "$vg"
 
 #COMM "read ahead is properly inherited from underlying PV"
 blockdev --setra 768 $dev1
+vgscan
 lvcreate -n $lv -L4m $vg $dev1
 test $(blockdev --getra $G_dev_/$vg/$lv) -eq 768
 lvremove -ff $vg

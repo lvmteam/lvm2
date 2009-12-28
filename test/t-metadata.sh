@@ -32,7 +32,7 @@ vgremove -f $vg
 for mdacp in 1 0; do
 	pvcreate --metadatacopies $mdacp $devs
 	pvcreate $dev1
-	vgcreate $vg $devs
+	vgcreate -c n $vg $devs
 	lvcreate -n $lv1 -l 2 -i5 -I256 $vg
 	lvcreate -n $lv2 -m2 -l 2  $vg
 	#lvchange -an $vg
@@ -51,5 +51,5 @@ not grep "Cached VG .* incorrect PV list" out0
 pvcreate -M1 $dev1
 pvcreate -M1 $dev2
 pvcreate -M1 $dev3
-vgcreate -M1 $vg $dev1 $dev2 $dev3
+vgcreate -M1 -c n $vg $dev1 $dev2 $dev3
 pvchange --uuid $dev1

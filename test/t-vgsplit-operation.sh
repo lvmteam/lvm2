@@ -75,9 +75,9 @@ COMM "vgsplit correctly splits single striped LV into $i VG ($j args)"
 		vgremove -f $vg2
 
 COMM "vgsplit correctly splits mirror LV into $i VG ($j args)" 
-		vgcreate $vg1 $dev1 $dev2 $dev3 
+		vgcreate -c n $vg1 $dev1 $dev2 $dev3 
 		if [ $i = existing ]; then
-		  vgcreate $vg2 $dev4
+		  vgcreate -c n $vg2 $dev4
 		fi 
 		lvcreate -l 64 -m1 -n $lv1 $vg1 $dev1 $dev2 $dev3 
 		vgchange -an $vg1 
@@ -95,9 +95,9 @@ COMM "vgsplit correctly splits mirror LV into $i VG ($j args)"
 		vgremove -f $vg2
 
 COMM "vgsplit correctly splits origin and snapshot LV into $i VG ($j args)" 
-		vgcreate $vg1 $dev1 $dev2 
+		vgcreate -c n $vg1 $dev1 $dev2 
 		if [ $i = existing ]; then
-		  vgcreate $vg2 $dev3 $dev4
+		  vgcreate -c n $vg2 $dev3 $dev4
 		fi 
 		lvcreate -l 64 -i 2 -n $lv1 $vg1 $dev1 $dev2 
 		lvcreate -l 4 -i 2 -s -n $lv2 $vg1/$lv1 
@@ -117,9 +117,9 @@ COMM "vgsplit correctly splits origin and snapshot LV into $i VG ($j args)"
 		vgremove -f $vg2
 
 COMM "vgsplit correctly splits linear LV but not snap+origin LV into $i VG ($j args)" 
-		vgcreate $vg1 $dev1 $dev2 
+		vgcreate -c n $vg1 $dev1 $dev2 
 		if [ $i = existing ]; then
-		  vgcreate $vg2 $dev3
+		  vgcreate -c n $vg2 $dev3
 		fi 
 		lvcreate -l 64 -i 2 -n $lv1 $vg1 
 		lvcreate -l 4 -i 2 -s -n $lv2 $vg1/$lv1 
@@ -145,9 +145,9 @@ COMM "vgsplit correctly splits linear LV but not snap+origin LV into $i VG ($j a
 		vgremove -f $vg2
 
 COMM "vgsplit correctly splits linear LV but not mirror LV into $i VG ($j args)" 
-		vgcreate $vg1 $dev1 $dev2 $dev3 
+		vgcreate -c n $vg1 $dev1 $dev2 $dev3 
 		if [ $i = existing ]; then
-		  vgcreate $vg2 $dev5
+		  vgcreate -c n $vg2 $dev5
 		fi 
 		lvcreate -l 64 -m1 -n $lv1 $vg1 $dev1 $dev2 $dev3 
 		vgextend $vg1 $dev4 
@@ -193,7 +193,7 @@ not vgsplit -n $lv1 $vg1 $vg2
 vgremove -ff $vg1
 
 COMM "vgsplit fails splitting one LV with 2 snapshots, only origin LV specified" 
-vgcreate $vg1 $dev1 $dev2 $dev3 $dev4 
+vgcreate -c n $vg1 $dev1 $dev2 $dev3 $dev4 
 lvcreate -l 16 -n $lv1 $vg1 $dev1 $dev2 
 lvcreate -l 4 -n $lv2 -s $vg1/$lv1 
 lvcreate -l 4 -n $lv3 -s $vg1/$lv1 
@@ -206,7 +206,7 @@ lvremove -f $vg1/$lv1
 vgremove -ff $vg1
 
 COMM "vgsplit fails splitting one LV with 2 snapshots, only snapshot LV specified" 
-vgcreate $vg1 $dev1 $dev2 $dev3 $dev4 
+vgcreate -c n $vg1 $dev1 $dev2 $dev3 $dev4 
 lvcreate -l 16 -n $lv1 $vg1 $dev1 $dev2 
 lvcreate -l 4 -n $lv2 -s $vg1/$lv1 
 lvcreate -l 4 -n $lv3 -s $vg1/$lv1 
@@ -219,7 +219,7 @@ lvremove -f $vg1/$lv1
 vgremove -ff $vg1
 
 COMM "vgsplit fails splitting one mirror LV, only one PV specified" 
-vgcreate $vg1 $dev1 $dev2 $dev3 $dev4 
+vgcreate -c n $vg1 $dev1 $dev2 $dev3 $dev4 
 lvcreate -l 16 -n $lv1 -m1 $vg1 $dev1 $dev2 $dev3 
 vg_validate_pvlv_counts_ $vg1 4 1 0 
 vgchange -an $vg1 
@@ -227,7 +227,7 @@ not vgsplit $vg1 $vg2 $dev2
 vgremove -ff $vg1
 
 COMM "vgsplit fails splitting 1 mirror + 1 striped LV, only striped LV specified" 
-vgcreate $vg1 $dev1 $dev2 $dev3 $dev4 
+vgcreate -c n $vg1 $dev1 $dev2 $dev3 $dev4 
 lvcreate -l 16 -n $lv1 -m1 $vg1 $dev1 $dev2 $dev3 
 lvcreate -l 16 -n $lv2 -i 2 $vg1 $dev3 $dev4 
 vg_validate_pvlv_counts_ $vg1 4 2 0 
@@ -239,7 +239,7 @@ vgremove -ff $vg1
 # Verify vgsplit rejects active LVs only when active LVs involved in split
 #
 COMM "vgsplit fails, active mirror involved in split" 
-vgcreate $vg1 $dev1 $dev2 $dev3 $dev4 
+vgcreate -c n $vg1 $dev1 $dev2 $dev3 $dev4 
 lvcreate -l 16 -n $lv1 -m1 $vg1 $dev1 $dev2 $dev3 
 lvcreate -l 16 -n $lv2 $vg1 $dev4 
 lvchange -an $vg1/$lv2 
@@ -249,7 +249,7 @@ vg_validate_pvlv_counts_ $vg1 4 2 0
 vgremove -ff $vg1
 
 COMM "vgsplit succeeds, active mirror not involved in split" 
-vgcreate $vg1 $dev1 $dev2 $dev3 $dev4 
+vgcreate -c n $vg1 $dev1 $dev2 $dev3 $dev4 
 lvcreate -l 16 -n $lv1 -m1 $vg1 $dev1 $dev2 $dev3 
 lvcreate -l 16 -n $lv2 $vg1 $dev4 
 lvchange -an $vg1/$lv2 
@@ -261,7 +261,7 @@ vgremove -ff $vg1
 vgremove -ff $vg2
 
 COMM "vgsplit fails, active snapshot involved in split" 
-vgcreate $vg1 $dev1 $dev2 $dev3 $dev4 
+vgcreate -c n $vg1 $dev1 $dev2 $dev3 $dev4 
 lvcreate -l 64 -i 2 -n $lv1 $vg1 $dev1 $dev2 
 lvcreate -l 4 -i 2 -s -n $lv2 $vg1/$lv1 
 lvcreate -l 64 -i 2 -n $lv3 $vg1 $dev3 $dev4 
@@ -273,7 +273,7 @@ lvremove -f $vg1/$lv2
 vgremove -ff $vg1
 
 COMM "vgsplit succeeds, active snapshot not involved in split" 
-vgcreate $vg1 $dev1 $dev2 $dev3 
+vgcreate -c n $vg1 $dev1 $dev2 $dev3 
 lvcreate -l 64 -i 2 -n $lv1 $vg1 $dev1 $dev2 
 lvcreate -l 4 -s -n $lv2 $vg1/$lv1 
 vgextend $vg1 $dev4 
