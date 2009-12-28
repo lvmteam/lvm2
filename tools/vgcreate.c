@@ -60,7 +60,8 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 			log_error("A volume group called %s already exists.", vp_new.vg_name);
 		else
 			log_error("Can't get lock for %s.", vp_new.vg_name);
-		goto bad;
+		vg_release(vg);
+		return ECMD_FAILED;
 	}
 
 	if (!vg_set_extent_size(vg, vp_new.extent_size) ||
@@ -68,7 +69,7 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	    !vg_set_max_pv(vg, vp_new.max_pv) ||
 	    !vg_set_alloc_policy(vg, vp_new.alloc) ||
 	    !vg_set_clustered(vg, vp_new.clustered))
-		goto_bad;
+		goto bad_orphan;
 
 	if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE)) {
 		log_error("Can't get lock for orphan PVs");
