@@ -12,6 +12,7 @@ lvchange \- change attributes of a logical volume
 [\-\-ignorelockingfailure]
 [\-\-ignoremonitoring]
 [\-\-monitor {y|n}]
+[\-\-poll {y|n}]
 [\-\-noudevsync]
 [\-M|\-\-persistent y|n] [\-\-minor minor]
 [\-P|\-\-partial]
@@ -61,6 +62,14 @@ If a device used by a monitored mirror reports an I/O error,
 the failure is handled according to 
 \fBmirror_image_fault_policy\fP and \fBmirror_log_fault_policy\fP
 set in \fBlvm.conf\fP.
+.TP
+.I \-\-poll y|n
+Controls whether or not a logical volume's progress is polled.  It may
+not be appropriate to immediately poll the progress of a logical
+volume's transformation when it is activated (for example, when merging
+a snapshot into the root FS).  The progress polling of an incomplete
+pvmove or lvconvert can be deferred using \fB--poll n\fP and restarted
+using \fB--poll y\fP.
 .TP
 .I \-\-noudevsync
 Disable udev synchronisation. The

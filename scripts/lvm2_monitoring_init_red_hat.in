@@ -26,7 +26,7 @@
 # Required-Stop: $local_fs
 # Default-Start: 1 2 3 4 5
 # Default-Stop: 0 6
-# Short-Description: Monitoring of LVM2 mirrors, snapshots etc. using dmeventd
+# Short-Description: Monitoring of LVM2 mirrors, snapshots etc. using dmeventd or progress polling
 ### END INIT INFO
 
 . /etc/init.d/functions
@@ -50,7 +50,7 @@ start()
 	VGSLIST=`$VGS --noheadings -o name 2> /dev/null`
 	for vg in $VGSLIST
 	do
-	    action "Starting monitoring for VG $vg:" $VGCHANGE --monitor y $vg || ret=$?
+	    action "Starting monitoring for VG $vg:" $VGCHANGE --monitor y --poll y $vg || ret=$?
 	done
 
 	return $ret

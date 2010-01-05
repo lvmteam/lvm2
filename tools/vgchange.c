@@ -51,6 +51,39 @@ static int _monitor_lvs_in_vg(struct cmd_context *cmd,
 	return count;
 }
 
+static int _poll_lvs_in_vg(struct cmd_context *cmd,
+			   struct volume_group *vg)
+{
+	struct lv_list *lvl;
+	struct logical_volume *lv;
+	struct lvinfo info;
+	int lv_active;
+	int count = 0;
+
+	dm_list_iterate_items(lvl, &vg->lvs) {
+		lv = lvl->lv;
+
+		if (!lv_info(cmd, lv, &info, 0, 0))
+			lv_active = 0;
+		else
+			lv_active = info.exists;
+
+		if (!lv_active ||
+		    !(lv->status & (PVMOVE|CONVERTING)))
+			continue;
+
+		lv_spawn_background_polling(cmd, lv);
+		count++;
+	}
+
+	/*
+	 * returns the number of polled devices
+	 * - there is no way to know if lv is already being polled
+	 */
+
+	return count;
+}
+
 static int _activate_lvs_in_vg(struct cmd_context *cmd,
 			       struct volume_group *vg, int activate)
 {
@@ -95,7 +128,8 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd,
 		} else if (!activate_lv(cmd, lv))
 			continue;
 
-		if (activate != CHANGE_AN && activate != CHANGE_ALN &&
+		if (background_polling() &&
+		    activate != CHANGE_AN && activate != CHANGE_ALN &&
 		    (lv->status & (PVMOVE|CONVERTING)))
 			lv_spawn_background_polling(cmd, lv);
 
@@ -120,6 +154,20 @@ static int _vgchange_monitoring(struct cmd_context *cmd, struct volume_group *vg
 		log_print("%d logical volume(s) in volume group "
 			    "\"%s\" %smonitored",
 			    monitored, vg->name, (dmeventd_monitor_mode()) ? "" : "un");
+	}
+
+	return ECMD_PROCESSED;
+}
+
+static int _vgchange_background_polling(struct cmd_context *cmd, struct volume_group *vg)
+{
+	int polled;
+
+	if (lvs_in_vg_activated(vg) && background_polling()) {
+	        polled = _poll_lvs_in_vg(cmd, vg);
+		log_print("Background polling started for %d logical volume(s) "
+			  "in volume group \"%s\"",
+			  polled, vg->name);
 	}
 
 	return ECMD_PROCESSED;
@@ -490,11 +538,17 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 					    (is_static() || arg_count(cmd, ignoremonitoring_ARG)) ?
 					    DMEVENTD_MONITOR_IGNORE : DEFAULT_DMEVENTD_MONITOR));
 
+	init_background_polling(arg_int_value(cmd, poll_ARG,
+					      DEFAULT_BACKGROUND_POLLING));
+
 	if (arg_count(cmd, available_ARG))
 		r = _vgchange_available(cmd, vg);
 
 	else if (arg_count(cmd, monitor_ARG))
 		r = _vgchange_monitoring(cmd, vg);
+
+	else if (arg_count(cmd, poll_ARG))
+		r = _vgchange_background_polling(cmd, vg);
 
 	else if (arg_count(cmd, resizeable_ARG))
 		r = _vgchange_resizeable(cmd, vg);
@@ -538,9 +592,11 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 	     arg_count(cmd, addtag_ARG) + arg_count(cmd, uuid_ARG) +
 	     arg_count(cmd, physicalextentsize_ARG) +
 	     arg_count(cmd, clustered_ARG) + arg_count(cmd, alloc_ARG) +
-	     arg_count(cmd, monitor_ARG) + arg_count(cmd, refresh_ARG))) {
-		log_error("One of -a, -c, -l, -p, -s, -x, --refresh, "
-				"--uuid, --alloc, --addtag or --deltag required");
+	     arg_count(cmd, monitor_ARG) + arg_count(cmd, poll_ARG) +
+	     arg_count(cmd, refresh_ARG))) {
+		log_error("Need 1 or more of -a, -c, -l, -p, -s, -x, "
+			  "--refresh, --uuid, --alloc, --addtag, --deltag, "
+			  "--monitor or --poll");
 		return EINVALID_CMD_LINE;
 	}
 
