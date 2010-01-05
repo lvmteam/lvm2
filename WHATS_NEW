@@ -1,5 +1,6 @@
 Version 2.02.57 -
 ====================================
+  Move processing of VG locks to separate function in clvmd.
   Properly decode flags even for VG locks.
   Properly handle precommitted flag in cache when commited data only present.
   Resume renamed volumes in reverse order to preserve memlock pairing.
