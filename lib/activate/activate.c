@@ -714,7 +714,8 @@ int lv_is_active(struct logical_volume *lv)
 	 * FIXME: check status to not deactivate already activate device
 	 */
 	if (activate_lv_excl(lv->vg->cmd, lv)) {
-		deactivate_lv(lv->vg->cmd, lv);
+		if (!deactivate_lv(lv->vg->cmd, lv))
+			stack;
 		return 0;
 	}
 

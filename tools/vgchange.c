@@ -114,19 +114,29 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd,
 		expected_count++;
 
 		if (activate == CHANGE_AN) {
-			if (!deactivate_lv(cmd, lv))
+			if (!deactivate_lv(cmd, lv)) {
+				stack;
 				continue;
+			}
 		} else if (activate == CHANGE_ALN) {
-			if (!deactivate_lv_local(cmd, lv))
+			if (!deactivate_lv_local(cmd, lv)) {
+				stack;
 				continue;
+			}
 		} else if (lv_is_origin(lv) || (activate == CHANGE_AE)) {
-			if (!activate_lv_excl(cmd, lv))
+			if (!activate_lv_excl(cmd, lv)) {
+				stack;
 				continue;
+			}
 		} else if (activate == CHANGE_ALY) {
-			if (!activate_lv_local(cmd, lv))
+			if (!activate_lv_local(cmd, lv)) {
+				stack;
 				continue;
-		} else if (!activate_lv(cmd, lv))
+			}
+		} else if (!activate_lv(cmd, lv)) {
+			stack;
 			continue;
+		}
 
 		if (background_polling() &&
 		    activate != CHANGE_AN && activate != CHANGE_ALN &&

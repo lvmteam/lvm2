@@ -271,10 +271,17 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 static int _activate_lv(struct cmd_context *cmd, struct logical_volume *lv_mirr,
 			unsigned exclusive)
 {
-	if (exclusive)
-		return activate_lv_excl(cmd, lv_mirr);
+	int r = 0;
 
-	return activate_lv(cmd, lv_mirr);
+	if (exclusive)
+		r = activate_lv_excl(cmd, lv_mirr);
+	else
+		r = activate_lv(cmd, lv_mirr);
+
+	if (!r)
+		stack;
+
+	return r;
 }
 
 static int _finish_pvmove(struct cmd_context *cmd, struct volume_group *vg,
