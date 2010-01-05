@@ -2620,7 +2620,11 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 			if (!inconsistent_pvs) {
 				log_debug("Updating cache for PVs without mdas "
 					  "in VG %s.", vgname);
-				lvmcache_update_vg(correct_vg, use_precommitted);
+				/*
+				 * If there is no precommitted metadata, committed metadata
+				 * is read and stored in the cache even if use_precommitted is set
+				 */
+				lvmcache_update_vg(correct_vg, correct_vg->status & PRECOMMITTED);
 
 				if (!(pvids = lvmcache_get_pvids(cmd, vgname, vgid)))
 					return_NULL;
@@ -2721,7 +2725,11 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 			return_NULL;
 	}
 
-	lvmcache_update_vg(correct_vg, use_precommitted);
+	/*
+	 * If there is no precommitted metadata, committed metadata
+	 * is read and stored in the cache even if use_precommitted is set
+	 */
+	lvmcache_update_vg(correct_vg, correct_vg->status & PRECOMMITTED);
 
 	if (inconsistent) {
 		/* FIXME Test should be if we're *using* precommitted metadata not if we were searching for it */

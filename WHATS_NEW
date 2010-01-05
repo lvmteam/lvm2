@@ -1,5 +1,6 @@
 Version 2.02.57 -
 ====================================
+  Properly handle precommitted flag in cache when commited data only present.
   Resume renamed volumes in reverse order to preserve memlock pairing.
   Drop metadata cache after device was autorepaired and removed from VG.
   Remove missing flag in metadata if PV reappeared and is empty.
