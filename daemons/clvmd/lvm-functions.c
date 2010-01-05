@@ -693,7 +693,7 @@ void do_lock_vg(unsigned char command, unsigned char lock_flags, char *resource)
 
 	pthread_mutex_lock(&lvm_lock);
 	DEBUGLOG("Dropping metadata for VG %s\n", vgname);
-	lvmcache_drop_metadata(vgname);
+	lvmcache_drop_metadata(vgname, 0);
 	pthread_mutex_unlock(&lvm_lock);
 }
 

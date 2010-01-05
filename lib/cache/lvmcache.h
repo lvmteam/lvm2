@@ -111,6 +111,7 @@ struct dm_list *lvmcache_get_pvids(struct cmd_context *cmd, const char *vgname,
 
 /* Returns cached volume group metadata. */
 struct volume_group *lvmcache_get_vg(const char *vgid, unsigned precommitted);
-void lvmcache_drop_metadata(const char *vgname);
+void lvmcache_drop_metadata(const char *vgname, int drop_precommitted);
+void lvmcache_commit_metadata(const char *vgname);
 
 #endif
