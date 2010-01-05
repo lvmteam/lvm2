@@ -1006,6 +1006,7 @@ int dm_tree_deactivate_children(struct dm_tree_node *dnode,
 				   const char *uuid_prefix,
 				   size_t uuid_prefix_len)
 {
+	int r = 1;
 	void *handle = NULL;
 	struct dm_tree_node *child = dnode;
 	struct dm_info info;
@@ -1043,14 +1044,16 @@ int dm_tree_deactivate_children(struct dm_tree_node *dnode,
 			log_error("Unable to deactivate %s (%" PRIu32
 				  ":%" PRIu32 ")", name, info.major,
 				  info.minor);
+			r = 0;
 			continue;
 		}
 
 		if (dm_tree_node_num_children(child, 0))
-			dm_tree_deactivate_children(child, uuid_prefix, uuid_prefix_len);
+			if (!dm_tree_deactivate_children(child, uuid_prefix, uuid_prefix_len))
+				return_0;
 	}
 
-	return 1;
+	return r;
 }
 
 void dm_tree_skip_lockfs(struct dm_tree_node *dnode)
