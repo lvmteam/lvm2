@@ -1251,7 +1251,18 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 
 int lv_refresh(struct cmd_context *cmd, struct logical_volume *lv)
 {
-	return suspend_lv(cmd, lv) && resume_lv(cmd, lv);
+	int r = 0;
+
+	r = suspend_lv(cmd, lv);
+	if (!r)
+		goto_out;
+
+	r = resume_lv(cmd, lv);
+	if (!r)
+		goto_out;
+
+out:
+	return r;
 }
 
 int vg_refresh_visible(struct cmd_context *cmd, struct volume_group *vg)

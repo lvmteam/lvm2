@@ -796,7 +796,8 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 	}
 
 	if (!vg_commit(lv->vg)) {
-		resume_lv(cmd, lv);
+		if (!resume_lv(cmd, lv))
+			stack;
 		goto_out;
 	}
 

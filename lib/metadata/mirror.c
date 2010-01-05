@@ -615,8 +615,9 @@ static int _remove_mirror_images(struct logical_volume *lv,
 		log_error("Problem suspending temporary LV %s", temp_layer_lv->name);
 
 	if (!vg_commit(mirrored_seg->lv->vg)) {
-		resume_lv(mirrored_seg->lv->vg->cmd, mirrored_seg->lv);
-		return 0;
+		if (!resume_lv(mirrored_seg->lv->vg->cmd, mirrored_seg->lv))
+			stack;
+		return_0;
 	}
 
 	log_very_verbose("Updating \"%s\" in kernel", mirrored_seg->lv->name);

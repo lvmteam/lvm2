@@ -454,7 +454,8 @@ int resume_lvs(struct cmd_context *cmd, struct dm_list *lvs)
 	struct lv_list *lvl;
 
 	dm_list_iterate_items(lvl, lvs)
-		resume_lv(cmd, lvl->lv);
+		if (!resume_lv(cmd, lvl->lv))
+			stack;
 
 	return 1;
 }
@@ -470,7 +471,8 @@ int suspend_lvs(struct cmd_context *cmd, struct dm_list *lvs)
 			log_error("Failed to suspend %s", lvl->lv->name);
 			dm_list_uniterate(lvh, lvs, &lvl->list) {
 				lvl = dm_list_item(lvh, struct lv_list);
-				resume_lv(cmd, lvl->lv);
+				if (!resume_lv(cmd, lvl->lv))
+					stack;
 			}
 
 			return 0;

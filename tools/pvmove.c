@@ -302,7 +302,8 @@ static int _update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 	/* Suspend mirrors on subsequent calls */
 	if (!first_time) {
 		if (!suspend_lv(cmd, lv_mirr)) {
-			resume_lvs(cmd, lvs_changed);
+			if (!resume_lvs(cmd, lvs_changed))
+				stack;
 			vg_revert(vg);
 			goto_out;
 		}
@@ -312,8 +313,10 @@ static int _update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 	if (!vg_commit(vg)) {
 		log_error("ABORTING: Volume group metadata update failed.");
 		if (!first_time)
-			resume_lv(cmd, lv_mirr);
-		resume_lvs(cmd, lvs_changed);
+			if (!resume_lv(cmd, lv_mirr))
+				stack;
+		if (!resume_lvs(cmd, lvs_changed))
+			stack;
 		goto out;
 	}
 
@@ -339,7 +342,8 @@ static int _update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 	} else if (!resume_lv(cmd, lv_mirr)) {
 		log_error("Unable to reactivate logical volume \"%s\"",
 			  lv_mirr->name);
-		resume_lvs(cmd, lvs_changed);
+		if (!resume_lvs(cmd, lvs_changed))
+			stack;
 		goto out;
 	}
 
@@ -513,8 +517,10 @@ static int _finish_pvmove(struct cmd_context *cmd, struct volume_group *vg,
 		log_error("ABORTING: Failed to write new data locations "
 			  "to disk.");
 		vg_revert(vg);
-		resume_lv(cmd, lv_mirr);
-		resume_lvs(cmd, lvs_changed);
+		if (!resume_lv(cmd, lv_mirr))
+			stack;
+		if (!resume_lvs(cmd, lvs_changed))
+			stack;
 		return 0;
 	}
 
@@ -526,7 +532,8 @@ static int _finish_pvmove(struct cmd_context *cmd, struct volume_group *vg,
 	}
 
 	/* Unsuspend LVs */
-	resume_lvs(cmd, lvs_changed);
+	if (!resume_lvs(cmd, lvs_changed))
+		stack;
 
 	/* Deactivate mirror LV */
 	if (!deactivate_lv(cmd, lv_mirr)) {
