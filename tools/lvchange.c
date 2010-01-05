@@ -101,6 +101,22 @@ static int lvchange_monitoring(struct cmd_context *cmd,
 	return 1;
 }
 
+static int lvchange_background_polling(struct cmd_context *cmd,
+				       struct logical_volume *lv)
+{
+	struct lvinfo info;
+
+	if (!lv_info(cmd, lv, &info, 0, 0) || !info.exists) {
+		log_error("Logical volume, %s, is not active", lv->name);
+		return 0;
+	}
+
+	if (background_polling())
+		lv_spawn_background_polling(cmd, lv);
+
+	return 1;
+}
+
 static int lvchange_availability(struct cmd_context *cmd,
 				 struct logical_volume *lv)
 {
@@ -135,7 +151,8 @@ static int lvchange_availability(struct cmd_context *cmd,
 				return_0;
 		}
 
-		lv_spawn_background_polling(cmd, lv);
+		if (background_polling())
+			lv_spawn_background_polling(cmd, lv);
 	}
 
 	return 1;
@@ -577,6 +594,9 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 					    (is_static() || arg_count(cmd, ignoremonitoring_ARG)) ?
 					    DMEVENTD_MONITOR_IGNORE : DEFAULT_DMEVENTD_MONITOR));
 
+	init_background_polling(arg_int_value(cmd, poll_ARG,
+					      DEFAULT_BACKGROUND_POLLING));
+
 	/* access permission change */
 	if (arg_count(cmd, permission_ARG)) {
 		if (!archive(lv->vg)) {
@@ -679,6 +699,15 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 		}
 	}
 
+	if (!arg_count(cmd, available_ARG) &&
+	    !arg_count(cmd, refresh_ARG) &&
+	    arg_count(cmd, poll_ARG)) {
+		if (!lvchange_background_polling(cmd, lv)) {
+			stack;
+			return ECMD_FAILED;
+		}
+	}
+
 	if (doit != docmds) {
 		stack;
 		return ECMD_FAILED;
@@ -695,10 +724,10 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 	    && !arg_count(cmd, persistent_ARG) && !arg_count(cmd, addtag_ARG)
 	    && !arg_count(cmd, deltag_ARG) && !arg_count(cmd, refresh_ARG)
 	    && !arg_count(cmd, alloc_ARG) && !arg_count(cmd, monitor_ARG)
-	    && !arg_count(cmd, resync_ARG)) {
+	    && !arg_count(cmd, poll_ARG) && !arg_count(cmd, resync_ARG)) {
 		log_error("Need 1 or more of -a, -C, -j, -m, -M, -p, -r, "
-			  "--resync, --refresh, --alloc, --addtag, --deltag "
-			  "or --monitor");
+			  "--resync, --refresh, --alloc, --addtag, --deltag, "
+			  "--monitor or --poll");
 		return EINVALID_CMD_LINE;
 	}
 

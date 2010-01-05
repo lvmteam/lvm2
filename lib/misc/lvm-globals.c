@@ -35,6 +35,7 @@ static int _security_level = SECURITY_LEVEL;
 static char _cmd_name[30] = "";
 static int _mirror_in_sync = 0;
 static int _dmeventd_monitor = DEFAULT_DMEVENTD_MONITOR;
+static int _background_polling = DEFAULT_BACKGROUND_POLLING;
 static int _ignore_suspended_devices = 0;
 static int _error_message_produced = 0;
 static unsigned _is_static = 0;
@@ -89,6 +90,11 @@ void init_mirror_in_sync(int in_sync)
 void init_dmeventd_monitor(int reg)
 {
 	_dmeventd_monitor = reg;
+}
+
+void init_background_polling(int polling)
+{
+	_background_polling = polling;
 }
 
 void init_ignore_suspended_devices(int ignore)
@@ -153,6 +159,11 @@ int full_scan_done()
 int trust_cache()
 {
 	return _trust_cache;
+}
+
+int background_polling()
+{
+	return _background_polling;
 }
 
 int ignorelockingfailure()
