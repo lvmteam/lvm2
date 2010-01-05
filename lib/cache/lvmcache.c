@@ -158,7 +158,7 @@ static void _update_cache_lock_state(const char *vgname, int locked)
 	_update_cache_vginfo_lock_state(vginfo, locked);
 }
 
-static void _drop_metadata(const char *vgname)
+static void _drop_metadata(const char *vgname, int drop_precommitted)
 {
 	struct lvmcache_vginfo *vginfo;
 	struct lvmcache_info *info;
@@ -172,26 +172,48 @@ static void _drop_metadata(const char *vgname)
 	 * already invalidated the PV labels (before caching it)
 	 * and we must not do it again.
 	 */
+	if (!drop_precommitted && vginfo->precommitted && !vginfo->vgmetadata)
+		log_error(INTERNAL_ERROR "metadata commit (or revert) missing before "
+			  "dropping metadata from cache.");
 
-	if (!vginfo->precommitted)
+	if (drop_precommitted || !vginfo->precommitted)
 		dm_list_iterate_items(info, &vginfo->infos)
 			info->status |= CACHE_INVALID;
 
 	_free_cached_vgmetadata(vginfo);
 }
 
-void lvmcache_drop_metadata(const char *vgname)
+/*
+ * Remote node uses this to upgrade precommited metadata to commited state
+ * when receives vg_commit notification.
+ * (Note that devices can be suspended here, if so, precommited metadata are already read.)
+ */
+void lvmcache_commit_metadata(const char *vgname)
+{
+	struct lvmcache_vginfo *vginfo;
+
+	if (!(vginfo = vginfo_from_vgname(vgname, NULL)))
+		return;
+
+	if (vginfo->precommitted) {
+		log_debug("Precommitted metadata cache: VG %s upgraded to committed.",
+			  vginfo->vgname);
+		vginfo->precommitted = 0;
+	}
+}
+
+void lvmcache_drop_metadata(const char *vgname, int drop_precommitted)
 {
 	/* For VG_ORPHANS, we need to invalidate all labels on orphan PVs. */
 	if (!strcmp(vgname, VG_ORPHANS)) {
-		_drop_metadata(FMT_TEXT_ORPHAN_VG_NAME);
-		_drop_metadata(FMT_LVM1_ORPHAN_VG_NAME);
-		_drop_metadata(FMT_POOL_ORPHAN_VG_NAME);
+		_drop_metadata(FMT_TEXT_ORPHAN_VG_NAME, 0);
+		_drop_metadata(FMT_LVM1_ORPHAN_VG_NAME, 0);
+		_drop_metadata(FMT_POOL_ORPHAN_VG_NAME, 0);
 
 		/* Indicate that PVs could now be missing from the cache */
 		init_full_scan_done(0);
 	} else if (!vgname_is_locked(VG_GLOBAL))
-		_drop_metadata(vgname);
+		_drop_metadata(vgname, drop_precommitted);
 }
 
 /*
