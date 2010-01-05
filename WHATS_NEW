@@ -1,5 +1,6 @@
 Version 2.02.57 -
 ====================================
+  Use proper mask for VG lock mode in clvmd.
   Add possibility to drop precommitted metadata in lvmcache.
   Move processing of VG locks to separate function in clvmd.
   Properly decode flags even for VG locks.

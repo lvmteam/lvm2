@@ -193,6 +193,7 @@ static int lock_vg(struct local_client *client)
 	(struct clvm_header *) client->bits.localsock.cmd;
     unsigned char lock_cmd;
     unsigned char lock_flags;
+    int lock_mode;
     char *args = header->node + strlen(header->node) + 1;
     int lkid;
     int status = 0;
@@ -212,11 +213,12 @@ static int lock_vg(struct local_client *client)
     }
 
     lock_cmd = args[0] & (LCK_NONBLOCK | LCK_HOLD | LCK_SCOPE_MASK | LCK_TYPE_MASK);
+    lock_mode = ((int)lock_cmd & LCK_TYPE_MASK);
     lock_flags = args[1];
     lockname = &args[2];
     DEBUGLOG("doing PRE command LOCK_VG '%s' at %x (client=%p)\n", lockname, lock_cmd, client);
 
-    if (lock_cmd == LCK_UNLOCK) {
+    if (lock_mode == LCK_UNLOCK) {
 
 	lkid = (int)(long)dm_hash_lookup(lock_hash, lockname);
 	if (lkid == 0)
@@ -230,11 +232,9 @@ static int lock_vg(struct local_client *client)
     }
     else {
 	/* Read locks need to be PR; other modes get passed through */
-	if ((lock_cmd & LCK_TYPE_MASK) == LCK_READ) {
-	    lock_cmd &= ~LCK_TYPE_MASK;
-	    lock_cmd |= LCK_PREAD;
-	}
-	status = sync_lock(lockname, (int)lock_cmd, (lock_cmd & LCK_NONBLOCK) ? LKF_NOQUEUE : 0, &lkid);
+	if (lock_mode == LCK_READ)
+	    lock_mode = LCK_PREAD;
+	status = sync_lock(lockname, lock_mode, (lock_cmd & LCK_NONBLOCK) ? LKF_NOQUEUE : 0, &lkid);
 	if (status)
 	    status = errno;
 	else

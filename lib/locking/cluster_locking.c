@@ -409,7 +409,6 @@ int lock_resource(struct cmd_context *cmd, const char *resource, uint32_t flags)
 
 		lock_scope = "VG";
 		clvmd_cmd = CLVMD_CMD_LOCK_VG;
-		flags &= LCK_TYPE_MASK;
 		break;
 
 	case LCK_LV:
