@@ -74,23 +74,23 @@ static const char *decode_locking_cmd(unsigned char cmdl)
 	const char *command;
 
 	switch (cmdl & LCK_TYPE_MASK) {
-	case LCK_NULL:   
-		type = "NULL";   
+	case LCK_NULL:
+		type = "NULL";
 		break;
-	case LCK_READ:   
-		type = "READ";   
+	case LCK_READ:
+		type = "READ";
 		break;
-	case LCK_PREAD:  
-		type = "PREAD";  
+	case LCK_PREAD:
+		type = "PREAD";
 		break;
-	case LCK_WRITE:  
-		type = "WRITE";  
+	case LCK_WRITE:
+		type = "WRITE";
 		break;
-	case LCK_EXCL:   
-		type = "EXCL";   
+	case LCK_EXCL:
+		type = "EXCL";
 		break;
-	case LCK_UNLOCK: 
-		type = "UNLOCK"; 
+	case LCK_UNLOCK:
+		type = "UNLOCK";
 		break;
 	default:
 		type = "unknown";
@@ -98,34 +98,35 @@ static const char *decode_locking_cmd(unsigned char cmdl)
 	}
 
 	switch (cmdl & LCK_SCOPE_MASK) {
-	case LCK_VG: 
-		scope = "VG"; 
+	case LCK_VG:
+		scope = "VG";
+		command = "LCK_VG";
 		break;
-	case LCK_LV: 
+	case LCK_LV:
 		scope = "LV"; 
+		switch (cmdl & LCK_MASK) {
+		case LCK_LV_EXCLUSIVE & LCK_MASK:
+			command = "LCK_LV_EXCLUSIVE";
+			break;
+		case LCK_LV_SUSPEND & LCK_MASK:
+			command = "LCK_LV_SUSPEND";
+			break;
+		case LCK_LV_RESUME & LCK_MASK:
+			command = "LCK_LV_RESUME";
+			break;
+		case LCK_LV_ACTIVATE & LCK_MASK:
+			command = "LCK_LV_ACTIVATE";
+			break;
+		case LCK_LV_DEACTIVATE & LCK_MASK:
+			command = "LCK_LV_DEACTIVATE";
+			break;
+		default:
+			command = "unknown";
+			break;
+		}
 		break;
 	default:
 		scope = "unknown";
-		break;
-	}
-
-	switch (cmdl & LCK_MASK) {
-	case LCK_LV_EXCLUSIVE & LCK_MASK:
-		command = "LCK_LV_EXCLUSIVE";  
-		break;
-	case LCK_LV_SUSPEND & LCK_MASK:    
-		command = "LCK_LV_SUSPEND";    
-		break;
-	case LCK_LV_RESUME & LCK_MASK:     
-		command = "LCK_LV_RESUME";     
-		break;
-	case LCK_LV_ACTIVATE & LCK_MASK:   
-		command = "LCK_LV_ACTIVATE";   
-		break;
-	case LCK_LV_DEACTIVATE & LCK_MASK: 
-		command = "LCK_LV_DEACTIVATE"; 
-		break;
-	default:
 		command = "unknown";
 		break;
 	}
