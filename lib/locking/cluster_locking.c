@@ -450,12 +450,13 @@ int lock_resource(struct cmd_context *cmd, const char *resource, uint32_t flags)
 		return 0;
 	}
 
-	log_very_verbose("Locking %s %s %s %s%s%s%s (0x%x)", lock_scope, lockname,
-			 lock_type,
-			 flags & LCK_NONBLOCK ? "" : "B",
-			 flags & LCK_HOLD ? "H" : "",
-			 flags & LCK_LOCAL ? "L" : "",
-			 flags & LCK_CLUSTER_VG ? "C" : "",
+	log_very_verbose("Locking %s %s %s (%s%s%s%s%s%s) (0x%x)", lock_scope, lockname,
+			 lock_type, lock_scope,
+			 flags & LCK_NONBLOCK ? "|NONBLOCK" : "",
+			 flags & LCK_HOLD ? "|HOLD" : "",
+			 flags & LCK_LOCAL ? "|LOCAL" : "",
+			 flags & LCK_CLUSTER_VG ? "|CLUSTER" : "",
+			 flags & LCK_CACHE ? "|CACHE" : "",
 			 flags);
 
 	/* Send a message to the cluster manager */
