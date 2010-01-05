@@ -1767,7 +1767,7 @@ int lv_rename(struct cmd_context *cmd, struct logical_volume *lv,
 	struct volume_group *vg = lv->vg;
 	struct lv_names lv_names;
 	DM_LIST_INIT(lvs_changed);
-	struct lv_list lvl, lvl2;
+	struct lv_list lvl, lvl2, *lvlp;
 	int r = 0;
 
 	/* rename is not allowed on sub LVs */
@@ -1822,7 +1822,13 @@ int lv_rename(struct cmd_context *cmd, struct logical_volume *lv,
 	if (!(r = vg_commit(vg)))
 		stack;
 
-	resume_lvs(cmd, &lvs_changed);
+	/*
+	 * FIXME: resume LVs in reverse order to prevent memory
+	 * lock imbalance when resuming virtual snapshot origin
+	 * (resume of snapshot resumes origin too)
+	 */
+	dm_list_iterate_back_items(lvlp, &lvs_changed)
+		resume_lv(cmd, lvlp->lv);
 out:
 	backup(vg);
 	return r;

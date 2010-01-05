@@ -1,5 +1,6 @@
 Version 2.02.57 -
 ====================================
+  Resume renamed volumes in reverse order to preserve memlock pairing.
   Drop metadata cache after device was autorepaired and removed from VG.
   Remove missing flag in metadata if PV reappeared and is empty.
   Destroy allocated mempool in _vg_read_orphans() error path.
