@@ -95,19 +95,27 @@ static int _snap_target_percent(void **target_state __attribute((unused)),
 				char *params, uint64_t *total_numerator,
 				uint64_t *total_denominator)
 {
-	uint64_t numerator, denominator;
+	uint64_t total_sectors, sectors_allocated, metadata_sectors;
+	int r;
 
-	if (sscanf(params, "%" PRIu64 "/%" PRIu64,
-		   &numerator, &denominator) == 2) {
-		*total_numerator += numerator;
-		*total_denominator += denominator;
-		if (!numerator)
+	/*
+	 * snapshot target's percent format:
+	 * <= 1.7.0: <sectors_allocated>/<total_sectors>
+	 * >= 1.8.0: <sectors_allocated>/<total_sectors> <metadata_sectors>
+	 */
+	r = sscanf(params, "%" PRIu64 "/%" PRIu64 " %" PRIu64,
+		   &sectors_allocated, &total_sectors, &metadata_sectors);
+	if (r == 2 || r == 3) {
+		*total_numerator += sectors_allocated;
+		*total_denominator += total_sectors;
+		if (r == 3 && sectors_allocated == metadata_sectors)
 			*percent_range = PERCENT_0;
-		else if (numerator == denominator)
+		else if (sectors_allocated == total_sectors)
 			*percent_range = PERCENT_100;
 		else
 			*percent_range = PERCENT_0_TO_100;
-	} else if (!strcmp(params, "Invalid"))
+	} else if (!strcmp(params, "Invalid") ||
+		   !strcmp(params, "Merge failed"))
 		*percent_range = PERCENT_INVALID;
 	else
 		return 0;
