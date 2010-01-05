@@ -676,12 +676,23 @@ static void drop_vg_locks()
 }
 
 /*
- * Drop lvmcache metadata
+ * Handle VG lock - drop metadata or update lvmcache state
  */
-void drop_metadata(const char *vgname)
+void do_lock_vg(unsigned char command, unsigned char lock_flags, char *resource)
 {
-	DEBUGLOG("Dropping metadata for VG %s\n", vgname);
+	char *vgname = resource + 2;
+
+	DEBUGLOG("do_lock_vg: resource '%s', cmd = %s, flags = %s, memlock = %d\n",
+		 resource, decode_locking_cmd(command), decode_flags(lock_flags), memlock());
+
+	/* P_#global causes a full cache refresh */
+	if (!strcmp(resource, "P_" VG_GLOBAL)) {
+		do_refresh_cache();
+		return;
+	}
+
 	pthread_mutex_lock(&lvm_lock);
+	DEBUGLOG("Dropping metadata for VG %s\n", vgname);
 	lvmcache_drop_metadata(vgname);
 	pthread_mutex_unlock(&lvm_lock);
 }

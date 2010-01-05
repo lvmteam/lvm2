@@ -119,15 +119,12 @@ int do_command(struct local_client *client, struct clvm_header *msg, int msglen,
 		break;
 
 	case CLVMD_CMD_LOCK_VG:
+		lock_cmd = args[0];
+		lock_flags = args[1];
 		lockname = &args[2];
 		/* Check to see if the VG is in use by LVM1 */
 		status = do_check_lvm1(lockname);
-		/* P_#global causes a full cache refresh */
-		if (!strcmp(lockname, "P_" VG_GLOBAL))
-			do_refresh_cache();
-		else
-			drop_metadata(lockname + 2);
-
+		do_lock_vg(lock_cmd, lock_flags, lockname);
 		break;
 
 	case CLVMD_CMD_LOCK_LV:
