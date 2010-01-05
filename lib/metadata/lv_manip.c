@@ -1828,7 +1828,8 @@ int lv_rename(struct cmd_context *cmd, struct logical_volume *lv,
 	 * (resume of snapshot resumes origin too)
 	 */
 	dm_list_iterate_back_items(lvlp, &lvs_changed)
-		resume_lv(cmd, lvlp->lv);
+		if (!resume_lv(cmd, lvlp->lv))
+			stack;
 out:
 	backup(vg);
 	return r;

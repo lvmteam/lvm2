@@ -64,7 +64,8 @@ static int lvchange_permission(struct cmd_context *cmd,
 	}
 
 	if (!vg_commit(lv->vg)) {
-		resume_lv(cmd, lv);
+		if (!resume_lv(cmd, lv))
+			stack;
 		goto_out;
 	}
 
@@ -402,7 +403,8 @@ static int lvchange_readahead(struct cmd_context *cmd,
 	}
 
 	if (!vg_commit(lv->vg)) {
-		resume_lv(cmd, lv);
+		if (!resume_lv(cmd, lv))
+			stack;
 		goto_out;
 	}
 

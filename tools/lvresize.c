@@ -638,7 +638,8 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 
 	if (!vg_commit(vg)) {
 		stack;
-		resume_lv(cmd, lock_lv);
+		if (!resume_lv(cmd, lock_lv))
+			stack;
 		backup(vg);
 		return ECMD_FAILED;
 	}
