@@ -1,5 +1,6 @@
 Version 2.02.57 -
 ====================================
+  Use snapshot metadata usage to determine if a snapshot is empty.
   Add --poll flag to vgchange and lvchange.
   Propagate commit and revert metadata notification to other nodes in cluster.
   Use proper mask for VG lock mode in clvmd.
