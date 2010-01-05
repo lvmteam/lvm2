@@ -33,7 +33,8 @@ int remote_lock_held(const char *vol);
  *   Use VG_ORPHANS to lock all orphan PVs.
  *   Use VG_GLOBAL as a global lock and to wipe the internal cache.
  *   char *vol holds volume group name.
- *   Set the LCK_CACHE flag to invalidate 'vol' in the internal cache.
+ *   Set LCK_CACHE flag when manipulating 'vol' metadata in the internal cache.
+ *   (Like commit, revert or invalidate metadata.)
  *   If more than one lock needs to be held simultaneously, they must be
  *   acquired in alphabetical order of 'vol' (to avoid deadlocks).
  *
@@ -48,6 +49,8 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags);
  *   LCK_VG: Uses prefix V_ unless the vol begins with # (i.e. #global or #orphans)
  *           or the LCK_CACHE flag is set when it uses the prefix P_.
  * If LCK_CACHE is set, we do not take out a real lock.
+ * NB In clustered situations, LCK_CACHE is not propagated directly to remote nodes.
+ * (It can be deduced from lock name.)
  */
 
 /*
@@ -107,6 +110,11 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 #define LCK_VG_WRITE		(LCK_VG | LCK_WRITE | LCK_HOLD)
 #define LCK_VG_UNLOCK		(LCK_VG | LCK_UNLOCK)
 #define LCK_VG_DROP_CACHE	(LCK_VG | LCK_WRITE | LCK_CACHE)
+
+/* FIXME: LCK_HOLD abused here */
+#define LCK_VG_COMMIT		(LCK_VG | LCK_WRITE | LCK_CACHE | LCK_HOLD)
+#define LCK_VG_REVERT		(LCK_VG | LCK_READ  | LCK_CACHE | LCK_HOLD)
+
 #define LCK_VG_BACKUP		(LCK_VG | LCK_CACHE)
 
 #define LCK_LV_EXCLUSIVE	(LCK_LV | LCK_EXCL)
@@ -142,6 +150,10 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 	lock_lv_vol(cmd, lv, LCK_LV_DEACTIVATE | LCK_LOCAL)
 #define drop_cached_metadata(vg)	\
 	lock_vol((vg)->cmd, (vg)->name, LCK_VG_DROP_CACHE)
+#define remote_commit_cached_metadata(vg)	\
+	lock_vol((vg)->cmd, (vg)->name, LCK_VG_COMMIT)
+#define remote_revert_cached_metadata(vg)	\
+	lock_vol((vg)->cmd, (vg)->name, LCK_VG_REVERT)
 #define remote_backup_metadata(vg)	\
 	lock_vol((vg)->cmd, (vg)->name, LCK_VG_BACKUP)
 

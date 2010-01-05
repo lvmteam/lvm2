@@ -1,5 +1,6 @@
 Version 2.02.57 -
 ====================================
+  Propagate commit and revert metadata notification to other nodes in cluster.
   Use proper mask for VG lock mode in clvmd.
   Add possibility to drop precommitted metadata in lvmcache.
   Move processing of VG locks to separate function in clvmd.

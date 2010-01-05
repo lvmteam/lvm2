@@ -680,6 +680,7 @@ static void drop_vg_locks()
  */
 void do_lock_vg(unsigned char command, unsigned char lock_flags, char *resource)
 {
+	uint32_t lock_cmd = command;
 	char *vgname = resource + 2;
 
 	DEBUGLOG("do_lock_vg: resource '%s', cmd = %s, flags = %s, memlock = %d\n",
@@ -691,9 +692,29 @@ void do_lock_vg(unsigned char command, unsigned char lock_flags, char *resource)
 		return;
 	}
 
+	lock_cmd &= (LCK_SCOPE_MASK | LCK_TYPE_MASK | LCK_HOLD);
+
+	/*
+	 * Check if LCK_CACHE should be set. All P_ locks except # are cache related.
+	 */
+	if (strncmp(resource, "P_#", 3) && !strncmp(resource, "P_", 2))
+		lock_cmd |= LCK_CACHE;
+
 	pthread_mutex_lock(&lvm_lock);
-	DEBUGLOG("Dropping metadata for VG %s\n", vgname);
-	lvmcache_drop_metadata(vgname, 0);
+	switch (lock_cmd) {
+		case LCK_VG_COMMIT:
+			DEBUGLOG("vg_commit notification for VG %s\n", vgname);
+			lvmcache_commit_metadata(vgname);
+			break;
+		case LCK_VG_REVERT:
+			DEBUGLOG("vg_revert notification for VG %s\n", vgname);
+			lvmcache_drop_metadata(vgname, 1);
+			break;
+		case LCK_VG_DROP_CACHE:
+		default:
+			DEBUGLOG("Invalidating cached metadata for VG %s\n", vgname);
+			lvmcache_drop_metadata(vgname, 0);
+	}
 	pthread_mutex_unlock(&lvm_lock);
 }
 
