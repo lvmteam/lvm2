@@ -1140,6 +1140,7 @@ int dm_tree_activate_children(struct dm_tree_node *dnode,
 				 const char *uuid_prefix,
 				 size_t uuid_prefix_len)
 {
+	int r = 1;
 	void *handle = NULL;
 	struct dm_tree_node *child = dnode;
 	struct dm_info newinfo;
@@ -1158,7 +1159,8 @@ int dm_tree_activate_children(struct dm_tree_node *dnode,
 			continue;
 
 		if (dm_tree_node_num_children(child, 0))
-			dm_tree_activate_children(child, uuid_prefix, uuid_prefix_len);
+			if (!dm_tree_activate_children(child, uuid_prefix, uuid_prefix_len))
+				return_0;
 	}
 
 	handle = NULL;
@@ -1204,6 +1206,7 @@ int dm_tree_activate_children(struct dm_tree_node *dnode,
 				log_error("Unable to resume %s (%" PRIu32
 					  ":%" PRIu32 ")", child->name, child->info.major,
 					  child->info.minor);
+				r = 0;
 				continue;
 			}
 
@@ -1214,7 +1217,7 @@ int dm_tree_activate_children(struct dm_tree_node *dnode,
 
 	handle = NULL;
 
-	return 1;
+	return r;
 }
 
 static int _create_node(struct dm_tree_node *dnode)
@@ -1605,6 +1608,7 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 			     const char *uuid_prefix,
 			     size_t uuid_prefix_len)
 {
+	int r = 1;
 	void *handle = NULL;
 	struct dm_tree_node *child;
 	struct dm_info newinfo;
@@ -1621,7 +1625,8 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 			continue;
 
 		if (dm_tree_node_num_children(child, 0))
-			dm_tree_preload_children(child, uuid_prefix, uuid_prefix_len);
+			if (!dm_tree_preload_children(child, uuid_prefix, uuid_prefix_len))
+				return_0;
 
 		/* FIXME Cope if name exists with no uuid? */
 		if (!child->info.exists) {
@@ -1655,6 +1660,7 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 			log_error("Unable to resume %s (%" PRIu32
 				  ":%" PRIu32 ")", child->name, child->info.major,
 				  child->info.minor);
+			r = 0;
 			continue;
 		}
 
@@ -1664,7 +1670,7 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 
 	handle = NULL;
 
-	return 1;
+	return r;
 }
 
 /*
