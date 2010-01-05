@@ -1067,6 +1067,7 @@ int dm_tree_suspend_children(struct dm_tree_node *dnode,
 			     const char *uuid_prefix,
 			     size_t uuid_prefix_len)
 {
+	int r = 1;
 	void *handle = NULL;
 	struct dm_tree_node *child = dnode;
 	struct dm_info info, newinfo;
@@ -1109,6 +1110,7 @@ int dm_tree_suspend_children(struct dm_tree_node *dnode,
 			log_error("Unable to suspend %s (%" PRIu32
 				  ":%" PRIu32 ")", name, info.major,
 				  info.minor);
+			r = 0;
 			continue;
 		}
 
@@ -1130,10 +1132,11 @@ int dm_tree_suspend_children(struct dm_tree_node *dnode,
 			continue;
 
 		if (dm_tree_node_num_children(child, 0))
-			dm_tree_suspend_children(child, uuid_prefix, uuid_prefix_len);
+			if (!dm_tree_suspend_children(child, uuid_prefix, uuid_prefix_len))
+				return_0;
 	}
 
-	return 1;
+	return r;
 }
 
 int dm_tree_activate_children(struct dm_tree_node *dnode,
