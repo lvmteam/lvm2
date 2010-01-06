@@ -1,5 +1,6 @@
 Version 2.02.57 -
 ====================================
+  Remove empty PV devices if lvconvert --repair is using defined policies.
   Use fixed buffer to prevent stack overflow in persistent filter dump.
   Use snapshot metadata usage to determine if a snapshot is empty.
   Insert missing stack macros to all activate_lv and deactivate_lv callers.

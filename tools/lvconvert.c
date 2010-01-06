@@ -428,6 +428,16 @@ static struct dm_list *_failed_pv_list(struct volume_group *vg)
 		if (!(pvl->pv->status & MISSING_PV))
 			continue;
 
+		/* 
+		 * Finally, --repair will remove empty PVs.
+		 * But we only want remove these which are output of repair,
+		 * Do not count these which are already empty here.
+		 * FIXME: code should traverse PV in LV not in whole VG.
+		 * FIXME: layer violation? should it depend on vgreduce --removemising?
+		 */
+		if (pvl->pv->pe_alloc_count == 0)
+			continue;
+
 		if (!(new_pvl = dm_pool_alloc(vg->vgmem, sizeof(*new_pvl)))) {
 			log_error("Allocation of failed_pvs list entry failed.");
 			return_NULL;
@@ -522,6 +532,44 @@ static int _lv_update_log_type(struct cmd_context *cmd,
 	return 1;
 }
 
+/*
+ * Reomove missing and empty PVs from VG, if are also in provided list
+ */
+static void _remove_missing_empty_pv(struct volume_group *vg, struct dm_list *remove_pvs)
+{
+	struct pv_list *pvl, *pvl_vg, *pvlt;
+	int removed = 0;
+
+	if (!remove_pvs)
+		return;
+
+	dm_list_iterate_items(pvl, remove_pvs) {
+		dm_list_iterate_items_safe(pvl_vg, pvlt, &vg->pvs) {
+			if (!id_equal(&pvl->pv->id, &pvl_vg->pv->id) ||
+			    !(pvl_vg->pv->status & MISSING_PV) ||
+			    pvl_vg->pv->pe_alloc_count != 0)
+				continue;
+
+			/* FIXME: duplication of vgreduce code, move this to library */
+			vg->free_count -= pvl_vg->pv->pe_count;
+			vg->extent_count -= pvl_vg->pv->pe_count;
+			vg->pv_count--;
+			dm_list_del(&pvl_vg->list);
+
+			removed++;
+		}
+	}
+
+	if (removed) {
+		if (!vg_write(vg) || !vg_commit(vg)) {
+			stack;
+			return;
+		}
+
+		log_warn("%d missing and now unallocated Physical Volumes removed from VG.", removed);
+	}
+}
+
 static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv,
 			      struct lvconvert_params *lp)
 {
@@ -532,7 +580,7 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 	int r = 0;
 	struct logical_volume *log_lv, *layer_lv;
 	int failed_mirrors = 0, failed_log = 0;
-	struct dm_list *old_pvh = NULL, *remove_pvs = NULL;
+	struct dm_list *old_pvh = NULL, *remove_pvs = NULL, *failed_pvs = NULL;
 
 	int repair = arg_count(cmd, repair_ARG);
 	int replace_log = 1, replace_mirrors = 1;
@@ -593,6 +641,7 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 		old_pvh = lp->pvh;
 		if (!(lp->pvh = _failed_pv_list(lv->vg)))
 			return_0;
+		failed_pvs = lp->pvh;
 		log_lv=first_seg(lv)->log_lv;
 		if (!log_lv || log_lv->status & PARTIAL_LV)
 			failed_log = corelog = 1;
@@ -820,6 +869,10 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 		if (replace_log || replace_mirrors)
 			goto restart;
 	}
+
+	/* If repairing and using policies, remove missing PVs from VG */
+	if (repair && arg_count(cmd, use_policies_ARG))
+		_remove_missing_empty_pv(lv->vg, failed_pvs);
 
 	if (!lp->need_polling)
 		log_print("Logical volume %s converted.", lv->name);
