@@ -1,5 +1,6 @@
 Version 2.02.57 -
 ====================================
+  Use fixed buffer to prevent stack overflow in persistent filter dump.
   Use snapshot metadata usage to determine if a snapshot is empty.
   Insert missing stack macros to all activate_lv and deactivate_lv callers.
   Insert missing stack macros to all suspend_lv and resume_lv callers.

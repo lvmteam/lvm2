@@ -143,7 +143,7 @@ static void _write_array(struct pfilter *pf, FILE *fp, const char *path,
 {
 	void *d;
 	int first = 1;
-	char *buf, *str;
+	char buf[2 * PATH_MAX];
 	struct dm_hash_node *n;
 
 	for (n = dm_hash_get_first(pf->devices); n;
@@ -160,13 +160,8 @@ static void _write_array(struct pfilter *pf, FILE *fp, const char *path,
 			first = 0;
 		}
 
-		str = dm_hash_get_key(pf->devices, n);
-		if (!(buf = alloca(escaped_len(str)))) {
-			log_error("persistent filter device path stack "
-				  "allocation failed");
-			return;
-		}
-		fprintf(fp, "\t\t\"%s\"", escape_double_quotes(buf, str));
+		escape_double_quotes(buf, dm_hash_get_key(pf->devices, n));
+		fprintf(fp, "\t\t\"%s\"", buf);
 	}
 
 	if (!first)
