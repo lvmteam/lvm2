@@ -783,9 +783,13 @@ static int get_mirror_fault_policy(struct cmd_context *cmd __attribute((unused))
 	if (log_policy)
 		policy = find_config_str(NULL, "activation/mirror_log_fault_policy",
 					 DEFAULT_MIRROR_LOG_FAULT_POLICY);
-	else
-		policy = find_config_str(NULL, "activation/mirror_device_fault_policy",
-					 DEFAULT_MIRROR_DEV_FAULT_POLICY);
+	else {
+		policy = find_config_str(NULL, "activation/mirror_image_fault_policy",
+					 NULL);
+		if (!policy)
+			policy = find_config_str(NULL, "activation/mirror_device_fault_policy",
+						 DEFAULT_MIRROR_IMAGE_FAULT_POLICY);
+	}
 
 	if (!strcmp(policy, "remove"))
 		return MIRROR_REMOVE;

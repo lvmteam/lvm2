@@ -475,6 +475,9 @@ static void _lvconvert_mirrors_repair_ask(struct cmd_context *cmd,
 
 	if (arg_count(cmd, use_policies_ARG)) {
 		leg_policy = find_config_tree_str(cmd,
+					"activation/mirror_image_fault_policy", NULL);
+		if (!leg_policy)
+			leg_policy = find_config_tree_str(cmd,
 					"activation/mirror_device_fault_policy",
 					DEFAULT_MIRROR_DEVICE_FAULT_POLICY);
 		log_policy = find_config_tree_str(cmd,
