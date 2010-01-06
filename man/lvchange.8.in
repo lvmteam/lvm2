@@ -64,12 +64,12 @@ the failure is handled according to
 set in \fBlvm.conf\fP.
 .TP
 .I \-\-poll y|n
-Controls whether or not a logical volume's progress is polled.  It may
-not be appropriate to immediately poll the progress of a logical
-volume's transformation when it is activated (for example, when merging
-a snapshot into the root FS).  The progress polling of an incomplete
-pvmove or lvconvert can be deferred using \fB--poll n\fP and restarted
-using \fB--poll y\fP.
+Without polling a logical volume's backgrounded transformation process
+will never complete.  If there is an incomplete pvmove or lvconvert (for
+example, on rebooting after a crash), use \fB--poll y\fP to restart the
+process from its last checkpoint.  However, it may not be appropriate to
+immediately poll a logical volume when it is activated, use \fB--poll
+n\fP to defer and then \fB--poll y\fP to restart the process.
 .TP
 .I \-\-noudevsync
 Disable udev synchronisation. The

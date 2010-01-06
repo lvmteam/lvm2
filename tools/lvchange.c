@@ -596,6 +596,13 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 					    (is_static() || arg_count(cmd, ignoremonitoring_ARG)) ?
 					    DMEVENTD_MONITOR_IGNORE : DEFAULT_DMEVENTD_MONITOR));
 
+	/*
+	 * FIXME: DEFAULT_BACKGROUND_POLLING should be "unspecified".
+	 * If --poll is explicitly provided use it; otherwise polling
+	 * should only be started if the LV is not already active. So:
+	 * 1) change the activation code to say if the LV was actually activated
+	 * 2) make polling of an LV tightly coupled with LV activation
+	 */
 	init_background_polling(arg_int_value(cmd, poll_ARG,
 					      DEFAULT_BACKGROUND_POLLING));
 
