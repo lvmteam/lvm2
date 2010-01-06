@@ -193,11 +193,7 @@ static int _remove_failed_devices(const char *device)
 
 	r = lvm2_run(_lvm_handle, cmd_str);
 
-	if (r == ECMD_PROCESSED) {
-		snprintf(cmd_str, CMD_SIZE, "vgreduce --removemissing %s", vg);
-		if (lvm2_run(_lvm_handle, cmd_str) != 1)
-			syslog(LOG_ERR, "Unable to remove failed PVs from VG %s", vg);
-	}
+	syslog(LOG_INFO, "Repair of mirrored LV %s/%s %s.", vg, lv, (r == ECMD_PROCESSED) ? "finished successfully" : "failed");
 
 	dm_pool_empty(_mem_pool);  /* FIXME: not safe with multiple threads */
 	return (r == ECMD_PROCESSED) ? 0 : -1;
