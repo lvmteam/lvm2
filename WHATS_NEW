@@ -1,5 +1,6 @@
 Version 2.02.57 -
 ====================================
+  Add macros outsize() and outhint().
   Use offsetof() macro for FIELD() macro in lib/report/report.c.
   Rename mirror_device_fault_policy to mirror_image_fault policy.
   Remove empty PV devices if lvconvert --repair is using defined policies.

@@ -16,6 +16,8 @@
 #ifndef _LVM_TEXT_EXPORT_H
 #define _LVM_TEXT_EXPORT_H
 
+#define outsize(args...) do {if (!out_size(args)) return_0;} while (0)
+#define outhint(args...) do {if (!out_hint(args)) return_0;} while (0)
 #define outf(args...) do {if (!out_text(args)) return_0;} while (0)
 #define outnl(f) do {if (!out_newline(f)) return_0;} while (0)
 
