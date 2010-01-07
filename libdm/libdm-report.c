@@ -550,7 +550,7 @@ static int _parse_keys(struct dm_report *rh, const char *keys,
 		while (*we && *we != ',')
 			we++;
 		if (!_key_match(rh, ws, (size_t) (we - ws), report_type_only)) {
-			log_error("dm_report: Unrecognised field: %.*s",
+			log_error("dm_report: Unrecognised key: %.*s",
 				  (int) (we - ws), ws);
 			return 0;
 		}
