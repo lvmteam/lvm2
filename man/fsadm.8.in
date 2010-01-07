@@ -2,10 +2,10 @@
 .SH "NAME"
 fsadm \- utility to resize or check filesystem on a device
 .SH "SYNOPSIS"
-.B fsdam
+.B fsadm
 .RI [options]\ check\ device
 
-.B fsdam
+.B fsadm
 .RI [options]\ resize\ device\ [new_size[BKMGTEP]]
 
 .SH "DESCRIPTION"
