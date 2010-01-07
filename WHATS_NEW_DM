@@ -1,5 +1,6 @@
 Version 1.02.41 -
 ====================================
+  Add dm_tree_add_dev_with_udev_flags to provide wider support for udev flags.
   Add --noudevrules option for dmsetup to disable /dev node management by udev.
   Update code to show all fields for 'dmsetup info -c -o all'.
   Return error from dm_tree_deactivate_children().

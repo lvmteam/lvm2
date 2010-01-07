@@ -108,7 +108,7 @@ static void _rm_blks(const char *dir)
 }
 
 static int _mk_link(const char *dev_dir, const char *vg_name,
-		    const char *lv_name, const char *dev)
+		    const char *lv_name, const char *dev, int check_udev)
 {
 	char lv_path[PATH_MAX], link_path[PATH_MAX], lvm1_group_path[PATH_MAX];
 	char vg_path[PATH_MAX];
@@ -166,7 +166,7 @@ static int _mk_link(const char *dev_dir, const char *vg_name,
 			return 0;
 		}
 
-		if (dm_udev_get_sync_support()) {
+		if (dm_udev_get_sync_support() && check_udev) {
 			/* Check udev created the correct link. */
 			if (!stat(link_path, &buf_lp) &&
 			    !stat(lv_path, &buf)) {
@@ -190,7 +190,7 @@ static int _mk_link(const char *dev_dir, const char *vg_name,
 			log_sys_error("unlink", lv_path);
 			return 0;
 		}
-	} else if (dm_udev_get_sync_support())
+	} else if (dm_udev_get_sync_support() && check_udev)
 		log_warn("The link %s should had been created by udev "
 			  "but it was not found. Falling back to "
 			  "direct link creation.", lv_path);
@@ -208,7 +208,7 @@ static int _mk_link(const char *dev_dir, const char *vg_name,
 }
 
 static int _rm_link(const char *dev_dir, const char *vg_name,
-		    const char *lv_name)
+		    const char *lv_name, int check_udev)
 {
 	struct stat buf;
 	char lv_path[PATH_MAX];
@@ -221,7 +221,7 @@ static int _rm_link(const char *dev_dir, const char *vg_name,
 
 	if (lstat(lv_path, &buf) && errno == ENOENT)
 		return 1;
-	else if (dm_udev_get_sync_support())
+	else if (dm_udev_get_sync_support() && check_udev)
 		log_warn("The link %s should have been removed by udev "
 			 "but it is still present. Falling back to "
 			 "direct link removal.", lv_path);
@@ -248,25 +248,26 @@ typedef enum {
 
 static int _do_fs_op(fs_op_t type, const char *dev_dir, const char *vg_name,
 		     const char *lv_name, const char *dev,
-		     const char *old_lv_name)
+		     const char *old_lv_name, int check_udev)
 {
 	switch (type) {
 	case FS_ADD:
 		if (!_mk_dir(dev_dir, vg_name) ||
-		    !_mk_link(dev_dir, vg_name, lv_name, dev))
+		    !_mk_link(dev_dir, vg_name, lv_name, dev, check_udev))
 			return_0;
 		break;
 	case FS_DEL:
-		if (!_rm_link(dev_dir, vg_name, lv_name) ||
+		if (!_rm_link(dev_dir, vg_name, lv_name, check_udev) ||
 		    !_rm_dir(dev_dir, vg_name))
 			return_0;
 		break;
 		/* FIXME Use rename() */
 	case FS_RENAME:
-		if (old_lv_name && !_rm_link(dev_dir, vg_name, old_lv_name))
+		if (old_lv_name && !_rm_link(dev_dir, vg_name, old_lv_name,
+					     check_udev))
 			stack;
 
-		if (!_mk_link(dev_dir, vg_name, lv_name, dev))
+		if (!_mk_link(dev_dir, vg_name, lv_name, dev, check_udev))
 			stack;
 	}
 
@@ -278,6 +279,7 @@ static DM_LIST_INIT(_fs_ops);
 struct fs_op_parms {
 	struct dm_list list;
 	fs_op_t type;
+	int check_udev;
 	char *dev_dir;
 	char *vg_name;
 	char *lv_name;
@@ -295,7 +297,7 @@ static void _store_str(char **pos, char **ptr, const char *str)
 
 static int _stack_fs_op(fs_op_t type, const char *dev_dir, const char *vg_name,
 			const char *lv_name, const char *dev,
-			const char *old_lv_name)
+			const char *old_lv_name, int check_udev)
 {
 	struct fs_op_parms *fsp;
 	size_t len = strlen(dev_dir) + strlen(vg_name) + strlen(lv_name) +
@@ -309,6 +311,7 @@ static int _stack_fs_op(fs_op_t type, const char *dev_dir, const char *vg_name,
 
 	pos = fsp->names;
 	fsp->type = type;
+	fsp->check_udev = check_udev;
 
 	_store_str(&pos, &fsp->dev_dir, dev_dir);
 	_store_str(&pos, &fsp->vg_name, vg_name);
@@ -329,40 +332,43 @@ static void _pop_fs_ops(void)
 	dm_list_iterate_safe(fsph, fspht, &_fs_ops) {
 		fsp = dm_list_item(fsph, struct fs_op_parms);
 		_do_fs_op(fsp->type, fsp->dev_dir, fsp->vg_name, fsp->lv_name,
-			  fsp->dev, fsp->old_lv_name);
+			  fsp->dev, fsp->old_lv_name, fsp->check_udev);
 		dm_list_del(&fsp->list);
 		dm_free(fsp);
 	}
 }
 
 static int _fs_op(fs_op_t type, const char *dev_dir, const char *vg_name,
-		  const char *lv_name, const char *dev, const char *old_lv_name)
+		  const char *lv_name, const char *dev, const char *old_lv_name,
+		  int check_udev)
 {
 	if (memlock()) {
 		if (!_stack_fs_op(type, dev_dir, vg_name, lv_name, dev,
-				  old_lv_name))
+				  old_lv_name, check_udev))
 			return_0;
 		return 1;
 	}
 
-	return _do_fs_op(type, dev_dir, vg_name, lv_name, dev, old_lv_name);
+	return _do_fs_op(type, dev_dir, vg_name, lv_name, dev,
+			 old_lv_name, check_udev);
 }
 
 int fs_add_lv(const struct logical_volume *lv, const char *dev)
 {
 	return _fs_op(FS_ADD, lv->vg->cmd->dev_dir, lv->vg->name, lv->name,
-		      dev, "");
+		      dev, "", lv->vg->cmd->current_settings.udev_rules);
 }
 
 int fs_del_lv(const struct logical_volume *lv)
 {
 	return _fs_op(FS_DEL, lv->vg->cmd->dev_dir, lv->vg->name, lv->name,
-		      "", "");
+		      "", "", lv->vg->cmd->current_settings.udev_rules);
 }
 
-int fs_del_lv_byname(const char *dev_dir, const char *vg_name, const char *lv_name)
+int fs_del_lv_byname(const char *dev_dir, const char *vg_name,
+		     const char *lv_name, int check_udev)
 {
-	return _fs_op(FS_DEL, dev_dir, vg_name, lv_name, "", "");
+	return _fs_op(FS_DEL, dev_dir, vg_name, lv_name, "", "", check_udev);
 }
 
 int fs_rename_lv(struct logical_volume *lv, const char *dev, 
@@ -370,12 +376,14 @@ int fs_rename_lv(struct logical_volume *lv, const char *dev,
 {
 	if (strcmp(old_vgname, lv->vg->name)) {
 		return
-			(_fs_op(FS_DEL, lv->vg->cmd->dev_dir, old_vgname, old_lvname, "", "") &&
-			 _fs_op(FS_ADD, lv->vg->cmd->dev_dir, lv->vg->name, lv->name, dev, ""));
+			(_fs_op(FS_DEL, lv->vg->cmd->dev_dir, old_vgname,
+				old_lvname, "", "", lv->vg->cmd->current_settings.udev_rules) &&
+			 _fs_op(FS_ADD, lv->vg->cmd->dev_dir, lv->vg->name,
+				lv->name, dev, "", lv->vg->cmd->current_settings.udev_rules));
 	}
 	else 
 		return _fs_op(FS_RENAME, lv->vg->cmd->dev_dir, lv->vg->name, lv->name,
-			      dev, old_lvname);
+			      dev, old_lvname, lv->vg->cmd->current_settings.udev_rules);
 }
 
 void fs_unlock(void)

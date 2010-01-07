@@ -267,6 +267,8 @@ void dm_tree_free(struct dm_tree *tree);
  * Add nodes to the tree for a given device and all the devices it uses.
  */
 int dm_tree_add_dev(struct dm_tree *tree, uint32_t major, uint32_t minor);
+int dm_tree_add_dev_with_udev_flags(struct dm_tree *tree, uint32_t major,
+				    uint32_t minor, uint16_t udev_flags);
 
 /*
  * Add a new node to the tree if it doesn't already exist.

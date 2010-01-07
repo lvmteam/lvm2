@@ -1,5 +1,6 @@
 Version 2.02.57 -
 ====================================
+  Add activation/udev_rules config option in lvm.conf.
   Add macro outfc() and export out_text_with_comment().
   Add macros outsize() and outhint().
   Use offsetof() macro for FIELD() macro in lib/report/report.c.
