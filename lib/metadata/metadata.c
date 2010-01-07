@@ -2116,7 +2116,7 @@ int vg_validate(struct volume_group *vg)
 		}
 
 		if (strcmp(pvl->pv->vg_name, vg->name)) {
-			log_error(INTERNAL_ERROR "VG name for PV %s is corrupted",
+			log_error(INTERNAL_ERROR "VG name for PV %s is corrupted.",
 				  pv_dev_name(pvl->pv));
 			r = 0;
 		}
