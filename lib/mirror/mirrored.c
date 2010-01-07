@@ -149,8 +149,8 @@ static int _mirrored_text_export(const struct lv_segment *seg, struct formatter 
 {
 	outf(f, "mirror_count = %u", seg->area_count);
 	if (seg->status & PVMOVE)
-		out_size(f, (uint64_t) seg->extents_copied * seg->lv->vg->extent_size,
-			 "extents_moved = %" PRIu32, seg->extents_copied);
+		outsize(f, (uint64_t) seg->extents_copied * seg->lv->vg->extent_size,
+			"extents_moved = %" PRIu32, seg->extents_copied);
 	if (seg->log_lv)
 		outf(f, "mirror_log = \"%s\"", seg->log_lv->name);
 	if (seg->region_size)
