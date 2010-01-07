@@ -127,6 +127,9 @@ Tell the kernel not to supply the open reference count for the device.
 .IP \fB--notable
 .br
 When creating a device, don't load any table.
+.IP \fB--noudevrules
+Do not allow udev to manage nodes for devices in device-mapper directory.
+.br
 .IP \fB--noudevsync
 Do not synchronise with udev when creating, renaming or removing devices.
 .br
