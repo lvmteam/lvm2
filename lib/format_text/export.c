@@ -286,9 +286,9 @@ int out_hint(struct formatter *f, const char *fmt, ...)
 }
 
 /*
- * Appends a comment
+ * The normal output function with comment
  */
-static int _out_comment(struct formatter *f, const char *comment, const char *fmt, ...)
+int out_text_with_comment(struct formatter *f, const char *comment, const char *fmt, ...)
 {
 	va_list ap;
 	int r;
@@ -579,7 +579,7 @@ static int _print_lv(struct formatter *f, struct logical_volume *lv)
 
 	switch (lv->read_ahead) {
 	case DM_READ_AHEAD_NONE:
-		_out_comment(f, "# None", "read_ahead = -1");
+		outfc(f, "# None", "read_ahead = -1");
 		break;
 	case DM_READ_AHEAD_AUTO:
 		/* No output - use default */

@@ -1,5 +1,6 @@
 Version 2.02.57 -
 ====================================
+  Add macro outfc() and export out_text_with_comment().
   Add macros outsize() and outhint().
   Use offsetof() macro for FIELD() macro in lib/report/report.c.
   Rename mirror_device_fault_policy to mirror_image_fault policy.
