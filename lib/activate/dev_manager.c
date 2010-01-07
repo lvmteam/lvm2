@@ -658,6 +658,7 @@ static int _add_dev_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 {
 	char *dlid, *name;
 	struct dm_info info, info2;
+	uint16_t udev_flags = 0;
 
 	if (!(name = build_dm_name(dm->mem, lv->vg->name, lv->name, layer)))
 		return_0;
@@ -695,7 +696,20 @@ static int _add_dev_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		}
 	}
 
-	if (info.exists && !dm_tree_add_dev(dtree, info.major, info.minor)) {
+	if (layer || !lv_is_visible(lv))
+		udev_flags |= DM_UDEV_DISABLE_SUBSYSTEM_RULES_FLAG |
+			      DM_UDEV_DISABLE_DISK_RULES_FLAG |
+			      DM_UDEV_DISABLE_OTHER_RULES_FLAG;
+
+	if (lv_is_cow(lv))
+		udev_flags |= DM_UDEV_LOW_PRIORITY_FLAG;
+
+	if (!dm->cmd->current_settings.udev_rules)
+		udev_flags |= DM_UDEV_DISABLE_DM_RULES_FLAG |
+			      DM_UDEV_DISABLE_SUBSYSTEM_RULES_FLAG;
+
+	if (info.exists && !dm_tree_add_dev_with_udev_flags(dtree, info.major,
+							    info.minor, udev_flags)) {
 		log_error("Failed to add device (%" PRIu32 ":%" PRIu32") to dtree",
 			  info.major, info.minor);
 		return 0;
@@ -1034,6 +1048,10 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	if (lv_is_cow(lv))
 		udev_flags |= DM_UDEV_LOW_PRIORITY_FLAG;
 
+	if (!dm->cmd->current_settings.udev_rules)
+		udev_flags |= DM_UDEV_DISABLE_DM_RULES_FLAG |
+			      DM_UDEV_DISABLE_SUBSYSTEM_RULES_FLAG;
+
 	/*
 	 * Add LV to dtree.
 	 * If we're working with precommitted metadata, clear any
@@ -1151,7 +1169,8 @@ static int _remove_lv_symlinks(struct dev_manager *dm, struct dm_tree_node *root
 		if (*layer)
 			continue;
 
-		fs_del_lv_byname(dm->cmd->dev_dir, vgname, lvname);
+		fs_del_lv_byname(dm->cmd->dev_dir, vgname, lvname,
+				 dm->cmd->current_settings.udev_rules);
 	}
 
 	return r;

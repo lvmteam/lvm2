@@ -50,6 +50,7 @@ dm_format_dev
 dm_tree_create
 dm_tree_free
 dm_tree_add_dev
+dm_tree_add_dev_with_udev_flags
 dm_tree_add_new_dev
 dm_tree_add_new_dev_with_udev_flags
 dm_tree_node_get_name

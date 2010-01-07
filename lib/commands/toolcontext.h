@@ -34,6 +34,7 @@ struct config_info {
 	int archive;		/* should we archive ? */
 	int backup;		/* should we backup ? */
 	int read_ahead;		/* DM_READ_AHEAD_NONE or _AUTO */
+	int udev_rules;
 	int udev_sync;
 	int cache_vgmetadata;
 	const char *msg_prefix;

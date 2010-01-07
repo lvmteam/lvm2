@@ -454,7 +454,8 @@ failed:
 
 static struct dm_tree_node *_add_dev(struct dm_tree *dtree,
 				     struct dm_tree_node *parent,
-				     uint32_t major, uint32_t minor)
+				     uint32_t major, uint32_t minor,
+				     uint16_t udev_flags)
 {
 	struct dm_task *dmt = NULL;
 	struct dm_info info;
@@ -471,7 +472,7 @@ static struct dm_tree_node *_add_dev(struct dm_tree *dtree,
 			return_NULL;
 
 		if (!(node = _create_dm_tree_node(dtree, name, uuid, &info,
-						  NULL, 0)))
+						  NULL, udev_flags)))
 			goto_out;
 		new = 1;
 	}
@@ -497,7 +498,7 @@ static struct dm_tree_node *_add_dev(struct dm_tree *dtree,
 	/* Add dependencies to tree */
 	for (i = 0; i < deps->count; i++)
 		if (!_add_dev(dtree, node, MAJOR(deps->device[i]),
-			      MINOR(deps->device[i]))) {
+			      MINOR(deps->device[i]), udev_flags)) {
 			node = NULL;
 			goto_out;
 		}
@@ -652,7 +653,13 @@ void dm_tree_node_set_read_ahead(struct dm_tree_node *dnode,
 
 int dm_tree_add_dev(struct dm_tree *dtree, uint32_t major, uint32_t minor)
 {
-	return _add_dev(dtree, &dtree->root, major, minor) ? 1 : 0;
+	return _add_dev(dtree, &dtree->root, major, minor, 0) ? 1 : 0;
+}
+
+int dm_tree_add_dev_with_udev_flags(struct dm_tree *dtree, uint32_t major,
+				    uint32_t minor, uint16_t udev_flags)
+{
+	return _add_dev(dtree, &dtree->root, major, minor, udev_flags) ? 1 : 0;
 }
 
 const char *dm_tree_node_get_name(struct dm_tree_node *node)
@@ -873,7 +880,8 @@ static int _deactivate_node(const char *name, uint32_t major, uint32_t minor,
 	r = dm_task_run(dmt);
 
 	/* FIXME Until kernel returns actual name so dm-ioctl.c can handle it */
-	rm_dev_node(name, dmt->cookie_set);
+	rm_dev_node(name, dmt->cookie_set &&
+			  !(udev_flags & DM_UDEV_DISABLE_DM_RULES_FLAG));
 
 	/* FIXME Remove node from tree or mark invalid? */
 
@@ -1963,7 +1971,8 @@ int dm_tree_node_add_target_area(struct dm_tree_node *node,
 		}
 
 		/* FIXME Check correct macro use */
-		if (!(dev_node = _add_dev(node->dtree, node, MAJOR(info.st_rdev), MINOR(info.st_rdev))))
+		if (!(dev_node = _add_dev(node->dtree, node, MAJOR(info.st_rdev),
+					  MINOR(info.st_rdev), 0)))
 			return_0;
 	}
 

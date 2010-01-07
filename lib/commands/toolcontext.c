@@ -267,6 +267,10 @@ static int _process_config(struct cmd_context *cmd)
 		return 0;
 	}
 
+	cmd->default_settings.udev_rules = find_config_tree_int(cmd,
+								"activation/udev_rules",
+								DEFAULT_UDEV_RULES);
+
 	cmd->default_settings.udev_sync = find_config_tree_int(cmd,
 								"activation/udev_sync",
 								DEFAULT_UDEV_SYNC);
