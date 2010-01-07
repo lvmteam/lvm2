@@ -24,6 +24,8 @@
 #include "str_list.h"
 #include "lvmcache.h"
 
+#include <stddef.h> /* offsetof() */
+
 struct lvm_report_object {
 	struct volume_group *vg;
 	struct logical_volume *lv;
@@ -31,17 +33,6 @@ struct lvm_report_object {
 	struct lv_segment *seg;
 	struct pv_segment *pvseg;
 };
-
-/*
- * For macro use
- */
-static union {
-	struct physical_volume _pv;
-	struct logical_volume _lv;
-	struct volume_group _vg;
-	struct lv_segment _seg;
-	struct pv_segment _pvseg;
-} _dummy;
 
 static char _alloc_policy_char(alloc_policy_t alloc)
 {
@@ -1156,9 +1147,17 @@ static const struct dm_report_object_type _report_types[] = {
 
 #define STR DM_REPORT_FIELD_TYPE_STRING
 #define NUM DM_REPORT_FIELD_TYPE_NUMBER
-#define FIELD(type, strct, sorttype, head, field, width, func, id, desc) {type, sorttype, (off_t)((uintptr_t)&_dummy._ ## strct.field - (uintptr_t)&_dummy._ ## strct), width, id, head, &_ ## func ## _disp, desc},
+#define FIELD(type, strct, sorttype, head, field, width, func, id, desc) \
+	{type, sorttype, offsetof(type_ ## strct, field), width, \
+	 id, head, &_ ## func ## _disp, desc},
 
-static struct dm_report_field_type _fields[] = {
+typedef struct physical_volume type_pv;
+typedef struct logical_volume type_lv;
+typedef struct volume_group type_vg;
+typedef struct lv_segment type_seg;
+typedef struct pv_segment type_pvseg;
+
+static const struct dm_report_field_type _fields[] = {
 #include "columns.h"
 {0, 0, 0, 0, "", "", NULL, NULL},
 };
