@@ -26,6 +26,8 @@
 struct dm_report {
 	struct dm_pool *mem;
 
+	/* To report all available types */
+#define REPORT_TYPES_ALL	UINT32_MAX
 	uint32_t report_types;
 	const char *output_field_name_prefix;
 	const char *field_prefix;
@@ -379,7 +381,8 @@ static uint32_t _all_match(struct dm_report *rh, const char *field, size_t flen)
 			       _all_match(rh, prefixed_all,
 					  strlen(prefixed_all));
 		} else
-			return rh->report_types;
+			return (rh->report_types)
+				? rh->report_types : REPORT_TYPES_ALL;
 	}
 
 	for (t = rh->types; t->data_fn; t++) {
