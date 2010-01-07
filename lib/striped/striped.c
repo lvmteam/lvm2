@@ -98,8 +98,8 @@ static int _striped_text_export(const struct lv_segment *seg, struct formatter *
 	     (seg->area_count == 1) ? "\t# linear" : "");
 
 	if (seg->area_count > 1)
-		out_size(f, (uint64_t) seg->stripe_size,
-			 "stripe_size = %u", seg->stripe_size);
+		outsize(f, (uint64_t) seg->stripe_size,
+			"stripe_size = %u", seg->stripe_size);
 
 	return out_areas(f, seg, "stripe");
 }
