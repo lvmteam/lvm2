@@ -127,6 +127,7 @@ enum {
 	NOLOCKFS_ARG,
 	NOOPENCOUNT_ARG,
 	NOTABLE_ARG,
+	NOUDEVRULES_ARG,
 	NOUDEVSYNC_ARG,
 	OPTIONS_ARG,
 	READAHEAD_ARG,
@@ -557,6 +558,7 @@ static int _create(int argc, char **argv, void *data __attribute((unused)))
 	struct dm_task *dmt;
 	const char *file = NULL;
 	uint32_t cookie = 0;
+	uint16_t udev_flags = 0;
 
 	if (argc == 3)
 		file = argv[2];
@@ -605,7 +607,11 @@ static int _create(int argc, char **argv, void *data __attribute((unused)))
 	if (_switches[NOTABLE_ARG])
 		dm_udev_set_sync_support(0);
 
-	if (!dm_task_set_cookie(dmt, &cookie, 0) ||
+	if (_switches[NOUDEVRULES_ARG])
+		udev_flags |= DM_UDEV_DISABLE_DM_RULES_FLAG |
+			      DM_UDEV_DISABLE_SUBSYSTEM_RULES_FLAG;
+
+	if (!dm_task_set_cookie(dmt, &cookie, udev_flags) ||
 	    !dm_task_run(dmt))
 		goto out;
 
@@ -626,6 +632,7 @@ static int _rename(int argc, char **argv, void *data __attribute((unused)))
 	int r = 0;
 	struct dm_task *dmt;
 	uint32_t cookie = 0;
+	uint16_t udev_flags = 0;
 
 	if (!(dmt = dm_task_create(DM_DEVICE_RENAME)))
 		return 0;
@@ -643,7 +650,11 @@ static int _rename(int argc, char **argv, void *data __attribute((unused)))
 	if (_switches[INACTIVE_ARG] && !dm_task_query_inactive_table(dmt))
 		goto out;
 
-	if (!dm_task_set_cookie(dmt, &cookie, 0) ||
+	if (_switches[NOUDEVRULES_ARG])
+		udev_flags |= DM_UDEV_DISABLE_DM_RULES_FLAG |
+			      DM_UDEV_DISABLE_SUBSYSTEM_RULES_FLAG;
+
+	if (!dm_task_set_cookie(dmt, &cookie, udev_flags) ||
 	    !dm_task_run(dmt))
 		goto out;
 
@@ -1011,6 +1022,7 @@ static int _version(int argc __attribute((unused)), char **argv __attribute((unu
 static int _simple(int task, const char *name, uint32_t event_nr, int display)
 {
 	uint32_t cookie = 0;
+	uint16_t udev_flags = 0;
 	int udev_wait_flag = task == DM_DEVICE_RESUME ||
 			     task == DM_DEVICE_REMOVE;
 	int r = 0;
@@ -1043,7 +1055,11 @@ static int _simple(int task, const char *name, uint32_t event_nr, int display)
 				    _read_ahead_flags))
 		goto out;
 
-	if (udev_wait_flag && !dm_task_set_cookie(dmt, &cookie, 0))
+	if (_switches[NOUDEVRULES_ARG])
+		udev_flags |= DM_UDEV_DISABLE_DM_RULES_FLAG |
+			      DM_UDEV_DISABLE_SUBSYSTEM_RULES_FLAG;
+
+	if (udev_wait_flag && !dm_task_set_cookie(dmt, &cookie, udev_flags))
 		goto out;
 
 	r = dm_task_run(dmt);
@@ -2559,7 +2575,8 @@ static void _usage(FILE *out)
 	fprintf(out, "Usage:\n\n");
 	fprintf(out, "dmsetup [--version] [-v|--verbose [-v|--verbose ...]]\n"
 		"        [-r|--readonly] [--noopencount] [--nolockfs] [--inactive]\n"
-		"        [--noudevsync] [-y|--yes] [--readahead [+]<sectors>|auto|none]\n"
+		"        [--noudevrules] [--noudevsync] [-y|--yes]\n"
+		"        [--readahead [+]<sectors>|auto|none]\n"
 		"        [-c|-C|--columns] [-o <fields>] [-O|--sort <sort_fields>]\n"
 		"        [--nameprefixes] [--noheadings] [--separator <separator>]\n\n");
 	for (i = 0; _commands[i].name; i++)
@@ -2927,6 +2944,7 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 		{"nolockfs", 0, &ind, NOLOCKFS_ARG},
 		{"noopencount", 0, &ind, NOOPENCOUNT_ARG},
 		{"notable", 0, &ind, NOTABLE_ARG},
+		{"noudevrules", 0, &ind, NOUDEVRULES_ARG},
 		{"noudevsync", 0, &ind, NOUDEVSYNC_ARG},
 		{"options", 1, &ind, OPTIONS_ARG},
 		{"readahead", 1, &ind, READAHEAD_ARG},
@@ -3039,6 +3057,8 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 		}
 		if (c == 'y' || ind == YES_ARG)
 			_switches[YES_ARG]++;
+		if (ind == NOUDEVRULES_ARG)
+			_switches[NOUDEVRULES_ARG]++;
 		if (ind == NOUDEVSYNC_ARG)
 			_switches[NOUDEVSYNC_ARG]++;
 		if (c == 'G' || ind == GID_ARG) {
