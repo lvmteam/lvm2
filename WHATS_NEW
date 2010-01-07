@@ -1,5 +1,6 @@
 Version 2.02.57 -
 ====================================
+  Keep log type consistent when changing mirror image count.
   Always set environment variables for an LVM2 device in 11-dm-lvm.rules.
   Add activation/udev_rules config option in lvm.conf.
   Add macro outfc() and export out_text_with_comment().
