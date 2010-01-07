@@ -628,6 +628,17 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 		return 0;
 	}
 
+	/*
+	 * If we are converting from one type of mirror to another, and
+	 * the type of log wasn't specified, then let's keep the log type
+	 * the same.
+	 */
+	if (existing_mirrors && lp->mirrors &&
+	    (lp->mirrors != existing_mirrors) &&
+	    !arg_count(cmd, mirrorlog_ARG) && !arg_count(cmd, corelog_ARG)) {
+		corelog = first_seg(lv)->log_lv ? 0 : 1;
+	}
+
 	if (repair) {
 		cmd->handles_missing_pvs = 1;
 		cmd->partial_activation = 1;
