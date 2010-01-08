@@ -40,6 +40,7 @@ struct lvconvert_params {
 	int pv_count;
 	char **pvs;
 	struct dm_list *pvh;
+	struct dm_list *failed_pvs;
 };
 
 static int _lvconvert_name_params(struct lvconvert_params *lp,
@@ -229,6 +230,7 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 
 	lp->pv_count = argc;
 	lp->pvs = argv;
+	lp->failed_pvs = NULL;
 
 	return 1;
 }
@@ -587,6 +589,7 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 
 	int repair = arg_count(cmd, repair_ARG);
 	int replace_log = 1, replace_mirrors = 1;
+	int failure_code = 0;
 
 	seg = first_seg(lv);
 	existing_mirrors = lv_mirror_count(lv);
@@ -644,8 +647,8 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 		cmd->partial_activation = 1;
 		lp->need_polling = 0;
 		if (!(lv->status & PARTIAL_LV)) {
-			log_error("The mirror is consistent, nothing to repair.");
-			return 0;
+			log_error("The mirror is consistent. Nothing to repair.");
+			return 1;
 		}
 		if ((failed_mirrors = _failed_mirrors_count(lv)) < 0)
 			return_0;
@@ -653,9 +656,9 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 		log_error("Mirror status: %d of %d images failed.",
 			  failed_mirrors, existing_mirrors);
 		old_pvh = lp->pvh;
-		if (!(lp->pvh = _failed_pv_list(lv->vg)))
+		if (!(failed_pvs = _failed_pv_list(lv->vg)))
 			return_0;
-		failed_pvs = lp->pvh;
+		lp->pvh = lp->failed_pvs = failed_pvs;
 		log_lv=first_seg(lv)->log_lv;
 		if (!log_lv || log_lv->status & PARTIAL_LV)
 			failed_log = corelog = 1;
@@ -770,8 +773,10 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 						lv->le_count,
 						lp->region_size),
 				    corelog ? 0U : 1U, lp->pvh, lp->alloc,
-				    MIRROR_BY_LV))
-			return_0;
+				    MIRROR_BY_LV)) {
+			stack;
+			return failure_code;
+		}
 		if (lp->wait_completion)
 			lp->need_polling = 1;
 	} else if (lp->mirrors > existing_mirrors || failed_mirrors) {
@@ -791,7 +796,7 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 		if (lv_is_origin(lv)) {
 			log_error("Can't add additional mirror images to "
 				  "mirrors that are under snapshots");
-			return 0;
+			return failure_code;
 		}
 
 		/*
@@ -799,8 +804,10 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 		 * insertion to make the end result consistent with
 		 * linear-to-mirror conversion.
 		 */
-		if (!_lv_update_log_type(cmd, lp, lv, corelog))
-			return_0;
+		if (!_lv_update_log_type(cmd, lp, lv, corelog)) {
+			stack;
+			return failure_code;
+		}
 		/* Insert a temporary layer for syncing,
 		 * only if the original lv is using disk log. */
 		if (seg->log_lv && !_insert_lvconvert_layer(cmd, lv)) {
@@ -827,7 +834,8 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 					  "and dmsetup may be required.");
 				return 0;
 			}
-			return_0;
+			stack;
+			return failure_code;
 		}
 		lv->status |= CONVERTING;
 		lp->need_polling = 1;
@@ -835,8 +843,10 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 
 	if (lp->mirrors == existing_mirrors) {
 		if (_using_corelog(lv) != corelog) {
-			if (!_lv_update_log_type(cmd, lp, lv, corelog))
-				return_0;
+			if (!_lv_update_log_type(cmd, lp, lv, corelog)) {
+				stack;
+				return failure_code;
+			}
 		} else {
 			log_error("Logical volume %s already has %"
 				  PRIu32 " mirror(s).", lv->name,
@@ -879,14 +889,17 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 			lp->mirrors += failed_mirrors;
 		failed_mirrors = 0;
 		existing_mirrors = lv_mirror_count(lv);
+		/*
+		 * Ignore failure in upconversion if this is a policy-driven
+		 * action. If we got this far, only unexpected failures are
+		 * reported.
+		 */
+		if (arg_count(cmd, use_policies_ARG))
+			failure_code = 1;
 		/* Now replace missing devices. */
 		if (replace_log || replace_mirrors)
 			goto restart;
 	}
-
-	/* If repairing and using policies, remove missing PVs from VG */
-	if (repair && arg_count(cmd, use_policies_ARG))
-		_remove_missing_empty_pv(lv->vg, failed_pvs);
 
 	if (!lp->need_polling)
 		log_print("Logical volume %s converted.", lv->name);
@@ -1015,6 +1028,10 @@ static int lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 			stack;
 			return ECMD_FAILED;
 		}
+
+		/* If repairing and using policies, remove missing PVs from VG */
+		if (arg_count(cmd, repair_ARG) && arg_count(cmd, use_policies_ARG))
+			_remove_missing_empty_pv(lv->vg, lp->failed_pvs);
 	}
 
 	return ECMD_PROCESSED;
