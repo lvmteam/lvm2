@@ -527,7 +527,7 @@ struct lvcreate_params {
 	int zero; /* all */
 	int major; /* all */
 	int minor; /* all */
-	int corelog; /* mirror */
+	int log_count; /* mirror */
 	int nosync; /* mirror */
 
 	char *origin; /* snap */
@@ -652,6 +652,8 @@ int lv_add_mirrors(struct cmd_context *cmd, struct logical_volume *lv,
 		   uint32_t mirrors, uint32_t stripes,
 		   uint32_t region_size, uint32_t log_count,
 		   struct dm_list *pvs, alloc_policy_t alloc, uint32_t flags);
+int lv_split_mirror_images(struct logical_volume *lv, const char *split_lv_name,
+			   uint32_t split_count, struct dm_list *removable_pvs);
 int lv_remove_mirrors(struct cmd_context *cmd, struct logical_volume *lv,
 		      uint32_t mirrors, uint32_t log_count,
 		      struct dm_list *pvs, uint64_t status_mask);
