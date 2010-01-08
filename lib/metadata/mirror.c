@@ -244,7 +244,7 @@ static int _init_mirror_log(struct cmd_context *cmd,
 {
 	struct str_list *sl;
 	struct lvinfo info;
-	uint32_t orig_status = log_lv->status;
+	uint64_t orig_status = log_lv->status;
 	int was_active = 0;
 
 	if (!activation() && in_sync) {
