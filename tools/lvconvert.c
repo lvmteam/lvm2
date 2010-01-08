@@ -258,16 +258,6 @@ static struct logical_volume *_get_lvconvert_lv(struct cmd_context *cmd __attrib
 	return lv;
 }
 
-static int _update_lvconvert_mirror(struct cmd_context *cmd __attribute((unused)),
-				    struct volume_group *vg __attribute((unused)),
-				    struct logical_volume *lv __attribute((unused)),
-				    struct dm_list *lvs_changed __attribute((unused)),
-				    unsigned flags __attribute((unused)))
-{
-	/* lvconvert mirror doesn't require periodical metadata update */
-	return 1;
-}
-
 static int _finish_lvconvert_mirror(struct cmd_context *cmd,
 				    struct volume_group *vg,
 				    struct logical_volume *lv,
@@ -316,7 +306,6 @@ static struct poll_functions _lvconvert_mirror_fns = {
 	.get_copy_vg = _get_lvconvert_vg,
 	.get_copy_lv = _get_lvconvert_lv,
 	.poll_progress = poll_mirror_progress,
-	.update_metadata = _update_lvconvert_mirror,
 	.finish_copy = _finish_lvconvert_mirror,
 };
 

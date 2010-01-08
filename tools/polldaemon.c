@@ -54,7 +54,7 @@ static int _become_daemon(struct cmd_context *cmd)
 	close(STDOUT_FILENO);
 	close(STDERR_FILENO);
 
-	strncpy(*cmd->argv, "(lvm2copyd)", strlen(*cmd->argv));
+	strncpy(*cmd->argv, "(lvm2)", strlen(*cmd->argv));
 
 	reset_locking();
 	lvmcache_init();
@@ -137,8 +137,8 @@ static int _check_lv_status(struct cmd_context *cmd,
 		if (!parms->poll_fns->finish_copy(cmd, vg, lv, lvs_changed))
 			return 0;
 	} else {
-		if (!parms->poll_fns->update_metadata(cmd, vg, lv, lvs_changed,
-						      0)) {
+		if (parms->poll_fns->update_metadata &&
+		    !parms->poll_fns->update_metadata(cmd, vg, lv, lvs_changed, 0)) {
 			log_error("ABORTING: Segment progression failed.");
 			parms->poll_fns->finish_copy(cmd, vg, lv, lvs_changed);
 			return 0;
@@ -177,7 +177,7 @@ static int _wait_for_single_lv(struct cmd_context *cmd, const char *name, const 
 
 		if (!(lv = parms->poll_fns->get_copy_lv(cmd, vg, name, uuid,
 							parms->lv_type))) {
-			log_error("ABORTING: Can't find mirror LV in %s for %s",
+			log_error("ABORTING: Can't find LV in %s for %s",
 				  vg->name, name);
 			unlock_and_release_vg(cmd, vg, vg->name);
 			return 0;
