@@ -22,6 +22,7 @@ struct lvconvert_params {
 
 	const char *origin;
 	const char *lv_name;
+	const char *lv_split_name;
 	const char *lv_name_full;
 	const char *vg_name;
 	int wait_completion;
@@ -32,6 +33,7 @@ struct lvconvert_params {
 
 	uint32_t mirrors;
 	sign_t mirrors_sign;
+	uint32_t keep_mimages;
 
 	struct segment_type *segtype;
 
@@ -125,7 +127,48 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 	if (arg_count(cmd, snapshot_ARG))
 		lp->snapshot = 1;
 
+	if (arg_count(cmd, splitmirrors_ARG) && arg_count(cmd, mirrors_ARG)) {
+		log_error("--mirrors and --splitmirrors are "
+			  "mutually exclusive");
+		return 0;
+	}
+
+	/*
+	 * The '--splitmirrors n' argument is equivalent to '--mirrors -n'
+	 * (note the minus sign), except that it signifies the additional
+	 * intent to keep the mimage that is detached, rather than
+	 * discarding it.
+	 */
+	if (arg_count(cmd, splitmirrors_ARG)) {
+		if (!arg_count(cmd, name_ARG)) {
+			log_error("Please name the new logical volume using '--name'");
+			return 0;
+		}
+
+		lp->lv_split_name = arg_value(cmd, name_ARG);
+		if (!apply_lvname_restrictions(lp->lv_split_name))
+			return_0;
+
+		lp->keep_mimages = 1;
+		if (arg_sign_value(cmd, mirrors_ARG, 0) == SIGN_MINUS) {
+			log_error("Argument to --splitmirrors"
+				  " cannot be negative");
+			return 0;
+		}
+		lp->mirrors = arg_uint_value(cmd, splitmirrors_ARG, 0);
+		lp->mirrors_sign = SIGN_MINUS;
+	} else if (arg_count(cmd, name_ARG)) {
+		log_error("The 'name' argument is only valid"
+			  " with --splitmirrors");
+		return 0;
+	}
+
 	if (arg_count(cmd, mirrors_ARG)) {
+		/*
+		 * --splitmirrors has been chosen as the mechanism for
+		 * specifying the intent of detaching and keeping a mimage
+		 * versus an additional qualifying argument being added here.
+		 */
 		lp->mirrors = arg_uint_value(cmd, mirrors_ARG, 0);
 		lp->mirrors_sign = arg_sign_value(cmd, mirrors_ARG, 0);
 	}
@@ -586,7 +629,7 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 	/* If called with no argument, try collapsing the resync layers */
 	if (!arg_count(cmd, mirrors_ARG) && !arg_count(cmd, mirrorlog_ARG) &&
 	    !arg_count(cmd, corelog_ARG) && !arg_count(cmd, regionsize_ARG) &&
-	    !repair) {
+	    !arg_count(cmd, splitmirrors_ARG) && !repair) {
 		if (find_temporary_mirror(lv) || (lv->status & CONVERTING))
 			lp->need_polling = 1;
 		return 1;
@@ -605,7 +648,7 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 	 * count to remain the same.  They may be changing
 	 * the logging type.
 	 */
-	if (!arg_count(cmd, mirrors_ARG))
+	if (!arg_count(cmd, mirrors_ARG) && !arg_count(cmd, splitmirrors_ARG))
 		lp->mirrors = existing_mirrors;
 	else if (lp->mirrors_sign == SIGN_PLUS)
 		lp->mirrors = existing_mirrors + lp->mirrors;
@@ -729,10 +772,17 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 		/* Reduce number of mirrors */
 		if (repair || lp->pv_count)
 			remove_pvs = lp->pvh;
-		if (!lv_remove_mirrors(cmd, lv, existing_mirrors - lp->mirrors,
-				       (corelog || lp->mirrors == 1) ? 1U : 0U,
-				       remove_pvs, 0))
+
+		if (lp->keep_mimages) {
+			if (!lv_split_mirror_images(lv, lp->lv_split_name,
+						    existing_mirrors - lp->mirrors,
+						    remove_pvs))
+				return 0;
+		} else if (!lv_remove_mirrors(cmd, lv, existing_mirrors - lp->mirrors,
+					      (corelog || lp->mirrors == 1) ? 1U : 0U,
+					      remove_pvs, 0))
 			return_0;
+
 		if (lp->mirrors > 1 &&
 		    !_lv_update_log_type(cmd, lp, lv, corelog))
 			return_0;
