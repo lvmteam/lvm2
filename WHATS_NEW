@@ -1,5 +1,6 @@
 Version 2.02.57 -
 ====================================
+  Add capability to split off and keep mirror legs to lvconvert.
   Change background polldaemon's process name to "(lvm2)".
   Allow vgremove of a VG with PVs missing.
   Keep log type consistent when changing mirror image count.
