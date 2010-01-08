@@ -19,7 +19,7 @@ static int vgremove_single(struct cmd_context *cmd, const char *vg_name,
 			   struct volume_group *vg,
 			   void *handle __attribute((unused)))
 {
-	unsigned lv_count;
+	unsigned lv_count, missing;
 	force_t force;
 
 	if (!vg_check_status(vg, EXPORTED_VG)) {
@@ -31,13 +31,17 @@ static int vgremove_single(struct cmd_context *cmd, const char *vg_name,
 
 	force = arg_count(cmd, force_ARG);
 	if (lv_count) {
-		if ((force == PROMPT) &&
-		    (yes_no_prompt("Do you really want to remove volume "
-				   "group \"%s\" containing %u "
-				   "logical volumes? [y/n]: ",
-				   vg_name, lv_count) == 'n')) {
-			log_error("Volume group \"%s\" not removed", vg_name);
-			return ECMD_FAILED;
+		if (force == PROMPT) {
+			if ((missing = vg_missing_pv_count(vg)))
+				log_warn("WARNING: %d physical volumes are currently missing "
+					 "from the system.", missing);
+			if (yes_no_prompt("Do you really want to remove volume "
+					  "group \"%s\" containing %u "
+					  "logical volumes? [y/n]: ",
+					  vg_name, lv_count) == 'n') {
+				log_error("Volume group \"%s\" not removed", vg_name);
+				return ECMD_FAILED;
+			}
 		}
 		if (!remove_lvs_in_vg(cmd, vg, force)) {
 			stack;
@@ -67,6 +71,7 @@ int vgremove(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
+	cmd->handles_missing_pvs = 1;
 	ret = process_each_vg(cmd, argc, argv,
 			      READ_FOR_UPDATE,
 			      NULL, &vgremove_single);
