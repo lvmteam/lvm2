@@ -1396,8 +1396,6 @@ int lv_add_segment(struct alloc_handle *ah,
 	/*
 	 * We don't actually use the 'log_lv' parameter for anything more
 	 * than just figuring out that this allocation is for a log device
-	 * It'd be nice to change the arguments type, but the function is
-	 * exported.
 	 */
 	aa_list = (log_lv) ? &ah->log_areas :
 		&ah->alloced_areas[first_area];
