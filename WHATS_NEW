@@ -1,5 +1,6 @@
 Version 2.02.57 -
 ====================================
+  Change background polldaemon's process name to "(lvm2)".
   Allow vgremove of a VG with PVs missing.
   Keep log type consistent when changing mirror image count.
   Always set environment variables for an LVM2 device in 11-dm-lvm.rules.
