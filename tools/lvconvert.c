@@ -550,18 +550,18 @@ static int _using_corelog(struct logical_volume *lv)
 static int _lv_update_log_type(struct cmd_context *cmd,
 			       struct lvconvert_params *lp,
 			       struct logical_volume *lv,
-			       int corelog)
+			       int log_count)
 {
 	struct logical_volume *original_lv = _original_lv(lv);
-	if (_using_corelog(lv) && !corelog) {
-		if (!add_mirror_log(cmd, original_lv, 1,
+	if (_using_corelog(lv) && log_count) {
+		if (!add_mirror_log(cmd, original_lv, log_count,
 				    adjusted_mirror_region_size(
 					lv->vg->extent_size,
 					lv->le_count,
 					lp->region_size),
 				    lp->pvh, lp->alloc))
 			return_0;
-	} else if (!_using_corelog(lv) && corelog) {
+	} else if (!_using_corelog(lv) && !log_count) {
 		if (!remove_mirror_log(cmd, original_lv,
 				       lp->pv_count ? lp->pvh : NULL))
 			return_0;
@@ -613,7 +613,7 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 	struct lv_segment *seg;
 	uint32_t existing_mirrors;
 	const char *mirrorlog;
-	unsigned corelog = 0;
+	unsigned log_count = 0;
 	int r = 0;
 	struct logical_volume *log_lv, *layer_lv;
 	int failed_mirrors = 0, failed_log = 0;
@@ -671,7 +671,7 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 	if (existing_mirrors && lp->mirrors &&
 	    (lp->mirrors != existing_mirrors) &&
 	    !arg_count(cmd, mirrorlog_ARG) && !arg_count(cmd, corelog_ARG)) {
-		corelog = first_seg(lv)->log_lv ? 0 : 1;
+		log_count = lv_mirror_count(first_seg(lv)->log_lv);
 	}
 
 	if (repair) {
@@ -692,8 +692,10 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 			return_0;
 		lp->pvh = lp->failed_pvs = failed_pvs;
 		log_lv=first_seg(lv)->log_lv;
-		if (!log_lv || log_lv->status & PARTIAL_LV)
-			failed_log = corelog = 1;
+		if (!log_lv || log_lv->status & PARTIAL_LV) {
+			failed_log = 1;
+			log_count = 0;
+		}
 	} else {
 		/*
 		 * Did the user try to subtract more legs than available?
@@ -707,20 +709,29 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 		/*
 		 * Adjust log type
 		 */
+		/*
+		 * This param used to be 'corelog' and was initialized to '0'.
+		 * We initially set to '1' here so as not to screw the logic.
+		 */
+		log_count = 1;
 		if (arg_count(cmd, corelog_ARG))
-			corelog = 1;
+			log_count = 0;
 
 		mirrorlog = arg_str_value(cmd, mirrorlog_ARG,
-					  corelog ? "core" : DEFAULT_MIRRORLOG);
-		if (!strcmp("disk", mirrorlog)) {
-			if (corelog) {
-				log_error("--mirrorlog disk and --corelog "
-					  "are incompatible");
-				return 0;
-			}
-			corelog = 0;
-		} else if (!strcmp("core", mirrorlog))
-			corelog = 1;
+					  !log_count ? "core" : DEFAULT_MIRRORLOG);
+
+		if (strcmp("core", mirrorlog) && !log_count) {
+			log_error("--mirrorlog disk and --corelog "
+				  "are incompatible");
+			return 0;
+		}
+
+		if (!strcmp("redundant", mirrorlog))
+			log_count = 2;
+		else if (!strcmp("disk", mirrorlog))
+			log_count = 1;
+		else if (!strcmp("core", mirrorlog))
+			log_count = 0;
 		else {
 			log_error("Unknown mirrorlog type: %s", mirrorlog);
 			return 0;
@@ -779,12 +790,12 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 						    remove_pvs))
 				return 0;
 		} else if (!lv_remove_mirrors(cmd, lv, existing_mirrors - lp->mirrors,
-					      (corelog || lp->mirrors == 1) ? 1U : 0U,
+					      (!log_count || lp->mirrors == 1) ? 1U : 0U,
 					      remove_pvs, 0))
 			return_0;
 
 		if (lp->mirrors > 1 &&
-		    !_lv_update_log_type(cmd, lp, lv, corelog))
+		    !_lv_update_log_type(cmd, lp, lv, log_count))
 			return_0;
 	} else if (!(lv->status & MIRRORED)) {
 		/*
@@ -811,7 +822,7 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 						lv->vg->extent_size,
 						lv->le_count,
 						lp->region_size),
-				    corelog ? 0U : 1U, lp->pvh, lp->alloc,
+				    log_count, lp->pvh, lp->alloc,
 				    MIRROR_BY_LV)) {
 			stack;
 			return failure_code;
@@ -843,7 +854,7 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 		 * insertion to make the end result consistent with
 		 * linear-to-mirror conversion.
 		 */
-		if (!_lv_update_log_type(cmd, lp, lv, corelog)) {
+		if (!_lv_update_log_type(cmd, lp, lv, log_count)) {
 			stack;
 			return failure_code;
 		}
@@ -881,8 +892,8 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 	}
 
 	if (lp->mirrors == existing_mirrors) {
-		if (_using_corelog(lv) != corelog) {
-			if (!_lv_update_log_type(cmd, lp, lv, corelog)) {
+		if (_using_corelog(lv) != !log_count) {
+			if (!_lv_update_log_type(cmd, lp, lv, log_count)) {
 				stack;
 				return failure_code;
 			}
@@ -922,8 +933,10 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 
 	if (failed_log || failed_mirrors) {
 		lp->pvh = old_pvh;
-		if (failed_log && replace_log)
-			failed_log = corelog = 0;
+		if (failed_log && replace_log) {
+			failed_log = 0;
+			log_count = 1;
+		}
 		if (replace_mirrors)
 			lp->mirrors += failed_mirrors;
 		failed_mirrors = 0;
