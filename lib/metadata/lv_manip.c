@@ -1390,7 +1390,6 @@ int lv_add_segment(struct alloc_handle *ah,
 		   uint32_t region_size,
 		   struct logical_volume *log_lv)
 {
-	int i;
 	struct dm_list *aa_list;
 
 	/*
