@@ -647,6 +647,7 @@ missingkernel
 kerneldir
 interface
 LIB_PTHREAD
+UDEV_SYNC
 UDEV_RULES
 STATIC_LINK
 STATICDIR
@@ -12306,6 +12307,9 @@ cat >>confdefs.h <<\_ACEOF
 _ACEOF
 
 			LIBS="-ludev $LIBS"
+		else
+			{ $as_echo "$as_me:$LINENO: WARNING: It won't be possible to get udev state. We will assume that udev is not running." >&5
+$as_echo "$as_me: WARNING: It won't be possible to get udev state. We will assume that udev is not running." >&2;}
 		fi
 fi
 
@@ -15441,6 +15445,7 @@ LVM_PATCHLEVEL=`echo "$VER" | $AWK -F '[(.]' '{print $3}'`
 LVM_LIBAPI=`echo "$VER" | $AWK -F '[()]' '{print $2}'`
 
 ################################################################################
+
 
 
 
