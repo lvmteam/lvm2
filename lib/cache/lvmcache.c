@@ -39,6 +39,13 @@ static int _vg_global_lock_held = 0;	/* Global lock held when cache wiped? */
 
 int lvmcache_init(void)
 {
+	/*
+	 * FIXME add a proper lvmcache_locking_reset() that
+	 * resets the cache so no previous locks are locked
+	 * - useful for reset_locking()
+	 */
+	_vgs_locked = 0;
+
 	dm_list_init(&_vginfos);
 
 	if (!(_vgname_hash = dm_hash_create(128)))
