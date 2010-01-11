@@ -762,7 +762,7 @@ static int _alloc_parallel_area(struct alloc_handle *ah, uint32_t needed,
 		consume_pv_area(areas[s], area_len);
 
 	for (i = 0, s = ah->area_count;
-	     (s < ah->area_count + ah->log_count);
+	     log_areas && (s < ah->area_count + ah->log_count);
 	     s++, i++) {
 		aa[s].pv = log_areas[i]->map->pv;
 		aa[s].pe = log_areas[i]->start;
