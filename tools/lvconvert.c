@@ -613,7 +613,7 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 	struct lv_segment *seg;
 	uint32_t existing_mirrors;
 	const char *mirrorlog;
-	unsigned log_count = 0;
+	unsigned log_count = 1;
 	int r = 0;
 	struct logical_volume *log_lv, *layer_lv;
 	int failed_mirrors = 0, failed_log = 0;
@@ -710,11 +710,6 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 		/*
 		 * Adjust log type
 		 */
-		/*
-		 * This param used to be 'corelog' and was initialized to '0'.
-		 * We initially set to '1' here so as not to screw the logic.
-		 */
-		log_count = 1;
 		if (arg_count(cmd, corelog_ARG))
 			log_count = 0;
 
