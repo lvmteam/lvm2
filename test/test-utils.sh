@@ -203,6 +203,10 @@ prepare_lvmconf() {
     library_dir = "$G_root_/lib"
     locking_dir = "$G_root_/var/lock/lvm"
   }
+  activation {
+    udev_sync = 1
+    udev_rules = 1
+  }
 EOF
 }
 
