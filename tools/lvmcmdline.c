@@ -1070,6 +1070,11 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	return ret;
 }
 
+int lvm_return_code(int ret)
+{
+	return (ret == ECMD_PROCESSED ? 0 : ret);
+}
+
 int lvm_split(char *str, int *argc, char **argv, int max)
 {
 	char *b = str, *e;
@@ -1389,7 +1394,5 @@ int lvm2_main(int argc, char **argv)
 
       out:
 	lvm_fin(cmd);
-	if (ret == ECMD_PROCESSED)
-		ret = 0;
-	return ret;
+	return lvm_return_code(ret);
 }
