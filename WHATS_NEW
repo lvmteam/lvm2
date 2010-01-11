@@ -1,5 +1,6 @@
 Version 2.02.57 -
 ====================================
+  Add support to disable udev checking: LVM_UDEV_DISABLE_CHECKING=1 env. var.
   Add redundant mirror log option.
   Add capability to split off and keep mirror legs to lvconvert.
   Change background polldaemon's process name to "(lvm2)".

@@ -36,6 +36,7 @@ void init_background_polling(int polling);
 void init_ignore_suspended_devices(int ignore);
 void init_error_message_produced(int produced);
 void init_is_static(unsigned value);
+void init_udev_checking(int checking);
 
 void set_cmd_name(const char *cmd_name);
 
@@ -54,6 +55,7 @@ int background_polling(void);
 int ignore_suspended_devices(void);
 const char *log_command_name(void);
 unsigned is_static(void);
+int udev_checking(void);
 
 #define DMEVENTD_MONITOR_IGNORE -1
 int dmeventd_monitor_mode(void);
