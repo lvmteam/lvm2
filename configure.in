@@ -669,6 +669,8 @@ if test x$UDEV_SYNC = xyes; then
 			AC_DEFINE([HAVE_UDEV_QUEUE_GET_UDEV_IS_ACTIVE], 1,
 			  [Define to 1 if libudev's udev_queue_get_udev_is_active function is available.])
 			LIBS="-ludev $LIBS"
+		else
+			AC_MSG_WARN(It won't be possible to get udev state. We will assume that udev is not running.)
 		fi
 fi
 
