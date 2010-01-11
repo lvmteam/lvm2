@@ -668,10 +668,11 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 	 * the type of log wasn't specified, then let's keep the log type
 	 * the same.
 	 */
-	if (existing_mirrors && lp->mirrors &&
-	    (lp->mirrors != existing_mirrors) &&
+	if ((existing_mirrors > 1) && (lp->mirrors > 1) &&
+	    (lp->mirrors != existing_mirrors) && !(lv->status & CONVERTING) &&
 	    !arg_count(cmd, mirrorlog_ARG) && !arg_count(cmd, corelog_ARG)) {
-		log_count = lv_mirror_count(first_seg(lv)->log_lv);
+		log_count = (first_seg(lv)->log_lv) ?
+			lv_mirror_count(first_seg(lv)->log_lv) : 0;
 	}
 
 	if (repair) {
