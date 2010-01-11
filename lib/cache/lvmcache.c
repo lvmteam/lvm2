@@ -42,7 +42,6 @@ int lvmcache_init(void)
 	/*
 	 * FIXME add a proper lvmcache_locking_reset() that
 	 * resets the cache so no previous locks are locked
-	 * - useful for reset_locking()
 	 */
 	_vgs_locked = 0;
 
