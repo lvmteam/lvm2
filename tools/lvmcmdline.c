@@ -909,6 +909,19 @@ static void _apply_settings(struct cmd_context *cmd)
 	cmd->handles_missing_pvs = 0;
 }
 
+static void _set_udev_checking()
+{
+	const char *e;
+
+	if ((e = getenv("DM_UDEV_DISABLE_CHECKING")) &&
+		!strcmp(e, "1"))
+		dm_udev_set_checking(0);
+
+	if ((e = getenv("LVM_UDEV_DISABLE_CHECKING")) &&
+		!strcmp(e, "1"))
+		init_udev_checking(0);
+}
+
 static const char *_copy_command_line(struct cmd_context *cmd, int argc, char **argv)
 {
 	int i, space;
@@ -1002,6 +1015,8 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 #ifdef O_DIRECT_SUPPORT
 	log_debug("O_DIRECT will be used");
 #endif
+
+	_set_udev_checking();
 
 	if ((ret = _process_common_commands(cmd)))
 		goto_out;

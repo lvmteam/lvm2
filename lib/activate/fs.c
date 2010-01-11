@@ -166,7 +166,7 @@ static int _mk_link(const char *dev_dir, const char *vg_name,
 			return 0;
 		}
 
-		if (dm_udev_get_sync_support() && check_udev) {
+		if (dm_udev_get_sync_support() && udev_checking() && check_udev) {
 			/* Check udev created the correct link. */
 			if (!stat(link_path, &buf_lp) &&
 			    !stat(lv_path, &buf)) {
@@ -190,7 +190,7 @@ static int _mk_link(const char *dev_dir, const char *vg_name,
 			log_sys_error("unlink", lv_path);
 			return 0;
 		}
-	} else if (dm_udev_get_sync_support() && check_udev)
+	} else if (dm_udev_get_sync_support() && udev_checking() && check_udev)
 		log_warn("The link %s should had been created by udev "
 			  "but it was not found. Falling back to "
 			  "direct link creation.", lv_path);
@@ -221,7 +221,7 @@ static int _rm_link(const char *dev_dir, const char *vg_name,
 
 	if (lstat(lv_path, &buf) && errno == ENOENT)
 		return 1;
-	else if (dm_udev_get_sync_support() && check_udev)
+	else if (dm_udev_get_sync_support() && udev_checking() && check_udev)
 		log_warn("The link %s should have been removed by udev "
 			 "but it is still present. Falling back to "
 			 "direct link removal.", lv_path);
