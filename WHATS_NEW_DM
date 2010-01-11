@@ -1,14 +1,10 @@
 Version 1.02.41 -
 ====================================
-  Define {DM, LVM}_UDEV_DISABLE_CHECKING=1 env. variables for tests.
-  Enable udev_sync and udev_rules in lvm.conf by default while running tests.
-  Add support to disable udev checking: DM_UDEV_DISABLE_CHECKING=1 env. variable.
+  If LVM_UDEV_DISABLE_CHECKING in set in environment, disable udev warnings.
   Add dm_tree_add_dev_with_udev_flags to provide wider support for udev flags.
   Add --noudevrules option for dmsetup to disable /dev node management by udev.
-  Update code to show all fields for 'dmsetup info -c -o all'.
-  Return error from dm_tree_deactivate_children().
-  Return error from dm_tree_suspend_children().
-  Return error from dm_tree_preload_children() and dm_tree_activate_children().
+  Fix 'dmsetup info -c -o all' to show all fields.
+  Return errors if dm_tree_*_children functions fail.
   Fix coredump and memory leak for 'dmsetup help -c'.
   Disable udev rules for change events with DISK_RO set.
 
