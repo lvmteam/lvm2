@@ -1,6 +1,6 @@
 Version 1.02.41 -
 ====================================
-  If LVM_UDEV_DISABLE_CHECKING in set in environment, disable udev warnings.
+  If DM_UDEV_DISABLE_CHECKING in set in environment, disable udev warnings.
   Add dm_tree_add_dev_with_udev_flags to provide wider support for udev flags.
   Add --noudevrules option for dmsetup to disable /dev node management by udev.
   Fix 'dmsetup info -c -o all' to show all fields.
