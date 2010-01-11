@@ -1086,6 +1086,8 @@ int dm_cookie_supported(void);
  */
 void dm_udev_set_sync_support(int sync_with_udev);
 int dm_udev_get_sync_support(void);
+void dm_udev_set_checking(int checking);
+int dm_udev_get_checking(void);
 int dm_udev_complete(uint32_t cookie);
 int dm_udev_wait(uint32_t cookie);
 

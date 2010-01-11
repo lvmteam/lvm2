@@ -163,5 +163,7 @@ dm_list_size
 dm_cookie_supported
 dm_udev_set_sync_support
 dm_udev_get_sync_support
+dm_udev_set_checking
+dm_udev_get_checking
 dm_udev_complete
 dm_udev_wait
