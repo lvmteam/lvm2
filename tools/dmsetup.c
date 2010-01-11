@@ -3158,6 +3158,7 @@ int main(int argc, char **argv)
 	struct command *c;
 	int r = 1;
 	const char *dev_dir;
+	const char *disable_udev_checking;
 
 	(void) setlocale(LC_ALL, "");
 
@@ -3206,6 +3207,11 @@ int main(int argc, char **argv)
 
 	if (_switches[NOUDEVSYNC_ARG])
 		dm_udev_set_sync_support(0);
+
+	disable_udev_checking = getenv("DM_UDEV_DISABLE_CHECKING");
+	if ((disable_udev_checking && *disable_udev_checking) &&
+	    !strcmp(disable_udev_checking, "1"))
+		dm_udev_set_checking(0);
 
       doit:
 	if (!c->fn(argc, argv, NULL)) {

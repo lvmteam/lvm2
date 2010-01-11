@@ -52,6 +52,7 @@ static int _verbose = 0;
 #ifdef UDEV_SYNC_SUPPORT
 static int _udev_running = -1;
 static int _sync_with_udev = 1;
+static int _udev_checking = 1;
 #endif
 
 /*
@@ -428,7 +429,8 @@ static int _add_dev_node(const char *dev_name, uint32_t major, uint32_t minor,
 				  dev_name);
 			return 0;
 		}
-	} else if (dm_udev_get_sync_support() && check_udev)
+	} else if (dm_udev_get_sync_support() && dm_udev_get_checking() &&
+		   check_udev)
 		log_warn("%s not set up by udev: Falling back to direct "
 			 "node creation.", path);
 
@@ -462,7 +464,8 @@ static int _rm_dev_node(const char *dev_name, int check_udev)
 
 	if (stat(path, &info) < 0)
 		return 1;
-	else if (dm_udev_get_sync_support() && check_udev)
+	else if (dm_udev_get_sync_support() && dm_udev_get_checking() &&
+		 check_udev)
 		log_warn("Node %s was not removed by udev. "
 			 "Falling back to direct node removal.", path);
 
@@ -492,7 +495,8 @@ static int _rename_dev_node(const char *old_name, const char *new_name,
 				  "is already present", newpath);
 			return 0;
 		}
-		else if (dm_udev_get_sync_support() && check_udev) {
+		else if (dm_udev_get_sync_support() && dm_udev_get_checking() &&
+			 check_udev) {
 			if (stat(oldpath, &info) < 0 &&
 				 errno == ENOENT)
 				/* assume udev already deleted this */
@@ -516,7 +520,8 @@ static int _rename_dev_node(const char *old_name, const char *new_name,
 			return 0;
 		}
 	}
-	else if (dm_udev_get_sync_support() && check_udev)
+	else if (dm_udev_get_sync_support() && dm_udev_get_checking() &&
+		 check_udev)
 		log_warn("The node %s should have been renamed to %s "
 			 "by udev but new node is not present. "
 			 "Falling back to direct node rename.",
@@ -884,6 +889,15 @@ int dm_udev_get_sync_support(void)
 	return 0;
 }
 
+void dm_udev_set_checking(int checking)
+{
+}
+
+int dm_udev_get_checking(void)
+{
+	return 0;
+}
+
 int dm_task_set_cookie(struct dm_task *dmt, uint32_t *cookie, uint16_t flags)
 {
 	if (dm_cookie_supported())
@@ -961,6 +975,19 @@ int dm_udev_get_sync_support(void)
 		_udev_running = _check_udev_is_running();
 
 	return dm_cookie_supported() && _udev_running && _sync_with_udev;
+}
+
+void dm_udev_set_checking(int checking)
+{
+	if ((_udev_checking = checking))
+		log_debug("DM udev checking enabled");
+	else
+		log_debug("DM udev checking disabled");
+}
+
+int dm_udev_get_checking(void)
+{
+	return _udev_checking;
 }
 
 static int _get_cookie_sem(uint32_t cookie, int *semid)
