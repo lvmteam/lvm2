@@ -30,6 +30,11 @@ SHELL_PATH_SQ = $(subst ','\'',$(SHELL_PATH))
 
 T = $(wildcard $(srcdir)/t-*.sh)
 
+ifeq ("@UDEV_SYNC@", "yes")
+dm_udev_disable_checking = 1
+lvm_udev_disable_checking = 1
+endif
+
 ifeq ("@APPLIB@", "yes")
 T += $(srcdir)/lvm2app.sh
 all: api/vgtest
@@ -56,6 +61,8 @@ init.sh: $(srcdir)/Makefile.in $(srcdir)/test-utils.sh .bin-dir-stamp bin/not bi
 	echo 'abs_srcdir=$(abs_srcdir)' >> $@-t
 	echo 'abs_builddir=$(abs_builddir)' >> $@-t
 	echo 'export PATH' >> $@-t
+	echo 'export DM_UDEV_DISABLE_CHECKING=$(dm_udev_disable_checking)' >> $@-t
+	echo 'export LVM_UDEV_DISABLE_CHECKING=$(lvm_udev_disable_checking)' >> $@-t
 	chmod a-w $@-t
 	mv $@-t $@
 	if test "$(srcdir)" != "."; then cp $(srcdir)/test-utils.sh \

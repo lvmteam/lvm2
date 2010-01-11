@@ -1,5 +1,6 @@
 Version 1.02.41 -
 ====================================
+  Define {DM, LVM}_UDEV_DISABLE_CHECKING=1 env. variables for tests.
   Enable udev_sync and udev_rules in lvm.conf by default while running tests.
   Add support to disable udev checking: DM_UDEV_DISABLE_CHECKING=1 env. variable.
   Add dm_tree_add_dev_with_udev_flags to provide wider support for udev flags.
