@@ -35,6 +35,7 @@ struct cmd_context *init_lvm(void);
 void lvm_register_commands(void);
 int lvm_split(char *str, int *argc, char **argv, int max);
 int lvm_run_command(struct cmd_context *cmd, int argc, char **argv);
+int lvm_return_code(int ret);
 int lvm_shell(struct cmd_context *cmd, struct cmdline_context *cmdline);
 
 #endif

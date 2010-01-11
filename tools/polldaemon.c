@@ -15,6 +15,7 @@
 
 #include "tools.h"
 #include "polldaemon.h"
+#include "lvm2cmdline.h"
 #include <signal.h>
 #include <sys/wait.h>
 
@@ -23,6 +24,12 @@ static void _sigchld_handler(int sig __attribute((unused)))
 	while (wait4(-1, NULL, WNOHANG | WUNTRACED, NULL) > 0) ;
 }
 
+/*
+ * returns:
+ * -1 if the fork failed
+ *  0 if the parent
+ *  1 if the child
+ */
 static int _become_daemon(struct cmd_context *cmd)
 {
 	pid_t pid;
@@ -37,7 +44,7 @@ static int _become_daemon(struct cmd_context *cmd)
 
 	if ((pid = fork()) == -1) {
 		log_error("fork failed: %s", strerror(errno));
-		return 1;
+		return -1;
 	}
 
 	/* Parent */
@@ -232,12 +239,20 @@ static void _poll_for_all_vgs(struct cmd_context *cmd,
 	}
 }
 
+/*
+ * Only allow *one* return from poll_daemon() (the parent).
+ * If there is a child it must exit (ignoring the memory leak messages).
+ * - 'background' is advisory so a child polldaemon may not be used even
+ *   if it was requested.
+ */
 int poll_daemon(struct cmd_context *cmd, const char *name, const char *uuid,
 		unsigned background,
 		uint32_t lv_type, struct poll_functions *poll_fns,
 		const char *progress_title)
 {
 	struct daemon_parms parms;
+	int daemon_mode = 0;
+	int ret = ECMD_PROCESSED;
 
 	parms.aborting = arg_is_set(cmd, abort_ARG);
 	parms.background = background;
@@ -260,9 +275,11 @@ int poll_daemon(struct cmd_context *cmd, const char *name, const char *uuid,
 	}
 
 	if (parms.background) {
-		if (!_become_daemon(cmd))
-			return ECMD_PROCESSED;	/* Parent */
-		parms.progress_display = 0;
+		daemon_mode = _become_daemon(cmd);
+		if (daemon_mode == 0)
+			return ECMD_PROCESSED;	    /* Parent */
+		else if (daemon_mode == 1)
+			parms.progress_display = 0; /* Child */
 		/* FIXME Use wait_event (i.e. interval = 0) and */
 		/*       fork one daemon per copy? */
 	}
@@ -273,10 +290,21 @@ int poll_daemon(struct cmd_context *cmd, const char *name, const char *uuid,
 	if (name) {
 		if (!_wait_for_single_lv(cmd, name, uuid, &parms)) {
 			stack;
-			return ECMD_FAILED;
+			ret = ECMD_FAILED;
 		}
 	} else
 		_poll_for_all_vgs(cmd, &parms);
 
-	return ECMD_PROCESSED;
+	if (parms.background && daemon_mode == 1) {
+		/*
+		 * child was successfully forked:
+		 * background polldaemon must not return to the caller
+		 * because it will redundantly continue performing the
+		 * caller's task (that the parent already performed)
+		 */
+		/* FIXME Attempt proper cleanup */
+		_exit(lvm_return_code(ret));
+	}
+
+	return ret;
 }
