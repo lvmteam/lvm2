@@ -1114,8 +1114,6 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 				}
 
 				areas[ix + ix_offset - 1] = pva;
-
-				goto next_pv;
 			}
 		next_pv:
 			if (ix >= areas_size)
