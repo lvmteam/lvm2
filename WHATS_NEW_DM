@@ -1,3 +1,6 @@
+Version 1.02.42 - 
+===================================
+
 Version 1.02.41 - 12th January 2010
 ===================================
   If DM_UDEV_DISABLE_CHECKING is set in environment, disable udev warnings.

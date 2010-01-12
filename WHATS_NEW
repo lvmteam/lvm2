@@ -1,3 +1,6 @@
+Version 2.02.58 - 
+===================================
+
 Version 2.02.57 - 12th January 2010
 ===================================
   Ensure exactly one process returns from poll_daemon(), never two.
