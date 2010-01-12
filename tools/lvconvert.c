@@ -692,7 +692,7 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 		if (!(failed_pvs = _failed_pv_list(lv->vg)))
 			return_0;
 		lp->pvh = lp->failed_pvs = failed_pvs;
-		log_lv=first_seg(lv)->log_lv;
+		log_lv = first_seg(lv)->log_lv;
 		if (!log_lv || log_lv->status & PARTIAL_LV) {
 			failed_log = 1;
 			log_count = 0;
@@ -722,9 +722,7 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 			return 0;
 		}
 
-		if (!strcmp("redundant", mirrorlog))
-			log_count = 2;
-		else if (!strcmp("disk", mirrorlog))
+		if (!strcmp("disk", mirrorlog))
 			log_count = 1;
 		else if (!strcmp("core", mirrorlog))
 			log_count = 0;

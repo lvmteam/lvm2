@@ -322,29 +322,19 @@ static int _read_mirror_params(struct lvcreate_params *lp,
 {
 	int region_size;
 	const char *mirrorlog;
-
-	/*
-	 * This param used to be 'corelog' and was initialized to '0'.
-	 * We initially set to '1' here so as not to screw the logic.
-	 */
-	lp->log_count = 1;
-	if (arg_count(cmd, corelog_ARG))
-		lp->log_count = 0;
+	int corelog = arg_count(cmd, corelog_ARG);
 
 	mirrorlog = arg_str_value(cmd, mirrorlog_ARG,
-				  !lp->log_count ? "core" : DEFAULT_MIRRORLOG);
+				  corelog ? "core" : DEFAULT_MIRRORLOG);
 
-	if (strcmp("core", mirrorlog) && !lp->log_count) {
-		log_error("--mirrorlog disk and --corelog "
-			  "are incompatible");
-		return 0;
-	}
-
-	if (!strcmp("redundant", mirrorlog))
-		lp->log_count = 2;
-	else if (!strcmp("disk", mirrorlog))
+	if (!strcmp("disk", mirrorlog)) {
+		if (corelog) {
+			log_error("--mirrorlog disk and --corelog "
+				  "are incompatible");
+			return 0;
+		}
 		lp->log_count = 1;
-	else if (!strcmp("core", mirrorlog))
+	} else if (!strcmp("core", mirrorlog))
 		lp->log_count = 0;
 	else {
 		log_error("Unknown mirrorlog type: %s", mirrorlog);
