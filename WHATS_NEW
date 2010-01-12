@@ -5,7 +5,6 @@ Version 2.02.57 -
   Define {DM, LVM}_UDEV_DISABLE_CHECKING=1 environment variables during tests.
   Enable udev_sync and udev_rules in lvm.conf by default while running tests.
   If LVM_UDEV_DISABLE_CHECKING in set in environment, disable udev warnings.
-Add redundant mirror log option.  FIXME - rename to 'duplicated' or similar?
   Add --splitmirrors to lvconvert to split off part of a mirror.
   Change background polldaemon's process name to "(lvm2)".
   Allow vgremove to remove a VG with PVs missing after a prompt.
