@@ -22,10 +22,10 @@ not lvconvert -m2 $vg/lv
 lvconvert --mirrorlog core $vg/lv
 
 # Log conversion (core -> redundant)
-lvconvert --mirrorlog redundant $vg/lv
+not lvconvert --mirrorlog redundant $vg/lv
 
 # Log conversion (redundant -> core)
-lvconvert --mirrorlog core $vg/lv
+# lvconvert --mirrorlog core $vg/lv
 
 # Log conversion (core -> disk)
 lvconvert --mirrorlog disk $vg/lv
