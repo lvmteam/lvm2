@@ -1,5 +1,5 @@
-Version 1.02.41 -
-====================================
+Version 1.02.41 - 12th January 2010
+===================================
   If DM_UDEV_DISABLE_CHECKING is set in environment, disable udev warnings.
   Add dm_tree_add_dev_with_udev_flags to provide wider support for udev flags.
   Add --noudevrules option for dmsetup to disable /dev node management by udev.
