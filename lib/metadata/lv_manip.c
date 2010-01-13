@@ -1877,7 +1877,6 @@ struct logical_volume *alloc_lv(struct dm_pool *mem)
 	}
 
 	lv->snapshot = NULL;
-	lv->merging_snapshot = NULL;
 	dm_list_init(&lv->snapshot_segs);
 	dm_list_init(&lv->segments);
 	dm_list_init(&lv->tags);

@@ -84,7 +84,7 @@ static int _snap_text_export(const struct lv_segment *seg, struct formatter *f)
 {
 	outf(f, "chunk_size = %u", seg->chunk_size);
 	outf(f, "origin = \"%s\"", seg->origin->name);
-	if (!(seg->status & SNAPSHOT_MERGE))
+	if (!(seg->status & MERGING))
 		outf(f, "cow_store = \"%s\"", seg->cow->name);
 	else
 		outf(f, "merging_store = \"%s\"", seg->cow->name);
@@ -144,7 +144,7 @@ static int _snap_target_present(struct cmd_context *cmd,
 		_snap_checked = 1;
 	}
 
-	if (!_snap_merge_checked && seg && (seg->status & SNAPSHOT_MERGE)) {
+	if (!_snap_merge_checked && seg && (seg->status & MERGING)) {
 		_snap_merge_present = target_present(cmd, "snapshot-merge", 0);
 		_snap_merge_checked = 1;
 		return _snap_present && _snap_merge_present;

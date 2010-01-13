@@ -69,7 +69,7 @@
 //#define POSTORDER_OPEN_FLAG	0x04000000U    temporary use inside vg_read_internal. */
 //#define VIRTUAL_ORIGIN	0x08000000U	/* LV - internal use only */
 
-#define SNAPSHOT_MERGE		0x10000000U	/* SEG */
+#define MERGING			0x10000000U	/* LV SEG */
 
 #define LVM_READ              	0x00000100U	/* LV VG */
 #define LVM_WRITE             	0x00000200U	/* LV VG */
@@ -329,9 +329,6 @@ struct logical_volume {
 	uint32_t origin_count;
 	struct dm_list snapshot_segs;
 	struct lv_segment *snapshot;
-
-	/* A snapshot that is merging into this origin */
-	struct lv_segment *merging_snapshot;
 
 	struct dm_list segments;
 	struct dm_list tags;
