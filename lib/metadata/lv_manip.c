@@ -2065,6 +2065,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	struct volume_group *vg;
 	struct lvinfo info;
 	struct logical_volume *origin = NULL;
+	int was_merging = 0;
 
 	vg = lv->vg;
 
@@ -2126,6 +2127,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 	if (lv_is_cow(lv)) {
 		origin = origin_from_cow(lv);
+		was_merging = !!origin->merging_snapshot;
 		log_verbose("Removing snapshot %s", lv->name);
 		if (!vg_remove_snapshot(lv))
 			return_0;
@@ -2143,8 +2145,8 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 	backup(vg);
 
-	/* If no snapshots left, reload without -real. */
-	if (origin && !lv_is_origin(origin)) {
+	/* If no snapshots left or if we stopped merging, reload */
+	if (origin && (!lv_is_origin(origin) || was_merging)) {
 		if (!suspend_lv(cmd, origin))
 			log_error("Failed to refresh %s without snapshot.", origin->name);
 		else if (!resume_lv(cmd, origin))
