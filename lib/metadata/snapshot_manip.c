@@ -37,6 +37,9 @@ int lv_is_visible(const struct logical_volume *lv)
 		if (lv_is_virtual_origin(origin_from_cow(lv)))
 			return 1;
 
+		if (find_cow(lv)->status & SNAPSHOT_MERGE)
+			return 0;
+
 		return lv_is_visible(origin_from_cow(lv));
 	}
 
@@ -62,7 +65,7 @@ struct logical_volume *origin_from_cow(const struct logical_volume *lv)
 }
 
 void init_snapshot_seg(struct lv_segment *seg, struct logical_volume *origin,
-		       struct logical_volume *cow, uint32_t chunk_size)
+		       struct logical_volume *cow, uint32_t chunk_size, int merge)
 {
 	seg->chunk_size = chunk_size;
 	seg->origin = origin;
@@ -79,8 +82,28 @@ void init_snapshot_seg(struct lv_segment *seg, struct logical_volume *origin,
 		origin->status |= VIRTUAL_ORIGIN;
 
 	seg->lv->status |= (SNAPSHOT | VIRTUAL);
+	if (merge)
+		init_snapshot_merge(seg, origin);
 
 	dm_list_add(&origin->snapshot_segs, &seg->origin_list);
+}
+
+void init_snapshot_merge(struct lv_segment *cow_seg,
+			 struct logical_volume *origin)
+{
+	/*
+	 * Even though lv_is_visible(cow_seg->lv) returns 0,
+	 * the cow_seg->lv (name: snapshotX) is _not_ hidden;
+	 * this is part of the lvm2 snapshot fiction.  Must
+	 * clear VISIBLE_LV directly (lv_set_visible can't)
+	 * - cow_seg->lv->status is used to control whether 'lv'
+	 *   (with user provided snapshot LV name) is visible
+	 * - this also enables vg_validate() to succeed with
+	 *   merge metadata (cow_seg->lv is now "internal")
+	 */
+	cow_seg->lv->status &= ~VISIBLE_LV;
+	cow_seg->status |= SNAPSHOT_MERGE;
+	origin->merging_snapshot = cow_seg;
 }
 
 int vg_add_snapshot(struct logical_volume *origin,
@@ -113,7 +136,7 @@ int vg_add_snapshot(struct logical_volume *origin,
 	if (!(seg = alloc_snapshot_seg(snap, 0, 0)))
 		return_0;
 
-	init_snapshot_seg(seg, origin, cow, chunk_size);
+	init_snapshot_seg(seg, origin, cow, chunk_size, 0);
 
 	return 1;
 }
@@ -122,6 +145,8 @@ int vg_remove_snapshot(struct logical_volume *cow)
 {
 	dm_list_del(&cow->snapshot->origin_list);
 	cow->snapshot->origin->origin_count--;
+	if (cow->snapshot->origin->merging_snapshot == cow->snapshot)
+		cow->snapshot->origin->merging_snapshot = NULL;
 
 	if (!lv_remove(cow->snapshot->lv)) {
 		log_error("Failed to remove internal snapshot LV %s",

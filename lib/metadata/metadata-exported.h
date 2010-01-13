@@ -69,6 +69,8 @@
 //#define POSTORDER_OPEN_FLAG	0x04000000U    temporary use inside vg_read_internal. */
 //#define VIRTUAL_ORIGIN	0x08000000U	/* LV - internal use only */
 
+#define SNAPSHOT_MERGE		0x10000000U	/* SEG */
+
 #define LVM_READ              	0x00000100U	/* LV VG */
 #define LVM_WRITE             	0x00000200U	/* LV VG */
 #define CLUSTERED         	0x00000400U	/* VG */
@@ -327,6 +329,9 @@ struct logical_volume {
 	uint32_t origin_count;
 	struct dm_list snapshot_segs;
 	struct lv_segment *snapshot;
+
+	/* A snapshot that is merging into this origin */
+	struct lv_segment *merging_snapshot;
 
 	struct dm_list segments;
 	struct dm_list tags;
@@ -624,7 +629,9 @@ struct lv_segment *find_cow(const struct logical_volume *lv);
 struct logical_volume *origin_from_cow(const struct logical_volume *lv);
 
 void init_snapshot_seg(struct lv_segment *seg, struct logical_volume *origin,
-		       struct logical_volume *cow, uint32_t chunk_size);
+		       struct logical_volume *cow, uint32_t chunk_size, int merge);
+
+void init_snapshot_merge(struct lv_segment *cow_seg, struct logical_volume *origin);
 
 int vg_add_snapshot(struct logical_volume *origin, struct logical_volume *cow,
 		    union lvid *lvid, uint32_t extent_count,
