@@ -2,6 +2,7 @@ Version 2.02.58 -
 ===================================
   Fix clvmd automatic target module loading crash.
   Fix allocation code not to stop at the first area of a PV that fits.
+  Add --merge to lvconvert to merge a snapshot into its origin.
 
 Version 2.02.57 - 12th January 2010
 ===================================
