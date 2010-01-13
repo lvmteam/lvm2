@@ -1270,7 +1270,7 @@ int lv_refresh(struct cmd_context *cmd, struct logical_volume *lv)
 	 * - fortunately: polldaemon will immediately shutdown if the
 	 *   origin doesn't have a status with a snapshot percentage
 	 */
-	if (background_polling() && lv_is_origin(lv) && lv->merging_snapshot)
+	if (background_polling() && lv_is_origin(lv) && lv_is_merging_origin(lv))
 		lv_spawn_background_polling(cmd, lv);
 
 out:
@@ -1307,7 +1307,7 @@ void lv_spawn_background_polling(struct cmd_context *cmd,
 		pvmove_poll(cmd, pvname, 1);
 	}
 
-	if (lv->status & CONVERTING || lv->merging_snapshot) {
+	if (lv->status & CONVERTING || lv_is_merging_origin(lv)) {
 		log_verbose("Spawning background lvconvert process for %s",
 			lv->name);
 		lvconvert_poll(cmd, lv, 1);

@@ -306,7 +306,7 @@ static int _lvstatus_disp(struct dm_report *rh __attribute((unused)), struct dm_
 		repstr[0] = 'v';
 	/* Origin takes precedence over Mirror */
 	else if (lv_is_origin(lv)) {
-		if (lv->merging_snapshot)
+		if (lv_is_merging_origin(lv))
 			repstr[0] = 'O';
 		else
 			repstr[0] = 'o';
@@ -324,7 +324,7 @@ static int _lvstatus_disp(struct dm_report *rh __attribute((unused)), struct dm_
 	else if (lv->status & MIRROR_LOG)
 		repstr[0] = 'l';
 	else if (lv_is_cow(lv)) {
-		if (find_cow(lv)->status & SNAPSHOT_MERGE)
+		if (lv_is_merging_cow(lv))
 			repstr[0] = 'S';
 		else
 			repstr[0] = 's';
@@ -1023,7 +1023,7 @@ static int _snpercent_disp(struct dm_report *rh __attribute((unused)), struct dm
 		return 0;
 	}
 
-	if ((!lv_is_cow(lv) && !lv->merging_snapshot) ||
+	if ((!lv_is_cow(lv) && !lv_is_merging_origin(lv)) ||
 	    (lv_info(lv->vg->cmd, lv, &info, 0, 0) && !info.exists)) {
 		*sortval = UINT64_C(0);
 		dm_report_field_set_value(field, "", sortval);
@@ -1032,7 +1032,7 @@ static int _snpercent_disp(struct dm_report *rh __attribute((unused)), struct dm
 
 	if (!lv_snapshot_percent(lv, &snap_percent, &percent_range) ||
 				 (percent_range == PERCENT_INVALID)) {
-		if (!lv->merging_snapshot) {
+		if (!lv_is_merging_origin(lv)) {
 			*sortval = UINT64_C(100);
 			dm_report_field_set_value(field, "100.00", sortval);
 		} else {

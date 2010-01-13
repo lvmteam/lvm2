@@ -37,7 +37,7 @@ int lv_is_visible(const struct logical_volume *lv)
 		if (lv_is_virtual_origin(origin_from_cow(lv)))
 			return 1;
 
-		if (find_cow(lv)->status & SNAPSHOT_MERGE)
+		if (lv_is_merging_cow(lv))
 			return 0;
 
 		return lv_is_visible(origin_from_cow(lv));
@@ -51,6 +51,21 @@ int lv_is_virtual_origin(const struct logical_volume *lv)
 	return (lv->status & VIRTUAL_ORIGIN) ? 1 : 0;
 }
 
+int lv_is_merging_origin(const struct logical_volume *origin)
+{
+	return origin->merging_snapshot ? 1 : 0;
+}
+
+struct lv_segment *find_merging_cow(const struct logical_volume *origin)
+{
+	return origin->merging_snapshot;
+}
+
+int lv_is_merging_cow(const struct logical_volume *snapshot)
+{
+	/* NOTE: use of find_cow() rather than find_merging_cow() */
+	return (find_cow(snapshot)->status & SNAPSHOT_MERGE) ? 1 : 0;
+}
 
 /* Given a cow LV, return the snapshot lv_segment that uses it */
 struct lv_segment *find_cow(const struct logical_volume *lv)
@@ -106,6 +121,13 @@ void init_snapshot_merge(struct lv_segment *cow_seg,
 	origin->merging_snapshot = cow_seg;
 }
 
+void clear_snapshot_merge(struct logical_volume *origin)
+{
+	/* clear merge attributes */
+	origin->merging_snapshot->status &= ~SNAPSHOT_MERGE;
+	origin->merging_snapshot = NULL;
+}
+
 int vg_add_snapshot(struct logical_volume *origin,
 		    struct logical_volume *cow, union lvid *lvid,
 		    uint32_t extent_count, uint32_t chunk_size)
@@ -143,10 +165,12 @@ int vg_add_snapshot(struct logical_volume *origin,
 
 int vg_remove_snapshot(struct logical_volume *cow)
 {
+	struct logical_volume *origin = origin_from_cow(cow);
+
 	dm_list_del(&cow->snapshot->origin_list);
-	cow->snapshot->origin->origin_count--;
-	if (cow->snapshot->origin->merging_snapshot == cow->snapshot)
-		cow->snapshot->origin->merging_snapshot = NULL;
+	origin->origin_count--;
+	if (find_merging_cow(origin) == find_cow(cow))
+		clear_snapshot_merge(origin_from_cow(cow));
 
 	if (!lv_remove(cow->snapshot->lv)) {
 		log_error("Failed to remove internal snapshot LV %s",

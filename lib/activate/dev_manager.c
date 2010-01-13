@@ -947,19 +947,20 @@ static int _add_snapshot_merge_target_to_dtree(struct dev_manager *dm,
 					       struct logical_volume *lv)
 {
 	const char *origin_dlid, *cow_dlid, *merge_dlid;
+	struct lv_segment *merging_cow_seg = find_merging_cow(lv);
 
 	if (!(origin_dlid = build_dlid(dm, lv->lvid.s, "real")))
 		return_0;
 
-	if (!(cow_dlid = build_dlid(dm, lv->merging_snapshot->cow->lvid.s, "cow")))
+	if (!(cow_dlid = build_dlid(dm, merging_cow_seg->cow->lvid.s, "cow")))
 		return_0;
 
-	if (!(merge_dlid = build_dlid(dm, lv->merging_snapshot->cow->lvid.s, NULL)))
+	if (!(merge_dlid = build_dlid(dm, merging_cow_seg->cow->lvid.s, NULL)))
 		return_0;
 
 	if (!dm_tree_node_add_snapshot_merge_target(dnode, lv->size, origin_dlid,
 						    cow_dlid, merge_dlid,
-						    lv->merging_snapshot->chunk_size))
+						    merging_cow_seg->chunk_size))
 		return_0;
 
 	return 1;
@@ -979,7 +980,8 @@ static int _add_snapshot_target_to_dtree(struct dev_manager *dm,
 		return 0;
 	}
 
-	if (snap_seg->status & SNAPSHOT_MERGE)
+	/* cow is to be merged so skip adding it */
+	if (lv_is_merging_cow(lv))
 		return 1;
 
 	if (!(origin_dlid = build_dlid(dm, snap_seg->origin->lvid.s, "real")))
@@ -1055,9 +1057,9 @@ static int _add_segment_to_dtree(struct dev_manager *dm,
 			log_error("Clustered snapshots are not yet supported");
 			return 0;
 		}
-		if (seg->lv->merging_snapshot) {
+		if (lv_is_merging_origin(seg->lv)) {
 			if (!_add_new_lv_to_dtree(dm, dtree,
-			     seg->lv->merging_snapshot->cow, "cow"))
+			     find_merging_cow(seg->lv)->cow, "cow"))
 				return_0;
 			/*
 			 * Must also add "real" LV for use when
@@ -1080,7 +1082,7 @@ static int _add_segment_to_dtree(struct dev_manager *dm,
 
 	/* Now we've added its dependencies, we can add the target itself */
 	if (lv_is_origin(seg->lv) && !layer) {
-		if (!seg->lv->merging_snapshot) {
+		if (!lv_is_merging_origin(seg->lv)) {
 			if (!_add_origin_target_to_dtree(dm, dnode, seg->lv))
 				return_0;
 		} else {
@@ -1115,7 +1117,7 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	uint32_t read_ahead_flags = UINT32_C(0);
 	uint16_t udev_flags = 0;
 
-	if (lv_is_origin(lv) && lv->merging_snapshot && !layer) {
+	if (lv_is_origin(lv) && lv_is_merging_origin(lv) && !layer) {
 		/*
 		 * Clear merge attributes if merge isn't currently possible:
 		 * either origin or merging snapshot are open
@@ -1125,18 +1127,15 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		 */
 		if ((dev_manager_info(dm->mem, NULL, lv,
 				      0, 1, 0, &dinfo, NULL) && dinfo.open_count) ||
-		    (dev_manager_info(dm->mem, NULL, lv->merging_snapshot->cow,
+		    (dev_manager_info(dm->mem, NULL, find_merging_cow(lv)->cow,
 				      0, 1, 0, &dinfo, NULL) && dinfo.open_count)) {
-			if (!_lv_has_target_type(dm, lv, NULL, "snapshot-merge")) {
-				/* clear merge attributes */
-				lv->merging_snapshot->status &= ~SNAPSHOT_MERGE;
-				lv->merging_snapshot = NULL;
-			}
+			if (!_lv_has_target_type(dm, lv, NULL, "snapshot-merge"))
+				clear_snapshot_merge(lv);
 		}
 	}
 
 	lv_name = lv->name;
-	if (lv_is_cow(lv) && find_cow(lv)->status & SNAPSHOT_MERGE) {
+	if (lv_is_cow(lv) && lv_is_merging_cow(lv)) {
 		if (layer) {
 			/*
 			 * use origin's name as basis for snapshot-merge device names;
