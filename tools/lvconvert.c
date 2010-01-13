@@ -1117,6 +1117,7 @@ static int lvconvert_merge(struct cmd_context *cmd,
 			   struct lvconvert_params *lp)
 {
 	int r = 0;
+	int merge_on_activate = 0;
 	struct logical_volume *origin = origin_from_cow(lv);
 	struct lv_segment *cow_seg = find_cow(lv);
 	struct lvinfo info;
@@ -1134,7 +1135,9 @@ static int lvconvert_merge(struct cmd_context *cmd,
 
 	/*
 	 * Prevent merge with open device(s) as it would likely lead
-	 * to application/filesystem failure.
+	 * to application/filesystem failure.  Merge on origin's next
+	 * activation if either the origin or snapshot LV are currently
+	 * open.
 	 *
 	 * FIXME testing open_count is racey; snapshot-merge target's
 	 * constructor and DM should prevent appropriate devices from
@@ -1143,13 +1146,13 @@ static int lvconvert_merge(struct cmd_context *cmd,
 	if (lv_info(cmd, origin, &info, 1, 0)) {
 		if (info.open_count) {
 			log_error("Can't merge over open origin volume");
-			return 0;
+			merge_on_activate = 1;
 		}
 	}
 	if (lv_info(cmd, lv, &info, 1, 0)) {
 		if (info.open_count) {
-			log_error("Can't merge when snapshot is open");
-			return 0;
+			log_print("Can't merge when snapshot is open");
+			merge_on_activate = 1;
 		}
 	}
 
@@ -1158,6 +1161,16 @@ static int lvconvert_merge(struct cmd_context *cmd,
 	/* store vg on disk(s) */
 	if (!vg_write(lv->vg))
 		return_0;
+
+	if (merge_on_activate) {
+		/* commit vg but skip starting the merge */
+		if (!vg_commit(lv->vg))
+			return_0;
+		r = 1;
+		log_print("Merging of snapshot %s will start "
+			  "next activation.", lv->name);
+		goto out;
+	}
 
 	/* Perform merge */
 	if (!suspend_lv(cmd, origin)) {

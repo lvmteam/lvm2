@@ -327,6 +327,52 @@ static int _status(const char *name, const char *uuid,
 	return 0;
 }
 
+static int _lv_has_target_type(struct dev_manager *dm,
+			       struct logical_volume *lv,
+			       const char *layer,
+			       const char *target_type)
+{
+	int r = 0;
+	char *dlid;
+	struct dm_task *dmt;
+	struct dm_info info;
+	void *next = NULL;
+	uint64_t start, length;
+	char *type = NULL;
+	char *params = NULL;
+
+	if (!(dlid = build_dlid(dm, lv->lvid.s, layer)))
+		return_0;
+
+	if (!(dmt = _setup_task(NULL, dlid, 0,
+				DM_DEVICE_STATUS, 0, 0)))
+		return_0;
+
+	if (!dm_task_no_open_count(dmt))
+		log_error("Failed to disable open_count");
+
+	if (!dm_task_run(dmt))
+		goto_out;
+
+	if (!dm_task_get_info(dmt, &info) || !info.exists)
+		goto_out;
+
+	do {
+		next = dm_get_next_target(dmt, next, &start, &length,
+					  &type, &params);
+		if (type && strncmp(type, target_type,
+				    strlen(target_type)) == 0) {
+			if (info.live_table && !info.inactive_table)
+				r = 1;
+			break;
+		}
+	} while (next);
+
+ out:
+	dm_task_destroy(dmt);
+	return r;
+}
+
 static percent_range_t _combine_percent_ranges(percent_range_t a,
 					       percent_range_t b)
 {
@@ -1062,11 +1108,32 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	struct lv_segment *seg;
 	struct lv_layer *lvlayer;
 	struct dm_tree_node *dnode;
+	struct dm_info dinfo;
 	char *name, *dlid, *lv_name;
 	uint32_t max_stripe_size = UINT32_C(0);
 	uint32_t read_ahead = lv->read_ahead;
 	uint32_t read_ahead_flags = UINT32_C(0);
 	uint16_t udev_flags = 0;
+
+	if (lv_is_origin(lv) && lv->merging_snapshot && !layer) {
+		/*
+		 * Clear merge attributes if merge isn't currently possible:
+		 * either origin or merging snapshot are open
+		 * - must refresh info's open_count, so using the tree's
+		 *   existing nodes' info isn't an option
+		 * - but use "snapshot-merge" if it is already being used
+		 */
+		if ((dev_manager_info(dm->mem, NULL, lv,
+				      0, 1, 0, &dinfo, NULL) && dinfo.open_count) ||
+		    (dev_manager_info(dm->mem, NULL, lv->merging_snapshot->cow,
+				      0, 1, 0, &dinfo, NULL) && dinfo.open_count)) {
+			if (!_lv_has_target_type(dm, lv, NULL, "snapshot-merge")) {
+				/* clear merge attributes */
+				lv->merging_snapshot->status &= ~SNAPSHOT_MERGE;
+				lv->merging_snapshot = NULL;
+			}
+		}
+	}
 
 	lv_name = lv->name;
 	if (lv_is_cow(lv) && find_cow(lv)->status & SNAPSHOT_MERGE) {
