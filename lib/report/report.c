@@ -305,8 +305,12 @@ static int _lvstatus_disp(struct dm_report *rh __attribute((unused)), struct dm_
 	else if (lv->status & VIRTUAL)
 		repstr[0] = 'v';
 	/* Origin takes precedence over Mirror */
-	else if (lv_is_origin(lv))
-		repstr[0] = 'o';
+	else if (lv_is_origin(lv)) {
+		if (lv->merging_snapshot)
+			repstr[0] = 'O';
+		else
+			repstr[0] = 'o';
+	}
 	else if (lv->status & MIRRORED) {
 		if (lv->status & MIRROR_NOTSYNCED)
 			repstr[0] = 'M';
@@ -319,9 +323,12 @@ static int _lvstatus_disp(struct dm_report *rh __attribute((unused)), struct dm_
 			repstr[0] = 'I';
 	else if (lv->status & MIRROR_LOG)
 		repstr[0] = 'l';
-	else if (lv_is_cow(lv))
-		repstr[0] = 's';
-	else
+	else if (lv_is_cow(lv)) {
+		if (find_cow(lv)->status & SNAPSHOT_MERGE)
+			repstr[0] = 'S';
+		else
+			repstr[0] = 's';
+	} else
 		repstr[0] = '-';
 
 	if (lv->status & PVMOVE)
