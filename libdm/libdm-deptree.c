@@ -35,6 +35,7 @@ enum {
 	SEG_MIRRORED,
 	SEG_SNAPSHOT,
 	SEG_SNAPSHOT_ORIGIN,
+	SEG_SNAPSHOT_MERGE,
 	SEG_STRIPED,
 	SEG_ZERO,
 };
@@ -51,6 +52,7 @@ struct {
 	{ SEG_MIRRORED, "mirror" },
 	{ SEG_SNAPSHOT, "snapshot" },
 	{ SEG_SNAPSHOT_ORIGIN, "snapshot-origin" },
+	{ SEG_SNAPSHOT_MERGE, "snapshot-merge" },
 	{ SEG_STRIPED, "striped" },
 	{ SEG_ZERO, "zero"},
 };
@@ -81,6 +83,7 @@ struct load_segment {
 	uint32_t chunk_size;		/* Snapshot */
 	struct dm_tree_node *cow;	/* Snapshot */
 	struct dm_tree_node *origin;	/* Snapshot + Snapshot origin */
+	struct dm_tree_node *merge;	/* Snapshot */
 
 	struct dm_tree_node *log;	/* Mirror */
 	uint32_t region_size;		/* Mirror */
@@ -1179,7 +1182,7 @@ int dm_tree_activate_children(struct dm_tree_node *dnode,
 
 	handle = NULL;
 
-	for (priority = 0; priority < 2; priority++) {
+	for (priority = 0; priority < 3; priority++) {
 		while ((child = dm_tree_next_child(&handle, dnode, 0))) {
 			if (!(uuid = dm_tree_node_get_uuid(child))) {
 				stack;
@@ -1471,6 +1474,7 @@ static int _emit_segment_line(struct dm_task *dmt, uint32_t major,
 			return_0;
 		break;
 	case SEG_SNAPSHOT:
+	case SEG_SNAPSHOT_MERGE:
 		if (!_build_dev_string(originbuf, sizeof(originbuf), seg->origin))
 			return_0;
 		if (!_build_dev_string(cowbuf, sizeof(cowbuf), seg->cow))
@@ -1499,6 +1503,7 @@ static int _emit_segment_line(struct dm_task *dmt, uint32_t major,
 	case SEG_ERROR:
 	case SEG_SNAPSHOT:
 	case SEG_SNAPSHOT_ORIGIN:
+	case SEG_SNAPSHOT_MERGE:
 	case SEG_ZERO:
 		break;
 	case SEG_CRYPT:
@@ -1735,6 +1740,7 @@ static struct load_segment *_add_segment(struct dm_tree_node *dnode, unsigned ty
 	seg->chunk_size = 0;
 	seg->cow = NULL;
 	seg->origin = NULL;
+	seg->merge = NULL;
 
 	dm_list_add(&dnode->props.segs, &seg->list);
 	dnode->props.segment_count++;
@@ -1767,17 +1773,21 @@ int dm_tree_node_add_snapshot_origin_target(struct dm_tree_node *dnode,
 	return 1;
 }
 
-int dm_tree_node_add_snapshot_target(struct dm_tree_node *node,
-                                        uint64_t size,
-                                        const char *origin_uuid,
-                                        const char *cow_uuid,
-                                        int persistent,
-                                        uint32_t chunk_size)
+static int _add_snapshot_target(struct dm_tree_node *node,
+				   uint64_t size,
+				   const char *origin_uuid,
+				   const char *cow_uuid,
+				   const char *merge_uuid,
+				   int persistent,
+				   uint32_t chunk_size)
 {
 	struct load_segment *seg;
-	struct dm_tree_node *origin_node, *cow_node;
+	struct dm_tree_node *origin_node, *cow_node, *merge_node;
+	unsigned seg_type;
 
-	if (!(seg = _add_segment(node, SEG_SNAPSHOT, size)))
+	seg_type = !merge_uuid ? SEG_SNAPSHOT : SEG_SNAPSHOT_MERGE;
+
+	if (!(seg = _add_segment(node, seg_type, size)))
 		return_0;
 
 	if (!(origin_node = dm_tree_find_node_by_uuid(node->dtree, origin_uuid))) {
@@ -1790,7 +1800,7 @@ int dm_tree_node_add_snapshot_target(struct dm_tree_node *node,
 		return_0;
 
 	if (!(cow_node = dm_tree_find_node_by_uuid(node->dtree, cow_uuid))) {
-		log_error("Couldn't find snapshot origin uuid %s.", cow_uuid);
+		log_error("Couldn't find snapshot COW device uuid %s.", cow_uuid);
 		return 0;
 	}
 
@@ -1801,7 +1811,47 @@ int dm_tree_node_add_snapshot_target(struct dm_tree_node *node,
 	seg->persistent = persistent ? 1 : 0;
 	seg->chunk_size = chunk_size;
 
+	if (merge_uuid) {
+		if (!(merge_node = dm_tree_find_node_by_uuid(node->dtree, merge_uuid))) {
+			/* not a pure error, merging snapshot may have been deactivated */
+			log_verbose("Couldn't find merging snapshot uuid %s.", merge_uuid);
+		} else {
+			seg->merge = merge_node;
+			/* must not link merging snapshot, would undermine activation_priority below */
+		}
+
+		/* Resume snapshot-merge (acting origin) after other snapshots */
+		node->activation_priority = 1;
+		if (seg->merge) {
+			/* Resume merging snapshot after snapshot-merge */
+			seg->merge->activation_priority = 2;
+		}
+	}
+
 	return 1;
+}
+
+
+int dm_tree_node_add_snapshot_target(struct dm_tree_node *node,
+				     uint64_t size,
+				     const char *origin_uuid,
+				     const char *cow_uuid,
+				     int persistent,
+				     uint32_t chunk_size)
+{
+	return _add_snapshot_target(node, size, origin_uuid, cow_uuid,
+				    NULL, persistent, chunk_size);
+}
+
+int dm_tree_node_add_snapshot_merge_target(struct dm_tree_node *node,
+					   uint64_t size,
+					   const char *origin_uuid,
+					   const char *cow_uuid,
+					   const char *merge_uuid,
+					   uint32_t chunk_size)
+{
+	return _add_snapshot_target(node, size, origin_uuid, cow_uuid,
+				    merge_uuid, 1, chunk_size);
 }
 
 int dm_tree_node_add_error_target(struct dm_tree_node *node,

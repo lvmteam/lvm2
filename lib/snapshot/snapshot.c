@@ -130,17 +130,25 @@ static int _snap_target_percent(void **target_state __attribute((unused)),
 }
 
 static int _snap_target_present(struct cmd_context *cmd,
-				const struct lv_segment *seg __attribute((unused)),
+				const struct lv_segment *seg,
 				unsigned *attributes __attribute((unused)))
 {
 	static int _snap_checked = 0;
+	static int _snap_merge_checked = 0;
 	static int _snap_present = 0;
+	static int _snap_merge_present = 0;
 
-	if (!_snap_checked)
+	if (!_snap_checked) {
 		_snap_present = target_present(cmd, "snapshot", 1) &&
 		    target_present(cmd, "snapshot-origin", 0);
+		_snap_checked = 1;
+	}
 
-	_snap_checked = 1;
+	if (!_snap_merge_checked && seg && (seg->status & SNAPSHOT_MERGE)) {
+		_snap_merge_present = target_present(cmd, "snapshot-merge", 0);
+		_snap_merge_checked = 1;
+		return _snap_present && _snap_merge_present;
+	}
 
 	return _snap_present;
 }

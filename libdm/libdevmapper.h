@@ -394,6 +394,12 @@ int dm_tree_node_add_snapshot_target(struct dm_tree_node *node,
 					const char *cow_uuid,
 					int persistent,
 					uint32_t chunk_size);
+int dm_tree_node_add_snapshot_merge_target(struct dm_tree_node *node,
+					     uint64_t size,
+					     const char *origin_uuid,
+					     const char *cow_uuid,
+					     const char *merge_uuid,
+					     uint32_t chunk_size);
 int dm_tree_node_add_error_target(struct dm_tree_node *node,
 				     uint64_t size);
 int dm_tree_node_add_zero_target(struct dm_tree_node *node,
