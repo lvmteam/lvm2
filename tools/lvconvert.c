@@ -1058,6 +1058,7 @@ static int lvconvert_merge(struct cmd_context *cmd,
 	int r = 0;
 	struct logical_volume *origin = origin_from_cow(lv);
 	struct lv_segment *cow_seg = find_cow(lv);
+	struct lvinfo info;
 
 	/* Check if merge is possible */
 	if (cow_seg->status & SNAPSHOT_MERGE) {
@@ -1068,6 +1069,27 @@ static int lvconvert_merge(struct cmd_context *cmd,
 		log_error("Snapshot %s is already merging into the origin",
 			  origin->merging_snapshot->cow->name);
 		return 0;
+	}
+
+	/*
+	 * Prevent merge with open device(s) as it would likely lead
+	 * to application/filesystem failure.
+	 *
+	 * FIXME testing open_count is racey; snapshot-merge target's
+	 * constructor and DM should prevent appropriate devices from
+	 * being open.
+	 */
+	if (lv_info(cmd, origin, &info, 1, 0)) {
+		if (info.open_count) {
+			log_error("Can't merge over open origin volume");
+			return 0;
+		}
+	}
+	if (lv_info(cmd, lv, &info, 1, 0)) {
+		if (info.open_count) {
+			log_error("Can't merge when snapshot is open");
+			return 0;
+		}
 	}
 
 	init_snapshot_merge(cow_seg, origin);
