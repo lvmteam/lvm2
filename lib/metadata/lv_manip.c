@@ -2140,18 +2140,27 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	/* store it on disks */
-	if (!vg_write(vg) || !vg_commit(vg))
+	if (!vg_write(vg))
 		return_0;
-
-	backup(vg);
 
 	/* If no snapshots left or if we stopped merging, reload */
 	if (origin && (!lv_is_origin(origin) || was_merging)) {
-		if (!suspend_lv(cmd, origin))
+		if (!suspend_lv(cmd, origin)) {
 			log_error("Failed to refresh %s without snapshot.", origin->name);
-		else if (!resume_lv(cmd, origin))
+			return 0;
+		}
+		if (!vg_commit(vg))
+			return_0;
+		if (!resume_lv(cmd, origin)) {
 			log_error("Failed to resume %s.", origin->name);
+			return 0;
+		}
+	} else {
+		if (!vg_commit(vg))
+			return_0;
 	}
+
+	backup(vg);
 
 	if (lv_is_visible(lv))
 		log_print("Logical volume \"%s\" successfully removed", lv->name);
