@@ -68,12 +68,12 @@ static int _poll_lvs_in_vg(struct cmd_context *cmd,
 		else
 			lv_active = info.exists;
 
-		if (!lv_active ||
-		    !(lv->status & (PVMOVE|CONVERTING)))
-			continue;
-
-		lv_spawn_background_polling(cmd, lv);
-		count++;
+		if (lv_active &&
+		    (lv->status & (PVMOVE|CONVERTING) ||
+		     lv->merging_snapshot)) {
+			lv_spawn_background_polling(cmd, lv);
+			count++;
+		}
 	}
 
 	/*
@@ -140,7 +140,8 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd,
 
 		if (background_polling() &&
 		    activate != CHANGE_AN && activate != CHANGE_ALN &&
-		    (lv->status & (PVMOVE|CONVERTING)))
+		    (lv->status & (PVMOVE|CONVERTING) ||
+		     lv->merging_snapshot))
 			lv_spawn_background_polling(cmd, lv);
 
 		count++;
