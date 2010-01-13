@@ -25,7 +25,7 @@ int lv_is_origin(const struct logical_volume *lv)
 
 int lv_is_cow(const struct logical_volume *lv)
 {
-	return lv->snapshot ? 1 : 0;
+	return (!lv_is_origin(lv) && lv->snapshot) ? 1 : 0;
 }
 
 int lv_is_visible(const struct logical_volume *lv)
@@ -53,18 +53,21 @@ int lv_is_virtual_origin(const struct logical_volume *lv)
 
 int lv_is_merging_origin(const struct logical_volume *origin)
 {
-	return origin->merging_snapshot ? 1 : 0;
+	return (origin->status & MERGING) ? 1 : 0;
 }
 
 struct lv_segment *find_merging_cow(const struct logical_volume *origin)
 {
-	return origin->merging_snapshot;
+	/* FIXME: eliminate this wrapper and just use find_cow()?
+	 * - find_merging_cow() adds to code clarity in caller
+	 */
+	return find_cow(origin);
 }
 
 int lv_is_merging_cow(const struct logical_volume *snapshot)
 {
-	/* NOTE: use of find_cow() rather than find_merging_cow() */
-	return (find_cow(snapshot)->status & SNAPSHOT_MERGE) ? 1 : 0;
+	/* checks lv_segment's status to see if cow is merging */
+	return (find_cow(snapshot)->status & MERGING) ? 1 : 0;
 }
 
 /* Given a cow LV, return the snapshot lv_segment that uses it */
@@ -117,15 +120,17 @@ void init_snapshot_merge(struct lv_segment *cow_seg,
 	 *   merge metadata (cow_seg->lv is now "internal")
 	 */
 	cow_seg->lv->status &= ~VISIBLE_LV;
-	cow_seg->status |= SNAPSHOT_MERGE;
-	origin->merging_snapshot = cow_seg;
+	cow_seg->status |= MERGING;
+	origin->snapshot = cow_seg;
+	origin->status |= MERGING;
 }
 
 void clear_snapshot_merge(struct logical_volume *origin)
 {
 	/* clear merge attributes */
-	origin->merging_snapshot->status &= ~SNAPSHOT_MERGE;
-	origin->merging_snapshot = NULL;
+	origin->snapshot->status &= ~MERGING;
+	origin->snapshot = NULL;
+	origin->status &= ~MERGING;
 }
 
 int vg_add_snapshot(struct logical_volume *origin,

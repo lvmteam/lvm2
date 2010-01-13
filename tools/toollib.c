@@ -1307,7 +1307,7 @@ void lv_spawn_background_polling(struct cmd_context *cmd,
 		pvmove_poll(cmd, pvname, 1);
 	}
 
-	if (lv->status & CONVERTING || lv_is_merging_origin(lv)) {
+	if (lv->status & (CONVERTING|MERGING)) {
 		log_verbose("Spawning background lvconvert process for %s",
 			lv->name);
 		lvconvert_poll(cmd, lv, 1);
