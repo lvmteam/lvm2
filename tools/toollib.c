@@ -1261,6 +1261,18 @@ int lv_refresh(struct cmd_context *cmd, struct logical_volume *lv)
 	if (!r)
 		goto_out;
 
+	/*
+	 * check if snapshot merge should be polled
+	 * - unfortunately: even though the dev_manager will clear
+	 *   the lv's merge attributes if a merge is not possible;
+	 *   it is clearing a different instance of the lv (as
+	 *   retrieved with lv_from_lvid)
+	 * - fortunately: polldaemon will immediately shutdown if the
+	 *   origin doesn't have a status with a snapshot percentage
+	 */
+	if (background_polling() && lv_is_origin(lv) && lv->merging_snapshot)
+		lv_spawn_background_polling(cmd, lv);
+
 out:
 	return r;
 }
@@ -1295,7 +1307,7 @@ void lv_spawn_background_polling(struct cmd_context *cmd,
 		pvmove_poll(cmd, pvname, 1);
 	}
 
-	if (lv->status & CONVERTING) {
+	if (lv->status & CONVERTING || lv->merging_snapshot) {
 		log_verbose("Spawning background lvconvert process for %s",
 			lv->name);
 		lvconvert_poll(cmd, lv, 1);
