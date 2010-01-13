@@ -37,7 +37,7 @@ static int _snap_text_import(struct lv_segment *seg, const struct config_node *s
 	uint32_t chunk_size;
 	const char *org_name, *cow_name;
 	struct logical_volume *org, *cow;
-	int old_suppress;
+	int old_suppress, merge = 0;
 
 	if (!get_config_uint32(sn, "chunk_size", &chunk_size)) {
 		log_error("Couldn't read chunk size for snapshot.");
@@ -46,7 +46,10 @@ static int _snap_text_import(struct lv_segment *seg, const struct config_node *s
 
 	old_suppress = log_suppress(1);
 
-	if (!(cow_name = find_config_str(sn, "cow_store", NULL))) {
+	cow_name = find_config_str(sn, "merging_store", NULL);
+	if (cow_name) {
+		merge = 1;
+	} else if (!(cow_name = find_config_str(sn, "cow_store", NULL))) {
 		log_suppress(old_suppress);
 		log_error("Snapshot cow storage not specified.");
 		return 0;
@@ -72,7 +75,7 @@ static int _snap_text_import(struct lv_segment *seg, const struct config_node *s
 		return 0;
 	}
 
-	init_snapshot_seg(seg, org, cow, chunk_size);
+	init_snapshot_seg(seg, org, cow, chunk_size, merge);
 
 	return 1;
 }
@@ -81,7 +84,10 @@ static int _snap_text_export(const struct lv_segment *seg, struct formatter *f)
 {
 	outf(f, "chunk_size = %u", seg->chunk_size);
 	outf(f, "origin = \"%s\"", seg->origin->name);
-	outf(f, "cow_store = \"%s\"", seg->cow->name);
+	if (!(seg->status & SNAPSHOT_MERGE))
+		outf(f, "cow_store = \"%s\"", seg->cow->name);
+	else
+		outf(f, "merging_store = \"%s\"", seg->cow->name);
 
 	return 1;
 }

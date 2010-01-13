@@ -1877,6 +1877,7 @@ struct logical_volume *alloc_lv(struct dm_pool *mem)
 	}
 
 	lv->snapshot = NULL;
+	lv->merging_snapshot = NULL;
 	dm_list_init(&lv->snapshot_segs);
 	dm_list_init(&lv->segments);
 	dm_list_init(&lv->tags);
@@ -2939,6 +2940,11 @@ int lv_create_single(struct volume_group *vg,
 			if (org->status & LOCKED) {
 				log_error("Snapshots of locked devices are not "
 					  "supported yet");
+				return 0;
+			}
+			if (org->merging_snapshot) {
+				log_error("Snapshots of an origin that has a "
+					  "merging snapshot is not supported");
 				return 0;
 			}
 			if ((org->status & MIRROR_IMAGE) ||
