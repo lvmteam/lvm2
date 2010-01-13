@@ -186,7 +186,8 @@ void reset_locking(void)
 	_vg_lock_count = 0;
 	_vg_write_lock_held = 0;
 
-	_locking.reset_locking();
+	if (_locking.reset_locking)
+		_locking.reset_locking();
 
 	if (was_locked)
 		_unblock_signals();
