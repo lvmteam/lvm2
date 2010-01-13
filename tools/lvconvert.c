@@ -377,7 +377,7 @@ static int _finish_lvconvert_merge(struct cmd_context *cmd,
 				   struct logical_volume *lv,
 				   struct dm_list *lvs_changed __attribute((unused)))
 {
-	struct lv_segment *snap_seg = lv->merging_snapshot;
+	struct lv_segment *snap_seg = find_merging_cow(lv);
 	if (!snap_seg) {
 		log_error("Logical volume %s has no merging snapshot.", lv->name);
 		return 0;
@@ -450,7 +450,7 @@ int lvconvert_poll(struct cmd_context *cmd, struct logical_volume *lv,
 
 	memcpy(uuid, &lv->lvid, sizeof(lv->lvid));
 
-	if (!lv->merging_snapshot)
+	if (!lv_is_merging_origin(lv))
 		return poll_daemon(cmd, lv_full_name, uuid, background, 0,
 				   &_lvconvert_mirror_fns, "Converted");
 	else
@@ -1123,13 +1123,13 @@ static int lvconvert_merge(struct cmd_context *cmd,
 	struct lvinfo info;
 
 	/* Check if merge is possible */
-	if (cow_seg->status & SNAPSHOT_MERGE) {
+	if (lv_is_merging_cow(lv)) {
 		log_error("Snapshot %s is already merging", lv->name);
 		return 0;
 	}
-	if (origin->merging_snapshot) {
+	if (lv_is_merging_origin(origin)) {
 		log_error("Snapshot %s is already merging into the origin",
-			  origin->merging_snapshot->cow->name);
+			  find_merging_cow(origin)->cow->name);
 		return 0;
 	}
 

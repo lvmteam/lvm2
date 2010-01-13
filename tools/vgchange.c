@@ -70,7 +70,7 @@ static int _poll_lvs_in_vg(struct cmd_context *cmd,
 
 		if (lv_active &&
 		    (lv->status & (PVMOVE|CONVERTING) ||
-		     lv->merging_snapshot)) {
+		     lv_is_merging_origin(lv))) {
 			lv_spawn_background_polling(cmd, lv);
 			count++;
 		}
@@ -141,7 +141,7 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd,
 		if (background_polling() &&
 		    activate != CHANGE_AN && activate != CHANGE_ALN &&
 		    (lv->status & (PVMOVE|CONVERTING) ||
-		     lv->merging_snapshot))
+		     lv_is_merging_origin(lv)))
 			lv_spawn_background_polling(cmd, lv);
 
 		count++;

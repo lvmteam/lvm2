@@ -2127,7 +2127,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 	if (lv_is_cow(lv)) {
 		origin = origin_from_cow(lv);
-		was_merging = !!origin->merging_snapshot;
+		was_merging = lv_is_merging_origin(origin);
 		log_verbose("Removing snapshot %s", lv->name);
 		if (!vg_remove_snapshot(lv))
 			return_0;
@@ -2953,7 +2953,7 @@ int lv_create_single(struct volume_group *vg,
 					  "supported yet");
 				return 0;
 			}
-			if (org->merging_snapshot) {
+			if (lv_is_merging_origin(org)) {
 				log_error("Snapshots of an origin that has a "
 					  "merging snapshot is not supported");
 				return 0;
