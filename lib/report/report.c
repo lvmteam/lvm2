@@ -1032,8 +1032,16 @@ static int _snpercent_disp(struct dm_report *rh __attribute((unused)), struct dm
 
 	if (!lv_snapshot_percent(lv, &snap_percent, &percent_range) ||
 				 (percent_range == PERCENT_INVALID)) {
-		*sortval = UINT64_C(100);
-		dm_report_field_set_value(field, "100.00", sortval);
+		if (!lv->merging_snapshot) {
+			*sortval = UINT64_C(100);
+			dm_report_field_set_value(field, "100.00", sortval);
+		} else {
+			/* onactivate merge that hasn't started yet would
+			 * otherwise display incorrect snap% in origin
+			 */
+			*sortval = UINT64_C(0);
+			dm_report_field_set_value(field, "", sortval);
+		}
 		return 1;
 	}
 
