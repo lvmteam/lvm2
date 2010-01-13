@@ -18,6 +18,7 @@
 
 struct lvconvert_params {
 	int snapshot;
+	int merge;
 	int zero;
 
 	const char *origin;
@@ -52,7 +53,7 @@ static int _lvconvert_name_params(struct lvconvert_params *lp,
 	char *ptr;
 	const char *vg_name = NULL;
 
-	if (lp->snapshot) {
+	if (lp->snapshot && !lp->merge) {
 		if (!*pargc) {
 			log_error("Please specify a logical volume to act as "
 				  "the snapshot origin.");
@@ -102,6 +103,11 @@ static int _lvconvert_name_params(struct lvconvert_params *lp,
 	if (!apply_lvname_restrictions(lp->lv_name))
 		return_0;
 
+	if (*pargc && (lp->snapshot || lp->merge)) {
+		log_error("Too many arguments provided for snapshots");
+		return 0;
+	}
+
 	return 1;
 }
 
@@ -113,10 +119,10 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 
 	memset(lp, 0, sizeof(*lp));
 
-	if (arg_count(cmd, snapshot_ARG) &&
+	if ((arg_count(cmd, snapshot_ARG) || arg_count(cmd, merge_ARG)) &&
 	    (arg_count(cmd, mirrorlog_ARG) || arg_count(cmd, mirrors_ARG) ||
 	     arg_count(cmd, repair_ARG))) {
-		log_error("--snapshot argument cannot be mixed "
+		log_error("--snapshot or --merge argument cannot be mixed "
 			  "with --mirrors, --repair or --log");
 		return 0;
 	}
@@ -126,6 +132,11 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 
 	if (arg_count(cmd, snapshot_ARG))
 		lp->snapshot = 1;
+
+	if (arg_count(cmd, snapshot_ARG) && arg_count(cmd, merge_ARG)) {
+		log_error("--snapshot and --merge are mutually exclusive");
+		return 0;
+	}
 
 	if (arg_count(cmd, splitmirrors_ARG) && arg_count(cmd, mirrors_ARG)) {
 		log_error("--mirrors and --splitmirrors are "
@@ -163,6 +174,9 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 		return 0;
 	}
 
+	if (arg_count(cmd, merge_ARG))
+		lp->merge = 1;
+
 	if (arg_count(cmd, mirrors_ARG)) {
 		/*
 		 * --splitmirrors has been chosen as the mechanism for
@@ -175,7 +189,18 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 
 	lp->alloc = arg_uint_value(cmd, alloc_ARG, ALLOC_INHERIT);
 
-	if (lp->snapshot) {
+	if (lp->merge) {
+		if (arg_count(cmd, regionsize_ARG) || arg_count(cmd, chunksize_ARG) ||
+		    arg_count(cmd, zero_ARG) || arg_count(cmd, regionsize_ARG)) {
+			log_error("Only --background and --interval are valid "
+				  "arguments for snapshot merge");
+			return 0;
+		}
+
+		if (!(lp->segtype = get_segtype_from_string(cmd, "snapshot")))
+			return_0;
+
+	} else if (lp->snapshot) {
 		if (arg_count(cmd, regionsize_ARG)) {
 			log_error("--regionsize is only available with mirrors");
 			return 0;
@@ -1026,6 +1051,61 @@ out:
 	return r;
 }
 
+static int lvconvert_merge(struct cmd_context *cmd,
+			   struct logical_volume *lv,
+			   struct lvconvert_params *lp)
+{
+	int r = 0;
+	struct logical_volume *origin = origin_from_cow(lv);
+	struct lv_segment *cow_seg = find_cow(lv);
+
+	/* Check if merge is possible */
+	if (cow_seg->status & SNAPSHOT_MERGE) {
+		log_error("Snapshot %s is already merging", lv->name);
+		return 0;
+	}
+	if (origin->merging_snapshot) {
+		log_error("Snapshot %s is already merging into the origin",
+			  origin->merging_snapshot->cow->name);
+		return 0;
+	}
+
+	init_snapshot_merge(cow_seg, origin);
+
+	/* store vg on disk(s) */
+	if (!vg_write(lv->vg))
+		return_0;
+
+	/* Perform merge */
+	if (!suspend_lv(cmd, origin)) {
+		log_error("Failed to suspend origin %s", origin->name);
+		vg_revert(lv->vg);
+		goto out;
+	}
+
+	if (!vg_commit(lv->vg)) {
+		if (!resume_lv(cmd, origin))
+			stack;
+		goto_out;
+	}
+
+	if (!resume_lv(cmd, origin)) {
+		log_error("Failed to reactivate origin %s", origin->name);
+		goto out;
+	}
+
+	if (!deactivate_lv(cmd, lv)) {
+		log_warn("WARNING: Unable to deactivate merging snapshot %s", lv->name);
+		/* merge is running regardless of this deactivation failure */
+	}
+
+	r = 1;
+	log_print("Merging of volume %s started.", lv->name);
+out:
+	backup(lv->vg);
+	return r;
+}
+
 static int lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 			    void *handle)
 {
@@ -1036,7 +1116,7 @@ static int lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return ECMD_FAILED;
 	}
 
-	if (lv_is_cow(lv)) {
+	if (lv_is_cow(lv) && !lp->merge) {
 		log_error("Can't convert snapshot logical volume \"%s\"",
 			  lv->name);
 		return ECMD_FAILED;
@@ -1052,7 +1132,21 @@ static int lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return ECMD_FAILED;
 	}
 
-	if (lp->snapshot) {
+	if (lp->merge) {
+		if (!lv_is_cow(lv)) {
+			log_error("Logical volume \"%s\" is not a snapshot",
+				  lv->name);
+			return ECMD_FAILED;
+		}
+		if (!archive(lv->vg)) {
+			stack;
+			return ECMD_FAILED;
+		}
+		if (!lvconvert_merge(cmd, lv, lp)) {
+			stack;
+			return ECMD_FAILED;
+		}
+	} else if (lp->snapshot) {
 		if (lv->status & MIRRORED) {
 			log_error("Unable to convert mirrored LV \"%s\" into a snapshot.", lv->name);
 			return ECMD_FAILED;

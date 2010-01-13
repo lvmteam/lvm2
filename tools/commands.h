@@ -124,12 +124,21 @@ xx(lvconvert,
    "\t[-v|--verbose]\n"
    "\t[-Z|--zero {y|n}]\n"
    "\t[--version]" "\n"
-   "\tOriginalLogicalVolume[Path] SnapshotLogicalVolume[Path]\n",
+   "\tOriginalLogicalVolume[Path] SnapshotLogicalVolume[Path]\n\n"
+
+   "lvconvert "
+   "--merge\n"
+   "\t[-b|--background]\n"
+   "\t[-i|--interval seconds]\n"
+   "\t[-d|--debug]\n"
+   "\t[-h|-?|--help]\n"
+   "\t[-v|--verbose]\n"
+   "\tSnapshotLogicalVolume[Path]\n",
 
    alloc_ARG, background_ARG, chunksize_ARG, corelog_ARG, interval_ARG,
-   splitmirrors_ARG, name_ARG, mirrorlog_ARG, mirrors_ARG, noudevsync_ARG,
-   regionsize_ARG, repair_ARG, snapshot_ARG, test_ARG, use_policies_ARG,
-   yes_ARG, force_ARG, zero_ARG)
+   merge_ARG, mirrorlog_ARG, mirrors_ARG, name_ARG, noudevsync_ARG,
+   regionsize_ARG, repair_ARG, snapshot_ARG, splitmirrors_ARG, test_ARG,
+   use_policies_ARG, yes_ARG, force_ARG, zero_ARG)
 
 xx(lvcreate,
    "Create a logical volume",
