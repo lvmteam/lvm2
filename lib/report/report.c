@@ -1023,7 +1023,7 @@ static int _snpercent_disp(struct dm_report *rh __attribute((unused)), struct dm
 		return 0;
 	}
 
-	if (!lv_is_cow(lv) ||
+	if ((!lv_is_cow(lv) && !lv->merging_snapshot) ||
 	    (lv_info(lv->vg->cmd, lv, &info, 0, 0) && !info.exists)) {
 		*sortval = UINT64_C(0);
 		dm_report_field_set_value(field, "", sortval);
