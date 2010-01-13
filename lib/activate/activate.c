@@ -754,7 +754,7 @@ int monitor_dev_for_events(struct cmd_context *cmd,
 	 * In case of a snapshot device, we monitor lv->snapshot->lv,
 	 * not the actual LV itself.
 	 */
-	if (lv_is_cow(lv))
+	if (lv_is_cow(lv) && !(find_cow(lv)->status & SNAPSHOT_MERGE))
 		return monitor_dev_for_events(cmd, lv->snapshot->lv, monitor);
 
 	/*
