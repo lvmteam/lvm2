@@ -2142,6 +2142,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	if (!vg_write(vg))
 		return_0;
 
+	/* FIXME Seek a simpler way of dealing with this within the tree. */
 	/* If no snapshots left or if we stopped merging, reload */
 	if (origin && (!lv_is_origin(origin) || was_merging)) {
 		if (!suspend_lv(cmd, origin)) {
