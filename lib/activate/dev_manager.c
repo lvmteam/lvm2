@@ -327,6 +327,7 @@ static int _status(const char *name, const char *uuid,
 	return 0;
 }
 
+/* FIXME Is there anything simpler to check for instead? */
 static int _lv_has_target_type(struct dev_manager *dm,
 			       struct logical_volume *lv,
 			       const char *layer,
@@ -362,6 +363,7 @@ static int _lv_has_target_type(struct dev_manager *dm,
 					  &type, &params);
 		if (type && strncmp(type, target_type,
 				    strlen(target_type)) == 0) {
+			/* FIXME Why the inactive test? */
 			if (info.live_table && !info.inactive_table)
 				r = 1;
 			break;
@@ -447,6 +449,7 @@ static int _percent_run(struct dev_manager *dm, const char *name,
                  * - allows the situation when 'type' is "snapshot-merge" and
                  *   'target_type' is "snapshot"
                  */
+		/* FIXME Do this properly - relying on target prefixes is incorrect. (E.g. snapshot-origin)*/
 		if (!type || !params || strncmp(type, target_type, strlen(target_type)))
 			continue;
 
@@ -1051,7 +1054,7 @@ static int _add_segment_to_dtree(struct dev_manager *dm,
 		return_0;
 
 	/* If this is a snapshot origin, add real LV */
-	/* If this is a snapshot origin w/ merging snapshot, add cow and real LV */
+	/* If this is a snapshot origin + merging snapshot, add cow + real LV */
 	if (lv_is_origin(seg->lv) && !layer) {
 		if (vg_is_clustered(seg->lv->vg)) {
 			log_error("Clustered snapshots are not yet supported");
@@ -1117,6 +1120,8 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	uint32_t read_ahead_flags = UINT32_C(0);
 	uint16_t udev_flags = 0;
 
+	/* FIXME Seek a simpler way to lay out the snapshot-merge tree. */
+
 	if (lv_is_origin(lv) && lv_is_merging_origin(lv) && !layer) {
 		/*
 		 * Clear merge attributes if merge isn't currently possible:
@@ -1125,6 +1130,7 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		 *   existing nodes' info isn't an option
 		 * - but use "snapshot-merge" if it is already being used
 		 */
+		/* FIXME Avoid this - open_count is always returned by kernel now. */
 		if ((dev_manager_info(dm->mem, NULL, lv,
 				      0, 1, 0, &dinfo, NULL) && dinfo.open_count) ||
 		    (dev_manager_info(dm->mem, NULL, find_merging_cow(lv)->cow,

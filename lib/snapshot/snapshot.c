@@ -46,10 +46,10 @@ static int _snap_text_import(struct lv_segment *seg, const struct config_node *s
 
 	old_suppress = log_suppress(1);
 
-	cow_name = find_config_str(sn, "merging_store", NULL);
-	if (cow_name) {
+	/* FIXME Detect case of both merging_store and cow_store supplied */
+	if ((cow_name = find_config_str(sn, "merging_store", NULL)))
 		merge = 1;
-	} else if (!(cow_name = find_config_str(sn, "cow_store", NULL))) {
+	else if (!(cow_name = find_config_str(sn, "cow_store", NULL))) {
 		log_suppress(old_suppress);
 		log_error("Snapshot cow storage not specified.");
 		return 0;
