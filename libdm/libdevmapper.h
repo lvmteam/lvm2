@@ -754,7 +754,7 @@ struct dm_list *dm_list_next(const struct dm_list *head, const struct dm_list *e
  * contained in a structure of type t, return the containing structure.
  */
 #define dm_list_struct_base(v, t, head) \
-    ((t *)((uintptr_t)(v) - (uintptr_t)&((t *) 0)->head))
+    ((t *)((char*)(v) - (char*)&((t *) 0)->head))
 
 /*
  * Given the address v of an instance of 'struct dm_list list' contained in
