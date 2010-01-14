@@ -2852,8 +2852,6 @@ int lv_create_single(struct volume_group *vg,
 	uint64_t status = UINT64_C(0);
 	struct logical_volume *lv, *org = NULL;
 	int origin_active = 0;
-	char lv_name_buf[128];
-	const char *lv_name;
 	struct lvinfo info;
 
 	if (lp->lv_name && find_lv_in_vg(vg, lp->lv_name)) {
@@ -3008,16 +3006,6 @@ int lv_create_single(struct volume_group *vg,
 	if (!archive(vg))
 		return 0;
 
-	if (lp->lv_name)
-		lv_name = lp->lv_name;
-	else {
-		if (!generate_lv_name(vg, "lvol%d", lv_name_buf, sizeof(lv_name_buf))) {
-			log_error("Failed to generate LV name.");
-			return 0;
-		}
-		lv_name = &lv_name_buf[0];
-	}
-
 	if (lp->tag) {
 		if (!(vg->fid->fmt->features & FMT_TAGS)) {
 			log_error("Volume group %s does not support tags",
@@ -3036,7 +3024,7 @@ int lv_create_single(struct volume_group *vg,
 		}
 	}
 
-	if (!(lv = lv_create_empty(lv_name ? lv_name : "lvol%d", NULL,
+	if (!(lv = lv_create_empty(lp->lv_name ? lp->lv_name : "lvol%d", NULL,
 				   status, lp->alloc, vg)))
 		return_0;
 
