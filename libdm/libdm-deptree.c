@@ -201,8 +201,8 @@ void dm_tree_free(struct dm_tree *dtree)
 	dm_free(dtree);
 }
 
-static int _nodes_are_linked(struct dm_tree_node *parent,
-			     struct dm_tree_node *child)
+static int _nodes_are_linked(const struct dm_tree_node *parent,
+			     const struct dm_tree_node *child)
 {
 	struct dm_tree_link *dlink;
 
@@ -665,32 +665,32 @@ int dm_tree_add_dev_with_udev_flags(struct dm_tree *dtree, uint32_t major,
 	return _add_dev(dtree, &dtree->root, major, minor, udev_flags) ? 1 : 0;
 }
 
-const char *dm_tree_node_get_name(struct dm_tree_node *node)
+const char *dm_tree_node_get_name(const struct dm_tree_node *node)
 {
 	return node->info.exists ? node->name : "";
 }
 
-const char *dm_tree_node_get_uuid(struct dm_tree_node *node)
+const char *dm_tree_node_get_uuid(const struct dm_tree_node *node)
 {
 	return node->info.exists ? node->uuid : "";
 }
 
-const struct dm_info *dm_tree_node_get_info(struct dm_tree_node *node)
+const struct dm_info *dm_tree_node_get_info(const struct dm_tree_node *node)
 {
 	return &node->info;
 }
 
-void *dm_tree_node_get_context(struct dm_tree_node *node)
+void *dm_tree_node_get_context(const struct dm_tree_node *node)
 {
 	return node->context;
 }
 
-int dm_tree_node_size_changed(struct dm_tree_node *dnode)
+int dm_tree_node_size_changed(const struct dm_tree_node *dnode)
 {
 	return dnode->props.size_changed;
 }
 
-int dm_tree_node_num_children(struct dm_tree_node *node, uint32_t inverted)
+int dm_tree_node_num_children(const struct dm_tree_node *node, uint32_t inverted)
 {
 	if (inverted) {
 		if (_nodes_are_linked(&node->dtree->root, node))
@@ -806,11 +806,11 @@ struct dm_tree_node *dm_tree_find_node_by_uuid(struct dm_tree *dtree,
  * Set inverted to invert the tree.
  */
 struct dm_tree_node *dm_tree_next_child(void **handle,
-					   struct dm_tree_node *parent,
-					   uint32_t inverted)
+					const struct dm_tree_node *parent,
+					uint32_t inverted)
 {
 	struct dm_list **dlink = (struct dm_list **) handle;
-	struct dm_list *use_list;
+	const struct dm_list *use_list;
 
 	if (inverted)
 		use_list = &parent->used_by;

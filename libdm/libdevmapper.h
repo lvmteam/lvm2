@@ -307,23 +307,23 @@ struct dm_tree_node *dm_tree_find_node_by_uuid(struct dm_tree *tree,
  * Set inverted to use inverted tree.
  */
 struct dm_tree_node *dm_tree_next_child(void **handle,
-					   struct dm_tree_node *parent,
-					   uint32_t inverted);
+					const struct dm_tree_node *parent,
+					uint32_t inverted);
 
 /*
  * Get properties of a node.
  */
-const char *dm_tree_node_get_name(struct dm_tree_node *node);
-const char *dm_tree_node_get_uuid(struct dm_tree_node *node);
-const struct dm_info *dm_tree_node_get_info(struct dm_tree_node *node);
-void *dm_tree_node_get_context(struct dm_tree_node *node);
-int dm_tree_node_size_changed(struct dm_tree_node *dnode);
+const char *dm_tree_node_get_name(const struct dm_tree_node *node);
+const char *dm_tree_node_get_uuid(const struct dm_tree_node *node);
+const struct dm_info *dm_tree_node_get_info(const struct dm_tree_node *node);
+void *dm_tree_node_get_context(const struct dm_tree_node *node);
+int dm_tree_node_size_changed(const struct dm_tree_node *dnode);
 
 /*
  * Returns the number of children of the given node (excluding the root node).
  * Set inverted for the number of parents.
  */
-int dm_tree_node_num_children(struct dm_tree_node *node, uint32_t inverted);
+int dm_tree_node_num_children(const struct dm_tree_node *node, uint32_t inverted);
 
 /*
  * Deactivate a device plus all dependencies.

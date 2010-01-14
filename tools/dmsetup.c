@@ -2094,7 +2094,7 @@ static int _dm_info_devno_disp(struct dm_report *rh, struct dm_pool *mem,
 			       void *private)
 {
 	char buf[DM_MAX_TYPE_NAME], *repstr;
-	struct dm_info *info = (struct dm_info *) data;
+	const struct dm_info *info = data;
 
 	if (!dm_pool_begin_object(mem, 8)) {
 		log_error("dm_pool_begin_object failed");
@@ -2125,7 +2125,8 @@ static int _dm_tree_names(struct dm_report *rh, struct dm_pool *mem,
 			  struct dm_report_field *field, const void *data,
 			  void *private, unsigned inverted)
 {
-	struct dm_tree_node *node = (struct dm_tree_node *) data, *parent;
+	const struct dm_tree_node *node = data;
+	struct dm_tree_node *parent;
 	void *t = NULL;
 	const char *name;
 	int first_node = 1;
@@ -2186,7 +2187,8 @@ static int _dm_tree_parents_devs_disp(struct dm_report *rh, struct dm_pool *mem,
 				      struct dm_report_field *field,
 				      const void *data, void *private)
 {
-	struct dm_tree_node *node = (struct dm_tree_node *) data, *parent;
+	const struct dm_tree_node *node = data;
+	struct dm_tree_node *parent;
 	void *t = NULL;
 	const struct dm_info *info;
 	int first_node = 1;
@@ -2237,7 +2239,7 @@ static int _dm_tree_parents_count_disp(struct dm_report *rh,
 				       struct dm_report_field *field,
 				       const void *data, void *private)
 {
-	struct dm_tree_node *node = (struct dm_tree_node *) data;
+	const struct dm_tree_node *node = data;
 	int num_parent = dm_tree_node_num_children(node, 1);
 
 	return dm_report_field_int(rh, field, &num_parent);
