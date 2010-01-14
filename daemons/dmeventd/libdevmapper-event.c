@@ -398,6 +398,8 @@ static int _start_daemon(struct dm_event_fifos *fifos)
 	int pid, ret = 0;
 	int status;
 	struct stat statbuf;
+	char dmeventdpath[] = DMEVENTD_PATH; /* const type for execvp */
+	char * const args[] = { dmeventdpath, NULL };
 
 	if (stat(fifos->client_path, &statbuf))
 		goto start_server;
@@ -437,7 +439,7 @@ static int _start_daemon(struct dm_event_fifos *fifos)
 		log_error("Unable to fork.");
 
 	else if (!pid) {
-		execvp(DMEVENTD_PATH, NULL);
+		execvp(args[0], args);
 		_exit(EXIT_FAILURE);
 	} else {
 		if (waitpid(pid, &status, 0) < 0)
