@@ -852,8 +852,8 @@ static int _for_each_pv(struct cmd_context *cmd, struct logical_volume *lv,
 
 static int _comp_area(const void *l, const void *r)
 {
-	const struct pv_area *lhs = *((const struct pv_area **) l);
-	const struct pv_area *rhs = *((const struct pv_area **) r);
+	const struct pv_area *lhs = *((const struct pv_area * const *) l);
+	const struct pv_area *rhs = *((const struct pv_area * const *) r);
 
 	if (lhs->count < rhs->count)
 		return 1;
