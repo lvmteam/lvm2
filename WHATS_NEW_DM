@@ -1,7 +1,7 @@
-Version 1.02.42 - 
+Version 1.02.42 - 14th January 2010
 ===================================
-  Add support for the "snapshot-merge" target.
-  Introduce a third activation_proiority level in dm_tree_activate_children.
+  Add support for the "snapshot-merge" kernel target (2.6.33-rc1).
+  Introduce a third activation_priority level in dm_tree_activate_children.
 
 Version 1.02.41 - 12th January 2010
 ===================================
