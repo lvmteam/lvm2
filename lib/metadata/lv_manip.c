@@ -566,10 +566,10 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 		return NULL;
 	}
 
+	ah->cmd = cmd;
+
 	if (segtype_is_virtual(segtype))
 		return ah;
-
-	ah->cmd = cmd;
 
 	if (!(ah->mem = dm_pool_create("allocation", 1024))) {
 		log_error("allocation pool creation failed");
