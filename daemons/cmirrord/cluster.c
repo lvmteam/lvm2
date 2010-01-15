@@ -34,6 +34,8 @@
 #include "logging.h"
 #include "link_mon.h"
 #include "cluster.h"
+#include "compat.h"
+#include "xlate.h"
 
 /* Open AIS error codes */
 #define str_ais_error(x)						\
@@ -65,10 +67,6 @@
 	((x) == SA_AIS_ERR_TOO_BIG) ? "SA_AIS_ERR_TOO_BIG" :		\
 	((x) == SA_AIS_ERR_NO_SECTIONS) ? "SA_AIS_ERR_NO_SECTIONS" :	\
 	"ais_error_unknown"
-
-#define DM_ULOG_RESPONSE 0x1000 /* in last byte of 32-bit value */
-#define DM_ULOG_CHECKPOINT_READY 21
-#define DM_ULOG_MEMBER_JOIN      22
 
 #define _RQ_TYPE(x)							\
 	((x) == DM_ULOG_CHECKPOINT_READY) ? "DM_ULOG_CHECKPOINT_READY": \
@@ -168,6 +166,14 @@ int cluster_send(struct clog_request *rq)
 	iov.iov_base = rq;
 	iov.iov_len = sizeof(struct clog_request) + rq->u_rq.data_size;
 
+	rq->u.version[0] = xlate64(CLOG_TFR_VERSION);
+	rq->u.version[1] = CLOG_TFR_VERSION;
+
+	r = clog_request_to_network(rq);
+	if (r < 0)
+		/* FIXME: Better error code for byteswap failure? */
+		return -EINVAL;
+
 	if (entry->cpg_state != VALID)
 		return -EINVAL;
 
@@ -211,9 +217,9 @@ static struct clog_request *get_matching_rq(struct clog_request *rq,
 {
 	struct clog_request *match, *n;
 
-	dm_list_iterate_items_safe(match, n, l)
+	dm_list_iterate_items_gen_safe(match, n, l, u.list)
 		if (match->u_rq.seq == rq->u_rq.seq) {
-			dm_list_del(&match->list);
+			dm_list_del(&match->u.list);
 			return match;
 		}
 
@@ -298,7 +304,7 @@ static int handle_cluster_response(struct clog_cpg *entry,
 		if (dm_list_empty(&entry->working_list))
 			LOG_ERROR("   [none]");
 
-		dm_list_iterate_items(orig_rq, &entry->working_list)
+		dm_list_iterate_items_gen(orig_rq, &entry->working_list, u.list)
 			LOG_ERROR("   [%s]  %s:%u",
 				  SHORT_UUID(orig_rq->u_rq.uuid),
 				  _RQ_TYPE(orig_rq->u_rq.request_type),
@@ -578,7 +584,7 @@ rr_create_retry:
 	}
 	memset(rq, 0, sizeof(*rq));
 
-	dm_list_init(&rq->list);
+	dm_list_init(&rq->u.list);
 	rq->u_rq.request_type = DM_ULOG_CHECKPOINT_READY;
 	rq->originator = cp->requester;  /* FIXME: hack to overload meaning of originator */
 	strncpy(rq->u_rq.uuid, cp->uuid, CPG_MAX_NAME_LENGTH);
@@ -803,8 +809,8 @@ static int resend_requests(struct clog_cpg *entry)
 
 	entry->resend_requests = 0;
 
-	dm_list_iterate_items_safe(rq, n, &entry->working_list) {
-		dm_list_del(&rq->list);
+	dm_list_iterate_items_gen_safe(rq, n, &entry->working_list, u.list) {
+		dm_list_del(&rq->u.list);
 
 		if (strcmp(entry->name.value, rq->u_rq.uuid)) {
 			LOG_ERROR("[%s]  Stray request from another log (%s)",
@@ -890,8 +896,8 @@ static int flush_startup_list(struct clog_cpg *entry)
 	struct clog_request *rq, *n;
 	struct checkpoint_data *new;
 
-	dm_list_iterate_items_safe(rq, n, &entry->startup_list) {
-		dm_list_del(&rq->list);
+	dm_list_iterate_items_gen_safe(rq, n, &entry->startup_list, u.list) {
+		dm_list_del(&rq->u.list);
 
 		if (rq->u_rq.request_type == DM_ULOG_MEMBER_JOIN) {
 			new = prepare_checkpoint(entry, rq->originator);
@@ -945,6 +951,10 @@ static void cpg_message_callback(cpg_handle_t handle, const struct cpg_name *gna
 	struct clog_request *tmp_rq;
 	struct clog_cpg *match;
 
+	if (clog_request_from_network(rq, msg_len) < 0)
+		/* Error message comes from 'clog_request_from_network' */
+		return;
+
 	match = find_clog_cpg(handle);
 	if (!match) {
 		LOG_ERROR("Unable to find clog_cpg for cluster message");
@@ -968,8 +978,8 @@ static void cpg_message_callback(cpg_handle_t handle, const struct cpg_name *gna
 			return;
 		}
 		memcpy(tmp_rq, rq, sizeof(*rq) + rq->u_rq.data_size);
-		dm_list_init(&tmp_rq->list);
-		dm_list_add( &match->working_list, &tmp_rq->list);
+		dm_list_init(&tmp_rq->u.list);
+		dm_list_add( &match->working_list, &tmp_rq->u.list);
 	}
 
 	if (rq->u_rq.request_type == DM_ULOG_POSTSUSPEND) {
@@ -990,7 +1000,7 @@ static void cpg_message_callback(cpg_handle_t handle, const struct cpg_name *gna
 						 SHORT_UUID(rq->u_rq.uuid), nodeid,
 						 (dm_list_empty(&match->working_list)) ? " -- working_list empty": "");
 
-					dm_list_iterate_items(tmp_rq, &match->working_list)
+					dm_list_iterate_items_gen(tmp_rq, &match->working_list, u.list)
 						LOG_COND(log_resend_requests,
 							 "[%s]                %s/%u",
 							 SHORT_UUID(tmp_rq->u_rq.uuid),
@@ -1075,8 +1085,8 @@ static void cpg_message_callback(cpg_handle_t handle, const struct cpg_name *gna
 
 			memcpy(tmp_rq, rq, sizeof(*rq) + rq->u_rq.data_size);
 			tmp_rq->pit_server = match->lowest_id;
-			dm_list_init(&tmp_rq->list);
-			dm_list_add(&match->startup_list, &tmp_rq->list);
+			dm_list_init(&tmp_rq->u.list);
+			dm_list_add(&match->startup_list, &tmp_rq->u.list);
 			goto out;
 		}
 
@@ -1206,8 +1216,8 @@ static void cpg_join_callback(struct clog_cpg *match,
 	}
 	rq->u_rq.request_type = DM_ULOG_MEMBER_JOIN;
 	rq->originator = joined->nodeid;
-	dm_list_init(&rq->list);
-	dm_list_add(&match->startup_list, &rq->list);
+	dm_list_init(&rq->u.list);
+	dm_list_add(&match->startup_list, &rq->u.list);
 
 out:
 	/* Find the lowest_id, i.e. the server */
@@ -1256,8 +1266,8 @@ static void cpg_leave_callback(struct clog_cpg *match,
 
 		cluster_postsuspend(match->name.value, match->luid);
 
-		dm_list_iterate_items_safe(rq, n, &match->working_list) {
-			dm_list_del(&rq->list);
+		dm_list_iterate_items_gen_safe(rq, n, &match->working_list, u.list) {
+			dm_list_del(&rq->u.list);
 
 			if (rq->u_rq.request_type == DM_ULOG_POSTSUSPEND)
 				kernel_send(&rq->u_rq);
@@ -1286,13 +1296,13 @@ static void cpg_leave_callback(struct clog_cpg *match,
 			 SHORT_UUID(match->name.value), left->nodeid);
 		free_checkpoint(c_cp);
 	}
-	dm_list_iterate_items_safe(rq, n, &match->startup_list) {
+	dm_list_iterate_items_gen_safe(rq, n, &match->startup_list, u.list) {
 		if ((rq->u_rq.request_type == DM_ULOG_MEMBER_JOIN) &&
 		    (rq->originator == left->nodeid)) {
 			LOG_COND(log_checkpoint,
 				 "[%s] Removing pending ckpt from startup list (%u is leaving)",
 				 SHORT_UUID(match->name.value), left->nodeid);
-			dm_list_del(&rq->list);
+			dm_list_del(&rq->u.list);
 			free(rq);
 		}
 	}
@@ -1352,7 +1362,7 @@ static void cpg_leave_callback(struct clog_cpg *match,
 		 */
 
 		i = 1; /* We do not have a DM_ULOG_MEMBER_JOIN entry of our own */
-		dm_list_iterate_items(rq, &match->startup_list)
+		dm_list_iterate_items_gen(rq, &match->startup_list, u.list)
 			if (rq->u_rq.request_type == DM_ULOG_MEMBER_JOIN)
 				i++;
 
@@ -1526,8 +1536,8 @@ static void abort_startup(struct clog_cpg *del)
 	LOG_DBG("[%s]  CPG teardown before checkpoint received",
 		SHORT_UUID(del->name.value));
 
-	dm_list_iterate_items_safe(rq, n, &del->startup_list) {
-		dm_list_del(&rq->list);
+	dm_list_iterate_items_gen_safe(rq, n, &del->startup_list, u.list) {
+		dm_list_del(&rq->u.list);
 
 		LOG_DBG("[%s]  Ignoring request from %u: %s",
 			SHORT_UUID(del->name.value), rq->originator,
@@ -1640,12 +1650,12 @@ void cluster_debug(void)
 				break;
 		LOG_ERROR("  CKPTs waiting     : %d", i);
 		LOG_ERROR("  Working list:");
-		dm_list_iterate_items(rq, &entry->working_list)
+		dm_list_iterate_items_gen(rq, &entry->working_list, u.list)
 			LOG_ERROR("  %s/%u", _RQ_TYPE(rq->u_rq.request_type),
 				  rq->u_rq.seq);
 
 		LOG_ERROR("  Startup list:");
-		dm_list_iterate_items(rq, &entry->startup_list)
+		dm_list_iterate_items_gen(rq, &entry->startup_list, u.list)
 			LOG_ERROR("  %s/%u", _RQ_TYPE(rq->u_rq.request_type),
 				  rq->u_rq.seq);
 

@@ -15,6 +15,10 @@
 #include "libdevmapper.h"
 #include "dm-log-userspace.h"
 
+#define DM_ULOG_RESPONSE 0x1000 /* in last byte of 32-bit value */
+#define DM_ULOG_CHECKPOINT_READY 21
+#define DM_ULOG_MEMBER_JOIN      22
+
 /*
  * There is other information in addition to what can
  * be found in the dm_ulog_request structure that we
@@ -23,7 +27,22 @@
  * available.
  */
 struct clog_request {
-	struct dm_list list;
+	/*
+	 * If we don't use a union, the structure size will
+	 * vary between 32-bit and 64-bit machines.  So, we
+	 * pack two 64-bit version numbers in there to force
+	 * the size of the structure to be the same.
+	 *
+	 * The two version numbers also help us with endian
+	 * issues.  The first is always little endian, while
+	 * the second is in native format of the sending
+	 * machine.  If the two are equal, there is no need
+	 * to do endian conversions.
+	 */
+	union {
+		uint64_t version[2]; /* LE version and native version */
+		struct dm_list list;
+	} u;
 
 	/*
 	 * 'originator' is the machine from which the requests
