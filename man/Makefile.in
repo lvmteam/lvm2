@@ -32,7 +32,7 @@ MAN8=lvchange.8 lvconvert.8 lvcreate.8 lvdisplay.8 lvextend.8 lvm.8 \
 	vgck.8 vgcreate.8 vgconvert.8 vgdisplay.8 vgexport.8 vgextend.8 \
 	vgimport.8 vgimportclone.8 vgmerge.8 vgmknodes.8 vgreduce.8 vgremove.8 \
 	vgrename.8 vgs.8 vgscan.8 vgsplit.8 $(FSADMMAN)
-MAN8CLUSTER=clvmd.8
+MAN8CLUSTER=clvmd.8 cmirrord.8
 MAN8DM=dmsetup.8
 MAN5DIR=${mandir}/man5
 MAN8DIR=${mandir}/man8
