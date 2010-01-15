@@ -1,5 +1,6 @@
 Version 2.02.59 - 
 ===================================
+  Initial version of the cmirrord man page.
   Make cluster log communication structures architecture independant.
   Fix cluster log issues with in-memory bitmaps.
   Improve target type compatibility checking in _percent_run().
