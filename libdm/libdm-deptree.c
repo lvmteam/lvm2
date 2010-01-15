@@ -1408,6 +1408,9 @@ static int _mirror_emit_segment_line(struct dm_task *dmt, uint32_t major,
 
 		if (!dm_log_userspace)
 			EMIT_PARAMS(pos, "clustered-");
+		else
+			/* For clustered-* type field inserted later */
+			log_parm_count++;
 	}
 
 	if (!seg->log)
