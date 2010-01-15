@@ -393,7 +393,7 @@ static percent_range_t _combine_percent_ranges(percent_range_t a,
 static int _percent_run(struct dev_manager *dm, const char *name,
 			const char *dlid,
 			const char *target_type, int wait,
-			struct logical_volume *lv, float *percent,
+			const struct logical_volume *lv, float *percent,
 			percent_range_t *overall_percent_range,
 			uint32_t *event_nr)
 {
@@ -404,7 +404,7 @@ static int _percent_run(struct dev_manager *dm, const char *name,
 	uint64_t start, length;
 	char *type = NULL;
 	char *params = NULL;
-	struct dm_list *segh = &lv->segments;
+	const struct dm_list *segh = &lv->segments;
 	struct lv_segment *seg = NULL;
 	struct segment_type *segtype;
 	percent_range_t percent_range = 0, combined_percent_range = 0;
@@ -484,9 +484,15 @@ static int _percent_run(struct dev_manager *dm, const char *name,
 		*overall_percent_range = combined_percent_range;
 	} else {
 		*percent = 100;
-		if (first_time)
+		if (first_time) {
+			/* above ->target_percent() was not executed! */
+			/* FIXME why return PERCENT_100 et. al. in this case? */
 			*overall_percent_range = PERCENT_100;
-		else
+			if (lv && lv_is_merging_origin(lv)) {
+				/* must fail in snapshot-merge case */
+				goto_out;
+			}
+		} else
 			*overall_percent_range = combined_percent_range;
 	}
 
@@ -500,7 +506,7 @@ static int _percent_run(struct dev_manager *dm, const char *name,
 
 static int _percent(struct dev_manager *dm, const char *name, const char *dlid,
 		    const char *target_type, int wait,
-		    struct logical_volume *lv, float *percent,
+		    const struct logical_volume *lv, float *percent,
 		    percent_range_t *overall_percent_range, uint32_t *event_nr)
 {
 	if (dlid && *dlid) {
@@ -587,7 +593,7 @@ int dev_manager_snapshot_percent(struct dev_manager *dm,
 	 * Try and get some info on this device.
 	 */
 	log_debug("Getting device status percentage for %s", name);
-	if (!(_percent(dm, name, dlid, "snapshot", 0, NULL, percent,
+	if (!(_percent(dm, name, dlid, "snapshot", 0, lv, percent,
 		       percent_range, NULL)))
 		return_0;
 
@@ -600,7 +606,7 @@ int dev_manager_snapshot_percent(struct dev_manager *dm,
 /* FIXME Merge with snapshot_percent, auto-detecting target type */
 /* FIXME Cope with more than one target */
 int dev_manager_mirror_percent(struct dev_manager *dm,
-			       struct logical_volume *lv, int wait,
+			       const struct logical_volume *lv, int wait,
 			       float *percent, percent_range_t *percent_range,
 			       uint32_t *event_nr)
 {
