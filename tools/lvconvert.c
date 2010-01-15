@@ -402,7 +402,7 @@ static progress_t _poll_merge_progress(struct cmd_context *cmd,
 	percent_range_t percent_range;
 
 	if (!lv_snapshot_percent(lv, &percent, &percent_range)) {
-		log_error("%s: Failed query for merging percentage", lv->name);
+		log_error("%s: Failed query for merging percentage. Aborting merge.", lv->name);
 		return PROGRESS_CHECK_FAILED;
 	} else if (percent_range == PERCENT_INVALID) {
 		log_error("%s: Merging snapshot invalidated. Aborting merge.", lv->name);

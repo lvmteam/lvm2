@@ -49,7 +49,7 @@ int dev_manager_snapshot_percent(struct dev_manager *dm,
 				 float *percent,
 				 percent_range_t *percent_range);
 int dev_manager_mirror_percent(struct dev_manager *dm,
-			       struct logical_volume *lv, int wait,
+			       const struct logical_volume *lv, int wait,
 			       float *percent, percent_range_t *percent_range,
 			       uint32_t *event_nr);
 int dev_manager_suspend(struct dev_manager *dm, struct logical_volume *lv,
