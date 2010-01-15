@@ -443,18 +443,18 @@ static int _percent_run(struct dev_manager *dm, const char *name,
 			seg = dm_list_item(segh, struct lv_segment);
 		}
 
-                /*
-                 * If target status doesn't have 'params' or 'type' is not in the same
-                 * target base class as 'target_type' (e.g. snapshot*, mirror*) skip it
-                 * - allows the situation when 'type' is "snapshot-merge" and
-                 *   'target_type' is "snapshot"
-                 */
-		/* FIXME Do this properly - relying on target prefixes is incorrect. (E.g. snapshot-origin)*/
-		if (!type || !params || strncmp(type, target_type, strlen(target_type)))
+		if (!type || !params)
 			continue;
 
 		if (!(segtype = get_segtype_from_string(dm->cmd, target_type)))
 			continue;
+
+		if (strcmp(type, target_type)) {
+			/* If kernel's type isn't an exact match is it compatible? */
+			if (!segtype->ops->target_status_compatible ||
+			    !segtype->ops->target_status_compatible(type))
+				continue;
+		}
 
 		if (segtype->ops->target_percent &&
 		    !segtype->ops->target_percent(&dm->target_state,

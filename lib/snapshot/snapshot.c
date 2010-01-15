@@ -92,6 +92,11 @@ static int _snap_text_export(const struct lv_segment *seg, struct formatter *f)
 	return 1;
 }
 
+static int _snap_target_status_compatible(const char *type)
+{
+	return (strcmp(type, "snapshot-merge") == 0);
+}
+
 #ifdef DEVMAPPER_SUPPORT
 static int _snap_target_percent(void **target_state __attribute((unused)),
 				percent_range_t *percent_range,
@@ -303,6 +308,7 @@ static struct segtype_handler _snapshot_ops = {
 	.name = _snap_name,
 	.text_import = _snap_text_import,
 	.text_export = _snap_text_export,
+	.target_status_compatible = _snap_target_status_compatible,
 #ifdef DEVMAPPER_SUPPORT
 	.target_percent = _snap_target_percent,
 	.target_present = _snap_target_present,
