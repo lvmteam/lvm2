@@ -382,7 +382,7 @@ static int _clog_ctr(char *uuid, uint64_t luid,
 		disk_log = 1;
 
 		if ((argc < 2) || (argc > 4)) {
-			LOG_ERROR("Too %s arguments to clustered_disk log type",
+			LOG_ERROR("Too %s arguments to clustered-disk log type",
 				  (argc < 3) ? "few" : "many");
 			r = -EINVAL;
 			goto fail;
@@ -398,7 +398,7 @@ static int _clog_ctr(char *uuid, uint64_t luid,
 		disk_log = 0;
 
 		if ((argc < 1) || (argc > 3)) {
-			LOG_ERROR("Too %s arguments to clustered_core log type",
+			LOG_ERROR("Too %s arguments to clustered-core log type",
 				  (argc < 2) ? "few" : "many");
 			r = -EINVAL;
 			goto fail;
@@ -406,7 +406,7 @@ static int _clog_ctr(char *uuid, uint64_t luid,
 	}
 
 	if (!(region_size = strtoll(argv[disk_log], &p, 0)) || *p) {
-		LOG_ERROR("Invalid region_size argument to clustered_%s log type",
+		LOG_ERROR("Invalid region_size argument to clustered-%s log type",
 			  (disk_log) ? "disk" : "core");
 		r = -EINVAL;
 		goto fail;
@@ -572,8 +572,8 @@ static int clog_ctr(struct dm_ulog_request *rq)
 	for (i = 0; i < argc; i++, p = p + strlen(p) + 1)
 		argv[i] = p;
 
-	if (strcmp(argv[0], "clustered_disk") &&
-	    strcmp(argv[0], "clustered_core")) {
+	if (strcmp(argv[0], "clustered-disk") &&
+	    strcmp(argv[0], "clustered-core")) {
 		LOG_ERROR("Unsupported userspace log type, \"%s\"", argv[0]);
 		free(argv);
 		return -EINVAL;
@@ -1374,7 +1374,7 @@ static int core_status_info(struct log_c *lc, struct dm_ulog_request *rq)
 {
 	char *data = (char *)rq->data;
 
-	rq->data_size = sprintf(data, "1 clustered_core");
+	rq->data_size = sprintf(data, "1 clustered-core");
 
 	return 0;
 }
@@ -1389,7 +1389,7 @@ static int disk_status_info(struct log_c *lc, struct dm_ulog_request *rq)
 		return -errno;
 	}
 
-	rq->data_size = sprintf(data, "3 clustered_disk %d:%d %c",
+	rq->data_size = sprintf(data, "3 clustered-disk %d:%d %c",
 				major(statbuf.st_rdev), minor(statbuf.st_rdev),
 				(lc->log_dev_failed) ? 'D' : 'A');
 
@@ -1424,7 +1424,7 @@ static int core_status_table(struct log_c *lc, struct dm_ulog_request *rq)
 {
 	char *data = (char *)rq->data;
 
-	rq->data_size = sprintf(data, "clustered_core %u %s%s ",
+	rq->data_size = sprintf(data, "clustered-core %u %s%s ",
 				lc->region_size,
 				(lc->sync == DEFAULTSYNC) ? "" :
 				(lc->sync == NOSYNC) ? "nosync " : "sync ",
@@ -1442,7 +1442,7 @@ static int disk_status_table(struct log_c *lc, struct dm_ulog_request *rq)
 		return -errno;
 	}
 
-	rq->data_size = sprintf(data, "clustered_disk %d:%d %u %s%s ",
+	rq->data_size = sprintf(data, "clustered-disk %d:%d %u %s%s ",
 				major(statbuf.st_rdev), minor(statbuf.st_rdev),
 				lc->region_size,
 				(lc->sync == DEFAULTSYNC) ? "" :
