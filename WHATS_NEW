@@ -1,5 +1,6 @@
 Version 2.02.59 - 
 ===================================
+  Initial version of the cmirror init script (Red Hat).
   Initial version of the cmirrord man page.
   Make cluster log communication structures architecture independant.
   Fix cluster log issues with in-memory bitmaps.
