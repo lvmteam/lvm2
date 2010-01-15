@@ -1,5 +1,6 @@
 Version 2.02.59 - 
 ===================================
+  Fix difference between CTR table built and expected for cluster log.
 
 Version 2.02.58 - 14th January 2010
 ===================================
