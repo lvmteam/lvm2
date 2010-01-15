@@ -13,20 +13,20 @@
 #define __CLUSTER_LOG_COMMON_DOT_H__
 
 /*
-#define EXIT_SUCCESS 0
-#define EXIT_FAILURE 1
-*/
-
+ * If there are problems when forking off to become a daemon,
+ * the child will exist with one of these codes.  This allows
+ * the parent to know the reason for the failure and print it
+ * to the launching terminal.
+ *
+ * #define EXIT_SUCCESS 0 (from stdlib.h)
+ * #define EXIT_FAILURE 1 (from stdlib.h)
+ */
 #define EXIT_LOCKFILE              2
-
 #define EXIT_KERNEL_SOCKET         3 /* Failed netlink socket create */
 #define EXIT_KERNEL_BIND           4
 #define EXIT_KERNEL_SETSOCKOPT     5
-
 #define EXIT_CLUSTER_CKPT_INIT     6 /* Failed to init checkpoint */
-
 #define EXIT_QUEUE_NOMEM           7
-
 
 #define DM_ULOG_REQUEST_SIZE 1024
 
