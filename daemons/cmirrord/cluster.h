@@ -9,11 +9,11 @@
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#ifndef __CLUSTER_LOG_CLUSTER_DOT_H__
-#define __CLUSTER_LOG_CLUSTER_DOT_H__
+#ifndef _LVM_CLOG_CLUSTER_H
+#define _LVM_CLOG_CLUSTER_H
 
-#include "libdevmapper.h"
 #include "dm-log-userspace.h"
+#include "libdevmapper.h"
 
 #define DM_ULOG_RESPONSE 0x1000 /* in last byte of 32-bit value */
 #define DM_ULOG_CHECKPOINT_READY 21
@@ -73,4 +73,4 @@ int destroy_cluster_cpg(char *uuid);
 
 int cluster_send(struct clog_request *rq);
 
-#endif /* __CLUSTER_LOG_CLUSTER_DOT_H__ */
+#endif /* _LVM_CLOG_CLUSTER_H */

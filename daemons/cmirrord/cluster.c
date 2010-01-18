@@ -9,33 +9,21 @@
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#include <errno.h>
-#include <string.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <signal.h>
-#include <sys/socket.h> /* These are for OpenAIS CPGs */
-#include <sys/select.h>
-#include <sys/un.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <corosync/corotypes.h>
+#include "logging.h"
+#include "cluster.h"
+#include "common.h"
+#include "compat.h"
+#include "functions.h"
+#include "link_mon.h"
+#include "local.h"
+#include "xlate.h"
+
 #include <corosync/cpg.h>
+#include <errno.h>
 #include <openais/saAis.h>
 #include <openais/saCkpt.h>
-
-#include "dm-log-userspace.h"
-#include "libdevmapper.h"
-#include "functions.h"
-#include "local.h"
-#include "common.h"
-#include "logging.h"
-#include "link_mon.h"
-#include "cluster.h"
-#include "compat.h"
-#include "xlate.h"
+#include <signal.h>
+#include <unistd.h>
 
 /* Open AIS error codes */
 #define str_ais_error(x)						\

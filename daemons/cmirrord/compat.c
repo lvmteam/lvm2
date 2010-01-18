@@ -5,16 +5,12 @@
  * modify, copy, or redistribute it subject to the terms and conditions
  * of the GNU Lesser General Public License v.2.1.
  */
-#include <stdlib.h>
-#include <errno.h>
-#include <stdint.h>
-#include <string.h>
-#include "dm-log-userspace.h"
 #include "logging.h"
 #include "cluster.h"
+#include "compat.h"
 #include "xlate.h"
 
-#include "compat.h"
+#include <errno.h>
 
 /*
  * Older versions of the log daemon communicate with different
@@ -201,7 +197,7 @@ int clog_request_from_network(void *data, size_t data_len)
 		if (data_len < (COMPAT_OFFSET + sizeof(*rq)))
 			return -ENOSPC;
 
-		rq = data + COMPAT_OFFSET;
+		rq = (struct clog_request *)((char *)data + COMPAT_OFFSET);
 		break;
 	default:
 		LOG_ERROR("Unable to process cluster message: "

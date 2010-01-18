@@ -9,8 +9,8 @@
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#ifndef __CLUSTER_LOG_COMMON_DOT_H__
-#define __CLUSTER_LOG_COMMON_DOT_H__
+#ifndef _LVM_CLOG_COMMON_H
+#define _LVM_CLOG_COMMON_H
 
 /*
  * If there are problems when forking off to become a daemon,
@@ -30,4 +30,4 @@
 
 #define DM_ULOG_REQUEST_SIZE 1024
 
-#endif /* __CLUSTER_LOG_COMMON_DOT_H__ */
+#endif /* _LVM_CLOG_COMMON_H */
