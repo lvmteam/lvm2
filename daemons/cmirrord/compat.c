@@ -201,7 +201,7 @@ int clog_request_from_network(void *data, size_t data_len)
 		if (data_len < (COMPAT_OFFSET + sizeof(*rq)))
 			return -ENOSPC;
 
-		rq = (char *)data + COMPAT_OFFSET;
+		rq = data + COMPAT_OFFSET;
 		break;
 	default:
 		LOG_ERROR("Unable to process cluster message: "
