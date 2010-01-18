@@ -14,10 +14,11 @@
 #include <poll.h>
 
 #include "logging.h"
+#include "link_mon.h"
 
 struct link_callback {
 	int fd;
-	char *name;
+	const char *name;
 	void *data;
 	int (*callback)(void *data);
 
@@ -29,7 +30,7 @@ static int free_pfds = 0;
 static struct pollfd *pfds = NULL;
 static struct link_callback *callbacks = NULL;
 
-int links_register(int fd, char *name, int (*callback)(void *data), void *data)
+int links_register(int fd, const char *name, int (*callback)(void *data), void *data)
 {
 	int i;
 	struct link_callback *lc;

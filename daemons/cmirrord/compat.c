@@ -25,7 +25,7 @@
  */
 #define COMPAT_OFFSET 256
 
-static void v5_data_endian_switch(struct clog_request *rq, int to_network)
+static void v5_data_endian_switch(struct clog_request *rq, int to_network __attribute((unused)))
 {
 	int i, end;
 	int64_t *pi64;
@@ -201,7 +201,7 @@ int clog_request_from_network(void *data, size_t data_len)
 		if (data_len < (COMPAT_OFFSET + sizeof(*rq)))
 			return -ENOSPC;
 
-		rq = data + COMPAT_OFFSET;
+		rq = (char *)data + COMPAT_OFFSET;
 		break;
 	default:
 		LOG_ERROR("Unable to process cluster message: "

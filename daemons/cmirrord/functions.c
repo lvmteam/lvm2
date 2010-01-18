@@ -262,7 +262,7 @@ static int read_log(struct log_c *lc)
 	bitset_size += (lc->region_count % 8) ? 1 : 0;
 
 	/* 'lc->clean_bits + 1' becasue dm_bitset_t leads with a uint32_t */
-	memcpy(lc->clean_bits + 1, lc->disk_buffer + 1024, bitset_size);
+	memcpy(lc->clean_bits + 1, (char *)lc->disk_buffer + 1024, bitset_size);
 
 	return 0;
 }
@@ -289,7 +289,7 @@ static int write_log(struct log_c *lc)
 	bitset_size += (lc->region_count % 8) ? 1 : 0;
 
 	/* 'lc->clean_bits + 1' becasue dm_bitset_t leads with a uint32_t */
-	memcpy(lc->disk_buffer + 1024, lc->clean_bits + 1, bitset_size);
+	memcpy((char *)lc->disk_buffer + 1024, lc->clean_bits + 1, bitset_size);
 
 	if (rw_log(lc, 1)) {
 		lc->log_dev_failed = 1;
@@ -372,7 +372,7 @@ static int _clog_ctr(char *uuid, uint64_t luid,
 	uint64_t region_count;
 	struct log_c *lc = NULL;
 	struct log_c *duplicate;
-	enum sync sync = DEFAULTSYNC;
+	enum sync log_sync = DEFAULTSYNC;
 	uint32_t block_on_error = 0;
 
 	int disk_log = 0;
@@ -427,9 +427,9 @@ static int _clog_ctr(char *uuid, uint64_t luid,
 
 	for (i = 0; i < argc; i++) {
 		if (!strcmp(argv[i], "sync"))
-			sync = FORCESYNC;
+			log_sync = FORCESYNC;
 		else if (!strcmp(argv[i], "nosync"))
-			sync = NOSYNC;
+			log_sync = NOSYNC;
 		else if (!strcmp(argv[i], "block_on_error"))
 			block_on_error = 1;
 	}
@@ -444,7 +444,7 @@ static int _clog_ctr(char *uuid, uint64_t luid,
 
 	lc->region_size = region_size;
 	lc->region_count = region_count;
-	lc->sync = sync;
+	lc->sync = log_sync;
 	lc->block_on_error = block_on_error;
 	lc->sync_search = 0;
 	lc->recovering_region = (uint64_t)-1;
@@ -456,7 +456,7 @@ static int _clog_ctr(char *uuid, uint64_t luid,
 
 	if ((duplicate = get_log(lc->uuid, lc->luid)) ||
 	    (duplicate = get_pending_log(lc->uuid, lc->luid))) {
-		LOG_ERROR("[%s/%llu] Log already exists, unable to create.",
+		LOG_ERROR("[%s/%" PRIu64 "u] Log already exists, unable to create.",
 			  SHORT_UUID(lc->uuid), lc->luid);
 		free(lc);
 		return -EINVAL;
@@ -477,10 +477,10 @@ static int _clog_ctr(char *uuid, uint64_t luid,
 		r = -ENOMEM;
 		goto fail;
 	}
-	if (sync == NOSYNC)
+	if (log_sync == NOSYNC)
 		dm_bit_set_all(lc->sync_bits);
 
-	lc->sync_count = (sync == NOSYNC) ? region_count : 0;
+	lc->sync_count = (log_sync == NOSYNC) ? region_count : 0;
 
 	if (disk_log) {
 		page_size = sysconf(_SC_PAGESIZE);
@@ -1375,7 +1375,7 @@ static int clog_get_sync_count(struct dm_ulog_request *rq, uint32_t originator)
 	return 0;
 }
 
-static int core_status_info(struct log_c *lc, struct dm_ulog_request *rq)
+static int core_status_info(struct log_c *lc __attribute((unused)), struct dm_ulog_request *rq)
 {
 	char *data = (char *)rq->data;
 
@@ -1648,7 +1648,7 @@ static void print_bits(dm_bitset_t bs, int print)
 {
 	int i, size;
 	char outbuf[128];
-	unsigned char *buf = bs + 1;
+	unsigned char *buf = (unsigned char *)(bs + 1);
 
 	size = (*bs % 8) ? 1 : 0;
 	size += (*bs / 8);
