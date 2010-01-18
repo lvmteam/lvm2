@@ -89,8 +89,10 @@ static int kernel_recv(struct clog_request **rq)
 {
 	int r = 0;
 	int len;
+	void *foo;
 	struct cn_msg *msg;
 	struct dm_ulog_request *u_rq;
+	struct nlmsghdr *nlmsg_h;
 
 	*rq = NULL;
 	memset(recv_buf, 0, sizeof(recv_buf));
@@ -102,7 +104,8 @@ static int kernel_recv(struct clog_request **rq)
 		goto fail;
 	}
 
-	switch (((struct nlmsghdr *)recv_buf)->nlmsg_type) {
+	nlmsg_h = (struct nlmsghdr *)recv_buf;
+	switch (nlmsg_h->nlmsg_type) {
 	case NLMSG_ERROR:
 		LOG_ERROR("Unable to recv message from kernel: NLMSG_ERROR");
 		r = -EBADE;
@@ -158,10 +161,9 @@ static int kernel_recv(struct clog_request **rq)
 		 * beyond what is available to us, but we need only check it
 		 * once... perhaps at compile time?
 		 */
-//		*rq = container_of(u_rq, struct clog_request, u_rq);
-		*rq = (char *)u_rq -
-			(sizeof(struct clog_request) -
-			 sizeof(struct dm_ulog_request));
+		foo = u_rq;
+		foo -= (sizeof(struct clog_request) - sizeof(struct dm_ulog_request));
+		*rq = foo;
 
 		/* Clear the wrapper container fields */
 		memset(*rq, 0, (char *)u_rq - (char *)(*rq));

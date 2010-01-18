@@ -933,13 +933,13 @@ static int clog_get_region_size(struct dm_ulog_request *rq)
 static int clog_is_clean(struct dm_ulog_request *rq)
 {
 	int64_t *rtn = (int64_t *)rq->data;
-	uint64_t region = *((uint64_t *)(rq->data));
+	uint64_t *region = (uint64_t *)rq->data;
 	struct log_c *lc = get_log(rq->uuid, rq->luid);
 
 	if (!lc)
 		return -EINVAL;
 
-	*rtn = log_test_bit(lc->clean_bits, region);
+	*rtn = log_test_bit(lc->clean_bits, *region);
 	rq->data_size = sizeof(*rtn);
 
 	return 0;
@@ -958,7 +958,8 @@ static int clog_is_clean(struct dm_ulog_request *rq)
 static int clog_in_sync(struct dm_ulog_request *rq)
 {
 	int64_t *rtn = (int64_t *)rq->data;
-	uint64_t region = *((uint64_t *)(rq->data));
+	uint64_t *region_p = (uint64_t *)rq->data;
+	uint64_t region = *region_p;
 	struct log_c *lc = get_log(rq->uuid, rq->luid);
 
 	if (!lc)
@@ -1487,7 +1488,8 @@ static int clog_status_table(struct dm_ulog_request *rq)
  */
 static int clog_is_remote_recovering(struct dm_ulog_request *rq)
 {
-	uint64_t region = *((uint64_t *)(rq->data));
+	uint64_t *region_p = (uint64_t *)rq->data;
+	uint64_t region = *region_p;
 	struct {
 		int64_t is_recovering;
 		uint64_t in_sync_hint;
