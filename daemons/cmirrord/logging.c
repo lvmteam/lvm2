@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include <syslog.h>
 
-char *__rq_types_off_by_one[] = {
+const char *__rq_types_off_by_one[] = {
 	"DM_ULOG_CTR",
 	"DM_ULOG_DTR",
 	"DM_ULOG_PRESUSPEND",

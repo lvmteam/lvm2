@@ -28,7 +28,7 @@
 #include "local.h"
 
 #ifndef CN_IDX_DM
-#warning Kernel should be at least 2.6.31
+/* Kernel 2.6.31 is required to run this code */
 #define CN_IDX_DM                       0x7     /* Device Mapper */
 #define CN_VAL_DM_USERSPACE_LOG         0x1
 #endif
@@ -159,12 +159,12 @@ static int kernel_recv(struct clog_request **rq)
 		 * once... perhaps at compile time?
 		 */
 //		*rq = container_of(u_rq, struct clog_request, u_rq);
-		*rq = (void *)u_rq -
+		*rq = (char *)u_rq -
 			(sizeof(struct clog_request) -
 			 sizeof(struct dm_ulog_request));
 
 		/* Clear the wrapper container fields */
-		memset(*rq, 0, (void *)u_rq - (void *)(*rq));
+		memset(*rq, 0, (char *)u_rq - (char *)(*rq));
 		break;
 	default:
 		LOG_ERROR("Unknown nlmsg_type");
@@ -218,7 +218,7 @@ static int kernel_send_helper(void *data, int out_size)
  *
  * Returns: 0 on success, -EXXX on failure
  */
-static int do_local_work(void *data)
+static int do_local_work(void *data __attribute((unused)))
 {
 	int r;
 	struct clog_request *rq;

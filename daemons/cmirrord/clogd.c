@@ -46,7 +46,7 @@ static void daemonize(void);
 static void init_all(void);
 static void cleanup_all(void);
 
-int main(int argc, char *argv[])
+int main(int argc __attribute((unused)), char *argv[] __attribute((unused)))
 {
 	daemonize();
 
@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
  * @sig: the signal
  *
  */
-static void parent_exit_handler(int sig)
+static void parent_exit_handler(int sig __attribute((unused)))
 {
 	exit_now = 1;
 }
@@ -85,7 +85,7 @@ static void parent_exit_handler(int sig)
  *
  * Returns: 0 on success, -1 otherwise
  */
-static int create_lockfile(char *lockfile)
+static int create_lockfile(const char *lockfile)
 {
 	int fd;
 	struct flock lock;
