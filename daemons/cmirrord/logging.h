@@ -10,16 +10,21 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef __CLUSTER_LOG_LOGGING_DOT_H__
-#define __CLUSTER_LOG_LOGGING_DOT_H__
+#ifndef _LVM_CLOG_LOGGING_H
+#define _LVM_CLOG_LOGGING_H
 
+#define _GNU_SOURCE
+#define _FILE_OFFSET_BITS 64
+
+#include <configure.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <syslog.h>
 
 /* SHORT_UUID - print last 8 chars of a string */
 #define SHORT_UUID(x) (strlen(x) > 8) ? ((x) + (strlen(x) - 8)) : (x)
 
-extern char *__rq_types_off_by_one[];
+extern const char *__rq_types_off_by_one[];
 #define RQ_TYPE(x) __rq_types_off_by_one[(x) - 1]
 
 extern int log_tabbing;
@@ -69,4 +74,4 @@ extern int log_resend_requests;
 #define LOG_PRINT(f, arg...) LOG_OUTPUT(LOG_NOTICE, f, ## arg)
 #define LOG_ERROR(f, arg...) LOG_OUTPUT(LOG_ERR, f, ## arg)
 
-#endif /* __CLUSTER_LOG_LOGGING_DOT_H__ */
+#endif /* _LVM_CLOG_LOGGING_H */

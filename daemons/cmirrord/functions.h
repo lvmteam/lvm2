@@ -9,8 +9,8 @@
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#ifndef __CLOG_FUNCTIONS_DOT_H__
-#define __CLOG_FUNCTIONS_DOT_H__
+#ifndef _LVM_CLOG_FUNCTIONS_H
+#define _LVM_CLOG_FUNCTIONS_H
 
 #include "dm-log-userspace.h"
 #include "cluster.h"
@@ -31,4 +31,4 @@ int log_get_state(struct dm_ulog_request *rq);
 int log_status(void);
 void log_debug(void);
 
-#endif /* __CLOG_FUNCTIONS_DOT_H__ */
+#endif /* _LVM_CLOG_FUNCTIONS_H */

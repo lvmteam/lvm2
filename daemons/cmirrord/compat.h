@@ -5,8 +5,8 @@
  * modify, copy, or redistribute it subject to the terms and conditions
  * of the GNU Lesser General Public License v.2.1.
  */
-#ifndef __COMPAT_DOT_H__
-#define __COMPAT_DOT_H__
+#ifndef _LVM_CLOG_COMPAT_H
+#define _LVM_CLOG_COMPAT_H
 
 /*
  * The intermachine communication structure version are:
@@ -22,4 +22,4 @@
 int clog_request_to_network(struct clog_request *rq);
 int clog_request_from_network(void *data, size_t data_len);
 
-#endif /* __COMPAT_DOT_H__ */
+#endif /* _LVM_CLOG_COMPAT_H */

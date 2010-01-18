@@ -9,27 +9,16 @@
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#define _GNU_SOURCE
-#define _FILE_OFFSET_BITS 64
-
-#include <stdint.h>
-#include <errno.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <dirent.h>
-#include <unistd.h>
-#include <signal.h>
-#include <linux/kdev_t.h>
-//#define __USE_GNU /* for O_DIRECT */
-#include <fcntl.h>
-#include <time.h>
-#include "libdevmapper.h"
-#include "dm-log-userspace.h"
-#include "functions.h"
-#include "common.h"
-#include "cluster.h"
 #include "logging.h"
+#include "functions.h"
+
+#include <dirent.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <linux/kdev_t.h>
+#include <signal.h>
+#include <time.h>
+#include <unistd.h>
 
 #define BYTE_SHIFT 3
 

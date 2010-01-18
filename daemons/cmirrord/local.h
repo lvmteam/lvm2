@@ -9,12 +9,12 @@
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#ifndef __CLUSTER_LOG_LOCAL_DOT_H__
-#define __CLUSTER_LOG_LOCAL_DOT_H__
+#ifndef _LVM_CLOG_LOCAL_H
+#define _LVM_CLOG_LOCAL_H
 
 int init_local(void);
 void cleanup_local(void);
 
 int kernel_send(struct dm_ulog_request *rq);
 
-#endif /* __CLUSTER_LOG_LOCAL_DOT_H__ */
+#endif /* _LVM_CLOG_LOCAL_H */

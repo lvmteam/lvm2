@@ -9,23 +9,17 @@
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#include <unistd.h>
-#include <errno.h>
-#include <string.h>
-#include <stdint.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/poll.h>
-#include <linux/connector.h>
-#include <linux/netlink.h>
-
-#include "dm-log-userspace.h"
-#include "functions.h"
-#include "cluster.h"
-#include "common.h"
 #include "logging.h"
+#include "common.h"
+#include "functions.h"
 #include "link_mon.h"
 #include "local.h"
+
+#include <errno.h>
+#include <sys/socket.h>
+#include <linux/connector.h>
+#include <linux/netlink.h>
+#include <unistd.h>
 
 #ifndef CN_IDX_DM
 /* Kernel 2.6.31 is required to run this code */

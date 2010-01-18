@@ -9,12 +9,12 @@
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#ifndef __LINK_MON_DOT_H__
-#define __LINK_MON_DOT_H__
+#ifndef _LVM_CLOG_LINK_MON_H
+#define _LVM_CLOG_LINK_MON_H
 
 int links_register(int fd, const char *name, int (*callback)(void *data), void *data);
 int links_unregister(int fd);
 int links_monitor(void);
 int links_issue_callbacks(void);
 
-#endif /* __LINK_MON_DOT_H__ */
+#endif /* _LVM_CLOG_LINK_MON_H */
