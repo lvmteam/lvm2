@@ -10,6 +10,11 @@
 
 which mkfs.ext3 || exit 200
 
+# Get linux minor version
+linux_minor=$(echo `uname -r` | cut -d'.' -f3 | cut -d'-' -f1)
+
+test $linux_minor -ge 31 || exit 200
+
 . ./test-utils.sh
 
 check_logical_block_size()
