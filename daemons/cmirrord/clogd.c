@@ -21,9 +21,10 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-static int exit_now = 0;
+static volatile sig_atomic_t exit_now = 0;
+/* FIXME Review signal handling.  Should be volatile sig_atomic_t */
 static sigset_t signal_mask;
-static int signal_received;
+static volatile sig_atomic_t signal_received;
 
 static void process_signals(void);
 static void daemonize(void);
@@ -96,7 +97,8 @@ static int create_lockfile(const char *lockfile)
 
 	sprintf(buffer, "%d\n", getpid());
 
-	if(write(fd, buffer, strlen(buffer)) < strlen(buffer)){
+	/* FIXME Handle other non-error returns without aborting */
+	if (write(fd, buffer, strlen(buffer)) < strlen(buffer)){
 		close(fd);
 		unlink(lockfile);
 		return -errno;
@@ -107,8 +109,9 @@ static int create_lockfile(const char *lockfile)
 
 static void sig_handler(int sig)
 {
+	/* FIXME Races - don't touch signal_mask here. */
 	sigaddset(&signal_mask, sig);
-	++signal_received;
+	signal_received = 1;
 }
 
 static void process_signal(int sig){
@@ -225,6 +228,7 @@ static void daemonize(void)
 	if (create_lockfile(CMIRRORD_PIDFILE))
 		exit(EXIT_LOCKFILE);
 
+	/* FIXME Replace with sigaction. (deprecated) */
 	signal(SIGINT, &sig_handler);
 	signal(SIGQUIT, &sig_handler);
 	signal(SIGTERM, &sig_handler);
