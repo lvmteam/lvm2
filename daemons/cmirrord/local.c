@@ -82,8 +82,8 @@ static int kernel_ack(uint32_t seq, int error)
 static int kernel_recv(struct clog_request **rq)
 {
 	int r = 0;
-	int len;
-	void *foo;
+	ssize_t len;
+	char *foo;
 	struct cn_msg *msg;
 	struct dm_ulog_request *u_rq;
 	struct nlmsghdr *nlmsg_h;
@@ -106,9 +106,9 @@ static int kernel_recv(struct clog_request **rq)
 		goto fail;
 	case NLMSG_DONE:
 		msg = (struct cn_msg *)NLMSG_DATA((struct nlmsghdr *)recv_buf);
-		len -= sizeof(struct nlmsghdr);
+		len -= (ssize_t)sizeof(struct nlmsghdr);
 
-		if (len < sizeof(struct cn_msg)) {
+		if (len < (ssize_t)sizeof(struct cn_msg)) {
 			LOG_ERROR("Incomplete request from kernel received");
 			r = -EBADE;
 			goto fail;
@@ -124,10 +124,10 @@ static int kernel_recv(struct clog_request **rq)
 		if (!msg->len)
 			LOG_ERROR("Zero length message received");
 
-		len -= sizeof(struct cn_msg);
+		len -= (ssize_t)sizeof(struct cn_msg);
 
 		if (len < msg->len)
-			LOG_ERROR("len = %d, msg->len = %d", len, msg->len);
+			LOG_ERROR("len = %zd, msg->len = %" PRIu16, len, msg->len);
 
 		msg->data[msg->len] = '\0'; /* Cleaner way to ensure this? */
 		u_rq = (struct dm_ulog_request *)msg->data;
@@ -155,12 +155,12 @@ static int kernel_recv(struct clog_request **rq)
 		 * beyond what is available to us, but we need only check it
 		 * once... perhaps at compile time?
 		 */
-		foo = u_rq;
+		foo = (char *)u_rq;
 		foo -= (sizeof(struct clog_request) - sizeof(struct dm_ulog_request));
-		*rq = foo;
+		*rq = (struct clog_request *) foo;
 
 		/* Clear the wrapper container fields */
-		memset(*rq, 0, (char *)u_rq - (char *)(*rq));
+		memset(*rq, 0, (size_t)((char *)u_rq - (char *)(*rq)));
 		break;
 	default:
 		LOG_ERROR("Unknown nlmsg_type");
@@ -174,7 +174,7 @@ fail:
 	return (r == -EAGAIN) ? 0 : r;
 }
 
-static int kernel_send_helper(void *data, int out_size)
+static int kernel_send_helper(void *data, uint16_t out_size)
 {
 	int r;
 	struct nlmsghdr *nlh;
@@ -327,12 +327,12 @@ static int do_local_work(void *data __attribute((unused)))
 int kernel_send(struct dm_ulog_request *u_rq)
 {
 	int r;
-	int size;
+	uint16_t size;
 
 	if (!u_rq)
 		return -EINVAL;
 
-	size = sizeof(struct dm_ulog_request) + u_rq->data_size;
+	size = (uint16_t)(sizeof(struct dm_ulog_request) + u_rq->data_size);
 
 	if (!u_rq->data_size && !u_rq->error) {
 		/* An ACK is all that is needed */
@@ -368,7 +368,7 @@ int kernel_send(struct dm_ulog_request *u_rq)
 int init_local(void)
 {
 	int r = 0;
-	int opt;
+	unsigned opt;
 	struct sockaddr_nl addr;
 
 	cn_fd = socket(PF_NETLINK, SOCK_DGRAM, NETLINK_CONNECTOR);
