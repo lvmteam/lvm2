@@ -1,0 +1,5 @@
+.TH CMIRRORD 8 "LVM TOOLS #VERSION#" "Red Hat Inc" \" -*- nroff -*-
+.SH NAME
+cmirrord
+.SH SYNOPSIS
+.B cmirrord
