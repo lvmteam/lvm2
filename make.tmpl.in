@@ -54,7 +54,7 @@ staticdir = $(DESTDIR)@STATICDIR@
 udevdir = $(DESTDIR)@udevdir@
 
 interface = @interface@
-interfacedir = $(top_srcdir)/libdm/$(interface)
+interfacebuilddir = $(top_builddir)/libdm/$(interface)
 
 # setup misc variables
 # define the ownership variables for the binaries and man pages
