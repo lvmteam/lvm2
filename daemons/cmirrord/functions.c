@@ -289,6 +289,7 @@ static int write_log(struct log_c *lc)
 	return 0;
 }
 
+/* FIXME Rewrite this function taking advantage of the udev changes (where in use) to improve its efficiency! */
 static int find_disk_path(char *major_minor_str, char *path_rtn, int *unlink_path)
 {
 	int r;
@@ -311,6 +312,7 @@ static int find_disk_path(char *major_minor_str, char *path_rtn, int *unlink_pat
 	if (r != 2)
 		return -EINVAL;
 
+	/* FIXME dm_dir() */
 	LOG_DBG("Checking /dev/mapper for device %d:%d", major, minor);
 	/* Check /dev/mapper dir */
 	dp = opendir("/dev/mapper");
@@ -340,17 +342,18 @@ static int find_disk_path(char *major_minor_str, char *path_rtn, int *unlink_pat
 
 	closedir(dp);
 
+	/* FIXME Find out why this was here and deal with underlying problem. */
 	LOG_DBG("Path not found for %d/%d", major, minor);
-	LOG_DBG("Creating /dev/mapper/%d-%d", major, minor);
-	sprintf(path_rtn, "/dev/mapper/%d-%d", major, minor);
-	r = mknod(path_rtn, S_IFBLK | S_IRUSR | S_IWUSR, MKDEV(major, minor));
+	return -ENOENT;
 
+	// LOG_DBG("Creating /dev/mapper/%d-%d", major, minor);
+	// sprintf(path_rtn, "/dev/mapper/%d-%d", major, minor);
+	// r = mknod(path_rtn, S_IFBLK | S_IRUSR | S_IWUSR, MKDEV(major, minor));
 	/*
 	 * If we have to make the path, we unlink it after we open it
 	 */
-	*unlink_path = 1;
-
-	return r ? -errno : 0;
+	// *unlink_path = 1;
+	// return r ? -errno : 0;
 }
 
 static int _clog_ctr(char *uuid, uint64_t luid,
