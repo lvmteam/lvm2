@@ -1231,12 +1231,21 @@ skip_dlclose:
 
 int refresh_filters(struct cmd_context *cmd)
 {
+	int r, saved_ignore_suspended_devices = ignore_suspended_devices();
+
 	if (cmd->filter) {
 		cmd->filter->destroy(cmd->filter);
 		cmd->filter = NULL;
 	}
 
-	return _init_filters(cmd, 0);
+	r = _init_filters(cmd, 0);
+
+	/*
+	 * During repair code must not reset suspended flag.
+	 */
+	init_ignore_suspended_devices(saved_ignore_suspended_devices);
+
+	return r;
 }
 
 int refresh_toolcontext(struct cmd_context *cmd)

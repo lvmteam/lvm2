@@ -499,6 +499,9 @@ int do_lock_lv(unsigned char command, unsigned char lock_flags, char *resource)
 
 	cmd->partial_activation = (lock_flags & LCK_PARTIAL_MODE) ? 1 : 0;
 
+	/* clvmd should never try to read suspended device */
+	init_ignore_suspended_devices(1);
+
 	switch (command & LCK_MASK) {
 	case LCK_LV_EXCLUSIVE:
 		status = do_activate_lv(resource, lock_flags, LKM_EXMODE);
@@ -627,6 +630,7 @@ int do_refresh_cache()
 	}
 
 	init_full_scan_done(0);
+	init_ignore_suspended_devices(1);
 	lvmcache_label_scan(cmd, 2);
 	dm_pool_empty(cmd->mem);
 
@@ -860,6 +864,7 @@ int init_lvm(int using_gulm)
 
 	/* Check lvm.conf is setup for cluster-LVM */
 	check_config();
+	init_ignore_suspended_devices(1);
 
 	/* Remove any non-LV locks that may have been left around */
 	if (using_gulm)
