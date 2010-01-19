@@ -40,8 +40,15 @@ teardown() {
 		done
 	}
 
-	test -n "$LOOP" && losetup -d $LOOP
-	test -n "$LOOPFILE" && rm -f $LOOPFILE
+	# NOTE: SCSI_DEBUG_DEV test must come before the LOOP test because
+	# prepare_scsi_debug_dev() also sets LOOP to short-circuit prepare_loop()
+	if [ -n "$SCSI_DEBUG_DEV" ] ; then
+		modprobe -r scsi_debug
+	else
+		test -n "$LOOP" && losetup -d $LOOP
+		test -n "$LOOPFILE" && rm -f $LOOPFILE
+	fi
+	unset devs # devs is set in prepare_devs()
 }
 
 teardown_() {
@@ -92,6 +99,68 @@ prepare_loop() {
 		return 0
 	fi
 	exit 1 # should not happen
+}
+
+get_sd_devs_()
+{
+    # prepare_scsi_debug_dev() requires the ability to lookup
+    # the scsi_debug created SCSI device in /dev/
+    local _devs=$(lvmdiskscan --config 'devices { filter = [ "a|/dev/sd.*|", "r|.*|" ] scan = "/dev/" }' | grep /dev/sd | awk '{ print $1 }')
+    echo $_devs
+}
+
+# A drop-in replacement for prepare_loop() that uses scsi_debug to create
+# a ramdisk-based SCSI device upon which all LVM devices will be created
+# - scripts must take care not to use a DEV_SIZE that will enduce OOM-killer
+prepare_scsi_debug_dev()
+{
+    local DEV_SIZE="$1"
+    shift
+    local SCSI_DEBUG_PARAMS="$@"
+
+    test -n "$SCSI_DEBUG_DEV" && return 0
+    trap 'aux teardown_' EXIT # don't forget to clean up
+    trap 'set +vex; STACKTRACE; set -vex' ERR
+
+    # Skip test if awk isn't available (required for get_sd_devs_)
+    which awk || exit 200
+
+    # Skip test if scsi_debug module is unavailable or is already in use
+    modinfo scsi_debug || exit 200
+    lsmod | grep -q scsi_debug && exit 200
+
+    # Create the scsi_debug device and determine the new scsi device's name
+    local devs_before=`get_sd_devs_`
+    # NOTE: it will _never_ make sense to pass num_tgts param;
+    # last param wins.. so num_tgts=1 is imposed
+    modprobe scsi_debug dev_size_mb=$DEV_SIZE $SCSI_DEBUG_PARAMS num_tgts=1
+    sleep 2 # allow for async Linux SCSI device registration
+
+    local devs_after=`get_sd_devs_`
+    for dev1 in $devs_after; do
+	FOUND=0
+	for dev2 in $devs_before; do
+	    if [ "$dev1" = "$dev2" ]; then
+		FOUND=1
+		break
+	    fi
+	done
+	if [ $FOUND -eq 0 ]; then
+	    # Create symlink to scsi_debug device in $G_dev_
+	    SCSI_DEBUG_DEV=$G_dev_/$(basename $dev1)
+	    # Setting $LOOP provides means for prepare_devs() override
+	    LOOP=$SCSI_DEBUG_DEV
+	    ln -snf $dev1 $SCSI_DEBUG_DEV
+	    return 0
+	fi
+    done
+    exit 1 # should not happen
+}
+
+cleanup_scsi_debug_dev()
+{
+    aux teardown
+    unset SCSI_DEBUG_DEV
 }
 
 prepare_devs() {
