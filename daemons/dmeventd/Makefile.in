@@ -64,8 +64,8 @@ dmeventd: $(LIB_SHARED) $(VERSIONED_SHLIB) dmeventd.o
 	$(CC) $(CFLAGS) $(LDFLAGS) -L. -o $@ dmeventd.o \
 	$(LVMLIBS) $(LIBS) -rdynamic
 
-dmeventd.static: $(LIB_STATIC) dmeventd.o $(interfacedir)/libdevmapper.a
-	$(CC) $(CFLAGS) $(LDFLAGS) -static -L. -L$(interfacedir) -o $@ \
+dmeventd.static: $(LIB_STATIC) dmeventd.o $(interfacebuilddir)/libdevmapper.a
+	$(CC) $(CFLAGS) $(LDFLAGS) -static -L. -L$(interfacebuilddir) -o $@ \
 	dmeventd.o $(LVMLIBS) $(LIBS) -rdynamic
 
 ifeq ("@PKGCONFIG@", "yes")

@@ -7,7 +7,7 @@
 #ifndef __DM_LOG_USERSPACE_H__
 #define __DM_LOG_USERSPACE_H__
 
-#include <linux/dm-ioctl.h> /* For DM_UUID_LEN */
+#include "dm-ioctl.h" /* For DM_UUID_LEN */
 
 /*
  * The device-mapper userspace log module consists of a kernel component and
