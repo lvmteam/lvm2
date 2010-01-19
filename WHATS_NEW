@@ -1,5 +1,6 @@
 Version 2.02.59 - 
 ===================================
+  Fix clvmd to never scan suspended devices.
   Initial version of the cmirror init script (Red Hat).
   Initial version of the cmirrord man page.
   Make cluster log communication structures architecture independant.
