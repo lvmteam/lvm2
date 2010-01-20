@@ -2064,7 +2064,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	struct volume_group *vg;
 	struct lvinfo info;
 	struct logical_volume *origin = NULL;
-	int was_merging = 0;
+	int was_merging = 0, preload_origin = 0;
 
 	vg = lv->vg;
 
@@ -2130,6 +2130,11 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		log_verbose("Removing snapshot %s", lv->name);
 		if (!vg_remove_snapshot(lv))
 			return_0;
+		if (was_merging && lv_is_origin(origin)) {
+			/* snapshot(s) still exist. preload new origin prior to suspend. */
+			/* FIXME Seek a simpler way of dealing with this within the tree. */
+			preload_origin = 1;
+		}
 	}
 
 	log_verbose("Releasing logical volume \"%s\"", lv->name);
@@ -2142,22 +2147,21 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	if (!vg_write(vg))
 		return_0;
 
-	/* FIXME Seek a simpler way of dealing with this within the tree. */
+	if (!preload_origin && !vg_commit(vg))
+		return_0;
+
 	/* If no snapshots left or if we stopped merging, reload */
 	if (origin && (!lv_is_origin(origin) || was_merging)) {
 		if (!suspend_lv(cmd, origin)) {
 			log_error("Failed to refresh %s without snapshot.", origin->name);
 			return 0;
 		}
-		if (!vg_commit(vg))
+		if (preload_origin && !vg_commit(vg))
 			return_0;
 		if (!resume_lv(cmd, origin)) {
 			log_error("Failed to resume %s.", origin->name);
 			return 0;
 		}
-	} else {
-		if (!vg_commit(vg))
-			return_0;
 	}
 
 	backup(vg);
