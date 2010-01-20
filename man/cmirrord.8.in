@@ -1,5 +1,13 @@
 .TH CMIRRORD 8 "LVM TOOLS #VERSION#" "Red Hat Inc" \" -*- nroff -*-
 .SH NAME
-cmirrord
+cmirrord \- cluster mirror log daemon
+
 .SH SYNOPSIS
 .B cmirrord
+
+.SH DESCRIPTION
+cmirrord is the daemon that tracks mirror log information in a cluster.
+Cluster mirrors are not possible without this daemon running.
+
+.SH SEE ALSO
+.BR clvmd (8)
