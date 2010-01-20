@@ -15,7 +15,7 @@
 #include "dm-log-userspace.h"
 #include "libdevmapper.h"
 
-#define DM_ULOG_RESPONSE 0x1000 /* in last byte of 32-bit value */
+#define DM_ULOG_RESPONSE 0x1000U /* in last byte of 32-bit value */
 #define DM_ULOG_CHECKPOINT_READY 21
 #define DM_ULOG_MEMBER_JOIN      22
 
