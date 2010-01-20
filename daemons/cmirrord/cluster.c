@@ -436,9 +436,9 @@ static int export_checkpoint(struct checkpoint_data *cp)
 
 	len = snprintf((char *)(name.value), SA_MAX_NAME_LENGTH,
 		       "bitmaps_%s_%u", SHORT_UUID(cp->uuid), cp->requester);
-	name.length = len;
+	name.length = (SaUint16T)len;
 
-	len = strlen(cp->recovering_region) + 1;
+	len = (int)strlen(cp->recovering_region) + 1;
 
 	attr.creationFlags = SA_CKPT_WR_ALL_REPLICAS;
 	attr.checkpointSize = cp->bitmap_size * 2 + len;
@@ -476,7 +476,7 @@ open_retry:
 	/*
 	 * Add section for sync_bits
 	 */
-	section_id.idLen = snprintf(buf, 32, "sync_bits");
+	section_id.idLen = (SaUint16T)snprintf(buf, 32, "sync_bits");
 	section_id.id = (unsigned char *)buf;
 	section_attr.sectionId = &section_id;
 	section_attr.expirationTime = SA_TIME_END;
@@ -605,7 +605,7 @@ static int import_checkpoint(struct clog_cpg *entry, int no_read)
 
 	len = snprintf((char *)(name.value), SA_MAX_NAME_LENGTH, "bitmaps_%s_%u",
 		       SHORT_UUID(entry->name.value), my_cluster_id);
-	name.length = len;
+	name.length = (SaUint16T)len;
 
 open_retry:
 	rv = saCkptCheckpointOpen(ckpt_handle, &name, NULL,
@@ -1157,8 +1157,8 @@ static void cpg_join_callback(struct clog_cpg *match,
 			      const struct cpg_address *member_list,
 			      size_t member_list_entries)
 {
-	int i;
-	int my_pid = getpid();
+	unsigned i;
+	uint32_t my_pid = (uint32_t)getpid();
 	uint32_t lowest = match->lowest_id;
 	struct clog_request *rq;
 	char dbuf[32];
@@ -1178,7 +1178,7 @@ static void cpg_join_callback(struct clog_cpg *match,
 		goto out;
 
 	memset(dbuf, 0, sizeof(dbuf));
-	for (i = 0; i < (member_list_entries-1); i++)
+	for (i = 0; i < member_list_entries - 1; i++)
 		sprintf(dbuf+strlen(dbuf), "%u-", member_list[i].nodeid);
 	sprintf(dbuf+strlen(dbuf), "(%u)", joined->nodeid);
 	LOG_COND(log_checkpoint, "[%s] Joining node, %u needs checkpoint [%s]",
@@ -1236,7 +1236,8 @@ static void cpg_leave_callback(struct clog_cpg *match,
 			       const struct cpg_address *member_list,
 			       size_t member_list_entries)
 {
-	int i, j, fd;
+	unsigned i;
+	int j, fd;
 	uint32_t lowest = match->lowest_id;
 	struct clog_request *rq, *n;
 	struct checkpoint_data *p_cp, *c_cp;
@@ -1456,7 +1457,7 @@ unlink_retry:
 int create_cluster_cpg(char *uuid, uint64_t luid)
 {
 	int r;
-	int size;
+	size_t size;
 	struct clog_cpg *new = NULL;
 	struct clog_cpg *tmp;
 
@@ -1480,7 +1481,7 @@ int create_cluster_cpg(char *uuid, uint64_t luid)
 	size = ((strlen(uuid) + 1) > CPG_MAX_NAME_LENGTH) ?
 		CPG_MAX_NAME_LENGTH : (strlen(uuid) + 1);
 	strncpy(new->name.value, uuid, size);
-	new->name.length = size;
+	new->name.length = (uint32_t)size;
 	new->luid = luid;
 
 	/*

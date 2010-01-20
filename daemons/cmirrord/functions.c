@@ -290,7 +290,7 @@ static int write_log(struct log_c *lc)
 }
 
 /* FIXME Rewrite this function taking advantage of the udev changes (where in use) to improve its efficiency! */
-static int find_disk_path(char *major_minor_str, char *path_rtn, int *unlink_path)
+static int find_disk_path(char *major_minor_str, char *path_rtn, int *unlink_path __attribute((unused)))
 {
 	int r;
 	DIR *dp;
