@@ -1213,6 +1213,10 @@ static void _fin_commands(void)
 		dm_free(_cmdline.commands[i].valid_args);
 
 	dm_free(_cmdline.commands);
+
+	_cmdline.commands = NULL;
+	_cmdline.num_commands = 0;
+	_cmdline.commands_size = 0;
 }
 
 void lvm_fin(struct cmd_context *cmd)
