@@ -3020,29 +3020,30 @@ static struct physical_volume *_pv_read(struct cmd_context *cmd,
 	if (label_sector && *label_sector)
 		*label_sector = label->sector;
 
-	if (!(pv = dm_pool_zalloc(pvmem, sizeof(*pv)))) {
+	pv = _alloc_pv(pvmem, dev);
+	if (!pv) {
 		log_error("pv allocation for '%s' failed", pv_name);
 		return NULL;
 	}
-
-	dm_list_init(&pv->tags);
-	dm_list_init(&pv->segments);
 
 	/* FIXME Move more common code up here */
 	if (!(info->fmt->ops->pv_read(info->fmt, pv_name, pv, mdas,
 	      scan_label_only))) {
 		log_error("Failed to read existing physical volume '%s'",
 			  pv_name);
-		return NULL;
+		goto bad;
 	}
 
 	if (!pv->size)
-		return NULL;
+		goto bad;
 
 	if (!alloc_pv_segment_whole_pv(pvmem, pv))
-		return_NULL;
+		goto_bad;
 
 	return pv;
+bad:
+	_free_pv(pvmem, pv);
+	return NULL;
 }
 
 /* May return empty list */
