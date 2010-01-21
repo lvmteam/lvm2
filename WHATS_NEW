@@ -1,17 +1,23 @@
-Version 2.02.59 - 
+Version 2.02.59 - 21st January 2010
 ===================================
   Add libdevmapper-event-lvm2.so to serialise dmeventd plugin liblvm2cmd use.
   Cleanup memory initialization and freeing in pv_read() and pv_create().
   Clear pointer and counters after their release in _fin_commands().
+  Stop dmeventd trying to access already-removed snapshots.
+  Remove (fallback) /dev mknod from cmirrord.
   Add t-topology-support.sh and t-snapshot-merge.sh tests.
   Fix clvmd to never scan suspended devices.
-  Initial version of the cmirror init script (Red Hat).
-  Initial version of the cmirrord man page.
+  Fix dmeventd build outside source tree.
+  Assorted cmirror code changes to remove various compiler warnings.
+  Fix detection of completed snapshot merge.
+  Add Red Hat cmirror initscript (unfinished).
+  Add cmirrord man page (incomplete).
   Make cluster log communication structures architecture independant.
-  Fix cluster log issues with in-memory bitmaps.
+  Fix cluster log in-memory bitmap handling.
+  Improve snapshot merge metadata import validation.
   Improve target type compatibility checking in _percent_run().
   Add 'target_status_compatible' method to 'struct segtype_handler'.
-  Fix difference between CTR table built and expected for cluster log.
+  Change underscore to hyphen in table line for clustered log type.
 
 Version 2.02.58 - 14th January 2010
 ===================================
