@@ -1348,7 +1348,7 @@ struct physical_volume * pvcreate_single(struct cmd_context *cmd,
 					 const char *pv_name,
 					 struct pvcreate_params *pp)
 {
-	void *pv;
+	struct physical_volume *pv;
 	struct device *dev;
 	struct dm_list mdas;
 	struct pvcreate_params default_pp;
@@ -1418,8 +1418,7 @@ struct physical_volume * pvcreate_single(struct cmd_context *cmd,
 
 	log_very_verbose("Writing physical volume data to disk \"%s\"",
 			 pv_name);
-	if (!(pv_write(cmd, (struct physical_volume *)pv, &mdas,
-		       pp->labelsector))) {
+	if (!(pv_write(cmd, pv, &mdas, pp->labelsector))) {
 		log_error("Failed to write physical volume \"%s\"", pv_name);
 		goto error;
 	}
