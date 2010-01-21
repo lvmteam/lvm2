@@ -1,0 +1,6 @@
+init_lvm
+fini_lvm
+lock_lvm
+unlock_lvm
+lvm_pool
+lvm_handle

@@ -1,6 +1,5 @@
 #
-# Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
-# Copyright (C) 2004-2005, 2008-2010 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2010 Red Hat, Inc. All rights reserved.
 #
 # This file is part of LVM2.
 #
@@ -17,24 +16,22 @@ top_srcdir = @top_srcdir@
 top_builddir = @top_builddir@
 VPATH = @srcdir@
 
-INCLUDES += -I${top_srcdir}/tools -I$(top_srcdir)/daemons/dmeventd/plugins/lvm2
-CLDFLAGS += -L${top_builddir}/tools -L${top_builddir}/daemons/dmeventd/plugins/lvm2
+CLDFLAGS += -L${top_builddir}/tools
 
-SOURCES = dmeventd_mirror.c
+SOURCES = dmeventd_lvm.c
 
 ifeq ("@LIB_SUFFIX@","dylib")
-  LIB_SHARED = libdevmapper-event-lvm2mirror.dylib
+  LIB_SHARED = libdevmapper-event-lvm2.dylib
 else
-  LIB_SHARED = libdevmapper-event-lvm2mirror.so
+  LIB_SHARED = libdevmapper-event-lvm2.so
 endif
-
 LIB_VERSION = $(LIB_VERSION_LVM)
 
 include $(top_builddir)/make.tmpl
 
-LIBS += -ldevmapper @LIB_PTHREAD@ @LVM2CMD_LIB@ -ldevmapper-event-lvm2
+LIBS += -ldevmapper @LIB_PTHREAD@ @LVM2CMD_LIB@
 
-install_lvm2: libdevmapper-event-lvm2mirror.$(LIB_SUFFIX)
+install_lvm2: libdevmapper-event-lvm2.$(LIB_SUFFIX)
 	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) $< \
 		$(libdir)/$<.$(LIB_VERSION)
 	$(LN_S) -f $<.$(LIB_VERSION) $(libdir)/$<

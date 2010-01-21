@@ -17,7 +17,10 @@ top_srcdir = @top_srcdir@
 top_builddir = @top_builddir@
 VPATH = @srcdir@
 
-SUBDIRS += mirror snapshot
+SUBDIRS += lvm2 mirror snapshot
+
+mirror: lvm2
+snapshot: lvm2
 
 include ../../../make.tmpl
 

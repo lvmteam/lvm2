@@ -1,5 +1,6 @@
 Version 2.02.59 - 
 ===================================
+  Add libdevmapper-event-lvm2.so to serialise dmeventd plugin liblvm2cmd use.
   Cleanup memory initialization and freeing in pv_read() and pv_create().
   Clear pointer and counters after their release in _fin_commands().
   Add t-topology-support.sh and t-snapshot-merge.sh tests.
