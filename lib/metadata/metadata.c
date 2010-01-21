@@ -1443,11 +1443,6 @@ static struct physical_volume *_alloc_pv(struct dm_pool *mem, struct device *dev
 	if (!pv)
 		return_NULL;
 
-	if (!(pv->vg_name = dm_pool_zalloc(mem, NAME_LEN))) {
-		dm_pool_free(mem, pv);
-		return NULL;
-	}
-
 	pv->pe_size = 0;
 	pv->pe_start = 0;
 	pv->pe_count = 0;
