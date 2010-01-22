@@ -1,3 +1,6 @@
+Version 2.02.60
+===================================
+
 Version 2.02.59 - 21st January 2010
 ===================================
   Add libdevmapper-event-lvm2.so to serialise dmeventd plugin liblvm2cmd use.
