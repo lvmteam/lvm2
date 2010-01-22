@@ -12,7 +12,7 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "dmlib.h"
+#include "lib.h"
 
 #include "lvm2cmd.h"
 #include "errors.h"
