@@ -17,6 +17,7 @@
 #include <fcntl.h>
 #include <linux/kdev_t.h>
 #include <signal.h>
+#include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
 
