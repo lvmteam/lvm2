@@ -53,6 +53,7 @@ struct poll_functions {
 
 struct daemon_parms {
 	unsigned interval;
+	unsigned wait_before_testing;
 	unsigned aborting;
 	unsigned background;
 	unsigned outstanding_count;

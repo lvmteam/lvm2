@@ -156,8 +156,18 @@ static int _check_lv_status(struct cmd_context *cmd,
 	return 1;
 }
 
+static void _sleep_and_rescan_devices(struct daemon_parms *parms)
+{
+	/* FIXME Use alarm for regular intervals instead */
+	if (parms->interval && !parms->aborting) {
+		sleep(parms->interval);
+		/* Devices might have changed while we slept */
+		init_full_scan_done(0);
+	}
+}
+
 static int _wait_for_single_lv(struct cmd_context *cmd, const char *name, const char *uuid,
-				   struct daemon_parms *parms)
+			       struct daemon_parms *parms)
 {
 	struct volume_group *vg;
 	struct logical_volume *lv;
@@ -165,13 +175,8 @@ static int _wait_for_single_lv(struct cmd_context *cmd, const char *name, const 
 
 	/* Poll for completion */
 	while (!finished) {
-		/* FIXME Also needed in vg/lvchange -ay? */
-		/* FIXME Use alarm for regular intervals instead */
-		if (parms->interval && !parms->aborting) {
-			sleep(parms->interval);
-			/* Devices might have changed while we slept */
-			init_full_scan_done(0);
-		}
+		if (parms->wait_before_testing)
+			_sleep_and_rescan_devices(parms);
 
 		/* Locks the (possibly renamed) VG again */
 		vg = parms->poll_fns->get_copy_vg(cmd, name, uuid);
@@ -196,6 +201,21 @@ static int _wait_for_single_lv(struct cmd_context *cmd, const char *name, const 
 		}
 
 		unlock_and_release_vg(cmd, vg, vg->name);
+
+		/*
+		 * FIXME Sleeping after testing, while preferred, also works around
+		 * unreliable "finished" state checking in _percent_run.  If the
+		 * above _check_lv_status is deferred until after the first sleep it
+		 * may be that a polldaemon will run without ever completing.
+		 *
+		 * This happens when one snapshot-merge polldaemon is racing with
+		 * another (polling the same LV).  The first to see the LV status
+		 * reach the "finished" state will alter the LV that the other
+		 * polldaemon(s) are polling.  These other polldaemon(s) can then
+		 * continue polling an LV that doesn't have a "status".
+		 */
+		if (!parms->wait_before_testing)
+			_sleep_and_rescan_devices(parms);
 	}
 
 	return 1;
@@ -253,17 +273,23 @@ int poll_daemon(struct cmd_context *cmd, const char *name, const char *uuid,
 	struct daemon_parms parms;
 	int daemon_mode = 0;
 	int ret = ECMD_PROCESSED;
+	sign_t interval_sign;
 
 	parms.aborting = arg_is_set(cmd, abort_ARG);
 	parms.background = background;
+	interval_sign = arg_sign_value(cmd, interval_ARG, 0);
+	if (interval_sign == SIGN_MINUS)
+		log_error("Argument to --interval cannot be negative");
 	parms.interval = arg_uint_value(cmd, interval_ARG, DEFAULT_INTERVAL);
+	parms.wait_before_testing = (interval_sign == SIGN_PLUS);
 	parms.progress_display = 1;
 	parms.progress_title = progress_title;
 	parms.lv_type = lv_type;
 	parms.poll_fns = poll_fns;
 
 	if (parms.interval && !parms.aborting)
-		log_verbose("Checking progress every %u seconds",
+		log_verbose("Checking progress %s waiting every %u seconds",
+			    (parms.wait_before_testing ? "after" : "before"),
 			    parms.interval);
 
 	if (!parms.interval) {
