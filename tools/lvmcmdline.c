@@ -1027,8 +1027,6 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 		locking_type = -1;
 
 	if (!init_locking(locking_type, cmd)) {
-		log_error("Locking type %d initialisation failed.",
-			  locking_type);
 		ret = ECMD_FAILED;
 		goto out;
 	}

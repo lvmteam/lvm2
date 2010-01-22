@@ -72,7 +72,7 @@ static int _readonly_lock_resource(struct cmd_context *cmd,
 	    (flags & LCK_SCOPE_MASK) == LCK_VG &&
 	    !(flags & LCK_CACHE) &&
 	    strcmp(resource, VG_GLOBAL)) {
-		log_error("Write locks are prohibited with --ignorelockingfailure.");
+		log_error("Write locks are prohibited with read-only locking.");
 		return 0;
 	}
 
