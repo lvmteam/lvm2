@@ -24,14 +24,10 @@ start()
 	if ! pidof $DAEMON > /dev/null 
 	then 
 		echo -n "Starting $DAEMON: "
-		daemon $DAEMON $CLVMDOPTS
+		daemon $DAEMON
 		rtrn=$?
 		echo
-		if [ $rtrn -ne 0 ]
-		then
-			break
-		fi
-	fi      
+	fi
 
 	return $rtrn
 }
@@ -41,6 +37,7 @@ stop()
 	echo -n "Stopping $DAEMON:"
 	killproc $DAEMON -TERM
 	rtrn=$?
+	echo
 
 	return $rtrn
 }
