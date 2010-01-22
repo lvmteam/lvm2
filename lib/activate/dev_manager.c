@@ -327,7 +327,6 @@ static int _status(const char *name, const char *uuid,
 	return 0;
 }
 
-/* FIXME Is there anything simpler to check for instead? */
 static int _lv_has_target_type(struct dev_manager *dm,
 			       struct logical_volume *lv,
 			       const char *layer,
@@ -363,8 +362,7 @@ static int _lv_has_target_type(struct dev_manager *dm,
 					  &type, &params);
 		if (type && strncmp(type, target_type,
 				    strlen(target_type)) == 0) {
-			/* FIXME Why the inactive test? */
-			if (info.live_table && !info.inactive_table)
+			if (info.live_table)
 				r = 1;
 			break;
 		}
@@ -1141,6 +1139,7 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 				      0, 1, 0, &dinfo, NULL) && dinfo.open_count) ||
 		    (dev_manager_info(dm->mem, NULL, find_merging_cow(lv)->cow,
 				      0, 1, 0, &dinfo, NULL) && dinfo.open_count)) {
+			/* FIXME Is there anything simpler to check for instead? */
 			if (!_lv_has_target_type(dm, lv, NULL, "snapshot-merge"))
 				clear_snapshot_merge(lv);
 		}
