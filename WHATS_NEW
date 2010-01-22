@@ -1,5 +1,6 @@
 Version 2.02.60
 ===================================
+  Eliminate extra ioctls just to check open_count in _add_new_lv_to_dtree.
   Disable not thread-safe memory debugging if dmeventd is configured.
   Fix first log message prefix in syslog for dmeventd plugins.
   Fix exported symbols names for dmeventd lvm2 wrapper plugin.
