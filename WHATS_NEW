@@ -1,5 +1,8 @@
 Version 2.02.60
 ===================================
+  Disable not thread-safe memory debugging if dmeventd is configured.
+  Fix first log message prefix in syslog for dmeventd plugins.
+  Fix exported symbols names for dmeventd lvm2 wrapper plugin.
   Fix failed locking messages to be more descriptive.
 
 Version 2.02.59 - 21st January 2010
