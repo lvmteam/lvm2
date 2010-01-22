@@ -51,7 +51,6 @@ lvm_t lvm_init(const char *system_dir)
 	/* initialize locking */
 	if (!init_locking(-1, cmd)) {
 		/* FIXME: use EAGAIN as error code here */
-		log_error("Locking initialisation failed.");
 		lvm_quit((lvm_t) cmd);
 		return NULL;
 	}

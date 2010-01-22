@@ -224,7 +224,7 @@ int init_locking(int type, struct cmd_context *cmd)
 
 	_blocking_supported = find_config_tree_int(cmd,
 	    "global/wait_for_locks", DEFAULT_WAIT_FOR_LOCKS);
-	
+
 	switch (type) {
 	case 0:
 		init_no_locking(&_locking, cmd);
@@ -236,8 +236,10 @@ int init_locking(int type, struct cmd_context *cmd)
 		log_very_verbose("%sFile-based locking selected.",
 				 _blocking_supported ? "" : "Non-blocking ");
 
-		if (!init_file_locking(&_locking, cmd))
+		if (!init_file_locking(&_locking, cmd)) {
+			log_error("File-based locking initialisation failed.");
 			break;
+		}
 		return 1;
 
 #ifdef HAVE_LIBDL
@@ -249,8 +251,10 @@ int init_locking(int type, struct cmd_context *cmd)
 		}
 		if (!find_config_tree_int(cmd, "locking/fallback_to_clustered_locking",
 			    find_config_tree_int(cmd, "global/fallback_to_clustered_locking",
-						 DEFAULT_FALLBACK_TO_CLUSTERED_LOCKING)))
+						 DEFAULT_FALLBACK_TO_CLUSTERED_LOCKING))) {
+			log_error("External locking initialisation failed.");
 			break;
+		}
 #endif
 
 #ifdef CLUSTER_LOCKING_INTERNAL
@@ -259,8 +263,10 @@ int init_locking(int type, struct cmd_context *cmd)
 
 	case 3:
 		log_very_verbose("Cluster locking selected.");
-		if (!init_cluster_locking(&_locking, cmd))
+		if (!init_cluster_locking(&_locking, cmd)) {
+			log_error("Internal cluster locking initialisation failed.");
 			break;
+		}
 		return 1;
 #endif
 
@@ -285,6 +291,8 @@ int init_locking(int type, struct cmd_context *cmd)
 			  "be inaccessible.");
 		if (init_file_locking(&_locking, cmd))
 			return 1;
+		else
+			log_error("File-based locking initialisation failed.");
 	}
 
 	if (!ignorelockingfailure())
