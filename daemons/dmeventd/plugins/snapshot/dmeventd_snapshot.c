@@ -120,11 +120,12 @@ int register_device(const char *device,
 		    void **private)
 {
 	int *percent_warning = (int*)private;
+	int r = dmeventd_lvm2_init();
 
 	*percent_warning = WARNING_THRESH; /* Print warning if snapshot is full */
 
 	syslog(LOG_INFO, "Monitoring snapshot %s\n", device);
-	return dmeventd_lvm2_init();
+	return r;
 }
 
 int unregister_device(const char *device,

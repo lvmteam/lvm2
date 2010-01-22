@@ -225,8 +225,9 @@ int register_device(const char *device,
 		    int minor __attribute((unused)),
 		    void **unused __attribute((unused)))
 {
+	int r = dmeventd_lvm2_init();
 	syslog(LOG_INFO, "Monitoring mirror device %s for events", device);
-	return dmeventd_lvm2_init();
+	return r;
 }
 
 int unregister_device(const char *device,
