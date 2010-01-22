@@ -78,7 +78,10 @@ CFLAGS += @COPTIMISE_FLAG@
 ifeq ("@DEBUG@", "yes")
   CFLAGS += -g -fno-omit-frame-pointer
   DEFS += -DDEBUG
-  DEFS += -DDEBUG_MEM
+  # memory debugging is not thread-safe yet
+  ifneq ("@DMEVENTD@", "yes")
+    DEFS += -DDEBUG_MEM
+  endif
 endif
 
 ifeq ("@INTL@", "yes")
