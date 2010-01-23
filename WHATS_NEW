@@ -1,13 +1,14 @@
-Version 2.02.60
+Version 2.02.60 - 23rd January 2010
 ===================================
-  Support "wait before testing" using '+' in pvmove and lvconvert interval.
-  Default to checking LV's progress before waiting in _wait_for_single_lv.
-  Fix syntax error in cmirror init script.
-  Eliminate extra ioctls just to check open_count in _add_new_lv_to_dtree.
-  Disable not thread-safe memory debugging if dmeventd is configured.
+  Extend cmirrord man page.
+  Sleep before first progress check if pvmove/lvconvert interval has prefix '+'.
+  Default to checking progress before waiting in _wait_for_single_lv.
+  Fix cmirror initscript (including syntax error).
+  Eliminate avoidable ioctls for checking open_count in _add_new_lv_to_dtree.
+  Disable memory debugging if dmeventd is configured. (Not thread-safe.)
   Fix first log message prefix in syslog for dmeventd plugins.
   Fix exported symbols names for dmeventd lvm2 wrapper plugin.
-  Fix failed locking messages to be more descriptive.
+  Make failed locking initialisation messages more descriptive.
 
 Version 2.02.59 - 21st January 2010
 ===================================
