@@ -303,8 +303,10 @@ static int _update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 	}
 
 	/* Suspend lvs_changed */
-	if (!suspend_lvs(cmd, lvs_changed))
+	if (!suspend_lvs(cmd, lvs_changed)) {
+		vg_revert(vg);
 		goto_out;
+	}
 
 	/* Suspend mirrors on subsequent calls */
 	if (!first_time) {
@@ -324,6 +326,7 @@ static int _update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 				stack;
 		if (!resume_lvs(cmd, lvs_changed))
 			stack;
+		vg_revert(vg);
 		goto out;
 	}
 
