@@ -1,5 +1,6 @@
 Version 2.02.60 - 23rd January 2010
 ===================================
+  Fix return code of info call for query by uuid.
   Extend cmirrord man page.
   Sleep before first progress check if pvmove/lvconvert interval has prefix '+'.
   Default to checking progress before waiting in _wait_for_single_lv.

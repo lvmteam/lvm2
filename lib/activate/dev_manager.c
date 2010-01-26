@@ -209,14 +209,16 @@ static int _info(const char *name, const char *dlid, int mknodes,
 		 int with_open_count, int with_read_ahead,
 		 struct dm_info *info, uint32_t *read_ahead)
 {
+	int r = 0;
+
 	if (!mknodes && dlid && *dlid) {
-		if (_info_run(NULL, dlid, info, read_ahead, 0, with_open_count,
-			      with_read_ahead, 0, 0) &&
+		if ((r = _info_run(NULL, dlid, info, read_ahead, 0, with_open_count,
+			      with_read_ahead, 0, 0)) &&
 	    	    info->exists)
 			return 1;
-		else if (_info_run(NULL, dlid + sizeof(UUID_PREFIX) - 1, info,
+		else if ((r = _info_run(NULL, dlid + sizeof(UUID_PREFIX) - 1, info,
 				   read_ahead, 0, with_open_count,
-				   with_read_ahead, 0, 0) &&
+				   with_read_ahead, 0, 0)) &&
 			 info->exists)
 			return 1;
 	}
@@ -225,7 +227,7 @@ static int _info(const char *name, const char *dlid, int mknodes,
 		return _info_run(name, NULL, info, read_ahead, mknodes,
 				 with_open_count, with_read_ahead, 0, 0);
 
-	return 0;
+	return r;
 }
 
 static int _info_by_dev(uint32_t major, uint32_t minor, struct dm_info *info)
