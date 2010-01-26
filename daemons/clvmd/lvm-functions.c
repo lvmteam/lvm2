@@ -373,17 +373,22 @@ static int do_activate_lv(char *resource, unsigned char lock_flags, int mode)
 
 	/* If it's suspended then resume it */
 	if (!lv_info_by_lvid(cmd, resource, &lvi, 0, 0))
-		return EIO;
+		goto error;
 
 	if (lvi.suspended)
 		if (!lv_resume(cmd, resource))
-			return EIO;
+			goto error;
 
 	/* Now activate it */
 	if (!lv_activate(cmd, resource, exclusive))
-		return EIO;
+		goto error;
 
 	return 0;
+
+error:
+	if (oldmode == -1 || oldmode != mode)
+		(void)hold_unlock(resource);
+	return EIO;
 }
 
 /* Resume the LV if it was active */
