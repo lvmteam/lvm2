@@ -858,9 +858,9 @@ static int resend_requests(struct clog_cpg *entry)
 static int do_cluster_work(void *data __attribute((unused)))
 {
 	int r = SA_AIS_OK;
-	struct clog_cpg *entry;
+	struct clog_cpg *entry, *tmp;
 
-	dm_list_iterate_items(entry, &clog_cpg_list) {
+	dm_list_iterate_items_safe(entry, tmp, &clog_cpg_list) {
 		r = cpg_dispatch(entry->handle, CPG_DISPATCH_ALL);
 		if (r != SA_AIS_OK)
 			LOG_ERROR("cpg_dispatch failed: %s", str_ais_error(r));
