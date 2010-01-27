@@ -492,7 +492,7 @@ int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s,
 	if (!(lv = lv_from_lvid(cmd, lvid_s, 0)))
 		return 0;
 
-	r = _lv_info(cmd, lv, 0, info, with_open_count, with_read_ahead, 0);
+	r = _lv_info(cmd, lv, 0, info, with_open_count, with_read_ahead, 1);
 	vg_release(lv->vg);
 
 	return r;
