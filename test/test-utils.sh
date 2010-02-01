@@ -59,7 +59,6 @@ teardown_() {
 
 make_ioerror() {
 	echo 0 10000000 error | dmsetup create ioerror
-	dmsetup resume ioerror
 	ln -s $G_dev_/mapper/ioerror $G_dev_/ioerror
 }
 
@@ -188,7 +187,6 @@ prepare_devs() {
 		devs="$devs $dev"
 		echo 0 $size linear $LOOP $((($i-1)*$size)) > $name.table
 		dmsetup create $name $name.table
-		dmsetup resume $name
 	done
 
     # set up some default names
