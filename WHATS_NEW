@@ -1,5 +1,7 @@
 Version 2.02.61 - 
 ===================================
+  Remove pointless versioned symlinks to dmeventd plugin libraries.
+  Fix dmeventd snapshot plugin build dependency.
   Make clvmd -V return zero status.
 
 Version 2.02.60 - 23rd January 2010
