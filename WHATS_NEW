@@ -1,3 +1,8 @@
+Version 2.02.60 - 
+===================================
+  Make clvmd -V return zero status.
+
+
 Version 2.02.60 - 23rd January 2010
 ===================================
   Fix lvconvert issue with cluster mirrors due to un'_safe' list processing
