@@ -1,3 +1,7 @@
+Version 1.02.44 - 
+===================================
+  Fix dmeventd snapshot plugin build dependency.
+
 Version 1.02.43 - 21st January 2010
 ===================================
   Remove bitset, hash and pool headers superceded by libdevmapper.h.
