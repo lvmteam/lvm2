@@ -342,7 +342,7 @@ int main(int argc, char *argv[])
 			printf("Protocol version:           %d.%d.%d\n",
 			       CLVMD_MAJOR_VERSION, CLVMD_MINOR_VERSION,
 			       CLVMD_PATCH_VERSION);
-			exit(1);
+			exit(0);
 			break;
 
 		}
