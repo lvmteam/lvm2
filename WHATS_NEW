@@ -4,15 +4,15 @@ Version 2.02.61 -
   Remove pointless versioned symlinks to dmeventd plugin libraries.
   Fix dmeventd snapshot plugin build dependency.
   Make clvmd -V return zero status.
-
-Version 2.02.60 - 23rd January 2010
-===================================
   Fix lvconvert issue with cluster mirrors due to un'_safe' list processing
   Fix pvmove abort workaround to be cluster-aware when temporary mirror activation fails.
   Always query device by using uuid only and not name in clvmd.
   Add missing metadata reverts in pvmove error path.
   Unlock shared lock in clvmd if activation calls failed.
   Fix return code of info call for query by uuid.
+
+Version 2.02.60 - 23rd January 2010
+===================================
   Extend cmirrord man page.
   Sleep before first progress check if pvmove/lvconvert interval has prefix '+'.
   Default to checking progress before waiting in _wait_for_single_lv.
