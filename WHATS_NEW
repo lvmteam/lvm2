@@ -1,5 +1,6 @@
 Version 2.02.61 - 
 ===================================
+  Add copy constructor for metadata_area.
   Remove pointless versioned symlinks to dmeventd plugin libraries.
   Fix dmeventd snapshot plugin build dependency.
   Make clvmd -V return zero status.
