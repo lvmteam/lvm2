@@ -83,7 +83,8 @@ typedef enum {
 	PERCENT_VG,
 	PERCENT_FREE,
 	PERCENT_LV,
-	PERCENT_PVS
+	PERCENT_PVS,
+	PERCENT_ORIGIN
 } percent_t;
 
 enum {
