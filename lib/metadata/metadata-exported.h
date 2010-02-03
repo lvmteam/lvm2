@@ -398,8 +398,10 @@ void lv_set_visible(struct logical_volume *lv);
 void lv_set_hidden(struct logical_volume *lv);
 
 /* Set full_scan to 1 to re-read every (filtered) device label */
-struct dm_list *get_vgnames(struct cmd_context *cmd, int full_scan);
-struct dm_list *get_vgids(struct cmd_context *cmd, int full_scan);
+struct dm_list *get_vgnames(struct cmd_context *cmd, int full_scan,
+			     int include_internal);
+struct dm_list *get_vgids(struct cmd_context *cmd, int full_scan,
+			   int include_internal);
 int scan_vgs_for_pvs(struct cmd_context *cmd);
 
 int pv_write(struct cmd_context *cmd, struct physical_volume *pv,

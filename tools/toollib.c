@@ -275,7 +275,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 
 	if (!argc || !dm_list_empty(&tags)) {
 		log_verbose("Finding all logical volumes");
-		if (!(vgnames = get_vgnames(cmd, 0)) || dm_list_empty(vgnames)) {
+		if (!(vgnames = get_vgnames(cmd, 0, 0)) || dm_list_empty(vgnames)) {
 			log_error("No volume groups found");
 			return ret_max;
 		}
@@ -284,8 +284,6 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 	vg = NULL;
 	dm_list_iterate_items(strl, vgnames) {
 		vgname = strl->str;
-		if (is_orphan_vg(vgname))
-			continue;	/* FIXME Unnecessary? */
 		vg = vg_read(cmd, vgname, NULL, flags);
 
 		if (vg_read_error(vg)) {
@@ -520,14 +518,13 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 
 	if (!argc || !dm_list_empty(&tags)) {
 		log_verbose("Finding all volume groups");
-		if (!(vgids = get_vgids(cmd, 0)) || dm_list_empty(vgids)) {
+		if (!(vgids = get_vgids(cmd, 0, 0)) || dm_list_empty(vgids)) {
 			log_error("No volume groups found");
 			return ret_max;
 		}
 		dm_list_iterate_items(sl, vgids) {
 			vgid = sl->str;
-			if (!vgid || !(vg_name = vgname_from_vgid(cmd->mem, vgid)) ||
-			    is_orphan_vg(vg_name))
+			if (!(vgid) || !(vg_name = vgname_from_vgid(cmd->mem, vgid)))
 				continue;
 			ret_max = _process_one_vg(cmd, vg_name, vgid, &tags,
 						  &arg_vgnames,
@@ -726,7 +723,7 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 			if (sigint_caught())
 				goto out;
 		}
-		if (!dm_list_empty(&tags) && (vgnames = get_vgnames(cmd, 0)) &&
+		if (!dm_list_empty(&tags) && (vgnames = get_vgnames(cmd, 0, 1)) &&
 			   !dm_list_empty(vgnames)) {
 			dm_list_iterate_items(sll, vgnames) {
 				vg = vg_read(cmd, sll->str, NULL, flags);

@@ -623,7 +623,8 @@ struct volume_group *lvmcache_get_vg(const char *vgid, unsigned precommitted)
 	return vg;
 }
 
-struct dm_list *lvmcache_get_vgids(struct cmd_context *cmd, int full_scan)
+struct dm_list *lvmcache_get_vgids(struct cmd_context *cmd, int full_scan,
+				    int include_internal)
 {
 	struct dm_list *vgids;
 	struct lvmcache_vginfo *vginfo;
@@ -636,6 +637,9 @@ struct dm_list *lvmcache_get_vgids(struct cmd_context *cmd, int full_scan)
 	}
 
 	dm_list_iterate_items(vginfo, &_vginfos) {
+		if (!include_internal && is_orphan_vg(vginfo->vgname))
+			continue;
+
 		if (!str_list_add(cmd->mem, vgids,
 				  dm_pool_strdup(cmd->mem, vginfo->vgid))) {
 			log_error("strlist allocation failed");
@@ -646,7 +650,8 @@ struct dm_list *lvmcache_get_vgids(struct cmd_context *cmd, int full_scan)
 	return vgids;
 }
 
-struct dm_list *lvmcache_get_vgnames(struct cmd_context *cmd, int full_scan)
+struct dm_list *lvmcache_get_vgnames(struct cmd_context *cmd, int full_scan,
+				      int include_internal)
 {
 	struct dm_list *vgnames;
 	struct lvmcache_vginfo *vginfo;
@@ -659,6 +664,9 @@ struct dm_list *lvmcache_get_vgnames(struct cmd_context *cmd, int full_scan)
 	}
 
 	dm_list_iterate_items(vginfo, &_vginfos) {
+		if (!include_internal && is_orphan_vg(vginfo->vgname))
+			continue;
+
 		if (!str_list_add(cmd->mem, vgnames,
 				  dm_pool_strdup(cmd->mem, vginfo->vgname))) {
 			log_errno(ENOMEM, "strlist allocation failed");

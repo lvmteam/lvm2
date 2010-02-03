@@ -98,12 +98,16 @@ int vgs_locked(void);
 int vgname_is_locked(const char *vgname);
 
 /* Returns list of struct str_lists containing pool-allocated copy of vgnames */
-/* Set full_scan to 1 to reread every filtered device label */
-struct dm_list *lvmcache_get_vgnames(struct cmd_context *cmd, int full_scan);
+/* Set full_scan to 1 to reread every filtered device label. If include_internal
+ * is not set, return only proper vg names. */
+struct dm_list *lvmcache_get_vgnames(struct cmd_context *cmd, int full_scan,
+				      int include_internal);
 
 /* Returns list of struct str_lists containing pool-allocated copy of vgids */
-/* Set full_scan to 1 to reread every filtered device label */
-struct dm_list *lvmcache_get_vgids(struct cmd_context *cmd, int full_scan);
+/* Set full_scan to 1 to reread every filtered device label. If include_internal
+ * is not set, return only proper vg ids. */
+struct dm_list *lvmcache_get_vgids(struct cmd_context *cmd, int full_scan,
+				    int include_internal);
 
 /* Returns list of struct str_lists containing pool-allocated copy of pvids */
 struct dm_list *lvmcache_get_pvids(struct cmd_context *cmd, const char *vgname,
