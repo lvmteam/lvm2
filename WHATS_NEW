@@ -1,5 +1,6 @@
 Version 2.02.61 - 
 ===================================
+  Add %ORIGIN support to lv{create,extend,reduce,resize} --extents option.
   Add copy constructor for metadata_area.
   Remove pointless versioned symlinks to dmeventd plugin libraries.
   Fix dmeventd snapshot plugin build dependency.

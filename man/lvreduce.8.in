@@ -6,7 +6,7 @@ lvreduce \- reduce the size of a logical volume
 [\-A|\-\-autobackup y|n] [\-d|\-\-debug] [\-f|\-\-force]
 [\-h|\-?|\-\-help]
 [\-\-noudevsync]
-{\-l|\-\-extents [\-]LogicalExtentsNumber[%{VG|LV|FREE}] |
+{\-l|\-\-extents [\-]LogicalExtentsNumber[%{VG|LV|FREE|ORIGIN}] |
 \-L|\-\-size [\-]LogicalVolumeSize[bBsSkKmMgGtTpPeE]}
 [\-t|\-\-test]
 [\-v|\-\-verbose] LogicalVolume[Path]
@@ -44,15 +44,17 @@ It will continue irrespective of any possible udev processing
 in the background.  You should only use this if udev is not running
 or has rules that ignore the devices LVM2 creates.
 .TP
-.I \-l, \-\-extents [\-]LogicalExtentsNumber[%{VG|LV|FREE}]
+.I \-l, \-\-extents [\-]LogicalExtentsNumber[%{VG|LV|FREE|ORIGIN}]
 Reduce or set the logical volume size in units of logical extents.
 With the - sign the value will be subtracted from
-the logical volume's actual size and without it the will be taken as
-an absolute size.
+the logical volume's actual size and without it the value will be taken
+as an absolute size.
 The number can also be expressed as a percentage of the total space
-in the Volume Group with the suffix %VG or relative to the existing
-size of the Logical Volume with the suffix %LV or as a percentage of the remaining
-free space in the Volume Group with the suffix %FREE.
+in the Volume Group with the suffix %VG, relative to the existing
+size of the Logical Volume with the suffix %LV, as a percentage of the
+remaining free space in the Volume Group with the suffix %FREE, or (for
+a snapshot) as a percentage of the total space in the Origin Logical
+Volume with the suffix %ORIGIN.
 .TP
 .I \-L, \-\-size [\-]LogicalVolumeSize[bBsSkKmMgGtTpPeE]
 Reduce or set the logical volume size in units of megabytes.

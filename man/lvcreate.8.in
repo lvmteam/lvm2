@@ -22,7 +22,7 @@ VolumeGroupName [PhysicalVolumePath[:PE[-PE]]...]
 
 .br
 .B lvcreate
-{\-l|\-\-extents LogicalExtentsNumber[%{VG|FREE}] |
+{\-l|\-\-extents LogicalExtentsNumber[%{VG|FREE|ORIGIN}] |
  \-L|\-\-size LogicalVolumeSize[bBsSkKmMgGtTpPeE]}
 [\-c|\-\-chunksize ChunkSize]
 [\-\-noudevsync]
@@ -70,14 +70,16 @@ StripeSize must be 2^n (n = 2 to 9) for metadata in LVM1 format.
 For metadata in LVM2 format, the stripe size may be a larger
 power of 2 but must not exceed the physical extent size.
 .TP
-.I \-l, \-\-extents LogicalExtentsNumber[%{VG|PVS|FREE}]
+.I \-l, \-\-extents LogicalExtentsNumber[%{VG|PVS|FREE|ORIGIN}]
 Gives the number of logical extents to allocate for the new
 logical volume.
-This can also be expressed as a percentage of the total space
-in the Volume Group with the suffix %VG, of the remaining
-free space in the Volume Group with the suffix %FREE, or
-of the remaining free space for the specified PhysicalVolume(s)
-with the suffix %PVS,
+The number can also be expressed as a percentage of the total space
+in the Volume Group with the suffix %VG, as a percentage of the
+remaining free space in the Volume Group with the suffix %FREE, as a
+percentage of the remaining free space for the specified
+PhysicalVolume(s) with the suffix %PVS, or (for a snapshot) as a
+percentage of the total space in the Origin Logical Volume with the
+suffix %ORIGIN.
 .TP
 .I \-L, \-\-size LogicalVolumeSize[bBsSkKmMgGtTpPeE]
 Gives the size to allocate for the new logical volume.

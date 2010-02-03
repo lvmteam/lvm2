@@ -7,7 +7,7 @@ lvresize \- resize a logical volume
 [\-A|\-\-autobackup y|n] [\-d|\-\-debug] [\-h|\-?|\-\-help]
 [\-\-noudevsync]
 [\-i|\-\-stripes Stripes [\-I|\-\-stripesize StripeSize]]
-{\-l|\-\-extents [+]LogicalExtentsNumber[%{VG|LV|PVS|FREE}] |
+{\-l|\-\-extents [+]LogicalExtentsNumber[%{VG|LV|PVS|FREE|ORIGIN}] |
 \-L|\-\-size [+]LogicalVolumeSize[bBsSkKmMgGtTpPeE]}
 [\-t|\-\-test]
 [\-v|\-\-verbose] LogicalVolumePath [PhysicalVolumePath[:PE[-PE]]...]
@@ -33,7 +33,7 @@ It will continue irrespective of any possible udev processing
 in the background.  You should only use this if udev is not running
 or has rules that ignore the devices LVM2 creates.
 .TP
-.I \-l, \-\-extents [+|-]LogicalExtentsNumber[%{VG|LV|PVS|FREE}]
+.I \-l, \-\-extents [+|-]LogicalExtentsNumber[%{VG|LV|PVS|FREE|ORIGIN}]
 Change or set the logical volume size in units of logical extents.
 With the + or - sign the value is added to or subtracted from the actual size
 of the logical volume and without it, the value is taken as an absolute one.
@@ -41,8 +41,9 @@ The number can also be expressed as a percentage of the total space
 in the Volume Group with the suffix %VG, relative to the existing
 size of the Logical Volume with the suffix %LV, as a percentage of
 the remaining free space of the PhysicalVolumes on the command line with the
-suffix %PVS, or as a percentage of the remaining free space in the
-Volume Group with the suffix %FREE.
+suffix %PVS, as a percentage of the remaining free space in the
+Volume Group with the suffix %FREE, or (for a snapshot) as a percentage
+of the total space in the Origin Logical Volume with the suffix %ORIGIN.
 .TP
 .I \-L, \-\-size [+|-]LogicalVolumeSize[bBsSkKmMgGtTpPeE]
 Change or set the logical volume size in units of megabytes.

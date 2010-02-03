@@ -130,6 +130,7 @@ static int _update_extents_params(struct volume_group *vg,
 				  struct lvcreate_cmdline_params *lcp)
 {
 	uint32_t pv_extent_count;
+	struct logical_volume *origin = NULL;
 
 	if (lcp->size &&
 	    !(lp->extents = extents_from_size(vg->cmd, lcp->size,
@@ -171,6 +172,15 @@ static int _update_extents_params(struct volume_group *vg,
 			log_error("Please express size as %%VG, %%PVS, or "
 				  "%%FREE.");
 			return 0;
+		case PERCENT_ORIGIN:
+			if (lp->snapshot && lp->origin &&
+			    !(origin = find_lv(vg, lp->origin))) {
+				log_error("Couldn't find origin volume '%s'.",
+					  lp->origin);
+				return 0;
+			}
+			lp->extents = lp->extents * origin->le_count / 100;
+			break;
 		case PERCENT_NONE:
 			break;
 	}

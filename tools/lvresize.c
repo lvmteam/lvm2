@@ -373,6 +373,13 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 			} else
 				lp->extents = lp->extents * vg->extent_count / 100;
 			break;
+		case PERCENT_ORIGIN:
+			if (!lv_is_cow(lv)) {
+				log_error("Specified LV does not have an origin LV.");
+				return EINVALID_CMD_LINE;
+			}
+			lp->extents = lp->extents * origin_from_cow(lv)->le_count / 100;
+			break;
 		case PERCENT_NONE:
 			break;
 	}

@@ -358,6 +358,9 @@ int int_arg_with_sign_and_percent(struct cmd_context *cmd __attribute((unused)),
 	else if (!strcasecmp(ptr, "F") || !strcasecmp(ptr, "FR") ||
 		 !strcasecmp(ptr, "FREE"))
 		a->percent = PERCENT_FREE;
+	else if (!strcasecmp(ptr, "O") || !strcasecmp(ptr, "OR") ||
+		 !strcasecmp(ptr, "ORIGIN"))
+		a->percent = PERCENT_ORIGIN;
 	else
 		return 0;
 
