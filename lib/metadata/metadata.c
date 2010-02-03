@@ -2911,14 +2911,14 @@ static struct volume_group *_vg_read_by_vgid(struct cmd_context *cmd,
 	 *       allowed to do a full scan here any more. */
 
 	// The slow way - full scan required to cope with vgrename
-	if (!(vgnames = get_vgnames(cmd, 2))) {
+	if (!(vgnames = get_vgnames(cmd, 2, 0))) {
 		log_error("vg_read_by_vgid: get_vgnames failed");
 		goto out;
 	}
 
 	dm_list_iterate_items(strl, vgnames) {
 		vgname = strl->str;
-		if (!vgname || is_orphan_vg(vgname))
+		if (!vgname)
 			continue;	// FIXME Unnecessary?
 		consistent = 0;
 		if ((vg = _vg_read(cmd, vgname, vgid, &consistent,
@@ -3047,14 +3047,16 @@ bad:
 }
 
 /* May return empty list */
-struct dm_list *get_vgnames(struct cmd_context *cmd, int full_scan)
+struct dm_list *get_vgnames(struct cmd_context *cmd, int full_scan,
+			     int include_internal)
 {
-	return lvmcache_get_vgnames(cmd, full_scan);
+	return lvmcache_get_vgnames(cmd, full_scan, include_internal);
 }
 
-struct dm_list *get_vgids(struct cmd_context *cmd, int full_scan)
+struct dm_list *get_vgids(struct cmd_context *cmd, int full_scan,
+			   int include_internal)
 {
-	return lvmcache_get_vgids(cmd, full_scan);
+	return lvmcache_get_vgids(cmd, full_scan, include_internal);
 }
 
 static int _get_pvs(struct cmd_context *cmd, struct dm_list **pvslist)
@@ -3080,7 +3082,7 @@ static int _get_pvs(struct cmd_context *cmd, struct dm_list **pvslist)
 	}
 
 	/* Get list of VGs */
-	if (!(vgids = get_vgids(cmd, 0))) {
+	if (!(vgids = get_vgids(cmd, 0, 1))) {
 		log_error("get_pvs: get_vgids failed");
 		return 0;
 	}
