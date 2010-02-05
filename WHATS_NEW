@@ -1,5 +1,6 @@
 Version 2.02.61 - 
 ===================================
+  Add multiple snapshot lv 'lvconvert --merge @tag' support via process_each_lv().
   Fix inappropriate second resync when adding mimage to core-logged mirror.
   Exclude internal VG names and uuids in lists returned via liblvm interface.
   Add %ORIGIN support to lv{create,extend,reduce,resize} --extents option.
