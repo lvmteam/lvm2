@@ -595,7 +595,8 @@ static int _finish_pvmove(struct cmd_context *cmd, struct volume_group *vg,
 }
 
 static struct volume_group *_get_move_vg(struct cmd_context *cmd,
-					 const char *name, const char *uuid)
+					 const char *name,
+					 const char *uuid __attribute((unused)))
 {
 	struct physical_volume *pv;
 
