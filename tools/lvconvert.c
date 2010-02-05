@@ -335,6 +335,9 @@ static int _finish_lvconvert_mirror(struct cmd_context *cmd,
 {
 	int r = 0;
 
+	if (!(lv->status & CONVERTING))
+		return 1;
+
 	if (!collapse_mirrored_lv(lv)) {
 		log_error("Failed to remove temporary sync layer.");
 		return 0;
@@ -967,7 +970,8 @@ static int _lvconvert_mirrors(struct cmd_context *cmd, struct logical_volume *lv
 			stack;
 			return failure_code;
 		}
-		lv->status |= CONVERTING;
+		if (seg->log_lv)
+			lv->status |= CONVERTING;
 		lp->need_polling = 1;
 	}
 
