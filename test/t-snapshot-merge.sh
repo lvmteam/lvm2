@@ -77,6 +77,17 @@ lvs -a
 lvconvert --merge $vg/$(snap_lv_name_ $lv1)
 lvremove -f $vg/$lv1
 
+# test merging multiple snapshots that share the same tag
+setup_merge $vg $lv1
+setup_merge $vg $lv2
+lvs -a
+lvchange --addtag this_is_a_test $vg/$(snap_lv_name_ $lv1)
+lvchange --addtag this_is_a_test $vg/$(snap_lv_name_ $lv2)
+lvconvert --merge @this_is_a_test
+lvs | not grep $(snap_lv_name_ $lv1)
+lvs | not grep $(snap_lv_name_ $lv2)
+lvremove -f $vg/$lv1
+lvremove -f $vg/$lv2
 
 # FIXME following tests would need to poll merge progress, via periodic lvs?
 # Background processes don't lend themselves to lvm testsuite...
