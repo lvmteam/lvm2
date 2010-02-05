@@ -1,5 +1,6 @@
 Version 2.02.61 - 
 ===================================
+  Fix inappropriate second resync when adding mimage to core-logged mirror.
   Exclude internal VG names and uuids in lists returned via liblvm interface.
   Add %ORIGIN support to lv{create,extend,reduce,resize} --extents option.
   Add copy constructor for metadata_area.
