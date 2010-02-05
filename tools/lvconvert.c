@@ -306,11 +306,16 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 }
 
 static struct volume_group *_get_lvconvert_vg(struct cmd_context *cmd,
-					      const char *lv_name, const char *uuid)
+					      const char *name,
+					      const char *uuid __attribute((unused)))
 {
 	dev_close_all();
 
-        return vg_read_for_update(cmd, extract_vgname(cmd, lv_name),
+	if (name && !strchr(name, '/'))
+		return vg_read_for_update(cmd, name, NULL, 0);
+
+	/* 'name' is the full LV name; must extract_vgname() */
+	return vg_read_for_update(cmd, extract_vgname(cmd, name),
 				  NULL, 0);
 }
 
@@ -440,10 +445,18 @@ static struct poll_functions _lvconvert_merge_fns = {
 int lvconvert_poll(struct cmd_context *cmd, struct logical_volume *lv,
 		   unsigned background)
 {
+	/*
+	 * FIXME allocate an "object key" structure with split
+	 * out members (vg_name, lv_name, uuid, etc) and pass that
+	 * around the lvconvert and polldaemon code
+	 * - will avoid needless work, e.g. extract_vgname()
+	 * - unfortunately there are enough overloaded "name" dragons in
+	 *   the polldaemon, lvconvert, pvmove code that a comprehensive
+	 *   audit/rework is needed
+	 */
 	int len = strlen(lv->vg->name) + strlen(lv->name) + 2;
 	char *uuid = alloca(sizeof(lv->lvid));
 	char *lv_full_name = alloca(len);
-
 
 	if (!uuid || !lv_full_name)
 		return_0;
