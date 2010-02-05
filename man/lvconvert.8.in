@@ -39,7 +39,7 @@ OriginalLogicalVolume[Path] SnapshotLogicalVolume[Path]
 [\-h|\-?|\-\-help]
 [\-v|\-\-verbose]
 [\-\-version]
-SnapshotLogicalVolume[Path]
+SnapshotLogicalVolume[Path]...
 .br
 
 .br
@@ -141,7 +141,9 @@ filesystem, is deferred until the next time the origin volume is activated.
 When merging starts, the resulting logical volume will have the origin's name,
 minor number and UUID.  While the merge is in progress, reads or writes to the
 origin appear as they were directed to the snapshot being merged.  When the
-merge finishes, the merged snapshot is removed.
+merge finishes, the merged snapshot is removed.  Multiple snapshots may
+be specified on the commandline or a @tag may be used to specify
+multiple snapshots be merged to their respective origin.
 .br
 
 
@@ -198,6 +200,14 @@ extents from /dev/sda.
 "lvconvert --merge vg00/lvol1_snap"
 .br
 merges "vg00/lvol1_snap" into its origin.
+
+.br
+"lvconvert --merge @some_tag"
+.br
+If vg00/lvol1, vg00/lvol2, and vg00/lvol3 are all tagged with "some_tag"
+each snapshot logical volume will be merged serially, e.g.: vg00/lvol1,
+then vg00/lvol2, then vg00/lvol3.  If --background were used it would start
+all snapshot logical volume merges in parallel.
 
 .SH SEE ALSO
 .BR lvm (8),
