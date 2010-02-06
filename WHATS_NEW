@@ -1,5 +1,6 @@
 Version 2.02.61 - 
 ===================================
+  Make lvconvert --repair --use-policies exit with success when no action is needed.
   Add multiple snapshot lv 'lvconvert --merge @tag' support via process_each_lv().
   Fix inappropriate second resync when adding mimage to core-logged mirror.
   Exclude internal VG names and uuids in lists returned via liblvm interface.

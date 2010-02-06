@@ -1247,6 +1247,8 @@ static int _lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	if (arg_count(cmd, repair_ARG) && !(lv->status & MIRRORED)) {
+		if (arg_count(cmd, use_policies_ARG))
+			return ECMD_PROCESSED; /* nothing to be done here */
 		log_error("Can't repair non-mirrored LV \"%s\".", lv->name);
 		return ECMD_FAILED;
 	}
