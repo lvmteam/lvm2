@@ -264,10 +264,9 @@ static const struct dm_info *_cached_info(struct dm_pool *mem,
 		return NULL;
 	}
 
-	if (!(dnode = dm_tree_find_node_by_uuid(dtree, dlid))) {
-		log_error("failed to find tree node for %s", lv->name);
+	/* An activating merging origin won't have a node in the tree yet */
+	if (!(dnode = dm_tree_find_node_by_uuid(dtree, dlid)))
 		return NULL;
-	}
 
 	if (!(dinfo = dm_tree_node_get_info(dnode))) {
 		log_error("failed to get info from tree node for %s", lv->name);
