@@ -423,7 +423,7 @@ static int _percent_run(struct dev_manager *dm, const char *name,
 			const char *target_type, int wait,
 			const struct logical_volume *lv, float *percent,
 			percent_range_t *overall_percent_range,
-			uint32_t *event_nr)
+			uint32_t *event_nr, int fail_if_percent_unsupported)
 {
 	int r = 0;
 	struct dm_task *dmt;
@@ -516,10 +516,8 @@ static int _percent_run(struct dev_manager *dm, const char *name,
 			/* above ->target_percent() was not executed! */
 			/* FIXME why return PERCENT_100 et. al. in this case? */
 			*overall_percent_range = PERCENT_100;
-			if (lv && lv_is_merging_origin(lv)) {
-				/* must fail in snapshot-merge case */
+			if (fail_if_percent_unsupported)
 				goto_out;
-			}
 		} else
 			*overall_percent_range = combined_percent_range;
 	}
@@ -535,20 +533,24 @@ static int _percent_run(struct dev_manager *dm, const char *name,
 static int _percent(struct dev_manager *dm, const char *name, const char *dlid,
 		    const char *target_type, int wait,
 		    const struct logical_volume *lv, float *percent,
-		    percent_range_t *overall_percent_range, uint32_t *event_nr)
+		    percent_range_t *overall_percent_range, uint32_t *event_nr,
+		    int fail_if_percent_unsupported)
 {
 	if (dlid && *dlid) {
 		if (_percent_run(dm, NULL, dlid, target_type, wait, lv, percent,
-				 overall_percent_range, event_nr))
+				 overall_percent_range, event_nr,
+				 fail_if_percent_unsupported))
 			return 1;
 		else if (_percent_run(dm, NULL, dlid + sizeof(UUID_PREFIX) - 1,
 				      target_type, wait, lv, percent,
-				      overall_percent_range, event_nr))
+				      overall_percent_range, event_nr,
+				      fail_if_percent_unsupported))
 			return 1;
 	}
 
 	if (name && _percent_run(dm, name, NULL, target_type, wait, lv, percent,
-				 overall_percent_range, event_nr))
+				 overall_percent_range, event_nr,
+				 fail_if_percent_unsupported))
 		return 1;
 
 	return 0;
@@ -607,6 +609,22 @@ int dev_manager_snapshot_percent(struct dev_manager *dm,
 {
 	char *name;
 	const char *dlid;
+	int fail_if_percent_unsupported = 0;
+
+	if (lv_is_merging_origin(lv)) {
+		/*
+		 * Set 'fail_if_percent_unsupported', otherwise passing
+		 * unsupported LV types to _percent will lead to a default
+		 * successful return with percent_range as PERCENT_100.
+		 * - For a merging origin, this will result in a polldaemon
+		 *   that runs infinitely (because completion is PERCENT_0)
+		 * - We unfortunately don't yet _know_ if a snapshot-merge
+		 *   target is active (activation is deferred if dev is open);
+		 *   so we can't short-circuit origin devices based purely on
+		 *   existing LVM LV attributes.
+		 */
+		fail_if_percent_unsupported = 1;
+	}
 
 	/*
 	 * Build a name for the top layer.
@@ -621,8 +639,8 @@ int dev_manager_snapshot_percent(struct dev_manager *dm,
 	 * Try and get some info on this device.
 	 */
 	log_debug("Getting device status percentage for %s", name);
-	if (!(_percent(dm, name, dlid, "snapshot", 0, lv, percent,
-		       percent_range, NULL)))
+	if (!(_percent(dm, name, dlid, "snapshot", 0, NULL, percent,
+		       percent_range, NULL, fail_if_percent_unsupported)))
 		return_0;
 
 	/* FIXME dm_pool_free ? */
@@ -657,7 +675,7 @@ int dev_manager_mirror_percent(struct dev_manager *dm,
 
 	log_debug("Getting device mirror status percentage for %s", name);
 	if (!(_percent(dm, name, dlid, "mirror", wait, lv, percent,
-		       percent_range, event_nr)))
+		       percent_range, event_nr, 0)))
 		return_0;
 
 	return 1;
