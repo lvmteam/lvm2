@@ -3,6 +3,9 @@ lvm_init
 lvm_quit
 lvm_config_reload
 lvm_config_override
+lvm_pv_get_dev_size
+lvm_pv_get_size
+lvm_pv_get_free
 lvm_pv_get_name
 lvm_pv_get_uuid
 lvm_pv_get_mda_count
