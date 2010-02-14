@@ -86,7 +86,7 @@ int lvm_vg_set_extent_size(vg_t vg, uint32_t new_size)
 	if (!vg_check_write_mode(vg))
 		return -1;
 
-	if (!vg_set_extent_size(vg, new_size))
+	if (!vg_set_extent_size(vg, new_size/SECTOR_SIZE))
 		return -1;
 	return 0;
 }
@@ -256,17 +256,17 @@ uint64_t lvm_vg_is_partial(const vg_t vg)
 /* FIXME: invalid handle? return INTMAX? */
 uint64_t lvm_vg_get_size(const vg_t vg)
 {
-	return vg_size(vg);
+	return SECTOR_SIZE*vg_size(vg);
 }
 
 uint64_t lvm_vg_get_free_size(const vg_t vg)
 {
-	return vg_free(vg);
+	return SECTOR_SIZE*vg_free(vg);
 }
 
 uint64_t lvm_vg_get_extent_size(const vg_t vg)
 {
-	return vg_extent_size(vg);
+	return SECTOR_SIZE*vg_extent_size(vg);
 }
 
 uint64_t lvm_vg_get_extent_count(const vg_t vg)

@@ -26,7 +26,7 @@
 /* FIXME: have lib/report/report.c _disp function call lv_size()? */
 uint64_t lvm_lv_get_size(const lv_t lv)
 {
-	return lv_size(lv);
+	return SECTOR_SIZE*lv_size(lv);
 }
 
 char *lvm_lv_get_uuid(const lv_t lv)
@@ -112,7 +112,7 @@ lv_t lvm_vg_create_lv_linear(vg_t vg, const char *name, uint64_t size)
 	if (!vg_check_write_mode(vg))
 		return NULL;
 	memset(&lp, 0, sizeof(lp));
-	extents = extents_from_size(vg->cmd, size, vg->extent_size);
+	extents = extents_from_size(vg->cmd, size/SECTOR_SIZE, vg->extent_size);
 	_lv_set_default_params(&lp, vg, name, extents);
 	_lv_set_default_linear_params(vg->cmd, &lp);
 	if (!lv_create_single(vg, &lp))
