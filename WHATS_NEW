@@ -1,5 +1,7 @@
 Version 2.02.61 - 
 ===================================
+  Add lvm2app exports lvm_pv_get_size(), lvm_pv_get_free(), and lvm_pv_get_dev_size().
+  Fix off by 512 sizes for lvm2app.
   Add 'fail_if_percent_unsupported' arg to _percent() and _percent_run().
   Remove false "failed to find tree node for" error when activating merging origin.
   Make lvconvert --repair --use-policies exit with success when no action is needed.
