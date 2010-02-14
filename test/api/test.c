@@ -450,8 +450,11 @@ static void _pvs_in_vg(char **argv, int argc)
 	}
 	printf("PVs in VG %s:\n", lvm_vg_get_name(vg));
 	dm_list_iterate_items(pvl, pvs) {
-		printf("%s (%s): mda_count=%"PRIu64"\n",
-		       lvm_pv_get_name(pvl->pv), lvm_pv_get_uuid(pvl->pv),
+		printf("%s (%s): size=%"PRIu64", free=%"PRIu64
+			", dev_size=%"PRIu64", mda_count=%"PRIu64"\n",
+			lvm_pv_get_name(pvl->pv), lvm_pv_get_uuid(pvl->pv),
+			lvm_pv_get_size(pvl->pv), lvm_pv_get_free(pvl->pv),
+			lvm_pv_get_dev_size(pvl->pv),
 			lvm_pv_get_mda_count(pvl->pv));
 	}
 }
