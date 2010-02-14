@@ -767,10 +767,7 @@ static int _pvfree_disp(struct dm_report *rh, struct dm_pool *mem,
 	    (const struct physical_volume *) data;
 	uint64_t freespace;
 
-	if (!pv->pe_count)
-		freespace = pv->size;
-	else
-		freespace = (uint64_t) (pv->pe_count - pv->pe_alloc_count) * pv->pe_size;
+	freespace = pv_free(pv);
 
 	return _size64_disp(rh, mem, field, &freespace, private);
 }
@@ -783,10 +780,7 @@ static int _pvsize_disp(struct dm_report *rh, struct dm_pool *mem,
 	    (const struct physical_volume *) data;
 	uint64_t size;
 
-	if (!pv->pe_count)
-		size = pv->size;
-	else
-		size = (uint64_t) pv->pe_count * pv->pe_size;
+	size = pv_size_field(pv);
 
 	return _size64_disp(rh, mem, field, &size, private);
 }
@@ -795,11 +789,11 @@ static int _devsize_disp(struct dm_report *rh, struct dm_pool *mem,
 			 struct dm_report_field *field,
 			 const void *data, void *private)
 {
-	const struct device *dev = *(const struct device **) data;
+	const struct physical_volume *pv =
+	    (const struct physical_volume *) data;
 	uint64_t size;
 
-	if (!dev_get_size(dev, &size))
-		size = 0;
+	size = pv_dev_size(pv);
 
 	return _size64_disp(rh, mem, field, &size, private);
 }

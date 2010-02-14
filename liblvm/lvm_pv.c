@@ -43,6 +43,21 @@ uint64_t lvm_pv_get_mda_count(const pv_t pv)
 	return (uint64_t) pv_mda_count(pv);
 }
 
+uint64_t lvm_pv_get_dev_size(const pv_t pv)
+{
+	return (uint64_t) SECTOR_SIZE*pv_dev_size(pv);
+}
+
+uint64_t lvm_pv_get_size(const pv_t pv)
+{
+	return (uint64_t) SECTOR_SIZE*pv_size_field(pv);
+}
+
+uint64_t lvm_pv_get_free(const pv_t pv)
+{
+	return (uint64_t) SECTOR_SIZE*pv_free(pv);
+}
+
 int lvm_pv_resize(const pv_t pv, uint64_t new_size)
 {
 	/* FIXME: add pv resize code here */

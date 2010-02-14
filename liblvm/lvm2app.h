@@ -868,6 +868,40 @@ char *lvm_pv_get_name(const pv_t pv);
 uint64_t lvm_pv_get_mda_count(const pv_t pv);
 
 /**
+ * Get the current size in bytes of a device underlying a
+ * physical volume.
+ *
+ * \param   pv
+ * Physical volume handle.
+ *
+ * \return
+ * Size in bytes.
+ */
+uint64_t lvm_pv_get_dev_size(const pv_t pv);
+
+/**
+ * Get the current size in bytes of a physical volume.
+ *
+ * \param   pv
+ * Physical volume handle.
+ *
+ * \return
+ * Size in bytes.
+ */
+uint64_t lvm_pv_get_size(const pv_t pv);
+
+/**
+ * Get the current unallocated space in bytes of a physical volume.
+ *
+ * \param   pv
+ * Physical volume handle.
+ *
+ * \return
+ * Free size in bytes.
+ */
+uint64_t lvm_pv_get_free(const pv_t pv);
+
+/**
  * Resize physical volume to new_size bytes.
  *
  * NOTE: This function is currently not implemented.

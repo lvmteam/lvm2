@@ -3603,6 +3603,38 @@ uint64_t pv_size(const struct physical_volume *pv)
 	return pv_field(pv, size);
 }
 
+uint64_t pv_dev_size(const struct physical_volume *pv)
+{
+	uint64_t size;
+
+	if (!dev_get_size(pv->dev, &size))
+		size = 0;
+	return size;
+}
+
+uint64_t pv_size_field(const struct physical_volume *pv)
+{
+	uint64_t size;
+
+	if (!pv->pe_count)
+		size = pv->size;
+	else
+		size = (uint64_t) pv->pe_count * pv->pe_size;
+	return size;
+}
+
+uint64_t pv_free(const struct physical_volume *pv)
+{
+	uint64_t freespace;
+
+	if (!pv->pe_count)
+		freespace = pv->size;
+	else
+		freespace = (uint64_t)
+			(pv->pe_count - pv->pe_alloc_count) * pv->pe_size;
+	return freespace;
+}
+
 uint64_t pv_status(const struct physical_volume *pv)
 {
 	return pv_field(pv, status);
