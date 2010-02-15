@@ -207,7 +207,7 @@ int dm_report_field_int32(struct dm_report *rh,
 int dm_report_field_uint64(struct dm_report *rh,
 			   struct dm_report_field *field, const uint64_t *data)
 {
-	const int value = *data;
+	const uint64_t value = *data;
 	uint64_t *sortval;
 	char *repstr;
 
@@ -221,12 +221,12 @@ int dm_report_field_uint64(struct dm_report *rh,
 		return 0;
 	}
 
-	if (dm_snprintf(repstr, 21, "%d", value) < 0) {
-		log_error("dm_report_field_uint64: uint64 too big: %d", value);
+	if (dm_snprintf(repstr, 21, "%" PRIu64 , value) < 0) {
+		log_error("dm_report_field_uint64: uint64 too big: %" PRIu64, value);
 		return 0;
 	}
 
-	*sortval = (const uint64_t) value;
+	*sortval = value;
 	field->sort_value = sortval;
 	field->report_string = repstr;
 
