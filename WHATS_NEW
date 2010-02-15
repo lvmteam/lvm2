@@ -1,5 +1,6 @@
 Version 2.02.61 - 
 ===================================
+  Add LVM_SUPPRESS_LOCKING_FAILURE_MESSAGES env. var. to suppress error and warning mesages.
   Remove hard-coded rule to skip _mimage devices in 11-dm-lvm.rules.
   Use udev transactions in testsuite.
   Don't use LVM_UDEV_DISABLE_CHECKING env. var. anymore and set the state automatically.

@@ -59,7 +59,9 @@
 #define log_info(x...) LOG_LINE(_LOG_INFO, x)
 #define log_notice(x...) LOG_LINE(_LOG_NOTICE, x)
 #define log_warn(x...) LOG_LINE(_LOG_WARN | _LOG_STDERR, x)
+#define log_warn_suppress(s, x...) LOG_LINE(s ? _LOG_NOTICE : _LOG_WARN | _LOG_STDERR, x)
 #define log_err(x...) LOG_LINE_WITH_ERRNO(_LOG_ERR, EUNCLASSIFIED, x)
+#define log_err_suppress(s, x...) LOG_LINE_WITH_ERRNO(s ? _LOG_NOTICE : _LOG_ERR, EUNCLASSIFIED, x)
 #define log_fatal(x...) LOG_LINE_WITH_ERRNO(_LOG_FATAL, EUNCLASSIFIED, x)
 
 #define stack log_debug("<backtrace>")	/* Backtrace on error */
@@ -67,6 +69,7 @@
 #define log_verbose(args...) log_notice(args)
 #define log_print(args...) LOG_LINE(_LOG_WARN, args)
 #define log_error(args...) log_err(args)
+#define log_error_suppress(s, args...) log_err_suppress(s, args)
 #define log_errno(args...) LOG_LINE_WITH_ERRNO(_LOG_ERR, args)
 
 /* System call equivalents */
