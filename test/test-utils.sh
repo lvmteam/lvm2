@@ -24,7 +24,20 @@ STACKTRACE() {
 		echo "$i ${FUNC}() called from ${BASH_SOURCE[$i]}:${BASH_LINENO[$i]}"
 		i=$(($i + 1));
 	done
-}	
+}
+
+init_udev_transaction() {
+	if test "$DM_UDEV_SYNCHRONISATION" = 1; then
+		export DM_UDEV_COOKIE=$(dmsetup udevcreatecookie)
+	fi
+}
+
+finish_udev_transaction() {
+	if test "$DM_UDEV_SYNCHRONISATION" = 1; then
+		dmsetup udevreleasecookie
+		unset DM_UDEV_COOKIE
+	fi
+}
 
 teardown() {
 	echo $LOOP
@@ -32,12 +45,15 @@ teardown() {
 
 	test -n "$PREFIX" && {
 		rm -rf $G_root_/dev/$PREFIX*
+
+		init_udev_transaction
 		while dmsetup table | grep -q ^$PREFIX; do
 			for s in `dmsetup table | grep ^$PREFIX| awk '{ print substr($1,1,length($1)-1) }'`; do
-				dmsetup resume $s 2>/dev/null > /dev/null || true
 				dmsetup remove $s 2>/dev/null > /dev/null || true
 			done
 		done
+		finish_udev_transaction
+
 	}
 
 	# NOTE: SCSI_DEBUG_DEV test must come before the LOOP test because
@@ -180,6 +196,7 @@ prepare_devs() {
 
 	local size=$(($loopsz/$n))
 
+	init_udev_transaction
 	for i in `seq 1 $n`; do
 		local name="${PREFIX}$pvname$i"
 		local dev="$G_dev_/mapper/$name"
@@ -188,6 +205,7 @@ prepare_devs() {
 		echo 0 $size linear $LOOP $((($i-1)*$size)) > $name.table
 		dmsetup create $name $name.table
 	done
+	finish_udev_transaction
 
     # set up some default names
 	vg=${PREFIX}vg
@@ -201,6 +219,8 @@ prepare_devs() {
 }
 
 disable_dev() {
+
+	init_udev_transaction
 	for dev in "$@"; do
         # first we make the device inaccessible
 		echo 0 10000000 error | dmsetup load $dev
@@ -208,14 +228,19 @@ disable_dev() {
         # now let's try to get rid of it if it's unused
         #dmsetup remove $dev
 	done
+	finish_udev_transaction
+
 }
 
 enable_dev() {
+
+	init_udev_transaction
 	for dev in "$@"; do
 		local name=`echo "$dev" | sed -e 's,.*/,,'`
 		dmsetup create $name $name.table || dmsetup load $name $name.table
 		dmsetup resume $dev
 	done
+	finish_udev_transaction
 }
 
 backup_dev() {
