@@ -1,5 +1,6 @@
 Version 2.02.61 - 
 ===================================
+  Don't use LVM_UDEV_DISABLE_CHECKING env. var. anymore and set the state automatically.
   Add lvm2app exports lvm_pv_get_size(), lvm_pv_get_free(), and lvm_pv_get_dev_size().
   Fix off by 512 sizes for lvm2app.
   Add 'fail_if_percent_unsupported' arg to _percent() and _percent_run().

@@ -42,6 +42,11 @@ extern char *optarg;
 #  define OPTIND_INIT 1
 #endif
 
+#ifdef HAVE_UDEV_QUEUE_GET_UDEV_IS_ACTIVE
+#  define LIBUDEV_I_KNOW_THE_API_IS_SUBJECT_TO_CHANGE
+#  include <libudev.h>
+#endif
+
 /*
  * Table of valid switches
  */
@@ -912,17 +917,45 @@ static void _apply_settings(struct cmd_context *cmd)
 	cmd->handles_missing_pvs = 0;
 }
 
-static void _set_udev_checking()
+static int _set_udev_checking(struct cmd_context *cmd)
 {
-	const char *e;
+#ifdef HAVE_UDEV_QUEUE_GET_UDEV_IS_ACTIVE
+	struct udev *udev;
+	const char *udev_dev_dir;
+	size_t udev_dev_dir_len;
+	int dirs_diff;
 
-	if ((e = getenv("DM_UDEV_DISABLE_CHECKING")) &&
-		!strcmp(e, "1"))
+	if (!(udev = udev_new()) ||
+	    !(udev_dev_dir = udev_get_dev_path(udev)) ||
+	    !*udev_dev_dir) {
+		log_error("Could not get udev dev path.");
+		return 0;
+	}
+	udev_dev_dir_len = strlen(udev_dev_dir);
+
+	/* There's always a slash at the end of dev_dir. But check udev_dev_dir! */
+	if (udev_dev_dir[udev_dev_dir_len - 1] != '/')
+		dirs_diff = strncmp(cmd->dev_dir, udev_dev_dir,
+				    udev_dev_dir_len);
+	else
+		dirs_diff = strcmp(cmd->dev_dir, udev_dev_dir);
+
+	if (dirs_diff) {
+		log_debug("The path %s used for creating device nodes and "
+			  "symlinks that is set in the configuration differs "
+			  "from the path %s that is used by udev. All warnings "
+			  "about udev not working correctly while processing "
+			  "particular nodes and symlinks will be suppressed. "
+			  "These nodes and symlinks will be managed in each "
+			  "directory separately.",
+			   cmd->dev_dir, udev_dev_dir);
 		dm_udev_set_checking(0);
-
-	if ((e = getenv("LVM_UDEV_DISABLE_CHECKING")) &&
-		!strcmp(e, "1"))
 		init_udev_checking(0);
+	}
+
+	udev_unref(udev);
+#endif
+	return 1;
 }
 
 static const char *_copy_command_line(struct cmd_context *cmd, int argc, char **argv)
@@ -1019,7 +1052,8 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	log_debug("O_DIRECT will be used");
 #endif
 
-	_set_udev_checking();
+	if (!_set_udev_checking(cmd))
+		goto_out;
 
 	if ((ret = _process_common_commands(cmd)))
 		goto_out;
