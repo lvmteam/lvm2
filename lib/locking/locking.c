@@ -219,6 +219,11 @@ static void _update_vg_lock_count(const char *resource, uint32_t flags)
  */
 int init_locking(int type, struct cmd_context *cmd)
 {
+	int suppress_messages = 0;
+
+	if (ignorelockingfailure() && getenv("LVM_SUPPRESS_LOCKING_FAILURE_MESSAGES"))
+		suppress_messages = 1;
+
 	if (type < 0)
 		type = find_config_tree_int(cmd, "global/locking_type", 1);
 
@@ -237,7 +242,8 @@ int init_locking(int type, struct cmd_context *cmd)
 				 _blocking_supported ? "" : "Non-blocking ");
 
 		if (!init_file_locking(&_locking, cmd)) {
-			log_error("File-based locking initialisation failed.");
+			log_error_suppress(suppress_messages,
+					   "File-based locking initialisation failed.");
 			break;
 		}
 		return 1;
@@ -264,7 +270,8 @@ int init_locking(int type, struct cmd_context *cmd)
 	case 3:
 		log_very_verbose("Cluster locking selected.");
 		if (!init_cluster_locking(&_locking, cmd)) {
-			log_error("Internal cluster locking initialisation failed.");
+			log_error_suppress(suppress_messages,
+					   "Internal cluster locking initialisation failed.");
 			break;
 		}
 		return 1;
@@ -286,13 +293,16 @@ int init_locking(int type, struct cmd_context *cmd)
 	    find_config_tree_int(cmd, "locking/fallback_to_local_locking",
 	    	    find_config_tree_int(cmd, "global/fallback_to_local_locking",
 					 DEFAULT_FALLBACK_TO_LOCAL_LOCKING))) {
-		log_warn("WARNING: Falling back to local file-based locking.");
-		log_warn("Volume Groups with the clustered attribute will "
-			  "be inaccessible.");
+		log_warn_suppress(suppress_messages,
+				  "WARNING: Falling back to local file-based locking.");
+		log_warn_suppress(suppress_messages,
+				  "Volume Groups with the clustered attribute will "
+				  "be inaccessible.");
 		if (init_file_locking(&_locking, cmd))
 			return 1;
 		else
-			log_error("File-based locking initialisation failed.");
+			log_error_suppress(suppress_messages,
+					   "File-based locking initialisation failed.");
 	}
 
 	if (!ignorelockingfailure())
