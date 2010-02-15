@@ -64,6 +64,11 @@ dmsetup \- low level logical volume management
 .B dmsetup mknodes
 .I [device_name]
 .br
+.B dmsetup udevcreatecookie
+.br
+.B dmsetup udevreleasecookie
+.I [cookie]
+.br
 .B dmsetup udevflags
 .I cookie
 .br
@@ -127,6 +132,9 @@ Tell the kernel not to supply the open reference count for the device.
 .IP \fB--notable
 .br
 When creating a device, don't load any table.
+.IP \fB--udevcookie\ \fIcookie
+.br
+Use cookie for udev synchronisation.
 .IP \fB--noudevrules
 Do not allow udev to manage nodes for devices in device-mapper directory.
 .br
@@ -315,6 +323,26 @@ is displayed.
 .br
 Displays the names and versions of the currently-loaded targets.
 .br
+.IP \fBudevcreatecookie
+.br
+Creates a new cookie to synchronize actions with udev processing.
+The output is a cookie value. Normally we don't need to create cookies since
+dmsetup creates and destroys them for each action automatically. However, we can
+generate one explicitly to group several actions together and use only one
+cookie instead. We can define a cookie to use for each relevant command by using
+--udevcookie option. Alternatively, we can export this value into the environment
+of the dmsetup process as DM_UDEV_COOKIE variable and it will be used automatically
+with all subsequent commands until it is unset.
+Invoking this command will create system-wide semaphore that needs to be cleaned
+up explicitly by calling udevreleasecookie command.
+.br
+.IP \fBudevreleasecookie
+.I [cookie]
+.br
+Waits for all pending udev processing bound to given cookie value and clean up
+the cookie with underlying semaphore. If the cookie is not given directly,
+the command will try to use a value defined by DM_UDEV_COOKIE environment variable.
+.br
 .IP \fBudevflags
 .I cookie
 .br
@@ -412,6 +440,10 @@ for creating devices with holes in them.
 \fBDM_DEV_DIR\fP
 The device directory name.
 Defaults to "/dev" and must be an absolute path.
+.TP
+\fBDM_UDEV_COOKIE\fP
+A cookie to use for all relevant commands to synchronize with udev processing.
+It is an alternative to using --udevcookie option.
 
 .SH AUTHORS
 Original version: Joe Thornber (thornber@sistina.com)
