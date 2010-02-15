@@ -1,5 +1,6 @@
 Version 2.02.61 - 
 ===================================
+  Use udev transactions in testsuite.
   Don't use LVM_UDEV_DISABLE_CHECKING env. var. anymore and set the state automatically.
   Add lvm2app exports lvm_pv_get_size(), lvm_pv_get_free(), and lvm_pv_get_dev_size().
   Fix off by 512 sizes for lvm2app.
