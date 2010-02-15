@@ -819,8 +819,8 @@ static int _report_headings(struct dm_report *rh)
  */
 static int _row_compare(const void *a, const void *b)
 {
-	const struct row *rowa = *(const struct row **) a;
-	const struct row *rowb = *(const struct row **) b;
+	const struct row *rowa = *(const struct row * const *) a;
+	const struct row *rowb = *(const struct row * const *) b;
 	const struct dm_report_field *sfa, *sfb;
 	uint32_t cnt;
 

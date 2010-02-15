@@ -66,7 +66,7 @@ static int _dev_name_disp(struct dm_report *rh, struct dm_pool *mem __attribute(
 			  struct dm_report_field *field,
 			  const void *data, void *private __attribute((unused)))
 {
-	const char *name = dev_name(*(const struct device **) data);
+	const char *name = dev_name(*(const struct device * const *) data);
 
 	return dm_report_field_string(rh, field, &name);
 }
@@ -873,7 +873,7 @@ static int _pvmdafree_disp(struct dm_report *rh, struct dm_pool *mem,
 {
 	struct lvmcache_info *info;
 	uint64_t freespace = UINT64_MAX, mda_free;
-	const char *pvid = (const char *)(&((struct id *) data)->uuid);
+	const char *pvid = (const char *)(&((const struct id *) data)->uuid);
 	struct metadata_area *mda;
 
 	if ((info = info_from_pvid(pvid, 0)))
@@ -916,7 +916,7 @@ static int _pvmdasize_disp(struct dm_report *rh, struct dm_pool *mem,
 {
 	struct lvmcache_info *info;
 	uint64_t min_mda_size = 0;
-	const char *pvid = (const char *)(&((struct id *) data)->uuid);
+	const char *pvid = (const char *)(&((const struct id *) data)->uuid);
 
 	/* PVs could have 2 mdas of different sizes (rounding effect) */
 	if ((info = info_from_pvid(pvid, 0)))
