@@ -1084,6 +1084,13 @@ void dm_report_field_set_value(struct dm_report_field *field, const void *value,
  * snapshot devices.
  */
 #define DM_UDEV_LOW_PRIORITY_FLAG 0x0010
+/*
+ * DM_UDEV_DISABLE_LIBRARY_FALLBACK is set in case we need to disable
+ * libdevmapper's node management. We will rely on udev completely
+ * and there will be no fallback action provided by libdevmapper if
+ * udev does something improperly.
+ */
+#define DM_UDEV_DISABLE_LIBRARY_FALLBACK 0x0020
 
 int dm_cookie_supported(void);
 
@@ -1094,6 +1101,7 @@ void dm_udev_set_sync_support(int sync_with_udev);
 int dm_udev_get_sync_support(void);
 void dm_udev_set_checking(int checking);
 int dm_udev_get_checking(void);
+int dm_udev_create_cookie(uint32_t *cookie);
 int dm_udev_complete(uint32_t cookie);
 int dm_udev_wait(uint32_t cookie);
 

@@ -166,5 +166,6 @@ dm_udev_set_sync_support
 dm_udev_get_sync_support
 dm_udev_set_checking
 dm_udev_get_checking
+dm_udev_create_cookie
 dm_udev_complete
 dm_udev_wait

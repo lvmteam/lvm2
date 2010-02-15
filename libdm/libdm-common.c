@@ -1166,6 +1166,16 @@ bad:
 	return 0;
 }
 
+int dm_udev_create_cookie(uint32_t *cookie)
+{
+	int semid;
+
+	if (!dm_udev_get_sync_support())
+		return 1;
+
+	return _udev_notify_sem_create(cookie, &semid);
+}
+
 int dm_task_set_cookie(struct dm_task *dmt, uint32_t *cookie, uint16_t flags)
 {
 	int semid;

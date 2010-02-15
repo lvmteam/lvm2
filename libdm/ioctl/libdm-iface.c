@@ -1789,6 +1789,7 @@ int dm_task_run(struct dm_task *dmt)
 	struct dm_ioctl *dmi;
 	unsigned command;
 	int check_udev;
+	int udev_only;
 
 #ifdef DM_COMPAT
 	if (_dm_version == 1)
@@ -1847,22 +1848,25 @@ repeat_ioctl:
 		     !(dmt->event_nr >> DM_UDEV_FLAGS_SHIFT &
 		       DM_UDEV_DISABLE_DM_RULES_FLAG);
 
+	udev_only = dmt->cookie_set ? (dmt->event_nr >> DM_UDEV_FLAGS_SHIFT &
+					DM_UDEV_DISABLE_LIBRARY_FALLBACK) : 0;
+
 	switch (dmt->type) {
 	case DM_DEVICE_CREATE:
-		if (dmt->dev_name && *dmt->dev_name)
+		if (dmt->dev_name && *dmt->dev_name && !udev_only)
 			add_dev_node(dmt->dev_name, MAJOR(dmi->dev),
 				     MINOR(dmi->dev), dmt->uid, dmt->gid,
 				     dmt->mode, check_udev);
 		break;
 	case DM_DEVICE_REMOVE:
 		/* FIXME Kernel needs to fill in dmi->name */
-		if (dmt->dev_name)
+		if (dmt->dev_name && !udev_only)
 			rm_dev_node(dmt->dev_name, check_udev);
 		break;
 
 	case DM_DEVICE_RENAME:
 		/* FIXME Kernel needs to fill in dmi->name */
-		if (dmt->dev_name)
+		if (dmt->dev_name && !udev_only)
 			rename_dev_node(dmt->dev_name, dmt->newname,
 					check_udev);
 		break;
