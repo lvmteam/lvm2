@@ -50,7 +50,8 @@ static char _alloc_policy_char(alloc_policy_t alloc)
 	}
 }
 
-static const uint64_t _minusone = UINT64_C(-1);
+static const uint64_t _minusone64 = UINT64_C(-1);
+static const int32_t _minusone32 = INT32_C(-1);
 
 /*
  * Data-munging functions to prepare each data type for display and sorting
@@ -247,7 +248,7 @@ static int _lvkmaj_disp(struct dm_report *rh, struct dm_pool *mem __attribute((u
 	if (lv_info(lv->vg->cmd, lv, &info, 0, 0) && info.exists)
 		return dm_report_field_int(rh, field, &info.major);
 
-	return dm_report_field_uint64(rh, field, &_minusone);
+	return dm_report_field_int32(rh, field, &_minusone32);
 }
 
 static int _lvkmin_disp(struct dm_report *rh, struct dm_pool *mem __attribute((unused)),
@@ -260,7 +261,7 @@ static int _lvkmin_disp(struct dm_report *rh, struct dm_pool *mem __attribute((u
 	if (lv_info(lv->vg->cmd, lv, &info, 0, 0) && info.exists)
 		return dm_report_field_int(rh, field, &info.minor);
 
-	return dm_report_field_uint64(rh, field, &_minusone);
+	return dm_report_field_int32(rh, field, &_minusone32);
 }
 
 static int _lv_mimage_in_sync(const struct logical_volume *lv)
@@ -643,7 +644,7 @@ static int _lvreadahead_disp(struct dm_report *rh, struct dm_pool *mem,
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 
 	if (lv->read_ahead == DM_READ_AHEAD_AUTO) {
-		dm_report_field_set_value(field, "auto", &_minusone);
+		dm_report_field_set_value(field, "auto", &_minusone64);
 		return 1;
 	}
 
@@ -659,7 +660,7 @@ static int _lvkreadahead_disp(struct dm_report *rh, struct dm_pool *mem,
 	struct lvinfo info;
 
 	if (!lv_info(lv->vg->cmd, lv, &info, 0, 1) || !info.exists)
-		return dm_report_field_uint64(rh, field, &_minusone);
+		return dm_report_field_int32(rh, field, &_minusone32);
 
 	return _size32_disp(rh, mem, field, &info.read_ahead, private);
 }
