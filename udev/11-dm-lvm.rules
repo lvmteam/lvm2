@@ -23,7 +23,7 @@ IMPORT{program}="$env{DM_SBIN_PATH}/dmsetup splitname --nameprefixes --noheading
 ENV{DM_UDEV_DISABLE_SUBSYSTEM_RULES_FLAG}=="1", GOTO="lvm_end"
 
 # Do not create symlinks for inappropriate subdevices.
-ENV{DM_LV_NAME}=="?*_mimage_[0-9]*|pvmove?*|?*_vorigin", GOTO="lvm_disable"
+ENV{DM_LV_NAME}=="pvmove?*|?*_vorigin", GOTO="lvm_disable"
 ENV{DM_LV_LAYER}=="?*", GOTO="lvm_disable"
 
 # Create symlinks for top-level devices only.
