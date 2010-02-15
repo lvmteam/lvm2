@@ -1,31 +1,32 @@
-Version 2.02.61 - 
-===================================
-  Add LVM_SUPPRESS_LOCKING_FAILURE_MESSAGES env. var. to suppress error and warning mesages.
-  Remove hard-coded rule to skip _mimage devices in 11-dm-lvm.rules.
-  Use udev transactions in testsuite.
-  Don't use LVM_UDEV_DISABLE_CHECKING env. var. anymore and set the state automatically.
-  Add lvm2app exports lvm_pv_get_size(), lvm_pv_get_free(), and lvm_pv_get_dev_size().
-  Fix off by 512 sizes for lvm2app.
-  Add 'fail_if_percent_unsupported' arg to _percent() and _percent_run().
-  Remove false "failed to find tree node for" error when activating merging origin.
-  Make lvconvert --repair --use-policies exit with success when no action is needed.
-  Add multiple snapshot lv 'lvconvert --merge @tag' support via process_each_lv().
-  Fix inappropriate second resync when adding mimage to core-logged mirror.
-  Exclude internal VG names and uuids in lists returned via liblvm interface.
-  Add %ORIGIN support to lv{create,extend,reduce,resize} --extents option.
-  Add copy constructor for metadata_area.
+Version 2.02.61 - 15th February 2010
+====================================
+  Fix some consts and floating point gcc warnings.
+  Fix dm_report_field_uint64 function to accept 64-bit ints.
+  Change readhead display to use 32-bit -1 const instead of 64-bit.
+  Add LVM_SUPPRESS_LOCKING_FAILURE_MESSAGES environment variable.
+  Remove hard-coding that skipped _mimage devices from 11-dm-lvm.rules.
+  Use udev transactions in test suite.
+  Set udev state automatically instead of using LVM_UDEV_DISABLE_CHECKING.
+  Add lvm_pv_get_size, lvm_pv_get_free and lvm_pv_get_dev_size to lvm2app.
+  Change lvm2app to return all sizes in bytes as documented (not sectors).
+  Add 'fail_if_percent_unsupported' arg to _percent and _percent_run.
+  Remove false "failed to find tree node" error when activating merging origin.
+  Exit with success when lvconvert --repair --use-policies performs no action.
+  Accept a list of LVs with 'lvconvert --merge @tag' using process_each_lv.
+  Avoid unnecessary second resync when adding mimage to core-logged mirror.
+  Exclude internal VG names and uuids from lists returned through liblvm.
+  Add %ORIGIN support to lv{create,extend,reduce,resize} --extents.
+  Add _mda_copy to clone a struct metadata_area.
   Remove pointless versioned symlinks to dmeventd plugin libraries.
   Fix dmeventd snapshot plugin build dependency.
-  Make clvmd -V return zero status.
-  Fix lvconvert issue with cluster mirrors due to un'_safe' list processing
-  Fix pvmove abort workaround to be cluster-aware when temporary mirror activation fails.
-  Always query device by using uuid only and not name in clvmd.
-  Add missing metadata reverts in pvmove error path.
-  Unlock shared lock in clvmd if activation calls failed.
-  Fix return code of info call for query by uuid.
-  Fix some constness and floating point gcc warnings.
-  Fix dm_report_field_uint64 function.
-  Fix display of lv_kernel_read_ahead -1, broken by fix of dm_report_field_uint64().
+  Make clvmd -V return status zero.
+  Remove unnecessary 'dmsetup resume' following 'dmsetup create' in tests.
+  Fix cmirrord segfault in clog_cpg list processing when converting mirror log.
+  Deactivate temporary pvmove mirror cluster-wide when activating it fails.
+  Always query device by uuid and not name in clvmd.
+  Add missing metadata vg_reverts in pvmove error paths.
+  Unlock shared lock in clvmd if activation calls fail.
+  Return success from dev_manager_info with non-existent uuid if ioctl succeeds.
 
 Version 2.02.60 - 23rd January 2010
 ===================================

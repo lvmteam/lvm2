@@ -1,9 +1,9 @@
-Version 1.02.44 - 
-===================================
+Version 1.02.44 - 15th February 2010
+====================================
   Add DM_UDEV_DISABLE_LIBRARY_FALLBACK udev flag to rely on udev only.
   Export dm_udev_create_cookie function to create new cookies on demand.
-  Add --udevcookie, udevcreatecookie and udevreleasecookie for dmsetup.
-  Don't use DM_UDEV_DISABLE_CHECKING env. var. anymore and set the state automatically.
+  Add --udevcookie, udevcreatecookie and udevreleasecookie to dmsetup.
+  Set udev state automatically instead of using DM_UDEV_DISABLE_CHECKING.
 
 Version 1.02.43 - 21st January 2010
 ===================================

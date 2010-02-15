@@ -1571,6 +1571,9 @@ static struct metadata_area *_mda_copy(struct dm_pool *mem,
 	memcpy(mda_new, mda, sizeof(*mda));
 	memcpy(mdac_new, mdac, sizeof(*mdac));
 	mda_new->metadata_locn = mdac_new;
+
+	/* FIXME mda 'list' left invalid here */
+
 	return mda_new;
 }
 
