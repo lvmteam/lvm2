@@ -1049,7 +1049,7 @@ static int _snpercent_disp(struct dm_report *rh __attribute((unused)), struct dm
 		return 0;
 	}
 
-	*sortval = snap_percent * UINT64_C(1000);
+	*sortval = (uint64_t)(snap_percent * 1000.f);
 	dm_report_field_set_value(field, repstr, sortval);
 
 	return 1;
@@ -1091,7 +1091,7 @@ static int _copypercent_disp(struct dm_report *rh __attribute((unused)),
 		return 0;
 	}
 
-	*sortval = percent * UINT64_C(1000);
+	*sortval = (uint64_t)(percent * 1000.f);
 	dm_report_field_set_value(field, repstr, sortval);
 
 	return 1;
