@@ -281,8 +281,6 @@ int lvm_scan(lvm_t libh);
  *
  * NOTE: This function normally does not scan devices in the system for LVM
  * metadata.  To scan the system, use lvm_scan.
- * NOTE: This function currently returns hidden VG names.  These names always
- * begin with a "#" and should be filtered out and not used.
  *
  * To process the list, use the dm_list iterator functions.  For example:
  *      vg_t vg;
@@ -315,8 +313,6 @@ struct dm_list *lvm_list_vg_names(lvm_t libh);
  *
  * NOTE: This function normally does not scan devices in the system for LVM
  * metadata.  To scan the system, use lvm_scan.
- * NOTE: This function currently returns hidden VG names.  These names always
- * begin with a "#" and should be filtered out and not used.
  *
  * \param   libh
  * Handle obtained from lvm_init.
