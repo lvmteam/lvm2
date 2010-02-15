@@ -38,7 +38,7 @@ struct snap_status {
 
 /* FIXME possibly reconcile this with target_percent when we gain
    access to regular LVM library here. */
-static void _parse_snapshot_params(char *params, struct snap_status *stat)
+static void _parse_snapshot_params(char *params, struct snap_status *status)
 {
 	char *p;
 	/*
@@ -46,10 +46,10 @@ static void _parse_snapshot_params(char *params, struct snap_status *stat)
 	 * Invalid	-- snapshot invalidated
 	 * Unknown	-- status unknown
 	 */
-	stat->used = stat->max = 0;
+	status->used = status->max = 0;
 
 	if (!strncmp(params, "Invalid", 7)) {
-		stat->invalid = 1;
+		status->invalid = 1;
 		return;
 	}
 
@@ -66,8 +66,8 @@ static void _parse_snapshot_params(char *params, struct snap_status *stat)
 	*p = '\0';
 	p++;
 
-	stat->used = atoi(params);
-	stat->max = atoi(p);
+	status->used = atoi(params);
+	status->max = atoi(p);
 }
 
 void process_event(struct dm_task *dmt,
@@ -78,7 +78,7 @@ void process_event(struct dm_task *dmt,
 	uint64_t start, length;
 	char *target_type = NULL;
 	char *params;
-	struct snap_status stat = { 0 };
+	struct snap_status status = { 0 };
 	const char *device = dm_task_get_name(dmt);
 	int percent, *percent_warning = (int*)private;
 
@@ -92,18 +92,18 @@ void process_event(struct dm_task *dmt,
 	if (!target_type)
 		goto out;
 
-	_parse_snapshot_params(params, &stat);
+	_parse_snapshot_params(params, &status);
 	/*
 	 * If the snapshot has been invalidated or we failed to parse
 	 * the status string. Report the full status string to syslog.
 	 */
-	if (stat.invalid || !stat.max) {
+	if (status.invalid || !status.max) {
 		syslog(LOG_ERR, "Snapshot %s changed state to: %s\n", device, params);
 		*percent_warning = 0;
 		goto out;
 	}
 
-	percent = 100 * stat.used / stat.max;
+	percent = 100 * status.used / status.max;
 	if (percent >= *percent_warning) {
 		syslog(LOG_WARNING, "Snapshot %s is now %i%% full.\n", device, percent);
 		/* Print warning on the next multiple of WARNING_STEP. */
