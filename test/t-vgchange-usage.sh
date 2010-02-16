@@ -17,13 +17,6 @@ aux prepare_pvs 3
 pvcreate --metadatacopies 0 $dev1
 vgcreate $vg $devs
 
-get_vg_field() {
-	local vg=$1
-	local field=$2
-	local value
-	vgs --noheading -o $field $vg | sed 's/^ *//'
-}
-
 vgdisplay $vg
 
 # vgchange -p MaxPhysicalVolumes (bz202232)
