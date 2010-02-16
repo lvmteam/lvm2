@@ -17,7 +17,7 @@ Version 2.02.61 - 15th February 2010
   Exit with success when lvconvert --repair --use-policies performs no action.
   Accept a list of LVs with 'lvconvert --merge @tag' using process_each_lv.
   Avoid unnecessary second resync when adding mimage to core-logged mirror.
-  Exclude internal VG names and uuids from lists returned through liblvm.
+  Exclude internal VG names and uuids from lists returned through lvm2app.
   Add %ORIGIN support to lv{create,extend,reduce,resize} --extents.
   Add _mda_copy to clone a struct metadata_area.
   Remove pointless versioned symlinks to dmeventd plugin libraries.
