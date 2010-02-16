@@ -1,3 +1,6 @@
+Version 2.02.62 -
+====================================
+
 Version 2.02.61 - 15th February 2010
 ====================================
   Fix some consts and floating point gcc warnings.
