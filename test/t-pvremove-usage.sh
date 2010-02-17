@@ -52,7 +52,7 @@ for mdacp in 0 1 2; do
     echo n | not pvremove -ff $dev1
 
     # pvremove -ff succeds with confirmation when pv in a vg (---metadatacopies $mdacp)
-    yes | pvremove -ff $dev1
+    pvremove -ffy $dev1
     not pvs $dev1
 
     vgreduce --removemissing $vg

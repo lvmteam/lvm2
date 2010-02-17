@@ -302,6 +302,6 @@ prepare_lvmconf() {
 EOF
 }
 
-set -vexE
+set -vexE -o pipefail
 aux prepare_lvmconf
 

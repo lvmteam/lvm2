@@ -58,6 +58,7 @@ mirrorlog_is_on_()
 {
   local lv="$1"_mlog
   shift 1
+  if ! lvs -a $lv; then return 0; fi # FIXME?
   lvs -a -odevices --noheadings $lv | sed 's/,/\n/g' > out
   for d in $*; do grep "$d(" out || return 1; done
   for d in $*; do grep -v "$d(" out > out2 || true; mv out2 out; done
