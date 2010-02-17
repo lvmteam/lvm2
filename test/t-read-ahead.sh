@@ -36,7 +36,7 @@ lvcreate -n "$lv" -l 100%FREE -i5 -I256 "$vg"
 ra="$(get_lvs_ lv_kernel_read_ahead)"
 test "$(( ( $ra / 5 ) * 5 ))" -eq $ra
 lvdisplay "$vg"/"$lv"
-lvchange -r auto "$vg"/"$lv" 2>&1 | grep auto
+not lvchange -r auto "$vg"/"$lv" 2>&1 | grep auto
 check_lvs_ lv_read_ahead auto
 check_lvs_ lv_kernel_read_ahead 5120
 lvchange -r 640 "$vg/$lv"

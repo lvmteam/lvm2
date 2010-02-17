@@ -31,11 +31,13 @@ mimages_are_redundant_ ()
   local i
 
   rm -f out
+  lvs -odevices --noheadings $lv | sed 's/([^)]*)//g; s/,/ /g'
   for i in $(lvs -odevices --noheadings $lv | sed 's/([^)]*)//g; s/,/ /g'); do
     lvs -a -odevices --noheadings $vg/$i | sed 's/([^)]*)//g; s/,/ /g' | \
-      sort | uniq >> out
+      sort | uniq >> out || true
   done
 
+  cat out
   # if any duplication is found, it's not redundant
   sort out | uniq -d | grep . && return 1
 
@@ -181,7 +183,7 @@ check_and_cleanup_lvs_
 #COMM "convert from linear to 2-way mirror"
 prepare_lvs_ 
 lvcreate -l2 -n $lv1 $vg $dev1 
-lvconvert -m+1 $vg/$lv1 $dev2 $dev3:0-1 
+lvconvert -i1 -m+1 $vg/$lv1 $dev2 $dev3:0-1 
 mimages_are_redundant_ $vg $lv1 
 mirrorlog_is_on_ $vg/$lv1 $dev3 
 check_and_cleanup_lvs_
@@ -196,21 +198,21 @@ check_and_cleanup_lvs_
 for status in active inactive; do 
 # bz192865 lvconvert log of an inactive mirror lv
 #COMM "convert from disklog to corelog"
-prepare_lvs_ 
-lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0-1 
-	test $status = "inactive" && lvchange -an $vg/$lv1
-	yes | lvconvert --mirrorlog core $vg/$lv1 
-mimages_are_redundant_ $vg $lv1 
-check_and_cleanup_lvs_
+    prepare_lvs_ 
+    lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0-1 
+    test $status = "inactive" && lvchange -an $vg/$lv1
+    echo y | lvconvert -f --mirrorlog core $vg/$lv1 
+    mimages_are_redundant_ $vg $lv1 
+    check_and_cleanup_lvs_
 
-#COMM "convert from corelog to disklog"
-prepare_lvs_ 
-lvcreate -l2 -m1 --mirrorlog core -n $lv1 $vg $dev1 $dev2 
-	test $status = "inactive" && lvchange -an $vg/$lv1
-lvconvert --mirrorlog disk $vg/$lv1 $dev3:0-1 
-mimages_are_redundant_ $vg $lv1 
-mirrorlog_is_on_ $vg/$lv1 $dev3 
-check_and_cleanup_lvs_
+    #COMM "convert from corelog to disklog"
+    prepare_lvs_ 
+    lvcreate -l2 -m1 --mirrorlog core -n $lv1 $vg $dev1 $dev2 
+    	test $status = "inactive" && lvchange -an $vg/$lv1
+    lvconvert --mirrorlog disk $vg/$lv1 $dev3:0-1 
+    mimages_are_redundant_ $vg $lv1 
+    mirrorlog_is_on_ $vg/$lv1 $dev3 
+    check_and_cleanup_lvs_
 done
 
 # ---
@@ -267,7 +269,7 @@ check_and_cleanup_lvs_
 prepare_lvs_ 
 lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0-1 
 mirrorlog_is_on_ $vg/$lv1 $dev3 
-yes | lvchange --resync $vg/$lv1 
+echo y | lvchange --resync $vg/$lv1 
 mirrorlog_is_on_ $vg/$lv1 $dev3 
 check_and_cleanup_lvs_
 
