@@ -1035,10 +1035,6 @@ static int _add_snapshot_target_to_dtree(struct dev_manager *dm,
 		return 0;
 	}
 
-	/* cow is to be merged so skip adding it */
-	if (lv_is_merging_cow(lv))
-		return 1;
-
 	if (!(origin_dlid = build_dlid(dm, snap_seg->origin->lvid.s, "real")))
 		return_0;
 
@@ -1047,7 +1043,13 @@ static int _add_snapshot_target_to_dtree(struct dev_manager *dm,
 
 	size = (uint64_t) snap_seg->len * snap_seg->origin->vg->extent_size;
 
-	if (!dm_tree_node_add_snapshot_target(dnode, size, origin_dlid, cow_dlid, 1, snap_seg->chunk_size))
+	if (lv_is_merging_cow(lv)) {
+		/* cow is to be merged so load the error target */
+		if (!dm_tree_node_add_error_target(dnode, size))
+			return_0;
+	}
+	else if (!dm_tree_node_add_snapshot_target(dnode, size, origin_dlid,
+						   cow_dlid, 1, snap_seg->chunk_size))
 		return_0;
 
 	return 1;
@@ -1166,7 +1168,7 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	struct lv_layer *lvlayer;
 	struct dm_tree_node *dnode;
 	const struct dm_info *dinfo;
-	char *name, *dlid, *lv_name;
+	char *name, *dlid;
 	uint32_t max_stripe_size = UINT32_C(0);
 	uint32_t read_ahead = lv->read_ahead;
 	uint32_t read_ahead_flags = UINT32_C(0);
@@ -1192,22 +1194,7 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		}
 	}
 
-	lv_name = lv->name;
-	if (lv_is_cow(lv) && lv_is_merging_cow(lv)) {
-		if (layer) {
-			/*
-			 * use origin's name as basis for snapshot-merge device names;
-			 * this allows _clean_tree to automatically cleanup "-cow"
-			 * when the origin is resumed (after merge completes)
-			 */
-			lv_name = origin_from_cow(lv)->name;
-		} else {
-			/* top-level snapshot device is not needed during merge */
-			return 1;
-		}
-	}
-
-	if (!(name = build_dm_name(dm->mem, lv->vg->name, lv_name, layer)))
+	if (!(name = build_dm_name(dm->mem, lv->vg->name, lv->name, layer)))
 		return_0;
 
 	if (!(dlid = build_dlid(dm, lv->lvid.s, layer)))
@@ -1220,7 +1207,7 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 
 	if (!(lvlayer = dm_pool_alloc(dm->mem, sizeof(*lvlayer)))) {
 		log_error("_add_new_lv_to_dtree: pool alloc failed for %s %s.",
-			  lv_name, layer);
+			  lv->name, layer);
 		return 0;
 	}
 
