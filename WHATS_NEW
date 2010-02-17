@@ -1,5 +1,6 @@
 Version 2.02.62 -
 ====================================
+  Refactor snapshot-merge deptree and device removal to support info-by-uuid.
 
 Version 2.02.61 - 15th February 2010
 ====================================

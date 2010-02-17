@@ -1210,11 +1210,6 @@ static int lvconvert_merge(struct cmd_context *cmd,
 		goto out;
 	}
 
-	if (!deactivate_lv(cmd, lv)) {
-		log_warn("WARNING: Unable to deactivate merging snapshot %s", lv->name);
-		/* merge is running regardless of this deactivation failure */
-	}
-
 	lp->need_polling = 1;
 	lp->lv_to_poll = origin;
 

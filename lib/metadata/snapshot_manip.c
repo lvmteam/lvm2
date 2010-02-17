@@ -15,6 +15,7 @@
 
 #include "lib.h"
 #include "metadata.h"
+#include "locking.h"
 #include "toolcontext.h"
 #include "lv_alloc.h"
 
@@ -58,9 +59,9 @@ int lv_is_merging_origin(const struct logical_volume *origin)
 
 struct lv_segment *find_merging_cow(const struct logical_volume *origin)
 {
-	/* FIXME: eliminate this wrapper and just use find_cow()?
-	 * - find_merging_cow() adds to code clarity in caller
-	 */
+	if (!lv_is_merging_origin(origin))
+		return NULL;
+
 	return find_cow(origin);
 }
 
@@ -170,12 +171,22 @@ int vg_add_snapshot(struct logical_volume *origin,
 
 int vg_remove_snapshot(struct logical_volume *cow)
 {
+	int preload_origin = 0;
 	struct logical_volume *origin = origin_from_cow(cow);
 
 	dm_list_del(&cow->snapshot->origin_list);
 	origin->origin_count--;
-	if (find_merging_cow(origin) == find_cow(cow))
-		clear_snapshot_merge(origin_from_cow(cow));
+	if (find_merging_cow(origin) == find_cow(cow)) {
+		clear_snapshot_merge(origin);
+		/*
+		 * preload origin to:
+		 * - allow proper release of -cow
+		 * - avoid allocations with other devices suspended
+		 *   when transitioning from "snapshot-merge" to
+		 *   "snapshot-origin after a merge completes.
+		 */
+		preload_origin = 1;
+	}
 
 	if (!lv_remove(cow->snapshot->lv)) {
 		log_error("Failed to remove internal snapshot LV %s",
@@ -185,6 +196,22 @@ int vg_remove_snapshot(struct logical_volume *cow)
 
 	cow->snapshot = NULL;
 	lv_set_visible(cow);
+
+	if (preload_origin) {
+		if (!vg_write(origin->vg))
+			return_0;
+		if (!suspend_lv(origin->vg->cmd, origin)) {
+			log_error("Failed to refresh %s without snapshot.",
+				  origin->name);
+			return 0;
+		}
+		if (!vg_commit(origin->vg))
+			return_0;
+		if (!resume_lv(origin->vg->cmd, origin)) {
+			log_error("Failed to resume %s.", origin->name);
+			return 0;
+		}
+	}
 
 	return 1;
 }
