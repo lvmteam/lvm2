@@ -62,7 +62,7 @@ struct dm_pool *dm_pool_create(const char *name, size_t chunk_hint)
 	mem->orig_pool = mem;
 
 #ifdef DEBUG_POOL
-	log_debug_mem("Created mempool %s", name);
+	log_debug_mem("Created mempool %s at %p", name, mem);
 #endif
 
 	dm_list_add(&_dm_pools, &mem->list);
@@ -91,8 +91,8 @@ static void _free_blocks(struct dm_pool *p, struct block *b)
 static void _pool_stats(struct dm_pool *p, const char *action)
 {
 #ifdef DEBUG_POOL
-	log_debug_mem("%s mempool %s: %u/%u bytes, %u/%u blocks, "
-		      "%u allocations)", action, p->name, p->stats.bytes,
+	log_debug_mem("%s mempool %s at %p: %u/%u bytes, %u/%u blocks, "
+		      "%u allocations)", action, p->name, p, p->stats.bytes,
 		      p->stats.maxbytes, p->stats.blocks_allocated,
 		      p->stats.blocks_max, p->stats.block_serialno);
 #else
