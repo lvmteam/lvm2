@@ -114,4 +114,5 @@ dd if=/dev/zero of=$dev1 bs=1024 count=64
 mkswap $dev1
 blkid -c /dev/null $dev1 | grep "swap"
 pvcreate -f $dev1
-blkid -c /dev/null $dev1 | not grep "swap"
+# blkid cannot make up its mind whether not finding anything it knows is a failure or not
+(blkid -c /dev/null $dev1 || true) | not grep "swap"
