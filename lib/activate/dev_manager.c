@@ -840,7 +840,8 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree, struc
 	if (!_add_dev_to_dtree(dm, dtree, lv, "cow"))
 		return_0;
 
-	if (!_add_dev_to_dtree(dm, dtree, lv, "_mlog"))
+	if ((lv->status & MIRRORED) && first_seg(lv)->log_lv &&
+	    !_add_dev_to_dtree(dm, dtree, first_seg(lv)->log_lv, NULL))
 		return_0;
 
 	return 1;
