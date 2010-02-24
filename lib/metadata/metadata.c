@@ -667,6 +667,8 @@ int vg_reduce(struct volume_group *vg, char *pv_name)
 
 int lv_change_tag(struct logical_volume *lv, const char *tag, int add_tag)
 {
+	char *tag_new;
+
 	if (!(lv->vg->fid->fmt->features & FMT_TAGS)) {
 		log_error("Logical volume %s/%s does not support tags",
 			  lv->vg->name, lv->name);
@@ -674,7 +676,10 @@ int lv_change_tag(struct logical_volume *lv, const char *tag, int add_tag)
 	}
 
 	if (add_tag) {
-		if (!str_list_add(lv->vg->vgmem, &lv->tags, tag)) {
+		if (!(tag_new = dm_pool_strdup(lv->vg->vgmem, tag))) {
+			return_0;
+		}
+		if (!str_list_add(lv->vg->vgmem, &lv->tags, tag_new)) {
 			log_error("Failed to add tag %s to %s/%s",
 				  tag, lv->vg->name, lv->name);
 			return 0;
@@ -691,13 +696,18 @@ int lv_change_tag(struct logical_volume *lv, const char *tag, int add_tag)
 
 int vg_change_tag(struct volume_group *vg, const char *tag, int add_tag)
 {
+	char *tag_new;
+
 	if (!(vg->fid->fmt->features & FMT_TAGS)) {
 		log_error("Volume group %s does not support tags", vg->name);
 		return 0;
 	}
 
 	if (add_tag) {
-		if (!str_list_add(vg->vgmem, &vg->tags, tag)) {
+		if (!(tag_new = dm_pool_strdup(vg->vgmem, tag))) {
+			return_0;
+		}
+		if (!str_list_add(vg->vgmem, &vg->tags, tag_new)) {
 			log_error("Failed to add tag %s to volume group %s",
 				  tag, vg->name);
 			return 0;
