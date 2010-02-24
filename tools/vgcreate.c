@@ -94,16 +94,8 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 			goto bad;
 		}
 
-		if (!(vg->fid->fmt->features & FMT_TAGS)) {
-			log_error("Volume group format does not support tags");
-			goto bad;
-		}
-
-		if (!str_list_add(cmd->mem, &vg->tags, tag)) {
-			log_error("Failed to add tag %s to volume group %s",
-				  tag, vp_new.vg_name);
-			goto bad;
-		}
+		if (!vg_change_tag(vg, tag, 1))
+			goto_bad;
 	}
 
 	if (vg_is_clustered(vg)) {
