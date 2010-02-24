@@ -835,6 +835,54 @@ uint64_t lvm_lv_is_active(const lv_t lv);
 uint64_t lvm_lv_is_suspended(const lv_t lv);
 
 /**
+ * Add/remove a tag to/from a LV.
+ *
+ * These functions require calling lvm_vg_write to commit the change to disk.
+ * After successfully adding/removing a tag, use lvm_vg_write to commit the
+ * new VG to disk.  Upon failure, retry the operation or release the VG handle
+ * with lvm_vg_close.
+ *
+ * \param   lv
+ * Logical volume handle.
+ *
+ * \param   tag
+ * Tag to add/remove to/from LV.
+ *
+ * \return
+ * 0 (success) or -1 (failure).
+ */
+int lvm_lv_add_tag(lv_t lv, const char *tag);
+int lvm_lv_remove_tag(lv_t lv, const char *tag);
+
+/**
+ * Return the list of logical volume tags.
+ *
+ * The memory allocated for the list is tied to the vg_t handle and will be
+ * released when lvm_vg_close is called.
+ *
+ * To process the list, use the dm_list iterator functions.  For example:
+ *      lv_t lv;
+ *      struct dm_list *tags;
+ *      struct lvm_str_list *strl;
+ *
+ *      tags = lvm_lv_get_tags(lv);
+ *	dm_list_iterate_items(strl, tags) {
+ *		tag = strl->str;
+ *              // do something with tag
+ *      }
+ *
+ *
+ * \return
+ * A list with entries of type struct lvm_str_list, containing the
+ * tag strings attached to volume group.
+ * If no tags are attached to the LV, an empty list is returned
+ * (check with dm_list_empty()).
+ * If there is a problem obtaining the list of tags, NULL is returned.
+ */
+struct dm_list *lvm_lv_get_tags(const lv_t lv);
+
+
+/**
  * Resize logical volume to new_size bytes.
  *
  * NOTE: This function is currently not implemented.

@@ -26,6 +26,9 @@ lvm_lv_get_name
 lvm_lv_get_size
 lvm_lv_is_active
 lvm_lv_is_suspended
+lvm_lv_add_tag
+lvm_lv_remove_tag
+lvm_lv_get_tags
 lvm_vg_create
 lvm_vg_extend
 lvm_vg_reduce
