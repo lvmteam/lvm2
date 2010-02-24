@@ -18,6 +18,7 @@ top_builddir = @top_builddir@
 VPATH = @srcdir@
 
 SOURCES =\
+	lvm_misc.c \
 	lvm_base.c \
 	lvm_lv.c \
 	lvm_pv.c \
