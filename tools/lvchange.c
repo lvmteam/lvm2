@@ -500,25 +500,8 @@ static int lvchange_tag(struct cmd_context *cmd, struct logical_volume *lv,
 		return 0;
 	}
 
-	if (!(lv->vg->fid->fmt->features & FMT_TAGS)) {
-		log_error("Logical volume %s/%s does not support tags",
-			  lv->vg->name, lv->name);
-		return 0;
-	}
-
-	if ((arg == addtag_ARG)) {
-		if (!str_list_add(cmd->mem, &lv->tags, tag)) {
-			log_error("Failed to add tag %s to %s/%s",
-				  tag, lv->vg->name, lv->name);
-			return 0;
-		}
-	} else {
-		if (!str_list_del(&lv->tags, tag)) {
-			log_error("Failed to remove tag %s from %s/%s",
-				  tag, lv->vg->name, lv->name);
-			return 0;
-		}
-	}
+	if (!lv_change_tag(lv, tag, arg == addtag_ARG))
+		return_0;
 
 	log_very_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
 

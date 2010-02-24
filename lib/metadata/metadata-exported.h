@@ -493,6 +493,8 @@ struct logical_volume *lv_create_empty(const char *name,
 int set_lv(struct cmd_context *cmd, struct logical_volume *lv,
            uint64_t sectors, int value);
 
+int lv_change_tag(struct logical_volume *lv, const char *tag, int add_tag);
+
 /* Reduce the size of an LV by extents */
 int lv_reduce(struct logical_volume *lv, uint32_t extents);
 
