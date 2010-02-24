@@ -1,5 +1,7 @@
 Version 2.02.62 -
 ====================================
+  Run device info query device by uuid only.
+  Don't touch /dev in vgmknodes if activation is disabled.
   Update lvm2app.h Doxygen comments and add lvm2app Doxygen config file.
   Update nightly tests and lvm2app unit tests to cover tags.
   Add lvm2app functions lvm_{vg|lv}_{get|add|remove}_tag() functions.

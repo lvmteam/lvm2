@@ -127,7 +127,7 @@ static int _info_run(const char *name, const char *dlid, struct dm_info *info,
 
 	dmtask = mknodes ? DM_DEVICE_MKNODES : DM_DEVICE_INFO;
 
-	if (!(dmt = _setup_task(name, dlid, 0, dmtask, major, minor)))
+	if (!(dmt = _setup_task(mknodes ? name : NULL, dlid, 0, dmtask, major, minor)))
 		return_0;
 
 	if (!with_open_count)
@@ -205,27 +205,18 @@ int device_is_usable(dev_t dev)
 	return r;
 }
 
-static int _info(const char *name, const char *dlid, int mknodes,
-		 int with_open_count, int with_read_ahead,
+static int _info(const char *dlid, int with_open_count, int with_read_ahead,
 		 struct dm_info *info, uint32_t *read_ahead)
 {
 	int r = 0;
 
-	if (!mknodes && dlid && *dlid) {
-		if ((r = _info_run(NULL, dlid, info, read_ahead, 0, with_open_count,
-			      with_read_ahead, 0, 0)) &&
-	    	    info->exists)
-			return 1;
-		else if ((r = _info_run(NULL, dlid + sizeof(UUID_PREFIX) - 1, info,
-				   read_ahead, 0, with_open_count,
-				   with_read_ahead, 0, 0)) &&
-			 info->exists)
-			return 1;
-	}
-
-	if (name)
-		return _info_run(name, NULL, info, read_ahead, mknodes,
-				 with_open_count, with_read_ahead, 0, 0);
+	if ((r = _info_run(NULL, dlid, info, read_ahead, 0, with_open_count,
+			   with_read_ahead, 0, 0)) && info->exists)
+		return 1;
+	else if ((r = _info_run(NULL, dlid + sizeof(UUID_PREFIX) - 1, info,
+				read_ahead, 0, with_open_count,
+				with_read_ahead, 0, 0)) && info->exists)
+		return 1;
 
 	return r;
 }
@@ -235,20 +226,28 @@ static int _info_by_dev(uint32_t major, uint32_t minor, struct dm_info *info)
 	return _info_run(NULL, NULL, info, NULL, 0, 0, 0, major, minor);
 }
 
-int dev_manager_info(struct dm_pool *mem, const char *name,
-		     const struct logical_volume *lv, int with_mknodes,
+int dev_manager_info(struct dm_pool *mem, const struct logical_volume *lv,
 		     int with_open_count, int with_read_ahead,
 		     struct dm_info *info, uint32_t *read_ahead)
 {
-	const char *dlid;
+	const char *dlid, *name;
+	int r;
+
+	if (!(name = build_dm_name(mem, lv->vg->name, lv->name, NULL))) {
+		log_error("name build failed for %s", lv->name);
+		return 0;
+	}
 
 	if (!(dlid = _build_dlid(mem, lv->lvid.s, NULL))) {
 		log_error("dlid build failed for %s", lv->name);
 		return 0;
 	}
 
-	return _info(name, dlid, with_mknodes, with_open_count, with_read_ahead,
-		     info, read_ahead);
+	log_debug("Getting device info for %s [%s]", name, dlid);
+	r = _info(dlid, with_open_count, with_read_ahead, info, read_ahead);
+
+	dm_pool_free(mem, (char*)name);
+	return r;
 }
 
 static const struct dm_info *_cached_info(struct dm_pool *mem,
@@ -744,7 +743,7 @@ static int _belong_to_vg(const char *vgname, const char *name)
 /*  NEW CODE STARTS HERE */
 /*************************/
 
-int dev_manager_lv_mknodes(const struct logical_volume *lv)
+static int _dev_manager_lv_mknodes(const struct logical_volume *lv)
 {
 	char *name;
 
@@ -755,9 +754,30 @@ int dev_manager_lv_mknodes(const struct logical_volume *lv)
 	return fs_add_lv(lv, name);
 }
 
-int dev_manager_lv_rmnodes(const struct logical_volume *lv)
+static int _dev_manager_lv_rmnodes(const struct logical_volume *lv)
 {
 	return fs_del_lv(lv);
+}
+
+int dev_manager_mknodes(const struct logical_volume *lv)
+{
+	struct dm_info dminfo;
+	const char *name;
+	int r = 0;
+
+	if (!(name = build_dm_name(lv->vg->cmd->mem, lv->vg->name, lv->name, NULL)))
+		return_0;
+
+	if ((r = _info_run(name, NULL, &dminfo, NULL, 1, 0, 0, 0, 0))) {
+		if (dminfo.exists) {
+			if (lv_is_visible(lv))
+				r = _dev_manager_lv_mknodes(lv);
+		} else
+			r = _dev_manager_lv_rmnodes(lv);
+	}
+
+	dm_pool_free(lv->vg->cmd->mem, (char*)name);
+	return r;
 }
 
 static int _add_dev_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
@@ -774,7 +794,7 @@ static int _add_dev_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		return_0;
 
 	log_debug("Getting device info for %s [%s]", name, dlid);
-	if (!_info(name, dlid, 0, 1, 0, &info, NULL)) {
+	if (!_info(dlid, 1, 0, &info, NULL)) {
 		log_error("Failed to get info for %s [%s].", name, dlid);
 		return 0;
 	}
@@ -1309,11 +1329,11 @@ static int _create_lv_symlinks(struct dev_manager *dm, struct dm_tree_node *root
 			continue;
 		}
 		if (lv_is_visible(lvlayer->lv)) {
-			if (!dev_manager_lv_mknodes(lvlayer->lv))
+			if (!_dev_manager_lv_mknodes(lvlayer->lv))
 				r = 0;
 			continue;
 		}
-		if (!dev_manager_lv_rmnodes(lvlayer->lv))
+		if (!_dev_manager_lv_rmnodes(lvlayer->lv))
 			r = 0;
 	}
 

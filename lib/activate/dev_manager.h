@@ -40,9 +40,8 @@ void dev_manager_exit(void);
  * (eg, an origin is created before its snapshot, but is not
  * unsuspended until the snapshot is also created.)
  */
-int dev_manager_info(struct dm_pool *mem, const char *name,
-		     const struct logical_volume *lv,
-		     int mknodes, int with_open_count, int with_read_ahead,
+int dev_manager_info(struct dm_pool *mem, const struct logical_volume *lv,
+		     int with_open_count, int with_read_ahead,
 		     struct dm_info *info, uint32_t *read_ahead);
 int dev_manager_snapshot_percent(struct dev_manager *dm,
 				 const struct logical_volume *lv,
@@ -59,8 +58,7 @@ int dev_manager_preload(struct dev_manager *dm, struct logical_volume *lv,
 			int *flush_required);
 int dev_manager_deactivate(struct dev_manager *dm, struct logical_volume *lv);
 
-int dev_manager_lv_mknodes(const struct logical_volume *lv);
-int dev_manager_lv_rmnodes(const struct logical_volume *lv);
+int dev_manager_mknodes(const struct logical_volume *lv);
 
 /*
  * Put the desired changes into effect.

@@ -440,27 +440,17 @@ int target_present(struct cmd_context *cmd, const char *target_name,
 /*
  * Returns 1 if info structure populated, else 0 on failure.
  */
-static int _lv_info(struct cmd_context *cmd, const struct logical_volume *lv, int with_mknodes,
-		    struct lvinfo *info, int with_open_count, int with_read_ahead, unsigned by_uuid_only)
+int lv_info(struct cmd_context *cmd, const struct logical_volume *lv,
+	    struct lvinfo *info, int with_open_count, int with_read_ahead)
 {
 	struct dm_info dminfo;
-	char *name = NULL;
 
 	if (!activation())
 		return 0;
 
-	if (!by_uuid_only &&
-	    !(name = build_dm_name(cmd->mem, lv->vg->name, lv->name, NULL)))
+	if (!dev_manager_info(lv->vg->cmd->mem, lv, with_open_count,
+			      with_read_ahead, &dminfo, &info->read_ahead))
 		return_0;
-
-	log_debug("Getting device info for %s", name);
-	if (!dev_manager_info(lv->vg->cmd->mem, name, lv, with_mknodes,
-			      with_open_count, with_read_ahead, &dminfo,
-			      &info->read_ahead)) {
-		if (name)
-			dm_pool_free(cmd->mem, name);
-		return_0;
-	}
 
 	info->exists = dminfo.exists;
 	info->suspended = dminfo.suspended;
@@ -471,16 +461,7 @@ static int _lv_info(struct cmd_context *cmd, const struct logical_volume *lv, in
 	info->live_table = dminfo.live_table;
 	info->inactive_table = dminfo.inactive_table;
 
-	if (name)
-		dm_pool_free(cmd->mem, name);
-
 	return 1;
-}
-
-int lv_info(struct cmd_context *cmd, const struct logical_volume *lv, struct lvinfo *info,
-	    int with_open_count, int with_read_ahead)
-{
-	return _lv_info(cmd, lv, 0, info, with_open_count, with_read_ahead, 0);
 }
 
 int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s,
@@ -492,7 +473,7 @@ int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s,
 	if (!(lv = lv_from_lvid(cmd, lvid_s, 0)))
 		return 0;
 
-	r = _lv_info(cmd, lv, 0, info, with_open_count, with_read_ahead, 1);
+	r = lv_info(cmd, lv, info, with_open_count, with_read_ahead);
 	vg_release(lv->vg);
 
 	return r;
@@ -558,12 +539,11 @@ int lv_mirror_percent(struct cmd_context *cmd, struct logical_volume *lv,
 	return r;
 }
 
-static int _lv_active(struct cmd_context *cmd, struct logical_volume *lv,
-		      unsigned by_uuid_only)
+static int _lv_active(struct cmd_context *cmd, struct logical_volume *lv)
 {
 	struct lvinfo info;
 
-	if (!_lv_info(cmd, lv, 0, &info, 0, 0, by_uuid_only)) {
+	if (!lv_info(cmd, lv, &info, 0, 0)) {
 		stack;
 		return -1;
 	}
@@ -657,7 +637,7 @@ static int _lvs_in_vg_activated(struct volume_group *vg, unsigned by_uuid_only)
 
 	dm_list_iterate_items(lvl, &vg->lvs) {
 		if (lv_is_visible(lvl->lv))
-			count += (_lv_active(vg->cmd, lvl->lv, by_uuid_only) == 1);
+			count += (_lv_active(vg->cmd, lvl->lv) == 1);
 	}
 
 	return count;
@@ -700,7 +680,7 @@ int lv_is_active(struct logical_volume *lv)
 {
 	int ret;
 
-	if (_lv_active(lv->vg->cmd, lv, 0))
+	if (_lv_active(lv->vg->cmd, lv))
 		return 1;
 
 	if (!vg_is_clustered(lv->vg))
@@ -1182,7 +1162,6 @@ int lv_activate_with_filter(struct cmd_context *cmd, const char *lvid_s, int exc
 
 int lv_mknodes(struct cmd_context *cmd, const struct logical_volume *lv)
 {
-	struct lvinfo info;
 	int r = 1;
 
 	if (!lv) {
@@ -1191,14 +1170,10 @@ int lv_mknodes(struct cmd_context *cmd, const struct logical_volume *lv)
 		return r;
 	}
 
-	if (!_lv_info(cmd, lv, 1, &info, 0, 0, 0))
-		return_0;
+	if (!activation())
+		return 1;
 
-	if (info.exists) {
-		if (lv_is_visible(lv))
-			r = dev_manager_lv_mknodes(lv);
-	} else
-		r = dev_manager_lv_rmnodes(lv);
+	r = dev_manager_mknodes(lv);
 
 	fs_unlock();
 
