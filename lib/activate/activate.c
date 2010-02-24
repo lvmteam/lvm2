@@ -171,10 +171,6 @@ int lvs_in_vg_activated(struct volume_group *vg)
 {
 	return 0;
 }
-int lvs_in_vg_activated_by_uuid_only(struct volume_group *vg)
-{
-	return 0;
-}
 int lvs_in_vg_opened(struct volume_group *vg)
 {
 	return 0;
@@ -627,7 +623,7 @@ static int _lv_suspend_lv(struct logical_volume *lv, int lockfs, int flush_requi
  * These two functions return the number of visible LVs in the state,
  * or -1 on error.
  */
-static int _lvs_in_vg_activated(struct volume_group *vg, unsigned by_uuid_only)
+int lvs_in_vg_activated(struct volume_group *vg)
 {
 	struct lv_list *lvl;
 	int count = 0;
@@ -641,16 +637,6 @@ static int _lvs_in_vg_activated(struct volume_group *vg, unsigned by_uuid_only)
 	}
 
 	return count;
-}
-
-int lvs_in_vg_activated_by_uuid_only(struct volume_group *vg)
-{
-	return _lvs_in_vg_activated(vg, 1);
-}
-
-int lvs_in_vg_activated(struct volume_group *vg)
-{
-	return _lvs_in_vg_activated(vg, 0);
 }
 
 int lvs_in_vg_opened(const struct volume_group *vg)

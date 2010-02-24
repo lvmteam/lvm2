@@ -91,7 +91,6 @@ int lv_mirror_percent(struct cmd_context *cmd, struct logical_volume *lv,
  * Return number of LVs in the VG that are active.
  */
 int lvs_in_vg_activated(struct volume_group *vg);
-int lvs_in_vg_activated_by_uuid_only(struct volume_group *vg);
 int lvs_in_vg_opened(const struct volume_group *vg);
 
 int lv_is_active(struct logical_volume *lv);
