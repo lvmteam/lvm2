@@ -159,10 +159,10 @@ typedef struct lvm_pv_list {
  * Lists of these structures are returned by lvm_list_vg_names and
  * lvm_list_vg_uuids.
  */
-struct lvm_str_list {
+typedef struct lvm_str_list {
 	struct dm_list list;
 	const char *str;
-};
+} lvm_str_list_t;
 
 /*************************** generic lvm handling ***************************/
 /**
@@ -458,6 +458,26 @@ int lvm_vg_extend(vg_t vg, const char *device);
 int lvm_vg_reduce(vg_t vg, const char *device);
 
 /**
+ * Add/remove a tag to/from a VG.
+ *
+ * These functions require calling lvm_vg_write to commit the change to disk.
+ * After successfully adding/removing a tag, use lvm_vg_write to commit the
+ * new VG to disk.  Upon failure, retry the operation or release the VG handle
+ * with lvm_vg_close.
+ *
+ * \param   vg
+ * VG handle obtained from lvm_vg_create or lvm_vg_open.
+ *
+ * \param   tag
+ * Tag to add/remove to/from VG.
+ *
+ * \return
+ * 0 (success) or -1 (failure).
+ */
+int lvm_vg_add_tag(vg_t vg, const char *tag);
+int lvm_vg_remove_tag(vg_t vg, const char *tag);
+
+/**
  * Set the extent size of a VG.
  *
  * This function requires calling lvm_vg_write to commit the change to disk.
@@ -643,6 +663,33 @@ uint64_t lvm_vg_get_max_pv(const vg_t vg);
  * Maximum number of logical volumes allowed in a volume group.
  */
 uint64_t lvm_vg_get_max_lv(const vg_t vg);
+
+/**
+ * Return the list of volume group tags.
+ *
+ * The memory allocated for the list is tied to the vg_t handle and will be
+ * released when lvm_vg_close is called.
+ *
+ * To process the list, use the dm_list iterator functions.  For example:
+ *      vg_t vg;
+ *      struct dm_list *tags;
+ *      struct lvm_str_list *strl;
+ *
+ *      tags = lvm_vg_get_tags(vg);
+ *	dm_list_iterate_items(strl, tags) {
+ *		tag = strl->str;
+ *              // do something with tag
+ *      }
+ *
+ *
+ * \return
+ * A list with entries of type struct lvm_str_list, containing the
+ * tag strings attached to volume group.
+ * If no tags are attached to the given VG, an empty list is returned
+ * (check with dm_list_empty()).
+ * If there is a problem obtaining the list of tags, NULL is returned.
+ */
+struct dm_list *lvm_vg_get_tags(const vg_t vg);
 
 /************************** logical volume handling *************************/
 
