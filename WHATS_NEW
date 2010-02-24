@@ -1,5 +1,10 @@
 Version 2.02.62 -
 ====================================
+  Update lvm2app.h Doxygen comments and add lvm2app Doxygen config file.
+  Update nightly tests and lvm2app unit tests to cover tags.
+  Add lvm2app functions lvm_{vg|lv}_{get|add|remove}_tag() functions.
+  Add dm_pool_strdup to allocate and copy memory in tag library function.
+  Refactor vgcreate, vgchange, and lvchange for tag library function.
   Refactor snapshot-merge deptree and device removal to support info-by-uuid.
 
 Version 2.02.61 - 15th February 2010
