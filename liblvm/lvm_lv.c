@@ -20,8 +20,18 @@
 #include "segtype.h"
 #include "locking.h"
 #include "activate.h"
+#include "lvm_misc.h"
 
 #include <string.h>
+
+static int _lv_check_handle(const lv_t lv, const int vg_writeable)
+{
+	if (!lv || !lv->vg || vg_read_error(lv->vg))
+		return -1;
+	if (vg_writeable && !vg_check_write_mode(lv->vg))
+		return -1;
+	return 0;
+}
 
 /* FIXME: have lib/report/report.c _disp function call lv_size()? */
 uint64_t lvm_lv_get_size(const lv_t lv)
@@ -66,6 +76,31 @@ uint64_t lvm_lv_is_suspended(const lv_t lv)
 	    info.exists && info.suspended)
 		return 1;
 	return 0;
+}
+
+int lvm_lv_add_tag(lv_t lv, const char *tag)
+{
+	if (_lv_check_handle(lv, 1))
+		return -1;
+	if (!lv_change_tag(lv, tag, 1))
+		return -1;
+	return 0;
+}
+
+
+int lvm_lv_remove_tag(lv_t lv, const char *tag)
+{
+	if (_lv_check_handle(lv, 1))
+		return -1;
+	if (!lv_change_tag(lv, tag, 0))
+		return -1;
+	return 0;
+}
+
+
+struct dm_list *lvm_lv_get_tags(const lv_t lv)
+{
+	return tag_list_copy(lv->vg->vgmem, &lv->tags);
 }
 
 /* Set defaults for non-segment specific LV parameters */
