@@ -665,6 +665,29 @@ int vg_reduce(struct volume_group *vg, char *pv_name)
 	return 0;
 }
 
+int vg_change_tag(struct volume_group *vg, const char *tag, int add_tag)
+{
+	if (!(vg->fid->fmt->features & FMT_TAGS)) {
+		log_error("Volume group %s does not support tags", vg->name);
+		return 0;
+	}
+
+	if (add_tag) {
+		if (!str_list_add(vg->vgmem, &vg->tags, tag)) {
+			log_error("Failed to add tag %s to volume group %s",
+				  tag, vg->name);
+			return 0;
+		}
+	} else {
+		if (!str_list_del(&vg->tags, tag)) {
+			log_error("Failed to remove tag %s from volume group "
+				  "%s", tag, vg->name);
+			return 0;
+		}
+	}
+	return 1;
+}
+
 const char *strip_dir(const char *vg_name, const char *dev_dir)
 {
 	size_t len = strlen(dev_dir);

@@ -447,28 +447,14 @@ static int _vgchange_tag(struct cmd_context *cmd, struct volume_group *vg,
 		return ECMD_FAILED;
 	}
 
-	if (!(vg->fid->fmt->features & FMT_TAGS)) {
-		log_error("Volume group %s does not support tags", vg->name);
-		return ECMD_FAILED;
-	}
-
 	if (!archive(vg)) {
 		stack;
 		return ECMD_FAILED;
 	}
 
-	if ((arg == addtag_ARG)) {
-		if (!str_list_add(cmd->mem, &vg->tags, tag)) {
-			log_error("Failed to add tag %s to volume group %s",
-				  tag, vg->name);
-			return ECMD_FAILED;
-		}
-	} else {
-		if (!str_list_del(&vg->tags, tag)) {
-			log_error("Failed to remove tag %s from volume group "
-				  "%s", tag, vg->name);
-			return ECMD_FAILED;
-		}
+	if (!vg_change_tag(vg, tag, arg == addtag_ARG)) {
+		stack;
+		return ECMD_FAILED;
 	}
 
 	if (!vg_write(vg) || !vg_commit(vg)) {
