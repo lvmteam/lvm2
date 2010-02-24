@@ -29,7 +29,7 @@ static struct volume_group *vg_rename_old(struct cmd_context *cmd,
 		return_NULL;
 	}
 
-	if (lvs_in_vg_activated_by_uuid_only(vg)) {
+	if (lvs_in_vg_activated(vg)) {
 		unlock_and_release_vg(cmd, vg, vg_name_old);
 		log_error("Volume group \"%s\" still has active LVs",
 			  vg_name_old);
@@ -161,7 +161,7 @@ static int vg_rename_path(struct cmd_context *cmd, const char *old_vg_path,
 		if (test_mode())
 			log_verbose("Test mode: Skipping rename.");
 
-		else if (lvs_in_vg_activated_by_uuid_only(vg)) {
+		else if (lvs_in_vg_activated(vg)) {
 			if (!vg_refresh_visible(cmd, vg)) {
 				log_error("Renaming \"%s\" to \"%s\" failed", 
 					old_path, new_path);
