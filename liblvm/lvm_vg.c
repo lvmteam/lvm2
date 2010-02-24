@@ -21,9 +21,38 @@
 #include "lvm-string.h"
 #include "lvmcache.h"
 #include "metadata.h"
+#include "lvm_misc.h"
 
 #include <errno.h>
 #include <string.h>
+
+int lvm_vg_add_tag(vg_t vg, const char *tag)
+{
+	if (vg_read_error(vg))
+		return -1;
+
+	if (!vg_check_write_mode(vg))
+		return -1;
+
+	if (!vg_change_tag(vg, tag, 1))
+		return -1;
+	return 0;
+}
+
+
+int lvm_vg_remove_tag(vg_t vg, const char *tag)
+{
+	if (vg_read_error(vg))
+		return -1;
+
+	if (!vg_check_write_mode(vg))
+		return -1;
+
+	if (!vg_change_tag(vg, tag, 0))
+		return -1;
+	return 0;
+}
+
 
 vg_t lvm_vg_create(lvm_t libh, const char *vg_name)
 {
@@ -231,6 +260,11 @@ struct dm_list *lvm_vg_list_lvs(vg_t vg)
 		dm_list_add(list, &lvs->list);
 	}
 	return list;
+}
+
+struct dm_list *lvm_vg_get_tags(const vg_t vg)
+{
+	return tag_list_copy(vg->vgmem, &vg->tags);
 }
 
 uint64_t lvm_vg_get_seqno(const vg_t vg)

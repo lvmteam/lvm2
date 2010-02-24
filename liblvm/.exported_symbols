@@ -18,6 +18,7 @@ lvm_vg_get_extent_size
 lvm_vg_get_extent_count
 lvm_vg_get_free_extent_count
 lvm_vg_get_pv_count
+lvm_vg_get_tags
 lvm_lv_activate
 lvm_lv_deactivate
 lvm_lv_get_uuid
@@ -33,6 +34,8 @@ lvm_vg_write
 lvm_vg_open
 lvm_vg_close
 lvm_vg_remove
+lvm_vg_add_tag
+lvm_vg_remove_tag
 lvm_scan
 lvm_errno
 lvm_errmsg
