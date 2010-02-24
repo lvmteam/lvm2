@@ -665,6 +665,30 @@ int vg_reduce(struct volume_group *vg, char *pv_name)
 	return 0;
 }
 
+int lv_change_tag(struct logical_volume *lv, const char *tag, int add_tag)
+{
+	if (!(lv->vg->fid->fmt->features & FMT_TAGS)) {
+		log_error("Logical volume %s/%s does not support tags",
+			  lv->vg->name, lv->name);
+		return 0;
+	}
+
+	if (add_tag) {
+		if (!str_list_add(lv->vg->vgmem, &lv->tags, tag)) {
+			log_error("Failed to add tag %s to %s/%s",
+				  tag, lv->vg->name, lv->name);
+			return 0;
+		}
+	} else {
+		if (!str_list_del(&lv->tags, tag)) {
+			log_error("Failed to remove tag %s from %s/%s",
+				  tag, lv->vg->name, lv->name);
+			return 0;
+		}
+	}
+	return 1;
+}
+
 int vg_change_tag(struct volume_group *vg, const char *tag, int add_tag)
 {
 	if (!(vg->fid->fmt->features & FMT_TAGS)) {
