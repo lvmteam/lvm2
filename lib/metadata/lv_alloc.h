@@ -58,8 +58,7 @@ int lv_add_segment(struct alloc_handle *ah,
                    const struct segment_type *segtype,
                    uint32_t stripe_size,
                    uint64_t status,
-		   uint32_t region_size,
-                   struct logical_volume *log_lv);
+		   uint32_t region_size);
 
 int lv_add_mirror_areas(struct alloc_handle *ah,
 			struct logical_volume *lv, uint32_t le,
