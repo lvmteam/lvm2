@@ -123,11 +123,14 @@ unsigned long set_pe_align_offset(struct physical_volume *pv,
 
 	if (find_config_tree_bool(pv->fmt->cmd,
 				  "devices/data_alignment_offset_detection",
-				  DEFAULT_DATA_ALIGNMENT_OFFSET_DETECTION))
-		pv->pe_align_offset =
-			MAX(pv->pe_align_offset,
-			    dev_alignment_offset(pv->fmt->cmd->sysfs_dir,
-						 pv->dev));
+				  DEFAULT_DATA_ALIGNMENT_OFFSET_DETECTION)) {
+		int align_offset = dev_alignment_offset(pv->fmt->cmd->sysfs_dir,
+							pv->dev);
+		/* must handle a -1 alignment_offset; means dev is misaligned */
+		if (align_offset < 0)
+			align_offset = 0;
+		pv->pe_align_offset = MAX(pv->pe_align_offset, align_offset);
+	}
 
 	log_very_verbose("%s: Setting PE alignment offset to %lu sectors.",
 			 dev_name(pv->dev), pv->pe_align_offset);
