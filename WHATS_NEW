@@ -1,5 +1,6 @@
 Version 2.02.62 -
 ====================================
+  Handle a misaligned device that reports a -1 alignment_offset.
   Extend core allocation code in preparation for mirrored log areas.
   Rewrite clvmd init script.
   Remove lvs_in_vg_activated_by_uuid_only call.
