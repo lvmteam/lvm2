@@ -1,5 +1,6 @@
 Version 2.02.62 -
 ====================================
+  Define and use internal makefile variable UDEV_LIBS.
   Define and use internal makefile variable DL_LIBS.
   Update check for selinux libraries and link them only when needed.
   Define and use internal makefile variable SELINUX_LIBS and STATIC_LIBS.

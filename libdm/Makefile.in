@@ -52,7 +52,7 @@ include $(top_builddir)/make.tmpl
 DEFS += -DDM_DEVICE_UID=@DM_DEVICE_UID@ -DDM_DEVICE_GID=@DM_DEVICE_GID@ \
 	-DDM_DEVICE_MODE=@DM_DEVICE_MODE@
 
-LIBS += $(SELINUX_LIBS)
+LIBS += $(SELINUX_LIBS) $(UDEV_LIBS)
 
 device-mapper: all
 
