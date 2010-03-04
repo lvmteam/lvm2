@@ -685,6 +685,7 @@ DM_DEVICE_MODE
 DM_DEVICE_GID
 DM_COMPAT
 DMEVENTD
+DL_LIBS
 DEVMAPPER
 DEBUG
 COPTIMISE_FLAG
@@ -12681,22 +12682,20 @@ fi
 { $as_echo "$as_me:$LINENO: result: $ac_cv_lib_dl_dlopen" >&5
 $as_echo "$ac_cv_lib_dl_dlopen" >&6; }
 if test "x$ac_cv_lib_dl_dlopen" = x""yes; then
-  HAVE_LIBDL=yes
-else
-  HAVE_LIBDL=no
-fi
 
-
-if [ "x$HAVE_LIBDL" = xyes ]; then
 
 cat >>confdefs.h <<\_ACEOF
 #define HAVE_LIBDL 1
 _ACEOF
 
-	LIBS="-ldl $LIBS"
+	DL_LIBS="-ldl"
+	HAVE_LIBDL=yes
 else
+
+	DL_LIBS=
 	HAVE_LIBDL=no
 fi
+
 
 ################################################################################
 if [ \( "x$LVM1" = xshared -o "x$POOL" = xshared -o "x$CLUSTER" = xshared \
@@ -15476,6 +15475,7 @@ LVM_PATCHLEVEL=`echo "$VER" | $AWK -F '[(.]' '{print $3}'`
 LVM_LIBAPI=`echo "$VER" | $AWK -F '[()]' '{print $2}'`
 
 ################################################################################
+
 
 
 

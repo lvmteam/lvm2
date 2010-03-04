@@ -789,14 +789,12 @@ fi;
 
 ################################################################################
 dnl -- Check for dlopen
-AC_CHECK_LIB(dl, dlopen, HAVE_LIBDL=yes, HAVE_LIBDL=no)
-
-if [[ "x$HAVE_LIBDL" = xyes ]]; then
+AC_CHECK_LIB(dl, dlopen, [
 	AC_DEFINE([HAVE_LIBDL], 1, [Define to 1 if dynamic libraries are available.])
-	LIBS="-ldl $LIBS"
-else
-	HAVE_LIBDL=no
-fi
+	DL_LIBS="-ldl"
+	HAVE_LIBDL=yes ], [
+	DL_LIBS=
+	HAVE_LIBDL=no ])
 
 ################################################################################
 dnl -- Check for shared/static conflicts
@@ -1074,6 +1072,7 @@ AC_SUBST(DEBUG)
 AC_SUBST(DEVMAPPER)
 AC_SUBST(DLM_CFLAGS)
 AC_SUBST(DLM_LIBS)
+AC_SUBST(DL_LIBS)
 AC_SUBST(DMEVENTD)
 AC_SUBST(DM_COMPAT)
 AC_SUBST(DM_DEVICE_GID)
