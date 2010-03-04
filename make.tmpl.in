@@ -30,6 +30,8 @@ SED = @SED@
 CFLOW_CMD = @CFLOW_CMD@
 
 LIBS = @LIBS@
+# Extra libraries always linked with static binaries
+STATIC_LIBS = $(SELINUX_LIBS)
 DEFS += @DEFS@
 CFLAGS += @CFLAGS@
 CLDFLAGS += @CLDFLAGS@
@@ -39,6 +41,7 @@ LIB_SUFFIX = @LIB_SUFFIX@
 LVMINTERNAL_LIBS = -llvm-internal
 PTHREAD_LIBS = @PTHREAD_LIBS@
 READLINE_LIBS = @READLINE_LIBS@
+SELINUX_LIBS = @SELINUX_LIBS@
 
 # Setup directory variables
 prefix = @prefix@

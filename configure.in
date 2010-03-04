@@ -824,35 +824,18 @@ AC_MSG_RESULT($SELINUX)
 ################################################################################
 dnl -- Check for selinux
 if test x$SELINUX = xyes; then
-	AC_CHECK_LIB(sepol, sepol_check_context, HAVE_SEPOL=yes, HAVE_SEPOL=no)
+	AC_CHECK_LIB([sepol], [sepol_check_context], [
+		AC_DEFINE([HAVE_SEPOL], 1, [Define to 1 if sepol_check_context is available.])
+		SELINUX_LIBS="-lsepol"])
 
-	if test x$HAVE_SEPOL = xyes; then
-		AC_DEFINE([HAVE_SEPOL], 1,
-		  [Define to 1 if sepol_check_context is available.])
-		SELINUX_LIBS="-lsepol $SELINUX_LIBS"
-	fi
-
-	AC_CHECK_LIB(selinux, is_selinux_enabled, HAVE_SELINUX=yes, HAVE_SELINUX=no)
-
-	if test x$HAVE_SELINUX = xyes; then
+	AC_CHECK_LIB([selinux], [is_selinux_enabled], [
+		AC_CHECK_HEADERS([selinux/selinux.h],, hard_bailout)
 		AC_DEFINE([HAVE_SELINUX], 1, [Define to 1 to include support for selinux.])
 		SELINUX_LIBS="-lselinux $SELINUX_LIBS"
-	else
+		HAVE_SELINUX=yes ], [
 		AC_MSG_WARN(Disabling selinux)
-	fi
-	LIBS="$SELINUX_LIBS $LIBS"
-
-	# With --enable-static_link and selinux enabled, linking
-	# fails on at least Debian unstable due to unsatisfied references
-	# to pthread_mutex_lock and _unlock.  See if we need -lpthread.
-	if test "$STATIC_LINK-$HAVE_SELINUX" = yes-yes; then
-		lvm_saved_libs=$LIBS
-		LIBS="$LIBS -static"
-		AC_SEARCH_LIBS([pthread_mutex_lock], [pthread],
-		  [test "$ac_cv_search_pthread_mutex_lock" = "none required" ||
-				LIB_PTHREAD=-lpthread])
-		LIBS=$lvm_saved_libs
-	fi
+		SELINUX_LIBS=
+		HAVE_SELINUX=no ])
 fi
 
 ################################################################################
@@ -997,10 +980,6 @@ if test x$INTL = xyes; then
 	AC_CHECK_HEADERS(libintl.h,,AC_MSG_ERROR(bailing out))
 fi
 
-if test x$HAVE_SELINUX = xyes; then
-	AC_CHECK_HEADERS(selinux/selinux.h,,AC_MSG_ERROR(bailing out))
-fi
-
 if test x$UDEV_SYNC = xyes; then
 	AC_CHECK_HEADERS(sys/ipc.h sys/sem.h,,AC_MSG_ERROR(bailing out))
 fi
@@ -1109,7 +1088,6 @@ AC_SUBST(GULM_CFLAGS)
 AC_SUBST(GULM_LIBS)
 AC_SUBST(HAVE_LIBDL)
 AC_SUBST(HAVE_REALTIME)
-AC_SUBST(HAVE_SELINUX)
 AC_SUBST(INTL)
 AC_SUBST(INTL_PACKAGE)
 AC_SUBST(JOBS)

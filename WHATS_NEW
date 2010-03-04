@@ -1,5 +1,7 @@
 Version 2.02.62 -
 ====================================
+  Update check for selinux libraries and link them only when needed.
+  Define and use internal makefile variable SELINUX_LIBS and STATIC_LIBS.
   Remove -rdynamic from static builds.
   Update check for pthread library and link it only when needed.
   Define and use internal makefile variable PTHREAD_LIBS.
