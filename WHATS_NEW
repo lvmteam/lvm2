@@ -1,5 +1,9 @@
 Version 2.02.62 -
 ====================================
+  Update check for pthread library and link it only when needed.
+  Define and use internal makefile variable PTHREAD_LIBS.
+  Update check for readline library and link it only when needed.
+  Define and use internal makefile variable READLINE_LIBS.
   Define and use internal makefile variable LVMINTERNAL_LIBS.
   Help for configure prints --disable-fsadm.
   Use consistently $() instead of ${} for all Makefile variables.

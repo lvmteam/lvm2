@@ -17,8 +17,6 @@ top_srcdir = @top_srcdir@
 top_builddir = @top_builddir@
 VPATH = @srcdir@
 
-LIB_PTHREAD = @LIB_PTHREAD@
-
 SOURCES =\
 	dumpconfig.c \
 	formats.c \
@@ -100,7 +98,7 @@ ifeq ("@CMDLIB@", "yes")
 endif
 
 ifeq ("@DMEVENTD@", "yes")
-	LVMLIBS += -ldevmapper-event -lpthread
+	LVMLIBS += -ldevmapper-event
 endif
 
 LVMLIBS += -ldevmapper
@@ -113,21 +111,21 @@ device-mapper: $(TARGETS_DM)
 
 dmsetup: dmsetup.o $(top_builddir)/libdm/libdevmapper.$(LIB_SUFFIX)
 	$(CC) $(CFLAGS) $(LDFLAGS) -L$(top_builddir)/libdm \
-	      -o $@ dmsetup.o -ldevmapper $(LIBS) $(LIB_PTHREAD)
+	      -o $@ dmsetup.o -ldevmapper $(LIBS)
 
 dmsetup.static: dmsetup.o $(interfacebuilddir)/libdevmapper.a
 	$(CC) $(CFLAGS) $(LDFLAGS) -static -L$(interfacebuilddir) \
-	      -o $@ dmsetup.o -ldevmapper $(LIBS) $(LIB_PTHREAD)
+	      -o $@ dmsetup.o -ldevmapper $(LIBS)
 
 all: device-mapper
 
 lvm: $(OBJECTS) lvm.o $(top_builddir)/lib/liblvm-internal.a
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJECTS) lvm.o \
-		$(LVMLIBS) $(READLINE_LIBS) $(LIBS) $(LIB_PTHREAD) -rdynamic
+		$(LVMLIBS) $(READLINE_LIBS) $(LIBS) -rdynamic
 
 lvm.static: $(OBJECTS) lvm-static.o $(top_builddir)/lib/liblvm-internal.a  $(interfacebuilddir)/libdevmapper.a
 	$(CC) $(CFLAGS) $(LDFLAGS) -static -L$(interfacebuilddir) -o $@ \
-	      $(OBJECTS) lvm-static.o $(LVMLIBS) $(LIBS) $(LIB_PTHREAD) \
+	      $(OBJECTS) lvm-static.o $(LVMLIBS) $(LIBS) \
 	      -rdynamic
 
 liblvm2cmd.a: $(top_builddir)/lib/liblvm-internal.a $(OBJECTS) lvmcmdlib.o lvm2cmd.o

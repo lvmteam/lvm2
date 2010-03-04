@@ -75,13 +75,14 @@ endif
 TARGETS = \
 	clvmd
 
-LVMLIBS = $(LVMINTERNAL_LIBS) -lpthread
+LVMLIBS = $(LVMINTERNAL_LIBS)
 
 ifeq ("@DMEVENTD@", "yes")
 	LVMLIBS += -ldevmapper-event
 endif
  
 LVMLIBS += -ldevmapper
+LIBS += $(PTHREAD_LIBS)
 
 DEFS += -D_REENTRANT
 CFLAGS += -fno-strict-aliasing

@@ -35,7 +35,7 @@ include $(top_builddir)/make.tmpl
 LDFLAGS = -L$(top_builddir)/libdm -L$(top_builddir)/liblvm
 
 ifeq ("@DMEVENTD@", "yes")
-	LVMLIBS += -ldevmapper-event -lpthread
+	LVMLIBS += -ldevmapper-event
 	LDFLAGS += -L$(top_builddir)/daemons/dmeventd
 endif
 
