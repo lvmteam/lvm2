@@ -648,6 +648,7 @@ kerneldir
 interface
 UDEV_SYNC
 UDEV_RULES
+UDEV_LIBS
 STATIC_LINK
 STATICDIR
 SNAPSHOTS
@@ -12307,8 +12308,9 @@ cat >>confdefs.h <<\_ACEOF
 #define HAVE_UDEV_QUEUE_GET_UDEV_IS_ACTIVE 1
 _ACEOF
 
-			LIBS="-ludev $LIBS"
+			UDEV_LIBS="-ludev"
 		else
+			UDEV_LIBS=
 			{ $as_echo "$as_me:$LINENO: WARNING: It won't be possible to get udev state. We will assume that udev is not running." >&5
 $as_echo "$as_me: WARNING: It won't be possible to get udev state. We will assume that udev is not running." >&2;}
 		fi
@@ -15475,6 +15477,7 @@ LVM_PATCHLEVEL=`echo "$VER" | $AWK -F '[(.]' '{print $3}'`
 LVM_LIBAPI=`echo "$VER" | $AWK -F '[()]' '{print $2}'`
 
 ################################################################################
+
 
 
 
