@@ -42,7 +42,7 @@ CLEAN_TARGETS += liblvm.cflow
 
 include $(top_builddir)/make.tmpl
 
-LIBS += -ldevmapper -llvm-internal
+LIBS += $(LVMINTERNAL_LIBS) -ldevmapper
 
 ifeq ("@DMEVENTD@", "yes")
   LIBS += -ldevmapper-event

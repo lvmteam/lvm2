@@ -36,6 +36,7 @@ CLDFLAGS += @CLDFLAGS@
 LDDEPS += @LDDEPS@
 LDFLAGS += @LDFLAGS@
 LIB_SUFFIX = @LIB_SUFFIX@
+LVMINTERNAL_LIBS = -llvm-internal
 
 # Setup directory variables
 prefix = @prefix@
