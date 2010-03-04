@@ -43,8 +43,8 @@ ifeq ("@BUILD_CMIRRORD@", "yes")
 endif
 
 MAN8DM=dmsetup.8
-MAN5DIR=${mandir}/man5
-MAN8DIR=${mandir}/man8
+MAN5DIR=$(mandir)/man5
+MAN8DIR=$(mandir)/man8
 
 CLEAN_TARGETS=$(MAN5) $(MAN8) $(MAN8CLUSTER) $(FSADMMAN) $(MAN8DM)
 
