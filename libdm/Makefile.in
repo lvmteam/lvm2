@@ -50,7 +50,7 @@ LIB_VERSION = $(LIB_VERSION_DM)
 DEFS += -DDM_DEVICE_UID=@DM_DEVICE_UID@ -DDM_DEVICE_GID=@DM_DEVICE_GID@ \
 	-DDM_DEVICE_MODE=@DM_DEVICE_MODE@
 
-include ../make.tmpl
+include $(top_builddir)/make.tmpl
 
 device-mapper: all
 

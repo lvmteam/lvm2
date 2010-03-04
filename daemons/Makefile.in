@@ -30,7 +30,7 @@ ifeq ("@BUILD_DMEVENTD@", "yes")
   SUBDIRS += dmeventd
 endif
 
-include ../make.tmpl
+include $(top_builddir)/make.tmpl
 
 ifeq ("@BUILD_DMEVENTD@", "yes")
 device-mapper: dmeventd.device-mapper

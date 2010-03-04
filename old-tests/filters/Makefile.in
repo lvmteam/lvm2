@@ -25,11 +25,11 @@ TARGETS=\
 	rfilter_t \
 	pfilter_t
 
-include ../../make.tmpl
+include $(top_builddir)/make.tmpl
 
 rfilter_t: rfilter_t.o $(top_srcdir)/lib/liblvm.a
-	$(CC) -o rfilter_t rfilter_t.o -L$(top_srcdir)/lib -llvm
+	$(CC) -o rfilter_t rfilter_t.o -L$(top_builddir)/lib -llvm
 
 pfilter_t: pfilter_t.o $(top_srcdir)/lib/liblvm.a
-	$(CC) -o pfilter_t pfilter_t.o -L$(top_srcdir)/lib -llvm
+	$(CC) -o pfilter_t pfilter_t.o -L$(top_builddir)/lib -llvm
 

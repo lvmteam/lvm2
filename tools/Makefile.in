@@ -107,7 +107,7 @@ LVMLIBS += -ldevmapper
 
 DEFS += -DLVM_SHARED_PATH=\"$(exec_prefix)/sbin/lvm\"
 
-include ../make.tmpl
+include $(top_builddir)/make.tmpl
 
 device-mapper: $(TARGETS_DM)
 

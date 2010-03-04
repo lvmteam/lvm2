@@ -40,7 +40,7 @@ endif
 
 CLEAN_TARGETS += liblvm.cflow
 
-include ../make.tmpl
+include $(top_builddir)/make.tmpl
 
 LIBS += -ldevmapper -llvm-internal
 

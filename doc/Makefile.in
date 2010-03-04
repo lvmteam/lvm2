@@ -19,7 +19,7 @@ VPATH = @srcdir@
 CONFSRC=example.conf
 CONFDEST=lvm.conf
 
-include ../make.tmpl
+include $(top_builddir)/make.tmpl
 
 install_lvm2: $(CONFSRC)
 	@if [ ! -e $(confdir)/$(CONFDEST) ]; then \

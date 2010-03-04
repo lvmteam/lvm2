@@ -22,7 +22,7 @@ SOURCES = mirrored.c
 LIB_SHARED = liblvm2mirror.so
 LIB_VERSION = $(LIB_VERSION_LVM)
 
-include ../../make.tmpl
+include $(top_builddir)/make.tmpl
 
 install: liblvm2mirror.so
 	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) $< \

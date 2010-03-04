@@ -48,7 +48,7 @@ ifneq ($(MAKECMDGOALS),device-mapper)
   SUBDIRS+=plugins
 endif
 
-include ../../make.tmpl
+include $(top_builddir)/make.tmpl
 
 all: device-mapper
 device-mapper: $(TARGETS)

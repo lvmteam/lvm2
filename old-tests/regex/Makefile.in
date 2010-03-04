@@ -25,11 +25,11 @@ TARGETS=\
 	parse_t \
 	matcher_t
 
-include ../../make.tmpl
+include $(top_builddir)/make.tmpl
 
-parse_t: parse_t.o $(top_srcdir)/lib/liblvm.a
-	$(CC) -o parse_t parse_t.o -L$(top_srcdir)/lib -llvm
+parse_t: parse_t.o $(top_builddir)/lib/liblvm.a
+	$(CC) -o parse_t parse_t.o -L$(top_builddir)/lib -llvm
 
-matcher_t: matcher_t.o $(top_srcdir)/lib/liblvm.a
-	$(CC) -o matcher_t matcher_t.o -L$(top_srcdir)/lib -llvm
+matcher_t: matcher_t.o $(top_builddir)/lib/liblvm.a
+	$(CC) -o matcher_t matcher_t.o -L$(top_builddir)/lib -llvm
 

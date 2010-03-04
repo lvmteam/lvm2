@@ -29,7 +29,7 @@ SOURCES =\
 LIB_SHARED = liblvm2format1.so
 LIB_VERSION = $(LIB_VERSION_LVM)
 
-include ../../make.tmpl
+include $(top_builddir)/make.tmpl
 
 install: liblvm2format1.so
 	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) $< \
