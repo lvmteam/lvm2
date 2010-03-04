@@ -48,7 +48,7 @@ MAN8DIR=${mandir}/man8
 
 CLEAN_TARGETS=$(MAN5) $(MAN8) $(MAN8CLUSTER) $(FSADMMAN) $(MAN8DM)
 
-include ../make.tmpl
+include $(top_builddir)/make.tmpl
 
 ifneq ("@CLVMD@", "none")
   install: install_cluster

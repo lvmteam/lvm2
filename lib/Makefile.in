@@ -143,7 +143,7 @@ ifeq ("@HAVE_LIBDL@", "yes")
 endif
 
 ifeq ("@DMEVENTD@", "yes")
-  CLDFLAGS += -L../daemons/dmeventd
+  CLDFLAGS += -L$(top_builddir)/daemons/dmeventd
   LIBS += -ldevmapper-event
 endif
 
@@ -152,7 +152,7 @@ LIB_STATIC = $(LIB_NAME).a
 
 CLEAN_TARGETS += $(LIB_NAME).cflow
 
-include ../make.tmpl
+include $(top_builddir)/make.tmpl
 
 $(SUBDIRS): $(LIB_STATIC)
 

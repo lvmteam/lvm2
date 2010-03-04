@@ -22,7 +22,7 @@ DM_DIR=$(shell grep "\#define DM_DIR" $(top_srcdir)/libdm/misc/dm-ioctl.h | awk 
 
 CLEAN_TARGETS=10-dm.rules
 
-include ../make.tmpl
+include $(top_builddir)/make.tmpl
 
 %: %.in
 	$(SED) -e "s/(DM_DIR)/$(DM_DIR)/" $< >$@
