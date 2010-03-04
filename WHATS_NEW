@@ -1,5 +1,6 @@
 Version 2.02.62 -
 ====================================
+  Help for configure prints --disable-fsadm.
   Use consistently $() instead of ${} for all Makefile variables.
   Replace CFLOW_CMD only in make.tmpl and use it as variable elsewhere.
   Use $(top_builddir) for inclusion of make.tmpl in Makefiles.

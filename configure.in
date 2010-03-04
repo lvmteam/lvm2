@@ -737,8 +737,8 @@ AC_ARG_ENABLE(pkgconfig,   [  --enable-pkgconfig      Install pkgconfig support]
 ################################################################################
 dnl -- Enable fsadm
 AC_MSG_CHECKING(whether to install fsadm)
-AC_ARG_ENABLE(fsadm, [  --enable-fsadm          Enable fsadm],
-FSADM=$enableval)
+AC_ARG_ENABLE(fsadm, [AC_HELP_STRING([--disable-fsadm], [Disable fsadm])],
+	FSADM=$enableval)
 AC_MSG_RESULT($FSADM)
 
 ################################################################################

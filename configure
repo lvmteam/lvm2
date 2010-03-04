@@ -1524,7 +1524,7 @@ Optional Features:
   --enable-applib         Build application library
   --enable-cmdlib         Build shared command library
   --enable-pkgconfig      Install pkgconfig support
-  --enable-fsadm          Enable fsadm
+  --disable-fsadm         Disable fsadm
   --enable-dmeventd       Enable the device-mapper event daemon
   --disable-selinux       Disable selinux support
   --enable-nls            Enable Native Language Support
