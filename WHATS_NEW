@@ -1,5 +1,6 @@
 Version 2.02.62 -
 ====================================
+  Fix autoconf warning about ignored datarootdir.
   Increase AC_PREREQ version to 2.61 (for AC_PROC_SED, AC_PROG_MKDIR_P).
   Handle a misaligned device that reports a -1 alignment_offset.
   Extend core allocation code in preparation for mirrored log areas.
