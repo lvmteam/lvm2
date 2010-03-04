@@ -788,24 +788,6 @@ if [[ "x$exec_prefix" = xNONE -a "x$prefix" = xNONE ]];
 fi;
 
 ################################################################################
-dnl -- Check for termcap (Shamelessly copied from parted 1.4.17)
-if test x$READLINE != xno; then
-	AC_SEARCH_LIBS([tgetent], [tinfo ncurses curses termcap termlib],
-	  [tg_found=yes], [tg_found=no])
-	test x$READLINE:$tg_found = xyes:no &&
-	  AC_MSG_ERROR(
-termcap could not be found which is required for the
---enable-readline option (which is enabled by default).  Either disable readline
-support with --disable-readline or download and install termcap from:
-	ftp.gnu.org/gnu/termcap
-Note: if you are using precompiled packages you will also need the development
-  package as well (which may be called termcap-devel or something similar).
-Note: (n)curses also seems to work as a substitute for termcap.  This was
-  not found either - but you could try installing that as well.
-)
-fi
-
-################################################################################
 dnl -- Check for dlopen
 AC_CHECK_LIB(dl, dlopen, HAVE_LIBDL=yes, HAVE_LIBDL=no)
 
@@ -887,22 +869,44 @@ AC_CHECK_HEADERS(getopt.h, AC_DEFINE([HAVE_GETOPTLONG], 1, [Define to 1 if getop
 ################################################################################
 dnl -- Check for readline (Shamelessly copied from parted 1.4.17)
 if test x$READLINE != xno; then
-	rl_found=yes
-	AC_CHECK_LIB([readline], [readline], , [rl_found=no])
-	test x$READLINE:$rl_found = xyes:no &&
-	  AC_MSG_ERROR(
-GNU Readline could not be found which is required for the
+	lvm_saved_libs=$LIBS
+	AC_SEARCH_LIBS([tgetent], [tinfo ncurses curses termcap termlib],
+		READLINE_LIBS=$ac_cv_search_tgetent, [
+		if test "$READLINE" = yes; then
+			AC_MSG_ERROR(
+[termcap could not be found which is required for the
+--enable-readline option (which is enabled by default).  Either disable readline
+support with --disable-readline or download and install termcap from:
+	ftp.gnu.org/gnu/termcap
+Note: if you are using precompiled packages you will also need the development
+  package as well (which may be called termcap-devel or something similar).
+Note: (n)curses also seems to work as a substitute for termcap.  This was
+  not found either - but you could try installing that as well.])
+		fi])
+	dnl -- Old systems may need extra termcap dependency explicitly in LIBS
+	AC_CHECK_LIB([readline], [readline], [
+		AC_DEFINE([READLINE_SUPPORT], 1,
+			[Define to 1 to include the LVM readline shell.])
+		dnl -- Try only with -lreadline and check for different symbol
+		LIBS=$lvm_saved_libs
+		AC_CHECK_LIB([readline], [rl_line_buffer],
+			[ READLINE_LIBS="-lreadline" ], [
+			  AC_MSG_RESULT([linking -lreadline with $READLINE_LIBS needed])
+			  READLINE_LIBS="-lreadline $READLINE_LIBS"
+			]) ], [
+		READLINE_LIBS=
+		if test "$READLINE" = yes; then
+			AC_MSG_ERROR(
+[GNU Readline could not be found which is required for the
 --enable-readline option (which is enabled by default).  Either disable readline
 support with --disable-readline or download and install readline from:
 	ftp.gnu.org/gnu/readline
 Note: if you are using precompiled packages you will also need the development
-package as well (which may be called readline-devel or something similar).
-)
-	if test $rl_found = yes; then
-		AC_CHECK_FUNCS([rl_completion_matches])
-		AC_DEFINE([READLINE_SUPPORT], 1,
-		  [Define to 1 to include the LVM readline shell.])
-	fi
+package as well (which may be called readline-devel or something similar).])
+		fi ])
+	LIBS="$READLINE_LIBS $lvm_saved_libs"
+	AC_CHECK_FUNCS([rl_completion_matches])
+	LIBS=$lvm_saved_libs
 fi
 
 ################################################################################
@@ -1123,6 +1127,7 @@ AC_SUBST(PKGCONFIG)
 AC_SUBST(POOL)
 AC_SUBST(QUORUM_CFLAGS)
 AC_SUBST(QUORUM_LIBS)
+AC_SUBST(READLINE_LIBS)
 AC_SUBST(SACKPT_CFLAGS)
 AC_SUBST(SACKPT_LIBS)
 AC_SUBST(SALCK_CFLAGS)
