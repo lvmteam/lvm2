@@ -54,7 +54,7 @@ all: device-mapper
 device-mapper: $(TARGETS)
 
 LIBS += -ldl
-LVMLIBS += -ldevmapper-event -lpthread -ldevmapper
+LVMLIBS += -ldevmapper-event -ldevmapper $(PTHREAD_LIBS)
 
 $(VERSIONED_SHLIB): $(LIB_SHARED)
 	$(RM) -f $@

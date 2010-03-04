@@ -809,6 +809,12 @@ Features cannot be 'shared' when building statically
 fi
 
 ################################################################################
+if [[ "$DMEVENTD" = yes -o "$CLVMD" != none ]] ; then
+	AC_CHECK_LIB([pthread], [pthread_mutex_lock],
+		[PTHREAD_LIBS="-lpthread"], hard_bailout)
+fi
+
+################################################################################
 dnl -- Disable selinux
 AC_MSG_CHECKING(whether to enable selinux support)
 AC_ARG_ENABLE(selinux, [  --disable-selinux       Disable selinux support],
@@ -1125,6 +1131,7 @@ AC_SUBST(MSGFMT)
 AC_SUBST(OWNER)
 AC_SUBST(PKGCONFIG)
 AC_SUBST(POOL)
+AC_SUBST(PTHREAD_LIBS)
 AC_SUBST(QUORUM_CFLAGS)
 AC_SUBST(QUORUM_LIBS)
 AC_SUBST(READLINE_LIBS)
@@ -1138,7 +1145,6 @@ AC_SUBST(STATICDIR)
 AC_SUBST(STATIC_LINK)
 AC_SUBST(UDEV_RULES)
 AC_SUBST(UDEV_SYNC)
-AC_SUBST([LIB_PTHREAD])
 AC_SUBST(interface)
 AC_SUBST(kerneldir)
 AC_SUBST(missingkernel)
