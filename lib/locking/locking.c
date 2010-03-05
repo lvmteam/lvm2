@@ -161,22 +161,22 @@ static void _unblock_signals(void)
 	_signals_blocked = 0;
 }
 
-static void _lock_memory(lv_operation_t lv_op)
+static void _lock_memory(struct cmd_context *cmd, lv_operation_t lv_op)
 {
 	if (!(_locking.flags & LCK_PRE_MEMLOCK))
 		return;
 
 	if (lv_op == LV_SUSPEND)
-		memlock_inc();
+		memlock_inc(cmd);
 }
 
-static void _unlock_memory(lv_operation_t lv_op)
+static void _unlock_memory(struct cmd_context *cmd, lv_operation_t lv_op)
 {
 	if (!(_locking.flags & LCK_PRE_MEMLOCK))
 		return;
 
 	if (lv_op == LV_RESUME)
-		memlock_dec();
+		memlock_dec(cmd);
 }
 
 void reset_locking(void)
@@ -363,7 +363,7 @@ static int _lock_vol(struct cmd_context *cmd, const char *resource,
 	int ret = 0;
 
 	_block_signals(flags);
-	_lock_memory(lv_op);
+	_lock_memory(cmd, lv_op);
 
 	assert(resource);
 
@@ -390,7 +390,7 @@ static int _lock_vol(struct cmd_context *cmd, const char *resource,
 		_update_vg_lock_count(resource, flags);
 	}
 
-	_unlock_memory(lv_op);
+	_unlock_memory(cmd, lv_op);
 	_unblock_signals();
 
 	return ret;
