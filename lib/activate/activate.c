@@ -849,7 +849,7 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 		if (!error_if_not_suspended) {
 			r = 1;
 			if (info.suspended)
-				memlock_inc();
+				memlock_inc(cmd);
 		}
 		goto out;
 	}
@@ -868,13 +868,13 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 		/* FIXME Consider aborting here */
 		stack;
 
-	memlock_inc();
+	memlock_inc(cmd);
 
 	if (lv_is_origin(lv_pre) || lv_is_cow(lv_pre))
 		lockfs = 1;
 
 	if (!_lv_suspend_lv(lv, lockfs, flush_required)) {
-		memlock_dec();
+		memlock_dec(cmd);
 		fs_unlock();
 		goto out;
 	}
@@ -930,7 +930,7 @@ static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
 	if (!_lv_activate_lv(lv))
 		goto_out;
 
-	memlock_dec();
+	memlock_dec(cmd);
 	fs_unlock();
 
 	if (!monitor_dev_for_events(cmd, lv, 1))
@@ -1019,9 +1019,9 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s)
 	if (!monitor_dev_for_events(cmd, lv, 0))
 		stack;
 
-	memlock_inc();
+	memlock_inc(cmd);
 	r = _lv_deactivate(lv);
-	memlock_dec();
+	memlock_dec(cmd);
 	fs_unlock();
 
 	if (!lv_info(cmd, lv, &info, 1, 0) || info.exists)
@@ -1112,10 +1112,10 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 	if (exclusive)
 		lv->status |= ACTIVATE_EXCL;
 
-	memlock_inc();
+	memlock_inc(cmd);
 	if (!(r = _lv_activate_lv(lv)))
 		stack;
-	memlock_dec();
+	memlock_dec(cmd);
 	fs_unlock();
 
 	if (r && !monitor_dev_for_events(cmd, lv, 1))
