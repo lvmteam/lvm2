@@ -79,7 +79,7 @@ struct maps_stats {
 	size_t w_size;
 	size_t x_size;
 };
-static struct maps_stats ms; /* statistic for maps locking */
+static struct maps_stats _ms; /* statistic for maps locking */
 
 static void _touch_memory(void *mem, size_t size)
 {
@@ -251,8 +251,8 @@ static void _lock_mem(struct cmd_context *cmd)
 {
 	_allocate_memory();
 
-	memset(&ms, 0, sizeof(ms));
-	if (_memlock_maps(cmd, LVM_MLOCK, &ms))
+	memset(&_ms, 0, sizeof(_ms));
+	if (_memlock_maps(cmd, LVM_MLOCK, &_ms))
 		log_very_verbose("Locking memory");
 
 	errno = 0;
@@ -271,9 +271,9 @@ static void _unlock_mem(struct cmd_context *cmd)
 	if (_memlock_maps(cmd, LVM_MUNLOCK, &ums))
 		log_very_verbose("Unlocking memory");
 
-	if (memcmp(&ms, &ums, sizeof(ms)))
+	if (memcmp(&_ms, &ums, sizeof(ums)))
 		log_error(INTERNAL_ERROR "Maps size mismatch (%ld,%ld,%ld) != (%ld,%ld,%ld)",
-			  (long)ms.r_size,  (long)ms.w_size, (long)ms.x_size,
+			  (long)_ms.r_size, (long)_ms.w_size, (long)_ms.x_size,
 			  (long)ums.r_size, (long)ums.w_size, (long)ums.x_size);
 
 	_release_memory();
