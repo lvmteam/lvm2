@@ -136,7 +136,7 @@ static int _maps_line(struct cmd_context *cmd, lvmlock_t lock,
 	}
 
 	/* skip  ---p,  select with r,w,x */
-	if (fr != 'r' && fw != 'w' && fx != 'x')
+	if (fr != 'r')
 		return 1;
 
 	/* always ignored areas */
