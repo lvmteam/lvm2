@@ -112,6 +112,10 @@ Invoking the command as \fBdevmap_name\fP is equivalent to
 .IP \fB-c|-C|--columns
 .br
 Display output in columns rather than as Field: Value lines.
+.IP \fB-h|--help
+.br
+Outputs a summary of the commands available, optionally including
+the list of report fields (synonym with \fBhelp\fP command).
 .IP \fB--inactive
 .br
 When returning any table information from the kernel report on the 
