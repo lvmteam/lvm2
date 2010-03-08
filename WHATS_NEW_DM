@@ -1,6 +1,7 @@
 Version 1.02.45 -
 ====================================
   Add --showkeys parameter description into dmsetup man page.
+  Add --help option as the synonym for help command.
 
 Version 1.02.44 - 15th February 2010
 ====================================

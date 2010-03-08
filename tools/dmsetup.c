@@ -124,6 +124,7 @@ enum {
 	EXEC_ARG,
 	FORCE_ARG,
 	GID_ARG,
+	HELP_ARG,
 	INACTIVE_ARG,
 	MAJOR_ARG,
 	MINOR_ARG,
@@ -2720,7 +2721,8 @@ static void _usage(FILE *out)
 	int i;
 
 	fprintf(out, "Usage:\n\n");
-	fprintf(out, "dmsetup [--version] [-v|--verbose [-v|--verbose ...]]\n"
+	fprintf(out, "dmsetup [--version] [-h|--help [-c|-C|--columns]]\n"
+		"        [-v|--verbose [-v|--verbose ...]]\n"
 		"        [-r|--readonly] [--noopencount] [--nolockfs] [--inactive]\n"
 		"        [--udevcookie] [--noudevrules] [--noudevsync] [-y|--yes]\n"
 		"        [--readahead [+]<sectors>|auto|none]\n"
@@ -3083,6 +3085,7 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 		{"exec", 1, &ind, EXEC_ARG},
 		{"force", 0, &ind, FORCE_ARG},
 		{"gid", 1, &ind, GID_ARG},
+		{"help", 0, &ind, HELP_ARG},
 		{"inactive", 0, &ind, INACTIVE_ARG},
 		{"major", 1, &ind, MAJOR_ARG},
 		{"minor", 1, &ind, MINOR_ARG},
@@ -3167,10 +3170,12 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 
 	optarg = 0;
 	optind = OPTIND_INIT;
-	while ((ind = -1, c = GETOPTLONG_FN(*argc, *argv, "cCfG:j:m:M:no:O:ru:U:vy",
+	while ((ind = -1, c = GETOPTLONG_FN(*argc, *argv, "cCfG:hj:m:M:no:O:ru:U:vy",
 					    long_options, NULL)) != -1) {
 		if (c == ':' || c == '?')
 			return 0;
+		if (c == 'h' || ind == HELP_ARG)
+			_switches[HELP_ARG]++;
 		if (c == 'c' || c == 'C' || ind == COLS_ARG)
 			_switches[COLS_ARG]++;
 		if (c == 'f' || ind == FORCE_ARG)
@@ -3327,6 +3332,11 @@ int main(int argc, char **argv)
 	if (!_process_switches(&argc, &argv, dev_dir)) {
 		fprintf(stderr, "Couldn't process command line.\n");
 		goto out;
+	}
+
+	if (_switches[HELP_ARG]) {
+		c = _find_command("help");
+		goto doit;
 	}
 
 	if (_switches[VERSION_ARG]) {
