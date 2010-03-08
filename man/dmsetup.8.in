@@ -54,7 +54,7 @@ dmsetup \- low level logical volume management
 .I [device_name]
 .br
 .B dmsetup table
-.I [--target target_type]
+.I [--target target_type] [--showkeys]
 .I [device_name]
 .br
 .B dmsetup wait
@@ -210,7 +210,8 @@ Outputs some brief information about the device in the form:
     Number of targets in the live table
 .br
     UUID
-.IP \fBinfo -c|-C|--columns
+.IP \fBinfo
+.I -c|-C|--columns
 .I [--noheadings] [--separator separator] [-o fields] [-O|--sort sort_fields]
 .I [device_name]
 .br
@@ -312,13 +313,15 @@ Some targets such as recent (October 2006) versions of multipath may support
 the --noflush option.  This lets outstanding I/O that has not yet reached the
 device to remain unflushed.
 .IP \fBtable
-.I [--target target_type]
+.I [--target target_type] [--showkeys]
 .I [device_name]
 .br
 Outputs the current table for the device in a format that can be fed
 back in using the create or load commands.
 With --target, only information relating to the specified target type
 is displayed.
+By default encryption keys are suppressed in table output (crypt target)
+unless --showkeys parameter is supplied.
 .IP \fBtargets
 .br
 Displays the names and versions of the currently-loaded targets.
