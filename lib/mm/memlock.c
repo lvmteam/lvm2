@@ -78,7 +78,7 @@ typedef enum { LVM_MLOCK, LVM_MUNLOCK } lvmlock_t;
 static unsigned _use_mlockall;
 static FILE *_mapsh;
 static char _procselfmaps[PATH_MAX] = "";
-static const char _selfmaps[] = "/self/maps";
+#define SELF_MAPS "/self/maps"
 
 struct maps_stats {
 	size_t r_size;
@@ -140,7 +140,7 @@ static int _maps_line(struct cmd_context *cmd, lvmlock_t lock,
 		return 0;
 	}
 
-	/* skip  ---p,  select with r,w,x */
+	/* Select readable maps */
 	if (fr != 'r')
 		return 1;
 
@@ -244,13 +244,14 @@ static void _lock_mem(struct cmd_context *cmd)
 	_use_mlockall = find_config_tree_bool(cmd, "activation/use_mlockall", DEFAULT_USE_MLOCKALL);
 
 	if (!_use_mlockall) {
-		/* Initialise static variables first time */
+		/* Reset statistic counters */
 		memset(&_mstats, 0, sizeof(_mstats));
 
-		if (!*_procselfmaps) {
-			_procselfmaps[PATH_MAX - 1] = '\0';
-			strncpy(_procselfmaps, cmd->proc_dir, PATH_MAX - 1);
-			strncat(_procselfmaps, _selfmaps, PATH_MAX - 1);
+		if (!*_procselfmaps &&
+		    dm_snprintf(_procselfmaps, sizeof(_procselfmaps),
+				"%s" SELF_MAPS, cmd->proc_dir) < 0) {
+			log_error("proc_dir too long");
+			return;
 		}
 
 		if (!(_mapsh = fopen(_procselfmaps, "r"))) {
