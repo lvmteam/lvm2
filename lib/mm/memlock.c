@@ -141,13 +141,18 @@ static int _maps_line(struct cmd_context *cmd, lvmlock_t lock,
 	}
 
 	/* Select readable maps */
-	if (fr != 'r')
+	if (fr != 'r') {
+		log_debug("mlock area unreadable '%s': Skipping.", line);
 		return 1;
+	}
 
 	/* always ignored areas */
 	for (i = 0; i < sizeof(_ignore_maps) / sizeof(_ignore_maps[0]); ++i)
-		if (strstr(line + pos, _ignore_maps[i]))
+		if (strstr(line + pos, _ignore_maps[i])) {
+			log_debug("mlock ignore filter '%s' matches '%s': Skipping.",
+				  _ignore_maps[i], line);
 			return 1;
+		}
 
 	sz = to - from;
 	if (!(cn = find_config_tree_node(cmd, "activation/mlock_filter"))) {
