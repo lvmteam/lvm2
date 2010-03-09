@@ -1,17 +1,18 @@
-Version 2.02.62 -
-====================================
-  Reimplement mlockall() with mlock() to reduce pinned memory size.
+Version 2.02.62 - 9th March 2010
+================================
+  Add use_mlockall and mlock_filter to activation section of lvm.conf.
+  Add default alternative to mlockall using mlock to reduce pinned memory size.
   Remove -rdynamic from static builds.
   Update checks for pthread, readline & selinux libs and link only when needed.
   Introduce makefile vars UDEV_LIBS, DL_LIBS, SELINUX_LIBS, STATIC_LIBS.
   Introduce makefile vars LVMINTERNAL_LIBS, READLINE_LIBS, PTHREAD_LIBS.
-  Help for configure prints --disable-fsadm.
-  Use consistently $() instead of ${} for all Makefile variables.
+  Toggle configure help to print --disable-fsadm.
+  Use $() instead of ${} consistently for all Makefile variables.
   Replace CFLOW_CMD only in make.tmpl and use it as variable elsewhere.
   Use $(top_builddir) for inclusion of make.tmpl in Makefiles.
   Fix autoconf warning about ignored datarootdir.
   Increase AC_PREREQ version to 2.61 (for AC_PROC_SED, AC_PROG_MKDIR_P).
-  Handle a misaligned device that reports a -1 alignment_offset.
+  Handle misaligned devices that report alignment_offset of -1.
   Extend core allocation code in preparation for mirrored log areas.
   Rewrite clvmd init script.
   Remove lvs_in_vg_activated_by_uuid_only call.
