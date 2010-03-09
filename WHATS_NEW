@@ -1,16 +1,10 @@
 Version 2.02.62 -
 ====================================
-  Reimplement mlockall() with mlock() to reduce mmaped memory size.
-  Define and use internal makefile variable UDEV_LIBS.
-  Define and use internal makefile variable DL_LIBS.
-  Update check for selinux libraries and link them only when needed.
-  Define and use internal makefile variable SELINUX_LIBS and STATIC_LIBS.
+  Reimplement mlockall() with mlock() to reduce pinned memory size.
   Remove -rdynamic from static builds.
-  Update check for pthread library and link it only when needed.
-  Define and use internal makefile variable PTHREAD_LIBS.
-  Update check for readline library and link it only when needed.
-  Define and use internal makefile variable READLINE_LIBS.
-  Define and use internal makefile variable LVMINTERNAL_LIBS.
+  Update checks for pthread, readline & selinux libs and link only when needed.
+  Introduce makefile vars UDEV_LIBS, DL_LIBS, SELINUX_LIBS, STATIC_LIBS.
+  Introduce makefile vars LVMINTERNAL_LIBS, READLINE_LIBS, PTHREAD_LIBS.
   Help for configure prints --disable-fsadm.
   Use consistently $() instead of ${} for all Makefile variables.
   Replace CFLOW_CMD only in make.tmpl and use it as variable elsewhere.
