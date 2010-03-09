@@ -1,3 +1,6 @@
+Version 2.02.63 - 
+================================
+
 Version 2.02.62 - 9th March 2010
 ================================
   Add use_mlockall and mlock_filter to activation section of lvm.conf.
