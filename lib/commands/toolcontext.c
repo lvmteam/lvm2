@@ -201,6 +201,8 @@ static int _process_config(struct cmd_context *cmd)
 	mode_t old_umask;
 	const char *read_ahead;
 	struct stat st;
+	const struct config_node *cn;
+	struct config_value *cv;
 
 	/* umask */
 	cmd->default_settings.umask = find_config_tree_int(cmd,
@@ -302,6 +304,11 @@ static int _process_config(struct cmd_context *cmd)
 	cmd->si_unit_consistency = find_config_tree_int(cmd,
 						  "global/si_unit_consistency",
 						  DEFAULT_SI_UNIT_CONSISTENCY);
+
+	if ((cn = find_config_tree_node(cmd, "activation/mlock_filter")))
+		for (cv = cn->v; cv; cv = cv->next) 
+			if ((cv->type != CFG_STRING) || !cv->v.str[0]) 
+				log_error("Ignoring invalid activation/mlock_filter entry in config file");
 
 	return 1;
 }
