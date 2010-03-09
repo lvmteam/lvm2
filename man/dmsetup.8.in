@@ -324,8 +324,8 @@ Outputs the current table for the device in a format that can be fed
 back in using the create or load commands.
 With --target, only information relating to the specified target type
 is displayed.
-By default encryption keys are suppressed in table output (crypt target)
-unless --showkeys parameter is supplied.
+Encryption keys are suppressed in the table output for the crypt
+target unless the --showkeys parameter is supplied.
 .IP \fBtargets
 .br
 Displays the names and versions of the currently-loaded targets.

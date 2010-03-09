@@ -16,7 +16,7 @@ Version 2.02.62 - 9th March 2010
   Extend core allocation code in preparation for mirrored log areas.
   Rewrite clvmd init script.
   Remove lvs_in_vg_activated_by_uuid_only call.
-  Run device info query device by uuid only.
+  No longer fall back to looking up active devices by name if uuid not found.
   Don't touch /dev in vgmknodes if activation is disabled.
   Update lvm2app.h Doxygen comments and add lvm2app Doxygen config file.
   Update nightly tests and lvm2app unit tests to cover tags.
