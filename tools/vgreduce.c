@@ -152,7 +152,7 @@ static int _consolidate_vg(struct cmd_context *cmd, struct volume_group *vg)
 	}
 
 	dm_list_iterate_items(pvl, &vg->pvs) {
-		if (pvl->pv->dev && !(pvl->pv->status & MISSING_PV))
+		if (pvl->pv->dev && !is_missing_pv(pvl->pv))
 			continue;
 		if (r && !_remove_pv(vg, pvl, 0))
 			return_0;
@@ -193,7 +193,7 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 
 				pv = seg_pv(seg, s);
 				if (!pv || !pv_dev(pv) ||
-				    (pv->status & MISSING_PV)) {
+				    is_missing_pv(pv)) {
 					if (arg_count(cmd, mirrorsonly_ARG) &&
 					    !(lv->status & MIRROR_IMAGE)) {
 						log_error("Non-mirror-image LV %s found: can't remove.", lv->name);
@@ -224,7 +224,7 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 	 */
 	dm_list_iterate_safe(pvh, pvht, &vg->pvs) {
 		pvl = dm_list_item(pvh, struct pv_list);
-		if (pvl->pv->dev && !(pvl->pv->status & MISSING_PV))
+		if (pvl->pv->dev && !is_missing_pv(pvl->pv))
 			continue;
 		if (!_remove_pv(vg, pvl, 0))
 			return_0;

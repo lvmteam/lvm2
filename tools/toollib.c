@@ -1001,7 +1001,7 @@ static int _create_pv_entry(struct dm_pool *mem, struct pv_list *pvl,
 		return 1;
 	}
 
-	if (allocatable_only && (pvl->pv->status & MISSING_PV)) {
+	if (allocatable_only && is_missing_pv(pvl->pv)) {
 		log_error("Physical volume %s is missing", pvname);
 		return 1;
 	}

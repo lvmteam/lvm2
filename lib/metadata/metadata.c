@@ -2068,7 +2068,7 @@ static int _lv_mark_if_partial_single(struct logical_volume *lv, void *data)
 	dm_list_iterate_items(lvseg, &lv->segments) {
 		for (s = 0; s < lvseg->area_count; ++s) {
 			if (seg_type(lvseg, s) == AREA_PV) {
-				if (seg_pv(lvseg, s)->status & MISSING_PV)
+				if (is_missing_pv(seg_pv(lvseg, s)))
 					lv->status |= PARTIAL_LV;
 			}
 		}
@@ -2513,7 +2513,7 @@ int vg_missing_pv_count(const struct volume_group *vg)
 	int ret = 0;
 	struct pv_list *pvl;
 	dm_list_iterate_items(pvl, &vg->pvs) {
-		if (pvl->pv->status & MISSING_PV)
+		if (is_missing_pv(pvl->pv))
 			++ ret;
 	}
 	return ret;
@@ -2525,7 +2525,7 @@ static void check_reappeared_pv(struct volume_group *correct_vg,
 	struct pv_list *pvl;
 
 	dm_list_iterate_items(pvl, &correct_vg->pvs)
-		if (pv->dev == pvl->pv->dev && pvl->pv->status & MISSING_PV) {
+		if (pv->dev == pvl->pv->dev && is_missing_pv(pvl->pv)) {
 			log_warn("Missing device %s reappeared, updating "
 				 "metadata for VG %s to version %u.",
 				 pv_dev_name(pvl->pv),  pv_vg_name(pvl->pv), 
@@ -2705,7 +2705,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 				correct_vg = NULL;
 			}
 		} else dm_list_iterate_items(pvl, &correct_vg->pvs) {
-			if (pvl->pv->status & MISSING_PV)
+			if (is_missing_pv(pvl->pv))
 				continue;
 			if (!str_list_match_item(pvids, pvl->pv->dev->pvid)) {
 				log_debug("Cached VG %s had incorrect PV list",
@@ -3274,6 +3274,11 @@ int is_orphan(const struct physical_volume *pv)
 int is_pv(struct physical_volume *pv)
 {
 	return (pv_field(pv, vg_name) ? 1 : 0);
+}
+ 
+int is_missing_pv(const struct physical_volume *pv)
+{
+	return pv_field(pv, status) & MISSING_PV ? 1 : 0;
 }
 
 /*
