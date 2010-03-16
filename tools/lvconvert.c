@@ -527,7 +527,7 @@ static int _area_missing(struct lv_segment *lvseg, int s)
 		if (seg_lv(lvseg, s)->status & PARTIAL_LV)
 			return 1;
 	} else if ((seg_type(lvseg, s) == AREA_PV) &&
-		   (seg_pv(lvseg, s)->status & MISSING_PV))
+		   (is_missing_pv(seg_pv(lvseg, s))))
 		return 1;
 
 	return 0;
@@ -564,7 +564,7 @@ static struct dm_list *_failed_pv_list(struct volume_group *vg)
 	dm_list_init(failed_pvs);
 
 	dm_list_iterate_items(pvl, &vg->pvs) {
-		if (!(pvl->pv->status & MISSING_PV))
+		if (!is_missing_pv(pvl->pv))
 			continue;
 
 		/* 
@@ -688,7 +688,7 @@ static void _remove_missing_empty_pv(struct volume_group *vg, struct dm_list *re
 	dm_list_iterate_items(pvl, remove_pvs) {
 		dm_list_iterate_items_safe(pvl_vg, pvlt, &vg->pvs) {
 			if (!id_equal(&pvl->pv->id, &pvl_vg->pv->id) ||
-			    !(pvl_vg->pv->status & MISSING_PV) ||
+			    !is_missing_pv(pvl_vg->pv) ||
 			    pvl_vg->pv->pe_alloc_count != 0)
 				continue;
 
