@@ -623,13 +623,13 @@ struct volume_group *lvmcache_get_vg(const char *vgid, unsigned precommitted)
 	return vg;
 }
 
-struct dm_list *lvmcache_get_vgids(struct cmd_context *cmd, int full_scan,
-				    int include_internal)
+struct dm_list *lvmcache_get_vgids(struct cmd_context *cmd,
+				   int include_internal)
 {
 	struct dm_list *vgids;
 	struct lvmcache_vginfo *vginfo;
 
-	lvmcache_label_scan(cmd, full_scan);
+	lvmcache_label_scan(cmd, 0);
 
 	if (!(vgids = str_list_create(cmd->mem))) {
 		log_error("vgids list allocation failed");
@@ -650,13 +650,13 @@ struct dm_list *lvmcache_get_vgids(struct cmd_context *cmd, int full_scan,
 	return vgids;
 }
 
-struct dm_list *lvmcache_get_vgnames(struct cmd_context *cmd, int full_scan,
-				      int include_internal)
+struct dm_list *lvmcache_get_vgnames(struct cmd_context *cmd,
+				     int include_internal)
 {
 	struct dm_list *vgnames;
 	struct lvmcache_vginfo *vginfo;
 
-	lvmcache_label_scan(cmd, full_scan);
+	lvmcache_label_scan(cmd, 0);
 
 	if (!(vgnames = str_list_create(cmd->mem))) {
 		log_errno(ENOMEM, "vgnames list allocation failed");

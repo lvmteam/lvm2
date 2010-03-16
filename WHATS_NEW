@@ -1,5 +1,6 @@
 Version 2.02.63 - 
 ================================
+  Remove unnecessary full_scan parameter from get_vgids and get_vgnames calls.
   Look up missing PVs by uuid not dev_name in _pvs_single to avoid invalid stat.
   Make find_pv_in_vg_by_uuid() return same type as related functions.
   Introduce is_missing_pv().
