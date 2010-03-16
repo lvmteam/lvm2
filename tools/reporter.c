@@ -70,29 +70,29 @@ static int _pvsegs_sub_single(struct cmd_context *cmd,
 	struct logical_volume _free_logical_volume = {
 		.vg = vg ?: &_free_vg,
 		.name = (char *) "",
-	        .snapshot = NULL,
+		.snapshot = NULL,
 		.status = VISIBLE_LV,
 		.major = -1,
 		.minor = -1,
 	};
 
 	struct lv_segment _free_lv_segment = {
-        	.lv = &_free_logical_volume,
-        	.le = 0,
-        	.status = 0,
-        	.stripe_size = 0,
-        	.area_count = 0,
-        	.area_len = 0,
-        	.origin = NULL,
-        	.cow = NULL,
-        	.chunk_size = 0,
-        	.region_size = 0,
-        	.extents_copied = 0,
-        	.log_lv = NULL,
-        	.areas = NULL,
+		.lv = &_free_logical_volume,
+		.le = 0,
+		.status = 0,
+		.stripe_size = 0,
+		.area_count = 0,
+		.area_len = 0,
+		.origin = NULL,
+		.cow = NULL,
+		.chunk_size = 0,
+		.region_size = 0,
+		.extents_copied = 0,
+		.log_lv = NULL,
+		.areas = NULL,
 	};
 
-        _free_lv_segment.segtype = get_segtype_from_string(cmd, "free");
+	_free_lv_segment.segtype = get_segtype_from_string(cmd, "free");
 	_free_lv_segment.len = pvseg->len;
 	dm_list_init(&_free_vg.pvs);
 	dm_list_init(&_free_vg.lvs);
@@ -136,6 +136,7 @@ static int _pvs_single(struct cmd_context *cmd, struct volume_group *vg,
 	int ret = ECMD_PROCESSED;
 	const char *vg_name = NULL;
 	struct volume_group *old_vg = vg;
+	char uuid[64] __attribute((aligned(8)));
 
 	if (is_pv(pv) && !is_orphan(pv) && !vg) {
 		vg_name = pv_vg_name(pv);
@@ -149,16 +150,28 @@ static int _pvs_single(struct cmd_context *cmd, struct volume_group *vg,
 
 		/*
 		 * Replace possibly incomplete PV structure with new one
-		 * allocated in vg_read_internal() path.
+		 * allocated in vg_read.
 		*/
-		if (!(pvl = find_pv_in_vg(vg, pv_dev_name(pv)))) {
-			log_error("Unable to find \"%s\" in volume group \"%s\"",
-				  pv_dev_name(pv), vg->name);
+		if (!is_missing_pv(pv)) {
+			if (!(pvl = find_pv_in_vg(vg, pv_dev_name(pv)))) {
+				log_error("Unable to find \"%s\" in volume group \"%s\"",
+					  pv_dev_name(pv), vg->name);
+				ret = ECMD_FAILED;
+				goto out;
+			}
+		} else if (!(pvl = find_pv_in_vg_by_uuid(vg, &pv->id))) {
+			if (!id_write_format(&pv->id, uuid, sizeof(uuid))) {
+				stack;
+				uuid[0] = '\0';
+			}
+
+			log_error("Unable to find missing PV %s in volume group %s",
+				  uuid, vg->name);
 			ret = ECMD_FAILED;
 			goto out;
 		}
 
-		 pv = pvl->pv;
+		pv = pvl->pv;
 	}
 
 	if (!report_object(handle, vg, NULL, pv, NULL, NULL)) {

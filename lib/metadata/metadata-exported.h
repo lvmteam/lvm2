@@ -597,8 +597,8 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 /* Find a PV within a given VG */
 struct pv_list *find_pv_in_vg(const struct volume_group *vg,
 			      const char *pv_name);
-struct physical_volume *find_pv_in_vg_by_uuid(const struct volume_group *vg,
-			    const struct id *id);
+struct pv_list *find_pv_in_vg_by_uuid(const struct volume_group *vg,
+				      const struct id *id);
 
 /* Find an LV within a given VG */
 struct lv_list *find_lv_in_vg(const struct volume_group *vg,

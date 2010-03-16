@@ -52,9 +52,6 @@ static struct physical_volume *_find_pv_by_name(struct cmd_context *cmd,
 static struct pv_list *_find_pv_in_vg(const struct volume_group *vg,
 				      const char *pv_name);
 
-static struct physical_volume *_find_pv_in_vg_by_uuid(const struct volume_group *vg,
-						      const struct id *id);
-
 static uint32_t _vg_bad_status_bits(const struct volume_group *vg,
 				    uint64_t status);
 
@@ -1656,35 +1653,34 @@ int pv_is_in_vg(struct volume_group *vg, struct physical_volume *pv)
 	return 0;
 }
 
+static struct pv_list *_find_pv_in_vg_by_uuid(const struct volume_group *vg,
+					      const struct id *id)
+{
+	struct pv_list *pvl;
+
+	dm_list_iterate_items(pvl, &vg->pvs)
+		if (id_equal(&pvl->pv->id, id))
+			return pvl;
+
+	return NULL;
+}
+
 /**
  * find_pv_in_vg_by_uuid - Find PV in VG by PV UUID
  * @vg: volume group to search
  * @id: UUID of the PV to match
  *
  * Returns:
- *   PV handle - if UUID of PV found in VG
+ *   struct pv_list within owning struct volume_group - if UUID of PV found in VG
  *   NULL - invalid parameter or UUID of PV not found in VG
  *
  * Note
  *   FIXME - liblvm todo - make into function that takes VG handle
  */
-struct physical_volume *find_pv_in_vg_by_uuid(const struct volume_group *vg,
-			    const struct id *id)
+struct pv_list *find_pv_in_vg_by_uuid(const struct volume_group *vg,
+				      const struct id *id)
 {
 	return _find_pv_in_vg_by_uuid(vg, id);
-}
-
-
-static struct physical_volume *_find_pv_in_vg_by_uuid(const struct volume_group *vg,
-						      const struct id *id)
-{
-	struct pv_list *pvl;
-
-	dm_list_iterate_items(pvl, &vg->pvs)
-		if (id_equal(&pvl->pv->id, id))
-			return pvl->pv;
-
-	return NULL;
 }
 
 struct lv_list *find_lv_in_vg(const struct volume_group *vg,
