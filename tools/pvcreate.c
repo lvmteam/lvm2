@@ -28,8 +28,8 @@ static int pvcreate_restore_params_validate(struct cmd_context *cmd,
 					    struct pvcreate_params *pp)
 {
 	const char *uuid = NULL;
-	void *existing_pv;
 	struct volume_group *vg;
+	struct pv_list *existing_pvl;
 
 	if (arg_count(cmd, restorefile_ARG) && !arg_count(cmd, uuidstr_ARG)) {
 		log_error("--uuid is required with --restorefile");
@@ -56,14 +56,14 @@ static int pvcreate_restore_params_validate(struct cmd_context *cmd,
 				  pp->restorefile);
 			return 0;
 		}
-		if (!(existing_pv = find_pv_in_vg_by_uuid(vg, pp->idp)->pv)) {
+		if (!(existing_pvl = find_pv_in_vg_by_uuid(vg, pp->idp))) {
 			log_error("Can't find uuid %s in backup file %s",
 				  uuid, pp->restorefile);
 			return 0;
 		}
-		pp->pe_start = pv_pe_start(existing_pv);
-		pp->extent_size = pv_pe_size(existing_pv);
-		pp->extent_count = pv_pe_count(existing_pv);
+		pp->pe_start = pv_pe_start(existing_pvl->pv);
+		pp->extent_size = pv_pe_size(existing_pvl->pv);
+		pp->extent_count = pv_pe_count(existing_pvl->pv);
 		vg_release(vg);
 	}
 
