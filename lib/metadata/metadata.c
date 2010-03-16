@@ -1416,7 +1416,7 @@ struct physical_volume * pvcreate_single(struct cmd_context *cmd,
 		pp = &default_pp;
 
 	if (pp->idp) {
-		if ((dev = device_from_pvid(cmd, pp->idp)) &&
+		if ((dev = device_from_pvid(cmd, pp->idp, NULL)) &&
 		    (dev != dev_cache_get(pv_name, cmd->filter))) {
 			if (!id_write_format((const struct id*)&pp->idp->uuid,
 			    buffer, sizeof(buffer)))
