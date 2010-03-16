@@ -703,7 +703,8 @@ struct dm_list *lvmcache_get_pvids(struct cmd_context *cmd, const char *vgname,
 	return pvids;
 }
 
-struct device *device_from_pvid(struct cmd_context *cmd, struct id *pvid)
+struct device *device_from_pvid(struct cmd_context *cmd, struct id *pvid,
+				int *scan_done_once)
 {
 	struct label *label;
 	struct lvmcache_info *info;
@@ -728,10 +729,11 @@ struct device *device_from_pvid(struct cmd_context *cmd, struct id *pvid)
 		}
 	}
 
-	if (memlock())
+	if (memlock() || (scan_done_once && *scan_done_once))
 		return NULL;
 
 	lvmcache_label_scan(cmd, 2);
+	*scan_done_once = 1;
 
 	/* Try again */
 	if ((info = info_from_pvid((char *) pvid, 0))) {
