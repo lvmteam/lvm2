@@ -1,5 +1,6 @@
 Version 2.02.63 - 
 ================================
+  Fix clvmd Makefile to not overwrite LIBS from template definition.
 
 Version 2.02.62 - 9th March 2010
 ================================
