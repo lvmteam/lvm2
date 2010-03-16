@@ -605,9 +605,9 @@ struct volume_group *lvmcache_get_vg(const char *vgid, unsigned precommitted)
 	    (!precommitted && vginfo->precommitted && !memlock()))
 		return NULL;
 
-	if (!(fid =  vginfo->fmt->ops->create_instance(vginfo->fmt,
-						       vginfo->vgname,
-						       vgid, NULL)))
+	if (!(fid = vginfo->fmt->ops->create_instance(vginfo->fmt,
+						      vginfo->vgname,
+						      vgid, NULL)))
 		return_NULL;
 
 	if (!(vg = import_vg_from_buffer(vginfo->vgmetadata, fid)) ||
@@ -733,7 +733,8 @@ struct device *device_from_pvid(struct cmd_context *cmd, struct id *pvid,
 		return NULL;
 
 	lvmcache_label_scan(cmd, 2);
-	*scan_done_once = 1;
+	if (scan_done_once)
+		*scan_done_once = 1;
 
 	/* Try again */
 	if ((info = info_from_pvid((char *) pvid, 0))) {
