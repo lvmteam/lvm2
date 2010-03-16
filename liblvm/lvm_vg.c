@@ -351,12 +351,12 @@ char *lvm_vg_get_name(const vg_t vg)
 
 struct dm_list *lvm_list_vg_names(lvm_t libh)
 {
-	return get_vgnames((struct cmd_context *)libh, 0, 0);
+	return get_vgnames((struct cmd_context *)libh, 0);
 }
 
 struct dm_list *lvm_list_vg_uuids(lvm_t libh)
 {
-	return get_vgids((struct cmd_context *)libh, 0, 0);
+	return get_vgids((struct cmd_context *)libh, 0);
 }
 
 /*
