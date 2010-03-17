@@ -32,7 +32,8 @@ lvm_t lvm_init(const char *system_dir)
 
 	/* create context */
 	/* FIXME: split create_toolcontext */
-	cmd = create_toolcontext(1, system_dir);
+	/* FIXME: make all globals configurable */
+	cmd = create_toolcontext(0, system_dir);
 	if (!cmd)
 		return NULL;
 
