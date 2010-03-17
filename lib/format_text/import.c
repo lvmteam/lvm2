@@ -111,7 +111,7 @@ struct volume_group *text_vg_import_fd(struct format_instance *fid,
 		if (!(*vsn)->check_version(cft))
 			continue;
 
-		if (!(vg = (*vsn)->read_vg(fid, cft)))
+		if (!(vg = (*vsn)->read_vg(fid, cft, 0)))
 			goto_out;
 
 		(*vsn)->read_desc(fid->fmt->cmd->mem, cft, when, desc);
@@ -146,7 +146,11 @@ struct volume_group *import_vg_from_buffer(char *buf,
 	for (vsn = &_text_vsn_list[0]; *vsn; vsn++) {
 		if (!(*vsn)->check_version(cft))
 			continue;
-		if (!(vg = (*vsn)->read_vg(fid, cft)))
+		/*
+		 * The only path to this point uses cached vgmetadata,
+		 * so it can use cached PV state too.
+		 */
+		if (!(vg = (*vsn)->read_vg(fid, cft, 1)))
 			stack;
 		break;
 	}

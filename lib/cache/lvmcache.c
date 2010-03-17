@@ -704,7 +704,7 @@ struct dm_list *lvmcache_get_pvids(struct cmd_context *cmd, const char *vgname,
 }
 
 struct device *device_from_pvid(struct cmd_context *cmd, struct id *pvid,
-				int *scan_done_once)
+				unsigned *scan_done_once)
 {
 	struct label *label;
 	struct lvmcache_info *info;
