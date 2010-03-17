@@ -1,5 +1,6 @@
 Version 2.02.63 - 
 ================================
+  Get stacktrace if testsuite test drops core and lvm was built with debugging.
   Disable long living process flag in lvm2app.
   Fix pvcreate device md filter check.
   Suppress repeated errors about the same missing PV uuids.
