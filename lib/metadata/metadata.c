@@ -1290,18 +1290,10 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name,
 	dev = dev_cache_get(name, cmd->filter);
 
 	/* Is there an md superblock here? */
+	/* FIXME: still possible issues here - rescan cache? */
 	if (!dev && md_filtering()) {
-		unlock_vg(cmd, VG_ORPHANS);
-
-		persistent_filter_wipe(cmd->filter);
-		lvmcache_destroy(cmd, 1);
-
+		refresh_filters(cmd);
 		init_md_filtering(0);
-		if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE)) {
-			log_error("Can't get lock for orphan PVs");
-			init_md_filtering(1);
-			return 0;
-		}
 		dev = dev_cache_get(name, cmd->filter);
 		init_md_filtering(1);
 	}

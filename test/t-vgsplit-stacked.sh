@@ -1,6 +1,6 @@
 . ./test-utils.sh
 
-prepare_lvmconf '[ "a/dev\/mirror/", "a/dev\/mapper\/.*$/", "r/.*/" ]'
+prepare_lvmconf '[ "a/dev\/mirror/", "a/dev\/mapper\/.*$/", "a/dev\/LVMTEST/", "r/.*/" ]'
 aux prepare_devs 3
 
 pvcreate $devs
