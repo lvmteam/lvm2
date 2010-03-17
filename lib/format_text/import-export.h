@@ -46,7 +46,8 @@ enum {
 struct text_vg_version_ops {
 	int (*check_version) (struct config_tree * cf);
 	struct volume_group *(*read_vg) (struct format_instance * fid,
-					 struct config_tree * cf);
+					 struct config_tree * cf,
+					 unsigned use_cached_pvs);
 	void (*read_desc) (struct dm_pool * mem, struct config_tree * cf,
 			   time_t *when, char **desc);
 	const char *(*read_vgname) (const struct format_type *fmt,

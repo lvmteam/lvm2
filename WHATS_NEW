@@ -1,5 +1,7 @@
 Version 2.02.63 - 
 ================================
+  Suppress repeated errors about the same missing PV uuids.
+  Bypass full device scans when using internally-cached VG metadata.
   Only do one full device scan during each read of text format metadata.
   Remove unnecessary full_scan parameter from get_vgids and get_vgnames calls.
   Look up missing PVs by uuid not dev_name in _pvs_single to avoid invalid stat.
