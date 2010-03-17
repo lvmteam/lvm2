@@ -46,6 +46,8 @@ vgcreate $vg1 $dev1 $dev2
 pvchange -u $dev1 
 pvchange -u $dev2 
 vg_validate_pvlv_counts_ $vg1 2 0 0
+pvchange -u --all
+vg_validate_pvlv_counts_ $vg1 2 0 0
 
 # "pvchange rejects uuid change under an active lv" 
 lvcreate -l 16 -i 2 -n $lv --alloc anywhere $vg1 
