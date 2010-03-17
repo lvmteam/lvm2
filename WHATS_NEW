@@ -1,5 +1,6 @@
 Version 2.02.63 - 
 ================================
+  Fix pvcreate device md filter check.
   Suppress repeated errors about the same missing PV uuids.
   Bypass full device scans when using internally-cached VG metadata.
   Only do one full device scan during each read of text format metadata.
