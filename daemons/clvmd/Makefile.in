@@ -71,6 +71,10 @@ ifneq (,$(findstring corosync,, "@CLVMD@,"))
 	DEFS += -DUSE_COROSYNC
 endif
 
+ifneq (,$(findstring singlenode,, &quot;@CLVMD@,&quot;))
+	SOURCES += clvmd-singlenode.c
+	DEFS += -DUSE_SINGLENODE
+endif
 
 TARGETS = \
 	clvmd

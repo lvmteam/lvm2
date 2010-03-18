@@ -110,7 +110,7 @@ static int child_pipe[2];
 #define DFAIL_TIMEOUT    5
 #define SUCCESS          0
 
-typedef enum {IF_AUTO, IF_CMAN, IF_GULM, IF_OPENAIS, IF_COROSYNC} if_type_t;
+typedef enum {IF_AUTO, IF_CMAN, IF_GULM, IF_OPENAIS, IF_COROSYNC, IF_SINGLENODE} if_type_t;
 
 typedef void *(lvm_pthread_fn_t)(void*);
 
@@ -179,6 +179,9 @@ static void usage(char *prog, FILE *file)
 #endif
 #ifdef USE_GULM
 	fprintf(file, "gulm ");
+#endif
+#ifdef USE_SINGLENODE
+	fprintf(file, "singlenode");
 #endif
 	fprintf(file, "\n");
 }
@@ -432,6 +435,15 @@ int main(int argc, char *argv[])
 			max_cluster_message = OPENAIS_MAX_CLUSTER_MESSAGE;
 			max_cluster_member_name_len = OPENAIS_MAX_CLUSTER_MEMBER_NAME_LEN;
 			syslog(LOG_NOTICE, "Cluster LVM daemon started - connected to OpenAIS");
+		}
+#endif
+#ifdef USE_SINGLENODE
+	if (!clops)
+		if ((cluster_iface == IF_AUTO || cluster_iface == IF_SINGLENODE) && (clops = init_singlenode_cluster())) {
+			max_csid_len = SINGLENODE_CSID_LEN;
+			max_cluster_message = SINGLENODE_MAX_CLUSTER_MESSAGE;
+			max_cluster_member_name_len = MAX_CLUSTER_MEMBER_NAME_LEN;
+			syslog(LOG_NOTICE, "Cluster LVM daemon started - running in single-node mode");
 		}
 #endif
 
@@ -2063,6 +2075,8 @@ static if_type_t parse_cluster_interface(char *ifname)
 		iface = IF_OPENAIS;
 	if (!strcmp(ifname, "corosync"))
 		iface = IF_COROSYNC;
+	if (!strcmp(ifname, "singlenode"))
+		iface = IF_SINGLENODE;
 
 	return iface;
 }
