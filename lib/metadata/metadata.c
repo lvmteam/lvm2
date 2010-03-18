@@ -1251,11 +1251,14 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name,
 	struct device *dev;
 	uint64_t md_superblock, swap_signature;
 	int wipe_md, wipe_swap;
+	struct dm_list mdas;
+
+	dm_list_init(&mdas);
 
 	/* FIXME Check partition type is LVM unless --force is given */
 
 	/* Is there a pv here already? */
-	pv = pv_read(cmd, name, NULL, NULL, 0, 0);
+	pv = pv_read(cmd, name, &mdas, NULL, 0, 0);
 
 	/*
 	 * If a PV has no MDAs it may appear to be an orphan until the
@@ -1263,7 +1266,7 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name,
 	 * this means checking every VG by scanning every PV on the
 	 * system.
 	 */
-	if (pv && is_orphan(pv)) {
+	if (pv && is_orphan(pv) && !dm_list_size(&mdas)) {
 		if (!scan_vgs_for_pvs(cmd))
 			return_0;
 		pv = pv_read(cmd, name, NULL, NULL, 0, 0);
@@ -1747,14 +1750,16 @@ struct physical_volume *find_pv_by_name(struct cmd_context *cmd,
 static struct physical_volume *_find_pv_by_name(struct cmd_context *cmd,
 			 			const char *pv_name)
 {
+	struct dm_list mdas;
 	struct physical_volume *pv;
 
-	if (!(pv = _pv_read(cmd, cmd->mem, pv_name, NULL, NULL, 1, 0))) {
+	dm_list_init(&mdas);
+	if (!(pv = _pv_read(cmd, cmd->mem, pv_name, &mdas, NULL, 1, 0))) {
 		log_error("Physical volume %s not found", pv_name);
 		return NULL;
 	}
 
-	if (is_orphan_vg(pv->vg_name)) {
+	if (is_orphan_vg(pv->vg_name) && !dm_list_size(&mdas)) {
 		/* If a PV has no MDAs - need to search all VGs for it */
 		if (!scan_vgs_for_pvs(cmd))
 			return_NULL;
