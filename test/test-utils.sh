@@ -54,9 +54,30 @@ finish_udev_transaction() {
 	fi
 }
 
+prepare_clvmd() {
+	if test -z "$LVM_TEST_LOCKING" || test "$LVM_TEST_LOCKING" -ne 3 ; then
+		return 0 # not needed
+	fi
+
+	if pgrep clvmd ; then
+		echo "Cannot use fake cluster locking with real clvmd ($(pgrep clvmd)) running."
+		exit 1
+	fi
+
+	# skip if we don't have our own clvmd...
+	(which clvmd | grep $abs_builddir) || exit 200
+
+	trap 'aux teardown_' EXIT # don't forget to clean up
+
+	clvmd -Isinglenode -d 1 &
+	LOCAL_CLVMD="$!"
+}
+
 teardown() {
 	echo $LOOP
 	echo $PREFIX
+
+	test -n "$LOCAL_CLVMD" && kill -9 "$LOCAL_CLVMD"
 
 	test -n "$PREFIX" && {
 		rm -rf $G_root_/dev/$PREFIX*
@@ -288,6 +309,8 @@ prepare_lvmconf() {
 	local filter="$1"
 	test -z "$filter" && \
 		filter='[ "a/dev\/mirror/", "a/dev\/mapper\/.*pv[0-9_]*$/", "r/.*/" ]'
+        locktype=
+	if test -n "$LVM_TEST_LOCKING"; then locktype="locking_type = $LVM_TEST_LOCKING"; fi
 	cat > $G_root_/etc/lvm.conf <<-EOF
   devices {
     dir = "$G_dev_"
@@ -309,6 +332,7 @@ prepare_lvmconf() {
     abort_on_internal_errors = 1
     library_dir = "$G_root_/lib"
     locking_dir = "$G_root_/var/lock/lvm"
+    $locktype
   }
   activation {
     udev_sync = 1
@@ -319,4 +343,5 @@ EOF
 
 set -vexE -o pipefail
 aux prepare_lvmconf
+prepare_clvmd
 
