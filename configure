@@ -1554,6 +1554,7 @@ Optional Packages:
                            * cman,gulm             (RHEL4 or equivalent)
                            * cman                  (RHEL5 or equivalent)
                            * cman,corosync,openais (or selection of them)
+                           * singlenode            (localhost only)
                            * all                   (autodetect)
                            * none                  (disable build)
                           TYPE=none
