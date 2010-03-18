@@ -642,6 +642,7 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 	struct str_list *sll;
 	char *tagname;
 	int scanned = 0;
+	struct dm_list mdas;
 
 	dm_list_init(&tags);
 
@@ -682,7 +683,9 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 				}
 				pv = pvl->pv;
 			} else {
-				if (!(pv = pv_read(cmd, argv[opt], NULL,
+
+				dm_list_init(&mdas);
+				if (!(pv = pv_read(cmd, argv[opt], &mdas,
 						   NULL, 1, scan_label_only))) {
 					log_error("Failed to read physical "
 						  "volume \"%s\"", argv[opt]);
@@ -697,7 +700,8 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 				 * means checking every VG by scanning every
 				 * PV on the system.
 				 */
-				if (!scanned && is_orphan(pv)) {
+				if (!scanned && is_orphan(pv) &&
+				    !dm_list_size(&mdas)) {
 					if (!scan_label_only &&
 					    !scan_vgs_for_pvs(cmd)) {
 						stack;
