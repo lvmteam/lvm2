@@ -61,7 +61,7 @@ prepare_clvmd() {
 
 	if pgrep clvmd ; then
 		echo "Cannot use fake cluster locking with real clvmd ($(pgrep clvmd)) running."
-		exit 1
+		exit 200
 	fi
 
 	# skip if we don't have our own clvmd...
