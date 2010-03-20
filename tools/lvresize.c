@@ -323,6 +323,11 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 
 	lv = lvl->lv;
 
+	if (!lv_is_visible(lv)) {
+		log_error("Can't resize internal logical volume %s", lv->name);
+		return ECMD_FAILED;
+	}
+
 	if (lv->status & LOCKED) {
 		log_error("Can't resize locked LV %s", lv->name);
 		return ECMD_FAILED;
