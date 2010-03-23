@@ -42,7 +42,7 @@ extern char *optarg;
 #  define OPTIND_INIT 1
 #endif
 
-#ifdef HAVE_UDEV_QUEUE_GET_UDEV_IS_ACTIVE
+#ifdef UDEV_SYNC_SUPPORT
 #  define LIBUDEV_I_KNOW_THE_API_IS_SUBJECT_TO_CHANGE
 #  include <libudev.h>
 #endif
@@ -919,7 +919,7 @@ static void _apply_settings(struct cmd_context *cmd)
 
 static int _set_udev_checking(struct cmd_context *cmd)
 {
-#ifdef HAVE_UDEV_QUEUE_GET_UDEV_IS_ACTIVE
+#ifdef UDEV_SYNC
 	struct udev *udev;
 	const char *udev_dev_dir;
 	size_t udev_dev_dir_len;

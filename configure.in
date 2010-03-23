@@ -650,6 +650,7 @@ UDEV_SYNC=$enableval, UDEV_SYNC=no)
 AC_MSG_RESULT($UDEV_SYNC)
 
 if test x$UDEV_SYNC = xyes; then
+	AC_CHECK_LIB(udev, udev_queue_get_udev_is_active, UDEV_LIBS="-ludev", AC_MSG_ERROR(bailing out... libudev library is required))
 	AC_DEFINE([UDEV_SYNC_SUPPORT], 1, [Define to 1 to enable synchronisation with udev processing.])
 fi
 
@@ -658,23 +659,6 @@ AC_MSG_CHECKING(whether to enable installation of udev rules required for synchr
 AC_ARG_ENABLE(udev_rules, [  --enable-udev_rules     Install rule files needed for udev synchronisation],
 UDEV_RULES=$enableval, UDEV_RULES=$UDEV_SYNC)
 AC_MSG_RESULT($UDEV_RULES)
-
-################################################################################
-dnl -- Check for libudev's udev_queue_get_udev_is_active function when udev synchronisation is enabled
-
-if test x$UDEV_SYNC = xyes; then
-	AC_CHECK_LIB(udev, udev_queue_get_udev_is_active, HAVE_UDEV_QUEUE_GET_UDEV_IS_ACTIVE=yes,
-		HAVE_UDEV_QUEUE_GET_UDEV_IS_ACTIVE=no)
-
-		if test x$HAVE_UDEV_QUEUE_GET_UDEV_IS_ACTIVE = xyes; then
-			AC_DEFINE([HAVE_UDEV_QUEUE_GET_UDEV_IS_ACTIVE], 1,
-			  [Define to 1 if libudev's udev_queue_get_udev_is_active function is available.])
-			UDEV_LIBS="-ludev"
-		else
-			UDEV_LIBS=
-			AC_MSG_WARN(It won't be possible to get udev state. We will assume that udev is not running.)
-		fi
-fi
 
 ################################################################################
 dnl -- Compatibility mode

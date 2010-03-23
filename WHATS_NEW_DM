@@ -1,5 +1,6 @@
 Version 1.02.46 - 
 ================================
+  Strictly require libudev if udev_sync is used.
   Add support for ioctl's DM_UEVENT_GENERATED_FLAG.
 
 Version 1.02.45 - 9th March 2010
