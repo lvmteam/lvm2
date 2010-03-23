@@ -1505,16 +1505,26 @@ static int _mknodes_v4(struct dm_task *dmt)
  */
 static int _udev_complete(struct dm_task *dmt)
 {
-	uint32_t cookie;
+	uint16_t base;
 
-	if (dmt->cookie_set) {
+	if (dmt->cookie_set &&
+	    (base = dmt->event_nr & ~DM_UDEV_FLAGS_MASK))
 		/* strip flags from the cookie and use cookie magic instead */
-		cookie = (dmt->event_nr & ~DM_UDEV_FLAGS_MASK) |
-			  (DM_COOKIE_MAGIC << DM_UDEV_FLAGS_SHIFT);
-		return dm_udev_complete(cookie);
-	}
+		return dm_udev_complete(base | (DM_COOKIE_MAGIC <<
+						DM_UDEV_FLAGS_SHIFT));
 
 	return 1;
+}
+
+static int _check_uevent_generated(struct dm_ioctl *dmi)
+{
+	if (!dm_check_version() ||
+	    _dm_version < 4 ||
+	    _dm_version_minor < 17)
+		/* can't check, assume uevent is generated */
+		return 1;
+
+	return dmi->flags & DM_UEVENT_GENERATED_FLAG;
 }
 
 static int _create_and_load_v4(struct dm_task *dmt)
@@ -1691,6 +1701,7 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 				     unsigned repeat_count)
 {
 	struct dm_ioctl *dmi;
+	int ioctl_with_uevent;
 
 	dmi = _flatten(dmt, repeat_count);
 	if (!dmi) {
@@ -1706,6 +1717,10 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 	if (dmt->no_open_count)
 		dmi->flags |= DM_SKIP_BDGET_FLAG;
 
+	ioctl_with_uevent = dmt->type == DM_DEVICE_RESUME ||
+			    dmt->type == DM_DEVICE_REMOVE ||
+			    dmt->type == DM_DEVICE_RENAME;
+
 	/*
 	 * Prevent udev vs. libdevmapper race when processing nodes and
 	 * symlinks. This can happen when the udev rules are installed and
@@ -1715,10 +1730,7 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 	 * to be applied at all in this situation so we can gracefully fallback
 	 * to libdevmapper's node and symlink creation code.
 	 */
-	if (dm_udev_get_sync_support() && !dmt->cookie_set &&
-	    (dmt->type == DM_DEVICE_RESUME ||
-	     dmt->type == DM_DEVICE_REMOVE ||
-	     dmt->type == DM_DEVICE_RENAME)) {
+	if (dm_udev_get_sync_support() && !dmt->cookie_set && ioctl_with_uevent) {
 		log_debug("Cookie value is not set while trying to call "
 			  "DM_DEVICE_RESUME, DM_DEVICE_REMOVE or DM_DEVICE_RENAME "
 			  "ioctl. Please, consider using libdevmapper's udev "
@@ -1774,6 +1786,10 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 			return NULL;
 		}
 	}
+
+	if (ioctl_with_uevent && !_check_uevent_generated(dmi))
+		_udev_complete(dmt);
+
 #else /* Userspace alternative for testing */
 #endif
 	return dmi;
