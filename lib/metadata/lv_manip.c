@@ -989,8 +989,8 @@ static int _check_contiguous(struct cmd_context *cmd,
  * Choose sets of parallel areas to use, respecting any constraints.
  */
 static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
-				struct dm_list *pvms, struct pv_area **areas,
-				uint32_t areas_size, unsigned can_split,
+				struct dm_list *pvms, struct pv_area ***areas_ptr,
+				uint32_t *areas_size_ptr, unsigned can_split,
 				struct lv_segment *prev_lvseg,
 				uint32_t *allocated, uint32_t needed)
 {
@@ -1094,8 +1094,8 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 					if (prev_lvseg &&
 					    _check_contiguous(ah->cmd,
 							      prev_lvseg,
-							      pva, areas,
-							      areas_size)) {
+							      pva, *areas_ptr,
+							      *areas_size_ptr)) {
 						preferred_count++;
 						goto next_pv;
 					}
@@ -1106,8 +1106,8 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 					if (prev_lvseg &&
 					    _check_cling(ah->cmd,
 							   prev_lvseg,
-							   pva, areas,
-							   areas_size)) {
+							   pva, *areas_ptr,
+							   *areas_size_ptr)) {
 						preferred_count++;
 					}
 					goto next_pv;
@@ -1127,10 +1127,15 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 					already_found_one = 1;
 				}
 
-				areas[ix + ix_offset - 1] = pva;
+				/* Expand areas array if needed after an area was split. */
+				if (ix + ix_offset > *areas_size_ptr) {
+					*areas_size_ptr *= 2;
+					*areas_ptr = dm_realloc(*areas_ptr, sizeof(**areas_ptr) * (*areas_size_ptr));
+				}
+				(*areas_ptr)[ix + ix_offset - 1] = pva;
 			}
 		next_pv:
-			if (ix >= areas_size)
+			if (ix >= *areas_size_ptr)
 				break;
 		}
 
@@ -1146,7 +1151,7 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 
 		/* sort the areas so we allocate from the biggest */
 		if (ix > 1)
-			qsort(areas + ix_offset, ix, sizeof(*areas),
+			qsort((*areas_ptr) + ix_offset, ix, sizeof(**areas_ptr),
 			      _comp_area);
 
 		/*
@@ -1160,7 +1165,7 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 		if (log_needs_allocating) {
 			/* How many areas are too small for the log? */
 			while (too_small_for_log_count < ix_offset + ix &&
-			       (*(areas + ix_offset + ix - 1 -
+			       (*((*areas_ptr) + ix_offset + ix - 1 -
 				  too_small_for_log_count))->count < ah->log_len)
 				too_small_for_log_count++;
 			ix_log_offset = ix_offset + ix - too_small_for_log_count - ah->log_area_count;
@@ -1172,7 +1177,7 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 			/* FIXME With ALLOC_ANYWHERE, need to split areas */
 			break;
 
-		if (!_alloc_parallel_area(ah, max_parallel, areas, allocated,
+		if (!_alloc_parallel_area(ah, max_parallel, *areas_ptr, allocated,
 					  log_needs_allocating, ix_log_offset))
 			return_0;
 
@@ -1247,8 +1252,8 @@ static int _allocate(struct alloc_handle *ah,
 	/* Attempt each defined allocation policy in turn */
 	for (alloc = ALLOC_CONTIGUOUS; alloc < ALLOC_INHERIT; alloc++) {
 		old_allocated = allocated;
-		if (!_find_parallel_space(ah, alloc, pvms, areas,
-					  areas_size, can_split,
+		if (!_find_parallel_space(ah, alloc, pvms, &areas,
+					  &areas_size, can_split,
 					  prev_lvseg, &allocated, ah->new_extents))
 			goto_out;
 		if ((allocated == ah->new_extents) || (ah->alloc == alloc) ||
