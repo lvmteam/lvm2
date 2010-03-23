@@ -231,7 +231,8 @@ void print_log(int level, const char *file, int line, int dm_errno,
 
 	if (_lvm2_log_fn) {
 		_lvm2_log_fn(level, file, line, 0, message);
-
+		if (fatal_internal_error)
+			abort();
 		return;
 	}
 
