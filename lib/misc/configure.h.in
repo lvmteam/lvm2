@@ -347,10 +347,6 @@
 /* Define to 1 if you have the <time.h> header file. */
 #undef HAVE_TIME_H
 
-/* Define to 1 if libudev's udev_queue_get_udev_is_active function is
-   available. */
-#undef HAVE_UDEV_QUEUE_GET_UDEV_IS_ACTIVE
-
 /* Define to 1 if you have the `uname' function. */
 #undef HAVE_UNAME
 
