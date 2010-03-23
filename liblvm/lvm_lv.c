@@ -111,6 +111,7 @@ static void _lv_set_default_params(struct lvcreate_params *lp,
 	lp->zero = 1;
 	lp->major = -1;
 	lp->minor = -1;
+	lp->activation_monitoring = DEFAULT_DMEVENTD_MONITOR;
 	lp->vg_name = vg->name;
 	lp->lv_name = lvname; /* FIXME: check this for safety */
 	lp->pvh = &vg->pvs;

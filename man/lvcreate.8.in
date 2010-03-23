@@ -7,6 +7,8 @@ lvcreate \- create a logical volume in an existing volume group
 [\-\-alloc AllocationPolicy]
 [\-A|\-\-autobackup y|n] [\-C|\-\-contiguous y|n] [\-d|\-\-debug]
 [\-h|\-?|\-\-help] [\-\-noudevsync]
+[\-\-ignoremonitoring]
+[\-\-monitor {y|n}]
 [\-i|\-\-stripes Stripes [\-I|\-\-stripesize StripeSize]]
 {\-l|\-\-extents LogicalExtentsNumber[%{VG|PVS|FREE}] |
  \-L|\-\-size LogicalVolumeSize[bBsSkKmMgGtTpPeE]}
@@ -26,6 +28,8 @@ VolumeGroupName [PhysicalVolumePath[:PE[-PE]]...]
  \-L|\-\-size LogicalVolumeSize[bBsSkKmMgGtTpPeE]}
 [\-c|\-\-chunksize ChunkSize]
 [\-\-noudevsync]
+[\-\-ignoremonitoring]
+[\-\-monitor {y|n}]
 \-n|\-\-name SnapshotLogicalVolumeName
 {{\-s|\-\-snapshot}
 OriginalLogicalVolumePath | 
@@ -128,6 +132,18 @@ process will not wait for notification from udev.
 It will continue irrespective of any possible udev processing
 in the background.  You should only use this if udev is not running
 or has rules that ignore the devices LVM2 creates.
+.TP
+.I \-\-monitor y|n
+Start or avoid monitoring a mirrored or snapshot logical volume with
+dmeventd, if it is installed. 
+If a device used by a monitored mirror reports an I/O error,
+the failure is handled according to 
+\fBmirror_image_fault_policy\fP and \fBmirror_log_fault_policy\fP
+set in \fBlvm.conf\fP.
+.TP
+.I \-\-ignoremonitoring
+Make no attempt to interact with dmeventd unless \-\-monitor
+is specified.
 .TP
 .I \-p, \-\-permission r|rw
 Set access permissions to read only or read and write.

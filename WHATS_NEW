@@ -1,5 +1,8 @@
 Version 2.02.63 - 
 ================================
+  Add "monitoring" option to "activation" section of lvm.conf.
+  Have clvmd consult the lvm.conf "activation/monitoring".
+  Add --monitor and --ignoremonitoring support to lvcreate.
   Allow dynamic extension of array of areas selected as allocation candidates.
   Export and use only valid cookie value in test suite.
   Remove const modifier for struct volume_group* from process_each_lv_in_vg().

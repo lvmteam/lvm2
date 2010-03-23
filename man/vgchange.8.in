@@ -78,7 +78,7 @@ are not marked as clustered.
 Generate new random UUID for specified Volume Groups.
 .TP
 .BR \-\-monitor " " { y | n }
-Controls whether or not a mirrored logical volume is monitored by
+Start or stop monitoring a mirrored or snapshot logical volume with
 dmeventd, if it is installed.
 If a device used by a monitored mirror reports an I/O error,
 the failure is handled according to 

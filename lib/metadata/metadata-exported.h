@@ -535,6 +535,7 @@ struct lvcreate_params {
 	int minor; /* all */
 	int log_count; /* mirror */
 	int nosync; /* mirror */
+	int activation_monitoring; /* all */
 
 	char *origin; /* snap */
 	const char *vg_name; /* all */

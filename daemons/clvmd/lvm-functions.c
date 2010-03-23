@@ -542,8 +542,12 @@ int do_lock_lv(unsigned char command, unsigned char lock_flags, char *resource)
 	if (lock_flags & LCK_MIRROR_NOSYNC_MODE)
 		init_mirror_in_sync(0);
 
-	if (!(lock_flags & LCK_DMEVENTD_MONITOR_MODE))
-		init_dmeventd_monitor(DEFAULT_DMEVENTD_MONITOR);
+	if (!(lock_flags & LCK_DMEVENTD_MONITOR_MODE)) {
+		int dmeventd_mode =
+			find_config_tree_bool(cmd, "activation/monitoring",
+					      DEFAULT_DMEVENTD_MONITOR);
+		init_dmeventd_monitor(dmeventd_mode);
+	}
 
 	cmd->partial_activation = 0;
 

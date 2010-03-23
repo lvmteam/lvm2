@@ -518,7 +518,7 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 			   void *handle __attribute((unused)))
 {
 	int doit = 0, docmds = 0;
-	int archived = 0;
+	int dmeventd_mode, archived = 0;
 	struct logical_volume *origin;
 
 	if (!(lv->vg->status & LVM_WRITE) &&
@@ -575,9 +575,10 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return ECMD_FAILED;
 	}
 
-	init_dmeventd_monitor(arg_int_value(cmd, monitor_ARG,
-					    (is_static() || arg_count(cmd, ignoremonitoring_ARG)) ?
-					    DMEVENTD_MONITOR_IGNORE : DEFAULT_DMEVENTD_MONITOR));
+	if (!get_activation_monitoring_mode(cmd, &dmeventd_mode))
+		return ECMD_FAILED;
+
+	init_dmeventd_monitor(dmeventd_mode);
 
 	/*
 	 * FIXME: DEFAULT_BACKGROUND_POLLING should be "unspecified".
