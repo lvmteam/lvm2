@@ -522,16 +522,17 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 			   struct volume_group *vg,
 			   void *handle __attribute((unused)))
 {
-	int r = ECMD_FAILED;
+	int dmeventd_mode, r = ECMD_FAILED;
 
 	if (vg_is_exported(vg)) {
 		log_error("Volume group \"%s\" is exported", vg_name);
 		return ECMD_FAILED;
 	}
 
-	init_dmeventd_monitor(arg_int_value(cmd, monitor_ARG,
-					    (is_static() || arg_count(cmd, ignoremonitoring_ARG)) ?
-					    DMEVENTD_MONITOR_IGNORE : DEFAULT_DMEVENTD_MONITOR));
+	if (!get_activation_monitoring_mode(cmd, &dmeventd_mode))
+		return ECMD_FAILED;
+
+	init_dmeventd_monitor(dmeventd_mode);
 
 	/*
 	 * FIXME: DEFAULT_BACKGROUND_POLLING should be "unspecified".

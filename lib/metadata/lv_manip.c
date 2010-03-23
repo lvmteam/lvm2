@@ -3061,6 +3061,8 @@ int lv_create_single(struct volume_group *vg,
 
 	backup(vg);
 
+	init_dmeventd_monitor(lp->activation_monitoring);
+
 	if (lp->snapshot) {
 		if (!activate_lv_excl(cmd, lv)) {
 			log_error("Aborting. Failed to activate snapshot "

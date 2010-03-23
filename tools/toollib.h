@@ -112,4 +112,7 @@ int pvcreate_params_validate(struct cmd_context *cmd,
 			     int argc, char **argv,
 			     struct pvcreate_params *pp);
 
+int get_activation_monitoring_mode(struct cmd_context *cmd,
+				   int *monitoring_mode);
+
 #endif
