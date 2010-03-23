@@ -29,10 +29,8 @@
 #  include <sys/types.h>
 #  include <sys/ipc.h>
 #  include <sys/sem.h>
-#ifdef HAVE_UDEV_QUEUE_GET_UDEV_IS_ACTIVE
 #  define LIBUDEV_I_KNOW_THE_API_IS_SUBJECT_TO_CHANGE
 #  include <libudev.h>
-#endif
 #endif
 
 #ifdef linux
@@ -922,16 +920,6 @@ int dm_udev_wait(uint32_t cookie)
 
 static int _check_udev_is_running(void)
 {
-
-#  ifndef HAVE_UDEV_QUEUE_GET_UDEV_IS_ACTIVE
-
-	log_debug("Could not get udev state because libudev library "
-		  "was not found and it was not compiled in. "
-		  "Assuming udev is not running.");
-	return 0;
-
-#  else	/* HAVE_UDEV_QUEUE_GET_UDEV_IS_ACTIVE */
-
 	struct udev *udev;
 	struct udev_queue *udev_queue;
 	int r;
@@ -956,9 +944,6 @@ static int _check_udev_is_running(void)
 bad:
 	log_error("Could not get udev state. Assuming udev is not running.");
 	return 0;
-
-#  endif	/* HAVE_UDEV_QUEUE_GET_UDEV_IS_ACTIVE */
-
 }
 
 void dm_udev_set_sync_support(int sync_with_udev)
@@ -1170,8 +1155,10 @@ int dm_udev_create_cookie(uint32_t *cookie)
 {
 	int semid;
 
-	if (!dm_udev_get_sync_support())
+	if (!dm_udev_get_sync_support()) {
+		*cookie = 0;
 		return 1;
+	}
 
 	return _udev_notify_sem_create(cookie, &semid);
 }
