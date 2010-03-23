@@ -919,7 +919,7 @@ static void _apply_settings(struct cmd_context *cmd)
 
 static int _set_udev_checking(struct cmd_context *cmd)
 {
-#ifdef UDEV_SYNC
+#ifdef UDEV_SYNC_SUPPORT
 	struct udev *udev;
 	const char *udev_dev_dir;
 	size_t udev_dev_dir_len;
