@@ -76,7 +76,7 @@ typedef int (*process_single_lv_fn_t) (struct cmd_context *cmd,
 				  void *handle);
 
 int process_each_lv_in_vg(struct cmd_context *cmd,
-			  const struct volume_group *vg,
+			  struct volume_group *vg,
 			  const struct dm_list *arg_lvnames,
 			  const struct dm_list *tags,
 			  void *handle,

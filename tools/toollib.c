@@ -83,7 +83,7 @@ char *skip_dev_dir(struct cmd_context *cmd, const char *vg_name,
  * Metadata iteration functions
  */
 int process_each_lv_in_vg(struct cmd_context *cmd,
-			  const struct volume_group *vg,
+			  struct volume_group *vg,
 			  const struct dm_list *arg_lvnames,
 			  const struct dm_list *tags,
 			  void *handle,
