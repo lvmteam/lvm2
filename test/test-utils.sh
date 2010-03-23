@@ -43,12 +43,16 @@ STACKTRACE() {
 
 init_udev_transaction() {
 	if test "$DM_UDEV_SYNCHRONISATION" = 1; then
-		export DM_UDEV_COOKIE=$(dmsetup udevcreatecookie)
+		COOKIE=$(dmsetup udevcreatecookie)
+		# Cookie is not generated if udev is not running!
+		if test -n "$COOKIE"; then
+			export DM_UDEV_COOKIE=$COOKIE
+		fi
 	fi
 }
 
 finish_udev_transaction() {
-	if test "$DM_UDEV_SYNCHRONISATION" = 1; then
+	if test "$DM_UDEV_SYNCHRONISATION" = 1 -a -n "$DM_UDEV_COOKIE"; then
 		dmsetup udevreleasecookie
 		unset DM_UDEV_COOKIE
 	fi
