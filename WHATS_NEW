@@ -1,5 +1,6 @@
 Version 2.02.63 - 
 ================================
+  Remove const modifier for struct volume_group* from process_each_lv_in_vg().
   Don't allow resizing of internal logical volumes.
   Fix libdevmapper-event pkgconfig version string to match libdevmapper.
   Avoid scanning all pvs in the system if operating on a device with mdas.
