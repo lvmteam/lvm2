@@ -688,6 +688,7 @@ int dm_event_get_registered_device(struct dm_event_handler *dmevh, int next)
 	enum dm_event_mask reply_mask = 0;
 	struct dm_task *dmt = NULL;
 	struct dm_event_daemon_message msg = { 0, 0, NULL };
+	struct dm_info info;
 
 	if (!(dmt = _get_device_info(dmevh))) {
 		stack;
@@ -746,7 +747,6 @@ int dm_event_get_registered_device(struct dm_event_handler *dmevh, int next)
 		goto fail;
 	}
 
-	struct dm_info info;
 	if (!dm_task_get_info(dmt, &info)) {
 		ret = -1;
 		goto fail;
