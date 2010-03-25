@@ -34,6 +34,18 @@ struct pv_area {
 	struct dm_list list;		/* pv_map.areas */
 };
 
+/*
+ * When building up a potential group of "parallel" extent ranges during
+ * an allocation attempt, track the maximum number of extents that may
+ * need to be used as a particular parallel area.  Several of these
+ * structs may reference the same pv_area, but 'used' may differ between
+ * them.
+ */
+struct pv_area_used {
+	struct pv_area *pva;
+	uint32_t used;
+};
+
 struct pv_map {
 	struct physical_volume *pv;
 	struct dm_list areas;		/* struct pv_areas */
@@ -49,6 +61,7 @@ struct dm_list *create_pv_maps(struct dm_pool *mem, struct volume_group *vg,
 			    struct dm_list *allocatable_pvs);
 
 void consume_pv_area(struct pv_area *area, uint32_t to_go);
+void reinsert_reduced_pv_area(struct pv_area *pva);
 
 uint32_t pv_maps_size(struct dm_list *pvms);
 

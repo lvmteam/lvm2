@@ -1,7 +1,8 @@
 Version 2.02.63 - 
 ================================
-  Add "monitoring" option to "activation" section of lvm.conf.
-  Add --monitor and --ignoremonitoring support to lvcreate.
+  Introduce pv_area_used into allocation algorithm and add debug messages.
+  Add activation/monitoring to lvm.conf.
+  Add --monitor and --ignoremonitoring to lvcreate.
   Allow dynamic extension of array of areas selected as allocation candidates.
   Export and use only valid cookie value in test suite.
   Remove const modifier for struct volume_group* from process_each_lv_in_vg().
