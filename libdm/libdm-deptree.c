@@ -1931,7 +1931,7 @@ int dm_tree_node_add_mirror_target_log(struct dm_tree_node *node,
 	struct load_segment *seg;
 
 	if (!node->props.segment_count) {
-		log_error("Internal error: Attempt to add target area to missing segment.");
+		log_error(INTERNAL_ERROR "Attempt to add target area to missing segment.");
 		return 0;
 	}
 
@@ -2030,7 +2030,7 @@ int dm_tree_node_add_target_area(struct dm_tree_node *node,
 	}
 
 	if (!node->props.segment_count) {
-		log_error("Internal error: Attempt to add target area to missing segment.");
+		log_error(INTERNAL_ERROR "Attempt to add target area to missing segment.");
 		return 0;
 	}
 

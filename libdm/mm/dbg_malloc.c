@@ -23,7 +23,7 @@ char *dm_strdup_aux(const char *str, const char *file, int line)
 	char *ret;
 
 	if (!str) {
-		log_error("Internal error: dm_strdup called with NULL pointer");
+		log_error(INTERNAL_ERROR "dm_strdup called with NULL pointer");
 		return NULL;
 	}
 
