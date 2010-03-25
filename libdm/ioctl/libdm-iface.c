@@ -691,7 +691,7 @@ static int _dm_task_run_v1(struct dm_task *dmt)
 
 	if ((unsigned) dmt->type >=
 	    (sizeof(_cmd_data_v1) / sizeof(*_cmd_data_v1))) {
-		log_error("Internal error: unknown device-mapper task %d",
+		log_error(INTERNAL ERROR "unknown device-mapper task %d",
 			  dmt->type);
 		goto bad;
 	}
@@ -1814,7 +1814,7 @@ int dm_task_run(struct dm_task *dmt)
 
 	if ((unsigned) dmt->type >=
 	    (sizeof(_cmd_data_v4) / sizeof(*_cmd_data_v4))) {
-		log_error("Internal error: unknown device-mapper task %d",
+		log_error(INTERNAL_ERROR "unknown device-mapper task %d",
 			  dmt->type);
 		return 0;
 	}

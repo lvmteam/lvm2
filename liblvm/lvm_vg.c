@@ -333,7 +333,7 @@ char *lvm_vg_get_uuid(const vg_t vg)
 	char uuid[64] __attribute((aligned(8)));
 
 	if (!id_write_format(&vg->id, uuid, sizeof(uuid))) {
-		log_error("Internal error converting uuid");
+		log_error(INTERNAL_ERROR "Unable to convert uuid");
 		return NULL;
 	}
 	return strndup((const char *)uuid, 64);

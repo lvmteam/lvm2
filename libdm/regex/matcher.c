@@ -133,7 +133,7 @@ static void _calc_functions(struct dm_regex *m)
 			break;
 
 		default:
-			log_error("Internal error: Unknown calc node type");
+			log_error(INTERNAL_ERROR "Unknown calc node type");
 		}
 
 		/*

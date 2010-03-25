@@ -132,7 +132,7 @@ void dm_pool_free(struct dm_pool *p, void *ptr)
 	}
 
 	if (!c)
-		log_error("Internal error: pool_free asked to free pointer "
+		log_error(INTERNAL_ERROR "pool_free asked to free pointer "
 			  "not in pool");
 	else
 		p->chunk = c;
