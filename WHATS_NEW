@@ -1,5 +1,6 @@
 Version 2.02.63 -  
 ================================
+  Add some assertions to allocation code.
   Introduce pv_area_used into allocation algorithm and add debug messages.
   Add activation/monitoring to lvm.conf.
   Add --monitor and --ignoremonitoring to lvcreate.

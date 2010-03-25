@@ -600,6 +600,11 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 	if (segtype_is_virtual(segtype))
 		return ah;
 
+	if (!(area_count + log_area_count)) {
+		log_error(INTERNAL_ERROR "_alloc_init called for non-virtual segment with no disk space.");
+		return NULL;
+	}
+
 	if (!(ah->mem = dm_pool_create("allocation", 1024))) {
 		log_error("allocation pool creation failed");
 		return NULL;
@@ -743,6 +748,11 @@ static int _alloc_parallel_area(struct alloc_handle *ah, uint32_t needed,
 	uint32_t ix_log_skip = 0; /* How many areas to skip in middle of array to reach log areas */
 	uint32_t total_area_count = ah->area_count + (log_needs_allocating ? ah->log_area_count : 0);
 	struct alloced_area *aa;
+
+	if (!total_area_count) {
+		log_error(INTERNAL_ERROR "_alloc_parallel_area called without any allocation to do.");
+		return 1;
+	}
 
 	remaining = needed - *allocated;
 	area_len = remaining / ah->area_multiple;
