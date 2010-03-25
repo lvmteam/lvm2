@@ -1018,7 +1018,7 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 	struct pv_list *pvl;
 	unsigned already_found_one = 0;
 	unsigned contiguous = 0, cling = 0, preferred_count = 0;
-	unsigned ix;
+	unsigned ix, last_ix;
 	unsigned ix_offset = 0;	/* Offset for non-preferred allocations */
 	unsigned ix_log_offset; /* Offset to start of areas to use for log */
 	unsigned too_small_for_log_count; /* How many too small for log? */
@@ -1085,99 +1085,125 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 		log_needs_allocating = (ah->log_area_count &&
 					dm_list_empty(&ah->alloced_areas[ah->area_count])) ?  1 : 0;
 
-		/*
-		 * Put the smallest area of each PV that is at least the
-		 * size we need into areas array.  If there isn't one
-		 * that fits completely and we're allowed more than one
-		 * LV segment, then take the largest remaining instead.
-		 */
-		dm_list_iterate_items(pvm, pvms) {
-			if (dm_list_empty(&pvm->areas))
-				continue;	/* Next PV */
+		do {
+			/*
+			 * Provide for escape from the loop if no progress is made.
+			 * This should not happen: ALLOC_ANYWHERE should be able to use
+			 * all available space. (If there aren't enough extents, the code
+			 * should not reach this point.)
+			 */
+			last_ix = ix;
 
-			if (alloc != ALLOC_ANYWHERE) {
-				/* Don't allocate onto the log pv */
-				if (ah->log_area_count)
-					dm_list_iterate_items(aa, &ah->alloced_areas[ah->area_count])
-						for (s = 0; s < ah->log_area_count; s++)
-							if (!aa[s].pv)
+			/*
+			 * Put the smallest area of each PV that is at least the
+			 * size we need into areas array.  If there isn't one
+			 * that fits completely and we're allowed more than one
+			 * LV segment, then take the largest remaining instead.
+			 */
+			dm_list_iterate_items(pvm, pvms) {
+				if (dm_list_empty(&pvm->areas))
+					continue;	/* Next PV */
+
+				if (alloc != ALLOC_ANYWHERE) {
+					/* Don't allocate onto the log pv */
+					if (ah->log_area_count)
+						dm_list_iterate_items(aa, &ah->alloced_areas[ah->area_count])
+							for (s = 0; s < ah->log_area_count; s++)
+								if (!aa[s].pv)
+									goto next_pv;
+
+					/* Avoid PVs used by existing parallel areas */
+					if (parallel_pvs)
+						dm_list_iterate_items(pvl, parallel_pvs)
+							if (pvm->pv == pvl->pv)
 								goto next_pv;
+				}
 
-				/* Avoid PVs used by existing parallel areas */
-				if (parallel_pvs)
-					dm_list_iterate_items(pvl, parallel_pvs)
-						if (pvm->pv == pvl->pv)
+				already_found_one = 0;
+				/* First area in each list is the largest */
+				dm_list_iterate_items(pva, &pvm->areas) {
+					/* Skip fully-reserved areas (which are not currently removed from the list). */
+					if (!pva->unreserved)
+						continue;
+					if (contiguous) {
+						if (prev_lvseg &&
+						    _check_contiguous(ah->cmd,
+								      prev_lvseg,
+								      pva, *areas_ptr,
+								      *areas_size_ptr)) {
+							preferred_count++;
 							goto next_pv;
-			}
+						}
+						continue;
+					}
 
-			already_found_one = 0;
-			/* First area in each list is the largest */
-			dm_list_iterate_items(pva, &pvm->areas) {
-				if (contiguous) {
-					if (prev_lvseg &&
-					    _check_contiguous(ah->cmd,
-							      prev_lvseg,
-							      pva, *areas_ptr,
-							      *areas_size_ptr)) {
-						preferred_count++;
+					if (cling) {
+						if (prev_lvseg &&
+						    _check_cling(ah->cmd,
+								   prev_lvseg,
+								   pva, *areas_ptr,
+								   *areas_size_ptr)) {
+							preferred_count++;
+						}
 						goto next_pv;
 					}
-					continue;
-				}
 
-				if (cling) {
-					if (prev_lvseg &&
-					    _check_cling(ah->cmd,
-							   prev_lvseg,
-							   pva, *areas_ptr,
-							   *areas_size_ptr)) {
-						preferred_count++;
+					/* Is it big enough on its own? */
+					if (pva->unreserved * ah->area_multiple <
+					    max_parallel - *allocated &&
+					    ((!can_split && !ah->log_area_count) ||
+					     (already_found_one &&
+					      !(alloc == ALLOC_ANYWHERE))))
+						goto next_pv;
+
+					/*
+					 * Except with ALLOC_ANYWHERE, replace first area with this
+					 * one which is smaller but still big enough.
+					 */
+					if (!already_found_one ||
+					    alloc == ALLOC_ANYWHERE) {
+						ix++;
+						already_found_one = 1;
 					}
-					goto next_pv;
+
+					if (ix + ix_offset - 1 < ah->area_count)
+						required = (max_parallel - *allocated) / ah->area_multiple;
+					else
+						required = ah->log_len;
+
+					if (alloc == ALLOC_ANYWHERE) {
+						/*
+						 * Update amount unreserved - effectively splitting an area 
+						 * into two or more parts.  If the whole stripe doesn't fit,
+						 * reduce amount we're looking for.
+						 */
+						if (required >= pva->unreserved) {
+							required = pva->unreserved;
+							pva->unreserved = 0;
+						} else {
+							pva->unreserved -= required;
+							reinsert_reduced_pv_area(pva);
+						}
+					} else if (required > pva->count)
+						required = pva->count;
+
+					/* Expand areas array if needed after an area was split. */
+					if (ix + ix_offset > *areas_size_ptr) {
+						*areas_size_ptr *= 2;
+						*areas_ptr = dm_realloc(*areas_ptr, sizeof(**areas_ptr) * (*areas_size_ptr));
+					}
+					(*areas_ptr)[ix + ix_offset - 1].pva = pva;
+						(*areas_ptr)[ix + ix_offset - 1].used = required;
+					log_debug("Trying allocation area %" PRIu32 " on %s start PE %" PRIu32
+						  " length %" PRIu32 " leaving %" PRIu32 ".",
+						  ix + ix_offset - 1, dev_name(pva->map->pv->dev), pva->start, required,
+						  (alloc == ALLOC_ANYWHERE) ? pva->unreserved : pva->count - required);
 				}
-
-				/* Is it big enough on its own? */
-				if (pva->count * ah->area_multiple <
-				    max_parallel - *allocated &&
-				    ((!can_split && !ah->log_area_count) ||
-				     (already_found_one &&
-				      !(alloc == ALLOC_ANYWHERE))))
-					goto next_pv;
-
-				/*
-				 * Except with ALLOC_ANYWHERE, replace first area with this
-				 * one which is smaller but still big enough.
-				 */
-				if (!already_found_one ||
-				    alloc == ALLOC_ANYWHERE) {
-					ix++;
-					already_found_one = 1;
-				}
-
-				if (ix + ix_offset - 1 < ah->area_count)
-					required = (max_parallel - *allocated) / ah->area_multiple;
-				else
-					required = ah->log_len;
-
-				if (required > pva->count)
-					required = pva->count;
-
-				/* Expand areas array if needed after an area was split. */
-				if (ix + ix_offset > *areas_size_ptr) {
-					*areas_size_ptr *= 2;
-					*areas_ptr = dm_realloc(*areas_ptr, sizeof(**areas_ptr) * (*areas_size_ptr));
-				}
-				(*areas_ptr)[ix + ix_offset - 1].pva = pva;
-				(*areas_ptr)[ix + ix_offset - 1].used = required;
-				log_debug("Trying allocation area %" PRIu32 " on %s start PE %" PRIu32
-					  " length %" PRIu32 " leaving %" PRIu32 ".",
-					  ix + ix_offset - 1, dev_name(pva->map->pv->dev), pva->start, required,
-					  pva->count - required);
+			next_pv:
+				if (ix + ix_offset >= ah->area_count + (log_needs_allocating ? ah->log_area_count : 0))
+					break;
 			}
-		next_pv:
-			if (ix + ix_offset >= ah->area_count + (log_needs_allocating ? ah->log_area_count : 0))
-				break;
-		}
+		} while (alloc == ALLOC_ANYWHERE && last_ix != ix && ix < ah->area_count + (log_needs_allocating ? ah->log_area_count : 0));
 
 		if ((contiguous || cling) && (preferred_count < ix_offset))
 			break;
@@ -1211,7 +1237,6 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 		if (ix + ix_offset < ah->area_count +
 		    (log_needs_allocating ? ah->log_area_count +
 					    too_small_for_log_count : 0))
-			/* FIXME With ALLOC_ANYWHERE, need to split areas */
 			break;
 
 		if (!_alloc_parallel_area(ah, max_parallel, *areas_ptr, allocated,
