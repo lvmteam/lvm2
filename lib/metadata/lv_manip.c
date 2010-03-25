@@ -929,7 +929,7 @@ static int _is_condition(struct cmd_context *cmd __attribute((unused)),
 		return 1;
 
 	/*
-	 * Only used for cling and contiguous policies so its safe to say all
+	 * Only used for cling and contiguous policies so it's safe to say all
 	 * the available space is used.
 	 */
 	pvmatch->areas[s].pva = pvmatch->pva;
