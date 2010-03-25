@@ -39,7 +39,9 @@ struct pv_area {
  * an allocation attempt, track the maximum number of extents that may
  * need to be used as a particular parallel area.  Several of these
  * structs may reference the same pv_area, but 'used' may differ between
- * them.
+ * them.  The sum of all the 'used' variables referring to the same
+ * pv_area may not exceed that area's count, so we cannot allocate the
+ * same extents twice.
  */
 struct pv_area_used {
 	struct pv_area *pva;
