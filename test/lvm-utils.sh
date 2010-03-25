@@ -161,7 +161,7 @@ vg_validate_pvlv_counts_()
 	local num_lvs=$3
 	local num_snaps=$4
 
-	lvs -a -odevices $local_vg
+	lvs -a -o+devices $local_vg
 
 	check_vg_field_ $local_vg pv_count $num_pvs &&
 	check_vg_field_ $local_vg lv_count $num_lvs &&
