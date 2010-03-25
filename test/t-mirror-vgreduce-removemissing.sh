@@ -25,6 +25,7 @@ lv_is_on_ ()
 	rm -f out1 out2
 	echo $pvs | sed 's/ /\n/g' | sort | uniq > out1
 
+	lvs -a -odevices --noheadings $lv
 	lvs -a -odevices --noheadings $lv | \
 	sed 's/([^)]*)//g; s/[ ,]/\n/g' | sort | uniq > out2
 
@@ -47,6 +48,7 @@ mimages_are_on_ ()
 		sed 's/\[//g; s/\]//g')
 	for i in $mimages; do
 		echo "Checking $vg/$i"
+		lvs -a -odevices --noheadings $vg/$i
 		lvs -a -odevices --noheadings $vg/$i | \
 			sed 's/([^)]*)//g; s/ //g; s/,/ /g' | sort | uniq >> out2
 	done
@@ -128,7 +130,7 @@ check_and_cleanup_lvs_
 
 #COMM "basic: fail the 2nd mirror image of 2-way mirrored LV"
 prepare_lvs_
-lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0-1
+lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0
 lvchange -an $vg/$lv1
 aux mimages_are_on_ $lv1 $dev1 $dev2
 mirrorlog_is_on_ $lv1 $dev3
