@@ -21,6 +21,7 @@ mimages_are_redundant_ ()
 
   rm -f out
   for i in $(lvs -odevices --noheadings $lv | sed 's/([^)]*)//g; s/,/ /g'); do
+    lvs -a -odevices --noheadings $vg/$i 
     lvs -a -odevices --noheadings $vg/$i | sed 's/([^)]*)//g; s/,/ /g' | \
       sort | uniq >> out
   done
@@ -36,6 +37,7 @@ lv_is_contiguous_ ()
   local lv=$1
 
   # if the lv has multiple segments, it's not contiguous
+  lvs -a --segments --noheadings $lv
   [ $(lvs -a --segments --noheadings $lv | wc -l) -ne 1 ] && return 1
 
   return 0
@@ -59,6 +61,7 @@ mirrorlog_is_on_()
   local lv="$1"_mlog
   shift 1
   if ! lvs -a $lv; then return 0; fi # FIXME?
+  lvs -a -odevices --noheadings $lv
   lvs -a -odevices --noheadings $lv | sed 's/,/\n/g' > out
   for d in $*; do grep "$d(" out || return 1; done
   for d in $*; do grep -v "$d(" out > out2 || true; mv out2 out; done
@@ -100,6 +103,7 @@ wait_conversion_()
 check_no_tmplvs_()
 {
   local lv=$1
+  lvs -a --noheadings -oname $(dirname $lv)
   lvs -a --noheadings -oname $(dirname $lv) > out
   ! grep tmp out
 }
@@ -146,7 +150,7 @@ check_and_cleanup_lvs_
 
 # add 1 mirror
 prepare_lvs_
-lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0-1
+lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0
 check_mirror_count_ $vg/$lv1 2
 check_mirror_log_ $vg/$lv1
 lvconvert -m+1 -i1 $vg/$lv1 $dev4
@@ -171,7 +175,7 @@ check_and_cleanup_lvs_
 
 # add 2 mirrors
 prepare_lvs_
-lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0-1
+lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0
 check_mirror_count_ $vg/$lv1 2
 check_mirror_log_ $vg/$lv1
 lvconvert -m+2 -i1 $vg/$lv1 $dev4 $dev5
@@ -224,7 +228,7 @@ check_and_cleanup_lvs_
 
 # add 1 mirror then add 1 more mirror during conversion
 prepare_lvs_
-lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0-1
+lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0
 check_mirror_count_ $vg/$lv1 2
 check_mirror_log_ $vg/$lv1
 lvconvert -m+1 -b $vg/$lv1 $dev4
@@ -243,7 +247,7 @@ prepare_lvs_
 lvcreate -l2 -m1 --mirrorlog core -n $lv1 $vg $dev1 $dev2 
 check_mirror_count_ $vg/$lv1 2 
 not_sh check_mirror_log_ $vg/$lv1 
-lvconvert -m+1 --mirrorlog disk -i1 $vg/$lv1 $dev4 $dev3:0-1 
+lvconvert -m+1 --mirrorlog disk -i1 $vg/$lv1 $dev4 $dev3:0
 check_no_tmplvs_ $vg/$lv1 
 check_mirror_count_ $vg/$lv1 3 
 check_mirror_log_ $vg/$lv1 
@@ -256,7 +260,7 @@ check_and_cleanup_lvs_
 
 # convert inactive mirror and start polling
 prepare_lvs_
-lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0-1
+lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0
 check_mirror_count_ $vg/$lv1 2
 lvchange -an $vg/$lv1
 lvconvert -m+1 $vg/$lv1 $dev4
@@ -271,7 +275,7 @@ check_and_cleanup_lvs_
 
 # "remove newly added mirror" 
 prepare_lvs_ 
-lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0-1 
+lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0
 check_mirror_count_ $vg/$lv1 2 
 check_mirror_log_ $vg/$lv1 
 lvconvert -m+1 -b $vg/$lv1 $dev4 
@@ -285,7 +289,7 @@ check_and_cleanup_lvs_
 
 # "remove one of newly added mirrors" 
 prepare_lvs_ 
-lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0-1 
+lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0
 check_mirror_count_ $vg/$lv1 2 
 check_mirror_log_ $vg/$lv1 
 lvconvert -m+2 -b $vg/$lv1 $dev4 $dev5 
@@ -300,7 +304,7 @@ check_and_cleanup_lvs_
 
 # "remove from original mirror (the original is still mirror)"
 prepare_lvs_ 
-lvcreate -l2 -m2 -n $lv1 $vg $dev1 $dev2 $dev5 $dev3:0-1 
+lvcreate -l2 -m2 -n $lv1 $vg $dev1 $dev2 $dev5 $dev3:0
 check_mirror_count_ $vg/$lv1 3 
 check_mirror_log_ $vg/$lv1 
 lvconvert -m+1 -b $vg/$lv1 $dev4 
@@ -315,7 +319,7 @@ check_and_cleanup_lvs_
 
 # "remove from original mirror (the original becomes linear)"
 prepare_lvs_ 
-lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0-1 
+lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0
 check_mirror_count_ $vg/$lv1 2 
 check_mirror_log_ $vg/$lv1 
 lvconvert -m+1 -b $vg/$lv1 $dev4 
