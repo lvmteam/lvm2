@@ -24,17 +24,23 @@
  *
  * FIXME Cope with overlap.
  */
-static void _insert_area(struct dm_list *head, struct pv_area *a)
+static void _insert_area(struct dm_list *head, struct pv_area *a, unsigned reduced)
 {
 	struct pv_area *pva;
-
-	dm_list_iterate_items(pva, head) {
-		if (a->count > pva->count)
+	uint32_t count = reduced ? a->unreserved : a->count;
+		
+	dm_list_iterate_items(pva, head)
+		if (count > pva->count)
 			break;
-	}
 
 	dm_list_add(&pva->list, &a->list);
 	a->map->pe_count += a->count;
+}
+
+static void _remove_area(struct pv_area *a)
+{
+	dm_list_del(&a->list);
+	a->map->pe_count -= a->count;
 }
 
 static int _create_single_area(struct dm_pool *mem, struct pv_map *pvm,
@@ -50,7 +56,8 @@ static int _create_single_area(struct dm_pool *mem, struct pv_map *pvm,
 	pva->map = pvm;
 	pva->start = start;
 	pva->count = length;
-	_insert_area(&pvm->areas, pva);
+	pva->unreserved = pva->count;
+	_insert_area(&pvm->areas, pva, 0);
 
 	return 1;
 }
@@ -184,8 +191,7 @@ struct dm_list *create_pv_maps(struct dm_pool *mem, struct volume_group *vg,
 
 void consume_pv_area(struct pv_area *pva, uint32_t to_go)
 {
-	dm_list_del(&pva->list);
-	pva->map->pe_count -= pva->count;
+	_remove_area(pva);
 
 	assert(to_go <= pva->count);
 
@@ -193,8 +199,19 @@ void consume_pv_area(struct pv_area *pva, uint32_t to_go)
 		/* split the area */
 		pva->start += to_go;
 		pva->count -= to_go;
-		_insert_area(&pva->map->areas, pva);
+		pva->unreserved = pva->count;
+		_insert_area(&pva->map->areas, pva, 0);
 	}
+}
+
+/*
+ * Remove an area from list and reinsert it based on its new smaller size
+ * after a provisional allocation.
+ */
+void reinsert_reduced_pv_area(struct pv_area *pva)
+{
+	_remove_area(pva);
+	_insert_area(&pva->map->areas, pva, 1);
 }
 
 uint32_t pv_maps_size(struct dm_list *pvms)
