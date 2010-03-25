@@ -25,7 +25,7 @@ lv_is_on_ ()
 	rm -f out1 out2
 	echo $pvs | sed 's/ /\n/g' | sort | uniq > out1
 
-	lvs -a -odevices --noheadings $lv
+	lvs -a -o+devices $lv
 	lvs -a -odevices --noheadings $lv | \
 	sed 's/([^)]*)//g; s/[ ,]/\n/g' | sort | uniq > out2
 
@@ -48,7 +48,7 @@ mimages_are_on_ ()
 		sed 's/\[//g; s/\]//g')
 	for i in $mimages; do
 		echo "Checking $vg/$i"
-		lvs -a -odevices --noheadings $vg/$i
+		lvs -a -o+devices $vg/$i
 		lvs -a -odevices --noheadings $vg/$i | \
 			sed 's/([^)]*)//g; s/ //g; s/,/ /g' | sort | uniq >> out2
 	done
