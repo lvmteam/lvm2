@@ -337,12 +337,14 @@ static int _read_mirror_params(struct lvcreate_params *lp,
 	mirrorlog = arg_str_value(cmd, mirrorlog_ARG,
 				  corelog ? "core" : DEFAULT_MIRRORLOG);
 
-	if (!strcmp("disk", mirrorlog)) {
-		if (corelog) {
-			log_error("--mirrorlog disk and --corelog "
-				  "are incompatible");
-			return 0;
-		}
+	if (strcmp("core", mirrorlog) && corelog) {
+		log_error("Please use only one of --mirrorlog or --corelog");
+		return 0;
+	}
+
+	if (!strcmp("mirrored", mirrorlog)) {
+		lp->log_count = 2;
+	} else if (!strcmp("disk", mirrorlog)) {
 		lp->log_count = 1;
 	} else if (!strcmp("core", mirrorlog))
 		lp->log_count = 0;
