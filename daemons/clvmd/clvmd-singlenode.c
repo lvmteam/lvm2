@@ -17,6 +17,7 @@
 
 #include <netinet/in.h>
 #include <sys/un.h>
+#include <sys/socket.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <configure.h>
@@ -31,17 +32,36 @@
 #include "lvm-functions.h"
 #include "clvmd.h"
 
+static const char SINGLENODE_CLVMD_SOCKNAME[] = "\0singlenode_clvmd";
 static int listen_fd = -1;
 
 static int init_comms()
 {
-	listen_fd = open("/dev/null", O_RDWR);
+	struct sockaddr_un addr;
 
-	if (listen_fd < 0)
+	listen_fd = socket(PF_UNIX, SOCK_STREAM, 0);
+	if (listen_fd < 0) {
+		DEBUGLOG("Can't create local socket: %s\n", strerror(errno));
 		return -1;
-
+	}
 	/* Set Close-on-exec */
 	fcntl(listen_fd, F_SETFD, 1);
+
+	memset(&addr, 0, sizeof(addr));
+	memcpy(addr.sun_path, SINGLENODE_CLVMD_SOCKNAME,
+	       sizeof(SINGLENODE_CLVMD_SOCKNAME));
+	addr.sun_family = AF_UNIX;
+
+	if (bind(listen_fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+		DEBUGLOG("Can't bind local socket: %s\n", strerror(errno));
+		close(listen_fd);
+		return -1;
+	}
+	if (listen(listen_fd, 10) < 0) {
+		DEBUGLOG("Can't listen local socket: %s\n", strerror(errno));
+		close(listen_fd);
+		return -1;
+	}
 
 	return 0;
 }
