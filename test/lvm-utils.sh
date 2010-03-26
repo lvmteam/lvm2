@@ -196,10 +196,10 @@ init_root_dir_()
   for i in 0 1 2 3 4 5 6 7; do
     mknod $G_root_/dev/loop$i b 7 $i
   done
-  for i in $abs_top_builddir/dmeventd/mirror/*.so $abs_top_builddir/dmeventd/snapshot/*.so
+  for i in $abs_top_builddir/daemons/dmeventd/plugins/*/*.so
   do
     # NOTE: This check is necessary because the loop above will give us the value
-    # "$abs_top_builddir/dmeventd/mirror/*.so" if no files ending in 'so' exist.
+    # "$abs_top_builddir/daemons/dmeventd/plugins/*/*.so" if no files ending in 'so' exist.
     # This is the best way I could quickly determine to skip over this bogus value.
     if [ -f $i ]; then
       echo Setting up symlink from $i to $G_root_/lib
