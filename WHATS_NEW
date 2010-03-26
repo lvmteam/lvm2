@@ -1,5 +1,6 @@
 Version 2.02.63 -  
 ================================
+  Fix clvmd cluster propagation of dmeventd monitoring mode.
   Allow ALLOC_ANYWHERE to split contiguous areas.
   Use INTERNAL_ERROR for internal errors throughout tree.
   Add some assertions to allocation code.
