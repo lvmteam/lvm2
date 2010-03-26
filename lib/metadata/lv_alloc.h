@@ -68,7 +68,8 @@ int lv_add_mirror_lvs(struct logical_volume *lv,
 		      uint32_t num_extra_areas,
 		      uint64_t status, uint32_t region_size);
 
-int lv_add_log_segment(struct alloc_handle *ah, struct logical_volume *log_lv);
+int lv_add_log_segment(struct alloc_handle *ah, uint32_t first_area,
+		       struct logical_volume *log_lv, uint64_t status);
 int lv_add_virtual_segment(struct logical_volume *lv, uint64_t status,
                            uint32_t extents, const struct segment_type *segtype);
 

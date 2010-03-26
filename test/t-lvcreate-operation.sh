@@ -25,9 +25,18 @@ aux prepare_pvs 2
 aux pvcreate --metadatacopies 0 $dev1
 aux vgcreate -c n $vg $devs
 
-#COMM create snapshots of LVs on --metadatacopies 0 PV (bz450651)
+# ---
+# Create snapshots of LVs on --metadatacopies 0 PV (bz450651)
 lvcreate -n$lv1 -l4 $vg $dev1
 lvcreate -n$lv2 -l4 -s $vg/$lv1
-#lvremove -f $vg/$lv2
 cleanup_lvs
 
+# ---
+# Create mirror on two devices with mirrored log using --alloc anywhere
+lvcreate -m 1 -l4 -n $lv1 --mirrorlog mirrored $vg --alloc anywhere $dev1 $dev2
+cleanup_lvs
+
+# --
+# Create mirror on one dev with mirrored log using --alloc anywhere, should fail
+lvcreate -m 1 -l4 -n $lv1 --mirrorlog mirrored $vg --alloc anywhere $dev1
+cleanup_lvs

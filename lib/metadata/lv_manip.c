@@ -1635,14 +1635,32 @@ int lv_add_mirror_lvs(struct logical_volume *lv,
 
 /*
  * Turn an empty LV into a mirror log.
+ *
+ * FIXME: Mirrored logs are built inefficiently.
+ * A mirrored log currently uses the same layout that a mirror
+ * LV uses.  The mirror layer sits on top of AREA_LVs which form the
+ * legs, rather on AREA_PVs.  This is done to allow re-use of the
+ * various mirror functions to also handle the mirrored LV that makes
+ * up the log.
+ *
+ * If we used AREA_PVs under the mirror layer of a log, we could
+ * assemble it all at once by calling 'lv_add_segment' with the
+ * appropriate segtype (mirror/stripe), like this:
+ * 	lv_add_segment(ah, ah->area_count, ah->log_area_count,
+ *		       log_lv, segtype, 0, MIRROR_LOG, 0);
+ *
+ * For now, we use the same mechanism to build a mirrored log as we
+ * do for building a mirrored LV: 1) create initial LV, 2) add a
+ * mirror layer, and 3) add the remaining copy LVs
  */
-int lv_add_log_segment(struct alloc_handle *ah, struct logical_volume *log_lv)
+int lv_add_log_segment(struct alloc_handle *ah, uint32_t first_area,
+		       struct logical_volume *log_lv, uint64_t status)
 {
-	const char *segtype_name = ah->log_area_count > 1 ? "mirror" : "striped";
 
-	return lv_add_segment(ah, ah->area_count, ah->log_area_count, log_lv,
-			      get_segtype_from_string(log_lv->vg->cmd, segtype_name),
-			      0, MIRROR_LOG, 0);
+	return lv_add_segment(ah, ah->area_count + first_area, 1, log_lv,
+			      get_segtype_from_string(log_lv->vg->cmd,
+						      "striped"),
+			      0, status, 0);
 }
 
 static int _lv_extend_mirror(struct alloc_handle *ah,

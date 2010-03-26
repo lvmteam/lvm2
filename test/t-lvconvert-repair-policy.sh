@@ -13,12 +13,15 @@
 
 prepare_vg 4
 
+# Clean-up and create a 2-way mirror, where the the
+# leg devices are always on $dev[12] and the log
+# is always on $dev3.  ($dev4 behaves as a spare)
 cleanup() {
 	vgreduce --removemissing $vg
 	for d in "$@"; do enable_dev $d; done
 	for d in "$@"; do vgextend $vg $d; done
 	lvremove -ff $vg/mirror
-	lvcreate -m 1 -L 1 -n mirror $vg
+	lvcreate -m 1 -l 2 -n mirror $vg $dev1 $dev2 $dev3:0
 }
 
 repair() {
@@ -28,34 +31,42 @@ repair() {
 lvcreate -m 1 -L 1 -n mirror $vg
 lvchange -a n $vg/mirror
 
+# Fail a leg of a mirror.
+# Expected result: linear
 disable_dev $dev1
 lvchange --partial -a y $vg/mirror
 repair 'activation { mirror_image_fault_policy = "remove" }'
 lvs | grep -- -wi-a- # non-mirror
 cleanup $dev1
 
+# Fail a leg of a mirror.
+# Expected result: Mirror (leg replaced)
 disable_dev $dev1
 repair 'activation { mirror_image_fault_policy = "replace" }'
 lvs | grep -- mwi-a- # mirror
 lvs | grep mirror_mlog
 cleanup $dev1
 
+# Fail a leg of a mirror (use old name for policy specification)
+# Expected result: Mirror (leg replaced)
 disable_dev $dev1
 repair 'activation { mirror_device_fault_policy = "replace" }'
 lvs | grep -- mwi-a- # mirror
 lvs | grep mirror_mlog
 cleanup $dev1
 
+# Fail a leg of a mirror w/ no available spare
+# Expected result: linear
 disable_dev $dev2 $dev4
-# no room for repair, downconversion should happen
 repair 'activation { mirror_image_fault_policy = "replace" }'
 lvs | grep -- -wi-a-
 cleanup $dev2 $dev4
 
-disable_dev $dev2 $dev4
-# no room for new log, corelog conversion should happen
+# Fail the log device of a mirror w/ no available spare
+# Expected result: mirror w/ corelog
+disable_dev $dev3 $dev4
 repair 'activation { mirror_image_fault_policy = "replace" }'
 lvs
 lvs | grep -- mwi-a-
 lvs | not grep mirror_mlog
-cleanup $dev2 $dev4
+cleanup $dev3 $dev4

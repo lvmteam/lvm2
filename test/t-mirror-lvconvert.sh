@@ -281,6 +281,38 @@ mirrorlog_is_on_ $vg/$lv1 $dev3
 check_and_cleanup_lvs_
 
 # ---
+# core log to mirrored log
+
+# change the log type from 'core' to 'mirrored'
+prepare_lvs_
+lvcreate -l2 -m1 --mirrorlog core -n $lv1 $vg $dev1 $dev2
+check_mirror_count_ $vg/$lv1 2
+not_sh check_mirror_log_ $vg/$lv1
+lvconvert --mirrorlog mirrored -i1 $vg/$lv1 $dev3 $dev4
+check_no_tmplvs_ $vg/$lv1
+check_mirror_log_ $vg/$lv1
+mimages_are_redundant_ $vg $lv1
+
+# ---
+# mirrored log to core log
+
+# change the log type from 'mirrored' to 'core'
+lvconvert --mirrorlog core -i1 $vg/$lv1 $dev3 $dev4
+check_no_tmplvs_ $vg/$lv1
+not_sh check_mirror_log_ $vg/$lv1
+mimages_are_redundant_ $vg $lv1
+check_and_cleanup_lvs_
+
+# ---
+# Linear to mirror with mirrored log using --alloc anywhere
+prepare_lvs_
+lvcreate -l2 -n $lv1 $vg $dev1
+lvconvert -m +1 --mirrorlog mirrored $vg/$lv1 $dev1 $dev2 --alloc anywhere
+mimages_are_redundant_ $vg $lv1
+check_and_cleanup_lvs_
+
+
+# ---
 # check polldaemon restarts
 
 # convert inactive mirror and start polling

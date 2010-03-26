@@ -1,5 +1,6 @@
 Version 2.02.63 -  
 ================================
+  Add ability to create mirrored logs for mirror LVs.
   Use a real socket for singlenode clvmd to fix clvmd's high cpu load.
   Fix clvmd cluster propagation of dmeventd monitoring mode.
   Allow ALLOC_ANYWHERE to split contiguous areas.
