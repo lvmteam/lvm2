@@ -188,7 +188,7 @@ prepare_scsi_debug_dev()
     local devs_before=`get_sd_devs_`
     # NOTE: it will _never_ make sense to pass num_tgts param;
     # last param wins.. so num_tgts=1 is imposed
-    modprobe scsi_debug dev_size_mb=$DEV_SIZE $SCSI_DEBUG_PARAMS num_tgts=1
+    modprobe scsi_debug dev_size_mb=$DEV_SIZE $SCSI_DEBUG_PARAMS num_tgts=1 || exit 200
     sleep 2 # allow for async Linux SCSI device registration
 
     local devs_after=`get_sd_devs_`
