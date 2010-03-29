@@ -1,6 +1,6 @@
 #
 # Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
-# Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2004-2010 Red Hat, Inc. All rights reserved.
 #
 # This file is part of LVM2.
 #
@@ -64,10 +64,15 @@ SOURCES =\
 	vgsplit.c
 
 SOURCES2 =\
-	dmsetup.c
+	dmsetup.c \
+	lvm.c \
+	lvm2cmd-static.c \
+	lvm2cmd.c \
+	lvmcmdlib.c
 
 TARGETS =\
 	.commands \
+	liblvm2cmd.a \
 	lvm
 
 TARGETS_DM = dmsetup
@@ -87,9 +92,8 @@ endif
 LVMLIBS = $(LVMINTERNAL_LIBS)
 LIB_VERSION = $(LIB_VERSION_LVM)
 
-CLEAN_TARGETS = liblvm2cmd.$(LIB_SUFFIX) liblvm2cmd.a liblvm2cmd-static.a lvm lvm.o \
-		lvm2cmd.o lvm2cmd-static.o lvm2cmdlib.o lvm.static \
-		lvmcmdlib.o lvm-static.o dmsetup.o $(TARGETS_DM)
+CLEAN_TARGETS = liblvm2cmd.$(LIB_SUFFIX) $(TARGETS_DM) \
+	liblvm2cmd-static.a dmsetup.static lvm.static
 
 ifeq ("@CMDLIB@", "yes")
 	TARGETS += liblvm2cmd.$(LIB_SUFFIX)
@@ -146,14 +150,15 @@ liblvm2cmd.$(LIB_SUFFIX): liblvm2cmd.a $(LDDEPS)
 	$(CC) -E -P $(srcdir)/cmdnames.h 2> /dev/null | \
 		egrep -v '^ *(|#.*|dumpconfig|formats|help|pvdata|segtypes|version) *$$' > .commands
 
-.PHONY: install_cmdlib_dynamic install_cmdlib_static \
-	install_tools_dynamic install_tools_static
-
 ifneq ("$(CFLOW_CMD)", "")
 CFLOW_SOURCES = $(addprefix $(srcdir)/, $(SOURCES))
 -include $(top_builddir)/libdm/libdevmapper.cflow
 -include $(top_builddir)/lib/liblvm-internal.cflow
 endif
+
+.PHONY: install_cmdlib_dynamic install_cmdlib_static \
+	install_tools_dynamic install_tools_static \
+	install_dmsetup_dynamic install_dmsetup_static
 
 install_cmdlib_dynamic: liblvm2cmd.$(LIB_SUFFIX)
 	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) $< \

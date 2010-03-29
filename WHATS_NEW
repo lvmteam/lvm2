@@ -1,5 +1,7 @@
 Version 2.02.63 -  
 ================================
+  Improved dependency tracking for dmeventd and liblvm2cmd sources.
+  Improved Makefile rules for distclean and cflow targets.
   Add ability to create mirrored logs for mirror LVs.
   Use a real socket for singlenode clvmd to fix clvmd's high cpu load.
   Fix clvmd cluster propagation of dmeventd monitoring mode.

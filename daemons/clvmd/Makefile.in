@@ -76,6 +76,14 @@ ifneq (,$(findstring singlenode,, &quot;@CLVMD@,&quot;))
 	DEFS += -DUSE_SINGLENODE
 endif
 
+ifeq ($(MAKECMDGOALS),distclean)
+	SOURCES += clvmd-gulm.c tcp-comms.c
+	SOURCES += clvmd-cman.c
+	SOURCES += clvmd-openais.c
+	SOURCES += clvmd-corosync.c
+	SOURCES += clvmd-singlenode.c
+endif
+
 TARGETS = \
 	clvmd
 
@@ -109,4 +117,3 @@ install_clvmd: $(TARGETS)
 install: $(INSTALL_TARGETS)
 
 install_cluster: $(INSTALL_TARGETS)
-

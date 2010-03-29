@@ -34,12 +34,9 @@ ifeq ("@APPLIB@", "yes")
 endif
 
 ifeq ($(MAKECMDGOALS),distclean)
-  SUBDIRS += liblvm \
-	     udev \
-	     test/api \
-	     test \
-	     po
-  DISTCLEAN_TARGETS += lib/misc/configure.h lib/misc/lvm-version.h
+  SUBDIRS = doc include man scripts \
+    lib tools daemons libdm \
+    udev po liblvm test/api test
   DISTCLEAN_DIRS += lcov_reports*
 endif
 

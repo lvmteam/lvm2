@@ -301,12 +301,12 @@ $(LIB_STATIC): $(OBJECTS)
 	$(MSGFMT) -o $@ $<
 
 clean: $(SUBDIRS.clean)
-	$(RM) $(OBJECTS) $(TARGETS) $(CLEAN_TARGETS) $(SOURCES:%.c=%.d) \
-	      $(SOURCES2:%.c=%.d) $(SOURCES:%.c=%.pot) $(SOURCES:%.c=%.gcno) \
-	      $(SOURCES:%.c=%.gcda) $(LDDEPS) $(CLEAN_CFLOW)
+	$(RM) $(OBJECTS) $(TARGETS) $(CLEAN_TARGETS) $(CLEAN_CFLOW) $(LDDEPS) \
+	$(POTFILES) $(SOURCES:%.c=%.d) $(SOURCES:%.c=%.gcno) $(SOURCES:%.c=%.gcda) \
+	$(SOURCES2:%.c=%.o) $(SOURCES2:%.c=%.d) $(SOURCES2:%.c=%.gcno) $(SOURCES2:%.c=%.gcda)
 
 distclean: clean $(SUBDIRS.distclean)
-	$(RM) -rf $(DISTCLEAN_DIRS)
+	$(RM) -r $(DISTCLEAN_DIRS)
 	$(RM) $(DISTCLEAN_TARGETS)  \
 	      config.cache config.log config.status \
 	      Makefile make.tmpl core \
@@ -317,15 +317,11 @@ distclean: clean $(SUBDIRS.distclean)
 		 sed "s/^/		/;s/$$/;/" < $<; \
 		 echo "	local:"; echo "		*;"; echo "};") > $@
 
-ifneq ($(MAKECMDGOALS),cflow)
-ifneq ($(MAKECMDGOALS),clean)
-  ifneq ($(MAKECMDGOALS),distclean)
+ifeq (,$(findstring $(MAKECMDGOALS),cscope.out cflow clean distclean))
     ifdef SOURCES
        -include $(SOURCES:.c=.d)
     endif
     ifdef SOURCES2
        -include $(SOURCES2:.c=.d)
     endif
-  endif
-endif
 endif
