@@ -34,16 +34,7 @@ ifeq ("@APPLIB@", "yes")
 endif
 
 ifeq ($(MAKECMDGOALS),distclean)
-  SUBDIRS += daemons/clvmd \
-	     daemons/cmirrord \
-	     daemons/dmeventd/plugins \
-	     daemons/dmeventd \
-	     lib/format1 \
-	     lib/format_pool \
-	     lib/locking \
-	     lib/mirror \
-	     lib/snapshot \
-	     liblvm \
+  SUBDIRS += liblvm \
 	     udev \
 	     test/api \
 	     test \

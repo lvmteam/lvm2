@@ -30,6 +30,10 @@ ifeq ("@BUILD_DMEVENTD@", "yes")
   SUBDIRS += dmeventd
 endif
 
+ifeq ($(MAKECMDGOALS),distclean)
+  SUBDIRS = clvmd cmirrord dmeventd
+endif
+
 include $(top_builddir)/make.tmpl
 
 ifeq ("@BUILD_DMEVENTD@", "yes")
