@@ -257,12 +257,9 @@ clean: $(SUBDIRS.clean)
 	      $(SOURCES2:%.c=%.d) $(SOURCES:%.c=%.pot) $(SOURCES:%.c=%.gcno) \
 	      $(SOURCES:%.c=%.gcda) $(LDDEPS)
 
-distclean: $(SUBDIRS.distclean)
+distclean: clean $(SUBDIRS.distclean)
 	$(RM) -rf $(DISTCLEAN_DIRS)
-	$(RM) $(DISTCLEAN_TARGETS) \
-	      $(OBJECTS) $(TARGETS) $(CLEAN_TARGETS) $(SOURCES:%.c=%.d) \
-	      $(SOURCES2:%.c=%.d) $(SOURCES:%.c=%.pot) $(SOURCES:%.c=%.gcno) \
-	      $(SOURCES:%.c=%.gcda) $(LDDEPS) \
+	$(RM) $(DISTCLEAN_TARGETS)  \
 	      config.cache config.log config.status \
 	      Makefile make.tmpl core \
 	      lvm-version.h

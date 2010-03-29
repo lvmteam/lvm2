@@ -152,6 +152,15 @@ LIB_STATIC = $(LIB_NAME).a
 
 CLEAN_TARGETS += $(LIB_NAME).cflow
 
+ifeq ($(MAKECMDGOALS),distclean)
+  SUBDIRS =\
+	format1 \
+	format_pool \
+	snapshot \
+	mirror \
+	locking
+endif
+
 include $(top_builddir)/make.tmpl
 
 $(SUBDIRS): $(LIB_STATIC)
