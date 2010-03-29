@@ -28,14 +28,16 @@ abs_top_srcdir = @abs_top_srcdir@
 # Shell quote;
 SHELL_PATH_SQ = $(subst ','\'',$(SHELL_PATH))
 
-T = $(wildcard $(srcdir)/t-*.sh)
+SCRIPTS := $(wildcard $(srcdir)/t-*.sh) \
+ $(srcdir)/test-utils.sh \
+ $(srcdir)/test-lib.sh
 
 ifeq ("@UDEV_SYNC@", "yes")
 dm_udev_synchronisation = 1
 endif
 
 ifeq ("@APPLIB@", "yes")
-T += $(srcdir)/lvm2app.sh
+SCRIPTS += $(srcdir)/lvm2app.sh
 all: api/vgtest
 api/vgtest:
 	$(MAKE) -C api vgtest
@@ -66,9 +68,7 @@ init.sh: $(srcdir)/Makefile.in $(srcdir)/test-utils.sh .bin-dir-stamp bin/not bi
 	echo 'export DM_UDEV_SYNCHRONISATION=$(dm_udev_synchronisation)' >> $@-t
 	chmod a-w $@-t
 	mv $@-t $@
-	if test "$(srcdir)" != "."; then cp $(srcdir)/test-utils.sh \
-	                                    $(srcdir)/test-lib.sh \
-	                                    $(T) .; fi
+	test "$(srcdir)" != . && cp $(SCRIPTS) .
 
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
@@ -95,9 +95,9 @@ lvm-wrapper: Makefile
 
 clean:
 	rm -rf init.sh lvm-wrapper bin .bin-dir-stamp
+	test "$(srcdir)" != . && rm -f $(subst $(srcdir)/, ,$(SCRIPTS)) lvm2app.sh
 
 distclean: clean
 	rm -f Makefile
 
-.PHONY: clean distclean
 .NOTPARALLEL:

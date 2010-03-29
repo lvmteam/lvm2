@@ -17,6 +17,8 @@ top_builddir = @top_builddir@
 VPATH = @srcdir@
 
 SOURCES = libdevmapper-event.c
+SOURCES2 = dmeventd.c
+
 TARGETS = dmeventd
 
 .PHONY: install_lib_dynamic install_lib_static install_include \
@@ -118,10 +120,9 @@ install: install_include install_lib install_dmeventd
 
 install_device-mapper: install_include install_lib install_dmeventd
 
-.PHONY: distclean_lib distclean
+.PHONY: distclean_lib
 
 distclean_lib: 
 	$(RM) libdevmapper-event.pc
 
 distclean: distclean_lib
-

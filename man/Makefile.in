@@ -47,6 +47,7 @@ MAN5DIR=$(mandir)/man5
 MAN8DIR=$(mandir)/man8
 
 CLEAN_TARGETS=$(MAN5) $(MAN8) $(MAN8CLUSTER) $(FSADMMAN) $(MAN8DM)
+DISTCLEAN_TARGETS=fsadm.8 clvmd.8 cmirrord.8
 
 include $(top_builddir)/make.tmpl
 
