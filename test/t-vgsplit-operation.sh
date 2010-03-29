@@ -195,8 +195,8 @@ vgremove -ff $vg1
 COMM "vgsplit fails splitting one LV with 2 snapshots, only origin LV specified" 
 vgcreate -c n $vg1 $dev1 $dev2 $dev3 $dev4 
 lvcreate -l 16 -n $lv1 $vg1 $dev1 $dev2 
-lvcreate -l 4 -n $lv2 -s $vg1/$lv1 
-lvcreate -l 4 -n $lv3 -s $vg1/$lv1 
+lvcreate -l 4 -n $lv2 -s $vg1/$lv1 $dev3
+lvcreate -l 4 -n $lv3 -s $vg1/$lv1 $dev4
 vg_validate_pvlv_counts_ $vg1 4 3 2 
 vgchange -an $vg1 
 not vgsplit -n $lv1 $vg1 $vg2;
@@ -208,8 +208,8 @@ vgremove -ff $vg1
 COMM "vgsplit fails splitting one LV with 2 snapshots, only snapshot LV specified" 
 vgcreate -c n $vg1 $dev1 $dev2 $dev3 $dev4 
 lvcreate -l 16 -n $lv1 $vg1 $dev1 $dev2 
-lvcreate -l 4 -n $lv2 -s $vg1/$lv1 
-lvcreate -l 4 -n $lv3 -s $vg1/$lv1 
+lvcreate -l 4 -n $lv2 -s $vg1/$lv1 $dev3
+lvcreate -l 4 -n $lv3 -s $vg1/$lv1 $dev4
 vg_validate_pvlv_counts_ $vg1 4 3 2 
 vgchange -an $vg1 
 not vgsplit -n $lv2 $vg1 $vg2
