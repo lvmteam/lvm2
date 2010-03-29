@@ -267,11 +267,12 @@ check_and_cleanup_lvs_
 # "add 1 mirror and disk log" 
 prepare_lvs_ 
 lvs -a -o+devices $vg
-lvcreate -l2 -m1 --mirrorlog core -n $lv1 $vg $dev1 $dev2 
+lvcreate -l2 -m1 --mirrorlog core -n $lv1 $vg $dev1 $dev2
 lvs -a -o+devices $vg
 check_mirror_count_ $vg/$lv1 2 
 not_sh check_mirror_log_ $vg/$lv1 
-lvconvert -m+1 --mirrorlog disk -i1 $vg/$lv1 $dev4 $dev3:0
+# FIXME on next line, specifying $dev4 $dev3:0 (i.e log device device last) fails (!)
+lvconvert -m+1 --mirrorlog disk -i1 $vg/$lv1 $dev3:0 $dev4 
 lvs -a -o+devices $vg
 check_no_tmplvs_ $vg/$lv1 
 check_mirror_count_ $vg/$lv1 3 
