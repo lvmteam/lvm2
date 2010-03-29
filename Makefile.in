@@ -65,9 +65,10 @@ po.pofile: tools.pofile daemons.pofile
 pofile: po.pofile
 endif
 
-ifneq ("@CFLOW_CMD@", "")
-tools.cflow: lib.cflow
-cflow: tools.cflow
+ifneq ("$(CFLOW_CMD)", "")
+tools.cflow: libdm.cflow lib.cflow
+daemons.cflow: tools.cflow
+cflow: include.cflow
 endif
 
 ifneq ("@CSCOPE_CMD@", "")

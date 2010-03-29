@@ -22,19 +22,23 @@ CLDFLAGS += -L$(top_builddir)/tools -L$(top_builddir)/daemons/dmeventd/plugins/l
 
 SOURCES = dmeventd_mirror.c
 
+LIB_NAME = libdevmapper-event-lvm2mirror
 ifeq ("@LIB_SUFFIX@","dylib")
-  LIB_SHARED = libdevmapper-event-lvm2mirror.dylib
+  LIB_SHARED = $(LIB_NAME).dylib
 else
-  LIB_SHARED = libdevmapper-event-lvm2mirror.so
+  LIB_SHARED = $(LIB_NAME).so
 endif
 
 LIB_VERSION = $(LIB_VERSION_LVM)
+
+CFLOW_LIST = $(SOURCES)
+CFLOW_LIST_TARGET = $(LIB_NAME).cflow
 
 include $(top_builddir)/make.tmpl
 
 LIBS += @LVM2CMD_LIB@ -ldevmapper-event-lvm2 -ldevmapper $(PTHREAD_LIBS)
 
-install_lvm2: libdevmapper-event-lvm2mirror.$(LIB_SUFFIX)
+install_lvm2: $(LIB_NAME).$(LIB_SUFFIX)
 	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) $< \
 		$(libdir)/$<
 

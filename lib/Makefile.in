@@ -150,8 +150,6 @@ endif
 LIB_NAME = liblvm-internal
 LIB_STATIC = $(LIB_NAME).a
 
-CLEAN_TARGETS += $(LIB_NAME).cflow
-
 ifeq ($(MAKECMDGOALS),distclean)
   SUBDIRS =\
 	format1 \
@@ -161,14 +159,9 @@ ifeq ($(MAKECMDGOALS),distclean)
 	locking
 endif
 
+CFLOW_LIST = $(SOURCES)
+CFLOW_LIST_TARGET = $(LIB_NAME).cflow
+
 include $(top_builddir)/make.tmpl
 
 $(SUBDIRS): $(LIB_STATIC)
-
-$(LIB_NAME).cflow: $(SOURCES)
-	set -e; (echo -n "SOURCES += "; \
-		 echo $(SOURCES) | \
-		 sed "s/^/ /;s/ / $(top_srcdir)\/lib\//g;s/$$//"; \
-		 ) > $@
-
-cflow: $(LIB_NAME).cflow
