@@ -575,7 +575,7 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return ECMD_FAILED;
 	}
 
-	if (!get_activation_monitoring_mode(cmd, &dmeventd_mode))
+	if (!get_activation_monitoring_mode(cmd, lv->vg, &dmeventd_mode))
 		return ECMD_FAILED;
 
 	init_dmeventd_monitor(dmeventd_mode);
