@@ -80,10 +80,11 @@ cflow: tools.cflow
 endif
 
 ifneq ("@CSCOPE_CMD@", "")
-cscope.out: tools
-	@CSCOPE_CMD@ -b -R
+cscope.out:
+	@CSCOPE_CMD@ -b -R -s$(top_srcdir)
 all: cscope.out
 endif
+DISTCLEAN_TARGETS += cscope.out
 
 check: all
 	$(MAKE) -C test all
