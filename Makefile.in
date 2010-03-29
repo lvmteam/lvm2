@@ -88,7 +88,7 @@ endif
 check: all
 	$(MAKE) -C test all
 
-ifneq ("@LCOV@", "")
+ifneq ("$(LCOV)", "")
 .PHONY: lcov-reset lcov lcov-dated
 
 ifeq ($(MAKECMDGOALS),lcov-dated)
@@ -116,7 +116,7 @@ lcov: all
 		-a $(LCOV_REPORTS_DIR)/libdm.info \
 		-a $(LCOV_REPORTS_DIR)/tools.info \
 		-o $(LCOV_REPORTS_DIR)/lvm.info
-ifneq ("@GENHTML@", "")
+ifneq ("$(GENHTML)", "")
 	$(GENHTML) -o $(LCOV_REPORTS_DIR) -p $(top_srcdir) $(LCOV_REPORTS_DIR)/lvm.info
 endif
 
