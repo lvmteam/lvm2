@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2005-2007 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2005-2010 Red Hat, Inc. All rights reserved.
 #
 # This file is part of the device-mapper userspace tools.
 #
@@ -43,11 +43,15 @@ else
   VERSIONED_SHLIB = $(LIB_SHARED).$(LIB_VERSION)
 endif
 
-CLEAN_TARGETS = dmeventd.o dmeventd.static dmeventd.gcda dmeventd.gcno
+CLEAN_TARGETS = dmeventd.static $(LIB_NAME).a
 
 ifneq ($(MAKECMDGOALS),device-mapper)
   SUBDIRS+=plugins
 endif
+
+CFLOW_LIST = $(SOURCES)
+CFLOW_LIST_TARGET = $(LIB_NAME).cflow
+CFLOW_TARGET = dmeventd
 
 include $(top_builddir)/make.tmpl
 
@@ -70,6 +74,15 @@ dmeventd.static: $(LIB_STATIC) dmeventd.o $(interfacebuilddir)/libdevmapper.a
 
 ifeq ("@PKGCONFIG@", "yes")
   INSTALL_LIB_TARGETS += install_pkgconfig
+endif
+
+ifneq ("$(CFLOW_CMD)", "")
+CFLOW_SOURCES = $(addprefix $(srcdir)/, $(SOURCES))
+-include $(top_builddir)/libdm/libdevmapper.cflow
+-include $(top_builddir)/lib/liblvm-internal.cflow
+-include $(top_builddir)/lib/liblvm2cmd.cflow
+-include $(top_builddir)/daemons/dmeventd/$(LIB_NAME).cflow
+-include $(top_builddir)/daemons/dmeventd/plugins/mirror/$(LIB_NAME)-lvm2mirror.cflow
 endif
 
 install_include:

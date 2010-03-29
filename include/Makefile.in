@@ -48,5 +48,4 @@ install_device-mapper:
 
 install_lvm2:
 
-cflow:
-
+cflow: all

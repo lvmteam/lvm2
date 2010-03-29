@@ -47,6 +47,9 @@ endif
 VERSIONED_SHLIB = libdevmapper.$(LIB_SUFFIX).$(LIB_VERSION_DM)
 LIB_VERSION = $(LIB_VERSION_DM)
 
+CFLOW_LIST = $(SOURCES)
+CFLOW_LIST_TARGET = libdevmapper.cflow
+
 include $(top_builddir)/make.tmpl
 
 DEFS += -DDM_DEVICE_UID=@DM_DEVICE_UID@ -DDM_DEVICE_GID=@DM_DEVICE_GID@ \

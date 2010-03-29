@@ -168,6 +168,7 @@ install: all $(SUBDIRS.install)
 install_cluster: all $(SUBDIRS.install_cluster)
 install_device-mapper: $(SUBDIRS.install_device-mapper)
 install_lvm2: $(SUBDIRS.install_lvm2)
+cflow: $(SUBDIRS.cflow)
 
 $(SUBDIRS): $(SUBDIRS.device-mapper)
 	$(MAKE) -C $@
@@ -193,6 +194,9 @@ $(SUBDIRS.clean):
 $(SUBDIRS.distclean):
 	-$(MAKE) -C $(@:.distclean=) distclean
 
+$(SUBDIRS.cflow):
+	$(MAKE) -C $(@:.cflow=) cflow
+
 ifeq ("@INTL@", "yes")
 pofile: $(SUBDIRS.pofile) $(POTFILES)
 
@@ -200,11 +204,55 @@ $(SUBDIRS.pofile):
 	$(MAKE) -C $(@:.pofile=) pofile
 endif
 
-ifneq ("@CFLOW_CMD@", "")
-cflow: $(SUBDIRS.cflow)
+ifneq ("$(CFLOW_LIST_TARGET)", "")
+CLEAN_CFLOW += $(CFLOW_LIST_TARGET)
+$(CFLOW_LIST_TARGET): $(CFLOW_LIST)
+	echo "CFLOW_SOURCES += $(addprefix \
+		\$$(top_srcdir)$(subst $(top_srcdir),,$(srcdir))/, $(CFLOW_LIST))" > $@
+cflow: $(CFLOW_LIST_TARGET)
+endif
 
-$(SUBDIRS.cflow):
-	$(MAKE) -C $(@:.cflow=) cflow
+ifneq ("$(CFLOW_TARGET)", "")
+CLEAN_CFLOW += \
+	$(CFLOW_TARGET).cflow \
+	$(CFLOW_TARGET).xref \
+	$(CFLOW_TARGET).tree \
+	$(CFLOW_TARGET).rtree \
+	$(CFLOW_TARGET).rxref
+
+ifneq ("$(CFLOW_CMD)", "")
+CFLOW_FLAGS +=\
+ --cpp="$(CC) -E" \
+ --symbol _ISbit:wrapper \
+ --symbol __attribute__:wrapper \
+ --symbol __const__:wrapper \
+ --symbol __const:type \
+ --symbol __restrict:type \
+ --symbol __extension__:wrapper \
+ --symbol __nonnull:wrapper \
+ --symbol __nothrow__:wrapper \
+ --symbol __pure__:wrapper \
+ --symbol __REDIRECT:wrapper \
+ --symbol __REDIRECT_NTH:wrapper \
+ --symbol __wur:wrapper \
+ -I$(top_srcdir)/libdm \
+ -I$(top_srcdir)/libdm/ioctl \
+ -I$(top_srcdir)/daemons/dmeventd/plugins/lvm2/ \
+ $(INCLUDES) $(DEFS)
+
+$(CFLOW_TARGET).cflow: $(CFLOW_SOURCES)
+	$(CFLOW_CMD) -o$@ $(CFLOW_FLAGS) $(CFLOW_SOURCES)
+$(CFLOW_TARGET).rxref: $(CFLOW_SOURCES)
+	$(CFLOW_CMD) -o$@ $(CFLOW_FLAGS) -r --omit-arguments $(CFLOW_SOURCES)
+$(CFLOW_TARGET).tree: $(CFLOW_SOURCES)
+	$(CFLOW_CMD) -o$@ $(CFLOW_FLAGS) --omit-arguments -T -b $(CFLOW_SOURCES)
+$(CFLOW_TARGET).xref: $(CFLOW_SOURCES)
+	$(CFLOW_CMD) -o$@ $(CFLOW_FLAGS) --omit-arguments -x $(CFLOW_SOURCES)
+#$(CFLOW_TARGET).rtree:  $(CFLOW_SOURCES)
+#	$(CFLOW_CMD) -o$@ $(CFLOW_FLAGS) -r --omit-arguments -T -b $(CFLOW_SOURCES)
+cflow: $(CFLOW_TARGET).cflow $(CFLOW_TARGET).tree $(CFLOW_TARGET).rxref $(CFLOW_TARGET).xref
+#$(CFLOW_TARGET).rtree
+endif
 endif
 
 $(TARGETS): $(OBJECTS)
@@ -255,7 +303,7 @@ $(LIB_STATIC): $(OBJECTS)
 clean: $(SUBDIRS.clean)
 	$(RM) $(OBJECTS) $(TARGETS) $(CLEAN_TARGETS) $(SOURCES:%.c=%.d) \
 	      $(SOURCES2:%.c=%.d) $(SOURCES:%.c=%.pot) $(SOURCES:%.c=%.gcno) \
-	      $(SOURCES:%.c=%.gcda) $(LDDEPS)
+	      $(SOURCES:%.c=%.gcda) $(LDDEPS) $(CLEAN_CFLOW)
 
 distclean: clean $(SUBDIRS.distclean)
 	$(RM) -rf $(DISTCLEAN_DIRS)
@@ -269,6 +317,7 @@ distclean: clean $(SUBDIRS.distclean)
 		 sed "s/^/		/;s/$$/;/" < $<; \
 		 echo "	local:"; echo "		*;"; echo "};") > $@
 
+ifneq ($(MAKECMDGOALS),cflow)
 ifneq ($(MAKECMDGOALS),clean)
   ifneq ($(MAKECMDGOALS),distclean)
     ifdef SOURCES
@@ -279,4 +328,4 @@ ifneq ($(MAKECMDGOALS),clean)
     endif
   endif
 endif
-
+endif
