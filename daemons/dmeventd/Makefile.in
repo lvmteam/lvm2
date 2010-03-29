@@ -26,9 +26,10 @@ TARGETS = dmeventd
 INSTALL_DMEVENTD_TARGETS = install_dmeventd_dynamic
 INSTALL_LIB_TARGETS = install_lib_dynamic
 
+LIB_NAME = libdevmapper-event
 ifeq ("@STATIC_LINK@", "yes")
-  LIB_STATIC = libdevmapper-event.a
-  TARGETS += dmeventd.static
+  LIB_STATIC = $(LIB_NAME).a
+  TARGETS += $(LIB_STATIC) dmeventd.static
   INSTALL_DMEVENTD_TARGETS += install_dmeventd_static
   INSTALL_LIB_TARGETS += install_lib_static
 endif
@@ -36,13 +37,13 @@ endif
 LIB_VERSION = $(LIB_VERSION_DM)
 
 ifeq ("@LIB_SUFFIX@","dylib")
-  LIB_SHARED = libdevmapper-event.dylib
+  LIB_SHARED = $(LIB_NAME).dylib
 else
-  LIB_SHARED = libdevmapper-event.so
+  LIB_SHARED = $(LIB_NAME).so
   VERSIONED_SHLIB = $(LIB_SHARED).$(LIB_VERSION)
 endif
 
-CLEAN_TARGETS = dmeventd.o dmeventd.static
+CLEAN_TARGETS = dmeventd.o dmeventd.static dmeventd.gcda dmeventd.gcno
 
 ifneq ($(MAKECMDGOALS),device-mapper)
   SUBDIRS+=plugins
