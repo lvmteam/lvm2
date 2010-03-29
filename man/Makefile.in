@@ -66,7 +66,10 @@ man: $(MAN5) $(MAN8) $(MAN8CLUSTER)
 $(MAN5) $(MAN8) $(MAN8CLUSTER):	Makefile
 
 %: %.in
-	$(SED) -e "s/#VERSION#/$(LVM_VERSION)/" $< > $@
+	@case "$@" in \
+	  */*) ;; \
+	  *) echo "Creating $@" ; $(SED) -e "s/#VERSION#/$(LVM_VERSION)/" $< > $@ ;; \
+	esac
 
 install_lvm2:
 	@echo "Installing $(MAN8) in $(MAN8DIR)"
