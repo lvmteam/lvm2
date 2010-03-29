@@ -529,7 +529,7 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 		return ECMD_FAILED;
 	}
 
-	if (!get_activation_monitoring_mode(cmd, &dmeventd_mode))
+	if (!get_activation_monitoring_mode(cmd, vg, &dmeventd_mode))
 		return ECMD_FAILED;
 
 	init_dmeventd_monitor(dmeventd_mode);

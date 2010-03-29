@@ -1424,6 +1424,7 @@ int pvcreate_params_validate(struct cmd_context *cmd,
 }
 
 int get_activation_monitoring_mode(struct cmd_context *cmd,
+				   struct volume_group *vg,
 				   int *monitoring_mode)
 {
 	*monitoring_mode = DEFAULT_DMEVENTD_MONITOR;
@@ -1441,6 +1442,16 @@ int get_activation_monitoring_mode(struct cmd_context *cmd,
 		 !find_config_tree_bool(cmd, "activation/monitoring",
 					DEFAULT_DMEVENTD_MONITOR))
 		*monitoring_mode = DMEVENTD_MONITOR_IGNORE;
+
+	if (vg && vg_is_clustered(vg) &&
+	    *monitoring_mode == DMEVENTD_MONITOR_IGNORE) {
+		log_error("%s is incompatible with clustered Volume Group "
+			  "\"%s\": Skipping.",
+			  (arg_count(cmd, ignoremonitoring_ARG) ?
+			   "--ignoremonitoring" : "activation/monitoring=0"),
+			  vg->name);
+		return 0;
+	}
 	
 	return 1;
 }

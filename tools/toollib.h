@@ -113,6 +113,7 @@ int pvcreate_params_validate(struct cmd_context *cmd,
 			     struct pvcreate_params *pp);
 
 int get_activation_monitoring_mode(struct cmd_context *cmd,
+				   struct volume_group *vg,
 				   int *monitoring_mode);
 
 #endif
