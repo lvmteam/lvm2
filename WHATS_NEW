@@ -1,5 +1,7 @@
 Version 2.02.63 -  
 ================================
+  Fix dso resource leak in error path of dmeventd.
+  Use C locales and use_mlockall for dmeventd.
   Fix --alloc contiguous policy only to allocate one set of parallel areas.
   Do not allow {vg|lv}change --ignoremonitoring if on clustered VG.
   Improved dependency tracking for dmeventd and liblvm2cmd sources.
