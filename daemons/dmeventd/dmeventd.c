@@ -1698,6 +1698,13 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	/*
+	 * Switch to C locale to avoid reading large locale-archive file
+	 * used by some glibc (on some distributions it takes over 100MB).
+	 * Daemon currently needs to use mlockall().
+	 */
+	setenv("LANG", "C", 1);
+
 	if (!_debug)
 		_daemonize();
 
