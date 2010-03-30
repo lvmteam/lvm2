@@ -1725,11 +1725,6 @@ int main(int argc, char *argv[])
 
 	pthread_mutex_init(&_global_mutex, NULL);
 
-#ifdef MCL_CURRENT
-	if (mlockall(MCL_CURRENT | MCL_FUTURE) == -1)
-		exit(EXIT_FAILURE);
-#endif
-
 	if ((ret = _open_fifos(&fifos)))
 		exit(EXIT_FIFO_FAILURE);
 
@@ -1749,9 +1744,6 @@ int main(int argc, char *argv[])
 
 	_exit_dm_lib();
 
-#ifdef MCL_CURRENT
-	munlockall();
-#endif
 	pthread_mutex_destroy(&_global_mutex);
 
 	syslog(LOG_NOTICE, "dmeventd shutting down.");
