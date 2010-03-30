@@ -243,8 +243,10 @@ static struct thread_status *_alloc_thread_status(struct message_data *data,
 	return ret;
 }
 
+static void _lib_put(struct dso_data *data);
 static void _free_thread_status(struct thread_status *thread)
 {
+	_lib_put(thread->dso_data);
 	if (thread->current_task)
 		dm_task_destroy(thread->current_task);
 	dm_free(thread->device.uuid);
@@ -1481,7 +1483,6 @@ static void _cleanup_unused_threads(void)
 		if (thread->status == DM_THREAD_DONE) {
 			dm_list_del(l);
 			pthread_join(thread->thread, NULL);
-			_lib_put(thread->dso_data);
 			_free_thread_status(thread);
 		}
 	}
