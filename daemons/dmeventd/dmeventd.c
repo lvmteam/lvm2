@@ -1737,7 +1737,8 @@ int main(int argc, char *argv[])
 		exit(EXIT_FIFO_FAILURE);
 
 	/* Signal parent, letting them know we are ready to go. */
-	kill(getppid(), SIGTERM);
+	if (!_debug)
+		kill(getppid(), SIGTERM);
 	syslog(LOG_NOTICE, "dmeventd ready for processing.");
 
 	while (!_exit_now) {

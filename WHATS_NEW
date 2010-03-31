@@ -1,5 +1,6 @@
 Version 2.02.63 -  
 ================================
+  When dmeventd is not forking because of -d flag, don't kill the parent process
   Fix 'make install' when $(builddir) is different from $(srcdir).
   Fix dso resource leak in error path of dmeventd.
   Use C locales and use_mlockall for dmeventd.
