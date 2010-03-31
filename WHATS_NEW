@@ -1,5 +1,6 @@
 Version 2.02.63 -  
 ================================
+  Return newly allocated PV segment after segment split.
   Optimise PV segments search for the most last segment search case.
   Remove vg_validate call when parsing cached metadata.
   Use hash table of LVs to speed up parsing of text metadata with many LVs.

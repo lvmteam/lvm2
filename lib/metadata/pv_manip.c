@@ -94,17 +94,18 @@ static struct pv_segment *find_peg_by_pe(const struct physical_volume *pv,
 
 /*
  * Split peg at given extent.
- * Second part is always deallocated.
+ * Second part is always not allocated to a LV and returned.
  */
-static int _pv_split_segment(struct physical_volume *pv, struct pv_segment *peg,
-			     uint32_t pe)
+static struct pv_segment *_pv_split_segment(struct physical_volume *pv,
+					    struct pv_segment *peg,
+					    uint32_t pe)
 {
 	struct pv_segment *peg_new;
 
 	if (!(peg_new = _alloc_pv_segment(pv->fmt->cmd->mem, peg->pv, pe,
 					  peg->len + peg->pe - pe,
 					  NULL, 0)))
-		return_0;
+		return_NULL;
 
 	peg->len = peg->len - peg_new->len;
 
@@ -115,31 +116,37 @@ static int _pv_split_segment(struct physical_volume *pv, struct pv_segment *peg,
 		peg->lvseg->lv->vg->free_count += peg_new->len;
 	}
 
-	return 1;
+	return peg_new;
 }
 
 /*
  * Ensure there is a PV segment boundary at the given extent.
  */
-int pv_split_segment(struct physical_volume *pv, uint32_t pe)
+int pv_split_segment(struct physical_volume *pv, uint32_t pe,
+		     struct pv_segment **pvseg_allocated)
 {
-	struct pv_segment *peg;
+	struct pv_segment *pvseg, *pvseg_new = NULL;
 
 	if (pe == pv->pe_count)
-		return 1;
+		goto out;
 
-	if (!(peg = find_peg_by_pe(pv, pe))) {
+	if (!(pvseg = find_peg_by_pe(pv, pe))) {
 		log_error("Segment with extent %" PRIu32 " in PV %s not found",
 			  pe, pv_dev_name(pv));
 		return 0;
 	}
 
 	/* This is a peg start already */
-	if (pe == peg->pe)
-		return 1;
+	if (pe == pvseg->pe) {
+		pvseg_new = pvseg;
+		goto out;
+	}
 
-	if (!_pv_split_segment(pv, peg, pe))
+	if (!(pvseg_new = _pv_split_segment(pv, pvseg, pe)))
 		return_0;
+out:
+	if (pvseg_allocated)
+		*pvseg_allocated = pvseg_new;
 
 	return 1;
 }
@@ -154,17 +161,17 @@ struct pv_segment *assign_peg_to_lvseg(struct physical_volume *pv,
 				       struct lv_segment *seg,
 				       uint32_t area_num)
 {
-	struct pv_segment *peg;
+	struct pv_segment *peg = NULL;
 
 	/* Missing format1 PV */
 	if (!pv)
 		return &null_pv_segment;
 
-	if (!pv_split_segment(pv, pe) ||
-	    !pv_split_segment(pv, pe + area_len))
+	if (!pv_split_segment(pv, pe, &peg) ||
+	    !pv_split_segment(pv, pe + area_len, NULL))
 		return_NULL;
 
-	if (!(peg = find_peg_by_pe(pv, pe))) {
+	if (!peg) {
 		log_error("Missing PV segment on %s at %u.",
 			  pv_dev_name(pv), pe);
 		return NULL;
@@ -200,7 +207,7 @@ int release_pv_segment(struct pv_segment *peg, uint32_t area_reduction)
 	}
 
 	if (!pv_split_segment(peg->pv, peg->pe + peg->lvseg->area_len -
-				       area_reduction))
+				       area_reduction, NULL))
 		return_0;
 
 	return 1;
@@ -373,7 +380,7 @@ static int _reduce_pv(struct physical_volume *pv, struct volume_group *vg, uint3
 		}
 	}
 
-	if (!pv_split_segment(pv, new_pe_count))
+	if (!pv_split_segment(pv, new_pe_count, NULL))
 		return_0;
 
 	dm_list_iterate_items_safe(peg, pegt, &pv->segments) {
