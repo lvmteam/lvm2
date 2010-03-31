@@ -877,8 +877,8 @@ static int _for_each_pv(struct cmd_context *cmd, struct logical_volume *lv,
 
 static int _comp_area(const void *l, const void *r)
 {
-	const struct pv_area_used *lhs = *((const struct pv_area_used * const *) l);
-	const struct pv_area_used *rhs = *((const struct pv_area_used * const *) r);
+	const struct pv_area_used *lhs = (const struct pv_area_used *) l;
+	const struct pv_area_used *rhs = (const struct pv_area_used *) r;
 
 	if (lhs->used < rhs->used)
 		return 1;
@@ -1166,10 +1166,7 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 						already_found_one = 1;
 					}
 
-					if (ix + ix_offset - 1 < ah->area_count)
-						required = (max_parallel - *allocated) / ah->area_multiple;
-					else
-						required = ah->log_len;
+					required = (max_parallel - *allocated) / ah->area_multiple;
 
 					if (alloc == ALLOC_ANYWHERE) {
 						/*
@@ -1177,6 +1174,8 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 						 * into two or more parts.  If the whole stripe doesn't fit,
 						 * reduce amount we're looking for.
 						 */
+						if (ix + ix_offset - 1 >= ah->area_count)
+							required = ah->log_len;
 						if (required >= pva->unreserved) {
 							required = pva->unreserved;
 							pva->unreserved = 0;
@@ -1200,7 +1199,8 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 						  (alloc == ALLOC_ANYWHERE) ? pva->unreserved : pva->count - required);
 				}
 			next_pv:
-				if (ix + ix_offset >= ah->area_count + (log_needs_allocating ? ah->log_area_count : 0))
+				if (alloc == ALLOC_ANYWHERE &&
+				    ix + ix_offset >= ah->area_count + (log_needs_allocating ? ah->log_area_count : 0))
 					break;
 			}
 		} while (alloc == ALLOC_ANYWHERE && last_ix != ix && ix < ah->area_count + (log_needs_allocating ? ah->log_area_count : 0));
