@@ -1,5 +1,6 @@
 Version 2.02.63 -  
 ================================
+  Use hash table of LVs to speed up parsing of text metadata with many LVs.
   Fix two messages, add a whitespace and parentheses
   When dmeventd is not forking because of -d flag, don't kill the parent process
   Fix 'make install' when $(builddir) is different from $(srcdir).
