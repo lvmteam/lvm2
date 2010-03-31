@@ -1,5 +1,6 @@
 Version 2.02.63 -  
 ================================
+  Fix 'make install' when $(builddir) is different from $(srcdir).
   Fix dso resource leak in error path of dmeventd.
   Use C locales and use_mlockall for dmeventd.
   Fix --alloc contiguous policy only to allocate one set of parallel areas.
