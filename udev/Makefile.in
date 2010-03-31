@@ -40,7 +40,8 @@ install_device-mapper: $(DM_RULES)
 	@for f in $(DM_RULES); \
 	do \
 	   $(RM) $(udevdir)/$$f; \
-	   $(INSTALL) -c -D $(OWNER) $(GROUP) -m 644 $(srcdir)/$$f $(udevdir)/$$f; \
+	   if test -f $$f; then file=$$f; else file=$(srcdir)/$$f; fi; \
+	   $(INSTALL) -c -D $(OWNER) $(GROUP) -m 644 $$file $(udevdir)/$$f; \
 	done
 
 install: install_lvm2 install_device-mapper
