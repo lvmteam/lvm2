@@ -126,6 +126,9 @@ void run(int i, char *f) {
 int main(int argc, char **argv) {
 	int i;
 	status = alloca(sizeof(int)*argc);
+	char *config = getenv("LVM_TEST_CONFIG"),
+	     *config_debug;
+	asprintf(&config_debug, "%s\n%s", config ? config : "", "log {\n verbose=4\n }");
 
 	if (socketpair(PF_UNIX, SOCK_STREAM, 0, fds)) {
 		perror("socketpair");
@@ -149,6 +152,12 @@ int main(int argc, char **argv) {
 		run(i, argv[i]);
 		if (die)
 			break;
+		if ( status[i] == FAILED ) {
+			setenv("LVM_TEST_CONFIG", config_debug, 1);
+			run(i, argv[i]);
+			setenv("LVM_TEST_CONFIG", config, 1);
+			status[i] = FAILED; /* just in case */
+		}
 	}
 
 	printf("\n## %d tests: %d OK, %d failed, %d skipped\n",
