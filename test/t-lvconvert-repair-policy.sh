@@ -21,7 +21,7 @@ cleanup() {
 	for d in "$@"; do enable_dev $d; done
 	for d in "$@"; do vgextend $vg $d; done
 	lvremove -ff $vg/mirror
-	lvcreate -m 1 -l 2 -n mirror $vg $dev1 $dev2 $dev3:0
+	lvcreate -m 1 --ig -l 2 -n mirror $vg $dev1 $dev2 $dev3:0
 }
 
 repair() {
