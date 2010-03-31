@@ -179,7 +179,7 @@ install_tools_dynamic: lvm .commands
 		$(sbindir)/lvm
 	@echo Creating symbolic links for individual commands in $(sbindir)
 	@( \
-		for v in `cat $(srcdir)/.commands`; do \
+		for v in `cat .commands`; do \
 			cd $(sbindir); \
 			$(LN_S) -f lvm $$v; \
 		done; \
