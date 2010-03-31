@@ -78,6 +78,20 @@ int peg_dup(struct dm_pool *mem, struct dm_list *peg_new, struct dm_list *peg_ol
 	return 1;
 }
 
+/* Find segment at a given physical extent in a PV */
+static struct pv_segment *find_peg_by_pe(const struct physical_volume *pv,
+					 uint32_t pe)
+{
+	struct pv_segment *pvseg;
+
+	/* search backwards to optimise mostly used last segment split */
+	dm_list_iterate_back_items(pvseg, &pv->segments)
+		if (pe >= pvseg->pe && pe < pvseg->pe + pvseg->len)
+			return pvseg;
+
+	return NULL;
+}
+
 /*
  * Split peg at given extent.
  * Second part is always deallocated.
