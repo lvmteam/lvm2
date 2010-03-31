@@ -918,7 +918,6 @@ static int _lvconvert_mirrors_aux(struct cmd_context *cmd,
 				  int allocation_failures_ok)
 {
 	uint32_t region_size;
-	struct dm_list *tmp;
 	struct lv_segment *seg;
 	struct logical_volume *layer_lv;
 	uint32_t old_mimage_count = lv_mirror_count(lv);
