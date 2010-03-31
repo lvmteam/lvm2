@@ -128,7 +128,8 @@ int main(int argc, char **argv) {
 	status = alloca(sizeof(int)*argc);
 	char *config = getenv("LVM_TEST_CONFIG"),
 	     *config_debug;
-	asprintf(&config_debug, "%s\n%s", config ? config : "", "log {\n verbose=4\n }");
+	config = config ? config : "";
+	asprintf(&config_debug, "%s\n%s\n", config, "log { verbose=4 }");
 
 	if (socketpair(PF_UNIX, SOCK_STREAM, 0, fds)) {
 		perror("socketpair");
