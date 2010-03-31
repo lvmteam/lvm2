@@ -1,5 +1,6 @@
 Version 2.02.63 -  
 ================================
+  Fix two messages, add a whitespace and parentheses
   When dmeventd is not forking because of -d flag, don't kill the parent process
   Fix 'make install' when $(builddir) is different from $(srcdir).
   Fix dso resource leak in error path of dmeventd.

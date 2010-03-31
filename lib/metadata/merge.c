@@ -233,7 +233,7 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 			}
 		if (!seg_found) {
 			log_error("LV segment %s:%" PRIu32 "-%" PRIu32
-				  "is incorrectly listed as being used by LV %s",
+				  " is incorrectly listed as being used by LV %s",
 				  seg->lv->name, seg->le, seg->le + seg->len - 1,
 				  lv->name);
 			r = 0;
