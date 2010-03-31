@@ -420,11 +420,9 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags)
 	switch (flags & LCK_SCOPE_MASK) {
 	case LCK_VG:
 		/*
-		 * Automatically set LCK_NONBLOCK if one or more VGs locked.
-		 * This will enforce correctness and prevent deadlocks rather
-		 * than relying on the caller to set the flag properly.
+		 * VG locks alphabetical, ORPHAN lock last
 		 */
-		if (!_blocking_supported || vgs_locked())
+		if (!_blocking_supported)
 			flags |= LCK_NONBLOCK;
 
 		if (vol[0] != '#' &&
