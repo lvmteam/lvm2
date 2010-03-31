@@ -55,7 +55,7 @@ bin/not: $(srcdir)/not.c .bin-dir-stamp
 bin/harness: $(srcdir)/harness.c .bin-dir-stamp
 	$(CC) -o bin/harness $<
 
-init.sh: $(srcdir)/Makefile.in $(srcdir)/test-utils.sh .bin-dir-stamp bin/not bin/harness $(T)
+init.sh: $(srcdir)/Makefile.in .bin-dir-stamp bin/not bin/harness $(SCRIPTS)
 	rm -f $@-t $@
 	echo 'top_srcdir=$(top_srcdir)' >> $@-t
 	echo 'abs_top_builddir=$(abs_top_builddir)' >> $@-t
