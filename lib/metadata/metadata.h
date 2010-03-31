@@ -308,9 +308,6 @@ struct pv_list *find_pv_in_pv_list(const struct dm_list *pl,
 /* Find LV segment containing given LE */
 struct lv_segment *find_seg_by_le(const struct logical_volume *lv, uint32_t le);
 
-/* Find PV segment containing given LE */
-struct pv_segment *find_peg_by_pe(const struct physical_volume *pv, uint32_t pe);
-
 /*
  * Remove a dev_dir if present.
  */

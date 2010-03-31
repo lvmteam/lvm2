@@ -1799,18 +1799,6 @@ struct lv_segment *first_seg(const struct logical_volume *lv)
 	return NULL;
 }
 
-/* Find segment at a given physical extent in a PV */
-struct pv_segment *find_peg_by_pe(const struct physical_volume *pv, uint32_t pe)
-{
-	struct pv_segment *peg;
-
-	dm_list_iterate_items(peg, &pv->segments)
-		if (pe >= peg->pe && pe < peg->pe + peg->len)
-			return peg;
-
-	return NULL;
-}
-
 int vg_remove_mdas(struct volume_group *vg)
 {
 	struct metadata_area *mda;
