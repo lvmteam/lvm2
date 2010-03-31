@@ -47,7 +47,7 @@ int add_seg_to_segs_using_this_lv(struct logical_volume *lv,
 	log_very_verbose("Adding %s:%" PRIu32 " as an user of %s",
 			 seg->lv->name, seg->le, lv->name);
 
-	if (!(sl = dm_pool_zalloc(lv->vg->cmd->mem, sizeof(*sl)))) {
+	if (!(sl = dm_pool_zalloc(lv->vg->vgmem, sizeof(*sl)))) {
 		log_error("Failed to allocate segment list");
 		return 0;
 	}
