@@ -268,7 +268,7 @@ static int _lv_split_segment(struct logical_volume *lv, struct lv_segment *seg,
 	}
 
 	/* Clone the existing segment */
-	if (!(split_seg = alloc_lv_segment(lv->vg->cmd->mem, seg->segtype,
+	if (!(split_seg = alloc_lv_segment(lv->vg->vgmem, seg->segtype,
 					   seg->lv, seg->le, seg->len,
 					   seg->status, seg->stripe_size,
 					   seg->log_lv,
@@ -279,7 +279,7 @@ static int _lv_split_segment(struct logical_volume *lv, struct lv_segment *seg,
 		return 0;
 	}
 
-	if (!str_list_dup(lv->vg->cmd->mem, &split_seg->tags, &seg->tags)) {
+	if (!str_list_dup(lv->vg->vgmem, &split_seg->tags, &seg->tags)) {
 		log_error("LV segment tags duplication failed");
 		return 0;
 	}

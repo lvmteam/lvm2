@@ -114,7 +114,7 @@ struct volume_group *text_vg_import_fd(struct format_instance *fid,
 		if (!(vg = (*vsn)->read_vg(fid, cft, 0)))
 			goto_out;
 
-		(*vsn)->read_desc(fid->fmt->cmd->mem, cft, when, desc);
+		(*vsn)->read_desc(vg->vgmem, cft, when, desc);
 		break;
 	}
 
