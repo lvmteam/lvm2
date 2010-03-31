@@ -316,6 +316,7 @@ prepare_lvmconf() {
         locktype=
 	if test -n "$LVM_TEST_LOCKING"; then locktype="locking_type = $LVM_TEST_LOCKING"; fi
 	cat > $G_root_/etc/lvm.conf <<-EOF
+  $LVM_TEST_CONFIG
   devices {
     dir = "$G_dev_"
     scan = "$G_dev_"
@@ -324,7 +325,6 @@ prepare_lvmconf() {
     sysfs_scan = 0
   }
   log {
-    verbose = $verboselevel
     syslog = 0
     indent = 1
   }
