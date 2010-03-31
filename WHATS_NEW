@@ -1,5 +1,6 @@
 Version 2.02.63 -  
 ================================
+  Always use blocking lock for VGs and orphan locks.
   Allocate all segments memory from vg private mempool.
   Return newly allocated PV segment after segment split.
   Optimise PV segments search for the most last segment search case.
