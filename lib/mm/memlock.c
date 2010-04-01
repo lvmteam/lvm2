@@ -195,7 +195,7 @@ static int _memlock_maps(struct cmd_context *cmd, lvmlock_t lock, size_t *mstats
 	char *line = NULL;
 	size_t len;
 	ssize_t n;
-	int ret = 0;
+	int ret = 1;
 
 	if (_use_mlockall) {
 #ifdef MCL_CURRENT
