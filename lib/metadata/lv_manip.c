@@ -1268,7 +1268,7 @@ static int _allocate(struct alloc_handle *ah,
 	uint32_t areas_size;
 	alloc_policy_t alloc;
 	struct alloced_area *aa;
-	unsigned log_allocated;
+	unsigned log_allocated = 0;
 
 	if (allocated >= ah->new_extents && !ah->log_area_count) {
 		log_error("_allocate called with no work to do!");
