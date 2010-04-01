@@ -392,7 +392,8 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 	}
 
 	if (memlock())
-		log_error(INTERNAL_ERROR "dev_open(%s) called while suspended",
+		/* FIXME Make this log_error */
+		log_verbose("dev_open(%s) called while suspended",
 			 dev_name(dev));
 
 	if (dev->flags & DEV_REGULAR)
