@@ -2129,12 +2129,28 @@ int vg_validate(struct volume_group *vg)
 	struct lv_list *lvl, *lvl2;
 	char uuid[64] __attribute((aligned(8)));
 	int r = 1;
-	uint32_t hidden_lv_count = 0;
+	uint32_t hidden_lv_count = 0, lv_count = 0, lv_visible_count = 0;
+	uint32_t pv_count = 0;
+	uint32_t num_snapshots = 0;
+	uint32_t loop_counter1, loop_counter2;
 
 	/* FIXME Also check there's no data/metadata overlap */
-
 	dm_list_iterate_items(pvl, &vg->pvs) {
+		if (++pv_count > vg->pv_count) {
+			log_error(INTERNAL_ERROR "PV list corruption detected in VG %s.", vg->name);
+			/* FIXME Dump list structure? */
+			r = 0;
+		}
+	}
+
+	loop_counter1 = loop_counter2 = 0;
+	/* FIXME Use temp hash table instead? */
+	dm_list_iterate_items(pvl, &vg->pvs) {
+		if (++loop_counter1 > pv_count)
+			break;
 		dm_list_iterate_items(pvl2, &vg->pvs) {
+			if (++loop_counter2 > pv_count)
+				break;
 			if (pvl == pvl2)
 				break;
 			if (id_equal(&pvl->pv->id,
@@ -2167,6 +2183,14 @@ int vg_validate(struct volume_group *vg)
 	 * Count all non-snapshot invisible LVs
 	 */
 	dm_list_iterate_items(lvl, &vg->lvs) {
+		lv_count++;
+
+		if (lv_is_cow(lvl->lv))
+			num_snapshots++;
+
+		if (lv_is_visible(lvl->lv))
+			lv_visible_count++;
+
 		if (lvl->lv->status & VISIBLE_LV)
 			continue;
 
@@ -2192,17 +2216,22 @@ int vg_validate(struct volume_group *vg)
 	/*
 	 * all volumes = visible LVs + snapshot_cows + invisible LVs
 	 */
-	if (((uint32_t) dm_list_size(&vg->lvs)) !=
-	    vg_visible_lvs(vg) + snapshot_count(vg) + hidden_lv_count) {
+	if (lv_count != lv_visible_count + num_snapshots + hidden_lv_count) {
 		log_error(INTERNAL_ERROR "#internal LVs (%u) != #LVs (%"
 			  PRIu32 ") + #snapshots (%" PRIu32 ") + #internal LVs (%u) in VG %s",
-			  dm_list_size(&vg->lvs), vg_visible_lvs(vg),
-			  snapshot_count(vg), hidden_lv_count, vg->name);
+			  lv_count, lv_visible_count,
+			  num_snapshots, hidden_lv_count, vg->name);
 		r = 0;
 	}
 
+	loop_counter1 = loop_counter2 = 0;
+	/* FIXME Use temp hash table instead? */
 	dm_list_iterate_items(lvl, &vg->lvs) {
+		if (++loop_counter1 > lv_count)
+			break;
 		dm_list_iterate_items(lvl2, &vg->lvs) {
+			if (++loop_counter2 > lv_count)
+				break;
 			if (lvl == lvl2)
 				break;
 			if (!strcmp(lvl->lv->name, lvl2->lv->name)) {
@@ -2223,9 +2252,7 @@ int vg_validate(struct volume_group *vg)
 				r = 0;
 			}
 		}
-	}
 
-	dm_list_iterate_items(lvl, &vg->lvs) {
 		if (!check_lv_segments(lvl->lv, 1)) {
 			log_error(INTERNAL_ERROR "LV segments corrupted in %s.",
 				  lvl->lv->name);
@@ -2889,6 +2916,15 @@ struct volume_group *vg_read_internal(struct cmd_context *cmd, const char *vgnam
 	}
 
 	dm_list_iterate_items(lvl, &vg->lvs) {
+		if (!check_lv_segments(lvl->lv, 0)) {
+			log_error(INTERNAL_ERROR "LV segments corrupted in %s.",
+				  lvl->lv->name);
+			vg_release(vg);
+			return NULL;
+		}
+		/*
+		 * Checks that cross-reference other LVs.
+		 */
 		if (!check_lv_segments(lvl->lv, 1)) {
 			log_error(INTERNAL_ERROR "LV segments corrupted in %s.",
 				  lvl->lv->name);
