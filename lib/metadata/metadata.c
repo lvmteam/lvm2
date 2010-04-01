@@ -2191,6 +2191,12 @@ int vg_validate(struct volume_group *vg)
 		if (lv_is_visible(lvl->lv))
 			lv_visible_count++;
 
+		if (!check_lv_segments(lvl->lv, 0)) {
+			log_error(INTERNAL_ERROR "LV segments corrupted in %s.",
+				  lvl->lv->name);
+			r = 0;
+		}
+
 		if (lvl->lv->status & VISIBLE_LV)
 			continue;
 
@@ -2224,6 +2230,10 @@ int vg_validate(struct volume_group *vg)
 		r = 0;
 	}
 
+	/* Avoid endless loop if lv->segments list is corrupt */
+	if (!r)
+		return r;
+
 	loop_counter1 = loop_counter2 = 0;
 	/* FIXME Use temp hash table instead? */
 	dm_list_iterate_items(lvl, &vg->lvs) {
@@ -2251,12 +2261,6 @@ int vg_validate(struct volume_group *vg)
 					  vg->name);
 				r = 0;
 			}
-		}
-
-		if (!check_lv_segments(lvl->lv, 0)) {
-			log_error(INTERNAL_ERROR "LV segments corrupted in %s.",
-				  lvl->lv->name);
-			r = 0;
 		}
 
 		if (!check_lv_segments(lvl->lv, 1)) {
@@ -2928,6 +2932,9 @@ struct volume_group *vg_read_internal(struct cmd_context *cmd, const char *vgnam
 			vg_release(vg);
 			return NULL;
 		}
+	}
+
+	dm_list_iterate_items(lvl, &vg->lvs) {
 		/*
 		 * Checks that cross-reference other LVs.
 		 */
