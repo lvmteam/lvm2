@@ -264,9 +264,9 @@ static int _read_pv(struct format_instance *fid, struct dm_pool *mem,
 			size = pv->pe_count * (uint64_t) vg->extent_size +
 			       pv->pe_start;
 			if (size > pv->size)
-				log_error("WARNING: Physical Volume %s is too "
-					  "large for underlying device",
-					  pv_dev_name(pv));
+				log_warn("WARNING: Physical Volume %s is too "
+					 "large for underlying device",
+					 pv_dev_name(pv));
 		}
 	}
 

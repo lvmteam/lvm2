@@ -903,37 +903,37 @@ static int _insert_vginfo(struct lvmcache_vginfo *new_vginfo, const char *vgid,
 		 */
 		if (!(primary_vginfo->status & EXPORTED_VG) &&
 		    (vgstatus & EXPORTED_VG))
-			log_error("WARNING: Duplicate VG name %s: "
-				  "Existing %s takes precedence over "
-				  "exported %s", new_vginfo->vgname,
-				  uuid_primary, uuid_new);
+			log_warn("WARNING: Duplicate VG name %s: "
+				 "Existing %s takes precedence over "
+				 "exported %s", new_vginfo->vgname,
+				 uuid_primary, uuid_new);
 		else if ((primary_vginfo->status & EXPORTED_VG) &&
 			   !(vgstatus & EXPORTED_VG)) {
-			log_error("WARNING: Duplicate VG name %s: "
-				  "%s takes precedence over exported %s",
-				  new_vginfo->vgname, uuid_new,
-				  uuid_primary);
+			log_warn("WARNING: Duplicate VG name %s: "
+				 "%s takes precedence over exported %s",
+				 new_vginfo->vgname, uuid_new,
+				 uuid_primary);
 			use_new = 1;
 		} else if (primary_vginfo->creation_host &&
 			   !strcmp(primary_vginfo->creation_host,
 				   primary_vginfo->fmt->cmd->hostname))
-			log_error("WARNING: Duplicate VG name %s: "
-				  "Existing %s (created here) takes precedence "
-				  "over %s", new_vginfo->vgname, uuid_primary,
-				  uuid_new);
+			log_warn("WARNING: Duplicate VG name %s: "
+				 "Existing %s (created here) takes precedence "
+				 "over %s", new_vginfo->vgname, uuid_primary,
+				 uuid_new);
 		else if (!primary_vginfo->creation_host && creation_host) {
-			log_error("WARNING: Duplicate VG name %s: "
-				  "%s (with creation_host) takes precedence over %s",
-				  new_vginfo->vgname, uuid_new,
-				  uuid_primary);
+			log_warn("WARNING: Duplicate VG name %s: "
+				 "%s (with creation_host) takes precedence over %s",
+				 new_vginfo->vgname, uuid_new,
+				 uuid_primary);
 			use_new = 1;
 		} else if (creation_host &&
 			   !strcmp(creation_host,
 				   primary_vginfo->fmt->cmd->hostname)) {
-			log_error("WARNING: Duplicate VG name %s: "
-				  "%s (created here) takes precedence over %s",
-				  new_vginfo->vgname, uuid_new,
-				  uuid_primary);
+			log_warn("WARNING: Duplicate VG name %s: "
+				 "%s (created here) takes precedence over %s",
+				 new_vginfo->vgname, uuid_new,
+				 uuid_primary);
 			use_new = 1;
 		}
 
