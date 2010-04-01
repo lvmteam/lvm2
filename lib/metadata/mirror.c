@@ -1080,15 +1080,15 @@ static int replace_mirror_images(struct lv_segment *mirrored_seg,
 	/* FIXME: Use lvconvert rather than duplicating its code */
 
 	if (mirrored_seg->area_count < num_mirrors) {
-		log_error("WARNING: Failed to replace mirror device in %s/%s",
-			  mirrored_seg->lv->vg->name, mirrored_seg->lv->name);
+		log_warn("WARNING: Failed to replace mirror device in %s/%s",
+			 mirrored_seg->lv->vg->name, mirrored_seg->lv->name);
 
 		if ((mirrored_seg->area_count > 1) && !mirrored_seg->log_lv)
-			log_error("WARNING: Use 'lvconvert -m %d %s/%s --corelog' to replace failed devices",
-				  num_mirrors - 1, lv->vg->name, lv->name);
+			log_warn("WARNING: Use 'lvconvert -m %d %s/%s --corelog' to replace failed devices",
+				 num_mirrors - 1, lv->vg->name, lv->name);
 		else
-			log_error("WARNING: Use 'lvconvert -m %d %s/%s' to replace failed devices",
-				  num_mirrors - 1, lv->vg->name, lv->name);
+			log_warn("WARNING: Use 'lvconvert -m %d %s/%s' to replace failed devices",
+				 num_mirrors - 1, lv->vg->name, lv->name);
 		r = 0;
 
 		/* REMEMBER/FIXME: set in_sync to 0 if a new mirror device was added */
@@ -1101,11 +1101,11 @@ static int replace_mirror_images(struct lv_segment *mirrored_seg,
 	 */
 	if ((mirrored_seg->area_count > 1) && !mirrored_seg->log_lv &&
 	    (log_policy != MIRROR_REMOVE)) {
-		log_error("WARNING: Failed to replace mirror log device in %s/%s",
-			  lv->vg->name, lv->name);
+		log_warn("WARNING: Failed to replace mirror log device in %s/%s",
+			 lv->vg->name, lv->name);
 
-		log_error("WARNING: Use 'lvconvert -m %d %s/%s' to replace failed devices",
-			  mirrored_seg->area_count - 1 , lv->vg->name, lv->name);
+		log_warn("WARNING: Use 'lvconvert -m %d %s/%s' to replace failed devices",
+			 mirrored_seg->area_count - 1 , lv->vg->name, lv->name);
 		r = 0;
 	}
 
@@ -1150,8 +1150,8 @@ int reconfigure_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirr
 
 	if (!r)
 		/* Failed to replace device(s) */
-		log_error("WARNING: Unable to find substitute device for mirror volume, %s/%s",
-			  mirrored_seg->lv->vg->name, mirrored_seg->lv->name);
+		log_warn("WARNING: Unable to find substitute device for mirror volume, %s/%s",
+			 mirrored_seg->lv->vg->name, mirrored_seg->lv->name);
 	else if (r > 0)
 		/* Success in replacing device(s) */
 		log_warn("WARNING: Mirror volume, %s/%s restored - substitute for failed device found.",
