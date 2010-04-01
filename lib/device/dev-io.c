@@ -383,8 +383,8 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 
 		if (dev->open_count && !need_excl) {
 			/* FIXME Ensure we never get here */
-			log_debug("WARNING: %s already opened read-only",
-				  dev_name(dev));
+			log_error(INTERNAL_ERROR "%s already opened read-only",
+				 dev_name(dev));
 			dev->open_count++;
 		}
 
@@ -392,8 +392,8 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 	}
 
 	if (memlock())
-		log_error("WARNING: dev_open(%s) called while suspended",
-			  dev_name(dev));
+		log_error(INTERNAL_ERROR "dev_open(%s) called while suspended",
+			 dev_name(dev));
 
 	if (dev->flags & DEV_REGULAR)
 		name = dev_name(dev);

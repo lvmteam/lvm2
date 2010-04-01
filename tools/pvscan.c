@@ -152,7 +152,7 @@ int pvscan(struct cmd_context *cmd, int argc __attribute((unused)),
 		/* Also check for MD use? */
 /*******
 		if (MAJOR(pv_create_kdev_t(pv[p]->pv_name)) != MD_MAJOR) {
-			log_print
+			log_warn
 			    ("WARNING: physical volume \"%s\" belongs to a meta device",
 			     pv[p]->pv_name);
 		}

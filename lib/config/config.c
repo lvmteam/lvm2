@@ -911,9 +911,9 @@ static struct config_node *_find_config_node(const struct config_node *cn,
 				if (!cn_found)
 					cn_found = cn;
 				else
-					log_error("WARNING: Ignoring duplicate"
-						  " config node: %s ("
-						  "seeking %s)", cn->key, path);
+					log_warn("WARNING: Ignoring duplicate"
+						 " config node: %s ("
+						 "seeking %s)", cn->key, path);
 			}
 
 			cn = cn->sib;
