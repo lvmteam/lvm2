@@ -228,7 +228,8 @@ static int _memlock_maps(struct cmd_context *cmd, lvmlock_t lock, size_t *mstats
 
 	free(line);
 
-	log_debug("Mapped size: %ld", (long)*mstats);
+	log_debug("%socked %ld bytes",
+		  (lock == LVM_MLOCK) ? "L" : "Unl", (long)*mstats);
 
 	return ret;
 }
