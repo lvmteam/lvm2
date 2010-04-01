@@ -2253,6 +2253,12 @@ int vg_validate(struct volume_group *vg)
 			}
 		}
 
+		if (!check_lv_segments(lvl->lv, 0)) {
+			log_error(INTERNAL_ERROR "LV segments corrupted in %s.",
+				  lvl->lv->name);
+			r = 0;
+		}
+
 		if (!check_lv_segments(lvl->lv, 1)) {
 			log_error(INTERNAL_ERROR "LV segments corrupted in %s.",
 				  lvl->lv->name);
