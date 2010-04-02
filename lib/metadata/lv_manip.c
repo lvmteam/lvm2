@@ -1269,7 +1269,6 @@ static int _allocate(struct alloc_handle *ah,
 	struct dm_list *pvms;
 	uint32_t areas_size;
 	alloc_policy_t alloc;
-	struct alloced_area *aa;
 	unsigned log_needs_allocating = 0;
 
 	if (allocated >= ah->new_extents && !ah->log_area_count) {
