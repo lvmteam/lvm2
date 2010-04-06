@@ -142,7 +142,7 @@ static struct volume_group *_build_vg(struct format_instance *fid,
 	if (!import_vg(mem, vg, dl))
 		goto_bad;
 
-	if (!import_pvs(fid->fmt, mem, vg, pvs, &vg->pvs, &vg->pv_count))
+	if (!import_pvs(fid->fmt, mem, vg, pvs))
 		goto_bad;
 
 	if (!import_lvs(mem, vg, pvs))
