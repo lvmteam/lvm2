@@ -307,6 +307,7 @@ prepare_pvs() {
 prepare_vg() {
 	prepare_pvs "$@"
 	vgcreate -c n $vg $devs
+	pvs -v
 }
 
 prepare_lvmconf() {
