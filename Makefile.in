@@ -112,7 +112,7 @@ lcov: $(LCOV_TRACES)
 	for i in $(LCOV_TRACES); do \
 		test -s $$i && lc="$$lc $$i"; \
 	done; \
-	test -z "$$lc" || $(GENHTML) --frames -p @abs_top_builddir@ \
+	test -z "$$lc" || $(GENHTML) -p @abs_top_builddir@ \
 		-o $(LCOV_REPORTS_DIR) $$lc
 endif
 
