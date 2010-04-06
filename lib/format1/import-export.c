@@ -437,8 +437,7 @@ int import_pvs(const struct format_type *fmt, struct dm_pool *mem,
 			return_0;
 
 		pvl->pv->fmt = fmt;
-		dm_list_add(&vg->pvs, &pvl->list);
-		vg->pv_count++;
+		add_pvl_to_vgs(vg, pvl);
 	}
 
 	return 1;
