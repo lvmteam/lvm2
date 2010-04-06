@@ -1,5 +1,6 @@
 Version 2.02.63 -  
 ================================
+  Fix another thread race in clvmd.
   Refactor management of vg->pvs list.
   Fix lcov rules and generate better coverage report.
   Improve vg_validate to detect some loops in lists.
