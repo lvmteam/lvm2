@@ -247,6 +247,15 @@ prepare_devs() {
 	done
 	finish_udev_transaction
 
+	for i in `seq 1 $n`; do
+		local name="${PREFIX}$pvname$i"
+		dmsetup info -c $name
+	done
+	for i in `seq 1 $n`; do
+		local name="${PREFIX}$pvname$i"
+		dmsetup table $name
+	done
+
     # set up some default names
 	vg=${PREFIX}vg
 	vg1=${PREFIX}vg1

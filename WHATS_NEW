@@ -1,5 +1,6 @@
 Version 2.02.63 -  
 ================================
+  Fix is_partitioned_dev not to attempt to reopen device.
   Fix another thread race in clvmd.
   Refactor management of vg->pvs list.
   Fix lcov rules and generate better coverage report.
