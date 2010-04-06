@@ -271,8 +271,7 @@ static int _read_pv(struct format_instance *fid, struct dm_pool *mem,
 
 	vg->extent_count += pv->pe_count;
 	vg->free_count += pv->pe_count;
-	vg->pv_count++;
-	dm_list_add(&vg->pvs, &pvl->list);
+	add_pvl_to_vgs(vg, pvl);
 
 	return 1;
 }

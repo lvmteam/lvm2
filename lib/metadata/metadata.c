@@ -136,6 +136,13 @@ out:
 	return pv->pe_align_offset;
 }
 
+void add_pvl_to_vgs(struct volume_group *vg, struct pv_list *pvl)
+{
+	dm_list_add(&vg->pvs, &pvl->list);
+	vg->pv_count++;
+}
+
+
 /**
  * add_pv_to_vg - Add a physical volume to a volume group
  * @vg - volume group to add to
@@ -230,9 +237,7 @@ int add_pv_to_vg(struct volume_group *vg, const char *pv_name,
 	}
 
 	pvl->pv = pv;
-	dm_list_add(&vg->pvs, &pvl->list);
-
-	vg->pv_count++;
+	add_pvl_to_vgs(vg, pvl);
 	vg->extent_count += pv->pe_count;
 	vg->free_count += pv->pe_count;
 
