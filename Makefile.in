@@ -37,8 +37,9 @@ ifeq ($(MAKECMDGOALS),distclean)
   SUBDIRS = doc include man scripts \
     lib tools daemons libdm \
     udev po liblvm test/api test
-  DISTCLEAN_DIRS += lcov_reports*
 endif
+DISTCLEAN_DIRS += lcov_reports*
+DISTCLEAN_TARGETS += config.cache config.log config.status make.tmpl
 
 include make.tmpl
 

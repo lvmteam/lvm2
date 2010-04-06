@@ -306,11 +306,8 @@ clean: $(SUBDIRS.clean)
 	$(SOURCES2:%.c=%.o) $(SOURCES2:%.c=%.d) $(SOURCES2:%.c=%.gcno) $(SOURCES2:%.c=%.gcda)
 
 distclean: clean $(SUBDIRS.distclean)
-	$(RM) -r $(DISTCLEAN_DIRS)
-	$(RM) $(DISTCLEAN_TARGETS)  \
-	      config.cache config.log config.status \
-	      Makefile make.tmpl core \
-	      lvm-version.h
+	test -z "$(DISTCLEAN_DIRS)" || $(RM) -r $(DISTCLEAN_DIRS)
+	$(RM) $(DISTCLEAN_TARGETS) Makefile core
 
 .export.sym: .exported_symbols
 	set -e; (echo "Base {"; echo "	global:"; \
