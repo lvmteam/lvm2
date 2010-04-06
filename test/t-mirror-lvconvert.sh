@@ -262,26 +262,6 @@ mirrorlog_is_on_ $vg/$lv1 $dev3
 check_and_cleanup_lvs_
 
 # ---
-# add mirror and disk log
-
-# "add 1 mirror and disk log" 
-prepare_lvs_ 
-lvs -a -o+devices $vg
-lvcreate -l2 -m1 --mirrorlog core -n $lv1 $vg $dev1 $dev2
-lvs -a -o+devices $vg
-check_mirror_count_ $vg/$lv1 2 
-not_sh check_mirror_log_ $vg/$lv1 
-# FIXME on next line, specifying $dev3:0 $dev4 (i.e log device first) fails (!)
-lvconvert -m+1 --mirrorlog disk -i1 $vg/$lv1 $dev4 $dev3:0
-lvs -a -o+devices $vg
-check_no_tmplvs_ $vg/$lv1 
-check_mirror_count_ $vg/$lv1 3 
-check_mirror_log_ $vg/$lv1 
-mimages_are_redundant_ $vg $lv1 
-mirrorlog_is_on_ $vg/$lv1 $dev3 
-check_and_cleanup_lvs_
-
-# ---
 # core log to mirrored log
 
 # change the log type from 'core' to 'mirrored'
@@ -463,3 +443,24 @@ lvs -a -o+devices $vg
 lvconvert -m1 --mirrorlog disk $vg/$lv1
 lvs -a -o+devices $vg
 check_mirror_log_ $vg/$lv1
+
+# ---
+# add mirror and disk log
+
+# "add 1 mirror and disk log" 
+prepare_lvs_ 
+lvs -a -o+devices $vg
+lvcreate -l2 -m1 --mirrorlog core -n $lv1 $vg $dev1 $dev2
+lvs -a -o+devices $vg
+check_mirror_count_ $vg/$lv1 2 
+not_sh check_mirror_log_ $vg/$lv1 
+# FIXME on next line, specifying $dev3:0 $dev4 (i.e log device first) fails (!)
+lvconvert -m+1 --mirrorlog disk -i1 $vg/$lv1 $dev4 $dev3:0
+lvs -a -o+devices $vg
+check_no_tmplvs_ $vg/$lv1 
+check_mirror_count_ $vg/$lv1 3 
+check_mirror_log_ $vg/$lv1 
+mimages_are_redundant_ $vg $lv1 
+mirrorlog_is_on_ $vg/$lv1 $dev3 
+check_and_cleanup_lvs_
+
