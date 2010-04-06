@@ -1516,7 +1516,8 @@ static __attribute__ ((noreturn)) void *pre_and_post_thread(void *arg)
 		DEBUGLOG("Waiting to do post command - state = %d\n",
 			 client->bits.localsock.state);
 
-		if (client->bits.localsock.state != POST_COMMAND) {
+		if (client->bits.localsock.state != POST_COMMAND &&
+		    !client->bits.localsock.finished) {
 			pthread_cond_wait(&client->bits.localsock.cond,
 					  &client->bits.localsock.mutex);
 		}
