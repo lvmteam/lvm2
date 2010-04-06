@@ -62,13 +62,8 @@ static int _has_partition_table(struct device *dev)
 	uint16_t *part_magic;
 	struct partition *part;
 
-	if (!dev_open(dev)) {
-		stack;
-		return -1;
-	}
-
 	if (!dev_read(dev, UINT64_C(0), sizeof(buf), &buf))
-		goto_out;
+		return_0;
 
 	/* FIXME Check for other types of partition table too */
 
@@ -87,10 +82,6 @@ static int _has_partition_table(struct device *dev)
 				ret = 1;
 		}
 	}
-
-      out:
-	if (!dev_close(dev))
-		stack;
 
 	return ret;
 }
