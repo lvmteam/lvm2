@@ -224,8 +224,7 @@ int export_extents(struct disk_list *dl, uint32_t lv_num,
 		   struct logical_volume *lv, struct physical_volume *pv);
 
 int import_pvs(const struct format_type *fmt, struct dm_pool *mem,
-	       struct volume_group *vg,
-	       struct dm_list *pvds, struct dm_list *results, uint32_t *count);
+	       struct volume_group *vg, struct dm_list *pvds);
 
 int import_lvs(struct dm_pool *mem, struct volume_group *vg, struct dm_list *pvds);
 int export_lvs(struct disk_list *dl, struct volume_group *vg,

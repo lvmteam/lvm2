@@ -422,13 +422,12 @@ int export_extents(struct disk_list *dl, uint32_t lv_num,
 }
 
 int import_pvs(const struct format_type *fmt, struct dm_pool *mem,
-	       struct volume_group *vg,
-	       struct dm_list *pvds, struct dm_list *results, uint32_t *count)
+	       struct volume_group *vg, struct dm_list *pvds)
 {
 	struct disk_list *dl;
 	struct pv_list *pvl;
 
-	*count = 0;
+	vg->pv_count = 0;
 	dm_list_iterate_items(dl, pvds) {
 		if (!(pvl = dm_pool_zalloc(mem, sizeof(*pvl))) ||
 		    !(pvl->pv = dm_pool_alloc(mem, sizeof(*pvl->pv))))
@@ -438,8 +437,8 @@ int import_pvs(const struct format_type *fmt, struct dm_pool *mem,
 			return_0;
 
 		pvl->pv->fmt = fmt;
-		dm_list_add(results, &pvl->list);
-		(*count)++;
+		dm_list_add(&vg->pvs, &pvl->list);
+		vg->pv_count++;
 	}
 
 	return 1;
