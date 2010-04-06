@@ -220,9 +220,6 @@ int add_pv_to_vg(struct volume_group *vg, const char *pv_name,
 	if (!alloc_pv_segment_whole_pv(mem, pv))
 		return_0;
 
-	pvl->pv = pv;
-	dm_list_add(&vg->pvs, &pvl->list);
-
 	if ((uint64_t) vg->extent_count + pv->pe_count > UINT32_MAX) {
 		log_error("Unable to add %s to %s: new extent count (%"
 			  PRIu64 ") exceeds limit (%" PRIu32 ").",
@@ -231,6 +228,9 @@ int add_pv_to_vg(struct volume_group *vg, const char *pv_name,
 			  UINT32_MAX);
 		return 0;
 	}
+
+	pvl->pv = pv;
+	dm_list_add(&vg->pvs, &pvl->list);
 
 	vg->pv_count++;
 	vg->extent_count += pv->pe_count;
