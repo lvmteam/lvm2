@@ -309,7 +309,8 @@ check_and_cleanup_lvs_
 prepare_lvs_
 lvcreate -l2 -n $lv1 $vg $dev1
 lvconvert -m +1 --mirrorlog mirrored $vg/$lv1 $dev1 $dev2 --alloc anywhere
-mimages_are_redundant_ $vg $lv1
+# FIXME Disable next check: --alloc anywhere makes *no* guarantees about placement - that's the entire point of it!
+#mimages_are_redundant_ $vg $lv1
 check_and_cleanup_lvs_
 
 
