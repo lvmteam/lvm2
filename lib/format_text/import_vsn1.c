@@ -241,10 +241,6 @@ static int _read_pv(struct format_instance *fid, struct dm_pool *mem,
 		return 0;
 	}
 
-	/* adjust the volume group. */
-	vg->extent_count += pv->pe_count;
-	vg->free_count += pv->pe_count;
-
 	pv->pe_size = vg->extent_size;
 
 	pv->pe_alloc_count = 0;
@@ -273,6 +269,8 @@ static int _read_pv(struct format_instance *fid, struct dm_pool *mem,
 	if (!alloc_pv_segment_whole_pv(mem, pv))
 		return_0;
 
+	vg->extent_count += pv->pe_count;
+	vg->free_count += pv->pe_count;
 	vg->pv_count++;
 	dm_list_add(&vg->pvs, &pvl->list);
 
