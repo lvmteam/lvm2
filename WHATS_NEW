@@ -1,5 +1,6 @@
 Version 2.02.63 -  
 ================================
+  Refactor management of vg->pvs list.
   Fix lcov rules and generate better coverage report.
   Improve vg_validate to detect some loops in lists.
   Change most remaining log_error WARNING messages to log_warn.
