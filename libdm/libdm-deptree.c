@@ -1047,8 +1047,13 @@ int dm_tree_deactivate_children(struct dm_tree_node *dnode,
 
 		/* Refresh open_count */
 		if (!_info_by_dev(dinfo->major, dinfo->minor, 1, &info) ||
-		    !info.exists || info.open_count)
+		    !info.exists)
 			continue;
+
+		if (info.open_count) {
+			r = 0;
+			continue;
+		}
 
 		if (!_deactivate_node(name, info.major, info.minor,
 				      &child->dtree->cookie, child->udev_flags)) {

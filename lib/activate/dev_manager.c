@@ -1523,8 +1523,6 @@ int dev_manager_deactivate(struct dev_manager *dm, struct logical_volume *lv)
 
 	r = _tree_action(dm, lv, DEACTIVATE);
 
-	fs_del_lv(lv);
-
 	return r;
 }
 
