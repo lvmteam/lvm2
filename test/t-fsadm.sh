@@ -19,7 +19,7 @@ vgcreate -cn $vg $devs
 
 # Test for block sizes != 1024 (rhbz #480022)
 lvcreate -n$lv1 -L 64M $vg
-mke2fs -b4096 -j $G_dev_/$vg/$lv1
-e2fsck -f -y $G_dev_/$vg/$lv1
-fsadm --lvresize resize $G_dev_/$vg/$lv1 128M
+mke2fs -b4096 -j $DM_DEV_DIR/$vg/$lv1
+e2fsck -f -y $DM_DEV_DIR/$vg/$lv1
+fsadm --lvresize resize $DM_DEV_DIR/$vg/$lv1 128M
 vgremove -ff $vg

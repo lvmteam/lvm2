@@ -16,7 +16,7 @@ which mkfs.ext3 || exit 200
 
 lvdev_()
 {
-    echo "$G_dev_/$1/$2"
+    echo "$DM_DEV_DIR/$1/$2"
 }
 
 snap_lv_name_() {

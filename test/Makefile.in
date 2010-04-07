@@ -30,7 +30,7 @@ SHELL_PATH_SQ = $(subst ','\'',$(SHELL_PATH))
 
 SCRIPTS := $(wildcard $(srcdir)/t-*.sh) \
  $(srcdir)/test-utils.sh \
- $(srcdir)/test-lib.sh
+ $(srcdir)/lvm-utils.sh
 
 ifeq ("@UDEV_SYNC@", "yes")
 dm_udev_synchronisation = 1

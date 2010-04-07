@@ -31,7 +31,7 @@ check_logical_block_size()
 
 lvdev_()
 {
-    echo "$G_dev_/$1/$2"
+    echo "$DM_DEV_DIR/$1/$2"
 }
 
 test_snapshot_mount()

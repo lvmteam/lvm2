@@ -8,9 +8,6 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-test_description="foo" # silence test-lib for now
-. ./test-lib.sh
-
 aux() {
         # use just "$@" for verbose operation
 	"$@" > /dev/null 2> /dev/null
@@ -71,10 +68,28 @@ prepare_clvmd() {
 	# skip if we don't have our own clvmd...
 	(which clvmd | grep $abs_builddir) || exit 200
 
-	trap 'aux teardown_' EXIT # don't forget to clean up
+	trap_teardown
 
 	clvmd -Isinglenode -d 1 &
 	LOCAL_CLVMD="$!"
+}
+
+prepare_testroot() {
+	PWD="`pwd`"
+	PREFIX="LVMTEST$$"
+
+	trap_teardown
+	TESTDIR=$($abs_srcdir/mkdtemp ${LVM_TEST_DIR-$(pwd)} $PREFIX.XXXXXXXXXX) \
+		|| { echo "failed to create temporary directory in $test_dir_"; exit 1; }
+
+	export LVM_SYSTEM_DIR=$TESTDIR/etc
+	export DM_DEV_DIR=$TESTDIR/dev
+	mkdir $LVM_SYSTEM_DIR $DM_DEV_DIR $DM_DEV_DIR/mapper $TESTDIR/lib
+
+	for i in `find $abs_top_builddir/daemons/dmeventd/plugins/ -name \*.so`; do
+		echo Setting up symlink from $i to $TESTDIR/lib
+		ln -s $i $TESTDIR/lib
+	done
 }
 
 teardown() {
@@ -84,12 +99,12 @@ teardown() {
 	test -n "$LOCAL_CLVMD" && kill -9 "$LOCAL_CLVMD"
 
 	test -n "$PREFIX" && {
-		rm -rf $G_root_/dev/$PREFIX*
+		rm -rf $TESTDIR/dev/$PREFIX*
 
 		init_udev_transaction
 		while dmsetup table | grep -q ^$PREFIX; do
-			for s in `dmsetup table | grep ^$PREFIX| awk '{ print substr($1,1,length($1)-1) }'`; do
-				dmsetup remove $s 2>/dev/null > /dev/null || true
+			for s in `dmsetup info -c -o name --noheading | grep ^$PREFIX`; do
+				dmsetup remove $s >& /dev/null || true
 			done
 		done
 		finish_udev_transaction
@@ -105,27 +120,35 @@ teardown() {
 		test -n "$LOOPFILE" && rm -f $LOOPFILE
 	fi
 	unset devs # devs is set in prepare_devs()
+
+	test -n "$TESTDIR" && {
+		cd $PWD
+		rm -rf $TESTDIR || echo BLA
+	}
 }
 
-teardown_() {
-	teardown
-	cleanup_ # user-overridable cleanup
-	testlib_cleanup_ # call test-lib cleanup routine, too
+trap_teardown() {
+	trap 'set +vex; STACKTRACE; set -vex' ERR
+	trap 'aux teardown' EXIT # don't forget to clean up
 }
 
 make_ioerror() {
 	echo 0 10000000 error | dmsetup create ioerror
-	ln -s $G_dev_/mapper/ioerror $G_dev_/ioerror
+	ln -s $DM_DEV_DIR/mapper/ioerror $DM_DEV_DIR/ioerror
 }
 
 prepare_loop() {
 	size=$1
 	test -n "$size" || size=32
 
-	test -n "$LOOP" && return 0
-	trap 'aux teardown_' EXIT # don't forget to clean up
-	trap 'set +vex; STACKTRACE; set -vex' ERR
-	#trap - ERR
+	test -z "$LOOP"
+	test -n "$DM_DEV_DIR"
+
+	trap_teardown
+
+	for i in 0 1 2 3 4 5 6 7; do
+		mknod $DM_DEV_DIR/loop$i b 7 $i
+	done
 
 	LOOPFILE="$PWD/test.img"
 	dd if=/dev/zero of="$LOOPFILE" bs=$((1024*1024)) count=1 seek=$(($size-1))
@@ -136,10 +159,10 @@ prepare_loop() {
 		return 0
 	else
 		# no -f support 
-		# Iterate through $G_dev_/loop{,/}{0,1,2,3,4,5,6,7}
+		# Iterate through $DM_DEV_DIR/loop{,/}{0,1,2,3,4,5,6,7}
 		for slash in '' /; do
 			for i in 0 1 2 3 4 5 6 7; do
-				local dev=$G_dev_/loop$slash$i
+				local dev=$DM_DEV_DIR/loop$slash$i
 				! losetup $dev >/dev/null 2>&1 || continue
 				# got a free
 				losetup "$dev" "$LOOPFILE"
@@ -174,8 +197,7 @@ prepare_scsi_debug_dev()
     local SCSI_DEBUG_PARAMS="$@"
 
     test -n "$SCSI_DEBUG_DEV" && return 0
-    trap 'aux teardown_' EXIT # don't forget to clean up
-    trap 'set +vex; STACKTRACE; set -vex' ERR
+    trap_teardown
 
     # Skip test if awk isn't available (required for get_sd_devs_)
     which awk || exit 200
@@ -201,8 +223,8 @@ prepare_scsi_debug_dev()
 	    fi
 	done
 	if [ $FOUND -eq 0 ]; then
-	    # Create symlink to scsi_debug device in $G_dev_
-	    SCSI_DEBUG_DEV=$G_dev_/$(basename $dev1)
+	    # Create symlink to scsi_debug device in $DM_DEV_DIR
+	    SCSI_DEBUG_DEV=$DM_DEV_DIR/$(basename $dev1)
 	    # Setting $LOOP provides means for prepare_devs() override
 	    LOOP=$SCSI_DEBUG_DEV
 	    ln -snf $dev1 $SCSI_DEBUG_DEV
@@ -228,8 +250,6 @@ prepare_devs() {
 
 	prepare_loop $(($n*$devsize))
 
-	PREFIX="LVMTEST$$"
-
 	if ! loopsz=`blockdev --getsz $LOOP 2>/dev/null`; then
   		loopsz=`blockdev --getsize $LOOP 2>/dev/null`
 	fi
@@ -239,7 +259,7 @@ prepare_devs() {
 	init_udev_transaction
 	for i in `seq 1 $n`; do
 		local name="${PREFIX}$pvname$i"
-		local dev="$G_dev_/mapper/$name"
+		local dev="$DM_DEV_DIR/mapper/$name"
 		eval "dev$i=$dev"
 		devs="$devs $dev"
 		echo 0 $size linear $LOOP $((($i-1)*$size)) > $name.table
@@ -325,13 +345,13 @@ prepare_lvmconf() {
 		filter='[ "a/dev\/mirror/", "a/dev\/mapper\/.*pv[0-9_]*$/", "r/.*/" ]'
         locktype=
 	if test -n "$LVM_TEST_LOCKING"; then locktype="locking_type = $LVM_TEST_LOCKING"; fi
-	cat > $G_root_/etc/lvm.conf <<-EOF
+	cat > $TESTDIR/etc/lvm.conf <<-EOF
   $LVM_TEST_CONFIG
   devices {
-    dir = "$G_dev_"
-    scan = "$G_dev_"
+    dir = "$DM_DEV_DIR"
+    scan = "$DM_DEV_DIR"
     filter = $filter
-    cache_dir = "$G_root_/etc"
+    cache_dir = "$TESTDIR/etc"
     sysfs_scan = 0
   }
   log {
@@ -344,8 +364,8 @@ prepare_lvmconf() {
   }
   global {
     abort_on_internal_errors = 1
-    library_dir = "$G_root_/lib"
-    locking_dir = "$G_root_/var/lock/lvm"
+    library_dir = "$TESTDIR/lib"
+    locking_dir = "$TESTDIR/var/lock/lvm"
     $locktype
   }
   activation {
@@ -353,9 +373,22 @@ prepare_lvmconf() {
     udev_rules = 1
   }
 EOF
+	cat $TESTDIR/etc/lvm.conf
 }
 
-set -vexE -o pipefail
-aux prepare_lvmconf
-prepare_clvmd
+prepare() {
+	prepare_testroot
+	prepare_lvmconf
+	prepare_clvmd
+	source ./lvm-utils.sh
+}
 
+LANG=C
+LC_ALL=C
+TZ=UTC
+unset CDPATH
+
+. ./init.sh || { echo >&2 you must run make first; exit 1; }
+
+set -vexE -o pipefail
+aux prepare
