@@ -353,13 +353,29 @@ error:
 #endif
 }
 
+static void _dm_zfree_string(char *string)
+{
+	if (string) {
+		memset(string, 0, strlen(string));
+		dm_free(string);
+	}
+}
+
+static void _dm_zfree_dmi(struct dm_ioctl *dmi)
+{
+	if (dmi) {
+		memset(dmi, 0, dmi->data_size);
+		dm_free(dmi);
+	}
+}
+
 void dm_task_destroy(struct dm_task *dmt)
 {
 	struct target *t, *n;
 
 	for (t = dmt->head; t; t = n) {
 		n = t->next;
-		dm_free(t->params);
+		_dm_zfree_string(t->params);
 		dm_free(t->type);
 		dm_free(t);
 	}
@@ -373,8 +389,7 @@ void dm_task_destroy(struct dm_task *dmt)
 	if (dmt->message)
 		dm_free(dmt->message);
 
-	if (dmt->dmi.v4)
-		dm_free(dmt->dmi.v4);
+	_dm_zfree_dmi(dmt->dmi.v4);
 
 	if (dmt->uuid)
 		dm_free(dmt->uuid);
@@ -387,6 +402,14 @@ void dm_task_destroy(struct dm_task *dmt)
  */
 
 #ifdef DM_COMPAT
+
+static void _dm_zfree_dmi_v1(struct dm_ioctl_v1 *dmi)
+{
+	if (dmi) {
+		memset(dmi, 0, dmi->data_size);
+		dm_free(dmi);
+	}
+}
 
 static int _dm_task_get_driver_version_v1(struct dm_task *dmt, char *version,
 					  size_t size)
@@ -494,13 +517,10 @@ static void *_add_target_v1(struct target *t, void *out, void *end)
 	struct dm_target_spec_v1 sp;
 	size_t sp_size = sizeof(struct dm_target_spec_v1);
 	int len;
-	const char no_space[] = "Ran out of memory building ioctl parameter";
 
 	out += sp_size;
-	if (out >= end) {
-		log_error(no_space);
-		return NULL;
-	}
+	if (out >= end)
+		return_NULL;
 
 	sp.status = 0;
 	sp.sector_start = t->start;
@@ -509,12 +529,9 @@ static void *_add_target_v1(struct target *t, void *out, void *end)
 
 	len = strlen(t->params);
 
-	if ((out + len + 1) >= end) {
-		log_error(no_space);
+	if ((out + len + 1) >= end)
+		return_NULL;
 
-		log_error("t->params= '%s'", t->params);
-		return NULL;
-	}
 	strcpy((char *) out, t->params);
 	out += len + 1;
 
@@ -600,8 +617,10 @@ static struct dm_ioctl_v1 *_flatten_v1(struct dm_task *dmt)
 	e = (void *) ((char *) dmi + len);
 
 	for (t = dmt->head; t; t = t->next)
-		if (!(b = _add_target_v1(t, b, e)))
+		if (!(b = _add_target_v1(t, b, e))) {
+			log_error("Ran out of memory building ioctl parameter");
 			goto bad;
+		}
 
 	if (dmt->newname)
 		strcpy(b, dmt->newname);
@@ -609,7 +628,7 @@ static struct dm_ioctl_v1 *_flatten_v1(struct dm_task *dmt)
 	return dmi;
 
       bad:
-	dm_free(dmi);
+	_dm_zfree_dmi_v1(dmi);
 	return NULL;
 }
 
@@ -762,7 +781,7 @@ static int _dm_task_run_v1(struct dm_task *dmt)
 		dmt->type = DM_DEVICE_INFO;
 		if (!dm_task_run(dmt))
 			goto bad;
-		dm_free(dmi);	/* We'll use what info returned */
+		_dm_zfree_dmi_v1(dmi);	/* We'll use what info returned */
 		return 1;
 	}
 
@@ -770,7 +789,7 @@ static int _dm_task_run_v1(struct dm_task *dmt)
 	return 1;
 
       bad:
-	dm_free(dmi);
+	_dm_zfree_dmi_v1(dmi);
 	return 0;
 }
 
@@ -1177,7 +1196,7 @@ struct target *create_target(uint64_t start, uint64_t len, const char *type,
 	return t;
 
       bad:
-	dm_free(t->params);
+	_dm_zfree_string(t->params);
 	dm_free(t->type);
 	dm_free(t);
 	return NULL;
@@ -1189,13 +1208,10 @@ static void *_add_target(struct target *t, void *out, void *end)
 	struct dm_target_spec sp;
 	size_t sp_size = sizeof(struct dm_target_spec);
 	int len;
-	const char no_space[] = "Ran out of memory building ioctl parameter";
 
 	out += sp_size;
-	if (out >= end) {
-		log_error(no_space);
-		return NULL;
-	}
+	if (out >= end)
+		return_NULL;
 
 	sp.status = 0;
 	sp.sector_start = t->start;
@@ -1204,12 +1220,9 @@ static void *_add_target(struct target *t, void *out, void *end)
 
 	len = strlen(t->params);
 
-	if ((out + len + 1) >= end) {
-		log_error(no_space);
+	if ((out + len + 1) >= end)
+		return_NULL;
 
-		log_error("t->params= '%s'", t->params);
-		return NULL;
-	}
 	strcpy((char *) out, t->params);
 	out += len + 1;
 
@@ -1403,8 +1416,10 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 	e = (void *) ((char *) dmi + len);
 
 	for (t = dmt->head; t; t = t->next)
-		if (!(b = _add_target(t, b, e)))
+		if (!(b = _add_target(t, b, e))) {
+			log_error("Ran out of memory building ioctl parameter");
 			goto bad;
+		}
 
 	if (dmt->newname)
 		strcpy(b, dmt->newname);
@@ -1421,7 +1436,7 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 	return dmi;
 
       bad:
-	dm_free(dmi);
+	_dm_zfree_dmi(dmi);
 	return NULL;
 }
 
@@ -1782,7 +1797,7 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 					  "failed: %s",
 				    	   _cmd_data_v4[dmt->type].name,
 					  strerror(errno));
-			dm_free(dmi);
+			_dm_zfree_dmi(dmi);
 			return NULL;
 		}
 	}
@@ -1853,7 +1868,7 @@ repeat_ioctl:
 		case DM_DEVICE_TABLE:
 		case DM_DEVICE_WAITEVENT:
 			_ioctl_buffer_double_factor++;
-			dm_free(dmi);
+			_dm_zfree_dmi(dmi);
 			goto repeat_ioctl;
 		default:
 			log_error("WARNING: libdevmapper buffer too small for data");
@@ -1911,13 +1926,12 @@ repeat_ioctl:
 	}
 
 	/* Was structure reused? */
-	if (dmt->dmi.v4)
-		dm_free(dmt->dmi.v4);
+	_dm_zfree_dmi(dmt->dmi.v4);
 	dmt->dmi.v4 = dmi;
 	return 1;
 
       bad:
-	dm_free(dmi);
+	_dm_zfree_dmi(dmi);
 	return 0;
 }
 
