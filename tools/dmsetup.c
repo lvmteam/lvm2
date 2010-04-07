@@ -266,6 +266,7 @@ static int _parse_file(struct dm_task *dmt, const char *file)
 	r = 1;
 
       out:
+	memset(buffer, 0, buffer_size);
 #ifndef HAVE_GETLINE
 	dm_free(buffer);
 #else
