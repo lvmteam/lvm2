@@ -1,6 +1,7 @@
 Version 1.02.46 - 
 ================================
-  Wipe memory buffers for dm-ioctl parameters before releaseing.
+  Change dm_tree_deactivate_children to fail if device is open.
+  Wipe memory buffers for dm-ioctl parameters before releasing.
   Strictly require libudev if udev_sync is used.
   Add support for ioctl's DM_UEVENT_GENERATED_FLAG.
 
