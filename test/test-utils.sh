@@ -86,6 +86,8 @@ prepare_testroot() {
 	export DM_DEV_DIR=$TESTDIR/dev
 	mkdir $LVM_SYSTEM_DIR $DM_DEV_DIR $DM_DEV_DIR/mapper $TESTDIR/lib
 
+	cd $TESTDIR
+
 	for i in `find $abs_top_builddir/daemons/dmeventd/plugins/ -name \*.so`; do
 		echo Setting up symlink from $i to $TESTDIR/lib
 		ln -s $i $TESTDIR/lib
@@ -381,7 +383,6 @@ prepare() {
 	prepare_testroot
 	prepare_lvmconf
 	prepare_clvmd
-	source ./lvm-utils.sh
 }
 
 LANG=C
@@ -390,6 +391,7 @@ TZ=UTC
 unset CDPATH
 
 . ./init.sh || { echo >&2 you must run make first; exit 1; }
+. ./lvm-utils.sh
 
 set -vexE -o pipefail
 aux prepare
