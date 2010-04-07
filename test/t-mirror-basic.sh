@@ -14,8 +14,6 @@ test_description="ensure that basic operations on mirrored LV works"
 
 . ./test-utils.sh
 
-dmsetup_has_dm_devdir_support_ || exit 200
-
 # ---------------------------------------------------------------------
 # Utilities
 

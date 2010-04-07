@@ -13,8 +13,6 @@ test_description="ensure that 'vgreduce --removemissing' works on mirrored LV"
 
 . ./test-utils.sh
 
-dmsetup_has_dm_devdir_support_ || exit 200
-
 lv_is_on_ ()
 {
 	local lv=$vg/$1
