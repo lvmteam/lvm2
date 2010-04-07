@@ -37,7 +37,7 @@ void handler( int s ) {
 }
 
 void dump() {
-	write(1, readbuf, readbuf_used);
+	fwrite(readbuf, 1, readbuf_used, stdout);
 }
 
 void clear() {
