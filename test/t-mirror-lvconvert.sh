@@ -11,8 +11,6 @@
 
 . ./test-utils.sh
 
-dmsetup_has_dm_devdir_support_ || exit 200
-
 mimages_are_redundant_ ()
 {
   local vg=$1

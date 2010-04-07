@@ -14,8 +14,6 @@ test_description="check namings of mirrored LV"
 
 . ./test-utils.sh
 
-dmsetup_has_dm_devdir_support_ || exit 200
-
 # ---------------------------------------------------------------------
 # Utilities
 

@@ -10,10 +10,7 @@
 
 . ./test-utils.sh
 
-dmsetup_has_dm_devdir_support_ || exit 200
-
 aux prepare_vg 5
-
 
 lv_is_on_() {
 	local lv=$1 #allready vg/lv
