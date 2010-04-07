@@ -24,7 +24,7 @@ lvcreate -l3 -i3 $vg @fast
 not lvcreate -l4 -i4 $vg @fast
 
 # 2 stripes is too many with just one PV
-not lvcreate -l2 -i2 $vg $G_dev_/mapper/pv1
+not lvcreate -l2 -i2 $vg $DM_DEV_DIR/mapper/pv1
 
 # lvcreate mirror
 lvcreate -l1 -m1 $vg @fast

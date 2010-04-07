@@ -20,7 +20,7 @@ dmsetup_has_dm_devdir_support_ || exit 200
 # Utilities
 
 lvdev_() {
-  echo "$G_dev_/$1/$2"
+  echo "$DM_DEV_DIR/$1/$2"
 }
 
 lv_is_on_() {

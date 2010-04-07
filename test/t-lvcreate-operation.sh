@@ -21,7 +21,7 @@ cleanup_lvs() {
 	fi
 }
 
-aux prepare_pvs 2
+prepare_pvs 2
 aux pvcreate --metadatacopies 0 $dev1
 aux vgcreate -c n $vg $devs
 

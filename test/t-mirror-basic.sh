@@ -21,7 +21,7 @@ dmsetup_has_dm_devdir_support_ || exit 200
 
 lvdev_()
 {
-  echo "$G_dev_/$1/$2"
+  echo "$DM_DEV_DIR/$1/$2"
 }
 
 mimages_are_redundant_ ()
