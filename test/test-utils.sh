@@ -75,7 +75,7 @@ prepare_clvmd() {
 }
 
 prepare_testroot() {
-	PWD="`pwd`"
+	OLDPWD="`pwd`"
 	PREFIX="LVMTEST$$"
 
 	trap_teardown
@@ -122,7 +122,7 @@ teardown() {
 	unset devs # devs is set in prepare_devs()
 
 	test -n "$TESTDIR" && {
-		cd $PWD
+		cd $OLDPWD
 		rm -rf $TESTDIR || echo BLA
 	}
 }
