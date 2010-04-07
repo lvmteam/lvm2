@@ -1051,6 +1051,9 @@ int dm_tree_deactivate_children(struct dm_tree_node *dnode,
 			continue;
 
 		if (info.open_count) {
+			log_error("Unable to deactivate open %s (%" PRIu32
+				  ":%" PRIu32 ")", name, info.major,
+				  info.minor);
 			r = 0;
 			continue;
 		}
