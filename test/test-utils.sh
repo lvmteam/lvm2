@@ -377,6 +377,7 @@ EOF
 }
 
 prepare() {
+	ulimit -c unlimited
 	prepare_testroot
 	prepare_lvmconf
 	prepare_clvmd
