@@ -2063,7 +2063,7 @@ struct dm_list *build_parallel_areas_from_lv(struct cmd_context *cmd,
 	struct dm_list *parallel_areas;
 	struct seg_pvs *spvs;
 	uint32_t current_le = 0;
-	struct lv_segment *seg;
+	struct lv_segment * uninitialized_var(seg);
 
 	if (!(parallel_areas = dm_pool_alloc(cmd->mem, sizeof(*parallel_areas)))) {
 		log_error("parallel_areas allocation failed");
