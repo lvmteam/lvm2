@@ -52,6 +52,9 @@ static struct physical_volume *_find_pv_by_name(struct cmd_context *cmd,
 static struct pv_list *_find_pv_in_vg(const struct volume_group *vg,
 				      const char *pv_name);
 
+static struct pv_list *_find_pv_in_vg_by_uuid(const struct volume_group *vg,
+					      const struct id *id);
+
 static uint32_t _vg_bad_status_bits(const struct volume_group *vg,
 				    uint64_t status);
 
@@ -160,6 +163,7 @@ int add_pv_to_vg(struct volume_group *vg, const char *pv_name,
 	struct pv_list *pvl;
 	struct format_instance *fid = vg->fid;
 	struct dm_pool *mem = vg->vgmem;
+	char uuid[64] __attribute((aligned(8)));
 
 	log_verbose("Adding physical volume '%s' to volume group '%s'",
 		    pv_name, vg->name);
@@ -211,9 +215,14 @@ int add_pv_to_vg(struct volume_group *vg, const char *pv_name,
 		return 0;
 	}
 
-	if (_find_pv_in_vg(vg, pv_name)) {
-		log_error("Physical volume '%s' listed more than once.",
-			  pv_name);
+	if (_find_pv_in_vg(vg, pv_name) ||
+	    _find_pv_in_vg_by_uuid(vg, &pv->id)) {
+		if (!id_write_format(&pv->id, uuid, sizeof(uuid))) {
+			stack;
+			uuid[0] = '\0';
+		}
+		log_error("Physical volume '%s (%s)' listed more than once.",
+			  pv_name, uuid);
 		return 0;
 	}
 
