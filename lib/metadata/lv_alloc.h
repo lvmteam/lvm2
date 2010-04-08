@@ -26,7 +26,8 @@ struct lv_segment *alloc_lv_segment(struct dm_pool *mem,
 				    uint32_t area_len,
 				    uint32_t chunk_size,
 				    uint32_t region_size,
-				    uint32_t extents_copied);
+				    uint32_t extents_copied,
+				    struct lv_segment *pvmove_source_seg);
 
 struct lv_segment *alloc_snapshot_seg(struct logical_volume *lv,
 				      uint64_t status, uint32_t old_le_count);
@@ -76,6 +77,7 @@ int lv_add_virtual_segment(struct logical_volume *lv, uint64_t status,
 void alloc_destroy(struct alloc_handle *ah);
 
 struct dm_list *build_parallel_areas_from_lv(struct cmd_context *cmd,
-					  struct logical_volume *lv);
+					     struct logical_volume *lv,
+					     unsigned use_pvmove_parent_lv);
 
 #endif

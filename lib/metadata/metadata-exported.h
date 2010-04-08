@@ -301,6 +301,7 @@ struct lv_segment {
 	uint32_t region_size;	/* For mirrors - in sectors */
 	uint32_t extents_copied;
 	struct logical_volume *log_lv;
+	struct lv_segment *pvmove_source_seg;
 	void *segtype_private;
 
 	struct dm_list tags;

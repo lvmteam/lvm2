@@ -280,7 +280,7 @@ static int _lv_split_segment(struct logical_volume *lv, struct lv_segment *seg,
 					   seg->log_lv,
 					   seg->area_count, seg->area_len,
 					   seg->chunk_size, seg->region_size,
-					   seg->extents_copied))) {
+					   seg->extents_copied, seg->pvmove_source_seg))) {
 		log_error("Couldn't allocate cloned LV segment.");
 		return 0;
 	}
