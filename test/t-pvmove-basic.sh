@@ -236,7 +236,7 @@ check_and_cleanup_lvs_
 
 #COMM "destination split into 3: from pv2:0-2 to {pv3,4,5}:5-5"
 prepare_lvs_ 
-pvmove -i1 $dev2:0-2 $dev3:5-5 $dev4:5-5 $dev5:5-5 
+pvmove -i1 --alloc anywhere $dev2:0-2 $dev3:5-5 $dev4:5-5 $dev5:5-5 
 lv_not_changed_ $vg/$lv1 
 lv_is_on_ $vg/$lv2 $dev3 $dev4 $dev5 $dev3 $dev4 
 lv_not_changed_ $vg/$lv3 
