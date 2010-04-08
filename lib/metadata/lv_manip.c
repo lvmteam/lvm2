@@ -2096,7 +2096,7 @@ struct dm_list *build_parallel_areas_from_lv(struct cmd_context *cmd,
 		if (!_for_each_pv(cmd, use_pvmove_parent_lv ? seg->pvmove_source_seg->lv : lv,
 				  use_pvmove_parent_lv ? seg->pvmove_source_seg->le : current_le,
 				  use_pvmove_parent_lv ? spvs->len * calc_area_multiple(seg->pvmove_source_seg->segtype, seg->pvmove_source_seg->area_count) : spvs->len,
-				  seg->pvmove_source_seg,
+				  use_pvmove_parent_lv ? seg->pvmove_source_seg : NULL,
 				  &spvs->len,
 				  0, 0, -1, 0, _add_pvs, (void *) spvs))
 			return_NULL;
