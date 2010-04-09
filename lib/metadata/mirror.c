@@ -1174,6 +1174,8 @@ int reconfigure_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirr
 
 static int _create_mimage_lvs(struct alloc_handle *ah,
 			      uint32_t num_mirrors,
+			      uint32_t stripes,
+			      uint32_t stripe_size,
 			      struct logical_volume *lv,
 			      struct logical_volume **img_lvs,
 			      int log)
@@ -1205,17 +1207,17 @@ static int _create_mimage_lvs(struct alloc_handle *ah,
 		}
 
 		if (log) {
-			if (!lv_add_log_segment(ah, m + 1, img_lvs[m], 0)) {
+			if (!lv_add_log_segment(ah, m * stripes + 1, img_lvs[m], 0)) {
 				log_error("Aborting. Failed to add mirror image segment "
 					  "to %s. Remove new LV and retry.",
 					  img_lvs[m]->name);
 				return 0;
 			}
 		} else {
-			if (!lv_add_segment(ah, m, 1, img_lvs[m],
+			if (!lv_add_segment(ah, m * stripes, stripes, img_lvs[m],
 					    get_segtype_from_string(lv->vg->cmd,
 								    "striped"),
-					    0, 0, 0)) {
+					    stripe_size, 0, 0)) {
 				log_error("Aborting. Failed to add mirror image segment "
 					  "to %s. Remove new LV and retry.",
 					  img_lvs[m]->name);
@@ -1566,7 +1568,8 @@ static struct logical_volume *_create_mirror_log(struct logical_volume *lv,
  */
 static int _form_mirror(struct cmd_context *cmd, struct alloc_handle *ah,
 			struct logical_volume *lv,
-			uint32_t mirrors, uint32_t region_size, int log)
+			uint32_t mirrors, uint32_t stripes,
+			uint32_t stripe_size, uint32_t region_size, int log)
 {
 	struct logical_volume **img_lvs;
 
@@ -1587,7 +1590,7 @@ static int _form_mirror(struct cmd_context *cmd, struct alloc_handle *ah,
 		return 0;
 	}
 
-	if (!_create_mimage_lvs(ah, mirrors, lv, img_lvs, log))
+	if (!_create_mimage_lvs(ah, mirrors, stripes, stripe_size, lv, img_lvs, log))
 		return 0;
 
 	if (!lv_add_mirror_lvs(lv, img_lvs, mirrors,
@@ -1650,7 +1653,7 @@ static struct logical_volume *_set_up_mirror_log(struct cmd_context *cmd,
 	}
 
 	if ((log_count > 1) &&
-	    !_form_mirror(cmd, ah, log_lv, log_count-1, region_size, 1)) {
+	    !_form_mirror(cmd, ah, log_lv, log_count-1, 1, 0, region_size, 1)) {
 		log_error("Failed to form mirrored log.");
 		return NULL;
 	}
@@ -1749,7 +1752,8 @@ out:
  * Convert "linear" LV to "mirror".
  */
 int add_mirror_images(struct cmd_context *cmd, struct logical_volume *lv,
-		      uint32_t mirrors, uint32_t stripes, uint32_t region_size,
+		      uint32_t mirrors, uint32_t stripes,
+		      uint32_t stripe_size, uint32_t region_size,
 		      struct dm_list *allocatable_pvs, alloc_policy_t alloc,
 		      uint32_t log_count)
 {
@@ -1757,11 +1761,6 @@ int add_mirror_images(struct cmd_context *cmd, struct logical_volume *lv,
 	const struct segment_type *segtype;
 	struct dm_list *parallel_areas;
 	struct logical_volume *log_lv = NULL;
-
-	if (stripes > 1) {
-		log_error("stripes > 1 is not supported");
-		return 0;
-	}
 
 	/*
 	 * allocate destination extents
@@ -1795,7 +1794,7 @@ int add_mirror_images(struct cmd_context *cmd, struct logical_volume *lv,
 	   So from here on, if failure occurs, the log must be explicitly
 	   removed and the updated vg metadata should be committed. */
 
-	if (!_form_mirror(cmd, ah, lv, mirrors, region_size, 0))
+	if (!_form_mirror(cmd, ah, lv, mirrors, stripes, stripe_size, region_size, 0))
 		goto out_remove_log;
 
 	if (log_count && !attach_mirror_log(first_seg(lv), log_lv))
@@ -1825,7 +1824,7 @@ int add_mirror_images(struct cmd_context *cmd, struct logical_volume *lv,
  * 'pvs' is either allocatable pvs.
  */
 int lv_add_mirrors(struct cmd_context *cmd, struct logical_volume *lv,
-		   uint32_t mirrors, uint32_t stripes,
+		   uint32_t mirrors, uint32_t stripes, uint32_t stripe_size,
 		   uint32_t region_size, uint32_t log_count,
 		   struct dm_list *pvs, alloc_policy_t alloc, uint32_t flags)
 {
@@ -1863,7 +1862,7 @@ int lv_add_mirrors(struct cmd_context *cmd, struct logical_volume *lv,
 			return add_mirror_log(cmd, lv, log_count,
 					      region_size, pvs, alloc);
 		return add_mirror_images(cmd, lv, mirrors,
-					 stripes, region_size,
+					 stripes, stripe_size, region_size,
 					 pvs, alloc, log_count);
 	}
 
