@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2006 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2006-2010 Red Hat, Inc. All rights reserved.
 #
 # This file is part of LVM2.
 #
@@ -17,16 +17,18 @@ top_builddir = @top_builddir@
 
 include $(top_builddir)/make.tmpl
 
-install:
-	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(srcdir)/lvm_dump.sh \
-		$(sbindir)/lvmdump
-	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(srcdir)/vgimportclone.sh \
-		$(sbindir)/vgimportclone
+SCRIPTS = lvm_dump.sh vgimportclone.sh
 ifeq ("@FSADM@", "yes")
-	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(srcdir)/fsadm.sh \
-		$(sbindir)/fsadm
+	SCRIPTS += fsadm.sh
 endif
 
-install_lvm2: install
+vpath %.sh $(srcdir)
+
+%_install: %.sh
+	$(INSTALL_PROGRAM) -D $< $(sbindir)/$(basename $(<F))
+
+install_lvm2: $(SCRIPTS:.sh=_install)
+
+install: install_lvm2
 
 DISTCLEAN_TARGETS += clvmd_init_red_hat cmirrord_init_red_hat lvm2_monitoring_init_red_hat

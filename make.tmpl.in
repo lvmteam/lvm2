@@ -72,15 +72,23 @@ vpath %.exported_symbols $(srcdir)
 interface = @interface@
 interfacebuilddir = $(top_builddir)/libdm/$(interface)
 
-# setup misc variables
-# define the ownership variables for the binaries and man pages
-OWNER = @OWNER@
-GROUP = @GROUP@
-
 # The number of jobs to run, if blank, defaults to the make standard
 ifndef MAKEFLAGS
 MAKEFLAGS = @JOBS@
 endif
+
+# Handle installation of files
+ifeq ("@WRITE_INSTALL@", "yes")
+# leaving defaults
+M_INSTALL_PROGRAM =
+M_INSTALL_DATA = -m 644
+else
+M_INSTALL_PROGRAM = -m 555
+M_INSTALL_DATA = -m 444
+endif
+INSTALL_PROGRAM = $(INSTALL) $(M_INSTALL_PROGRAM) $(STRIP)
+INSTALL_DATA = $(INSTALL) -p $(M_INSTALL_DATA)
+INSTALL_WDATA = $(INSTALL) -p -m 644
 
 .SUFFIXES: .c .d .o .so .a .po .pot .mo .dylib
 
@@ -152,6 +160,7 @@ POTFILES = $(SOURCES:%.c=%.pot)
 
 .PHONY: all pofile distclean clean cleandir cflow device-mapper
 .PHONY: install install_cluster install_device-mapper install_lvm2
+.PHONY: install_lib_shared install_lib_shared_plugin
 .PHONY: $(SUBDIRS) $(SUBDIRS.install) $(SUBDIRS.clean) $(SUBDIRS.distclean)
 .PHONY: $(SUBDIRS.pofile) $(SUBDIRS.install_cluster) $(SUBDIRS.cflow)
 .PHONY: $(SUBDIRS.device-mapper) $(SUBDIRS.install-device-mapper)
@@ -166,7 +175,7 @@ SUBDIRS.cflow := $(SUBDIRS:=.cflow)
 SUBDIRS.clean := $(SUBDIRS:=.clean)
 SUBDIRS.distclean := $(SUBDIRS:=.distclean)
 
-TARGETS += $(LIB_SHARED) $(LIB_STATIC) $(VERSIONED_SHLIB)
+TARGETS += $(LIB_SHARED) $(LIB_STATIC)
 
 all: $(SUBDIRS) $(TARGETS)
 
@@ -273,16 +282,30 @@ $(TARGETS): $(OBJECTS)
 %.so: %.o
 	$(CC) -c $(INCLUDES) $(DEFS) $(CFLAGS) $(CLDFLAGS) $< $(LIBS) -o $@
 
+ifneq (,$(LIB_SHARED))
+
+TARGETS += $(LIB_SHARED).$(LIB_VERSION)
+$(LIB_SHARED).$(LIB_VERSION): $(OBJECTS) $(LDDEPS)
 ifeq ("@LIB_SUFFIX@","so")
-$(LIB_SHARED): $(OBJECTS) $(LDDEPS)
-	$(CC) -shared -Wl,-soname,$(notdir $@).$(LIB_VERSION) \
-	$(CFLAGS) $(CLDFLAGS) $(OBJECTS) $(LIBS) -o $@
+	$(CC) -shared -Wl,-soname,$(notdir $@) \
+		$(CFLAGS) $(CLDFLAGS) $(OBJECTS) $(LIBS) -o $@
+endif
+ifeq ("@LIB_SUFFIX@","dylib")
+	$(CC) -dynamiclib -dylib_current_version,$(LIB_VERSION) \
+		$(CFLAGS) $(CLDFLAGS) $(OBJECTS) $(LIBS) -o $@
 endif
 
-ifeq ("@LIB_SUFFIX@","dylib")
-$(LIB_SHARED): $(OBJECTS) $(LDDEPS)
-	$(CC) -dynamiclib -dylib_current_version,$(LIB_VERSION) \
-	$(CFLAGS) $(CLDFLAGS) $(OBJECTS) $(LIBS) -o $@
+$(LIB_SHARED): $(LIB_SHARED).$(LIB_VERSION)
+	$(LN_S) -f $(<F) $@
+
+install_lib_shared: $(LIB_SHARED)
+	$(INSTALL_PROGRAM) -D $< $(libdir)/$(<F).$(LIB_VERSION)
+	$(INSTALL) -d $(usrlibdir)
+	$(LN_S) -f $(libdir)/$(<F).$(LIB_VERSION) $(usrlibdir)/$(<F)
+
+# FIXME: plugins are currently installed with .so suffix only
+install_lib_shared_plugin: $(LIB_SHARED)
+	$(INSTALL_PROGRAM) -D $< $(libdir)/$(<F)
 endif
 
 %.so: %.a
