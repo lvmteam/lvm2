@@ -526,13 +526,22 @@ struct alloc_handle {
 	struct dm_list alloced_areas[0];
 };
 
-static uint32_t calc_area_multiple(const struct segment_type *segtype,
-				   const uint32_t area_count)
+static uint32_t _calc_area_multiple(const struct segment_type *segtype,
+				    const uint32_t area_count, const uint32_t stripes)
 {
-	if (!segtype_is_striped(segtype) || !area_count)
+	if (!area_count)
 		return 1;
 
-	return area_count;
+	/* Striped */
+	if (segtype_is_striped(segtype))
+		return area_count;
+
+	/* Mirrored stripes */
+	if (stripes)
+		return stripes;
+
+	/* Mirrored */
+	return 1;
 }
 
 /*
@@ -559,6 +568,8 @@ static uint32_t mirror_log_extents(uint32_t region_size, uint32_t pe_size, uint3
 
 /*
  * Preparation for a specific allocation attempt
+ * stripes and mirrors refer to the parallel areas used for data.
+ * If log_area_count > 1 it is always mirrored (not striped).
  */
 static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 					struct dm_pool *mem,
@@ -575,20 +586,14 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 	struct alloc_handle *ah;
 	uint32_t s, area_count;
 
-	if (stripes > 1 && mirrors > 1) {
-		log_error("Striped mirrors are not supported yet");
-		return NULL;
-	}
-
-	if (log_area_count && stripes > 1) {
-		log_error("Can't mix striping with a mirror log yet.");
-		return NULL;
-	}
+	/* FIXME Caller should ensure this */
+	if (mirrors && !stripes)
+		stripes = 1;
 
 	if (segtype_is_virtual(segtype))
 		area_count = 0;
 	else if (mirrors > 1)
-		area_count = mirrors;
+		area_count = mirrors * stripes;
 	else
 		area_count = stripes;
 
@@ -617,7 +622,7 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 	ah->log_area_count = log_area_count;
 	ah->region_size = region_size;
 	ah->alloc = alloc;
-	ah->area_multiple = calc_area_multiple(segtype, area_count);
+	ah->area_multiple = _calc_area_multiple(segtype, area_count, stripes);
 
 	ah->log_len = log_area_count ? mirror_log_extents(ah->region_size, extent_size, ah->new_extents / ah->area_multiple) : 0;
 
@@ -688,7 +693,7 @@ static int _setup_alloced_segment(struct logical_volume *lv, uint64_t status,
 	uint32_t s, extents, area_multiple;
 	struct lv_segment *seg;
 
-	area_multiple = calc_area_multiple(segtype, area_count);
+	area_multiple = _calc_area_multiple(segtype, area_count, 0);
 
 	if (!(seg = alloc_lv_segment(lv->vg->cmd->mem, segtype, lv,
 				     lv->le_count,
@@ -801,6 +806,20 @@ static int _alloc_parallel_area(struct alloc_handle *ah, uint32_t needed,
 	return 1;
 }
 
+/* For striped mirrors, all the areas are counted, through the mirror layer */
+static uint32_t _stripes_per_mimage(struct lv_segment *seg)
+{
+	struct lv_segment *last_lvseg;
+
+	if (seg_is_mirrored(seg) && seg->area_count && seg_type(seg, 0) == AREA_LV) {
+		last_lvseg = dm_list_item(dm_list_last(&seg_lv(seg, 0)->segments), struct lv_segment);
+		if (seg_is_striped(last_lvseg))
+			return last_lvseg->area_count;
+	}
+
+	return 1;
+}
+
 /*
  * Call fn for each AREA_PV used by the LV segment at lv:le of length *max_seg_len.
  * If any constituent area contains more than one segment, max_seg_len is
@@ -821,6 +840,7 @@ static int _for_each_pv(struct cmd_context *cmd, struct logical_volume *lv,
 {
 	uint32_t s;
 	uint32_t remaining_seg_len, area_len, area_multiple;
+	uint32_t stripes_per_mimage = 1;
 	int r = 1;
 
 	if (!seg && !(seg = find_seg_by_le(lv, le))) {
@@ -838,8 +858,12 @@ static int _for_each_pv(struct cmd_context *cmd, struct logical_volume *lv,
 	if (max_seg_len && *max_seg_len > remaining_seg_len)
 		*max_seg_len = remaining_seg_len;
 
-	area_multiple = calc_area_multiple(seg->segtype, seg->area_count);
+	area_multiple = _calc_area_multiple(seg->segtype, seg->area_count, 0);
 	area_len = remaining_seg_len / area_multiple ? : 1;
+
+	/* For striped mirrors, all the areas are counted, through the mirror layer */
+	if (top_level_area_index == -1)
+		stripes_per_mimage = _stripes_per_mimage(seg);
 
 	for (s = first_area;
 	     s < seg->area_count && (!max_areas || s <= max_areas);
@@ -848,15 +872,14 @@ static int _for_each_pv(struct cmd_context *cmd, struct logical_volume *lv,
 			if (!(r = _for_each_pv(cmd, seg_lv(seg, s),
 					       seg_le(seg, s) +
 					       (le - seg->le) / area_multiple,
-					       area_len, NULL, max_seg_len,
-					       only_single_area_segments ? 0 : 0,
-					       only_single_area_segments ? 1U : 0U,
-					       top_level_area_index != -1 ? top_level_area_index : (int) s,
+					       area_len, NULL, max_seg_len, 0,
+					       (stripes_per_mimage == 1) && only_single_area_segments ? 1U : 0U,
+					       top_level_area_index != -1 ? top_level_area_index : (int) s * stripes_per_mimage,
 					       only_single_area_segments, fn,
 					       data)))
 				stack;
 		} else if (seg_type(seg, s) == AREA_PV)
-			if (!(r = fn(cmd, seg_pvseg(seg, s), top_level_area_index != -1 ? (uint32_t) top_level_area_index : s, data)))
+			if (!(r = fn(cmd, seg_pvseg(seg, s), top_level_area_index != -1 ? (uint32_t) top_level_area_index + s : s, data)))
 				stack;
 		if (r != 1)
 			return r;
@@ -947,6 +970,11 @@ static int _is_condition(struct cmd_context *cmd __attribute((unused)),
 	pvmatch->areas[s].pva = pvmatch->pva;
 	pvmatch->areas[s].used = pvmatch->pva->count;
 
+	log_debug("Trying allocation area %" PRIu32 " on %s start PE %" PRIu32
+		  " length %" PRIu32 ".",
+		  s, dev_name(pvmatch->pva->map->pv->dev), pvmatch->pva->start, 
+		  pvmatch->pva->count);
+
 	return 2;	/* Finished */
 }
 
@@ -1032,13 +1060,14 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 	uint32_t free_pes;
 	struct alloced_area *aa;
 	uint32_t s;
+	uint32_t total_extents_needed = (needed - *allocated) * ah->area_count / ah->area_multiple;
 
 	/* Is there enough total space? */
 	free_pes = pv_maps_size(pvms);
-	if (needed - *allocated > free_pes) {
+	if (total_extents_needed > free_pes) {
 		log_error("Insufficient free space: %" PRIu32 " extents needed,"
 			  " but only %" PRIu32 " available",
-			  needed - *allocated, free_pes);
+			  total_extents_needed, free_pes);
 		return 0;
 	}
 
@@ -1046,7 +1075,7 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 
 	/* Are there any preceding segments we must follow on from? */
 	if (prev_lvseg) {
-		ix_offset = prev_lvseg->area_count;
+		ix_offset = _stripes_per_mimage(prev_lvseg) * prev_lvseg->area_count;
 		if ((alloc == ALLOC_CONTIGUOUS))
 			contiguous = 1;
 		else if ((alloc == ALLOC_CLING))
@@ -1201,20 +1230,25 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 						  (alloc == ALLOC_ANYWHERE) ? pva->unreserved : pva->count - required);
 				}
 			next_pv:
-				if (alloc == ALLOC_ANYWHERE &&
-				    ix + ix_offset >= ah->area_count + (*log_needs_allocating ? ah->log_area_count : 0))
+				/* With ALLOC_ANYWHERE we ignore further PVs once we have at least enough areas */
+				/* With cling and contiguous we stop if we found a match for *all* the areas */
+				/* FIXME Rename these variables! */
+				if ((alloc == ALLOC_ANYWHERE &&
+				    ix + ix_offset >= ah->area_count + (*log_needs_allocating ? ah->log_area_count : 0)) ||
+				    (preferred_count == ix_offset &&
+				     (ix_offset == ah->area_count + (*log_needs_allocating ? ah->log_area_count : 0))))
 					break;
 			}
 		} while (alloc == ALLOC_ANYWHERE && last_ix != ix && ix < ah->area_count + (*log_needs_allocating ? ah->log_area_count : 0));
 
-		if ((contiguous || cling) && (preferred_count < ix_offset))
+		if (preferred_count < ix_offset)
 			break;
 
 		if (ix + ix_offset < ah->area_count +
 		   (*log_needs_allocating ? ah->log_area_count : 0))
 			break;
 
-		/* sort the areas so we allocate from the biggest */
+		/* Sort the areas so we allocate from the biggest */
 		if (ix > 1)
 			qsort((*areas_ptr) + ix_offset, ix, sizeof(**areas_ptr),
 			      _comp_area);
@@ -1310,7 +1344,7 @@ static int _allocate(struct alloc_handle *ah,
 	/* Upper bound if none of the PVs in prev_lvseg is in pvms */
 	/* FIXME Work size out properly */
 	if (prev_lvseg)
-		areas_size += prev_lvseg->area_count;
+		areas_size += _stripes_per_mimage(prev_lvseg) * prev_lvseg->area_count;
 
 	/* Allocate an array of pv_areas to hold the largest space on each PV */
 	if (!(areas = dm_malloc(sizeof(*areas) * areas_size))) {
@@ -1322,10 +1356,14 @@ static int _allocate(struct alloc_handle *ah,
 	for (alloc = ALLOC_CONTIGUOUS; alloc < ALLOC_INHERIT; alloc++) {
 		old_allocated = allocated;
 		log_debug("Trying allocation using %s policy.  "
-			  "Need %" PRIu32 " extents for %" PRIu32 " parallel areas and %" PRIu32 " log extents.",
+			  "Need %" PRIu32 " extents for %" PRIu32 " parallel areas and %" PRIu32 " log areas of %" PRIu32 " extents. "
+			  "(Total %" PRIu32 " extents.)",
 			  get_alloc_string(alloc),
 			  (ah->new_extents - allocated) / ah->area_multiple,
-			  ah->area_count, log_needs_allocating ? ah->log_area_count : 0);
+			  ah->area_count, log_needs_allocating ? ah->log_area_count : 0,
+			  log_needs_allocating ? ah->log_len : 0,
+			  (ah->new_extents - allocated) * ah->area_count / ah->area_multiple +
+				(log_needs_allocating ? ah->log_area_count * ah->log_len : 0));
 		if (!_find_parallel_space(ah, alloc, pvms, &areas,
 					  &areas_size, can_split,
 					  prev_lvseg, &allocated, &log_needs_allocating, ah->new_extents))
@@ -1665,7 +1703,8 @@ int lv_add_log_segment(struct alloc_handle *ah, uint32_t first_area,
 
 static int _lv_extend_mirror(struct alloc_handle *ah,
 			     struct logical_volume *lv,
-			     uint32_t extents, uint32_t first_area)
+			     uint32_t extents, uint32_t first_area,
+			     uint32_t stripes, uint32_t stripe_size)
 {
 	struct lv_segment *seg;
 	uint32_t m, s;
@@ -1673,20 +1712,21 @@ static int _lv_extend_mirror(struct alloc_handle *ah,
 	seg = first_seg(lv);
 	for (m = first_area, s = 0; s < seg->area_count; s++) {
 		if (is_temporary_mirror_layer(seg_lv(seg, s))) {
-			if (!_lv_extend_mirror(ah, seg_lv(seg, s), extents, m))
+			if (!_lv_extend_mirror(ah, seg_lv(seg, s), extents, m, stripes, stripe_size))
 				return_0;
 			m += lv_mirror_count(seg_lv(seg, s));
 			continue;
 		}
 
-		if (!lv_add_segment(ah, m++, 1, seg_lv(seg, s),
+		if (!lv_add_segment(ah, m, stripes, seg_lv(seg, s),
 				    get_segtype_from_string(lv->vg->cmd,
 							    "striped"),
-				    0, 0, 0)) {
+				    stripe_size, 0, 0)) {
 			log_error("Aborting. Failed to extend %s.",
 				  seg_lv(seg, s)->name);
 			return 0;
 		}
+		m += stripes;
 	}
 	seg->area_len += extents;
 	seg->len += extents;
@@ -1722,7 +1762,7 @@ int lv_extend(struct logical_volume *lv,
 		r = lv_add_segment(ah, 0, ah->area_count, lv, segtype,
 				   stripe_size, status, 0);
 	else
-		r = _lv_extend_mirror(ah, lv, extents, 0);
+		r = _lv_extend_mirror(ah, lv, extents, 0, stripes, stripe_size);
 
 	alloc_destroy(ah);
 	return r;
@@ -2095,7 +2135,7 @@ struct dm_list *build_parallel_areas_from_lv(struct cmd_context *cmd,
 		/* FIXME Unnecessary nesting! */
 		if (!_for_each_pv(cmd, use_pvmove_parent_lv ? seg->pvmove_source_seg->lv : lv,
 				  use_pvmove_parent_lv ? seg->pvmove_source_seg->le : current_le,
-				  use_pvmove_parent_lv ? spvs->len * calc_area_multiple(seg->pvmove_source_seg->segtype, seg->pvmove_source_seg->area_count) : spvs->len,
+				  use_pvmove_parent_lv ? spvs->len * _calc_area_multiple(seg->pvmove_source_seg->segtype, seg->pvmove_source_seg->area_count, 0) : spvs->len,
 				  use_pvmove_parent_lv ? seg->pvmove_source_seg : NULL,
 				  &spvs->len,
 				  0, 0, -1, 0, _add_pvs, (void *) spvs))
@@ -3148,6 +3188,7 @@ int lv_create_single(struct volume_group *vg,
 
 	if (lp->mirrors > 1) {
 		if (!lv_add_mirrors(cmd, lv, lp->mirrors - 1, lp->stripes,
+				    lp->stripe_size,
 				    adjusted_mirror_region_size(
 						vg->extent_size,
 						lv->le_count,

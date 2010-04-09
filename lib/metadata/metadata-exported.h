@@ -665,7 +665,7 @@ int vg_max_lv_reached(struct volume_group *vg);
 */
 struct lv_segment *find_mirror_seg(struct lv_segment *seg);
 int lv_add_mirrors(struct cmd_context *cmd, struct logical_volume *lv,
-		   uint32_t mirrors, uint32_t stripes,
+		   uint32_t mirrors, uint32_t stripes, uint32_t stripe_size,
 		   uint32_t region_size, uint32_t log_count,
 		   struct dm_list *pvs, alloc_policy_t alloc, uint32_t flags);
 int lv_split_mirror_images(struct logical_volume *lv, const char *split_lv_name,
@@ -688,7 +688,7 @@ int add_mirrors_to_segments(struct cmd_context *cmd, struct logical_volume *lv,
 int remove_mirror_images(struct logical_volume *lv, uint32_t num_mirrors,
 			 struct dm_list *removable_pvs, unsigned remove_log);
 int add_mirror_images(struct cmd_context *cmd, struct logical_volume *lv,
-		      uint32_t mirrors, uint32_t stripes, uint32_t region_size,
+		      uint32_t mirrors, uint32_t stripes, uint32_t stripe_size, uint32_t region_size,
 		      struct dm_list *allocatable_pvs, alloc_policy_t alloc,
 		      uint32_t log_count);
 struct logical_volume *detach_mirror_log(struct lv_segment *seg);

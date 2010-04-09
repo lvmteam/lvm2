@@ -30,7 +30,8 @@
 static int _merge(struct lv_segment *first, struct lv_segment *second)
 {
 	if (!first || !second || first->segtype != second->segtype ||
-	    !first->segtype->ops->merge_segments) return 0;
+	    !first->segtype->ops->merge_segments)
+		return 0;
 
 	return first->segtype->ops->merge_segments(first, second);
 }

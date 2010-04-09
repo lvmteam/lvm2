@@ -945,21 +945,13 @@ static int _lvconvert_mirrors_aux(struct cmd_context *cmd,
 	if (!(lv->status & MIRRORED)) {
 		/* FIXME Share code with lvcreate */
 
-		/* FIXME Why is this restriction here?  Fix it! */
-		dm_list_iterate_items(seg, &lv->segments) {
-			if (seg_is_striped(seg) && seg->area_count > 1) {
-				log_error("Mirrors of striped volumes are not yet supported.");
-				return 0;
-			}
-		}
-
 		/*
 		 * FIXME should we give not only lp->pvh, but also all PVs
 		 * currently taken by the mirror? Would make more sense from
 		 * user perspective.
 		 */
 		if (!lv_add_mirrors(cmd, lv, new_mimage_count - 1, 1,
-				    region_size, new_log_count, operable_pvs,
+				    0, region_size, new_log_count, operable_pvs,
 				    lp->alloc, MIRROR_BY_LV)) {
 			stack;
 			return failure_code;
@@ -1013,7 +1005,7 @@ static int _lvconvert_mirrors_aux(struct cmd_context *cmd,
 
 		/* FIXME: can't have multiple mlogs. force corelog. */
 		if (!lv_add_mirrors(cmd, lv,
-				    new_mimage_count - old_mimage_count, 1,
+				    new_mimage_count - old_mimage_count, 1, 0,
 				    region_size, 0U, operable_pvs, lp->alloc,
 				    MIRROR_BY_LV)) {
 			layer_lv = seg_lv(first_seg(lv), 0);

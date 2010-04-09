@@ -457,12 +457,6 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 			return 0;
 		}
 
-		if (lp->stripes > 1) {
-			log_error("mirrors and stripes are currently "
-				  "incompatible");
-			return 0;
-		}
-
 		if (!(lp->segtype = get_segtype_from_string(cmd, "striped")))
 			return_0;
 	} else {

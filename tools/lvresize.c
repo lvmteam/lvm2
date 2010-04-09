@@ -73,10 +73,6 @@ static int _validate_stripesize(struct cmd_context *cmd,
 	} else
 		lp->stripe_size = arg_uint_value(cmd, stripesize_ARG, 0);
 
-	if (lp->mirrors) {
-		log_error("Mirrors and striping cannot be combined yet.");
-		return 0;
-	}
 	if (lp->stripe_size & (lp->stripe_size - 1)) {
 		log_error("Stripe size must be power of 2");
 		return 0;
@@ -287,7 +283,7 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 	alloc_policy_t alloc;
 	struct logical_volume *lock_lv;
 	struct lv_list *lvl;
-	struct lv_segment *seg;
+	struct lv_segment *seg, *uninitialized_var(mirr_seg);
 	uint32_t seg_extents;
 	uint32_t sz, str;
 	struct dm_list *pvh = NULL;
@@ -429,10 +425,32 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 		return EINVALID_CMD_LINE;
 	}
 
+	/* If extending, find mirrors of last segment */
+	if ((lp->extents > lv->le_count)) {
+		dm_list_iterate_back_items(mirr_seg, &lv->segments) {
+			if (seg_is_mirrored(mirr_seg))
+				seg_mirrors = lv_mirror_count(mirr_seg->lv);
+			else
+				seg_mirrors = 0;
+			break;
+		}
+		if (!arg_count(cmd, mirrors_ARG) && seg_mirrors) {
+			log_print("Extending %" PRIu32 " mirror images.",
+				  seg_mirrors);
+			lp->mirrors = seg_mirrors;
+		}
+		if ((arg_count(cmd, mirrors_ARG) || seg_mirrors) &&
+		    (lp->mirrors != seg_mirrors)) {
+			log_error("Cannot vary number of mirrors in LV yet.");
+			return EINVALID_CMD_LINE;
+		}
+	}
+
 	/* If extending, find stripes, stripesize & size of last segment */
 	if ((lp->extents > lv->le_count) &&
 	    !(lp->stripes == 1 || (lp->stripes > 1 && lp->stripe_size))) {
-		dm_list_iterate_items(seg, &lv->segments) {
+		/* FIXME Don't assume mirror seg will always be AREA_LV */
+		dm_list_iterate_items(seg, seg_mirrors ? &seg_lv(mirr_seg, 0)->segments : &lv->segments) {
 			if (!seg_is_striped(seg))
 				continue;
 
@@ -440,7 +458,7 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 			str = seg->area_count;
 
 			if ((seg_stripesize && seg_stripesize != sz &&
-			     !lp->stripe_size) ||
+			     sz && !lp->stripe_size) ||
 			    (seg_stripes && seg_stripes != str && !lp->stripes)) {
 				log_error("Please specify number of "
 					  "stripes (-i) and stripesize (-I)");
@@ -467,27 +485,6 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 				log_print("Using default stripesize %s",
 					  display_size(cmd, (uint64_t) lp->stripe_size));
 			}
-		}
-	}
-
-	/* If extending, find mirrors of last segment */
-	if ((lp->extents > lv->le_count)) {
-		dm_list_iterate_back_items(seg, &lv->segments) {
-			if (seg_is_mirrored(seg))
-				seg_mirrors = lv_mirror_count(seg->lv);
-			else
-				seg_mirrors = 0;
-			break;
-		}
-		if (!arg_count(cmd, mirrors_ARG) && seg_mirrors) {
-			log_print("Extending %" PRIu32 " mirror images.",
-				  seg_mirrors);
-			lp->mirrors = seg_mirrors;
-		}
-		if ((arg_count(cmd, mirrors_ARG) || seg_mirrors) &&
-		    (lp->mirrors != seg_mirrors)) {
-			log_error("Cannot vary number of mirrors in LV yet.");
-			return EINVALID_CMD_LINE;
 		}
 	}
 
