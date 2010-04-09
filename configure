@@ -646,6 +646,7 @@ kernelvsn
 missingkernel
 kerneldir
 interface
+WRITE_INSTALL
 UDEV_SYNC
 UDEV_RULES
 UDEV_LIBS
@@ -657,7 +658,6 @@ READLINE_LIBS
 PTHREAD_LIBS
 POOL
 PKGCONFIG
-OWNER
 MIRRORS
 LVM_RELEASE_DATE
 LVM_RELEASE
@@ -676,7 +676,6 @@ INTL_PACKAGE
 INTL
 HAVE_REALTIME
 HAVE_LIBDL
-GROUP
 FSADM
 DM_LIB_PATCHLEVEL
 DM_LIB_VERSION
@@ -836,6 +835,7 @@ enable_o_direct
 enable_applib
 enable_cmdlib
 enable_pkgconfig
+enable_write_install
 enable_fsadm
 enable_dmeventd
 enable_selinux
@@ -1527,6 +1527,7 @@ Optional Features:
   --enable-applib         Build application library
   --enable-cmdlib         Build shared command library
   --enable-pkgconfig      Install pkgconfig support
+  --enable-write_install  Install user writable files
   --disable-fsadm         Disable fsadm
   --enable-dmeventd       Enable the device-mapper event daemon
   --disable-selinux       Disable selinux support
@@ -9083,8 +9084,6 @@ $as_echo "$STATIC_LINK" >&6; }
 ################################################################################
 { $as_echo "$as_me:$LINENO: checking file owner" >&5
 $as_echo_n "checking file owner... " >&6; }
-OWNER=""
-
 
 # Check whether --with-user was given.
 if test "${with_user+set}" = set; then
@@ -9095,13 +9094,12 @@ fi
 $as_echo "$OWNER" >&6; }
 
 if test x$OWNER != x; then
-	OWNER="-o $OWNER"
+	INSTALL="$INSTALL -o $OWNER"
 fi
 
 ################################################################################
 { $as_echo "$as_me:$LINENO: checking group owner" >&5
 $as_echo_n "checking group owner... " >&6; }
-GROUP=""
 
 # Check whether --with-group was given.
 if test "${with_group+set}" = set; then
@@ -9112,7 +9110,7 @@ fi
 $as_echo "$GROUP" >&6; }
 
 if test x$GROUP != x; then
-	GROUP="-g $GROUP"
+	INSTALL="$INSTALL -g $GROUP"
 fi
 
 ################################################################################
@@ -12451,6 +12449,15 @@ fi
 
 
 ################################################################################
+# Check whether --enable-write_install was given.
+if test "${enable_write_install+set}" = set; then
+  enableval=$enable_write_install; WRITE_INSTALL=$enableval
+else
+  WRITE_INSTALL=no
+fi
+
+
+################################################################################
 { $as_echo "$as_me:$LINENO: checking whether to install fsadm" >&5
 $as_echo_n "checking whether to install fsadm... " >&6; }
 # Check whether --enable-fsadm was given.
@@ -15516,7 +15523,6 @@ LVM_PATCHLEVEL=`echo "$VER" | $AWK -F '[(.]' '{print $3}'`
 LVM_LIBAPI=`echo "$VER" | $AWK -F '[()]' '{print $2}'`
 
 ################################################################################
-
 
 
 

@@ -1,6 +1,6 @@
 #
 # Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
-# Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2004-2010 Red Hat, Inc. All rights reserved.
 #
 # This file is part of the device-mapper userspace tools.
 #
@@ -38,13 +38,9 @@ ifeq ("@STATIC_LINK@", "yes")
 LIB_STATIC = $(interface)/libdevmapper.a
 endif
 
-ifeq ("@LIB_SUFFIX@","dylib")
-  LIB_SHARED = $(interface)/libdevmapper.dylib
-else
-  LIB_SHARED = $(interface)/libdevmapper.so
-endif
-VERSIONED_SHLIB = libdevmapper.$(LIB_SUFFIX).$(LIB_VERSION_DM)
+LIB_SHARED = $(interface)/libdevmapper.$(LIB_SUFFIX)
 LIB_VERSION = $(LIB_VERSION_DM)
+TARGETS += libdevmapper.$(LIB_SUFFIX) libdevmapper.$(LIB_SUFFIX).$(LIB_VERSION)
 
 CFLOW_LIST = $(SOURCES)
 CFLOW_LIST_TARGET = libdevmapper.cflow
@@ -57,6 +53,9 @@ DEFS += -DDM_DEVICE_UID=@DM_DEVICE_UID@ -DDM_DEVICE_GID=@DM_DEVICE_GID@ \
 LIBS += $(SELINUX_LIBS) $(UDEV_LIBS)
 
 device-mapper: all
+
+libdevmapper.$(LIB_SUFFIX) libdevmapper.$(LIB_SUFFIX).$(LIB_VERSION): $(LIB_SHARED)
+	$(LN_S) -f $< $@
 
 .PHONY: install_dynamic install_static install_include \
 	install_ioctl install_ioctl_static \
@@ -76,40 +75,20 @@ install: $(INSTALL_TYPE) install_include
 
 install_device-mapper: install
 
-install_include:
-	$(INSTALL) -D $(OWNER) $(GROUP) -m 444 $(srcdir)/libdevmapper.h \
-		$(includedir)/libdevmapper.h
+install_include: $(srcdir)/libdevmapper.h
+	$(INSTALL_DATA) -D $< $(includedir)/$(<F)
 
 install_dynamic: install_@interface@
-	$(LN_S) -f libdevmapper.$(LIB_SUFFIX).$(LIB_VERSION_DM) \
-		$(libdir)/libdevmapper.$(LIB_SUFFIX)
 
 install_static: install_@interface@_static
-	$(LN_S) -f libdevmapper.a.$(LIB_VERSION_DM) $(libdir)/libdevmapper.a
 
-install_ioctl: ioctl/libdevmapper.$(LIB_SUFFIX)
-	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) $< \
-		$(libdir)/libdevmapper.$(LIB_SUFFIX).$(LIB_VERSION_DM)
+install_ioctl: install_lib_shared
 
-install_pkgconfig:
-	$(INSTALL) -D $(OWNER) $(GROUP) -m 444 libdevmapper.pc \
-		$(usrlibdir)/pkgconfig/devmapper.pc
+install_pkgconfig: libdevmapper.pc
+	$(INSTALL_DATA) -D $< $(usrlibdir)/pkgconfig/devmapper.pc
 
-install_ioctl_static: ioctl/libdevmapper.a
-	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) $< \
-		$(libdir)/libdevmapper.a.$(LIB_VERSION_DM)
+install_ioctl_static: $(LIB_STATIC)
+	$(INSTALL_DATA) -D $< $(usrlibdir)/$(<F)
 
-$(VERSIONED_SHLIB): %.$(LIB_SUFFIX).$(LIB_VERSION_DM): $(interface)/%.$(LIB_SUFFIX)
-	rm -f $@
-	$(LN_S) $< $@
-	rm -f libdevmapper.$(LIB_SUFFIX)
-	$(LN_S) $< libdevmapper.$(LIB_SUFFIX)
-
-CLEAN_TARGETS += libdevmapper.$(LIB_SUFFIX) ioctl/libdevmapper.a
-
-.PHONY: distclean_lib
-
-distclean_lib:
-	$(RM) libdevmapper.pc
-
-distclean: distclean_lib
+CLEAN_TARGETS += ioctl/libdevmapper.a
+DISTCLEAN_TARGETS += libdevmapper.pc

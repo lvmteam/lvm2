@@ -19,20 +19,13 @@ CLDFLAGS += -L$(top_builddir)/tools
 
 SOURCES = dmeventd_lvm.c
 
-ifeq ("@LIB_SUFFIX@","dylib")
-  LIB_SHARED = libdevmapper-event-lvm2.dylib
-else
-  LIB_SHARED = libdevmapper-event-lvm2.so
-endif
+LIB_SHARED = libdevmapper-event-lvm2.$(LIB_SUFFIX)
 LIB_VERSION = $(LIB_VERSION_LVM)
 
 include $(top_builddir)/make.tmpl
 
 LIBS += @LVM2CMD_LIB@ -ldevmapper $(PTHREAD_LIBS)
 
-install_lvm2: libdevmapper-event-lvm2.$(LIB_SUFFIX)
-	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) $< \
-		$(libdir)/$<.$(LIB_VERSION)
-	$(LN_S) -f $<.$(LIB_VERSION) $(libdir)/$<
+install_lvm2: install_lib_shared
 
 install: install_lvm2
