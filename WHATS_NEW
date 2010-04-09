@@ -1,5 +1,6 @@
 Version 2.02.63 -  
 ================================
+  Switch from using VPATH  to vpath in Makefiles.
   Permit mimage LVs to be striped in lvcreate and lvresize.
   Fix pvmove allocation to take existing parallel stripes into account.
   Add pvmove_source_seg to struct lv_segment.
