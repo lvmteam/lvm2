@@ -63,6 +63,12 @@ localedir = $(DESTDIR)@LOCALEDIR@
 staticdir = $(DESTDIR)@STATICDIR@
 udevdir = $(DESTDIR)@udevdir@
 
+# Setup vpath search paths for some suffixes
+vpath %.c $(srcdir)
+vpath %.in $(srcdir)
+vpath %.po $(srcdir)
+vpath %.exported_symbols $(srcdir)
+
 interface = @interface@
 interfacebuilddir = $(top_builddir)/libdm/$(interface)
 
