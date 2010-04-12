@@ -26,14 +26,33 @@ mirror_images_redundant()
   }
 }
 
+mirror_images_on() {
+	lv=$1
+
+	for i in `lvdevices $lv`; do
+		shift
+		lv_on $lv $1
+	done
+}
+
+lv_on()
+{
+	lv="$1"
+	lvdevices $lv | grep -F "$2" || {
+		echo "LV $lv expected on $2 but is not:" >&2
+		lvdevices $lv >&2
+		exit 1
+	}
+	test `lvdevices $lv | grep -vF "$2" | wc -l` -eq 0 || {
+		echo "LV $lv contains unexpected devices:" >&2
+		lvdevices $lv >&2
+		exit 1
+	}
+}
+
 mirror_log_on()
 {
-  lv="$1"_mlog
-  lvdevices $lv | grep -F "$2" || {
-	  echo "mirror log $lv expected on $2 but found on:" >&2
-	  lvdevices $lv >&2
-	  exit 1
-  }
+	lv_on "${1}_mlog" "$2"
 }
 
 lv_is_contiguous()
@@ -81,7 +100,7 @@ mirror() {
 
 linear() {
 	lv="$1/$2"
-	lvs -ostripes "$lv" | grep "1" || {
+	lvs -ostripes "$lv" | grep -q "1" || {
 		echo "$lv expected linear, but is not:"
 		lvs -a "$lv" -o+devices
 		exit 1
