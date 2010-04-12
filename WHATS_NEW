@@ -1,5 +1,7 @@
 Version 2.02.63 -  
 ================================
+  Don't ignore error if resuming any LV fails in resume_lvs.
+  Skip closing persistent filter cache file if open failed.
   Install .a .so links to $(usrlibdir).
   Add --enable-write_install options to install user writable files.
   Use INSTALL_PROGRAM/DATA/WDATA target.
