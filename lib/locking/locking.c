@@ -468,12 +468,15 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags)
 int resume_lvs(struct cmd_context *cmd, struct dm_list *lvs)
 {
 	struct lv_list *lvl;
+	int r = 1;
 
 	dm_list_iterate_items(lvl, lvs)
-		if (!resume_lv(cmd, lvl->lv))
+		if (!resume_lv(cmd, lvl->lv)) {
+			r = 0;
 			stack;
+		}
 
-	return 1;
+	return r;
 }
 
 /* Lock a list of LVs */
