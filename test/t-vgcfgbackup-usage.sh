@@ -18,7 +18,7 @@ vg1=${PREFIX}vg00
 vg2=${PREFIX}vg01
 vgcreate $vg1 $dev1
 vgcreate $vg2 $dev2
-vgcfgbackup -f /tmp/bak-%s >out
+vgcfgbackup -f $TESTDIR/bak-%s >out
 grep "Volume group \"$vg1\" successfully backed up." out
 grep "Volume group \"$vg2\" successfully backed up." out
 vgremove -ff $vg1
