@@ -23,6 +23,11 @@ lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0-1
 lvconvert -m-1 $vg/$lv1
 check linear $vg $lv1
 lvremove -ff $vg
+# and now try removing a specific leg (bz453643)
+lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0-1
+lvconvert -m0 $vg/$lv1 $dev2
+check lv_on $vg/$lv1 $dev1
+lvremove -ff $vg
 
 # convert from disklog to corelog, active
 lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0-1
@@ -55,3 +60,11 @@ lvremove -ff $vg
 lvcreate -l2 -n $lv1 $vg $dev1
 not lvconvert -m+1 --mirrorlog core $vg/$lv1 $dev1
 lvremove -ff $vg
+
+lvcreate -l2 -m2 -n $lv1 $vg $dev1 $dev2 $dev4 $dev3:0-1
+lvconvert -m-1 $vg/$lv1 $dev1
+check mirror_images_on $lv1 $dev2 $dev4
+lvconvert -m-1 $vg/$lv1 $dev2
+check linear $vg $lv1
+check lv_on $vg/$lv1 $dev4
+
