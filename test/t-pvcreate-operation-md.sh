@@ -41,7 +41,7 @@ cleanup_md() {
 	sleep 2
 	rm -f $mddev
     fi
-    teardown_
+    teardown
 }
 
 # create 2 disk MD raid0 array (stripe_width=128K)
