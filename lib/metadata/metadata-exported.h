@@ -470,6 +470,9 @@ int vg_set_alloc_policy(struct volume_group *vg, alloc_policy_t alloc);
 int vg_set_clustered(struct volume_group *vg, int clustered);
 int vg_split_mdas(struct cmd_context *cmd, struct volume_group *vg_from,
 		  struct volume_group *vg_to);
+/* FIXME: Investigate refactoring these functions to take a pv ISO pv_list */
+void add_pvl_to_vgs(struct volume_group *vg, struct pv_list *pvl);
+void del_pvl_from_vgs(struct volume_group *vg, struct pv_list *pvl);
 
 /* FIXME: refactor / unexport when lvremove liblvm refactoring dones */
 int remove_lvs_in_vg(struct cmd_context *cmd,
