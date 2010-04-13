@@ -143,12 +143,14 @@ void add_pvl_to_vgs(struct volume_group *vg, struct pv_list *pvl)
 {
 	dm_list_add(&vg->pvs, &pvl->list);
 	vg->pv_count++;
+	pvl->pv->vg = vg;
 }
 
 void del_pvl_from_vgs(struct volume_group *vg, struct pv_list *pvl)
 {
 	vg->pv_count--;
 	dm_list_del(&pvl->list);
+	pvl->pv->vg = NULL; /* orphan */
 }
 
 
@@ -2156,6 +2158,12 @@ int vg_validate(struct volume_group *vg)
 		if (++pv_count > vg->pv_count) {
 			log_error(INTERNAL_ERROR "PV list corruption detected in VG %s.", vg->name);
 			/* FIXME Dump list structure? */
+			r = 0;
+		}
+		if (pvl->pv->vg != vg) {
+			log_error(INTERNAL_ERROR "VG %s PV list entry points "
+				  "to different VG %s", vg->name,
+				  pvl->pv->vg ? pvl->pv->vg->name : "NULL");
 			r = 0;
 		}
 	}
