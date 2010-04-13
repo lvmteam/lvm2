@@ -129,7 +129,7 @@ static struct volume_group *_build_vg_from_pds(struct format_instance
 	if (!import_pool_vg(vg, smem, pds))
 		return_NULL;
 
-	if (!import_pool_pvs(fid->fmt, vg, &vg->pvs, smem, pds))
+	if (!import_pool_pvs(fid->fmt, vg, smem, pds))
 		return_NULL;
 
 	if (!import_pool_lvs(vg, smem, pds))
