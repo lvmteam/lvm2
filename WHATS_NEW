@@ -1,5 +1,6 @@
 Version 2.02.63 -  
 ================================
+  Add activation/polling_interval to lvm.conf as --interval default.
   Don't ignore error if resuming any LV fails in resume_lvs.
   Skip closing persistent filter cache file if open failed.
   Install .a .so links to $(usrlibdir).

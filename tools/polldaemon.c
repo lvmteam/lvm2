@@ -280,7 +280,9 @@ int poll_daemon(struct cmd_context *cmd, const char *name, const char *uuid,
 	interval_sign = arg_sign_value(cmd, interval_ARG, 0);
 	if (interval_sign == SIGN_MINUS)
 		log_error("Argument to --interval cannot be negative");
-	parms.interval = arg_uint_value(cmd, interval_ARG, DEFAULT_INTERVAL);
+	parms.interval = arg_uint_value(cmd, interval_ARG,
+					find_config_tree_int(cmd, "activation/polling_interval",
+							     DEFAULT_INTERVAL));
 	parms.wait_before_testing = (interval_sign == SIGN_PLUS);
 	parms.progress_display = 1;
 	parms.progress_title = progress_title;
@@ -297,7 +299,8 @@ int poll_daemon(struct cmd_context *cmd, const char *name, const char *uuid,
 
 		/* FIXME Disabled multiple-copy wait_event */
 		if (!name)
-			parms.interval = DEFAULT_INTERVAL;
+			parms.interval = find_config_tree_int(cmd, "activation/polling_interval",
+							      DEFAULT_INTERVAL);
 	}
 
 	if (parms.background) {
