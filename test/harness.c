@@ -133,6 +133,7 @@ void run(int i, char *f) {
 
 int main(int argc, char **argv) {
 	int i;
+	int repeat = getenv("LVM_TEST_NOVERBOSE") ? 0 : 1;
 
 	if (argc >= MAX) {
 		fprintf(stderr, "Sorry, my head exploded. Please increase MAX.\n");
@@ -168,7 +169,7 @@ int main(int argc, char **argv) {
 		run(i, argv[i]);
 		if (die)
 			break;
-		if ( s.status[i] == FAILED ) {
+		if ( repeat && s.status[i] == FAILED ) {
 			backup = s;
 			setenv("LVM_TEST_CONFIG", config_debug, 1);
 			run(i, argv[i]);
