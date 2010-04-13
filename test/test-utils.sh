@@ -373,6 +373,7 @@ prepare_lvmconf() {
   activation {
     udev_sync = 1
     udev_rules = 1
+    polling_interval = 0
   }
 EOF
 	cat $TESTDIR/etc/lvm.conf
