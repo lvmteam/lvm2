@@ -194,6 +194,12 @@ get_sd_devs_()
 # - scripts must take care not to use a DEV_SIZE that will enduce OOM-killer
 prepare_scsi_debug_dev()
 {
+    # FIXME this is extremely fragile and can cause data loss if an unrelated
+    # SCSI device appears at a wrong time... we need the code to reliably
+    # identify the scsi_debug device it has created before we can re-include
+    # this in the testsuite
+    exit 200
+
     local DEV_SIZE="$1"
     shift
     local SCSI_DEBUG_PARAMS="$@"
