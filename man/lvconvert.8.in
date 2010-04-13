@@ -76,7 +76,7 @@ For example, "-m 1" would convert the original logical
 volume to a mirror volume with 2-sides; that is, a
 linear volume plus one copy.
 .TP
-.I \-\-mirrorlog {disk|core}
+.I \-\-mirrorlog {disk|core|mirrored}
 Specifies the type of log to use.
 The default is disk, which is persistent and requires
 a small amount of storage space, usually on a separate device
