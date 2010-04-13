@@ -46,11 +46,19 @@ api/vgtest:
 	$(MAKE) -C api vgtest
 endif
 
-all: init.sh
+all check: init.sh
 	@echo Testing with locking_type 1
 	./bin/harness $(RUN)
 	@echo Testing with locking_type 3
 	LVM_TEST_LOCKING=3 ./bin/harness $(RUN)
+
+check_cluster: init.sh
+	@echo Testing with locking_type 3
+	LVM_TEST_LOCKING=3 ./bin/harness $(RUN)
+
+check_local: init.sh
+	@echo Testing with locking_type 1
+	LVM_TEST_LOCKING=1 ./bin/harness $(RUN)
 
 bin/not: $(srcdir)/not.c .bin-dir-stamp
 	$(CC) -o bin/not $<

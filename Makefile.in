@@ -75,8 +75,8 @@ all: cscope.out
 endif
 DISTCLEAN_TARGETS += cscope.out
 
-check: all
-	$(MAKE) -C test all
+check check_cluster check_local: all
+	$(MAKE) -C test $(@)
 
 LCOV_TRACES = libdm.info lib.info tools.info \
 	daemons/dmeventd.info daemons/clvmd.info
