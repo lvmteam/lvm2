@@ -415,6 +415,13 @@ int lock_resource(struct cmd_context *cmd, const char *resource, uint32_t flags)
 
 		lock_scope = "VG";
 		clvmd_cmd = CLVMD_CMD_LOCK_VG;
+		/*
+		 * Old clvmd does not expect LCK_HOLD which was already processed
+		 * in lock_vol, mask it for compatibility reasons.
+		 */
+		if (flags != LCK_VG_COMMIT && flags != LCK_VG_REVERT)
+			flags &= ~LCK_HOLD;
+
 		break;
 
 	case LCK_LV:
