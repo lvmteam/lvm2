@@ -37,7 +37,6 @@ int import_pool_vg(struct volume_group *vg, struct dm_pool *mem, struct dm_list 
 		    ((pl->pd.pl_blocks) / POOL_PE_SIZE);
 
 		vg->free_count = vg->extent_count;
-		vg->pv_count++;
 
 		if (vg->name)
 			continue;
@@ -120,6 +119,7 @@ int import_pool_pvs(const struct format_type *fmt, struct volume_group *vg,
 		pl->pv = pvl->pv;
 		pvl->mdas = NULL;
 		pvl->pe_ranges = NULL;
+		vg->pv_count++;
 		dm_list_add(&vg->pvs, &pvl->list);
 	}
 
