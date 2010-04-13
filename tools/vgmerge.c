@@ -31,6 +31,7 @@ static struct volume_group *_vgmerge_vg_read(struct cmd_context *cmd,
 static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 			   const char *vg_name_from)
 {
+	struct pv_list *pvl, *tpvl;
 	struct volume_group *vg_to, *vg_from;
 	struct lv_list *lvl1, *lvl2;
 	int r = ECMD_FAILED;
@@ -82,16 +83,11 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 	drop_cached_metadata(vg_from);
 
 	/* Merge volume groups */
-	while (!dm_list_empty(&vg_from->pvs)) {
-		struct dm_list *pvh = vg_from->pvs.n;
-		struct physical_volume *pv;
-
-		dm_list_move(&vg_to->pvs, pvh);
-
-		pv = dm_list_item(pvh, struct pv_list)->pv;
-		pv->vg_name = dm_pool_strdup(cmd->mem, vg_to->name);
+	dm_list_iterate_items_safe(pvl, tpvl, &vg_from->pvs) {
+		del_pvl_from_vgs(vg_from, pvl);
+		add_pvl_to_vgs(vg_to, pvl);
+		pvl->pv->vg_name = dm_pool_strdup(cmd->mem, vg_to->name);
 	}
-	vg_to->pv_count += vg_from->pv_count;
 
 	/* Fix up LVIDs */
 	dm_list_iterate_items(lvl1, &vg_to->lvs) {

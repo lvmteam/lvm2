@@ -347,10 +347,8 @@ int move_pv(struct volume_group *vg_from, struct volume_group *vg_to,
 	    _vg_bad_status_bits(vg_to, RESIZEABLE_VG))
 		return 0;
 
-	dm_list_move(&vg_to->pvs, &pvl->list);
-
-	vg_from->pv_count--;
-	vg_to->pv_count++;
+	del_pvl_from_vgs(vg_from, pvl);
+	add_pvl_to_vgs(vg_to, pvl);
 
 	pv = pvl->pv;
 
@@ -517,7 +515,7 @@ int vg_remove_check(struct volume_group *vg)
 		return 0;
 
 	dm_list_iterate_items_safe(pvl, tpvl, &vg->pvs) {
-		dm_list_del(&pvl->list);
+		del_pvl_from_vgs(vg, pvl);
 		dm_list_add(&vg->removed_pvs, &pvl->list);
 	}
 	return 1;
@@ -2510,8 +2508,7 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd,
 			goto bad;
 		}
 		pvl->pv = pv;
-		dm_list_add(&vg->pvs, &pvl->list);
-		vg->pv_count++;
+		add_pvl_to_vgs(vg, pvl);
 	}
 
 	return vg;

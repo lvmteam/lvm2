@@ -119,8 +119,7 @@ int import_pool_pvs(const struct format_type *fmt, struct volume_group *vg,
 		pl->pv = pvl->pv;
 		pvl->mdas = NULL;
 		pvl->pe_ranges = NULL;
-		vg->pv_count++;
-		dm_list_add(&vg->pvs, &pvl->list);
+		add_pvl_to_vgs(vg, pvl);
 	}
 
 	return 1;
