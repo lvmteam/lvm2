@@ -7,7 +7,7 @@ Version 2.02.63 -
   Add --enable-write_install options to install user writable files.
   Use INSTALL_PROGRAM/DATA/WDATA target.
   Switch from using VPATH  to vpath in Makefiles.
-  Permit mimage LVs to be striped in lvcreate and lvresize.
+  Permit mimage LVs to be striped in lvcreate, lvresize and lvconvert.
   Fix pvmove allocation to take existing parallel stripes into account.
   Add pvmove_source_seg to struct lv_segment.
   Fix incorrect removal of symlinks after LV deactivation fails.

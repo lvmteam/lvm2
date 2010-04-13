@@ -35,6 +35,8 @@ struct lvconvert_params {
 	uint32_t mirrors;
 	sign_t mirrors_sign;
 	uint32_t keep_mimages;
+	uint32_t stripes;
+	uint32_t stripe_size;
 
 	struct segment_type *segtype;
 
@@ -194,9 +196,11 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 
 	lp->alloc = arg_uint_value(cmd, alloc_ARG, ALLOC_INHERIT);
 
-	if (lp->merge) {
+	/* There are three types of lvconvert. */
+	if (lp->merge) {	/* Snapshot merge */
 		if (arg_count(cmd, regionsize_ARG) || arg_count(cmd, chunksize_ARG) ||
-		    arg_count(cmd, zero_ARG) || arg_count(cmd, regionsize_ARG)) {
+		    arg_count(cmd, zero_ARG) || arg_count(cmd, regionsize_ARG) ||
+		    arg_count(cmd, stripes_long_ARG) || arg_count(cmd, stripesize_ARG)) {
 			log_error("Only --background and --interval are valid "
 				  "arguments for snapshot merge");
 			return 0;
@@ -205,9 +209,14 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 		if (!(lp->segtype = get_segtype_from_string(cmd, "snapshot")))
 			return_0;
 
-	} else if (lp->snapshot) {
+	} else if (lp->snapshot) {	/* Snapshot creation from pre-existing cow */
 		if (arg_count(cmd, regionsize_ARG)) {
 			log_error("--regionsize is only available with mirrors");
+			return 0;
+		}
+
+		if (arg_count(cmd, stripesize_ARG) || arg_count(cmd, stripes_long_ARG)) {
+			log_error("--stripes and --stripesize are only available with striped mirrors");
 			return 0;
 		}
 
@@ -284,6 +293,12 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 
 		if (!lp->region_size) {
 			log_error("Non-zero region size must be supplied.");
+			return 0;
+		}
+
+		/* Default is never striped, regardless of existing LV configuration. */
+		if (!get_stripe_params(cmd, &lp->stripes, &lp->stripe_size)) {
+			stack;
 			return 0;
 		}
 
@@ -950,8 +965,8 @@ static int _lvconvert_mirrors_aux(struct cmd_context *cmd,
 		 * currently taken by the mirror? Would make more sense from
 		 * user perspective.
 		 */
-		if (!lv_add_mirrors(cmd, lv, new_mimage_count - 1, 1,
-				    0, region_size, new_log_count, operable_pvs,
+		if (!lv_add_mirrors(cmd, lv, new_mimage_count - 1, lp->stripes,
+				    lp->stripe_size, region_size, new_log_count, operable_pvs,
 				    lp->alloc, MIRROR_BY_LV)) {
 			stack;
 			return failure_code;
@@ -1005,7 +1020,7 @@ static int _lvconvert_mirrors_aux(struct cmd_context *cmd,
 
 		/* FIXME: can't have multiple mlogs. force corelog. */
 		if (!lv_add_mirrors(cmd, lv,
-				    new_mimage_count - old_mimage_count, 1, 0,
+				    new_mimage_count - old_mimage_count, lp->stripes, lp->stripe_size,
 				    region_size, 0U, operable_pvs, lp->alloc,
 				    MIRROR_BY_LV)) {
 			layer_lv = seg_lv(first_seg(lv), 0);

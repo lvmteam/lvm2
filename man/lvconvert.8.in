@@ -7,6 +7,7 @@ lvconvert \- convert a logical volume from linear to mirror or snapshot
 [\-A|\-\-alloc AllocationPolicy]
 [\-b|\-\-background] [\-f|\-\-force] [\-i|\-\-interval Seconds]
 [\-h|\-?|\-\-help]
+[\-\-stripes Stripes [\-I|\-\-stripesize StripeSize]]
 [\-\-noudevsync]
 [\-v|\-\-verbose] [\-y|\-\-yes]
 [\-\-version]

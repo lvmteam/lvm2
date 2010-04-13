@@ -105,6 +105,7 @@ xx(lvconvert,
    "\t[-f|--force]\n"
    "\t[-h|-?|--help]\n"
    "\t[-i|--interval seconds]\n"
+   "\t[--stripes Stripes [-I|--stripesize StripeSize]]\n"
    "\t[--noudevsync]\n"
    "\t[-v|--verbose]\n"
    "\t[-y|--yes]\n"
@@ -137,7 +138,8 @@ xx(lvconvert,
 
    alloc_ARG, background_ARG, chunksize_ARG, corelog_ARG, interval_ARG,
    merge_ARG, mirrorlog_ARG, mirrors_ARG, name_ARG, noudevsync_ARG,
-   regionsize_ARG, repair_ARG, snapshot_ARG, splitmirrors_ARG, test_ARG,
+   regionsize_ARG, repair_ARG, snapshot_ARG, splitmirrors_ARG,
+   stripes_long_ARG, stripesize_ARG, test_ARG,
    use_policies_ARG, yes_ARG, force_ARG, zero_ARG)
 
 xx(lvcreate,

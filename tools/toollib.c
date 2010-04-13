@@ -1455,3 +1455,65 @@ int get_activation_monitoring_mode(struct cmd_context *cmd,
 	
 	return 1;
 }
+
+/*
+ * Generic stripe parameter checks.
+ */
+static int _validate_stripe_params(struct cmd_context *cmd, uint32_t *stripes,
+				   uint32_t *stripe_size)
+{
+	if (*stripes == 1 && *stripe_size) {
+		log_print("Ignoring stripesize argument with single stripe");
+		*stripe_size = 0;
+	}
+
+	if (*stripes > 1 && !*stripe_size) {
+		*stripe_size = find_config_tree_int(cmd, "metadata/stripesize", DEFAULT_STRIPESIZE) * 2;
+		log_print("Using default stripesize %s",
+			  display_size(cmd, (uint64_t) *stripe_size));
+	}
+
+	if (*stripes < 1 || *stripes > MAX_STRIPES) {
+		log_error("Number of stripes (%d) must be between %d and %d",
+			  *stripes, 1, MAX_STRIPES);
+		return 0;
+	}
+
+	if (*stripes > 1 && (*stripe_size < STRIPE_SIZE_MIN ||
+			     *stripe_size & (*stripe_size - 1))) {
+		log_error("Invalid stripe size %s",
+			  display_size(cmd, (uint64_t) *stripe_size));
+		return 0;
+	}
+
+	return 1;
+}
+
+/*
+ * The stripe size is limited by the size of a uint32_t, but since the
+ * value given by the user is doubled, and the final result must be a
+ * power of 2, we must divide UINT_MAX by four and add 1 (to round it
+ * up to the power of 2)
+ */
+int get_stripe_params(struct cmd_context *cmd, uint32_t *stripes, uint32_t *stripe_size)
+{
+	/* stripes_long_ARG takes precedence (for lvconvert) */
+        *stripes = arg_uint_value(cmd, arg_count(cmd, stripes_long_ARG) ? stripes_long_ARG : stripes_ARG, 1);
+
+	*stripe_size = arg_uint_value(cmd, stripesize_ARG, 0);
+	if (*stripe_size) {
+		if (arg_sign_value(cmd, stripesize_ARG, 0) == SIGN_MINUS) {
+			log_error("Negative stripesize is invalid");
+			return 0;
+		}
+
+		if(*stripe_size > STRIPE_SIZE_LIMIT * 2) {
+			log_error("Stripe size cannot be larger than %s",
+				  display_size(cmd, (uint64_t) STRIPE_SIZE_LIMIT));
+			return 0;
+		}
+	}
+
+	return _validate_stripe_params(cmd, stripes, stripe_size);
+}
+
