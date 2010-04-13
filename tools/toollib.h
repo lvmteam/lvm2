@@ -26,61 +26,60 @@ int autobackup(struct volume_group *vg);
 struct volume_group *recover_vg(struct cmd_context *cmd, const char *vgname,
 				uint32_t lock_type);
 
+typedef int (*process_single_vg_fn_t) (struct cmd_context * cmd,
+				       const char *vg_name,
+				       struct volume_group * vg,
+				       void *handle);
+typedef int (*process_single_pv_fn_t) (struct cmd_context *cmd,
+				  struct volume_group *vg,
+				  struct physical_volume *pv,
+				  void *handle);
+typedef int (*process_single_lv_fn_t) (struct cmd_context *cmd,
+				  struct logical_volume *lv,
+				  void *handle);
+typedef int (*process_single_seg_fn_t) (struct cmd_context * cmd,
+					struct lv_segment * seg,
+					void *handle);
+typedef int (*process_single_pvseg_fn_t) (struct cmd_context * cmd,
+					  struct volume_group * vg,
+					  struct pv_segment * pvseg,
+					  void *handle);
+
 int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 		    uint32_t flags, void *handle,
-		    int (*process_single) (struct cmd_context * cmd,
-					   const char *vg_name,
-					   struct volume_group * vg,
-					   void *handle));
+		    process_single_vg_fn_t process_single_vg);
 
 int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 		    struct volume_group *vg, uint32_t lock_type,
 		    int scan_label_only, void *handle,
-		    int (*process_single) (struct cmd_context * cmd,
-					   struct volume_group * vg,
-					   struct physical_volume * pv,
-					   void *handle));
+		    process_single_pv_fn_t process_single_pv);
 
 int process_each_segment_in_pv(struct cmd_context *cmd,
 			       struct volume_group *vg,
 			       struct physical_volume *pv,
 			       void *handle,
-			       int (*process_single) (struct cmd_context * cmd,
-						      struct volume_group * vg,
-						      struct pv_segment * pvseg,
-						      void *handle));
+			       process_single_pvseg_fn_t process_single_pvseg);
 
 int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 		    uint32_t flags, void *handle,
-		    int (*process_single) (struct cmd_context * cmd,
-					   struct logical_volume * lv,
-					   void *handle));
+		    process_single_lv_fn_t process_single_lv);
+
 
 int process_each_segment_in_lv(struct cmd_context *cmd,
 			       struct logical_volume *lv, void *handle,
-			       int (*process_single) (struct cmd_context * cmd,
-						      struct lv_segment * seg,
-						      void *handle));
-
-typedef int (*process_single_pv_fn_t) (struct cmd_context *cmd,
-				  struct volume_group *vg,
-				  struct physical_volume *pv,
-				  void *handle);
+			       process_single_seg_fn_t process_single_seg);
 
 int process_each_pv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 			  const struct dm_list *tags, void *handle,
-			  process_single_pv_fn_t process_single);
+			  process_single_pv_fn_t process_single_pv);
 
-typedef int (*process_single_lv_fn_t) (struct cmd_context *cmd,
-				  struct logical_volume *lv,
-				  void *handle);
 
 int process_each_lv_in_vg(struct cmd_context *cmd,
 			  struct volume_group *vg,
 			  const struct dm_list *arg_lvnames,
 			  const struct dm_list *tags,
 			  void *handle,
-			  process_single_lv_fn_t process_single);
+			  process_single_lv_fn_t process_single_lv);
 
 char *default_vgname(struct cmd_context *cmd);
 const char *extract_vgname(struct cmd_context *cmd, const char *lv_name);
@@ -117,6 +116,5 @@ int get_activation_monitoring_mode(struct cmd_context *cmd,
 				   int *monitoring_mode);
 int get_stripe_params(struct cmd_context *cmd, uint32_t *stripes,
 		      uint32_t *stripe_size);
-
 
 #endif
