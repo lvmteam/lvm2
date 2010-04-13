@@ -181,8 +181,19 @@ struct physical_volume {
 	struct id id;
 	struct device *dev;
 	const struct format_type *fmt;
+
+	/*
+	 * vg_name and vgid are used before the parent VG struct exists.
+	 * FIXME: Investigate removal/substitution with 'vg' fields.
+	 */
 	const char *vg_name;
 	struct id vgid;
+
+	/*
+	 * 'vg' is set and maintained when the PV belongs to a 'pvs'
+	 * list in a parent VG struct.
+	 */
+	struct volume_group *vg;
 
 	uint64_t status;
 	uint64_t size;
