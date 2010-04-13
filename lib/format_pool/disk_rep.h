@@ -141,7 +141,7 @@ int import_pool_vg(struct volume_group *vg, struct dm_pool *mem, struct dm_list 
 int import_pool_lvs(struct volume_group *vg, struct dm_pool *mem,
 		    struct dm_list *pls);
 int import_pool_pvs(const struct format_type *fmt, struct volume_group *vg,
-		    struct dm_list *pvs, struct dm_pool *mem, struct dm_list *pls);
+		    struct dm_pool *mem, struct dm_list *pls);
 int import_pool_pv(const struct format_type *fmt, struct dm_pool *mem,
 		   struct volume_group *vg, struct physical_volume *pv,
 		   struct pool_list *pl);
