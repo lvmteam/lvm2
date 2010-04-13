@@ -387,7 +387,8 @@ static int _lock_vol(struct cmd_context *cmd, const char *resource,
 		}
 
 		_update_vg_lock_count(resource, flags);
-	}
+	} else
+		stack;
 
 	_unlock_memory(cmd, lv_op);
 	_unblock_signals();

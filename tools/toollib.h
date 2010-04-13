@@ -115,5 +115,8 @@ int pvcreate_params_validate(struct cmd_context *cmd,
 int get_activation_monitoring_mode(struct cmd_context *cmd,
 				   struct volume_group *vg,
 				   int *monitoring_mode);
+int get_stripe_params(struct cmd_context *cmd, uint32_t *stripes,
+		      uint32_t *stripe_size);
+
 
 #endif
