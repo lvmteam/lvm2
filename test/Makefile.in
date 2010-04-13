@@ -25,6 +25,9 @@ abs_builddir = @abs_builddir@
 abs_top_builddir = @abs_top_builddir@
 abs_top_srcdir = @abs_top_srcdir@
 
+T ?= .
+RUN = $(shell find -regextype posix-egrep -name t-\*.sh -and -regex ".*($(T)).*")
+
 # Shell quote;
 SHELL_PATH_SQ = $(subst ','\'',$(SHELL_PATH))
 
@@ -45,9 +48,9 @@ endif
 
 all: init.sh
 	@echo Testing with locking_type 1
-	./bin/harness t-*.sh
+	./bin/harness $(RUN)
 	@echo Testing with locking_type 3
-	LVM_TEST_LOCKING=3 ./bin/harness t-*.sh
+	LVM_TEST_LOCKING=3 ./bin/harness $(RUN)
 
 bin/not: $(srcdir)/not.c .bin-dir-stamp
 	$(CC) -o bin/not $<
@@ -74,7 +77,7 @@ init.sh: $(srcdir)/Makefile.in .bin-dir-stamp bin/not bin/check bin/harness $(SC
 	echo 'export DM_UDEV_SYNCHRONISATION=$(dm_udev_synchronisation)' >> $@-t
 	chmod a-w $@-t
 	mv $@-t $@
-	if test "$(srcdir)" != . ; then  cp $(SCRIPTS) . ; fi
+	@if test "$(srcdir)" != . ; then echo "Copying tests to builddir."; cp $(SCRIPTS) . ; fi
 
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
