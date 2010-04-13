@@ -1,5 +1,6 @@
 Version 2.02.63 -  
 ================================
+  Use typedefs for toollib process_each functions.
   Use C locales and use_mlockall for clvmd.
   Refactor code related to vg->pvs list and add pv->vg link.
   Mask LCK_HOLD flag in cluster VG locks for compatibility reasons.
