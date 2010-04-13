@@ -360,6 +360,13 @@ int main(int argc, char *argv[])
 		return debug_clvmd(debug, clusterwide_opt)==1?0:1;
 	}
 
+	/*
+	 * Switch to C locale to avoid reading large locale-archive file
+	 * used by some glibc (on some distributions it takes over 100MB).
+	 * Daemon currently needs to use mlockall().
+	 */
+	setenv("LANG", "C", 1);
+
 	/* Fork into the background (unless requested not to) */
 	if (debug != DEBUG_STDERR) {
 		be_daemon(start_timeout);

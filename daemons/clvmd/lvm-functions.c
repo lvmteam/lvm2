@@ -878,13 +878,16 @@ int init_lvm(int using_gulm)
 
 	/* Trap log messages so we can pass them back to the user */
 	init_log_fn(lvm2_log_fn);
+	memlock_inc_daemon(cmd);
 
 	return 1;
 }
 
 void destroy_lvm(void)
 {
-	if (cmd)
+	if (cmd) {
+		memlock_dec_daemon(cmd);
 		destroy_toolcontext(cmd);
+	}
 	cmd = NULL;
 }
