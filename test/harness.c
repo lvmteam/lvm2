@@ -196,5 +196,5 @@ int main(int argc, char **argv) {
 		printf("\n");
 		return s.nfailed > 0 || die;
 	}
-	return !die;
+	return die;
 }
