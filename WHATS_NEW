@@ -1,5 +1,6 @@
 Version 2.02.63 -  
 ================================
+  Refactor code related to vg->pvs list and add pv->vg link.
   Mask LCK_HOLD flag in cluster VG locks for compatibility reasons.
   Add activation/polling_interval to lvm.conf as --interval default.
   Don't ignore error if resuming any LV fails in resume_lvs.
