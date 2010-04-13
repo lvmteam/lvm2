@@ -667,12 +667,11 @@ int vg_reduce(struct volume_group *vg, char *pv_name)
 		goto bad;
 	}
 
-	vg->pv_count--;
 	vg->free_count -= pv_pe_count(pv) - pv_pe_alloc_count(pv);
 	vg->extent_count -= pv_pe_count(pv);
+	del_pvl_from_vgs(vg, pvl);
 
 	/* add pv to the remove_pvs list */
-	dm_list_del(&pvl->list);
 	dm_list_add(&vg->removed_pvs, &pvl->list);
 
 	return 1;

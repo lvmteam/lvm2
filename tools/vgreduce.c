@@ -407,7 +407,7 @@ static int _vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 	log_verbose("Removing \"%s\" from volume group \"%s\"", name, vg->name);
 
 	if (pvl)
-		dm_list_del(&pvl->list);
+		del_pvl_from_vgs(vg, pvl);
 
 	pv->vg_name = vg->fid->fmt->orphan_vg_name;
 	pv->status = ALLOCATABLE_PV;
@@ -417,7 +417,6 @@ static int _vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 		goto bad;
 	}
 
-	vg->pv_count--;
 	vg->free_count -= pv_pe_count(pv) - pv_pe_alloc_count(pv);
 	vg->extent_count -= pv_pe_count(pv);
 
