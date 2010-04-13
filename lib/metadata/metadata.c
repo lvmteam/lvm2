@@ -145,6 +145,12 @@ void add_pvl_to_vgs(struct volume_group *vg, struct pv_list *pvl)
 	vg->pv_count++;
 }
 
+void del_pvl_from_vgs(struct volume_group *vg, struct pv_list *pvl)
+{
+	vg->pv_count--;
+	dm_list_del(&pvl->list);
+}
+
 
 /**
  * add_pv_to_vg - Add a physical volume to a volume group
