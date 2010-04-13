@@ -39,9 +39,7 @@ static int _remove_pv(struct volume_group *vg, struct pv_list *pvl, int silent)
 
 	vg->free_count -= pvl->pv->pe_count;
 	vg->extent_count -= pvl->pv->pe_count;
-	vg->pv_count--;
-
-	dm_list_del(&pvl->list);
+	del_pvl_from_vgs(vg, pvl);
 
 	return 1;
 }

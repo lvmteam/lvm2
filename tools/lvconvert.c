@@ -751,8 +751,7 @@ static void _remove_missing_empty_pv(struct volume_group *vg, struct dm_list *re
 			/* FIXME: duplication of vgreduce code, move this to library */
 			vg->free_count -= pvl_vg->pv->pe_count;
 			vg->extent_count -= pvl_vg->pv->pe_count;
-			vg->pv_count--;
-			dm_list_del(&pvl_vg->list);
+			del_pvl_from_vgs(vg, pvl_vg);
 
 			removed++;
 		}
