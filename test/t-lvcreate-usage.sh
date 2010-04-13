@@ -33,8 +33,7 @@ not lvcreate -L 64m -n $lv -i2 --stripesize 4294967291 $vg 2>err
 grep "^  Stripe size cannot be larger than" err
 
 # 'lvcreate w/single stripe succeeds with diagnostics to stdout' 
-lvcreate -L 64m -n $lv -i1 --stripesize 4 $vg >out 2>err
-grep "^  Redundant stripes argument: default is 1\$" out 
+lvcreate -L 64m -n $lv -i1 --stripesize 4 $vg 2> err | tee out
 grep "^  Ignoring stripesize argument with single stripe\$" out 
 lvdisplay $vg 
 lvremove -ff $vg
