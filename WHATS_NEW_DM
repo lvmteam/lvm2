@@ -1,5 +1,5 @@
-Version 1.02.46 - 
-================================
+Version 1.02.46 - 14th April 2010
+=================================
   Change dm_tree_deactivate_children to fail if device is open.
   Wipe memory buffers for dm-ioctl parameters before releasing.
   Strictly require libudev if udev_sync is used.
