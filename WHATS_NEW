@@ -1,5 +1,6 @@
 Version 2.02.63 -  
 ================================
+  Only pass visible LVs to tools in cmdline VG name/tag expansions without -a.
   Use typedefs for toollib process_each functions.
   Use C locales and use_mlockall for clvmd.
   Refactor code related to vg->pvs list and add pv->vg link.
