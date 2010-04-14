@@ -380,6 +380,17 @@ static struct raw_locn *_find_vg_rlocn(struct device_area *dev_area,
 	} else
 		*precommitted = 0;
 
+	/* Do not check non-existent metadata. */
+	if (!rlocn->offset && !rlocn->size)
+		return NULL;
+
+	/*
+	 * Don't try to check existing metadata
+	 * if given vgname is an empty string.
+	 */
+	if (!*vgname)
+		return rlocn;
+
 	/* FIXME Loop through rlocns two-at-a-time.  List null-terminated. */
 	/* FIXME Ignore if checksum incorrect!!! */
 	if (!dev_read(dev_area->dev, dev_area->start + rlocn->offset,
@@ -387,9 +398,11 @@ static struct raw_locn *_find_vg_rlocn(struct device_area *dev_area,
 		goto_bad;
 
 	if (!strncmp(vgnamebuf, vgname, len = strlen(vgname)) &&
-	    (isspace(vgnamebuf[len]) || vgnamebuf[len] == '{')) {
+	    (isspace(vgnamebuf[len]) || vgnamebuf[len] == '{'))
 		return rlocn;
-	}
+	else
+		log_debug("Volume group name found in metadata does "
+			  "not match expected name %s.", vgname);
 
       bad:
 	if ((info = info_from_pvid(dev_area->dev->pvid, 0)))
@@ -542,7 +555,8 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 	if (!(mdah = _raw_read_mda_header(fid->fmt, &mdac->area)))
 		goto_out;
 
-	rlocn = _find_vg_rlocn(&mdac->area, mdah, vg->name, &noprecommit);
+	rlocn = _find_vg_rlocn(&mdac->area, mdah,
+			vg->old_name ? vg->old_name : vg->name, &noprecommit);
 	mdac->rlocn.offset = _next_rlocn_offset(rlocn, mdah);
 
 	if (!fidtc->raw_metadata_buf &&
@@ -647,7 +661,9 @@ static int _vg_commit_raw_rlocn(struct format_instance *fid,
 	if (!(mdah = _raw_read_mda_header(fid->fmt, &mdac->area)))
 		goto_out;
 
-	if (!(rlocn = _find_vg_rlocn(&mdac->area, mdah, vg->name, &noprecommit))) {
+	if (!(rlocn = _find_vg_rlocn(&mdac->area, mdah,
+				     vg->old_name ? vg->old_name : vg->name,
+				     &noprecommit))) {
 		mdah->raw_locns[0].offset = 0;
 		mdah->raw_locns[0].size = 0;
 		mdah->raw_locns[0].checksum = 0;

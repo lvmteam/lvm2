@@ -457,6 +457,8 @@ int vg_rename(struct cmd_context *cmd, struct volume_group *vg,
 	struct dm_pool *mem = vg->vgmem;
 	struct pv_list *pvl;
 
+	vg->old_name = vg->name;
+
 	if (!(vg->name = dm_pool_strdup(mem, new_name))) {
 		log_error("vg->name allocation failed for '%s'", new_name);
 		return 0;
@@ -2428,11 +2430,15 @@ int vg_commit(struct volume_group *vg)
 		}
 	}
 
-	/*
-	 * Instruct remote nodes to upgrade cached metadata.
-	 */
-	if (cache_updated)
+	if (cache_updated) {
+		/* Instruct remote nodes to upgrade cached metadata. */
 		remote_commit_cached_metadata(vg);
+		/*
+		 * We need to clear old_name after a successful commit.
+		 * The volume_group structure could be reused later.
+		 */
+		vg->old_name = NULL;
+	}
 
 	/* If update failed, remove any cached precommitted metadata. */
 	if (!cache_updated && !drop_cached_metadata(vg))
