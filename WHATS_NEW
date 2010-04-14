@@ -1,5 +1,6 @@
 Version 2.02.63 -  
 ================================
+  Allow VGs with active LVs to be renamed.
   Use UUIDs instead of names while processing event handlers.
   Only pass visible LVs to tools in cmdline VG name/tag expansions without -a.
   Use typedefs for toollib process_each functions.
