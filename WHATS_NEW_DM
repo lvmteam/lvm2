@@ -1,3 +1,6 @@
+Version 1.02.47 -
+=================================
+
 Version 1.02.46 - 14th April 2010
 =================================
   Change dm_tree_deactivate_children to fail if device is open.
