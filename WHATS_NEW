@@ -1,5 +1,6 @@
 Version 2.02.63 -  
 ================================
+  Do not reset position in metadata ring buffer on vgrename and vgcfgrestore.
   Allow VGs with active LVs to be renamed.
   Use UUIDs instead of names while processing event handlers.
   Only pass visible LVs to tools in cmdline VG name/tag expansions without -a.

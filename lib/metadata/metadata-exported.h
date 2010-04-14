@@ -227,6 +227,7 @@ struct volume_group {
 
 	struct id id;
 	char *name;
+	char *old_name;		/* Set during vgrename and vgcfgrestore */
 	char *system_id;
 
 	uint32_t extent_size;
