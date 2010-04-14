@@ -919,24 +919,19 @@ static int _lvconvert_mirrors_parse_params(struct cmd_context *cmd,
  * Add/remove mirror images and adjust log type.  'operable_pvs'
  * are the set of PVs open to removal or allocation - depending
  * on the operation being performed.
- *
- * If 'allocation_failures_ok' is set, and there is a failure to
- * convert due to space, success will be returned.
  */
 static int _lvconvert_mirrors_aux(struct cmd_context *cmd,
 				  struct logical_volume *lv,
 				  struct lvconvert_params *lp,
 				  struct dm_list *operable_pvs,
 				  uint32_t new_mimage_count,
-				  uint32_t new_log_count,
-				  int allocation_failures_ok)
+				  uint32_t new_log_count)
 {
 	uint32_t region_size;
 	struct lv_segment *seg;
 	struct logical_volume *layer_lv;
 	uint32_t old_mimage_count = lv_mirror_count(lv);
 	uint32_t old_log_count = _get_log_count(lv);
-	int failure_code = (allocation_failures_ok) ? 1 : 0;
 
 	if ((lp->mirrors == 1) && !(lv->status & MIRRORED)) {
 		log_error("Logical volume %s is already not mirrored.",
@@ -968,7 +963,7 @@ static int _lvconvert_mirrors_aux(struct cmd_context *cmd,
 				    lp->stripe_size, region_size, new_log_count, operable_pvs,
 				    lp->alloc, MIRROR_BY_LV)) {
 			stack;
-			return failure_code;
+			return 0;
 		}
 		if (lp->wait_completion)
 			lp->need_polling = 1;
@@ -996,7 +991,7 @@ static int _lvconvert_mirrors_aux(struct cmd_context *cmd,
 		if (lv_is_origin(lv)) {
 			log_error("Can't add additional mirror images to "
 				  "mirrors that are under snapshots");
-			return failure_code;
+			return 0;
 		}
 
 		/*
@@ -1007,7 +1002,7 @@ static int _lvconvert_mirrors_aux(struct cmd_context *cmd,
 		if (!_lv_update_log_type(cmd, lp, lv,
 					 operable_pvs, new_log_count)) {
 			stack;
-			return failure_code;
+			return 0;
 		}
 
 		/* Insert a temporary layer for syncing,
@@ -1035,7 +1030,7 @@ static int _lvconvert_mirrors_aux(struct cmd_context *cmd,
 				return 0;
 			}
 			stack;
-			return failure_code;
+			return 0;
 		}
 		if (seg->log_lv)
 			lv->status |= CONVERTING;
@@ -1073,7 +1068,7 @@ out:
 		if (!_lv_update_log_type(cmd, lp, lv,
 					 operable_pvs, new_log_count)) {
 			stack;
-			return failure_code;
+			return 0;
 		}
 	}
 
@@ -1126,7 +1121,7 @@ static int _lvconvert_mirrors_repair(struct cmd_context *cmd,
 	int failed_mirrors = 0;
 	int replace_log = 0;
 	int replace_mirrors = 0;
-	uint32_t new_log_count;
+	uint32_t new_log_count, log_count;
 	struct dm_list *failed_pvs = NULL;
 	struct logical_volume *log_lv;
 
@@ -1191,37 +1186,43 @@ static int _lvconvert_mirrors_repair(struct cmd_context *cmd,
 		return 0;
 
 	if (!_lvconvert_mirrors_aux(cmd, lv, lp, failed_pvs,
-				    lp->mirrors, new_log_count, 0))
+				    lp->mirrors, new_log_count))
 		return 0;
 
 	/*
 	 * Second phase - replace faulty devices
-	 *
-	 * FIXME: It would be nice to do this all in one step, but
-	 *        for simplicity, we replace mimages first and then
-	 *        work on the log.
 	 */
-	if (replace_mirrors && (old_mimage_count != lp->mirrors)) {
+
+	if (replace_mirrors)
 		lp->mirrors = old_mimage_count;
-		if (!_lvconvert_mirrors_aux(cmd, lv, lp, NULL,
-					    old_mimage_count, new_log_count, 1))
-			return 0;
+
+	log_count = replace_log ? old_log_count : new_log_count;
+
+	while (replace_mirrors || replace_log) {
+		log_warn("Trying to up-convert to %d images, %d logs.", lp->mirrors, log_count);
+		if (_lvconvert_mirrors_aux(cmd, lv, lp, NULL,
+					   lp->mirrors, log_count))
+			break;
+		else {
+			if (lp->mirrors > 2)
+				-- lp->mirrors;
+			else if (log_count > 0)
+				-- log_count;
+			else
+				break; /* nowhere to go, anymore... */
+		}
 	}
 
-	log_lv = first_seg(lv)->log_lv;
-	if (replace_log && (old_log_count != new_log_count)) {
-		/*
-		 * If we are up-converting the log from linear to
-		 * mirrored, then we must use '_lvconvert_mirrors_aux'
-		 */
-		if ((new_log_count == 1) && (old_log_count > 1)) {
-			if (!_lvconvert_mirrors_aux(cmd, log_lv, lp, NULL,
-						    old_log_count, 0, 1))
-				return 0;
-		} else if (!_lv_update_log_type(cmd, lp, lv,
-						lp->pvh, new_log_count))
-			return 0;
-	}
+	if (lp->mirrors != old_mimage_count)
+		log_warn("WARNING: Failed to replace %d of %d images in volume %s",
+			 old_mimage_count - lp->mirrors, old_mimage_count, lv->name);
+	if (log_count != old_log_count)
+		log_warn("WARNING: Failed to replace %d of %d logs in volume %s",
+			 old_log_count - log_count, old_log_count, lv->name);
+
+	/* if (!arg_count(cmd, use_policies_ARG) && (lp->mirrors != old_mimage_count
+						  || log_count != old_log_count))
+						  return 0; */
 
 	return 1;
 }
@@ -1259,7 +1260,7 @@ static int _lvconvert_mirrors(struct cmd_context *cmd,
 						 old_log_count);
 
 	if (!_lvconvert_mirrors_aux(cmd, lv, lp, NULL,
-				    new_mimage_count, new_log_count, 0))
+				    new_mimage_count, new_log_count))
 		return 0;
 
 	if (!lp->need_polling)
