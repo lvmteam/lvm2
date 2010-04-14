@@ -1,5 +1,6 @@
 Version 2.02.63 - 14th April 2010
 =================================
+  Rename lvm_dump.sh to lvmdump.sh.
   Allow incomplete mirror restore in lvconvert --repair upon insufficient space.
   Do not reset position in metadata ring buffer on vgrename and vgcfgrestore.
   Allow VGs with active LVs to be renamed.
