@@ -1703,7 +1703,7 @@ int main(int argc, char *argv[])
 	 * used by some glibc (on some distributions it takes over 100MB).
 	 * Daemon currently needs to use mlockall().
 	 */
-	if (!setenv("LANG", "C", 1))
+	if (setenv("LANG", "C", 1))
 		perror("Cannot set LANG to C");
 
 	if (!_debug)
