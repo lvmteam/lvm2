@@ -96,7 +96,11 @@ teardown() {
 	echo $LOOP
 	echo $PREFIX
 
-	test -n "$LOCAL_CLVMD" && kill -9 "$LOCAL_CLVMD"
+	test -n "$LOCAL_CLVMD" && {
+		kill "$LOCAL_CLVMD"
+		sleep .1
+		kill -9 "$LOCAL_CLVMD" || true
+	}
 
 	test -n "$PREFIX" && {
 		rm -rf $TESTDIR/dev/$PREFIX*
