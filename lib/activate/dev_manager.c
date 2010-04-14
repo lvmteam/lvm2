@@ -31,7 +31,6 @@
 #include <dirent.h>
 
 #define MAX_TARGET_PARAMSIZE 50000
-#define UUID_PREFIX "LVM-"
 
 typedef enum {
 	PRELOAD,
@@ -58,32 +57,6 @@ struct lv_layer {
 	struct logical_volume *lv;
 	const char *old_name;
 };
-
-static char *_build_dlid(struct dm_pool *mem, const char *lvid, const char *layer)
-{
-	char *dlid;
-	size_t len;
-
-	if (!layer)
-		layer = "";
-
-	len = sizeof(UUID_PREFIX) + sizeof(union lvid) + strlen(layer);
-
-	if (!(dlid = dm_pool_alloc(mem, len))) {
-		log_error("_build_dlid: pool allocation failed for %" PRIsize_t
-			  " %s %s.", len, lvid, layer);
-		return NULL;
-	}
-
-	sprintf(dlid, UUID_PREFIX "%s%s%s", lvid, (*layer) ? "-" : "", layer);
-
-	return dlid;
-}
-
-char *build_dlid(struct dev_manager *dm, const char *lvid, const char *layer)
-{
-	return _build_dlid(dm->mem, lvid, layer);
-}
 
 static int _read_only_lv(struct logical_volume *lv)
 {
@@ -238,7 +211,7 @@ int dev_manager_info(struct dm_pool *mem, const struct logical_volume *lv,
 		return 0;
 	}
 
-	if (!(dlid = _build_dlid(mem, lv->lvid.s, NULL))) {
+	if (!(dlid = build_dm_uuid(mem, lv->lvid.s, NULL))) {
 		log_error("dlid build failed for %s", lv->name);
 		return 0;
 	}
@@ -258,7 +231,7 @@ static const struct dm_info *_cached_info(struct dm_pool *mem,
 	struct dm_tree_node *dnode;
 	const struct dm_info *dinfo;
 
-	if (!(dlid = _build_dlid(mem, lv->lvid.s, NULL))) {
+	if (!(dlid = build_dm_uuid(mem, lv->lvid.s, NULL))) {
 		log_error("dlid build failed for %s", lv->name);
 		return NULL;
 	}
@@ -370,7 +343,7 @@ static int _lv_has_target_type(struct dev_manager *dm,
 	char *type = NULL;
 	char *params = NULL;
 
-	if (!(dlid = build_dlid(dm, lv->lvid.s, layer)))
+	if (!(dlid = build_dm_uuid(dm->mem, lv->lvid.s, layer)))
 		return_0;
 
 	if (!(dmt = _setup_task(NULL, dlid, 0,
@@ -631,7 +604,7 @@ int dev_manager_snapshot_percent(struct dev_manager *dm,
 	if (!(name = build_dm_name(dm->mem, lv->vg->name, lv->name, NULL)))
 		return_0;
 
-	if (!(dlid = build_dlid(dm, lv->lvid.s, NULL)))
+	if (!(dlid = build_dm_uuid(dm->mem, lv->lvid.s, NULL)))
 		return_0;
 
 	/*
@@ -667,7 +640,7 @@ int dev_manager_mirror_percent(struct dev_manager *dm,
 
 	/* FIXME dm_pool_free ? */
 
-	if (!(dlid = build_dlid(dm, lv->lvid.s, suffix))) {
+	if (!(dlid = build_dm_uuid(dm->mem, lv->lvid.s, suffix))) {
 		log_error("dlid build failed for %s", lv->name);
 		return 0;
 	}
@@ -790,7 +763,7 @@ static int _add_dev_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	if (!(name = build_dm_name(dm->mem, lv->vg->name, lv->name, layer)))
 		return_0;
 
-	if (!(dlid = build_dlid(dm, lv->lvid.s, layer)))
+	if (!(dlid = build_dm_uuid(dm->mem, lv->lvid.s, layer)))
 		return_0;
 
 	log_debug("Getting device info for %s [%s]", name, dlid);
@@ -925,7 +898,7 @@ static char *_add_error_device(struct dev_manager *dm, struct dm_tree *dtree,
 
 	sprintf(errid, "missing_%d_%d", segno, s);
 
-	if (!(id = build_dlid(dm, seg->lv->lvid.s, errid)))
+	if (!(id = build_dm_uuid(dm->mem, seg->lv->lvid.s, errid)))
 		return_NULL;
 
 	if (!(name = build_dm_name(dm->mem, seg->lv->vg->name,
@@ -987,9 +960,9 @@ int add_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 							(seg_pv(seg, s)->pe_start +
 							 (extent_size * seg_pe(seg, s))));
 		else if (seg_type(seg, s) == AREA_LV) {
-			if (!(dlid = build_dlid(dm,
-						 seg_lv(seg, s)->lvid.s,
-						 NULL)))
+			if (!(dlid = build_dm_uuid(dm->mem,
+						   seg_lv(seg, s)->lvid.s,
+						   NULL)))
 				return_0;
 			dm_tree_node_add_target_area(node, NULL, dlid,
 							extent_size * seg_le(seg, s));
@@ -1009,7 +982,7 @@ static int _add_origin_target_to_dtree(struct dev_manager *dm,
 {
 	const char *real_dlid;
 
-	if (!(real_dlid = build_dlid(dm, lv->lvid.s, "real")))
+	if (!(real_dlid = build_dm_uuid(dm->mem, lv->lvid.s, "real")))
 		return_0;
 
 	if (!dm_tree_node_add_snapshot_origin_target(dnode, lv->size, real_dlid))
@@ -1025,13 +998,13 @@ static int _add_snapshot_merge_target_to_dtree(struct dev_manager *dm,
 	const char *origin_dlid, *cow_dlid, *merge_dlid;
 	struct lv_segment *merging_cow_seg = find_merging_cow(lv);
 
-	if (!(origin_dlid = build_dlid(dm, lv->lvid.s, "real")))
+	if (!(origin_dlid = build_dm_uuid(dm->mem, lv->lvid.s, "real")))
 		return_0;
 
-	if (!(cow_dlid = build_dlid(dm, merging_cow_seg->cow->lvid.s, "cow")))
+	if (!(cow_dlid = build_dm_uuid(dm->mem, merging_cow_seg->cow->lvid.s, "cow")))
 		return_0;
 
-	if (!(merge_dlid = build_dlid(dm, merging_cow_seg->cow->lvid.s, NULL)))
+	if (!(merge_dlid = build_dm_uuid(dm->mem, merging_cow_seg->cow->lvid.s, NULL)))
 		return_0;
 
 	if (!dm_tree_node_add_snapshot_merge_target(dnode, lv->size, origin_dlid,
@@ -1056,10 +1029,10 @@ static int _add_snapshot_target_to_dtree(struct dev_manager *dm,
 		return 0;
 	}
 
-	if (!(origin_dlid = build_dlid(dm, snap_seg->origin->lvid.s, "real")))
+	if (!(origin_dlid = build_dm_uuid(dm->mem, snap_seg->origin->lvid.s, "real")))
 		return_0;
 
-	if (!(cow_dlid = build_dlid(dm, snap_seg->cow->lvid.s, "cow")))
+	if (!(cow_dlid = build_dm_uuid(dm->mem, snap_seg->cow->lvid.s, "cow")))
 		return_0;
 
 	size = (uint64_t) snap_seg->len * snap_seg->origin->vg->extent_size;
@@ -1218,7 +1191,7 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	if (!(name = build_dm_name(dm->mem, lv->vg->name, lv->name, layer)))
 		return_0;
 
-	if (!(dlid = build_dlid(dm, lv->lvid.s, layer)))
+	if (!(dlid = build_dm_uuid(dm->mem, lv->lvid.s, layer)))
 		return_0;
 
 	/* We've already processed this node if it already has a context ptr */
@@ -1421,7 +1394,7 @@ static int _tree_action(struct dev_manager *dm, struct logical_volume *lv, actio
 		goto out;
 	}
 
-	if (!(dlid = build_dlid(dm, lv->lvid.s, NULL)))
+	if (!(dlid = build_dm_uuid(dm->mem, lv->lvid.s, NULL)))
 		goto_out;
 
 	/* Only process nodes with uuid of "LVM-" plus VG id. */

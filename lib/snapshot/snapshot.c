@@ -185,7 +185,7 @@ static int _get_snapshot_dso_path(struct cmd_context *cmd, char **dso)
 	return 1;
 }
 
-static struct dm_event_handler *_create_dm_event_handler(const char *dmname,
+static struct dm_event_handler *_create_dm_event_handler(const char *dmuuid,
 							 const char *dso,
 							 const int timeout,
 							 enum dm_event_mask mask)
@@ -198,7 +198,7 @@ static struct dm_event_handler *_create_dm_event_handler(const char *dmname,
        if (dm_event_handler_set_dso(dmevh, dso))
 		goto fail;
 
-	if (dm_event_handler_set_dev_name(dmevh, dmname))
+	if (dm_event_handler_set_uuid(dmevh, dmuuid))
 		goto fail;
 
 	dm_event_handler_set_timeout(dmevh, timeout);
@@ -212,7 +212,7 @@ fail:
 
 static int _target_registered(struct lv_segment *seg, int *pending)
 {
-	char *dso, *name;
+	char *dso, *uuid;
 	struct logical_volume *lv;
 	struct volume_group *vg;
 	enum dm_event_mask evmask = 0;
@@ -225,10 +225,10 @@ static int _target_registered(struct lv_segment *seg, int *pending)
 	if (!_get_snapshot_dso_path(vg->cmd, &dso))
 		return_0;
 
-	if (!(name = build_dm_name(vg->cmd->mem, vg->name, seg->cow->name, NULL)))
+	if (!(uuid = build_dm_uuid(vg->cmd->mem, seg->cow->lvid.s, NULL)))
 		return_0;
 
-	if (!(dmevh = _create_dm_event_handler(name, dso, 0, DM_EVENT_ALL_ERRORS)))
+	if (!(dmevh = _create_dm_event_handler(uuid, dso, 0, DM_EVENT_ALL_ERRORS)))
 		return_0;
 
 	if (dm_event_get_registered_device(dmevh, 0)) {
@@ -251,7 +251,7 @@ static int _target_registered(struct lv_segment *seg, int *pending)
 static int _target_set_events(struct lv_segment *seg,
 			      int events __attribute((unused)), int set)
 {
-	char *dso, *name;
+	char *dso, *uuid;
 	struct volume_group *vg = seg->lv->vg;
 	struct dm_event_handler *dmevh;
 	int r;
@@ -259,11 +259,11 @@ static int _target_set_events(struct lv_segment *seg,
 	if (!_get_snapshot_dso_path(vg->cmd, &dso))
 		return_0;
 
-	if (!(name = build_dm_name(vg->cmd->mem, vg->name, seg->cow->name, NULL)))
+	if (!(uuid = build_dm_uuid(vg->cmd->mem, seg->cow->lvid.s, NULL)))
 		return_0;
 
 	/* FIXME: make timeout configurable */
-	if (!(dmevh = _create_dm_event_handler(name, dso, 10,
+	if (!(dmevh = _create_dm_event_handler(uuid, dso, 10,
 		DM_EVENT_ALL_ERRORS|DM_EVENT_TIMEOUT)))
 		return_0;
 
@@ -272,7 +272,7 @@ static int _target_set_events(struct lv_segment *seg,
 	if (!r)
 		return_0;
 
-	log_info("%s %s for events", set ? "Registered" : "Unregistered", name);
+	log_info("%s %s for events", set ? "Registered" : "Unregistered", uuid);
 
 	return 1;
 }

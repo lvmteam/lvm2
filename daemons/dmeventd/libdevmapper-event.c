@@ -113,7 +113,7 @@ int dm_event_handler_set_uuid(struct dm_event_handler *dmevh, const char *uuid)
 	_dm_event_handler_clear_dev_info(dmevh);
 
 	dmevh->uuid = dm_strdup(uuid);
-	if (!dmevh->dev_name)
+	if (!dmevh->uuid)
 		return -ENOMEM;
 	return 0;
 }
