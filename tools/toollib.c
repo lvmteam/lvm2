@@ -125,6 +125,13 @@ int process_each_lv_in_vg(struct cmd_context *cmd,
 		if (lv_is_virtual_origin(lvl->lv) && !arg_count(cmd, all_ARG))
 			continue;
 
+		/*
+		 * Only let hidden LVs through it --all was used or the LVs 
+		 * were specifically named on the command line.
+		 */
+		if (!lvargs_supplied && !lv_is_visible(lvl->lv) && !arg_count(cmd, all_ARG))
+			continue;
+
 		/* Should we process this LV? */
 		if (process_all)
 			process_lv = 1;
