@@ -366,7 +366,7 @@ int main(int argc, char *argv[])
 	 * Daemon currently needs to use mlockall().
 	 */
 	if (setenv("LANG", "C", 1) != 0)
-		perror("Can not set LANG to C");
+		perror("Cannot set LANG to C");
 
 	/* Fork into the background (unless requested not to) */
 	if (debug != DEBUG_STDERR) {
