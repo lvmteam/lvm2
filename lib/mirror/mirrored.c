@@ -239,7 +239,7 @@ static int _mirrored_target_percent(void **target_state,
 	return 1;
 }
 
-static int _add_log(struct dev_manager *dm, struct lv_segment *seg,
+static int _add_log(struct dm_pool *mem, struct lv_segment *seg,
 		    struct dm_tree_node *node, uint32_t area_count, uint32_t region_size)
 {
 	unsigned clustered = 0;
@@ -256,14 +256,14 @@ static int _add_log(struct dev_manager *dm, struct lv_segment *seg,
 
 	if (seg->log_lv) {
 		/* If disk log, use its UUID */
-		if (!(log_dlid = build_dlid(dm, seg->log_lv->lvid.s, NULL))) {
+		if (!(log_dlid = build_dm_uuid(mem, seg->log_lv->lvid.s, NULL))) {
 			log_error("Failed to build uuid for log LV %s.",
 				  seg->log_lv->name);
 			return 0;
 		}
 	} else {
 		/* If core log, use mirror's UUID and set DM_CORELOG flag */
-		if (!(log_dlid = build_dlid(dm, seg->lv->lvid.s, NULL))) {
+		if (!(log_dlid = build_dm_uuid(mem, seg->lv->lvid.s, NULL))) {
 			log_error("Failed to build uuid for mirror LV %s.",
 				  seg->lv->name);
 			return 0;
@@ -342,7 +342,7 @@ static int _mirrored_add_target_line(struct dev_manager *dm, struct dm_pool *mem
 	if (!dm_tree_node_add_mirror_target(node, len))
 		return_0;
 
-	if ((r = _add_log(dm, seg, node, area_count, region_size)) <= 0) {
+	if ((r = _add_log(mem, seg, node, area_count, region_size)) <= 0) {
 		stack;
 		return r;
 	}
@@ -422,7 +422,7 @@ static int _get_mirror_dso_path(struct cmd_context *cmd, char **dso)
 	return 1;
 }
 
-static struct dm_event_handler *_create_dm_event_handler(const char *dmname,
+static struct dm_event_handler *_create_dm_event_handler(const char *dmuuid,
 							 const char *dso,
 							 enum dm_event_mask mask)
 {
@@ -434,7 +434,7 @@ static struct dm_event_handler *_create_dm_event_handler(const char *dmname,
        if (dm_event_handler_set_dso(dmevh, dso))
 		goto fail;
 
-	if (dm_event_handler_set_dev_name(dmevh, dmname))
+	if (dm_event_handler_set_uuid(dmevh, dmuuid))
 		goto fail;
 
 	dm_event_handler_set_event_mask(dmevh, mask);
@@ -447,7 +447,7 @@ fail:
 
 static int _target_monitored(struct lv_segment *seg, int *pending)
 {
-	char *dso, *name;
+	char *dso, *uuid;
 	struct logical_volume *lv;
 	struct volume_group *vg;
 	enum dm_event_mask evmask = 0;
@@ -460,10 +460,10 @@ static int _target_monitored(struct lv_segment *seg, int *pending)
 	if (!_get_mirror_dso_path(vg->cmd, &dso))
 		return_0;
 
-	if (!(name = build_dm_name(vg->cmd->mem, vg->name, lv->name, NULL)))
+	if (!(uuid = build_dm_uuid(vg->cmd->mem, lv->lvid.s, NULL)))
 		return_0;
 
-	if (!(dmevh = _create_dm_event_handler(name, dso, DM_EVENT_ALL_ERRORS)))
+	if (!(dmevh = _create_dm_event_handler(uuid, dso, DM_EVENT_ALL_ERRORS)))
 		return_0;
 
 	if (dm_event_get_registered_device(dmevh, 0)) {
@@ -486,7 +486,7 @@ static int _target_monitored(struct lv_segment *seg, int *pending)
 static int _target_set_events(struct lv_segment *seg,
 			      int evmask __attribute((unused)), int set)
 {
-	char *dso, *name;
+	char *dso, *uuid;
 	struct logical_volume *lv;
 	struct volume_group *vg;
 	struct dm_event_handler *dmevh;
@@ -498,10 +498,10 @@ static int _target_set_events(struct lv_segment *seg,
 	if (!_get_mirror_dso_path(vg->cmd, &dso))
 		return_0;
 
-	if (!(name = build_dm_name(vg->cmd->mem, vg->name, lv->name, NULL)))
+	if (!(uuid = build_dm_uuid(vg->cmd->mem, lv->lvid.s, NULL)))
 		return_0;
 
-	if (!(dmevh = _create_dm_event_handler(name, dso, DM_EVENT_ALL_ERRORS)))
+	if (!(dmevh = _create_dm_event_handler(uuid, dso, DM_EVENT_ALL_ERRORS)))
 		return_0;
 
 	r = set ? dm_event_register_handler(dmevh) : dm_event_unregister_handler(dmevh);
@@ -509,7 +509,7 @@ static int _target_set_events(struct lv_segment *seg,
 	if (!r)
 		return_0;
 
-	log_info("%s %s for events", set ? "Monitored" : "Unmonitored", name);
+	log_info("%s %s for events", set ? "Monitored" : "Unmonitored", uuid);
 
 	return 1;
 }

@@ -170,6 +170,27 @@ char *build_dm_name(struct dm_pool *mem, const char *vgname,
 	return r;
 }
 
+char *build_dm_uuid(struct dm_pool *mem, const char *lvid, const char *layer)
+{
+	char *dmuuid;
+	size_t len;
+
+	if (!layer)
+		layer = "";
+
+	len = sizeof(UUID_PREFIX) + strlen(lvid) + strlen(layer) + 1;
+
+	if (!(dmuuid = dm_pool_alloc(mem, len))) {
+		log_error("build_dm_name: Allocation failed for %" PRIsize_t
+			  " %s %s.", len, lvid, layer);
+		return NULL;
+	}
+
+	sprintf(dmuuid, UUID_PREFIX "%s%s%s", lvid, (*layer) ? "-" : "", layer);
+
+	return dmuuid;
+}
+
 /*
  * Copies a string, quoting double quotes with backslashes.
  */
