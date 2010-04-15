@@ -1,6 +1,7 @@
 Version 2.02.64 -
 =================================
   Added awk script relpath.awk to calculate relative paths.
+  Fix double DESTDIR usage for infodir and mandir.
 
 Version 2.02.63 - 14th April 2010
 =================================
