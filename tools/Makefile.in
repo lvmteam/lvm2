@@ -169,7 +169,7 @@ install_cmdlib_include: $(srcdir)/lvm2cmd.h
 install_cmdlib_dynamic: liblvm2cmd.$(LIB_SUFFIX)
 	$(INSTALL_PROGRAM) -D $< $(libdir)/$(<F).$(LIB_VERSION)
 	$(INSTALL) -d $(usrlibdir)
-	$(LN_S) -f $(libdir)/$<.$(LIB_VERSION) $(usrlibdir)/$(<F)
+	$(LN_S) -f $(USRLIB_RELPATH)$(<F).$(LIB_VERSION) $(usrlibdir)/$(<F)
 
 install_cmdlib_static: liblvm2cmd-static.a
 	$(INSTALL_DATA) -D $< $(usrlibdir)/liblvm2cmd.a
