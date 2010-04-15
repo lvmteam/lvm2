@@ -1,5 +1,6 @@
 Version 2.02.64 -
 =================================
+  Change daemon lock filename from lvm2_monitor to lvm2-monitor for consistency.
   Added awk script relpath.awk to calculate relative paths.
   Fix double DESTDIR usage for infodir and mandir.
   Install symbolic .so links with relative paths between usrlibdir and libdir.
