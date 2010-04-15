@@ -2,6 +2,7 @@ Version 2.02.64 -
 =================================
   Added awk script relpath.awk to calculate relative paths.
   Fix double DESTDIR usage for infodir and mandir.
+  Install symbolic .so links with relative paths between usrlibdir and libdir.
 
 Version 2.02.63 - 14th April 2010
 =================================

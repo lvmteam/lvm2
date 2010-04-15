@@ -62,6 +62,8 @@ mandir = $(datarootdir)/man
 localedir = $(DESTDIR)@LOCALEDIR@
 staticdir = $(DESTDIR)@STATICDIR@
 udevdir = $(DESTDIR)@udevdir@
+USRLIB_RELPATH = $(shell echo $(abspath $(usrlibdir) $(libdir)) | \
+  awk -f $(top_srcdir)/scripts/relpath.awk)
 
 # Setup vpath search paths for some suffixes
 vpath %.c $(srcdir)
@@ -301,7 +303,7 @@ $(LIB_SHARED): $(LIB_SHARED).$(LIB_VERSION)
 install_lib_shared: $(LIB_SHARED)
 	$(INSTALL_PROGRAM) -D $< $(libdir)/$(<F).$(LIB_VERSION)
 	$(INSTALL) -d $(usrlibdir)
-	$(LN_S) -f $(libdir)/$(<F).$(LIB_VERSION) $(usrlibdir)/$(<F)
+	$(LN_S) -f $(USRLIB_RELPATH)$(<F).$(LIB_VERSION) $(usrlibdir)/$(<F)
 
 # FIXME: plugins are currently installed with .so suffix only
 install_lib_shared_plugin: $(LIB_SHARED)
