@@ -1,5 +1,6 @@
 Version 1.02.47 -
 =================================
+  Simplify dm_bitset_create.
   Speed up dm_bit_get_next with ffs().
 
 Version 1.02.46 - 14th April 2010
