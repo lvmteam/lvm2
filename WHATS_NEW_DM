@@ -1,5 +1,6 @@
 Version 1.02.47 -
 =================================
+  Add dm_bit_and.
   Simplify dm_bitset_create.
   Speed up dm_bit_get_next with ffs().
 
