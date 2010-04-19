@@ -26,16 +26,13 @@ dm_bitset_t dm_bitset_create(struct dm_pool *mem, unsigned num_bits)
 	
 	if (mem)
 		bs = dm_pool_zalloc(mem, size);
-	else
-		bs = dm_malloc(size);
+	else if ((bs = dm_malloc(size)))
+		memset(mem, 0, size);
 
 	if (!bs)
 		return NULL;
 
 	*bs = num_bits;
-
-	if (!mem)
-		dm_bit_clear_all(bs);
 
 	return bs;
 }
