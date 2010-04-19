@@ -17,7 +17,7 @@
 #include "metadata-exported.h"
 #include "lvm-string.h"
 
-char *lvm_pv_get_uuid(const pv_t pv)
+const char *lvm_pv_get_uuid(const pv_t pv)
 {
 	char uuid[64] __attribute((aligned(8)));
 
@@ -25,17 +25,13 @@ char *lvm_pv_get_uuid(const pv_t pv)
 		log_error(INTERNAL_ERROR "Unable to convert uuid");
 		return NULL;
 	}
-	return strndup((const char *)uuid, 64);
+	return dm_pool_strndup(pv->vg->vgmem, (const char *)uuid, 64);
 }
 
-char *lvm_pv_get_name(const pv_t pv)
+const char *lvm_pv_get_name(const pv_t pv)
 {
-	char *name;
-
-	name = dm_malloc(NAME_LEN + 1);
-	strncpy(name, (const char *)pv_dev_name(pv), NAME_LEN);
-	name[NAME_LEN] = '\0';
-	return name;
+	return dm_pool_strndup(pv->vg->vgmem,
+			       (const char *)pv_dev_name(pv), NAME_LEN + 1);
 }
 
 uint64_t lvm_pv_get_mda_count(const pv_t pv)

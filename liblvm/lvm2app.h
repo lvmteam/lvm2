@@ -642,12 +642,12 @@ uint64_t lvm_vg_is_partial(vg_t vg);
 uint64_t lvm_vg_get_seqno(const vg_t vg);
 
 /**
- * Get the current name of a volume group.
+ * Get the current uuid of a volume group.
  *
  * \memberof vg_t
  *
- * Memory is allocated using dm_malloc() and caller must free the memory
- * using dm_free().
+ * The memory allocated for the uuid is tied to the vg_t handle and will be
+ * released when lvm_vg_close() is called.
  *
  * \param   vg
  * VG handle obtained from lvm_vg_create or lvm_vg_open().
@@ -655,15 +655,15 @@ uint64_t lvm_vg_get_seqno(const vg_t vg);
  * \return
  * Copy of the uuid string.
  */
-char *lvm_vg_get_uuid(const vg_t vg);
+const char *lvm_vg_get_uuid(const vg_t vg);
 
 /**
- * Get the current uuid of a volume group.
+ * Get the current name of a volume group.
  *
  * \memberof vg_t
  *
- * Memory is allocated using dm_malloc() and caller must free the memory
- * using dm_free().
+ * The memory allocated for the name is tied to the vg_t handle and will be
+ * released when lvm_vg_close() is called.
  *
  * \param   vg
  * VG handle obtained from lvm_vg_create or lvm_vg_open().
@@ -671,7 +671,7 @@ char *lvm_vg_get_uuid(const vg_t vg);
  * \return
  * Copy of the name.
  */
-char *lvm_vg_get_name(const vg_t vg);
+const char *lvm_vg_get_name(const vg_t vg);
 
 /**
  * Get the current size in bytes of a volume group.
@@ -783,7 +783,7 @@ uint64_t lvm_vg_get_max_lv(const vg_t vg);
  * \memberof vg_t
  *
  * The memory allocated for the list is tied to the vg_t handle and will be
- * released when lvm_vg_close is called.
+ * released when lvm_vg_close() is called.
  *
  * To process the list, use the dm_list iterator functions.  For example:
  *      vg_t vg;
@@ -896,7 +896,7 @@ int lvm_vg_remove_lv(lv_t lv);
  * \return
  * Copy of the uuid string.
  */
-char *lvm_lv_get_uuid(const lv_t lv);
+const char *lvm_lv_get_uuid(const lv_t lv);
 
 /**
  * Get the current uuid of a logical volume.
@@ -912,7 +912,7 @@ char *lvm_lv_get_uuid(const lv_t lv);
  * \return
  * Copy of the name.
  */
-char *lvm_lv_get_name(const lv_t lv);
+const char *lvm_lv_get_name(const lv_t lv);
 
 /**
  * Get the current size in bytes of a logical volume.
@@ -1001,7 +1001,7 @@ int lvm_lv_remove_tag(lv_t lv, const char *tag);
  * \memberof lv_t
  *
  * The memory allocated for the list is tied to the vg_t handle and will be
- * released when lvm_vg_close is called.
+ * released when lvm_vg_close() is called.
  *
  * To process the list, use the dm_list iterator functions.  For example:
  *      lv_t lv;
@@ -1057,8 +1057,8 @@ int lvm_lv_resize(const lv_t lv, uint64_t new_size);
  *
  * \memberof pv_t
  *
- * Memory is allocated using dm_malloc() and caller must free the memory
- * using dm_free().
+ * The memory allocated for the uuid is tied to the vg_t handle and will be
+ * released when lvm_vg_close() is called.
  *
  * \param   pv
  * Physical volume handle.
@@ -1066,15 +1066,15 @@ int lvm_lv_resize(const lv_t lv, uint64_t new_size);
  * \return
  * Copy of the uuid string.
  */
-char *lvm_pv_get_uuid(const pv_t pv);
+const char *lvm_pv_get_uuid(const pv_t pv);
 
 /**
  * Get the current name of a physical volume.
  *
  * \memberof pv_t
  *
- * Memory is allocated using dm_malloc() and caller must free the memory
- * using dm_free().
+ * The memory allocated for the uuid is tied to the vg_t handle and will be
+ * released when lvm_vg_close() is called.
  *
  * \param   pv
  * Physical volume handle.
@@ -1082,7 +1082,7 @@ char *lvm_pv_get_uuid(const pv_t pv);
  * \return
  * Copy of the name.
  */
-char *lvm_pv_get_name(const pv_t pv);
+const char *lvm_pv_get_name(const pv_t pv);
 
 /**
  * Get the current number of metadata areas in the physical volume.

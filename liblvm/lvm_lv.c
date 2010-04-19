@@ -39,7 +39,7 @@ uint64_t lvm_lv_get_size(const lv_t lv)
 	return SECTOR_SIZE * lv_size(lv);
 }
 
-char *lvm_lv_get_uuid(const lv_t lv)
+const char *lvm_lv_get_uuid(const lv_t lv)
 {
 	char uuid[64] __attribute((aligned(8)));
 
@@ -47,17 +47,13 @@ char *lvm_lv_get_uuid(const lv_t lv)
 		log_error(INTERNAL_ERROR "unable to convert uuid");
 		return NULL;
 	}
-	return strndup((const char *)uuid, 64);
+	return dm_pool_strndup(lv->vg->vgmem, (const char *)uuid, 64);
 }
 
-char *lvm_lv_get_name(const lv_t lv)
+const char *lvm_lv_get_name(const lv_t lv)
 {
-	char *name;
-
-	name = dm_malloc(NAME_LEN + 1);
-	strncpy(name, (const char *)lv->name, NAME_LEN);
-	name[NAME_LEN] = '\0';
-	return name;
+	return dm_pool_strndup(lv->vg->vgmem, (const char *)lv->name,
+			       NAME_LEN+1);
 }
 
 uint64_t lvm_lv_is_active(const lv_t lv)
