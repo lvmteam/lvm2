@@ -55,19 +55,24 @@ lvconvert --merge $vg/$(snap_lv_name_ $lv1)
 lvremove -f $vg/$lv1
 
 
-# "onactivate merge" test -- refresh LV while FS is still mounted;
-# verify snapshot-origin target is still being used
+# "onactivate merge" test
 setup_merge $vg $lv1
 lvs -a
 mkdir test_mnt
 mount $(lvdev_ $vg $lv1) test_mnt
 lvconvert --merge $vg/$(snap_lv_name_ $lv1)
+# -- refresh LV while FS is still mounted (merge must not start),
+#    verify 'snapshot-origin' target is still being used
 lvchange --refresh $vg/$lv1
 umount test_mnt
 rm -r test_mnt
-# an active merge uses the "snapshot-merge" target
 dmsetup table ${vg}-${lv1} | grep -q " snapshot-origin "
-test $? = 0
+# -- refresh LV to start merge (now that FS is unmounted),
+#    an active merge uses the 'snapshot-merge' target
+lvchange --refresh $vg/$lv1
+dmsetup table ${vg}-${lv1} | grep -q " snapshot-merge "
+# -- don't care if merge is still active; lvremove at this point
+#    may test stopping an active merge
 lvremove -f $vg/$lv1
 
 
