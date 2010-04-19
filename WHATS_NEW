@@ -1,5 +1,7 @@
 Version 2.02.64 -
 =================================
+  Increment lvm2app version from 1 to 2.
+  Change lvm2app memory alloc/free for pv/vg/lv properties.
   Change daemon lock filename from lvm2_monitor to lvm2-monitor for consistency.
   Added awk script relpath.awk to calculate relative paths.
   Fix double DESTDIR usage for infodir and mandir.
