@@ -24,3 +24,7 @@ mknod $DM_DEV_DIR/null c 1 3 ||
   error "Can't create nodes on filesystem"
 echo >$DM_DEV_DIR/null || 
   error "Filesystem for tests does not allow using device nodes (check nodev)"
+
+# ensure we can create devices (uses dmsetup, etc)
+aux prepare_devs 5
+
