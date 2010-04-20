@@ -688,14 +688,13 @@ xx(vgcfgrestore,
    "\t[-f|--file filename] " "\n"
    "\t[-l[l]|--list [--list]]" "\n"
    "\t[-M|--metadatatype 1|2]" "\n"
-   "\t[-n|--name VolumeGroupName] " "\n"
    "\t[-h|--help]" "\n"
    "\t[-t|--test] " "\n"
    "\t[-v|--verbose]" "\n"
    "\t[--version] " "\n"
    "\tVolumeGroupName",
 
-   file_ARG, list_ARG, metadatatype_ARG, name_ARG, test_ARG)
+   file_ARG, list_ARG, metadatatype_ARG, test_ARG)
 
 xx(vgchange,
    "Change volume group attributes",
