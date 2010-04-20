@@ -1,5 +1,6 @@
 Version 2.02.64 -
 =================================
+  Remove obsolete --name parameter from vgcfgrestore.
   Add -S command to clvmd to restart the daemon preserving exclusive locks.
   Increment lvm2app version from 1 to 2.
   Change lvm2app memory alloc/free for pv/vg/lv properties.
