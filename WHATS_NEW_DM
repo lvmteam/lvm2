@@ -1,5 +1,6 @@
 Version 1.02.47 -
 =================================
+  Add a regex optimisation pass for shared character prefixes.
   Add dm_bit_and and dm_bitset_equal to libdevmapper.
   Simplify dm_bitset_create.
   Speed up dm_bit_get_next with ffs().
