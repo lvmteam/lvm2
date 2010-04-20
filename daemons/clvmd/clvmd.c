@@ -92,6 +92,11 @@ struct lvm_thread_cmd {
 	unsigned short xid;
 };
 
+struct lvm_startup_params {
+	int using_gulm;
+	char **argv;
+};
+
 debug_t debug;
 static pthread_t lvm_thread;
 static pthread_mutex_t lvm_thread_mutex;
@@ -163,6 +168,7 @@ static void usage(char *prog, FILE *file)
 	fprintf(file, "   -d       Set debug level\n");
 	fprintf(file, "            If starting clvmd then don't fork, run in the foreground\n");
 	fprintf(file, "   -R       Tell all running clvmds in the cluster to reload their device cache\n");
+	fprintf(file, "   -S       Restart clvmd, preserving exclusive locks\n");
 	fprintf(file, "   -C       Sets debug level (from -d) on all clvmd instances clusterwide\n");
 	fprintf(file, "   -t<secs> Command timeout (default 60 seconds)\n");
 	fprintf(file, "   -T<secs> Startup timeout (default none)\n");
@@ -268,6 +274,9 @@ static const char *decode_cmd(unsigned char cmdl)
 	case CLVMD_CMD_LOCK_QUERY:
 		command = "LOCK_QUERY";
 		break;
+	case CLVMD_CMD_RESTART:
+		command = "RESTART";
+		break;
 	default:
 		command = "unknown";
 		break;
@@ -283,6 +292,7 @@ int main(int argc, char *argv[])
 	int local_sock;
 	struct local_client *newfd;
 	struct utsname nodeinfo;
+	struct lvm_startup_params lvm_params;
 	signed char opt;
 	int cmd_timeout = DEFAULT_CMD_TIMEOUT;
 	int start_timeout = 0;
@@ -295,7 +305,7 @@ int main(int argc, char *argv[])
 	/* Deal with command-line arguments */
 	opterr = 0;
 	optind = 0;
-	while ((opt = getopt(argc, argv, "?vVhd::t:RT:CI:")) != EOF) {
+	while ((opt = getopt(argc, argv, "?vVhd::t:RST:CI:E:")) != EOF) {
 		switch (opt) {
 		case 'h':
 			usage(argv[0], stdout);
@@ -306,7 +316,10 @@ int main(int argc, char *argv[])
 			exit(0);
 
 		case 'R':
-			return refresh_clvmd()==1?0:1;
+			return refresh_clvmd(1)==1?0:1;
+
+		case 'S':
+			return restart_clvmd(clusterwide_opt)==1?0:1;
 
 		case 'C':
 			clusterwide_opt = 1;
@@ -489,8 +502,10 @@ int main(int argc, char *argv[])
 
 	/* Don't let anyone else to do work until we are started */
 	pthread_mutex_lock(&lvm_start_mutex);
+	lvm_params.using_gulm = using_gulm;
+	lvm_params.argv = argv;
 	pthread_create(&lvm_thread, NULL, (lvm_pthread_fn_t*)lvm_thread_fn,
-			(void *)(long)using_gulm);
+			(void *)&lvm_params);
 
 	/* Tell the rest of the cluster our version number */
 	/* CMAN can do this immediately, gulm needs to wait until
@@ -551,6 +566,10 @@ static int local_rendezvous_callback(struct local_client *thisfd, char *buf,
 			close(client_fd);
 			return 1;
 		}
+
+		if (fcntl(client_fd, F_SETFD, 1))
+			DEBUGLOG("setting CLOEXEC on client fd failed: %s\n", strerror(errno));
+
 		newfd->fd = client_fd;
 		newfd->type = LOCAL_SOCK;
 		newfd->xid = 0;
@@ -1182,6 +1201,12 @@ static int read_from_local_sock(struct local_client *thisfd)
 		}
 		DEBUGLOG("creating pipe, [%d, %d]\n", comms_pipe[0],
 			 comms_pipe[1]);
+
+		if (fcntl(comms_pipe[0], F_SETFD, 1))
+			DEBUGLOG("setting CLOEXEC on pipe[0] failed: %s\n", strerror(errno));
+		if (fcntl(comms_pipe[1], F_SETFD, 1))
+			DEBUGLOG("setting CLOEXEC on pipe[1] failed: %s\n", strerror(errno));
+
 		newfd->fd = comms_pipe[0];
 		newfd->removeme = 0;
 		newfd->type = THREAD_PIPE;
@@ -1830,7 +1855,7 @@ static void lvm_thread_fn(void *arg)
 {
 	struct dm_list *cmdl, *tmp;
 	sigset_t ss;
-	int using_gulm = (int)(long)arg;
+	struct lvm_startup_params *lvm_params = arg;
 
 	DEBUGLOG("LVM thread function started\n");
 
@@ -1841,7 +1866,7 @@ static void lvm_thread_fn(void *arg)
 	pthread_sigmask(SIG_BLOCK, &ss, NULL);
 
 	/* Initialise the interface to liblvm */
-	init_lvm(using_gulm);
+	init_lvm(lvm_params->using_gulm, lvm_params->argv);
 
 	/* Allow others to get moving */
 	pthread_mutex_unlock(&lvm_start_mutex);
@@ -1956,8 +1981,10 @@ static int open_local_sock()
 		log_error("Can't create local socket: %m");
 		return -1;
 	}
+
 	/* Set Close-on-exec & non-blocking */
-	fcntl(local_socket, F_SETFD, 1);
+	if (fcntl(local_socket, F_SETFD, 1))
+		DEBUGLOG("setting CLOEXEC on local_socket failed: %s\n", strerror(errno));
 	fcntl(local_socket, F_SETFL, fcntl(local_socket, F_GETFL, 0) | O_NONBLOCK);
 
 	memset(&sockaddr, 0, sizeof(sockaddr));

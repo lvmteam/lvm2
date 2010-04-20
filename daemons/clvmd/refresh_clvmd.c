@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2002-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2010 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -14,7 +14,7 @@
  */
 
 /*
- * Tell all clvmds in a cluster to refresh their toolcontext
+ * Send a command to a running clvmd from the command-line
  */
 
 #define _GNU_SOURCE
@@ -83,7 +83,7 @@ static int _open_local_sock(void)
 }
 
 /* Send a request and return the status */
-static int _send_request(const char *inbuf, int inlen, char **retbuf)
+static int _send_request(const char *inbuf, int inlen, char **retbuf, int no_response)
 {
 	char outbuf[PIPE_BUF];
 	struct clvm_header *outheader = (struct clvm_header *) outbuf;
@@ -100,6 +100,8 @@ static int _send_request(const char *inbuf, int inlen, char **retbuf)
 		fprintf(stderr, "Error writing data to clvmd: %s", strerror(errno));
 		return 0;
 	}
+	if (no_response)
+		return 1;
 
 	/* Get the response */
  reread:
@@ -184,7 +186,7 @@ static void _build_header(struct clvm_header *head, int cmd, const char *node,
  * Send a message to a(or all) node(s) in the cluster and wait for replies
  */
 static int _cluster_request(char cmd, const char *node, void *data, int len,
-			   lvm_response_t ** response, int *num)
+			    lvm_response_t ** response, int *num, int no_response)
 {
 	char outbuf[sizeof(struct clvm_header) + len + strlen(node) + 1];
 	char *inptr;
@@ -207,8 +209,8 @@ static int _cluster_request(char cmd, const char *node, void *data, int len,
 	memcpy(head->node + strlen(head->node) + 1, data, len);
 
 	status = _send_request(outbuf, sizeof(struct clvm_header) +
-			      strlen(head->node) + len, &retbuf);
-	if (!status)
+			       strlen(head->node) + len, &retbuf, no_response);
+	if (!status || no_response)
 		goto out;
 
 	/* Count the number of responses we got */
@@ -287,7 +289,7 @@ static int _cluster_free_request(lvm_response_t * response, int num)
 	return 1;
 }
 
-int refresh_clvmd()
+int refresh_clvmd(int all_nodes)
 {
 	int num_responses;
 	char args[1]; // No args really.
@@ -296,7 +298,7 @@ int refresh_clvmd()
 	int status;
 	int i;
 
-	status = _cluster_request(CLVMD_CMD_REFRESH, "*", args, 0, &response, &num_responses);
+	status = _cluster_request(CLVMD_CMD_REFRESH, all_nodes?"*":".", args, 0, &response, &num_responses, 0);
 
 	/* If any nodes were down then display them and return an error */
 	for (i = 0; i < num_responses; i++) {
@@ -323,6 +325,12 @@ int refresh_clvmd()
 	return status;
 }
 
+int restart_clvmd(int all_nodes)
+{
+	int dummy;
+	return _cluster_request(CLVMD_CMD_RESTART, all_nodes?"*":".", NULL, 0, NULL, &dummy, 1);
+}
+
 int debug_clvmd(int level, int clusterwide)
 {
 	int num_responses;
@@ -339,7 +347,7 @@ int debug_clvmd(int level, int clusterwide)
 	else
 		nodes = ".";
 
-	status = _cluster_request(CLVMD_CMD_SET_DEBUG, nodes, args, 1, &response, &num_responses);
+	status = _cluster_request(CLVMD_CMD_SET_DEBUG, nodes, args, 1, &response, &num_responses, 0);
 
 	/* If any nodes were down then display them and return an error */
 	for (i = 0; i < num_responses; i++) {

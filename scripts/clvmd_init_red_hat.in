@@ -146,7 +146,17 @@ restart() {
 	# another start. Even if start is protected by rh_status_q,
 	# that would avoid spawning another daemon, it would try to
 	# reactivate the VGs.
-	stop && start
+
+	# Try to get clvmd to restart itself. This will preserve 
+	# exclusive LV locks
+	action "Restarting $DAEMON: " $DAEMON -S || return $?
+
+	# If that fails then do a normal stop & restart
+	if  [ $? != 0 ]; then
+	    stop && start
+	else
+	    touch $LOCK_FILE
+	fi
 }
 
 # See how we were called.
