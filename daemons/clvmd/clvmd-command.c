@@ -80,6 +80,7 @@
 
 extern debug_t debug;
 extern struct cluster_ops *clops;
+static int restart_clvmd(void);
 
 /* This is where all the real work happens:
    NOTE: client will be NULL when this is executed on a remote node */
@@ -156,6 +157,10 @@ int do_command(struct local_client *client, struct clvm_header *msg, int msglen,
 
 	case CLVMD_CMD_SET_DEBUG:
 		debug = args[0];
+		break;
+
+	case CLVMD_CMD_RESTART:
+		restart_clvmd();
 		break;
 
 	case CLVMD_CMD_GET_CLUSTERNAME:
@@ -285,6 +290,7 @@ int do_pre_command(struct local_client *client)
 	case CLVMD_CMD_SET_DEBUG:
 	case CLVMD_CMD_VG_BACKUP:
 	case CLVMD_CMD_LOCK_QUERY:
+	case CLVMD_CMD_RESTART:
 		break;
 
 	default:
@@ -350,4 +356,51 @@ void cmd_client_cleanup(struct local_client *client)
 	dm_hash_destroy(lock_hash);
 	client->bits.localsock.private = 0;
     }
+}
+
+
+static int restart_clvmd(void)
+{
+	char *argv[1024];
+	int argc = 1;
+	struct dm_hash_node *hn = NULL;
+	char *lv_name;
+
+	DEBUGLOG("clvmd restart requested\n");
+
+	/*
+	 * Build the command-line
+	 */
+	argv[0] = strdup("clvmd");
+
+	/* Propogate debug options */
+	if (debug) {
+		char debug_level[16];
+
+		sprintf(debug_level, "-d%d", debug);
+		argv[argc++] = strdup(debug_level);
+	}
+
+	/* Now add the exclusively-open LVs */
+	do {
+		hn = get_next_excl_lock(hn, &lv_name);
+		if (lv_name) {
+			argv[argc++] = strdup("-E");
+			argv[argc++] = strdup(lv_name);
+
+			DEBUGLOG("excl lock: %s\n", lv_name);
+			hn = get_next_excl_lock(hn, &lv_name);
+		}
+	} while (hn && *lv_name);
+	argv[argc++] = NULL;
+
+	/* Tidy up */
+	destroy_lvm();
+
+	/* Exec new clvmd */
+	/* NOTE: This will fail when downgrading! */
+	execve("clvmd", argv, NULL);
+
+	/* We failed */
+	return 0;
 }

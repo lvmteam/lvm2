@@ -13,6 +13,7 @@
  */
 
 
-int refresh_clvmd(void);
+int refresh_clvmd(int all_nodes);
+int restart_clvmd(int all_nodes);
 int debug_clvmd(int level, int clusterwide);
 

@@ -5,6 +5,7 @@ clvmd \- cluster LVM daemon
 .B clvmd
 [\-d [<value>]] [\-C] [\-h]
 [\-R]
+[\-S]
 [\-t <timeout>]
 [\-T <start timeout>]
 [\-V]
@@ -73,6 +74,12 @@ This timeout will be ignored if you start clvmd with the -d switch.
 Tells all the running clvmds in the cluster to reload their device cache and
 re-read the lvm configuration file. This command should be run whenever the
 devices on a cluster system are changed.
+.TP
+.I \-S
+Tells the running clvmd to exit and restart. This is a preferred option
+to killing and restarting clvmd as it will preserve exclusive LV locks.
+If a full stop & restart is done instead, exclusive LV locks will be
+re-acquired as shared.
 .TP
 .I \-I
 Selects the cluster manager to use for locking and internal communications,
