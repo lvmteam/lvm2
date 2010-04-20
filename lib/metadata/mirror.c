@@ -516,6 +516,21 @@ static int _move_removable_mimages_to_end(struct logical_volume *lv,
 	return !count;
 }
 
+static int _mirrored_lv_in_sync(struct logical_volume *lv)
+{
+	float sync_percent;
+	percent_range_t percent_range;
+
+	if (!lv_mirror_percent(lv->vg->cmd, lv, 0, &sync_percent,
+			       &percent_range, NULL)) {
+		log_error("Unable to determine mirror sync status of %s/%s.",
+			  lv->vg->name, lv->name);
+		return 0;
+	}
+
+	return (percent_range == PERCENT_100) ? 1 : 0;
+}
+
 /*
  * Split off 'split_count' legs from a mirror
  *
@@ -958,21 +973,6 @@ int remove_mirror_images(struct logical_volume *lv, uint32_t num_mirrors,
 	}
 
 	return 1;
-}
-
-static int _mirrored_lv_in_sync(struct logical_volume *lv)
-{
-	float sync_percent;
-	percent_range_t percent_range;
-
-	if (!lv_mirror_percent(lv->vg->cmd, lv, 0, &sync_percent,
-			       &percent_range, NULL)) {
-		log_error("Unable to determine mirror sync status of %s/%s.",
-			  lv->vg->name, lv->name);
-		return 0;
-	}
-
-	return (percent_range == PERCENT_100) ? 1 : 0;
 }
 
 /*
