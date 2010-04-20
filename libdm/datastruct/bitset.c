@@ -42,6 +42,17 @@ void dm_bitset_destroy(dm_bitset_t bs)
 	dm_free(bs);
 }
 
+int dm_bitset_equal(dm_bitset_t in1, dm_bitset_t in2)
+{
+	int i;
+
+	for (i = (in1[0] / DM_BITS_PER_INT) + 1; i; i--)
+		if (in1[i] != in2[i])
+			return 0;
+
+	return 1;
+}
+
 void dm_bit_and(dm_bitset_t out, dm_bitset_t in1, dm_bitset_t in2)
 {
 	int i;

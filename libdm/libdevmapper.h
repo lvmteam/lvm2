@@ -600,6 +600,8 @@ typedef uint32_t *dm_bitset_t;
 dm_bitset_t dm_bitset_create(struct dm_pool *mem, unsigned num_bits);
 void dm_bitset_destroy(dm_bitset_t bs);
 
+int dm_bitset_equal(dm_bitset_t in1, dm_bitset_t in2);
+
 void dm_bit_and(dm_bitset_t out, dm_bitset_t in1, dm_bitset_t in2);
 void dm_bit_union(dm_bitset_t out, dm_bitset_t in1, dm_bitset_t in2);
 int dm_bit_get_first(dm_bitset_t bs);
