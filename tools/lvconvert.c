@@ -1046,7 +1046,7 @@ static int _lvconvert_mirrors_aux(struct cmd_context *cmd,
 		uint32_t nmc = old_mimage_count - new_mimage_count;
 		uint32_t nlc = (!new_log_count || lp->mirrors == 1) ? 1U : 0U;
 
-		/* FIXME: We did nlc used to be calculated that way? */
+		/* FIXME: Why did nlc used to be calculated that way? */
 
 		/* Reduce number of mirrors */
 		if (lp->keep_mimages) {
