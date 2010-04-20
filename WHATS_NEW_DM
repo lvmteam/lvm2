@@ -1,6 +1,6 @@
 Version 1.02.47 -
 =================================
-  Add dm_bit_and.
+  Add dm_bit_and and dm_bitset_equal to libdevmapper.
   Simplify dm_bitset_create.
   Speed up dm_bit_get_next with ffs().
 

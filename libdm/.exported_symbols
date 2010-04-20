@@ -109,6 +109,7 @@ dm_pool_strndup
 dm_pool_zalloc
 dm_bitset_create
 dm_bitset_destroy
+dm_bitset_equal
 dm_bit_and
 dm_bit_union
 dm_bit_get_first
