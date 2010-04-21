@@ -61,10 +61,20 @@ lvcreate -l2 -n $lv1 $vg $dev1
 not lvconvert -m+1 --mirrorlog core $vg/$lv1 $dev1
 lvremove -ff $vg
 
-lvcreate -l2 -m2 -n $lv1 $vg $dev1 $dev2 $dev4 $dev3:0-1
+# Start w/ 3-way mirror
+# Test pulling primary image before mirror in-sync (should fail)
+# Test pulling primary image after mirror in-sync (should work)
+# Test that the correct devices remain in the mirror
+lvcreate -l8 -m2 -n $lv1 $vg $dev1 $dev2 $dev4 $dev3:0-1
+# FIXME:
+#  This is somewhat timing dependent - sync /could/ finish before
+#  we get a chance to have this command fail
+not lvconvert -m-1 $vg/$lv1 $dev1
+while [ `lvs --noheadings -o copy_percent $vg/$lv1` != "100.00" ]; do
+	sleep 1
+done
 lvconvert -m-1 $vg/$lv1 $dev1
 check mirror_images_on $lv1 $dev2 $dev4
 lvconvert -m-1 $vg/$lv1 $dev2
 check linear $vg $lv1
 check lv_on $vg/$lv1 $dev4
-

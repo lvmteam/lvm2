@@ -1,5 +1,6 @@
 Version 2.02.64 -
 =================================
+  Disallow primary mirror image removal when mirror is not in-sync.
   Remove obsolete --name parameter from vgcfgrestore.
   Add -S command to clvmd to restart the daemon preserving exclusive locks.
   Increment lvm2app version from 1 to 2.
