@@ -98,6 +98,12 @@ wait_conversion_()
   while (lvs --noheadings -oattr "$lv" | grep -q '^ *c'); do sleep 1; done
 }
 
+wait_sync_()
+{
+  local lv=$1
+  while [ `lvs --noheadings -o copy_percent $lv` != "100.00" ]; do sleep 1; done
+}
+
 check_no_tmplvs_()
 {
   local lv=$1
@@ -404,6 +410,7 @@ lvcreate -l`pvs --noheadings -ope_count $dev1` -m1 -n $lv1 $vg $dev1 $dev2 $dev3
 lvs -a -o+devices $vg
 check_mirror_count_ $vg/$lv1 2 
 check_mirror_log_ $vg/$lv1 
+wait_sync_ $vg/$lv1 # cannot pull primary unless mirror in-sync
 lvconvert -m0 $vg/$lv1 $dev1 
 lvs -a -o+devices $vg
 check_no_tmplvs_ $vg/$lv1 

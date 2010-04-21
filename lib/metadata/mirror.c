@@ -751,7 +751,7 @@ static int _remove_mirror_images(struct logical_volume *lv,
 				 uint32_t *removed)
 {
 	uint32_t m;
-	uint32_t s;
+	int32_t s;
 	int removable_pvs_specified;
 	struct logical_volume *sub_lv;
 	struct logical_volume *detached_log_lv = NULL;
@@ -781,15 +781,25 @@ static int _remove_mirror_images(struct logical_volume *lv,
 
 	/* Move removable_pvs to end of array */
 	if (removable_pvs_specified) {
-		for (s = 0; s < mirrored_seg->area_count &&
-			    old_area_count - new_area_count < num_removed; s++) {
+		for (s = mirrored_seg->area_count - 1;
+		     s >= 0 && old_area_count - new_area_count < num_removed;
+		     s--) {
 			sub_lv = seg_lv(mirrored_seg, s);
 
 			if (!is_temporary_mirror_layer(sub_lv) &&
 			    _is_mirror_image_removable(sub_lv, removable_pvs)) {
+				/*
+				 * Check if the user is trying to pull the
+				 * primary mirror image when the mirror is
+				 * not in-sync.
+				 */
+				if ((s == 0) && !_mirrored_lv_in_sync(lv) &&
+				    !(lv->status & PARTIAL_LV)) {
+					log_error("Unable to remove primary mirror image while mirror is not in-sync");
+					return_0;
+				}
 				if (!shift_mirror_images(mirrored_seg, s))
 					return_0;
-				s--; /* adjust counter after shifting */
 				new_area_count--;
 			}
 		}
