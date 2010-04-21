@@ -155,11 +155,14 @@ check_and_cleanup_lvs_
 # add 1 mirror
 prepare_lvs_
 lvs -a -o+devices $vg
-lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0
+lvcreate -l5 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0
 lvs -a -o+devices $vg
 check_mirror_count_ $vg/$lv1 2
 check_mirror_log_ $vg/$lv1
-lvconvert -m+1 -i1 $vg/$lv1 $dev4
+lvconvert -m+1 -i 20 -b $vg/$lv1 $dev4
+# Next convert should fail b/c we can't have 2 at once
+not lvconvert -m+1 -b $vg/$lv1 $dev5
+wait_conversion_ $vg/$lv1
 lvs -a -o+devices $vg
 check_no_tmplvs_ $vg/$lv1
 check_mirror_count_ $vg/$lv1 3

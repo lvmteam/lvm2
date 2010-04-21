@@ -995,6 +995,16 @@ static int _lvconvert_mirrors_aux(struct cmd_context *cmd,
 		}
 
 		/*
+		 * Is there already a convert in progress?  We do not
+		 * currently allow more than one.
+		 */
+		if (find_temporary_mirror(lv) || (lv->status & CONVERTING)) {
+			log_error("%s is already being converted.  Unable to start another conversion.",
+				  lv->name);
+			return 0;
+		}
+
+		/*
 		 * Log addition/removal should be done before the layer
 		 * insertion to make the end result consistent with
 		 * linear-to-mirror conversion.
