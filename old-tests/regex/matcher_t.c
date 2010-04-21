@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2010 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -13,7 +13,7 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "matcher.h"
+#include "libdevmapper.h"
 #include "log.h"
 
 #include <stdio.h>
@@ -31,7 +31,7 @@ static int _read_spec(const char *file, char ***regex, int *nregex)
 	char buffer[1024], *start, *ptr;
 	FILE *fp = fopen(file, "r");
 	int asize = 100;
-	char **rx = dbg_malloc(sizeof(*rx) * asize);
+	char **rx = dm_malloc(sizeof(*rx) * asize);
 	int nr = 0;
 
 	if (!fp)
@@ -60,7 +60,7 @@ static int _read_spec(const char *file, char ***regex, int *nregex)
 				return 0;
 			}
 
-			rx[nr] = dbg_malloc((ptr - start) + 1);
+			rx[nr] = dm_malloc((ptr - start) + 1);
 			strncpy(rx[nr], start, ptr - start);
 			rx[nr][ptr - start] = '\0';
 			nr++;
@@ -81,12 +81,12 @@ static void _free_regex(char **regex, int nregex)
 {
 	int i;
 	for (i = 0; i < nregex; i++)
-		dbg_free(regex[i]);
+		dm_free(regex[i]);
 
-	dbg_free(regex);
+	dm_free(regex);
 }
 
-static void _scan_input(struct matcher *m, char **regex)
+static void _scan_input(struct dm_regex *m, char **regex)
 {
 	char buffer[256], *ptr;
 	int r;
@@ -95,7 +95,7 @@ static void _scan_input(struct matcher *m, char **regex)
 		if ((ptr = strchr(buffer, '\n')))
 			*ptr = '\0';
 
-		r = matcher_run(m, buffer);
+		r = dm_regex_match(m, buffer);
 
 		if (r >= 0)
 			printf("%s : %s\n", buffer, regex[r]);
@@ -105,39 +105,41 @@ static void _scan_input(struct matcher *m, char **regex)
 int main(int argc, char **argv)
 {
 	struct dm_pool *mem;
-	struct matcher *scanner;
+	struct dm_regex *scanner;
 	char **regex;
 	int nregex;
+	int ret = 0;
 
 	if (argc < 2) {
 		fprintf(stderr, "Usage : %s <pattern_file>\n", argv[0]);
 		exit(1);
 	}
 
-	init_log(stderr);
-	init_debug(_LOG_DEBUG);
+	dm_log_init_verbose(_LOG_DEBUG);
 
-	if (!(mem = dm_pool_create(10 * 1024))) {
+	if (!(mem = dm_pool_create("match_regex", 10 * 1024))) {
 		fprintf(stderr, "Couldn't create pool\n");
-		exit(2);
+		ret = 2;
+		goto err;
 	}
 
 	if (!_read_spec(argv[1], &regex, &nregex)) {
 		fprintf(stderr, "Couldn't read the lex specification\n");
-		exit(3);
+		ret = 3;
+		goto err;
 	}
 
-	if (!(scanner = matcher_create(mem, (const char **) regex, nregex))) {
+	if (!(scanner = dm_regex_create(mem, (const char **)regex, nregex))) {
 		fprintf(stderr, "Couldn't build the lexer\n");
-		exit(4);
+		ret = 4;
+		goto err;
 	}
 
 	_scan_input(scanner, regex);
 	_free_regex(regex, nregex);
+
+    err:
 	dm_pool_destroy(mem);
 
-	dump_memory();
-	fin_log();
-	return 0;
+	return ret;
 }
-
