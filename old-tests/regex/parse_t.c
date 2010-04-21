@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2010 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -13,8 +13,8 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "log.h"
-#include "../../lib/regex/parse_rx.h"
+/* hack - using unexported internal function */
+#include "regex/parse_rx.c"
 
 #include <stdio.h>
 #include <ctype.h>
@@ -50,7 +50,7 @@ static void _pretty_print(struct rx_node *rx, int depth)
 	case CHARSET:
 		printf("Charset : ");
 		for (i = 0; i < 256; i++) {
-			if (bit(rx->charset, i) && isprint(i))
+			if (dm_bit(rx->charset, i) && isprint(i))
 				printf("%c", (char) i);
 		}
 		break;
@@ -67,7 +67,6 @@ static void _pretty_print(struct rx_node *rx, int depth)
 		_pretty_print(rx->right, depth + 1);
 }
 
-
 int main(int argc, char **argv)
 {
 	struct dm_pool *mem;
@@ -78,15 +77,15 @@ int main(int argc, char **argv)
 		exit(0);
 	}
 
-	init_log(stderr);
-	init_debug(_LOG_INFO);
+	dm_log_init_verbose(_LOG_DEBUG);
 
-	if (!(mem = dm_pool_create(1024))) {
+	if (!(mem = dm_pool_create("parse_regex", 1024))) {
 		fprintf(stderr, "Couldn't create pool\n");
 		exit(1);
 	}
 
 	if (!(rx = rx_parse_str(mem, argv[1]))) {
+		dm_pool_destroy(mem);
 		fprintf(stderr, "Couldn't parse regex\n");
 		exit(1);
 	}
@@ -94,7 +93,5 @@ int main(int argc, char **argv)
 	_pretty_print(rx, 0);
 	dm_pool_destroy(mem);
 
-	dump_memory();
-	fin_log();
 	return 0;
 }
