@@ -37,8 +37,6 @@ struct dm_regex {		/* Instance variables for the lexer */
 	struct dm_pool *scratch, *mem;
 };
 
-#define TARGET_TRANS '\0'
-
 static int _count_nodes(struct rx_node *rx)
 {
 	int r = 1;

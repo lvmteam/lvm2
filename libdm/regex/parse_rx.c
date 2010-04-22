@@ -452,7 +452,12 @@ static int _nodes_equal(struct rx_node *l, struct rx_node *r)
 		return _nodes_equal(l->left, r->left);
 
 	case CHARSET:
-		return dm_bitset_equal(l->charset, r->charset);
+		/*
+		 * Never change anything containing TARGET_TRANS
+		 * used by matcher as boundary marker between concatenated
+		 * expressions.
+		 */
+		return (!dm_bit(l->charset, TARGET_TRANS) && dm_bitset_equal(l->charset, r->charset));
 	}
 
 	/* NOTREACHED */

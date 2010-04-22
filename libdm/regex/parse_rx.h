@@ -33,6 +33,8 @@ enum {
 #define HAT_CHAR 0x2
 #define DOLLAR_CHAR 0x3
 
+#define TARGET_TRANS '\0'
+
 struct rx_node {
 	int type;
 	dm_bitset_t charset;
