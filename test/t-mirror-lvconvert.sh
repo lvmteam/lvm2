@@ -112,7 +112,7 @@ check_no_tmplvs_()
   ! grep tmp out
 }
 
-aux prepare_vg 5
+aux prepare_vg 5 200
 
 # ---------------------------------------------------------------------
 # Common environment setup/cleanup for each sub testcases
@@ -155,7 +155,7 @@ check_and_cleanup_lvs_
 # add 1 mirror
 prepare_lvs_
 lvs -a -o+devices $vg
-lvcreate -l5 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0
+lvcreate -l15 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0
 lvs -a -o+devices $vg
 check_mirror_count_ $vg/$lv1 2
 check_mirror_log_ $vg/$lv1
