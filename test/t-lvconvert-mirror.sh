@@ -10,7 +10,7 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 . ./test-utils.sh
-aux prepare_vg 5 80
+aux prepare_vg 5 200
 
 # convert from linear to 2-way mirror
 lvcreate -l2 -n $lv1 $vg $dev1
@@ -65,7 +65,7 @@ lvremove -ff $vg
 # Test pulling primary image before mirror in-sync (should fail)
 # Test pulling primary image after mirror in-sync (should work)
 # Test that the correct devices remain in the mirror
-lvcreate -l8 -m2 -n $lv1 $vg $dev1 $dev2 $dev4 $dev3:0-1
+lvcreate -l20 -m2 -n $lv1 $vg $dev1 $dev2 $dev4 $dev3:0
 # FIXME:
 #  This is somewhat timing dependent - sync /could/ finish before
 #  we get a chance to have this command fail
