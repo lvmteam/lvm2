@@ -16,8 +16,6 @@
 #include "dmlib.h"
 #include "parse_rx.h"
 
-#include <ctype.h>
-
 struct parse_sp {		/* scratch pad for the parsing process */
 	struct dm_pool *mem;
 	int type;		/* token type, 0 indicates a charset */
@@ -345,7 +343,7 @@ static unsigned _depth(struct rx_node *r, unsigned leftmost)
 {
 	int count = 1;
 
-	while (r->type != CHARSET) {
+	while (r->type != CHARSET && LEFT(r)) {
 		count++;
 		r = LEFT(r);
 	}
