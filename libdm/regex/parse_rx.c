@@ -16,6 +16,85 @@
 #include "dmlib.h"
 #include "parse_rx.h"
 
+#ifdef DEBUG
+#include <ctype.h>
+
+static void _regex_print(struct rx_node *rx, int depth, unsigned show_nodes)
+{
+	int i, numchars;
+
+	if (rx->left) {
+		if (rx->left->type != CHARSET && (show_nodes || (!((rx->type == CAT || rx->type == OR) && rx->left->type == CAT))))
+			printf("(");
+
+		_regex_print(rx->left, depth + 1, show_nodes);
+
+		if (rx->left->type != CHARSET && (show_nodes || (!((rx->type == CAT || rx->type == OR) && rx->left->type == CAT))))
+			printf(")");
+	}
+
+	/* display info about the node */
+	switch (rx->type) {
+	case CAT:
+		break;
+
+	case OR:
+		printf("|");
+		break;
+
+	case STAR:
+		printf("*");
+		break;
+
+	case PLUS:
+		printf("+");
+		break;
+
+	case QUEST:
+		printf("?");
+		break;
+
+	case CHARSET:
+		numchars = 0;
+		for (i = 0; i < 256; i++)
+			if (dm_bit(rx->charset, i) && (isprint(i) || i == HAT_CHAR || i == DOLLAR_CHAR))
+				numchars++;
+		if (numchars == 97) {
+			printf(".");
+			break;
+		}
+		if (numchars > 1)
+			printf("[");
+		for (i = 0; i < 256; i++)
+			if (dm_bit(rx->charset, i)) {
+				if isprint(i)
+					printf("%c", (char) i);
+				else if (i == HAT_CHAR)
+					printf("^");
+				else if (i == DOLLAR_CHAR)
+					printf("$");
+			}
+		if (numchars > 1)
+			printf("]");
+		break;
+
+	default:
+		fprintf(stderr, "Unknown type");
+	}
+
+	if (rx->right) {
+		if (rx->right->type != CHARSET && (show_nodes || (!(rx->type == CAT && rx->right->type == CAT) && rx->right->right)))
+			printf("(");
+		_regex_print(rx->right, depth + 1, show_nodes);
+		if (rx->right->type != CHARSET && (show_nodes || (!(rx->type == CAT && rx->right->type == CAT) && rx->right->right)))
+			printf(")");
+	}
+
+	if (!depth)
+		printf("\n");
+}
+#endif /* DEBUG */
+
 struct parse_sp {		/* scratch pad for the parsing process */
 	struct dm_pool *mem;
 	int type;		/* token type, 0 indicates a charset */
@@ -342,10 +421,16 @@ static struct rx_node *_or_term(struct parse_sp *ps)
 static unsigned _depth(struct rx_node *r, unsigned leftmost)
 {
 	int count = 1;
+	int or_count = 0;
 
 	while (r->type != CHARSET && LEFT(r)) {
 		count++;
 		r = LEFT(r);
+		/* Stop if we pass another OR */
+		if (or_count)
+			break;
+		if (r->type == OR)
+			or_count++;
 	}
 
 	return count;
