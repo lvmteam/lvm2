@@ -212,6 +212,8 @@ static int _calc_states(struct dm_regex *m, struct rx_node *rx)
 	/* prime the queue */
 	h = t = _create_state_queue(m->scratch, dfa, rx->firstpos);
 	while (h) {
+		int elems, j, idx[h->bits[0]];
+
 		/* pop state off front of the queue */
 		dfa = h->s;
 		dfa_bits = h->bits;
@@ -219,10 +221,17 @@ static int _calc_states(struct dm_regex *m, struct rx_node *rx)
 
 		/* iterate through all the inputs for this state */
 		dm_bit_clear_all(bs);
+
+		/* Cache list of locations of bits */
+		elems = 0;
+		for (i = dm_bit_get_first(dfa_bits);
+		     i >= 0; i = dm_bit_get_next(dfa_bits, i))
+			idx[elems++] = i;
+
 		for (a = 0; a < 256; a++) {
 			/* iterate through all the states in firstpos */
-			for (i = dm_bit_get_first(dfa_bits);
-			     i >= 0; i = dm_bit_get_next(dfa_bits, i)) {
+			for (j = 0; j < elems; j++) {
+				i = idx[j];
 				if (dm_bit(m->nodes[i]->charset, a)) {
 					if (a == TARGET_TRANS)
 						dfa->final = m->nodes[i]->final;
