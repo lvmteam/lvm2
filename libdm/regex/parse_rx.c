@@ -421,16 +421,10 @@ static struct rx_node *_or_term(struct parse_sp *ps)
 static unsigned _depth(struct rx_node *r, unsigned leftmost)
 {
 	int count = 1;
-	int or_count = 0;
 
-	while (r->type != CHARSET && LEFT(r)) {
+	while (r->type != CHARSET && LEFT(r) && (leftmost || r->type != OR)) {
 		count++;
 		r = LEFT(r);
-		/* Stop if we pass another OR */
-		if (or_count)
-			break;
-		if (r->type == OR)
-			or_count++;
 	}
 
 	return count;
