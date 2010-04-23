@@ -95,6 +95,9 @@ int lvs_in_vg_opened(const struct volume_group *vg);
 
 int lv_is_active(struct logical_volume *lv);
 
+int lv_has_target_type(struct dm_pool *mem, struct logical_volume *lv,
+		       const char *layer, const char *target_type);
+
 int monitor_dev_for_events(struct cmd_context *cmd,
 			    struct logical_volume *lv, int do_reg);
 

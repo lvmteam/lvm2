@@ -329,10 +329,8 @@ static int _status(const char *name, const char *uuid,
 	return 0;
 }
 
-static int _lv_has_target_type(struct dev_manager *dm,
-			       struct logical_volume *lv,
-			       const char *layer,
-			       const char *target_type)
+int lv_has_target_type(struct dm_pool *mem, struct logical_volume *lv,
+		       const char *layer, const char *target_type)
 {
 	int r = 0;
 	char *dlid;
@@ -343,7 +341,7 @@ static int _lv_has_target_type(struct dev_manager *dm,
 	char *type = NULL;
 	char *params = NULL;
 
-	if (!(dlid = build_dm_uuid(dm->mem, lv->lvid.s, layer)))
+	if (!(dlid = build_dm_uuid(mem, lv->lvid.s, layer)))
 		return_0;
 
 	if (!(dmt = _setup_task(NULL, dlid, 0,
@@ -1183,7 +1181,7 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		    ((dinfo = _cached_info(dm->mem, find_merging_cow(lv)->cow,
 					   dtree)) && dinfo->open_count)) {
 			/* FIXME Is there anything simpler to check for instead? */
-			if (!_lv_has_target_type(dm, lv, NULL, "snapshot-merge"))
+			if (!lv_has_target_type(dm->mem, lv, NULL, "snapshot-merge"))
 				clear_snapshot_merge(lv);
 		}
 	}

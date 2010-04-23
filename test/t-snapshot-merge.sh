@@ -76,6 +76,23 @@ dmsetup table ${vg}-${lv1} | grep -q " snapshot-merge "
 lvremove -f $vg/$lv1
 
 
+# "onactivate merge" test
+# -- deactivate/remove after disallowed merge attempt, tests
+#    to make sure preload of origin's metadata is _not_ performed
+setup_merge $vg $lv1
+lvs -a
+mkdir test_mnt
+mount $(lvdev_ $vg $lv1) test_mnt
+lvconvert --merge $vg/$(snap_lv_name_ $lv1)
+# -- refresh LV while FS is still mounted (merge must not start),
+#    verify 'snapshot-origin' target is still being used
+lvchange --refresh $vg/$lv1
+umount test_mnt
+rm -r test_mnt
+dmsetup table ${vg}-${lv1} | grep -q " snapshot-origin "
+lvremove -f $vg/$lv1
+
+
 # test multiple snapshot merge; tests copy out that is driven by merge
 setup_merge $vg $lv1 1
 lvs -a
