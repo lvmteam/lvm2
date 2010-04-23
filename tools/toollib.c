@@ -1125,52 +1125,6 @@ struct dm_list *clone_pv_list(struct dm_pool *mem, struct dm_list *pvsl)
 	return r;
 }
 
-int apply_lvname_restrictions(const char *name)
-{
-	if (!strncmp(name, "snapshot", 8)) {
-		log_error("Names starting \"snapshot\" are reserved. "
-			  "Please choose a different LV name.");
-		return 0;
-	}
-
-	if (!strncmp(name, "pvmove", 6)) {
-		log_error("Names starting \"pvmove\" are reserved. "
-			  "Please choose a different LV name.");
-		return 0;
-	}
-
-	if (strstr(name, "_mlog")) {
-		log_error("Names including \"_mlog\" are reserved. "
-			  "Please choose a different LV name.");
-		return 0;
-	}
-
-	if (strstr(name, "_mimage")) {
-		log_error("Names including \"_mimage\" are reserved. "
-			  "Please choose a different LV name.");
-		return 0;
-	}
-
-	if (strstr(name, "_vorigin")) {
-		log_error("Names including \"_vorigin\" are reserved. "
-			  "Please choose a different LV name.");
-		return 0;
-	}
-
-	return 1;
-}
-
-int is_reserved_lvname(const char *name)
-{
-	int rc, old_suppress;
-
-	old_suppress = log_suppress(2);
-	rc = !apply_lvname_restrictions(name);
-	log_suppress(old_suppress);
-
-	return rc;
-}
-
 void vgcreate_params_set_defaults(struct vgcreate_params *vp_def,
 				  struct volume_group *vg)
 {
