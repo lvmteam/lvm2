@@ -44,14 +44,19 @@ setup_merge() {
 aux prepare_vg 1 100
 
 
-# full merge of a single LV
+# test full merge of a single LV
 setup_merge $vg $lv1
-
 # now that snapshot LV is created: test if snapshot-merge target is available
 $(dmsetup targets | grep -q snapshot-merge) || exit 200
-
 lvs -a
 lvconvert --merge $vg/$(snap_lv_name_ $lv1)
+lvremove -f $vg/$lv1
+
+
+# test that an actively merging snapshot may not be removed
+setup_merge $vg $lv1
+lvconvert -i+100 --merge --background $vg/$(snap_lv_name_ $lv1)
+not lvremove -f $vg/$(snap_lv_name_ $lv1)
 lvremove -f $vg/$lv1
 
 
@@ -98,6 +103,7 @@ setup_merge $vg $lv1 1
 lvs -a
 lvconvert --merge $vg/$(snap_lv_name_ $lv1)
 lvremove -f $vg/$lv1
+
 
 # test merging multiple snapshots that share the same tag
 setup_merge $vg $lv1
