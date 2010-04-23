@@ -751,12 +751,55 @@ int dev_manager_mknodes(const struct logical_volume *lv)
 	return r;
 }
 
+static uint16_t _get_udev_flags(struct dev_manager *dm, struct logical_volume *lv,
+				const char *layer)
+{
+	uint16_t udev_flags = 0;
+
+	/*
+	 * Is this top-level and visible device?
+	 * If not, create just the /dev/mapper content.
+	 */
+	if (layer || !lv_is_visible(lv))
+		udev_flags |= DM_UDEV_DISABLE_SUBSYSTEM_RULES_FLAG |
+			      DM_UDEV_DISABLE_DISK_RULES_FLAG |
+			      DM_UDEV_DISABLE_OTHER_RULES_FLAG;
+	/*
+	 * There's no need for other udev rules to touch special LVs with
+	 * reserved names. We don't need to populate /dev/disk here either.
+	 * Even if they happen to be visible and top-level.
+	 */
+	else if (is_reserved_lvname(lv->name))
+		udev_flags |= DM_UDEV_DISABLE_DISK_RULES_FLAG |
+			      DM_UDEV_DISABLE_OTHER_RULES_FLAG;
+
+	/*
+	 * Snapshots and origins could have the same rule applied that will
+	 * give symlinks exactly the same name (e.g. a name based on
+	 * filesystem UUID). We give preference to origins to make such
+	 * naming deterministic (e.g. symlinks in /dev/disk/by-uuid).
+	 */
+	if (lv_is_cow(lv))
+		udev_flags |= DM_UDEV_LOW_PRIORITY_FLAG;
+
+	/*
+	 * Finally, add flags to disable /dev/mapper and /dev/<vgname> content
+	 * to be created by udev if it is requested by user's configuration.
+	 * This is basically an explicit fallback to old node/symlink creation
+	 * without udev.
+	 */
+	if (!dm->cmd->current_settings.udev_rules)
+		udev_flags |= DM_UDEV_DISABLE_DM_RULES_FLAG |
+			      DM_UDEV_DISABLE_SUBSYSTEM_RULES_FLAG;
+
+	return udev_flags;
+}
+
 static int _add_dev_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 			       struct logical_volume *lv, const char *layer)
 {
 	char *dlid, *name;
 	struct dm_info info, info2;
-	uint16_t udev_flags = 0;
 
 	if (!(name = build_dm_name(dm->mem, lv->vg->name, lv->name, layer)))
 		return_0;
@@ -794,20 +837,8 @@ static int _add_dev_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		}
 	}
 
-	if (layer || !lv_is_visible(lv))
-		udev_flags |= DM_UDEV_DISABLE_SUBSYSTEM_RULES_FLAG |
-			      DM_UDEV_DISABLE_DISK_RULES_FLAG |
-			      DM_UDEV_DISABLE_OTHER_RULES_FLAG;
-
-	if (lv_is_cow(lv))
-		udev_flags |= DM_UDEV_LOW_PRIORITY_FLAG;
-
-	if (!dm->cmd->current_settings.udev_rules)
-		udev_flags |= DM_UDEV_DISABLE_DM_RULES_FLAG |
-			      DM_UDEV_DISABLE_SUBSYSTEM_RULES_FLAG;
-
-	if (info.exists && !dm_tree_add_dev_with_udev_flags(dtree, info.major,
-							    info.minor, udev_flags)) {
+	if (info.exists && !dm_tree_add_dev_with_udev_flags(dtree, info.major, info.minor,
+							_get_udev_flags(dm, lv, layer))) {
 		log_error("Failed to add device (%" PRIu32 ":%" PRIu32") to dtree",
 			  info.major, info.minor);
 		return 0;
@@ -1164,7 +1195,6 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	uint32_t max_stripe_size = UINT32_C(0);
 	uint32_t read_ahead = lv->read_ahead;
 	uint32_t read_ahead_flags = UINT32_C(0);
-	uint16_t udev_flags = 0;
 
 	/* FIXME Seek a simpler way to lay out the snapshot-merge tree. */
 
@@ -1205,18 +1235,6 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 
 	lvlayer->lv = lv;
 
-	if (layer || !lv_is_visible(lv))
-		udev_flags |= DM_UDEV_DISABLE_SUBSYSTEM_RULES_FLAG |
-			      DM_UDEV_DISABLE_DISK_RULES_FLAG |
-			      DM_UDEV_DISABLE_OTHER_RULES_FLAG;
-
-	if (lv_is_cow(lv))
-		udev_flags |= DM_UDEV_LOW_PRIORITY_FLAG;
-
-	if (!dm->cmd->current_settings.udev_rules)
-		udev_flags |= DM_UDEV_DISABLE_DM_RULES_FLAG |
-			      DM_UDEV_DISABLE_SUBSYSTEM_RULES_FLAG;
-
 	/*
 	 * Add LV to dtree.
 	 * If we're working with precommitted metadata, clear any
@@ -1229,7 +1247,7 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 					     _read_only_lv(lv),
 					     (lv->vg->status & PRECOMMITTED) ? 1 : 0,
 					     lvlayer,
-					     udev_flags)))
+					     _get_udev_flags(dm, lv, layer))))
 		return_0;
 
 	/* Store existing name so we can do rename later */

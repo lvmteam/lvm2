@@ -1,5 +1,6 @@
 Version 2.02.64 -
 =================================
+  Set appropriate udev flags for reserved LVs.
   Don't preload the origin when removing a snapshot whose merge is pending.
   Disallow the addition of mirror images while a conversion is happening.
   Disallow primary mirror image removal when mirror is not in-sync.

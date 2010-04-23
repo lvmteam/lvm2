@@ -34,6 +34,9 @@ char *build_dm_uuid(struct dm_pool *mem, const char *lvid,
 
 int validate_name(const char *n);
 
+int apply_lvname_restrictions(const char *name);
+int is_reserved_lvname(const char *name);
+
 /*
  * Returns number of occurrences of c in first len characters of str.
  */
