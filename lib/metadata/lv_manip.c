@@ -2306,16 +2306,25 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
  * remove LVs with its dependencies - LV leaf nodes should be removed first
  */
 int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *lv,
-				const force_t force)
+				const force_t force, unsigned level)
 {
 	struct dm_list *snh, *snht;
 
-        if (lv_is_origin(lv)) {
+	if (lv_is_cow(lv)) {
+		/* A merging snapshot cannot be removed directly */
+		if (lv_is_merging_cow(lv) && !level) {
+			log_error("Can't remove merging snapshot logical volume \"%s\"",
+				  lv->name);
+			return 0;
+		}
+	}
+
+	if (lv_is_origin(lv)) {
 		/* remove snapshot LVs first */
 		dm_list_iterate_safe(snh, snht, &lv->snapshot_segs) {
 			if (!lv_remove_with_dependencies(cmd, dm_list_struct_base(snh, struct lv_segment,
-									       origin_list)->cow,
-							 force))
+										  origin_list)->cow,
+							 force, level + 1))
 				return 0;
 		}
 	}
