@@ -33,9 +33,6 @@ static int _vgs_single(struct cmd_context *cmd __attribute((unused)),
 static int _lvs_single(struct cmd_context *cmd, struct logical_volume *lv,
 		       void *handle)
 {
-	if (!arg_count(cmd, all_ARG) && !lv_is_visible(lv))
-		return ECMD_PROCESSED;
-
 	if (!report_object(handle, lv->vg, lv, NULL, NULL, NULL)) {
 		stack;
 		return ECMD_FAILED;
