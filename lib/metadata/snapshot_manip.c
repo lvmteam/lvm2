@@ -18,6 +18,7 @@
 #include "locking.h"
 #include "toolcontext.h"
 #include "lv_alloc.h"
+#include "activate.h"
 
 int lv_is_origin(const struct logical_volume *lv)
 {
@@ -176,16 +177,24 @@ int vg_remove_snapshot(struct logical_volume *cow)
 
 	dm_list_del(&cow->snapshot->origin_list);
 	origin->origin_count--;
+
 	if (find_merging_cow(origin) == find_cow(cow)) {
 		clear_snapshot_merge(origin);
 		/*
-		 * preload origin to:
-		 * - allow proper release of -cow
-		 * - avoid allocations with other devices suspended
-		 *   when transitioning from "snapshot-merge" to
-		 *   "snapshot-origin after a merge completes.
+		 * preload origin IFF "snapshot-merge" target is active
+		 * - IMPORTANT: avoids preload if onactivate merge is pending
 		 */
-		preload_origin = 1;
+		if (lv_has_target_type(origin->vg->cmd->mem, origin, NULL,
+				       "snapshot-merge")) {
+			/*
+			 * preload origin to:
+			 * - allow proper release of -cow
+			 * - avoid allocations with other devices suspended
+			 *   when transitioning from "snapshot-merge" to
+			 *   "snapshot-origin after a merge completes.
+			 */
+			preload_origin = 1;
+		}
 	}
 
 	if (!lv_remove(cow->snapshot->lv)) {
