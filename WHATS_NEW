@@ -1,5 +1,6 @@
 Version 2.02.64 -
 =================================
+  Fix lvconvert error message when existing mirrored LV is not found.
   Disallow the direct removal of a merging snapshot.
   Set appropriate udev flags for reserved LVs.
   Don't preload the origin when removing a snapshot whose merge is pending.
