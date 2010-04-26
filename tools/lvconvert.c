@@ -1533,12 +1533,11 @@ static struct logical_volume *get_vg_lock_and_logical_volume(struct cmd_context 
 	vg = _get_lvconvert_vg(cmd, vg_name, NULL);
 	if (vg_read_error(vg)) {
 		vg_release(vg);
-		log_error("ABORTING: Can't reread VG for %s", vg_name);
-		return NULL;
+		return_NULL;
 	}
 
 	if (!(lv = _get_lvconvert_lv(cmd, vg, lv_name, NULL, 0))) {
-		log_error("ABORTING: Can't find LV %s in VG %s", lv_name, vg_name);
+		log_error("Can't find LV %s in VG %s", lv_name, vg_name);
 		unlock_and_release_vg(cmd, vg, vg_name);
 		return NULL;
 	}
@@ -1616,8 +1615,10 @@ static int lvconvert_merge_single(struct cmd_context *cmd, struct logical_volume
 	vg_name = lv->vg->name;
 	unlock_vg(cmd, vg_name);
 	refreshed_lv = get_vg_lock_and_logical_volume(cmd, vg_name, lv->name);
-	if (!refreshed_lv)
+	if (!refreshed_lv) {
+		log_error("ABORTING: Can't reread LV %s/%s", vg_name, lv->name);
 		return ECMD_FAILED;
+	}
 
 	lp->lv_to_poll = refreshed_lv;
 	ret = _lvconvert_single(cmd, refreshed_lv, lp);
