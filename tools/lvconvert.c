@@ -1195,6 +1195,9 @@ static int _lvconvert_mirrors_repair(struct cmd_context *cmd,
 	if (!_lv_update_log_type(cmd, lp, lv, failed_pvs, new_log_count))
 		return 0;
 
+	/*
+	 * Remove all failed_pvs
+	 */
 	if (!_lvconvert_mirrors_aux(cmd, lv, lp, failed_pvs,
 				    lp->mirrors, new_log_count))
 		return 0;
@@ -1570,6 +1573,9 @@ static int lvconvert_single(struct cmd_context *cmd, struct lvconvert_params *lp
 	if (!lv)
 		goto_out;
 
+	/*
+	 * lp->pvh holds the list of PVs available for allocation or removal
+	 */
 	if (lp->pv_count) {
 		if (!(lp->pvh = create_pv_list(cmd->mem, lv->vg, lp->pv_count,
 					      lp->pvs, 0)))
