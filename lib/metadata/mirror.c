@@ -805,8 +805,15 @@ static int _remove_mirror_images(struct logical_volume *lv,
 		}
 		if (num_removed && old_area_count == new_area_count)
 			return 1;
-	} else
-		new_area_count = old_area_count - num_removed;
+	}
+
+	/*
+	 * If removable_pvs were specified, then they have been shifted
+	 * to the end to ensure they are removed.  The remaining balance
+	 * of images left to remove will be taken from the unspecified.
+	 * This may not be correct behavior, but it is historical.
+	 */
+	new_area_count = old_area_count - num_removed;
 
 	/* Remove mimage LVs from the segment */
 	dm_list_init(&tmp_orphan_lvs);
