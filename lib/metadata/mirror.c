@@ -811,7 +811,6 @@ static int _remove_mirror_images(struct logical_volume *lv,
 	 * If removable_pvs were specified, then they have been shifted
 	 * to the end to ensure they are removed.  The remaining balance
 	 * of images left to remove will be taken from the unspecified.
-	 * This may not be correct behavior, but it is historical.
 	 */
 	new_area_count = old_area_count - num_removed;
 
