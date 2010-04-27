@@ -76,7 +76,10 @@ The values are:
 .TP
 .I \-m, \-\-maps
 Display the mapping of logical extents to physical volumes and
-physical extents.
+physical extents.  To map physical extents
+to logical extents use
+.BR
+\fBpvs --segments -o+lv_name,seg_start_pe,segtype\fP.
 .TP
 .I \-\-columns | \-C
 Display output in columns, the equivalent of \fBlvs\fP.  Options listed
@@ -95,4 +98,5 @@ it is associated with.
 .SH SEE ALSO
 .BR lvm (8), 
 .BR lvcreate (8), 
-.BR lvscan (8)
+.BR lvscan (8),
+.BR pvs (8)
