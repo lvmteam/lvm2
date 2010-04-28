@@ -1074,7 +1074,7 @@ out:
 	/*
 	 * Converting the log type
 	 */
-	if (old_log_count != new_log_count) {
+	if ((lv->status & MIRRORED) && (old_log_count != new_log_count)) {
 		if (!_lv_update_log_type(cmd, lp, lv,
 					 operable_pvs, new_log_count)) {
 			stack;
