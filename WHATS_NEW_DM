@@ -1,5 +1,7 @@
 Version 1.02.47 -
 =================================
+  Add support for new IMPORT{db} udev rule.
+  Add DM_UDEV_PRIMARY_SOURCE_FLAG udev flag to recognize proper DM events.
   Also include udev libs in libdevmapper.pc when udev_sync is enabled.
   Cache bitset locations to speed up _calc_states.
   Add a regex optimisation pass for shared character prefixes.
