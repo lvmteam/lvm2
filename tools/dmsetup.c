@@ -842,7 +842,8 @@ static int _udevflags(int args, char **argv, void *data __attribute((unused)))
 					      "DISABLE_OTHER_RULES",
 					      "LOW_PRIORITY",
 					      "DISABLE_LIBRARY_FALLBACK",
-					       0, 0};
+					      "PRIMARY_SOURCE",
+					       0};
 
 	if (!(cookie = _get_cookie_value(argv[1])))
 		return 0;

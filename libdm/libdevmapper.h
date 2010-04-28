@@ -1094,6 +1094,16 @@ void dm_report_field_set_value(struct dm_report_field *field, const void *value,
  * udev does something improperly.
  */
 #define DM_UDEV_DISABLE_LIBRARY_FALLBACK 0x0020
+/*
+ * DM_UDEV_PRIMARY_SOURCE_FLAG is automatically appended by
+ * libdevmapper for all ioctls generating udev uevents. Once used in
+ * udev rules, we know if this is a real "primary sourced" event or not.
+ * We need to distinguish real events originated in libdevmapper from
+ * any spurious events to gather all missing information (e.g. events
+ * generated as a result of "udevadm trigger" command or as a result
+ * of the "watch" udev rule).
+ */
+#define DM_UDEV_PRIMARY_SOURCE_FLAG 0x0040
 
 int dm_cookie_supported(void);
 

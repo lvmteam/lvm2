@@ -1736,31 +1736,44 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 			    dmt->type == DM_DEVICE_REMOVE ||
 			    dmt->type == DM_DEVICE_RENAME;
 
-	/*
-	 * Prevent udev vs. libdevmapper race when processing nodes and
-	 * symlinks. This can happen when the udev rules are installed and
-	 * udev synchronisation code is enabled in libdevmapper but the
-	 * software using libdevmapper does not make use of it (by not calling
-	 * dm_task_set_cookie before). We need to instruct the udev rules not
-	 * to be applied at all in this situation so we can gracefully fallback
-	 * to libdevmapper's node and symlink creation code.
-	 */
-	if (dm_udev_get_sync_support() && !dmt->cookie_set && ioctl_with_uevent) {
-		log_debug("Cookie value is not set while trying to call "
-			  "DM_DEVICE_RESUME, DM_DEVICE_REMOVE or DM_DEVICE_RENAME "
-			  "ioctl. Please, consider using libdevmapper's udev "
-			  "synchronisation interface or disable it explicitly "
-			  "by calling dm_udev_set_sync_support(0).");
-		log_debug("Switching off device-mapper and all subsystem related "
-			  "udev rules. Falling back to libdevmapper node creation.");
+	if (ioctl_with_uevent && dm_cookie_supported()) {
 		/*
-		 * Disable general dm and subsystem rules but keep dm disk rules
-		 * if not flagged out explicitly before. We need /dev/disk content
-		 * for the software that expects it.
-		*/
-		dmi->event_nr |= (DM_UDEV_DISABLE_DM_RULES_FLAG |
-				  DM_UDEV_DISABLE_SUBSYSTEM_RULES_FLAG) <<
+		 * Always mark events coming from libdevmapper as
+		 * "primary sourced". This is needed to distinguish
+		 * any spurious events so we can act appropriately.
+		 * This needs to be applied even when udev_sync is
+		 * not used because udev flags could be used alone.
+		 */
+		dmi->event_nr |= DM_UDEV_PRIMARY_SOURCE_FLAG <<
 				 DM_UDEV_FLAGS_SHIFT;
+
+		/*
+		 * Prevent udev vs. libdevmapper race when processing nodes
+		 * and symlinks. This can happen when the udev rules are
+		 * installed and udev synchronisation code is enabled in
+		 * libdevmapper but the software using libdevmapper does not
+		 * make use of it (by not calling dm_task_set_cookie before).
+		 * We need to instruct the udev rules not to be applied at
+		 * all in this situation so we can gracefully fallback to
+		 * libdevmapper's node and symlink creation code.
+		 */
+		if (!dmt->cookie_set && dm_udev_get_sync_support()) {
+			log_debug("Cookie value is not set while trying to call "
+				  "DM_DEVICE_RESUME, DM_DEVICE_REMOVE or DM_DEVICE_RENAME "
+				  "ioctl. Please, consider using libdevmapper's udev "
+				  "synchronisation interface or disable it explicitly "
+				  "by calling dm_udev_set_sync_support(0).");
+			log_debug("Switching off device-mapper and all subsystem related "
+				  "udev rules. Falling back to libdevmapper node creation.");
+			/*
+			 * Disable general dm and subsystem rules but keep
+			 * dm disk rules if not flagged out explicitly before.
+			 * We need /dev/disk content for the software that expects it.
+			*/
+			dmi->event_nr |= (DM_UDEV_DISABLE_DM_RULES_FLAG |
+					  DM_UDEV_DISABLE_SUBSYSTEM_RULES_FLAG) <<
+					 DM_UDEV_FLAGS_SHIFT;
+		}
 	}
 
 	log_debug("dm %s %s %s%s%s %s%.0d%s%.0d%s"

@@ -44,6 +44,28 @@ ENV{DM_COOKIE}=="?*", IMPORT{program}="$env{DM_SBIN_PATH}/dmsetup udevflags $env
 
 ACTION!="add|change", GOTO="dm_end"
 
+# There is no cookie set nor any flags encoded in events not originating
+# in libdevmapper so we need to detect this and try to behave correctly.
+# For such spurious events, regenerate all flags from current udev database content
+# (this information would normally be inaccessible for spurious ADD and CHANGE events).
+ENV{DM_UDEV_PRIMARY_SOURCE_FLAG}=="1", GOTO="dm_flags_done"
+IMPORT{db}="DM_UDEV_DISABLE_DM_RULES_FLAG"
+IMPORT{db}="DM_UDEV_DISABLE_SUBSYSTEM_RULES_FLAG"
+IMPORT{db}="DM_UDEV_DISABLE_DISK_RULES_FLAG"
+IMPORT{db}="DM_UDEV_DISABLE_OTHER_RULES_FLAG"
+IMPORT{db}="DM_UDEV_LOW_PRIORITY_FLAG"
+IMPORT{db}="DM_UDEV_DISABLE_LIBRARY_FALLBACK_FLAG"
+IMPORT{db}="DM_UDEV_FLAG7"
+IMPORT{db}="DM_SUBSYSTEM_UDEV_FLAG0"
+IMPORT{db}="DM_SUBSYSTEM_UDEV_FLAG1"
+IMPORT{db}="DM_SUBSYSTEM_UDEV_FLAG2"
+IMPORT{db}="DM_SUBSYSTEM_UDEV_FLAG3"
+IMPORT{db}="DM_SUBSYSTEM_UDEV_FLAG4"
+IMPORT{db}="DM_SUBSYSTEM_UDEV_FLAG5"
+IMPORT{db}="DM_SUBSYSTEM_UDEV_FLAG6"
+IMPORT{db}="DM_SUBSYSTEM_UDEV_FLAG7"
+LABEL="dm_flags_done"
+
 # Normally, we operate on "change" events only. But when
 # coldplugging, there's an "add" event present. We have to
 # recognize this and do our actions in this particular
