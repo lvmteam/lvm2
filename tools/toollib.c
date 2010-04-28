@@ -316,7 +316,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 				   strlen(vgname) == (size_t) (lv_name - vg_name)) {
 				if (!str_list_add(cmd->mem, &lvnames,
 						  dm_pool_strdup(cmd->mem,
-							      lv_name + 1))) {
+								 lv_name + 1))) {
 					log_error("strlist allocation failed");
 					unlock_and_release_vg(cmd, vg, vgname);
 					return ECMD_FAILED;
