@@ -2,7 +2,6 @@ Version 2.02.64 -
 =================================
   Remove no-longer-used arg_ptr_value.
   Fix -M and --type to use strings not pointers that change on config refresh.
-  Fix regression in down-convert of mirror images with partial PV specification.
   Fix lvconvert error message when existing mirrored LV is not found.
   Disallow the direct removal of a merging snapshot.
   Set appropriate udev flags for reserved LVs.
@@ -11,10 +10,10 @@ Version 2.02.64 -
   Disallow primary mirror image removal when mirror is not in-sync.
   Remove obsolete --name parameter from vgcfgrestore.
   Add -S command to clvmd to restart the daemon preserving exclusive locks.
-  Increment lvm2app version from 1 to 2.
+  Increment lvm2app version from 1 to 2 (memory allocation changes).
   Change lvm2app memory alloc/free for pv/vg/lv properties.
   Change daemon lock filename from lvm2_monitor to lvm2-monitor for consistency.
-  Added awk script relpath.awk to calculate relative paths.
+  Add awk script relpath.awk to calculate paths for relative symlinks.
   Fix double DESTDIR usage for infodir and mandir.
   Install symbolic .so links with relative paths between usrlibdir and libdir.
 
