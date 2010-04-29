@@ -4,7 +4,7 @@ Version 1.02.47 -
   Add DM_UDEV_PRIMARY_SOURCE_FLAG udev flag to recognize proper DM events.
   Also include udev libs in libdevmapper.pc when udev_sync is enabled.
   Cache bitset locations to speed up _calc_states.
-  Add a regex optimisation pass for shared character prefixes.
+  Add a regex optimisation pass for shared prefixes and suffixes.
   Add dm_bit_and and dm_bitset_equal to libdevmapper.
   Simplify dm_bitset_create.
   Speed up dm_bit_get_next with ffs().
