@@ -51,7 +51,7 @@ extern char *optarg;
  * Table of valid switches
  */
 static struct arg _the_args[ARG_COUNT + 1] = {
-#define arg(a, b, c, d, e) {b, "", "--" c, d, e, 0, NULL, 0, 0, INT64_C(0), UINT64_C(0), SIGN_NONE, PERCENT_NONE, NULL},
+#define arg(a, b, c, d, e) {b, "", "--" c, d, e, 0, NULL, 0, 0, INT64_C(0), UINT64_C(0), SIGN_NONE, PERCENT_NONE},
 #include "args.h"
 #undef arg
 };
@@ -100,10 +100,12 @@ uint64_t arg_uint64_value(struct cmd_context *cmd, int a, const uint64_t def)
 	return arg_count(cmd, a) ? _the_args[a].ui64_value : def;
 }
 
+/* No longer used.
 const void *arg_ptr_value(struct cmd_context *cmd, int a, const void *def)
 {
 	return arg_count(cmd, a) ? _the_args[a].ptr : def;
 }
+*/
 
 sign_t arg_sign_value(struct cmd_context *cmd, int a, const sign_t def)
 {
@@ -182,21 +184,7 @@ int yes_no_excl_arg(struct cmd_context *cmd __attribute((unused)),
 
 int metadatatype_arg(struct cmd_context *cmd, struct arg *a)
 {
-	struct format_type *fmt;
-	char *format;
-
-	format = a->value;
-
-	dm_list_iterate_items(fmt, &cmd->formats) {
-		if (!strcasecmp(fmt->name, format) ||
-		    !strcasecmp(fmt->name + 3, format) ||
-		    (fmt->alias && !strcasecmp(fmt->alias, format))) {
-			a->ptr = fmt;
-			return 1;
-		}
-	}
-
-	return 0;
+	return get_format_by_name(cmd, a->value) ? 1 : 0;
 }
 
 static int _get_int_arg(struct arg *a, char **ptr)
@@ -458,10 +446,7 @@ int alloc_arg(struct cmd_context *cmd __attribute((unused)), struct arg *a)
 
 int segtype_arg(struct cmd_context *cmd, struct arg *a)
 {
-	if (!(a->ptr = (void *) get_segtype_from_string(cmd, a->value)))
-		return 0;
-
-	return 1;
+	return get_segtype_from_string(cmd, a->value) ? 1 : 0;
 }
 
 /*
@@ -912,8 +897,9 @@ static void _apply_settings(struct cmd_context *cmd)
 
 	set_activation(cmd->current_settings.activation);
 
-	cmd->fmt = arg_ptr_value(cmd, metadatatype_ARG,
-				 cmd->current_settings.fmt);
+	cmd->fmt = get_format_by_name(cmd, arg_str_value(cmd, metadatatype_ARG,
+				      cmd->current_settings.fmt_name));
+
 	cmd->handles_missing_pvs = 0;
 }
 

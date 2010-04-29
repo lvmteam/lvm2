@@ -114,7 +114,7 @@ struct arg {
 	uint64_t ui64_value;
 	sign_t sign;
 	percent_t percent;
-	void *ptr;
+/*	void *ptr; // Currently not used. */
 };
 
 #define CACHE_VGMETADATA 0x00000001

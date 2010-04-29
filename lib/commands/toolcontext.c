@@ -733,6 +733,19 @@ static int _init_filters(struct cmd_context *cmd, unsigned load_persistent_cache
 	return 1;
 }
 
+struct format_type *get_format_by_name(struct cmd_context *cmd, const char *format)
+{
+        struct format_type *fmt;
+
+        dm_list_iterate_items(fmt, &cmd->formats)
+                if (!strcasecmp(fmt->name, format) ||
+                    !strcasecmp(fmt->name + 3, format) ||
+                    (fmt->alias && !strcasecmp(fmt->alias, format)))
+                        return fmt;
+
+        return NULL;
+}
+
 static int _init_formats(struct cmd_context *cmd)
 {
 	const char *format;
@@ -806,8 +819,8 @@ static int _init_formats(struct cmd_context *cmd)
 	dm_list_iterate_items(fmt, &cmd->formats) {
 		if (!strcasecmp(fmt->name, format) ||
 		    (fmt->alias && !strcasecmp(fmt->alias, format))) {
-			cmd->default_settings.fmt = fmt;
-			cmd->fmt = cmd->default_settings.fmt;
+			cmd->default_settings.fmt_name = fmt->name;
+			cmd->fmt = fmt;
 			return 1;
 		}
 	}
@@ -1190,7 +1203,7 @@ out:
 	return cmd;
 }
 
-static void _destroy_formats(struct dm_list *formats)
+static void _destroy_formats(struct cmd_context *cmd, struct dm_list *formats)
 {
 	struct dm_list *fmtl, *tmp;
 	struct format_type *fmt;
@@ -1268,7 +1281,7 @@ int refresh_toolcontext(struct cmd_context *cmd)
 	lvmcache_destroy(cmd, 0);
 	label_exit();
 	_destroy_segtypes(&cmd->segtypes);
-	_destroy_formats(&cmd->formats);
+	_destroy_formats(cmd, &cmd->formats);
 	if (cmd->filter) {
 		cmd->filter->destroy(cmd->filter);
 		cmd->filter = NULL;
@@ -1329,7 +1342,7 @@ void destroy_toolcontext(struct cmd_context *cmd)
 	lvmcache_destroy(cmd, 0);
 	label_exit();
 	_destroy_segtypes(&cmd->segtypes);
-	_destroy_formats(&cmd->formats);
+	_destroy_formats(cmd, &cmd->formats);
 	if (cmd->filter)
 		cmd->filter->destroy(cmd->filter);
 	if (cmd->mem)

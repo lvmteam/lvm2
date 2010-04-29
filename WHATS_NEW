@@ -1,5 +1,8 @@
 Version 2.02.64 -
 =================================
+  Remove no-longer-used arg_ptr_value.
+  Fix -M and --type to use strings not pointers that change on config refresh.
+  Fix regression in down-convert of mirror images with partial PV specification.
   Fix lvconvert error message when existing mirrored LV is not found.
   Disallow the direct removal of a merging snapshot.
   Set appropriate udev flags for reserved LVs.
