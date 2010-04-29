@@ -330,9 +330,7 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 	/*
 	 * Check selected options are compatible and determine segtype
 	 */
-	lp->segtype = (const struct segment_type *)
-	    arg_ptr_value(cmd, type_ARG,
-			  get_segtype_from_string(cmd, "striped"));
+	lp->segtype = get_segtype_from_string(cmd, arg_str_value(cmd, type_ARG, "striped"));
 
 	if (arg_count(cmd, snapshot_ARG) || seg_is_snapshot(lp) ||
 	    arg_count(cmd, virtualsize_ARG))

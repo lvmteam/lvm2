@@ -420,7 +420,8 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 	}
 
 	/* FIXME Support LVs with mixed segment types */
-	if (lp->segtype != arg_ptr_value(cmd, type_ARG, lp->segtype)) {
+	if (lp->segtype != get_segtype_from_string(cmd, arg_str_value(cmd, type_ARG,
+								      lp->segtype->name))) {
 		log_error("VolumeType does not match (%s)", lp->segtype->name);
 		return EINVALID_CMD_LINE;
 	}

@@ -38,7 +38,7 @@ struct config_info {
 	int udev_sync;
 	int cache_vgmetadata;
 	const char *msg_prefix;
-	struct format_type *fmt;
+	const char *fmt_name;
 	uint64_t unit_factor;
 	int cmd_name;		/* Show command name? */
 	mode_t umask;
@@ -109,5 +109,7 @@ int refresh_toolcontext(struct cmd_context *cmd);
 int refresh_filters(struct cmd_context *cmd);
 int config_files_changed(struct cmd_context *cmd);
 int init_lvmcache_orphans(struct cmd_context *cmd);
+
+struct format_type *get_format_by_name(struct cmd_context *cmd, const char *format);
 
 #endif
