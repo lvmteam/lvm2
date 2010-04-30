@@ -1,4 +1,4 @@
-#!/bin/awk -f
+#!/usr/bin/awk -f
 #
 # Copyright (C) 2010 Red Hat, Inc. All rights reserved.
 #

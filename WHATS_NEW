@@ -1,12 +1,13 @@
-Version 2.02.64 -
+Version 2.02.64 - 30th April 2010
 =================================
+  Avoid pointless initialisation when the 'version' command is run directly.
   Fix memory leak for invalid regex pattern input.
   Display invalid regex pattern for filter configuration in case of error.
   Remove no-longer-used arg_ptr_value.
-  Fix -M and --type to use strings not pointers that change on config refresh.
+  Fix -M and --type to use strings, not pointers that change on config refresh.
   Fix lvconvert error message when existing mirrored LV is not found.
-  Disallow the direct removal of a merging snapshot.
   Set appropriate udev flags for reserved LVs.
+  Disallow the direct removal of a merging snapshot.
   Don't preload the origin when removing a snapshot whose merge is pending.
   Disallow the addition of mirror images while a conversion is happening.
   Disallow primary mirror image removal when mirror is not in-sync.
@@ -15,9 +16,10 @@ Version 2.02.64 -
   Increment lvm2app version from 1 to 2 (memory allocation changes).
   Change lvm2app memory alloc/free for pv/vg/lv properties.
   Change daemon lock filename from lvm2_monitor to lvm2-monitor for consistency.
-  Add awk script relpath.awk to calculate paths for relative symlinks.
-  Fix double DESTDIR usage for infodir and mandir.
   Install symbolic .so links with relative paths between usrlibdir and libdir.
+  Add awk script relpath.awk to calculate paths for relative symlinks.
+  Use @AWK@ in makefiles.
+  Fix double DESTDIR usage for infodir and mandir.
 
 Version 2.02.63 - 14th April 2010
 =================================
