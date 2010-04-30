@@ -4,6 +4,16 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+int finished(const char *cmd, int status) {
+	if (!strcmp(cmd, "not"))
+		return !status;
+	if (!strcmp(cmd, "should")) {
+		fprintf(stderr, "TEST WARNING: Ignoring command failure.\n");
+		return 0;
+	}
+	return 6;
+}
+
 int main(int args, char **argv) {
 	pid_t pid;
 	int status;
@@ -32,8 +42,8 @@ int main(int args, char **argv) {
 			/* did not exit correctly */
 			return FAILURE;
 		}
-		/* return the opposite */
-		return !WEXITSTATUS(status);
+
+		return finished(argv[0], WEXITSTATUS(status));
 	}
 	/* not accessible */
 	return FAILURE;
