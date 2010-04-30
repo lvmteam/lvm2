@@ -1,5 +1,6 @@
 Version 2.02.64 -
 =================================
+  Fix memory leak for invalid regex pattern input.
   Display invalid regex pattern for filter configuration in case of error.
   Remove no-longer-used arg_ptr_value.
   Fix -M and --type to use strings not pointers that change on config refresh.

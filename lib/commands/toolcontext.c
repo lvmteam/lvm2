@@ -639,14 +639,14 @@ static struct dev_filter *_init_filter_components(struct cmd_context *cmd)
 
 	else if (!(filters[nr_filt++] = regex_filter_create(cn->v))) {
 		log_error("Failed to create regex device filter");
-		return NULL;
+		goto err;
 	}
 
 	/* device type filter. Required. */
 	cn = find_config_tree_node(cmd, "devices/types");
 	if (!(filters[nr_filt++] = lvm_type_filter_create(cmd->proc_dir, cn))) {
 		log_error("Failed to create lvm type filter");
-		return NULL;
+		goto err;
 	}
 
 	/* md component filter. Optional, non-critical. */
@@ -660,6 +660,11 @@ static struct dev_filter *_init_filter_components(struct cmd_context *cmd)
 	/* Only build a composite filter if we really need it. */
 	return (nr_filt == 1) ?
 	    filters[0] : composite_filter_create(nr_filt, filters);
+err:
+	nr_filt--; /* skip NULL */
+	while (nr_filt-- > 0)
+		 filters[nr_filt]->destroy(filters[nr_filt]);
+	return NULL;
 }
 
 static int _init_filters(struct cmd_context *cmd, unsigned load_persistent_cache)
