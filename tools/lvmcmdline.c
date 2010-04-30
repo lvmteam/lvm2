@@ -1366,7 +1366,7 @@ int lvm2_main(int argc, char **argv)
 
 	/* "version" command is simple enough so it doesn't need any complex init */
 	if (!alias && argc > 1 && !strcmp(argv[1], "version"))
-		return version(NULL, argc, argv);
+		return lvm_return_code(version(NULL, argc, argv));
 
 	if (!(cmd = init_lvm()))
 		return -1;
