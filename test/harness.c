@@ -15,6 +15,7 @@ struct stats {
 	int nfailed;
 	int nskipped;
 	int npassed;
+	int nwarned;
 	int status[MAX];
 };
 
@@ -29,6 +30,7 @@ int die = 0;
 #define PASSED 0
 #define SKIPPED 1
 #define FAILED 2
+#define WARNED 3
 
 void handler( int s ) {
 	signal( s, SIG_DFL );
@@ -59,13 +61,20 @@ void drain() {
 			exit(205);
 		memcpy(readbuf + readbuf_used, buf, sz);
 		readbuf_used += sz;
+		readbuf[readbuf_used] = 0;
 	}
 }
 
 void passed(int i, char *f) {
-	++ s.npassed;
-	s.status[i] = PASSED;
-	printf("passed.\n");
+	if (strstr(readbuf, "TEST WARNING")) {
+		++s.nwarned;
+		s.status[i] = WARNED;
+		printf("warnings\n");
+	} else {
+		++ s.npassed;
+		s.status[i] = PASSED;
+		printf("passed.\n");
+	}
 }
 
 void skipped(int i, char *f) {
@@ -140,7 +149,7 @@ int main(int argc, char **argv) {
 		exit(1);
 	}
 
-	s.nfailed = s.npassed = s.nskipped = 0;
+	s.nwarned = s.nfailed = s.npassed = s.nskipped = 0;
 
 	char *config = getenv("LVM_TEST_CONFIG"),
 	     *config_debug;
@@ -178,8 +187,9 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	printf("\n## %d tests: %d OK, %d failed, %d skipped\n",
-	       s.npassed + s.nfailed + s.nskipped, s.npassed, s.nfailed, s.nskipped);
+	printf("\n## %d tests: %d OK, %d warnings, %d failures; %d skipped\n",
+	       s.nwarned + s.npassed + s.nfailed + s.nskipped,
+	       s.npassed, s.nwarned, s.nfailed, s.nskipped);
 
 	/* print out a summary */
 	if (s.nfailed || s.nskipped) {
