@@ -1048,6 +1048,7 @@ LVM_LIBAPI=`echo "$VER" | $AWK -F '[[()]]' '{print $2}'`
 
 ################################################################################
 AC_SUBST(APPLIB)
+AC_SUBST(AWK)
 AC_SUBST(BUILD_CMIRRORD)
 AC_SUBST(BUILD_DMEVENTD)
 AC_SUBST(CCS_CFLAGS)

@@ -28,6 +28,7 @@ GENHTML = @GENHTML@
 LN_S = @LN_S@
 SED = @SED@
 CFLOW_CMD = @CFLOW_CMD@
+AWK = @AWK@
 
 LIBS = @LIBS@
 # Extra libraries always linked with static binaries
@@ -63,7 +64,7 @@ localedir = $(DESTDIR)@LOCALEDIR@
 staticdir = $(DESTDIR)@STATICDIR@
 udevdir = $(DESTDIR)@udevdir@
 USRLIB_RELPATH = $(shell echo $(abspath $(usrlibdir) $(libdir)) | \
-  awk -f $(top_srcdir)/scripts/relpath.awk)
+  $(AWK) -f $(top_srcdir)/scripts/relpath.awk)
 
 # Setup vpath search paths for some suffixes
 vpath %.c $(srcdir)
@@ -142,13 +143,13 @@ STRIP=
 LVM_VERSION := $(shell cat $(top_srcdir)/VERSION)
 
 LIB_VERSION_LVM := $(shell cat $(top_srcdir)/VERSION | \
-		     awk -F '.' '{printf "%s.%s",$$1,$$2}')
+		     $(AWK) -F '.' '{printf "%s.%s",$$1,$$2}')
 
 LIB_VERSION_DM := $(shell cat $(top_srcdir)/VERSION_DM | \
-		    awk -F '.' '{printf "%s.%s",$$1,$$2}')
+		    $(AWK) -F '.' '{printf "%s.%s",$$1,$$2}')
 
 LIB_VERSION_APP := $(shell cat $(top_srcdir)/VERSION | \
-		     awk -F '[(). ]' '{printf "%s.%s",$$1,$$4}')
+		     $(AWK) -F '[(). ]' '{printf "%s.%s",$$1,$$4}')
 
 INCLUDES += -I. -I$(top_builddir)/include
 
