@@ -1,4 +1,4 @@
-Version 1.02.47 -
+Version 1.02.47 - 30th April 2010
 =================================
   Add support for new IMPORT{db} udev rule.
   Add DM_UDEV_PRIMARY_SOURCE_FLAG udev flag to recognize proper DM events.

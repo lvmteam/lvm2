@@ -76,10 +76,11 @@ re-read the lvm configuration file. This command should be run whenever the
 devices on a cluster system are changed.
 .TP
 .I \-S
-Tells the running clvmd to exit and restart. This is a preferred option
-to killing and restarting clvmd as it will preserve exclusive LV locks.
-If a full stop & restart is done instead, exclusive LV locks will be
-re-acquired as shared.
+Tells the running clvmd to exit and reexecute itself, for example at the
+end of a package upgrade.  The new instance is instructed to reacquire
+any locks in the same state as they were previously held.  (Alternative
+methods of restarting the daemon have the side effect of changing
+exclusive LV locks into shared locks.)
 .TP
 .I \-I
 Selects the cluster manager to use for locking and internal communications,
