@@ -371,7 +371,7 @@ static int restart_clvmd(void)
 	/*
 	 * Build the command-line
 	 */
-	/* FIXME missing strup error checks */
+	/* FIXME missing strdup error checks */
 	argv[0] = strdup("clvmd");
 
 	/* Propogate debug options */
