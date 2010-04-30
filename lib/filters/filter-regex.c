@@ -103,7 +103,7 @@ static int _build_matcher(struct rfilter *rf, struct config_value *val)
 	 */
 	for (v = val; v; v = v->next) {
 		if (v->type != CFG_STRING) {
-			log_error("filter patterns must be enclosed in quotes");
+			log_error("Filter patterns must be enclosed in quotes.");
 			goto out;
 		}
 
@@ -128,7 +128,7 @@ static int _build_matcher(struct rfilter *rf, struct config_value *val)
 	 */
 	for (v = val, i = count - 1; v; v = v->next, i--)
 		if (!_extract_pattern(scratch, v->v.str, regex, rf->accept, i)) {
-			log_error("invalid filter pattern");
+			log_error("Invalid filter pattern \"%s\".", v->v.str);
 			goto out;
 		}
 
