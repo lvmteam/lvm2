@@ -1,3 +1,6 @@
+Version 2.02.65 - 
+=================================
+
 Version 2.02.64 - 30th April 2010
 =================================
   Avoid pointless initialisation when the 'version' command is run directly.
