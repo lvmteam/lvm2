@@ -1546,6 +1546,7 @@ static int _create_and_load_v4(struct dm_task *dmt)
 {
 	struct dm_task *task;
 	int r;
+	uint32_t cookie;
 
 	/* Use new task struct to create the device */
 	if (!(task = dm_task_create(DM_DEVICE_CREATE))) {
@@ -1625,7 +1626,18 @@ static int _create_and_load_v4(struct dm_task *dmt)
  	dmt->type = DM_DEVICE_REMOVE;
 	dm_free(dmt->uuid);
 	dmt->uuid = NULL;
-	dmt->cookie_set = 0;
+
+	/*
+	 * Also udev-synchronize "remove" dm task that is a part of this revert!
+	 * But only if the original dm task was supposed to be synchronized.
+	 */
+	if (dmt->cookie_set) {
+		cookie = (dmt->event_nr & ~DM_UDEV_FLAGS_MASK) |
+			 (DM_COOKIE_MAGIC << DM_UDEV_FLAGS_SHIFT);
+		dm_task_set_cookie(dmt, &cookie,
+				   (dmt->event_nr & DM_UDEV_FLAGS_MASK) >>
+				    DM_UDEV_FLAGS_SHIFT);
+	}
 
 	if (!dm_task_run(dmt))
 		log_error("Failed to revert device creation.");

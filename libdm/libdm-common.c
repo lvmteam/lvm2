@@ -1192,7 +1192,7 @@ int dm_task_set_cookie(struct dm_task *dmt, uint32_t *cookie, uint16_t flags)
 	dmt->cookie_set = 1;
 
 	log_debug("Udev cookie 0x%" PRIx32 " (semid %d) assigned to dm_task "
-		  "with flags 0x%" PRIx16, *cookie, semid, flags);
+		  "type %d with flags 0x%" PRIx16, *cookie, semid, dmt->type, flags);
 
 	return 1;
 
