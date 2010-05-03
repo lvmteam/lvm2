@@ -1770,11 +1770,13 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 		 * libdevmapper's node and symlink creation code.
 		 */
 		if (!dmt->cookie_set && dm_udev_get_sync_support()) {
-			log_debug("Cookie value is not set while trying to call "
-				  "DM_DEVICE_RESUME, DM_DEVICE_REMOVE or DM_DEVICE_RENAME "
+			log_debug("Cookie value is not set while trying to call %s "
 				  "ioctl. Please, consider using libdevmapper's udev "
 				  "synchronisation interface or disable it explicitly "
-				  "by calling dm_udev_set_sync_support(0).");
+				  "by calling dm_udev_set_sync_support(0).",
+				  dmt->type == DM_DEVICE_RESUME ? "DM_DEVICE_RESUME" :
+				  dmt->type == DM_DEVICE_REMOVE ? "DM_DEVICE_REMOVE" :
+								  "DM_DEVICE_RENAME");
 			log_debug("Switching off device-mapper and all subsystem related "
 				  "udev rules. Falling back to libdevmapper node creation.");
 			/*
