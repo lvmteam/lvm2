@@ -169,6 +169,14 @@ const char *stored_errmsg(void)
 	return _lvm_errmsg ? : "";
 }
 
+static struct dm_hash_table *_duplicated = NULL;
+
+void reset_log_duplicated(void) {
+	if (_duplicated)
+		dm_hash_destroy(_duplicated);
+	_duplicated = NULL;
+}
+
 void print_log(int level, const char *file, int line, int dm_errno,
 	       const char *format, ...)
 {
@@ -179,9 +187,10 @@ void print_log(int level, const char *file, int line, int dm_errno,
 	const char *trformat;		/* Translated format string */
 	char *newbuf;
 	int use_stderr = level & _LOG_STDERR;
+	int log_once = level & _LOG_ONCE;
 	int fatal_internal_error = 0;
 
-	level &= ~_LOG_STDERR;
+	level &= ~(_LOG_STDERR|_LOG_ONCE);
 
 	if (_abort_on_internal_errors &&
 	    !strncmp(format, INTERNAL_ERROR,
@@ -203,7 +212,9 @@ void print_log(int level, const char *file, int line, int dm_errno,
 	if (dm_errno && !_lvm_errno)
 		_lvm_errno = dm_errno;
 
-	if (_lvm2_log_fn || (_store_errmsg && (level <= _LOG_ERR))) {
+	if (_lvm2_log_fn ||
+	    (_store_errmsg && (level <= _LOG_ERR)) ||
+	    log_once) {
 		va_start(ap, format);
 		n = vsnprintf(buf2, sizeof(buf2) - 1, trformat, ap);
 		va_end(ap);
@@ -226,6 +237,16 @@ void print_log(int level, const char *file, int line, int dm_errno,
 					      strlen(message) + 2))) {
 			_lvm_errmsg = strcat(newbuf, "\n");
 			_lvm_errmsg = strcat(newbuf, message);
+		}
+	}
+
+	if (log_once) {
+		if (!_duplicated)
+			_duplicated = dm_hash_create(128);
+		if (_duplicated) {
+			if (dm_hash_lookup(_duplicated, message))
+				level = _LOG_NOTICE;
+			dm_hash_insert(_duplicated, message, (void*)1);
 		}
 	}
 
