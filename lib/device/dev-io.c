@@ -95,12 +95,12 @@ static int _io(struct device_area *where, void *buffer, int should_write)
 		while ((n < 0) && ((errno == EINTR) || (errno == EAGAIN)));
 
 		if (n < 0)
-			log_error("%s: %s failed after %" PRIu64 " of %" PRIu64
-				  " at %" PRIu64 ": %s", dev_name(where->dev),
-				  should_write ? "write" : "read",
-				  (uint64_t) total,
-				  (uint64_t) where->size,
-				  (uint64_t) where->start, strerror(errno));
+			log_error_once("%s: %s failed after %" PRIu64 " of %" PRIu64
+				       " at %" PRIu64 ": %s", dev_name(where->dev),
+				       should_write ? "write" : "read",
+				       (uint64_t) total,
+				       (uint64_t) where->size,
+				       (uint64_t) where->start, strerror(errno));
 
 		if (n <= 0)
 			break;

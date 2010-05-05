@@ -43,6 +43,7 @@ void init_abort_on_internal_errors(int fatal);
 
 void fin_log(void);
 void release_log_memory(void);
+void reset_log_duplicated(void);
 
 void init_syslog(int facility);
 void fin_syslog(void);

@@ -194,6 +194,7 @@ static void _init_logging(struct cmd_context *cmd)
 #ifdef DEVMAPPER_SUPPORT
 	dm_log_with_errno_init(print_log);
 #endif
+	reset_log_duplicated();
 }
 
 static int _process_config(struct cmd_context *cmd)
@@ -1361,6 +1362,7 @@ void destroy_toolcontext(struct cmd_context *cmd)
 
 	release_log_memory();
 	activation_exit();
+	reset_log_duplicated();
 	fin_log();
 	fin_syslog();
 	reset_lvm_errno(0);

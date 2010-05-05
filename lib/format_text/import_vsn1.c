@@ -198,7 +198,7 @@ static int _read_pv(struct format_instance *fid, struct dm_pool *mem,
 		if (!id_write_format(&pv->id, buffer, sizeof(buffer)))
 			buffer[0] = '\0';
 		if (report_missing_devices)
-			log_error("Couldn't find device with uuid %s.", buffer);
+			log_error_once("Couldn't find device with uuid %s.", buffer);
 		else
 			log_very_verbose("Couldn't find device with uuid %s.", buffer);
 	}
