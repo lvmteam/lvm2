@@ -1,5 +1,6 @@
 Version 2.02.65 - 
 =================================
+  Suppress duplicate error messages about read failures and missing devices.
 
 Version 2.02.64 - 30th April 2010
 =================================
