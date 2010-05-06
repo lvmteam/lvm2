@@ -50,7 +50,7 @@ lvm_t lvm_init(const char *system_dir)
 
 	/* FIXME: locking_type config option needed? */
 	/* initialize locking */
-	if (!init_locking(-1, cmd)) {
+	if (!init_locking(-1, cmd, 0)) {
 		/* FIXME: use EAGAIN as error code here */
 		lvm_quit((lvm_t) cmd);
 		return NULL;

@@ -19,6 +19,7 @@ vgchange \- change attributes of a volume group
 .RB [ \-h | \-\-help]
 .RB [ \-\-ignorelockingfailure]
 .RB [ \-\-ignoremonitoring]
+.RB [ \-\-sysinit]
 .RB [ \-\-noudevsync ]
 .RB [ \-l | \-\-logicalvolume
 .IR MaxLogicalVolumes ]
@@ -95,6 +96,15 @@ example, on rebooting after a crash), use \fB--poll y\fP to restart the
 process from its last checkpoint.  However, it may not be appropriate to
 immediately poll a logical volume when it is activated, use \fB--poll
 n\fP to defer and then \fB--poll y\fP to restart the process.
+.TP
+.BR \-\-sysinit
+Indicates that vgchange(8) is being invoked from early system initialisation
+scripts (e.g. rc.sysinit or an initrd), before writeable filesystems are
+available. As such, some functionality needs to be disabled and this option
+acts as a shortcut which selects an appropriate set of options. Currently
+this is equivalent to using  \fB--ignorelockingfailure\fP, \fB--ignoremonitoring\fP,
+\fB--poll n\fP and setting \fBLVM_SUPPRESS_LOCKING_FAILURE_MESSAGES\fP
+environment variable.
 .TP
 .BR \-\-noudevsync
 Disable udev synchronisation. The

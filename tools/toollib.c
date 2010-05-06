@@ -1372,8 +1372,9 @@ int get_activation_monitoring_mode(struct cmd_context *cmd,
 	*monitoring_mode = DEFAULT_DMEVENTD_MONITOR;
 
 	if (arg_count(cmd, monitor_ARG) &&
-	    arg_count(cmd, ignoremonitoring_ARG)) {
-		log_error("Conflicting monitor and ignoremonitoring options");
+	    (arg_count(cmd, ignoremonitoring_ARG) ||
+	     arg_count(cmd, sysinit_ARG))) {
+		log_error("--ignoremonitoring or --sysinit option not allowed with --monitor option");
 		return 0;
 	}
 
@@ -1381,6 +1382,7 @@ int get_activation_monitoring_mode(struct cmd_context *cmd,
 		*monitoring_mode = arg_int_value(cmd, monitor_ARG,
 						 DEFAULT_DMEVENTD_MONITOR);
 	else if (is_static() || arg_count(cmd, ignoremonitoring_ARG) ||
+		 arg_count(cmd, sysinit_ARG) ||
 		 !find_config_tree_bool(cmd, "activation/monitoring",
 					DEFAULT_DMEVENTD_MONITOR))
 		*monitoring_mode = DMEVENTD_MONITOR_IGNORE;
