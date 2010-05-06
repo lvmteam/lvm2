@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2010 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -143,4 +143,26 @@ unsigned int dm_list_size(const struct dm_list *head)
 	    s++;
 
 	return s;
+}
+
+/*
+ * Join two lists together.
+ * This moves all the elements of the list 'head1' to the end of the list
+ * 'head', leaving 'head1' empty.
+ */
+void dm_list_splice(struct dm_list *head, struct dm_list *head1)
+{
+	assert(head->n);
+	assert(head1->n);
+
+	if (dm_list_empty(head1))
+	    return;
+
+	head1->p->n = head;
+	head1->n->p = head->p;
+
+	head->p->n = head1->n;
+	head->p = head1->p;
+
+	dm_list_init(head1);
 }

@@ -155,6 +155,7 @@ dm_list_add
 dm_list_add_h
 dm_list_del
 dm_list_move
+dm_list_splice
 dm_list_empty
 dm_list_start
 dm_list_end
