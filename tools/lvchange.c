@@ -586,9 +586,12 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 	 * should only be started if the LV is not already active. So:
 	 * 1) change the activation code to say if the LV was actually activated
 	 * 2) make polling of an LV tightly coupled with LV activation
+	 *
+	 * Do not initiate any polling if --sysinit option is used.
 	 */
-	init_background_polling(arg_int_value(cmd, poll_ARG,
-					      DEFAULT_BACKGROUND_POLLING));
+	init_background_polling(arg_count(cmd, sysinit_ARG) ? 0 :
+						arg_int_value(cmd, poll_ARG,
+						DEFAULT_BACKGROUND_POLLING));
 
 	/* access permission change */
 	if (arg_count(cmd, permission_ARG)) {
@@ -730,8 +733,9 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 	     arg_count(cmd, addtag_ARG) || arg_count(cmd, deltag_ARG) ||
 	     arg_count(cmd, resync_ARG) || arg_count(cmd, alloc_ARG));
 
-	if (arg_count(cmd, ignorelockingfailure_ARG) && !avail_only) {
-		log_error("Only -a permitted with --ignorelockingfailure");
+	if ((arg_count(cmd, ignorelockingfailure_ARG) ||
+	     arg_count(cmd, sysinit_ARG)) && !avail_only) {
+		log_error("Only -a permitted with --ignorelockingfailure and --sysinit");
 		return EINVALID_CMD_LINE;
 	}
 
@@ -756,6 +760,11 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 
 	if (arg_count(cmd, contiguous_ARG) && arg_count(cmd, alloc_ARG)) {
 		log_error("Only one of --alloc and --contiguous permitted");
+		return EINVALID_CMD_LINE;
+	}
+
+	if (arg_count(cmd, poll_ARG) && arg_count(cmd, sysinit_ARG)) {
+		log_error("Only one of --poll and --sysinit permitted");
 		return EINVALID_CMD_LINE;
 	}
 

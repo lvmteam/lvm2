@@ -13,6 +13,7 @@ lvchange \- change attributes of a logical volume
 [\-\-ignoremonitoring]
 [\-\-monitor {y|n}]
 [\-\-poll {y|n}]
+[\-\-sysinit]
 [\-\-noudevsync]
 [\-M|\-\-persistent y|n] [\-\-minor minor]
 [\-P|\-\-partial]
@@ -70,6 +71,15 @@ example, on rebooting after a crash), use \fB--poll y\fP to restart the
 process from its last checkpoint.  However, it may not be appropriate to
 immediately poll a logical volume when it is activated, use \fB--poll
 n\fP to defer and then \fB--poll y\fP to restart the process.
+.TP
+.I \-\-sysinit
+Indicates that lvchange(8) is being invoked from early system initialisation
+scripts (e.g. rc.sysinit or an initrd), before writeable filesystems are
+available. As such, some functionality needs to be disabled and this option
+acts as a shortcut which selects an appropriate set of options. Currently
+this is equivalent to using  \fB--ignorelockingfailure\fP, \fB--ignoremonitoring\fP,
+\fB--poll n\fP and setting \fBLVM_SUPPRESS_LOCKING_FAILURE_MESSAGES\fP
+environment variable.
 .TP
 .I \-\-noudevsync
 Disable udev synchronisation. The

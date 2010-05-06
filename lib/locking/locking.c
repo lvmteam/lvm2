@@ -217,10 +217,8 @@ static void _update_vg_lock_count(const char *resource, uint32_t flags)
  * Select a locking type
  * type: locking type; if < 0, then read config tree value
  */
-int init_locking(int type, struct cmd_context *cmd)
+int init_locking(int type, struct cmd_context *cmd, int suppress_messages)
 {
-	int suppress_messages = 0;
-
 	if (ignorelockingfailure() && getenv("LVM_SUPPRESS_LOCKING_FAILURE_MESSAGES"))
 		suppress_messages = 1;
 

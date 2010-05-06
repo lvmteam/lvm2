@@ -1,5 +1,6 @@
 Version 2.02.65 - 
 =================================
+  Add new --sysinit option for vgchange and lvchange.
   Suppress duplicate error messages about read failures and missing devices.
   Install plugins to $(libdir)/device-mapper and $(libdir)/lvm2.
   Add dm_list_splice() function to join two lists together.
