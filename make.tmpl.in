@@ -163,7 +163,7 @@ POTFILES = $(SOURCES:%.c=%.pot)
 
 .PHONY: all pofile distclean clean cleandir cflow device-mapper
 .PHONY: install install_cluster install_device-mapper install_lvm2
-.PHONY: install_lib_shared install_lib_shared_plugin
+.PHONY: install_lib_shared install_dm_plugin install_lvm2_plugin
 .PHONY: $(SUBDIRS) $(SUBDIRS.install) $(SUBDIRS.clean) $(SUBDIRS.distclean)
 .PHONY: $(SUBDIRS.pofile) $(SUBDIRS.install_cluster) $(SUBDIRS.cflow)
 .PHONY: $(SUBDIRS.device-mapper) $(SUBDIRS.install-device-mapper)
@@ -306,9 +306,18 @@ install_lib_shared: $(LIB_SHARED)
 	$(INSTALL) -d $(usrlibdir)
 	$(LN_S) -f $(USRLIB_RELPATH)$(<F).$(LIB_VERSION) $(usrlibdir)/$(<F)
 
-# FIXME: plugins are currently installed with .so suffix only
-install_lib_shared_plugin: $(LIB_SHARED)
-	$(INSTALL_PROGRAM) -D $< $(libdir)/$(<F)
+# FIXME: plugins are installed to subdirs 
+#        and for compatibility links in libdir are created
+#        when the code is fixed links could be removed.
+install_dm_plugin: $(LIB_SHARED)
+	$(INSTALL_PROGRAM) -D $< $(libdir)/device-mapper/$(<F)
+	$(LN_S) -f device-mapper/$(<F) $(libdir)/$(<F)
+	$(LN_S) -f $(<F) $(libdir)/$(<F).$(LIB_VERSION)
+
+install_lvm2_plugin: $(LIB_SHARED)
+	$(INSTALL_PROGRAM) -D $< $(libdir)/lvm2/$(<F)
+	$(LN_S) -f lvm2/$(<F) $(libdir)/$(<F)
+	$(LN_S) -f $(<F) $(libdir)/$(<F).$(LIB_VERSION)
 endif
 
 %.so: %.a

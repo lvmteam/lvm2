@@ -32,6 +32,6 @@ include $(top_builddir)/make.tmpl
 
 LIBS += @LVM2CMD_LIB@ -ldevmapper-event-lvm2 -ldevmapper $(PTHREAD_LIBS)
 
-install_lvm2: install_lib_shared_plugin
+install_lvm2: install_dm_plugin
 
 install: install_lvm2
