@@ -72,6 +72,22 @@ prepare_clvmd() {
 	LOCAL_CLVMD="$!"
 }
 
+prepare_dmeventd() {
+	if pgrep dmeventd ; then
+		echo "Cannot test dmeventd with real dmeventd ($(pgrep clvmd)) running."
+		exit 200
+	fi
+
+	# skip if we don't have our own dmeventd...
+	(which dmeventd | grep $abs_builddir) || exit 200
+
+	trap_teardown
+
+	dmeventd -d &
+	LOCAL_DMEVENTD="$!"
+	strace -p $LOCAL_DMEVENTD &
+}
+
 prepare_testroot() {
 	OLDPWD="`pwd`"
 	PREFIX="LVMTEST$$"
@@ -126,6 +142,8 @@ teardown() {
 		sleep .1
 		kill -9 "$LOCAL_CLVMD" || true
 	}
+
+	test -n "$LOCAL_DMEVENTD" && kill -9 "$LOCAL_DMEVENTD"
 
 	teardown_devs
 
