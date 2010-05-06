@@ -718,6 +718,11 @@ void dm_list_del(struct dm_list *elem);
 void dm_list_move(struct dm_list *head, struct dm_list *elem);
 
 /*
+ * Join 'head1' to the of 'head'.
+ */
+void dm_list_splice(struct dm_list *head, struct dm_list *head1);
+
+/*
  * Is the list empty?
  */
 int dm_list_empty(const struct dm_list *head);

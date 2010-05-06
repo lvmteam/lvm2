@@ -1,6 +1,8 @@
 Version 2.02.65 - 
 =================================
   Suppress duplicate error messages about read failures and missing devices.
+  Install plugins to $(libdir)/device-mapper and $(libdir)/lvm2.
+  Add dm_list_splice() function to join two lists together.
 
 Version 2.02.64 - 30th April 2010
 =================================
