@@ -98,6 +98,14 @@ mirror() {
 	if test -n "$3"; then mirror_log_on "$lv" "$3"; fi
 }
 
+mirror_legs() {
+	lv="$1/$2"
+	expect="$3"
+	lvdevices "$lv"
+	real=`lvdevices "$lv" | wc -w`
+	test "$expect" = "$real"
+}
+
 linear() {
 	lv="$1/$2"
 	lvs -ostripes "$lv" | grep -q "1" || {
