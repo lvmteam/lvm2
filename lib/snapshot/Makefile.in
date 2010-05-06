@@ -23,4 +23,4 @@ LIB_VERSION = $(LIB_VERSION_LVM)
 
 include $(top_builddir)/make.tmpl
 
-install: install_lib_shared_plugin
+install: install_lvm2_plugin
