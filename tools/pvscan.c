@@ -166,7 +166,7 @@ int pvscan(struct cmd_context *cmd, int argc __attribute((unused)),
 			size_new += pv_size(pv);
 			size_total += pv_size(pv);
 		} else
-			size_total += pv_pe_count(pv) * pv_pe_size(pv);
+			size_total += (uint64_t) pv_pe_count(pv) * pv_pe_size(pv);
 	}
 
 	/* find maximum pv name length */
