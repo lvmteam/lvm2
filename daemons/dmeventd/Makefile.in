@@ -81,7 +81,7 @@ install_include: $(srcdir)/libdevmapper-event.h
 	$(INSTALL_DATA) -D $< $(includedir)/$(<F)
 
 install_pkgconfig: libdevmapper-event.pc
-	$(INSTALL_DATA) -D $< $(usrlibdir)/pkgconfig/devmapper-event.pc
+	$(INSTALL_DATA) -D $< $(pkgconfigdir)/devmapper-event.pc
 
 install_lib_dynamic: install_lib_shared
 
