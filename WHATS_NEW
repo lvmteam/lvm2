@@ -1,5 +1,6 @@
 Version 2.02.65 - 
 =================================
+  Add pkgconfigdir Makefile variable for make install override.
   Switch usage of Libs.private: to Requires.private: in devmapper.pc, lvm2app.pc.
   Use field Requires.private: for devmapper-event.pc.
   Add devmapper library to linked libdevmapper-event.so.

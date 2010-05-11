@@ -85,7 +85,7 @@ install_static: install_@interface@_static
 install_ioctl: install_lib_shared
 
 install_pkgconfig: libdevmapper.pc
-	$(INSTALL_DATA) -D $< $(usrlibdir)/pkgconfig/devmapper.pc
+	$(INSTALL_DATA) -D $< $(pkgconfigdir)/devmapper.pc
 
 install_ioctl_static: $(LIB_STATIC)
 	$(INSTALL_DATA) -D $< $(usrlibdir)/$(<F)
