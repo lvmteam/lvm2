@@ -8,4 +8,4 @@ Description: lvm2 application library
 Version: @LVM_MAJOR@.@LVM_LIBAPI@
 Cflags: -I${includedir} 
 Libs: -L${libdir} -llvm2app
-Libs.private: -ldevmapper
+Requires.private: devmapper

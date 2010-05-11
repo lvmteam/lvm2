@@ -1,5 +1,6 @@
 Version 2.02.65 - 
 =================================
+  Switch usage of Libs.private: to Requires.private: in devmapper.pc, lvm2app.pc.
   Use field Requires.private: for devmapper-event.pc.
   Add devmapper library to linked libdevmapper-event.so.
   Link liblvm2cmd.so with devmapper-event and devmapper libs.
