@@ -142,14 +142,11 @@ STRIP=
 
 LVM_VERSION := $(shell cat $(top_srcdir)/VERSION)
 
-LIB_VERSION_LVM := $(shell cat $(top_srcdir)/VERSION | \
-		     $(AWK) -F '.' '{printf "%s.%s",$$1,$$2}')
+LIB_VERSION_LVM := $(shell $(AWK) -F '.' '{printf "%s.%s",$$1,$$2}' $(top_srcdir)/VERSION)
 
-LIB_VERSION_DM := $(shell cat $(top_srcdir)/VERSION_DM | \
-		    $(AWK) -F '.' '{printf "%s.%s",$$1,$$2}')
+LIB_VERSION_DM := $(shell $(AWK) -F '.' '{printf "%s.%s",$$1,$$2}' $(top_srcdir)/VERSION_DM)
 
-LIB_VERSION_APP := $(shell cat $(top_srcdir)/VERSION | \
-		     $(AWK) -F '[(). ]' '{printf "%s.%s",$$1,$$4}')
+LIB_VERSION_APP := $(shell $(AWK) -F '[(). ]' '{printf "%s.%s",$$1,$$4}' $(top_srcdir)/VERSION)
 
 INCLUDES += -I. -I$(top_builddir)/include
 
