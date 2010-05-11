@@ -659,7 +659,9 @@ UDEV_SYNC=$enableval, UDEV_SYNC=no)
 AC_MSG_RESULT($UDEV_SYNC)
 
 if test x$UDEV_SYNC = xyes; then
-	AC_CHECK_LIB(udev, udev_queue_get_udev_is_active, UDEV_LIBS="-ludev", AC_MSG_ERROR(bailing out... libudev library is required))
+	AC_CHECK_LIB(udev, udev_queue_get_udev_is_active,
+		     [UDEV_PC="libudev"; UDEV_LIBS="-ludev"],
+		     [AC_MSG_ERROR([bailing out... libudev library is required])])
 	AC_DEFINE([UDEV_SYNC_SUPPORT], 1, [Define to 1 to enable synchronisation with udev processing.])
 fi
 
@@ -831,9 +833,11 @@ if test x$SELINUX = xyes; then
 		AC_CHECK_HEADERS([selinux/selinux.h],, hard_bailout)
 		AC_DEFINE([HAVE_SELINUX], 1, [Define to 1 to include support for selinux.])
 		SELINUX_LIBS="-lselinux $SELINUX_LIBS"
+		SELINUX_PC="libselinux"
 		HAVE_SELINUX=yes ], [
 		AC_MSG_WARN(Disabling selinux)
 		SELINUX_LIBS=
+		SELINUX_PC=
 		HAVE_SELINUX=no ])
 fi
 
@@ -1117,10 +1121,12 @@ AC_SUBST(SACKPT_LIBS)
 AC_SUBST(SALCK_CFLAGS)
 AC_SUBST(SALCK_LIBS)
 AC_SUBST(SELINUX_LIBS)
+AC_SUBST(SELINUX_PC)
 AC_SUBST(SNAPSHOTS)
 AC_SUBST(STATICDIR)
 AC_SUBST(STATIC_LINK)
 AC_SUBST(UDEV_LIBS)
+AC_SUBST(UDEV_PC)
 AC_SUBST(UDEV_RULES)
 AC_SUBST(UDEV_SYNC)
 AC_SUBST(WRITE_INSTALL)
