@@ -394,6 +394,11 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 			return 0;
 		}
 
+		if (arg_count(cmd, mirrorlog_ARG)) {
+			log_error("--mirrorlog is only available with mirrors");
+			return 0;
+		}
+
 		if (arg_count(cmd, nosync_ARG)) {
 			log_error("--nosync is only available with mirrors");
 			return 0;
