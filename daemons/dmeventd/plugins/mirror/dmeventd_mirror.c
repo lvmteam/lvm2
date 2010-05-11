@@ -19,8 +19,6 @@
 #include "libdevmapper-event.h"
 #include "dmeventd_lvm.h"
 
-#include <pthread.h>
-
 #include <syslog.h> /* FIXME Replace syslog with multilog */
 /* FIXME Missing openlog? */
 /* FIXME Replace most syslogs with log_error() style messages and add complete context. */
