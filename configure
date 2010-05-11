@@ -649,10 +649,12 @@ interface
 WRITE_INSTALL
 UDEV_SYNC
 UDEV_RULES
+UDEV_PC
 UDEV_LIBS
 STATIC_LINK
 STATICDIR
 SNAPSHOTS
+SELINUX_PC
 SELINUX_LIBS
 READLINE_LIBS
 PTHREAD_LIBS
@@ -12327,7 +12329,7 @@ fi
 { $as_echo "$as_me:$LINENO: result: $ac_cv_lib_udev_udev_queue_get_udev_is_active" >&5
 $as_echo "$ac_cv_lib_udev_udev_queue_get_udev_is_active" >&6; }
 if test "x$ac_cv_lib_udev_udev_queue_get_udev_is_active" = x""yes; then
-  UDEV_LIBS="-ludev"
+  UDEV_PC="libudev"; UDEV_LIBS="-ludev"
 else
   { { $as_echo "$as_me:$LINENO: error: bailing out... libudev library is required" >&5
 $as_echo "$as_me: error: bailing out... libudev library is required" >&2;}
@@ -13141,12 +13143,14 @@ cat >>confdefs.h <<\_ACEOF
 _ACEOF
 
 		SELINUX_LIBS="-lselinux $SELINUX_LIBS"
+		SELINUX_PC="libselinux"
 		HAVE_SELINUX=yes
 else
 
 		{ $as_echo "$as_me:$LINENO: WARNING: Disabling selinux" >&5
 $as_echo "$as_me: WARNING: Disabling selinux" >&2;}
 		SELINUX_LIBS=
+		SELINUX_PC=
 		HAVE_SELINUX=no
 fi
 
@@ -15523,6 +15527,8 @@ LVM_PATCHLEVEL=`echo "$VER" | $AWK -F '[(.]' '{print $3}'`
 LVM_LIBAPI=`echo "$VER" | $AWK -F '[()]' '{print $2}'`
 
 ################################################################################
+
+
 
 
 
