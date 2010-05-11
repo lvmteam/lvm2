@@ -320,11 +320,6 @@ install_lvm2_plugin: $(LIB_SHARED)
 	$(LN_S) -f $(<F) $(libdir)/$(<F).$(LIB_VERSION)
 endif
 
-%.so: %.a
-	$(CC) -shared -Wl,-soname,$(notdir $@).$(LIB_VERSION) \
-	$(CFLAGS) $(CLDFLAGS) $(LIBS) -o $@ \
-	@CLDWHOLEARCHIVE@ $< @CLDNOWHOLEARCHIVE@
-
 $(LIB_STATIC): $(OBJECTS)
 	$(RM) $@
 	$(AR) rs $@ $(OBJECTS)
