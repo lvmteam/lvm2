@@ -53,7 +53,8 @@ include $(top_builddir)/make.tmpl
 all: device-mapper
 device-mapper: $(TARGETS)
 
-LVMLIBS += -ldevmapper-event -ldevmapper $(PTHREAD_LIBS)
+LIBS += -ldevmapper
+LVMLIBS += -ldevmapper-event $(PTHREAD_LIBS)
 
 dmeventd: $(LIB_SHARED) dmeventd.o
 	$(CC) $(CFLAGS) $(LDFLAGS) -L. -o $@ dmeventd.o \
