@@ -6,7 +6,6 @@ includedir=@includedir@
 Name: devmapper-event
 Description: device-mapper event library
 Version: @DM_LIB_PATCHLEVEL@
-Requires: devmapper
 Cflags: -I${includedir}
 Libs: -L${libdir} -ldevmapper-event
-Libs.private: -lpthread -ldl
+Requires.private: devmapper

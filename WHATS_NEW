@@ -1,5 +1,6 @@
 Version 2.02.65 - 
 =================================
+  Use field Requires.private: for devmapper-event.pc.
   Add devmapper library to linked libdevmapper-event.so.
   Link liblvm2cmd.so with devmapper-event and devmapper libs.
   Fix truncated total size displayed by pvscan.
