@@ -1,5 +1,18 @@
 #!/bin/bash
 
+# check.sh: assert various things about volumes
+
+# USAGE
+#  check linear VG LV
+#  check lv_on VG LV PV
+
+#  check mirror VG LV [LOGDEV|core]
+#  check mirror_nonredundant VG LV
+#  check mirror_legs VG LV N
+#  check mirror_images_on VG LV DEV [DEV...]
+
+# ...
+
 set -e -o pipefail
 
 lvl() {
@@ -15,7 +28,7 @@ mirror_images_redundant()
   vg=$1
   lv=$vg/$2
 
-  lvs -a $vg
+  lvs -a $vg -o+devices
   for i in `lvdevices $lv`; do
 	  echo "# $i:"
 	  lvdevices $vg/$i | sort | uniq
@@ -31,23 +44,26 @@ mirror_images_redundant()
 }
 
 mirror_images_on() {
-	lv=$1
+	vg=$1
+	lv=$2
+
+	shift 2
 
 	for i in `lvdevices $lv`; do
+		lv_on $vg $lv $1
 		shift
-		lv_on $lv $1
 	done
 }
 
 lv_on()
 {
-	lv="$1"
-	lvdevices $lv | grep -F "$2" || {
-		echo "LV $lv expected on $2 but is not:" >&2
+	lv="$1/$2"
+	lvdevices $lv | grep -F "$3" || {
+		echo "LV $lv expected on $3 but is not:" >&2
 		lvdevices $lv >&2
 		exit 1
 	}
-	test `lvdevices $lv | grep -vF "$2" | wc -l` -eq 0 || {
+	test `lvdevices $lv | grep -vF "$3" | wc -l` -eq 0 || {
 		echo "LV $lv contains unexpected devices:" >&2
 		lvdevices $lv >&2
 		exit 1
@@ -56,7 +72,14 @@ lv_on()
 
 mirror_log_on()
 {
-	lv_on "${1}_mlog" "$2"
+	vg="$1"
+	lv="$2"
+	where="$3"
+	if test "$where" = "core"; then
+		lvl -omirror_log "$vg/$lv" | not grep mlog
+	else
+		lv_on $vg "${lv}_mlog" "$where"
+	fi
 }
 
 lv_is_contiguous()
@@ -92,14 +115,18 @@ mirror_images_clung()
 }
 
 mirror() {
+	mirror_nonredundant "$@"
+	mirror_images_redundant "$1" "$2"
+}
+
+mirror_nonredundant() {
 	lv="$1/$2"
-	lvl -oattr "$lv" | grep "m" || {
+	lvs -oattr "$lv" | grep -q "^ *m.....$" || {
 		echo "$lv expected a mirror, but is not:"
-		lvl -a $lv
+		lvs -a $lv
 		exit 1
 	}
-	mirror_images_redundant "$1" "$2"
-	if test -n "$3"; then mirror_log_on "$lv" "$3"; fi
+	if test -n "$3"; then mirror_log_on "$1" "$2" "$3"; fi
 }
 
 mirror_legs() {
@@ -108,6 +135,17 @@ mirror_legs() {
 	lvdevices "$lv"
 	real=`lvdevices "$lv" | wc -w`
 	test "$expect" = "$real"
+}
+
+mirror_no_temporaries()
+{
+	vg=$1
+	lv=$2
+	lvl -oname $vg | grep $lv | not grep "tmp" || {
+		echo "$lv has temporary mirror images unexpectedly:"
+		lvl $vg | grep $lv
+		exit 1
+	}
 }
 
 linear() {

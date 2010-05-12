@@ -17,6 +17,8 @@ aux prepare_devs 3
 pvcreate $dev1 $dev2
 pvcreate --metadatacopies 0 $dev3
 
+vg=${PREFIX}vg
+
 #COMM 'vgcreate accepts 8.00m physicalextentsize for VG'
 vgcreate -c n $vg --physicalextentsize 8.00m $dev1 $dev2
 check_vg_field_ $vg vg_extent_size 8.00m

@@ -20,13 +20,13 @@ lvremove -ff $vg
 # 2-way mirror with disklog, 3 PVs
 lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0-1
 check mirror_images_redundant $vg $lv1
-check mirror_log_on $vg/$lv1 $dev3
+check mirror_log_on $vg $lv1 $dev3
 lvremove -ff $vg
 
 # 3-way mirror with disklog, 4 PVs
 lvcreate -l2 -m2 --mirrorlog disk -n $lv1 $vg $dev1 $dev2 $dev4 $dev3:0-1
 check mirror_images_redundant $vg $lv1
-check mirror_log_on $vg/$lv1 $dev3
+check mirror_log_on $vg $lv1 $dev3
 lvremove -ff $vg
 
 # lvcreate --nosync is in 100% sync after creation (bz429342)
