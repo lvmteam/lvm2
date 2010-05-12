@@ -121,9 +121,9 @@ test_lvconvert()
 
 aux prepare_vg 5
 
-# Test conversion combinations from linear <-> 4-way mirrors
-for i in $(seq 0 4); do
-	for j in $(seq 0 4); do
+test_many() {
+	i=$1
+	for j in $(seq 0 3); do
 		for k in core disk mirrored; do
 			for l in core disk mirrored; do
 				if test "$i" -eq "$j" && test "$k" = "$l"; then continue; fi
@@ -135,5 +135,4 @@ for i in $(seq 0 4); do
 			done
 		done
 	done
-done
-
+}
