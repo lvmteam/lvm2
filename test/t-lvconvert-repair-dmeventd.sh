@@ -20,7 +20,7 @@ lvcreate -m 3 --ig -L 1 -n 4way $vg
 lvchange --monitor y $vg/4way
 disable_dev $dev2 $dev4
 mkfs.ext2 $DM_DEV_DIR/$vg/4way
-sleep 3 # FIXME : - (
+sleep 3 # FIXME: need a "poll" utility, akin to "check"
 enable_dev $dev2 $dev4
 check mirror $vg 4way
 check mirror_legs $vg 4way 2

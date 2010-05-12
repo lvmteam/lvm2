@@ -20,7 +20,6 @@ struct stats {
 };
 
 struct stats s;
-struct stats backup;
 
 char *readbuf = NULL;
 int readbuf_sz = 0, readbuf_used = 0;
@@ -142,7 +141,6 @@ void run(int i, char *f) {
 
 int main(int argc, char **argv) {
 	int i;
-	int repeat = getenv("LVM_TEST_NOVERBOSE") ? 0 : 1;
 
 	if (argc >= MAX) {
 		fprintf(stderr, "Sorry, my head exploded. Please increase MAX.\n");
@@ -178,13 +176,6 @@ int main(int argc, char **argv) {
 		run(i, argv[i]);
 		if (die)
 			break;
-		if ( repeat && s.status[i] == FAILED ) {
-			backup = s;
-			setenv("LVM_TEST_CONFIG", config_debug, 1);
-			run(i, argv[i]);
-			setenv("LVM_TEST_CONFIG", config, 1);
-			s = backup;
-		}
 	}
 
 	printf("\n## %d tests: %d OK, %d warnings, %d failures; %d skipped\n",
