@@ -94,7 +94,7 @@ prepare_testroot() {
 
 	trap_teardown
 	TESTDIR=$($abs_srcdir/mkdtemp ${LVM_TEST_DIR-$(pwd)} $PREFIX.XXXXXXXXXX) \
-		|| { echo "failed to create temporary directory in $test_dir_"; exit 1; }
+		|| { echo "failed to create temporary directory in ${LVM_TEST_DIR-$(pwd)}"; exit 1; }
 
 	export LVM_SYSTEM_DIR=$TESTDIR/etc
 	export DM_DEV_DIR=$TESTDIR/dev
@@ -131,6 +131,7 @@ teardown_devs() {
 		test -n "$LOOPFILE" && rm -f $LOOPFILE
 	fi
 	unset devs # devs is set in prepare_devs()
+	unset LOOP
 }
 
 teardown() {
@@ -178,7 +179,7 @@ prepare_loop() {
 	trap_teardown
 
 	for i in 0 1 2 3 4 5 6 7; do
-		mknod $DM_DEV_DIR/loop$i b 7 $i
+		test -e $DM_DEV_DIR/loop$i || mknod $DM_DEV_DIR/loop$i b 7 $i
 	done
 
 	LOOPFILE="$PWD/test.img"
@@ -291,16 +292,6 @@ prepare_devs() {
 		local name="${PREFIX}$pvname$i"
 		dmsetup table $name
 	done
-
-    # set up some default names
-	vg=${PREFIX}vg
-	vg1=${PREFIX}vg1
-	vg2=${PREFIX}vg2
-	lv=LV
-	lv1=LV1
-	lv2=LV2
-	lv3=LV3
-	lv4=LV4
 }
 
 disable_dev() {
@@ -346,10 +337,13 @@ restore_dev() {
 
 prepare_pvs() {
 	prepare_devs "$@"
-	pvcreate $devs
+	pvcreate -ff $devs
 }
 
 prepare_vg() {
+	vgremove -ff $vg || true
+	teardown_devs
+
 	prepare_pvs "$@"
 	vgcreate -c n $vg $devs
 	pvs -v
@@ -400,6 +394,16 @@ prepare() {
 	prepare_testroot
 	prepare_lvmconf
 	prepare_clvmd
+
+	# set up some default names
+	vg=${PREFIX}vg
+	vg1=${PREFIX}vg1
+	vg2=${PREFIX}vg2
+	lv=LV
+	lv1=LV1
+	lv2=LV2
+	lv3=LV3
+	lv4=LV4
 }
 
 LANG=C
