@@ -371,7 +371,7 @@ prepare_lvmconf() {
   log {
     syslog = 0
     indent = 1
-    level = 4
+    level = 9
     file = "$TESTDIR/debug.log"
     overwrite = 1
   }
