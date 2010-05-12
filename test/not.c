@@ -8,7 +8,8 @@ int finished(const char *cmd, int status) {
 	if (!strcmp(cmd, "not"))
 		return !status;
 	if (!strcmp(cmd, "should")) {
-		fprintf(stderr, "TEST WARNING: Ignoring command failure.\n");
+		if (status)
+			fprintf(stderr, "TEST WARNING: Ignoring command failure.\n");
 		return 0;
 	}
 	return 6;
