@@ -168,7 +168,7 @@ static void _write_array(struct pfilter *pf, FILE *fp, const char *path,
 		fprintf(fp, "\n\t]\n");
 }
 
-int persistent_filter_dump(struct dev_filter *f)
+int persistent_filter_dump(struct dev_filter *f, int merge_existing)
 {
 	struct pfilter *pf;
 	char *tmp_file;
@@ -220,7 +220,7 @@ int persistent_filter_dump(struct dev_filter *f)
 	/*
 	 * If file contents changed since we loaded it, merge new contents
 	 */
-	if (info.st_ctime != pf->ctime)
+	if (merge_existing && info.st_ctime != pf->ctime)
 		/* Keep cft open to avoid losing lock */
 		persistent_filter_load(f, &cft);
 

@@ -1341,7 +1341,7 @@ int refresh_toolcontext(struct cmd_context *cmd)
 void destroy_toolcontext(struct cmd_context *cmd)
 {
 	if (cmd->dump_filter)
-		persistent_filter_dump(cmd->filter);
+		persistent_filter_dump(cmd->filter, 1);
 
 	archive_exit(cmd);
 	backup_exit(cmd);
