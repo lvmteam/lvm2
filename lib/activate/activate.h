@@ -110,6 +110,6 @@ int pv_uses_vg(struct physical_volume *pv,
 /*
  * Returns 1 if mapped device is not suspended.
  */
-int device_is_usable(dev_t dev);
+int device_is_usable(struct device *dev);
 
 #endif

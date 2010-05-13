@@ -1,5 +1,6 @@
 Version 2.02.65 - 
 =================================
+  Skip internal lvm devices in scan if ignore suspended devices is requested.
   Do not merge old device cache after we run full scan. (2.02.56)
   Add pkgconfigdir Makefile variable for make install override.
   Switch usage of Libs.private: to Requires.private: in devmapper.pc, lvm2app.pc.

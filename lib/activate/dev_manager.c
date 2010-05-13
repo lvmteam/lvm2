@@ -126,11 +126,11 @@ static int _info_run(const char *name, const char *dlid, struct dm_info *info,
 	return r;
 }
 
-int device_is_usable(dev_t dev)
+int device_is_usable(struct device *dev)
 {
 	struct dm_task *dmt;
 	struct dm_info info;
-	const char *name;
+	const char *name, *uuid;
 	uint64_t start, length;
 	char *target_type = NULL;
 	char *params;
@@ -142,7 +142,7 @@ int device_is_usable(dev_t dev)
 		return 0;
 	}
 
-	if (!dm_task_set_major_minor(dmt, MAJOR(dev), MINOR(dev), 1))
+	if (!dm_task_set_major_minor(dmt, MAJOR(dev->dev), MINOR(dev->dev), 1))
 		goto_out;
 
 	if (!dm_task_run(dmt)) {
@@ -157,6 +157,7 @@ int device_is_usable(dev_t dev)
 		goto out;
 
 	name = dm_task_get_name(dmt);
+	uuid = dm_task_get_uuid(dmt);
 
 	/* FIXME Also check for mirror block_on_error and mpath no paths */
 	/* For now, we exclude all mirrors */
@@ -165,11 +166,20 @@ int device_is_usable(dev_t dev)
 		next = dm_get_next_target(dmt, next, &start, &length,
 					  &target_type, &params);
 		/* Skip if target type doesn't match */
-		if (target_type && !strcmp(target_type, "mirror"))
+		if (target_type && !strcmp(target_type, "mirror")) {
+			log_debug("%s: Mirror device not usable.", dev_name(dev));
 			goto out;
+		}
 	} while (next);
 
 	/* FIXME Also check dependencies? */
+
+	/* Check internal lvm devices */
+	if (is_reserved_lvname(name) && uuid &&
+	    !strncmp(uuid, UUID_PREFIX, sizeof(UUID_PREFIX) - 1)) {
+		log_debug("%s: Reserved internal LVM device not usable.", dev_name(dev));
+		goto out;
+	}
 
 	r = 1;
 
