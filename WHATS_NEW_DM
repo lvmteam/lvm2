@@ -1,5 +1,6 @@
 Version 1.02.48 -
 =================================
+  Do not print encryption key in message debug output (cryptsetup luksResume).
 
 Version 1.02.47 - 30th April 2010
 =================================

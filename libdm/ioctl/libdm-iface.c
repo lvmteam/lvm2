@@ -1102,7 +1102,7 @@ int dm_task_set_newname(struct dm_task *dmt, const char *newname)
 int dm_task_set_message(struct dm_task *dmt, const char *message)
 {
 	if (!(dmt->message = dm_strdup(message))) {
-		log_error("dm_task_set_message: strdup(%s) failed", message);
+		log_error("dm_task_set_message: strdup failed");
 		return 0;
 	}
 
@@ -1724,6 +1724,18 @@ no_match:
 	return r;
 }
 
+static const char *_sanitise_message(char *message)
+{
+	const char *sanitised_message = message ?: "";
+
+	/* FIXME: Check for whitespace variations. */
+	/* This traps what cryptsetup sends us. */
+	if (message && !strncasecmp(message, "key set", 7))
+		sanitised_message = "key set";
+
+	return sanitised_message;
+}
+
 static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 				     unsigned repeat_count)
 {
@@ -1805,7 +1817,7 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 		  dmt->no_flush ? 'N' : 'F',
 		  dmt->skip_lockfs ? "S " : "",
 		  dmt->query_inactive_table ? "I " : "",
-		  dmt->sector, dmt->message ? dmt->message : "",
+		  dmt->sector, _sanitise_message(dmt->message),
 		  dmi->data_size);
 #ifdef DM_IOCTLS
 	if (ioctl(_control_fd, command, dmi) < 0) {
