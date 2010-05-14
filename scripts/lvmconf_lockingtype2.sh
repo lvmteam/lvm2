@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Copyright (C) 2004-2006 Red Hat, Inc. All rights reserved.
 #
