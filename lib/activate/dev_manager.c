@@ -180,7 +180,7 @@ int device_is_usable(struct device *dev)
 		    !dm_split_lvm_name(NULL, NULL, &vgname, &lvname, &layer))
 			goto_out;
 
-		if (lvname && (is_reserved_lvname(lvname) || layer)) {
+		if (lvname && (is_reserved_lvname(lvname) || (layer && *layer))) {
 			log_debug("%s: Reserved internal LV device %s/%s%s%s not usable.",
 				  dev_name(dev), vgname, lvname, layer ? "-" : "",
 				  layer ?: "");
