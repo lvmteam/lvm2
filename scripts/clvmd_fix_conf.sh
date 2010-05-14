@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Edit an lvm.conf file to enable cluster locking.
 #
