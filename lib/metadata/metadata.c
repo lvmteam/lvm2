@@ -1208,14 +1208,32 @@ int vg_set_alloc_policy(struct volume_group *vg, alloc_policy_t alloc)
 int vg_set_clustered(struct volume_group *vg, int clustered)
 {
 	struct lv_list *lvl;
-	if (clustered) {
-		dm_list_iterate_items(lvl, &vg->lvs) {
+
+	/*
+	 * We do not currently support switching the cluster attribute
+	 * on active mirrors or snapshots.
+	 */
+	dm_list_iterate_items(lvl, &vg->lvs) {
+		if (lv_is_mirrored(lvl->lv) && lv_is_active(lvl->lv)) {
+			log_error("Mirror logical volumes must be inactive "
+				  "when changing the cluster attribute.");
+			return 0;
+		}
+
+		if (clustered) {
 			if (lv_is_origin(lvl->lv) || lv_is_cow(lvl->lv)) {
 				log_error("Volume group %s contains snapshots "
 					  "that are not yet supported.",
 					  vg->name);
 				return 0;
 			}
+		}
+
+		if ((lv_is_origin(lvl->lv) || lv_is_cow(lvl->lv)) &&
+		    lv_is_active(lvl->lv)) {
+			log_error("Snapshot logical volumes must be inactive "
+				  "when changing the cluster attribute.");
+			return 0;
 		}
 	}
 

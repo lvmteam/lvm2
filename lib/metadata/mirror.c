@@ -72,6 +72,14 @@ struct logical_volume *find_temporary_mirror(const struct logical_volume *lv)
 	return NULL;
 }
 
+int lv_is_mirrored(const struct logical_volume *lv)
+{
+	if (lv->status & MIRRORED)
+		return 1;
+
+	return 0;
+}
+
 /*
  * Returns the number of mirrors of the LV
  */
