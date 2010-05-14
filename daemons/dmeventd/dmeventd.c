@@ -54,7 +54,6 @@
 
 static volatile sig_atomic_t _exit_now = 0;	/* set to '1' when signal is given to exit */
 static volatile sig_atomic_t _thread_registries_empty = 1;	/* registries are empty initially */
-static int _debug = 0;
 
 /* List (un)link macros. */
 #define	LINK(x, head)		dm_list_add(head, &(x)->list)
@@ -97,6 +96,9 @@ static pthread_mutex_t _global_mutex;
 #define THREAD_STACK_SIZE (300*1024)
 
 #define DEBUGLOG(fmt, args...) _debuglog(fmt, ## args)
+
+int dmeventd_debug = 0;
+static int _foreground = 0;
 
 /* Data kept about a DSO. */
 struct dso_data {
@@ -204,7 +206,7 @@ static void _debuglog(const char *fmt, ...)
         time_t P;
         va_list ap;
  
-        if (!_debug)
+        if (!_foreground)
                 return;
  
         va_start(ap,fmt);
@@ -1662,11 +1664,12 @@ static void _daemonize(void)
 static void usage(char *prog, FILE *file)
 {
 	fprintf(file, "Usage:\n");
-	fprintf(file, "%s [Vhd]\n", prog);
+	fprintf(file, "%s [-V] [-h] [-d] [-d] [-d] [-f]\n", prog);
 	fprintf(file, "\n");
 	fprintf(file, "   -V       Show version of dmeventd\n");
 	fprintf(file, "   -h       Show this help information\n");
-	fprintf(file, "   -d       Don't fork, run in the foreground\n");
+	fprintf(file, "   -d       Log debug messages to syslog (-d, -dd, -ddd)\n");
+	fprintf(file, "   -f       Don't fork, run in the foreground\n");
 	fprintf(file, "\n");
 }
 
@@ -1680,7 +1683,7 @@ int main(int argc, char *argv[])
 	opterr = 0;
 	optind = 0;
 
-	while ((opt = getopt(argc, argv, "?hVd")) != EOF) {
+	while ((opt = getopt(argc, argv, "?fhVd")) != EOF) {
 		switch (opt) {
 		case 'h':
 			usage(argv[0], stdout);
@@ -1688,8 +1691,11 @@ int main(int argc, char *argv[])
 		case '?':
 			usage(argv[0], stderr);
 			exit(0);
+		case 'f':
+			_foreground++;
+			break;
 		case 'd':
-			_debug++;
+			dmeventd_debug++;
 			break;
 		case 'V':
 			printf("dmeventd version: %s\n", DM_LIB_VERSION);
@@ -1706,7 +1712,7 @@ int main(int argc, char *argv[])
 	if (setenv("LANG", "C", 1))
 		perror("Cannot set LANG to C");
 
-	if (!_debug)
+	if (!_foreground)
 		_daemonize();
 
 	openlog("dmeventd", LOG_PID, LOG_DAEMON);
@@ -1738,7 +1744,7 @@ int main(int argc, char *argv[])
 		exit(EXIT_FIFO_FAILURE);
 
 	/* Signal parent, letting them know we are ready to go. */
-	if (!_debug)
+	if (!_foreground)
 		kill(getppid(), SIGTERM);
 	syslog(LOG_NOTICE, "dmeventd ready for processing.");
 

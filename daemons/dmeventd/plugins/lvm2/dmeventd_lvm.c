@@ -13,6 +13,7 @@
  */
 
 #include "lib.h"
+#include "log.h"
 
 #include "lvm2cmd.h"
 #include "errors.h"
@@ -21,6 +22,8 @@
 
 #include <pthread.h>
 #include <syslog.h>
+
+extern int dmeventd_debug;
 
 /*
  * register_device() is called first and performs initialisation.
@@ -40,19 +43,41 @@ static void *_lvm_handle = NULL;
  */
 static pthread_mutex_t _event_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-/* FIXME Remove this: Pass messages back to dmeventd core for processing. */
+/*
+ * FIXME Do not pass things directly to syslog, rather use the existing logging
+ * facilities to sort logging ... however that mechanism needs to be somehow
+ * configurable and we don't have that option yet
+ */
 static void _temporary_log_fn(int level,
 			      const char *file __attribute((unused)),
 			      int line __attribute((unused)),
 			      int dm_errno __attribute((unused)),
-			      const char *format)
+			      const char *message)
 {
-	level &= ~_LOG_STDERR;
+	level &= ~(_LOG_STDERR | _LOG_ONCE);
 
-	if (!strncmp(format, "WARNING: ", 9) && (level < 5))
-		syslog(LOG_CRIT, "%s", format);
-	else
-		syslog(LOG_DEBUG, "%s", format);
+	switch (level) {
+	case _LOG_DEBUG:
+		if (dmeventd_debug >= 3)
+			syslog(LOG_DEBUG, "%s", message);
+		break;
+	case _LOG_INFO:
+		if (dmeventd_debug >= 2)
+			syslog(LOG_INFO, "%s", message);
+		break;
+	case _LOG_NOTICE:
+		if (dmeventd_debug >= 1)
+			syslog(LOG_NOTICE, "%s", message);
+		break;
+	case _LOG_WARN:
+		syslog(LOG_WARNING, "%s", message);
+		break;
+	case _LOG_ERR:
+		syslog(LOG_ERR, "%s", message);
+		break;
+	default:
+		syslog(LOG_CRIT, "%s", message);
+	}
 }
 
 void dmeventd_lvm2_lock(void)
