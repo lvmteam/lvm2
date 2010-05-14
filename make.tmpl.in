@@ -350,7 +350,7 @@ distclean: cleandir $(SUBDIRS.distclean)
 		 sed "s/^/		/;s/$$/;/" < $<; \
 		 echo "	local:"; echo "		*;"; echo "};") > $@
 
-ifeq (,$(findstring $(MAKECMDGOALS),cscope.out cflow clean distclean))
+ifeq (,$(findstring $(MAKECMDGOALS),cscope.out cflow clean distclean lcov))
     ifdef SOURCES
        -include $(SOURCES:.c=.d)
     endif
