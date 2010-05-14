@@ -160,7 +160,8 @@ static int _remove_failed_devices(const char *device)
 
 	r = dmeventd_lvm2_run(cmd_str);
 
-	syslog(LOG_INFO, "Repair of mirrored LV %s/%s %s.", vg, lv, (r == ECMD_PROCESSED) ? "finished successfully" : "failed");
+	syslog(LOG_INFO, "Repair of mirrored LV %s/%s %s.", vg, lv,
+	       (r == ECMD_PROCESSED) ? "finished successfully" : "failed");
 
 	return (r == ECMD_PROCESSED) ? 0 : -1;
 }

@@ -87,9 +87,8 @@ prepare_dmeventd() {
 
 	trap_teardown
 
-	dmeventd -d &
+	dmeventd -f &
 	LOCAL_DMEVENTD="$!"
-	strace -p $LOCAL_DMEVENTD &
 }
 
 prepare_testroot() {

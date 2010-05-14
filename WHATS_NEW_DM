@@ -1,5 +1,7 @@
 Version 1.02.48 -
 =================================
+  Use -d to control level of messages sent to syslog by dmeventd.
+  Change -d to -f to run dmeventd in foreground.
   Do not print encryption key in message debug output (cryptsetup luksResume).
 
 Version 1.02.47 - 30th April 2010
