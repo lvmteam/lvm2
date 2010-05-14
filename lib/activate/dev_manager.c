@@ -133,7 +133,7 @@ int device_is_usable(struct device *dev)
 	const char *name, *uuid;
 	uint64_t start, length;
 	char *target_type = NULL;
-	char *params;
+	char *params, *vgname = NULL, *lvname, *layer;
 	void *next = NULL;
 	int r = 0;
 
@@ -175,15 +175,23 @@ int device_is_usable(struct device *dev)
 	/* FIXME Also check dependencies? */
 
 	/* Check internal lvm devices */
-	if (is_reserved_lvname(name) && uuid &&
-	    !strncmp(uuid, UUID_PREFIX, sizeof(UUID_PREFIX) - 1)) {
-		log_debug("%s: Reserved internal LVM device not usable.", dev_name(dev));
-		goto out;
+	if (uuid && !strncmp(uuid, UUID_PREFIX, sizeof(UUID_PREFIX) - 1)) {
+		if (!(vgname = dm_strdup(name)) ||
+		    !dm_split_lvm_name(NULL, NULL, &vgname, &lvname, &layer))
+			goto_out;
+
+		if (lvname && (is_reserved_lvname(lvname) || layer)) {
+			log_debug("%s: Reserved internal LV device %s/%s%s%s not usable.",
+				  dev_name(dev), vgname, lvname, layer ? "-" : "",
+				  layer ?: "");
+			goto out;
+		}
 	}
 
 	r = 1;
 
       out:
+	dm_free(vgname);
 	dm_task_destroy(dmt);
 	return r;
 }
