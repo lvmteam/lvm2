@@ -1,19 +1,22 @@
-Version 2.02.65 - 
-=================================
-  Fix clvmd init script to not deactive non-clustered volume groups.
-  Disallow cluster attr toggling if there are active mirrors or snapshots.
+Version 2.02.65 - 17th May 2010
+===============================
+  Fix clvmd init script never to deactivate non-clustered volume groups.
+  Disallow vgchange --clustered if there are active mirrors or snapshots.
+  Introduce lv_is_mirrored.
   Use /bin/bash for scripts with bashisms.
-  Skip internal lvm devices in scan if ignore suspended devices is requested.
+  Skip internal lvm devices in scan if ignore_suspended_devices is set.
   Do not merge old device cache after we run full scan. (2.02.56)
   Add pkgconfigdir Makefile variable for make install override.
-  Switch usage of Libs.private: to Requires.private: in devmapper.pc, lvm2app.pc.
-  Use field Requires.private: for devmapper-event.pc.
-  Add devmapper library to linked libdevmapper-event.so.
-  Link liblvm2cmd.so with devmapper-event and devmapper libs.
+  Configure pkgconfig udev and selinux dependencies.
+  Switch Libs.private to Requires.private in devmapper.pc and lvm2app.pc.
+  Use pkgconfig Requires.private for devmapper-event.pc.
+  Add libdevmapper to linked libdevmapper-event.so.
+  Link liblvm2cmd.so with libdevmapper-event and libdevmapper.
   Fix truncated total size displayed by pvscan.
-  Add new --sysinit option for vgchange and lvchange.
-  Suppress duplicate error messages about read failures and missing devices.
-  Install plugins to $(libdir)/device-mapper and $(libdir)/lvm2.
+  Add new --sysinit compound option to vgchange and lvchange.
+  Drop duplicate errors for read failures and missing devices to verbose level.
+  Use $(libdir)/lvm2 with make install_lvm2_plugin.
+  Use $(libdir)/device-mapper with make install_dm_plugin.
   Add dm_list_splice() function to join two lists together.
 
 Version 2.02.64 - 30th April 2010
