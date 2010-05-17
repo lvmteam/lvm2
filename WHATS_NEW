@@ -1,3 +1,6 @@
+Version 2.02.66 - 
+===============================
+
 Version 2.02.65 - 17th May 2010
 ===============================
   Fix clvmd init script never to deactivate non-clustered volume groups.
