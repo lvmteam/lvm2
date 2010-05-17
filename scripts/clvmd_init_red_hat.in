@@ -109,7 +109,10 @@ stop()
 {
 	rh_status_q || return 0
 
-	action "Deactivating clusterd VG(s):" ${lvm_vgchange} -anl ${LVM_VGS:-$(clustered_vgs)} || return $?
+	[ -z "$LVM_VGS" ] && LVM_VGS="$(clustered_vgs)"
+	if [ -n "$LVM_VGS" ]; then
+		action "Deactivating clustered VG(s):" ${lvm_vgchange} -anl $LVM_VGS || return $?
+	fi
 
 	action "Signaling $DAEMON to exit" kill -TERM $(pidofproc $DAEMON) || return $?
 
