@@ -1,5 +1,6 @@
 Version 2.02.65 - 
 =================================
+  Fix clvmd init script to not deactive non-clustered volume groups.
   Disallow cluster attr toggling if there are active mirrors or snapshots.
   Use /bin/bash for scripts with bashisms.
   Skip internal lvm devices in scan if ignore suspended devices is requested.
