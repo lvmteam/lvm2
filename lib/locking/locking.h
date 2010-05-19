@@ -36,7 +36,8 @@ int remote_lock_held(const char *vol);
  *   Set LCK_CACHE flag when manipulating 'vol' metadata in the internal cache.
  *   (Like commit, revert or invalidate metadata.)
  *   If more than one lock needs to be held simultaneously, they must be
- *   acquired in alphabetical order of 'vol' (to avoid deadlocks).
+ *   acquired in alphabetical order of 'vol' (to avoid deadlocks), with
+ *   VG_ORPHANS last.
  *
  * LCK_LV:
  *   Lock/unlock an individual logical volume
