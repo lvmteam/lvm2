@@ -98,6 +98,7 @@ struct device *device_from_pvid(struct cmd_context *cmd, struct id *pvid,
 				unsigned *scan_done_once);
 const char *pvid_from_devname(struct cmd_context *cmd,
 			      const char *dev_name);
+char *lvmcache_vgname_from_pvid(struct cmd_context *cmd, const char *pvid);
 int vgs_locked(void);
 int vgname_is_locked(const char *vgname);
 

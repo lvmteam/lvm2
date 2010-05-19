@@ -509,6 +509,27 @@ struct lvmcache_info *info_from_pvid(const char *pvid, int valid_only)
 	return info;
 }
 
+char *lvmcache_vgname_from_pvid(struct cmd_context *cmd, const char *pvid)
+{
+	struct lvmcache_info *info;
+	char *vgname;
+
+	if (!device_from_pvid(cmd, (struct id *)pvid, NULL)) {
+		log_error("Couldn't find device with uuid %s.", pvid);
+		return NULL;
+	}
+
+	info = info_from_pvid(pvid, 0);
+	if (!info)
+		return_NULL;
+
+	if (!(vgname = dm_pool_strdup(cmd->mem, info->vginfo->vgname))) {
+		log_errno(ENOMEM, "vgname allocation failed");
+		return NULL;
+	}
+	return vgname;
+}
+
 static void _rescan_entry(struct lvmcache_info *info)
 {
 	struct label *label;
