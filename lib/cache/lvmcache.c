@@ -757,6 +757,25 @@ struct device *device_from_pvid(struct cmd_context *cmd, struct id *pvid,
 	return NULL;
 }
 
+const char *pvid_from_devname(struct cmd_context *cmd,
+			      const char *devname)
+{
+	struct device *dev;
+	struct label *label;
+
+	if (!(dev = dev_cache_get(devname, cmd->filter))) {
+		log_error("%s: Couldn't find device.  Check your filters?",
+			  devname);
+		return NULL;
+	}
+
+	if (!(label_read(dev, &label, UINT64_C(0))))
+		return NULL;
+
+	return dev->pvid;
+}
+
+
 static int _free_vginfo(struct lvmcache_vginfo *vginfo)
 {
 	struct lvmcache_vginfo *primary_vginfo, *vginfo2;
