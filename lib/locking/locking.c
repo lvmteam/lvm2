@@ -424,7 +424,7 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags)
 		if (is_orphan_vg(vol))
 			vol = VG_ORPHANS;
 		/* VG locks alphabetical, ORPHAN lock last */
-		else if (((flags & LCK_TYPE_MASK) != LCK_UNLOCK) &&
+		if (((flags & LCK_TYPE_MASK) != LCK_UNLOCK) &&
 			 !(flags & LCK_CACHE) &&
 			 !lvmcache_verify_lock_order(vol))
 			return 0;

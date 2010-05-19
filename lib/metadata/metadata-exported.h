@@ -423,6 +423,7 @@ int move_pv(struct volume_group *vg_from, struct volume_group *vg_to,
 int move_pvs_used_by_lv(struct volume_group *vg_from,
 			struct volume_group *vg_to,
 			const char *lv_name);
+int is_global_vg(const char *vg_name);
 int is_orphan_vg(const char *vg_name);
 int is_orphan(const struct physical_volume *pv);
 int is_missing_pv(const struct physical_volume *pv);

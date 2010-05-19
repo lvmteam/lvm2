@@ -224,11 +224,21 @@ void lvmcache_drop_metadata(const char *vgname, int drop_precommitted)
 
 /*
  * Ensure vgname2 comes after vgname1 alphabetically.
- * Orphans don't count.
+ * Orphan locks come last.
+ * VG_GLOBAL comes first.
  */
 static int _vgname_order_correct(const char *vgname1, const char *vgname2)
 {
-	if (is_orphan_vg(vgname1) || is_orphan_vg(vgname2))
+	if (is_global_vg(vgname1))
+		return 1;
+
+	if (is_global_vg(vgname2))
+		return 0;
+
+	if (is_orphan_vg(vgname1))
+		return 0;
+
+	if (is_orphan_vg(vgname2))
 		return 1;
 
 	if (strcmp(vgname1, vgname2) < 0)
