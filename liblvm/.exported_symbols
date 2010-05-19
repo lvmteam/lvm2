@@ -48,3 +48,5 @@ lvm_list_vg_names
 lvm_list_vg_uuids
 lvm_vg_create_lv_linear
 lvm_vg_remove_lv
+lvm_vgname_from_pvid
+lvm_vgname_from_device
