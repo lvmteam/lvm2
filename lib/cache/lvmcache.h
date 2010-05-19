@@ -19,9 +19,10 @@
 #include "dev-cache.h"
 #include "uuid.h"
 #include "label.h"
+#include "locking.h"
 
-#define ORPHAN_PREFIX "#"
-#define ORPHAN_VG_NAME(fmt) ORPHAN_PREFIX "orphans_" fmt
+#define ORPHAN_PREFIX VG_ORPHANS
+#define ORPHAN_VG_NAME(fmt) ORPHAN_PREFIX "_" fmt
 
 #define CACHE_INVALID	0x00000001
 #define CACHE_LOCKED	0x00000002

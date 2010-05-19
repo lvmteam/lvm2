@@ -2,7 +2,7 @@ Version 2.02.66 -
 ===============================
   Validate orphan and VG_GLOBAL lock order too.
   Accept orphan VG names as parameters to lock_vol() and related functions.
-  Use is_orphan_vg in place of hard-coded prefix tests.
+  Use is_orphan_vg in place of hard-coded prefix tests and add is_global_vg.
 
 Version 2.02.65 - 17th May 2010
 ===============================

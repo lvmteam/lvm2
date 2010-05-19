@@ -406,7 +406,7 @@ int lock_resource(struct cmd_context *cmd, const char *resource, uint32_t flags)
 		}
 
 		/* If the VG name is empty then lock the unused PVs */
-		if (is_orphan_vg(resource) || (flags & LCK_CACHE))
+		if (is_orphan_vg(resource) || is_global_vg(resource) || (flags & LCK_CACHE))
 			dm_snprintf(lockname, sizeof(lockname), "P_%s",
 				    resource);
 		else

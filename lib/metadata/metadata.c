@@ -3337,7 +3337,7 @@ int is_global_vg(const char *vg_name)
  */
 int is_orphan_vg(const char *vg_name)
 {
-	return (vg_name && vg_name[0] == ORPHAN_PREFIX[0]) ? 1 : 0;
+	return (vg_name && !strncmp(vg_name, ORPHAN_PREFIX, sizeof(ORPHAN_PREFIX) - 1)) ? 1 : 0;
 }
 
 /**
