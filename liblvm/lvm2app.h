@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008,2009 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2008,2009,2010 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -342,6 +342,45 @@ struct dm_list *lvm_list_vg_names(lvm_t libh);
  * exist on the system.
  */
 struct dm_list *lvm_list_vg_uuids(lvm_t libh);
+
+/**
+ * Return the volume group name given a PV UUID
+ *
+ * \memberof lvm_t
+ *
+ * The memory allocated for the name is tied to the lvm_t handle and will be
+ * released when lvm_quit is called.
+ *
+ * NOTE: This function may scan devices in the system for LVM metadata.
+ *
+ * \param   libh
+ * Handle obtained from lvm_init().
+ *
+ * \return
+ * The volume group name for the given PV UUID.
+ * NULL is returned if the PV UUID is not associated with a volume group.
+ */
+const char *lvm_vgname_from_pvid(lvm_t libh, const char *pvid);
+
+/**
+ * Return the volume group name given a device name
+ *
+ * \memberof lvm_t
+ *
+ * The memory allocated for the name is tied to the lvm_t handle and will be
+ * released when lvm_quit is called.
+ *
+ * NOTE: This function may scan devices in the system for LVM metadata.
+ *
+ * \param   libh
+ * Handle obtained from lvm_init().
+ *
+ * \return
+ * The volume group name for the given device name.
+ * NULL is returned if the device is not an LVM device.
+ *
+ */
+const char *lvm_vgname_from_device(lvm_t libh, const char *device);
 
 /**
  * Open an existing VG.

@@ -17,6 +17,7 @@
 #include "toolcontext.h"
 #include "locking.h"
 #include "lvm-version.h"
+#include "metadata-exported.h"
 
 const char *lvm_library_get_version(void)
 {
@@ -97,4 +98,22 @@ int lvm_errno(lvm_t libh)
 const char *lvm_errmsg(lvm_t libh)
 {
 	return stored_errmsg();
+}
+
+const char *lvm_vgname_from_pvid(lvm_t libh, const char *pvid)
+{
+	struct cmd_context *cmd = (struct cmd_context *)libh;
+	char uuid[64] __attribute((aligned(8)));
+
+	if (!id_read_format(uuid, pvid)) {
+		log_error(INTERNAL_ERROR "Unable to convert uuid");
+		return NULL;
+	}
+	return find_vgname_from_pvid(cmd, uuid);
+}
+
+const char *lvm_vgname_from_device(lvm_t libh, const char *device)
+{
+	struct cmd_context *cmd = (struct cmd_context *)libh;
+	return find_vgname_from_pvname(cmd, device);
 }
