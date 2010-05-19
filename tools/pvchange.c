@@ -229,9 +229,6 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 			total++;
 			done += _pvchange_single(cmd, vg,
 						 pvl->pv, NULL);
-			/* FIXME: we should be using #orphans_lvm2 everwhere */
-			if (is_orphan_vg(vg->name))
-				vg_name = VG_ORPHANS;
 			unlock_and_release_vg(cmd, vg, vg_name);
 		}
 	} else {
