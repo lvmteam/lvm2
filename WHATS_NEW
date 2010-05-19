@@ -1,5 +1,6 @@
 Version 2.02.66 - 
 ===============================
+  Use is_orphan_vg in place of hard-coded prefix tests.
 
 Version 2.02.65 - 17th May 2010
 ===============================
