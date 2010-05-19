@@ -3110,6 +3110,52 @@ out:
 	return NULL;
 }
 
+
+const char *find_vgname_from_pvid(struct cmd_context *cmd,
+				  const char *pvid)
+{
+	char *vgname;
+	struct lvmcache_info *info;
+
+	vgname = lvmcache_vgname_from_pvid(cmd, pvid);
+
+	if (is_orphan_vg(vgname)) {
+		if (!(info = info_from_pvid(pvid, 0))) {
+			return_NULL;
+		}
+		/*
+		 * If an orphan PV has no MDAs it may appear to be an
+		 * orphan until the metadata is read off another PV in
+		 * the same VG.  Detecting this means checking every VG
+		 * by scanning every PV on the system.
+		 */
+		if (!dm_list_size(&info->mdas)) {
+			if (!scan_vgs_for_pvs(cmd)) {
+				log_error("Rescan for PVs without "
+					  "metadata areas failed.");
+				return NULL;
+			}
+		}
+		/* Ask lvmcache again - we may have a non-orphan name now */
+		vgname = lvmcache_vgname_from_pvid(cmd, pvid);
+	}
+	return vgname;
+}
+
+
+const char *find_vgname_from_pvname(struct cmd_context *cmd,
+				    const char *pvname)
+{
+	const char *pvid;
+
+	pvid = pvid_from_devname(cmd, pvname);
+	if (!pvid)
+		/* Not a PV */
+		return NULL;
+
+	return find_vgname_from_pvid(cmd, pvid);
+}
+
 /**
  * pv_read - read and return a handle to a physical volume
  * @cmd: LVM command initiating the pv_read
