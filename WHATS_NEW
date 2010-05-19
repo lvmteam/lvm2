@@ -1,5 +1,6 @@
 Version 2.02.66 - 
 ===============================
+  Accept orphan VG names as parameters to lock_vol() and related functions.
   Use is_orphan_vg in place of hard-coded prefix tests.
 
 Version 2.02.65 - 17th May 2010

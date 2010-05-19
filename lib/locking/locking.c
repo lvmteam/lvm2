@@ -417,16 +417,16 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags)
 
 	switch (flags & LCK_SCOPE_MASK) {
 	case LCK_VG:
-		/*
-		 * VG locks alphabetical, ORPHAN lock last
-		 */
 		if (!_blocking_supported)
 			flags |= LCK_NONBLOCK;
 
-		if (!is_orphan_vg(vol) && 
-		    ((flags & LCK_TYPE_MASK) != LCK_UNLOCK) &&
-		    (!(flags & LCK_CACHE)) &&
-		    !lvmcache_verify_lock_order(vol))
+		/* Global VG_ORPHANS lock covers all orphan formats. */
+		if (is_orphan_vg(vol))
+			vol = VG_ORPHANS;
+		/* VG locks alphabetical, ORPHAN lock last */
+		else if (((flags & LCK_TYPE_MASK) != LCK_UNLOCK) &&
+			 !(flags & LCK_CACHE) &&
+			 !lvmcache_verify_lock_order(vol))
 			return 0;
 
 		/* Lock VG to change on-disk metadata. */
