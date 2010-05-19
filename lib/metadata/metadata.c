@@ -3326,6 +3326,11 @@ int pv_write_orphan(struct cmd_context *cmd, struct physical_volume *pv)
 	return 1;
 }
 
+int is_global_vg(const char *vg_name)
+{
+	return (vg_name && !strcmp(vg_name, VG_GLOBAL)) ? 1 : 0;
+}
+
 /**
  * is_orphan_vg - Determine whether a vg_name is an orphan
  * @vg_name: pointer to the vg_name
