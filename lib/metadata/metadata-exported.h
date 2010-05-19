@@ -625,6 +625,10 @@ struct logical_volume *find_lv(const struct volume_group *vg,
 struct physical_volume *find_pv_by_name(struct cmd_context *cmd,
 					const char *pv_name);
 
+const char *find_vgname_from_pvname(struct cmd_context *cmd,
+				    const char *pvname);
+const char *find_vgname_from_pvid(struct cmd_context *cmd,
+				  const char *pvid);
 /* Find LV segment containing given LE */
 struct lv_segment *first_seg(const struct logical_volume *lv);
 
