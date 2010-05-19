@@ -263,9 +263,6 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 								 pvl->pv,
 								 NULL);
 				}
-				/* FIXME: we should be using #orphans_lvm2 everwhere */
-				if (is_orphan_vg(vg->name))
-					sll->str = VG_ORPHANS;
 				unlock_and_release_vg(cmd, vg, sll->str);
 			}
 		}
