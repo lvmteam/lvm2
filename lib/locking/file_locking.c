@@ -265,7 +265,7 @@ static int _file_lock_resource(struct cmd_context *cmd, const char *resource,
 		if (flags & LCK_CACHE)
 			break;
 
-		if (*resource == '#')
+		if (is_orphan_vg(resource))
 			dm_snprintf(lockfile, sizeof(lockfile),
 				     "%s/P_%s", _lock_dir, resource + 1);
 		else

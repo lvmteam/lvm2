@@ -224,11 +224,11 @@ void lvmcache_drop_metadata(const char *vgname, int drop_precommitted)
 
 /*
  * Ensure vgname2 comes after vgname1 alphabetically.
- * Special VG names beginning with '#' don't count.
+ * Orphans don't count.
  */
 static int _vgname_order_correct(const char *vgname1, const char *vgname2)
 {
-	if ((*vgname1 == '#') || (*vgname2 == '#'))
+	if (is_orphan_vg(vgname1) || is_orphan_vg(vgname2))
 		return 1;
 
 	if (strcmp(vgname1, vgname2) < 0)

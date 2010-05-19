@@ -369,7 +369,7 @@ static int _lock_vol(struct cmd_context *cmd, const char *resource,
 		return 0;
 	}
 
-	if (*resource == '#' && (flags & LCK_CACHE)) {
+	if (is_orphan_vg(resource) && (flags & LCK_CACHE)) {
 		log_error(INTERNAL_ERROR "P_%s referenced", resource);
 		return 0;
 	}
@@ -423,7 +423,7 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags)
 		if (!_blocking_supported)
 			flags |= LCK_NONBLOCK;
 
-		if (vol[0] != '#' &&
+		if (!is_orphan_vg(vol) && 
 		    ((flags & LCK_TYPE_MASK) != LCK_UNLOCK) &&
 		    (!(flags & LCK_CACHE)) &&
 		    !lvmcache_verify_lock_order(vol))
