@@ -103,13 +103,13 @@ const char *lvm_errmsg(lvm_t libh)
 const char *lvm_vgname_from_pvid(lvm_t libh, const char *pvid)
 {
 	struct cmd_context *cmd = (struct cmd_context *)libh;
-	char uuid[64] __attribute((aligned(8)));
+	struct id id;
 
-	if (!id_read_format(uuid, pvid)) {
+	if (!id_read_format(&id, pvid)) {
 		log_error(INTERNAL_ERROR "Unable to convert uuid");
 		return NULL;
 	}
-	return find_vgname_from_pvid(cmd, uuid);
+	return find_vgname_from_pvid(cmd, (char *)id.uuid);
 }
 
 const char *lvm_vgname_from_device(lvm_t libh, const char *device)
