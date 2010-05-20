@@ -689,6 +689,11 @@ DM_COMPAT
 DMEVENTD
 DL_LIBS
 DEVMAPPER
+DEFAULT_LOCK_DIR
+DEFAULT_CACHE_SUBDIR
+DEFAULT_BACKUP_SUBDIR
+DEFAULT_ARCHIVE_SUBDIR
+DEFAULT_SYS_DIR
 DEBUG
 COPTIMISE_FLAG
 CONFDIR
@@ -851,6 +856,11 @@ with_udev_prefix
 with_udevdir
 with_dmeventd_pidfile
 with_dmeventd_path
+with_default_system_dir
+with_default_archive_subdir
+with_default_backup_subdir
+with_default_cache_subdir
+with_default_locking_dir
 with_interface
 '
       ac_precious_vars='build_alias
@@ -1573,6 +1583,11 @@ Optional Packages:
   --with-udevdir=DIR      udev rules in DIR [UPREFIX/lib/udev/rules.d]
   --with-dmeventd-pidfile=PATH    dmeventd pidfile [/var/run/dmeventd.pid]
   --with-dmeventd-path=PATH       dmeventd path [EPREFIX/sbin/dmeventd]
+  --with-default-system-dir=DIR        Default LVM system directory [/etc/lvm]
+  --with-default-archive-subdir=SUBDIR Default metadata archive subdir [archive]
+  --with-default-backup-subdir=SUBDIR  Default metadata backup subdir [backup]
+  --with-default-cache-subdir=SUBDIR   Default metadata cache subdir [cache]
+  --with-default-locking-dir=DIR       Default locking directory [/var/lock/lvm]
   --with-interface=IFACE  Choose kernel interface (ioctl) [ioctl]
 
 Some influential environment variables:
@@ -15485,6 +15500,82 @@ fi
 fi
 
 ################################################################################
+
+
+
+# Check whether --with-default-system-dir was given.
+if test "${with_default_system_dir+set}" = set; then
+  withval=$with_default_system_dir;  DEFAULT_SYS_DIR="$withval"
+else
+   DEFAULT_SYS_DIR="/etc/lvm"
+fi
+
+cat >>confdefs.h <<_ACEOF
+#define DEFAULT_SYS_DIR "$DEFAULT_SYS_DIR"
+_ACEOF
+
+
+
+
+
+# Check whether --with-default-archive-subdir was given.
+if test "${with_default_archive_subdir+set}" = set; then
+  withval=$with_default_archive_subdir;  DEFAULT_ARCHIVE_SUBDIR="$withval"
+else
+   DEFAULT_ARCHIVE_SUBDIR="archive"
+fi
+
+cat >>confdefs.h <<_ACEOF
+#define DEFAULT_ARCHIVE_SUBDIR "$DEFAULT_ARCHIVE_SUBDIR"
+_ACEOF
+
+
+
+
+
+# Check whether --with-default-backup-subdir was given.
+if test "${with_default_backup_subdir+set}" = set; then
+  withval=$with_default_backup_subdir;  DEFAULT_BACKUP_SUBDIR="$withval"
+else
+   DEFAULT_BACKUP_SUBDIR="backup"
+fi
+
+cat >>confdefs.h <<_ACEOF
+#define DEFAULT_BACKUP_SUBDIR "$DEFAULT_BACKUP_SUBDIR"
+_ACEOF
+
+
+
+
+
+# Check whether --with-default-cache-subdir was given.
+if test "${with_default_cache_subdir+set}" = set; then
+  withval=$with_default_cache_subdir;  DEFAULT_CACHE_SUBDIR="$withval"
+else
+   DEFAULT_CACHE_SUBDIR="cache"
+fi
+
+cat >>confdefs.h <<_ACEOF
+#define DEFAULT_CACHE_SUBDIR "$DEFAULT_CACHE_SUBDIR"
+_ACEOF
+
+
+
+
+
+# Check whether --with-default-locking-dir was given.
+if test "${with_default_locking_dir+set}" = set; then
+  withval=$with_default_locking_dir;  DEFAULT_LOCK_DIR="$withval"
+else
+   DEFAULT_LOCK_DIR="/var/lock/lvm"
+fi
+
+cat >>confdefs.h <<_ACEOF
+#define DEFAULT_LOCK_DIR "$DEFAULT_LOCK_DIR"
+_ACEOF
+
+
+################################################################################
 { $as_echo "$as_me:$LINENO: checking for kernel interface choice" >&5
 $as_echo_n "checking for kernel interface choice... " >&6; }
 
@@ -15527,6 +15618,11 @@ LVM_PATCHLEVEL=`echo "$VER" | $AWK -F '[(.]' '{print $3}'`
 LVM_LIBAPI=`echo "$VER" | $AWK -F '[()]' '{print $2}'`
 
 ################################################################################
+
+
+
+
+
 
 
 

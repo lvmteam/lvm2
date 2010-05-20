@@ -1020,6 +1020,43 @@ if test "$BUILD_DMEVENTD" = yes; then
 fi
 
 ################################################################################
+dnl -- various defaults
+AH_TEMPLATE(DEFAULT_SYS_DIR, [Path to LVM system directory.])
+AC_ARG_WITH(default-system-dir,
+	    [  --with-default-system-dir=DIR        Default LVM system directory [[/etc/lvm]] ],
+	    [ DEFAULT_SYS_DIR="$withval" ],
+	    [ DEFAULT_SYS_DIR="/etc/lvm" ])
+AC_DEFINE_UNQUOTED(DEFAULT_SYS_DIR,["$DEFAULT_SYS_DIR"] )
+
+AH_TEMPLATE(DEFAULT_ARCHIVE_SUBDIR, [Name of default metadata archive subdirectory.])
+AC_ARG_WITH(default-archive-subdir,
+	    [  --with-default-archive-subdir=SUBDIR Default metadata archive subdir [[archive]] ],
+	    [ DEFAULT_ARCHIVE_SUBDIR="$withval" ],
+	    [ DEFAULT_ARCHIVE_SUBDIR="archive" ])
+AC_DEFINE_UNQUOTED(DEFAULT_ARCHIVE_SUBDIR,["$DEFAULT_ARCHIVE_SUBDIR"])
+
+AH_TEMPLATE(DEFAULT_BACKUP_SUBDIR, [Name of default metadata backup subdirectory.])
+AC_ARG_WITH(default-backup-subdir,
+	    [  --with-default-backup-subdir=SUBDIR  Default metadata backup subdir [[backup]] ],
+	    [ DEFAULT_BACKUP_SUBDIR="$withval" ],
+	    [ DEFAULT_BACKUP_SUBDIR="backup" ])
+AC_DEFINE_UNQUOTED(DEFAULT_BACKUP_SUBDIR,["$DEFAULT_BACKUP_SUBDIR"] )
+
+AH_TEMPLATE(DEFAULT_CACHE_SUBDIR, [Name of default metadata backup subdirectory.])
+AC_ARG_WITH(default-cache-subdir,
+	    [  --with-default-cache-subdir=SUBDIR   Default metadata cache subdir [[cache]] ],
+	    [ DEFAULT_CACHE_SUBDIR="$withval" ],
+	    [ DEFAULT_CACHE_SUBDIR="cache" ])
+AC_DEFINE_UNQUOTED(DEFAULT_CACHE_SUBDIR,["$DEFAULT_CACHE_SUBDIR"] )
+
+AH_TEMPLATE(DEFAULT_LOCK_DIR, [Name of default locking directory.])
+AC_ARG_WITH(default-locking-dir,
+	    [  --with-default-locking-dir=DIR       Default locking directory [[/var/lock/lvm]] ],
+	    [ DEFAULT_LOCK_DIR="$withval" ],
+	    [ DEFAULT_LOCK_DIR="/var/lock/lvm" ])
+AC_DEFINE_UNQUOTED(DEFAULT_LOCK_DIR,["$DEFAULT_LOCK_DIR"] )
+
+################################################################################
 dnl -- which kernel interface to use (ioctl only)
 AC_MSG_CHECKING(for kernel interface choice)
 AC_ARG_WITH(interface,
@@ -1075,6 +1112,11 @@ AC_SUBST(CPG_CFLAGS)
 AC_SUBST(CPG_LIBS)
 AC_SUBST(CSCOPE_CMD)
 AC_SUBST(DEBUG)
+AC_SUBST(DEFAULT_SYS_DIR)
+AC_SUBST(DEFAULT_ARCHIVE_SUBDIR)
+AC_SUBST(DEFAULT_BACKUP_SUBDIR)
+AC_SUBST(DEFAULT_CACHE_SUBDIR)
+AC_SUBST(DEFAULT_LOCK_DIR)
 AC_SUBST(DEVMAPPER)
 AC_SUBST(DLM_CFLAGS)
 AC_SUBST(DLM_LIBS)

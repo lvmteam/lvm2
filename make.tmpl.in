@@ -67,6 +67,12 @@ pkgconfigdir = $(usrlibdir)/pkgconfig
 USRLIB_RELPATH = $(shell echo $(abspath $(usrlibdir) $(libdir)) | \
   $(AWK) -f $(top_srcdir)/scripts/relpath.awk)
 
+DEFAULT_SYS_DIR = @DEFAULT_SYS_DIR@
+DEFAULT_ARCHIVE_DIR = $(DEFAULT_SYS_DIR)/@DEFAULT_ARCHIVE_SUBDIR@
+DEFAULT_BACKUP_DIR = $(DEFAULT_SYS_DIR)/@DEFAULT_BACKUP_SUBDIR@
+DEFAULT_CACHE_DIR = $(DEFAULT_SYS_DIR)/@DEFAULT_CACHE_SUBDIR@
+DEFAULT_LOCK_DIR = @DEFAULT_LOCK_DIR@
+
 # Setup vpath search paths for some suffixes
 vpath %.c $(srcdir)
 vpath %.in $(srcdir)
@@ -93,6 +99,9 @@ endif
 INSTALL_PROGRAM = $(INSTALL) $(M_INSTALL_PROGRAM) $(STRIP)
 INSTALL_DATA = $(INSTALL) -p $(M_INSTALL_DATA)
 INSTALL_WDATA = $(INSTALL) -p -m 644
+
+INSTALL_ROOT_DIR = $(INSTALL) -m 0700 -d
+INSTALL_ROOT_DATA = $(INSTALL) -m 0600
 
 .SUFFIXES: .c .d .o .so .a .po .pot .mo .dylib
 
