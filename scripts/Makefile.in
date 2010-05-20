@@ -17,7 +17,7 @@ top_builddir = @top_builddir@
 
 include $(top_builddir)/make.tmpl
 
-SCRIPTS = lvmdump.sh vgimportclone.sh
+SCRIPTS = lvmdump.sh lvmconf.sh vgimportclone.sh
 ifeq ("@FSADM@", "yes")
 	SCRIPTS += fsadm.sh
 endif
