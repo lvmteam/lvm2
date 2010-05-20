@@ -1,6 +1,6 @@
 Version 2.02.66 - 
 ===============================
-  Add install_system_dirs makefile target.
+  Add install_system_dirs and install_initscripts makefile targets.
   Add configure options for system and locking directories.
   Generate example.conf so default lvm.conf contents can be configured.
   Install lvmconf script by default.
