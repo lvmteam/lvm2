@@ -254,7 +254,7 @@ satisfy allocation attempts.
 \fBLVM_SYSTEM_DIR\fP 
 Directory containing lvm.conf and other LVM
 system files.
-Defaults to "/etc/lvm".
+Defaults to "#DEFAULT_SYS_DIR#".
 .TP
 \fBHOME\fP 
 Directory containing .lvm_history if the internal readline shell
@@ -277,7 +277,7 @@ A LV cannot be called '.' '..' 'snapshot' or 'pvmove'. The LV name may also not 
 .SH DIAGNOSTICS
 All tools return a status code of zero on success or non-zero on failure.
 .SH FILES
-.I /etc/lvm/lvm.conf
+.I #DEFAULT_SYS_DIR#/lvm.conf
 .br
 .I $HOME/.lvm_history
 .SH SEE ALSO

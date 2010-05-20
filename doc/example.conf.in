@@ -1,10 +1,10 @@
 # This is an example configuration file for the LVM2 system.
 # It contains the default settings that would be used if there was no
-# /etc/lvm/lvm.conf file.
+# @DEFAULT_SYS_DIR@/lvm.conf file.
 #
 # Refer to 'man lvm.conf' for further information including the file layout.
 #
-# To put this file in a different directory and override /etc/lvm set
+# To put this file in a different directory and override @DEFAULT_SYS_DIR@ set
 # the environment variable LVM_SYSTEM_DIR before running the tools.
 
 
@@ -66,12 +66,12 @@ devices {
 
     # The results of the filtering are cached on disk to avoid
     # rescanning dud devices (which can take a very long time).
-    # By default this cache is stored in the /etc/lvm/cache directory
+    # By default this cache is stored in the @DEFAULT_SYS_DIR@/@DEFAULT_CACHE_SUBDIR@ directory
     # in a file called '.cache'.
     # It is safe to delete the contents: the tools regenerate it.
     # (The old setting 'cache' is still respected if neither of
     # these new ones is present.)
-    cache_dir = "/etc/lvm/cache"
+    cache_dir = "@DEFAULT_SYS_DIR@/@DEFAULT_CACHE_SUBDIR@"
     cache_file_prefix = ""
 
     # You can turn off writing this cache file by setting this to 0.
@@ -192,7 +192,7 @@ backup {
 
     # Where shall we keep it ?
     # Remember to back up this directory regularly!
-    backup_dir = "/etc/lvm/backup"
+    backup_dir = "@DEFAULT_SYS_DIR@/@DEFAULT_BACKUP_SUBDIR@"
 
     # Should we maintain an archive of old metadata configurations.
     # Use 1 for Yes; 0 for No.
@@ -201,7 +201,7 @@ backup {
 
     # Where should archived files go ?
     # Remember to back up this directory regularly!
-    archive_dir = "/etc/lvm/archive"
+    archive_dir = "@DEFAULT_SYS_DIR@/@DEFAULT_ARCHIVE_SUBDIR@"
 
     # What is the minimum number of archive files you wish to keep ?
     retain_min = 10
@@ -295,7 +295,7 @@ global {
 
     # Local non-LV directory that holds file-based locks while commands are
     # in progress.  A directory like /tmp that may get wiped on reboot is OK.
-    locking_dir = "/var/lock/lvm"
+    locking_dir = "@DEFAULT_LOCK_DIR@"
 
     # Whenever there are competing read-only and read-write access requests for
     # a volume group's metadata, instead of always granting the read-only

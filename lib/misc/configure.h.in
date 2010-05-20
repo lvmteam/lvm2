@@ -17,8 +17,23 @@
 /* Define to 1 if using `alloca.c'. */
 #undef C_ALLOCA
 
+/* Name of default metadata archive subdirectory. */
+#undef DEFAULT_ARCHIVE_SUBDIR
+
+/* Name of default metadata backup subdirectory. */
+#undef DEFAULT_BACKUP_SUBDIR
+
+/* Name of default metadata backup subdirectory. */
+#undef DEFAULT_CACHE_SUBDIR
+
+/* Name of default locking directory. */
+#undef DEFAULT_LOCK_DIR
+
 /* Define to 0 to reinstate the pre-2.02.54 handling of unit suffixes. */
 #undef DEFAULT_SI_UNIT_CONSISTENCY
+
+/* Path to LVM system directory. */
+#undef DEFAULT_SYS_DIR
 
 /* Define to 1 to enable LVM2 device-mapper interaction. */
 #undef DEVMAPPER_SUPPORT

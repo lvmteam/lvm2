@@ -1,5 +1,7 @@
 Version 2.02.66 - 
 ===============================
+  Add install_system_dirs makefile target.
+  Add configure options for system and locking directories.
   Generate example.conf so default lvm.conf contents can be configured.
   Install lvmconf script by default.
   Remove unnecessary versioned dmeventd plugin symlinks.
