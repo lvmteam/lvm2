@@ -310,7 +310,6 @@ install_lib_shared: $(LIB_SHARED)
 install_dm_plugin: $(LIB_SHARED)
 	$(INSTALL_PROGRAM) -D $< $(libdir)/device-mapper/$(<F)
 	$(LN_S) -f device-mapper/$(<F) $(libdir)/$(<F)
-	$(LN_S) -f $(<F) $(libdir)/$(<F).$(LIB_VERSION)
 
 install_lvm2_plugin: $(LIB_SHARED)
 	$(INSTALL_PROGRAM) -D $< $(libdir)/lvm2/$(<F)

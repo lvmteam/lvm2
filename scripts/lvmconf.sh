@@ -2,7 +2,7 @@
 #
 # Copyright (C) 2004-2009 Red Hat, Inc. All rights reserved.
 #
-# This file is part of the lvm2-cluster package.
+# This file is part of the lvm2 package.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
