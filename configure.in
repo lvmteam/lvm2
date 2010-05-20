@@ -1156,6 +1156,7 @@ daemons/dmeventd/plugins/lvm2/Makefile
 daemons/dmeventd/plugins/mirror/Makefile
 daemons/dmeventd/plugins/snapshot/Makefile
 doc/Makefile
+doc/example.conf
 include/.symlinks
 include/Makefile
 lib/Makefile

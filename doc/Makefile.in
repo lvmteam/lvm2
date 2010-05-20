@@ -15,7 +15,7 @@ srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 top_builddir = @top_builddir@
 
-CONFSRC=$(srcdir)/example.conf
+CONFSRC=example.conf
 CONFDEST=lvm.conf
 
 include $(top_builddir)/make.tmpl
