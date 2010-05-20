@@ -1,5 +1,6 @@
 Version 2.02.66 - 
 ===============================
+  Generate example.conf so default lvm.conf contents can be configured.
   Install lvmconf script by default.
   Remove unnecessary versioned dmeventd plugin symlinks.
   Add tests for lvm_vgname_from_{pvid|device}.
