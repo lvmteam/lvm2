@@ -1,4 +1,4 @@
-Version 2.02.66 - 
+Version 2.02.66 - 20th May 2010
 ===============================
   If unable to obtain snapshot percentage leave value blank on reports.
   Add install_system_dirs and install_initscripts makefile targets.
@@ -9,7 +9,7 @@ Version 2.02.66 -
   Add tests for lvm_vgname_from_{pvid|device}.
   Add lvm2app interfaces to lookup a vgname from a pvid and pvname.
   Update pvchange to always obtain a vg handle for each pv to process.
-  Add Add find_vgname_from_{pvname|pvid} functions.
+  Add find_vgname_from_{pvname|pvid} functions.
   Add pvid_from_devname and lvmcache_vgname_from_pvid lvmcache functions.
   Validate orphan and VG_GLOBAL lock order too.
   Accept orphan VG names as parameters to lock_vol() and related functions.
