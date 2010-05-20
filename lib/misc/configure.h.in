@@ -23,7 +23,7 @@
 /* Name of default metadata backup subdirectory. */
 #undef DEFAULT_BACKUP_SUBDIR
 
-/* Name of default metadata backup subdirectory. */
+/* Name of default metadata cache subdirectory. */
 #undef DEFAULT_CACHE_SUBDIR
 
 /* Name of default locking directory. */
