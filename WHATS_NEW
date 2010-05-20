@@ -1,5 +1,6 @@
 Version 2.02.66 - 
 ===============================
+  If unable to obtain snapshot percentage leave value blank on reports.
   Add install_system_dirs and install_initscripts makefile targets.
   Add configure options for system and locking directories.
   Generate example.conf so default lvm.conf contents can be configured.
