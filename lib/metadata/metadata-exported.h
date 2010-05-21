@@ -817,6 +817,9 @@ void cmd_vg_release(struct dm_list *cmd_vgs);
 
 int find_replicator_vgs(struct logical_volume *lv);
 
+int lv_read_replicator_vgs(struct logical_volume *lv);
+void lv_release_replicator_vgs(struct logical_volume *lv);
+
 struct logical_volume *find_pvmove_lv(struct volume_group *vg,
 				      struct device *dev, uint32_t lv_type);
 struct logical_volume *find_pvmove_lv_from_pvname(struct cmd_context *cmd,
