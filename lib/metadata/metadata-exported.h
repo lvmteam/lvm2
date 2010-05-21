@@ -298,6 +298,15 @@ struct lv_segment_area {
 
 struct segment_type;
 
+/* List with vg_name, vgid and flags */
+struct cmd_vg {
+	struct dm_list list;
+	const char *vg_name;
+	const char *vgid;
+	uint32_t flags;
+	struct volume_group *vg;
+};
+
 /* ++ Replicator datatypes */
 typedef enum {
 	REPLICATOR_STATE_PASSIVE,
@@ -798,6 +807,13 @@ int lv_is_rlog(const struct logical_volume *lv);
 int lv_is_slog(const struct logical_volume *lv);
 struct logical_volume *first_replicator_dev(const struct logical_volume *lv);
 /* --  metadata/replicator_manip.c */
+struct cmd_vg *cmd_vg_add(struct dm_pool *mem, struct dm_list *cmd_vgs,
+			  const char *vg_name, const char *vgid,
+			  uint32_t flags);
+struct cmd_vg *cmd_vg_lookup(struct dm_list *cmd_vgs,
+			     const char *vg_name, const char *vgid);
+int cmd_vg_read(struct cmd_context *cmd, struct dm_list *cmd_vgs);
+void cmd_vg_release(struct dm_list *cmd_vgs);
 
 struct logical_volume *find_pvmove_lv(struct volume_group *vg,
 				      struct device *dev, uint32_t lv_type);

@@ -13,6 +13,7 @@
  */
 
 #include "lib.h"
+#include "locking.h"
 #include "metadata.h"
 #include "segtype.h"
 
@@ -476,4 +477,128 @@ struct logical_volume *first_replicator_dev(const struct logical_volume *lv)
 		}
 
 	return NULL;
+}
+
+/**
+ * Add VG open parameters to sorted cmd_vg list.
+ *
+ * Maintain the alphabeticaly ordered list, avoid duplications.
+ *
+ * \return	Returns newly created or already present cmd_vg entry,
+ *		or NULL in error case.
+ */
+struct cmd_vg *cmd_vg_add(struct dm_pool *mem, struct dm_list *cmd_vgs,
+			  const char *vg_name, const char *vgid,
+			  uint32_t flags)
+{
+	struct cmd_vg *cvl, *ins;
+
+	if (!vg_name && !vgid) {
+		log_error("Either vg_name or vgid must be set.");
+		return NULL;
+	}
+
+	/* Is it already in the list ? */
+	if ((cvl = cmd_vg_lookup(cmd_vgs, vg_name, vgid)))
+		return cvl;
+
+	if (!(cvl = dm_pool_zalloc(mem, sizeof(*cvl)))) {
+		log_error("Allocation of cmd_vg failed.");
+		return NULL;
+	}
+
+	if (vg_name && !(cvl->vg_name = dm_pool_strdup(mem, vg_name))) {
+		dm_pool_free(mem, cvl);
+		log_error("Allocation of vg_name failed.");
+		return NULL;
+	}
+
+	if (vgid && !(cvl->vgid = dm_pool_strdup(mem, vgid))) {
+		dm_pool_free(mem, cvl);
+		log_error("Allocation of vgid failed.");
+		return NULL;
+	}
+
+	cvl->flags = flags;
+
+	if (vg_name)
+		dm_list_iterate_items(ins, cmd_vgs)
+			if (strcmp(vg_name, ins->vg_name) < 0) {
+				cmd_vgs = &ins->list; /* new position */
+				break;
+			}
+
+	dm_list_add(cmd_vgs, &cvl->list);
+
+	return cvl;
+}
+
+/**
+ * Find cmd_vg with given vg_name in cmd_vgs list.
+ *
+ * \param cmd_vgs	List of cmd_vg entries.
+ *
+ * \param vg_name	Name of VG to be found.
+
+ * \param vgid		UUID of VG to be found.
+ *
+ * \return		Returns cmd_vg entry if vg_name or vgid is found,
+ *			NULL otherwise.
+ */
+struct cmd_vg *cmd_vg_lookup(struct dm_list *cmd_vgs,
+			     const char *vg_name, const char *vgid)
+{
+	struct cmd_vg *cvl;
+
+	dm_list_iterate_items(cvl, cmd_vgs)
+		if ((vgid && cvl->vgid && !strcmp(vgid, cvl->vgid)) ||
+		    (vg_name && cvl->vg_name && !strcmp(vg_name, cvl->vg_name)))
+			return cvl;
+	return NULL;
+}
+
+/**
+ * Read and lock multiple VGs stored in cmd_vgs list alphabeticaly.
+ * On the success list head pointer is set to VGs' cmd_vgs.
+ * (supports FAILED_INCONSISTENT)
+ *
+ * \param cmd_vg	Contains list of cmd_vg entries.
+ *
+ * \return		Returns 1 if all VG in cmd_vgs list are correctly
+ *			openned and locked, 0 otherwise.
+ */
+int cmd_vg_read(struct cmd_context *cmd, struct dm_list *cmd_vgs)
+{
+	struct cmd_vg *cvl;
+
+	/* Iterate through alphabeticaly ordered cmd_vg list */
+	dm_list_iterate_items(cvl, cmd_vgs) {
+		cvl->vg = vg_read(cmd, cvl->vg_name, cvl->vgid, cvl->flags);
+		if (vg_read_error(cvl->vg)) {
+			log_debug("Failed to vg_read %s", cvl->vg_name);
+			return 0;
+		}
+		cvl->vg->cmd_vgs = cmd_vgs;	/* Make it usable in VG */
+	}
+
+	return 1;
+}
+
+/**
+ * Release opened and locked VGs from list.
+ *
+ * \param cmd_vgs	Contains list of cmd_vg entries.
+ */
+void cmd_vg_release(struct dm_list *cmd_vgs)
+{
+	struct cmd_vg *cvl;
+
+	/* Backward iterate cmd_vg list */
+	dm_list_iterate_back_items(cvl, cmd_vgs) {
+		if (vg_read_error(cvl->vg))
+			vg_release(cvl->vg);
+		else
+			unlock_and_release_vg(cvl->vg->cmd, cvl->vg, cvl->vg_name);
+		cvl->vg = NULL;
+	}
 }
