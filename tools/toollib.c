@@ -329,8 +329,9 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 		unlock_and_release_vg(cmd, vg, vgname);
 		if (ret > ret_max)
 			ret_max = ret;
+		/* FIXME: logic for breaking command is not consistent */
 		if (sigint_caught())
-			break;
+			return ECMD_FAILED;
 	}
 
 	return ret_max;
@@ -408,8 +409,9 @@ int process_each_segment_in_lv(struct cmd_context *cmd,
 		ret = process_single_seg(cmd, seg, handle);
 		if (ret > ret_max)
 			ret_max = ret;
+		/* FIXME: logic for breaking command is not consistent */
 		if (sigint_caught())
-			break;
+			return ECMD_FAILED;
 	}
 
 	return ret_max;
