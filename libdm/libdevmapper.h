@@ -439,6 +439,41 @@ int dm_tree_node_add_mirror_target_log(struct dm_tree_node *node,
 					  const char *log_uuid,
 					  unsigned area_count,
 					  uint32_t flags);
+
+/*
+ * Replicator operation mode
+ * Note: API for Replicator is not yet stable
+ */
+typedef enum {
+	DM_REPLICATOR_SYNC,			/* Synchronous replication */
+	DM_REPLICATOR_ASYNC_WARN,		/* Warn if async replicator is slow */
+	DM_REPLICATOR_ASYNC_STALL,		/* Stall replicator if not fast enough */
+	DM_REPLICATOR_ASYNC_DROP,		/* Drop sites out of sync */
+	DM_REPLICATOR_ASYNC_FAIL,		/* Fail replicator if slow */
+	NUM_DM_REPLICATOR_MODES
+} dm_replicator_mode_t;
+
+int dm_tree_node_add_replicator_target(struct dm_tree_node *node,
+				       uint64_t size,
+				       const char *rlog_uuid,
+				       const char *rlog_type,
+				       unsigned rsite_index,
+				       dm_replicator_mode_t mode,
+				       uint32_t async_timeout,
+				       uint64_t fall_behind_data,
+				       uint32_t fall_behind_ios);
+
+int dm_tree_node_add_replicator_dev_target(struct dm_tree_node *node,
+					   uint64_t size,
+					   const char *replicator_uuid,	/* Replicator control device */
+					   uint64_t rdevice_index,
+					   const char *rdev_uuid,	/* Rimage device name/uuid */
+					   unsigned rsite_index,
+					   const char *slog_uuid,
+					   uint32_t slog_flags,		/* Mirror log flags */
+					   uint32_t slog_region_size);
+/* End of Replicator API */
+
 int dm_tree_node_add_target_area(struct dm_tree_node *node,
 				    const char *dev_name,
 				    const char *dlid,
