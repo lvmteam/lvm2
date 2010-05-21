@@ -902,6 +902,44 @@ static int _info_by_dev(uint32_t major, uint32_t minor, int with_open_count,
 	return r;
 }
 
+/* Check if all parent nodes of given node have open_count == 0 */
+static int _node_has_closed_parents(struct dm_tree_node *node,
+				    const char *uuid_prefix,
+				    size_t uuid_prefix_len)
+{
+	struct dm_tree_link *dlink;
+	const struct dm_info *dinfo;
+	struct dm_info info;
+	const char *uuid;
+
+	/* Iterate through parents of this node */
+	dm_list_iterate_items(dlink, &node->used_by) {
+		if (!(uuid = dm_tree_node_get_uuid(dlink->node))) {
+			stack;
+			continue;
+		}
+
+		/* Ignore if it doesn't belong to this VG */
+		if (!_uuid_prefix_matches(uuid, uuid_prefix, uuid_prefix_len))
+			continue;
+
+		if (!(dinfo = dm_tree_node_get_info(dlink->node))) {
+			stack;	/* FIXME Is this normal? */
+			return 0;
+		}
+
+		/* Refresh open_count */
+		if (!_info_by_dev(dinfo->major, dinfo->minor, 1, &info) ||
+		    !info.exists)
+			continue;
+
+		if (info.open_count)
+			return 0;
+	}
+
+	return 1;
+}
+
 static int _deactivate_node(const char *name, uint32_t major, uint32_t minor,
 			    uint32_t *cookie, uint16_t udev_flags)
 {
@@ -1100,7 +1138,11 @@ static int _dm_tree_deactivate_children(struct dm_tree_node *dnode,
 		    !info.exists)
 			continue;
 
-		if (info.open_count) {
+		/* Also checking open_count in parent nodes of presuspend_node */
+		if (info.open_count ||
+		    (child->presuspend_node &&
+		     !_node_has_closed_parents(child->presuspend_node,
+					       uuid_prefix, uuid_prefix_len))) {
 			/* Only report error from (likely non-internal) dependency at top level */
 			if (!level) {
 				log_error("Unable to deactivate open %s (%" PRIu32
