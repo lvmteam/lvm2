@@ -1,5 +1,6 @@
 Version 2.02.67 -
 ===============================
+  Return ECMD_FAILED for break in process_each_lv() and process_each_segment_in_lv().
 
 Version 2.02.66 - 20th May 2010
 ===============================
