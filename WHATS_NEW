@@ -1,5 +1,6 @@
 Version 2.02.67 -
 ===============================
+  Add functions for read and release VGs list.
   Add find_replicator_vgs() to discover all needed VGs for replicator-dev LV.
   Add functions for handling cmd_vg structure.
   Extend _lv_each_dependency() with Replicator dependencies.
