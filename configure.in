@@ -303,6 +303,21 @@ if test x$MIRRORS = xinternal; then
 fi
 
 ################################################################################
+dnl -- asynchronous volume replicator inclusion type
+AC_MSG_CHECKING(whether to include replicators)
+AC_ARG_WITH(replicators, AC_HELP_STRING([--with-replicators=TYPE],
+	[Replicator support: internal/shared/none [TYPE=none] ]),
+	[REPLICATORS=$withval], [REPLICATORS="none"])
+AC_MSG_RESULT($REPLICATORS)
+
+case "$REPLICATORS" in
+  none|shared) ;;
+  internal) AC_DEFINE([REPLICATOR_INTERNAL], 1,
+		[Define to 1 to include built-in support for replicators.]) ;;
+  *) AC_MSG_ERROR([--with-replicators parameter invalid ($REPLICATORS)]) ;;
+esac
+
+################################################################################
 dnl -- Disable readline
 AC_MSG_CHECKING(whether to enable readline)
 AC_ARG_ENABLE([readline],
@@ -1151,6 +1166,7 @@ AC_SUBST(LVM_PATCHLEVEL)
 AC_SUBST(LVM_RELEASE)
 AC_SUBST(LVM_RELEASE_DATE)
 AC_SUBST(MIRRORS)
+AC_SUBST(REPLICATORS)
 AC_SUBST(MSGFMT)
 AC_SUBST(PKGCONFIG)
 AC_SUBST(POOL)
@@ -1206,6 +1222,7 @@ lib/format1/Makefile
 lib/format_pool/Makefile
 lib/locking/Makefile
 lib/mirror/Makefile
+lib/replicator/Makefile
 lib/misc/lvm-version.h
 lib/snapshot/Makefile
 libdm/Makefile

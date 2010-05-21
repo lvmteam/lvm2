@@ -32,6 +32,10 @@ ifeq ("@MIRRORS@", "shared")
   SUBDIRS += mirror
 endif
 
+ifeq ("@REPLICATORS@", "shared")
+  SUBDIRS += replicator
+endif
+
 SOURCES =\
 	activate/activate.c \
 	cache/lvmcache.c \
@@ -74,6 +78,7 @@ SOURCES =\
 	metadata/mirror.c \
 	metadata/pv_manip.c \
 	metadata/pv_map.c \
+	metadata/replicator_manip.c \
 	metadata/segtype.c \
 	metadata/snapshot_manip.c \
 	misc/crc.c \
@@ -129,6 +134,10 @@ ifeq ("@MIRRORS@", "internal")
   SOURCES += mirror/mirrored.c
 endif
 
+ifeq ("@REPLICATORS@", "internal")
+  SOURCES += replicator/replicator.c
+endif
+
 ifeq ("@DEVMAPPER@", "yes")
   SOURCES +=\
 	activate/dev_manager.c \
@@ -155,6 +164,7 @@ ifeq ($(MAKECMDGOALS),distclean)
 	format_pool \
 	snapshot \
 	mirror \
+	replicator \
 	locking
 endif
 

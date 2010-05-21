@@ -936,6 +936,11 @@ static int _init_segtypes(struct cmd_context *cmd)
 	dm_list_add(&cmd->segtypes, &segtype->list);
 #endif
 
+#ifdef REPLICATOR_INTERNAL
+	if (!init_replicator_segtype(&seglib))
+		return 0;
+#endif
+
 #ifdef HAVE_LIBDL
 	/* Load any formats in shared libs unless static */
 	if (!is_static() &&

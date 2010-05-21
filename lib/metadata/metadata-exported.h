@@ -72,6 +72,9 @@
 
 #define MERGING			0x10000000U	/* LV SEG */
 
+#define REPLICATOR		0x20000000U	/* LV -internal use only for replicator */
+#define REPLICATOR_LOG		0x40000000U	/* LV -internal use only for replicator-dev */
+
 #define LVM_READ              	0x00000100U	/* LV VG */
 #define LVM_WRITE             	0x00000200U	/* LV VG */
 #define CLUSTERED         	0x00000400U	/* VG */
@@ -292,6 +295,45 @@ struct lv_segment_area {
 };
 
 struct segment_type;
+
+/* ++ Replicator datatypes */
+typedef enum {
+	REPLICATOR_STATE_PASSIVE,
+	REPLICATOR_STATE_ACTIVE,
+	NUM_REPLICATOR_STATE
+} replicator_state_t;
+
+struct replicator_site {
+	struct dm_list list;		/* Chained list of sites */
+	struct dm_list rdevices;	/* Device list */
+
+	struct logical_volume *replicator; /* Reference to replicator */
+
+	const char *name;               /* Site name */
+	const char *vg_name;		/* VG name */
+	struct volume_group *vg;        /* resolved vg  (activate/deactive) */
+	unsigned site_index;
+	replicator_state_t state;	/* Active or pasive state of site */
+	dm_replicator_mode_t op_mode;	/* Operation mode sync or async fail|warn|drop|stall */
+	uint64_t fall_behind_data;	/* Bytes */
+	uint32_t fall_behind_ios;	/* IO operations */
+	uint32_t fall_behind_timeout;	/* Seconds */
+};
+
+struct replicator_device {
+	struct dm_list list;		/* Chained list of devices from same site */
+
+	struct lv_segment *replicator_dev; /* Reference to replicator-dev segment */
+	struct replicator_site *rsite;	/* Reference to site parameters */
+
+	uint64_t device_index;
+	const char *name;		/* Device LV name */
+	struct logical_volume *lv;	/* LV from replicator site's VG */
+	struct logical_volume *slog;	/* Synclog lv from VG  */
+	const char *slog_name;		/* Debug - specify size of core synclog */
+};
+/* -- Replicator datatypes */
+
 struct lv_segment {
 	struct dm_list list;
 	struct logical_volume *lv;
@@ -310,7 +352,7 @@ struct lv_segment {
 	struct logical_volume *origin;
 	struct logical_volume *cow;
 	struct dm_list origin_list;
-	uint32_t region_size;	/* For mirrors - in sectors */
+	uint32_t region_size;	/* For mirrors, replicators - in sectors */
 	uint32_t extents_copied;
 	struct logical_volume *log_lv;
 	struct lv_segment *pvmove_source_seg;
@@ -319,6 +361,12 @@ struct lv_segment {
 	struct dm_list tags;
 
 	struct lv_segment_area *areas;
+
+	struct logical_volume *replicator;/* For replicator-devs - link to replicator LV */
+	struct logical_volume *rlog_lv;	/* For replicators */
+	const char *rlog_type;		/* For replicators */
+	uint64_t rdevice_index_highest;	/* For replicators */
+	unsigned rsite_index_highest;	/* For replicators */
 };
 
 #define seg_type(seg, s)	(seg)->areas[(s)].type
@@ -343,6 +391,9 @@ struct logical_volume {
 	uint32_t origin_count;
 	struct dm_list snapshot_segs;
 	struct lv_segment *snapshot;
+
+	struct replicator_device *rdevice;/* For replicator-devs, rimages, slogs - reference to rdevice */
+	struct dm_list rsites;	/* For replicators - all sites */
 
 	struct dm_list segments;
 	struct dm_list tags;
@@ -724,6 +775,27 @@ int reconfigure_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirr
 			      struct dm_list *removable_pvs, unsigned remove_log);
 int collapse_mirrored_lv(struct logical_volume *lv);
 int shift_mirror_images(struct lv_segment *mirrored_seg, unsigned mimage);
+
+/* ++  metadata/replicator_manip.c */
+int replicator_add_replicator_dev(struct logical_volume *replicator_lv,
+				  struct lv_segment *rdev_seg);
+struct logical_volume *replicator_remove_replicator_dev(struct lv_segment *rdev_seg);
+int replicator_add_rlog(struct lv_segment *replicator_seg, struct logical_volume *rlog_lv);
+struct logical_volume *replicator_remove_rlog(struct lv_segment *replicator_seg);
+
+int replicator_dev_add_slog(struct replicator_device *rdev, struct logical_volume *slog_lv);
+struct logical_volume *replicator_dev_remove_slog(struct replicator_device *rdev);
+int replicator_dev_add_rimage(struct replicator_device *rdev, struct logical_volume *lv);
+struct logical_volume *replicator_dev_remove_rimage(struct replicator_device *rdev);
+
+int lv_is_active_replicator_dev(const struct logical_volume *lv);
+int lv_is_replicator(const struct logical_volume *lv);
+int lv_is_replicator_dev(const struct logical_volume *lv);
+int lv_is_rimage(const struct logical_volume *lv);
+int lv_is_rlog(const struct logical_volume *lv);
+int lv_is_slog(const struct logical_volume *lv);
+struct logical_volume *first_replicator_dev(const struct logical_volume *lv);
+/* --  metadata/replicator_manip.c */
 
 struct logical_volume *find_pvmove_lv(struct volume_group *vg,
 				      struct device *dev, uint32_t lv_type);
