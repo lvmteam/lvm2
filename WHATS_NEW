@@ -1,5 +1,6 @@
 Version 2.02.67 -
 ===============================
+  Add check_replicator_segment() for catching internal replicator errors.
   Initial lvm2 support for Replicator metadata handling.
   Checking open_count in all parents of presuspend_node.
   Added dm_tree_node_set_presuspend_node() to presuspend child in deactivate.
