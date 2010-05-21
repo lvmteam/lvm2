@@ -19,17 +19,17 @@
 # -> ../../e/f/
 
 {
-	split($1, from, "/");
-	split($2, to, "/") ;
+	length_from = split($1, from, "/");
+	length_to = split($2, to, "/") ;
 	l = 1;
-	while (l <= length(from) && l <= length(to) && from[l] == to[l])
+	while (l <= length_from && l <= length_to && from[l] == to[l])
 		l++;
-	for (i = l; i <= length(from) && length(from[i]); i++) {
+	for (i = l; i <= length_from && length(from[i]); i++) {
 		if (i > l)
 			p = sprintf("%s/", p);
 		p = sprintf("%s..", p);
 	}
-	for (i = l; i <= length(to) && length(to[i]); i++) {
+	for (i = l; i <= length_to && length(to[i]); i++) {
 		if (length(p) > 0)
 			p = sprintf("%s/", p);
 		p = sprintf("%s%s", p, to[i]);
