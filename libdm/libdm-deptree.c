@@ -168,6 +168,12 @@ struct dm_tree_node {
 	void *context;			/* External supplied context */
 
 	struct load_properties props;	/* For creation/table (re)load */
+
+	/*
+	 * If presuspend of child node is needed
+	 * Note: only direct child is allowed
+	 */
+	struct dm_tree_node *presuspend_node;
 };
 
 struct dm_tree {
@@ -684,6 +690,12 @@ void dm_tree_node_set_read_ahead(struct dm_tree_node *dnode,
 	dnode->props.read_ahead_flags = read_ahead_flags;
 }
 
+void dm_tree_node_set_presuspend_node(struct dm_tree_node *node,
+				      struct dm_tree_node *presuspend_node)
+{
+	node->presuspend_node = presuspend_node;
+}
+
 int dm_tree_add_dev(struct dm_tree *dtree, uint32_t major, uint32_t minor)
 {
 	return _add_dev(dtree, &dtree->root, major, minor, 0) ? 1 : 0;
@@ -792,6 +804,10 @@ static int _children_suspended(struct dm_tree_node *node,
 
 		/* Ignore if it doesn't belong to this VG */
 		if (!_uuid_prefix_matches(uuid, uuid_prefix, uuid_prefix_len))
+			continue;
+
+		/* Ignore if parent node wants to presuspend this node */
+		if (dlink->node->presuspend_node == node)
 			continue;
 
 		if (!(dinfo = dm_tree_node_get_info(dlink->node))) {
@@ -1094,6 +1110,11 @@ static int _dm_tree_deactivate_children(struct dm_tree_node *dnode,
 			}
 			continue;
 		}
+
+		/* Suspend child node first if requested */
+		if (child->presuspend_node &&
+		    !dm_tree_suspend_children(child, uuid_prefix, uuid_prefix_len))
+			continue;
 
 		if (!_deactivate_node(name, info.major, info.minor,
 				      &child->dtree->cookie, child->udev_flags)) {
