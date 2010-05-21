@@ -252,6 +252,158 @@ int lv_remove_replicator(struct logical_volume *lv)
 }
 #endif
 
+/*
+ * Check all replicator structures:
+ *  only non-clustered VG for Replicator
+ *  only one segment in replicator LV
+ *  site has correct combination of operation_mode parameters
+ *  site and related devices have correct index numbers
+ *  duplicate site names, site indexes, device names, device indexes
+ */
+int check_replicator_segment(const struct lv_segment *rseg)
+{
+	struct replicator_site *rsite, *rsiteb;
+	struct replicator_device *rdev, *rdevb;
+        struct logical_volume *lv = rseg->lv;
+	int r = 1;
+
+	if (vg_is_clustered(lv->vg)) {
+		log_error("Volume Group %s of replicator %s is clustered",
+			  lv->vg->name, lv->name);
+		return 0;
+	}
+
+	if (dm_list_size(&lv->segments) != 1) {
+		log_error("Replicator %s segment size %d != 1",
+			  lv->name, dm_list_size(&lv->segments));
+		return 0;
+	}
+
+	dm_list_iterate_items(rsite, &lv->rsites) {
+		if (rsite->op_mode == DM_REPLICATOR_SYNC) {
+			if (rsite->fall_behind_timeout) {
+				log_error("Defined fall_behind_timeout="
+					  "%d for sync replicator %s/%s.",
+					  rsite->fall_behind_timeout, lv->name,
+					  rsite->name);
+				r = 0;
+			}
+			if (rsite->fall_behind_ios) {
+				log_error("Defined fall_behind_ios="
+					  "%d for sync replicator %s/%s.",
+					  rsite->fall_behind_ios, lv->name, rsite->name);
+				r = 0;
+			}
+			if (rsite->fall_behind_data) {
+				log_error("Defined fall_behind_data="
+					  "%" PRIu64 " for sync replicator %s/%s.",
+					  rsite->fall_behind_data, lv->name, rsite->name);
+				r = 0;
+			}
+		} else {
+			if (rsite->fall_behind_timeout && rsite->fall_behind_ios) {
+				log_error("Defined fall_behind_timeout and"
+					  " fall_behind_ios for async replicator %s/%s.",
+					  lv->name, rsite->name);
+				r = 0;
+			}
+			if (rsite->fall_behind_timeout && rsite->fall_behind_data) {
+				log_error("Defined fall_behind_timeout and"
+					  " fall_behind_data for async replicator %s/%s.",
+					  lv->name, rsite->name);
+				r = 0;
+			}
+			if (rsite->fall_behind_ios && rsite->fall_behind_data) {
+				log_error("Defined fall_behind_ios and"
+					  " fall_behind_data for async replicator %s/%s.",
+					  lv->name, rsite->name);
+				r = 0;
+			}
+			if (!rsite->fall_behind_ios &&
+			    !rsite->fall_behind_data &&
+			    !rsite->fall_behind_timeout) {
+				log_error("fall_behind_timeout,"
+					  " fall_behind_ios and fall_behind_data are"
+					  " undefined for async replicator %s/%s.",
+					  lv->name, rsite->name);
+				r = 0;
+			}
+		}
+		dm_list_iterate_items(rsiteb, &lv->rsites) {
+			if (rsite == rsiteb)
+				break;
+			if (strcasecmp(rsite->name, rsiteb->name) == 0) {
+				log_error("Duplicate site name "
+					  "%s detected for replicator %s.",
+					  rsite->name, lv->name);
+				r = 0;
+			}
+			if ((rsite->vg_name && rsiteb->vg_name &&
+			     strcasecmp(rsite->vg_name, rsiteb->vg_name) == 0) ||
+			    (!rsite->vg_name && !rsiteb->vg_name)) {
+				log_error("Duplicate VG name "
+					  "%s detected for replicator %s.",
+					  (rsite->vg_name) ? rsite->vg_name : "<local>",
+					  lv->name);
+				r = 0;
+			}
+			if (rsite->site_index == rsiteb->site_index) {
+				log_error("Duplicate site index %d detected "
+					  "for replicator site %s/%s.",
+					  rsite->site_index, lv->name,
+					  rsite->name);
+				r = 0;
+			}
+			if (rsite->site_index > rseg->rsite_index_highest) {
+				log_error("Site index %d > %d (too high) "
+					  "for replicator site %s/%s.",
+					  rsite->site_index,
+					  rseg->rsite_index_highest,
+					  lv->name, rsite->name);
+				r = 0;
+			}
+		}
+
+		dm_list_iterate_items(rdev, &rsite->rdevices) {
+			dm_list_iterate_items(rdevb, &rsite->rdevices) {
+				if (rdev == rdevb)
+					break;
+				if (rdev->slog && (rdev->slog == rdevb->slog)) {
+					log_error("Duplicate sync log %s "
+						  "detected for replicator %s.",
+						  rdev->slog->name, lv->name);
+					r = 0;
+				}
+				if (strcasecmp(rdev->name, rdevb->name) == 0) {
+					log_error("Duplicate device name %s "
+						  "detected for replicator %s.",
+						  rdev->name, lv->name);
+					r = 0;
+				}
+				if (rdev->device_index == rdevb->device_index) {
+					log_error("Duplicate device index %"
+						  PRId64 " detected for "
+						  "replicator site %s/%s.",
+						  rdev->device_index,
+						  lv->name, rsite->name);
+					r = 0;
+				}
+				if (rdev->device_index > rseg->rdevice_index_highest) {
+					log_error("Device index %" PRIu64
+						  " > %" PRIu64 " (too high) "
+						  "for replicator site %s/%s.",
+						  rdev->device_index,
+						  rseg->rdevice_index_highest,
+						  lv->name, rsite->name);
+					r = 0;
+				}
+			}
+		}
+	}
+
+	return r;
+}
+
 /**
  * Is this segment part of active replicator
  */

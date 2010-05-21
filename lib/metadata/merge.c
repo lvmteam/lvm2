@@ -137,6 +137,9 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 			}
 		}
 
+		if (seg_is_replicator(seg) && !check_replicator_segment(seg))
+			inc_error_count;
+
 		for (s = 0; s < seg->area_count; s++) {
 			if (seg_type(seg, s) == AREA_UNASSIGNED) {
 				log_error("LV %s: segment %u has unassigned "

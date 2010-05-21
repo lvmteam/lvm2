@@ -321,6 +321,12 @@ struct logical_volume *alloc_lv(struct dm_pool *mem);
  */
 int check_lv_segments(struct logical_volume *lv, int complete_vg);
 
+
+/*
+ * Checks that a replicator segment is correct.
+ */
+int check_replicator_segment(const struct lv_segment *replicator_seg);
+
 /*
  * Sometimes (eg, after an lvextend), it is possible to merge two
  * adjacent segments into a single segment.  This function trys
