@@ -1,6 +1,7 @@
 Version 2.02.67 -
 ===============================
-  Update _process_one_vg() to work with cmd_vg struture.
+  Update process_each_lv_in_vg() to use cmd_vg structure.
+  Update _process_one_vg() to work with cmd_vg structure.
   Add functions for read and release VGs list.
   Add find_replicator_vgs() to discover all needed VGs for replicator-dev LV.
   Add functions for handling cmd_vg structure.
