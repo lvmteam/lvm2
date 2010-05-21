@@ -16,6 +16,7 @@
 #include "locking.h"
 #include "metadata.h"
 #include "segtype.h"
+#include "toolcontext.h"
 
 /* Add lv as replicator_dev device */
 int replicator_dev_add_rimage(struct replicator_device *rdev,
