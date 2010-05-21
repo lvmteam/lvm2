@@ -602,3 +602,35 @@ void cmd_vg_release(struct dm_list *cmd_vgs)
 		cvl->vg = NULL;
 	}
 }
+
+/**
+ * Find all needed remote VGs for processing given LV.
+ * Missing VGs are added to VG's cmd_vg list and flag cmd_missing_vgs is set.
+ */
+int find_replicator_vgs(struct logical_volume *lv)
+{
+	struct replicator_site *rsite;
+	int ret = 1;
+
+	if (!lv_is_replicator_dev(lv))
+		return 1;
+
+	dm_list_iterate_items(rsite, &first_seg(lv)->replicator->rsites) {
+		if (!rsite->vg_name || !lv->vg->cmd_vgs ||
+		    cmd_vg_lookup(lv->vg->cmd_vgs, rsite->vg_name, NULL))
+			continue;
+		ret = 0;
+		/* Using cmd memory pool for cmd_vg list allocation */
+		if (!cmd_vg_add(lv->vg->cmd->mem, lv->vg->cmd_vgs,
+				rsite->vg_name, NULL, 0)) {
+			lv->vg->cmd_missing_vgs = 0; /* do not retry */
+			stack;
+			break;
+		}
+
+		log_debug("VG: %s added as missing.", rsite->vg_name);
+		lv->vg->cmd_missing_vgs++;
+	}
+
+	return ret;
+}
