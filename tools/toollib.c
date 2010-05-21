@@ -86,6 +86,7 @@ int process_each_lv_in_vg(struct cmd_context *cmd,
 			  struct volume_group *vg,
 			  const struct dm_list *arg_lvnames,
 			  const struct dm_list *tags,
+			  struct dm_list *failed_lvnames,
 			  void *handle,
 			  process_single_lv_fn_t process_single_lv)
 {
@@ -96,7 +97,7 @@ int process_each_lv_in_vg(struct cmd_context *cmd,
 	unsigned tags_supplied = 0;
 	unsigned lvargs_supplied = 0;
 	unsigned lvargs_matched = 0;
-
+	char *lv_name;
 	struct lv_list *lvl;
 
 	if (!vg_check_status(vg, EXPORTED_VG))
@@ -155,6 +156,14 @@ int process_each_lv_in_vg(struct cmd_context *cmd,
 			continue;
 
 		ret = process_single_lv(cmd, lvl->lv, handle);
+		if (ret != ECMD_PROCESSED && failed_lvnames) {
+			lv_name = dm_pool_strdup(cmd->mem, lvl->lv->name);
+			if (!lv_name ||
+			    !str_list_add(cmd->mem, failed_lvnames, lv_name)) {
+				log_error("Allocation failed for str_list.");
+				return ECMD_FAILED;
+			}
+		}
 		if (ret > ret_max)
 			ret_max = ret;
 		if (sigint_caught())
@@ -325,7 +334,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 		}
 
 		ret = process_each_lv_in_vg(cmd, vg, &lvnames, tags_arg,
-					    handle, process_single_lv);
+					    NULL, handle, process_single_lv);
 		unlock_and_release_vg(cmd, vg, vgname);
 		if (ret > ret_max)
 			ret_max = ret;

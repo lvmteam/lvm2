@@ -1,5 +1,6 @@
 Version 2.02.67 -
 ===============================
+  Extend process_each_lv_in_vg() with support for list of failed lvnames.
   Return ECMD_FAILED for break in process_each_lv() and process_each_segment_in_lv().
 
 Version 2.02.66 - 20th May 2010
