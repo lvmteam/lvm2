@@ -1,5 +1,6 @@
 Version 2.02.67 -
 ===============================
+  Add _add_partial_replicator_to_dtree().
   Activation code read and releases also remote VGs (Replicator).
   Check for missing VGs before taking lock_vol (Replicator).
   Update process_each_lv_in_vg() to use cmd_vg structure.
