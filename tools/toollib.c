@@ -432,37 +432,51 @@ static int _process_one_vg(struct cmd_context *cmd, const char *vg_name,
 			   uint32_t flags, void *handle, int ret_max,
 			   process_single_vg_fn_t process_single_vg)
 {
-	struct volume_group *vg;
+	struct dm_list cmd_vgs;
+	struct cmd_vg *cvl_vg;
 	int ret = 0;
 
 	log_verbose("Finding volume group \"%s\"", vg_name);
 
-	vg = vg_read(cmd, vg_name, vgid, flags);
-	/* Allow FAILED_INCONSISTENT through only for vgcfgrestore */
-	if (vg_read_error(vg) &&
-	    !((vg_read_error(vg) == FAILED_INCONSISTENT) &&
-	      (flags & READ_ALLOW_INCONSISTENT))) {
-		ret_max = ECMD_FAILED;
-		goto_out;
+	dm_list_init(&cmd_vgs);
+	if (!(cvl_vg = cmd_vg_add(cmd->mem, &cmd_vgs, vg_name, vgid, flags)))
+		return_0;
+
+	for (;;) {
+		/* FIXME: consistent handling of command break */
+		if (sigint_caught()) {
+                        ret = ECMD_FAILED;
+			break;
+		}
+		if (!cmd_vg_read(cmd, &cmd_vgs))
+			/* Allow FAILED_INCONSISTENT through only for vgcfgrestore */
+			if (vg_read_error(cvl_vg->vg) &&
+			    (!((flags & READ_ALLOW_INCONSISTENT) &&
+			       (vg_read_error(cvl_vg->vg) == FAILED_INCONSISTENT)))) {
+				ret = ECMD_FAILED;
+				break;
+			}
+
+		if (!dm_list_empty(tags) &&
+		    /* Only process if a tag matches or it's on arg_vgnames */
+		    !str_list_match_item(arg_vgnames, vg_name) &&
+		    !str_list_match_list(tags, &cvl_vg->vg->tags))
+			break;
+
+		ret = process_single_vg(cmd, vg_name, cvl_vg->vg, handle);
+
+		if (vg_read_error(cvl_vg->vg)) /* FAILED_INCONSISTENT */
+			break;
+
+		if (!cvl_vg->vg->cmd_missing_vgs)
+			break;
+
+		cmd_vg_release(&cmd_vgs);
 	}
 
-	if (!dm_list_empty(tags)) {
-		/* Only process if a tag matches or it's on arg_vgnames */
-		if (!str_list_match_item(arg_vgnames, vg_name) &&
-		    !str_list_match_list(tags, &vg->tags))
-			goto out;
-	}
+	cmd_vg_release(&cmd_vgs);
 
-	if ((ret = process_single_vg(cmd, vg_name, vg,
-				  handle)) > ret_max)
-		ret_max = ret;
-
-out:
-	if (vg_read_error(vg))
-		vg_release(vg);
-	else
-		unlock_and_release_vg(cmd, vg, vg_name);
-	return ret_max;
+	return (ret > ret_max) ? ret : ret_max;
 }
 
 int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
