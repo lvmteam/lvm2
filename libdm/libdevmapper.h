@@ -474,6 +474,9 @@ int dm_tree_node_add_replicator_dev_target(struct dm_tree_node *node,
 					   uint32_t slog_region_size);
 /* End of Replicator API */
 
+void dm_tree_node_set_presuspend_node(struct dm_tree_node *node,
+				      struct dm_tree_node *presuspend_node);
+
 int dm_tree_node_add_target_area(struct dm_tree_node *node,
 				    const char *dev_name,
 				    const char *dlid,
