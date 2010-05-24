@@ -1,5 +1,6 @@
 Version 2.02.67 -
 ===============================
+  Avoid selecting names under /dev/block if there is an alternative.
   Update clustered log kernel module name to log-userspace for 2.6.31 onwards.
   Activate only first head of Replicator for vgchange -ay.
   Add Replicators' LVs to dtree for activation.
