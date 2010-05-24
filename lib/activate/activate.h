@@ -78,6 +78,7 @@ int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s,
 int lv_activation_filter(struct cmd_context *cmd, const char *lvid_s,
 			 int *activate_lv);
 
+int lv_check_transient(struct logical_volume *lv);
 /*
  * Returns 1 if percent has been set, else 0.
  */

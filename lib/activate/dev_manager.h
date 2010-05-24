@@ -57,6 +57,7 @@ int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv);
 int dev_manager_preload(struct dev_manager *dm, struct logical_volume *lv,
 			int *flush_required);
 int dev_manager_deactivate(struct dev_manager *dm, struct logical_volume *lv);
+int dev_manager_transient(struct dev_manager *dm, struct logical_volume *lv);
 
 int dev_manager_mknodes(const struct logical_volume *lv);
 

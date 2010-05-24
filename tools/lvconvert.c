@@ -15,6 +15,7 @@
 #include "tools.h"
 #include "polldaemon.h"
 #include "lv_alloc.h"
+#include "metadata.h"
 
 struct lvconvert_params {
 	int snapshot;
@@ -603,6 +604,12 @@ static struct dm_list *_failed_pv_list(struct volume_group *vg)
 	return failed_pvs;
 }
 
+static int _is_partial_lv(struct logical_volume *lv,
+			  void *baton __attribute((unused)))
+{
+	return lv->status & PARTIAL_LV;
+}
+
 /*
  * Walk down the stacked mirror LV to the original mirror LV.
  */
@@ -727,7 +734,7 @@ static int _lv_update_log_type(struct cmd_context *cmd,
 	}
 
 	/* Reducing redundancy of the log */
-	return remove_mirror_images(log_lv, log_count, operable_pvs, 1U);
+	return remove_mirror_images(log_lv, log_count, is_mirror_image_removable, operable_pvs, 1U);
 }
 
 /*
@@ -913,6 +920,34 @@ static int _lvconvert_mirrors_parse_params(struct cmd_context *cmd,
 	return 1;
 }
 
+static int _reload_lv(struct cmd_context *cmd, struct logical_volume *lv)
+{
+	log_very_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
+
+	if (!vg_write(lv->vg))
+		return_0;
+
+	if (!suspend_lv(cmd, lv)) {
+		log_error("Failed to lock %s", lv->name);
+		vg_revert(lv->vg);
+		return 0;
+	}
+
+	if (!vg_commit(lv->vg)) {
+		if (!resume_lv(cmd, lv))
+			stack;
+		return_0;
+	}
+
+	log_very_verbose("Updating \"%s\" in kernel", lv->name);
+
+	if (!resume_lv(cmd, lv)) {
+		log_error("Problem reactivating %s", lv->name);
+		return 0;
+	}
+	return 1;
+}
+
 /*
  * _lvconvert_mirrors_aux
  *
@@ -1005,6 +1040,16 @@ static int _lvconvert_mirrors_aux(struct cmd_context *cmd,
 		}
 
 		/*
+		 * Is there already a convert in progress?  We do not
+		 * currently allow more than one.
+		 */
+		if (find_temporary_mirror(lv) || (lv->status & CONVERTING)) {
+			log_error("%s is already being converted.  Unable to start another conversion.",
+				  lv->name);
+			return 0;
+		}
+
+		/*
 		 * Log addition/removal should be done before the layer
 		 * insertion to make the end result consistent with
 		 * linear-to-mirror conversion.
@@ -1064,7 +1109,7 @@ static int _lvconvert_mirrors_aux(struct cmd_context *cmd,
 						    nmc, operable_pvs))
 				return 0;
 		} else if (!lv_remove_mirrors(cmd, lv, nmc, nlc,
-					      operable_pvs, 0))
+					      is_mirror_image_removable, operable_pvs, 0))
 			return_0;
 
 		goto out; /* Just in case someone puts code between */
@@ -1084,29 +1129,8 @@ out:
 
 out_skip_log_convert:
 
-	log_very_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
-
-	if (!vg_write(lv->vg))
-		return_0;
-
-	if (!suspend_lv(cmd, lv)) {
-		log_error("Failed to lock %s", lv->name);
-		vg_revert(lv->vg);
-		goto out;
-	}
-
-	if (!vg_commit(lv->vg)) {
-		if (!resume_lv(cmd, lv))
-			stack;
-		goto_out;
-	}
-
-	log_very_verbose("Updating \"%s\" in kernel", lv->name);
-
-	if (!resume_lv(cmd, lv)) {
-		log_error("Problem reactivating %s", lv->name);
-		goto out;
-	}
+	if (!_reload_lv(cmd, lv))
+		return 0;
 
 	return 1;
 }
@@ -1138,6 +1162,8 @@ static int _lvconvert_mirrors_repair(struct cmd_context *cmd,
 	cmd->handles_missing_pvs = 1;
 	cmd->partial_activation = 1;
 	lp->need_polling = 0;
+
+	lv_check_transient(lv); /* TODO check this in lib for all commands? */
 
 	if (!(lv->status & PARTIAL_LV)) {
 		log_error("%s is consistent. Nothing to repair.", lv->name);
@@ -1195,11 +1221,13 @@ static int _lvconvert_mirrors_repair(struct cmd_context *cmd,
 	if (!_lv_update_log_type(cmd, lp, lv, failed_pvs, new_log_count))
 		return 0;
 
-	/*
-	 * Remove all failed_pvs
-	 */
-	if (!_lvconvert_mirrors_aux(cmd, lv, lp, failed_pvs,
-				    lp->mirrors, new_log_count))
+	if (failed_mirrors) {
+		if (!lv_remove_mirrors(cmd, lv, failed_mirrors, new_log_count,
+				       _is_partial_lv, NULL, 0))
+			return 0;
+	}
+
+	if (!_reload_lv(cmd, lv))
 		return 0;
 
 	/*
@@ -1208,6 +1236,13 @@ static int _lvconvert_mirrors_repair(struct cmd_context *cmd,
 
 	if (replace_mirrors)
 		lp->mirrors = old_mimage_count;
+
+	/*
+	 * It does not make sense to replace the log if the volume is no longer
+	 * a mirror.
+	 */
+	if (!replace_mirrors && lp->mirrors == 1)
+		replace_log = 0;
 
 	log_count = replace_log ? old_log_count : new_log_count;
 
@@ -1226,10 +1261,10 @@ static int _lvconvert_mirrors_repair(struct cmd_context *cmd,
 		}
 	}
 
-	if (lp->mirrors != old_mimage_count)
+	if (replace_mirrors && lp->mirrors != old_mimage_count)
 		log_warn("WARNING: Failed to replace %d of %d images in volume %s",
 			 old_mimage_count - lp->mirrors, old_mimage_count, lv->name);
-	if (log_count != old_log_count)
+	if (replace_log && log_count != old_log_count)
 		log_warn("WARNING: Failed to replace %d of %d logs in volume %s",
 			 old_log_count - log_count, old_log_count, lv->name);
 

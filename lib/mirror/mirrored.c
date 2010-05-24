@@ -239,6 +239,117 @@ static int _mirrored_target_percent(void **target_state,
 	return 1;
 }
 
+static int _mirrored_transient_status(struct lv_segment *seg, char *params)
+{
+	int i, j;
+	struct logical_volume *lv = seg->lv;
+	struct lvinfo info;
+	char *p = NULL;
+	char **args, **log_args;
+	struct logical_volume **images;
+	struct logical_volume *log;
+	int num_devs, log_argc;
+	int failed = 0;
+	char *status;
+
+	log_error("Mirrored transient status: \"%s\"", params);
+
+	/* number of devices */
+	if (!dm_split_words(params, 1, 0, &p))
+		return_0;
+
+	if (!(num_devs = atoi(p)))
+		return_0;
+
+	p += strlen(p) + 1;
+
+	if (num_devs > DEFAULT_MIRROR_MAX_IMAGES) {
+		log_error("Unexpectedly many (%d) mirror images in %s.",
+			  num_devs, lv->name);
+		return_0;
+	}
+
+	args = alloca((num_devs + 5) * sizeof(char *));
+	images = alloca(num_devs * sizeof(struct logical_volume *));
+
+	if (dm_split_words(p, num_devs + 4, 0, args) < num_devs + 4)
+		return_0;
+
+	log_argc = atoi(args[3 + num_devs]);
+	log_args = alloca(log_argc * sizeof(char *));
+
+	if (log_argc > 16) {
+		log_error("Unexpectedly many (%d) log arguments in %s.",
+			  log_argc, lv->name);
+		return_0;
+	}
+
+
+	if (dm_split_words(args[3 + num_devs] + strlen(args[3 + num_devs]) + 1,
+			   log_argc, 0, log_args) < log_argc)
+		return_0;
+
+	if (num_devs != seg->area_count) {
+		log_error("Active mirror has a wrong number of mirror images!");
+		log_error("Metadata says %d, kernel says %d.", seg->area_count, num_devs);
+		return_0;
+	}
+
+	if (!strcmp(log_args[0], "disk")) {
+		char buf[32];
+		log = first_seg(lv)->log_lv;
+		lv_info(lv->vg->cmd, log, &info, 0, 0);
+		log_debug("Found mirror log at %d:%d", info.major, info.minor);
+		sprintf(buf, "%d:%d", info.major, info.minor);
+		if (strcmp(buf, log_args[1])) {
+			log_error("Mirror log mismatch. Metadata says %s, kernel says %s.",
+				  buf, log_args[1]);
+			return_0;
+		}
+		log_very_verbose("Status of log (%s): %s", buf, log_args[2]);
+		if (log_args[2][0] != 'A') {
+			log->status |= PARTIAL_LV;
+			++failed;
+		}
+	}
+
+	for (i = 0; i < num_devs; ++i)
+		images[i] = NULL;
+
+	for (i = 0; i < seg->area_count; ++i) {
+		char buf[32];
+		lv_info(lv->vg->cmd, seg_lv(seg, i), &info, 0, 0);
+		log_debug("Found mirror leg at %d:%d", info.major, info.minor);
+		sprintf(buf, "%d:%d", info.major, info.minor);
+		for (j = 0; j < num_devs; ++j) {
+			if (!strcmp(buf, args[j])) {
+			    log_debug("Match: metadata image %d matches kernel image %d", i, j);
+			    images[j] = seg_lv(seg, i);
+			}
+		}
+	}
+
+	status = args[2 + num_devs];
+
+	for (i = 0; i < num_devs; ++i) {
+		if (!images[i]) {
+			log_error("Failed to find image %d (%s).", i, args[i]);
+			return_0;
+		}
+		log_very_verbose("Status of image %d: %c", i, status[i]);
+		if (status[i] != 'A') {
+			images[i]->status |= PARTIAL_LV;
+			++failed;
+		}
+	}
+
+	/* update PARTIAL_LV flags across the VG */
+	if (failed)
+		vg_mark_partial_lvs(lv->vg);
+
+	return 1;
+}
+
 static int _add_log(struct dm_pool *mem, struct lv_segment *seg,
 		    struct dm_tree_node *node, uint32_t area_count, uint32_t region_size)
 {
@@ -564,6 +675,7 @@ static struct segtype_handler _mirrored_ops = {
 	.add_target_line = _mirrored_add_target_line,
 	.target_percent = _mirrored_target_percent,
 	.target_present = _mirrored_target_present,
+	.check_transient_status = _mirrored_transient_status,
 #ifdef DMEVENTD
 	.target_monitored = _target_monitored,
 	.target_monitor_events = _target_monitor_events,
