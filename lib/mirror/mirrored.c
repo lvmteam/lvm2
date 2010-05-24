@@ -28,6 +28,8 @@
 #include "sharedlib.h"
 #include "str_list.h"
 
+#include <sys/utsname.h>
+
 #ifdef DMEVENTD
 #  include "libdevmapper-event.h"
 #endif
@@ -471,6 +473,7 @@ static int _mirrored_target_present(struct cmd_context *cmd,
 	uint32_t maj, min, patchlevel;
 	unsigned maj2, min2, patchlevel2;
 	char vsn[80];
+	struct utsname uts;
 
 	if (!_mirrored_checked) {
 		_mirrored_present = target_present(cmd, "mirror", 1);
@@ -503,8 +506,18 @@ static int _mirrored_target_present(struct cmd_context *cmd,
 	 * FIXME: Fails incorrectly if cmirror was built into kernel.
 	 */
 	if (attributes) {
-		if (!_mirror_attributes && module_present(cmd, "log-userspace"))
-			_mirror_attributes |= MIRROR_LOG_CLUSTERED;
+		if (!_mirror_attributes) {
+			/*
+			 * The dm-log-userspace module was added to the
+			 * 2.6.31 kernel.
+			 */
+			/* FIXME Replace the broken string comparison! */
+			if (!uname(&uts) && strncmp(uts.release, "2.6.31", 6) < 0) {
+				if (module_present(cmd, "log-clustered"))
+					_mirror_attributes |= MIRROR_LOG_CLUSTERED;
+			} else if (module_present(cmd, "log-userspace"))
+				_mirror_attributes |= MIRROR_LOG_CLUSTERED;
+		}
 		*attributes = _mirror_attributes;
 	}
 	_mirrored_checked = 1;
