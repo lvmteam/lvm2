@@ -1,5 +1,6 @@
 Version 2.02.67 -
 ===============================
+  Update clustered log kernel module name to log-userspace.
   Activate only first head of Replicator for vgchange -ay.
   Add Replicators' LVs to dtree for activation.
   Avoid print activation message if there is a missing VG (Replicator).
