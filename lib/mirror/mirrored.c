@@ -503,7 +503,7 @@ static int _mirrored_target_present(struct cmd_context *cmd,
 	 * FIXME: Fails incorrectly if cmirror was built into kernel.
 	 */
 	if (attributes) {
-		if (!_mirror_attributes && module_present(cmd, "log-clustered"))
+		if (!_mirror_attributes && module_present(cmd, "log-userspace"))
 			_mirror_attributes |= MIRROR_LOG_CLUSTERED;
 		*attributes = _mirror_attributes;
 	}
