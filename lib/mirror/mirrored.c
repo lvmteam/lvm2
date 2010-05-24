@@ -474,6 +474,7 @@ static int _mirrored_target_present(struct cmd_context *cmd,
 	unsigned maj2, min2, patchlevel2;
 	char vsn[80];
 	struct utsname uts;
+	unsigned kmaj, kmin, krel;
 
 	if (!_mirrored_checked) {
 		_mirrored_present = target_present(cmd, "mirror", 1);
@@ -511,8 +512,9 @@ static int _mirrored_target_present(struct cmd_context *cmd,
 			 * The dm-log-userspace module was added to the
 			 * 2.6.31 kernel.
 			 */
-			/* FIXME Replace the broken string comparison! */
-			if (!uname(&uts) && strncmp(uts.release, "2.6.31", 6) < 0) {
+			if (!uname(&uts) &&
+			    (sscanf(uts.release, "%u.%u.%u", &kmaj, &kmin, &krel) == 3) &&
+			    KERNEL_VERSION(kmaj, kmin, krel) < KERNEL_VERSION(2, 6, 31)) {
 				if (module_present(cmd, "log-clustered"))
 					_mirror_attributes |= MIRROR_LOG_CLUSTERED;
 			} else if (module_present(cmd, "log-userspace"))

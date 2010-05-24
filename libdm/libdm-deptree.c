@@ -1540,9 +1540,9 @@ static int _mirror_emit_segment_line(struct dm_task *dmt, uint32_t major,
 	int pos = 0;
 	char logbuf[DM_FORMAT_DEV_BUFSIZE];
 	const char *logtype;
+	unsigned kmaj, kmin, krel;
 
-	r = uname(&uts);
-	if (r)
+	if (!uname(&uts) || sscanf(uts.release, "%u.%u.%u", &kmaj, &kmin, &krel) != 3)
 		return_0;
 
 	if ((seg->flags & DM_BLOCK_ON_ERROR)) {
@@ -1556,7 +1556,7 @@ static int _mirror_emit_segment_line(struct dm_task *dmt, uint32_t major,
 		 * "handle_errors" by the dm-mirror module's version
 		 * number (>= 1.12) or by the kernel version (>= 2.6.22).
 		 */
-		if (strncmp(uts.release, "2.6.22", 6) >= 0)
+		if (KERNEL_VERSION(kmaj, kmin, krel) >= KERNEL_VERSION(2, 6, 22))
 			handle_errors = 1;
 		else
 			block_on_error = 1;
@@ -1575,8 +1575,7 @@ static int _mirror_emit_segment_line(struct dm_task *dmt, uint32_t major,
 		 * The dm-log-userspace module was added to the
 		 * 2.6.31 kernel.
 		 */
-		/* FIXME Replace the broken string comparison! */
-		if (strncmp(uts.release, "2.6.31", 6) >= 0)
+		if (KERNEL_VERSION(kmaj, kmin, krel) >= KERNEL_VERSION(2, 6, 31))
 			dm_log_userspace = 1;
 	}
 
