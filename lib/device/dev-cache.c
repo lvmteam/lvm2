@@ -40,6 +40,7 @@ static struct {
 	struct dm_hash_table *names;
 	struct btree *devices;
 	struct dm_regex *preferred_names_matcher;
+	const char *dev_dir;
 
 	int has_scanned;
 	struct dm_list dirs;
@@ -155,6 +156,7 @@ static int _compare_paths(const char *path0, const char *path1)
 	char p0[PATH_MAX], p1[PATH_MAX];
 	char *s0, *s1;
 	struct stat stat0, stat1;
+	size_t devdir_len;
 
 	/*
 	 * FIXME Better to compare patterns one-at-a-time against all names.
@@ -178,6 +180,19 @@ static int _compare_paths(const char *path0, const char *path1)
 	/*
 	 * Built-in rules.
 	 */
+
+	/*
+	 * Anything beats /dev/block.
+	 */
+	devdir_len = strlen(_cache.dev_dir);
+	if (!strncmp(path0, _cache.dev_dir, devdir_len) &&
+	    !strncmp(path1, _cache.dev_dir, devdir_len)) {
+		if (!strncmp(path0 + devdir_len, "block/", 6)) {
+			if (strncmp(path1 + devdir_len, "block/", 6))
+				return 1;
+		} else if (!strncmp(path1 + devdir_len, "block/", 6))
+			return 0;
+	}
 
 	/* Return the path with fewer slashes */
 	for (p = path0; p++; p = (const char *) strchr(p, '/'))
@@ -542,6 +557,11 @@ int dev_cache_init(struct cmd_context *cmd)
 
 	if (!(_cache.devices = btree_create(_cache.mem))) {
 		log_error("Couldn't create binary tree for dev-cache.");
+		goto bad;
+	}
+
+	if (!(_cache.dev_dir = _strdup(cmd->dev_dir))) {
+		log_error("strdup dev_dir failed.");
 		goto bad;
 	}
 
