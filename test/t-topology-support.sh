@@ -68,7 +68,8 @@ prepare_scsi_debug_dev $DEV_SIZE \
     sector_size=$LOGICAL_BLOCK_SIZE physblk_exp=3
 check_logical_block_size $SCSI_DEBUG_DEV $LOGICAL_BLOCK_SIZE
 
-aux prepare_vg $NUM_DEVS $PER_DEV_SIZE
+aux prepare_pvs $NUM_DEVS $PER_DEV_SIZE
+vgcreate -c n $vg $devs
 test_snapshot_mount
 vgremove $vg
 
@@ -82,7 +83,8 @@ prepare_scsi_debug_dev $DEV_SIZE \
     sector_size=$LOGICAL_BLOCK_SIZE physblk_exp=3 lowest_aligned=7
 check_logical_block_size $SCSI_DEBUG_DEV $LOGICAL_BLOCK_SIZE
 
-aux prepare_vg $NUM_DEVS $PER_DEV_SIZE
+aux prepare_pvs $NUM_DEVS $PER_DEV_SIZE
+vgcreate -c n $vg $devs
 test_snapshot_mount
 vgremove $vg
 
@@ -96,6 +98,7 @@ prepare_scsi_debug_dev $DEV_SIZE \
     sector_size=$LOGICAL_BLOCK_SIZE
 check_logical_block_size $SCSI_DEBUG_DEV $LOGICAL_BLOCK_SIZE
 
-aux prepare_vg $NUM_DEVS $PER_DEV_SIZE
+aux prepare_pvs $NUM_DEVS $PER_DEV_SIZE
+vgcreate -c n $vg $devs
 test_snapshot_mount
 vgremove $vg
