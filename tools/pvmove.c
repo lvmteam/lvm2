@@ -292,7 +292,7 @@ static int _detach_pvmove_mirror(struct cmd_context *cmd,
 
 	/* Update metadata to remove mirror segments and break dependencies */
 	dm_list_init(&lvs_completed);
-	if (!lv_remove_mirrors(cmd, lv_mirr, 1, 0, NULL, PVMOVE) ||
+	if (!lv_remove_mirrors(cmd, lv_mirr, 1, 0, NULL, NULL, PVMOVE) ||
 	    !remove_layers_for_segments_all(cmd, lv_mirr, PVMOVE,
 					    &lvs_completed)) {
 		return 0;

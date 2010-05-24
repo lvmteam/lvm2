@@ -435,14 +435,17 @@ struct logical_volume *detach_mirror_log(struct lv_segment *mirrored_seg)
 }
 
 /* Check if mirror image LV is removable with regard to given removable_pvs */
-static int _is_mirror_image_removable(struct logical_volume *mimage_lv,
-				      struct dm_list *removable_pvs)
+int is_mirror_image_removable(struct logical_volume *mimage_lv, void *baton)
 {
 	struct physical_volume *pv;
 	struct lv_segment *seg;
 	int pv_found;
 	struct pv_list *pvl;
 	uint32_t s;
+	struct dm_list *removable_pvs = baton;
+
+	if (!baton || dm_list_empty(removable_pvs))
+		return 1;
 
 	dm_list_iterate_items(seg, &mimage_lv->segments) {
 		for (s = 0; s < seg->area_count; s++) {
@@ -508,7 +511,7 @@ static int _move_removable_mimages_to_end(struct logical_volume *lv,
 			sub_lv = seg_lv(mirrored_seg, i);
 
 			if (!is_temporary_mirror_layer(sub_lv) &&
-			    _is_mirror_image_removable(sub_lv, removable_pvs)) {
+			    is_mirror_image_removable(sub_lv, removable_pvs)) {
 				if (!shift_mirror_images(mirrored_seg, i))
 					return_0;
 				count--;
@@ -754,13 +757,13 @@ static int _split_mirror_images(struct logical_volume *lv,
  */
 static int _remove_mirror_images(struct logical_volume *lv,
 				 uint32_t num_removed,
-				 struct dm_list *removable_pvs,
+				 int (*is_removable)(struct logical_volume *, void *),
+				 void *removable_baton,
 				 unsigned remove_log, unsigned collapse,
 				 uint32_t *removed)
 {
 	uint32_t m;
 	int32_t s;
-	int removable_pvs_specified;
 	struct logical_volume *sub_lv;
 	struct logical_volume *detached_log_lv = NULL;
 	struct logical_volume *temp_layer_lv = NULL;
@@ -770,9 +773,6 @@ static int _remove_mirror_images(struct logical_volume *lv,
 	struct lv_list *lvl;
 	struct dm_list tmp_orphan_lvs;
 
-	removable_pvs_specified = (removable_pvs &&
-				   !dm_list_empty(removable_pvs)) ? 1 : 0;
-
 	if (removed)
 		*removed = 0;
 
@@ -781,38 +781,32 @@ static int _remove_mirror_images(struct logical_volume *lv,
 			 old_area_count, old_area_count - num_removed,
 			 remove_log ? " and no log volume" : "");
 
-	if (collapse &&
-	    (removable_pvs_specified || (old_area_count - num_removed != 1))) {
+	if (collapse && (old_area_count - num_removed != 1)) {
 		log_error("Incompatible parameters to _remove_mirror_images");
 		return 0;
 	}
 
 	/* Move removable_pvs to end of array */
-	if (removable_pvs_specified) {
-		for (s = mirrored_seg->area_count - 1;
-		     s >= 0 && old_area_count - new_area_count < num_removed;
-		     s--) {
-			sub_lv = seg_lv(mirrored_seg, s);
-
-			if (!is_temporary_mirror_layer(sub_lv) &&
-			    _is_mirror_image_removable(sub_lv, removable_pvs)) {
-				/*
-				 * Check if the user is trying to pull the
-				 * primary mirror image when the mirror is
-				 * not in-sync.
-				 */
-				if ((s == 0) && !_mirrored_lv_in_sync(lv) &&
-				    !(lv->status & PARTIAL_LV)) {
-					log_error("Unable to remove primary mirror image while mirror is not in-sync");
-					return_0;
-				}
-				if (!shift_mirror_images(mirrored_seg, s))
-					return_0;
-				new_area_count--;
+	for (s = mirrored_seg->area_count - 1;
+	     s >= 0 && old_area_count - new_area_count < num_removed;
+	     s--) {
+		sub_lv = seg_lv(mirrored_seg, s);
+		if (!is_temporary_mirror_layer(sub_lv) &&
+		    is_removable(sub_lv, removable_baton)) {
+			/*
+			 * Check if the user is trying to pull the
+			 * primary mirror image when the mirror is
+			 * not in-sync.
+			 */
+			if ((s == 0) && !_mirrored_lv_in_sync(lv) &&
+			    !(lv->status & PARTIAL_LV)) {
+				log_error("Unable to remove primary mirror image while mirror is not in-sync");
+				return_0;
 			}
+			if (!shift_mirror_images(mirrored_seg, s))
+				return_0;
+			new_area_count--;
 		}
-		if (num_removed && old_area_count == new_area_count)
-			return 1;
 	}
 
 	/*
@@ -821,6 +815,9 @@ static int _remove_mirror_images(struct logical_volume *lv,
 	 * of images left to remove will be taken from the unspecified.
 	 */
 	new_area_count = old_area_count - num_removed;
+
+	if (num_removed && old_area_count == new_area_count)
+		return 1;
 
 	/* Remove mimage LVs from the segment */
 	dm_list_init(&tmp_orphan_lvs);
@@ -956,7 +953,8 @@ static int _remove_mirror_images(struct logical_volume *lv,
  * Remove the number of mirror images from the LV
  */
 int remove_mirror_images(struct logical_volume *lv, uint32_t num_mirrors,
-			 struct dm_list *removable_pvs, unsigned remove_log)
+			 int (*is_removable)(struct logical_volume *, void *),
+			 void *removable_baton, unsigned remove_log)
 {
 	uint32_t num_removed, removed_once, r;
 	uint32_t existing_mirrors = lv_mirror_count(lv);
@@ -972,7 +970,8 @@ int remove_mirror_images(struct logical_volume *lv, uint32_t num_mirrors,
 			removed_once = first_seg(next_lv)->area_count - 1;
 
 		if (!_remove_mirror_images(next_lv, removed_once,
-					   removable_pvs, remove_log, 0, &r))
+					   is_removable, removable_baton,
+					   remove_log, 0, &r))
 			return_0;
 
 		if (r < removed_once) {
@@ -997,6 +996,11 @@ int remove_mirror_images(struct logical_volume *lv, uint32_t num_mirrors,
 	}
 
 	return 1;
+}
+
+static int _no_removable_images(struct logical_volume *lv __attribute((unused)),
+				void *baton __attribute((unused))) {
+	return 0;
 }
 
 /*
@@ -1031,7 +1035,7 @@ int collapse_mirrored_lv(struct logical_volume *lv)
 
 		if (!_remove_mirror_images(mirror_seg->lv,
 					   mirror_seg->area_count - 1,
-					   NULL, 1, 1, NULL)) {
+					   _no_removable_images, NULL, 1, 1, NULL)) {
 			log_error("Failed to release mirror images");
 			return 0;
 		}
@@ -1156,7 +1160,8 @@ int reconfigure_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirr
 	init_mirror_in_sync(in_sync);
 
 	r = _remove_mirror_images(mirrored_seg->lv, old_num_mirrors - num_mirrors,
-				  removable_pvs, remove_log, 0, NULL);
+				  is_mirror_image_removable, removable_pvs,
+				  remove_log, 0, NULL);
 	if (!r)
 		/* Unable to remove bad devices */
 		return 0;
@@ -1549,7 +1554,7 @@ int remove_mirror_log(struct cmd_context *cmd,
 	}
 
 	if (!remove_mirror_images(lv, lv_mirror_count(lv),
-				  removable_pvs, 1U))
+				  is_mirror_image_removable, removable_pvs, 1U))
 		return_0;
 
 	return 1;
@@ -1929,7 +1934,9 @@ int lv_split_mirror_images(struct logical_volume *lv, const char *split_name,
  */
 int lv_remove_mirrors(struct cmd_context *cmd __attribute((unused)),
 		      struct logical_volume *lv,
-		      uint32_t mirrors, uint32_t log_count, struct dm_list *pvs,
+		      uint32_t mirrors, uint32_t log_count,
+		      int (*is_removable)(struct logical_volume *, void *),
+		      void *removable_baton,
 		      uint64_t status_mask)
 {
 	uint32_t new_mirrors;
@@ -1957,7 +1964,8 @@ int lv_remove_mirrors(struct cmd_context *cmd __attribute((unused)),
 	if (seg_type(seg, 0) == AREA_LV &&
 	    seg_lv(seg, 0)->status & MIRROR_IMAGE)
 		return remove_mirror_images(lv, new_mirrors + 1,
-					    pvs, log_count ? 1U : 0);
+					    is_removable, removable_baton,
+					    log_count ? 1U : 0);
 
 	/* MIRROR_BY_SEG */
 	if (log_count) {

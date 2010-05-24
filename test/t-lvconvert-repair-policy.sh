@@ -32,40 +32,49 @@ lvcreate -m 1 -L 1 -n mirror $vg
 lvchange -a n $vg/mirror
 
 # Fail a leg of a mirror.
-disable_dev $dev1
+aux disable_dev $dev1
 lvchange --partial -a y $vg/mirror
 repair 'activation { mirror_image_fault_policy = "remove" }'
 check linear $vg mirror
-cleanup $dev1
+aux cleanup $dev1
 
 # Fail a leg of a mirror.
 # Expected result: Mirror (leg replaced)
-disable_dev $dev1
+aux disable_dev $dev1
 repair 'activation { mirror_image_fault_policy = "replace" }'
 check mirror $vg mirror
 lvs | grep mirror_mlog
-cleanup $dev1
+aux cleanup $dev1
 
 # Fail a leg of a mirror (use old name for policy specification)
 # Expected result: Mirror (leg replaced)
-disable_dev $dev1
+aux disable_dev $dev1
 repair 'activation { mirror_device_fault_policy = "replace" }'
 check mirror $vg mirror
 lvs | grep mirror_mlog
-cleanup $dev1
+aux cleanup $dev1
 
 # Fail a leg of a mirror w/ no available spare
 # Expected result: 2-way with corelog
-disable_dev $dev2 $dev4
+aux disable_dev $dev2 $dev4
 repair 'activation { mirror_image_fault_policy = "replace" }'
 check mirror $vg mirror
 lvs | not grep mirror_mlog
-cleanup $dev2 $dev4
+aux cleanup $dev2 $dev4
 
 # Fail the log device of a mirror w/ no available spare
 # Expected result: mirror w/ corelog
-disable_dev $dev3 $dev4
-lvconvert --repair --use-policies --config 'activation { mirror_image_fault_policy = "replace" }' $vg/mirror
+aux disable_dev $dev3 $dev4
+repair 'activation { mirror_image_fault_policy = "replace" }' $vg/mirror
 check mirror $vg mirror
+lvs | not grep mirror_mlog
+aux cleanup $dev3 $dev4
+
+# Fail the log device with a remove policy
+# Expected result: mirror w/ corelog
+lvchange -a y $vg/mirror
+aux disable_dev $dev3 $dev4
+repair 'activation { mirror_log_fault_policy = "remove" }'
+check mirror $vg mirror core
 lvs | not grep mirror_mlog
 cleanup $dev3 $dev4

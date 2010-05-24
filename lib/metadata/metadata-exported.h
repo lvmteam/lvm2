@@ -754,7 +754,8 @@ int lv_split_mirror_images(struct logical_volume *lv, const char *split_lv_name,
 			   uint32_t split_count, struct dm_list *removable_pvs);
 int lv_remove_mirrors(struct cmd_context *cmd, struct logical_volume *lv,
 		      uint32_t mirrors, uint32_t log_count,
-		      struct dm_list *pvs, uint64_t status_mask);
+		      int (*is_removable)(struct logical_volume *, void *),
+		      void *removable_baton, uint64_t status_mask);
 
 int is_temporary_mirror_layer(const struct logical_volume *lv);
 struct logical_volume * find_temporary_mirror(const struct logical_volume *lv);
@@ -769,7 +770,8 @@ int add_mirrors_to_segments(struct cmd_context *cmd, struct logical_volume *lv,
 			    struct dm_list *allocatable_pvs, alloc_policy_t alloc);
 
 int remove_mirror_images(struct logical_volume *lv, uint32_t num_mirrors,
-			 struct dm_list *removable_pvs, unsigned remove_log);
+			 int (*is_removable)(struct logical_volume *, void *),
+			 void *removable_baton, unsigned remove_log);
 int add_mirror_images(struct cmd_context *cmd, struct logical_volume *lv,
 		      uint32_t mirrors, uint32_t stripes, uint32_t stripe_size, uint32_t region_size,
 		      struct dm_list *allocatable_pvs, alloc_policy_t alloc,

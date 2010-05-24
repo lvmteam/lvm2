@@ -373,6 +373,7 @@ prepare_lvmconf() {
     level = 9
     file = "$TESTDIR/debug.log"
     overwrite = 1
+    activation = 1
   }
   backup {
     backup = 0

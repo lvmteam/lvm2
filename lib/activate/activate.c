@@ -478,6 +478,28 @@ int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s,
 /*
  * Returns 1 if percent set, else 0 on failure.
  */
+int lv_check_transient(struct logical_volume *lv)
+{
+	int r;
+	struct dev_manager *dm;
+
+	if (!activation())
+		return 0;
+
+	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name)))
+		return_0;
+
+	if (!(r = dev_manager_transient(dm, lv)))
+		stack;
+
+	dev_manager_destroy(dm);
+
+	return r;
+}
+
+/*
+ * Returns 1 if percent set, else 0 on failure.
+ */
 int lv_snapshot_percent(const struct logical_volume *lv, float *percent,
 			percent_range_t *percent_range)
 {

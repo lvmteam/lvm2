@@ -543,6 +543,68 @@ static int _percent(struct dev_manager *dm, const char *name, const char *dlid,
 	return 0;
 }
 
+int dev_manager_transient(struct dev_manager *dm, struct logical_volume *lv)
+{
+	int r = 0;
+	struct dm_task *dmt;
+	struct dm_info info;
+	void *next = NULL;
+	uint64_t start, length;
+	char *type = NULL;
+	char *params = NULL;
+	char *dlid = NULL;
+	const struct dm_list *segh = &lv->segments;
+	struct lv_segment *seg = NULL;
+
+	if (!(dlid = build_dm_uuid(dm->mem, lv->lvid.s, NULL)))
+		return_0;
+
+	if (!(dmt = _setup_task(0, dlid, NULL, DM_DEVICE_STATUS, 0, 0)))
+		return_0;
+
+	if (!dm_task_no_open_count(dmt))
+		log_error("Failed to disable open_count");
+
+	if (!dm_task_run(dmt))
+		goto_out;
+
+	if (!dm_task_get_info(dmt, &info) || !info.exists)
+		goto_out;
+
+	do {
+		next = dm_get_next_target(dmt, next, &start, &length, &type,
+					  &params);
+		if (lv) {
+			if (!(segh = dm_list_next(&lv->segments, segh))) {
+				log_error("Number of segments in active LV %s "
+					  "does not match metadata", lv->name);
+				goto out;
+			}
+			seg = dm_list_item(segh, struct lv_segment);
+		}
+
+		if (!type || !params)
+			continue;
+
+		if (seg->segtype->ops->check_transient_status &&
+		    !seg->segtype->ops->check_transient_status(seg, params))
+			goto_out;
+
+	} while (next);
+
+	if (lv && (segh = dm_list_next(&lv->segments, segh))) {
+		log_error("Number of segments in active LV %s does not "
+			  "match metadata", lv->name);
+		goto out;
+	}
+
+	r = 1;
+
+      out:
+	dm_task_destroy(dmt);
+	return r;
+}
+
 /*
  * dev_manager implementation.
  */
