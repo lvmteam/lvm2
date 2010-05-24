@@ -358,7 +358,7 @@ prepare_lvmconf() {
 		filter='[ "a/dev\/mirror/", "a/dev\/mapper\/.*pv[0-9_]*$/", "r/.*/" ]'
         locktype=
 	if test -n "$LVM_TEST_LOCKING"; then locktype="locking_type = $LVM_TEST_LOCKING"; fi
-	cat > $TESTDIR/etc/lvm.conf <<-EOF
+	cat > $TESTDIR/etc/lvm.conf.new <<-EOF
   $LVM_TEST_CONFIG
   devices {
     dir = "$DM_DEV_DIR"
@@ -391,6 +391,8 @@ prepare_lvmconf() {
     polling_interval = 0
   }
 EOF
+	# FIXME remove this workaround after mmap & truncating file problems solved
+	mv $TESTDIR/etc/lvm.conf.new $TESTDIR/etc/lvm.conf
 	cat $TESTDIR/etc/lvm.conf
 }
 
