@@ -13,6 +13,8 @@
 
 prepare_vg 5
 
+exit 200 # this breaks upstream .33 and RHEL6 kernel :(
+
 # fail multiple devices
 
 lvcreate -m 3 --ig -L 1 -n 4way $vg
