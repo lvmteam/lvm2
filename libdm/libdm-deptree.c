@@ -1575,6 +1575,7 @@ static int _mirror_emit_segment_line(struct dm_task *dmt, uint32_t major,
 		 * The dm-log-userspace module was added to the
 		 * 2.6.31 kernel.
 		 */
+		/* FIXME Replace the broken string comparison! */
 		if (strncmp(uts.release, "2.6.31", 6) >= 0)
 			dm_log_userspace = 1;
 	}
