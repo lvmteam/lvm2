@@ -45,9 +45,10 @@ cleanup_md() {
 }
 
 # create 2 disk MD raid0 array (stripe_width=128K)
-[ -b "$mddev" ] && exit 200
+test -b "$mddev" && exit 200
 mdadm --create $mddev --auto=md --level 0 --raid-devices=2 --chunk 64 $dev1 $dev2
 trap 'aux cleanup_md' EXIT # cleanup this MD device at the end of the test
+test -b "$mddev" || exit 200
 
 # Test alignment of PV on MD without any MD-aware or topology-aware detection
 # - should treat $mddev just like any other block device
