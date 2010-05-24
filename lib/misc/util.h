@@ -27,4 +27,6 @@
 
 #define uninitialized_var(x) x = x
 
+#define KERNEL_VERSION(major, minor, release) (((major) << 16) + ((minor) << 8) + (release))
+
 #endif
