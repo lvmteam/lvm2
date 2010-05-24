@@ -392,7 +392,7 @@ prepare_lvmconf() {
   }
 EOF
 	# FIXME remove this workaround after mmap & truncating file problems solved
-	mv $TESTDIR/etc/lvm.conf.new $TESTDIR/etc/lvm.conf
+	mv -f $TESTDIR/etc/lvm.conf.new $TESTDIR/etc/lvm.conf
 	cat $TESTDIR/etc/lvm.conf
 }
 
