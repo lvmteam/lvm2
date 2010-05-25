@@ -1542,8 +1542,10 @@ static int _mirror_emit_segment_line(struct dm_task *dmt, uint32_t major,
 	const char *logtype;
 	unsigned kmaj, kmin, krel;
 
-	if (!uname(&uts) || sscanf(uts.release, "%u.%u.%u", &kmaj, &kmin, &krel) != 3)
-		return_0;
+	if (uname(&uts) == -1 || sscanf(uts.release, "%u.%u.%u", &kmaj, &kmin, &krel) != 3) {
+		log_error("Cannot read kernel release version");
+		return 0;
+	}
 
 	if ((seg->flags & DM_BLOCK_ON_ERROR)) {
 		/*
