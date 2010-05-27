@@ -1,5 +1,6 @@
 Version 1.02.49 - 
 ================================
+  Use expected union semun for arguments in selected semaphore operations.
 
 Version 1.02.48 - 17th May 2010
 ================================

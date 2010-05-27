@@ -43,6 +43,18 @@
 
 #define DEV_DIR "/dev/"
 
+#ifdef UDEV_SYNC_SUPPORT
+#ifdef _SEM_SEMUN_UNDEFINED
+union semun
+{
+	int val;			/* value for SETVAL */
+	struct semid_ds *buf;		/* buffer for IPC_STAT & IPC_SET */
+	unsigned short int *array;	/* array for GETALL & SETALL */
+	struct seminfo *__buf;		/* buffer for IPC_INFO */
+};
+#endif
+#endif
+
 static char _dm_dir[PATH_MAX] = DEV_DIR DM_DIR;
 
 static int _verbose = 0;
@@ -1076,6 +1088,7 @@ static int _udev_notify_sem_create(uint32_t *cookie, int *semid)
 	int gen_semid;
 	uint16_t base_cookie;
 	uint32_t gen_cookie;
+	union semun sem_arg;
 
 	if ((fd = open("/dev/urandom", O_RDONLY)) < 0) {
 		log_error("Failed to open /dev/urandom "
@@ -1123,7 +1136,9 @@ static int _udev_notify_sem_create(uint32_t *cookie, int *semid)
 	log_debug("Udev cookie 0x%" PRIx32 " (semid %d) created",
 		  gen_cookie, gen_semid);
 
-	if (semctl(gen_semid, 0, SETVAL, 1) < 0) {
+	sem_arg.val = 1;
+
+	if (semctl(gen_semid, 0, SETVAL, sem_arg) < 0) {
 		log_error("semid %d: semctl failed: %s", gen_semid, strerror(errno));
 		/* We have to destroy just created semaphore
 		 * so it won't stay in the system. */
