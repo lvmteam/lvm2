@@ -175,6 +175,10 @@ Produce additional output.
 .br
 Display the library and kernel driver version.
 .SH COMMANDS
+.IP \fBclear
+.I device_name
+.br
+Destroys the table in the inactive table slot for device_name.
 .IP \fBcreate
 .I device_name [-u uuid] [--notable | --table <table> | table_file]
 .br

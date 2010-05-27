@@ -1,5 +1,6 @@
 Version 2.02.67 -
 ===============================
+  Document 'clear' in dmsetup man page.
   Replace strncmp kernel version number checks with proper ones.
   Avoid selecting names under /dev/block if there is an alternative.
   Update clustered log kernel module name to log-userspace for 2.6.31 onwards.
