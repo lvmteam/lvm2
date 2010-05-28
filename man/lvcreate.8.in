@@ -18,6 +18,7 @@ lvcreate \- create a logical volume in an existing volume group
 [\-n|\-\-name LogicalVolumeName]
 [\-p|\-\-permission r|rw] [\-r|\-\-readahead ReadAheadSectors|auto|none]
 [\-t|\-\-test]
+[\-\-type SegmentType]
 [\-v|\-\-verbose] [\-Z|\-\-zero y|n]
 VolumeGroupName [PhysicalVolumePath[:PE[-PE]]...]
 .br
@@ -182,6 +183,14 @@ used to track the locations of the chunks of data, so you should
 allocate slightly more space than you actually need and monitor the
 rate at which the snapshot data is growing so you can avoid running out
 of space.
+.TP
+.I \-\-type SegmentType
+Create a logical volume that uses the specified segment type
+(e.g. "mirror", "snapshot", "striped").  Especially useful when no
+existing commandline switch alias enables the use of the desired type
+(e.g. "error" or "zero" types).  Many segment types already have a
+commandline switch alias that will enable their use (-s is an alias for
+--type snapshot).
 .TP
 .I \-\-virtualsize VirtualSize
 Create a sparse device of the given size (in MB by default) using a snapshot.  
