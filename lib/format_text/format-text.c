@@ -814,7 +814,7 @@ static struct volume_group *_vg_read_file_name(struct format_instance *fid,
 	 * check that it contains the correct volume group.
 	 */
 	if (vgname && strcmp(vgname, vg->name)) {
-		dm_pool_free(fid->fmt->cmd->mem, vg);
+		dm_pool_destroy(vg->vgmem);
 		log_error("'%s' does not contain volume group '%s'.",
 			  read_path, vgname);
 		return NULL;

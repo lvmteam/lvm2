@@ -1,5 +1,6 @@
 Version 2.02.67 -
 ===============================
+  Fix incorrect memory pool deallocation while using vg_read for files.
   Add --type parameter description to the lvcreate man page.
   Replace strncmp kernel version number checks with proper ones.
   Avoid selecting names under /dev/block if there is an alternative.
