@@ -295,6 +295,7 @@ struct dev_filter *persistent_filter_create(struct dev_filter *real,
 {
 	struct pfilter *pf;
 	struct dev_filter *f = NULL;
+	struct stat info;
 
 	if (!(pf = dm_malloc(sizeof(*pf))))
 		return_NULL;
@@ -313,6 +314,10 @@ struct dev_filter *persistent_filter_create(struct dev_filter *real,
 
 	if (!(f = dm_malloc(sizeof(*f))))
 		goto_bad;
+
+	/* Only merge cache file before dumping it if it changed externally. */
+	if (!stat(pf->file, &info))
+		pf->ctime = info.st_ctime;
 
 	f->passes_filter = _lookup_p;
 	f->destroy = _persistent_destroy;
