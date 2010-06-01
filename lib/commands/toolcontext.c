@@ -195,6 +195,7 @@ static void _init_logging(struct cmd_context *cmd)
 	dm_log_with_errno_init(print_log);
 #endif
 	reset_log_duplicated();
+	reset_lvm_errno(1);
 }
 
 static int _process_config(struct cmd_context *cmd)
