@@ -1084,10 +1084,13 @@ static int _init_backup(struct cmd_context *cmd)
 
 static void _init_rand(struct cmd_context *cmd)
 {
-	if (read_urandom(&cmd->rand_seed, sizeof(cmd->rand_seed)))
+	if (read_urandom(&cmd->rand_seed, sizeof(cmd->rand_seed))) {
+		reset_lvm_errno(1);
 		return;
+	}
 
 	cmd->rand_seed = (unsigned) time(NULL) + (unsigned) getpid();
+	reset_lvm_errno(1);
 }
 
 static void _init_globals(struct cmd_context *cmd)
