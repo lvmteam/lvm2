@@ -1,5 +1,6 @@
 Version 2.02.67 -
 ===============================
+  Require partial option in lvchange --refresh for partial LVs.
   Do not fail lvm_init() if init_logging() or _init_rand() generates an errno.
   Don't merge unchanged persistent cache file before dumping if tool scanned.
   Fix incorrect memory pool deallocation while using vg_read for files.

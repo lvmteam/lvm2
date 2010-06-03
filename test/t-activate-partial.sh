@@ -9,6 +9,8 @@ disable_dev $dev1
 not vgreduce --removemissing $vg
 not lvchange -v -a y $vg/mirror
 lvchange -v --partial -a y $vg/mirror
+not lvchange -v --refresh $vg/mirror
+lvchange -v --refresh --partial $vg/mirror
 
 # also check that vgchange works
 vgchange -a n --partial $vg

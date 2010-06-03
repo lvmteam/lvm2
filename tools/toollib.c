@@ -1248,6 +1248,12 @@ int lv_refresh(struct cmd_context *cmd, struct logical_volume *lv)
 {
 	int r = 0;
 
+	if (!cmd->partial_activation && (lv->status & PARTIAL_LV)) {
+		log_error("Refusing refresh of partial LV %s. Use --partial to override.",
+			  lv->name);
+		goto out;
+	}
+
 	r = suspend_lv(cmd, lv);
 	if (!r)
 		goto_out;
