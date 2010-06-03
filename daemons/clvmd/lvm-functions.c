@@ -653,7 +653,7 @@ static void drop_vg_locks()
 	char line[255];
 	FILE *vgs =
 	    popen
-	    ("lvm pvs  --config 'log{command_names=0 prefix=\"\"}' --nolocking --noheadings -o vg_name", "r");
+	    (LVM_PATH " pvs  --config 'log{command_names=0 prefix=\"\"}' --nolocking --noheadings -o vg_name", "r");
 
 	sync_unlock("P_" VG_ORPHANS, LCK_EXCL);
 	sync_unlock("P_" VG_GLOBAL, LCK_EXCL);
@@ -762,7 +762,7 @@ static void *get_initial_state(char **argv)
 	char line[255];
 	FILE *lvs =
 	    popen
-	    ("lvm lvs  --config 'log{command_names=0 prefix=\"\"}' --nolocking --noheadings -o vg_uuid,lv_uuid,lv_attr,vg_attr",
+	    (LVM_PATH " lvs  --config 'log{command_names=0 prefix=\"\"}' --nolocking --noheadings -o vg_uuid,lv_uuid,lv_attr,vg_attr",
 	     "r");
 
 	if (!lvs)

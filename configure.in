@@ -1009,6 +1009,14 @@ if test x$MODPROBE_CMD != x; then
 	AC_DEFINE_UNQUOTED([MODPROBE_CMD], ["$MODPROBE_CMD"], [The path to 'modprobe', if available.])
 fi
 
+AC_DEFINE_UNQUOTED(LVM_PATH, ["$exec_prefix/sbin/lvm"], [Path to lvm binary.])
+
+if  test "$CLVMD" != none; then
+        clvmd_prefix=$ac_default_prefix
+        test "$prefix" != NONE && clvmd_prefix=$prefix
+	AC_DEFINE_UNQUOTED(CLVMD_PATH, ["$clvmd_prefix/sbin/clvmd"], [Path to clvmd binary.])
+fi
+
 ################################################################################
 dnl -- dmeventd pidfile and executable path
 AH_TEMPLATE(DMEVENTD_PIDFILE, [Path to dmeventd pidfile.])

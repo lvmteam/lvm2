@@ -6,6 +6,9 @@
 /* Define to 1 to include built-in support for clustered LVM locking. */
 #undef CLUSTER_LOCKING_INTERNAL
 
+/* Path to clvmd binary. */
+#undef CLVMD_PATH
+
 /* Path to cmirrord pidfile. */
 #undef CMIRRORD_PIDFILE
 
@@ -396,6 +399,9 @@
 
 /* Define to 1 to include built-in support for LVM1 metadata. */
 #undef LVM1_INTERNAL
+
+/* Path to lvm binary. */
+#undef LVM_PATH
 
 /* Define to 1 to include built-in support for mirrors. */
 #undef MIRRORED_INTERNAL

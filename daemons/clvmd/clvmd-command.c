@@ -400,7 +400,7 @@ static int restart_clvmd(void)
 
 	/* Exec new clvmd */
 	/* NOTE: This will fail when downgrading! */
-	execve("clvmd", argv, NULL);
+	execve(CLVMD_PATH, argv, NULL);
 
 	/* We failed */
 	return 0;
