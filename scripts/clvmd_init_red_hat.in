@@ -152,13 +152,15 @@ restart() {
 
 	# Try to get clvmd to restart itself. This will preserve 
 	# exclusive LV locks
-	action "Restarting $DAEMON: " $DAEMON -S || return $?
+	action "Restarting $DAEMON: " $DAEMON -S
 
 	# If that fails then do a normal stop & restart
 	if  [ $? != 0 ]; then
 	    stop && start
+	    return $?
 	else
 	    touch $LOCK_FILE
+	    return 0
 	fi
 }
 
