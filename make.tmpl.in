@@ -312,7 +312,7 @@ $(LIB_SHARED): $(LIB_SHARED).$(LIB_VERSION)
 
 install_lib_shared: $(LIB_SHARED)
 	$(INSTALL_PROGRAM) -D $< $(libdir)/$(<F).$(LIB_VERSION)
-	$(INSTALL) -d $(usrlibdir)
+	$(INSTALL_DIR) $(usrlibdir)
 	$(LN_S) -f $(USRLIB_RELPATH)$(<F).$(LIB_VERSION) $(usrlibdir)/$(<F)
 
 # FIXME: plugins are installed to subdirs 
