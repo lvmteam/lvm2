@@ -1,8 +1,10 @@
-Version 1.02.49 - 
-================================
-  Add support for dm-mod module autoload.
+Version 1.02.49 - 4th June 2010
+===============================
+  Support autoloading of dm-mod module for kernels from 2.6.35.
   Document 'clear' in dmsetup man page.
-  Use expected union semun for arguments in selected semaphore operations.
+  Fix semctl parameter (union) to avoid misaligned parameter on some arches.
+  Add dm_tree_node_set_presuspend_node() to presuspend child when deactivating.
+  Initial support for replicator target.
 
 Version 1.02.48 - 17th May 2010
 ================================
