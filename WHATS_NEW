@@ -1,5 +1,6 @@
 Version 2.02.67 -
 ===============================
+  Handle failed restart of clvmd using -S switch properly.
   Fix clvmd initscript restart command to start clvmd if not yet running.
   Use absolute paths for clvmd restart.
   Require partial option in lvchange --refresh for partial LVs.

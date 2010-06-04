@@ -361,33 +361,51 @@ void cmd_client_cleanup(struct local_client *client)
 
 static int restart_clvmd(void)
 {
-	char *argv[1024];
-	int argc = 1;
+	char **argv = NULL;
+	char *debug_arg = NULL, *lv_name;
+	int i, argc = 0, max_locks = 0;
 	struct dm_hash_node *hn = NULL;
-	char *lv_name;
 
 	DEBUGLOG("clvmd restart requested\n");
+
+	/* Count exclusively-open LVs */
+	hn = NULL;
+	do {
+		hn = get_next_excl_lock(hn, &lv_name);
+		if (lv_name)
+			max_locks++;
+	} while (hn && *lv_name);
+
+	/* clvmd + locks (-E uuid) + debug (-d X) + NULL */
+	argv = malloc((max_locks * 2 + 4) * sizeof(*argv));
+	if (!argv)
+		goto_out;
 
 	/*
 	 * Build the command-line
 	 */
-	/* FIXME missing strdup error checks */
-	argv[0] = strdup("clvmd");
+	argv[argc++] = strdup("clvmd");
+	if (!argv[0])
+		goto_out;
 
 	/* Propogate debug options */
 	if (debug) {
-		char debug_level[16];
-
-		sprintf(debug_level, "-d%d", debug);
-		argv[argc++] = strdup(debug_level);
+		if (!(debug_arg = malloc(16)) ||
+		    snprintf(debug_arg, 16, "-d%d", (int)debug) < 0)
+			goto_out;
+		argv[argc++] = debug_arg;
 	}
 
 	/* Now add the exclusively-open LVs */
 	do {
 		hn = get_next_excl_lock(hn, &lv_name);
 		if (lv_name) {
-			argv[argc++] = strdup("-E");
-			argv[argc++] = strdup(lv_name);
+			argv[argc] = strdup("-E");
+			if (!argv[argc++])
+				goto_out;
+			argv[argc] = strdup(lv_name);
+			if (!argv[argc++])
+				goto_out;
 
 			DEBUGLOG("excl lock: %s\n", lv_name);
 			hn = get_next_excl_lock(hn, &lv_name);
@@ -395,13 +413,16 @@ static int restart_clvmd(void)
 	} while (hn && *lv_name);
 	argv[argc++] = NULL;
 
-	/* Tidy up */
-	destroy_lvm();
-
 	/* Exec new clvmd */
 	/* NOTE: This will fail when downgrading! */
 	execve(CLVMD_PATH, argv, NULL);
-
+out:
 	/* We failed */
+	DEBUGLOG("Restart of clvmd failed.\n");
+
+	for (i = 0; i < argc && argv[i]; i++)
+		free(argv[i]);
+	free(argv);
+
 	return 0;
 }
