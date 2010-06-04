@@ -898,7 +898,9 @@ struct dm_hash_node *get_next_excl_lock(struct dm_hash_node *v, char **name)
 			v = dm_hash_get_next(lv_hash, v);
 		}
 	} while (v && !*name);
-	DEBUGLOG("returning EXclusive UUID %s\n", *name);
+
+	if (*name)
+		DEBUGLOG("returning EXclusive UUID %s\n", *name);
 	return v;
 }
 
