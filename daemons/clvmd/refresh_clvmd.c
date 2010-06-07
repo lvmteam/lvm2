@@ -336,7 +336,7 @@ int debug_clvmd(int level, int clusterwide)
 	int num_responses;
 	char args[1];
 	const char *nodes;
-	lvm_response_t *response;
+	lvm_response_t *response = NULL;
 	int saved_errno;
 	int status;
 	int i;
