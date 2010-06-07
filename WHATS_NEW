@@ -1,5 +1,6 @@
 Version 2.02.68 -
 ===============================
+  Fix segfault in clvmd -R if no response from daemon received.
 
 Version 2.02.67 - 4th June 2010
 ===============================
