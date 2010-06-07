@@ -1009,7 +1009,11 @@ if test x$MODPROBE_CMD != x; then
 	AC_DEFINE_UNQUOTED([MODPROBE_CMD], ["$MODPROBE_CMD"], [The path to 'modprobe', if available.])
 fi
 
-AC_DEFINE_UNQUOTED(LVM_PATH, ["$exec_prefix/sbin/lvm"], [Path to lvm binary.])
+
+lvm_exec_prefix=$exec_prefix
+test "$lvm_exec_prefix" = NONE && lvm_exec_prefix=$prefix
+test "$lvm_exec_prefix" = NONE && lvm_exec_prefix=$ac_default_prefix
+AC_DEFINE_UNQUOTED(LVM_PATH, ["$lvm_exec_prefix/sbin/lvm"], [Path to lvm binary.])
 
 if  test "$CLVMD" != none; then
         clvmd_prefix=$ac_default_prefix
@@ -1029,17 +1033,10 @@ fi
 
 AH_TEMPLATE(DMEVENTD_PATH, [Path to dmeventd binary.])
 if test "$BUILD_DMEVENTD" = yes; then
-        dmeventd_prefix="$exec_prefix"
-        if test "x$dmeventd_prefix" = "xNONE"; then
-                dmeventd_prefix="$prefix"
-        fi
-        if test "x$dmeventd_prefix" = "xNONE"; then
-                dmeventd_prefix=""
-        fi
 	AC_ARG_WITH(dmeventd-path,
 		    [  --with-dmeventd-path=PATH       dmeventd path [[EPREFIX/sbin/dmeventd]] ],
 		    [ AC_DEFINE_UNQUOTED(DMEVENTD_PATH,"$withval") ],
-		    [ AC_DEFINE_UNQUOTED(DMEVENTD_PATH,"$dmeventd_prefix/sbin/dmeventd") ])
+		    [ AC_DEFINE_UNQUOTED(DMEVENTD_PATH,"$lvm_exec_prefix/sbin/dmeventd") ])
 fi
 
 ################################################################################
