@@ -15518,8 +15518,12 @@ _ACEOF
 fi
 
 
+lvm_exec_prefix=$exec_prefix
+test "$lvm_exec_prefix" = NONE && lvm_exec_prefix=$prefix
+test "$lvm_exec_prefix" = NONE && lvm_exec_prefix=$ac_default_prefix
+
 cat >>confdefs.h <<_ACEOF
-#define LVM_PATH "$exec_prefix/sbin/lvm"
+#define LVM_PATH "$lvm_exec_prefix/sbin/lvm"
 _ACEOF
 
 
@@ -15556,13 +15560,6 @@ fi
 
 
 if test "$BUILD_DMEVENTD" = yes; then
-        dmeventd_prefix="$exec_prefix"
-        if test "x$dmeventd_prefix" = "xNONE"; then
-                dmeventd_prefix="$prefix"
-        fi
-        if test "x$dmeventd_prefix" = "xNONE"; then
-                dmeventd_prefix=""
-        fi
 
 # Check whether --with-dmeventd-path was given.
 if test "${with_dmeventd_path+set}" = set; then
@@ -15572,7 +15569,7 @@ _ACEOF
 
 else
    cat >>confdefs.h <<_ACEOF
-#define DMEVENTD_PATH "$dmeventd_prefix/sbin/dmeventd"
+#define DMEVENTD_PATH "$lvm_exec_prefix/sbin/dmeventd"
 _ACEOF
 
 fi
