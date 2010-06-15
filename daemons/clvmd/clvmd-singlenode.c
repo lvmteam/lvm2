@@ -15,13 +15,13 @@
 #define _GNU_SOURCE
 #define _FILE_OFFSET_BITS 64
 
+#include "configure.h"
 #include <netinet/in.h>
 #include <sys/un.h>
 #include <sys/socket.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <configure.h>
-#include <libdevmapper.h>
+#include "libdevmapper.h"
 
 #include <pthread.h>
 

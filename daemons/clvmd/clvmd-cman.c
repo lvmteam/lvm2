@@ -20,7 +20,7 @@
 #define _GNU_SOURCE
 #define _FILE_OFFSET_BITS 64
 
-#include <configure.h>
+#include "configure.h"
 #include <pthread.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -40,7 +40,7 @@
 #include <fcntl.h>
 #include <getopt.h>
 #include <errno.h>
-#include <libdevmapper.h>
+#include "libdevmapper.h"
 #include <libdlm.h>
 
 #include "clvmd-comms.h"

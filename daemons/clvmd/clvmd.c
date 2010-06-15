@@ -20,8 +20,8 @@
 #define _GNU_SOURCE
 #define _FILE_OFFSET_BITS 64
 
-#include <configure.h>
-#include <libdevmapper.h>
+#include "configure.h"
+#include "libdevmapper.h"
 
 #include <pthread.h>
 #include <sys/types.h>

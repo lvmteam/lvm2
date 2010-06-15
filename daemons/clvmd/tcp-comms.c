@@ -23,7 +23,7 @@
 #define _GNU_SOURCE
 #define _FILE_OFFSET_BITS 64
 
-#include <configure.h>
+#include "configure.h"
 #include <pthread.h>
 #include <sys/types.h>
 #include <sys/utsname.h>
@@ -44,7 +44,7 @@
 #include <syslog.h>
 #include <netdb.h>
 #include <assert.h>
-#include <libdevmapper.h>
+#include "libdevmapper.h"
 
 #include "clvm.h"
 #include "clvmd-comms.h"

@@ -24,6 +24,7 @@
  * on the cluster nodes. That is done in tcp-comms.c
  */
 
+#include "configure.h"
 #include <pthread.h>
 #include <sys/types.h>
 #include <sys/utsname.h>
@@ -46,7 +47,7 @@
 #include <utmpx.h>
 #include <syslog.h>
 #include <assert.h>
-#include <libdevmapper.h>
+#include "libdevmapper.h"
 #include <ccs.h>
 #include <libgulm.h>
 

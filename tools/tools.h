@@ -19,9 +19,9 @@
 #define _GNU_SOURCE
 #define _FILE_OFFSET_BITS 64
 
-#include <configure.h>
+#include "configure.h"
 #include <assert.h>
-#include <libdevmapper.h>
+#include "libdevmapper.h"
 
 #include "lvm-types.h"
 #include "lvm-logging.h"

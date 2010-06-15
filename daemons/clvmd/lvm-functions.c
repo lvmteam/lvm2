@@ -16,7 +16,7 @@
 #define _GNU_SOURCE
 #define _FILE_OFFSET_BITS 64
 
-#include <configure.h>
+#include "configure.h"
 #include <pthread.h>
 #include <sys/types.h>
 #include <sys/utsname.h>
@@ -34,7 +34,7 @@
 #include <errno.h>
 #include <syslog.h>
 #include <assert.h>
-#include <libdevmapper.h>
+#include "libdevmapper.h"
 #include <libdlm.h>
 
 #include "lvm-types.h"
