@@ -18,6 +18,9 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /******************************** WARNING ***********************************
  *
@@ -1194,4 +1197,7 @@ uint64_t lvm_pv_get_free(const pv_t pv);
  */
 int lvm_pv_resize(const pv_t pv, uint64_t new_size);
 
+#ifdef __cplusplus
+}
+#endif
 #endif /* _LIB_LVM2APP_H */
