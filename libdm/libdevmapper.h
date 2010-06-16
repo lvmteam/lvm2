@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2010 Red Hat, Inc. All rights reserved.
  *
  * This file is part of the device-mapper userspace tools.
  *
@@ -28,6 +28,10 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*****************************************************************
  * The first section of this file provides direct access to the
@@ -1022,7 +1026,7 @@ struct dm_report_field_type {
 	const char heading[32];	/* string printed in header */
 	int (*report_fn)(struct dm_report *rh, struct dm_pool *mem,
 			 struct dm_report_field *field, const void *data,
-			 void *private);
+			 void *private_data);
 	const char *desc;	/* description of the field */
 };
 
@@ -1044,7 +1048,7 @@ struct dm_report *dm_report_init(uint32_t *report_types,
 				 const char *output_separator,
 				 uint32_t output_flags,
 				 const char *sort_keys,
-				 void *private);
+				 void *private_data);
 int dm_report_object(struct dm_report *rh, void *object);
 int dm_report_output(struct dm_report *rh);
 void dm_report_free(struct dm_report *rh);
@@ -1163,4 +1167,7 @@ int dm_udev_wait(uint32_t cookie);
 
 #define DM_DEV_DIR_UMASK 0022
 
+#ifdef __cplusplus
+}
+#endif
 #endif				/* LIB_DEVICE_MAPPER_H */

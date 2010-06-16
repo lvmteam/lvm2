@@ -566,7 +566,7 @@ struct dm_report *dm_report_init(uint32_t *report_types,
 				 const char *output_separator,
 				 uint32_t output_flags,
 				 const char *sort_keys,
-				 void *private)
+				 void *private_data)
 {
 	struct dm_report *rh;
 	const struct dm_report_object_type *type;
@@ -588,7 +588,7 @@ struct dm_report *dm_report_init(uint32_t *report_types,
 	rh->separator = output_separator;
 	rh->fields = fields;
 	rh->types = types;
-	rh->private = private;
+	rh->private = private_data;
 
 	rh->flags |= output_flags & DM_REPORT_OUTPUT_MASK;
 

@@ -16,6 +16,10 @@
 #ifndef _LVM_CMDLIB_H
 #define _LVM_CMDLIB_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef _LVM_LOG_H
 typedef void (*lvm2_log_fn_t) (int level, const char *file, int line,
                                int dm_errno, const char *message);
@@ -63,4 +67,7 @@ int lvm2_run(void *handle, const char *cmdline);
 /* Release handle */
 void lvm2_exit(void *handle);
 
+#ifdef __cplusplus
+}
+#endif
 #endif
