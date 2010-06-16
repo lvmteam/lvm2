@@ -1,5 +1,6 @@
 Version 2.02.68 -
 ===============================
+  Fix lvm2cmd example in documentation.
   Allow use of lvm2app and lvm2cmd headers in C++ mode.
   Fix wrong lvm path creation from configure introduced in previous release.
   Fix segfault in clvmd -R if no response from daemon received.

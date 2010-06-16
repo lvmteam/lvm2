@@ -13,10 +13,11 @@
  */
 
 #include "lvm2cmd.h"
+#include <stdio.h>
 
 /* All output gets passed to this function line-by-line */
-void test_log_fn(int level, int dm_errno, const char *file, int line,
-		 const char *format)
+void test_log_fn(int level, const char *file, int line,
+		 int dm_errno, const char *format)
 {
 	/* Extract and process output here rather than printing it */
 
