@@ -1,5 +1,6 @@
 Version 2.02.68 -
 ===============================
+  Do not use internal DLM lock definitions in generic LVM2 clvmd code.
   Add dmeventd man page.
   Update lvresize/extend/reduce manpages with --nofsck, --resizefs options.
   Fix lvm2cmd example in documentation.

@@ -73,6 +73,12 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 #define LCK_UNLOCK      0x00000006U	/* This is ours */
 
 /*
+ * Lock flags - these numbers are the same as DLM
+ */
+#define LCKF_NOQUEUE	0x00000001U	/* LKF$_NOQUEUE */
+#define LCKF_CONVERT	0x00000004U	/* LKF$_CONVERT */
+
+/*
  * Lock scope
  */
 #define LCK_SCOPE_MASK	0x00000008U
