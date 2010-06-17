@@ -362,6 +362,8 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 					  separator, aligned, buffered,
 					  headings, field_prefixes, quoted,
 					  columns_as_rows))) {
+		if (!strcasecmp(options, "help") || !strcmp(options, "?"))
+			return r;
 		stack;
 		return ECMD_FAILED;
 	}
