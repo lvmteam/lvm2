@@ -69,7 +69,6 @@
 #include <unistd.h>
 #include <errno.h>
 #include "libdevmapper.h"
-#include <libdlm.h>
 
 #include "locking.h"
 #include "lvm-logging.h"
@@ -239,7 +238,7 @@ static int lock_vg(struct local_client *client)
 	/* Read locks need to be PR; other modes get passed through */
 	if (lock_mode == LCK_READ)
 	    lock_mode = LCK_PREAD;
-	status = sync_lock(lockname, lock_mode, (lock_cmd & LCK_NONBLOCK) ? LKF_NOQUEUE : 0, &lkid);
+	status = sync_lock(lockname, lock_mode, (lock_cmd & LCK_NONBLOCK) ? LCKF_NOQUEUE : 0, &lkid);
 	if (status)
 	    status = errno;
 	else
@@ -266,7 +265,7 @@ int do_pre_command(struct local_client *client)
 
 	switch (header->cmd) {
 	case CLVMD_CMD_TEST:
-		status = sync_lock("CLVMD_TEST", LKM_EXMODE, 0, &lockid);
+		status = sync_lock("CLVMD_TEST", LCK_EXCL, 0, &lockid);
 		client->bits.localsock.private = (void *)(long)lockid;
 		break;
 

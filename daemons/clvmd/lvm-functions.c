@@ -35,7 +35,6 @@
 #include <syslog.h>
 #include <assert.h>
 #include "libdevmapper.h"
-#include <libdlm.h>
 
 #include "lvm-types.h"
 #include "clvm.h"
@@ -243,7 +242,7 @@ int hold_lock(char *resource, int mode, int flags)
 	struct lv_info *lvi;
 
 	/* Mask off invalid options */
-	flags &= LKF_NOQUEUE | LKF_CONVERT;
+	flags &= LCKF_NOQUEUE | LCKF_CONVERT;
 
 	lvi = lookup_info(resource);
 
@@ -253,7 +252,7 @@ int hold_lock(char *resource, int mode, int flags)
 	}
 
 	/* Only allow explicit conversions */
-	if (lvi && !(flags & LKF_CONVERT)) {
+	if (lvi && !(flags & LCKF_CONVERT)) {
 		errno = EBUSY;
 		return -1;
 	}
@@ -276,7 +275,7 @@ int hold_lock(char *resource, int mode, int flags)
 			return -1;
 
 		lvi->lock_mode = mode;
-		status = sync_lock(resource, mode, flags & ~LKF_CONVERT, &lvi->lock_id);
+		status = sync_lock(resource, mode, flags & ~LCKF_CONVERT, &lvi->lock_id);
 		saved_errno = errno;
 		if (status) {
 			free(lvi);
@@ -346,9 +345,9 @@ static int do_activate_lv(char *resource, unsigned char lock_flags, int mode)
 		return 0;	/* Success, we did nothing! */
 
 	/* Do we need to activate exclusively? */
-	if ((activate_lv == 2) || (mode == LKM_EXMODE)) {
+	if ((activate_lv == 2) || (mode == LCK_EXCL)) {
 		exclusive = 1;
-		mode = LKM_EXMODE;
+		mode = LCK_EXCL;
 	}
 
 	/*
@@ -357,7 +356,7 @@ static int do_activate_lv(char *resource, unsigned char lock_flags, int mode)
 	 * of exclusive lock to shared one during activation.
 	 */
 	if (lock_flags & LCK_CLUSTER_VG) {
-		status = hold_lock(resource, mode, LKF_NOQUEUE | (lock_flags & LCK_CONVERT?LKF_CONVERT:0));
+		status = hold_lock(resource, mode, LCKF_NOQUEUE | (lock_flags & LCK_CONVERT ? LCKF_CONVERT:0));
 		if (status) {
 			/* Return an LVM-sensible error for this.
 			 * Forcing EIO makes the upper level return this text
@@ -465,12 +464,11 @@ const char *do_lock_query(char *resource)
 
 	mode = get_current_lock(resource);
 	switch (mode) {
-		case LKM_NLMODE: type = "NL"; break;
-		case LKM_CRMODE: type = "CR"; break;
-		case LKM_CWMODE: type = "CW"; break;
-		case LKM_PRMODE: type = "PR"; break;
-		case LKM_PWMODE: type = "PW"; break;
-		case LKM_EXMODE: type = "EX"; break;
+		case LCK_NULL: type = "NL"; break;
+		case LCK_READ: type = "CR"; break;
+		case LCK_PREAD:type = "PR"; break;
+		case LCK_WRITE:type = "PW"; break;
+		case LCK_EXCL: type = "EX"; break;
 	}
 
 	DEBUGLOG("do_lock_query: resource '%s', mode %i (%s)\n", resource, mode, type ?: "?");
@@ -511,7 +509,7 @@ int do_lock_lv(unsigned char command, unsigned char lock_flags, char *resource)
 
 	switch (command & LCK_MASK) {
 	case LCK_LV_EXCLUSIVE:
-		status = do_activate_lv(resource, lock_flags, LKM_EXMODE);
+		status = do_activate_lv(resource, lock_flags, LCK_EXCL);
 		break;
 
 	case LCK_LV_SUSPEND:
@@ -528,7 +526,7 @@ int do_lock_lv(unsigned char command, unsigned char lock_flags, char *resource)
 		break;
 
 	case LCK_LV_ACTIVATE:
-		status = do_activate_lv(resource, lock_flags, LKM_CRMODE);
+		status = do_activate_lv(resource, lock_flags, LCK_READ);
 		break;
 
 	case LCK_LV_DEACTIVATE:
@@ -560,14 +558,14 @@ int pre_lock_lv(unsigned char command, unsigned char lock_flags, char *resource)
 	/* Nearly all the stuff happens cluster-wide. Apart from SUSPEND. Here we get the
 	   lock out on this node (because we are the node modifying the metadata)
 	   before suspending cluster-wide.
-	   LKF_CONVERT is used always, local node is going to modify metadata
+	   LCKF_CONVERT is used always, local node is going to modify metadata
 	 */
 	if ((command & (LCK_SCOPE_MASK | LCK_TYPE_MASK)) == LCK_LV_SUSPEND &&
 	    (lock_flags & LCK_CLUSTER_VG)) {
 		DEBUGLOG("pre_lock_lv: resource '%s', cmd = %s, flags = %s\n",
 			 resource, decode_locking_cmd(command), decode_flags(lock_flags));
 
-		if (hold_lock(resource, LKM_PWMODE, LKF_NOQUEUE | LKF_CONVERT))
+		if (hold_lock(resource, LCK_WRITE, LCKF_NOQUEUE | LCKF_CONVERT))
 			return errno;
 	}
 	return 0;
@@ -590,7 +588,7 @@ int post_lock_lv(unsigned char command, unsigned char lock_flags,
 
 		/* If the lock state is PW then restore it to what it was */
 		oldmode = get_current_lock(resource);
-		if (oldmode == LKM_PWMODE) {
+		if (oldmode == LCK_WRITE) {
 			struct lvinfo lvi;
 
 			pthread_mutex_lock(&lvm_lock);
@@ -600,7 +598,7 @@ int post_lock_lv(unsigned char command, unsigned char lock_flags,
 				return EIO;
 
 			if (lvi.exists) {
-				if (hold_lock(resource, LKM_CRMODE, LKF_CONVERT))
+				if (hold_lock(resource, LCK_READ, LCKF_CONVERT))
 					return errno;
 			} else {
 				if (hold_unlock(resource))
@@ -792,15 +790,15 @@ static void *get_initial_state(char **argv)
 				memcpy(&uuid[58], &lv[32], 6);
 				uuid[64] = '\0';
 
-				lock_mode = LKM_CRMODE;
+				lock_mode = LCK_READ;
 
 				/* Look for this lock in the list of EX locks
 				   we were passed on the command-line */
 				if (was_ex_lock(uuid, argv))
-					lock_mode = LKM_EXMODE;
+					lock_mode = LCK_EXCL;
 
 				DEBUGLOG("getting initial lock for %s\n", uuid);
-				hold_lock(uuid, lock_mode, LKF_NOQUEUE);
+				hold_lock(uuid, lock_mode, LCKF_NOQUEUE);
 			}
 		}
 	}

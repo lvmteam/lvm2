@@ -739,7 +739,7 @@ static int _lock_resource(char *resource, int mode, int flags, int *lockid)
     pthread_mutex_lock(&lwait.mutex);
 
     /* This needs to be converted from DLM/LVM2 value for GULM */
-    if (flags & LKF_NOQUEUE) flags = lg_lock_flag_Try;
+    if (flags & LCKF_NOQUEUE) flags = lg_lock_flag_Try;
 
     dm_hash_insert(lock_hash, resource, &lwait);
     DEBUGLOG("lock_resource '%s', flags=%d, mode=%d\n", resource, flags, mode);
