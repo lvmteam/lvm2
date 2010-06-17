@@ -9,6 +9,9 @@ lvextend \- extend the size of a logical volume
 [\-i|\-\-stripes Stripes [\-I|\-\-stripesize StripeSize]]
 {\-l|\-\-extents [+]LogicalExtentsNumber[%{VG|LV|PVS|FREE|ORIGIN}] |
 \-L|\-\-size [+]LogicalVolumeSize[bBsSkKmMgGtTpPeE]}
+[\-f|\-\-force]
+[\-n|\-\-nofsck]
+[\-r|\-\-resizefs]
 [\-t|\-\-test]
 [\-v|\-\-verbose] LogicalVolumePath [PhysicalVolumePath[:PE[-PE]]...]
 .SH DESCRIPTION
@@ -60,6 +63,18 @@ Not applicable to LVs using the original metadata LVM format, which must
 use a single value throughout.
 .br
 StripeSize must be 2^n (n = 2 to 9)
+.TP
+.I \-f, \-\-force
+Force size extension without any question.
+.TP
+.I \-n, \-\-nofsck
+Do not perform fsck before extending filesystem when filesystem
+requires it. You may need to use \fB--force\fR to proceed with 
+this option.
+.TP
+.I \-r, \-\-resizefs
+Resize underlying filesystem together with logical volume size.
+\fBfsadm\fR tool is used for filesystem resize.
 .SH Examples
 "lvextend -L +54 /dev/vg01/lvol10 /dev/sdk3" tries to extend the size of
 that logical volume by 54MB on physical volume /dev/sdk3.
@@ -77,6 +92,7 @@ tries to extend a logical volume "vg01/lvol01" by 16MB using physical extents
 /dev/sda:8-9 and /dev/sdb:8-9 for allocation of extents.
 
 .SH SEE ALSO
+.BR fsadm (8),
 .BR lvm (8), 
 .BR lvcreate (8), 
 .BR lvconvert (8), 
