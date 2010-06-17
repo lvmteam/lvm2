@@ -1,0 +1,42 @@
+.TH DMEVENTD 8 "DM TOOLS #VERSION#" "Red Hat Inc" \" -*- nroff -*-
+.SH NAME
+dmeventd \- Device-mapper event daemon
+.SH SYNOPSIS
+.B dmeventd
+[\-V]
+[\-d]
+[\-f]
+[\-h]
+[\-?]
+.SH DESCRIPTION
+dmeventd is the event monitoring daemon for device-mapper devices.
+Plugins are supported.
+
+.br
+LVM plugins:
+.TP
+Snapshot: monitor the filling of snapshot and emits a warning through 
+syslog, when the use of snapshot exceedes 80%.
+The warning is repeated when 85%, 90% and 95% of the snapshot are filled.
+(see \fBlvm.conf\fP)
+.TP
+Mirror: attempts to recover from failures (see \fBlvm.conf\fP).
+.SH OPTIONS
+.TP
+.I \-V
+Show version of dmeventd.
+.TP
+.I \-d
+Repeat from 1 to 3 times (-d, -dd, -ddd) to increase the detail of
+debug messages sent to syslog.
+Each extra d adds more debugging information.
+.TP
+.I \-f
+Don't fork, run in the foreground.
+.TP
+.I \-h, \-?
+Show help information.
+
+.SH SEE ALSO
+.BR lvm (8),
+.BR lvm.conf (5)
