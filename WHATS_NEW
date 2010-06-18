@@ -1,5 +1,6 @@
 Version 2.02.68 -
 ===============================
+  Add man pages for lvmconf and unsupported lvmsadc and lvmsar tools.
   Fix exit code when requesting help using documented -o help option.
   Do not use internal DLM lock definitions in generic LVM2 clvmd code.
   Add dmeventd man page.
