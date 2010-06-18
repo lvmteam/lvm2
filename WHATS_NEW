@@ -1,5 +1,6 @@
 Version 2.02.68 -
 ===============================
+  Unneeded kdev_t.h reference causing harm for cmirrord on some archs.
   Add man pages for lvmconf and unsupported lvmsadc and lvmsar tools.
   Fix exit code when requesting help using documented -o help option.
   Do not use internal DLM lock definitions in generic LVM2 clvmd code.
