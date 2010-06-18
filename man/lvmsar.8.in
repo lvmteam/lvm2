@@ -1,0 +1,14 @@
+.TH "LVMSAR" "8" "LVM TOOLS #VERSION#" "Red Hat, Inc" "\""
+
+.SH "NAME"
+lvmsar \- LVM system activity reporter
+
+.SH "SYNOPSIS"
+.B lvmsar
+
+.SH "DESCRIPTION"
+.B lvmsar
+is not currently supported under LVM2.
+
+.SH "SEE ALSO"
+.BR lvm (8)
