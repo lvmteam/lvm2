@@ -17,46 +17,23 @@
  * and lock manager.
  */
 
-#define _GNU_SOURCE
-#define _FILE_OFFSET_BITS 64
+#include "clvmd-common.h"
 
-#include "configure.h"
 #include <pthread.h>
-#include <sys/types.h>
-#include <sys/utsname.h>
-#include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <sys/file.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <signal.h>
-#include <fcntl.h>
-#include <string.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <unistd.h>
-#include <errno.h>
-#include <utmpx.h>
-#include <syslog.h>
-#include <assert.h>
-#include "libdevmapper.h"
 
-#include <corosync/corotypes.h>
+#include "clvm.h"
+#include "clvmd-comms.h"
+#include "clvmd.h"
+#include "lvm-functions.h"
+
+#include "locking.h"
+
 #include <corosync/cpg.h>
 #include <corosync/quorum.h>
 #include <corosync/confdb.h>
 #include <libdlm.h>
 
-#include "locking.h"
-#include "lvm-logging.h"
-#include "clvm.h"
-#include "clvmd-comms.h"
-#include "lvm-functions.h"
-#include "clvmd.h"
+#include <syslog.h>
 
 /* Timeout value for several corosync calls */
 #define LOCKSPACE_NAME "clvmd"

@@ -1,16 +1,18 @@
 Version 2.02.68 -
 ===============================
-  Add workaround for clvmd -S (socket closed too early and server drops the command).
+  Sleep to workaround clvmd -S race: socket closed early and server drops cmd.
   Use early udev synchronisation and update of dev nodes for clustered mirrors.
-  Unneeded kdev_t.h reference causing harm for cmirrord on some archs.
-  Add man pages for lvmconf and unsupported lvmsadc and lvmsar tools.
-  Fix exit code when requesting help using documented -o help option.
+  Remove incorrect inclusion of kdev_t.h from cmirrord/functions.h.
+  Add man pages for lvmconf and non-existent lvmsadc and lvmsar tools.
+  Exit successfully when using -o help (but not -o +help) with LVM reports.
   Do not use internal DLM lock definitions in generic LVM2 clvmd code.
   Add dmeventd man page.
-  Update lvresize/extend/reduce manpages with --nofsck, --resizefs options.
+  Add --force, --nofsck and --resizefs to lvresize/extend/reduce man pages.
   Fix lvm2cmd example in documentation.
-  Allow use of lvm2app and lvm2cmd headers in C++ mode.
-  Fix wrong lvm path creation from configure introduced in previous release.
+  Allow use of lvm2app and lvm2cmd headers in C++ code.
+  Remove some unused #includes from clvmd files.
+  Use #include "" for libdevmapper.h and configure.h throughout tree.
+  Fix 'make exec_prefix' with LVM_PATH / DMEVENTD_PATH. (2.02.67)
   Fix segfault in clvmd -R if no response from daemon received.
 
 Version 2.02.67 - 4th June 2010

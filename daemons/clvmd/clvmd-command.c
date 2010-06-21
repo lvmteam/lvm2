@@ -50,32 +50,18 @@
 
 */
 
-#define _GNU_SOURCE
-#define _FILE_OFFSET_BITS 64
+#include "clvmd-common.h"
 
-#include "configure.h"
 #include <pthread.h>
-#include <sys/types.h>
-#include <sys/utsname.h>
-#include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <fcntl.h>
-#include <string.h>
-#include <stddef.h>
-#include <unistd.h>
-#include <errno.h>
-#include "libdevmapper.h"
 
-#include "locking.h"
-#include "lvm-logging.h"
-#include "lvm-functions.h"
 #include "clvmd-comms.h"
 #include "clvm.h"
 #include "clvmd.h"
+#include "lvm-functions.h"
+
+#include "locking.h"
+
+#include <sys/utsname.h>
 
 extern debug_t debug;
 extern struct cluster_ops *clops;

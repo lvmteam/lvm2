@@ -13,28 +13,9 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#define _GNU_SOURCE
-#define _FILE_OFFSET_BITS 64
+#include "clvmd-common.h"
 
-#include "configure.h"
 #include <pthread.h>
-#include <sys/types.h>
-#include <sys/utsname.h>
-#include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <fcntl.h>
-#include <string.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <unistd.h>
-#include <errno.h>
-#include <syslog.h>
-#include <assert.h>
-#include "libdevmapper.h"
 
 #include "lvm-types.h"
 #include "clvm.h"
@@ -45,13 +26,12 @@
 /* LVM2 headers */
 #include "toolcontext.h"
 #include "lvmcache.h"
-#include "lvm-logging.h"
 #include "lvm-globals.h"
 #include "activate.h"
-#include "locking.h"
 #include "archiver.h"
-#include "defaults.h"
 #include "memlock.h"
+
+#include <syslog.h>
 
 static struct cmd_context *cmd = NULL;
 static struct dm_hash_table *lv_hash = NULL;

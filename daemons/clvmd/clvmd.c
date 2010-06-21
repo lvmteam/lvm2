@@ -17,44 +17,28 @@
  * CLVMD: Cluster LVM daemon
  */
 
-#define _GNU_SOURCE
-#define _FILE_OFFSET_BITS 64
-
-#include "configure.h"
-#include "libdevmapper.h"
+#include "clvmd-common.h"
 
 #include <pthread.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/socket.h>
-#include <sys/uio.h>
-#include <sys/un.h>
-#include <sys/time.h>
-#include <sys/ioctl.h>
-#include <sys/utsname.h>
-#include <netinet/in.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stddef.h>
-#include <stdarg.h>
-#include <signal.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <getopt.h>
-#include <syslog.h>
-#include <errno.h>
-#include <limits.h>
+
+#include "clvmd-comms.h"
+#include "clvm.h"
+#include "clvmd.h"
+#include "lvm-functions.h"
+#include "lvm-version.h"
+#include "refresh_clvmd.h"
+
 #ifdef HAVE_COROSYNC_CONFDB_H
 #include <corosync/confdb.h>
 #endif
 
-#include "clvmd-comms.h"
-#include "lvm-functions.h"
-#include "clvm.h"
-#include "lvm-version.h"
-#include "clvmd.h"
-#include "refresh_clvmd.h"
-#include "lvm-logging.h"
+#include <fcntl.h>
+#include <netinet/in.h>
+#include <signal.h>
+#include <stddef.h>
+#include <syslog.h>
+#include <sys/un.h>
+#include <sys/utsname.h>
 
 #ifndef TRUE
 #define TRUE 1
