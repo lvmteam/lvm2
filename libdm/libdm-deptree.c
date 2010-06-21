@@ -143,6 +143,13 @@ struct load_properties {
 	struct dm_list segs;
 
 	const char *new_name;
+
+	/* If immediate_dev_node is set to 1, try to create the dev node
+	 * as soon as possible (e.g. in preload stage even during traversal
+	 * and processing of dm tree). This will also flush all stacked dev
+	 * node operations, synchronizing with udev.
+	 */
+	int immediate_dev_node;
 };
 
 /* Two of these used to join two nodes with uses and used_by. */
@@ -1843,6 +1850,7 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 	void *handle = NULL;
 	struct dm_tree_node *child;
 	struct dm_info newinfo;
+	int update_devs_flag = 0;
 
 	/* Preload children first */
 	while ((child = dm_tree_next_child(&handle, dnode, 0))) {
@@ -1897,9 +1905,25 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 
 		/* Update cached info */
 		child->info = newinfo;
+
+		/*
+		 * Prepare for immediate synchronization with udev and flush all stacked
+		 * dev node operations if requested by immediate_dev_node property. But
+		 * finish processing current level in the tree first.
+		 */
+		if (child->props.immediate_dev_node)
+			update_devs_flag = 1;
+
 	}
 
 	handle = NULL;
+
+	if (update_devs_flag) {
+		if (!dm_udev_wait(dm_tree_get_cookie(dnode)))
+			stack;
+		dm_tree_set_cookie(dnode, 0);
+		dm_task_update_nodes();
+	}
 
 	return r;
 }
@@ -2156,6 +2180,9 @@ int dm_tree_node_add_mirror_target_log(struct dm_tree_node *node,
 				log_error("Couldn't find mirror log uuid %s.", log_uuid);
 				return 0;
 			}
+
+			if (clustered)
+				log_node->props.immediate_dev_node = 1;
 
 			if (!_link_tree_nodes(node, log_node))
 				return_0;
