@@ -851,6 +851,9 @@ static int _remove_mirror_images(struct logical_volume *lv,
 			log_error("Failed to add mirror images");
 			return 0;
 		}
+		mirrored_seg = first_seg(lv);
+		if (remove_log && !detached_log_lv)
+			detached_log_lv = detach_mirror_log(mirrored_seg);
 	} else if (new_area_count == 0) {
 		log_very_verbose("All mimages of %s are gone", lv->name);
 
