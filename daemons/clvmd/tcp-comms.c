@@ -20,31 +20,22 @@
  * It can also make outgoing connnections to the other clvmd nodes.
  */
 
-#define _GNU_SOURCE
-#define _FILE_OFFSET_BITS 64
+#include "clvmd-common.h"
 
-#include "configure.h"
 #include <pthread.h>
-#include <sys/types.h>
 #include <sys/utsname.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
-#include <sys/stat.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <stdint.h>
 #include <fcntl.h>
-#include <string.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <unistd.h>
 #include <errno.h>
 #include <syslog.h>
 #include <netdb.h>
 #include <assert.h>
-#include "libdevmapper.h"
 
 #include "clvm.h"
 #include "clvmd-comms.h"

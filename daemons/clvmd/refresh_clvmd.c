@@ -17,22 +17,14 @@
  * Send a command to a running clvmd from the command-line
  */
 
-#define _GNU_SOURCE
-#define _FILE_OFFSET_BITS 64
-
-#include "configure.h"
-#include <stddef.h>
-#include <sys/socket.h>
-#include <sys/un.h>
-#include <errno.h>
-#include <unistd.h>
-#include "libdevmapper.h"
-#include <stdint.h>
-#include <stdio.h>
-#include <limits.h>
+#include "clvmd-common.h"
 
 #include "clvm.h"
 #include "refresh_clvmd.h"
+
+#include <stddef.h>
+#include <sys/socket.h>
+#include <sys/un.h>
 
 typedef struct lvm_response {
 	char node[255];

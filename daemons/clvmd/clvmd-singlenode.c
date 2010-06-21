@@ -12,25 +12,19 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#define _GNU_SOURCE
-#define _FILE_OFFSET_BITS 64
-
-#include "configure.h"
-#include <netinet/in.h>
-#include <sys/un.h>
-#include <sys/socket.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include "libdevmapper.h"
+#include "clvmd-common.h"
 
 #include <pthread.h>
 
 #include "locking.h"
-#include "lvm-logging.h"
 #include "clvm.h"
 #include "clvmd-comms.h"
 #include "lvm-functions.h"
 #include "clvmd.h"
+
+#include <sys/un.h>
+#include <sys/socket.h>
+#include <fcntl.h>
 
 static const char SINGLENODE_CLVMD_SOCKNAME[] = "\0singlenode_clvmd";
 static int listen_fd = -1;

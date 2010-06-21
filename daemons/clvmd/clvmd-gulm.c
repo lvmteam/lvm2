@@ -24,35 +24,27 @@
  * on the cluster nodes. That is done in tcp-comms.c
  */
 
-#include "configure.h"
+#include "clvmd-common.h"
+
 #include <pthread.h>
-#include <sys/types.h>
 #include <sys/utsname.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
-#include <sys/stat.h>
 #include <sys/file.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <stdint.h>
 #include <signal.h>
 #include <fcntl.h>
-#include <string.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <unistd.h>
-#include <errno.h>
 #include <utmpx.h>
 #include <syslog.h>
 #include <assert.h>
-#include "libdevmapper.h"
 #include <ccs.h>
 #include <libgulm.h>
 
 #include "locking.h"
-#include "lvm-logging.h"
 #include "clvm.h"
 #include "clvmd-comms.h"
 #include "lvm-functions.h"

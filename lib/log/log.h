@@ -16,8 +16,6 @@
 #ifndef _LVM_LOG_H
 #define _LVM_LOG_H
 
-#include <errno.h>
-
 /*
  * printf()-style macros to use for messages:
  *

@@ -65,7 +65,7 @@ use a single value throughout.
 StripeSize must be 2^n (n = 2 to 9)
 .TP
 .I \-f, \-\-force
-Force size extension without any question.
+Proceed with size extension without prompting.
 .TP
 .I \-n, \-\-nofsck
 Do not perform fsck before extending filesystem when filesystem
@@ -73,8 +73,8 @@ requires it. You may need to use \fB--force\fR to proceed with
 this option.
 .TP
 .I \-r, \-\-resizefs
-Resize underlying filesystem together with logical volume size.
-\fBfsadm\fR tool is used for filesystem resize.
+Resize underlying filesystem together with the logical volume using 
+\fBfsadm\fR(8).
 .SH Examples
 "lvextend -L +54 /dev/vg01/lvol10 /dev/sdk3" tries to extend the size of
 that logical volume by 54MB on physical volume /dev/sdk3.
