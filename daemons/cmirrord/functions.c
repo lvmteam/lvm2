@@ -1371,15 +1371,21 @@ static int clog_get_sync_count(struct dm_ulog_request *rq, uint32_t originator)
 
 static int core_status_info(struct log_c *lc __attribute((unused)), struct dm_ulog_request *rq)
 {
+	int r;
 	char *data = (char *)rq->data;
 
-	rq->data_size = sprintf(data, "1 clustered-core");
+	r = sprintf(data, "1 clustered-core");
+	if (r < 0)
+		return r;
+
+	rq->data_size = r;
 
 	return 0;
 }
 
 static int disk_status_info(struct log_c *lc, struct dm_ulog_request *rq)
 {
+	int r;
 	char *data = (char *)rq->data;
 	struct stat statbuf;
 
@@ -1388,9 +1394,13 @@ static int disk_status_info(struct log_c *lc, struct dm_ulog_request *rq)
 		return -errno;
 	}
 
-	rq->data_size = sprintf(data, "3 clustered-disk %d:%d %c",
-				major(statbuf.st_rdev), minor(statbuf.st_rdev),
-				(lc->log_dev_failed) ? 'D' : 'A');
+	r = sprintf(data, "3 clustered-disk %d:%d %c",
+		    major(statbuf.st_rdev), minor(statbuf.st_rdev),
+		    (lc->log_dev_failed) ? 'D' : 'A');
+	if (r < 0)
+		return r;
+
+	rq->data_size = r;
 
 	return 0;
 }
@@ -1421,18 +1431,24 @@ static int clog_status_info(struct dm_ulog_request *rq)
 
 static int core_status_table(struct log_c *lc, struct dm_ulog_request *rq)
 {
+	int r;
 	char *data = (char *)rq->data;
 
-	rq->data_size = sprintf(data, "clustered-core %u %s%s ",
-				lc->region_size,
-				(lc->sync == DEFAULTSYNC) ? "" :
-				(lc->sync == NOSYNC) ? "nosync " : "sync ",
-				(lc->block_on_error) ? "block_on_error" : "");
+	r = sprintf(data, "clustered-core %u %s%s ",
+		    lc->region_size,
+		    (lc->sync == DEFAULTSYNC) ? "" :
+		    (lc->sync == NOSYNC) ? "nosync " : "sync ",
+		    (lc->block_on_error) ? "block_on_error" : "");
+	if (r < 0)
+		return r;
+
+	rq->data_size = r;
 	return 0;
 }
 
 static int disk_status_table(struct log_c *lc, struct dm_ulog_request *rq)
 {
+	int r;
 	char *data = (char *)rq->data;
 	struct stat statbuf;
 
@@ -1441,12 +1457,16 @@ static int disk_status_table(struct log_c *lc, struct dm_ulog_request *rq)
 		return -errno;
 	}
 
-	rq->data_size = sprintf(data, "clustered-disk %d:%d %u %s%s ",
-				major(statbuf.st_rdev), minor(statbuf.st_rdev),
-				lc->region_size,
-				(lc->sync == DEFAULTSYNC) ? "" :
-				(lc->sync == NOSYNC) ? "nosync " : "sync ",
-				(lc->block_on_error) ? "block_on_error" : "");
+	r = sprintf(data, "clustered-disk %d:%d %u %s%s ",
+		    major(statbuf.st_rdev), minor(statbuf.st_rdev),
+		    lc->region_size,
+		    (lc->sync == DEFAULTSYNC) ? "" :
+		    (lc->sync == NOSYNC) ? "nosync " : "sync ",
+		    (lc->block_on_error) ? "block_on_error" : "");
+	if (r < 0)
+		return r;
+
+	rq->data_size = r;
 	return 0;
 }
 
@@ -1554,6 +1574,11 @@ out:
  * An inability to perform this function will return an error
  * from this function.  However, an inability to successfully
  * perform the request will fill in the 'rq->error' field.
+ *
+ * 'rq' (or more correctly, rq->u_rq.data) should be of sufficient
+ * size to hold any returning data.  Currently, local.c uses 2kiB
+ * to hold 'rq' - leaving ~1.5kiB for return data... more than
+ * enough for all the implemented functions here.
  *
  * Returns: 0 on success, -EXXX on error
  */
