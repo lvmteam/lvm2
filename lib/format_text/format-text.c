@@ -311,26 +311,32 @@ static struct mda_header *_raw_read_mda_header(const struct format_type *fmt,
 	if (mdah->checksum_xl != xlate32(calc_crc(INITIAL_CRC, mdah->magic,
 						  MDA_HEADER_SIZE -
 						  sizeof(mdah->checksum_xl)))) {
-		log_error("Incorrect metadata area header checksum");
+		log_error("Incorrect metadata area header checksum on %s"
+			  " at offset %"PRIu64, dev_name(dev_area->dev),
+			  dev_area->start);
 		goto bad;
 	}
 
 	_xlate_mdah(mdah);
 
 	if (strncmp((char *)mdah->magic, FMTT_MAGIC, sizeof(mdah->magic))) {
-		log_error("Wrong magic number in metadata area header");
+		log_error("Wrong magic number in metadata area header on %s"
+			  " at offset %"PRIu64, dev_name(dev_area->dev),
+			  dev_area->start);
 		goto bad;
 	}
 
 	if (mdah->version != FMTT_VERSION) {
-		log_error("Incompatible metadata area header version: %d",
-			  mdah->version);
+		log_error("Incompatible metadata area header version: %d on %s"
+			  " at offset %"PRIu64, mdah->version,
+			  dev_name(dev_area->dev), dev_area->start);
 		goto bad;
 	}
 
 	if (mdah->start != dev_area->start) {
 		log_error("Incorrect start sector in metadata area header: %"
-			  PRIu64, mdah->start);
+			  PRIu64" on %s at offset %"PRIu64, mdah->start,
+			  dev_name(dev_area->dev), dev_area->start);
 		goto bad;
 	}
 
