@@ -2604,7 +2604,7 @@ static void check_reappeared_pv(struct volume_group *correct_vg,
 				pv->status &= ~MISSING_PV;
 				pvl->pv->status &= ~MISSING_PV;
 			} else
-				log_warn("Device still marked missing because of alocated data "
+				log_warn("Device still marked missing because of allocated data "
 					 "on it, remove volumes and consider vgreduce --removemissing.");
 		}
 }
