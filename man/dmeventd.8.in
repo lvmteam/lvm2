@@ -16,13 +16,13 @@ particular events occur.
 LVM PLUGINS
 .TP
 .I Mirror
-Attempts to handle device failure automatically.  See \fBlvm.conf\fP).
+Attempts to handle device failure automatically.  See \fBlvm.conf\fP(5).
 .TP
 .I Snapshot
 Monitors how full a snapshot is becoming and emits a warning to
 syslog when it exceeds 80% full.
 The warning is repeated when 85%, 90% and 95% of the snapshot is filled.
-See \fBlvm.conf\fP.
+See \fBlvm.conf\fP(5).
 .SH OPTIONS
 .TP
 .I \-d
