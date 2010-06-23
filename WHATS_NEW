@@ -1,5 +1,6 @@
 Version 2.02.68 -
 ===============================
+  Fix typo "INTERNAL ERROR" -> "INTERNAL_ERROR" in libdm-iface.c.
   Add lv_path to reports to offer full /dev pathname.
   Fix typo in warning message about missing device with allocated data areas.
   Add device name and offset to output of error messages in raw_read_mda_header().
