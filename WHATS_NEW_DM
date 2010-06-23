@@ -1,9 +1,10 @@
-Version 1.02.50 - 
-===============================
+Version 1.02.50 - 23rd June 2010
+================================
   Fix INTERNAL_ERROR typo in ioctl iface unknown task message.
   Fix udev rules to handle spurious events properly.
   Use C99 [] not [0] in dm_ulog_request struct to avoid abort when fortified.
   Allow use of devmapper header file in C++ mode (extern "C" and __typeof__).
+  Add dmeventd man page.
 
 Version 1.02.49 - 4th June 2010
 ===============================
