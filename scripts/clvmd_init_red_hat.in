@@ -25,7 +25,7 @@ sbindir=@sbindir@
 lvm_vgchange=${sbindir}/vgchange
 lvm_vgdisplay=${sbindir}/vgdisplay
 lvm_vgscan=${sbindir}/vgscan
-lvm_lvs=${sbindir}/lvs
+lvm_lvdisplay=${sbindir}/lvdisplay
 
 CLVMDOPTS="-T30"
 
@@ -47,9 +47,10 @@ clustered_vgs() {
 		awk 'BEGIN {RS="VG Name"} {if (/Clustered/) print $1;}'
 }
 
-clustered_lvs() {
+clustered_active_lvs() {
 	for i in $(clustered_vgs); do
-		${lvm_lvs} -o lv_name --noheadings $i
+		${lvm_lvdisplay} $i 2>/dev/null | \
+		awk 'BEGIN {RS="LV Name"} {if (/[^N^O^T] available/) print $1;}'
 	done
 }
 
@@ -197,8 +198,8 @@ case "$1" in
 	rtrn=$?
 	if [ $rtrn = 0 ]; then
 		cvgs="$(clustered_vgs)"
-		echo Active clustered Volume Groups: ${cvgs:-"(none)"}
-		clvs="$(clustered_lvs)"
+		echo Clustered Volume Groups: ${cvgs:-"(none)"}
+		clvs="$(clustered_active_lvs)"
 		echo Active clustered Logical Volumes: ${clvs:-"(none)"}
 	fi
 	;;
