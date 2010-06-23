@@ -627,7 +627,7 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 
 	if ((arg_count(cmd, ignorelockingfailure_ARG) ||
 	     arg_count(cmd, sysinit_ARG)) && !arg_count(cmd, available_ARG)) {
-		log_error("Only -a premitted with --ignorelockingfailure and --sysinit");
+		log_error("Only -a permitted with --ignorelockingfailure and --sysinit");
 		return EINVALID_CMD_LINE;
 	}
 
