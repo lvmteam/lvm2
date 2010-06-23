@@ -16,7 +16,7 @@ Version 2.02.68 -
   Allow use of lvm2app and lvm2cmd headers in C++ code.
   Remove some unused #includes from clvmd files.
   Use #include "" for libdevmapper.h and configure.h throughout tree.
-  Fix 'make exec_prefix' with LVM_PATH / DMEVENTD_PATH. (2.02.67)
+  Fix LVM_PATH expansion when exec_prefix=NONE (2.02.67).
   Fix segfault in clvmd -R if no response from daemon received.
 
 Version 2.02.67 - 4th June 2010
