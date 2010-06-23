@@ -29,6 +29,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#ifndef __GNUC__
+# define __typeof__ typeof
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -855,9 +859,9 @@ struct dm_list *dm_list_next(const struct dm_list *head, const struct dm_list *e
  * The 'struct dm_list' variable within the containing structure is 'field'.
  */
 #define dm_list_iterate_items_gen(v, head, field) \
-	for (v = dm_list_struct_base((head)->n, typeof(*v), field); \
+	for (v = dm_list_struct_base((head)->n, __typeof__(*v), field); \
 	     &v->field != (head); \
-	     v = dm_list_struct_base(v->field.n, typeof(*v), field))
+	     v = dm_list_struct_base(v->field.n, __typeof__(*v), field))
 
 /*
  * Walk a list, setting 'v' in turn to the containing structure of each item.
@@ -873,10 +877,10 @@ struct dm_list *dm_list_next(const struct dm_list *head, const struct dm_list *e
  * t must be defined as a temporary variable of the same type as v.
  */
 #define dm_list_iterate_items_gen_safe(v, t, head, field) \
-	for (v = dm_list_struct_base((head)->n, typeof(*v), field), \
-	     t = dm_list_struct_base(v->field.n, typeof(*v), field); \
+	for (v = dm_list_struct_base((head)->n, __typeof__(*v), field), \
+	     t = dm_list_struct_base(v->field.n, __typeof__(*v), field); \
 	     &v->field != (head); \
-	     v = t, t = dm_list_struct_base(v->field.n, typeof(*v), field))
+	     v = t, t = dm_list_struct_base(v->field.n, __typeof__(*v), field))
 /*
  * Walk a list, setting 'v' in turn to the containing structure of each item.
  * The containing structure should be the same type as 'v'.
@@ -893,9 +897,9 @@ struct dm_list *dm_list_next(const struct dm_list *head, const struct dm_list *e
  * The 'struct dm_list' variable within the containing structure is 'field'.
  */
 #define dm_list_iterate_back_items_gen(v, head, field) \
-	for (v = dm_list_struct_base((head)->p, typeof(*v), field); \
+	for (v = dm_list_struct_base((head)->p, __typeof__(*v), field); \
 	     &v->field != (head); \
-	     v = dm_list_struct_base(v->field.p, typeof(*v), field))
+	     v = dm_list_struct_base(v->field.p, __typeof__(*v), field))
 
 /*
  * Walk a list backwards, setting 'v' in turn to the containing structure 
