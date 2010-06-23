@@ -1,5 +1,5 @@
-Version 2.02.68 -
-===============================
+Version 2.02.68 - 23rd June 2010
+================================
   Fix clvmd initscript status to print only active clustered LVs.
   Add lv_path to reports to offer full /dev pathname.
   Fix typo in warning message about missing device with allocated data areas.
@@ -11,14 +11,13 @@ Version 2.02.68 -
   Add man pages for lvmconf and non-existent lvmsadc and lvmsar tools.
   Exit successfully when using -o help (but not -o +help) with LVM reports.
   Do not use internal DLM lock definitions in generic LVM2 clvmd code.
-  Add dmeventd man page.
   Add --force, --nofsck and --resizefs to lvresize/extend/reduce man pages.
   Fix lvm2cmd example in documentation.
   Allow use of lvm2app and lvm2cmd headers in C++ code.
   Remove unused #includes from clvmd files and introduce clvmd-common.h.
   Move common inclusions to clvmd-common.h.
   Use #include "" for libdevmapper.h and configure.h throughout tree.
-  Fix LVM_PATH expansion when exec_prefix=NONE (2.02.67).
+  Fix LVM_PATH expansion when exec_prefix=NONE. (2.02.67)
   Fix segfault in clvmd -R if no response from daemon received.
 
 Version 2.02.67 - 4th June 2010
