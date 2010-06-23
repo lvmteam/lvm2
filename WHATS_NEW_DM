@@ -1,5 +1,6 @@
 Version 1.02.50 - 
 ===============================
+  Fix udev rules to handle spurious events properly.
   Allow use of devmapper header file in C++ mode.
 
 Version 1.02.49 - 4th June 2010
