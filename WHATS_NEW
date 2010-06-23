@@ -1,5 +1,6 @@
 Version 2.02.69 - 
 ================================
+  Fix handling of simultaneous mirror image and mirrored log image failure.
 
 Version 2.02.68 - 23rd June 2010
 ================================
