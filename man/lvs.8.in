@@ -55,7 +55,7 @@ to select all logical volume segment columns.
 Use \fb-o help\fP to view the full list of columns available.
 .IP
 Column names include:
-lv_uuid, lv_name, lv_attr, lv_major, lv_minor, lv_read_ahead, lv_kernel_major,
+lv_uuid, lv_name, lv_path, lv_attr, lv_major, lv_minor, lv_read_ahead, lv_kernel_major,
 lv_kernel_minor, lv_kernel_read_ahead, lv_size, seg_count, origin, origin_size,
 snap_percent, copy_percent, move_pv, convert_lv, lv_tags, mirror_log, modules,
 segtype, stripes, stripesize, regionsize, chunksize, seg_start, seg_start_pe,
