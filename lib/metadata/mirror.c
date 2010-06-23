@@ -1038,7 +1038,7 @@ int collapse_mirrored_lv(struct logical_volume *lv)
 
 		if (!_remove_mirror_images(mirror_seg->lv,
 					   mirror_seg->area_count - 1,
-					   _no_removable_images, NULL, 1, 1, NULL)) {
+					   _no_removable_images, NULL, 0, 1, NULL)) {
 			log_error("Failed to release mirror images");
 			return 0;
 		}
