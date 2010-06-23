@@ -1,12 +1,10 @@
 Version 2.02.68 -
 ===============================
   Fix clvmd initscript status to print only active clustered LVs.
-  Fix typo "INTERNAL ERROR" -> "INTERNAL_ERROR" in libdm-iface.c.
   Add lv_path to reports to offer full /dev pathname.
   Fix typo in warning message about missing device with allocated data areas.
-  Add device name and offset to output of error messages in raw_read_mda_header().
-  Use flexible data[] in cmirrord request to prevent abort in runtime size checks.
-  Honor log argument when down-converting stacked mirror.
+  Add device name and offset to raw_read_mda_header error messages.
+  Honour log argument when down-converting stacked mirror.
   Sleep to workaround clvmd -S race: socket closed early and server drops cmd.
   Use early udev synchronisation and update of dev nodes for clustered mirrors.
   Remove incorrect inclusion of kdev_t.h from cmirrord/functions.h.
