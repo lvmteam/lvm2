@@ -523,6 +523,30 @@ static int _lvname_disp(struct dm_report *rh, struct dm_pool *mem,
 	return 1;
 }
 
+static int _lvpath_disp(struct dm_report *rh, struct dm_pool *mem,
+			struct dm_report_field *field,
+			const void *data, void *private __attribute((unused)))
+{
+	const struct logical_volume *lv = (const struct logical_volume *) data;
+	char *repstr;
+	size_t len;
+
+	len = strlen(lv->vg->cmd->dev_dir) + strlen(lv->vg->name) + strlen(lv->name) + 2;
+	if (!(repstr = dm_pool_zalloc(mem, len))) {
+		log_error("dm_pool_alloc failed");
+		return 0;
+	}
+
+	if (dm_snprintf(repstr, len, "%s%s/%s", lv->vg->cmd->dev_dir, lv->vg->name, lv->name) < 0) {
+		log_error("lvpath snprintf failed");
+		return 0;
+	}
+
+	dm_report_field_set_value(field, repstr, NULL);
+
+	return 1;
+}
+
 static int _origin_disp(struct dm_report *rh, struct dm_pool *mem,
 			struct dm_report_field *field,
 			const void *data, void *private)
