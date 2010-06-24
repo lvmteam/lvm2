@@ -216,6 +216,9 @@ static int _memlock_maps(struct cmd_context *cmd, lvmlock_t lock, size_t *mstats
 #endif
 	}
 
+	/* Force libc.mo load */
+	if (lock == LVM_MLOCK)
+		(void)strerror(0);
 	/* Reset statistic counters */
 	*mstats = 0;
 	rewind(_mapsh);
