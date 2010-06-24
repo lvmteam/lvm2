@@ -33,7 +33,7 @@ using the block special device \fIPhysicalDevicePath\fP.
 If \fIPhysicalDevicePath\fP was not previously configured for LVM with
 \fBpvcreate (8)\fP, the device will be initialized with the same
 default values used with \fBpvcreate\fP.  If non-default
-\fPpvcreate\fP values are are desired, they may be given on the
+\fPpvcreate\fP values are desired, they may be given on the
 commandline with the same options as \fPpvcreate\fP.  See
 \fBPHYSICAL DEVICE OPTIONS\fP for available options.  Note
 that the restore-related options such as --restorefile, --uuid,
