@@ -14,9 +14,13 @@ The content of the tarball is as follows:
 .br
 - recent entries from /var/log/messages (containing system messages)
 .br
-- complete lvm configuration and cache
+- complete lvm configuration and cache (content of /etc/lvm)
 .br
 - list of device nodes present under /dev
+.br
+- list of files present /sys/block
+.br
+- list of files present /sys/devices/virtual/block
 .br
 - if enabled with -m, metadata dump will be also included
 .br
