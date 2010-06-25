@@ -106,6 +106,9 @@ endif
 
 LVMLIBS += -ldevmapper
 
+EXPORTED_HEADER = $(srcdir)/lvm2cmd.h
+EXPORTED_FN_PREFIX = lvm2
+
 DEFS += -DLVM_SHARED_PATH=\"$(exec_prefix)/sbin/lvm\"
 
 CFLOW_LIST = lvmcmdlib.c lvm2cmd.c
