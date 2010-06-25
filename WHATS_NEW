@@ -1,7 +1,6 @@
 Version 2.02.69 - 
 ================================
-  Update liblvm2app exported symbols.
-  Add manual Makefile target to generate current list of lvm2app.h functions.
+  Generate liblvm2app and libdevmapper exported symbols from header file.
   Preload libc locale messages to prevent reading it in memory locked state.
   Fix handling of simultaneous mirror image and mirrored log image failure.
 

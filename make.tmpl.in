@@ -355,7 +355,16 @@ distclean: cleandir $(SUBDIRS.distclean)
 	test -z "$(DISTCLEAN_DIRS)" || $(RM) -r $(DISTCLEAN_DIRS)
 	$(RM) $(DISTCLEAN_TARGETS) Makefile core
 
-.export.sym: .exported_symbols
+.exported_symbols_generated: $(EXPORTED_HEADER) .exported_symbols
+	set -e; \
+	( cat $(srcdir)/.exported_symbols; \
+	  if test x$(EXPORTED_HEADER) != x; then \
+        	$(CC) -E -P $(EXPORTED_HEADER) | \
+        	$(SED) -ne "/^typedef|}/!s/.*[ \*]\(\$(EXPORTED_FN_PREFIX)_[a-z0-9_]*\)(.*/\1/p"; \
+	  fi \
+	) > $@
+
+.export.sym: .exported_symbols_generated
 	set -e; (echo "Base {"; echo "	global:"; \
 		 sed "s/^/		/;s/$$/;/" < $<; \
 		 echo "	local:"; echo "		*;"; echo "};") > $@

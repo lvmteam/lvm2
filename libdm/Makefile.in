@@ -45,6 +45,9 @@ TARGETS += libdevmapper.$(LIB_SUFFIX) libdevmapper.$(LIB_SUFFIX).$(LIB_VERSION)
 CFLOW_LIST = $(SOURCES)
 CFLOW_LIST_TARGET = libdevmapper.cflow
 
+EXPORTED_HEADER = $(srcdir)/libdevmapper.h
+EXPORTED_FN_PREFIX = dm
+
 include $(top_builddir)/make.tmpl
 
 DEFS += -DDM_DEVICE_UID=@DM_DEVICE_UID@ -DDM_DEVICE_GID=@DM_DEVICE_GID@ \
