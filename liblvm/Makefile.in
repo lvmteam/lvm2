@@ -75,4 +75,8 @@ liblvm.cflow: $(SOURCES)
 
 cflow: liblvm.cflow
 
+.exported_symbols_new: $(srcdir)/lvm2app.h
+	$(CPP) -P $< | \
+	$(SED) -ne '/^(typedef|})/!s/.*[ \*]\(lvm_[a-z_]*\)(.*/\1/p' > $@
+
 DISTCLEAN_TARGETS += $(LIB_NAME).pc
