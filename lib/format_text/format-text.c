@@ -121,6 +121,20 @@ static int _mda_in_vg_raw(struct format_instance *fid __attribute((unused)),
 	return 0;
 }
 
+static unsigned _mda_locns_match_raw(struct metadata_area *mda1,
+				     struct metadata_area *mda2)
+{
+	struct mda_context *mda1c = (struct mda_context *) mda1->metadata_locn;
+	struct mda_context *mda2c = (struct mda_context *) mda2->metadata_locn;
+
+	if ((mda1c->area.dev == mda2c->area.dev) &&
+	    (mda1c->area.start == mda2c->area.start) &&
+	    (mda1c->area.size == mda2c->area.size))
+		return 1;
+
+	return 0;
+}
+
 /*
  * For circular region between region_start and region_start + region_size,
  * back up one SECTOR_SIZE from 'region_ptr' and return the value.
@@ -1732,6 +1746,7 @@ static struct metadata_area_ops _metadata_text_raw_ops = {
 	.mda_total_sectors = _mda_total_sectors_raw,
 	.mda_in_vg = _mda_in_vg_raw,
 	.pv_analyze_mda = _pv_analyze_mda_raw,
+	.mda_locns_match = _mda_locns_match_raw
 };
 
 /* pvmetadatasize in sectors */
