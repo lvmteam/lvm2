@@ -2723,7 +2723,8 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	if (correct_vg) {
 		/*
 		 * If the VG has PVs without mdas, or ignored mdas, they may
-		 * still be orphans in the cache: update the cache state here.
+		 * still be orphans in the cache: update the cache state here,
+		 * and update the metadata lists in the vg.
 		 */
 		if (!inconsistent &&
 		    dm_list_size(&correct_vg->pvs) > dm_list_size(pvids)) {
@@ -2747,6 +2748,9 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 					inconsistent_pvs = 1;
 					break;
 				}
+				if (dm_list_size(&info->mdas) &&
+				    !fid_add_mdas(fid, &info->mdas))
+					return_NULL;
 			}
 
 			/* If the check passed, let's update VG and recalculate pvids */
