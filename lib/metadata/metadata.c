@@ -4032,6 +4032,19 @@ unsigned pv_mda_set_ignored(const struct physical_volume *pv, unsigned ignored)
 	return 1;
 }
 
+int mdas_empty_or_ignored(struct dm_list *mdas)
+{
+	struct metadata_area *mda;
+
+	if (!dm_list_size(mdas))
+		return 1;
+	dm_list_iterate_items(mda, mdas) {
+		if (mda_is_ignored(mda))
+			return 1;
+	}
+	return 0;
+}
+
 uint32_t vg_seqno(const struct volume_group *vg)
 {
 	return vg->seqno;
