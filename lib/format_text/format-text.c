@@ -1891,11 +1891,11 @@ static struct format_instance *_text_create_text_instance(const struct format_ty
 {
 	struct format_instance *fid;
 	struct text_fid_context *fidtc;
-	struct metadata_area *mda, *mda_new;
+	struct metadata_area *mda;
 	struct mda_context *mdac;
 	struct dir_list *dl;
 	struct raw_list *rl;
-	struct dm_list *dir_list, *raw_list, *mdas;
+	struct dm_list *dir_list, *raw_list;
 	char path[PATH_MAX];
 	struct lvmcache_vginfo *vginfo;
 	struct lvmcache_info *info;
@@ -1923,7 +1923,7 @@ static struct format_instance *_text_create_text_instance(const struct format_ty
 			return_NULL;
 		mda->ops = &_metadata_text_file_backup_ops;
 		mda->metadata_locn = context;
-		dm_list_add(&fid->metadata_areas_in_use, &mda->list);
+		fid_add_mda(fid, mda);
 	} else {
 		dir_list = &((struct mda_lists *) fmt->private)->dirs;
 
@@ -1940,7 +1940,7 @@ static struct format_instance *_text_create_text_instance(const struct format_ty
 				return_NULL;
 			mda->ops = &_metadata_text_file_ops;
 			mda->metadata_locn = context;
-			dm_list_add(&fid->metadata_areas_in_use, &mda->list);
+			fid_add_mda(fid, mda);
 		}
 
 		raw_list = &((struct mda_lists *) fmt->private)->raws;
@@ -1960,7 +1960,7 @@ static struct format_instance *_text_create_text_instance(const struct format_ty
 			memcpy(&mdac->area, &rl->dev_area, sizeof(mdac->area));
 			mda->ops = &_metadata_text_raw_ops;
 			/* FIXME MISTAKE? mda->metadata_locn = context; */
-			dm_list_add(&fid->metadata_areas_in_use, &mda->list);
+			fid_add_mda(fid, mda);
 		}
 
 		/* Scan PVs in VG for any further MDAs */
@@ -1968,14 +1968,8 @@ static struct format_instance *_text_create_text_instance(const struct format_ty
 		if (!(vginfo = vginfo_from_vgname(vgname, vgid)))
 			goto_out;
 		dm_list_iterate_items(info, &vginfo->infos) {
-			mdas = &info->mdas;
-			dm_list_iterate_items(mda, mdas) {
-				/* FIXME Check it holds this VG */
-				mda_new = mda_copy(fmt->cmd->mem, mda);
-				if (!mda_new)
-					return_NULL;
-				dm_list_add(&fid->metadata_areas_in_use, &mda_new->list);
-			}
+			if (!fid_add_mdas(fid, &info->mdas))
+				return_NULL;
 		}
 		/* FIXME Check raw metadata area count - rescan if required */
 	}
