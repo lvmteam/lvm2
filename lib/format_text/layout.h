@@ -46,6 +46,13 @@ struct pv_header {
 	struct disk_locn disk_areas_xl[0];	/* Two lists */
 } __attribute__ ((packed));
 
+/*
+ * Ignore this raw location.  This allows us to
+ * ignored metadata areas easily, and thus balance
+ * metadata across VGs with many PVs.
+ */
+#define RAW_LOCN_IGNORED 0x00000001
+
 /* On disk */
 struct raw_locn {
 	uint64_t offset;	/* Offset in bytes to start sector */
@@ -53,6 +60,9 @@ struct raw_locn {
 	uint32_t checksum;
 	uint32_t flags;
 } __attribute__ ((packed));
+
+int rlocn_is_ignored(const struct raw_locn *rlocn);
+void rlocn_set_ignored(struct raw_locn *rlocn, int value);
 
 /* On disk */
 /* Structure size limited to one sector */
