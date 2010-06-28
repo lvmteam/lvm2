@@ -49,7 +49,7 @@ Use \fb-o help\fP to view the full list of columns available.
 Column names include: vg_fmt, vg_uuid, vg_name, vg_attr, vg_size, vg_free,
 vg_sysid, vg_extent_size, vg_extent_count, vg_free_count, max_lv, max_pv,
 pv_count, lv_count, snap_count, vg_seqno, vg_tags, vg_mda_count, vg_mda_free,
-and vg_mda_size.
+and vg_mda_size, vg_mda_used_count.
 .IP
 Any "vg_" prefixes are optional.  Columns mentioned in either \fBpvs (8)\fP 
 or \fBlvs (8)\fP can also be chosen, but columns cannot be taken from both
