@@ -23,6 +23,7 @@
 #include "pv_alloc.h"
 #include "segtype.h"
 #include "text_import.h"
+#include "defaults.h"
 
 typedef int (*section_fn) (struct format_instance * fid, struct dm_pool * mem,
 			   struct volume_group * vg, struct config_node * pvn,
@@ -743,6 +744,10 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 		vg->alloc = get_alloc_from_string(cv->v.str);
 		if (vg->alloc == ALLOC_INVALID)
 			return_0;
+	}
+
+	if (!_read_uint32(vgn, "metadata_copies", &vg->mda_copies)) {
+		vg->mda_copies = DEFAULT_VGMETADATACOPIES;
 	}
 
 	/*
