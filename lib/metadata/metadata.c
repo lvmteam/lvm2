@@ -3855,6 +3855,19 @@ uint32_t pv_pe_alloc_count(const struct physical_volume *pv)
 	return pv_field(pv, pe_alloc_count);
 }
 
+unsigned mda_is_ignored(struct metadata_area *mda)
+{
+	return (mda->flags & MDA_IGNORED);
+}
+
+void mda_set_ignored(struct metadata_area *mda, int value)
+{
+	if (value)
+		mda->flags |= MDA_IGNORED;
+	else
+		mda->flags &= ~MDA_IGNORED;
+}
+
 uint32_t pv_mda_count(const struct physical_volume *pv)
 {
 	struct lvmcache_info *info;
