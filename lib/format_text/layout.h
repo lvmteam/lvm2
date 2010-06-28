@@ -76,6 +76,9 @@ struct mda_header {
 	struct raw_locn raw_locns[0];	/* NULL-terminated list */
 } __attribute__ ((packed));
 
+struct mda_header *raw_read_mda_header(const struct format_type *fmt,
+				       struct device_area *dev_area);
+
 struct mda_lists {
 	struct dm_list dirs;
 	struct dm_list raws;
@@ -95,5 +98,12 @@ struct mda_context {
 #define MDA_HEADER_SIZE 512
 #define LVM2_LABEL "LVM2 001"
 #define MDA_SIZE_MIN (8 * (unsigned) lvm_getpagesize())
+
+
+const char *vgname_from_mda(const struct format_type *fmt,
+			    struct mda_header *mdah,
+			    struct device_area *dev_area, struct id *vgid,
+			    uint64_t *vgstatus, char **creation_host,
+			    uint64_t *mda_free_sectors);
 
 #endif

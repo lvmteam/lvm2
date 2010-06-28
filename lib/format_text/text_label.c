@@ -262,6 +262,7 @@ static int _text_read(struct labeller *l, struct device *dev, void *buf,
 	const char *vgname;
 	uint64_t vgstatus;
 	char *creation_host;
+	struct mda_header *mdah;
 
 	pvhdr = (struct pv_header *) ((void *) buf + xlate32(lh->offset_xl));
 
@@ -303,13 +304,23 @@ static int _text_read(struct labeller *l, struct device *dev, void *buf,
 			stack;
 			continue;
 		}
-		if ((vgname = vgname_from_mda(info->fmt, &mdac->area,
+		if (!(mdah = raw_read_mda_header(info->fmt, &mdac->area))) {
+			stack;
+			goto close_dev;
+		}
+
+		if ((vgname = vgname_from_mda(info->fmt, mdah,
+					      &mdac->area,
 					      &vgid, &vgstatus, &creation_host,
 					      &mdac->free_sectors)) &&
 		    !lvmcache_update_vgname_and_id(info, vgname,
 						   (char *) &vgid, vgstatus,
-						   creation_host))
+						   creation_host)) {
+			if (!dev_close(mdac->area.dev))
+					stack;
 			return_0;
+		}
+	close_dev:
 		if (!dev_close(mdac->area.dev))
 			stack;
 	}
