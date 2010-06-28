@@ -3955,6 +3955,83 @@ uint32_t pv_mda_count(const struct physical_volume *pv)
 	return info ? dm_list_size(&info->mdas) : UINT64_C(0);
 }
 
+uint32_t pv_mda_used_count(const struct physical_volume *pv)
+{
+	struct lvmcache_info *info;
+	struct metadata_area *mda;
+	uint32_t used_count=0;
+
+	info = info_from_pvid((const char *)&pv->id.uuid, 0);
+	if (!info)
+		return 0;
+	dm_list_iterate_items(mda, &info->mdas) {
+		if (!mda_is_ignored(mda))
+			used_count++;
+	}
+	return used_count;
+}
+
+unsigned pv_mda_set_ignored(const struct physical_volume *pv, unsigned ignored)
+{
+	struct lvmcache_info *info;
+	struct metadata_area *mda, *vg_mda, *tmda;
+	struct dm_list *vg_mdas_in_use, *vg_mdas_ignored;
+
+	info = info_from_pvid((const char *)&pv->id.uuid, 0);
+	if (!info)
+		return_0;
+
+	if (is_orphan(pv)) {
+		dm_list_iterate_items(mda, &info->mdas) {
+			mda_set_ignored(mda, ignored);
+		}
+		return 1;
+	}
+
+	/*
+	 * Do not allow disabling of the the last PV in a VG.
+	 */
+	if (pv_mda_used_count(pv) == vg_mda_used_count(pv->vg)) {
+		log_error("Cannot disable metadata - volume group "
+			  "needs at least one physical volume with "
+			  "metadata areas in use.\n");
+		return 0;
+	}
+
+	/*
+	 * Non-orphan case is more complex.
+	 * If the PV's mdas are ignored, and we wish to un-ignore,
+	 * we clear the bit and move them from the ignored mda list to the
+	 * in_use list, ensuring the new state will get written to disk
+	 * in the vg_write() path.
+	 * If the PV's mdas are not ignored, and we are setting
+	 * them to ignored, we set the bit but leave them on the in_use
+	 * list, ensuring the new state will get written to disk in the
+	 * vg_write() path.
+	 */
+	vg_mdas_in_use = &pv->vg->fid->metadata_areas_in_use;
+	vg_mdas_ignored = &pv->vg->fid->metadata_areas_ignored;
+	dm_list_iterate_items(mda, &info->mdas) {
+		if (mda_is_ignored(mda) && !ignored) {
+			/* Changing an ignored mda to one in_use requires moving it */
+			dm_list_iterate_items_safe(vg_mda, tmda, vg_mdas_ignored) {
+				if (mda_locns_match(mda, vg_mda)) {
+					mda_set_ignored(vg_mda, ignored);
+					dm_list_move(vg_mdas_in_use, &vg_mda->list);
+				}
+			}
+		}
+		dm_list_iterate_items_safe(vg_mda, tmda, vg_mdas_in_use) {
+			if (mda_locns_match(mda, vg_mda)) {
+				mda_set_ignored(vg_mda, ignored);
+				/* don't move mda - needs written to disk */
+			}
+		}
+		mda_set_ignored(mda, ignored);
+	}
+	return 1;
+}
+
 uint32_t vg_seqno(const struct volume_group *vg)
 {
 	return vg->seqno;
@@ -4007,7 +4084,30 @@ uint64_t vg_max_lv(const struct volume_group *vg)
 
 uint32_t vg_mda_count(const struct volume_group *vg)
 {
-	return dm_list_size(&vg->fid->metadata_areas_in_use);
+	return dm_list_size(&vg->fid->metadata_areas_in_use) +
+		dm_list_size(&vg->fid->metadata_areas_ignored);
+}
+
+uint32_t vg_mda_used_count(const struct volume_group *vg)
+{
+       uint32_t used_count = 0;
+       struct metadata_area *mda;
+
+	/*
+	 * Ignored mdas could be on either list - the reason being the state
+	 * may have changed from ignored to un-ignored and we need to write
+	 * the state to disk.
+	 */
+       dm_list_iterate_items(mda, &vg->fid->metadata_areas_in_use) {
+	       if (!mda_is_ignored(mda))
+		       used_count++;
+       }
+       dm_list_iterate_items(mda, &vg->fid->metadata_areas_ignored) {
+	       if (!mda_is_ignored(mda))
+		       used_count++;
+       }
+
+       return used_count;
 }
 
 uint64_t lv_size(const struct logical_volume *lv)
