@@ -1816,7 +1816,9 @@ int add_mirror_images(struct cmd_context *cmd, struct logical_volume *lv,
 	 * create and initialize mirror log
 	 */
 	if (log_count &&
-	    !(log_lv = _set_up_mirror_log(cmd, ah, lv, log_count, region_size,
+	    !(log_lv = _set_up_mirror_log(cmd, ah, lv, log_count,
+					  (region_size > lv->vg->extent_size) ?
+					  lv->vg->extent_size : region_size,
 					  alloc, mirror_in_sync()))) {
 		stack;
 		goto out_remove_images;
