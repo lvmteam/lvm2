@@ -6,6 +6,7 @@ pvchange \- change attributes of a physical volume
 [\-\-addtag Tag]
 [\-A|\-\-autobackup y|n] [\-d|\-\-debug] 
 [\-\-deltag Tag]
+[\-\-metadataignore y|n]
 [\-h|\-?|\-\-help]
 [\-t|\-\-test]
 [\-v|\-\-verbose] [\-a|\-\-all] [\-x|\-\-allocatable y|n]
@@ -25,10 +26,20 @@ Generate new random UUID for specified physical volumes.
 .TP
 .I \-x, \-\-allocatable y|n
 Enable or disable allocation of physical extents on this physical volume.
+.TP
+.I \-\-metadataignore y|n
+Ignore or un-ignore metadata areas on this physical volume.  If metadata
+areas on a physical volume are ignored, LVM will not not store metadata
+in the metadata areas present on this Physical Volume.  Metadata areas
+cannot be created or extended after Logical Volumes have been allocated
+on the device. If you do not want to store metadata on this device, it
+is still wise always to allocate a metadata area in case you need it in
+the future and to use this option to instruct LVM2 to ignore it.
+(This option is not applicable to the old LVM1 metadata format.)
 .SH Example
 "pvchange -x n /dev/sdk1" disallows the allocation of physical extents
 on this physical volume (possibly because of disk errors, or because it will
 be removed after freeing it.
 .SH SEE ALSO
-.BR lvm (8), 
+.BR lvm (8),
 .BR pvcreate (8)
