@@ -2424,18 +2424,11 @@ int vg_write(struct volume_group *vg)
 	return 1;
 }
 
-/* Commit pending changes */
-int vg_commit(struct volume_group *vg)
+static int _vg_commit_mdas(struct volume_group *vg)
 {
 	struct metadata_area *mda;
-	int cache_updated = 0;
 	int failed = 0;
-
-	if (!vgname_is_locked(vg->name)) {
-		log_error(INTERNAL_ERROR "Attempt to write new VG metadata "
-			  "without locking %s", vg->name);
-		return cache_updated;
-	}
+	int cache_updated = 0;
 
 	/* Commit to each copy of the metadata area */
 	dm_list_iterate_items(mda, &vg->fid->metadata_areas_in_use) {
@@ -2451,6 +2444,21 @@ int vg_commit(struct volume_group *vg)
 			cache_updated = 1;
 		}
 	}
+	return cache_updated;
+}
+
+/* Commit pending changes */
+int vg_commit(struct volume_group *vg)
+{
+	int cache_updated = 0;
+
+	if (!vgname_is_locked(vg->name)) {
+		log_error(INTERNAL_ERROR "Attempt to write new VG metadata "
+			  "without locking %s", vg->name);
+		return cache_updated;
+	}
+
+	cache_updated = _vg_commit_mdas(vg);
 
 	if (cache_updated) {
 		/* Instruct remote nodes to upgrade cached metadata. */
