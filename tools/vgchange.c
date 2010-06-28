@@ -525,6 +525,45 @@ static int _vgchange_refresh(struct cmd_context *cmd, struct volume_group *vg)
 	return ECMD_PROCESSED;
 }
 
+static int _vgchange_metadata_copies(struct cmd_context *cmd,
+				     struct volume_group *vg)
+{
+	uint32_t mda_copies;
+
+	if (arg_count(cmd, vgmetadatacopies_ARG))
+		mda_copies = arg_uint_value(cmd, vgmetadatacopies_ARG,
+			DEFAULT_VGMETADATACOPIES);
+	else if (arg_count(cmd, metadatacopies_ARG))
+		mda_copies = arg_uint_value(cmd, metadatacopies_ARG,
+			DEFAULT_VGMETADATACOPIES);
+	if (mda_copies == vg_mda_copies(vg)) {
+		log_error("Metadata copies of VG %s is already %u",
+			  vg->name, mda_copies);
+		return ECMD_PROCESSED;
+	}
+
+	if (!archive(vg)) {
+		stack;
+		return ECMD_FAILED;
+	}
+
+	if (!vg_set_mda_copies(vg, mda_copies)) {
+		stack;
+		return EINVALID_CMD_LINE;
+	}
+
+	if (!vg_write(vg) || !vg_commit(vg)) {
+		stack;
+		return ECMD_FAILED;
+	}
+
+	backup(vg);
+
+	log_print("Volume group \"%s\" successfully changed", vg->name);
+
+	return ECMD_PROCESSED;
+}
+
 static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 			   struct volume_group *vg,
 			   void *handle __attribute((unused)))
@@ -593,6 +632,10 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 	else if (arg_count(cmd, refresh_ARG))
 		r = _vgchange_refresh(cmd, vg);
 
+	else if (arg_count(cmd, vgmetadatacopies_ARG) ||
+		 arg_count(cmd, metadatacopies_ARG))
+		r = _vgchange_metadata_copies(cmd, vg);
+
 	return r;
 }
 
@@ -606,10 +649,12 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 	     arg_count(cmd, physicalextentsize_ARG) +
 	     arg_count(cmd, clustered_ARG) + arg_count(cmd, alloc_ARG) +
 	     arg_count(cmd, monitor_ARG) + arg_count(cmd, poll_ARG) +
-	     arg_count(cmd, refresh_ARG))) {
+	     arg_count(cmd, refresh_ARG) + arg_count(cmd, metadatacopies_ARG) +
+	     arg_count(cmd, vgmetadatacopies_ARG))) {
 		log_error("Need 1 or more of -a, -c, -l, -p, -s, -x, "
 			  "--refresh, --uuid, --alloc, --addtag, --deltag, "
-			  "--monitor or --poll");
+			  "--monitor, --poll, --vgmetadatacopies or "
+			  "--metadatacopies");
 		return EINVALID_CMD_LINE;
 	}
 
