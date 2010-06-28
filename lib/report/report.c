@@ -1127,6 +1127,7 @@ static int _copypercent_disp(struct dm_report *rh __attribute((unused)),
 /* necessary for displaying something for PVs not belonging to VG */
 static struct format_instance _dummy_fid = {
 	.metadata_areas_in_use = { &(_dummy_fid.metadata_areas_in_use), &(_dummy_fid.metadata_areas_in_use) },
+	.metadata_areas_ignored = { &(_dummy_fid.metadata_areas_ignored), &(_dummy_fid.metadata_areas_ignored) },
 };
 
 static struct volume_group _dummy_vg = {

@@ -215,7 +215,14 @@ struct physical_volume {
 
 struct format_instance {
 	const struct format_type *fmt;
-	struct dm_list metadata_areas_in_use;	/* e.g. metadata locations */
+	/*
+	 * Each mda in a vg is on exactly one of the below lists.
+	 * MDAs on the 'in_use' list will be read from / written to
+	 * disk, while MDAs on the 'ignored' list will not be read
+	 * or written to.
+	 */
+	struct dm_list metadata_areas_in_use;
+	struct dm_list metadata_areas_ignored;
 	void *private;
 };
 

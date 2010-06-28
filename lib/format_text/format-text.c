@@ -1209,6 +1209,7 @@ static int _scan_raw(const struct format_type *fmt)
 
 	fid.fmt = fmt;
 	dm_list_init(&fid.metadata_areas_in_use);
+	dm_list_init(&fid.metadata_areas_ignored);
 
 	dm_list_iterate_items(rl, raw_list) {
 		/* FIXME We're reading mdah twice here... */
@@ -1915,6 +1916,7 @@ static struct format_instance *_text_create_text_instance(const struct format_ty
 
 	fid->fmt = fmt;
 	dm_list_init(&fid->metadata_areas_in_use);
+	dm_list_init(&fid->metadata_areas_ignored);
 
 	if (!vgname) {
 		if (!(mda = dm_pool_alloc(fmt->cmd->mem, sizeof(*mda))))
