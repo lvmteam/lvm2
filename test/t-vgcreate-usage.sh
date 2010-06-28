@@ -115,7 +115,7 @@ do
     vgremove -f $vg
     pvremove -f $dev1
 done
-not vgcreate -c n --metadatacopies 0 $vg $dev1
+not vgcreate -c n --pvmetadatacopies 0 $vg $dev1
 pvcreate --metadatacopies 1 $dev2
 vgcreate -c n --pvmetadatacopies 0 $vg $dev1 $dev2
 check_pv_field_ $dev1 pv_mda_count 0
