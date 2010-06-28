@@ -863,6 +863,8 @@ uint64_t pv_pe_start(const struct physical_volume *pv);
 uint32_t pv_pe_count(const struct physical_volume *pv);
 uint32_t pv_pe_alloc_count(const struct physical_volume *pv);
 uint32_t pv_mda_count(const struct physical_volume *pv);
+uint32_t pv_mda_used_count(const struct physical_volume *pv);
+unsigned pv_mda_set_ignored(const struct physical_volume *pv, unsigned ignored);
 
 uint64_t lv_size(const struct logical_volume *lv);
 
@@ -878,6 +880,7 @@ uint64_t vg_pv_count(const struct volume_group *vg);
 uint64_t vg_max_pv(const struct volume_group *vg);
 uint64_t vg_max_lv(const struct volume_group *vg);
 uint32_t vg_mda_count(const struct volume_group *vg);
+uint32_t vg_mda_used_count(const struct volume_group *vg);
 int vg_check_write_mode(struct volume_group *vg);
 #define vg_is_clustered(vg) (vg_status((vg)) & CLUSTERED)
 #define vg_is_exported(vg) (vg_status((vg)) & EXPORTED_VG)

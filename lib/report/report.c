@@ -880,6 +880,19 @@ static int _pvmdas_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _uint32_disp(rh, mem, field, &count, private);
 }
 
+static int _pvmdasused_disp(struct dm_report *rh, struct dm_pool *mem,
+			     struct dm_report_field *field,
+			     const void *data, void *private)
+{
+	uint32_t count;
+	const struct physical_volume *pv =
+	    (const struct physical_volume *) data;
+
+	count = pv_mda_used_count(pv);
+
+	return _uint32_disp(rh, mem, field, &count, private);
+}
+
 static int _vgmdas_disp(struct dm_report *rh, struct dm_pool *mem,
 			struct dm_report_field *field,
 			const void *data, void *private)
@@ -888,6 +901,18 @@ static int _vgmdas_disp(struct dm_report *rh, struct dm_pool *mem,
 	uint32_t count;
 
 	count = vg_mda_count(vg);
+
+	return _uint32_disp(rh, mem, field, &count, private);
+}
+
+static int _vgmdasused_disp(struct dm_report *rh, struct dm_pool *mem,
+			     struct dm_report_field *field,
+			     const void *data, void *private)
+{
+	const struct volume_group *vg = (const struct volume_group *) data;
+	uint32_t count;
+
+	count = vg_mda_used_count(vg);
 
 	return _uint32_disp(rh, mem, field, &count, private);
 }
