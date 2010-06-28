@@ -51,7 +51,7 @@ struct raw_locn {
 	uint64_t offset;	/* Offset in bytes to start sector */
 	uint64_t size;		/* Bytes */
 	uint32_t checksum;
-	uint32_t filler;
+	uint32_t flags;
 } __attribute__ ((packed));
 
 /* On disk */
