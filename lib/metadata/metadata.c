@@ -989,6 +989,22 @@ static int _recalc_extents(uint32_t *extents, const char *desc1,
 	return 1;
 }
 
+uint32_t vg_mda_copies(const struct volume_group *vg)
+{
+	return vg->mda_copies;
+}
+
+int vg_set_mda_copies(struct volume_group *vg, uint32_t value)
+{
+	/* FIXME: add checks, etc, and set the value */
+	/*
+	 * FIXME: Before we set a larger value, we may need to
+	 * enable some mdas on PVS
+	 */
+	vg->mda_copies = value;
+	return 1;
+}
+
 int vg_set_extent_size(struct volume_group *vg, uint32_t new_size)
 {
 	uint32_t old_size = vg->extent_size;
