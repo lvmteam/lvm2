@@ -63,7 +63,7 @@ for i in pr "p rw" an ay "-monitor y" "-monitor n" \
     lvchange -$i "$vg"/"$lv"
 done
 
-pvck "$d1"
+pvck "$dev1"
 vgck "$vg"
 lvrename "$vg" "$lv" "$lv-rename"
 vgcfgbackup -f "$(pwd)/backup.$$" "$vg"
