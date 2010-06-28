@@ -1366,19 +1366,11 @@ int vg_set_clustered(struct volume_group *vg, int clustered)
 	return 1;
 }
 
-/*
- * Separate metadata areas after splitting a VG.
- * Also accepts orphan VG as destination (for vgreduce).
- */
-int vg_split_mdas(struct cmd_context *cmd __attribute((unused)),
-		  struct volume_group *vg_from, struct volume_group *vg_to)
+static int _move_mdas(struct volume_group *vg_from, struct volume_group *vg_to,
+		      struct dm_list *mdas_from, struct dm_list *mdas_to)
 {
 	struct metadata_area *mda, *mda2;
-	struct dm_list *mdas_from, *mdas_to;
 	int common_mda = 0;
-
-	mdas_from = &vg_from->fid->metadata_areas_in_use;
-	mdas_to = &vg_to->fid->metadata_areas_in_use;
 
 	dm_list_iterate_items_safe(mda, mda2, mdas_from) {
 		if (!mda->ops->mda_in_vg) {
@@ -1393,9 +1385,35 @@ int vg_split_mdas(struct cmd_context *cmd __attribute((unused)),
 				dm_list_move(mdas_to, &mda->list);
 		}
 	}
+	return common_mda;
+}
 
-	if (dm_list_empty(mdas_from) ||
-	    (!is_orphan_vg(vg_to->name) && dm_list_empty(mdas_to)))
+/*
+ * Separate metadata areas after splitting a VG.
+ * Also accepts orphan VG as destination (for vgreduce).
+ */
+int vg_split_mdas(struct cmd_context *cmd __attribute((unused)),
+		  struct volume_group *vg_from, struct volume_group *vg_to)
+{
+	struct dm_list *mdas_from_in_use, *mdas_to_in_use;
+	struct dm_list *mdas_from_ignored, *mdas_to_ignored;
+	int common_mda = 0;
+
+	mdas_from_in_use = &vg_from->fid->metadata_areas_in_use;
+	mdas_from_ignored = &vg_from->fid->metadata_areas_ignored;
+	mdas_to_in_use = &vg_to->fid->metadata_areas_in_use;
+	mdas_to_ignored = &vg_to->fid->metadata_areas_ignored;
+
+	common_mda = _move_mdas(vg_from, vg_to,
+				mdas_from_in_use, mdas_to_in_use);
+	common_mda = _move_mdas(vg_from, vg_to,
+				mdas_from_ignored, mdas_to_ignored);
+
+	if ((dm_list_empty(mdas_from_in_use) &&
+	     dm_list_empty(mdas_from_ignored)) ||
+	    ((!is_orphan_vg(vg_to->name) &&
+	      dm_list_empty(mdas_to_in_use) &&
+	      dm_list_empty(mdas_to_ignored))))
 		return common_mda;
 
 	return 1;
