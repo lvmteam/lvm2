@@ -386,7 +386,7 @@ to store on each physical volume.
 Currently it can be set to 0, 1 or 2.  The default is 1.  
 If set to 2, one copy is placed at the beginning of the disk
 and the other is placed at the end.
-It can be overridden on the command line with \fB--metadatacopies\fP.
+It can be overridden on the command line with \fB--pvmetadatacopies\fP.
 If creating a volume group with just one physical volume, it's a
 good idea to have 2 copies.  If creating a large volume group with
 many physical volumes, you may decide that 3 copies of the metadata
@@ -405,6 +405,26 @@ logical volume structures will need additional space for their metadata.
 The metadata areas are treated as circular buffers, so
 unused space becomes filled with an archive of the most recent
 previous versions of the metadata.
+.IP
+\fBvgmetadatacopies\fP \(em When creating a volume group using the
+LVM2 metadata format, this is the default number of copies of metadata
+desired across all the physical volumes in the volume group.  If set to
+a non-zero value, LVM will automatically set or clear the metadataignore
+flag on the physical volumes (see \fBpvchange --metadataignore\fP) in order
+to achieve the desired number of metadata copies.  An LVM command that
+adds or removes physical volumes (for example, \fBvgextend\fP, \fBvgreduce\fP,
+\fBvgsplit\fP, or \fBvgmerge\fP), may cause LVM to automatically set or
+clear the metadataignore flags.  Also, if physical volumes go missing or
+reappear, or a new number of copies is explicitly set (see
+\fBvgchange --vgmetadatacopies\fP), LVM may adjust the metadataignore flags.
+Set \fBvgmetadatacopies\fP to 0 instructs LVM not to set or clear the
+metadataignore flags automatically.  You may set a value larger than the
+sum of all metadata areas on all physical volumes.  The value can
+be overridden on the command line with \fB--vgmetadatacopies\fP for various
+commands (for example, \fBvgcreate\fP and \fBvgchange\fP), and can be
+queryied with the \fBvg_mda_copies\fP field of \fBvgs\fP.  This option
+is useful for volume groups containing large numbers of physical volumes
+with metadata as it may be used to minimize metadata read and write overhead.
 .IP
 \fBdirs\fP \(em List of directories holding live copies of LVM2
 metadata as text files.  These directories must not be on logical

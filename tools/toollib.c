@@ -1243,6 +1243,18 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 		return 1;
 	}
 
+	if (arg_count(cmd, metadatacopies_ARG)) {
+		vp_new->metadata_copies = arg_int_value(cmd, metadatacopies_ARG,
+							DEFAULT_VGMETADATACOPIES);
+	} else if (arg_count(cmd, vgmetadatacopies_ARG)) {
+		vp_new->metadata_copies = arg_int_value(cmd, vgmetadatacopies_ARG,
+							DEFAULT_VGMETADATACOPIES);
+	} else {
+		vp_new->metadata_copies = find_config_tree_int(cmd,
+						   "metadata/vgmetadatacopies",
+						   DEFAULT_VGMETADATACOPIES);
+	}
+
 	return 0;
 }
 
