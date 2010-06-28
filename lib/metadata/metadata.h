@@ -156,6 +156,12 @@ struct metadata_area_ops {
 	int (*pv_analyze_mda) (const struct format_type * fmt,
 			       struct metadata_area *mda);
 
+	/*
+	 * Do these two metadata_areas match with respect to their underlying
+	 * location?
+	 */
+	unsigned (*mda_locns_match)(struct metadata_area *mda1,
+				    struct metadata_area *mda2);
 };
 
 #define MDA_IGNORED 0x00000001
@@ -169,6 +175,7 @@ struct metadata_area {
 
 unsigned mda_is_ignored(struct metadata_area *mda);
 void mda_set_ignored(struct metadata_area *mda, int value);
+unsigned mda_locns_match(struct metadata_area *mda1, struct metadata_area *mda2);
 
 #define seg_pvseg(seg, s)	(seg)->areas[(s)].u.pv.pvseg
 #define seg_dev(seg, s)		(seg)->areas[(s)].u.pv.pvseg->pv->dev

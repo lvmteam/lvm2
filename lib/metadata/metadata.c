@@ -3855,6 +3855,36 @@ uint32_t pv_pe_alloc_count(const struct physical_volume *pv)
 	return pv_field(pv, pe_alloc_count);
 }
 
+/*
+ * This function provides a way to answer the question on a format specific
+ * basis - does the format specfic context of these two metadata areas
+ * match?
+ *
+ * A metatdata_area is defined to be independent of the underlying context.
+ * This has the benefit that we can use the same abstraction to read disks
+ * (see _metadata_text_raw_ops) or files (see _metadata_text_file_ops).
+ * However, one downside is there is no format-independent way to determine
+ * whether a given metadata_area is attached to a specific device - in fact,
+ * it may not be attached to a device at all.
+ *
+ * Thus, LVM is structured such that an mda is not a member of struct
+ * physical_volume.  The location of the mda depends on whether
+ * the PV is in a volume group.  A PV not in a VG has an mda on the
+ * 'info->mda' list in lvmcache, while a PV in a VG has an mda on
+ * the vg->fid->metadata_areas list.  For further details, see _vg_read(),
+ * and the sequence of creating the format_instance with fid->metadata_areas
+ * list, as well as the construction of the VG, with list of PVs (comes
+ * after the construction of the fid and list of mdas).
+ */
+unsigned mda_locns_match(struct metadata_area *mda1, struct metadata_area *mda2)
+{
+	if (!mda1->ops->mda_locns_match || !mda2->ops->mda_locns_match ||
+	    mda1->ops->mda_locns_match != mda2->ops->mda_locns_match)
+		return 0;
+
+	return mda1->ops->mda_locns_match(mda1, mda2);
+}
+
 unsigned mda_is_ignored(struct metadata_area *mda)
 {
 	return (mda->flags & MDA_IGNORED);
