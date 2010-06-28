@@ -1063,7 +1063,7 @@ static int _vg_adjust_ignored_mdas(struct volume_group *vg)
 	int ret = 1;
 
 	mda_copies = vg_mda_used_count(vg);
-	if (!vg->mda_copies)
+	if (vg->mda_copies == VGMETADATACOPIES_UNMANAGED)
 		goto skip_adjust;
 
 	if (mda_copies > vg->mda_copies) {
@@ -1076,6 +1076,15 @@ static int _vg_adjust_ignored_mdas(struct volume_group *vg)
 			count = vg->mda_copies - mda_copies;
 		ret = _vg_unignore_mdas(vg, count);
 	}
+	/*
+	 * The VGMETADATACOPIES_ALL value will never be written disk.
+	 * It is a special cmdline value that means 2 things:
+	 * 1. clear all ignore bits in all mdas in this vg
+	 * 2. set the "unmanaged" policy going forward for metadata balancing
+	 */
+	if (vg->mda_copies == VGMETADATACOPIES_ALL)
+		vg->mda_copies = VGMETADATACOPIES_UNMANAGED;
+
 	if (!ret)
 		return ret;
 

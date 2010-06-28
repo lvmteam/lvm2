@@ -926,6 +926,11 @@ static int _vgmdacopies_disp(struct dm_report *rh, struct dm_pool *mem,
 
 	count = vg_mda_copies(vg);
 
+	if (count == VGMETADATACOPIES_UNMANAGED) {
+		dm_report_field_set_value(field, "unmanaged", &_minusone64);
+		return 1;
+	}
+
 	return _uint32_disp(rh, mem, field, &count, private);
 }
 
