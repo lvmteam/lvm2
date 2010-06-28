@@ -3855,6 +3855,29 @@ uint32_t pv_pe_alloc_count(const struct physical_volume *pv)
 	return pv_field(pv, pe_alloc_count);
 }
 
+void fid_add_mda(struct format_instance *fid, struct metadata_area *mda)
+{
+	if (mda_is_ignored(mda))
+		dm_list_add(&fid->metadata_areas_ignored,
+			    &mda->list);
+	else
+		dm_list_add(&fid->metadata_areas_in_use,
+			    &mda->list);
+}
+
+int fid_add_mdas(struct format_instance *fid, struct dm_list *mdas)
+{
+	struct metadata_area *mda, *mda_new;
+
+	dm_list_iterate_items(mda, mdas) {
+		mda_new = mda_copy(fid->fmt->cmd->mem, mda);
+		if (!mda_new)
+			return_0;
+		fid_add_mda(fid, mda_new);
+	}
+	return 1;
+}
+
 /*
  * Copy constructor for a metadata_area.
  */
