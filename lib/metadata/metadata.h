@@ -158,11 +158,17 @@ struct metadata_area_ops {
 
 };
 
+#define MDA_IGNORED 0x00000001
+
 struct metadata_area {
 	struct dm_list list;
 	struct metadata_area_ops *ops;
 	void *metadata_locn;
+	uint32_t flags;
 };
+
+unsigned mda_is_ignored(struct metadata_area *mda);
+void mda_set_ignored(struct metadata_area *mda, int value);
 
 #define seg_pvseg(seg, s)	(seg)->areas[(s)].u.pv.pvseg
 #define seg_dev(seg, s)		(seg)->areas[(s)].u.pv.pvseg->pv->dev
