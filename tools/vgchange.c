@@ -528,7 +528,7 @@ static int _vgchange_refresh(struct cmd_context *cmd, struct volume_group *vg)
 static int _vgchange_metadata_copies(struct cmd_context *cmd,
 				     struct volume_group *vg)
 {
-	uint32_t mda_copies;
+	uint32_t mda_copies = DEFAULT_VGMETADATACOPIES;
 
 	if (arg_count(cmd, vgmetadatacopies_ARG))
 		mda_copies = arg_uint_value(cmd, vgmetadatacopies_ARG,
