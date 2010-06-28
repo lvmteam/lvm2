@@ -301,6 +301,7 @@ static int _text_read(struct labeller *l, struct device *dev, void *buf,
 	dm_list_iterate_items(mda, &info->mdas) {
 		mdac = (struct mda_context *) mda->metadata_locn;
 		if (!dev_open(mdac->area.dev)) {
+			mda_set_ignored(mda, 1);
 			stack;
 			continue;
 		}
@@ -308,6 +309,7 @@ static int _text_read(struct labeller *l, struct device *dev, void *buf,
 			stack;
 			goto close_dev;
 		}
+		mda_set_ignored(mda, rlocn_is_ignored(mdah->raw_locns));
 
 		if ((vgname = vgname_from_mda(info->fmt, mdah,
 					      &mdac->area,

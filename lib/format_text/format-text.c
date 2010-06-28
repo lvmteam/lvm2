@@ -726,6 +726,7 @@ static int _vg_commit_raw_rlocn(struct format_instance *fid,
 			  "header at %" PRIu64, vg->name,
 			  dev_name(mdac->area.dev), mdac->area.start);
 
+	rlocn_set_ignored(mdah->raw_locns, mda_is_ignored(mda));
 	if (!_raw_write_mda_header(fid->fmt, mdac->area.dev, mdac->area.start,
 				   mdah)) {
 		dm_pool_free(fid->fmt->cmd->mem, mdah);
@@ -808,6 +809,7 @@ static int _vg_remove_raw(struct format_instance *fid, struct volume_group *vg,
 	rlocn->offset = 0;
 	rlocn->size = 0;
 	rlocn->checksum = 0;
+	rlocn_set_ignored(mdah->raw_locns, mda_is_ignored(mda));
 
 	if (!_raw_write_mda_header(fid->fmt, mdac->area.dev, mdac->area.start,
 				   mdah)) {
@@ -1513,6 +1515,7 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 		mdac = mda->metadata_locn;
 		memset(&buf, 0, sizeof(buf));
 		mdah->size = mdac->area.size;
+		rlocn_set_ignored(mdah->raw_locns, mda_is_ignored(mda));
 		if (!_raw_write_mda_header(fmt, mdac->area.dev,
 					   mdac->area.start, mdah)) {
 			if (!dev_close(pv->dev))
