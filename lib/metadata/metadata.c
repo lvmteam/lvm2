@@ -2426,9 +2426,20 @@ int vg_write(struct volume_group *vg)
 
 static int _vg_commit_mdas(struct volume_group *vg)
 {
-	struct metadata_area *mda;
+	struct metadata_area *mda, *tmda;
+	struct dm_list ignored;
 	int failed = 0;
 	int cache_updated = 0;
+
+	/* Rearrange the metadata_areas_in_use so ignored mdas come first. */
+	dm_list_init(&ignored);
+	dm_list_iterate_items_safe(mda, tmda, &vg->fid->metadata_areas_in_use) {
+		if (mda_is_ignored(mda))
+			dm_list_move(&ignored, &mda->list);
+	}
+	dm_list_iterate_items_safe(mda, tmda, &ignored) {
+		dm_list_move(&vg->fid->metadata_areas_in_use, &mda->list);
+	}
 
 	/* Commit to each copy of the metadata area */
 	dm_list_iterate_items(mda, &vg->fid->metadata_areas_in_use) {
