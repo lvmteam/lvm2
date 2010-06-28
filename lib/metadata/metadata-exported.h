@@ -287,6 +287,7 @@ struct volume_group {
 	 * 0 for success else appropriate FAILURE_* bits set.
 	 */
 	uint32_t read_status;
+	uint32_t mda_copies; /* target number of mdas for this VG */
 };
 
 /* There will be one area for each stripe */
@@ -896,6 +897,7 @@ struct vgcreate_params {
 	size_t max_lv;
 	alloc_policy_t alloc;
 	int clustered; /* FIXME: put this into a 'status' variable instead? */
+	uint32_t metadata_copies;
 };
 
 int vgcreate_params_validate(struct cmd_context *cmd,
