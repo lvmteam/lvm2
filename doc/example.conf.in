@@ -456,6 +456,17 @@ activation {
 
     # pvmetadatacopies = 1
 
+    # Default number of copies of metadata to hold on each VG.
+    # If set to a non-zero value, LVM automatically manages the PV
+    # 'metadataignore' flags (see pvchange) to achieve the requested
+    # copies of metadata.  You may set a value larger than the
+    # the sum of all metadata areas on all physical volumes.  This value
+    # can be overridden on the command line of various commands. The
+    # default value of 0 indicates that LVM should not automatically
+    # manage the 'metadataignore' flags.
+
+    # vgmetadatacopies = 0
+
     # Approximate default size of on-disk metadata areas in sectors.
     # You should increase this if you have large volume groups or
     # you want to retain a large on-disk history of your metadata changes.
