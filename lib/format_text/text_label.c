@@ -299,6 +299,10 @@ static int _text_read(struct labeller *l, struct device *dev, void *buf,
 
 	dm_list_iterate_items(mda, &info->mdas) {
 		mdac = (struct mda_context *) mda->metadata_locn;
+		if (!dev_open(mdac->area.dev)) {
+			stack;
+			continue;
+		}
 		if ((vgname = vgname_from_mda(info->fmt, &mdac->area,
 					      &vgid, &vgstatus, &creation_host,
 					      &mdac->free_sectors)) &&
@@ -306,6 +310,8 @@ static int _text_read(struct labeller *l, struct device *dev, void *buf,
 						   (char *) &vgid, vgstatus,
 						   creation_host))
 			return_0;
+		if (!dev_close(mdac->area.dev))
+			stack;
 	}
 
 	info->status &= ~CACHE_INVALID;
