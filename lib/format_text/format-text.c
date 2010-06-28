@@ -66,6 +66,19 @@ struct text_context {
 	char *desc;		/* Description placed inside file */
 };
 
+int rlocn_is_ignored(const struct raw_locn *rlocn)
+{
+	return (rlocn->flags & RAW_LOCN_IGNORED ? 1 : 0);
+}
+
+void rlocn_set_ignored(struct raw_locn *rlocn, int value)
+{
+	if (value)
+		rlocn->flags |= RAW_LOCN_IGNORED;
+	else
+		rlocn->flags &= ~RAW_LOCN_IGNORED;
+}
+
 /*
  * NOTE: Currently there can be only one vg per text file.
  */
