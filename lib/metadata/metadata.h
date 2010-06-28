@@ -136,6 +136,11 @@ struct metadata_area_ops {
 			  struct metadata_area * mda);
 
 	/*
+	 * Per location copy constructor.
+	 */
+	void *(*mda_metadata_locn_copy) (struct dm_pool *mem, void *metadata_locn);
+
+	/*
 	 * Returns number of free sectors in given metadata area.
 	 */
 	uint64_t (*mda_free_sectors) (struct metadata_area *mda);
@@ -172,6 +177,8 @@ struct metadata_area {
 	void *metadata_locn;
 	uint32_t flags;
 };
+struct metadata_area *mda_copy(struct dm_pool *mem,
+			       struct metadata_area *mda);
 
 unsigned mda_is_ignored(struct metadata_area *mda);
 void mda_set_ignored(struct metadata_area *mda, int value);

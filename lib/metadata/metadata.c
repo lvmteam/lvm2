@@ -3856,6 +3856,32 @@ uint32_t pv_pe_alloc_count(const struct physical_volume *pv)
 }
 
 /*
+ * Copy constructor for a metadata_area.
+ */
+struct metadata_area *mda_copy(struct dm_pool *mem,
+			       struct metadata_area *mda)
+{
+	struct metadata_area *mda_new;
+
+	if (!(mda_new = dm_pool_alloc(mem, sizeof(*mda_new)))) {
+		log_error("metadata_area allocation failed");
+		return NULL;
+	}
+	memcpy(mda_new, mda, sizeof(*mda));
+	if (mda->ops->mda_metadata_locn_copy && mda->metadata_locn) {
+		mda_new->metadata_locn =
+			mda->ops->mda_metadata_locn_copy(mem, mda->metadata_locn);
+		if (!mda_new->metadata_locn) {
+			dm_pool_free(mem, mda_new);
+			return NULL;
+		}
+	}
+
+	/* FIXME mda 'list' left invalid here */
+
+	return mda_new;
+}
+/*
  * This function provides a way to answer the question on a format specific
  * basis - does the format specfic context of these two metadata areas
  * match?
