@@ -311,6 +311,12 @@ static int _text_read(struct labeller *l, struct device *dev, void *buf,
 		}
 		mda_set_ignored(mda, rlocn_is_ignored(mdah->raw_locns));
 
+		if (mda_is_ignored(mda)) {
+			if (!dev_close(mdac->area.dev))
+				stack;
+			continue;
+		}
+
 		if ((vgname = vgname_from_mda(info->fmt, mdah,
 					      &mdac->area,
 					      &vgid, &vgstatus, &creation_host,
