@@ -147,6 +147,17 @@ static int _pvchange_single(struct cmd_context *cmd, struct volume_group *vg,
 		if (!pv_mda_set_ignored(pv, mda_ignore)) {
 			goto out;
 		}
+		/*
+		 * Update vg_mda_copies based on the mdas in this PV.
+		 * This is most likely what the user would expect - if they
+		 * specify a specific PV to be ignored/un-ignored, they will
+		 * most likely not want LVM to turn around and change the
+		 * ignore / un-ignore value when it writes the VG to disk.
+		 * This does not guarantee this PV's ignore bits will be
+		 * preserved in future operations.
+		 */
+		if (!is_orphan(pv) && vg_mda_copies(vg))
+			vg_set_mda_copies(vg, vg_mda_used_count(vg));
 	} else {
 		/* --uuid: Change PV ID randomly */
 		if (!id_create(&pv->id)) {
