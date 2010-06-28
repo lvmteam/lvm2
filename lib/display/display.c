@@ -664,7 +664,7 @@ void vgdisplay_full(const struct volume_group *vg)
 	log_print("Format                %s", vg->fid->fmt->name);
 	if (vg->fid->fmt->features & FMT_MDAS) {
 		log_print("Metadata Areas        %d",
-			  dm_list_size(&vg->fid->metadata_areas));
+			  vg_mda_count(vg));
 		log_print("Metadata Sequence No  %d", vg->seqno);
 	}
 	access_str = vg->status & (LVM_READ | LVM_WRITE);
