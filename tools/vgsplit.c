@@ -272,7 +272,8 @@ static int new_vg_option_specified(struct cmd_context *cmd)
 	return(arg_count(cmd, clustered_ARG) ||
 	       arg_count(cmd, alloc_ARG) ||
 	       arg_count(cmd, maxphysicalvolumes_ARG) ||
-	       arg_count(cmd, maxlogicalvolumes_ARG));
+	       arg_count(cmd, maxlogicalvolumes_ARG) ||
+	       arg_count(cmd, vgmetadatacopies_ARG));
 }
 
 int vgsplit(struct cmd_context *cmd, int argc, char **argv)
@@ -382,7 +383,8 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		    !vg_set_max_lv(vg_to, vp_new.max_lv) ||
 		    !vg_set_max_pv(vg_to, vp_new.max_pv) ||
 		    !vg_set_alloc_policy(vg_to, vp_new.alloc) ||
-		    !vg_set_clustered(vg_to, vp_new.clustered))
+		    !vg_set_clustered(vg_to, vp_new.clustered) ||
+		    !vg_set_mda_copies(vg_to, vp_new.metadata_copies))
 			goto_bad;
 	}
 
