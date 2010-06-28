@@ -2,9 +2,9 @@
 
 log_name_to_count()
 {
-	if [ $1 == "mirrored" ]; then
+	if [ "$1" = "mirrored" ]; then
 		echo 2
-	elif [ $1 == "disk" ]; then
+	elif [ "$1" = "disk" ]; then
 		echo 1
 	else
 		echo 0
@@ -44,8 +44,8 @@ test_lvconvert()
 	local active=true
 	local i
 
-	if [ $start_log_type == "disk" ] &&
-		[ $finish_log_type == "mirrored" ]; then
+	if [ "$start_log_type" = "disk" ] &&
+		[ "$finish_log_type" = "mirrored" ]; then
 		echo "FIXME:  disk -> mirrored log conversion not yet supported by LVM"
 		return 0
 	fi
