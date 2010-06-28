@@ -1197,7 +1197,8 @@ int lvmcache_update_vgname_and_id(struct lvmcache_info *info,
 	}
 
 	/* If PV without mdas is already in a real VG, don't make it orphan */
-	if (is_orphan_vg(vgname) && info->vginfo && !dm_list_size(&info->mdas) &&
+	if (is_orphan_vg(vgname) && info->vginfo &&
+	    mdas_empty_or_ignored(&info->mdas) &&
 	    !is_orphan_vg(info->vginfo->vgname) && memlock())
 		return 1;
 
