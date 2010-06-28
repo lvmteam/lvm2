@@ -217,7 +217,7 @@ int add_pv_to_vg(struct volume_group *vg, const char *pv_name,
 
 	if (!fid->fmt->ops->pv_setup(fid->fmt, UINT64_C(0), 0,
 				     vg->extent_size, 0, 0, 0UL, UINT64_C(0),
-				     &fid->metadata_areas, pv, vg)) {
+				     &fid->metadata_areas_in_use, pv, vg)) {
 		log_error("Format-specific setup of physical volume '%s' "
 			  "failed.", pv_name);
 		return 0;
@@ -1255,8 +1255,8 @@ int vg_split_mdas(struct cmd_context *cmd __attribute((unused)),
 	struct dm_list *mdas_from, *mdas_to;
 	int common_mda = 0;
 
-	mdas_from = &vg_from->fid->metadata_areas;
-	mdas_to = &vg_to->fid->metadata_areas;
+	mdas_from = &vg_from->fid->metadata_areas_in_use;
+	mdas_to = &vg_to->fid->metadata_areas_in_use;
 
 	dm_list_iterate_items_safe(mda, mda2, mdas_from) {
 		if (!mda->ops->mda_in_vg) {
@@ -1844,7 +1844,7 @@ int vg_remove_mdas(struct volume_group *vg)
 
 	/* FIXME Improve recovery situation? */
 	/* Remove each copy of the metadata */
-	dm_list_iterate_items(mda, &vg->fid->metadata_areas) {
+	dm_list_iterate_items(mda, &vg->fid->metadata_areas_in_use) {
 		if (mda->ops->vg_remove &&
 		    !mda->ops->vg_remove(vg->fid, vg, mda))
 			return_0;
@@ -2362,7 +2362,7 @@ int vg_write(struct volume_group *vg)
 	}
 
 
-	if (dm_list_empty(&vg->fid->metadata_areas)) {
+	if (dm_list_empty(&vg->fid->metadata_areas_in_use)) {
 		log_error("Aborting vg_write: No metadata areas to write to!");
 		return 0;
 	}
@@ -2375,12 +2375,12 @@ int vg_write(struct volume_group *vg)
 	vg->seqno++;
 
 	/* Write to each copy of the metadata area */
-	dm_list_iterate_items(mda, &vg->fid->metadata_areas) {
+	dm_list_iterate_items(mda, &vg->fid->metadata_areas_in_use) {
 		if (!mda->ops->vg_write) {
 			log_error("Format does not support writing volume"
 				  "group metadata areas");
 			/* Revert */
-			dm_list_uniterate(mdah, &vg->fid->metadata_areas, &mda->list) {
+			dm_list_uniterate(mdah, &vg->fid->metadata_areas_in_use, &mda->list) {
 				mda = dm_list_item(mdah, struct metadata_area);
 
 				if (mda->ops->vg_revert &&
@@ -2393,7 +2393,7 @@ int vg_write(struct volume_group *vg)
 		if (!mda->ops->vg_write(vg->fid, vg, mda)) {
 			stack;
 			/* Revert */
-			dm_list_uniterate(mdah, &vg->fid->metadata_areas, &mda->list) {
+			dm_list_uniterate(mdah, &vg->fid->metadata_areas_in_use, &mda->list) {
 				mda = dm_list_item(mdah, struct metadata_area);
 
 				if (mda->ops->vg_revert &&
@@ -2406,12 +2406,12 @@ int vg_write(struct volume_group *vg)
 	}
 
 	/* Now pre-commit each copy of the new metadata */
-	dm_list_iterate_items(mda, &vg->fid->metadata_areas) {
+	dm_list_iterate_items(mda, &vg->fid->metadata_areas_in_use) {
 		if (mda->ops->vg_precommit &&
 		    !mda->ops->vg_precommit(vg->fid, vg, mda)) {
 			stack;
 			/* Revert */
-			dm_list_iterate_items(mda, &vg->fid->metadata_areas) {
+			dm_list_iterate_items(mda, &vg->fid->metadata_areas_in_use) {
 				if (mda->ops->vg_revert &&
 				    !mda->ops->vg_revert(vg->fid, vg, mda)) {
 					stack;
@@ -2438,7 +2438,7 @@ int vg_commit(struct volume_group *vg)
 	}
 
 	/* Commit to each copy of the metadata area */
-	dm_list_iterate_items(mda, &vg->fid->metadata_areas) {
+	dm_list_iterate_items(mda, &vg->fid->metadata_areas_in_use) {
 		failed = 0;
 		if (mda->ops->vg_commit &&
 		    !mda->ops->vg_commit(vg->fid, vg, mda)) {
@@ -2476,7 +2476,7 @@ int vg_revert(struct volume_group *vg)
 {
 	struct metadata_area *mda;
 
-	dm_list_iterate_items(mda, &vg->fid->metadata_areas) {
+	dm_list_iterate_items(mda, &vg->fid->metadata_areas_in_use) {
 		if (mda->ops->vg_revert &&
 		    !mda->ops->vg_revert(vg->fid, vg, mda)) {
 			stack;
@@ -2691,7 +2691,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		return_NULL;
 
 	/* Ensure contents of all metadata areas match - else do recovery */
-	dm_list_iterate_items(mda, &fid->metadata_areas) {
+	dm_list_iterate_items(mda, &fid->metadata_areas_in_use) {
 		if ((use_precommitted &&
 		     !(vg = mda->ops->vg_read_precommit(fid, vgname, mda))) ||
 		    (!use_precommitted &&
@@ -2809,7 +2809,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		}
 
 		/* Ensure contents of all metadata areas match - else recover */
-		dm_list_iterate_items(mda, &fid->metadata_areas) {
+		dm_list_iterate_items(mda, &fid->metadata_areas_in_use) {
 			if ((use_precommitted &&
 			     !(vg = mda->ops->vg_read_precommit(fid, vgname,
 								mda))) ||
@@ -3897,8 +3897,8 @@ struct metadata_area *mda_copy(struct dm_pool *mem,
  * physical_volume.  The location of the mda depends on whether
  * the PV is in a volume group.  A PV not in a VG has an mda on the
  * 'info->mda' list in lvmcache, while a PV in a VG has an mda on
- * the vg->fid->metadata_areas list.  For further details, see _vg_read(),
- * and the sequence of creating the format_instance with fid->metadata_areas
+ * the vg->fid->metadata_areas_in_use list.  For further details, see _vg_read(),
+ * and the sequence of creating the format_instance with fid->metadata_areas_in_use
  * list, as well as the construction of the VG, with list of PVs (comes
  * after the construction of the fid and list of mdas).
  */
@@ -3984,7 +3984,7 @@ uint64_t vg_max_lv(const struct volume_group *vg)
 
 uint32_t vg_mda_count(const struct volume_group *vg)
 {
-	return dm_list_size(&vg->fid->metadata_areas);
+	return dm_list_size(&vg->fid->metadata_areas_in_use);
 }
 
 uint64_t lv_size(const struct logical_volume *lv)

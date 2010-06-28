@@ -215,7 +215,7 @@ struct physical_volume {
 
 struct format_instance {
 	const struct format_type *fmt;
-	struct dm_list metadata_areas;	/* e.g. metadata locations */
+	struct dm_list metadata_areas_in_use;	/* e.g. metadata locations */
 	void *private;
 };
 
