@@ -34,6 +34,7 @@ static int _pvchange_single(struct cmd_context *cmd, struct volume_group *vg,
 	int allocatable = 0;
 	int tagarg = 0;
 	int r = 0;
+	int mda_ignore = 0;
 
 	if (arg_count(cmd, addtag_ARG))
 		tagarg = addtag_ARG;
@@ -42,6 +43,9 @@ static int _pvchange_single(struct cmd_context *cmd, struct volume_group *vg,
 
 	if (arg_count(cmd, allocatable_ARG))
 		allocatable = !strcmp(arg_str_value(cmd, allocatable_ARG, "n"),
+				      "y");
+	if (arg_count(cmd, metadataignore_ARG))
+		mda_ignore = !strcmp(arg_str_value(cmd, metadataignore_ARG, "n"),
 				      "y");
 	else if (tagarg && !(tag = arg_str_value(cmd, tagarg, NULL))) {
 		log_error("Failed to get tag");
@@ -117,6 +121,32 @@ static int _pvchange_single(struct cmd_context *cmd, struct volume_group *vg,
 				goto out;
 			}
 		}
+	} else if (arg_count(cmd, metadataignore_ARG)) {
+		if (mda_ignore && (pv_mda_used_count(pv) == 0)) {
+			log_error("Physical volume \"%s\" metadata already "
+				  "ignored", pv_name);
+			goto out;
+		}
+		if (!mda_ignore && (pv_mda_used_count(pv) == pv_mda_count(pv))) {
+			log_error("Physical volume \"%s\" metadata already "
+				  "not ignored", pv_name);
+			goto out;
+		}
+		if (!pv_mda_count(pv)) {
+			log_error("Physical volume \"%s\" has no metadata "
+				  "areas ", pv_name);
+			goto out;
+		}
+		if (mda_ignore) {
+			log_verbose("Setting physical volume \"%s\" "
+				    "metadata ignored", pv_name);
+		} else {
+			log_verbose("Setting physical volume \"%s\" "
+				    "metadata not ignored", pv_name);
+		}
+		if (!pv_mda_set_ignored(pv, mda_ignore)) {
+			goto out;
+		}
 	} else {
 		/* --uuid: Change PV ID randomly */
 		if (!id_create(&pv->id)) {
@@ -187,7 +217,8 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 	struct str_list *sll;
 
 	if (arg_count(cmd, allocatable_ARG) + arg_count(cmd, addtag_ARG) +
-	    arg_count(cmd, deltag_ARG) + arg_count(cmd, uuid_ARG) != 1) {
+	    arg_count(cmd, deltag_ARG) + arg_count(cmd, uuid_ARG) +
+	    arg_count(cmd, metadataignore_ARG) != 1) {
 		log_error("Please give exactly one option of -x, -uuid, "
 			  "--addtag or --deltag");
 		return EINVALID_CMD_LINE;
