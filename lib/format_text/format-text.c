@@ -483,9 +483,6 @@ static struct volume_group *_vg_read_raw_area(struct format_instance *fid,
 	char *desc;
 	uint32_t wrap = 0;
 
-	if (!dev_open(area->dev))
-		return_NULL;
-
 	if (!(mdah = _raw_read_mda_header(fid->fmt, area)))
 		goto_out;
 
@@ -520,9 +517,6 @@ static struct volume_group *_vg_read_raw_area(struct format_instance *fid,
 		vg->status |= PRECOMMITTED;
 
       out:
-	if (!dev_close(area->dev))
-		stack;
-
 	return vg;
 }
 
@@ -531,8 +525,17 @@ static struct volume_group *_vg_read_raw(struct format_instance *fid,
 					 struct metadata_area *mda)
 {
 	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
+	struct volume_group *vg;
 
-	return _vg_read_raw_area(fid, vgname, &mdac->area, 0);
+	if (!dev_open(mdac->area.dev))
+		return_NULL;
+
+	vg = _vg_read_raw_area(fid, vgname, &mdac->area, 0);
+
+	if (!dev_close(mdac->area.dev))
+		stack;
+
+	return vg;
 }
 
 static struct volume_group *_vg_read_precommit_raw(struct format_instance *fid,
@@ -540,8 +543,17 @@ static struct volume_group *_vg_read_precommit_raw(struct format_instance *fid,
 						   struct metadata_area *mda)
 {
 	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
+	struct volume_group *vg;
 
-	return _vg_read_raw_area(fid, vgname, &mdac->area, 1);
+	if (!dev_open(mdac->area.dev))
+		return_NULL;
+
+	vg = _vg_read_raw_area(fid, vgname, &mdac->area, 1);
+
+	if (!dev_close(mdac->area.dev))
+		stack;
+
+	return vg;
 }
 
 static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
@@ -1192,9 +1204,17 @@ static int _scan_raw(const struct format_type *fmt)
 		/* FIXME We're reading mdah twice here... */
 		if ((vgname = vgname_from_mda(fmt, &rl->dev_area, &vgid, &vgstatus,
 					      NULL, NULL))) {
-			if ((vg = _vg_read_raw_area(&fid, vgname,
-						    &rl->dev_area, 0)))
+			if (!dev_open(rl->dev_area.dev)) {
+				stack;
+				continue;
+			}
+
+			vg = _vg_read_raw_area(&fid, vgname, &rl->dev_area, 0);
+			if (vg)
 				lvmcache_update_vg(vg, 0);
+
+			if (!dev_close(rl->dev_area.dev))
+				stack;
 		}
 	}
 
