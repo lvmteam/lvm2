@@ -714,32 +714,31 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 int lvchange(struct cmd_context *cmd, int argc, char **argv)
 {
-	if (!arg_count(cmd, available_ARG) && !arg_count(cmd, contiguous_ARG)
-	    && !arg_count(cmd, permission_ARG) && !arg_count(cmd, readahead_ARG)
-	    && !arg_count(cmd, minor_ARG) && !arg_count(cmd, major_ARG)
-	    && !arg_count(cmd, persistent_ARG) && !arg_count(cmd, addtag_ARG)
-	    && !arg_count(cmd, deltag_ARG) && !arg_count(cmd, refresh_ARG)
-	    && !arg_count(cmd, alloc_ARG) && !arg_count(cmd, monitor_ARG)
-	    && !arg_count(cmd, poll_ARG) && !arg_count(cmd, resync_ARG)) {
+	int update = /* options other than -a, --refresh or --monitor */
+		arg_count(cmd, contiguous_ARG) || arg_count(cmd, permission_ARG) ||
+		arg_count(cmd, readahead_ARG) || arg_count(cmd, persistent_ARG) ||
+		arg_count(cmd, addtag_ARG) || arg_count(cmd, deltag_ARG) ||
+		arg_count(cmd, resync_ARG) || arg_count(cmd, alloc_ARG);
+
+	if (!update &&
+            !arg_count(cmd, available_ARG) && !arg_count(cmd, refresh_ARG) &&
+            !arg_count(cmd, monitor_ARG) && !arg_count(cmd, poll_ARG) &&
+            /* for persistent_ARG */
+	    !arg_count(cmd, minor_ARG) && !arg_count(cmd, major_ARG)) {
 		log_error("Need 1 or more of -a, -C, -j, -m, -M, -p, -r, "
 			  "--resync, --refresh, --alloc, --addtag, --deltag, "
 			  "--monitor or --poll");
 		return EINVALID_CMD_LINE;
 	}
 
-	int avail_only = /* i.e. only one of -a or --refresh is given */
-	    !(arg_count(cmd, contiguous_ARG) || arg_count(cmd, permission_ARG) ||
-	     arg_count(cmd, readahead_ARG) || arg_count(cmd, persistent_ARG) ||
-	     arg_count(cmd, addtag_ARG) || arg_count(cmd, deltag_ARG) ||
-	     arg_count(cmd, resync_ARG) || arg_count(cmd, alloc_ARG));
 
 	if ((arg_count(cmd, ignorelockingfailure_ARG) ||
-	     arg_count(cmd, sysinit_ARG)) && !avail_only) {
+	     arg_count(cmd, sysinit_ARG)) && update) {
 		log_error("Only -a permitted with --ignorelockingfailure and --sysinit");
 		return EINVALID_CMD_LINE;
 	}
 
-	if (avail_only)
+	if (!update)
 		cmd->handles_missing_pvs = 1;
 
 	if (!argc) {
@@ -769,6 +768,6 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	return process_each_lv(cmd, argc, argv,
-			       avail_only ? 0 : READ_FOR_UPDATE, NULL,
+			       update ? READ_FOR_UPDATE : 0, NULL,
 			       &lvchange_single);
 }
