@@ -957,7 +957,7 @@ static int _vgmdasize_disp(struct dm_report *rh, struct dm_pool *mem,
 	const struct volume_group *vg = (const struct volume_group *) data;
 	uint64_t min_mda_size;
 
-	min_mda_size = _find_min_mda_size(&vg->fid->metadata_areas);
+	min_mda_size = _find_min_mda_size(&vg->fid->metadata_areas_in_use);
 
 	return _size64_disp(rh, mem, field, &min_mda_size, private);
 }
@@ -970,7 +970,7 @@ static int _vgmdafree_disp(struct dm_report *rh, struct dm_pool *mem,
 	uint64_t freespace = UINT64_MAX, mda_free;
 	struct metadata_area *mda;
 
-	dm_list_iterate_items(mda, &vg->fid->metadata_areas) {
+	dm_list_iterate_items(mda, &vg->fid->metadata_areas_in_use) {
 		if (!mda->ops->mda_free_sectors)
 			continue;
 		mda_free = mda->ops->mda_free_sectors(mda);
@@ -1126,7 +1126,7 @@ static int _copypercent_disp(struct dm_report *rh __attribute((unused)),
 
 /* necessary for displaying something for PVs not belonging to VG */
 static struct format_instance _dummy_fid = {
-	.metadata_areas = { &(_dummy_fid.metadata_areas), &(_dummy_fid.metadata_areas) },
+	.metadata_areas_in_use = { &(_dummy_fid.metadata_areas_in_use), &(_dummy_fid.metadata_areas_in_use) },
 };
 
 static struct volume_group _dummy_vg = {

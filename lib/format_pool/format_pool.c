@@ -262,7 +262,7 @@ static struct format_instance *_pool_create_instance(const struct format_type *f
 	}
 
 	fid->fmt = fmt;
-	dm_list_init(&fid->metadata_areas);
+	dm_list_init(&fid->metadata_areas_in_use);
 
 	/* Define a NULL metadata area */
 	if (!(mda = dm_pool_zalloc(fmt->cmd->mem, sizeof(*mda)))) {
@@ -274,7 +274,7 @@ static struct format_instance *_pool_create_instance(const struct format_type *f
 
 	mda->ops = &_metadata_format_pool_ops;
 	mda->metadata_locn = NULL;
-	dm_list_add(&fid->metadata_areas, &mda->list);
+	dm_list_add(&fid->metadata_areas_in_use, &mda->list);
 
 	return fid;
 }

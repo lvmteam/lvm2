@@ -1208,7 +1208,7 @@ static int _scan_raw(const struct format_type *fmt)
 	raw_list = &((struct mda_lists *) fmt->private)->raws;
 
 	fid.fmt = fmt;
-	dm_list_init(&fid.metadata_areas);
+	dm_list_init(&fid.metadata_areas_in_use);
 
 	dm_list_iterate_items(rl, raw_list) {
 		/* FIXME We're reading mdah twice here... */
@@ -1914,14 +1914,14 @@ static struct format_instance *_text_create_text_instance(const struct format_ty
 	fid->private = (void *) fidtc;
 
 	fid->fmt = fmt;
-	dm_list_init(&fid->metadata_areas);
+	dm_list_init(&fid->metadata_areas_in_use);
 
 	if (!vgname) {
 		if (!(mda = dm_pool_alloc(fmt->cmd->mem, sizeof(*mda))))
 			return_NULL;
 		mda->ops = &_metadata_text_file_backup_ops;
 		mda->metadata_locn = context;
-		dm_list_add(&fid->metadata_areas, &mda->list);
+		dm_list_add(&fid->metadata_areas_in_use, &mda->list);
 	} else {
 		dir_list = &((struct mda_lists *) fmt->private)->dirs;
 
@@ -1938,7 +1938,7 @@ static struct format_instance *_text_create_text_instance(const struct format_ty
 				return_NULL;
 			mda->ops = &_metadata_text_file_ops;
 			mda->metadata_locn = context;
-			dm_list_add(&fid->metadata_areas, &mda->list);
+			dm_list_add(&fid->metadata_areas_in_use, &mda->list);
 		}
 
 		raw_list = &((struct mda_lists *) fmt->private)->raws;
@@ -1958,7 +1958,7 @@ static struct format_instance *_text_create_text_instance(const struct format_ty
 			memcpy(&mdac->area, &rl->dev_area, sizeof(mdac->area));
 			mda->ops = &_metadata_text_raw_ops;
 			/* FIXME MISTAKE? mda->metadata_locn = context; */
-			dm_list_add(&fid->metadata_areas, &mda->list);
+			dm_list_add(&fid->metadata_areas_in_use, &mda->list);
 		}
 
 		/* Scan PVs in VG for any further MDAs */
@@ -1972,7 +1972,7 @@ static struct format_instance *_text_create_text_instance(const struct format_ty
 				mda_new = mda_copy(fmt->cmd->mem, mda);
 				if (!mda_new)
 					return_NULL;
-				dm_list_add(&fid->metadata_areas, &mda_new->list);
+				dm_list_add(&fid->metadata_areas_in_use, &mda_new->list);
 			}
 		}
 		/* FIXME Check raw metadata area count - rescan if required */

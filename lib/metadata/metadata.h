@@ -162,8 +162,8 @@ struct metadata_area_ops {
 			       struct metadata_area *mda);
 
 	/*
-	 * Do these two metadata_areas match with respect to their underlying
-	 * location?
+	 * Do these two metadata_area structures match with respect to
+	 * their underlying location?
 	 */
 	unsigned (*mda_locns_match)(struct metadata_area *mda1,
 				    struct metadata_area *mda2);

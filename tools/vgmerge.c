@@ -120,10 +120,10 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 		dm_list_move(&vg_to->lvs, lvh);
 	}
 
-	while (!dm_list_empty(&vg_from->fid->metadata_areas)) {
-		struct dm_list *mdah = vg_from->fid->metadata_areas.n;
+	while (!dm_list_empty(&vg_from->fid->metadata_areas_in_use)) {
+		struct dm_list *mdah = vg_from->fid->metadata_areas_in_use.n;
 
-		dm_list_move(&vg_to->fid->metadata_areas, mdah);
+		dm_list_move(&vg_to->fid->metadata_areas_in_use, mdah);
 	}
 
 	vg_to->extent_count += vg_from->extent_count;
