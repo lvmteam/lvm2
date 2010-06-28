@@ -185,6 +185,7 @@ void mda_set_ignored(struct metadata_area *mda, int value);
 unsigned mda_locns_match(struct metadata_area *mda1, struct metadata_area *mda2);
 void fid_add_mda(struct format_instance *fid, struct metadata_area *mda);
 int fid_add_mdas(struct format_instance *fid, struct dm_list *mdas);
+int mdas_empty_or_ignored(struct dm_list *mdas);
 
 #define seg_pvseg(seg, s)	(seg)->areas[(s)].u.pv.pvseg
 #define seg_dev(seg, s)		(seg)->areas[(s)].u.pv.pvseg->pv->dev
