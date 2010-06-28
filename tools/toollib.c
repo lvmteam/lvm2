@@ -1187,6 +1187,7 @@ void vgcreate_params_set_defaults(struct vgcreate_params *vp_def,
 		vp_def->max_lv = vg->max_lv;
 		vp_def->alloc = vg->alloc;
 		vp_def->clustered = vg_is_clustered(vg);
+		vp_def->metadata_copies = vg->mda_copies;
 	} else {
 		vp_def->vg_name = NULL;
 		vp_def->extent_size = DEFAULT_EXTENT_SIZE * 2;
@@ -1194,6 +1195,7 @@ void vgcreate_params_set_defaults(struct vgcreate_params *vp_def,
 		vp_def->max_lv = DEFAULT_MAX_LV;
 		vp_def->alloc = DEFAULT_ALLOC_POLICY;
 		vp_def->clustered = DEFAULT_CLUSTERED;
+		vp_def->metadata_copies = DEFAULT_VGMETADATACOPIES;
 	}
 }
 

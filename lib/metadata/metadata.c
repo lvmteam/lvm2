@@ -910,6 +910,7 @@ struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name)
 	vg->max_pv = DEFAULT_MAX_PV;
 
 	vg->alloc = DEFAULT_ALLOC_POLICY;
+	vg->mda_copies = DEFAULT_VGMETADATACOPIES;
 
 	vg->pv_count = 0;
 	dm_list_init(&vg->pvs);
