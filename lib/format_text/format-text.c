@@ -1099,9 +1099,6 @@ const char *vgname_from_mda(const struct format_type *fmt,
 	if (mda_free_sectors)
 		*mda_free_sectors = ((dev_area->size - MDA_HEADER_SIZE) / 2) >> SECTOR_SHIFT;
 
-	if (!dev_open(dev_area->dev))
-		return_NULL;
-
 	if (!(mdah = _raw_read_mda_header(fmt, dev_area)))
 		goto_out;
 
@@ -1179,9 +1176,6 @@ const char *vgname_from_mda(const struct format_type *fmt,
 	}
 
       out:
-	if (!dev_close(dev_area->dev))
-		stack;
-
 	return vgname;
 }
 
@@ -1202,20 +1196,20 @@ static int _scan_raw(const struct format_type *fmt)
 
 	dm_list_iterate_items(rl, raw_list) {
 		/* FIXME We're reading mdah twice here... */
+		if (!dev_open(rl->dev_area.dev)) {
+			stack;
+			continue;
+		}
+
 		if ((vgname = vgname_from_mda(fmt, &rl->dev_area, &vgid, &vgstatus,
 					      NULL, NULL))) {
-			if (!dev_open(rl->dev_area.dev)) {
-				stack;
-				continue;
-			}
-
 			vg = _vg_read_raw_area(&fid, vgname, &rl->dev_area, 0);
 			if (vg)
 				lvmcache_update_vg(vg, 0);
 
-			if (!dev_close(rl->dev_area.dev))
-				stack;
 		}
+		if (!dev_close(rl->dev_area.dev))
+			stack;
 	}
 
 	return 1;
