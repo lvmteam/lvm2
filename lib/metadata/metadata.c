@@ -1011,6 +1011,8 @@ static int _vg_ignore_mdas(struct volume_group *vg, uint32_t num_to_ignore)
 {
 	struct metadata_area *mda;
 
+	log_verbose("Setting ignore flag for %"PRIu32" mdas on vg %s",
+		    num_to_ignore, vg->name);
 	if (!num_to_ignore)
 		return 1;
 	/* FIXME: flip bits on random mdas */
@@ -1031,6 +1033,8 @@ static int _vg_unignore_mdas(struct volume_group *vg, uint32_t num_to_unignore)
 {
 	struct metadata_area *mda, *tmda;
 
+	log_verbose("Clearing ignore flag for %"PRIu32" mdas on vg %s",
+		    num_to_unignore, vg->name);
 	if (!num_to_unignore)
 		return 1;
 	/* FIXME: flip bits on random mdas */
@@ -1063,6 +1067,9 @@ static int _vg_adjust_ignored_mdas(struct volume_group *vg)
 	int ret = 1;
 
 	mda_copies = vg_mda_used_count(vg);
+	log_verbose("Adjusting ignored mdas on vg %s, vg_mda_used_count=%"
+		    PRIu32", vg_mda_copies=%"PRIu32,
+		    vg->name, mda_copies, vg_mda_copies(vg));
 	if (vg->mda_copies == VGMETADATACOPIES_UNMANAGED)
 		goto skip_adjust;
 
@@ -1108,14 +1115,16 @@ uint32_t vg_mda_copies(const struct volume_group *vg)
 	return vg->mda_copies;
 }
 
-int vg_set_mda_copies(struct volume_group *vg, uint32_t value)
+int vg_set_mda_copies(struct volume_group *vg, uint32_t copies)
 {
 	/* FIXME: add checks, etc, and set the value */
 	/*
 	 * FIXME: Before we set a larger value, we may need to
 	 * enable some mdas on PVS
 	 */
-	vg->mda_copies = value;
+	vg->mda_copies = copies;
+	log_verbose("Setting mda_copies = %"PRIu32" on vg %s",
+		    copies, vg->name);
 	return 1;
 }
 
