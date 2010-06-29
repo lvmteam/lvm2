@@ -122,42 +122,8 @@ static int _pvchange_single(struct cmd_context *cmd, struct volume_group *vg,
 			}
 		}
 	} else if (arg_count(cmd, metadataignore_ARG)) {
-		if (mda_ignore && (pv_mda_used_count(pv) == 0)) {
-			log_error("Physical volume \"%s\" metadata already "
-				  "ignored", pv_name);
+		if (!pv_change_metadataignore(pv, mda_ignore))
 			goto out;
-		}
-		if (!mda_ignore && (pv_mda_used_count(pv) == pv_mda_count(pv))) {
-			log_error("Physical volume \"%s\" metadata already "
-				  "not ignored", pv_name);
-			goto out;
-		}
-		if (!pv_mda_count(pv)) {
-			log_error("Physical volume \"%s\" has no metadata "
-				  "areas ", pv_name);
-			goto out;
-		}
-		if (mda_ignore) {
-			log_verbose("Setting physical volume \"%s\" "
-				    "metadata ignored", pv_name);
-		} else {
-			log_verbose("Setting physical volume \"%s\" "
-				    "metadata not ignored", pv_name);
-		}
-		if (!pv_mda_set_ignored(pv, mda_ignore)) {
-			goto out;
-		}
-		/*
-		 * Update vg_mda_copies based on the mdas in this PV.
-		 * This is most likely what the user would expect - if they
-		 * specify a specific PV to be ignored/un-ignored, they will
-		 * most likely not want LVM to turn around and change the
-		 * ignore / un-ignore value when it writes the VG to disk.
-		 * This does not guarantee this PV's ignore bits will be
-		 * preserved in future operations.
-		 */
-		if (!is_orphan(pv) && vg_mda_copies(vg))
-			vg_set_mda_copies(vg, vg_mda_used_count(vg));
 	} else {
 		/* --uuid: Change PV ID randomly */
 		if (!id_create(&pv->id)) {
