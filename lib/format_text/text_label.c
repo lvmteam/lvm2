@@ -312,6 +312,10 @@ static int _text_read(struct labeller *l, struct device *dev, void *buf,
 		mda_set_ignored(mda, rlocn_is_ignored(mdah->raw_locns));
 
 		if (mda_is_ignored(mda)) {
+			log_verbose("Skipping mda with ignored flag on "
+				    "device %s at offset %"PRIu64,
+				    dev_name(mdac->area.dev),
+				    mdac->area.start);
 			if (!dev_close(mdac->area.dev))
 				stack;
 			continue;
