@@ -396,6 +396,11 @@ int backup_to_file(const char *file, const char *desc, struct volume_group *vg)
 		return 0;
 	}
 
+	if (!dm_list_size(&tf->metadata_areas_in_use)) {
+		log_error(INTERNAL_ERROR "No in use metadata areas to write.");
+		return 0;
+	}
+
 	/* Write and commit the metadata area */
 	dm_list_iterate_items(mda, &tf->metadata_areas_in_use) {
 		if (!(r = mda->ops->vg_write(tf, vg, mda))) {
