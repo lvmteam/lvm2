@@ -1919,7 +1919,7 @@ static struct format_instance *_text_create_text_instance(const struct format_ty
 	dm_list_init(&fid->metadata_areas_ignored);
 
 	if (!vgname) {
-		if (!(mda = dm_pool_alloc(fmt->cmd->mem, sizeof(*mda))))
+		if (!(mda = dm_pool_zalloc(fmt->cmd->mem, sizeof(*mda))))
 			return_NULL;
 		mda->ops = &_metadata_text_file_backup_ops;
 		mda->metadata_locn = context;
@@ -1936,7 +1936,7 @@ static struct format_instance *_text_create_text_instance(const struct format_ty
 			}
 
 			context = create_text_context(fmt->cmd, path, NULL);
-			if (!(mda = dm_pool_alloc(fmt->cmd->mem, sizeof(*mda))))
+			if (!(mda = dm_pool_zalloc(fmt->cmd->mem, sizeof(*mda))))
 				return_NULL;
 			mda->ops = &_metadata_text_file_ops;
 			mda->metadata_locn = context;
@@ -1950,10 +1950,10 @@ static struct format_instance *_text_create_text_instance(const struct format_ty
 			if (!_raw_holds_vgname(fid, &rl->dev_area, vgname))
 				continue;
 
-			if (!(mda = dm_pool_alloc(fmt->cmd->mem, sizeof(*mda))))
+			if (!(mda = dm_pool_zalloc(fmt->cmd->mem, sizeof(*mda))))
 				return_NULL;
 
-			if (!(mdac = dm_pool_alloc(fmt->cmd->mem, sizeof(*mdac))))
+			if (!(mdac = dm_pool_zalloc(fmt->cmd->mem, sizeof(*mdac))))
 				return_NULL;
 			mda->metadata_locn = mdac;
 			/* FIXME Allow multiple dev_areas inside area */
