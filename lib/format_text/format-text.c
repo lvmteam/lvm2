@@ -1923,6 +1923,7 @@ static struct format_instance *_text_create_text_instance(const struct format_ty
 			return_NULL;
 		mda->ops = &_metadata_text_file_backup_ops;
 		mda->metadata_locn = context;
+		mda->flags = 0;
 		fid_add_mda(fid, mda);
 	} else {
 		dir_list = &((struct mda_lists *) fmt->private)->dirs;
@@ -1940,6 +1941,7 @@ static struct format_instance *_text_create_text_instance(const struct format_ty
 				return_NULL;
 			mda->ops = &_metadata_text_file_ops;
 			mda->metadata_locn = context;
+			mda->flags = 0;
 			fid_add_mda(fid, mda);
 		}
 
@@ -1959,6 +1961,7 @@ static struct format_instance *_text_create_text_instance(const struct format_ty
 			/* FIXME Allow multiple dev_areas inside area */
 			memcpy(&mdac->area, &rl->dev_area, sizeof(mdac->area));
 			mda->ops = &_metadata_text_raw_ops;
+			mda->flags = 0;
 			/* FIXME MISTAKE? mda->metadata_locn = context; */
 			fid_add_mda(fid, mda);
 		}

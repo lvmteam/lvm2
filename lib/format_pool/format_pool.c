@@ -275,6 +275,7 @@ static struct format_instance *_pool_create_instance(const struct format_type *f
 
 	mda->ops = &_metadata_format_pool_ops;
 	mda->metadata_locn = NULL;
+	mda->flags = 0;
 	dm_list_add(&fid->metadata_areas_in_use, &mda->list);
 
 	return fid;
