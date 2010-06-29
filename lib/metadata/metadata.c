@@ -4117,12 +4117,17 @@ unsigned mda_is_ignored(struct metadata_area *mda)
 	return (mda->flags & MDA_IGNORED);
 }
 
-void mda_set_ignored(struct metadata_area *mda, int value)
+void mda_set_ignored(struct metadata_area *mda, unsigned ignored)
 {
-	if (value)
+	if (ignored) {
 		mda->flags |= MDA_IGNORED;
-	else
+		log_verbose("Setting mda ignored flag for metadata_locn %p.",
+			mda->metadata_locn);
+	} else {
 		mda->flags &= ~MDA_IGNORED;
+		log_verbose("Clearing mda ignored flag for metadata_locn %p.",
+			mda->metadata_locn);
+	}
 }
 
 uint32_t pv_mda_count(const struct physical_volume *pv)
