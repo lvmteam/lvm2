@@ -4119,15 +4119,23 @@ unsigned mda_is_ignored(struct metadata_area *mda)
 
 void mda_set_ignored(struct metadata_area *mda, unsigned ignored)
 {
+	void *locn = mda->metadata_locn;
+
 	if (ignored) {
 		mda->flags |= MDA_IGNORED;
-		log_verbose("Setting mda ignored flag for metadata_locn %p.",
-			mda->metadata_locn);
 	} else {
 		mda->flags &= ~MDA_IGNORED;
-		log_verbose("Clearing mda ignored flag for metadata_locn %p.",
-			mda->metadata_locn);
 	}
+	if (mda->ops->mda_metadata_locn_desc)
+		log_verbose("%s mda ignored flag for "
+			    "metadata_locn %s.",
+			    ignored ? "Setting" : "Clearing",
+			    mda->ops->mda_metadata_locn_desc(locn));
+	else
+		log_verbose("%s mda ignored flag for "
+			    "metadata_locn %p.",
+			    ignored ? "Setting" : "Clearing",
+			    locn);
 }
 
 uint32_t pv_mda_count(const struct physical_volume *pv)

@@ -139,6 +139,10 @@ struct metadata_area_ops {
 	 * Per location copy constructor.
 	 */
 	void *(*mda_metadata_locn_copy) (struct dm_pool *mem, void *metadata_locn);
+	/*
+	 * Per location description - useful for logging.
+	 */
+	const char *(*mda_metadata_locn_desc) (void *metadata_locn);
 
 	/*
 	 * Returns number of free sectors in given metadata area.

@@ -1639,6 +1639,17 @@ static void *_metadata_locn_copy_raw(struct dm_pool *mem, void *metadata_locn)
 	return mdac_new;
 }
 
+/*
+ * Return a string description of the metadata location.
+ */
+static const char * _metadata_locn_desc_raw(void *metadata_locn)
+{
+	struct mda_context *mdac;
+
+	mdac = (struct mda_context *) metadata_locn;
+	return dev_name(mdac->area.dev);
+}
+
 
 static int _text_pv_read(const struct format_type *fmt, const char *pv_name,
 		    struct physical_volume *pv, struct dm_list *mdas,
@@ -1732,6 +1743,7 @@ static struct metadata_area_ops _metadata_text_raw_ops = {
 	.vg_commit = _vg_commit_raw,
 	.vg_revert = _vg_revert_raw,
 	.mda_metadata_locn_copy = _metadata_locn_copy_raw,
+	.mda_metadata_locn_desc = _metadata_locn_desc_raw,
 	.mda_free_sectors = _mda_free_sectors_raw,
 	.mda_total_sectors = _mda_total_sectors_raw,
 	.mda_in_vg = _mda_in_vg_raw,
