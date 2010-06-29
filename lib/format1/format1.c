@@ -467,13 +467,14 @@ static struct format_instance *_format1_create_instance(const struct format_type
 	dm_list_init(&fid->metadata_areas_ignored);
 
 	/* Define a NULL metadata area */
-	if (!(mda = dm_pool_alloc(fmt->cmd->mem, sizeof(*mda)))) {
+	if (!(mda = dm_pool_zalloc(fmt->cmd->mem, sizeof(*mda)))) {
 		dm_pool_free(fmt->cmd->mem, fid);
 		return_NULL;
 	}
 
 	mda->ops = &_metadata_format1_ops;
 	mda->metadata_locn = NULL;
+	mda->flags = 0;
 	dm_list_add(&fid->metadata_areas_in_use, &mda->list);
 
 	return fid;
