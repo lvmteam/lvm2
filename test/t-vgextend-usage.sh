@@ -99,3 +99,31 @@ check_pv_field_ $dev2 vg_name $vg1
 check_pv_field_ $dev3 vg_name $vg1
 vgremove -f $vg1
 pvremove -f $dev1 $dev2 $dev3
+
+echo test vgextend --metadataignore
+for mdacp in 1 2; do
+for ignore in y n; do
+	echo vgextend --metadataignore has proper mda_count and mda_used_count
+	vgcreate $vg $dev3
+	vgextend --metadataignore $ignore --pvmetadatacopies $mdacp $vg $dev1 $dev2
+	check_pv_field_ $dev1 pv_mda_count $mdacp
+	check_pv_field_ $dev2 pv_mda_count $mdacp
+	if [ $ignore = y ]; then
+		check_pv_field_ $dev1 pv_mda_used_count 0
+		check_pv_field_ $dev2 pv_mda_used_count 0
+	else
+		check_pv_field_ $dev1 pv_mda_used_count $mdacp
+		check_pv_field_ $dev2 pv_mda_used_count $mdacp
+	fi
+	echo vg has proper vg_mda_count and vg_mda_used_count
+	check_vg_field_ $vg vg_mda_count $(($mdacp * 2 + 1))
+	if [ $ignore = y ]; then
+		check_vg_field_ $vg vg_mda_used_count 1
+	else
+		check_vg_field_ $vg vg_mda_used_count $(($mdacp * 2 + 1))
+	fi
+	check_vg_field_ $vg vg_mda_copies unmanaged
+	vgremove $vg
+	pvremove -ff $dev1 $dev2 $dev3
+done
+done
