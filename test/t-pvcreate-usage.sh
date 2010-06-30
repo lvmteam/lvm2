@@ -158,3 +158,34 @@ vgcfgrestore -f "$(pwd)/backup.$$1" $vg
 check_pv_field_ $dev1 pe_start 0
 check_pv_field_ $dev2 pe_start 0
 vgremove $vg
+
+echo test pvcreate --metadataignore
+for pv_in_vg in 1 0; do
+for mdacp in 1 2; do
+for ignore in y n; do
+	echo pvcreate --metadataignore has proper mda_count and mda_used_count
+	pvcreate --metadatacopies $mdacp --metadataignore $ignore $dev1 $dev2
+	check_pv_field_ $dev1 pv_mda_count $mdacp
+	check_pv_field_ $dev2 pv_mda_count $mdacp
+	if [ $ignore = y ]; then
+		check_pv_field_ $dev1 pv_mda_used_count 0
+		check_pv_field_ $dev2 pv_mda_used_count 0
+	else
+		check_pv_field_ $dev1 pv_mda_used_count $mdacp
+		check_pv_field_ $dev2 pv_mda_used_count $mdacp
+	fi
+	echo vgcreate has proper vg_mda_count and vg_mda_used_count
+	if [ $pv_in_vg = 1 ]; then
+		vgcreate -c n "$vg" $dev1 $dev2
+		check_vg_field_ $vg vg_mda_count $(($mdacp * 2))
+		if [ $ignore = y ]; then
+			check_vg_field_ $vg vg_mda_used_count 1
+		else
+			check_vg_field_ $vg vg_mda_used_count $(($mdacp * 2))
+		fi
+		check_vg_field_ $vg vg_mda_copies unmanaged
+		vgremove $vg
+	fi
+done
+done
+done
