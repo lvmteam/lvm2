@@ -68,9 +68,9 @@ int rlocn_is_ignored(const struct raw_locn *rlocn)
 	return (rlocn->flags & RAW_LOCN_IGNORED ? 1 : 0);
 }
 
-void rlocn_set_ignored(struct raw_locn *rlocn, int value)
+void rlocn_set_ignored(struct raw_locn *rlocn, unsigned mda_ignored)
 {
-	if (value)
+	if (mda_ignored)
 		rlocn->flags |= RAW_LOCN_IGNORED;
 	else
 		rlocn->flags &= ~RAW_LOCN_IGNORED;
