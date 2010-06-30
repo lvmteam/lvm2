@@ -1377,6 +1377,18 @@ int pvcreate_params_validate(struct cmd_context *cmd,
 		return 0;
 	}
 
+	if (arg_count(cmd, metadataignore_ARG)) {
+		pp->mda_ignore = !strcmp(arg_str_value(cmd,
+						       metadataignore_ARG,
+						       "n"), "y");
+	}
+	if (arg_count(cmd, pvmetadatacopies_ARG) &&
+	    !arg_int_value(cmd, pvmetadatacopies_ARG, -1) &&
+	    pp->mda_ignore) {
+		log_error("metadataignore only applies to metadatacopies > 0");
+		return 0;
+	}
+
 	if (arg_count(cmd, zero_ARG))
 		pp->zero = strcmp(arg_str_value(cmd, zero_ARG, "y"), "n");
 

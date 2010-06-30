@@ -453,6 +453,7 @@ struct pvcreate_params {
 	const char *restorefile; /* 0 if no --restorefile option */
 	force_t force;
 	unsigned yes;
+	unsigned mda_ignore;
 };
 
 struct physical_volume *pvcreate_single(struct cmd_context *cmd,

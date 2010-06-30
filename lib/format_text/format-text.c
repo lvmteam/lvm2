@@ -1337,7 +1337,7 @@ static int _mda_setup(const struct format_type *fmt,
 	/* FIXME If creating new mdas, wipe them! */
 	if (mda_size1) {
 		if (!add_mda(fmt, fmt->cmd->mem, mdas, pv->dev, start1,
-			     mda_size1))
+			     mda_size1, 0))
 			return 0;
 
 		if (!dev_set((struct device *) pv->dev, start1,
@@ -1384,7 +1384,7 @@ static int _mda_setup(const struct format_type *fmt,
 
 	if (mda_size2) {
 		if (!add_mda(fmt, fmt->cmd->mem, mdas, pv->dev, start2,
-			     mda_size2)) return 0;
+			     mda_size2, 0)) return 0;
 		if (!dev_set(pv->dev, start2,
 			     (size_t) (mda_size1 >
 				       wipe_size ? : mda_size1), 0)) {
@@ -1440,7 +1440,7 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 				  mdac->area.start >> SECTOR_SHIFT,
 				  mdac->area.size >> SECTOR_SHIFT);
 			add_mda(fmt, NULL, &info->mdas, mdac->area.dev,
-				mdac->area.start, mdac->area.size);
+				mdac->area.start, mdac->area.size, mda_is_ignored(mda));
 		}
 		/* FIXME Temporary until mda creation supported by tools */
 	} else if (!info->mdas.n) {

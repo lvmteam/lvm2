@@ -56,7 +56,7 @@ int add_da(struct dm_pool *mem, struct dm_list *das,
 void del_das(struct dm_list *das);
 
 int add_mda(const struct format_type *fmt, struct dm_pool *mem, struct dm_list *mdas,
-	    struct device *dev, uint64_t start, uint64_t size);
+	    struct device *dev, uint64_t start, uint64_t size, unsigned ignored);
 void del_mdas(struct dm_list *mdas);
 
 #endif
