@@ -126,10 +126,13 @@ for mdacp in 1 2; do
 	check_vg_field_ $vg vg_mda_count $(($mdacp * 4))
 	check_vg_field_ $vg vg_mda_copies unmanaged
 	check_vg_field_ $vg vg_mda_used_count $(($mdacp * 4))
-	echo --vgmetadatacopies 0 should be rejected for vgchange and vgcreate
-	not vgchange --vgmetadatacopies 0 $vg
+	echo --vgmetadatacopies 0 should be unmanaged for vgchange and vgcreate
+	vgchange --vgmetadatacopies 0 $vg
+	check_vg_field_ $vg vg_mda_copies unmanaged
 	vgremove -f $vg
-	not vgcreate -c n --vgmetadatacopies 0 "$vg" $dev1 $dev2 $dev4 $dev5
+	vgcreate -c n --vgmetadatacopies 0 "$vg" $dev1 $dev2 $dev4 $dev5
+	check_vg_field_ $vg vg_mda_copies unmanaged
+	vgremove -f $vg
 done
 
 echo Test vgextend / vgreduce with vgmetadatacopies
