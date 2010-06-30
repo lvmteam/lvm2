@@ -476,29 +476,22 @@ int readahead_arg(struct cmd_context *cmd __attribute((unused)), struct arg *a)
 /*
  * Non-zero, positive integer, "all", or "unmanaged"
  */
-int vgmetadatacopies_arg(struct cmd_context *cmd __attribute((unused)),
+int metadatacopies_arg(struct cmd_context *cmd __attribute((unused)),
 			 struct arg *a)
 {
-	if (!strcasecmp(a->value, "all")) {
-		a->ui_value = VGMETADATACOPIES_ALL;
-		return 1;
+	if (!strncmp(cmd->command->name, "vg", 2)) {
+		if (!strcasecmp(a->value, "all")) {
+			a->ui_value = VGMETADATACOPIES_ALL;
+			return 1;
+		}
+
+		if (!strcasecmp(a->value, "unmanaged")) {
+			a->ui_value = VGMETADATACOPIES_UNMANAGED;
+			return 1;
+		}
 	}
 
-	if (!strcasecmp(a->value, "unmanaged")) {
-		a->ui_value = VGMETADATACOPIES_UNMANAGED;
-		return 1;
-	}
-
-	if (!_size_arg(cmd, a, 1))
-		return 0;
-
-	if (a->sign == SIGN_MINUS)
-		return 0;
-
-	if (!a->ui_value)
-		return 0;
-
-	return 1;
+	return int_arg(cmd, a);
 }
 
 static void __alloc(int size)
