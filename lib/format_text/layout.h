@@ -62,7 +62,7 @@ struct raw_locn {
 } __attribute__ ((packed));
 
 int rlocn_is_ignored(const struct raw_locn *rlocn);
-void rlocn_set_ignored(struct raw_locn *rlocn, int value);
+void rlocn_set_ignored(struct raw_locn *rlocn, unsigned mda_ignored);
 
 /* On disk */
 /* Structure size limited to one sector */
