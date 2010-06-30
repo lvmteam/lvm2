@@ -49,7 +49,7 @@ static int vgremove_single(struct cmd_context *cmd, const char *vg_name,
 		}
 	}
 
-	if (!vg_remove_check(vg)) {
+	if (!force && !vg_remove_check(vg)) {
 		stack;
 		return ECMD_FAILED;
 	}

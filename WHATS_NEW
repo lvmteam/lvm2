@@ -1,5 +1,6 @@
 Version 2.02.69 - 
 ================================
+  Fix vgremove to allow removal of VG with missing PVs. (2.02.52)
   Add --metadataignore to pvcreate and vgextend and define in lvm.conf.
   Add {pv|vg}_mda_used_count which displays a count of mdas w/ignored bit clear.
   Add vg_mda_copies which displays the value of --vgmetadatacopies.

@@ -15,3 +15,6 @@ lvchange -v --refresh --partial $vg/mirror
 # also check that vgchange works
 vgchange -a n --partial $vg
 vgchange -a y --partial $vg
+
+# check vgremove
+vgremove -f $vg
