@@ -1,5 +1,6 @@
-Version 1.02.51 - 
+Version 1.02.51 - 30th June 2010
 ================================
+  Generate libdevmapper exported symbols from header file.
 
 Version 1.02.50 - 23rd June 2010
 ================================
