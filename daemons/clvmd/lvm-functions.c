@@ -354,9 +354,13 @@ static int do_activate_lv(char *resource, unsigned char lock_flags, int mode)
 	if (!lv_info_by_lvid(cmd, resource, &lvi, 0, 0))
 		goto error;
 
-	if (lvi.suspended)
-		if (!lv_resume(cmd, resource))
+	if (lvi.suspended) {
+		memlock_inc(cmd);
+		if (!lv_resume(cmd, resource)) {
+			memlock_dec(cmd);
 			goto error;
+		}
+	}
 
 	/* Now activate it */
 	if (!lv_activate(cmd, resource, exclusive))
