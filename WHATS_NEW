@@ -1,3 +1,6 @@
+Version 2.02.70 - 
+================================
+
 Version 2.02.69 - 30th June 2010
 ================================
   Fix vgremove to allow removal of VG with missing PVs. (2.02.52)
