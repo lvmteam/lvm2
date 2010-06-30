@@ -54,6 +54,8 @@ static int vgremove_single(struct cmd_context *cmd, const char *vg_name,
 		return ECMD_FAILED;
 	}
 
+	vg_remove_pvs(vg);
+
 	if (!vg_remove(vg)) {
 		stack;
 		return ECMD_FAILED;
