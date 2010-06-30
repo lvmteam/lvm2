@@ -1187,7 +1187,7 @@ void vgcreate_params_set_defaults(struct vgcreate_params *vp_def,
 		vp_def->max_lv = vg->max_lv;
 		vp_def->alloc = vg->alloc;
 		vp_def->clustered = vg_is_clustered(vg);
-		vp_def->metadata_copies = vg->mda_copies;
+		vp_def->vgmetadatacopies = vg->mda_copies;
 	} else {
 		vp_def->vg_name = NULL;
 		vp_def->extent_size = DEFAULT_EXTENT_SIZE * 2;
@@ -1195,7 +1195,7 @@ void vgcreate_params_set_defaults(struct vgcreate_params *vp_def,
 		vp_def->max_lv = DEFAULT_MAX_LV;
 		vp_def->alloc = DEFAULT_ALLOC_POLICY;
 		vp_def->clustered = DEFAULT_CLUSTERED;
-		vp_def->metadata_copies = DEFAULT_VGMETADATACOPIES;
+		vp_def->vgmetadatacopies = DEFAULT_VGMETADATACOPIES;
 	}
 }
 
@@ -1244,13 +1244,13 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 	}
 
 	if (arg_count(cmd, metadatacopies_ARG)) {
-		vp_new->metadata_copies = arg_int_value(cmd, metadatacopies_ARG,
+		vp_new->vgmetadatacopies = arg_int_value(cmd, metadatacopies_ARG,
 							DEFAULT_VGMETADATACOPIES);
 	} else if (arg_count(cmd, vgmetadatacopies_ARG)) {
-		vp_new->metadata_copies = arg_int_value(cmd, vgmetadatacopies_ARG,
+		vp_new->vgmetadatacopies = arg_int_value(cmd, vgmetadatacopies_ARG,
 							DEFAULT_VGMETADATACOPIES);
 	} else {
-		vp_new->metadata_copies = find_config_tree_int(cmd,
+		vp_new->vgmetadatacopies = find_config_tree_int(cmd,
 						   "metadata/vgmetadatacopies",
 						   DEFAULT_VGMETADATACOPIES);
 	}
@@ -1378,19 +1378,19 @@ int pvcreate_params_validate(struct cmd_context *cmd,
 	}
 
 	if (arg_count(cmd, metadataignore_ARG)) {
-		pp->mda_ignore = !strcmp(arg_str_value(cmd,
+		pp->metadataignore = !strcmp(arg_str_value(cmd,
 						metadataignore_ARG,
 						DEFAULT_PVMETADATAIGNORE_STR),
 					 "y");
 	} else {
-		pp->mda_ignore = !strcmp(find_config_tree_str(cmd,
+		pp->metadataignore = !strcmp(find_config_tree_str(cmd,
 					"metadata/pvmetadataignore",
 					DEFAULT_PVMETADATAIGNORE_STR),
 					"y");
 	}
 	if (arg_count(cmd, pvmetadatacopies_ARG) &&
 	    !arg_int_value(cmd, pvmetadatacopies_ARG, -1) &&
-	    pp->mda_ignore) {
+	    pp->metadataignore) {
 		log_error("metadataignore only applies to metadatacopies > 0");
 		return 0;
 	}

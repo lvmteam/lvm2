@@ -1583,7 +1583,7 @@ void pvcreate_params_set_defaults(struct pvcreate_params *pp)
 	pp->restorefile = 0;
 	pp->force = PROMPT;
 	pp->yes = 0;
-	pp->mda_ignore = DEFAULT_PVMETADATAIGNORE;
+	pp->metadataignore = DEFAULT_PVMETADATAIGNORE;
 }
 
 /*
@@ -1673,7 +1673,7 @@ struct physical_volume * pvcreate_single(struct cmd_context *cmd,
 	log_very_verbose("Writing physical volume data to disk \"%s\"",
 			 pv_name);
 
-	if (pp->mda_ignore) {
+	if (pp->metadataignore) {
 		dm_list_iterate_items(mda, &mdas) {
 			mda_set_ignored(mda, 1);
 		}
@@ -4247,17 +4247,17 @@ int mdas_empty_or_ignored(struct dm_list *mdas)
 	return 0;
 }
 
-int pv_change_metadataignore(struct physical_volume *pv, uint32_t mda_ignore)
+int pv_change_metadataignore(struct physical_volume *pv, uint32_t mda_ignored)
 {
 	const char *pv_name = pv_dev_name(pv);
 
-	if (mda_ignore && !pv_mda_used_count(pv)) {
+	if (mda_ignored && !pv_mda_used_count(pv)) {
 		log_error("Metadata areas on physical volume \"%s\" already "
 			  "ignored.", pv_name);
 		return 0;
 	}
 
-	if (!mda_ignore && (pv_mda_used_count(pv) == pv_mda_count(pv))) {
+	if (!mda_ignored && (pv_mda_used_count(pv) == pv_mda_count(pv))) {
 		log_error("Metadata areas on physical volume \"%s\" already "
 			  "marked as in-use.", pv_name);
 		return 0;
@@ -4270,9 +4270,9 @@ int pv_change_metadataignore(struct physical_volume *pv, uint32_t mda_ignore)
 	}
 
 	log_verbose("Marking metadata areas on physical volume \"%s\" "
-		    "as %s.", pv_name, mda_ignore ? "ignored" : "in-use");
+		    "as %s.", pv_name, mda_ignored ? "ignored" : "in-use");
 
-	if (!pv_mda_set_ignored(pv, mda_ignore))
+	if (!pv_mda_set_ignored(pv, mda_ignored))
 		return_0;
 
 	/*
