@@ -1111,7 +1111,7 @@ skip_adjust:
 	 * below check and retain correctness.
 	 */
 	if ((!dm_list_size(&vg->fid->metadata_areas_in_use) ||
-	    !vg_mda_used_count(vg)) && vg_mda_count(vg))
+	    (!vg_mda_used_count(vg)) && vg_mda_count(vg)))
 		ret = _vg_unignore_mdas(vg, 1);
 
 	if (!ret)
