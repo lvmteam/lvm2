@@ -384,7 +384,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		    !vg_set_max_pv(vg_to, vp_new.max_pv) ||
 		    !vg_set_alloc_policy(vg_to, vp_new.alloc) ||
 		    !vg_set_clustered(vg_to, vp_new.clustered) ||
-		    !vg_set_mda_copies(vg_to, vp_new.metadata_copies))
+		    !vg_set_mda_copies(vg_to, vp_new.vgmetadatacopies))
 			goto_bad;
 	}
 

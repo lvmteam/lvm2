@@ -528,17 +528,15 @@ static int _vgchange_refresh(struct cmd_context *cmd, struct volume_group *vg)
 static int _vgchange_metadata_copies(struct cmd_context *cmd,
 				     struct volume_group *vg)
 {
-	uint32_t mda_copies = DEFAULT_VGMETADATACOPIES;
+	uint32_t mda_copies = arg_uint_value(cmd, vgmetadatacopies_ARG, DEFAULT_VGMETADATACOPIES);
 
-	if (arg_count(cmd, vgmetadatacopies_ARG))
-		mda_copies = arg_uint_value(cmd, vgmetadatacopies_ARG,
-			DEFAULT_VGMETADATACOPIES);
-	else if (arg_count(cmd, metadatacopies_ARG))
-		mda_copies = arg_uint_value(cmd, metadatacopies_ARG,
-			DEFAULT_VGMETADATACOPIES);
 	if (mda_copies == vg_mda_copies(vg)) {
-		log_error("Metadata copies of VG %s is already %u",
-			  vg->name, mda_copies);
+		if (vg_mda_copies(vg) == VGMETADATACOPIES_UNMANAGED)
+			log_error("Number of metadata copies for VG %s is already unmanaged.",
+				  vg->name);
+		else
+			log_error("Number of metadata copies for VG %s is already %" PRIu32,
+				  vg->name, mda_copies);
 		return ECMD_PROCESSED;
 	}
 
