@@ -566,6 +566,9 @@ int vg_remove(struct volume_group *vg)
 	/* init physical volumes */
 	dm_list_iterate_items(pvl, &vg->removed_pvs) {
 		pv = pvl->pv;
+		if (is_missing_pv(pv))
+			continue;
+
 		log_verbose("Removing physical volume \"%s\" from "
 			    "volume group \"%s\"", pv_dev_name(pv), vg->name);
 		pv->vg_name = vg->fid->fmt->orphan_vg_name;
