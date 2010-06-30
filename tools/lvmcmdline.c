@@ -817,8 +817,7 @@ static int _get_settings(struct cmd_context *cmd)
 
 	if (arg_count(cmd, partial_ARG)) {
 		cmd->partial_activation = 1;
-		log_print("Partial mode. Incomplete volume groups will "
-			  "be activated read-only.");
+		log_print("Partial mode. Incomplete logical volumes will be processed.");
 	}
 
 	if (arg_count(cmd, ignorelockingfailure_ARG) || arg_count(cmd, sysinit_ARG))
