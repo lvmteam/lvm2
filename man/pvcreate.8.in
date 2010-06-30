@@ -13,6 +13,7 @@ pvcreate \- initialize a disk or partition for use by LVM
 .RB [ \-M | \-\-metadatatype type ]
 .RB [ \-\-[pv]metadatacopies #copies ]
 .RB [ \-\-metadatasize size ]
+.RB [ \-\-metadataignore y|n ]
 .RB [ \-\-dataalignment alignment ]
 .RB [ \-\-dataalignmentoffset alignment_offset ]
 .RB [ \-\-restorefile file ]

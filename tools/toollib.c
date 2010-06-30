@@ -1379,8 +1379,14 @@ int pvcreate_params_validate(struct cmd_context *cmd,
 
 	if (arg_count(cmd, metadataignore_ARG)) {
 		pp->mda_ignore = !strcmp(arg_str_value(cmd,
-						       metadataignore_ARG,
-						       "n"), "y");
+						metadataignore_ARG,
+						DEFAULT_PVMETADATAIGNORE_STR),
+					 "y");
+	} else {
+		pp->mda_ignore = !strcmp(find_config_tree_str(cmd,
+					"metadata/pvmetadataignore",
+					DEFAULT_PVMETADATAIGNORE_STR),
+					"y");
 	}
 	if (arg_count(cmd, pvmetadatacopies_ARG) &&
 	    !arg_int_value(cmd, pvmetadatacopies_ARG, -1) &&
