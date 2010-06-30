@@ -182,8 +182,9 @@ void del_das(struct dm_list *das)
 	}
 }
 
+/* FIXME: refactor this function with other mda constructor code */
 int add_mda(const struct format_type *fmt, struct dm_pool *mem, struct dm_list *mdas,
-	    struct device *dev, uint64_t start, uint64_t size)
+	    struct device *dev, uint64_t start, uint64_t size, unsigned ignored)
 {
 /* FIXME List size restricted by pv_header SECTOR_SIZE */
 	struct metadata_area *mdal;
@@ -222,6 +223,7 @@ int add_mda(const struct format_type *fmt, struct dm_pool *mem, struct dm_list *
 	mdac->area.size = size;
 	mdac->free_sectors = UINT64_C(0);
 	memset(&mdac->rlocn, 0, sizeof(mdac->rlocn));
+	mda_set_ignored(mdal, ignored);
 
 	dm_list_add(mdas, &mdal->list);
 	return 1;
@@ -294,7 +296,7 @@ static int _text_read(struct labeller *l, struct device *dev, void *buf,
 	dlocn_xl++;
 	while ((offset = xlate64(dlocn_xl->offset))) {
 		add_mda(info->fmt, NULL, &info->mdas, dev, offset,
-			xlate64(dlocn_xl->size));
+			xlate64(dlocn_xl->size), 0);
 		dlocn_xl++;
 	}
 

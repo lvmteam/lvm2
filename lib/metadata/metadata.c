@@ -1580,6 +1580,7 @@ void pvcreate_params_set_defaults(struct pvcreate_params *pp)
 	pp->restorefile = 0;
 	pp->force = PROMPT;
 	pp->yes = 0;
+	pp->mda_ignore = DEFAULT_PVMETADATAIGNORE;
 }
 
 /*
@@ -1602,6 +1603,7 @@ struct physical_volume * pvcreate_single(struct cmd_context *cmd,
 	struct dm_list mdas;
 	struct pvcreate_params default_pp;
 	char buffer[64] __attribute((aligned(8)));
+	struct metadata_area *mda;
 
 	pvcreate_params_set_defaults(&default_pp);
 	if (!pp)
@@ -1667,6 +1669,13 @@ struct physical_volume * pvcreate_single(struct cmd_context *cmd,
 
 	log_very_verbose("Writing physical volume data to disk \"%s\"",
 			 pv_name);
+
+	if (pp->mda_ignore) {
+		dm_list_iterate_items(mda, &mdas) {
+			mda_set_ignored(mda, 1);
+		}
+	}
+
 	if (!(pv_write(cmd, pv, &mdas, pp->labelsector))) {
 		log_error("Failed to write physical volume \"%s\"", pv_name);
 		goto error;

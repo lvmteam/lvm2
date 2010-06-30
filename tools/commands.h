@@ -517,8 +517,8 @@ xx(pvcreate,
 
    dataalignment_ARG, dataalignmentoffset_ARG, force_ARG, test_ARG,
    labelsector_ARG, metadatatype_ARG, metadatacopies_ARG, pvmetadatacopies_ARG,
-   metadatasize_ARG, physicalvolumesize_ARG, restorefile_ARG, uuidstr_ARG,
-   yes_ARG, zero_ARG)
+   metadatasize_ARG, metadataignore_ARG, physicalvolumesize_ARG,
+   restorefile_ARG, uuidstr_ARG, yes_ARG, zero_ARG)
 
 xx(pvdata,
    "Display the on-disk metadata for physical volume(s)",
