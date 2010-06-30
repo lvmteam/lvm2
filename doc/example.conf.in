@@ -456,7 +456,7 @@ activation {
 
     # pvmetadatacopies = 1
 
-    # Default number of copies of metadata to hold on each VG.
+    # Default number of copies of metadata to maintain for each VG.
     # If set to a non-zero value, LVM automatically manages the PV
     # 'metadataignore' flags (see pvchange) to achieve the requested
     # copies of metadata.  You may set a value larger than the
