@@ -180,6 +180,8 @@ int lvm_vg_remove(vg_t vg)
 	if (!vg_remove_check(vg))
 		return -1;
 
+	vg_remove_pvs(vg);
+
 	return 0;
 }
 
