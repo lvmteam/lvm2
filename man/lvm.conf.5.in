@@ -411,7 +411,7 @@ metadata format, this states whether metadata areas should be ignored.
 The default is "n".  If metadata areas on a physical volume are ignored,
 LVM will not not store metadata in the metadata areas present on newly
 created Physical Volumes.  The option can be overridden on the command
-line with \fB--pvmetadataignore\fP.  Metadata areas cannot be created
+line with \fB--metadataignore\fP.  Metadata areas cannot be created
 or extended after Logical Volumes have been allocated on the device.
 If you do not want to store metadata on this device, it is still wise
 always to allocate a metadata area (use a non-zero value for

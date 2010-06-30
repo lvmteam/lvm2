@@ -856,7 +856,7 @@ xx(vgextend,
    autobackup_ARG, test_ARG,
    force_ARG, yes_ARG, zero_ARG, labelsector_ARG, metadatatype_ARG,
    metadatasize_ARG, pvmetadatacopies_ARG, metadatacopies_ARG,
-   dataalignment_ARG, dataalignmentoffset_ARG)
+   metadataignore_ARG, dataalignment_ARG, dataalignmentoffset_ARG)
 
 xx(vgimport,
    "Register exported volume group with system",
