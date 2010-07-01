@@ -217,6 +217,9 @@ int lvm_shell(struct cmd_context *cmd, struct cmdline_context *cmdline)
 			continue;
 		}
 
+		if (!argc)
+			continue;
+
 		if (!strcmp(argv[0], "lvm")) {
 			argv++;
 			argc--;
