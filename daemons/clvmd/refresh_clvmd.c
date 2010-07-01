@@ -285,7 +285,7 @@ int refresh_clvmd(int all_nodes)
 {
 	int num_responses;
 	char args[1]; // No args really.
-	lvm_response_t *response;
+	lvm_response_t *response = NULL;
 	int saved_errno;
 	int status;
 	int i;
