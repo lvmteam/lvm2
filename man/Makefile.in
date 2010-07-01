@@ -36,7 +36,7 @@ MAN8=lvchange.8 lvconvert.8 lvcreate.8 lvdisplay.8 lvextend.8 lvm.8 \
 	pvresize.8 pvs.8 pvscan.8 vgcfgbackup.8 vgcfgrestore.8 vgchange.8 \
 	vgck.8 vgcreate.8 vgconvert.8 vgdisplay.8 vgexport.8 vgextend.8 \
 	vgimport.8 vgimportclone.8 vgmerge.8 vgmknodes.8 vgreduce.8 vgremove.8 \
-	vgrename.8 vgs.8 vgscan.8 vgsplit.8 $(FSADMMAN) $(DMEVENTDMAN)
+	vgrename.8 vgs.8 vgscan.8 vgsplit.8 $(FSADMMAN)
 
 ifneq ("@CLVMD@", "none")
   MAN8CLUSTER=clvmd.8
@@ -47,7 +47,7 @@ ifeq ("@BUILD_CMIRRORD@", "yes")
   MAN8CLUSTER+=cmirrord.8
 endif
 
-MAN8DM=dmsetup.8
+MAN8DM=dmsetup.8 $(DMEVENTDMAN)
 MAN5DIR=$(mandir)/man5
 MAN8DIR=$(mandir)/man8
 

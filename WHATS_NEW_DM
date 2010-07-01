@@ -1,5 +1,6 @@
 Version 1.02.52 -
 ================================
+  Move dmeventd man page from install_lvm2 to install_device-mapper. (1.02.50)
 
 Version 1.02.51 - 30th June 2010
 ================================
