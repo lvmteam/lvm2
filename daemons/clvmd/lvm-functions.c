@@ -38,7 +38,6 @@ static struct dm_hash_table *lv_hash = NULL;
 static pthread_mutex_t lv_hash_lock;
 static pthread_mutex_t lvm_lock;
 static char last_error[1024];
-static int suspended = 0;
 
 struct lv_info {
 	int lock_id;
@@ -498,15 +497,11 @@ int do_lock_lv(unsigned char command, unsigned char lock_flags, char *resource)
 
 	case LCK_LV_SUSPEND:
 		status = do_suspend_lv(resource, lock_flags);
-		if (!status)
-			suspended++;
 		break;
 
 	case LCK_UNLOCK:
 	case LCK_LV_RESUME:	/* if active */
 		status = do_resume_lv(resource, lock_flags);
-		if (!status)
-			suspended--;
 		break;
 
 	case LCK_LV_ACTIVATE:
@@ -844,7 +839,7 @@ void lvm_do_backup(const char *vgname)
 	struct volume_group * vg;
 	int consistent = 0;
 
-	DEBUGLOG("Triggering backup of VG metadata for %s. suspended=%d\n", vgname, suspended);
+	DEBUGLOG("Triggering backup of VG metadata for %s.\n", vgname);
 
 	pthread_mutex_lock(&lvm_lock);
 
