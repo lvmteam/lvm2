@@ -42,6 +42,11 @@ static int _blkext_major = -1;
 static int _drbd_major = -1;
 static int _device_mapper_major = -1;
 
+int dm_major(void)
+{
+	return _device_mapper_major;
+}
+
 int md_major(void)
 {
 	return _md_major;
@@ -127,14 +132,6 @@ static int _passes_lvm_type_device_filter(struct dev_filter *f __attribute((unus
 	if (!_max_partitions_by_major[MAJOR(dev->dev)]) {
 		log_debug("%s: Skipping: Unrecognised LVM device type %"
 			  PRIu64, name, (uint64_t) MAJOR(dev->dev));
-		return 0;
-	}
-
-	/* FIXME Always check 'layer' regardless of ignore_suspended_devices */
-	/* Skip suspended devices */
-	if (MAJOR(dev->dev) == _device_mapper_major &&
-	    ignore_suspended_devices() && !device_is_usable(dev)) {
-		log_debug("%s: Skipping: Suspended or internal dm device", name);
 		return 0;
 	}
 

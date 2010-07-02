@@ -16,9 +16,11 @@
 #include "lib.h"
 #include "config.h"
 #include "dev-cache.h"
+#include "filter.h"
 #include "filter-persistent.h"
 #include "lvm-file.h"
 #include "lvm-string.h"
+#include "activate.h"
 
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -266,15 +268,31 @@ static int _lookup_p(struct dev_filter *f, struct device *dev)
 	void *l = dm_hash_lookup(pf->devices, dev_name(dev));
 	struct str_list *sl;
 
+	/* Cached BAD? */
+	if (l == PF_BAD_DEVICE) {
+		log_debug("%s: Skipping (cached)", dev_name(dev));
+		return 0;
+	}
+
+        /* Test dm devices every time, so cache them as GOOD. */
+	if (MAJOR(dev->dev) == dm_major()) {
+		if (!l)
+			dm_list_iterate_items(sl, &dev->aliases)
+				dm_hash_insert(pf->devices, sl->str, PF_GOOD_DEVICE);
+		if (ignore_suspended_devices() && !device_is_usable(dev)) {
+                	log_debug("%s: Skipping (suspended/internal)", dev_name(dev));
+			return 0;
+		}
+		return pf->real->passes_filter(pf->real, dev);
+	}
+
+	/* Uncached */
 	if (!l) {
-		l = pf->real->passes_filter(pf->real, dev) ?
-		    PF_GOOD_DEVICE : PF_BAD_DEVICE;
+		l = pf->real->passes_filter(pf->real, dev) ?  PF_GOOD_DEVICE : PF_BAD_DEVICE;
 
 		dm_list_iterate_items(sl, &dev->aliases)
 			dm_hash_insert(pf->devices, sl->str, l);
-
-	} else if (l == PF_BAD_DEVICE)
-			log_debug("%s: Skipping (cached)", dev_name(dev));
+	}
 
 	return (l == PF_BAD_DEVICE) ? 0 : 1;
 }
