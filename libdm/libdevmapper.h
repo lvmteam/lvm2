@@ -66,6 +66,7 @@ void dm_log_init_verbose(int level);
 typedef void (*dm_log_fn) (int level, const char *file, int line,
 			   const char *f, ...)
     __attribute__ ((format(printf, 4, 5)));
+
 void dm_log_init(dm_log_fn fn);
 /*
  * For backward-compatibility, indicate that dm_log_init() was used
@@ -943,7 +944,8 @@ int dm_split_words(char *buffer, unsigned max,
 /* 
  * Returns -1 if buffer too small
  */
-int dm_snprintf(char *buf, size_t bufsize, const char *format, ...);
+int dm_snprintf(char *buf, size_t bufsize, const char *format, ...)
+    __attribute__ ((format(printf, 3, 4)));
 
 /*
  * Returns pointer to the last component of the path.
@@ -975,7 +977,8 @@ int dm_fclose(FILE *stream);
  * Pointer to the buffer is stored in *buf.
  * Returns -1 on failure leaving buf undefined.
  */
-int dm_asprintf(char **buf, const char *format, ...);
+int dm_asprintf(char **buf, const char *format, ...)
+    __attribute__ ((format(printf, 2, 3)));
 
 /*********************
  * regular expressions

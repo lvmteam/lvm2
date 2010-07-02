@@ -1442,7 +1442,7 @@ static int _emit_areas_line(struct dm_task *dmt __attribute((unused)),
 	struct seg_area *area;
 	char devbuf[DM_FORMAT_DEV_BUFSIZE];
 	unsigned first_time = 1;
-	const char *logtype;
+	const char *logtype, *synctype;
 	unsigned log_parm_count;
 
 	dm_list_iterate_items(area, &seg->areas) {
@@ -1475,12 +1475,12 @@ static int _emit_areas_line(struct dm_task *dmt __attribute((unused)),
 				EMIT_PARAMS(*pos, " %s %u%s %" PRIu64, logtype,
 					    log_parm_count, devbuf, area->region_size);
 
-				logtype = (area->flags & DM_NOSYNC) ?
-					" nosync" : (area->flags & DM_FORCESYNC) ?
-					" sync" : NULL;
+				synctype = (area->flags & DM_NOSYNC) ?
+						" nosync" : (area->flags & DM_FORCESYNC) ?
+								" sync" : NULL;
 
-				if (logtype)
-					EMIT_PARAMS(*pos, logtype);
+				if (synctype)
+					EMIT_PARAMS(*pos, "%s", synctype);
 			}
 			break;
 		default:

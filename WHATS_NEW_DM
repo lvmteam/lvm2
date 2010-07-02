@@ -1,5 +1,6 @@
 Version 1.02.52 -
 ================================
+  Add printf format attributes to dm_{sn,as}printf and fix a caller.
   Move dmeventd man page from install_lvm2 to install_device-mapper. (1.02.50)
 
 Version 1.02.51 - 30th June 2010

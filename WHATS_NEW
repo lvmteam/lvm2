@@ -1,5 +1,6 @@
 Version 2.02.70 - 
 ================================
+  Add printf format attributes to yes_no_prompt and fix a caller.
   Always pass unsuspended dm devices through persistent filter to other filters.
   Move test for suspended dm devices ahead of other filters.
   Fix another segfault in clvmd -R if no response from daemon received. (2.02.68)
