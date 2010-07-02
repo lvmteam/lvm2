@@ -1,5 +1,7 @@
 Version 2.02.70 - 
 ================================
+  Always pass unsuspended dm devices through persistent filter to other filters.
+  Move test for suspended dm devices ahead of other filters.
   Fix another segfault in clvmd -R if no response from daemon received. (2.02.68)
   Remove superfluous suspended device counter from clvmd.
   Fix lvm shell crash when input is entirely whitespace.
