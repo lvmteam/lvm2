@@ -59,6 +59,6 @@ void display_segtypes(const struct cmd_context *cmd);
 const char *get_alloc_string(alloc_policy_t alloc);
 alloc_policy_t get_alloc_from_string(const char *str);
 
-char yes_no_prompt(const char *prompt, ...);
+char yes_no_prompt(const char *prompt, ...) __attribute__ ((format(printf, 1, 2)));
 
 #endif

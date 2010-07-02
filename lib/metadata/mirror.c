@@ -1543,7 +1543,7 @@ int remove_mirror_log(struct cmd_context *cmd,
 		return 0;
 	} else if (yes_no_prompt("Full resync required to convert "
 				 "inactive mirror %s to core log. "
-				 "Proceed? [y/n]: ") == 'y')
+				 "Proceed? [y/n]: ", lv->name) == 'y')
 		sync_percent = 0;
 	else
 		return 0;
