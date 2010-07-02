@@ -118,6 +118,16 @@ with VGs containing large numbers of PVs.  But if you do this and
 then later use \fBvgsplit\fP you must ensure that each VG is still going 
 to have a suitable number of copies of the metadata after the split!
 .TP
+.I \-\-metadataignore y|n
+Ignore or un-ignore metadata areas on this physical volume.  The default
+is "n".  If metadata areas on a physical volume are ignored, LVM will
+not not store metadata in the metadata areas present on this Physical
+Volume.  Metadata areas cannot be created or extended after Logical
+Volumes have been allocated on the device. If you do not want to store
+metadata on this device, it is still wise always to allocate a metadata
+area in case you need it in the future and to use this option to instruct
+LVM2 to ignore it.
+.TP
 .BR \-\-restorefile " file"
 In conjunction with \fB--uuid\fP, this extracts the location and size
 of the data on the PV from the file (produced by \fBvgcfgbackup\fP)

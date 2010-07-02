@@ -138,7 +138,7 @@ you should consider some use of \fB--pvmetadatacopies 0\fP as described in
 .BR \-\-vgmetadatacopies " " \fINumberOfCopies|unmanaged|all\fP
 Sets the desired number of metadata copies in the volume group.  If set to
 a non-zero value, LVM will automatically manage the 'metadataignore'
-flags on the physical volumes (see \fBpvchange --metadataignore\fP) in order
+flags on the physical volumes (see \fBpvchange\fP or \fBpvcreate\fP --metadataignore\fP) in order
 to achieve \fINumberOfCopies\fP copies of metadata.  If set to \fIunmanaged\fP,
 LVM will not automatically manage the 'metadataignore' flags.  If set to
 \fIall\fP, LVM will first clear all of the 'metadataignore' flags on all
