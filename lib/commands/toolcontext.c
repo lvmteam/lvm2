@@ -24,7 +24,6 @@
 #include "filter-md.h"
 #include "filter-persistent.h"
 #include "filter-regex.h"
-#include "filter-suspended.h"
 #include "filter-sysfs.h"
 #include "label.h"
 #include "lvm-file.h"
