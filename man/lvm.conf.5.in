@@ -415,7 +415,7 @@ line with \fB--metadataignore\fP.  Metadata areas cannot be created
 or extended after Logical Volumes have been allocated on the device.
 If you do not want to store metadata on this device, it is still wise
 always to allocate a metadata area (use a non-zero value for
-\fB--pvmetadatacopies) in case you need it in the future and to use
+\fB--pvmetadatacopies\fP) in case you need it in the future and to use
 this option to instruct LVM2 to ignore it.
 .IP
 \fBvgmetadatacopies\fP \(em When creating a volume group using the
