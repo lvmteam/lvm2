@@ -7,6 +7,7 @@ Version 2.02.70 -
   Fix lvm shell crash when input is entirely whitespace.
   Update partial mode warning message.
   Preserve memlock balance in clvmd when activation triggers a resume.
+  Restore the "removemissing" behaviour of lvconvert --repair --use-policies.
 
 Version 2.02.69 - 30th June 2010
 ================================
