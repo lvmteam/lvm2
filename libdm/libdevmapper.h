@@ -657,22 +657,22 @@ int dm_bit_get_next(dm_bitset_t bs, int last_bit);
 #define DM_BITS_PER_INT (sizeof(int) * CHAR_BIT)
 
 #define dm_bit(bs, i) \
-   (bs[(i / DM_BITS_PER_INT) + 1] & (0x1 << (i & (DM_BITS_PER_INT - 1))))
+   ((bs)[((i) / DM_BITS_PER_INT) + 1] & (0x1 << ((i) & (DM_BITS_PER_INT - 1))))
 
 #define dm_bit_set(bs, i) \
-   (bs[(i / DM_BITS_PER_INT) + 1] |= (0x1 << (i & (DM_BITS_PER_INT - 1))))
+   ((bs)[((i) / DM_BITS_PER_INT) + 1] |= (0x1 << ((i) & (DM_BITS_PER_INT - 1))))
 
 #define dm_bit_clear(bs, i) \
-   (bs[(i / DM_BITS_PER_INT) + 1] &= ~(0x1 << (i & (DM_BITS_PER_INT - 1))))
+   ((bs)[((i) / DM_BITS_PER_INT) + 1] &= ~(0x1 << ((i) & (DM_BITS_PER_INT - 1))))
 
 #define dm_bit_set_all(bs) \
-   memset(bs + 1, -1, ((*bs / DM_BITS_PER_INT) + 1) * sizeof(int))
+   memset((bs) + 1, -1, ((*(bs) / DM_BITS_PER_INT) + 1) * sizeof(int))
 
 #define dm_bit_clear_all(bs) \
-   memset(bs + 1, 0, ((*bs / DM_BITS_PER_INT) + 1) * sizeof(int))
+   memset((bs) + 1, 0, ((*(bs) / DM_BITS_PER_INT) + 1) * sizeof(int))
 
 #define dm_bit_copy(bs1, bs2) \
-   memcpy(bs1 + 1, bs2 + 1, ((*bs1 / DM_BITS_PER_INT) + 1) * sizeof(int))
+   memcpy((bs1) + 1, (bs2) + 1, ((*(bs1) / DM_BITS_PER_INT) + 1) * sizeof(int))
 
 /* Returns number of set bits */
 static inline unsigned hweight32(uint32_t i)
@@ -716,8 +716,8 @@ struct dm_hash_node *dm_hash_get_first(struct dm_hash_table *t);
 struct dm_hash_node *dm_hash_get_next(struct dm_hash_table *t, struct dm_hash_node *n);
 
 #define dm_hash_iterate(v, h) \
-	for (v = dm_hash_get_first(h); v; \
-	     v = dm_hash_get_next(h, v))
+	for (v = dm_hash_get_first((h)); v; \
+	     v = dm_hash_get_next((h), v))
 
 /****************
  * list functions
