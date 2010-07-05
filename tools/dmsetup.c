@@ -2942,7 +2942,7 @@ static int _loop_table(char *table, size_t tlen, char *file,
 	close(fd);
 
 	if (dm_snprintf(table, tlen, "%llu %llu loop %s %llu\n", 0ULL,
-			(long long unsigned)sectors, file, off) < 0)
+			(long long unsigned)sectors, file, (long long unsigned)off) < 0)
 		return 0;
 
 	if (_switches[VERBOSE_ARG] > 1)
@@ -2955,8 +2955,6 @@ error:
 		close(fd);
 	return 0;
 }
-
-
 
 static int _process_losetup_switches(const char *base, int *argc, char ***argv,
 				     const char *dev_dir)
