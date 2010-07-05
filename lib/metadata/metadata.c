@@ -31,6 +31,7 @@
 #include "defaults.h"
 #include "filter-persistent.h"
 
+#include <math.h>
 #include <sys/param.h>
 
 /*
@@ -1013,63 +1014,140 @@ static int _recalc_extents(uint32_t *extents, const char *desc1,
 	return 1;
 }
 
+static dm_bitset_t _bitset_with_random_bits(struct dm_pool *mem, uint32_t num_bits,
+					    uint32_t num_set_bits, unsigned *seed)
+{
+	dm_bitset_t bs;
+	unsigned bit_selected;
+	char buf[32];
+	uint32_t i = num_bits - num_set_bits;
+
+	if (!(bs = dm_bitset_create(mem, (unsigned) num_bits))) {
+		log_error("Failed to allocate bitset for setting random bits.");
+		return NULL;
+	}
+
+        if (!dm_pool_begin_object(mem, 512)) {
+                log_error("dm_pool_begin_object failed for random list of bits.");
+		dm_pool_free(mem, bs);
+                return NULL;
+        }
+
+	/* Perform loop num_set_bits times, selecting one bit each time */
+	while (i++ < num_bits) {
+		/* Select a random bit between 0 and (i-1) inclusive. */
+		bit_selected = (unsigned) floor(i * (rand_r(seed) / (RAND_MAX + 1.0)));
+
+		/*
+		 * If the bit was already set, set the new bit that became
+		 * choosable for the first time during this pass.
+		 * This maintains a uniform probability distribution by compensating
+		 * for being unable to select it until this pass.
+		 */
+		if (dm_bit(bs, bit_selected))
+			bit_selected = i - 1;
+
+		dm_bit_set(bs, bit_selected);
+
+		if (dm_snprintf(buf, sizeof(buf), "%u ", bit_selected) < 0) {
+			log_error("snprintf random bit failed.");
+			dm_pool_free(mem, bs);
+                	return NULL;
+		}
+		if (!dm_pool_grow_object(mem, buf, strlen(buf))) {
+			log_error("Failed to generate list of random bits.");
+			dm_pool_free(mem, bs);
+                	return NULL;
+		}
+	}
+
+	log_debug("Selected %" PRIu32 " random bits from %" PRIu32 ": %s", num_set_bits, num_bits, (char *) dm_pool_end_object(mem));
+
+	return bs;
+}
+
 static int _vg_ignore_mdas(struct volume_group *vg, uint32_t num_to_ignore)
 {
 	struct metadata_area *mda;
+	uint32_t mda_used_count = vg_mda_used_count(vg);
+	dm_bitset_t mda_to_ignore_bs;
+	int r = 1;
 
-	log_debug("Adjusting ignored mdas on vg %s: %" PRIu32 " mdas in use "
+	log_debug("Adjusting ignored mdas on vg %s: %" PRIu32 " of %" PRIu32 " mdas in use "
 		  "but %" PRIu32 " required.  Changing %" PRIu32 " flags.",
-		  vg->name, vg_mda_copies(vg), vg_mda_used_count(vg), num_to_ignore);
+		  vg->name, mda_used_count, vg_mda_count(vg), vg_mda_copies(vg), num_to_ignore);
 
 	if (!num_to_ignore)
 		return 1;
 
-	/* FIXME: flip bits on random mdas */
+	if (!(mda_to_ignore_bs = _bitset_with_random_bits(vg->vgmem, mda_used_count,
+							  num_to_ignore, &vg->cmd->rand_seed)))
+		return_0;
+
 	dm_list_iterate_items(mda, &vg->fid->metadata_areas_in_use)
-		if (!mda_is_ignored(mda)) {
+		if (!mda_is_ignored(mda) && (--mda_used_count,
+		    dm_bit(mda_to_ignore_bs, mda_used_count))) {
 			mda_set_ignored(mda, 1);
 			if (!--num_to_ignore)
-				return 1;
+				goto out;
 		}
 
 	log_error(INTERNAL_ERROR "Unable to find %"PRIu32" metadata areas to ignore "
 		  "on volume group %s", num_to_ignore, vg->name);
 
-	return 0;
+	r = 0;
+
+out:
+	dm_pool_free(vg->vgmem, mda_to_ignore_bs);
+	return r;
 }
 
 static int _vg_unignore_mdas(struct volume_group *vg, uint32_t num_to_unignore)
 {
 	struct metadata_area *mda, *tmda;
+	uint32_t mda_used_count = vg_mda_used_count(vg);
+	uint32_t mda_count = vg_mda_count(vg);
+	uint32_t mda_free_count = mda_count - mda_used_count;
+	dm_bitset_t mda_to_unignore_bs;
+	int r = 1;
 
 	if (!num_to_unignore)
 		return 1;
 
-	log_debug("Adjusting ignored mdas on vg %s: %" PRIu32 " mdas in use "
+	log_debug("Adjusting ignored mdas on vg %s: %" PRIu32 " of %" PRIu32 " mdas in use "
 		  "but %" PRIu32 " required.  Changing %" PRIu32 " flags.",
-		  vg->name, vg_mda_copies(vg), vg_mda_used_count(vg), num_to_unignore);
+		  vg->name, vg_mda_copies(vg), mda_count, mda_used_count, num_to_unignore);
 
-	/* FIXME: Select mdas to change at random */
+	if (!(mda_to_unignore_bs = _bitset_with_random_bits(vg->vgmem, mda_free_count,
+							    num_to_unignore, &vg->cmd->rand_seed)))
+		return_0;
+
 	dm_list_iterate_items_safe(mda, tmda, &vg->fid->metadata_areas_ignored)
-		if (mda_is_ignored(mda)) {
+		if (mda_is_ignored(mda) && (--mda_free_count,
+		    dm_bit(mda_to_unignore_bs, mda_free_count))) {
 			mda_set_ignored(mda, 0);
 			dm_list_move(&vg->fid->metadata_areas_in_use,
 				     &mda->list);
 			if (!--num_to_unignore)
-				return 1;
+				goto out;
 		}
 
 	dm_list_iterate_items(mda, &vg->fid->metadata_areas_in_use)
-		if (mda_is_ignored(mda)) {
+		if (mda_is_ignored(mda) &&
+		    dm_bit(mda_to_unignore_bs, num_to_unignore - 1)) {
 			mda_set_ignored(mda, 0);
 			if (!--num_to_unignore)
-				return 1;
+				goto out;
 		}
 
 	log_error(INTERNAL_ERROR "Unable to find %"PRIu32" metadata areas to unignore "
 		 "on volume group %s", num_to_unignore, vg->name);
 
-	return 0;
+	r = 0;
+
+out:
+	dm_pool_free(vg->vgmem, mda_to_unignore_bs);
+	return r;
 }
 
 static int _vg_adjust_ignored_mdas(struct volume_group *vg)
@@ -1673,11 +1751,9 @@ struct physical_volume * pvcreate_single(struct cmd_context *cmd,
 	log_very_verbose("Writing physical volume data to disk \"%s\"",
 			 pv_name);
 
-	if (pp->metadataignore) {
-		dm_list_iterate_items(mda, &mdas) {
+	if (pp->metadataignore)
+		dm_list_iterate_items(mda, &mdas)
 			mda_set_ignored(mda, 1);
-		}
-	}
 
 	if (!(pv_write(cmd, pv, &mdas, pp->labelsector))) {
 		log_error("Failed to write physical volume \"%s\"", pv_name);

@@ -1,5 +1,7 @@
 Version 2.02.70 - 
 ================================
+  Randomly select which mdas to use or ignore.
+  Add some missing standard configure.in checks.
   Add printf format attributes to yes_no_prompt and fix a caller.
   Always pass unsuspended dm devices through persistent filter to other filters.
   Move test for suspended dm devices ahead of other filters.
