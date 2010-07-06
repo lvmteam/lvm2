@@ -1,5 +1,6 @@
 Version 2.02.70 - 6th July 2010
 ===============================
+  Change logic to handle double failure of a "mirrored" mirror log.
   Randomly select which mdas to use or ignore.
   Add some missing standard configure.in checks.
   Add printf format attributes to yes_no_prompt and fix a caller.

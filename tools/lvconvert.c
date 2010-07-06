@@ -705,9 +705,12 @@ static int _lv_update_mirrored_log(struct logical_volume *lv,
 		return 1;
 
 	/* Reducing redundancy of the log */
-	return remove_mirror_images(log_lv, log_count,
-				    is_mirror_image_removable,
-				    operable_pvs, 0U);
+	if (log_count)
+		return remove_mirror_images(log_lv, log_count,
+					    is_mirror_image_removable,
+					    operable_pvs, 0U);
+
+	return remove_mirror_log(lv->vg->cmd, lv, operable_pvs);
 }
 
 static int _lv_update_log_type(struct cmd_context *cmd,
