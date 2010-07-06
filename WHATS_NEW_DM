@@ -1,5 +1,5 @@
-Version 1.02.52 -
-================================
+Version 1.02.52 - 6th July 2010
+===============================
   Fix dmlosetup snprintf %llu compiler warning.
   Add parentheses to some libdevmapper.h macro arguments.
   Add printf format attributes to dm_{sn,as}printf and fix a caller.
