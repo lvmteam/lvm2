@@ -1116,7 +1116,7 @@ static int _vg_unignore_mdas(struct volume_group *vg, uint32_t num_to_unignore)
 
 	log_debug("Adjusting ignored mdas on vg %s: %" PRIu32 " of %" PRIu32 " mdas in use "
 		  "but %" PRIu32 " required.  Changing %" PRIu32 " flags.",
-		  vg->name, vg_mda_copies(vg), mda_count, mda_used_count, num_to_unignore);
+		  vg->name, mda_used_count, mda_count, vg_mda_copies(vg), num_to_unignore);
 
 	if (!(mda_to_unignore_bs = _bitset_with_random_bits(vg->vgmem, mda_free_count,
 							    num_to_unignore, &vg->cmd->rand_seed)))
