@@ -1133,8 +1133,8 @@ static int _vg_unignore_mdas(struct volume_group *vg, uint32_t num_to_unignore)
 		}
 
 	dm_list_iterate_items(mda, &vg->fid->metadata_areas_in_use)
-		if (mda_is_ignored(mda) &&
-		    dm_bit(mda_to_unignore_bs, num_to_unignore - 1)) {
+		if (mda_is_ignored(mda) && (--mda_free_count,
+		    dm_bit(mda_to_unignore_bs, mda_free_count))) {
 			mda_set_ignored(mda, 0);
 			if (!--num_to_unignore)
 				goto out;
