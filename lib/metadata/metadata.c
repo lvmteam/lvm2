@@ -1073,7 +1073,7 @@ static int _vg_ignore_mdas(struct volume_group *vg, uint32_t num_to_ignore)
 	dm_bitset_t mda_to_ignore_bs;
 	int r = 1;
 
-	log_debug("Adjusting ignored mdas on vg %s: %" PRIu32 " of %" PRIu32 " mdas in use "
+	log_debug("Adjusting ignored mdas for %s: %" PRIu32 " of %" PRIu32 " mdas in use "
 		  "but %" PRIu32 " required.  Changing %" PRIu32 " flags.",
 		  vg->name, mda_used_count, vg_mda_count(vg), vg_mda_copies(vg), num_to_ignore);
 
@@ -1114,7 +1114,7 @@ static int _vg_unignore_mdas(struct volume_group *vg, uint32_t num_to_unignore)
 	if (!num_to_unignore)
 		return 1;
 
-	log_debug("Adjusting ignored mdas on vg %s: %" PRIu32 " of %" PRIu32 " mdas in use "
+	log_debug("Adjusting ignored mdas for %s: %" PRIu32 " of %" PRIu32 " mdas in use "
 		  "but %" PRIu32 " required.  Changing %" PRIu32 " flags.",
 		  vg->name, mda_used_count, mda_count, vg_mda_copies(vg), num_to_unignore);
 
