@@ -1,5 +1,5 @@
-Version 2.02.70 - 
-================================
+Version 2.02.70 - 6th July 2010
+===============================
   Randomly select which mdas to use or ignore.
   Add some missing standard configure.in checks.
   Add printf format attributes to yes_no_prompt and fix a caller.
@@ -10,7 +10,7 @@ Version 2.02.70 -
   Fix lvm shell crash when input is entirely whitespace.
   Update partial mode warning message.
   Preserve memlock balance in clvmd when activation triggers a resume.
-  Restore the "removemissing" behaviour of lvconvert --repair --use-policies.
+  Restore the removemissing behaviour of lvconvert --repair --use-policies.
 
 Version 2.02.69 - 30th June 2010
 ================================
