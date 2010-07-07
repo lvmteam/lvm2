@@ -123,6 +123,7 @@ static int _pvchange_single(struct cmd_context *cmd, struct volume_group *vg,
 		}
 	} else if (arg_count(cmd, metadataignore_ARG)) {
 		if ((vg_mda_copies(vg) != VGMETADATACOPIES_UNMANAGED) &&
+		    (arg_count(cmd, force_ARG) == PROMPT) &&
 		    yes_no_prompt("Setting metadataignore on %s will override "
 				  "preferred number of copies of VG %s "
 				  "metadata.\nAre you sure? [y/n]: ",

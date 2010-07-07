@@ -5,6 +5,7 @@ pvchange \- change attributes of a physical volume
 .B pvchange
 [\-\-addtag Tag]
 [\-A|\-\-autobackup y|n] [\-d|\-\-debug] 
+[\-f|\-\-force]
 [\-\-deltag Tag]
 [\-\-metadataignore y|n]
 [\-h|\-?|\-\-help]

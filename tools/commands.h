@@ -451,6 +451,7 @@ xx(pvchange,
    "\t[-a|--all]\n"
    "\t[-A|--autobackup y|n]\n"
    "\t[-d|--debug]\n"
+   "\t[-f|--force]\n"
    "\t[-h|--help]\n"
    "\t[-t|--test]\n"
    "\t[-u|--uuid]\n"
@@ -463,7 +464,7 @@ xx(pvchange,
    "\t[PhysicalVolumePath...]\n",
 
    all_ARG, allocatable_ARG, allocation_ARG, autobackup_ARG, deltag_ARG,
-   addtag_ARG, metadataignore_ARG, test_ARG, uuid_ARG)
+   addtag_ARG, force_ARG, metadataignore_ARG, test_ARG, uuid_ARG)
 
 xx(pvresize,
    "Resize physical volume(s)",
@@ -846,6 +847,7 @@ xx(vgextend,
    "vgextend\n"
    "\t[-A|--autobackup y|n]\n"
    "\t[-d|--debug]\n"
+   "\t[-f|--force]\n"
    "\t[-h|--help]\n"
    "\t[-t|--test]\n"
    "\t[-v|--verbose]\n"

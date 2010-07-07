@@ -214,7 +214,7 @@ for mdacp in 1 2; do
 	vgextend $vg1 $dev3
 	check_vg_field_ $vg1 vg_mda_used_count $(($mdacp * 1))
 	echo Using pvchange to unignore should update vg_mda_used_count
-	pvchange --metadataignore n $dev3
+	pvchange -f --metadataignore n $dev3
 	check_pv_field_ $dev3 pv_mda_used_count $mdacp
 	check_vg_field_ $vg1 vg_mda_used_count $(($mdacp * 2))
 	echo Set unmanaged on the vg should keep ignore bits the same during vgextend
@@ -225,7 +225,7 @@ for mdacp in 1 2; do
 	check_pv_field_ $dev4 pv_mda_used_count $mdacp
 	check_vg_field_ $vg1 vg_mda_used_count $(($mdacp * 3))
 	echo Using pvchange to ignore should update vg_mda_used_count
-	pvchange --metadataignore y $dev4
+	pvchange -f --metadataignore y $dev4
 	check_pv_field_ $dev4 pv_mda_used_count 0
 	check_vg_field_ $vg1 vg_mda_used_count $(($mdacp * 2))
 	vgremove -f $vg1

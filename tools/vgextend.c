@@ -61,6 +61,7 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 
 	if (arg_count(cmd, metadataignore_ARG) &&
 	    (vg_mda_copies(vg) != VGMETADATACOPIES_UNMANAGED) &&
+	    (pp.force == PROMPT) &&
 	    yes_no_prompt("Setting metadataignore will override "
 			  "preferred number of copies of VG %s "
 			  "metadata.\nAre you sure? [y/n]: ",
