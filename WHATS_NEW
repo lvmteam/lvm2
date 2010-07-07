@@ -1,5 +1,6 @@
 Version 2.02.71 -
 ===============================
+  Adjust auto-metadata repair and caching logic to try to cope with empty mdas.
 
 Version 2.02.70 - 6th July 2010
 ===============================
