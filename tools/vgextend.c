@@ -59,6 +59,16 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 	if (!archive(vg))
 		goto_bad;
 
+	if (arg_count(cmd, metadataignore_ARG) &&
+	    (vg_mda_copies(vg) != VGMETADATACOPIES_UNMANAGED) &&
+	    yes_no_prompt("Setting metadataignore will override "
+			  "preferred number of copies of VG %s "
+			  "metadata.\nAre you sure? [y/n]: ",
+			  vg_name) == 'n') {
+		log_error("Volume group %s not changed", vg_name);
+		goto_bad;
+	}
+
 	/* extend vg */
 	if (!vg_extend(vg, argc, argv, &pp))
 		goto_bad;

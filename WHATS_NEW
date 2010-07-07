@@ -1,5 +1,7 @@
 Version 2.02.71 -
 ===============================
+  Prompt if metadataignore with vgextend or pvchange would adjust vg_mda_copies.
+  Adjust vg_mda_copies if metadataignore given with vgextend or pvchange.
   Adjust auto-metadata repair and caching logic to try to cope with empty mdas.
 
 Version 2.02.70 - 6th July 2010
