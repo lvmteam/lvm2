@@ -63,3 +63,13 @@ grep "Inconsistent metadata found for VG $vg" cmd.out
 vgs 2>&1 | tee cmd.out
 not grep "Inconsistent metadata found for VG $vg" cmd.out
 check
+
+echo Check auto-repair of failed vgextend - metadata written to original pv but not new pv
+vgremove -f $vg
+pvremove -ff $devs
+pvcreate $devs
+backup_dev $dev2
+vgcreate $vg $dev1
+vgextend $vg $dev2
+restore_dev $dev2
+should compare_two_fields_ vgs $vg vg_mda_count pvs $dev2 vg_mda_count
