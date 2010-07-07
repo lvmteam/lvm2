@@ -63,6 +63,15 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 	if (!vg_extend(vg, argc, argv, &pp))
 		goto_bad;
 
+	if (arg_count(cmd, metadataignore_ARG) &&
+	    (vg_mda_copies(vg) != VGMETADATACOPIES_UNMANAGED) &&
+	    (vg_mda_copies(vg) != vg_mda_used_count(vg))) {
+		log_warn("WARNING: Changing preferred number of copies of VG %s "
+			 "metadata from %"PRIu32" to %"PRIu32, vg_name,
+			 vg_mda_copies(vg), vg_mda_used_count(vg));
+		vg_set_mda_copies(vg, vg_mda_used_count(vg));
+	}
+
 	/* ret > 0 */
 	log_verbose("Volume group \"%s\" will be extended by %d new "
 		    "physical volumes", vg_name, argc);

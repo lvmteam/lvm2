@@ -4396,8 +4396,13 @@ int pv_change_metadataignore(struct physical_volume *pv, uint32_t mda_ignored)
 	 * This does not guarantee this PV's ignore bits will be
 	 * preserved in future operations.
 	 */
-	if (!is_orphan(pv) && vg_mda_copies(pv->vg))
+	if (!is_orphan(pv) &&
+	    vg_mda_copies(pv->vg) != VGMETADATACOPIES_UNMANAGED) {
+		log_warn("WARNING: Changing preferred number of copies of VG %s "
+			 "metadata from %"PRIu32" to %"PRIu32, pv_vg_name(pv),
+			 vg_mda_copies(pv->vg), vg_mda_used_count(pv->vg));
 		vg_set_mda_copies(pv->vg, vg_mda_used_count(pv->vg));
+	}
 
 	return 1;
 }
