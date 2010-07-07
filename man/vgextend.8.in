@@ -4,6 +4,7 @@ vgextend \- add physical volumes to a volume group
 .SH SYNOPSIS
 .B vgextend
 [\-A|\-\-autobackup y|n] [\-d|\-\-debug] [\-h|\-?|\-\-help] 
+[\-f|\-\-force]
 [\-t|\-\-test]
 [\-v|\-\-verbose]
 [ \fIPHYSICAL DEVICE OPTIONS\fP ]
