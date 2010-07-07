@@ -2899,6 +2899,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	int inconsistent_vgid = 0;
 	int inconsistent_pvs = 0;
 	int inconsistent_seqno = 0;
+	int inconsistent_mdas = 0;
 	unsigned use_precommitted = precommitted;
 	unsigned saved_handles_missing_pvs = cmd->handles_missing_pvs;
 	struct dm_list *pvids;
@@ -2916,14 +2917,28 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		return _vg_read_orphans(cmd, vgname);
 	}
 
-	if ((correct_vg = lvmcache_get_vg(vgid, precommitted))) {
+	/*
+	 * If cached metadata was inconsistent and *consistent is set
+	 * then repair it now.  Otherwise just return it.
+	 * Also return if use_precommitted is set due to the FIXME in
+	 * the missing PV logic below.
+	 */
+	if ((correct_vg = lvmcache_get_vg(vgid, precommitted)) &&
+	    (use_precommitted || !*consistent || !(correct_vg->status & INCONSISTENT_VG))) {
+		if (!(correct_vg->status & INCONSISTENT_VG))
+			*consistent = 1;
+		else	/* Inconsistent but we can't repair it */
+			correct_vg->status &= ~INCONSISTENT_VG;
+
 		if (vg_missing_pv_count(correct_vg)) {
 			log_verbose("There are %d physical volumes missing.",
 				    vg_missing_pv_count(correct_vg));
 			vg_mark_partial_lvs(correct_vg);
 		}
-		*consistent = 1;
 		return correct_vg;
+	} else {
+		vg_release(correct_vg);
+		correct_vg = NULL;
 	}
 
 	/* Find the vgname in the cache */
@@ -3009,14 +3024,29 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 				 * not ignored.
 				 */
 				if (!(info = info_from_pvid(pvl->pv->dev->pvid, 1)) ||
-				   !info->vginfo || !is_orphan_vg(info->vginfo->vgname) ||
-				   !mdas_empty_or_ignored(&info->mdas)) {
+				   !info->vginfo || !is_orphan_vg(info->vginfo->vgname)) {
 					inconsistent_pvs = 1;
 					break;
 				}
-				if (dm_list_size(&info->mdas) &&
-				    !fid_add_mdas(fid, &info->mdas))
-					return_NULL;
+				if (dm_list_size(&info->mdas)) {
+					if (!fid_add_mdas(fid, &info->mdas))
+						return_NULL;
+					 
+					log_debug("Empty mda found for VG %s.", vgname);
+
+					if (inconsistent_mdas)
+						continue;
+
+					/*
+					 * If any newly-added mdas are in-use then their
+					 * metadata needs updating.
+					 */
+					dm_list_iterate_items(mda, &info->mdas)
+						if (!mda_is_ignored(mda)) {
+							inconsistent_mdas = 1;
+							break;
+						}
+				}
 			}
 
 			/* If the check passed, let's update VG and recalculate pvids */
@@ -3055,6 +3085,11 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 				correct_vg = NULL;
 				break;
 			}
+		}
+
+		if (correct_vg && inconsistent_mdas) {
+			vg_release(correct_vg);
+			correct_vg = NULL;
 		}
 	}
 
@@ -3132,7 +3167,8 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	 * If there is no precommitted metadata, committed metadata
 	 * is read and stored in the cache even if use_precommitted is set
 	 */
-	lvmcache_update_vg(correct_vg, correct_vg->status & PRECOMMITTED);
+	lvmcache_update_vg(correct_vg, correct_vg->status & PRECOMMITTED &
+			   (inconsistent ? INCONSISTENT_VG : 0));
 
 	if (inconsistent) {
 		/* FIXME Test should be if we're *using* precommitted metadata not if we were searching for it */
