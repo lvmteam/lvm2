@@ -1,3 +1,6 @@
+Version 1.02.53 -
+===============================
+
 Version 1.02.52 - 6th July 2010
 ===============================
   Fix dmlosetup snprintf %llu compiler warning.
