@@ -122,6 +122,14 @@ static int _pvchange_single(struct cmd_context *cmd, struct volume_group *vg,
 			}
 		}
 	} else if (arg_count(cmd, metadataignore_ARG)) {
+		if ((vg_mda_copies(vg) != VGMETADATACOPIES_UNMANAGED) &&
+		    yes_no_prompt("Setting metadataignore on %s will override "
+				  "preferred number of copies of VG %s "
+				  "metadata.\nAre you sure? [y/n]: ",
+				  pv_name, pv_vg_name(pv)) == 'n') {
+			log_error("Physical volume %s not changed", pv_name);
+			goto out;
+		}
 		if (!pv_change_metadataignore(pv, mda_ignore))
 			goto out;
 	} else {
