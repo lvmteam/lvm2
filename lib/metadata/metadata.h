@@ -244,8 +244,8 @@ struct format_handler {
 			 uint64_t pe_start, uint32_t extent_count,
 			 uint32_t extent_size, unsigned long data_alignment,
 			 unsigned long data_alignment_offset,
-			 int pvmetadatacopies,
-			 uint64_t pvmetadatasize, struct dm_list * mdas,
+			 int pvmetadatacopies, uint64_t pvmetadatasize,
+			 unsigned metadataignore, struct dm_list * mdas,
 			 struct physical_volume * pv, struct volume_group * vg);
 
 	/*

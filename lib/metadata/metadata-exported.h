@@ -522,16 +522,17 @@ uint32_t vg_read_error(struct volume_group *vg_handle);
 /* pe_start and pe_end relate to any existing data so that new metadata
 * areas can avoid overlap */
 struct physical_volume *pv_create(const struct cmd_context *cmd,
-		      struct device *dev,
-		      struct id *id,
-		      uint64_t size,
-		      unsigned long data_alignment,
-		      unsigned long data_alignment_offset,
-		      uint64_t pe_start,
-		      uint32_t existing_extent_count,
-		      uint32_t existing_extent_size,
-		      int pvmetadatacopies,
-		      uint64_t pvmetadatasize, struct dm_list *mdas);
+				  struct device *dev,
+				  struct id *id,
+				  uint64_t size,
+				  unsigned long data_alignment,
+				  unsigned long data_alignment_offset,
+				  uint64_t pe_start,
+				  uint32_t existing_extent_count,
+				  uint32_t existing_extent_size,
+				  int pvmetadatacopies, uint64_t pvmetadatasize,
+				  unsigned metadataignore,
+				  struct dm_list *mdas);
 int pv_resize(struct physical_volume *pv, struct volume_group *vg,
              uint32_t new_pe_count);
 int pv_analyze(struct cmd_context *cmd, const char *pv_name,
