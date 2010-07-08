@@ -961,8 +961,10 @@ static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
 		goto_out;
 
 	if (!info.exists || !info.suspended) {
-		r = error_if_not_active ? 0 : 1;
-		goto_out;
+		if (error_if_not_active)
+			goto_out;
+		r = 1;
+		goto out;
 	}
 
 	if (!_lv_activate_lv(lv))
