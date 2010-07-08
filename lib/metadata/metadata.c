@@ -4207,7 +4207,7 @@ struct metadata_area *mda_copy(struct dm_pool *mem,
 		}
 	}
 
-	/* FIXME mda 'list' left invalid here */
+	dm_list_init(&mda_new->list);
 
 	return mda_new;
 }
