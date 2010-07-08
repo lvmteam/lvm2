@@ -69,9 +69,9 @@ void dm_bit_union(dm_bitset_t out, dm_bitset_t in1, dm_bitset_t in2)
 
 static int _test_word(uint32_t test, int bit)
 {
-	int next_set_bit;
+	uint32_t tb = test >> bit;
 
-	return ((next_set_bit = ffs(test >> bit)) ? next_set_bit + bit - 1 : -1);
+	return (tb ? ffs(tb) + bit - 1 : -1);
 }
 
 int dm_bit_get_next(dm_bitset_t bs, int last_bit)
