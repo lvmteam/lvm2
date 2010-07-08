@@ -736,6 +736,8 @@ CCS_LIBS
 CCS_CFLAGS
 PKGCONFIGINIT_LIBS
 PKGCONFIGINIT_CFLAGS
+PKG_CONFIG_LIBDIR
+PKG_CONFIG_PATH
 PKG_CONFIG
 POW_LIB
 LIBOBJS
@@ -875,6 +877,8 @@ LIBS
 CPPFLAGS
 CPP
 PKG_CONFIG
+PKG_CONFIG_PATH
+PKG_CONFIG_LIBDIR
 PKGCONFIGINIT_CFLAGS
 PKGCONFIGINIT_LIBS
 CCS_CFLAGS
@@ -1521,52 +1525,53 @@ Optional Features:
   --disable-option-checking  ignore unrecognized --enable/--with options
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
-  --enable-static_link    Use this to link the tools to their libraries
-                          statically.  Default is dynamic linking
-  --enable-lvm1_fallback  Use this to fall back and use LVM1 binaries if
+  --enable-static_link    use this to link the tools to their libraries
+                          statically (default is dynamic linking
+  --enable-lvm1_fallback  use this to fall back and use LVM1 binaries if
                           device-mapper is missing from the kernel
-  --disable-readline      Disable readline support
-  --enable-realtime       Enable realtime clock support
-  --enable-cmirrord       Enable the cluster mirror log daemon
-  --enable-debug          Enable debugging
-  --enable-profiling      Gather gcov profiling data
-  --disable-devmapper     Disable LVM2 device-mapper interaction
-  --enable-udev_sync      Enable synchronisation with udev processing
-  --enable-udev_rules     Install rule files needed for udev synchronisation
-  --enable-compat         Enable support for old device-mapper versions
-  --enable-units-compat   Enable output compatibility with old versions that
-                          that don't use KiB-style unit suffixes
-  --disable-driver        Disable calls to device-mapper in the kernel
-  --disable-o_direct      Disable O_DIRECT
-  --enable-applib         Build application library
-  --enable-cmdlib         Build shared command library
-  --enable-pkgconfig      Install pkgconfig support
-  --enable-write_install  Install user writable files
-  --disable-fsadm         Disable fsadm
-  --enable-dmeventd       Enable the device-mapper event daemon
-  --disable-selinux       Disable selinux support
-  --enable-nls            Enable Native Language Support
+  --disable-readline      disable readline support
+  --enable-realtime       enable realtime clock support
+  --enable-cmirrord       enable the cluster mirror log daemon
+  --enable-debug          enable debugging
+  --enable-profiling      gather gcov profiling data
+  --disable-devmapper     disable LVM2 device-mapper interaction
+  --enable-udev_sync      enable synchronisation with udev processing
+  --enable-udev_rules     install rule files needed for udev synchronisation
+  --enable-compat         enable support for old device-mapper versions
+  --enable-units-compat   enable output compatibility with old versions that
+                          that do not use KiB-style unit suffixes
+  --disable-driver        disable calls to device-mapper in the kernel
+  --disable-o_direct      disable O_DIRECT
+  --enable-applib         build application library
+  --enable-cmdlib         build shared command library
+  --enable-pkgconfig      install pkgconfig support
+  --enable-write_install  install user writable files
+  --disable-fsadm         disable fsadm
+  --enable-dmeventd       enable the device-mapper event daemon
+  --disable-selinux       disable selinux support
+  --enable-nls            enable Native Language Support
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
-  --with-user=USER        Set the owner of installed files [USER=]
-  --with-group=GROUP      Set the group owner of installed files [GROUP=]
-  --with-device-uid=UID   Set the owner used for new device nodes [UID=0]
-  --with-device-gid=UID   Set the group used for new device nodes [GID=0]
-  --with-device-mode=MODE Set the mode used for new device nodes [MODE=0600]
+  --with-user=USER        set the owner of installed files [USER=]
+  --with-group=GROUP      set the group owner of installed files [GROUP=]
+  --with-device-uid=UID   set the owner used for new device nodes [UID=0]
+  --with-device-gid=GID   set the group used for new device nodes [GID=0]
+  --with-device-mode=MODE set the mode used for new device nodes [MODE=0600]
   --with-lvm1=TYPE        LVM1 metadata support: internal/shared/none
-                          TYPE=internal
+                          [TYPE=internal]
   --with-pool=TYPE        GFS pool read-only support: internal/shared/none
-                          TYPE=internal
-  --with-cluster=TYPE     Cluster LVM locking support: internal/shared/none
-                          TYPE=internal
-  --with-snapshots=TYPE   Snapshot support: internal/shared/none
-                          TYPE=internal
-  --with-mirrors=TYPE     Mirror support: internal/shared/none
-                          TYPE=internal
-  --with-replicators=TYPE Replicator support: internal/shared/none TYPE=none
-  --with-clvmd=TYPE       Build cluster LVM Daemon.
+                          [TYPE=internal]
+  --with-cluster=TYPE     cluster LVM locking support: internal/shared/none
+                          [TYPE=internal]
+  --with-snapshots=TYPE   snapshot support: internal/shared/none
+                          [TYPE=internal]
+  --with-mirrors=TYPE     mirror support: internal/shared/none
+                          [TYPE=internal]
+  --with-replicators=TYPE replicator support: internal/shared/none
+                          [TYPE=none]
+  --with-clvmd=TYPE       build cluster LVM Daemon
                           The following cluster manager combinations are valid:
                            * cman,gulm             (RHEL4 or equivalent)
                            * cman                  (RHEL5 or equivalent)
@@ -1574,24 +1579,33 @@ Optional Packages:
                            * singlenode            (localhost only)
                            * all                   (autodetect)
                            * none                  (disable build)
-                          TYPE=none
-  --with-cmirrord-pidfile=PATH    cmirrord pidfile [/var/run/cmirrord.pid]
+                          [TYPE=none]
+  --with-cmirrord-pidfile=PATH
+                          cmirrord pidfile [/var/run/cmirrord.pid]
   --with-optimisation=OPT C optimisation flag [OPT=-O2]
-  --with-localedir=DIR    Translation files in DIR [PREFIX/share/locale]
-  --with-confdir=DIR      Configuration files in DIR [/etc]
-  --with-staticdir=DIR    Static binary in DIR [EPREFIX/sbin]
-  --with-usrlibdir=DIR
-  --with-usrsbindir=DIR
-  --with-udev-prefix=UPREFIX      Install udev rule files in UPREFIX [EPREFIX]
+  --with-localedir=DIR    translation files in DIR [PREFIX/share/locale]
+  --with-confdir=DIR      configuration files in DIR [/etc]
+  --with-staticdir=DIR    static binaries in DIR [EPREFIX/sbin]
+  --with-usrlibdir=DIR    usrlib in DIR [PREFIX/lib]
+  --with-usrsbindir=DIR   usrsbin executables in DIR [PREFIX/sbin]
+  --with-udev-prefix=UPREFIX
+                          install udev rule files in UPREFIX [EPREFIX]
   --with-udevdir=DIR      udev rules in DIR [UPREFIX/lib/udev/rules.d]
-  --with-dmeventd-pidfile=PATH    dmeventd pidfile [/var/run/dmeventd.pid]
-  --with-dmeventd-path=PATH       dmeventd path [EPREFIX/sbin/dmeventd]
-  --with-default-system-dir=DIR        Default LVM system directory [/etc/lvm]
-  --with-default-archive-subdir=SUBDIR Default metadata archive subdir [archive]
-  --with-default-backup-subdir=SUBDIR  Default metadata backup subdir [backup]
-  --with-default-cache-subdir=SUBDIR   Default metadata cache subdir [cache]
-  --with-default-locking-dir=DIR       Default locking directory [/var/lock/lvm]
-  --with-interface=IFACE  Choose kernel interface (ioctl) [ioctl]
+  --with-dmeventd-pidfile=PATH
+                          dmeventd pidfile [/var/run/dmeventd.pid]
+  --with-dmeventd-path=PATH
+                          dmeventd path [EPREFIX/sbin/dmeventd]
+  --with-default-system-dir=DIR
+                          default LVM system directory [/etc/lvm]
+  --with-default-archive-subdir=SUBDIR
+                          default metadata archive subdir [archive]
+  --with-default-backup-subdir=SUBDIR
+                          default metadata backup subdir [backup]
+  --with-default-cache-subdir=SUBDIR
+                          default metadata cache subdir [cache]
+  --with-default-locking-dir=DIR
+                          default locking directory [/var/lock/lvm]
+  --with-interface=IFACE  choose kernel interface (ioctl) [ioctl]
 
 Some influential environment variables:
   CC          C compiler command
@@ -1603,6 +1617,10 @@ Some influential environment variables:
               you have headers in a nonstandard directory <include dir>
   CPP         C preprocessor
   PKG_CONFIG  path to pkg-config utility
+  PKG_CONFIG_PATH
+              directories to add to pkg-config's search path
+  PKG_CONFIG_LIBDIR
+              path overriding pkg-config's built-in search path
   PKGCONFIGINIT_CFLAGS
               C compiler flags for PKGCONFIGINIT, overriding pkg-config
   PKGCONFIGINIT_LIBS
@@ -11103,7 +11121,7 @@ $as_echo_n "checking file owner... " >&6; }
 
 # Check whether --with-user was given.
 if test "${with_user+set}" = set; then
-  withval=$with_user;  OWNER="$withval"
+  withval=$with_user; OWNER=$withval
 fi
 
 { $as_echo "$as_me:$LINENO: result: $OWNER" >&5
@@ -11119,7 +11137,7 @@ $as_echo_n "checking group owner... " >&6; }
 
 # Check whether --with-group was given.
 if test "${with_group+set}" = set; then
-  withval=$with_group;  GROUP="$withval"
+  withval=$with_group; GROUP=$withval
 fi
 
 { $as_echo "$as_me:$LINENO: result: $GROUP" >&5
@@ -11136,9 +11154,9 @@ $as_echo_n "checking device node uid... " >&6; }
 
 # Check whether --with-device-uid was given.
 if test "${with_device_uid+set}" = set; then
-  withval=$with_device_uid;  DM_DEVICE_UID="$withval"
+  withval=$with_device_uid; DM_DEVICE_UID=$withval
 else
-   DM_DEVICE_UID="0"
+  DM_DEVICE_UID=0
 fi
 
 { $as_echo "$as_me:$LINENO: result: $DM_DEVICE_UID" >&5
@@ -11151,9 +11169,9 @@ $as_echo_n "checking device node gid... " >&6; }
 
 # Check whether --with-device-gid was given.
 if test "${with_device_gid+set}" = set; then
-  withval=$with_device_gid;  DM_DEVICE_GID="$withval"
+  withval=$with_device_gid; DM_DEVICE_GID=$withval
 else
-   DM_DEVICE_GID="0"
+  DM_DEVICE_GID=0
 fi
 
 { $as_echo "$as_me:$LINENO: result: $DM_DEVICE_GID" >&5
@@ -11166,9 +11184,9 @@ $as_echo_n "checking device node mode... " >&6; }
 
 # Check whether --with-device-mode was given.
 if test "${with_device_mode+set}" = set; then
-  withval=$with_device_mode;  DM_DEVICE_MODE="$withval"
+  withval=$with_device_mode; DM_DEVICE_MODE=$withval
 else
-   DM_DEVICE_MODE="0600"
+  DM_DEVICE_MODE=0600
 fi
 
 { $as_echo "$as_me:$LINENO: result: $DM_DEVICE_MODE" >&5
@@ -11201,9 +11219,9 @@ $as_echo_n "checking whether to include support for lvm1 metadata... " >&6; }
 
 # Check whether --with-lvm1 was given.
 if test "${with_lvm1+set}" = set; then
-  withval=$with_lvm1;  LVM1="$withval"
+  withval=$with_lvm1; LVM1=$withval
 else
-   LVM1="internal"
+  LVM1=internal
 fi
 
 { $as_echo "$as_me:$LINENO: result: $LVM1" >&5
@@ -11231,9 +11249,9 @@ $as_echo_n "checking whether to include support for GFS pool metadata... " >&6; 
 
 # Check whether --with-pool was given.
 if test "${with_pool+set}" = set; then
-  withval=$with_pool;  POOL="$withval"
+  withval=$with_pool; POOL=$withval
 else
-   POOL="internal"
+  POOL=internal
 fi
 
 { $as_echo "$as_me:$LINENO: result: $POOL" >&5
@@ -11261,7 +11279,7 @@ $as_echo_n "checking whether to include support for cluster locking... " >&6; }
 
 # Check whether --with-cluster was given.
 if test "${with_cluster+set}" = set; then
-  withval=$with_cluster;  CLUSTER="$withval"
+  withval=$with_cluster; CLUSTER=$withval
 fi
 
 { $as_echo "$as_me:$LINENO: result: $CLUSTER" >&5
@@ -11289,9 +11307,9 @@ $as_echo_n "checking whether to include snapshots... " >&6; }
 
 # Check whether --with-snapshots was given.
 if test "${with_snapshots+set}" = set; then
-  withval=$with_snapshots;  SNAPSHOTS="$withval"
+  withval=$with_snapshots; SNAPSHOTS=$withval
 else
-   SNAPSHOTS="internal"
+  SNAPSHOTS=internal
 fi
 
 { $as_echo "$as_me:$LINENO: result: $SNAPSHOTS" >&5
@@ -11319,9 +11337,9 @@ $as_echo_n "checking whether to include mirrors... " >&6; }
 
 # Check whether --with-mirrors was given.
 if test "${with_mirrors+set}" = set; then
-  withval=$with_mirrors;  MIRRORS="$withval"
+  withval=$with_mirrors; MIRRORS=$withval
 else
-   MIRRORS="internal"
+  MIRRORS=internal
 fi
 
 { $as_echo "$as_me:$LINENO: result: $MIRRORS" >&5
@@ -11351,7 +11369,7 @@ $as_echo_n "checking whether to include replicators... " >&6; }
 if test "${with_replicators+set}" = set; then
   withval=$with_replicators; REPLICATORS=$withval
 else
-  REPLICATORS="none"
+  REPLICATORS=none
 fi
 
 { $as_echo "$as_me:$LINENO: result: $REPLICATORS" >&5
@@ -11395,6 +11413,10 @@ $as_echo "$REALTIME" >&6; }
 
 ################################################################################
 pkg_config_init() {
+
+
+
+
 
 
 if test "x$ac_cv_env_PKG_CONFIG_set" != "xset"; then
@@ -11509,7 +11531,6 @@ $as_echo "yes" >&6; }
 $as_echo "no" >&6; }
 		PKG_CONFIG=""
 	fi
-
 fi
 
 pkg_failed=no
@@ -11552,6 +11573,8 @@ fi
 
 
 if test $pkg_failed = yes; then
+   	{ $as_echo "$as_me:$LINENO: result: no" >&5
+$as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
         _pkg_short_errors_supported=yes
@@ -11566,11 +11589,11 @@ fi
 	# Put the nasty error message in config.log where it belongs
 	echo "$PKGCONFIGINIT_PKG_ERRORS" >&5
 
-	{ $as_echo "$as_me:$LINENO: result: no" >&5
-$as_echo "no" >&6; }
-                { $as_echo "$as_me:$LINENO: result: pkg-config initialized" >&5
+	{ $as_echo "$as_me:$LINENO: result: pkg-config initialized" >&5
 $as_echo "pkg-config initialized" >&6; }
 elif test $pkg_failed = untried; then
+     	{ $as_echo "$as_me:$LINENO: result: no" >&5
+$as_echo "no" >&6; }
 	{ $as_echo "$as_me:$LINENO: result: pkg-config initialized" >&5
 $as_echo "pkg-config initialized" >&6; }
 else
@@ -11578,7 +11601,7 @@ else
 	PKGCONFIGINIT_LIBS=$pkg_cv_PKGCONFIGINIT_LIBS
         { $as_echo "$as_me:$LINENO: result: yes" >&5
 $as_echo "yes" >&6; }
-	:
+
 fi
 	PKGCONFIG_INIT=1
 }
@@ -11589,9 +11612,9 @@ $as_echo_n "checking whether to build cluster LVM daemon... " >&6; }
 
 # Check whether --with-clvmd was given.
 if test "${with_clvmd+set}" = set; then
-  withval=$with_clvmd;  CLVMD="$withval"
+  withval=$with_clvmd; CLVMD=$withval
 else
-   CLVMD="none"
+  CLVMD=none
 fi
 
 if test x$CLVMD = xyes; then
@@ -11784,6 +11807,8 @@ fi
 
 
 if test $pkg_failed = yes; then
+   	{ $as_echo "$as_me:$LINENO: result: no" >&5
+$as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
         _pkg_short_errors_supported=yes
@@ -11798,9 +11823,7 @@ fi
 	# Put the nasty error message in config.log where it belongs
 	echo "$CCS_PKG_ERRORS" >&5
 
-	{ $as_echo "$as_me:$LINENO: result: no" >&5
-$as_echo "no" >&6; }
-                NOTFOUND=0
+	NOTFOUND=0
 
 for ac_header in ccs.h
 do
@@ -11957,6 +11980,8 @@ $as_echo "no pkg for libccs, using -lccs" >&6; }
 			HAVE_CCS=yes
 		fi
 elif test $pkg_failed = untried; then
+     	{ $as_echo "$as_me:$LINENO: result: no" >&5
+$as_echo "no" >&6; }
 	NOTFOUND=0
 
 for ac_header in ccs.h
@@ -12161,6 +12186,8 @@ fi
 
 
 if test $pkg_failed = yes; then
+   	{ $as_echo "$as_me:$LINENO: result: no" >&5
+$as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
         _pkg_short_errors_supported=yes
@@ -12175,9 +12202,7 @@ fi
 	# Put the nasty error message in config.log where it belongs
 	echo "$GULM_PKG_ERRORS" >&5
 
-	{ $as_echo "$as_me:$LINENO: result: no" >&5
-$as_echo "no" >&6; }
-                NOTFOUND=0
+	NOTFOUND=0
 
 for ac_header in libgulm.h
 do
@@ -12334,6 +12359,8 @@ $as_echo "no pkg for libgulm, using -lgulm" >&6; }
 			HAVE_GULM=yes
 		fi
 elif test $pkg_failed = untried; then
+     	{ $as_echo "$as_me:$LINENO: result: no" >&5
+$as_echo "no" >&6; }
 	NOTFOUND=0
 
 for ac_header in libgulm.h
@@ -12541,6 +12568,8 @@ fi
 
 
 if test $pkg_failed = yes; then
+   	{ $as_echo "$as_me:$LINENO: result: no" >&5
+$as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
         _pkg_short_errors_supported=yes
@@ -12555,9 +12584,7 @@ fi
 	# Put the nasty error message in config.log where it belongs
 	echo "$CMAN_PKG_ERRORS" >&5
 
-	{ $as_echo "$as_me:$LINENO: result: no" >&5
-$as_echo "no" >&6; }
-                NOTFOUND=0
+	NOTFOUND=0
 
 for ac_header in libcman.h
 do
@@ -12714,6 +12741,8 @@ $as_echo "no pkg for libcman, using -lcman" >&6; }
 			HAVE_CMAN=yes
 		fi
 elif test $pkg_failed = untried; then
+     	{ $as_echo "$as_me:$LINENO: result: no" >&5
+$as_echo "no" >&6; }
 	NOTFOUND=0
 
 for ac_header in libcman.h
@@ -12924,6 +12953,8 @@ fi
 
 
 if test $pkg_failed = yes; then
+   	{ $as_echo "$as_me:$LINENO: result: no" >&5
+$as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
         _pkg_short_errors_supported=yes
@@ -12938,10 +12969,10 @@ fi
 	# Put the nasty error message in config.log where it belongs
 	echo "$COROSYNC_PKG_ERRORS" >&5
 
-	{ $as_echo "$as_me:$LINENO: result: no" >&5
-$as_echo "no" >&6; }
-                $bailout
+	$bailout
 elif test $pkg_failed = untried; then
+     	{ $as_echo "$as_me:$LINENO: result: no" >&5
+$as_echo "no" >&6; }
 	$bailout
 else
 	COROSYNC_CFLAGS=$pkg_cv_COROSYNC_CFLAGS
@@ -12995,6 +13026,8 @@ fi
 
 
 if test $pkg_failed = yes; then
+   	{ $as_echo "$as_me:$LINENO: result: no" >&5
+$as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
         _pkg_short_errors_supported=yes
@@ -13009,10 +13042,10 @@ fi
 	# Put the nasty error message in config.log where it belongs
 	echo "$QUORUM_PKG_ERRORS" >&5
 
-	{ $as_echo "$as_me:$LINENO: result: no" >&5
-$as_echo "no" >&6; }
-                $bailout
+	$bailout
 elif test $pkg_failed = untried; then
+     	{ $as_echo "$as_me:$LINENO: result: no" >&5
+$as_echo "no" >&6; }
 	$bailout
 else
 	QUORUM_CFLAGS=$pkg_cv_QUORUM_CFLAGS
@@ -13067,6 +13100,8 @@ fi
 
 
 if test $pkg_failed = yes; then
+   	{ $as_echo "$as_me:$LINENO: result: no" >&5
+$as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
         _pkg_short_errors_supported=yes
@@ -13081,10 +13116,10 @@ fi
 	# Put the nasty error message in config.log where it belongs
 	echo "$SALCK_PKG_ERRORS" >&5
 
-	{ $as_echo "$as_me:$LINENO: result: no" >&5
-$as_echo "no" >&6; }
-                $bailout
+	$bailout
 elif test $pkg_failed = untried; then
+     	{ $as_echo "$as_me:$LINENO: result: no" >&5
+$as_echo "no" >&6; }
 	$bailout
 else
 	SALCK_CFLAGS=$pkg_cv_SALCK_CFLAGS
@@ -13140,6 +13175,8 @@ fi
 
 
 if test $pkg_failed = yes; then
+   	{ $as_echo "$as_me:$LINENO: result: no" >&5
+$as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
         _pkg_short_errors_supported=yes
@@ -13154,10 +13191,10 @@ fi
 	# Put the nasty error message in config.log where it belongs
 	echo "$CONFDB_PKG_ERRORS" >&5
 
-	{ $as_echo "$as_me:$LINENO: result: no" >&5
-$as_echo "no" >&6; }
-                HAVE_CONFDB=no
+	HAVE_CONFDB=no
 elif test $pkg_failed = untried; then
+     	{ $as_echo "$as_me:$LINENO: result: no" >&5
+$as_echo "no" >&6; }
 	HAVE_CONFDB=no
 else
 	CONFDB_CFLAGS=$pkg_cv_CONFDB_CFLAGS
@@ -13376,6 +13413,8 @@ fi
 
 
 if test $pkg_failed = yes; then
+   	{ $as_echo "$as_me:$LINENO: result: no" >&5
+$as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
         _pkg_short_errors_supported=yes
@@ -13390,10 +13429,10 @@ fi
 	# Put the nasty error message in config.log where it belongs
 	echo "$CPG_PKG_ERRORS" >&5
 
-	{ $as_echo "$as_me:$LINENO: result: no" >&5
-$as_echo "no" >&6; }
-                $bailout
+	$bailout
 elif test $pkg_failed = untried; then
+     	{ $as_echo "$as_me:$LINENO: result: no" >&5
+$as_echo "no" >&6; }
 	$bailout
 else
 	CPG_CFLAGS=$pkg_cv_CPG_CFLAGS
@@ -13446,6 +13485,8 @@ fi
 
 
 if test $pkg_failed = yes; then
+   	{ $as_echo "$as_me:$LINENO: result: no" >&5
+$as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
         _pkg_short_errors_supported=yes
@@ -13460,9 +13501,7 @@ fi
 	# Put the nasty error message in config.log where it belongs
 	echo "$DLM_PKG_ERRORS" >&5
 
-	{ $as_echo "$as_me:$LINENO: result: no" >&5
-$as_echo "no" >&6; }
-                NOTFOUND=0
+	NOTFOUND=0
 
 for ac_header in libdlm.h
 do
@@ -13619,6 +13658,8 @@ $as_echo "no pkg for libdlm, using -ldlm" >&6; }
 			HAVE_DLM=yes
 		fi
 elif test $pkg_failed = untried; then
+     	{ $as_echo "$as_me:$LINENO: result: no" >&5
+$as_echo "no" >&6; }
 	NOTFOUND=0
 
 for ac_header in libdlm.h
@@ -13836,22 +13877,19 @@ $as_echo "$CMIRRORD" >&6; }
 BUILD_CMIRRORD=$CMIRRORD
 
 ################################################################################
-
-
 if test "x$BUILD_CMIRRORD" = xyes; then
 
 # Check whether --with-cmirrord-pidfile was given.
 if test "${with_cmirrord_pidfile+set}" = set; then
-  withval=$with_cmirrord_pidfile;  cat >>confdefs.h <<_ACEOF
-#define CMIRRORD_PIDFILE "$withval"
-_ACEOF
-
+  withval=$with_cmirrord_pidfile; CMIRRORD_PIDFILE=$withval
 else
-   cat >>confdefs.h <<_ACEOF
-#define CMIRRORD_PIDFILE "/var/run/cmirrord.pid"
-_ACEOF
-
+  CMIRRORD_PIDFILE="/var/run/cmirrord.pid"
 fi
+
+
+cat >>confdefs.h <<_ACEOF
+#define CMIRRORD_PIDFILE "$CMIRRORD_PIDFILE"
+_ACEOF
 
 fi
 
@@ -13901,6 +13939,8 @@ fi
 
 
 if test $pkg_failed = yes; then
+   	{ $as_echo "$as_me:$LINENO: result: no" >&5
+$as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
         _pkg_short_errors_supported=yes
@@ -13924,8 +13964,7 @@ installed software in a non-standard prefix.
 
 Alternatively, you may set the environment variables SACKPT_CFLAGS
 and SACKPT_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&5
+See the pkg-config man page for more details." >&5
 $as_echo "$as_me: error: Package requirements (libSaCkpt) were not met:
 
 $SACKPT_PKG_ERRORS
@@ -13935,10 +13974,11 @@ installed software in a non-standard prefix.
 
 Alternatively, you may set the environment variables SACKPT_CFLAGS
 and SACKPT_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&2;}
+See the pkg-config man page for more details." >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
+     	{ $as_echo "$as_me:$LINENO: result: no" >&5
+$as_echo "no" >&6; }
 	{ { $as_echo "$as_me:$LINENO: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 { { $as_echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
@@ -13967,7 +14007,7 @@ else
 	SACKPT_LIBS=$pkg_cv_SACKPT_LIBS
         { $as_echo "$as_me:$LINENO: result: yes" >&5
 $as_echo "yes" >&6; }
-	:
+
 fi
 	if test x$HAVE_CPG != xyes; then
 
@@ -14011,6 +14051,8 @@ fi
 
 
 if test $pkg_failed = yes; then
+   	{ $as_echo "$as_me:$LINENO: result: no" >&5
+$as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
         _pkg_short_errors_supported=yes
@@ -14034,8 +14076,7 @@ installed software in a non-standard prefix.
 
 Alternatively, you may set the environment variables CPG_CFLAGS
 and CPG_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&5
+See the pkg-config man page for more details." >&5
 $as_echo "$as_me: error: Package requirements (libcpg) were not met:
 
 $CPG_PKG_ERRORS
@@ -14045,10 +14086,11 @@ installed software in a non-standard prefix.
 
 Alternatively, you may set the environment variables CPG_CFLAGS
 and CPG_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" >&2;}
+See the pkg-config man page for more details." >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
+     	{ $as_echo "$as_me:$LINENO: result: no" >&5
+$as_echo "no" >&6; }
 	{ { $as_echo "$as_me:$LINENO: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 { { $as_echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
@@ -14077,7 +14119,7 @@ else
 	CPG_LIBS=$pkg_cv_CPG_LIBS
         { $as_echo "$as_me:$LINENO: result: yes" >&5
 $as_echo "yes" >&6; }
-	:
+
 fi
 	fi
 fi
@@ -14107,7 +14149,7 @@ $as_echo_n "checking for C optimisation flag... " >&6; }
 
 # Check whether --with-optimisation was given.
 if test "${with_optimisation+set}" = set; then
-  withval=$with_optimisation;  COPTIMISE_FLAG="$withval"
+  withval=$with_optimisation; COPTIMISE_FLAG=$withval
 fi
 
 { $as_echo "$as_me:$LINENO: result: $COPTIMISE_FLAG" >&5
@@ -15886,9 +15928,9 @@ $as_echo "$as_me: error: msgfmt not found in path $PATH
 
 # Check whether --with-localedir was given.
 if test "${with_localedir+set}" = set; then
-  withval=$with_localedir;  LOCALEDIR="$withval"
+  withval=$with_localedir; LOCALEDIR=$withval
 else
-   LOCALEDIR='${prefix}/share/locale'
+  LOCALEDIR='${prefix}/share/locale'
 fi
 
 fi
@@ -15897,36 +15939,36 @@ fi
 
 # Check whether --with-confdir was given.
 if test "${with_confdir+set}" = set; then
-  withval=$with_confdir;  CONFDIR="$withval"
+  withval=$with_confdir; CONFDIR=$withval
 else
-   CONFDIR='/etc'
+  CONFDIR="/etc"
 fi
 
 
 
 # Check whether --with-staticdir was given.
 if test "${with_staticdir+set}" = set; then
-  withval=$with_staticdir;  STATICDIR="$withval"
+  withval=$with_staticdir; STATICDIR=$withval
 else
-   STATICDIR='${exec_prefix}/sbin'
+  STATICDIR='${exec_prefix}/sbin'
 fi
 
 
 
 # Check whether --with-usrlibdir was given.
 if test "${with_usrlibdir+set}" = set; then
-  withval=$with_usrlibdir;  usrlibdir="$withval"
+  withval=$with_usrlibdir; usrlibdir=$withval
 else
-   usrlibdir='${prefix}/lib'
+  usrlibdir='${prefix}/lib'
 fi
 
 
 
 # Check whether --with-usrsbindir was given.
 if test "${with_usrsbindir+set}" = set; then
-  withval=$with_usrsbindir;  usrsbindir="$withval"
+  withval=$with_usrsbindir; usrsbindir=$withval
 else
-   usrsbindir='${prefix}/sbin'
+  usrsbindir='${prefix}/sbin'
 fi
 
 
@@ -15934,18 +15976,18 @@ fi
 
 # Check whether --with-udev_prefix was given.
 if test "${with_udev_prefix+set}" = set; then
-  withval=$with_udev_prefix;  udev_prefix="$withval"
+  withval=$with_udev_prefix; udev_prefix=$withval
 else
-   udev_prefix='${exec_prefix}'
+  udev_prefix='${exec_prefix}'
 fi
 
 
 
 # Check whether --with-udevdir was given.
 if test "${with_udevdir+set}" = set; then
-  withval=$with_udevdir;  udevdir="$withval"
+  withval=$with_udevdir; udevdir=$withval
 else
-   udevdir='${udev_prefix}/lib/udev/rules.d'
+  udevdir='${udev_prefix}/lib/udev/rules.d'
 fi
 
 
@@ -17651,54 +17693,47 @@ _ACEOF
 fi
 
 ################################################################################
-
-
 if test "$BUILD_DMEVENTD" = yes; then
 
 # Check whether --with-dmeventd-pidfile was given.
 if test "${with_dmeventd_pidfile+set}" = set; then
-  withval=$with_dmeventd_pidfile;  cat >>confdefs.h <<_ACEOF
-#define DMEVENTD_PIDFILE "$withval"
-_ACEOF
-
+  withval=$with_dmeventd_pidfile; DMEVENTD_PIDFILE=$withval
 else
-   cat >>confdefs.h <<_ACEOF
-#define DMEVENTD_PIDFILE "/var/run/dmeventd.pid"
+  DMEVENTD_PIDFILE="/var/run/dmeventd.pid"
+fi
+
+
+cat >>confdefs.h <<_ACEOF
+#define DMEVENTD_PIDFILE "$DMEVENTD_PIDFILE"
 _ACEOF
 
 fi
-
-fi
-
-
 
 if test "$BUILD_DMEVENTD" = yes; then
 
 # Check whether --with-dmeventd-path was given.
 if test "${with_dmeventd_path+set}" = set; then
-  withval=$with_dmeventd_path;  cat >>confdefs.h <<_ACEOF
-#define DMEVENTD_PATH "$withval"
-_ACEOF
-
+  withval=$with_dmeventd_path; DMEVENTD_PATH=$withval
 else
-   cat >>confdefs.h <<_ACEOF
-#define DMEVENTD_PATH "$lvm_exec_prefix/sbin/dmeventd"
-_ACEOF
-
+  DMEVENTD_PATH="$lvm_exec_prefix/sbin/dmeventd"
 fi
+
+
+cat >>confdefs.h <<_ACEOF
+#define DMEVENTD_PATH "$DMEVENTD_PATH"
+_ACEOF
 
 fi
 
 ################################################################################
 
-
-
 # Check whether --with-default-system-dir was given.
 if test "${with_default_system_dir+set}" = set; then
-  withval=$with_default_system_dir;  DEFAULT_SYS_DIR="$withval"
+  withval=$with_default_system_dir; DEFAULT_SYS_DIR=$withval
 else
-   DEFAULT_SYS_DIR="/etc/lvm"
+  DEFAULT_SYS_DIR="/etc/lvm"
 fi
+
 
 cat >>confdefs.h <<_ACEOF
 #define DEFAULT_SYS_DIR "$DEFAULT_SYS_DIR"
@@ -17706,14 +17741,13 @@ _ACEOF
 
 
 
-
-
 # Check whether --with-default-archive-subdir was given.
 if test "${with_default_archive_subdir+set}" = set; then
-  withval=$with_default_archive_subdir;  DEFAULT_ARCHIVE_SUBDIR="$withval"
+  withval=$with_default_archive_subdir; DEFAULT_ARCHIVE_SUBDIR=$withval
 else
-   DEFAULT_ARCHIVE_SUBDIR="archive"
+  DEFAULT_ARCHIVE_SUBDIR=archive
 fi
+
 
 cat >>confdefs.h <<_ACEOF
 #define DEFAULT_ARCHIVE_SUBDIR "$DEFAULT_ARCHIVE_SUBDIR"
@@ -17721,14 +17755,13 @@ _ACEOF
 
 
 
-
-
 # Check whether --with-default-backup-subdir was given.
 if test "${with_default_backup_subdir+set}" = set; then
-  withval=$with_default_backup_subdir;  DEFAULT_BACKUP_SUBDIR="$withval"
+  withval=$with_default_backup_subdir; DEFAULT_BACKUP_SUBDIR=$withval
 else
-   DEFAULT_BACKUP_SUBDIR="backup"
+  DEFAULT_BACKUP_SUBDIR=backup
 fi
+
 
 cat >>confdefs.h <<_ACEOF
 #define DEFAULT_BACKUP_SUBDIR "$DEFAULT_BACKUP_SUBDIR"
@@ -17736,14 +17769,13 @@ _ACEOF
 
 
 
-
-
 # Check whether --with-default-cache-subdir was given.
 if test "${with_default_cache_subdir+set}" = set; then
-  withval=$with_default_cache_subdir;  DEFAULT_CACHE_SUBDIR="$withval"
+  withval=$with_default_cache_subdir; DEFAULT_CACHE_SUBDIR=$withval
 else
-   DEFAULT_CACHE_SUBDIR="cache"
+  DEFAULT_CACHE_SUBDIR=cache
 fi
+
 
 cat >>confdefs.h <<_ACEOF
 #define DEFAULT_CACHE_SUBDIR "$DEFAULT_CACHE_SUBDIR"
@@ -17751,14 +17783,13 @@ _ACEOF
 
 
 
-
-
 # Check whether --with-default-locking-dir was given.
 if test "${with_default_locking_dir+set}" = set; then
-  withval=$with_default_locking_dir;  DEFAULT_LOCK_DIR="$withval"
+  withval=$with_default_locking_dir; DEFAULT_LOCK_DIR=$withval
 else
-   DEFAULT_LOCK_DIR="/var/lock/lvm"
+  DEFAULT_LOCK_DIR="/var/lock/lvm"
 fi
+
 
 cat >>confdefs.h <<_ACEOF
 #define DEFAULT_LOCK_DIR "$DEFAULT_LOCK_DIR"
@@ -17771,9 +17802,9 @@ $as_echo_n "checking for kernel interface choice... " >&6; }
 
 # Check whether --with-interface was given.
 if test "${with_interface+set}" = set; then
-  withval=$with_interface;  interface="$withval"
+  withval=$with_interface; interface=$withval
 else
-   interface=ioctl
+  interface=ioctl
 fi
 
 if [ "x$interface" != xioctl ];
