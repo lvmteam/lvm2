@@ -1,6 +1,5 @@
 Version 1.02.53 -
 ===============================
-  Fix return value to 0 for 'dmsetup -c -o help'.
   Use "nowatch" udev rule for inappropriate devices.
 
 Version 1.02.52 - 6th July 2010
