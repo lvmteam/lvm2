@@ -234,7 +234,7 @@ int add_pv_to_vg(struct volume_group *vg, const char *pv_name,
 
 	if (!fid->fmt->ops->pv_setup(fid->fmt, UINT64_C(0), 0,
 				     vg->extent_size, 0, 0, 0UL, UINT64_C(0),
-				     mdas, pv, vg)) {
+				     0, mdas, pv, vg)) {
 		log_error("Format-specific setup of physical volume '%s' "
 			  "failed.", pv_name);
 		return 0;
@@ -1684,7 +1684,6 @@ struct physical_volume * pvcreate_single(struct cmd_context *cmd,
 	struct dm_list mdas;
 	struct pvcreate_params default_pp;
 	char buffer[64] __attribute((aligned(8)));
-	struct metadata_area *mda;
 
 	pvcreate_params_set_defaults(&default_pp);
 	if (!pp)
@@ -1718,8 +1717,8 @@ struct physical_volume * pvcreate_single(struct cmd_context *cmd,
 	if (!(pv = pv_create(cmd, dev, pp->idp, pp->size,
 			     pp->data_alignment, pp->data_alignment_offset,
 			     pp->pe_start, pp->extent_count, pp->extent_size,
-			     pp->pvmetadatacopies,
-			     pp->pvmetadatasize,&mdas))) {
+			     pp->pvmetadatacopies, pp->pvmetadatasize,
+			     pp->metadataignore, &mdas))) {
 		log_error("Failed to setup physical volume \"%s\"", pv_name);
 		goto error;
 	}
@@ -1750,10 +1749,6 @@ struct physical_volume * pvcreate_single(struct cmd_context *cmd,
 
 	log_very_verbose("Writing physical volume data to disk \"%s\"",
 			 pv_name);
-
-	if (pp->metadataignore)
-		dm_list_iterate_items(mda, &mdas)
-			mda_set_ignored(mda, 1);
 
 	if (!(pv_write(cmd, pv, &mdas, pp->labelsector))) {
 		log_error("Failed to write physical volume \"%s\"", pv_name);
@@ -1827,8 +1822,8 @@ struct physical_volume *pv_create(const struct cmd_context *cmd,
 				  uint64_t pe_start,
 				  uint32_t existing_extent_count,
 				  uint32_t existing_extent_size,
-				  int pvmetadatacopies,
-				  uint64_t pvmetadatasize, struct dm_list *mdas)
+				  int pvmetadatacopies, uint64_t pvmetadatasize,
+				  unsigned metadataignore, struct dm_list *mdas)
 {
 	const struct format_type *fmt = cmd->fmt;
 	struct dm_pool *mem = fmt->cmd->mem;
@@ -1877,8 +1872,8 @@ struct physical_volume *pv_create(const struct cmd_context *cmd,
 	if (!fmt->ops->pv_setup(fmt, pe_start, existing_extent_count,
 				existing_extent_size, data_alignment,
 				data_alignment_offset,
-				pvmetadatacopies, pvmetadatasize, mdas,
-				pv, NULL)) {
+				pvmetadatacopies, pvmetadatasize,
+				metadataignore, mdas, pv, NULL)) {
 		log_error("%s: Format-specific setup of physical volume "
 			  "failed.", pv_dev_name(pv));
 		goto bad;

@@ -196,6 +196,7 @@ static int _pool_pv_setup(const struct format_type *fmt __attribute((unused)),
 			  unsigned long data_alignment_offset __attribute((unused)),
 			  int pvmetadatacopies __attribute((unused)),
 			  uint64_t pvmetadatasize __attribute((unused)),
+			  unsigned metadataignore __attribute((unused)),
 			  struct dm_list *mdas __attribute((unused)),
 			  struct physical_volume *pv __attribute((unused)),
 			  struct volume_group *vg __attribute((unused)))

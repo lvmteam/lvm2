@@ -1248,8 +1248,8 @@ static int _text_scan(const struct format_type *fmt)
    Always have an mda between end-of-label and pe_align() boundary */
 static int _mda_setup(const struct format_type *fmt,
 		      uint64_t pe_start, uint64_t pe_end,
-		      int pvmetadatacopies,
-		      uint64_t pvmetadatasize, struct dm_list *mdas,
+		      int pvmetadatacopies, uint64_t pvmetadatasize,
+		      unsigned metadataignore, struct dm_list *mdas,
 		      struct physical_volume *pv,
 		      struct volume_group *vg __attribute((unused)))
 {
@@ -1337,7 +1337,7 @@ static int _mda_setup(const struct format_type *fmt,
 	/* FIXME If creating new mdas, wipe them! */
 	if (mda_size1) {
 		if (!add_mda(fmt, fmt->cmd->mem, mdas, pv->dev, start1,
-			     mda_size1, 0))
+			     mda_size1, metadataignore))
 			return 0;
 
 		if (!dev_set((struct device *) pv->dev, start1,
@@ -1384,7 +1384,7 @@ static int _mda_setup(const struct format_type *fmt,
 
 	if (mda_size2) {
 		if (!add_mda(fmt, fmt->cmd->mem, mdas, pv->dev, start2,
-			     mda_size2, 0)) return 0;
+			     mda_size2, metadataignore)) return 0;
 		if (!dev_set(pv->dev, start2,
 			     (size_t) (mda_size1 >
 				       wipe_size ? : mda_size1), 0)) {
@@ -1766,12 +1766,12 @@ static struct metadata_area_ops _metadata_text_raw_ops = {
  *   setting of pv->pe_start to .pv_write
  */
 static int _text_pv_setup(const struct format_type *fmt,
-		     uint64_t pe_start, uint32_t extent_count,
-		     uint32_t extent_size, unsigned long data_alignment,
-		     unsigned long data_alignment_offset,
-		     int pvmetadatacopies,
-		     uint64_t pvmetadatasize, struct dm_list *mdas,
-		     struct physical_volume *pv, struct volume_group *vg)
+			  uint64_t pe_start, uint32_t extent_count,
+			  uint32_t extent_size, unsigned long data_alignment,
+			  unsigned long data_alignment_offset,
+			  int pvmetadatacopies, uint64_t pvmetadatasize,
+			  unsigned metadataignore, struct dm_list *mdas,
+			  struct physical_volume *pv, struct volume_group *vg)
 {
 	struct metadata_area *mda, *mda_new, *mda2;
 	struct mda_context *mdac, *mdac2;
@@ -1894,7 +1894,7 @@ static int _text_pv_setup(const struct format_type *fmt,
 		if (extent_count)
 			pe_end = pe_start + extent_count * extent_size - 1;
 		if (!_mda_setup(fmt, pe_start, pe_end, pvmetadatacopies,
-				pvmetadatasize, mdas, pv, vg))
+				pvmetadatasize, metadataignore,  mdas, pv, vg))
 			return_0;
 	}
 
