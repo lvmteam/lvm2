@@ -3341,7 +3341,6 @@ int main(int argc, char **argv)
 
 	if (argc == 0) {
 		_usage(stderr);
-		r = 0;
 		goto out;
 	}
 
