@@ -137,7 +137,7 @@ static int _maps_line(struct cmd_context *cmd, lvmlock_t lock,
 
 	/* Select readable maps */
 	if (fr != 'r') {
-		log_debug("% area unreadable %s : Skipping.",
+		log_debug("%s area unreadable %s : Skipping.",
 			  (lock == LVM_MLOCK) ? "mlock" : "munlock", line);
 		return 1;
 	}
