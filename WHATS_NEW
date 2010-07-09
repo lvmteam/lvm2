@@ -1,5 +1,6 @@
 Version 2.02.71 -
 ===============================
+  Fix redundant declarations and always compile with -Wredundant-decls.
   Fix possible hang when all mirror images of a mirrored log fail.
   Do not log backtrace in valid _lv_resume() code path.
   Cleanup help strings in configure.in.

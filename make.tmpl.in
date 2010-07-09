@@ -107,9 +107,9 @@ INSTALL_SCRIPT = $(INSTALL) -p $(M_INSTALL_PROGRAM)
 
 .SUFFIXES: .c .d .o .so .a .po .pot .mo .dylib
 
-CFLAGS += -fPIC -Wall -Wundef -Wshadow -Wcast-align -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wnested-externs -Winline -Wmissing-noreturn -Wformat-security
+CFLAGS += -fPIC -Wall -Wundef -Wshadow -Wcast-align -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wnested-externs -Winline -Wmissing-noreturn -Wformat-security -Wredundant-decls
 
-#CFLAGS += -W -Wconversion -Wpointer-arith -Wredundant-decls -Wbad-function-cast -Wcast-qual
+#CFLAGS += -W -Wconversion -Wpointer-arith -Wbad-function-cast -Wcast-qual
 #CFLAGS += -pedantic -std=gnu99
 
 CFLAGS += @COPTIMISE_FLAG@
