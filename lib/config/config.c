@@ -159,7 +159,7 @@ static int _parse_config_file(struct parser *p, struct config_tree *cft)
 	return 1;
 }
 
-struct config_tree *create_config_tree_from_string(struct cmd_context *cmd __attribute((unused)),
+struct config_tree *create_config_tree_from_string(struct cmd_context *cmd __attribute__((unused)),
 						   const char *config_settings)
 {
 	struct cs *c;

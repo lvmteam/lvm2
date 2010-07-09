@@ -49,9 +49,9 @@ static pthread_mutex_t _event_mutex = PTHREAD_MUTEX_INITIALIZER;
  * configurable and we don't have that option yet
  */
 static void _temporary_log_fn(int level,
-			      const char *file __attribute((unused)),
-			      int line __attribute((unused)),
-			      int dm_errno __attribute((unused)),
+			      const char *file __attribute__((unused)),
+			      int line __attribute__((unused)),
+			      int dm_errno __attribute__((unused)),
 			      const char *message)
 {
 	level &= ~(_LOG_STDERR | _LOG_ONCE);

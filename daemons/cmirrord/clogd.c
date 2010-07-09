@@ -32,7 +32,7 @@ static void daemonize(void);
 static void init_all(void);
 static void cleanup_all(void);
 
-int main(int argc __attribute((unused)), char *argv[] __attribute((unused)))
+int main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
 {
 	daemonize();
 
@@ -60,7 +60,7 @@ int main(int argc __attribute((unused)), char *argv[] __attribute((unused)))
  * @sig: the signal
  *
  */
-static void parent_exit_handler(int sig __attribute((unused)))
+static void parent_exit_handler(int sig __attribute__((unused)))
 {
 	exit_now = 1;
 }

@@ -158,7 +158,7 @@ static struct volume_group *_build_vg_from_pds(struct format_instance
 
 static struct volume_group *_pool_vg_read(struct format_instance *fid,
 				     const char *vg_name,
-				     struct metadata_area *mda __attribute((unused)))
+				     struct metadata_area *mda __attribute__((unused)))
 {
 	struct dm_pool *mem = dm_pool_create("pool vg_read", VG_MEMPOOL_CHUNK);
 	struct dm_list pds;
@@ -188,26 +188,26 @@ out:
 	return NULL;
 }
 
-static int _pool_pv_setup(const struct format_type *fmt __attribute((unused)),
-			  uint64_t pe_start __attribute((unused)),
-			  uint32_t extent_count __attribute((unused)),
-			  uint32_t extent_size __attribute((unused)),
-			  unsigned long data_alignment __attribute((unused)),
-			  unsigned long data_alignment_offset __attribute((unused)),
-			  int pvmetadatacopies __attribute((unused)),
-			  uint64_t pvmetadatasize __attribute((unused)),
-			  unsigned metadataignore __attribute((unused)),
-			  struct dm_list *mdas __attribute((unused)),
-			  struct physical_volume *pv __attribute((unused)),
-			  struct volume_group *vg __attribute((unused)))
+static int _pool_pv_setup(const struct format_type *fmt __attribute__((unused)),
+			  uint64_t pe_start __attribute__((unused)),
+			  uint32_t extent_count __attribute__((unused)),
+			  uint32_t extent_size __attribute__((unused)),
+			  unsigned long data_alignment __attribute__((unused)),
+			  unsigned long data_alignment_offset __attribute__((unused)),
+			  int pvmetadatacopies __attribute__((unused)),
+			  uint64_t pvmetadatasize __attribute__((unused)),
+			  unsigned metadataignore __attribute__((unused)),
+			  struct dm_list *mdas __attribute__((unused)),
+			  struct physical_volume *pv __attribute__((unused)),
+			  struct volume_group *vg __attribute__((unused)))
 {
 	return 1;
 }
 
 static int _pool_pv_read(const struct format_type *fmt, const char *pv_name,
 			 struct physical_volume *pv,
-			 struct dm_list *mdas __attribute((unused)),
-			 int scan_label_only __attribute((unused)))
+			 struct dm_list *mdas __attribute__((unused)),
+			 int scan_label_only __attribute__((unused)))
 {
 	struct dm_pool *mem = dm_pool_create("pool pv_read", 1024);
 	struct pool_list *pl;
@@ -249,9 +249,9 @@ static struct metadata_area_ops _metadata_format_pool_ops = {
 /* *INDENT-ON* */
 
 static struct format_instance *_pool_create_instance(const struct format_type *fmt,
-						const char *vgname __attribute((unused)),
-						const char *vgid __attribute((unused)),
-						void *private __attribute((unused)))
+						const char *vgname __attribute__((unused)),
+						const char *vgid __attribute__((unused)),
+						void *private __attribute__((unused)))
 {
 	struct format_instance *fid;
 	struct metadata_area *mda;
@@ -282,7 +282,7 @@ static struct format_instance *_pool_create_instance(const struct format_type *f
 	return fid;
 }
 
-static void _pool_destroy_instance(struct format_instance *fid __attribute((unused)))
+static void _pool_destroy_instance(struct format_instance *fid __attribute__((unused)))
 {
 }
 

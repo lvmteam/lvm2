@@ -114,7 +114,7 @@ static struct labeller *_find_labeller(struct device *dev, char *buf,
 	struct lvmcache_info *info;
 	uint64_t sector;
 	int found = 0;
-	char readbuf[LABEL_SCAN_SIZE] __attribute((aligned(8)));
+	char readbuf[LABEL_SCAN_SIZE] __attribute__((aligned(8)));
 
 	if (!dev_read(dev, scan_sector << SECTOR_SHIFT,
 		      LABEL_SCAN_SIZE, readbuf)) {
@@ -190,8 +190,8 @@ static struct labeller *_find_labeller(struct device *dev, char *buf,
 /* FIXME Also wipe associated metadata area headers? */
 int label_remove(struct device *dev)
 {
-	char buf[LABEL_SIZE] __attribute((aligned(8)));
-	char readbuf[LABEL_SCAN_SIZE] __attribute((aligned(8)));
+	char buf[LABEL_SIZE] __attribute__((aligned(8)));
+	char readbuf[LABEL_SCAN_SIZE] __attribute__((aligned(8)));
 	int r = 1;
 	uint64_t sector;
 	int wipe;
@@ -260,7 +260,7 @@ int label_remove(struct device *dev)
 int label_read(struct device *dev, struct label **result,
 		uint64_t scan_sector)
 {
-	char buf[LABEL_SIZE] __attribute((aligned(8)));
+	char buf[LABEL_SIZE] __attribute__((aligned(8)));
 	struct labeller *l;
 	uint64_t sector;
 	struct lvmcache_info *info;
@@ -299,7 +299,7 @@ int label_read(struct device *dev, struct label **result,
 /* Caller may need to use label_get_handler to create label struct! */
 int label_write(struct device *dev, struct label *label)
 {
-	char buf[LABEL_SIZE] __attribute((aligned(8)));
+	char buf[LABEL_SIZE] __attribute__((aligned(8)));
 	struct label_header *lh = (struct label_header *) buf;
 	int r = 1;
 
@@ -347,7 +347,7 @@ int label_write(struct device *dev, struct label *label)
 int label_verify(struct device *dev)
 {
 	struct labeller *l;
-	char buf[LABEL_SIZE] __attribute((aligned(8)));
+	char buf[LABEL_SIZE] __attribute__((aligned(8)));
 	uint64_t sector;
 	struct lvmcache_info *info;
 	int r = 0;

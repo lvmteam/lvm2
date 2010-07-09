@@ -41,7 +41,7 @@ uint64_t lvm_lv_get_size(const lv_t lv)
 
 const char *lvm_lv_get_uuid(const lv_t lv)
 {
-	char uuid[64] __attribute((aligned(8)));
+	char uuid[64] __attribute__((aligned(8)));
 
 	if (!id_write_format(&lv->lvid.id[1], uuid, sizeof(uuid))) {
 		log_error(INTERNAL_ERROR "unable to convert uuid");

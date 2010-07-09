@@ -79,7 +79,7 @@ static int _readonly_lock_resource(struct cmd_context *cmd,
 	return _no_lock_resource(cmd, resource, flags);
 }
 
-int init_no_locking(struct locking_type *locking, struct cmd_context *cmd __attribute((unused)))
+int init_no_locking(struct locking_type *locking, struct cmd_context *cmd __attribute__((unused)))
 {
 	locking->lock_resource = _no_lock_resource;
 	locking->reset_locking = _no_reset_locking;
@@ -89,7 +89,7 @@ int init_no_locking(struct locking_type *locking, struct cmd_context *cmd __attr
 	return 1;
 }
 
-int init_readonly_locking(struct locking_type *locking, struct cmd_context *cmd __attribute((unused)))
+int init_readonly_locking(struct locking_type *locking, struct cmd_context *cmd __attribute__((unused)))
 {
 	locking->lock_resource = _readonly_lock_resource;
 	locking->reset_locking = _no_reset_locking;

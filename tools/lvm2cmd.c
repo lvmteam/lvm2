@@ -20,8 +20,8 @@ void *lvm2_init(void)
 	return cmdlib_lvm2_init(0);
 }
 
-int lvm_shell(struct cmd_context *cmd __attribute((unused)),
-	      struct cmdline_context *cmdline __attribute((unused)))
+int lvm_shell(struct cmd_context *cmd __attribute__((unused)),
+	      struct cmdline_context *cmdline __attribute__((unused)))
 {
 	return 0;
 }

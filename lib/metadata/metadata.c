@@ -172,7 +172,7 @@ int add_pv_to_vg(struct volume_group *vg, const char *pv_name,
 	struct pv_list *pvl;
 	struct format_instance *fid = vg->fid;
 	struct dm_pool *mem = vg->vgmem;
-	char uuid[64] __attribute((aligned(8)));
+	char uuid[64] __attribute__((aligned(8)));
 	struct dm_list *mdas;
 
 	log_verbose("Adding physical volume '%s' to volume group '%s'",
@@ -1491,7 +1491,7 @@ static int _move_mdas(struct volume_group *vg_from, struct volume_group *vg_to,
  * Separate metadata areas after splitting a VG.
  * Also accepts orphan VG as destination (for vgreduce).
  */
-int vg_split_mdas(struct cmd_context *cmd __attribute((unused)),
+int vg_split_mdas(struct cmd_context *cmd __attribute__((unused)),
 		  struct volume_group *vg_from, struct volume_group *vg_to)
 {
 	struct dm_list *mdas_from_in_use, *mdas_to_in_use;
@@ -1683,7 +1683,7 @@ struct physical_volume * pvcreate_single(struct cmd_context *cmd,
 	struct device *dev;
 	struct dm_list mdas;
 	struct pvcreate_params default_pp;
-	char buffer[64] __attribute((aligned(8)));
+	char buffer[64] __attribute__((aligned(8)));
 
 	pvcreate_params_set_defaults(&default_pp);
 	if (!pp)
@@ -2122,7 +2122,7 @@ unsigned vg_visible_lvs(const struct volume_group *vg)
 /*
  * Determine whether two vgs are compatible for merging.
  */
-int vgs_are_compatible(struct cmd_context *cmd __attribute((unused)),
+int vgs_are_compatible(struct cmd_context *cmd __attribute__((unused)),
 		       struct volume_group *vg_from,
 		       struct volume_group *vg_to)
 {
@@ -2411,7 +2411,7 @@ int vg_validate(struct volume_group *vg)
 {
 	struct pv_list *pvl, *pvl2;
 	struct lv_list *lvl, *lvl2;
-	char uuid[64] __attribute((aligned(8)));
+	char uuid[64] __attribute__((aligned(8)));
 	int r = 1;
 	uint32_t hidden_lv_count = 0, lv_count = 0, lv_visible_count = 0;
 	uint32_t pv_count = 0;
@@ -2900,7 +2900,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	struct dm_list *pvids;
 	struct pv_list *pvl, *pvl2;
 	struct dm_list all_pvs;
-	char uuid[64] __attribute((aligned(8)));
+	char uuid[64] __attribute__((aligned(8)));
 
 	if (is_orphan_vg(vgname)) {
 		if (use_precommitted) {
@@ -3638,7 +3638,7 @@ int scan_vgs_for_pvs(struct cmd_context *cmd)
 	return _get_pvs(cmd, NULL);
 }
 
-int pv_write(struct cmd_context *cmd __attribute((unused)),
+int pv_write(struct cmd_context *cmd __attribute__((unused)),
 	     struct physical_volume *pv,
 	     struct dm_list *mdas, int64_t label_sector)
 {

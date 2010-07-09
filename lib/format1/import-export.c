@@ -137,7 +137,7 @@ static int _system_id(struct cmd_context *cmd, char *s, const char *prefix)
 	return 1;
 }
 
-int export_pv(struct cmd_context *cmd, struct dm_pool *mem __attribute((unused)),
+int export_pv(struct cmd_context *cmd, struct dm_pool *mem __attribute__((unused)),
 	      struct volume_group *vg,
 	      struct pv_disk *pvd, struct physical_volume *pv)
 {
@@ -552,7 +552,7 @@ int export_lvs(struct disk_list *dl, struct volume_group *vg,
 /*
  * FIXME: More inefficient code.
  */
-int import_snapshots(struct dm_pool *mem __attribute((unused)), struct volume_group *vg,
+int import_snapshots(struct dm_pool *mem __attribute__((unused)), struct volume_group *vg,
 		     struct dm_list *pvds)
 {
 	struct logical_volume *lvs[MAX_LV];
@@ -641,7 +641,7 @@ int export_uuids(struct disk_list *dl, struct volume_group *vg)
  * This calculates the nasty pv_number field
  * used by LVM1.
  */
-void export_numbers(struct dm_list *pvds, struct volume_group *vg __attribute((unused)))
+void export_numbers(struct dm_list *pvds, struct volume_group *vg __attribute__((unused)))
 {
 	struct disk_list *dl;
 	int pv_num = 1;

@@ -121,7 +121,7 @@ static const device_info_t device_info[] = {
 	{NULL, 0}
 };
 
-static int _passes_lvm_type_device_filter(struct dev_filter *f __attribute((unused)),
+static int _passes_lvm_type_device_filter(struct dev_filter *f __attribute__((unused)),
 					  struct device *dev)
 {
 	const char *name = dev_name(dev);

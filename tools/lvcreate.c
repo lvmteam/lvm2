@@ -236,7 +236,7 @@ static int _read_size_params(struct lvcreate_params *lp,
  * Generic mirror parameter checks.
  * FIXME: Should eventually be moved into lvm library.
  */
-static int _validate_mirror_params(const struct cmd_context *cmd __attribute((unused)),
+static int _validate_mirror_params(const struct cmd_context *cmd __attribute__((unused)),
 				   const struct lvcreate_params *lp)
 {
 	int pagesize = lvm_getpagesize();

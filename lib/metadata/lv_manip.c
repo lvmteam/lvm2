@@ -951,7 +951,7 @@ static int _is_contiguous(struct pv_segment *pvseg, struct pv_area *pva)
 	return 1;
 }
 
-static int _is_condition(struct cmd_context *cmd __attribute((unused)),
+static int _is_condition(struct cmd_context *cmd __attribute__((unused)),
 			 struct pv_segment *pvseg, uint32_t s,
 			 void *data)
 {
@@ -1743,8 +1743,8 @@ int lv_extend(struct logical_volume *lv,
 	      const struct segment_type *segtype,
 	      uint32_t stripes, uint32_t stripe_size,
 	      uint32_t mirrors, uint32_t extents,
-	      struct physical_volume *mirrored_pv __attribute((unused)),
-	      uint32_t mirrored_pe __attribute((unused)),
+	      struct physical_volume *mirrored_pv __attribute__((unused)),
+	      uint32_t mirrored_pe __attribute__((unused)),
 	      uint64_t status, struct dm_list *allocatable_pvs,
 	      alloc_policy_t alloc)
 {
@@ -2072,7 +2072,7 @@ bad:
 }
 
 static int _add_pvs(struct cmd_context *cmd, struct pv_segment *peg,
-		    uint32_t s __attribute((unused)), void *data)
+		    uint32_t s __attribute__((unused)), void *data)
 {
 	struct seg_pvs *spvs = (struct seg_pvs *) data;
 	struct pv_list *pvl;

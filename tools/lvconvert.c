@@ -326,7 +326,7 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 
 static struct volume_group *_get_lvconvert_vg(struct cmd_context *cmd,
 					      const char *name,
-					      const char *uuid __attribute((unused)))
+					      const char *uuid __attribute__((unused)))
 {
 	dev_close_all();
 
@@ -338,11 +338,11 @@ static struct volume_group *_get_lvconvert_vg(struct cmd_context *cmd,
 				  NULL, 0);
 }
 
-static struct logical_volume *_get_lvconvert_lv(struct cmd_context *cmd __attribute((unused)),
+static struct logical_volume *_get_lvconvert_lv(struct cmd_context *cmd __attribute__((unused)),
 						struct volume_group *vg,
 						const char *name,
 						const char *uuid,
-						uint32_t lv_type __attribute((unused)))
+						uint32_t lv_type __attribute__((unused)))
 {
 	struct logical_volume *lv = find_lv(vg, name);
 
@@ -355,7 +355,7 @@ static struct logical_volume *_get_lvconvert_lv(struct cmd_context *cmd __attrib
 static int _finish_lvconvert_mirror(struct cmd_context *cmd,
 				    struct volume_group *vg,
 				    struct logical_volume *lv,
-				    struct dm_list *lvs_changed __attribute((unused)))
+				    struct dm_list *lvs_changed __attribute__((unused)))
 {
 	int r = 0;
 
@@ -402,7 +402,7 @@ out:
 static int _finish_lvconvert_merge(struct cmd_context *cmd,
 				   struct volume_group *vg,
 				   struct logical_volume *lv,
-				   struct dm_list *lvs_changed __attribute((unused)))
+				   struct dm_list *lvs_changed __attribute__((unused)))
 {
 	struct lv_segment *snap_seg = find_merging_cow(lv);
 	if (!snap_seg) {
@@ -422,7 +422,7 @@ static int _finish_lvconvert_merge(struct cmd_context *cmd,
 
 static progress_t _poll_merge_progress(struct cmd_context *cmd,
 				       struct logical_volume *lv,
-				       const char *name __attribute((unused)),
+				       const char *name __attribute__((unused)),
 				       struct daemon_parms *parms)
 {
 	float percent = 0.0;
@@ -605,7 +605,7 @@ static struct dm_list *_failed_pv_list(struct volume_group *vg)
 }
 
 static int _is_partial_lv(struct logical_volume *lv,
-			  void *baton __attribute((unused)))
+			  void *baton __attribute__((unused)))
 {
 	return lv->status & PARTIAL_LV;
 }

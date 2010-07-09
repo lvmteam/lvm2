@@ -221,7 +221,7 @@ static int _add_site(struct lv_segment *seg,
 /* Import replicator segment */
 static int _replicator_text_import(struct lv_segment *seg,
 				   const struct config_node *sn,
-				   struct dm_hash_table *pv_hash __attribute((unused)))
+				   struct dm_hash_table *pv_hash __attribute__((unused)))
 {
 	const struct config_node *cn;
 	struct logical_volume *rlog_lv;
@@ -377,8 +377,8 @@ static int _replicator_target_percent(void **target_state,
 
 /* Check for module presence */
 static int _replicator_target_present(struct cmd_context *cmd,
-				      const struct lv_segment *seg __attribute((unused)),
-				      unsigned *attributes __attribute((unused)))
+				      const struct lv_segment *seg __attribute__((unused)),
+				      unsigned *attributes __attribute__((unused)))
 {
 	static int _checked = 0;
 	static int _present = 0;
@@ -394,7 +394,7 @@ static int _replicator_target_present(struct cmd_context *cmd,
 #endif
 
 static int _replicator_modules_needed(struct dm_pool *mem,
-				      const struct lv_segment *seg __attribute((unused)),
+				      const struct lv_segment *seg __attribute__((unused)),
 				      struct dm_list *modules)
 {
 	if (!str_list_add(mem, modules, REPLICATOR_MODULE))
@@ -520,7 +520,7 @@ static int _add_device(struct lv_segment *seg,
 /* Import replicator segment */
 static int _replicator_dev_text_import(struct lv_segment *seg,
 				       const struct config_node *sn,
-				       struct dm_hash_table *pv_hash __attribute((unused)))
+				       struct dm_hash_table *pv_hash __attribute__((unused)))
 {
 	const struct config_node *cn;
 	struct logical_volume *replicator;
@@ -721,8 +721,8 @@ static int _replicator_dev_target_percent(void **target_state,
 
 /* Check for module presence */
 static int _replicator_dev_target_present(struct cmd_context *cmd,
-					  const struct lv_segment *seg __attribute((unused)),
-					  unsigned *attributes __attribute((unused)))
+					  const struct lv_segment *seg __attribute__((unused)),
+					  unsigned *attributes __attribute__((unused)))
 {
 	static int _checked = 0;
 	static int _present = 0;

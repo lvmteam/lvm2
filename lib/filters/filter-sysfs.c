@@ -326,7 +326,7 @@ struct dev_filter *sysfs_filter_create(const char *sysfs_dir)
 
 #else
 
-struct dev_filter *sysfs_filter_create(const char *sysfs_dir __attribute((unused)))
+struct dev_filter *sysfs_filter_create(const char *sysfs_dir __attribute__((unused)))
 {
 	return NULL;
 }

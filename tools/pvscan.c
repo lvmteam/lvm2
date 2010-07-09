@@ -20,9 +20,9 @@ int vg_max_name_len = 0;
 
 static void _pvscan_display_single(struct cmd_context *cmd,
 				   struct physical_volume *pv,
-				   void *handle __attribute((unused)))
+				   void *handle __attribute__((unused)))
 {
-	char uuid[64] __attribute((aligned(8)));
+	char uuid[64] __attribute__((aligned(8)));
 	unsigned vg_name_len = 0;
 
 	char pv_tmp_name[NAME_LEN] = { 0, };
@@ -96,8 +96,8 @@ static void _pvscan_display_single(struct cmd_context *cmd,
 					   pv_pe_size(pv)));
 }
 
-int pvscan(struct cmd_context *cmd, int argc __attribute((unused)),
-	   char **argv __attribute((unused)))
+int pvscan(struct cmd_context *cmd, int argc __attribute__((unused)),
+	   char **argv __attribute__((unused)))
 {
 	int new_pvs_found = 0;
 	int pvs_found = 0;

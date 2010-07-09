@@ -1064,8 +1064,8 @@ int remove_mirror_images(struct logical_volume *lv, uint32_t num_mirrors,
 	return 1;
 }
 
-static int _no_removable_images(struct logical_volume *lv __attribute((unused)),
-				void *baton __attribute((unused))) {
+static int _no_removable_images(struct logical_volume *lv __attribute__((unused)),
+				void *baton __attribute__((unused))) {
 	return 0;
 }
 
@@ -1110,7 +1110,7 @@ int collapse_mirrored_lv(struct logical_volume *lv)
 	return 1;
 }
 
-static int get_mirror_fault_policy(struct cmd_context *cmd __attribute((unused)),
+static int get_mirror_fault_policy(struct cmd_context *cmd __attribute__((unused)),
 				   int log_policy)
 {
 	const char *policy;
@@ -1432,7 +1432,7 @@ struct logical_volume *find_pvmove_lv(struct volume_group *vg,
 struct logical_volume *find_pvmove_lv_from_pvname(struct cmd_context *cmd,
 						  struct volume_group *vg,
 						  const char *name,
-						  const char *uuid __attribute((unused)),
+						  const char *uuid __attribute__((unused)),
 						  uint32_t lv_type)
 {
 	struct physical_volume *pv;
@@ -2000,7 +2000,7 @@ int lv_split_mirror_images(struct logical_volume *lv, const char *split_name,
  * 'mirror' is the number of mirrors to be removed.
  * 'pvs' is removable pvs.
  */
-int lv_remove_mirrors(struct cmd_context *cmd __attribute((unused)),
+int lv_remove_mirrors(struct cmd_context *cmd __attribute__((unused)),
 		      struct logical_volume *lv,
 		      uint32_t mirrors, uint32_t log_count,
 		      int (*is_removable)(struct logical_volume *, void *),

@@ -16,7 +16,7 @@
 #include "tools.h"
 
 static int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv,
-			   void *handle __attribute((unused)))
+			   void *handle __attribute__((unused)))
 {
 	struct logical_volume *origin;
 

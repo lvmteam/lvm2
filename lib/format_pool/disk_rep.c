@@ -34,10 +34,10 @@
 #define CPOUT_64(x, y) {(y) = xlate64_be((x));}
 
 static int __read_pool_disk(const struct format_type *fmt, struct device *dev,
-			    struct dm_pool *mem __attribute((unused)), struct pool_list *pl,
-			    const char *vg_name __attribute((unused)))
+			    struct dm_pool *mem __attribute__((unused)), struct pool_list *pl,
+			    const char *vg_name __attribute__((unused)))
 {
-	char buf[512] __attribute((aligned(8)));
+	char buf[512] __attribute__((aligned(8)));
 
 	/* FIXME: Need to check the cache here first */
 	if (!dev_read(dev, UINT64_C(0), 512, buf)) {
@@ -58,7 +58,7 @@ static void _add_pl_to_list(struct dm_list *head, struct pool_list *data)
 
 	dm_list_iterate_items(pl, head) {
 		if (id_equal(&data->pv_uuid, &pl->pv_uuid)) {
-			char uuid[ID_LEN + 7] __attribute((aligned(8)));
+			char uuid[ID_LEN + 7] __attribute__((aligned(8)));
 
 			id_write_format(&pl->pv_uuid, uuid, ID_LEN + 7);
 
@@ -84,7 +84,7 @@ int read_pool_label(struct pool_list *pl, struct labeller *l,
 	struct lvmcache_info *info;
 	struct id pvid;
 	struct id vgid;
-	char uuid[ID_LEN + 7] __attribute((aligned(8)));
+	char uuid[ID_LEN + 7] __attribute__((aligned(8)));
 	struct pool_disk *pd = &pl->pd;
 
 	pool_label_in(pd, buf);

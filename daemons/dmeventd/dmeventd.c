@@ -476,14 +476,14 @@ static void _exit_dm_lib(void)
 	dm_lib_exit();
 }
 
-static void _exit_timeout(void *unused __attribute((unused)))
+static void _exit_timeout(void *unused __attribute__((unused)))
 {
 	_timeout_running = 0;
 	pthread_mutex_unlock(&_timeout_mutex);
 }
 
 /* Wake up monitor threads every so often. */
-static void *_timeout_thread(void *unused __attribute((unused)))
+static void *_timeout_thread(void *unused __attribute__((unused)))
 {
 	struct timespec timeout;
 	time_t curr_time;
@@ -1492,7 +1492,7 @@ static void _cleanup_unused_threads(void)
 	_unlock_mutex();
 }
 
-static void _sig_alarm(int signum __attribute((unused)))
+static void _sig_alarm(int signum __attribute__((unused)))
 {
 	pthread_testcancel();
 }
@@ -1524,7 +1524,7 @@ static void _init_thread_signals(void)
  * Set the global variable which the process should
  * be watching to determine when to exit.
  */
-static void _exit_handler(int sig __attribute((unused)))
+static void _exit_handler(int sig __attribute__((unused)))
 {
 	/*
 	 * We exit when '_exit_now' is set.

@@ -290,7 +290,7 @@ static int write_log(struct log_c *lc)
 }
 
 /* FIXME Rewrite this function taking advantage of the udev changes (where in use) to improve its efficiency! */
-static int find_disk_path(char *major_minor_str, char *path_rtn, int *unlink_path __attribute((unused)))
+static int find_disk_path(char *major_minor_str, char *path_rtn, int *unlink_path __attribute__((unused)))
 {
 	int r;
 	DIR *dp;
@@ -1369,7 +1369,7 @@ static int clog_get_sync_count(struct dm_ulog_request *rq, uint32_t originator)
 	return 0;
 }
 
-static int core_status_info(struct log_c *lc __attribute((unused)), struct dm_ulog_request *rq)
+static int core_status_info(struct log_c *lc __attribute__((unused)), struct dm_ulog_request *rq)
 {
 	int r;
 	char *data = (char *)rq->data;

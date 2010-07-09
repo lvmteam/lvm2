@@ -16,7 +16,7 @@
 #include "tools.h"
 
 static int _vgmknodes_single(struct cmd_context *cmd, struct logical_volume *lv,
-			     void *handle __attribute((unused)))
+			     void *handle __attribute__((unused)))
 {
 	if (arg_count(cmd, refresh_ARG) && lv_is_visible(lv))
 		if (!lv_refresh(cmd, lv)) {

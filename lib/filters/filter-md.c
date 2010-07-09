@@ -19,7 +19,7 @@
 
 #ifdef linux
 
-static int _ignore_md(struct dev_filter *f __attribute((unused)),
+static int _ignore_md(struct dev_filter *f __attribute__((unused)),
 		      struct device *dev)
 {
 	int ret;

@@ -247,7 +247,7 @@ static int _read_uuids(struct disk_list *data)
 {
 	unsigned num_read = 0;
 	struct uuid_list *ul;
-	char buffer[NAME_LEN] __attribute((aligned(8)));
+	char buffer[NAME_LEN] __attribute__((aligned(8)));
 	uint64_t pos = data->pvd.pv_uuidlist_on_disk.base;
 	uint64_t end = pos + data->pvd.pv_uuidlist_on_disk.size;
 
@@ -650,7 +650,7 @@ static int _write_pvd(struct disk_list *data)
 /*
  * assumes the device has been opened.
  */
-static int __write_all_pvd(const struct format_type *fmt __attribute((unused)),
+static int __write_all_pvd(const struct format_type *fmt __attribute__((unused)),
 			   struct disk_list *data)
 {
 	const char *pv_name = dev_name(data->dev);

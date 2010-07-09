@@ -23,9 +23,9 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-static int _text_can_handle(struct labeller *l __attribute((unused)),
+static int _text_can_handle(struct labeller *l __attribute__((unused)),
 			    void *buf,
-			    uint64_t sector __attribute((unused)))
+			    uint64_t sector __attribute__((unused)))
 {
 	struct label_header *lh = (struct label_header *) buf;
 
@@ -44,7 +44,7 @@ static int _text_write(struct label *label, void *buf)
 	struct metadata_area *mda;
 	struct mda_context *mdac;
 	struct data_area_list *da;
-	char buffer[64] __attribute((aligned(8)));
+	char buffer[64] __attribute__((aligned(8)));
 	int da1, mda1, mda2;
 
 	/* FIXME Move to where label is created */
@@ -242,7 +242,7 @@ void del_mdas(struct dm_list *mdas)
 	}
 }
 
-static int _text_initialise_label(struct labeller *l __attribute((unused)),
+static int _text_initialise_label(struct labeller *l __attribute__((unused)),
 				  struct label *label)
 {
 	strncpy(label->type, LVM2_LABEL, sizeof(label->type));
@@ -343,7 +343,7 @@ static int _text_read(struct labeller *l, struct device *dev, void *buf,
 	return 1;
 }
 
-static void _text_destroy_label(struct labeller *l __attribute((unused)),
+static void _text_destroy_label(struct labeller *l __attribute__((unused)),
 				struct label *label)
 {
 	struct lvmcache_info *info = (struct lvmcache_info *) label->info;

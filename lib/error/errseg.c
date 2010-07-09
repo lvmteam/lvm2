@@ -40,20 +40,20 @@ static int _errseg_merge_segments(struct lv_segment *seg1, struct lv_segment *se
 }
 
 #ifdef DEVMAPPER_SUPPORT
-static int _errseg_add_target_line(struct dev_manager *dm __attribute((unused)),
-				struct dm_pool *mem __attribute((unused)),
-				struct cmd_context *cmd __attribute((unused)),
-				void **target_state __attribute((unused)),
-				struct lv_segment *seg __attribute((unused)),
+static int _errseg_add_target_line(struct dev_manager *dm __attribute__((unused)),
+				struct dm_pool *mem __attribute__((unused)),
+				struct cmd_context *cmd __attribute__((unused)),
+				void **target_state __attribute__((unused)),
+				struct lv_segment *seg __attribute__((unused)),
 				struct dm_tree_node *node, uint64_t len,
-				uint32_t *pvmove_mirror_count __attribute((unused)))
+				uint32_t *pvmove_mirror_count __attribute__((unused)))
 {
 	return dm_tree_node_add_error_target(node, len);
 }
 
 static int _errseg_target_present(struct cmd_context *cmd,
-				  const struct lv_segment *seg __attribute((unused)),
-				  unsigned *attributes __attribute((unused)))
+				  const struct lv_segment *seg __attribute__((unused)),
+				  unsigned *attributes __attribute__((unused)))
 {
 	static int _errseg_checked = 0;
 	static int _errseg_present = 0;
@@ -70,7 +70,7 @@ static int _errseg_target_present(struct cmd_context *cmd,
 #endif
 
 static int _errseg_modules_needed(struct dm_pool *mem,
-				  const struct lv_segment *seg __attribute((unused)),
+				  const struct lv_segment *seg __attribute__((unused)),
 				  struct dm_list *modules)
 {
 	if (!str_list_add(mem, modules, "error")) {

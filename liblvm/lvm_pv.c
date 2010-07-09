@@ -19,7 +19,7 @@
 
 const char *lvm_pv_get_uuid(const pv_t pv)
 {
-	char uuid[64] __attribute((aligned(8)));
+	char uuid[64] __attribute__((aligned(8)));
 
 	if (!id_write_format(&pv->id, uuid, sizeof(uuid))) {
 		log_error(INTERNAL_ERROR "Unable to convert uuid");

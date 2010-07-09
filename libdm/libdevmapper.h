@@ -244,7 +244,7 @@ int dm_is_dm_major(uint32_t major);
  * Release library resources
  */
 void dm_lib_release(void);
-void dm_lib_exit(void) __attribute((destructor));
+void dm_lib_exit(void) __attribute__((destructor));
 
 /*
  * Use NULL for all devices.

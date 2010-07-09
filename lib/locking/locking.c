@@ -127,7 +127,7 @@ void sigint_restore(void)
 	sigaction(SIGINT, &_oldhandler, NULL);
 }
 
-static void _block_signals(uint32_t flags __attribute((unused)))
+static void _block_signals(uint32_t flags __attribute__((unused)))
 {
 	sigset_t set;
 
@@ -396,7 +396,7 @@ static int _lock_vol(struct cmd_context *cmd, const char *resource,
 
 int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags)
 {
-	char resource[258] __attribute((aligned(8)));
+	char resource[258] __attribute__((aligned(8)));
 	lv_operation_t lv_op;
 
 	switch (flags & (LCK_SCOPE_MASK | LCK_TYPE_MASK)) {

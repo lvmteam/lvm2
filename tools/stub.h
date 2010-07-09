@@ -17,23 +17,23 @@
 	log_error("Command not implemented yet."); return ECMD_FAILED
 
 /*int e2fsadm(struct cmd_context *cmd, int argc, char **argv) unimplemented*/
-int lvmsadc(struct cmd_context *cmd __attribute((unused)),
-	    int argc __attribute((unused)),
-	    char **argv __attribute((unused)))
+int lvmsadc(struct cmd_context *cmd __attribute__((unused)),
+	    int argc __attribute__((unused)),
+	    char **argv __attribute__((unused)))
 {
 	unimplemented;
 }
 
-int lvmsar(struct cmd_context *cmd __attribute((unused)),
-	   int argc __attribute((unused)),
-	   char **argv __attribute((unused)))
+int lvmsar(struct cmd_context *cmd __attribute__((unused)),
+	   int argc __attribute__((unused)),
+	   char **argv __attribute__((unused)))
 {
 	unimplemented;
 }
 
-int pvdata(struct cmd_context *cmd __attribute((unused)),
-	   int argc __attribute((unused)),
-	   char **argv __attribute((unused)))
+int pvdata(struct cmd_context *cmd __attribute__((unused)),
+	   int argc __attribute__((unused)),
+	   char **argv __attribute__((unused)))
 {
 	log_error("There's no 'pvdata' command in LVM2.");
 	log_error("Use lvs, pvs, vgs instead; or use vgcfgbackup and read the text file backup.");

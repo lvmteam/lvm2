@@ -29,7 +29,7 @@ static void _pool_not_supported(const char *op)
 		  op);
 }
 
-static int _pool_can_handle(struct labeller *l __attribute((unused)), void *buf, uint64_t sector)
+static int _pool_can_handle(struct labeller *l __attribute__((unused)), void *buf, uint64_t sector)
 {
 
 	struct pool_disk pd;
@@ -50,7 +50,7 @@ static int _pool_can_handle(struct labeller *l __attribute((unused)), void *buf,
 	return 0;
 }
 
-static int _pool_write(struct label *label __attribute((unused)), void *buf __attribute((unused)))
+static int _pool_write(struct label *label __attribute__((unused)), void *buf __attribute__((unused)))
 {
 	_pool_not_supported("write");
 	return 0;
@@ -64,14 +64,14 @@ static int _pool_read(struct labeller *l, struct device *dev, void *buf,
 	return read_pool_label(&pl, l, dev, buf, label);
 }
 
-static int _pool_initialise_label(struct labeller *l __attribute((unused)), struct label *label)
+static int _pool_initialise_label(struct labeller *l __attribute__((unused)), struct label *label)
 {
 	strcpy(label->type, "POOL");
 
 	return 1;
 }
 
-static void _pool_destroy_label(struct labeller *l __attribute((unused)), struct label *label __attribute((unused)))
+static void _pool_destroy_label(struct labeller *l __attribute__((unused)), struct label *label __attribute__((unused)))
 {
 }
 

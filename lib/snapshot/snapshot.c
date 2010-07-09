@@ -32,7 +32,7 @@ static const char *_snap_name(const struct lv_segment *seg)
 }
 
 static int _snap_text_import(struct lv_segment *seg, const struct config_node *sn,
-			struct dm_hash_table *pv_hash __attribute((unused)))
+			struct dm_hash_table *pv_hash __attribute__((unused)))
 {
 	uint32_t chunk_size;
 	const char *org_name, *cow_name;
@@ -103,11 +103,11 @@ static int _snap_target_status_compatible(const char *type)
 }
 
 #ifdef DEVMAPPER_SUPPORT
-static int _snap_target_percent(void **target_state __attribute((unused)),
+static int _snap_target_percent(void **target_state __attribute__((unused)),
 				percent_range_t *percent_range,
-				struct dm_pool *mem __attribute((unused)),
-				struct cmd_context *cmd __attribute((unused)),
-				struct lv_segment *seg __attribute((unused)),
+				struct dm_pool *mem __attribute__((unused)),
+				struct cmd_context *cmd __attribute__((unused)),
+				struct lv_segment *seg __attribute__((unused)),
 				char *params, uint64_t *total_numerator,
 				uint64_t *total_denominator)
 {
@@ -141,7 +141,7 @@ static int _snap_target_percent(void **target_state __attribute((unused)),
 
 static int _snap_target_present(struct cmd_context *cmd,
 				const struct lv_segment *seg,
-				unsigned *attributes __attribute((unused)))
+				unsigned *attributes __attribute__((unused)))
 {
 	static int _snap_checked = 0;
 	static int _snap_merge_checked = 0;
@@ -249,7 +249,7 @@ static int _target_registered(struct lv_segment *seg, int *pending)
 
 /* FIXME This gets run while suspended and performs banned operations. */
 static int _target_set_events(struct lv_segment *seg,
-			      int events __attribute((unused)), int set)
+			      int events __attribute__((unused)), int set)
 {
 	char *dso, *uuid;
 	struct volume_group *vg = seg->lv->vg;
@@ -293,7 +293,7 @@ static int _target_unregister_events(struct lv_segment *seg,
 #endif
 
 static int _snap_modules_needed(struct dm_pool *mem,
-				const struct lv_segment *seg __attribute((unused)),
+				const struct lv_segment *seg __attribute__((unused)),
 				struct dm_list *modules)
 {
 	if (!str_list_add(mem, modules, "snapshot")) {
