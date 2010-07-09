@@ -879,7 +879,7 @@ static int _remove_mirror_images(struct logical_volume *lv,
 		 * have failed, we must replace with error target - it is
 		 * the only way to release the pending writes.
 		 */
-		if (lv_is_mirrored(detached_log_lv) &&
+		if (detached_log_lv && lv_is_mirrored(detached_log_lv) &&
 		    (detached_log_lv->status & PARTIAL_LV)) {
 			struct lv_segment *seg = first_seg(detached_log_lv);
 
@@ -896,8 +896,10 @@ static int _remove_mirror_images(struct logical_volume *lv,
 				seg_lv(seg, m)->status &= ~MIRROR_IMAGE;
 				lv_set_visible(seg_lv(seg, m));
 				if (!(lvl = dm_pool_alloc(lv->vg->cmd->mem,
-							  sizeof(*lvl))))
+							  sizeof(*lvl)))) {
+					log_error("dm_pool_alloc failed");
 					return 0;
+				}
 				lvl->lv = seg_lv(seg, m);
 				dm_list_add(&tmp_orphan_lvs, &lvl->list);
 			}
@@ -905,7 +907,7 @@ static int _remove_mirror_images(struct logical_volume *lv,
 			if (!replace_lv_with_error_segment(detached_log_lv)) {
 				log_error("Failed error target substitution for %s",
 					  detached_log_lv->name);
-				return_0;
+				return 0;
 			}
 
 			if (!vg_write(detached_log_lv->vg)) {
@@ -926,7 +928,7 @@ static int _remove_mirror_images(struct logical_volume *lv,
 
 			if (!resume_lv(detached_log_lv->vg->cmd,
 				       detached_log_lv))
-					return 0;
+					return_0;
 		}
 	}
 
