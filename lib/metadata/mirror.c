@@ -864,8 +864,71 @@ static int _remove_mirror_images(struct logical_volume *lv,
 		lv->status &= ~MIRROR_NOTSYNCED;
 		if (!replace_lv_with_error_segment(lv))
 			return_0;
-	} else if (remove_log)
+	} else if (remove_log) {
 		detached_log_lv = detach_mirror_log(mirrored_seg);
+
+		/*
+		 * The log may be removed due to repair.  If the log
+		 * happens to be a mirrored log, then there is a special
+		 * case we need to consider.  One of the images of a
+		 * mirrored log can fail followed shortly afterwards by
+		 * a failure of the second.  This means that the top-level
+		 * mirror is waiting for writes to the log to finish, but
+		 * they never will unless the mirrored log can be repaired
+		 * or replaced with an error target.  Since both the devices
+		 * have failed, we must replace with error target - it is
+		 * the only way to release the pending writes.
+		 */
+		if (lv_is_mirrored(detached_log_lv) &&
+		    (detached_log_lv->status & PARTIAL_LV)) {
+			struct lv_segment *seg = first_seg(detached_log_lv);
+
+			log_very_verbose("%s being removed due to failures",
+					 detached_log_lv->name);
+
+			/*
+			 * We are going to replace the mirror with an
+			 * error segment, but before we do, we must remember
+			 * all of the LVs that must be deleted later (i.e.
+			 * the sub-lv's)
+			 */
+			for (m = 0; m < seg->area_count; m++) {
+				seg_lv(seg, m)->status &= ~MIRROR_IMAGE;
+				lv_set_visible(seg_lv(seg, m));
+				if (!(lvl = dm_pool_alloc(lv->vg->cmd->mem,
+							  sizeof(*lvl))))
+					return 0;
+				lvl->lv = seg_lv(seg, m);
+				dm_list_add(&tmp_orphan_lvs, &lvl->list);
+			}
+
+			if (!replace_lv_with_error_segment(detached_log_lv)) {
+				log_error("Failed error target substitution for %s",
+					  detached_log_lv->name);
+				return_0;
+			}
+
+			if (!vg_write(detached_log_lv->vg)) {
+				log_error("intermediate VG write fail.");
+				return 0;
+			}
+
+			if (!suspend_lv(detached_log_lv->vg->cmd,
+					detached_log_lv)) {
+				log_error("Failed to suspend %s",
+					  detached_log_lv->name);
+				vg_revert(detached_log_lv->vg);
+				return 0;
+			}
+
+			if (!vg_commit(detached_log_lv->vg))
+				return_0;
+
+			if (!resume_lv(detached_log_lv->vg->cmd,
+				       detached_log_lv))
+					return 0;
+		}
+	}
 
 	/*
 	 * To successfully remove these unwanted LVs we need to
