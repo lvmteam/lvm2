@@ -22,8 +22,6 @@
 #include "activate.h"
 #include "lvm_misc.h"
 
-#include <string.h>
-
 static int _lv_check_handle(const lv_t lv, const int vg_writeable)
 {
 	if (!lv || !lv->vg || vg_read_error(lv->vg))

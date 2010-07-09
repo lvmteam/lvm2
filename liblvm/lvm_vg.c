@@ -15,16 +15,11 @@
 #include "lib.h"
 #include "lvm2app.h"
 #include "toolcontext.h"
-#include "metadata-exported.h"
+#include "metadata.h"
 #include "archiver.h"
 #include "locking.h"
-#include "lvm-string.h"
 #include "lvmcache.h"
-#include "metadata.h"
 #include "lvm_misc.h"
-
-#include <errno.h>
-#include <string.h>
 
 int lvm_vg_add_tag(vg_t vg, const char *tag)
 {
