@@ -69,6 +69,5 @@ void consume_pv_area(struct pv_area *area, uint32_t to_go);
 void reinsert_reduced_pv_area(struct pv_area *pva);
 
 uint32_t pv_maps_size(struct dm_list *pvms);
-void reinsert_reduced_pv_area(struct pv_area *pva);
 
 #endif
