@@ -1,7 +1,11 @@
 Version 2.02.71 -
 ===============================
+  Add log_error when strdup fails in {vg|lv}_change_tag().
+  Remove unnecessary includes in liblvm files.
   Use __attribute__ consistently throughout.
   Fix redundant declarations and always compile with -Wredundant-decls.
+  Pass metadataignore to pv_create, pv_setup, _mda_setup, and add_mda.
+  Init mda->list in mda_copy.
   Fix possible hang when all mirror images of a mirrored log fail.
   Do not log backtrace in valid _lv_resume() code path.
   Cleanup help strings in configure.in.
