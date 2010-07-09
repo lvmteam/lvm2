@@ -17,7 +17,7 @@
 
 static int vgremove_single(struct cmd_context *cmd, const char *vg_name,
 			   struct volume_group *vg,
-			   void *handle __attribute((unused)))
+			   void *handle __attribute__((unused)))
 {
 	unsigned lv_count, missing;
 	force_t force;

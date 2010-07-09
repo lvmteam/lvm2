@@ -62,13 +62,13 @@ static int _unknown_text_export(const struct lv_segment *seg, struct formatter *
 }
 
 #ifdef DEVMAPPER_SUPPORT
-static int _unknown_add_target_line(struct dev_manager *dm __attribute((unused)),
-				struct dm_pool *mem __attribute((unused)),
-				struct cmd_context *cmd __attribute((unused)),
-				void **target_state __attribute((unused)),
-				struct lv_segment *seg __attribute((unused)),
+static int _unknown_add_target_line(struct dev_manager *dm __attribute__((unused)),
+				struct dm_pool *mem __attribute__((unused)),
+				struct cmd_context *cmd __attribute__((unused)),
+				void **target_state __attribute__((unused)),
+				struct lv_segment *seg __attribute__((unused)),
 				struct dm_tree_node *node, uint64_t len,
-				uint32_t *pvmove_mirror_count __attribute((unused)))
+				uint32_t *pvmove_mirror_count __attribute__((unused)))
 {
 	return dm_tree_node_add_error_target(node, len);
 }

@@ -163,7 +163,7 @@ static struct volume_group *_build_vg(struct format_instance *fid,
 
 static struct volume_group *_format1_vg_read(struct format_instance *fid,
 				     const char *vg_name,
-				     struct metadata_area *mda __attribute((unused)))
+				     struct metadata_area *mda __attribute__((unused)))
 {
 	struct dm_pool *mem = dm_pool_create("lvm1 vg_read", VG_MEMPOOL_CHUNK);
 	struct dm_list pvs;
@@ -241,7 +241,7 @@ static int _flatten_vg(struct format_instance *fid, struct dm_pool *mem,
 }
 
 static int _format1_vg_write(struct format_instance *fid, struct volume_group *vg,
-		     struct metadata_area *mda __attribute((unused)))
+		     struct metadata_area *mda __attribute__((unused)))
 {
 	struct dm_pool *mem = dm_pool_create("lvm1 vg_write", VG_MEMPOOL_CHUNK);
 	struct dm_list pvds;
@@ -262,8 +262,8 @@ static int _format1_vg_write(struct format_instance *fid, struct volume_group *v
 }
 
 static int _format1_pv_read(const struct format_type *fmt, const char *pv_name,
-		    struct physical_volume *pv, struct dm_list *mdas __attribute((unused)),
-		    int scan_label_only __attribute((unused)))
+		    struct physical_volume *pv, struct dm_list *mdas __attribute__((unused)),
+		    int scan_label_only __attribute__((unused)))
 {
 	struct dm_pool *mem = dm_pool_create("lvm1 pv_read", 1024);
 	struct disk_list *dl;
@@ -296,13 +296,13 @@ static int _format1_pv_read(const struct format_type *fmt, const char *pv_name,
 static int _format1_pv_setup(const struct format_type *fmt,
 			     uint64_t pe_start, uint32_t extent_count,
 			     uint32_t extent_size,
-			     unsigned long data_alignment __attribute((unused)),
-			     unsigned long data_alignment_offset __attribute((unused)),
-			     int pvmetadatacopies __attribute((unused)),
-			     uint64_t pvmetadatasize __attribute((unused)),
-			     unsigned metadataignore __attribute((unused)),
-			     struct dm_list *mdas __attribute((unused)),
-			     struct physical_volume *pv, struct volume_group *vg __attribute((unused)))
+			     unsigned long data_alignment __attribute__((unused)),
+			     unsigned long data_alignment_offset __attribute__((unused)),
+			     int pvmetadatacopies __attribute__((unused)),
+			     uint64_t pvmetadatasize __attribute__((unused)),
+			     unsigned metadataignore __attribute__((unused)),
+			     struct dm_list *mdas __attribute__((unused)),
+			     struct physical_volume *pv, struct volume_group *vg __attribute__((unused)))
 {
 	if (pv->size > MAX_PV_SIZE)
 		pv->size--;
@@ -354,7 +354,7 @@ static int _format1_lv_setup(struct format_instance *fid, struct logical_volume 
 }
 
 static int _format1_pv_write(const struct format_type *fmt, struct physical_volume *pv,
-		     struct dm_list *mdas __attribute((unused)), int64_t sector __attribute((unused)))
+		     struct dm_list *mdas __attribute__((unused)), int64_t sector __attribute__((unused)))
 {
 	struct dm_pool *mem;
 	struct disk_list *dl;
@@ -439,7 +439,7 @@ static int _format1_vg_setup(struct format_instance *fid, struct volume_group *v
 	return 1;
 }
 
-static int _format1_segtype_supported(struct format_instance *fid __attribute((unused)),
+static int _format1_segtype_supported(struct format_instance *fid __attribute__((unused)),
 				      const struct segment_type *segtype)
 {
 	if (!(segtype->flags & SEG_FORMAT1_SUPPORT))
@@ -454,9 +454,9 @@ static struct metadata_area_ops _metadata_format1_ops = {
 };
 
 static struct format_instance *_format1_create_instance(const struct format_type *fmt,
-						const char *vgname __attribute((unused)),
-						const char *vgid __attribute((unused)),
-						void *private __attribute((unused)))
+						const char *vgname __attribute__((unused)),
+						const char *vgid __attribute__((unused)),
+						void *private __attribute__((unused)))
 {
 	struct format_instance *fid;
 	struct metadata_area *mda;
@@ -482,7 +482,7 @@ static struct format_instance *_format1_create_instance(const struct format_type
 	return fid;
 }
 
-static void _format1_destroy_instance(struct format_instance *fid __attribute((unused)))
+static void _format1_destroy_instance(struct format_instance *fid __attribute__((unused)))
 {
 }
 

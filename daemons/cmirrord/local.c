@@ -214,7 +214,7 @@ static int kernel_send_helper(void *data, uint16_t out_size)
  *
  * Returns: 0 on success, -EXXX on failure
  */
-static int do_local_work(void *data __attribute((unused)))
+static int do_local_work(void *data __attribute__((unused)))
 {
 	int r;
 	struct clog_request *rq;

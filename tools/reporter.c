@@ -16,7 +16,7 @@
 #include "tools.h"
 #include "report.h"
 
-static int _vgs_single(struct cmd_context *cmd __attribute((unused)),
+static int _vgs_single(struct cmd_context *cmd __attribute__((unused)),
 		       const char *vg_name, struct volume_group *vg,
 		       void *handle)
 {
@@ -41,7 +41,7 @@ static int _lvs_single(struct cmd_context *cmd, struct logical_volume *lv,
 	return ECMD_PROCESSED;
 }
 
-static int _segs_single(struct cmd_context *cmd __attribute((unused)),
+static int _segs_single(struct cmd_context *cmd __attribute__((unused)),
 			struct lv_segment *seg, void *handle)
 {
 	if (!report_object(handle, seg->lv->vg, seg->lv, NULL, seg, NULL)) {
@@ -133,7 +133,7 @@ static int _pvs_single(struct cmd_context *cmd, struct volume_group *vg,
 	int ret = ECMD_PROCESSED;
 	const char *vg_name = NULL;
 	struct volume_group *old_vg = vg;
-	char uuid[64] __attribute((aligned(8)));
+	char uuid[64] __attribute__((aligned(8)));
 
 	if (is_pv(pv) && !is_orphan(pv) && !vg) {
 		vg_name = pv_vg_name(pv);

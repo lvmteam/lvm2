@@ -183,7 +183,7 @@ static int _out_with_comment_file(struct formatter *f, const char *comment,
 }
 
 static int _out_with_comment_raw(struct formatter *f,
-				 const char *comment __attribute((unused)),
+				 const char *comment __attribute__((unused)),
 				 const char *fmt, va_list ap)
 {
 	int n;
@@ -413,7 +413,7 @@ static const char *_get_pv_name_from_uuid(struct formatter *f, char *uuid)
 
 static const char *_get_pv_name(struct formatter *f, struct physical_volume *pv)
 {
-	char uuid[64] __attribute((aligned(8)));
+	char uuid[64] __attribute__((aligned(8)));
 
 	if (!pv || !id_write_format(&pv->id, uuid, sizeof(uuid)))
 		return_NULL;

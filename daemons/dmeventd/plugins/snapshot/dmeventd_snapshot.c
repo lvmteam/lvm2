@@ -70,7 +70,7 @@ static void _parse_snapshot_params(char *params, struct snap_status *status)
 }
 
 void process_event(struct dm_task *dmt,
-		   enum dm_event_mask event __attribute((unused)),
+		   enum dm_event_mask event __attribute__((unused)),
 		   void **private)
 {
 	void *next = NULL;
@@ -113,9 +113,9 @@ out:
 }
 
 int register_device(const char *device,
-		    const char *uuid __attribute((unused)),
-		    int major __attribute((unused)),
-		    int minor __attribute((unused)),
+		    const char *uuid __attribute__((unused)),
+		    int major __attribute__((unused)),
+		    int minor __attribute__((unused)),
 		    void **private)
 {
 	int *percent_warning = (int*)private;
@@ -128,10 +128,10 @@ int register_device(const char *device,
 }
 
 int unregister_device(const char *device,
-		      const char *uuid __attribute((unused)),
-		      int major __attribute((unused)),
-		      int minor __attribute((unused)),
-		      void **unused __attribute((unused)))
+		      const char *uuid __attribute__((unused)),
+		      int major __attribute__((unused)),
+		      int minor __attribute__((unused)),
+		      void **unused __attribute__((unused)))
 {
 	syslog(LOG_INFO, "No longer monitoring snapshot %s\n",
 	       device);

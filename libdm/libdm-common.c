@@ -71,8 +71,8 @@ static int _udev_checking = 1;
  */
 
 static void _default_log_line(int level,
-	    const char *file __attribute((unused)),
-	    int line __attribute((unused)), int dm_errno, 
+	    const char *file __attribute__((unused)),
+	    int line __attribute__((unused)), int dm_errno, 
 	    const char *f, va_list ap)
 {
 	int use_stderr = level & _LOG_STDERR;
@@ -94,8 +94,8 @@ static void _default_log_line(int level,
 }
 
 static void _default_log_with_errno(int level,
-	    const char *file __attribute((unused)),
-	    int line __attribute((unused)), int dm_errno, 
+	    const char *file __attribute__((unused)),
+	    int line __attribute__((unused)), int dm_errno, 
 	    const char *f, ...)
 {
 	va_list ap;

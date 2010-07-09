@@ -148,7 +148,7 @@ struct pe_disk {
 
 struct uuid_list {
 	struct dm_list list;
-	char uuid[NAME_LEN] __attribute((aligned(8)));
+	char uuid[NAME_LEN] __attribute__((aligned(8)));
 };
 
 struct lvd_list {
@@ -161,11 +161,11 @@ struct disk_list {
 	struct dm_pool *mem;
 	struct device *dev;
 
-	struct pv_disk pvd __attribute((aligned(8)));
-	struct vg_disk vgd __attribute((aligned(8)));
-	struct dm_list uuids __attribute((aligned(8)));
-	struct dm_list lvds __attribute((aligned(8)));
-	struct pe_disk *extents __attribute((aligned(8)));
+	struct pv_disk pvd __attribute__((aligned(8)));
+	struct vg_disk vgd __attribute__((aligned(8)));
+	struct dm_list uuids __attribute__((aligned(8)));
+	struct dm_list lvds __attribute__((aligned(8)));
+	struct pe_disk *extents __attribute__((aligned(8)));
 };
 
 /*

@@ -22,8 +22,8 @@ int main(int argc, char **argv)
 	return lvm2_main(argc, argv);
 }
 
-int lvm_shell(struct cmd_context *cmd __attribute((unused)),
-	      struct cmdline_context *cmdline __attribute((unused)))
+int lvm_shell(struct cmd_context *cmd __attribute__((unused)),
+	      struct cmdline_context *cmdline __attribute__((unused)))
 {
 	return 0;
 }

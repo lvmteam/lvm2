@@ -56,16 +56,16 @@ static const int32_t _minusone32 = INT32_C(-1);
 /*
  * Data-munging functions to prepare each data type for display and sorting
  */
-static int _string_disp(struct dm_report *rh, struct dm_pool *mem __attribute((unused)),
+static int _string_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
 			struct dm_report_field *field,
-			const void *data, void *private __attribute((unused)))
+			const void *data, void *private __attribute__((unused)))
 {
 	return dm_report_field_string(rh, field, (const char **) data);
 }
 
-static int _dev_name_disp(struct dm_report *rh, struct dm_pool *mem __attribute((unused)),
+static int _dev_name_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
 			  struct dm_report_field *field,
-			  const void *data, void *private __attribute((unused)))
+			  const void *data, void *private __attribute__((unused)))
 {
 	const char *name = dev_name(*(const struct device * const *) data);
 
@@ -147,23 +147,23 @@ static int _format_pvsegs(struct dm_pool *mem, struct dm_report_field *field,
 	return 1;
 }
 
-static int _devices_disp(struct dm_report *rh __attribute((unused)), struct dm_pool *mem,
+static int _devices_disp(struct dm_report *rh __attribute__((unused)), struct dm_pool *mem,
 			 struct dm_report_field *field,
-			 const void *data, void *private __attribute((unused)))
+			 const void *data, void *private __attribute__((unused)))
 {
 	return _format_pvsegs(mem, field, data, 0);
 }
 
-static int _peranges_disp(struct dm_report *rh __attribute((unused)), struct dm_pool *mem,
+static int _peranges_disp(struct dm_report *rh __attribute__((unused)), struct dm_pool *mem,
 			  struct dm_report_field *field,
-			  const void *data, void *private __attribute((unused)))
+			  const void *data, void *private __attribute__((unused)))
 {
 	return _format_pvsegs(mem, field, data, 1);
 }
 
-static int _tags_disp(struct dm_report *rh __attribute((unused)), struct dm_pool *mem,
+static int _tags_disp(struct dm_report *rh __attribute__((unused)), struct dm_pool *mem,
 		      struct dm_report_field *field,
-		      const void *data, void *private __attribute((unused)))
+		      const void *data, void *private __attribute__((unused)))
 {
 	const struct dm_list *tags = (const struct dm_list *) data;
 	struct str_list *sl;
@@ -238,9 +238,9 @@ static int _pvfmt_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _string_disp(rh, mem, field, &pv->fmt->name, private);
 }
 
-static int _lvkmaj_disp(struct dm_report *rh, struct dm_pool *mem __attribute((unused)),
+static int _lvkmaj_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
 			struct dm_report_field *field,
-			const void *data, void *private __attribute((unused)))
+			const void *data, void *private __attribute__((unused)))
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 	struct lvinfo info;
@@ -251,9 +251,9 @@ static int _lvkmaj_disp(struct dm_report *rh, struct dm_pool *mem __attribute((u
 	return dm_report_field_int32(rh, field, &_minusone32);
 }
 
-static int _lvkmin_disp(struct dm_report *rh, struct dm_pool *mem __attribute((unused)),
+static int _lvkmin_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
 			struct dm_report_field *field,
-			const void *data, void *private __attribute((unused)))
+			const void *data, void *private __attribute__((unused)))
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 	struct lvinfo info;
@@ -280,9 +280,9 @@ static int _lv_mimage_in_sync(const struct logical_volume *lv)
 	return (percent_range == PERCENT_100) ? 1 : 0;
 }
 
-static int _lvstatus_disp(struct dm_report *rh __attribute((unused)), struct dm_pool *mem,
+static int _lvstatus_disp(struct dm_report *rh __attribute__((unused)), struct dm_pool *mem,
 			  struct dm_report_field *field,
-			  const void *data, void *private __attribute((unused)))
+			  const void *data, void *private __attribute__((unused)))
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 	struct lvinfo info;
@@ -386,9 +386,9 @@ out:
 	return 1;
 }
 
-static int _pvstatus_disp(struct dm_report *rh __attribute((unused)), struct dm_pool *mem,
+static int _pvstatus_disp(struct dm_report *rh __attribute__((unused)), struct dm_pool *mem,
 			  struct dm_report_field *field,
-			  const void *data, void *private __attribute((unused)))
+			  const void *data, void *private __attribute__((unused)))
 {
 	const uint32_t status = *(const uint32_t *) data;
 	char *repstr;
@@ -412,9 +412,9 @@ static int _pvstatus_disp(struct dm_report *rh __attribute((unused)), struct dm_
 	return 1;
 }
 
-static int _vgstatus_disp(struct dm_report *rh __attribute((unused)), struct dm_pool *mem,
+static int _vgstatus_disp(struct dm_report *rh __attribute__((unused)), struct dm_pool *mem,
 			  struct dm_report_field *field,
-			  const void *data, void *private __attribute((unused)))
+			  const void *data, void *private __attribute__((unused)))
 {
 	const struct volume_group *vg = (const struct volume_group *) data;
 	char *repstr;
@@ -455,10 +455,10 @@ static int _vgstatus_disp(struct dm_report *rh __attribute((unused)), struct dm_
 	return 1;
 }
 
-static int _segtype_disp(struct dm_report *rh __attribute((unused)),
-			 struct dm_pool *mem __attribute((unused)),
+static int _segtype_disp(struct dm_report *rh __attribute__((unused)),
+			 struct dm_pool *mem __attribute__((unused)),
 			 struct dm_report_field *field,
-			 const void *data, void *private __attribute((unused)))
+			 const void *data, void *private __attribute__((unused)))
 {
 	const struct lv_segment *seg = (const struct lv_segment *) data;
 
@@ -471,9 +471,9 @@ static int _segtype_disp(struct dm_report *rh __attribute((unused)),
 	return 1;
 }
 
-static int _loglv_disp(struct dm_report *rh, struct dm_pool *mem __attribute((unused)),
+static int _loglv_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
 		       struct dm_report_field *field,
-		       const void *data, void *private __attribute((unused)))
+		       const void *data, void *private __attribute__((unused)))
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 	struct lv_segment *seg;
@@ -491,7 +491,7 @@ static int _loglv_disp(struct dm_report *rh, struct dm_pool *mem __attribute((un
 
 static int _lvname_disp(struct dm_report *rh, struct dm_pool *mem,
 			struct dm_report_field *field,
-			const void *data, void *private __attribute((unused)))
+			const void *data, void *private __attribute__((unused)))
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 	char *repstr, *lvname;
@@ -525,7 +525,7 @@ static int _lvname_disp(struct dm_report *rh, struct dm_pool *mem,
 
 static int _lvpath_disp(struct dm_report *rh, struct dm_pool *mem,
 			struct dm_report_field *field,
-			const void *data, void *private __attribute((unused)))
+			const void *data, void *private __attribute__((unused)))
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 	char *repstr;
@@ -560,9 +560,9 @@ static int _origin_disp(struct dm_report *rh, struct dm_pool *mem,
 	return 1;
 }
 
-static int _movepv_disp(struct dm_report *rh, struct dm_pool *mem __attribute((unused)),
+static int _movepv_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
 			struct dm_report_field *field,
-			const void *data, void *private __attribute((unused)))
+			const void *data, void *private __attribute__((unused)))
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 	const char *name;
@@ -579,9 +579,9 @@ static int _movepv_disp(struct dm_report *rh, struct dm_pool *mem __attribute((u
 	return 1;
 }
 
-static int _convertlv_disp(struct dm_report *rh, struct dm_pool *mem __attribute((unused)),
+static int _convertlv_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
 			   struct dm_report_field *field,
-			   const void *data, void *private __attribute((unused)))
+			   const void *data, void *private __attribute__((unused)))
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 	const char *name = NULL;
@@ -605,7 +605,7 @@ static int _convertlv_disp(struct dm_report *rh, struct dm_pool *mem __attribute
 	return 1;
 }
 
-static int _size32_disp(struct dm_report *rh __attribute((unused)), struct dm_pool *mem,
+static int _size32_disp(struct dm_report *rh __attribute__((unused)), struct dm_pool *mem,
 			struct dm_report_field *field,
 			const void *data, void *private)
 {
@@ -633,7 +633,7 @@ static int _size32_disp(struct dm_report *rh __attribute((unused)), struct dm_po
 	return 1;
 }
 
-static int _size64_disp(struct dm_report *rh __attribute((unused)),
+static int _size64_disp(struct dm_report *rh __attribute__((unused)),
 			struct dm_pool *mem,
 			struct dm_report_field *field,
 			const void *data, void *private)
@@ -663,7 +663,7 @@ static int _size64_disp(struct dm_report *rh __attribute((unused)),
 
 static int _lvreadahead_disp(struct dm_report *rh, struct dm_pool *mem,
 			     struct dm_report_field *field,
-			     const void *data, void *private __attribute((unused)))
+			     const void *data, void *private __attribute__((unused)))
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 
@@ -714,10 +714,10 @@ static int _segstart_disp(struct dm_report *rh, struct dm_pool *mem,
 }
 
 static int _segstartpe_disp(struct dm_report *rh,
-			    struct dm_pool *mem __attribute((unused)),
+			    struct dm_pool *mem __attribute__((unused)),
 			    struct dm_report_field *field,
 			    const void *data,
-			    void *private __attribute((unused)))
+			    void *private __attribute__((unused)))
 {
 	const struct lv_segment *seg = (const struct lv_segment *) data;
 
@@ -835,9 +835,9 @@ static int _vgfree_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _size64_disp(rh, mem, field, &freespace, private);
 }
 
-static int _uuid_disp(struct dm_report *rh __attribute((unused)), struct dm_pool *mem,
+static int _uuid_disp(struct dm_report *rh __attribute__((unused)), struct dm_pool *mem,
 		      struct dm_report_field *field,
-		      const void *data, void *private __attribute((unused)))
+		      const void *data, void *private __attribute__((unused)))
 {
 	char *repstr = NULL;
 
@@ -853,16 +853,16 @@ static int _uuid_disp(struct dm_report *rh __attribute((unused)), struct dm_pool
 	return 1;
 }
 
-static int _uint32_disp(struct dm_report *rh, struct dm_pool *mem __attribute((unused)),
+static int _uint32_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
 			struct dm_report_field *field,
-			const void *data, void *private __attribute((unused)))
+			const void *data, void *private __attribute__((unused)))
 {
 	return dm_report_field_uint32(rh, field, data);
 }
 
-static int _int32_disp(struct dm_report *rh, struct dm_pool *mem __attribute((unused)),
+static int _int32_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
 		       struct dm_report_field *field,
-		       const void *data, void *private __attribute((unused)))
+		       const void *data, void *private __attribute__((unused)))
 {
 	return dm_report_field_int32(rh, field, data);
 }
@@ -1062,9 +1062,9 @@ static int _snapcount_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _uint32_disp(rh, mem, field, &count, private);
 }
 
-static int _snpercent_disp(struct dm_report *rh __attribute((unused)), struct dm_pool *mem,
+static int _snpercent_disp(struct dm_report *rh __attribute__((unused)), struct dm_pool *mem,
 			   struct dm_report_field *field,
-			   const void *data, void *private __attribute((unused)))
+			   const void *data, void *private __attribute__((unused)))
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 	struct lvinfo info;
@@ -1122,10 +1122,10 @@ static int _snpercent_disp(struct dm_report *rh __attribute((unused)), struct dm
 	return 1;
 }
 
-static int _copypercent_disp(struct dm_report *rh __attribute((unused)),
+static int _copypercent_disp(struct dm_report *rh __attribute__((unused)),
 			     struct dm_pool *mem,
 			     struct dm_report_field *field,
-			     const void *data, void *private __attribute((unused)))
+			     const void *data, void *private __attribute__((unused)))
 {
 	struct logical_volume *lv = (struct logical_volume *) data;
 	float percent;

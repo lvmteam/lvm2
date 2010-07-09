@@ -215,7 +215,7 @@ static struct clog_request *get_matching_rq(struct clog_request *rq,
 }
 
 static char rq_buffer[DM_ULOG_REQUEST_SIZE];
-static int handle_cluster_request(struct clog_cpg *entry __attribute((unused)),
+static int handle_cluster_request(struct clog_cpg *entry __attribute__((unused)),
 				  struct clog_request *rq, int server)
 {
 	int r = 0;
@@ -855,7 +855,7 @@ static int resend_requests(struct clog_cpg *entry)
 	return r;
 }
 
-static int do_cluster_work(void *data __attribute((unused)))
+static int do_cluster_work(void *data __attribute__((unused)))
 {
 	int r = SA_AIS_OK;
 	struct clog_cpg *entry, *tmp;
@@ -927,8 +927,8 @@ static int flush_startup_list(struct clog_cpg *entry)
 	return 0;
 }
 
-static void cpg_message_callback(cpg_handle_t handle, const struct cpg_name *gname __attribute((unused)),
-				 uint32_t nodeid, uint32_t pid __attribute((unused)),
+static void cpg_message_callback(cpg_handle_t handle, const struct cpg_name *gname __attribute__((unused)),
+				 uint32_t nodeid, uint32_t pid __attribute__((unused)),
 				 void *msg, size_t msg_len)
 {
 	int i;
@@ -1366,7 +1366,7 @@ static void cpg_leave_callback(struct clog_cpg *match,
 	}
 }
 
-static void cpg_config_callback(cpg_handle_t handle, const struct cpg_name *gname __attribute((unused)),
+static void cpg_config_callback(cpg_handle_t handle, const struct cpg_name *gname __attribute__((unused)),
 				const struct cpg_address *member_list,
 				size_t member_list_entries,
 				const struct cpg_address *left_list,

@@ -60,7 +60,7 @@ static struct cmdline_context _cmdline;
 
 /* Command line args */
 /* FIXME: Move static _the_args into cmd? */
-unsigned arg_count(const struct cmd_context *cmd __attribute((unused)), int a)
+unsigned arg_count(const struct cmd_context *cmd __attribute__((unused)), int a)
 {
 	return _the_args[a].count;
 }
@@ -70,7 +70,7 @@ unsigned arg_is_set(const struct cmd_context *cmd, int a)
 	return arg_count(cmd, a) ? 1 : 0;
 }
 
-const char *arg_value(struct cmd_context *cmd __attribute((unused)), int a)
+const char *arg_value(struct cmd_context *cmd __attribute__((unused)), int a)
 {
 	return _the_args[a].value;
 }
@@ -117,12 +117,12 @@ percent_t arg_percent_value(struct cmd_context *cmd, int a, const percent_t def)
 	return arg_count(cmd, a) ? _the_args[a].percent : def;
 }
 
-int arg_count_increment(struct cmd_context *cmd __attribute((unused)), int a)
+int arg_count_increment(struct cmd_context *cmd __attribute__((unused)), int a)
 {
 	return _the_args[a].count++;
 }
 
-int yes_no_arg(struct cmd_context *cmd __attribute((unused)), struct arg *a)
+int yes_no_arg(struct cmd_context *cmd __attribute__((unused)), struct arg *a)
 {
 	a->sign = SIGN_NONE;
 	a->percent = PERCENT_NONE;
@@ -143,7 +143,7 @@ int yes_no_arg(struct cmd_context *cmd __attribute((unused)), struct arg *a)
 	return 1;
 }
 
-int yes_no_excl_arg(struct cmd_context *cmd __attribute((unused)),
+int yes_no_excl_arg(struct cmd_context *cmd __attribute__((unused)),
 		    struct arg *a)
 {
 	a->sign = SIGN_NONE;
@@ -225,7 +225,7 @@ static int _get_int_arg(struct arg *a, char **ptr)
 }
 
 /* Size stored in sectors */
-static int _size_arg(struct cmd_context *cmd __attribute((unused)), struct arg *a, int factor)
+static int _size_arg(struct cmd_context *cmd __attribute__((unused)), struct arg *a, int factor)
 {
 	char *ptr;
 	int i;
@@ -307,7 +307,7 @@ int size_mb_arg(struct cmd_context *cmd, struct arg *a)
 	return _size_arg(cmd, a, 2048);
 }
 
-int int_arg(struct cmd_context *cmd __attribute((unused)), struct arg *a)
+int int_arg(struct cmd_context *cmd __attribute__((unused)), struct arg *a)
 {
 	char *ptr;
 
@@ -317,7 +317,7 @@ int int_arg(struct cmd_context *cmd __attribute((unused)), struct arg *a)
 	return 1;
 }
 
-int int_arg_with_sign(struct cmd_context *cmd __attribute((unused)), struct arg *a)
+int int_arg_with_sign(struct cmd_context *cmd __attribute__((unused)), struct arg *a)
 {
 	char *ptr;
 
@@ -327,7 +327,7 @@ int int_arg_with_sign(struct cmd_context *cmd __attribute((unused)), struct arg 
 	return 1;
 }
 
-int int_arg_with_sign_and_percent(struct cmd_context *cmd __attribute((unused)),
+int int_arg_with_sign_and_percent(struct cmd_context *cmd __attribute__((unused)),
 				  struct arg *a)
 {
 	char *ptr;
@@ -360,7 +360,7 @@ int int_arg_with_sign_and_percent(struct cmd_context *cmd __attribute((unused)),
 	return 1;
 }
 
-int minor_arg(struct cmd_context *cmd __attribute((unused)), struct arg *a)
+int minor_arg(struct cmd_context *cmd __attribute__((unused)), struct arg *a)
 {
 	char *ptr;
 
@@ -375,7 +375,7 @@ int minor_arg(struct cmd_context *cmd __attribute((unused)), struct arg *a)
 	return 1;
 }
 
-int major_arg(struct cmd_context *cmd __attribute((unused)), struct arg *a)
+int major_arg(struct cmd_context *cmd __attribute__((unused)), struct arg *a)
 {
 	char *ptr;
 
@@ -392,13 +392,13 @@ int major_arg(struct cmd_context *cmd __attribute((unused)), struct arg *a)
 	return 1;
 }
 
-int string_arg(struct cmd_context *cmd __attribute((unused)),
-	       struct arg *a __attribute((unused)))
+int string_arg(struct cmd_context *cmd __attribute__((unused)),
+	       struct arg *a __attribute__((unused)))
 {
 	return 1;
 }
 
-int tag_arg(struct cmd_context *cmd __attribute((unused)), struct arg *a)
+int tag_arg(struct cmd_context *cmd __attribute__((unused)), struct arg *a)
 {
 	char *pos = a->value;
 
@@ -413,7 +413,7 @@ int tag_arg(struct cmd_context *cmd __attribute((unused)), struct arg *a)
 	return 1;
 }
 
-int permission_arg(struct cmd_context *cmd __attribute((unused)), struct arg *a)
+int permission_arg(struct cmd_context *cmd __attribute__((unused)), struct arg *a)
 {
 	a->sign = SIGN_NONE;
 
@@ -429,7 +429,7 @@ int permission_arg(struct cmd_context *cmd __attribute((unused)), struct arg *a)
 	return 1;
 }
 
-int alloc_arg(struct cmd_context *cmd __attribute((unused)), struct arg *a)
+int alloc_arg(struct cmd_context *cmd __attribute__((unused)), struct arg *a)
 {
 	alloc_policy_t alloc;
 
@@ -452,7 +452,7 @@ int segtype_arg(struct cmd_context *cmd, struct arg *a)
 /*
  * Positive integer, zero or "auto".
  */
-int readahead_arg(struct cmd_context *cmd __attribute((unused)), struct arg *a)
+int readahead_arg(struct cmd_context *cmd __attribute__((unused)), struct arg *a)
 {
 	if (!strcasecmp(a->value, "auto")) {
 		a->ui_value = DM_READ_AHEAD_AUTO;
@@ -476,7 +476,7 @@ int readahead_arg(struct cmd_context *cmd __attribute((unused)), struct arg *a)
 /*
  * Non-zero, positive integer, "all", or "unmanaged"
  */
-int metadatacopies_arg(struct cmd_context *cmd __attribute((unused)),
+int metadatacopies_arg(struct cmd_context *cmd __attribute__((unused)),
 			 struct arg *a)
 {
 	if (!strncmp(cmd->command->name, "vg", 2)) {
@@ -763,9 +763,9 @@ static int _merge_synonym(struct cmd_context *cmd, int oldarg, int newarg)
 	return 1;
 }
 
-int version(struct cmd_context *cmd __attribute((unused)),
-	    int argc __attribute((unused)),
-	    char **argv __attribute((unused)))
+int version(struct cmd_context *cmd __attribute__((unused)),
+	    int argc __attribute__((unused)),
+	    char **argv __attribute__((unused)))
 {
 	char vsn[80];
 
@@ -890,7 +890,7 @@ static void _display_help(void)
 	}
 }
 
-int help(struct cmd_context *cmd __attribute((unused)), int argc, char **argv)
+int help(struct cmd_context *cmd __attribute__((unused)), int argc, char **argv)
 {
 	int ret = ECMD_PROCESSED;
 

@@ -19,7 +19,7 @@
 
 static int _pvchange_single(struct cmd_context *cmd, struct volume_group *vg,
 			    struct physical_volume *pv,
-			    void *handle __attribute((unused)))
+			    void *handle __attribute__((unused)))
 {
 	uint32_t orig_pe_alloc_count;
 	/* FIXME Next three only required for format1. */
@@ -29,7 +29,7 @@ static int _pvchange_single(struct cmd_context *cmd, struct volume_group *vg,
 	const char *pv_name = pv_dev_name(pv);
 	const char *tag = NULL;
 	const char *orig_vg_name;
-	char uuid[64] __attribute((aligned(8)));
+	char uuid[64] __attribute__((aligned(8)));
 
 	int allocatable = 0;
 	int tagarg = 0;

@@ -80,7 +80,7 @@ void rlocn_set_ignored(struct raw_locn *rlocn, unsigned mda_ignored)
  * NOTE: Currently there can be only one vg per text file.
  */
 
-static int _text_vg_setup(struct format_instance *fid __attribute((unused)),
+static int _text_vg_setup(struct format_instance *fid __attribute__((unused)),
 			  struct volume_group *vg)
 {
 	if (vg->extent_size & (vg->extent_size - 1)) {
@@ -108,7 +108,7 @@ static uint64_t _mda_total_sectors_raw(struct metadata_area *mda)
 /*
  * Check if metadata area belongs to vg
  */
-static int _mda_in_vg_raw(struct format_instance *fid __attribute((unused)),
+static int _mda_in_vg_raw(struct format_instance *fid __attribute__((unused)),
 			     struct volume_group *vg, struct metadata_area *mda)
 {
 	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
@@ -279,7 +279,7 @@ static int _pv_analyze_mda_raw (const struct format_type * fmt,
 
 
 
-static int _text_lv_setup(struct format_instance *fid __attribute((unused)),
+static int _text_lv_setup(struct format_instance *fid __attribute__((unused)),
 			  struct logical_volume *lv)
 {
 /******** FIXME Any LV size restriction?
@@ -396,7 +396,7 @@ static struct raw_locn *_find_vg_rlocn(struct device_area *dev_area,
 				       int *precommitted)
 {
 	size_t len;
-	char vgnamebuf[NAME_LEN + 2] __attribute((aligned(8)));
+	char vgnamebuf[NAME_LEN + 2] __attribute__((aligned(8)));
 	struct raw_locn *rlocn, *rlocn_precommitted;
 	struct lvmcache_info *info;
 
@@ -892,7 +892,7 @@ static struct volume_group *_vg_read_precommit_file(struct format_instance *fid,
 	return vg;
 }
 
-static int _vg_write_file(struct format_instance *fid __attribute((unused)),
+static int _vg_write_file(struct format_instance *fid __attribute__((unused)),
 			  struct volume_group *vg, struct metadata_area *mda)
 {
 	struct text_context *tc = (struct text_context *) mda->metadata_locn;
@@ -958,7 +958,7 @@ static int _vg_write_file(struct format_instance *fid __attribute((unused)),
 	return 1;
 }
 
-static int _vg_commit_file_backup(struct format_instance *fid __attribute((unused)),
+static int _vg_commit_file_backup(struct format_instance *fid __attribute__((unused)),
 				  struct volume_group *vg,
 				  struct metadata_area *mda)
 {
@@ -1025,8 +1025,8 @@ static int _vg_commit_file(struct format_instance *fid, struct volume_group *vg,
 	return 1;
 }
 
-static int _vg_remove_file(struct format_instance *fid __attribute((unused)),
-			   struct volume_group *vg __attribute((unused)),
+static int _vg_remove_file(struct format_instance *fid __attribute__((unused)),
+			   struct volume_group *vg __attribute__((unused)),
 			   struct metadata_area *mda)
 {
 	struct text_context *tc = (struct text_context *) mda->metadata_locn;
@@ -1105,8 +1105,8 @@ const char *vgname_from_mda(const struct format_type *fmt,
 	uint32_t wrap = 0;
 	const char *vgname = NULL;
 	unsigned int len = 0;
-	char buf[NAME_LEN + 1] __attribute((aligned(8)));
-	char uuid[64] __attribute((aligned(8)));
+	char buf[NAME_LEN + 1] __attribute__((aligned(8)));
+	char uuid[64] __attribute__((aligned(8)));
 	uint64_t buffer_size, current_usage;
 
 	if (mda_free_sectors)
@@ -1251,7 +1251,7 @@ static int _mda_setup(const struct format_type *fmt,
 		      int pvmetadatacopies, uint64_t pvmetadatasize,
 		      unsigned metadataignore, struct dm_list *mdas,
 		      struct physical_volume *pv,
-		      struct volume_group *vg __attribute((unused)))
+		      struct volume_group *vg __attribute__((unused)))
 {
 	uint64_t mda_adjustment, disk_size, alignment, alignment_offset;
 	uint64_t start1, mda_size1;	/* First area - start of disk */
@@ -1407,7 +1407,7 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 	struct lvmcache_info *info;
 	struct mda_context *mdac;
 	struct metadata_area *mda;
-	char buf[MDA_HEADER_SIZE] __attribute((aligned(8)));
+	char buf[MDA_HEADER_SIZE] __attribute__((aligned(8)));
 	struct mda_header *mdah = (struct mda_header *) buf;
 	uint64_t adjustment;
 	struct data_area_list *da;
@@ -1689,7 +1689,7 @@ static int _text_pv_read(const struct format_type *fmt, const char *pv_name,
 	return 1;
 }
 
-static void _text_destroy_instance(struct format_instance *fid __attribute((unused)))
+static void _text_destroy_instance(struct format_instance *fid __attribute__((unused)))
 {
 }
 
@@ -2106,7 +2106,7 @@ static int _get_config_disk_area(struct cmd_context *cmd,
 	}
 
 	if (!(dev_area.dev = device_from_pvid(cmd, &id, NULL))) {
-		char buffer[64] __attribute((aligned(8)));
+		char buffer[64] __attribute__((aligned(8)));
 
 		if (!id_write_format(&id, buffer, sizeof(buffer)))
 			log_error("Couldn't find device.");

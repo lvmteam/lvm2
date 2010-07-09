@@ -122,7 +122,7 @@ static char *_list_args(const char *text, int state)
 
 /* Custom completion function */
 static char **_completion(const char *text, int start_pos,
-			  int end_pos __attribute((unused)))
+			  int end_pos __attribute__((unused)))
 {
 	char **match_list = NULL;
 	int p = 0;

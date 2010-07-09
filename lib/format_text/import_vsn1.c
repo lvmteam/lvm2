@@ -156,9 +156,9 @@ static int _read_flag_config(struct config_node *n, uint64_t *status, int type)
 
 static int _read_pv(struct format_instance *fid, struct dm_pool *mem,
 		    struct volume_group *vg, struct config_node *pvn,
-		    struct config_node *vgn __attribute((unused)),
+		    struct config_node *vgn __attribute__((unused)),
 		    struct dm_hash_table *pv_hash,
-		    struct dm_hash_table *lv_hash __attribute((unused)),
+		    struct dm_hash_table *lv_hash __attribute__((unused)),
 		    unsigned *scan_done_once,
 		    unsigned report_missing_devices)
 {
@@ -194,7 +194,7 @@ static int _read_pv(struct format_instance *fid, struct dm_pool *mem,
 	 * Convert the uuid into a device.
 	 */
 	if (!(pv->dev = device_from_pvid(fid->fmt->cmd, &pv->id, scan_done_once))) {
-		char buffer[64] __attribute((aligned(8)));
+		char buffer[64] __attribute__((aligned(8)));
 
 		if (!id_write_format(&pv->id, buffer, sizeof(buffer)))
 			buffer[0] = '\0';
@@ -491,14 +491,14 @@ static int _read_segments(struct dm_pool *mem, struct volume_group *vg,
 	return 1;
 }
 
-static int _read_lvnames(struct format_instance *fid __attribute((unused)),
+static int _read_lvnames(struct format_instance *fid __attribute__((unused)),
 			 struct dm_pool *mem,
 			 struct volume_group *vg, struct config_node *lvn,
-			 struct config_node *vgn __attribute((unused)),
-			 struct dm_hash_table *pv_hash __attribute((unused)),
+			 struct config_node *vgn __attribute__((unused)),
+			 struct dm_hash_table *pv_hash __attribute__((unused)),
 			 struct dm_hash_table *lv_hash,
-			 unsigned *scan_done_once __attribute((unused)),
-			 unsigned report_missing_devices __attribute((unused)))
+			 unsigned *scan_done_once __attribute__((unused)),
+			 unsigned report_missing_devices __attribute__((unused)))
 {
 	struct logical_volume *lv;
 	struct config_node *cn;
@@ -563,14 +563,14 @@ static int _read_lvnames(struct format_instance *fid __attribute((unused)),
 	return link_lv_to_vg(vg, lv);
 }
 
-static int _read_lvsegs(struct format_instance *fid __attribute((unused)),
+static int _read_lvsegs(struct format_instance *fid __attribute__((unused)),
 			struct dm_pool *mem,
 			struct volume_group *vg, struct config_node *lvn,
-			struct config_node *vgn __attribute((unused)),
+			struct config_node *vgn __attribute__((unused)),
 			struct dm_hash_table *pv_hash,
 			struct dm_hash_table *lv_hash,
-			unsigned *scan_done_once __attribute((unused)),
-			unsigned report_missing_devices __attribute((unused)))
+			unsigned *scan_done_once __attribute__((unused)),
+			unsigned report_missing_devices __attribute__((unused)))
 {
 	struct logical_volume *lv;
 

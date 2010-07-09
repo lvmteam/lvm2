@@ -91,8 +91,8 @@ static int _check_device(struct cmd_context *cmd, struct device *dev)
 	return 1;
 }
 
-int lvmdiskscan(struct cmd_context *cmd, int argc __attribute((unused)),
-		char **argv __attribute((unused)))
+int lvmdiskscan(struct cmd_context *cmd, int argc __attribute__((unused)),
+		char **argv __attribute__((unused)))
 {
 	uint64_t size;
 	struct dev_iter *iter;

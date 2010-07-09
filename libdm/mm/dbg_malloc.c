@@ -231,8 +231,8 @@ void dm_bounds_check_debug(void)
 	}
 }
 
-void *dm_malloc_aux(size_t s, const char *file __attribute((unused)),
-		    int line __attribute((unused)))
+void *dm_malloc_aux(size_t s, const char *file __attribute__((unused)),
+		    int line __attribute__((unused)))
 {
 	if (s > 50000000) {
 		log_error("Huge memory allocation (size %" PRIsize_t

@@ -1435,7 +1435,7 @@ do {\
  *
  * Returns: 1 on success, 0 on failure
  */
-static int _emit_areas_line(struct dm_task *dmt __attribute((unused)),
+static int _emit_areas_line(struct dm_task *dmt __attribute__((unused)),
 			    struct load_segment *seg, char *params,
 			    size_t paramsize, int *pos)
 {

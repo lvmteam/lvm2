@@ -90,7 +90,7 @@ static void _free_cached_vgmetadata(struct lvmcache_vginfo *vginfo)
  */
 static void _store_metadata(struct volume_group *vg, unsigned precommitted)
 {
-	char uuid[64] __attribute((aligned(8)));
+	char uuid[64] __attribute__((aligned(8)));
 	struct lvmcache_vginfo *vginfo;
 	int size;
 
@@ -275,7 +275,7 @@ int lvmcache_verify_lock_order(const char *vgname)
 	return 1;
 }
 
-void lvmcache_lock_vgname(const char *vgname, int read_only __attribute((unused)))
+void lvmcache_lock_vgname(const char *vgname, int read_only __attribute__((unused)))
 {
 	if (!_lock_hash && !lvmcache_init()) {
 		log_error("Internal cache initialisation failed");
@@ -374,7 +374,7 @@ const struct format_type *fmt_from_vgname(const char *vgname, const char *vgid)
 	struct dm_list *devh, *tmp;
 	struct dm_list devs;
 	struct device_list *devl;
-	char vgid_found[ID_LEN + 1] __attribute((aligned(8)));
+	char vgid_found[ID_LEN + 1] __attribute__((aligned(8)));
 
 	if (!(vginfo = vginfo_from_vgname(vgname, vgid)))
 		return NULL;
@@ -411,7 +411,7 @@ const struct format_type *fmt_from_vgname(const char *vgname, const char *vgid)
 struct lvmcache_vginfo *vginfo_from_vgid(const char *vgid)
 {
 	struct lvmcache_vginfo *vginfo;
-	char id[ID_LEN + 1] __attribute((aligned(8)));
+	char id[ID_LEN + 1] __attribute__((aligned(8)));
 
 	if (!_vgid_hash || !vgid)
 		return NULL;
@@ -492,7 +492,7 @@ static int _vginfo_is_invalid(struct lvmcache_vginfo *vginfo)
 struct lvmcache_info *info_from_pvid(const char *pvid, int valid_only)
 {
 	struct lvmcache_info *info;
-	char id[ID_LEN + 1] __attribute((aligned(8)));
+	char id[ID_LEN + 1] __attribute__((aligned(8)));
 
 	if (!_pvid_hash || !pvid)
 		return NULL;
@@ -930,8 +930,8 @@ static int _insert_vginfo(struct lvmcache_vginfo *new_vginfo, const char *vgid,
 			  struct lvmcache_vginfo *primary_vginfo)
 {
 	struct lvmcache_vginfo *last_vginfo = primary_vginfo;
-	char uuid_primary[64] __attribute((aligned(8)));
-	char uuid_new[64] __attribute((aligned(8)));
+	char uuid_primary[64] __attribute__((aligned(8)));
+	char uuid_new[64] __attribute__((aligned(8)));
 	int use_new = 0;
 
 	/* Pre-existing VG takes precedence. Unexported VG takes precedence. */
@@ -1219,7 +1219,7 @@ int lvmcache_update_vg(struct volume_group *vg, unsigned precommitted)
 {
 	struct pv_list *pvl;
 	struct lvmcache_info *info;
-	char pvid_s[ID_LEN + 1] __attribute((aligned(8)));
+	char pvid_s[ID_LEN + 1] __attribute__((aligned(8)));
 
 	pvid_s[sizeof(pvid_s) - 1] = '\0';
 
@@ -1247,7 +1247,7 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 {
 	struct label *label;
 	struct lvmcache_info *existing, *info;
-	char pvid_s[ID_LEN + 1] __attribute((aligned(8)));
+	char pvid_s[ID_LEN + 1] __attribute__((aligned(8)));
 
 	if (!_vgname_hash && !lvmcache_init()) {
 		log_error("Internal cache initialisation failed");

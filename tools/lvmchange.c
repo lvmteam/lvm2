@@ -15,8 +15,8 @@
 
 #include "tools.h"
 
-int lvmchange(struct cmd_context *cmd __attribute((unused)),
-	      int argc __attribute((unused)), char **argv __attribute((unused)))
+int lvmchange(struct cmd_context *cmd __attribute__((unused)),
+	      int argc __attribute__((unused)), char **argv __attribute__((unused)))
 {
 	log_error("With LVM2 and the device mapper, this program is obsolete.");
 	return ECMD_FAILED;

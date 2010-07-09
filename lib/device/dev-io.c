@@ -678,7 +678,7 @@ int dev_write(struct device *dev, uint64_t offset, size_t len, void *buffer)
 int dev_set(struct device *dev, uint64_t offset, size_t len, int value)
 {
 	size_t s;
-	char buffer[4096] __attribute((aligned(8)));
+	char buffer[4096] __attribute__((aligned(8)));
 
 	if (!dev_open(dev))
 		return_0;

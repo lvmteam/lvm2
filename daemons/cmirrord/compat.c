@@ -21,7 +21,7 @@
  */
 #define COMPAT_OFFSET 256
 
-static void v5_data_endian_switch(struct clog_request *rq, int to_network __attribute((unused)))
+static void v5_data_endian_switch(struct clog_request *rq, int to_network __attribute__((unused)))
 {
 	int i, end;
 	int64_t *pi64;

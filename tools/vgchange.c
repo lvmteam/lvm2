@@ -476,7 +476,7 @@ static int _vgchange_tag(struct cmd_context *cmd, struct volume_group *vg,
 	return ECMD_PROCESSED;
 }
 
-static int _vgchange_uuid(struct cmd_context *cmd __attribute((unused)),
+static int _vgchange_uuid(struct cmd_context *cmd __attribute__((unused)),
 			  struct volume_group *vg)
 {
 	struct lv_list *lvl;
@@ -564,7 +564,7 @@ static int _vgchange_metadata_copies(struct cmd_context *cmd,
 
 static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 			   struct volume_group *vg,
-			   void *handle __attribute((unused)))
+			   void *handle __attribute__((unused)))
 {
 	int dmeventd_mode, r = ECMD_FAILED;
 

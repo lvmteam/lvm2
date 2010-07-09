@@ -320,14 +320,14 @@ unsigned long dev_md_stripe_width(const char *sysfs_dir, struct device *dev)
 
 #else
 
-int dev_is_md(struct device *dev __attribute((unused)),
-	      uint64_t *sb __attribute((unused)))
+int dev_is_md(struct device *dev __attribute__((unused)),
+	      uint64_t *sb __attribute__((unused)))
 {
 	return 0;
 }
 
-unsigned long dev_md_stripe_width(const char *sysfs_dir __attribute((unused)),
-				  struct device *dev  __attribute((unused)))
+unsigned long dev_md_stripe_width(const char *sysfs_dir __attribute__((unused)),
+				  struct device *dev  __attribute__((unused)))
 {
 	return 0UL;
 }
