@@ -723,7 +723,9 @@ int lv_change_tag(struct logical_volume *lv, const char *tag, int add_tag)
 
 	if (add_tag) {
 		if (!(tag_new = dm_pool_strdup(lv->vg->vgmem, tag))) {
-			return_0;
+			log_error("Failed to duplicate tag %s from %s/%s",
+				  tag, lv->vg->name, lv->name);
+			return 0;
 		}
 		if (!str_list_add(lv->vg->vgmem, &lv->tags, tag_new)) {
 			log_error("Failed to add tag %s to %s/%s",
@@ -751,7 +753,9 @@ int vg_change_tag(struct volume_group *vg, const char *tag, int add_tag)
 
 	if (add_tag) {
 		if (!(tag_new = dm_pool_strdup(vg->vgmem, tag))) {
-			return_0;
+			log_error("Failed to duplicate tag %s from %s",
+				  tag, vg->name);
+			return 0;
 		}
 		if (!str_list_add(vg->vgmem, &vg->tags, tag_new)) {
 			log_error("Failed to add tag %s to volume group %s",
