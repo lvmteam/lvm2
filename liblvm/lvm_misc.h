@@ -14,15 +14,7 @@
 #ifndef _LVM2APP_MISC_H
 #define _LVM2APP_MISC_H
 
-#include "lib.h"
-#include "lvm2app.h"
-#include "toolcontext.h"
-#include "metadata-exported.h"
-#include "archiver.h"
-#include "locking.h"
-#include "lvm-string.h"
-#include "lvmcache.h"
-#include "metadata.h"
+#include "libdevmapper.h"
 
 struct dm_list *tag_list_copy(struct dm_pool *p, struct dm_list *tag_list);
 
