@@ -929,8 +929,8 @@ int lvm_vg_remove_lv(lv_t lv);
  *
  * \memberof lv_t
  *
- * Memory is allocated using dm_malloc() and caller must free the memory
- * using dm_free().
+ * The memory allocated for the uuid is tied to the vg_t handle and will be
+ * released when lvm_vg_close() is called.
  *
  * \param   lv
  * Logical volume handle.
@@ -945,8 +945,8 @@ const char *lvm_lv_get_uuid(const lv_t lv);
  *
  * \memberof lv_t
  *
- * Memory is allocated using dm_malloc() and caller must free the memory
- * using dm_free().
+ * The memory allocated for the uuid is tied to the vg_t handle and will be
+ * released when lvm_vg_close() is called.
  *
  * \param   lv
  * Logical volume handle.
