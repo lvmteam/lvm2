@@ -263,7 +263,8 @@ static int _passes_activation_filter(struct cmd_context *cmd,
 
 	if (!(cn = find_config_tree_node(cmd, "activation/volume_list"))) {
 		log_verbose("activation/volume_list configuration setting "
-			    "not defined, checking host tags only");
+			    "not defined, checking only host tags for %s/%s",
+			    lv->vg->name, lv->name);
 
 		/* If no host tags defined, activate */
 		if (dm_list_empty(&cmd->tags))
