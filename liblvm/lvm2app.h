@@ -102,7 +102,7 @@ struct logical_volume;
  * This is the base handle that is needed to open and create objects such as
  * volume groups and logical volumes.  In addition, this handle provides a
  * context for error handling information, saving any error number (see
- * lvm_errno) and error message (see lvm_errmsg) that any function may
+ * lvm_errno()) and error message (see lvm_errmsg()) that any function may
  * generate.
  */
 typedef struct lvm *lvm_t;
@@ -174,7 +174,7 @@ typedef struct lvm_str_list {
  *
  * \memberof lvm_t
  *
- * Once all LVM operations have been completed, use lvm_quit to release
+ * Once all LVM operations have been completed, use lvm_quit() to release
  * the handle and any associated resources.
  *
  * \param system_dir
@@ -185,7 +185,7 @@ typedef struct lvm_str_list {
  * \return
  * A valid LVM handle is returned or NULL if there has been a
  * memory allocation problem. You have to check if an error occured
- * with the lvm_error function.
+ * with the lvm_error() function.
  */
 lvm_t lvm_init(const char *system_dir);
 
@@ -268,7 +268,7 @@ int lvm_errno(lvm_t libh);
  *
  * \memberof lvm_t
  *
- * This function may be used in conjunction with lvm_errno to obtain more
+ * This function may be used in conjunction with lvm_errno() to obtain more
  * specific error information for a function that is known to have failed.
  *
  * \param   libh
@@ -295,10 +295,10 @@ int lvm_scan(lvm_t libh);
  * \memberof lvm_t
  *
  * The memory allocated for the list is tied to the lvm_t handle and will be
- * released when lvm_quit is called.
+ * released when lvm_quit() is called.
  *
  * NOTE: This function normally does not scan devices in the system for LVM
- * metadata.  To scan the system, use lvm_scan.
+ * metadata.  To scan the system, use lvm_scan().
  *
  * To process the list, use the dm_list iterator functions.  For example:
  *      vg_t vg;
@@ -329,10 +329,10 @@ struct dm_list *lvm_list_vg_names(lvm_t libh);
  * \memberof lvm_t
  *
  * The memory allocated for the list is tied to the lvm_t handle and will be
- * released when lvm_quit is called.
+ * released when lvm_quit() is called.
  *
  * NOTE: This function normally does not scan devices in the system for LVM
- * metadata.  To scan the system, use lvm_scan.
+ * metadata.  To scan the system, use lvm_scan().
  *
  * \param   libh
  * Handle obtained from lvm_init().
@@ -352,7 +352,7 @@ struct dm_list *lvm_list_vg_uuids(lvm_t libh);
  * \memberof lvm_t
  *
  * The memory allocated for the name is tied to the lvm_t handle and will be
- * released when lvm_quit is called.
+ * released when lvm_quit() is called.
  *
  * NOTE: This function may scan devices in the system for LVM metadata.
  *
@@ -371,7 +371,7 @@ const char *lvm_vgname_from_pvid(lvm_t libh, const char *pvid);
  * \memberof lvm_t
  *
  * The memory allocated for the name is tied to the lvm_t handle and will be
- * released when lvm_quit is called.
+ * released when lvm_quit() is called.
  *
  * NOTE: This function may scan devices in the system for LVM metadata.
  *
@@ -443,7 +443,7 @@ vg_t lvm_vg_create(lvm_t libh, const char *vg_name);
  * \memberof vg_t
  *
  * \param   vg
- * VG handle obtained from lvm_vg_create or lvm_vg_open().
+ * VG handle obtained from lvm_vg_create() or lvm_vg_open().
  *
  * \return
  * A list of lvm_lv_list structures containing lv handles for this vg.
@@ -457,7 +457,7 @@ struct dm_list *lvm_vg_list_lvs(vg_t vg);
  * \memberof vg_t
  *
  * \param   vg
- * VG handle obtained from lvm_vg_create or lvm_vg_open().
+ * VG handle obtained from lvm_vg_create() or lvm_vg_open().
  *
  * \return
  * A list of lvm_pv_list structures containing pv handles for this vg.
@@ -475,7 +475,7 @@ struct dm_list *lvm_vg_list_pvs(vg_t vg);
  * with lvm_vg_close().
  *
  * \param   vg
- * VG handle obtained from lvm_vg_create or lvm_vg_open().
+ * VG handle obtained from lvm_vg_create() or lvm_vg_open().
  *
  * \return
  * 0 (success) or -1 (failure).
@@ -491,7 +491,7 @@ int lvm_vg_write(vg_t vg);
  * calling lvm_vg_write() to commit the removal to disk.
  *
  * \param   vg
- * VG handle obtained from lvm_vg_create or lvm_vg_open().
+ * VG handle obtained from lvm_vg_create() or lvm_vg_open().
  *
  * \return
  * 0 (success) or -1 (failure).
@@ -507,7 +507,7 @@ int lvm_vg_remove(vg_t vg);
  * handle.
  *
  * \param   vg
- * VG handle obtained from lvm_vg_create or lvm_vg_open().
+ * VG handle obtained from lvm_vg_create() or lvm_vg_open().
  *
  * \return
  * 0 (success) or -1 (failure).
@@ -526,10 +526,10 @@ int lvm_vg_close(vg_t vg);
  * If the device is not initialized for LVM use, it will be initialized
  * before adding to the VG.  Although some internal checks are done,
  * the caller should be sure the device is not in use by other subsystems
- * before calling lvm_vg_extend.
+ * before calling lvm_vg_extend().
  *
  * \param   vg
- * VG handle obtained from lvm_vg_create or lvm_vg_open().
+ * VG handle obtained from lvm_vg_create() or lvm_vg_open().
  *
  * \param   device
  * Absolute pathname of device to add to VG.
@@ -550,7 +550,7 @@ int lvm_vg_extend(vg_t vg, const char *device);
  * lvm_vg_close().
  *
  * \param   vg
- * VG handle obtained from lvm_vg_create or lvm_vg_open().
+ * VG handle obtained from lvm_vg_create() or lvm_vg_open().
  *
  * \param   device
  * Name of device to remove from VG.
@@ -571,7 +571,7 @@ int lvm_vg_reduce(vg_t vg, const char *device);
  * with lvm_vg_close().
  *
  * \param   vg
- * VG handle obtained from lvm_vg_create or lvm_vg_open().
+ * VG handle obtained from lvm_vg_create() or lvm_vg_open().
  *
  * \param   tag
  * Tag to add to the VG.
@@ -592,7 +592,7 @@ int lvm_vg_add_tag(vg_t vg, const char *tag);
  * with lvm_vg_close().
  *
  * \param   vg
- * VG handle obtained from lvm_vg_create or lvm_vg_open().
+ * VG handle obtained from lvm_vg_create() or lvm_vg_open().
  *
  * \param   tag
  * Tag to remove from VG.
@@ -613,7 +613,7 @@ int lvm_vg_remove_tag(vg_t vg, const char *tag);
  * handle with lvm_vg_close().
  *
  * \param   vg
- * VG handle obtained from lvm_vg_create or lvm_vg_open().
+ * VG handle obtained from lvm_vg_create() or lvm_vg_open().
  *
  * \param   new_size
  * New extent size in bytes.
@@ -629,7 +629,7 @@ int lvm_vg_set_extent_size(vg_t vg, uint32_t new_size);
  * \memberof vg_t
  *
  * \param   vg
- * VG handle obtained from lvm_vg_create or lvm_vg_open().
+ * VG handle obtained from lvm_vg_create() or lvm_vg_open().
  *
  * \return
  * 1 if the VG is clustered, 0 if not
@@ -642,7 +642,7 @@ uint64_t lvm_vg_is_clustered(vg_t vg);
  * \memberof vg_t
  *
  * \param   vg
- * VG handle obtained from lvm_vg_create or lvm_vg_open().
+ * VG handle obtained from lvm_vg_create() or lvm_vg_open().
  *
  * \return
  * 1 if the VG is exported, 0 if not
@@ -659,7 +659,7 @@ uint64_t lvm_vg_is_exported(vg_t vg);
  * group.
  *
  * \param   vg
- * VG handle obtained from lvm_vg_create or lvm_vg_open().
+ * VG handle obtained from lvm_vg_create() or lvm_vg_open().
  *
  * \return
  * 1 if the VG is PVs, 0 if not
@@ -676,7 +676,7 @@ uint64_t lvm_vg_is_partial(vg_t vg);
  * have changed from a prior query.
  *
  * \param   vg
- * VG handle obtained from lvm_vg_create or lvm_vg_open().
+ * VG handle obtained from lvm_vg_create() or lvm_vg_open().
  *
  * \return
  * Metadata sequence number.
@@ -692,7 +692,7 @@ uint64_t lvm_vg_get_seqno(const vg_t vg);
  * released when lvm_vg_close() is called.
  *
  * \param   vg
- * VG handle obtained from lvm_vg_create or lvm_vg_open().
+ * VG handle obtained from lvm_vg_create() or lvm_vg_open().
  *
  * \return
  * Copy of the uuid string.
@@ -708,7 +708,7 @@ const char *lvm_vg_get_uuid(const vg_t vg);
  * released when lvm_vg_close() is called.
  *
  * \param   vg
- * VG handle obtained from lvm_vg_create or lvm_vg_open().
+ * VG handle obtained from lvm_vg_create() or lvm_vg_open().
  *
  * \return
  * Copy of the name.
@@ -721,7 +721,7 @@ const char *lvm_vg_get_name(const vg_t vg);
  * \memberof vg_t
  *
  * \param   vg
- * VG handle obtained from lvm_vg_create or lvm_vg_open().
+ * VG handle obtained from lvm_vg_create() or lvm_vg_open().
  *
  * \return
  * Size in bytes.
@@ -734,7 +734,7 @@ uint64_t lvm_vg_get_size(const vg_t vg);
  * \memberof vg_t
  *
  * \param   vg
- * VG handle obtained from lvm_vg_create or lvm_vg_open().
+ * VG handle obtained from lvm_vg_create() or lvm_vg_open().
  *
  * \return
  * Free size in bytes.
@@ -747,7 +747,7 @@ uint64_t lvm_vg_get_free_size(const vg_t vg);
  * \memberof vg_t
  *
  * \param   vg
- * VG handle obtained from lvm_vg_create or lvm_vg_open().
+ * VG handle obtained from lvm_vg_create() or lvm_vg_open().
  *
  * \return
  * Extent size in bytes.
@@ -760,7 +760,7 @@ uint64_t lvm_vg_get_extent_size(const vg_t vg);
  * \memberof vg_t
  *
  * \param   vg
- * VG handle obtained from lvm_vg_create or lvm_vg_open().
+ * VG handle obtained from lvm_vg_create() or lvm_vg_open().
  *
  * \return
  * Extent count.
@@ -773,7 +773,7 @@ uint64_t lvm_vg_get_extent_count(const vg_t vg);
  * \memberof vg_t
  *
  * \param   vg
- * VG handle obtained from lvm_vg_create or lvm_vg_open().
+ * VG handle obtained from lvm_vg_create() or lvm_vg_open().
  *
  * \return
  * Free extent count.
@@ -786,7 +786,7 @@ uint64_t lvm_vg_get_free_extent_count(const vg_t vg);
  * \memberof vg_t
  *
  * \param   vg
- * VG handle obtained from lvm_vg_create or lvm_vg_open().
+ * VG handle obtained from lvm_vg_create() or lvm_vg_open().
  *
  * \return
  * Physical volume count.
@@ -799,7 +799,7 @@ uint64_t lvm_vg_get_pv_count(const vg_t vg);
  * \memberof vg_t
  *
  * \param   vg
- * VG handle obtained from lvm_vg_create or lvm_vg_open().
+ * VG handle obtained from lvm_vg_create() or lvm_vg_open().
  *
  * \return
  * Maximum number of physical volumes allowed in a volume group.
@@ -812,7 +812,7 @@ uint64_t lvm_vg_get_max_pv(const vg_t vg);
  * \memberof vg_t
  *
  * \param   vg
- * VG handle obtained from lvm_vg_create or lvm_vg_open().
+ * VG handle obtained from lvm_vg_create() or lvm_vg_open().
  *
  * \return
  * Maximum number of logical volumes allowed in a volume group.
@@ -858,7 +858,7 @@ struct dm_list *lvm_vg_get_tags(const vg_t vg);
  * as the API is developed.
  *
  * \param   vg
- * VG handle obtained from lvm_vg_create or lvm_vg_open().
+ * VG handle obtained from lvm_vg_create() or lvm_vg_open().
  *
  * \param   name
  * Name of logical volume to create.
@@ -945,7 +945,7 @@ const char *lvm_lv_get_uuid(const lv_t lv);
  *
  * \memberof lv_t
  *
- * The memory allocated for the uuid is tied to the vg_t handle and will be
+ * The memory allocated for the name is tied to the vg_t handle and will be
  * released when lvm_vg_close() is called.
  *
  * \param   lv
@@ -1115,7 +1115,7 @@ const char *lvm_pv_get_uuid(const pv_t pv);
  *
  * \memberof pv_t
  *
- * The memory allocated for the uuid is tied to the vg_t handle and will be
+ * The memory allocated for the name is tied to the vg_t handle and will be
  * released when lvm_vg_close() is called.
  *
  * \param   pv
