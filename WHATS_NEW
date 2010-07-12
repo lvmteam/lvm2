@@ -1,5 +1,6 @@
 Version 2.02.71 -
 ===============================
+  Add more verbose messages while checking volume_list and hosttags settings.
   Add log_error when strdup fails in {vg|lv}_change_tag().
   Remove unnecessary includes in liblvm files.
   Use __attribute__ consistently throughout.
