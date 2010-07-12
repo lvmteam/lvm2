@@ -262,6 +262,9 @@ static int _passes_activation_filter(struct cmd_context *cmd,
 	char path[PATH_MAX];
 
 	if (!(cn = find_config_tree_node(cmd, "activation/volume_list"))) {
+		log_verbose("activation/volume_list configuration setting "
+			    "not defined, checking host tags only");
+
 		/* If no host tags defined, activate */
 		if (dm_list_empty(&cmd->tags))
 			return 1;
@@ -271,11 +274,18 @@ static int _passes_activation_filter(struct cmd_context *cmd,
 		    str_list_match_list(&cmd->tags, &lv->vg->tags))
 			return 1;
 
+		log_verbose("No host tag matches %s/%s",
+			    lv->vg->name, lv->name);
+
 		/* Don't activate */
 		return 0;
 	}
 
 	for (cv = cn->v; cv; cv = cv->next) {
+		log_verbose("activation/volume_list configuration setting "
+			    "defined, checking the list to match %s/%s",
+			    lv->vg->name, lv->name);
+
 		if (cv->type != CFG_STRING) {
 			log_error("Ignoring invalid string in config file "
 				  "activation/volume_list");
@@ -329,6 +339,9 @@ static int _passes_activation_filter(struct cmd_context *cmd,
 		if (!strcmp(path, str))
 			return 1;
 	}
+
+	log_verbose("No item supplied in activation/volume_list configuration "
+		    "setting matches %s/%s", lv->vg->name, lv->name);
 
 	return 0;
 }
