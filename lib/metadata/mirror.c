@@ -1982,6 +1982,12 @@ int lv_split_mirror_images(struct logical_volume *lv, const char *split_name,
 {
 	int r;
 
+	if (find_lv_in_vg(lv->vg, split_name)) {
+		log_error("Logical Volume \"%s\" already exists in "
+			  "volume group \"%s\"", split_name, lv->vg->name);
+		return 0;
+	}
+
 	/* Can't split a mirror that is not in-sync... unless force? */
 	if (!_mirrored_lv_in_sync(lv)) {
 		log_error("Unable to split mirror that is not in-sync.");
