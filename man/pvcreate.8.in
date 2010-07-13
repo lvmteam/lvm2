@@ -118,9 +118,10 @@ with VGs containing large numbers of PVs.  But if you do this and
 then later use \fBvgsplit\fP you must ensure that each VG is still going 
 to have a suitable number of copies of the metadata after the split!
 .TP
-.I \-\-metadataignore y|n
-Ignore or un-ignore metadata areas on this physical volume.  The default
-is "n".  If metadata areas on a physical volume are ignored, LVM will
+.BR \-\-metadataignore " y|n"
+Ignore or un-ignore metadata areas on this physical volume.
+The default is "n".  This setting can be changed with \fBpvchange\fP.
+If metadata areas on a physical volume are ignored, LVM will
 not not store metadata in the metadata areas present on this Physical
 Volume.  Metadata areas cannot be created or extended after Logical
 Volumes have been allocated on the device. If you do not want to store

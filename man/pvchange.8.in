@@ -22,6 +22,12 @@ See \fBlvm\fP for common options.
 If PhysicalVolumePath is not specified on the command line all
 physical volumes are searched for and used.
 .TP
+.I \-\-metadataignore " y|n"
+Ignore or un-ignore metadata areas on this physical volume.
+If metadata areas on a physical volume are ignored, LVM will
+not not store metadata in the metadata areas present on this Physical
+Volume.
+.TP
 .I \-u, \-\-uuid
 Generate new random UUID for specified physical volumes.
 .TP
