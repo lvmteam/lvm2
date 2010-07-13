@@ -394,26 +394,6 @@ static int _unlock_mutex(void)
 	return pthread_mutex_unlock(&_global_mutex);
 }
 
-/* Store pid in pidfile. */
-static int _storepid(int lf)
-{
-	int len;
-	char pid[8];
-
-	if ((len = snprintf(pid, sizeof(pid), "%u\n", getpid())) < 0)
-		return 0;
-
-	if (len > (int) sizeof(pid))
-		len = (int) sizeof(pid);
-
-	if (write(lf, pid, (size_t) len) != len)
-		return 0;
-
-	fsync(lf);
-
-	return 1;
-}
-
 /* Check, if a device exists. */
 static int _fill_device_data(struct thread_status *ts)
 {
@@ -1541,23 +1521,6 @@ static void _exit_handler(int sig __attribute__((unused)))
 
 }
 
-static int _lock_pidfile(void)
-{
-	int lf;
-	char pidfile[] = DMEVENTD_PIDFILE;
-
-	if ((lf = open(pidfile, O_CREAT | O_RDWR, 0644)) < 0)
-		exit(EXIT_OPEN_PID_FAILURE);
-
-	if (flock(lf, LOCK_EX | LOCK_NB) < 0)
-		exit(EXIT_LOCKFILE_INUSE);
-
-	if (!_storepid(lf))
-		exit(EXIT_FAILURE);
-
-	return 0;
-}
-
 #ifdef linux
 /*
  * Protection against OOM killer if kernel supports it
@@ -1588,6 +1551,11 @@ static int _set_oom_adj(int val)
 	return 1;
 }
 #endif
+
+static void remove_lockfile(void)
+{
+	unlink(DMEVENTD_PIDFILE);
+}
 
 static void _daemonize(void)
 {
@@ -1626,12 +1594,8 @@ static void _daemonize(void)
 
 		/* Problem with child.  Determine what it is by exit code */
 		switch (WEXITSTATUS(child_status)) {
-		case EXIT_LOCKFILE_INUSE:
-			fprintf(stderr, "Another dmeventd daemon is already running\n");
-			break;
 		case EXIT_DESC_CLOSE_FAILURE:
 		case EXIT_DESC_OPEN_FAILURE:
-		case EXIT_OPEN_PID_FAILURE:
 		case EXIT_FIFO_FAILURE:
 		case EXIT_CHDIR_FAILURE:
 		default:
@@ -1717,7 +1681,10 @@ int main(int argc, char *argv[])
 
 	openlog("dmeventd", LOG_PID, LOG_DAEMON);
 
-	_lock_pidfile();		/* exits if failure */
+	if (dm_create_lockfile(DMEVENTD_PIDFILE) == 0)
+		exit(EXIT_FAILURE);
+
+	atexit(remove_lockfile);
 
 	/* Set the rest of the signals to cause '_exit_now' to be set */
 	signal(SIGINT, &_exit_handler);

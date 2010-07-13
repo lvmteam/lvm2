@@ -9,6 +9,9 @@
 /* Path to clvmd binary. */
 #undef CLVMD_PATH
 
+/* Path to clvmd pidfile. */
+#undef CLVMD_PIDFILE
+
 /* Path to cmirrord pidfile. */
 #undef CMIRRORD_PIDFILE
 
