@@ -1,5 +1,6 @@
 Version 2.02.71 -
 ===============================
+  Fix suspend/resume logic for LVs resulting from splitting a mirror.
   Switch cmirrord and clvmd to use dm_create_lockfile.
   Allow clvmd pidfile to be configurable.
   Update comments about memory handling in lvm2app.h.
