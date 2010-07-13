@@ -386,7 +386,8 @@ to store on each physical volume.
 Currently it can be set to 0, 1 or 2.  The default is 1.  
 If set to 2, one copy is placed at the beginning of the disk
 and the other is placed at the end.
-It can be overridden on the command line with \fB--pvmetadatacopies\fP.
+It can be overridden on the command line with \fB--pvmetadatacopies\fP
+(see \fBpvcreate\fP).
 If creating a volume group with just one physical volume, it's a
 good idea to have 2 copies.  If creating a large volume group with
 many physical volumes, you may decide that 3 copies of the metadata
@@ -411,8 +412,9 @@ metadata format, this states whether metadata areas should be ignored.
 The default is "n".  If metadata areas on a physical volume are ignored,
 LVM will not not store metadata in the metadata areas present on newly
 created Physical Volumes.  The option can be overridden on the command
-line with \fB--metadataignore\fP.  Metadata areas cannot be created
-or extended after Logical Volumes have been allocated on the device.
+line with \fB--metadataignore\fP (See \fBpvcreate\fP and \fBpvchange\fP).
+Metadata areas cannot be created or extended after Logical Volumes have
+been allocated on the device.
 If you do not want to store metadata on this device, it is still wise
 always to allocate a metadata area (use a non-zero value for
 \fB--pvmetadatacopies\fP) in case you need it in the future and to use
@@ -422,13 +424,14 @@ this option to instruct LVM2 to ignore it.
 LVM2 metadata format, this is the default number of copies of metadata
 desired across all the physical volumes in the volume group.  If set to
 a non-zero value, LVM will automatically set or clear the metadataignore
-flag on the physical volumes (see \fBpvchange --metadataignore\fP) in order
-to achieve the desired number of metadata copies.  An LVM command that
-adds or removes physical volumes (for example, \fBvgextend\fP, \fBvgreduce\fP,
-\fBvgsplit\fP, or \fBvgmerge\fP), may cause LVM to automatically set or
-clear the metadataignore flags.  Also, if physical volumes go missing or
-reappear, or a new number of copies is explicitly set (see
-\fBvgchange --vgmetadatacopies\fP), LVM may adjust the metadataignore flags.
+flag on the physical volumes (see \fBpvcreate\fP and \fBpvchange\fP
+\fB--metadataignore\fP) in order to achieve the desired number of metadata
+copies.  An LVM command that adds or removes physical volumes (for example,
+\fBvgextend\fP, \fBvgreduce\fP, \fBvgsplit\fP, or \fBvgmerge\fP), may cause
+LVM to automatically set or clear the metadataignore flags.  Also, if
+physical volumes go missing or reappear, or a new number of copies is
+explicitly set (see \fBvgchange --vgmetadatacopies\fP), LVM may adjust
+the metadataignore flags.
 Set \fBvgmetadatacopies\fP to 0 instructs LVM not to set or clear the
 metadataignore flags automatically.  You may set a value larger than the
 sum of all metadata areas on all physical volumes.  The value can
