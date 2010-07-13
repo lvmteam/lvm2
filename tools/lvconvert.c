@@ -861,7 +861,8 @@ static int _lvconvert_mirrors_parse_params(struct cmd_context *cmd,
 	else if (lp->mirrors_sign == SIGN_PLUS)
 		lp->mirrors = *old_mimage_count + lp->mirrors;
 	else if (lp->mirrors_sign == SIGN_MINUS)
-		lp->mirrors = *old_mimage_count - lp->mirrors;
+		lp->mirrors = (*old_mimage_count > lp->mirrors) ?
+			*old_mimage_count - lp->mirrors: 0;
 	else
 		lp->mirrors += 1;
 
@@ -876,8 +877,8 @@ static int _lvconvert_mirrors_parse_params(struct cmd_context *cmd,
 
 	/* Did the user try to subtract more legs than available? */
 	if (lp->mirrors < 1) {
-		log_error("Logical volume %s only has %" PRIu32 " mirrors.",
-			  lv->name, *old_mimage_count);
+		log_error("Unable to reduce images by specified amount - only %d in %s",
+			  *old_mimage_count, lv->name);
 		return 0;
 	}
 
@@ -1561,7 +1562,9 @@ static int _lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 			stack;
 			return ECMD_FAILED;
 		}
-	} else if (arg_count(cmd, mirrors_ARG) || (lv->status & MIRRORED)) {
+	} else if (arg_count(cmd, mirrors_ARG) ||
+		   arg_count(cmd, splitmirrors_ARG) ||
+		   (lv->status & MIRRORED)) {
 		if (!archive(lv->vg)) {
 			stack;
 			return ECMD_FAILED;
