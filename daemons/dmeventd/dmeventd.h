@@ -56,10 +56,10 @@ struct dm_event_fifos {
 
 /*      EXIT_SUCCESS             0 -- stdlib.h */
 /*      EXIT_FAILURE             1 -- stdlib.h */
-#define EXIT_LOCKFILE_INUSE      2
+/*      EXIT_LOCKFILE_INUSE      2 -- obsoleted */
 #define EXIT_DESC_CLOSE_FAILURE  3
 #define EXIT_DESC_OPEN_FAILURE   4
-#define EXIT_OPEN_PID_FAILURE    5
+/*      EXIT_OPEN_PID_FAILURE    5 -- obsoleted */
 #define EXIT_FIFO_FAILURE        6
 #define EXIT_CHDIR_FAILURE       7
 

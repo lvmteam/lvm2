@@ -980,6 +980,14 @@ int dm_fclose(FILE *stream);
 int dm_asprintf(char **buf, const char *format, ...)
     __attribute__ ((format(printf, 2, 3)));
 
+/*
+ * create lockfile (pidfile) - create and lock a lock file
+ * @lockfile: location of lock file
+ *
+ * Returns: 1 on success, 0 otherwise, errno is handled internally
+ */
+int dm_create_lockfile(const char* lockfile);
+
 /*********************
  * regular expressions
  *********************/

@@ -65,49 +65,6 @@ static void parent_exit_handler(int sig __attribute__((unused)))
 	exit_now = 1;
 }
 
-/*
- * create_lockfile - create and lock a lock file
- * @lockfile: location of lock file
- *
- * Returns: 0 on success, -1 otherwise
- */
-static int create_lockfile(const char *lockfile)
-{
-	int fd;
-	struct flock lock;
-	char buffer[50];
-
-	if((fd = open(lockfile, O_CREAT | O_WRONLY,
-		      (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH))) < 0)
-		return -errno;
-
-	lock.l_type = F_WRLCK;
-	lock.l_start = 0;
-	lock.l_whence = SEEK_SET;
-	lock.l_len = 0;
-
-	if (fcntl(fd, F_SETLK, &lock) < 0) {
-		close(fd);
-		return -errno;
-	}
-
-	if (ftruncate(fd, 0) < 0) {
-		close(fd);
-		return -errno;
-	}
-
-	sprintf(buffer, "%d\n", getpid());
-
-	/* FIXME Handle other non-error returns without aborting */
-	if (write(fd, buffer, strlen(buffer)) < strlen(buffer)){
-		close(fd);
-		unlink(lockfile);
-		return -errno;
-	}
-
-	return 0;
-}
-
 static void sig_handler(int sig)
 {
 	/* FIXME Races - don't touch signal_mask here. */
@@ -160,6 +117,11 @@ static void process_signals(void)
 			process_signal(x);
 		}
 	}
+}
+
+static void remove_lockfile(void)
+{
+	unlink(CMIRRORD_PIDFILE);
 }
 
 /*
@@ -226,8 +188,10 @@ static void daemonize(void)
 
 	LOG_OPEN("cmirrord", LOG_PID, LOG_DAEMON);
 
-	if (create_lockfile(CMIRRORD_PIDFILE))
+	if (dm_create_lockfile(CMIRRORD_PIDFILE) == 0)
 		exit(EXIT_LOCKFILE);
+
+	atexit(remove_lockfile);
 
 	/* FIXME Replace with sigaction. (deprecated) */
 	signal(SIGINT, &sig_handler);

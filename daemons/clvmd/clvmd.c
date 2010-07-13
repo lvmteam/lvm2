@@ -271,6 +271,11 @@ static const char *decode_cmd(unsigned char cmdl)
 	return buf;
 }
 
+static void remove_lockfile(void)
+{
+	unlink(CLVMD_PIDFILE);
+}
+
 int main(int argc, char *argv[])
 {
 	int local_sock;
@@ -369,6 +374,14 @@ int main(int argc, char *argv[])
 	if (debug != DEBUG_STDERR) {
 		be_daemon(start_timeout);
 	}
+
+	/* Create pidfile */
+	if (dm_create_lockfile(CLVMD_PIDFILE) == 0) {
+		DEBUGLOG("clvmd: unable to create lockfile\n");
+		exit(1);
+	}
+
+	atexit(remove_lockfile);
 
 	DEBUGLOG("CLVMD started\n");
 

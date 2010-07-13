@@ -601,6 +601,18 @@ if test x$CLVMD = xall; then
 fi
 
 ################################################################################
+dnl -- clvmd pidfile
+if test "x$CLVMD" != xnone; then
+	AC_ARG_WITH(clvmd-pidfile,
+		    AC_HELP_STRING([--with-clvmd-pidfile=PATH],
+				   [clvmd pidfile [[/var/run/clvmd.pid]]]),
+		    CLVMD_PIDFILE=$withval,
+		    CLVMD_PIDFILE="/var/run/clvmd.pid")
+	AC_DEFINE_UNQUOTED(CLVMD_PIDFILE, ["$CLVMD_PIDFILE"],
+			   [Path to clvmd pidfile.])
+fi
+
+################################################################################
 dnl -- Build cluster mirror log daemon
 AC_MSG_CHECKING(whether to build cluster mirror log daemon)
 AC_ARG_ENABLE(cmirrord,
