@@ -1002,7 +1002,7 @@ static int _lvconvert_mirrors_aux(struct cmd_context *cmd,
 						  lv->le_count,
 						  lp->region_size);
 
-	if (!operable_pvs)
+	if (!operable_pvs && !lp->keep_mimages)
 		operable_pvs = lp->pvh;
 
 	seg = first_seg(lv);
