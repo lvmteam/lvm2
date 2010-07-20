@@ -1,0 +1,30 @@
+<table width="95%" cellspacing="2" cellpadding="5" border="0" class="stripes">
+  <tr><th>Tests passed</th><th>Tests failed</th></tr>
+  <tr><td class="pass"><%= total_passed %></td><td <%= total_failed == 0 ? "" : "class=\"fail\""%>><%= total_failed %></td></tr>
+</table>
+
+<% schedules.each do |s| %>
+<h3><%= s.dir.sub('./unit-tests/', '') %></h3>
+<table width="95%" cellspacing="2" cellpadding="5" border="0" class="stripes">
+<tr><th>Test</th><th>Result</th><th>Definitely lost</th><th>indirectly lost</th><th>possibly lost</th><th>still reachable</th><tr>
+
+<% s.schedules.each do |t| %>
+<tr>
+  <td>
+  <a href="memcheck_<%= mangle(t.desc) %>.html"><%= t.desc %></a>
+  </td>
+  <% if t.status.success? %>
+  <td class="pass">pass</td>
+  <% else %>
+  <td class="fail">fail</td>
+  <% end %>
+ 
+  <% stats = extract_stats(t) %>
+  <td><%= stats.definitely_lost %></td>
+  <td><%= stats.indirectly_lost %></td>
+  <td><%= stats.possibly_lost %></td>
+  <td><%= stats.reachable %></td>
+</tr>
+<% end %>
+</table>
+<% end %>
