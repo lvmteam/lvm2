@@ -135,7 +135,8 @@ RUBY=ruby1.9 -Ireport-generators/lib -Ireport-generators/test
 .PHONEY: unit-test ruby-test test-programs
 
 test-programs:
-	$(MAKE) unit-tests/regex
+	cd unit-tests/regex && $(MAKE)
+	cd unit-tests/datastruct && $(MAKE)
 
 unit-test: test-programs
 	$(RUBY) report-generators/unit_test.rb $(shell find . -name TESTS)
