@@ -1,0 +1,1 @@
+dfa matching:$TEST_TOOL ./matcher_t dev_patterns < devices.list > matcher_t.output && diff -u matcher_t.expected matcher_t.output
