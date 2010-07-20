@@ -1,0 +1,37 @@
+<table width="95%" cellspacing="2" cellpadding="5" border="0" class="stripes">
+<tr><th>Test</th><th>Result</th></tr>
+<tr>
+  <td>
+  <%= t.desc %>
+  </td>
+  <% if t.status.success? %>
+  <td class="pass">pass</td>
+  <% else %>
+  <td class="fail">fail</td>
+  <% end %>
+</tr>
+</table>
+
+<table width="95%" cellspacing="2" cellpadding="5" border="0" class="stripes">
+<tr><th>Command line</th></tr>
+<tr>
+  <td>
+  <pre>
+<%= t.command_line %>
+  </pre>
+  </td>
+</tr>
+</table>
+
+
+<table width="95%" cellspacing="2" cellpadding="5" border="0" class="stripes">
+<tr><th>Output</th></tr>
+<tr>
+  <td>
+  <pre>
+<%= t.output %>
+  </pre>
+  </td>
+</tr>
+</table>
+

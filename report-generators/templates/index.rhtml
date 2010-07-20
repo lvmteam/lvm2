@@ -1,0 +1,17 @@
+<table width="95%" cellspacing="2" cellpadding="5" border="0" class="stripes">
+<tr><th>Report</th><th>Generation time</th></tr>
+<% [:unit_test, :memcheck].each do |sym| %>
+<% r = reports.get_report(sym) %>
+<tr>
+  <td>
+    <% if r.path.file? %>
+    <a href="<%= r.path.to_s.gsub(/^reports\//, '') %>"><%= r.short_desc %></a>
+    <% else %>
+    <%= r.short_desc %>
+    <% end %>
+  </td>
+  <td><%= safe_mtime(r) %></td>
+</tr>
+<% end %>
+</table>
+
