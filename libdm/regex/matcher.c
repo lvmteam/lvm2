@@ -363,3 +363,126 @@ int dm_regex_match(struct dm_regex *regex, const char *s)
 	/* subtract 1 to get back to zero index */
 	return r - 1;
 }
+
+/*
+ * The next block of code concerns calculating a fingerprint for the dfa.
+ *
+ * We're not calculating a minimal dfa in _calculate_state (maybe a future
+ * improvement).  As such it's possible that two non-isomorphic dfas
+ * recognise the same language.  This can only really happen if you start
+ * with equivalent, but different regexes (for example the simplifier in
+ * parse_rx.c may have changed).
+ *
+ * The code is inefficient; repeatedly searching a singly linked list for
+ * previously seen nodes.  Not worried since this is test code.
+ */
+struct node_list {
+        unsigned node_id;
+        struct dfa_state *node;
+        struct node_list *next;
+};
+
+struct printer {
+        struct dm_pool *mem;
+        struct node_list *pending;
+        struct node_list *processed;
+        unsigned next_index;
+};
+
+static uint32_t randomise_(uint32_t n)
+{
+        /* 2^32 - 5 */
+        uint32_t const prime = (~0) - 4;
+        return n * prime;
+}
+
+static int seen_(struct node_list *n, struct dfa_state *node, uint32_t *i)
+{
+        while (n) {
+                if (n->node == node) {
+                        *i = n->node_id;
+                        return 1;
+                }
+                n = n->next;
+        }
+
+        return 0;
+}
+
+/*
+ * Push node if it's not been seen before, returning a unique index.
+ */
+static uint32_t push_node_(struct printer *p, struct dfa_state *node)
+{
+        uint32_t i;
+        if (seen_(p->pending, node, &i) ||
+            seen_(p->processed, node, &i))
+                return i;
+        else {
+                struct node_list *n = dm_pool_alloc(p->mem, sizeof(*n));
+                assert(n);
+                n->node_id = p->next_index++;
+                n->node = node;
+                n->next = p->pending;
+                p->pending = n;
+                return n->node_id;
+        }
+}
+
+/*
+ * Pop the front node, and fill out it's previously assigned index.
+ */
+static struct dfa_state *pop_node_(struct printer *p)
+{
+        struct dfa_state *node = NULL;
+
+        if (p->pending) {
+                struct node_list *n = p->pending;
+                p->pending = n->next;
+                n->next = p->processed;
+                p->processed = n;
+
+                node = n->node;
+        }
+
+        return node;
+}
+
+static uint32_t combine_(uint32_t n1, uint32_t n2)
+{
+        return ((n1 << 8) | (n1 >> 24)) ^ randomise_(n2);
+}
+
+static uint32_t fingerprint_(struct printer *p)
+{
+        int c;
+        uint32_t result = 0;
+        struct dfa_state *node;
+
+        while ((node = pop_node_(p))) {
+                result = combine_(result, node->final);
+                for (c = 0; c < 256; c++)
+                        result = combine_(result,
+                                          push_node_(p, node->lookup[c]));
+        }
+
+        return result;
+}
+
+uint32_t dm_regex_fingerprint(struct dm_regex *regex)
+{
+        uint32_t result;
+        struct printer p;
+        struct dm_pool *mem = dm_pool_create("regex fingerprint", 1024);
+
+        assert(mem);
+        p.mem = mem;
+        p.pending = NULL;
+        p.processed = NULL;
+        p.next_index = 0;
+
+        push_node_(&p, regex->start);
+        result = fingerprint_(&p);
+        dm_pool_destroy(mem);
+        return result;
+}
