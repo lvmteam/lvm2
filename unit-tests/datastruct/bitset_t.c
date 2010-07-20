@@ -64,12 +64,46 @@ static void test_equal(struct dm_pool *mem)
         }
 }
 
+static void test_and(struct dm_pool *mem)
+{
+        dm_bitset_t bs1 = dm_bitset_create(mem, NR_BITS);
+        dm_bitset_t bs2 = dm_bitset_create(mem, NR_BITS);
+        dm_bitset_t bs3 = dm_bitset_create(mem, NR_BITS);
+
+        int i, j;
+        for (i = 0, j = 1; i < NR_BITS; i += j, j++) {
+                dm_bit_set(bs1, i);
+                dm_bit_set(bs2, i);
+        }
+
+        dm_bit_and(bs3, bs1, bs2);
+
+        assert(dm_bitset_equal(bs1, bs2));
+        assert(dm_bitset_equal(bs1, bs3));
+        assert(dm_bitset_equal(bs2, bs3));
+
+        dm_bit_clear_all(bs1);
+        dm_bit_clear_all(bs2);
+
+        for (i = 0; i < NR_BITS; i++) {
+                if (i % 2)
+                        dm_bit_set(bs1, i);
+                else
+                        dm_bit_set(bs2, i);
+        }
+
+        dm_bit_and(bs3, bs1, bs2);
+        for (i = 0; i < NR_BITS; i++)
+                assert(!dm_bit(bs3, i));
+}
+
 int main(int argc, char **argv)
 {
         typedef void (*test_fn)(struct dm_pool *);
         static test_fn tests[] = {
                 test_get_next,
-                test_equal
+                test_equal,
+                test_and
         };
 
         int i;
