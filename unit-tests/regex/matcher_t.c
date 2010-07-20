@@ -135,6 +135,7 @@ int main(int argc, char **argv)
 		goto err;
 	}
 
+        printf("fingerprint: %x\n", dm_regex_fingerprint(scanner));
 	_scan_input(scanner, regex);
 	_free_regex(regex, nregex);
 

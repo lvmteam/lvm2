@@ -1007,6 +1007,14 @@ struct dm_regex *dm_regex_create(struct dm_pool *mem, const char **patterns,
  */
 int dm_regex_match(struct dm_regex *regex, const char *s);
 
+/*
+ * This is useful for regression testing only.  The idea is if two
+ * fingerprints are different, then the two dfas are certainly not
+ * isomorphic.  If two fingerprints _are_ the same then it's very likely
+ * that the dfas are isomorphic.
+ */
+uint32_t dm_regex_fingerprint(struct dm_regex *regex);
+
 /*********************
  * reporting functions
  *********************/
