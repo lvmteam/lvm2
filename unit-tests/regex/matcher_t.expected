@@ -1,4 +1,3 @@
-Matcher built with 23 dfa states
 fingerprint: 352b6c4f
 /dev/loop/0 : loop/[0-9]+
 /dev/loop/1 : loop/[0-9]+
