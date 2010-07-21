@@ -35,7 +35,7 @@ cleanup_md() {
     # sleeps offer hack to defeat: 'md: md127 still in use'
     # see: https://bugzilla.redhat.com/show_bug.cgi?id=509908#c25
     sleep 2
-    mdadm --stop $mddev
+    mdadm --stop $mddev || true
     if [ -b "$mddev" ]; then
         # mdadm doesn't always cleanup the device node
 	sleep 2
