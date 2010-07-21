@@ -284,7 +284,7 @@ static struct rx_node *_node(struct dm_pool *mem, int type,
 	struct rx_node *n = dm_pool_zalloc(mem, sizeof(*n));
 
 	if (n) {
-		if (!(n->charset = dm_bitset_create(mem, 256))) {
+		if (type == CHARSET && !(n->charset = dm_bitset_create(mem, 256))) {
 			dm_pool_free(mem, n);
 			return NULL;
 		}
