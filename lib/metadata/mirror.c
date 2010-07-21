@@ -81,6 +81,36 @@ int lv_is_mirrored(const struct logical_volume *lv)
 }
 
 /*
+ * cluster_mirror_is_available
+ *
+ * Check if the proper kernel module and log daemon are running.
+ * Caller should check for 'vg_is_clustered(lv->vg)' before making
+ * this call.
+ *
+ * Returns: 1 if available, 0 otherwise
+ */
+static int cluster_mirror_is_available(struct logical_volume *lv)
+{
+       unsigned attr = 0;
+       struct cmd_context *cmd = lv->vg->cmd;
+       const struct segment_type *segtype;
+
+       if (!(segtype = get_segtype_from_string(cmd, "mirror")))
+               return_0;
+
+       if (!segtype->ops->target_present)
+               return_0;
+
+       if (!segtype->ops->target_present(lv->vg->cmd, NULL, &attr))
+               return_0;
+
+       if (!(attr & MIRROR_LOG_CLUSTERED))
+               return 0;
+
+       return 1;
+}
+
+/*
  * Returns the number of mirrors of the LV
  */
 uint32_t lv_mirror_count(const struct logical_volume *lv)
@@ -1937,6 +1967,12 @@ int lv_add_mirrors(struct cmd_context *cmd, struct logical_volume *lv,
 {
 	if (!mirrors && !log_count) {
 		log_error("No conversion is requested");
+		return 0;
+	}
+
+	if (vg_is_clustered(lv->vg) &&  !(lv->status & ACTIVATE_EXCL) &&
+	    !cluster_mirror_is_available(lv)) {
+		log_error("Shared cluster mirrors are not available.");
 		return 0;
 	}
 

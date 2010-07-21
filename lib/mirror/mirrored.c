@@ -519,6 +519,19 @@ static int _mirrored_target_present(struct cmd_context *cmd,
 					_mirror_attributes |= MIRROR_LOG_CLUSTERED;
 			} else if (module_present(cmd, "log-userspace"))
 				_mirror_attributes |= MIRROR_LOG_CLUSTERED;
+
+                        if (!(_mirror_attributes & MIRROR_LOG_CLUSTERED))
+                                log_verbose("Cluster mirror log module is not available");
+
+                        /*
+                         * The cluster mirror log daemon must be running,
+                         * otherwise, the kernel module will fail to make
+                         * contact.
+                         */
+                        if (!dm_daemon_is_running(CMIRRORD_PIDFILE)) {
+                                log_verbose("Cluster mirror log daemon is not running");
+                                _mirror_attributes &= ~MIRROR_LOG_CLUSTERED;
+                        }
 		}
 		*attributes = _mirror_attributes;
 	}

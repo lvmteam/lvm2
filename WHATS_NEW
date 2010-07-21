@@ -1,5 +1,6 @@
 Version 2.02.71 -
 ===============================
+  Check if cluster log daemon is running before allowing cmirror create.
   Check if LV with specified name already exists when splitting a mirror.
   Fix suspend/resume logic for LVs resulting from splitting a mirror.
   Switch cmirrord and clvmd to use dm_create_lockfile.
