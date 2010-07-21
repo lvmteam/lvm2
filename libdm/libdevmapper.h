@@ -1012,6 +1012,8 @@ int dm_regex_match(struct dm_regex *regex, const char *s);
  * fingerprints are different, then the two dfas are certainly not
  * isomorphic.  If two fingerprints _are_ the same then it's very likely
  * that the dfas are isomorphic.
+ *
+ * This function must be called before any matching is done.
  */
 uint32_t dm_regex_fingerprint(struct dm_regex *regex);
 
