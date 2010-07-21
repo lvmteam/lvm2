@@ -528,10 +528,15 @@ static int _mirrored_target_present(struct cmd_context *cmd,
                          * otherwise, the kernel module will fail to make
                          * contact.
                          */
+#ifdef CMIRRORD_PIDFILE
                         if (!dm_daemon_is_running(CMIRRORD_PIDFILE)) {
                                 log_verbose("Cluster mirror log daemon is not running");
                                 _mirror_attributes &= ~MIRROR_LOG_CLUSTERED;
                         }
+#else
+			log_verbose("Cluster mirror log daemon not included in build");
+			_mirror_attributes &= ~MIRROR_LOG_CLUSTERED;
+#endif
 		}
 		*attributes = _mirror_attributes;
 	}
