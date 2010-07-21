@@ -1,1 +1,2 @@
 dfa matching:$TEST_TOOL ./matcher_t dev_patterns < devices.list > matcher_t.output && diff -u matcher_t.expected matcher_t.output
+dfa matching:$TEST_TOOL ./matcher_t random_regexes < /dev/null > matcher_t.output && diff -u matcher_t.expected2 matcher_t.output
