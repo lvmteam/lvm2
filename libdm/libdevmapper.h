@@ -988,6 +988,13 @@ int dm_asprintf(char **buf, const char *format, ...)
  */
 int dm_create_lockfile(const char* lockfile);
 
+/*
+ * Query whether a daemon is running based on its lockfile
+ *
+ * Returns: 1 if running, 0 if not
+ */
+int dm_daemon_is_running(const char* lockfile);
+
 /*********************
  * regular expressions
  *********************/
