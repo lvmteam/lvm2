@@ -1,8 +1,10 @@
 Version 2.02.71 -
 ===============================
+  Clarify help text for vg_mda_count.
   Check if cluster log daemon is running before allowing cmirror create.
   Check if LV with specified name already exists when splitting a mirror.
   Fix suspend/resume logic for LVs resulting from splitting a mirror.
+  Update pvcreate, {pv|vg}change, and lvm.conf man pages about metadataignore.
   Switch cmirrord and clvmd to use dm_create_lockfile.
   Allow clvmd pidfile to be configurable.
   Update comments about memory handling in lvm2app.h.
