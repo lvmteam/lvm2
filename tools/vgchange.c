@@ -160,9 +160,9 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd,
 
 static int _vgchange_monitoring(struct cmd_context *cmd, struct volume_group *vg)
 {
-	int active, monitored;
+	int monitored;
 
-	if ((active = lvs_in_vg_activated(vg)) &&
+	if (lvs_in_vg_activated(vg) &&
 	    dmeventd_monitor_mode() != DMEVENTD_MONITOR_IGNORE) {
 		monitored = _monitor_lvs_in_vg(cmd, vg, dmeventd_monitor_mode());
 		log_print("%d logical volume(s) in volume group "
