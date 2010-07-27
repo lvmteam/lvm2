@@ -1,5 +1,6 @@
 Version 2.02.71 -
 ===============================
+  Make vgck warn about missing PVs.
   Clarify help text for vg_mda_count.
   Check if cluster log daemon is running before allowing cmirror create.
   Check if LV with specified name already exists when splitting a mirror.
