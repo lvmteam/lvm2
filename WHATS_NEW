@@ -1,5 +1,5 @@
-Version 2.02.71 -
-===============================
+Version 2.02.71 - 27th July 2010
+================================
   Document LVM fault handling in doc/lvm_fault_handling.txt.
   Make vgck warn about missing PVs.
   Clarify help text for vg_mda_count.

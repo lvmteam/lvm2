@@ -1,5 +1,5 @@
-Version 1.02.53 -
-===============================
+Version 1.02.53 - 27th July 2010
+================================
   Switch dmeventd to use dm_create_lockfile and drop duplicate code.
   Add dm_create_lockfile to libdm to handle pidfiles for all daemons.
   Replace lookup with next in struct dfa_state & calculate states on demand.
