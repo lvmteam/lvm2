@@ -5,7 +5,7 @@
 prepare_devs 4
 pvcreate $dev1 $dev2
 pvcreate --metadatacopies 0 $dev3 $dev4
-vgcreate $vg $dev1 $dev2 $dev3 $dev4
+vgcreate -c n $vg $dev1 $dev2 $dev3 $dev4
 
 lvcreate -l1 -n linear1 $vg $dev1
 lvcreate -l1 -n linear2 $vg $dev2
