@@ -2,6 +2,10 @@ Version 1.02.53 -
 ===============================
   Switch dmeventd to use dm_create_lockfile and drop duplicate code.
   Add dm_create_lockfile to libdm to handle pidfiles for all daemons.
+  Replace lookup with next in struct dfa_state & calculate states on demand.
+  Improve the regex matcher, reducing the number of charset nodes used.
+  Add dm_regex_fingerprint to facilitate regex testing.
+  Skip ffs(0) in _test_word in bitset functions.
   Use "nowatch" udev rule for inappropriate devices.
 
 Version 1.02.52 - 6th July 2010
