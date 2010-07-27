@@ -104,21 +104,29 @@ int dm_create_lockfile(const char *lockfile)
 	lock.l_start = 0;
 	lock.l_whence = SEEK_SET;
 	lock.l_len = 0;
+retry_fcntl:
 	if (fcntl(fd, F_SETLK, &lock) < 0) {
-		if (errno != EACCES && errno != EAGAIN)
+		switch (errno) {
+		case EINTR:
+			goto retry_fcntl;
+			break;
+		case EACCES:
+		case EAGAIN:
 			log_error("Cannot lock lockfile [%s], error was [%s]",
 				   lockfile, strerror(errno));
-		else
+			break;
+		default:
 			log_error("process is already running");
+		}
 
-		goto fail;
+		goto fail_close;
 	}
 
 	if (ftruncate(fd, 0) < 0) {
 		log_error("Cannot truncate pidfile [%s], error was [%s]",
 			  lockfile, strerror(errno));
 
-		goto fail;
+		goto fail_close_unlink;
 	}
 
 	memset(buffer, 0, sizeof(buffer));
@@ -131,7 +139,7 @@ int dm_create_lockfile(const char *lockfile)
 		log_error("Cannot write pid to pidfile [%s], error was [%s]",
 			  lockfile, strerror(errno));
 
-		goto fail;
+		goto fail_close_unlink;
 	}
 
 	if ((write_out == 0) || (write_out < bufferlen)) {
@@ -139,29 +147,30 @@ int dm_create_lockfile(const char *lockfile)
 			  "[%" PRIsize_t "] bytes, expected [%" PRIsize_t "]\n",
 			  lockfile, write_out, bufferlen);
 
-		goto fail;
+		goto fail_close_unlink;
 	}
 
 	if ((value = fcntl(fd, F_GETFD, 0)) < 0) {
 		log_error("Cannot get close-on-exec flag from pidfile [%s], "
 			  "error was [%s]", lockfile, strerror(errno));
 
-		goto fail;
+		goto fail_close_unlink;
 	}
 	value |= FD_CLOEXEC;
 	if (fcntl(fd, F_SETFD, value) < 0) {
 		log_error("Cannot set close-on-exec flag from pidfile [%s], "
 			  "error was [%s]", lockfile, strerror(errno));
 
-		goto fail;
+		goto fail_close_unlink;
 	}
 
 	return 1;
 
-fail:
-	if (close(fd))
-		stack;
+fail_close_unlink:
 	if (unlink(lockfile))
+		stack;
+fail_close:
+	if (close(fd))
 		stack;
 
 	return 0;
