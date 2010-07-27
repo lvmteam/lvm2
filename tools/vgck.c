@@ -31,6 +31,12 @@ static int vgck_single(struct cmd_context *cmd __attribute__((unused)),
 		return ECMD_FAILED;
 	}
 
+	if (vg_missing_pv_count(vg)) {
+		log_error("The volume group is missing %d physical volumes.",
+			  vg_missing_pv_count(vg));
+		return ECMD_FAILED;
+	}
+
 	return ECMD_PROCESSED;
 }
 

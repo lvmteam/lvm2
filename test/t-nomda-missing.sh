@@ -1,15 +1,11 @@
 #!/bin/bash
 
-# Test activation behaviour with devices missing.
-# - snapshots and their origins are only activated together; if one fails, both
-#   fail
-# - partial mirrors are not activated (but maybe they should? maybe we should
-#   instead lvconvert --repair them?)
-# - linear LVs with bits missing are not activated
-
 . ./test-utils.sh
 
-prepare_vg 4
+prepare_devs 4
+pvcreate $dev1 $dev2
+pvcreate --metadatacopies 0 $dev3 $dev4
+vgcreate $vg $dev1 $dev2 $dev3 $dev4
 
 lvcreate -l1 -n linear1 $vg $dev1
 lvcreate -l1 -n linear2 $vg $dev2
