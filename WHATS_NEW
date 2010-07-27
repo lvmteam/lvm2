@@ -1,8 +1,12 @@
 Version 2.02.71 -
 ===============================
+  Document LVM fault handling in doc/lvm_fault_handling.txt.
   Make vgck warn about missing PVs.
   Clarify help text for vg_mda_count.
   Check if cluster log daemon is running before allowing cmirror create.
+  Add unit-tests dir.
+  Add configure --enable-testing and reports and report-generators dirs.
+  Correct LV list order used by lvconvert when splitting a mirror.
   Check if LV with specified name already exists when splitting a mirror.
   Fix suspend/resume logic for LVs resulting from splitting a mirror.
   Update pvcreate, {pv|vg}change, and lvm.conf man pages about metadataignore.
@@ -14,9 +18,9 @@ Version 2.02.71 -
   Remove unnecessary includes in liblvm files.
   Use __attribute__ consistently throughout.
   Fix redundant declarations and always compile with -Wredundant-decls.
+  Fix possible hang when all mirror images of a mirrored log fail.
   Pass metadataignore to pv_create, pv_setup, _mda_setup, and add_mda.
   Init mda->list in mda_copy.
-  Fix possible hang when all mirror images of a mirrored log fail.
   Do not log backtrace in valid _lv_resume() code path.
   Cleanup help strings in configure.in.
   Prompt if metadataignore with vgextend or pvchange would adjust vg_mda_copies.
