@@ -1127,6 +1127,13 @@ if test "$BUILD_DMEVENTD" = yes; then
 			   [Path to dmeventd binary.])
 fi
 
+AH_TEMPLATE(DEFAULT_RUN_DIR, [Name of default run directory.])
+AC_ARG_WITH(default-run-dir,
+	    [  --with-default-run-dir=DIR       Default run directory [[/var/run/lvm]] ],
+	    [ DEFAULT_RUN_DIR="$withval" ],
+	    [ DEFAULT_RUN_DIR="/var/run/lvm" ])
+AC_DEFINE_UNQUOTED(DEFAULT_RUN_DIR,["$DEFAULT_RUN_DIR"] )
+
 ################################################################################
 dnl -- various defaults
 AC_ARG_WITH(default-system-dir,
