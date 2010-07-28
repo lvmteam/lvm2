@@ -26,17 +26,29 @@
 #include <sys/socket.h>
 #include <fcntl.h>
 
-static const char SINGLENODE_CLVMD_SOCKNAME[] = "\0singlenode_clvmd";
+static const char SINGLENODE_CLVMD_SOCKNAME[] = DEFAULT_RUN_DIR "/clvmd_singlenode.sock";
 static int listen_fd = -1;
+
+static void close_comms()
+{
+	if (listen_fd != -1 && close(listen_fd))
+		stack;
+	(void)unlink(SINGLENODE_CLVMD_SOCKNAME);
+	listen_fd = -1;
+}
 
 static int init_comms()
 {
 	struct sockaddr_un addr;
+	mode_t old_mask;
+
+	close_comms();
+	old_mask = umask(0077);
 
 	listen_fd = socket(PF_UNIX, SOCK_STREAM, 0);
 	if (listen_fd < 0) {
 		DEBUGLOG("Can't create local socket: %s\n", strerror(errno));
-		return -1;
+		goto error;
 	}
 	/* Set Close-on-exec */
 	fcntl(listen_fd, F_SETFD, 1);
@@ -48,16 +60,19 @@ static int init_comms()
 
 	if (bind(listen_fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
 		DEBUGLOG("Can't bind local socket: %s\n", strerror(errno));
-		close(listen_fd);
-		return -1;
+		goto error;
 	}
 	if (listen(listen_fd, 10) < 0) {
 		DEBUGLOG("Can't listen local socket: %s\n", strerror(errno));
-		close(listen_fd);
-		return -1;
+		goto error;
 	}
 
+	umask(old_mask);
 	return 0;
+error:
+	umask(old_mask);
+	close_comms();
+	return -1;
 }
 
 static int _init_cluster(void)
@@ -74,7 +89,7 @@ static int _init_cluster(void)
 
 static void _cluster_closedown(void)
 {
-	close(listen_fd);
+	close_comms();
 
 	DEBUGLOG("cluster_closedown\n");
 	destroy_lvhash();

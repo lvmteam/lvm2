@@ -3,6 +3,7 @@ Version 2.02.72 - 28th July 2010  [CVE-2010-2526]
   Change clvmd to communicate with lvm2 via a socket in /var/run/lvm.
   Return controlled error if clvmd is run by non-root user.
   Add configure --default-run-dir for /var/run/lvm.
+  Never use clvmd singlenode unless explicitly requested with -Isinglenode.
 
 Version 2.02.71 - 28th July 2010
 ================================
