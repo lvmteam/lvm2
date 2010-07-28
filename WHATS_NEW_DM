@@ -1,4 +1,4 @@
-Version 1.02.53 - 27th July 2010
+Version 1.02.53 - 28th July 2010
 ================================
   Revert failed table load preparation after "create, load and resume".
   Switch dmeventd to use dm_create_lockfile and drop duplicate code.
