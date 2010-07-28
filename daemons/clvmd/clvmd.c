@@ -479,7 +479,7 @@ int main(int argc, char *argv[])
 #endif
 #ifdef USE_SINGLENODE
 	if (!clops)
-		if ((cluster_iface == IF_AUTO || cluster_iface == IF_SINGLENODE) && (clops = init_singlenode_cluster())) {
+		if (cluster_iface == IF_SINGLENODE && (clops = init_singlenode_cluster())) {
 			max_csid_len = SINGLENODE_CSID_LEN;
 			max_cluster_message = SINGLENODE_MAX_CLUSTER_MESSAGE;
 			max_cluster_member_name_len = MAX_CLUSTER_MEMBER_NAME_LEN;
