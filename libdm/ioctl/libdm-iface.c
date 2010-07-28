@@ -1655,14 +1655,16 @@ static int _create_and_load_v4(struct dm_task *dmt)
 	if (!(task = dm_task_create(DM_DEVICE_RELOAD))) {
 		log_error("Failed to create device-mapper task struct");
 		_udev_complete(dmt);
-		return 0;
+		r = 0;
+		goto revert;
 	}
 
 	/* Copy across relevant fields */
 	if (dmt->dev_name && !dm_task_set_name(task, dmt->dev_name)) {
 		dm_task_destroy(task);
 		_udev_complete(dmt);
-		return 0;
+		r = 0;
+		goto revert;
 	}
 
 	task->read_only = dmt->read_only;
