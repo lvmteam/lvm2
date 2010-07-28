@@ -20,9 +20,6 @@
 #define CLVMD_MINOR_VERSION 2
 #define CLVMD_PATCH_VERSION 1
 
-/* Name of the cluster LVM admin lock */
-#define ADMIN_LOCK_NAME "CLVMD_ADMIN"
-
 /* Default time (in seconds) we will wait for all remote commands to execute
    before declaring them dead */
 #define DEFAULT_CMD_TIMEOUT 60

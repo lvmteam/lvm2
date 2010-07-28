@@ -863,6 +863,7 @@ with_udev_prefix
 with_udevdir
 with_dmeventd_pidfile
 with_dmeventd_path
+with_default_run_dir
 with_default_system_dir
 with_default_archive_subdir
 with_default_backup_subdir
@@ -1599,6 +1600,7 @@ Optional Packages:
                           dmeventd pidfile [/var/run/dmeventd.pid]
   --with-dmeventd-path=PATH
                           dmeventd path [EPREFIX/sbin/dmeventd]
+  --with-default-run-dir=DIR       Default run directory [/var/run/lvm]
   --with-default-system-dir=DIR
                           default LVM system directory [/etc/lvm]
   --with-default-archive-subdir=SUBDIR
@@ -17815,6 +17817,21 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 fi
+
+
+
+
+# Check whether --with-default-run-dir was given.
+if test "${with_default_run_dir+set}" = set; then
+  withval=$with_default_run_dir;  DEFAULT_RUN_DIR="$withval"
+else
+   DEFAULT_RUN_DIR="/var/run/lvm"
+fi
+
+cat >>confdefs.h <<_ACEOF
+#define DEFAULT_RUN_DIR "$DEFAULT_RUN_DIR"
+_ACEOF
+
 
 ################################################################################
 

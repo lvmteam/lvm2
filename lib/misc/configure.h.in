@@ -35,6 +35,9 @@
 /* Name of default locking directory. */
 #undef DEFAULT_LOCK_DIR
 
+/* Name of default run directory. */
+#undef DEFAULT_RUN_DIR
+
 /* Define to 0 to reinstate the pre-2.02.54 handling of unit suffixes. */
 #undef DEFAULT_SI_UNIT_CONSISTENCY
 
