@@ -1199,11 +1199,6 @@ uint32_t vg_mda_copies(const struct volume_group *vg)
 
 int vg_set_mda_copies(struct volume_group *vg, uint32_t mda_copies)
 {
-	/* FIXME: add checks, etc, and set the value */
-	/*
-	 * FIXME: Before we set a larger value, we may need to
-	 * enable some mdas on PVS
-	 */
 	vg->mda_copies = mda_copies;
 
 	/* FIXME Use log_verbose when this is due to specific cmdline request. */
