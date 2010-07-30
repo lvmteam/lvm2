@@ -1237,25 +1237,27 @@ static int _lvconvert_mirrors_repair(struct cmd_context *cmd,
 	if (!(lp->failed_pvs = _failed_pv_list(lv->vg)))
 		return_0;
 
+	log_count = new_log_count;
+
 	/*
 	 * We must adjust the log first, or the entire mirror
 	 * will get stuck during a suspend.
 	 */
-	if (!_lv_update_mirrored_log(lv, lp->failed_pvs, new_log_count))
+	if (!_lv_update_mirrored_log(lv, lp->failed_pvs, log_count))
 		return 0;
 
 	if (lp->mirrors == 1)
-		new_log_count = 0;
+		log_count = 0;
 
 	if (failed_mirrors) {
 		if (!lv_remove_mirrors(cmd, lv, failed_mirrors,
-				       new_log_count ? 0U : 1U,
+				       log_count ? 0U : 1U,
 				       _is_partial_lv, NULL, 0))
 			return 0;
 	}
 
 	if (!_lv_update_log_type(cmd, lp, lv, lp->failed_pvs,
-				 new_log_count))
+				 log_count))
 		return 0;
 
 	if (!_reload_lv(cmd, lv))
