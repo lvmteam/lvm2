@@ -1,5 +1,6 @@
 Version 2.02.73 - 
 ================================
+  Fix configure to supply DEFAULT_RUN_DIR to Makefiles.
   Fix wrong number of mirror log at allocate policy
 
 Version 2.02.72 - 28th July 2010  [CVE-2010-2526]
