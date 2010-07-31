@@ -691,6 +691,7 @@ DM_COMPAT
 DMEVENTD
 DL_LIBS
 DEVMAPPER
+DEFAULT_RUN_DIR
 DEFAULT_LOCK_DIR
 DEFAULT_CACHE_SUBDIR
 DEFAULT_BACKUP_SUBDIR
@@ -17947,6 +17948,7 @@ LVM_PATCHLEVEL=`echo "$VER" | $AWK -F '[(.]' '{print $3}'`
 LVM_LIBAPI=`echo "$VER" | $AWK -F '[()]' '{print $2}'`
 
 ################################################################################
+
 
 
 
