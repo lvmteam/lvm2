@@ -366,7 +366,7 @@ distclean: cleandir $(SUBDIRS.distclean)
 	) > $@
 
 .export.sym: .exported_symbols_generated
-	set -e; (echo "Base {"; echo "	global:"; \
+	set -e; (echo "{"; echo "	global:"; \
 		 sed "s/^/		/;s/$$/;/" < $<; \
 		 echo "	local:"; echo "		*;"; echo "};") > $@
 
