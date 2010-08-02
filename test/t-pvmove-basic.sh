@@ -33,8 +33,7 @@ lv_is_on_() {
 }
 
 save_dev_sum_() {
-  mkfs.ext3 $1 > /dev/null &&
-  md5sum $1 > md5.$(basename $1)
+  mkfs.ext3 $1 > /dev/null && md5sum $1 > md5.$(basename $1)
 }
 
 check_dev_sum_() {
@@ -83,8 +82,8 @@ check_and_cleanup_lvs_() {
   lvs -a -o name $vg > out && ! grep ^pvmove out
   lvremove -ff $vg
 	if ! dmsetup table|not grep $vg; then
-		echo "ERROR: lvremove did leave some some mappings in DM behind!" &&
-		return 1
+		echo "ERROR: lvremove did leave some some mappings in DM behind!" && \
+			return 1
 	fi
 	:
 }
