@@ -26,7 +26,7 @@ do
 	pvchange $dev1 --addtag test$mda 
 	check_pv_field_ $dev1 pv_tags test$mda 
 	pvchange $dev1 --deltag test$mda 
-	check_pv_field_ $dev1 pv_tags " "
+	check_pv_field_ $dev1 pv_tags ""
 
 # "vgchange disable/enable allocation for pvs with metadatacopies = $mda (bz452982)"
 	pvchange $dev1 -x n 
