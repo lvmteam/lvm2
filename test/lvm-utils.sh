@@ -129,9 +129,9 @@ vg_validate_pvlv_counts_()
 
 	lvs -a -o+devices $local_vg
 
-	check_vg_field_ $local_vg pv_count $num_pvs &&
-	check_vg_field_ $local_vg lv_count $num_lvs &&
-	check_vg_field_ $local_vg snap_count $num_snaps
+	check_vg_field_ $local_vg pv_count $num_pvs && \
+	  check_vg_field_ $local_vg lv_count $num_lvs && \
+	  check_vg_field_ $local_vg snap_count $num_snaps
 }
 
 dmsetup_has_dm_devdir_support_()

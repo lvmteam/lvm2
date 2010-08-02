@@ -20,9 +20,9 @@ lvm pvmove --version|sed -n "1s/.*: *\([0-9][^ ]*\) .*/\1/p" > actual
 # ensure they are the same
 diff -u actual expected
 
-mknod $DM_DEV_DIR/null c 1 3 ||
+mknod $DM_DEV_DIR/null c 1 3 || \
   error "Can't create nodes on filesystem"
-echo >$DM_DEV_DIR/null || 
+echo >$DM_DEV_DIR/null || \
   error "Filesystem for tests does not allow using device nodes (check nodev)"
 
 # ensure we can create devices (uses dmsetup, etc)
