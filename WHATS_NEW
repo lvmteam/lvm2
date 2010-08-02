@@ -3,7 +3,7 @@ Version 2.02.73 -
   Do not use VPATH in include/Makefile.
   Fix exported_symbols generation to use standard compiler arguments.
   Use #include <> not "" in lvm2app.h which gets installed on the system.
-  Make liblvm.device-mapper wait for include file generation.
+  Make lib and liblvm.device-mapper wait for include file generation.
   Fix configure to supply DEFAULT_RUN_DIR to Makefiles.
   Fix wrong number of mirror log at allocate policy
 
