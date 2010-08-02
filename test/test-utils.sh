@@ -186,7 +186,7 @@ prepare_loop() {
 	done
 
 	LOOPFILE="$PWD/test.img"
-	dd if=/dev/zero of="$LOOPFILE" bs=$((1024*1024)) count=1 seek=$(($size-1))
+	dd if=/dev/zero of="$LOOPFILE" bs=$((1024*1024)) count=0 seek=$(($size-1))
 	if LOOP=`losetup -s -f "$LOOPFILE" 2>/dev/null`; then
 		return 0
 	elif LOOP=`losetup -f` && losetup $LOOP "$LOOPFILE"; then
