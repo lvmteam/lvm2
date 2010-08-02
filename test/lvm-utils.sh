@@ -16,6 +16,14 @@ export LVM_SUPPRESS_FD_WARNINGS=1
 ME=$(basename "$0")
 warn() { echo >&2 "$ME: $@"; }
 
+trim()
+{
+    trimmed=${1%% }
+    trimmed=${trimmed## }
+
+    echo "$trimmed"
+}
+
 compare_two_fields_()
 {
     local cmd1=$1;
@@ -33,7 +41,7 @@ if test "$verbose" = "t"
 then
   echo "compare_two_fields_ $obj1($field1): $val1 $obj2($field2): $val2"
 fi
-  test $val1 = $val2
+  test "$val1" = "$val2"
 }
 
 compare_vg_field_()
@@ -50,7 +58,7 @@ if test "$verbose" = "t"
 then
   echo "compare_vg_field_ VG1: $val1 VG2: $val2"
 fi
-  test $val1 = $val2
+  test "$val1" = "$val2"
 }
 
 
@@ -82,12 +90,12 @@ check_vg_field_()
     local expected=$3;
     local actual;
 
-    actual=$(vgs --noheadings -o $field $vg)
+    actual=$(trim $(vgs --noheadings -o $field $vg))
 if test "$verbose" = "t"
 then
   echo "check_vg_field_ VG=$vg, field=$field, actual=$actual, expected=$expected"
 fi
-  test $actual = $expected
+  test "$actual" = "$expected"
 }
 
 check_pv_field_()
@@ -97,12 +105,12 @@ check_pv_field_()
     local expected=$3;
     local actual;
 
-    actual=$(pvs --noheadings -o $field $pv)
+    actual=$(trim $(pvs --noheadings -o $field $pv))
 if test "$verbose" = "t"
 then
   echo "check_pv_field_ PV=$pv, field=$field, actual=$actual, expected=$expected"
 fi
-    test $actual = $expected
+    test "$actual" = "$expected"
 }
 
 check_lv_field_()
@@ -112,12 +120,12 @@ check_lv_field_()
     local expected=$3;
     local actual;
 
-    actual=$(lvs --noheadings -o $field $lv)
+    actual=$(trim $(lvs --noheadings -o $field $lv))
 if test "$verbose" = "t"
 then
   echo "check_lv_field_ LV=$lv, field=$field, actual=$actual, expected=$expected"
 fi
-  test $actual = $expected
+  test "$actual" = "$expected"
 }
 
 vg_validate_pvlv_counts_()
