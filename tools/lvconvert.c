@@ -696,6 +696,13 @@ static int _lv_update_mirrored_log(struct logical_volume *lv,
 	int old_log_count;
 	struct logical_volume *log_lv;
 
+	/*
+	 * When log_count is 0, mirrored log doesn't need to be
+	 * updated here but it will be removed later.
+	 */
+	if (!log_count)
+		return 1;
+
 	log_lv = first_seg(_original_lv(lv))->log_lv;
 	if (!log_lv || !(log_lv->status & MIRRORED))
 		return 1;
@@ -705,12 +712,9 @@ static int _lv_update_mirrored_log(struct logical_volume *lv,
 		return 1;
 
 	/* Reducing redundancy of the log */
-	if (log_count)
-		return remove_mirror_images(log_lv, log_count,
-					    is_mirror_image_removable,
-					    operable_pvs, 0U);
-
-	return remove_mirror_log(lv->vg->cmd, lv, operable_pvs);
+	return remove_mirror_images(log_lv, log_count,
+				    is_mirror_image_removable,
+				    operable_pvs, 0U);
 }
 
 static int _lv_update_log_type(struct cmd_context *cmd,

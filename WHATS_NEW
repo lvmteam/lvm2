@@ -1,5 +1,6 @@
 Version 2.02.73 - 
 ================================
+  Handle failure of all mirrored log devices and all but one mirror leg. 
   Disallow 'mirrored' log type for cluster mirrors.
   Do not use VPATH in include/Makefile.
   Fix exported_symbols generation to use standard compiler arguments.
