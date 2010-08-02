@@ -919,6 +919,15 @@ static int _lvconvert_mirrors_parse_params(struct cmd_context *cmd,
 		return 0;
 	}
 
+	/*
+	 * No mirrored logs for cluster mirrors until
+	 * log daemon is multi-threaded.
+	 */
+	if ((*new_log_count == 2) && vg_is_clustered(lv->vg)) {
+		log_error("Log type, \"mirrored\", is unavailable to cluster mirrors");
+		return 0;
+	}
+
 	log_verbose("Setting logging type to %s", mirrorlog);
 
 	/*

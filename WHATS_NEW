@@ -1,5 +1,6 @@
 Version 2.02.73 - 
 ================================
+  Disallow 'mirrored' log type for cluster mirrors.
   Do not use VPATH in include/Makefile.
   Fix exported_symbols generation to use standard compiler arguments.
   Use #include <> not "" in lvm2app.h which gets installed on the system.
