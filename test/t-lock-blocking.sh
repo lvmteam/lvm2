@@ -33,4 +33,4 @@ flock -w 5 $TESTDIR/var/lock/lvm/P_orphans -c "sleep 10" &
 flock_pid=`jobs -p`
 not vgremove --config 'global { wait_for_locks = 0 }' $vg
 ps $flock_pid # still running
-wait $flock_pid
+kill $flock_pid
