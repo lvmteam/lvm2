@@ -1,5 +1,6 @@
 Version 2.02.73 - 
 ================================
+  Use #include <> not "" in lvm2app.h which gets installed on the system.
   Make liblvm.device-mapper wait for include file generation.
   Drop explicit 'Base' version from exported symbols.
   Fix configure to supply DEFAULT_RUN_DIR to Makefiles.
