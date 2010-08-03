@@ -1,5 +1,6 @@
 Version 1.02.54 - 
 ================================
+  Fix return status 0 for "dmsetup info -c -o help".
   Add check for kernel semaphore support and disable udev_sync if not available.
 
 Version 1.02.53 - 28th July 2010
