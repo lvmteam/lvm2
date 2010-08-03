@@ -1,6 +1,7 @@
 Version 2.02.73 - 
 ================================
-  Fix constness warning in archive_file structure from archive.c.
+  Fix const warning in dev_manager_info() and _dev_manager_lv_rmnodes().
+  Fix const warning in archive_file structure from archive.c.
   Clean generated files .exported_symbols_generated, example.conf for distclean.
   Handle failure of all mirrored log devices and all but one mirror leg. 
   Disallow 'mirrored' log type for cluster mirrors.
