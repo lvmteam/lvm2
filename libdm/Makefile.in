@@ -94,4 +94,4 @@ install_ioctl_static: $(LIB_STATIC)
 	$(INSTALL_DATA) -D $< $(usrlibdir)/$(<F)
 
 CLEAN_TARGETS += ioctl/libdevmapper.a
-DISTCLEAN_TARGETS += libdevmapper.pc
+DISTCLEAN_TARGETS += libdevmapper.pc .exported_symbols_generated
