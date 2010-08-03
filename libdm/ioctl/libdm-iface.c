@@ -139,7 +139,7 @@ static void *_align(void *ptr, unsigned int a)
 	return (void *) (((unsigned long) ptr + agn) & ~agn);
 }
 
-static int _uname()
+static int _uname(void)
 {
 	static int _uts_set = 0;
 	struct utsname _uts;

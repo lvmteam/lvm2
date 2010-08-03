@@ -624,7 +624,7 @@ int do_refresh_cache()
 /* Only called at gulm startup. Drop any leftover VG or P_orphan locks
    that might be hanging around if we died for any reason
 */
-static void drop_vg_locks()
+static void drop_vg_locks(void)
 {
 	char vg[128];
 	char line[255];
@@ -810,7 +810,7 @@ static void lvm2_log_fn(int level, const char *file, int line, int dm_errno,
 }
 
 /* This checks some basic cluster-LVM configuration stuff */
-static void check_config()
+static void check_config(void)
 {
 	int locking_type;
 

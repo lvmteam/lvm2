@@ -29,7 +29,7 @@
 static const char SINGLENODE_CLVMD_SOCKNAME[] = DEFAULT_RUN_DIR "/clvmd_singlenode.sock";
 static int listen_fd = -1;
 
-static void close_comms()
+static void close_comms(void)
 {
 	if (listen_fd != -1 && close(listen_fd))
 		stack;
@@ -37,7 +37,7 @@ static void close_comms()
 	listen_fd = -1;
 }
 
-static int init_comms()
+static int init_comms(void)
 {
 	struct sockaddr_un addr;
 	mode_t old_mask;
@@ -112,7 +112,7 @@ static int _name_from_csid(const char *csid, char *name)
 	return 0;
 }
 
-static int _get_num_nodes()
+static int _get_num_nodes(void)
 {
 	return 1;
 }
@@ -222,7 +222,7 @@ static int _unlock_resource(const char *resource, int lockid)
 	return 0;
 }
 
-static int _is_quorate()
+static int _is_quorate(void)
 {
 	return 1;
 }

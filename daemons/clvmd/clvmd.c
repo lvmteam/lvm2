@@ -280,7 +280,7 @@ static void remove_lockfile(void)
 /*
  * clvmd require dm-ioctl capability for operation
  */
-static void check_permissions()
+static void check_permissions(void)
 {
 	if (getuid() || geteuid()) {
 		log_error("Cannot run as a non-root user.");

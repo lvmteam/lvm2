@@ -930,7 +930,7 @@ int dm_udev_wait(uint32_t cookie)
 
 #else		/* UDEV_SYNC_SUPPORT */
 
-static int _check_semaphore_is_supported()
+static int _check_semaphore_is_supported(void)
 {
 	int maxid;
 	union semun arg;
@@ -976,7 +976,7 @@ bad:
 	return 0;
 }
 
-static void _check_udev_sync_requirements_once()
+static void _check_udev_sync_requirements_once(void)
 {
 	if (_semaphore_supported < 0)
 		_semaphore_supported = _check_semaphore_is_supported();

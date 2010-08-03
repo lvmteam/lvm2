@@ -25,7 +25,7 @@ static struct text_vg_version_ops *(_text_vsn_list[2]);
 
 static int _text_import_initialised = 0;
 
-static void _init_text_import()
+static void _init_text_import(void)
 {
 	if (_text_import_initialised)
 		return;
