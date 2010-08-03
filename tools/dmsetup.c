@@ -633,8 +633,15 @@ static int _create(int argc, char **argv, void *data __attribute__((unused)))
 
 	r = 1;
 
+	if (!_udev_cookie)
+		(void) dm_udev_wait(cookie);
+
 	if (_switches[VERBOSE_ARG])
 		r = _display_info(dmt);
+
+	dm_task_destroy(dmt);
+
+	return r;
 
       out:
 	if (!_udev_cookie)
