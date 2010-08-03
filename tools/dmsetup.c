@@ -2652,6 +2652,9 @@ static int _report_init(struct command *c)
 	r = 1;
 
 out:
+	if (!strcasecmp(options, "help") || !strcmp(options, "?"))
+		r = 1;
+
 	if (len)
 		dm_free(options);
 
@@ -3360,8 +3363,15 @@ int main(int argc, char **argv)
 	if (!_switches[COLS_ARG] && !strcmp(c->name, "splitname"))
 		_switches[COLS_ARG]++;
 
-	if (_switches[COLS_ARG] && !_report_init(c))
-		goto out;
+	if (_switches[COLS_ARG]) {
+		if (!_report_init(c))
+			goto out;
+		if (!_report) {
+			if (!strcmp(c->name, "info"))
+				r = 0;  /* info -c -o help */
+			goto out;
+		}
+	}
 
 	#ifdef UDEV_SYNC_SUPPORT
 	if (!_set_up_udev_support(dev_dir))
