@@ -1498,7 +1498,7 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 				adjustment =
 				(pv->pe_start - pv->pe_align_offset) % pv->pe_align;
 				if (adjustment)
-					pv->pe_start += pv->pe_align - adjustment;
+					pv->pe_start += (pv->pe_align - adjustment);
 
 				log_very_verbose("%s: setting pe_start=%" PRIu64
 					 " (orig_pe_start=%" PRIu64 ", "
@@ -1506,7 +1506,7 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 					 "adjustment=%" PRIu64 ")",
 					 pv_dev_name(pv), pv->pe_start,
 					 (adjustment ?
-					  pv->pe_start -= pv->pe_align - adjustment :
+					  pv->pe_start - (pv->pe_align - adjustment) :
 					  pv->pe_start),
 					 pv->pe_align, pv->pe_align_offset, adjustment);
 			}
