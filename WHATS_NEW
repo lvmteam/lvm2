@@ -1,5 +1,6 @@
 Version 2.02.73 - 
 ================================
+  Require logical volume(s) to be explicitly named for lvconvert --merge.
   Avoid changing aligned pe_start as a side-effect of very verbose logging.
   Fix 'void*' arithmetic warnings in dbg_malloc.c.
   Fix 'void*' arithmetic warning in some functions from libdm-iface.c.
