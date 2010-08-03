@@ -147,6 +147,71 @@ void dev_set_preferred_name(struct str_list *sl, struct device *dev)
 	dm_list_add_h(&dev->aliases, &sl->list);
 }
 
+/*
+ * Check whether path0 or path1 contains the subpath. The path that
+ * *does not* contain the subpath wins (return 0 or 1). If both paths
+ * contain the subpath, return -1. If none of them contains the subpath,
+ * return -2.
+ */
+static int _builtin_preference(const char *path0, const char *path1,
+			       size_t skip_prefix_count, const char *subpath)
+{
+	size_t subpath_len;
+	int r0, r1;
+
+	subpath_len = strlen(subpath);
+
+	r0 = !strncmp(path0 + skip_prefix_count, subpath, subpath_len);
+	r1 = !strncmp(path1 + skip_prefix_count, subpath, subpath_len);
+
+	if (!r0 && r1)
+		/* path0 does not have the subpath - it wins */
+		return 0;
+	else if (r0 && !r1)
+		/* path1 does not have the subpath - it wins */
+		return 1;
+	else if (r0 && r1)
+		/* both of them have the subpath */
+		return -1;
+
+	/* no path has the subpath */
+	return -2;
+}
+
+static int _apply_builtin_path_preference_rules(const char *path0, const char *path1)
+{
+	size_t devdir_len;
+	int r;
+
+	devdir_len = strlen(_cache.dev_dir);
+
+	if (!strncmp(path0, _cache.dev_dir, devdir_len) &&
+	    !strncmp(path1, _cache.dev_dir, devdir_len)) {
+		/*
+		 * We're trying to achieve the ordering:
+		 *	/dev/block/ < /dev/dm-* < /dev/disk/ < /dev/mapper/ < anything else
+		 */
+
+		/* Prefer any other path over /dev/block/ path. */
+		if ((r = _builtin_preference(path0, path1, devdir_len, "block/")) >= -1)
+			return r;
+
+		/* Prefer any other path over /dev/dm-* path. */
+		if ((r = _builtin_preference(path0, path1, devdir_len, "dm-")) >= -1)
+			return r;
+
+		/* Prefer any other path over /dev/disk/ path. */
+		if ((r = _builtin_preference(path0, path1, devdir_len, "disk/")) >= -1)
+			return r;
+
+		/* Prefer any other path over /dev/mapper/ path. */
+		if ((r = _builtin_preference(path0, path1, 0, dm_dir())) >= -1)
+			return r;
+	}
+
+	return -1;
+}
+
 /* Return 1 if we prefer path1 else return 0 */
 static int _compare_paths(const char *path0, const char *path1)
 {
@@ -156,7 +221,7 @@ static int _compare_paths(const char *path0, const char *path1)
 	char p0[PATH_MAX], p1[PATH_MAX];
 	char *s0, *s1;
 	struct stat stat0, stat1;
-	size_t devdir_len;
+	int r;
 
 	/*
 	 * FIXME Better to compare patterns one-at-a-time against all names.
@@ -177,22 +242,9 @@ static int _compare_paths(const char *path0, const char *path1)
 		}
 	}
 
-	/*
-	 * Built-in rules.
-	 */
-
-	/*
-	 * Anything beats /dev/block.
-	 */
-	devdir_len = strlen(_cache.dev_dir);
-	if (!strncmp(path0, _cache.dev_dir, devdir_len) &&
-	    !strncmp(path1, _cache.dev_dir, devdir_len)) {
-		if (!strncmp(path0 + devdir_len, "block/", 6)) {
-			if (strncmp(path1 + devdir_len, "block/", 6))
-				return 1;
-		} else if (!strncmp(path1 + devdir_len, "block/", 6))
-			return 0;
-	}
+	/* Apply built-in preference rules first. */
+	if ((r = _apply_builtin_path_preference_rules(path0, path1)) >= 0)
+		return r;
 
 	/* Return the path with fewer slashes */
 	for (p = path0; p++; p = (const char *) strchr(p, '/'))
