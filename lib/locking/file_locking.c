@@ -118,7 +118,7 @@ static void _trap_ctrl_c(int sig __attribute__((unused)))
 	log_error("CTRL-c detected: giving up waiting for lock");
 }
 
-static void _install_ctrl_c_handler()
+static void _install_ctrl_c_handler(void)
 {
 	_handler_installed = 1;
 
