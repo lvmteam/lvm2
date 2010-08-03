@@ -1104,7 +1104,7 @@ struct dm_deps *dm_task_get_deps(struct dm_task *dmt)
 		return _dm_task_get_deps_v1(dmt);
 #endif
 
-	return (struct dm_deps *) (((void *) dmt->dmi.v4) +
+	return (struct dm_deps *) (((char *) dmt->dmi.v4) +
 				   dmt->dmi.v4->data_start);
 }
 
@@ -1115,13 +1115,13 @@ struct dm_names *dm_task_get_names(struct dm_task *dmt)
 		return _dm_task_get_names_v1(dmt);
 #endif
 
-	return (struct dm_names *) (((void *) dmt->dmi.v4) +
+	return (struct dm_names *) (((char *) dmt->dmi.v4) +
 				    dmt->dmi.v4->data_start);
 }
 
 struct dm_versions *dm_task_get_versions(struct dm_task *dmt)
 {
-	return (struct dm_versions *) (((void *) dmt->dmi.v4) +
+	return (struct dm_versions *) (((char *) dmt->dmi.v4) +
 				       dmt->dmi.v4->data_start);
 }
 
