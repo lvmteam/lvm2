@@ -1,5 +1,6 @@
 Version 1.02.54 - 
 ================================
+  Wait for node creation before displaying debug info in dmsetup.
   Fix return status 0 for "dmsetup info -c -o help".
   Add check for kernel semaphore support and disable udev_sync if not available.
 
