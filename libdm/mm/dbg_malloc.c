@@ -196,12 +196,12 @@ int dm_dump_memory_debug(void)
 		for (c = 0; c < sizeof(str) - 1; c++) {
 			if (c >= mb->length)
 				str[c] = ' ';
-			else if (*(char *)(mb->magic + c) == '\0')
+			else if (((char *)mb->magic)[c] == '\0')
 				str[c] = '\0';
-			else if (*(char *)(mb->magic + c) < ' ')
+			else if (((char *)mb->magic)[c] < ' ')
 				str[c] = '?';
 			else
-				str[c] = *(char *)(mb->magic + c);
+				str[c] = ((char *)mb->magic)[c];
 		}
 		str[sizeof(str) - 1] = '\0';
 
