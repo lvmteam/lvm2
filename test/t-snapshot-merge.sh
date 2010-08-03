@@ -49,6 +49,8 @@ setup_merge $vg $lv1
 # now that snapshot LV is created: test if snapshot-merge target is available
 $(dmsetup targets | grep -q snapshot-merge) || exit 200
 lvs -a
+# make sure lvconvert --merge requires explicit LV listing
+not lvconvert --merge 2>err
 lvconvert --merge $vg/$(snap_lv_name_ $lv1)
 lvremove -f $vg/$lv1
 

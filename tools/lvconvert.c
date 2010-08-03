@@ -1738,9 +1738,14 @@ int lvconvert(struct cmd_context * cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (lp.merge)
+	if (lp.merge) {
+		if (!argc) {
+			log_error("Please provide logical volume path");
+			return EINVALID_CMD_LINE;
+		}
 		return process_each_lv(cmd, argc, argv, READ_FOR_UPDATE, &lp,
 				       &lvconvert_merge_single);
+	}
 
 	return lvconvert_single(cmd, &lp);
 }
