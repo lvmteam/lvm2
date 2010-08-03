@@ -220,7 +220,7 @@ int dev_manager_info(struct dm_pool *mem, const struct logical_volume *lv,
 		     int with_open_count, int with_read_ahead,
 		     struct dm_info *info, uint32_t *read_ahead)
 {
-	const char *dlid, *name;
+	char *dlid, *name;
 	int r;
 
 	if (!(name = build_dm_name(mem, lv->vg->name, lv->name, NULL))) {
@@ -236,7 +236,7 @@ int dev_manager_info(struct dm_pool *mem, const struct logical_volume *lv,
 	log_debug("Getting device info for %s [%s]", name, dlid);
 	r = _info(dlid, with_open_count, with_read_ahead, info, read_ahead);
 
-	dm_pool_free(mem, (char*)name);
+	dm_pool_free(mem, name);
 	return r;
 }
 
@@ -812,7 +812,7 @@ static int _dev_manager_lv_rmnodes(const struct logical_volume *lv)
 int dev_manager_mknodes(const struct logical_volume *lv)
 {
 	struct dm_info dminfo;
-	const char *name;
+	char *name;
 	int r = 0;
 
 	if (!(name = build_dm_name(lv->vg->cmd->mem, lv->vg->name, lv->name, NULL)))
@@ -826,7 +826,7 @@ int dev_manager_mknodes(const struct logical_volume *lv)
 			r = _dev_manager_lv_rmnodes(lv);
 	}
 
-	dm_pool_free(lv->vg->cmd->mem, (char*)name);
+	dm_pool_free(lv->vg->cmd->mem, name);
 	return r;
 }
 
