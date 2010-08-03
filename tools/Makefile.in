@@ -202,3 +202,5 @@ install_device-mapper: $(INSTALL_DMSETUP_TARGETS)
 install_lvm2: $(INSTALL_LVM_TARGETS)
 
 install: install_lvm2 install_device-mapper
+
+DISTCLEAN_TARGETS += .exported_symbols_generated

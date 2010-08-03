@@ -27,3 +27,5 @@ install_lvm2: $(CONFSRC)
 	fi
 
 install: install_lvm2
+
+DISTCLEAN_TARGETS += $(CONFSRC)
