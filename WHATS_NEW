@@ -1,5 +1,6 @@
 Version 2.02.73 - 
 ================================
+  Avoid changing aligned pe_start as a side-effect of very verbose logging.
   Fix 'void*' arithmetic warnings in dbg_malloc.c.
   Fix 'void*' arithmetic warning in some functions from libdm-iface.c.
   Fix const warning in dev_manager_info() and _dev_manager_lv_rmnodes().
