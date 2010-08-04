@@ -254,7 +254,7 @@ static int _mirrored_transient_status(struct lv_segment *seg, char *params)
 	int failed = 0;
 	char *status;
 
-	log_error("Mirrored transient status: \"%s\"", params);
+	log_very_verbose("Mirrored transient status: \"%s\"", params);
 
 	/* number of devices */
 	if (!dm_split_words(params, 1, 0, &p))
