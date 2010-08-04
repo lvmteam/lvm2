@@ -106,7 +106,7 @@ static DM_LIST_INIT(log_pending_list);
 
 static int log_test_bit(dm_bitset_t bs, int bit)
 {
-	return dm_bit(bs, bit);
+	return dm_bit(bs, bit) ? 1 : 0;
 }
 
 static void log_set_bit(struct log_c *lc, dm_bitset_t bs, int bit)
