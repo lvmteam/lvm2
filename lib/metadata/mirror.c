@@ -524,34 +524,22 @@ static int _move_removable_mimages_to_end(struct logical_volume *lv,
 					  uint32_t count,
 					  struct dm_list *removable_pvs)
 {
-	int i, images;
+	int i;
 	struct logical_volume *sub_lv;
 	struct lv_segment *mirrored_seg = first_seg(lv);
 
 	if (!removable_pvs)
 		return 1;
 
-	/*
-	 * When we shift an image to the end, we must start from
-	 * the begining of the list again.  We must visit the
-	 * images up to the last one we just moved.
-	 */
-	for (images = mirrored_seg->area_count; images && count; images--) {
-		for (i = 0; i < images; i++) {
-			sub_lv = seg_lv(mirrored_seg, i);
+	for (i = mirrored_seg->area_count - 1; (i >= 0) && count; i--) {
+		sub_lv = seg_lv(mirrored_seg, i);
 
-			if (!is_temporary_mirror_layer(sub_lv) &&
-			    is_mirror_image_removable(sub_lv, removable_pvs)) {
-				if (!shift_mirror_images(mirrored_seg, i))
-					return_0;
-				count--;
-				break;
-			}
+		if (!is_temporary_mirror_layer(sub_lv) &&
+		    is_mirror_image_removable(sub_lv, removable_pvs)) {
+			if (!shift_mirror_images(mirrored_seg, i))
+				return_0;
+			count--;
 		}
-
-		/* Did we shift any images? */
-		if (i == images)
-			return 0;
 	}
 
 	return !count;
