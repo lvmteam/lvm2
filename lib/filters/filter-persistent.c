@@ -279,8 +279,8 @@ static int _lookup_p(struct dev_filter *f, struct device *dev)
 		if (!l)
 			dm_list_iterate_items(sl, &dev->aliases)
 				dm_hash_insert(pf->devices, sl->str, PF_GOOD_DEVICE);
-		if (ignore_suspended_devices() && !device_is_usable(dev)) {
-                	log_debug("%s: Skipping (suspended/internal)", dev_name(dev));
+		if (!device_is_usable(dev)) {
+                	log_debug("%s: Skipping unusable device", dev_name(dev));
 			return 0;
 		}
 		return pf->real->passes_filter(pf->real, dev);
