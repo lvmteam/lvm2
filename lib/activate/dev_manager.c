@@ -153,11 +153,16 @@ int device_is_usable(struct device *dev)
 	if (!dm_task_get_info(dmt, &info))
 		goto_out;
 
-	if (!info.exists || info.suspended)
+	if (!info.exists)
 		goto out;
 
 	name = dm_task_get_name(dmt);
 	uuid = dm_task_get_uuid(dmt);
+
+	if (info.suspended && ignore_suspended_devices()) {
+		log_debug("%s: Suspended device %s not usable.", dev_name(dev), name);
+		goto out;
+	}
 
 	/* FIXME Also check for mirror block_on_error and mpath no paths */
 	/* For now, we exclude all mirrors */
@@ -166,8 +171,8 @@ int device_is_usable(struct device *dev)
 		next = dm_get_next_target(dmt, next, &start, &length,
 					  &target_type, &params);
 		/* Skip if target type doesn't match */
-		if (target_type && !strcmp(target_type, "mirror")) {
-			log_debug("%s: Mirror device not usable.", dev_name(dev));
+		if (target_type && !strcmp(target_type, "mirror") && ignore_suspended_devices()) {
+			log_debug("%s: Mirror device %s not usable.", dev_name(dev), name);
 			goto out;
 		}
 	} while (next);
