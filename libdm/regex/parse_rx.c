@@ -271,7 +271,7 @@ static int _rx_get_token(struct parse_sp *ps)
 		ps->type = 0;
 		ps->cursor = ptr + 1;
 		dm_bit_clear_all(ps->charset);
-		dm_bit_set(ps->charset, (int) *ptr);
+		dm_bit_set(ps->charset, (int) (unsigned char) *ptr);
 		break;
 	}
 
