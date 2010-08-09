@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.   
- * Copyright (C) 2004-2006 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
+ * Copyright (C) 2004-2010 Red Hat, Inc. All rights reserved.
  *
  * This file is part of the device-mapper userspace tools.
  *
@@ -12,6 +12,10 @@
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
+#ifdef VALGRIND_POOL
+#include "valgrind/memcheck.h"
+#endif
 
 #include "dmlib.h"
 
@@ -31,6 +35,7 @@ struct dm_pool {
 
 void _align_chunk(struct chunk *c, unsigned alignment);
 struct chunk *_new_chunk(struct dm_pool *p, size_t s);
+static void _free_chunk(struct chunk *c);
 
 /* by default things come out aligned for doubles */
 #define DEFAULT_ALIGNMENT __alignof__ (double)
@@ -59,11 +64,11 @@ struct dm_pool *dm_pool_create(const char *name, size_t chunk_hint)
 void dm_pool_destroy(struct dm_pool *p)
 {
 	struct chunk *c, *pr;
-	dm_free(p->spare_chunk);
+	_free_chunk(p->spare_chunk);
 	c = p->chunk;
 	while (c) {
 		pr = c->prev;
-		dm_free(c);
+		_free_chunk(c);
 		c = pr;
 	}
 
@@ -100,6 +105,11 @@ void *dm_pool_alloc_aligned(struct dm_pool *p, size_t s, unsigned alignment)
 
 	r = c->begin;
 	c->begin += s;
+
+#ifdef VALGRIND_POOL
+	VALGRIND_MAKE_MEM_UNDEFINED(r, s);
+#endif
+
 	return r;
 }
 
@@ -122,11 +132,20 @@ void dm_pool_free(struct dm_pool *p, void *ptr)
 		if (((char *) c < (char *) ptr) &&
 		    ((char *) c->end > (char *) ptr)) {
 			c->begin = ptr;
+#ifdef VALGRIND_POOL
+			VALGRIND_MAKE_MEM_NOACCESS(c->begin, c->end - c->begin);
+#endif
 			break;
 		}
 
 		if (p->spare_chunk)
-			dm_free(p->spare_chunk);
+			_free_chunk(p->spare_chunk);
+
+		c->begin = (char *) (c + 1);
+#ifdef VALGRIND_POOL
+                VALGRIND_MAKE_MEM_NOACCESS(c->begin, c->end - c->begin);
+#endif
+
 		p->spare_chunk = c;
 		c = c->prev;
 	}
@@ -183,9 +202,23 @@ int dm_pool_grow_object(struct dm_pool *p, const void *extra, size_t delta)
 			return 0;
 
 		_align_chunk(p->chunk, p->object_alignment);
+
+#ifdef VALGRIND_POOL
+		VALGRIND_MAKE_MEM_UNDEFINED(p->chunk->begin, p->object_len);
+#endif
+
 		memcpy(p->chunk->begin, c->begin, p->object_len);
+
+#ifdef VALGRIND_POOL
+		VALGRIND_MAKE_MEM_NOACCESS(c->begin, p->object_len);
+#endif
+
 		c = p->chunk;
 	}
+
+#ifdef VALGRIND_POOL
+	VALGRIND_MAKE_MEM_UNDEFINED(p->chunk->begin + p->object_len, delta);
+#endif
 
 	memcpy(c->begin + p->object_len, extra, delta);
 	p->object_len += delta;
@@ -218,7 +251,7 @@ struct chunk *_new_chunk(struct dm_pool *p, size_t s)
 	struct chunk *c;
 
 	if (p->spare_chunk &&
-	    ((p->spare_chunk->end - (char *) p->spare_chunk) >= s)) {
+	    ((p->spare_chunk->end - p->spare_chunk->begin) >= s)) {
 		/* reuse old chunk */
 		c = p->spare_chunk;
 		p->spare_chunk = 0;
@@ -229,12 +262,26 @@ struct chunk *_new_chunk(struct dm_pool *p, size_t s)
 			return NULL;
 		}
 
+		c->begin = (char *) (c + 1);
 		c->end = (char *) c + s;
+
+#ifdef VALGRIND_POOL
+		VALGRIND_MAKE_MEM_NOACCESS(c->begin, c->end - c->begin);
+#endif
 	}
 
 	c->prev = p->chunk;
-	c->begin = (char *) (c + 1);
 	p->chunk = c;
-
 	return c;
+}
+
+static void _free_chunk(struct chunk *c)
+{
+	if (c) {
+#ifdef VALGRIND_POOL
+		VALGRIND_MAKE_MEM_UNDEFINED(c, c->end - (char *) c);
+#endif
+
+		dm_free(c);
+	}
 }
