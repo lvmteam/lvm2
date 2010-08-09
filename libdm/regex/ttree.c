@@ -91,10 +91,10 @@ int ttree_insert(struct ttree *tt, unsigned int *key, void *data)
 				return 0;
 			}
 
-			k = *key++;
-
-			if (count)
+			if (count) {
+				k = *key++;
 				c = &((*c)->m);
+			}
 		}
 	}
 	(*c)->data = data;
