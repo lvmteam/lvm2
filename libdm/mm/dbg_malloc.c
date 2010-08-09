@@ -193,6 +193,13 @@ int dm_dump_memory_debug(void)
 		log_very_verbose("You have a memory leak:");
 
 	for (mb = _head; mb; mb = mb->next) {
+#ifdef VALGRIND_POOL
+		/*
+		 * We can't look at the memory in case it has had
+		 * VALGRIND_MAKE_MEM_NOACCESS called on it.
+		 */
+		str[0] = '\0';
+#else
 		for (c = 0; c < sizeof(str) - 1; c++) {
 			if (c >= mb->length)
 				str[c] = ' ';
@@ -204,6 +211,7 @@ int dm_dump_memory_debug(void)
 				str[c] = ((char *)mb->magic)[c];
 		}
 		str[sizeof(str) - 1] = '\0';
+#endif
 
 		LOG_MESG(_LOG_INFO, mb->file, mb->line, 0,
 			 "block %d at %p, size %" PRIsize_t "\t [%s]",

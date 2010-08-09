@@ -717,6 +717,19 @@ if test "$TESTING" = yes; then
 fi
 
 ################################################################################
+dnl -- Enable valgrind awareness of memory pools
+AC_MSG_CHECKING(whether to enable valgrind awareness of pools)
+AC_ARG_ENABLE(valgrind_pool,
+              AC_HELP_STRING(--enable-valgrind-pool, [enable valgrind awareness of pools]),
+	      VALGRIND_POOL=$enableval, VALGRIND_POOL=no)
+AC_MSG_RESULT($VALGRIND_POOL)
+
+if test "$VALGRIND_POOL" = yes; then
+    AC_CHECK_HEADERS([valgrind/memcheck.h], , [AC_MSG_ERROR(bailing out)])
+    AC_DEFINE([VALGRIND_POOL], 1, [Enable a valgrind aware build of pool])
+fi
+
+################################################################################
 dnl -- Disable devmapper
 AC_MSG_CHECKING(whether to use device-mapper)
 AC_ARG_ENABLE(devmapper,
@@ -1343,6 +1356,7 @@ tools/Makefile
 udev/Makefile
 unit-tests/datastruct/Makefile
 unit-tests/regex/Makefile
+unit-tests/mm/Makefile
 ])
 AC_OUTPUT
 
