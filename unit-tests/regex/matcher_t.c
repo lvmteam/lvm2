@@ -109,9 +109,18 @@ int main(int argc, char **argv)
 	char **regex;
 	int nregex;
 	int ret = 0;
+	int want_finger_print = 0, i;
+	const char *pattern_file = NULL;
 
-	if (argc < 2) {
-		fprintf(stderr, "Usage : %s <pattern_file>\n", argv[0]);
+	for (i = 1; i < argc; i++)
+		if (!strcmp(argv[i], "--fingerprint"))
+			want_finger_print = 1;
+
+		else
+			pattern_file = argv[i];
+
+	if (!pattern_file) {
+		fprintf(stderr, "Usage : %s [--fingerprint] <pattern_file>\n", argv[0]);
 		exit(1);
 	}
 
@@ -123,7 +132,7 @@ int main(int argc, char **argv)
 		goto err;
 	}
 
-	if (!_read_spec(argv[1], &regex, &nregex)) {
+	if (!_read_spec(pattern_file, &regex, &nregex)) {
 		fprintf(stderr, "Couldn't read the lex specification\n");
 		ret = 3;
 		goto err;
@@ -135,7 +144,8 @@ int main(int argc, char **argv)
 		goto err;
 	}
 
-        printf("fingerprint: %x\n", dm_regex_fingerprint(scanner));
+	if (want_finger_print)
+		printf("fingerprint: %x\n", dm_regex_fingerprint(scanner));
 	_scan_input(scanner, regex);
 	_free_regex(regex, nregex);
 
