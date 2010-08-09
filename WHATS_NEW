@@ -1,5 +1,6 @@
 Version 2.02.73 - 
 ================================
+  Never scan internal LVM devices.
   Split-mirror operations were ignoring user-specified PVs.
   Fix data corruption bug in cluster mirrors.
   Require logical volume(s) to be explicitly named for lvconvert --merge.
