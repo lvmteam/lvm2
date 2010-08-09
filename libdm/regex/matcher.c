@@ -375,7 +375,7 @@ static struct dfa_state *_step_matcher(struct dm_regex *m, int c, struct dfa_sta
         struct dfa_state *ns;
 
         if (!(ns = cs->lookup[(unsigned char) c]))
-                _calc_state(m, cs, c);
+                _calc_state(m, cs, (unsigned char) c);
 
 	if (!(ns = cs->lookup[(unsigned char) c]))
 		return NULL;
