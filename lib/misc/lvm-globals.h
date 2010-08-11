@@ -39,6 +39,7 @@ void init_is_static(unsigned value);
 void init_udev_checking(int checking);
 
 void set_cmd_name(const char *cmd_name);
+void set_sysfs_dir_path(const char *path);
 
 int test_mode(void);
 int md_filtering(void);
@@ -56,6 +57,7 @@ int ignore_suspended_devices(void);
 const char *log_command_name(void);
 unsigned is_static(void);
 int udev_checking(void);
+const char *sysfs_dir_path(void);
 
 #define DMEVENTD_MONITOR_IGNORE -1
 int dmeventd_monitor_mode(void);

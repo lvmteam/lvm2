@@ -1,5 +1,6 @@
 Version 2.02.73 - 
 ================================
+  Recognise and give preference to md device partitions (blkext major).
   Never scan internal LVM devices.
   Split-mirror operations were ignoring user-specified PVs.
   Fix data corruption bug in cluster mirrors.
