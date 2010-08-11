@@ -1,5 +1,6 @@
 Version 1.02.54 - 
 ================================
+  Fix segfault in regex matcher with characters of ordinal value > 127.
   Use built-in rule for device aliases: block/ < dm- < disk/ < mapper/ < other.
   Wait for node creation before displaying debug info in dmsetup.
   Fix return status 0 for "dmsetup info -c -o help".
