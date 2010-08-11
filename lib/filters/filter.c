@@ -59,6 +59,8 @@ int blkext_major(void)
 
 int dev_subsystem_part_major(const struct device *dev)
 {
+	dev_t primary_dev;
+
 	if (MAJOR(dev->dev) == -1)
 		return 0;
 
@@ -66,6 +68,11 @@ int dev_subsystem_part_major(const struct device *dev)
 		return 1;
 
 	if (MAJOR(dev->dev) == _drbd_major)
+		return 1;
+
+	if ((MAJOR(dev->dev) == _blkext_major) &&
+	    (get_primary_dev(sysfs_dir_path(), dev, &primary_dev)) &&
+	    (MAJOR(primary_dev) == _md_major))
 		return 1;
 
 	return 0;
@@ -78,6 +85,9 @@ const char *dev_subsystem_name(const struct device *dev)
 
 	if (MAJOR(dev->dev) == _drbd_major)
 		return "DRBD";
+
+	if (MAJOR(dev->dev) == _blkext_major)
+		return "BLKEXT";
 
 	return "";
 }

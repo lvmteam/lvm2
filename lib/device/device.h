@@ -101,7 +101,7 @@ unsigned long dev_md_stripe_width(const char *sysfs_dir, struct device *dev);
 int is_partitioned_dev(struct device *dev);
 
 int get_primary_dev(const char *sysfs_dir,
-		    struct device *dev, dev_t *result);
+		    const struct device *dev, dev_t *result);
 
 unsigned long dev_alignment_offset(const char *sysfs_dir,
 				   struct device *dev);

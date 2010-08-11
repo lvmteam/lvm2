@@ -278,7 +278,7 @@ int _get_partition_type(struct dev_mgr *dm, struct device *d)
 #ifdef linux
 
 int get_primary_dev(const char *sysfs_dir,
-		    struct device *dev, dev_t *result)
+		    const struct device *dev, dev_t *result)
 {
 	char path[PATH_MAX+1];
 	char temp_path[PATH_MAX+1];
