@@ -99,14 +99,17 @@ EOF
     mddev_p=/dev/${base_mddev_p}
 
     # Checking for 'alignment_offset' in sysfs implies Linux >= 2.6.31
+    # but reliable alignment_offset support requires kernel.org Linux >= 2.6.33
     sysfs_alignment_offset=/sys/dev/block/${mddev_maj_min}/${base_mddev_p}/alignment_offset
     [ -f $sysfs_alignment_offset -a $linux_minor -ge 33 ] && \
 	alignment_offset=`cat $sysfs_alignment_offset` || \
 	alignment_offset=0
 
-    # default alignment is 1M, add alignment_offset
-    pv_align=$((1048576+$alignment_offset))B
-    pvcreate --metadatasize 128k $mddev_p
-    check_pv_field_ $mddev_p pe_start $pv_align "--units b"
-    pvremove $mddev_p
+    if [ $alignment_offset -gt 0 ]; then    
+        # default alignment is 1M, add alignment_offset
+	pv_align=$((1048576+$alignment_offset))B
+	pvcreate --metadatasize 128k $mddev_p
+	check_pv_field_ $mddev_p pe_start $pv_align "--units b"
+	pvremove $mddev_p
+    fi
 fi
