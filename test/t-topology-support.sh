@@ -57,7 +57,7 @@ test_snapshot_mount()
 # FIXME add more topology-specific tests and validation (striped LVs, etc)
 
 NUM_DEVS=1
-PER_DEV_SIZE=33
+PER_DEV_SIZE=34
 DEV_SIZE=$(($NUM_DEVS*$PER_DEV_SIZE))
 
 # ---------------------------------------------

@@ -52,14 +52,14 @@ test -b "$mddev" || exit 200
 
 # Test alignment of PV on MD without any MD-aware or topology-aware detection
 # - should treat $mddev just like any other block device
-pv_align="192.00k"
+pv_align="1.00m"
 pvcreate --metadatasize 128k \
     --config 'devices {md_chunk_alignment=0 data_alignment_detection=0 data_alignment_offset_detection=0}' \
     $mddev
 check_pv_field_ $mddev pe_start $pv_align
 
 # Test md_chunk_alignment independent of topology-aware detection
-pv_align="256.00k"
+pv_align="1.00m"
 pvcreate --metadatasize 128k \
     --config 'devices {data_alignment_detection=0 data_alignment_offset_detection=0}' \
     $mddev
@@ -71,7 +71,8 @@ linux_minor=$(echo `uname -r` | cut -d'.' -f3 | cut -d'-' -f1)
 # Test newer topology-aware alignment detection
 # - first added to 2.6.31 but not "reliable" until 2.6.33
 if [ $linux_minor -ge 33 ]; then
-    pv_align="256.00k"
+    pv_align="1.00m"
+    # optimal_io_size=131072, minimum_io_size=65536
     pvcreate --metadatasize 128k \
 	--config 'devices { md_chunk_alignment=0 }' $mddev
     check_pv_field_ $mddev pe_start $pv_align
@@ -103,15 +104,9 @@ EOF
 	alignment_offset=`cat $sysfs_alignment_offset` || \
 	alignment_offset=0
 
-    if [ "$alignment_offset" = "512" ]; then
-	pv_align="256.50k"
-	pvcreate --metadatasize 128k $mddev_p
-	check_pv_field_ $mddev_p pe_start $pv_align
-	pvremove $mddev_p
-    elif [ "$alignment_offset" = "2048" ]; then
-	pv_align="258.00k"
-	pvcreate --metadatasize 128k $mddev_p
-	check_pv_field_ $mddev_p pe_start $pv_align
-	pvremove $mddev_p
-    fi
+    # default alignment is 1M, add alignment_offset
+    pv_align=$((1048576+$alignment_offset))B
+    pvcreate --metadatasize 128k $mddev_p
+    check_pv_field_ $mddev_p pe_start $pv_align "--units b"
+    pvremove $mddev_p
 fi
