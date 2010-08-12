@@ -42,6 +42,9 @@ ENV{DM_COOKIE}=="?*", IMPORT{program}="$env{DM_SBIN_PATH}/dmsetup udevflags $env
 # is not recommended.
 ACTION!="add|change", GOTO="dm_end"
 
+# Rule out easy-to-detect inappropriate events first.
+ENV{DISK_RO}=="1", GOTO="dm_disable"
+
 # There is no cookie set nor any flags encoded in events not originating
 # in libdevmapper so we need to detect this and try to behave correctly.
 # For such spurious events, regenerate all flags from current udev database content
