@@ -103,9 +103,10 @@ check_pv_field_()
     local pv=$1;
     local field=$2;
     local expected=$3;
+    local pvs_args=$4; # optional
     local actual;
 
-    actual=$(trim $(pvs --noheadings -o $field $pv))
+    actual=$(trim $(pvs --noheadings $pvs_args -o $field $pv))
 if test "$verbose" = "t"
 then
   echo "check_pv_field_ PV=$pv, field=$field, actual=$actual, expected=$expected"

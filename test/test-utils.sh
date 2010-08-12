@@ -264,7 +264,7 @@ prepare_devs() {
 	local n="$1"
 	test -z "$n" && n=3
 	local devsize="$2"
-	test -z "$devsize" && devsize=33
+	test -z "$devsize" && devsize=34
 	local pvname="$3"
 	test -z "$pvname" && pvname="pv"
 

@@ -62,15 +62,23 @@ static uint32_t _vg_bad_status_bits(const struct volume_group *vg,
 const char _really_init[] =
     "Really INITIALIZE physical volume \"%s\" of volume group \"%s\" [y/n]? ";
 
+static int _alignment_overrides_default(unsigned long data_alignment)
+{
+	return data_alignment && (DEFAULT_PE_ALIGN % data_alignment);
+}
+
 unsigned long set_pe_align(struct physical_volume *pv, unsigned long data_alignment)
 {
+	unsigned long temp_pe_align;
+
 	if (pv->pe_align)
 		goto out;
 
 	if (data_alignment)
 		pv->pe_align = data_alignment;
 	else
-		pv->pe_align = MAX(65536UL, lvm_getpagesize()) >> SECTOR_SHIFT;
+		pv->pe_align = MAX((DEFAULT_PE_ALIGN << SECTOR_SHIFT),
+				   lvm_getpagesize()) >> SECTOR_SHIFT;
 
 	if (!pv->dev)
 		goto out;
@@ -79,10 +87,11 @@ unsigned long set_pe_align(struct physical_volume *pv, unsigned long data_alignm
 	 * Align to stripe-width of underlying md device if present
 	 */
 	if (find_config_tree_bool(pv->fmt->cmd, "devices/md_chunk_alignment",
-				  DEFAULT_MD_CHUNK_ALIGNMENT))
-		pv->pe_align = MAX(pv->pe_align,
-				   dev_md_stripe_width(pv->fmt->cmd->sysfs_dir,
-						       pv->dev));
+				  DEFAULT_MD_CHUNK_ALIGNMENT)) {
+		temp_pe_align = dev_md_stripe_width(pv->fmt->cmd->sysfs_dir, pv->dev);
+		if (_alignment_overrides_default(temp_pe_align))
+			pv->pe_align = temp_pe_align;
+	}
 
 	/*
 	 * Align to topology's minimum_io_size or optimal_io_size if present
@@ -94,13 +103,13 @@ unsigned long set_pe_align(struct physical_volume *pv, unsigned long data_alignm
 	if (find_config_tree_bool(pv->fmt->cmd,
 				  "devices/data_alignment_detection",
 				  DEFAULT_DATA_ALIGNMENT_DETECTION)) {
-		pv->pe_align = MAX(pv->pe_align,
-				   dev_minimum_io_size(pv->fmt->cmd->sysfs_dir,
-						       pv->dev));
+		temp_pe_align = dev_minimum_io_size(pv->fmt->cmd->sysfs_dir, pv->dev);
+		if (_alignment_overrides_default(temp_pe_align))
+			pv->pe_align = temp_pe_align;
 
-		pv->pe_align = MAX(pv->pe_align,
-				   dev_optimal_io_size(pv->fmt->cmd->sysfs_dir,
-						       pv->dev));
+		temp_pe_align = dev_optimal_io_size(pv->fmt->cmd->sysfs_dir, pv->dev);
+		if (_alignment_overrides_default(temp_pe_align))
+			pv->pe_align = temp_pe_align;
 	}
 
 	log_very_verbose("%s: Setting PE alignment to %lu sectors.",

@@ -130,11 +130,11 @@ check_pv_field_ $dev1 pe_start 200.00k
 vgremove -f $vg
 pvremove -f $dev1
 
-# data area is aligned to 64k by default,
+# data area is aligned to 1M by default,
 # data area start is shifted by the specified alignment_offset
-pv_align="195.50k"
+pv_align="1052160B" # 1048576 + (7*512)
 vgcreate -c n --metadatasize 128k --dataalignmentoffset 7s $vg $dev1
-check_pv_field_ $dev1 pe_start $pv_align
+check_pv_field_ $dev1 pe_start $pv_align "--units b"
 vgremove -f $vg
 pvremove -f $dev1
 

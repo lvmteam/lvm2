@@ -17,7 +17,7 @@ COMM() {
 	LAST_TEST="$@"
 }
 
-prepare_pvs 5 257
+prepare_pvs 5 258
 # FIXME: paramaterize lvm1 vs lvm2 metadata; most of these tests should run
 # fine with lvm1 metadata as well; for now, just add disks 5 and 6 as lvm1
 # metadata
