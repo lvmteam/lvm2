@@ -66,7 +66,7 @@ start()
 {
 	if ! rh_status_q; then
 		echo -n "Starting $DAEMON: "
-		daemon $DAEMON $CLVMDOPTS || return $?
+		$DAEMON $CLVMDOPTS || return $?
 		echo
 	fi
 
@@ -163,6 +163,11 @@ restart() {
 	    touch $LOCK_FILE
 	    return 0
 	fi
+}
+
+[ "$EUID" != "0" ] && {
+	echo "clvmd init script can only be executed as root user"
+	exit 4
 }
 
 # See how we were called.
