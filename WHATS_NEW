@@ -1,5 +1,6 @@
 Version 2.02.73 - 
 ================================
+  Fix clvmd init script exit code when executed as non-root user.
   Change default alignment of pe_start to 1MB.
   Add --norestorefile option to pvcreate.
   Require --restorefile when using pvcreate --uuid.
