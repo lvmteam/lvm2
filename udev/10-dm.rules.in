@@ -66,6 +66,7 @@ IMPORT{db}="DM_SUBSYSTEM_UDEV_FLAG4"
 IMPORT{db}="DM_SUBSYSTEM_UDEV_FLAG5"
 IMPORT{db}="DM_SUBSYSTEM_UDEV_FLAG6"
 IMPORT{db}="DM_SUBSYSTEM_UDEV_FLAG7"
+IMPORT{db}="DM_UDEV_RULES_VSN"
 LABEL="dm_flags_done"
 
 # Normally, we operate on "change" events. But when coldplugging, there's an
@@ -80,7 +81,7 @@ LABEL="dm_flags_done"
 # before (e.g. in initrd). If udev is used in initrd, we require the udev init
 # script to not remove the existing udev database so we can reuse the information
 # stored at the time of device activation in the initrd.
-ACTION=="add", ENV{DM_UDEV_PRIMARY_SOURCE_FLAG}!="1", GOTO="dm_disable"
+ACTION=="add", ENV{DM_UDEV_RULES_VSN}!="1", ENV{DM_UDEV_PRIMARY_SOURCE_FLAG}!="1", GOTO="dm_disable"
 
 # "dm" sysfs subdirectory is available in newer versions of DM
 # only (kernels >= 2.6.29). We have to check for its existence
@@ -106,7 +107,9 @@ ENV{DM_SUSPENDED}=="Suspended", ENV{DM_SUSPENDED}="1"
 # fact (e.g. fallback to rules that behave correctly even without
 # these rules installed). It also provides versioning for any
 # possible future changes.
-ENV{DM_UDEV_RULES_VSN}="1"
+# VSN 1 - original rules
+# VSN 2 - add support for synthesized events
+ENV{DM_UDEV_RULES_VSN}="2"
 
 ENV{DM_UDEV_DISABLE_DM_RULES_FLAG}!="1", ENV{DM_NAME}=="?*", SYMLINK+="(DM_DIR)/$env{DM_NAME}"
 
