@@ -37,6 +37,6 @@ pvcreate -ff -y $dev1
 pvcreate -ff -y $dev2
 vgcfgbackup -f "$(pwd)/backup.$$" $vg
 sed 's/flags = \[\"MISSING\"\]/flags = \[\]/' "$(pwd)/backup.$$" > "$(pwd)/backup.$$1"
-pvcreate -ff -y -u $pv1_uuid $dev1
-pvcreate -ff -y -u $pv2_uuid $dev2
+pvcreate -ff -y --norestorefile -u $pv1_uuid $dev1
+pvcreate -ff -y --norestorefile -u $pv2_uuid $dev2
 vgcfgrestore -f "$(pwd)/backup.$$1" $vg

@@ -497,6 +497,7 @@ xx(pvcreate,
    "Initialize physical volume(s) for use by LVM",
    0,
    "pvcreate " "\n"
+   "\t[--norestorefile]\n"
    "\t[--restorefile file]\n"
    "\t[-d|--debug]" "\n"
    "\t[-f[f]|--force [--force]] " "\n"
@@ -517,8 +518,9 @@ xx(pvcreate,
    "\tPhysicalVolume [PhysicalVolume...]\n",
 
    dataalignment_ARG, dataalignmentoffset_ARG, force_ARG, test_ARG,
-   labelsector_ARG, metadatatype_ARG, metadatacopies_ARG, pvmetadatacopies_ARG,
-   metadatasize_ARG, metadataignore_ARG, physicalvolumesize_ARG,
+   labelsector_ARG, metadatatype_ARG, metadatacopies_ARG,
+   metadatasize_ARG, metadataignore_ARG, norestorefile_ARG,
+   physicalvolumesize_ARG, pvmetadatacopies_ARG,
    restorefile_ARG, uuidstr_ARG, yes_ARG, zero_ARG)
 
 xx(pvdata,

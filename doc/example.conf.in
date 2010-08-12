@@ -130,6 +130,9 @@ devices {
     # Set this to 1 to skip such devices.  This should only be needed
     # in recovery situations.
     ignore_suspended_devices = 0
+
+    # Allow use of pvcreate --uuid without requiring --restorefile.
+    require_restorefile_with_uuid = 1
 }
 
 # This section that allows you to configure the nature of the

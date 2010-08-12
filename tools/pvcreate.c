@@ -36,6 +36,16 @@ static int pvcreate_restore_params_validate(struct cmd_context *cmd,
 		return 0;
 	}
 
+	if (!arg_count(cmd, restorefile_ARG) && arg_count(cmd, uuidstr_ARG)) {
+		if (!arg_count(cmd, norestorefile_ARG) &&
+		    find_config_tree_bool(cmd,
+					  "devices/require_restorefile_with_uuid",
+					  DEFAULT_REQUIRE_RESTOREFILE_WITH_UUID)) {
+			log_error("--restorefile is required with --uuid");
+			return 0;
+		}
+	}
+
 	if (arg_count(cmd, uuidstr_ARG) && argc != 1) {
 		log_error("Can only set uuid on one volume at once");
 		return 0;

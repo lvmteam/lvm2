@@ -1,5 +1,7 @@
 Version 2.02.73 - 
 ================================
+  Add --norestorefile option to pvcreate.
+  Require --restorefile when using pvcreate --uuid.
   Recognise and give preference to md device partitions (blkext major).
   Never scan internal LVM devices.
   Split-mirror operations were ignoring user-specified PVs.

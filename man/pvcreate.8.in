@@ -17,6 +17,7 @@ pvcreate \- initialize a disk or partition for use by LVM
 .RB [ \-\-dataalignment alignment ]
 .RB [ \-\-dataalignmentoffset alignment_offset ]
 .RB [ \-\-restorefile file ]
+.RB [ \-\-norestorefile ]
 .RB [ \-\-setphysicalvolumesize size ]
 .RB [ \-u | \-\-uuid uuid ]
 .RB [ \-\-version ]
@@ -60,7 +61,9 @@ Specify the uuid for the device.
 Without this option, \fBpvcreate\fP generates a random uuid.
 All of your physical volumes must have unique uuids.
 You need to use this option before restoring a backup of LVM metadata 
-onto a replacement device - see \fBvgcfgrestore\fP(8).
+onto a replacement device - see \fBvgcfgrestore\fP(8).  As such, use of
+\fB--restorefile\fP is compulsory unless the \fB--norestorefile\fP is
+used.
 .TP
 .BR \-y ", " \-\-yes
 Answer yes to all questions.
@@ -137,6 +140,10 @@ with the contents of the file i.e. the physical extents will be in
 the same place and not get overwritten by new metadata.  This provides
 a mechanism to upgrade the metadata format or to add/remove metadata
 areas. Use with care. See also \fBvgconvert\fP(8).
+.TP
+.BR \-\-norestorefile
+In conjunction with \fB--uuid\fP, this allows a uuid to be specified
+without also requiring that a backup of the metadata be provided.
 .TP
 .BR \-\-labelsector " sector"
 By default the PV is labelled with an LVM2 identifier in its second 
