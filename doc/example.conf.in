@@ -509,9 +509,13 @@ dmeventd {
     # snapshot_library is the library used when monitoring a snapshot device.
     #
     # "libdevmapper-event-lvm2snapshot.so" monitors the filling of
-    # snapshots and emits a warning through syslog, when the use of
-    # snapshot exceedes 80%. The warning is repeated when 85%, 90% and
-    # 95% of the snapshot are filled.
+    # snapshots and emits a warning through syslog when the use of
+    # the snapshot exceeds 80%. The warning is repeated when 85%, 90% and
+    # 95% of the snapshot is filled.
 
     snapshot_library = "libdevmapper-event-lvm2snapshot.so"
+
+    # Full path of the dmeventd binary.
+    #
+    # executable = "@DMEVENTD_PATH@"
 }

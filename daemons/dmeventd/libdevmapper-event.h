@@ -55,11 +55,16 @@ void dm_event_handler_destroy(struct dm_event_handler *dmevh);
 /*
  * Path of shared library to handle events.
  *
- * All of dso, device_name and uuid strings are duplicated, you do not
- * need to keep the pointers valid after the call succeeds. Thes may
- * return -ENOMEM though.
+ * All of dmeventd, dso, device_name and uuid strings are duplicated so
+ * you do not need to keep the pointers valid after the call succeeds.
+ * They may return -ENOMEM though.
  */
 int dm_event_handler_set_dso(struct dm_event_handler *dmevh, const char *path);
+
+/*
+ * Path of dmeventd binary.
+ */
+int dm_event_handler_set_dmeventd_path(struct dm_event_handler *dmevh, const char *dmeventd_path);
 
 /*
  * Identify the device to monitor by exactly one of device_name, uuid or

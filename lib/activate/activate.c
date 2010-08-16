@@ -28,6 +28,7 @@
 #include "config.h"
 #include "filter.h"
 #include "segtype.h"
+#include "sharedlib.h"
 
 #include <limits.h>
 #include <fcntl.h>
@@ -726,6 +727,112 @@ int lv_is_active(struct logical_volume *lv)
 	 */
 	return 1;
 }
+
+#ifdef DMEVENTD
+static struct dm_event_handler *_create_dm_event_handler(struct cmd_context *cmd, const char *dmuuid, const char *dso,
+							 const int timeout, enum dm_event_mask mask)
+{
+	struct dm_event_handler *dmevh;
+
+	if (!(dmevh = dm_event_handler_create()))
+		return_NULL;
+
+	if (dm_event_handler_set_dmeventd_path(dmevh, find_config_tree_str(cmd, "dmeventd/executable", NULL)))
+		goto_bad;
+
+	if (dm_event_handler_set_dso(dmevh, dso))
+		goto_bad;
+
+	if (dm_event_handler_set_uuid(dmevh, dmuuid))
+		goto_bad;
+
+	dm_event_handler_set_timeout(dmevh, timeout);
+	dm_event_handler_set_event_mask(dmevh, mask);
+
+	return dmevh;
+
+bad:
+	dm_event_handler_destroy(dmevh);
+	return NULL;
+}
+
+char *get_monitor_dso_path(struct cmd_context *cmd, const char *libpath)
+{
+	char *path;
+
+	if (!(path = dm_pool_alloc(cmd->mem, PATH_MAX))) {
+		log_error("Failed to allocate dmeventd library path.");
+		return NULL;
+	}
+
+	get_shared_library_path(cmd, libpath, path, PATH_MAX);
+
+	return path;
+}
+
+int target_registered_with_dmeventd(struct cmd_context *cmd, const char *dso, const char *lvid, int *pending)
+{
+	char *uuid;
+	enum dm_event_mask evmask = 0;
+	struct dm_event_handler *dmevh;
+
+	*pending = 0;
+
+	if (!dso)
+		return_0;
+
+	if (!(uuid = build_dm_uuid(cmd->mem, lvid, NULL)))
+		return_0;
+
+	if (!(dmevh = _create_dm_event_handler(cmd, uuid, dso, 0, DM_EVENT_ALL_ERRORS)))
+		return_0;
+
+	if (dm_event_get_registered_device(dmevh, 0)) {
+		dm_event_handler_destroy(dmevh);
+		return 0;
+	}
+
+	evmask = dm_event_handler_get_event_mask(dmevh);
+	if (evmask & DM_EVENT_REGISTRATION_PENDING) {
+		*pending = 1;
+		evmask &= ~DM_EVENT_REGISTRATION_PENDING;
+	}
+
+	dm_event_handler_destroy(dmevh);
+
+	return evmask;
+}
+
+int target_register_events(struct cmd_context *cmd, const char *dso, const char *lvid,
+			    int evmask __attribute__((unused)), int set, int timeout)
+{
+	char *uuid;
+	struct dm_event_handler *dmevh;
+	int r;
+
+	if (!dso)
+		return_0;
+
+	if (!(uuid = build_dm_uuid(cmd->mem, lvid, NULL)))
+		return_0;
+
+	if (!(dmevh = _create_dm_event_handler(cmd, uuid, dso, timeout,
+					       DM_EVENT_ALL_ERRORS | (timeout ? DM_EVENT_TIMEOUT : 0))))
+		return_0;
+
+	r = set ? dm_event_register_handler(dmevh) : dm_event_unregister_handler(dmevh);
+
+	dm_event_handler_destroy(dmevh);
+
+	if (!r)
+		return_0;
+
+	log_info("%s %s for events", set ? "Monitored" : "Unmonitored", uuid);
+
+	return 1;
+}
+
+#endif
 
 /*
  * Returns 0 if an attempt to (un)monitor the device failed.

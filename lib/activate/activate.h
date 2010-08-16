@@ -44,7 +44,7 @@ int module_present(struct cmd_context *cmd, const char *target_name);
 int target_present(struct cmd_context *cmd, const char *target_name,
 		   int use_modprobe);
 int target_version(const char *target_name, uint32_t *maj,
-                   uint32_t *min, uint32_t *patchlevel);
+		   uint32_t *min, uint32_t *patchlevel);
 int list_segment_modules(struct dm_pool *mem, const struct lv_segment *seg,
 			 struct dm_list *modules);
 int list_lv_modules(struct dm_pool *mem, const struct logical_volume *lv,
@@ -101,6 +101,14 @@ int lv_has_target_type(struct dm_pool *mem, struct logical_volume *lv,
 
 int monitor_dev_for_events(struct cmd_context *cmd,
 			    struct logical_volume *lv, int do_reg);
+
+#ifdef DMEVENTD
+#  include "libdevmapper-event.h"
+char *get_monitor_dso_path(struct cmd_context *cmd, const char *libpath);
+int target_registered_with_dmeventd(struct cmd_context *cmd, const char *libpath, const char *lvid, int *pending);
+int target_register_events(struct cmd_context *cmd, const char *dso, const char *lvid,
+			    int evmask __attribute__((unused)), int set, int timeout);
+#endif
 
 /*
  * Returns 1 if PV has a dependency tree that uses anything in VG.

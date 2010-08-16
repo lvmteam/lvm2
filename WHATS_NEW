@@ -1,5 +1,8 @@
 Version 2.02.73 - 
 ================================
+  Fix some exit statuses when starting/stopping monitoring fails.
+  Enable snapshot monitoring by default when dmeventd is enabled.
+  Move cloned libdevmapper-event client code from segments into lib/activate.
   Fix 'lvconvert --splitmirrors' in cluster operation.
   Fix clvmd init script exit code when executed as non-root user.
   Change default alignment of pe_start to 1MB.

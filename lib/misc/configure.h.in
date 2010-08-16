@@ -417,6 +417,9 @@
 /* Define to 1 if you have the <utmpx.h> header file. */
 #undef HAVE_UTMPX_H
 
+/* Define to 1 if you have the <valgrind/memcheck.h> header file. */
+#undef HAVE_VALGRIND_MEMCHECK_H
+
 /* Define to 1 if you have the `vfork' function. */
 #undef HAVE_VFORK
 
@@ -521,6 +524,9 @@
 
 /* Define to 1 to enable synchronisation with udev processing. */
 #undef UDEV_SYNC_SUPPORT
+
+/* Enable a valgrind aware build of pool */
+#undef VALGRIND_POOL
 
 /* Define for Solaris 2.5.1 so the uint32_t typedef from <sys/synch.h>,
    <pthread.h>, or <semaphore.h> is not used. If the typedef were allowed, the
