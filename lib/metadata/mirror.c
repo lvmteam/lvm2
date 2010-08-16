@@ -719,19 +719,8 @@ static int _split_mirror_images(struct logical_volume *lv,
 		return 0;
 	}
 
-	/*
-	 * Suspend the newly split-off LV (balance memlock count
-	 * and prepare for DM automated renaming via resume).
-	 */
-	if (!suspend_lv(lv->vg->cmd, new_lv)) {
-		log_error("Failed to lock newly split LV, %s", new_lv->name);
-		vg_revert(lv->vg);
-		return 0;
-	}
-
 	/* Bring newly split-off LV into existence */
-	log_very_verbose("Creating %s", new_lv->name);
-	if (!resume_lv(lv->vg->cmd, new_lv)) {
+	if (!activate_lv(lv->vg->cmd, new_lv)) {
 		log_error("Failed to activate newly split LV, %s",
 			  new_lv->name);
 		return 0;
