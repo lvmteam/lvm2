@@ -48,6 +48,9 @@ CFLOW_LIST = $(SOURCES)
 CFLOW_LIST_TARGET = $(LIB_NAME).cflow
 CFLOW_TARGET = dmeventd
 
+EXPORTED_HEADER = $(srcdir)/libdevmapper-event.h
+EXPORTED_FN_PREFIX = dm_event
+
 include $(top_builddir)/make.tmpl
 
 all: device-mapper
@@ -102,4 +105,4 @@ install: install_include install_lib install_dmeventd
 
 install_device-mapper: install_include install_lib install_dmeventd
 
-DISTCLEAN_TARGETS += libdevmapper-event.pc
+DISTCLEAN_TARGETS += libdevmapper-event.pc .exported_symbols_generated

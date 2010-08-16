@@ -15,14 +15,17 @@
 
 #include "tools.h"
 
+/*
+ * Increments *count by the number of _new_ monitored devices.
+ */
 static int _monitor_lvs_in_vg(struct cmd_context *cmd,
-			       struct volume_group *vg, int reg)
+			      struct volume_group *vg, int reg, int *count)
 {
 	struct lv_list *lvl;
 	struct logical_volume *lv;
 	struct lvinfo info;
 	int lv_active;
-	int count = 0;
+	int r = ECMD_PROCESSED;
 
 	dm_list_iterate_items(lvl, &vg->lvs) {
 		lv = lvl->lv;
@@ -39,16 +42,13 @@ static int _monitor_lvs_in_vg(struct cmd_context *cmd,
 			continue;
 
 		if (!monitor_dev_for_events(cmd, lv, reg)) {
+			r = ECMD_FAILED;
 			continue;
 		} else
-			count++;
+			(*count)++;
 	}
 
-	/*
-	 * returns the number of _new_ monitored devices
-	 */
-
-	return count;
+	return r;
 }
 
 static int _poll_lvs_in_vg(struct cmd_context *cmd,
@@ -160,17 +160,18 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd,
 
 static int _vgchange_monitoring(struct cmd_context *cmd, struct volume_group *vg)
 {
-	int monitored;
+	int ret_max = ECMD_PROCESSED;
+	int monitored = 0;
 
 	if (lvs_in_vg_activated(vg) &&
 	    dmeventd_monitor_mode() != DMEVENTD_MONITOR_IGNORE) {
-		monitored = _monitor_lvs_in_vg(cmd, vg, dmeventd_monitor_mode());
+		ret_max = max(ret_max, _monitor_lvs_in_vg(cmd, vg, dmeventd_monitor_mode(), &monitored));
 		log_print("%d logical volume(s) in volume group "
 			    "\"%s\" %smonitored",
 			    monitored, vg->name, (dmeventd_monitor_mode()) ? "" : "un");
 	}
 
-	return ECMD_PROCESSED;
+	return ret_max;
 }
 
 static int _vgchange_background_polling(struct cmd_context *cmd, struct volume_group *vg)
@@ -190,7 +191,7 @@ static int _vgchange_background_polling(struct cmd_context *cmd, struct volume_g
 static int _vgchange_available(struct cmd_context *cmd, struct volume_group *vg)
 {
 	int lv_open, active, monitored;
-	int available, ret;
+	int available, ret_max = ECMD_PROCESSED;
 	int activate = 1;
 
 	/*
@@ -219,7 +220,7 @@ static int _vgchange_available(struct cmd_context *cmd, struct volume_group *vg)
 		log_verbose("%d logical volume(s) in volume group \"%s\" "
 			    "already active", active, vg->name);
 		if (dmeventd_monitor_mode() != DMEVENTD_MONITOR_IGNORE) {
-			monitored = _monitor_lvs_in_vg(cmd, vg, dmeventd_monitor_mode());
+			ret_max = max(ret_max, _monitor_lvs_in_vg(cmd, vg, dmeventd_monitor_mode(), &monitored));
 			log_verbose("%d existing logical volume(s) in volume "
 				    "group \"%s\" %smonitored",
 				    monitored, vg->name,
@@ -227,13 +228,13 @@ static int _vgchange_available(struct cmd_context *cmd, struct volume_group *vg)
 		}
 	}
 
-	ret = _activate_lvs_in_vg(cmd, vg, available);
+	ret_max = max(ret_max, _activate_lvs_in_vg(cmd, vg, available));
 
 	/* Print message only if there was not found a missing VG */
 	if (!vg->cmd_missing_vgs)
 		log_print("%d logical volume(s) in volume group \"%s\" now active",
 			  lvs_in_vg_activated(vg), vg->name);
-	return ret;
+	return ret_max;
 }
 
 static int _vgchange_alloc(struct cmd_context *cmd, struct volume_group *vg)

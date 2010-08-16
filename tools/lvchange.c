@@ -97,7 +97,7 @@ static int lvchange_monitoring(struct cmd_context *cmd,
 
 	if ((dmeventd_monitor_mode() != DMEVENTD_MONITOR_IGNORE) &&
 	    !monitor_dev_for_events(cmd, lv, dmeventd_monitor_mode()))
-		stack;
+		return_0;
 
 	return 1;
 }

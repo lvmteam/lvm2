@@ -35,6 +35,8 @@ static int _sequence_nr = 0;
 struct dm_event_handler {
 	char *dso;
 
+	char *dmeventd_path;
+
 	char *dev_name;
 
 	char *uuid;
@@ -60,6 +62,7 @@ struct dm_event_handler *dm_event_handler_create(void)
 	if (!(dmevh = dm_malloc(sizeof(*dmevh))))
 		return NULL;
 
+	dmevh->dmeventd_path = NULL;
 	dmevh->dso = dmevh->dev_name = dmevh->uuid = NULL;
 	dmevh->major = dmevh->minor = 0;
 	dmevh->mask = 0;
@@ -72,7 +75,22 @@ void dm_event_handler_destroy(struct dm_event_handler *dmevh)
 {
 	_dm_event_handler_clear_dev_info(dmevh);
 	dm_free(dmevh->dso);
+	dm_free(dmevh->dmeventd_path);
 	dm_free(dmevh);
+}
+
+int dm_event_handler_set_dmeventd_path(struct dm_event_handler *dmevh, const char *dmeventd_path)
+{
+	if (!dmeventd_path) /* noop */
+		return 0;
+
+	dm_free(dmevh->dmeventd_path);
+
+	dmevh->dmeventd_path = dm_strdup(dmeventd_path);
+	if (!dmevh->dmeventd_path)
+		return -ENOMEM;
+
+	return 0;
 }
 
 int dm_event_handler_set_dso(struct dm_event_handler *dmevh, const char *path)
@@ -387,13 +405,13 @@ static int _daemon_talk(struct dm_event_fifos *fifos,
  *
  * Returns: 1 on success, 0 otherwise
  */
-static int _start_daemon(struct dm_event_fifos *fifos)
+static int _start_daemon(char *dmeventd_path, struct dm_event_fifos *fifos)
 {
 	int pid, ret = 0;
 	int status;
 	struct stat statbuf;
-	char dmeventdpath[] = DMEVENTD_PATH; /* const type for execvp */
-	char * const args[] = { dmeventdpath, NULL };
+	char default_dmeventd_path[] = DMEVENTD_PATH;
+	char *args[] = { dmeventd_path ? : default_dmeventd_path, NULL };
 
 	if (stat(fifos->client_path, &statbuf))
 		goto start_server;
@@ -449,17 +467,19 @@ static int _start_daemon(struct dm_event_fifos *fifos)
 }
 
 /* Initialize client. */
-static int _init_client(struct dm_event_fifos *fifos)
+static int _init_client(char *dmeventd_path, struct dm_event_fifos *fifos)
 {
 	/* FIXME? Is fifo the most suitable method? Why not share
 	   comms/daemon code with something else e.g. multipath? */
 
 	/* init fifos */
 	memset(fifos, 0, sizeof(*fifos));
+
+	/* FIXME Make these either configurable or depend directly on dmeventd_path */
 	fifos->client_path = DM_EVENT_FIFO_CLIENT;
 	fifos->server_path = DM_EVENT_FIFO_SERVER;
 
-	if (!_start_daemon(fifos)) {
+	if (!_start_daemon(dmeventd_path, fifos)) {
 		stack;
 		return 0;
 	}
@@ -544,14 +564,14 @@ failed:
 }
 
 /* Handle the event (de)registration call and return negative error codes. */
-static int _do_event(int cmd, struct dm_event_daemon_message *msg,
+static int _do_event(int cmd, char *dmeventd_path, struct dm_event_daemon_message *msg,
 		     const char *dso_name, const char *dev_name,
 		     enum dm_event_mask evmask, uint32_t timeout)
 {
 	int ret;
 	struct dm_event_fifos fifos;
 
-	if (!_init_client(&fifos)) {
+	if (!_init_client(dmeventd_path, &fifos)) {
 		stack;
 		return -ESRCH;
 	}
@@ -585,7 +605,7 @@ int dm_event_register_handler(const struct dm_event_handler *dmevh)
 
 	uuid = dm_task_get_uuid(dmt);
 
-	if ((err = _do_event(DM_EVENT_CMD_REGISTER_FOR_EVENT, &msg,
+	if ((err = _do_event(DM_EVENT_CMD_REGISTER_FOR_EVENT, dmevh->dmeventd_path, &msg,
 			     dmevh->dso, uuid, dmevh->mask, dmevh->timeout)) < 0) {
 		log_error("%s: event registration failed: %s",
 			  dm_task_get_name(dmt),
@@ -614,7 +634,7 @@ int dm_event_unregister_handler(const struct dm_event_handler *dmevh)
 
 	uuid = dm_task_get_uuid(dmt);
 
-	if ((err = _do_event(DM_EVENT_CMD_UNREGISTER_FOR_EVENT, &msg,
+	if ((err = _do_event(DM_EVENT_CMD_UNREGISTER_FOR_EVENT, dmevh->dmeventd_path, &msg,
 			    dmevh->dso, uuid, dmevh->mask, dmevh->timeout)) < 0) {
 		log_error("%s: event deregistration failed: %s",
 			  dm_task_get_name(dmt),
@@ -689,7 +709,7 @@ int dm_event_get_registered_device(struct dm_event_handler *dmevh, int next)
 	uuid = dm_task_get_uuid(dmt);
 
 	if (!(ret = _do_event(next ? DM_EVENT_CMD_GET_NEXT_REGISTERED_DEVICE :
-			     DM_EVENT_CMD_GET_REGISTERED_DEVICE,
+			     DM_EVENT_CMD_GET_REGISTERED_DEVICE, dmevh->dmeventd_path,
 			      &msg, dmevh->dso, uuid, dmevh->mask, 0))) {
 		/* FIXME this will probably horribly break if we get
 		   ill-formatted reply */

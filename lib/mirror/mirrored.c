@@ -30,10 +30,6 @@
 
 #include <sys/utsname.h>
 
-#ifdef DMEVENTD
-#  include "libdevmapper-event.h"
-#endif
-
 static int _block_on_error_available = 0;
 static unsigned _mirror_attributes = 0;
 
@@ -520,19 +516,19 @@ static int _mirrored_target_present(struct cmd_context *cmd,
 			} else if (module_present(cmd, "log-userspace"))
 				_mirror_attributes |= MIRROR_LOG_CLUSTERED;
 
-                        if (!(_mirror_attributes & MIRROR_LOG_CLUSTERED))
-                                log_verbose("Cluster mirror log module is not available");
+			if (!(_mirror_attributes & MIRROR_LOG_CLUSTERED))
+				log_verbose("Cluster mirror log module is not available");
 
-                        /*
-                         * The cluster mirror log daemon must be running,
-                         * otherwise, the kernel module will fail to make
-                         * contact.
-                         */
+			/*
+			 * The cluster mirror log daemon must be running,
+			 * otherwise, the kernel module will fail to make
+			 * contact.
+			 */
 #ifdef CMIRRORD_PIDFILE
-                        if (!dm_daemon_is_running(CMIRRORD_PIDFILE)) {
-                                log_verbose("Cluster mirror log daemon is not running");
-                                _mirror_attributes &= ~MIRROR_LOG_CLUSTERED;
-                        }
+			if (!dm_daemon_is_running(CMIRRORD_PIDFILE)) {
+				log_verbose("Cluster mirror log daemon is not running");
+				_mirror_attributes &= ~MIRROR_LOG_CLUSTERED;
+			}
 #else
 			log_verbose("Cluster mirror log daemon not included in build");
 			_mirror_attributes &= ~MIRROR_LOG_CLUSTERED;
@@ -546,116 +542,23 @@ static int _mirrored_target_present(struct cmd_context *cmd,
 }
 
 #ifdef DMEVENTD
-static int _get_mirror_dso_path(struct cmd_context *cmd, char **dso)
+static const char *_get_mirror_dso_path(struct cmd_context *cmd)
 {
-	char *path;
-	const char *libpath;
-
-	if (!(path = dm_pool_alloc(cmd->mem, PATH_MAX))) {
-		log_error("Failed to allocate dmeventd library path.");
-		return 0;
-	}
-
-	libpath = find_config_tree_str(cmd, "dmeventd/mirror_library",
-				       DEFAULT_DMEVENTD_MIRROR_LIB);
-
-	get_shared_library_path(cmd, libpath, path, PATH_MAX);
-
-	*dso = path;
-
-	return 1;
+	return get_monitor_dso_path(cmd, find_config_tree_str(cmd, "dmeventd/mirror_library",
+							      DEFAULT_DMEVENTD_MIRROR_LIB));
 }
 
-static struct dm_event_handler *_create_dm_event_handler(const char *dmuuid,
-							 const char *dso,
-							 enum dm_event_mask mask)
+static int _target_registered(struct lv_segment *seg, int *pending)
 {
-	struct dm_event_handler *dmevh;
-
-	if (!(dmevh = dm_event_handler_create()))
-		return_0;
-
-       if (dm_event_handler_set_dso(dmevh, dso))
-		goto fail;
-
-	if (dm_event_handler_set_uuid(dmevh, dmuuid))
-		goto fail;
-
-	dm_event_handler_set_event_mask(dmevh, mask);
-	return dmevh;
-
-fail:
-	dm_event_handler_destroy(dmevh);
-	return NULL;
-}
-
-static int _target_monitored(struct lv_segment *seg, int *pending)
-{
-	char *dso, *uuid;
-	struct logical_volume *lv;
-	struct volume_group *vg;
-	enum dm_event_mask evmask = 0;
-	struct dm_event_handler *dmevh;
-
-	lv = seg->lv;
-	vg = lv->vg;
-
-	*pending = 0;
-	if (!_get_mirror_dso_path(vg->cmd, &dso))
-		return_0;
-
-	if (!(uuid = build_dm_uuid(vg->cmd->mem, lv->lvid.s, NULL)))
-		return_0;
-
-	if (!(dmevh = _create_dm_event_handler(uuid, dso, DM_EVENT_ALL_ERRORS)))
-		return_0;
-
-	if (dm_event_get_registered_device(dmevh, 0)) {
-		dm_event_handler_destroy(dmevh);
-		return 0;
-	}
-
-	evmask = dm_event_handler_get_event_mask(dmevh);
-	if (evmask & DM_EVENT_REGISTRATION_PENDING) {
-		*pending = 1;
-		evmask &= ~DM_EVENT_REGISTRATION_PENDING;
-	}
-
-	dm_event_handler_destroy(dmevh);
-
-	return evmask;
+	return target_registered_with_dmeventd(seg->lv->vg->cmd, _get_mirror_dso_path(seg->lv->vg->cmd),
+					       seg->lv->lvid.s, pending);
 }
 
 /* FIXME This gets run while suspended and performs banned operations. */
-static int _target_set_events(struct lv_segment *seg,
-			      int evmask __attribute__((unused)), int set)
+static int _target_set_events(struct lv_segment *seg, int evmask, int set)
 {
-	char *dso, *uuid;
-	struct logical_volume *lv;
-	struct volume_group *vg;
-	struct dm_event_handler *dmevh;
-	int r;
-
-	lv = seg->lv;
-	vg = lv->vg;
-
-	if (!_get_mirror_dso_path(vg->cmd, &dso))
-		return_0;
-
-	if (!(uuid = build_dm_uuid(vg->cmd->mem, lv->lvid.s, NULL)))
-		return_0;
-
-	if (!(dmevh = _create_dm_event_handler(uuid, dso, DM_EVENT_ALL_ERRORS)))
-		return_0;
-
-	r = set ? dm_event_register_handler(dmevh) : dm_event_unregister_handler(dmevh);
-	dm_event_handler_destroy(dmevh);
-	if (!r)
-		return_0;
-
-	log_info("%s %s for events", set ? "Monitored" : "Unmonitored", uuid);
-
-	return 1;
+	return target_register_events(seg->lv->vg->cmd, _get_mirror_dso_path(seg->lv->vg->cmd),
+				      seg->lv->lvid.s, evmask, set, 0);
 }
 
 static int _target_monitor_events(struct lv_segment *seg, int events)
@@ -710,7 +613,7 @@ static struct segtype_handler _mirrored_ops = {
 	.target_present = _mirrored_target_present,
 	.check_transient_status = _mirrored_transient_status,
 #ifdef DMEVENTD
-	.target_monitored = _target_monitored,
+	.target_monitored = _target_registered,
 	.target_monitor_events = _target_monitor_events,
 	.target_unmonitor_events = _target_unmonitor_events,
 #endif
@@ -735,7 +638,12 @@ struct segment_type *init_segtype(struct cmd_context *cmd)
 	segtype->ops = &_mirrored_ops;
 	segtype->name = "mirror";
 	segtype->private = NULL;
-	segtype->flags = SEG_AREAS_MIRRORED | SEG_MONITORED;
+	segtype->flags = SEG_AREAS_MIRRORED;
+
+#ifdef DMEVENTD
+	if (_get_mirror_dso_path(cmd))
+		segtype->flags |= SEG_MONITORED;
+#endif
 
 	log_very_verbose("Initialised segtype: %s", segtype->name);
 

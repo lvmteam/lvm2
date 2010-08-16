@@ -21,10 +21,7 @@
 #include "config.h"
 #include "activate.h"
 #include "str_list.h"
-#ifdef DMEVENTD
-#  include "sharedlib.h"
-#  include "libdevmapper-event.h"
-#endif
+#include "defaults.h"
 
 static const char *_snap_name(const struct lv_segment *seg)
 {
@@ -164,117 +161,25 @@ static int _snap_target_present(struct cmd_context *cmd,
 }
 
 #ifdef DMEVENTD
-static int _get_snapshot_dso_path(struct cmd_context *cmd, char **dso)
+
+static const char *_get_snapshot_dso_path(struct cmd_context *cmd)
 {
-	char *path;
-	const char *libpath;
-
-	if (!(path = dm_pool_alloc(cmd->mem, PATH_MAX))) {
-		log_error("Failed to allocate dmeventd library path.");
-		return 0;
-	}
-
-	libpath = find_config_tree_str(cmd, "dmeventd/snapshot_library", NULL);
-	if (!libpath)
-		return 0;
-
-	get_shared_library_path(cmd, libpath, path, PATH_MAX);
-
-	*dso = path;
-
-	return 1;
-}
-
-static struct dm_event_handler *_create_dm_event_handler(const char *dmuuid,
-							 const char *dso,
-							 const int timeout,
-							 enum dm_event_mask mask)
-{
-	struct dm_event_handler *dmevh;
-
-	if (!(dmevh = dm_event_handler_create()))
-		return_0;
-
-       if (dm_event_handler_set_dso(dmevh, dso))
-		goto fail;
-
-	if (dm_event_handler_set_uuid(dmevh, dmuuid))
-		goto fail;
-
-	dm_event_handler_set_timeout(dmevh, timeout);
-	dm_event_handler_set_event_mask(dmevh, mask);
-	return dmevh;
-
-fail:
-	dm_event_handler_destroy(dmevh);
-	return NULL;
+	return get_monitor_dso_path(cmd, find_config_tree_str(cmd, "dmeventd/snapshot_library",
+							      DEFAULT_DMEVENTD_SNAPSHOT_LIB));
 }
 
 static int _target_registered(struct lv_segment *seg, int *pending)
 {
-	char *dso, *uuid;
-	struct logical_volume *lv;
-	struct volume_group *vg;
-	enum dm_event_mask evmask = 0;
-	struct dm_event_handler *dmevh;
-
-	lv = seg->lv;
-	vg = lv->vg;
-
-	*pending = 0;
-	if (!_get_snapshot_dso_path(vg->cmd, &dso))
-		return_0;
-
-	if (!(uuid = build_dm_uuid(vg->cmd->mem, seg->cow->lvid.s, NULL)))
-		return_0;
-
-	if (!(dmevh = _create_dm_event_handler(uuid, dso, 0, DM_EVENT_ALL_ERRORS)))
-		return_0;
-
-	if (dm_event_get_registered_device(dmevh, 0)) {
-		dm_event_handler_destroy(dmevh);
-		return 0;
-	}
-
-	evmask = dm_event_handler_get_event_mask(dmevh);
-	if (evmask & DM_EVENT_REGISTRATION_PENDING) {
-		*pending = 1;
-		evmask &= ~DM_EVENT_REGISTRATION_PENDING;
-	}
-
-	dm_event_handler_destroy(dmevh);
-
-	return evmask;
+	return target_registered_with_dmeventd(seg->lv->vg->cmd, _get_snapshot_dso_path(seg->lv->vg->cmd),
+					       seg->cow->lvid.s, pending);
 }
 
 /* FIXME This gets run while suspended and performs banned operations. */
-static int _target_set_events(struct lv_segment *seg,
-			      int events __attribute__((unused)), int set)
+static int _target_set_events(struct lv_segment *seg, int evmask, int set)
 {
-	char *dso, *uuid;
-	struct volume_group *vg = seg->lv->vg;
-	struct dm_event_handler *dmevh;
-	int r;
-
-	if (!_get_snapshot_dso_path(vg->cmd, &dso))
-		return_0;
-
-	if (!(uuid = build_dm_uuid(vg->cmd->mem, seg->cow->lvid.s, NULL)))
-		return_0;
-
-	/* FIXME: make timeout configurable */
-	if (!(dmevh = _create_dm_event_handler(uuid, dso, 10,
-		DM_EVENT_ALL_ERRORS|DM_EVENT_TIMEOUT)))
-		return_0;
-
-	r = set ? dm_event_register_handler(dmevh) : dm_event_unregister_handler(dmevh);
-	dm_event_handler_destroy(dmevh);
-	if (!r)
-		return_0;
-
-	log_info("%s %s for events", set ? "Registered" : "Unregistered", uuid);
-
-	return 1;
+	/* FIXME Make timeout (10) configurable */
+	return target_register_events(seg->lv->vg->cmd, _get_snapshot_dso_path(seg->lv->vg->cmd),
+				      seg->cow->lvid.s, evmask, set, 10);
 }
 
 static int _target_register_events(struct lv_segment *seg,
@@ -335,9 +240,6 @@ struct segment_type *init_segtype(struct cmd_context *cmd)
 #endif
 {
 	struct segment_type *segtype = dm_malloc(sizeof(*segtype));
-#ifdef DMEVENTD
-	char *dso;
-#endif
 
 	if (!segtype)
 		return_NULL;
@@ -349,7 +251,7 @@ struct segment_type *init_segtype(struct cmd_context *cmd)
 	segtype->flags = SEG_SNAPSHOT;
 
 #ifdef DMEVENTD
-	if (_get_snapshot_dso_path(cmd, &dso))
+	if (_get_snapshot_dso_path(cmd))
 		segtype->flags |= SEG_MONITORED;
 #endif
 	log_very_verbose("Initialised segtype: %s", segtype->name);
