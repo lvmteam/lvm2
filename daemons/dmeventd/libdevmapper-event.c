@@ -47,10 +47,8 @@ struct dm_event_handler {
 
 static void _dm_event_handler_clear_dev_info(struct dm_event_handler *dmevh)
 {
-	if (dmevh->dev_name)
-		dm_free(dmevh->dev_name);
-	if (dmevh->uuid)
-		dm_free(dmevh->uuid);
+	dm_free(dmevh->dev_name);
+	dm_free(dmevh->uuid);
 	dmevh->dev_name = dmevh->uuid = NULL;
 	dmevh->major = dmevh->minor = 0;
 }
@@ -73,8 +71,7 @@ struct dm_event_handler *dm_event_handler_create(void)
 void dm_event_handler_destroy(struct dm_event_handler *dmevh)
 {
 	_dm_event_handler_clear_dev_info(dmevh);
-	if (dmevh->dso)
-		dm_free(dmevh->dso);
+	dm_free(dmevh->dso);
 	dm_free(dmevh);
 }
 
@@ -82,8 +79,7 @@ int dm_event_handler_set_dso(struct dm_event_handler *dmevh, const char *path)
 {
 	if (!path) /* noop */
 		return 0;
-	if (dmevh->dso)
-		dm_free(dmevh->dso);
+	dm_free(dmevh->dso);
 
 	dmevh->dso = dm_strdup(path);
 	if (!dmevh->dso)
@@ -259,8 +255,7 @@ static int _daemon_read(struct dm_event_fifos *fifos,
 	}
 
 	if (bytes != size) {
-		if (msg->data)
-			dm_free(msg->data);
+		dm_free(msg->data);
 		msg->data = NULL;
 	}
 
@@ -366,8 +361,7 @@ static int _daemon_talk(struct dm_event_fifos *fifos,
 
 	do {
 
-		if (msg->data)
-			dm_free(msg->data);
+		dm_free(msg->data);
 		msg->data = 0;
 
 		if (!_daemon_read(fifos, msg)) {
@@ -564,8 +558,7 @@ static int _do_event(int cmd, struct dm_event_daemon_message *msg,
 
 	ret = _daemon_talk(&fifos, msg, DM_EVENT_CMD_HELLO, 0, 0, 0, 0);
 
-	if (msg->data)
-		dm_free(msg->data);
+	dm_free(msg->data);
 	msg->data = 0;
 
 	if (!ret)
@@ -600,8 +593,7 @@ int dm_event_register_handler(const struct dm_event_handler *dmevh)
 		ret = 0;
 	}
 
-	if (msg.data)
-		dm_free(msg.data);
+	dm_free(msg.data);
 
 	dm_task_destroy(dmt);
 
@@ -630,8 +622,7 @@ int dm_event_unregister_handler(const struct dm_event_handler *dmevh)
 		ret = 0;
 	}
 
-	if (msg.data)
-		dm_free(msg.data);
+	dm_free(msg.data);
 
 	dm_task_destroy(dmt);
 
@@ -711,10 +702,8 @@ int dm_event_get_registered_device(struct dm_event_handler *dmevh, int next)
 	dm_task_destroy(dmt);
 	dmt = NULL;
 
-	if (msg.data) {
-		dm_free(msg.data);
-		msg.data = NULL;
-	}
+	dm_free(msg.data);
+	msg.data = NULL;
 
 	_dm_event_handler_clear_dev_info(dmevh);
 	dmevh->uuid = dm_strdup(reply_uuid);
@@ -731,15 +720,11 @@ int dm_event_get_registered_device(struct dm_event_handler *dmevh, int next)
 	dm_event_handler_set_dso(dmevh, reply_dso);
 	dm_event_handler_set_event_mask(dmevh, reply_mask);
 
-	if (reply_dso) {
-		dm_free(reply_dso);
-		reply_dso = NULL;
-	}
+	dm_free(reply_dso);
+	reply_dso = NULL;
 
-	if (reply_uuid) {
-		dm_free(reply_uuid);
-		reply_uuid = NULL;
-	}
+	dm_free(reply_uuid);
+	reply_uuid = NULL;
 
 	dmevh->dev_name = dm_strdup(dm_task_get_name(dmt));
 	if (!dmevh->dev_name) {
@@ -760,12 +745,9 @@ int dm_event_get_registered_device(struct dm_event_handler *dmevh, int next)
 	return ret;
 
  fail:
-	if (msg.data)
-		dm_free(msg.data);
-	if (reply_dso)
-		dm_free(reply_dso);
-	if (reply_uuid)
-		dm_free(reply_uuid);
+	dm_free(msg.data);
+	dm_free(reply_dso);
+	dm_free(reply_uuid);
 	_dm_event_handler_clear_dev_info(dmevh);
 	if (dmt)
 		dm_task_destroy(dmt);

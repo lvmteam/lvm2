@@ -327,13 +327,10 @@ static int _fetch_string(char **ptr, char **src, const int delimiter)
 /* Free message memory. */
 static void _free_message(struct message_data *message_data)
 {
-	if (message_data->id)
-		dm_free(message_data->id);
-	if (message_data->dso_name)
-		dm_free(message_data->dso_name);
+	dm_free(message_data->id);
+	dm_free(message_data->dso_name);
 
-	if (message_data->device_uuid)
-		dm_free(message_data->device_uuid);
+	dm_free(message_data->device_uuid);
 
 }
 
@@ -1051,8 +1048,7 @@ static int _registered_device(struct message_data *message_data,
 			   && (thread->events)) ? thread->events : thread->
 	    events | DM_EVENT_REGISTRATION_PENDING;
 
-	if (msg->data)
-		dm_free(msg->data);
+	dm_free(msg->data);
 
 	msg->size = dm_asprintf(&(msg->data), fmt, id, dso, dev, events);
 
@@ -1162,8 +1158,7 @@ static int _get_timeout(struct message_data *message_data)
 	struct thread_status *thread;
 	struct dm_event_daemon_message *msg = message_data->msg;
 
-	if (msg->data)
-		dm_free(msg->data);
+	dm_free(msg->data);
 
 	_lock_mutex();
 	if ((thread = _lookup_thread_status(message_data))) {
@@ -1287,8 +1282,7 @@ static int _client_read(struct dm_event_fifos *fifos,
 	}
 
 	if (bytes != size) {
-		if (msg->data)
-			dm_free(msg->data);
+		dm_free(msg->data);
 		msg->data = NULL;
 		msg->size = 0;
 	}
@@ -1416,8 +1410,7 @@ static void _process_request(struct dm_event_fifos *fifos)
 	if (!_client_write(fifos, &msg))
 		stack;
 
-	if (msg.data)
-		dm_free(msg.data);
+	dm_free(msg.data);
 }
 
 static void _cleanup_unused_threads(void)
