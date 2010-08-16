@@ -1,5 +1,6 @@
 Version 2.02.73 - 
 ================================
+  Don't really change monitoring status when in test mode.
   Fix some exit statuses when starting/stopping monitoring fails.
   Enable snapshot monitoring by default when dmeventd is enabled.
   Move cloned libdevmapper-event client code from segments into lib/activate.
