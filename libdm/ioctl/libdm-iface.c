@@ -392,7 +392,7 @@ static int _open_control(void)
 	 */
 	if (!_control_exists(control, 0, 0) ||
 	    !(KERNEL_VERSION(_kernel_major, _kernel_minor, _kernel_release) >=
-	      KERNEL_VERSION(2, 6, 35)) ||
+	      KERNEL_VERSION(2, 6, 36)) ||
 	    !_open_and_assign_control_fd(control)) {
 		if (!_control_device_number(&major, &minor))
 			log_error("Is device-mapper driver missing from kernel?");
