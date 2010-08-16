@@ -940,7 +940,12 @@ int monitor_dev_for_events(struct cmd_context *cmd,
 		if (!monitor_fn)
 			continue;
 
-		log_verbose("%sonitoring %s/%s", monitor ? "M" : "Not m", lv->vg->name, lv->name);
+		log_verbose("%sonitoring %s/%s%s", monitor ? "M" : "Not m", lv->vg->name, lv->name,
+			    test_mode() ? " [Test mode: skipping this]" : "");
+
+		/* FIXME Test mode should really continue a bit further. */
+		if (test_mode())
+			continue;
 
 		/* FIXME specify events */
 		if (!monitor_fn(seg, 0)) {
@@ -964,7 +969,8 @@ int monitor_dev_for_events(struct cmd_context *cmd,
 			sleep(1);
 		}
 
-		r = (monitored && monitor) || (!monitored && !monitor);
+		if (r)
+			r = (monitored && monitor) || (!monitored && !monitor);
 	}
 
 	return r;
