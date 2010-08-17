@@ -168,10 +168,11 @@ static const char *_get_snapshot_dso_path(struct cmd_context *cmd)
 							      DEFAULT_DMEVENTD_SNAPSHOT_LIB));
 }
 
+/* FIXME Cache this */
 static int _target_registered(struct lv_segment *seg, int *pending)
 {
 	return target_registered_with_dmeventd(seg->lv->vg->cmd, _get_snapshot_dso_path(seg->lv->vg->cmd),
-					       seg->cow->lvid.s, pending);
+					       seg->cow, pending);
 }
 
 /* FIXME This gets run while suspended and performs banned operations. */
@@ -179,7 +180,7 @@ static int _target_set_events(struct lv_segment *seg, int evmask, int set)
 {
 	/* FIXME Make timeout (10) configurable */
 	return target_register_events(seg->lv->vg->cmd, _get_snapshot_dso_path(seg->lv->vg->cmd),
-				      seg->cow->lvid.s, evmask, set, 10);
+				      seg->cow, evmask, set, 10);
 }
 
 static int _target_register_events(struct lv_segment *seg,

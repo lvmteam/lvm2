@@ -548,17 +548,18 @@ static const char *_get_mirror_dso_path(struct cmd_context *cmd)
 							      DEFAULT_DMEVENTD_MIRROR_LIB));
 }
 
+/* FIXME Cache this */
 static int _target_registered(struct lv_segment *seg, int *pending)
 {
 	return target_registered_with_dmeventd(seg->lv->vg->cmd, _get_mirror_dso_path(seg->lv->vg->cmd),
-					       seg->lv->lvid.s, pending);
+					       seg->lv, pending);
 }
 
 /* FIXME This gets run while suspended and performs banned operations. */
 static int _target_set_events(struct lv_segment *seg, int evmask, int set)
 {
 	return target_register_events(seg->lv->vg->cmd, _get_mirror_dso_path(seg->lv->vg->cmd),
-				      seg->lv->lvid.s, evmask, set, 0);
+				      seg->lv, evmask, set, 0);
 }
 
 static int _target_monitor_events(struct lv_segment *seg, int events)

@@ -770,7 +770,8 @@ char *get_monitor_dso_path(struct cmd_context *cmd, const char *libpath)
 	return path;
 }
 
-int target_registered_with_dmeventd(struct cmd_context *cmd, const char *dso, const char *lvid, int *pending)
+int target_registered_with_dmeventd(struct cmd_context *cmd, const char *dso,
+				    struct logical_volume *lv, int *pending)
 {
 	char *uuid;
 	enum dm_event_mask evmask = 0;
@@ -781,7 +782,8 @@ int target_registered_with_dmeventd(struct cmd_context *cmd, const char *dso, co
 	if (!dso)
 		return_0;
 
-	if (!(uuid = build_dm_uuid(cmd->mem, lvid, NULL)))
+	/* We always monitor the "real" device, never the "snapshot-origin" itself. */
+	if (!(uuid = build_dm_uuid(cmd->mem, lv->lvid.s, lv_is_origin(lv) ? "real" : NULL)))
 		return_0;
 
 	if (!(dmevh = _create_dm_event_handler(cmd, uuid, dso, 0, DM_EVENT_ALL_ERRORS)))
@@ -803,7 +805,7 @@ int target_registered_with_dmeventd(struct cmd_context *cmd, const char *dso, co
 	return evmask;
 }
 
-int target_register_events(struct cmd_context *cmd, const char *dso, const char *lvid,
+int target_register_events(struct cmd_context *cmd, const char *dso, struct logical_volume *lv,
 			    int evmask __attribute__((unused)), int set, int timeout)
 {
 	char *uuid;
@@ -813,7 +815,8 @@ int target_register_events(struct cmd_context *cmd, const char *dso, const char 
 	if (!dso)
 		return_0;
 
-	if (!(uuid = build_dm_uuid(cmd->mem, lvid, NULL)))
+	/* We always monitor the "real" device, never the "snapshot-origin" itself. */
+	if (!(uuid = build_dm_uuid(cmd->mem, lv->lvid.s, lv_is_origin(lv) ? "real" : NULL)))
 		return_0;
 
 	if (!(dmevh = _create_dm_event_handler(cmd, uuid, dso, timeout,
@@ -869,18 +872,14 @@ int monitor_dev_for_events(struct cmd_context *cmd,
 
 	/*
 	 * In case this LV is a snapshot origin, we instead monitor
-	 * each of its respective snapshots (the origin itself does
-	 * not need to be monitored).
-	 *
-	 * TODO: This may change when snapshots of mirrors are allowed.
+	 * each of its respective snapshots.  The origin itself may
+	 * also need to be monitored if it is a mirror, for example.
 	 */
-	if (lv_is_origin(lv)) {
+	if (lv_is_origin(lv))
 		dm_list_iterate_safe(snh, snht, &lv->snapshot_segs)
 			if (!monitor_dev_for_events(cmd, dm_list_struct_base(snh,
 				    struct lv_segment, origin_list)->cow, monitor))
 				r = 0;
-		return r;
-	}
 
 	/*
 	 * If the volume is mirrored and its log is also mirrored, monitor
