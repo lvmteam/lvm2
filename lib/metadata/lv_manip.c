@@ -2237,7 +2237,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 	/* FIXME Ensure not referred to by another existing LVs */
 
-	if (lv_info(cmd, lv, &info, 1, 0)) {
+	if (lv_info(cmd, lv, 0, &info, 1, 0)) {
 		if (info.open_count) {
 			log_error("Can't remove open logical volume \"%s\"",
 				  lv->name);
@@ -3109,7 +3109,7 @@ int lv_create_single(struct volume_group *vg,
 				return 0;
 			}
 
-			if (!lv_info(cmd, org, &info, 0, 0)) {
+			if (!lv_info(cmd, org, 0, &info, 0, 0)) {
 				log_error("Check for existence of snapshot "
 					  "origin '%s' failed.", org->name);
 				return 0;

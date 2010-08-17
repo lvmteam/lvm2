@@ -1465,13 +1465,13 @@ static int lvconvert_merge(struct cmd_context *cmd,
 	 * constructor and DM should prevent appropriate devices from
 	 * being open.
 	 */
-	if (lv_info(cmd, origin, &info, 1, 0)) {
+	if (lv_info(cmd, origin, 0, &info, 1, 0)) {
 		if (info.open_count) {
 			log_error("Can't merge over open origin volume");
 			merge_on_activate = 1;
 		}
 	}
-	if (lv_info(cmd, lv, &info, 1, 0)) {
+	if (lv_info(cmd, lv, 0, &info, 1, 0)) {
 		if (info.open_count) {
 			log_print("Can't merge when snapshot is open");
 			merge_on_activate = 1;
@@ -1633,7 +1633,7 @@ static int poll_logical_volume(struct cmd_context *cmd, struct logical_volume *l
 {
 	struct lvinfo info;
 
-	if (!lv_info(cmd, lv, &info, 1, 0) || !info.exists) {
+	if (!lv_info(cmd, lv, 0, &info, 1, 0) || !info.exists) {
 		log_print("Conversion starts after activation.");
 		return ECMD_PROCESSED;
 	}

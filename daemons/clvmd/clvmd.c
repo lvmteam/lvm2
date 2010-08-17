@@ -1885,7 +1885,7 @@ static void lvm_thread_fn(void *arg)
 	pthread_sigmask(SIG_BLOCK, &ss, NULL);
 
 	/* Initialise the interface to liblvm */
-	init_lvm(lvm_params->using_gulm, lvm_params->argv);
+	init_clvm(lvm_params->using_gulm, lvm_params->argv);
 
 	/* Allow others to get moving */
 	pthread_mutex_unlock(&lvm_start_mutex);

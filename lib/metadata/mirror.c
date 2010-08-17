@@ -292,14 +292,14 @@ static int _init_mirror_log(struct cmd_context *cmd,
 	}
 
 	/* If the LV is active, deactivate it first. */
-	if (lv_info(cmd, log_lv, &info, 0, 0) && info.exists) {
+	if (lv_info(cmd, log_lv, 0, &info, 0, 0) && info.exists) {
 		(void)deactivate_lv(cmd, log_lv);
 		/*
 		 * FIXME: workaround to fail early
 		 * Ensure that log is really deactivated because deactivate_lv
 		 * on cluster do not fail if there is log_lv with different UUID.
 		 */
-		if (lv_info(cmd, log_lv, &info, 0, 0) && info.exists) {
+		if (lv_info(cmd, log_lv, 0, &info, 0, 0) && info.exists) {
 			log_error("Aborting. Unable to deactivate mirror log.");
 			goto revert_new_lv;
 		}
@@ -1587,7 +1587,7 @@ int remove_mirror_log(struct cmd_context *cmd,
 	}
 
 	/* Had disk log, switch to core. */
-	if (lv_info(cmd, lv, &info, 0, 0) && info.exists) {
+	if (lv_info(cmd, lv, 0, &info, 0, 0) && info.exists) {
 		if (!lv_mirror_percent(cmd, lv, 0, &sync_percent,
 				       &percent_range, NULL)) {
 			log_error("Unable to determine mirror sync status.");
@@ -1787,7 +1787,7 @@ int add_mirror_log(struct cmd_context *cmd, struct logical_volume *lv,
 	 * on remote nodes (even though it is inactive on this node)
 	 */
 	if (vg_is_clustered(lv->vg) &&
-	    !(lv_info(cmd, lv, &info, 0, 0) && info.exists)) {
+	    !(lv_info(cmd, lv, 0, &info, 0, 0) && info.exists)) {
 		log_error("Unable to convert the log of inactive "
 			  "cluster mirror %s", lv->name);
 		return 0;

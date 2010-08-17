@@ -222,19 +222,20 @@ static int _info_by_dev(uint32_t major, uint32_t minor, struct dm_info *info)
 }
 
 int dev_manager_info(struct dm_pool *mem, const struct logical_volume *lv,
+		     const char *layer,
 		     int with_open_count, int with_read_ahead,
 		     struct dm_info *info, uint32_t *read_ahead)
 {
 	char *dlid, *name;
 	int r;
 
-	if (!(name = build_dm_name(mem, lv->vg->name, lv->name, NULL))) {
+	if (!(name = build_dm_name(mem, lv->vg->name, lv->name, layer))) {
 		log_error("name build failed for %s", lv->name);
 		return 0;
 	}
 
-	if (!(dlid = build_dm_uuid(mem, lv->lvid.s, NULL))) {
-		log_error("dlid build failed for %s", lv->name);
+	if (!(dlid = build_dm_uuid(mem, lv->lvid.s, layer))) {
+		log_error("dlid build failed for %s", name);
 		return 0;
 	}
 
@@ -559,11 +560,11 @@ int dev_manager_transient(struct dev_manager *dm, struct logical_volume *lv)
 	char *type = NULL;
 	char *params = NULL;
 	char *dlid = NULL;
-	char *suffix = lv_is_origin(lv) ? "real" : NULL;
+	const char *layer = lv_is_origin(lv) ? "real" : NULL;
 	const struct dm_list *segh = &lv->segments;
 	struct lv_segment *seg = NULL;
 
-	if (!(dlid = build_dm_uuid(dm->mem, lv->lvid.s, suffix)))
+	if (!(dlid = build_dm_uuid(dm->mem, lv->lvid.s, layer)))
 		return_0;
 
 	if (!(dmt = _setup_task(0, dlid, NULL, DM_DEVICE_STATUS, 0, 0)))
@@ -714,17 +715,17 @@ int dev_manager_mirror_percent(struct dev_manager *dm,
 {
 	char *name;
 	const char *dlid;
-	const char *suffix = (lv_is_origin(lv)) ? "real" : NULL;
+	const char *layer = (lv_is_origin(lv)) ? "real" : NULL;
 
 	/*
 	 * Build a name for the top layer.
 	 */
-	if (!(name = build_dm_name(dm->mem, lv->vg->name, lv->name, suffix)))
+	if (!(name = build_dm_name(dm->mem, lv->vg->name, lv->name, layer)))
 		return_0;
 
 	/* FIXME dm_pool_free ? */
 
-	if (!(dlid = build_dm_uuid(dm->mem, lv->lvid.s, suffix))) {
+	if (!(dlid = build_dm_uuid(dm->mem, lv->lvid.s, layer))) {
 		log_error("dlid build failed for %s", lv->name);
 		return 0;
 	}
@@ -1014,16 +1015,16 @@ static int _add_partial_replicator_to_dtree(struct dev_manager *dm,
 /*
  * Add LV and any known dependencies
  */
-static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree, struct logical_volume *lv)
+static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree, struct logical_volume *lv, unsigned origin_only)
 {
-	if (!_add_dev_to_dtree(dm, dtree, lv, NULL))
+	if (!origin_only && !_add_dev_to_dtree(dm, dtree, lv, NULL))
 		return_0;
 
 	/* FIXME Can we avoid doing this every time? */
 	if (!_add_dev_to_dtree(dm, dtree, lv, "real"))
 		return_0;
 
-	if (!_add_dev_to_dtree(dm, dtree, lv, "cow"))
+	if (!origin_only && !_add_dev_to_dtree(dm, dtree, lv, "cow"))
 		return_0;
 
 	if ((lv->status & MIRRORED) && first_seg(lv)->log_lv &&
@@ -1038,7 +1039,7 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree, struc
 	return 1;
 }
 
-static struct dm_tree *_create_partial_dtree(struct dev_manager *dm, struct logical_volume *lv)
+static struct dm_tree *_create_partial_dtree(struct dev_manager *dm, struct logical_volume *lv, unsigned origin_only)
 {
 	struct dm_tree *dtree;
 	struct dm_list *snh, *snht;
@@ -1050,19 +1051,20 @@ static struct dm_tree *_create_partial_dtree(struct dev_manager *dm, struct logi
 		return NULL;
 	}
 
-	if (!_add_lv_to_dtree(dm, dtree, lv))
+	if (!_add_lv_to_dtree(dm, dtree, lv, origin_only))
 		goto_bad;
 
 	/* Add any snapshots of this LV */
-	dm_list_iterate_safe(snh, snht, &lv->snapshot_segs)
-		if (!_add_lv_to_dtree(dm, dtree, dm_list_struct_base(snh, struct lv_segment, origin_list)->cow))
-			goto_bad;
+	if (!origin_only)
+		dm_list_iterate_safe(snh, snht, &lv->snapshot_segs)
+			if (!_add_lv_to_dtree(dm, dtree, dm_list_struct_base(snh, struct lv_segment, origin_list)->cow, 0))
+				goto_bad;
 
 	/* Add any LVs used by segments in this LV */
 	dm_list_iterate_items(seg, &lv->segments)
 		for (s = 0; s < seg->area_count; s++)
 			if (seg_type(seg, s) == AREA_LV && seg_lv(seg, s)) {
-				if (!_add_lv_to_dtree(dm, dtree, seg_lv(seg, s)))
+				if (!_add_lv_to_dtree(dm, dtree, seg_lv(seg, s), 0))
 					goto_bad;
 			}
 
@@ -1622,14 +1624,15 @@ static int _clean_tree(struct dev_manager *dm, struct dm_tree_node *root)
 	return 1;
 }
 
-static int _tree_action(struct dev_manager *dm, struct logical_volume *lv, action_t action)
+static int _tree_action(struct dev_manager *dm, struct logical_volume *lv,
+			unsigned origin_only, action_t action)
 {
 	struct dm_tree *dtree;
 	struct dm_tree_node *root;
 	char *dlid;
 	int r = 0;
 
-	if (!(dtree = _create_partial_dtree(dm, lv)))
+	if (!(dtree = _create_partial_dtree(dm, lv, origin_only)))
 		return_0;
 
 	if (!(root = dm_tree_find_node(dtree, 0, 0))) {
@@ -1637,7 +1640,7 @@ static int _tree_action(struct dev_manager *dm, struct logical_volume *lv, actio
 		goto out;
 	}
 
-	if (!(dlid = build_dm_uuid(dm->mem, lv->lvid.s, NULL)))
+	if (!(dlid = build_dm_uuid(dm->mem, lv->lvid.s, origin_only ? "real" : NULL)))
 		goto_out;
 
 	/* Only process nodes with uuid of "LVM-" plus VG id. */
@@ -1669,7 +1672,7 @@ static int _tree_action(struct dev_manager *dm, struct logical_volume *lv, actio
 	case PRELOAD:
 	case ACTIVATE:
 		/* Add all required new devices to tree */
-		if (!_add_new_lv_to_dtree(dm, dtree, lv, NULL))
+		if (!_add_new_lv_to_dtree(dm, dtree, lv, origin_only ? "real" : NULL))
 			goto_out;
 
 		/* Preload any devices required before any suspensions */
@@ -1710,22 +1713,24 @@ out:
 	return r;
 }
 
-int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv)
+/* origin_only may only be set if we are resuming (not activating) an origin LV */
+int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv, unsigned origin_only)
 {
-	if (!_tree_action(dm, lv, ACTIVATE))
+	if (!_tree_action(dm, lv, origin_only, ACTIVATE))
 		return_0;
 
-	return _tree_action(dm, lv, CLEAN);
+	return _tree_action(dm, lv, origin_only, CLEAN);
 }
 
+/* origin_only may only be set if we are resuming (not activating) an origin LV */
 int dev_manager_preload(struct dev_manager *dm, struct logical_volume *lv,
-			int *flush_required)
+			unsigned origin_only, int *flush_required)
 {
 	/* FIXME Update the pvmove implementation! */
 	if ((lv->status & PVMOVE) || (lv->status & LOCKED))
 		return 1;
 
-	if (!_tree_action(dm, lv, PRELOAD))
+	if (!_tree_action(dm, lv, origin_only, PRELOAD))
 		return 0;
 
 	*flush_required = dm->flush_required;
@@ -1737,17 +1742,17 @@ int dev_manager_deactivate(struct dev_manager *dm, struct logical_volume *lv)
 {
 	int r;
 
-	r = _tree_action(dm, lv, DEACTIVATE);
+	r = _tree_action(dm, lv, 0, DEACTIVATE);
 
 	return r;
 }
 
 int dev_manager_suspend(struct dev_manager *dm, struct logical_volume *lv,
-			int lockfs, int flush_required)
+			unsigned origin_only, int lockfs, int flush_required)
 {
 	dm->flush_required = flush_required;
 
-	return _tree_action(dm, lv, lockfs ? SUSPEND_WITH_LOCKFS : SUSPEND);
+	return _tree_action(dm, lv, origin_only, lockfs ? SUSPEND_WITH_LOCKFS : SUSPEND);
 }
 
 /*
