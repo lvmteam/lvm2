@@ -1,5 +1,6 @@
 Version 2.02.73 - 
 ================================
+  Fix potential for corruption during cluster mirror device failure.
   Use 'SINGLENODE' instead of 'dead' in clvmd singlenode messages.
   Ignore snapshots when performing mirror recovery beneath an origin.
   Pass LCK_ORIGIN_ONLY flag around cluster.
