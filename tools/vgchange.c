@@ -190,7 +190,7 @@ static int _vgchange_background_polling(struct cmd_context *cmd, struct volume_g
 
 static int _vgchange_available(struct cmd_context *cmd, struct volume_group *vg)
 {
-	int lv_open, active, monitored;
+	int lv_open, active, monitored = 0;
 	int available, ret_max = ECMD_PROCESSED;
 	int activate = 1;
 
