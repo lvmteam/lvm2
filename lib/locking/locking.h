@@ -93,14 +93,16 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 #define LCK_LOCAL	0x00000040U	/* Don't propagate to other nodes */
 #define LCK_CLUSTER_VG	0x00000080U	/* VG is clustered */
 #define LCK_CACHE	0x00000100U	/* Operation on cache only using P_ lock */
+#define LCK_ORIGIN_ONLY	0x00000200U	/* Operation should bypass any snapshots */
 
 /*
- * Additional lock bits for cluster communication
+ * Additional lock bits for cluster communication via args[1]
  */
-#define LCK_PARTIAL_MODE        0x00000001U	/* Partial activation? */
-#define LCK_MIRROR_NOSYNC_MODE	0x00000002U	/* Mirrors don't require sync */
-#define LCK_DMEVENTD_MONITOR_MODE	0x00000004U	/* Register with dmeventd */
-#define LCK_CONVERT		0x00000008U	/* Convert existing lock */
+#define LCK_PARTIAL_MODE        	0x01	/* Partial activation? */
+#define LCK_MIRROR_NOSYNC_MODE		0x02	/* Mirrors don't require sync */
+#define LCK_DMEVENTD_MONITOR_MODE	0x04	/* Register with dmeventd */
+#define LCK_CONVERT			0x08	/* Convert existing lock */
+#define LCK_ORIGIN_ONLY_MODE		0x20	/* Same as above */
 
 /*
  * Special cases of VG locks.
@@ -148,7 +150,9 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 	} while (0)
 
 #define resume_lv(cmd, lv)	lock_lv_vol(cmd, lv, LCK_LV_RESUME)
+#define resume_lv_origin(cmd, lv)	lock_lv_vol(cmd, lv, LCK_LV_RESUME | LCK_ORIGIN_ONLY)
 #define suspend_lv(cmd, lv)	lock_lv_vol(cmd, lv, LCK_LV_SUSPEND | LCK_HOLD)
+#define suspend_lv_origin(cmd, lv)	lock_lv_vol(cmd, lv, LCK_LV_SUSPEND | LCK_HOLD | LCK_ORIGIN_ONLY)
 #define deactivate_lv(cmd, lv)	lock_lv_vol(cmd, lv, LCK_LV_DEACTIVATE)
 #define activate_lv(cmd, lv)	lock_lv_vol(cmd, lv, LCK_LV_ACTIVATE | LCK_HOLD)
 #define activate_lv_excl(cmd, lv)	\

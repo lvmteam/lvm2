@@ -254,6 +254,7 @@ static int _file_lock_resource(struct cmd_context *cmd, const char *resource,
 			       uint32_t flags)
 {
 	char lockfile[PATH_MAX];
+	unsigned origin_only = (flags & LCK_ORIGIN_ONLY) ? 1 : 0;
 
 	switch (flags & LCK_SCOPE_MASK) {
 	case LCK_VG:
@@ -278,9 +279,8 @@ static int _file_lock_resource(struct cmd_context *cmd, const char *resource,
 	case LCK_LV:
 		switch (flags & LCK_TYPE_MASK) {
 		case LCK_UNLOCK:
-			log_very_verbose("Unlocking LV %s", resource);
-			// FIXME Set origin_only
-			if (!lv_resume_if_active(cmd, resource, 0))
+			log_very_verbose("Unlocking LV %s%s", resource, origin_only ? " without snapshots" : "");
+			if (!lv_resume_if_active(cmd, resource, origin_only))
 				return 0;
 			break;
 		case LCK_NULL:
@@ -297,9 +297,8 @@ static int _file_lock_resource(struct cmd_context *cmd, const char *resource,
 			log_very_verbose("Locking LV %s (PR) - ignored", resource);
 			break;
 		case LCK_WRITE:
-			log_very_verbose("Locking LV %s (W)", resource);
-			// FIXME Set origin_only
-			if (!lv_suspend_if_active(cmd, resource, 0))
+			log_very_verbose("Locking LV %s (W)%s", resource, origin_only ? " without snapshots" : "");
+			if (!lv_suspend_if_active(cmd, resource, origin_only))
 				return 0;
 			break;
 		case LCK_EXCL:

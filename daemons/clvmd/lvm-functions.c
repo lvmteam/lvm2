@@ -122,12 +122,19 @@ static const char *decode_locking_cmd(unsigned char cmdl)
 static const char *decode_flags(unsigned char flags)
 {
 	static char buf[128];
+	int len;
 
-	sprintf(buf, "0x%x (%s%s%s%s)", flags,
-		flags & LCK_PARTIAL_MODE	  ? "PARTIAL_MODE " : "",
-		flags & LCK_MIRROR_NOSYNC_MODE	  ? "MIRROR_NOSYNC " : "",
-		flags & LCK_DMEVENTD_MONITOR_MODE ? "DMEVENTD_MONITOR " : "",
-		flags & LCK_CONVERT ? "CONVERT " : "");
+	len = sprintf(buf, "0x%x ( %s%s%s%s%s)", flags,
+		flags & LCK_PARTIAL_MODE	  ? "PARTIAL_MODE|" : "",
+		flags & LCK_MIRROR_NOSYNC_MODE	  ? "MIRROR_NOSYNC|" : "",
+		flags & LCK_DMEVENTD_MONITOR_MODE ? "DMEVENTD_MONITOR|" : "",
+		flags & LCK_ORIGIN_ONLY_MODE ? "ORIGIN_ONLY|" : "",
+		flags & LCK_CONVERT ? "CONVERT|" : "");
+
+	if (len > 1)
+		buf[len - 2] = ' ';
+	else
+		buf[0] = '\0';
 
 	return buf;
 }
@@ -350,13 +357,11 @@ static int do_activate_lv(char *resource, unsigned char lock_flags, int mode)
 	}
 
 	/* If it's suspended then resume it */
-	// FIXME Set origin_only
 	if (!lv_info_by_lvid(cmd, resource, 0, &lvi, 0, 0))
 		goto error;
 
 	if (lvi.suspended) {
 		memlock_inc(cmd);
-		// FIXME Set origin_only
 		if (!lv_resume(cmd, resource, 0)) {
 			memlock_dec(cmd);
 			goto error;
@@ -387,8 +392,7 @@ static int do_resume_lv(char *resource, unsigned char lock_flags)
 		return 0;	/* We don't need to do anything */
 	}
 
-	// FIXME Set origin_only
-	if (!lv_resume_if_active(cmd, resource, 0))
+	if (!lv_resume_if_active(cmd, resource, (lock_flags & LCK_ORIGIN_ONLY_MODE) ? 1 : 0))
 		return EIO;
 
 	return 0;
@@ -399,6 +403,7 @@ static int do_suspend_lv(char *resource, unsigned char lock_flags)
 {
 	int oldmode;
 	struct lvinfo lvi;
+	unsigned origin_only = (lock_flags & LCK_ORIGIN_ONLY_MODE) ? 1 : 0;
 
 	/* Is it open ? */
 	oldmode = get_current_lock(resource);
@@ -408,12 +413,10 @@ static int do_suspend_lv(char *resource, unsigned char lock_flags)
 	}
 
 	/* Only suspend it if it exists */
-	// FIXME Set origin_only
-	if (!lv_info_by_lvid(cmd, resource, 0, &lvi, 0, 0))
+	if (!lv_info_by_lvid(cmd, resource, origin_only, &lvi, 0, 0))
 		return EIO;
 
-	// FIXME Set origin_only
-	if (lvi.exists && !lv_suspend_if_active(cmd, resource, 0))
+	if (lvi.exists && !lv_suspend_if_active(cmd, resource, origin_only))
 		return EIO;
 
 	return 0;
@@ -558,6 +561,7 @@ int post_lock_lv(unsigned char command, unsigned char lock_flags,
 		 char *resource)
 {
 	int status;
+	unsigned origin_only = (lock_flags & LCK_ORIGIN_ONLY_MODE) ? 1 : 0;
 
 	/* Opposite of above, done on resume after a metadata update */
 	if ((command & (LCK_SCOPE_MASK | LCK_TYPE_MASK)) == LCK_LV_RESUME &&
@@ -574,8 +578,7 @@ int post_lock_lv(unsigned char command, unsigned char lock_flags,
 			struct lvinfo lvi;
 
 			pthread_mutex_lock(&lvm_lock);
-			// FIXME Set origin_only
-			status = lv_info_by_lvid(cmd, resource, 0, &lvi, 0, 0);
+			status = lv_info_by_lvid(cmd, resource, origin_only, &lvi, 0, 0);
 			pthread_mutex_unlock(&lvm_lock);
 			if (!status)
 				return EIO;

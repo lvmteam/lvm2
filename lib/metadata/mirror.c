@@ -934,7 +934,7 @@ static int _remove_mirror_images(struct logical_volume *lv,
 		return 0;
 	}
 
-	if (!suspend_lv(mirrored_seg->lv->vg->cmd, mirrored_seg->lv)) {
+	if (!suspend_lv_origin(mirrored_seg->lv->vg->cmd, mirrored_seg->lv)) {
 		log_error("Failed to lock %s", mirrored_seg->lv->name);
 		vg_revert(mirrored_seg->lv->vg);
 		return 0;
@@ -969,7 +969,7 @@ static int _remove_mirror_images(struct logical_volume *lv,
 		return 0;
 	}
 
-	if (!resume_lv(mirrored_seg->lv->vg->cmd, mirrored_seg->lv)) {
+	if (!resume_lv_origin(mirrored_seg->lv->vg->cmd, mirrored_seg->lv)) {
 		log_error("Problem reactivating %s", mirrored_seg->lv->name);
 		return 0;
 	}
