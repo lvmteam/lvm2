@@ -1588,7 +1588,7 @@ static int _remove_lv_symlinks(struct dev_manager *dm, struct dm_tree_node *root
 	return r;
 }
 
-static int _clean_tree(struct dev_manager *dm, struct dm_tree_node *root)
+static int _clean_tree(struct dev_manager *dm, struct dm_tree_node *root, char *non_toplevel_tree_dlid)
 {
 	void *handle = NULL;
 	struct dm_tree_node *child;
@@ -1610,6 +1610,10 @@ static int _clean_tree(struct dev_manager *dm, struct dm_tree_node *root)
 
 		/* Not meant to be top level? */
 		if (!*layer)
+			continue;
+
+		/* If operation was performed on a partial tree, don't remove it */
+		if (non_toplevel_tree_dlid && !strcmp(non_toplevel_tree_dlid, uuid))
 			continue;
 
 		dm_tree_set_cookie(root, 0);
@@ -1647,7 +1651,7 @@ static int _tree_action(struct dev_manager *dm, struct logical_volume *lv,
 	switch(action) {
 	case CLEAN:
 		/* Deactivate any unused non-toplevel nodes */
-		if (!_clean_tree(dm, root))
+		if (!_clean_tree(dm, root, origin_only ? dlid : NULL))
 			goto_out;
 		break;
 	case DEACTIVATE:

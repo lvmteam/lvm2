@@ -1,5 +1,9 @@
 Version 2.02.73 - 
 ================================
+  Use 'SINGLENODE' instead of 'dead' in clvmd singlenode messages.
+  Ignore snapshots when performing mirror recovery beneath an origin.
+  Pass LCK_ORIGIN_ONLY flag around cluster.
+  Add suspend_lv_origin and resume_lv_origin using LCK_ORIGIN_ONLY.
   Allow internal suspend and resume of origin without its snapshots.
   Fix dev_manager_transient to access -real device not snapshot-origin.
   Monitor origin -real device below snapshot instead of overlay device.

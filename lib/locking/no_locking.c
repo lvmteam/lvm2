@@ -44,13 +44,11 @@ static int _no_lock_resource(struct cmd_context *cmd, const char *resource,
 		case LCK_NULL:
 			return lv_deactivate(cmd, resource);
 		case LCK_UNLOCK:
-			// FIXME Set origin_only
-			return lv_resume_if_active(cmd, resource, 0);
+			return lv_resume_if_active(cmd, resource, (flags & LCK_ORIGIN_ONLY) ? 1: 0);
 		case LCK_READ:
 			return lv_activate_with_filter(cmd, resource, 0);
 		case LCK_WRITE:
-			// FIXME Set origin_only
-			return lv_suspend_if_active(cmd, resource, 0);
+			return lv_suspend_if_active(cmd, resource, (flags & LCK_ORIGIN_ONLY) ? 1 : 0);
 		case LCK_EXCL:
 			return lv_activate_with_filter(cmd, resource, 1);
 		default:

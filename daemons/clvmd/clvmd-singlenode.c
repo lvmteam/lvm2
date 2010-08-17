@@ -108,7 +108,7 @@ static int _csid_from_name(char *csid, const char *name)
 
 static int _name_from_csid(const char *csid, char *name)
 {
-	sprintf(name, "%x", 0xdead);
+	sprintf(name, "SINGLENODE");
 	return 0;
 }
 
