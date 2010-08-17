@@ -90,7 +90,7 @@ static int _request_confirmation(struct cmd_context *cmd,
 
 	memset(&info, 0, sizeof(info));
 
-	if (!lv_info(cmd, lv, &info, 1, 0) && driver_version(NULL, 0)) {
+	if (!lv_info(cmd, lv, 0, &info, 1, 0) && driver_version(NULL, 0)) {
 		log_error("lv_info failed: aborting");
 		return 0;
 	}
@@ -572,7 +572,7 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 
 		memset(&info, 0, sizeof(info));
 
-		if (lv_info(cmd, lv, &info, 0, 0) && info.exists) {
+		if (lv_info(cmd, lv, 0, &info, 0, 0) && info.exists) {
 			log_error("Snapshot origin volumes can be resized "
 				  "only while inactive: try lvchange -an");
 			return ECMD_FAILED;

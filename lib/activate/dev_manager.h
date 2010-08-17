@@ -41,6 +41,7 @@ void dev_manager_exit(void);
  * unsuspended until the snapshot is also created.)
  */
 int dev_manager_info(struct dm_pool *mem, const struct logical_volume *lv,
+		     const char *layer,
 		     int with_open_count, int with_read_ahead,
 		     struct dm_info *info, uint32_t *read_ahead);
 int dev_manager_snapshot_percent(struct dev_manager *dm,
@@ -52,10 +53,10 @@ int dev_manager_mirror_percent(struct dev_manager *dm,
 			       float *percent, percent_range_t *percent_range,
 			       uint32_t *event_nr);
 int dev_manager_suspend(struct dev_manager *dm, struct logical_volume *lv,
-			int lockfs, int flush_required);
-int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv);
+			unsigned origin_only, int lockfs, int flush_required);
+int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv, unsigned origin_only);
 int dev_manager_preload(struct dev_manager *dm, struct logical_volume *lv,
-			int *flush_required);
+			unsigned origin_only, int *flush_required);
 int dev_manager_deactivate(struct dev_manager *dm, struct logical_volume *lv);
 int dev_manager_transient(struct dev_manager *dm, struct logical_volume *lv);
 

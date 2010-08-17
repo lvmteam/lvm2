@@ -53,10 +53,10 @@ int list_lv_modules(struct dm_pool *mem, const struct logical_volume *lv,
 void activation_release(void);
 void activation_exit(void);
 
-int lv_suspend(struct cmd_context *cmd, const char *lvid_s);
-int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s);
-int lv_resume(struct cmd_context *cmd, const char *lvid_s);
-int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s);
+/* int lv_suspend(struct cmd_context *cmd, const char *lvid_s); */
+int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only);
+int lv_resume(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only);
+int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only);
 int lv_activate(struct cmd_context *cmd, const char *lvid_s, int exclusive);
 int lv_activate_with_filter(struct cmd_context *cmd, const char *lvid_s,
 			    int exclusive);
@@ -67,9 +67,10 @@ int lv_mknodes(struct cmd_context *cmd, const struct logical_volume *lv);
 /*
  * Returns 1 if info structure has been populated, else 0.
  */
-int lv_info(struct cmd_context *cmd, const struct logical_volume *lv, struct lvinfo *info,
+int lv_info(struct cmd_context *cmd, const struct logical_volume *lv,
+	    unsigned origin_only, struct lvinfo *info,
 	    int with_open_count, int with_read_ahead);
-int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s,
+int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only,
 		    struct lvinfo *info, int with_open_count, int with_read_ahead);
 
 /*
@@ -99,8 +100,8 @@ int lv_is_active(struct logical_volume *lv);
 int lv_has_target_type(struct dm_pool *mem, struct logical_volume *lv,
 		       const char *layer, const char *target_type);
 
-int monitor_dev_for_events(struct cmd_context *cmd,
-			    struct logical_volume *lv, int do_reg);
+int monitor_dev_for_events(struct cmd_context *cmd, struct logical_volume *lv,
+			   unsigned origin_only, int do_reg);
 
 #ifdef DMEVENTD
 #  include "libdevmapper-event.h"

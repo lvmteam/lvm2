@@ -296,7 +296,7 @@ static int _mirrored_transient_status(struct lv_segment *seg, char *params)
 	if (!strcmp(log_args[0], "disk")) {
 		char buf[32];
 		log = first_seg(lv)->log_lv;
-		lv_info(lv->vg->cmd, log, &info, 0, 0);
+		lv_info(lv->vg->cmd, log, 0, &info, 0, 0);
 		log_debug("Found mirror log at %d:%d", info.major, info.minor);
 		sprintf(buf, "%d:%d", info.major, info.minor);
 		if (strcmp(buf, log_args[1])) {
@@ -316,7 +316,7 @@ static int _mirrored_transient_status(struct lv_segment *seg, char *params)
 
 	for (i = 0; i < seg->area_count; ++i) {
 		char buf[32];
-		lv_info(lv->vg->cmd, seg_lv(seg, i), &info, 0, 0);
+		lv_info(lv->vg->cmd, seg_lv(seg, i), 0, &info, 0, 0);
 		log_debug("Found mirror leg at %d:%d", info.major, info.minor);
 		sprintf(buf, "%d:%d", info.major, info.minor);
 		for (j = 0; j < num_devs; ++j) {

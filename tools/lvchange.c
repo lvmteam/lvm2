@@ -37,7 +37,7 @@ static int lvchange_permission(struct cmd_context *cmd,
 	}
 
 	if ((lv->status & MIRRORED) && (vg_is_clustered(lv->vg)) &&
-	    lv_info(cmd, lv, &info, 0, 0) && info.exists) {
+	    lv_info(cmd, lv, 0, &info, 0, 0) && info.exists) {
 		log_error("Cannot change permissions of mirror \"%s\" "
 			  "while active.", lv->name);
 		return 0;
@@ -86,7 +86,7 @@ static int lvchange_monitoring(struct cmd_context *cmd,
 {
 	struct lvinfo info;
 
-	if (!lv_info(cmd, lv, &info, 0, 0) || !info.exists) {
+	if (!lv_info(cmd, lv, 0, &info, 0, 0) || !info.exists) {
 		log_error("Logical volume, %s, is not active", lv->name);
 		return 0;
 	}
@@ -96,7 +96,7 @@ static int lvchange_monitoring(struct cmd_context *cmd,
 		return 1;
 
 	if ((dmeventd_monitor_mode() != DMEVENTD_MONITOR_IGNORE) &&
-	    !monitor_dev_for_events(cmd, lv, dmeventd_monitor_mode()))
+	    !monitor_dev_for_events(cmd, lv, 0, dmeventd_monitor_mode()))
 		return_0;
 
 	return 1;
@@ -107,7 +107,7 @@ static int lvchange_background_polling(struct cmd_context *cmd,
 {
 	struct lvinfo info;
 
-	if (!lv_info(cmd, lv, &info, 0, 0) || !info.exists) {
+	if (!lv_info(cmd, lv, 0, &info, 0, 0) || !info.exists) {
 		log_error("Logical volume, %s, is not active", lv->name);
 		return 0;
 	}
@@ -189,7 +189,7 @@ static int lvchange_resync(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (lv_info(cmd, lv, &info, 1, 0)) {
+	if (lv_info(cmd, lv, 0, &info, 1, 0)) {
 		if (info.open_count) {
 			log_error("Can't resync open logical volume \"%s\"",
 				  lv->name);
@@ -446,7 +446,7 @@ static int lvchange_persistent(struct cmd_context *cmd,
 			log_error("Major number must be specified with -My");
 			return 0;
 		}
-		if (lv_info(cmd, lv, &info, 0, 0) && info.exists)
+		if (lv_info(cmd, lv, 0, &info, 0, 0) && info.exists)
 			active = 1;
 		if (active && !arg_count(cmd, force_ARG) &&
 		    yes_no_prompt("Logical volume %s will be "

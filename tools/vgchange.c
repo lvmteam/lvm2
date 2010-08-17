@@ -30,7 +30,7 @@ static int _monitor_lvs_in_vg(struct cmd_context *cmd,
 	dm_list_iterate_items(lvl, &vg->lvs) {
 		lv = lvl->lv;
 
-		if (!lv_info(cmd, lv, &info, 0, 0))
+		if (!lv_info(cmd, lv, 0, &info, 0, 0))
 			lv_active = 0;
 		else
 			lv_active = info.exists;
@@ -41,7 +41,7 @@ static int _monitor_lvs_in_vg(struct cmd_context *cmd,
 		if ((lv->status & PVMOVE) || !lv_active)
 			continue;
 
-		if (!monitor_dev_for_events(cmd, lv, reg)) {
+		if (!monitor_dev_for_events(cmd, lv, 0, reg)) {
 			r = ECMD_FAILED;
 			continue;
 		} else
@@ -63,7 +63,7 @@ static int _poll_lvs_in_vg(struct cmd_context *cmd,
 	dm_list_iterate_items(lvl, &vg->lvs) {
 		lv = lvl->lv;
 
-		if (!lv_info(cmd, lv, &info, 0, 0))
+		if (!lv_info(cmd, lv, 0, &info, 0, 0))
 			lv_active = 0;
 		else
 			lv_active = info.exists;

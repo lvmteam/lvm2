@@ -279,7 +279,8 @@ static int _file_lock_resource(struct cmd_context *cmd, const char *resource,
 		switch (flags & LCK_TYPE_MASK) {
 		case LCK_UNLOCK:
 			log_very_verbose("Unlocking LV %s", resource);
-			if (!lv_resume_if_active(cmd, resource))
+			// FIXME Set origin_only
+			if (!lv_resume_if_active(cmd, resource, 0))
 				return 0;
 			break;
 		case LCK_NULL:
@@ -297,7 +298,8 @@ static int _file_lock_resource(struct cmd_context *cmd, const char *resource,
 			break;
 		case LCK_WRITE:
 			log_very_verbose("Locking LV %s (W)", resource);
-			if (!lv_suspend_if_active(cmd, resource))
+			// FIXME Set origin_only
+			if (!lv_suspend_if_active(cmd, resource, 0))
 				return 0;
 			break;
 		case LCK_EXCL:

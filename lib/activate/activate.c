@@ -147,12 +147,13 @@ int target_present(struct cmd_context *cmd, const char *target_name,
 {
 	return 0;
 }
-int lv_info(struct cmd_context *cmd, const struct logical_volume *lv, struct lvinfo *info,
-	    int with_open_count, int with_read_ahead)
+int lv_info(struct cmd_context *cmd, const struct logical_volume *lv, unsigned origin_only,
+	    struct lvinfo *info, int with_open_count, int with_read_ahead)
 {
 	return 0;
 }
 int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s,
+		    unsigned origin_only,
 		    struct lvinfo *info, int with_open_count, int with_read_ahead)
 {
 	return 0;
@@ -176,10 +177,12 @@ int lvs_in_vg_opened(struct volume_group *vg)
 {
 	return 0;
 }
+/******
 int lv_suspend(struct cmd_context *cmd, const char *lvid_s)
 {
 	return 1;
 }
+*******/
 int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s)
 {
 	return 1;
@@ -451,7 +454,7 @@ int target_present(struct cmd_context *cmd, const char *target_name,
 /*
  * Returns 1 if info structure populated, else 0 on failure.
  */
-int lv_info(struct cmd_context *cmd, const struct logical_volume *lv,
+int lv_info(struct cmd_context *cmd, const struct logical_volume *lv, unsigned origin_only,
 	    struct lvinfo *info, int with_open_count, int with_read_ahead)
 {
 	struct dm_info dminfo;
@@ -459,7 +462,7 @@ int lv_info(struct cmd_context *cmd, const struct logical_volume *lv,
 	if (!activation())
 		return 0;
 
-	if (!dev_manager_info(lv->vg->cmd->mem, lv, with_open_count,
+	if (!dev_manager_info(lv->vg->cmd->mem, lv, origin_only ? "real" : NULL, with_open_count,
 			      with_read_ahead, &dminfo, &info->read_ahead))
 		return_0;
 
@@ -476,6 +479,7 @@ int lv_info(struct cmd_context *cmd, const struct logical_volume *lv,
 }
 
 int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s,
+		    unsigned origin_only,
 		    struct lvinfo *info, int with_open_count, int with_read_ahead)
 {
 	int r;
@@ -484,7 +488,10 @@ int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s,
 	if (!(lv = lv_from_lvid(cmd, lvid_s, 0)))
 		return 0;
 
-	r = lv_info(cmd, lv, info, with_open_count, with_read_ahead);
+	if (!lv_is_origin(lv))
+		origin_only = 0;
+
+	r = lv_info(cmd, lv, origin_only, info, with_open_count, with_read_ahead);
 	vg_release(lv->vg);
 
 	return r;
@@ -554,7 +561,7 @@ int lv_mirror_percent(struct cmd_context *cmd, struct logical_volume *lv,
 	if (!activation())
 		return 0;
 
-	if (!lv_info(cmd, lv, &info, 0, 0))
+	if (!lv_info(cmd, lv, 0, &info, 0, 0))
 		return_0;
 
 	if (!info.exists)
@@ -576,7 +583,7 @@ static int _lv_active(struct cmd_context *cmd, struct logical_volume *lv)
 {
 	struct lvinfo info;
 
-	if (!lv_info(cmd, lv, &info, 0, 0)) {
+	if (!lv_info(cmd, lv, 0, &info, 0, 0)) {
 		stack;
 		return -1;
 	}
@@ -588,7 +595,7 @@ static int _lv_open_count(struct cmd_context *cmd, struct logical_volume *lv)
 {
 	struct lvinfo info;
 
-	if (!lv_info(cmd, lv, &info, 1, 0)) {
+	if (!lv_info(cmd, lv, 0, &info, 1, 0)) {
 		stack;
 		return -1;
 	}
@@ -596,7 +603,7 @@ static int _lv_open_count(struct cmd_context *cmd, struct logical_volume *lv)
 	return info.open_count;
 }
 
-static int _lv_activate_lv(struct logical_volume *lv)
+static int _lv_activate_lv(struct logical_volume *lv, unsigned origin_only)
 {
 	int r;
 	struct dev_manager *dm;
@@ -604,14 +611,14 @@ static int _lv_activate_lv(struct logical_volume *lv)
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name)))
 		return_0;
 
-	if (!(r = dev_manager_activate(dm, lv)))
+	if (!(r = dev_manager_activate(dm, lv, origin_only)))
 		stack;
 
 	dev_manager_destroy(dm);
 	return r;
 }
 
-static int _lv_preload(struct logical_volume *lv, int *flush_required)
+static int _lv_preload(struct logical_volume *lv, unsigned origin_only, int *flush_required)
 {
 	int r;
 	struct dev_manager *dm;
@@ -619,7 +626,7 @@ static int _lv_preload(struct logical_volume *lv, int *flush_required)
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name)))
 		return_0;
 
-	if (!(r = dev_manager_preload(dm, lv, flush_required)))
+	if (!(r = dev_manager_preload(dm, lv, origin_only, flush_required)))
 		stack;
 
 	dev_manager_destroy(dm);
@@ -641,7 +648,7 @@ static int _lv_deactivate(struct logical_volume *lv)
 	return r;
 }
 
-static int _lv_suspend_lv(struct logical_volume *lv, int lockfs, int flush_required)
+static int _lv_suspend_lv(struct logical_volume *lv, unsigned origin_only, int lockfs, int flush_required)
 {
 	int r;
 	struct dev_manager *dm;
@@ -649,7 +656,7 @@ static int _lv_suspend_lv(struct logical_volume *lv, int lockfs, int flush_requi
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name)))
 		return_0;
 
-	if (!(r = dev_manager_suspend(dm, lv, lockfs, flush_required)))
+	if (!(r = dev_manager_suspend(dm, lv, origin_only, lockfs, flush_required)))
 		stack;
 
 	dev_manager_destroy(dm);
@@ -841,8 +848,8 @@ int target_register_events(struct cmd_context *cmd, const char *dso, struct logi
  * Returns 0 if an attempt to (un)monitor the device failed.
  * Returns 1 otherwise.
  */
-int monitor_dev_for_events(struct cmd_context *cmd,
-			    struct logical_volume *lv, int monitor)
+int monitor_dev_for_events(struct cmd_context *cmd, struct logical_volume *lv,
+			   unsigned origin_only, int monitor)
 {
 #ifdef DMEVENTD
 	int i, pending = 0, monitored;
@@ -868,17 +875,17 @@ int monitor_dev_for_events(struct cmd_context *cmd,
 	 * not the actual LV itself.
 	 */
 	if (lv_is_cow(lv) && !lv_is_merging_cow(lv))
-		return monitor_dev_for_events(cmd, lv->snapshot->lv, monitor);
+		return monitor_dev_for_events(cmd, lv->snapshot->lv, 0, monitor);
 
 	/*
 	 * In case this LV is a snapshot origin, we instead monitor
 	 * each of its respective snapshots.  The origin itself may
 	 * also need to be monitored if it is a mirror, for example.
 	 */
-	if (lv_is_origin(lv))
+	if (!origin_only && lv_is_origin(lv))
 		dm_list_iterate_safe(snh, snht, &lv->snapshot_segs)
 			if (!monitor_dev_for_events(cmd, dm_list_struct_base(snh,
-				    struct lv_segment, origin_list)->cow, monitor))
+				    struct lv_segment, origin_list)->cow, 0, monitor))
 				r = 0;
 
 	/*
@@ -888,7 +895,7 @@ int monitor_dev_for_events(struct cmd_context *cmd,
 	if ((seg = first_seg(lv)) != NULL && seg->log_lv != NULL &&
 	    (log_seg = first_seg(seg->log_lv)) != NULL &&
 	    seg_is_mirrored(log_seg))
-		if (!monitor_dev_for_events(cmd, seg->log_lv, monitor))
+		if (!monitor_dev_for_events(cmd, seg->log_lv, 0, monitor))
 			r = 0;
 
 	dm_list_iterate(tmp, &lv->segments) {
@@ -898,7 +905,7 @@ int monitor_dev_for_events(struct cmd_context *cmd,
 		for (s = 0; s < seg->area_count; s++) {
 			if (seg_type(seg, s) != AREA_LV)
 				continue;
-			if (!monitor_dev_for_events(cmd, seg_lv(seg, s),
+			if (!monitor_dev_for_events(cmd, seg_lv(seg, s), 0,
 						    monitor)) {
 				log_error("Failed to %smonitor %s",
 					  monitor ? "" : "un",
@@ -979,7 +986,7 @@ int monitor_dev_for_events(struct cmd_context *cmd,
 }
 
 static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
-		       int error_if_not_suspended)
+		       unsigned origin_only, int error_if_not_suspended)
 {
 	struct logical_volume *lv = NULL, *lv_pre = NULL;
 	struct lvinfo info;
@@ -995,13 +1002,17 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 	if (!(lv_pre = lv_from_lvid(cmd, lvid_s, 1)))
 		goto_out;
 
+	/* Ignore origin_only unless LV is origin in both old and new metadata */
+	if (!lv_is_origin(lv) || !lv_is_origin(lv_pre))
+		origin_only = 0;
+
 	if (test_mode()) {
-		_skip("Suspending '%s'.", lv->name);
+		_skip("Suspending %s%s.", lv->name, origin_only ? " origin without snapshots" : "");
 		r = 1;
 		goto out;
 	}
 
-	if (!lv_info(cmd, lv, &info, 0, 0))
+	if (!lv_info(cmd, lv, origin_only, &info, 0, 0))
 		goto_out;
 
 	if (!info.exists || info.suspended) {
@@ -1020,22 +1031,23 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 
 	/* If VG was precommitted, preload devices for the LV */
 	if ((lv_pre->vg->status & PRECOMMITTED)) {
-		if (!_lv_preload(lv_pre, &flush_required)) {
+		if (!_lv_preload(lv_pre, origin_only, &flush_required)) {
 			/* FIXME Revert preloading */
 			goto_out;
 		}
 	}
 
-	if (!monitor_dev_for_events(cmd, lv, 0))
+	if (!monitor_dev_for_events(cmd, lv, origin_only, 0))
 		/* FIXME Consider aborting here */
 		stack;
 
 	memlock_inc(cmd);
 
-	if (lv_is_origin(lv_pre) || lv_is_cow(lv_pre))
+	if (!origin_only &&
+	    (lv_is_origin(lv_pre) || lv_is_cow(lv_pre)))
 		lockfs = 1;
 
-	if (!_lv_suspend_lv(lv, lockfs, flush_required)) {
+	if (!_lv_suspend_lv(lv, origin_only, lockfs, flush_required)) {
 		memlock_dec(cmd);
 		fs_unlock();
 		goto out;
@@ -1054,17 +1066,21 @@ out:
 }
 
 /* Returns success if the device is not active */
-int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s)
+int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only)
 {
-	return _lv_suspend(cmd, lvid_s, 0);
+	return _lv_suspend(cmd, lvid_s, origin_only, 0);
 }
 
+/* No longer used */
+/***********
 int lv_suspend(struct cmd_context *cmd, const char *lvid_s)
 {
 	return _lv_suspend(cmd, lvid_s, 1);
 }
+***********/
 
 static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
+		      unsigned origin_only,
 		      int error_if_not_active)
 {
 	struct logical_volume *lv;
@@ -1077,13 +1093,16 @@ static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
 	if (!(lv = lv_from_lvid(cmd, lvid_s, 0)))
 		goto_out;
 
+	if (!lv_is_origin(lv))
+		origin_only = 0;
+
 	if (test_mode()) {
-		_skip("Resuming '%s'.", lv->name);
+		_skip("Resuming %s%s.", lv->name, origin_only ? " without snapshots" : "");
 		r = 1;
 		goto out;
 	}
 
-	if (!lv_info(cmd, lv, &info, 0, 0))
+	if (!lv_info(cmd, lv, origin_only, &info, 0, 0))
 		goto_out;
 
 	if (!info.exists || !info.suspended) {
@@ -1093,13 +1112,13 @@ static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
 		goto out;
 	}
 
-	if (!_lv_activate_lv(lv))
+	if (!_lv_activate_lv(lv, origin_only))
 		goto_out;
 
 	memlock_dec(cmd);
 	fs_unlock();
 
-	if (!monitor_dev_for_events(cmd, lv, 1))
+	if (!monitor_dev_for_events(cmd, lv, origin_only, 1))
 		stack;
 
 	r = 1;
@@ -1111,14 +1130,14 @@ out:
 }
 
 /* Returns success if the device is not active */
-int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s)
+int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only)
 {
-	return _lv_resume(cmd, lvid_s, 0);
+	return _lv_resume(cmd, lvid_s, origin_only, 0);
 }
 
-int lv_resume(struct cmd_context *cmd, const char *lvid_s)
+int lv_resume(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only)
 {
-	return _lv_resume(cmd, lvid_s, 1);
+	return _lv_resume(cmd, lvid_s, origin_only, 1);
 }
 
 static int _lv_has_open_snapshots(struct logical_volume *lv)
@@ -1128,7 +1147,7 @@ static int _lv_has_open_snapshots(struct logical_volume *lv)
 	int r = 0;
 
 	dm_list_iterate_items_gen(snap_seg, &lv->snapshot_segs, origin_list) {
-		if (!lv_info(lv->vg->cmd, snap_seg->cow, &info, 1, 0)) {
+		if (!lv_info(lv->vg->cmd, snap_seg->cow, 0, &info, 1, 0)) {
 			r = 1;
 			continue;
 		}
@@ -1162,7 +1181,7 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s)
 		goto out;
 	}
 
-	if (!lv_info(cmd, lv, &info, 1, 0))
+	if (!lv_info(cmd, lv, 0, &info, 1, 0))
 		goto_out;
 
 	if (!info.exists) {
@@ -1185,7 +1204,7 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s)
 
 	lv_calculate_readahead(lv, NULL);
 
-	if (!monitor_dev_for_events(cmd, lv, 0))
+	if (!monitor_dev_for_events(cmd, lv, 0, 0))
 		stack;
 
 	memlock_inc(cmd);
@@ -1193,7 +1212,7 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s)
 	memlock_dec(cmd);
 	fs_unlock();
 
-	if (!lv_info(cmd, lv, &info, 1, 0) || info.exists)
+	if (!lv_info(cmd, lv, 0, &info, 1, 0) || info.exists)
 		r = 0;
 out:
 	if (lv) {
@@ -1270,7 +1289,7 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 		goto out;
 	}
 
-	if (!lv_info(cmd, lv, &info, 0, 0))
+	if (!lv_info(cmd, lv, 0, &info, 0, 0))
 		goto_out;
 
 	if (info.exists && !info.suspended && info.live_table) {
@@ -1287,12 +1306,12 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 		lv->status |= ACTIVATE_EXCL;
 
 	memlock_inc(cmd);
-	if (!(r = _lv_activate_lv(lv)))
+	if (!(r = _lv_activate_lv(lv, 0)))
 		stack;
 	memlock_dec(cmd);
 	fs_unlock();
 
-	if (r && !monitor_dev_for_events(cmd, lv, 1))
+	if (r && !monitor_dev_for_events(cmd, lv, 0, 1))
 		stack;
 
 out:

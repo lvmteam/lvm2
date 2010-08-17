@@ -214,7 +214,7 @@ void destroy_lvhash()
 }
 
 /* Gets a real lock and keeps the info in the hash table */
-int hold_lock(char *resource, int mode, int flags)
+static int hold_lock(char *resource, int mode, int flags)
 {
 	int status;
 	int saved_errno;
@@ -269,7 +269,7 @@ int hold_lock(char *resource, int mode, int flags)
 }
 
 /* Unlock and remove it from the hash table */
-int hold_unlock(char *resource)
+static int hold_unlock(char *resource)
 {
 	struct lv_info *lvi;
 	int status;
@@ -350,12 +350,14 @@ static int do_activate_lv(char *resource, unsigned char lock_flags, int mode)
 	}
 
 	/* If it's suspended then resume it */
-	if (!lv_info_by_lvid(cmd, resource, &lvi, 0, 0))
+	// FIXME Set origin_only
+	if (!lv_info_by_lvid(cmd, resource, 0, &lvi, 0, 0))
 		goto error;
 
 	if (lvi.suspended) {
 		memlock_inc(cmd);
-		if (!lv_resume(cmd, resource)) {
+		// FIXME Set origin_only
+		if (!lv_resume(cmd, resource, 0)) {
 			memlock_dec(cmd);
 			goto error;
 		}
@@ -385,7 +387,8 @@ static int do_resume_lv(char *resource, unsigned char lock_flags)
 		return 0;	/* We don't need to do anything */
 	}
 
-	if (!lv_resume_if_active(cmd, resource))
+	// FIXME Set origin_only
+	if (!lv_resume_if_active(cmd, resource, 0))
 		return EIO;
 
 	return 0;
@@ -405,14 +408,14 @@ static int do_suspend_lv(char *resource, unsigned char lock_flags)
 	}
 
 	/* Only suspend it if it exists */
-	if (!lv_info_by_lvid(cmd, resource, &lvi, 0, 0))
+	// FIXME Set origin_only
+	if (!lv_info_by_lvid(cmd, resource, 0, &lvi, 0, 0))
 		return EIO;
 
-	if (lvi.exists) {
-		if (!lv_suspend_if_active(cmd, resource)) {
-			return EIO;
-		}
-	}
+	// FIXME Set origin_only
+	if (lvi.exists && !lv_suspend_if_active(cmd, resource, 0))
+		return EIO;
+
 	return 0;
 }
 
@@ -571,7 +574,8 @@ int post_lock_lv(unsigned char command, unsigned char lock_flags,
 			struct lvinfo lvi;
 
 			pthread_mutex_lock(&lvm_lock);
-			status = lv_info_by_lvid(cmd, resource, &lvi, 0, 0);
+			// FIXME Set origin_only
+			status = lv_info_by_lvid(cmd, resource, 0, &lvi, 0, 0);
 			pthread_mutex_unlock(&lvm_lock);
 			if (!status)
 				return EIO;
@@ -579,10 +583,8 @@ int post_lock_lv(unsigned char command, unsigned char lock_flags,
 			if (lvi.exists) {
 				if (hold_lock(resource, LCK_READ, LCKF_CONVERT))
 					return errno;
-			} else {
-				if (hold_unlock(resource))
-					return errno;
-			}
+			} else if (hold_unlock(resource))
+				return errno;
 		}
 	}
 	return 0;
@@ -882,7 +884,7 @@ struct dm_hash_node *get_next_excl_lock(struct dm_hash_node *v, char **name)
 }
 
 /* Called to initialise the LVM context of the daemon */
-int init_lvm(int using_gulm, char **argv)
+int init_clvm(int using_gulm, char **argv)
 {
 	if (!(cmd = create_toolcontext(1, NULL))) {
 		log_error("Failed to allocate command context");
