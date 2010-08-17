@@ -548,6 +548,7 @@ static int _percent(struct dev_manager *dm, const char *name, const char *dlid,
 	return 0;
 }
 
+/* FIXME Merge with the percent function */
 int dev_manager_transient(struct dev_manager *dm, struct logical_volume *lv)
 {
 	int r = 0;
@@ -558,10 +559,11 @@ int dev_manager_transient(struct dev_manager *dm, struct logical_volume *lv)
 	char *type = NULL;
 	char *params = NULL;
 	char *dlid = NULL;
+	char *suffix = lv_is_origin(lv) ? "real" : NULL;
 	const struct dm_list *segh = &lv->segments;
 	struct lv_segment *seg = NULL;
 
-	if (!(dlid = build_dm_uuid(dm->mem, lv->lvid.s, NULL)))
+	if (!(dlid = build_dm_uuid(dm->mem, lv->lvid.s, suffix)))
 		return_0;
 
 	if (!(dmt = _setup_task(0, dlid, NULL, DM_DEVICE_STATUS, 0, 0)))

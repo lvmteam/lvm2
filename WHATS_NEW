@@ -1,5 +1,6 @@
 Version 2.02.73 - 
 ================================
+  Fix dev_manager_transient to access -real device not snapshot-origin.
   Monitor origin -real device below snapshot instead of overlay device.
   Don't really change monitoring status when in test mode.
   Fix some exit statuses when starting/stopping monitoring fails.
