@@ -54,6 +54,7 @@ struct log_c {
 
 	time_t delay; /* limits how fast a resume can happen after suspend */
 	int touched;
+	int in_sync;  /* An in-sync that stays set until suspend/resume */
 	uint32_t region_size;
 	uint32_t region_count;
 	uint64_t sync_count;
@@ -720,6 +721,7 @@ static int clog_resume(struct dm_ulog_request *rq)
 	if (!lc)
 		return -EINVAL;
 
+	lc->in_sync = 0;
 	switch (lc->resume_override) {
 	case 1000:
 		LOG_ERROR("[%s] Additional resume issued before suspend",
@@ -963,6 +965,42 @@ static int clog_in_sync(struct dm_ulog_request *rq)
 		return -EINVAL;
 
 	*rtn = log_test_bit(lc->sync_bits, region);
+
+	/*
+	 * If the mirror was successfully recovered, we want to always
+	 * force every machine to write to all devices - otherwise,
+	 * corruption will occur.  Here's how:
+	 *    Node1 suffers a failure and marks a region out-of-sync
+	 *    Node2 attempts a write, gets by is_remote_recovering,
+   	 *          and queries the sync status of the region - finding
+	 *	    it out-of-sync.
+	 *    Node2 thinks the write should be a nosync write, but it
+	 *          hasn't suffered the drive failure that Node1 has yet.
+	 *          It then issues a generic_make_request directly to
+	 *          the primary image only - which is exactly the device
+	 *          that has suffered the failure.
+	 *    Node2 suffers a lost write - which completely bypasses the
+	 *          mirror layer because it had gone through generic_m_r.
+	 *    The file system will likely explode at this point due to
+	 *    I/O errors.  If it wasn't the primary that failed, it is
+	 *    easily possible in this case to issue writes to just one
+	 *    of the remaining images - also leaving the mirror inconsistent.
+	 *
+	 * We let in_sync() return 1 in a cluster regardless of what is
+	 * in the bitmap once recovery has successfully completed on a
+	 * mirror.  This ensures the mirroring code will continue to
+	 * attempt to write to all mirror images.  The worst that can
+	 * happen for reads is that additional read attempts may be
+	 * taken.
+	 *
+	 * Futher investigation may be required to determine if there are
+	 * similar possible outcomes when the mirror is in the process of
+	 * recovering.  In that case, lc->in_sync would not have been set
+	 * yet.
+	 */
+	if (!*rtn && lc->in_sync)
+		*rtn = 1;
+
 	if (*rtn)
 		LOG_DBG("[%s] Region is in-sync: %llu",
 			SHORT_UUID(lc->uuid), (unsigned long long)region);
@@ -1282,7 +1320,7 @@ static int clog_set_region_sync(struct dm_ulog_request *rq, uint32_t originator)
 				lc->skip_bit_warning = lc->region_count;
 
 			if (pkg->region > (lc->skip_bit_warning + 5)) {
-				LOG_ERROR("*** Region #%llu skipped during recovery ***",
+				LOG_SPRINT(lc, "*** Region #%llu skipped during recovery ***",
 					  (unsigned long long)lc->skip_bit_warning);
 				lc->skip_bit_warning = lc->region_count;
 #ifdef DEBUG
@@ -1323,6 +1361,9 @@ static int clog_set_region_sync(struct dm_ulog_request *rq, uint32_t originator)
 		LOG_SPRINT(lc, "SET - SEQ#=%u, UUID=%s, nodeid = %u:: "
 			   "(lc->sync_count > lc->region_count) - this is bad",
 			   rq->seq, SHORT_UUID(lc->uuid), originator);
+
+	if (lc->sync_count == lc->region_count)
+		lc->in_sync = 1;
 
 	rq->data_size = 0;
 	return 0;
