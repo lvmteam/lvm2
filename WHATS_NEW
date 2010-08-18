@@ -1,5 +1,5 @@
-Version 2.02.73 - 
-================================
+Version 2.02.73 - 18th August 2010
+==================================
   Fix potential for corruption during cluster mirror device failure.
   Use 'SINGLENODE' instead of 'dead' in clvmd singlenode messages.
   Ignore snapshots when performing mirror recovery beneath an origin.
@@ -13,18 +13,17 @@ Version 2.02.73 -
   Enable snapshot monitoring by default when dmeventd is enabled.
   Move cloned libdevmapper-event client code from segments into lib/activate.
   Fix 'lvconvert --splitmirrors' in cluster operation.
-  Fix clvmd init script exit code when executed as non-root user.
+  Fix clvmd init script exit code to return 4 when executed as non-root user.
   Change default alignment of pe_start to 1MB.
   Add --norestorefile option to pvcreate.
   Require --restorefile when using pvcreate --uuid.
   Recognise and give preference to md device partitions (blkext major).
   Never scan internal LVM devices.
-  Split-mirror operations were ignoring user-specified PVs.
+  Don't ignore user-specified PVs in split-mirror operations. (2.02.71)
   Fix data corruption bug in cluster mirrors.
   Require logical volume(s) to be explicitly named for lvconvert --merge.
   Avoid changing aligned pe_start as a side-effect of very verbose logging.
-  Fix 'void*' arithmetic warnings in dbg_malloc.c.
-  Fix 'void*' arithmetic warning in some functions from libdm-iface.c.
+  Use built-in rule for device aliases: block/ < dm- < disk/ < mapper/ < other.
   Fix const warning in dev_manager_info() and _dev_manager_lv_rmnodes().
   Fix const warning in archive_file structure from archive.c.
   Clean generated files .exported_symbols_generated, example.conf for distclean.
@@ -35,7 +34,7 @@ Version 2.02.73 -
   Use #include <> not "" in lvm2app.h which gets installed on the system.
   Make lib and liblvm.device-mapper wait for include file generation.
   Fix configure to supply DEFAULT_RUN_DIR to Makefiles.
-  Fix wrong number of mirror log at allocate policy
+  Fix allocation of wrong number of mirror logs with 'remove' fault policy.
 
 Version 2.02.72 - 28th July 2010  [CVE-2010-2526]
 =================================================
