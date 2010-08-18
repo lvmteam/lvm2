@@ -1,5 +1,6 @@
 Version 1.02.54 - 
 ================================
+  Fix dm-mod autoloading logic to not assume control node is set correctly.
   Add dmeventd/executable to lvm.conf to test alternative dmeventd.
   Export dm_event_handler_set_dmeventd_path to override built-in dmeventd path.
   Generate libdevmapper-event exported symbols.
