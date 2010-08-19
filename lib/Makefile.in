@@ -47,6 +47,7 @@ SOURCES =\
 	device/dev-io.c \
 	device/dev-md.c \
 	device/dev-swap.c \
+	device/dev-luks.c \
 	device/device.c \
 	display/display.c \
 	error/errseg.c \

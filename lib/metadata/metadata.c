@@ -1640,6 +1640,9 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name,
 	if (!_wipe_sb(dev, "swap signature", name, 10, pp, dev_is_swap))
 		return 0;
 
+	if (!_wipe_sb(dev, "LUKS signature", name, 8, pp, dev_is_luks))
+		return 0;
+
 	if (sigint_caught())
 		return 0;
 
