@@ -1,6 +1,7 @@
 Version 2.02.74 - 
 ==================================
   Simplify MD/swap signature detection in pvcreate and allow aborting.
+  Remove assumption that --yes must be used only in --force mode.
 
 Version 2.02.73 - 18th August 2010
 ==================================
