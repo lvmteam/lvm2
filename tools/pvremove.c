@@ -143,11 +143,6 @@ int pvremove(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(cmd, yes_ARG) && !arg_count(cmd, force_ARG)) {
-		log_error("Option y can only be given with option f");
-		return EINVALID_CMD_LINE;
-	}
-
 	for (i = 0; i < argc; i++) {
 		r = pvremove_single(cmd, argv[i], NULL);
 		if (r > ret)

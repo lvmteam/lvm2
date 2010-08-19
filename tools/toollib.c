@@ -1344,11 +1344,6 @@ int pvcreate_params_validate(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (arg_count(cmd, yes_ARG) && !arg_count(cmd, force_ARG)) {
-		log_error("Option y can only be given with option f");
-		return 0;
-	}
-
 	pp->yes = arg_count(cmd, yes_ARG);
 	pp->force = arg_count(cmd, force_ARG);
 
