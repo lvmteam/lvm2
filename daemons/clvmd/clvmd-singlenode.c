@@ -155,11 +155,13 @@ static int _lock_resource(const char *resource, int mode, int flags, int *lockid
 		if (!_resources[i])
 			break;
 		if (!strcmp(_resources[i], resource)) {
-			if ((_locks[i] & LCK_WRITE) || (_locks[i] & LCK_EXCL)) {
+			if ((_locks[i] & LCK_TYPE_MASK) == LCK_WRITE ||
+			    (_locks[i] & LCK_TYPE_MASK) == LCK_EXCL) {
 				DEBUGLOG("%s already write/exclusively locked...\n", resource);
 				goto maybe_retry;
 			}
-			if ((mode & LCK_WRITE) || (mode & LCK_EXCL)) {
+			if ((mode & LCK_TYPE_MASK) == LCK_WRITE ||
+			    (mode & LCK_TYPE_MASK) == LCK_EXCL) {
 				DEBUGLOG("%s already locked and WRITE/EXCL lock requested...\n",
 					 resource);
 				goto maybe_retry;

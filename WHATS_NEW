@@ -4,6 +4,7 @@ Version 2.02.74 -
   Remove assumption that --yes must be used only in --force mode.
   Fix file descriptor leak in swap signature detection error path.
   Detect and allow abort in pvcreate if LUKS signature is detected.
+  Use proper locks mask when checking for LCK_WRITE.
 
 Version 2.02.73 - 18th August 2010
 ==================================
