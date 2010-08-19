@@ -1,3 +1,6 @@
+Version 1.02.55 - 
+==================================
+
 Version 1.02.54 - 18th August 2010
 ==================================
   Fix dm-mod autoloading logic to not assume control node is set correctly.
