@@ -1,3 +1,6 @@
+Version 2.02.74 - 
+==================================
+
 Version 2.02.73 - 18th August 2010
 ==================================
   Fix potential for corruption during cluster mirror device failure.
