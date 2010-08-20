@@ -20,6 +20,15 @@
 #include "lvm-types.h"
 #include "metadata.h"
 
+#define GET_NUM_PROPERTY_FN(NAME, VALUE) \
+static int _ ## NAME ## _get (void *obj, struct lvm_property_type *prop) \
+{ \
+	struct volume_group *vg = (struct volume_group *)obj; \
+\
+	prop->v.n_val = VALUE; \
+	return 1; \
+}
+
 static int _not_implemented(void *obj, struct lvm_property_type *prop)
 {
 	log_errno(ENOSYS, "Function not implemented");
