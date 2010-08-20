@@ -1195,7 +1195,7 @@ static const struct dm_report_object_type _report_types[] = {
 
 #define STR DM_REPORT_FIELD_TYPE_STRING
 #define NUM DM_REPORT_FIELD_TYPE_NUMBER
-#define FIELD(type, strct, sorttype, head, field, width, func, id, desc) \
+#define FIELD(type, strct, sorttype, head, field, width, func, id, desc, writeable) \
 	{type, sorttype, offsetof(type_ ## strct, field), width, \
 	 id, head, &_ ## func ## _disp, desc},
 
