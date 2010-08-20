@@ -1048,14 +1048,19 @@ struct dm_report_field;
 #define DM_REPORT_FIELD_TYPE_STRING	0x00000010
 #define DM_REPORT_FIELD_TYPE_NUMBER	0x00000020
 
+#define DM_REPORT_FIELD_TYPE_ID_LEN 32
+#define DM_REPORT_FIELD_TYPE_HEADING_LEN 32
+
 struct dm_report;
 struct dm_report_field_type {
 	uint32_t type;		/* object type id */
 	uint32_t flags;		/* DM_REPORT_FIELD_* */
 	uint32_t offset;	/* byte offset in the object */
 	int32_t width;		/* default width */
-	const char id[32];	/* string used to specify the field */
-	const char heading[32];	/* string printed in header */
+	/* string used to specify the field */
+	const char id[DM_REPORT_FIELD_TYPE_ID_LEN];
+	/* string printed in header */
+	const char heading[DM_REPORT_FIELD_TYPE_HEADING_LEN];
 	int (*report_fn)(struct dm_report *rh, struct dm_pool *mem,
 			 struct dm_report_field *field, const void *data,
 			 void *private_data);
