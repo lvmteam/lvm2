@@ -1,5 +1,12 @@
 Version 2.02.74 - 
 ==================================
+  Add implmentation for simple numeric 'get' property functions.
+  Define GET_NUM_PROPERTY_FN macro to simplify numeric property 'get' function
+  Add properties.[ch] to lib/report, defined based on columns.h.
+  Add macro definitions to report infrastructure for character array length.
+  Remove explicit double quotes from columns.h 'id' entries.
+  Add 'flags' field to columns.h and define FIELD_MODIFIABLE.
+  Add vg_mda_size and vg_mda_free functions.
   Simplify MD/swap signature detection in pvcreate and allow aborting.
   Remove assumption that --yes must be used only in --force mode.
   Fix file descriptor leak in swap signature detection error path.
