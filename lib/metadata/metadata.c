@@ -1217,6 +1217,48 @@ int vg_set_mda_copies(struct volume_group *vg, uint32_t mda_copies)
 	return 1;
 }
 
+uint64_t find_min_mda_size(struct dm_list *mdas)
+{
+	uint64_t min_mda_size = UINT64_MAX, mda_size;
+	struct metadata_area *mda;
+
+	dm_list_iterate_items(mda, mdas) {
+		if (!mda->ops->mda_total_sectors)
+			continue;
+		mda_size = mda->ops->mda_total_sectors(mda);
+		if (mda_size < min_mda_size)
+			min_mda_size = mda_size;
+	}
+
+	if (min_mda_size == UINT64_MAX)
+		min_mda_size = UINT64_C(0);
+
+	return min_mda_size;
+}
+
+uint64_t vg_mda_size(const struct volume_group *vg)
+{
+	return find_min_mda_size(&vg->fid->metadata_areas_in_use);
+}
+
+uint64_t vg_mda_free(const struct volume_group *vg)
+{
+	uint64_t freespace = UINT64_MAX, mda_free;
+	struct metadata_area *mda;
+
+	dm_list_iterate_items(mda, &vg->fid->metadata_areas_in_use) {
+		if (!mda->ops->mda_free_sectors)
+			continue;
+		mda_free = mda->ops->mda_free_sectors(mda);
+		if (mda_free < freespace)
+			freespace = mda_free;
+	}
+
+	if (freespace == UINT64_MAX)
+		freespace = UINT64_C(0);
+	return freespace;
+}
+
 int vg_set_extent_size(struct volume_group *vg, uint32_t new_size)
 {
 	uint32_t old_size = vg->extent_size;

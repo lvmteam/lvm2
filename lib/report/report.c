@@ -958,25 +958,6 @@ static int _pvmdafree_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _size64_disp(rh, mem, field, &freespace, private);
 }
 
-static uint64_t _find_min_mda_size(struct dm_list *mdas)
-{
-	uint64_t min_mda_size = UINT64_MAX, mda_size;
-	struct metadata_area *mda;
-
-	dm_list_iterate_items(mda, mdas) {
-		if (!mda->ops->mda_total_sectors)
-			continue;
-		mda_size = mda->ops->mda_total_sectors(mda);
-		if (mda_size < min_mda_size)
-			min_mda_size = mda_size;
-	}
-
-	if (min_mda_size == UINT64_MAX)
-		min_mda_size = UINT64_C(0);
-
-	return min_mda_size;
-}
-
 static int _pvmdasize_disp(struct dm_report *rh, struct dm_pool *mem,
 			   struct dm_report_field *field,
 			   const void *data, void *private)
@@ -987,7 +968,7 @@ static int _pvmdasize_disp(struct dm_report *rh, struct dm_pool *mem,
 
 	/* PVs could have 2 mdas of different sizes (rounding effect) */
 	if ((info = info_from_pvid(pvid, 0)))
-		min_mda_size = _find_min_mda_size(&info->mdas);
+		min_mda_size = find_min_mda_size(&info->mdas);
 
 	return _size64_disp(rh, mem, field, &min_mda_size, private);
 }
@@ -999,7 +980,7 @@ static int _vgmdasize_disp(struct dm_report *rh, struct dm_pool *mem,
 	const struct volume_group *vg = (const struct volume_group *) data;
 	uint64_t min_mda_size;
 
-	min_mda_size = _find_min_mda_size(&vg->fid->metadata_areas_in_use);
+	min_mda_size = vg_mda_size(vg);
 
 	return _size64_disp(rh, mem, field, &min_mda_size, private);
 }
@@ -1009,19 +990,9 @@ static int _vgmdafree_disp(struct dm_report *rh, struct dm_pool *mem,
 			   const void *data, void *private)
 {
 	const struct volume_group *vg = (const struct volume_group *) data;
-	uint64_t freespace = UINT64_MAX, mda_free;
-	struct metadata_area *mda;
+	uint64_t freespace;
 
-	dm_list_iterate_items(mda, &vg->fid->metadata_areas_in_use) {
-		if (!mda->ops->mda_free_sectors)
-			continue;
-		mda_free = mda->ops->mda_free_sectors(mda);
-		if (mda_free < freespace)
-			freespace = mda_free;
-	}
-
-	if (freespace == UINT64_MAX)
-		freespace = UINT64_C(0);
+	freespace = vg_mda_free(vg);
 
 	return _size64_disp(rh, mem, field, &freespace, private);
 }
