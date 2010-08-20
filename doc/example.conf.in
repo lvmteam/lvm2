@@ -101,7 +101,7 @@ devices {
     # Default alignment of the start of a data area in MB.  If set to 0,
     # a small value of 64KB will be used, which was the default until
     # LVM2 version 2.02.73.  Set to 1 for 1MiB, 2 for 2MiB, etc.
-    default_data_alignment = 1
+    # default_data_alignment = @DEFAULT_DATA_ALIGNMENT@
 
     # By default, the start of a PV's data area will be a multiple of
     # the 'minimum_io_size' or 'optimal_io_size' exposed in sysfs.
