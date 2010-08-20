@@ -1,5 +1,7 @@
 Version 2.02.74 - 
 ==================================
+  Update heuristic used for default and detected data alignment.
+  Add "devices/default_data_alignment" to lvm.conf.
   Add implmentation for simple numeric 'get' property functions.
   Define GET_NUM_PROPERTY_FN macro to simplify numeric property 'get' function
   Add properties.[ch] to lib/report, defined based on columns.h.

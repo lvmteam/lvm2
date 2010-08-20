@@ -62,23 +62,38 @@ static uint32_t _vg_bad_status_bits(const struct volume_group *vg,
 const char _really_init[] =
     "Really INITIALIZE physical volume \"%s\" of volume group \"%s\" [y/n]? ";
 
-static int _alignment_overrides_default(unsigned long data_alignment)
+static int _alignment_overrides_default(unsigned long data_alignment,
+					unsigned long default_pe_align)
 {
-	return data_alignment && (DEFAULT_PE_ALIGN % data_alignment);
+	return data_alignment && (default_pe_align % data_alignment);
 }
 
 unsigned long set_pe_align(struct physical_volume *pv, unsigned long data_alignment)
 {
-	unsigned long temp_pe_align;
+	unsigned long default_pe_align, temp_pe_align;
 
 	if (pv->pe_align)
 		goto out;
 
-	if (data_alignment)
+	if (data_alignment) {
+		/* Always use specified data_alignment */
 		pv->pe_align = data_alignment;
+		goto out;
+	}
+
+	default_pe_align = find_config_tree_int(pv->fmt->cmd,
+						"devices/default_data_alignment",
+						DEFAULT_DATA_ALIGNMENT);
+
+	if (default_pe_align)
+		/* align on 1 MiB multiple */
+		default_pe_align *= DEFAULT_PE_ALIGN;
 	else
-		pv->pe_align = MAX((DEFAULT_PE_ALIGN << SECTOR_SHIFT),
-				   lvm_getpagesize()) >> SECTOR_SHIFT;
+		/* align on 64 KiB multiple (old default) */
+		default_pe_align = DEFAULT_PE_ALIGN_OLD;
+
+	pv->pe_align = MAX((default_pe_align << SECTOR_SHIFT),
+			   lvm_getpagesize()) >> SECTOR_SHIFT;
 
 	if (!pv->dev)
 		goto out;
@@ -89,8 +104,8 @@ unsigned long set_pe_align(struct physical_volume *pv, unsigned long data_alignm
 	if (find_config_tree_bool(pv->fmt->cmd, "devices/md_chunk_alignment",
 				  DEFAULT_MD_CHUNK_ALIGNMENT)) {
 		temp_pe_align = dev_md_stripe_width(pv->fmt->cmd->sysfs_dir, pv->dev);
-		if (_alignment_overrides_default(temp_pe_align))
-			pv->pe_align = temp_pe_align;
+		if (_alignment_overrides_default(temp_pe_align, default_pe_align))
+			pv->pe_align = MAX(pv->pe_align, temp_pe_align);
 	}
 
 	/*
@@ -104,18 +119,18 @@ unsigned long set_pe_align(struct physical_volume *pv, unsigned long data_alignm
 				  "devices/data_alignment_detection",
 				  DEFAULT_DATA_ALIGNMENT_DETECTION)) {
 		temp_pe_align = dev_minimum_io_size(pv->fmt->cmd->sysfs_dir, pv->dev);
-		if (_alignment_overrides_default(temp_pe_align))
-			pv->pe_align = temp_pe_align;
+		if (_alignment_overrides_default(temp_pe_align, default_pe_align))
+			pv->pe_align = MAX(pv->pe_align, temp_pe_align);
 
 		temp_pe_align = dev_optimal_io_size(pv->fmt->cmd->sysfs_dir, pv->dev);
-		if (_alignment_overrides_default(temp_pe_align))
-			pv->pe_align = temp_pe_align;
+		if (_alignment_overrides_default(temp_pe_align, default_pe_align))
+			pv->pe_align = MAX(pv->pe_align, temp_pe_align);
 	}
 
+out:
 	log_very_verbose("%s: Setting PE alignment to %lu sectors.",
 			 dev_name(pv->dev), pv->pe_align);
 
-out:
 	return pv->pe_align;
 }
 
@@ -125,8 +140,11 @@ unsigned long set_pe_align_offset(struct physical_volume *pv,
 	if (pv->pe_align_offset)
 		goto out;
 
-	if (data_alignment_offset)
+	if (data_alignment_offset) {
+		/* Always use specified data_alignment_offset */
 		pv->pe_align_offset = data_alignment_offset;
+		goto out;
+	}
 
 	if (!pv->dev)
 		goto out;
@@ -142,10 +160,10 @@ unsigned long set_pe_align_offset(struct physical_volume *pv,
 		pv->pe_align_offset = MAX(pv->pe_align_offset, align_offset);
 	}
 
+out:
 	log_very_verbose("%s: Setting PE alignment offset to %lu sectors.",
 			 dev_name(pv->dev), pv->pe_align_offset);
 
-out:
 	return pv->pe_align_offset;
 }
 
