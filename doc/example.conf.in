@@ -98,6 +98,11 @@ devices {
     # 1 enables; 0 disables.
     md_chunk_alignment = 1
 
+    # Default alignment of the start of a data area in MB.  If set to 0,
+    # a small value of 64KB will be used, which was the default until
+    # LVM2 version 2.02.73.  Set to 1 for 1MiB, 2 for 2MiB, etc.
+    default_data_alignment = 1
+
     # By default, the start of a PV's data area will be a multiple of
     # the 'minimum_io_size' or 'optimal_io_size' exposed in sysfs.
     # - minimum_io_size - the smallest request the device can perform
@@ -111,9 +116,9 @@ devices {
     data_alignment_detection = 1
 
     # Alignment (in KB) of start of data area when creating a new PV.
-    # If a PV is placed directly upon an md device and md_chunk_alignment or
-    # data_alignment_detection is enabled this parameter is ignored.
-    # Set to 0 for the default alignment of 1MB or page size, if larger.
+    # md_chunk_alignment and data_alignment_detection are disabled if set.
+    # Set to 0 for the default alignment (see: data_alignment_default)
+    # or page size, if larger.
     data_alignment = 0
 
     # By default, the start of the PV's aligned data area will be shifted by
@@ -122,6 +127,7 @@ devices {
     # windows partitioning will have an alignment_offset of 3584 bytes
     # (sector 7 is the lowest aligned logical block, the 4KB sectors start
     # at LBA -1, and consequently sector 63 is aligned on a 4KB boundary).
+    # But note that pvcreate --dataalignmentoffset will skip this detection.
     # 1 enables; 0 disables.
     data_alignment_offset_detection = 1
 

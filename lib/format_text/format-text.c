@@ -1861,16 +1861,20 @@ static int _text_pv_setup(const struct format_type *fmt,
 						      0) * 2;
 
 		if (set_pe_align(pv, data_alignment) != data_alignment &&
-		    data_alignment)
-			log_warn("WARNING: %s: Overriding data alignment to "
-				 "%lu sectors (requested %lu sectors)",
-				 pv_dev_name(pv), pv->pe_align, data_alignment);
+		    data_alignment) {
+			log_error("%s: invalid data alignment of "
+				  "%lu sectors (requested %lu sectors)",
+				  pv_dev_name(pv), pv->pe_align, data_alignment);
+			return 0;
+		}
 
 		if (set_pe_align_offset(pv, data_alignment_offset) != data_alignment_offset &&
-		    data_alignment_offset)
-			log_warn("WARNING: %s: Overriding data alignment offset to "
-				 "%lu sectors (requested %lu sectors)",
-				 pv_dev_name(pv), pv->pe_align_offset, data_alignment_offset);
+		    data_alignment_offset) {
+			log_error("%s: invalid data alignment offset of "
+				  "%lu sectors (requested %lu sectors)",
+				  pv_dev_name(pv), pv->pe_align_offset, data_alignment_offset);
+			return 0;
+		}
 
 		if (pv->pe_align < pv->pe_align_offset) {
 			log_error("%s: pe_align (%lu sectors) must not be less "
