@@ -90,6 +90,7 @@ SOURCES =\
 	misc/lvm-wrappers.c \
 	misc/util.c \
 	mm/memlock.c \
+	report/properties.c \
 	report/report.c \
 	striped/striped.c \
 	uuid/uuid.c \
