@@ -694,6 +694,7 @@ DL_LIBS
 DEVMAPPER
 DEFAULT_RUN_DIR
 DEFAULT_LOCK_DIR
+DEFAULT_DATA_ALIGNMENT
 DEFAULT_CACHE_SUBDIR
 DEFAULT_BACKUP_SUBDIR
 DEFAULT_ARCHIVE_SUBDIR
@@ -872,6 +873,7 @@ with_default_archive_subdir
 with_default_backup_subdir
 with_default_cache_subdir
 with_default_locking_dir
+with_default_data_alignment
 with_interface
 '
       ac_precious_vars='build_alias
@@ -1615,6 +1617,8 @@ Optional Packages:
                           default metadata cache subdir [cache]
   --with-default-locking-dir=DIR
                           default locking directory [/var/lock/lvm]
+  --with-default-data-alignment=NUM
+                          set the default data alignment in MiB [1]
   --with-interface=IFACE  choose kernel interface (ioctl) [ioctl]
 
 Some influential environment variables:
@@ -18080,6 +18084,21 @@ _ACEOF
 
 
 ################################################################################
+
+# Check whether --with-default-data-alignment was given.
+if test "${with_default_data_alignment+set}" = set; then
+  withval=$with_default_data_alignment; DEFAULT_DATA_ALIGNMENT=$withval
+else
+  DEFAULT_DATA_ALIGNMENT=1
+fi
+
+
+cat >>confdefs.h <<_ACEOF
+#define DEFAULT_DATA_ALIGNMENT $DEFAULT_DATA_ALIGNMENT
+_ACEOF
+
+
+################################################################################
 { $as_echo "$as_me:$LINENO: checking for kernel interface choice" >&5
 $as_echo_n "checking for kernel interface choice... " >&6; }
 
@@ -18122,6 +18141,7 @@ LVM_PATCHLEVEL=`echo "$VER" | $AWK -F '[(.]' '{print $3}'`
 LVM_LIBAPI=`echo "$VER" | $AWK -F '[()]' '{print $2}'`
 
 ################################################################################
+
 
 
 
