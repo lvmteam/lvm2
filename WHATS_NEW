@@ -1,5 +1,6 @@
 Version 2.02.74 - 
 ==================================
+  Add configure --with-default-data-alignment.
   Update heuristic used for default and detected data alignment.
   Add "devices/default_data_alignment" to lvm.conf.
   Add implmentation for simple numeric 'get' property functions.
