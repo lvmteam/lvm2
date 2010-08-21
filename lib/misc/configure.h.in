@@ -32,6 +32,9 @@
 /* Name of default metadata cache subdirectory. */
 #undef DEFAULT_CACHE_SUBDIR
 
+/* Default data alignment. */
+#undef DEFAULT_DATA_ALIGNMENT
+
 /* Name of default locking directory. */
 #undef DEFAULT_LOCK_DIR
 
