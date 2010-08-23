@@ -234,8 +234,10 @@ static int _poll_vg(struct cmd_context *cmd, const char *vgname,
 		lv = lvl->lv;
 		if (!(lv->status & parms->lv_type))
 			continue;
-		if (!(name = parms->poll_fns->get_copy_name_from_lv(lv)))
+		name = parms->poll_fns->get_copy_name_from_lv(lv);
+		if (!name && !parms->aborting)
 			continue;
+
 		/* FIXME Need to do the activation from _set_up_pvmove here
 		 *       if it's not running and we're not aborting */
 		if (_check_lv_status(cmd, vg, lv, name, parms, &finished) &&
