@@ -703,6 +703,7 @@ DEBUG
 COPTIMISE_FLAG
 CONFDIR
 CMDLIB
+CLVMD_CMANAGERS
 CLVMD
 CLUSTER
 CLDWHOLEARCHIVE
@@ -11632,22 +11633,33 @@ if  test x$CLVMD != xnone && test x$CLUSTER = xnone; then
 	CLUSTER=internal
 fi
 
-if  test x$CLVMD != xnone && test x$PKGCONFIG_INIT != x1; then
+if test x$CLVMD != xnone && test x$PKGCONFIG_INIT != x1; then
 	pkg_config_init
 fi
 
+CLVMD_CMANAGERS=""
+CLVMD_NEEDS_QDISKD=no
 
 if [ `expr x"$CLVMD" : '.*gulm.*'` != 0 ]; then
 	BUILDGULM=yes
-fi
-if [ `expr x"$CLVMD" : '.*corosync.*'` != 0 ]; then
-	BUILDCOROSYNC=yes
-fi
-if [ `expr x"$CLVMD" : '.*openais.*'` != 0 ]; then
-	BUILDOPENAIS=yes
+	CLVMD_CMANAGERS="$CLVMD_CMANAGERS lock_gulmd"
+	CLVMD_NEEDS_QDISKD=yes
 fi
 if [ `expr x"$CLVMD" : '.*cman.*'` != 0 ]; then
 	BUILDCMAN=yes
+	CLVMD_CMANAGERS="$CLVMD_CMANAGERS cman"
+	CLVMD_NEEDS_QDISKD=yes
+fi
+if [ `expr x"$CLVMD" : '.*corosync.*'` != 0 ]; then
+	BUILDCOROSYNC=yes
+	CLVMD_CMANAGERS="$CLVMD_CMANAGERS corosync"
+fi
+if [ `expr x"$CLVMD" : '.*openais.*'` != 0 ]; then
+	BUILDOPENAIS=yes
+	CLVMD_CMANAGERS="$CLVMD_CMANAGERS openais"
+fi
+if test x$CLVMD_NEEDS_QDISKD != xno; then
+	CLVMD_CMANAGERS="$CLVMD_CMANAGERS qdiskd"
 fi
 
 if test x$BUILDGULM = xyes; then
@@ -13814,17 +13826,23 @@ fi
 
 if test x$CLVMD = xall; then
 	CLVMD=none
+	CLVMD_CMANAGERS=""
+	CLVMD_NEEDS_QDISKD=no
 	if test x$HAVE_CCS = xyes && \
 	   test x$HAVE_GULM = xyes; then
 		{ $as_echo "$as_me:$LINENO: result: Enabling clvmd gulm cluster manager" >&5
 $as_echo "Enabling clvmd gulm cluster manager" >&6; }
 		CLVMD="$CLVMD,gulm"
+		CLVMD_CMANAGERS="$CLVMD_CMANAGERS lock_gulmd"
+		CLVMD_NEEDS_QDISKD=yes
 	fi
 	if test x$HAVE_CMAN = xyes && \
 	   test x$HAVE_DLM = xyes; then
 		{ $as_echo "$as_me:$LINENO: result: Enabling clvmd cman cluster manager" >&5
 $as_echo "Enabling clvmd cman cluster manager" >&6; }
 		CLVMD="$CLVMD,cman"
+		CLVMD_CMANAGERS="$CLVMD_CMANAGERS cman"
+		CLVMD_NEEDS_QDISKD=yes
 	fi
 	if test x$HAVE_COROSYNC = xyes && \
 	   test x$HAVE_QUORUM = xyes && \
@@ -13834,6 +13852,7 @@ $as_echo "Enabling clvmd cman cluster manager" >&6; }
 		{ $as_echo "$as_me:$LINENO: result: Enabling clvmd corosync cluster manager" >&5
 $as_echo "Enabling clvmd corosync cluster manager" >&6; }
 		CLVMD="$CLVMD,corosync"
+		CLVMD_CMANAGERS="$CLVMD_CMANAGERS corosync"
 	fi
 	if test x$HAVE_COROSYNC = xyes && \
 	   test x$HAVE_CPG = xyes && \
@@ -13841,6 +13860,10 @@ $as_echo "Enabling clvmd corosync cluster manager" >&6; }
 		{ $as_echo "$as_me:$LINENO: result: Enabling clvmd openais cluster manager" >&5
 $as_echo "Enabling clvmd openais cluster manager" >&6; }
 		CLVMD="$CLVMD,openais"
+		CLVMD_CMANAGERS="$CLVMD_CMANAGERS openais"
+	fi
+	if test x$CLVMD_NEEDS_QDISKD != xno; then
+		CLVMD_CMANAGERS="$CLVMD_CMANAGERS qdiskd"
 	fi
 	if test x$CLVMD = xnone; then
 		{ $as_echo "$as_me:$LINENO: result: Disabling clvmd build. No cluster manager detected." >&5
@@ -18141,6 +18164,7 @@ LVM_PATCHLEVEL=`echo "$VER" | $AWK -F '[(.]' '{print $3}'`
 LVM_LIBAPI=`echo "$VER" | $AWK -F '[()]' '{print $2}'`
 
 ################################################################################
+
 
 
 
