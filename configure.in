@@ -397,23 +397,37 @@ if  test x$CLVMD != xnone && test x$CLUSTER = xnone; then
 fi
 
 dnl -- init pkgconfig if required
-if  test x$CLVMD != xnone && test x$PKGCONFIG_INIT != x1; then
+if test x$CLVMD != xnone && test x$PKGCONFIG_INIT != x1; then
 	pkg_config_init
 fi
 
+dnl -- Express clvmd init script Required-Start / Required-Stop
+CLVMD_CMANAGERS=""
+dnl -- On RHEL4/RHEL5, qdiskd is started from a separate init script.
+dnl -- Enable if we are build for either cman or gulm.
+CLVMD_NEEDS_QDISKD=no
 
 dnl -- define build types
 if [[ `expr x"$CLVMD" : '.*gulm.*'` != 0 ]]; then
 	BUILDGULM=yes
-fi
-if [[ `expr x"$CLVMD" : '.*corosync.*'` != 0 ]]; then
-	BUILDCOROSYNC=yes
-fi
-if [[ `expr x"$CLVMD" : '.*openais.*'` != 0 ]]; then
-	BUILDOPENAIS=yes
+	CLVMD_CMANAGERS="$CLVMD_CMANAGERS lock_gulmd"
+	CLVMD_NEEDS_QDISKD=yes
 fi
 if [[ `expr x"$CLVMD" : '.*cman.*'` != 0 ]]; then
 	BUILDCMAN=yes
+	CLVMD_CMANAGERS="$CLVMD_CMANAGERS cman"
+	CLVMD_NEEDS_QDISKD=yes
+fi
+if [[ `expr x"$CLVMD" : '.*corosync.*'` != 0 ]]; then
+	BUILDCOROSYNC=yes
+	CLVMD_CMANAGERS="$CLVMD_CMANAGERS corosync"
+fi
+if [[ `expr x"$CLVMD" : '.*openais.*'` != 0 ]]; then
+	BUILDOPENAIS=yes
+	CLVMD_CMANAGERS="$CLVMD_CMANAGERS openais"
+fi
+if test x$CLVMD_NEEDS_QDISKD != xno; then
+	CLVMD_CMANAGERS="$CLVMD_CMANAGERS qdiskd"
 fi
 
 dnl -- sanity check around user selection
@@ -568,18 +582,25 @@ if test x$CHECKDLM = xyes; then
 fi
 
 dnl -- If we are autodetecting, we need to re-create
-dnl -- the depedencies checks and set a proper CLVMD.
+dnl -- the depedencies checks and set a proper CLVMD,
+dnl -- together with init script Required-Start/Stop entries.
 if test x$CLVMD = xall; then
 	CLVMD=none
+	CLVMD_CMANAGERS=""
+	CLVMD_NEEDS_QDISKD=no
 	if test x$HAVE_CCS = xyes && \
 	   test x$HAVE_GULM = xyes; then
 		AC_MSG_RESULT([Enabling clvmd gulm cluster manager])
 		CLVMD="$CLVMD,gulm"
+		CLVMD_CMANAGERS="$CLVMD_CMANAGERS lock_gulmd"
+		CLVMD_NEEDS_QDISKD=yes
 	fi
 	if test x$HAVE_CMAN = xyes && \
 	   test x$HAVE_DLM = xyes; then
 		AC_MSG_RESULT([Enabling clvmd cman cluster manager])
 		CLVMD="$CLVMD,cman"
+		CLVMD_CMANAGERS="$CLVMD_CMANAGERS cman"
+		CLVMD_NEEDS_QDISKD=yes
 	fi
 	if test x$HAVE_COROSYNC = xyes && \
 	   test x$HAVE_QUORUM = xyes && \
@@ -588,12 +609,17 @@ if test x$CLVMD = xall; then
 	   test x$HAVE_CONFDB = xyes; then
 		AC_MSG_RESULT([Enabling clvmd corosync cluster manager])
 		CLVMD="$CLVMD,corosync"
+		CLVMD_CMANAGERS="$CLVMD_CMANAGERS corosync"
 	fi
 	if test x$HAVE_COROSYNC = xyes && \
 	   test x$HAVE_CPG = xyes && \
 	   test x$HAVE_SALCK = xyes; then
 		AC_MSG_RESULT([Enabling clvmd openais cluster manager])
 		CLVMD="$CLVMD,openais"
+		CLVMD_CMANAGERS="$CLVMD_CMANAGERS openais"
+	fi
+	if test x$CLVMD_NEEDS_QDISKD != xno; then
+		CLVMD_CMANAGERS="$CLVMD_CMANAGERS qdiskd"
 	fi
 	if test x$CLVMD = xnone; then
 		AC_MSG_RESULT([Disabling clvmd build. No cluster manager detected.])
@@ -1238,6 +1264,7 @@ AC_SUBST(CLDNOWHOLEARCHIVE)
 AC_SUBST(CLDWHOLEARCHIVE)
 AC_SUBST(CLUSTER)
 AC_SUBST(CLVMD)
+AC_SUBST(CLVMD_CMANAGERS)
 AC_SUBST(CMAN_CFLAGS)
 AC_SUBST(CMAN_LIBS)
 AC_SUBST(CMDLIB)
