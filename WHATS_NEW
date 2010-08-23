@@ -1,5 +1,6 @@
 Version 2.02.74 - 
 ==================================
+  Automatically generate LSB Requires-Start for clvmd init script.
   Fix return code of pvmove --abort PV.
   Fix pvmove --abort to remove even for empty pvmove LV.
   Add configure --with-default-data-alignment.

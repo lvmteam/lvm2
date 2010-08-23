@@ -9,8 +9,8 @@
 #
 ### BEGIN INIT INFO
 # Provides:		clvmd
-# Required-Start:	$local_fs
-# Required-Stop:	$local_fs
+# Required-Start:	$local_fs@CLVMD_CMANAGERS@
+# Required-Stop:	$local_fs@CLVMD_CMANAGERS@
 # Short-Description:	This service is Clusterd LVM Daemon.
 # Description:		Cluster daemon for userland logical volume management tools.
 ### END INIT INFO
