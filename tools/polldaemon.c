@@ -120,8 +120,10 @@ static int _check_lv_status(struct cmd_context *cmd,
 				  "can't abort.");
 			return 0;
 		}
-		parms->poll_fns->finish_copy(cmd, vg, lv, lvs_changed);
-		return 0;
+		if (!parms->poll_fns->finish_copy(cmd, vg, lv, lvs_changed))
+			return_0;
+
+		return 1;
 	}
 
 	progress = parms->poll_fns->poll_progress(cmd, lv, name, parms);
