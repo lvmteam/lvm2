@@ -520,7 +520,8 @@ static int _finish_pvmove(struct cmd_context *cmd, struct volume_group *vg,
 {
 	int r = 1;
 
-	if (!_detach_pvmove_mirror(cmd, lv_mirr)) {
+	if (!dm_list_empty(lvs_changed) &&
+	    !_detach_pvmove_mirror(cmd, lv_mirr)) {
 		log_error("ABORTING: Removal of temporary mirror failed");
 		return 0;
 	}
