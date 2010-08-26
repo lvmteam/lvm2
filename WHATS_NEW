@@ -1,5 +1,6 @@
 Version 2.02.74 - 
 ==================================
+  Like mirrors, don't scan origins if ignore_suspended_devices() is set.
   Fix return type qualifier to avoid compiler warning. (2.02.69)
   Automatically generate LSB Requires-Start for clvmd init script.
   Fix return code of pvmove --abort PV.
