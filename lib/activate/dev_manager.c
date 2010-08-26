@@ -175,6 +175,21 @@ int device_is_usable(struct device *dev)
 			log_debug("%s: Mirror device %s not usable.", dev_name(dev), name);
 			goto out;
 		}
+
+		/*
+		 * Snapshot origin could be sitting on top of a mirror which
+		 * could be blocking I/O.  Skip snapshot origins entirely for
+		 * now.
+		 *
+		 * FIXME: rather than skipping origin, check if mirror is
+		 * underneath and if the mirror is blocking I/O.
+		 */
+		if (target_type && !strcmp(target_type, "snapshot-origin") &&
+		    ignore_suspended_devices()) {
+			log_debug("%s: Snapshot-origin device %s not usable.",
+				  dev_name(dev), name);
+			goto out;
+		}
 	} while (next);
 
 	/* FIXME Also check dependencies? */
