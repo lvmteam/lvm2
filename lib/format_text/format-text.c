@@ -1649,7 +1649,7 @@ static const char *_metadata_locn_name_raw(void *metadata_locn)
 	return dev_name(mdac->area.dev);
 }
 
-static uint64_t const _metadata_locn_offset_raw(void *metadata_locn)
+static uint64_t _metadata_locn_offset_raw(void *metadata_locn)
 {
 	struct mda_context *mdac = (struct mda_context *) metadata_locn;
 
