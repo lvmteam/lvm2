@@ -145,7 +145,7 @@ struct metadata_area_ops {
 	 * Per location description for logging.
 	 */
 	const char *(*mda_metadata_locn_name) (void *metadata_locn);
-	uint64_t const (*mda_metadata_locn_offset) (void *metadata_locn);
+	uint64_t (*mda_metadata_locn_offset) (void *metadata_locn);
 
 	/*
 	 * Returns number of free sectors in given metadata area.
