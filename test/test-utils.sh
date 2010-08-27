@@ -366,6 +366,7 @@ prepare_lvmconf() {
     filter = $filter
     cache_dir = "$TESTDIR/etc"
     sysfs_scan = 0
+    default_data_alignment = 1
   }
   log {
     syslog = 0
@@ -384,6 +385,7 @@ prepare_lvmconf() {
     library_dir = "$TESTDIR/lib"
     locking_dir = "$TESTDIR/var/lock/lvm"
     $locktype
+    si_unit_consistency = 1
   }
   activation {
     udev_sync = 1
