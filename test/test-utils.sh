@@ -70,6 +70,9 @@ prepare_clvmd() {
 	# skip if we don't have our own clvmd...
 	(which clvmd | grep $abs_builddir) || exit 200
 
+	# skip if we singlenode is not compiled in
+	(clvmd --help 2>&1 | grep "Available cluster managers" | grep singlenode) || exit 200
+
 	trap_teardown
 
 	clvmd -Isinglenode -d 1 &
