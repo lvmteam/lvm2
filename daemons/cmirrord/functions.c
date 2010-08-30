@@ -1268,6 +1268,7 @@ static int clog_get_resync_work(struct dm_ulog_request *rq, uint32_t originator)
 		LOG_SPRINT(lc, "GET - SEQ#=%u, UUID=%s, nodeid = %u:: "
 			   "Resync work complete.",
 			   rq->seq, SHORT_UUID(lc->uuid), originator);
+		lc->sync_search = lc->region_count + 1;
 		return 0;
 	}
 
