@@ -226,7 +226,7 @@ int archive_vg(struct volume_group *vg,
 	       const char *dir, const char *desc,
 	       uint32_t retain_days, uint32_t min_archive)
 {
-	int i, fd, renamed = 0;
+	int i, fd, rnum, renamed = 0;
 	uint32_t ix = 0;
 	struct archive_file *last;
 	FILE *fp = NULL;
@@ -271,9 +271,12 @@ int archive_vg(struct volume_group *vg,
 		ix = last->index + 1;
 	}
 
+	rnum = rand_r(&vg->cmd->rand_seed);
+
 	for (i = 0; i < 10; i++) {
 		if (dm_snprintf(archive_name, sizeof(archive_name),
-				 "%s/%s_%05u.vg", dir, vg->name, ix) < 0) {
+				 "%s/%s_%05u-%d.vg",
+				 dir, vg->name, ix, rnum) < 0) {
 			log_error("Archive file name too long.");
 			return 0;
 		}
