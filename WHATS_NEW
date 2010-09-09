@@ -1,5 +1,6 @@
 Version 2.02.74 - 
 ==================================
+  Reinitialize archive and backup handling on toolcontext refresh.
   Fix opprobriously slow I/O to cluster mirrors created with --nosync.
   Make poll_mirror_progress report PROGRESS_CHECK_FAILED if LV is not a mirror.
   Like mirrors, don't scan origins if ignore_suspended_devices() is set.

@@ -1343,6 +1343,9 @@ int refresh_toolcontext(struct cmd_context *cmd)
 	if (!_init_segtypes(cmd))
 		return 0;
 
+	if (!_init_backup(cmd))
+		return 0;
+
 	cmd->config_valid = 1;
 
 	reset_lvm_errno(1);
