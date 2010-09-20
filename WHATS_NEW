@@ -1,5 +1,6 @@
 Version 2.02.74 - 
 ==================================
+  Use dynamic allocation for metadata's tag buffer (removes 4096 char. limit).
   Add random suffix to archive file names to prevent races when being created.
   Reinitialize archive and backup handling on toolcontext refresh.
   Fix opprobriously slow I/O to cluster mirrors created with --nosync.
