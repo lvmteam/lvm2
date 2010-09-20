@@ -19,29 +19,46 @@
 #include "str_list.h"
 #include "lvm-string.h"
 
-int print_tags(struct dm_list *tags, char *buffer, size_t size)
+char *alloc_printed_tags(struct dm_list *tags)
 {
 	struct str_list *sl;
 	int first = 1;
+	size_t size = 0;
+	char *buffer, *buf;
 
-	if (!emit_to_buffer(&buffer, &size, "["))
-		return_0;
+	dm_list_iterate_items(sl, tags)
+		/* '"' + tag + '"' + ',' + ' ' */
+		size += strlen(sl->str) + 4;
+	/* '[' + ']' + '\0' */
+	size += 3;
+
+	if (!(buffer = buf = dm_malloc(size))) {
+		log_error("Could not allocate memory for tag list buffer.");
+		return NULL;
+	}
+
+	if (!emit_to_buffer(&buf, &size, "["))
+		goto bad;
 
 	dm_list_iterate_items(sl, tags) {
 		if (!first) {
-			if (!emit_to_buffer(&buffer, &size, ", "))
-				return_0;
+			if (!emit_to_buffer(&buf, &size, ", "))
+				goto bad;
 		} else
 			first = 0;
 
-		if (!emit_to_buffer(&buffer, &size, "\"%s\"", sl->str))
-			return_0;
+		if (!emit_to_buffer(&buf, &size, "\"%s\"", sl->str))
+			goto bad;
 	}
 
-	if (!emit_to_buffer(&buffer, &size, "]"))
-		return_0;
+	if (!emit_to_buffer(&buf, &size, "]"))
+		goto bad;
 
-	return 1;
+	return buffer;
+
+bad:
+	dm_free(buffer);
+	return_NULL;
 }
 
 int read_tags(struct dm_pool *mem, struct dm_list *tags, struct config_value *cv)
