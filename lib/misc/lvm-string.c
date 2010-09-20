@@ -27,6 +27,14 @@ int emit_to_buffer(char **buffer, size_t *size, const char *fmt, ...)
 	n = vsnprintf(*buffer, *size, fmt, ap);
 	va_end(ap);
 
+	/*
+	 * Revert to old glibc behaviour (version <= 2.0.6) where snprintf
+	 * returned -1 if buffer was too small. From glibc 2.1 it returns number
+	 * of chars that would have been written had there been room.
+	 */
+	if (n < 0 || ((unsigned) n + 1 > *size))
+		n = -1;
+
 	if (n < 0 || ((size_t)n == *size))
 		return 0;
 
