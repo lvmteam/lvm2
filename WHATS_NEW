@@ -1,5 +1,6 @@
 Version 2.02.74 - 
 ==================================
+  Revert to old glibc behaviour for vsnprintf used in emit_to_buffer function.
   Use dynamic allocation for metadata's tag buffer (removes 4096 char. limit).
   Add random suffix to archive file names to prevent races when being created.
   Reinitialize archive and backup handling on toolcontext refresh.
