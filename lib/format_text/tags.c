@@ -38,21 +38,21 @@ char *alloc_printed_tags(struct dm_list *tags)
 	}
 
 	if (!emit_to_buffer(&buf, &size, "["))
-		goto bad;
+		goto_bad;
 
 	dm_list_iterate_items(sl, tags) {
 		if (!first) {
 			if (!emit_to_buffer(&buf, &size, ", "))
-				goto bad;
+				goto_bad;
 		} else
 			first = 0;
 
 		if (!emit_to_buffer(&buf, &size, "\"%s\"", sl->str))
-			goto bad;
+			goto_bad;
 	}
 
 	if (!emit_to_buffer(&buf, &size, "]"))
-		goto bad;
+		goto_bad;
 
 	return buffer;
 
