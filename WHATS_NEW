@@ -1,5 +1,6 @@
 Version 2.02.74 - 
 =====================================
+  Replace alloca with dm_malloc in _aligned_io.
   Fix partial mode operations for lvm1 metadata format.
   Track recursive filter iteration to avoid refreshing while in use. (2.02.56)
   Revert to old glibc vsnprintf behaviour in emit_to_buffer() to catch overflow.
