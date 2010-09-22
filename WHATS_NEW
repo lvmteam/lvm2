@@ -1,5 +1,6 @@
 Version 2.02.74 - 
 =====================================
+  Fix partial mode operations for lvm1 metadata format.
   Track recursive filter iteration to avoid refreshing while in use. (2.02.56)
   Revert to old glibc vsnprintf behaviour in emit_to_buffer() to catch overflow.
   Allocate buffer for metadata tags dynamically to remove 4k limit.
