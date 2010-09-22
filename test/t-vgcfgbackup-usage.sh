@@ -40,3 +40,12 @@ sed 's/flags = \[\"MISSING\"\]/flags = \[\]/' "$(pwd)/backup.$$" > "$(pwd)/backu
 pvcreate -ff -y --norestorefile -u $pv1_uuid $dev1
 pvcreate -ff -y --norestorefile -u $pv2_uuid $dev2
 vgcfgrestore -f "$(pwd)/backup.$$1" $vg
+vgremove -ff $vg
+
+# vgcfgbackup correctly stores metadata LVM1 with missing PVs
+pvcreate -M1 $devs
+vgcreate -M1 -c n $vg $devs
+lvcreate -l1 -n $lv1 $vg $dev1
+pvremove -ff -y $dev2
+not lvcreate -l1 -n $lv1 $vg $dev3
+vgcfgbackup -f "$(pwd)/backup.$$" $vg
