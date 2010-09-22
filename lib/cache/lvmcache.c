@@ -570,7 +570,7 @@ int lvmcache_label_scan(struct cmd_context *cmd, int full_scan)
 		goto out;
 	}
 
-	if (full_scan == 2 && !refresh_filters(cmd)) {
+	if (full_scan == 2 && !cmd->filter->use_count && !refresh_filters(cmd)) {
 		log_error("refresh filters failed");
 		goto out;
 	}

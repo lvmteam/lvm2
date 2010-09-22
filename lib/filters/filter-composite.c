@@ -37,6 +37,9 @@ static void _composite_destroy(struct dev_filter *f)
 {
 	struct dev_filter **filters = (struct dev_filter **) f->private;
 
+	if (f->use_count)
+		log_error(INTERNAL_ERROR "Destroying composite filter while in use %u times.", f->use_count);
+
 	while (*filters) {
 		(*filters)->destroy(*filters);
 		filters++;
@@ -69,6 +72,7 @@ struct dev_filter *composite_filter_create(int n, struct dev_filter **filters)
 
 	cft->passes_filter = _and_p;
 	cft->destroy = _composite_destroy;
+	cft->use_count = 0;
 	cft->private = filters_copy;
 
 	return cft;
