@@ -164,10 +164,11 @@ static void _widen_region(unsigned int block_size, struct device_area *region,
 static int _aligned_io(struct device_area *where, void *buffer,
 		       int should_write)
 {
-	void *bounce;
+	void *bounce, *bounce_buf;
 	unsigned int block_size = 0;
 	uintptr_t mask;
 	struct device_area widened;
+	int r = 0;
 
 	if (!(where->dev->flags & DEV_REGULAR) &&
 	    !_get_block_size(where->dev, &block_size))
@@ -185,8 +186,8 @@ static int _aligned_io(struct device_area *where, void *buffer,
 		return _io(where, buffer, should_write);
 
 	/* Allocate a bounce buffer with an extra block */
-	if (!(bounce = alloca((size_t) widened.size + block_size))) {
-		log_error("Bounce buffer alloca failed");
+	if (!(bounce_buf = bounce = dm_malloc((size_t) widened.size + block_size))) {
+		log_error("Bounce buffer malloc failed");
 		return 0;
 	}
 
@@ -199,7 +200,7 @@ static int _aligned_io(struct device_area *where, void *buffer,
 	/* channel the io through the bounce buffer */
 	if (!_io(&widened, bounce, 0)) {
 		if (!should_write)
-			return_0;
+			goto_out;
 		/* FIXME pre-extend the file */
 		memset(bounce, '\n', widened.size);
 	}
@@ -209,13 +210,18 @@ static int _aligned_io(struct device_area *where, void *buffer,
 		       (size_t) where->size);
 
 		/* ... then we write */
-		return _io(&widened, bounce, 1);
+		r = _io(&widened, bounce, 1);
+		goto_out;
 	}
 
 	memcpy(buffer, bounce + (where->start - widened.start),
 	       (size_t) where->size);
 
-	return 1;
+	r = 1;
+
+out:
+	dm_free(bounce_buf);
+	return r;
 }
 
 static int _dev_get_size_file(const struct device *dev, uint64_t *size)
