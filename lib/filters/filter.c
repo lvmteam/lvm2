@@ -326,6 +326,7 @@ struct dev_filter *lvm_type_filter_create(const char *proc,
 
 	f->passes_filter = _passes_lvm_type_device_filter;
 	f->destroy = lvm_type_filter_destroy;
+	f->use_count = 0;
 	f->private = NULL;
 
 	if (!_scan_proc_dev(proc, cn)) {
@@ -338,5 +339,8 @@ struct dev_filter *lvm_type_filter_create(const char *proc,
 
 void lvm_type_filter_destroy(struct dev_filter *f)
 {
+	if (f->use_count)
+		log_error(INTERNAL_ERROR "Destroying lvm_type filter while in use %u times.", f->use_count);
+
 	dm_free(f);
 }

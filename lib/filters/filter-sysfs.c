@@ -282,6 +282,10 @@ static int _accept_p(struct dev_filter *f, struct device *dev)
 static void _destroy(struct dev_filter *f)
 {
 	struct dev_set *ds = (struct dev_set *) f->private;
+
+	if (f->use_count)
+		log_error(INTERNAL_ERROR "Destroying sysfs filter while in use %u times.", f->use_count);
+
 	dm_pool_destroy(ds->mem);
 }
 
@@ -316,6 +320,7 @@ struct dev_filter *sysfs_filter_create(const char *sysfs_dir)
 
 	f->passes_filter = _accept_p;
 	f->destroy = _destroy;
+	f->use_count = 0;
 	f->private = ds;
 	return f;
 

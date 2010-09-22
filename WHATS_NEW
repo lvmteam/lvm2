@@ -1,7 +1,8 @@
 Version 2.02.74 - 
-==================================
-  Revert to old glibc behaviour for vsnprintf used in emit_to_buffer function.
-  Use dynamic allocation for metadata's tag buffer (removes 4096 char. limit).
+=====================================
+  Track recursive filter iteration to avoid refreshing while in use. (2.02.56)
+  Revert to old glibc vsnprintf behaviour in emit_to_buffer() to catch overflow.
+  Allocate buffer for metadata tags dynamically to remove 4k limit.
   Add random suffix to archive file names to prevent races when being created.
   Reinitialize archive and backup handling on toolcontext refresh.
   Fix opprobriously slow I/O to cluster mirrors created with --nosync.
@@ -16,16 +17,16 @@ Version 2.02.74 -
   Add "devices/default_data_alignment" to lvm.conf.
   Add implmentation for simple numeric 'get' property functions.
   Define GET_NUM_PROPERTY_FN macro to simplify numeric property 'get' function
-  Add properties.[ch] to lib/report, defined based on columns.h.
+  Add properties.[ch] to lib/report using columns.h.
   Add macro definitions to report infrastructure for character array length.
   Remove explicit double quotes from columns.h 'id' entries.
   Add 'flags' field to columns.h and define FIELD_MODIFIABLE.
   Add vg_mda_size and vg_mda_free functions.
   Simplify MD/swap signature detection in pvcreate and allow aborting.
-  Remove assumption that --yes must be used only in --force mode.
+  Allow --yes to be used without --force mode.
   Fix file descriptor leak in swap signature detection error path.
   Detect and allow abort in pvcreate if LUKS signature is detected.
-  Use proper locks mask when checking for LCK_WRITE.
+  Always mask lock flags correctly when checking for LCK_WRITE.
 
 Version 2.02.73 - 18th August 2010
 ==================================

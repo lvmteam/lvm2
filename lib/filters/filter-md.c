@@ -45,6 +45,9 @@ static int _ignore_md(struct dev_filter *f __attribute__((unused)),
 
 static void _destroy(struct dev_filter *f)
 {
+	if (f->use_count)
+		log_error(INTERNAL_ERROR "Destroying sysfs filter while in use %u times.", f->use_count);
+
 	dm_free(f);
 }
 
@@ -59,6 +62,7 @@ struct dev_filter *md_filter_create(void)
 
 	f->passes_filter = _ignore_md;
 	f->destroy = _destroy;
+	f->use_count = 0;
 	f->private = NULL;
 
 	return f;

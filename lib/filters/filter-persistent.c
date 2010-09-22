@@ -274,13 +274,13 @@ static int _lookup_p(struct dev_filter *f, struct device *dev)
 		return 0;
 	}
 
-        /* Test dm devices every time, so cache them as GOOD. */
+	/* Test dm devices every time, so cache them as GOOD. */
 	if (MAJOR(dev->dev) == dm_major()) {
 		if (!l)
 			dm_list_iterate_items(sl, &dev->aliases)
 				dm_hash_insert(pf->devices, sl->str, PF_GOOD_DEVICE);
 		if (!device_is_usable(dev)) {
-                	log_debug("%s: Skipping unusable device", dev_name(dev));
+			log_debug("%s: Skipping unusable device", dev_name(dev));
 			return 0;
 		}
 		return pf->real->passes_filter(pf->real, dev);
@@ -300,6 +300,9 @@ static int _lookup_p(struct dev_filter *f, struct device *dev)
 static void _persistent_destroy(struct dev_filter *f)
 {
 	struct pfilter *pf = (struct pfilter *) f->private;
+
+	if (f->use_count)
+		log_error(INTERNAL_ERROR "Destroying persistent filter while in use %u times.", f->use_count);
 
 	dm_hash_destroy(pf->devices);
 	dm_free(pf->file);
@@ -339,6 +342,7 @@ struct dev_filter *persistent_filter_create(struct dev_filter *real,
 
 	f->passes_filter = _lookup_p;
 	f->destroy = _persistent_destroy;
+	f->use_count = 0;
 	f->private = pf;
 
 	return f;

@@ -815,12 +815,14 @@ struct dev_iter *dev_iter_create(struct dev_filter *f, int dev_scan)
 
 	di->current = btree_first(_cache.devices);
 	di->filter = f;
+	di->filter->use_count++;
 
 	return di;
 }
 
 void dev_iter_destroy(struct dev_iter *iter)
 {
+	iter->filter->use_count--;
 	dm_free(iter);
 }
 
