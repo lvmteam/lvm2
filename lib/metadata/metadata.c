@@ -677,6 +677,7 @@ int vg_extend(struct volume_group *vg, int pv_count, char **pv_names,
 
 	/* attach each pv */
 	for (i = 0; i < pv_count; i++) {
+		unescape_colons_and_at_signs(pv_names[i], NULL, NULL);
 		if (!vg_extend_single_pv(vg, pv_names[i], pp))
 			goto bad;
 	}

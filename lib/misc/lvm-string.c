@@ -109,19 +109,31 @@ static void _quote_characters(char **out, const char *src,
 }
 
 /*
- * Unquote orig_char in string.
- * Also unquote quote_char.
+ * Unquote each character given in orig_char array and unquote quote_char
+ * as well. The array ends up with '\0' character. Also save the first
+ * occurence of each character from orig_char that was found unquoted in
+ * arr_substr_first_unquoted array. This way we can process several
+ * characters in one go.
  */
-static void _unquote_characters(char *src, const int orig_char,
-				const int quote_char)
+static void _unquote_characters(char *src, const int orig_chars[],
+				const int quote_char,
+				char *arr_substr_first_unquoted[])
 {
 	char *out = src;
+	int c;
+	int i;
 
 	while (*src) {
-		if (*src == quote_char &&
-		    (*(src + 1) == orig_char || *(src + 1) == quote_char))
-			src++;
-
+		for (i = 0; (c = orig_chars[i]); i++) {
+			if (*src == quote_char &&
+			    (*(src + 1) == c || *(src + 1) == quote_char)) {
+				src++;
+				break;
+			}
+			else if (arr_substr_first_unquoted && (*src == c) &&
+				 !arr_substr_first_unquoted[i])
+				arr_substr_first_unquoted[i] = out;
+		}
 		*out++ = *src++;
 	}
 
@@ -217,7 +229,31 @@ char *escape_double_quotes(char *out, const char *src)
  */
 void unescape_double_quotes(char *src)
 {
-	_unquote_characters(src, '\"', '\\');
+	const int orig_chars[] = {'\"', '\0'};
+
+	_unquote_characters(src, orig_chars, '\\', NULL);
+}
+
+/*
+ * Unescape colons and "at" signs in situ and save the substrings
+ * starting at the position of the first unescaped colon and the
+ * first unescaped "at" sign. This is normally used to unescape
+ * device names used as PVs.
+ */
+void unescape_colons_and_at_signs(char *src,
+				  char **substr_first_unquoted_colon,
+				  char **substr_first_unquoted_at_sign)
+{
+	const int orig_chars[] = {':', '@', '\0'};
+	char *arr_substr_first_unquoted[] = {NULL, NULL, NULL};
+
+	_unquote_characters(src, orig_chars, '\\', arr_substr_first_unquoted);
+
+	if (substr_first_unquoted_colon)
+		*substr_first_unquoted_colon = arr_substr_first_unquoted[0];
+
+	if (substr_first_unquoted_at_sign)
+		*substr_first_unquoted_at_sign = arr_substr_first_unquoted[1];
 }
 
 /*

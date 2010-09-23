@@ -195,7 +195,8 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 	int total = 0;
 
 	struct volume_group *vg;
-	const char *pv_name, *vg_name;
+	const char *vg_name;
+	char *pv_name;
 
 	struct pv_list *pvl;
 	struct dm_list *vgnames;
@@ -223,6 +224,7 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 		log_verbose("Using physical volume(s) on command line");
 		for (; opt < argc; opt++) {
 			pv_name = argv[opt];
+			unescape_colons_and_at_signs(pv_name, NULL, NULL);
 			vg_name = find_vgname_from_pvname(cmd, pv_name);
 			if (!vg_name) {
 				log_error("Failed to read physical volume %s",

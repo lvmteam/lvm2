@@ -60,4 +60,13 @@ char *escape_double_quotes(char *out, const char *src);
  */
 void unescape_double_quotes(char *src);
 
+/*
+ * Unescape colons and at signs in situ and save the substring starting
+ * at the position of the first unescaped colon and the first unescaped
+ * "at" sign.
+ */
+void unescape_colons_and_at_signs(char *src,
+				  char **substr_first_unquoted_colon,
+				  char **substr_first_unquoted_at_sign);
+
 #endif

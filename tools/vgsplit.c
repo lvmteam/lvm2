@@ -394,6 +394,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 
 	/* Move PVs across to new structure */
 	for (opt = 0; opt < argc; opt++) {
+		unescape_colons_and_at_signs(argv[opt], NULL, NULL);
 		if (!move_pv(vg_from, vg_to, argv[opt]))
 			goto_bad;
 	}
