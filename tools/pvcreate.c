@@ -109,6 +109,8 @@ int pvcreate(struct cmd_context *cmd, int argc, char **argv)
 			return ECMD_FAILED;
 		}
 
+		unescape_colons_and_at_signs(argv[i], NULL, NULL);
+
 		if (!pvcreate_single(cmd, argv[i], &pp)) {
 			stack;
 			ret = ECMD_FAILED;

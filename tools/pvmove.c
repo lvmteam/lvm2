@@ -644,17 +644,16 @@ int pvmove(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	if (argc) {
-		pv_name = argv[0];
+		if (!(pv_name = dm_pool_strdup(cmd->mem, argv[0]))) {
+			log_error("Failed to clone PV name");
+			return ECMD_FAILED;
+		}
+
+		unescape_colons_and_at_signs(pv_name, &colon, NULL);
 
 		/* Drop any PE lists from PV name */
-		if ((colon = strchr(pv_name, ':'))) {
-			if (!(pv_name = dm_pool_strndup(cmd->mem, pv_name,
-						     (unsigned) (colon -
-								 pv_name)))) {
-				log_error("Failed to clone PV name");
-				return ECMD_FAILED;
-			}
-		}
+		if (colon)
+			*colon = '\0';
 
 		if (!arg_count(cmd, abort_ARG) &&
 		    (ret = _set_up_pvmove(cmd, pv_name, argc, argv)) !=

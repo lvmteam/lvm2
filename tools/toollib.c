@@ -680,7 +680,7 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 	struct dm_list *pvslist, *vgnames;
 	struct dm_list tags;
 	struct str_list *sll;
-	char *tagname;
+	char *at_sign, *tagname;
 	int scanned = 0;
 	struct dm_list mdas;
 
@@ -694,8 +694,9 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 	if (argc) {
 		log_verbose("Using physical volume(s) on command line");
 		for (; opt < argc; opt++) {
-			if (*argv[opt] == '@') {
-				tagname = argv[opt] + 1;
+			unescape_colons_and_at_signs(argv[opt], NULL, &at_sign);
+			if (at_sign && (at_sign == argv[opt])) {
+				tagname = at_sign + 1;
 
 				if (!validate_name(tagname)) {
 					log_error("Skipping invalid tag %s",
@@ -1093,8 +1094,8 @@ struct dm_list *create_pv_list(struct dm_pool *mem, struct volume_group *vg, int
 	struct dm_list *r;
 	struct pv_list *pvl;
 	struct dm_list tags, arg_pvnames;
-	const char *pvname = NULL;
-	char *colon, *tagname;
+	char *pvname = NULL;
+	char *colon, *at_sign, *tagname;
 	int i;
 
 	/* Build up list of PVs */
@@ -1108,8 +1109,10 @@ struct dm_list *create_pv_list(struct dm_pool *mem, struct volume_group *vg, int
 	dm_list_init(&arg_pvnames);
 
 	for (i = 0; i < argc; i++) {
-		if (*argv[i] == '@') {
-			tagname = argv[i] + 1;
+		unescape_colons_and_at_signs(argv[i], &colon, &at_sign);
+
+		if (at_sign && (at_sign == argv[i])) {
+			tagname = at_sign + 1;
 			if (!validate_name(tagname)) {
 				log_error("Skipping invalid tag %s", tagname);
 				continue;
@@ -1128,13 +1131,10 @@ struct dm_list *create_pv_list(struct dm_pool *mem, struct volume_group *vg, int
 
 		pvname = argv[i];
 
-		if ((colon = strchr(pvname, ':'))) {
-			if (!(pvname = dm_pool_strndup(mem, pvname,
-						    (unsigned) (colon -
-								pvname)))) {
-				log_error("Failed to clone PV name");
-				return NULL;
-			}
+		if (colon && !(pvname = dm_pool_strndup(mem, pvname,
+					(unsigned) (colon - pvname)))) {
+			log_error("Failed to clone PV name");
+			return NULL;
 		}
 
 		if (!(pvl = find_pv_in_vg(vg, pvname))) {
