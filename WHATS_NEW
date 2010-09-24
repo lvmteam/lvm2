@@ -1,14 +1,13 @@
-Version 2.02.74 - 
+Version 2.02.74 - 24th September 2010
 =====================================
-  Add escape sequence for ':' and '@' found in device names used as PVs.
-  Replace alloca with dm_malloc in _aligned_io.
+  Allow : and @ to be escaped with \ in device names of PVs.
+  Replace alloca with dm_malloc in _aligned_io to avoid stack corruption.
   Fix partial mode operations for lvm1 metadata format.
   Track recursive filter iteration to avoid refreshing while in use. (2.02.56)
   Revert to old glibc vsnprintf behaviour in emit_to_buffer() to catch overflow.
   Allocate buffer for metadata tags dynamically to remove 4k limit.
   Add random suffix to archive file names to prevent races when being created.
   Reinitialize archive and backup handling on toolcontext refresh.
-  Fix opprobriously slow I/O to cluster mirrors created with --nosync.
   Make poll_mirror_progress report PROGRESS_CHECK_FAILED if LV is not a mirror.
   Like mirrors, don't scan origins if ignore_suspended_devices() is set.
   Fix return type qualifier to avoid compiler warning. (2.02.69)
