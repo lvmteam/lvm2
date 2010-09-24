@@ -1,5 +1,6 @@
-Version 1.02.55 - 
+Version 1.02.55 - 24th September 2010
 =====================================
+  Fix the way regions are marked complete to avoid slow --nosync cmirror I/O.
   Add DM_REPORT_FIELD_TYPE_ID_LEN to libdevmapper.h.
 
 Version 1.02.54 - 18th August 2010
