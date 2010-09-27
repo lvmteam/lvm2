@@ -60,7 +60,7 @@ int override_config_tree_from_string(struct cmd_context *cmd,
 				     const char *config_settings);
 void destroy_config_tree(struct config_tree *cft);
 
-typedef uint32_t (*checksum_fn_t) (uint32_t initial, const void *buf, uint32_t size);
+typedef uint32_t (*checksum_fn_t) (uint32_t initial, const uint8_t *buf, uint32_t size);
 
 int read_config_fd(struct config_tree *cft, struct device *dev,
 		   off_t offset, size_t size, off_t offset2, size_t size2,

@@ -113,6 +113,7 @@ CFLAGS += -fPIC -Wall -Wundef -Wshadow -Wcast-align -Wwrite-strings -Wmissing-pr
 
 #CFLAGS += -W -Wconversion -Wpointer-arith -Wbad-function-cast -Wcast-qual
 #CFLAGS += -pedantic -std=gnu99
+#CFLAGS += -DDEBUG_CRC32
 
 CFLAGS += @COPTIMISE_FLAG@
 
