@@ -332,7 +332,7 @@ struct mda_header *raw_read_mda_header(const struct format_type *fmt,
 	if (!dev_read(dev_area->dev, dev_area->start, MDA_HEADER_SIZE, mdah))
 		goto_bad;
 
-	if (mdah->checksum_xl != xlate32(calc_crc(INITIAL_CRC, mdah->magic,
+	if (mdah->checksum_xl != xlate32(calc_crc(INITIAL_CRC, (uint8_t *)mdah->magic,
 						  MDA_HEADER_SIZE -
 						  sizeof(mdah->checksum_xl)))) {
 		log_error("Incorrect metadata area header checksum on %s"
@@ -380,7 +380,7 @@ static int _raw_write_mda_header(const struct format_type *fmt,
 	mdah->start = start_byte;
 
 	_xlate_mdah(mdah);
-	mdah->checksum_xl = xlate32(calc_crc(INITIAL_CRC, mdah->magic,
+	mdah->checksum_xl = xlate32(calc_crc(INITIAL_CRC, (uint8_t *)mdah->magic,
 					     MDA_HEADER_SIZE -
 					     sizeof(mdah->checksum_xl)));
 
@@ -650,12 +650,12 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 			goto_out;
 	}
 
-	mdac->rlocn.checksum = calc_crc(INITIAL_CRC, fidtc->raw_metadata_buf,
+	mdac->rlocn.checksum = calc_crc(INITIAL_CRC, (uint8_t *)fidtc->raw_metadata_buf,
 					(uint32_t) (mdac->rlocn.size -
 						    new_wrap));
 	if (new_wrap)
 		mdac->rlocn.checksum = calc_crc(mdac->rlocn.checksum,
-						fidtc->raw_metadata_buf +
+						(uint8_t *)fidtc->raw_metadata_buf +
 						mdac->rlocn.size -
 						new_wrap, (uint32_t) new_wrap);
 

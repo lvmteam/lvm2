@@ -142,8 +142,8 @@ static struct labeller *_find_labeller(struct device *dev, char *buf,
 					 sector + scan_sector);
 				continue;
 			}
-			if (calc_crc(INITIAL_CRC, &lh->offset_xl, LABEL_SIZE -
-				     ((uintptr_t) &lh->offset_xl - (uintptr_t) lh)) !=
+			if (calc_crc(INITIAL_CRC, (uint8_t *)&lh->offset_xl, LABEL_SIZE -
+				     ((uint8_t *) &lh->offset_xl - (uint8_t *) lh)) !=
 			    xlate32(lh->crc_xl)) {
 				log_info("Label checksum incorrect on %s - "
 					 "ignoring", dev_name(dev));
@@ -323,8 +323,8 @@ int label_write(struct device *dev, struct label *label)
 	if (!(label->labeller->ops->write)(label, buf))
 		return_0;
 
-	lh->crc_xl = xlate32(calc_crc(INITIAL_CRC, &lh->offset_xl, LABEL_SIZE -
-				      ((uintptr_t) &lh->offset_xl - (uintptr_t) lh)));
+	lh->crc_xl = xlate32(calc_crc(INITIAL_CRC, (uint8_t *)&lh->offset_xl, LABEL_SIZE -
+				      ((uint8_t *) &lh->offset_xl - (uint8_t *) lh)));
 
 	if (!dev_open(dev))
 		return_0;

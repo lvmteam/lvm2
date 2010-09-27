@@ -1,3 +1,7 @@
+Version 2.02.75 - 
+=====================================
+  Speed up CRC32 calculations by using a larger lookup table.
+
 Version 2.02.74 - 24th September 2010
 =====================================
   Allow : and @ to be escaped with \ in device names of PVs.
@@ -17,7 +21,7 @@ Version 2.02.74 - 24th September 2010
   Add configure --with-default-data-alignment.
   Update heuristic used for default and detected data alignment.
   Add "devices/default_data_alignment" to lvm.conf.
-  Add implmentation for simple numeric 'get' property functions.
+  Add implementation for simple numeric 'get' property functions.
   Define GET_NUM_PROPERTY_FN macro to simplify numeric property 'get' function
   Add properties.[ch] to lib/report using columns.h.
   Add macro definitions to report infrastructure for character array length.
