@@ -210,8 +210,10 @@ static int _aligned_io(struct device_area *where, void *buffer,
 		       (size_t) where->size);
 
 		/* ... then we write */
-		r = _io(&widened, bounce, 1);
-		goto_out;
+		if (!(r = _io(&widened, bounce, 1)))
+			stack;
+			
+		goto out;
 	}
 
 	memcpy(buffer, bounce + (where->start - widened.start),
