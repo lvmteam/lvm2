@@ -108,33 +108,64 @@ static void _quote_characters(char **out, const char *src,
 	}
 }
 
+static void _unquote_one_character(char *src, const char orig_char,
+				   const char quote_char)
+{
+	char *out;
+	char s, n;
+
+	/* Optimise for the common case where no changes are needed. */
+	while ((s = *src++)) {
+		if (s == quote_char &&
+		    ((n = *src) == orig_char || n == quote_char)) {
+			out = src++;
+			*(out - 1) = n;
+
+			while ((s = *src++)) {
+				if (s == quote_char &&
+				    ((n = *src) == orig_char || n == quote_char)) {
+					s = n;
+					src++;
+				}
+				*out = s;
+				out++;
+			}
+
+			*out = '\0';
+			return;
+		}
+	}
+}
+
 /*
  * Unquote each character given in orig_char array and unquote quote_char
- * as well. The array ends up with '\0' character. Also save the first
- * occurence of each character from orig_char that was found unquoted in
- * arr_substr_first_unquoted array. This way we can process several
- * characters in one go.
+ * as well. Also save the first occurrence of each character from orig_char
+ * that was found unquoted in arr_substr_first_unquoted array. This way we can
+ * process several characters in one go.
  */
-static void _unquote_characters(char *src, const int orig_chars[],
-				const int quote_char,
+static void _unquote_characters(char *src, const char *orig_chars,
+				const int num_orig_chars, 
+				const char quote_char,
 				char *arr_substr_first_unquoted[])
 {
 	char *out = src;
-	int c;
-	int i;
+	char c, s, n;
+	unsigned i;
 
-	while (*src) {
-		for (i = 0; (c = orig_chars[i]); i++) {
-			if (*src == quote_char &&
-			    (*(src + 1) == c || *(src + 1) == quote_char)) {
+	while ((s = *src++)) {
+		for (i = 0; i < num_orig_chars; i++) {
+			c = orig_chars[i];
+			if (s == quote_char &&
+			    ((n = *src) == c || n == quote_char)) {
+				s = n;
 				src++;
 				break;
 			}
-			else if (arr_substr_first_unquoted && (*src == c) &&
-				 !arr_substr_first_unquoted[i])
+			if (arr_substr_first_unquoted && (s == c) &&
+			    !arr_substr_first_unquoted[i])
 				arr_substr_first_unquoted[i] = out;
-		}
-		*out++ = *src++;
+		};
+		*out++ = s;
 	}
 
 	*out = '\0';
@@ -229,9 +260,7 @@ char *escape_double_quotes(char *out, const char *src)
  */
 void unescape_double_quotes(char *src)
 {
-	const int orig_chars[] = {'\"', '\0'};
-
-	_unquote_characters(src, orig_chars, '\\', NULL);
+	_unquote_one_character(src, '\"', '\\');
 }
 
 /*
@@ -244,10 +273,10 @@ void unescape_colons_and_at_signs(char *src,
 				  char **substr_first_unquoted_colon,
 				  char **substr_first_unquoted_at_sign)
 {
-	const int orig_chars[] = {':', '@', '\0'};
+	const char *orig_chars = ":@";
 	char *arr_substr_first_unquoted[] = {NULL, NULL, NULL};
 
-	_unquote_characters(src, orig_chars, '\\', arr_substr_first_unquoted);
+	_unquote_characters(src, orig_chars, 2, '\\', arr_substr_first_unquoted);
 
 	if (substr_first_unquoted_colon)
 		*substr_first_unquoted_colon = arr_substr_first_unquoted[0];
