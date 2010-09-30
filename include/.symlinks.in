@@ -30,6 +30,7 @@
 @top_srcdir@/lib/locking/locking.h
 @top_srcdir@/lib/log/log.h
 @top_srcdir@/lib/log/lvm-logging.h
+@top_srcdir@/lib/metadata/lv.h
 @top_srcdir@/lib/metadata/lv_alloc.h
 @top_srcdir@/lib/metadata/metadata.h
 @top_srcdir@/lib/metadata/metadata-exported.h
