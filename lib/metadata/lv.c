@@ -16,6 +16,11 @@
 #include "metadata.h"
 #include "activate.h"
 
+char *lv_uuid_dup(const struct logical_volume *lv)
+{
+	return id_format_and_copy(lv->vg->vgmem, &lv->lvid.id[1]);
+}
+
 uint64_t lv_size(const struct logical_volume *lv)
 {
 	return lv->size;

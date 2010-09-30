@@ -14,7 +14,7 @@
 
 #include "lib.h"
 #include "lvm2app.h"
-#include "metadata-exported.h"
+#include "metadata.h"
 #include "lvm-string.h"
 #include "defaults.h"
 #include "segtype.h"
@@ -39,13 +39,7 @@ uint64_t lvm_lv_get_size(const lv_t lv)
 
 const char *lvm_lv_get_uuid(const lv_t lv)
 {
-	char uuid[64] __attribute__((aligned(8)));
-
-	if (!id_write_format(&lv->lvid.id[1], uuid, sizeof(uuid))) {
-		log_error(INTERNAL_ERROR "unable to convert uuid");
-		return NULL;
-	}
-	return dm_pool_strndup(lv->vg->vgmem, (const char *)uuid, 64);
+	return lv_uuid_dup(lv);
 }
 
 const char *lvm_lv_get_name(const lv_t lv)
