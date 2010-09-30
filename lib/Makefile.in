@@ -82,6 +82,7 @@ SOURCES =\
 	metadata/replicator_manip.c \
 	metadata/segtype.c \
 	metadata/snapshot_manip.c \
+	metadata/vg.c \
 	misc/crc.c \
 	misc/lvm-exec.c \
 	misc/lvm-file.c \

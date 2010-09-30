@@ -35,6 +35,7 @@
 @top_srcdir@/lib/metadata/metadata-exported.h
 @top_srcdir@/lib/metadata/pv_alloc.h
 @top_srcdir@/lib/metadata/segtype.h
+@top_srcdir@/lib/metadata/vg.h
 @top_srcdir@/lib/mm/memlock.h
 @top_srcdir@/lib/mm/xlate.h
 @top_builddir@/lib/misc/configure.h
