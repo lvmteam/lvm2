@@ -54,4 +54,6 @@ int id_write_format(const struct id *id, char *buffer, size_t size);
  */
 int id_read_format(struct id *id, const char *buffer);
 
+char *id_format_and_copy(struct dm_pool *mem, const struct id *id);
+
 #endif

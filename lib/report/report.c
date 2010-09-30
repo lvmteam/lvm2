@@ -677,12 +677,7 @@ static int _uuid_disp(struct dm_report *rh __attribute__((unused)), struct dm_po
 {
 	char *repstr = NULL;
 
-	if (!(repstr = dm_pool_alloc(mem, 40))) {
-		log_error("dm_pool_alloc failed");
-		return 0;
-	}
-
-	if (!id_write_format((const struct id *) data, repstr, 40))
+	if (!(repstr = id_format_and_copy(mem, (struct id *)data)))
 		return_0;
 
 	dm_report_field_set_value(field, repstr, NULL);

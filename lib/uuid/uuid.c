@@ -206,3 +206,18 @@ int id_read_format(struct id *id, const char *buffer)
 
 	return id_valid(id);
 }
+
+char *id_format_and_copy(struct dm_pool *mem, const struct id *id)
+{
+	char *repstr = NULL;
+
+	if (!(repstr = dm_pool_alloc(mem, 40))) {
+		log_error("dm_pool_alloc failed");
+		return NULL;
+	}
+
+	if (!id_write_format(id, repstr, 40))
+		return_NULL;
+
+	return repstr;
+}
