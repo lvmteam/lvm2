@@ -443,31 +443,11 @@ char *vg_attr_dup(struct dm_pool *mem, const struct volume_group *vg)
 		return NULL;
 	}
 
-	if (vg->status & LVM_WRITE)
-		repstr[0] = 'w';
-	else
-		repstr[0] = 'r';
-
-	if (vg_is_resizeable(vg))
-		repstr[1] = 'z';
-	else
-		repstr[1] = '-';
-
-	if (vg_is_exported(vg))
-		repstr[2] = 'x';
-	else
-		repstr[2] = '-';
-
-	if (vg_missing_pv_count(vg))
-		repstr[3] = 'p';
-	else
-		repstr[3] = '-';
-
+	repstr[0] = (vg->status & LVM_WRITE) ? 'w' : 'r';
+	repstr[1] = (vg_is_resizeable(vg)) ? 'z' : '-';
+	repstr[2] = (vg_is_exported(vg)) ? 'x' : '-';
+	repstr[3] = (vg_missing_pv_count(vg)) ? 'p' : '-';
 	repstr[4] = alloc_policy_char(vg->alloc);
-
-	if (vg_is_clustered(vg))
-		repstr[5] = 'c';
-	else
-		repstr[5] = '-';
+	repstr[5] = (vg_is_clustered(vg)) ? 'c' : '-';
 	return repstr;
 }
