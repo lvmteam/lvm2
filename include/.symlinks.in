@@ -33,6 +33,7 @@
 @top_srcdir@/lib/metadata/lv_alloc.h
 @top_srcdir@/lib/metadata/metadata.h
 @top_srcdir@/lib/metadata/metadata-exported.h
+@top_srcdir@/lib/metadata/pv.h
 @top_srcdir@/lib/metadata/pv_alloc.h
 @top_srcdir@/lib/metadata/segtype.h
 @top_srcdir@/lib/metadata/vg.h

@@ -22,6 +22,7 @@
 #define _LVM_METADATA_EXPORTED_H
 
 #include "uuid.h"
+#include "pv.h"
 #include "vg.h"
 
 #define MAX_STRIPES 128U
@@ -174,39 +175,6 @@ struct pv_segment {
 };
 
 #define pvseg_is_allocated(pvseg) ((pvseg)->lvseg)
-
-struct physical_volume {
-	struct id id;
-	struct device *dev;
-	const struct format_type *fmt;
-
-	/*
-	 * vg_name and vgid are used before the parent VG struct exists.
-	 * FIXME: Investigate removal/substitution with 'vg' fields.
-	 */
-	const char *vg_name;
-	struct id vgid;
-
-	/*
-	 * 'vg' is set and maintained when the PV belongs to a 'pvs'
-	 * list in a parent VG struct.
-	 */
-	struct volume_group *vg;
-
-	uint64_t status;
-	uint64_t size;
-
-	/* physical extents */
-	uint32_t pe_size;
-	uint64_t pe_start;
-	uint32_t pe_count;
-	uint32_t pe_alloc_count;
-	unsigned long pe_align;
-	unsigned long pe_align_offset;
-
-	struct dm_list segments;	/* Ordered pv_segments covering complete PV */
-	struct dm_list tags;
-};
 
 struct format_instance {
 	const struct format_type *fmt;
@@ -419,7 +387,6 @@ int scan_vgs_for_pvs(struct cmd_context *cmd);
 
 int pv_write(struct cmd_context *cmd, struct physical_volume *pv,
 	     struct dm_list *mdas, int64_t label_sector);
-int is_pv(struct physical_volume *pv);
 int move_pv(struct volume_group *vg_from, struct volume_group *vg_to,
 	    const char *pv_name);
 int move_pvs_used_by_lv(struct volume_group *vg_from,
@@ -427,8 +394,6 @@ int move_pvs_used_by_lv(struct volume_group *vg_from,
 			const char *lv_name);
 int is_global_vg(const char *vg_name);
 int is_orphan_vg(const char *vg_name);
-int is_orphan(const struct physical_volume *pv);
-int is_missing_pv(const struct physical_volume *pv);
 int vg_missing_pv_count(const struct volume_group *vg);
 int vgs_are_compatible(struct cmd_context *cmd,
 		       struct volume_group *vg_from,
@@ -777,21 +742,6 @@ char *generate_lv_name(struct volume_group *vg, const char *format,
 /*
 * Begin skeleton for external LVM library
 */
-struct device *pv_dev(const struct physical_volume *pv);
-const char *pv_vg_name(const struct physical_volume *pv);
-const char *pv_dev_name(const struct physical_volume *pv);
-uint64_t pv_size(const struct physical_volume *pv);
-uint64_t pv_size_field(const struct physical_volume *pv);
-uint64_t pv_dev_size(const struct physical_volume *pv);
-uint64_t pv_free(const struct physical_volume *pv);
-uint64_t pv_status(const struct physical_volume *pv);
-uint32_t pv_pe_size(const struct physical_volume *pv);
-uint64_t pv_pe_start(const struct physical_volume *pv);
-uint32_t pv_pe_count(const struct physical_volume *pv);
-uint32_t pv_pe_alloc_count(const struct physical_volume *pv);
-uint32_t pv_mda_count(const struct physical_volume *pv);
-uint32_t pv_mda_used_count(const struct physical_volume *pv);
-unsigned pv_mda_set_ignored(const struct physical_volume *pv, unsigned ignored);
 int pv_change_metadataignore(struct physical_volume *pv, uint32_t mda_ignore);
 
 uint64_t lv_size(const struct logical_volume *lv);
