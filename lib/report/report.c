@@ -597,10 +597,7 @@ static int _pvused_disp(struct dm_report *rh, struct dm_pool *mem,
 	    (const struct physical_volume *) data;
 	uint64_t used;
 
-	if (!pv->pe_count)
-		used = 0LL;
-	else
-		used = (uint64_t) pv->pe_alloc_count * pv->pe_size;
+	used = pv_used(pv);
 
 	return _size64_disp(rh, mem, field, &used, private);
 }
@@ -754,22 +751,11 @@ static int _pvmdafree_disp(struct dm_report *rh, struct dm_pool *mem,
 			   struct dm_report_field *field,
 			   const void *data, void *private)
 {
-	struct lvmcache_info *info;
-	uint64_t freespace = UINT64_MAX, mda_free;
-	const char *pvid = (const char *)(&((const struct id *) data)->uuid);
-	struct metadata_area *mda;
+	const struct physical_volume *pv =
+	    (const struct physical_volume *) data;
+	uint64_t freespace;
 
-	if ((info = info_from_pvid(pvid, 0)))
-		dm_list_iterate_items(mda, &info->mdas) {
-			if (!mda->ops->mda_free_sectors)
-				continue;
-			mda_free = mda->ops->mda_free_sectors(mda);
-			if (mda_free < freespace)
-				freespace = mda_free;
-		}
-
-	if (freespace == UINT64_MAX)
-		freespace = UINT64_C(0);
+	freespace = pv_mda_free(pv);
 
 	return _size64_disp(rh, mem, field, &freespace, private);
 }
@@ -778,13 +764,11 @@ static int _pvmdasize_disp(struct dm_report *rh, struct dm_pool *mem,
 			   struct dm_report_field *field,
 			   const void *data, void *private)
 {
-	struct lvmcache_info *info;
-	uint64_t min_mda_size = 0;
-	const char *pvid = (const char *)(&((const struct id *) data)->uuid);
+	const struct physical_volume *pv =
+	    (const struct physical_volume *) data;
+	uint64_t min_mda_size;
 
-	/* PVs could have 2 mdas of different sizes (rounding effect) */
-	if ((info = info_from_pvid(pvid, 0)))
-		min_mda_size = find_min_mda_size(&info->mdas);
+	min_mda_size = pv_mda_size(pv);
 
 	return _size64_disp(rh, mem, field, &min_mda_size, private);
 }
