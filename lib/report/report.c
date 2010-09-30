@@ -150,27 +150,12 @@ static int _tags_disp(struct dm_report *rh __attribute__((unused)), struct dm_po
 		      const void *data, void *private __attribute__((unused)))
 {
 	const struct dm_list *tags = (const struct dm_list *) data;
-	struct str_list *sl;
+	char *tags_str;
 
-	if (!dm_pool_begin_object(mem, 256)) {
-		log_error("dm_pool_begin_object failed");
+	if (!(tags_str = tags_format_and_copy(mem, tags)))
 		return 0;
-	}
 
-	dm_list_iterate_items(sl, tags) {
-		if (!dm_pool_grow_object(mem, sl->str, strlen(sl->str)) ||
-		    (sl->list.n != tags && !dm_pool_grow_object(mem, ",", 1))) {
-			log_error("dm_pool_grow_object failed");
-			return 0;
-		}
-	}
-
-	if (!dm_pool_grow_object(mem, "\0", 1)) {
-		log_error("dm_pool_grow_object failed");
-		return 0;
-	}
-
-	dm_report_field_set_value(field, dm_pool_end_object(mem), NULL);
+	dm_report_field_set_value(field, tags_str, NULL);
 
 	return 1;
 }
