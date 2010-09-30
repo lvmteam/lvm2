@@ -1,5 +1,6 @@
 Version 2.02.75 - 
 =====================================
+  Fix memory leak of vg_read while using live copies of metadata in directories.
   Fix memory leak of config_tree in reinitialization code path.
   Swap pool destruction order in dmeventd_lvm2_exit() to fix leak report.
   Read whole /proc/self/maps file before working with maps entries.
