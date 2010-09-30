@@ -135,19 +135,19 @@ static int _not_implemented(void *obj, struct lvm_property_type *prop)
 #define _modules_set _not_implemented
 
 /* VG */
-#define _vg_fmt_get _not_implemented
+GET_VG_STR_PROPERTY_FN(vg_fmt, vg_fmt_dup(vg))
 #define _vg_fmt_set _not_implemented
-#define _vg_uuid_get _not_implemented
+GET_VG_STR_PROPERTY_FN(vg_uuid, vg_uuid_dup(vg))
 #define _vg_uuid_set _not_implemented
-#define _vg_name_get _not_implemented
+GET_VG_STR_PROPERTY_FN(vg_name, vg_name_dup(vg))
 #define _vg_name_set _not_implemented
-#define _vg_attr_get _not_implemented
+GET_VG_STR_PROPERTY_FN(vg_attr, vg_attr_dup(vg->vgmem, vg))
 #define _vg_attr_set _not_implemented
 GET_VG_NUM_PROPERTY_FN(vg_size, (SECTOR_SIZE * vg_size(vg)))
 #define _vg_size_set _not_implemented
 GET_VG_NUM_PROPERTY_FN(vg_free, (SECTOR_SIZE * vg_free(vg)))
 #define _vg_free_set _not_implemented
-#define _vg_sysid_get _not_implemented
+GET_VG_STR_PROPERTY_FN(vg_sysid, vg_system_id_dup(vg))
 #define _vg_sysid_set _not_implemented
 GET_VG_NUM_PROPERTY_FN(vg_extent_size, vg->extent_size)
 #define _vg_extent_size_set _not_implemented
@@ -167,7 +167,7 @@ GET_VG_NUM_PROPERTY_FN(snap_count, (snapshot_count(vg)))
 #define _snap_count_set _not_implemented
 GET_VG_NUM_PROPERTY_FN(vg_seqno, vg->seqno)
 #define _vg_seqno_set _not_implemented
-#define _vg_tags_get _not_implemented
+GET_VG_STR_PROPERTY_FN(vg_tags, vg_tags_dup(vg))
 #define _vg_tags_set _not_implemented
 GET_VG_NUM_PROPERTY_FN(vg_mda_count, (vg_mda_count(vg)))
 #define _vg_mda_count_set _not_implemented
