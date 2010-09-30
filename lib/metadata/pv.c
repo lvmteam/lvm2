@@ -163,6 +163,27 @@ int is_missing_pv(const struct physical_volume *pv)
 	return pv_field(pv, status) & MISSING_PV ? 1 : 0;
 }
 
+char *pv_attr_dup(struct dm_pool *mem, const struct physical_volume *pv)
+{
+	char *repstr;
+
+	if (!(repstr = dm_pool_zalloc(mem, 3))) {
+		log_error("dm_pool_alloc failed");
+		return NULL;
+	}
+
+	if (pv->status & ALLOCATABLE_PV)
+		repstr[0] = 'a';
+	else
+		repstr[0] = '-';
+
+	if (pv->status & EXPORTED_VG)
+		repstr[1] = 'x';
+	else
+		repstr[1] = '-';
+	return repstr;
+}
+
 unsigned pv_mda_set_ignored(const struct physical_volume *pv, unsigned mda_ignored)
 {
 	struct lvmcache_info *info;

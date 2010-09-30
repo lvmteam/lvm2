@@ -3921,6 +3921,22 @@ int pv_change_metadataignore(struct physical_volume *pv, uint32_t mda_ignored)
 	return 1;
 }
 
+char alloc_policy_char(alloc_policy_t alloc)
+{
+	switch (alloc) {
+	case ALLOC_CONTIGUOUS:
+		return 'c';
+	case ALLOC_CLING:
+		return 'l';
+	case ALLOC_NORMAL:
+		return 'n';
+	case ALLOC_ANYWHERE:
+		return 'a';
+	default:
+		return 'i';
+	}
+}
+
 /**
  * pv_by_path - Given a device path return a PV handle if it is a PV
  * @cmd - handle to the LVM command instance
