@@ -17,10 +17,12 @@
 #include "libdevmapper.h"
 #include "lvm-types.h"
 #include "metadata.h"
+#include "report.h"
 
 #define LVM_PROPERTY_NAME_LEN DM_REPORT_FIELD_TYPE_ID_LEN
 
 struct lvm_property_type {
+	report_type_t type;
 	char id[LVM_PROPERTY_NAME_LEN];
 	unsigned is_writeable;
 	unsigned is_string;
@@ -28,10 +30,13 @@ struct lvm_property_type {
 		char *s_val;
 		uint64_t n_val;
 	} v;
-	int (*get) (void *obj, struct lvm_property_type *prop);
+	int (*get) (const void *obj, struct lvm_property_type *prop);
 	int (*set) (void *obj, struct lvm_property_type *prop);
 };
 
-int vg_get_property(struct volume_group *vg, struct lvm_property_type *prop);
+int vg_get_property(const struct volume_group *vg,
+		    struct lvm_property_type *prop);
+int pv_get_property(const struct physical_volume *pv,
+		    struct lvm_property_type *prop);
 
 #endif
