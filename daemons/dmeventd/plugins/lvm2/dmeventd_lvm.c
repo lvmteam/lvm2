@@ -131,10 +131,10 @@ void dmeventd_lvm2_exit(void)
 
 	if (!--_register_count) {
 		lvm2_run(_lvm_handle, "_memlock_dec");
-		lvm2_exit(_lvm_handle);
-		_lvm_handle = NULL;
 		dm_pool_destroy(_mem_pool);
 		_mem_pool = NULL;
+		lvm2_exit(_lvm_handle);
+		_lvm_handle = NULL;
 	}
 
 	pthread_mutex_unlock(&_register_mutex);
