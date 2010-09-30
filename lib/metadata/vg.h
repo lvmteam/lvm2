@@ -125,5 +125,6 @@ uint64_t vg_mda_size(const struct volume_group *vg);
 uint64_t vg_mda_free(const struct volume_group *vg);
 char *vg_attr_dup(struct dm_pool *mem, const struct volume_group *vg);
 char *vg_uuid_dup(const struct volume_group *vg);
+char *vg_tags_dup(const struct volume_group *vg);
 
 #endif
