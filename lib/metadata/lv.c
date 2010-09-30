@@ -21,6 +21,11 @@ char *lv_uuid_dup(const struct logical_volume *lv)
 	return id_format_and_copy(lv->vg->vgmem, &lv->lvid.id[1]);
 }
 
+char *lv_tags_dup(const struct logical_volume *lv)
+{
+	return tags_format_and_copy(lv->vg->vgmem, &lv->tags);
+}
+
 uint64_t lv_size(const struct logical_volume *lv)
 {
 	return lv->size;
