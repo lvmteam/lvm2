@@ -20,14 +20,35 @@
 #include "lvm-types.h"
 #include "metadata.h"
 
-#define GET_NUM_PROPERTY_FN(NAME, VALUE) \
+#define GET_NUM_PROPERTY_FN(NAME, VALUE, TYPE, VAR)			\
 static int _ ## NAME ## _get (void *obj, struct lvm_property_type *prop) \
 { \
-	struct volume_group *vg = (struct volume_group *)obj; \
+	struct TYPE *VAR = (struct TYPE *)obj; \
 \
 	prop->v.n_val = VALUE; \
 	return 1; \
 }
+#define GET_VG_NUM_PROPERTY_FN(NAME, VALUE) \
+	GET_NUM_PROPERTY_FN(NAME, VALUE, volume_group, vg)
+#define GET_PV_NUM_PROPERTY_FN(NAME, VALUE) \
+	GET_NUM_PROPERTY_FN(NAME, VALUE, physical_volume, pv)
+#define GET_LV_NUM_PROPERTY_FN(NAME, VALUE) \
+	GET_NUM_PROPERTY_FN(NAME, VALUE, logical_volume, lv)
+
+#define GET_STR_PROPERTY_FN(NAME, VALUE, TYPE, VAR)			\
+static int _ ## NAME ## _get (void *obj, struct lvm_property_type *prop) \
+{ \
+	struct TYPE *VAR = (struct TYPE *)obj; \
+\
+	prop->v.s_val = (char *)VALUE;	\
+	return 1; \
+}
+#define GET_VG_STR_PROPERTY_FN(NAME, VALUE) \
+	GET_STR_PROPERTY_FN(NAME, VALUE, volume_group, vg)
+#define GET_PV_STR_PROPERTY_FN(NAME, VALUE) \
+	GET_STR_PROPERTY_FN(NAME, VALUE, physical_volume, pv)
+#define GET_LV_STR_PROPERTY_FN(NAME, VALUE) \
+	GET_STR_PROPERTY_FN(NAME, VALUE, logical_volume, lv)
 
 static int _not_implemented(void *obj, struct lvm_property_type *prop)
 {
@@ -122,41 +143,41 @@ static int _not_implemented(void *obj, struct lvm_property_type *prop)
 #define _vg_name_set _not_implemented
 #define _vg_attr_get _not_implemented
 #define _vg_attr_set _not_implemented
-GET_NUM_PROPERTY_FN(vg_size, (SECTOR_SIZE * vg_size(vg)))
+GET_VG_NUM_PROPERTY_FN(vg_size, (SECTOR_SIZE * vg_size(vg)))
 #define _vg_size_set _not_implemented
-GET_NUM_PROPERTY_FN(vg_free, (SECTOR_SIZE * vg_free(vg)))
+GET_VG_NUM_PROPERTY_FN(vg_free, (SECTOR_SIZE * vg_free(vg)))
 #define _vg_free_set _not_implemented
 #define _vg_sysid_get _not_implemented
 #define _vg_sysid_set _not_implemented
-GET_NUM_PROPERTY_FN(vg_extent_size, vg->extent_size)
+GET_VG_NUM_PROPERTY_FN(vg_extent_size, vg->extent_size)
 #define _vg_extent_size_set _not_implemented
-GET_NUM_PROPERTY_FN(vg_extent_count, vg->extent_count)
+GET_VG_NUM_PROPERTY_FN(vg_extent_count, vg->extent_count)
 #define _vg_extent_count_set _not_implemented
-GET_NUM_PROPERTY_FN(vg_free_count, vg->free_count)
+GET_VG_NUM_PROPERTY_FN(vg_free_count, vg->free_count)
 #define _vg_free_count_set _not_implemented
-GET_NUM_PROPERTY_FN(max_lv, vg->max_lv)
+GET_VG_NUM_PROPERTY_FN(max_lv, vg->max_lv)
 #define _max_lv_set _not_implemented
-GET_NUM_PROPERTY_FN(max_pv, vg->max_pv)
+GET_VG_NUM_PROPERTY_FN(max_pv, vg->max_pv)
 #define _max_pv_set _not_implemented
-GET_NUM_PROPERTY_FN(pv_count, vg->pv_count)
+GET_VG_NUM_PROPERTY_FN(pv_count, vg->pv_count)
 #define _pv_count_set _not_implemented
-GET_NUM_PROPERTY_FN(lv_count, (vg_visible_lvs(vg)))
+GET_VG_NUM_PROPERTY_FN(lv_count, (vg_visible_lvs(vg)))
 #define _lv_count_set _not_implemented
-GET_NUM_PROPERTY_FN(snap_count, (snapshot_count(vg)))
+GET_VG_NUM_PROPERTY_FN(snap_count, (snapshot_count(vg)))
 #define _snap_count_set _not_implemented
-GET_NUM_PROPERTY_FN(vg_seqno, vg->seqno)
+GET_VG_NUM_PROPERTY_FN(vg_seqno, vg->seqno)
 #define _vg_seqno_set _not_implemented
 #define _vg_tags_get _not_implemented
 #define _vg_tags_set _not_implemented
-GET_NUM_PROPERTY_FN(vg_mda_count, (vg_mda_count(vg)))
+GET_VG_NUM_PROPERTY_FN(vg_mda_count, (vg_mda_count(vg)))
 #define _vg_mda_count_set _not_implemented
-GET_NUM_PROPERTY_FN(vg_mda_used_count, (vg_mda_used_count(vg)))
+GET_VG_NUM_PROPERTY_FN(vg_mda_used_count, (vg_mda_used_count(vg)))
 #define _vg_mda_used_count_set _not_implemented
-GET_NUM_PROPERTY_FN(vg_mda_free, (SECTOR_SIZE * vg_mda_free(vg)))
+GET_VG_NUM_PROPERTY_FN(vg_mda_free, (SECTOR_SIZE * vg_mda_free(vg)))
 #define _vg_mda_free_set _not_implemented
-GET_NUM_PROPERTY_FN(vg_mda_size, (SECTOR_SIZE * vg_mda_size(vg)))
+GET_VG_NUM_PROPERTY_FN(vg_mda_size, (SECTOR_SIZE * vg_mda_size(vg)))
 #define _vg_mda_size_set _not_implemented
-GET_NUM_PROPERTY_FN(vg_mda_copies, (vg_mda_copies(vg)))
+GET_VG_NUM_PROPERTY_FN(vg_mda_copies, (vg_mda_copies(vg)))
 #define _vg_mda_copies_set _not_implemented
 
 /* LVSEG */
