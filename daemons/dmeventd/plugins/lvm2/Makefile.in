@@ -29,3 +29,5 @@ LIBS += @LVM2CMD_LIB@ -ldevmapper $(PTHREAD_LIBS)
 install_lvm2: install_lib_shared
 
 install: install_lvm2
+
+DISTCLEAN_TARGETS += .exported_symbols_generated
