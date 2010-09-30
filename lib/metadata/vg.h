@@ -93,6 +93,9 @@ struct volume_group {
 	uint32_t mda_copies; /* target number of mdas for this VG */
 };
 
+char *vg_fmt_dup(const struct volume_group *vg);
+char *vg_name_dup(const struct volume_group *vg);
+char *vg_system_id_dup(const struct volume_group *vg);
 uint32_t vg_seqno(const struct volume_group *vg);
 uint64_t vg_status(const struct volume_group *vg);
 int vg_set_alloc_policy(struct volume_group *vg, alloc_policy_t alloc);
