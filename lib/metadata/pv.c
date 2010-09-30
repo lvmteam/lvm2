@@ -21,6 +21,18 @@
  */
 #define pv_field(handle, field)	((handle)->field)
 
+char *pv_fmt_dup(const struct physical_volume *pv)
+{
+	if (!pv->fmt)
+		return NULL;
+	return dm_pool_strdup(pv->vg->vgmem, pv->fmt->name);
+}
+
+char *pv_name_dup(const struct physical_volume *pv)
+{
+	return dm_pool_strdup(pv->vg->vgmem, dev_name(pv->dev));
+}
+
 /*
  * Gets/Sets for external LVM library
  */

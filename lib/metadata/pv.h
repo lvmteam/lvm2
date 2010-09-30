@@ -52,6 +52,8 @@ struct physical_volume {
 	struct dm_list tags;
 };
 
+char *pv_fmt_dup(const struct physical_volume *pv);
+char *pv_name_dup(const struct physical_volume *pv);
 struct device *pv_dev(const struct physical_volume *pv);
 const char *pv_vg_name(const struct physical_volume *pv);
 char *pv_attr_dup(struct dm_pool *mem, const struct physical_volume *pv);
