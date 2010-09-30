@@ -412,5 +412,6 @@ int vg_mark_partial_lvs(struct volume_group *vg);
 int is_mirror_image_removable(struct logical_volume *mimage_lv, void *baton);
 
 uint64_t find_min_mda_size(struct dm_list *mdas);
+char alloc_policy_char(alloc_policy_t alloc);
 
 #endif
