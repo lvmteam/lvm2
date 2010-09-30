@@ -1048,6 +1048,10 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	if (arg_count(cmd, config_ARG) || !cmd->config_valid || config_files_changed(cmd)) {
 		/* Reinitialise various settings inc. logging, filters */
 		if (!refresh_toolcontext(cmd)) {
+			if (cmd->cft_override) {
+				destroy_config_tree(cmd->cft_override);
+				cmd->cft_override = NULL;
+			}
 			log_error("Updated config file invalid. Aborting.");
 			return ECMD_FAILED;
 		}
