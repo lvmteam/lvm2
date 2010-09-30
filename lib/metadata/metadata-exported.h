@@ -24,6 +24,7 @@
 #include "uuid.h"
 #include "pv.h"
 #include "vg.h"
+#include "lv.h"
 
 #define MAX_STRIPES 128U
 #define SECTOR_SHIFT 9L
@@ -290,33 +291,6 @@ struct lv_segment {
 #define seg_type(seg, s)	(seg)->areas[(s)].type
 #define seg_pv(seg, s)		(seg)->areas[(s)].u.pv.pvseg->pv
 #define seg_lv(seg, s)		(seg)->areas[(s)].u.lv.lv
-
-struct logical_volume {
-	union lvid lvid;
-	char *name;
-
-	struct volume_group *vg;
-
-	uint64_t status;
-	alloc_policy_t alloc;
-	uint32_t read_ahead;
-	int32_t major;
-	int32_t minor;
-
-	uint64_t size;		/* Sectors */
-	uint32_t le_count;
-
-	uint32_t origin_count;
-	struct dm_list snapshot_segs;
-	struct lv_segment *snapshot;
-
-	struct replicator_device *rdevice;/* For replicator-devs, rimages, slogs - reference to rdevice */
-	struct dm_list rsites;	/* For replicators - all sites */
-
-	struct dm_list segments;
-	struct dm_list tags;
-	struct dm_list segs_using_this_lv;
-};
 
 struct pe_range {
 	struct dm_list list;
@@ -744,7 +718,6 @@ char *generate_lv_name(struct volume_group *vg, const char *format,
 */
 int pv_change_metadataignore(struct physical_volume *pv, uint32_t mda_ignore);
 
-uint64_t lv_size(const struct logical_volume *lv);
 
 int vg_check_write_mode(struct volume_group *vg);
 #define vg_is_clustered(vg) (vg_status((vg)) & CLUSTERED)

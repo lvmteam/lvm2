@@ -73,6 +73,7 @@ SOURCES =\
 	locking/locking.c \
 	locking/no_locking.c \
 	log/log.c \
+	metadata/lv.c \
 	metadata/lv_manip.c \
 	metadata/merge.c \
 	metadata/metadata.c \
