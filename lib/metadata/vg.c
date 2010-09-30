@@ -16,6 +16,23 @@
 #include "metadata.h"
 #include "activate.h"
 
+char *vg_fmt_dup(const struct volume_group *vg)
+{
+	if (!vg->fid || !vg->fid->fmt)
+		return NULL;
+	return dm_pool_strdup(vg->vgmem, vg->fid->fmt->name);
+}
+
+char *vg_name_dup(const struct volume_group *vg)
+{
+	return dm_pool_strdup(vg->vgmem, vg->name);
+}
+
+char *vg_system_id_dup(const struct volume_group *vg)
+{
+	return dm_pool_strdup(vg->vgmem, vg->system_id);
+}
+
 char *vg_uuid_dup(const struct volume_group *vg)
 {
 	return id_format_and_copy(vg->vgmem, &vg->id);
