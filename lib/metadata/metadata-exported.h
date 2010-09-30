@@ -22,6 +22,7 @@
 #define _LVM_METADATA_EXPORTED_H
 
 #include "uuid.h"
+#include "vg.h"
 
 #define MAX_STRIPES 128U
 #define SECTOR_SHIFT 9L
@@ -122,15 +123,6 @@
 
 /* Ordered list - see lv_manip.c */
 typedef enum {
-	ALLOC_INVALID,
-	ALLOC_CONTIGUOUS,
-	ALLOC_CLING,
-	ALLOC_NORMAL,
-	ALLOC_ANYWHERE,
-	ALLOC_INHERIT
-} alloc_policy_t;
-
-typedef enum {
 	AREA_UNASSIGNED,
 	AREA_PV,
 	AREA_LV
@@ -227,70 +219,6 @@ struct format_instance {
 	struct dm_list metadata_areas_in_use;
 	struct dm_list metadata_areas_ignored;
 	void *private;
-};
-
-struct volume_group {
-	struct cmd_context *cmd;
-	struct dm_pool *vgmem;
-	struct format_instance *fid;
-	struct dm_list *cmd_vgs;/* List of wanted/locked and opened VGs */
-	uint32_t cmd_missing_vgs;/* Flag marks missing VG */
-	uint32_t seqno;		/* Metadata sequence number */
-
-	alloc_policy_t alloc;
-	uint64_t status;
-
-	struct id id;
-	char *name;
-	char *old_name;		/* Set during vgrename and vgcfgrestore */
-	char *system_id;
-
-	uint32_t extent_size;
-	uint32_t extent_count;
-	uint32_t free_count;
-
-	uint32_t max_lv;
-	uint32_t max_pv;
-
-	/* physical volumes */
-	uint32_t pv_count;
-	struct dm_list pvs;
-
-	/*
-	 * logical volumes
-	 * The following relationship should always hold:
-	 * dm_list_size(lvs) = user visible lv_count + snapshot_count + other invisible LVs
-	 *
-	 * Snapshots consist of 2 instances of "struct logical_volume":
-	 * - cow (lv_name is visible to the user)
-	 * - snapshot (lv_name is 'snapshotN')
-	 *
-	 * Mirrors consist of multiple instances of "struct logical_volume":
-	 * - one for the mirror log
-	 * - one for each mirror leg
-	 * - one for the user-visible mirror LV
-	 */
-	struct dm_list lvs;
-
-	struct dm_list tags;
-
-	/*
-	 * FIXME: Move the next fields into a different struct?
-	 */
-
-	/*
-	 * List of removed physical volumes by pvreduce.
-	 * They have to get cleared on vg_commit.
-	 */
-	struct dm_list removed_pvs;
-	uint32_t open_mode; /* FIXME: read or write - check lock type? */
-
-	/*
-	 * Store result of the last vg_read().
-	 * 0 for success else appropriate FAILURE_* bits set.
-	 */
-	uint32_t read_status;
-	uint32_t mda_copies; /* target number of mdas for this VG */
 };
 
 /* There will be one area for each stripe */
@@ -501,6 +429,7 @@ int is_global_vg(const char *vg_name);
 int is_orphan_vg(const char *vg_name);
 int is_orphan(const struct physical_volume *pv);
 int is_missing_pv(const struct physical_volume *pv);
+int vg_missing_pv_count(const struct volume_group *vg);
 int vgs_are_compatible(struct cmd_context *cmd,
 		       struct volume_group *vg_from,
 		       struct volume_group *vg_to);
@@ -552,11 +481,6 @@ int vg_extend(struct volume_group *vg, int pv_count, char **pv_names,
 	      struct pvcreate_params *pp);
 int vg_reduce(struct volume_group *vg, char *pv_name);
 int vg_change_tag(struct volume_group *vg, const char *tag, int add_tag);
-int vg_set_extent_size(struct volume_group *vg, uint32_t new_extent_size);
-int vg_set_max_lv(struct volume_group *vg, uint32_t max_lv);
-int vg_set_max_pv(struct volume_group *vg, uint32_t max_pv);
-int vg_set_alloc_policy(struct volume_group *vg, alloc_policy_t alloc);
-int vg_set_clustered(struct volume_group *vg, int clustered);
 int vg_split_mdas(struct cmd_context *cmd, struct volume_group *vg_from,
 		  struct volume_group *vg_to);
 /* FIXME: Investigate refactoring these functions to take a pv ISO pv_list */
@@ -746,10 +670,6 @@ int vg_remove_snapshot(struct logical_volume *cow);
 
 int vg_check_status(const struct volume_group *vg, uint64_t status);
 
-/*
- * Returns visible LV count - number of LVs from user perspective
- */
-unsigned vg_visible_lvs(const struct volume_group *vg);
 
 /*
  * Check if the VG reached maximal LVs count (if set)
@@ -876,21 +796,6 @@ int pv_change_metadataignore(struct physical_volume *pv, uint32_t mda_ignore);
 
 uint64_t lv_size(const struct logical_volume *lv);
 
-int vg_missing_pv_count(const struct volume_group *vg);
-uint32_t vg_seqno(const struct volume_group *vg);
-uint64_t vg_status(const struct volume_group *vg);
-uint64_t vg_size(const struct volume_group *vg);
-uint64_t vg_free(const struct volume_group *vg);
-uint64_t vg_extent_size(const struct volume_group *vg);
-uint64_t vg_extent_count(const struct volume_group *vg);
-uint64_t vg_free_count(const struct volume_group *vg);
-uint64_t vg_pv_count(const struct volume_group *vg);
-uint64_t vg_max_pv(const struct volume_group *vg);
-uint64_t vg_max_lv(const struct volume_group *vg);
-uint32_t vg_mda_count(const struct volume_group *vg);
-uint32_t vg_mda_used_count(const struct volume_group *vg);
-uint32_t vg_mda_copies(const struct volume_group *vg);
-int vg_set_mda_copies(struct volume_group *vg, uint32_t mda_copies);
 int vg_check_write_mode(struct volume_group *vg);
 #define vg_is_clustered(vg) (vg_status((vg)) & CLUSTERED)
 #define vg_is_exported(vg) (vg_status((vg)) & EXPORTED_VG)

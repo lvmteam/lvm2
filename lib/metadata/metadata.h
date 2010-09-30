@@ -378,11 +378,6 @@ int remove_seg_from_segs_using_this_lv(struct logical_volume *lv, struct lv_segm
 struct lv_segment *get_only_segment_using_this_lv(struct logical_volume *lv);
 
 /*
- * Count snapshot LVs.
- */
-unsigned snapshot_count(const struct volume_group *vg);
-
-/*
  * Calculate readahead from underlying PV devices
  */
 void lv_calculate_readahead(const struct logical_volume *lv, uint32_t *read_ahead);
@@ -417,7 +412,5 @@ int vg_mark_partial_lvs(struct volume_group *vg);
 int is_mirror_image_removable(struct logical_volume *mimage_lv, void *baton);
 
 uint64_t find_min_mda_size(struct dm_list *mdas);
-uint64_t vg_mda_size(const struct volume_group *vg);
-uint64_t vg_mda_free(const struct volume_group *vg);
 
 #endif
