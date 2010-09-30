@@ -31,3 +31,5 @@ LIBS += -ldevmapper-event-lvm2 -ldevmapper
 install_lvm2: install_dm_plugin
 
 install: install_lvm2
+
+DISTCLEAN_TARGETS += .exported_symbols_generated
