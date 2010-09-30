@@ -157,7 +157,7 @@ static struct volume_group *_build_vg(struct format_instance *fid,
 				      struct dm_list *pvs,
 				      struct dm_pool *mem)
 {
-	struct volume_group *vg = dm_pool_alloc(mem, sizeof(*vg));
+	struct volume_group *vg = dm_pool_zalloc(mem, sizeof(*vg));
 	struct disk_list *dl;
 
 	if (!vg)
@@ -165,8 +165,6 @@ static struct volume_group *_build_vg(struct format_instance *fid,
 
 	if (dm_list_empty(pvs))
 		goto_bad;
-
-	memset(vg, 0, sizeof(*vg));
 
 	vg->cmd = fid->fmt->cmd;
 	vg->vgmem = mem;

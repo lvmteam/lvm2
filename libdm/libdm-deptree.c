@@ -197,12 +197,11 @@ struct dm_tree *dm_tree_create(void)
 {
 	struct dm_tree *dtree;
 
-	if (!(dtree = dm_malloc(sizeof(*dtree)))) {
+	if (!(dtree = dm_zalloc(sizeof(*dtree)))) {
 		log_error("dm_tree_create malloc failed");
 		return NULL;
 	}
 
-	memset(dtree, 0, sizeof(*dtree));
 	dtree->root.dtree = dtree;
 	dm_list_init(&dtree->root.uses);
 	dm_list_init(&dtree->root.used_by);

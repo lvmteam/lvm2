@@ -320,10 +320,8 @@ struct dm_regex *dm_regex_create(struct dm_pool *mem, const char **patterns,
 	struct dm_regex *m;
 	struct dm_pool *scratch = mem;
 
-	if (!(m = dm_pool_alloc(mem, sizeof(*m))))
+	if (!(m = dm_pool_zalloc(mem, sizeof(*m))))
 		return_NULL;
-
-	memset(m, 0, sizeof(*m));
 
 	/* join the regexps together, delimiting with zero */
 	for (i = 0; i < num_patterns; i++)

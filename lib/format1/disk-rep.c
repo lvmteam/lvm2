@@ -624,13 +624,12 @@ static int _write_pvd(struct disk_list *data)
 	/* Make sure that the gap between the PV structure and
 	   the next one is zeroed in order to make non LVM tools
 	   happy (idea from AED) */
-	buf = dm_malloc(size);
+	buf = dm_zalloc(size);
 	if (!buf) {
 		log_error("Couldn't allocate temporary PV buffer.");
 		return 0;
 	}
 
-	memset(buf, 0, size);
 	memcpy(buf, &data->pvd, sizeof(struct pv_disk));
 
 	log_debug("Writing %s PV metadata to %s at %" PRIu64 " len %"

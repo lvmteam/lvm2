@@ -223,12 +223,11 @@ static void _debuglog(const char *fmt, ...)
 static struct thread_status *_alloc_thread_status(struct message_data *data,
 						  struct dso_data *dso_data)
 {
-	struct thread_status *ret = (typeof(ret)) dm_malloc(sizeof(*ret));
+	struct thread_status *ret = (typeof(ret)) dm_zalloc(sizeof(*ret));
 
 	if (!ret)
 		return NULL;
 
-	memset(ret, 0, sizeof(*ret));
 	if (!(ret->device.uuid = dm_strdup(data->device_uuid))) {
 		dm_free(ret);
 		return NULL;
@@ -259,12 +258,11 @@ static void _free_thread_status(struct thread_status *thread)
 /* Allocate/free DSO data. */
 static struct dso_data *_alloc_dso_data(struct message_data *data)
 {
-	struct dso_data *ret = (typeof(ret)) dm_malloc(sizeof(*ret));
+	struct dso_data *ret = (typeof(ret)) dm_zalloc(sizeof(*ret));
 
 	if (!ret)
 		return NULL;
 
-	memset(ret, 0, sizeof(*ret));
 	if (!(ret->dso_name = dm_strdup(data->dso_name))) {
 		dm_free(ret);
 		return NULL;

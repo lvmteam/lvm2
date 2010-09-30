@@ -166,7 +166,7 @@ int dm_get_library_version(char *version, size_t size)
 
 struct dm_task *dm_task_create(int type)
 {
-	struct dm_task *dmt = dm_malloc(sizeof(*dmt));
+	struct dm_task *dmt = dm_zalloc(sizeof(*dmt));
 
 	if (!dmt) {
 		log_error("dm_task_create: malloc(%" PRIsize_t ") failed",
@@ -178,8 +178,6 @@ struct dm_task *dm_task_create(int type)
 		dm_free(dmt);
 		return NULL;
 	}
-
-	memset(dmt, 0, sizeof(*dmt));
 
 	dmt->type = type;
 	dmt->minor = -1;

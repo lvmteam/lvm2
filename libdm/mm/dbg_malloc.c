@@ -119,6 +119,16 @@ void *dm_malloc_aux_debug(size_t s, const char *file, int line)
 	return nb + 1;
 }
 
+void *dm_zalloc_aux_debug(size_t s, const char *file, int line)
+{
+	void *ptr = dm_malloc_aux_debug(s, file, line);
+
+	if (ptr)
+		memset(ptr, 0, s);
+
+	return ptr;
+}
+
 void dm_free_aux(void *p)
 {
 	char *ptr;
@@ -249,4 +259,14 @@ void *dm_malloc_aux(size_t s, const char *file __attribute__((unused)),
 	}
 
 	return malloc(s);
+}
+
+void *dm_zalloc_aux(size_t s, const char *file, int line)
+{
+	void *ptr = dm_malloc_aux(s, file, line);
+
+	if (ptr)
+		memset(ptr, 0, s);
+
+	return ptr;
 }

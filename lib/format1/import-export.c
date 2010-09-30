@@ -506,9 +506,8 @@ int export_lvs(struct disk_list *dl, struct volume_group *vg,
 	 * setup the pv's extents array
 	 */
 	len = sizeof(struct pe_disk) * dl->pvd.pe_total;
-	if (!(dl->extents = dm_pool_alloc(dl->mem, len)))
+	if (!(dl->extents = dm_pool_zalloc(dl->mem, len)))
 		goto_out;
-	memset(dl->extents, 0, len);
 
 	dm_list_iterate_items(ll, &vg->lvs) {
 		if (ll->lv->status & SNAPSHOT)

@@ -724,6 +724,8 @@ static void _get_token(struct parser *p, int tok_prev)
 {
 	int values_allowed = 0;
 
+	const char *te;
+
 	p->tb = p->te;
 	_eat_space(p);
 	if (p->tb == p->fe || !*p->tb) {
@@ -738,59 +740,61 @@ static void _get_token(struct parser *p, int tok_prev)
 
 	p->t = TOK_INT;		/* fudge so the fall through for
 				   floats works */
-	switch (*p->te) {
+
+	te = p->te;
+	switch (*te) {
 	case SECTION_B_CHAR:
 		p->t = TOK_SECTION_B;
-		p->te++;
+		te++;
 		break;
 
 	case SECTION_E_CHAR:
 		p->t = TOK_SECTION_E;
-		p->te++;
+		te++;
 		break;
 
 	case '[':
 		p->t = TOK_ARRAY_B;
-		p->te++;
+		te++;
 		break;
 
 	case ']':
 		p->t = TOK_ARRAY_E;
-		p->te++;
+		te++;
 		break;
 
 	case ',':
 		p->t = TOK_COMMA;
-		p->te++;
+		te++;
 		break;
 
 	case '=':
 		p->t = TOK_EQ;
-		p->te++;
+		te++;
 		break;
 
 	case '"':
 		p->t = TOK_STRING_ESCAPED;
-		p->te++;
-		while ((p->te != p->fe) && (*p->te) && (*p->te != '"')) {
-			if ((*p->te == '\\') && (p->te + 1 != p->fe) &&
-			    *(p->te + 1))
-				p->te++;
-			p->te++;
+		te++;
+		while ((te != p->fe) && (*te) && (*te != '"')) {
+			if ((*te == '\\') && (te + 1 != p->fe) &&
+			    *(te + 1))
+				te++;
+			te++;
 		}
 
-		if ((p->te != p->fe) && (*p->te))
-			p->te++;
+		if ((te != p->fe) && (*te))
+			te++;
 		break;
 
 	case '\'':
 		p->t = TOK_STRING;
-		p->te++;
-		while ((p->te != p->fe) && (*p->te) && (*p->te != '\''))
-			p->te++;
+		te++;
+		while ((te != p->fe) && (*te) && (*te != '\''))
+			te++;
 
-		if ((p->te != p->fe) && (*p->te))
-			p->te++;
+		if ((te != p->fe) && (*te))
+			te++;
 		break;
 
 	case '.':
@@ -808,28 +812,30 @@ static void _get_token(struct parser *p, int tok_prev)
 	case '+':
 	case '-':
 		if (values_allowed) {
-			p->te++;
-			while ((p->te != p->fe) && (*p->te)) {
-				if (*p->te == '.') {
+			te++;
+			while ((te != p->fe) && (*te)) {
+				if (*te == '.') {
 					if (p->t == TOK_FLOAT)
 						break;
 					p->t = TOK_FLOAT;
-				} else if (!isdigit((int) *p->te))
+				} else if (!isdigit((int) *te))
 					break;
-				p->te++;
+				te++;
 			}
 			break;
 		}
 
 	default:
 		p->t = TOK_IDENTIFIER;
-		while ((p->te != p->fe) && (*p->te) && !isspace(*p->te) &&
-		       (*p->te != '#') && (*p->te != '=') &&
-		       (*p->te != SECTION_B_CHAR) &&
-		       (*p->te != SECTION_E_CHAR))
-			p->te++;
+		while ((te != p->fe) && (*te) && !isspace(*te) &&
+		       (*te != '#') && (*te != '=') &&
+		       (*te != SECTION_B_CHAR) &&
+		       (*te != SECTION_E_CHAR))
+			te++;
 		break;
 	}
+
+	p->te = te;
 }
 
 static void _eat_space(struct parser *p)
@@ -859,22 +865,12 @@ static void _eat_space(struct parser *p)
  */
 static struct config_value *_create_value(struct dm_pool *mem)
 {
-	struct config_value *v = dm_pool_alloc(mem, sizeof(*v));
-
-	if (v)
-		memset(v, 0, sizeof(*v));
-
-	return v;
+	return dm_pool_zalloc(mem, sizeof(struct config_value));
 }
 
 static struct config_node *_create_node(struct dm_pool *mem)
 {
-	struct config_node *n = dm_pool_alloc(mem, sizeof(*n));
-
-	if (n)
-		memset(n, 0, sizeof(*n));
-
-	return n;
+	return dm_pool_zalloc(mem, sizeof(struct config_node));
 }
 
 static char *_dup_tok(struct parser *p)
