@@ -1083,9 +1083,11 @@ static int _scan_file(const struct format_type *fmt)
 				fid = _text_create_text_instance(fmt, NULL, NULL,
 							    NULL);
 				if ((vg = _vg_read_file_name(fid, vgname,
-							     path)))
+							     path))) {
 					/* FIXME Store creation host in vg */
 					lvmcache_update_vg(vg, 0);
+					dm_pool_destroy(vg->vgmem);
+				}
 			}
 
 		if (closedir(d))
