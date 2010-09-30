@@ -1,5 +1,6 @@
 Version 2.02.75 - 
 =====================================
+  Read whole /proc/self/maps file before working with maps entries.
   Speed up unquoting of quoted double quotes and backslashes.
   Speed up CRC32 calculations by using a larger lookup table.
 
