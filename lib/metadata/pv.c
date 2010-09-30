@@ -29,6 +29,11 @@ struct id pv_id(const struct physical_volume *pv)
 	return pv_field(pv, id);
 }
 
+char *pv_uuid_dup(const struct physical_volume *pv)
+{
+	return id_format_and_copy(pv->vg->vgmem, &pv->id);
+}
+
 const struct format_type *pv_format_type(const struct physical_volume *pv)
 {
 	return pv_field(pv, fmt);

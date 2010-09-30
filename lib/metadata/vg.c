@@ -16,6 +16,11 @@
 #include "metadata.h"
 #include "activate.h"
 
+char *vg_uuid_dup(const struct volume_group *vg)
+{
+	return id_format_and_copy(vg->vgmem, &vg->id);
+}
+
 uint32_t vg_seqno(const struct volume_group *vg)
 {
 	return vg->seqno;

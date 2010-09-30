@@ -327,13 +327,7 @@ uint64_t lvm_vg_get_max_lv(const vg_t vg)
 
 const char *lvm_vg_get_uuid(const vg_t vg)
 {
-	char uuid[64] __attribute__((aligned(8)));
-
-	if (!id_write_format(&vg->id, uuid, sizeof(uuid))) {
-		log_error(INTERNAL_ERROR "Unable to convert uuid");
-		return NULL;
-	}
-	return dm_pool_strndup(vg->vgmem, (const char *)uuid, 64);
+	return vg_uuid_dup(vg);
 }
 
 const char *lvm_vg_get_name(const vg_t vg)

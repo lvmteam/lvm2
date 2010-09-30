@@ -14,18 +14,12 @@
 
 #include "lib.h"
 #include "lvm2app.h"
-#include "metadata-exported.h"
+#include "metadata.h"
 #include "lvm-string.h"
 
 const char *lvm_pv_get_uuid(const pv_t pv)
 {
-	char uuid[64] __attribute__((aligned(8)));
-
-	if (!id_write_format(&pv->id, uuid, sizeof(uuid))) {
-		log_error(INTERNAL_ERROR "Unable to convert uuid");
-		return NULL;
-	}
-	return dm_pool_strndup(pv->vg->vgmem, (const char *)uuid, 64);
+	return pv_uuid_dup(pv);
 }
 
 const char *lvm_pv_get_name(const pv_t pv)
