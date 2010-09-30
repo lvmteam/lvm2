@@ -187,6 +187,50 @@ char *pv_attr_dup(struct dm_pool *mem, const struct physical_volume *pv)
 	return repstr;
 }
 
+uint64_t pv_mda_size(const struct physical_volume *pv)
+{
+	struct lvmcache_info *info;
+	uint64_t min_mda_size = 0;
+	const char *pvid = (const char *)(&pv->id.uuid);
+
+	/* PVs could have 2 mdas of different sizes (rounding effect) */
+	if ((info = info_from_pvid(pvid, 0)))
+		min_mda_size = find_min_mda_size(&info->mdas);
+	return min_mda_size;
+}
+
+uint64_t pv_mda_free(const struct physical_volume *pv)
+{
+	struct lvmcache_info *info;
+	uint64_t freespace = UINT64_MAX, mda_free;
+	const char *pvid = (const char *)&pv->id.uuid;
+	struct metadata_area *mda;
+
+	if ((info = info_from_pvid(pvid, 0)))
+		dm_list_iterate_items(mda, &info->mdas) {
+			if (!mda->ops->mda_free_sectors)
+				continue;
+			mda_free = mda->ops->mda_free_sectors(mda);
+			if (mda_free < freespace)
+				freespace = mda_free;
+		}
+
+	if (freespace == UINT64_MAX)
+		freespace = UINT64_C(0);
+	return freespace;
+}
+
+uint64_t pv_used(const struct physical_volume *pv)
+{
+	uint64_t used;
+
+	if (!pv->pe_count)
+		used = 0LL;
+	else
+		used = (uint64_t) pv->pe_alloc_count * pv->pe_size;
+	return used;
+}
+
 unsigned pv_mda_set_ignored(const struct physical_volume *pv, unsigned mda_ignored)
 {
 	struct lvmcache_info *info;
