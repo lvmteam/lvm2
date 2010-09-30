@@ -90,14 +90,10 @@ struct dm_hash_table *dm_hash_create(unsigned size_hint)
 {
 	size_t len;
 	unsigned new_size = 16u;
-	struct dm_hash_table *hc = dm_malloc(sizeof(*hc));
+	struct dm_hash_table *hc = dm_zalloc(sizeof(*hc));
 
-	if (!hc) {
-		stack;
-		return 0;
-	}
-
-	memset(hc, 0, sizeof(*hc));
+	if (!hc)
+		return_0;
 
 	/* round size hint up to a power of two */
 	while (new_size < size_hint)

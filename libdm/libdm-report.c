@@ -571,11 +571,10 @@ struct dm_report *dm_report_init(uint32_t *report_types,
 	struct dm_report *rh;
 	const struct dm_report_object_type *type;
 
-	if (!(rh = dm_malloc(sizeof(*rh)))) {
+	if (!(rh = dm_zalloc(sizeof(*rh)))) {
 		log_error("dm_report_init: dm_malloc failed");
 		return 0;
 	}
-	memset(rh, 0, sizeof(*rh));
 
 	/*
 	 * rh->report_types is updated in _parse_fields() and _parse_keys()

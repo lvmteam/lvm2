@@ -742,10 +742,9 @@ int text_vg_export_file(struct volume_group *vg, const char *desc, FILE *fp)
 
 	_init();
 
-	if (!(f = dm_malloc(sizeof(*f))))
+	if (!(f = dm_zalloc(sizeof(*f))))
 		return_0;
 
-	memset(f, 0, sizeof(*f));
 	f->data.fp = fp;
 	f->indent = 0;
 	f->header = 1;
@@ -767,10 +766,8 @@ int text_vg_export_raw(struct volume_group *vg, const char *desc, char **buf)
 
 	_init();
 
-	if (!(f = dm_malloc(sizeof(*f))))
+	if (!(f = dm_zalloc(sizeof(*f))))
 		return_0;
-
-	memset(f, 0, sizeof(*f));
 
 	f->data.buf.size = 65536;	/* Initial metadata limit */
 	if (!(f->data.buf.start = dm_malloc(f->data.buf.size))) {

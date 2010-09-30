@@ -1121,11 +1121,10 @@ struct cmd_context *create_toolcontext(unsigned is_long_lived,
 
 	init_syslog(DEFAULT_LOG_FACILITY);
 
-	if (!(cmd = dm_malloc(sizeof(*cmd)))) {
+	if (!(cmd = dm_zalloc(sizeof(*cmd)))) {
 		log_error("Failed to allocate command context");
 		return NULL;
 	}
-	memset(cmd, 0, sizeof(*cmd));
 	cmd->is_long_lived = is_long_lived;
 	cmd->handles_missing_pvs = 0;
 	cmd->handles_unknown_segments = 0;

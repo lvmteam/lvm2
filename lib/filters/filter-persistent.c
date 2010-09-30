@@ -318,9 +318,8 @@ struct dev_filter *persistent_filter_create(struct dev_filter *real,
 	struct dev_filter *f = NULL;
 	struct stat info;
 
-	if (!(pf = dm_malloc(sizeof(*pf))))
+	if (!(pf = dm_zalloc(sizeof(*pf))))
 		return_NULL;
-	memset(pf, 0, sizeof(*pf));
 
 	if (!(pf->file = dm_malloc(strlen(file) + 1)))
 		goto_bad;

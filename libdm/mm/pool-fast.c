@@ -43,14 +43,13 @@ static void _free_chunk(struct chunk *c);
 struct dm_pool *dm_pool_create(const char *name, size_t chunk_hint)
 {
 	size_t new_size = 1024;
-	struct dm_pool *p = dm_malloc(sizeof(*p));
+	struct dm_pool *p = dm_zalloc(sizeof(*p));
 
 	if (!p) {
 		log_error("Couldn't create memory pool %s (size %"
 			  PRIsize_t ")", name, sizeof(*p));
 		return 0;
 	}
-	memset(p, 0, sizeof(*p));
 
 	/* round chunk_hint up to the next power of 2 */
 	p->chunk_size = chunk_hint + sizeof(struct chunk);

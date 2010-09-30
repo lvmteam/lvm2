@@ -383,11 +383,10 @@ struct label *label_create(struct labeller *labeller)
 {
 	struct label *label;
 
-	if (!(label = dm_malloc(sizeof(*label)))) {
+	if (!(label = dm_zalloc(sizeof(*label)))) {
 		log_error("label allocaction failed");
 		return NULL;
 	}
-	memset(label, 0, sizeof(*label));
 
 	label->labeller = labeller;
 

@@ -26,8 +26,8 @@ dm_bitset_t dm_bitset_create(struct dm_pool *mem, unsigned num_bits)
 	
 	if (mem)
 		bs = dm_pool_zalloc(mem, size);
-	else if ((bs = dm_malloc(size)))
-		memset(bs, 0, size);
+	else
+		bs = dm_zalloc(size);
 
 	if (!bs)
 		return NULL;

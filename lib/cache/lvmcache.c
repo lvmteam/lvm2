@@ -1064,11 +1064,10 @@ static int _lvmcache_update_vgname(struct lvmcache_info *info,
 			}
 		} else {
 ***/
-		if (!(vginfo = dm_malloc(sizeof(*vginfo)))) {
+		if (!(vginfo = dm_zalloc(sizeof(*vginfo)))) {
 			log_error("lvmcache_update_vgname: list alloc failed");
 			return 0;
 		}
-		memset(vginfo, 0, sizeof(*vginfo));
 		if (!(vginfo->vgname = dm_strdup(vgname))) {
 			dm_free(vginfo);
 			log_error("cache vgname alloc failed for %s", vgname);
@@ -1261,12 +1260,11 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 	    !(existing = info_from_pvid(dev->pvid, 0))) {
 		if (!(label = label_create(labeller)))
 			return_NULL;
-		if (!(info = dm_malloc(sizeof(*info)))) {
+		if (!(info = dm_zalloc(sizeof(*info)))) {
 			log_error("lvmcache_info allocation failed");
 			label_destroy(label);
 			return NULL;
 		}
-		memset(info, 0, sizeof(*info));
 
 		label->info = info;
 		info->label = label;

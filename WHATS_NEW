@@ -1,8 +1,9 @@
 Version 2.02.75 - 
 =====================================
+  Add dm_zalloc and use it and dm_pool_zalloc throughout.
   Add pv_get_property and create generic internal _get_property function.
   Add 'get' functions for pv and vg properties/fields.
-  Make generic GET_*_PROPERTY_FN macros and define secondary macro for vg, pv, lv.
+  Make generic GET_*_PROPERTY_FN macros with secondary macro for vg, pv & lv.
   Add tags_format_and_copy() common function and call from _tags_disp.
   Add id_format_and_copy() common function and call from _uuid_disp.
   Simplify logic to create '{pv|vg|lv}_attr' strings.
