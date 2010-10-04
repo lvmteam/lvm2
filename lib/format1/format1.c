@@ -118,6 +118,28 @@ static int _fix_partial_vg(struct volume_group *vg, struct dm_list *pvs)
 	struct disk_list *dl;
 	struct dm_list *pvh;
 	struct pv_list *pvl;
+	struct lv_list *ll;
+	struct lv_segment *seg;
+
+	/*
+	 * FIXME: code should remap missing segments to error segment.
+	 * Also current mapping code allocates 1 segment per missing extent.
+	 * For now bail out completely - allocated structures are not complete
+	 */
+	dm_list_iterate_items(ll, &vg->lvs)
+		dm_list_iterate_items(seg, &ll->lv->segments) {
+
+			/* area_count is always 1 here, s == 0 */
+			if (seg_type(seg, 0) != AREA_PV)
+				continue;
+
+			if (seg_pv(seg, 0))
+				continue;
+
+			log_error("Partial mode support for missing lvm1 PVs and "
+				  "partially available LVs is currently not implemented.");
+			return 0;
+	}
 
 	dm_list_iterate(pvh, pvs) {
 		dl = dm_list_item(pvh, struct disk_list);
@@ -129,8 +151,10 @@ static int _fix_partial_vg(struct volume_group *vg, struct dm_list *pvs)
 	    !(pvl->pv = dm_pool_zalloc(vg->vgmem, sizeof(*pvl->pv))))
 		return_0;
 
-	if (!id_create(&pvl->pv->id))
-		goto_out;
+	/* Use vg uuid with replaced first chars to "missing" as missing PV UUID */
+	memcpy(&pvl->pv->id.uuid, vg->id.uuid, sizeof(pvl->pv->id.uuid));
+	memcpy(&pvl->pv->id.uuid, "missing", 7);
+
 	if (!(pvl->pv->vg_name = dm_pool_strdup(vg->vgmem, vg->name)))
 		goto_out;
 	memcpy(&pvl->pv->vgid, &vg->id, sizeof(vg->id));

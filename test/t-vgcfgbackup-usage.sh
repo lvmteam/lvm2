@@ -43,6 +43,9 @@ vgcfgrestore -f "$(pwd)/backup.$$1" $vg
 vgremove -ff $vg
 
 # vgcfgbackup correctly stores metadata LVM1 with missing PVs
+# FIXME: clvmd seems to have problem with metadata format change here
+# fix it and remove this vgscan
+vgscan
 pvcreate -M1 $devs
 vgcreate -M1 -c n $vg $devs
 lvcreate -l1 -n $lv1 $vg $dev1
