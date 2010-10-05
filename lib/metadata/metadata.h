@@ -182,7 +182,7 @@ struct metadata_area {
 	struct dm_list list;
 	struct metadata_area_ops *ops;
 	void *metadata_locn;
-	uint32_t flags;
+	uint32_t status;
 };
 struct metadata_area *mda_copy(struct dm_pool *mem,
 			       struct metadata_area *mda);

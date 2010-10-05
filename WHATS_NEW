@@ -1,5 +1,6 @@
 Version 2.02.75 - 
 =====================================
+  Rename 'flags' to 'status' in struct metadata_area.
   Avoid segfault by limiting partial mode for lvm1 metadata. (2.02.74)
   Add dm_zalloc and use it and dm_pool_zalloc throughout.
   Add pv_get_property and create generic internal _get_property function.

@@ -545,7 +545,7 @@ static struct format_instance *_format1_create_instance(const struct format_type
 
 	mda->ops = &_metadata_format1_ops;
 	mda->metadata_locn = NULL;
-	mda->flags = 0;
+	mda->status = 0;
 	dm_list_add(&fid->metadata_areas_in_use, &mda->list);
 
 	return fid;
