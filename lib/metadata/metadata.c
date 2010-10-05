@@ -3839,7 +3839,7 @@ unsigned mda_locns_match(struct metadata_area *mda1, struct metadata_area *mda2)
 
 unsigned mda_is_ignored(struct metadata_area *mda)
 {
-	return (mda->flags & MDA_IGNORED);
+	return (mda->status & MDA_IGNORED);
 }
 
 void mda_set_ignored(struct metadata_area *mda, unsigned mda_ignored)
@@ -3848,9 +3848,9 @@ void mda_set_ignored(struct metadata_area *mda, unsigned mda_ignored)
 	unsigned old_mda_ignored = mda_is_ignored(mda);
 
 	if (mda_ignored && !old_mda_ignored)
-		mda->flags |= MDA_IGNORED;
+		mda->status |= MDA_IGNORED;
 	else if (!mda_ignored && old_mda_ignored)
-		mda->flags &= ~MDA_IGNORED;
+		mda->status &= ~MDA_IGNORED;
 	else
 		return;	/* No change */
 
