@@ -17,9 +17,8 @@ SHELL = /bin/sh
 
 @SET_MAKE@
 
-CC = @CC@
+CC ?= @CC@
 RANLIB = @RANLIB@
-SHELL = /bin/sh
 INSTALL = @INSTALL@
 MKDIR_P = @MKDIR_P@
 MSGFMT = @MSGFMT@
