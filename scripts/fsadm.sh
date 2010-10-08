@@ -51,7 +51,7 @@ XFS_CHECK=xfs_check
 # user may override lvm location by setting LVM_BINARY
 LVM=${LVM_BINARY-lvm}
 
-YES=
+YES=${_FSADM_YES}
 DRY=0
 VERB=
 FORCE=
@@ -128,6 +128,8 @@ cleanup() {
 	if [ "$DO_LVRESIZE" -eq 2 ]; then
 		# start LVRESIZE with the filesystem modification flag
 		# and allow recursive call of fsadm
+		_FSADM_YES=$YES
+		export _FSADM_YES
 		unset FSADM_RUNNING
 		dry exec $LVM lvresize $VERB $FORCE -r -L${NEWSIZE}b $VOLUME_ORIG
 	fi
