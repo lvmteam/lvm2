@@ -227,7 +227,7 @@ yes_no() {
 
 try_umount() {
 	yes_no "Do you want to unmount \"$MOUNTED\"" && dry $UMOUNT "$MOUNTED" && return 0
-	error "Can not proceed with mounted filesystem \"$MOUNTED\""
+	error "Cannot proceed with mounted filesystem \"$MOUNTED\""
 }
 
 validate_parsing() {
@@ -289,7 +289,7 @@ resize_reiser() {
 ########################
 # Resize XFS filesystem
 # - mounted for upsize
-# - can not downsize
+# - cannot downsize
 ########################
 resize_xfs() {
 	detect_mounted
@@ -345,7 +345,7 @@ resize() {
 ###################
 check() {
 	detect_fs "$1"
-	detect_mounted && error "Can not fsck device \"$VOLUME\", filesystem mounted on $MOUNTED"
+	detect_mounted && error "Cannot fsck device \"$VOLUME\", filesystem is mounted on $MOUNTED"
 	case "$FSTYPE" in
 	  "xfs") dry $XFS_CHECK "$VOLUME" ;;
 	  *) dry $FSCK $YES "$VOLUME" ;;
