@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (C) 2007-2009 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2007-2010 Red Hat, Inc. All rights reserved.
 #
 # This file is part of LVM2.
 #
@@ -129,7 +129,8 @@ cleanup() {
 	# and allow recursive call of fsadm
 	unset FSADM_RUNNING
 	test "$DO_LVRESIZE" -eq 2 && exec $LVM lvresize $VERB -r -L$(( $NEWSIZE / 1048576 )) $VOLUME
-	exit ${1:-0}
+	# error exit status for break
+	exit ${1:-1}
 }
 
 # convert parameter from Exa/Peta/Tera/Giga/Mega/Kilo/Bytes and blocks
