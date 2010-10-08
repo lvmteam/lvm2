@@ -300,7 +300,7 @@ resize_reiser() {
 	decode_size $1 $BLOCKSIZE
 	verbose "Resizing \"$VOLUME\" $BLOCKCOUNT -> $NEWBLOCKCOUNT blocks ($NEWSIZE bytes, bs: $NEWBLOCKCOUNT)"
 	if [ -n "$YES" ]; then
-		dry echo y | $RESIZE_REISER -s $NEWSIZE "$VOLUME"
+		echo y | dry $RESIZE_REISER -s $NEWSIZE "$VOLUME"
 	else
 		dry $RESIZE_REISER -s $NEWSIZE "$VOLUME"
 	fi
