@@ -1,5 +1,6 @@
 Version 2.02.75 - 
 =====================================
+  Do not execute lvresize with --dry-run option for fsadm.
   Fix fsadm return error code from user's break action.
   Allow CC to be overridden at build time (for 'scan-build make').
   Rename 'flags' to 'status' in struct metadata_area.

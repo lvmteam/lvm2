@@ -125,10 +125,13 @@ cleanup() {
 	IFS=$IFS_OLD
 	trap 2
 
-	# start LVRESIZE with the filesystem modification flag
-	# and allow recursive call of fsadm
-	unset FSADM_RUNNING
-	test "$DO_LVRESIZE" -eq 2 && exec $LVM lvresize $VERB -r -L$(( $NEWSIZE / 1048576 )) $VOLUME
+	if [ "$DO_LVRESIZE" -eq 2 ]; then
+		# start LVRESIZE with the filesystem modification flag
+		# and allow recursive call of fsadm
+		unset FSADM_RUNNING
+		dry exec $LVM lvresize $VERB $FORCE -r -L${NEWSIZE}b $VOLUME_ORIG
+	fi
+        
 	# error exit status for break
 	exit ${1:-1}
 }
