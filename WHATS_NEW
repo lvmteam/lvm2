@@ -1,5 +1,6 @@
 Version 2.02.75 - 
 =====================================
+  Fix detection of mounted filesystems for fsadm when udev is used.
   Fix assignment of default value to LVM variable is fsadm.
   Fix support for --yes flag for fsadm.
   Do not execute lvresize with --dry-run option for fsadm.
