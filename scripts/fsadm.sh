@@ -49,7 +49,7 @@ FSCK=fsck
 XFS_CHECK=xfs_check
 
 # user may override lvm location by setting LVM_BINARY
-LVM=${LVM_BINARY-lvm}
+LVM=${LVM_BINARY:-lvm}
 
 YES=${_FSADM_YES}
 DRY=0
