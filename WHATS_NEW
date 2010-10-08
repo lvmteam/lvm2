@@ -1,5 +1,6 @@
 Version 2.02.75 - 
 =====================================
+  Better support of noninteractive shell execution of fsadm.
   Fix usage of --yes flag for ReiserFS resize in fsadm.
   Fix detection of mounted filesystems for fsadm when udev is used.
   Fix assignment of default value to LVM variable is fsadm.
