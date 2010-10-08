@@ -368,7 +368,11 @@ check() {
 	detect_mounted && error "Cannot fsck device \"$VOLUME\", filesystem is mounted on $MOUNTED"
 	case "$FSTYPE" in
 	  "xfs") dry $XFS_CHECK "$VOLUME" ;;
-	  *) dry $FSCK $YES "$VOLUME" ;;
+	  *)    # check if executed from interactive shell environment
+		case "$-" in
+		  *i*) dry $FSCK $YES $FORCE "$VOLUME" ;;
+		  *) dry $FSCK $FORCE -p "$VOLUME" ;;
+		esac
 	esac
 }
 
