@@ -26,7 +26,8 @@ abs_top_builddir = @abs_top_builddir@
 abs_top_srcdir = @abs_top_srcdir@
 
 T ?= .
-RUN = $(shell find -regextype posix-egrep -name t-\*.sh -and -regex ".*($(T)).*" | sort)
+S ?= @ # never match anything by default
+RUN = $(shell find -regextype posix-egrep -name t-\*.sh -and -regex ".*($(T)).*" -and -not -regex ".*($(S)).*" | sort)
 
 # Shell quote;
 SHELL_PATH_SQ = $(subst ','\'',$(SHELL_PATH))
