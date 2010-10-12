@@ -212,10 +212,10 @@ static int _lvkmaj_disp(struct dm_report *rh, struct dm_pool *mem __attribute__(
 			const void *data, void *private __attribute__((unused)))
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
-	struct lvinfo info;
+	int major;
 
-	if (lv_info(lv->vg->cmd, lv, 0, &info, 0, 0) && info.exists)
-		return dm_report_field_int(rh, field, &info.major);
+	if ((major = lv_kernel_major(lv)) >= 0)
+		return dm_report_field_int(rh, field, &major);
 
 	return dm_report_field_int32(rh, field, &_minusone32);
 }
@@ -225,10 +225,10 @@ static int _lvkmin_disp(struct dm_report *rh, struct dm_pool *mem __attribute__(
 			const void *data, void *private __attribute__((unused)))
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
-	struct lvinfo info;
+	int minor;
 
-	if (lv_info(lv->vg->cmd, lv, 0, &info, 0, 0) && info.exists)
-		return dm_report_field_int(rh, field, &info.minor);
+	if ((minor = lv_kernel_minor(lv)) >= 0)
+		return dm_report_field_int(rh, field, &minor);
 
 	return dm_report_field_int32(rh, field, &_minusone32);
 }

@@ -111,9 +111,9 @@ GET_LV_NUM_PROPERTY_FN(lv_minor, lv->minor)
 #define _lv_minor_set _not_implemented_set
 #define _lv_read_ahead_get _not_implemented_get
 #define _lv_read_ahead_set _not_implemented_set
-#define _lv_kernel_major_get _not_implemented_get
+GET_LV_NUM_PROPERTY_FN(lv_kernel_major, lv_kernel_major(lv))
 #define _lv_kernel_major_set _not_implemented_set
-#define _lv_kernel_minor_get _not_implemented_get
+GET_LV_NUM_PROPERTY_FN(lv_kernel_minor, lv_kernel_minor(lv))
 #define _lv_kernel_minor_set _not_implemented_set
 #define _lv_kernel_read_ahead_get _not_implemented_get
 #define _lv_kernel_read_ahead_set _not_implemented_set
