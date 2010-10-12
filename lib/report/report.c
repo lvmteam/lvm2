@@ -378,16 +378,11 @@ static int _movepv_disp(struct dm_report *rh, struct dm_pool *mem __attribute__(
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 	const char *name;
-	struct lv_segment *seg;
 
-	dm_list_iterate_items(seg, &lv->segments) {
-		if (!(seg->status & PVMOVE))
-			continue;
-		name = dev_name(seg_dev(seg, 0));
+	if (!(name = lv_move_pv_dup(mem, lv)))
+		dm_report_field_set_value(field, "", NULL);
+	else
 		return dm_report_field_string(rh, field, &name);
-	}
-
-	dm_report_field_set_value(field, "", NULL);
 	return 1;
 }
 
