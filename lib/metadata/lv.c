@@ -18,6 +18,23 @@
 #include "activate.h"
 #include "toolcontext.h"
 
+int lv_kernel_minor(const struct logical_volume *lv)
+{
+	struct lvinfo info;
+
+	if (lv_info(lv->vg->cmd, lv, 0, &info, 0, 0) && info.exists)
+		return info.minor;
+	return -1;
+}
+
+int lv_kernel_major(const struct logical_volume *lv)
+{
+	struct lvinfo info;
+	if (lv_info(lv->vg->cmd, lv, 0, &info, 0, 0) && info.exists)
+		return info.major;
+	return -1;
+}
+
 char *lv_convert_lv_dup(struct dm_pool *mem, const struct logical_volume *lv)
 {
 	struct lv_segment *seg;
