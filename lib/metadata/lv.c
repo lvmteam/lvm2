@@ -31,7 +31,7 @@ char *lv_modules_dup(struct dm_pool *mem, const struct logical_volume *lv)
 
 	if (!list_lv_modules(mem, lv, modules))
 		return_NULL;
-	return tags_format_and_copy(lv->vg->vgmem, modules);
+	return tags_format_and_copy(mem, modules);
 }
 
 char *lv_mirror_log_dup(struct dm_pool *mem, const struct logical_volume *lv)
