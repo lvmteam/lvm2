@@ -81,7 +81,7 @@ prepare_clvmd() {
 
 prepare_dmeventd() {
 	if pgrep dmeventd ; then
-		echo "Cannot test dmeventd with real dmeventd ($(pgrep clvmd)) running."
+		echo "Cannot test dmeventd with real dmeventd ($(pgrep dmeventd)) running."
 		exit 200
 	fi
 
