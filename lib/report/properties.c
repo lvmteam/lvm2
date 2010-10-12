@@ -97,17 +97,17 @@ GET_PV_NUM_PROPERTY_FN(pv_mda_used_count, pv_mda_used_count(pv))
 #define _pv_mda_used_count_set _not_implemented_set
 
 /* LV */
-#define _lv_uuid_get _not_implemented_get
+GET_LV_STR_PROPERTY_FN(lv_uuid, lv_uuid_dup(lv))
 #define _lv_uuid_set _not_implemented_set
 #define _lv_name_get _not_implemented_get
 #define _lv_name_set _not_implemented_set
 #define _lv_path_get _not_implemented_get
 #define _lv_path_set _not_implemented_set
-#define _lv_attr_get _not_implemented_get
+GET_LV_STR_PROPERTY_FN(lv_attr, lv_attr_dup(lv->vg->vgmem, lv))
 #define _lv_attr_set _not_implemented_set
-#define _lv_major_get _not_implemented_get
+GET_LV_NUM_PROPERTY_FN(lv_major, lv->major)
 #define _lv_major_set _not_implemented_set
-#define _lv_minor_get _not_implemented_get
+GET_LV_NUM_PROPERTY_FN(lv_minor, lv->minor)
 #define _lv_minor_set _not_implemented_set
 #define _lv_read_ahead_get _not_implemented_get
 #define _lv_read_ahead_set _not_implemented_set
@@ -117,9 +117,9 @@ GET_PV_NUM_PROPERTY_FN(pv_mda_used_count, pv_mda_used_count(pv))
 #define _lv_kernel_minor_set _not_implemented_set
 #define _lv_kernel_read_ahead_get _not_implemented_get
 #define _lv_kernel_read_ahead_set _not_implemented_set
-#define _lv_size_get _not_implemented_get
+GET_LV_NUM_PROPERTY_FN(lv_size, lv->size * SECTOR_SIZE)
 #define _lv_size_set _not_implemented_set
-#define _seg_count_get _not_implemented_get
+GET_LV_NUM_PROPERTY_FN(seg_count, dm_list_size(&lv->segments))
 #define _seg_count_set _not_implemented_set
 #define _origin_get _not_implemented_get
 #define _origin_set _not_implemented_set
@@ -133,7 +133,7 @@ GET_PV_NUM_PROPERTY_FN(pv_mda_used_count, pv_mda_used_count(pv))
 #define _move_pv_set _not_implemented_set
 #define _convert_lv_get _not_implemented_get
 #define _convert_lv_set _not_implemented_set
-#define _lv_tags_get _not_implemented_get
+GET_LV_STR_PROPERTY_FN(lv_tags, lv_tags_dup(lv))
 #define _lv_tags_set _not_implemented_set
 #define _mirror_log_get _not_implemented_get
 #define _mirror_log_set _not_implemented_set
