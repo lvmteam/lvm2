@@ -16,6 +16,28 @@
 #include "lib.h"
 #include "metadata.h"
 #include "activate.h"
+#include "toolcontext.h"
+
+char *lv_path_dup(struct dm_pool *mem, const struct logical_volume *lv)
+{
+	char *repstr;
+	size_t len;
+
+	len = strlen(lv->vg->cmd->dev_dir) + strlen(lv->vg->name) +
+		strlen(lv->name) + 2;
+
+	if (!(repstr = dm_pool_zalloc(mem, len))) {
+		log_error("dm_pool_alloc failed");
+		return 0;
+	}
+
+	if (dm_snprintf(repstr, len, "%s%s/%s",
+			lv->vg->cmd->dev_dir, lv->vg->name, lv->name) < 0) {
+		log_error("lvpath snprintf failed");
+		return 0;
+	}
+	return repstr;
+}
 
 char *lv_uuid_dup(const struct logical_volume *lv)
 {
