@@ -18,6 +18,21 @@
 #include "activate.h"
 #include "toolcontext.h"
 #include "segtype.h"
+#include "str_list.h"
+
+char *lv_modules_dup(struct dm_pool *mem, const struct logical_volume *lv)
+{
+	struct dm_list *modules;
+
+	if (!(modules = str_list_create(mem))) {
+		log_error("modules str_list allocation failed");
+		return NULL;
+	}
+
+	if (!list_lv_modules(mem, lv, modules))
+		return_NULL;
+	return tags_format_and_copy(lv->vg->vgmem, modules);
+}
 
 char *lv_mirror_log_dup(struct dm_pool *mem, const struct logical_volume *lv)
 {
