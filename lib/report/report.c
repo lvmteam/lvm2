@@ -392,19 +392,8 @@ static int _convertlv_disp(struct dm_report *rh, struct dm_pool *mem __attribute
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 	const char *name = NULL;
-	struct lv_segment *seg;
 
-	if (lv->status & CONVERTING) {
-		if (lv->status & MIRRORED) {
-			seg = first_seg(lv);
-
-			/* Temporary mirror is always area_num == 0 */
-			if (seg_type(seg, 0) == AREA_LV &&
-			    is_temporary_mirror_layer(seg_lv(seg, 0)))
-				name = seg_lv(seg, 0)->name;
-		}
-	}
-
+	name = lv_convert_lv_dup(mem, lv);
 	if (name)
 		return dm_report_field_string(rh, field, &name);
 

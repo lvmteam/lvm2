@@ -18,6 +18,21 @@
 #include "activate.h"
 #include "toolcontext.h"
 
+char *lv_convert_lv_dup(struct dm_pool *mem, const struct logical_volume *lv)
+{
+	struct lv_segment *seg;
+
+	if (lv->status & (CONVERTING|MIRRORED)) {
+		seg = first_seg(lv);
+
+		/* Temporary mirror is always area_num == 0 */
+		if (seg_type(seg, 0) == AREA_LV &&
+		    is_temporary_mirror_layer(seg_lv(seg, 0)))
+			return dm_pool_strdup(mem, seg_lv(seg, 0)->name);
+	}
+	return NULL;
+}
+
 char *lv_move_pv_dup(struct dm_pool *mem, const struct logical_volume *lv)
 {
 	struct lv_segment *seg;
