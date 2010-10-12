@@ -297,14 +297,10 @@ static int _loglv_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((
 		       const void *data, void *private __attribute__((unused)))
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
-	struct lv_segment *seg;
+	const char *name;
 
-	dm_list_iterate_items(seg, &lv->segments) {
-		if (!seg_is_mirrored(seg) || !seg->log_lv)
-			continue;
-		return dm_report_field_string(rh, field,
-					      (const char **) &seg->log_lv->name);
-	}
+	if ((name = lv_mirror_log_dup(mem, lv)))
+		return dm_report_field_string(rh, field, &name);
 
 	dm_report_field_set_value(field, "", NULL);
 	return 1;
