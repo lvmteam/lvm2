@@ -570,12 +570,7 @@ static int _originsize_disp(struct dm_report *rh, struct dm_pool *mem,
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 	uint64_t size;
 
-	if (lv_is_cow(lv))
-		size = (uint64_t) find_cow(lv)->len * lv->vg->extent_size;
-	else if (lv_is_origin(lv))
-		size = lv->size;
-	else
-		size = UINT64_C(0);
+	size = lv_origin_size(lv);
 
 	return _size64_disp(rh, mem, field, &size, private);
 }
