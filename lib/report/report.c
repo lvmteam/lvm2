@@ -165,17 +165,13 @@ static int _modules_disp(struct dm_report *rh, struct dm_pool *mem,
 			 const void *data, void *private)
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
-	struct dm_list *modules;
+	char *modules_str;
 
-	if (!(modules = str_list_create(mem))) {
-		log_error("modules str_list allocation failed");
+	if (!(modules_str = lv_modules_dup(mem, lv)))
 		return 0;
-	}
 
-	if (!list_lv_modules(mem, lv, modules))
-		return_0;
-
-	return _tags_disp(rh, mem, field, modules, private);
+	dm_report_field_set_value(field, modules_str, NULL);
+	return 1;
 }
 
 static int _vgfmt_disp(struct dm_report *rh, struct dm_pool *mem,
