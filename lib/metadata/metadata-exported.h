@@ -652,7 +652,7 @@ int add_mirror_images(struct cmd_context *cmd, struct logical_volume *lv,
 struct logical_volume *detach_mirror_log(struct lv_segment *seg);
 int attach_mirror_log(struct lv_segment *seg, struct logical_volume *lv);
 int remove_mirror_log(struct cmd_context *cmd, struct logical_volume *lv,
-		      struct dm_list *removable_pvs);
+		      struct dm_list *removable_pvs, int force);
 int add_mirror_log(struct cmd_context *cmd, struct logical_volume *lv,
 		   uint32_t log_count, uint32_t region_size,
 		   struct dm_list *allocatable_pvs, alloc_policy_t alloc);

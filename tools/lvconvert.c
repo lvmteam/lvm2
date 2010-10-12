@@ -747,7 +747,9 @@ static int _lv_update_log_type(struct cmd_context *cmd,
 
 	/* Remove an existing log completely */
 	if (!log_count) {
-		if (!remove_mirror_log(cmd, original_lv, operable_pvs))
+		if (!remove_mirror_log(cmd, original_lv, operable_pvs,
+				       arg_count(cmd, yes_ARG) ||
+				       arg_count(cmd, force_ARG)))
 			return_0;
 		return 1;
 	}

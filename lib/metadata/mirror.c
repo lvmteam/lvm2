@@ -1573,7 +1573,8 @@ int add_mirrors_to_segments(struct cmd_context *cmd, struct logical_volume *lv,
  */
 int remove_mirror_log(struct cmd_context *cmd,
 		      struct logical_volume *lv,
-		      struct dm_list *removable_pvs)
+		      struct dm_list *removable_pvs,
+		      int force)
 {
 	float sync_percent;
 	percent_range_t percent_range = PERCENT_0;
@@ -1597,7 +1598,7 @@ int remove_mirror_log(struct cmd_context *cmd,
 		log_error("Unable to convert the log of an inactive "
 			  "cluster mirror, %s", lv->name);
 		return 0;
-	} else if (yes_no_prompt("Full resync required to convert "
+	} else if (force || yes_no_prompt("Full resync required to convert "
 				 "inactive mirror %s to core log. "
 				 "Proceed? [y/n]: ", lv->name) == 'y')
 		sync_percent = 0;
