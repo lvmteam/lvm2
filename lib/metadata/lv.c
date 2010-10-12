@@ -17,6 +17,19 @@
 #include "metadata.h"
 #include "activate.h"
 #include "toolcontext.h"
+#include "segtype.h"
+
+char *lv_mirror_log_dup(struct dm_pool *mem, const struct logical_volume *lv)
+{
+	struct lv_segment *seg;
+
+	dm_list_iterate_items(seg, &lv->segments) {
+		if (!seg_is_mirrored(seg) || !seg->log_lv)
+			continue;
+		return dm_pool_strdup(mem, seg->log_lv->name);
+	}
+	return NULL;
+}
 
 int lv_kernel_minor(const struct logical_volume *lv)
 {
