@@ -123,7 +123,7 @@ GET_LV_NUM_PROPERTY_FN(seg_count, dm_list_size(&lv->segments))
 #define _seg_count_set _not_implemented_set
 #define _origin_get _not_implemented_get
 #define _origin_set _not_implemented_set
-#define _origin_size_get _not_implemented_get
+GET_LV_NUM_PROPERTY_FN(origin_size, lv_origin_size(lv))
 #define _origin_size_set _not_implemented_set
 #define _snap_percent_get _not_implemented_get
 #define _snap_percent_set _not_implemented_set

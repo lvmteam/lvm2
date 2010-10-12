@@ -18,6 +18,15 @@
 #include "activate.h"
 #include "toolcontext.h"
 
+uint64_t lv_origin_size(const struct logical_volume *lv)
+{
+	if (lv_is_cow(lv))
+		return (uint64_t) find_cow(lv)->len * lv->vg->extent_size;
+	if (lv_is_origin(lv))
+		return lv->size;
+	return 0;
+}
+
 char *lv_path_dup(struct dm_pool *mem, const struct logical_volume *lv)
 {
 	char *repstr;
