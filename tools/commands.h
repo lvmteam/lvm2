@@ -848,6 +848,7 @@ xx(vgextend,
    0,
    "vgextend\n"
    "\t[-A|--autobackup y|n]\n"
+   "\t[--restoremissing]\n"
    "\t[-d|--debug]\n"
    "\t[-f|--force]\n"
    "\t[-h|--help]\n"
@@ -860,7 +861,8 @@ xx(vgextend,
    autobackup_ARG, test_ARG,
    force_ARG, yes_ARG, zero_ARG, labelsector_ARG, metadatatype_ARG,
    metadatasize_ARG, pvmetadatacopies_ARG, metadatacopies_ARG,
-   metadataignore_ARG, dataalignment_ARG, dataalignmentoffset_ARG)
+   metadataignore_ARG, dataalignment_ARG, dataalignmentoffset_ARG,
+   restoremissing_ARG)
 
 xx(vgimport,
    "Register exported volume group with system",
