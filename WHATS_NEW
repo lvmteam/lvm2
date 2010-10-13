@@ -1,5 +1,6 @@
 Version 2.02.75 - 
 =====================================
+  Limit repeated accesses to broken devices.
   Give correct error message when creating a too-small snapshot.
   Implement vgextend --restoremissing.
   Refactor and add 'get' functions for lv properties/fields.
