@@ -560,6 +560,10 @@ static int _init_dev_cache(struct cmd_context *cmd)
 	const struct config_node *cn;
 	struct config_value *cv;
 
+	init_dev_disable_after_error_count(
+		find_config_tree_int(cmd, "devices/disable_after_error_count",
+				     DEFAULT_DISABLE_AFTER_ERROR_COUNT));
+
 	if (!dev_cache_init(cmd))
 		return_0;
 

@@ -37,6 +37,7 @@ void init_ignore_suspended_devices(int ignore);
 void init_error_message_produced(int produced);
 void init_is_static(unsigned value);
 void init_udev_checking(int checking);
+void init_dev_disable_after_error_count(int value);
 
 void set_cmd_name(const char *cmd_name);
 void set_sysfs_dir_path(const char *path);
@@ -61,5 +62,8 @@ const char *sysfs_dir_path(void);
 
 #define DMEVENTD_MONITOR_IGNORE -1
 int dmeventd_monitor_mode(void);
+
+#define NO_DEV_ERROR_COUNT_LIMIT 0
+int dev_disable_after_error_count(void);
 
 #endif

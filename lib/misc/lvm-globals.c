@@ -41,6 +41,7 @@ static int _error_message_produced = 0;
 static unsigned _is_static = 0;
 static int _udev_checking = 1;
 static char _sysfs_dir_path[PATH_MAX] = "";
+static int _dev_disable_after_error_count = DEFAULT_DISABLE_AFTER_ERROR_COUNT;
 
 void init_verbose(int level)
 {
@@ -120,6 +121,11 @@ void init_udev_checking(int checking)
 		log_debug("LVM udev checking enabled");
 	else
 		log_debug("LVM udev checking disabled");
+}
+
+void init_dev_disable_after_error_count(int value)
+{
+	_dev_disable_after_error_count = value;
 }
 
 void set_cmd_name(const char *cmd)
@@ -235,4 +241,9 @@ int udev_checking(void)
 const char *sysfs_dir_path()
 {
 	return _sysfs_dir_path;
+}
+
+int dev_disable_after_error_count(void)
+{
+	return _dev_disable_after_error_count;
 }

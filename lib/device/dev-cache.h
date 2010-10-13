@@ -53,4 +53,6 @@ struct dev_iter *dev_iter_create(struct dev_filter *f, int dev_scan);
 void dev_iter_destroy(struct dev_iter *iter);
 struct device *dev_iter_get(struct dev_iter *iter);
 
+void dev_reset_error_count(struct cmd_context *cmd);
+
 #endif

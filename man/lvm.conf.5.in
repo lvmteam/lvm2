@@ -165,6 +165,11 @@ use \fBpvs -o +pe_start\fP .  It will be a multiple of the requested
 \fBdata_alignment\fP plus the alignment_offset from
 \fBdata_alignment_offset_detection\fP (if enabled) or the pvcreate
 commandline.
+.IP
+\fBdev_max_error_count\fP \(em Maximum number of error counts per device
+before disabling devices. This option prevents a broken device from
+being accessed repeatedly. If set to 0, no access control to devices is
+done.
 .TP
 \fBlog\fP \(em Default log settings
 .IP

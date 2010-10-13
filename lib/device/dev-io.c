@@ -603,18 +603,40 @@ void dev_close_all(void)
 	}
 }
 
+static inline int _dev_is_valid(struct device *dev)
+{
+	return (dev->max_error_count == NO_DEV_ERROR_COUNT_LIMIT ||
+		dev->error_count < dev->max_error_count);
+}
+
+static void _dev_inc_error_count(struct device *dev)
+{
+	if (++dev->error_count == dev->max_error_count)
+		log_warn("WARNING: Error counts reached a limit of %d. "
+			 "Device %s was disabled",
+			 dev->max_error_count, dev_name(dev));
+}
+
 int dev_read(struct device *dev, uint64_t offset, size_t len, void *buffer)
 {
 	struct device_area where;
+	int ret;
 
 	if (!dev->open_count)
 		return_0;
+
+	if (!_dev_is_valid(dev))
+		return 0;
 
 	where.dev = dev;
 	where.start = offset;
 	where.size = len;
 
-	return _aligned_io(&where, buffer, 0);
+	ret = _aligned_io(&where, buffer, 0);
+	if (!ret)
+		_dev_inc_error_count(dev);
+
+	return ret;
 }
 
 /*
@@ -670,9 +692,13 @@ int dev_append(struct device *dev, size_t len, void *buffer)
 int dev_write(struct device *dev, uint64_t offset, size_t len, void *buffer)
 {
 	struct device_area where;
+	int ret;
 
 	if (!dev->open_count)
 		return_0;
+
+	if (!_dev_is_valid(dev))
+		return 0;
 
 	where.dev = dev;
 	where.start = offset;
@@ -680,7 +706,11 @@ int dev_write(struct device *dev, uint64_t offset, size_t len, void *buffer)
 
 	dev->flags |= DEV_ACCESSED_W;
 
-	return _aligned_io(&where, buffer, 1);
+	ret = _aligned_io(&where, buffer, 1);
+	if (!ret)
+		_dev_inc_error_count(dev);
+
+	return ret;
 }
 
 int dev_set(struct device *dev, uint64_t offset, size_t len, int value)

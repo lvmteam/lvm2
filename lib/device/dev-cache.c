@@ -104,6 +104,8 @@ struct device *dev_create_file(const char *filename, struct device *dev,
 	dev->dev = 0;
 	dev->fd = -1;
 	dev->open_count = 0;
+	dev->error_count = 0;
+	dev->max_error_count = NO_DEV_ERROR_COUNT_LIMIT;
 	dev->block_size = -1;
 	dev->read_ahead = -1;
 	memset(dev->pvid, 0, sizeof(dev->pvid));
@@ -125,6 +127,7 @@ static struct device *_dev_create(dev_t d)
 	dev->dev = d;
 	dev->fd = -1;
 	dev->open_count = 0;
+	dev->max_error_count = dev_disable_after_error_count();
 	dev->block_size = -1;
 	dev->read_ahead = -1;
 	dev->end = UINT64_C(0);
@@ -843,6 +846,22 @@ struct device *dev_iter_get(struct dev_iter *iter)
 	}
 
 	return NULL;
+}
+
+void dev_reset_error_count(struct cmd_context *cmd)
+{
+	struct dev_iter *iter;
+	struct device *dev;
+
+	if (!(iter = dev_iter_create(cmd->filter, 0))) {
+		log_error("Resetting device error count failed");
+		return;
+	}
+
+	for (dev = dev_iter_get(iter); dev; dev = dev_iter_get(iter))
+		dev->error_count = 0;
+
+	dev_iter_destroy(iter);
 }
 
 int dev_fd(struct device *dev)
