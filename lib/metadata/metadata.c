@@ -1015,6 +1015,29 @@ uint64_t extents_from_size(struct cmd_context *cmd, uint64_t size,
 	return (uint64_t) size / extent_size;
 }
 
+/*
+ * Return random integer in [0,max) interval
+ *
+ * The loop rejects numbers that come from an "incomplete" slice of the
+ * RAND_MAX space (considering the number space [0, RAND_MAX] is divided
+ * into some "max"-sized slices and at most a single smaller slice,
+ * between [n*max, RAND_MAX] for suitable n -- numbers from this last slice
+ * are discarded because they could distort the distribution in favour of
+ * smaller numbers.
+ */
+static unsigned _even_rand( unsigned *seed, unsigned max )
+{
+	unsigned r, ret;
+
+	/* make sure distribution is even */
+	do {
+		r = (unsigned) rand_r( seed );
+		ret = r % max;
+	} while ( r - ret > RAND_MAX - max );
+
+	return ret;
+}
+
 static dm_bitset_t _bitset_with_random_bits(struct dm_pool *mem, uint32_t num_bits,
 					    uint32_t num_set_bits, unsigned *seed)
 {
@@ -1037,7 +1060,7 @@ static dm_bitset_t _bitset_with_random_bits(struct dm_pool *mem, uint32_t num_bi
 	/* Perform loop num_set_bits times, selecting one bit each time */
 	while (i++ < num_bits) {
 		/* Select a random bit between 0 and (i-1) inclusive. */
-		bit_selected = (unsigned) floor(i * (rand_r(seed) / (RAND_MAX + 1.0)));
+		bit_selected = _even_rand(seed, i);
 
 		/*
 		 * If the bit was already set, set the new bit that became
