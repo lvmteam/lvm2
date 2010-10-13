@@ -382,6 +382,7 @@ static int _lock_vol(struct cmd_context *cmd, const char *resource,
 			else
 				lvmcache_lock_vgname(resource, (flags & LCK_TYPE_MASK)
 								== LCK_READ);
+			dev_reset_error_count(cmd);
 		}
 
 		_update_vg_lock_count(resource, flags);
