@@ -66,6 +66,7 @@ struct segment_type {
 
 struct segtype_handler {
 	const char *(*name) (const struct lv_segment * seg);
+	const char *(*target_name) (const struct lv_segment * seg);
 	void (*display) (const struct lv_segment * seg);
 	int (*text_export) (const struct lv_segment * seg,
 			    struct formatter * f);
