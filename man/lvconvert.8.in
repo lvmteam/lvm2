@@ -135,8 +135,10 @@ Controls zeroing of the first KB of data in the snapshot.
 If the volume is read-only the snapshot will not be zeroed.
 .TP
 .I \-\-merge
-Merges a snapshot into its origin volume. If both the origin and snapshot volume
-are not open the merge will start immediately.  Otherwise, the merge will start
+Merges a snapshot into its origin volume.  To check if your kernel
+supports this feature, look for 'snapshot-merge' in the output
+of 'dmsetup targets'.  If both the origin and snapshot volume are not
+open the merge will start immediately.  Otherwise, the merge will start
 the first time either the origin or snapshot are activated and both are closed.
 Merging a snapshot into an origin that cannot be closed, for example a root
 filesystem, is deferred until the next time the origin volume is activated.
