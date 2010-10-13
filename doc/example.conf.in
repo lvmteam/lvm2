@@ -136,9 +136,10 @@ devices {
     # in recovery situations.
     ignore_suspended_devices = 0
 
-    # During each LVM operation any errors received from a device are counted.
-    # If this counter exceeds the number here, no further I/O is sent to the
-    # device.
+    # During each LVM operation errors received from each device are counted.
+    # If the counter of a particular device exceeds the limit set here, no
+    # further I/O is sent to that device for the remainder of the respective
+    # operation.
     disable_after_error_count = 0
 
     # Allow use of pvcreate --uuid without requiring --restorefile.
