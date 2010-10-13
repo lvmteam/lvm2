@@ -10,6 +10,7 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 test_description='Exercise fsadm filesystem resize'
+exit 200
 
 . ./test-utils.sh
 
