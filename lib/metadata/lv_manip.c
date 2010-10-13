@@ -3123,6 +3123,11 @@ int lv_create_single(struct volume_group *vg,
 		return 0;
 	}
 
+	if (lp->snapshot && (lp->extents * vg->extent_size < 2 * lp->chunk_size)) {
+		log_error("Unable to create a snapshot smaller than 2 chunks.");
+		return 0;
+	}
+
 	if (!seg_is_virtual(lp) &&
 	    vg->free_count < lp->extents) {
 		log_error("Insufficient free extents (%u) in volume group %s: "
