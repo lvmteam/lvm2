@@ -1,5 +1,6 @@
 Version 2.02.75 - 
 =====================================
+  Implement vgextend --restoremissing.
   Refactor and add 'get' functions for lv properties/fields.
   Update script for fsadm testing.
   Better support of noninteractive shell execution of fsadm.
