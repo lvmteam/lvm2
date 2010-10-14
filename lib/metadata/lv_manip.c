@@ -462,6 +462,15 @@ int replace_lv_with_error_segment(struct logical_volume *lv)
 	if (!lv_empty(lv))
 		return_0;
 
+	/*
+	 * Since we are replacing the whatever-was-there with
+	 * an error segment, we should also clear any flags
+	 * that suggest it is anything other than "error".
+	 */
+	lv->status &= ~MIRRORED;
+
+	/* FIXME: Should we bug if we find a log_lv attached? */
+
 	if (!lv_add_virtual_segment(lv, 0, len,
 				    get_segtype_from_string(lv->vg->cmd,
 							    "error")))
