@@ -27,6 +27,7 @@ abs_top_srcdir = @abs_top_srcdir@
 
 T ?= .
 S ?= @ # never match anything by default
+VERBOSE ?= 0
 RUN = $(shell find -regextype posix-egrep -name t-\*.sh -and -regex ".*($(T)).*" -and -not -regex ".*($(S)).*" | sort)
 
 # Shell quote;
@@ -49,17 +50,17 @@ endif
 
 all check: init.sh
 	@echo Testing with locking_type 1
-	./bin/harness $(RUN)
+	VERBOSE=$(VERBOSE) ./bin/harness $(RUN)
 	@echo Testing with locking_type 3
-	LVM_TEST_LOCKING=3 ./bin/harness $(RUN)
+	VERBOSE=$(VERBOSE) LVM_TEST_LOCKING=3 ./bin/harness $(RUN)
 
 check_cluster: init.sh
 	@echo Testing with locking_type 3
-	LVM_TEST_LOCKING=3 ./bin/harness $(RUN)
+	VERBOSE=$(VERBOSE) LVM_TEST_LOCKING=3 ./bin/harness $(RUN)
 
 check_local: init.sh
 	@echo Testing with locking_type 1
-	LVM_TEST_LOCKING=1 ./bin/harness $(RUN)
+	VERBOSE=$(VERBOSE) LVM_TEST_LOCKING=1 ./bin/harness $(RUN)
 
 bin/not: $(srcdir)/not.c .bin-dir-stamp
 	$(CC) -o bin/not $<

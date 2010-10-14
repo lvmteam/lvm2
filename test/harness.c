@@ -39,6 +39,7 @@ char *readbuf = NULL;
 int readbuf_sz = 0, readbuf_used = 0;
 
 int die = 0;
+int verbose = 0;
 
 #define PASSED 0
 #define SKIPPED 1
@@ -64,6 +65,8 @@ void drain() {
 	char buf[2048];
 	while (1) {
 		sz = read(fds[1], buf, 2048);
+		if (verbose)
+			write(1, buf, sz);
 		if (sz <= 0)
 			return;
 		if (readbuf_used + sz >= readbuf_sz) {
@@ -164,7 +167,10 @@ int main(int argc, char **argv) {
 	s.nwarned = s.nfailed = s.npassed = s.nskipped = 0;
 
 	char *config = getenv("LVM_TEST_CONFIG"),
-	     *config_debug;
+		*config_debug,
+		*be_verbose = getenv("VERBOSE");
+	if (be_verbose && atoi(be_verbose))
+		verbose = 1; // XXX
 	config = config ? config : "";
 	asprintf(&config_debug, "%s\n%s\n", config, "log { verbose=4 }");
 
