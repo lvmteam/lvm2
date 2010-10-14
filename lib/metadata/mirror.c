@@ -896,8 +896,28 @@ static int _remove_mirror_images(struct logical_volume *lv,
 	 */
 	if (detached_log_lv && lv_is_mirrored(detached_log_lv) &&
 	    (detached_log_lv->status & PARTIAL_LV)) {
+		struct lv_segment *seg = first_seg(detached_log_lv);
+
 		log_very_verbose("%s being removed due to failures",
 				 detached_log_lv->name);
+
+		/*
+		 * We are going to replace the mirror with an
+		 * error segment, but before we do, we must remember
+		 * all of the LVs that must be deleted later (i.e.
+		 * the sub-lv's)
+		 */
+		for (m = 0; m < seg->area_count; m++) {
+			seg_lv(seg, m)->status &= ~MIRROR_IMAGE;
+			lv_set_visible(seg_lv(seg, m));
+			if (!(lvl = dm_pool_alloc(lv->vg->cmd->mem,
+						  sizeof(*lvl)))) {
+				log_error("dm_pool_alloc failed");
+				return 0;
+			}
+			lvl->lv = seg_lv(seg, m);
+			dm_list_add(&tmp_orphan_lvs, &lvl->list);
+		}
 
 		if (!replace_lv_with_error_segment(detached_log_lv)) {
 			log_error("Failed error target substitution for %s",
@@ -905,9 +925,11 @@ static int _remove_mirror_images(struct logical_volume *lv,
 			return 0;
 		}
 
-		/*
-		 * Flush all I/Os held by mirrored log.
-		 */
+		if (!vg_write(detached_log_lv->vg)) {
+			log_error("intermediate VG write failed.");
+			return 0;
+		}
+
 		if (!suspend_lv(detached_log_lv->vg->cmd,
 				detached_log_lv)) {
 			log_error("Failed to suspend %s",
@@ -915,8 +937,14 @@ static int _remove_mirror_images(struct logical_volume *lv,
 			return 0;
  		}
 
-		if (!resume_lv(detached_log_lv->vg->cmd,
-			       detached_log_lv)) {
+		if (!vg_commit(detached_log_lv->vg)) {
+			if (!resume_lv(detached_log_lv->vg->cmd,
+				       detached_log_lv))
+				stack;
+			return_0;
+		}
+
+		if (!resume_lv(detached_log_lv->vg->cmd, detached_log_lv)) {
 			log_error("Failed to resume %s",
 				  detached_log_lv->name);
 			return_0;
