@@ -166,10 +166,11 @@ use \fBpvs -o +pe_start\fP .  It will be a multiple of the requested
 \fBdata_alignment_offset_detection\fP (if enabled) or the pvcreate
 commandline.
 .IP
-\fBdev_max_error_count\fP \(em Maximum number of error counts per device
-before disabling devices. This option prevents a broken device from
-being accessed repeatedly. If set to 0, no access control to devices is
-done.
+\fBdisable_after_error_count\fP \(em During each LVM operation errors received
+from each device are counted.  If the counter of a particular device exceeds
+the limit set here, no further I/O is sent to that device for the remainder of
+the respective operation. Setting the parameter to 0 disables the counters
+altogether.
 .TP
 \fBlog\fP \(em Default log settings
 .IP
