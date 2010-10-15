@@ -139,7 +139,7 @@ devices {
     # During each LVM operation errors received from each device are counted.
     # If the counter of a particular device exceeds the limit set here, no
     # further I/O is sent to that device for the remainder of the respective
-    # operation.
+    # operation. Setting the parameter to 0 disables the counters altogether.
     disable_after_error_count = 0
 
     # Allow use of pvcreate --uuid without requiring --restorefile.
