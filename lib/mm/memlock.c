@@ -121,10 +121,9 @@ static void _release_memory(void)
  * mlock/munlock memory areas from /proc/self/maps
  * format described in kernel/Documentation/filesystem/proc.txt
  */
-static int _maps_line(struct cmd_context *cmd, lvmlock_t lock,
+static int _maps_line(const struct config_node *cn, lvmlock_t lock,
 		      const char* line, size_t* mstats)
 {
-	const struct config_node *cn;
 	struct config_value *cv;
 	long from, to;
 	int pos, i;
@@ -153,7 +152,7 @@ static int _maps_line(struct cmd_context *cmd, lvmlock_t lock,
 		}
 
 	sz = to - from;
-	if (!(cn = find_config_tree_node(cmd, "activation/mlock_filter"))) {
+	if (!cn) {
 		/* If no blacklist configured, use an internal set */
 		for (i = 0; i < sizeof(_blacklist_maps) / sizeof(_blacklist_maps[0]); ++i)
 			if (strstr(line + pos, _blacklist_maps[i])) {
@@ -195,6 +194,7 @@ static int _maps_line(struct cmd_context *cmd, lvmlock_t lock,
 
 static int _memlock_maps(struct cmd_context *cmd, lvmlock_t lock, size_t *mstats)
 {
+	const struct config_node *cn;
 	char *line, *line_end;
 	size_t len;
 	ssize_t n;
@@ -250,10 +250,11 @@ static int _memlock_maps(struct cmd_context *cmd, lvmlock_t lock, size_t *mstats
 	}
 
 	line = _maps_buffer;
+	cn = find_config_tree_node(cmd, "activation/mlock_filter");
 
 	while ((line_end = strchr(line, '\n'))) {
 		*line_end = '\0'; /* remove \n */
-		if (!_maps_line(cmd, lock, line, mstats))
+		if (!_maps_line(cn, lock, line, mstats))
 			ret = 0;
 		line = line_end + 1;
 	}
