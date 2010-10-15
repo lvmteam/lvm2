@@ -192,6 +192,7 @@ struct dm_task *dm_task_create(int type)
 	dmt->event_nr = 0;
 	dmt->cookie_set = 0;
 	dmt->query_inactive_table = 0;
+	dmt->new_uuid = 0;
 
 	return dmt;
 }

@@ -62,6 +62,7 @@ struct dm_task {
 	int suppress_identical_reload;
 	uint64_t existing_table_size;
 	int cookie_set;
+	int new_uuid;
 
 	char *uuid;
 };
