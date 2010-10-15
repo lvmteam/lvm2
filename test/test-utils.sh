@@ -394,6 +394,8 @@ prepare_lvmconf() {
     udev_sync = 1
     udev_rules = 1
     polling_interval = 0
+    snapshot_autoextend_percent = 50
+    snapshot_autoextend_threshold = 50
   }
 EOF
 	# FIXME remove this workaround after mmap & truncating file problems solved

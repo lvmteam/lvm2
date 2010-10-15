@@ -428,6 +428,25 @@ activation {
     mirror_log_fault_policy = "allocate"
     mirror_image_fault_policy = "remove"
 
+    # 'snapshot_autoextend_threshold' and 'snapshot_autoextend_percent' define
+    # how to handle automatic snapshot extension. The former defines when the
+    # snapshot should be extended: when its space usage exceeds this many
+    # percent. The latter defines how much extra space should be allocated for
+    # the snapshot, in percent of its current size.
+    #
+    # For example, if you set snapshot_autoextend_threshold to 70 and
+    # snapshot_autoextend_percent to 20, whenever a snapshot exceeds 70% usage,
+    # it will be extended by another 20%. For a 1G snapshot, using up 700M will
+    # trigger a resize to 1.2G. When the usage exceeds 840M, the snapshot will
+    # be extended to 1.44G, and so on.
+    #
+    # Setting snapshot_autoextend_threshold to 100 disables automatic
+    # extensions. The minimum value is 50 (A setting below 50 will be treated
+    # as 50).
+
+    snapshot_autoextend_threshold = 100
+    snapshot_autoextend_percent = 20
+
     # While activating devices, I/O to devices being (re)configured is
     # suspended, and as a precaution against deadlocks, LVM2 needs to pin
     # any memory it is using so it is not paged out.  Groups of pages that

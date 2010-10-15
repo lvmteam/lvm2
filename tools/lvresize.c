@@ -186,6 +186,7 @@ static int _lvresize_params(struct cmd_context *cmd, int argc, char **argv,
 	const char *cmd_name;
 	char *st;
 	unsigned dev_dir_found = 0;
+	int use_policy = arg_count(cmd, use_policies_ARG);
 
 	lp->sign = SIGN_NONE;
 	lp->resize = LV_ANY;
@@ -196,34 +197,41 @@ static int _lvresize_params(struct cmd_context *cmd, int argc, char **argv,
 	if (!strcmp(cmd_name, "lvextend"))
 		lp->resize = LV_EXTEND;
 
-	/*
-	 * Allow omission of extents and size if the user has given us
-	 * one or more PVs.  Most likely, the intent was "resize this
-	 * LV the best you can with these PVs"
-	 */
-	if ((arg_count(cmd, extents_ARG) + arg_count(cmd, size_ARG) == 0) &&
-	    (argc >= 2)) {
-		lp->extents = 100;
-		lp->percent = PERCENT_PVS;
+	if (use_policy) {
+		/* do nothing; _lvresize will handle --use-policies itself */
+		lp->extents = 0;
 		lp->sign = SIGN_PLUS;
-	} else if ((arg_count(cmd, extents_ARG) +
-		    arg_count(cmd, size_ARG) != 1)) {
-		log_error("Please specify either size or extents but not "
-			  "both.");
-		return 0;
-	}
+		lp->percent = PERCENT_LV;
+	} else {
+		/*
+		 * Allow omission of extents and size if the user has given us
+		 * one or more PVs.  Most likely, the intent was "resize this
+		 * LV the best you can with these PVs"
+		 */
+		if ((arg_count(cmd, extents_ARG) + arg_count(cmd, size_ARG) == 0) &&
+		    (argc >= 2)) {
+			lp->extents = 100;
+			lp->percent = PERCENT_PVS;
+			lp->sign = SIGN_PLUS;
+		} else if ((arg_count(cmd, extents_ARG) +
+			    arg_count(cmd, size_ARG) != 1)) {
+			log_error("Please specify either size or extents but not "
+				  "both.");
+			return 0;
+		}
 
-	if (arg_count(cmd, extents_ARG)) {
-		lp->extents = arg_uint_value(cmd, extents_ARG, 0);
-		lp->sign = arg_sign_value(cmd, extents_ARG, SIGN_NONE);
-		lp->percent = arg_percent_value(cmd, extents_ARG, PERCENT_NONE);
-	}
+		if (arg_count(cmd, extents_ARG)) {
+			lp->extents = arg_uint_value(cmd, extents_ARG, 0);
+			lp->sign = arg_sign_value(cmd, extents_ARG, SIGN_NONE);
+			lp->percent = arg_percent_value(cmd, extents_ARG, PERCENT_NONE);
+		}
 
-	/* Size returned in kilobyte units; held in sectors */
-	if (arg_count(cmd, size_ARG)) {
-		lp->size = arg_uint64_value(cmd, size_ARG, UINT64_C(0));
-		lp->sign = arg_sign_value(cmd, size_ARG, SIGN_NONE);
-		lp->percent = PERCENT_NONE;
+		/* Size returned in kilobyte units; held in sectors */
+		if (arg_count(cmd, size_ARG)) {
+			lp->size = arg_uint64_value(cmd, size_ARG, 0);
+			lp->sign = arg_sign_value(cmd, size_ARG, SIGN_NONE);
+			lp->percent = PERCENT_NONE;
+		}
 	}
 
 	if (lp->resize == LV_EXTEND && lp->sign == SIGN_MINUS) {
@@ -269,6 +277,33 @@ static int _lvresize_params(struct cmd_context *cmd, int argc, char **argv,
 	return 1;
 }
 
+static int _adjust_policy_params(struct cmd_context *cmd,
+				 struct logical_volume *lv, struct lvresize_params *lp)
+{
+	float percent;
+	percent_range_t range;
+	int policy_threshold, policy_amount;
+
+	policy_threshold =
+		find_config_tree_int(cmd, "activation/snapshot_autoextend_threshold",
+				     DEFAULT_SNAPSHOT_AUTOEXTEND_THRESHOLD);
+	policy_amount =
+		find_config_tree_int(cmd, "activation/snapshot_autoextend_percent",
+				     DEFAULT_SNAPSHOT_AUTOEXTEND_PERCENT);
+
+	if (policy_threshold >= 100)
+		return 1; /* nothing to do */
+
+	if (!lv_snapshot_percent(lv, &percent, &range))
+		return_0;
+
+	if (range != PERCENT_0_TO_100 || percent <= policy_threshold)
+		return 1; /* nothing to do */
+
+	lp->extents = policy_amount;
+	return 1;
+}
+
 static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 		     struct lvresize_params *lp)
 {
@@ -287,6 +322,7 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 	uint32_t seg_extents;
 	uint32_t sz, str;
 	struct dm_list *pvh = NULL;
+	int use_policy = arg_count(cmd, use_policies_ARG);
 
 	/* does LV exist? */
 	if (!(lvl = find_lv_in_vg(vg, lp->lv_name))) {
@@ -318,6 +354,14 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 		return EINVALID_CMD_LINE;
 
 	lv = lvl->lv;
+
+	if (use_policy) {
+		if (!lv_is_cow(lv)) {
+			log_error("Can't use policy-based resize for non-snapshot volumes.");
+			return ECMD_FAILED;
+		}
+		_adjust_policy_params(cmd, lv, lp);
+	}
 
 	if (!lv_is_visible(lv)) {
 		log_error("Can't resize internal logical volume %s", lv->name);
@@ -404,6 +448,8 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 	}
 
 	if (lp->extents == lv->le_count) {
+		if (use_policy)
+			return ECMD_PROCESSED; /* Nothing to do. */
 		if (!lp->resizefs) {
 			log_error("New size (%d extents) matches existing size "
 				  "(%d extents)", lp->extents, lv->le_count);
