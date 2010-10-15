@@ -140,6 +140,7 @@ enum {
 	READAHEAD_ARG,
 	ROWS_ARG,
 	SEPARATOR_ARG,
+	SETUUID_ARG,
 	SHOWKEYS_ARG,
 	SORT_ARG,
 	TABLE_ARG,
@@ -665,7 +666,10 @@ static int _rename(int argc, char **argv, void *data __attribute__((unused)))
 	if (!_set_task_device(dmt, (argc == 3) ? argv[1] : NULL, 0))
 		goto out;
 
-	if (!dm_task_set_newname(dmt, argv[argc - 1]))
+	if (_switches[SETUUID_ARG]) {
+		if  (!dm_task_set_newuuid(dmt, argv[argc - 1]))
+			goto out;
+	} else if (!dm_task_set_newname(dmt, argv[argc - 1]))
 		goto out;
 
 	if (_switches[NOOPENCOUNT_ARG] && !dm_task_no_open_count(dmt))
@@ -2699,7 +2703,7 @@ static struct command _commands[] = {
 	{"load", "<device> [<table_file>]", 0, 2, _load},
 	{"clear", "<device>", 0, 1, _clear},
 	{"reload", "<device> [<table_file>]", 0, 2, _load},
-	{"rename", "<device> <new_name>", 1, 2, _rename},
+	{"rename", "<device> [--setuuid] <new_name_or_uuid>", 1, 2, _rename},
 	{"message", "<device> <sector> <message>", 2, -1, _message},
 	{"ls", "[--target <target_type>] [--exec <command>] [--tree [-o options]]", 0, 0, _ls},
 	{"info", "[<device>]", 0, 1, _info},
@@ -3106,6 +3110,7 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 		{"readahead", 1, &ind, READAHEAD_ARG},
 		{"rows", 0, &ind, ROWS_ARG},
 		{"separator", 1, &ind, SEPARATOR_ARG},
+		{"setuuid", 0, &ind, SETUUID_ARG},
 		{"showkeys", 0, &ind, SHOWKEYS_ARG},
 		{"sort", 1, &ind, SORT_ARG},
 		{"table", 1, &ind, TABLE_ARG},
@@ -3278,6 +3283,8 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 		}
 		if ((ind == ROWS_ARG))
 			_switches[ROWS_ARG]++;
+		if ((ind == SETUUID_ARG))
+			_switches[SETUUID_ARG]++;
 		if ((ind == SHOWKEYS_ARG))
 			_switches[SHOWKEYS_ARG]++;
 		if ((ind == TABLE_ARG)) {

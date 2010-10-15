@@ -826,6 +826,11 @@ static int _dm_task_run_v1(struct dm_task *dmt)
 	if (dmt->type == DM_DEVICE_TABLE)
 		dmi->flags |= DM_STATUS_TABLE_FLAG;
 
+	if (dmt->new_uuid) {
+		log_error("Changing UUID is not supported by kernel.");
+		goto bad;
+	}
+
 	log_debug("dm %s %s %s%s%s [%u]", _cmd_data_v1[dmt->type].name,
 		  dmi->name, dmi->uuid, dmt->newname ? " " : "",
 		  dmt->newname ? dmt->newname : "",
@@ -1185,6 +1190,22 @@ int dm_task_suppress_identical_reload(struct dm_task *dmt)
 	return 1;
 }
 
+int dm_task_set_newuuid(struct dm_task *dmt, const char *newuuid)
+{
+	if (strlen(newuuid) >= DM_UUID_LEN) {
+		log_error("Uuid \"%s\" too long", newuuid);
+		return 0;
+	}
+
+	if (!(dmt->newname = dm_strdup(newuuid))) {
+		log_error("dm_task_set_newuuid: strdup(%s) failed", newuuid);
+		return 0;
+	}
+	dmt->new_uuid = 1;
+
+	return 1;
+}
+
 int dm_task_set_newname(struct dm_task *dmt, const char *newname)
 {
 	if (strchr(newname, '/')) {
@@ -1201,6 +1222,7 @@ int dm_task_set_newname(struct dm_task *dmt, const char *newname)
 		log_error("dm_task_set_newname: strdup(%s) failed", newname);
 		return 0;
 	}
+	dmt->new_uuid = 0;
 
 	return 1;
 }
@@ -1399,7 +1421,7 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 	}
 
 	if (count && dmt->newname) {
-		log_error("targets and newname are incompatible");
+		log_error("targets and rename are incompatible");
 		return NULL;
 	}
 
@@ -1409,12 +1431,12 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 	}
 
 	if (dmt->newname && (dmt->sector || dmt->message)) {
-		log_error("message and newname are incompatible");
+		log_error("message and rename are incompatible");
 		return NULL;
 	}
 
 	if (dmt->newname && dmt->geometry) {
-		log_error("geometry and newname are incompatible");
+		log_error("geometry and rename are incompatible");
 		return NULL;
 	}
 
@@ -1513,6 +1535,14 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 			log_warn("WARNING: Inactive table query unsupported "
 				 "by kernel.  It will use live table.");
 		dmi->flags |= DM_QUERY_INACTIVE_TABLE_FLAG;
+	}
+	if (dmt->new_uuid) {
+		if (_dm_version_minor < 19) {
+			log_error("WARNING: Setting UUID unsupported by "
+				  "kernel.  Aborting operation.");
+			goto bad;
+		}
+		dmi->flags |= DM_NEW_UUID_FLAG;
 	}
 
 	dmi->target_count = count;
@@ -1910,9 +1940,10 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 		}
 	}
 
-	log_debug("dm %s %s %s%s%s %s%.0d%s%.0d%s"
+	log_debug("dm %s %s%s %s%s%s %s%.0d%s%.0d%s"
 		  "%s%c%c%s%s %.0" PRIu64 " %s [%u]",
 		  _cmd_data_v4[dmt->type].name,
+		  dmt->new_uuid ? "UUID " : "",
 		  dmi->name, dmi->uuid, dmt->newname ? " " : "",
 		  dmt->newname ? dmt->newname : "",
 		  dmt->major > 0 ? "(" : "",
@@ -2044,7 +2075,7 @@ repeat_ioctl:
 
 	case DM_DEVICE_RENAME:
 		/* FIXME Kernel needs to fill in dmi->name */
-		if (dmt->dev_name && !udev_only)
+		if (!dmt->new_uuid && dmt->dev_name && !udev_only)
 			rename_dev_node(dmt->dev_name, dmt->newname,
 					check_udev);
 		break;
