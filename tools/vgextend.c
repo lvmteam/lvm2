@@ -133,7 +133,8 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 	r = ECMD_PROCESSED;
 
 bad:
-	unlock_vg(cmd, VG_ORPHANS);
+	if (!arg_count(cmd, restoremissing_ARG))
+		unlock_vg(cmd, VG_ORPHANS);
 	unlock_and_release_vg(cmd, vg, vg_name);
 	return r;
 }
