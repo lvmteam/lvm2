@@ -58,9 +58,11 @@ static int _has_partition_table(struct device *dev)
 {
 	int ret = 0;
 	unsigned p;
-	uint16_t buf[SECTOR_SIZE/sizeof(uint16_t)];
-	uint16_t *part_magic;
-	struct partition *part;
+	struct {
+		uint8_t skip[PART_OFFSET];
+		struct partition part[4];
+		uint16_t magic;
+	} __attribute__((packed)) buf; /* sizeof() == SECTOR_SIZE */
 
 	if (!dev_read(dev, UINT64_C(0), sizeof(buf), &buf))
 		return_0;
@@ -68,17 +70,15 @@ static int _has_partition_table(struct device *dev)
 	/* FIXME Check for other types of partition table too */
 
 	/* Check for msdos partition table */
-	part_magic = buf + PART_MAGIC_OFFSET/sizeof(buf[0]);
-	if ((*part_magic == xlate16(PART_MAGIC))) {
-		part = (struct partition *) (buf + PART_OFFSET/sizeof(buf[0]));
-		for (p = 0; p < 4; p++, part++) {
+	if (buf.magic == xlate16(PART_MAGIC)) {
+		for (p = 0; p < 4; ++p) {
 			/* Table is invalid if boot indicator not 0 or 0x80 */
-			if ((part->boot_ind & 0x7f)) {
+			if (buf.part[p].boot_ind & 0x7f) {
 				ret = 0;
 				break;
 			}
 			/* Must have at least one non-empty partition */
-			if (part->nr_sects)
+			if (buf.part[p].nr_sects)
 				ret = 1;
 		}
 	}

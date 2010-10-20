@@ -1,5 +1,6 @@
 Version 2.02.75 - 
 =====================================
+  Fix strict-aliasing compile warning in partition table scanning.
   Add an option to automatically extend snapshots through dmeventd.
   Remove dependency on libm, floor() is replaced with integer algorithm.
   Fix hang when repairing a mirrored-log that had both devs fail.
