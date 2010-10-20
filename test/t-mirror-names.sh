@@ -120,7 +120,7 @@ prepare_lvs_
 
 #COMM "converting mirror names is ${lv1}_mimagetmp_2"
 lvcreate -l2 -m1 -n $lv1 $vg 
-lvconvert -m+1 -i+1000 -b $vg/$lv1
+lvconvert -m+1 -i+10 -b $vg/$lv1
 convlv=$(lv_convert_lv_ "$vg/$lv1") 
 test "$convlv" = "$lv1"_mimagetmp_2 
 lv_devices_ $vg/$lv1 "$convlv" "$lv1"_mimage_2 
