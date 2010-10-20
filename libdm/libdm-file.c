@@ -92,6 +92,7 @@ int dm_create_lockfile(const char *lockfile)
 	ssize_t write_out;
 	struct flock lock;
 	char buffer[50];
+	int retries = 0;
 
 	if((fd = open(lockfile, O_CREAT | O_WRONLY,
 		      (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH))) < 0) {
@@ -112,9 +113,15 @@ retry_fcntl:
 			break;
 		case EACCES:
 		case EAGAIN:
-			log_error("Cannot lock lockfile [%s], error was [%s]",
-				   lockfile, strerror(errno));
-			break;
+			if (retries == 20) {
+				log_error("Cannot lock lockfile [%s], error was [%s]",
+					  lockfile, strerror(errno));
+				break;
+			} else {
+				++ retries;
+				usleep(1000);
+				goto retry_fcntl;
+			}
 		default:
 			log_error("process is already running");
 		}

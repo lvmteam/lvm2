@@ -1,0 +1,3 @@
+init_fifos
+fini_fifos
+daemon_talk

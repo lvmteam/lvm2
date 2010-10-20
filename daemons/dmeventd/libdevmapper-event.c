@@ -276,7 +276,6 @@ static int _daemon_read(struct dm_event_fifos *fifos,
 		dm_free(msg->data);
 		msg->data = NULL;
 	}
-
 	return bytes == size;
 }
 
@@ -341,13 +340,13 @@ static int _daemon_write(struct dm_event_fifos *fifos,
 	return bytes == size;
 }
 
-static int _daemon_talk(struct dm_event_fifos *fifos,
-			struct dm_event_daemon_message *msg, int cmd,
-			const char *dso_name, const char *dev_name,
-			enum dm_event_mask evmask, uint32_t timeout)
+int daemon_talk(struct dm_event_fifos *fifos,
+		struct dm_event_daemon_message *msg, int cmd,
+		const char *dso_name, const char *dev_name,
+		enum dm_event_mask evmask, uint32_t timeout)
 {
-	const char *dso = dso_name ? dso_name : "";
-	const char *dev = dev_name ? dev_name : "";
+	const char *dso = dso_name ? dso_name : "-";
+	const char *dev = dev_name ? dev_name : "-";
 	const char *fmt = "%d:%d %s %s %u %" PRIu32;
 	int msg_size;
 	memset(msg, 0, sizeof(*msg));
@@ -452,6 +451,7 @@ static int _start_daemon(char *dmeventd_path, struct dm_event_fifos *fifos)
 
 	else if (!pid) {
 		execvp(args[0], args);
+		log_error("Unable to exec dmeventd: %s", strerror(errno));
 		_exit(EXIT_FAILURE);
 	} else {
 		if (waitpid(pid, &status, 0) < 0)
@@ -466,23 +466,14 @@ static int _start_daemon(char *dmeventd_path, struct dm_event_fifos *fifos)
 	return ret;
 }
 
-/* Initialize client. */
-static int _init_client(char *dmeventd_path, struct dm_event_fifos *fifos)
+int init_fifos(struct dm_event_fifos *fifos)
 {
 	/* FIXME? Is fifo the most suitable method? Why not share
 	   comms/daemon code with something else e.g. multipath? */
 
-	/* init fifos */
-	memset(fifos, 0, sizeof(*fifos));
-
 	/* FIXME Make these either configurable or depend directly on dmeventd_path */
 	fifos->client_path = DM_EVENT_FIFO_CLIENT;
 	fifos->server_path = DM_EVENT_FIFO_SERVER;
-
-	if (!_start_daemon(dmeventd_path, fifos)) {
-		stack;
-		return 0;
-	}
 
 	/* Open the fifo used to read from the daemon. */
 	if ((fifos->server = open(fifos->server_path, O_RDWR)) < 0) {
@@ -511,7 +502,23 @@ static int _init_client(char *dmeventd_path, struct dm_event_fifos *fifos)
 	return 1;
 }
 
-static void _dtr_client(struct dm_event_fifos *fifos)
+/* Initialize client. */
+static int _init_client(char *dmeventd_path, struct dm_event_fifos *fifos)
+{
+	/* init fifos */
+	memset(fifos, 0, sizeof(*fifos));
+
+	/* FIXME Make these either configurable or depend directly on dmeventd_path */
+	fifos->client_path = DM_EVENT_FIFO_CLIENT;
+	fifos->server_path = DM_EVENT_FIFO_SERVER;
+
+	if (!_start_daemon(dmeventd_path, fifos))
+		return_0;
+
+	return init_fifos(fifos);
+}
+
+void fini_fifos(struct dm_event_fifos *fifos)
 {
 	if (flock(fifos->server, LOCK_UN))
 		log_error("flock unlock %s", fifos->server_path);
@@ -576,16 +583,16 @@ static int _do_event(int cmd, char *dmeventd_path, struct dm_event_daemon_messag
 		return -ESRCH;
 	}
 
-	ret = _daemon_talk(&fifos, msg, DM_EVENT_CMD_HELLO, 0, 0, 0, 0);
+	ret = daemon_talk(&fifos, msg, DM_EVENT_CMD_HELLO, NULL, NULL, 0, 0);
 
 	dm_free(msg->data);
 	msg->data = 0;
 
 	if (!ret)
-		ret = _daemon_talk(&fifos, msg, cmd, dso_name, dev_name, evmask, timeout);
+		ret = daemon_talk(&fifos, msg, cmd, dso_name, dev_name, evmask, timeout);
 
 	/* what is the opposite of init? */
-	_dtr_client(&fifos);
+	fini_fifos(&fifos);
 
 	return ret;
 }
