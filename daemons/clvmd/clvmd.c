@@ -1520,6 +1520,7 @@ static __attribute__ ((noreturn)) void *pre_and_post_thread(void *arg)
 	int pipe_fd = client->bits.localsock.pipe;
 
 	DEBUGLOG("in sub thread: client = %p\n", client);
+	pthread_mutex_lock(&client->bits.localsock.mutex);
 
 	/* Don't start until the LVM thread is ready */
 	pthread_mutex_lock(&lvm_start_mutex);
@@ -1564,7 +1565,6 @@ static __attribute__ ((noreturn)) void *pre_and_post_thread(void *arg)
 		}
 
 		/* We may need to wait for the condition variable before running the post command */
-		pthread_mutex_lock(&client->bits.localsock.mutex);
 		DEBUGLOG("Waiting to do post command - state = %d\n",
 			 client->bits.localsock.state);
 
@@ -1573,7 +1573,6 @@ static __attribute__ ((noreturn)) void *pre_and_post_thread(void *arg)
 			pthread_cond_wait(&client->bits.localsock.cond,
 					  &client->bits.localsock.mutex);
 		}
-		pthread_mutex_unlock(&client->bits.localsock.mutex);
 
 		DEBUGLOG("Got post command condition...\n");
 
@@ -1594,16 +1593,15 @@ static __attribute__ ((noreturn)) void *pre_and_post_thread(void *arg)
 next_pre:
 		DEBUGLOG("Waiting for next pre command\n");
 
-		pthread_mutex_lock(&client->bits.localsock.mutex);
 		if (client->bits.localsock.state != PRE_COMMAND &&
 		    !client->bits.localsock.finished) {
 			pthread_cond_wait(&client->bits.localsock.cond,
 					  &client->bits.localsock.mutex);
 		}
-		pthread_mutex_unlock(&client->bits.localsock.mutex);
 
 		DEBUGLOG("Got pre command condition...\n");
 	}
+	pthread_mutex_unlock(&client->bits.localsock.mutex);
 	DEBUGLOG("Subthread finished\n");
 	pthread_exit((void *) 0);
 }

@@ -210,9 +210,12 @@ static int lock_vg(struct local_client *client)
 
     if (lock_mode == LCK_UNLOCK) {
 
+        DEBUGLOG("PRE: UNLOCK\n");
 	lkid = (int)(long)dm_hash_lookup(lock_hash, lockname);
-	if (lkid == 0)
+	if (lkid == 0) {
+            DEBUGLOG("lock not found in table\n");
 	    return EINVAL;
+	}
 
 	status = sync_unlock(lockname, lkid);
 	if (status)
@@ -221,6 +224,7 @@ static int lock_vg(struct local_client *client)
 	    dm_hash_remove(lock_hash, lockname);
     }
     else {
+        DEBUGLOG("PRE: LOCK\n");
 	/* Read locks need to be PR; other modes get passed through */
 	if (lock_mode == LCK_READ)
 	    lock_mode = LCK_PREAD;
