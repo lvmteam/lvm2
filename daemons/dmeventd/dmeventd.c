@@ -99,6 +99,8 @@ static pthread_mutex_t _global_mutex;
 
 int dmeventd_debug = 0;
 static int _foreground = 0;
+static int _restart = 0;
+static char **_initial_registrations = 0;
 
 /* Data kept about a DSO. */
 struct dso_data {
@@ -442,6 +444,61 @@ static struct thread_status *_lookup_thread_status(struct message_data *data)
 		return thread;
 
 	return NULL;
+}
+
+static int _get_status(struct message_data *message_data)
+{
+	struct dm_event_daemon_message *msg = message_data->msg;
+	struct thread_status *thread;
+	int i = 0, j = 0;
+	int ret = -1;
+	int count = dm_list_size(&_thread_registry);
+	int size = 0, current = 0;
+	char *buffers[count];
+	char *message;
+
+	dm_free(msg->data);
+
+	for (i = 0; i < count; ++i)
+		buffers[i] = NULL;
+
+	i = 0;
+	_lock_mutex();
+	dm_list_iterate_items(thread, &_thread_registry) {
+		if ((current = dm_asprintf(buffers + i, "0:%d %s %s %u %" PRIu32 ";",
+					   i, thread->dso_data->dso_name,
+					   thread->device.uuid, thread->events,
+					   thread->timeout)) < 0) {
+			_unlock_mutex();
+			goto out;
+		}
+		++ i;
+		size += current;
+	}
+	_unlock_mutex();
+
+	msg->size = size + strlen(message_data->id) + 1;
+	msg->data = dm_malloc(msg->size);
+	if (!msg->data)
+		goto out;
+	*msg->data = 0;
+
+	message = msg->data;
+	strcpy(message, message_data->id);
+	message += strlen(message_data->id);
+	*message = ' ';
+	message ++;
+	for (j = 0; j < i; ++j) {
+		strcpy(message, buffers[j]);
+		message += strlen(buffers[j]);
+	}
+
+	ret = 0;
+ out:
+	for (j = 0; j < i; ++j)
+		dm_free(buffers[j]);
+	return ret;
+
 }
 
 /* Cleanup at exit. */
@@ -1343,6 +1400,7 @@ static int _handle_request(struct dm_event_daemon_message *msg,
 		{ DM_EVENT_CMD_SET_TIMEOUT, _set_timeout},
 		{ DM_EVENT_CMD_GET_TIMEOUT, _get_timeout},
 		{ DM_EVENT_CMD_ACTIVE, _active},
+		{ DM_EVENT_CMD_GET_STATUS, _get_status},
 	}, *req;
 
 	for (req = requests; req < requests + sizeof(requests); req++)
@@ -1362,11 +1420,12 @@ static int _do_process_request(struct dm_event_daemon_message *msg)
 	/* Parse the message. */
 	memset(&message_data, 0, sizeof(message_data));
 	message_data.msg = msg;
-	if (msg->cmd == DM_EVENT_CMD_HELLO)  {
+	if (msg->cmd == DM_EVENT_CMD_HELLO || msg->cmd == DM_EVENT_CMD_DIE)  {
 		ret = 0;
 		answer = msg->data;
 		if (answer) {
-			msg->size = dm_asprintf(&(msg->data), "%s HELLO", answer);
+			msg->size = dm_asprintf(&(msg->data), "%s %s", answer,
+						msg->cmd == DM_EVENT_CMD_DIE ? "DYING" : "HELLO");
 			dm_free(answer);
 		} else {
 			msg->size = 0;
@@ -1390,6 +1449,7 @@ static int _do_process_request(struct dm_event_daemon_message *msg)
 /* Only one caller at a time. */
 static void _process_request(struct dm_event_fifos *fifos)
 {
+	int die = 0;
 	struct dm_event_daemon_message msg;
 
 	memset(&msg, 0, sizeof(msg));
@@ -1401,6 +1461,9 @@ static void _process_request(struct dm_event_fifos *fifos)
 	if (!_client_read(fifos, &msg))
 		return;
 
+	if (msg.cmd == DM_EVENT_CMD_DIE)
+		die = 1;
+
 	/* _do_process_request fills in msg (if memory allows for
 	   data, otherwise just cmd and size = 0) */
 	_do_process_request(&msg);
@@ -1408,7 +1471,24 @@ static void _process_request(struct dm_event_fifos *fifos)
 	if (!_client_write(fifos, &msg))
 		stack;
 
+	if (die) raise(9);
+
 	dm_free(msg.data);
+}
+
+static void _process_initial_registrations()
+{
+	int i = 0;
+	char *reg;
+	struct dm_event_daemon_message msg = { 0, 0, NULL };
+
+	while ((reg = _initial_registrations[i])) {
+		msg.cmd = DM_EVENT_CMD_REGISTER_FOR_EVENT;
+		msg.size = strlen(reg);
+		msg.data = reg;
+		_do_process_request(&msg);
+		++ i;
+	}
 }
 
 static void _cleanup_unused_threads(void)
@@ -1616,6 +1696,56 @@ static void _daemonize(void)
 	setsid();
 }
 
+static void restart()
+{
+	struct dm_event_fifos fifos;
+	struct dm_event_daemon_message msg = { 0, 0, NULL };
+	int i, count = 0;
+	char *message;
+	int length;
+
+	/* Get the list of registrations from the running daemon. */
+
+	if (!init_fifos(&fifos)) {
+		fprintf(stderr, "Could not initiate communication with existing dmeventd.\n");
+		exit(EXIT_FAILURE);
+	}
+
+	if (daemon_talk(&fifos, &msg, DM_EVENT_CMD_HELLO, NULL, NULL, 0, 0)) {
+		fprintf(stderr, "Could not communicate with existing dmeventd.\n");
+		exit(EXIT_FAILURE);
+	}
+
+	if (daemon_talk(&fifos, &msg, DM_EVENT_CMD_GET_STATUS, "-", "-", 0, 0)) {
+		exit(EXIT_FAILURE);
+	}
+
+	message = msg.data;
+	message = strchr(message, ' ');
+	++ message;
+	length = strlen(msg.data);
+	for (i = 0; i < length; ++i) {
+		if (msg.data[i] == ';') {
+			msg.data[i] = 0;
+			++count;
+		}
+	}
+
+	_initial_registrations = dm_malloc(sizeof(char*) * (count + 1));
+	for (i = 0; i < count; ++i) {
+		_initial_registrations[i] = dm_strdup(message);
+		message += strlen(message) + 1;
+	}
+	_initial_registrations[count] = 0;
+
+	if (daemon_talk(&fifos, &msg, DM_EVENT_CMD_DIE, "-", "-", 0, 0)) {
+		fprintf(stderr, "Old dmeventd refused to die.\n");
+		exit(EXIT_FAILURE);
+	}
+
+	fini_fifos(&fifos);
+}
+
 static void usage(char *prog, FILE *file)
 {
 	fprintf(file, "Usage:\n");
@@ -1638,7 +1768,7 @@ int main(int argc, char *argv[])
 	opterr = 0;
 	optind = 0;
 
-	while ((opt = getopt(argc, argv, "?fhVd")) != EOF) {
+	while ((opt = getopt(argc, argv, "?fhVdR")) != EOF) {
 		switch (opt) {
 		case 'h':
 			usage(argv[0], stdout);
@@ -1646,6 +1776,9 @@ int main(int argc, char *argv[])
 		case '?':
 			usage(argv[0], stderr);
 			exit(0);
+		case 'R':
+			_restart++;
+			break;
 		case 'f':
 			_foreground++;
 			break;
@@ -1666,6 +1799,9 @@ int main(int argc, char *argv[])
 	 */
 	if (setenv("LANG", "C", 1))
 		perror("Cannot set LANG to C");
+
+	if (_restart)
+		restart();
 
 	if (!_foreground)
 		_daemonize();
@@ -1705,6 +1841,9 @@ int main(int argc, char *argv[])
 	if (!_foreground)
 		kill(getppid(), SIGTERM);
 	syslog(LOG_NOTICE, "dmeventd ready for processing.");
+
+	if (_initial_registrations)
+		_process_initial_registrations();
 
 	while (!_exit_now) {
 		_process_request(&fifos);

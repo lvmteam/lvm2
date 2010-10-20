@@ -35,6 +35,8 @@ enum dm_event_command {
 	DM_EVENT_CMD_SET_TIMEOUT,
 	DM_EVENT_CMD_GET_TIMEOUT,
 	DM_EVENT_CMD_HELLO,
+	DM_EVENT_CMD_DIE,
+	DM_EVENT_CMD_GET_STATUS,
 };
 
 /* Message passed between client and daemon. */
@@ -62,5 +64,13 @@ struct dm_event_fifos {
 /*      EXIT_OPEN_PID_FAILURE    5 -- obsoleted */
 #define EXIT_FIFO_FAILURE        6
 #define EXIT_CHDIR_FAILURE       7
+
+/* Implemented in libdevmapper-event.c, but not part of public API. */
+int daemon_talk(struct dm_event_fifos *fifos,
+		struct dm_event_daemon_message *msg, int cmd,
+		const char *dso_name, const char *dev_name,
+		enum dm_event_mask evmask, uint32_t timeout);
+int init_fifos(struct dm_event_fifos *fifos);
+void fini_fifos(struct dm_event_fifos *fifos);
 
 #endif /* __DMEVENTD_DOT_H__ */
