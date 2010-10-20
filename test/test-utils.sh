@@ -370,6 +370,7 @@ prepare_lvmconf() {
     cache_dir = "$TESTDIR/etc"
     sysfs_scan = 0
     default_data_alignment = 1
+    $LVM_TEST_CONFIG_DEVICES
   }
   log {
     syslog = 0
