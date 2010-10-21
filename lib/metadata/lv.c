@@ -20,6 +20,15 @@
 #include "segtype.h"
 #include "str_list.h"
 
+uint32_t lv_kernel_read_ahead(const struct logical_volume *lv)
+{
+	struct lvinfo info;
+
+	if (!lv_info(lv->vg->cmd, lv, 0, &info, 0, 1) || !info.exists)
+		return UINT32_MAX;
+	return info.read_ahead;
+}
+
 char *lv_origin_dup(struct dm_pool *mem, const struct logical_volume *lv)
 {
 	if (lv_is_cow(lv))

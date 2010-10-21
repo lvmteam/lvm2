@@ -469,12 +469,12 @@ static int _lvkreadahead_disp(struct dm_report *rh, struct dm_pool *mem,
 			      void *private)
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
-	struct lvinfo info;
+	uint32_t read_ahead;
 
-	if (!lv_info(lv->vg->cmd, lv, 0, &info, 0, 1) || !info.exists)
+	if ((read_ahead = lv_kernel_read_ahead(lv)) == UINT32_MAX)
 		return dm_report_field_int32(rh, field, &_minusone32);
 
-	return _size32_disp(rh, mem, field, &info.read_ahead, private);
+	return _size32_disp(rh, mem, field, &read_ahead, private);
 }
 
 static int _vgsize_disp(struct dm_report *rh, struct dm_pool *mem,
