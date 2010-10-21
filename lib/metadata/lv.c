@@ -20,6 +20,13 @@
 #include "segtype.h"
 #include "str_list.h"
 
+char *lv_origin_dup(struct dm_pool *mem, const struct logical_volume *lv)
+{
+	if (lv_is_cow(lv))
+		return lv_name_dup(mem, origin_from_cow(lv));
+	return NULL;
+}
+
 char *lv_name_dup(struct dm_pool *mem, const struct logical_volume *lv)
 {
 	return dm_pool_strdup(mem, lv->name);
