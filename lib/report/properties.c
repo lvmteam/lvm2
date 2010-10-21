@@ -109,13 +109,13 @@ GET_LV_NUM_PROPERTY_FN(lv_major, lv->major)
 #define _lv_major_set _not_implemented_set
 GET_LV_NUM_PROPERTY_FN(lv_minor, lv->minor)
 #define _lv_minor_set _not_implemented_set
-#define _lv_read_ahead_get _not_implemented_get
+GET_LV_NUM_PROPERTY_FN(lv_read_ahead, lv->read_ahead * SECTOR_SIZE)
 #define _lv_read_ahead_set _not_implemented_set
 GET_LV_NUM_PROPERTY_FN(lv_kernel_major, lv_kernel_major(lv))
 #define _lv_kernel_major_set _not_implemented_set
 GET_LV_NUM_PROPERTY_FN(lv_kernel_minor, lv_kernel_minor(lv))
 #define _lv_kernel_minor_set _not_implemented_set
-#define _lv_kernel_read_ahead_get _not_implemented_get
+GET_LV_NUM_PROPERTY_FN(lv_kernel_read_ahead, lv_kernel_read_ahead(lv) * SECTOR_SIZE)
 #define _lv_kernel_read_ahead_set _not_implemented_set
 GET_LV_NUM_PROPERTY_FN(lv_size, lv->size * SECTOR_SIZE)
 #define _lv_size_set _not_implemented_set
