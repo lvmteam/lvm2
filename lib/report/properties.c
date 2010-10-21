@@ -25,7 +25,7 @@ static int _ ## NAME ## _get (const void *obj, struct lvm_property_type *prop) \
 { \
 	const struct TYPE *VAR = (const struct TYPE *)obj; \
 \
-	prop->v.n_val = VALUE; \
+	prop->value.integer = VALUE; \
 	return 1; \
 }
 #define GET_VG_NUM_PROPERTY_FN(NAME, VALUE) \
@@ -40,7 +40,7 @@ static int _ ## NAME ## _get (const void *obj, struct lvm_property_type *prop) \
 { \
 	const struct TYPE *VAR = (const struct TYPE *)obj; \
 \
-	prop->v.s_val = (char *)VALUE;	\
+	prop->value.string = (char *)VALUE;	\
 	return 1; \
 }
 #define GET_VG_STR_PROPERTY_FN(NAME, VALUE) \
@@ -226,12 +226,12 @@ GET_VG_NUM_PROPERTY_FN(vg_mda_copies, (vg_mda_copies(vg)))
 
 #define STR DM_REPORT_FIELD_TYPE_STRING
 #define NUM DM_REPORT_FIELD_TYPE_NUMBER
-#define FIELD(type, strct, sorttype, head, field, width, fn, id, desc, writeable) \
-	{ type, #id, writeable, sorttype == STR, { .n_val = 0 }, _ ## id ## _get, _ ## id ## _set },
+#define FIELD(type, strct, sorttype, head, field, width, fn, id, desc, settable) \
+	{ type, #id, settable, sorttype == STR, { .integer = 0 }, _ ## id ## _get, _ ## id ## _set },
 
 struct lvm_property_type _properties[] = {
 #include "columns.h"
-	{ 0, "", 0, 0, { .n_val = 0 }, _not_implemented_get, _not_implemented_set },
+	{ 0, "", 0, 0, { .integer = 0 }, _not_implemented_get, _not_implemented_set },
 };
 
 #undef STR

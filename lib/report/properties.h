@@ -19,17 +19,15 @@
 #include "metadata.h"
 #include "report.h"
 
-#define LVM_PROPERTY_NAME_LEN DM_REPORT_FIELD_TYPE_ID_LEN
-
 struct lvm_property_type {
 	report_type_t type;
-	char id[LVM_PROPERTY_NAME_LEN];
-	unsigned is_writeable;
-	unsigned is_string;
+	const char *id;
+	unsigned is_settable:1;
+	unsigned is_string:1;
 	union {
-		char *s_val;
-		uint64_t n_val;
-	} v;
+		char *string;
+		uint64_t integer;
+	} value;
 	int (*get) (const void *obj, struct lvm_property_type *prop);
 	int (*set) (void *obj, struct lvm_property_type *prop);
 };
