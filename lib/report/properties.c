@@ -267,6 +267,12 @@ static int _get_property(const void *obj, struct lvm_property_type *prop,
 	return 1;
 }
 
+int lv_get_property(const struct logical_volume *lv,
+		    struct lvm_property_type *prop)
+{
+	return _get_property(lv, prop, LVS);
+}
+
 int vg_get_property(const struct volume_group *vg,
 		    struct lvm_property_type *prop)
 {
