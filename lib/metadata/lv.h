@@ -60,5 +60,6 @@ int lv_kernel_major(const struct logical_volume *lv);
 int lv_kernel_minor(const struct logical_volume *lv);
 char *lv_mirror_log_dup(struct dm_pool *mem, const struct logical_volume *lv);
 char *lv_modules_dup(struct dm_pool *mem, const struct logical_volume *lv);
+char *lv_name_dup(struct dm_pool *mem, const struct logical_volume *lv);
 
 #endif
