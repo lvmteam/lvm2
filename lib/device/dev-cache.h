@@ -42,6 +42,7 @@ int dev_cache_has_scanned(void);
 
 int dev_cache_add_dir(const char *path);
 int dev_cache_add_loopfile(const char *path);
+__attribute__((nonnull(1)))
 struct device *dev_cache_get(const char *name, struct dev_filter *f);
 
 // TODO

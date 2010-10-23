@@ -28,6 +28,7 @@ struct ttree {
 	struct node *root;
 };
 
+__attribute__((nonnull(1)))
 static struct node **_lookup_single(struct node **c, unsigned int k)
 {
 	while (*c) {
