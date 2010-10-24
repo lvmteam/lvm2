@@ -1,5 +1,6 @@
 Version 2.02.75 - 
 =====================================
+  Never scan a device which is using the error target.
   Fix strict-aliasing compile warning in partition table scanning.
   Add an option to automatically extend snapshots through dmeventd.
   Remove dependency on libm, floor() is replaced with integer algorithm.
