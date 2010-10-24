@@ -190,6 +190,12 @@ int device_is_usable(struct device *dev)
 				  dev_name(dev), name);
 			goto out;
 		}
+
+		if (target_type && !strcmp(target_type, "error")) {
+			log_debug("%s: Error device %s not usable.",
+				  dev_name(dev), name);
+			goto out;
+		}
 	} while (next);
 
 	/* FIXME Also check dependencies? */
