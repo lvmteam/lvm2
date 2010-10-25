@@ -955,7 +955,7 @@ int dm_snprintf(char *buf, size_t bufsize, const char *format, ...)
 /*
  * Returns pointer to the last component of the path.
  */
-char *dm_basename(const char *path);
+const char *dm_basename(const char *path);
 
 /**************************
  * file/stream manipulation

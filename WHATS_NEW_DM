@@ -1,5 +1,6 @@
 Version 1.02.56 - 
 =====================================
+  Fix API for dm_basename() and return const pointer for const input pointer.
   Add --setuuid to dmsetup rename.
   Add dm_task_set_newuuid to set uuid of mapped device post-creation.
 

@@ -123,11 +123,11 @@ int dm_snprintf(char *buf, size_t bufsize, const char *format, ...)
 	return n;
 }
 
-char *dm_basename(const char *path)
+const char *dm_basename(const char *path)
 {
-	char *p = strrchr(path, '/');
+	const char *p = strrchr(path, '/');
 
-	return p ? p + 1 : (char *) path;
+	return p ? p + 1 : path;
 }
 
 int dm_asprintf(char **result, const char *format, ...)
