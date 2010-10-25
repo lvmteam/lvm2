@@ -179,6 +179,10 @@ static int _update_extents_params(struct volume_group *vg,
 					  lp->origin);
 				return 0;
 			}
+			if (!origin) {
+				log_error(INTERNAL_ERROR "Couldn't find origin volume.");
+				return 0;
+			}
 			lp->extents = lp->extents * origin->le_count / 100;
 			break;
 		case PERCENT_NONE:
