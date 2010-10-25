@@ -12,8 +12,8 @@
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#ifndef _PV_H
-#define _PV_H
+#ifndef _LVM_PV_H
+#define _LVM_PV_H
 
 struct id;
 struct device;
@@ -80,4 +80,4 @@ int is_orphan(const struct physical_volume *pv);
 int is_missing_pv(const struct physical_volume *pv);
 int is_pv(const struct physical_volume *pv);
 
-#endif
+#endif /* _LVM_PV_H */

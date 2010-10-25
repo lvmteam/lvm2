@@ -12,8 +12,8 @@
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#ifndef _VG_H
-#define _VG_H
+#ifndef _LVM_VG_H
+#define _LVM_VG_H
 
 struct cmd_context;
 struct dm_pool;
@@ -131,4 +131,4 @@ char *vg_attr_dup(struct dm_pool *mem, const struct volume_group *vg);
 char *vg_uuid_dup(const struct volume_group *vg);
 char *vg_tags_dup(const struct volume_group *vg);
 
-#endif
+#endif /* _LVM_VG_H */
