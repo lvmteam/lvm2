@@ -139,7 +139,7 @@ typedef struct physical_volume *pv_t;
 /**
  * Logical Volume object list.
  *
- * Lists of these structures are returned by lvm_vg_list_pvs().
+ * Lists of these structures are returned by lvm_vg_list_lvs().
  */
 typedef struct lvm_lv_list {
 	struct dm_list list;
@@ -167,6 +167,30 @@ typedef struct lvm_str_list {
 	struct dm_list list;
 	const char *str;
 } lvm_str_list_t;
+
+/**
+ * Property Value
+ *
+ * This structure defines a single LVM property value for an LVM object.
+ * The structures are returned by functions such as
+ * lvm_vg_get_property().
+ *
+ * is_settable: indicates whether a 'set' function exists for this property
+ * is_string: indicates whether this property is a string (1) or not (0)
+ * is_integer: indicates whether this property is an integer (1) or not (0)
+ * is_valid: indicates whether 'value' is valid (1) or not (0)
+ */
+typedef struct lvm_property_value {
+	uint32_t is_settable:1;
+	uint32_t is_string:1;
+	uint32_t is_integer:1;
+	uint32_t is_valid:1;
+	uint32_t padding:28;
+	union {
+		const char *string;
+		uint64_t integer;
+	} value;
+} lvm_property_value_t;
 
 /*************************** generic lvm handling ***************************/
 /**
@@ -847,6 +871,45 @@ uint64_t lvm_vg_get_max_lv(const vg_t vg);
  * If there is a problem obtaining the list of tags, NULL is returned.
  */
 struct dm_list *lvm_vg_get_tags(const vg_t vg);
+
+/**
+ * Get the value of a VG property
+ *
+ * \memberof vg_t
+ *
+ * \param   vg
+ * VG handle obtained from lvm_vg_create() or lvm_vg_open().
+ *
+ * \param   name
+ * Name of property to query.  See vgs man page for full list of properties
+ * that may be queried.
+ *
+ * The memory allocated for a string property value is tied to the vg_t
+ * handle and will be released when lvm_vg_close() is called.
+ *
+ * Example:
+ *      lvm_property_value v;
+ *      char *prop_name = "vg_mda_count";
+ *
+ *      v = lvm_vg_get_property(vg, prop_name);
+ *      if (!v.is_valid) {
+ *           printf("Invalid property name or unable to query"
+ *                  "'%s', errno = %d.\n", prop_name, lvm_errno(libh));
+ *           return;
+ *      }
+ *      if (v.is_string)
+ *           printf(", value = %s\n", v.value.string);
+ *	if (v.is_integer)
+ *           printf(", value = %"PRIu64"\n", v.value.integer);
+ *
+ *
+ * \return
+ * lvm_property_value structure that will contain the current
+ * value of the property.  Caller should check 'is_valid' flag before using
+ * the value.  If 'is_valid' is not set, caller should check lvm_errno()
+ * for specific error.
+ */
+struct lvm_property_value lvm_vg_get_property(const vg_t vg, const char *name);
 
 /************************** logical volume handling *************************/
 

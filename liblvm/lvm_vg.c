@@ -335,6 +335,12 @@ const char *lvm_vg_get_name(const vg_t vg)
 	return dm_pool_strndup(vg->vgmem, (const char *)vg->name, NAME_LEN+1);
 }
 
+
+struct lvm_property_value lvm_vg_get_property(const vg_t vg, const char *name)
+{
+	return get_property(NULL, vg, NULL, name);
+}
+
 struct dm_list *lvm_list_vg_names(lvm_t libh)
 {
 	return get_vgnames((struct cmd_context *)libh, 0);
