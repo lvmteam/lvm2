@@ -1,5 +1,6 @@
-Version 2.02.75 - 
-=====================================
+Version 2.02.75 - 25th October 2010
+===================================
+  Annotate more variables and parameters as const.
   Fix missing variable initialization in cluster_send() function from cmirrord.
   Fix pointer for VG name in _pv_resize_single error code path.
   Fix warning for changed alignment requirements for dmeventd read/write func.
@@ -7,37 +8,40 @@ Version 2.02.75 -
   Don't take write lock in vgchange --refresh, --poll or --monitor.
   Skip dm devices in scan if they contain only error targets or are empty.
   Fix strict-aliasing compile warning in partition table scanning.
-  Add an option to automatically extend snapshots through dmeventd.
-  Remove dependency on libm, floor() is replaced with integer algorithm.
+  Fix pthread mutex usage deadlock in clvmd.
+  Automatically extend snapshots with dmeventd according to policy in lvm.conf.
+  Add activation/snapshot_autoextend_threshold/percent to lvm.conf.
+  Fix liblvm2cmd link order to support --as-needed.
+  Remove dependency on libm by replacing floor() by an integer-based algorithm.
   Fix hang when repairing a mirrored-log that had both devs fail.
   Convey need for snapshot-merge target in lvconvert error message and man page.
-  Add "devices/disable_after_error_count" to lvm.conf.
+  Add devices/disable_after_error_count config to limit access to failing devs.
   Give correct error message when creating a too-small snapshot.
-  Implement vgextend --restoremissing.
+  Implement vgextend --restoremissing to reinstate missing devs that return.
+  Make lvconvert respect --yes and --force when converting an inactive log.
   Refactor and add 'get' functions for lv properties/fields.
   Update script for fsadm testing.
   Better support of noninteractive shell execution of fsadm.
   Fix usage of --yes flag for ReiserFS resize in fsadm.
   Fix detection of mounted filesystems for fsadm when udev is used.
-  Fix assignment of default value to LVM variable is fsadm.
+  Fix assignment of default value to LVM variable in fsadm.
   Fix support for --yes flag for fsadm.
-  Do not execute lvresize with --dry-run option for fsadm.
+  Do not execute lvresize from fsadm --dry-run.
   Fix fsadm return error code from user's break action.
   Allow CC to be overridden at build time (for 'scan-build make').
   Rename 'flags' to 'status' in struct metadata_area.
   Avoid segfault by limiting partial mode for lvm1 metadata. (2.02.74)
-  Add dm_zalloc and use it and dm_pool_zalloc throughout.
+  Use dm_zalloc and dm_pool_zalloc throughout.
   Add pv_get_property and create generic internal _get_property function.
   Add 'get' functions for pv and vg properties/fields.
   Make generic GET_*_PROPERTY_FN macros with secondary macro for vg, pv & lv.
   Add tags_format_and_copy() common function and call from _tags_disp.
   Add id_format_and_copy() common function and call from _uuid_disp.
-  Simplify logic to create '{pv|vg|lv}_attr' strings.
   Refactor report.c '*_disp' functions to call supporting functions.
-  Refactor lib/metadata/metadata.[ch] into {pv|vg|lv}.[ch].
-  Fix memory leak of vg_read while using live copies of metadata in directories.
+  Move parts of metadata*.[ch] into new {pv|vg|lv}.[ch] files.
+  Fix vg_read memory leak with directory-based metadata.
   Fix memory leak of config_tree in reinitialization code path.
-  Swap pool destruction order in dmeventd_lvm2_exit() to fix leak report.
+  Fix pool destruction order in dmeventd_lvm2_exit() to avoid leak debug mesg.
   Read whole /proc/self/maps file before working with maps entries.
   Speed up unquoting of quoted double quotes and backslashes.
   Speed up CRC32 calculations by using a larger lookup table.

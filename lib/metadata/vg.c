@@ -15,6 +15,7 @@
 
 #include "lib.h"
 #include "metadata.h"
+#include "display.h"
 #include "activate.h"
 
 char *vg_fmt_dup(const struct volume_group *vg)

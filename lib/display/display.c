@@ -27,13 +27,14 @@ typedef enum { SIZE_LONG = 0, SIZE_SHORT = 1, SIZE_UNIT = 2 } size_len_t;
 static const struct {
 	alloc_policy_t alloc;
 	const char str[12]; /* must be changed when size extends 11 chars */
+	const char repchar;
 } _policies[] = {
 	{
-	ALLOC_CONTIGUOUS, "contiguous"}, {
-	ALLOC_CLING, "cling"}, {
-	ALLOC_NORMAL, "normal"}, {
-	ALLOC_ANYWHERE, "anywhere"}, {
-	ALLOC_INHERIT, "inherit"}
+	ALLOC_CONTIGUOUS, "contiguous", 'c'}, {
+	ALLOC_CLING, "cling", 'l'}, {
+	ALLOC_NORMAL, "normal", 'n'}, {
+	ALLOC_ANYWHERE, "anywhere", 'a'}, {
+	ALLOC_INHERIT, "inherit", 'i'}
 };
 
 static const int _num_policies = sizeof(_policies) / sizeof(*_policies);
@@ -118,6 +119,17 @@ uint64_t units_to_bytes(const char *units, char *unit_type)
 		return 0;
 
 	return v;
+}
+
+const char alloc_policy_char(alloc_policy_t alloc)
+{
+	int i;
+
+	for (i = 0; i < _num_policies; i++)
+		if (_policies[i].alloc == alloc)
+			return _policies[i].repchar;
+
+	return '-';
 }
 
 const char *get_alloc_string(alloc_policy_t alloc)
