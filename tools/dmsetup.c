@@ -2399,7 +2399,7 @@ static int _dm_deps_disp(struct dm_report *rh, struct dm_pool *mem,
 			 struct dm_report_field *field, const void *data,
 			 void *private)
 {
-	struct dm_deps *deps = (struct dm_deps *) data;
+	const struct dm_deps *deps = data;
 	int i;
 	char buf[DM_MAX_TYPE_NAME], *repstr;
 
