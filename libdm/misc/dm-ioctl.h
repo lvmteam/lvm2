@@ -328,6 +328,6 @@ enum {
  * If set, rename changes the uuid not the name.  Only permitted
  * if no uuid was previously supplied: an existing uuid cannot be changed.
  */
-#define DM_NEW_UUID_FLAG        (1 << 14) /* In */
+#define DM_UUID_FLAG			(1 << 14) /* In */
 
 #endif				/* _LINUX_DM_IOCTL_H */
