@@ -73,6 +73,7 @@ struct cmd_context {
 	unsigned handles_unknown_segments:1;
 	unsigned partial_activation:1;
 	unsigned si_unit_consistency:1;
+	unsigned metadata_read_only:1;
 
 	struct dev_filter *filter;
 	int dump_filter;	/* Dump filter when exiting? */

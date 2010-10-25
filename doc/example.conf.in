@@ -334,6 +334,13 @@ global {
     # Treat any internal errors as fatal errors, aborting the process that
     # encountered the internal error. Please only enable for debugging.
     abort_on_internal_errors = 0
+
+    # If set to 1, no operations that change on-disk metadata will be permitted.
+    # Additionally, read-only commands that encounter metadata in need of repair
+    # will still be allowed to proceed exactly as if the repair had been 
+    # performed (except for the unchanged vg_seqno).
+    # Inappropriate use could mess up your system, so seek advice first!
+    metadata_read_only = 0
 }
 
 activation {

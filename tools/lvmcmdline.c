@@ -1073,6 +1073,13 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	if ((ret = _process_common_commands(cmd)))
 		goto_out;
 
+	if (cmd->metadata_read_only &&
+	    !(cmd->command->flags & PERMITTED_READ_ONLY)) {
+		log_error("%s: Command not permitted while global/metadata_read_only "
+			  "is set.", cmd->cmd_line);
+		goto out;
+	}
+
 	if (arg_count(cmd, nolocking_ARG))
 		locking_type = 0;
 	else

@@ -314,6 +314,9 @@ static int _process_config(struct cmd_context *cmd)
 			if ((cv->type != CFG_STRING) || !cv->v.str[0]) 
 				log_error("Ignoring invalid activation/mlock_filter entry in config file");
 
+	cmd->metadata_read_only = find_config_tree_int(cmd, "global/metadata_read_only",
+						       DEFAULT_METADATA_READ_ONLY);
+
 	return 1;
 }
 
