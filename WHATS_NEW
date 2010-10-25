@@ -1,6 +1,7 @@
 Version 2.02.75 - 
 =====================================
-  Skip dm devices in scan if they contain only error targets.
+  Don't take write lock in vgchange --refresh, --poll or --monitor.
+  Skip dm devices in scan if they contain only error targets or are empty.
   Fix strict-aliasing compile warning in partition table scanning.
   Add an option to automatically extend snapshots through dmeventd.
   Remove dependency on libm, floor() is replaced with integer algorithm.
