@@ -87,8 +87,8 @@ static size_t _mstats; /* statistic for maps locking */
 static void _touch_memory(void *mem, size_t size)
 {
 	size_t pagesize = lvm_getpagesize();
-	void *pos = mem;
-	void *end = mem + size - sizeof(long);
+	char *pos = mem;
+	char *end = pos + size - sizeof(long);
 
 	while (pos < end) {
 		*(long *) pos = 1;
