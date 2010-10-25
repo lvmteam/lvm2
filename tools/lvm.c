@@ -85,10 +85,10 @@ static char *_list_args(const char *text, int state)
 				break;
 			}
 		}
-
-		if (!com)
-			return NULL;
 	}
+
+	if (!com)
+		return NULL;
 
 	/* Short form arguments */
 	if (len < 3) {
