@@ -1542,7 +1542,7 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 				  "kernel.  Aborting operation.");
 			goto bad;
 		}
-		dmi->flags |= DM_NEW_UUID_FLAG;
+		dmi->flags |= DM_UUID_FLAG;
 	}
 
 	dmi->target_count = count;
