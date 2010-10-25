@@ -48,6 +48,11 @@ const char *lvm_lv_get_name(const lv_t lv)
 			       NAME_LEN+1);
 }
 
+struct lvm_property_value lvm_lv_get_property(const lv_t lv, const char *name)
+{
+	return get_property(NULL, NULL, lv, name);
+}
+
 uint64_t lvm_lv_is_active(const lv_t lv)
 {
 	struct lvinfo info;
