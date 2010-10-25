@@ -12,8 +12,8 @@
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#ifndef _LV_H
-#define _LV_H
+#ifndef _LVM_LV_H
+#define _LVM_LV_H
 
 union lvid;
 struct volume_group;
@@ -64,4 +64,4 @@ char *lv_name_dup(struct dm_pool *mem, const struct logical_volume *lv);
 char *lv_origin_dup(struct dm_pool *mem, const struct logical_volume *lv);
 uint32_t lv_kernel_read_ahead(const struct logical_volume *lv);
 
-#endif
+#endif /* _LVM_LV_H */
