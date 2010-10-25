@@ -1,5 +1,6 @@
 Version 2.02.76
 ===================================
+  Add lvm2app functions to query any pv, vg, or lv property / report field.
 
 Version 2.02.75 - 25th October 2010
 ===================================
