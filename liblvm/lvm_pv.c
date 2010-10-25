@@ -16,6 +16,7 @@
 #include "lvm2app.h"
 #include "metadata.h"
 #include "lvm-string.h"
+#include "lvm_misc.h"
 
 const char *lvm_pv_get_uuid(const pv_t pv)
 {
@@ -46,6 +47,11 @@ uint64_t lvm_pv_get_size(const pv_t pv)
 uint64_t lvm_pv_get_free(const pv_t pv)
 {
 	return (uint64_t) SECTOR_SIZE * pv_free(pv);
+}
+
+struct lvm_property_value lvm_pv_get_property(const pv_t pv, const char *name)
+{
+	return get_property(pv, NULL, NULL, name);
 }
 
 int lvm_pv_resize(const pv_t pv, uint64_t new_size)
