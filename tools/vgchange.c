@@ -687,7 +687,10 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	return process_each_vg(cmd, argc, argv,
-			       (arg_count(cmd, available_ARG)) ?
+			       (arg_count(cmd, available_ARG) ||
+				arg_count(cmd, refresh_ARG) ||
+				arg_count(cmd, monitor_ARG) ||
+				arg_count(cmd, poll_ARG)) ?
 			       0 : READ_FOR_UPDATE,
 			       NULL,
 			       &vgchange_single);
