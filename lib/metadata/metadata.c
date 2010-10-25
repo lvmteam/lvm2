@@ -3154,7 +3154,7 @@ struct logical_volume *lv_from_lvid(struct cmd_context *cmd, const char *lvid_s,
 	lvid = (const union lvid *) lvid_s;
 
 	log_very_verbose("Finding volume group for uuid %s", lvid_s);
-	if (!(vg = _vg_read_by_vgid(cmd, (char *)lvid->id[0].uuid, precommitted))) {
+	if (!(vg = _vg_read_by_vgid(cmd, (const char *)lvid->id[0].uuid, precommitted))) {
 		log_error("Volume group for uuid not found: %s", lvid_s);
 		return NULL;
 	}
