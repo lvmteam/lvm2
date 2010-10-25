@@ -71,7 +71,7 @@ static int _striped_text_import_area_count(struct config_node *sn, uint32_t *are
 static int _striped_text_import(struct lv_segment *seg, const struct config_node *sn,
 			struct dm_hash_table *pv_hash)
 {
-	struct config_node *cn;
+	const struct config_node *cn;
 
 	if ((seg->area_count != 1) &&
 	    !get_config_uint32(sn, "stripe_size", &seg->stripe_size)) {
