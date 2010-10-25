@@ -869,7 +869,7 @@ const char *extract_vgname(struct cmd_context *cmd, const char *lv_name)
 			while (*st == '/')
 				st++;
 
-		if (!strchr(vg_name, '/') || strchr(st, '/')) {
+		if (!st || strchr(st, '/')) {
 			log_error("\"%s\": Invalid path for Logical Volume",
 				  lv_name);
 			return 0;
