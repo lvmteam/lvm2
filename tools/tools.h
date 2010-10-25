@@ -117,7 +117,8 @@ struct arg {
 /*	void *ptr; // Currently not used. */
 };
 
-#define CACHE_VGMETADATA 0x00000001
+#define CACHE_VGMETADATA	0x00000001
+#define PERMITTED_READ_ONLY 	0x00000002
 
 /* a register of the lvm commands */
 struct command {

@@ -2729,8 +2729,14 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 
 		/* FIXME Also ensure contents same - checksum compare? */
 		if (correct_vg->seqno != vg->seqno) {
-			inconsistent = 1;
-			inconsistent_seqno = 1;
+			if (cmd->metadata_read_only)
+				log_very_verbose("Not repairing VG %s metadata seqno (%d != %d) "
+						  "as global/metadata_read_only is set.",
+						  vgname, vg->seqno, correct_vg->seqno);
+			else {
+				inconsistent = 1;
+				inconsistent_seqno = 1;
+			}
 			if (vg->seqno > correct_vg->seqno) {
 				vg_release(correct_vg);
 				correct_vg = vg;
@@ -2805,8 +2811,8 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 			}
 		}
 
-		if (dm_list_size(&correct_vg->pvs) != dm_list_size(pvids)
-		    + vg_missing_pv_count(correct_vg)) {
+		if (dm_list_size(&correct_vg->pvs) !=
+		    dm_list_size(pvids) + vg_missing_pv_count(correct_vg)) {
 			log_debug("Cached VG %s had incorrect PV list",
 				  vgname);
 
@@ -2882,8 +2888,15 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 
 			/* FIXME Also ensure contents same - checksums same? */
 			if (correct_vg->seqno != vg->seqno) {
-				inconsistent = 1;
-				inconsistent_seqno = 1;
+				/* Ignore inconsistent seqno if told to skip repair logic */
+				if (cmd->metadata_read_only)
+					log_very_verbose("Not repairing VG %s metadata seqno (%d != %d) "
+							  "as global/metadata_read_only is set.",
+							  vgname, vg->seqno, correct_vg->seqno);
+				else {
+					inconsistent = 1;
+					inconsistent_seqno = 1;
+				}
 				if (!_update_pv_list(cmd->mem, &all_pvs, vg)) {
 					vg_release(vg);
 					vg_release(correct_vg);

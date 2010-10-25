@@ -374,6 +374,13 @@ static int _lock_vol(struct cmd_context *cmd, const char *resource,
 		return 0;
 	}
 
+	if (cmd->metadata_read_only &&
+	    ((flags & LCK_TYPE_MASK) == LCK_WRITE) &&
+	    strcmp(resource, VG_GLOBAL)) {
+		log_error("Operation prohibited while global/metadata_read_only is set.");
+		return 0;
+	}
+
 	if ((ret = _locking.lock_resource(cmd, resource, flags))) {
 		if ((flags & LCK_SCOPE_MASK) == LCK_VG &&
 		    !(flags & LCK_CACHE)) {

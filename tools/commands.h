@@ -30,7 +30,7 @@ xx(e2fsadm,
 
 xx(dumpconfig,
    "Dump active configuration",
-   0,
+   PERMITTED_READ_ONLY,
    "dumpconfig "
    "\t[-f|--file filename] " "\n"
    "[ConfigurationVariable...]\n",
@@ -38,12 +38,12 @@ xx(dumpconfig,
 
 xx(formats,
    "List available metadata formats",
-   0,
+   PERMITTED_READ_ONLY,
    "formats\n")
 
 xx(help,
    "Display help for commands",
-   0,
+   PERMITTED_READ_ONLY,
    "help <command>" "\n")
 
 /*********
@@ -58,7 +58,7 @@ xx(lvactivate,
 
 xx(lvchange,
    "Change the attributes of logical volume(s)",
-   CACHE_VGMETADATA,
+   CACHE_VGMETADATA | PERMITTED_READ_ONLY,
    "lvchange\n"
    "\t[-A|--autobackup y|n]\n"
    "\t[-a|--available [e|l]y|n]\n"
@@ -207,7 +207,7 @@ xx(lvcreate,
 
 xx(lvdisplay,
    "Display information about a logical volume",
-   0,
+   PERMITTED_READ_ONLY,
    "lvdisplay\n"
    "\t[-a|--all]\n"
    "\t[-c|--colon]\n"
@@ -287,7 +287,7 @@ xx(lvmchange,
 
 xx(lvmdiskscan,
    "List devices that may be used as physical volumes",
-   0,
+   PERMITTED_READ_ONLY,
    "lvmdiskscan\n"
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
@@ -401,7 +401,7 @@ xx(lvresize,
 
 xx(lvs,
    "Display information about logical volumes",
-   0,
+   PERMITTED_READ_ONLY,
    "lvs" "\n"
    "\t[-a|--all]\n"
    "\t[--aligned]\n"
@@ -432,7 +432,7 @@ xx(lvs,
 
 xx(lvscan,
    "List all logical volumes in all volume groups",
-   0,
+   PERMITTED_READ_ONLY,
    "lvscan " "\n"
    "\t[-a|--all]\n"
    "\t[-b|--blockdevice] " "\n"
@@ -545,7 +545,7 @@ xx(pvdata,
 
 xx(pvdisplay,
    "Display various attributes of physical volume(s)",
-   CACHE_VGMETADATA,
+   CACHE_VGMETADATA | PERMITTED_READ_ONLY,
    "pvdisplay\n"
    "\t[-c|--colon]\n"
    "\t[-d|--debug]\n"
@@ -620,7 +620,7 @@ xx(pvremove,
 
 xx(pvs,
    "Display information about physical volumes",
-   CACHE_VGMETADATA,
+   CACHE_VGMETADATA | PERMITTED_READ_ONLY,
    "pvs" "\n"
    "\t[-a|--all]\n"
    "\t[--aligned]\n"
@@ -651,7 +651,7 @@ xx(pvs,
 
 xx(pvscan,
    "List all physical volumes",
-   0,
+   PERMITTED_READ_ONLY,
    "pvscan " "\n"
    "\t[-d|--debug] " "\n"
    "\t{-e|--exported | -n|--novolumegroup} " "\n"
@@ -668,12 +668,12 @@ xx(pvscan,
 
 xx(segtypes,
    "List available segment types",
-   0,
+   PERMITTED_READ_ONLY,
    "segtypes\n")
 
 xx(vgcfgbackup,
    "Backup volume group configuration(s)",
-   0,
+   PERMITTED_READ_ONLY,
    "vgcfgbackup " "\n"
    "\t[-d|--debug] " "\n"
    "\t[-f|--file filename] " "\n"
@@ -704,7 +704,7 @@ xx(vgcfgrestore,
 
 xx(vgchange,
    "Change volume group attributes",
-   CACHE_VGMETADATA,
+   CACHE_VGMETADATA | PERMITTED_READ_ONLY,
    "vgchange" "\n"
    "\t[-A|--autobackup {y|n}] " "\n"
    "\t[--alloc AllocationPolicy] " "\n"
@@ -797,7 +797,7 @@ xx(vgcreate,
 
 xx(vgdisplay,
    "Display volume group information",
-   0,
+   PERMITTED_READ_ONLY,
    "vgdisplay " "\n"
    "\t[-A|--activevolumegroups]" "\n"
    "\t[-c|--colon | -s|--short | -v|--verbose]" "\n"
@@ -961,7 +961,7 @@ xx(vgrename,
 
 xx(vgs,
    "Display information about volume groups",
-   0,
+   PERMITTED_READ_ONLY,
    "vgs" "\n"
    "\t[--aligned]\n"
    "\t[-a|--all]\n"
@@ -991,7 +991,7 @@ xx(vgs,
 
 xx(vgscan,
    "Search for all volume groups",
-   0,
+   PERMITTED_READ_ONLY,
    "vgscan "
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
@@ -1029,6 +1029,6 @@ xx(vgsplit,
 
 xx(version,
    "Display software and driver version information",
-   0,
+   PERMITTED_READ_ONLY,
    "version\n" )
 
