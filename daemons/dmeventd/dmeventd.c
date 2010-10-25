@@ -1300,9 +1300,9 @@ static int _client_read(struct dm_event_fifos *fifos,
 	unsigned bytes = 0;
 	int ret = 0;
 	fd_set fds;
-	int header = 1;
 	size_t size = 2 * sizeof(uint32_t);	/* status + size */
-	char *buf = alloca(size);
+	uint32_t *header = alloca(size);
+	char *buf = (char *)header;
 
 	msg->data = NULL;
 
@@ -1326,9 +1326,9 @@ static int _client_read(struct dm_event_fifos *fifos,
 
 		ret = read(fifos->client, buf + bytes, size - bytes);
 		bytes += ret > 0 ? ret : 0;
-		if (bytes == 2 * sizeof(uint32_t) && header) {
-			msg->cmd = ntohl(*((uint32_t *) buf));
-			msg->size = ntohl(*((uint32_t *) buf + 1));
+		if (header && (bytes == 2 * sizeof(uint32_t))) {
+			msg->cmd = ntohl(header[0]);
+			msg->size = ntohl(header[1]);
 			buf = msg->data = dm_malloc(msg->size);
 			size = msg->size;
 			bytes = 0;
@@ -1356,10 +1356,11 @@ static int _client_write(struct dm_event_fifos *fifos,
 	fd_set fds;
 
 	size_t size = 2 * sizeof(uint32_t) + msg->size;
-	char *buf = alloca(size);
+	uint32_t *header = alloca(size);
+	char *buf = (char *)header;
 
-	*((uint32_t *)buf) = htonl(msg->cmd);
-	*((uint32_t *)buf + 1) = htonl(msg->size);
+	header[0] = htonl(msg->cmd);
+	header[1] = htonl(msg->size);
 	if (msg->data)
 		memcpy(buf + 2 * sizeof(uint32_t), msg->data, msg->size);
 

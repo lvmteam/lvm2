@@ -230,8 +230,8 @@ static int _daemon_read(struct dm_event_fifos *fifos,
 	fd_set fds;
 	struct timeval tval = { 0, 0 };
 	size_t size = 2 * sizeof(uint32_t);	/* status + size */
-	char *buf = alloca(size);
-	int header = 1;
+	uint32_t *header = alloca(size);
+	char *buf = (char *)header;
 
 	while (bytes < size) {
 		for (i = 0, ret = 0; (i < 20) && (ret < 1); i++) {
@@ -262,9 +262,9 @@ static int _daemon_read(struct dm_event_fifos *fifos,
 		}
 
 		bytes += ret;
-		if (bytes == 2 * sizeof(uint32_t) && header) {
-			msg->cmd = ntohl(*((uint32_t *)buf));
-			msg->size = ntohl(*((uint32_t *)buf + 1));
+		if (header && (bytes == 2 * sizeof(uint32_t))) {
+			msg->cmd = ntohl(header[0]);
+			msg->size = ntohl(header[1]);
 			buf = msg->data = dm_malloc(msg->size);
 			size = msg->size;
 			bytes = 0;
@@ -288,12 +288,13 @@ static int _daemon_write(struct dm_event_fifos *fifos,
 	fd_set fds;
 
 	size_t size = 2 * sizeof(uint32_t) + msg->size;
-	char *buf = alloca(size);
+	uint32_t *header = alloca(size);
+	char *buf = (char *)header;
 	char drainbuf[128];
 	struct timeval tval = { 0, 0 };
 
-	*((uint32_t *)buf) = htonl(msg->cmd);
-	*((uint32_t *)buf + 1) = htonl(msg->size);
+	header[0] = htonl(msg->cmd);
+	header[1] = htonl(msg->size);
 	memcpy(buf + 2 * sizeof(uint32_t), msg->data, msg->size);
 
 	/* drain the answer fifo */
@@ -323,8 +324,7 @@ static int _daemon_write(struct dm_event_fifos *fifos,
 			}
 		} while (ret < 1);
 
-		ret = write(fifos->client, ((char *) buf) + bytes,
-			    size - bytes);
+		ret = write(fifos->client, buf + bytes, size - bytes);
 		if (ret < 0) {
 			if ((errno == EINTR) || (errno == EAGAIN))
 				continue;
