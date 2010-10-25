@@ -227,11 +227,11 @@ GET_VG_NUM_PROPERTY_FN(vg_mda_copies, (vg_mda_copies(vg)))
 #define STR DM_REPORT_FIELD_TYPE_STRING
 #define NUM DM_REPORT_FIELD_TYPE_NUMBER
 #define FIELD(type, strct, sorttype, head, field, width, fn, id, desc, settable) \
-	{ type, #id, settable, sorttype == STR, { .integer = 0 }, _ ## id ## _get, _ ## id ## _set },
+	{ type, #id, settable, sorttype == STR, sorttype == NUM, { .integer = 0 }, _ ## id ## _get, _ ## id ## _set },
 
 struct lvm_property_type _properties[] = {
 #include "columns.h"
-	{ 0, "", 0, 0, { .integer = 0 }, _not_implemented_get, _not_implemented_set },
+	{ 0, "", 0, 0, 0, { .integer = 0 }, _not_implemented_get, _not_implemented_set },
 };
 
 #undef STR
