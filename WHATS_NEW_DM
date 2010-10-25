@@ -1,3 +1,6 @@
+Version 1.02.57
+===================================
+
 Version 1.02.56 - 25th October 2010
 ===================================
   Return const pointer from dm_basename() in libdevmapper.
