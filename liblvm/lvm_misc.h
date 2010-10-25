@@ -17,5 +17,7 @@
 #include "libdevmapper.h"
 
 struct dm_list *tag_list_copy(struct dm_pool *p, struct dm_list *tag_list);
+struct lvm_property_value get_property(const pv_t pv, const vg_t vg,
+				       const lv_t lv, const char *name);
 
 #endif

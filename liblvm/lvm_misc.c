@@ -15,6 +15,7 @@
 #include "lvm2app.h"
 #include "lvm_misc.h"
 #include "lib.h"
+#include "properties.h"
 
 struct dm_list *tag_list_copy(struct dm_pool *p, struct dm_list *tag_list)
 {
@@ -42,4 +43,38 @@ struct dm_list *tag_list_copy(struct dm_pool *p, struct dm_list *tag_list)
 		dm_list_add(list, &lsl->list);
 	}
 	return list;
+}
+
+struct lvm_property_value get_property(const pv_t pv, const vg_t vg,
+				       const lv_t lv, const char *name)
+{
+	struct lvm_property_type prop;
+	struct lvm_property_value v;
+
+	prop.id = name;
+	if (pv) {
+		if (!pv_get_property(pv, &prop)) {
+			v.is_valid = 0;
+			return v;
+		}
+	} else if (vg) {
+		if (!vg_get_property(vg, &prop)) {
+			v.is_valid = 0;
+			return v;
+		}
+	} else if (lv) {
+		if (!lv_get_property(lv, &prop)) {
+			v.is_valid = 0;
+			return v;
+		}
+	}
+	v.is_settable = prop.is_settable;
+	v.is_string = prop.is_string;
+	v.is_integer = prop.is_integer;
+	if (v.is_string)
+		v.value.string = prop.value.string;
+	if (v.is_integer)
+		v.value.integer = prop.value.integer;
+	v.is_valid = 1;
+	return v;
 }
