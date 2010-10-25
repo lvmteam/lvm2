@@ -733,7 +733,7 @@ struct dm_list *lvmcache_get_pvids(struct cmd_context *cmd, const char *vgname,
 	return pvids;
 }
 
-struct device *device_from_pvid(struct cmd_context *cmd, struct id *pvid,
+struct device *device_from_pvid(struct cmd_context *cmd, const struct id *pvid,
 				unsigned *scan_done_once)
 {
 	struct label *label;
