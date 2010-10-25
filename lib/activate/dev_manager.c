@@ -135,10 +135,11 @@ int device_is_usable(struct device *dev)
 	char *target_type = NULL;
 	char *params, *vgname = NULL, *lvname, *layer;
 	void *next = NULL;
+	int only_error_target = 1;
 	int r = 0;
 
 	if (!(dmt = dm_task_create(DM_DEVICE_STATUS))) {
-		log_error("Failed to allocate dm_task struct to check dev status");
+		log_error("Failed to create dm_task struct to check dev status");
 		return 0;
 	}
 
@@ -158,6 +159,11 @@ int device_is_usable(struct device *dev)
 
 	name = dm_task_get_name(dmt);
 	uuid = dm_task_get_uuid(dmt);
+
+	if (!info.target_count) {
+		log_debug("%s: Empty device %s not usable.", dev_name(dev), name);
+		goto out;
+	}
 
 	if (info.suspended && ignore_suspended_devices()) {
 		log_debug("%s: Suspended device %s not usable.", dev_name(dev), name);
@@ -191,12 +197,17 @@ int device_is_usable(struct device *dev)
 			goto out;
 		}
 
-		if (target_type && !strcmp(target_type, "error")) {
-			log_debug("%s: Error device %s not usable.",
-				  dev_name(dev), name);
-			goto out;
-		}
+		if (target_type && strcmp(target_type, "error"))
+			only_error_target = 0;
 	} while (next);
+
+	/* Skip devices consisting entirely of error targets. */
+	/* FIXME Deal with device stacked above error targets? */
+	if (only_error_target) {
+		log_debug("%s: Error device %s not usable.",
+			  dev_name(dev), name);
+		goto out;
+	}
 
 	/* FIXME Also check dependencies? */
 
