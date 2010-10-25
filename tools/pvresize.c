@@ -148,7 +148,7 @@ static int _pv_resize_single(struct cmd_context *cmd,
 	if (!is_orphan_vg(vg_name)) {
 		if (!vg_write(vg) || !vg_commit(vg)) {
 			log_error("Failed to store physical volume \"%s\" in "
-				  "volume group \"%s\"", pv_name, vg->name);
+				  "volume group \"%s\"", pv_name, vg_name);
 			goto out;
 		}
 		backup(vg);

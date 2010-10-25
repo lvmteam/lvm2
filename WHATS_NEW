@@ -1,5 +1,6 @@
 Version 2.02.75 - 
 =====================================
+  Fix pointer for VG name in _pv_resize_single error code path.
   Fix warning for changed alignment requirements for dmeventd read/write func.
   Add global/metadata_read_only to use unrepaired metadata in read-only cmds.
   Don't take write lock in vgchange --refresh, --poll or --monitor.
