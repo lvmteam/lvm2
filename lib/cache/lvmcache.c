@@ -514,7 +514,7 @@ char *lvmcache_vgname_from_pvid(struct cmd_context *cmd, const char *pvid)
 	struct lvmcache_info *info;
 	char *vgname;
 
-	if (!device_from_pvid(cmd, (struct id *)pvid, NULL)) {
+	if (!device_from_pvid(cmd, (const struct id *)pvid, NULL)) {
 		log_error("Couldn't find device with uuid %s.", pvid);
 		return NULL;
 	}
@@ -740,7 +740,7 @@ struct device *device_from_pvid(struct cmd_context *cmd, const struct id *pvid,
 	struct lvmcache_info *info;
 
 	/* Already cached ? */
-	if ((info = info_from_pvid((char *) pvid, 0))) {
+	if ((info = info_from_pvid((const char *) pvid, 0))) {
 		if (label_read(info->dev, &label, UINT64_C(0))) {
 			info = (struct lvmcache_info *) label->info;
 			if (id_equal(pvid, (struct id *) &info->dev->pvid))
@@ -751,7 +751,7 @@ struct device *device_from_pvid(struct cmd_context *cmd, const struct id *pvid,
 	lvmcache_label_scan(cmd, 0);
 
 	/* Try again */
-	if ((info = info_from_pvid((char *) pvid, 0))) {
+	if ((info = info_from_pvid((const char *) pvid, 0))) {
 		if (label_read(info->dev, &label, UINT64_C(0))) {
 			info = (struct lvmcache_info *) label->info;
 			if (id_equal(pvid, (struct id *) &info->dev->pvid))
@@ -767,7 +767,7 @@ struct device *device_from_pvid(struct cmd_context *cmd, const struct id *pvid,
 		*scan_done_once = 1;
 
 	/* Try again */
-	if ((info = info_from_pvid((char *) pvid, 0))) {
+	if ((info = info_from_pvid((const char *) pvid, 0))) {
 		if (label_read(info->dev, &label, UINT64_C(0))) {
 			info = (struct lvmcache_info *) label->info;
 			if (id_equal(pvid, (struct id *) &info->dev->pvid))
