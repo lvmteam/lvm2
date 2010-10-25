@@ -24,6 +24,7 @@ struct lvm_property_type {
 	const char *id;
 	unsigned is_settable:1;
 	unsigned is_string:1;
+	unsigned is_integer:1;
 	union {
 		char *string;
 		uint64_t integer;
