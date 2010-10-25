@@ -129,7 +129,7 @@ int cluster_send(struct clog_request *rq)
 {
 	int r;
 	int count=0;
-	int found;
+	int found = 0;
 	struct iovec iov;
 	struct clog_cpg *entry;
 
