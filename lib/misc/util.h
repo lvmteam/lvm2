@@ -25,7 +25,11 @@
 		     (void) (&_a == &_b); \
 		     _a > _b ? _a : _b; })
 
+#ifdef __clang__
+#define uninitialized_var(x) x
+#else
 #define uninitialized_var(x) x = x
+#endif
 
 #define KERNEL_VERSION(major, minor, release) (((major) << 16) + ((minor) << 8) + (release))
 
