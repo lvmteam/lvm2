@@ -491,6 +491,7 @@ int main(int argc, char *argv[])
 		DEBUGLOG("Can't initialise cluster interface\n");
 		log_error("Can't initialise cluster interface\n");
 		child_init_signal(DFAIL_CLUSTER_IF);
+		__builtin_unreachable();
 	}
 	DEBUGLOG("Cluster ready, doing some more initialisation\n");
 
@@ -505,8 +506,10 @@ int main(int argc, char *argv[])
 
 	/* Add the local socket to the list */
 	newfd = malloc(sizeof(struct local_client));
-	if (!newfd)
-	        child_init_signal(DFAIL_MALLOC);
+	if (!newfd) {
+		child_init_signal(DFAIL_MALLOC);
+		__builtin_unreachable();
+	}
 
 	newfd->fd = local_sock;
 	newfd->removeme = 0;
