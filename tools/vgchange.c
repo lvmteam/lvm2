@@ -180,9 +180,10 @@ static int _vgchange_background_polling(struct cmd_context *cmd, struct volume_g
 
 	if (lvs_in_vg_activated(vg) && background_polling()) {
 	        polled = _poll_lvs_in_vg(cmd, vg);
-		log_print("Background polling started for %d logical volume(s) "
-			  "in volume group \"%s\"",
-			  polled, vg->name);
+		if (polled)
+			log_print("Background polling started for %d logical volume(s) "
+				  "in volume group \"%s\"",
+				  polled, vg->name);
 	}
 
 	return ECMD_PROCESSED;
@@ -592,13 +593,30 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 						arg_int_value(cmd, poll_ARG,
 						DEFAULT_BACKGROUND_POLLING));
 
-	if (arg_count(cmd, available_ARG))
+	if (arg_count(cmd, available_ARG)) {
 		r = _vgchange_available(cmd, vg);
+		if (r != ECMD_PROCESSED)
+			return r;
+	}
 
-	else if (arg_count(cmd, monitor_ARG))
+	if (arg_count(cmd, refresh_ARG)) {
+		/* refreshes the visible LVs (which starts polling) */
+		r = _vgchange_refresh(cmd, vg);
+		if (r != ECMD_PROCESSED)
+			return r;
+	}
+
+	if (!arg_count(cmd, available_ARG) &&
+	    !arg_count(cmd, refresh_ARG) &&
+	    arg_count(cmd, monitor_ARG)) {
+		/* -ay* will have already done monitoring changes */
 		r = _vgchange_monitoring(cmd, vg);
+		if (r != ECMD_PROCESSED)
+			return r;
+	}
 
-	else if (arg_count(cmd, poll_ARG))
+	if (!arg_count(cmd, refresh_ARG) &&
+	    arg_count(cmd, poll_ARG))
 		r = _vgchange_background_polling(cmd, vg);
 
 	else if (arg_count(cmd, resizeable_ARG))
@@ -627,9 +645,6 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 
 	else if (arg_count(cmd, clustered_ARG))
 		r = _vgchange_clustered(cmd, vg);
-
-	else if (arg_count(cmd, refresh_ARG))
-		r = _vgchange_refresh(cmd, vg);
 
 	else if (arg_count(cmd, vgmetadatacopies_ARG) ||
 		 arg_count(cmd, metadatacopies_ARG))
@@ -669,10 +684,24 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
+	if (arg_count(cmd, available_ARG) && arg_count(cmd, refresh_ARG)) {
+		log_error("Only one of -a and --refresh permitted.");
+		return EINVALID_CMD_LINE;
+	}
+
 	if ((arg_count(cmd, ignorelockingfailure_ARG) ||
 	     arg_count(cmd, sysinit_ARG)) && !arg_count(cmd, available_ARG)) {
 		log_error("Only -a permitted with --ignorelockingfailure and --sysinit");
 		return EINVALID_CMD_LINE;
+	}
+
+	if (arg_count(cmd, available_ARG) &&
+	    (arg_count(cmd, monitor_ARG) || arg_count(cmd, poll_ARG))) {
+		int activate = arg_uint_value(cmd, available_ARG, 0);
+		if (activate == CHANGE_AN || activate == CHANGE_ALN) {
+			log_error("Only -ay* allowed with --monitor or --poll.");
+			return EINVALID_CMD_LINE;
+		}
 	}
 
 	if (arg_count(cmd, poll_ARG) && arg_count(cmd, sysinit_ARG)) {
