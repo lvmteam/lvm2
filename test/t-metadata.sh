@@ -36,13 +36,11 @@ for mdacp in 1 0; do
 	lvcreate -n $lv1 -l 2 -i5 -I256 $vg
 	lvcreate -n $lv2 -m2 -l 2  $vg
 	#lvchange -an $vg
-	lvchange -an $vg/$lv1 >out$mdacp 2>&1 
-	lvchange -an $vg/$lv2 >>out$mdacp 2>&1 
-	test ! -s out$mdacp
+	lvchange -an $vg/$lv1
+	lvchange -an $vg/$lv2
 	vgchange -ay $vg
 	lvchange -vvvv -an $vg/$lv1 >out$mdacp 2>&1 
 	lvchange -vvvv -an $vg/$lv2 >>out$mdacp 2>&1 
-	eval run$mdacp=$(wc -l <out$mdacp)
 	vgremove -f $vg
 done
 not grep "Cached VG .* incorrect PV list" out0
