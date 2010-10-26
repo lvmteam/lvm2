@@ -507,7 +507,7 @@ static struct volume_group *_vg_read_raw_area(struct format_instance *fid,
 
 	if (wrap > rlocn->offset) {
 		log_error("VG %s metadata too large for circular buffer",
-			  vg->name);
+			  vgname);
 		goto out;
 	}
 
