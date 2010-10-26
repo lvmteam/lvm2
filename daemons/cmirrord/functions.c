@@ -1809,8 +1809,10 @@ int pull_state(const char *uuid, uint64_t luid,
 	int bitset_size;
 	struct log_c *lc;
 
-	if (!buf)
+	if (!buf) {
 		LOG_ERROR("pull_state: buf == NULL");
+		return -EINVAL;
+	}
 
 	lc = get_log(uuid, luid);
 	if (!lc) {
