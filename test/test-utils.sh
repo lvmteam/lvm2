@@ -245,7 +245,7 @@ prepare_scsi_debug_dev()
     modprobe scsi_debug dev_size_mb=$DEV_SIZE $SCSI_DEBUG_PARAMS num_tgts=1 || exit 200
     sleep 2 # allow for async Linux SCSI device registration
 
-    local DEBUG_DEV=/dev/$(grep scsi_debug /sys/block/*/device/model | cut -f4 -d /)
+    local DEBUG_DEV=/dev/$(grep -H scsi_debug /sys/block/*/device/model | cut -f4 -d /)
     [ -b $DEBUG_DEV ] || exit 1 # should not happen
 
     # Create symlink to scsi_debug device in $DM_DEV_DIR
