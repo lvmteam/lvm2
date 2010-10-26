@@ -491,7 +491,9 @@ int main(int argc, char *argv[])
 		DEBUGLOG("Can't initialise cluster interface\n");
 		log_error("Can't initialise cluster interface\n");
 		child_init_signal(DFAIL_CLUSTER_IF);
+#ifdef __clang__
 		__builtin_unreachable();
+#endif
 	}
 	DEBUGLOG("Cluster ready, doing some more initialisation\n");
 
@@ -508,7 +510,9 @@ int main(int argc, char *argv[])
 	newfd = malloc(sizeof(struct local_client));
 	if (!newfd) {
 		child_init_signal(DFAIL_MALLOC);
+#ifdef __clang__
 		__builtin_unreachable();
+#endif
 	}
 
 	newfd->fd = local_sock;
