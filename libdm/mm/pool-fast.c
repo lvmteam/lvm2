@@ -33,8 +33,8 @@ struct dm_pool {
 	unsigned object_alignment;
 };
 
-void _align_chunk(struct chunk *c, unsigned alignment);
-struct chunk *_new_chunk(struct dm_pool *p, size_t s);
+static void _align_chunk(struct chunk *c, unsigned alignment);
+static struct chunk *_new_chunk(struct dm_pool *p, size_t s);
 static void _free_chunk(struct chunk *c);
 
 /* by default things come out aligned for doubles */
@@ -240,12 +240,12 @@ void dm_pool_abandon_object(struct dm_pool *p)
 	p->object_alignment = DEFAULT_ALIGNMENT;
 }
 
-void _align_chunk(struct chunk *c, unsigned alignment)
+static void _align_chunk(struct chunk *c, unsigned alignment)
 {
 	c->begin += alignment - ((unsigned long) c->begin & (alignment - 1));
 }
 
-struct chunk *_new_chunk(struct dm_pool *p, size_t s)
+static struct chunk *_new_chunk(struct dm_pool *p, size_t s)
 {
 	struct chunk *c;
 
