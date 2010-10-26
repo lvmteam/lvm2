@@ -1477,7 +1477,7 @@ static void _process_request(struct dm_event_fifos *fifos)
 	dm_free(msg.data);
 }
 
-static void _process_initial_registrations()
+static void _process_initial_registrations(void)
 {
 	int i = 0;
 	char *reg;
@@ -1697,7 +1697,7 @@ static void _daemonize(void)
 	setsid();
 }
 
-static void restart()
+static void restart(void)
 {
 	struct dm_event_fifos fifos;
 	struct dm_event_daemon_message msg = { 0, 0, NULL };
