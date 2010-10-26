@@ -715,7 +715,7 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 int lvchange(struct cmd_context *cmd, int argc, char **argv)
 {
-	int update = /* options other than -a, --refresh or --monitor */
+	int update = /* options other than -a, --refresh, --monitor or --poll */
 		arg_count(cmd, contiguous_ARG) || arg_count(cmd, permission_ARG) ||
 		arg_count(cmd, readahead_ARG) || arg_count(cmd, persistent_ARG) ||
 		arg_count(cmd, addtag_ARG) || arg_count(cmd, deltag_ARG) ||
@@ -732,6 +732,10 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
+	if (arg_count(cmd, available_ARG) && arg_count(cmd, refresh_ARG)) {
+		log_error("Only one of -a and --refresh permitted.");
+		return EINVALID_CMD_LINE;
+	}
 
 	if ((arg_count(cmd, ignorelockingfailure_ARG) ||
 	     arg_count(cmd, sysinit_ARG)) && update) {
