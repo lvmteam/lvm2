@@ -188,6 +188,14 @@ static void child_init_signal(int status)
 	        exit(status);
 }
 
+static void safe_close(int *fd)
+{
+	if (*fd >= 0) {
+		int to_close = *fd;
+		*fd = -1;
+		close(to_close);
+	}
+}
 
 void debuglog(const char *fmt, ...)
 {
@@ -838,10 +846,7 @@ static void main_loop(int local_sock, int cmd_timeout)
 						lastfd->next = thisfd->next;
 						free_fd = thisfd;
 						thisfd = lastfd;
-						if (free_fd->fd >= 0) {
-							close(free_fd->fd);
-							free_fd->fd = -1;
-						}
+						safe_close(&(free_fd->fd));
 
 						/* Queue cleanup, this also frees the client struct */
 						add_to_lvmqueue(free_fd, NULL, 0, NULL);
@@ -1091,10 +1096,7 @@ static int read_from_local_sock(struct local_client *thisfd)
 			thisfd->bits.localsock.pipe_client->bits.pipe.client =
 			    NULL;
 
-		if (thisfd->fd >= 0) {
-			close(thisfd->fd);
-			thisfd->fd = -1;
-		}
+		safe_close(&(thisfd->fd));
 		return 0;
 	} else {
 		int comms_pipe[2];
