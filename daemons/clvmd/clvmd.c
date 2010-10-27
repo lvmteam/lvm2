@@ -838,7 +838,10 @@ static void main_loop(int local_sock, int cmd_timeout)
 						lastfd->next = thisfd->next;
 						free_fd = thisfd;
 						thisfd = lastfd;
-						close(free_fd->fd);
+						if (free_fd->fd >= 0) {
+							close(free_fd->fd);
+							free_fd->fd = -1;
+						}
 
 						/* Queue cleanup, this also frees the client struct */
 						add_to_lvmqueue(free_fd, NULL, 0, NULL);
@@ -1088,7 +1091,10 @@ static int read_from_local_sock(struct local_client *thisfd)
 			thisfd->bits.localsock.pipe_client->bits.pipe.client =
 			    NULL;
 
-		close(thisfd->fd);
+		if (thisfd->fd >= 0) {
+			close(thisfd->fd);
+			thisfd->fd = -1;
+		}
 		return 0;
 	} else {
 		int comms_pipe[2];
