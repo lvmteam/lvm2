@@ -121,6 +121,7 @@ teardown_devs() {
 		init_udev_transaction
 		while dmsetup table | grep -q ^$PREFIX; do
 			for s in `dmsetup info -c -o name --noheading | grep ^$PREFIX`; do
+				umount -fl $DM_DEV_DIR/mapper/$s || true
 				dmsetup remove $s >& /dev/null || true
 			done
 		done
@@ -360,6 +361,11 @@ prepare_lvmconf() {
 	test -z "$filter" && \
 		filter='[ "a/dev\/mirror/", "a/dev\/mapper\/.*pv[0-9_]*$/", "r/.*/" ]'
         locktype=
+	if test -z "$LVM_TEST_CONFIG_SNAPSHOT_AUTOEXTEND"; then
+		LVM_TEST_CONFIG_SNAPSHOT_AUTOEXTEND="
+    snapshot_autoextend_percent = 50
+    snapshot_autoextend_threshold = 50"
+	fi
 	if test -n "$LVM_TEST_LOCKING"; then locktype="locking_type = $LVM_TEST_LOCKING"; fi
 	cat > $TESTDIR/etc/lvm.conf.new <<-EOF
   $LVM_TEST_CONFIG
@@ -395,8 +401,7 @@ prepare_lvmconf() {
     udev_sync = 1
     udev_rules = 1
     polling_interval = 0
-    snapshot_autoextend_percent = 50
-    snapshot_autoextend_threshold = 50
+    $LVM_TEST_CONFIG_SNAPSHOT_AUTOEXTEND
   }
 EOF
 	# FIXME remove this workaround after mmap & truncating file problems solved
