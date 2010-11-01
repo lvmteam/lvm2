@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.  
- * Copyright (C) 2004-2006 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2010 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -19,6 +19,6 @@
 #include "lib.h"
 
 struct cmd_context;
-int exec_cmd(struct cmd_context *cmd, const char *const argv[]);
+int exec_cmd(struct cmd_context *cmd, const char *const argv[], int *rstatus);
 
 #endif

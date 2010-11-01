@@ -46,7 +46,7 @@ static char *_verbose_args(const char *const argv[], char *buf, size_t sz)
 /*
  * Execute and wait for external command
  */
-int exec_cmd(struct cmd_context *cmd, const char *const argv[])
+int exec_cmd(struct cmd_context *cmd, const char *const argv[], int *rstatus)
 {
 	pid_t pid;
 	int status;
@@ -71,6 +71,9 @@ int exec_cmd(struct cmd_context *cmd, const char *const argv[])
 		_exit(errno);
 	}
 
+	if (rstatus)
+		*rstatus = -1;
+
 	/* Parent */
 	if (wait4(pid, &status, 0, NULL) != pid) {
 		log_error("wait4 child process %u failed: %s", pid,
@@ -84,9 +87,16 @@ int exec_cmd(struct cmd_context *cmd, const char *const argv[])
 	}
 
 	if (WEXITSTATUS(status)) {
-		log_error("%s failed: %u", argv[0], WEXITSTATUS(status));
+		if (rstatus) {
+			*rstatus = WEXITSTATUS(status);
+			log_verbose("%s failed: %u", argv[0], *rstatus);
+		} else
+			log_error("%s failed: %u", argv[0], WEXITSTATUS(status));
 		return 0;
 	}
+
+	if (rstatus)
+		*rstatus = 0;
 
 	return 1;
 }

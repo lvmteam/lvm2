@@ -129,6 +129,7 @@ static int _request_confirmation(struct cmd_context *cmd,
 enum fsadm_cmd_e { FSADM_CMD_CHECK, FSADM_CMD_RESIZE };
 #define FSADM_CMD "fsadm"
 #define FSADM_CMD_MAX_ARGS 6
+#define FSADM_CHECK_FAILS_FOR_MOUNTED 3 /* shell exist status code */
 
 /*
  * FSADM_CMD --dry-run --verbose --force check lv_path
@@ -137,7 +138,8 @@ enum fsadm_cmd_e { FSADM_CMD_CHECK, FSADM_CMD_RESIZE };
 static int _fsadm_cmd(struct cmd_context *cmd,
 		      const struct volume_group *vg,
 		      const struct lvresize_params *lp,
-		      enum fsadm_cmd_e fcmd)
+		      enum fsadm_cmd_e fcmd,
+		      int *status)
 {
 	char lv_path[PATH_MAX];
 	char size_buf[SIZE_BUF];
@@ -177,7 +179,7 @@ static int _fsadm_cmd(struct cmd_context *cmd,
 
 	argv[i] = NULL;
 
-	return exec_cmd(cmd, argv);
+	return exec_cmd(cmd, argv, status);
 }
 
 static int _lvresize_params(struct cmd_context *cmd, int argc, char **argv,
@@ -321,6 +323,7 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 	struct lv_segment *seg, *uninitialized_var(mirr_seg);
 	uint32_t seg_extents;
 	uint32_t sz, str;
+	int status;
 	struct dm_list *pvh = NULL;
 	int use_policy = arg_count(cmd, use_policies_ARG);
 
@@ -637,13 +640,16 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 
 	if (lp->resizefs) {
 		if (!lp->nofsck &&
-		    !_fsadm_cmd(cmd, vg, lp, FSADM_CMD_CHECK)) {
-			stack;
-			return ECMD_FAILED;
+		    !_fsadm_cmd(cmd, vg, lp, FSADM_CMD_CHECK, &status)) {
+			if (status != FSADM_CHECK_FAILS_FOR_MOUNTED) {
+				stack;
+				return ECMD_FAILED;
+			}
+                        /* some filesystems supports online resize */
 		}
 
 		if ((lp->resize == LV_REDUCE) &&
-		    !_fsadm_cmd(cmd, vg, lp, FSADM_CMD_RESIZE)) {
+		    !_fsadm_cmd(cmd, vg, lp, FSADM_CMD_RESIZE, NULL)) {
 			stack;
 			return ECMD_FAILED;
 		}
@@ -711,7 +717,7 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 	log_print("Logical volume %s successfully resized", lp->lv_name);
 
 	if (lp->resizefs && (lp->resize == LV_EXTEND) &&
-	    !_fsadm_cmd(cmd, vg, lp, FSADM_CMD_RESIZE)) {
+	    !_fsadm_cmd(cmd, vg, lp, FSADM_CMD_RESIZE, NULL)) {
 		stack;
 		return ECMD_FAILED;
 	}
