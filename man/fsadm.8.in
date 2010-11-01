@@ -37,6 +37,13 @@ It tries to use the same API for \fBext2/ext3/ext4\fR,
 or an absolute size using a suffix (in powers of 1024).
 If new_size is not supplied, the whole device is used.
 
+.SH "DIAGNOSTICS"
+On successful completion, the status code is 0.
+A status code of 2 indicates the operation was interrupted by the user.
+A status code of 3 indicates the requested check operation could not be performed
+because the filesystem is mounted and does not support an online fsck.
+A status code of 1 is used for other failures.
+
 .SH "EXAMPLES"
 "fsadm \-e \-y resize /dev/vg/test 1000M" tries to resize the filesystem
 on logical volume /dev/vg/test. If /dev/vg/test contains ext2/ext3/ext4
