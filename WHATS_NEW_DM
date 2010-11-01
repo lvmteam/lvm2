@@ -1,5 +1,7 @@
 Version 1.02.57
 ===================================
+  Fix memory leak of field_id in _output_field function.
+  Allocate buffer for reporting functions dynamically to support long outputs.
 
 Version 1.02.56 - 25th October 2010
 ===================================
