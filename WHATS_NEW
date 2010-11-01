@@ -1,5 +1,6 @@
 Version 2.02.76 - 
 ===================================
+  Modify fsadm to return different status code for check of mounted filesystem.
   Update VG metadata only once in vgchange when making multiple changes.
   Allow independent vgchange arguments to be used together.
   Automatically unmount invalidated snapshots in dmeventd.
