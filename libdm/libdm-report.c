@@ -912,20 +912,20 @@ static int _output_field(struct dm_report *rh, struct dm_report_field *field)
 	size_t buf_size = 0;
 
 	if (rh->flags & DM_REPORT_OUTPUT_FIELD_NAME_PREFIX) {
-		if (!(field_id = strdup(rh->fields[field->props->field_num].id))) {
+		if (!(field_id = dm_strdup(rh->fields[field->props->field_num].id))) {
 			log_error("dm_report: Failed to copy field name");
 			return 0;
 		}
 
 		if (!dm_pool_grow_object(rh->mem, rh->output_field_name_prefix, 0)) {
 			log_error("dm_report: Unable to extend output line");
-			free(field_id);
+			dm_free(field_id);
 			return 0;
 		}
 
 		if (!dm_pool_grow_object(rh->mem, _toupperstr(field_id), 0)) {
 			log_error("dm_report: Unable to extend output line");
-			free(field_id);
+			dm_free(field_id);
 			return 0;
 		}
 
