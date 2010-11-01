@@ -23,6 +23,11 @@
 # reiserfs: resize_reiserfs, reiserfstune
 # xfs: xfs_growfs, xfs_info
 #
+# Return values:
+#   0 success
+#   1 error
+#   2 break detected
+#   3 unsupported online filesystem check for given mounted fs
 
 TOOL=fsadm
 
@@ -125,6 +130,8 @@ cleanup() {
 	fi
 	IFS=$IFS_OLD
 	trap 2
+
+	test "$1" -eq 2 && verbose "Break detected"
 
 	if [ "$DO_LVRESIZE" -eq 2 ]; then
 		# start LVRESIZE with the filesystem modification flag
@@ -349,7 +356,6 @@ resize() {
 	# if the size parameter is missing use device size
 	#if [ -n "$NEWSIZE" -a $NEWSIZE <
 	test -z "$NEWSIZE" && NEWSIZE=${DEVSIZE}b
-	trap cleanup 2
 	IFS=$NL
 	case "$FSTYPE" in
 	  "ext3"|"ext2"|"ext4") resize_ext $NEWSIZE ;;
@@ -365,7 +371,10 @@ resize() {
 ###################
 check() {
 	detect_fs "$1"
-	detect_mounted && error "Cannot fsck device \"$VOLUME\", filesystem is mounted on $MOUNTED"
+	if detect_mounted ; then
+		verbose "Skipping filesystem check for device \"$VOLUME\" as the filesystem is mounted on $MOUNTED";
+		cleanup 3
+	fi
 	case "$FSTYPE" in
 	  "xfs") dry $XFS_CHECK "$VOLUME" ;;
 	  *)    # check if executed from interactive shell environment
@@ -380,6 +389,7 @@ check() {
 # start point of this script
 # - parsing parameters
 #############################
+trap "cleanup 2" 2
 
 # test if we are not invoked recursively
 test -n "$FSADM_RUNNING" && exit 0
