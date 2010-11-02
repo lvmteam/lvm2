@@ -574,6 +574,7 @@ static struct rx_node *_pass(struct dm_pool *mem,
 		if (!(r->left = _pass(mem, r->left, changed)))
 			return_NULL;
 
+		break;
 	case OR:
 		/* It's important we optimise sub nodes first */
 		if (!(r->left = _pass(mem, r->left, changed)))
