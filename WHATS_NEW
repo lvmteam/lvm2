@@ -1,5 +1,6 @@
 Version 2.02.76 - 
 ===================================
+  Fix regex optimiser not to ignore RHS of OR nodes in _find_leftmost_common.
   Fix handling of online filesystem resize (using new fsadm return code).
   Add DIAGNOSTICS section to fsadm man page.
   Modify fsadm to return different status code for check of mounted filesystem.

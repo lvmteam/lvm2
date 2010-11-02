@@ -473,15 +473,18 @@ static int _find_leftmost_common(struct rx_node *or,
 	unsigned left_depth = _depth(left, leftmost);
 	unsigned right_depth = _depth(right, leftmost);
 
-	while (left_depth > right_depth) {
+	while (left_depth > right_depth && left->type != OR) {
 		left = LEFT(left);
 		left_depth--;
 	}
 
-	while (right_depth > left_depth) {
+	while (right_depth > left_depth && right->type != OR) {
 		right = LEFT(right);
 		right_depth--;
 	}
+
+	if (left_depth != right_depth)
+		return 0;
 
 	while (left_depth) {
 		if (left->type == CAT && right->type == CAT) {
@@ -491,6 +494,8 @@ static int _find_leftmost_common(struct rx_node *or,
 				return 1;
 			}
 		}
+		if (left->type == OR || right->type == OR)
+			break;
 		left = LEFT(left);
 		right = LEFT(right);
 		left_depth--;
@@ -568,7 +573,6 @@ static struct rx_node *_pass(struct dm_pool *mem,
 	case QUEST:
 		if (!(r->left = _pass(mem, r->left, changed)))
 			return_NULL;
-		break;
 
 	case OR:
 		/* It's important we optimise sub nodes first */
@@ -577,7 +581,6 @@ static struct rx_node *_pass(struct dm_pool *mem,
 
 		if (!(r->right = _pass(mem, r->right, changed)))
 			return_NULL;
-
 		/*
 		 * If rotate_ors changes the tree, left and right are stale,
 		 * so just set 'changed' to repeat the search.
