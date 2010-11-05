@@ -285,12 +285,12 @@ static int _passes_activation_filter(struct cmd_context *cmd,
 		/* Don't activate */
 		return 0;
 	}
-
-	for (cv = cn->v; cv; cv = cv->next) {
+	else
 		log_verbose("activation/volume_list configuration setting "
 			    "defined, checking the list to match %s/%s",
 			    lv->vg->name, lv->name);
 
+	for (cv = cn->v; cv; cv = cv->next) {
 		if (cv->type != CFG_STRING) {
 			log_error("Ignoring invalid string in config file "
 				  "activation/volume_list");
@@ -302,6 +302,7 @@ static int _passes_activation_filter(struct cmd_context *cmd,
 				  "activation/volume_list");
 			continue;
 		}
+
 
 		/* Tag? */
 		if (*str == '@') {
@@ -1239,8 +1240,8 @@ int lv_activation_filter(struct cmd_context *cmd, const char *lvid_s,
 		goto out;
 
 	if (!_passes_activation_filter(cmd, lv)) {
-		log_verbose("Not activating %s/%s due to config file settings",
-			    lv->vg->name, lv->name);
+		log_verbose("Not activating %s/%s since it does not pass "
+			    "activation filter.", lv->vg->name, lv->name);
 		*activate_lv = 0;
 	} else
 		*activate_lv = 1;
@@ -1266,8 +1267,8 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 		goto out;
 
 	if (filter && !_passes_activation_filter(cmd, lv)) {
-		log_verbose("Not activating %s/%s due to config file settings",
-			    lv->vg->name, lv->name);
+		log_error("Not activating %s/%s since it does not pass "
+			  "activation filter.", lv->vg->name, lv->name);
 		goto out;
 	}
 
