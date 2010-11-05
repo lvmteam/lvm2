@@ -22,14 +22,25 @@ ifeq ("@FSADM@", "yes")
 	SCRIPTS += fsadm.sh
 endif
 
+OCF_SCRIPTS =
+ifeq ("@OCF@", "yes")
+        OCF_SCRIPTS += VolumeGroup.ocf
+endif
+
 vpath %.sh $(srcdir)
 
 %_install: %.sh
 	$(INSTALL_PROGRAM) -D $< $(sbindir)/$(basename $(<F))
 
+%_install: %.ocf
+	$(INSTALL_DIR) $(ocf_scriptdir)
+	$(INSTALL_SCRIPT) $< $(ocf_scriptdir)/$(basename $(<F))
+
 install_lvm2: $(SCRIPTS:.sh=_install)
 
-install: install_lvm2
+install_ocf: $(OCF_SCRIPTS:.ocf=_install)
+
+install: install_lvm2 install_ocf
 
 # FIXME Customise for other distributions
 install_initscripts:

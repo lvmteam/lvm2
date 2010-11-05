@@ -1,5 +1,6 @@
 Version 2.02.76 - 
 ===================================
+  Add initial script VolumeGroup.ocf for pacemaker support.
   Fix regex optimiser not to ignore RHS of OR nodes in _find_leftmost_common.
   Fix handling of online filesystem resize (using new fsadm return code).
   Add DIAGNOSTICS section to fsadm man page.

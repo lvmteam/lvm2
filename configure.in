@@ -361,6 +361,15 @@ AC_ARG_ENABLE(realtime,
 AC_MSG_RESULT($REALTIME)
 
 ################################################################################
+dnl -- disable OCF resource agents
+AC_MSG_CHECKING(whether to enable OCF resource agents)
+AC_ARG_ENABLE(ocf,
+	      AC_HELP_STRING([--enable-ocf],
+			     [enable Open Cluster Framework (OCF) compliant resource agents]),
+	      OCF=$enableval, OCF=no)
+AC_MSG_RESULT($OCF)
+
+################################################################################
 dnl -- Init pkg-config with dummy invokation:
 dnl -- this is required because PKG_CHECK_MODULES macro is expanded
 dnl -- to initialize the pkg-config environment only at the first invokation,
@@ -1317,6 +1326,7 @@ AC_SUBST(LVM_PATCHLEVEL)
 AC_SUBST(LVM_RELEASE)
 AC_SUBST(LVM_RELEASE_DATE)
 AC_SUBST(MIRRORS)
+AC_SUBST(OCF)
 AC_SUBST(REPLICATORS)
 AC_SUBST(MSGFMT)
 AC_SUBST(PKGCONFIG)
