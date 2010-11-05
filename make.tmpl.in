@@ -1,7 +1,7 @@
 # @configure_input@
 #
 # Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
-# Copyright (C) 2004-2009 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2004-2010 Red Hat, Inc. All rights reserved.
 #
 # This file is part of LVM2.
 #
@@ -65,6 +65,7 @@ staticdir = $(DESTDIR)@STATICDIR@
 udevdir = $(DESTDIR)@udevdir@
 pkgconfigdir = $(usrlibdir)/pkgconfig
 initdir = $(DESTDIR)@sysconfdir@/rc.d/init.d
+ocf_scriptdir = $(DESTDIR)@prefix@/usr/lib/ocf/resource.d/lvm2
 
 USRLIB_RELPATH = $(shell echo $(abspath $(usrlibdir) $(libdir)) | \
   $(AWK) -f $(top_srcdir)/scripts/relpath.awk)
@@ -177,6 +178,7 @@ POTFILES = $(SOURCES:%.c=%.pot)
 .PHONY: all pofile distclean clean cleandir cflow device-mapper
 .PHONY: install install_cluster install_device-mapper install_lvm2
 .PHONY: install_lib_shared install_dm_plugin install_lvm2_plugin
+.PHONY: install_ocf
 .PHONY: $(SUBDIRS) $(SUBDIRS.install) $(SUBDIRS.clean) $(SUBDIRS.distclean)
 .PHONY: $(SUBDIRS.pofile) $(SUBDIRS.install_cluster) $(SUBDIRS.cflow)
 .PHONY: $(SUBDIRS.device-mapper) $(SUBDIRS.install-device-mapper)
@@ -186,6 +188,7 @@ SUBDIRS.install := $(SUBDIRS:=.install)
 SUBDIRS.install_cluster := $(SUBDIRS:=.install_cluster)
 SUBDIRS.install_device-mapper := $(SUBDIRS:=.install_device-mapper)
 SUBDIRS.install_lvm2 := $(SUBDIRS:=.install_lvm2)
+SUBDIRS.install_ocf := $(SUBDIRS:=.install_ocf)
 SUBDIRS.pofile := $(SUBDIRS:=.pofile)
 SUBDIRS.cflow := $(SUBDIRS:=.cflow)
 SUBDIRS.clean := $(SUBDIRS:=.clean)
@@ -199,6 +202,7 @@ install: all $(SUBDIRS.install)
 install_cluster: all $(SUBDIRS.install_cluster)
 install_device-mapper: $(SUBDIRS.install_device-mapper)
 install_lvm2: $(SUBDIRS.install_lvm2)
+install_ocf: $(SUBDIRS.install_ocf)
 cflow: $(SUBDIRS.cflow)
 
 $(SUBDIRS): $(SUBDIRS.device-mapper)
@@ -218,6 +222,9 @@ $(SUBDIRS.install_device-mapper): device-mapper
 
 $(SUBDIRS.install_lvm2): $(SUBDIRS)
 	$(MAKE) -C $(@:.install_lvm2=) install_lvm2
+
+$(SUBDIRS.install_ocf):
+	$(MAKE) -C $(@:.install_ocf=) install_ocf
 
 $(SUBDIRS.clean):
 	-$(MAKE) -C $(@:.clean=) clean
