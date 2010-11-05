@@ -3240,12 +3240,9 @@ int lv_create_single(struct volume_group *vg,
 			goto revert_new_lv;
 		}
 	} else if (!activate_lv(cmd, lv)) {
-		if (lp->zero) {
-			log_error("Aborting. Failed to activate new LV to wipe "
-				  "the start of it.");
-			goto deactivate_and_revert_new_lv;
-		}
 		log_error("Failed to activate new LV.");
+		if (lp->zero)
+			goto deactivate_and_revert_new_lv;
 		return 0;
 	}
 
