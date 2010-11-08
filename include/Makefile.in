@@ -25,12 +25,11 @@ all: .symlinks_created
 	for i in `cat $<`; do $(LN_S) $$i ; done
 	touch $@
 
-distclean:
-	find . -maxdepth 1 -type l -exec $(RM) \{\} \;
-	$(RM) Makefile .include_symlinks .symlinks_created .symlinks
-
 pofile: all
 
 device-mapper: all
 
 cflow: all
+
+DISTCLEAN_TARGETS += $(shell find . -maxdepth 1 -type l)
+DISTCLEAN_TARGETS += .include_symlinks .symlinks_created .symlinks
