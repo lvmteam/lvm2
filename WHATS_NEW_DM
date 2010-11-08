@@ -1,5 +1,7 @@
-Version 1.02.57
+Version 1.02.57 - 8th November 2010
 ===================================
+  Fix regex optimiser not to ignore RHS of OR nodes in _find_leftmost_common.
+  Add dmeventd -R to restart dmeventd without losing monitoring state. (1.02.56)
   Fix memory leak of field_id in _output_field function.
   Allocate buffer for reporting functions dynamically to support long outputs.
 

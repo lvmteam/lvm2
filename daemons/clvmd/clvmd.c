@@ -184,8 +184,12 @@ static void child_init_signal(int status)
 	        write(child_pipe[1], &status, sizeof(status));
 		close(child_pipe[1]);
 	}
-	if (status)
-	        exit(status);
+}
+
+static __attribute__((noreturn)) void child_init_signal_and_exit(int status) 
+{
+	child_init_signal(status);
+	exit(status);
 }
 
 static void safe_close(int *fd)
@@ -420,8 +424,10 @@ int main(int argc, char *argv[])
 	   potential clients will block rather than error if we are running
 	   but the cluster is not ready yet */
 	local_sock = open_local_sock();
-	if (local_sock < 0)
-		child_init_signal(DFAIL_LOCAL_SOCK);
+	if (local_sock < 0) {
+		child_init_signal_and_exit(DFAIL_LOCAL_SOCK);
+		/* NOTREACHED */
+	}
 
 	/* Set up signal handlers, USR1 is for cluster change notifications (in cman)
 	   USR2 causes child threads to exit.
@@ -498,10 +504,8 @@ int main(int argc, char *argv[])
 	if (!clops) {
 		DEBUGLOG("Can't initialise cluster interface\n");
 		log_error("Can't initialise cluster interface\n");
-		child_init_signal(DFAIL_CLUSTER_IF);
-#ifdef __clang__
-		__builtin_unreachable();
-#endif
+		child_init_signal_and_exit(DFAIL_CLUSTER_IF);
+		/* NOTREACHED */
 	}
 	DEBUGLOG("Cluster ready, doing some more initialisation\n");
 
@@ -517,10 +521,8 @@ int main(int argc, char *argv[])
 	/* Add the local socket to the list */
 	newfd = malloc(sizeof(struct local_client));
 	if (!newfd) {
-		child_init_signal(DFAIL_MALLOC);
-#ifdef __clang__
-		__builtin_unreachable();
-#endif
+		child_init_signal_and_exit(DFAIL_MALLOC);
+		/* NOTREACHED */
 	}
 
 	newfd->fd = local_sock;

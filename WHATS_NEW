@@ -1,16 +1,16 @@
-Version 2.02.76 - 
+Version 2.02.76 - 8th November 2010
 ===================================
   Clarify error messages when activation fails due to activation filter use.
-  Add initial script VolumeGroup.ocf for pacemaker support.
-  Fix regex optimiser not to ignore RHS of OR nodes in _find_leftmost_common.
+  Add pacemaker script VolumeGroup.ocf with configure --enable-ocf.
+  Import make.tmpl into include/ Makefile.
   Fix handling of online filesystem resize (using new fsadm return code).
   Add DIAGNOSTICS section to fsadm man page.
   Modify fsadm to return different status code for check of mounted filesystem.
   Update VG metadata only once in vgchange when making multiple changes.
   Allow independent vgchange arguments to be used together.
   Automatically unmount invalidated snapshots in dmeventd.
+  Suppress some superfluous messages from clang static analysis.
   Fix a deadlock caused by double close in clvmd.
-  Add dmeventd -R to restart dmeventd without losing monitoring state. (2.02.75)
   Fix NULL pointer dereference on too-large MDA error path in _vg_read_raw_area.
   Use static for internal _align_chunk() and _new_chunk() from pool-fast.c.
   Fix vgchange to process -a, --refresh, --monitor and --poll like lvchange.
