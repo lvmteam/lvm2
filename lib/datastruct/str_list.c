@@ -93,14 +93,18 @@ int str_list_match_item(const struct dm_list *sll, const char *str)
 
 /*
  * Is at least one item on both lists?
+ * If tag_matched is non-NULL, it is set to the tag that matched.
  */
-int str_list_match_list(const struct dm_list *sll, const struct dm_list *sll2)
+int str_list_match_list(const struct dm_list *sll, const struct dm_list *sll2, char **tag_matched)
 {
 	struct str_list *sl;
 
 	dm_list_iterate_items(sl, sll)
-	    if (str_list_match_item(sll2, sl->str))
-		return 1;
+		if (str_list_match_item(sll2, sl->str)) {
+			if (tag_matched)
+				*tag_matched = sl->str;
+			return 1;
+		}
 
 	return 0;
 }
