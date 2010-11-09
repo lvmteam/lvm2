@@ -2164,6 +2164,12 @@ int vg_validate(struct volume_group *vg)
 	uint32_t num_snapshots = 0;
 	uint32_t loop_counter1, loop_counter2;
 
+	if (vg->alloc == ALLOC_CLING_BY_TAGS) {
+		log_error(INTERNAL_ERROR "VG %s allocation policy set to invalid cling_by_tags.",
+			  vg->name);
+		r = 0;
+	}
+
 	/* FIXME Also check there's no data/metadata overlap */
 	dm_list_iterate_items(pvl, &vg->pvs) {
 		if (++pv_count > vg->pv_count) {
@@ -2229,6 +2235,12 @@ int vg_validate(struct volume_group *vg)
 
 		if (!check_lv_segments(lvl->lv, 0)) {
 			log_error(INTERNAL_ERROR "LV segments corrupted in %s.",
+				  lvl->lv->name);
+			r = 0;
+		}
+
+		if (lvl->lv->alloc == ALLOC_CLING_BY_TAGS) {
+			log_error(INTERNAL_ERROR "LV %s allocation policy set to invalid cling_by_tags.",
 				  lvl->lv->name);
 			r = 0;
 		}

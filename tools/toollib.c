@@ -115,7 +115,7 @@ int process_each_lv_in_vg(struct cmd_context *cmd,
 
 	/* Or if VG tags match */
 	if (!process_lv && tags_supplied &&
-	    str_list_match_list(tags, &vg->tags)) {
+	    str_list_match_list(tags, &vg->tags, NULL)) {
 		process_all = 1;
 	}
 
@@ -141,7 +141,7 @@ int process_each_lv_in_vg(struct cmd_context *cmd,
 
 		/* LV tag match? */
 		if (!process_lv && tags_supplied &&
-		    str_list_match_list(tags, &lvl->lv->tags)) {
+		    str_list_match_list(tags, &lvl->lv->tags, NULL)) {
 			process_lv = 1;
 		}
 
@@ -487,7 +487,7 @@ static int _process_one_vg(struct cmd_context *cmd, const char *vg_name,
 		if (!dm_list_empty(tags) &&
 		    /* Only process if a tag matches or it's on arg_vgnames */
 		    !str_list_match_item(arg_vgnames, vg_name) &&
-		    !str_list_match_list(tags, &cvl_vg->vg->tags))
+		    !str_list_match_list(tags, &cvl_vg->vg->tags, NULL))
 			break;
 
 		ret = process_single_vg(cmd, vg_name, cvl_vg->vg, handle);
@@ -606,7 +606,7 @@ int process_each_pv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 
 	dm_list_iterate_items(pvl, &vg->pvs) {
 		if (tags && !dm_list_empty(tags) &&
-		    !str_list_match_list(tags, &pvl->pv->tags)) {
+		    !str_list_match_list(tags, &pvl->pv->tags, NULL)) {
 			continue;
 		}
 		if ((ret = process_single_pv(cmd, vg, pvl->pv, handle)) > ret_max)

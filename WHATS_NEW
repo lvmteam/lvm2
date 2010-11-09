@@ -1,5 +1,7 @@
 Version 2.02.77 -
 ===================================
+  Extend cling allocation policy to recognise PV tags (cling_by_tags).
+  Add allocation/cling_tag_list to lvm.conf.
   Regenerate configure with 'autoreconf' for --enable-ocf. (2.02.76)
 
 Version 2.02.76 - 8th November 2010

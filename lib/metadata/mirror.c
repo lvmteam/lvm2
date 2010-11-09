@@ -400,7 +400,7 @@ static int _delete_lv(struct logical_volume *mirror_lv, struct logical_volume *l
 	struct str_list *sl;
 
 	/* Inherit tags - maybe needed for activation */
-	if (!str_list_match_list(&mirror_lv->tags, &lv->tags)) {
+	if (!str_list_match_list(&mirror_lv->tags, &lv->tags, NULL)) {
 		dm_list_iterate_items(sl, &mirror_lv->tags)
 			if (!str_list_add(cmd->mem, &lv->tags, sl->str)) {
 				log_error("Aborting. Unable to tag.");

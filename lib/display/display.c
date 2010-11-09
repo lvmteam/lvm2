@@ -26,12 +26,13 @@ typedef enum { SIZE_LONG = 0, SIZE_SHORT = 1, SIZE_UNIT = 2 } size_len_t;
 
 static const struct {
 	alloc_policy_t alloc;
-	const char str[12]; /* must be changed when size extends 11 chars */
+	const char str[14]; /* must be changed when size extends 13 chars */
 	const char repchar;
 } _policies[] = {
 	{
 	ALLOC_CONTIGUOUS, "contiguous", 'c'}, {
 	ALLOC_CLING, "cling", 'l'}, {
+	ALLOC_CLING_BY_TAGS, "cling_by_tags", 't'}, {	/* Only used in log mesgs */
 	ALLOC_NORMAL, "normal", 'n'}, {
 	ALLOC_ANYWHERE, "anywhere", 'a'}, {
 	ALLOC_INHERIT, "inherit", 'i'}
@@ -147,12 +148,16 @@ alloc_policy_t get_alloc_from_string(const char *str)
 {
 	int i;
 
+	/* cling_by_tags is part of cling */
+	if (!strcmp("cling_by_tags", str))
+		return ALLOC_CLING;
+
 	for (i = 0; i < _num_policies; i++)
 		if (!strcmp(_policies[i].str, str))
 			return _policies[i].alloc;
 
 	/* Special case for old metadata */
-	if(!strcmp("next free", str))
+	if (!strcmp("next free", str))
 		return ALLOC_NORMAL;
 
 	log_error("Unrecognised allocation policy %s", str);

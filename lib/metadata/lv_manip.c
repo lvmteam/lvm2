@@ -526,6 +526,8 @@ struct alloc_handle {
 	uint32_t region_size;		/* Mirror region size */
 	uint32_t total_area_len;	/* Total number of parallel extents */
 
+	const struct config_node *cling_tag_list_cn;
+
 	struct dm_list *parallel_areas;	/* PVs to avoid */
 
 	/*
@@ -639,6 +641,8 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 		dm_list_init(&ah->alloced_areas[s]);
 
 	ah->parallel_areas = parallel_areas;
+
+	ah->cling_tag_list_cn = find_config_tree_node(cmd, "allocation/cling_tag_list");
 
 	return ah;
 }
@@ -927,18 +931,19 @@ static int _comp_area(const void *l, const void *r)
  * Search for pvseg that matches condition
  */
 struct pv_match {
-	int (*condition)(struct pv_segment *pvseg, struct pv_area *pva);
+	int (*condition)(struct pv_match *pvmatch, struct pv_segment *pvseg, struct pv_area *pva);
 
 	struct pv_area_used *areas;
 	struct pv_area *pva;
 	uint32_t areas_size;
+	const struct config_node *cling_tag_list_cn;
 	int s;	/* Area index of match */
 };
 
 /*
  * Is PV area on the same PV?
  */
-static int _is_same_pv(struct pv_segment *pvseg, struct pv_area *pva)
+static int _is_same_pv(struct pv_match *pvmatch __attribute((unused)), struct pv_segment *pvseg, struct pv_area *pva)
 {
 	if (pvseg->pv != pva->map->pv)
 		return 0;
@@ -947,9 +952,70 @@ static int _is_same_pv(struct pv_segment *pvseg, struct pv_area *pva)
 }
 
 /*
+ * Does PV area have a tag listed in allocation/cling_tag_list that 
+ * matches a tag of the PV of the existing segment?
+ */
+static int _has_matching_pv_tag(struct pv_match *pvmatch, struct pv_segment *pvseg, struct pv_area *pva)
+{
+	struct config_value *cv;
+	char *str;
+	char *tag_matched;
+
+	for (cv = pvmatch->cling_tag_list_cn->v; cv; cv = cv->next) {
+		if (cv->type != CFG_STRING) {
+			log_error("Ignoring invalid string in config file entry "
+				  "allocation/cling_tag_list");
+			continue;
+		}
+		str = cv->v.str;
+		if (!*str) {
+			log_error("Ignoring empty string in config file entry "
+				  "allocation/cling_tag_list");
+			continue;
+		}
+
+		if (*str != '@') {
+			log_error("Ignoring string not starting with @ in config file entry "
+				  "allocation/cling_tag_list: %s", str);
+			continue;
+		}
+
+		str++;
+
+		if (!*str) {
+			log_error("Ignoring empty tag in config file entry "
+				  "allocation/cling_tag_list");
+			continue;
+		}
+
+		/* Wildcard matches any tag against any tag. */
+		if (!strcmp(str, "*")) {
+			if (!str_list_match_list(&pvseg->pv->tags, &pva->map->pv->tags, &tag_matched))
+				continue;
+			else {
+				log_debug("Matched allocation PV tag %s on existing %s with free space on %s.",
+					  tag_matched, pv_dev_name(pvseg->pv), pv_dev_name(pva->map->pv));
+				return 1;
+			}
+		}
+
+		if (!str_list_match_item(&pvseg->pv->tags, str) ||
+		    !str_list_match_item(&pva->map->pv->tags, str))
+			continue;
+		else {
+			log_debug("Matched allocation PV tag %s on existing %s with free space on %s.",
+				  str, pv_dev_name(pvseg->pv), pv_dev_name(pva->map->pv));
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+/*
  * Is PV area contiguous to PV segment?
  */
-static int _is_contiguous(struct pv_segment *pvseg, struct pv_area *pva)
+static int _is_contiguous(struct pv_match *pvmatch __attribute((unused)), struct pv_segment *pvseg, struct pv_area *pva)
 {
 	if (pvseg->pv != pva->map->pv)
 		return 0;
@@ -966,7 +1032,7 @@ static int _is_condition(struct cmd_context *cmd __attribute__((unused)),
 {
 	struct pv_match *pvmatch = data;
 
-	if (!pvmatch->condition(pvseg, pvmatch->pva))
+	if (!pvmatch->condition(pvmatch, pvseg, pvmatch->pva))
 		return 1;	/* Continue */
 
 	if (s >= pvmatch->areas_size)
@@ -991,16 +1057,18 @@ static int _is_condition(struct cmd_context *cmd __attribute__((unused)),
  * Is pva on same PV as any existing areas?
  */
 static int _check_cling(struct cmd_context *cmd,
+			const struct config_node *cling_tag_list_cn,
 			struct lv_segment *prev_lvseg, struct pv_area *pva,
 			struct pv_area_used *areas, uint32_t areas_size)
 {
 	struct pv_match pvmatch;
 	int r;
 
-	pvmatch.condition = _is_same_pv;
+	pvmatch.condition = cling_tag_list_cn ? _has_matching_pv_tag : _is_same_pv;
 	pvmatch.areas = areas;
 	pvmatch.areas_size = areas_size;
 	pvmatch.pva = pva;
+	pvmatch.cling_tag_list_cn = cling_tag_list_cn;
 
 	/* FIXME Cope with stacks by flattening */
 	if (!(r = _for_each_pv(cmd, prev_lvseg->lv,
@@ -1029,6 +1097,7 @@ static int _check_contiguous(struct cmd_context *cmd,
 	pvmatch.areas = areas;
 	pvmatch.areas_size = areas_size;
 	pvmatch.pva = pva;
+	pvmatch.cling_tag_list_cn = NULL;
 
 	/* FIXME Cope with stacks by flattening */
 	if (!(r = _for_each_pv(cmd, prev_lvseg->lv,
@@ -1056,7 +1125,7 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 	struct pv_area *pva;
 	struct pv_list *pvl;
 	unsigned already_found_one = 0;
-	unsigned contiguous = 0, cling = 0, preferred_count = 0;
+	unsigned contiguous = 0, cling = 0, use_cling_tags = 0, preferred_count = 0;
 	unsigned ix, last_ix;
 	unsigned ix_offset = 0;	/* Offset for non-preferred allocations */
 	unsigned ix_log_offset; /* Offset to start of areas to use for log */
@@ -1089,7 +1158,10 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 			contiguous = 1;
 		else if ((alloc == ALLOC_CLING))
 			cling = 1;
-		else
+		else if ((alloc == ALLOC_CLING_BY_TAGS)) {
+			cling = 1;
+			use_cling_tags = 1;
+		} else
 			ix_offset = 0;
 	}
 
@@ -1176,9 +1248,10 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 					if (cling) {
 						if (prev_lvseg &&
 						    _check_cling(ah->cmd,
-								   prev_lvseg,
-								   pva, *areas_ptr,
-								   *areas_size_ptr)) {
+								 use_cling_tags ? ah->cling_tag_list_cn : NULL,
+								 prev_lvseg,
+								 pva, *areas_ptr,
+								 *areas_size_ptr)) {
 							preferred_count++;
 						}
 						goto next_pv;
@@ -1361,8 +1434,18 @@ static int _allocate(struct alloc_handle *ah,
 		return 0;
 	}
 
+	/*
+	 * cling includes implicit cling_by_tags
+	 * but it does nothing unless the lvm.conf setting is present.
+	 */
+	if (ah->alloc == ALLOC_CLING)
+		ah->alloc = ALLOC_CLING_BY_TAGS;
+
 	/* Attempt each defined allocation policy in turn */
 	for (alloc = ALLOC_CONTIGUOUS; alloc < ALLOC_INHERIT; alloc++) {
+		/* Skip cling_by_tags if no list defined */
+		if (alloc == ALLOC_CLING_BY_TAGS && !ah->cling_tag_list_cn)
+			continue;
 		old_allocated = allocated;
 		log_debug("Trying allocation using %s policy.  "
 			  "Need %" PRIu32 " extents for %" PRIu32 " parallel areas and %" PRIu32 " log areas of %" PRIu32 " extents. "
@@ -1829,8 +1912,8 @@ static int _rename_sub_lv(struct cmd_context *cmd,
 	/*
 	 * Compose a new name for sub lv:
 	 *   e.g. new name is "lvol1_mlog"
-	 *        if the sub LV is "lvol0_mlog" and
-	 *        a new name for main LV is "lvol1"
+	 *	if the sub LV is "lvol0_mlog" and
+	 *	a new name for main LV is "lvol1"
 	 */
 	len = strlen(lv_name_new) + strlen(suffix) + 1;
 	new_name = dm_pool_alloc(cmd->mem, len);
@@ -2339,7 +2422,7 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 		}
 	}
 
-        return lv_remove_single(cmd, lv, force);
+	return lv_remove_single(cmd, lv, force);
 }
 
 /*

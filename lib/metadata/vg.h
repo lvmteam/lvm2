@@ -25,6 +25,7 @@ typedef enum {
 	ALLOC_INVALID,
 	ALLOC_CONTIGUOUS,
 	ALLOC_CLING,
+	ALLOC_CLING_BY_TAGS,	/* Internal - never written or displayed. */
 	ALLOC_NORMAL,
 	ALLOC_ANYWHERE,
 	ALLOC_INHERIT

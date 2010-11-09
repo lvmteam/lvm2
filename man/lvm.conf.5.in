@@ -172,6 +172,28 @@ the limit set here, no further I/O is sent to that device for the remainder of
 the respective operation. Setting the parameter to 0 disables the counters
 altogether.
 .TP
+\fBallocation\fP \(em Space allocation policies
+.IP
+\fBcling_tag_list\fP \(em List of PV tags matched by the \fBcling\fP allocation policy.
+.IP
+When searching for free space to extend an LV, the \fBcling\fP
+allocation policy will choose space on the same PVs as the last
+segment of the existing LV.  If there is insufficient space and a
+list of tags is defined here, it will check whether any of them are
+attached to the PVs concerned and then seek to match those PV tags
+between existing extents and new extents.
+.IP 
+The @ prefix for tags is required.
+Use the special tag "@*" as a wildcard to match any PV tag and so use 
+all PV tags for this purpose.
+.IP
+For example, LVs are mirrored between two sites within a single VG.
+PVs are tagged with either @site1 or @site2 to indicate where
+they are situated and these two PV tags are selected for use with this
+allocation policy:
+.IP
+cling_tag_list = [ "@site1", "@site2" ]
+.TP
 \fBlog\fP \(em Default log settings
 .IP
 \fBfile\fP \(em Location of log file.  If this entry is not present, no

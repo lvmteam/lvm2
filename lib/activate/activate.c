@@ -275,8 +275,8 @@ static int _passes_activation_filter(struct cmd_context *cmd,
 			return 1;
 
 		/* If any host tag matches any LV or VG tag, activate */
-		if (str_list_match_list(&cmd->tags, &lv->tags) ||
-		    str_list_match_list(&cmd->tags, &lv->vg->tags))
+		if (str_list_match_list(&cmd->tags, &lv->tags, NULL) ||
+		    str_list_match_list(&cmd->tags, &lv->vg->tags, NULL))
 			return 1;
 
 		log_verbose("No host tag matches %s/%s",
@@ -314,9 +314,9 @@ static int _passes_activation_filter(struct cmd_context *cmd,
 			}
 			/* If any host tag matches any LV or VG tag, activate */
 			if (!strcmp(str, "*")) {
-				if (str_list_match_list(&cmd->tags, &lv->tags)
+				if (str_list_match_list(&cmd->tags, &lv->tags, NULL)
 				    || str_list_match_list(&cmd->tags,
-							   &lv->vg->tags))
+							   &lv->vg->tags, NULL))
 					    return 1;
 				else
 					continue;
