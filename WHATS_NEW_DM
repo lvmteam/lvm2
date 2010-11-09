@@ -1,3 +1,6 @@
+Version 1.02.58 - 
+===================================
+
 Version 1.02.57 - 8th November 2010
 ===================================
   Fix regex optimiser not to ignore RHS of OR nodes in _find_leftmost_common.
