@@ -199,14 +199,19 @@ detect_mounted()  {
 	# for empty string try again with real volume name
 	test -z "$MOUNTED" && MOUNTED=$($GREP ^"$RVOLUME" $PROCMOUNTS)
 
-	# for systems with different device names - check also mount output
-	test -z "$MOUNTED" && MOUNTED=$($MOUNT | $GREP ^"$VOLUME")
-	test -z "$MOUNTED" && MOUNTED=$($MOUNT | $GREP ^"$RVOLUME")
-
 	# cut device name prefix and trim everything past mountpoint
 	# echo translates \040 to spaces
 	MOUNTED=${MOUNTED#* }
 	MOUNTED=$(echo -n -e ${MOUNTED%% *})
+
+	# for systems with different device names - check also mount output
+	if test -z "$MOUNTED" ; then
+		MOUNTED=$(LANG=C $MOUNT | $GREP ^"$VOLUME")
+		test -z "$MOUNTED" && MOUNTED=$(LANG=C $MOUNT | $GREP ^"$RVOLUME")
+		MOUNTED=${MOUNTED##* on }
+		MOUNTED=${MOUNTED% type *} # allow type in the mount name
+	fi
+
 	test -n "$MOUNTED"
 }
 
@@ -271,7 +276,7 @@ validate_parsing() {
 ####################################
 resize_ext() {
 	verbose "Parsing $TUNE_EXT -l \"$VOLUME\""
-	for i in $($TUNE_EXT -l "$VOLUME"); do
+	for i in $(LANG=C $TUNE_EXT -l "$VOLUME"); do
 		case "$i" in
 		  "Block size"*) BLOCKSIZE=${i##*  } ;;
 		  "Block count"*) BLOCKCOUNT=${i##*  } ;;
@@ -284,8 +289,13 @@ resize_ext() {
 	if [ "$NEWBLOCKCOUNT" -lt "$BLOCKCOUNT" -o "$EXTOFF" -eq 1 ]; then
 		detect_mounted && verbose "$RESIZE_EXT needs unmounted filesystem" && try_umount
 		REMOUNT=$MOUNTED
-		# CHECKME: after umount resize2fs requires fsck or -f flag.
-		FSFORCE="-f"
+		if test -n "$MOUNTED" ; then
+			# Forced fsck -f for umounted extX filesystem.
+			case "$-" in
+			  *i*) dry $FSCK $YES -f "$VOLUME" ;;
+			  *) dry $FSCK -f -p "$VOLUME" ;;
+			esac
+		fi
 	fi
 
 	verbose "Resizing filesystem on device \"$VOLUME\" to $NEWSIZE bytes ($BLOCKCOUNT -> $NEWBLOCKCOUNT blocks of $BLOCKSIZE bytes)"
@@ -301,7 +311,7 @@ resize_reiser() {
 	detect_mounted && verbose "ReiserFS resizes only unmounted filesystem" && try_umount
 	REMOUNT=$MOUNTED
 	verbose "Parsing $TUNE_REISER \"$VOLUME\""
-	for i in $($TUNE_REISER "$VOLUME"); do
+	for i in $(LANG=C $TUNE_REISER "$VOLUME"); do
 		case "$i" in
 		  "Blocksize"*) BLOCKSIZE=${i##*: } ;;
 		  "Count of blocks"*) BLOCKCOUNT=${i##*: } ;;
@@ -330,7 +340,7 @@ resize_xfs() {
 		temp_mount || error "Cannot mount Xfs filesystem"
 	fi
 	verbose "Parsing $TUNE_XFS \"$MOUNTPOINT\""
-	for i in $($TUNE_XFS "$MOUNTPOINT"); do
+	for i in $(LANG=C $TUNE_XFS "$MOUNTPOINT"); do
 		case "$i" in
 		  "data"*) BLOCKSIZE=${i##*bsize=} ; BLOCKCOUNT=${i##*blocks=} ;;
 		esac
@@ -370,6 +380,15 @@ resize() {
 	cleanup 0
 }
 
+####################################
+# Calclulate diff between two dates
+#  LANG=C input is expected the
+#  only one supported
+####################################
+diff_dates() {
+         echo $(( $(date -u -d"$1" +%s 2>/dev/null) - $(date -u -d"$2" +%s 2>/dev/null) ))
+}
+
 ###################
 # Check filesystem
 ###################
@@ -379,6 +398,30 @@ check() {
 		verbose "Skipping filesystem check for device \"$VOLUME\" as the filesystem is mounted on $MOUNTED";
 		cleanup 3
 	fi
+
+	case "$FSTYPE" in
+	  "ext2"|"ext3"|"ext4")
+		IFS_CHECK=$IFS
+		IFS=$NL
+		for i in $(LANG=C $TUNE_EXT -l "$VOLUME"); do
+			case "$i" in
+			  "Last mount"*) LASTMOUNT=${i##*: } ;;
+			  "Last checked"*) LASTCHECKED=${i##*: } ;;
+			esac
+		done
+		case "$LASTMOUNT" in
+		  *"n/a") ;; # nothing to do - system was not mounted yet
+		  *)
+			LASTDIFF=$(diff_dates $LASTMOUNT $LASTCHECKED)
+			if test "$LASTDIFF" -gt 0 ; then
+				verbose "Filesystem has not been checked after the last mount, using fsck -f"
+				FORCE="-f"
+			fi
+			;;
+		esac
+		IFS=$IFS_CHECK
+	esac
+
 	case "$FSTYPE" in
 	  "xfs") dry $XFS_CHECK "$VOLUME" ;;
 	  *)    # check if executed from interactive shell environment
