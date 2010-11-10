@@ -199,6 +199,10 @@ detect_mounted()  {
 	# for empty string try again with real volume name
 	test -z "$MOUNTED" && MOUNTED=$($GREP ^"$RVOLUME" $PROCMOUNTS)
 
+	# for systems with different device names - check also mount output
+	test -z "$MOUNTED" && MOUNTED=$($MOUNT | $GREP ^"$VOLUME")
+	test -z "$MOUNTED" && MOUNTED=$($MOUNT | $GREP ^"$RVOLUME")
+
 	# cut device name prefix and trim everything past mountpoint
 	# echo translates \040 to spaces
 	MOUNTED=${MOUNTED#* }
