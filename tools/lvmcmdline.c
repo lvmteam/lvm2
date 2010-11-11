@@ -50,8 +50,8 @@ extern char *optarg;
 /*
  * Table of valid switches
  */
-static struct arg _the_args[ARG_COUNT + 1] = {
-#define arg(a, b, c, d, e) {b, "", "--" c, d, e, 0, NULL, 0, 0, INT64_C(0), UINT64_C(0), SIGN_NONE, PERCENT_NONE},
+static struct arg_props _arg_props[ARG_COUNT + 1] = {
+#define arg(a, b, c, d, e) {b, "", "--" c, d, e},
 #include "args.h"
 #undef arg
 };
@@ -59,10 +59,14 @@ static struct arg _the_args[ARG_COUNT + 1] = {
 static struct cmdline_context _cmdline;
 
 /* Command line args */
-/* FIXME: Move static _the_args into cmd? */
-unsigned arg_count(const struct cmd_context *cmd __attribute__((unused)), int a)
+unsigned arg_count(const struct cmd_context *cmd, int a)
 {
-	return _the_args[a].count;
+	return cmd->arg_values[a].count;
+}
+
+unsigned grouped_arg_count(const struct arg_values *av, int a)
+{
+	return av[a].count;
 }
 
 unsigned arg_is_set(const struct cmd_context *cmd, int a)
@@ -70,71 +74,81 @@ unsigned arg_is_set(const struct cmd_context *cmd, int a)
 	return arg_count(cmd, a) ? 1 : 0;
 }
 
-const char *arg_value(struct cmd_context *cmd __attribute__((unused)), int a)
+unsigned grouped_arg_is_set(const struct arg_values *av, int a)
 {
-	return _the_args[a].value;
+	return grouped_arg_count(av, a) ? 1 : 0;
+}
+
+const char *arg_value(struct cmd_context *cmd, int a)
+{
+	return cmd->arg_values[a].value;
 }
 
 const char *arg_str_value(struct cmd_context *cmd, int a, const char *def)
 {
-	return arg_count(cmd, a) ? _the_args[a].value : def;
+	return arg_count(cmd, a) ? cmd->arg_values[a].value : def;
+}
+
+const char *grouped_arg_str_value(const struct arg_values *av, int a, const char *def)
+{
+	return grouped_arg_count(av, a) ? av[a].value : def;
 }
 
 int32_t arg_int_value(struct cmd_context *cmd, int a, const int32_t def)
 {
-	return arg_count(cmd, a) ? _the_args[a].i_value : def;
+	return arg_count(cmd, a) ? cmd->arg_values[a].i_value : def;
 }
 
 uint32_t arg_uint_value(struct cmd_context *cmd, int a, const uint32_t def)
 {
-	return arg_count(cmd, a) ? _the_args[a].ui_value : def;
+	return arg_count(cmd, a) ? cmd->arg_values[a].ui_value : def;
 }
 
 int64_t arg_int64_value(struct cmd_context *cmd, int a, const int64_t def)
 {
-	return arg_count(cmd, a) ? _the_args[a].i64_value : def;
+	return arg_count(cmd, a) ? cmd->arg_values[a].i64_value : def;
 }
 
 uint64_t arg_uint64_value(struct cmd_context *cmd, int a, const uint64_t def)
 {
-	return arg_count(cmd, a) ? _the_args[a].ui64_value : def;
+	return arg_count(cmd, a) ? cmd->arg_values[a].ui64_value : def;
 }
 
 /* No longer used.
 const void *arg_ptr_value(struct cmd_context *cmd, int a, const void *def)
 {
-	return arg_count(cmd, a) ? _the_args[a].ptr : def;
+	return arg_count(cmd, a) ? cmd->arg_values[a].ptr : def;
 }
 */
 
 sign_t arg_sign_value(struct cmd_context *cmd, int a, const sign_t def)
 {
-	return arg_count(cmd, a) ? _the_args[a].sign : def;
+	return arg_count(cmd, a) ? cmd->arg_values[a].sign : def;
 }
 
 percent_t arg_percent_value(struct cmd_context *cmd, int a, const percent_t def)
 {
-	return arg_count(cmd, a) ? _the_args[a].percent : def;
+	return arg_count(cmd, a) ? cmd->arg_values[a].percent : def;
 }
 
-int arg_count_increment(struct cmd_context *cmd __attribute__((unused)), int a)
+int arg_count_increment(struct cmd_context *cmd, int a)
 {
-	return _the_args[a].count++;
+	return cmd->arg_values[a].count++;
 }
 
-int yes_no_arg(struct cmd_context *cmd __attribute__((unused)), struct arg *a)
+int yes_no_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av)
 {
-	a->sign = SIGN_NONE;
-	a->percent = PERCENT_NONE;
+	av->sign = SIGN_NONE;
+	av->percent = PERCENT_NONE;
 
-	if (!strcmp(a->value, "y")) {
-		a->i_value = 1;
-		a->ui_value = 1;
+	if (!strcmp(av->value, "y")) {
+		av->i_value = 1;
+		av->ui_value = 1;
 	}
 
-	else if (!strcmp(a->value, "n")) {
-		a->i_value = 0;
-		a->ui_value = 0;
+	else if (!strcmp(av->value, "n")) {
+		av->i_value = 0;
+		av->ui_value = 0;
 	}
 
 	else
@@ -143,37 +157,36 @@ int yes_no_arg(struct cmd_context *cmd __attribute__((unused)), struct arg *a)
 	return 1;
 }
 
-int yes_no_excl_arg(struct cmd_context *cmd __attribute__((unused)),
-		    struct arg *a)
+int yes_no_excl_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av)
 {
-	a->sign = SIGN_NONE;
-	a->percent = PERCENT_NONE;
+	av->sign = SIGN_NONE;
+	av->percent = PERCENT_NONE;
 
-	if (!strcmp(a->value, "e") || !strcmp(a->value, "ey") ||
-	    !strcmp(a->value, "ye")) {
-		a->i_value = CHANGE_AE;
-		a->ui_value = CHANGE_AE;
+	if (!strcmp(av->value, "e") || !strcmp(av->value, "ey") ||
+	    !strcmp(av->value, "ye")) {
+		av->i_value = CHANGE_AE;
+		av->ui_value = CHANGE_AE;
 	}
 
-	else if (!strcmp(a->value, "y")) {
-		a->i_value = CHANGE_AY;
-		a->ui_value = CHANGE_AY;
+	else if (!strcmp(av->value, "y")) {
+		av->i_value = CHANGE_AY;
+		av->ui_value = CHANGE_AY;
 	}
 
-	else if (!strcmp(a->value, "n") || !strcmp(a->value, "en") ||
-		 !strcmp(a->value, "ne")) {
-		a->i_value = CHANGE_AN;
-		a->ui_value = CHANGE_AN;
+	else if (!strcmp(av->value, "n") || !strcmp(av->value, "en") ||
+		 !strcmp(av->value, "ne")) {
+		av->i_value = CHANGE_AN;
+		av->ui_value = CHANGE_AN;
 	}
 
-	else if (!strcmp(a->value, "ln") || !strcmp(a->value, "nl")) {
-		a->i_value = CHANGE_ALN;
-		a->ui_value = CHANGE_ALN;
+	else if (!strcmp(av->value, "ln") || !strcmp(av->value, "nl")) {
+		av->i_value = CHANGE_ALN;
+		av->ui_value = CHANGE_ALN;
 	}
 
-	else if (!strcmp(a->value, "ly") || !strcmp(a->value, "yl")) {
-		a->i_value = CHANGE_ALY;
-		a->ui_value = CHANGE_ALY;
+	else if (!strcmp(av->value, "ly") || !strcmp(av->value, "yl")) {
+		av->i_value = CHANGE_ALY;
+		av->ui_value = CHANGE_ALY;
 	}
 
 	else
@@ -182,30 +195,30 @@ int yes_no_excl_arg(struct cmd_context *cmd __attribute__((unused)),
 	return 1;
 }
 
-int metadatatype_arg(struct cmd_context *cmd, struct arg *a)
+int metadatatype_arg(struct cmd_context *cmd, struct arg_values *av)
 {
-	return get_format_by_name(cmd, a->value) ? 1 : 0;
+	return get_format_by_name(cmd, av->value) ? 1 : 0;
 }
 
-static int _get_int_arg(struct arg *a, char **ptr)
+static int _get_int_arg(struct arg_values *av, char **ptr)
 {
 	char *val;
 	long v;
 
-	a->percent = PERCENT_NONE;
+	av->percent = PERCENT_NONE;
 
-	val = a->value;
+	val = av->value;
 	switch (*val) {
 	case '+':
-		a->sign = SIGN_PLUS;
+		av->sign = SIGN_PLUS;
 		val++;
 		break;
 	case '-':
-		a->sign = SIGN_MINUS;
+		av->sign = SIGN_MINUS;
 		val++;
 		break;
 	default:
-		a->sign = SIGN_NONE;
+		av->sign = SIGN_NONE;
 	}
 
 	if (!isdigit(*val))
@@ -216,16 +229,16 @@ static int _get_int_arg(struct arg *a, char **ptr)
 	if (*ptr == val)
 		return 0;
 
-	a->i_value = (int32_t) v;
-	a->ui_value = (uint32_t) v;
-	a->i64_value = (int64_t) v;
-	a->ui64_value = (uint64_t) v;
+	av->i_value = (int32_t) v;
+	av->ui_value = (uint32_t) v;
+	av->i64_value = (int64_t) v;
+	av->ui64_value = (uint64_t) v;
 
 	return 1;
 }
 
 /* Size stored in sectors */
-static int _size_arg(struct cmd_context *cmd __attribute__((unused)), struct arg *a, int factor)
+static int _size_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av, int factor)
 {
 	char *ptr;
 	int i;
@@ -234,20 +247,20 @@ static int _size_arg(struct cmd_context *cmd __attribute__((unused)), struct arg
 	double v;
 	uint64_t v_tmp, adjustment;
 
-	a->percent = PERCENT_NONE;
+	av->percent = PERCENT_NONE;
 
-	val = a->value;
+	val = av->value;
 	switch (*val) {
 	case '+':
-		a->sign = SIGN_PLUS;
+		av->sign = SIGN_PLUS;
 		val++;
 		break;
 	case '-':
-		a->sign = SIGN_MINUS;
+		av->sign = SIGN_MINUS;
 		val++;
 		break;
 	default:
-		a->sign = SIGN_NONE;
+		av->sign = SIGN_NONE;
 	}
 
 	if (!isdigit(*val))
@@ -289,50 +302,50 @@ static int _size_arg(struct cmd_context *cmd __attribute__((unused)), struct arg
 	} else
 		v *= factor;
 
-	a->i_value = (int32_t) v;
-	a->ui_value = (uint32_t) v;
-	a->i64_value = (int64_t) v;
-	a->ui64_value = (uint64_t) v;
+	av->i_value = (int32_t) v;
+	av->ui_value = (uint32_t) v;
+	av->i64_value = (int64_t) v;
+	av->ui64_value = (uint64_t) v;
 
 	return 1;
 }
 
-int size_kb_arg(struct cmd_context *cmd, struct arg *a)
+int size_kb_arg(struct cmd_context *cmd, struct arg_values *av)
 {
-	return _size_arg(cmd, a, 2);
+	return _size_arg(cmd, av, 2);
 }
 
-int size_mb_arg(struct cmd_context *cmd, struct arg *a)
+int size_mb_arg(struct cmd_context *cmd, struct arg_values *av)
 {
-	return _size_arg(cmd, a, 2048);
+	return _size_arg(cmd, av, 2048);
 }
 
-int int_arg(struct cmd_context *cmd __attribute__((unused)), struct arg *a)
+int int_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av)
 {
 	char *ptr;
 
-	if (!_get_int_arg(a, &ptr) || (*ptr) || (a->sign == SIGN_MINUS))
+	if (!_get_int_arg(av, &ptr) || (*ptr) || (av->sign == SIGN_MINUS))
 		return 0;
 
 	return 1;
 }
 
-int int_arg_with_sign(struct cmd_context *cmd __attribute__((unused)), struct arg *a)
+int int_arg_with_sign(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av)
 {
 	char *ptr;
 
-	if (!_get_int_arg(a, &ptr) || (*ptr))
+	if (!_get_int_arg(av, &ptr) || (*ptr))
 		return 0;
 
 	return 1;
 }
 
 int int_arg_with_sign_and_percent(struct cmd_context *cmd __attribute__((unused)),
-				  struct arg *a)
+				  struct arg_values *av)
 {
 	char *ptr;
 
-	if (!_get_int_arg(a, &ptr))
+	if (!_get_int_arg(av, &ptr))
 		return 0;
 
 	if (!*ptr)
@@ -342,32 +355,32 @@ int int_arg_with_sign_and_percent(struct cmd_context *cmd __attribute__((unused)
 		return 0;
 
 	if (!strcasecmp(ptr, "V") || !strcasecmp(ptr, "VG"))
-		a->percent = PERCENT_VG;
+		av->percent = PERCENT_VG;
 	else if (!strcasecmp(ptr, "L") || !strcasecmp(ptr, "LV"))
-		a->percent = PERCENT_LV;
+		av->percent = PERCENT_LV;
 	else if (!strcasecmp(ptr, "P") || !strcasecmp(ptr, "PV") ||
 		 !strcasecmp(ptr, "PVS"))
-		a->percent = PERCENT_PVS;
+		av->percent = PERCENT_PVS;
 	else if (!strcasecmp(ptr, "F") || !strcasecmp(ptr, "FR") ||
 		 !strcasecmp(ptr, "FREE"))
-		a->percent = PERCENT_FREE;
+		av->percent = PERCENT_FREE;
 	else if (!strcasecmp(ptr, "O") || !strcasecmp(ptr, "OR") ||
 		 !strcasecmp(ptr, "ORIGIN"))
-		a->percent = PERCENT_ORIGIN;
+		av->percent = PERCENT_ORIGIN;
 	else
 		return 0;
 
 	return 1;
 }
 
-int minor_arg(struct cmd_context *cmd __attribute__((unused)), struct arg *a)
+int minor_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av)
 {
 	char *ptr;
 
-	if (!_get_int_arg(a, &ptr) || (*ptr) || (a->sign == SIGN_MINUS))
+	if (!_get_int_arg(av, &ptr) || (*ptr) || (av->sign == SIGN_MINUS))
 		return 0;
 
-	if (a->i_value > 255) {
+	if (av->i_value > 255) {
 		log_error("Minor number outside range 0-255");
 		return 0;
 	}
@@ -375,14 +388,14 @@ int minor_arg(struct cmd_context *cmd __attribute__((unused)), struct arg *a)
 	return 1;
 }
 
-int major_arg(struct cmd_context *cmd __attribute__((unused)), struct arg *a)
+int major_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av)
 {
 	char *ptr;
 
-	if (!_get_int_arg(a, &ptr) || (*ptr) || (a->sign == SIGN_MINUS))
+	if (!_get_int_arg(av, &ptr) || (*ptr) || (av->sign == SIGN_MINUS))
 		return 0;
 
-	if (a->i_value > 255) {
+	if (av->i_value > 255) {
 		log_error("Major number outside range 0-255");
 		return 0;
 	}
@@ -393,14 +406,14 @@ int major_arg(struct cmd_context *cmd __attribute__((unused)), struct arg *a)
 }
 
 int string_arg(struct cmd_context *cmd __attribute__((unused)),
-	       struct arg *a __attribute__((unused)))
+	       struct arg_values *av __attribute__((unused)))
 {
 	return 1;
 }
 
-int tag_arg(struct cmd_context *cmd __attribute__((unused)), struct arg *a)
+int tag_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av)
 {
-	char *pos = a->value;
+	char *pos = av->value;
 
 	if (*pos == '@')
 		pos++;
@@ -408,20 +421,20 @@ int tag_arg(struct cmd_context *cmd __attribute__((unused)), struct arg *a)
 	if (!validate_name(pos))
 		return 0;
 
-	a->value = pos;
+	av->value = pos;
 
 	return 1;
 }
 
-int permission_arg(struct cmd_context *cmd __attribute__((unused)), struct arg *a)
+int permission_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av)
 {
-	a->sign = SIGN_NONE;
+	av->sign = SIGN_NONE;
 
-	if ((!strcmp(a->value, "rw")) || (!strcmp(a->value, "wr")))
-		a->ui_value = LVM_READ | LVM_WRITE;
+	if ((!strcmp(av->value, "rw")) || (!strcmp(av->value, "wr")))
+		av->ui_value = LVM_READ | LVM_WRITE;
 
-	else if (!strcmp(a->value, "r"))
-		a->ui_value = LVM_READ;
+	else if (!strcmp(av->value, "r"))
+		av->ui_value = LVM_READ;
 
 	else
 		return 0;
@@ -429,45 +442,45 @@ int permission_arg(struct cmd_context *cmd __attribute__((unused)), struct arg *
 	return 1;
 }
 
-int alloc_arg(struct cmd_context *cmd __attribute__((unused)), struct arg *a)
+int alloc_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av)
 {
 	alloc_policy_t alloc;
 
-	a->sign = SIGN_NONE;
+	av->sign = SIGN_NONE;
 
-	alloc = get_alloc_from_string(a->value);
+	alloc = get_alloc_from_string(av->value);
 	if (alloc == ALLOC_INVALID)
 		return 0;
 
-	a->ui_value = (uint32_t) alloc;
+	av->ui_value = (uint32_t) alloc;
 
 	return 1;
 }
 
-int segtype_arg(struct cmd_context *cmd, struct arg *a)
+int segtype_arg(struct cmd_context *cmd, struct arg_values *av)
 {
-	return get_segtype_from_string(cmd, a->value) ? 1 : 0;
+	return get_segtype_from_string(cmd, av->value) ? 1 : 0;
 }
 
 /*
  * Positive integer, zero or "auto".
  */
-int readahead_arg(struct cmd_context *cmd __attribute__((unused)), struct arg *a)
+int readahead_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av)
 {
-	if (!strcasecmp(a->value, "auto")) {
-		a->ui_value = DM_READ_AHEAD_AUTO;
+	if (!strcasecmp(av->value, "auto")) {
+		av->ui_value = DM_READ_AHEAD_AUTO;
 		return 1;
 	}
 
-	if (!strcasecmp(a->value, "none")) {
-		a->ui_value = DM_READ_AHEAD_NONE;
+	if (!strcasecmp(av->value, "none")) {
+		av->ui_value = DM_READ_AHEAD_NONE;
 		return 1;
 	}
 
-	if (!_size_arg(cmd, a, 1))
+	if (!_size_arg(cmd, av, 1))
 		return 0;
 
-	if (a->sign == SIGN_MINUS)
+	if (av->sign == SIGN_MINUS)
 		return 0;
 
 	return 1;
@@ -476,22 +489,21 @@ int readahead_arg(struct cmd_context *cmd __attribute__((unused)), struct arg *a
 /*
  * Non-zero, positive integer, "all", or "unmanaged"
  */
-int metadatacopies_arg(struct cmd_context *cmd __attribute__((unused)),
-			 struct arg *a)
+int metadatacopies_arg(struct cmd_context *cmd, struct arg_values *av)
 {
 	if (!strncmp(cmd->command->name, "vg", 2)) {
-		if (!strcasecmp(a->value, "all")) {
-			a->ui_value = VGMETADATACOPIES_ALL;
+		if (!strcasecmp(av->value, "all")) {
+			av->ui_value = VGMETADATACOPIES_ALL;
 			return 1;
 		}
 
-		if (!strcasecmp(a->value, "unmanaged")) {
-			a->ui_value = VGMETADATACOPIES_UNMANAGED;
+		if (!strcasecmp(av->value, "unmanaged")) {
+			av->ui_value = VGMETADATACOPIES_UNMANAGED;
 			return 1;
 		}
 	}
 
-	return int_arg(cmd, a);
+	return int_arg(cmd, av);
 }
 
 static void __alloc(int size)
@@ -618,7 +630,7 @@ static int _usage(const char *name)
  */
 static void _add_getopt_arg(int arg, char **ptr, struct option **o)
 {
-	struct arg *a = _cmdline.the_args + arg;
+	struct arg_props *a = _cmdline.arg_props + arg;
 
 	if (a->short_arg) {
 		*(*ptr)++ = a->short_arg;
@@ -640,14 +652,14 @@ static void _add_getopt_arg(int arg, char **ptr, struct option **o)
 #endif
 }
 
-static struct arg *_find_arg(struct command *com, int opt)
+static int _find_arg(struct command *com, int opt)
 {
-	struct arg *a;
+	struct arg_props *a;
 	int i, arg;
 
 	for (i = 0; i < com->num_args; i++) {
 		arg = com->valid_args[i];
-		a = _cmdline.the_args + arg;
+		a = _cmdline.arg_props + arg;
 
 		/*
 		 * opt should equal either the
@@ -656,30 +668,25 @@ static struct arg *_find_arg(struct command *com, int opt)
 		 */
 		if ((a->short_arg && (opt == a->short_arg)) ||
 		    (!a->short_arg && (opt == arg)))
-			return a;
+			return arg;
 	}
 
-	return 0;
+	return -1;
 }
 
 static int _process_command_line(struct cmd_context *cmd, int *argc,
 				 char ***argv)
 {
-	int i, opt;
+	int i, opt, arg;
 	char str[((ARG_COUNT + 1) * 2) + 1], *ptr = str;
 	struct option opts[ARG_COUNT + 1], *o = opts;
-	struct arg *a;
+	struct arg_props *a;
+	struct arg_values *av;
+	struct arg_value_group_list *current_group = NULL;
 
-	for (i = 0; i < ARG_COUNT; i++) {
-		a = _cmdline.the_args + i;
-
-		/* zero the count and arg */
-		a->count = 0;
-		a->value = 0;
-		a->i_value = 0;
-		a->ui_value = 0;
-		a->i64_value = 0;
-		a->ui64_value = 0;
+	if (!(cmd->arg_values = dm_pool_zalloc(cmd->mem, sizeof(*cmd->arg_values) * ARG_COUNT))) {
+		log_fatal("Unable to allocate memory for command line arguments.");
+		return 0;
 	}
 
 	/* fill in the short and long opts */
@@ -697,15 +704,33 @@ static int _process_command_line(struct cmd_context *cmd, int *argc,
 		if (opt == '?')
 			return 0;
 
-		a = _find_arg(cmd->command, opt);
-
-		if (!a) {
+		if ((arg = _find_arg(cmd->command, opt)) < 0) {
 			log_fatal("Unrecognised option.");
 			return 0;
 		}
 
-		if (a->count && !(a->flags & ARG_REPEATABLE)) {
-			log_error("Option%s%c%s%s may not be repeated",
+		a = _cmdline.arg_props + arg;
+
+		av = &cmd->arg_values[arg];
+
+		if (a->flags & ARG_GROUPABLE) {
+			/* Start a new group of arguments the first time or if a non-countable argument is repeated. */
+			if (!current_group || (current_group->arg_values[arg].count && !(a->flags & ARG_COUNTABLE))) {
+				/* FIXME Reduce size including only groupable args */
+				if (!(current_group = dm_pool_zalloc(cmd->mem, sizeof(struct arg_value_group_list) + sizeof(*cmd->arg_values) * ARG_COUNT))) {
+					log_fatal("Unable to allocate memory for command line arguments.");
+					return 0;
+				}
+
+				dm_list_add(&cmd->arg_value_groups, &current_group->list);
+			}
+			/* Maintain total argument count as well as count within each group */
+			av->count++;
+			av = &current_group->arg_values[arg];
+		}
+
+		if (av->count && !(a->flags & ARG_COUNTABLE)) {
+			log_error("Option%s%c%s%s may not be repeated.",
 				  a->short_arg ? " -" : "",
 				  a->short_arg ? : ' ',
 				  (a->short_arg && a->long_arg) ?
@@ -719,15 +744,15 @@ static int _process_command_line(struct cmd_context *cmd, int *argc,
 				return 0;
 			}
 
-			a->value = optarg;
+			av->value = optarg;
 
-			if (!a->fn(cmd, a)) {
-				log_error("Invalid argument %s", optarg);
+			if (!a->fn(cmd, av)) {
+				log_error("Invalid argument for %s: %s", a->long_arg, optarg);
 				return 0;
 			}
 		}
 
-		a->count++;
+		av->count++;
 	}
 
 	*argc -= optind;
@@ -737,20 +762,20 @@ static int _process_command_line(struct cmd_context *cmd, int *argc,
 
 static int _merge_synonym(struct cmd_context *cmd, int oldarg, int newarg)
 {
-	const struct arg *old;
-	struct arg *new;
+	const struct arg_values *old;
+	struct arg_values *new;
 
 	if (arg_count(cmd, oldarg) && arg_count(cmd, newarg)) {
 		log_error("%s and %s are synonyms.  Please only supply one.",
-			  _cmdline.the_args[oldarg].long_arg, _cmdline.the_args[newarg].long_arg);
+			  _cmdline.arg_props[oldarg].long_arg, _cmdline.arg_props[newarg].long_arg);
 		return 0;
 	}
 
 	if (!arg_count(cmd, oldarg))
 		return 1;
 
-	old = _cmdline.the_args + oldarg;
-	new = _cmdline.the_args + newarg;
+	old = cmd->arg_values + oldarg;
+	new = cmd->arg_values + newarg;
 
 	new->count = old->count;
 	new->value = old->value;
@@ -1120,6 +1145,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	/*
 	 * free off any memory the command used.
 	 */
+	dm_list_init(&cmd->arg_value_groups);
 	dm_pool_empty(cmd->mem);
 
 	reset_lvm_errno(1);
@@ -1250,10 +1276,10 @@ struct cmd_context *init_lvm(void)
 {
 	struct cmd_context *cmd;
 
-	_cmdline.the_args = &_the_args[0];
-
 	if (!(cmd = create_toolcontext(0, NULL)))
 		return_NULL;
+
+	_cmdline.arg_props = &_arg_props[0];
 
 	if (stored_errno()) {
 		destroy_toolcontext(cmd);

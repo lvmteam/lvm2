@@ -327,9 +327,12 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 {
 	int contiguous;
 	unsigned pagesize;
+	struct arg_value_group_list *current_group;
+	const char *tag;
 
 	memset(lp, 0, sizeof(*lp));
 	memset(lcp, 0, sizeof(*lcp));
+	dm_list_init(&lp->tags);
 
 	/*
 	 * Check selected options are compatible and determine segtype
@@ -507,7 +510,20 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 		return 0;
 	}
 
-	lp->tag = arg_str_value(cmd, addtag_ARG, NULL);
+	dm_list_iterate_items(current_group, &cmd->arg_value_groups) {
+		if (!grouped_arg_is_set(current_group->arg_values, addtag_ARG))
+			continue;
+
+		if (!(tag = grouped_arg_str_value(current_group->arg_values, addtag_ARG, NULL))) {
+			log_error("Failed to get tag");
+			return 0;
+		}
+
+		if (!str_list_add(cmd->mem, &lp->tags, tag)) {
+                	log_error("Unable to allocate memory for tag %s", tag);
+			return 0;
+		}
+        }
 
 	lcp->pv_count = argc;
 	lcp->pvs = argv;
