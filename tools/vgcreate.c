@@ -24,6 +24,7 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	const char *clustered_message = "";
 	char *vg_name;
 	struct pvcreate_params pp;
+	struct arg_value_group_list *current_group;
 
 	if (!argc) {
 		log_error("Please provide volume group name and "
@@ -85,21 +86,24 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 			 "(0 means unlimited)", vg->max_pv);
 
 	if (arg_count(cmd, addtag_ARG)) {
-		if (!(tag = arg_str_value(cmd, addtag_ARG, NULL))) {
-			log_error("Failed to get tag");
-			goto bad;
+		dm_list_iterate_items(current_group, &cmd->arg_value_groups) {
+			if (!grouped_arg_is_set(current_group->arg_values, addtag_ARG))
+				continue;
+
+			if (!(tag = grouped_arg_str_value(current_group->arg_values, addtag_ARG, NULL))) {
+				log_error("Failed to get tag");
+				goto bad;
+			}
+
+			if (!vg_change_tag(vg, tag, 1))
+				goto_bad;
 		}
-
-		if (!vg_change_tag(vg, tag, 1))
-			goto_bad;
 	}
 
-	if (vg_is_clustered(vg)) {
+	if (vg_is_clustered(vg))
 		clustered_message = "Clustered ";
-	} else {
-		if (locking_is_clustered())
-			clustered_message = "Non-clustered ";
-	}
+	else if (locking_is_clustered())
+		clustered_message = "Non-clustered ";
 
 	if (!archive(vg))
 		goto_bad;

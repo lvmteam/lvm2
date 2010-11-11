@@ -1,7 +1,10 @@
 Version 2.02.77 -
 ===================================
-  Fix fsadm need of using '-f' for downsize of unmounted filesystem.
-  Fix fsadm regression in detection of mounted filesystem for older systems (2.0.75).
+  Support repetition of --addtag and --deltag arguments.
+  Add infrastructure for specific cmdline arguments to be repeated in groups.
+  Split the_args cmdline arguments and values into arg_props and arg_values.
+FIXME??? Fix fsadm need of using '-f' for downsize of unmounted filesystem.
+  Fix fsadm to detect mounted filesystems on older systems. (2.0.75)
   Extend cling allocation policy to recognise PV tags (cling_by_tags).
   Add allocation/cling_tag_list to lvm.conf.
   Regenerate configure with 'autoreconf' for --enable-ocf. (2.02.76)

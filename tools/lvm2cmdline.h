@@ -19,7 +19,7 @@
 struct cmd_context;
 
 struct cmdline_context {
-        struct arg *the_args;
+        struct arg_props *arg_props;
         struct command *commands;
         int num_commands;
         int commands_size;

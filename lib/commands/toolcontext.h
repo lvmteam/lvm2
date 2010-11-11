@@ -49,6 +49,7 @@ struct config_info {
 struct config_tree;
 struct archive_params;
 struct backup_params;
+struct arg_values;
 
 /* FIXME Split into tool & library contexts */
 /* command-instance-related variables needed by library */
@@ -68,6 +69,8 @@ struct cmd_context {
 	const char *cmd_line;
 	struct command *command;
 	char **argv;
+	struct arg_values *arg_values;
+	struct dm_list arg_value_groups;
 	unsigned is_long_lived:1;	/* Optimises persistent_filter handling */
 	unsigned handles_missing_pvs:1;
 	unsigned handles_unknown_segments:1;

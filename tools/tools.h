@@ -95,17 +95,10 @@ enum {
 	CHANGE_ALN = 4
 };
 
-#define ARG_REPEATABLE 0x00000001
+#define ARG_COUNTABLE 0x00000001	/* E.g. -vvvv */
+#define ARG_GROUPABLE 0x00000002	/* E.g. --addtag */
 
-/* a global table of possible arguments */
-struct arg {
-	const char short_arg;
-	char _padding[7];
-	const char *long_arg;
-
-	int (*fn) (struct cmd_context * cmd, struct arg * a);
-	uint32_t flags;
-
+struct arg_values {
 	unsigned count;
 	char *value;
 	int32_t i_value;
@@ -115,6 +108,21 @@ struct arg {
 	sign_t sign;
 	percent_t percent;
 /*	void *ptr; // Currently not used. */
+};
+
+/* a global table of possible arguments */
+struct arg_props {
+	const char short_arg;
+	char _padding[7];
+	const char *long_arg;
+
+	int (*fn) (struct cmd_context *cmd, struct arg_values *av);
+	uint32_t flags;
+};
+
+struct arg_value_group_list {
+        struct dm_list list;
+        struct arg_values arg_values[0];
 };
 
 #define CACHE_VGMETADATA	0x00000001
@@ -136,24 +144,24 @@ struct command {
 void usage(const char *name);
 
 /* the argument verify/normalise functions */
-int yes_no_arg(struct cmd_context *cmd, struct arg *a);
-int yes_no_excl_arg(struct cmd_context *cmd, struct arg *a);
-int size_kb_arg(struct cmd_context *cmd, struct arg *a);
-int size_mb_arg(struct cmd_context *cmd, struct arg *a);
-int int_arg(struct cmd_context *cmd, struct arg *a);
-int int_arg_with_sign(struct cmd_context *cmd, struct arg *a);
-int int_arg_with_sign_and_percent(struct cmd_context *cmd, struct arg *a);
-int major_arg(struct cmd_context *cmd, struct arg *a);
-int minor_arg(struct cmd_context *cmd, struct arg *a);
-int string_arg(struct cmd_context *cmd, struct arg *a);
-int tag_arg(struct cmd_context *cmd, struct arg *a);
-int permission_arg(struct cmd_context *cmd, struct arg *a);
-int metadatatype_arg(struct cmd_context *cmd, struct arg *a);
-int units_arg(struct cmd_context *cmd, struct arg *a);
-int segtype_arg(struct cmd_context *cmd, struct arg *a);
-int alloc_arg(struct cmd_context *cmd, struct arg *a);
-int readahead_arg(struct cmd_context *cmd, struct arg *a);
-int metadatacopies_arg(struct cmd_context *cmd __attribute__((unused)), struct arg *a);
+int yes_no_arg(struct cmd_context *cmd, struct arg_values *av);
+int yes_no_excl_arg(struct cmd_context *cmd, struct arg_values *av);
+int size_kb_arg(struct cmd_context *cmd, struct arg_values *av);
+int size_mb_arg(struct cmd_context *cmd, struct arg_values *av);
+int int_arg(struct cmd_context *cmd, struct arg_values *av);
+int int_arg_with_sign(struct cmd_context *cmd, struct arg_values *av);
+int int_arg_with_sign_and_percent(struct cmd_context *cmd, struct arg_values *av);
+int major_arg(struct cmd_context *cmd, struct arg_values *av);
+int minor_arg(struct cmd_context *cmd, struct arg_values *av);
+int string_arg(struct cmd_context *cmd, struct arg_values *av);
+int tag_arg(struct cmd_context *cmd, struct arg_values *av);
+int permission_arg(struct cmd_context *cmd, struct arg_values *av);
+int metadatatype_arg(struct cmd_context *cmd, struct arg_values *av);
+int units_arg(struct cmd_context *cmd, struct arg_values *av);
+int segtype_arg(struct cmd_context *cmd, struct arg_values *av);
+int alloc_arg(struct cmd_context *cmd, struct arg_values *av);
+int readahead_arg(struct cmd_context *cmd, struct arg_values *av);
+int metadatacopies_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av);
 
 /* we use the enums to access the switches */
 unsigned arg_count(const struct cmd_context *cmd, int a);
@@ -168,6 +176,10 @@ const void *arg_ptr_value(struct cmd_context *cmd, int a, const void *def);
 sign_t arg_sign_value(struct cmd_context *cmd, int a, const sign_t def);
 percent_t arg_percent_value(struct cmd_context *cmd, int a, const percent_t def);
 int arg_count_increment(struct cmd_context *cmd, int a);
+
+unsigned grouped_arg_count(const struct arg_values *av, int a);
+unsigned grouped_arg_is_set(const struct arg_values *av, int a);
+const char *grouped_arg_str_value(const struct arg_values *av, int a, const char *def);
 
 const char *command_name(struct cmd_context *cmd);
 

@@ -113,7 +113,7 @@ static void _lv_set_default_params(struct lvcreate_params *lp,
 	lp->permission = LVM_READ | LVM_WRITE;
 	lp->read_ahead = DM_READ_AHEAD_NONE;
 	lp->alloc = ALLOC_INHERIT;
-	lp->tag = NULL;
+	dm_list_init(&lp->tags);
 }
 
 /* Set default for linear segment specific LV parameters */

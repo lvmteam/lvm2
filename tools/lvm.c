@@ -95,7 +95,7 @@ static char *_list_args(const char *text, int state)
 		while (match_no < com->num_args) {
 			char s[3];
 			char c;
-			if (!(c = (_cmdline->the_args +
+			if (!(c = (_cmdline->arg_props +
 				   com->valid_args[match_no++])->short_arg))
 				continue;
 
@@ -111,7 +111,7 @@ static char *_list_args(const char *text, int state)
 
 	while (match_no - com->num_args < com->num_args) {
 		const char *l;
-		l = (_cmdline->the_args +
+		l = (_cmdline->arg_props +
 		     com->valid_args[match_no++ - com->num_args])->long_arg;
 		if (*(l + 2) && !strncmp(text, l, len))
 			return strdup(l);

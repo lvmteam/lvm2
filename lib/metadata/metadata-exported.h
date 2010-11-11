@@ -516,7 +516,7 @@ struct lvcreate_params {
 	uint32_t read_ahead; /* all */
 	alloc_policy_t alloc; /* all */
 
-	const char *tag; /* all */
+	struct dm_list tags;	/* all */
 };
 
 int lv_create_single(struct volume_group *vg,

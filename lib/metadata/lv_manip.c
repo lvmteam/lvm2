@@ -3248,7 +3248,7 @@ int lv_create_single(struct volume_group *vg,
 	if (!archive(vg))
 		return 0;
 
-	if (lp->tag) {
+	if (!dm_list_empty(&lp->tags)) {
 		if (!(vg->fid->fmt->features & FMT_TAGS)) {
 			log_error("Volume group %s does not support tags",
 				  vg->name);
@@ -3283,11 +3283,8 @@ int lv_create_single(struct volume_group *vg,
 			    lv->minor);
 	}
 
-	if (lp->tag && !str_list_add(cmd->mem, &lv->tags, lp->tag)) {
-		log_error("Failed to add tag %s to %s/%s",
-			  lp->tag, lv->vg->name, lv->name);
-		return 0;
-	}
+	if (!dm_list_empty(&lp->tags))
+		dm_list_splice(&lv->tags, &lp->tags);
 
 	if (!lv_extend(lv, lp->segtype, lp->stripes, lp->stripe_size,
 		       1, lp->extents, NULL, 0u, 0u, lp->pvh, lp->alloc))

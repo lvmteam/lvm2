@@ -364,14 +364,21 @@ static int _vgchange_tag(struct cmd_context *cmd, struct volume_group *vg,
 			 int arg)
 {
 	const char *tag;
+	struct arg_value_group_list *current_group;
 
-	if (!(tag = arg_str_value(cmd, arg, NULL))) {
-		log_error("Failed to get tag");
-		return 0;
+	dm_list_iterate_items(current_group, &cmd->arg_value_groups) {
+		if (!grouped_arg_is_set(current_group->arg_values, arg))
+			continue;
+
+		if (!(tag = grouped_arg_str_value(current_group->arg_values, arg, NULL))) {
+			log_error("Failed to get tag");
+			return 0;
+		}
+
+		if (!vg_change_tag(vg, tag, arg == addtag_ARG))
+			return_0;
+
 	}
-
-	if (!vg_change_tag(vg, tag, arg == addtag_ARG))
-		return_0;
 
 	return 1;
 }

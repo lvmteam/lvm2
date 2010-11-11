@@ -36,6 +36,8 @@ static int _pvchange_single(struct cmd_context *cmd, struct volume_group *vg,
 	int r = 0;
 	int mda_ignore = 0;
 
+	struct arg_value_group_list *current_group;
+
 	if (arg_count(cmd, addtag_ARG))
 		tagarg = addtag_ARG;
 	else if (arg_count(cmd, deltag_ARG))
@@ -47,10 +49,6 @@ static int _pvchange_single(struct cmd_context *cmd, struct volume_group *vg,
 	if (arg_count(cmd, metadataignore_ARG))
 		mda_ignore = !strcmp(arg_str_value(cmd, metadataignore_ARG, "n"),
 				      "y");
-	else if (tagarg && !(tag = arg_str_value(cmd, tagarg, NULL))) {
-		log_error("Failed to get tag");
-		return 0;
-	}
 
 	/* If in a VG, must change using volume group. */
 	if (!is_orphan(pv)) {
@@ -108,16 +106,25 @@ static int _pvchange_single(struct cmd_context *cmd, struct volume_group *vg,
 		}
 	} else if (tagarg) {
 		/* tag or deltag */
-		if ((tagarg == addtag_ARG)) {
-			if (!str_list_add(cmd->mem, &pv->tags, tag)) {
-				log_error("Failed to add tag %s to physical "
-					  "volume %s", tag, pv_name);
+
+		dm_list_iterate_items(current_group, &cmd->arg_value_groups) {
+			if (!grouped_arg_is_set(current_group->arg_values, tagarg))
+				continue;
+
+			if (!(tag = grouped_arg_str_value(current_group->arg_values, tagarg, NULL))) {
+				log_error("Failed to get tag");
 				goto out;
 			}
-		} else {
-			if (!str_list_del(&pv->tags, tag)) {
+
+			if ((tagarg == addtag_ARG)) {
+				if (!str_list_add(cmd->mem, &pv->tags, tag)) {
+					log_error("Failed to add tag %s to physical "
+						  "volume %s", tag, pv_name);
+					goto out;
+				}
+			} else if (!str_list_del(&pv->tags, tag)) {
 				log_error("Failed to remove tag %s from "
-					  "physical volume" "%s", tag, pv_name);
+				  	"physical volume" "%s", tag, pv_name);
 				goto out;
 			}
 		}
@@ -202,8 +209,8 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 	struct dm_list *vgnames;
 	struct str_list *sll;
 
-	if (arg_count(cmd, allocatable_ARG) + arg_count(cmd, addtag_ARG) +
-	    arg_count(cmd, deltag_ARG) + arg_count(cmd, uuid_ARG) +
+	if (arg_count(cmd, allocatable_ARG) + arg_is_set(cmd, addtag_ARG) +
+	    arg_is_set(cmd, deltag_ARG) + arg_count(cmd, uuid_ARG) +
 	    arg_count(cmd, metadataignore_ARG) != 1) {
 		log_error("Please give exactly one option of -x, -uuid, "
 			  "--addtag or --deltag");
