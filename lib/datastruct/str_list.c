@@ -95,7 +95,7 @@ int str_list_match_item(const struct dm_list *sll, const char *str)
  * Is at least one item on both lists?
  * If tag_matched is non-NULL, it is set to the tag that matched.
  */
-int str_list_match_list(const struct dm_list *sll, const struct dm_list *sll2, char **tag_matched)
+int str_list_match_list(const struct dm_list *sll, const struct dm_list *sll2, const char **tag_matched)
 {
 	struct str_list *sl;
 
