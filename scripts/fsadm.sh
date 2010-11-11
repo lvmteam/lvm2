@@ -47,6 +47,7 @@ MKDIR=mkdir
 RMDIR=rmdir
 BLOCKDEV=blockdev
 BLKID=blkid
+DATE=date
 GREP=grep
 READLINK=readlink
 READLINK_E="-e"
@@ -386,7 +387,7 @@ resize() {
 #  only one supported
 ####################################
 diff_dates() {
-         echo $(( $(date -u -d"$1" +%s 2>/dev/null) - $(date -u -d"$2" +%s 2>/dev/null) ))
+         echo $(( $($DATE -u -d"$1" +%s 2>/dev/null) - $($DATE -u -d"$2" +%s 2>/dev/null) ))
 }
 
 ###################
@@ -445,7 +446,7 @@ test -n "$FSADM_RUNNING" && exit 0
 test -n "$TUNE_EXT" -a -n "$RESIZE_EXT" -a -n "$TUNE_REISER" -a -n "$RESIZE_REISER" \
   -a -n "$TUNE_XFS" -a -n "$RESIZE_XFS" -a -n "$MOUNT" -a -n "$UMOUNT" -a -n "$MKDIR" \
   -a -n "$RMDIR" -a -n "$BLOCKDEV" -a -n "$BLKID" -a -n "$GREP" -a -n "$READLINK" \
-  -a -n "$FSCK" -a -n "$XFS_CHECK" -a -n "LVM" \
+  -a -n "$DATE" -a -n "$FSCK" -a -n "$XFS_CHECK" -a -n "LVM" \
   || error "Required command definitions in the script are missing!"
 
 $LVM version >/dev/null 2>&1 || error "Could not run lvm binary '$LVM'"
@@ -453,6 +454,7 @@ $($READLINK -e / >/dev/null 2>&1) || READLINK_E="-f"
 TEST64BIT=$(( 1000 * 1000000000000 ))
 test $TEST64BIT -eq 1000000000000000 || error "Shell does not handle 64bit arithmetic"
 $(echo Y | $GREP Y >/dev/null) || error "Grep does not work properly"
+test $($DATE -u -d"Jan 01 00:00:01 1970" +%s) -eq 1 || error "Date translation does not work"
 
 
 if [ "$#" -eq 0 ] ; then
