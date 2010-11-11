@@ -959,7 +959,7 @@ static int _has_matching_pv_tag(struct pv_match *pvmatch, struct pv_segment *pvs
 {
 	struct config_value *cv;
 	char *str;
-	char *tag_matched;
+	const char *tag_matched;
 
 	for (cv = pvmatch->cling_tag_list_cn->v; cv; cv = cv->next) {
 		if (cv->type != CFG_STRING) {
