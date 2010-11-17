@@ -35,6 +35,21 @@ static int _ ## NAME ## _get (const void *obj, struct lvm_property_type *prop) \
 #define GET_LV_NUM_PROPERTY_FN(NAME, VALUE) \
 	GET_NUM_PROPERTY_FN(NAME, VALUE, logical_volume, lv)
 
+#define SET_NUM_PROPERTY_FN(NAME, SETFN, TYPE, VAR)			\
+static int _ ## NAME ## _set (void *obj, struct lvm_property_type *prop) \
+{ \
+	struct TYPE *VAR = (struct TYPE *)obj; \
+\
+	SETFN(VAR, prop->value.integer);		\
+	return 1; \
+}
+#define SET_VG_NUM_PROPERTY_FN(NAME, SETFN) \
+	SET_NUM_PROPERTY_FN(NAME, SETFN, volume_group, vg)
+#define SET_PV_NUM_PROPERTY_FN(NAME, SETFN) \
+	SET_NUM_PROPERTY_FN(NAME, SETFN, physical_volume, pv)
+#define SET_LV_NUM_PROPERTY_FN(NAME, SETFN) \
+	SET_NUM_PROPERTY_FN(NAME, SETFN, logical_volume, lv)
+
 #define GET_STR_PROPERTY_FN(NAME, VALUE, TYPE, VAR)			\
 static int _ ## NAME ## _get (const void *obj, struct lvm_property_type *prop) \
 { \
@@ -184,7 +199,7 @@ GET_VG_NUM_PROPERTY_FN(vg_mda_free, (SECTOR_SIZE * vg_mda_free(vg)))
 GET_VG_NUM_PROPERTY_FN(vg_mda_size, (SECTOR_SIZE * vg_mda_size(vg)))
 #define _vg_mda_size_set _not_implemented_set
 GET_VG_NUM_PROPERTY_FN(vg_mda_copies, (vg_mda_copies(vg)))
-#define _vg_mda_copies_set _not_implemented_set
+SET_VG_NUM_PROPERTY_FN(vg_mda_copies, vg_set_mda_copies)
 
 /* LVSEG */
 #define _segtype_get _not_implemented_get
@@ -267,6 +282,42 @@ static int _get_property(const void *obj, struct lvm_property_type *prop,
 	return 1;
 }
 
+static int _set_property(void *obj, struct lvm_property_type *prop,
+			 report_type_t type)
+{
+	struct lvm_property_type *p;
+
+	p = _properties;
+	while (p->id[0]) {
+		if (!strcmp(p->id, prop->id))
+			break;
+		p++;
+	}
+	if (!p->id[0]) {
+		log_errno(EINVAL, "Invalid property name %s", prop->id);
+		return 0;
+	}
+	if (!p->is_settable) {
+		log_errno(EINVAL, "Unable to set read-only property %s",
+			  prop->id);
+		return 0;
+	}
+	if (!(p->type & type)) {
+		log_errno(EINVAL, "Property name %s does not match type %d",
+			  prop->id, p->type);
+		return 0;
+	}
+
+	if (p->is_string)
+		p->value.string = prop->value.string;
+	else
+		p->value.integer = prop->value.integer;
+	if (!p->set(obj, p)) {
+		return 0;
+	}
+	return 1;
+}
+
 int lv_get_property(const struct logical_volume *lv,
 		    struct lvm_property_type *prop)
 {
@@ -283,4 +334,22 @@ int pv_get_property(const struct physical_volume *pv,
 		    struct lvm_property_type *prop)
 {
 	return _get_property(pv, prop, PVS | LABEL);
+}
+
+int lv_set_property(struct logical_volume *lv,
+		    struct lvm_property_type *prop)
+{
+	return _set_property(lv, prop, LVS);
+}
+
+int vg_set_property(struct volume_group *vg,
+		    struct lvm_property_type *prop)
+{
+	return _set_property(vg, prop, VGS);
+}
+
+int pv_set_property(struct physical_volume *pv,
+		    struct lvm_property_type *prop)
+{
+	return _set_property(pv, prop, PVS | LABEL);
 }
