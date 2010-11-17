@@ -96,6 +96,7 @@ struct physical_volume;
 struct volume_group;
 struct logical_volume;
 struct lv_segment;
+struct pv_segment;
 
 /**
  * \class lvm_t
@@ -145,6 +146,13 @@ typedef struct physical_volume *pv_t;
 typedef struct lv_segment *lvseg_t;
 
 /**
+ * \class pvseg_t
+ *
+ * This pv segment object is bound to a pv_t.
+ */
+typedef struct pv_segment *pvseg_t;
+
+/**
  * Logical Volume object list.
  *
  * Lists of these structures are returned by lvm_vg_list_lvs().
@@ -173,6 +181,16 @@ typedef struct lvm_pv_list {
 	struct dm_list list;
 	pv_t pv;
 } pv_list_t;
+
+/**
+ * Physical Volume Segment object list.
+ *
+ * Lists of these structures are returned by lvm_pv_list_pvsegs().
+ */
+typedef struct lvm_pvseg_list {
+	struct dm_list list;
+	pvseg_t pvseg;
+} pvseg_list_t;
 
 /**
  * String list.
@@ -1417,6 +1435,19 @@ uint64_t lvm_pv_get_free(const pv_t pv);
  * for specific error.
  */
 struct lvm_property_value lvm_pv_get_property(const pv_t pv, const char *name);
+
+/**
+ * Return a list of pvseg handles for a given PV handle.
+ *
+ * \memberof pv_t
+ *
+ * \param   pv
+ * Physical volume handle.
+ *
+ * \return
+ * A list of lvm_pvseg_list structures containing pvseg handles for this pv.
+ */
+struct dm_list *lvm_pv_list_pvsegs(pv_t pv);
 
 /**
  * Resize physical volume to new_size bytes.
