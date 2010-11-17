@@ -341,6 +341,12 @@ struct lvm_property_value lvm_vg_get_property(const vg_t vg, const char *name)
 	return get_property(NULL, vg, NULL, name);
 }
 
+int lvm_vg_set_property(const vg_t vg, const char *name,
+			struct lvm_property_value *value)
+{
+	return set_property(NULL, vg, NULL, name, value);
+}
+
 struct dm_list *lvm_list_vg_names(lvm_t libh)
 {
 	return get_vgnames((struct cmd_context *)libh, 0);

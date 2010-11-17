@@ -78,3 +78,33 @@ struct lvm_property_value get_property(const pv_t pv, const vg_t vg,
 	v.is_valid = 1;
 	return v;
 }
+
+
+int set_property(const pv_t pv, const vg_t vg, const lv_t lv,
+		 const char *name, struct lvm_property_value *v)
+{
+	struct lvm_property_type prop;
+
+	prop.id = name;
+	if (v->is_string)
+		prop.value.string = v->value.string;
+	else
+		prop.value.integer = v->value.integer;
+	if (pv) {
+		if (!pv_set_property(pv, &prop)) {
+			v->is_valid = 0;
+			return -1;
+		}
+	} else if (vg) {
+		if (!vg_set_property(vg, &prop)) {
+			v->is_valid = 0;
+			return -1;
+		}
+	} else if (lv) {
+		if (!lv_set_property(lv, &prop)) {
+			v->is_valid = 0;
+			return -1;
+		}
+	}
+	return 0;
+}
