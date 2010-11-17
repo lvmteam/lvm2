@@ -54,6 +54,33 @@ struct lvm_property_value lvm_pv_get_property(const pv_t pv, const char *name)
 	return get_property(pv, NULL, NULL, NULL, name);
 }
 
+struct dm_list *lvm_pv_list_pvsegs(pv_t pv)
+{
+	struct dm_list *list;
+	pvseg_list_t *pvseg;
+	struct pv_segment *pvl;
+
+	if (dm_list_empty(&pv->segments))
+		return NULL;
+
+	if (!(list = dm_pool_zalloc(pv->vg->vgmem, sizeof(*list)))) {
+		log_errno(ENOMEM, "Memory allocation fail for dm_list.");
+		return NULL;
+	}
+	dm_list_init(list);
+
+	dm_list_iterate_items(pvl, &pv->segments) {
+		if (!(pvseg = dm_pool_zalloc(pv->vg->vgmem, sizeof(*pvseg)))) {
+			log_errno(ENOMEM,
+				"Memory allocation fail for lvm_pvseg_list.");
+			return NULL;
+		}
+		pvseg->pvseg = pvl;
+		dm_list_add(list, &pvseg->list);
+	}
+	return list;
+}
+
 int lvm_pv_resize(const pv_t pv, uint64_t new_size)
 {
 	/* FIXME: add pv resize code here */
