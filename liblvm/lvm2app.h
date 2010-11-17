@@ -1437,6 +1437,45 @@ uint64_t lvm_pv_get_free(const pv_t pv);
 struct lvm_property_value lvm_pv_get_property(const pv_t pv, const char *name);
 
 /**
+ * Get the value of a PV segment property
+ *
+ * \memberof pv_t
+ *
+ * \param   pvseg
+ * Physical volume segment handle.
+ *
+ * \param   name
+ * Name of property to query.  See pvs man page for full list of properties
+ * that may be queried.
+ *
+ * The memory allocated for a string property value is tied to the vg_t
+ * handle and will be released when lvm_vg_close() is called.
+ *
+ * Example:
+ *      lvm_property_value v;
+ *      char *prop_name = "pvseg_start";
+ *
+ *      v = lvm_pvseg_get_property(pvseg, prop_name);
+ *      if (lvm_errno(libh) || !v.is_valid) {
+ *           // handle error
+ *           printf("Invalid property name or unable to query"
+ *                  "'%s'.\n", prop_name);
+ *           return;
+ *      }
+ *      if (v.is_string)
+ *           printf(", value = %s\n", v.value.string);
+ *	else
+ *           printf(", value = %"PRIu64"\n", v.value.integer);
+ *
+ * \return
+ * lvm_property_value structure that will contain the current
+ * value of the property.  Caller should check lvm_errno() as well
+ * as 'is_valid' flag before using the value.
+ */
+struct lvm_property_value lvm_pvseg_get_property(const pvseg_t pvseg,
+						 const char *name);
+
+/**
  * Return a list of pvseg handles for a given PV handle.
  *
  * \memberof pv_t
