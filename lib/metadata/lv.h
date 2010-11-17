@@ -63,5 +63,10 @@ char *lv_modules_dup(struct dm_pool *mem, const struct logical_volume *lv);
 char *lv_name_dup(struct dm_pool *mem, const struct logical_volume *lv);
 char *lv_origin_dup(struct dm_pool *mem, const struct logical_volume *lv);
 uint32_t lv_kernel_read_ahead(const struct logical_volume *lv);
+uint64_t lvseg_start(const struct lv_segment *seg);
+uint64_t lvseg_size(const struct lv_segment *seg);
+uint64_t lvseg_chunksize(const struct lv_segment *seg);
+char *lvseg_segtype_dup(const struct lv_segment *seg);
+char *lvseg_tags_dup(const struct lv_segment *seg);
 
 #endif /* _LVM_LV_H */

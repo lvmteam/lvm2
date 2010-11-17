@@ -21,6 +21,41 @@
 #include "segtype.h"
 #include "str_list.h"
 
+char *lvseg_tags_dup(const struct lv_segment *seg)
+{
+	return tags_format_and_copy(seg->lv->vg->vgmem, &seg->tags);
+}
+
+char *lvseg_segtype_dup(const struct lv_segment *seg)
+{
+	if (seg->area_count == 1) {
+		return (char *)"linear";
+	}
+
+	return dm_pool_strdup(seg->lv->vg->vgmem, seg->segtype->ops->name(seg));
+}
+
+uint64_t lvseg_chunksize(const struct lv_segment *seg)
+{
+	uint64_t size;
+
+	if (lv_is_cow(seg->lv))
+		size = (uint64_t) find_cow(seg->lv)->chunk_size;
+	else
+		size = UINT64_C(0);
+	return size;
+}
+
+uint64_t lvseg_start(const struct lv_segment *seg)
+{
+	return (uint64_t) seg->le * seg->lv->vg->extent_size;
+}
+
+uint64_t lvseg_size(const struct lv_segment *seg)
+{
+	return (uint64_t) seg->len * seg->lv->vg->extent_size;
+}
+
 uint32_t lv_kernel_read_ahead(const struct logical_volume *lv)
 {
 	struct lvinfo info;
