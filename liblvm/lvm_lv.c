@@ -216,6 +216,33 @@ int lvm_lv_deactivate(lv_t lv)
 	return 0;
 }
 
+struct dm_list *lvm_lv_list_lvsegs(lv_t lv)
+{
+	struct dm_list *list;
+	lvseg_list_t *lvseg;
+	struct lv_segment *lvl;
+
+	if (dm_list_empty(&lv->segments))
+		return NULL;
+
+	if (!(list = dm_pool_zalloc(lv->vg->vgmem, sizeof(*list)))) {
+		log_errno(ENOMEM, "Memory allocation fail for dm_list.");
+		return NULL;
+	}
+	dm_list_init(list);
+
+	dm_list_iterate_items(lvl, &lv->segments) {
+		if (!(lvseg = dm_pool_zalloc(lv->vg->vgmem, sizeof(*lvseg)))) {
+			log_errno(ENOMEM,
+				"Memory allocation fail for lvm_lvseg_list.");
+			return NULL;
+		}
+		lvseg->lvseg = lvl;
+		dm_list_add(list, &lvseg->list);
+	}
+	return list;
+}
+
 int lvm_lv_resize(const lv_t lv, uint64_t new_size)
 {
 	/* FIXME: add lv resize code here */

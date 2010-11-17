@@ -95,6 +95,7 @@ struct lvm;
 struct physical_volume;
 struct volume_group;
 struct logical_volume;
+struct lv_segment;
 
 /**
  * \class lvm_t
@@ -137,6 +138,13 @@ typedef struct logical_volume *lv_t;
 typedef struct physical_volume *pv_t;
 
 /**
+ * \class lvseg_t
+ *
+ * This lv segment object is bound to a lv_t.
+ */
+typedef struct lv_segment *lvseg_t;
+
+/**
  * Logical Volume object list.
  *
  * Lists of these structures are returned by lvm_vg_list_lvs().
@@ -145,6 +153,16 @@ typedef struct lvm_lv_list {
 	struct dm_list list;
 	lv_t lv;
 } lv_list_t;
+
+/**
+ * Logical Volume Segment object list.
+ *
+ * Lists of these structures are returned by lvm_lv_list_lvsegs().
+ */
+typedef struct lvm_lvseg_list {
+	struct dm_list list;
+	lvseg_t lvseg;
+} lvseg_list_t;
 
 /**
  * Physical volume object list.
@@ -964,6 +982,19 @@ int lvm_vg_set_property(const vg_t vg, const char *name,
  *
  */
 lv_t lvm_vg_create_lv_linear(vg_t vg, const char *name, uint64_t size);
+
+/**
+ * Return a list of lvseg handles for a given LV handle.
+ *
+ * \memberof lv_t
+ *
+ * \param   lv
+ * Logical volume handle.
+ *
+ * \return
+ * A list of lvm_lvseg_list structures containing lvseg handles for this lv.
+ */
+struct dm_list *lvm_lv_list_lvsegs(lv_t lv);
 
 /**
  * Activate a logical volume.
