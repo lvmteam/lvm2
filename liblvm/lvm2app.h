@@ -911,6 +911,36 @@ struct dm_list *lvm_vg_get_tags(const vg_t vg);
  */
 struct lvm_property_value lvm_vg_get_property(const vg_t vg, const char *name);
 
+/**
+ * Set the value of a VG property.  Note that the property must be
+ * a 'settable' property, as evidenced by the 'is_settable' flag
+ * when querying the property.
+ *
+ * \memberof vg_t
+ *
+ * The memory allocated for a string property value is tied to the vg_t
+ * handle and will be released when lvm_vg_close() is called.
+ *
+ * Example (integer):
+ *      lvm_property_value copies;
+ *
+ *      if (lvm_vg_get_property(vg, "vg_mda_copies", &copies) < 0) {
+ *              // Error - unable to query property
+ *      }
+ *      if (!copies.is_settable) {
+ *              // Error - property not settable
+ *      }
+ *      copies.value.integer = 2;
+ *      if (lvm_vg_set_property(vg, "vg_mda_copies", &copies) < 0) {
+ *              // handle error
+ *      }
+ *
+ * \return
+ * 0 (success) or -1 (failure).
+ */
+int lvm_vg_set_property(const vg_t vg, const char *name,
+			struct lvm_property_value *value);
+
 /************************** logical volume handling *************************/
 
 /**
