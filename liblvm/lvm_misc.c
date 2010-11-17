@@ -46,7 +46,8 @@ struct dm_list *tag_list_copy(struct dm_pool *p, struct dm_list *tag_list)
 }
 
 struct lvm_property_value get_property(const pv_t pv, const vg_t vg,
-				       const lv_t lv, const char *name)
+				       const lv_t lv, const lvseg_t lvseg,
+				       const char *name)
 {
 	struct lvm_property_type prop;
 	struct lvm_property_value v;
@@ -64,6 +65,11 @@ struct lvm_property_value get_property(const pv_t pv, const vg_t vg,
 		}
 	} else if (lv) {
 		if (!lv_get_property(lv, &prop)) {
+			v.is_valid = 0;
+			return v;
+		}
+	} else if (lvseg) {
+		if (!lvseg_get_property(lvseg, &prop)) {
 			v.is_valid = 0;
 			return v;
 		}

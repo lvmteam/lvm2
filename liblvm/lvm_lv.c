@@ -50,7 +50,13 @@ const char *lvm_lv_get_name(const lv_t lv)
 
 struct lvm_property_value lvm_lv_get_property(const lv_t lv, const char *name)
 {
-	return get_property(NULL, NULL, lv, name);
+	return get_property(NULL, NULL, lv, NULL, name);
+}
+
+struct lvm_property_value lvm_lvseg_get_property(const lvseg_t lvseg,
+						 const char *name)
+{
+	return get_property(NULL, NULL, NULL, lvseg, name);
 }
 
 uint64_t lvm_lv_is_active(const lv_t lv)

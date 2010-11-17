@@ -1132,6 +1132,45 @@ uint64_t lvm_lv_get_size(const lv_t lv);
 struct lvm_property_value lvm_lv_get_property(const lv_t lv, const char *name);
 
 /**
+ * Get the value of a LV segment property
+ *
+ * \memberof lv_t
+ *
+ * \param   lvseg
+ * Logical volume segment handle.
+ *
+ * \param   name
+ * Name of property to query.  See lvs man page for full list of properties
+ * that may be queried.
+ *
+ * The memory allocated for a string property value is tied to the vg_t
+ * handle and will be released when lvm_vg_close() is called.
+ *
+ * Example:
+ *      lvm_property_value v;
+ *      char *prop_name = "seg_start_pe";
+ *
+ *      v = lvm_lvseg_get_property(lvseg, prop_name);
+ *      if (lvm_errno(libh) || !v.is_valid) {
+ *           // handle error
+ *           printf("Invalid property name or unable to query"
+ *                  "'%s'.\n", prop_name);
+ *           return;
+ *      }
+ *      if (v.is_string)
+ *           printf(", value = %s\n", v.value.string);
+ *	else
+ *           printf(", value = %"PRIu64"\n", v.value.integer);
+ *
+ * \return
+ * lvm_property_value structure that will contain the current
+ * value of the property.  Caller should check lvm_errno() as well
+ * as 'is_valid' flag before using the value.
+ */
+struct lvm_property_value lvm_lvseg_get_property(const lvseg_t lvseg,
+						 const char *name);
+
+/**
  * Get the current activation state of a logical volume.
  *
  * \memberof lv_t

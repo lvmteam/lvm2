@@ -51,7 +51,7 @@ uint64_t lvm_pv_get_free(const pv_t pv)
 
 struct lvm_property_value lvm_pv_get_property(const pv_t pv, const char *name)
 {
-	return get_property(pv, NULL, NULL, name);
+	return get_property(pv, NULL, NULL, NULL, name);
 }
 
 int lvm_pv_resize(const pv_t pv, uint64_t new_size)
