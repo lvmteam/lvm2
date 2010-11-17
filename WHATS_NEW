@@ -1,5 +1,6 @@
 Version 2.02.77 -
 ===================================
+  Remove tag length restriction and allow / = ! : # & characters.
   Support repetition of --addtag and --deltag arguments.
   Add infrastructure for specific cmdline arguments to be repeated in groups.
   Split the_args cmdline arguments and values into arg_props and arg_values.

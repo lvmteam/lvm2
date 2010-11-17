@@ -222,7 +222,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 			vgname = lv_name;
 
 			if (*vgname == '@') {
-				if (!validate_name(vgname + 1)) {
+				if (!validate_tag(vgname + 1)) {
 					log_error("Skipping invalid tag %s",
 						  vgname);
 					continue;
@@ -528,7 +528,7 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 		for (; opt < argc; opt++) {
 			vg_name = argv[opt];
 			if (*vg_name == '@') {
-				if (!validate_name(vg_name + 1)) {
+				if (!validate_tag(vg_name + 1)) {
 					log_error("Skipping invalid tag %s",
 						  vg_name);
 					if (ret_max < EINVALID_CMD_LINE)
@@ -698,7 +698,7 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 			if (at_sign && (at_sign == argv[opt])) {
 				tagname = at_sign + 1;
 
-				if (!validate_name(tagname)) {
+				if (!validate_tag(tagname)) {
 					log_error("Skipping invalid tag %s",
 						  tagname);
 					if (ret_max < EINVALID_CMD_LINE)
@@ -1113,7 +1113,7 @@ struct dm_list *create_pv_list(struct dm_pool *mem, struct volume_group *vg, int
 
 		if (at_sign && (at_sign == argv[i])) {
 			tagname = at_sign + 1;
-			if (!validate_name(tagname)) {
+			if (!validate_tag(tagname)) {
 				log_error("Skipping invalid tag %s", tagname);
 				continue;
 			}
