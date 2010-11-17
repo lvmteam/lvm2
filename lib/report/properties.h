@@ -26,7 +26,7 @@ struct lvm_property_type {
 	unsigned is_string:1;
 	unsigned is_integer:1;
 	union {
-		char *string;
+		const char *string;
 		uint64_t integer;
 	} value;
 	int (*get) (const void *obj, struct lvm_property_type *prop);
