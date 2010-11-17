@@ -36,6 +36,8 @@ static int _ ## NAME ## _get (const void *obj, struct lvm_property_type *prop) \
 	GET_NUM_PROPERTY_FN(NAME, VALUE, logical_volume, lv)
 #define GET_LVSEG_NUM_PROPERTY_FN(NAME, VALUE) \
 	GET_NUM_PROPERTY_FN(NAME, VALUE, lv_segment, lvseg)
+#define GET_PVSEG_NUM_PROPERTY_FN(NAME, VALUE) \
+	GET_NUM_PROPERTY_FN(NAME, VALUE, pv_segment, pvseg)
 
 #define SET_NUM_PROPERTY_FN(NAME, SETFN, TYPE, VAR)			\
 static int _ ## NAME ## _set (void *obj, struct lvm_property_type *prop) \
@@ -68,6 +70,8 @@ static int _ ## NAME ## _get (const void *obj, struct lvm_property_type *prop) \
 	GET_STR_PROPERTY_FN(NAME, VALUE, logical_volume, lv)
 #define GET_LVSEG_STR_PROPERTY_FN(NAME, VALUE) \
 	GET_STR_PROPERTY_FN(NAME, VALUE, lv_segment, lvseg)
+#define GET_PVSEG_STR_PROPERTY_FN(NAME, VALUE) \
+	GET_STR_PROPERTY_FN(NAME, VALUE, pv_segment, pvseg)
 
 static int _not_implemented_get(const void *obj, struct lvm_property_type *prop)
 {
@@ -237,9 +241,9 @@ GET_LVSEG_STR_PROPERTY_FN(seg_tags, lvseg_tags_dup(lvseg))
 
 
 /* PVSEG */
-#define _pvseg_start_get _not_implemented_get
+GET_PVSEG_NUM_PROPERTY_FN(pvseg_start, pvseg->pe)
 #define _pvseg_start_set _not_implemented_set
-#define _pvseg_size_get _not_implemented_get
+GET_PVSEG_NUM_PROPERTY_FN(pvseg_size, pvseg->len)
 #define _pvseg_size_set _not_implemented_set
 
 
@@ -338,6 +342,12 @@ int vg_get_property(const struct volume_group *vg,
 		    struct lvm_property_type *prop)
 {
 	return _get_property(vg, prop, VGS);
+}
+
+int pvseg_get_property(const struct pv_segment *pvseg,
+		       struct lvm_property_type *prop)
+{
+	return _get_property(pvseg, prop, PVSEGS);
 }
 
 int pv_get_property(const struct physical_volume *pv,

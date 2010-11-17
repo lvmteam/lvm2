@@ -39,6 +39,8 @@ int lv_get_property(const struct logical_volume *lv,
 		    struct lvm_property_type *prop);
 int vg_get_property(const struct volume_group *vg,
 		    struct lvm_property_type *prop);
+int pvseg_get_property(const struct pv_segment *pvseg,
+		       struct lvm_property_type *prop);
 int pv_get_property(const struct physical_volume *pv,
 		    struct lvm_property_type *prop);
 int lv_set_property(struct logical_volume *lv,
