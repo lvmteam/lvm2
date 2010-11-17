@@ -286,6 +286,25 @@ void unescape_colons_and_at_signs(char *src,
 }
 
 /*
+ * A-Za-z0-9._-+/=!:&#
+ */
+int validate_tag(const char *n)
+{
+	register char c;
+	register int len = 0;
+
+	if (!n || !*n)
+		return 0;
+
+	while ((len++, c = *n++))
+		if (!isalnum(c) && c != '.' && c != '_' && c != '-' && c != '+' && c != '/'
+		    && c != '=' && c != '!' && c != ':' && c != '&' && c != '#')
+			return 0;
+
+	return 1;
+}
+
+/*
  * Device layer names are all of the form <vg>-<lv>-<layer>, any
  * other hyphens that appear in these names are quoted with yet
  * another hyphen.  The top layer of any device has no layer

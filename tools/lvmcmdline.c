@@ -418,7 +418,7 @@ int tag_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *
 	if (*pos == '@')
 		pos++;
 
-	if (!validate_name(pos))
+	if (!validate_tag(pos))
 		return 0;
 
 	av->value = pos;
