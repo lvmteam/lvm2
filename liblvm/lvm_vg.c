@@ -338,7 +338,7 @@ const char *lvm_vg_get_name(const vg_t vg)
 
 struct lvm_property_value lvm_vg_get_property(const vg_t vg, const char *name)
 {
-	return get_property(NULL, vg, NULL, name);
+	return get_property(NULL, vg, NULL, NULL, name);
 }
 
 int lvm_vg_set_property(const vg_t vg, const char *name,
