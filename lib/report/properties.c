@@ -34,6 +34,8 @@ static int _ ## NAME ## _get (const void *obj, struct lvm_property_type *prop) \
 	GET_NUM_PROPERTY_FN(NAME, VALUE, physical_volume, pv)
 #define GET_LV_NUM_PROPERTY_FN(NAME, VALUE) \
 	GET_NUM_PROPERTY_FN(NAME, VALUE, logical_volume, lv)
+#define GET_LVSEG_NUM_PROPERTY_FN(NAME, VALUE) \
+	GET_NUM_PROPERTY_FN(NAME, VALUE, lv_segment, lvseg)
 
 #define SET_NUM_PROPERTY_FN(NAME, SETFN, TYPE, VAR)			\
 static int _ ## NAME ## _set (void *obj, struct lvm_property_type *prop) \
@@ -64,6 +66,8 @@ static int _ ## NAME ## _get (const void *obj, struct lvm_property_type *prop) \
 	GET_STR_PROPERTY_FN(NAME, VALUE, physical_volume, pv)
 #define GET_LV_STR_PROPERTY_FN(NAME, VALUE) \
 	GET_STR_PROPERTY_FN(NAME, VALUE, logical_volume, lv)
+#define GET_LVSEG_STR_PROPERTY_FN(NAME, VALUE) \
+	GET_STR_PROPERTY_FN(NAME, VALUE, lv_segment, lvseg)
 
 static int _not_implemented_get(const void *obj, struct lvm_property_type *prop)
 {
@@ -202,29 +206,29 @@ GET_VG_NUM_PROPERTY_FN(vg_mda_copies, (vg_mda_copies(vg)))
 SET_VG_NUM_PROPERTY_FN(vg_mda_copies, vg_set_mda_copies)
 
 /* LVSEG */
-#define _segtype_get _not_implemented_get
+GET_LVSEG_STR_PROPERTY_FN(segtype, lvseg_segtype_dup(lvseg))
 #define _segtype_set _not_implemented_set
-#define _stripes_get _not_implemented_get
+GET_LVSEG_NUM_PROPERTY_FN(stripes, lvseg->area_count)
 #define _stripes_set _not_implemented_set
-#define _stripesize_get _not_implemented_get
+GET_LVSEG_NUM_PROPERTY_FN(stripesize, lvseg->stripe_size)
 #define _stripesize_set _not_implemented_set
-#define _stripe_size_get _not_implemented_get
+GET_LVSEG_NUM_PROPERTY_FN(stripe_size, lvseg->stripe_size)
 #define _stripe_size_set _not_implemented_set
-#define _regionsize_get _not_implemented_get
+GET_LVSEG_NUM_PROPERTY_FN(regionsize, lvseg->region_size)
 #define _regionsize_set _not_implemented_set
-#define _region_size_get _not_implemented_get
+GET_LVSEG_NUM_PROPERTY_FN(region_size, lvseg->region_size)
 #define _region_size_set _not_implemented_set
-#define _chunksize_get _not_implemented_get
+GET_LVSEG_NUM_PROPERTY_FN(chunksize, lvseg_chunksize(lvseg))
 #define _chunksize_set _not_implemented_set
-#define _chunk_size_get _not_implemented_get
+GET_LVSEG_NUM_PROPERTY_FN(chunk_size, lvseg_chunksize(lvseg))
 #define _chunk_size_set _not_implemented_set
-#define _seg_start_get _not_implemented_get
+GET_LVSEG_NUM_PROPERTY_FN(seg_start, lvseg_start(lvseg))
 #define _seg_start_set _not_implemented_set
-#define _seg_start_pe_get _not_implemented_get
+GET_LVSEG_NUM_PROPERTY_FN(seg_start_pe, lvseg->le)
 #define _seg_start_pe_set _not_implemented_set
-#define _seg_size_get _not_implemented_get
+GET_LVSEG_NUM_PROPERTY_FN(seg_size, lvseg_size(lvseg))
 #define _seg_size_set _not_implemented_set
-#define _seg_tags_get _not_implemented_get
+GET_LVSEG_STR_PROPERTY_FN(seg_tags, lvseg_tags_dup(lvseg))
 #define _seg_tags_set _not_implemented_set
 #define _seg_pe_ranges_get _not_implemented_get
 #define _seg_pe_ranges_set _not_implemented_set
@@ -316,6 +320,12 @@ static int _set_property(void *obj, struct lvm_property_type *prop,
 		return 0;
 	}
 	return 1;
+}
+
+int lvseg_get_property(const struct lv_segment *lvseg,
+		       struct lvm_property_type *prop)
+{
+	return _get_property(lvseg, prop, SEGS);
 }
 
 int lv_get_property(const struct logical_volume *lv,

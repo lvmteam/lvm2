@@ -279,12 +279,9 @@ static int _segtype_disp(struct dm_report *rh __attribute__((unused)),
 {
 	const struct lv_segment *seg = (const struct lv_segment *) data;
 
-	if (seg->area_count == 1) {
-		dm_report_field_set_value(field, "linear", NULL);
-		return 1;
-	}
-
-	dm_report_field_set_value(field, seg->segtype->ops->name(seg), NULL);
+	char *name;
+	name = lvseg_segtype_dup(seg);
+	dm_report_field_set_value(field, name, NULL);
 	return 1;
 }
 
@@ -496,7 +493,7 @@ static int _segstart_disp(struct dm_report *rh, struct dm_pool *mem,
 	const struct lv_segment *seg = (const struct lv_segment *) data;
 	uint64_t start;
 
-	start = (uint64_t) seg->le * seg->lv->vg->extent_size;
+	start = lvseg_start(seg);
 
 	return _size64_disp(rh, mem, field, &start, private);
 }
@@ -519,7 +516,7 @@ static int _segsize_disp(struct dm_report *rh, struct dm_pool *mem,
 	const struct lv_segment *seg = (const struct lv_segment *) data;
 	uint64_t size;
 
-	size = (uint64_t) seg->len * seg->lv->vg->extent_size;
+	size = lvseg_size(seg);
 
 	return _size64_disp(rh, mem, field, &size, private);
 }
@@ -531,10 +528,7 @@ static int _chunksize_disp(struct dm_report *rh, struct dm_pool *mem,
 	const struct lv_segment *seg = (const struct lv_segment *) data;
 	uint64_t size;
 
-	if (lv_is_cow(seg->lv))
-		size = (uint64_t) find_cow(seg->lv)->chunk_size;
-	else
-		size = UINT64_C(0);
+	size = lvseg_chunksize(seg);
 
 	return _size64_disp(rh, mem, field, &size, private);
 }
