@@ -64,6 +64,9 @@ static int _pvsegs_sub_single(struct cmd_context *cmd,
 		.name = (char *)"",
 	};
 
+        if (!(_free_vg.vgmem = dm_pool_create("_free_vg", 10240)))
+            return ECMD_FAILED;
+
 	struct logical_volume _free_logical_volume = {
 		.vg = vg ?: &_free_vg,
 		.name = (char *) "",
@@ -103,10 +106,11 @@ static int _pvsegs_sub_single(struct cmd_context *cmd,
 
 	if (!report_object(handle, vg, seg ? seg->lv : &_free_logical_volume, pvseg->pv,
 			   seg ? : &_free_lv_segment, pvseg)) {
-		stack;
 		ret = ECMD_FAILED;
+                goto_out;
 	}
-
+ out:
+        dm_pool_destroy(_free_vg.vgmem);
 	return ret;
 }
 
