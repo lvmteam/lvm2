@@ -929,7 +929,7 @@ static int _output_field(struct dm_report *rh, struct dm_report_field *field)
 			return 0;
 		}
 
-		free(field_id);
+		dm_free(field_id);
 
 		if (!dm_pool_grow_object(rh->mem, "=", 1)) {
 			log_error("dm_report: Unable to extend output line");
