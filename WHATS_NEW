@@ -1,10 +1,13 @@
-Version 2.02.77 -
-===================================
+Version 2.02.77 - 22nd November 2010
+====================================
+  Allocate a pool for dummy VG in _pvsegs_sub_single.
+  Add PV and LV segment types and functions to liblvm.
+  Add set_property functions to liblvm.
   Remove tag length restriction and allow / = ! : # & characters.
   Support repetition of --addtag and --deltag arguments.
   Add infrastructure for specific cmdline arguments to be repeated in groups.
   Split the_args cmdline arguments and values into arg_props and arg_values.
-  Fix fsadm to not require '-f' for resize of unmounted filesystem.
+  Fix fsadm no longer to require '-f' to resize an unmounted filesystem.
   Fix fsadm to detect mounted filesystems on older systems. (2.0.75)
   Extend cling allocation policy to recognise PV tags (cling_by_tags).
   Add allocation/cling_tag_list to lvm.conf.
