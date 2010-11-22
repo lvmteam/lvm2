@@ -1,5 +1,5 @@
-Version 1.02.58 - 
-===================================
+Version 1.02.58 - 22nd November 2010
+====================================
   Fix _output_field crash from field_id free with DEBUG_MEM. (1.02.57)
 
 Version 1.02.57 - 8th November 2010
