@@ -1,3 +1,6 @@
+Version 2.02.78 - 
+====================================
+
 Version 2.02.77 - 22nd November 2010
 ====================================
   Allocate a pool for dummy VG in _pvsegs_sub_single.
