@@ -198,6 +198,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 	struct dm_list failed_lvnames;
 	struct dm_list tags, lvnames;
 	struct dm_list arg_lvnames;	/* Cmdline vgname or vgname/lvname */
+	struct dm_list arg_vgnames;
 	char *vglv;
 	size_t vglv_sz;
 
@@ -208,8 +209,6 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 	dm_list_init(&failed_lvnames);
 
 	if (argc) {
-		struct dm_list arg_vgnames;
-
 		log_verbose("Using logical volume(s) on command line");
 		dm_list_init(&arg_vgnames);
 
