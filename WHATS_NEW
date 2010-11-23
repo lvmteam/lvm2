@@ -1,5 +1,6 @@
 Version 2.02.78 - 
 ====================================
+  Fix out-of-scope variable usage in process_each_lv().
   Fix dm_task_destroy(NULL) call in _node_clear_table() error path.
   Fix resource leak in _rm_blks().
   Suppress 'No PV label' message when removing several PVs without mdas.
