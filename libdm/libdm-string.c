@@ -144,6 +144,8 @@ int dm_asprintf(char **result, const char *format, ...)
 	while (!ok) {
 		va_start(ap, format);
 		n = vsnprintf(buf, size, format, ap);
+		va_end(ap);
+
 		if (0 <= n && n < size)
 			ok = 1;
 		else {
@@ -152,8 +154,7 @@ int dm_asprintf(char **result, const char *format, ...)
 			buf = dm_malloc(size);
 			if (!buf)
 				return -1;
-		};
-		va_end(ap);
+		}
 	}
 
 	*result = dm_strdup(buf);
