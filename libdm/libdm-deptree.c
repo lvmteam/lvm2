@@ -580,7 +580,6 @@ static int _node_clear_table(struct dm_tree_node *dnode)
 		    name, info->major, info->minor);
 
 	if (!(dmt = dm_task_create(DM_DEVICE_CLEAR))) {
-		dm_task_destroy(dmt);
 		log_error("Table clear dm_task creation failed for %s", name);
 		return 0;
 	}
