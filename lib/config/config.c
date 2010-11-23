@@ -381,11 +381,12 @@ static int _line_append(struct output_line *outline, const char *fmt, ...)
 
 	va_start(ap, fmt);
 	n = vsnprintf(&buf[0], sizeof buf - 1, fmt, ap);
+	va_end(ap);
+
 	if (n < 0 || n > (int) sizeof buf - 1) {
 		log_error("vsnprintf failed for config line");
 		return 0;
 	}
-	va_end(ap);
 
 	if (!dm_pool_grow_object(outline->mem, &buf[0], strlen(buf))) {
 		log_error("dm_pool_grow_object failed for config line");
