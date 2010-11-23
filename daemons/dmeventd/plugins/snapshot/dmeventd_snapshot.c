@@ -170,6 +170,9 @@ static void _umount(const char *device, int major, int minor)
                                        device, words[1], strerror(errno));
 		}
 	}
+
+	if (fclose(mounts))
+		syslog(LOG_ERR, "Failed to close /proc/mounts.\n");
 }
 
 void process_event(struct dm_task *dmt,
