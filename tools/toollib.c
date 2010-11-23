@@ -629,7 +629,7 @@ static int _process_all_devs(struct cmd_context *cmd, void *handle,
 	int ret_max = ECMD_PROCESSED;
 	int ret = 0;
 
-	if (!scan_vgs_for_pvs(cmd)) {
+	if (!scan_vgs_for_pvs(cmd, 1)) {
 		stack;
 		return ECMD_FAILED;
 	}
@@ -744,7 +744,7 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 				if (!scanned && is_orphan(pv) &&
 				    !dm_list_size(&mdas)) {
 					if (!scan_label_only &&
-					    !scan_vgs_for_pvs(cmd)) {
+					    !scan_vgs_for_pvs(cmd, 1)) {
 						stack;
 						ret_max = ECMD_FAILED;
 						continue;

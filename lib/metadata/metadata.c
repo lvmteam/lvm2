@@ -344,7 +344,7 @@ int get_pv_from_vg_by_id(const struct format_type *fmt, const char *vg_name,
 	struct pv_list *pvl;
 	int r = 0, consistent = 0;
 
-	if (!(vg = vg_read_internal(fmt->cmd, vg_name, vgid, &consistent))) {
+	if (!(vg = vg_read_internal(fmt->cmd, vg_name, vgid, 1, &consistent))) {
 		log_error("get_pv_from_vg_by_id: vg_read_internal failed to read VG %s",
 			  vg_name);
 		return 0;
@@ -918,7 +918,7 @@ struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name)
 	/* FIXME: Is this vg_read_internal necessary? Move it inside
 	   vg_lock_newname? */
 	/* is this vg name already in use ? */
-	if ((vg = vg_read_internal(cmd, vg_name, NULL, &consistent))) {
+	if ((vg = vg_read_internal(cmd, vg_name, NULL, 1, &consistent))) {
 		log_error("A volume group called '%s' already exists.", vg_name);
 		unlock_and_release_vg(cmd, vg, vg_name);
 		return _vg_make_handle(cmd, NULL, FAILED_EXIST);
@@ -1343,7 +1343,7 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name,
 	 * system.
 	 */
 	if (pv && is_orphan(pv) && mdas_empty_or_ignored(&mdas)) {
-		if (!scan_vgs_for_pvs(cmd))
+		if (!scan_vgs_for_pvs(cmd, 0))
 			return_0;
 		pv = pv_read(cmd, name, NULL, NULL, 0, 0);
 	}
@@ -1812,7 +1812,7 @@ static struct physical_volume *_find_pv_by_name(struct cmd_context *cmd,
 
 	if (is_orphan_vg(pv->vg_name) && mdas_empty_or_ignored(&mdas)) {
 		/* If a PV has no MDAs - need to search all VGs for it */
-		if (!scan_vgs_for_pvs(cmd))
+		if (!scan_vgs_for_pvs(cmd, 1))
 			return_NULL;
 		if (!(pv = _pv_read(cmd, cmd->mem, pv_name, NULL, NULL, 1, 0))) {
 			log_error("Physical volume %s not found", pv_name);
@@ -2513,6 +2513,7 @@ int vg_revert(struct volume_group *vg)
 
 /* Make orphan PVs look like a VG */
 static struct volume_group *_vg_read_orphans(struct cmd_context *cmd,
+					     int warnings,
 					     const char *orphan_vgname)
 {
 	struct lvmcache_vginfo *vginfo;
@@ -2554,7 +2555,7 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd,
 	}
 
 	dm_list_iterate_items(info, &vginfo->infos) {
-		if (!(pv = _pv_read(cmd, mem, dev_name(info->dev), NULL, NULL, 1, 0))) {
+		if (!(pv = _pv_read(cmd, mem, dev_name(info->dev), NULL, NULL, warnings, 0))) {
 			continue;
 		}
 		if (!(pvl = dm_pool_zalloc(mem, sizeof(*pvl)))) {
@@ -2641,6 +2642,7 @@ static void check_reappeared_pv(struct volume_group *correct_vg,
 static struct volume_group *_vg_read(struct cmd_context *cmd,
 				     const char *vgname,
 				     const char *vgid,
+				     int warnings, 
 				     int *consistent, unsigned precommitted)
 {
 	struct format_instance *fid;
@@ -2667,7 +2669,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 			return NULL;
 		}
 		*consistent = 1;
-		return _vg_read_orphans(cmd, vgname);
+		return _vg_read_orphans(cmd, warnings, vgname);
 	}
 
 	/*
@@ -3035,12 +3037,12 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 }
 
 struct volume_group *vg_read_internal(struct cmd_context *cmd, const char *vgname,
-			     const char *vgid, int *consistent)
+			     const char *vgid, int warnings, int *consistent)
 {
 	struct volume_group *vg;
 	struct lv_list *lvl;
 
-	if (!(vg = _vg_read(cmd, vgname, vgid, consistent, 0)))
+	if (!(vg = _vg_read(cmd, vgname, vgid, warnings, consistent, 0)))
 		return NULL;
 
 	if (!check_pv_segments(vg)) {
@@ -3104,7 +3106,7 @@ static struct volume_group *_vg_read_by_vgid(struct cmd_context *cmd,
 	/* Is corresponding vgname already cached? */
 	if ((vginfo = vginfo_from_vgid(vgid)) &&
 	    vginfo->vgname && !is_orphan_vg(vginfo->vgname)) {
-		if ((vg = _vg_read(cmd, NULL, vgid,
+		if ((vg = _vg_read(cmd, NULL, vgid, 1,
 				   &consistent, precommitted)) &&
 		    !strncmp((char *)vg->id.uuid, vgid, ID_LEN)) {
 
@@ -3137,7 +3139,7 @@ static struct volume_group *_vg_read_by_vgid(struct cmd_context *cmd,
 		if (!vgname)
 			continue;	// FIXME Unnecessary?
 		consistent = 0;
-		if ((vg = _vg_read(cmd, vgname, vgid, &consistent,
+		if ((vg = _vg_read(cmd, vgname, vgid, 1, &consistent,
 				   precommitted)) &&
 		    !strncmp((char *)vg->id.uuid, vgid, ID_LEN)) {
 
@@ -3208,7 +3210,7 @@ const char *find_vgname_from_pvid(struct cmd_context *cmd,
 		 * every PV on the system.
 		 */
 		if (mdas_empty_or_ignored(&info->mdas)) {
-			if (!scan_vgs_for_pvs(cmd)) {
+			if (!scan_vgs_for_pvs(cmd, 1)) {
 				log_error("Rescan for PVs without "
 					  "metadata areas failed.");
 				return NULL;
@@ -3323,7 +3325,7 @@ struct dm_list *get_vgids(struct cmd_context *cmd, int include_internal)
 	return lvmcache_get_vgids(cmd, include_internal);
 }
 
-static int _get_pvs(struct cmd_context *cmd, struct dm_list **pvslist)
+static int _get_pvs(struct cmd_context *cmd, int warnings, struct dm_list **pvslist)
 {
 	struct str_list *strl;
 	struct dm_list * uninitialized_var(results);
@@ -3364,7 +3366,7 @@ static int _get_pvs(struct cmd_context *cmd, struct dm_list **pvslist)
 			stack;
 			continue;
 		}
-		if (!(vg = vg_read_internal(cmd, vgname, vgid, &consistent))) {
+		if (!(vg = vg_read_internal(cmd, vgname, vgid, warnings, &consistent))) {
 			stack;
 			continue;
 		}
@@ -3398,15 +3400,15 @@ struct dm_list *get_pvs(struct cmd_context *cmd)
 {
 	struct dm_list *results;
 
-	if (!_get_pvs(cmd, &results))
+	if (!_get_pvs(cmd, 1, &results))
 		return NULL;
 
 	return results;
 }
 
-int scan_vgs_for_pvs(struct cmd_context *cmd)
+int scan_vgs_for_pvs(struct cmd_context *cmd, int warnings)
 {
-	return _get_pvs(cmd, NULL);
+	return _get_pvs(cmd, warnings, NULL);
 }
 
 int pv_write(struct cmd_context *cmd __attribute__((unused)),
@@ -3581,7 +3583,7 @@ static struct volume_group *_recover_vg(struct cmd_context *cmd,
 	if (!lock_vol(cmd, vg_name, LCK_VG_WRITE))
 		return_NULL;
 
-	if (!(vg = vg_read_internal(cmd, vg_name, vgid, &consistent)))
+	if (!(vg = vg_read_internal(cmd, vg_name, vgid, 1, &consistent)))
 		return_NULL;
 
 	if (!consistent) {
@@ -3636,7 +3638,7 @@ static struct volume_group *_vg_lock_and_read(struct cmd_context *cmd, const cha
 	consistent_in = consistent;
 
 	/* If consistent == 1, we get NULL here if correction fails. */
-	if (!(vg = vg_read_internal(cmd, vg_name, vgid, &consistent))) {
+	if (!(vg = vg_read_internal(cmd, vg_name, vgid, 1, &consistent))) {
 		if (consistent_in && !consistent) {
 			log_error("Volume group \"%s\" inconsistent.", vg_name);
 			failure |= FAILED_INCONSISTENT;

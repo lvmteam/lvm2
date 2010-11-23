@@ -848,7 +848,7 @@ void lvm_do_backup(const char *vgname)
 
 	pthread_mutex_lock(&lvm_lock);
 
-	vg = vg_read_internal(cmd, vgname, NULL /*vgid*/, &consistent);
+	vg = vg_read_internal(cmd, vgname, NULL /*vgid*/, 1, &consistent);
 
 	if (vg && consistent)
 		check_current_backup(vg);

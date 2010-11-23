@@ -48,7 +48,7 @@ static int pvremove_check(struct cmd_context *cmd, const char *name)
 	 * PV on the system.
 	 */
 	if (is_orphan(pv) && !dm_list_size(&mdas)) {
-		if (!scan_vgs_for_pvs(cmd)) {
+		if (!scan_vgs_for_pvs(cmd, 0)) {
 			log_error("Rescan for PVs without metadata areas "
 				  "failed.");
 			return 0;

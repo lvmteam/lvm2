@@ -1,5 +1,6 @@
 Version 2.02.78 - 
 ====================================
+  Suppress 'No PV label' message when removing several PVs without mdas.
   Fix default /etc/lvm permissions to be 0755. (2.02.66)
 
 Version 2.02.77 - 22nd November 2010
