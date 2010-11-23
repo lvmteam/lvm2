@@ -105,6 +105,9 @@ static void _rm_blks(const char *dir)
 				log_sys_error("unlink", path);
 		}
 	}
+
+	if (closedir(d))
+		log_sys_error("closedir", dir);
 }
 
 static int _mk_link(const char *dev_dir, const char *vg_name,

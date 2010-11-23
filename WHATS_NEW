@@ -1,5 +1,6 @@
 Version 2.02.78 - 
 ====================================
+  Fix resource leak in _rm_blks().
   Suppress 'No PV label' message when removing several PVs without mdas.
   Fix default /etc/lvm permissions to be 0755. (2.02.66)
 
