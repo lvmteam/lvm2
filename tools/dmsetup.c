@@ -2904,6 +2904,7 @@ static char *parse_loop_device_name(const char *dev, const char *dev_dir)
 	return buf;
 
 error:
+	dm_free(buf);
 	return NULL;
 }
 
