@@ -1447,10 +1447,12 @@ int lvm2_main(int argc, char **argv)
 		if (!argc) {
 			log_error("Falling back to LVM1 tools, but no "
 				  "command specified.");
-			return ECMD_FAILED;
+			ret = ECMD_FAILED;
+			goto out;
 		}
 		_exec_lvm1_command(argv);
-		return ECMD_FAILED;
+		ret = ECMD_FAILED;
+		goto out;
 	}
 #ifdef READLINE_SUPPORT
 	if (!alias && argc == 1) {
