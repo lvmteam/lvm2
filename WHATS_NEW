@@ -1,5 +1,6 @@
 Version 2.02.78 - 
 ====================================
+  Fix memory leak in error path of parse_loop_device_name() from dmsetup.
   Fix missing dlclose in _init_formats() error path from init_format call.
   Fix missing fclose for _umount() in dmeventd snapshot plugin.
   Fix out-of-scope variable usage in process_each_lv().
