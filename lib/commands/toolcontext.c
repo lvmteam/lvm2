@@ -814,8 +814,11 @@ static int _init_formats(struct cmd_context *cmd)
 				return 0;
 			}
 
-			if (!(fmt = init_format_fn(cmd)))
-				return 0;
+			if (!(fmt = init_format_fn(cmd))) {
+				dlclose(lib);
+				return_0;
+			}
+
 			fmt->library = lib;
 			dm_list_add(&cmd->formats, &fmt->list);
 		}
