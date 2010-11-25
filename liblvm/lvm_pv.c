@@ -87,6 +87,18 @@ struct dm_list *lvm_pv_list_pvsegs(pv_t pv)
 	return list;
 }
 
+pv_t lvm_pv_from_name(vg_t vg, const char *name)
+{
+	struct pv_list *pvl;
+
+	dm_list_iterate_items(pvl, &vg->pvs) {
+		if (!strcmp(name, pv_dev_name(pvl->pv)))
+			return pvl->pv;
+	}
+	return NULL;
+}
+
+
 int lvm_pv_resize(const pv_t pv, uint64_t new_size)
 {
 	/* FIXME: add pv resize code here */

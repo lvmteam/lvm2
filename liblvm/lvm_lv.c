@@ -249,6 +249,17 @@ struct dm_list *lvm_lv_list_lvsegs(lv_t lv)
 	return list;
 }
 
+lv_t lvm_lv_from_name(vg_t vg, const char *name)
+{
+	struct lv_list *lvl;
+
+	dm_list_iterate_items(lvl, &vg->lvs) {
+		if (!strcmp(name, lvl->lv->name))
+			return lvl->lv;
+	}
+	return NULL;
+}
+
 int lvm_lv_resize(const lv_t lv, uint64_t new_size)
 {
 	/* FIXME: add lv resize code here */
