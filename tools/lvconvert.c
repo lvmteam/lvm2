@@ -1345,6 +1345,15 @@ static int _lvconvert_mirrors(struct cmd_context *cmd,
 					     &new_mimage_count, &new_log_count))
 		return 0;
 
+        if (((old_mimage_count < new_mimage_count && old_log_count > new_log_count) ||
+             (old_mimage_count > new_mimage_count && old_log_count < new_log_count)) &&
+            lp->pv_count) {
+		log_error("Cannot both allocate and free extents when specifying physical"
+			  " volumes to use.");
+		log_error("Please specify the operation in two steps.");
+		return 0;
+        }
+
 	/* Nothing to do?  (Probably finishing collapse.) */
 	if ((old_mimage_count == new_mimage_count) &&
 	    (old_log_count == new_log_count) && !repair)
