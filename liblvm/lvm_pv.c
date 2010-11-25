@@ -98,6 +98,28 @@ pv_t lvm_pv_from_name(vg_t vg, const char *name)
 	return NULL;
 }
 
+pv_t lvm_pv_from_uuid(vg_t vg, const char *uuid)
+{
+	struct pv_list *pvl;
+	struct id id;
+
+	if (strlen(uuid) < ID_LEN) {
+		log_errno (EINVAL, "Invalid UUID string length");
+		return NULL;
+	}
+	if (strlen(uuid) >= ID_LEN) {
+		if (!id_read_format(&id, uuid)) {
+			log_errno(EINVAL, "Invalid UUID format");
+			return NULL;
+		}
+	}
+	dm_list_iterate_items(pvl, &vg->pvs) {
+		if (id_equal(&id, &pvl->pv->id))
+			return pvl->pv;
+	}
+	return NULL;
+}
+
 
 int lvm_pv_resize(const pv_t pv, uint64_t new_size)
 {
