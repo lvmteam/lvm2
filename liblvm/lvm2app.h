@@ -1015,6 +1015,23 @@ lv_t lvm_vg_create_lv_linear(vg_t vg, const char *name, uint64_t size);
 struct dm_list *lvm_lv_list_lvsegs(lv_t lv);
 
 /**
+ * Lookup an LV handle in a VG by the LV name.
+ *
+ * \memberof lv_t
+ *
+ * \param   vg
+ * VG handle obtained from lvm_vg_create() or lvm_vg_open().
+ *
+ * \param   name
+ * Name of LV to lookup.
+ *
+ * \return
+ * non-NULL handle to the LV 'name' attached to the VG.
+ * NULL is returned if the LV name is not associated with the VG handle.
+ */
+lv_t lvm_lv_from_name(vg_t vg, const char *name);
+
+/**
  * Activate a logical volume.
  *
  * \memberof lv_t
@@ -1487,6 +1504,23 @@ struct lvm_property_value lvm_pvseg_get_property(const pvseg_t pvseg,
  * A list of lvm_pvseg_list structures containing pvseg handles for this pv.
  */
 struct dm_list *lvm_pv_list_pvsegs(pv_t pv);
+
+/**
+ * Lookup an PV handle in a VG by the PV name.
+ *
+ * \memberof pv_t
+ *
+ * \param   vg
+ * VG handle obtained from lvm_vg_create() or lvm_vg_open().
+ *
+ * \param   name
+ * Name of PV to lookup.
+ *
+ * \return
+ * non-NULL handle to the PV 'name' attached to the VG.
+ * NULL is returned if the PV name is not associated with the VG handle.
+ */
+pv_t lvm_pv_from_name(vg_t vg, const char *name);
 
 /**
  * Resize physical volume to new_size bytes.
