@@ -260,6 +260,28 @@ lv_t lvm_lv_from_name(vg_t vg, const char *name)
 	return NULL;
 }
 
+lv_t lvm_lv_from_uuid(vg_t vg, const char *uuid)
+{
+	struct lv_list *lvl;
+	struct id id;
+
+	if (strlen(uuid) < ID_LEN) {
+		log_errno (EINVAL, "Invalid UUID string length");
+		return NULL;
+	}
+	if (strlen(uuid) >= ID_LEN) {
+		if (!id_read_format(&id, uuid)) {
+			log_errno(EINVAL, "Invalid UUID format");
+			return NULL;
+		}
+	}
+	dm_list_iterate_items(lvl, &vg->lvs) {
+		if (id_equal(&vg->id, &lvl->lv->lvid.id[0]) &&
+		    id_equal(&id, &lvl->lv->lvid.id[1]))
+			return lvl->lv;
+	}
+	return NULL;
+}
 int lvm_lv_resize(const lv_t lv, uint64_t new_size)
 {
 	/* FIXME: add lv resize code here */

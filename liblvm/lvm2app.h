@@ -1032,6 +1032,25 @@ struct dm_list *lvm_lv_list_lvsegs(lv_t lv);
 lv_t lvm_lv_from_name(vg_t vg, const char *name);
 
 /**
+ * Lookup an LV handle in a VG by the LV uuid.
+ * The form of the uuid may be either the formatted, human-readable form,
+ * or the non-formatted form.
+ *
+ * \memberof lv_t
+ *
+ * \param   vg
+ * VG handle obtained from lvm_vg_create() or lvm_vg_open().
+ *
+ * \param   uuid
+ * UUID of LV to lookup.
+ *
+ * \return
+ * non-NULL handle to the LV with 'uuid' attached to the VG.
+ * NULL is returned if the LV uuid is not associated with the VG handle.
+ */
+lv_t lvm_lv_from_uuid(vg_t vg, const char *uuid);
+
+/**
  * Activate a logical volume.
  *
  * \memberof lv_t
@@ -1521,6 +1540,25 @@ struct dm_list *lvm_pv_list_pvsegs(pv_t pv);
  * NULL is returned if the PV name is not associated with the VG handle.
  */
 pv_t lvm_pv_from_name(vg_t vg, const char *name);
+
+/**
+ * Lookup an PV handle in a VG by the PV uuid.
+ * The form of the uuid may be either the formatted, human-readable form,
+ * or the non-formatted form.
+ *
+ * \memberof pv_t
+ *
+ * \param   vg
+ * VG handle obtained from lvm_vg_create() or lvm_vg_open().
+ *
+ * \param   uuid
+ * UUID of PV to lookup.
+ *
+ * \return
+ * non-NULL handle to the PV with 'uuid' attached to the VG.
+ * NULL is returned if the PV uuid is not associated with the VG handle.
+ */
+pv_t lvm_pv_from_uuid(vg_t vg, const char *uuid);
 
 /**
  * Resize physical volume to new_size bytes.
