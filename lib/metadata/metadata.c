@@ -3117,6 +3117,7 @@ static struct volume_group *_vg_read_by_vgid(struct cmd_context *cmd,
 			return vg;
 		}
 		vg_release(vg);
+		vg = NULL; /* reset so memlock goto out is safe */
 	}
 
 	/* Mustn't scan if memory locked: ensure cache gets pre-populated! */
