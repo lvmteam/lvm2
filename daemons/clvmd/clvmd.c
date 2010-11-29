@@ -965,7 +965,6 @@ static __attribute__ ((noreturn)) void wait_for_child(int c_pipe, int timeout)
  */
 static void be_daemon(int timeout)
 {
-        pid_t pid;
 	int devnull = open("/dev/null", O_RDWR);
 	if (devnull == -1) {
 		perror("Can't open /dev/null");
@@ -974,7 +973,7 @@ static void be_daemon(int timeout)
 
 	pipe(child_pipe);
 
-	switch (pid = fork()) {
+	switch (fork()) {
 	case -1:
 		perror("clvmd: can't fork");
 		exit(2);
