@@ -173,7 +173,6 @@ static int _pv_analyze_mda_raw (const struct format_type * fmt,
 	uint64_t area_size;
 	uint64_t prev_sector, prev_sector2;
 	uint64_t latest_mrec_offset;
-	int i;
 	uint64_t offset;
 	uint64_t offset2;
 	size_t size;
@@ -214,7 +213,7 @@ static int _pv_analyze_mda_raw (const struct format_type * fmt,
 	offset = prev_sector;
 	size = SECTOR_SIZE;
 	offset2 = size2 = 0;
-	i = 0;
+
 	while (prev_sector != latest_mrec_offset) {
 		prev_sector2 = prev_sector;
 		prev_sector = _get_prev_sector_circular(area_start, area_size,
