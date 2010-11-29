@@ -1749,14 +1749,12 @@ static void restart(void)
 
 static void usage(char *prog, FILE *file)
 {
-	fprintf(file, "Usage:\n");
-	fprintf(file, "%s [-V] [-h] [-d] [-d] [-d] [-f]\n", prog);
-	fprintf(file, "\n");
-	fprintf(file, "   -V       Show version of dmeventd\n");
-	fprintf(file, "   -h       Show this help information\n");
-	fprintf(file, "   -d       Log debug messages to syslog (-d, -dd, -ddd)\n");
-	fprintf(file, "   -f       Don't fork, run in the foreground\n");
-	fprintf(file, "\n");
+	fprintf(file, "Usage:\n"
+		"%s [-V] [-h] [-d] [-d] [-d] [-f]\n\n"
+		"   -V       Show version of dmeventd\n"
+		"   -h       Show this help information\n"
+		"   -d       Log debug messages to syslog (-d, -dd, -ddd)\n"
+		"   -f       Don't fork, run in the foreground\n\n", prog);
 }
 
 int main(int argc, char *argv[])
