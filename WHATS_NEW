@@ -1,5 +1,6 @@
 Version 2.02.78 - 
 ====================================
+  Fix memory leak in outf macro error path of _print_vg/lv/pvs/segment().
   Fix missing reset of vg pointer after vg_release() in _vg_read_by_vgid().
   Fix test for empty system_dir string in _init_backup().
   Certain lvconvert invocations are now required to be done in two steps.
