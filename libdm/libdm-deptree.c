@@ -2199,9 +2199,7 @@ int dm_tree_node_add_mirror_target_log(struct dm_tree_node *node,
 int dm_tree_node_add_mirror_target(struct dm_tree_node *node,
                                       uint64_t size)
 {
-	struct load_segment *seg;
-
-	if (!(seg = _add_segment(node, SEG_MIRRORED, size)))
+	if (!_add_segment(node, SEG_MIRRORED, size))
 		return_0;
 
 	return 1;
