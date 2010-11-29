@@ -308,7 +308,7 @@ static int _lock_for_cluster(struct cmd_context *cmd, unsigned char clvmd_cmd,
 	const char *node = "";
 	int len;
 	int dmeventd_mode;
-	int saved_errno = errno;
+	int saved_errno;
 	lvm_response_t *response = NULL;
 	int num_responses;
 
