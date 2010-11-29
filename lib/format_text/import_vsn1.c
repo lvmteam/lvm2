@@ -529,8 +529,10 @@ static int _read_lvnames(struct format_instance *fid __attribute__((unused)),
 		}
 
 		lv->alloc = get_alloc_from_string(cv->v.str);
-		if (lv->alloc == ALLOC_INVALID)
-			return_0;
+		if (lv->alloc == ALLOC_INVALID) {
+			log_warn("WARNING: Ignoring unrecognised allocation policy %s for LV %s", cv->v.str, lv->name);
+			lv->alloc = ALLOC_INHERIT;
+		}
 	}
 
 	if (!_read_int32(lvn, "read_ahead", &lv->read_ahead))
@@ -660,7 +662,8 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 		return_NULL;
 
 	/* skip any top-level values */
-	for (vgn = cft->root; (vgn && vgn->v); vgn = vgn->sib) ;
+	for (vgn = cft->root; (vgn && vgn->v); vgn = vgn->sib)
+		;
 
 	if (!vgn) {
 		log_error("Couldn't find volume group in file.");
@@ -738,12 +741,14 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 		struct config_value *cv = cn->v;
 		if (!cv || !cv->v.str) {
 			log_error("allocation_policy must be a string.");
-			return 0;
+			goto bad;
 		}
 
 		vg->alloc = get_alloc_from_string(cv->v.str);
-		if (vg->alloc == ALLOC_INVALID)
-			return_0;
+		if (vg->alloc == ALLOC_INVALID) {
+			log_warn("WARNING: Ignoring unrecognised allocation policy %s for VG %s", cv->v.str, vg->name);
+			vg->alloc = ALLOC_NORMAL;
+		}
 	}
 
 	if (!_read_uint32(vgn, "metadata_copies", &vg->mda_copies)) {

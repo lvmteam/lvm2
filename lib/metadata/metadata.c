@@ -3086,6 +3086,7 @@ void vg_release(struct volume_group *vg)
 			  vg->name);
 
 	dm_pool_destroy(vg->vgmem);
+	vg->vgmem = NULL;
 }
 
 /* This is only called by lv_from_lvid, which is only called from
@@ -3098,7 +3099,7 @@ static struct volume_group *_vg_read_by_vgid(struct cmd_context *cmd,
 {
 	const char *vgname;
 	struct dm_list *vgnames;
-	struct volume_group *vg = NULL;
+	struct volume_group *vg;
 	struct lvmcache_vginfo *vginfo;
 	struct str_list *strl;
 	int consistent = 0;
@@ -3109,20 +3110,17 @@ static struct volume_group *_vg_read_by_vgid(struct cmd_context *cmd,
 		if ((vg = _vg_read(cmd, NULL, vgid, 1,
 				   &consistent, precommitted)) &&
 		    !strncmp((char *)vg->id.uuid, vgid, ID_LEN)) {
-
-			if (!consistent) {
+			if (!consistent)
 				log_error("Volume group %s metadata is "
 					  "inconsistent", vg->name);
-			}
 			return vg;
 		}
 		vg_release(vg);
-		vg = NULL; /* reset so memlock goto out is safe */
 	}
 
 	/* Mustn't scan if memory locked: ensure cache gets pre-populated! */
 	if (memlock())
-		goto out;
+		return_NULL;
 
 	/* FIXME Need a genuine read by ID here - don't vg_read_internal by name! */
 	/* FIXME Disabled vgrenames while active for now because we aren't
@@ -3132,7 +3130,7 @@ static struct volume_group *_vg_read_by_vgid(struct cmd_context *cmd,
 	lvmcache_label_scan(cmd, 2);
 	if (!(vgnames = get_vgnames(cmd, 0))) {
 		log_error("vg_read_by_vgid: get_vgnames failed");
-		goto out;
+		return NULL;
 	}
 
 	dm_list_iterate_items(strl, vgnames) {
@@ -3143,18 +3141,17 @@ static struct volume_group *_vg_read_by_vgid(struct cmd_context *cmd,
 		if ((vg = _vg_read(cmd, vgname, vgid, 1, &consistent,
 				   precommitted)) &&
 		    !strncmp((char *)vg->id.uuid, vgid, ID_LEN)) {
-
 			if (!consistent) {
 				log_error("Volume group %s metadata is "
 					  "inconsistent", vgname);
-				goto out;
+				vg_release(vg);
+				return NULL;
 			}
 			return vg;
 		}
+		vg_release(vg);
 	}
 
-out:
-	vg_release(vg);
 	return NULL;
 }
 
