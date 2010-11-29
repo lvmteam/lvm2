@@ -1,5 +1,6 @@
 Version 2.02.78 - 
 ====================================
+  Fix test for empty system_dir string in _init_backup().
   Certain lvconvert invocations are now required to be done in two steps.
   Fix missing context desctruction in err path of lvm1 fallback in lvm2_main().
   Fix memory leak in error path of parse_loop_device_name() from dmsetup.
