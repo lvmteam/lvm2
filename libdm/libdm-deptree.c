@@ -1536,7 +1536,6 @@ static int _mirror_emit_segment_line(struct dm_task *dmt, uint32_t major,
 				     uint64_t *seg_start, char *params,
 				     size_t paramsize)
 {
-	int r;
 	int block_on_error = 0;
 	int handle_errors = 0;
 	int dm_log_userspace = 0;
@@ -1643,7 +1642,7 @@ static int _mirror_emit_segment_line(struct dm_task *dmt, uint32_t major,
 
 	EMIT_PARAMS(pos, " %u ", seg->mirror_area_count);
 
-	if ((r = _emit_areas_line(dmt, seg, params, paramsize, &pos)) <= 0)
+	if (_emit_areas_line(dmt, seg, params, paramsize, &pos) <= 0)
 		return_0;
 
 	if (handle_errors)
