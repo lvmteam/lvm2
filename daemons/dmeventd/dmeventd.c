@@ -1761,7 +1761,6 @@ static void usage(char *prog, FILE *file)
 
 int main(int argc, char *argv[])
 {
-	int ret;
 	signed char opt;
 	struct dm_event_fifos fifos;
 	//struct sys_log logdata = {DAEMON_NAME, LOG_DAEMON};
@@ -1835,7 +1834,7 @@ int main(int argc, char *argv[])
 
 	pthread_mutex_init(&_global_mutex, NULL);
 
-	if ((ret = _open_fifos(&fifos)))
+	if (_open_fifos(&fifos))
 		exit(EXIT_FIFO_FAILURE);
 
 	/* Signal parent, letting them know we are ready to go. */
