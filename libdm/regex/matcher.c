@@ -372,11 +372,11 @@ static struct dfa_state *_step_matcher(struct dm_regex *m, int c, struct dfa_sta
 {
         struct dfa_state *ns;
 
-        if (!cs->lookup[(unsigned char) c])
-                _calc_state(m, cs, (unsigned char) c);
-
-	if (!(ns = cs->lookup[(unsigned char) c]))
-		return NULL;
+	if (!(ns = cs->lookup[(unsigned char) c])) {
+		_calc_state(m, cs, (unsigned char) c);
+		if (!(ns = cs->lookup[(unsigned char) c]))
+			return NULL;
+	}
 
         // yuck, we have to special case the target trans
         if (ns->final == -1)
