@@ -1442,7 +1442,6 @@ int lvm2_main(int argc, char **argv)
 		if (!alias) {
 			argv++;
 			argc--;
-			alias = 0;
 		}
 		if (!argc) {
 			log_error("Falling back to LVM1 tools, but no "
