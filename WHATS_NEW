@@ -1,16 +1,22 @@
 Version 2.02.78 - 
 ====================================
-  Fix memory leak in outf macro error path of _print_vg/lv/pvs/segment().
-  Fix missing reset of vg pointer after vg_release() in _vg_read_by_vgid().
-  Fix test for empty system_dir string in _init_backup().
-  Certain lvconvert invocations are now required to be done in two steps.
-  Fix missing context desctruction in err path of lvm1 fallback in lvm2_main().
-  Fix memory leak in error path of parse_loop_device_name() from dmsetup.
-  Fix missing dlclose in _init_formats() error path from init_format call.
-  Fix missing fclose for _umount() in dmeventd snapshot plugin.
-  Fix out-of-scope variable usage in process_each_lv().
-  Fix dm_task_destroy(NULL) call in _node_clear_table() error path.
-  Fix resource leak in _rm_blks().
+  Fix memory leak when VG allocation policy in metadata is invalid.
+  Ignore unrecognised allocation policy found in metadata instead of aborting.
+  Factor out tag printing into _out_tags and avoid leaking string buffer.
+  Remove some unused variables & assignments.
+  Add missing vg_release calls in _vg_read_by_vgid.
+Still to fix: LCK_CACHE/CLUSTER_VG printing/FIXME
+  Fix test for no system_dir in _init_backup().
+  Disallow lvconvert ops that both allocate & free supplied PEs in a single cmd.
+  Fix liblvm seg_size to give bytes not sectors.
+  Add functions to look up LV/PV by name/uuid to liblvm.
+  Free cmd_context if fallback to LVM1 fails in lvm2_main().
+  Free device name buffer in dmsetup parse_loop_device_name() error paths.
+  Close format lib if init_format_fn fails in _init_formats().
+  Don't leave /proc/mounts open after dmeventd snapshot event processing.
+  Fix out-of-scope arg_vgnames use in process_each_lv().
+  Remove incorrect dm_task_destroy(NULL) from _node_clear_table() error path.
+  Add missing closedir in _rm_blks after removing stray LVM1 VG files.
   Suppress 'No PV label' message when removing several PVs without mdas.
   Fix default /etc/lvm permissions to be 0755. (2.02.66)
 

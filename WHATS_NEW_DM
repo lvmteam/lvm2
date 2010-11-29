@@ -1,5 +1,6 @@
 Version 1.02.59 - 
 ====================================
+  Remove superfluous checks for NULL before calling dm_free.
 
 Version 1.02.58 - 22nd November 2010
 ====================================
