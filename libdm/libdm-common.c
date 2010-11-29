@@ -250,10 +250,8 @@ int dm_task_set_name(struct dm_task *dmt, const char *name)
 	char path[PATH_MAX];
 	struct stat st1, st2;
 
-	if (dmt->dev_name) {
-		dm_free(dmt->dev_name);
-		dmt->dev_name = NULL;
-	}
+	dm_free(dmt->dev_name);
+	dmt->dev_name = NULL;
 
 	/*
 	 * Path supplied for existing device?
@@ -292,8 +290,7 @@ int dm_task_set_name(struct dm_task *dmt, const char *name)
 
 	if (strlen(name) >= DM_NAME_LEN) {
 		log_error("Name \"%s\" too long", name);
-		if (new_name)
-			dm_free(new_name);
+		dm_free(new_name);
 		return 0;
 	}
 
@@ -309,10 +306,7 @@ int dm_task_set_name(struct dm_task *dmt, const char *name)
 
 int dm_task_set_uuid(struct dm_task *dmt, const char *uuid)
 {
-	if (dmt->uuid) {
-		dm_free(dmt->uuid);
-		dmt->uuid = NULL;
-	}
+	dm_free(dmt->uuid);
 
 	if (!(dmt->uuid = dm_strdup(uuid))) {
 		log_error("dm_task_set_uuid: strdup(%s) failed", uuid);
