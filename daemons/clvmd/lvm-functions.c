@@ -44,6 +44,10 @@ struct lv_info {
 	int lock_mode;
 };
 
+/*
+ * FIXME: 8bit value passed here -
+ *        so only LCK_XXX defines < 0x100 can be decoded
+ */
 static const char *decode_locking_cmd(unsigned char cmdl)
 {
 	static char buf[128];
@@ -109,12 +113,11 @@ static const char *decode_locking_cmd(unsigned char cmdl)
 		break;
 	}
 
-	sprintf(buf, "0x%x %s (%s|%s%s%s%s%s%s)", cmdl, command, type, scope,
+	sprintf(buf, "0x%x %s (%s|%s%s%s%s%s)", cmdl, command, type, scope,
 		cmdl & LCK_NONBLOCK   ? "|NONBLOCK" : "",
 		cmdl & LCK_HOLD       ? "|HOLD" : "",
 		cmdl & LCK_LOCAL      ? "|LOCAL" : "",
-		cmdl & LCK_CLUSTER_VG ? "|CLUSTER_VG" : "",
-		cmdl & LCK_CACHE      ? "|CACHE" : "");
+		cmdl & LCK_CLUSTER_VG ? "|CLUSTER_VG" : "");
 
 	return buf;
 }
