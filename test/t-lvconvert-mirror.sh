@@ -223,8 +223,9 @@ check mirror_legs $vg $lv1 2
 aux prepare_vg 5
 lvcreate -l1 -m2 --corelog -n $lv1 $vg $dev1 $dev2 $dev3
 while [ `lvs --noheadings -o copy_percent $vg/$lv1` != "100.00" ]; do sleep 1; done
-lvconvert -m1 --mirrorlog disk $vg/$lv1 $dev1
-check mirror $vg $lv1 $dev1
+lvconvert -m1 --mirrorlog disk $vg/$lv1
+check mirror $vg $lv1
+not check mirror $vg $lv1 core
 
 # ---
 # add mirror and disk log
