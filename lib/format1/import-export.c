@@ -185,7 +185,7 @@ int export_pv(struct cmd_context *cmd, struct dm_pool *mem __attribute__((unused
 	}
 
 	/* Generate system_id if PV is in VG */
-	if (!pvd->system_id || !*pvd->system_id)
+	if (!pvd->system_id[0])
 		if (!_system_id(cmd, (char *)pvd->system_id, ""))
 			return_0;
 
