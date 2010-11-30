@@ -2614,6 +2614,14 @@ static void check_reappeared_pv(struct volume_group *correct_vg,
 {
 	struct pv_list *pvl;
 
+        /*
+         * Skip these checks in case the tool is going to deal with missing
+         * PVs, especially since the resulting messages can be pretty
+         * confusing.
+         */
+        if (correct_vg->cmd->handles_missing_pvs)
+            return;
+
 	dm_list_iterate_items(pvl, &correct_vg->pvs)
 		if (pv->dev == pvl->pv->dev && is_missing_pv(pvl->pv)) {
 			log_warn("Missing device %s reappeared, updating "
