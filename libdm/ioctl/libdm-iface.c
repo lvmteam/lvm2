@@ -1779,9 +1779,10 @@ static int _create_and_load_v4(struct dm_task *dmt)
 	if (dmt->cookie_set) {
 		cookie = (dmt->event_nr & ~DM_UDEV_FLAGS_MASK) |
 			 (DM_COOKIE_MAGIC << DM_UDEV_FLAGS_SHIFT);
-		dm_task_set_cookie(dmt, &cookie,
-				   (dmt->event_nr & DM_UDEV_FLAGS_MASK) >>
-				    DM_UDEV_FLAGS_SHIFT);
+		if (!dm_task_set_cookie(dmt, &cookie,
+					(dmt->event_nr & DM_UDEV_FLAGS_MASK) >>
+					DM_UDEV_FLAGS_SHIFT))
+                        stack; /* keep going */
 	}
 
 	if (!dm_task_run(dmt))
