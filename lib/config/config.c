@@ -511,7 +511,8 @@ int write_config_node(const struct config_node *cn, putline_fn putline, void *ba
 {
 	struct output_line outline;
 	outline.fp = NULL;
-	outline.mem = dm_pool_create("config_line", 1024);
+	if (!(outline.mem = dm_pool_create("config_line", 1024)))
+		return_0;
 	outline.putline = putline;
 	outline.putline_baton = baton;
 	if (!_write_config(cn, 0, &outline, 0)) {
@@ -538,7 +539,10 @@ int write_config_file(struct config_tree *cft, const char *file,
 		return 0;
 	}
 
-	outline.mem = dm_pool_create("config_line", 1024);
+	if (!(outline.mem = dm_pool_create("config_line", 1024))) {
+		r = 0;
+		goto_out;
+	}
 
 	log_verbose("Dumping configuration to %s", file);
 	if (!argc) {
@@ -559,12 +563,14 @@ int write_config_file(struct config_tree *cft, const char *file,
 		argv++;
 	}
 
+	dm_pool_destroy(outline.mem);
+
+out:
 	if (outline.fp && lvm_fclose(outline.fp, file)) {
 		stack;
 		r = 0;
 	}
 
-	dm_pool_destroy(outline.mem);
 	return r;
 }
 
