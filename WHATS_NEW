@@ -1,5 +1,6 @@
 Version 2.02.78 - 
 ====================================
+  Check reallocated buffer for NULL before use in clvmd do_command().
   Fix memory leak when VG allocation policy in metadata is invalid.
   Ignore unrecognised allocation policy found in metadata instead of aborting.
   Factor out tag printing into _out_tags and avoid leaking string buffer.

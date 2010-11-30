@@ -169,7 +169,8 @@ int do_command(struct local_client *client, struct clvm_header *msg, int msglen,
 
 	/* Check the status of the command and return the error text */
 	if (status) {
-		*retlen = 1 + snprintf(*buf, buflen, "%s", strerror(status));
+		*retlen = 1 + (*buf) ? snprintf(*buf, buflen, "%s",
+						strerror(status)) : -1;
 	}
 
 	return status;
