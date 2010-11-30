@@ -1,5 +1,6 @@
 Version 2.02.78 - 
 ====================================
+  Add missing test for failed pool allocation in write_config_node().
   Replace snprintf with dm_snprintf in clvmd-command.c.
   Check reallocated buffer for NULL before use in clvmd do_command().
   Fix memory leak when VG allocation policy in metadata is invalid.
