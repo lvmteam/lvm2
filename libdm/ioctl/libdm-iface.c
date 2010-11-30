@@ -1594,8 +1594,15 @@ static int _process_mapper_dir(struct dm_task *dmt)
 		    !strcmp(dirent->d_name, "..") ||
 		    !strcmp(dirent->d_name, "control"))
 			continue;
-		dm_task_set_name(dmt, dirent->d_name);
-		dm_task_run(dmt);
+		if (!dm_task_set_name(dmt, dirent->d_name)) {
+			r = 0;
+			stack;
+			continue; /* try next name */
+		}
+		if (!dm_task_run(dmt)) {
+			r = 0;
+			stack;  /* keep going */
+		}
 	}
 
 	if (closedir(d))
