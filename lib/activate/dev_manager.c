@@ -601,14 +601,13 @@ int dev_manager_transient(struct dev_manager *dm, struct logical_volume *lv)
 	do {
 		next = dm_get_next_target(dmt, next, &start, &length, &type,
 					  &params);
-		if (lv) {
-			if (!(segh = dm_list_next(&lv->segments, segh))) {
-				log_error("Number of segments in active LV %s "
-					  "does not match metadata", lv->name);
-				goto out;
-			}
-			seg = dm_list_item(segh, struct lv_segment);
+
+		if (!(segh = dm_list_next(&lv->segments, segh))) {
+		    log_error("Number of segments in active LV %s "
+			      "does not match metadata", lv->name);
+		    goto out;
 		}
+		seg = dm_list_item(segh, struct lv_segment);
 
 		if (!type || !params)
 			continue;
@@ -619,7 +618,7 @@ int dev_manager_transient(struct dev_manager *dm, struct logical_volume *lv)
 
 	} while (next);
 
-	if (lv && (segh = dm_list_next(&lv->segments, segh))) {
+	if ((segh = dm_list_next(&lv->segments, segh))) {
 		log_error("Number of segments in active LV %s does not "
 			  "match metadata", lv->name);
 		goto out;
