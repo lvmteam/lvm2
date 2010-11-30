@@ -91,6 +91,7 @@ SOURCES =\
 	misc/lvm-globals.c \
 	misc/lvm-string.c \
 	misc/lvm-wrappers.c \
+	misc/lvm-percent.c \
 	misc/util.c \
 	mm/memlock.c \
 	report/properties.c \

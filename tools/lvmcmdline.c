@@ -126,7 +126,7 @@ sign_t arg_sign_value(struct cmd_context *cmd, int a, const sign_t def)
 	return arg_count(cmd, a) ? cmd->arg_values[a].sign : def;
 }
 
-percent_t arg_percent_value(struct cmd_context *cmd, int a, const percent_t def)
+percent_type_t arg_percent_value(struct cmd_context *cmd, int a, const percent_type_t def)
 {
 	return arg_count(cmd, a) ? cmd->arg_values[a].percent : def;
 }

@@ -85,7 +85,7 @@ typedef enum {
 	PERCENT_LV,
 	PERCENT_PVS,
 	PERCENT_ORIGIN
-} percent_t;
+} percent_type_t;
 
 enum {
 	CHANGE_AY = 0,
@@ -106,7 +106,7 @@ struct arg_values {
 	int64_t i64_value;
 	uint64_t ui64_value;
 	sign_t sign;
-	percent_t percent;
+	percent_type_t percent;
 /*	void *ptr; // Currently not used. */
 };
 
@@ -174,7 +174,7 @@ int64_t arg_int64_value(struct cmd_context *cmd, int a, const int64_t def);
 uint64_t arg_uint64_value(struct cmd_context *cmd, int a, const uint64_t def);
 const void *arg_ptr_value(struct cmd_context *cmd, int a, const void *def);
 sign_t arg_sign_value(struct cmd_context *cmd, int a, const sign_t def);
-percent_t arg_percent_value(struct cmd_context *cmd, int a, const percent_t def);
+percent_type_t arg_percent_value(struct cmd_context *cmd, int a, const percent_type_t def);
 int arg_count_increment(struct cmd_context *cmd, int a);
 
 unsigned grouped_arg_count(const struct arg_values *av, int a);

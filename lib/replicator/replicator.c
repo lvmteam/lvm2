@@ -365,7 +365,7 @@ static int _replicator_add_target_line(struct dev_manager *dm,
 
 /* FIXME: write something useful for replicator here */
 static int _replicator_target_percent(void **target_state,
-				      percent_range_t *percent_range,
+				      percent_t *percent,
 				      struct dm_pool *mem,
 				      struct cmd_context *cmd,
 				      struct lv_segment *seg,
@@ -708,7 +708,7 @@ static int _replicator_dev_add_target_line(struct dev_manager *dm,
 
 /* FIXME: write something useful for replicator-dev here */
 static int _replicator_dev_target_percent(void **target_state,
-					  percent_range_t *percent_range,
+					  percent_t *percent,
 					  struct dm_pool *mem,
 					  struct cmd_context *cmd,
 					  struct lv_segment *seg,

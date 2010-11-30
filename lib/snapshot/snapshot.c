@@ -109,7 +109,7 @@ static int _snap_target_status_compatible(const char *type)
 
 #ifdef DEVMAPPER_SUPPORT
 static int _snap_target_percent(void **target_state __attribute__((unused)),
-				percent_range_t *percent_range,
+				percent_t *percent,
 				struct dm_pool *mem __attribute__((unused)),
 				struct cmd_context *cmd __attribute__((unused)),
 				struct lv_segment *seg __attribute__((unused)),
@@ -130,14 +130,14 @@ static int _snap_target_percent(void **target_state __attribute__((unused)),
 		*total_numerator += sectors_allocated;
 		*total_denominator += total_sectors;
 		if (r == 3 && sectors_allocated == metadata_sectors)
-			*percent_range = PERCENT_0;
+			*percent = PERCENT_0;
 		else if (sectors_allocated == total_sectors)
-			*percent_range = PERCENT_100;
+			*percent = PERCENT_100;
 		else
-			*percent_range = PERCENT_0_TO_100;
+			*percent = make_percent(*total_numerator, *total_denominator);
 	} else if (!strcmp(params, "Invalid") ||
 		   !strcmp(params, "Merge failed"))
-		*percent_range = PERCENT_INVALID;
+		*percent = PERCENT_INVALID;
 	else
 		return 0;
 
