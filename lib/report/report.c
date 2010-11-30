@@ -795,8 +795,7 @@ static int _snpercent_disp(struct dm_report *rh __attribute__((unused)), struct 
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 	struct lvinfo info;
-	float snap_percent;
-	percent_range_t percent_range;
+	percent_t snap_percent;
 	uint64_t *sortval;
 	char *repstr;
 
@@ -818,8 +817,8 @@ static int _snpercent_disp(struct dm_report *rh __attribute__((unused)), struct 
 		return 1;
 	}
 
-	if (!lv_snapshot_percent(lv, &snap_percent, &percent_range) ||
-				 (percent_range == PERCENT_INVALID)) {
+	if (!lv_snapshot_percent(lv, &snap_percent) ||
+				 (snap_percent == PERCENT_INVALID)) {
 		if (!lv_is_merging_origin(lv)) {
 			*sortval = UINT64_C(100);
 			dm_report_field_set_value(field, "100.00", sortval);
@@ -838,7 +837,7 @@ static int _snpercent_disp(struct dm_report *rh __attribute__((unused)), struct 
 		return 0;
 	}
 
-	if (dm_snprintf(repstr, 7, "%.2f", snap_percent) < 0) {
+	if (dm_snprintf(repstr, 7, "%.2f", percent_to_float(snap_percent)) < 0) {
 		log_error("snapshot percentage too large");
 		return 0;
 	}
@@ -855,8 +854,7 @@ static int _copypercent_disp(struct dm_report *rh __attribute__((unused)),
 			     const void *data, void *private __attribute__((unused)))
 {
 	struct logical_volume *lv = (struct logical_volume *) data;
-	float percent;
-	percent_range_t percent_range;
+	percent_t percent;
 	uint64_t *sortval;
 	char *repstr;
 
@@ -866,21 +864,21 @@ static int _copypercent_disp(struct dm_report *rh __attribute__((unused)),
 	}
 
 	if ((!(lv->status & PVMOVE) && !(lv->status & MIRRORED)) ||
-	    !lv_mirror_percent(lv->vg->cmd, lv, 0, &percent, &percent_range,
-			       NULL) || (percent_range == PERCENT_INVALID)) {
+	    !lv_mirror_percent(lv->vg->cmd, lv, 0, &percent,
+			       NULL) || (percent == PERCENT_INVALID)) {
 		*sortval = UINT64_C(0);
 		dm_report_field_set_value(field, "", sortval);
 		return 1;
 	}
 
-	percent = copy_percent(lv, &percent_range);
+	percent = copy_percent(lv);
 
 	if (!(repstr = dm_pool_zalloc(mem, 8))) {
 		log_error("dm_pool_alloc failed");
 		return 0;
 	}
 
-	if (dm_snprintf(repstr, 7, "%.2f", percent) < 0) {
+	if (dm_snprintf(repstr, 7, "%.2f", percent_to_float(percent)) < 0) {
 		log_error("copy percentage too large");
 		return 0;
 	}

@@ -46,12 +46,10 @@ int dev_manager_info(struct dm_pool *mem, const struct logical_volume *lv,
 		     struct dm_info *info, uint32_t *read_ahead);
 int dev_manager_snapshot_percent(struct dev_manager *dm,
 				 const struct logical_volume *lv,
-				 float *percent,
-				 percent_range_t *percent_range);
+				 percent_t *percent);
 int dev_manager_mirror_percent(struct dev_manager *dm,
 			       const struct logical_volume *lv, int wait,
-			       float *percent, percent_range_t *percent_range,
-			       uint32_t *event_nr);
+			       percent_t *percent, uint32_t *event_nr);
 int dev_manager_suspend(struct dev_manager *dm, struct logical_volume *lv,
 			unsigned origin_only, int lockfs, int flush_required);
 int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv, unsigned origin_only);

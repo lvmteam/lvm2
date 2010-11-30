@@ -492,8 +492,7 @@ int lvdisplay_full(struct cmd_context *cmd,
 	int inkernel, snap_active = 0;
 	char uuid[64] __attribute__((aligned(8)));
 	struct lv_segment *snap_seg = NULL, *mirror_seg = NULL;
-	float snap_percent;	/* fused, fsize; */
-	percent_range_t percent_range;
+	percent_t snap_percent;
 
 	if (!id_write_format(&lv->lvid.id[1], uuid, sizeof(uuid)))
 		return_0;
@@ -518,9 +517,8 @@ int lvdisplay_full(struct cmd_context *cmd,
 				       origin_list) {
 			if (inkernel &&
 			    (snap_active = lv_snapshot_percent(snap_seg->cow,
-							       &snap_percent,
-							       &percent_range)))
-				if (percent_range == PERCENT_INVALID)
+							       &snap_percent)))
+				if (snap_percent == PERCENT_INVALID)
 					snap_active = 0;
 			log_print("                       %s%s/%s [%s]",
 				  lv->vg->cmd->dev_dir, lv->vg->name,
@@ -531,9 +529,8 @@ int lvdisplay_full(struct cmd_context *cmd,
 	} else if ((snap_seg = find_cow(lv))) {
 		if (inkernel &&
 		    (snap_active = lv_snapshot_percent(snap_seg->cow,
-						       &snap_percent,
-						       &percent_range)))
-			if (percent_range == PERCENT_INVALID)
+						       &snap_percent)))
+			if (snap_percent == PERCENT_INVALID)
 				snap_active = 0;
 
 		log_print("LV snapshot status     %s destination for %s%s/%s",
@@ -568,7 +565,8 @@ int lvdisplay_full(struct cmd_context *cmd,
 		log_print("COW-table LE           %u", lv->le_count);
 
 		if (snap_active)
-			log_print("Allocated to snapshot  %.2f%% ", snap_percent);	
+			log_print("Allocated to snapshot  %.2f%% ",
+				  percent_to_float(snap_percent));
 
 		log_print("Snapshot chunk size    %s",
 			  display_size(cmd, (uint64_t) snap_seg->chunk_size));

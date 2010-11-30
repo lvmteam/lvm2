@@ -193,24 +193,22 @@ uint64_t lv_size(const struct logical_volume *lv)
 
 static int _lv_mimage_in_sync(const struct logical_volume *lv)
 {
-	float percent;
-	percent_range_t percent_range;
+	percent_t percent;
 	struct lv_segment *mirror_seg = find_mirror_seg(first_seg(lv));
 
 	if (!(lv->status & MIRROR_IMAGE) || !mirror_seg)
 		return_0;
 
 	if (!lv_mirror_percent(lv->vg->cmd, mirror_seg->lv, 0, &percent,
-			       &percent_range, NULL))
+			       NULL))
 		return_0;
 
-	return (percent_range == PERCENT_100) ? 1 : 0;
+	return (percent == PERCENT_100) ? 1 : 0;
 }
 
 char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 {
-	float snap_percent;
-	percent_range_t percent_range;
+	percent_t snap_percent;
 	struct lvinfo info;
 	char *repstr;
 
@@ -272,8 +270,8 @@ char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 
 		/* Snapshot dropped? */
 		if (info.live_table && lv_is_cow(lv) &&
-		    (!lv_snapshot_percent(lv, &snap_percent, &percent_range) ||
-		     percent_range == PERCENT_INVALID)) {
+		    (!lv_snapshot_percent(lv, &snap_percent) ||
+		     snap_percent == PERCENT_INVALID)) {
 			repstr[0] = toupper(repstr[0]);
 			if (info.suspended)
 				repstr[4] = 'S'; /* Susp Inv snapshot */

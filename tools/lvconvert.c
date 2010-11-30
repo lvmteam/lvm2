@@ -425,23 +425,24 @@ static progress_t _poll_merge_progress(struct cmd_context *cmd,
 				       const char *name __attribute__((unused)),
 				       struct daemon_parms *parms)
 {
-	float percent = 0.0;
-	percent_range_t percent_range;
+	percent_t percent = PERCENT_0;
 
-	if (!lv_snapshot_percent(lv, &percent, &percent_range)) {
+	if (!lv_snapshot_percent(lv, &percent)) {
 		log_error("%s: Failed query for merging percentage. Aborting merge.", lv->name);
 		return PROGRESS_CHECK_FAILED;
-	} else if (percent_range == PERCENT_INVALID) {
+	} else if (percent == PERCENT_INVALID) {
 		log_error("%s: Merging snapshot invalidated. Aborting merge.", lv->name);
 		return PROGRESS_CHECK_FAILED;
 	}
 
 	if (parms->progress_display)
-		log_print("%s: %s: %.1f%%", lv->name, parms->progress_title, percent);
+		log_print("%s: %s: %.1f%%", lv->name, parms->progress_title,
+			  percent_to_float(percent));
 	else
-		log_verbose("%s: %s: %.1f%%", lv->name, parms->progress_title, percent);
+		log_verbose("%s: %s: %.1f%%", lv->name, parms->progress_title,
+			    percent_to_float(percent));
 
-	if (percent_range == PERCENT_0)
+	if (percent == PERCENT_0)
 		return PROGRESS_FINISHED_ALL;
 
 	return PROGRESS_UNFINISHED;

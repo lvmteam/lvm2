@@ -428,8 +428,8 @@ int lv_has_target_type(struct dm_pool *mem, struct logical_volume *lv,
 	return r;
 }
 
-static percent_range_t _combine_percent_ranges(percent_range_t a,
-					       percent_range_t b)
+static percent_range_t _combine_percent(percent_t a, percent_t b,
+                                        uint32_t numerator, uint32_t denominator)
 {
 	if (a == PERCENT_INVALID || b == PERCENT_INVALID)
 		return PERCENT_INVALID;
@@ -440,14 +440,13 @@ static percent_range_t _combine_percent_ranges(percent_range_t a,
 	if (a == PERCENT_0 && b == PERCENT_0)
 		return PERCENT_0;
 
-	return PERCENT_0_TO_100;
+	return make_percent(numerator, denominator);
 }
 
 static int _percent_run(struct dev_manager *dm, const char *name,
 			const char *dlid,
 			const char *target_type, int wait,
-			const struct logical_volume *lv, float *percent,
-			percent_range_t *overall_percent_range,
+			const struct logical_volume *lv, percent_t *overall_percent,
 			uint32_t *event_nr, int fail_if_percent_unsupported)
 {
 	int r = 0;
@@ -460,13 +459,12 @@ static int _percent_run(struct dev_manager *dm, const char *name,
 	const struct dm_list *segh = &lv->segments;
 	struct lv_segment *seg = NULL;
 	struct segment_type *segtype;
-	percent_range_t percent_range = 0, combined_percent_range = 0;
 	int first_time = 1;
+	percent_t percent;
 
 	uint64_t total_numerator = 0, total_denominator = 0;
 
-	*percent = -1;
-	*overall_percent_range = PERCENT_INVALID;
+	*overall_percent = PERCENT_INVALID;
 
 	if (!(dmt = _setup_task(name, dlid, event_nr,
 				wait ? DM_DEVICE_WAITEVENT : DM_DEVICE_STATUS, 0, 0)))
@@ -511,19 +509,19 @@ static int _percent_run(struct dev_manager *dm, const char *name,
 
 		if (segtype->ops->target_percent &&
 		    !segtype->ops->target_percent(&dm->target_state,
-						  &percent_range, dm->mem,
+						  &percent, dm->mem,
 						  dm->cmd, seg, params,
 						  &total_numerator,
 						  &total_denominator))
 			goto_out;
 
 		if (first_time) {
-			combined_percent_range = percent_range;
+			*overall_percent = percent;
 			first_time = 0;
 		} else
-			combined_percent_range =
-			    _combine_percent_ranges(combined_percent_range,
-						    percent_range);
+			*overall_percent =
+				_combine_percent(*overall_percent, percent,
+						 total_numerator, total_denominator);
 	} while (next);
 
 	if (lv && (segh = dm_list_next(&lv->segments, segh))) {
@@ -532,22 +530,15 @@ static int _percent_run(struct dev_manager *dm, const char *name,
 		goto out;
 	}
 
-	if (total_denominator) {
-		*percent = (float) total_numerator *100 / total_denominator;
-		*overall_percent_range = combined_percent_range;
-	} else {
-		*percent = 100;
-		if (first_time) {
-			/* above ->target_percent() was not executed! */
-			/* FIXME why return PERCENT_100 et. al. in this case? */
-			*overall_percent_range = PERCENT_100;
-			if (fail_if_percent_unsupported)
-				goto_out;
-		} else
-			*overall_percent_range = combined_percent_range;
+	if (first_time) {
+		/* above ->target_percent() was not executed! */
+		/* FIXME why return PERCENT_100 et. al. in this case? */
+		*overall_percent = PERCENT_100;
+		if (fail_if_percent_unsupported)
+			goto_out;
 	}
 
-	log_debug("LV percent: %f", *percent);
+	log_debug("LV percent: %f", percent_to_float(*overall_percent));
 	r = 1;
 
       out:
@@ -557,25 +548,21 @@ static int _percent_run(struct dev_manager *dm, const char *name,
 
 static int _percent(struct dev_manager *dm, const char *name, const char *dlid,
 		    const char *target_type, int wait,
-		    const struct logical_volume *lv, float *percent,
-		    percent_range_t *overall_percent_range, uint32_t *event_nr,
-		    int fail_if_percent_unsupported)
+		    const struct logical_volume *lv, percent_t *percent,
+		    uint32_t *event_nr, int fail_if_percent_unsupported)
 {
 	if (dlid && *dlid) {
 		if (_percent_run(dm, NULL, dlid, target_type, wait, lv, percent,
-				 overall_percent_range, event_nr,
-				 fail_if_percent_unsupported))
+				 event_nr, fail_if_percent_unsupported))
 			return 1;
 		else if (_percent_run(dm, NULL, dlid + sizeof(UUID_PREFIX) - 1,
 				      target_type, wait, lv, percent,
-				      overall_percent_range, event_nr,
-				      fail_if_percent_unsupported))
+				      event_nr, fail_if_percent_unsupported))
 			return 1;
 	}
 
 	if (name && _percent_run(dm, name, NULL, target_type, wait, lv, percent,
-				 overall_percent_range, event_nr,
-				 fail_if_percent_unsupported))
+				 event_nr, fail_if_percent_unsupported))
 		return 1;
 
 	return 0;
@@ -694,7 +681,7 @@ void dev_manager_exit(void)
 
 int dev_manager_snapshot_percent(struct dev_manager *dm,
 				 const struct logical_volume *lv,
-				 float *percent, percent_range_t *percent_range)
+				 percent_t *percent)
 {
 	char *name;
 	const char *dlid;
@@ -729,7 +716,7 @@ int dev_manager_snapshot_percent(struct dev_manager *dm,
 	 */
 	log_debug("Getting device status percentage for %s", name);
 	if (!(_percent(dm, name, dlid, "snapshot", 0, NULL, percent,
-		       percent_range, NULL, fail_if_percent_unsupported)))
+		       NULL, fail_if_percent_unsupported)))
 		return_0;
 
 	/* FIXME dm_pool_free ? */
@@ -742,8 +729,7 @@ int dev_manager_snapshot_percent(struct dev_manager *dm,
 /* FIXME Cope with more than one target */
 int dev_manager_mirror_percent(struct dev_manager *dm,
 			       const struct logical_volume *lv, int wait,
-			       float *percent, percent_range_t *percent_range,
-			       uint32_t *event_nr)
+			       percent_t *percent, uint32_t *event_nr)
 {
 	char *name;
 	const char *dlid;
@@ -764,7 +750,7 @@ int dev_manager_mirror_percent(struct dev_manager *dm,
 
 	log_debug("Getting device mirror status percentage for %s", name);
 	if (!(_percent(dm, name, dlid, "mirror", wait, lv, percent,
-		       percent_range, event_nr, 0)))
+		       event_nr, 0)))
 		return_0;
 
 	return 1;

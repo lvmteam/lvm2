@@ -52,6 +52,7 @@
 @top_srcdir@/lib/misc/lvm-string.h
 @top_builddir@/lib/misc/lvm-version.h
 @top_srcdir@/lib/misc/lvm-wrappers.h
+@top_srcdir@/lib/misc/lvm-percent.h
 @top_srcdir@/lib/misc/sharedlib.h
 @top_srcdir@/lib/report/properties.h
 @top_srcdir@/lib/report/report.h

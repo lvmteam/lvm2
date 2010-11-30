@@ -25,6 +25,7 @@
 #include "pv.h"
 #include "vg.h"
 #include "lv.h"
+#include "lvm-percent.h"
 
 #define MAX_STRIPES 128U
 #define SECTOR_SHIFT 9L
@@ -138,13 +139,6 @@ typedef enum {
 	DONT_PROMPT = 1, /* Skip yes/no prompt */
 	DONT_PROMPT_OVERRIDE = 2 /* Skip prompt + override a second condition */
 } force_t;
-
-typedef enum {
-	PERCENT_0 = 0,
-	PERCENT_0_TO_100 = 1,
-	PERCENT_100 = 2,
-	PERCENT_INVALID = 3
-} percent_range_t;
 
 struct cmd_context;
 struct format_handler;
@@ -704,8 +698,7 @@ struct logical_volume *find_pvmove_lv_from_pvname(struct cmd_context *cmd,
 						  uint32_t lv_type);
 const char *get_pvmove_pvname_from_lv(struct logical_volume *lv);
 const char *get_pvmove_pvname_from_lv_mirr(struct logical_volume *lv_mirr);
-float copy_percent(struct logical_volume *lv_mirr,
-		   percent_range_t *percent_range);
+percent_t copy_percent(struct logical_volume *lv_mirr);
 struct dm_list *lvs_using_lv(struct cmd_context *cmd, struct volume_group *vg,
 			  struct logical_volume *lv);
 

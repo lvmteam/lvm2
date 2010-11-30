@@ -547,17 +547,16 @@ static int _move_removable_mimages_to_end(struct logical_volume *lv,
 
 static int _mirrored_lv_in_sync(struct logical_volume *lv)
 {
-	float sync_percent;
-	percent_range_t percent_range;
+	percent_t sync_percent;
 
 	if (!lv_mirror_percent(lv->vg->cmd, lv, 0, &sync_percent,
-			       &percent_range, NULL)) {
+			       NULL)) {
 		log_error("Unable to determine mirror sync status of %s/%s.",
 			  lv->vg->name, lv->name);
 		return 0;
 	}
 
-	return (percent_range == PERCENT_100) ? 1 : 0;
+	return (sync_percent == PERCENT_100) ? 1 : 0;
 }
 
 /*
@@ -1508,8 +1507,7 @@ struct dm_list *lvs_using_lv(struct cmd_context *cmd, struct volume_group *vg,
 	return lvs;
 }
 
-float copy_percent(struct logical_volume *lv_mirr,
-		   percent_range_t *percent_range)
+percent_t copy_percent(struct logical_volume *lv_mirr)
 {
 	uint32_t numerator = 0u, denominator = 0u;
 	struct lv_segment *seg;
@@ -1523,14 +1521,7 @@ float copy_percent(struct logical_volume *lv_mirr,
 			numerator += seg->area_len;
 	}
 
-	if (!denominator || (numerator == denominator))
-		*percent_range = PERCENT_100;
-	else if (numerator == 0)
-		*percent_range = PERCENT_0;
-	else
-		*percent_range = PERCENT_0_TO_100;
-		
-	return denominator ? (float) numerator *100 / denominator : 100.0;
+	return denominator ? make_percent( numerator, denominator ) : 100.0;
 }
 
 /*
@@ -1604,8 +1595,7 @@ int remove_mirror_log(struct cmd_context *cmd,
 		      struct dm_list *removable_pvs,
 		      int force)
 {
-	float sync_percent;
-	percent_range_t percent_range = PERCENT_0;
+	percent_t sync_percent;
 	struct lvinfo info;
 	struct volume_group *vg = lv->vg;
 
@@ -1618,7 +1608,7 @@ int remove_mirror_log(struct cmd_context *cmd,
 	/* Had disk log, switch to core. */
 	if (lv_info(cmd, lv, 0, &info, 0, 0) && info.exists) {
 		if (!lv_mirror_percent(cmd, lv, 0, &sync_percent,
-				       &percent_range, NULL)) {
+				       NULL)) {
 			log_error("Unable to determine mirror sync status.");
 			return 0;
 		}
@@ -1633,7 +1623,7 @@ int remove_mirror_log(struct cmd_context *cmd,
 	else
 		return 0;
 
-	if (percent_range == PERCENT_100)
+	if (sync_percent == PERCENT_100)
 		init_mirror_in_sync(1);
 	else {
 		/* A full resync will take place */
@@ -1798,8 +1788,7 @@ int add_mirror_log(struct cmd_context *cmd, struct logical_volume *lv,
 	struct alloc_handle *ah;
 	const struct segment_type *segtype;
 	struct dm_list *parallel_areas;
-	float sync_percent;
-	percent_range_t percent_range;
+	percent_t sync_percent;
 	int in_sync;
 	struct logical_volume *log_lv;
 	struct lvinfo info;
@@ -1845,9 +1834,8 @@ int add_mirror_log(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	/* check sync status */
-	if (lv_mirror_percent(cmd, lv, 0, &sync_percent, &percent_range,
-			      NULL) &&
-	    (percent_range == PERCENT_100))
+	if (lv_mirror_percent(cmd, lv, 0, &sync_percent, NULL) &&
+	    (sync_percent == PERCENT_100))
 		in_sync = 1;
 	else
 		in_sync = 0;

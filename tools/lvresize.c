@@ -31,7 +31,7 @@ struct lvresize_params {
 	uint32_t extents;
 	uint64_t size;
 	sign_t sign;
-	percent_t percent;
+	percent_type_t percent;
 
 	enum {
 		LV_ANY = 0,
@@ -282,24 +282,23 @@ static int _lvresize_params(struct cmd_context *cmd, int argc, char **argv,
 static int _adjust_policy_params(struct cmd_context *cmd,
 				 struct logical_volume *lv, struct lvresize_params *lp)
 {
-	float percent;
-	percent_range_t range;
+	percent_t percent;
 	int policy_threshold, policy_amount;
 
 	policy_threshold =
 		find_config_tree_int(cmd, "activation/snapshot_autoextend_threshold",
-				     DEFAULT_SNAPSHOT_AUTOEXTEND_THRESHOLD);
+				     DEFAULT_SNAPSHOT_AUTOEXTEND_THRESHOLD) * PERCENT_1;
 	policy_amount =
 		find_config_tree_int(cmd, "activation/snapshot_autoextend_percent",
 				     DEFAULT_SNAPSHOT_AUTOEXTEND_PERCENT);
 
-	if (policy_threshold >= 100)
+	if (policy_threshold >= PERCENT_100)
 		return 1; /* nothing to do */
 
-	if (!lv_snapshot_percent(lv, &percent, &range))
+	if (!lv_snapshot_percent(lv, &percent))
 		return_0;
 
-	if (range != PERCENT_0_TO_100 || percent <= policy_threshold)
+	if (!(PERCENT_0 < percent && percent < PERCENT_100) || percent <= policy_threshold)
 		return 1; /* nothing to do */
 
 	lp->extents = policy_amount;

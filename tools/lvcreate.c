@@ -19,7 +19,7 @@
 #include <fcntl.h>
 
 struct lvcreate_cmdline_params {
-	percent_t percent;
+	percent_type_t percent;
 	uint64_t size;
 	char **pvs;
 	int pv_count;
