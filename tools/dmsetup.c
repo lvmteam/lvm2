@@ -343,7 +343,9 @@ static char *_extract_uuid_prefix(const char *uuid, const int separator)
 		return NULL;
 	}
 
-	memcpy(uuid_prefix, uuid, len);
+	if (uuid)
+		memcpy(uuid_prefix, uuid, len);
+
 	uuid_prefix[len] = '\0';
 
 	return uuid_prefix;
