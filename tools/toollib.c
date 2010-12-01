@@ -331,7 +331,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 				tags_arg = NULL;
 				dm_list_init(&lvnames);
 				break;
-			} else if (!strncmp(vg_name, vgname, strlen(vgname)) &&
+			} else if (!strncmp(vg_name, vgname, strlen(vgname)) && lv_name &&
 				   strlen(vgname) == (size_t) (lv_name - vg_name)) {
 				if (!str_list_add(cmd->mem, &lvnames,
 						  dm_pool_strdup(cmd->mem,
