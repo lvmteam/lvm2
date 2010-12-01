@@ -180,9 +180,12 @@ static void usage(char *prog, FILE *file)
 /* Called to signal the parent how well we got on during initialisation */
 static void child_init_signal(int status)
 {
-        if (child_pipe[1]) {
-	        write(child_pipe[1], &status, sizeof(status));
-		close(child_pipe[1]);
+	if (child_pipe[1]) {
+		/* FIXME Use a proper wrapper around write */
+		if (write(child_pipe[1], &status, sizeof(status)) < 0)
+			log_sys_error("write", "child_pipe");
+		if (close(child_pipe[1]))
+			log_sys_error("close", "child_pipe");
 	}
 }
 
