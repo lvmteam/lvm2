@@ -3033,9 +3033,13 @@ int set_lv(struct cmd_context *cmd, struct logical_volume *lv,
 	if (sectors > lv->size)
 		sectors = lv->size;
 
-	dev_set(dev, UINT64_C(0), (size_t) sectors << SECTOR_SHIFT, value);
+	if (!dev_set(dev, UINT64_C(0), (size_t) sectors << SECTOR_SHIFT, value))
+		stack;
+
 	dev_flush(dev);
-	dev_close_immediate(dev);
+
+	if (!dev_close_immediate(dev))
+                stack;
 
 	return 1;
 }
