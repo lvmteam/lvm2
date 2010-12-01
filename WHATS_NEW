@@ -1,5 +1,6 @@
 Version 2.02.78 - 
 ====================================
+  Add test for existance of orphan vginfo in _lvmcache_update_vgname().
   Do a full rescan if some device is missing in read_pvs_in_vg().
   Avoid misleading warnings in vgextend --restoremissing in certain cases.
   Add error path stack traces for _process_mapper_dir(), _create_and_load_v4().
