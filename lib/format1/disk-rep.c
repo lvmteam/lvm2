@@ -471,7 +471,7 @@ int read_pvs_in_vg(const struct format_type *fmt, const char *vg_name,
 	    vginfo->infos.n) {
 		dm_list_iterate_items(info, &vginfo->infos) {
 			dev = info->dev;
-			if (dev && !(data = read_disk(fmt, dev, mem, vg_name)))
+			if (!dev || !(data = read_disk(fmt, dev, mem, vg_name)))
 				break;
 			_add_pv_to_list(head, data);
 		}
