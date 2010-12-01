@@ -214,6 +214,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 
 		for (; opt < argc; opt++) {
 			const char *lv_name = argv[opt];
+			const char *tmp_lv_name;
 			char *vgname_def;
 			unsigned dev_dir_found = 0;
 
@@ -246,9 +247,9 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 				continue;
 			}
 			lv_name = vgname;
-			if (strchr(vgname, '/')) {
+			if ((tmp_lv_name = strchr(vgname, '/'))) {
 				/* Must be an LV */
-				lv_name = strchr(vgname, '/');
+				lv_name = tmp_lv_name;
 				while (*lv_name == '/')
 					lv_name++;
 				if (!(vgname = extract_vgname(cmd, vgname))) {
