@@ -289,7 +289,8 @@ static const char *decode_cmd(unsigned char cmdl)
 
 static void remove_lockfile(void)
 {
-	unlink(CLVMD_PIDFILE);
+	if (unlink(CLVMD_PIDFILE))
+		log_sys_error("unlink", CLVMD_PIDFILE);
 }
 
 /*
