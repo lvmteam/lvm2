@@ -206,7 +206,10 @@ static int _add_stripe_seg(struct dm_pool *mem,
 			return_0;
 
 	/* add the subpool type to the segment tag list */
-	str_list_add(mem, &seg->tags, _cvt_sptype(usp->type));
+	if (!str_list_add(mem, &seg->tags, _cvt_sptype(usp->type))) {
+		log_error("Allocation failed for str_list.");
+		return 0;
+	}
 
 	dm_list_add(&lv->segments, &seg->list);
 
@@ -240,7 +243,10 @@ static int _add_linear_seg(struct dm_pool *mem,
 		}
 
 		/* add the subpool type to the segment tag list */
-		str_list_add(mem, &seg->tags, _cvt_sptype(usp->type));
+		if (!str_list_add(mem, &seg->tags, _cvt_sptype(usp->type))) {
+			log_error("Allocation failed for str_list.");
+			return 0;
+		}
 
 		if (!set_lv_segment_area_pv(seg, 0, usp->devs[j].pv, 0))
 			return_0;
