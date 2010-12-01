@@ -1,5 +1,6 @@
 Version 2.02.78 - 
 ====================================
+  Check str_list_add() success in _add_stripe_seg().
   Check lv_info() success in _mirrored_transient_status().
   Add backtraces for dev_set() and dev_close_immediate() errors in set_lv().
   Add logging for unlink() error in clvmd remove_lockfile().
