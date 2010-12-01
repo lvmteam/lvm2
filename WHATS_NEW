@@ -1,5 +1,6 @@
 Version 2.02.78 - 
 ====================================
+  Add backtraces for dev_set() and dev_close_immediate() errors in set_lv().
   Add logging for unlink() error in clvmd remove_lockfile().
   Add logging for pipe write() and close() error in clvmd child_init_signal().
   Add test for existance of orphan vginfo in _lvmcache_update_vgname().
