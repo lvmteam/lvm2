@@ -1,5 +1,5 @@
-Version 2.02.78 - 
-====================================
+Version 2.02.78 - 6th December 2010
+===================================
   Abort if segment tag allocation fails in pool format _add_stripe_seg.
   Abort in _mirrored_transient_status if referenced log/image LV is not active.
   Add backtraces for dev_set() and dev_close_immediate() errors in set_lv().
