@@ -1,5 +1,6 @@
 Version 1.02.59 - 
 ====================================
+  Add backtraces to _process_mapper_dir and  _create_and_load_v4 error paths.
   Remove superfluous checks for NULL before calling dm_free.
 
 Version 1.02.58 - 22nd November 2010

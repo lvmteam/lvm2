@@ -1,23 +1,23 @@
 Version 2.02.78 - 
 ====================================
-  Check str_list_add() success in _add_stripe_seg().
-  Check lv_info() success in _mirrored_transient_status().
+  Abort if segment tag allocation fails in pool format _add_stripe_seg.
+  Abort in _mirrored_transient_status if referenced log/image LV is not active.
   Add backtraces for dev_set() and dev_close_immediate() errors in set_lv().
-  Add logging for unlink() error in clvmd remove_lockfile().
-  Add logging for pipe write() and close() error in clvmd child_init_signal().
-  Add test for existance of orphan vginfo in _lvmcache_update_vgname().
-  Do a full rescan if some device is missing in read_pvs_in_vg().
-  Avoid misleading warnings in vgextend --restoremissing in certain cases.
-  Add error path stack traces for _process_mapper_dir(), _create_and_load_v4().
-  Add missing test for failed pool allocation in write_config_node().
-  Replace snprintf with dm_snprintf in clvmd-command.c.
-  Check reallocated buffer for NULL before use in clvmd do_command().
+  Log any unlink() error in clvmd remove_lockfile().
+  Log any pipe write() or close() errors in clvmd child_init_signal().
+  Detect if orphan vginfo was lost from cache before _lvmcache_update_vgname().
+  Do a full rescan if some device is missing in lvm1 format read_pvs_in_vg.
+  Add missing check that dm_pool_create succeeded in write_config_node().
+  Use dm_snprintf in clvmd-command.c to ensure an overlong buffer is truncated.
+  Don't write to buffer if its reallocation failed in clvmd do_command().
+  Switch from float to fixed point percentage handling.
+  Avoid misleading missing PV warnings in vgextend --restoremissing.
   Fix memory leak when VG allocation policy in metadata is invalid.
   Ignore unrecognised allocation policy found in metadata instead of aborting.
   Factor out tag printing into _out_tags and avoid leaking string buffer.
   Remove some unused variables & assignments.
   Add missing vg_release calls in _vg_read_by_vgid.
-Still to fix: LCK_CACHE/CLUSTER_VG printing/FIXME
+  Fix debug logging of derived flag LCK_CACHE in clvmd.
   Fix test for no system_dir in _init_backup().
   Disallow lvconvert ops that both allocate & free supplied PEs in a single cmd.
   Fix liblvm seg_size to give bytes not sectors.

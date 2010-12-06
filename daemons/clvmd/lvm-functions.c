@@ -44,11 +44,7 @@ struct lv_info {
 	int lock_mode;
 };
 
-/*
- * FIXME: 8bit value passed here -
- *        so only LCK_XXX defines < 0x100 can be decoded
- */
-static const char *decode_locking_cmd(unsigned char cmdl)
+static const char *decode_full_locking_cmd(uint32_t cmdl)
 {
 	static char buf[128];
 	const char *type;
@@ -117,9 +113,18 @@ static const char *decode_locking_cmd(unsigned char cmdl)
 		cmdl & LCK_NONBLOCK   ? "|NONBLOCK" : "",
 		cmdl & LCK_HOLD       ? "|HOLD" : "",
 		cmdl & LCK_LOCAL      ? "|LOCAL" : "",
-		cmdl & LCK_CLUSTER_VG ? "|CLUSTER_VG" : "");
+		cmdl & LCK_CLUSTER_VG ? "|CLUSTER_VG" : "",
+		cmdl & LCK_CACHE      ? "|CACHE" : "");
 
 	return buf;
+}
+
+/*
+ * Only processes 8 bits: excludes LCK_CACHE.
+ */
+static const char *decode_locking_cmd(unsigned char cmdl)
+{
+	return decode_full_locking_cmd((uint32_t) cmdl);
 }
 
 static const char *decode_flags(unsigned char flags)
@@ -676,15 +681,6 @@ void do_lock_vg(unsigned char command, unsigned char lock_flags, char *resource)
 	uint32_t lock_cmd = command;
 	char *vgname = resource + 2;
 
-	DEBUGLOG("do_lock_vg: resource '%s', cmd = %s, flags = %s, memlock = %d\n",
-		 resource, decode_locking_cmd(command), decode_flags(lock_flags), memlock());
-
-	/* P_#global causes a full cache refresh */
-	if (!strcmp(resource, "P_" VG_GLOBAL)) {
-		do_refresh_cache();
-		return;
-	}
-
 	lock_cmd &= (LCK_SCOPE_MASK | LCK_TYPE_MASK | LCK_HOLD);
 
 	/*
@@ -692,6 +688,15 @@ void do_lock_vg(unsigned char command, unsigned char lock_flags, char *resource)
 	 */
 	if (strncmp(resource, "P_#", 3) && !strncmp(resource, "P_", 2))
 		lock_cmd |= LCK_CACHE;
+
+	DEBUGLOG("do_lock_vg: resource '%s', cmd = %s, flags = %s, memlock = %d\n",
+		 resource, decode_full_locking_cmd(lock_cmd), decode_flags(lock_flags), memlock());
+
+	/* P_#global causes a full cache refresh */
+	if (!strcmp(resource, "P_" VG_GLOBAL)) {
+		do_refresh_cache();
+		return;
+	}
 
 	pthread_mutex_lock(&lvm_lock);
 	switch (lock_cmd) {
