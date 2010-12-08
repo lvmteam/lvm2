@@ -1,4 +1,4 @@
-Version 2.02.79 -
+Version 2.02.79 - 
 ===================================
   Cope better with an undefined target_percent operation in _percent_run.
   Fix write to released memory in vg_release and rename to free_vg.  (2.02.78)
