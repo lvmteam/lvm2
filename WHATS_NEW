@@ -1,5 +1,6 @@
 Version 2.02.79 -
 ===================================
+  Fix write to released memory in vg_relase().  (2.02.78)
 
 Version 2.02.78 - 6th December 2010
 ===================================
