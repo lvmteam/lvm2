@@ -1619,7 +1619,7 @@ static struct logical_volume *get_vg_lock_and_logical_volume(struct cmd_context 
 {
 	/*
 	 * Returns NULL if the requested LV doesn't exist;
-	 * otherwise the caller must vg_release(lv->vg)
+	 * otherwise the caller must free_vg(lv->vg)
 	 * - it is also up to the caller to unlock_vg() as needed
 	 */
 	struct volume_group *vg;
@@ -1627,13 +1627,13 @@ static struct logical_volume *get_vg_lock_and_logical_volume(struct cmd_context 
 
 	vg = _get_lvconvert_vg(cmd, vg_name, NULL);
 	if (vg_read_error(vg)) {
-		vg_release(vg);
+		free_vg(vg);
 		return_NULL;
 	}
 
 	if (!(lv = _get_lvconvert_lv(cmd, vg, lv_name, NULL, 0))) {
 		log_error("Can't find LV %s in VG %s", lv_name, vg_name);
-		unlock_and_release_vg(cmd, vg, vg_name);
+		unlock_and_free_vg(cmd, vg, vg_name);
 		return NULL;
 	}
 
@@ -1686,7 +1686,7 @@ bad:
 		ret = poll_logical_volume(cmd, lp->lv_to_poll,
 					  lp->wait_completion);
 
-	vg_release(lv->vg);
+	free_vg(lv->vg);
 out:
 	init_ignore_suspended_devices(saved_ignore_suspended_devices);
 	return ret;
@@ -1736,7 +1736,7 @@ static int lvconvert_merge_single(struct cmd_context *cmd, struct logical_volume
 		}
 	}
 
-	vg_release(refreshed_lv->vg);
+	free_vg(refreshed_lv->vg);
 
 	return ret;
 }

@@ -590,16 +590,16 @@ int cmd_vg_read(struct cmd_context *cmd, struct dm_list *cmd_vgs)
  *
  * \param cmd_vgs	Contains list of cmd_vg entries.
  */
-void cmd_vg_release(struct dm_list *cmd_vgs)
+void free_cmd_vgs(struct dm_list *cmd_vgs)
 {
 	struct cmd_vg *cvl;
 
 	/* Backward iterate cmd_vg list */
 	dm_list_iterate_back_items(cvl, cmd_vgs) {
 		if (vg_read_error(cvl->vg))
-			vg_release(cvl->vg);
+			free_vg(cvl->vg);
 		else
-			unlock_and_release_vg(cvl->vg->cmd, cvl->vg, cvl->vg_name);
+			unlock_and_free_vg(cvl->vg->cmd, cvl->vg, cvl->vg_name);
 		cvl->vg = NULL;
 	}
 }
@@ -687,7 +687,7 @@ void lv_release_replicator_vgs(struct logical_volume *lv)
 
 	dm_list_iterate_back_items(rsite, &first_seg(lv)->replicator->rsites)
 		if (rsite->vg_name && rsite->vg) {
-			vg_release(rsite->vg);
+			free_vg(rsite->vg);
 			rsite->vg = NULL;
 		}
 }

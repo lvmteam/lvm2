@@ -738,7 +738,7 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 	log_verbose("Finding volume group %s", lp.vg_name);
 	vg = vg_read_for_update(cmd, lp.vg_name, NULL, 0);
 	if (vg_read_error(vg)) {
-		vg_release(vg);
+		free_vg(vg);
 		stack;
 		return ECMD_FAILED;
 	}
@@ -746,7 +746,7 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 	if (!(r = _lvresize(cmd, vg, &lp)))
 		stack;
 
-	unlock_and_release_vg(cmd, vg, lp.vg_name);
+	unlock_and_free_vg(cmd, vg, lp.vg_name);
 
 	return r;
 }

@@ -223,16 +223,16 @@ static struct volume_group *_vgsplit_to(struct cmd_context *cmd,
 	vg_to = vg_create(cmd, vg_name_to);
 	if (vg_read_error(vg_to) == FAILED_LOCKING) {
 		log_error("Can't get lock for %s", vg_name_to);
-		vg_release(vg_to);
+		free_vg(vg_to);
 		return NULL;
 	}
 	if (vg_read_error(vg_to) == FAILED_EXIST) {
 		*existing_vg = 1;
-		vg_release(vg_to);
+		free_vg(vg_to);
 		vg_to = vg_read_for_update(cmd, vg_name_to, NULL, 0);
 
 		if (vg_read_error(vg_to)) {
-			vg_release(vg_to);
+			free_vg(vg_to);
 			stack;
 			return NULL;
 		}
@@ -258,7 +258,7 @@ static struct volume_group *_vgsplit_from(struct cmd_context *cmd,
 
 	vg_from = vg_read_for_update(cmd, vg_name_from, NULL, 0);
 	if (vg_read_error(vg_from)) {
-		vg_release(vg_from);
+		free_vg(vg_from);
 		return NULL;
 	}
 	return vg_from;
@@ -333,7 +333,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 
 		vg_to = _vgsplit_to(cmd, vg_name_to, &existing_vg);
 		if (!vg_to) {
-			unlock_and_release_vg(cmd, vg_from, vg_name_from);
+			unlock_and_free_vg(cmd, vg_from, vg_name_from);
 			stack;
 			return ECMD_FAILED;
 		}
@@ -345,7 +345,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		}
 		vg_from = _vgsplit_from(cmd, vg_name_from);
 		if (!vg_from) {
-			unlock_and_release_vg(cmd, vg_to, vg_name_to);
+			unlock_and_free_vg(cmd, vg_to, vg_name_to);
 			stack;
 			return ECMD_FAILED;
 		}
@@ -462,7 +462,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	 * Finally, remove the EXPORTED flag from the new VG and write it out.
 	 */
 	if (!test_mode()) {
-		vg_release(vg_to);
+		free_vg(vg_to);
 		vg_to = vg_read_for_update(cmd, vg_name_to, NULL,
 					   READ_ALLOW_EXPORTED);
 		if (vg_read_error(vg_to)) {
@@ -487,11 +487,11 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 
 bad:
 	if (lock_vg_from_first) {
-		unlock_and_release_vg(cmd, vg_to, vg_name_to);
-		unlock_and_release_vg(cmd, vg_from, vg_name_from);
+		unlock_and_free_vg(cmd, vg_to, vg_name_to);
+		unlock_and_free_vg(cmd, vg_from, vg_name_from);
 	} else {
-		unlock_and_release_vg(cmd, vg_from, vg_name_from);
-		unlock_and_release_vg(cmd, vg_to, vg_name_to);
+		unlock_and_free_vg(cmd, vg_from, vg_name_from);
+		unlock_and_free_vg(cmd, vg_to, vg_name_to);
 	}
 	return r;
 }

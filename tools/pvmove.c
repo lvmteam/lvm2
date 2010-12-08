@@ -445,7 +445,7 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 
 	vg = _get_vg(cmd, pv_vg_name(pv));
 	if (vg_read_error(vg)) {
-		vg_release(vg);
+		free_vg(vg);
 		stack;
 		return ECMD_FAILED;
 	}
@@ -510,7 +510,7 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 	/* LVs are all in status LOCKED */
 	r = ECMD_PROCESSED;
 out:
-	unlock_and_release_vg(cmd, vg, pv_vg_name(pv));
+	unlock_and_free_vg(cmd, vg, pv_vg_name(pv));
 	return r;
 }
 

@@ -425,10 +425,10 @@ int remove_lvs_in_vg(struct cmd_context *cmd,
 		     struct volume_group *vg,
 		     force_t force);
 /*
- * vg_release() must be called on every struct volume_group allocated
+ * free_vg() must be called on every struct volume_group allocated
  * by vg_create() or vg_read_internal() to free it when no longer required.
  */
-void vg_release(struct volume_group *vg);
+void free_vg(struct volume_group *vg);
 
 /* Manipulate LVs */
 struct logical_volume *lv_create_empty(const char *name,
@@ -682,7 +682,7 @@ struct cmd_vg *cmd_vg_add(struct dm_pool *mem, struct dm_list *cmd_vgs,
 struct cmd_vg *cmd_vg_lookup(struct dm_list *cmd_vgs,
 			     const char *vg_name, const char *vgid);
 int cmd_vg_read(struct cmd_context *cmd, struct dm_list *cmd_vgs);
-void cmd_vg_release(struct dm_list *cmd_vgs);
+void free_cmd_vgs(struct dm_list *cmd_vgs);
 
 int find_replicator_vgs(struct logical_volume *lv);
 

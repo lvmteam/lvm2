@@ -329,7 +329,7 @@ static void _display_archive(struct cmd_context *cmd, struct archive_file *af)
 	log_print("Description:\t%s", desc ? : "<No description>");
 	log_print("Backup Time:\t%s", ctime(&when));
 
-	vg_release(vg);
+	free_vg(vg);
 	tf->fmt->ops->destroy_instance(tf);
 }
 
