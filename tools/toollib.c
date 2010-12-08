@@ -311,7 +311,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 		}
 
 		if (!cmd_vg_read(cmd, &cmd_vgs)) {
-			cmd_vg_release(&cmd_vgs);
+			free_cmd_vgs(&cmd_vgs);
 			if (ret_max < ECMD_FAILED) {
 				log_error("Skipping volume group %s", vgname);
 				ret_max = ECMD_FAILED;
@@ -337,7 +337,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 						  dm_pool_strdup(cmd->mem,
 								 lv_name + 1))) {
 					log_error("strlist allocation failed");
-					cmd_vg_release(&cmd_vgs);
+					free_cmd_vgs(&cmd_vgs);
 					return ECMD_FAILED;
 				}
 			}
@@ -355,7 +355,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 			dm_list_init(&lvnames);
 			dm_list_splice(&lvnames, &failed_lvnames);
 
-			cmd_vg_release(&cmd_vgs);
+			free_cmd_vgs(&cmd_vgs);
 			if (!cmd_vg_read(cmd, &cmd_vgs)) {
 				ret = ECMD_FAILED; /* break */
 				break;
@@ -364,7 +364,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 		if (ret > ret_max)
 			ret_max = ret;
 
-		cmd_vg_release(&cmd_vgs);
+		free_cmd_vgs(&cmd_vgs);
 		/* FIXME: logic for breaking command is not consistent */
 		if (sigint_caught())
 			return ECMD_FAILED;
@@ -392,7 +392,7 @@ int process_each_segment_in_pv(struct cmd_context *cmd,
 
 		vg = vg_read(cmd, vg_name, NULL, 0);
 		if (vg_read_error(vg)) {
-			vg_release(vg);
+			free_vg(vg);
 			log_error("Skipping volume group %s", vg_name);
 			return ECMD_FAILED;
 		}
@@ -404,7 +404,7 @@ int process_each_segment_in_pv(struct cmd_context *cmd,
 		if (!(pvl = find_pv_in_vg(vg, pv_dev_name(pv)))) {
 			 log_error("Unable to find %s in volume group %s",
 				   pv_dev_name(pv), vg_name);
-			 unlock_and_release_vg(cmd, vg, vg_name);
+			 unlock_and_free_vg(cmd, vg, vg_name);
 			 return ECMD_FAILED;
 		}
 
@@ -427,7 +427,7 @@ int process_each_segment_in_pv(struct cmd_context *cmd,
 	if (vg_name)
 		unlock_vg(cmd, vg_name);
 	if (!old_vg)
-		vg_release(vg);
+		free_vg(vg);
 
 	return ret_max;
 }
@@ -498,10 +498,10 @@ static int _process_one_vg(struct cmd_context *cmd, const char *vg_name,
 		if (!cvl_vg->vg->cmd_missing_vgs)
 			break;
 
-		cmd_vg_release(&cmd_vgs);
+		free_cmd_vgs(&cmd_vgs);
 	}
 
-	cmd_vg_release(&cmd_vgs);
+	free_cmd_vgs(&cmd_vgs);
 
 	return (ret > ret_max) ? ret : ret_max;
 }
@@ -774,7 +774,7 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 				vg = vg_read(cmd, sll->str, NULL, flags);
 				if (vg_read_error(vg)) {
 					ret_max = ECMD_FAILED;
-					vg_release(vg);
+					free_vg(vg);
 					stack;
 					continue;
 				}
@@ -783,7 +783,7 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 							    handle,
 							    process_single_pv);
 
-				unlock_and_release_vg(cmd, vg, sll->str);
+				unlock_and_free_vg(cmd, vg, sll->str);
 
 				if (ret > ret_max)
 					ret_max = ret;

@@ -366,7 +366,7 @@ int get_pv_from_vg_by_id(const struct format_type *fmt, const char *vg_name,
 		}
 	}
 out:
-	vg_release(vg);
+	free_vg(vg);
 	return r;
 }
 
@@ -920,7 +920,7 @@ struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name)
 	/* is this vg name already in use ? */
 	if ((vg = vg_read_internal(cmd, vg_name, NULL, 1, &consistent))) {
 		log_error("A volume group called '%s' already exists.", vg_name);
-		unlock_and_release_vg(cmd, vg, vg_name);
+		unlock_and_free_vg(cmd, vg, vg_name);
 		return _vg_make_handle(cmd, NULL, FAILED_EXIST);
 	}
 
@@ -988,7 +988,7 @@ struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name)
 	return _vg_make_handle(cmd, vg, SUCCESS);
 
 bad:
-	unlock_and_release_vg(cmd, vg, vg_name);
+	unlock_and_free_vg(cmd, vg, vg_name);
 	/* FIXME: use _vg_make_handle() w/proper error code */
 	return NULL;
 }
@@ -2700,7 +2700,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		}
 		return correct_vg;
 	} else {
-		vg_release(correct_vg);
+		free_vg(correct_vg);
 		correct_vg = NULL;
 	}
 
@@ -2741,7 +2741,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		    (!use_precommitted &&
 		     !(vg = mda->ops->vg_read(fid, vgname, mda)))) {
 			inconsistent = 1;
-			vg_release(vg);
+			free_vg(vg);
 			continue;
 		}
 		if (!correct_vg) {
@@ -2760,13 +2760,13 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 				inconsistent_seqno = 1;
 			}
 			if (vg->seqno > correct_vg->seqno) {
-				vg_release(correct_vg);
+				free_vg(correct_vg);
 				correct_vg = vg;
 			}
 		}
 
 		if (vg != correct_vg)
-			vg_release(vg);
+			free_vg(vg);
 	}
 
 	/* Ensure every PV in the VG was in the cache */
@@ -2841,7 +2841,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 			if (memlock())
 				inconsistent = 1;
 			else {
-				vg_release(correct_vg);
+				free_vg(correct_vg);
 				correct_vg = NULL;
 			}
 		} else dm_list_iterate_items(pvl, &correct_vg->pvs) {
@@ -2850,14 +2850,14 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 			if (!str_list_match_item(pvids, pvl->pv->dev->pvid)) {
 				log_debug("Cached VG %s had incorrect PV list",
 					  vgname);
-				vg_release(correct_vg);
+				free_vg(correct_vg);
 				correct_vg = NULL;
 				break;
 			}
 		}
 
 		if (correct_vg && inconsistent_mdas) {
-			vg_release(correct_vg);
+			free_vg(correct_vg);
 			correct_vg = NULL;
 		}
 	}
@@ -2896,7 +2896,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 			if (!correct_vg) {
 				correct_vg = vg;
 				if (!_update_pv_list(cmd->mem, &all_pvs, correct_vg)) {
-					vg_release(vg);
+					free_vg(vg);
 					return_NULL;
 				}
 				continue;
@@ -2920,18 +2920,18 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 					inconsistent_seqno = 1;
 				}
 				if (!_update_pv_list(cmd->mem, &all_pvs, vg)) {
-					vg_release(vg);
-					vg_release(correct_vg);
+					free_vg(vg);
+					free_vg(correct_vg);
 					return_NULL;
 				}
 				if (vg->seqno > correct_vg->seqno) {
-					vg_release(correct_vg);
+					free_vg(correct_vg);
 					correct_vg = vg;
 				}
 			}
 
 			if (vg != correct_vg)
-				vg_release(vg);
+				free_vg(vg);
 		}
 
 		/* Give up looking */
@@ -2961,7 +2961,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 				*consistent = 0;
 				return correct_vg;
 			}
-			vg_release(correct_vg);
+			free_vg(correct_vg);
 			return NULL;
 		}
 
@@ -2989,7 +2989,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		cmd->handles_missing_pvs = 1;
 		if (!vg_write(correct_vg)) {
 			log_error("Automatic metadata correction failed");
-			vg_release(correct_vg);
+			free_vg(correct_vg);
 			cmd->handles_missing_pvs = saved_handles_missing_pvs;
 			return NULL;
 		}
@@ -2998,7 +2998,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		if (!vg_commit(correct_vg)) {
 			log_error("Automatic metadata correction commit "
 				  "failed");
-			vg_release(correct_vg);
+			free_vg(correct_vg);
 			return NULL;
 		}
 
@@ -3008,13 +3008,13 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 					goto next_pv;
 			}
 			if (!id_write_format(&pvl->pv->id, uuid, sizeof(uuid))) {
-				vg_release(correct_vg);
+				free_vg(correct_vg);
 				return_NULL;
 			}
 			log_error("Removing PV %s (%s) that no longer belongs to VG %s",
 				  pv_dev_name(pvl->pv), uuid, correct_vg->name);
 			if (!pv_write_orphan(cmd, pvl->pv)) {
-				vg_release(correct_vg);
+				free_vg(correct_vg);
 				return_NULL;
 			}
 
@@ -3036,7 +3036,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 			  "volume group %s", correct_vg->name);
 		log_error("Please restore the metadata by running "
 			  "vgcfgrestore.");
-		vg_release(correct_vg);
+		free_vg(correct_vg);
 		return NULL;
 	}
 
@@ -3056,7 +3056,7 @@ struct volume_group *vg_read_internal(struct cmd_context *cmd, const char *vgnam
 	if (!check_pv_segments(vg)) {
 		log_error(INTERNAL_ERROR "PV segments corrupted in %s.",
 			  vg->name);
-		vg_release(vg);
+		free_vg(vg);
 		return NULL;
 	}
 
@@ -3064,7 +3064,7 @@ struct volume_group *vg_read_internal(struct cmd_context *cmd, const char *vgnam
 		if (!check_lv_segments(lvl->lv, 0)) {
 			log_error(INTERNAL_ERROR "LV segments corrupted in %s.",
 				  lvl->lv->name);
-			vg_release(vg);
+			free_vg(vg);
 			return NULL;
 		}
 	}
@@ -3076,7 +3076,7 @@ struct volume_group *vg_read_internal(struct cmd_context *cmd, const char *vgnam
 		if (!check_lv_segments(lvl->lv, 1)) {
 			log_error(INTERNAL_ERROR "LV segments corrupted in %s.",
 				  lvl->lv->name);
-			vg_release(vg);
+			free_vg(vg);
 			return NULL;
 		}
 	}
@@ -3084,14 +3084,16 @@ struct volume_group *vg_read_internal(struct cmd_context *cmd, const char *vgnam
 	return vg;
 }
 
-void vg_release(struct volume_group *vg)
+void free_vg(struct volume_group *vg)
 {
-	if (!vg || !vg->vgmem)
+	if (!vg)
 		return;
 
-	if (vg->cmd && vg->vgmem == vg->cmd->mem)
+	if (vg->cmd && vg->vgmem == vg->cmd->mem) {
 		log_error(INTERNAL_ERROR "global memory pool used for VG %s",
 			  vg->name);
+		return;
+	}
 
 	dm_pool_destroy(vg->vgmem);
 }
@@ -3122,7 +3124,7 @@ static struct volume_group *_vg_read_by_vgid(struct cmd_context *cmd,
 					  "inconsistent", vg->name);
 			return vg;
 		}
-		vg_release(vg);
+		free_vg(vg);
 	}
 
 	/* Mustn't scan if memory locked: ensure cache gets pre-populated! */
@@ -3151,12 +3153,12 @@ static struct volume_group *_vg_read_by_vgid(struct cmd_context *cmd,
 			if (!consistent) {
 				log_error("Volume group %s metadata is "
 					  "inconsistent", vgname);
-				vg_release(vg);
+				free_vg(vg);
 				return NULL;
 			}
 			return vg;
 		}
-		vg_release(vg);
+		free_vg(vg);
 	}
 
 	return NULL;
@@ -3190,7 +3192,7 @@ struct logical_volume *lv_from_lvid(struct cmd_context *cmd, const char *lvid_s,
 
 	return lvl->lv;
 out:
-	vg_release(vg);
+	free_vg(vg);
 	return NULL;
 }
 
@@ -3384,12 +3386,12 @@ static int _get_pvs(struct cmd_context *cmd, int warnings, struct dm_list **pvsl
 			dm_list_iterate_items(pvl, &vg->pvs) {
 				if (!(pvl_copy = _copy_pvl(cmd->mem, pvl))) {
 					log_error("PV list allocation failed");
-					vg_release(vg);
+					free_vg(vg);
 					return 0;
 				}
 				dm_list_add(results, &pvl_copy->list);
 			}
-		vg_release(vg);
+		free_vg(vg);
 	}
 	init_pvmove(old_pvmove);
 
@@ -3592,7 +3594,7 @@ static struct volume_group *_recover_vg(struct cmd_context *cmd,
 		return_NULL;
 
 	if (!consistent) {
-		vg_release(vg);
+		free_vg(vg);
 		return_NULL;
 	}
 
@@ -3664,7 +3666,7 @@ static struct volume_group *_vg_lock_and_read(struct cmd_context *cmd, const cha
 
 	/* consistent == 0 when VG is not found, but failed == FAILED_NOTFOUND */
 	if (!consistent && !failure) {
-		vg_release(vg);
+		free_vg(vg);
 		if (!(vg = _recover_vg(cmd, vg_name, vgid))) {
 			log_error("Recovery of volume group \"%s\" failed.",
 				  vg_name);

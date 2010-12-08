@@ -857,7 +857,7 @@ static struct volume_group *_vg_read_file_name(struct format_instance *fid,
 	 * check that it contains the correct volume group.
 	 */
 	if (vgname && strcmp(vgname, vg->name)) {
-		dm_pool_destroy(vg->vgmem);
+		free_vg(vg);
 		log_error("'%s' does not contain volume group '%s'.",
 			  read_path, vgname);
 		return NULL;
@@ -1085,7 +1085,7 @@ static int _scan_file(const struct format_type *fmt)
 							     path))) {
 					/* FIXME Store creation host in vg */
 					lvmcache_update_vg(vg, 0);
-					dm_pool_destroy(vg->vgmem);
+					free_vg(vg);
 				}
 			}
 

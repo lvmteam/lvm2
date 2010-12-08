@@ -65,7 +65,7 @@ static int _pvsegs_sub_single(struct cmd_context *cmd,
 	};
 
         if (!(_free_vg.vgmem = dm_pool_create("_free_vg", 10240)))
-            return ECMD_FAILED;
+		return ECMD_FAILED;
 
 	struct logical_volume _free_logical_volume = {
 		.vg = vg ?: &_free_vg,
@@ -110,7 +110,7 @@ static int _pvsegs_sub_single(struct cmd_context *cmd,
                 goto_out;
 	}
  out:
-        dm_pool_destroy(_free_vg.vgmem);
+	free_vg(&_free_vg);
 	return ret;
 }
 
@@ -145,7 +145,7 @@ static int _pvs_single(struct cmd_context *cmd, struct volume_group *vg,
 		vg = vg_read(cmd, vg_name, (char *)&pv->vgid, 0);
 		if (vg_read_error(vg)) {
 			log_error("Skipping volume group %s", vg_name);
-			vg_release(vg);
+			free_vg(vg);
 			return ECMD_FAILED;
 		}
 
@@ -185,7 +185,7 @@ out:
 		unlock_vg(cmd, vg_name);
 
 	if (!old_vg)
-		vg_release(vg);
+		free_vg(vg);
 
 	return ret;
 }
