@@ -3094,7 +3094,6 @@ void vg_release(struct volume_group *vg)
 			  vg->name);
 
 	dm_pool_destroy(vg->vgmem);
-	vg->vgmem = NULL;
 }
 
 /* This is only called by lv_from_lvid, which is only called from
