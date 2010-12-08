@@ -507,8 +507,10 @@ static int _percent_run(struct dev_manager *dm, const char *name,
 				continue;
 		}
 
-		if (segtype->ops->target_percent &&
-		    !segtype->ops->target_percent(&dm->target_state,
+		if (!segtype->ops->target_percent)
+			continue;
+
+		if (!segtype->ops->target_percent(&dm->target_state,
 						  &percent, dm->mem,
 						  dm->cmd, seg, params,
 						  &total_numerator,
