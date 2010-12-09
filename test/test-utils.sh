@@ -77,6 +77,10 @@ prepare_clvmd() {
 
 	clvmd -Isinglenode -d 1 &
 	LOCAL_CLVMD="$!"
+
+	# check that it is really running now
+	sleep .1
+	ps $LOCAL_CLVMD || exit 200
 }
 
 prepare_dmeventd() {
@@ -396,6 +400,7 @@ prepare_lvmconf() {
     locking_dir = "$TESTDIR/var/lock/lvm"
     $locktype
     si_unit_consistency = 1
+    fallback_to_local_locking = 0
   }
   activation {
     udev_sync = 1
