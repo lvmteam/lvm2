@@ -227,7 +227,7 @@ struct format_handler {
 	/*
 	 * Scan any metadata areas that aren't referenced in PV labels
 	 */
-	int (*scan) (const struct format_type * fmt);
+	int (*scan) (const struct format_type * fmt, const char *vgname);
 
 	/*
 	 * Return PV with given path.

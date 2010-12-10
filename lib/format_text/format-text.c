@@ -1045,7 +1045,7 @@ static int _vg_remove_file(struct format_instance *fid __attribute__((unused)),
 	return 1;
 }
 
-static int _scan_file(const struct format_type *fmt)
+static int _scan_file(const struct format_type *fmt, const char *vgname)
 {
 	struct dirent *dirent;
 	struct dir_list *dl;
@@ -1055,7 +1055,7 @@ static int _scan_file(const struct format_type *fmt)
 	struct volume_group *vg;
 	struct format_instance *fid;
 	char path[PATH_MAX];
-	char *vgname;
+	char *scanned_vgname;
 
 	dir_list = &((struct mda_lists *) fmt->private)->dirs;
 
@@ -1070,18 +1070,23 @@ static int _scan_file(const struct format_type *fmt)
 			    (!(tmp = strstr(dirent->d_name, ".tmp")) ||
 			     tmp != dirent->d_name + strlen(dirent->d_name)
 			     - 4)) {
-				vgname = dirent->d_name;
+				scanned_vgname = dirent->d_name;
+
+				/* If vgname supplied, only scan that one VG */
+				if (vgname && strcmp(vgname, scanned_vgname))
+					continue;
+
 				if (dm_snprintf(path, PATH_MAX, "%s/%s",
-						 dl->dir, vgname) < 0) {
+						 dl->dir, scanned_vgname) < 0) {
 					log_error("Name too long %s/%s",
-						  dl->dir, vgname);
+						  dl->dir, scanned_vgname);
 					break;
 				}
 
 				/* FIXME stat file to see if it's changed */
 				fid = _text_create_text_instance(fmt, NULL, NULL,
 							    NULL);
-				if ((vg = _vg_read_file_name(fid, vgname,
+				if ((vg = _vg_read_file_name(fid, scanned_vgname,
 							     path))) {
 					/* FIXME Store creation host in vg */
 					lvmcache_update_vg(vg, 0);
@@ -1195,11 +1200,11 @@ const char *vgname_from_mda(const struct format_type *fmt,
 	return vgname;
 }
 
-static int _scan_raw(const struct format_type *fmt)
+static int _scan_raw(const struct format_type *fmt, const char *vgname __attribute__((unused)))
 {
 	struct raw_list *rl;
 	struct dm_list *raw_list;
-	const char *vgname;
+	const char *scanned_vgname;
 	struct volume_group *vg;
 	struct format_instance fid;
 	struct id vgid;
@@ -1224,10 +1229,10 @@ static int _scan_raw(const struct format_type *fmt)
 			goto close_dev;
 		}
 
-		if ((vgname = vgname_from_mda(fmt, mdah,
+		if ((scanned_vgname = vgname_from_mda(fmt, mdah,
 					      &rl->dev_area, &vgid, &vgstatus,
 					      NULL, NULL))) {
-			vg = _vg_read_raw_area(&fid, vgname, &rl->dev_area, 0);
+			vg = _vg_read_raw_area(&fid, scanned_vgname, &rl->dev_area, 0);
 			if (vg)
 				lvmcache_update_vg(vg, 0);
 
@@ -1240,9 +1245,9 @@ static int _scan_raw(const struct format_type *fmt)
 	return 1;
 }
 
-static int _text_scan(const struct format_type *fmt)
+static int _text_scan(const struct format_type *fmt, const char *vgname)
 {
-	return (_scan_file(fmt) & _scan_raw(fmt));
+	return (_scan_file(fmt, vgname) & _scan_raw(fmt, vgname));
 }
 
 /* For orphan, creates new mdas according to policy.
@@ -2181,6 +2186,7 @@ struct format_type *create_text_format(struct cmd_context *cmd)
 					  "metadata directory list ", cv->v.str);
 				goto err;
 			}
+			cmd->independent_metadata_areas = 1;
 		}
 	}
 
@@ -2188,6 +2194,7 @@ struct format_type *create_text_format(struct cmd_context *cmd)
 		for (cn = cn->child; cn; cn = cn->sib) {
 			if (!_get_config_disk_area(cmd, cn, &mda_lists->raws))
 				goto err;
+			cmd->independent_metadata_areas = 1;
 		}
 	}
 

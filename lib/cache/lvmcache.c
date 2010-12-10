@@ -366,7 +366,7 @@ struct lvmcache_vginfo *vginfo_from_vgname(const char *vgname, const char *vgid)
 	return vginfo;
 }
 
-const struct format_type *fmt_from_vgname(const char *vgname, const char *vgid)
+const struct format_type *fmt_from_vgname(const char *vgname, const char *vgid, unsigned revalidate_labels)
 {
 	struct lvmcache_vginfo *vginfo;
 	struct lvmcache_info *info;
@@ -379,8 +379,16 @@ const struct format_type *fmt_from_vgname(const char *vgname, const char *vgid)
 	if (!(vginfo = vginfo_from_vgname(vgname, vgid)))
 		return NULL;
 
-	/* This function is normally called before reading metadata so
- 	 * we check cached labels here. Unfortunately vginfo is volatile. */
+	/*
+	 * If this function is called repeatedly, only the first one needs to revalidate.
+	 */
+	if (!revalidate_labels)
+		goto out;
+
+	/*
+	 * This function is normally called before reading metadata so
+ 	 * we check cached labels here. Unfortunately vginfo is volatile.
+ 	 */
 	dm_list_init(&devs);
 	dm_list_iterate_items(info, &vginfo->infos) {
 		if (!(devl = dm_malloc(sizeof(*devl)))) {
@@ -405,6 +413,7 @@ const struct format_type *fmt_from_vgname(const char *vgname, const char *vgid)
 	    strncmp(vginfo->vgid, vgid_found, ID_LEN))
 		return NULL;
 
+out:
 	return vginfo->fmt;
 }
 
@@ -588,10 +597,10 @@ int lvmcache_label_scan(struct cmd_context *cmd, int full_scan)
 	_has_scanned = 1;
 
 	/* Perform any format-specific scanning e.g. text files */
-	dm_list_iterate_items(fmt, &cmd->formats) {
-		if (fmt->ops->scan && !fmt->ops->scan(fmt))
-			goto out;
-	}
+	if (cmd->independent_metadata_areas)
+		dm_list_iterate_items(fmt, &cmd->formats)
+			if (fmt->ops->scan && !fmt->ops->scan(fmt, NULL))
+				goto out;
 
 	/*
 	 * If we are a long-lived process, write out the updated persistent
