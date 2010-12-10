@@ -88,7 +88,7 @@ void lvmcache_unlock_vgname(const char *vgname);
 int lvmcache_verify_lock_order(const char *vgname);
 
 /* Queries */
-const struct format_type *fmt_from_vgname(const char *vgname, const char *vgid);
+const struct format_type *fmt_from_vgname(const char *vgname, const char *vgid, unsigned revalidate_labels);
 struct lvmcache_vginfo *vginfo_from_vgname(const char *vgname,
 					   const char *vgid);
 struct lvmcache_vginfo *vginfo_from_vgid(const char *vgid);

@@ -2706,13 +2706,14 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 
 	/* Find the vgname in the cache */
 	/* If it's not there we must do full scan to be completely sure */
-	if (!(fmt = fmt_from_vgname(vgname, vgid))) {
+	if (!(fmt = fmt_from_vgname(vgname, vgid, 1))) {
 		lvmcache_label_scan(cmd, 0);
-		if (!(fmt = fmt_from_vgname(vgname, vgid))) {
-			if (memlock())
+		if (!(fmt = fmt_from_vgname(vgname, vgid, 1))) {
+			/* Independent MDAs aren't supported under low memory */
+			if (!cmd->independent_metadata_areas && memlock())
 				return_NULL;
 			lvmcache_label_scan(cmd, 2);
-			if (!(fmt = fmt_from_vgname(vgname, vgid)))
+			if (!(fmt = fmt_from_vgname(vgname, vgid, 0)))
 				return_NULL;
 		}
 	}
@@ -2868,10 +2869,11 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	if (!correct_vg) {
 		inconsistent = 0;
 
-		if (memlock())
+		/* Independent MDAs aren't supported under low memory */
+		if (!cmd->independent_metadata_areas && memlock())
 			return_NULL;
 		lvmcache_label_scan(cmd, 2);
-		if (!(fmt = fmt_from_vgname(vgname, vgid)))
+		if (!(fmt = fmt_from_vgname(vgname, vgid, 0)))
 			return_NULL;
 
 		if (precommitted && !(fmt->features & FMT_PRECOMMIT))
@@ -3795,10 +3797,11 @@ uint32_t vg_lock_newname(struct cmd_context *cmd, const char *vgname)
 
 	/* Find the vgname in the cache */
 	/* If it's not there we must do full scan to be completely sure */
-	if (!fmt_from_vgname(vgname, NULL)) {
+	if (!fmt_from_vgname(vgname, NULL, 1)) {
 		lvmcache_label_scan(cmd, 0);
-		if (!fmt_from_vgname(vgname, NULL)) {
-			if (memlock()) {
+		if (!fmt_from_vgname(vgname, NULL, 1)) {
+			/* Independent MDAs aren't supported under low memory */
+			if (!cmd->independent_metadata_areas && memlock()) {
 				/*
 				 * FIXME: Disallow calling this function if
 				 * memlock() is true.
@@ -3807,7 +3810,7 @@ uint32_t vg_lock_newname(struct cmd_context *cmd, const char *vgname)
 				return FAILED_LOCKING;
 			}
 			lvmcache_label_scan(cmd, 2);
-			if (!fmt_from_vgname(vgname, NULL)) {
+			if (!fmt_from_vgname(vgname, NULL, 0)) {
 				/* vgname not found after scanning */
 				return SUCCESS;
 			}

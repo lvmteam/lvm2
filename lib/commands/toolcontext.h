@@ -78,6 +78,8 @@ struct cmd_context {
 	unsigned si_unit_consistency:1;
 	unsigned metadata_read_only:1;
 
+	unsigned independent_metadata_areas:1;	/* Active formats have MDAs outside PVs */
+
 	struct dev_filter *filter;
 	int dump_filter;	/* Dump filter when exiting? */
 

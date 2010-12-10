@@ -1138,6 +1138,7 @@ struct cmd_context *create_toolcontext(unsigned is_long_lived,
 	cmd->is_long_lived = is_long_lived;
 	cmd->handles_missing_pvs = 0;
 	cmd->handles_unknown_segments = 0;
+	cmd->independent_metadata_areas = 0;
 	cmd->hosttags = 0;
 	dm_list_init(&cmd->arg_value_groups);
 	dm_list_init(&cmd->formats);
@@ -1246,6 +1247,8 @@ static void _destroy_formats(struct cmd_context *cmd, struct dm_list *formats)
 			dlclose(lib);
 #endif
 	}
+
+	cmd->independent_metadata_areas = 0;
 }
 
 static void _destroy_segtypes(struct dm_list *segtypes)
