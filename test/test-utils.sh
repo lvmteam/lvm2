@@ -433,6 +433,18 @@ prepare() {
 	lv4=LV4
 }
 
+apitest() {
+	t=$1
+        shift
+	test -x $abs_top_builddir/test/api/$t.t || exit 200
+	$abs_top_builddir/test/api/$t.t "$@"
+}
+
+api() {
+	test -x $abs_top_builddir/test/api/wrapper || exit 200
+	$abs_top_builddir/test/api/wrapper "$@"
+}
+
 LANG=C
 LC_ALL=C
 TZ=UTC

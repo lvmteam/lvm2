@@ -13,11 +13,6 @@
 #
 
 . ./test-utils.sh
-
 aux prepare_devs 2
-
 pvcreate $dev1 $dev2
-
-echo `pwd`
-ls -lR `pwd`
-$abs_srcdir/api/vgtest $vg1 $dev1 $dev2
+apitest vgtest $vg1 $dev1 $dev2
