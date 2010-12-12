@@ -42,19 +42,19 @@ dm_udev_synchronisation = 1
 endif
 
 all check: init.sh
-	make -C api
+	make -C api tests
 	@echo Testing with locking_type 1
 	VERBOSE=$(VERBOSE) ./bin/harness $(RUN_BASE)
 	@echo Testing with locking_type 3
 	VERBOSE=$(VERBOSE) LVM_TEST_LOCKING=3 ./bin/harness $(RUN_BASE)
 
 check_cluster: init.sh
-	make -C api
+	make -C api tests
 	@echo Testing with locking_type 3
 	VERBOSE=$(VERBOSE) LVM_TEST_LOCKING=3 ./bin/harness $(RUN_BASE)
 
 check_local: init.sh
-	make -C api
+	make -C api tests
 	@echo Testing with locking_type 1
 	VERBOSE=$(VERBOSE) LVM_TEST_LOCKING=1 ./bin/harness $(RUN_BASE)
 

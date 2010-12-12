@@ -44,7 +44,9 @@ test_OBJECTS = $(test_SOURCES:.c=.o)
 wrapper_OBJECTS = $(wrapper_SOURCES:.c=.o)
 OBJECTS = $(test_OBJECTS)
 
-all: $(UNIT) test
+all: tests test
+
+tests: $(UNIT)
 
 test: $(test_OBJECTS) $(DEPLIBS)
 	$(CC) -o test $(test_OBJECTS) $(CFLAGS) $(LDFLAGS) $(LVMLIBS) $(LIBS) $(READLINE_LIBS)
