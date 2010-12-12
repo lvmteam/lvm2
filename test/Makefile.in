@@ -29,7 +29,7 @@ T ?= .
 S ?= @ # never match anything by default
 VERBOSE ?= 0
 RUN = $(shell find $(srcdir) -regextype posix-egrep \( -name t-\*.sh -or -path */api/\*.sh \) -and -regex "$(srcdir)/.*($(T)).*" -and -not -regex "$(srcdir)/.*($(S)).*" | sort)
-RUN_BASE = $(shell echo $(RUN) | sed -e s,$(srcdir)/,,g)
+RUN_BASE = $(shell echo $(RUN) | sed -e s,^$(srcdir)/,,)
 
 # Shell quote;
 SHELL_PATH_SQ = $(subst ','\'',$(SHELL_PATH))
