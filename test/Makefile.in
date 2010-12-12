@@ -28,39 +28,35 @@ abs_top_srcdir = @abs_top_srcdir@
 T ?= .
 S ?= @ # never match anything by default
 VERBOSE ?= 0
-RUN = $(shell find -regextype posix-egrep -name t-\*.sh -and -regex ".*($(T)).*" -and -not -regex ".*($(S)).*" | sort)
+RUN = $(shell find $(srcdir) -regextype posix-egrep \( -name t-\*.sh -or -path */api/\*.sh \) -and -regex "$(srcdir)/.*($(T)).*" -and -not -regex "$(srcdir)/.*($(S)).*" | sort)
+RUN_BASE = $(shell echo $(RUN) | sed -e s,$(srcdir)/,,g)
 
 # Shell quote;
 SHELL_PATH_SQ = $(subst ','\'',$(SHELL_PATH))
 
-SCRIPTS := $(wildcard $(srcdir)/t-*.sh) \
- $(srcdir)/test-utils.sh \
- $(srcdir)/lvm-utils.sh
+SUPPORT := $(srcdir)/test-utils.sh \
+           $(srcdir)/lvm-utils.sh
 
 ifeq ("@UDEV_SYNC@", "yes")
 dm_udev_synchronisation = 1
 endif
 
-ifeq ("@APPLIB@", "yes")
-SCRIPTS += $(srcdir)/lvm2app.sh
-all: api/vgtest
-api/vgtest:
-	$(MAKE) -C api vgtest
-endif
-
 all check: init.sh
+	make -C api
 	@echo Testing with locking_type 1
-	VERBOSE=$(VERBOSE) ./bin/harness $(RUN)
+	VERBOSE=$(VERBOSE) ./bin/harness $(RUN_BASE)
 	@echo Testing with locking_type 3
-	VERBOSE=$(VERBOSE) LVM_TEST_LOCKING=3 ./bin/harness $(RUN)
+	VERBOSE=$(VERBOSE) LVM_TEST_LOCKING=3 ./bin/harness $(RUN_BASE)
 
 check_cluster: init.sh
+	make -C api
 	@echo Testing with locking_type 3
-	VERBOSE=$(VERBOSE) LVM_TEST_LOCKING=3 ./bin/harness $(RUN)
+	VERBOSE=$(VERBOSE) LVM_TEST_LOCKING=3 ./bin/harness $(RUN_BASE)
 
 check_local: init.sh
+	make -C api
 	@echo Testing with locking_type 1
-	VERBOSE=$(VERBOSE) LVM_TEST_LOCKING=1 ./bin/harness $(RUN)
+	VERBOSE=$(VERBOSE) LVM_TEST_LOCKING=1 ./bin/harness $(RUN_BASE)
 
 bin/not: $(srcdir)/not.c .bin-dir-stamp
 	$(CC) -o bin/not $<
@@ -73,7 +69,7 @@ bin/check: $(srcdir)/check.sh .bin-dir-stamp
 	cp $< bin/check
 	chmod +x bin/check
 
-init.sh: $(srcdir)/Makefile.in .bin-dir-stamp bin/not bin/check bin/harness $(SCRIPTS)
+init.sh: $(srcdir)/Makefile.in .bin-dir-stamp bin/not bin/check bin/harness $(RUN) $(SUPPORT) $(UNIT)
 	rm -f $@-t $@
 	echo 'top_srcdir=$(top_srcdir)' >> $@-t
 	echo 'abs_top_builddir=$(abs_top_builddir)' >> $@-t
@@ -81,6 +77,7 @@ init.sh: $(srcdir)/Makefile.in .bin-dir-stamp bin/not bin/check bin/harness $(SC
 	echo 'PATH=$$abs_top_builddir/test/bin:$$PATH' >> $@-t
 	LDLPATH="\$$abs_top_builddir/libdm"; \
 	LDLPATH="$$LDLPATH:\$$abs_top_builddir/tools"; \
+	LDLPATH="$$LDLPATH:\$$abs_top_builddir/liblvm"; \
 	LDLPATH="$$LDLPATH:\$$abs_top_builddir/daemons/dmeventd"; \
 	LDLPATH="$$LDLPATH:\$$abs_top_builddir/daemons/dmeventd/plugins/lvm2"; \
 	LDLPATH="$$LDLPATH:\$$abs_top_builddir/daemons/dmeventd/plugins/mirror"; \
@@ -93,7 +90,11 @@ init.sh: $(srcdir)/Makefile.in .bin-dir-stamp bin/not bin/check bin/harness $(SC
 	echo 'export DM_UDEV_SYNCHRONISATION=$(dm_udev_synchronisation)' >> $@-t
 	chmod a-w $@-t
 	mv $@-t $@
-	@if test "$(srcdir)" != . ; then echo "Copying tests to builddir."; cp $(SCRIPTS) . ; fi
+	@if test "$(srcdir)" != . ; then \
+	    echo "Copying tests to builddir."; \
+	    cp $(SUPPORT) .; \
+	    for f in $(RUN); do cp $$f `echo $$f | sed -e s,$(srcdir)/,,g`; done; \
+	fi
 
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
@@ -121,7 +122,7 @@ lvm-wrapper: Makefile
 
 clean:
 	rm -rf init.sh lvm-wrapper bin .bin-dir-stamp
-	if test "$(srcdir)" != . ; then rm -f $(subst $(srcdir)/, ,$(SCRIPTS)) lvm2app.sh ; fi
+	if test "$(srcdir)" != . ; then rm -f $(subst $(srcdir)/, ,$(RUN)) lvm2app.sh ; fi
 
 distclean: clean
 	rm -f Makefile
