@@ -51,9 +51,6 @@ tests: $(UNIT)
 test: $(test_OBJECTS) $(DEPLIBS)
 	$(CC) -o test $(test_OBJECTS) $(CFLAGS) $(LDFLAGS) $(LVMLIBS) $(LIBS) $(READLINE_LIBS)
 
-%.o: $(srcdir)/%.c
-	$(CC) -o $@ $(CFLAGS) $(INCLUDES)
-
 %.t: %.o $(DEPLIBS)
 	$(CC) -o $@ $(<) $(CFLAGS) $(LDFLAGS) $(LVMLIBS) $(LIBS)
 
