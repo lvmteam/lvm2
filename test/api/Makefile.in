@@ -19,9 +19,8 @@ ifeq ("@DEBUG@", "yes")
 	DEFS += -DDEBUG
 endif
 
-TARGETS = vgtest
+TARGETS = 
 test_SOURCES = test.c
-vgtest_SOURCES = vgtest.c
 wrapper_SOURCES = test.c
 INCLUDES += -I../../include
 
@@ -42,9 +41,8 @@ ifeq ("@DMEVENTD@", "yes")
 endif
 
 test_OBJECTS = $(test_SOURCES:.c=.o)
-vgtest_OBJECTS = $(vgtest_SOURCES:.c=.o)
 wrapper_OBJECTS = $(wrapper_SOURCES:.c=.o)
-OBJECTS = $(test_OBJECTS) $(vgtest_OBJECTS)
+OBJECTS = $(test_OBJECTS)
 
 all: $(UNIT) test
 
@@ -52,7 +50,7 @@ test: $(test_OBJECTS) $(DEPLIBS)
 	$(CC) -o test $(test_OBJECTS) $(CFLAGS) $(LDFLAGS) $(LVMLIBS) $(LIBS) $(READLINE_LIBS)
 
 %.o: $(srcdir)/%.c
-	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $(LVMLIBS) $(LIBS) $(READLINE_LIBS)
+	$(CC) -o $@ $(CFLAGS) $(INCLUDES)
 
 %.t: %.o $(DEPLIBS)
 	$(CC) -o $@ $(<) $(CFLAGS) $(LDFLAGS) $(LVMLIBS) $(LIBS)
