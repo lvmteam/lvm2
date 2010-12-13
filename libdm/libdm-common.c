@@ -390,6 +390,7 @@ int dm_task_add_target(struct dm_task *dmt, uint64_t start, uint64_t size,
 static int _selabel_lookup(const char *path, mode_t mode,
 			   security_context_t *scontext)
 {
+#ifdef HAVE_SELINUX
 #ifdef HAVE_SELINUX_LABEL_H
 	if (!_selabel_handle &&
 	    !(_selabel_handle = selabel_open(SELABEL_CTX_FILE, NULL, 0))) {
@@ -401,11 +402,12 @@ static int _selabel_lookup(const char *path, mode_t mode,
 		log_error("selabel_lookup failed: %s", strerror(errno));
 		return 0;
 	}
-#elif HAVE_SELINUX
+#else
 	if (matchpathcon(path, mode, scontext)) {
 		log_error("matchpathcon failed: %s", strerror(errno));
 		return 0;
 	}
+#endif
 #endif
 	return 1;
 }
