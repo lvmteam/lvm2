@@ -1,5 +1,6 @@
 Version 2.02.79 -  
 ===================================
+  Create /var/run/lvm directory during clvmd initialisation if missing.
   Use new dm_prepare_selinux_context instead of dm_set_selinux_context.
   Avoid revalidating the label cache immediately after scanning.
   Support scanning for a single VG in independent mdas.
