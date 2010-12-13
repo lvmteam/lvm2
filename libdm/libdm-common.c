@@ -401,7 +401,7 @@ static int _selabel_lookup(const char *path, mode_t mode,
 		log_error("selabel_lookup failed: %s", strerror(errno));
 		return 0;
 	}
-#else
+#elif HAVE_SELINUX
 	if (matchpathcon(path, mode, scontext)) {
 		log_error("matchpathcon failed: %s", strerror(errno));
 		return 0;
