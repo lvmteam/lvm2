@@ -252,6 +252,9 @@
 /* Define to 1 to include support for selinux. */
 #undef HAVE_SELINUX
 
+/* Define to 1 if you have the <selinux/label.h> header file. */
+#undef HAVE_SELINUX_LABEL_H
+
 /* Define to 1 if you have the <selinux/selinux.h> header file. */
 #undef HAVE_SELINUX_SELINUX_H
 
