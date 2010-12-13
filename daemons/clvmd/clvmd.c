@@ -324,6 +324,7 @@ int main(int argc, char *argv[])
 	int using_gulm = 0;
 	int debug_opt = 0;
 	int clusterwide_opt = 0;
+	mode_t old_mask;
 
 	/* Deal with command-line arguments */
 	opterr = 0;
@@ -412,6 +413,16 @@ int main(int argc, char *argv[])
 	if (debug != DEBUG_STDERR) {
 		be_daemon(start_timeout);
 	}
+
+        dm_prepare_selinux_context(DEFAULT_RUN_DIR, S_IFDIR);
+        old_mask = umask(0077);
+        if (dm_create_dir(DEFAULT_RUN_DIR) == 0) {
+                DEBUGLOG("clvmd: unable to create %s directory\n",
+                          DEFAULT_RUN_DIR);
+                umask(old_mask);
+                exit(1);
+        }
+        umask(old_mask);
 
 	/* Create pidfile */
 	(void) dm_prepare_selinux_context(CLVMD_PIDFILE, S_IFREG);
