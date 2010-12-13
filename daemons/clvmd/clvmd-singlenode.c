@@ -43,6 +43,8 @@ static int init_comms(void)
 	mode_t old_mask;
 
 	close_comms();
+
+	(void) dm_prepare_selinux_context(SINGLENODE_CLVMD_SOCKNAME, S_IFSOCK);
 	old_mask = umask(0077);
 
 	listen_fd = socket(PF_UNIX, SOCK_STREAM, 0);
@@ -68,9 +70,11 @@ static int init_comms(void)
 	}
 
 	umask(old_mask);
+	(void) dm_prepare_selinux_context(NULL, 0);
 	return 0;
 error:
 	umask(old_mask);
+	(void) dm_prepare_selinux_context(NULL, 0);
 	close_comms();
 	return -1;
 }

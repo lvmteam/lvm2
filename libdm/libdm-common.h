@@ -31,5 +31,6 @@ int get_dev_node_read_ahead(const char *dev_name, uint32_t *read_ahead);
 int set_dev_node_read_ahead(const char *dev_name, uint32_t read_ahead,
 			    uint32_t read_ahead_flags);
 void update_devs(void);
+void selinux_release(void);
 
 #endif

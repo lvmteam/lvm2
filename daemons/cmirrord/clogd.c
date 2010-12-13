@@ -188,8 +188,10 @@ static void daemonize(void)
 
 	LOG_OPEN("cmirrord", LOG_PID, LOG_DAEMON);
 
+	(void) dm_prepare_selinux_context(CMIRRORD_PIDFILE, S_IFREG);
 	if (dm_create_lockfile(CMIRRORD_PIDFILE) == 0)
 		exit(EXIT_LOCKFILE);
+	(void) dm_prepare_selinux_context(NULL, 0);
 
 	atexit(remove_lockfile);
 

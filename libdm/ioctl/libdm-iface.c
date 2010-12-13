@@ -270,27 +270,25 @@ static int _create_control(const char *control, uint32_t major, uint32_t minor)
 	if (!major)
 		return 0;
 
+	(void) dm_prepare_selinux_context(dm_dir(), S_IFDIR);
 	old_umask = umask(DM_DEV_DIR_UMASK);
 	ret = dm_create_dir(dm_dir());
 	umask(old_umask);
+	(void) dm_prepare_selinux_context(NULL, 0);
 
 	if (!ret)
 		return 0;
 
 	log_verbose("Creating device %s (%u, %u)", control, major, minor);
 
+	(void) dm_prepare_selinux_context(control, S_IFCHR);
 	if (mknod(control, S_IFCHR | S_IRUSR | S_IWUSR,
 		  MKDEV(major, minor)) < 0)  {
 		log_sys_error("mknod", control);
+		(void) dm_prepare_selinux_context(NULL, 0);
 		return 0;
 	}
-
-#ifdef HAVE_SELINUX
-	if (!dm_set_selinux_context(control, S_IFCHR)) {
-		stack;
-		return 0;
-	}
-#endif
+	(void) dm_prepare_selinux_context(NULL, 0);
 
 	return 1;
 }
@@ -2132,6 +2130,7 @@ void dm_pools_check_leaks(void);
 void dm_lib_exit(void)
 {
 	dm_lib_release();
+	selinux_release();
 	if (_dm_bitset)
 		dm_bitset_destroy(_dm_bitset);
 	_dm_bitset = NULL;

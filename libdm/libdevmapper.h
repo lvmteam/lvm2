@@ -923,6 +923,17 @@ unsigned int dm_list_size(const struct dm_list *head);
 /*********
  * selinux
  *********/
+
+/*
+ * Obtain SELinux security context assigned for the path and set this
+ * context for creating a new file system object. This security context
+ * is global and it is used until reset to default policy behaviour
+ * by calling 'dm_prepare_selinux_context(NULL, 0)'.
+ */
+int dm_prepare_selinux_context(const char *path, mode_t mode);
+/*
+ * Set SELinux context for existing file system object.
+ */
 int dm_set_selinux_context(const char *path, mode_t mode);
 
 /*********************
