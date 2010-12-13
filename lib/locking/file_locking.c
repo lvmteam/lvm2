@@ -234,10 +234,12 @@ static int _lock_file(const char *file, uint32_t flags)
 	log_very_verbose("Locking %s %c%c", ll->res, state,
 			 nonblock ? ' ' : 'B');
 
+	(void) dm_prepare_selinux_context(file, S_IFREG);
 	if (_prioritise_write_locks)
 		r = _do_write_priority_flock(file, &ll->lf, operation, nonblock);
 	else 
 		r = _do_flock(file, &ll->lf, operation, nonblock);
+	(void) dm_prepare_selinux_context(NULL, 0);
 
 	if (r)
 		dm_list_add(&_lock_list, &ll->list);
@@ -325,6 +327,7 @@ int init_file_locking(struct locking_type *locking, struct cmd_context *cmd)
 	locking->reset_locking = _reset_file_locking;
 	locking->fin_locking = _fin_file_locking;
 	locking->flags = 0;
+	int r;
 
 	/* Get lockfile directory from config file */
 	strncpy(_lock_dir, find_config_tree_str(cmd, "global/locking_dir",
@@ -335,7 +338,11 @@ int init_file_locking(struct locking_type *locking, struct cmd_context *cmd)
 	    find_config_tree_bool(cmd, "global/prioritise_write_locks",
 				  DEFAULT_PRIORITISE_WRITE_LOCKS);
 
-	if (!dm_create_dir(_lock_dir))
+	(void) dm_prepare_selinux_context(_lock_dir, S_IFDIR);
+	r = dm_create_dir(_lock_dir);
+	(void) dm_prepare_selinux_context(NULL, 0);
+
+	if (!r)
 		return 0;
 
 	/* Trap a read-only file system */

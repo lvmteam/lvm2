@@ -414,10 +414,12 @@ int main(int argc, char *argv[])
 	}
 
 	/* Create pidfile */
+	(void) dm_prepare_selinux_context(CLVMD_PIDFILE, S_IFREG);
 	if (dm_create_lockfile(CLVMD_PIDFILE) == 0) {
 		DEBUGLOG("clvmd: unable to create lockfile\n");
 		exit(1);
 	}
+	(void) dm_prepare_selinux_context(NULL, 0);
 
 	atexit(remove_lockfile);
 
@@ -2020,6 +2022,8 @@ static int open_local_sock()
 	mode_t old_mask;
 
 	close_local_sock(local_socket);
+
+	(void) dm_prepare_selinux_context(CLVMD_SOCKNAME, S_IFSOCK);
 	old_mask = umask(0077);
 
 	/* Open local socket */
@@ -2037,6 +2041,7 @@ static int open_local_sock()
 	memset(&sockaddr, 0, sizeof(sockaddr));
 	memcpy(sockaddr.sun_path, CLVMD_SOCKNAME, sizeof(CLVMD_SOCKNAME));
 	sockaddr.sun_family = AF_UNIX;
+
 	if (bind(local_socket, (struct sockaddr *) &sockaddr, sizeof(sockaddr))) {
 		log_error("can't bind local socket: %m");
 		goto error;
@@ -2047,10 +2052,12 @@ static int open_local_sock()
 	}
 
 	umask(old_mask);
+	(void) dm_prepare_selinux_context(NULL, 0);
 	return local_socket;
 error:
 	close_local_sock(local_socket);
 	umask(old_mask);
+	(void) dm_prepare_selinux_context(NULL, 0);
 	return -1;
 }
 

@@ -971,6 +971,7 @@ if test x$SELINUX = xyes; then
 
 	AC_CHECK_LIB([selinux], [is_selinux_enabled], [
 		AC_CHECK_HEADERS([selinux/selinux.h],, hard_bailout)
+		AC_CHECK_HEADERS([selinux/label.h])
 		AC_DEFINE([HAVE_SELINUX], 1, [Define to 1 to include support for selinux.])
 		SELINUX_LIBS="-lselinux $SELINUX_LIBS"
 		SELINUX_PC="libselinux"

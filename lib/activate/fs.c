@@ -43,13 +43,16 @@ static int _mk_dir(const char *dev_dir, const char *vg_name)
 
 	log_very_verbose("Creating directory %s", vg_path);
 
+	(void) dm_prepare_selinux_context(vg_path, S_IFDIR);
 	old_umask = umask(DM_DEV_DIR_UMASK);
 	if (mkdir(vg_path, 0777)) {
 		log_sys_error("mkdir", vg_path);
 		umask(old_umask);
+		(void) dm_prepare_selinux_context(NULL, 0);
 		return 0;
 	}
 	umask(old_umask);
+	(void) dm_prepare_selinux_context(NULL, 0);
 
 	return 1;
 }
@@ -199,13 +202,14 @@ static int _mk_link(const char *dev_dir, const char *vg_name,
 			  "direct link creation.", lv_path);
 
 	log_very_verbose("Linking %s -> %s", lv_path, link_path);
+
+	(void) dm_prepare_selinux_context(lv_path, S_IFLNK);
 	if (symlink(link_path, lv_path) < 0) {
 		log_sys_error("symlink", lv_path);
+		(void) dm_prepare_selinux_context(NULL, 0);
 		return 0;
 	}
-
-	if (!dm_set_selinux_context(lv_path, S_IFLNK))
-		return_0;
+	(void) dm_prepare_selinux_context(NULL, 0);
 
 	return 1;
 }

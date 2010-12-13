@@ -1,5 +1,6 @@
 Version 2.02.79 -  
 ===================================
+  Use new dm_prepare_selinux_context instead of dm_set_selinux_context.
   Avoid revalidating the label cache immediately after scanning.
   Support scanning for a single VG in independent mdas.
   Don't skip full scan when independent mdas are present even if memlock is set.

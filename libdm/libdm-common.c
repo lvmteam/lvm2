@@ -40,6 +40,9 @@
 #ifdef HAVE_SELINUX
 #  include <selinux/selinux.h>
 #endif
+#ifdef HAVE_SELINUX_LABEL_H
+#  include <selinux/label.h>
+#endif
 
 #define DEV_DIR "/dev/"
 
@@ -58,6 +61,10 @@ union semun
 static char _dm_dir[PATH_MAX] = DEV_DIR DM_DIR;
 
 static int _verbose = 0;
+
+#ifdef HAVE_SELINUX_LABEL_H
+static struct selabel_handle *_selabel_handle = NULL;
+#endif
 
 #ifdef UDEV_SYNC_SUPPORT
 static int _semaphore_supported = -1;
@@ -380,6 +387,57 @@ int dm_task_add_target(struct dm_task *dmt, uint64_t start, uint64_t size,
 	return 1;
 }
 
+static int _selabel_lookup(const char *path, mode_t mode,
+			   security_context_t *scontext)
+{
+#ifdef HAVE_SELINUX_LABEL_H
+	if (!_selabel_handle &&
+	    !(_selabel_handle = selabel_open(SELABEL_CTX_FILE, NULL, 0))) {
+		log_error("selabel_open failed: %s", strerror(errno));
+		return 0;
+	}
+
+	if (selabel_lookup(_selabel_handle, scontext, path, mode)) {
+		log_error("selabel_lookup failed: %s", strerror(errno));
+		return 0;
+	}
+#else
+	if (matchpathcon(path, mode, scontext)) {
+		log_error("matchpathcon failed: %s", strerror(errno));
+		return 0;
+	}
+#endif
+	return 1;
+}
+
+int dm_prepare_selinux_context(const char *path, mode_t mode)
+{
+#ifdef HAVE_SELINUX
+	security_context_t scontext = NULL;
+
+	if (is_selinux_enabled() <= 0)
+		return 1;
+
+	if (path) {
+		if (!_selabel_lookup(path, mode, &scontext))
+			return_0;
+
+		log_debug("Preparing SELinux context for %s to %s.", path, scontext);
+	}
+	else
+		log_debug("Resetting SELinux context to default value.");
+
+	if (setfscreatecon(scontext) < 0) {
+		log_sys_error("setfscreatecon", path);
+		freecon(scontext);
+		return 0;
+	}
+
+	freecon(scontext);
+#endif
+	return 1;
+}
+
 int dm_set_selinux_context(const char *path, mode_t mode)
 {
 #ifdef HAVE_SELINUX
@@ -388,11 +446,8 @@ int dm_set_selinux_context(const char *path, mode_t mode)
 	if (is_selinux_enabled() <= 0)
 		return 1;
 
-	if (matchpathcon(path, mode, &scontext) < 0) {
-		log_error("%s: matchpathcon %07o failed: %s", path, mode,
-			  strerror(errno));
-		return 0;
-	}
+	if (!_selabel_lookup(path, mode, &scontext))
+		return_0;
 
 	log_debug("Setting SELinux context for %s to %s.", path, scontext);
 
@@ -405,6 +460,15 @@ int dm_set_selinux_context(const char *path, mode_t mode)
 	freecon(scontext);
 #endif
 	return 1;
+}
+
+void selinux_release(void)
+{
+#ifdef HAVE_SELINUX_LABEL_H
+	if (_selabel_handle)
+		selabel_close(_selabel_handle);
+	_selabel_handle = NULL;
+#endif
 }
 
 static int _add_dev_node(const char *dev_name, uint32_t major, uint32_t minor,
@@ -438,13 +502,16 @@ static int _add_dev_node(const char *dev_name, uint32_t major, uint32_t minor,
 		log_warn("%s not set up by udev: Falling back to direct "
 			 "node creation.", path);
 
+	(void) dm_prepare_selinux_context(path, S_IFBLK);
 	old_mask = umask(0);
 	if (mknod(path, S_IFBLK | mode, dev) < 0) {
-		umask(old_mask);
 		log_error("Unable to make device node for '%s'", dev_name);
+		umask(old_mask);
+		(void) dm_prepare_selinux_context(NULL, 0);
 		return 0;
 	}
 	umask(old_mask);
+	(void) dm_prepare_selinux_context(NULL, 0);
 
 	if (chown(path, uid, gid) < 0) {
 		log_sys_error("chown", path);
@@ -452,9 +519,6 @@ static int _add_dev_node(const char *dev_name, uint32_t major, uint32_t minor,
 	}
 
 	log_debug("Created %s", path);
-
-	if (!dm_set_selinux_context(path, S_IFBLK))
-		return 0;
 
 	return 1;
 }

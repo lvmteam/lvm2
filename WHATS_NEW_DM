@@ -1,5 +1,7 @@
 Version 1.02.60 -
 ===================================
+  Add new dm_prepare_selinux_context fn to libdevmapper and use it throughout.
+  Detect existence of new SELinux selabel interface during configure.
 
 Version 1.02.59 - 6th December 2010
 ===================================

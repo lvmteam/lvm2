@@ -1241,13 +1241,29 @@ static void _init_fifos(struct dm_event_fifos *fifos)
 /* Open fifos used for client communication. */
 static int _open_fifos(struct dm_event_fifos *fifos)
 {
-	/* Create fifos */
-	if (((mkfifo(fifos->client_path, 0600) == -1) && errno != EEXIST) ||
-	    ((mkfifo(fifos->server_path, 0600) == -1) && errno != EEXIST)) {
-		syslog(LOG_ERR, "%s: Failed to create a fifo.\n", __func__);
+	int orig_errno;
+
+	/* Create client fifo. */
+	(void) dm_prepare_selinux_context(fifos->client_path, S_IFIFO);
+	if ((mkfifo(fifos->client_path, 0600) == -1) && errno != EEXIST) {
+		syslog(LOG_ERR, "%s: Failed to create client fifo.\n", __func__);
+		orig_errno = errno;
+		(void) dm_prepare_selinux_context(NULL, 0);
 		stack;
-		return -errno;
+		return -orig_errno;
 	}
+
+	/* Create server fifo. */
+	(void) dm_prepare_selinux_context(fifos->server_path, S_IFIFO);
+	if ((mkfifo(fifos->server_path, 0600) == -1) && errno != EEXIST) {
+		syslog(LOG_ERR, "%s: Failed to create server fifo.\n", __func__);
+		orig_errno = errno;
+		(void) dm_prepare_selinux_context(NULL, 0);
+		stack;
+		return -orig_errno;
+	}
+
+	(void) dm_prepare_selinux_context(NULL, 0);
 
 	struct stat st;
 
@@ -1806,10 +1822,12 @@ int main(int argc, char *argv[])
 
 	openlog("dmeventd", LOG_PID, LOG_DAEMON);
 
+	(void) dm_prepare_selinux_context(DMEVENTD_PIDFILE, S_IFREG);
 	if (dm_create_lockfile(DMEVENTD_PIDFILE) == 0)
 		exit(EXIT_FAILURE);
 
 	atexit(remove_lockfile);
+	(void) dm_prepare_selinux_context(NULL, 0);
 
 	/* Set the rest of the signals to cause '_exit_now' to be set */
 	signal(SIGINT, &_exit_handler);
