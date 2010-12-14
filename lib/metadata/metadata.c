@@ -2153,6 +2153,61 @@ void lv_calculate_readahead(const struct logical_volume *lv, uint32_t *read_ahea
 	}
 }
 
+/*
+ * Check that an LV and all its PV references are correctly listed in vg->lvs
+ * and vg->pvs, respectively. This only looks at a single LV, but *not* at the
+ * LVs it is using. To do the latter, you should use _lv_postorder with this
+ * function. C.f. vg_validate.
+ */
+static int _lv_validate_references_single(struct logical_volume *lv, void *data)
+{
+	struct volume_group *vg = lv->vg;
+	struct lv_segment *lvseg;
+	struct pv_list *pvl;
+	struct lv_list *lvl;
+	int s;
+	int r = 1;
+	int ok = 0;
+
+	dm_list_iterate_items(lvl, &vg->lvs) {
+		if (lvl->lv == lv) {
+			ok = 1;
+			break;
+		}
+	}
+
+	if (!ok) {
+		log_error(INTERNAL_ERROR
+			  "Referenced LV %s not listed in VG %s.",
+			  lv->name, vg->name);
+		r = 0;
+	}
+
+	dm_list_iterate_items(lvseg, &lv->segments) {
+		for (s = 0; s < lvseg->area_count; ++s) {
+			if (seg_type(lvseg, s) == AREA_PV) {
+				ok = 0;
+				/* look up the reference in vg->pvs */
+				dm_list_iterate_items(pvl, &vg->pvs) {
+					if (pvl->pv == seg_pv(lvseg, s)) {
+						ok = 1;
+						break;
+					}
+				}
+
+				if (!ok) {
+					log_error(INTERNAL_ERROR
+						  "Referenced PV %s not listed in VG %s.",
+						  pv_dev_name(seg_pv(lvseg, s)), vg->name);
+					r = 0;
+				}
+			}
+		}
+	}
+
+	return r;
+}
+
 int vg_validate(struct volume_group *vg)
 {
 	struct pv_list *pvl, *pvl2;
@@ -2317,6 +2372,11 @@ int vg_validate(struct volume_group *vg)
 				  lvl->lv->name);
 			r = 0;
 		}
+	}
+
+	dm_list_iterate_items(lvl, &vg->lvs) {
+		if (!_lv_postorder(lvl->lv, _lv_validate_references_single, NULL))
+			r = 0;
 	}
 
 	dm_list_iterate_items(lvl, &vg->lvs) {

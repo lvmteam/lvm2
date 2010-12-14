@@ -34,6 +34,7 @@ static int _move_one_lv(struct volume_group *vg_from,
 	struct logical_volume *lv = dm_list_item(lvh, struct lv_list)->lv;
 
 	dm_list_move(&vg_to->lvs, lvh);
+	lv->vg = vg_to;
 
 	if (lv_is_active(lv)) {
 		log_error("Logical volume \"%s\" must be inactive", lv->name);
