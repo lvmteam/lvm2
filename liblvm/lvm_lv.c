@@ -13,7 +13,6 @@
  */
 
 #include "lib.h"
-#include "lvm2app.h"
 #include "metadata.h"
 #include "lvm-string.h"
 #include "defaults.h"
@@ -21,6 +20,7 @@
 #include "locking.h"
 #include "activate.h"
 #include "lvm_misc.h"
+#include "lvm2app.h"
 
 static int _lv_check_handle(const lv_t lv, const int vg_writeable)
 {

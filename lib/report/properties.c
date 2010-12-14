@@ -16,6 +16,7 @@
 
 #include "libdevmapper.h"
 #include "properties.h"
+#include "activate.h"
 #include "lvm-logging.h"
 #include "lvm-types.h"
 #include "metadata.h"
@@ -85,6 +86,18 @@ static int _not_implemented_set(void *obj, struct lvm_property_type *prop)
 	return 0;
 }
 
+static percent_t _copy_percent(const struct logical_volume *lv) {
+    percent_t perc;
+    lv_mirror_percent(lv->vg->cmd, (struct logical_volume *) lv, 0, &perc, NULL);
+    return perc;
+}
+
+static percent_t _snap_percent(const struct logical_volume *lv) {
+    percent_t perc;
+    lv_snapshot_percent(lv, &perc);
+    return perc;
+}
+
 /* PV */
 GET_PV_STR_PROPERTY_FN(pv_fmt, pv_fmt_dup(pv))
 #define _pv_fmt_set _not_implemented_set
@@ -148,9 +161,9 @@ GET_LV_STR_PROPERTY_FN(origin, lv_origin_dup(lv->vg->vgmem, lv))
 #define _origin_set _not_implemented_set
 GET_LV_NUM_PROPERTY_FN(origin_size, lv_origin_size(lv))
 #define _origin_size_set _not_implemented_set
-#define _snap_percent_get _not_implemented_get
+GET_LV_NUM_PROPERTY_FN(snap_percent, _snap_percent(lv))
 #define _snap_percent_set _not_implemented_set
-#define _copy_percent_get _not_implemented_get
+GET_LV_NUM_PROPERTY_FN(copy_percent, _copy_percent(lv))
 #define _copy_percent_set _not_implemented_set
 GET_LV_STR_PROPERTY_FN(move_pv, lv_move_pv_dup(lv->vg->vgmem, lv))
 #define _move_pv_set _not_implemented_set
