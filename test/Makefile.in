@@ -93,7 +93,7 @@ init.sh: $(srcdir)/Makefile.in .bin-dir-stamp bin/not bin/check bin/harness $(RU
 	@if test "$(srcdir)" != . ; then \
 	    echo "Copying tests to builddir."; \
 	    cp $(SUPPORT) .; \
-	    for f in $(RUN); do cp $$f `echo $$f | sed -e s,$(srcdir)/,,g`; done; \
+	    for f in $(RUN); do cp $$f `echo $$f | sed -e s,^$(srcdir)/,,`; done; \
 	fi
 
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
