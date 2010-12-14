@@ -2157,6 +2157,7 @@ int vg_validate(struct volume_group *vg)
 {
 	struct pv_list *pvl, *pvl2;
 	struct lv_list *lvl, *lvl2;
+	struct lv_segment *seg;
 	char uuid[64] __attribute__((aligned(8)));
 	int r = 1;
 	uint32_t hidden_lv_count = 0, lv_count = 0, lv_visible_count = 0;
@@ -2315,6 +2316,26 @@ int vg_validate(struct volume_group *vg)
 			log_error(INTERNAL_ERROR "LV segments corrupted in %s.",
 				  lvl->lv->name);
 			r = 0;
+		}
+	}
+
+	dm_list_iterate_items(lvl, &vg->lvs) {
+		if (!(lvl->lv->status & PVMOVE))
+			continue;
+		dm_list_iterate_items(seg, &lvl->lv->segments) {
+			if (seg_is_mirrored(seg)) {
+				if (seg->area_count != 2) {
+					log_error(INTERNAL_ERROR
+						  "Segment %d in %s is not 2-way.",
+						  loop_counter1, lvl->lv->name);
+					r = 0;
+				}
+			} else if (seg->area_count != 1) {
+				log_error(INTERNAL_ERROR
+					  "Segment %d in %s has wrong number of areas: %d.",
+					  loop_counter1, lvl->lv->name, seg->area_count);
+				r = 0;
+			}
 		}
 	}
 
