@@ -114,6 +114,10 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 		}
 	}
 
+	dm_list_iterate_items(lvl1, &vg_from->lvs) {
+		lvl1->lv->vg = vg_to;
+	}
+
 	while (!dm_list_empty(&vg_from->lvs)) {
 		struct dm_list *lvh = vg_from->lvs.n;
 
