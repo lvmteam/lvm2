@@ -15,6 +15,7 @@
 #define _LVM2APP_MISC_H
 
 #include "libdevmapper.h"
+#include "lvm2app.h"
 
 struct dm_list *tag_list_copy(struct dm_pool *p, struct dm_list *tag_list);
 struct lvm_property_value get_property(const pv_t pv, const vg_t vg,

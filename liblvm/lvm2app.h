@@ -1446,8 +1446,10 @@ uint64_t lvm_pv_get_free(const pv_t pv);
  * Name of property to query.  See pvs man page for full list of properties
  * that may be queried.
  *
- * The memory allocated for a string property value is tied to the vg_t
- * handle and will be released when lvm_vg_close() is called.
+ * The memory allocated for a string property value is tied to the vg_t handle
+ * and will be released when lvm_vg_close() is called. For "percent" values
+ * (those obtained for copy_percent and snap_percent properties), please see
+ * percent_range_t and lvm_percent_to_float().
  *
  * Example:
  *      lvm_property_value value;
@@ -1577,6 +1579,30 @@ pv_t lvm_pv_from_uuid(vg_t vg, const char *uuid);
  * 0 (success) or -1 (failure).
  */
 int lvm_pv_resize(const pv_t pv, uint64_t new_size);
+
+#ifndef _LVM_PERCENT_H
+
+/**
+ * This type defines a couple of special percent values. The PERCENT_0 and
+ * PERCENT_100 constants designate *exact* percentages: values are never
+ * rounded to either of these two.
+ */
+typedef enum {
+	PERCENT_0 = 0,
+	PERCENT_1 = 1000000,
+	PERCENT_100 = 100 * PERCENT_1,
+	PERCENT_INVALID = -1
+} percent_range_t;
+
+typedef int32_t percent_t;
+
+#endif
+
+/**
+ * Convert a (fixed-point) value obtained from the percent-denominated
+ * *_get_property functions into a floating-point value.
+ */
+float lvm_percent_to_float(percent_t v);
 
 #ifdef __cplusplus
 }

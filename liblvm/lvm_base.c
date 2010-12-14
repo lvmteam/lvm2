@@ -13,11 +13,11 @@
  */
 
 #include "lib.h"
-#include "lvm2app.h"
 #include "toolcontext.h"
 #include "locking.h"
 #include "lvm-version.h"
 #include "metadata-exported.h"
+#include "lvm2app.h"
 
 const char *lvm_library_get_version(void)
 {

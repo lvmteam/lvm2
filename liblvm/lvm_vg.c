@@ -13,13 +13,13 @@
  */
 
 #include "lib.h"
-#include "lvm2app.h"
 #include "toolcontext.h"
 #include "metadata.h"
 #include "archiver.h"
 #include "locking.h"
 #include "lvmcache.h"
 #include "lvm_misc.h"
+#include "lvm2app.h"
 
 int lvm_vg_add_tag(vg_t vg, const char *tag)
 {

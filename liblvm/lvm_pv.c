@@ -13,10 +13,10 @@
  */
 
 #include "lib.h"
-#include "lvm2app.h"
 #include "metadata.h"
 #include "lvm-string.h"
 #include "lvm_misc.h"
+#include "lvm2app.h"
 
 const char *lvm_pv_get_uuid(const pv_t pv)
 {
