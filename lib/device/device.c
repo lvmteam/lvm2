@@ -13,13 +13,14 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <libgen.h> /* dirname, basename */
 #include "lib.h"
 #include "lvm-types.h"
 #include "device.h"
 #include "metadata.h"
 #include "filter.h"
 #include "xlate.h"
+
+#include <libgen.h> /* dirname, basename */
 
 /* See linux/genhd.h and fs/partitions/msdos */
 
