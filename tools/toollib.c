@@ -842,7 +842,6 @@ const char *extract_vgname(struct cmd_context *cmd, const char *lv_name)
 	const char *vg_name = lv_name;
 	char *st;
 	char *dev_dir = cmd->dev_dir;
-	int dev_dir_provided = 0;
 
 	/* Path supplied? */
 	if (vg_name && strchr(vg_name, '/')) {
@@ -854,7 +853,6 @@ const char *extract_vgname(struct cmd_context *cmd, const char *lv_name)
 		}
 		if (!strncmp(vg_name, dev_dir, strlen(dev_dir))) {
 			vg_name += strlen(dev_dir);
-			dev_dir_provided = 1;
 			while (*vg_name == '/')
 				vg_name++;
 		}
