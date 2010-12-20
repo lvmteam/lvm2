@@ -398,7 +398,7 @@ int target_version(const char *target_name, uint32_t *maj,
 			goto out;
 		}
 
-		target = (void *) target + target->next;
+		target = (struct dm_versions *)((char *) target + target->next);
 	} while (last_target != target);
 
       out:
