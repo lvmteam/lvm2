@@ -526,7 +526,7 @@ static int _percent_run(struct dev_manager *dm, const char *name,
 						 total_numerator, total_denominator);
 	} while (next);
 
-	if (lv && (segh = dm_list_next(&lv->segments, segh))) {
+	if (lv && dm_list_next(&lv->segments, segh)) {
 		log_error("Number of segments in active LV %s does not "
 			  "match metadata", lv->name);
 		goto out;
@@ -620,7 +620,7 @@ int dev_manager_transient(struct dev_manager *dm, struct logical_volume *lv)
 
 	} while (next);
 
-	if ((segh = dm_list_next(&lv->segments, segh))) {
+	if (dm_list_next(&lv->segments, segh)) {
 		log_error("Number of segments in active LV %s does not "
 			  "match metadata", lv->name);
 		goto out;
