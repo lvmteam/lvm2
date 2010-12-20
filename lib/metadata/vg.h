@@ -43,8 +43,8 @@ struct volume_group {
 	uint64_t status;
 
 	struct id id;
-	char *name;
-	char *old_name;		/* Set during vgrename and vgcfgrestore */
+	const char *name;
+	const char *old_name;		/* Set during vgrename and vgcfgrestore */
 	char *system_id;
 
 	uint32_t extent_size;
