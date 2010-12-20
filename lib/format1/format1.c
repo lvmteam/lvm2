@@ -555,9 +555,9 @@ static void _format1_destroy_instance(struct format_instance *fid __attribute__(
 {
 }
 
-static void _format1_destroy(const struct format_type *fmt)
+static void _format1_destroy(struct format_type *fmt)
 {
-	dm_free((void *) fmt);
+	dm_free(fmt);
 }
 
 static struct format_handler _format1_ops = {

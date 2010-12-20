@@ -31,9 +31,9 @@ static const char *_freeseg_name(const struct lv_segment *seg)
 	return seg->segtype->name;
 }
 
-static void _freeseg_destroy(const struct segment_type *segtype)
+static void _freeseg_destroy(struct segment_type *segtype)
 {
-	dm_free((void *)segtype);
+	dm_free(segtype);
 }
 
 static struct segtype_handler _freeseg_ops = {

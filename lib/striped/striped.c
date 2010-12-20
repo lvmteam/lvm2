@@ -199,9 +199,9 @@ static int _striped_target_present(struct cmd_context *cmd,
 }
 #endif
 
-static void _striped_destroy(const struct segment_type *segtype)
+static void _striped_destroy(struct segment_type *segtype)
 {
-	dm_free((void *)segtype);
+	dm_free(segtype);
 }
 
 static struct segtype_handler _striped_ops = {

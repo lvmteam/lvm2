@@ -1719,7 +1719,7 @@ static void _free_raws(struct dm_list *raw_list)
 	}
 }
 
-static void _text_destroy(const struct format_type *fmt)
+static void _text_destroy(struct format_type *fmt)
 {
 	if (fmt->private) {
 		_free_dirs(&((struct mda_lists *) fmt->private)->dirs);
@@ -1727,7 +1727,7 @@ static void _text_destroy(const struct format_type *fmt)
 		dm_free(fmt->private);
 	}
 
-	dm_free((void *)fmt);
+	dm_free(fmt);
 }
 
 static struct metadata_area_ops _metadata_text_file_ops = {

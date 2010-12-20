@@ -291,7 +291,7 @@ struct format_handler {
 	/*
 	 * Destructor for format type
 	 */
-	void (*destroy) (const struct format_type * fmt);
+	void (*destroy) (struct format_type * fmt);
 };
 
 /*
