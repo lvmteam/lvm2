@@ -543,7 +543,7 @@ static int _init_preferred_names(struct cmd_context *cmd)
 	const struct config_node *cn;
 	const struct config_value *v;
 	struct dm_pool *scratch = NULL;
-	char **regex;
+	const char **regex;
 	unsigned count = 0;
 	int i, r = 0;
 
@@ -583,7 +583,7 @@ static int _init_preferred_names(struct cmd_context *cmd)
 	}
 
 	if (!(_cache.preferred_names_matcher =
-		dm_regex_create(_cache.mem,(const char **) regex, count))) {
+		dm_regex_create(_cache.mem, regex, count))) {
 		log_error("Preferred device name pattern matcher creation failed.");
 		goto out;
 	}
