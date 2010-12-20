@@ -366,7 +366,6 @@ static int _clog_ctr(char *uuid, uint64_t luid,
 	uint64_t region_size;
 	uint64_t region_count;
 	struct log_c *lc = NULL;
-	struct log_c *duplicate;
 	enum sync log_sync = DEFAULTSYNC;
 	uint32_t block_on_error = 0;
 
@@ -448,8 +447,8 @@ static int _clog_ctr(char *uuid, uint64_t luid,
 	strncpy(lc->uuid, uuid, DM_UUID_LEN);
 	lc->luid = luid;
 
-	if ((duplicate = get_log(lc->uuid, lc->luid)) ||
-	    (duplicate = get_pending_log(lc->uuid, lc->luid))) {
+	if (get_log(lc->uuid, lc->luid) ||
+	    get_pending_log(lc->uuid, lc->luid)) {
 		LOG_ERROR("[%s/%" PRIu64 "u] Log already exists, unable to create.",
 			  SHORT_UUID(lc->uuid), lc->luid);
 		dm_free(lc);
