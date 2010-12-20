@@ -957,8 +957,8 @@ static int _is_same_pv(struct pv_match *pvmatch __attribute((unused)), struct pv
  */
 static int _has_matching_pv_tag(struct pv_match *pvmatch, struct pv_segment *pvseg, struct pv_area *pva)
 {
-	struct config_value *cv;
-	char *str;
+	const struct config_value *cv;
+	const char *str;
 	const char *tag_matched;
 
 	for (cv = pvmatch->cling_tag_list_cn->v; cv; cv = cv->next) {

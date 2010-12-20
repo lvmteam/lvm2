@@ -72,7 +72,7 @@ static void _mirrored_display(const struct lv_segment *seg)
 	log_print(" ");
 }
 
-static int _mirrored_text_import_area_count(struct config_node *sn, uint32_t *area_count)
+static int _mirrored_text_import_area_count(const struct config_node *sn, uint32_t *area_count)
 {
 	if (!get_config_uint32(sn, "mirror_count", area_count)) {
 		log_error("Couldn't read 'mirror_count' for "
@@ -87,7 +87,7 @@ static int _mirrored_text_import(struct lv_segment *seg, const struct config_nod
 			struct dm_hash_table *pv_hash)
 {
 	const struct config_node *cn;
-	char *logname = NULL;
+	const char *logname = NULL;
 
 	if (find_config_node(sn, "extents_moved")) {
 		if (get_config_uint32(sn, "extents_moved",

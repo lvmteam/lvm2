@@ -2078,10 +2078,10 @@ static int _add_dir(const char *dir, struct dm_list *dir_list)
 }
 
 static int _get_config_disk_area(struct cmd_context *cmd,
-				 struct config_node *cn, struct dm_list *raw_list)
+				 const struct config_node *cn, struct dm_list *raw_list)
 {
 	struct device_area dev_area;
-	char *id_str;
+	const char *id_str;
 	struct id id;
 
 	if (!(cn = cn->child)) {
@@ -2133,8 +2133,8 @@ static int _get_config_disk_area(struct cmd_context *cmd,
 struct format_type *create_text_format(struct cmd_context *cmd)
 {
 	struct format_type *fmt;
-	struct config_node *cn;
-	struct config_value *cv;
+	const struct config_node *cn;
+	const struct config_value *cv;
 	struct mda_lists *mda_lists;
 
 	if (!(fmt = dm_malloc(sizeof(*fmt))))
