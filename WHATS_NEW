@@ -1,5 +1,6 @@
 Version 2.02.79 -  
 ===================================
+  Add check for unlink error result in remove_lockfile() (dmeventd).
   Use dm_free for dm_malloc-ed areas in _clog_ctr/_clog_dtr (cmirrord).
   Add checks for allocation errors in config node clonning.
   Fix error path if regex engine cannot be created in _build_matcher().

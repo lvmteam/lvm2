@@ -1642,7 +1642,8 @@ static int _set_oom_adj(int val)
 
 static void remove_lockfile(void)
 {
-	unlink(DMEVENTD_PIDFILE);
+	if (unlink(DMEVENTD_PIDFILE))
+		perror(DMEVENTD_PIDFILE ": unlink failed");
 }
 
 static void _daemonize(void)
