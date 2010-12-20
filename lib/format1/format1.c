@@ -428,13 +428,12 @@ static int _format1_pv_write(const struct format_type *fmt, struct physical_volu
 	struct dm_pool *mem;
 	struct disk_list *dl;
 	struct dm_list pvs;
-	struct label *label;
 	struct lvmcache_info *info;
 
 	if (!(info = lvmcache_add(fmt->labeller, (char *) &pv->id, pv->dev,
 				  pv->vg_name, NULL, 0)))
 		return_0;
-	label = info->label;
+
 	info->device_size = pv->size << SECTOR_SHIFT;
 	info->fmt = fmt;
 
