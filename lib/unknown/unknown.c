@@ -74,9 +74,9 @@ static int _unknown_add_target_line(struct dev_manager *dm __attribute__((unused
 }
 #endif
 
-static void _unknown_destroy(const struct segment_type *segtype)
+static void _unknown_destroy(struct segment_type *segtype)
 {
-	dm_free((void *)segtype);
+	dm_free(segtype);
 }
 
 static struct segtype_handler _unknown_ops = {

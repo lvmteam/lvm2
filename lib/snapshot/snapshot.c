@@ -218,9 +218,9 @@ static int _snap_modules_needed(struct dm_pool *mem,
 	return 1;
 }
 
-static void _snap_destroy(const struct segment_type *segtype)
+static void _snap_destroy(struct segment_type *segtype)
 {
-	dm_free((void *)segtype);
+	dm_free(segtype);
 }
 
 static struct segtype_handler _snapshot_ops = {

@@ -286,9 +286,9 @@ static void _pool_destroy_instance(struct format_instance *fid __attribute__((un
 {
 }
 
-static void _pool_destroy(const struct format_type *fmt)
+static void _pool_destroy(struct format_type *fmt)
 {
-	dm_free((void *) fmt);
+	dm_free(fmt);
 }
 
 /* *INDENT-OFF* */

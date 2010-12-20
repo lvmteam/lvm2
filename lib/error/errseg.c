@@ -81,9 +81,9 @@ static int _errseg_modules_needed(struct dm_pool *mem,
 	return 1;
 }
 
-static void _errseg_destroy(const struct segment_type *segtype)
+static void _errseg_destroy(struct segment_type *segtype)
 {
-	dm_free((void *)segtype);
+	dm_free(segtype);
 }
 
 static struct segtype_handler _error_ops = {
