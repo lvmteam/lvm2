@@ -239,8 +239,8 @@ int read_config_fd(struct config_tree *cft, struct device *dev,
 	}
 
 	if (checksum_fn && checksum !=
-	    (checksum_fn(checksum_fn(INITIAL_CRC, (uint8_t *)p->fb, size),
-			 (uint8_t *)(p->fb + size), size2))) {
+	    (checksum_fn(checksum_fn(INITIAL_CRC, (const uint8_t *)p->fb, size),
+			 (const uint8_t *)(p->fb + size), size2))) {
 		log_error("%s: Checksum error", dev_name(dev));
 		goto out;
 	}

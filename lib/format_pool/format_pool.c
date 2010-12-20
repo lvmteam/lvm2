@@ -75,7 +75,7 @@ static struct user_subpool *_build_usp(struct dm_list *pls, struct dm_pool *mem,
 	return usp;
 }
 
-static int _check_usp(char *vgname, struct user_subpool *usp, int sp_count)
+static int _check_usp(const char *vgname, struct user_subpool *usp, int sp_count)
 {
 	int i;
 	unsigned j;
