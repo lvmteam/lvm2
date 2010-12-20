@@ -259,8 +259,8 @@ static int _passes_activation_filter(struct cmd_context *cmd,
 				     struct logical_volume *lv)
 {
 	const struct config_node *cn;
-	struct config_value *cv;
-	char *str;
+	const struct config_value *cv;
+	const char *str;
 	char path[PATH_MAX];
 
 	if (!(cn = find_config_tree_node(cmd, "activation/volume_list"))) {

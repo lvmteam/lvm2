@@ -124,7 +124,7 @@ static void _release_memory(void)
 static int _maps_line(const struct config_node *cn, lvmlock_t lock,
 		      const char* line, size_t* mstats)
 {
-	struct config_value *cv;
+	const struct config_value *cv;
 	long from, to;
 	int pos, i;
 	char fr, fw, fx, fp;

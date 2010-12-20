@@ -70,7 +70,7 @@ struct segtype_handler {
 	void (*display) (const struct lv_segment * seg);
 	int (*text_export) (const struct lv_segment * seg,
 			    struct formatter * f);
-	int (*text_import_area_count) (struct config_node * sn,
+	int (*text_import_area_count) (const struct config_node * sn,
 				       uint32_t *area_count);
 	int (*text_import) (struct lv_segment * seg,
 			    const struct config_node * sn,

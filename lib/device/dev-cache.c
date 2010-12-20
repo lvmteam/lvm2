@@ -541,7 +541,7 @@ void dev_cache_scan(int do_scan)
 static int _init_preferred_names(struct cmd_context *cmd)
 {
 	const struct config_node *cn;
-	struct config_value *v;
+	const struct config_value *v;
 	struct dm_pool *scratch = NULL;
 	char **regex;
 	unsigned count = 0;

@@ -420,7 +420,7 @@ static int _line_end(struct output_line *outline)
 	return 1;
 }
 
-static int _write_value(struct output_line *outline, struct config_value *v)
+static int _write_value(struct output_line *outline, const struct config_value *v)
 {
 	char *buf;
 
@@ -483,7 +483,7 @@ static int _write_config(const struct config_node *n, int only_one,
 			line_append("%s}", space);
 		} else {
 			/* it's a value */
-			struct config_value *v = n->v;
+			const struct config_value *v = n->v;
 			line_append("=");
 			if (v->next) {
 				line_append("[");
@@ -526,7 +526,7 @@ int write_config_node(const struct config_node *cn, putline_fn putline, void *ba
 int write_config_file(struct config_tree *cft, const char *file,
 		      int argc, char **argv)
 {
-	struct config_node *cn;
+	const struct config_node *cn;
 	int r = 1;
 	struct output_line outline;
 	outline.fp = NULL;
@@ -669,6 +669,7 @@ static struct config_value *_type(struct parser *p)
 {
 	/* [+-]{0,1}[0-9]+ | [0-9]*\.[0-9]* | ".*" */
 	struct config_value *v = _create_value(p->mem);
+	char *str;
 
 	if (!v)
 		return NULL;
@@ -700,9 +701,10 @@ static struct config_value *_type(struct parser *p)
 		v->type = CFG_STRING;
 
 		p->tb++, p->te--;	/* strip "'s */
-		if (!(v->v.str = _dup_tok(p)))
+		if (!(str = _dup_tok(p)))
 			return_0;
-		unescape_double_quotes(v->v.str);
+		unescape_double_quotes(str);
+		v->v.str = str;
 		p->te++;
 		match(TOK_STRING_ESCAPED);
 		break;
@@ -894,8 +896,8 @@ static char *_dup_tok(struct parser *p)
 /*
  * utility functions
  */
-static struct config_node *_find_config_node(const struct config_node *cn,
-					     const char *path)
+static const struct config_node *_find_config_node(const struct config_node *cn,
+						   const char *path)
 {
 	const char *e;
 	const struct config_node *cn_found = NULL;
@@ -932,14 +934,14 @@ static struct config_node *_find_config_node(const struct config_node *cn,
 		path = e;
 	}
 
-	return (struct config_node *) cn_found;
+	return cn_found;
 }
 
-static struct config_node *_find_first_config_node(const struct config_node *cn1,
-						   const struct config_node *cn2,
-						   const char *path)
+static const struct config_node *_find_first_config_node(const struct config_node *cn1,
+							 const struct config_node *cn2,
+							 const char *path)
 {
-	struct config_node *cn;
+	const struct config_node *cn;
 
 	if (cn1 && (cn = _find_config_node(cn1, path)))
 		return cn;
@@ -950,8 +952,8 @@ static struct config_node *_find_first_config_node(const struct config_node *cn1
 	return NULL;
 }
 
-struct config_node *find_config_node(const struct config_node *cn,
-				     const char *path)
+const struct config_node *find_config_node(const struct config_node *cn,
+					   const char *path)
 {
 	return _find_config_node(cn, path);
 }
@@ -1026,7 +1028,7 @@ float find_config_float(const struct config_node *cn, const char *path,
 	return _find_config_float(cn, NULL, path, fail);
 }
 
-struct config_node *find_config_tree_node(struct cmd_context *cmd,
+const struct config_node *find_config_tree_node(struct cmd_context *cmd,
 					  const char *path)
 {
 	return _find_first_config_node(cmd->cft_override ? cmd->cft_override->root : NULL, cmd->cft->root, path);
@@ -1081,7 +1083,7 @@ static int _find_config_bool(const struct config_node *cn1,
 			     const char *path, int fail)
 {
 	const struct config_node *n = _find_first_config_node(cn1, cn2, path);
-	struct config_value *v;
+	const struct config_value *v;
 
 	if (!n)
 		return fail;
@@ -1138,7 +1140,7 @@ int get_config_uint64(const struct config_node *cn, const char *path,
 }
 
 int get_config_str(const struct config_node *cn, const char *path,
-		   char **result)
+		   const char **result)
 {
 	const struct config_node *n;
 
@@ -1185,7 +1187,7 @@ static void _merge_section(struct config_node *cn1, struct config_node *cn2)
 			/* Ignore - we don't have any of these yet */
 			continue;
 		/* Not already present? */
-		if (!(oldn = find_config_node(cn1->child, cn->key))) {
+		if (!(oldn = (struct config_node*)find_config_node(cn1->child, cn->key))) {
 			_insert_config_node(&cn1->child, cn);
 			continue;
 		}
@@ -1205,9 +1207,9 @@ static void _merge_section(struct config_node *cn1, struct config_node *cn2)
 	}
 }
 
-static int _match_host_tags(struct dm_list *tags, struct config_node *tn)
+static int _match_host_tags(struct dm_list *tags, const struct config_node *tn)
 {
-	struct config_value *tv;
+	const struct config_value *tv;
 	const char *str;
 
 	for (tv = tn->v; tv; tv = tv->next) {
@@ -1229,8 +1231,9 @@ static int _match_host_tags(struct dm_list *tags, struct config_node *tn)
 int merge_config_tree(struct cmd_context *cmd, struct config_tree *cft,
 		      struct config_tree *newdata)
 {
-	struct config_node *root = cft->root;
-	struct config_node *cn, *nextn, *oldn, *tn, *cn2;
+	const struct config_node *root = cft->root;
+	struct config_node *cn, *nextn, *oldn, *cn2;
+	const struct config_node *tn;
 
 	for (cn = newdata->root; cn; cn = nextn) {
 		nextn = cn->sib;
@@ -1242,7 +1245,7 @@ int merge_config_tree(struct cmd_context *cmd, struct config_tree *cft,
 			if (!_match_host_tags(&cmd->tags, tn))
 				continue;
 		}
-		if (!(oldn = find_config_node(root, cn->key))) {
+		if (!(oldn = (struct config_node *)find_config_node(root, cn->key))) {
 			_insert_config_node(&cft->root, cn);
 			/* Remove any "tags" nodes */
 			for (cn2 = cn->child; cn2; cn2 = cn2->sib) {

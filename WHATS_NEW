@@ -1,5 +1,6 @@
 Version 2.02.79 -  
 ===================================
+  Add const for struct config_node usage.
   Fix NULL pointer check in error path in clvmd do_command(). (2.02.78)
   Fix device.c #include to ensure 64-bit fopen64 use. (2.02.51)
   Create /var/run/lvm directory during clvmd initialisation if missing.

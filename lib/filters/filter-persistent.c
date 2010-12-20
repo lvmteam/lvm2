@@ -68,7 +68,7 @@ static int _read_array(struct pfilter *pf, struct config_tree *cft,
 		       const char *path, void *data)
 {
 	const struct config_node *cn;
-	struct config_value *cv;
+	const struct config_value *cv;
 
 	if (!(cn = find_config_node(cft->root, path))) {
 		log_very_verbose("Couldn't find %s array in '%s'",

@@ -61,7 +61,7 @@ bad:
 	return_NULL;
 }
 
-int read_tags(struct dm_pool *mem, struct dm_list *tags, struct config_value *cv)
+int read_tags(struct dm_pool *mem, struct dm_list *tags, const struct config_value *cv)
 {
 	if (cv->type == CFG_EMPTY_ARRAY)
 		return 1;

@@ -185,8 +185,8 @@ static int _scan_proc_dev(const char *proc, const struct config_node *cn)
 	int line_maj = 0;
 	int blocksection = 0;
 	size_t dev_len = 0;
-	struct config_value *cv;
-	char *name;
+	const struct config_value *cv;
+	const char *name;
 
 
 	if (!*proc) {

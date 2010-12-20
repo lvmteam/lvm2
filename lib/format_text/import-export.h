@@ -44,14 +44,14 @@ enum {
 };
 
 struct text_vg_version_ops {
-	int (*check_version) (struct config_tree * cf);
+	int (*check_version) (const struct config_tree * cf);
 	struct volume_group *(*read_vg) (struct format_instance * fid,
-					 struct config_tree * cf,
+					 const struct config_tree *cf,
 					 unsigned use_cached_pvs);
-	void (*read_desc) (struct dm_pool * mem, struct config_tree * cf,
+	void (*read_desc) (struct dm_pool * mem, const struct config_tree *cf,
 			   time_t *when, char **desc);
 	const char *(*read_vgname) (const struct format_type *fmt,
-				    struct config_tree *cft,
+				    const struct config_tree *cft,
 				    struct id *vgid, uint64_t *vgstatus,
 				    char **creation_host);
 };
@@ -59,10 +59,10 @@ struct text_vg_version_ops {
 struct text_vg_version_ops *text_vg_vsn1_init(void);
 
 int print_flags(uint64_t status, int type, char *buffer, size_t size);
-int read_flags(uint64_t *status, int type, struct config_value *cv);
+int read_flags(uint64_t *status, int type, const struct config_value *cv);
 
 char *alloc_printed_tags(struct dm_list *tags);
-int read_tags(struct dm_pool *mem, struct dm_list *tags, struct config_value *cv);
+int read_tags(struct dm_pool *mem, struct dm_list *tags, const struct config_value *cv);
 
 int text_vg_export_file(struct volume_group *vg, const char *desc, FILE *fp);
 int text_vg_export_raw(struct volume_group *vg, const char *desc, char **buf);

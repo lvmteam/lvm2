@@ -138,7 +138,7 @@ int print_flags(uint64_t status, int type, char *buffer, size_t size)
 	return 1;
 }
 
-int read_flags(uint64_t *status, int type, struct config_value *cv)
+int read_flags(uint64_t *status, int type, const struct config_value *cv)
 {
 	int f;
 	uint64_t s = UINT64_C(0);

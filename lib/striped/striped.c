@@ -57,7 +57,7 @@ static void _striped_display(const struct lv_segment *seg)
 	log_print(" ");
 }
 
-static int _striped_text_import_area_count(struct config_node *sn, uint32_t *area_count)
+static int _striped_text_import_area_count(const struct config_node *sn, uint32_t *area_count)
 {
 	if (!get_config_uint32(sn, "stripe_count", area_count)) {
 		log_error("Couldn't read 'stripe_count' for "

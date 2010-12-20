@@ -89,7 +89,7 @@ static const char _state_txt[NUM_REPLICATOR_STATE][8] = {
 static replicator_state_t _get_state(const struct config_node *sn,
 				     const char *path, replicator_state_t def)
 {
-	char *str;
+	const char *str;
 	unsigned i;
 
 	if (get_config_str(sn, path, &str)) {
@@ -118,7 +118,7 @@ static const char _op_mode_txt[NUM_DM_REPLICATOR_MODES][8] = {
 static dm_replicator_mode_t _get_op_mode(const struct config_node *sn,
 					 const char *path, dm_replicator_mode_t def)
 {
-	char *str;
+	const char *str;
 	unsigned i;
 
 	if (get_config_str(sn, path, &str)) {

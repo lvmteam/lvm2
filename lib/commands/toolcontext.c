@@ -204,7 +204,7 @@ static int _process_config(struct cmd_context *cmd)
 	const char *read_ahead;
 	struct stat st;
 	const struct config_node *cn;
-	struct config_value *cv;
+	const struct config_value *cv;
 
 	/* umask */
 	cmd->default_settings.umask = find_config_tree_int(cmd,
@@ -332,11 +332,11 @@ static int _set_tag(struct cmd_context *cmd, const char *tag)
 	return 1;
 }
 
-static int _check_host_filters(struct cmd_context *cmd, struct config_node *hn,
+static int _check_host_filters(struct cmd_context *cmd, const struct config_node *hn,
 			       int *passes)
 {
-	struct config_node *cn;
-	struct config_value *cv;
+	const struct config_node *cn;
+	const struct config_value *cv;
 
 	*passes = 1;
 
@@ -561,7 +561,7 @@ static void _destroy_tag_configs(struct cmd_context *cmd)
 static int _init_dev_cache(struct cmd_context *cmd)
 {
 	const struct config_node *cn;
-	struct config_value *cv;
+	const struct config_value *cv;
 
 	init_dev_disable_after_error_count(
 		find_config_tree_int(cmd, "devices/disable_after_error_count",
@@ -793,7 +793,7 @@ static int _init_formats(struct cmd_context *cmd)
 	if (!is_static() &&
 	    (cn = find_config_tree_node(cmd, "global/format_libraries"))) {
 
-		struct config_value *cv;
+		const struct config_value *cv;
 		struct format_type *(*init_format_fn) (struct cmd_context *);
 		void *lib;
 
@@ -959,7 +959,7 @@ static int _init_segtypes(struct cmd_context *cmd)
 	if (!is_static() &&
 	    (cn = find_config_tree_node(cmd, "global/segment_libraries"))) {
 
-		struct config_value *cv;
+		const struct config_value *cv;
 		int (*init_multiple_segtypes_fn) (struct cmd_context *,
 						  struct segtype_library *);
 
