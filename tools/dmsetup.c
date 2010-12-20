@@ -1288,8 +1288,8 @@ static int _process_all(int argc, char **argv, int silent,
 	}
 
 	do {
-		names = (void *) names + next;
-		if (!fn(argc, argv, (void *) names))
+		names = (struct dm_names *)((char *) names + next);
+		if (!fn(argc, argv, names))
 			r = 0;
 		next = names->next;
 	} while (next);
@@ -1632,7 +1632,7 @@ static int _targets(int argc __attribute__((unused)), char **argv __attribute__(
 		printf("%-16s v%d.%d.%d\n", target->name, target->version[0],
 		       target->version[1], target->version[2]);
 
-		target = (void *) target + target->next;
+		target = (struct dm_versions *)((char *) target + target->next);
 	} while (last_target != target);
 
 	r = 1;
