@@ -1,5 +1,6 @@
 Version 2.02.79 -  
 ===================================
+  Fix error path if regex engine cannot be created in _build_matcher().
   Use char* arithmetic in target_version(), _process_all(), _targets().
   Fixing const cast gcc warnings in the code.
   Check read() and close() results in _get_cmdline().
