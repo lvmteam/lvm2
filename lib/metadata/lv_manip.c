@@ -1302,7 +1302,12 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 					/* Expand areas array if needed after an area was split. */
 					if (ix + ix_offset > *areas_size_ptr) {
 						*areas_size_ptr *= 2;
-						*areas_ptr = dm_realloc(*areas_ptr, sizeof(**areas_ptr) * (*areas_size_ptr));
+						if (!(*areas_ptr = dm_realloc(*areas_ptr,
+									     sizeof(**areas_ptr) *
+									     (*areas_size_ptr)))) {
+							log_error("Memory reallocation for parallel areas failed.");
+							return 0;
+						}
 					}
 					(*areas_ptr)[ix + ix_offset - 1].pva = pva;
 						(*areas_ptr)[ix + ix_offset - 1].used = required;
