@@ -213,7 +213,8 @@ static int _process_config(struct cmd_context *cmd)
 
 	if ((old_umask = umask((mode_t) cmd->default_settings.umask)) !=
 	    (mode_t) cmd->default_settings.umask)
-		log_verbose("Set umask to %04o", cmd->default_settings.umask);
+		log_verbose("Set umask from %04o to %04o",
+                            old_umask, cmd->default_settings.umask);
 
 	/* dev dir */
 	if (dm_snprintf(cmd->dev_dir, sizeof(cmd->dev_dir), "%s/",
