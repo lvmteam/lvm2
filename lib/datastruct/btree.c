@@ -103,7 +103,7 @@ int btree_insert(struct btree *t, uint32_t k, void *data)
 
 void *btree_get_data(const struct btree_iter *it)
 {
-	return ((struct node *) it)->data;
+	return ((const struct node *) it)->data;
 }
 
 static struct node *_left(struct node *n)

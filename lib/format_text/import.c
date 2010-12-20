@@ -131,7 +131,7 @@ struct volume_group *text_vg_import_file(struct format_instance *fid,
 				 when, desc);
 }
 
-struct volume_group *import_vg_from_buffer(char *buf,
+struct volume_group *import_vg_from_buffer(const char *buf,
                                            struct format_instance *fid)
 {
 	struct volume_group *vg = NULL;
