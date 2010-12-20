@@ -4,16 +4,21 @@
 
 int main(int argc, char *argv[])
 {
-        lvm_t handle = lvm_init(NULL);
+	lvm_t handle;
+	vg_t vg = NULL;
+	lv_t lv;
+	struct lvm_property_value v;
+
+	handle = lvm_init(NULL);
         assert(handle);
 
-	vg_t vg = lvm_vg_open(handle, argv[1], "r", 0);
+	vg = lvm_vg_open(handle, argv[1], "r", 0);
         assert(vg);
 
-        lv_t lv = lvm_lv_from_name(vg, "snap");
+	lv = lvm_lv_from_name(vg, "snap");
         assert(lv);
 
-        struct lvm_property_value v = lvm_lv_get_property(lv, "snap_percent");
+        v = lvm_lv_get_property(lv, "snap_percent");
         assert(v.is_valid);
         assert(v.value.integer == PERCENT_0);
 
