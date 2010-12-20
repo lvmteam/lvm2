@@ -1020,7 +1020,7 @@ struct dm_regex;
  * Initialise an array of num patterns for matching.
  * Uses memory from mem.
  */
-struct dm_regex *dm_regex_create(struct dm_pool *mem, const char **patterns,
+struct dm_regex *dm_regex_create(struct dm_pool *mem, const char * const *patterns,
 				 unsigned num_patterns);
 
 /*

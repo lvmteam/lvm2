@@ -1,5 +1,6 @@
 Version 1.02.60 -
 ===================================
+  Change dm_regex_create() API to accept const char * const *patterns.
   Add new dm_prepare_selinux_context fn to libdevmapper and use it throughout.
   Detect existence of new SELinux selabel interface during configure.
 

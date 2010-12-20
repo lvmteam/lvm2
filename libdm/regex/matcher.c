@@ -310,7 +310,7 @@ static void _force_states(struct dm_regex *m)
         }
 }
 
-struct dm_regex *dm_regex_create(struct dm_pool *mem, const char **patterns,
+struct dm_regex *dm_regex_create(struct dm_pool *mem, const char * const *patterns,
 				 unsigned num_patterns)
 {
 	char *all, *ptr;
