@@ -1,5 +1,6 @@
 Version 2.02.79 -  
 ===================================
+  Use dm_free for dm_malloc-ed areas in _clog_ctr/_clog_dtr (cmirrord).
   Add checks for allocation errors in config node clonning.
   Fix error path if regex engine cannot be created in _build_matcher().
   Use char* arithmetic in target_version(), _process_all(), _targets().
