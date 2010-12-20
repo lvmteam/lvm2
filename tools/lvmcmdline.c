@@ -1191,15 +1191,19 @@ static const char *_get_cmdline(pid_t pid)
 {
 	static char _proc_cmdline[32];
 	char buf[256];
-	int fd;
+	int fd, n = 0;
 
 	snprintf(buf, sizeof(buf), DEFAULT_PROC_DIR "/%u/cmdline", pid);
+	/* FIXME Use generic read code. */
 	if ((fd = open(buf, O_RDONLY)) > 0) {
-		read(fd, _proc_cmdline, sizeof(_proc_cmdline) - 1);
-		_proc_cmdline[sizeof(_proc_cmdline) - 1] = '\0';
-		close(fd);
-	} else
-		_proc_cmdline[0] = '\0';
+		if ((n = read(fd, _proc_cmdline, sizeof(_proc_cmdline) - 1)) < 0) {
+			log_sys_error("read", buf);
+			n = 0;
+		}
+		if (close(fd))
+			log_sys_error("close", buf);
+	}
+	_proc_cmdline[n] = '\0';
 
 	return _proc_cmdline;
 }
