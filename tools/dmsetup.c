@@ -1386,10 +1386,8 @@ error:
 
 static int _remove(int argc, char **argv, void *data __attribute__((unused)))
 {
-	int r;
-
 	if (_switches[FORCE_ARG] && argc > 1)
-		r = _error_device(argc, argv, NULL);
+		(void) _error_device(argc, argv, NULL);
 
 	return _simple(DM_DEVICE_REMOVE, argc > 1 ? argv[1] : NULL, 0, 0);
 }
