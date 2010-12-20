@@ -263,6 +263,11 @@ static int _read_vg_pds(const struct format_type *fmt, struct dm_pool *mem,
 		 */
 		if (!sp_count) {
 			/* FIXME pl left uninitialised if !info->dev */
+			if (!pl) {
+				log_error(INTERNAL_ERROR "device is missing");
+				dm_pool_destroy(tmpmem);
+				return 0;
+			}
 			sp_count = pl->pd.pl_subpools;
 			if (!(sp_devs =
 			      dm_pool_zalloc(tmpmem,
