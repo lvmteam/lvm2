@@ -1,5 +1,8 @@
-Version 1.02.60 -
-===================================
+Version 1.02.60 - 20th December 2010
+====================================
+  Check for unlink failure in remove_lockfile() in dmeventd.
+  Use dm_free for dm_malloc-ed areas in _clog_ctr/_clog_dtr in cmirrord.
+  Use char* arithmetic in _process_all() & _targets() in dmsetup.
   Change dm_regex_create() API to accept const char * const *patterns.
   Add new dm_prepare_selinux_context fn to libdevmapper and use it throughout.
   Detect existence of new SELinux selabel interface during configure.

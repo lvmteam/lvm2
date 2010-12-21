@@ -1,16 +1,18 @@
-Version 2.02.79 -  
-===================================
+Version 2.02.79 - 20th December 2010
+====================================
+  Remove some unused variables.
   Add missing test for reallocation error in _find_parallel_space().
-  Add check for unlink error result in remove_lockfile() (dmeventd).
-  Use dm_free for dm_malloc-ed areas in _clog_ctr/_clog_dtr (cmirrord).
   Add checks for allocation errors in config node clonning.
   Fix error path if regex engine cannot be created in _build_matcher().
-  Use char* arithmetic in target_version(), _process_all(), _targets().
+  Use char* arithmetic in target_version(), _process_all() & _targets().
   Fixing const cast gcc warnings in the code.
   Check read() and close() results in _get_cmdline().
   Add const for struct config_node usage.
   Fix NULL pointer check in error path in clvmd do_command(). (2.02.78)
   Fix device.c #include to ensure 64-bit fopen64 use. (2.02.51)
+  Add copy_percent and snap_percent to liblvm.
+  Enhance vg_validate to ensure integrity of LV and PV structs referenced.
+  Enhance vg_validate to check composition of pvmove LVs.
   Create /var/run/lvm directory during clvmd initialisation if missing.
   Use new dm_prepare_selinux_context instead of dm_set_selinux_context.
   Avoid revalidating the label cache immediately after scanning.
@@ -18,7 +20,7 @@ Version 2.02.79 -
   Don't skip full scan when independent mdas are present even if memlock is set.
   Set cmd->independent_metadata_areas if metadata/dirs or disk_areas in use.
   Cope better with an undefined target_percent operation in _percent_run.
-  Fix write to released memory in vg_release and rename to free_vg.  (2.02.78)
+  Avoid writing to freed memory in vg_release and rename to free_vg.  (2.02.78)
 
 Version 2.02.78 - 6th December 2010
 ===================================
