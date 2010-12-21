@@ -1,8 +1,11 @@
+Version 2.02.80 - 
+====================================
+
 Version 2.02.79 - 20th December 2010
 ====================================
   Remove some unused variables.
   Add missing test for reallocation error in _find_parallel_space().
-  Add checks for allocation errors in config node clonning.
+  Add checks for allocation errors in config node cloning.
   Fix error path if regex engine cannot be created in _build_matcher().
   Use char* arithmetic in target_version(), _process_all() & _targets().
   Fixing const cast gcc warnings in the code.
