@@ -667,7 +667,8 @@ static int local_pipe_callback(struct local_client *thisfd, char *buf,
 	/* EOF on pipe or an error, close it */
 	if (len <= 0) {
 		void *ret = &status;
-		close(thisfd->fd);
+		if (close(thisfd->fd))
+			log_sys_error("close", "local_pipe");
 
 		/* Clear out the cross-link */
 		if (thisfd->bits.pipe.client != NULL)
@@ -676,7 +677,8 @@ static int local_pipe_callback(struct local_client *thisfd, char *buf,
 
 		/* Reap child thread */
 		if (thisfd->bits.pipe.threadid) {
-			if (pthread_join(thisfd->bits.pipe.threadid, &ret))
+			if ((errno = pthread_join(thisfd->bits.pipe.threadid,
+						  &ret)))
 				log_sys_error("pthread_join", "");
 
 			thisfd->bits.pipe.threadid = 0;
@@ -1068,8 +1070,8 @@ static int read_from_local_sock(struct local_client *thisfd)
 			pthread_cond_signal(&thisfd->bits.localsock.cond);
 			pthread_mutex_unlock(&thisfd->bits.localsock.mutex);
 
-			if (pthread_join(thisfd->bits.localsock.threadid,
-					 (void **) &status))
+			if ((errno = pthread_join(thisfd->bits.localsock.threadid,
+						  (void **) &status)))
 				log_sys_error("pthread_join", "");
 
 			DEBUGLOG("Joined child thread\n");
