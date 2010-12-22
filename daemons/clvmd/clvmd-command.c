@@ -408,6 +408,7 @@ out:
 	for (i = 0; i < argc && argv[i]; i++)
 		free(argv[i]);
 	free(argv);
+	free(debug_arg);
 
 	return 0;
 }

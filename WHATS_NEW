@@ -1,5 +1,6 @@
 Version 2.02.80 - 
 ====================================
+  Fix memory leak in debug mode of restart_clvmd() error path.
   Log error message for pthread_join() failure in clvmd.
 
 Version 2.02.79 - 20th December 2010
