@@ -257,14 +257,10 @@ static int _read_pv(struct format_instance *fid, struct dm_pool *mem,
 		log_verbose("Fixing up missing size (%s) "
 			    "for PV %s", display_size(fid->fmt->cmd, pv->size),
 			    pv_dev_name(pv));
-		if (vg) {
-			size = pv->pe_count * (uint64_t) vg->extent_size +
-			       pv->pe_start;
-			if (size > pv->size)
-				log_warn("WARNING: Physical Volume %s is too "
-					 "large for underlying device",
-					 pv_dev_name(pv));
-		}
+		size = pv->pe_count * (uint64_t) vg->extent_size + pv->pe_start;
+		if (size > pv->size)
+			log_warn("WARNING: Physical Volume %s is too large "
+				 "for underlying device", pv_dev_name(pv));
 	}
 
 	if (!alloc_pv_segment_whole_pv(mem, pv))
