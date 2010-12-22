@@ -538,34 +538,37 @@ static struct dm_task *_get_device_info(const struct dm_event_handler *dmevh)
 		return NULL;
 	}
 
-	if (dmevh->uuid)
-		dm_task_set_uuid(dmt, dmevh->uuid);
-	else if (dmevh->dev_name)
-		dm_task_set_name(dmt, dmevh->dev_name);
-	else if (dmevh->major && dmevh->minor) {
-		dm_task_set_major(dmt, dmevh->major);
-		dm_task_set_minor(dmt, dmevh->minor);
-        }
+	if (dmevh->uuid) {
+		if (!dm_task_set_uuid(dmt, dmevh->uuid))
+			goto_bad;
+	} else if (dmevh->dev_name) {
+		if (!dm_task_set_name(dmt, dmevh->dev_name))
+			goto_bad;
+	} else if (dmevh->major && dmevh->minor) {
+		if (!dm_task_set_major(dmt, dmevh->major) ||
+		    !dm_task_set_minor(dmt, dmevh->minor))
+			goto_bad;
+	}
 
 	/* FIXME Add name or uuid or devno to messages */
 	if (!dm_task_run(dmt)) {
 		log_error("_get_device_info: dm_task_run() failed");
-		goto failed;
+		goto bad;
 	}
 
 	if (!dm_task_get_info(dmt, &info)) {
 		log_error("_get_device_info: failed to get info for device");
-		goto failed;
+		goto bad;
 	}
 
 	if (!info.exists) {
 		log_error("_get_device_info: device not found");
-		goto failed;
+		goto bad;
 	}
 
 	return dmt;
 
-failed:
+      bad:
 	dm_task_destroy(dmt);
 	return NULL;
 }
