@@ -611,7 +611,8 @@ int vg_remove(struct volume_group *vg)
 		}
 	}
 
-	backup_remove(vg->cmd, vg->name);
+	if (!backup_remove(vg->cmd, vg->name))
+		stack;
 
 	if (ret)
 		log_print("Volume group \"%s\" successfully removed", vg->name);
