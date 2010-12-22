@@ -19,8 +19,6 @@ static int lvscan_single(struct cmd_context *cmd, struct logical_volume *lv,
 			 void *handle __attribute__((unused)))
 {
 	struct lvinfo info;
-	int lv_total = 0;
-	uint64_t lv_capacity_total = 0;
 	int inkernel, snap_active = 1;
 	struct lv_segment *snap_seg = NULL;
 	percent_t snap_percent;     /* fused, fsize; */
@@ -65,10 +63,6 @@ static int lvscan_single(struct cmd_context *cmd, struct logical_volume *lv,
 		  cmd->dev_dir, lv->vg->name, lv->name,
 		  display_size(cmd, lv->size),
 		  get_alloc_string(lv->alloc));
-
-	lv_total++;
-
-	lv_capacity_total += lv->size;
 
 	return ECMD_PROCESSED;
 }
