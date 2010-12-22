@@ -666,7 +666,6 @@ static int local_pipe_callback(struct local_client *thisfd, char *buf,
 
 	/* EOF on pipe or an error, close it */
 	if (len <= 0) {
-		int jstat;
 		void *ret = &status;
 		close(thisfd->fd);
 
@@ -677,7 +676,9 @@ static int local_pipe_callback(struct local_client *thisfd, char *buf,
 
 		/* Reap child thread */
 		if (thisfd->bits.pipe.threadid) {
-			jstat = pthread_join(thisfd->bits.pipe.threadid, &ret);
+			if (pthread_join(thisfd->bits.pipe.threadid, &ret))
+				log_sys_error("pthread_join", "");
+
 			thisfd->bits.pipe.threadid = 0;
 			if (thisfd->bits.pipe.client != NULL)
 				thisfd->bits.pipe.client->bits.localsock.
@@ -1041,7 +1042,6 @@ static int read_from_local_sock(struct local_client *thisfd)
 	/* EOF or error on socket */
 	if (len <= 0) {
 		int *status;
-		int jstat;
 
 		DEBUGLOG("EOF on local socket: inprogress=%d\n",
 			 thisfd->bits.localsock.in_progress);
@@ -1068,9 +1068,10 @@ static int read_from_local_sock(struct local_client *thisfd)
 			pthread_cond_signal(&thisfd->bits.localsock.cond);
 			pthread_mutex_unlock(&thisfd->bits.localsock.mutex);
 
-			jstat =
-			    pthread_join(thisfd->bits.localsock.threadid,
-					 (void **) &status);
+			if (pthread_join(thisfd->bits.localsock.threadid,
+					 (void **) &status))
+				log_sys_error("pthread_join", "");
+
 			DEBUGLOG("Joined child thread\n");
 
 			thisfd->bits.localsock.threadid = 0;
