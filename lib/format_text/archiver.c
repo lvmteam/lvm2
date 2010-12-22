@@ -452,9 +452,12 @@ void check_current_backup(struct volume_group *vg)
 	log_suppress(old_suppress);
 
 	if (vg_backup) {
-		archive(vg_backup);
+		if (!archive(vg_backup))
+			stack;
 		free_vg(vg_backup);
 	}
-	archive(vg);
-	backup_locally(vg);
+	if (!archive(vg))
+		stack;
+	if (!backup_locally(vg))
+		stack;
 }
