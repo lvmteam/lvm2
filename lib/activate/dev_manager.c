@@ -306,6 +306,7 @@ static const struct dm_info *_cached_info(struct dm_pool *mem,
 	return dinfo;
 }
 
+#if 0
 /* FIXME Interface must cope with multiple targets */
 static int _status_run(const char *name, const char *uuid,
 		       unsigned long long *s, unsigned long long *l,
@@ -383,6 +384,7 @@ static int _status(const char *name, const char *uuid,
 
 	return 0;
 }
+#endif
 
 int lv_has_target_type(struct dm_pool *mem, struct logical_volume *lv,
 		       const char *layer, const char *target_type)
