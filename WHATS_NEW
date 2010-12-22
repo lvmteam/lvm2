@@ -1,5 +1,6 @@
 Version 2.02.80 - 
 ====================================
+  Add backtraces for backup and backup_remove fail paths.
   Detect errors from dm_task_set calls in _get_device_info (dmeventd).
   Add backtraces for archive and backup_locally in check_current_backup().
   Fix memory leak in debug mode of restart_clvmd() error path.

@@ -164,8 +164,10 @@ static int vg_rename_path(struct cmd_context *cmd, const char *old_vg_path,
 		}
 	}
 
-	backup(vg);
-	backup_remove(cmd, vg_name_old);
+	if (!backup(vg))
+		stack;
+	if (!backup_remove(cmd, vg_name_old))
+		stack;
 
 	unlock_vg(cmd, vg_name_new);
 	unlock_and_free_vg(cmd, vg, vg_name_old);
