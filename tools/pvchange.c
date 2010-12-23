@@ -288,9 +288,9 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 				unlock_and_free_vg(cmd, vg, sll->str);
 			}
 		}
+		unlock_vg(cmd, VG_GLOBAL);
 	}
 
-	unlock_vg(cmd, VG_GLOBAL);
 	log_print("%d physical volume%s changed / %d physical volume%s "
 		  "not changed",
 		  done, done == 1 ? "" : "s",
