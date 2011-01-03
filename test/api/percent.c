@@ -12,9 +12,10 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "lvm2app.h"
+#undef NDEBUG
 
-#define assert(x) do { if (!(x)) goto bad; } while (0)
+#include "lvm2app.h"
+#include "assert.h"
 
 int main(int argc, char *argv[])
 {
@@ -52,13 +53,4 @@ int main(int argc, char *argv[])
 
         lvm_vg_close(vg);
         return 0;
-
-bad:
-	if (handle && lvm_errno(handle))
-		fprintf(stderr, "LVM Error: %s\n", lvm_errmsg(handle));
-	if (vg)
-		lvm_vg_close(vg);
-	if (handle)
-		lvm_quit(handle);
-	return 1;
 }
