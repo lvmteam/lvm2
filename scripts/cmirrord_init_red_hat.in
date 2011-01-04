@@ -21,6 +21,7 @@ LOCK_FILE="/var/lock/subsys/$DAEMON"
 
 start()
 {
+	rtrn=0
 	if ! pidof $DAEMON > /dev/null 
 	then 
 		echo -n "Starting $DAEMON: "
