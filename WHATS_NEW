@@ -1,5 +1,6 @@
 Version 2.02.80 - 
 ====================================
+  Correct return code of cmirrord when issuing 'start' when already running.
   Fix wrongly paired unlocking of global lock in pvchange. (2.02.66)
   Add backtraces for backup and backup_remove fail paths.
   Detect errors from dm_task_set calls in _get_device_info (dmeventd).
