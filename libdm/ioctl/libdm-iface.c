@@ -282,12 +282,14 @@ static int _create_control(const char *control, uint32_t major, uint32_t minor)
 	log_verbose("Creating device %s (%u, %u)", control, major, minor);
 
 	(void) dm_prepare_selinux_context(control, S_IFCHR);
+	old_umask = umask(DM_CONTROL_NODE_UMASK);
 	if (mknod(control, S_IFCHR | S_IRUSR | S_IWUSR,
 		  MKDEV(major, minor)) < 0)  {
 		log_sys_error("mknod", control);
 		(void) dm_prepare_selinux_context(NULL, 0);
 		return 0;
 	}
+	umask(old_umask);
 	(void) dm_prepare_selinux_context(NULL, 0);
 
 	return 1;

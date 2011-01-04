@@ -1219,6 +1219,7 @@ int dm_udev_complete(uint32_t cookie);
 int dm_udev_wait(uint32_t cookie);
 
 #define DM_DEV_DIR_UMASK 0022
+#define DM_CONTROL_NODE_UMASK 0177
 
 #ifdef __cplusplus
 }
