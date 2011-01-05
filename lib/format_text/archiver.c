@@ -261,7 +261,9 @@ int backup_remove(struct cmd_context *cmd, const char *vg_name)
 	/*
 	 * Let this fail silently.
 	 */
-	unlink(path);
+	if (unlink(path))
+		log_sys_debug("unlink", path);
+
 	return 1;
 }
 
