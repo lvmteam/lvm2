@@ -64,7 +64,9 @@ static int _become_daemon(struct cmd_context *cmd)
 	strncpy(*cmd->argv, "(lvm2)", strlen(*cmd->argv));
 
 	reset_locking();
-	lvmcache_init();
+	if (!lvmcache_init())
+		/* FIXME Clean up properly here */
+		_exit(ECMD_FAILED);
 	dev_close_all();
 
 	return 1;
