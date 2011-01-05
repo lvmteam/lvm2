@@ -8,7 +8,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-. ./test-utils.sh
+. lib/test
 
 # create the old GFS pool labeled linear devices
 create_pool_label_()
@@ -32,7 +32,7 @@ not pvcreate "$dev1"
 
 # check that vgdisplay and pvcreate -ff works with the pool device
 vgdisplay --config 'global { locking_type = 0 }'
-disable_dev "$dev2"
+aux disable_dev "$dev2"
 # FIXME! since pool1 cannot be opened, vgdisplay gives error... should we say
 # "not" there instead, checking that it indeed does fail?
 vgdisplay --config 'global { locking_type = 0 }' || true

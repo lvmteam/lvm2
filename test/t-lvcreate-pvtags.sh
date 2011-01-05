@@ -8,14 +8,14 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-. ./test-utils.sh
+. lib/test
 
 aux prepare_pvs 3
 # not required, just testing
 aux pvcreate --metadatacopies 0 $dev1
 
-vgcreate -c n $vg $devs
-pvchange --addtag fast $devs
+vgcreate -c n $vg $(cat DEVICES)
+pvchange --addtag fast $(cat DEVICES)
 
 # 3 stripes with 3 PVs (selected by tag, @fast) is fine
 lvcreate -l3 -i3 $vg @fast

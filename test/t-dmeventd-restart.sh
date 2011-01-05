@@ -9,10 +9,10 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-. ./test-utils.sh
+. lib/test
 
-prepare_vg 5
-prepare_dmeventd
+aux prepare_vg 5
+aux prepare_dmeventd
 
 which mkfs.ext2 || exit 200
 
@@ -22,7 +22,7 @@ lvcreate -m 2 --ig -L 1 -n 3way $vg
 lvchange --monitor y $vg/3way
 
 dmeventd -R -f &
-LOCAL_DMEVENTD="$!"
+echo "$!" > LOCAL_DMEVENTD
 
 sleep 1 # wait a bit, so we talk to the new dmeventd later
 

@@ -11,7 +11,7 @@
 
 # 'Check extents percentage arguments'
 
-. ./test-utils.sh
+. lib/test
 
 aux prepare_vg 2 128
 
@@ -28,7 +28,7 @@ grep "^  Please specify either size or extents but not both.\$" err
 # 'lvextend accepts no size or extents but one PV - bz154691'
 lvextend $vg/$lv $dev1 >out
 grep "^  Logical volume $lv successfully resized\$" out
-check_pv_field_ $dev1 pv_free "0"
+check pv_field $dev1 pv_free "0"
 
 lvremove -f $vg/$lv 
 
@@ -45,8 +45,8 @@ lvcreate -L 64m -n $lv $vg
 # 'lvextend accepts no size but extents 100%PVS and two PVs - bz154691'
 lvextend -l +100%PVS $vg/$lv $dev1 $dev2 >out
 grep "^  Logical volume $lv successfully resized\$" out 
-check_pv_field_ $dev1 pv_free "0" 
-check_pv_field_ $dev2 pv_free "0"
+check pv_field $dev1 pv_free "0" 
+check pv_field $dev2 pv_free "0"
 
 # Exercise the range overlap code.  Allocate every 2 extents.
 #
@@ -72,13 +72,13 @@ check_pv_field_ $dev2 pv_free "0"
 create_pvs=`for i in $(seq 0 4 20); do echo -n "\$dev1:$i-$(($i + 1)) "; done` 
 lvremove -f $vg/$lv
 lvcreate -l 12 -n $lv $vg $create_pvs
-check_lv_field_ $vg/$lv lv_size "48.00m"
+check lv_field $vg/$lv lv_size "48.00m"
 
 # 'lvextend with partially allocated PVs and extents 100%PVS with PE ranges' 
 extend_pvs=`for i in $(seq 0 6 18); do echo -n "\$dev1:$i-$(($i + 2)) "; done` 
 lvextend -l +100%PVS $vg/$lv $extend_pvs >out
 grep "^  Logical volume $lv successfully resized\$" out 
-check_lv_field_ $vg/$lv lv_size "72.00m"
+check lv_field $vg/$lv lv_size "72.00m"
 
 # Simple seg_count validation; initially create the LV with half the # of
 # extents (should be 1 lv segment), extend it (should go to 2 segments),
@@ -90,12 +90,12 @@ pe1=$(( $pe_count / 2 ))
 lvcreate -l $pe1 -n $lv $vg
 pesize=$(lvs -ovg_extent_size --units b --nosuffix --noheadings $vg/$lv)
 segsize=$(( $pe1 * $pesize / 1024 / 1024 ))m
-check_lv_field_ $vg/$lv seg_count 1
-check_lv_field_ $vg/$lv seg_start 0
-check_lv_field_ $vg/$lv seg_start_pe 0
-#check_lv_field_ $vg/$lv seg_size $segsize
+check lv_field $vg/$lv seg_count 1
+check lv_field $vg/$lv seg_start 0
+check lv_field $vg/$lv seg_start_pe 0
+#check lv_field $vg/$lv seg_size $segsize
 lvextend -l +$(( $pe_count * 1 )) $vg/$lv
-check_lv_field_ $vg/$lv seg_count 2
+check lv_field $vg/$lv seg_count 2
 lvreduce -f -l -$(( $pe_count * 1 )) $vg/$lv
-check_lv_field_ $vg/$lv seg_count 1
+check lv_field $vg/$lv seg_count 1
 

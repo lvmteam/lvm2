@@ -12,7 +12,7 @@ set -xv
 
 which mkfs.ext3 || exit 200
 
-. ./test-utils.sh
+. lib/test
 
 lvdev_()
 {

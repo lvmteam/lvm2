@@ -12,7 +12,7 @@
 # tests lvm initialization, and especially negative tests of error paths
 #
 
-. ./test-utils.sh
+. lib/test
 
 aux prepare_devs 5
 

@@ -11,7 +11,7 @@
 
 # 'Test vgmerge command options for validity'
 
-. ./test-utils.sh
+. lib/test
 
 aux prepare_pvs 4
 

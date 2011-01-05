@@ -12,7 +12,7 @@
 # tests functionality of lvs, pvs, vgs, *display tools
 #
 
-. ./test-utils.sh
+. lib/test
 
 get_lvs_()
 {
@@ -38,16 +38,16 @@ test $(wc -l <out) -eq 5
 pvs --noheadings -o  seg_all,pv_all,lv_all,vg_all | tee out
 test $(wc -l <out) -eq 5
 
-vgcreate -c n $vg $devs
+vgcreate -c n $vg $(cat DEVICES)
 
 #COMM pvs and vgs report mda_count, mda_free (bz202886, bz247444)
-pvs -o +pv_mda_count,pv_mda_free $devs
+pvs -o +pv_mda_count,pv_mda_free $(cat DEVICES)
 for I in $dev2 $dev3 $dev5; do
-	aux check_pv_field_ $I pv_mda_count 0
-	aux check_pv_field_ $I pv_mda_free 0
+	check pv_field $I pv_mda_count 0
+	check pv_field $I pv_mda_free 0
 done
 vgs -o +vg_mda_count,vg_mda_free $vg
-aux check_vg_field_ $vg vg_mda_count 2
+check vg_field $vg vg_mda_count 2
 
 #COMM pvs doesn't display --metadatacopies 0 PVs as orphans (bz409061)
 pvdisplay $dev2|grep "VG Name.*$vg"
@@ -77,7 +77,7 @@ vgs -o pv_name,vg_name $vg
 # would complain if not
 
 #COMM pvdisplay --maps feature (bz149814)
-pvdisplay $devs >out
-pvdisplay --maps $devs >out2
+pvdisplay $(cat DEVICES) >out
+pvdisplay --maps $(cat DEVICES) >out2
 not diff out out2
 

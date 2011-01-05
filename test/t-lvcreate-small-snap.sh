@@ -9,11 +9,11 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-. ./test-utils.sh
+. lib/test
 
 aux prepare_pvs 3
 
-vgcreate -c n -s 1k $vg $devs
+vgcreate -c n -s 1k $vg $(cat DEVICES)
 
 lvcreate -n one -l 10 $vg
 lvcreate -s -l 8 -n snapA $vg/one

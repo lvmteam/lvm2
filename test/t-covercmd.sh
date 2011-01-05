@@ -12,7 +12,7 @@
 # tests basic functionality of read-ahead and ra regressions
 #
 
-. ./test-utils.sh
+. lib/test
 
 TEST_UUID="aaaaaa-aaaa-aaaa-aaaa-aaaa-aaaa-aaaaaa"
 
@@ -31,7 +31,7 @@ pvcreate --metadatacopies 0 $dev2
 pvcreate --metadatacopies 0 $dev3
 pvcreate $dev4
 pvcreate --norestorefile -u $TEST_UUID --metadatacopies 0 $dev5
-vgcreate -c n $vg $devs
+vgcreate -c n $vg $(cat DEVICES)
 lvcreate -n $lv -l 5 -i5 -I256 $vg
 
 # test *scan and *display tools

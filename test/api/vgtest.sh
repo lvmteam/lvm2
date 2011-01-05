@@ -12,7 +12,7 @@
 # tests lvm2app library
 #
 
-. ./test-utils.sh
+. lib/test
 aux prepare_devs 2
 pvcreate $dev1 $dev2
-apitest vgtest $vg1 $dev1 $dev2
+aux apitest vgtest $vg1 $dev1 $dev2

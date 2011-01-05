@@ -12,7 +12,7 @@
 test_description='Exercise fsadm filesystem resize'
 exit 200
 
-. ./test-utils.sh
+. lib/test
 
 aux prepare_vg 1 100
 

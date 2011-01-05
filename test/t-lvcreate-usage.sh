@@ -11,11 +11,11 @@
 
 # 'Exercise some lvcreate diagnostics'
 
-. ./test-utils.sh
+. lib/test
 
 aux prepare_pvs 4
 aux pvcreate --metadatacopies 0 $dev1
-vgcreate -cn $vg $devs
+vgcreate -cn $vg $(cat DEVICES)
 
 # "lvcreate rejects repeated invocation (run 2 times) (bz178216)" 
 lvcreate -n $lv -l 4 $vg 
@@ -42,7 +42,7 @@ lvremove -ff $vg
 lvcreate -L 64m -n $lv -i2 $vg > out
 grep "^  Using default stripesize" out 
 lvdisplay $vg 
-check_lv_field_ $vg/$lv stripesize "64.00k"
+check lv_field $vg/$lv stripesize "64.00k"
 lvremove -ff $vg
 
 # 'lvcreate rejects an invalid number of stripes' 
@@ -89,16 +89,16 @@ vgchange -l 0 $vg
 # lvcreate rejects invalid chunksize, accepts between 4K and 512K
 # validate origin_size
 vgremove -ff $vg
-vgcreate -cn $vg $devs
+vgcreate -cn $vg $(cat DEVICES)
 lvcreate -L 32m -n $lv1 $vg
 not lvcreate -L 8m -n $lv2 -s --chunksize 3k $vg/$lv1
 not lvcreate -L 8m -n $lv2 -s --chunksize 1024k $vg/$lv1
 lvcreate -L 8m -n $lv2 -s --chunksize 4k $vg/$lv1
-check_lv_field_ $vg/$lv2 chunk_size 4.00k
-check_lv_field_ $vg/$lv2 origin_size 32.00m
+check lv_field $vg/$lv2 chunk_size 4.00k
+check lv_field $vg/$lv2 origin_size 32.00m
 lvcreate -L 8m -n $lv3 -s --chunksize 512k $vg/$lv1
-check_lv_field_ $vg/$lv3 chunk_size 512.00k
-check_lv_field_ $vg/$lv3 origin_size 32.00m
+check lv_field $vg/$lv3 chunk_size 512.00k
+check lv_field $vg/$lv3 origin_size 32.00m
 lvremove -ff $vg
 vgchange -l 0 $vg
 
@@ -111,10 +111,10 @@ grep "Non-zero region size must be supplied." err
 not lvcreate -L 32m -n $lv -R 11k $vg
 not lvcreate -L 32m -n $lv -R 1k $vg
 lvcreate -L 32m -n $lv --regionsize 128m  -m 1 $vg
-check_lv_field_ $vg/$lv regionsize "32.00m"
+check lv_field $vg/$lv regionsize "32.00m"
 lvremove -ff $vg
 lvcreate -L 32m -n $lv --regionsize 4m -m 1 $vg
-check_lv_field_ $vg/$lv regionsize "4.00m"
+check lv_field $vg/$lv regionsize "4.00m"
 lvremove -ff $vg
 
 # snapshot with virtual origin works
@@ -127,15 +127,15 @@ lvremove -ff $vg
 
 # readahead default (auto), none, #, auto
 lvcreate -L 32m -n $lv $vg
-check_lv_field_ $vg/$lv lv_read_ahead "auto"
+check lv_field $vg/$lv lv_read_ahead "auto"
 lvremove -ff $vg
 lvcreate -L 32m -n $lv --readahead none $vg
-check_lv_field_ $vg/$lv lv_read_ahead "0"
+check lv_field $vg/$lv lv_read_ahead "0"
 lvremove -ff $vg
 lvcreate -L 32m -n $lv --readahead 8k $vg
-check_lv_field_ $vg/$lv lv_read_ahead "8.00k"
+check lv_field $vg/$lv lv_read_ahead "8.00k"
 lvremove -ff $vg
 lvcreate -L 32m -n $lv --readahead auto $vg
-check_lv_field_ $vg/$lv lv_read_ahead "auto"
+check lv_field $vg/$lv lv_read_ahead "auto"
 lvremove -ff $vg
 

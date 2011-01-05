@@ -18,7 +18,7 @@ which sfdisk || exit 200
 
 LVM_TEST_CONFIG_DEVICES="types = [\"device-mapper\", 142]"
 
-. ./test-utils.sh
+. lib/test
 
 aux prepare_pvs 1 30
 

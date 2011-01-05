@@ -8,9 +8,9 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-. ./test-utils.sh
+. lib/test
 
-prepare_vg 4
+aux prepare_vg 4
 
 # Create snapshot of a mirror origin
 lvcreate -m 1 -L 10M -n lv $vg

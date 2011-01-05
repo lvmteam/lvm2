@@ -9,7 +9,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-. ./test-utils.sh
+. lib/test
 
 aux prepare_devs 4
 
@@ -21,7 +21,7 @@ do
     # (lvm$mdatype) vgreduce removes only the specified pv from vg (bz427382)" '
     vgcreate -c n -M$mdatype $vg1 $dev1 $dev2
     vgreduce $vg1 $dev1
-    check_pv_field_ $dev2 vg_name $vg1
+    check pv_field $dev2 vg_name $vg1
     vgremove -f $vg1
 
     # (lvm$mdatype) vgreduce rejects removing the last pv (--all)
@@ -58,15 +58,15 @@ vgchange -an $vg1
 aux disable_dev $dev1
 # (lvm$mdatype) vgreduce --removemissing --force repares to linear
 vgreduce --removemissing --force $vg1
-check_lv_field_ $vg1/$lv1 segtype linear
-vg_validate_pvlv_counts_ $vg1 2 3 0
+check lv_field $vg1/$lv1 segtype linear
+check pvlv_counts $vg1 2 3 0
 # cleanup
 aux enable_dev $dev1
 vgremove -ff $vg1
 
 #COMM "vgreduce rejects --removemissing --mirrorsonly --force when nonmirror lv lost too"
 # (lvm$mdatype) setup: create mirror + linear lvs
-vgcreate -c n -M$mdatype $vg1 $devs
+vgcreate -c n -M$mdatype $vg1 $(cat DEVICES)
 lvcreate -n $lv2 -l 4 $vg1
 lvcreate -m1 -n $lv1 -l 4 $vg1 $dev1 $dev2 $dev3
 lvcreate -n $lv3 -l 4 $vg1 $dev3

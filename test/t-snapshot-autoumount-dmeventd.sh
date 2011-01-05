@@ -10,15 +10,13 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 # no automatic extensions please
-LVM_TEST_CONFIG_SNAPSHOT_AUTOEXTEND="
-    snapshot_autoextend_percent = 0
-    snapshot_autoextend_threshold = 100"
 
-. ./test-utils.sh
+. lib/test
 
 which mkfs.ext2 || exit 200
 
-prepare_lvmconf
+aux lvmconf "activation/snapshot_autoextend_percent = 0" \
+            "activation/snapshot_autoextend_threshold = 100"
 
 aux prepare_vg 2
 aux prepare_dmeventd

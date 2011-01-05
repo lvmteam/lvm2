@@ -11,29 +11,29 @@
 
 # Test vgsplit command options for validity
 
-. ./test-utils.sh
+. lib/test
 
 aux prepare_devs 5
 
 for mdatype in 1 2
 do
 
-pvcreate -M$mdatype $devs
+pvcreate -M$mdatype $(cat DEVICES)
 
 # ensure name order does not matter
 # NOTE: if we're using lvm1, we must use -M on vgsplit
-vgcreate -M$mdatype $vg1 $devs
+vgcreate -M$mdatype $vg1 $(cat DEVICES)
 vgsplit -M$mdatype $vg1 $vg2 $dev1
 vgremove $vg1
 vgremove $vg2
-vgcreate -M$mdatype $vg2 $devs
+vgcreate -M$mdatype $vg2 $(cat DEVICES)
 vgsplit -M$mdatype $vg2 $vg1 $dev1
 vgremove $vg1
 vgremove $vg2
 
 # vgsplit accepts new vg as destination of split
 # lvm1 -- bz244792
-vgcreate -M$mdatype $vg1 $devs
+vgcreate -M$mdatype $vg1 $(cat DEVICES)
 vgsplit $vg1 $vg2 $dev1 1>err
 grep "New volume group \"$vg2\" successfully split from \"$vg1\"" err 
 vgremove $vg1 
@@ -50,14 +50,14 @@ vgremove $vg2
 # vgsplit accepts --maxphysicalvolumes 128 on new VG
 vgcreate -M$mdatype $vg1 $dev1 $dev2 
 vgsplit --maxphysicalvolumes 128 $vg1 $vg2 $dev1 
-check_vg_field_ $vg2 max_pv 128 
+check vg_field $vg2 max_pv 128 
 vgremove $vg1 
 vgremove $vg2
 
 # vgsplit accepts --maxlogicalvolumes 128 on new VG
 vgcreate -M$mdatype $vg1 $dev1 $dev2 
 vgsplit --maxlogicalvolumes 128 $vg1 $vg2 $dev1 
-check_vg_field_ $vg2 max_lv 128 
+check vg_field $vg2 max_lv 128 
 vgremove $vg1 
 vgremove $vg2
 
@@ -129,7 +129,7 @@ vgcreate -M$mdatype $vg1 $dev1 $dev2
 lvcreate -l 4 -n $lv1 $vg1 
 vgchange -an $vg1 
 vgsplit $vg1 $vg2 $dev1 
-compare_vg_field_ $vg1 $vg2 max_lv 
+check compare_vg_field $vg1 $vg2 max_lv 
 vgremove -f $vg2 
 vgremove -f $vg1
 
@@ -138,7 +138,7 @@ vgcreate -M$mdatype $vg1 $dev1 $dev2
 lvcreate -l 4 -n $lv1 $vg1 
 vgchange -an $vg1 
 vgsplit $vg1 $vg2 $dev1 
-compare_vg_field_ $vg1 $vg2 max_pv 
+check compare_vg_field $vg1 $vg2 max_pv 
 vgremove -f $vg2 
 vgremove -f $vg1
 
@@ -147,7 +147,7 @@ vgcreate -M$mdatype $vg1 $dev1 $dev2
 lvcreate -l 4 -n $lv1 $vg1 
 vgchange -an $vg1 
 vgsplit $vg1 $vg2 $dev1 
-compare_vg_field_ $vg1 $vg2 vg_fmt 
+check compare_vg_field $vg1 $vg2 vg_fmt 
 vgremove -f $vg2 
 vgremove -f $vg1
 
@@ -170,9 +170,9 @@ pvcreate --metadatacopies 0 $dev5
 vgcreate $vg1 $dev5 $dev2  
 lvcreate -l 10 -n $lv1  $vg1 
 lvchange -an $vg1/$lv1 
-vg_validate_pvlv_counts_ $vg1 2 1 0 
+check pvlv_counts $vg1 2 1 0 
 not vgsplit  $vg1 $vg2 $dev5;
-vg_validate_pvlv_counts_ $vg1 2 1 0 
+check pvlv_counts $vg1 2 1 0 
 vgremove -ff $vg1
 
 # vgsplit rejects split because metadata types differ

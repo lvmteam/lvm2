@@ -8,7 +8,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-. ./test-utils.sh
+. lib/test
 
 aux prepare_devs 5
 
@@ -18,7 +18,7 @@ pvcreate --metadatacopies 0 $dev3
 pvcreate $dev4
 pvcreate --metadatacopies 0 $dev5
 
-vgcreate -c n "$vg" $devs
+vgcreate -c n "$vg" $(cat DEVICES)
 lvcreate -n $lv -l 1 -i5 -I256 $vg
 
 pvchange -x n $dev1
@@ -30,9 +30,9 @@ vgremove -f $vg
 
 # check that PVs without metadata don't cause too many full device rescans (bz452606)
 for mdacp in 1 0; do
-	pvcreate --metadatacopies $mdacp $devs
+	pvcreate --metadatacopies $mdacp $(cat DEVICES)
 	pvcreate $dev1
-	vgcreate -c n $vg $devs
+	vgcreate -c n $vg $(cat DEVICES)
 	lvcreate -n $lv1 -l 2 -i5 -I256 $vg
 	lvcreate -n $lv2 -m2 -l 2  $vg
 	#lvchange -an $vg
@@ -55,9 +55,9 @@ pvchange --uuid $dev1
 
 # verify pe_start of all M1 PVs
 pv_align="128.00k"
-check_pv_field_ $dev1 pe_start $pv_align
-check_pv_field_ $dev2 pe_start $pv_align
-check_pv_field_ $dev3 pe_start $pv_align
+check pv_field $dev1 pe_start $pv_align
+check pv_field $dev2 pe_start $pv_align
+check pv_field $dev3 pe_start $pv_align
 
 pvs --units k -o name,pe_start,vg_mda_size,vg_name
 
@@ -65,9 +65,9 @@ pvs --units k -o name,pe_start,vg_mda_size,vg_name
 vgconvert -M2 $vg
 
 # verify pe_start of all M2 PVs
-check_pv_field_ $dev1 pe_start $pv_align
-check_pv_field_ $dev2 pe_start $pv_align
-check_pv_field_ $dev3 pe_start $pv_align
+check pv_field $dev1 pe_start $pv_align
+check pv_field $dev2 pe_start $pv_align
+check pv_field $dev3 pe_start $pv_align
 
 pvs --units k -o name,pe_start,vg_mda_size,vg_name
 
@@ -77,4 +77,4 @@ pvcreate -ff -y --restorefile $TESTDIR/bak-$vg --uuid $pv3_uuid $dev3
 vgcfgrestore -f $TESTDIR/bak-$vg $vg
 
 # verify pe_start of $dev3
-check_pv_field_ $dev3 pe_start $pv_align
+check pv_field $dev3 pe_start $pv_align

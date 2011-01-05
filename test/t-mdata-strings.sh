@@ -11,7 +11,7 @@
 
 # 'Test for proper escaping of strings in metadata (bz431474)'
 
-. ./test-utils.sh
+. lib/test
 
 aux prepare_devs 1
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2007-2008 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2011 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -8,13 +8,16 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-. lib/test
+pv_field() {
+	pvs --noheading -o $2 $1 | sed 's/^ *//'
+}
 
-aux prepare_vg 2
+vg_field() {
+	vgs --noheading -o $2 $1 | sed 's/^ *//'
+}
 
-lvcreate -L 10M -n lv -i2 $vg
-lvresize -l +4 $vg/lv
-lvremove -ff $vg
+lv_field() {
+	lvs --noheading -o $2 $1 | sed 's/^ *//'
+}
 
-lvcreate -L 64M -n $lv -i2 $vg
-not lvresize -v -l +4 xxx/$lv
+"$@"

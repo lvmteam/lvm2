@@ -15,7 +15,7 @@
 #
 # 'Test pvcreate without metadata on all pvs'
 
-. ./test-utils.sh
+. lib/test
 
 aux prepare_devs 2 128
 

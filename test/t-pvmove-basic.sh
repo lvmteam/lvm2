@@ -12,7 +12,7 @@
 
 test_description="ensure that pvmove works with basic options"
 
-. ./test-utils.sh
+. lib/test
 
 # ---------------------------------------------------------------------
 # Utilities
@@ -361,9 +361,9 @@ check_and_cleanup_lvs_
 
 #COMM "pvmove out of --metadatacopies 0 PV (bz252150)"
 vgremove -ff $vg
-pvcreate $devs
+pvcreate $(cat DEVICES)
 pvcreate --metadatacopies 0 $dev1 $dev2
-vgcreate -c n $vg $devs
+vgcreate -c n $vg $(cat DEVICES)
 lvcreate -l4 -n $lv1 $vg $dev1
 pvmove $dev1
 

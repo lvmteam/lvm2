@@ -9,43 +9,43 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-. ./test-utils.sh
+. lib/test
 
-prepare_vg 6
+aux prepare_vg 6
 
 # multiple failures, full replace
 lvcreate --mirrorlog disk -m 2 --ig -L 1 -n 3way $vg $dev1 $dev2 $dev3 $dev4:0-1
-disable_dev $dev1 $dev2
+aux disable_dev $dev1 $dev2
 echo y | lvconvert --repair $vg/3way 2>&1 | tee 3way.out
 lvs -a -o +devices | not grep unknown
 not grep "WARNING: Failed" 3way.out
 vgreduce --removemissing $vg
 check mirror $vg 3way
-enable_dev $dev1 $dev2
+aux enable_dev $dev1 $dev2
 
 vgremove -ff $vg; vgcreate -c n $vg $dev1 $dev2 $dev3 $dev4 $dev5
 
 # multiple failures, partial replace
 lvcreate --mirrorlog disk -m 2 --ig -L 1 -n 3way $vg $dev1 $dev2 $dev3 $dev4
-disable_dev $dev1 $dev2
+aux disable_dev $dev1 $dev2
 echo y | lvconvert --repair $vg/3way 2>&1 | tee 3way.out
 grep "WARNING: Failed" 3way.out
 lvs -a -o +devices | not grep unknown
 vgreduce --removemissing $vg
 check mirror $vg 3way
-enable_dev $dev1 $dev2
+aux enable_dev $dev1 $dev2
 lvchange -a n $vg/3way
 
 vgremove -ff $vg; vgcreate -c n $vg $dev1 $dev2 $dev3
 
 lvcreate --mirrorlog disk -m 1 --ig -L 1 -n 2way $vg $dev1 $dev2 $dev3
-disable_dev $dev1
+aux disable_dev $dev1
 echo y | lvconvert --repair $vg/2way 2>&1 | tee 2way.out
 grep "WARNING: Failed" 2way.out
 lvs -a -o +devices | not grep unknown
 vgreduce --removemissing $vg
 check mirror $vg 2way
-enable_dev $dev1 $dev2
+aux enable_dev $dev1 $dev2
 lvchange -a n $vg/2way
 
 vgremove -ff $vg; vgcreate -c n $vg $dev1 $dev2 $dev3 $dev4

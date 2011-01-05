@@ -25,6 +25,14 @@
 
 set -e -o pipefail
 
+trim()
+{
+    trimmed=${1%% }
+    trimmed=${trimmed## }
+
+    echo "$trimmed"
+}
+
 lvl() {
 	lvs -a --noheadings "$@"
 }
@@ -193,6 +201,81 @@ inactive() {
 		dmsetup table | grep $1-$2:
 		exit 1
 	}
+}
+
+pv_field()
+{
+    actual=$(trim $(pvs --noheadings $4 -o $2 $1))
+
+    test "$actual" = "$3" || {
+        echo "pv_field: PV=$1, field=$2, actual=$actual, expected=$3"
+        exit 1
+    }
+}
+
+vg_field()
+{
+    actual=$(trim $(vgs --noheadings $4 -o $2 $1))
+    test "$actual" = "$3" || {
+        echo "vg_field: vg=$1, field=$2, actual=$actual, expected=$3"
+        exit 1
+    }
+}
+
+lv_field()
+{
+    actual=$(trim $(lvs --noheadings $4 -o $2 $1))
+    test "$actual" = "$3" || {
+        echo "lv_field: lv=$1, field=$2, actual=$actual, expected=$3"
+        exit 1
+    }
+}
+
+compare_fields()
+{
+    local cmd1=$1;
+    local obj1=$2;
+    local field1=$3;
+    local cmd2=$4;
+    local obj2=$5;
+    local field2=$6;
+    local val1;
+    local val2;
+
+    val1=$($cmd1 --noheadings -o $field1 $obj1)
+    val2=$($cmd2 --noheadings -o $field2 $obj2)
+    test "$val1" = "$val2" || {
+        echo "compare_fields $obj1($field1): $val1 $obj2($field2): $val2"
+        exit 1
+    }
+}
+
+compare_vg_field()
+{
+    local vg1=$1;
+    local vg2=$2;
+    local field=$3;
+
+    val1=$(vgs --noheadings -o $field $vg1)
+    val2=$(vgs --noheadings -o $field $vg2)
+    test "$val1" = "$val2" || {
+        echo "compare_vg_field: $vg1: $val1, $vg2: $val2"
+        exit 1
+    }
+}
+
+pvlv_counts()
+{
+	local local_vg=$1
+	local num_pvs=$2
+	local num_lvs=$3
+	local num_snaps=$4
+
+	lvs -a -o+devices $local_vg
+
+	vg_field $local_vg pv_count $num_pvs
+	vg_field $local_vg lv_count $num_lvs
+	vg_field $local_vg snap_count $num_snaps
 }
 
 "$@"

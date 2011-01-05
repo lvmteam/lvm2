@@ -12,7 +12,7 @@
 test_description='Test pvcreate option values'
 PAGESIZE=$(getconf PAGESIZE)
 
-. ./test-utils.sh
+. lib/test
 
 aux prepare_devs 4
 
@@ -25,7 +25,7 @@ not pvcreate --metadatasize -1024 $dev1
 # x. metadatasize 0, defaults to 255
 # FIXME: unable to check default value, not in reporting cmds
 # should default to 255 according to code
-#   check_pv_field_ pv_mda_size 255 
+#   check pv_field pv_mda_size 255 
 #COMM 'pvcreate accepts metadatasize 0'
 pvcreate --metadatasize 0 $dev1
 pvremove $dev1
@@ -34,7 +34,7 @@ pvremove $dev1
 pvcreate --metadatasize 512k $dev1
 pvcreate --metadatasize 96k $dev2
 vgcreate $vg $dev1 $dev2
-compare_two_fields_ vgs $vg vg_mda_size pvs $dev2 pv_mda_size
+check compare_fields vgs $vg vg_mda_size pvs $dev2 pv_mda_size
 vgremove -ff $vg
 
 # x. metadatasize too large
@@ -51,9 +51,9 @@ do
 pvcreate --$j 0 $dev1
 pvcreate --$j 1 $dev2
 pvcreate --$j 2 $dev3
-check_pv_field_ $dev1 pv_mda_count 0
-check_pv_field_ $dev2 pv_mda_count 1
-check_pv_field_ $dev3 pv_mda_count 2
+check pv_field $dev1 pv_mda_count 0
+check pv_field $dev2 pv_mda_count 1
+check pv_field $dev3 pv_mda_count 2
 pvremove $dev1 
 pvremove $dev2 
 pvremove $dev3
@@ -89,21 +89,21 @@ not pvcreate --dataalignment 1e $dev1
 #COMM 'pvcreate always rounded up to page size for start of device'
 #pvcreate --metadatacopies 0 --dataalignment 1 $dev1
 # amuse shell experts
-#check_pv_field_ $dev1 pe_start $(($(getconf PAGESIZE)/1024))".00k"
+#check pv_field $dev1 pe_start $(($(getconf PAGESIZE)/1024))".00k"
 
 #COMM 'pvcreate sets data offset directly'
 pvcreate --dataalignment 512k $dev1
-check_pv_field_ $dev1 pe_start 512.00k
+check pv_field $dev1 pe_start 512.00k
 
 #COMM 'vgcreate/vgremove do not modify data offset of existing PV'
 vgcreate $vg $dev1  --config 'devices { data_alignment = 1024 }'
-check_pv_field_ $dev1 pe_start 512.00k
+check pv_field $dev1 pe_start 512.00k
 vgremove $vg --config 'devices { data_alignment = 1024 }'
-check_pv_field_ $dev1 pe_start 512.00k
+check pv_field $dev1 pe_start 512.00k
 
 #COMM 'pvcreate sets data offset next to mda area'
 pvcreate --metadatasize 100k --dataalignment 100k $dev1
-check_pv_field_ $dev1 pe_start 200.00k
+check pv_field $dev1 pe_start 200.00k
 
 # metadata area start is aligned according to pagesize
 # pagesize should be 64k or 4k ...
@@ -114,21 +114,21 @@ else
 fi
 
 pvcreate --metadatasize 128k --dataalignment 3.5k $dev1
-check_pv_field_ $dev1 pe_start $pv_align
+check pv_field $dev1 pe_start $pv_align
 
 pvcreate --metadatasize 128k --metadatacopies 2 --dataalignment 3.5k $dev1
-check_pv_field_ $dev1 pe_start $pv_align
+check pv_field $dev1 pe_start $pv_align
 
 # data area is aligned to 1M by default,
 # data area start is shifted by the specified alignment_offset
 pv_align="1052160B" # 1048576 + (7*512)
 pvcreate --metadatasize 128k --dataalignmentoffset 7s $dev1
-check_pv_field_ $dev1 pe_start $pv_align "--units b"
+check pv_field $dev1 pe_start $pv_align "--units b"
 
 # 2nd metadata area is created without problems when
 # data area start is shifted by the specified alignment_offset
 pvcreate --metadatasize 128k --metadatacopies 2 --dataalignmentoffset 7s $dev1
-check_pv_field_ $dev1 pv_mda_count 2
+check pv_field $dev1 pv_mda_count 2
 # FIXME: compare start of 2nd mda with and without --dataalignmentoffset
 
 #COMM 'pv with LVM1 compatible data alignment can be convereted'
@@ -137,7 +137,7 @@ pvcreate --dataalignment 256k $dev1
 vgcreate -s 1m $vg $dev1
 vgconvert -M1 $vg
 vgconvert -M2 $vg
-check_pv_field_ $dev1 pe_start 256.00k
+check pv_field $dev1 pe_start 256.00k
 vgremove $vg
 
 #COMM 'pv with LVM1 incompatible data alignment cannot be convereted'
@@ -155,8 +155,8 @@ vgcreate $vg $dev1 $dev2
 vgcfgbackup -f "$(pwd)/backup.$$" $vg
 sed 's/pe_start = [0-9]*/pe_start = 0/' "$(pwd)/backup.$$" > "$(pwd)/backup.$$1"
 vgcfgrestore -f "$(pwd)/backup.$$1" $vg
-check_pv_field_ $dev1 pe_start 0
-check_pv_field_ $dev2 pe_start 0
+check pv_field $dev1 pe_start 0
+check pv_field $dev2 pe_start 0
 vgremove $vg
 
 echo test pvcreate --metadataignore
@@ -165,25 +165,25 @@ for mdacp in 1 2; do
 for ignore in y n; do
 	echo pvcreate --metadataignore has proper mda_count and mda_used_count
 	pvcreate --metadatacopies $mdacp --metadataignore $ignore $dev1 $dev2
-	check_pv_field_ $dev1 pv_mda_count $mdacp
-	check_pv_field_ $dev2 pv_mda_count $mdacp
+	check pv_field $dev1 pv_mda_count $mdacp
+	check pv_field $dev2 pv_mda_count $mdacp
 	if [ $ignore = y ]; then
-		check_pv_field_ $dev1 pv_mda_used_count 0
-		check_pv_field_ $dev2 pv_mda_used_count 0
+		check pv_field $dev1 pv_mda_used_count 0
+		check pv_field $dev2 pv_mda_used_count 0
 	else
-		check_pv_field_ $dev1 pv_mda_used_count $mdacp
-		check_pv_field_ $dev2 pv_mda_used_count $mdacp
+		check pv_field $dev1 pv_mda_used_count $mdacp
+		check pv_field $dev2 pv_mda_used_count $mdacp
 	fi
 	echo vgcreate has proper vg_mda_count and vg_mda_used_count
 	if [ $pv_in_vg = 1 ]; then
 		vgcreate -c n "$vg" $dev1 $dev2
-		check_vg_field_ $vg vg_mda_count $(($mdacp * 2))
+		check vg_field $vg vg_mda_count $(($mdacp * 2))
 		if [ $ignore = y ]; then
-			check_vg_field_ $vg vg_mda_used_count 1
+			check vg_field $vg vg_mda_used_count 1
 		else
-			check_vg_field_ $vg vg_mda_used_count $(($mdacp * 2))
+			check vg_field $vg vg_mda_used_count $(($mdacp * 2))
 		fi
-		check_vg_field_ $vg vg_mda_copies unmanaged
+		check vg_field $vg vg_mda_copies unmanaged
 		vgremove $vg
 	fi
 done

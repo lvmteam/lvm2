@@ -8,13 +8,13 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-. ./test-utils.sh
+. lib/test
 
 aux prepare_vg 3
 
 lvcreate -m 1 -l 1 -n mirror $vg
 lvchange -a n $vg/mirror
-disable_dev $dev1
+aux disable_dev $dev1
 
 not vgreduce --removemissing $vg
 not lvchange -v -a y $vg/mirror

@@ -9,9 +9,9 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-. ./test-utils.sh
+. lib/test
 
-prepare_dmeventd
+aux prepare_dmeventd
 aux prepare_pvs 3
 
 vgcreate -c n -l 2 $vg $dev1 $dev2 $dev3

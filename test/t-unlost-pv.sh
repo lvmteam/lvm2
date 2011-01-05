@@ -9,7 +9,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-. ./test-utils.sh
+. lib/test
 
 aux prepare_vg 3
 
@@ -24,15 +24,15 @@ not grep "Inconsistent metadata found for VG $vg" vgscan.out
 }
 
 # try orphaning a missing PV (bz45867)
-disable_dev $dev1
+aux disable_dev $dev1
 vgreduce --removemissing --force $vg
-enable_dev $dev1
+aux enable_dev $dev1
 check
 
 # try to just change metadata; we expect the new version (with MISSING_PV set
 # on the reappeared volume) to be written out to the previously missing PV
 vgextend $vg $dev1
-disable_dev $dev1
+aux disable_dev $dev1
 lvremove $vg/mirror
-enable_dev $dev1
+aux enable_dev $dev1
 check
