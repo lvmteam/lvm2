@@ -1,5 +1,6 @@
 Version 2.02.80 - 
 ====================================
+  Fail poll daemon creation when lvmcache_init() fails.
   Return defined value for errors in _copy_percent() and _snap_percent().
   Correct return code of cmirrord when issuing 'start' when already running.
   Fix wrongly paired unlocking of global lock in pvchange. (2.02.66)
