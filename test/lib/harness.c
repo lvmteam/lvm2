@@ -19,9 +19,10 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <string.h>
 
-pid_t pid;
-int fds[2];
+static pid_t pid;
+static int fds[2];
 
 #define MAX 1024
 
@@ -33,37 +34,33 @@ struct stats {
 	int status[MAX];
 };
 
-struct stats s;
+static struct stats s;
 
-char *readbuf = NULL;
-int readbuf_sz = 0, readbuf_used = 0;
+static char *readbuf = NULL;
+static int readbuf_sz = 0, readbuf_used = 0;
 
-int die = 0;
-int verbose = 0;
-int verbose_off = 0;
+static int die = 0;
+static int verbose = 0;
 
 struct subst {
-        char *key;
+        const char *key;
         char *value;
 };
 
-struct subst subst[2];
-
-char *TESTDIR = NULL;
-char *PREFIX = NULL;
+static struct subst subst[2];
 
 #define PASSED 0
 #define SKIPPED 1
 #define FAILED 2
 #define WARNED 3
 
-void handler( int s ) {
+static void handler( int s ) {
 	signal( s, SIG_DFL );
 	kill( pid, s );
 	die = s;
 }
 
-int outline(char *buf, int start, int force) {
+static int outline(char *buf, int start, int force) {
         char *from = buf + start;
         char *next = strchr(buf + start, '\n');
 
@@ -112,18 +109,18 @@ int outline(char *buf, int start, int force) {
         return next - buf + (force ? 0 : 1);
 }
 
-void dump() {
+static void dump(void) {
         int counter = 0;
 
         while ( counter < readbuf_used )
                 counter = outline( readbuf, counter, 1 );
 }
 
-void clear() {
+static void clear(void) {
 	readbuf_used = 0;
 }
 
-void drain() {
+static void drain(void) {
 	int sz;
 	char buf[2048];
         memset(buf, 0, 2048);
@@ -146,7 +143,7 @@ void drain() {
 	}
 }
 
-void passed(int i, char *f) {
+static void passed(int i, char *f) {
 	if (strstr(readbuf, "TEST WARNING")) {
 		++s.nwarned;
 		s.status[i] = WARNED;
@@ -158,13 +155,13 @@ void passed(int i, char *f) {
 	}
 }
 
-void skipped(int i, char *f) {
+static void skipped(int i, char *f) {
 	++ s.nskipped;
 	s.status[i] = SKIPPED;
 	printf("skipped.\n");
 }
 
-void failed(int i, char *f, int st) {
+static void failed(int i, char *f, int st) {
 	++ s.nfailed;
 	s.status[i] = FAILED;
 	if(die == 2) {
@@ -177,7 +174,7 @@ void failed(int i, char *f, int st) {
 	printf("-- FAILED %s (end) ------------------------------\n", f);
 }
 
-void run(int i, char *f) {
+static void run(int i, char *f) {
 	pid = fork();
 	if (pid < 0) {
 		perror("Fork failed.");
