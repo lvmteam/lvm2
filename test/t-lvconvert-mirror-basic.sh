@@ -8,7 +8,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-. ./test-utils.sh
+. lib/test
 
 log_name_to_count()
 {
@@ -83,7 +83,7 @@ test_lvconvert()
 		max_log_count=$start_log_count
 	fi
 
-	prepare_vg 5
+	aux prepare_vg 5
 
 	if [ $start_count -gt 0 ]; then
 		# Are there extra devices for the log or do we overlap

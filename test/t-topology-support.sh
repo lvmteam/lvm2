@@ -15,7 +15,7 @@ linux_minor=$(echo `uname -r` | cut -d'.' -f3 | cut -d'-' -f1)
 
 test $linux_minor -ge 31 || exit 200
 
-. ./test-utils.sh
+. lib/test
 
 check_logical_block_size()
 {
@@ -64,41 +64,41 @@ DEV_SIZE=$(($NUM_DEVS*$PER_DEV_SIZE))
 # Create "desktop-class" 4K drive
 # (logical_block_size=512, physical_block_size=4096, alignment_offset=0):
 LOGICAL_BLOCK_SIZE=512
-prepare_scsi_debug_dev $DEV_SIZE \
+aux prepare_scsi_debug_dev $DEV_SIZE \
     sector_size=$LOGICAL_BLOCK_SIZE physblk_exp=3
 check_logical_block_size $SCSI_DEBUG_DEV $LOGICAL_BLOCK_SIZE
 
 aux prepare_pvs $NUM_DEVS $PER_DEV_SIZE
-vgcreate -c n $vg $devs
+vgcreate -c n $vg $(cat DEVICES)
 test_snapshot_mount
 vgremove $vg
 
-cleanup_scsi_debug_dev
+aux cleanup_scsi_debug_dev
 
 # ---------------------------------------------
 # Create "desktop-class" 4K drive w/ 63-sector DOS partition compensation
 # (logical_block_size=512, physical_block_size=4096, alignment_offset=3584):
 LOGICAL_BLOCK_SIZE=512
-prepare_scsi_debug_dev $DEV_SIZE \
+aux prepare_scsi_debug_dev $DEV_SIZE \
     sector_size=$LOGICAL_BLOCK_SIZE physblk_exp=3 lowest_aligned=7
 check_logical_block_size $SCSI_DEBUG_DEV $LOGICAL_BLOCK_SIZE
 
 aux prepare_pvs $NUM_DEVS $PER_DEV_SIZE
-vgcreate -c n $vg $devs
+vgcreate -c n $vg $(cat DEVICES)
 test_snapshot_mount
 vgremove $vg
 
-cleanup_scsi_debug_dev
+aux cleanup_scsi_debug_dev
 
 # ---------------------------------------------
 # Create "enterprise-class" 4K drive
 # (logical_block_size=4096, physical_block_size=4096, alignment_offset=0):
 LOGICAL_BLOCK_SIZE=4096
-prepare_scsi_debug_dev $DEV_SIZE \
+aux prepare_scsi_debug_dev $DEV_SIZE \
     sector_size=$LOGICAL_BLOCK_SIZE
 check_logical_block_size $SCSI_DEBUG_DEV $LOGICAL_BLOCK_SIZE
 
 aux prepare_pvs $NUM_DEVS $PER_DEV_SIZE
-vgcreate -c n $vg $devs
+vgcreate -c n $vg $(cat DEVICES)
 test_snapshot_mount
 vgremove $vg

@@ -11,7 +11,7 @@
 
 # 'Ensure that pvmove diagnoses PE-range values 2^32 and larger.'
 
-. ./test-utils.sh
+. lib/test
 
 aux prepare_vg 2
 

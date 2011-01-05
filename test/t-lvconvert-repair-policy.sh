@@ -9,16 +9,16 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-. ./test-utils.sh
+. lib/test
 
-prepare_vg 4
+aux prepare_vg 4
 
 # Clean-up and create a 2-way mirror, where the the
 # leg devices are always on $dev[12] and the log
 # is always on $dev3.  ($dev4 behaves as a spare)
 cleanup() {
 	vgreduce --removemissing $vg
-	for d in "$@"; do enable_dev $d; done
+	for d in "$@"; do aux enable_dev $d; done
 	for d in "$@"; do vgextend $vg $d; done
 	lvremove -ff $vg/mirror
 	lvcreate -m 1 --ig -l 2 -n mirror $vg $dev1 $dev2 $dev3:0
@@ -36,7 +36,7 @@ aux disable_dev $dev1
 lvchange --partial -a y $vg/mirror
 repair 'activation { mirror_image_fault_policy = "remove" }'
 check linear $vg mirror
-aux cleanup $dev1
+cleanup $dev1
 
 # Fail a leg of a mirror.
 # Expected result: Mirror (leg replaced)
@@ -44,7 +44,7 @@ aux disable_dev $dev1
 repair 'activation { mirror_image_fault_policy = "replace" }'
 check mirror $vg mirror
 lvs | grep mirror_mlog
-aux cleanup $dev1
+cleanup $dev1
 
 # Fail a leg of a mirror (use old name for policy specification)
 # Expected result: Mirror (leg replaced)
@@ -52,7 +52,7 @@ aux disable_dev $dev1
 repair 'activation { mirror_device_fault_policy = "replace" }'
 check mirror $vg mirror
 lvs | grep mirror_mlog
-aux cleanup $dev1
+cleanup $dev1
 
 # Fail a leg of a mirror w/ no available spare
 # Expected result: 2-way with corelog
@@ -60,7 +60,7 @@ aux disable_dev $dev2 $dev4
 repair 'activation { mirror_image_fault_policy = "replace" }'
 check mirror $vg mirror
 lvs | not grep mirror_mlog
-aux cleanup $dev2 $dev4
+cleanup $dev2 $dev4
 
 # Fail the log device of a mirror w/ no available spare
 # Expected result: mirror w/ corelog
@@ -68,7 +68,7 @@ aux disable_dev $dev3 $dev4
 repair 'activation { mirror_image_fault_policy = "replace" }' $vg/mirror
 check mirror $vg mirror
 lvs | not grep mirror_mlog
-aux cleanup $dev3 $dev4
+cleanup $dev3 $dev4
 
 # Fail the log device with a remove policy
 # Expected result: mirror w/ corelog

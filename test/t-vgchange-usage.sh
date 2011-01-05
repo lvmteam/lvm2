@@ -11,34 +11,34 @@
 
 test_description='Exercise some vgchange diagnostics'
 
-. ./test-utils.sh
+. lib/test
 
 aux prepare_pvs 3
 pvcreate --metadatacopies 0 $dev1
-vgcreate $vg $devs
+vgcreate $vg $(cat DEVICES)
 
 vgdisplay $vg
 
 # vgchange -p MaxPhysicalVolumes (bz202232)
-aux check_vg_field_ $vg max_pv 0
+aux check vg_field $vg max_pv 0
 vgchange -p 128 $vg
-aux check_vg_field_ $vg max_pv 128
+aux check vg_field $vg max_pv 128
 
-pv_count=$(get_vg_field $vg pv_count)
+pv_count=$(get vg_field $vg pv_count)
 not vgchange -p 2 $vg 2>err
 grep "MaxPhysicalVolumes is less than the current number $pv_count of PVs for" err
-aux check_vg_field_ $vg max_pv 128
+aux check vg_field $vg max_pv 128
 
 # vgchange -l MaxLogicalVolumes
-aux check_vg_field_ $vg max_lv 0
+aux check vg_field $vg max_lv 0
 vgchange -l 128 $vg
-aux check_vg_field_ $vg max_lv 128
+aux check vg_field $vg max_lv 128
 
 lvcreate -l4 -n$lv1 $vg
 lvcreate -l4 -n$lv2 $vg
 
-lv_count=$(get_vg_field $vg lv_count)
+lv_count=$(get vg_field $vg lv_count)
 not vgchange -l 1 $vg 2>err
 grep "MaxLogicalVolume is less than the current number $lv_count of LVs for"  err
-aux check_vg_field_ $vg max_lv 128
+aux check vg_field $vg max_lv 128
 

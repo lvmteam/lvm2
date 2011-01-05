@@ -12,7 +12,7 @@
 # Exercise various vgextend commands
 #
 
-. ./test-utils.sh
+. lib/test
 
 aux prepare_devs 5
 
@@ -55,7 +55,7 @@ done
 for i in 0 1 2
 do
     vgextend --pvmetadatacopies $i $vg $dev1
-    check_pv_field_ $dev1 pv_mda_count $i
+    check pv_field $dev1 pv_mda_count $i
     vgreduce $vg $dev1
     pvremove -f $dev1
 done
@@ -63,7 +63,7 @@ done
 # metadatasize, dataalignment, dataalignmentoffset
 #COMM 'pvcreate sets data offset next to mda area'
 vgextend --metadatasize 100k --dataalignment 100k $vg $dev1
-check_pv_field_ $dev1 pe_start 200.00k
+check pv_field $dev1 pe_start 200.00k
 vgreduce $vg $dev1
 pvremove -f $dev1
 
@@ -71,7 +71,7 @@ pvremove -f $dev1
 # data area start is shifted by the specified alignment_offset
 pv_align="1052160B" # 1048576 + (7*512)
 vgextend --metadatasize 128k --dataalignmentoffset 7s $vg $dev1
-check_pv_field_ $dev1 pe_start $pv_align "--units b"
+check pv_field $dev1 pe_start $pv_align "--units b"
 vgremove -f $vg
 pvremove -f $dev1
 
@@ -94,9 +94,9 @@ pvremove -f $dev1 $dev2
 pvcreate $dev1
 vgcreate $vg1 $dev2
 vgextend $vg1 $dev1 $dev3
-check_pv_field_ $dev1 vg_name $vg1
-check_pv_field_ $dev2 vg_name $vg1
-check_pv_field_ $dev3 vg_name $vg1
+check pv_field $dev1 vg_name $vg1
+check pv_field $dev2 vg_name $vg1
+check pv_field $dev3 vg_name $vg1
 vgremove -f $vg1
 pvremove -f $dev1 $dev2 $dev3
 
@@ -106,23 +106,23 @@ for ignore in y n; do
 	echo vgextend --metadataignore has proper mda_count and mda_used_count
 	vgcreate $vg $dev3
 	vgextend --metadataignore $ignore --pvmetadatacopies $mdacp $vg $dev1 $dev2
-	check_pv_field_ $dev1 pv_mda_count $mdacp
-	check_pv_field_ $dev2 pv_mda_count $mdacp
+	check pv_field $dev1 pv_mda_count $mdacp
+	check pv_field $dev2 pv_mda_count $mdacp
 	if [ $ignore = y ]; then
-		check_pv_field_ $dev1 pv_mda_used_count 0
-		check_pv_field_ $dev2 pv_mda_used_count 0
+		check pv_field $dev1 pv_mda_used_count 0
+		check pv_field $dev2 pv_mda_used_count 0
 	else
-		check_pv_field_ $dev1 pv_mda_used_count $mdacp
-		check_pv_field_ $dev2 pv_mda_used_count $mdacp
+		check pv_field $dev1 pv_mda_used_count $mdacp
+		check pv_field $dev2 pv_mda_used_count $mdacp
 	fi
 	echo vg has proper vg_mda_count and vg_mda_used_count
-	check_vg_field_ $vg vg_mda_count $(($mdacp * 2 + 1))
+	check vg_field $vg vg_mda_count $(($mdacp * 2 + 1))
 	if [ $ignore = y ]; then
-		check_vg_field_ $vg vg_mda_used_count 1
+		check vg_field $vg vg_mda_used_count 1
 	else
-		check_vg_field_ $vg vg_mda_used_count $(($mdacp * 2 + 1))
+		check vg_field $vg vg_mda_used_count $(($mdacp * 2 + 1))
 	fi
-	check_vg_field_ $vg vg_mda_copies unmanaged
+	check vg_field $vg vg_mda_copies unmanaged
 	vgremove $vg
 	pvremove -ff $dev1 $dev2 $dev3
 done

@@ -9,7 +9,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-. ./test-utils.sh
+. lib/test
 
 
 aux prepare_vg 3
@@ -19,9 +19,9 @@ lvcreate -l 1 -n lv1 $vg $dev1
 
 # try to just change metadata; we expect the new version (with MISSING_PV set
 # on the reappeared volume) to be written out to the previously missing PV
-disable_dev $dev1
+aux disable_dev $dev1
 lvremove $vg/mirror
-enable_dev $dev1
+aux enable_dev $dev1
 not vgck $vg 2>&1 | tee log
 grep "missing 1 physical volume" log
 not lvcreate -m 1 -l 1 -n mirror $vg # write operations fail

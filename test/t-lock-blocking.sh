@@ -11,7 +11,7 @@
 
 test_description='test some blocking / non-blocking multi-vg operations'
 
-. ./test-utils.sh
+. lib/test
 
 aux prepare_devs 3
 test -n "$LOCAL_CLVMD" && exit 200

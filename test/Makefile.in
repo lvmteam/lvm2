@@ -34,94 +34,73 @@ RUN_BASE = $(shell echo $(RUN) | xargs -n 1 echo | sed -e s,^$(srcdir)/,,)
 # Shell quote;
 SHELL_PATH_SQ = $(subst ','\'',$(SHELL_PATH))
 
-SUPPORT := $(srcdir)/test-utils.sh \
-           $(srcdir)/lvm-utils.sh
-
 ifeq ("@UDEV_SYNC@", "yes")
 dm_udev_synchronisation = 1
 endif
 
-all check: init.sh
+all check: .tests-stamp
 	make -C api tests
 	@echo Testing with locking_type 1
-	VERBOSE=$(VERBOSE) ./bin/harness $(RUN_BASE)
+	VERBOSE=$(VERBOSE) ./lib/harness $(RUN_BASE)
 	@echo Testing with locking_type 3
-	VERBOSE=$(VERBOSE) LVM_TEST_LOCKING=3 ./bin/harness $(RUN_BASE)
+	VERBOSE=$(VERBOSE) LVM_TEST_LOCKING=3 ./lib/harness $(RUN_BASE)
 
-check_cluster: init.sh
+check_cluster: .tests-stamp
 	make -C api tests
 	@echo Testing with locking_type 3
-	VERBOSE=$(VERBOSE) LVM_TEST_LOCKING=3 ./bin/harness $(RUN_BASE)
+	VERBOSE=$(VERBOSE) LVM_TEST_LOCKING=3 ./lib/harness $(RUN_BASE)
 
-check_local: init.sh
+check_local: .tests-stamp
 	make -C api tests
 	@echo Testing with locking_type 1
-	VERBOSE=$(VERBOSE) LVM_TEST_LOCKING=1 ./bin/harness $(RUN_BASE)
+	VERBOSE=$(VERBOSE) LVM_TEST_LOCKING=1 ./lib/harness $(RUN_BASE)
 
-bin/not: $(srcdir)/not.c .bin-dir-stamp
-	$(CC) -o bin/not $<
-	ln -sf not bin/should
+lib/should: lib/not
+	ln -sf not lib/should
 
-bin/harness: $(srcdir)/harness.c .bin-dir-stamp
-	$(CC) -o bin/harness $<
+lib/%: $(srcdir)/lib/%.c .lib-dir-stamp
+	$(CC) -o $@ $<
 
-bin/check: $(srcdir)/check.sh .bin-dir-stamp
-	cp $< bin/check
-	chmod +x bin/check
+lib/%: $(srcdir)/lib/%.sh .lib-dir-stamp
+	cp $< $@
+	chmod +x $@
 
-init.sh: $(srcdir)/Makefile.in .bin-dir-stamp bin/not bin/check bin/harness $(RUN) $(SUPPORT) $(UNIT)
-	rm -f $@-t $@
+lib/paths: $(srcdir)/Makefile.in .lib-dir-stamp
+	rm -f $@-t
 	echo 'top_srcdir=$(top_srcdir)' >> $@-t
 	echo 'abs_top_builddir=$(abs_top_builddir)' >> $@-t
 	echo 'abs_top_srcdir=$(abs_top_builddir)' >> $@-t
-	echo 'PATH=$$abs_top_builddir/test/bin:$$PATH' >> $@-t
-	LDLPATH="\$$abs_top_builddir/libdm"; \
-	LDLPATH="$$LDLPATH:\$$abs_top_builddir/tools"; \
-	LDLPATH="$$LDLPATH:\$$abs_top_builddir/liblvm"; \
-	LDLPATH="$$LDLPATH:\$$abs_top_builddir/daemons/dmeventd"; \
-	LDLPATH="$$LDLPATH:\$$abs_top_builddir/daemons/dmeventd/plugins/lvm2"; \
-	LDLPATH="$$LDLPATH:\$$abs_top_builddir/daemons/dmeventd/plugins/mirror"; \
-	LDLPATH="$$LDLPATH:\$$abs_top_builddir/daemons/dmeventd/plugins/snapshot"; \
-	echo "export LD_LIBRARY_PATH=\"$$LDLPATH\"" >> $@-t
-	echo 'top_srcdir=$(top_srcdir)' >> $@-t
 	echo 'abs_srcdir=$(abs_srcdir)' >> $@-t
 	echo 'abs_builddir=$(abs_builddir)' >> $@-t
-	echo 'export PATH' >> $@-t
 	echo 'export DM_UDEV_SYNCHRONISATION=$(dm_udev_synchronisation)' >> $@-t
-	chmod a-w $@-t
 	mv $@-t $@
+
+LIB = lib/not lib/should lib/harness \
+      lib/check lib/aux lib/test lib/utils lib/get lib/lvm-wrapper \
+      lib/paths
+
+.tests-stamp: $(RUN) $(LIB)
 	@if test "$(srcdir)" != . ; then \
 	    echo "Copying tests to builddir."; \
-	    cp $(SUPPORT) .; \
 	    for f in $(RUN); do cp $$f `echo $$f | sed -e s,^$(srcdir)/,,`; done; \
 	fi
+	touch .tests-stamp
 
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 
-.bin-dir-stamp: lvm-wrapper
-	rm -rf bin
-	mkdir bin
+.lib-dir-stamp:
+	mkdir -p lib
 	for i in lvm $$(cat ../tools/.commands); do \
-	  ln -s ../lvm-wrapper bin/$$i; \
+	  ln -fs lvm-wrapper lib/$$i; \
 	done
-	ln -s "$(abs_top_builddir)/tools/dmsetup" bin/dmsetup
-	ln -s "$(abs_top_builddir)/daemons/clvmd/clvmd" bin/clvmd
-	ln -s "$(abs_top_builddir)/daemons/dmeventd/dmeventd" bin/dmeventd
+	ln -s "$(abs_top_builddir)/tools/dmsetup" lib/dmsetup
+	ln -s "$(abs_top_builddir)/daemons/clvmd/clvmd" lib/clvmd
+	ln -s "$(abs_top_builddir)/daemons/dmeventd/dmeventd" lib/dmeventd
 	touch $@
 
-lvm-wrapper: Makefile
-	rm -f $@-t $@
-	echo '#!/bin/sh'                                          >  $@-t
-	echo 'cmd=$$(echo ./$$0|sed "s,.*/,,")'                   >> $@-t
-	echo 'test "$$cmd" = lvm &&'                              >> $@-t
-	echo 'exec "$(abs_top_builddir)/tools/lvm" "$$@"'         >> $@-t
-	echo 'exec "$(abs_top_builddir)/tools/lvm" "$$cmd" "$$@"' >> $@-t
-	chmod a-w,a+x $@-t
-	mv $@-t $@
-
 clean:
-	rm -rf init.sh lvm-wrapper bin .bin-dir-stamp
+	rm -rf bin .lib-dir-stamp .test-stamp
 	if test "$(srcdir)" != . ; then rm -f $(subst $(srcdir)/, ,$(RUN)) lvm2app.sh ; fi
 
 distclean: clean

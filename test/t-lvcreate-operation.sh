@@ -11,7 +11,7 @@
 
 # 'Exercise some lvcreate diagnostics'
 
-. ./test-utils.sh
+. lib/test
 
 cleanup_lvs() {
 	lvremove -ff $vg
@@ -21,9 +21,9 @@ cleanup_lvs() {
 	fi
 }
 
-prepare_pvs 2
+aux prepare_pvs 2
 aux pvcreate --metadatacopies 0 $dev1
-aux vgcreate -c n $vg $devs
+aux vgcreate -c n $vg $(cat DEVICES)
 
 # ---
 # Create snapshots of LVs on --metadatacopies 0 PV (bz450651)

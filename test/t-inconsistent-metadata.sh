@@ -9,7 +9,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-. ./test-utils.sh
+. lib/test
 
 aux prepare_vg 3
 
@@ -17,14 +17,14 @@ lvcreate -m 1 -l 1 -n mirror $vg
 lvcreate -l 1 -n resized $vg
 lvchange -a n $vg/mirror
 
-backup_dev $devs
+aux backup_dev $(cat DEVICES)
 
 init() {
-	restore_dev $devs
+	aux restore_dev $(cat DEVICES)
 	lvs -o lv_name,lv_size --units k $vg | tee lvs.out
 	grep resized lvs.out | not grep 8192
 	lvresize -L 8192K $vg/resized
-	restore_dev $dev1
+	aux restore_dev $dev1
 }
 
 check() {
@@ -66,10 +66,10 @@ check
 
 echo Check auto-repair of failed vgextend - metadata written to original pv but not new pv
 vgremove -f $vg
-pvremove -ff $devs
-pvcreate $devs
-backup_dev $dev2
+pvremove -ff $(cat DEVICES)
+pvcreate $(cat DEVICES)
+aux backup_dev $dev2
 vgcreate $vg $dev1
 vgextend $vg $dev2
-restore_dev $dev2
-should compare_two_fields_ vgs $vg vg_mda_count pvs $dev2 vg_mda_count
+aux restore_dev $dev2
+should check compare_fields vgs $vg vg_mda_count pvs $dev2 vg_mda_count

@@ -11,7 +11,7 @@
 
 test_description="ensure that 'vgreduce --removemissing' works on mirrored LV"
 
-. ./test-utils.sh
+. lib/test
 
 lv_is_on_ ()
 {
@@ -86,7 +86,7 @@ rest_pvs_()
 # ---------------------------------------------------------------------
 # Initialize PVs and VGs
 
-prepare_vg 5
+aux prepare_vg 5
 
 # ---------------------------------------------------------------------
 # Common environment setup/cleanup for each sub testcases
@@ -113,7 +113,7 @@ check_and_cleanup_lvs_()
 
 recover_vg_()
 {
-	enable_dev $* 
+	aux enable_dev $* 
 	pvcreate -ff $* 
 	vgextend $vg $* 
 	check_and_cleanup_lvs_
@@ -130,9 +130,9 @@ check_and_cleanup_lvs_
 prepare_lvs_
 lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0
 lvchange -an $vg/$lv1
-aux mimages_are_on_ $lv1 $dev1 $dev2
+mimages_are_on_ $lv1 $dev1 $dev2
 mirrorlog_is_on_ $lv1 $dev3
-disable_dev $dev2
+aux disable_dev $dev2
 vgreduce --removemissing --force $vg
 lv_is_linear_ $lv1
 lv_is_on_ $lv1 $dev1
@@ -151,9 +151,9 @@ test_3way_mirror_fail_1_()
 
 	lvcreate -l2 -m2 -n $lv1 $vg $dev1 $dev2 $dev3 $dev4:0
 	lvchange -an $vg/$lv1
-	aux mimages_are_on_ $lv1 $dev1 $dev2 $dev3
+	mimages_are_on_ $lv1 $dev1 $dev2 $dev3
 	mirrorlog_is_on_ $lv1 $dev4
-	eval disable_dev \$dev$index
+	eval aux disable_dev \$dev$index
 	vgreduce --removemissing --force $vg
 	lvs -a -o+devices $vg
 	mimages_are_on_ $lv1 $(rest_pvs_ $index 3)
@@ -181,10 +181,10 @@ test_3way_mirror_fail_2_()
 	mimages_are_on_ $lv1 $dev1 $dev2 $dev3
 	mirrorlog_is_on_ $lv1 $dev4
 	rest_pvs_ $index 3
-	disable_dev $(rest_pvs_ $index 3)
+	aux disable_dev $(rest_pvs_ $index 3)
 	vgreduce --force --removemissing $vg
 	lvs -a -o+devices $vg
-	aux lv_is_linear_ $lv1
+	lv_is_linear_ $lv1
 	eval lv_is_on_ $lv1 \$dev$n
 }
 
@@ -209,7 +209,7 @@ test_3way_mirror_plus_1_fail_1_()
 	lvconvert -m+1 $vg/$lv1 $dev4 
 	mimages_are_on_ $lv1 $dev1 $dev2 $dev3 $dev4 
 	mirrorlog_is_on_ $lv1 $dev5 
-	eval disable_dev \$dev$n 
+	eval aux disable_dev \$dev$n 
 	vgreduce --removemissing --force $vg 
 	lvs -a -o+devices $vg 
 	mimages_are_on_ $lv1 $(rest_pvs_ $index 4) 
@@ -237,7 +237,7 @@ test_3way_mirror_plus_1_fail_3_()
 	lvconvert -m+1 $vg/$lv1 $dev4 
 	mimages_are_on_ $lv1 $dev1 $dev2 $dev3 $dev4 
 	mirrorlog_is_on_ $lv1 $dev5 
-	disable_dev $(rest_pvs_ $index 4) 
+	aux disable_dev $(rest_pvs_ $index 4) 
 	vgreduce --removemissing --force $vg 
 	lvs -a -o+devices $vg 
 	eval local dev=\$dev$n
@@ -266,7 +266,7 @@ test_2way_mirror_plus_2_fail_1_()
 	lvconvert -m+2 $vg/$lv1 $dev3 $dev4 
 	mimages_are_on_ $lv1 $dev1 $dev2 $dev3 $dev4 
 	mirrorlog_is_on_ $lv1 $dev5 
-	eval disable_dev \$dev$n 
+	eval aux disable_dev \$dev$n 
 	vgreduce --removemissing --force $vg 
 	lvs -a -o+devices $vg 
 	mimages_are_on_ $lv1 $(rest_pvs_ $index 4) 
@@ -294,7 +294,7 @@ test_2way_mirror_plus_2_fail_3_()
 	lvconvert -m+2 $vg/$lv1 $dev3 $dev4 
 	mimages_are_on_ $lv1 $dev1 $dev2 $dev3 $dev4 
 	mirrorlog_is_on_ $lv1 $dev5 
-	disable_dev $(rest_pvs_ $index 4) 
+	aux disable_dev $(rest_pvs_ $index 4) 
 	vgreduce --removemissing --force $vg 
 	lvs -a -o+devices $vg 
 	eval local dev=\$dev$n
@@ -318,7 +318,7 @@ lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev5:0
 lvchange -an $vg/$lv1 
 mimages_are_on_ $lv1 $dev1 $dev2 
 mirrorlog_is_on_ $lv1 $dev5 
-disable_dev $dev5 
+aux disable_dev $dev5 
 vgreduce --removemissing --force $vg 
 mimages_are_on_ $lv1 $dev1 $dev2 
 not mirrorlog_is_on_ $lv1 $dev5
@@ -331,7 +331,7 @@ lvchange -an $vg/$lv1
 lvconvert -m+1 $vg/$lv1 $dev3 
 mimages_are_on_ $lv1 $dev1 $dev2 $dev3 
 mirrorlog_is_on_ $lv1 $dev5 
-disable_dev $dev5 
+aux disable_dev $dev5 
 vgreduce --removemissing --force $vg 
 mimages_are_on_ $lv1 $dev1 $dev2 $dev3 
 not mirrorlog_is_on_ $lv1 $dev5
@@ -346,7 +346,7 @@ lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev5:0
 lvchange -an $vg/$lv1 
 mimages_are_on_ $lv1 $dev1 $dev2 
 mirrorlog_is_on_ $lv1 $dev5 
-disable_dev $dev1 $dev2 
+aux disable_dev $dev1 $dev2 
 vgreduce --removemissing --force $vg 
 not lvs $vg/$lv1
 recover_vg_ $dev1 $dev2
@@ -358,7 +358,7 @@ lvchange -an $vg/$lv1
 lvconvert -m+1 $vg/$lv1 $dev3 
 mimages_are_on_ $lv1 $dev1 $dev2 $dev3 
 mirrorlog_is_on_ $lv1 $dev5 
-disable_dev $dev1 $dev2 $dev3 
+aux disable_dev $dev1 $dev2 $dev3 
 vgreduce --removemissing --force $vg 
 not lvs $vg/$lv1
 recover_vg_ $dev1 $dev2 $dev3
@@ -376,7 +376,7 @@ mimages_are_on_ $lv1 $dev1 $dev2
 mimages_are_on_ $lv2 $dev3 $dev4 
 mirrorlog_is_on_ $lv1 $dev5 
 mirrorlog_is_on_ $lv2 $dev5 
-disable_dev $dev2 
+aux disable_dev $dev2 
 vgreduce --removemissing --force $vg 
 mimages_are_on_ $lv2 $dev3 $dev4 
 mirrorlog_is_on_ $lv2 $dev5 
@@ -394,8 +394,8 @@ mimages_are_on_ $lv1 $dev1 $dev2
 mimages_are_on_ $lv2 $dev3 $dev4 
 mirrorlog_is_on_ $lv1 $dev5 
 mirrorlog_is_on_ $lv2 $dev5 
-disable_dev $dev2 
-disable_dev $dev4 
+aux disable_dev $dev2 
+aux disable_dev $dev4 
 vgreduce --removemissing --force $vg 
 lv_is_linear_ $lv1 
 lv_is_on_ $lv1 $dev1 

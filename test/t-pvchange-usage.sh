@@ -11,7 +11,7 @@
 
 # 'Test pvchange option values'
 
-. ./test-utils.sh
+. lib/test
 
 aux prepare_devs 4
 
@@ -24,15 +24,15 @@ do
 
 # "pvchange adds/dels tag to pvs with metadatacopies = $mda " 
 	pvchange $dev1 --addtag test$mda 
-	check_pv_field_ $dev1 pv_tags test$mda 
+	check pv_field $dev1 pv_tags test$mda 
 	pvchange $dev1 --deltag test$mda 
-	check_pv_field_ $dev1 pv_tags ""
+	check pv_field $dev1 pv_tags ""
 
 # "vgchange disable/enable allocation for pvs with metadatacopies = $mda (bz452982)"
 	pvchange $dev1 -x n 
-	check_pv_field_ $dev1 pv_attr  --  
+	check pv_field $dev1 pv_attr  --  
 	pvchange $dev1 -x y 
-	check_pv_field_ $dev1 pv_attr  a- 
+	check pv_field $dev1 pv_attr  a- 
 
 # 'remove pv'
 	vgremove $vg1 
@@ -45,13 +45,13 @@ pvcreate --metadatacopies 2 $dev2
 vgcreate $vg1 $dev1 $dev2 
 pvchange -u $dev1 
 pvchange -u $dev2 
-vg_validate_pvlv_counts_ $vg1 2 0 0
+check pvlv_counts $vg1 2 0 0
 pvchange -u --all
-vg_validate_pvlv_counts_ $vg1 2 0 0
+check pvlv_counts $vg1 2 0 0
 
 # "pvchange rejects uuid change under an active lv" 
 lvcreate -l 16 -i 2 -n $lv --alloc anywhere $vg1 
-vg_validate_pvlv_counts_ $vg1 2 1 0 
+check pvlv_counts $vg1 2 1 0 
 not pvchange -u $dev1
 lvchange -an "$vg1"/"$lv" 
 pvchange -u $dev1

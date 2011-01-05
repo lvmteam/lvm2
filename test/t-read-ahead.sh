@@ -15,7 +15,7 @@
 
 test_description='Test read-ahead functionality'
 
-. ./test-utils.sh
+. lib/test
 
 
 get_lvs_() {
@@ -53,10 +53,10 @@ lvremove -ff $vg
 # Check default, active/inactive values for read_ahead / kernel_read_ahead
 lvcreate -n $lv -l 50%FREE $vg
 lvchange -an $vg/$lv
-check_lv_field_ $vg/$lv lv_read_ahead auto
-check_lv_field_ $vg/$lv lv_kernel_read_ahead -1
+check lv_field $vg/$lv lv_read_ahead auto
+check lv_field $vg/$lv lv_kernel_read_ahead -1
 lvchange -r 512 $vg/$lv
 lvchange -ay $vg/$lv
-check_lv_field_ $vg/$lv lv_read_ahead 256.00k
-check_lv_field_ $vg/$lv lv_kernel_read_ahead 256.00k
+check lv_field $vg/$lv lv_read_ahead 256.00k
+check lv_field $vg/$lv lv_kernel_read_ahead 256.00k
 lvremove -ff $vg

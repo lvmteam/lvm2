@@ -9,7 +9,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-. ./test-utils.sh
+. lib/test
 
 aux prepare_pvs 4
 
@@ -28,7 +28,7 @@ vgremove -ff $vg2
 # and vgcfgrestore able to restore them when device reappears
 pv1_uuid=$(pvs --noheadings -o pv_uuid $dev1)
 pv2_uuid=$(pvs --noheadings -o pv_uuid $dev2)
-vgcreate $vg $devs
+vgcreate $vg $(cat DEVICES)
 lvcreate -l1 -n $lv1 $vg $dev1
 lvcreate -l1 -n $lv2 $vg $dev2
 lvcreate -l1 -n $lv3 $vg $dev3
@@ -46,8 +46,8 @@ vgremove -ff $vg
 # FIXME: clvmd seems to have problem with metadata format change here
 # fix it and remove this vgscan
 vgscan
-pvcreate -M1 $devs
-vgcreate -M1 -c n $vg $devs
+pvcreate -M1 $(cat DEVICES)
+vgcreate -M1 -c n $vg $(cat DEVICES)
 lvcreate -l1 -n $lv1 $vg $dev1
 pvremove -ff -y $dev2
 not lvcreate -l1 -n $lv1 $vg $dev3

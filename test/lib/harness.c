@@ -40,6 +40,17 @@ int readbuf_sz = 0, readbuf_used = 0;
 
 int die = 0;
 int verbose = 0;
+int verbose_off = 0;
+
+struct subst {
+        char *key;
+        char *value;
+};
+
+struct subst subst[2];
+
+char *TESTDIR = NULL;
+char *PREFIX = NULL;
 
 #define PASSED 0
 #define SKIPPED 1
@@ -52,8 +63,60 @@ void handler( int s ) {
 	die = s;
 }
 
+int outline(char *buf, int start, int force) {
+        char *from = buf + start;
+        char *next = strchr(buf + start, '\n');
+
+        if (!next && !force) /* not a complete line yet... */
+                return start;
+
+        if (!next)
+                next = from + strlen(from);
+        else
+                ++next;
+
+        if (!strncmp(from, "@TESTDIR=", 9)) {
+                subst[0].key = "@TESTDIR@";
+                subst[0].value = strndup(from + 9, next - from - 9 - 1);
+        } else if (!strncmp(from, "@PREFIX=", 8)) {
+                subst[1].key = "@PREFIX@";
+                subst[1].value = strndup(from + 8, next - from - 8 - 1);
+        } else {
+                char *line = strndup(from, next - from);
+                char *a = line, *b;
+                do {
+                        b = line + strlen(line);
+                        int idx = -1;
+                        int i;
+                        for ( i = 0; i < 2; ++i ) {
+                                if (subst[i].key) {
+                                        // printf("trying: %s -> %s\n", subst[i].value, subst[i].key);
+                                        char *stop = strstr(a, subst[i].value);
+                                        if (stop && stop < b) {
+                                                idx = i;
+                                                b = stop;
+                                        }
+                                }
+                        }
+                        fwrite(a, 1, b - a, stdout);
+                        a = b;
+
+                        if ( idx >= 0 ) {
+                                fprintf(stdout, "%s", subst[idx].key);
+                                a += strlen(subst[idx].value);
+                        }
+                } while (b < line + strlen(line));
+                free(line);
+        }
+
+        return next - buf + (force ? 0 : 1);
+}
+
 void dump() {
-	fwrite(readbuf, 1, readbuf_used, stdout);
+        int counter = 0;
+
+        while ( counter < readbuf_used )
+                counter = outline( readbuf, counter, 1 );
 }
 
 void clear() {
@@ -63,8 +126,10 @@ void clear() {
 void drain() {
 	int sz;
 	char buf[2048];
+        memset(buf, 0, 2048);
+
 	while (1) {
-		sz = read(fds[1], buf, 2048);
+		sz = read(fds[1], buf, 2047);
 		if (verbose)
 			write(1, buf, sz);
 		if (sz <= 0)
@@ -121,6 +186,8 @@ void run(int i, char *f) {
 		close(0);
 		dup2(fds[0], 1);
 		dup2(fds[0], 2);
+                close(fds[0]);
+                close(fds[1]);
 		execlp("bash", "bash", f, NULL);
 		perror("execlp");
 		fflush(stderr);
@@ -166,13 +233,9 @@ int main(int argc, char **argv) {
 
 	s.nwarned = s.nfailed = s.npassed = s.nskipped = 0;
 
-	char *config = getenv("LVM_TEST_CONFIG"),
-		*config_debug,
-		*be_verbose = getenv("VERBOSE");
+	char *be_verbose = getenv("VERBOSE");
 	if (be_verbose && atoi(be_verbose))
 		verbose = 1; // XXX
-	config = config ? config : "";
-	asprintf(&config_debug, "%s\n%s\n", config, "log { verbose=4 }");
 
 	if (socketpair(PF_UNIX, SOCK_STREAM, 0, fds)) {
 		perror("socketpair");

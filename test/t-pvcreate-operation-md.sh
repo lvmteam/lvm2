@@ -18,9 +18,9 @@ which cut || exit 200
 test -f /proc/mdstat && grep -q raid0 /proc/mdstat || \
 modprobe raid0 || exit 200
 
-. ./test-utils.sh
+. lib/test
 
-prepare_lvmconf '[ "a|/dev/md.*|", "a/dev\/mapper\/.*$/", "r/.*/" ]'
+prepare_lvmconf 'devices/filter = [ "a|/dev/md.*|", "a/dev\/mapper\/.*$/", "r/.*/" ]'
 aux prepare_devs 2
 
 # Have MD use a non-standard name to avoid colliding with an existing MD device
@@ -60,14 +60,14 @@ pv_align="1.00m"
 pvcreate --metadatasize 128k \
     --config 'devices {md_chunk_alignment=0 data_alignment_detection=0 data_alignment_offset_detection=0}' \
     $mddev
-check_pv_field_ $mddev pe_start $pv_align
+check pv_field $mddev pe_start $pv_align
 
 # Test md_chunk_alignment independent of topology-aware detection
 pv_align="1.00m"
 pvcreate --metadatasize 128k \
     --config 'devices {data_alignment_detection=0 data_alignment_offset_detection=0}' \
     $mddev
-check_pv_field_ $mddev pe_start $pv_align
+check pv_field $mddev pe_start $pv_align
 
 # Get linux minor version
 linux_minor=$(echo `uname -r` | cut -d'.' -f3 | cut -d'-' -f1)
@@ -79,7 +79,7 @@ if [ $linux_minor -ge 33 ]; then
     # optimal_io_size=131072, minimum_io_size=65536
     pvcreate --metadatasize 128k \
 	--config 'devices { md_chunk_alignment=0 }' $mddev
-    check_pv_field_ $mddev pe_start $pv_align
+    check pv_field $mddev pe_start $pv_align
 fi
 
 # partition MD array directly, depends on blkext in Linux >= 2.6.28
@@ -113,7 +113,7 @@ EOF
         # default alignment is 1M, add alignment_offset
 	pv_align=$((1048576+$alignment_offset))B
 	pvcreate --metadatasize 128k $mddev_p
-	check_pv_field_ $mddev_p pe_start $pv_align "--units b"
+	check pv_field $mddev_p pe_start $pv_align "--units b"
 	pvremove $mddev_p
     fi
 fi
@@ -133,11 +133,11 @@ if [ $linux_minor -ge 33 ]; then
     pv_align="2.00m"
     pvcreate --metadatasize 128k \
 	--config 'devices { md_chunk_alignment=0 }' $mddev
-    check_pv_field_ $mddev pe_start $pv_align
+    check pv_field $mddev pe_start $pv_align
 
     # now verify pe_start alignment override using --dataalignment
     pv_align="192.00k"
     pvcreate --dataalignment 64k --metadatasize 128k \
 	--config 'devices { md_chunk_alignment=0 }' $mddev
-    check_pv_field_ $mddev pe_start $pv_align
+    check pv_field $mddev pe_start $pv_align
 fi

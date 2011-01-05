@@ -8,16 +8,16 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-. ./test-utils.sh
+. lib/test
 
 aux prepare_pvs 5
 
 vgcreate $vg1 $dev1
 vgcreate $vg2 $dev3
 
-disable_dev $dev1
+aux disable_dev $dev1
 pvscan
 vgcreate $vg1 $dev2
-enable_dev $dev1
+aux enable_dev $dev1
 pvs
 pvs

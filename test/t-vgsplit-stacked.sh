@@ -8,12 +8,13 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-. ./test-utils.sh
+. lib/test
 
-prepare_lvmconf '[ "a/dev\/mirror/", "a/dev\/mapper\/.*$/", "a/dev\/LVMTEST/", "r/.*/" ]'
+aux lvmconf 'devices/filter = [ "a/dev\/mirror/", "a/dev\/mapper\/.*$/", "a/dev\/LVMTEST/", "r/.*/" ]'
+cat $TESTDIR/etc/lvm.conf
 aux prepare_devs 3
 
-pvcreate $devs
+pvcreate $(cat DEVICES)
 vgcreate $vg1 $dev1 $dev2
 lvcreate -n $lv1 -l 100%FREE $vg1
 

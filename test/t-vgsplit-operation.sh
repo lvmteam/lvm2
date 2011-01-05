@@ -11,13 +11,13 @@
 
 # Test vgsplit operation, including different LV types
 
-. ./test-utils.sh
+. lib/test
 
 COMM() {  
 	LAST_TEST="$@"
 }
 
-prepare_pvs 5 258
+aux prepare_pvs 5 258
 # FIXME: paramaterize lvm1 vs lvm2 metadata; most of these tests should run
 # fine with lvm1 metadata as well; for now, just add disks 5 and 6 as lvm1
 # metadata
@@ -44,11 +44,11 @@ COMM "vgsplit correctly splits single linear LV into $i VG ($j args)"
 		else
 		  vgsplit -n $lv1 $vg1 $vg2
 		fi 
-		vg_validate_pvlv_counts_ $vg1 1 0 0 
+		check pvlv_counts $vg1 1 0 0 
 		if [ $i = existing ]; then
-		   aux vg_validate_pvlv_counts_ $vg2 3 1 0
+		   check pvlv_counts $vg2 3 1 0
 		else
-		   aux vg_validate_pvlv_counts_ $vg2 1 1 0
+		   check pvlv_counts $vg2 1 1 0
 		fi 
 		lvremove -f $vg2/$lv1 
 		vgremove -f $vg2 
@@ -67,9 +67,9 @@ COMM "vgsplit correctly splits single striped LV into $i VG ($j args)"
 		  vgsplit -n $lv1 $vg1 $vg2
 		fi 
 		if [ $i = existing ]; then
-		  aux vg_validate_pvlv_counts_ $vg2 4 1 0
+		  check pvlv_counts $vg2 4 1 0
 		else
-		  aux vg_validate_pvlv_counts_ $vg2 2 1 0
+		  check pvlv_counts $vg2 2 1 0
 		fi 
 		lvremove -f $vg2/$lv1 
 		vgremove -f $vg2
@@ -87,9 +87,9 @@ COMM "vgsplit correctly splits mirror LV into $i VG ($j args)"
 		  vgsplit -n $lv1 $vg1 $vg2
 		fi 
 		if [ $i = existing ]; then
-		  aux vg_validate_pvlv_counts_ $vg2 4 1 0
+		  check pvlv_counts $vg2 4 1 0
 		else
-		  aux vg_validate_pvlv_counts_ $vg2 3 1 0
+		  check pvlv_counts $vg2 3 1 0
 		fi 
 		lvremove -f $vg2/$lv1 
 		vgremove -f $vg2
@@ -108,9 +108,9 @@ COMM "vgsplit correctly splits origin and snapshot LV into $i VG ($j args)"
 		  vgsplit -n $lv1 $vg1 $vg2
 		fi 
 		if [ $i = existing ]; then
-		  aux vg_validate_pvlv_counts_ $vg2 4 2 1
+		  check pvlv_counts $vg2 4 2 1
 		else
-		  aux vg_validate_pvlv_counts_ $vg2 2 2 1
+		  check pvlv_counts $vg2 2 2 1
 		fi 
 		lvremove -f $vg2/$lv2 
 		lvremove -f $vg2/$lv1 
@@ -132,11 +132,11 @@ COMM "vgsplit correctly splits linear LV but not snap+origin LV into $i VG ($j a
 		  vgsplit -n $lv3 $vg1 $vg2
 		fi 
 		if [ $i = existing ]; then
-		  aux vg_validate_pvlv_counts_ $vg2 2 1 0
-		  aux vg_validate_pvlv_counts_ $vg1 2 2 1
+		  check pvlv_counts $vg2 2 1 0
+		  check pvlv_counts $vg1 2 2 1
 		else
-		  aux vg_validate_pvlv_counts_ $vg2 1 1 0
-		  aux vg_validate_pvlv_counts_ $vg1 2 2 1
+		  check pvlv_counts $vg2 1 1 0
+		  check pvlv_counts $vg1 2 2 1
 		fi 
 		lvremove -f $vg1/$lv2 
 		lvremove -f $vg1/$lv1 
@@ -162,14 +162,14 @@ COMM "vgsplit correctly splits linear LV but not mirror LV into $i VG ($j args)"
 		  vgsplit -n $lv2 $vg1 $vg2
 		fi 
 		if [ $i = existing ]; then
-		  aux vg_validate_pvlv_counts_ $vg1 3 1 0
-		  aux vg_validate_pvlv_counts_ $vg2 2 1 0
+		  check pvlv_counts $vg1 3 1 0
+		  check pvlv_counts $vg2 2 1 0
 		else
 		vgs
 		lvs 
 		pvs
-		  aux vg_validate_pvlv_counts_ $vg1 3 1 0
-		  aux vg_validate_pvlv_counts_ $vg2 1 1 0
+		  check pvlv_counts $vg1 3 1 0
+		  check pvlv_counts $vg2 1 1 0
 		fi 
 		lvremove -f $vg1/$lv1 
 		lvremove -f $vg2/$lv2 
@@ -197,7 +197,7 @@ vgcreate -c n $vg1 $dev1 $dev2 $dev3 $dev4
 lvcreate -l 16 -n $lv1 $vg1 $dev1 $dev2 
 lvcreate -l 4 -n $lv2 -s $vg1/$lv1 $dev3
 lvcreate -l 4 -n $lv3 -s $vg1/$lv1 $dev4
-vg_validate_pvlv_counts_ $vg1 4 3 2 
+check pvlv_counts $vg1 4 3 2 
 vgchange -an $vg1 
 not vgsplit -n $lv1 $vg1 $vg2;
 lvremove -f $vg1/$lv2 
@@ -210,7 +210,7 @@ vgcreate -c n $vg1 $dev1 $dev2 $dev3 $dev4
 lvcreate -l 16 -n $lv1 $vg1 $dev1 $dev2 
 lvcreate -l 4 -n $lv2 -s $vg1/$lv1 $dev3
 lvcreate -l 4 -n $lv3 -s $vg1/$lv1 $dev4
-vg_validate_pvlv_counts_ $vg1 4 3 2 
+check pvlv_counts $vg1 4 3 2 
 vgchange -an $vg1 
 not vgsplit -n $lv2 $vg1 $vg2
 lvremove -f $vg1/$lv2 
@@ -221,7 +221,7 @@ vgremove -ff $vg1
 COMM "vgsplit fails splitting one mirror LV, only one PV specified" 
 vgcreate -c n $vg1 $dev1 $dev2 $dev3 $dev4 
 lvcreate -l 16 -n $lv1 -m1 $vg1 $dev1 $dev2 $dev3 
-vg_validate_pvlv_counts_ $vg1 4 1 0 
+check pvlv_counts $vg1 4 1 0 
 vgchange -an $vg1 
 not vgsplit $vg1 $vg2 $dev2 
 vgremove -ff $vg1
@@ -230,7 +230,7 @@ COMM "vgsplit fails splitting 1 mirror + 1 striped LV, only striped LV specified
 vgcreate -c n $vg1 $dev1 $dev2 $dev3 $dev4 
 lvcreate -l 16 -n $lv1 -m1 $vg1 $dev1 $dev2 $dev3 
 lvcreate -l 16 -n $lv2 -i 2 $vg1 $dev3 $dev4 
-vg_validate_pvlv_counts_ $vg1 4 2 0 
+check pvlv_counts $vg1 4 2 0 
 vgchange -an $vg1 
 not vgsplit -n $lv2 $vg1 $vg2 2>err
 vgremove -ff $vg1
@@ -243,9 +243,9 @@ vgcreate -c n $vg1 $dev1 $dev2 $dev3 $dev4
 lvcreate -l 16 -n $lv1 -m1 $vg1 $dev1 $dev2 $dev3 
 lvcreate -l 16 -n $lv2 $vg1 $dev4 
 lvchange -an $vg1/$lv2 
-vg_validate_pvlv_counts_ $vg1 4 2 0 
+check pvlv_counts $vg1 4 2 0 
 not vgsplit -n $lv1 $vg1 $vg2;
-vg_validate_pvlv_counts_ $vg1 4 2 0 
+check pvlv_counts $vg1 4 2 0 
 vgremove -ff $vg1
 
 COMM "vgsplit succeeds, active mirror not involved in split" 
@@ -253,10 +253,10 @@ vgcreate -c n $vg1 $dev1 $dev2 $dev3 $dev4
 lvcreate -l 16 -n $lv1 -m1 $vg1 $dev1 $dev2 $dev3 
 lvcreate -l 16 -n $lv2 $vg1 $dev4 
 lvchange -an $vg1/$lv2 
-vg_validate_pvlv_counts_ $vg1 4 2 0 
+check pvlv_counts $vg1 4 2 0 
 vgsplit -n $lv2 $vg1 $vg2 
-vg_validate_pvlv_counts_ $vg1 3 1 0 
-vg_validate_pvlv_counts_ $vg2 1 1 0 
+check pvlv_counts $vg1 3 1 0 
+check pvlv_counts $vg2 1 1 0 
 vgremove -ff $vg1 
 vgremove -ff $vg2
 
@@ -266,9 +266,9 @@ lvcreate -l 64 -i 2 -n $lv1 $vg1 $dev1 $dev2
 lvcreate -l 4 -i 2 -s -n $lv2 $vg1/$lv1 
 lvcreate -l 64 -i 2 -n $lv3 $vg1 $dev3 $dev4 
 lvchange -an $vg1/$lv3 
-vg_validate_pvlv_counts_ $vg1 4 3 1 
+check pvlv_counts $vg1 4 3 1 
 not vgsplit -n $lv2 $vg1 $vg2;
-vg_validate_pvlv_counts_ $vg1 4 3 1 
+check pvlv_counts $vg1 4 3 1 
 lvremove -f $vg1/$lv2 
 vgremove -ff $vg1
 
@@ -279,10 +279,10 @@ lvcreate -l 4 -s -n $lv2 $vg1/$lv1
 vgextend $vg1 $dev4 
 lvcreate -l 64 -n $lv3 $vg1 $dev4 
 lvchange -an $vg1/$lv3 
-vg_validate_pvlv_counts_ $vg1 4 3 1 
+check pvlv_counts $vg1 4 3 1 
 vgsplit -n $lv3 $vg1 $vg2 
-vg_validate_pvlv_counts_ $vg1 3 2 1 
-vg_validate_pvlv_counts_ $vg2 1 1 0 
+check pvlv_counts $vg1 3 2 1 
+check pvlv_counts $vg2 1 1 0 
 vgchange -an $vg1 
 lvremove -f $vg1/$lv2 
 vgremove -ff $vg1 
