@@ -43,7 +43,10 @@ prepare_dmeventd() {
 	fi
 
 	# skip if we don't have our own dmeventd...
-	(which dmeventd | grep $abs_builddir) || exit 200
+	(which dmeventd | grep $abs_builddir) || {
+            touch SKIP_THIS_TEST
+            exit 1
+        }
 
 	dmeventd -f &
 	echo "$!" > LOCAL_DMEVENTD
@@ -219,6 +222,7 @@ prepare_devs() {
 	fi
 
 	local size=$(($loopsz/$n))
+        devs=
 
 	init_udev_transaction
 	for i in `seq 1 $n`; do
