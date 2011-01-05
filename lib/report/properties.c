@@ -87,15 +87,18 @@ static int _not_implemented_set(void *obj, struct lvm_property_type *prop)
 }
 
 static percent_t _copy_percent(const struct logical_volume *lv) {
-    percent_t perc;
-    lv_mirror_percent(lv->vg->cmd, (struct logical_volume *) lv, 0, &perc, NULL);
-    return perc;
+	percent_t perc;
+	if (!lv_mirror_percent(lv->vg->cmd, (struct logical_volume *) lv,
+			   0, &perc, NULL))
+		perc = PERCENT_INVALID;
+	return perc;
 }
 
 static percent_t _snap_percent(const struct logical_volume *lv) {
-    percent_t perc;
-    lv_snapshot_percent(lv, &perc);
-    return perc;
+	percent_t perc;
+	if (!lv_snapshot_percent(lv, &perc))
+		perc = PERCENT_INVALID;
+	return perc;
 }
 
 /* PV */
