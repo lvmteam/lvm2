@@ -45,13 +45,13 @@ cleanup_md() {
 
 cleanup_md_and_teardown() {
     cleanup_md
-    teardown
+    aux teardown
 }
 
 # create 2 disk MD raid0 array (stripe_width=128K)
 test -b "$mddev" && exit 200
 mdadm --create --metadata=1.0 $mddev --auto=md --level 0 --raid-devices=2 --chunk 64 $dev1 $dev2
-trap 'aux cleanup_md_and_teardown' EXIT # cleanup this MD device at the end of the test
+trap 'cleanup_md_and_teardown' EXIT # cleanup this MD device at the end of the test
 test -b "$mddev" || exit 200
 
 # Test alignment of PV on MD without any MD-aware or topology-aware detection
