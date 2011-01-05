@@ -21,7 +21,7 @@ unset CDPATH
 OLDPWD="`pwd`"
 PREFIX="LVMTEST$$"
 
-TESTDIR=$($abs_srcdir/mkdtemp ${LVM_TEST_DIR-$(pwd)} $PREFIX.XXXXXXXXXX) \
+TESTDIR=$(mkdtemp ${LVM_TEST_DIR-$(pwd)} $PREFIX.XXXXXXXXXX) \
 	|| { echo "failed to create temporary directory in ${LVM_TEST_DIR-$(pwd)}"; exit 1; }
 
 export PREFIX
