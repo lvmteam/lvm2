@@ -75,19 +75,22 @@ static struct dm_task *_setup_task(const char *name, const char *uuid,
 	if (!(dmt = dm_task_create(task)))
 		return_NULL;
 
-	if (name)
-		dm_task_set_name(dmt, name);
+	if (name && !dm_task_set_name(dmt, name))
+		goto_out;
 
-	if (uuid && *uuid)
-		dm_task_set_uuid(dmt, uuid);
+	if (uuid && *uuid && !dm_task_set_uuid(dmt, uuid))
+		goto_out;
 
-	if (event_nr)
-		dm_task_set_event_nr(dmt, *event_nr);
+	if (event_nr && !dm_task_set_event_nr(dmt, *event_nr))
+		goto_out;
 
-	if (major)
-		dm_task_set_major_minor(dmt, major, minor, 1);
+	if (major && !dm_task_set_major_minor(dmt, major, minor, 1))
+		goto_out;
 
 	return dmt;
+      out:
+	dm_task_destroy(dmt);
+	return NULL;
 }
 
 static int _info_run(const char *name, const char *dlid, struct dm_info *info,
