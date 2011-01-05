@@ -830,7 +830,6 @@ static void main_loop(int local_sock, int cmd_timeout)
 					struct local_client *free_fd;
 					lastfd->next = thisfd->next;
 					free_fd = thisfd;
-					thisfd = lastfd;
 
 					DEBUGLOG("removeme set for fd %d\n", free_fd->fd);
 
@@ -866,7 +865,6 @@ static void main_loop(int local_sock, int cmd_timeout)
 							 ret, errno);
 						lastfd->next = thisfd->next;
 						free_fd = thisfd;
-						thisfd = lastfd;
 						safe_close(&(free_fd->fd));
 
 						/* Queue cleanup, this also frees the client struct */
