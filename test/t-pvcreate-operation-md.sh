@@ -20,7 +20,7 @@ modprobe raid0 || exit 200
 
 . lib/test
 
-prepare_lvmconf 'devices/filter = [ "a|/dev/md.*|", "a/dev\/mapper\/.*$/", "r/.*/" ]'
+aux lvmconf 'devices/filter = [ "a|/dev/md.*|", "a/dev\/mapper\/.*$/", "r/.*/" ]'
 aux prepare_devs 2
 
 # Have MD use a non-standard name to avoid colliding with an existing MD device
