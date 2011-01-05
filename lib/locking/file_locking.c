@@ -268,12 +268,20 @@ static int _file_lock_resource(struct cmd_context *cmd, const char *resource,
 		if (flags & LCK_CACHE)
 			break;
 
-		if (is_orphan_vg(resource) || is_global_vg(resource))
-			dm_snprintf(lockfile, sizeof(lockfile),
-				     "%s/P_%s", _lock_dir, resource + 1);
-		else
-			dm_snprintf(lockfile, sizeof(lockfile),
-				     "%s/V_%s", _lock_dir, resource);
+		if (is_orphan_vg(resource) || is_global_vg(resource)) {
+			if (dm_snprintf(lockfile, sizeof(lockfile),
+					"%s/P_%s", _lock_dir, resource + 1) < 0) {
+				log_error("Too long locking filename %s/P_%s.",
+					  _lock_dir, resource + 1);
+				return 0;
+			}
+		} else
+			if (dm_snprintf(lockfile, sizeof(lockfile),
+					"%s/V_%s", _lock_dir, resource) < 0) {
+				log_error("Too long locking filename %s/V_%s.",
+					  _lock_dir, resource);
+				return 0;
+			}
 
 		if (!_lock_file(lockfile, flags))
 			return_0;

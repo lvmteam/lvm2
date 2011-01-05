@@ -409,12 +409,14 @@ int lock_resource(struct cmd_context *cmd, const char *resource, uint32_t flags)
 		}
 
 		/* If the VG name is empty then lock the unused PVs */
-		if (is_orphan_vg(resource) || is_global_vg(resource) || (flags & LCK_CACHE))
-			dm_snprintf(lockname, sizeof(lockname), "P_%s",
-				    resource);
-		else
-			dm_snprintf(lockname, sizeof(lockname), "V_%s",
-				    resource);
+		if (dm_snprintf(lockname, sizeof(lockname), "%c_%s",
+				(is_orphan_vg(resource) ||
+				 is_global_vg(resource) ||
+				 (flags & LCK_CACHE)) ?  'P' : 'V',
+				resource)  < 0) {
+			log_error("Locking resource %s too long.", resource);
+			return 0;
+		}
 
 		lock_scope = "VG";
 		clvmd_cmd = CLVMD_CMD_LOCK_VG;
