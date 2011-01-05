@@ -927,25 +927,6 @@ static int _lvconvert_mirrors_parse_params(struct cmd_context *cmd,
 	}
 
 	/*
-	 * Disallow adding logs while removing images or
-	 *          adding images while removing logs
-	 */
-	if ((*old_log_count < *new_log_count) &&
-	    (*old_mimage_count > *new_mimage_count)) {
-		log_error("Mirror logs cannot be added while images are"
-			  " being removed.");
-		log_error("Try two separate commands.");
-		return 0;
-	}
-	if ((*old_log_count > *new_log_count) &&
-	    (*old_mimage_count < *new_mimage_count)) {
-		log_error("Mirror images cannot be added while logs are"
-			  " being removed.");
-		log_error("Try two separate commands.");
-		return 0;
-	}
-
-	/*
 	 * No mirrored logs for cluster mirrors until
 	 * log daemon is multi-threaded.
 	 */
@@ -1368,8 +1349,8 @@ static int _lvconvert_mirrors(struct cmd_context *cmd,
         if (((old_mimage_count < new_mimage_count && old_log_count > new_log_count) ||
              (old_mimage_count > new_mimage_count && old_log_count < new_log_count)) &&
             lp->pv_count) {
-		log_error("Cannot both allocate and free extents when specifying physical"
-			  " volumes to use.");
+		log_error("Cannot both allocate and free extents when "
+			  "specifying physical volumes to use.");
 		log_error("Please specify the operation in two steps.");
 		return 0;
         }
