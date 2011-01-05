@@ -184,7 +184,6 @@ static int _mirrored_target_percent(void **target_state,
 				    uint64_t *total_numerator,
 				    uint64_t *total_denominator)
 {
-	struct mirror_state *mirr_state;
 	uint64_t numerator, denominator;
 	unsigned mirror_count, m;
 	int used;
@@ -192,8 +191,6 @@ static int _mirrored_target_percent(void **target_state,
 
 	if (!*target_state)
 		*target_state = _mirrored_init_target(mem, cmd);
-
-	mirr_state = *target_state;
 
 	/* Status line: <#mirrors> (maj:min)+ <synced>/<total_regions> */
 	log_debug("Mirror status: %s", params);
