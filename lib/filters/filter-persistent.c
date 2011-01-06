@@ -318,13 +318,16 @@ struct dev_filter *persistent_filter_create(struct dev_filter *real,
 	struct dev_filter *f = NULL;
 	struct stat info;
 
-	if (!(pf = dm_zalloc(sizeof(*pf))))
-		return_NULL;
+	if (!(pf = dm_zalloc(sizeof(*pf)))) {
+		log_error("Allocation of persistent filter failed.");
+		return NULL;
+	}
 
-	if (!(pf->file = dm_malloc(strlen(file) + 1)))
-		goto_bad;
+	if (!(pf->file = dm_strdup(file))) {
+		log_error("Filename duplication for persistent filter failed.");
+		goto bad;
+	}
 
-	strcpy(pf->file, file);
 	pf->real = real;
 
 	if (!(_init_hash(pf))) {
@@ -332,8 +335,10 @@ struct dev_filter *persistent_filter_create(struct dev_filter *real,
 		goto bad;
 	}
 
-	if (!(f = dm_malloc(sizeof(*f))))
-		goto_bad;
+	if (!(f = dm_malloc(sizeof(*f)))) {
+		log_error("Allocation of device filter for persistent filter failed.");
+		goto bad;
+	}
 
 	/* Only merge cache file before dumping it if it changed externally. */
 	if (!stat(pf->file, &info))

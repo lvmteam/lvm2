@@ -708,6 +708,7 @@ static int _init_filters(struct cmd_context *cmd, unsigned load_persistent_cache
 		    cache_dir ? : DEFAULT_CACHE_SUBDIR,
 		    cache_file_prefix ? : DEFAULT_CACHE_FILE_PREFIX) < 0) {
 			log_error("Persistent cache filename too long.");
+			f3->destroy(f3);
 			return 0;
 		}
 	} else if (!(dev_cache = find_config_tree_str(cmd, "devices/cache", NULL)) &&
@@ -716,6 +717,7 @@ static int _init_filters(struct cmd_context *cmd, unsigned load_persistent_cache
 				cmd->system_dir, DEFAULT_CACHE_SUBDIR,
 				DEFAULT_CACHE_FILE_PREFIX) < 0)) {
 		log_error("Persistent cache filename too long.");
+		f3->destroy(f3);
 		return 0;
 	}
 
@@ -723,8 +725,9 @@ static int _init_filters(struct cmd_context *cmd, unsigned load_persistent_cache
 		dev_cache = cache_file;
 
 	if (!(f4 = persistent_filter_create(f3, dev_cache))) {
-		log_error("Failed to create persistent device filter");
-		return 0;
+		log_verbose("Failed to create persistent device filter.");
+		f3->destroy(f3);
+		return_0;
 	}
 
 	/* Should we ever dump persistent filter state? */
