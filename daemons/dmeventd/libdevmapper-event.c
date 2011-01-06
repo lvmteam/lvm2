@@ -432,7 +432,6 @@ static int _start_daemon(char *dmeventd_path, struct dm_event_fifos *fifos)
 
 		log_error("%s: Can't open client fifo %s: %s",
 			  __func__, fifos->client_path, strerror(errno));
-		stack;
 		return 0;
 	}
 
@@ -441,7 +440,7 @@ static int _start_daemon(char *dmeventd_path, struct dm_event_fifos *fifos)
 
 	if (!strncmp(DMEVENTD_PATH, "/", 1) && stat(DMEVENTD_PATH, &statbuf)) {
 		log_error("Unable to find dmeventd.");
-		return_0;
+		return 0;
 	}
 
 	pid = fork();
@@ -479,7 +478,6 @@ int init_fifos(struct dm_event_fifos *fifos)
 	if ((fifos->server = open(fifos->server_path, O_RDWR)) < 0) {
 		log_error("%s: open server fifo %s",
 			  __func__, fifos->server_path);
-		stack;
 		return 0;
 	}
 
@@ -495,7 +493,6 @@ int init_fifos(struct dm_event_fifos *fifos)
 		log_error("%s: Can't open client fifo %s: %s",
 			  __func__, fifos->client_path, strerror(errno));
 		close(fifos->server);
-		stack;
 		return 0;
 	}
 
