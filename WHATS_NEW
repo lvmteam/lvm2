@@ -1,5 +1,6 @@
 Version 2.02.80 - 
 ====================================
+  Fix memory leak in filter creation error path.
   Add missing tests in _setup_task().
   Fail poll daemon creation when lvmcache_init() fails.
   Return defined value for errors in _copy_percent() and _snap_percent().
