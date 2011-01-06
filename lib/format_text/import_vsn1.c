@@ -840,7 +840,7 @@ static void _read_desc(struct dm_pool *mem,
 	log_suppress(old_suppress);
 	*desc = dm_pool_strdup(mem, d);
 
-	get_config_uint32(cft->root, "creation_time", &u);
+	(void) get_config_uint32(cft->root, "creation_time", &u);
 	*when = u;
 }
 
