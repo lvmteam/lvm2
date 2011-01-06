@@ -715,16 +715,17 @@ int dm_event_get_registered_device(struct dm_event_handler *dmevh, int next)
 
 	uuid = dm_task_get_uuid(dmt);
 
-	if (!(ret = _do_event(next ? DM_EVENT_CMD_GET_NEXT_REGISTERED_DEVICE :
-			     DM_EVENT_CMD_GET_REGISTERED_DEVICE, dmevh->dmeventd_path,
-			      &msg, dmevh->dso, uuid, dmevh->mask, 0))) {
-		/* FIXME this will probably horribly break if we get
-		   ill-formatted reply */
-		ret = _parse_message(&msg, &reply_dso, &reply_uuid, &reply_mask);
-	} else {
+	if (_do_event(next ? DM_EVENT_CMD_GET_NEXT_REGISTERED_DEVICE :
+		      DM_EVENT_CMD_GET_REGISTERED_DEVICE, dmevh->dmeventd_path,
+		      &msg, dmevh->dso, uuid, dmevh->mask, 0)) {
 		ret = -ENOENT;
+		stack;
 		goto fail;
 	}
+
+	/* FIXME this will probably horribly break if we get
+	   ill-formatted reply */
+	ret = _parse_message(&msg, &reply_dso, &reply_uuid, &reply_mask);
 
 	dm_task_destroy(dmt);
 	dmt = NULL;
