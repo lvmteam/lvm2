@@ -10,11 +10,6 @@
 
 . lib/utils
 
-skip() {
-    touch SKIP_THIS_TEST
-    exit 1
-}
-
 prepare_clvmd() {
 	if test -z "$LVM_TEST_LOCKING" || test "$LVM_TEST_LOCKING" -ne 3 ; then
 		return 0 # not needed
