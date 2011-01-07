@@ -146,6 +146,11 @@ finish_udev_transaction() {
     fi
 }
 
+skip() {
+    touch SKIP_THIS_TEST
+    exit 200
+}
+
 . lib/paths || { echo >&2 you must run make first; exit 1; }
 
 PATH=$abs_top_builddir/test/lib:$PATH
