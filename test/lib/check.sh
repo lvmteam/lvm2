@@ -141,7 +141,7 @@ mirror_nonredundant() {
 	lv="$1/$2"
 	lvs -oattr "$lv" | grep -q "^ *m.....$" || {
 		if lvs -oattr "$lv" | grep -q "^ *o.....$" &&
-		   lvs -a | fgrep -q "[${lv}_mimage"; then
+		   lvs -a | fgrep -q "[${2}_mimage"; then
 			echo "TEST WARNING: $lv is a snapshot origin and looks like a mirror,"
 			echo "assuming it is actually a mirror"
 		else
