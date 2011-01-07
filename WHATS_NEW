@@ -1,5 +1,6 @@
 Version 2.02.80 - 
 ====================================
+  Add aclocal.m4 (for pkgconfig).
   Fix memory leak in filter creation error path.
   Add missing tests in _setup_task().
   Fail poll daemon creation when lvmcache_init() fails.
