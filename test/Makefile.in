@@ -101,6 +101,9 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 
 clean:
 	rm -rf bin .lib-dir-stamp .test-stamp
+	rm -f $(LIB)
+	rm -f lib/dmsetup lib/clvmd lib/dmeventd
+	for i in lvm $$(cat ../tools/.commands); do rm -f lib/$$i; done
 	if test "$(srcdir)" != . ; then rm -f $(subst $(srcdir)/, ,$(RUN)) lvm2app.sh ; fi
 
 distclean: clean
