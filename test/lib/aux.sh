@@ -52,7 +52,9 @@ prepare_dmeventd() {
             exit 1
         }
 
-	dmeventd -f &
+        lvmconf "activation/monitoring = 1"
+
+	dmeventd -f "$@" &
 	echo "$!" > LOCAL_DMEVENTD
 }
 
@@ -335,6 +337,7 @@ activation/udev_rules = 1
 activation/polling_interval = 0
 activation/snapshot_autoextend_percent = 50
 activation/snapshot_autoextend_threshold = 50
+activation/monitoring = 0
 EOF
     }
 
