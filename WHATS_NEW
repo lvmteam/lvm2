@@ -1,19 +1,20 @@
-Version 2.02.80 - 
-====================================
-  Speedup consequent activation calls by using internal cookie.
-  Add internal lvm library cookie.
-  Speedup command processing by caching resolved config tree.
+Version 2.02.80 - 10th January 2011
+===================================
+  Use same dm cookie for consecutive dm ops in same VG to reduce udev waits.
+  Speed up command processing by caching resolved config tree.
   Pass config_tree to renamed function import_vg_from_config_tree().
   Detect NULL handle in get_property().
   Fix superfluous /usr in ocf_scriptdir instalation path.
   Add --with-ocfdir configurable option.
   Add aclocal.m4 (for pkgconfig).
-  Fix memory leak in filter creation error path.
-  Add missing tests in _setup_task().
-  Fail poll daemon creation when lvmcache_init() fails.
-  Return defined value for errors in _copy_percent() and _snap_percent().
-  Correct return code of cmirrord when issuing 'start' when already running.
-  Fix wrongly paired unlocking of global lock in pvchange. (2.02.66)
+  Fix memory leak in persistent filter creation error path.
+  Check for errors setting up dm_task struct in _setup_task().
+  Fail polldaemon creation when lvmcache_init() fails.
+  Return PERCENT_INVALID for errors in _copy_percent() and _snap_percent().
+  Remove some unused variables.
+  Improve general lvconvert man page description.
+  Return 0 from cmirrord initscript 'start' if daemon is already running.
+  Fix wrongly paired unlocking of VG_GLOBAL in pvchange. (2.02.66)
   Add backtraces for backup and backup_remove fail paths.
   Detect errors from dm_task_set calls in _get_device_info (dmeventd).
   Add backtraces for archive and backup_locally in check_current_backup().
