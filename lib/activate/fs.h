@@ -30,5 +30,7 @@ int fs_del_lv_byname(const char *dev_dir, const char *vg_name,
 int fs_rename_lv(struct logical_volume *lv, const char *dev, 
 		 const char *old_vgname, const char *old_lvname);
 void fs_unlock(void);
+uint32_t fs_get_cookie(void);
+void fs_set_cookie(uint32_t cookie);
 
 #endif
