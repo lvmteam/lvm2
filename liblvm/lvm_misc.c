@@ -52,33 +52,29 @@ struct lvm_property_value get_property(const pv_t pv, const vg_t vg,
 	struct lvm_property_type prop;
 	struct lvm_property_value v;
 
+	memset(&v, 0, sizeof(v));
 	prop.id = name;
+
 	if (pv) {
-		if (!pv_get_property(pv, &prop)) {
-			v.is_valid = 0;
+		if (!pv_get_property(pv, &prop))
 			return v;
-		}
 	} else if (vg) {
-		if (!vg_get_property(vg, &prop)) {
-			v.is_valid = 0;
+		if (!vg_get_property(vg, &prop))
 			return v;
-		}
 	} else if (lv) {
-		if (!lv_get_property(lv, &prop)) {
-			v.is_valid = 0;
+		if (!lv_get_property(lv, &prop))
 			return v;
-		}
 	} else if (lvseg) {
-		if (!lvseg_get_property(lvseg, &prop)) {
-			v.is_valid = 0;
+		if (!lvseg_get_property(lvseg, &prop))
 			return v;
-		}
 	} else if (pvseg) {
-		if (!pvseg_get_property(pvseg, &prop)) {
-			v.is_valid = 0;
+		if (!pvseg_get_property(pvseg, &prop))
 			return v;
-		}
+	} else {
+		log_errno(EINVAL, "Invalid NULL handle passed to library function.");
+		return v;
 	}
+
 	v.is_settable = prop.is_settable;
 	v.is_string = prop.is_string;
 	v.is_integer = prop.is_integer;
