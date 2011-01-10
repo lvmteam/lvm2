@@ -1,5 +1,6 @@
 Version 2.02.80 - 
 ====================================
+  Detect NULL handle in get_property().
   Fix superfluous /usr in ocf_scriptdir instalation path.
   Add --with-ocfdir configurable option.
   Add aclocal.m4 (for pkgconfig).
