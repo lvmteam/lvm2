@@ -1,5 +1,6 @@
 Version 2.02.80 - 
 ====================================
+  Speedup command processing by caching resolved config tree.
   Pass config_tree to renamed function import_vg_from_config_tree().
   Detect NULL handle in get_property().
   Fix superfluous /usr in ocf_scriptdir instalation path.

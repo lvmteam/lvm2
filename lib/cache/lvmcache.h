@@ -48,6 +48,7 @@ struct lvmcache_vginfo {
 	char *creation_host;
 	char *vgmetadata;	/* Copy of VG metadata as format_text string */
 	struct config_tree *cft; /* Config tree created from vgmetadata */
+				/* Lifetime is directly tied to vgmetadata */
 	unsigned precommitted;	/* Is vgmetadata live or precommitted? */
 };
 

@@ -83,6 +83,12 @@ static void _free_cached_vgmetadata(struct lvmcache_vginfo *vginfo)
 
 	vginfo->vgmetadata = NULL;
 
+	/* Release also cached config tree */
+	if (vginfo->cft) {
+		destroy_config_tree(vginfo->cft);
+		vginfo->cft = NULL;
+	}
+
 	log_debug("Metadata cache: VG %s wiped.", vginfo->vgname);
 }
 
@@ -651,7 +657,9 @@ struct volume_group *lvmcache_get_vg(const char *vgid, unsigned precommitted)
 						      vgid, NULL)))
 		return_NULL;
 
-	if (!(vginfo->cft =
+	/* Build config tree from vgmetadata, if not yet cached */
+	if (!vginfo->cft &&
+	    !(vginfo->cft =
 	      create_config_tree_from_string(fid->fmt->cmd,
 					     vginfo->vgmetadata))) {
 		_free_cached_vgmetadata(vginfo);
@@ -660,10 +668,8 @@ struct volume_group *lvmcache_get_vg(const char *vgid, unsigned precommitted)
 
 	if (!(vg = import_vg_from_config_tree(vginfo->cft, fid))) {
 		_free_cached_vgmetadata(vginfo);
-		destroy_config_tree(vginfo->cft);
 		return_NULL;
 	}
-	destroy_config_tree(vginfo->cft);
 
 	log_debug("Using cached %smetadata for VG %s.",
 		  vginfo->precommitted ? "pre-committed" : "", vginfo->vgname);
