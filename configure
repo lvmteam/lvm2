@@ -619,6 +619,7 @@ PTHREAD_LIBS
 POOL
 PKGCONFIG
 REPLICATORS
+OCFDIR
 OCF
 MIRRORS
 LVM_RELEASE_DATE
@@ -797,6 +798,7 @@ with_replicators
 enable_readline
 enable_realtime
 enable_ocf
+with_ocfdir
 with_clvmd
 with_clvmd_pidfile
 enable_cmirrord
@@ -1536,6 +1538,8 @@ Optional Packages:
                           [[TYPE=internal]]
   --with-replicators=TYPE replicator support: internal/shared/none
                           [[TYPE=none]]
+  --with-ocfdir=DIR       install OCF files in DIR
+                          [[PREFIX/lib/ocf/resource.d/lvm2]]
   --with-clvmd=TYPE       build cluster LVM Daemon
                           The following cluster manager combinations are valid:
                            * cman,gulm             (RHEL4 or equivalent)
@@ -6908,6 +6912,14 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $OCF" >&5
 $as_echo "$OCF" >&6; }
 
+# Check whether --with-ocfdir was given.
+if test "${with_ocfdir+set}" = set; then :
+  withval=$with_ocfdir; OCFDIR=$withval
+else
+  OCFDIR='${prefix}/lib/ocf/resource.d/lvm2'
+fi
+
+
 ################################################################################
 pkg_config_init() {
 
@@ -10183,6 +10195,7 @@ LVM_PATCHLEVEL=`echo "$VER" | $AWK -F '[(.]' '{print $3}'`
 LVM_LIBAPI=`echo "$VER" | $AWK -F '[()]' '{print $2}'`
 
 ################################################################################
+
 
 
 
