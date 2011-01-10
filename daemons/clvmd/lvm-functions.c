@@ -894,6 +894,13 @@ struct dm_hash_node *get_next_excl_lock(struct dm_hash_node *v, char **name)
 	return v;
 }
 
+void lvm_do_fs_unlock(void)
+{
+	pthread_mutex_lock(&lvm_lock);
+	fs_unlock();
+	pthread_mutex_unlock(&lvm_lock);
+}
+
 /* Called to initialise the LVM context of the daemon */
 int init_clvm(int using_gulm, char **argv)
 {

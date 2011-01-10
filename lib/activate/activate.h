@@ -121,4 +121,9 @@ int pv_uses_vg(struct physical_volume *pv,
  */
 int device_is_usable(struct device *dev);
 
+/*
+ * Declaration moved here from fs.h to keep header fs.h hidden
+ */
+void fs_unlock(void);
+
 #endif

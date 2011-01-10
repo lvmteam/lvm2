@@ -1206,7 +1206,6 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s)
 	memlock_inc(cmd);
 	r = _lv_deactivate(lv);
 	memlock_dec(cmd);
-	fs_unlock();
 
 	if (!lv_info(cmd, lv, 0, &info, 1, 0) || info.exists)
 		r = 0;
@@ -1305,7 +1304,6 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 	if (!(r = _lv_activate_lv(lv, 0)))
 		stack;
 	memlock_dec(cmd);
-	fs_unlock();
 
 	if (r && !monitor_dev_for_events(cmd, lv, 0, 1))
 		stack;

@@ -1,5 +1,6 @@
 Version 2.02.80 - 
 ====================================
+  Speedup consequent activation calls by using internal cookie.
   Add internal lvm library cookie.
   Speedup command processing by caching resolved config tree.
   Pass config_tree to renamed function import_vg_from_config_tree().
