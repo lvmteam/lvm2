@@ -1,5 +1,6 @@
 Version 2.02.81 - 
 ===================================
+  Fix cookie sharing between forked lvm processes (2.02.80).
 
 Version 2.02.80 - 10th January 2011
 ===================================

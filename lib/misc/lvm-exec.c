@@ -54,6 +54,8 @@ int exec_cmd(struct cmd_context *cmd, const char *const argv[], int *rstatus)
 
 	log_verbose("Executing: %s", _verbose_args(argv, buf, sizeof(buf)));
 
+	fs_unlock(); /* Flush oops and ensure cookie is not shared */
+
 	if ((pid = fork()) == -1) {
 		log_error("fork failed: %s", strerror(errno));
 		return 0;
