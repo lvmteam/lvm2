@@ -15,6 +15,7 @@
 
 #include "lib.h"
 #include "fs.h"
+#include "activate.h"
 #include "toolcontext.h"
 #include "lvm-string.h"
 #include "lvm-file.h"
