@@ -1,5 +1,6 @@
 Version 2.02.80 - 
 ====================================
+  Pass config_tree to renamed function import_vg_from_config_tree().
   Detect NULL handle in get_property().
   Fix superfluous /usr in ocf_scriptdir instalation path.
   Add --with-ocfdir configurable option.

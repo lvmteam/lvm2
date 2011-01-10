@@ -131,17 +131,13 @@ struct volume_group *text_vg_import_file(struct format_instance *fid,
 				 when, desc);
 }
 
-struct volume_group *import_vg_from_buffer(const char *buf,
-                                           struct format_instance *fid)
+struct volume_group *import_vg_from_config_tree(const struct config_tree *cft,
+						struct format_instance *fid)
 {
 	struct volume_group *vg = NULL;
-	struct config_tree *cft;
 	struct text_vg_version_ops **vsn;
 
 	_init_text_import();
-
-	if (!(cft = create_config_tree_from_string(fid->fmt->cmd, buf)))
-		return_NULL;
 
 	for (vsn = &_text_vsn_list[0]; *vsn; vsn++) {
 		if (!(*vsn)->check_version(cft))
@@ -155,6 +151,5 @@ struct volume_group *import_vg_from_buffer(const char *buf,
 		break;
 	}
 
-	destroy_config_tree(cft);
 	return vg;
 }

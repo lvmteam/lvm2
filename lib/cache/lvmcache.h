@@ -33,6 +33,7 @@
 struct cmd_context;
 struct format_type;
 struct volume_group;
+struct config_tree;
 
 /* One per VG */
 struct lvmcache_vginfo {
@@ -46,6 +47,7 @@ struct lvmcache_vginfo {
 	struct lvmcache_vginfo *next; /* Another VG with same name? */
 	char *creation_host;
 	char *vgmetadata;	/* Copy of VG metadata as format_text string */
+	struct config_tree *cft; /* Config tree created from vgmetadata */
 	unsigned precommitted;	/* Is vgmetadata live or precommitted? */
 };
 
