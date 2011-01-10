@@ -42,6 +42,8 @@ static int _become_daemon(struct cmd_context *cmd)
 
 	sigaction(SIGCHLD, &act, NULL);
 
+	fs_unlock(); /* Flush oops and ensure cookie is not shared */
+
 	if ((pid = fork()) == -1) {
 		log_error("fork failed: %s", strerror(errno));
 		return -1;
