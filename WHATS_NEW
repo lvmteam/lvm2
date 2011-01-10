@@ -1,3 +1,6 @@
+Version 2.02.81 - 
+===================================
+
 Version 2.02.80 - 10th January 2011
 ===================================
   Use same dm cookie for consecutive dm ops in same VG to reduce udev waits.
