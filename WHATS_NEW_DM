@@ -1,5 +1,6 @@
 Version 1.02.61 - 
 ====================================
+  Add DM_COOKIE_AUTO_CREATE to libdevmapper.h.
   Export DM_CONTROL_NODE_UMASK and use it while creating /dev/mapper/control.
 
 Version 1.02.60 - 20th December 2010
