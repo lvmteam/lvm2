@@ -26,6 +26,7 @@
 #include "format-text.h"
 #include "format_pool.h"
 #include "format1.h"
+#include "config.h"
 
 static struct dm_hash_table *_pvid_hash = NULL;
 static struct dm_hash_table *_vgid_hash = NULL;
@@ -650,11 +651,19 @@ struct volume_group *lvmcache_get_vg(const char *vgid, unsigned precommitted)
 						      vgid, NULL)))
 		return_NULL;
 
-	if (!(vg = import_vg_from_buffer(vginfo->vgmetadata, fid))) {
+	if (!(vginfo->cft =
+	      create_config_tree_from_string(fid->fmt->cmd,
+					     vginfo->vgmetadata))) {
 		_free_cached_vgmetadata(vginfo);
-		free_vg(vg);
 		return_NULL;
 	}
+
+	if (!(vg = import_vg_from_config_tree(vginfo->cft, fid))) {
+		_free_cached_vgmetadata(vginfo);
+		destroy_config_tree(vginfo->cft);
+		return_NULL;
+	}
+	destroy_config_tree(vginfo->cft);
 
 	log_debug("Using cached %smetadata for VG %s.",
 		  vginfo->precommitted ? "pre-committed" : "", vginfo->vgname);
