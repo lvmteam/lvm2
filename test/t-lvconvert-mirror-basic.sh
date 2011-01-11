@@ -54,12 +54,6 @@ test_lvconvert()
 	local active=true
 	local i
 
-	if [ "$start_log_type" = "disk" ] &&
-		[ "$finish_log_type" = "mirrored" ]; then
-		echo "FIXME:  disk -> mirrored log conversion not yet supported by LVM"
-		return 0
-	fi
-
 	test "$5" = "active" && active=false
 	#test $finish_count -gt $start_count && up=true
 

@@ -12,10 +12,15 @@
 . lib/test
 
 aux prepare_vg 4
+
 lvcreate -m 1 --mirrorlog disk --ig -L 1 -n mirror $vg
 not lvconvert -m 2 --mirrorlog core $vg/mirror $dev3 2>&1 | tee errs
 grep "two steps" errs
+
 lvconvert -m 2 $vg/mirror $dev3
 lvconvert --mirrorlog core $vg/mirror
 not lvconvert -m 1 --mirrorlog disk $vg/mirror $dev3 2>&1 | tee errs
+grep "two steps" errs
+
+not lvconvert -m 1 --mirrorlog mirrored $vg/mirror $dev3 $dev4 2>&1 | tee errs
 grep "two steps" errs

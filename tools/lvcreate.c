@@ -538,8 +538,6 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 	struct lvcreate_cmdline_params lcp;
 	struct volume_group *vg;
 
-	memset(&lp, 0, sizeof(lp));
-
 	if (!_lvcreate_params(&lp, &lcp, cmd, argc, argv))
 		return EINVALID_CMD_LINE;
 

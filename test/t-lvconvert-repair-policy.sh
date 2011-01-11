@@ -55,7 +55,8 @@ lvs | grep mirror_mlog
 cleanup $dev1
 
 # Fail a leg of a mirror w/ no available spare
-# Expected result: 2-way with corelog
+# Expected result: linear
+#                  (or 2-way with leg/log overlap if alloc anywhere)
 aux disable_dev $dev2 $dev4
 repair 'activation { mirror_image_fault_policy = "replace" }'
 check mirror $vg mirror

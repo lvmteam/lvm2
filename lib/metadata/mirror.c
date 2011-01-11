@@ -1295,7 +1295,7 @@ static int _create_mimage_lvs(struct alloc_handle *ah,
 			      struct logical_volume **img_lvs,
 			      int log)
 {
-	uint32_t m;
+	uint32_t m, first_area;
 	char *img_name;
 	size_t len;
 	
@@ -1322,10 +1322,13 @@ static int _create_mimage_lvs(struct alloc_handle *ah,
 		}
 
 		if (log) {
-			if (!lv_add_log_segment(ah, m * stripes + 1, img_lvs[m], 0)) {
-				log_error("Aborting. Failed to add mirror image segment "
-					  "to %s. Remove new LV and retry.",
-					  img_lvs[m]->name);
+			first_area = m * stripes + (log - 1);
+
+			if (!lv_add_log_segment(ah, first_area, img_lvs[m], 0)) {
+				/* error msg already from lv_add_log_segment */
+				log_verbose("Failed to add mirror image segment"
+					    " to %s. Remove new LV and retry.",
+					    img_lvs[m]->name);
 				return 0;
 			}
 		} else {
@@ -1760,7 +1763,7 @@ static struct logical_volume *_set_up_mirror_log(struct cmd_context *cmd,
 	}
 
 	if ((log_count > 1) &&
-	    !_form_mirror(cmd, ah, log_lv, log_count-1, 1, 0, region_size, 1)) {
+	    !_form_mirror(cmd, ah, log_lv, log_count-1, 1, 0, region_size, 2)) {
 		log_error("Failed to form mirrored log.");
 		return NULL;
 	}
@@ -1792,6 +1795,7 @@ int add_mirror_log(struct cmd_context *cmd, struct logical_volume *lv,
 	int in_sync;
 	struct logical_volume *log_lv;
 	struct lvinfo info;
+	int old_log_count;
 	int r = 0;
 
 	if (dm_list_size(&lv->segments) != 1) {
@@ -1811,6 +1815,15 @@ int add_mirror_log(struct cmd_context *cmd, struct logical_volume *lv,
 		return 0;
 	}
 
+	log_lv = first_seg(lv)->log_lv;
+	old_log_count = (log_lv) ? lv_mirror_count(log_lv) : 0;
+	if (old_log_count == log_count) {
+		log_verbose("Mirror already has a %s log",
+			    !log_count ? "core" :
+			    (log_count == 1) ? "disk" : "mirrored");
+		return 1;
+	}
+
 	if (!(parallel_areas = build_parallel_areas_from_lv(cmd, lv, 0)))
 		return_0;
 
@@ -1826,11 +1839,22 @@ int add_mirror_log(struct cmd_context *cmd, struct logical_volume *lv,
 
 	/* allocate destination extents */
 	ah = allocate_extents(lv->vg, NULL, segtype,
-			      0, 0, log_count, region_size, 0,
+			      0, 0, log_count - old_log_count, region_size, 0,
 			      allocatable_pvs, alloc, parallel_areas);
 	if (!ah) {
 		log_error("Unable to allocate extents for mirror log.");
 		return 0;
+	}
+
+	if (old_log_count) {
+		/* Converting from disk to mirrored log */
+		if (!_form_mirror(cmd, ah, log_lv, log_count - 1, 1, 0,
+				  region_size, 1)) {
+			log_error("Failed to convert mirror log");
+			return 0;
+		}
+		r = 1;
+		goto out;
 	}
 
 	/* check sync status */
