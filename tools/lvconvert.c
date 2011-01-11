@@ -718,6 +718,7 @@ static int _lv_update_mirrored_log(struct logical_volume *lv,
 				    operable_pvs, 0U);
 }
 
+static int _reload_lv(struct cmd_context *cmd, struct logical_volume *lv);
 static int _lv_update_log_type(struct cmd_context *cmd,
 			       struct lvconvert_params *lp,
 			       struct logical_volume *lv,
@@ -738,14 +739,6 @@ static int _lv_update_log_type(struct cmd_context *cmd,
 						  lv->le_count,
 						  lp->region_size);
 
-	/* Add a log where there is none */
-	if (!old_log_count) {
-		if (!add_mirror_log(cmd, original_lv, log_count,
-				    region_size, operable_pvs, lp->alloc))
-			return_0;
-		return 1;
-	}
-
 	/* Remove an existing log completely */
 	if (!log_count) {
 		if (!remove_mirror_log(cmd, original_lv, operable_pvs,
@@ -759,9 +752,17 @@ static int _lv_update_log_type(struct cmd_context *cmd,
 
 	/* Adding redundancy to the log */
 	if (old_log_count < log_count) {
-		log_error("Adding log redundancy not supported yet.");
-		log_error("Try converting the log to 'core' first.");
-		return_0;
+		if (!add_mirror_log(cmd, original_lv, log_count,
+				    region_size, operable_pvs, lp->alloc))
+			return_0;
+		/*
+		 * FIXME: This simple approach won't work in cluster mirrors,
+		 *        but it doesn't matter because we don't support
+		 *        mirrored logs in cluster mirrors.
+		 */
+		if (old_log_count)
+			return _reload_lv(cmd, log_lv);
+		return 1;
 	}
 
 	/* Reducing redundancy of the log */
@@ -1109,7 +1110,8 @@ static int _lvconvert_mirrors_aux(struct cmd_context *cmd,
 
 		/* FIXME: can't have multiple mlogs. force corelog. */
 		if (!lv_add_mirrors(cmd, lv,
-				    new_mimage_count - old_mimage_count, lp->stripes, lp->stripe_size,
+				    new_mimage_count - old_mimage_count,
+				    lp->stripes, lp->stripe_size,
 				    region_size, 0U, operable_pvs, lp->alloc,
 				    MIRROR_BY_LV)) {
 			layer_lv = seg_lv(first_seg(lv), 0);

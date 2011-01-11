@@ -1557,8 +1557,7 @@ struct alloc_handle *allocate_extents(struct volume_group *vg,
 			       parallel_areas)))
 		return_NULL;
 
-	if (!segtype_is_virtual(segtype) &&
-	    !_allocate(ah, vg, lv, 1, allocatable_pvs)) {
+	if (!_allocate(ah, vg, lv, 1, allocatable_pvs)) {
 		alloc_destroy(ah);
 		return_NULL;
 	}
