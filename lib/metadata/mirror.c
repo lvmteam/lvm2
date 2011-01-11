@@ -1325,10 +1325,9 @@ static int _create_mimage_lvs(struct alloc_handle *ah,
 			first_area = m * stripes + (log - 1);
 
 			if (!lv_add_log_segment(ah, first_area, img_lvs[m], 0)) {
-				/* error msg already from lv_add_log_segment */
-				log_verbose("Failed to add mirror image segment"
-					    " to %s. Remove new LV and retry.",
-					    img_lvs[m]->name);
+				log_error("Failed to add mirror image segment"
+					  " to %s. Remove new LV and retry.",
+					  img_lvs[m]->name);
 				return 0;
 			}
 		} else {
