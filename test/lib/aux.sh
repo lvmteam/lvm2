@@ -32,6 +32,7 @@ prepare_clvmd() {
 	# check that it is really running now
 	sleep .1
 	ps $LOCAL_CLVMD || skip
+        echo "$LOCAL_CLVMD" > LOCAL_CLVMD
 }
 
 prepare_dmeventd() {
@@ -83,10 +84,10 @@ teardown_devs() {
 teardown() {
     echo -n "## teardown..."
 
-    test -n "$LOCAL_CLVMD" && {
-	kill "$LOCAL_CLVMD"
+    test -f LOCAL_CLVMD && {
+	kill "$(cat LOCAL_CLVMD)"
 	sleep .1
-	kill -9 "$LOCAL_CLVMD" || true
+	kill -9 "$(cat LOCAL_CLVMD)" || true
     }
 
     echo -n .
