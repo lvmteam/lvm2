@@ -507,7 +507,7 @@ static int _add_dev_node(const char *dev_name, uint32_t major, uint32_t minor,
 	(void) dm_prepare_selinux_context(path, S_IFBLK);
 	old_mask = umask(0);
 	if (mknod(path, S_IFBLK | mode, dev) < 0) {
-		log_error("Unable to make device node for '%s'", dev_name);
+		log_error("%s: mknod for %s failed: %s", path, dev_name, strerror(errno));
 		umask(old_mask);
 		(void) dm_prepare_selinux_context(NULL, 0);
 		return 0;

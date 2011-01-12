@@ -897,6 +897,7 @@ struct dm_hash_node *get_next_excl_lock(struct dm_hash_node *v, char **name)
 void lvm_do_fs_unlock(void)
 {
 	pthread_mutex_lock(&lvm_lock);
+	DEBUGLOG("Syncing device names\n");
 	fs_unlock();
 	pthread_mutex_unlock(&lvm_lock);
 }

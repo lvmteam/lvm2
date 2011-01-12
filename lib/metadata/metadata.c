@@ -3561,6 +3561,14 @@ int is_orphan_vg(const char *vg_name)
 }
 
 /*
+ * Exclude pseudo VG names used for locking.
+ */
+int is_real_vg(const char *vg_name)
+{
+	return (vg_name && *vg_name != '#');
+}
+
+/*
  * Returns:
  *  0 - fail
  *  1 - success

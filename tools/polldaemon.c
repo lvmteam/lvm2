@@ -42,7 +42,7 @@ static int _become_daemon(struct cmd_context *cmd)
 
 	sigaction(SIGCHLD, &act, NULL);
 
-	fs_unlock(); /* Flush oops and ensure cookie is not shared */
+	sync_local_dev_names(cmd); /* Flush ops and reset dm cookie */
 
 	if ((pid = fork()) == -1) {
 		log_error("fork failed: %s", strerror(errno));
