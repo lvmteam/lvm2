@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2011 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -128,6 +128,7 @@ static const device_info_t device_info[] = {
 	{"virtblk", 8},		/* VirtIO disk */
 	{"mmc", 16},		/* MMC block device */
 	{"blkext", 1},		/* Extended device partitions */
+	{"fio", 16},		/* Fusion */
 	{NULL, 0}
 };
 
