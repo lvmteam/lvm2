@@ -109,6 +109,7 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
  */
 #define VG_ORPHANS	"#orphans"
 #define VG_GLOBAL	"#global"
+#define VG_SYNC_NAMES	"#sync_names"
 
 /*
  * Common combinations
@@ -169,6 +170,8 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 	lock_vol((vg)->cmd, (vg)->name, LCK_VG_REVERT)
 #define remote_backup_metadata(vg)	\
 	lock_vol((vg)->cmd, (vg)->name, LCK_VG_BACKUP)
+#define sync_local_dev_names(cmd)	\
+	lock_vol(cmd, VG_SYNC_NAMES, LCK_NONE | LCK_CACHE | LCK_LOCAL)
 
 /* Process list of LVs */
 int suspend_lvs(struct cmd_context *cmd, struct dm_list *lvs);

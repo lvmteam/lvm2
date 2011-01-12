@@ -325,7 +325,7 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname)
 	char path[PATH_MAX];
 
 	/* We'll allow operations on orphans */
-	if (is_orphan_vg(vgname) || is_global_vg(vgname))
+	if (!is_real_vg(vgname))
 		return 1;
 
 	/* LVM1 is only present in 2.4 kernels. */

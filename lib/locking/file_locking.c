@@ -265,6 +265,9 @@ static int _file_lock_resource(struct cmd_context *cmd, const char *resource,
 		if (strcmp(resource, VG_GLOBAL))
 			lvmcache_drop_metadata(resource, 0);
 
+		if (!strcmp(resource, VG_SYNC_NAMES))
+			fs_unlock();
+
 		/* LCK_CACHE does not require a real lock */
 		if (flags & LCK_CACHE)
 			break;

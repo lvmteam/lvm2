@@ -362,6 +362,7 @@ int move_pvs_used_by_lv(struct volume_group *vg_from,
 			const char *lv_name);
 int is_global_vg(const char *vg_name);
 int is_orphan_vg(const char *vg_name);
+int is_real_vg(const char *vg_name);
 int vg_missing_pv_count(const struct volume_group *vg);
 int vgs_are_compatible(struct cmd_context *cmd,
 		       struct volume_group *vg_from,

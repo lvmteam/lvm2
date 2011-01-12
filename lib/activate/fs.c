@@ -403,6 +403,7 @@ int fs_rename_lv(struct logical_volume *lv, const char *dev,
 void fs_unlock(void)
 {
 	if (!memlock()) {
+		log_debug("Syncing device names");
 		/* Wait for all processed udev devices */
 		if (!dm_udev_wait(_fs_cookie))
 			stack;

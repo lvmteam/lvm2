@@ -345,14 +345,15 @@ static int _lock_for_cluster(struct cmd_context *cmd, unsigned char clvmd_cmd,
 	 * locks are cluster-wide.
 	 * Also, if the lock is exclusive it makes no sense to try to
 	 * acquire it on all nodes, so just do that on the local node too.
-	 * One exception, is that P_ locks /do/ get distributed across
-	 * the cluster because they might have side-effects.
+	 * One exception, is that P_ locks (except VG_SYNC_NAMES) /do/ get 
+	 * distributed across the cluster because they might have side-effects.
 	 */
-	if (strncmp(name, "P_", 2) &&
-	    (clvmd_cmd == CLVMD_CMD_LOCK_VG ||
-	     (flags & LCK_TYPE_MASK) == LCK_EXCL ||
-	     (flags & LCK_LOCAL) ||
-	     !(flags & LCK_CLUSTER_VG)))
+	if ((strncmp(name, "P_", 2) &&
+	     (clvmd_cmd == CLVMD_CMD_LOCK_VG ||
+	      (flags & LCK_TYPE_MASK) == LCK_EXCL ||
+	      (flags & LCK_LOCAL) ||
+	      !(flags & LCK_CLUSTER_VG))) ||
+	    (clvmd_cmd == CLVMD_CMD_SYNC_NAMES && (flags & LCK_LOCAL)))
 		node = ".";
 
 	status = _cluster_request(clvmd_cmd, node, args, len,
@@ -401,6 +402,11 @@ int lock_resource(struct cmd_context *cmd, const char *resource, uint32_t flags)
 
 	switch (flags & LCK_SCOPE_MASK) {
 	case LCK_VG:
+		if (!strcmp(resource, VG_SYNC_NAMES)) {
+			log_very_verbose("Requesting sync names.");
+			return _lock_for_cluster(cmd, CLVMD_CMD_SYNC_NAMES,
+						 flags & ~LCK_HOLD, resource);
+		}
 		if (flags == LCK_VG_BACKUP) {
 			log_very_verbose("Requesting backup of VG metadata for %s",
 					 resource);

@@ -3021,7 +3021,7 @@ int set_lv(struct cmd_context *cmd, struct logical_volume *lv,
 		return 0;
 	}
 
-	fs_unlock();  /* Wait until devices are available */
+	sync_local_dev_names(cmd);  /* Wait until devices are available */
 
 	log_verbose("Clearing start of logical volume \"%s\"", lv->name);
 
