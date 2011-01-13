@@ -14,7 +14,7 @@ test_description='test some blocking / non-blocking multi-vg operations'
 . lib/test
 
 aux prepare_devs 3
-test -n "$LOCAL_CLVMD" && exit 200
+test -e LOCAL_CLVMD && exit 200
 pvcreate $dev1 $dev2
 vgcreate $vg $dev1 $dev2
 
