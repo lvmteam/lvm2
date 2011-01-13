@@ -1095,8 +1095,11 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	if (!_set_udev_checking(cmd))
 		goto_out;
 
-	if ((ret = _process_common_commands(cmd)))
-		goto_out;
+	if ((ret = _process_common_commands(cmd))) {
+		if (ret != ECMD_PROCESSED)
+			stack;
+		goto out;
+	}
 
 	if (cmd->metadata_read_only &&
 	    !(cmd->command->flags & PERMITTED_READ_ONLY)) {
