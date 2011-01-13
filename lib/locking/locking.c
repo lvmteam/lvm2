@@ -406,6 +406,7 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags)
 {
 	char resource[258] __attribute__((aligned(8)));
 	lv_operation_t lv_op;
+	int lck_type = flags & LCK_TYPE_MASK;
 
 	switch (flags & (LCK_SCOPE_MASK | LCK_TYPE_MASK)) {
 		case LCK_LV_SUSPEND:
@@ -432,15 +433,15 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags)
 		if (is_orphan_vg(vol))
 			vol = VG_ORPHANS;
 		/* VG locks alphabetical, ORPHAN lock last */
-		if (((flags & LCK_TYPE_MASK) != LCK_UNLOCK) &&
-			 !(flags & LCK_CACHE) &&
-			 !lvmcache_verify_lock_order(vol))
-			return 0;
+		if ((lck_type != LCK_UNLOCK) &&
+		    !(flags & LCK_CACHE) &&
+		    !lvmcache_verify_lock_order(vol))
+			return_0;
 
 		/* Lock VG to change on-disk metadata. */
 		/* If LVM1 driver knows about the VG, it can't be accessed. */
 		if (!check_lvm1_vg_inactive(cmd, vol))
-			return 0;
+			return_0;
 		break;
 	case LCK_LV:
 		/* All LV locks are non-blocking. */
@@ -455,18 +456,18 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags)
 	strncpy(resource, vol, sizeof(resource));
 
 	if (!_lock_vol(cmd, resource, flags, lv_op))
-		return 0;
+		return_0;
 
 	/*
 	 * If a real lock was acquired (i.e. not LCK_CACHE),
 	 * perform an immediate unlock unless LCK_HOLD was requested.
 	 */
-	if (!(flags & LCK_CACHE) && !(flags & LCK_HOLD) &&
-	    ((flags & LCK_TYPE_MASK) != LCK_UNLOCK)) {
-		if (!_lock_vol(cmd, resource,
-			       (flags & ~LCK_TYPE_MASK) | LCK_UNLOCK, lv_op))
-			return 0;
-	}
+	if ((lck_type == LCK_NULL) || (lck_type == LCK_UNLOCK) ||
+	    (flags & (LCK_CACHE | LCK_HOLD)))
+		return 1;
+
+	if (!_lock_vol(cmd, resource, (flags & ~LCK_TYPE_MASK) | LCK_UNLOCK, lv_op))
+		return_0;
 
 	return 1;
 }
