@@ -110,7 +110,7 @@ static int outline(char *buf, int start, int force) {
 }
 
 static void dump(void) {
-	int counter_last, counter = 0;
+	int counter_last = -1, counter = 0;
 
 	while ( counter < readbuf_used && counter != counter_last ) {
 		counter_last = counter;
