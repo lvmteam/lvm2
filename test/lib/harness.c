@@ -54,10 +54,10 @@ static struct subst subst[2];
 #define FAILED 2
 #define WARNED 3
 
-static void handler( int s ) {
-	signal( s, SIG_DFL );
-	kill( pid, s );
-	die = s;
+static void handler( int sig ) {
+	signal( sig, SIG_DFL );
+	kill( pid, sig );
+	die = sig;
 }
 
 static int outline(char *buf, int start, int force) {
@@ -110,10 +110,12 @@ static int outline(char *buf, int start, int force) {
 }
 
 static void dump(void) {
-        int counter = 0;
+	int counter_last, counter = 0;
 
-        while ( counter < readbuf_used )
-                counter = outline( readbuf, counter, 1 );
+	while ( counter < readbuf_used && counter != counter_last ) {
+		counter_last = counter;
+		counter = outline( readbuf, counter, 1 );
+	}
 }
 
 static void clear(void) {
