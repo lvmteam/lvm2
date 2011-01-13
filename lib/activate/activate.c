@@ -424,7 +424,7 @@ int module_present(struct cmd_context *cmd, const char *target_name)
 	argv[1] = module;
 	argv[2] = NULL;
 
-	ret = exec_cmd(cmd, argv, NULL);
+	ret = exec_cmd(cmd, argv, NULL, 0);
 #endif
 	return ret;
 }

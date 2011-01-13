@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2009 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2011 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -47,7 +47,8 @@ static char *_verbose_args(const char *const argv[], char *buf, size_t sz)
 /*
  * Execute and wait for external command
  */
-int exec_cmd(struct cmd_context *cmd, const char *const argv[], int *rstatus)
+int exec_cmd(struct cmd_context *cmd, const char *const argv[],
+	     int *rstatus, int sync_needed)
 {
 	pid_t pid;
 	int status;
@@ -55,7 +56,12 @@ int exec_cmd(struct cmd_context *cmd, const char *const argv[], int *rstatus)
 
 	log_verbose("Executing: %s", _verbose_args(argv, buf, sizeof(buf)));
 
-	sync_local_dev_names(cmd); /* Flush ops and reset dm cookie */
+	if (rstatus)
+		*rstatus = -1;
+
+	if (sync_needed)
+		if (!sync_local_dev_names(cmd)) /* Flush ops and reset dm cookie */
+			return_0;
 
 	if ((pid = fork()) == -1) {
 		log_error("fork failed: %s", strerror(errno));
@@ -73,9 +79,6 @@ int exec_cmd(struct cmd_context *cmd, const char *const argv[], int *rstatus)
 		log_sys_error("execvp", argv[0]);
 		_exit(errno);
 	}
-
-	if (rstatus)
-		*rstatus = -1;
 
 	/* Parent */
 	if (wait4(pid, &status, 0, NULL) != pid) {
