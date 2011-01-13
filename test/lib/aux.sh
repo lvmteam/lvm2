@@ -26,6 +26,8 @@ prepare_clvmd() {
 	# skip if we singlenode is not compiled in
 	(clvmd --help 2>&1 | grep "Available cluster managers" | grep singlenode) || skip
 
+	lvmconf "activation/monitoring = 1"
+
 	clvmd -Isinglenode -d 1 &
 	LOCAL_CLVMD="$!"
 
