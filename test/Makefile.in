@@ -24,6 +24,7 @@ abs_srcdir = @abs_srcdir@
 abs_builddir = @abs_builddir@
 abs_top_builddir = @abs_top_builddir@
 abs_top_srcdir = @abs_top_srcdir@
+include $(top_builddir)/make.tmpl
 
 T ?= .
 S ?= @ # never match anything by default
@@ -59,7 +60,7 @@ lib/should: lib/not
 	ln -sf not lib/should
 
 lib/%: $(srcdir)/lib/%.c .lib-dir-stamp
-	$(CC) -o $@ $<
+	$(CC) $(DEFS) $(CFLAGS) -o $@ $<
 
 lib/%: $(srcdir)/lib/%.sh .lib-dir-stamp
 	cp $< $@
@@ -100,13 +101,9 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	touch $@
 
 clean:
-	rm -rf bin .lib-dir-stamp .test-stamp
-	rm -f $(LIB)
-	rm -f lib/dmsetup lib/clvmd lib/dmeventd
 	for i in lvm $$(cat ../tools/.commands); do rm -f lib/$$i; done
 	if test "$(srcdir)" != . ; then rm -f $(subst $(srcdir)/, ,$(RUN)) lvm2app.sh ; fi
 
-distclean: clean
-	rm -f Makefile
+CLEAN_TARGETS += .lib-dir-stamp .test-stamp -f $(LIB) lib/dmsetup lib/clvmd lib/dmeventd
 
 .NOTPARALLEL:
