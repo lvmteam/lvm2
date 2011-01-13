@@ -179,7 +179,7 @@ static int _fsadm_cmd(struct cmd_context *cmd,
 
 	argv[i] = NULL;
 
-	return exec_cmd(cmd, argv, status);
+	return exec_cmd(cmd, argv, status, 1);
 }
 
 static int _lvresize_params(struct cmd_context *cmd, int argc, char **argv,
