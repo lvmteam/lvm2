@@ -95,8 +95,6 @@ static pthread_mutex_t _global_mutex;
 
 #define THREAD_STACK_SIZE (300*1024)
 
-#define DEBUGLOG(fmt, args...) _debuglog(fmt, ## args)
-
 int dmeventd_debug = 0;
 static int _foreground = 0;
 static int _restart = 0;
@@ -202,24 +200,6 @@ static int _timeout_running;
 static DM_LIST_INIT(_timeout_registry);
 static pthread_mutex_t _timeout_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t _timeout_cond = PTHREAD_COND_INITIALIZER;
-
-static void _debuglog(const char *fmt, ...)
-{
-        time_t P;
-        va_list ap;
- 
-        if (!_foreground)
-                return;
- 
-        va_start(ap,fmt);
-
-        time(&P);
-        fprintf(stderr, "dmeventd[%p]: %.15s ", (void *) pthread_self(), ctime(&P)+4 );
-        vfprintf(stderr, fmt, ap);
-	fprintf(stderr, "\n");
-
-        va_end(ap);
-}
 
 /* Allocate/free the status structure for a monitoring thread. */
 static struct thread_status *_alloc_thread_status(struct message_data *data,
@@ -1621,7 +1601,7 @@ static int _set_oom_adj(int val)
 
 	if (stat(OOM_ADJ_FILE, &st) == -1) {
 		if (errno == ENOENT)
-			DEBUGLOG(OOM_ADJ_FILE " not found");
+			perror(OOM_ADJ_FILE " not found");
 		else
 			perror(OOM_ADJ_FILE ": stat failed");
 		return 1;
