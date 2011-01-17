@@ -850,18 +850,14 @@ struct device *dev_iter_get(struct dev_iter *iter)
 
 void dev_reset_error_count(struct cmd_context *cmd)
 {
-	struct dev_iter *iter;
-	struct device *dev;
+	struct dev_iter iter;
 
-	if (!(iter = dev_iter_create(cmd->filter, 0))) {
-		log_error("Resetting device error count failed");
+	if (!_cache.devices)
 		return;
-	}
 
-	for (dev = dev_iter_get(iter); dev; dev = dev_iter_get(iter))
-		dev->error_count = 0;
-
-	dev_iter_destroy(iter);
+	iter.current = btree_first(_cache.devices);
+	while (iter.current)
+		_iter_next(&iter)->error_count = 0;
 }
 
 int dev_fd(struct device *dev)
