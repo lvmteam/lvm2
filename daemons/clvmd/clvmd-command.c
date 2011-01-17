@@ -63,7 +63,6 @@
 
 #include <sys/utsname.h>
 
-extern debug_t debug;
 extern struct cluster_ops *clops;
 static int restart_clvmd(void);
 
@@ -144,7 +143,7 @@ int do_command(struct local_client *client, struct clvm_header *msg, int msglen,
 		break;
 
 	case CLVMD_CMD_SET_DEBUG:
-		debug = args[0];
+		clvmd_set_debug(args[0]);
 		break;
 
 	case CLVMD_CMD_RESTART:
@@ -310,18 +309,15 @@ int do_post_command(struct local_client *client)
 		client->bits.localsock.private = 0;
 		break;
 
-	case CLVMD_CMD_LOCK_VG:
-	case CLVMD_CMD_VG_BACKUP:
-	case CLVMD_CMD_SYNC_NAMES:
-	case CLVMD_CMD_LOCK_QUERY:
-		/* Nothing to do here */
-		break;
-
 	case CLVMD_CMD_LOCK_LV:
 		lock_cmd = args[0];
 		lock_flags = args[1];
 		lockname = &args[2];
 		status = post_lock_lv(lock_cmd, lock_flags, lockname);
+		break;
+
+	default:
+		/* Nothing to do here */
 		break;
 	}
 	return status;
@@ -381,9 +377,9 @@ static int restart_clvmd(void)
 		goto_out;
 
 	/* Propogate debug options */
-	if (debug) {
+	if (clvmd_get_debug()) {
 		if (!(debug_arg = malloc(16)) ||
-		    dm_snprintf(debug_arg, 16, "-d%d", (int)debug) < 0)
+		    dm_snprintf(debug_arg, 16, "-d%d", (int)clvmd_get_debug()) < 0)
 			goto_out;
 		argv[argc++] = debug_arg;
 	}

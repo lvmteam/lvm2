@@ -117,6 +117,9 @@ extern void process_message(struct local_client *client, const char *buf,
 extern void debuglog(const char *fmt, ... )
   __attribute__ ((format(printf, 1, 2)));
 
+void clvmd_set_debug(debug_t new_de);
+debug_t clvmd_get_debug(void);
+
 int sync_lock(const char *resource, int mode, int flags, int *lockid);
 int sync_unlock(const char *resource, int lockid);
 

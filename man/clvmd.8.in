@@ -3,7 +3,7 @@
 clvmd \- cluster LVM daemon
 .SH SYNOPSIS
 .B clvmd
-[\-d [<value>]] [\-C] [\-h]
+[\-d[<value>]] [\-C] [\-h]
 [\-R]
 [\-S]
 [\-t <timeout>]
@@ -15,19 +15,18 @@ It must be running on all nodes in the cluster and will give an error
 if a node in the cluster does not have this daemon running.
 .SH OPTIONS
 .TP
-.I \-d [<value>]
+.I \-d[<value>]
 Enable debug logging. Value can be 0, 1 or 2.
 .br
-0 disables debug logging in a running clvmd
+0 disables debug logging
 .br
-1 sends debug logs to stderr (clvmd will not fork in this case)
+1 sends debug logs to stderr (implies -f option)
 .br
 2 sends debug logs to syslog
 .br
 If 
 .B -d 
-is specified without a value then 1 is assumed if you are starting a
-new clvmd, 2 if you are enabling debug in a running clvmd.
+is specified without a value then 1 is assumed.
 .TP
 .I \-C
 Only valid if 

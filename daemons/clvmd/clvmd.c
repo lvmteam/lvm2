@@ -81,7 +81,8 @@ struct lvm_startup_params {
 	char **argv;
 };
 
-debug_t debug;
+static debug_t debug = DEBUG_OFF;
+static int foreground_mode = 0;
 static pthread_t lvm_thread;
 static pthread_mutex_t lvm_thread_mutex;
 static pthread_cond_t lvm_thread_cond;
@@ -145,12 +146,11 @@ static if_type_t get_cluster_type(void);
 
 static void usage(const char *prog, FILE *file)
 {
-	fprintf(file, "Usage:\n"
-		"%s [Vhd]\n\n"
+	fprintf(file, "Usage: %s [options]\n"
 		"   -V       Show version of clvmd\n"
 		"   -h       Show this help information\n"
-		"   -d       Set debug level\n"
-		"            If starting clvmd then don't fork, run in the foreground\n"
+		"   -d[n]    Set debug logging (0:none, 1:stderr (implies -f option), 2:syslog)\n"
+		"   -f       Don't fork, run in the foreground\n"
 		"   -R       Tell all running clvmds in the cluster to reload their device cache\n"
 		"   -S       Restart clvmd, preserving exclusive locks\n"
 		"   -C       Sets debug level (from -d) on all clvmd instances clusterwide\n"
@@ -209,14 +209,15 @@ void debuglog(const char *fmt, ...)
 	va_list ap;
 	static int syslog_init = 0;
 
-	if (debug == DEBUG_STDERR) {
+	switch (clvmd_get_debug()) {
+	case DEBUG_STDERR:
 		va_start(ap,fmt);
 		time(&P);
 		fprintf(stderr, "CLVMD[%x]: %.15s ", (int)pthread_self(), ctime(&P)+4 );
 		vfprintf(stderr, fmt, ap);
 		va_end(ap);
-	}
-	if (debug == DEBUG_SYSLOG) {
+		break;
+	case DEBUG_SYSLOG:
 		if (!syslog_init) {
 			openlog("clvmd", LOG_PID, LOG_DAEMON);
 			syslog_init = 1;
@@ -225,7 +226,26 @@ void debuglog(const char *fmt, ...)
 		va_start(ap,fmt);
 		vsyslog(LOG_DEBUG, fmt, ap);
 		va_end(ap);
+		break;
+	case DEBUG_OFF:
+		break;
 	}
+}
+
+void clvmd_set_debug(debug_t new_debug)
+{
+	if (!foreground_mode && new_debug == DEBUG_STDERR)
+		new_debug = DEBUG_SYSLOG;
+
+	if (new_debug > DEBUG_SYSLOG)
+		new_debug = DEBUG_SYSLOG;
+
+	debug = new_debug;
+}
+
+debug_t clvmd_get_debug(void)
+{
+	return debug;
 }
 
 static const char *decode_cmd(unsigned char cmdl)
@@ -322,13 +342,14 @@ int main(int argc, char *argv[])
 	sigset_t ss;
 	int using_gulm = 0;
 	int debug_opt = 0;
+	debug_t debug_arg = DEBUG_OFF;
 	int clusterwide_opt = 0;
 	mode_t old_mask;
 
 	/* Deal with command-line arguments */
 	opterr = 0;
 	optind = 0;
-	while ((opt = getopt(argc, argv, "?vVhd::t:RST:CI:E:")) != EOF) {
+	while ((opt = getopt(argc, argv, "?vVhfd::t:RST:CI:E:")) != EOF) {
 		switch (opt) {
 		case 'h':
 			usage(argv[0], stdout);
@@ -352,12 +373,14 @@ int main(int argc, char *argv[])
 
 		case 'd':
 			debug_opt = 1;
-			if (optarg)
-				debug = atoi(optarg);
-			else
-				debug = DEBUG_STDERR;
+			debug_arg = optarg ? atoi(optarg) : DEBUG_STDERR;
+			if (debug_arg == DEBUG_STDERR)
+				foreground_mode = 1;
 			break;
 
+		case 'f':
+			foreground_mode = 1;
+			break;
 		case 't':
 			cmd_timeout = atoi(optarg);
 			if (!cmd_timeout) {
@@ -391,15 +414,6 @@ int main(int argc, char *argv[])
 
 	check_permissions();
 
-	/* Setting debug options on an existing clvmd */
-	if (debug_opt && !check_local_clvmd()) {
-
-		/* Sending to stderr makes no sense for a detached daemon */
-		if (debug == DEBUG_STDERR)
-			debug = DEBUG_SYSLOG;
-		return debug_clvmd(debug, clusterwide_opt)==1?0:1;
-	}
-
 	/*
 	 * Switch to C locale to avoid reading large locale-archive file
 	 * used by some glibc (on some distributions it takes over 100MB).
@@ -408,10 +422,15 @@ int main(int argc, char *argv[])
 	if (setenv("LANG", "C", 1))
 		perror("Cannot set LANG to C");
 
+	/* Setting debug options on an existing clvmd */
+	if (debug_opt && !check_local_clvmd())
+		return debug_clvmd(debug_arg, clusterwide_opt)==1?0:1;
+
+	clvmd_set_debug(debug_opt);
+
 	/* Fork into the background (unless requested not to) */
-	if (debug != DEBUG_STDERR) {
+	if (!foreground_mode)
 		be_daemon(start_timeout);
-	}
 
         dm_prepare_selinux_context(DEFAULT_RUN_DIR, S_IFDIR);
         old_mask = umask(0077);
