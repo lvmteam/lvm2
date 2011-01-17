@@ -17,11 +17,8 @@
 
 /* FIXME This stuff must be configurable. */
 
-#define	DM_EVENT_DAEMON		"/sbin/dmeventd"
-#define DM_EVENT_LOCKFILE	"/var/lock/dmeventd"
 #define	DM_EVENT_FIFO_CLIENT	"/var/run/dmeventd-client"
 #define	DM_EVENT_FIFO_SERVER	"/var/run/dmeventd-server"
-#define DM_EVENT_PIDFILE	"/var/run/dmeventd.pid"
 
 #define DM_EVENT_DEFAULT_TIMEOUT 10
 
