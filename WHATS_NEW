@@ -1,5 +1,6 @@
 Version 2.02.82 -
 ===================================
+  Add -f (don't fork) option to clvmd and fix clvmd -d<num> description.
 
 Version 2.02.81 - 17th January 2011
 ===================================
