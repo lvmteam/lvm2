@@ -1,12 +1,13 @@
-Version 2.02.81 -
+Version 2.02.81 - 17th January 2011
 ===================================
-  Do not scan devices unnecessarily in dev_reset_error_count().
-  Skip unnecessary lock_vol() call after volume deactivation.
-  Extend exec_cmd params to specify, when device sync is needed.
+  Do not scan devices in dev_reset_error_count().
+  Skip unnecessary LOCK_NULL unlock call during volume deactivation.
+  Skip fs_unlock when calling exec_cmd within activation code (for modprobe).
+  Extend exec_cmd params to specify when device sync (fs_unlock) is needed.
   Replace fs_unlock by sync_local_dev_names to notify local clvmd. (2.02.80)
   Introduce sync_local_dev_names and CLVMD_CMD_SYNC_NAMES to issue fs_unlock.
   Accept fusion fio in device type filter.
-  Add disk to mirrored log type conversion.
+  Add disk to allowed mirrored log type conversions.
 
 Version 2.02.80 - 10th January 2011
 ===================================
