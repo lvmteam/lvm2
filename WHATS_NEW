@@ -1,5 +1,6 @@
 Version 2.02.81 -
 ===================================
+  Do not scan devices unnecessarily in dev_reset_error_count().
   Skip unnecessary lock_vol() call after volume deactivation.
   Extend exec_cmd params to specify, when device sync is needed.
   Replace fs_unlock by sync_local_dev_names to notify local clvmd. (2.02.80)
