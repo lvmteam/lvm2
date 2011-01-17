@@ -1,3 +1,6 @@
+Version 2.02.82 -
+===================================
+
 Version 2.02.81 - 17th January 2011
 ===================================
   Do not scan devices in dev_reset_error_count().
