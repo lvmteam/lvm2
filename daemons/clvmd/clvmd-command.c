@@ -147,7 +147,7 @@ int do_command(struct local_client *client, struct clvm_header *msg, int msglen,
 		break;
 
 	case CLVMD_CMD_RESTART:
-		restart_clvmd();
+		status = restart_clvmd();
 		break;
 
 	case CLVMD_CMD_GET_CLUSTERNAME:
@@ -382,7 +382,13 @@ static int restart_clvmd(void)
 		    dm_snprintf(debug_arg, 16, "-d%d", (int)clvmd_get_debug()) < 0)
 			goto_out;
 		argv[argc++] = debug_arg;
+		debug_arg = NULL;
 	}
+
+	/*
+	 * FIXME: specify used cluster backend
+	 * argv[argc++] = strdup("-Isinglenode");
+	 */
 
 	/* Now add the exclusively-open LVs */
 	do {
@@ -402,6 +408,7 @@ static int restart_clvmd(void)
 	argv[argc++] = NULL;
 
 	/* Exec new clvmd */
+	DEBUGLOG("--- Restarting %s ---\n", CLVMD_PATH);
 	/* NOTE: This will fail when downgrading! */
 	execve(CLVMD_PATH, argv, NULL);
 out:
@@ -413,5 +420,5 @@ out:
 	free(argv);
 	free(debug_arg);
 
-	return 0;
+	return EIO;
 }

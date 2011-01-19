@@ -294,19 +294,18 @@ static int _init_cluster(void)
 		return cs_to_errno(err);
 	}
 
-
 	/* Create a lockspace for LV & VG locks to live in */
-	lockspace = dlm_create_lockspace(LOCKSPACE_NAME, 0600);
+	lockspace = dlm_open_lockspace(LOCKSPACE_NAME);
 	if (!lockspace) {
-		if (errno == EEXIST) {
-			lockspace = dlm_open_lockspace(LOCKSPACE_NAME);
-		}
+		lockspace = dlm_create_lockspace(LOCKSPACE_NAME, 0600);
 		if (!lockspace) {
-			syslog(LOG_ERR, "Unable to create lockspace for CLVM: %m");
-			quorum_finalize(quorum_handle);
+			syslog(LOG_ERR, "Unable to create DLM lockspace for CLVM: %m");
 			return -1;
 		}
-	}
+		DEBUGLOG("Created DLM lockspace for CLVMD.\n");
+	} else
+		DEBUGLOG("Opened existing DLM lockspace for CLVMD.\n");
+
 	dlm_ls_pthread_init(lockspace);
 	DEBUGLOG("DLM initialisation complete\n");
 
