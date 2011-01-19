@@ -193,8 +193,16 @@ static int _wait_for_single_lv(struct cmd_context *cmd, const char *name, const 
 			return 0;
 		}
 
-		if (!(lv = parms->poll_fns->get_copy_lv(cmd, vg, name, uuid,
-							parms->lv_type))) {
+		lv = parms->poll_fns->get_copy_lv(cmd, vg, name, uuid, parms->lv_type);
+
+		if (!lv && parms->lv_type == PVMOVE) {
+			log_print("%s: no pvmove in progress - already finished or aborted.",
+				  name);
+			unlock_and_free_vg(cmd, vg, vg->name);
+			return 1;
+		}
+
+		if (!lv) {
 			log_error("ABORTING: Can't find LV in %s for %s",
 				  vg->name, name);
 			unlock_and_free_vg(cmd, vg, vg->name);
