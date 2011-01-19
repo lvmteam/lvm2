@@ -39,6 +39,14 @@ check linear $vg mirror
 cleanup $dev1
 
 # Fail a leg of a mirror.
+# Expected result: Mirror (leg replaced, should retain log)
+aux disable_dev $dev1
+repair 'activation { mirror_image_fault_policy = "replace" mirror_log_fault_policy = "remove" }'
+check mirror $vg mirror
+lvs | grep mirror_mlog
+cleanup $dev1
+
+# Fail a leg of a mirror.
 # Expected result: Mirror (leg replaced)
 aux disable_dev $dev1
 repair 'activation { mirror_image_fault_policy = "replace" }'
@@ -49,7 +57,7 @@ cleanup $dev1
 # Fail a leg of a mirror (use old name for policy specification)
 # Expected result: Mirror (leg replaced)
 aux disable_dev $dev1
-repair 'activation { mirror_device_fault_policy = "replace" }'
+repair 'activation { mirror_image_fault_policy = "replace" }'
 check mirror $vg mirror
 lvs | grep mirror_mlog
 cleanup $dev1
