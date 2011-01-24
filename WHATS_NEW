@@ -1,5 +1,6 @@
 Version 2.02.82 -
 ===================================
+  Fix lvchange --test to exit cleanly.
   Add change_tag to toollib.
   Allow multiple pvchange command line options to be specified together.
   Add -f (don't fork) option to clvmd and fix clvmd -d<num> description.

@@ -285,6 +285,11 @@ static int _init_mirror_log(struct cmd_context *cmd,
 	uint64_t orig_status = log_lv->status;
 	int was_active = 0;
 
+	if (test_mode()) {
+		log_verbose("Test mode: Skipping mirror log initialisation.");
+		return 1;
+	}
+
 	if (!activation() && in_sync) {
 		log_error("Aborting. Unable to create in-sync mirror log "
 			  "while activation is disabled.");

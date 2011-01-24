@@ -3321,6 +3321,11 @@ int lv_create_single(struct volume_group *vg,
 
 	backup(vg);
 
+	if (test_mode()) {
+		log_verbose("Test mode: Skipping activation and zeroing.");
+		goto out;
+	}
+
 	init_dmeventd_monitor(lp->activation_monitoring);
 
 	if (lp->snapshot) {
@@ -3399,6 +3404,7 @@ int lv_create_single(struct volume_group *vg,
 	/* FIXME out of sequence */
 	backup(vg);
 
+out:
 	log_print("Logical volume \"%s\" created", lv->name);
 
 	/*
