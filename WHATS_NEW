@@ -1,12 +1,12 @@
-Version 2.02.82 -
+Version 2.02.82 - 24th January 2011
 ===================================
   Bring lvscan man page up-to-date.
   Fix lvchange --test to exit cleanly.
   Add change_tag to toollib.
   Allow multiple pvchange command line options to be specified together.
+  Do not fail pvmove polling if another process cleaned up first.
+  Avoid clvmd incrementing dlm lockspace reference count more than once.
   Add -f (don't fork) option to clvmd and fix clvmd -d<num> description.
-  Fix possible clvmd DLM lockspace increasing reference count.
-  Do not fail polling if pvmove finished in another process.
 
 Version 2.02.81 - 17th January 2011
 ===================================
