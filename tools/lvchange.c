@@ -491,24 +491,10 @@ static int lvchange_persistent(struct cmd_context *cmd,
 	return 1;
 }
 
-static int lvchange_tag(struct cmd_context *cmd, struct logical_volume *lv,
-			int arg)
+static int lvchange_tag(struct cmd_context *cmd, struct logical_volume *lv, int arg)
 {
-	const char *tag;
-	struct arg_value_group_list *current_group;
-
-	dm_list_iterate_items(current_group, &cmd->arg_value_groups) {
-		if (!grouped_arg_is_set(current_group->arg_values, arg))
-			continue;
-
-		if (!(tag = grouped_arg_str_value(current_group->arg_values, arg, NULL))) {
-			log_error("Failed to get tag");
-			return 0;
-		}
-
-		if (!lv_change_tag(lv, tag, arg == addtag_ARG))
-			return_0;
-	}
+	if (!change_tag(cmd, NULL, lv, NULL, arg))
+		return_0;
 
 	log_very_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
 

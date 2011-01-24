@@ -360,37 +360,14 @@ static int _vgchange_pesize(struct cmd_context *cmd, struct volume_group *vg)
 	return 1;
 }
 
-static int _vgchange_tag(struct cmd_context *cmd, struct volume_group *vg,
-			 int arg)
-{
-	const char *tag;
-	struct arg_value_group_list *current_group;
-
-	dm_list_iterate_items(current_group, &cmd->arg_value_groups) {
-		if (!grouped_arg_is_set(current_group->arg_values, arg))
-			continue;
-
-		if (!(tag = grouped_arg_str_value(current_group->arg_values, arg, NULL))) {
-			log_error("Failed to get tag");
-			return 0;
-		}
-
-		if (!vg_change_tag(vg, tag, arg == addtag_ARG))
-			return_0;
-
-	}
-
-	return 1;
-}
-
 static int _vgchange_addtag(struct cmd_context *cmd, struct volume_group *vg)
 {
-	return _vgchange_tag(cmd, vg, addtag_ARG);
+	return change_tag(cmd, vg, NULL, NULL, addtag_ARG);
 }
 
 static int _vgchange_deltag(struct cmd_context *cmd, struct volume_group *vg)
 {
-	return _vgchange_tag(cmd, vg, deltag_ARG);
+	return change_tag(cmd, vg, NULL, NULL, deltag_ARG);
 }
 
 static int _vgchange_uuid(struct cmd_context *cmd __attribute__((unused)),

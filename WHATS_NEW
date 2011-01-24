@@ -1,5 +1,7 @@
 Version 2.02.82 -
 ===================================
+  Add change_tag to toollib.
+  Allow multiple pvchange command line options to be specified together.
   Add -f (don't fork) option to clvmd and fix clvmd -d<num> description.
   Fix possible clvmd DLM lockspace increasing reference count.
   Do not fail polling if pvmove finished in another process.
