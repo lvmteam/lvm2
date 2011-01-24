@@ -472,7 +472,7 @@ static int _process_one_vg(struct cmd_context *cmd, const char *vg_name,
 	for (;;) {
 		/* FIXME: consistent handling of command break */
 		if (sigint_caught()) {
-                        ret = ECMD_FAILED;
+			ret = ECMD_FAILED;
 			break;
 		}
 		if (!cmd_vg_read(cmd, &cmd_vgs))
@@ -1525,7 +1525,7 @@ static int _validate_stripe_params(struct cmd_context *cmd, uint32_t *stripes,
 int get_stripe_params(struct cmd_context *cmd, uint32_t *stripes, uint32_t *stripe_size)
 {
 	/* stripes_long_ARG takes precedence (for lvconvert) */
-        *stripes = arg_uint_value(cmd, arg_count(cmd, stripes_long_ARG) ? stripes_long_ARG : stripes_ARG, 1);
+	*stripes = arg_uint_value(cmd, arg_count(cmd, stripes_long_ARG) ? stripes_long_ARG : stripes_ARG, 1);
 
 	*stripe_size = arg_uint_value(cmd, stripesize_ARG, 0);
 	if (*stripe_size) {
@@ -1544,3 +1544,47 @@ int get_stripe_params(struct cmd_context *cmd, uint32_t *stripes, uint32_t *stri
 	return _validate_stripe_params(cmd, stripes, stripe_size);
 }
 
+/* FIXME move to lib */
+static int _pv_change_tag(struct physical_volume *pv, const char *tag, int addtag)
+{
+	if (addtag) {
+		if (!str_list_add(pv->fmt->cmd->mem, &pv->tags, tag)) {
+			log_error("Failed to add tag %s to physical volume %s",
+				  tag, pv_dev_name(pv));
+			return 0;
+		}
+	} else if (!str_list_del(&pv->tags, tag)) {
+		log_error("Failed to remove tag %s from physical volume" "%s",
+			  tag,  pv_dev_name(pv));
+		return 0;
+	}
+
+	return 1;
+}
+
+/* Set exactly one of VG, LV or PV */
+int change_tag(struct cmd_context *cmd, struct volume_group *vg,
+	       struct logical_volume *lv, struct physical_volume *pv, int arg)
+{
+	const char *tag;
+	struct arg_value_group_list *current_group;
+
+	dm_list_iterate_items(current_group, &cmd->arg_value_groups) {
+		if (!grouped_arg_is_set(current_group->arg_values, arg))
+			continue;
+
+		if (!(tag = grouped_arg_str_value(current_group->arg_values, arg, NULL))) {
+			log_error("Failed to get tag");
+			return 0;
+		}
+
+		if (vg && !vg_change_tag(vg, tag, arg == addtag_ARG))
+			return_0;
+		else if (lv && !lv_change_tag(lv, tag, arg == addtag_ARG))
+			return_0;
+		else if (pv && !_pv_change_tag(pv, tag, arg == addtag_ARG))
+			return_0;
+	}
+
+	return 1;
+}

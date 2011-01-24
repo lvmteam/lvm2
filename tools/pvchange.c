@@ -15,8 +15,6 @@
 
 #include "tools.h"
 
-/* FIXME Locking.  PVs in VG. */
-
 static int _pvchange_single(struct cmd_context *cmd, struct volume_group *vg,
 			    struct physical_volume *pv,
 			    void *handle __attribute__((unused)))
@@ -27,21 +25,14 @@ static int _pvchange_single(struct cmd_context *cmd, struct volume_group *vg,
 	uint64_t orig_pe_start;
 
 	const char *pv_name = pv_dev_name(pv);
-	const char *tag = NULL;
 	const char *orig_vg_name;
 	char uuid[64] __attribute__((aligned(8)));
 
 	int allocatable = 0;
-	int tagarg = 0;
-	int r = 0;
+	int tagargs = 0;
 	int mda_ignore = 0;
 
-	struct arg_value_group_list *current_group;
-
-	if (arg_count(cmd, addtag_ARG))
-		tagarg = addtag_ARG;
-	else if (arg_count(cmd, deltag_ARG))
-		tagarg = deltag_ARG;
+	tagargs = arg_count(cmd, addtag_ARG) + arg_count(cmd, deltag_ARG);
 
 	if (arg_count(cmd, allocatable_ARG))
 		allocatable = !strcmp(arg_str_value(cmd, allocatable_ARG, "n"),
@@ -52,20 +43,20 @@ static int _pvchange_single(struct cmd_context *cmd, struct volume_group *vg,
 
 	/* If in a VG, must change using volume group. */
 	if (!is_orphan(pv)) {
-		if (tagarg && !(vg->fid->fmt->features & FMT_TAGS)) {
+		if (tagargs && !(vg->fid->fmt->features & FMT_TAGS)) {
 			log_error("Volume group containing %s does not "
 				  "support tags", pv_name);
-			goto out;
+			return 0;
 		}
 		if (arg_count(cmd, uuid_ARG) && lvs_in_vg_activated(vg)) {
 			log_error("Volume group containing %s has active "
 				  "logical volumes", pv_name);
-			goto out;
+			return 0;
 		}
 		if (!archive(vg))
-			goto out;
+			return 0;
 	} else {
-		if (tagarg) {
+		if (tagargs) {
 			log_error("Can't change tag on Physical Volume %s not "
 				  "in volume group", pv_name);
 			return 0;
@@ -77,22 +68,20 @@ static int _pvchange_single(struct cmd_context *cmd, struct volume_group *vg,
 		    !(pv->fmt->features & FMT_ORPHAN_ALLOCATABLE)) {
 			log_error("Allocatability not supported by orphan "
 				  "%s format PV %s", pv->fmt->name, pv_name);
-			goto out;
+			return 0;
 		}
 
 		/* change allocatability for a PV */
 		if (allocatable && (pv_status(pv) & ALLOCATABLE_PV)) {
 			log_error("Physical volume \"%s\" is already "
 				  "allocatable", pv_name);
-			r = 1;
-			goto out;
+			return 1;
 		}
 
 		if (!allocatable && !(pv_status(pv) & ALLOCATABLE_PV)) {
 			log_error("Physical volume \"%s\" is already "
 				  "unallocatable", pv_name);
-			r = 1;
-			goto out;
+			return 1;
 		}
 
 		if (allocatable) {
@@ -104,50 +93,40 @@ static int _pvchange_single(struct cmd_context *cmd, struct volume_group *vg,
 				    "allocatable", pv_name);
 			pv->status &= ~ALLOCATABLE_PV;
 		}
-	} else if (tagarg) {
+	}
+
+	if (tagargs) {
 		/* tag or deltag */
+		if (arg_count(cmd, addtag_ARG) && !change_tag(cmd, NULL, NULL, pv, addtag_ARG))
+			return_0;
 
-		dm_list_iterate_items(current_group, &cmd->arg_value_groups) {
-			if (!grouped_arg_is_set(current_group->arg_values, tagarg))
-				continue;
+		if (arg_count(cmd, deltag_ARG) && !change_tag(cmd, NULL, NULL, pv, deltag_ARG))
+			return_0;
+ 
+	}
 
-			if (!(tag = grouped_arg_str_value(current_group->arg_values, tagarg, NULL))) {
-				log_error("Failed to get tag");
-				goto out;
-			}
-
-			if ((tagarg == addtag_ARG)) {
-				if (!str_list_add(cmd->mem, &pv->tags, tag)) {
-					log_error("Failed to add tag %s to physical "
-						  "volume %s", tag, pv_name);
-					goto out;
-				}
-			} else if (!str_list_del(&pv->tags, tag)) {
-				log_error("Failed to remove tag %s from "
-				  	"physical volume" "%s", tag, pv_name);
-				goto out;
-			}
-		}
-	} else if (arg_count(cmd, metadataignore_ARG)) {
+	if (arg_count(cmd, metadataignore_ARG)) {
 		if ((vg_mda_copies(vg) != VGMETADATACOPIES_UNMANAGED) &&
 		    (arg_count(cmd, force_ARG) == PROMPT) &&
 		    yes_no_prompt("Override preferred number of copies "
 				  "of VG %s metadata? [y/n]: ",
 				  pv_vg_name(pv)) == 'n') {
 			log_error("Physical volume %s not changed", pv_name);
-			goto out;
+			return 0;
 		}
 		if (!pv_change_metadataignore(pv, mda_ignore))
-			goto out;
-	} else {
+			return_0;
+	} 
+
+	if (arg_count(cmd, uuid_ARG)) {
 		/* --uuid: Change PV ID randomly */
 		if (!id_create(&pv->id)) {
 			log_error("Failed to generate new random UUID for %s.",
 				  pv_name);
-			goto out;
+			return 0;
 		}
 		if (!id_write_format(&pv->id, uuid, sizeof(uuid)))
-			goto_out;
+			return 0;
 		log_verbose("Changing uuid of %s to %s.", pv_name, uuid);
 		if (!is_orphan(pv)) {
 			orig_vg_name = pv_vg_name(pv);
@@ -163,7 +142,7 @@ static int _pvchange_single(struct cmd_context *cmd, struct volume_group *vg,
 			if (!(pv_write(cmd, pv, NULL, INT64_C(-1)))) {
 				log_error("pv_write with new uuid failed "
 					  "for %s.", pv_name);
-				goto out;
+				return 0;
 			}
 			pv->vg_name = orig_vg_name;
 			pv->pe_alloc_count = orig_pe_alloc_count;
@@ -179,20 +158,18 @@ static int _pvchange_single(struct cmd_context *cmd, struct volume_group *vg,
 		if (!vg_write(vg) || !vg_commit(vg)) {
 			log_error("Failed to store physical volume \"%s\" in "
 				  "volume group \"%s\"", pv_name, vg->name);
-			goto out;
+			return 0;
 		}
 		backup(vg);
 	} else if (!(pv_write(cmd, pv, NULL, INT64_C(-1)))) {
 		log_error("Failed to store physical volume \"%s\"",
 			  pv_name);
-		goto out;
+		return 0;
 	}
 
 	log_print("Physical volume \"%s\" changed", pv_name);
-	r = 1;
-out:
-	return r;
 
+	return 1;
 }
 
 int pvchange(struct cmd_context *cmd, int argc, char **argv)
@@ -209,11 +186,11 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 	struct dm_list *vgnames;
 	struct str_list *sll;
 
-	if (arg_count(cmd, allocatable_ARG) + arg_is_set(cmd, addtag_ARG) +
+	if (!(arg_count(cmd, allocatable_ARG) + arg_is_set(cmd, addtag_ARG) +
 	    arg_is_set(cmd, deltag_ARG) + arg_count(cmd, uuid_ARG) +
-	    arg_count(cmd, metadataignore_ARG) != 1) {
-		log_error("Please give exactly one option of -x, -uuid, "
-			  "--addtag or --deltag");
+	    arg_count(cmd, metadataignore_ARG))) {
+		log_error("Please give one or more of -x, -uuid, "
+			  "--addtag, --deltag or --metadataignore");
 		return EINVALID_CMD_LINE;
 	}
 
