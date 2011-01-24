@@ -51,7 +51,7 @@ void init_verbose(int level)
 void init_test(int level)
 {
 	if (!_test && level)
-		log_print("Test mode: Metadata will NOT be updated.");
+		log_print("Test mode: Metadata will NOT be updated and volumes will not be (de)activated.");
 	_test = level;
 }
 
