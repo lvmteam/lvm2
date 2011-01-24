@@ -1,5 +1,6 @@
 Version 2.02.82 -
 ===================================
+  Bring lvscan man page up-to-date.
   Fix lvchange --test to exit cleanly.
   Add change_tag to toollib.
   Allow multiple pvchange command line options to be specified together.

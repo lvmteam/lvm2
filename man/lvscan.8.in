@@ -1,6 +1,6 @@
 .TH LVSCAN 8 "LVM TOOLS #VERSION#" "Sistina Software UK" \" -*- nroff -*-
 .SH NAME
-lvscan \- scan (all disks) for logical volumes
+lvscan \- scan (all disks) for Logical Volumes
 .SH SYNOPSIS
 .B lvscan
 .RB [ \-a | \-\-all]
@@ -13,7 +13,11 @@ lvscan \- scan (all disks) for logical volumes
 .SH DESCRIPTION
 .B lvscan
 scans all known volume groups or all supported LVM block devices
-in the system for defined logical volumes.
+in the system for defined Logical Volumes.  The output consists
+of one line for each Logical Volume indicating whether or not it is active, 
+a snapshot or origin, the size of the device and its allocation policy.
+Use \fBlvs(8)\fP or \fBlvdisplay(8)\fP to obtain more-comprehensive information 
+about the Logical Volumes.
 .SH OPTIONS
 See \fBlvm\fP for common options.
 .TP
@@ -26,9 +30,10 @@ this option will reveal three internal Logical Volumes, with suffixes
 mimage_0, mimage_1, and mlog.
 .TP
 .BR \-b ", " \-\-blockdevice
-Adds the device major and minor numbers to the display
-of each logical volume.
+This option is now ignored.  Instead, use \fBlvs(8)\fP or \fBlvdisplay(8)\fP to obtain
+the device number.
 .SH SEE ALSO
 .BR lvm (8), 
 .BR lvcreate (8),
 .BR lvdisplay (8)
+.BR lvs (8)
