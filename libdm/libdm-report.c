@@ -1006,11 +1006,6 @@ static int _output_as_rows(struct dm_report *rh)
 	struct dm_report_field *field;
 	struct row *row;
 
-	if (!dm_pool_begin_object(rh->mem, 512)) {
-		log_error("dm_report: Unable to allocate output line");
-		return 0;
-	}
-
 	dm_list_iterate_items(fp, &rh->field_props) {
 		if (fp->flags & FLD_HIDDEN) {
 			dm_list_iterate_items(row, &rh->rows) {
@@ -1018,6 +1013,11 @@ static int _output_as_rows(struct dm_report *rh)
 				dm_list_del(&field->list);
 			}
 			continue;
+		}
+
+		if (!dm_pool_begin_object(rh->mem, 512)) {
+			log_error("dm_report: Unable to allocate output line");
+			return 0;
 		}
 
 		if ((rh->flags & DM_REPORT_OUTPUT_HEADINGS)) {

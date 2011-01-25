@@ -1,5 +1,6 @@
 Version 1.02.62 - 
 ===================================
+  Initialize pool object for each row in _output_as_rows().
 
 Version 1.02.61 - 10th January 2011
 ===================================
