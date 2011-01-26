@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
         assert(v.is_valid);
         assert(v.value.integer == PERCENT_0);
 
-        lv = lvm_lv_from_name(vg, "mirr");
+	lv = lvm_lv_from_name(vg, "mirr");
         assert(lv);
 
         v = lvm_lv_get_property(lv, "copy_percent");
@@ -52,5 +52,7 @@ int main(int argc, char *argv[])
         assert(v.value.integer == 50 * PERCENT_1);
 
         lvm_vg_close(vg);
+
+	lvm_quit(handle);
         return 0;
 }
