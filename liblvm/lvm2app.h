@@ -1343,6 +1343,22 @@ int lvm_lv_remove_tag(lv_t lv, const char *tag);
  */
 struct dm_list *lvm_lv_get_tags(const lv_t lv);
 
+/**
+ * Rename logical volume to new_name.
+ *
+ * \memberof lv_t
+ *
+ * \param   lv
+ * Logical volume handle.
+ *
+ * \param   new_name
+ * New name of logical volume.
+ *
+ * \return
+ * 0 (success) or -1 (failure).
+ *
+ */
+int lvm_lv_rename(lv_t lv, const char *new_name);
 
 /**
  * Resize logical volume to new_size bytes.

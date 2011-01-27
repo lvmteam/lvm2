@@ -292,6 +292,16 @@ lv_t lvm_lv_from_uuid(vg_t vg, const char *uuid)
 	}
 	return NULL;
 }
+
+int lvm_lv_rename(lv_t lv, const char *new_name)
+{
+	if (!lv_rename(lv->vg->cmd, lv, new_name)) {
+		log_verbose("LV Rename failed.");
+		return -1;
+	}
+	return 0;
+}
+
 int lvm_lv_resize(const lv_t lv, uint64_t new_size)
 {
 	/* FIXME: add lv resize code here */
