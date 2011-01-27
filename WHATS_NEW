@@ -1,5 +1,6 @@
 Version 2.02.83 - 
 ===================================
+  Always use O_DIRECT when opening block devices to check for partitioning.
 
 Version 2.02.82 - 24th January 2011
 ===================================

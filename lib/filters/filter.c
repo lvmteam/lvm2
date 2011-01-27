@@ -147,7 +147,7 @@ static int _passes_lvm_type_device_filter(struct dev_filter *f __attribute__((un
 	}
 
 	/* Check it's accessible */
-	if (!dev_open_flags(dev, O_RDONLY, 0, 1)) {
+	if (!dev_open_flags(dev, O_RDONLY, 1, 1)) {
 		log_debug("%s: Skipping: open failed", name);
 		return 0;
 	}
