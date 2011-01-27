@@ -20,8 +20,8 @@ ifeq ("@APPLIB@", "yes")
 TARGETS += test
 SOURCES = test.c
 
-TARGETS += vgtest.t percent.t pe_start.t
-SOURCES2 = vgtest.c percent.c pe_start.c
+TARGETS += vgtest.t percent.t pe_start.t lvtest.t
+SOURCES2 = vgtest.c percent.c pe_start.c lvtest.c
 endif
 
 include $(top_builddir)/make.tmpl
