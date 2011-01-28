@@ -125,6 +125,7 @@ static void _build_inverse(void)
 	if (_built_inverse)
 		return;
 
+	_built_inverse = 1;
 	memset(_inverse_c, 0, sizeof(_inverse_c));
 
 	for (ptr = _c; *ptr; ptr++)
