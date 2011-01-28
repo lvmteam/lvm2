@@ -125,6 +125,5 @@ int cmp_timestamp(struct timestamp *t1, struct timestamp *t2)
 
 void destroy_timestamp(struct timestamp *t)
 {
-	if (t)
-		dm_free(t);
+	dm_free(t);
 }

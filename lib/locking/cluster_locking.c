@@ -279,8 +279,7 @@ static int _cluster_request(char clvmd_cmd, const char *node, void *data, int le
 	*response = rarray;
 
       out:
-	if (retbuf)
-		dm_free(retbuf);
+	dm_free(retbuf);
 
 	return status;
 }

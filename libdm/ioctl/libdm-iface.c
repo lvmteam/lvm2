@@ -486,20 +486,11 @@ void dm_task_destroy(struct dm_task *dmt)
 		dm_free(t);
 	}
 
-	if (dmt->dev_name)
-		dm_free(dmt->dev_name);
-
-	if (dmt->newname)
-		dm_free(dmt->newname);
-
-	if (dmt->message)
-		dm_free(dmt->message);
-
 	_dm_zfree_dmi(dmt->dmi.v4);
-
-	if (dmt->uuid)
-		dm_free(dmt->uuid);
-
+	dm_free(dmt->dev_name);
+	dm_free(dmt->newname);
+	dm_free(dmt->message);
+	dm_free(dmt->uuid);
 	dm_free(dmt);
 }
 
