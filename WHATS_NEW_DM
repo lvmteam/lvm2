@@ -1,5 +1,6 @@
 Version 1.02.62 - 
 ===================================
+  Set DM_UDEV_DISABLE_OTHER_RULES_FLAG for suspended DM devices in udev rules.
   Initialize pool object for each row in _output_as_rows().
 
 Version 1.02.61 - 10th January 2011
