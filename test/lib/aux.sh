@@ -1,3 +1,4 @@
+#!/bin/bash
 # Copyright (C) 2011 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
@@ -71,6 +72,7 @@ teardown_devs() {
 
 	}
 
+	udev_wait
 	# NOTE: SCSI_DEBUG_DEV test must come before the LOOP test because
 	# prepare_scsi_debug_dev() also sets LOOP to short-circuit prepare_loop()
 	if test -f SCSI_DEBUG_DEV; then
@@ -365,6 +367,15 @@ apitest() {
 api() {
 	test -x $abs_top_builddir/test/api/wrapper || skip
 	$abs_top_builddir/test/api/wrapper "$@"
+}
+
+udev_wait() {
+	pgrep udev >/dev/null || return
+	if test -n "$1" ; then
+		udevadm settle --exit-if-exists=$1
+	else
+		udevadm settle --timeout=5 
+	fi
 }
 
 test -f DEVICES && devs=$(cat DEVICES)
