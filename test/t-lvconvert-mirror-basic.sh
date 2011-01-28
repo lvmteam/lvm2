@@ -77,8 +77,6 @@ test_lvconvert()
 		max_log_count=$start_log_count
 	fi
 
-	aux prepare_vg 5
-
 	if [ $start_count -gt 0 ]; then
 		# Are there extra devices for the log or do we overlap
 		if [ $(($start_count_p1 + $start_log_count)) -gt ${#dev_array[@]} ]; then
@@ -123,7 +121,7 @@ test_lvconvert()
 	fi
 }
 
-aux prepare_vg 5
+aux prepare_vg 5 16
 
 test_many() {
 	i=$1
@@ -135,7 +133,9 @@ test_many() {
 				: "Testing mirror conversion -m$i/$k -> -m$j/$l"
 				: ----------------------------------------------------
 				test_lvconvert $i $k $j $l 0
+				lvremove -ff $vg
 				test_lvconvert $i $k $j $l 1
+				lvremove -ff $vg
 			done
 		done
 	done
