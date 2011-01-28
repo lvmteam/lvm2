@@ -11,7 +11,7 @@
 
 . lib/test
 
-aux prepare_vg 3
+aux prepare_vg 3 12
 
 lvcreate -m 1 -l 1 -n mirror $vg
 lvcreate -l 1 -n resized $vg
