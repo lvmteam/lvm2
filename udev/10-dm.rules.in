@@ -119,6 +119,11 @@ ENV{DM_UUID}=="mpath-?*", ENV{DM_ACTION}=="PATH_FAILED", GOTO="dm_disable"
 ENV{DM_UUID}=="CRYPT-TEMP-?*", GOTO="dm_disable"
 ENV{DM_UUID}!="?*", ENV{DM_NAME}=="temporary-cryptsetup-?*", GOTO="dm_disable"
 
+# Avoid processing and scanning a DM device in the other (foreign)
+# rules if it is in suspended state. However, we still keep 'disk'
+# and 'DM subsystem' related rules enabled in this case.
+ENV{DM_SUSPENDED}=="1", ENV{DM_UDEV_DISABLE_OTHER_RULES_FLAG}="1"
+
 GOTO="dm_end"
 
 LABEL="dm_disable"
