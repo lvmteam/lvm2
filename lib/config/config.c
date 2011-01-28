@@ -886,9 +886,11 @@ static char *_dup_tok(struct parser *p)
 {
 	size_t len = p->te - p->tb;
 	char *str = dm_pool_alloc(p->mem, len + 1);
-	if (!str)
-		return_0;
-	strncpy(str, p->tb, len);
+	if (!str) {
+		log_error("Failed to duplicate token.");
+		return 0;
+	}
+	memcpy(str, p->tb, len);
 	str[len] = '\0';
 	return str;
 }
