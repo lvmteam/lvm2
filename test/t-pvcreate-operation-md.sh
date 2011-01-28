@@ -34,8 +34,9 @@ mdadm_maj=$(mdadm --version 2>&1 | perl -pi -e 's|.* v(\d+).*|\1|')
 cleanup_md() {
     # sleeps offer hack to defeat: 'md: md127 still in use'
     # see: https://bugzilla.redhat.com/show_bug.cgi?id=509908#c25
-    sleep 2
+    aux udev_wait
     mdadm --stop $mddev || true
+    aux udev_wait
     if [ -b "$mddev" ]; then
         # mdadm doesn't always cleanup the device node
 	sleep 2
@@ -101,6 +102,11 @@ EOF
     mddev_p_sysfs_name=$(echo /sys/dev/block/${mddev_maj_min}/*p1)
     base_mddev_p=`basename $mddev_p_sysfs_name`
     mddev_p=/dev/${base_mddev_p}
+
+    # in case the system is running without devtmpfs /dev
+    # wait here for created device node on tmpfs
+    aux udev_wait $mddev_p
+    test -b $mddev_p || exit 200
 
     # Checking for 'alignment_offset' in sysfs implies Linux >= 2.6.31
     # but reliable alignment_offset support requires kernel.org Linux >= 2.6.33
