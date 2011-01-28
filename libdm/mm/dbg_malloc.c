@@ -15,6 +15,8 @@
 
 #include "dmlib.h"
 
+#ifdef DEBUG_MEM
+
 #include <assert.h>
 #include <stdarg.h>
 
@@ -248,6 +250,8 @@ void dm_bounds_check_debug(void)
 		mb = mb->next;
 	}
 }
+
+#endif
 
 void *dm_malloc_aux(size_t s, const char *file __attribute__((unused)),
 		    int line __attribute__((unused)))
