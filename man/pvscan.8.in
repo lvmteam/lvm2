@@ -3,19 +3,15 @@
 pvscan \- scan all disks for physical volumes
 .SH SYNOPSIS
 .B pvscan
-.RB [ \-d | \-\-debug]
-.RB [\-e | \-\-exported]
-.RB [\-h | \-\-help]
-.RB [\-\-ignorelockingfailure]
-.RB [ \-n | \-\-novolumegroup]
-.RB [\-s | \-\-short]
-.RB [\-u | \-\-uuid]
-.RB [ \-v [ v ]| \-\-verbose " [" \-\-verbose ]]
+.RB [ \-e | \-\-exported ]
+.RB [ \-n | \-\-novolumegroup ]
+.RB [ \-s | \-\-short ]
+.RB [ \-u | \-\-uuid ]
 .SH DESCRIPTION
 .B pvscan
 scans all supported LVM block devices in the system for physical volumes.
 .SH OPTIONS
-See \fBlvm\fP for common options.
+See \fBlvm\fP(8) for common options.
 .TP
 .BR \-e ", " \-\-exported
 Only show physical volumes belonging to exported volume groups.
