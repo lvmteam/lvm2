@@ -1,5 +1,6 @@
 Version 2.02.83 - 
 ===================================
+  Avoid rebuilding of uuid validation table.
   Always use O_DIRECT when opening block devices to check for partitioning.
   Improve lvcreate "insufficient extents" errors to "insufficient free space".
 
