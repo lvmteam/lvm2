@@ -139,9 +139,9 @@ mirror() {
 
 mirror_nonredundant() {
 	lv="$1/$2"
-	lvs -oattr "$lv" | grep -q "^ *m.....$" || {
-		if lvs -oattr "$lv" | grep -q "^ *o.....$" &&
-		   lvs -a | fgrep -q "[${2}_mimage"; then
+	lvs -oattr "$lv" | grep "^ *m.....$" >/dev/null || {
+		if lvs -oattr "$lv" | grep "^ *o.....$" >/dev/null &&
+		   lvs -a | fgrep "[${2}_mimage" >/dev/null; then
 			echo "TEST WARNING: $lv is a snapshot origin and looks like a mirror,"
 			echo "assuming it is actually a mirror"
 		else
@@ -174,7 +174,7 @@ mirror_no_temporaries()
 
 linear() {
 	lv="$1/$2"
-	lvl -ostripes "$lv" | grep -q "1" || {
+	lvl -ostripes "$lv" | grep "1" >/dev/null || {
 		echo "$lv expected linear, but is not:"
 		lvl "$lv" -o+devices
 		exit 1
@@ -183,12 +183,12 @@ linear() {
 
 active() {
 	lv="$1/$2"
-	lvl -oattr "$lv" 2> /dev/null | grep -q "^ *....a.$" || {
+	lvl -oattr "$lv" 2> /dev/null | grep "^ *....a.$" >/dev/null || {
 		echo "$lv expected active, but lvs says it's not:"
 		lvl "$lv" -o+devices 2>/dev/null
 		exit 1
 	}
-	dmsetup table | egrep -q "$1-$2: *[^ ]+" || {
+	dmsetup table | egrep "$1-$2: *[^ ]+" >/dev/null || {
 		echo "$lv expected active, lvs thinks it is but there are no mappings!"
 		dmsetup table | grep $1-$2:
 		exit 1
@@ -197,12 +197,12 @@ active() {
 
 inactive() {
 	lv="$1/$2"
-	lvl -oattr "$lv" 2> /dev/null | grep -q '^ *....[-isd].$' || {
+	lvl -oattr "$lv" 2> /dev/null | grep '^ *....[-isd].$' >/dev/null || {
 		echo "$lv expected inactive, but lvs says it's not:"
 		lvl "$lv" -o+devices 2>/dev/null
 		exit 1
 	}
-	dmsetup table | not egrep -q "$1-$2: *[^ ]+" || {
+	dmsetup table | not egrep "$1-$2: *[^ ]+" >/dev/null || {
 		echo "$lv expected inactive, lvs thinks it is but there are mappings!"
 		dmsetup table | grep $1-$2:
 		exit 1
