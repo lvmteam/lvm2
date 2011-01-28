@@ -3,11 +3,7 @@
 pvremove \- remove a physical volume
 .SH SYNOPSIS
 .B pvremove
-.RB [ \-d | \-\-debug]
 .RB [ \-f [ f ]| \-\-force " [" \-\-force ]]
-.RB [\-h | \-\-help]
-.RB [ \-t | \-\-test ]
-.RB [ \-v [ v ]| \-\-verbose " [" \-\-verbose ]]
 .RB [ \-y | \-\-yes ]
 .IR PhysicalVolume " [" PhysicalVolume ...]
 .SH DESCRIPTION
@@ -15,7 +11,14 @@ pvremove \- remove a physical volume
 wipes the label on a device so that LVM will no longer recognise it
 as a physical volume.
 .SH OPTIONS
-See \fBlvm\fP for common options.
+See \fBlvm\fP(8) for common options.
+.TP
+.BR \-ff ", " \-\-force " " \-\-force
+Force the removal of a physical volume belonging to an existing volume group.
+You cannot remove a physical volume which in use by some active logical volume.
+.TP
+.BR \-y ", " \-\-yes
+Answer yes to all questions.
 .SH SEE ALSO
 .BR lvm (8),
 .BR pvcreate (8),
