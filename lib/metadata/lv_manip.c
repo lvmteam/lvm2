@@ -1481,7 +1481,7 @@ static int _allocate(struct alloc_handle *ah,
 	}
 
 	if (log_needs_allocating) {
-		log_error("Insufficient extents for log allocation "
+		log_error("Insufficient free space for log allocation "
 			  "for logical volume %s.",
 			  lv ? lv->name : "");
 		goto out;
@@ -3232,8 +3232,9 @@ int lv_create_single(struct volume_group *vg,
 
 	if (!seg_is_virtual(lp) &&
 	    vg->free_count < lp->extents) {
-		log_error("Insufficient free extents (%u) in volume group %s: "
-			  "%u required", vg->free_count, vg->name, lp->extents);
+		log_error("Volume group \"%s\" has insufficient free space "
+			  "(%u extents): %u required.",
+			  vg->name, vg->free_count, lp->extents);
 		return 0;
 	}
 
