@@ -1,5 +1,6 @@
 Version 2.02.83 - 
 ===================================
+  Fix udev synchronization with no-locking --sysinit (2.02.80).
   Updating man pages for pvcreate, pvremove, pvresize, pvscan.
   Avoid rebuilding of uuid validation table.
   Always use O_DIRECT when opening block devices to check for partitioning.
