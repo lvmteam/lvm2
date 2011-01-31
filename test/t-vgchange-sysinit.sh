@@ -14,6 +14,7 @@
 which mkfs.ext3 || exit 200
 
 aux prepare_pvs 2 8
+test -e LOCAL_CLVMD && exit 200
 
 var_lock="$DM_DEV_DIR/$vg1/$lv1"
 # keep in sync with aux configured lockingdir
