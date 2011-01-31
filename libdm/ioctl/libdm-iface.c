@@ -1979,8 +1979,11 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 		}
 	}
 
-	if (ioctl_with_uevent && !_check_uevent_generated(dmi))
+	if (ioctl_with_uevent && !_check_uevent_generated(dmi)) {
+		log_debug("Uevent not generated! Calling udev_complete "
+			  "internally to avoid process lock-up.");
 		_udev_complete(dmt);
+	}
 
 #else /* Userspace alternative for testing */
 #endif
