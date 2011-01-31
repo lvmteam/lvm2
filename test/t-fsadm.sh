@@ -38,7 +38,7 @@ test ! -d $mount_dir && mkdir $mount_dir
 cleanup_mounted_and_teardown()
 {
 	umount $mount_dir || true
-	teardown
+	aux teardown
 }
 
 fscheck_ext3()
@@ -68,7 +68,7 @@ check_missing()
 
 # Test for block sizes != 1024 (rhbz #480022)
 lvcreate -n $lv1 -L20M $vg
-trap 'aux cleanup_mounted_and_teardown' EXIT
+trap 'cleanup_mounted_and_teardown' EXIT
 
 if check_missing ext3; then
 	mkfs.ext3 -b4096 -j $dev_vg_lv
