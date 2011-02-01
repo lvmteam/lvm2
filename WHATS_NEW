@@ -1,5 +1,6 @@
 Version 2.02.83 - 
 ===================================
+  Add "dmsetup ls --tree" output to lvmdump.
   Fix udev synchronization with no-locking --sysinit (2.02.80).
   Updating man pages for pvcreate, pvremove, pvresize, pvscan.
   Avoid rebuilding of uuid validation table.
