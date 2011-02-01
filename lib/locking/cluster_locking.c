@@ -490,11 +490,11 @@ static int decode_lock_type(const char *response)
 {
 	if (!response)
 		return LCK_NULL;
-	else if (strcmp(response, "EX"))
+	else if (!strcmp(response, "EX"))
 		return LCK_EXCL;
-	else if (strcmp(response, "CR"))
+	else if (!strcmp(response, "CR"))
 		return LCK_READ;
-	else if (strcmp(response, "PR"))
+	else if (!strcmp(response, "PR"))
 		return LCK_PREAD;
 
 	stack;
@@ -532,8 +532,8 @@ int query_resource(const char *resource, int *mode)
 
 		/*
 		 * All nodes should use CR, or exactly one node
-		 * should held EX. (PR is obsolete)
-		 * If two nodes node reports different locks,
+		 * should hold EX. (PR is obsolete)
+		 * If two nodes report different locks,
 		 * something is broken - just return more important mode.
 		 */
 		if (decode_lock_type(response[i].response) > *mode)
