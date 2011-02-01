@@ -183,6 +183,7 @@ myecho "Gathering dmsetup info..."
 log "\"$DMSETUP\" info -c > \"$dir/dmsetup_info\" 2>> \"$log\""
 log "\"$DMSETUP\" table > \"$dir/dmsetup_table\" 2>> \"$log\""
 log "\"$DMSETUP\" status > \"$dir/dmsetup_status\" 2>> \"$log\""
+log "\"$DMSETUP\" ls --tree > \"$dir/dmsetup_ls_tree\" 2>> \"$log\""
 
 myecho "Gathering process info..."
 log "$PS alx > \"$dir/ps_info\" 2>> \"$log\""
