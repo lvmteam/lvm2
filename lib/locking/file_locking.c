@@ -215,6 +215,7 @@ static int _lock_file(const char *file, uint32_t flags)
 		state = 'W';
 		break;
 	case LCK_UNLOCK:
+		fs_unlock(); /* Wait until devices are available */
 		return _release_lock(file, 1);
 	default:
 		log_error("Unrecognised lock type: %d", flags & LCK_TYPE_MASK);
