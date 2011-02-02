@@ -342,10 +342,14 @@ static int _lock_for_cluster(struct cmd_context *cmd, unsigned char clvmd_cmd,
 	 * VG locks are just that: locks, and have no side effects
 	 * so we only need to do them on the local node because all
 	 * locks are cluster-wide.
+	 *
 	 * Also, if the lock is exclusive it makes no sense to try to
 	 * acquire it on all nodes, so just do that on the local node too.
-	 * One exception, is that P_ locks (except VG_SYNC_NAMES) /do/ get 
-	 * distributed across the cluster because they might have side-effects.
+	 *
+	 * P_ locks /do/ get distributed across the cluster because they might
+	 * have side-effects.
+	 *
+	 * SYNC_NAMES and VG_BACKUP use the VG name directly without prefix.
 	 */
 	if (clvmd_cmd == CLVMD_CMD_SYNC_NAMES) {
 		if (flags & LCK_LOCAL)
