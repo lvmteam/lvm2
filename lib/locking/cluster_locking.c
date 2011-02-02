@@ -347,13 +347,17 @@ static int _lock_for_cluster(struct cmd_context *cmd, unsigned char clvmd_cmd,
 	 * One exception, is that P_ locks (except VG_SYNC_NAMES) /do/ get 
 	 * distributed across the cluster because they might have side-effects.
 	 */
-	if ((strncmp(name, "P_", 2) &&
-	     (clvmd_cmd == CLVMD_CMD_LOCK_VG ||
-	      (flags & LCK_TYPE_MASK) == LCK_EXCL ||
-	      (flags & LCK_LOCAL) ||
-	      !(flags & LCK_CLUSTER_VG))) ||
-	    (clvmd_cmd == CLVMD_CMD_SYNC_NAMES && (flags & LCK_LOCAL)))
-		node = ".";
+	if (clvmd_cmd == CLVMD_CMD_SYNC_NAMES) {
+		if (flags & LCK_LOCAL)
+			node = ".";
+	} else if (clvmd_cmd != CLVMD_CMD_VG_BACKUP) {
+		if (strncmp(name, "P_", 2) &&
+		    (clvmd_cmd == CLVMD_CMD_LOCK_VG ||
+		     (flags & LCK_TYPE_MASK) == LCK_EXCL ||
+		     (flags & LCK_LOCAL) ||
+		     !(flags & LCK_CLUSTER_VG)))
+			node = ".";
+	}
 
 	status = _cluster_request(clvmd_cmd, node, args, len,
 				  &response, &num_responses);
