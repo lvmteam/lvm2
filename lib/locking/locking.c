@@ -442,10 +442,6 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags)
 		/* If LVM1 driver knows about the VG, it can't be accessed. */
 		if (!check_lvm1_vg_inactive(cmd, vol))
 			return_0;
-
-		/* Before unlocking VG wait until devices are available. */
-		if ((flags & LCK_TYPE_MASK) == LCK_UNLOCK)
-			sync_local_dev_names(cmd);
 		break;
 	case LCK_LV:
 		/* All LV locks are non-blocking. */
