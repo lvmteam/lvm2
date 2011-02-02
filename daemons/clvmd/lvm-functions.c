@@ -507,6 +507,7 @@ int do_lock_lv(unsigned char command, unsigned char lock_flags, char *resource)
 	switch (command & LCK_MASK) {
 	case LCK_LV_EXCLUSIVE:
 		status = do_activate_lv(resource, lock_flags, LCK_EXCL);
+		fs_unlock();
 		break;
 
 	case LCK_LV_SUSPEND:
@@ -520,10 +521,12 @@ int do_lock_lv(unsigned char command, unsigned char lock_flags, char *resource)
 
 	case LCK_LV_ACTIVATE:
 		status = do_activate_lv(resource, lock_flags, LCK_READ);
+		fs_unlock();
 		break;
 
 	case LCK_LV_DEACTIVATE:
 		status = do_deactivate_lv(resource, lock_flags);
+		fs_unlock();
 		break;
 
 	default:
