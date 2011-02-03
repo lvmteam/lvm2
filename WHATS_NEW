@@ -1,5 +1,6 @@
 Version 2.02.83 - 
 ===================================
+  Remove fs_unlock() from lv_resume path.
   Fix wipe size when setting up mda.
   Remove unneeded checks for open_count in lv_info().
   Synchronize with udev before checking open_count in lv_info().

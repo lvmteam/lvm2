@@ -517,6 +517,7 @@ int do_lock_lv(unsigned char command, unsigned char lock_flags, char *resource)
 	case LCK_UNLOCK:
 	case LCK_LV_RESUME:	/* if active */
 		status = do_resume_lv(resource, lock_flags);
+		fs_unlock();
 		break;
 
 	case LCK_LV_ACTIVATE:
