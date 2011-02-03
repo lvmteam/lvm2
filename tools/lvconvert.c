@@ -1637,7 +1637,7 @@ static int poll_logical_volume(struct cmd_context *cmd, struct logical_volume *l
 {
 	struct lvinfo info;
 
-	if (!lv_info(cmd, lv, 0, &info, 1, 0) || !info.exists) {
+	if (!lv_info(cmd, lv, 0, &info, 0, 0) || !info.exists) {
 		log_print("Conversion starts after activation.");
 		return ECMD_PROCESSED;
 	}

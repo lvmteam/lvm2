@@ -1,5 +1,7 @@
 Version 2.02.83 - 
 ===================================
+  Remove unneeded checks for open_count in lv_info().
+  Synchronize with udev before checking open_count in lv_info().
   Allow CLVMD_CMD_SYNC_NAMES to be propagated around the cluster if requested.
   Add "dmsetup ls --tree" output to lvmdump.
   Fix udev synchronization with no-locking --sysinit (2.02.80).
