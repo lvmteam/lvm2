@@ -62,7 +62,7 @@ struct lvm_property_value lvm_lvseg_get_property(const lvseg_t lvseg,
 uint64_t lvm_lv_is_active(const lv_t lv)
 {
 	struct lvinfo info;
-	if (lv_info(lv->vg->cmd, lv, 0, &info, 1, 0) &&
+	if (lv_info(lv->vg->cmd, lv, 0, &info, 0, 0) &&
 	    info.exists && info.live_table)
 		return 1;
 	return 0;
@@ -71,7 +71,7 @@ uint64_t lvm_lv_is_active(const lv_t lv)
 uint64_t lvm_lv_is_suspended(const lv_t lv)
 {
 	struct lvinfo info;
-	if (lv_info(lv->vg->cmd, lv, 0, &info, 1, 0) &&
+	if (lv_info(lv->vg->cmd, lv, 0, &info, 0, 0) &&
 	    info.exists && info.suspended)
 		return 1;
 	return 0;
