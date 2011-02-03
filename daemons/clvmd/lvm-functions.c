@@ -197,7 +197,7 @@ static int get_current_lock(char *resource)
 void init_lvhash()
 {
 	/* Create hash table for keeping LV locks & status */
-	lv_hash = dm_hash_create(100);
+	lv_hash = dm_hash_create(1024);
 	pthread_mutex_init(&lv_hash_lock, NULL);
 	pthread_mutex_init(&lvm_lock, NULL);
 }
