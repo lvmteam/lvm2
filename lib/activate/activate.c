@@ -1124,7 +1124,6 @@ static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
 		goto_out;
 
 	memlock_dec(cmd);
-	fs_unlock();
 
 	if (!monitor_dev_for_events(cmd, lv, origin_only, 1))
 		stack;
