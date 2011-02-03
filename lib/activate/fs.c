@@ -422,3 +422,8 @@ void fs_set_cookie(uint32_t cookie)
 {
 	_fs_cookie = cookie;
 }
+
+int fs_has_non_delete_ops(void)
+{
+	return _other_fs_ops(FS_DEL);
+}

@@ -460,6 +460,18 @@ int lv_info(struct cmd_context *cmd, const struct logical_volume *lv, unsigned o
 
 	if (!activation())
 		return 0;
+	/*
+	 * If open_count info is requested and we have to be sure our own udev
+	 * transactions are finished
+	 * For non-clustered locking type we are only interested for non-delete operation
+	 * in progress - as only those could lead to opened files
+	 */
+	if (with_open_count) {
+		if (locking_is_clustered())
+			sync_local_dev_names(cmd); /* Wait to have udev in sync */
+		else if (fs_has_non_delete_ops())
+			fs_unlock(); /* For non clustered - wait if there are non-delete ops */
+	}
 
 	if (!dev_manager_info(lv->vg->cmd->mem, lv, origin_only ? "real" : NULL, with_open_count,
 			      with_read_ahead, &dminfo, &info->read_ahead))
