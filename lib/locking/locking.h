@@ -143,7 +143,12 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 		lock_vol(cmd, (lv)->lvid.s, flags | LCK_LV_CLUSTERED(lv)) : \
 		0)
 
-#define unlock_vg(cmd, vol)	lock_vol(cmd, vol, LCK_VG_UNLOCK)
+#define unlock_vg(cmd, vol)	\
+	do { \
+		if (is_real_vg(vol)) \
+			sync_dev_names(cmd); \
+		lock_vol(cmd, vol, LCK_VG_UNLOCK); \
+	} while (0)
 #define unlock_and_free_vg(cmd, vg, vol) \
 	do { \
 		unlock_vg(cmd, vol); \
@@ -172,6 +177,8 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 	lock_vol((vg)->cmd, (vg)->name, LCK_VG_BACKUP)
 #define sync_local_dev_names(cmd)	\
 	lock_vol(cmd, VG_SYNC_NAMES, LCK_NONE | LCK_CACHE | LCK_LOCAL)
+#define sync_dev_names(cmd)	\
+	lock_vol(cmd, VG_SYNC_NAMES, LCK_NONE | LCK_CACHE)
 
 /* Process list of LVs */
 int suspend_lvs(struct cmd_context *cmd, struct dm_list *lvs);

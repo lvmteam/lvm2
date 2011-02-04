@@ -18,6 +18,8 @@
 #include "defaults.h"
 #include "sharedlib.h"
 #include "toolcontext.h"
+#include "activate.h"
+#include "locking.h"
 
 static void *_locking_lib = NULL;
 static void (*_reset_fn) (void) = NULL;
@@ -31,10 +33,16 @@ static int (*_lock_query_fn) (const char *resource, int *mode) = NULL;
 static int _lock_resource(struct cmd_context *cmd, const char *resource,
 			  uint32_t flags)
 {
-	if (_lock_fn)
-		return _lock_fn(cmd, resource, flags);
-	else
+	if (!_lock_fn)
 		return 0;
+
+	if (!strcmp(resource, VG_SYNC_NAMES)) {
+		/* Hide this lock request from external locking */
+		fs_unlock();
+		return 1;
+	}
+
+	return _lock_fn(cmd, resource, flags);
 }
 
 static void _fin_external_locking(void)

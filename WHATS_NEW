@@ -1,5 +1,6 @@
 Version 2.02.83 - 
 ===================================
+  Use cluster-wide message to request device name sync.
   Fix operation node stacking for consecutive dm ops.
   Increase hash table size to 1024 lv names and 64 pv uuids.
   Remove fs_unlock() from lv_resume path.
