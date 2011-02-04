@@ -257,7 +257,8 @@ static int _rm_link(const char *dev_dir, const char *vg_name,
 typedef enum {
 	FS_ADD,
 	FS_DEL,
-	FS_RENAME
+	FS_RENAME,
+	NUM_FS_OPS
 } fs_op_t;
 
 static int _do_fs_op(fs_op_t type, const char *dev_dir, const char *vg_name,
@@ -283,12 +284,18 @@ static int _do_fs_op(fs_op_t type, const char *dev_dir, const char *vg_name,
 
 		if (!_mk_link(dev_dir, vg_name, lv_name, dev, check_udev))
 			stack;
+	default:;
 	}
 
 	return 1;
 }
 
 static DM_LIST_INIT(_fs_ops);
+/*
+ * Count number of stacked fs_op_t operations to allow to skip dm_list search.
+ * FIXME: handling of FS_RENAME
+ */
+static int _count_fs_ops[NUM_FS_OPS];
 
 struct fs_op_parms {
 	struct dm_list list;
@@ -309,14 +316,83 @@ static void _store_str(char **pos, char **ptr, const char *str)
 	*pos += strlen(*ptr) + 1;
 }
 
+static void _del_fs_op(struct fs_op_parms *fsp)
+{
+	_count_fs_ops[fsp->type]--;
+	dm_list_del(&fsp->list);
+	dm_free(fsp);
+}
+
+/* Check if there is other the type of fs operation stacked */
+static int _other_fs_ops(fs_op_t type)
+{
+	int i;
+
+	for (i = 0; i < NUM_FS_OPS; i++)
+		if (type != i && _count_fs_ops[i])
+			return 1;
+	return 0;
+}
+
+/* Check if udev is supposed to create nodes */
+static int _check_udev(int check_udev)
+{
+    return check_udev && dm_udev_get_sync_support() && dm_udev_get_checking();
+}
+
+/* FIXME: duplication of the  code from libdm-common.c */
 static int _stack_fs_op(fs_op_t type, const char *dev_dir, const char *vg_name,
 			const char *lv_name, const char *dev,
 			const char *old_lv_name, int check_udev)
 {
+	struct dm_list *fsph, *fspht;
 	struct fs_op_parms *fsp;
 	size_t len = strlen(dev_dir) + strlen(vg_name) + strlen(lv_name) +
 	    strlen(dev) + strlen(old_lv_name) + 5;
 	char *pos;
+
+	if ((type == FS_DEL) && _other_fs_ops(type))
+		/*
+		 * Ignore any outstanding operations on the fs_op if deleting it.
+		 */
+		dm_list_iterate_safe(fsph, fspht, &_fs_ops) {
+			fsp = dm_list_item(fsph, struct fs_op_parms);
+			if (!strcmp(lv_name, fsp->lv_name) &&
+			    !strcmp(vg_name, fsp->vg_name)) {
+				_del_fs_op(fsp);
+				if (!_other_fs_ops(type))
+					break; /* no other non DEL ops */
+			}
+		}
+	else if ((type == FS_ADD) && _count_fs_ops[FS_DEL] && _check_udev(check_udev))
+		/*
+		 * If udev is running ignore previous DEL operation on added fs_op.
+		 * (No other operations for this device then DEL could be staked here).
+		 */
+		dm_list_iterate_safe(fsph, fspht, &_fs_ops) {
+			fsp = dm_list_item(fsph, struct fs_op_parms);
+			if ((fsp->type == FS_DEL) &&
+			    !strcmp(lv_name, fsp->lv_name) &&
+			    !strcmp(vg_name, fsp->vg_name)) {
+				_del_fs_op(fsp);
+				break; /* no other DEL ops */
+			}
+		}
+	else if ((type == FS_RENAME) && _check_udev(check_udev))
+		/*
+		 * If udev is running ignore any outstanding operations if renaming it.
+		 *
+		 * Currently RENAME operation happens through 'suspend -> resume'.
+		 * On 'resume' device is added with read_ahead settings, so it
+		 * safe to remove any stacked ADD, RENAME, READ_AHEAD operation
+		 * There cannot be any DEL operation on the renamed device.
+		 */
+		dm_list_iterate_safe(fsph, fspht, &_fs_ops) {
+			fsp = dm_list_item(fsph, struct fs_op_parms);
+			if (!strcmp(old_lv_name, fsp->lv_name) &&
+			    !strcmp(vg_name, fsp->vg_name))
+				_del_fs_op(fsp);
+		}
 
 	if (!(fsp = dm_malloc(sizeof(*fsp) + len))) {
 		log_error("No space to stack fs operation");
@@ -333,6 +409,7 @@ static int _stack_fs_op(fs_op_t type, const char *dev_dir, const char *vg_name,
 	_store_str(&pos, &fsp->dev, dev);
 	_store_str(&pos, &fsp->old_lv_name, old_lv_name);
 
+	_count_fs_ops[type]++;
 	dm_list_add(&_fs_ops, &fsp->list);
 
 	return 1;
@@ -347,8 +424,7 @@ static void _pop_fs_ops(void)
 		fsp = dm_list_item(fsph, struct fs_op_parms);
 		_do_fs_op(fsp->type, fsp->dev_dir, fsp->vg_name, fsp->lv_name,
 			  fsp->dev, fsp->old_lv_name, fsp->check_udev);
-		dm_list_del(&fsp->list);
-		dm_free(fsp);
+		_del_fs_op(fsp);
 	}
 }
 
@@ -423,9 +499,7 @@ void fs_set_cookie(uint32_t cookie)
 	_fs_cookie = cookie;
 }
 
-#if 0
 int fs_has_non_delete_ops(void)
 {
 	return _other_fs_ops(FS_DEL);
 }
-#endif

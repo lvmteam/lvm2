@@ -1,5 +1,6 @@
 Version 2.02.83 - 
 ===================================
+  Fix operation node stacking for consecutive dm ops.
   Increase hash table size to 1024 lv names and 64 pv uuids.
   Remove fs_unlock() from lv_resume path.
   Fix wipe size when setting up mda.
