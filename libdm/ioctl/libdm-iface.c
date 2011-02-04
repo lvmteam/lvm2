@@ -1541,8 +1541,12 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 		dmi->flags |= DM_READONLY_FLAG;
 	if (dmt->skip_lockfs)
 		dmi->flags |= DM_SKIP_LOCKFS_FLAG;
-	if (dmt->secure_data)
+	if (dmt->secure_data) {
+		if (_dm_version_minor < 20)
+			log_warn("WARNING: Secure data flag unsupported by "
+				 "kernel.  Buffers will not be wiped after use.");
 		dmi->flags |= DM_SECURE_DATA_FLAG;
+	}
 	if (dmt->query_inactive_table) {
 		if (_dm_version_minor < 16)
 			log_warn("WARNING: Inactive table query unsupported "
