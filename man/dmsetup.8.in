@@ -8,6 +8,7 @@ dmsetup \- low level logical volume management
 .br
 .B dmsetup create 
 .I device_name [-u uuid] [--notable | --table <table> | table_file]
+.I [{ --addnodeonresume | --addnodeoncreate }]
 .br
 .B dmsetup remove
 .I [-f|--force] device_name
@@ -139,6 +140,12 @@ Tell the kernel not to supply the open reference count for the device.
 .IP \fB--notable
 .br
 When creating a device, don't load any table.
+.IP \fB--addnodeonresume
+.br
+Ensure /dev/mapper node exists after dmsetup resume (default with udev).
+.IP \fB--addnodeoncreate
+.br
+Ensure /dev/mapper node exists after dmsetup create.
 .IP \fB--udevcookie\ \fIcookie
 .br
 Use cookie for udev synchronisation.

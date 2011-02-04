@@ -185,6 +185,11 @@ int dm_task_skip_lockfs(struct dm_task *dmt);
 int dm_task_query_inactive_table(struct dm_task *dmt);
 int dm_task_suppress_identical_reload(struct dm_task *dmt);
 int dm_task_secure_data(struct dm_task *dmt);
+typedef enum {
+	DM_ADD_NODE_ON_RESUME, /* add /dev/mapper node with dmsetup resume */
+	DM_ADD_NODE_ON_CREATE  /* add /dev/mapper node with dmsetup create */
+} dm_add_node_t;
+int dm_task_set_add_node(struct dm_task *dmt, dm_add_node_t add_node);
 
 /*
  * Control read_ahead.
