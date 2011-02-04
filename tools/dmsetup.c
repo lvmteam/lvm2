@@ -153,6 +153,8 @@ enum {
 	VERBOSE_ARG,
 	VERSION_ARG,
 	YES_ARG,
+	ADD_NODE_ON_RESUME_ARG,
+	ADD_NODE_ON_CREATE_ARG,
 	NUM_SWITCHES
 };
 
@@ -623,6 +625,14 @@ static int _create(int argc, char **argv, void *data __attribute__((unused)))
 	if (_switches[NOUDEVRULES_ARG])
 		udev_flags |= DM_UDEV_DISABLE_DM_RULES_FLAG |
 			      DM_UDEV_DISABLE_SUBSYSTEM_RULES_FLAG;
+
+	if (_switches[ADD_NODE_ON_RESUME_ARG] &&
+	    !dm_task_set_add_node(dmt, DM_ADD_NODE_ON_RESUME))
+		goto out;
+
+	if (_switches[ADD_NODE_ON_CREATE_ARG] &&
+	    !dm_task_set_add_node(dmt, DM_ADD_NODE_ON_CREATE))
+		goto out;
 
 	if (_udev_cookie) {
 		cookie = _udev_cookie;
@@ -2693,7 +2703,7 @@ static struct command _commands[] = {
 	{"help", "[-c|-C|--columns]", 0, 0, _help},
 	{"create", "<dev_name> [-j|--major <major> -m|--minor <minor>]\n"
 	  "\t                  [-U|--uid <uid>] [-G|--gid <gid>] [-M|--mode <octal_mode>]\n"
-	  "\t                  [-u|uuid <uuid>]\n"
+	  "\t                  [-u|uuid <uuid>] [{--addnodeonresume|--addnodeoncreate}]\n"
 	  "\t                  [--notable | --table <table> | <table_file>]",
 	 1, 2, _create},
 	{"remove", "[-f|--force] <device>", 0, 1, _remove},
@@ -3124,6 +3134,8 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 		{"verbose", 1, &ind, VERBOSE_ARG},
 		{"version", 0, &ind, VERSION_ARG},
 		{"yes", 0, &ind, YES_ARG},
+		{"addnodeonresume", 0, &ind, ADD_NODE_ON_RESUME_ARG},
+		{"addnodeoncreate", 0, &ind, ADD_NODE_ON_CREATE_ARG},
 		{0, 0, 0, 0}
 	};
 #else
@@ -3221,6 +3233,10 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 		}
 		if (c == 'y' || ind == YES_ARG)
 			_switches[YES_ARG]++;
+		if (ind == ADD_NODE_ON_RESUME_ARG)
+			_switches[ADD_NODE_ON_RESUME_ARG]++;
+		if (ind == ADD_NODE_ON_CREATE_ARG)
+			_switches[ADD_NODE_ON_CREATE_ARG]++;
 		if (ind == UDEVCOOKIE_ARG) {
 			_switches[UDEVCOOKIE_ARG]++;
 			_udev_cookie = _get_cookie_value(optarg);
@@ -3315,6 +3331,11 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 
 	if (_switches[TABLE_ARG] && _switches[NOTABLE_ARG]) {
 		fprintf(stderr, "--table and --notable are incompatible.\n");
+		return 0;
+	}
+
+	if (_switches[ADD_NODE_ON_RESUME_ARG] && _switches[ADD_NODE_ON_CREATE_ARG]) {
+		fprintf(stderr, "--addnodeonresume and --addnodeoncreate are incompatible.\n");
 		return 0;
 	}
 

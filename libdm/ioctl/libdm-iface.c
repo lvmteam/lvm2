@@ -1181,6 +1181,19 @@ int dm_task_suppress_identical_reload(struct dm_task *dmt)
 	return 1;
 }
 
+int dm_task_set_add_node(struct dm_task *dmt, dm_add_node_t add_node)
+{
+	switch (add_node) {
+	case DM_ADD_NODE_ON_RESUME:
+	case DM_ADD_NODE_ON_CREATE:
+		dmt->add_node = add_node;
+		return 1;
+	default:
+		log_error("Unknown add node parameter");
+		return 0;
+	}
+}
+
 int dm_task_set_newuuid(struct dm_task *dmt, const char *newuuid)
 {
 	if (strlen(newuuid) >= DM_UUID_LEN) {
@@ -2075,7 +2088,8 @@ repeat_ioctl:
 
 	switch (dmt->type) {
 	case DM_DEVICE_CREATE:
-		if (dmt->dev_name && *dmt->dev_name && !udev_only)
+	    if ((dmt->add_node == DM_ADD_NODE_ON_CREATE) &&
+		dmt->dev_name && *dmt->dev_name && !udev_only)
 			add_dev_node(dmt->dev_name, MAJOR(dmi->dev),
 				     MINOR(dmi->dev), dmt->uid, dmt->gid,
 				     dmt->mode, check_udev);
@@ -2094,6 +2108,11 @@ repeat_ioctl:
 		break;
 
 	case DM_DEVICE_RESUME:
+		if ((dmt->add_node == DM_ADD_NODE_ON_RESUME) &&
+		    dmt->dev_name && *dmt->dev_name && !udev_only)
+			add_dev_node(dmt->dev_name, MAJOR(dmi->dev),
+				     MINOR(dmi->dev), dmt->uid, dmt->gid,
+				     dmt->mode, check_udev);
 		/* FIXME Kernel needs to fill in dmi->name */
 		set_dev_node_read_ahead(dmt->dev_name, dmt->read_ahead,
 					dmt->read_ahead_flags);
