@@ -1,5 +1,7 @@
 Version 1.02.62 - 4th February 2011
 ===================================
+  Add configure --with-device-nodes-on=create for previous behaviour.
+  Move creation of device nodes from 'create' to 'resume'.
   Add --addnodeonresume and --addnodeoncreate options to dmsetup.
   Add dm_task_set_add_node to libdevmapper to control dev node creation time.
   Add dm_task_secure_data to libdevmapper to wipe ioctl buffers in kernel.
