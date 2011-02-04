@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2008 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2011 Red Hat, Inc. All rights reserved.
  * Copyright (C) 2005-2007 NEC Corporation
  *
  * This file is part of the device-mapper userspace tools.
@@ -507,6 +507,22 @@ static int _set_task_device(struct dm_task *dmt, const char *name, int optional)
 	return 1;
 }
 
+static int _set_task_add_node(struct dm_task *dmt)
+{
+	if (!dm_task_set_add_node(dmt, DEFAULT_DM_ADD_NODE))
+		return 0;
+
+	if (_switches[ADD_NODE_ON_RESUME_ARG] &&
+	    !dm_task_set_add_node(dmt, DM_ADD_NODE_ON_RESUME))
+		return 0;
+
+	if (_switches[ADD_NODE_ON_CREATE_ARG] &&
+	    !dm_task_set_add_node(dmt, DM_ADD_NODE_ON_CREATE))
+		return 0;
+
+	return 1;
+}
+
 static int _load(int argc, char **argv, void *data __attribute__((unused)))
 {
 	int r = 0;
@@ -626,13 +642,9 @@ static int _create(int argc, char **argv, void *data __attribute__((unused)))
 		udev_flags |= DM_UDEV_DISABLE_DM_RULES_FLAG |
 			      DM_UDEV_DISABLE_SUBSYSTEM_RULES_FLAG;
 
-	if (_switches[ADD_NODE_ON_RESUME_ARG] &&
-	    !dm_task_set_add_node(dmt, DM_ADD_NODE_ON_RESUME))
-		goto out;
 
-	if (_switches[ADD_NODE_ON_CREATE_ARG] &&
-	    !dm_task_set_add_node(dmt, DM_ADD_NODE_ON_CREATE))
-		goto out;
+	if (!_set_task_add_node(dmt))
+                goto out;
 
 	if (_udev_cookie) {
 		cookie = _udev_cookie;
@@ -1205,6 +1217,10 @@ static int _simple(int task, const char *name, uint32_t event_nr, int display)
 
 	if (_switches[NOLOCKFS_ARG] && !dm_task_skip_lockfs(dmt))
 		goto out;
+
+	/* FIXME: needs to coperate with udev */
+	if (!_set_task_add_node(dmt))
+                goto out;
 
 	if (_switches[READAHEAD_ARG] &&
 	    !dm_task_set_read_ahead(dmt, _int_args[READAHEAD_ARG],
@@ -2709,7 +2725,7 @@ static struct command _commands[] = {
 	{"remove", "[-f|--force] <device>", 0, 1, _remove},
 	{"remove_all", "[-f|--force]", 0, 0, _remove_all},
 	{"suspend", "[--noflush] <device>", 0, 1, _suspend},
-	{"resume", "<device>", 0, 1, _resume},
+	{"resume", "<device> [{--addnodeonresume|--addnodeoncreate}]", 0, 1, _resume},
 	{"load", "<device> [<table_file>]", 0, 2, _load},
 	{"clear", "<device>", 0, 1, _clear},
 	{"reload", "<device> [<table_file>]", 0, 2, _load},

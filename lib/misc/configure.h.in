@@ -35,6 +35,9 @@
 /* Default data alignment. */
 #undef DEFAULT_DATA_ALIGNMENT
 
+/* Define default node creation behavior with dmsetup create */
+#undef DEFAULT_DM_ADD_NODE
+
 /* Name of default locking directory. */
 #undef DEFAULT_LOCK_DIR
 

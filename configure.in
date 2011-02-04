@@ -213,6 +213,19 @@ AC_ARG_WITH(device-mode,
 	    DM_DEVICE_MODE=$withval, DM_DEVICE_MODE=0600)
 AC_MSG_RESULT($DM_DEVICE_MODE)
 
+AC_MSG_CHECKING(when to create device nodes)
+AC_ARG_WITH(device-nodes-on,
+	    AC_HELP_STRING([--with-device-nodes-on=ON],
+			   [create nodes on resume or create [[ON=resume]]]),
+	    ADD_NODE=$withval, ADD_NODE=resume)
+case "$ADD_NODE" in
+ resume) add_on=DM_ADD_NODE_ON_RESUME;;
+ create) add_on=DM_ADD_NODE_ON_CREATE;;
+ *) AC_MSG_ERROR([--with-device-nodes-on parameter invalid]);;
+esac
+AC_MSG_RESULT(on $ADD_NODE)
+AC_DEFINE_UNQUOTED([DEFAULT_DM_ADD_NODE], $add_on, [Define default node creation behavior with dmsetup create])
+
 ################################################################################
 dnl -- LVM1 tool fallback option
 AC_MSG_CHECKING(whether to enable lvm1 fallback)
