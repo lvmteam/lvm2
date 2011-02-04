@@ -788,6 +788,7 @@ with_group
 with_device_uid
 with_device_gid
 with_device_mode
+with_device_nodes_on
 enable_lvm1_fallback
 with_lvm1
 with_pool
@@ -1526,6 +1527,8 @@ Optional Packages:
   --with-device-uid=UID   set the owner used for new device nodes [[UID=0]]
   --with-device-gid=GID   set the group used for new device nodes [[GID=0]]
   --with-device-mode=MODE set the mode used for new device nodes [[MODE=0600]]
+  --with-device-nodes-on=ON
+                          create nodes on resume or create [[ON=resume]]
   --with-lvm1=TYPE        LVM1 metadata support: internal/shared/none
                           [[TYPE=internal]]
   --with-pool=TYPE        GFS pool read-only support: internal/shared/none
@@ -6710,6 +6713,29 @@ fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $DM_DEVICE_MODE" >&5
 $as_echo "$DM_DEVICE_MODE" >&6; }
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking when to create device nodes" >&5
+$as_echo_n "checking when to create device nodes... " >&6; }
+
+# Check whether --with-device-nodes-on was given.
+if test "${with_device_nodes_on+set}" = set; then :
+  withval=$with_device_nodes_on; ADD_NODE=$withval
+else
+  ADD_NODE=resume
+fi
+
+case "$ADD_NODE" in
+ resume) add_on=DM_ADD_NODE_ON_RESUME;;
+ create) add_on=DM_ADD_NODE_ON_CREATE;;
+ *) as_fn_error $? "--with-device-nodes-on parameter invalid" "$LINENO" 5;;
+esac
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: on $ADD_NODE" >&5
+$as_echo "on $ADD_NODE" >&6; }
+
+cat >>confdefs.h <<_ACEOF
+#define DEFAULT_DM_ADD_NODE $add_on
+_ACEOF
+
 
 ################################################################################
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to enable lvm1 fallback" >&5
