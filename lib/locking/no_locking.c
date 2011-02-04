@@ -38,9 +38,7 @@ static int _no_lock_resource(struct cmd_context *cmd, const char *resource,
 {
 	switch (flags & LCK_SCOPE_MASK) {
 	case LCK_VG:
-		if (!strcmp(resource, VG_SYNC_NAMES) ||
-		    (((flags & LCK_TYPE_MASK) == LCK_UNLOCK) &&
-		     is_real_vg(resource)))
+		if (!strcmp(resource, VG_SYNC_NAMES))
 			fs_unlock();
 		break;
 	case LCK_LV:
