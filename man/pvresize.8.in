@@ -3,8 +3,15 @@
 pvresize \- resize a disk or partition in use by LVM2
 .SH SYNOPSIS
 .B pvresize
-.RB [ \-\-setphysicalvolumesize " " \fIsize ]
-.IR PhysicalVolume " [" PhysicalVolume ...]
+.RB [ \-d | \-\-debug ]
+.RB [ \-h | \-\-help ]
+.RB [ \-t | \-\-test ]
+.RB [ \-v | \-\-verbose ]
+.RB [ \-\-version ]
+.RB [ \-\-setphysicalvolumesize
+.IR size ]
+.I PhysicalVolume 
+.RI [ PhysicalVolume ...]
 .SH DESCRIPTION
 .B pvresize
 resizes

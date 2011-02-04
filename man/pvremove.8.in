@@ -3,9 +3,16 @@
 pvremove \- remove a physical volume
 .SH SYNOPSIS
 .B pvremove
-.RB [ \-f [ f ]| \-\-force " [" \-\-force ]]
+.RB [ \-d | \-\-debug ]
+.RB [ \-h | \-\-help ]
+.RB [ \-t | \-\-test ]
+.RB [ \-v | \-\-verbose ]
+.RB [ \-\-version ]
+.RB [ \-f [ f ]| \-\-force 
+.RB [ \-\-force ]]
 .RB [ \-y | \-\-yes ]
-.IR PhysicalVolume " [" PhysicalVolume ...]
+.I PhysicalVolume
+.RI [ PhysicalVolume ...]
 .SH DESCRIPTION
 .B pvremove
 wipes the label on a device so that LVM will no longer recognise it

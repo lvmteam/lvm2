@@ -3,6 +3,11 @@
 pvscan \- scan all disks for physical volumes
 .SH SYNOPSIS
 .B pvscan
+.RB [ \-d | \-\-debug ]
+.RB [ \-h | \-\-help ]
+.RB [ \-v | \-\-verbose ]
+.RB [ \-\-version ]
+.RB [ \-\-ignorelockingfailure ]
 .RB [ \-e | \-\-exported ]
 .RB [ \-n | \-\-novolumegroup ]
 .RB [ \-s | \-\-short ]
