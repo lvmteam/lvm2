@@ -284,7 +284,8 @@ static int _do_fs_op(fs_op_t type, const char *dev_dir, const char *vg_name,
 
 		if (!_mk_link(dev_dir, vg_name, lv_name, dev, check_udev))
 			stack;
-	default:;
+	default:
+		; /* NOTREACHED */
 	}
 
 	return 1;
@@ -367,7 +368,7 @@ static int _stack_fs_op(fs_op_t type, const char *dev_dir, const char *vg_name,
 	else if ((type == FS_ADD) && _count_fs_ops[FS_DEL] && _check_udev(check_udev))
 		/*
 		 * If udev is running ignore previous DEL operation on added fs_op.
-		 * (No other operations for this device then DEL could be staked here).
+		 * (No other operations for this device then DEL could be stacked here).
 		 */
 		dm_list_iterate_safe(fsph, fspht, &_fs_ops) {
 			fsp = dm_list_item(fsph, struct fs_op_parms);

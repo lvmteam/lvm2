@@ -1,9 +1,9 @@
-Version 2.02.83 - 
+Version 2.02.83 - 4th February 2011
 ===================================
   Allow exclusive activation of snapshots in a cluster.
-  Add --addnodeonresume, --addnodeoncreate options for dmsetup create.
-  Use cluster-wide message to request device name sync.
-  Fix operation node stacking for consecutive dm ops.
+  Leave EX lock unchanged when suspending a device in clvmd.
+  Use sync_dev_names in unlock_vg macro for cluster-wide dev name sync.
+  Fix fs operation stack handling when multiple operations on same device.
   Increase hash table size to 1024 lv names and 64 pv uuids.
   Remove fs_unlock() from lv_resume path.
   Fix wipe size when setting up mda.
@@ -12,10 +12,10 @@ Version 2.02.83 -
   Allow CLVMD_CMD_SYNC_NAMES to be propagated around the cluster if requested.
   Add "dmsetup ls --tree" output to lvmdump.
   Fix udev synchronization with no-locking --sysinit (2.02.80).
-  Updating man pages for pvcreate, pvremove, pvresize, pvscan.
+  Improve man page style consistency for pvcreate, pvremove, pvresize, pvscan.
   Avoid rebuilding of uuid validation table.
+  Improve lvcreate error text from insufficient "extents" to "free space".
   Always use O_DIRECT when opening block devices to check for partitioning.
-  Improve lvcreate "insufficient extents" errors to "insufficient free space".
 
 Version 2.02.82 - 24th January 2011
 ===================================
