@@ -217,7 +217,6 @@ static int lock_vg(struct local_client *client)
 	if (lkid == 0)
 	    return EINVAL;
 
-	lvm_do_fs_unlock(); /* Wait for devices */
 	status = sync_unlock(lockname, lkid);
 	if (status)
 	    status = errno;
