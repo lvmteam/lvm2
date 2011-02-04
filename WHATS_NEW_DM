@@ -1,8 +1,12 @@
-Version 1.02.62 - 
+Version 1.02.62 - 4th February 2011
 ===================================
+  Add --addnodeonresume and --addnodeoncreate options to dmsetup.
+  Add dm_task_set_add_node to libdevmapper to control dev node creation time.
   Add dm_task_secure_data to libdevmapper to wipe ioctl buffers in kernel.
+  Log debug message when expected uevent is not generated.
+  Only compile memory debugging code when DEBUG_MEM is set.
   Set DM_UDEV_DISABLE_OTHER_RULES_FLAG for suspended DM devices in udev rules.
-  Initialize pool object for each row in _output_as_rows().
+  Begin a new pool object for each row in _output_as_rows() correctly.
 
 Version 1.02.61 - 10th January 2011
 ===================================

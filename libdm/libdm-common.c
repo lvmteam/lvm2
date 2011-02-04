@@ -745,7 +745,8 @@ static int _do_node_op(node_op_t type, const char *dev_name, uint32_t major,
 	case NODE_READ_AHEAD:
 		return _set_dev_node_read_ahead(dev_name, read_ahead,
 						read_ahead_flags);
-	default:;
+	default:
+		; /* NOTREACHED */
 	}
 
 	return 1;
@@ -830,7 +831,7 @@ static int _stack_node_op(node_op_t type, const char *dev_name, uint32_t major,
 	else if ((type == NODE_ADD) && _count_node_ops[NODE_DEL] && _check_udev(check_udev))
 		/*
 		 * If udev is running ignore previous DEL operation on added node.
-		 * (No other operations for this device then DEL could be staked here).
+		 * (No other operations for this device then DEL could be stacked here).
 		 */
 		dm_list_iterate_safe(noph, nopht, &_node_ops) {
 			nop = dm_list_item(noph, struct node_op_parms);
