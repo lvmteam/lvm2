@@ -469,7 +469,7 @@ int lv_info(struct cmd_context *cmd, const struct logical_volume *lv, unsigned o
 	if (with_open_count) {
 		if (locking_is_clustered())
 			sync_local_dev_names(cmd); /* Wait to have udev in sync */
-		else //if (fs_has_non_delete_ops())
+		else if (fs_has_non_delete_ops())
 			fs_unlock(); /* For non clustered - wait if there are non-delete ops */
 	}
 

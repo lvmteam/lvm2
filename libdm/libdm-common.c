@@ -725,7 +725,8 @@ typedef enum {
 	NODE_ADD,
 	NODE_DEL,
 	NODE_RENAME,
-	NODE_READ_AHEAD
+	NODE_READ_AHEAD,
+	NUM_NODES
 } node_op_t;
 
 static int _do_node_op(node_op_t type, const char *dev_name, uint32_t major,
@@ -744,12 +745,14 @@ static int _do_node_op(node_op_t type, const char *dev_name, uint32_t major,
 	case NODE_READ_AHEAD:
 		return _set_dev_node_read_ahead(dev_name, read_ahead,
 						read_ahead_flags);
+	default:;
 	}
 
 	return 1;
 }
 
 static DM_LIST_INIT(_node_ops);
+static int _count_node_ops[NUM_NODES];
 
 struct node_op_parms {
 	struct dm_list list;
@@ -774,6 +777,31 @@ static void _store_str(char **pos, char **ptr, const char *str)
 	*pos += strlen(*ptr) + 1;
 }
 
+static void _del_node_op(struct node_op_parms *nop)
+{
+	_count_node_ops[nop->type]--;
+	dm_list_del(&nop->list);
+	dm_free(nop);
+
+}
+
+/* Check if there is other the type of node operation stacked */
+static int _other_node_ops(node_op_t type)
+{
+	int i;
+
+	for (i = 0; i < NUM_NODES; i++)
+		if (type != i && _count_node_ops[i])
+			return 1;
+	return 0;
+}
+
+/* Check if udev is supposed to create nodes */
+static int _check_udev(int check_udev)
+{
+    return check_udev && dm_udev_get_sync_support() && dm_udev_get_checking();
+}
+
 static int _stack_node_op(node_op_t type, const char *dev_name, uint32_t major,
 			  uint32_t minor, uid_t uid, gid_t gid, mode_t mode,
 			  const char *old_name, uint32_t read_ahead,
@@ -785,17 +813,47 @@ static int _stack_node_op(node_op_t type, const char *dev_name, uint32_t major,
 	char *pos;
 
 	/*
-	 * Ignore any outstanding operations on the node if deleting it
+	 * Note: check_udev must have valid content
 	 */
-	if (type == NODE_DEL) {
+	if ((type == NODE_DEL) && _other_node_ops(type))
+		/*
+		 * Ignore any outstanding operations on the node if deleting it.
+		 */
 		dm_list_iterate_safe(noph, nopht, &_node_ops) {
 			nop = dm_list_item(noph, struct node_op_parms);
 			if (!strcmp(dev_name, nop->dev_name)) {
-				dm_list_del(&nop->list);
-				dm_free(nop);
+				_del_node_op(nop);
+				if (!_other_node_ops(type))
+					break; /* no other non DEL ops */
 			}
 		}
-	}
+	else if ((type == NODE_ADD) && _count_node_ops[NODE_DEL] && _check_udev(check_udev))
+		/*
+		 * If udev is running ignore previous DEL operation on added node.
+		 * (No other operations for this device then DEL could be staked here).
+		 */
+		dm_list_iterate_safe(noph, nopht, &_node_ops) {
+			nop = dm_list_item(noph, struct node_op_parms);
+			if ((nop->type == NODE_DEL) &&
+			    !strcmp(dev_name, nop->dev_name)) {
+				_del_node_op(nop);
+				break; /* no other DEL ops */
+			}
+		}
+	else if ((type == NODE_RENAME) && _check_udev(check_udev))
+		/*
+		 * If udev is running ignore any outstanding operations if renaming it.
+		 *
+		 * Currently  RENAME operation happens through 'suspend -> resume'.
+		 * On 'resume' device is added with read_ahead settings, so it is
+		 * safe to remove any stacked ADD, RENAME, READ_AHEAD operation
+		 * There cannot be any DEL operation on the renamed device.
+		 */
+		dm_list_iterate_safe(noph, nopht, &_node_ops) {
+			nop = dm_list_item(noph, struct node_op_parms);
+			if (!strcmp(old_name, nop->dev_name))
+				_del_node_op(nop);
+		}
 
 	if (!(nop = dm_malloc(sizeof(*nop) + len))) {
 		log_error("Insufficient memory to stack mknod operation");
@@ -816,6 +874,7 @@ static int _stack_node_op(node_op_t type, const char *dev_name, uint32_t major,
 	_store_str(&pos, &nop->dev_name, dev_name);
 	_store_str(&pos, &nop->old_name, old_name);
 
+	_count_node_ops[type]++;
 	dm_list_add(&_node_ops, &nop->list);
 
 	return 1;
@@ -832,8 +891,7 @@ static void _pop_node_ops(void)
 			    nop->uid, nop->gid, nop->mode, nop->old_name,
 			    nop->read_ahead, nop->read_ahead_flags,
 			    nop->check_udev);
-		dm_list_del(&nop->list);
-		dm_free(nop);
+		_del_node_op(nop);
 	}
 }
 
