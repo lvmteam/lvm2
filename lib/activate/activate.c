@@ -708,39 +708,108 @@ int lvs_in_vg_opened(const struct volume_group *vg)
 }
 
 /*
+ * _lv_is_active
+ * @lv:        logical volume being queried
+ * @locally:   set if active locally (when provided)
+ * @exclusive: set if active exclusively (when provided)
+ *
  * Determine whether an LV is active locally or in a cluster.
- * Assumes vg lock held.
- * Returns:
- * 0 - not active locally or on any node in cluster
- * 1 - active either locally or some node in the cluster
+ * In addition to the return code which indicates whether or
+ * not the LV is active somewhere, two other values are set
+ * to yield more information about the status of the activation:
+ *	return	locally	exclusively	status
+ *	======	=======	===========	======
+ *	   0	   0	    0		not active
+ *	   1	   0	    0		active remotely
+ *	   1	   0	    1		exclusive remotely
+ *	   1	   1	    0		active locally and possibly remotely
+ *	   1	   1	    1		exclusive locally (or local && !cluster)
+ * The VG lock must be held to call this function.
+ *
+ * Returns: 0 or 1
  */
-int lv_is_active(struct logical_volume *lv)
+static int _lv_is_active(struct logical_volume *lv,
+			 int *locally, int *exclusive)
 {
-	int ret;
+	int r, l, e; /* remote, local, and exclusive */
+
+	r = l = e = 0;
 
 	if (_lv_active(lv->vg->cmd, lv))
-		return 1;
+		l = 1;
 
-	if (!vg_is_clustered(lv->vg))
-		return 0;
+	if (!vg_is_clustered(lv->vg)) {
+		e = 1;  /* exclusive by definition */
+		goto out;
+	}
 
-	if ((ret = remote_lock_held(lv->lvid.s)) >= 0)
-		return ret;
+	/* Active locally, and the caller doesn't care about exclusive */
+	if (l && !exclusive)
+		goto out;
+
+	if ((r = remote_lock_held(lv->lvid.s, &e)) >= 0)
+		goto out;
 
 	/*
-	 * Old compatibility code if locking doesn't support lock query
-	 * FIXME: check status to not deactivate already activate device
+	 * If lock query is not supported (due to interfacing with old
+	 * code), then we cannot evaluate exclusivity properly.
+	 *
+	 * Old users of this function will never be affected by this,
+	 * since they are only concerned about active vs. not active.
+	 * New users of this function who specifically ask for 'exclusive'
+	 * will be given an error message.
 	 */
+	if (l) {
+		if (exclusive)
+			log_error("Unable to determine exclusivity of %s",
+				  lv->name);
+		goto out;
+	}
+
 	if (activate_lv_excl(lv->vg->cmd, lv)) {
 		if (!deactivate_lv(lv->vg->cmd, lv))
 			stack;
 		return 0;
 	}
 
-	/*
-	 * Exclusive local activation failed so assume it is active elsewhere.
-	 */
-	return 1;
+out:
+	if (locally)
+		*locally = l;
+	if (exclusive)
+		*exclusive = e;
+
+	log_very_verbose("%s/%s is %sactive%s%s",
+			 lv->vg->name, lv->name,
+			 (r || l) ? "" : "not ",
+			 (exclusive && e) ? " exclusive" : "",
+			 e ? (l ? " locally" : " remotely") : "");
+
+	return r || l;
+}
+
+int lv_is_active(struct logical_volume *lv)
+{
+	return _lv_is_active(lv, NULL, NULL);
+}
+
+/*
+int lv_is_active_locally(struct logical_volume *lv)
+{
+	int l;
+	return _lv_is_active(lv, &l, NULL) && l;
+}
+*/
+
+int lv_is_active_exclusive_locally(struct logical_volume *lv)
+{
+	int l, e;
+	return _lv_is_active(lv, &l, &e) && l && e;
+}
+
+int lv_is_active_exclusive_remotely(struct logical_volume *lv)
+{
+	int l, e;
+	return _lv_is_active(lv, &l, &e) && !l && e;
 }
 
 #ifdef DMEVENTD

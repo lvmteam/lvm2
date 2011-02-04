@@ -1,5 +1,6 @@
 Version 2.02.83 - 
 ===================================
+  Allow exclusive activation of snapshots in a cluster.
   Add --addnodeonresume, --addnodeoncreate options for dmsetup create.
   Use cluster-wide message to request device name sync.
   Fix operation node stacking for consecutive dm ops.
