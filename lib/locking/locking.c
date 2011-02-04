@@ -545,7 +545,7 @@ int locking_is_clustered(void)
 	return (_locking.flags & LCK_CLUSTERED) ? 1 : 0;
 }
 
-int remote_lock_held(const char *vol)
+int remote_lock_held(const char *vol, int *exclusive)
 {
 	int mode = LCK_NULL;
 
@@ -562,6 +562,9 @@ int remote_lock_held(const char *vol)
 		stack;
 		return 1;
 	}
+
+	if (exclusive)
+		*exclusive = (mode == LCK_EXCL);
 
 	return mode == LCK_NULL ? 0 : 1;
 }

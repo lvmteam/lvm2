@@ -115,6 +115,16 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd,
 		    ((lv->status & PVMOVE) ))
 			continue;
 
+		/*
+		 * If the LV is active exclusive remotely,
+		 * then ignore it here
+		 */
+		if (lv_is_active_exclusive_remotely(lv)) {
+			log_verbose("%s/%s is exclusively active on"
+				    " a remote node", vg->name, lv->name);
+			continue;
+		}
+
 		expected_count++;
 
 		if (activate == CHANGE_AN) {

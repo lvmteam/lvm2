@@ -3164,11 +3164,6 @@ int lv_create_single(struct volume_group *vg,
 				  "device-mapper kernel driver");
 			return 0;
 		}
-		/* FIXME Allow exclusive activation. */
-		if (vg_is_clustered(vg)) {
-			log_error("Clustered snapshots are not yet supported.");
-			return 0;
-		}
 
 		/* Must zero cow */
 		status |= LVM_WRITE;
@@ -3217,6 +3212,13 @@ int lv_create_single(struct volume_group *vg,
 				return 0;
 			}
 			origin_active = info.exists;
+
+			if (vg_is_clustered(vg) &&
+			    !lv_is_active_exclusive_locally(org)) {
+				log_error("%s must be active exclusively to"
+					  " create snapshot", org->name);
+				return 0;
+			}
 		}
 	}
 

@@ -240,9 +240,17 @@ static int hold_lock(char *resource, int mode, int flags)
 
 	lvi = lookup_info(resource);
 
-	if (lvi && lvi->lock_mode == mode) {
-		DEBUGLOG("hold_lock, lock mode %d already held\n", mode);
-		return 0;
+	if (lvi) {
+		if (lvi->lock_mode == mode) {
+			DEBUGLOG("hold_lock, lock mode %d already held\n",
+				 mode);
+			return 0;
+		}
+		if ((lvi->lock_mode == LCK_EXCL) && (mode == LCK_WRITE)) {
+			DEBUGLOG("hold_lock, lock already held LCK_EXCL, "
+				 "ignoring LCK_WRITE request");
+			return 0;
+		}
 	}
 
 	/* Only allow explicit conversions */
