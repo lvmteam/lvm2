@@ -1,5 +1,6 @@
 Version 1.02.62 - 
 ===================================
+  Add dm_task_secure_data to libdevmapper to wipe ioctl buffers in kernel.
   Set DM_UDEV_DISABLE_OTHER_RULES_FLAG for suspended DM devices in udev rules.
   Initialize pool object for each row in _output_as_rows().
 

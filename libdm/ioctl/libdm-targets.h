@@ -63,6 +63,7 @@ struct dm_task {
 	uint64_t existing_table_size;
 	int cookie_set;
 	int new_uuid;
+	int secure_data;
 
 	char *uuid;
 };

@@ -1273,6 +1273,13 @@ int dm_task_skip_lockfs(struct dm_task *dmt)
 	return 1;
 }
 
+int dm_task_secure_data(struct dm_task *dmt)
+{
+	dmt->secure_data = 1;
+
+	return 1;
+}
+
 int dm_task_query_inactive_table(struct dm_task *dmt)
 {
 	dmt->query_inactive_table = 1;
@@ -1521,6 +1528,8 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 		dmi->flags |= DM_READONLY_FLAG;
 	if (dmt->skip_lockfs)
 		dmi->flags |= DM_SKIP_LOCKFS_FLAG;
+	if (dmt->secure_data)
+		dmi->flags |= DM_SECURE_DATA_FLAG;
 	if (dmt->query_inactive_table) {
 		if (_dm_version_minor < 16)
 			log_warn("WARNING: Inactive table query unsupported "
@@ -1737,6 +1746,7 @@ static int _create_and_load_v4(struct dm_task *dmt)
 	task->read_only = dmt->read_only;
 	task->head = dmt->head;
 	task->tail = dmt->tail;
+	task->secure_data = dmt->secure_data;
 
 	r = dm_task_run(task);
 
@@ -1940,7 +1950,7 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 	}
 
 	log_debug("dm %s %s%s %s%s%s %s%.0d%s%.0d%s"
-		  "%s%c%c%s%s %.0" PRIu64 " %s [%u]",
+		  "%s%c%c%s%s%s %.0" PRIu64 " %s [%u]",
 		  _cmd_data_v4[dmt->type].name,
 		  dmt->new_uuid ? "UUID " : "",
 		  dmi->name, dmi->uuid, dmt->newname ? " " : "",
@@ -1954,6 +1964,7 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 		  dmt->no_open_count ? 'N' : 'O',
 		  dmt->no_flush ? 'N' : 'F',
 		  dmt->skip_lockfs ? "S " : "",
+		  dmt->secure_data ? "W " : "",
 		  dmt->query_inactive_table ? "I " : "",
 		  dmt->sector, _sanitise_message(dmt->message),
 		  dmi->data_size);
