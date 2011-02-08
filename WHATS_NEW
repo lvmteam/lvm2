@@ -40,7 +40,7 @@ Version 2.02.81 - 17th January 2011
   Replace fs_unlock by sync_local_dev_names to notify local clvmd. (2.02.80)
   Introduce sync_local_dev_names and CLVMD_CMD_SYNC_NAMES to issue fs_unlock.
   Accept fusion fio in device type filter.
-  Add disk to allowed mirrored log type conversions.
+  Add ability to convert mirror log type from disk to mirrored.
 
 Version 2.02.80 - 10th January 2011
 ===================================
