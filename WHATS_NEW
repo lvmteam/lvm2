@@ -1,3 +1,6 @@
+Version 2.02.85 - 
+===================================
+
 Version 2.02.84 - 9th February 2011
 ===================================
   Fix CRC32 calculation on big endian CPU (2.02.75).
