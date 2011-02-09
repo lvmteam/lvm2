@@ -31,8 +31,11 @@ trap 'set +vx; STACKTRACE; set -vx' ERR
 trap 'aux teardown' EXIT # don't forget to clean up
 
 export LVM_SYSTEM_DIR=$TESTDIR/etc
-export DM_DEV_DIR=$TESTDIR/dev
-mkdir $LVM_SYSTEM_DIR $DM_DEV_DIR $DM_DEV_DIR/mapper $TESTDIR/lib
+DM_DEV_DIR=$TESTDIR/dev
+test -n "$LVM_TEST_DEVDIR" && DM_DEV_DIR="$LVM_TEST_DEVDIR"
+export DM_DEV_DIR
+mkdir $LVM_SYSTEM_DIR $TESTDIR/lib
+mkdir -p $DM_DEV_DIR $DM_DEV_DIR/mapper
 
 cd $TESTDIR
 
