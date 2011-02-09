@@ -1,5 +1,6 @@
-Version 1.02.63 - 
+Version 1.02.63 - 9th February 2011
 ===================================
+  Reinstate DEBUG_MEM as it's part of the API. (1.02.62)
 
 Version 1.02.62 - 4th February 2011
 ===================================
