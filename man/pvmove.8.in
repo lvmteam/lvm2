@@ -95,12 +95,37 @@ instead of all allocated extents to the destination physical volume(s).
 
 .SH EXAMPLES
 To move all logical extents of any logical volumes on
-.B /dev/hda4
-to free physical extents elsewhere in the volume group, giving verbose
-runtime information, use:
+.B /dev/sdb1
+to free physical extents elsewhere in the volume group, use:
 .sp
-\	pvmove -v /dev/hda4
+\	pvmove /dev/sdb1
+.P
+Additionally, the destination device can be specified.
 .sp
+\	pvmove /dev/sdb1 /dev/sdc1
+.P
+It is possible to perform the action on a single logical volume (instead of all
+the logical volumes that might be on the source device), like this:
+.sp
+\	pvmove -n lvol1 /dev/sdb1 /dev/sdc1
+.P
+Rather than moving the contents of the entire device, it is possible to
+move a range of extents.
+.sp
+\	pvmove /dev/sdb1:1000-1999
+.P
+It is possible to move the range of extents to a specific location (as long
+as the location has sufficent free extents) - even on the same device.
+.sp
+\	pvmove /dev/sdb1:1000-1999 /dev/sdc1
+.sp
+\	pvmove /dev/sdb1:1000-1999 /dev/sdb1:0-999
+.P
+A specific logical volume in a range of extents can also be picked out and
+moved.
+.sp
+\	pvmove -n lvol1 /dev/sdb1:1000-1999 /dev/sdc1
 .SH SEE ALSO
 .BR lvm (8),
 .BR vgconvert (8)
+.BR pvs (8)
