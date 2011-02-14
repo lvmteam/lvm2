@@ -200,7 +200,6 @@ void process_event(struct dm_task *dmt,
 	_parse_snapshot_params(params, &status);
 
 	if (status.invalid) {
-		syslog(LOG_ERR, "Trying to umount invalid snapshot %s...\n", device);
 		struct dm_info info;
 		if (dm_task_get_info(dmt, &info)) {
 			dmeventd_lvm2_unlock();
