@@ -1969,18 +1969,6 @@ static int _lv_postorder_visit(struct logical_volume *,
 			       int (*fn)(struct logical_volume *lv, void *data),
 			       void *data);
 
-static int _lv_postorder_level(struct logical_volume *lv, void *data)
-{
-	struct _lv_postorder_baton *baton = data;
-	if (lv->status & POSTORDER_OPEN_FLAG)
-		return 1; // a data structure loop has closed...
-	lv->status |= POSTORDER_OPEN_FLAG;
-	int r =_lv_postorder_visit(lv, baton->fn, baton->data);
-	lv->status &= ~POSTORDER_OPEN_FLAG;
-	lv->status |= POSTORDER_FLAG;
-	return r;
-};
-
 static int _lv_each_dependency(struct logical_volume *lv,
 			       int (*fn)(struct logical_volume *lv, void *data),
 			       void *data)
@@ -2022,6 +2010,12 @@ static int _lv_postorder_cleanup(struct logical_volume *lv, void *data)
 	return 1;
 }
 
+static int _lv_postorder_level(struct logical_volume *lv, void *data)
+{
+	struct _lv_postorder_baton *baton = data;
+	return _lv_postorder_visit(lv, baton->fn, baton->data);
+};
+
 static int _lv_postorder_visit(struct logical_volume *lv,
 			       int (*fn)(struct logical_volume *lv, void *data),
 			       void *data)
@@ -2031,12 +2025,19 @@ static int _lv_postorder_visit(struct logical_volume *lv,
 
 	if (lv->status & POSTORDER_FLAG)
 		return 1;
+	if (lv->status & POSTORDER_OPEN_FLAG)
+		return 1; // a data structure loop has closed...
+	lv->status |= POSTORDER_OPEN_FLAG;
 
 	baton.fn = fn;
 	baton.data = data;
 	r = _lv_each_dependency(lv, _lv_postorder_level, &baton);
+
 	if (r)
 		r = fn(lv, data);
+
+	lv->status &= ~POSTORDER_OPEN_FLAG;
+	lv->status |= POSTORDER_FLAG;
 
 	return r;
 }
