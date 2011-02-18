@@ -1123,7 +1123,7 @@ int dm_report_set_output_field_name_prefix(struct dm_report *rh,
  * They take care of allocating copies of the data.
  */
 int dm_report_field_string(struct dm_report *rh, struct dm_report_field *field,
-			   const char **data);
+			   const char *const *data);
 int dm_report_field_int32(struct dm_report *rh, struct dm_report_field *field,
 			  const int32_t *data);
 int dm_report_field_uint32(struct dm_report *rh, struct dm_report_field *field,
