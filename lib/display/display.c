@@ -44,14 +44,23 @@ uint64_t units_to_bytes(const char *units, char *unit_type)
 {
 	char *ptr = NULL;
 	uint64_t v;
+	double custom_value = 0;
+	uint64_t multiplier;
 
 	if (isdigit(*units)) {
-		v = (uint64_t) strtod(units, &ptr);
+		custom_value = strtod(units, &ptr);
 		if (ptr == units)
 			return 0;
+		v = (uint64_t) strtoull(units, NULL, 10);
+		if ((double) v == custom_value)
+			custom_value = 0;	/* Use integer arithmetic */
 		units = ptr;
 	} else
 		v = 1;
+
+	/* Only one units char permitted. */
+	if (*(units + 1))
+		return 0;
 
 	if (v == 1)
 		*unit_type = *units;
@@ -61,65 +70,65 @@ uint64_t units_to_bytes(const char *units, char *unit_type)
 	switch (*units) {
 	case 'h':
 	case 'H':
-		v = UINT64_C(1);
+		multiplier = v = UINT64_C(1);
 		*unit_type = *units;
 		break;
 	case 'b':
 	case 'B':
-		v *= UINT64_C(1);
+		multiplier = UINT64_C(1);
 		break;
 #define KILO UINT64_C(1024)
 	case 's':
 	case 'S':
-		v *= (KILO/2);
+		multiplier = (KILO/2);
 		break;
 	case 'k':
-		v *= KILO;
+		multiplier = KILO;
 		break;
 	case 'm':
-		v *= KILO * KILO;
+		multiplier = KILO * KILO;
 		break;
 	case 'g':
-		v *= KILO * KILO * KILO;
+		multiplier = KILO * KILO * KILO;
 		break;
 	case 't':
-		v *= KILO * KILO * KILO * KILO;
+		multiplier = KILO * KILO * KILO * KILO;
 		break;
 	case 'p':
-		v *= KILO * KILO * KILO * KILO * KILO;
+		multiplier = KILO * KILO * KILO * KILO * KILO;
 		break;
 	case 'e':
-		v *= KILO * KILO * KILO * KILO * KILO * KILO;
+		multiplier = KILO * KILO * KILO * KILO * KILO * KILO;
 		break;
 #undef KILO
 #define KILO UINT64_C(1000)
 	case 'K':
-		v *= KILO;
+		multiplier = KILO;
 		break;
 	case 'M':
-		v *= KILO * KILO;
+		multiplier = KILO * KILO;
 		break;
 	case 'G':
-		v *= KILO * KILO * KILO;
+		multiplier = KILO * KILO * KILO;
 		break;
 	case 'T':
-		v *= KILO * KILO * KILO * KILO;
+		multiplier = KILO * KILO * KILO * KILO;
 		break;
 	case 'P':
-		v *= KILO * KILO * KILO * KILO * KILO;
+		multiplier = KILO * KILO * KILO * KILO * KILO;
 		break;
 	case 'E':
-		v *= KILO * KILO * KILO * KILO * KILO * KILO;
+		multiplier = KILO * KILO * KILO * KILO * KILO * KILO;
 		break;
 #undef KILO
 	default:
 		return 0;
 	}
 
-	if (*(units + 1))
-		return 0;
-
-	return v;
+	if (custom_value)
+		return (uint64_t) (custom_value * multiplier);
+	else
+		return v * multiplier;
 }
 
 const char alloc_policy_char(alloc_policy_t alloc)

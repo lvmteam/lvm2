@@ -83,9 +83,9 @@ const char *dev_name(const struct device *dev);
 
 int dev_read(struct device *dev, uint64_t offset, size_t len, void *buffer);
 int dev_read_circular(struct device *dev, uint64_t offset, size_t len,
-		      uint64_t offset2, size_t len2, void *buf);
+		      uint64_t offset2, size_t len2, char *buf);
 int dev_write(struct device *dev, uint64_t offset, size_t len, void *buffer);
-int dev_append(struct device *dev, size_t len, void *buffer);
+int dev_append(struct device *dev, size_t len, char *buffer);
 int dev_set(struct device *dev, uint64_t offset, size_t len, int value);
 void dev_flush(struct device *dev);
 

@@ -1,5 +1,7 @@
 Version 2.02.85 - 
 ===================================
+  Handle decimal digits with --units instead of ignoring them silently.
+  Fix remaining warnings and compile with -Wpointer-arith.
   Fix gcc warnings for unused variables.
   Add stack backtraces for error paths in process_each_lv().
   Fixing some const cast gcc warnings in the code.

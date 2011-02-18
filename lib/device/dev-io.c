@@ -57,7 +57,7 @@ static DM_LIST_INIT(_open_devices);
  * The standard io loop that keeps submitting an io until it's
  * all gone.
  *---------------------------------------------------------------*/
-static int _io(struct device_area *where, void *buffer, int should_write)
+static int _io(struct device_area *where, char *buffer, int should_write)
 {
 	int fd = dev_fd(where->dev);
 	ssize_t n = 0;
@@ -161,10 +161,10 @@ static void _widen_region(unsigned int block_size, struct device_area *region,
 		result->size += block_size - delta;
 }
 
-static int _aligned_io(struct device_area *where, void *buffer,
+static int _aligned_io(struct device_area *where, char *buffer,
 		       int should_write)
 {
-	void *bounce, *bounce_buf;
+	char *bounce, *bounce_buf;
 	unsigned int block_size = 0;
 	uintptr_t mask;
 	struct device_area widened;
@@ -195,7 +195,7 @@ static int _aligned_io(struct device_area *where, void *buffer,
 	 * Realign start of bounce buffer (using the extra sector)
 	 */
 	if (((uintptr_t) bounce) & mask)
-		bounce = (void *) ((((uintptr_t) bounce) + mask) & ~mask);
+		bounce = (char *) ((((uintptr_t) bounce) + mask) & ~mask);
 
 	/* channel the io through the bounce buffer */
 	if (!_io(&widened, bounce, 0)) {
@@ -645,7 +645,7 @@ int dev_read(struct device *dev, uint64_t offset, size_t len, void *buffer)
  * 'buf' should be len+len2.
  */
 int dev_read_circular(struct device *dev, uint64_t offset, size_t len,
-		      uint64_t offset2, size_t len2, void *buf)
+		      uint64_t offset2, size_t len2, char *buf)
 {
 	if (!dev_read(dev, offset, len, buf)) {
 		log_error("Read from %s failed", dev_name(dev));
@@ -673,7 +673,7 @@ int dev_read_circular(struct device *dev, uint64_t offset, size_t len,
  */
 
 /* FIXME pre-extend the file */
-int dev_append(struct device *dev, size_t len, void *buffer)
+int dev_append(struct device *dev, size_t len, char *buffer)
 {
 	int r;
 
