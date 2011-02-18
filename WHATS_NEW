@@ -1,5 +1,6 @@
 Version 2.02.85 - 
 ===================================
+  Change memory locking semantic and use critical sections.
   Add configurable pv_min_size to select block devices by its size.
   Add function to read 64bit ints from config find_config_tree_int64.
   Fix to make resuming exclusive cluster mirror use local target type.

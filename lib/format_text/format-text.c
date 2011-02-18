@@ -1601,7 +1601,7 @@ static int _populate_pv_fields(struct lvmcache_info *info,
 		return 1;
 
 	/* Perform full scan (just the first time) and try again */
-	if (!scan_label_only && !memlock() && !full_scan_done()) {
+	if (!scan_label_only && !critical_section() && !full_scan_done()) {
 		lvmcache_label_scan(info->fmt->cmd, 2);
 
 		if (_get_pv_if_in_vg(info, pv))

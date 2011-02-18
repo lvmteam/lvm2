@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2011 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -167,7 +167,7 @@ static void _lock_memory(struct cmd_context *cmd, lv_operation_t lv_op)
 		return;
 
 	if (lv_op == LV_SUSPEND)
-		memlock_inc(cmd);
+		critical_section_inc(cmd);
 }
 
 static void _unlock_memory(struct cmd_context *cmd, lv_operation_t lv_op)
@@ -176,7 +176,7 @@ static void _unlock_memory(struct cmd_context *cmd, lv_operation_t lv_op)
 		return;
 
 	if (lv_op == LV_RESUME)
-		memlock_dec(cmd);
+		critical_section_dec(cmd);
 }
 
 void reset_locking(void)
@@ -191,6 +191,8 @@ void reset_locking(void)
 
 	if (was_locked)
 		_unblock_signals();
+
+	memlock_reset();
 }
 
 static void _update_vg_lock_count(const char *resource, uint32_t flags)
@@ -567,4 +569,16 @@ int remote_lock_held(const char *vol, int *exclusive)
 		*exclusive = (mode == LCK_EXCL);
 
 	return mode == LCK_NULL ? 0 : 1;
+}
+
+int sync_local_dev_names(struct cmd_context* cmd)
+{
+	memlock_unlock(cmd);
+	return lock_vol(cmd, VG_SYNC_NAMES, LCK_NONE | LCK_CACHE | LCK_LOCAL);
+}
+
+int sync_dev_names(struct cmd_context* cmd)
+{
+	memlock_unlock(cmd);
+	return lock_vol(cmd, VG_SYNC_NAMES, LCK_NONE | LCK_CACHE);
 }
