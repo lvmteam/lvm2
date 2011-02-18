@@ -1,5 +1,6 @@
 Version 2.02.85 - 
 ===================================
+  Use char* arithmetic in _text_write(), _text_read() & send_message().
   Fix compilation when devmapper is dissabled.
   Remove fs_unlock() from lv_suspend error path.
   Change memory locking semantic and use critical sections.

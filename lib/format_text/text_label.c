@@ -52,7 +52,7 @@ static int _text_write(struct label *label, void *buf)
 
 	strncpy((char *)lh->type, label->type, sizeof(label->type));
 
-	pvhdr = (struct pv_header *) ((void *) buf + xlate32(lh->offset_xl));
+	pvhdr = (struct pv_header *) ((char *) buf + xlate32(lh->offset_xl));
 	info = (struct lvmcache_info *) label->info;
 	pvhdr->device_size_xl = xlate64(info->device_size);
 	memcpy(pvhdr->pv_uuid, &info->dev->pvid, sizeof(struct id));
@@ -266,7 +266,7 @@ static int _text_read(struct labeller *l, struct device *dev, void *buf,
 	char *creation_host;
 	struct mda_header *mdah;
 
-	pvhdr = (struct pv_header *) ((void *) buf + xlate32(lh->offset_xl));
+	pvhdr = (struct pv_header *) ((char *) buf + xlate32(lh->offset_xl));
 
 	if (!(info = lvmcache_add(l, (char *)pvhdr->pv_uuid, dev,
 				  FMT_TEXT_ORPHAN_VG_NAME,

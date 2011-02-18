@@ -1867,7 +1867,7 @@ static int send_message(void *buf, int msglen, const char *csid, int fd,
 				break;
 			}
 
-			len = write(fd, buf + ptr, msglen - ptr);
+			len = write(fd, (char*)buf + ptr, msglen - ptr);
 
 			if (len <= 0) {
 				if (errno == EINTR)
