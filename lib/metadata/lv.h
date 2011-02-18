@@ -23,7 +23,7 @@ struct replicator_device;
 
 struct logical_volume {
 	union lvid lvid;
-	char *name;
+	const char *name;
 
 	struct volume_group *vg;
 

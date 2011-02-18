@@ -662,33 +662,38 @@ static int vg_extend_single_pv(struct volume_group *vg, char *pv_name,
  * - pp: parameters to pass to implicit pvcreate; if NULL, do not pvcreate
  *
  */
-int vg_extend(struct volume_group *vg, int pv_count, char **pv_names,
+int vg_extend(struct volume_group *vg, int pv_count, const char *const *pv_names,
 	      struct pvcreate_params *pp)
 {
 	int i;
+	char *pv_name;
 
 	if (_vg_bad_status_bits(vg, RESIZEABLE_VG))
 		return 0;
 
 	/* attach each pv */
 	for (i = 0; i < pv_count; i++) {
-		unescape_colons_and_at_signs(pv_names[i], NULL, NULL);
-		if (!vg_extend_single_pv(vg, pv_names[i], pp))
-			goto bad;
+		if (!(pv_name = dm_strdup(pv_names[i]))) {
+			log_error("Failed to duplicate pv name %s.", pv_names[i]);
+			return 0;
+		}
+		unescape_colons_and_at_signs(pv_name, NULL, NULL);
+		if (!vg_extend_single_pv(vg, pv_name, pp)) {
+			log_error("Unable to add physical volume '%s' to "
+				  "volume group '%s'.", pv_name, vg->name);
+			dm_free(pv_name);
+			return 0;
+		}
+		dm_free(pv_name);
 	}
 
 /* FIXME Decide whether to initialise and add new mdahs to format instance */
 
 	return 1;
-
-      bad:
-	log_error("Unable to add physical volume '%s' to "
-		  "volume group '%s'.", pv_names[i], vg->name);
-	return 0;
 }
 
 /* FIXME: use this inside vgreduce_single? */
-int vg_reduce(struct volume_group *vg, char *pv_name)
+int vg_reduce(struct volume_group *vg, const char *pv_name)
 {
 	struct physical_volume *pv;
 	struct pv_list *pvl;
@@ -1875,7 +1880,7 @@ int vgs_are_compatible(struct cmd_context *cmd __attribute__((unused)),
 {
 	struct lv_list *lvl1, *lvl2;
 	struct pv_list *pvl;
-	char *name1, *name2;
+	const char *name1, *name2;
 
 	if (lvs_in_vg_activated(vg_from)) {
 		log_error("Logical volumes in \"%s\" must be inactive",

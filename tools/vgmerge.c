@@ -163,7 +163,7 @@ bad:
 
 int vgmerge(struct cmd_context *cmd, int argc, char **argv)
 {
-	char *vg_name_to, *vg_name_from;
+	const char *vg_name_to, *vg_name_from;
 	int opt = 0;
 	int ret = 0, ret_max = 0;
 

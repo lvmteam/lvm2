@@ -84,8 +84,8 @@ int process_each_lv_in_vg(struct cmd_context *cmd,
 
 char *default_vgname(struct cmd_context *cmd);
 const char *extract_vgname(struct cmd_context *cmd, const char *lv_name);
-char *skip_dev_dir(struct cmd_context *cmd, const char *vg_name,
-		   unsigned *dev_dir_found);
+const char *skip_dev_dir(struct cmd_context *cmd, const char *vg_name,
+			 unsigned *dev_dir_found);
 
 /*
  * Builds a list of pv's from the names in argv.  Used in

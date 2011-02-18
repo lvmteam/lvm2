@@ -1514,7 +1514,7 @@ struct dm_list *lvs_using_lv(struct cmd_context *cmd, struct volume_group *vg,
 	return lvs;
 }
 
-percent_t copy_percent(struct logical_volume *lv_mirr)
+percent_t copy_percent(const struct logical_volume *lv_mirr)
 {
 	uint32_t numerator = 0u, denominator = 0u;
 	struct lv_segment *seg;
@@ -1727,8 +1727,8 @@ static struct logical_volume *_set_up_mirror_log(struct cmd_context *cmd,
 						 int in_sync)
 {
 	struct logical_volume *log_lv;
-	const char *suffix, *c;
-	char *lv_name;
+	const char *suffix, *lv_name;
+	char *tmp_name;
 	size_t len;
 	struct lv_segment *seg;
 
@@ -1747,21 +1747,21 @@ static struct logical_volume *_set_up_mirror_log(struct cmd_context *cmd,
 	    strstr(seg_lv(seg, 0)->name, MIRROR_SYNC_LAYER)) {
 		lv_name = lv->name;
 		suffix = "_mlogtmp_%d";
-	} else if ((c = strstr(lv->name, MIRROR_SYNC_LAYER))) {
-		len = c - lv->name + 1;
-		if (!(lv_name = alloca(len)) ||
-		    !dm_snprintf(lv_name, len, "%s", lv->name)) {
+	} else if ((lv_name = strstr(lv->name, MIRROR_SYNC_LAYER))) {
+		len = lv_name - lv->name + 1;
+		if (!(tmp_name = alloca(len)) ||
+		    !dm_snprintf(tmp_name, len, "%s", lv->name)) {
 			log_error("mirror log name allocation failed");
 			return 0;
 		}
+		lv_name = tmp_name;
 		suffix = "_mlog";
 	} else {
 		lv_name = lv->name;
 		suffix = "_mlog";
 	}
 
-	if (!(log_lv = _create_mirror_log(lv, ah, alloc,
-					  (const char *) lv_name, suffix))) {
+	if (!(log_lv = _create_mirror_log(lv, ah, alloc, lv_name, suffix))) {
 		log_error("Failed to create mirror log.");
 		return NULL;
 	}

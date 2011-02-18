@@ -61,7 +61,7 @@ static int _pvsegs_sub_single(struct cmd_context *cmd,
 
 	struct volume_group _free_vg = {
 		.cmd = cmd,
-		.name = (char *)"",
+		.name = "",
 	};
 
         if (!(_free_vg.vgmem = dm_pool_create("_free_vg", 10240)))
@@ -69,7 +69,7 @@ static int _pvsegs_sub_single(struct cmd_context *cmd,
 
 	struct logical_volume _free_logical_volume = {
 		.vg = vg ?: &_free_vg,
-		.name = (char *) "",
+		.name = "",
 		.snapshot = NULL,
 		.status = VISIBLE_LV,
 		.major = -1,

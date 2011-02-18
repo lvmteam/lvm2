@@ -74,7 +74,7 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	/* attach the pv's */
-	if (!vg_extend(vg, argc, argv, &pp))
+	if (!vg_extend(vg, argc, (const char* const*)argv, &pp))
 		goto_bad;
 
 	if (vp_new.max_lv != vg->max_lv)

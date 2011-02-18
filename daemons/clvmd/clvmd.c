@@ -2091,7 +2091,7 @@ error:
 	return -1;
 }
 
-void process_message(struct local_client *client, const char *buf, int len,
+void process_message(struct local_client *client, char *buf, int len,
 		     const char *csid)
 {
 	struct clvm_header *inheader;

@@ -31,7 +31,7 @@ static int _lvcreate_name_params(struct lvcreate_params *lp,
 {
 	int argc = *pargc;
 	char **argv = *pargv, *ptr;
-	char *vg_name;
+	const char *vg_name;
 
 	lp->lv_name = arg_str_value(cmd, name_ARG, NULL);
 
