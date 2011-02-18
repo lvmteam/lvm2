@@ -141,11 +141,11 @@ static struct cmd_data _cmd_data_v4[] = {
 #  define DM_EXISTS_FLAG 0x00000004
 #endif
 
-static void *_align(void *ptr, unsigned int a)
+static char *_align(char *ptr, unsigned int a)
 {
 	register unsigned long agn = --a;
 
-	return (void *) (((unsigned long) ptr + agn) & ~agn);
+	return (char *) (((unsigned long) ptr + agn) & ~agn);
 }
 
 static int _uname(void)
@@ -608,9 +608,9 @@ static struct dm_names *_dm_task_get_names_v1(struct dm_task *dmt)
 				    dmt->dmi.v1->data_start);
 }
 
-static void *_add_target_v1(struct target *t, void *out, void *end)
+static char *_add_target_v1(struct target *t, char *out, char *end)
 {
-	void *out_sp = out;
+	char *out_sp = out;
 	struct dm_target_spec_v1 sp;
 	size_t sp_size = sizeof(struct dm_target_spec_v1);
 	int len;
@@ -629,7 +629,7 @@ static void *_add_target_v1(struct target *t, void *out, void *end)
 	if ((out + len + 1) >= end)
 		return_NULL;
 
-	strcpy((char *) out, t->params);
+	strcpy(out, t->params);
 	out += len + 1;
 
 	/* align next block */
@@ -650,7 +650,7 @@ static struct dm_ioctl_v1 *_flatten_v1(struct dm_task *dmt)
 	struct dm_ioctl_v1 *dmi;
 	struct target *t;
 	size_t len = sizeof(struct dm_ioctl_v1);
-	void *b, *e;
+	char *b, *e;
 	int count = 0;
 
 	for (t = dmt->head; t; t = t->next) {
@@ -710,8 +710,8 @@ static struct dm_ioctl_v1 *_flatten_v1(struct dm_task *dmt)
 
 	dmi->target_count = count;
 
-	b = (void *) (dmi + 1);
-	e = (void *) ((char *) dmi + len);
+	b = (char *) (dmi + 1);
+	e = (char *) dmi + len;
 
 	for (t = dmt->head; t; t = t->next)
 		if (!(b = _add_target_v1(t, b, e))) {
@@ -773,7 +773,7 @@ static int _dm_names_v1(struct dm_ioctl_v1 *dmi)
 		names->dev = (uint64_t) buf.st_rdev;
 		names->next = 0;
 		len = strlen(name);
-		if (((void *) (names + 1) + len + 1) >= end) {
+		if (((char *) (names + 1) + len + 1) >= end) {
 			log_error("Insufficient buffer space for device list");
 			r = 0;
 			break;
@@ -782,7 +782,7 @@ static int _dm_names_v1(struct dm_ioctl_v1 *dmi)
 		strcpy(names->name, name);
 
 		old_names = names;
-		names = _align((void *) ++names + len + 1, ALIGNMENT);
+		names = _align((char *) ++names + len + 1, ALIGNMENT);
 	}
 
 	if (closedir(d))
@@ -1341,9 +1341,9 @@ struct target *create_target(uint64_t start, uint64_t len, const char *type,
 	return NULL;
 }
 
-static void *_add_target(struct target *t, void *out, void *end)
+static char *_add_target(struct target *t, char *out, char *end)
 {
-	void *out_sp = out;
+	char *out_sp = out;
 	struct dm_target_spec sp;
 	size_t sp_size = sizeof(struct dm_target_spec);
 	int len;
@@ -1362,7 +1362,7 @@ static void *_add_target(struct target *t, void *out, void *end)
 	if ((out + len + 1) >= end)
 		return_NULL;
 
-	strcpy((char *) out, t->params);
+	strcpy(out, t->params);
 	out += len + 1;
 
 	/* align next block */
@@ -1394,7 +1394,7 @@ static int _lookup_dev_name(uint64_t dev, char *buf, size_t len)
 		goto out;
  
 	do {
-		names = (void *) names + next;
+		names = (struct dm_names *)((char *) names + next);
 		if (names->dev == dev) {
 			strncpy(buf, names->name, len);
 			r = 1;
@@ -1417,7 +1417,7 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 	struct target *t;
 	struct dm_target_msg *tmsg;
 	size_t len = sizeof(struct dm_ioctl);
-	void *b, *e;
+	char *b, *e;
 	int count = 0;
 
 	for (t = dmt->head; t; t = t->next) {
@@ -1565,8 +1565,8 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 	dmi->target_count = count;
 	dmi->event_nr = dmt->event_nr;
 
-	b = (void *) (dmi + 1);
-	e = (void *) ((char *) dmi + len);
+	b = (char *) (dmi + 1);
+	e = (char *) dmi + len;
 
 	for (t = dmt->head; t; t = t->next)
 		if (!(b = _add_target(t, b, e))) {
@@ -1652,7 +1652,7 @@ static int _process_all_v4(struct dm_task *dmt)
 		goto out;
 
 	do {
-		names = (void *) names + next;
+		names = (struct dm_names *)((char *) names + next);
 		if (!dm_task_set_name(dmt, names->name)) {
 			r = 0;
 			goto out;

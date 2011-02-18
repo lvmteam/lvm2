@@ -675,15 +675,15 @@ int dm_report_set_output_field_name_prefix(struct dm_report *rh, const char *out
 /*
  * Create a row of data for an object
  */
-static void * _report_get_field_data(struct dm_report *rh,
-			      struct field_properties *fp, void *object)
+static void *_report_get_field_data(struct dm_report *rh,
+				    struct field_properties *fp, void *object)
 {
-	void *ret = fp->type->data_fn(object);
+	char *ret = fp->type->data_fn(object);
 
 	if (!ret)
 		return NULL;
 
-	return ret + rh->fields[fp->field_num].offset;
+	return (void *)(ret + rh->fields[fp->field_num].offset);
 }
 
 int dm_report_object(struct dm_report *rh, void *object)
