@@ -1156,8 +1156,18 @@ int lv_suspend(struct cmd_context *cmd, const char *lvid_s)
 }
 ***********/
 
+ /*
+  * _lv_resume
+  * @cmd
+  * @lvid_s
+  * @origin_only
+  * @exclusive:  This parameter only has an affect in cluster-context.
+  *		 It forces local target type to be used (instead of
+  *		 cluster-aware type).
+  * @error_if_not_active
+  */
 static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
-		      unsigned origin_only,
+		      unsigned origin_only, unsigned exclusive,
 		      int error_if_not_active)
 {
 	struct logical_volume *lv;
@@ -1189,6 +1199,14 @@ static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
 		goto out;
 	}
 
+	/*
+	 * When targets are activated exclusively in a cluster, the
+	 * non-clustered target should be used.  This only happens
+	 * if ACTIVATE_EXCL is set in lv->status.
+	 */
+	if (exclusive)
+		lv->status |= ACTIVATE_EXCL;
+
 	if (!_lv_activate_lv(lv, origin_only))
 		goto_out;
 
@@ -1206,14 +1224,15 @@ out:
 }
 
 /* Returns success if the device is not active */
-int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only)
+int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s,
+			unsigned origin_only, unsigned exclusive)
 {
-	return _lv_resume(cmd, lvid_s, origin_only, 0);
+	return _lv_resume(cmd, lvid_s, origin_only, exclusive, 0);
 }
 
 int lv_resume(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only)
 {
-	return _lv_resume(cmd, lvid_s, origin_only, 1);
+	return _lv_resume(cmd, lvid_s, origin_only, 0, 1);
 }
 
 static int _lv_has_open_snapshots(struct logical_volume *lv)

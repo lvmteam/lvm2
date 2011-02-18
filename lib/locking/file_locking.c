@@ -293,7 +293,7 @@ static int _file_lock_resource(struct cmd_context *cmd, const char *resource,
 		switch (flags & LCK_TYPE_MASK) {
 		case LCK_UNLOCK:
 			log_very_verbose("Unlocking LV %s%s", resource, origin_only ? " without snapshots" : "");
-			if (!lv_resume_if_active(cmd, resource, origin_only))
+			if (!lv_resume_if_active(cmd, resource, origin_only, 0))
 				return 0;
 			break;
 		case LCK_NULL:
