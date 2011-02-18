@@ -1126,7 +1126,6 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 
 	if (!_lv_suspend_lv(lv, origin_only, lockfs, flush_required)) {
 		critical_section_dec(cmd);
-		fs_unlock();
 		goto out;
 	}
 
