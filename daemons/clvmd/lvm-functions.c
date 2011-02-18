@@ -377,9 +377,9 @@ static int do_activate_lv(char *resource, unsigned char lock_flags, int mode)
 		goto error;
 
 	if (lvi.suspended) {
-		memlock_inc(cmd);
+		critical_section_inc(cmd);
 		if (!lv_resume(cmd, resource, 0)) {
-			memlock_dec(cmd);
+			critical_section_dec(cmd);
 			goto error;
 		}
 	}
@@ -489,8 +489,8 @@ int do_lock_lv(unsigned char command, unsigned char lock_flags, char *resource)
 {
 	int status = 0;
 
-	DEBUGLOG("do_lock_lv: resource '%s', cmd = %s, flags = %s, memlock = %d\n",
-		 resource, decode_locking_cmd(command), decode_flags(lock_flags), memlock());
+	DEBUGLOG("do_lock_lv: resource '%s', cmd = %s, flags = %s, critical_section = %d\n",
+		 resource, decode_locking_cmd(command), decode_flags(lock_flags), critical_section());
 
 	if (!cmd->config_valid || config_files_changed(cmd)) {
 		/* Reinitialise various settings inc. logging, filters */
@@ -551,7 +551,7 @@ int do_lock_lv(unsigned char command, unsigned char lock_flags, char *resource)
 	dm_pool_empty(cmd->mem);
 	pthread_mutex_unlock(&lvm_lock);
 
-	DEBUGLOG("Command return is %d, memlock is %d\n", status, memlock());
+	DEBUGLOG("Command return is %d, critical_section is %d\n", status, critical_section());
 	return status;
 }
 
@@ -699,8 +699,8 @@ void do_lock_vg(unsigned char command, unsigned char lock_flags, char *resource)
 	if (strncmp(resource, "P_#", 3) && !strncmp(resource, "P_", 2))
 		lock_cmd |= LCK_CACHE;
 
-	DEBUGLOG("do_lock_vg: resource '%s', cmd = %s, flags = %s, memlock = %d\n",
-		 resource, decode_full_locking_cmd(lock_cmd), decode_flags(lock_flags), memlock());
+	DEBUGLOG("do_lock_vg: resource '%s', cmd = %s, flags = %s, critical_section = %d\n",
+		 resource, decode_full_locking_cmd(lock_cmd), decode_flags(lock_flags), critical_section());
 
 	/* P_#global causes a full cache refresh */
 	if (!strcmp(resource, "P_" VG_GLOBAL)) {

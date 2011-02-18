@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.  
- * Copyright (C) 2004 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2011 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -18,11 +18,13 @@
 
 struct cmd_context;
 
-void memlock_inc(struct cmd_context *cmd);
-void memlock_dec(struct cmd_context *cmd);
+void critical_section_inc(struct cmd_context *cmd);
+void critical_section_dec(struct cmd_context *cmd);
+int critical_section(void);
 void memlock_inc_daemon(struct cmd_context *cmd);
 void memlock_dec_daemon(struct cmd_context *cmd);
-int memlock(void);
 void memlock_init(struct cmd_context *cmd);
+void memlock_reset(void);
+void memlock_unlock(struct cmd_context *cmd);
 
 #endif

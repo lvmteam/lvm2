@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2003-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2006 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2011 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -28,19 +28,41 @@
 
 #ifndef DEVMAPPER_SUPPORT
 
-void memlock_inc(struct cmd_context *cmd)
+void memlock_inc_daemon(struct cmd_context *cmd)
 {
 	return;
 }
-void memlock_dec(struct cmd_context *cmd)
+
+void memlock_dec_daemon(struct cmd_context *cmd)
 {
 	return;
 }
-int memlock(void)
+
+void critical_section_inc(struct cmd_context *cmd)
+{
+	return;
+}
+
+void critical_section_dec(struct cmd_context *cmd)
+{
+	return;
+}
+
+int critical_section(void)
 {
 	return 0;
 }
 void memlock_init(struct cmd_context *cmd)
+{
+	return;
+}
+
+void memlock_unlock(struct cmd_context *cmd)
+{
+	return;
+}
+
+void memlock_reset(void)
 {
 	return;
 }
@@ -52,7 +74,8 @@ static size_t _size_malloc_tmp;
 static size_t _size_malloc = 2000000;
 
 static void *_malloc_mem = NULL;
-static int _memlock_count = 0;
+static int _mem_locked = 0;
+static int _critical_section_count = 0;
 static int _memlock_count_daemon = 0;
 static int _priority;
 static int _default_priority;
@@ -333,46 +356,59 @@ static void _unlock_mem(struct cmd_context *cmd)
 
 static void _lock_mem_if_needed(struct cmd_context *cmd)
 {
-	if ((_memlock_count + _memlock_count_daemon) == 1)
+	if (!_mem_locked &&
+	    ((_critical_section_count + _memlock_count_daemon) == 1)) {
+		_mem_locked = 1;
 		_lock_mem(cmd);
+	}
 }
 
 static void _unlock_mem_if_possible(struct cmd_context *cmd)
 {
-	if ((_memlock_count + _memlock_count_daemon) == 0)
+	log_debug("UnlockMem l:%d cs:%d md:%d", _mem_locked,
+		  _critical_section_count, _memlock_count_daemon);
+	if (_mem_locked &&
+	    !_critical_section_count &&
+	    !_memlock_count_daemon) {
 		_unlock_mem(cmd);
+		_mem_locked = 0;
+	}
 }
 
-void memlock_inc(struct cmd_context *cmd)
+void critical_section_inc(struct cmd_context *cmd)
 {
-	++_memlock_count;
+	++_critical_section_count;
+	log_debug("critical_section_inc to %d", _critical_section_count);
 	_lock_mem_if_needed(cmd);
-	log_debug("memlock_count inc to %d", _memlock_count);
 }
 
-void memlock_dec(struct cmd_context *cmd)
+void critical_section_dec(struct cmd_context *cmd)
 {
-	if (!_memlock_count)
-		log_error(INTERNAL_ERROR "_memlock_count has dropped below 0.");
-	--_memlock_count;
-	_unlock_mem_if_possible(cmd);
-	log_debug("memlock_count dec to %d", _memlock_count);
+	if (!_critical_section_count)
+		log_error(INTERNAL_ERROR "_critical_section has dropped below 0.");
+	--_critical_section_count;
+	log_debug("critical_section_dec to %d", _critical_section_count);
+}
+
+int critical_section(void)
+{
+	return _critical_section_count;
 }
 
 /*
  * The memlock_*_daemon functions will force the mlockall() call that we need
  * to stay in memory, but they will have no effect on device scans (unlike
- * normal memlock_inc and memlock_dec). Memory is kept locked as long as either
- * of memlock or memlock_daemon is in effect.
+ * normal critical_section_inc/dec). Memory is kept locked as long as either
+ * of critical_section or memlock_daemon is in effect.
  */
 
 void memlock_inc_daemon(struct cmd_context *cmd)
 {
 	++_memlock_count_daemon;
-	if (_memlock_count_daemon == 1 && _memlock_count > 0)
-                log_error(INTERNAL_ERROR "_memlock_inc_daemon used after _memlock_inc.");
-	_lock_mem_if_needed(cmd);
+	if (_memlock_count_daemon == 1 && _critical_section_count > 0)
+                log_error(INTERNAL_ERROR "_memlock_inc_daemon used in critical section.");
 	log_debug("memlock_count_daemon inc to %d", _memlock_count_daemon);
+	_lock_mem_if_needed(cmd);
 }
 
 void memlock_dec_daemon(struct cmd_context *cmd)
@@ -380,19 +416,8 @@ void memlock_dec_daemon(struct cmd_context *cmd)
 	if (!_memlock_count_daemon)
 		log_error(INTERNAL_ERROR "_memlock_count_daemon has dropped below 0.");
 	--_memlock_count_daemon;
-	_unlock_mem_if_possible(cmd);
 	log_debug("memlock_count_daemon dec to %d", _memlock_count_daemon);
-}
-
-/*
- * This disregards the daemon (dmeventd) locks, since we use memlock() to check
- * whether it is safe to run a device scan, which would normally coincide with
- * !memlock() -- but the daemon global memory lock breaks this assumption, so
- * we do not take those into account here.
- */
-int memlock(void)
-{
-	return _memlock_count;
+	_unlock_mem_if_possible(cmd);
 }
 
 void memlock_init(struct cmd_context *cmd)
@@ -406,6 +431,19 @@ void memlock_init(struct cmd_context *cmd)
 	_default_priority = find_config_tree_int(cmd,
 					    "activation/process_priority",
 					    DEFAULT_PROCESS_PRIORITY);
+}
+
+void memlock_reset(void)
+{
+	log_debug("memlock reset.");
+	_mem_locked = 0;
+	_critical_section_count = 0;
+	_memlock_count_daemon = 0;
+}
+
+void memlock_unlock(struct cmd_context *cmd)
+{
+	_unlock_mem_if_possible(cmd);
 }
 
 #endif

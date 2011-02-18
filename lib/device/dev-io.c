@@ -399,7 +399,7 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 		dev_close_immediate(dev);
 	}
 
-	if (memlock())
+	if (critical_section())
 		/* FIXME Make this log_error */
 		log_verbose("dev_open(%s) called while suspended",
 			 dev_name(dev));

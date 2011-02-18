@@ -2793,7 +2793,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		lvmcache_label_scan(cmd, 0);
 		if (!(fmt = fmt_from_vgname(vgname, vgid, 1))) {
 			/* Independent MDAs aren't supported under low memory */
-			if (!cmd->independent_metadata_areas && memlock())
+			if (!cmd->independent_metadata_areas && critical_section())
 				return_NULL;
 			lvmcache_label_scan(cmd, 2);
 			if (!(fmt = fmt_from_vgname(vgname, vgid, 0)))
@@ -2922,7 +2922,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 			log_debug("Cached VG %s had incorrect PV list",
 				  vgname);
 
-			if (memlock())
+			if (critical_section())
 				inconsistent = 1;
 			else {
 				free_vg(correct_vg);
@@ -2953,7 +2953,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		inconsistent = 0;
 
 		/* Independent MDAs aren't supported under low memory */
-		if (!cmd->independent_metadata_areas && memlock())
+		if (!cmd->independent_metadata_areas && critical_section())
 			return_NULL;
 		lvmcache_label_scan(cmd, 2);
 		if (!(fmt = fmt_from_vgname(vgname, vgid, 0)))
@@ -3213,7 +3213,7 @@ static struct volume_group *_vg_read_by_vgid(struct cmd_context *cmd,
 	}
 
 	/* Mustn't scan if memory locked: ensure cache gets pre-populated! */
-	if (memlock())
+	if (critical_section())
 		return_NULL;
 
 	/* FIXME Need a genuine read by ID here - don't vg_read_internal by name! */
@@ -3892,10 +3892,10 @@ uint32_t vg_lock_newname(struct cmd_context *cmd, const char *vgname)
 		lvmcache_label_scan(cmd, 0);
 		if (!fmt_from_vgname(vgname, NULL, 1)) {
 			/* Independent MDAs aren't supported under low memory */
-			if (!cmd->independent_metadata_areas && memlock()) {
+			if (!cmd->independent_metadata_areas && critical_section()) {
 				/*
 				 * FIXME: Disallow calling this function if
-				 * memlock() is true.
+				 * critical_section() is true.
 				 */
 				unlock_vg(cmd, vgname);
 				return FAILED_LOCKING;

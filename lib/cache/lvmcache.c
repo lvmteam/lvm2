@@ -649,7 +649,7 @@ struct volume_group *lvmcache_get_vg(const char *vgid, unsigned precommitted)
 	 * Note that we do not clear the PRECOMMITTED flag.
 	 */
 	if ((precommitted && !vginfo->precommitted) ||
-	    (!precommitted && vginfo->precommitted && !memlock()))
+	    (!precommitted && vginfo->precommitted && !critical_section()))
 		return NULL;
 
 	if (!(fid = vginfo->fmt->ops->create_instance(vginfo->fmt,
@@ -783,7 +783,7 @@ struct device *device_from_pvid(struct cmd_context *cmd, const struct id *pvid,
 		}
 	}
 
-	if (memlock() || (scan_done_once && *scan_done_once))
+	if (critical_section() || (scan_done_once && *scan_done_once))
 		return NULL;
 
 	lvmcache_label_scan(cmd, 2);
@@ -1229,7 +1229,7 @@ int lvmcache_update_vgname_and_id(struct lvmcache_info *info,
 	/* If PV without mdas is already in a real VG, don't make it orphan */
 	if (is_orphan_vg(vgname) && info->vginfo &&
 	    mdas_empty_or_ignored(&info->mdas) &&
-	    !is_orphan_vg(info->vginfo->vgname) && memlock())
+	    !is_orphan_vg(info->vginfo->vgname) && critical_section())
 		return 1;
 
 	/* If moving PV from orphan to real VG, always mark it valid */
