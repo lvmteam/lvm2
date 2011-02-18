@@ -26,7 +26,7 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 	struct dm_list mdas;
 	int pvmetadatacopies = 0;
 	uint64_t pvmetadatasize = 0;
-	uint64_t pe_end = 0, pe_start = 0;
+	uint64_t pe_start = 0;
 	struct pv_list *pvl;
 	int change_made = 0;
 	struct lvinfo info;
@@ -119,8 +119,7 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 		existing_pv = pvl->pv;
 
 		pe_start = pv_pe_start(existing_pv);
-		pe_end = pv_pe_count(existing_pv) * pv_pe_size(existing_pv)
-		    + pe_start - 1;
+		/* pe_end = pv_pe_count(existing_pv) * pv_pe_size(existing_pv) + pe_start - 1; */
 
 		dm_list_init(&mdas);
 		if (!(pv = pv_create(cmd, pv_dev(existing_pv),
