@@ -1,5 +1,6 @@
 Version 1.02.64 - 
 ===================================
+  Change dm_report_field_string() API to accept const char *const *data.
 
 Version 1.02.63 - 9th February 2011
 ===================================

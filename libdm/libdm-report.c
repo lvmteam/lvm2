@@ -102,7 +102,7 @@ static const struct dm_report_object_type *_find_type(struct dm_report *rh,
  */
 
 int dm_report_field_string(struct dm_report *rh,
-			   struct dm_report_field *field, const char **data)
+			   struct dm_report_field *field, const char *const *data)
 {
 	char *repstr;
 
