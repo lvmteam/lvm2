@@ -1049,6 +1049,12 @@ int find_config_tree_int(struct cmd_context *cmd, const char *path,
 	return (int) _find_config_int64(cmd->cft_override ? cmd->cft_override->root : NULL, cmd->cft->root, path, (int64_t) fail);
 }
 
+int64_t find_config_tree_int64(struct cmd_context *cmd, const char *path, int64_t fail)
+{
+	return _find_config_int64(cmd->cft_override ? cmd->cft_override->root : NULL,
+				  cmd->cft->root, path, fail);
+}
+
 float find_config_tree_float(struct cmd_context *cmd, const char *path,
 			     float fail)
 {

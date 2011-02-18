@@ -95,6 +95,8 @@ const char *find_config_tree_str(struct cmd_context *cmd,
 				 const char *path, const char *fail);
 int find_config_tree_int(struct cmd_context *cmd, const char *path,
 			 int fail);
+int64_t find_config_tree_int64(struct cmd_context *cmd, const char *path,
+			     int64_t fail);
 float find_config_tree_float(struct cmd_context *cmd, const char *path,
 			     float fail);
 
