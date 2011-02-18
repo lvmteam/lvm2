@@ -938,8 +938,11 @@ static int _node_has_closed_parents(struct dm_tree_node *node,
 		    !info.exists)
 			continue;
 
-		if (info.open_count)
+		if (info.open_count) {
+			log_debug("Node %s %d:%d has open_count %d", uuid_prefix,
+				  dinfo->major, dinfo->minor, info.open_count);
 			return 0;
+		}
 	}
 
 	return 1;
