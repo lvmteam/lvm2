@@ -343,9 +343,15 @@ static void _unlock_mem(struct cmd_context *cmd)
 			log_sys_error("close", _procselfmaps);
 		dm_free(_maps_buffer);
 		_maps_buffer = NULL;
-		if (_mstats < unlock_mstats)
-			log_error(INTERNAL_ERROR "Maps lock %ld < unlock %ld",
-				  (long)_mstats, (long)unlock_mstats);
+		if (_mstats < unlock_mstats) {
+			if ((_mstats + 4096) < unlock_mstats)
+				log_error(INTERNAL_ERROR
+					  "Maps lock %ld < unlock %ld",
+					  (long)_mstats, (long)unlock_mstats);
+			else
+				log_debug("Maps lock %ld < unlock %ld, 1 page difference!",
+					  (long)_mstats, (long)unlock_mstats);
+		}
 	}
 
 	if (setpriority(PRIO_PROCESS, 0, _priority))
