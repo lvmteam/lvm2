@@ -30,9 +30,6 @@
 
 #include <sys/utsname.h>
 
-static int _block_on_error_available = 0;
-static unsigned _mirror_attributes = 0;
-
 enum {
 	MIRR_DISABLED,
 	MIRR_RUNNING,
@@ -158,6 +155,9 @@ static int _mirrored_text_export(const struct lv_segment *seg, struct formatter 
 }
 
 #ifdef DEVMAPPER_SUPPORT
+static int _block_on_error_available = 0;
+static unsigned _mirror_attributes = 0;
+
 static struct mirror_state *_mirrored_init_target(struct dm_pool *mem,
 					 struct cmd_context *cmd)
 {
@@ -641,9 +641,11 @@ struct segment_type *init_segtype(struct cmd_context *cmd)
 	segtype->private = NULL;
 	segtype->flags = SEG_AREAS_MIRRORED;
 
+#ifdef DEVMAPPER_SUPPORT
 #ifdef DMEVENTD
 	if (_get_mirror_dso_path(cmd))
 		segtype->flags |= SEG_MONITORED;
+#endif
 #endif
 
 	log_very_verbose("Initialised segtype: %s", segtype->name);

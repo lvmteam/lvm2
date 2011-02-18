@@ -260,9 +260,11 @@ struct segment_type *init_segtype(struct cmd_context *cmd)
 	segtype->private = NULL;
 	segtype->flags = SEG_SNAPSHOT;
 
+#ifdef DEVMAPPER_SUPPORT
 #ifdef DMEVENTD
 	if (_get_snapshot_dso_path(cmd))
 		segtype->flags |= SEG_MONITORED;
+#endif
 #endif
 	log_very_verbose("Initialised segtype: %s", segtype->name);
 

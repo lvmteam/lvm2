@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2009 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2011 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -171,7 +171,7 @@ int lvs_in_vg_activated(struct volume_group *vg)
 {
 	return 0;
 }
-int lvs_in_vg_opened(struct volume_group *vg)
+int lvs_in_vg_opened(const struct volume_group *vg)
 {
 	return 0;
 }
@@ -181,15 +181,16 @@ int lv_suspend(struct cmd_context *cmd, const char *lvid_s)
 	return 1;
 }
 *******/
-int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s)
+int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only)
 {
 	return 1;
 }
-int lv_resume(struct cmd_context *cmd, const char *lvid_s)
+int lv_resume(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only)
 {
 	return 1;
 }
-int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s)
+int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s,
+			unsigned origin_only, unsigned exclusive)
 {
 	return 1;
 }
@@ -210,28 +211,42 @@ int lv_activate_with_filter(struct cmd_context *cmd, const char *lvid_s, int exc
 {
 	return 1;
 }
-
 int lv_mknodes(struct cmd_context *cmd, const struct logical_volume *lv)
 {
 	return 1;
 }
-
 int pv_uses_vg(struct physical_volume *pv,
 	       struct volume_group *vg)
 {
 	return 0;
 }
-
 void activation_release(void)
 {
-	return;
 }
-
 void activation_exit(void)
 {
-	return;
 }
-
+int lv_is_active(struct logical_volume *lv)
+{
+	return 0;
+}
+int lv_is_active_exclusive_locally(struct logical_volume *lv)
+{
+	return 0;
+}
+int lv_is_active_exclusive_remotely(struct logical_volume *lv)
+{
+	return 0;
+}
+int lv_check_transient(struct logical_volume *lv)
+{
+	return 1;
+}
+int monitor_dev_for_events(struct cmd_context *cmd, struct logical_volume *lv,
+			   unsigned origin_only, int monitor)
+{
+	return 1;
+}
 #else				/* DEVMAPPER_SUPPORT */
 
 static int _activation = 1;

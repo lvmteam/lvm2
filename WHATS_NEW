@@ -1,5 +1,6 @@
 Version 2.02.85 - 
 ===================================
+  Fix compilation when devmapper is dissabled.
   Remove fs_unlock() from lv_suspend error path.
   Change memory locking semantic and use critical sections.
   Add configurable pv_min_size to select block devices by its size.
