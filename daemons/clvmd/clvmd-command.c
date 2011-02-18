@@ -185,7 +185,6 @@ static int lock_vg(struct local_client *client)
     struct clvm_header *header =
 	(struct clvm_header *) client->bits.localsock.cmd;
     unsigned char lock_cmd;
-    unsigned char lock_flags;
     int lock_mode;
     char *args = header->node + strlen(header->node) + 1;
     int lkid;
@@ -207,7 +206,7 @@ static int lock_vg(struct local_client *client)
 
     lock_cmd = args[0] & (LCK_NONBLOCK | LCK_HOLD | LCK_SCOPE_MASK | LCK_TYPE_MASK);
     lock_mode = ((int)lock_cmd & LCK_TYPE_MASK);
-    lock_flags = args[1];
+    /* lock_flags = args[1]; */
     lockname = &args[2];
     DEBUGLOG("doing PRE command LOCK_VG '%s' at %x (client=%p)\n", lockname, lock_cmd, client);
 

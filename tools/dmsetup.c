@@ -2998,7 +2998,6 @@ error:
 static int _process_losetup_switches(const char *base, int *argc, char ***argv,
 				     const char *dev_dir)
 {
-	static int ind;
 	int c;
 	int encrypt_loop = 0, delete = 0, find = 0, show_all = 0;
 	char *device_name = NULL;
@@ -3013,8 +3012,8 @@ static int _process_losetup_switches(const char *base, int *argc, char ***argv,
 
 	optarg = 0;
 	optind = OPTIND_INIT;
-	while ((ind = -1, c = GETOPTLONG_FN(*argc, *argv, "ade:fo:v",
-					    long_options, NULL)) != -1 ) {
+	while ((c = GETOPTLONG_FN(*argc, *argv, "ade:fo:v",
+				  long_options, NULL)) != -1 ) {
 		if (c == ':' || c == '?')
 			return 0;
 		if (c == 'a')

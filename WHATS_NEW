@@ -1,5 +1,6 @@
 Version 2.02.85 - 
 ===================================
+  Fix gcc warnings for unused variables.
   Add stack backtraces for error paths in process_each_lv().
   Fixing some const cast gcc warnings in the code.
   Use char* arithmetic in _text_write(), _text_read() & send_message().
