@@ -281,7 +281,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 {
 	struct vgcreate_params vp_new;
 	struct vgcreate_params vp_def;
-	char *vg_name_from, *vg_name_to;
+	const char *vg_name_from, *vg_name_to;
 	struct volume_group *vg_to = NULL, *vg_from = NULL;
 	int opt;
 	int existing_vg = 0;

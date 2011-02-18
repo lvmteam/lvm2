@@ -40,7 +40,7 @@ static int _restore_pv(struct volume_group *vg, char *pv_name)
 
 int vgextend(struct cmd_context *cmd, int argc, char **argv)
 {
-	char *vg_name;
+	const char *vg_name;
 	struct volume_group *vg = NULL;
 	int r = ECMD_FAILED;
 	struct pvcreate_params pp;
@@ -107,7 +107,7 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 		}
 
 		/* extend vg */
-		if (!vg_extend(vg, argc, argv, &pp))
+		if (!vg_extend(vg, argc, (const char* const*)argv, &pp))
 			goto_bad;
 
 		if (arg_count(cmd, metadataignore_ARG) &&

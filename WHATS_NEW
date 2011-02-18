@@ -1,5 +1,6 @@
 Version 2.02.85 - 
 ===================================
+  Fixing some const cast gcc warnings in the code.
   Use char* arithmetic in _text_write(), _text_read() & send_message().
   Fix compilation when devmapper is dissabled.
   Remove fs_unlock() from lv_suspend error path.

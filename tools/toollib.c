@@ -28,7 +28,7 @@ const char *command_name(struct cmd_context *cmd)
 /*
  * Strip dev_dir if present
  */
-char *skip_dev_dir(struct cmd_context *cmd, const char *vg_name,
+const char *skip_dev_dir(struct cmd_context *cmd, const char *vg_name,
 		   unsigned *dev_dir_found)
 {
 	const char *dmdir = dm_dir();
@@ -54,7 +54,7 @@ char *skip_dev_dir(struct cmd_context *cmd, const char *vg_name,
 		    *layer) {
 			log_error("skip_dev_dir: Couldn't split up device name %s",
 				  vg_name);
-			return (char *) vg_name;
+			return vg_name;
 		}
 		vglv_sz = strlen(vgname) + strlen(lvname) + 2;
 		if (!(vglv = dm_pool_alloc(cmd->mem, vglv_sz)) ||
@@ -62,7 +62,7 @@ char *skip_dev_dir(struct cmd_context *cmd, const char *vg_name,
 				 *lvname ? "/" : "",
 				 lvname) < 0) {
 			log_error("vg/lv string alloc failed");
-			return (char *) vg_name;
+			return vg_name;
 		}
 		return vglv;
 	}
@@ -76,7 +76,7 @@ char *skip_dev_dir(struct cmd_context *cmd, const char *vg_name,
 	} else if (dev_dir_found)
 		*dev_dir_found = 0;
 
-	return (char *) vg_name;
+	return vg_name;
 }
 
 /*
@@ -898,7 +898,7 @@ const char *extract_vgname(struct cmd_context *cmd, const char *lv_name)
  */
 char *default_vgname(struct cmd_context *cmd)
 {
-	char *vg_path;
+	const char *vg_path;
 
 	/* Take default VG from environment? */
 	vg_path = getenv("LVM_VG_NAME");

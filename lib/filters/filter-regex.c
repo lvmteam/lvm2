@@ -135,7 +135,7 @@ static int _build_matcher(struct rfilter *rf, const struct config_value *val)
 	/*
 	 * build the matcher.
 	 */
-	if (!(rf->engine = dm_regex_create(rf->mem, (const char **) regex,
+	if (!(rf->engine = dm_regex_create(rf->mem, (const char * const*) regex,
 					   count)))
 		goto_out;
 	r = 1;

@@ -162,7 +162,7 @@ int lv_snapshot_percent(const struct logical_volume *lv, percent_t *percent)
 {
 	return 0;
 }
-int lv_mirror_percent(struct cmd_context *cmd, struct logical_volume *lv,
+int lv_mirror_percent(struct cmd_context *cmd, const struct logical_volume *lv,
 		      int wait, percent_t *percent, uint32_t *event_nr)
 {
 	return 0;
@@ -568,7 +568,7 @@ int lv_snapshot_percent(const struct logical_volume *lv, percent_t *percent)
 }
 
 /* FIXME Merge with snapshot_percent */
-int lv_mirror_percent(struct cmd_context *cmd, struct logical_volume *lv,
+int lv_mirror_percent(struct cmd_context *cmd, const struct logical_volume *lv,
 		      int wait, percent_t *percent, uint32_t *event_nr)
 {
 	int r;

@@ -158,7 +158,7 @@ int id_write_format(const struct id *id, char *buffer, size_t size)
 {
 	int i, tot;
 
-	static unsigned group_size[] = { 6, 4, 4, 4, 4, 4, 6 };
+	static const unsigned group_size[] = { 6, 4, 4, 4, 4, 4, 6 };
 
 	assert(ID_LEN == 32);
 

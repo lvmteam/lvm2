@@ -1897,7 +1897,8 @@ static int _rename_sub_lv(struct cmd_context *cmd,
 			  struct logical_volume *lv,
 			  const char *lv_name_old, const char *lv_name_new)
 {
-	char *suffix, *new_name;
+	const char *suffix;
+	char *new_name;
 	size_t len;
 
 	/*

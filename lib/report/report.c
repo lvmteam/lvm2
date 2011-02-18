@@ -44,7 +44,7 @@ static int _string_disp(struct dm_report *rh, struct dm_pool *mem __attribute__(
 			struct dm_report_field *field,
 			const void *data, void *private __attribute__((unused)))
 {
-	return dm_report_field_string(rh, field, (const char **) data);
+	return dm_report_field_string(rh, field, (const char * const *) data);
 }
 
 static int _dev_name_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
@@ -307,10 +307,8 @@ static int _lvname_disp(struct dm_report *rh, struct dm_pool *mem,
 	char *repstr, *lvname;
 	size_t len;
 
-	if (lv_is_visible(lv)) {
-		repstr = lv->name;
-		return dm_report_field_string(rh, field, (const char **) &repstr);
-	}
+	if (lv_is_visible(lv))
+		return dm_report_field_string(rh, field, &lv->name);
 
 	len = strlen(lv->name) + 3;
 	if (!(repstr = dm_pool_zalloc(mem, len))) {
@@ -615,7 +613,7 @@ static int _uuid_disp(struct dm_report *rh __attribute__((unused)), struct dm_po
 {
 	char *repstr = NULL;
 
-	if (!(repstr = id_format_and_copy(mem, (struct id *)data)))
+	if (!(repstr = id_format_and_copy(mem, data)))
 		return_0;
 
 	dm_report_field_set_value(field, repstr, NULL);
@@ -853,7 +851,7 @@ static int _copypercent_disp(struct dm_report *rh __attribute__((unused)),
 			     struct dm_report_field *field,
 			     const void *data, void *private __attribute__((unused)))
 {
-	struct logical_volume *lv = (struct logical_volume *) data;
+	const struct logical_volume *lv = (const struct logical_volume *) data;
 	percent_t percent;
 	uint64_t *sortval;
 	char *repstr;
@@ -899,7 +897,7 @@ static struct format_instance _dummy_fid = {
 
 static struct volume_group _dummy_vg = {
 	.fid = &_dummy_fid,
-	.name = (char *) "",
+	.name = "",
 	.system_id = (char *) "",
 	.pvs = { &(_dummy_vg.pvs), &(_dummy_vg.pvs) },
 	.lvs = { &(_dummy_vg.lvs), &(_dummy_vg.lvs) },
