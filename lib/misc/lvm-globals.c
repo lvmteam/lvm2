@@ -19,6 +19,7 @@
 #include "lvm-string.h"
 #include "lvm-file.h"
 #include "defaults.h"
+#include "metadata-exported.h"
 
 #include <stdarg.h>
 
@@ -42,6 +43,7 @@ static unsigned _is_static = 0;
 static int _udev_checking = 1;
 static char _sysfs_dir_path[PATH_MAX] = "";
 static int _dev_disable_after_error_count = DEFAULT_DISABLE_AFTER_ERROR_COUNT;
+static uint64_t _pv_min_size = (DEFAULT_PV_MIN_SIZE_KB * 1024L >> SECTOR_SHIFT);
 
 void init_verbose(int level)
 {
@@ -126,6 +128,11 @@ void init_udev_checking(int checking)
 void init_dev_disable_after_error_count(int value)
 {
 	_dev_disable_after_error_count = value;
+}
+
+void init_pv_min_size(uint64_t sectors)
+{
+	_pv_min_size = sectors;
 }
 
 void set_cmd_name(const char *cmd)
@@ -246,4 +253,9 @@ const char *sysfs_dir_path()
 int dev_disable_after_error_count(void)
 {
 	return _dev_disable_after_error_count;
+}
+
+uint64_t pv_min_size(void)
+{
+	return _pv_min_size;
 }

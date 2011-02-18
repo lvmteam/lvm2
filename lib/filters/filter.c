@@ -158,7 +158,7 @@ static int _passes_lvm_type_device_filter(struct dev_filter *f __attribute__((un
 		goto out;
 	}
 
-	if (size < PV_MIN_SIZE) {
+	if (size < pv_min_size()) {
 		log_debug("%s: Skipping: Too small to hold a PV", name);
 		goto out;
 	}
