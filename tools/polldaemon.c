@@ -148,7 +148,7 @@ static int _check_lv_status(struct cmd_context *cmd,
 	/* Finished? Or progress to next segment? */
 	if (progress == PROGRESS_FINISHED_ALL) {
 		if (!parms->poll_fns->finish_copy(cmd, vg, lv, lvs_changed))
-			return 0;
+			return_0;
 	} else {
 		if (parms->poll_fns->update_metadata &&
 		    !parms->poll_fns->update_metadata(cmd, vg, lv, lvs_changed, 0)) {
@@ -211,7 +211,7 @@ static int _wait_for_single_lv(struct cmd_context *cmd, const char *name, const 
 
 		if (!_check_lv_status(cmd, vg, lv, name, parms, &finished)) {
 			unlock_and_free_vg(cmd, vg, vg->name);
-			return 0;
+			return_0;
 		}
 
 		unlock_and_free_vg(cmd, vg, vg->name);
