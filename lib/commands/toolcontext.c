@@ -205,6 +205,7 @@ static int _process_config(struct cmd_context *cmd)
 	struct stat st;
 	const struct config_node *cn;
 	const struct config_value *cv;
+	int64_t pv_min_kb;
 
 	/* umask */
 	cmd->default_settings.umask = find_config_tree_int(cmd,
@@ -317,6 +318,15 @@ static int _process_config(struct cmd_context *cmd)
 
 	cmd->metadata_read_only = find_config_tree_int(cmd, "global/metadata_read_only",
 						       DEFAULT_METADATA_READ_ONLY);
+
+	pv_min_kb = find_config_tree_int64(cmd, "devices/pv_min_size", DEFAULT_PV_MIN_SIZE_KB);
+	if (pv_min_kb < DEFAULT_PV_MIN_SIZE_KB) {
+		log_warn("Ignoring too small pv_min_size %" PRId64 "KB, using default %dKB.",
+			 pv_min_kb, DEFAULT_PV_MIN_SIZE_KB);
+		pv_min_kb = DEFAULT_PV_MIN_SIZE_KB;
+	}
+	/* lvm internally works with device size in 512b sectors */
+	init_pv_min_size((uint64_t)pv_min_kb * (1024 >> SECTOR_SHIFT));
 
 	return 1;
 }
@@ -1113,7 +1123,6 @@ static void _init_globals(struct cmd_context *cmd)
 {
 	init_full_scan_done(0);
 	init_mirror_in_sync(0);
-
 }
 
 /* Entry point */

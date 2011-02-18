@@ -111,9 +111,9 @@ static int _pv_resize_single(struct cmd_context *cmd,
 		size = new_size;
 	}
 
-	if (size < PV_MIN_SIZE) {
-		log_error("%s: Size must exceed minimum of %ld sectors.",
-			  pv_name, PV_MIN_SIZE);
+	if (size < pv_min_size()) {
+		log_error("%s: Size must exceed minimum of %" PRIu64 " sectors.",
+			  pv_name, pv_min_size());
 		goto out;
 	}
 

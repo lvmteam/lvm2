@@ -1626,9 +1626,9 @@ struct physical_volume *pv_create(const struct cmd_context *cmd,
 		pv->size = size;
 	}
 
-	if (pv->size < PV_MIN_SIZE) {
-		log_error("%s: Size must exceed minimum of %ld sectors.",
-			  pv_dev_name(pv), PV_MIN_SIZE);
+	if (pv->size < pv_min_size()) {
+		log_error("%s: Size must exceed minimum of %" PRIu64 " sectors.",
+			  pv_dev_name(pv), pv_min_size());
 		goto bad;
 	}
 

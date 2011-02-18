@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.  
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2011 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -18,6 +18,7 @@
 
 #define VERBOSE_BASE_LEVEL _LOG_WARN
 #define SECURITY_LEVEL 0
+#define DEFAULT_PV_MIN_SIZE_KB		512		/* 512 KB */
 
 void init_verbose(int level);
 void init_test(int level);
@@ -38,6 +39,7 @@ void init_error_message_produced(int produced);
 void init_is_static(unsigned value);
 void init_udev_checking(int checking);
 void init_dev_disable_after_error_count(int value);
+void init_pv_min_size(uint64_t sectors);
 
 void set_cmd_name(const char *cmd_name);
 void set_sysfs_dir_path(const char *path);
@@ -59,6 +61,7 @@ const char *log_command_name(void);
 unsigned is_static(void);
 int udev_checking(void);
 const char *sysfs_dir_path(void);
+uint64_t pv_min_size(void);
 
 #define DMEVENTD_MONITOR_IGNORE -1
 int dmeventd_monitor_mode(void);
