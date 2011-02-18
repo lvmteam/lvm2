@@ -1,5 +1,6 @@
 Version 2.02.85 - 
 ===================================
+  Fix to make resuming exclusive cluster mirror use local target type.
 
 Version 2.02.84 - 9th February 2011
 ===================================
