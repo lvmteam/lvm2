@@ -293,6 +293,14 @@ struct format_handler {
 					unsigned metadata_index);
 
 	/*
+	 * Recalculate the PV size taking into account any existing metadata areas.
+	 */
+	int (*pv_resize) (const struct format_type *fmt,
+			  struct physical_volume *pv,
+			  struct volume_group *vg,
+			  uint64_t size);
+
+	/*
 	 * Write a PV structure to disk. Fails if the PV is in a VG ie
 	 * pv->vg_name must be a valid orphan VG name
 	 */

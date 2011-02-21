@@ -357,10 +357,10 @@ int check_pv_segments(struct volume_group *vg)
 	return ret;
 }
 
-static int _reduce_pv(struct physical_volume *pv, struct volume_group *vg, uint32_t new_pe_count)
+static int _reduce_pv(struct physical_volume *pv, struct volume_group *vg,
+		      uint32_t old_pe_count, uint32_t new_pe_count)
 {
 	struct pv_segment *peg, *pegt;
-	uint32_t old_pe_count = pv->pe_count;
 
 	if (new_pe_count < pv->pe_alloc_count) {
 		log_error("%s: cannot resize to %" PRIu32 " extents "
@@ -400,10 +400,9 @@ static int _reduce_pv(struct physical_volume *pv, struct volume_group *vg, uint3
 }
 
 static int _extend_pv(struct physical_volume *pv, struct volume_group *vg,
-		      uint32_t new_pe_count)
+		      uint32_t old_pe_count, uint32_t new_pe_count)
 {
 	struct pv_segment *peg;
-	uint32_t old_pe_count = pv->pe_count;
 
 	if ((uint64_t) new_pe_count * pv->pe_size > pv->size ) {
 		log_error("%s: cannot resize to %" PRIu32 " extents as there "
@@ -432,20 +431,59 @@ static int _extend_pv(struct physical_volume *pv, struct volume_group *vg,
  */
 int pv_resize(struct physical_volume *pv,
 	      struct volume_group *vg,
-	      uint32_t new_pe_count)
+	      uint64_t size)
 {
-	if ((new_pe_count == pv->pe_count)) {
-		log_verbose("No change to size of physical volume %s.",
-			    pv_dev_name(pv));
-		return 1;
+	uint32_t old_pe_count, new_pe_count = 0;
+
+	if (size < pv_min_size()) {
+		log_error("Size must exceed minimum of %ld sectors on PV %s.",
+			   pv_min_size(), pv_dev_name(pv));
+		return 0;
 	}
 
-	log_verbose("Resizing physical volume %s from %" PRIu32
-		    " to %" PRIu32 " extents.",
-		    pv_dev_name(pv), pv->pe_count, new_pe_count);
+	if (size < pv_pe_start(pv)) {
+		log_error("Size must exceed physical extent start "
+			  "of %" PRIu64 " sectors on PV %s.",
+			  pv_pe_start(pv), pv_dev_name(pv));
+	}
 
-	if (new_pe_count > pv->pe_count)
-		return _extend_pv(pv, vg, new_pe_count);
-	else
-		return _reduce_pv(pv, vg, new_pe_count);
+	old_pe_count = pv->pe_count;
+
+	if (!pv->fmt->ops->pv_resize(pv->fmt, pv, vg, size)) {
+		log_error("Format specific resize of PV %s failed.",
+			   pv_dev_name(pv));
+		return 0;
+	}
+
+	/* pv->pe_count is 0 now! We need to recalculate! */
+
+	/* If there's a VG, calculate new PE count value. */
+	if (vg) {
+		/* FIXME: Maybe PE calculation should go into pv->fmt->resize?
+		          (like it is for pv->fmt->setup) */
+		if (!(new_pe_count = pv_size(pv) / vg->extent_size)) {
+			log_error("Size must leave space for at least one physical "
+				  "extent of %" PRIu32 " sectors on PV %s.",
+				   pv_pe_size(pv), pv_dev_name(pv));
+			return 0;
+		}
+
+		if ((new_pe_count == old_pe_count)) {
+			pv->pe_count = old_pe_count;
+			log_verbose("No change to size of physical volume %s.",
+				    pv_dev_name(pv));
+			return 1;
+		}
+
+		log_verbose("Resizing physical volume %s from %" PRIu32
+			    " to %" PRIu32 " extents.",
+			    pv_dev_name(pv), pv->pe_count, new_pe_count);
+
+		if (new_pe_count > old_pe_count)
+			return _extend_pv(pv, vg, old_pe_count, new_pe_count);
+		else
+			return _reduce_pv(pv, vg, old_pe_count, new_pe_count);
+	}
+
+	return 1;
 }
