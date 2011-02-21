@@ -906,6 +906,7 @@ int vg_has_unknown_segments(const struct volume_group *vg)
 struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name)
 {
 	struct volume_group *vg;
+	struct format_instance_ctx fic;
 	int consistent = 0;
 	struct dm_pool *mem;
 	uint32_t rc;
@@ -979,8 +980,10 @@ struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name)
 	/* initialize removed_pvs list */
 	dm_list_init(&vg->removed_pvs);
 
-	if (!(vg->fid = cmd->fmt->ops->create_instance(cmd->fmt, vg_name,
-						       NULL, NULL))) {
+	fic.type = FMT_INSTANCE_VG | FMT_INSTANCE_MDAS | FMT_INSTANCE_AUX_MDAS;
+	fic.context.vg_ref.vg_name = vg_name;
+	fic.context.vg_ref.vg_id = NULL;
+	if (!(vg->fid = cmd->fmt->ops->create_instance(cmd->fmt, &fic))) {
 		log_error("Failed to create format instance");
 		goto bad;
 	}
@@ -2604,6 +2607,7 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd,
 					     int warnings,
 					     const char *orphan_vgname)
 {
+	struct format_instance_ctx fic;
 	struct lvmcache_vginfo *vginfo;
 	struct lvmcache_info *info;
 	struct pv_list *pvl;
@@ -2635,9 +2639,10 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd,
 	}
 
 	/* create format instance with appropriate metadata area */
-	if (!(vg->fid = vginfo->fmt->ops->create_instance(vginfo->fmt,
-							  orphan_vgname, NULL,
-							  NULL))) {
+	fic.type = FMT_INSTANCE_VG | FMT_INSTANCE_AUX_MDAS;
+	fic.context.vg_ref.vg_name = orphan_vgname;
+	fic.context.vg_ref.vg_id = NULL;
+	if (!(vg->fid = vginfo->fmt->ops->create_instance(vginfo->fmt, &fic))) {
 		log_error("Failed to create format instance");
 		goto bad;
 	}
@@ -2742,6 +2747,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 				     int *consistent, unsigned precommitted)
 {
 	struct format_instance *fid;
+	struct format_instance_ctx fic;
 	const struct format_type *fmt;
 	struct volume_group *vg, *correct_vg = NULL;
 	struct metadata_area *mda;
@@ -2814,7 +2820,10 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		use_precommitted = 0;
 
 	/* create format instance with appropriate metadata area */
-	if (!(fid = fmt->ops->create_instance(fmt, vgname, vgid, NULL))) {
+	fic.type = FMT_INSTANCE_VG | FMT_INSTANCE_MDAS | FMT_INSTANCE_AUX_MDAS;
+	fic.context.vg_ref.vg_name = vgname;
+	fic.context.vg_ref.vg_id = vgid;
+	if (!(fid = fmt->ops->create_instance(fmt, &fic))) {
 		log_error("Failed to create format instance");
 		return NULL;
 	}
@@ -2969,7 +2978,10 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 			use_precommitted = 0;
 
 		/* create format instance with appropriate metadata area */
-		if (!(fid = fmt->ops->create_instance(fmt, vgname, vgid, NULL))) {
+		fic.type = FMT_INSTANCE_VG | FMT_INSTANCE_MDAS | FMT_INSTANCE_AUX_MDAS;
+		fic.context.vg_ref.vg_name = vgname;
+		fic.context.vg_ref.vg_id = vgid;
+		if (!(fid = fmt->ops->create_instance(fmt, &fic))) {
 			log_error("Failed to create format instance");
 			return NULL;
 		}
