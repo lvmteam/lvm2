@@ -649,7 +649,7 @@ static int _process_all_devs(struct cmd_context *cmd, void *handle,
 	}
 
 	while ((dev = dev_iter_get(iter))) {
-		if (!(pv = pv_read(cmd, dev_name(dev), NULL, NULL, 0, 0))) {
+		if (!(pv = pv_read(cmd, dev_name(dev), NULL, 0, 0))) {
 			memset(&pv_dummy, 0, sizeof(pv_dummy));
 			dm_list_init(&pv_dummy.tags);
 			dm_list_init(&pv_dummy.segments);
@@ -691,7 +691,6 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 	struct str_list *sll;
 	char *at_sign, *tagname;
 	int scanned = 0;
-	struct dm_list mdas;
 
 	dm_list_init(&tags);
 
@@ -733,10 +732,8 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 				}
 				pv = pvl->pv;
 			} else {
-
-				dm_list_init(&mdas);
-				if (!(pv = pv_read(cmd, argv[opt], &mdas,
-						   NULL, 1, scan_label_only))) {
+				if (!(pv = pv_read(cmd, argv[opt], NULL,
+						   1, scan_label_only))) {
 					log_error("Failed to read physical "
 						  "volume \"%s\"", argv[opt]);
 					ret_max = ECMD_FAILED;
@@ -751,7 +748,8 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 				 * PV on the system.
 				 */
 				if (!scanned && is_orphan(pv) &&
-				    !dm_list_size(&mdas)) {
+				    !dm_list_size(&pv->fid->metadata_areas_in_use) &&
+				    !dm_list_size(&pv->fid->metadata_areas_ignored)) {
 					if (!scan_label_only &&
 					    !scan_vgs_for_pvs(cmd, 1)) {
 						stack;
@@ -760,7 +758,7 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 					}
 					scanned = 1;
 					if (!(pv = pv_read(cmd, argv[opt],
-							   NULL, NULL, 1,
+							   NULL, 1,
 							   scan_label_only))) {
 						log_error("Failed to read "
 							  "physical volume "

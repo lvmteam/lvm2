@@ -1668,10 +1668,8 @@ static uint64_t _metadata_locn_offset_raw(void *metadata_locn)
 }
 
 static int _text_pv_read(const struct format_type *fmt, const char *pv_name,
-		    struct physical_volume *pv, struct dm_list *mdas,
-		    int scan_label_only)
+		    struct physical_volume *pv, int scan_label_only)
 {
-	struct metadata_area *mda, *mda_new;
 	struct label *label;
 	struct device *dev;
 	struct lvmcache_info *info;
@@ -1685,17 +1683,6 @@ static int _text_pv_read(const struct format_type *fmt, const char *pv_name,
 
 	if (!_populate_pv_fields(info, pv, scan_label_only))
 		return 0;
-
-	if (!mdas)
-		return 1;
-
-	/* Add copy of mdas to supplied list */
-	dm_list_iterate_items(mda, &info->mdas) {
-		mda_new = mda_copy(fmt->cmd->mem, mda);
-		if (!mda_new)
-			return 0;
-		dm_list_add(mdas, &mda_new->list);
-	}
 
 	return 1;
 }

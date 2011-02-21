@@ -368,8 +368,8 @@ int vg_revert(struct volume_group *vg);
 struct volume_group *vg_read_internal(struct cmd_context *cmd, const char *vg_name,
 			     const char *vgid, int warnings, int *consistent);
 struct physical_volume *pv_read(struct cmd_context *cmd, const char *pv_name,
-				struct dm_list *mdas, uint64_t *label_sector,
-				int warnings, int scan_label_only);
+				uint64_t *label_sector, int warnings,
+				int scan_label_only);
 struct dm_list *get_pvs(struct cmd_context *cmd);
 
 /*

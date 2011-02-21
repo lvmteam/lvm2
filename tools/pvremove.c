@@ -25,15 +25,12 @@ const char _really_wipe[] =
 static int pvremove_check(struct cmd_context *cmd, const char *name)
 {
 	struct physical_volume *pv;
-	struct dm_list mdas;
-
-	dm_list_init(&mdas);
 
 	/* FIXME Check partition type is LVM unless --force is given */
 
 	/* Is there a pv here already? */
 	/* If not, this is an error unless you used -f. */
-	if (!(pv = pv_read(cmd, name, &mdas, NULL, 1, 0))) {
+	if (!(pv = pv_read(cmd, name, NULL, 1, 0))) {
 		if (arg_count(cmd, force_ARG))
 			return 1;
 		log_error("Physical Volume %s not found", name);
@@ -47,13 +44,14 @@ static int pvremove_check(struct cmd_context *cmd, const char *name)
 	 * means checking every VG by scanning every
 	 * PV on the system.
 	 */
-	if (is_orphan(pv) && !dm_list_size(&mdas)) {
+	if (is_orphan(pv) && !dm_list_size(&pv->fid->metadata_areas_in_use) &&
+	    !dm_list_size(&pv->fid->metadata_areas_ignored)) {
 		if (!scan_vgs_for_pvs(cmd, 0)) {
 			log_error("Rescan for PVs without metadata areas "
 				  "failed.");
 			return 0;
 		}
-		if (!(pv = pv_read(cmd, name, NULL, NULL, 1, 0))) {
+		if (!(pv = pv_read(cmd, name, NULL, 1, 0))) {
 			log_error("Failed to read physical volume %s", name);
 			return 0;
 		}
