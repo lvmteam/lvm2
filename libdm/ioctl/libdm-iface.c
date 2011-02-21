@@ -992,6 +992,23 @@ int dm_cookie_supported(void)
 	        _dm_version_minor >= 15);
 }
 
+static int dm_inactive_supported(void)
+{
+	int inactive_supported = 0;
+
+	if (dm_check_version() && _dm_version >= 4) {
+		if (_dm_version_minor >= 16)
+			inactive_supported = 1; /* upstream */
+		else if (_dm_version_minor == 11 &&
+			 (_dm_version_patchlevel >= 6 &&
+			  _dm_version_patchlevel <= 40)) {
+			inactive_supported = 1; /* RHEL 5.7 */
+		}
+	}
+
+	return inactive_supported;
+}
+
 void *dm_get_next_target(struct dm_task *dmt, void *next,
 			 uint64_t *start, uint64_t *length,
 			 char **target_type, char **params)
@@ -1548,7 +1565,7 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 		dmi->flags |= DM_SECURE_DATA_FLAG;
 	}
 	if (dmt->query_inactive_table) {
-		if (_dm_version_minor < 16)
+		if (!dm_inactive_supported())
 			log_warn("WARNING: Inactive table query unsupported "
 				 "by kernel.  It will use live table.");
 		dmi->flags |= DM_QUERY_INACTIVE_TABLE_FLAG;

@@ -1,5 +1,6 @@
 Version 1.02.64 - 
 ===================================
+  Add inactive table query support for kernel driver >= 4.11.6 (RHEL 5.7).
   Log debug open_count in _node_has_closed_parents().
   Change dm_report_field_string() API to accept const char *const *data.
 
