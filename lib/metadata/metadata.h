@@ -220,6 +220,18 @@ struct seg_list {
 	struct lv_segment *seg;
 };
 
+struct format_instance_ctx {
+	uint32_t type;
+	union {
+		const char *pv_id;
+		struct {
+			const char *vg_name;
+			const char *vg_id;
+		} vg_ref;
+		void *private;
+	} context;
+};
+
 /*
  * Ownership of objects passes to caller.
  */
