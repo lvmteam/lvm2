@@ -32,14 +32,11 @@ static int _pv_resize_single(struct cmd_context *cmd,
 	uint64_t size = 0;
 	uint32_t new_pe_count = 0;
 	int r = 0;
-	struct dm_list mdas;
 	const char *pv_name = pv_dev_name(pv);
 	const char *vg_name = pv_vg_name(pv);
 	struct lvmcache_info *info;
 	int mda_count = 0;
 	struct volume_group *old_vg = vg;
-
-	dm_list_init(&mdas);
 
 	if (is_orphan_vg(vg_name)) {
 		if (!lock_vol(cmd, vg_name, LCK_VG_WRITE)) {
@@ -47,13 +44,14 @@ static int _pv_resize_single(struct cmd_context *cmd,
 			return 0;
 		}
 
-		if (!(pv = pv_read(cmd, pv_name, &mdas, NULL, 1, 0))) {
+		if (!(pv = pv_read(cmd, pv_name, NULL, 1, 0))) {
 			unlock_vg(cmd, vg_name);
 			log_error("Unable to read PV \"%s\"", pv_name);
 			return 0;
 		}
 
-		mda_count = dm_list_size(&mdas);
+		mda_count = dm_list_size(&pv->fid->metadata_areas_in_use) +
+			    dm_list_size(&pv->fid->metadata_areas_ignored);
 	} else {
 		vg = vg_read_for_update(cmd, vg_name, NULL, 0);
 

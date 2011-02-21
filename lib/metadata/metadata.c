@@ -38,7 +38,6 @@ static struct physical_volume *_pv_read(struct cmd_context *cmd,
 					struct dm_pool *pvmem,
 					const char *pv_name,
 					struct format_instance *fid,
-					struct dm_list *mdas,
 					uint64_t *label_sector,
 					int warnings, int scan_label_only);
 
@@ -1338,14 +1337,11 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name,
 {
 	struct physical_volume *pv;
 	struct device *dev;
-	struct dm_list mdas;
-
-	dm_list_init(&mdas);
 
 	/* FIXME Check partition type is LVM unless --force is given */
 
 	/* Is there a pv here already? */
-	pv = pv_read(cmd, name, &mdas, NULL, 0, 0);
+	pv = pv_read(cmd, name, NULL, 0, 0);
 
 	/*
 	 * If a PV has no MDAs it may appear to be an orphan until the
@@ -1353,10 +1349,10 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name,
 	 * this means checking every VG by scanning every PV on the
 	 * system.
 	 */
-	if (pv && is_orphan(pv) && mdas_empty_or_ignored(&mdas)) {
+	if (pv && is_orphan(pv) && !dm_list_size(&pv->fid->metadata_areas_in_use)) {
 		if (!scan_vgs_for_pvs(cmd, 0))
 			return_0;
-		pv = pv_read(cmd, name, NULL, NULL, 0, 0);
+		pv = pv_read(cmd, name, NULL, 0, 0);
 	}
 
 	/* Allow partial & exported VGs to be destroyed. */
@@ -1821,20 +1817,18 @@ struct physical_volume *find_pv_by_name(struct cmd_context *cmd,
 static struct physical_volume *_find_pv_by_name(struct cmd_context *cmd,
 			 			const char *pv_name)
 {
-	struct dm_list mdas;
 	struct physical_volume *pv;
 
-	dm_list_init(&mdas);
-	if (!(pv = _pv_read(cmd, cmd->mem, pv_name, NULL, &mdas, NULL, 1, 0))) {
+	if (!(pv = _pv_read(cmd, cmd->mem, pv_name, NULL, NULL, 1, 0))) {
 		log_error("Physical volume %s not found", pv_name);
 		return NULL;
 	}
 
-	if (is_orphan_vg(pv->vg_name) && mdas_empty_or_ignored(&mdas)) {
+	if (is_orphan_vg(pv->vg_name) && !dm_list_size(&pv->fid->metadata_areas_in_use)) {
 		/* If a PV has no MDAs - need to search all VGs for it */
 		if (!scan_vgs_for_pvs(cmd, 1))
 			return_NULL;
-		if (!(pv = _pv_read(cmd, cmd->mem, pv_name, NULL, NULL, NULL, 1, 0))) {
+		if (!(pv = _pv_read(cmd, cmd->mem, pv_name, NULL, NULL, 1, 0))) {
 			log_error("Physical volume %s not found", pv_name);
 			return NULL;
 		}
@@ -2659,8 +2653,8 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd,
 	}
 
 	dm_list_iterate_items(info, &vginfo->infos) {
-		if (!(pv = _pv_read(cmd, mem, dev_name(info->dev), vg->fid,
-				    NULL, NULL, warnings, 0))) {
+		if (!(pv = _pv_read(cmd, mem, dev_name(info->dev),
+				    vg->fid, NULL, warnings, 0))) {
 			continue;
 		}
 		if (!(pvl = dm_pool_zalloc(mem, sizeof(*pvl)))) {
@@ -3377,10 +3371,10 @@ const char *find_vgname_from_pvname(struct cmd_context *cmd,
  *   FIXME - liblvm todo - make into function that returns handle
  */
 struct physical_volume *pv_read(struct cmd_context *cmd, const char *pv_name,
-				struct dm_list *mdas, uint64_t *label_sector,
-				int warnings, int scan_label_only)
+				uint64_t *label_sector, int warnings,
+				int scan_label_only)
 {
-	return _pv_read(cmd, cmd->mem, pv_name, NULL, mdas, label_sector, warnings, scan_label_only);
+	return _pv_read(cmd, cmd->mem, pv_name, NULL, label_sector, warnings, scan_label_only);
 }
 
 /* FIXME Use label functions instead of PV functions */
@@ -3388,7 +3382,6 @@ static struct physical_volume *_pv_read(struct cmd_context *cmd,
 					struct dm_pool *pvmem,
 					const char *pv_name,
 					struct format_instance *fid,
-					struct dm_list *mdas,
 					uint64_t *label_sector,
 					int warnings, int scan_label_only)
 {
@@ -3419,8 +3412,7 @@ static struct physical_volume *_pv_read(struct cmd_context *cmd,
 	}
 
 	/* FIXME Move more common code up here */
-	if (!(info->fmt->ops->pv_read(info->fmt, pv_name, pv, mdas,
-	      scan_label_only))) {
+	if (!(info->fmt->ops->pv_read(info->fmt, pv_name, pv, scan_label_only))) {
 		log_error("Failed to read existing physical volume '%s'",
 			  pv_name);
 		goto bad;
@@ -4258,8 +4250,5 @@ char *tags_format_and_copy(struct dm_pool *mem, const struct dm_list *tags)
  */
 struct physical_volume *pv_by_path(struct cmd_context *cmd, const char *pv_name)
 {
-	struct dm_list mdas;
-
-	dm_list_init(&mdas);
-	return _pv_read(cmd, cmd->mem, pv_name, NULL, &mdas, NULL, 1, 0);
+	return _pv_read(cmd, cmd->mem, pv_name, NULL, NULL, 1, 0);
 }
