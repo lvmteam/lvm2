@@ -586,7 +586,7 @@ int vg_remove(struct volume_group *vg)
 		}
 
 		/* FIXME Write to same sector label was read from */
-		if (!pv_write(vg->cmd, pv, NULL, INT64_C(-1))) {
+		if (!pv_write(vg->cmd, pv)) {
 			log_error("Failed to remove physical volume \"%s\""
 				  " from volume group \"%s\"",
 				  pv_dev_name(pv), vg->name);
@@ -1511,7 +1511,7 @@ struct physical_volume * pvcreate_single(struct cmd_context *cmd,
 	log_very_verbose("Writing physical volume data to disk \"%s\"",
 			 pv_name);
 
-	if (!(pv_write(cmd, pv, &mdas, pp->labelsector))) {
+	if (!(pv_write(cmd, pv))) {
 		log_error("Failed to write physical volume \"%s\"", pv_name);
 		goto error;
 	}
@@ -3536,8 +3536,7 @@ int scan_vgs_for_pvs(struct cmd_context *cmd, int warnings)
 }
 
 int pv_write(struct cmd_context *cmd __attribute__((unused)),
-	     struct physical_volume *pv,
-	     struct dm_list *mdas, int64_t label_sector)
+	     struct physical_volume *pv)
 {
 	if (!pv->fmt->ops->pv_write) {
 		log_error("Format does not support writing physical volumes");
@@ -3550,7 +3549,7 @@ int pv_write(struct cmd_context *cmd __attribute__((unused)),
 		return 0;
 	}
 
-	if (!pv->fmt->ops->pv_write(pv->fmt, pv, mdas, label_sector))
+	if (!pv->fmt->ops->pv_write(pv->fmt, pv))
 		return_0;
 
 	return 1;
@@ -3569,7 +3568,7 @@ int pv_write_orphan(struct cmd_context *cmd, struct physical_volume *pv)
 		return 0;
 	}
 
-	if (!pv_write(cmd, pv, NULL, INT64_C(-1))) {
+	if (!pv_write(cmd, pv)) {
 		log_error("Failed to clear metadata from physical "
 			  "volume \"%s\" after removal from \"%s\"",
 			  pv_dev_name(pv), old_vg_name);

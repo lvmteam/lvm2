@@ -426,8 +426,7 @@ static int _format1_lv_setup(struct format_instance *fid, struct logical_volume 
 	return 1;
 }
 
-static int _format1_pv_write(const struct format_type *fmt, struct physical_volume *pv,
-		     struct dm_list *mdas __attribute__((unused)), int64_t sector __attribute__((unused)))
+static int _format1_pv_write(const struct format_type *fmt, struct physical_volume *pv)
 {
 	struct dm_pool *mem;
 	struct disk_list *dl;

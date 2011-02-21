@@ -297,8 +297,7 @@ struct format_handler {
 	 * pv->vg_name must be a valid orphan VG name
 	 */
 	int (*pv_write) (const struct format_type * fmt,
-			 struct physical_volume * pv, struct dm_list * mdas,
-			 int64_t label_sector);
+			 struct physical_volume * pv);
 
 	/*
 	 * Tweak an already filled out a lv eg, check there

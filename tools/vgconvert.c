@@ -154,9 +154,7 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 
 		log_very_verbose("Writing physical volume data to disk \"%s\"",
 				 pv_dev_name(pv));
-		if (!(pv_write(cmd, pv, &mdas,
-			       arg_int64_value(cmd, labelsector_ARG,
-					       DEFAULT_LABELSECTOR)))) {
+		if (!(pv_write(cmd, pv))) {
 			log_error("Failed to write physical volume \"%s\"",
 				  pv_dev_name(pv));
 			log_error("Use pvcreate and vgcfgrestore to repair "
