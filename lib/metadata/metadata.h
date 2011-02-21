@@ -278,6 +278,13 @@ struct format_handler {
 				     unsigned metadata_ignored);
 
 	/*
+	 * Remove metadata area from a PV. Changes will take effect on pv_write.
+	 */
+	int (*pv_remove_metadata_area) (const struct format_type *fmt,
+					struct physical_volume *pv,
+					unsigned metadata_index);
+
+	/*
 	 * Write a PV structure to disk. Fails if the PV is in a VG ie
 	 * pv->vg_name must be a valid orphan VG name
 	 */
