@@ -150,7 +150,7 @@ static int _pv_resize_single(struct cmd_context *cmd,
 			goto out;
 		}
 		backup(vg);
-	} else if (!(pv_write(cmd, pv, NULL, INT64_C(-1)))) {
+	} else if (!(pv_write(cmd, pv))) {
 		log_error("Failed to store physical volume \"%s\"",
 			  pv_name);
 		goto out;

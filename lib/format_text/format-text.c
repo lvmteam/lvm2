@@ -1256,60 +1256,81 @@ static int _text_scan(const struct format_type *fmt, const char *vgname)
 }
 
 /* Only for orphans */
-/* Set label_sector to -1 if rewriting existing label into same sector */
-/* If mdas is supplied it overwrites existing mdas e.g. used with pvcreate */
-static int _text_pv_write(const struct format_type *fmt, struct physical_volume *pv,
-		     struct dm_list *mdas, int64_t label_sector)
+static int _text_pv_write(const struct format_type *fmt, struct physical_volume *pv)
 {
+	struct text_fid_pv_context *fid_pv_tc;
+	struct format_instance *fid = pv->fid;
 	struct label *label;
+	int64_t label_sector;
 	struct lvmcache_info *info;
 	struct mda_context *mdac;
 	struct metadata_area *mda;
+	unsigned mda_index;
 	char buf[MDA_HEADER_SIZE] __attribute__((aligned(8)));
 	struct mda_header *mdah = (struct mda_header *) buf;
-	uint64_t adjustment;
 	struct data_area_list *da;
 
-	/* FIXME Test mode don't update cache? */
-
-	if (!(info = lvmcache_add(fmt->labeller, (char *) &pv->id, pv->dev,
-				  FMT_TEXT_ORPHAN_VG_NAME, NULL, 0)))
+	/* Add a new cache entry with PV info or update existing one. */
+	if (!(info = lvmcache_add(fmt->labeller, (const char *) &pv->id,
+			pv->dev, FMT_TEXT_ORPHAN_VG_NAME, NULL, 0)))
 		return_0;
+
 	label = info->label;
 
-	if (label_sector != -1)
+	/*
+	 * We can change the label sector for a
+	 * plain PV that is not part of a VG only!
+	 */
+	if (fid && (!fid->type & FMT_INSTANCE_VG) &&
+	    (fid_pv_tc = (struct text_fid_pv_context *) pv->fid->private) &&
+	    ((label_sector = fid_pv_tc->label_sector) != -1))
 		label->sector = label_sector;
 
 	info->device_size = pv->size << SECTOR_SHIFT;
 	info->fmt = fmt;
 
-	/* If mdas supplied, use them regardless of existing ones, */
-	/* otherwise retain existing ones */
-	if (mdas) {
-		if (info->mdas.n)
-			del_mdas(&info->mdas);
-		else
-			dm_list_init(&info->mdas);
-		dm_list_iterate_items(mda, mdas) {
-			mdac = mda->metadata_locn;
-			log_debug("Creating metadata area on %s at sector %"
-				  PRIu64 " size %" PRIu64 " sectors",
-				  dev_name(mdac->area.dev),
-				  mdac->area.start >> SECTOR_SHIFT,
-				  mdac->area.size >> SECTOR_SHIFT);
-			add_mda(fmt, NULL, &info->mdas, mdac->area.dev,
-				mdac->area.start, mdac->area.size, mda_is_ignored(mda));
-		}
-		/* FIXME Temporary until mda creation supported by tools */
-	} else if (!info->mdas.n) {
+	/* Flush all cached metadata areas, we will reenter new/modified ones. */
+	if (info->mdas.n)
+		del_mdas(&info->mdas);
+	else
 		dm_list_init(&info->mdas);
+
+	/*
+	 * Add all new or modified metadata areas for this PV stored in
+	 * its format instance. If this PV is not part of a VG yet,
+	 * pv->fid will be used. Otherwise pv->vg->fid will be used.
+	 * The fid_get_mda_indexed fn can handle that transparently,
+	 * just pass the right format_instance in.
+	 */
+	for (mda_index = 0; mda_index < FMT_TEXT_MAX_MDAS_PER_PV; mda_index++) {
+		if (!(mda = fid_get_mda_indexed(fid, (const char *) &pv->id,
+							ID_LEN, mda_index)))
+			continue;
+
+		mdac = (struct mda_context *) mda->metadata_locn;
+		log_debug("Creating metadata area on %s at sector %"
+			  PRIu64 " size %" PRIu64 " sectors",
+			  dev_name(mdac->area.dev),
+			  mdac->area.start >> SECTOR_SHIFT,
+			  mdac->area.size >> SECTOR_SHIFT);
+		add_mda(fmt, NULL, &info->mdas, mdac->area.dev,
+			mdac->area.start, mdac->area.size, mda_is_ignored(mda));
 	}
 
 	/*
-	 * If no pe_start supplied but PV already exists,
-	 * get existing value; use-cases include:
-	 * - pvcreate on PV without prior pvremove
-	 * - vgremove on VG with PV(s) that have pe_start=0 (hacked cfg)
+	 * FIXME: Allow writing zero offset/size data area to disk.
+	 *        This requires defining a special value since we can't
+	 *        write offset/size that is 0/0 - this is already reserved
+	 *        as a delimiter in data/metadata area area list in PV header
+	 *        (needs exploring compatibility with older lvm2).
+	 */
+
+	/*
+	 * We can't actually write pe_start = 0 (a data area offset)
+	 * in PV header now. We need to replace this value here. This can
+	 * happen with vgcfgrestore with redefined pe_start or
+	 * pvcreate --restorefile. However, we can can have this value in
+	 * metadata which will override the value in the PV header.
 	 */
 	if (info->das.n) {
 		if (!pv->pe_start)
@@ -1319,66 +1340,7 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 	} else
 		dm_list_init(&info->das);
 
-#if 0
-	/*
-	 * FIXME: ideally a pre-existing pe_start seen in .pv_write
-	 * would always be preserved BUT 'pvcreate on PV without prior pvremove'
-	 * could easily cause the pe_start to overlap with the first mda!
-	 */
-	if (pv->pe_start) {
-		log_very_verbose("%s: preserving pe_start=%lu",
-				 pv_dev_name(pv), pv->pe_start);
-		goto preserve_pe_start;
-	}
-#endif
-
-	/*
-	 * If pe_start is still unset, set it to first aligned
-	 * sector after any metadata areas that begin before pe_start.
-	 */
-	if (!pv->pe_start) {
-		pv->pe_start = pv->pe_align;
-		if (pv->pe_align_offset)
-			pv->pe_start += pv->pe_align_offset;
-	}
-	dm_list_iterate_items(mda, &info->mdas) {
-		mdac = (struct mda_context *) mda->metadata_locn;
-		if (pv->dev == mdac->area.dev &&
-		    ((mdac->area.start <= (pv->pe_start << SECTOR_SHIFT)) ||
-		    (mdac->area.start <= lvm_getpagesize() &&
-		     pv->pe_start < (lvm_getpagesize() >> SECTOR_SHIFT))) &&
-		    (mdac->area.start + mdac->area.size >
-		     (pv->pe_start << SECTOR_SHIFT))) {
-			pv->pe_start = (mdac->area.start + mdac->area.size)
-			    >> SECTOR_SHIFT;
-			/* Adjust pe_start to: (N * pe_align) + pe_align_offset */
-			if (pv->pe_align) {
-				adjustment =
-				(pv->pe_start - pv->pe_align_offset) % pv->pe_align;
-				if (adjustment)
-					pv->pe_start += (pv->pe_align - adjustment);
-
-				log_very_verbose("%s: setting pe_start=%" PRIu64
-					 " (orig_pe_start=%" PRIu64 ", "
-					 "pe_align=%lu, pe_align_offset=%lu, "
-					 "adjustment=%" PRIu64 ")",
-					 pv_dev_name(pv), pv->pe_start,
-					 (adjustment ?
-					  pv->pe_start - (pv->pe_align - adjustment) :
-					  pv->pe_start),
-					 pv->pe_align, pv->pe_align_offset, adjustment);
-			}
-		}
-	}
-	if (pv->pe_start >= pv->size) {
-		log_error("Data area is beyond end of device %s!",
-			  pv_dev_name(pv));
-		return 0;
-	}
-
-	/* FIXME: preserve_pe_start: */
-	if (!add_da
-	    (NULL, &info->das, pv->pe_start << SECTOR_SHIFT, UINT64_C(0)))
+	if (!add_da(NULL, &info->das, pv->pe_start << SECTOR_SHIFT, UINT64_C(0)))
 		return_0;
 
 	if (!dev_open(pv->dev))
@@ -1397,10 +1359,16 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 		}
 	}
 
-	if (!label_write(pv->dev, label)) {
+	if (!label_write(pv->dev, info->label)) {
 		dev_close(pv->dev);
 		return_0;
 	}
+
+	/*
+	 *  FIXME: We should probably use the format instance's metadata
+	 *        areas for label_write and only if it's successful,
+	 *        update the cache afterwards?
+	 */
 
 	if (!dev_close(pv->dev))
 		return_0;
