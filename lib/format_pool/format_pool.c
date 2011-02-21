@@ -201,15 +201,6 @@ static int _pool_pv_initialise(const struct format_type *fmt __attribute__((unus
 }
 
 static int _pool_pv_setup(const struct format_type *fmt __attribute__((unused)),
-			  uint64_t pe_start __attribute__((unused)),
-			  uint32_t extent_count __attribute__((unused)),
-			  uint32_t extent_size __attribute__((unused)),
-			  unsigned long data_alignment __attribute__((unused)),
-			  unsigned long data_alignment_offset __attribute__((unused)),
-			  int pvmetadatacopies __attribute__((unused)),
-			  uint64_t pvmetadatasize __attribute__((unused)),
-			  unsigned metadataignore __attribute__((unused)),
-			  struct dm_list *mdas __attribute__((unused)),
 			  struct physical_volume *pv __attribute__((unused)),
 			  struct volume_group *vg __attribute__((unused)))
 {

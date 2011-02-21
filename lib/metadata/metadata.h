@@ -272,12 +272,8 @@ struct format_handler {
 	 * vg.  eg. pe_count is format specific.
 	 */
 	int (*pv_setup) (const struct format_type * fmt,
-			 uint64_t pe_start, uint32_t extent_count,
-			 uint32_t extent_size, unsigned long data_alignment,
-			 unsigned long data_alignment_offset,
-			 int pvmetadatacopies, uint64_t pvmetadatasize,
-			 unsigned metadataignore, struct dm_list * mdas,
-			 struct physical_volume * pv, struct volume_group * vg);
+			 struct physical_volume * pv,
+			 struct volume_group * vg);
 
 	/*
 	 * Add metadata area to a PV. Changes will take effect on pv_write.
