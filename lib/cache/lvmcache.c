@@ -629,6 +629,7 @@ struct volume_group *lvmcache_get_vg(const char *vgid, unsigned precommitted)
 	struct lvmcache_vginfo *vginfo;
 	struct volume_group *vg;
 	struct format_instance *fid;
+	struct format_instance_ctx fic;
 
 	if (!vgid || !(vginfo = vginfo_from_vgid(vgid)) || !vginfo->vgmetadata)
 		return NULL;
@@ -652,9 +653,10 @@ struct volume_group *lvmcache_get_vg(const char *vgid, unsigned precommitted)
 	    (!precommitted && vginfo->precommitted && !critical_section()))
 		return NULL;
 
-	if (!(fid = vginfo->fmt->ops->create_instance(vginfo->fmt,
-						      vginfo->vgname,
-						      vgid, NULL)))
+	fic.type = FMT_INSTANCE_VG | FMT_INSTANCE_MDAS | FMT_INSTANCE_AUX_MDAS;
+	fic.context.vg_ref.vg_name = vginfo->vgname;
+	fic.context.vg_ref.vg_id = vgid;
+	if (!(fid = vginfo->fmt->ops->create_instance(vginfo->fmt, &fic)))
 		return_NULL;
 
 	/* Build config tree from vgmetadata, if not yet cached */

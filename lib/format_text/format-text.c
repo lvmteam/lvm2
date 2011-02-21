@@ -1056,6 +1056,7 @@ static int _scan_file(const struct format_type *fmt, const char *vgname)
 	DIR *d;
 	struct volume_group *vg;
 	struct format_instance *fid;
+	struct format_instance_ctx fic;
 	char path[PATH_MAX];
 	char *scanned_vgname;
 
@@ -1086,8 +1087,10 @@ static int _scan_file(const struct format_type *fmt, const char *vgname)
 				}
 
 				/* FIXME stat file to see if it's changed */
-				fid = _text_create_text_instance(fmt, NULL, NULL,
-							    NULL);
+				/* FIXME: Check this fid is OK! */
+				fic.type = FMT_INSTANCE_VG | FMT_INSTANCE_PRIVATE_MDAS;
+				fic.context.private = NULL;
+				fid = _text_create_text_instance(fmt, &fic);
 				if ((vg = _vg_read_file_name(fid, scanned_vgname,
 							     path))) {
 					/* FIXME Store creation host in vg */
