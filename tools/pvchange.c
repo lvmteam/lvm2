@@ -120,6 +120,7 @@ static int _pvchange_single(struct cmd_context *cmd, struct volume_group *vg,
 
 	if (arg_count(cmd, uuid_ARG)) {
 		/* --uuid: Change PV ID randomly */
+		memcpy(&pv->old_id, &pv->id, sizeof(pv->id));
 		if (!id_create(&pv->id)) {
 			log_error("Failed to generate new random UUID for %s.",
 				  pv_name);

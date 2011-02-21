@@ -1260,6 +1260,7 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 {
 	struct text_fid_pv_context *fid_pv_tc;
 	struct format_instance *fid = pv->fid;
+	const char *pvid = (const char *) (*pv->old_id.uuid ? &pv->old_id : &pv->id);
 	struct label *label;
 	int64_t label_sector;
 	struct lvmcache_info *info;
@@ -1303,8 +1304,7 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 	 * just pass the right format_instance in.
 	 */
 	for (mda_index = 0; mda_index < FMT_TEXT_MAX_MDAS_PER_PV; mda_index++) {
-		if (!(mda = fid_get_mda_indexed(fid, (const char *) &pv->id,
-							ID_LEN, mda_index)))
+		if (!(mda = fid_get_mda_indexed(fid, pvid, ID_LEN, mda_index)))
 			continue;
 
 		mdac = (struct mda_context *) mda->metadata_locn;
@@ -1644,7 +1644,7 @@ static int _text_pv_setup(const struct format_type *fmt,
 			  struct volume_group *vg)
 {
 	struct format_instance *fid = pv->fid;
-	const char *pvid = (const char *) &pv->id;
+	const char *pvid = (const char *) (*pv->old_id.uuid ? &pv->old_id : &pv->id);
 	unsigned mda_index;
 	struct metadata_area *pv_mda;
 	struct mda_context *pv_mdac;
@@ -1879,7 +1879,7 @@ static int _text_pv_add_metadata_area(const struct format_type *fmt,
 				      unsigned mda_ignored)
 {
 	struct format_instance *fid = pv->fid;
-	const char *pvid = (char *) &pv->id;
+	const char *pvid = (const char *) (*pv->old_id.uuid ? &pv->old_id : &pv->id);
 	uint64_t pe_start, pe_end;
 	uint64_t alignment, alignment_offset;
 	uint64_t disk_size;
@@ -2099,7 +2099,7 @@ static int _text_pv_resize(const struct format_type *fmt,
 			   uint64_t size)
 {
 	struct format_instance *fid = pv->fid;
-	const char *pvid = (const char *) &pv->id;
+	const char *pvid = (const char *) (*pv->old_id.uuid ? &pv->old_id : &pv->id);
 	struct metadata_area *mda;
 	struct mda_context *mdac;
 	uint64_t size_reduction;
