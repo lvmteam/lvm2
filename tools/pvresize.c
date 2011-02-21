@@ -30,12 +30,9 @@ static int _pv_resize_single(struct cmd_context *cmd,
 {
 	struct pv_list *pvl;
 	uint64_t size = 0;
-	uint32_t new_pe_count = 0;
 	int r = 0;
 	const char *pv_name = pv_dev_name(pv);
 	const char *vg_name = pv_vg_name(pv);
-	struct lvmcache_info *info;
-	int mda_count = 0;
 	struct volume_group *old_vg = vg;
 
 	if (is_orphan_vg(vg_name)) {
@@ -49,9 +46,6 @@ static int _pv_resize_single(struct cmd_context *cmd,
 			log_error("Unable to read PV \"%s\"", pv_name);
 			return 0;
 		}
-
-		mda_count = dm_list_size(&pv->fid->metadata_areas_in_use) +
-			    dm_list_size(&pv->fid->metadata_areas_ignored);
 	} else {
 		vg = vg_read_for_update(cmd, vg_name, NULL, 0);
 
@@ -70,22 +64,8 @@ static int _pv_resize_single(struct cmd_context *cmd,
 
 		pv = pvl->pv;
 
-		if (!(info = info_from_pvid(pv->dev->pvid, 0))) {
-			log_error("Can't get info for PV %s in volume group %s",
-				  pv_name, vg->name);
-			goto out;
-		}
-
-		mda_count = dm_list_size(&info->mdas);
-
 		if (!archive(vg))
 			goto out;
-	}
-
-	/* FIXME Create function to test compatibility properly */
-	if (mda_count > 1) {
-		log_error("%s: too many metadata areas for pvresize", pv_name);
-		goto out;
 	}
 
 	if (!(pv->fmt->features & FMT_RESIZE_PV)) {
@@ -109,38 +89,11 @@ static int _pv_resize_single(struct cmd_context *cmd,
 		size = new_size;
 	}
 
-	if (size < pv_min_size()) {
-		log_error("%s: Size must exceed minimum of %" PRIu64 " sectors.",
-			  pv_name, pv_min_size());
-		goto out;
-	}
-
-	if (size < pv_pe_start(pv)) {
-		log_error("%s: Size must exceed physical extent start of "
-			  "%" PRIu64 " sectors.", pv_name, pv_pe_start(pv));
-		goto out;
-	}
-
-	pv->size = size;
-
-	if (vg) {
-		pv->size -= pv_pe_start(pv);
-		new_pe_count = pv_size(pv) / vg->extent_size;
-
- 		if (!new_pe_count) {
-			log_error("%s: Size must leave space for at "
-				  "least one physical extent of "
-				  "%" PRIu32 " sectors.", pv_name,
-				  pv_pe_size(pv));
-			goto out;
-		}
-
-		if (!pv_resize(pv, vg, new_pe_count))
-			goto_out;
-	}
-
 	log_verbose("Resizing volume \"%s\" to %" PRIu64 " sectors.",
 		    pv_name, pv_size(pv));
+
+	if (!pv_resize(pv, vg, size))
+		goto_out;
 
 	log_verbose("Updating physical volume \"%s\"", pv_name);
 	if (!is_orphan_vg(vg_name)) {

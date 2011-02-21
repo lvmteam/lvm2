@@ -2093,6 +2093,55 @@ static int _text_pv_remove_metadata_area(const struct format_type *fmt,
 	return remove_metadata_area_from_pv(pv, mda_index);
 }
 
+static int _text_pv_resize(const struct format_type *fmt,
+			   struct physical_volume *pv,
+			   struct volume_group *vg,
+			   uint64_t size)
+{
+	struct format_instance *fid = pv->fid;
+	const char *pvid = (const char *) &pv->id;
+	struct metadata_area *mda;
+	struct mda_context *mdac;
+	uint64_t size_reduction;
+	uint64_t mda_size;
+	unsigned mda_ignored;
+
+	/*
+	 * First, set the new size and update the cache and reset pe_count.
+	 * (pe_count must be reset otherwise it would be considered as
+	 * a limiting factor while moving the mda!)
+	 */
+	pv->size = size;
+	pv->pe_count = 0;
+
+	/* If there's an mda at the end, move it to a new position. */
+	if ((mda = fid_get_mda_indexed(fid, pvid, ID_LEN, 1)) &&
+	    (mdac = mda->metadata_locn)) {
+		/* FIXME: Maybe MDA0 size would be better? */
+		mda_size = mdac->area.size >> SECTOR_SHIFT;
+		mda_ignored = mda_is_ignored(mda);
+
+		if (!_text_pv_remove_metadata_area(fmt, pv, 1) ||
+		    !_text_pv_add_metadata_area(fmt, pv, 1, 1, mda_size,
+						mda_ignored)) {
+			log_error("Failed to move metadata area with index 1 "
+				  "while resizing PV %s.", pv_dev_name(pv));
+			return 0;
+		}
+	}
+
+	/* If there's a VG, reduce size by counting in pe_start and metadata areas. */
+	if (vg) {
+		size_reduction = pv_pe_start(pv);
+		if ((mda = fid_get_mda_indexed(fid, pvid, ID_LEN, 1)) &&
+		    (mdac = mda->metadata_locn))
+			size_reduction += mdac->area.size >> SECTOR_SHIFT;
+		pv->size -= size_reduction;
+	}
+
+	return 1;
+}
+
 /* NULL vgname means use only the supplied context e.g. an archive file */
 static struct format_instance *_text_create_text_instance(const struct format_type *fmt,
 							   const struct format_instance_ctx *fic)
@@ -2170,6 +2219,7 @@ static struct format_handler _text_handler = {
 	.pv_setup = _text_pv_setup,
 	.pv_add_metadata_area = _text_pv_add_metadata_area,
 	.pv_remove_metadata_area = _text_pv_remove_metadata_area,
+	.pv_resize = _text_pv_resize,
 	.pv_write = _text_pv_write,
 	.vg_setup = _text_vg_setup,
 	.lv_setup = _text_lv_setup,
