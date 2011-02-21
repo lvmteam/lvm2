@@ -19,16 +19,11 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 			    struct volume_group *vg,
 			    void *handle __attribute__((unused)))
 {
-	struct physical_volume *pv, *existing_pv;
+	const struct format_type *target_fmt = cmd->fmt;
 	struct logical_volume *lv;
 	struct lv_list *lvl;
-	uint64_t size = 0;
-	struct dm_list mdas;
 	int pvmetadatacopies = 0;
 	uint64_t pvmetadatasize = 0;
-	uint64_t pe_start = 0;
-	struct pv_list *pvl;
-	int change_made = 0;
 	struct lvinfo info;
 	int active = 0;
 
@@ -37,13 +32,13 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 		return ECMD_FAILED;
 	}
 
-	if (vg->fid->fmt == cmd->fmt) {
+	if (vg->fid->fmt == target_fmt) {
 		log_error("Volume group \"%s\" already uses format %s",
 			  vg_name, cmd->fmt->name);
 		return ECMD_FAILED;
 	}
 
-	if (cmd->fmt->features & FMT_MDAS) {
+	if (target_fmt->features & FMT_MDAS) {
 		if (arg_sign_value(cmd, metadatasize_ARG, 0) == SIGN_MINUS) {
 			log_error("Metadata size may not be negative");
 			return EINVALID_CMD_LINE;
@@ -72,7 +67,7 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 
 	/* Set PV/LV limit if converting from unlimited metadata format */
 	if (vg->fid->fmt->features & FMT_UNLIMITED_VOLS &&
-	    !(cmd->fmt->features & FMT_UNLIMITED_VOLS)) {
+	    !(target_fmt->features & FMT_UNLIMITED_VOLS)) {
 		if (!vg->max_lv)
 			vg->max_lv = 255;
 		if (!vg->max_pv)
@@ -81,7 +76,7 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 
 	/* If converting to restricted lvid, check if lvid is compatible */
 	if (!(vg->fid->fmt->features & FMT_RESTRICTED_LVIDS) &&
-	    cmd->fmt->features & FMT_RESTRICTED_LVIDS)
+	    target_fmt->features & FMT_RESTRICTED_LVIDS)
 		dm_list_iterate_items(lvl, &vg->lvs)
 			if (!lvid_in_restricted_range(&lvl->lv->lvid)) {
 				log_error("Logical volume %s lvid format is"
@@ -91,7 +86,7 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 			}
 
 	/* Attempt to change any LVIDs that are too big */
-	if (cmd->fmt->features & FMT_RESTRICTED_LVIDS) {
+	if (target_fmt->features & FMT_RESTRICTED_LVIDS) {
 		dm_list_iterate_items(lvl, &vg->lvs) {
 			lv = lvl->lv;
 			if (lv->status & SNAPSHOT)
@@ -115,65 +110,17 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 		return ECMD_FAILED;
 	}
 
-	dm_list_iterate_items(pvl, &vg->pvs) {
-		existing_pv = pvl->pv;
-
-		pe_start = pv_pe_start(existing_pv);
-		/* pe_end = pv_pe_count(existing_pv) * pv_pe_size(existing_pv) + pe_start - 1; */
-
-		dm_list_init(&mdas);
-		if (!(pv = pv_create(cmd, pv_dev(existing_pv),
-				     &existing_pv->id, size, 0, 0,
-				     pe_start, pv_pe_count(existing_pv),
-				     pv_pe_size(existing_pv),
-				     arg_int64_value(cmd, labelsector_ARG,
-						     DEFAULT_LABELSECTOR),
-				     pvmetadatacopies, pvmetadatasize, 0))) {
-			log_error("Failed to setup physical volume \"%s\"",
-				  pv_dev_name(existing_pv));
-			if (change_made)
-				log_error("Use pvcreate and vgcfgrestore to "
-					  "repair from archived metadata.");
-			return ECMD_FAILED;
-		}
-
-		/* Need to revert manually if it fails after this point */
-		change_made = 1;
-
-		log_verbose("Set up physical volume for \"%s\" with %" PRIu64
-			    " available sectors", pv_dev_name(pv), pv_size(pv));
-
-		/* Wipe existing label first */
-		if (!label_remove(pv_dev(pv))) {
-			log_error("Failed to wipe existing label on %s",
-				  pv_dev_name(pv));
-			log_error("Use pvcreate and vgcfgrestore to repair "
-				  "from archived metadata.");
-			return ECMD_FAILED;
-		}
-
-		log_very_verbose("Writing physical volume data to disk \"%s\"",
-				 pv_dev_name(pv));
-		if (!(pv_write(cmd, pv))) {
-			log_error("Failed to write physical volume \"%s\"",
-				  pv_dev_name(pv));
-			log_error("Use pvcreate and vgcfgrestore to repair "
-				  "from archived metadata.");
-			return ECMD_FAILED;
-		}
-		log_verbose("Physical volume \"%s\" successfully created",
-			    pv_dev_name(pv));
-
-	}
-
 	log_verbose("Deleting existing metadata for VG %s", vg_name);
 	if (!vg_remove_mdas(vg)) {
 		log_error("Removal of existing metadata for %s failed.",
 			  vg_name);
-		log_error("Use pvcreate and vgcfgrestore to repair "
-			  "from archived metadata.");
-		return ECMD_FAILED;
+		goto revert;
 	}
+
+	if (!vg_convert(cmd, vg, target_fmt, arg_int64_value(cmd,
+				labelsector_ARG, DEFAULT_LABELSECTOR),
+			pvmetadatacopies, pvmetadatasize))
+		goto revert;
 
 	/* FIXME Cache the label format change so we don't have to skip this */
 	if (test_mode()) {
@@ -183,18 +130,21 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 	}
 
 	log_verbose("Writing metadata for VG %s using format %s", vg_name,
-		    cmd->fmt->name);
-	if (!backup_restore_vg(cmd, vg)) {
+		    target_fmt->name);
+	if (!vg_write(vg) || !vg_commit(vg)) {
 		log_error("Conversion failed for volume group %s.", vg_name);
-		log_error("Use pvcreate and vgcfgrestore to repair from "
-			  "archived metadata.");
-		return ECMD_FAILED;
+		goto revert;
 	}
 	log_print("Volume group %s successfully converted", vg_name);
 
 	backup(vg);
 
 	return ECMD_PROCESSED;
+
+revert:
+	log_error("Use pvcreate and vgcfgrestore to repair "
+		  "from archived metadata.");
+	return ECMD_FAILED;
 }
 
 int vgconvert(struct cmd_context *cmd, int argc, char **argv)
