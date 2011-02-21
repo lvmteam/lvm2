@@ -190,8 +190,14 @@ struct metadata_area *mda_copy(struct dm_pool *mem,
 unsigned mda_is_ignored(struct metadata_area *mda);
 void mda_set_ignored(struct metadata_area *mda, unsigned ignored);
 unsigned mda_locns_match(struct metadata_area *mda1, struct metadata_area *mda2);
-void fid_add_mda(struct format_instance *fid, struct metadata_area *mda);
-int fid_add_mdas(struct format_instance *fid, struct dm_list *mdas);
+int fid_add_mda(struct format_instance *fid, struct metadata_area *mda,
+		const char *key, size_t key_len, const unsigned sub_key);
+int fid_add_mdas(struct format_instance *fid, struct dm_list *mdas,
+		 const char *key, size_t key_len);
+int fid_remove_mda(struct format_instance *fid, struct metadata_area *mda,
+		   const char *key, size_t key_len, const unsigned sub_key);
+struct metadata_area *fid_get_mda_indexed(struct format_instance *fid,
+		const char *key, size_t key_len, const unsigned sub_key);
 int mdas_empty_or_ignored(struct dm_list *mdas);
 
 #define seg_pvseg(seg, s)	(seg)->areas[(s)].u.pv.pvseg
@@ -290,10 +296,8 @@ struct format_handler {
 	/*
 	 * Create format instance with a particular metadata area
 	 */
-	struct format_instance *(*create_instance) (const struct format_type *
-						    fmt, const char *vgname,
-						    const char *vgid,
-						    void *context);
+	struct format_instance *(*create_instance) (const struct format_type *fmt,
+						    const struct format_instance_ctx *fic);
 
 	/*
 	 * Destructor for format instance
