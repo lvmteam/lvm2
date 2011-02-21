@@ -1555,6 +1555,7 @@ static struct physical_volume *_alloc_pv(struct dm_pool *mem, struct device *dev
 	if (!pv)
 		return_NULL;
 
+	pv->fid = NULL;
 	pv->pe_size = 0;
 	pv->pe_start = 0;
 	pv->pe_count = 0;
@@ -1606,6 +1607,7 @@ struct physical_volume *pv_create(const struct cmd_context *cmd,
 				  unsigned metadataignore, struct dm_list *mdas)
 {
 	const struct format_type *fmt = cmd->fmt;
+	struct format_instance_ctx fic;
 	struct dm_pool *mem = fmt->cmd->mem;
 	struct physical_volume *pv = _alloc_pv(mem, dev);
 
@@ -1643,6 +1645,13 @@ struct physical_volume *pv_create(const struct cmd_context *cmd,
 	if (pv->size < data_alignment) {
 		log_error("%s: Data alignment must not exceed device size.",
 			  pv_dev_name(pv));
+		goto bad;
+	}
+
+	fic.type = FMT_INSTANCE_PV;
+	fic.context.pv_id = (const char *) &pv->id;
+	if (!(pv->fid = fmt->ops->create_instance(fmt, &fic))) {
+		log_error("Couldn't create format instance for PV %s.", pv_dev_name(pv));
 		goto bad;
 	}
 

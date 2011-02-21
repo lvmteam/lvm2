@@ -24,6 +24,7 @@ struct physical_volume {
 	struct id id;
 	struct device *dev;
 	const struct format_type *fmt;
+	struct format_instance *fid;
 
 	/*
 	 * vg_name and vgid are used before the parent VG struct exists.
