@@ -2272,6 +2272,29 @@ bad:
 	return 0;
 }
 
+int remove_metadata_area_from_pv(struct physical_volume *pv,
+				 unsigned mda_index)
+{
+	if (mda_index >= FMT_TEXT_MAX_MDAS_PER_PV) {
+		log_error(INTERNAL_ERROR "can't remove metadata area with "
+					 "index %u from PV %s. Metadata "
+					 "layou not supported by %s format.",
+					  mda_index, dev_name(pv->dev),
+					  pv->fmt->name);
+		return 0;
+	}
+
+	return fid_remove_mda(pv->fid, NULL, (const char *) &pv->id,
+			      ID_LEN, mda_index);
+}
+
+static int _text_pv_remove_metadata_area(const struct format_type *fmt,
+					 struct physical_volume *pv,
+					 unsigned mda_index)
+{
+	return remove_metadata_area_from_pv(pv, mda_index);
+}
+
 /* NULL vgname means use only the supplied context e.g. an archive file */
 static struct format_instance *_text_create_text_instance(const struct format_type *fmt,
 							   const struct format_instance_ctx *fic)
@@ -2347,6 +2370,7 @@ static struct format_handler _text_handler = {
 	.pv_read = _text_pv_read,
 	.pv_setup = _text_pv_setup,
 	.pv_add_metadata_area = _text_pv_add_metadata_area,
+	.pv_remove_metadata_area = _text_pv_remove_metadata_area,
 	.pv_write = _text_pv_write,
 	.vg_setup = _text_vg_setup,
 	.lv_setup = _text_lv_setup,
