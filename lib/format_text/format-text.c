@@ -1687,6 +1687,75 @@ static int _text_pv_read(const struct format_type *fmt, const char *pv_name,
 	return 1;
 }
 
+static int _text_pv_initialise(const struct format_type *fmt,
+			       const int64_t label_sector,
+			       uint64_t pe_start,
+			       uint32_t extent_count,
+			       uint32_t extent_size,
+			       unsigned long data_alignment,
+			       unsigned long data_alignment_offset,
+			       struct physical_volume *pv)
+{
+	struct text_fid_pv_context *fid_pv_tc;
+
+	/*
+	 * Try to keep the value of PE start set to a firm value if requested.
+	 * This is usefull when restoring existing PE start value (backups etc.).
+	 */
+	if (pe_start != PV_PE_START_CALC)
+		pv->pe_start = pe_start;
+
+	if (!data_alignment)
+		data_alignment = find_config_tree_int(pv->fmt->cmd,
+					      "devices/data_alignment",
+					      0) * 2;
+
+	if (set_pe_align(pv, data_alignment) != data_alignment &&
+	    data_alignment) {
+		log_error("%s: invalid data alignment of "
+			  "%lu sectors (requested %lu sectors)",
+			  pv_dev_name(pv), pv->pe_align, data_alignment);
+		return 0;
+	}
+
+	if (set_pe_align_offset(pv, data_alignment_offset) != data_alignment_offset &&
+	    data_alignment_offset) {
+		log_error("%s: invalid data alignment offset of "
+			  "%lu sectors (requested %lu sectors)",
+			  pv_dev_name(pv), pv->pe_align_offset, data_alignment_offset);
+		return 0;
+	}
+
+	if (pv->pe_align < pv->pe_align_offset) {
+		log_error("%s: pe_align (%lu sectors) must not be less "
+			  "than pe_align_offset (%lu sectors)",
+			  pv_dev_name(pv), pv->pe_align, pv->pe_align_offset);
+		return 0;
+	}
+
+	if (pe_start == PV_PE_START_CALC && pv->pe_start < pv->pe_align)
+		pv->pe_start = pv->pe_align;
+
+	if (extent_size)
+		pv->pe_size = extent_size;
+
+	if (extent_count)
+		pv->pe_count = extent_count;
+
+	if ((pv->pe_start + pv->pe_count * pv->pe_size - 1) > (pv->size << SECTOR_SHIFT)) {
+		log_error("Physical extents end beyond end of device %s.",
+			   pv_dev_name(pv));
+		return 0;
+	}
+
+	if (label_sector != -1) {
+		fid_pv_tc = (struct text_fid_pv_context *) pv->fid->private;
+		fid_pv_tc->label_sector = label_sector;
+	}
+
+	return 1;
+}
+
 static void _text_destroy_instance(struct format_instance *fid __attribute__((unused)))
 {
 }
@@ -2368,6 +2437,7 @@ void *create_text_context(struct cmd_context *cmd, const char *path,
 static struct format_handler _text_handler = {
 	.scan = _text_scan,
 	.pv_read = _text_pv_read,
+	.pv_initialise = _text_pv_initialise,
 	.pv_setup = _text_pv_setup,
 	.pv_add_metadata_area = _text_pv_add_metadata_area,
 	.pv_remove_metadata_area = _text_pv_remove_metadata_area,
