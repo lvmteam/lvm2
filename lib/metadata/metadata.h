@@ -35,6 +35,7 @@
 //#define MAX_RESTRICTED_LVS 255	/* Used by FMT_RESTRICTED_LVIDS */
 #define MIRROR_LOG_OFFSET	2	/* sectors */
 #define VG_MEMPOOL_CHUNK	10240	/* in bytes, hint only */
+#define PV_PE_START_CALC	((uint64_t) -1) /* Calculate pe_start value */
 
 /*
  * Ceiling(n / sz)
@@ -265,6 +266,16 @@ struct format_handler {
 			 int pvmetadatacopies, uint64_t pvmetadatasize,
 			 unsigned metadataignore, struct dm_list * mdas,
 			 struct physical_volume * pv, struct volume_group * vg);
+
+	/*
+	 * Add metadata area to a PV. Changes will take effect on pv_write.
+	 */
+	int (*pv_add_metadata_area) (const struct format_type * fmt,
+				     struct physical_volume * pv,
+				     int pe_start_locked,
+				     unsigned metadata_index,
+				     uint64_t metadata_size,
+				     unsigned metadata_ignored);
 
 	/*
 	 * Write a PV structure to disk. Fails if the PV is in a VG ie
