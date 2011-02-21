@@ -256,6 +256,18 @@ struct format_handler {
 			struct physical_volume * pv, int scan_label_only);
 
 	/*
+	 * Initialise a new PV.
+	 */
+	int (*pv_initialise) (const struct format_type * fmt,
+			      int64_t label_sector,
+			      uint64_t pe_start,
+			      uint32_t extent_count,
+			      uint32_t extent_size,
+			      unsigned long data_alignment,
+			      unsigned long data_alignment_offset,
+			      struct physical_volume * pv);
+
+	/*
 	 * Tweak an already filled out a pv ready for importing into a
 	 * vg.  eg. pe_count is format specific.
 	 */

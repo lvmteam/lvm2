@@ -188,6 +188,18 @@ out:
 	return NULL;
 }
 
+static int _pool_pv_initialise(const struct format_type *fmt __attribute__((unused)),
+			       int64_t label_sector __attribute__((unused)),
+			       uint64_t pe_start __attribute__((unused)),
+			       uint32_t extent_count __attribute__((unused)),
+			       uint32_t extent_size __attribute__((unused)),
+			       unsigned long data_alignment __attribute__((unused)),
+			       unsigned long data_alignment_offset __attribute__((unused)),
+			       struct physical_volume *pv __attribute__((unused)))
+{
+	return 1;
+}
+
 static int _pool_pv_setup(const struct format_type *fmt __attribute__((unused)),
 			  uint64_t pe_start __attribute__((unused)),
 			  uint32_t extent_count __attribute__((unused)),
@@ -293,6 +305,7 @@ static void _pool_destroy(struct format_type *fmt)
 /* *INDENT-OFF* */
 static struct format_handler _format_pool_ops = {
 	.pv_read = _pool_pv_read,
+	.pv_initialise = _pool_pv_initialise,
 	.pv_setup = _pool_pv_setup,
 	.create_instance = _pool_create_instance,
 	.destroy_instance = _pool_destroy_instance,

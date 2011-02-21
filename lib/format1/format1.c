@@ -361,16 +361,14 @@ static int _format1_pv_read(const struct format_type *fmt, const char *pv_name,
 	return r;
 }
 
-static int _format1_pv_setup(const struct format_type *fmt,
-			     uint64_t pe_start, uint32_t extent_count,
-			     uint32_t extent_size,
-			     unsigned long data_alignment __attribute__((unused)),
-			     unsigned long data_alignment_offset __attribute__((unused)),
-			     int pvmetadatacopies __attribute__((unused)),
-			     uint64_t pvmetadatasize __attribute__((unused)),
-			     unsigned metadataignore __attribute__((unused)),
-			     struct dm_list *mdas __attribute__((unused)),
-			     struct physical_volume *pv, struct volume_group *vg __attribute__((unused)))
+static int _format1_pv_initialise(const struct format_type * fmt,
+				  int64_t label_sector __attribute__((unused)),
+				  uint64_t pe_start,
+				  uint32_t extent_count,
+				  uint32_t extent_size,
+				  unsigned long data_alignment __attribute__((unused)),
+				  unsigned long data_alignment_offset __attribute__((unused)),
+				  struct physical_volume * pv)
 {
 	if (pv->size > MAX_PV_SIZE)
 		pv->size--;
@@ -398,6 +396,21 @@ static int _format1_pv_setup(const struct format_type *fmt,
 	}
 
 	return 1;
+}
+
+static int _format1_pv_setup(const struct format_type *fmt,
+			     uint64_t pe_start, uint32_t extent_count,
+			     uint32_t extent_size,
+			     unsigned long data_alignment __attribute__((unused)),
+			     unsigned long data_alignment_offset __attribute__((unused)),
+			     int pvmetadatacopies __attribute__((unused)),
+			     uint64_t pvmetadatasize __attribute__((unused)),
+			     unsigned metadataignore __attribute__((unused)),
+			     struct dm_list *mdas __attribute__((unused)),
+			     struct physical_volume *pv,
+			     struct volume_group *vg __attribute__((unused)))
+{
+	return _format1_pv_initialise(fmt, -1, 0, 0, vg->extent_size, 0, 0, pv);
 }
 
 static int _format1_lv_setup(struct format_instance *fid, struct logical_volume *lv)
@@ -560,6 +573,7 @@ static void _format1_destroy(struct format_type *fmt)
 
 static struct format_handler _format1_ops = {
 	.pv_read = _format1_pv_read,
+	.pv_initialise = _format1_pv_initialise,
 	.pv_setup = _format1_pv_setup,
 	.pv_write = _format1_pv_write,
 	.lv_setup = _format1_lv_setup,
