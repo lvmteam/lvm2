@@ -248,13 +248,17 @@ unsigned pv_mda_set_ignored(const struct physical_volume *pv, unsigned mda_ignor
 {
 	struct lvmcache_info *info;
 	struct metadata_area *mda, *vg_mda, *tmda;
-	struct dm_list *vg_mdas_in_use, *vg_mdas_ignored;
+	struct dm_list *mdas_in_use, *mdas_ignored, *mdas_to_change;
 
 	if (!(info = info_from_pvid((const char *)&pv->id.uuid, 0)))
 		return_0;
 
+	mdas_in_use = &pv->fid->metadata_areas_in_use;
+	mdas_ignored = &pv->fid->metadata_areas_ignored;
+	mdas_to_change = mda_ignored ? mdas_in_use : mdas_ignored;
+
 	if (is_orphan(pv)) {
-		dm_list_iterate_items(mda, &info->mdas)
+		dm_list_iterate_items(mda, mdas_to_change)
 			mda_set_ignored(mda, mda_ignored);
 		return 1;
 	}
@@ -279,19 +283,19 @@ unsigned pv_mda_set_ignored(const struct physical_volume *pv, unsigned mda_ignor
 	 * list, ensuring the new state will get written to disk in the
 	 * vg_write() path.
 	 */
-	vg_mdas_in_use = &pv->vg->fid->metadata_areas_in_use;
-	vg_mdas_ignored = &pv->vg->fid->metadata_areas_ignored;
-
+	/* FIXME: Try not to update the cache here! Also, try to iterate over
+	 *	  PV mdas only using the format instance's index somehow
+	 * 	  (i.e. try to avoid using mda_locn_match call). */
 	dm_list_iterate_items(mda, &info->mdas) {
 		if (mda_is_ignored(mda) && !mda_ignored)
 			/* Changing an ignored mda to one in_use requires moving it */
-			dm_list_iterate_items_safe(vg_mda, tmda, vg_mdas_ignored)
+			dm_list_iterate_items_safe(vg_mda, tmda, mdas_ignored)
 				if (mda_locns_match(mda, vg_mda)) {
 					mda_set_ignored(vg_mda, mda_ignored);
-					dm_list_move(vg_mdas_in_use, &vg_mda->list);
+					dm_list_move(mdas_in_use, &vg_mda->list);
 				}
 
-		dm_list_iterate_items_safe(vg_mda, tmda, vg_mdas_in_use)
+		dm_list_iterate_items_safe(vg_mda, tmda, mdas_in_use)
 			if (mda_locns_match(mda, vg_mda))
 				/* Don't move mda: needs writing to disk. */
 				mda_set_ignored(vg_mda, mda_ignored);
