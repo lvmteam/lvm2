@@ -125,8 +125,10 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 		if (!(pv = pv_create(cmd, pv_dev(existing_pv),
 				     &existing_pv->id, size, 0, 0,
 				     pe_start, pv_pe_count(existing_pv),
-				     pv_pe_size(existing_pv), pvmetadatacopies,
-				     pvmetadatasize, 0, &mdas))) {
+				     pv_pe_size(existing_pv),
+				     arg_int64_value(cmd, labelsector_ARG,
+						     DEFAULT_LABELSECTOR),
+				     pvmetadatacopies, pvmetadatasize, 0))) {
 			log_error("Failed to setup physical volume \"%s\"",
 				  pv_dev_name(existing_pv));
 			if (change_made)
