@@ -308,10 +308,11 @@ int backup_restore_vg(struct cmd_context *cmd, struct volume_group *vg)
 	fic.type = FMT_INSTANCE_VG | FMT_INSTANCE_MDAS | FMT_INSTANCE_AUX_MDAS;
 	fic.context.vg_ref.vg_name = vg->name;
 	fic.context.vg_ref.vg_id = NULL;
-	if (!(vg->fid = cmd->fmt->ops->create_instance(cmd->fmt, &fic))) {
+	if (!(fid = cmd->fmt->ops->create_instance(cmd->fmt, &fic))) {
 		log_error("Failed to allocate format instance");
 		return 0;
 	}
+	vg_set_fid(vg, fid);
 
 	/*
 	 * Setting vg->old_name to a blank value will explicitly

@@ -3931,6 +3931,16 @@ uint32_t vg_lock_newname(struct cmd_context *cmd, const char *vgname)
 	return FAILED_EXIST;
 }
 
+void vg_set_fid(struct volume_group *vg,
+		 struct format_instance *fid)
+{
+	struct pv_list *pvl;
+
+	vg->fid = fid;
+	dm_list_iterate_items(pvl, &vg->pvs)
+		pvl->pv->fid = fid;
+}
+
 static int _convert_key_to_string(const char *key, size_t key_len,
 				  unsigned sub_key, char *buf, size_t buf_len)
 {

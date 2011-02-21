@@ -190,6 +190,7 @@ struct metadata_area *mda_copy(struct dm_pool *mem,
 unsigned mda_is_ignored(struct metadata_area *mda);
 void mda_set_ignored(struct metadata_area *mda, unsigned ignored);
 unsigned mda_locns_match(struct metadata_area *mda1, struct metadata_area *mda2);
+void vg_set_fid(struct volume_group *vg, struct format_instance *fid);
 int fid_add_mda(struct format_instance *fid, struct metadata_area *mda,
 		const char *key, size_t key_len, const unsigned sub_key);
 int fid_add_mdas(struct format_instance *fid, struct dm_list *mdas,
