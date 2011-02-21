@@ -522,9 +522,7 @@ static struct metadata_area_ops _metadata_format1_ops = {
 };
 
 static struct format_instance *_format1_create_instance(const struct format_type *fmt,
-						const char *vgname __attribute__((unused)),
-						const char *vgid __attribute__((unused)),
-						void *private __attribute__((unused)))
+							const struct format_instance_ctx *fic)
 {
 	struct format_instance *fid;
 	struct metadata_area *mda;
@@ -533,6 +531,8 @@ static struct format_instance *_format1_create_instance(const struct format_type
 		return_NULL;
 
 	fid->fmt = fmt;
+	fid->type = fic->type;
+
 	dm_list_init(&fid->metadata_areas_in_use);
 	dm_list_init(&fid->metadata_areas_ignored);
 

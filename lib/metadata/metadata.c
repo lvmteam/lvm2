@@ -2887,7 +2887,8 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 					break;
 				}
 				if (dm_list_size(&info->mdas)) {
-					if (!fid_add_mdas(fid, &info->mdas))
+					if (!fid_add_mdas(fid, &info->mdas,
+							  info->dev->pvid, ID_LEN))
 						return_NULL;
 					 
 					log_debug("Empty mda found for VG %s.", vgname);
@@ -3918,22 +3919,117 @@ uint32_t vg_lock_newname(struct cmd_context *cmd, const char *vgname)
 	return FAILED_EXIST;
 }
 
-void fid_add_mda(struct format_instance *fid, struct metadata_area *mda)
+static int _convert_key_to_string(const char *key, size_t key_len,
+				  unsigned sub_key, char *buf, size_t buf_len)
 {
-	dm_list_add(mda_is_ignored(mda) ? &fid->metadata_areas_ignored :
-					  &fid->metadata_areas_in_use, &mda->list);
+	memcpy(buf, key, key_len);
+	buf += key_len;
+	buf_len -= key_len;
+	if ((dm_snprintf(buf, buf_len, "_%u", sub_key) == -1))
+		return_0;
+
+	return 1;
 }
 
-int fid_add_mdas(struct format_instance *fid, struct dm_list *mdas)
+int fid_add_mda(struct format_instance *fid, struct metadata_area *mda,
+		 const char *key, size_t key_len, const unsigned sub_key)
+{
+	char full_key[PATH_MAX];
+	dm_list_add(mda_is_ignored(mda) ? &fid->metadata_areas_ignored :
+					  &fid->metadata_areas_in_use, &mda->list);
+
+	/* Return if the mda is not supposed to be indexed. */
+	if (!key)
+		return 1;
+
+	/* Add metadata area to index. */
+	if (fid->type & FMT_INSTANCE_VG) {
+		if (!_convert_key_to_string(key, key_len, sub_key,
+					    full_key, PATH_MAX))
+		return_0;
+
+		dm_hash_insert(fid->metadata_areas_index.hash,
+			       full_key, mda);
+	}
+	else
+		fid->metadata_areas_index.array[sub_key] = mda;
+
+	return 1;
+}
+
+int fid_add_mdas(struct format_instance *fid, struct dm_list *mdas,
+		 const char *key, size_t key_len)
 {
 	struct metadata_area *mda, *mda_new;
+	unsigned mda_index = 0;
 
 	dm_list_iterate_items(mda, mdas) {
 		mda_new = mda_copy(fid->fmt->cmd->mem, mda);
 		if (!mda_new)
 			return_0;
-		fid_add_mda(fid, mda_new);
+
+		fid_add_mda(fid, mda_new, key, key_len, mda_index);
+		mda_index++;
 	}
+
+	return 1;
+}
+
+struct metadata_area *fid_get_mda_indexed(struct format_instance *fid,
+					  const char *key, size_t key_len,
+					  const unsigned sub_key)
+{
+	char full_key[PATH_MAX];
+	struct metadata_area *mda = NULL;
+
+
+	if (fid->type & FMT_INSTANCE_VG) {
+		if (!_convert_key_to_string(key, key_len, sub_key,
+					    full_key, PATH_MAX))
+			return_NULL;
+		mda = (struct metadata_area *) dm_hash_lookup(fid->metadata_areas_index.hash,
+							      full_key);
+	}
+	else
+		mda = fid->metadata_areas_index.array[sub_key];
+
+	return mda;
+}
+
+int fid_remove_mda(struct format_instance *fid, struct metadata_area *mda,
+		   const char *key, size_t key_len, const unsigned sub_key)
+{
+	struct metadata_area *mda_indexed = NULL;
+	char full_key[PATH_MAX];
+
+	/* At least one of mda or key must be specified. */
+	if (!mda && !key)
+		return 1;
+
+	if (key) {
+		/*
+		 * If both mda and key specified, check given mda
+		 * with what we find using the index and return
+		 * immediately if these two do not match.
+		 */
+		if (!(mda_indexed = fid_get_mda_indexed(fid, key, key_len, sub_key)) ||
+		     (mda && mda != mda_indexed))
+			return 1;
+
+		mda = mda_indexed;
+
+		if (fid->type & FMT_INSTANCE_VG) {
+			if (!_convert_key_to_string(key, key_len, sub_key,
+					    full_key, PATH_MAX))
+				return_0;
+
+			dm_hash_remove(fid->metadata_areas_index.hash, full_key);
+		} else
+			fid->metadata_areas_index.array[sub_key] = NULL;
+	}
+
+	dm_list_del(&mda->list);
+
 	return 1;
 }
 

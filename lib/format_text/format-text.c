@@ -37,14 +37,16 @@
 #include <dirent.h>
 #include <ctype.h>
 
-static struct format_instance *_text_create_text_instance(const struct format_type
-						     *fmt, const char *vgname,
-						     const char *vgid,
-						     void *context);
+static struct format_instance *_text_create_text_instance(const struct format_type *fmt,
+							  const struct format_instance_ctx *fic);
 
 struct text_fid_context {
 	char *raw_metadata_buf;
 	uint32_t raw_metadata_buf_size;
+};
+
+struct text_fid_pv_context {
+	int64_t label_sector;
 };
 
 struct dir_list {
@@ -1911,13 +1913,38 @@ static int _text_pv_setup(const struct format_type *fmt,
 	return 1;
 }
 
-/* NULL vgname means use only the supplied context e.g. an archive file */
-static struct format_instance *_text_create_text_instance(const struct format_type
-						     *fmt, const char *vgname,
-						     const char *vgid,
-						     void *context)
+static int _create_pv_text_instance(struct format_instance *fid,
+                                    const struct format_instance_ctx *fic)
 {
-	struct format_instance *fid;
+	struct text_fid_pv_context *fid_pv_tc;
+	struct lvmcache_info *info;
+
+	if (!(fid_pv_tc = (struct text_fid_pv_context *)
+			dm_pool_zalloc(fid->fmt->cmd->mem, sizeof(*fid_pv_tc)))) {
+		log_error("Couldn't allocate text_fid_pv_context.");
+		return 0;
+	}
+	fid_pv_tc->label_sector = -1;
+	fid->private = (void *) fid_pv_tc;
+
+	if (!(fid->metadata_areas_index.array = dm_pool_zalloc(fid->fmt->cmd->mem,
+					FMT_TEXT_MAX_MDAS_PER_PV *
+					sizeof(struct metadata_area *)))) {
+		log_error("Couldn't allocate format instance metadata index.");
+		return 0;
+	}
+
+	if (fic->type & FMT_INSTANCE_MDAS &&
+	    (info = info_from_pvid(fic->context.pv_id, 0)))
+		fid_add_mdas(fid, &info->mdas, fic->context.pv_id, ID_LEN);
+
+	return 1;
+}
+
+static int _create_vg_text_instance(struct format_instance *fid,
+                                    const struct format_instance_ctx *fic)
+{
+	uint32_t type = fic->type;
 	struct text_fid_context *fidtc;
 	struct metadata_area *mda;
 	struct mda_context *mdac;
@@ -1927,86 +1954,120 @@ static struct format_instance *_text_create_text_instance(const struct format_ty
 	char path[PATH_MAX];
 	struct lvmcache_vginfo *vginfo;
 	struct lvmcache_info *info;
+	const char *vg_name, *vg_id;
+
+	if (!(fidtc = (struct text_fid_context *)
+			dm_pool_zalloc(fid->fmt->cmd->mem,sizeof(*fidtc)))) {
+		log_error("Couldn't allocate text_fid_context.");
+		return 0;
+	}
+
+	fidtc->raw_metadata_buf = NULL;
+	fid->private = (void *) fidtc;
+
+	if (type & FMT_INSTANCE_PRIVATE_MDAS) {
+		if (!(mda = dm_pool_zalloc(fid->fmt->cmd->mem, sizeof(*mda))))
+			return_0;
+		mda->ops = &_metadata_text_file_backup_ops;
+		mda->metadata_locn = fic->context.private;
+		mda->status = 0;
+		fid->metadata_areas_index.hash = NULL;
+		fid_add_mda(fid, mda, NULL, 0, 0);
+	} else {
+		vg_name = fic->context.vg_ref.vg_name;
+		vg_id = fic->context.vg_ref.vg_id;
+
+		if (!(fid->metadata_areas_index.hash = dm_hash_create(128))) {
+			log_error("Couldn't create metadata index for format "
+				  "instance of VG %s.", vg_name);
+			return 0;
+		}
+
+		if (type & FMT_INSTANCE_AUX_MDAS) {
+			dir_list = &((struct mda_lists *) fid->fmt->private)->dirs;
+			dm_list_iterate_items(dl, dir_list) {
+				if (dm_snprintf(path, PATH_MAX, "%s/%s", dl->dir, vg_name) < 0) {
+					log_error("Name too long %s/%s", dl->dir, vg_name);
+					return 0;
+				}
+
+				if (!(mda = dm_pool_zalloc(fid->fmt->cmd->mem, sizeof(*mda))))
+					return_0;
+				mda->ops = &_metadata_text_file_ops;
+				mda->metadata_locn = create_text_context(fid->fmt->cmd, path, NULL);
+				mda->status = 0;
+				fid_add_mda(fid, mda, NULL, 0, 0);
+			}
+
+			raw_list = &((struct mda_lists *) fid->fmt->private)->raws;
+			dm_list_iterate_items(rl, raw_list) {
+				/* FIXME Cache this; rescan below if some missing */
+				if (!_raw_holds_vgname(fid, &rl->dev_area, vg_name))
+					continue;
+
+				if (!(mda = dm_pool_zalloc(fid->fmt->cmd->mem, sizeof(*mda))))
+					return_0;
+
+				if (!(mdac = dm_pool_zalloc(fid->fmt->cmd->mem, sizeof(*mdac))))
+					return_0;
+				mda->metadata_locn = mdac;
+				/* FIXME Allow multiple dev_areas inside area */
+				memcpy(&mdac->area, &rl->dev_area, sizeof(mdac->area));
+				mda->ops = &_metadata_text_raw_ops;
+				mda->status = 0;
+				/* FIXME MISTAKE? mda->metadata_locn = context; */
+				fid_add_mda(fid, mda, NULL, 0, 0);
+			}
+		}
+
+		if (type & FMT_INSTANCE_MDAS) {
+			/* Scan PVs in VG for any further MDAs */
+			lvmcache_label_scan(fid->fmt->cmd, 0);
+			if (!(vginfo = vginfo_from_vgname(vg_name, vg_id)))
+				goto_out;
+			dm_list_iterate_items(info, &vginfo->infos) {
+				if (!fid_add_mdas(fid, &info->mdas, info->dev->pvid, ID_LEN))
+					return_0;
+			}
+		}
+
+		/* FIXME Check raw metadata area count - rescan if required */
+	}
+
+out:
+	return 1;
+}
+
+/* NULL vgname means use only the supplied context e.g. an archive file */
+static struct format_instance *_text_create_text_instance(const struct format_type *fmt,
+							   const struct format_instance_ctx *fic)
+{
+	struct format_instance *fid;
+	int r;
 
 	if (!(fid = dm_pool_alloc(fmt->cmd->mem, sizeof(*fid)))) {
 		log_error("Couldn't allocate format instance object.");
 		return NULL;
 	}
 
-	if (!(fidtc = (struct text_fid_context *)
-			dm_pool_zalloc(fmt->cmd->mem,sizeof(*fidtc)))) {
-		log_error("Couldn't allocate text_fid_context.");
-		return NULL;
-	}
-
-	fidtc->raw_metadata_buf = NULL;
-	fid->private = (void *) fidtc;
-
 	fid->fmt = fmt;
+	fid->type = fic->type;
+
 	dm_list_init(&fid->metadata_areas_in_use);
 	dm_list_init(&fid->metadata_areas_ignored);
 
-	if (!vgname) {
-		if (!(mda = dm_pool_zalloc(fmt->cmd->mem, sizeof(*mda))))
-			return_NULL;
-		mda->ops = &_metadata_text_file_backup_ops;
-		mda->metadata_locn = context;
-		mda->status = 0;
-		fid_add_mda(fid, mda);
-	} else {
-		dir_list = &((struct mda_lists *) fmt->private)->dirs;
+	if (fid->type & FMT_INSTANCE_VG)
+		r = _create_vg_text_instance(fid, fic);
+	else
+		r = _create_pv_text_instance(fid, fic);
 
-		dm_list_iterate_items(dl, dir_list) {
-			if (dm_snprintf(path, PATH_MAX, "%s/%s",
-					 dl->dir, vgname) < 0) {
-				log_error("Name too long %s/%s", dl->dir,
-					  vgname);
-				return NULL;
-			}
-
-			context = create_text_context(fmt->cmd, path, NULL);
-			if (!(mda = dm_pool_zalloc(fmt->cmd->mem, sizeof(*mda))))
-				return_NULL;
-			mda->ops = &_metadata_text_file_ops;
-			mda->metadata_locn = context;
-			mda->status = 0;
-			fid_add_mda(fid, mda);
-		}
-
-		raw_list = &((struct mda_lists *) fmt->private)->raws;
-
-		dm_list_iterate_items(rl, raw_list) {
-			/* FIXME Cache this; rescan below if some missing */
-			if (!_raw_holds_vgname(fid, &rl->dev_area, vgname))
-				continue;
-
-			if (!(mda = dm_pool_zalloc(fmt->cmd->mem, sizeof(*mda))))
-				return_NULL;
-
-			if (!(mdac = dm_pool_zalloc(fmt->cmd->mem, sizeof(*mdac))))
-				return_NULL;
-			mda->metadata_locn = mdac;
-			/* FIXME Allow multiple dev_areas inside area */
-			memcpy(&mdac->area, &rl->dev_area, sizeof(mdac->area));
-			mda->ops = &_metadata_text_raw_ops;
-			mda->status = 0;
-			/* FIXME MISTAKE? mda->metadata_locn = context; */
-			fid_add_mda(fid, mda);
-		}
-
-		/* Scan PVs in VG for any further MDAs */
-		lvmcache_label_scan(fmt->cmd, 0);
-		if (!(vginfo = vginfo_from_vgname(vgname, vgid)))
-			goto_out;
-		dm_list_iterate_items(info, &vginfo->infos) {
-			if (!fid_add_mdas(fid, &info->mdas))
-				return_NULL;
-		}
-		/* FIXME Check raw metadata area count - rescan if required */
+	if (r)
+		return fid;
+	else {
+		dm_pool_free(fmt->cmd->mem, fid);
+		return NULL;
 	}
 
-      out:
-	return fid;
 }
 
 void *create_text_context(struct cmd_context *cmd, const char *path,
