@@ -442,6 +442,9 @@ void vg_remove_pvs(struct volume_group *vg);
 int vg_remove(struct volume_group *vg);
 int vg_rename(struct cmd_context *cmd, struct volume_group *vg,
 	      const char *new_name);
+int vg_convert(struct cmd_context *cmd, struct volume_group *vg,
+	       const struct format_type *target_fmt, int64_t label_sector,
+	       int pvmetadatacopies, uint64_t pvmetadatasize);
 int vg_extend(struct volume_group *vg, int pv_count, const char *const *pv_names,
 	      struct pvcreate_params *pp);
 int vg_reduce(struct volume_group *vg, const char *pv_name);

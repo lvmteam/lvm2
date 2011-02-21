@@ -496,6 +496,109 @@ int vg_rename(struct cmd_context *cmd, struct volume_group *vg,
 	return 1;
 }
 
+int vg_convert(struct cmd_context *cmd, struct volume_group *vg,
+	       const struct format_type *target_fmt, int64_t label_sector,
+	       int pvmetadatacopies, uint64_t pvmetadatasize)
+{
+	struct physical_volume *pv, *existing_pv;
+	struct format_instance_ctx fic;
+	uint64_t pe_start = 0;
+	struct pv_list *pvl;
+	int change_made = 0;
+	const char *vg_name = vg->name;
+
+	/* Replace an old format instance with a new empty one. */
+	vg->fid->fmt->ops->destroy_instance(vg->fid);
+	fic.type = FMT_INSTANCE_VG | FMT_INSTANCE_AUX_MDAS;
+	fic.context.vg_ref.vg_name = vg_name;
+	fic.context.vg_ref.vg_id = NULL;
+	if (!(vg->fid = target_fmt->ops->create_instance(target_fmt, &fic))) {
+		log_error("Couldn't create target format instance "
+			  "for VG %s.", vg_name);
+		return 0;
+	}
+
+	/*
+	 * Create new PVs in target format taking original PVs as coimage.
+	 * Write the new PVs out and replace the old PVs in VG structure
+	 * with the new PVs.
+	 */
+	dm_list_iterate_items(pvl, &vg->pvs) {
+		existing_pv = pvl->pv;
+		pe_start = pv_pe_start(existing_pv);
+
+		if (!(pv = pv_create(cmd, pv_dev(existing_pv),
+				     &existing_pv->id,
+				     0, 0, 0, pe_start,
+				     pv_pe_count(existing_pv),
+				     pv_pe_size(existing_pv),
+				     label_sector, pvmetadatacopies,
+				     pvmetadatasize, 0))) {
+			log_error("Failed to setup physical volume \"%s\"",
+				  pv_dev_name(existing_pv));
+			if (change_made)
+				goto revert;
+			return 0;
+		}
+
+		/* Need to revert manually if it fails after this point */
+		change_made = 1;
+
+		log_verbose("Set up physical volume for \"%s\" with %" PRIu64
+			    " available sectors", pv_dev_name(pv), pv_size(pv));
+
+		/* Wipe existing label first */
+		if (!label_remove(pv_dev(pv))) {
+			log_error("Failed to wipe existing label on %s",
+				  pv_dev_name(pv));
+		}
+
+		log_very_verbose("Writing physical volume data to disk \"%s\"",
+				 pv_dev_name(pv));
+		/* FIXME: This pv_write will change the VG assignment for the
+		 *	  PV info in the cache to orphan VG! We should just change
+		 *	  the existing VG format information in the cache or throw
+		 *	  the cache away after this pv_write. */
+		if (!(pv_write(cmd, pv))) {
+			log_error("Failed to write physical volume \"%s\"",
+				  pv_dev_name(pv));
+			goto revert;
+		}
+		log_verbose("Physical volume \"%s\" successfully created",
+			    pv_dev_name(pv));
+
+		if (!vg->fid->fmt->ops->pv_setup(vg->fid->fmt, pv, vg)) {
+			log_error("Failed to setup PV %s in new format for VG %s.",
+				  pv_dev_name(pv), vg_name);
+			goto revert;
+		}
+
+		/* FIXME: Free the mem used by the old PV structure? */
+
+		/* Copy relevant fields from old PV and further initialise new PV. */
+		pv->vg = vg;
+		if (!(pv->vg_name = dm_pool_strdup(vg->vgmem, vg_name))) {
+			log_error("vg->name allocation failed for %s",pv_dev_name(pv));
+			goto revert;
+		}
+		memcpy(&pv->vgid, &vg->id, sizeof(vg->id));
+		if (!alloc_pv_segment_whole_pv(vg->vgmem, pv)) {
+			log_error("pv->segments allocation failed for %s", pv_dev_name(pv));
+			goto revert;
+		}
+
+		pvl->pv = pv;
+	}
+
+
+	return 1;
+
+revert:
+	log_error("Use pvcreate and vgcfgrestore to repair "
+		  "from archived metadata.");
+	return 0;
+}
+
 int remove_lvs_in_vg(struct cmd_context *cmd,
 		     struct volume_group *vg,
 		     force_t force)
