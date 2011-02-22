@@ -227,7 +227,7 @@ static void openais_cpg_deliver_callback (cpg_handle_t handle,
 
 	memcpy(&target_nodeid, msg, OPENAIS_CSID_LEN);
 
-	DEBUGLOG("%u got message from nodeid %d for %d. len %d\n",
+	DEBUGLOG("%u got message from nodeid %d for %d. len %" PRIsize_t "\n",
 		 our_nodeid, nodeid, target_nodeid, msg_len-4);
 
 	if (nodeid != our_nodeid)
@@ -245,7 +245,8 @@ static void openais_cpg_confchg_callback(cpg_handle_t handle,
 	int i;
 	struct node_info *ninfo;
 
-	DEBUGLOG("confchg callback. %d joined, %d left, %d members\n",
+	DEBUGLOG("confchg callback. %" PRIsize_t " joined, "
+		 "%" PRIsize_t " left, %" PRIsize_t " members\n",
 		 joined_list_entries, left_list_entries, member_list_entries);
 
 	for (i=0; i<joined_list_entries; i++) {
