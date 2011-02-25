@@ -3543,6 +3543,12 @@ int pv_write(struct cmd_context *cmd __attribute__((unused)),
 		return 0;
 	}
 
+	/*
+	 * FIXME: Try to remove this restriction. This requires checking
+	 *        that the PV and the VG are in a consistent state. We need
+	 *        to provide some revert mechanism since PV label together
+	 *        with VG metadata write is not atomic.
+	 */
 	if (!is_orphan_vg(pv->vg_name) || pv->pe_alloc_count) {
 		log_error("Assertion failed: can't _pv_write non-orphan PV "
 			  "(in VG %s)", pv->vg_name);

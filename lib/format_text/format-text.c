@@ -2161,6 +2161,17 @@ static int _text_pv_resize(const struct format_type *fmt,
 	/* If there's an mda at the end, move it to a new position. */
 	if ((mda = fid_get_mda_indexed(fid, pvid, ID_LEN, 1)) &&
 	    (mdac = mda->metadata_locn)) {
+		/*
+		 * FIXME: Remove this restriction - we need to
+		 *        allow writing PV labels on non-orphan VGs
+		 *        for this to work correctly.
+		 */
+		if (vg) {
+			log_error("Resizing a PV with two metadata areas "
+				  "that is part of a VG is not supported.");
+			return 0;
+		}
+
 		/* FIXME: Maybe MDA0 size would be better? */
 		mda_size = mdac->area.size >> SECTOR_SHIFT;
 		mda_ignored = mda_is_ignored(mda);
