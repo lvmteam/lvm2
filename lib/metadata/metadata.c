@@ -4105,7 +4105,7 @@ int fid_add_mdas(struct format_instance *fid, struct dm_list *mdas,
 		mda_new = mda_copy(fid->fmt->cmd->mem, mda);
 		if (!mda_new)
 			return_0;
-
+		fid_remove_mda(fid, NULL, key, key_len, mda_index);
 		fid_add_mda(fid, mda_new, key, key_len, mda_index);
 		mda_index++;
 	}

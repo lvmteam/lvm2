@@ -1645,20 +1645,42 @@ static int _text_pv_setup(const struct format_type *fmt,
 {
 	struct format_instance *fid = pv->fid;
 	const char *pvid = (const char *) (*pv->old_id.uuid ? &pv->old_id : &pv->id);
+	struct lvmcache_info *info;
 	unsigned mda_index;
 	struct metadata_area *pv_mda;
 	struct mda_context *pv_mdac;
 	uint64_t pe_count;
 	uint64_t size_reduction = 0;
 
-	/* Add any further mdas on this PV to VG's format instance. */
-	for (mda_index = 0; mda_index < FMT_TEXT_MAX_MDAS_PER_PV; mda_index++) {
-		if (!(pv_mda = fid_get_mda_indexed(fid, pvid, ID_LEN, mda_index)))
-			continue;
+	/* If PV has its own format instance, add mdas from pv->fid to vg->fid. */
+	if (pv->fid != vg->fid) {
+		for (mda_index = 0; mda_index < FMT_TEXT_MAX_MDAS_PER_PV; mda_index++) {
+			if (!(pv_mda = fid_get_mda_indexed(fid, pvid, ID_LEN, mda_index)))
+				continue;
 
-		/* Be sure it's not already in VG's format instance! */
-		if (!fid_get_mda_indexed(vg->fid, pvid, ID_LEN, mda_index))
-			fid_add_mda(vg->fid, pv_mda, pvid, ID_LEN, mda_index);
+			/* Be sure it's not already in VG's format instance! */
+			if (!fid_get_mda_indexed(vg->fid, pvid, ID_LEN, mda_index))
+				fid_add_mda(vg->fid, pv_mda, pvid, ID_LEN, mda_index);
+		}
+	}
+	/*
+	 * Otherwise, if the PV is already a part of the VG (pv->fid == vg->fid),
+	 * reread PV mda information from the cache and add it to vg->fid.
+	 */
+	else {
+		if (!(info = info_from_pvid(pv->dev->pvid, 0))) {
+			log_error("PV %s missing from cache", pv_dev_name(pv));
+			return 0;
+		}
+
+		if (fmt != info->fmt) {
+			log_error("PV %s is a different format (seqno %s)",
+				  pv_dev_name(pv), info->fmt->name);
+			return 0;
+		}
+
+		if (!fid_add_mdas(vg->fid, &info->mdas, pvid, ID_LEN))
+			return_0;
 	}
 
 	/* If there's the 2nd mda, we need to reduce

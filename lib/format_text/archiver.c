@@ -294,8 +294,6 @@ struct volume_group *backup_read_vg(struct cmd_context *cmd,
 int backup_restore_vg(struct cmd_context *cmd, struct volume_group *vg)
 {
 	struct pv_list *pvl;
-	struct physical_volume *pv;
-	struct lvmcache_info *info;
 	struct format_instance *fid;
 	struct format_instance_ctx fic;
 
@@ -305,7 +303,7 @@ int backup_restore_vg(struct cmd_context *cmd, struct volume_group *vg)
 	 */
 
 	/* Attempt to write out using currently active format */
-	fic.type = FMT_INSTANCE_VG | FMT_INSTANCE_MDAS | FMT_INSTANCE_AUX_MDAS;
+	fic.type = FMT_INSTANCE_VG | FMT_INSTANCE_AUX_MDAS;
 	fic.context.vg_ref.vg_name = vg->name;
 	fic.context.vg_ref.vg_id = NULL;
 	if (!(fid = cmd->fmt->ops->create_instance(cmd->fmt, &fic))) {
@@ -322,20 +320,9 @@ int backup_restore_vg(struct cmd_context *cmd, struct volume_group *vg)
 
 	/* Add any metadata areas on the PVs */
 	dm_list_iterate_items(pvl, &vg->pvs) {
-		pv = pvl->pv;
-		if (!(info = info_from_pvid(pv->dev->pvid, 0))) {
-			log_error("PV %s missing from cache",
-				  pv_dev_name(pv));
-			return 0;
-		}
-		if (cmd->fmt != info->fmt) {
-			log_error("PV %s is a different format (seqno %s)",
-				  pv_dev_name(pv), info->fmt->name);
-			return 0;
-		}
-		if (!vg->fid->fmt->ops->pv_setup(vg->fid->fmt, pv, vg)) {
+		if (!vg->fid->fmt->ops->pv_setup(vg->fid->fmt, pvl->pv, vg)) {
 			log_error("Format-specific setup for %s failed",
-				  pv_dev_name(pv));
+				  pv_dev_name(pvl->pv));
 			return 0;
 		}
 	}
