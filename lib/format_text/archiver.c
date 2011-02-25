@@ -296,6 +296,7 @@ int backup_restore_vg(struct cmd_context *cmd, struct volume_group *vg)
 	struct pv_list *pvl;
 	struct format_instance *fid;
 	struct format_instance_ctx fic;
+	uint32_t tmp;
 
 	/*
 	 * FIXME: Check that the PVs referenced in the backup are
@@ -320,11 +321,14 @@ int backup_restore_vg(struct cmd_context *cmd, struct volume_group *vg)
 
 	/* Add any metadata areas on the PVs */
 	dm_list_iterate_items(pvl, &vg->pvs) {
+		tmp = vg->extent_size;
+		vg->extent_size = 0;
 		if (!vg->fid->fmt->ops->pv_setup(vg->fid->fmt, pvl->pv, vg)) {
 			log_error("Format-specific setup for %s failed",
 				  pv_dev_name(pvl->pv));
 			return 0;
 		}
+		vg->extent_size = tmp;
 	}
 
 	if (!vg_write(vg) || !vg_commit(vg))

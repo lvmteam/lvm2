@@ -400,7 +400,7 @@ static int _format1_pv_initialise(const struct format_type * fmt,
 
 static int _format1_pv_setup(const struct format_type *fmt,
 			     struct physical_volume *pv,
-			     struct volume_group *vg __attribute__((unused)))
+			     struct volume_group *vg)
 {
 	return _format1_pv_initialise(fmt, -1, 0, 0, vg->extent_size, 0, 0, pv);
 }
