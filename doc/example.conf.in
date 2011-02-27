@@ -171,6 +171,19 @@ devices {
 #
 #    cling_tag_list = [ "@site1", "@site2" ]
 #    cling_tag_list = [ "@*" ]
+#
+#    Changes made in version 2.02.85 extended the reach of the 'cling'
+#    policies to detect more situations where data can be grouped
+#    onto the same disks.  Set this to 0 to revert to the previous
+#    algorithm.
+#
+#    maximise_cling = 1
+#
+#    Set to 1 to guarantee that mirror logs will always be placed on 
+#    different PVs from the mirror images.  This was the default
+#    until version 2.02.85.
+#
+#    mirror_logs_require_separate_pvs = 0
 #}
 
 # This section that allows you to configure the nature of the

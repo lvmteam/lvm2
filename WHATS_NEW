@@ -1,5 +1,9 @@
 Version 2.02.85 - 
 ===================================
+  Extend normal policy to allow mirror logs on same devs as images if necessary.
+  Improve cling policy to recognise devs already allocated in the transaction.
+  Improve normal allocation algorithm to include clinging to existing areas.
+  Add allocation/maximise_cling & mirror_logs_require_separate_pvs to lvm.conf.
   Fix metadata balance code to work with recent changes in metadata handling.
   Add old_uuid field to physical_volume and fix pvchange -u for recent changes.
   Allow pvresize on a PV with two metadata areas (for PVs not in a VG).
