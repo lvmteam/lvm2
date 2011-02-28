@@ -11,6 +11,8 @@
 
 . lib/test
 
+aux lvmconf 'allocation/maximise_cling = 0'
+aux lvmconf 'allocation/mirror_logs_require_separate_pvs = 1'
 
 # fail multiple devices
 
