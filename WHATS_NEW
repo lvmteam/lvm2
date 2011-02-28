@@ -5,8 +5,8 @@ Version 2.02.85 -
   Improve normal allocation algorithm to include clinging to existing areas.
   Add allocation/maximise_cling & mirror_logs_require_separate_pvs to lvm.conf.
   Fix metadata balance code to work with recent changes in metadata handling.
-  Add old_uuid field to physical_volume and fix pvchange -u for recent changes.
-  Allow pvresize on a PV with two metadata areas (for PVs not in a VG).
+  Add old_id field to physical_volume and fix pvchange -u for recent changes.
+  Allow pvresize on a PV with two metadata areas.
   Change pvcreate to use new metadata handling interface.
   Restructure existing pv_setup and pv_write fn, add pv_initialise fn.
   Add internal interface to support adding and removing metadata areas.

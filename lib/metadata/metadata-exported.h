@@ -384,7 +384,7 @@ struct dm_list *get_vgnames(struct cmd_context *cmd, int include_internal);
 struct dm_list *get_vgids(struct cmd_context *cmd, int include_internal);
 int scan_vgs_for_pvs(struct cmd_context *cmd, int warnings);
 
-int pv_write(struct cmd_context *cmd, struct physical_volume *pv);
+int pv_write(struct cmd_context *cmd, struct physical_volume *pv, int allow_non_orphan);
 int move_pv(struct volume_group *vg_from, struct volume_group *vg_to,
 	    const char *pv_name);
 int move_pvs_used_by_lv(struct volume_group *vg_from,

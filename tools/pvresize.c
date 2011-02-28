@@ -15,6 +15,7 @@
  */
 
 #include "tools.h"
+#include "metadata.h"
 
 struct pvresize_params {
 	uint64_t new_size;
@@ -96,6 +97,16 @@ static int _pv_resize_single(struct cmd_context *cmd,
 		goto_out;
 
 	log_verbose("Updating physical volume \"%s\"", pv_name);
+
+	/* Write PV label only if this an orphan PV or it has 2nd mda. */
+	if ((is_orphan_vg(vg_name) ||
+	    fid_get_mda_indexed(vg->fid, (const char *) &pv->id, ID_LEN, 1)) &&
+	    !pv_write(cmd, pv, 1)) {
+		log_error("Failed to store physical volume \"%s\"",
+			  pv_name);
+		goto out;
+	}
+
 	if (!is_orphan_vg(vg_name)) {
 		if (!vg_write(vg) || !vg_commit(vg)) {
 			log_error("Failed to store physical volume \"%s\" in "
@@ -103,10 +114,6 @@ static int _pv_resize_single(struct cmd_context *cmd,
 			goto out;
 		}
 		backup(vg);
-	} else if (!(pv_write(cmd, pv))) {
-		log_error("Failed to store physical volume \"%s\"",
-			  pv_name);
-		goto out;
 	}
 
 	log_print("Physical volume \"%s\" changed", pv_name);
