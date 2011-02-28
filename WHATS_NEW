@@ -1,5 +1,6 @@
 Version 2.02.85 - 
 ===================================
+  Add test for failed allocation from dm_task_set_uuid() in dmeventd.
   Improve pvremove error message when PV belongs to a VG.
   Extend normal policy to allow mirror logs on same PVs as images if necessary.
   Improve cling policy to recognise PVs already used during the transaction.
