@@ -586,7 +586,7 @@ int vg_remove(struct volume_group *vg)
 		}
 
 		/* FIXME Write to same sector label was read from */
-		if (!pv_write(vg->cmd, pv)) {
+		if (!pv_write(vg->cmd, pv, 0)) {
 			log_error("Failed to remove physical volume \"%s\""
 				  " from volume group \"%s\"",
 				  pv_dev_name(pv), vg->name);
@@ -1511,7 +1511,7 @@ struct physical_volume * pvcreate_single(struct cmd_context *cmd,
 	log_very_verbose("Writing physical volume data to disk \"%s\"",
 			 pv_name);
 
-	if (!(pv_write(cmd, pv))) {
+	if (!(pv_write(cmd, pv, 0))) {
 		log_error("Failed to write physical volume \"%s\"", pv_name);
 		goto error;
 	}
@@ -3536,7 +3536,7 @@ int scan_vgs_for_pvs(struct cmd_context *cmd, int warnings)
 }
 
 int pv_write(struct cmd_context *cmd __attribute__((unused)),
-	     struct physical_volume *pv)
+	     struct physical_volume *pv, int allow_non_orphan)
 {
 	if (!pv->fmt->ops->pv_write) {
 		log_error("Format does not support writing physical volumes");
@@ -3549,7 +3549,8 @@ int pv_write(struct cmd_context *cmd __attribute__((unused)),
 	 *        to provide some revert mechanism since PV label together
 	 *        with VG metadata write is not atomic.
 	 */
-	if (!is_orphan_vg(pv->vg_name) || pv->pe_alloc_count) {
+	if (!allow_non_orphan &&
+	    (!is_orphan_vg(pv->vg_name) || pv->pe_alloc_count)) {
 		log_error("Assertion failed: can't _pv_write non-orphan PV "
 			  "(in VG %s)", pv->vg_name);
 		return 0;
@@ -3574,7 +3575,7 @@ int pv_write_orphan(struct cmd_context *cmd, struct physical_volume *pv)
 		return 0;
 	}
 
-	if (!pv_write(cmd, pv)) {
+	if (!pv_write(cmd, pv, 0)) {
 		log_error("Failed to clear metadata from physical "
 			  "volume \"%s\" after removal from \"%s\"",
 			  pv_dev_name(pv), old_vg_name);
