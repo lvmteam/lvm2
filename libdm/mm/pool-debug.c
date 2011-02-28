@@ -248,7 +248,7 @@ int dm_pool_grow_object(struct dm_pool *p, const void *extra, size_t delta)
 	}
 	p->object = new;
 
-	memcpy(new->data + new_size - delta, extra, delta);
+	memcpy((char*)new->data + new_size - delta, extra, delta);
 
 	return 1;
 }
