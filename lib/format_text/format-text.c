@@ -1273,8 +1273,7 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 
 	/* Add a new cache entry with PV info or update existing one. */
 	if (!(info = lvmcache_add(fmt->labeller, (const char *) &pv->id,
-		      pv->dev, pv->vg ? pv->vg->name : FMT_TEXT_ORPHAN_VG_NAME,
-		      NULL, 0)))
+				  pv->dev, pv->vg_name, NULL, 0)))
 		return_0;
 
 	label = info->label;
