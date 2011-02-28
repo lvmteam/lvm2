@@ -35,6 +35,7 @@ static int _pv_resize_single(struct cmd_context *cmd,
 	const char *pv_name = pv_dev_name(pv);
 	const char *vg_name = pv_vg_name(pv);
 	struct volume_group *old_vg = vg;
+	int vg_needs_pv_write = 0;
 
 	if (is_orphan_vg(vg_name)) {
 		if (!lock_vol(cmd, vg_name, LCK_VG_WRITE)) {
@@ -100,7 +101,8 @@ static int _pv_resize_single(struct cmd_context *cmd,
 
 	/* Write PV label only if this an orphan PV or it has 2nd mda. */
 	if ((is_orphan_vg(vg_name) ||
-	    fid_get_mda_indexed(vg->fid, (const char *) &pv->id, ID_LEN, 1)) &&
+	     (vg_needs_pv_write = (fid_get_mda_indexed(vg->fid,
+			(const char *) &pv->id, ID_LEN, 1) != NULL))) &&
 	    !pv_write(cmd, pv, 1)) {
 		log_error("Failed to store physical volume \"%s\"",
 			  pv_name);
@@ -120,6 +122,9 @@ static int _pv_resize_single(struct cmd_context *cmd,
 	r = 1;
 
 out:
+	if (!r && vg_needs_pv_write)
+		log_error("Use pvcreate and vgcfgrestore "
+			  "to repair from archived metadata.");
 	unlock_vg(cmd, vg_name);
 	if (!old_vg)
 		free_vg(vg);
