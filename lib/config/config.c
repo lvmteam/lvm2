@@ -808,6 +808,7 @@ static void _get_token(struct parser *p, int tok_prev)
 
 	case '.':
 		p->t = TOK_FLOAT;
+		/* Fall through */
 	case '0':
 	case '1':
 	case '2':

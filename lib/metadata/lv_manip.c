@@ -1512,6 +1512,7 @@ static int _find_some_parallel_space(struct alloc_handle *ah, const struct alloc
 
 				case PREFERRED:
 					preferred_count++;
+					/* Fall through */
 
 				case NEXT_PV:
 					goto next_pv;
