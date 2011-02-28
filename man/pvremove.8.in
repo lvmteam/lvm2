@@ -22,6 +22,7 @@ See \fBlvm\fP(8) for common options.
 .TP
 .BR \-ff ", " \-\-force " " \-\-force
 Force the removal of a physical volume belonging to an existing volume group.
+Normally \fBvgreduce\fP(8) should be used instead of this command.
 You cannot remove a physical volume which in use by some active logical volume.
 .TP
 .BR \-y ", " \-\-yes
@@ -29,4 +30,5 @@ Answer yes to all questions.
 .SH SEE ALSO
 .BR lvm (8),
 .BR pvcreate (8),
-.BR pvdisplay (8)
+.BR pvdisplay (8),
+.BR vgreduce (8)
