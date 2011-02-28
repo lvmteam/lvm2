@@ -217,7 +217,7 @@ int backup_locally(struct volume_group *vg)
 	}
 
 	if (test_mode()) {
-		log_verbose("Test mode: Skipping volume group backup.");
+		log_verbose("Test mode: Skipping backup of volume group.");
 		return 1;
 	}
 
