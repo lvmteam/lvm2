@@ -387,7 +387,9 @@ static int _fill_device_data(struct thread_status *ts)
 	if (!dmt)
 		return 0;
 
-	dm_task_set_uuid(dmt, ts->device.uuid);
+	if (!dm_task_set_uuid(dmt, ts->device.uuid))
+		goto fail;
+
 	if (!dm_task_run(dmt))
 		goto fail;
 
@@ -732,7 +734,8 @@ static struct dm_task *_get_device_status(struct thread_status *ts)
 	if (!dmt)
 		return NULL;
 
-	dm_task_set_uuid(dmt, ts->device.uuid);
+	if (!dm_task_set_uuid(dmt, ts->device.uuid))
+                return NULL;
 
 	if (!dm_task_run(dmt)) {
 		dm_task_destroy(dmt);
