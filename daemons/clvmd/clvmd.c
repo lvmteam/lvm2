@@ -1392,7 +1392,6 @@ static void process_remote_command(struct clvm_header *msg, int msglen, int fd,
 	int replylen = 0;
 	int buflen = max_cluster_message - sizeof(struct clvm_header) - 1;
 	int status;
-	int msg_malloced = 0;
 
 	/* Get the node name as we /may/ need it later */
 	clops->name_from_csid(csid, nodename);
@@ -1501,10 +1500,6 @@ static void process_remote_command(struct clvm_header *msg, int msglen, int fd,
 		}
 	}
 
-	/* Free buffer if it was malloced */
-	if (msg_malloced) {
-		free(msg);
-	}
 	free(replyargs);
 }
 
