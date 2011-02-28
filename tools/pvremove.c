@@ -64,8 +64,8 @@ static int pvremove_check(struct cmd_context *cmd, const char *name)
 	/* Allow partial & exported VGs to be destroyed. */
 	/* we must have -ff to overwrite a non orphan */
 	if (arg_count(cmd, force_ARG) < 2) {
-		log_error("Can't pvremove physical volume \"%s\" of "
-			  "volume group \"%s\" without -ff", name, pv_vg_name(pv));
+		log_error("PV %s belongs to Volume Group %s so please use vgreduce first.", name, pv_vg_name(pv));
+		log_error("(If you are certain you need pvremove, then confirm by using --force twice.)");
 		return 0;
 	}
 
