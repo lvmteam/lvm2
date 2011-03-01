@@ -371,6 +371,7 @@ api() {
 
 udev_wait() {
 	pgrep udev >/dev/null || return
+	which udevadm >/dev/null || return
 	if test -n "$1" ; then
 		udevadm settle --exit-if-exists=$1
 	else
