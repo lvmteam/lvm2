@@ -21,7 +21,7 @@
 #include "configure.h"
 #include "lvm2app.h"
 
-#ifndef READLINE_SUPPORT
+#ifdef READLINE_SUPPORT
 #include <readline/readline.h>
 
 #define MAX_ARGS 64
