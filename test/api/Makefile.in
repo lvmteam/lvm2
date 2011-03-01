@@ -20,11 +20,14 @@ ifeq ("@DEBUG@", "yes")
 endif
 
 TARGETS = 
+ifeq ("@APPLIB@", "yes")
+TARGETS += test
 test_SOURCES = test.c
 wrapper_SOURCES = test.c
 INCLUDES += -I../../include
 
-UNIT = vgtest.t percent.t
+TARGETS += vgtest.t percent.t
+endif
 
 LVMLIBS = @LVM2APP_LIB@ -ldevmapper
 DEPLIBS = $(top_builddir)/liblvm/liblvm2app.so $(top_builddir)/libdm/libdevmapper.so
@@ -44,9 +47,9 @@ test_OBJECTS = $(test_SOURCES:.c=.o)
 wrapper_OBJECTS = $(wrapper_SOURCES:.c=.o)
 OBJECTS = $(test_OBJECTS)
 
-all: tests test
+all: tests
 
-tests: $(UNIT)
+tests: $(TARGETS)
 
 test: $(test_OBJECTS) $(DEPLIBS)
 	$(CC) -o test $(test_OBJECTS) $(CFLAGS) $(LDFLAGS) $(LVMLIBS) $(LIBS) $(READLINE_LIBS)
