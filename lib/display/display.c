@@ -131,7 +131,7 @@ uint64_t units_to_bytes(const char *units, char *unit_type)
 		return v * multiplier;
 }
 
-const char alloc_policy_char(alloc_policy_t alloc)
+char alloc_policy_char(alloc_policy_t alloc)
 {
 	int i;
 
