@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2009 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2011 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -12,12 +12,17 @@
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <readline/readline.h>
+#include <ctype.h>
 
+#include "configure.h"
 #include "lvm2app.h"
+
+#ifndef READLINE_SUPPORT
+#include <readline/readline.h>
 
 #define MAX_ARGS 64
 
@@ -1071,6 +1076,13 @@ static int lvmapi_test_shell(lvm_t libh)
 	free(input);
 	return 0;
 }
+#else /* !READLINE_SUPPORT */
+static int lvmapi_test_shell(lvm_t libh)
+{
+	printf("Build without readline library, no interactive testing.\n");
+	return 1;
+}
+#endif
 
 int main (int argc, char *argv[])
 {
