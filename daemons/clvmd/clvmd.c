@@ -1007,7 +1007,10 @@ static void be_daemon(int timeout)
 		exit(3);
 	}
 
-	pipe(child_pipe);
+	if (pipe(child_pipe)) {
+		perror("Error creating pipe");
+		exit(3);
+	}
 
 	switch (fork()) {
 	case -1:
@@ -1254,7 +1257,9 @@ static int read_from_local_sock(struct local_client *thisfd)
 		}
 
 		/* Create a pipe and add the reading end to our FD list */
-		pipe(comms_pipe);
+		if (pipe(comms_pipe))
+			DEBUGLOG("creating pipe failed: %s\n", strerror(errno));
+		
 		newfd = malloc(sizeof(struct local_client));
 		if (!newfd) {
 			struct clvm_header reply;

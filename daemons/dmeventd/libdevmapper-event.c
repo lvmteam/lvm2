@@ -309,7 +309,7 @@ static int _daemon_write(struct dm_event_fifos *fifos,
 		}
 		if (ret == 0)
 			break;
-		read(fifos->server, drainbuf, 127);
+		ret = read(fifos->server, drainbuf, 127);
 	}
 
 	while (bytes < size) {
