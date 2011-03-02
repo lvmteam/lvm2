@@ -1388,7 +1388,7 @@ static int _client_write(struct dm_event_fifos *fifos,
 static int _handle_request(struct dm_event_daemon_message *msg,
 			  struct message_data *message_data)
 {
-	static struct {
+	static struct request {
 		unsigned int cmd;
 		int (*f)(struct message_data *);
 	} requests[] = {
@@ -1403,7 +1403,7 @@ static int _handle_request(struct dm_event_daemon_message *msg,
 		{ DM_EVENT_CMD_GET_STATUS, _get_status},
 	}, *req;
 
-	for (req = requests; req < requests + sizeof(requests); req++)
+	for (req = requests; req < requests + sizeof(requests) / sizeof(struct request); req++)
 		if (req->cmd == msg->cmd)
 			return req->f(message_data);
 
