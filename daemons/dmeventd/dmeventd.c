@@ -1708,13 +1708,14 @@ static void restart(void)
 	/* Get the list of registrations from the running daemon. */
 
 	if (!init_fifos(&fifos)) {
-		fprintf(stderr, "Could not initiate communication with existing dmeventd.\n");
-		exit(EXIT_FAILURE);
+		fprintf(stderr, "WARNING: Could not initiate communication with existing dmeventd.\n");
+		return;
 	}
 
 	if (daemon_talk(&fifos, &msg, DM_EVENT_CMD_HELLO, NULL, NULL, 0, 0)) {
-		fprintf(stderr, "Could not communicate with existing dmeventd.\n");
-		exit(EXIT_FAILURE);
+		fprintf(stderr, "WARNING: Could not communicate with existing dmeventd.\n");
+		fini_fifos(&fifos);
+		return;
 	}
 
 	if (daemon_talk(&fifos, &msg, DM_EVENT_CMD_GET_STATUS, "-", "-", 0, 0)) {

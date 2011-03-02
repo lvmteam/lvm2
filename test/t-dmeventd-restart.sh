@@ -30,3 +30,11 @@ lvchange --monitor y --verbose $vg/3way 2>&1 | tee lvchange.out
 grep 'already monitored' lvchange.out
 lvchange --monitor y --verbose $vg/4way 2>&1 | tee lvchange.out
 grep 'already monitored' lvchange.out
+
+# now try what happens if no dmeventd is running
+kill -9 `cat LOCAL_DMEVENTD`
+dmeventd -R -f &
+echo "$!" > LOCAL_DMEVENTD
+sleep 3
+lvchange --monitor y --verbose $vg/3way 2>&1 | tee lvchange.out
+not grep 'already monitored' lvchange.out
