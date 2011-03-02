@@ -1427,6 +1427,8 @@ int dm_udev_wait(uint32_t cookie)
 	int r = _udev_wait(cookie);
 
 	update_devs();
+
+	return r;
 }
 
 #endif		/* UDEV_SYNC_SUPPORT */
