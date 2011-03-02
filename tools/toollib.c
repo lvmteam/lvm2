@@ -1238,6 +1238,12 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 		return 1;
 	}
 
+	if (arg_uint64_value(cmd, physicalextentsize_ARG, 0) > MAX_EXTENT_SIZE) {
+		log_error("Physical extent size cannot be larger than %s",
+				  display_size(cmd, (uint64_t) MAX_EXTENT_SIZE));
+		return 1;
+	}
+
 	if (arg_sign_value(cmd, maxlogicalvolumes_ARG, 0) == SIGN_MINUS) {
 		log_error("Max Logical Volumes may not be negative");
 		return 1;

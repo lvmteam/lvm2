@@ -34,6 +34,7 @@
 #define STRIPE_SIZE_MAX ( 512L * 1024L >> SECTOR_SHIFT)	/* 512 KB in sectors */
 #define STRIPE_SIZE_LIMIT ((UINT_MAX >> 2) + 1)
 #define MAX_RESTRICTED_LVS 255	/* Used by FMT_RESTRICTED_LVIDS */
+#define MAX_EXTENT_SIZE ((uint32_t) -1)
 
 /* Layer suffix */
 #define MIRROR_SYNC_LAYER "_mimagetmp"
