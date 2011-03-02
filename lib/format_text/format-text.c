@@ -1848,11 +1848,11 @@ out:
 	return 1;
 }
 
-int add_metadata_area_to_pv(struct physical_volume *pv,
-			    unsigned mda_index,
-			    uint64_t mda_start,
-			    uint64_t mda_size,
-			    unsigned mda_ignored)
+static int _add_metadata_area_to_pv(struct physical_volume *pv,
+				    unsigned mda_index,
+				    uint64_t mda_start,
+				    uint64_t mda_size,
+				    unsigned mda_ignored)
 {
 	struct metadata_area *mda;
 	struct mda_context *mdac;
@@ -2101,8 +2101,8 @@ static int _text_pv_add_metadata_area(const struct format_type *fmt,
 		}
 
 		/* Finally, add new metadata area to PV's format instance. */
-		if (!add_metadata_area_to_pv(pv, mda_index, mda_start,
-					     mda_size, mda_ignored))
+		if (!_add_metadata_area_to_pv(pv, mda_index, mda_start,
+					      mda_size, mda_ignored))
 			return_0;
 	}
 
@@ -2114,8 +2114,8 @@ bad:
 	return 0;
 }
 
-int remove_metadata_area_from_pv(struct physical_volume *pv,
-				 unsigned mda_index)
+static int _remove_metadata_area_from_pv(struct physical_volume *pv,
+					 unsigned mda_index)
 {
 	if (mda_index >= FMT_TEXT_MAX_MDAS_PER_PV) {
 		log_error(INTERNAL_ERROR "can't remove metadata area with "
@@ -2134,7 +2134,7 @@ static int _text_pv_remove_metadata_area(const struct format_type *fmt,
 					 struct physical_volume *pv,
 					 unsigned mda_index)
 {
-	return remove_metadata_area_from_pv(pv, mda_index);
+	return _remove_metadata_area_from_pv(pv, mda_index);
 }
 
 static int _text_pv_resize(const struct format_type *fmt,
