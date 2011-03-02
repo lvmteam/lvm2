@@ -356,6 +356,12 @@ static int _vgchange_pesize(struct cmd_context *cmd, struct volume_group *vg)
 {
 	uint32_t extent_size;
 
+	if (arg_uint64_value(cmd, physicalextentsize_ARG, 0) > MAX_EXTENT_SIZE) {
+		log_error("Physical extent size cannot be larger than %s",
+				  display_size(cmd, (uint64_t) MAX_EXTENT_SIZE));
+		return 1;
+	}
+
 	extent_size = arg_uint_value(cmd, physicalextentsize_ARG, 0);
 	/* FIXME: remove check - redundant with vg_change_pesize */
 	if (extent_size == vg->extent_size) {
