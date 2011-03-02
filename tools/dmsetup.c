@@ -658,19 +658,13 @@ static int _create(int argc, char **argv, void *data __attribute__((unused)))
 
 	r = 1;
 
-	if (!_udev_cookie)
-		(void) dm_udev_wait(cookie);
-
-	if (_switches[VERBOSE_ARG])
-		r = _display_info(dmt);
-
-	dm_task_destroy(dmt);
-
-	return r;
-
       out:
 	if (!_udev_cookie)
 		(void) dm_udev_wait(cookie);
+
+	if (r && _switches[VERBOSE_ARG])
+		r = _display_info(dmt);
+
 	dm_task_destroy(dmt);
 
 	return r;
@@ -721,6 +715,7 @@ static int _rename(int argc, char **argv, void *data __attribute__((unused)))
       out:
 	if (!_udev_cookie)
 		(void) dm_udev_wait(cookie);
+
 	dm_task_destroy(dmt);
 
 	return r;
@@ -1242,14 +1237,15 @@ static int _simple(int task, const char *name, uint32_t event_nr, int display)
 
 	r = dm_task_run(dmt);
 
-	if (r && display && _switches[VERBOSE_ARG])
-		r = _display_info(dmt);
-
       out:
 	if (!_udev_cookie && udev_wait_flag)
 		(void) dm_udev_wait(cookie);
 
+	if (r && display && _switches[VERBOSE_ARG])
+		r = _display_info(dmt);
+
 	dm_task_destroy(dmt);
+
 	return r;
 }
 

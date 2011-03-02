@@ -1044,6 +1044,8 @@ int dm_udev_complete(uint32_t cookie)
 
 int dm_udev_wait(uint32_t cookie)
 {
+	update_devs();
+
 	return 1;
 }
 
@@ -1380,7 +1382,7 @@ int dm_udev_complete(uint32_t cookie)
 	return 1;
 }
 
-int dm_udev_wait(uint32_t cookie)
+static int _udev_wait(uint32_t cookie)
 {
 	int semid;
 	struct sembuf sb = {0, 0, 0};
@@ -1418,6 +1420,13 @@ repeat_wait:
 	}
 
 	return _udev_notify_sem_destroy(cookie, semid);
+}
+
+int dm_udev_wait(uint32_t cookie)
+{
+	int r = _udev_wait(cookie);
+
+	update_devs();
 }
 
 #endif		/* UDEV_SYNC_SUPPORT */

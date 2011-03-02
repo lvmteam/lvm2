@@ -1,5 +1,7 @@
 Version 1.02.64 - 
 ===================================
+  Fix dm_udev_wait calls in dmsetup to occur before readahead display not after.
+  Include an implicit dm_task_update_nodes() within dm_udev_wait().
   Fix _create_and_load_v4 not to lose the --addnodeoncreate setting (1.02.62).
   Add inactive table query support for kernel driver >= 4.11.6 (RHEL 5.7).
   Log debug open_count in _node_has_closed_parents().
