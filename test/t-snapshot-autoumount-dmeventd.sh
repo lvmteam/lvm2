@@ -28,7 +28,7 @@ lvcreate -s -l 4 -n snap $vg/base
 lvchange --monitor y $vg/snap
 
 mkdir mnt
-mount $DM_DEV_DIR/$vg/snap mnt
+mount $DM_DEV_DIR/mapper/$vg-snap mnt
 mount
 cat /proc/mounts | grep $vg-snap
 
