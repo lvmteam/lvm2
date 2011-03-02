@@ -915,6 +915,10 @@ void lvm_do_fs_unlock(void)
 /* Called to initialise the LVM context of the daemon */
 int init_clvm(int using_gulm, char **argv)
 {
+	/* Use LOG_DAEMON for syslog messages instead of LOG_USER */
+	init_syslog(LOG_DAEMON);
+	openlog("clvmd", LOG_PID, LOG_DAEMON);
+
 	if (!(cmd = create_toolcontext(1, NULL))) {
 		log_error("Failed to allocate command context");
 		return 0;
@@ -925,9 +929,6 @@ int init_clvm(int using_gulm, char **argv)
 		return 0;
 	}
 
-	/* Use LOG_DAEMON for syslog messages instead of LOG_USER */
-	init_syslog(LOG_DAEMON);
-	openlog("clvmd", LOG_PID, LOG_DAEMON);
 	cmd->cmd_line = "clvmd";
 
 	/* Check lvm.conf is setup for cluster-LVM */
