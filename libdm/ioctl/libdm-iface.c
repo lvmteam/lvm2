@@ -2111,8 +2111,8 @@ repeat_ioctl:
 
 	switch (dmt->type) {
 	case DM_DEVICE_CREATE:
-	    if ((dmt->add_node == DM_ADD_NODE_ON_CREATE) &&
-		dmt->dev_name && *dmt->dev_name && !udev_only)
+		if ((dmt->add_node == DM_ADD_NODE_ON_CREATE) &&
+		    dmt->dev_name && *dmt->dev_name && !udev_only)
 			add_dev_node(dmt->dev_name, MAJOR(dmi->dev),
 				     MINOR(dmi->dev), dmt->uid, dmt->gid,
 				     dmt->mode, check_udev);
