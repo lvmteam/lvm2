@@ -5,6 +5,7 @@ dmeventd \- Device-mapper event daemon
 .B dmeventd
 [\-d]
 [\-f]
+[\-R]
 [\-h]
 [\-V]
 [\-?]
@@ -32,6 +33,11 @@ Each extra d adds more debugging information.
 .TP
 .I \-f
 Don't fork, run in the foreground.
+.TP
+.I \-R
+Replace a running dmeventd instance. The running dmeventd must be version
+2.02.77 or newer. The new dmeventd instance will obtain a list of devices and
+events to monitor from the currently running daemon.
 .TP
 .I \-h, \-?
 Show help information.
