@@ -1922,7 +1922,6 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 		if (!dm_udev_wait(dm_tree_get_cookie(dnode)))
 			stack;
 		dm_tree_set_cookie(dnode, 0);
-		dm_task_update_nodes();
 	}
 
 	return r;
