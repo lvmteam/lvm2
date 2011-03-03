@@ -1,5 +1,6 @@
 Version 1.02.64 - 
 ===================================
+  Lower severity of selabel_lookup and matchpathcon failure to log_debug.
   Accept multiple mapped device names on many dmsetup command lines.
   Fix dm_udev_wait calls in dmsetup to occur before readahead display not after.
   Include an implicit dm_task_update_nodes() within dm_udev_wait().

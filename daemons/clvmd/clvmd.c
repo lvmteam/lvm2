@@ -432,7 +432,7 @@ int main(int argc, char *argv[])
 	if (!foreground_mode)
 		be_daemon(start_timeout);
 
-        dm_prepare_selinux_context(DEFAULT_RUN_DIR, S_IFDIR);
+        (void) dm_prepare_selinux_context(DEFAULT_RUN_DIR, S_IFDIR);
         old_mask = umask(0077);
         if (dm_create_dir(DEFAULT_RUN_DIR) == 0) {
                 DEBUGLOG("clvmd: unable to create %s directory\n",
