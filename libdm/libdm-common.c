@@ -400,12 +400,14 @@ static int _selabel_lookup(const char *path, mode_t mode,
 	}
 
 	if (selabel_lookup(_selabel_handle, scontext, path, mode)) {
-		log_error("selabel_lookup failed: %s", strerror(errno));
+		log_debug("selabel_lookup failed for %s: %s",
+			  path, strerror(errno));
 		return 0;
 	}
 #else
 	if (matchpathcon(path, mode, scontext)) {
-		log_error("matchpathcon failed: %s", strerror(errno));
+		log_debug("matchpathcon failed for %s: %s",
+			  path, strerror(errno));
 		return 0;
 	}
 #endif
