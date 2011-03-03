@@ -101,7 +101,7 @@ test_lvconvert()
 		alloc="--alloc anywhere"
 	fi
 
-	echo y | lvconvert -m $finish_count --mirrorlog $finish_log_type \
+	lvconvert -m $finish_count --mirrorlog $finish_log_type \
 		$vg/$lv1 $alloc
 
 	if ! $active; then
