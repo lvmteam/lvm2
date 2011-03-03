@@ -60,7 +60,7 @@ for mdacp in 0 1 2; do
     vgextend $vg $dev1
 
     # pvremove -ff -y is sufficient when pv in a vg (---metadatacopies $mdacp)" '
-    echo n | pvremove -ff -y $dev1
+    pvremove -ff -y $dev1
 
     vgreduce --removemissing $vg
     pvcreate --metadatacopies $mdacp $dev1
