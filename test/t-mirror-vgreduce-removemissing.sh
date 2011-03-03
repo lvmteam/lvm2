@@ -24,8 +24,8 @@ lv_is_on_ ()
 	echo $pvs | sed 's/ /\n/g' | sort | uniq > out1
 
 	lvs -a -o+devices $lv
-	lvs -a -odevices --noheadings $lv | \
-	sed 's/([^)]*)//g; s/[ ,]/\n/g' | sort | uniq > out2
+	lvs -a -odevices --noheadings $lv > lvs_log
+	sed 's/([^)]*)//g; s/[ ,]/\n/g' lvs_log | sort | uniq > out2 || true
 
 	diff --ignore-blank-lines out1 out2
 }
@@ -41,14 +41,15 @@ mimages_are_on_ ()
 	echo "Check if mirror images of $lv are on PVs $pvs"
 	rm -f out1 out2
 	echo $pvs | sed 's/ /\n/g' | sort | uniq > out1
-
-	mimages=$(lvs --noheadings -a -o lv_name $vg | grep "${lv}_mimage_" | \
-		sed 's/\[//g; s/\]//g')
+	lvs --noheadings -a -o lv_name $vg > lvs_log
+	mimages=$(grep "${lv}_mimage_" lvs_log | \
+		sed 's/\[//g; s/\]//g' || true)
+	
 	for i in $mimages; do
 		echo "Checking $vg/$i"
 		lvs -a -o+devices $vg/$i
-		lvs -a -odevices --noheadings $vg/$i | \
-			sed 's/([^)]*)//g; s/ //g; s/,/ /g' | sort | uniq >> out2
+		lvs -a -odevices --noheadings $vg/$i > lvs_log
+		sed 's/([^)]*)//g; s/ //g; s/,/ /g' lvs_log | sort | uniq >> out2 || true
 	done
 
 	diff --ignore-blank-lines out1 out2
