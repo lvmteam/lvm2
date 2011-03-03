@@ -24,6 +24,7 @@ flock -w 5 $TESTDIR/var/lock/lvm/P_orphans -c "sleep 10" &
 flock_pid=`jobs -p`
 vgremove --config 'global { wait_for_locks = 1 }' $vg
 not vgremove --config 'global { wait_for_locks = 1 }' $vg
+sleep .2 # leave some time for scheduler to exit flock process
 not ps $flock_pid # finished
 
 # if wait_for_locks not set, vgremove should fail on non-blocking lock
