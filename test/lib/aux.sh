@@ -55,6 +55,9 @@ prepare_dmeventd() {
 
 	dmeventd -f "$@" &
 	echo "$!" > LOCAL_DMEVENTD
+
+	# FIXME wait for pipe in /var/run instead
+	sleep 1
 }
 
 teardown_devs() {
