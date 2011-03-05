@@ -278,9 +278,13 @@ static int _segtype_disp(struct dm_report *rh __attribute__((unused)),
 			 const void *data, void *private __attribute__((unused)))
 {
 	const struct lv_segment *seg = (const struct lv_segment *) data;
-
 	char *name;
-	name = lvseg_segtype_dup(seg);
+
+	if (!(name = lvseg_segtype_dup(mem, seg))) {
+		log_error("Failed to get segtype.");
+		return 0;
+	}
+
 	dm_report_field_set_value(field, name, NULL);
 	return 1;
 }

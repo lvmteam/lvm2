@@ -1,5 +1,6 @@
 Version 2.02.85 - 
 ===================================
+  Fix reading of released memory for printing segment type.
   Fix syslog initialisation in clvmd to respect lvm.conf setting.
   Fix possible overflow in maximum stripe size and physical extent size.
   Add test for failed allocation from dm_task_set_uuid() in dmeventd.

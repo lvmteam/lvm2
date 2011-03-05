@@ -26,13 +26,13 @@ char *lvseg_tags_dup(const struct lv_segment *seg)
 	return tags_format_and_copy(seg->lv->vg->vgmem, &seg->tags);
 }
 
-char *lvseg_segtype_dup(const struct lv_segment *seg)
+char *lvseg_segtype_dup(struct dm_pool *mem, const struct lv_segment *seg)
 {
 	if (seg->area_count == 1) {
 		return (char *)"linear";
 	}
 
-	return dm_pool_strdup(seg->lv->vg->vgmem, seg->segtype->ops->name(seg));
+	return dm_pool_strdup(mem, seg->segtype->ops->name(seg));
 }
 
 uint64_t lvseg_chunksize(const struct lv_segment *seg)
