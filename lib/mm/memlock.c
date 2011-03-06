@@ -344,7 +344,7 @@ static void _unlock_mem(struct cmd_context *cmd)
 		dm_free(_maps_buffer);
 		_maps_buffer = NULL;
 		if (_mstats < unlock_mstats) {
-			if ((_mstats + getpagesize()) < unlock_mstats)
+			if ((_mstats + lvm_getpagesize()) < unlock_mstats)
 				log_error(INTERNAL_ERROR
 					  "Maps lock %ld < unlock %ld",
 					  (long)_mstats, (long)unlock_mstats);
