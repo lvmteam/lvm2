@@ -106,9 +106,10 @@ pvcreate --metadatasize 100k --dataalignment 100k $dev1
 check pv_field $dev1 pe_start 200.00k
 
 # metadata area start is aligned according to pagesize
-# pagesize should be 64k or 4k ...
 if [ $PAGESIZE -eq 65536 ] ; then
 	pv_align="192.50k"
+elif [ $PAGESIZE -eq 8192 ] ; then
+	pv_align="136.50k"
 else
 	pv_align="133.00k"
 fi
