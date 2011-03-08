@@ -1749,13 +1749,18 @@ static void send_local_reply(struct local_client *client, int status, int fd)
 	}
 
 	/* Add in the size of our header */
-	message_len = message_len + sizeof(struct clvm_header) + 1;
-	replybuf = malloc(message_len);
+	message_len = message_len + sizeof(struct clvm_header);
+	if (!(replybuf = malloc(message_len))) {
+		DEBUGLOG("Memory allocation fails\n");
+		return;
+	}
 
 	clientreply = (struct clvm_header *) replybuf;
 	clientreply->status = status;
 	clientreply->cmd = CLVMD_CMD_REPLY;
 	clientreply->node[0] = '\0';
+	clientreply->xid = 0;
+	clientreply->clientid = 0;
 	clientreply->flags = 0;
 
 	ptr = clientreply->args;
@@ -1790,7 +1795,7 @@ static void send_local_reply(struct local_client *client, int status, int fd)
 	/* Terminate with an empty node name */
 	*ptr = '\0';
 
-	clientreply->arglen = ptr - clientreply->args + 1;
+	clientreply->arglen = ptr - clientreply->args;
 
 	/* And send it */
 	send_message(replybuf, message_len, our_csid, fd,
