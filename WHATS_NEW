@@ -1,5 +1,6 @@
 Version 2.02.85 - 
 ===================================
+  Support --help option for clvmd and return error for unknown option.
   Use system page size and not hardcoded value in locking code check.
   Fix reading of released memory for printing segment type.
   Fix syslog initialisation in clvmd to respect lvm.conf setting.
