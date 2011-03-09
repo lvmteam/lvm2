@@ -160,6 +160,9 @@ char *lv_path_dup(struct dm_pool *mem, const struct logical_volume *lv)
 	char *repstr;
 	size_t len;
 
+	if (!*lv->vg->name)
+		return dm_pool_strdup(mem, "");
+
 	len = strlen(lv->vg->cmd->dev_dir) + strlen(lv->vg->name) +
 		strlen(lv->name) + 2;
 
@@ -173,6 +176,7 @@ char *lv_path_dup(struct dm_pool *mem, const struct logical_volume *lv)
 		log_error("lvpath snprintf failed");
 		return 0;
 	}
+
 	return repstr;
 }
 

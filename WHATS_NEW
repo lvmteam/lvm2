@@ -1,6 +1,8 @@
 Version 2.02.85 - 
 ===================================
-  Send 1 byte shorted fully initialised local clvmd messages.
+  Use empty string instead of /dev// for LV path when there's no VG.
+  Don't allocate unused VG mempool in _pvsegs_sub_single.
+  Remove uninitialised byte from end of local clvmd messages.
   Support --help option for clvmd and return error for unknown option.
   Use system page size and not hardcoded value in locking code check.
   Fix reading of released memory for printing segment type.
