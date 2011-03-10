@@ -836,25 +836,16 @@ int vgcreate_params_validate(struct cmd_context *cmd,
  * possible failure code or zero for success.
  */
 static struct volume_group *_vg_make_handle(struct cmd_context *cmd,
-			     struct volume_group *vg,
-			     uint32_t failure)
+					    struct volume_group *vg,
+					    uint32_t failure)
 {
-	struct dm_pool *vgmem;
+	if (!vg && !(vg = alloc_vg("vg_make_handle", cmd, NULL)))
+		return_NULL;
 
-	if (!vg) {
-		if (!(vgmem = dm_pool_create("lvm2 vg_handle", VG_MEMPOOL_CHUNK)) ||
-		    !(vg = dm_pool_zalloc(vgmem, sizeof(*vg)))) {
-			log_error("Error allocating vg handle.");
-			if (vgmem)
-				dm_pool_destroy(vgmem);
-			return_NULL;
-		}
-		vg->vgmem = vgmem;
-	}
+	if (vg->read_status != failure)
+		vg->read_status = failure;
 
-	vg->read_status = failure;
-
-	return (struct volume_group *)vg;
+	return vg;
 }
 
 int lv_has_unknown_segments(const struct logical_volume *lv)
@@ -891,7 +882,6 @@ struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name)
 	struct volume_group *vg;
 	struct format_instance_ctx fic;
 	int consistent = 0;
-	struct dm_pool *mem;
 	uint32_t rc;
 
 	if (!validate_name(vg_name)) {
@@ -914,10 +904,10 @@ struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name)
 		return _vg_make_handle(cmd, NULL, FAILED_EXIST);
 	}
 
-	if (!(mem = dm_pool_create("lvm2 vg_create", VG_MEMPOOL_CHUNK)))
-		goto_bad;
+	/* Strip dev_dir if present */
+	vg_name = strip_dir(vg_name, cmd->dev_dir);
 
-	if (!(vg = dm_pool_zalloc(mem, sizeof(*vg))))
+	if (!(vg = alloc_vg("vg_create", cmd, vg_name)))
 		goto_bad;
 
 	if (!id_create(&vg->id)) {
@@ -926,19 +916,8 @@ struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name)
 		goto bad;
 	}
 
-	/* Strip dev_dir if present */
-	vg_name = strip_dir(vg_name, cmd->dev_dir);
-
-	vg->vgmem = mem;
-	vg->cmd = cmd;
-
-	if (!(vg->name = dm_pool_strdup(mem, vg_name)))
-		goto_bad;
-
-	vg->seqno = 0;
-
 	vg->status = (RESIZEABLE_VG | LVM_READ | LVM_WRITE);
-	if (!(vg->system_id = dm_pool_alloc(mem, NAME_LEN)))
+	if (!(vg->system_id = dm_pool_alloc(vg->vgmem, NAME_LEN)))
 		goto_bad;
 
 	*vg->system_id = '\0';
@@ -954,14 +933,6 @@ struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name)
 	vg->mda_copies = DEFAULT_VGMETADATACOPIES;
 
 	vg->pv_count = 0;
-	dm_list_init(&vg->pvs);
-
-	dm_list_init(&vg->lvs);
-
-	dm_list_init(&vg->tags);
-
-	/* initialize removed_pvs list */
-	dm_list_init(&vg->removed_pvs);
 
 	fic.type = FMT_INSTANCE_VG | FMT_INSTANCE_MDAS | FMT_INSTANCE_AUX_MDAS;
 	fic.context.vg_ref.vg_name = vg_name;
@@ -2614,30 +2585,14 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd,
 	struct pv_list *pvl;
 	struct volume_group *vg;
 	struct physical_volume *pv;
-	struct dm_pool *mem;
 
 	lvmcache_label_scan(cmd, 0);
 
 	if (!(vginfo = vginfo_from_vgname(orphan_vgname, NULL)))
 		return_NULL;
 
-	if (!(mem = dm_pool_create("vg_read orphan", VG_MEMPOOL_CHUNK)))
+	if (!(vg = alloc_vg("vg_read_orphans", cmd, orphan_vgname)))
 		return_NULL;
-
-	if (!(vg = dm_pool_zalloc(mem, sizeof(*vg)))) {
-		log_error("vg allocation failed");
-		goto bad;
-	}
-	dm_list_init(&vg->pvs);
-	dm_list_init(&vg->lvs);
-	dm_list_init(&vg->tags);
-	dm_list_init(&vg->removed_pvs);
-	vg->vgmem = mem;
-	vg->cmd = cmd;
-	if (!(vg->name = dm_pool_strdup(mem, orphan_vgname))) {
-		log_error("vg name allocation failed");
-		goto bad;
-	}
 
 	/* create format instance with appropriate metadata area */
 	fic.type = FMT_INSTANCE_VG | FMT_INSTANCE_AUX_MDAS;
@@ -2649,11 +2604,11 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd,
 	}
 
 	dm_list_iterate_items(info, &vginfo->infos) {
-		if (!(pv = _pv_read(cmd, mem, dev_name(info->dev),
+		if (!(pv = _pv_read(cmd, vg->vgmem, dev_name(info->dev),
 				    vg->fid, NULL, warnings, 0))) {
 			continue;
 		}
-		if (!(pvl = dm_pool_zalloc(mem, sizeof(*pvl)))) {
+		if (!(pvl = dm_pool_zalloc(vg->vgmem, sizeof(*pvl)))) {
 			log_error("pv_list allocation failed");
 			goto bad;
 		}
@@ -2663,7 +2618,7 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd,
 
 	return vg;
 bad:
-	dm_pool_destroy(mem);
+	free_vg(vg);
 	return NULL;
 }
 

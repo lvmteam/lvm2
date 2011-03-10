@@ -652,11 +652,7 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 	const struct config_node *vgn, *cn;
 	struct volume_group *vg;
 	struct dm_hash_table *pv_hash = NULL, *lv_hash = NULL;
-	struct dm_pool *mem = dm_pool_create("lvm2 vg_read", VG_MEMPOOL_CHUNK);
 	unsigned scan_done_once = use_cached_pvs;
-
-	if (!mem)
-		return_NULL;
 
 	/* skip any top-level values */
 	for (vgn = cft->root; (vgn && vgn->v); vgn = vgn->sib)
@@ -664,23 +660,17 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 
 	if (!vgn) {
 		log_error("Couldn't find volume group in file.");
-		goto bad;
+		return NULL;
 	}
 
-	if (!(vg = dm_pool_zalloc(mem, sizeof(*vg))))
-		goto_bad;
-
-	vg->vgmem = mem;
-	vg->cmd = fid->fmt->cmd;
+	if (!(vg = alloc_vg("read_vg", fid->fmt->cmd, vgn->key)))
+		return_NULL;
 
 	/* FIXME Determine format type from file contents */
 	/* eg Set to instance of fmt1 here if reading a format1 backup? */
 	vg->fid = fid;
 
-	if (!(vg->name = dm_pool_strdup(mem, vgn->key)))
-		goto_bad;
-
-	if (!(vg->system_id = dm_pool_zalloc(mem, NAME_LEN)))
+	if (!(vg->system_id = dm_pool_zalloc(vg->vgmem, NAME_LEN)))
 		goto_bad;
 
 	vgn = vgn->child;
@@ -733,7 +723,6 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 		goto bad;
 	}
 
-	vg->alloc = ALLOC_NORMAL;
 	if ((cn = find_config_node(vgn, "allocation_policy"))) {
 		const struct config_value *cv = cn->v;
 		if (!cv || !cv->v.str) {
@@ -761,21 +750,16 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 		goto bad;
 	}
 
-	dm_list_init(&vg->pvs);
-	if (!_read_sections(fid, "physical_volumes", _read_pv, mem, vg,
+	if (!_read_sections(fid, "physical_volumes", _read_pv, vg->vgmem, vg,
 			    vgn, pv_hash, lv_hash, 0, &scan_done_once)) {
 		log_error("Couldn't find all physical volumes for volume "
 			  "group %s.", vg->name);
 		goto bad;
 	}
 
-	dm_list_init(&vg->lvs);
-	dm_list_init(&vg->tags);
-	dm_list_init(&vg->removed_pvs);
-
 	/* Optional tags */
 	if ((cn = find_config_node(vgn, "tags")) &&
-	    !(read_tags(mem, &vg->tags, cn->v))) {
+	    !(read_tags(vg->vgmem, &vg->tags, cn->v))) {
 		log_error("Couldn't read tags for volume group %s.", vg->name);
 		goto bad;
 	}
@@ -789,15 +773,15 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 		goto bad;
 	}
 
-	if (!_read_sections(fid, "logical_volumes", _read_lvnames, mem, vg,
-			    vgn, pv_hash, lv_hash, 1, NULL)) {
+	if (!_read_sections(fid, "logical_volumes", _read_lvnames, vg->vgmem,
+			    vg, vgn, pv_hash, lv_hash, 1, NULL)) {
 		log_error("Couldn't read all logical volume names for volume "
 			  "group %s.", vg->name);
 		goto bad;
 	}
 
-	if (!_read_sections(fid, "logical_volumes", _read_lvsegs, mem, vg,
-			    vgn, pv_hash, lv_hash, 1, NULL)) {
+	if (!_read_sections(fid, "logical_volumes", _read_lvsegs, vg->vgmem,
+			    vg, vgn, pv_hash, lv_hash, 1, NULL)) {
 		log_error("Couldn't read all logical volumes for "
 			  "volume group %s.", vg->name);
 		goto bad;
@@ -824,7 +808,7 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 	if (lv_hash)
 		dm_hash_destroy(lv_hash);
 
-	dm_pool_destroy(mem);
+	free_vg(vg);
 	return NULL;
 }
 

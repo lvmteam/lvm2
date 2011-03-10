@@ -18,6 +18,38 @@
 #include "display.h"
 #include "activate.h"
 
+struct volume_group *alloc_vg(const char *pool_name, struct cmd_context *cmd,
+			      const char *vg_name)
+{
+	struct dm_pool *vgmem;
+	struct volume_group *vg;
+
+	if (!(vgmem = dm_pool_create(pool_name, VG_MEMPOOL_CHUNK)) ||
+	    !(vg = dm_pool_zalloc(vgmem, sizeof(*vg)))) {
+		log_error("Failed to allocate volume group structure");
+		if (vgmem)
+			dm_pool_destroy(vgmem);
+		return NULL;
+	}
+
+	if (vg_name && !(vg->name = dm_pool_strdup(vgmem, vg_name))) {
+		log_error("Failed to allocate VG name.");
+		dm_pool_destroy(vgmem);
+		return NULL;
+	}
+
+	vg->cmd = cmd;
+	vg->vgmem = vgmem;
+	vg->alloc = ALLOC_NORMAL;
+
+	dm_list_init(&vg->pvs);
+	dm_list_init(&vg->lvs);
+	dm_list_init(&vg->tags);
+	dm_list_init(&vg->removed_pvs);
+
+	return vg;
+}
+
 char *vg_fmt_dup(const struct volume_group *vg)
 {
 	if (!vg->fid || !vg->fid->fmt)
