@@ -845,7 +845,7 @@ static int _free_vginfo(struct lvmcache_vginfo *vginfo)
 			vginfo2->next = vginfo->next;
 			break;
 		}
- 	while ((vginfo2 = primary_vginfo->next));
+ 	while ((vginfo2 = vginfo2->next));
 
 	if (vginfo->vgname)
 		dm_free(vginfo->vgname);
