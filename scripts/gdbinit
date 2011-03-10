@@ -1,0 +1,303 @@
+# Copyright (C) 2011 Red Hat, Inc. All rights reserved.
+# This file is part of LVM2.
+
+# This copyrighted material is made available to anyone wishing to use,
+# modify, copy, or redistribute it subject to the terms and conditions
+# of the GNU Lesser General Public License v.2.1.
+
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+# Author(s):
+#	Jonathan Brassow <jbrassow@redhat.com>
+#
+# Copy this file to ~/.gdbinit or <working_dir>/.gdbinit
+
+printf "\n\n"
+printf "Loading commands:\n"
+printf " - first_seg <LV ptr>\n"
+printf " - lv_status <LV ptr>\n"
+printf " - lv_status_r <LV ptr>\n"
+printf " - lv_is_mirrored <LV ptr>\n"
+printf " - seg_item <seg ptr> <index>\n"
+printf " - seg_status <seg ptr>\n"
+printf " - segs_using_this_lv <seg ptr>\n"
+printf " - \n"
+printf "Use 'help <command>' for more info\n"
+printf "\n\n"
+printf "Popular breakpoints:\n"
+printf "break lv_extend\n"
+printf "run -m1 -L 200M -n lv vg\n"
+printf "lv_status_r lv\n"
+printf "\n\n"
+
+set follow-fork-mode child
+
+define first_seg
+	set $__lv=(struct logical_volume *)$arg0
+
+	if ($__lv->segments.n == &$__lv->segments)
+		printf "No segments (list empty)\n"
+	else
+		p (struct lv_segment *)$__lv->segments.n
+	end
+end
+
+document first_seg
+Returns the pointer to the first segment of an LV
+
+	Usage: first_seg <LV ptr>
+
+WARNING: If the list pointer in 'struct lv_segment' moves,
+	 this function will be wrong.
+end
+
+define seg_item
+	set $__seg=(struct lv_segment *)$arg0
+	set $__index=$arg1
+	set $__area=$__seg->areas[$__index]
+	set $__type=$__area.type
+
+	if ($__type == AREA_PV)
+		p $__area.u.pv.pvseg->pv
+	else
+		if ($__type == AREA_LV)
+			p $__area.u.lv.lv
+		else
+			printf "AREA_UNASSIGNED or invalid\n"
+		end
+	end
+end
+
+document seg_item
+Returns the pointer to the LV or PV for the indexed area of a segment
+
+	Usage: seg_item <struct lv_segment *> <index>
+
+Example - Getting to the sub-lv of a mirror:
+	(gdb) p lv->name
+	$1 = 0x712548 "lv"
+
+	(gdb) first_seg lv
+	$2 = (struct lv_segment *) 0x7128b8
+
+	(gdb) seg_item $2 0
+	$3 = (struct logical_volume *) 0x712688
+
+	(gdb) p $3->name
+	$4 = 0x712770 "lv_mimage_0"
+end
+
+define __status
+#	Constants defined in metadata-exported.h
+
+#	if ($arg0->status & VISIBLE_LV)
+	if ($arg0->status & 0x00000040U)
+		printf " VISIBLE_LV"
+	else
+		printf " *HIDDEN_LV*"
+	end
+#	if ($arg0->status & FIXED_MINOR)
+	if ($arg0->status & 0x00000080U)
+		printf " FIXED_MINOR"
+	end
+#	if ($arg0->status & SNAPSHOT)
+	if ($arg0->status & 0x00001000U)
+		printf " SNAPSHOT"
+	end
+#	if ($arg0->status & PVMOVE)
+	if ($arg0->status & 0x00002000U)
+		printf " PVMOVE"
+	end
+#	if ($arg0->status & LOCKED)
+	if ($arg0->status & 0x00004000U)
+		printf " LOCKED"
+	end
+#	if ($arg0->status & MIRRORED)
+	if ($arg0->status & 0x00008000U)
+		printf " MIRRORED"
+	end
+#	if ($arg0->status & MIRROR_LOG)
+	if ($arg0->status & 0x00020000U)
+		printf " MIRROR_LOG"
+	end
+#	if ($arg0->status & MIRROR_IMAGE)
+	if ($arg0->status & 0x00040000U)
+		printf " MIRROR_IMAGE"
+	end
+#	if ($arg0->status & MIRROR_NOTSYNCED)
+	if ($arg0->status & 0x00080000U)
+		printf " MIRROR_NOTSYNCED"
+	end
+#	if ($arg0->status & CONVERTING)
+	if ($arg0->status & 0x00400000U)
+		printf " CONVERTING"
+	end
+end
+
+define lv_status
+	set $_lv=(struct logical_volume *)$arg0
+
+	printf "%s->status:", $_lv->name
+	__status $_lv
+	printf "\n"
+end
+
+document lv_status
+Display the flags that are set on an LV.
+
+	Usage: lv_status <LV ptr>
+end
+
+define seg_status
+	set $_seg=(struct lv_segment *)$arg0
+
+	printf "(%s) seg->status:", $_seg->lv->name
+	__status $_seg
+	printf "\n"
+end
+
+document seg_status
+Display the flags that are set on an lv_segment.
+
+        Usage: lv_status <(struct lv_segment *)>
+end
+
+define __lv_status_r
+        set $_lv=(struct logical_volume *)$arg0
+	set $_seg_list_head = &$_lv->segments
+	set $_s = $_lv->segments.n
+	set $_i = 0
+
+	# lv_status $_lv
+	printf "%s%s->status:", $arg1, $_lv->name
+	__status $_lv
+	printf "\n"
+
+	if ($_s == $_seg_list_head)
+		printf "[ No segments for %s ]\n", $_lv->name
+	else
+		while ($_s != $_seg_list_head)
+			set $_seg = (struct lv_segment *)$_s
+			printf "%s[ %s->seg(%d)->status:", $arg1, $_lv->name, $_i
+			__status $_seg
+			printf " ]\n"
+
+			set $_j = 0
+			while ($_j < $_seg->area_count)
+				set $_area=$_seg->areas[$_j]
+				set $_type=$_area.type
+				if ($_type == AREA_LV)
+# Damn it, gdb does not have scoping so functions are not reentrant
+#					__lv_status_r $_area.u.lv.lv "    "
+
+# Next couple lines will get us through a non-stacked mirror...
+printf "*    "
+lv_status $_area.u.lv.lv
+set $barf = (struct lv_segment *)($_area.u.lv.lv)->segments.n
+if ($barf != &($_area.u.lv.lv)->segments)
+printf "*    "
+printf "[ %s->seg(0)->status:", $_lv->name
+__status $barf
+printf " ]\n"
+end
+				end
+				set $_j = $_j + 1
+			end
+			set $_s = $_s->n
+			set $_i = $_i + 1
+		end
+	end
+	printf "\n"	
+end
+
+define lv_status_r
+	__lv_status_r $arg0 ""
+end
+
+document lv_status_r
+Display the status flags of an LV and its sub_lvs.
+
+	Usage: lv_status_r <LV ptr>
+
+This function is useful for checking that all the LVs that
+compose a logical volume have the correct flags set (and also
+their associated lv_segments)
+end
+
+define segs_using_this_lv
+	set $_lv=(struct logical_volume *)$arg0
+	set $_seg_list_head = &$_lv->segs_using_this_lv
+	set $_s = $_lv->segs_using_this_lv.n
+	set $_i = 0
+
+	if ($_s != $_seg_list_head)
+		printf "Segments using %s\n", $_lv->name
+	else
+		printf "No segments using %s\n", $_lv->name
+	end
+	while ($_s != $_seg_list_head)
+		set $_seg_list = (struct seg_list *)$_s
+		set $_seg = (struct lv_segment *)$_seg_list->seg
+		printf "  %d) seg: %p", $_i, $_seg
+		if ($_seg->lv < 0x200)
+			printf "  [BAD LV POINTER FROM THIS SEG]\n"
+		else
+			printf "  [seg found in %s]\n", $_seg->lv->name
+		end
+		set $_s = $_s->n
+		set $_i = $_i + 1
+	end
+end
+
+document segs_using_this_lv
+Display the segments (and their associated LV) using an LV
+
+	Usage: segs_using_this_lv <LV ptr>
+
+Example:
+	(gdb) lv_is_mirrored lv
+	lv is mirrored ('core' log)
+
+	(gdb) segs_using_this_lv lv
+	No segments using lv
+
+	(gdb) first_seg lv
+	$1 = (struct lv_segment *) 0x92d360
+
+	(gdb) seg_item $1 0
+	$2 = (struct logical_volume *) 0x928f58
+
+	(gdb) segs_using_this_lv $2
+	Segments using lv_mimage_0
+	  0) seg: 0x92d360  [seg found in lv]
+end
+
+define lv_is_mirrored
+	set $_lv=(struct logical_volume *)$arg0
+	set $_fs=(struct lv_segment *)$_lv->segments.n
+	set $_log_lv=(struct logical_volume *)$_fs->log_lv
+
+#	if ($_lv->status & MIRRORED)
+	if ($_lv->status & 0x00008000U)
+		printf "%s is mirrored (", $_lv->name
+		if ($_log_lv)
+			if ($_log_lv->status & 0x00008000U)
+				printf "'mirrored' log)\n"
+			else
+				printf "'disk' log)\n"
+			end
+		else
+			printf "'core' log)\n"
+		end
+	else
+		printf "%s is not mirrored\n", $_lv->name
+	end
+end
+
+document lv_is_mirrored
+Report whether the given LV is mirrored (and its log type).
+
+	Usage: lv_is_mirrored <LV ptr>
+end
