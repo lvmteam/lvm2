@@ -2039,6 +2039,29 @@ static int _lv_postorder(struct logical_volume *lv,
 	return r;
 }
 
+/*
+ * Calls _lv_postorder() on each LV from VG. Avoids duplicate transitivity visits.
+ * Clears with _lv_postorder_cleanup() when all LVs were visited by postorder.
+ */
+static int _lv_postorder_vg(struct volume_group *vg,
+			    int (*fn)(struct logical_volume *lv, void *data),
+			    void *data)
+{
+	struct lv_list *lvl;
+	int r = 1;
+
+	dm_list_iterate_items(lvl, &vg->lvs)
+		if (!_lv_postorder_visit(lvl->lv, fn, data)) {
+			stack;
+			r = 0;
+		}
+
+	dm_list_iterate_items(lvl, &vg->lvs)
+		_lv_postorder_cleanup(lvl->lv, 0);
+
+	return r;
+}
+
 struct _lv_mark_if_partial_baton {
 	int partial;
 };
@@ -2076,11 +2099,6 @@ static int _lv_mark_if_partial_single(struct logical_volume *lv, void *data)
 	return 1;
 }
 
-static int _lv_mark_if_partial(struct logical_volume *lv)
-{
-	return _lv_postorder(lv, _lv_mark_if_partial_single, NULL);
-}
-
 /*
  * Mark LVs with missing PVs using PARTIAL_LV status flag. The flag is
  * propagated transitively, so LVs referencing other LVs are marked
@@ -2088,14 +2106,9 @@ static int _lv_mark_if_partial(struct logical_volume *lv)
  */
 int vg_mark_partial_lvs(struct volume_group *vg)
 {
-	struct logical_volume *lv;
-	struct lv_list *lvl;
+	if (!_lv_postorder_vg(vg, _lv_mark_if_partial_single, NULL))
+		return_0;
 
-	dm_list_iterate_items(lvl, &vg->lvs) {
-		lv = lvl->lv;
-		if (!_lv_mark_if_partial(lv))
-			return_0;
-	}
 	return 1;
 }
 
@@ -2378,9 +2391,9 @@ int vg_validate(struct volume_group *vg)
 	dm_hash_destroy(lvname_hash);
 	dm_hash_destroy(lvid_hash);
 
-	dm_list_iterate_items(lvl, &vg->lvs) {
-		if (!_lv_postorder(lvl->lv, _lv_validate_references_single, NULL))
-			r = 0;
+	if (!_lv_postorder_vg(vg, _lv_validate_references_single, NULL)) {
+		stack;
+		r = 0;
 	}
 
 	dm_list_iterate_items(lvl, &vg->lvs) {
