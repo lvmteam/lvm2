@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2011 Red Hat, Inc. All rights reserved.
  *
  * This file is part of the device-mapper userspace tools.
  *
@@ -133,7 +133,7 @@ void dm_hash_destroy(struct dm_hash_table *t)
 	dm_free(t);
 }
 
-static struct dm_hash_node **_find(struct dm_hash_table *t, const char *key,
+static struct dm_hash_node **_find(struct dm_hash_table *t, const void *key,
 				   uint32_t len)
 {
 	unsigned h = _hash(key, len) & (t->num_slots - 1);
@@ -150,15 +150,15 @@ static struct dm_hash_node **_find(struct dm_hash_table *t, const char *key,
 	return c;
 }
 
-void *dm_hash_lookup_binary(struct dm_hash_table *t, const char *key,
-			 uint32_t len)
+void *dm_hash_lookup_binary(struct dm_hash_table *t, const void *key,
+			    uint32_t len)
 {
 	struct dm_hash_node **c = _find(t, key, len);
 
 	return *c ? (*c)->data : 0;
 }
 
-int dm_hash_insert_binary(struct dm_hash_table *t, const char *key,
+int dm_hash_insert_binary(struct dm_hash_table *t, const void *key,
 			  uint32_t len, void *data)
 {
 	struct dm_hash_node **c = _find(t, key, len);
@@ -180,7 +180,7 @@ int dm_hash_insert_binary(struct dm_hash_table *t, const char *key,
 	return 1;
 }
 
-void dm_hash_remove_binary(struct dm_hash_table *t, const char *key,
+void dm_hash_remove_binary(struct dm_hash_table *t, const void *key,
 			uint32_t len)
 {
 	struct dm_hash_node **c = _find(t, key, len);
