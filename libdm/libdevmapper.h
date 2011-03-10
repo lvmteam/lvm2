@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2010 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2011 Red Hat, Inc. All rights reserved.
  *
  * This file is part of the device-mapper userspace tools.
  *
@@ -713,10 +713,10 @@ void *dm_hash_lookup(struct dm_hash_table *t, const char *key);
 int dm_hash_insert(struct dm_hash_table *t, const char *key, void *data);
 void dm_hash_remove(struct dm_hash_table *t, const char *key);
 
-void *dm_hash_lookup_binary(struct dm_hash_table *t, const char *key, uint32_t len);
-int dm_hash_insert_binary(struct dm_hash_table *t, const char *key, uint32_t len,
+void *dm_hash_lookup_binary(struct dm_hash_table *t, const void *key, uint32_t len);
+int dm_hash_insert_binary(struct dm_hash_table *t, const void *key, uint32_t len,
 		       void *data);
-void dm_hash_remove_binary(struct dm_hash_table *t, const char *key, uint32_t len);
+void dm_hash_remove_binary(struct dm_hash_table *t, const void *key, uint32_t len);
 
 unsigned dm_hash_get_num_entries(struct dm_hash_table *t);
 void dm_hash_iter(struct dm_hash_table *t, dm_hash_iterate_fn f);
