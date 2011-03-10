@@ -290,7 +290,7 @@ Use with care!  From version 4.8.0 onwards, if devices can't
 be removed because uninterruptible processes are waiting for
 I/O to return from them, adding --force will replace the table 
 with one that fails all I/O, which might allow the 
-process to be killed.  This also runs \fBmknodes\fP afterwards.
+process to be killed.  This also runs \fBmknodes\fP afterward.
 .IP \fBrename
 .I device_name new_name
 .br
@@ -374,7 +374,7 @@ the command will try to use a value defined by DM_UDEV_COOKIE environment variab
 .br
 Parses given cookie value and extracts any udev control flags encoded.
 The output is in environment key format that is suitable for use in udev
-rules. If the flag has its symbolic name assigned then the ouput is
+rules. If the flag has its symbolic name assigned then the output is
 DM_UDEV_FLAG_<flag_name>='1', DM_UDEV_FLAG<flag_position>='1' otherwise.
 Subsystem udev flags don't have symbolic names assigned and these ones are
 always reported as DM_SUBSYSTEM_UDEV_FLAG<flag_position>='1'. There are
