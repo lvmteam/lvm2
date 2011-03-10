@@ -98,93 +98,65 @@ static int _check_usp(const char *vgname, struct user_subpool *usp, int sp_count
 	return 1;
 }
 
-static struct volume_group *_build_vg_from_pds(struct format_instance
-					       *fid, struct dm_pool *mem,
-					       struct dm_list *pds)
+static struct volume_group *_pool_vg_read(struct format_instance *fid,
+					  const char *vg_name,
+					  struct metadata_area *mda __attribute__((unused)))
 {
-	struct dm_pool *smem = fid->fmt->cmd->mem;
-	struct volume_group *vg = NULL;
-	struct user_subpool *usp = NULL;
+	struct volume_group *vg;
+	struct user_subpool *usp;
 	int sp_count;
+	DM_LIST_INIT(pds);
 
-	if (!(vg = dm_pool_zalloc(smem, sizeof(*vg)))) {
-		log_error("Unable to allocate volume group structure");
-		return NULL;
-	}
+	/* We can safely ignore the mda passed in */
 
-	vg->cmd = fid->fmt->cmd;
-	vg->vgmem = mem;
+	/* Strip dev_dir if present */
+	vg_name = strip_dir(vg_name, fid->fmt->cmd->dev_dir);
+
+	/* Set vg_name through read_pool_pds() */
+	if (!(vg = alloc_vg("pool_vg_read", fid->fmt->cmd, NULL)))
+		return_NULL;
+
+	/* Read all the pvs in the vg */
+	if (!read_pool_pds(fid->fmt, vg_name, vg->vgmem, &pds))
+		goto_bad;
+
 	vg->fid = fid;
-	vg->name = NULL;
-	vg->status = 0;
-	vg->extent_count = 0;
-	vg->pv_count = 0;
+	/* Setting pool seqno to 1 because the code always did this,
+	 * although we don't think it's needed. */
 	vg->seqno = 1;
-	vg->system_id = NULL;
-	dm_list_init(&vg->pvs);
-	dm_list_init(&vg->lvs);
-	dm_list_init(&vg->tags);
-	dm_list_init(&vg->removed_pvs);
 
-	if (!import_pool_vg(vg, smem, pds))
-		return_NULL;
+	if (!import_pool_vg(vg, vg->vgmem, &pds))
+		goto_bad;
 
-	if (!import_pool_pvs(fid->fmt, vg, smem, pds))
-		return_NULL;
+	if (!import_pool_pvs(fid->fmt, vg, vg->vgmem, &pds))
+		goto_bad;
 
-	if (!import_pool_lvs(vg, smem, pds))
-		return_NULL;
+	if (!import_pool_lvs(vg, vg->vgmem, &pds))
+		goto_bad;
 
 	/*
 	 * I need an intermediate subpool structure that contains all the
 	 * relevant info for this.  Then i can iterate through the subpool
 	 * structures for checking, and create the segments
 	 */
-	if (!(usp = _build_usp(pds, mem, &sp_count)))
-		return_NULL;
+	if (!(usp = _build_usp(&pds, vg->vgmem, &sp_count)))
+		goto_bad;
 
 	/*
 	 * check the subpool structures - we can't handle partial VGs in
 	 * the pool format, so this will error out if we're missing PVs
 	 */
 	if (!_check_usp(vg->name, usp, sp_count))
-		return_NULL;
+		goto_bad;
 
-	if (!import_pool_segments(&vg->lvs, smem, usp, sp_count))
-		return_NULL;
-
-	return vg;
-}
-
-static struct volume_group *_pool_vg_read(struct format_instance *fid,
-				     const char *vg_name,
-				     struct metadata_area *mda __attribute__((unused)))
-{
-	struct dm_pool *mem = dm_pool_create("pool vg_read", VG_MEMPOOL_CHUNK);
-	struct dm_list pds;
-	struct volume_group *vg = NULL;
-
-	dm_list_init(&pds);
-
-	/* We can safely ignore the mda passed in */
-
-	if (!mem)
-		return_NULL;
-
-	/* Strip dev_dir if present */
-	vg_name = strip_dir(vg_name, fid->fmt->cmd->dev_dir);
-
-	/* Read all the pvs in the vg */
-	if (!read_pool_pds(fid->fmt, vg_name, mem, &pds))
-		goto_out;
-
-	/* Do the rest of the vg stuff */
-	if (!(vg = _build_vg_from_pds(fid, mem, &pds)))
-		goto_out;
+	if (!import_pool_segments(&vg->lvs, vg->vgmem, usp, sp_count))
+		goto_bad;
 
 	return vg;
-out:
-	dm_pool_destroy(mem);
+
+bad:
+	free_vg(vg);
+
 	return NULL;
 }
 

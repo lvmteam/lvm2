@@ -1,5 +1,6 @@
 Version 2.02.85 - 
 ===================================
+  Refactor allocation of VG structure, add alloc_vg().
   Avoid possible endless loop in _free_vginfo when 4 or more VGs have same name.
   Use empty string instead of /dev// for LV path when there's no VG.
   Don't allocate unused VG mempool in _pvsegs_sub_single.

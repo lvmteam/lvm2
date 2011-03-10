@@ -177,84 +177,58 @@ out:
 	return 0;
 }
 
-static struct volume_group *_build_vg(struct format_instance *fid,
-				      struct dm_list *pvs,
-				      struct dm_pool *mem)
-{
-	struct volume_group *vg = dm_pool_zalloc(mem, sizeof(*vg));
-	struct disk_list *dl;
-
-	if (!vg)
-		goto_bad;
-
-	if (dm_list_empty(pvs))
-		goto_bad;
-
-	vg->cmd = fid->fmt->cmd;
-	vg->vgmem = mem;
-	vg->fid = fid;
-	vg->seqno = 0;
-	dm_list_init(&vg->pvs);
-	dm_list_init(&vg->lvs);
-	dm_list_init(&vg->tags);
-	dm_list_init(&vg->removed_pvs);
-
-	if (!_check_vgs(pvs, vg))
-		goto_bad;
-
-	dl = dm_list_item(pvs->n, struct disk_list);
-
-	if (!import_vg(mem, vg, dl))
-		goto_bad;
-
-	if (!import_pvs(fid->fmt, mem, vg, pvs))
-		goto_bad;
-
-	if (!import_lvs(mem, vg, pvs))
-		goto_bad;
-
-	if (!import_extents(fid->fmt->cmd, vg, pvs))
-		goto_bad;
-
-	if (!import_snapshots(mem, vg, pvs))
-		goto_bad;
-
-	/* Fix extents counts by adding missing PV if partial VG */
-	if ((vg->status & PARTIAL_VG) && !_fix_partial_vg(vg, pvs))
-		goto_bad;
-
-	return vg;
-
-      bad:
-	dm_pool_free(mem, vg);
-	return NULL;
-}
-
 static struct volume_group *_format1_vg_read(struct format_instance *fid,
 				     const char *vg_name,
 				     struct metadata_area *mda __attribute__((unused)))
 {
-	struct dm_pool *mem = dm_pool_create("lvm1 vg_read", VG_MEMPOOL_CHUNK);
-	struct dm_list pvs;
-	struct volume_group *vg = NULL;
-	dm_list_init(&pvs);
-
-	if (!mem)
-		return_NULL;
+	struct volume_group *vg;
+	struct disk_list *dl;
+	DM_LIST_INIT(pvs);
 
 	/* Strip dev_dir if present */
 	vg_name = strip_dir(vg_name, fid->fmt->cmd->dev_dir);
 
-	if (!read_pvs_in_vg
-	    (fid->fmt, vg_name, fid->fmt->cmd->filter, mem, &pvs))
+	if (!(vg = alloc_vg("format1_vg_read", fid->fmt->cmd, NULL)))
+		return_NULL;
+
+	if (!read_pvs_in_vg(fid->fmt, vg_name, fid->fmt->cmd->filter,
+			    vg->vgmem, &pvs))
 		goto_bad;
 
-	if (!(vg = _build_vg(fid, &pvs, mem)))
+	if (dm_list_empty(&pvs))
+		goto_bad;
+
+	vg->fid = fid;
+
+	if (!_check_vgs(&pvs, vg))
+		goto_bad;
+
+	dl = dm_list_item(pvs.n, struct disk_list);
+
+	if (!import_vg(vg->vgmem, vg, dl))
+		goto_bad;
+
+	if (!import_pvs(fid->fmt, vg->vgmem, vg, &pvs))
+		goto_bad;
+
+	if (!import_lvs(vg->vgmem, vg, &pvs))
+		goto_bad;
+
+	if (!import_extents(fid->fmt->cmd, vg, &pvs))
+		goto_bad;
+
+	if (!import_snapshots(vg->vgmem, vg, &pvs))
+		goto_bad;
+
+	/* Fix extents counts by adding missing PV if partial VG */
+	if ((vg->status & PARTIAL_VG) && !_fix_partial_vg(vg, &pvs))
 		goto_bad;
 
 	return vg;
+
 bad:
-	dm_pool_destroy(mem);
+	free(vg);
+
 	return NULL;
 }
 
