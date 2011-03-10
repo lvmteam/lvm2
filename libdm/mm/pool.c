@@ -71,7 +71,7 @@ void dm_pools_check_leaks(void)
 			  p->orig_pool,
 			  p->name, p->stats.bytes);
 #else
-		log_error(" [%p]", p);
+		log_error(" [%p] %s", p, p->name);
 #endif
 	}
 }
