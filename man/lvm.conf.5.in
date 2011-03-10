@@ -171,6 +171,15 @@ from each device are counted.  If the counter of a particular device exceeds
 the limit set here, no further I/O is sent to that device for the remainder of
 the respective operation. Setting the parameter to 0 disables the counters
 altogether.
+.IP
+\fBpv_min_size\fP \(em
+Minimal size (in KB) of the block device which can be used as a PV.
+In clustered environment all nodes have to use the same value.
+Any value smaller then 512KB is ignored. An example to
+ignore devices smaller then 2MB (i.e. floppy drives):
+.IP
+pv_min_size = 2048
+.IP
 .TP
 \fBallocation\fP \(em Space allocation policies
 .IP
