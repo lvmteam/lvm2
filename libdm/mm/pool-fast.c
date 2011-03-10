@@ -28,6 +28,7 @@ struct dm_pool {
 	struct dm_list list;
 	struct chunk *chunk, *spare_chunk;	/* spare_chunk is a one entry free
 						   list to stop 'bobbling' */
+	const char *name;
 	size_t chunk_size;
 	size_t object_len;
 	unsigned object_alignment;
@@ -51,6 +52,7 @@ struct dm_pool *dm_pool_create(const char *name, size_t chunk_hint)
 		return 0;
 	}
 
+	p->name = name;
 	/* round chunk_hint up to the next power of 2 */
 	p->chunk_size = chunk_hint + sizeof(struct chunk);
 	while (new_size < p->chunk_size)
