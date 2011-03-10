@@ -2380,8 +2380,8 @@ int vg_validate(struct volume_group *vg)
 			break;
 		}
 
-		if (!dm_hash_insert_binary(lvid_hash, lvl->lv->lvid.id,
-					   sizeof(lvl->lv->lvid.id), lvl->lv)) {
+		if (!dm_hash_insert_binary(lvid_hash, &lvl->lv->lvid.id[1],
+					   sizeof(lvl->lv->lvid.id[1]), lvl->lv)) {
 			log_error("Failed to hash lvid.");
 			r = 0;
 			break;
