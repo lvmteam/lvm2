@@ -1,5 +1,6 @@
 Version 2.02.85 - 
 ===================================
+  Use hash tables to speedup string search in validate_vg().
   Refactor allocation of VG structure, add alloc_vg().
   Avoid possible endless loop in _free_vginfo when 4 or more VGs have same name.
   Use empty string instead of /dev// for LV path when there's no VG.
