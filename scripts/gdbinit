@@ -198,10 +198,11 @@ define __status
 end
 
 define lv_status
-	set $_lv=(struct logical_volume *)$arg0
+	# Use __lv because we don't want to overwrite higher functions
+	set $__lv = (struct logical_volume *)$arg0
 
-	printf "%s->status:", $_lv->name
-	__status $_lv
+	printf "%s->status:", $__lv->name
+	__status $__lv
 	printf "\n"
 end
 
@@ -371,6 +372,10 @@ define __lv_status_r
 			__seg_item $_lv $_seg $_area_index
 			__lv_status_r $_lv
 		else
+			if ($_seg->log_lv)
+				printf "[LOG OF %s] ", $_lv->name
+				lv_status $_seg->log_lv
+			end
 			__get_only_segment_using_this_lv $_seg $_lv
 			if ($_seg)
 				__lv_status_r $_lv $_seg
