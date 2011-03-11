@@ -1,5 +1,6 @@
 Version 2.02.85 - 
 ===================================
+  Add new free_pv_fid fn and use it throughout to free all attached fids.
   Use only vg_set_fid and new pv_set_fid fn to assign the format instance.
   Make create_text_context fn static and move it inside create_instance fn.
   Add mem and ref_count fields to struct format_instance for own mempool use.

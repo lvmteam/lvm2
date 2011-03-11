@@ -126,6 +126,8 @@ out:
 		log_error("Use pvcreate and vgcfgrestore "
 			  "to repair from archived metadata.");
 	unlock_vg(cmd, vg_name);
+	if (is_orphan_vg(vg_name))
+		free_pv_fid(pv);
 	if (!old_vg)
 		free_vg(vg);
 	return r;

@@ -183,8 +183,10 @@ int pvscan(struct cmd_context *cmd, int argc __attribute__((unused)),
 	pv_max_name_len += 2;
 	vg_max_name_len += 2;
 
-	dm_list_iterate_items(pvl, pvslist)
+	dm_list_iterate_items(pvl, pvslist) {
 	    _pvscan_display_single(cmd, pvl->pv, NULL);
+	    free_pv_fid(pvl->pv);
+	}
 
 	if (!pvs_found) {
 		log_print("No matching physical volumes found");

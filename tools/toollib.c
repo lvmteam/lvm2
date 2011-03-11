@@ -658,6 +658,9 @@ static int _process_all_devs(struct cmd_context *cmd, void *handle,
 			pv = &pv_dummy;
 		}
 		ret = process_single_pv(cmd, NULL, pv, handle);
+
+		free_pv_fid(pv);
+
 		if (ret > ret_max)
 			ret_max = ret;
 		if (sigint_caught())
@@ -757,6 +760,7 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 						continue;
 					}
 					scanned = 1;
+					free_pv_fid(pv);
 					if (!(pv = pv_read(cmd, argv[opt],
 							   NULL, 1,
 							   scan_label_only))) {
@@ -770,6 +774,14 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 			}
 
 			ret = process_single_pv(cmd, vg, pv, handle);
+
+			/*
+			 * Free PV only if we called pv_read before,
+			 * otherwise the PV structure is part of the VG.
+			 */
+			if (!vg)
+				free_pv_fid(pv);
+
 			if (ret > ret_max)
 				ret_max = ret;
 			if (sigint_caught())
@@ -823,6 +835,7 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 			dm_list_iterate_items(pvl, pvslist) {
 				ret = process_single_pv(cmd, NULL, pvl->pv,
 						     handle);
+				free_pv_fid(pvl->pv);
 				if (ret > ret_max)
 					ret_max = ret;
 				if (sigint_caught())
