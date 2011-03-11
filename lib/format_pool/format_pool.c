@@ -236,7 +236,7 @@ static struct format_instance *_pool_create_instance(const struct format_type *f
 		log_error("Unable to allocate metadata area structure "
 			  "for pool format");
 		dm_pool_free(fmt->cmd->mem, fid);
-		return NULL;
+		goto bad;
 	}
 
 	mda->ops = &_metadata_format_pool_ops;
@@ -245,10 +245,16 @@ static struct format_instance *_pool_create_instance(const struct format_type *f
 	dm_list_add(&fid->metadata_areas_in_use, &mda->list);
 
 	return fid;
+
+bad:
+	dm_pool_destroy(fid->mem);
+	return NULL;
 }
 
-static void _pool_destroy_instance(struct format_instance *fid __attribute__((unused)))
+static void _pool_destroy_instance(struct format_instance *fid)
 {
+	if (--fid->ref_count <= 1)
+		dm_pool_destroy(fid->mem);
 }
 
 static void _pool_destroy(struct format_type *fmt)

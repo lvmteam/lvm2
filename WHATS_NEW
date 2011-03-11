@@ -1,9 +1,10 @@
 Version 2.02.85 - 
 ===================================
+  Add mem and ref_count fields to struct format_instance for own mempool use.
   Use new alloc_fid fn for common format instance initialisation.
   Optimise _get_token() and _eat_space().
   Add _lv_postorder_vg() to improve efficiency for all LVs in VG.
-  Use hash tables to speedup string search in validate_vg().
+  Use hash tables to speedup string search in vg_validate().
   Refactor allocation of VG structure, add alloc_vg().
   Avoid possible endless loop in _free_vginfo when 4 or more VGs have same name.
   Use empty string instead of /dev// for LV path when there's no VG.

@@ -509,8 +509,10 @@ static struct format_instance *_format1_create_instance(const struct format_type
 
 	/* Define a NULL metadata area */
 	if (!(mda = dm_pool_zalloc(fmt->cmd->mem, sizeof(*mda)))) {
+		log_error("Unable to allocate metadata area structure "
+			  "for lvm1 format");
 		dm_pool_free(fmt->cmd->mem, fid);
-		return_NULL;
+		goto bad;
 	}
 
 	mda->ops = &_metadata_format1_ops;
@@ -519,10 +521,16 @@ static struct format_instance *_format1_create_instance(const struct format_type
 	dm_list_add(&fid->metadata_areas_in_use, &mda->list);
 
 	return fid;
+
+bad:
+	dm_pool_destroy(fid->mem);
+	return NULL;
 }
 
-static void _format1_destroy_instance(struct format_instance *fid __attribute__((unused)))
+static void _format1_destroy_instance(struct format_instance *fid)
 {
+	if (--fid->ref_count <= 1)
+		dm_pool_destroy(fid->mem);
 }
 
 static void _format1_destroy(struct format_type *fmt)
