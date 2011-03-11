@@ -333,7 +333,6 @@ static void _display_archive(struct cmd_context *cmd, struct archive_file *af)
 	log_print("Backup Time:\t%s", ctime(&when));
 
 	free_vg(vg);
-	tf->fmt->ops->destroy_instance(tf);
 }
 
 int archive_list(struct cmd_context *cmd, const char *dir, const char *vgname)

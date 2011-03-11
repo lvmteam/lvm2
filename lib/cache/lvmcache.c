@@ -627,7 +627,7 @@ int lvmcache_label_scan(struct cmd_context *cmd, int full_scan)
 struct volume_group *lvmcache_get_vg(const char *vgid, unsigned precommitted)
 {
 	struct lvmcache_vginfo *vginfo;
-	struct volume_group *vg;
+	struct volume_group *vg = NULL;
 	struct format_instance *fid;
 	struct format_instance_ctx fic;
 
@@ -663,20 +663,21 @@ struct volume_group *lvmcache_get_vg(const char *vgid, unsigned precommitted)
 	if (!vginfo->cft &&
 	    !(vginfo->cft =
 	      create_config_tree_from_string(fid->fmt->cmd,
-					     vginfo->vgmetadata))) {
-		_free_cached_vgmetadata(vginfo);
-		return_NULL;
-	}
+					     vginfo->vgmetadata)))
+		goto_bad;
 
-	if (!(vg = import_vg_from_config_tree(vginfo->cft, fid))) {
-		_free_cached_vgmetadata(vginfo);
-		return_NULL;
-	}
+	if (!(vg = import_vg_from_config_tree(vginfo->cft, fid)))
+		goto_bad;
 
 	log_debug("Using cached %smetadata for VG %s.",
 		  vginfo->precommitted ? "pre-committed" : "", vginfo->vgname);
 
 	return vg;
+
+bad:
+	free_vg(vg);
+	_free_cached_vgmetadata(vginfo);
+	return NULL;
 }
 
 struct dm_list *lvmcache_get_vgids(struct cmd_context *cmd,
