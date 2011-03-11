@@ -2647,7 +2647,7 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd,
 	struct lvmcache_vginfo *vginfo;
 	struct lvmcache_info *info;
 	struct pv_list *pvl;
-	struct volume_group *vg;
+	struct volume_group *vg = NULL;
 	struct physical_volume *pv = NULL;
 
 	lvmcache_label_scan(cmd, 0);
