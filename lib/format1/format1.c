@@ -508,10 +508,9 @@ static struct format_instance *_format1_create_instance(const struct format_type
 		return_NULL;
 
 	/* Define a NULL metadata area */
-	if (!(mda = dm_pool_zalloc(fmt->cmd->mem, sizeof(*mda)))) {
+	if (!(mda = dm_pool_zalloc(fid->mem, sizeof(*mda)))) {
 		log_error("Unable to allocate metadata area structure "
 			  "for lvm1 format");
-		dm_pool_free(fmt->cmd->mem, fid);
 		goto bad;
 	}
 

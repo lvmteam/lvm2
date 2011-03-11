@@ -4025,7 +4025,7 @@ struct format_instance *alloc_fid(const struct format_type *fmt,
 	if (!(mem = dm_pool_create("format_instance", 1024)))
 		return_NULL;
 
-	if (!(fid = dm_pool_zalloc(fmt->cmd->mem, sizeof(*fid)))) {
+	if (!(fid = dm_pool_zalloc(mem, sizeof(*fid)))) {
 		log_error("Couldn't allocate format_instance object.");
 		goto bad;
 	}
@@ -4117,7 +4117,7 @@ int fid_add_mdas(struct format_instance *fid, struct dm_list *mdas,
 	unsigned mda_index = 0;
 
 	dm_list_iterate_items(mda, mdas) {
-		mda_new = mda_copy(fid->fmt->cmd->mem, mda);
+		mda_new = mda_copy(fid->mem, mda);
 		if (!mda_new)
 			return_0;
 		fid_remove_mda(fid, NULL, key, key_len, mda_index);

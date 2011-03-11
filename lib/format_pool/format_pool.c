@@ -233,10 +233,9 @@ static struct format_instance *_pool_create_instance(const struct format_type *f
 		return_NULL;
 
 	/* Define a NULL metadata area */
-	if (!(mda = dm_pool_zalloc(fmt->cmd->mem, sizeof(*mda)))) {
+	if (!(mda = dm_pool_zalloc(fid->mem, sizeof(*mda)))) {
 		log_error("Unable to allocate metadata area structure "
 			  "for pool format");
-		dm_pool_free(fmt->cmd->mem, fid);
 		goto bad;
 	}
 
