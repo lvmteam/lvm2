@@ -3944,20 +3944,30 @@ uint32_t vg_lock_newname(struct cmd_context *cmd, const char *vgname)
 struct format_instance *alloc_fid(const struct format_type *fmt,
 				  const struct format_instance_ctx *fic)
 {
+	struct dm_pool *mem;
 	struct format_instance *fid;
+
+	if (!(mem = dm_pool_create("format_instance", 1024)))
+		return_NULL;
 
 	if (!(fid = dm_pool_zalloc(fmt->cmd->mem, sizeof(*fid)))) {
 		log_error("Couldn't allocate format_instance object.");
-		return NULL;
+		goto bad;
 	}
 
-	fid->fmt = fmt;
+	fid->ref_count = 1;
+	fid->mem = mem;
 	fid->type = fic->type;
+	fid->fmt = fmt;
 
 	dm_list_init(&fid->metadata_areas_in_use);
 	dm_list_init(&fid->metadata_areas_ignored);
 
 	return fid;
+
+bad:
+	dm_pool_destroy(mem);
+	return NULL;
 }
 
 void vg_set_fid(struct volume_group *vg,

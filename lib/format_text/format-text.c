@@ -1571,8 +1571,13 @@ static int _text_pv_initialise(const struct format_type *fmt,
 	return 1;
 }
 
-static void _text_destroy_instance(struct format_instance *fid __attribute__((unused)))
+static void _text_destroy_instance(struct format_instance *fid)
 {
+	if (--fid->ref_count <= 1) {
+		if (fid->type & FMT_INSTANCE_VG && fid->metadata_areas_index.hash)
+			dm_hash_destroy(fid->metadata_areas_index.hash);
+		dm_pool_destroy(fid->mem);
+	}
 }
 
 static void _free_dirs(struct dm_list *dir_list)
@@ -2188,28 +2193,21 @@ static int _text_pv_resize(const struct format_type *fmt,
 	return 1;
 }
 
-/* NULL vgname means use only the supplied context e.g. an archive file */
 static struct format_instance *_text_create_text_instance(const struct format_type *fmt,
 							  const struct format_instance_ctx *fic)
 {
 	struct format_instance *fid;
-	int r;
 
 	if (!(fid = alloc_fid(fmt, fic)))
 		return_NULL;
 
-	if (fid->type & FMT_INSTANCE_VG)
-		r = _create_vg_text_instance(fid, fic);
-	else
-		r = _create_pv_text_instance(fid, fic);
-
-	if (r)
+	if (fid->type & FMT_INSTANCE_VG ? _create_vg_text_instance(fid, fic) :
+					  _create_pv_text_instance(fid, fic))
 		return fid;
-	else {
-		dm_pool_free(fmt->cmd->mem, fid);
-		return NULL;
-	}
 
+	dm_pool_free(fmt->cmd->mem, fid);
+	dm_pool_destroy(fid->mem);
+	return NULL;
 }
 
 void *create_text_context(struct cmd_context *cmd, const char *path,
