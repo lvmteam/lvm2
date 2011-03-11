@@ -504,14 +504,8 @@ static struct format_instance *_format1_create_instance(const struct format_type
 	struct format_instance *fid;
 	struct metadata_area *mda;
 
-	if (!(fid = dm_pool_alloc(fmt->cmd->mem, sizeof(*fid))))
+	if (!(fid = alloc_fid(fmt, fic)))
 		return_NULL;
-
-	fid->fmt = fmt;
-	fid->type = fic->type;
-
-	dm_list_init(&fid->metadata_areas_in_use);
-	dm_list_init(&fid->metadata_areas_ignored);
 
 	/* Define a NULL metadata area */
 	if (!(mda = dm_pool_zalloc(fmt->cmd->mem, sizeof(*mda)))) {

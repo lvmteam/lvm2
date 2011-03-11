@@ -228,17 +228,8 @@ static struct format_instance *_pool_create_instance(const struct format_type *f
 	struct format_instance *fid;
 	struct metadata_area *mda;
 
-	if (!(fid = dm_pool_zalloc(fmt->cmd->mem, sizeof(*fid)))) {
-		log_error("Unable to allocate format instance structure for "
-			  "pool format");
-		return NULL;
-	}
-
-	fid->fmt = fmt;
-	fid->type = fic->type;
-
-	dm_list_init(&fid->metadata_areas_in_use);
-	dm_list_init(&fid->metadata_areas_ignored);
+	if (!(fid = alloc_fid(fmt, fic)))
+		return_NULL;
 
 	/* Define a NULL metadata area */
 	if (!(mda = dm_pool_zalloc(fmt->cmd->mem, sizeof(*mda)))) {
