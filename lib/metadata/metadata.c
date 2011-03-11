@@ -3243,8 +3243,19 @@ void free_pv_fid(struct physical_volume *pv)
 
 void free_vg(struct volume_group *vg)
 {
+	struct pv_list *pvl;
+
 	if (!vg)
 		return;
+
+	dm_list_iterate_items(pvl, &vg->pvs)
+		pvl->pv->fid->fmt->ops->destroy_instance(pvl->pv->fid);
+
+	dm_list_iterate_items(pvl, &vg->removed_pvs)
+		pvl->pv->fid->fmt->ops->destroy_instance(pvl->pv->fid);
+
+	if (vg->fid)
+		vg->fid->fmt->ops->destroy_instance(vg->fid);
 
 	if (vg->cmd && vg->vgmem == vg->cmd->mem) {
 		log_error(INTERNAL_ERROR "global memory pool used for VG %s",
