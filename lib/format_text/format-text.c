@@ -1690,12 +1690,8 @@ static int _text_pv_setup(const struct format_type *fmt,
 	    (pv_mdac = pv_mda->metadata_locn))
 		size_reduction = pv_mdac->area.size >> SECTOR_SHIFT;
 
-	/* Destroy old PV-based format instance if it exists. */
-	if (!(pv->fid->type & FMT_INSTANCE_VG))
-		pv->fmt->ops->destroy_instance(pv->fid);
-
 	/* From now on, VG format instance will be used. */
-	pv->fid = vg->fid;
+	pv_set_fid(pv, vg->fid);
 
 	/* FIXME Cope with genuine pe_count 0 */
 

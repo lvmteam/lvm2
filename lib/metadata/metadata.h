@@ -206,7 +206,15 @@ struct format_instance_ctx {
 
 struct format_instance *alloc_fid(const struct format_type *fmt,
 				  const struct format_instance_ctx *fic);
+
+/*
+ * Format instance must always be set using pv_set_fid or vg_set_fid
+ * (NULL value as well), never asign it directly! This is essential
+ * for proper reference counting for the format instance.
+ */
+void pv_set_fid(struct physical_volume *pv, struct format_instance *fid);
 void vg_set_fid(struct volume_group *vg, struct format_instance *fid);
+
 /* FIXME: Add generic interface for mda counts based on given key. */
 int fid_add_mda(struct format_instance *fid, struct metadata_area *mda,
 		const char *key, size_t key_len, const unsigned sub_key);

@@ -166,14 +166,24 @@ void add_pvl_to_vgs(struct volume_group *vg, struct pv_list *pvl)
 	dm_list_add(&vg->pvs, &pvl->list);
 	vg->pv_count++;
 	pvl->pv->vg = vg;
-	pvl->pv->fid = vg->fid;
+	pv_set_fid(pvl->pv, vg->fid);
 }
 
 void del_pvl_from_vgs(struct volume_group *vg, struct pv_list *pvl)
 {
+	struct format_instance_ctx fic;
+	struct format_instance *fid;
+
 	vg->pv_count--;
 	dm_list_del(&pvl->list);
 	pvl->pv->vg = NULL; /* orphan */
+
+	/* Use a new PV-based format instance since the PV is orphan now. */
+	fic.type = FMT_INSTANCE_PV | FMT_INSTANCE_MDAS | FMT_INSTANCE_AUX_MDAS;
+	fic.context.pv_id = (const char *) &pvl->pv->id;
+	fid = pvl->pv->fid->fmt->ops->create_instance(pvl->pv->fid->fmt, &fic);
+
+	pv_set_fid(pvl->pv, fid);
 }
 
 
@@ -287,6 +297,10 @@ static int _copy_pv(struct dm_pool *pvmem,
 		    struct physical_volume *pv_from)
 {
 	memcpy(pv_to, pv_from, sizeof(*pv_to));
+
+	/* We must use pv_set_fid here to update the reference counter! */
+	pv_to->fid = NULL;
+	pv_set_fid(pv_to, pv_from->fid);
 
 	if (!(pv_to->vg_name = dm_pool_strdup(pvmem, pv_from->vg_name)))
 		return_0;
@@ -881,6 +895,7 @@ struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name)
 {
 	struct volume_group *vg;
 	struct format_instance_ctx fic;
+	struct format_instance *fid;
 	int consistent = 0;
 	uint32_t rc;
 
@@ -937,10 +952,11 @@ struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name)
 	fic.type = FMT_INSTANCE_VG | FMT_INSTANCE_MDAS | FMT_INSTANCE_AUX_MDAS;
 	fic.context.vg_ref.vg_name = vg_name;
 	fic.context.vg_ref.vg_id = NULL;
-	if (!(vg->fid = cmd->fmt->ops->create_instance(cmd->fmt, &fic))) {
+	if (!(fid = cmd->fmt->ops->create_instance(cmd->fmt, &fic))) {
 		log_error("Failed to create format instance");
 		goto bad;
 	}
+	vg_set_fid(vg, fid);
 
 	if (vg->fid->fmt->ops->vg_setup &&
 	    !vg->fid->fmt->ops->vg_setup(vg->fid, vg)) {
@@ -1507,7 +1523,7 @@ static struct physical_volume *_alloc_pv(struct dm_pool *mem, struct device *dev
 	if (!pv)
 		return_NULL;
 
-	pv->fid = NULL;
+	pv_set_fid(pv, NULL);
 	pv->pe_size = 0;
 	pv->pe_start = 0;
 	pv->pe_count = 0;
@@ -1562,6 +1578,7 @@ struct physical_volume *pv_create(const struct cmd_context *cmd,
 {
 	const struct format_type *fmt = cmd->fmt;
 	struct format_instance_ctx fic;
+	struct format_instance *fid;
 	struct dm_pool *mem = fmt->cmd->mem;
 	struct physical_volume *pv = _alloc_pv(mem, dev);
 	unsigned mda_index;
@@ -1605,10 +1622,11 @@ struct physical_volume *pv_create(const struct cmd_context *cmd,
 
 	fic.type = FMT_INSTANCE_PV;
 	fic.context.pv_id = (const char *) &pv->id;
-	if (!(pv->fid = fmt->ops->create_instance(fmt, &fic))) {
+	if (!(fid = fmt->ops->create_instance(fmt, &fic))) {
 		log_error("Couldn't create format instance for PV %s.", pv_dev_name(pv));
 		goto bad;
 	}
+	pv_set_fid(pv, fid);
 
 	pv->fmt = fmt;
 	pv->vg_name = fmt->orphan_vg_name;
@@ -2615,6 +2633,7 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd,
 					     const char *orphan_vgname)
 {
 	struct format_instance_ctx fic;
+	struct format_instance *fid;
 	struct lvmcache_vginfo *vginfo;
 	struct lvmcache_info *info;
 	struct pv_list *pvl;
@@ -2633,10 +2652,11 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd,
 	fic.type = FMT_INSTANCE_VG | FMT_INSTANCE_AUX_MDAS;
 	fic.context.vg_ref.vg_name = orphan_vgname;
 	fic.context.vg_ref.vg_id = NULL;
-	if (!(vg->fid = vginfo->fmt->ops->create_instance(vginfo->fmt, &fic))) {
+	if (!(fid = vginfo->fmt->ops->create_instance(vginfo->fmt, &fic))) {
 		log_error("Failed to create format instance");
 		goto bad;
 	}
+	vg_set_fid(vg, fid);
 
 	dm_list_iterate_items(info, &vginfo->infos) {
 		if (!(pv = _pv_read(cmd, vg->vgmem, dev_name(info->dev),
@@ -3415,11 +3435,12 @@ static struct physical_volume *_pv_read(struct cmd_context *cmd,
 	else {
 		fic.type = FMT_INSTANCE_PV | FMT_INSTANCE_MDAS | FMT_INSTANCE_AUX_MDAS;
 		fic.context.pv_id = (const char *) &pv->id;
-		if (!(pv->fid = pv->fmt->ops->create_instance(pv->fmt, &fic))) {
+		if (!(fid = pv->fmt->ops->create_instance(pv->fmt, &fic))) {
 			log_error("_pv_read: Couldn't create format instance "
 				  "for PV %s", pv_name);
 			goto bad;
 		}
+		pv_set_fid(pv, fid);
 	}
 
 	return pv;
@@ -3970,14 +3991,31 @@ bad:
 	return NULL;
 }
 
+void pv_set_fid(struct physical_volume *pv,
+		struct format_instance *fid)
+{
+	if (pv->fid)
+		pv->fid->fmt->ops->destroy_instance(pv->fid);
+
+	pv->fid = fid;
+	if (fid)
+		fid->ref_count++;
+}
+
 void vg_set_fid(struct volume_group *vg,
 		 struct format_instance *fid)
 {
 	struct pv_list *pvl;
 
+	if (vg->fid)
+		vg->fid->fmt->ops->destroy_instance(vg->fid);
+
 	vg->fid = fid;
+	if (fid)
+		fid->ref_count++;
+
 	dm_list_iterate_items(pvl, &vg->pvs)
-		pvl->pv->fid = fid;
+		pv_set_fid(pvl->pv, fid);
 }
 
 static int _convert_key_to_string(const char *key, size_t key_len,
