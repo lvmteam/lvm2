@@ -191,6 +191,21 @@ struct metadata_area *mda_copy(struct dm_pool *mem,
 unsigned mda_is_ignored(struct metadata_area *mda);
 void mda_set_ignored(struct metadata_area *mda, unsigned ignored);
 unsigned mda_locns_match(struct metadata_area *mda1, struct metadata_area *mda2);
+
+struct format_instance_ctx {
+	uint32_t type;
+	union {
+		const char *pv_id;
+		struct {
+			const char *vg_name;
+			const char *vg_id;
+		} vg_ref;
+		void *private;
+	} context;
+};
+
+struct format_instance *alloc_fid(const struct format_type *fmt,
+				  const struct format_instance_ctx *fic);
 void vg_set_fid(struct volume_group *vg, struct format_instance *fid);
 /* FIXME: Add generic interface for mda counts based on given key. */
 int fid_add_mda(struct format_instance *fid, struct metadata_area *mda,
@@ -227,18 +242,6 @@ struct seg_list {
 	struct dm_list list;
 	unsigned count;
 	struct lv_segment *seg;
-};
-
-struct format_instance_ctx {
-	uint32_t type;
-	union {
-		const char *pv_id;
-		struct {
-			const char *vg_name;
-			const char *vg_id;
-		} vg_ref;
-		void *private;
-	} context;
 };
 
 /*

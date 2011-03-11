@@ -2190,21 +2190,13 @@ static int _text_pv_resize(const struct format_type *fmt,
 
 /* NULL vgname means use only the supplied context e.g. an archive file */
 static struct format_instance *_text_create_text_instance(const struct format_type *fmt,
-							   const struct format_instance_ctx *fic)
+							  const struct format_instance_ctx *fic)
 {
 	struct format_instance *fid;
 	int r;
 
-	if (!(fid = dm_pool_alloc(fmt->cmd->mem, sizeof(*fid)))) {
-		log_error("Couldn't allocate format instance object.");
-		return NULL;
-	}
-
-	fid->fmt = fmt;
-	fid->type = fic->type;
-
-	dm_list_init(&fid->metadata_areas_in_use);
-	dm_list_init(&fid->metadata_areas_ignored);
+	if (!(fid = alloc_fid(fmt, fic)))
+		return_NULL;
 
 	if (fid->type & FMT_INSTANCE_VG)
 		r = _create_vg_text_instance(fid, fic);

@@ -3941,6 +3941,25 @@ uint32_t vg_lock_newname(struct cmd_context *cmd, const char *vgname)
 	return FAILED_EXIST;
 }
 
+struct format_instance *alloc_fid(const struct format_type *fmt,
+				  const struct format_instance_ctx *fic)
+{
+	struct format_instance *fid;
+
+	if (!(fid = dm_pool_zalloc(fmt->cmd->mem, sizeof(*fid)))) {
+		log_error("Couldn't allocate format_instance object.");
+		return NULL;
+	}
+
+	fid->fmt = fmt;
+	fid->type = fic->type;
+
+	dm_list_init(&fid->metadata_areas_in_use);
+	dm_list_init(&fid->metadata_areas_ignored);
+
+	return fid;
+}
+
 void vg_set_fid(struct volume_group *vg,
 		 struct format_instance *fid)
 {
