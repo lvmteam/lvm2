@@ -1,5 +1,6 @@
 Version 2.02.85 - 
 ===================================
+  Make create_text_context fn static and move it inside create_instance fn.
   Add mem and ref_count fields to struct format_instance for own mempool use.
   Use new alloc_fid fn for common format instance initialisation.
   Optimise _get_token() and _eat_space().

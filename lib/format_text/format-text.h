@@ -44,9 +44,12 @@ int backup_list(struct cmd_context *cmd, const char *dir, const char *vgname);
 /*
  * The text format can read and write a volume_group to a file.
  */
+struct text_context {
+	const char *path_live;	/* Path to file holding live metadata */
+	const char *path_edit;	/* Path to file holding edited metadata */
+	const char *desc;	/* Description placed inside file */
+};
 struct format_type *create_text_format(struct cmd_context *cmd);
-void *create_text_context(struct cmd_context *cmd, const char *path,
-			  const char *desc);
 
 struct labeller *text_labeller_create(const struct format_type *fmt);
 
