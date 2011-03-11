@@ -271,11 +271,14 @@ struct volume_group *backup_read_vg(struct cmd_context *cmd,
 	struct volume_group *vg = NULL;
 	struct format_instance *tf;
 	struct format_instance_ctx fic;
+	struct text_context tc = {.path_live = file,
+				  .path_edit = NULL,
+				  .desc = cmd->cmd_line};
 	struct metadata_area *mda;
 
 	fic.type = FMT_INSTANCE_VG | FMT_INSTANCE_PRIVATE_MDAS;
-	if (!(fic.context.private = create_text_context(cmd, file, cmd->cmd_line)) ||
-	    !(tf = cmd->fmt_backup->ops->create_instance(cmd->fmt_backup, &fic))) {
+	fic.context.private = &tc;
+	if (!(tf = cmd->fmt_backup->ops->create_instance(cmd->fmt_backup, &fic))) {
 		log_error("Couldn't create text format object.");
 		return NULL;
 	}
@@ -379,6 +382,9 @@ int backup_to_file(const char *file, const char *desc, struct volume_group *vg)
 	int r = 0;
 	struct format_instance *tf;
 	struct format_instance_ctx fic;
+	struct text_context tc = {.path_live = file,
+				  .path_edit = NULL,
+				  .desc = desc};
 	struct metadata_area *mda;
 	struct cmd_context *cmd;
 
@@ -387,8 +393,8 @@ int backup_to_file(const char *file, const char *desc, struct volume_group *vg)
 	log_verbose("Creating volume group backup \"%s\" (seqno %u).", file, vg->seqno);
 
 	fic.type = FMT_INSTANCE_VG | FMT_INSTANCE_PRIVATE_MDAS;
-	if (!(fic.context.private = create_text_context(cmd, file, desc)) ||
-	    !(tf = cmd->fmt_backup->ops->create_instance(cmd->fmt_backup, &fic))) {
+	fic.context.private = &tc;
+	if (!(tf = cmd->fmt_backup->ops->create_instance(cmd->fmt_backup, &fic))) {
 		log_error("Couldn't create backup object.");
 		return 0;
 	}

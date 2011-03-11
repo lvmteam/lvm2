@@ -59,12 +59,6 @@ struct raw_list {
 	struct device_area dev_area;
 };
 
-struct text_context {
-	char *path_live;	/* Path to file holding live metadata */
-	char *path_edit;	/* Path to file holding edited metadata */
-	char *desc;		/* Description placed inside file */
-};
-
 int rlocn_is_ignored(const struct raw_locn *rlocn)
 {
 	return (rlocn->flags & RAW_LOCN_IGNORED ? 1 : 0);
@@ -992,7 +986,7 @@ static int _vg_commit_file(struct format_instance *fid, struct volume_group *vg,
 			   struct metadata_area *mda)
 {
 	struct text_context *tc = (struct text_context *) mda->metadata_locn;
-	char *slash;
+	const char *slash;
 	char new_name[PATH_MAX];
 	size_t len;
 
@@ -1758,6 +1752,52 @@ static int _create_pv_text_instance(struct format_instance *fid,
 	return 1;
 }
 
+static void *_create_text_context(struct dm_pool *mem, struct text_context *tc)
+{
+	struct text_context *new_tc;
+	const char *path;
+	char *tmp;
+
+	if (!tc)
+		return NULL;
+
+	path = tc->path_live;
+
+	if ((tmp = strstr(path, ".tmp")) && (tmp == path + strlen(path) - 4)) {
+		log_error("%s: Volume group filename may not end in .tmp",
+			  path);
+		return NULL;
+	}
+
+	if (!(new_tc = dm_pool_alloc(mem, sizeof(*new_tc))))
+		return_NULL;
+
+	if (!(new_tc->path_live = dm_pool_strdup(mem, path)))
+		goto_bad;
+
+	/* If path_edit not defined, create one from path_live with .tmp suffix. */
+	if (!tc->path_edit) {
+		if (!(tmp = dm_pool_alloc(mem, strlen(path) + 5)))
+			goto_bad;
+		sprintf(tmp, "%s.tmp", path);
+		new_tc->path_edit = tmp;
+	}
+	else if (!(new_tc->path_edit = dm_pool_strdup(mem, tc->path_edit)))
+		goto_bad;
+
+	if (!(new_tc->desc = tc->desc ? dm_pool_strdup(mem, tc->desc)
+				      : dm_pool_strdup(mem, "")))
+		goto_bad;
+
+	return (void *) new_tc;
+
+      bad:
+	dm_pool_free(mem, new_tc);
+
+	log_error("Couldn't allocate text format context object.");
+	return NULL;
+}
+
 static int _create_vg_text_instance(struct format_instance *fid,
                                     const struct format_instance_ctx *fic)
 {
@@ -1769,6 +1809,7 @@ static int _create_vg_text_instance(struct format_instance *fid,
 	struct raw_list *rl;
 	struct dm_list *dir_list, *raw_list;
 	char path[PATH_MAX];
+	struct text_context tc;
 	struct lvmcache_vginfo *vginfo;
 	struct lvmcache_info *info;
 	const char *vg_name, *vg_id;
@@ -1786,7 +1827,7 @@ static int _create_vg_text_instance(struct format_instance *fid,
 		if (!(mda = dm_pool_zalloc(fid->fmt->cmd->mem, sizeof(*mda))))
 			return_0;
 		mda->ops = &_metadata_text_file_backup_ops;
-		mda->metadata_locn = fic->context.private;
+		mda->metadata_locn = _create_text_context(fid->fmt->cmd->mem, fic->context.private);
 		mda->status = 0;
 		fid->metadata_areas_index.hash = NULL;
 		fid_add_mda(fid, mda, NULL, 0, 0);
@@ -1811,7 +1852,9 @@ static int _create_vg_text_instance(struct format_instance *fid,
 				if (!(mda = dm_pool_zalloc(fid->fmt->cmd->mem, sizeof(*mda))))
 					return_0;
 				mda->ops = &_metadata_text_file_ops;
-				mda->metadata_locn = create_text_context(fid->fmt->cmd, path, NULL);
+				tc.path_live = path;
+				tc.path_edit = tc.desc = NULL;
+				mda->metadata_locn = _create_text_context(fid->fmt->cmd->mem, &tc);
 				mda->status = 0;
 				fid_add_mda(fid, mda, NULL, 0, 0);
 			}
@@ -2207,44 +2250,6 @@ static struct format_instance *_text_create_text_instance(const struct format_ty
 
 	dm_pool_free(fmt->cmd->mem, fid);
 	dm_pool_destroy(fid->mem);
-	return NULL;
-}
-
-void *create_text_context(struct cmd_context *cmd, const char *path,
-			  const char *desc)
-{
-	struct text_context *tc;
-	char *tmp;
-
-	if ((tmp = strstr(path, ".tmp")) && (tmp == path + strlen(path) - 4)) {
-		log_error("%s: Volume group filename may not end in .tmp",
-			  path);
-		return NULL;
-	}
-
-	if (!(tc = dm_pool_alloc(cmd->mem, sizeof(*tc))))
-		return_NULL;
-
-	if (!(tc->path_live = dm_pool_strdup(cmd->mem, path)))
-		goto_bad;
-
-	if (!(tc->path_edit = dm_pool_alloc(cmd->mem, strlen(path) + 5)))
-		goto_bad;
-
-	sprintf(tc->path_edit, "%s.tmp", path);
-
-	if (!desc)
-		desc = "";
-
-	if (!(tc->desc = dm_pool_strdup(cmd->mem, desc)))
-		goto_bad;
-
-	return (void *) tc;
-
-      bad:
-	dm_pool_free(cmd->mem, tc);
-
-	log_error("Couldn't allocate text format context object.");
 	return NULL;
 }
 
