@@ -40,6 +40,7 @@ static int _remove_pv(struct volume_group *vg, struct pv_list *pvl, int silent)
 	vg->free_count -= pvl->pv->pe_count;
 	vg->extent_count -= pvl->pv->pe_count;
 	del_pvl_from_vgs(vg, pvl);
+	free_pv_fid(pvl->pv);
 
 	return 1;
 }
@@ -450,6 +451,8 @@ static int _vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 	log_print("Removed \"%s\" from volume group \"%s\"", name, vg->name);
 	r = ECMD_PROCESSED;
 bad:
+	if (pvl)
+		free_pv_fid(pvl->pv);
 	unlock_and_free_vg(cmd, orphan_vg, VG_ORPHANS);
 	return r;
 }

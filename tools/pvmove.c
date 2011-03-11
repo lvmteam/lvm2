@@ -431,11 +431,13 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 		if (!(lv_name = _extract_lvname(cmd, pv_vg_name(pv),
 						arg_value(cmd, name_ARG)))) {
 			stack;
+			free_pv_fid(pv);
 			return EINVALID_CMD_LINE;
 		}
 
 		if (!validate_name(lv_name)) {
 			log_error("Logical volume name %s is invalid", lv_name);
+			free_pv_fid(pv);
 			return EINVALID_CMD_LINE;
 		}
 	}
@@ -510,6 +512,7 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 	/* LVs are all in status LOCKED */
 	r = ECMD_PROCESSED;
 out:
+	free_pv_fid(pv);
 	unlock_and_free_vg(cmd, vg, pv_vg_name(pv));
 	return r;
 }
@@ -600,6 +603,7 @@ static struct volume_group *_get_move_vg(struct cmd_context *cmd,
 					 const char *uuid __attribute__((unused)))
 {
 	struct physical_volume *pv;
+	struct volume_group *vg;
 
 	/* Reread all metadata in case it got changed */
 	if (!(pv = find_pv_by_name(cmd, name))) {
@@ -608,7 +612,10 @@ static struct volume_group *_get_move_vg(struct cmd_context *cmd,
 		return NULL;
 	}
 
-	return _get_vg(cmd, pv_vg_name(pv));
+	vg = _get_vg(cmd, pv_vg_name(pv));
+	free_pv_fid(pv);
+
+	return vg;
 }
 
 static struct poll_functions _pvmove_fns = {

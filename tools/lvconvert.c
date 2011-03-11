@@ -791,6 +791,7 @@ static void _remove_missing_empty_pv(struct volume_group *vg, struct dm_list *re
 			vg->free_count -= pvl_vg->pv->pe_count;
 			vg->extent_count -= pvl_vg->pv->pe_count;
 			del_pvl_from_vgs(vg, pvl_vg);
+			free_pv_fid(pvl_vg->pv);
 
 			removed++;
 		}

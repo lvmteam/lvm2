@@ -49,31 +49,34 @@ static int pvremove_check(struct cmd_context *cmd, const char *name)
 		if (!scan_vgs_for_pvs(cmd, 0)) {
 			log_error("Rescan for PVs without metadata areas "
 				  "failed.");
-			return 0;
+			goto bad;
 		}
+		free_pv_fid(pv);
 		if (!(pv = pv_read(cmd, name, NULL, 1, 0))) {
 			log_error("Failed to read physical volume %s", name);
-			return 0;
+			goto bad;
 		}
 	}
 
 	/* orphan ? */
-	if (is_orphan(pv))
+	if (is_orphan(pv)) {
+		free_pv_fid(pv);
 		return 1;
+	}
 
 	/* Allow partial & exported VGs to be destroyed. */
 	/* we must have -ff to overwrite a non orphan */
 	if (arg_count(cmd, force_ARG) < 2) {
 		log_error("PV %s belongs to Volume Group %s so please use vgreduce first.", name, pv_vg_name(pv));
 		log_error("(If you are certain you need pvremove, then confirm by using --force twice.)");
-		return 0;
+		goto bad;
 	}
 
 	/* prompt */
 	if (!arg_count(cmd, yes_ARG) &&
 	    yes_no_prompt(_really_wipe, name, pv_vg_name(pv)) == 'n') {
 		log_error("%s: physical volume label not removed", name);
-		return 0;
+		goto bad;
 	}
 
 	if (arg_count(cmd, force_ARG)) {
@@ -84,7 +87,12 @@ static int pvremove_check(struct cmd_context *cmd, const char *name)
 			  !is_orphan(pv) ? "\"" : "");
 	}
 
+	free_pv_fid(pv);
 	return 1;
+
+bad:
+	free_pv_fid(pv);
+	return 0;
 }
 
 static int pvremove_single(struct cmd_context *cmd, const char *pv_name,

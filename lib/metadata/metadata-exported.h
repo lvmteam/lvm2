@@ -460,6 +460,14 @@ void del_pvl_from_vgs(struct volume_group *vg, struct pv_list *pvl);
 int remove_lvs_in_vg(struct cmd_context *cmd,
 		     struct volume_group *vg,
 		     force_t force);
+
+/*
+ * free_pv_fid() must be called on every struct physical_volume allocated
+ * by pv_create, pv_read, find_pv_by_name or pv_by_path to free it when
+ * no longer required.
+ */
+void free_pv_fid(struct physical_volume *pv);
+
 /*
  * free_vg() must be called on every struct volume_group allocated
  * by vg_create() or vg_read_internal() to free it when no longer required.

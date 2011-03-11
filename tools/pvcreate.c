@@ -93,6 +93,7 @@ int pvcreate(struct cmd_context *cmd, int argc, char **argv)
 	int i;
 	int ret = ECMD_PROCESSED;
 	struct pvcreate_params pp;
+	struct physical_volume *pv;
 
 	pvcreate_params_set_defaults(&pp);
 
@@ -111,11 +112,12 @@ int pvcreate(struct cmd_context *cmd, int argc, char **argv)
 
 		unescape_colons_and_at_signs(argv[i], NULL, NULL);
 
-		if (!pvcreate_single(cmd, argv[i], &pp)) {
+		if (!(pv = pvcreate_single(cmd, argv[i], &pp))) {
 			stack;
 			ret = ECMD_FAILED;
 		}
 
+		free_pv_fid(pv);
 		unlock_vg(cmd, VG_ORPHANS);
 		if (sigint_caught())
 			return ret;
