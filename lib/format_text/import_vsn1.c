@@ -666,10 +666,6 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 	if (!(vg = alloc_vg("read_vg", fid->fmt->cmd, vgn->key)))
 		return_NULL;
 
-	/* FIXME Determine format type from file contents */
-	/* eg Set to instance of fmt1 here if reading a format1 backup? */
-	vg->fid = fid;
-
 	if (!(vg->system_id = dm_pool_zalloc(vg->vgmem, NAME_LEN)))
 		goto_bad;
 
@@ -795,6 +791,10 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 
 	dm_hash_destroy(pv_hash);
 	dm_hash_destroy(lv_hash);
+
+	/* FIXME Determine format type from file contents */
+	/* eg Set to instance of fmt1 here if reading a format1 backup? */
+	vg_set_fid(vg, fid);
 
 	/*
 	 * Finished.

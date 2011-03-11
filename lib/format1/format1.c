@@ -198,7 +198,7 @@ static struct volume_group *_format1_vg_read(struct format_instance *fid,
 	if (dm_list_empty(&pvs))
 		goto_bad;
 
-	vg->fid = fid;
+	vg_set_fid(vg, fid);
 
 	if (!_check_vgs(&pvs, vg))
 		goto_bad;
