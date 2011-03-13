@@ -1,5 +1,6 @@
 Version 2.02.85 - 
 ===================================
+  Fix readlink usage inside get_primary_dev().
   Use format instance mempool where possible and adequate.
   Call destroy_instance for any PVs found in VG structure during vg_free call.
   Add new free_pv_fid fn and use it throughout to free all attached fids.
