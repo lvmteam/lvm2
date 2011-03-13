@@ -509,8 +509,8 @@ static int _lock_resource(char *resource, int mode, int flags, int *lockid)
 			
 	/* Wait for it to complete */
 
-	DEBUGLOG("lock_resource returning %d, lock_id=%llx\n", err,
-		 lock_id);
+	DEBUGLOG("lock_resource returning %d, lock_id=%" PRIx64 "\n",
+		 err, lock_id);
 
 	linfo->lock_id = lock_id;
 	linfo->res_handle = res_handle;
@@ -531,7 +531,7 @@ static int _unlock_resource(char *resource, int lockid)
 	if (!linfo)
 		return 0;
 
-	DEBUGLOG("unlock_resource: lockid: %llx\n", linfo->lock_id);
+	DEBUGLOG("unlock_resource: lockid: %" PRIx64 "\n", linfo->lock_id);
 	err = saLckResourceUnlock(linfo->lock_id, SA_TIME_END);
 	if (err != SA_AIS_OK)
 	{
