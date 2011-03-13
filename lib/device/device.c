@@ -287,7 +287,7 @@ int get_primary_dev(const char *sysfs_dir,
 	struct stat info;
 	FILE *fp;
 	uint32_t pri_maj, pri_min;
-	int ret = 0;
+	int size, ret = 0;
 
 	/* check if dev is a partition */
 	if (dm_snprintf(path, PATH_MAX, "%s/dev/block/%d:%d/partition",
@@ -309,10 +309,12 @@ int get_primary_dev(const char *sysfs_dir,
 	 * - basename ../../block/md0/md0  = md0
 	 * Parent's 'dev' sysfs attribute  = /sys/block/md0/dev
 	 */
-	if (readlink(dirname(path), temp_path, PATH_MAX) < 0) {
+	if ((size = readlink(dirname(path), temp_path, PATH_MAX)) < 0) {
 		log_sys_error("readlink", path);
 		return ret;
 	}
+
+	temp_path[size] = '\0';
 
 	if (dm_snprintf(path, PATH_MAX, "%s/block/%s/dev",
 			sysfs_dir, basename(dirname(temp_path))) < 0) {
