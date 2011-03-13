@@ -225,7 +225,7 @@ int import_vg(struct dm_pool *mem,
 	if (!(vg->name = dm_pool_strdup(mem, (char *)dl->pvd.vg_name)))
 		return_0;
 
-	if (!(vg->system_id = dm_pool_alloc(mem, NAME_LEN)))
+	if (!(vg->system_id = dm_pool_zalloc(mem, NAME_LEN + 1)))
 		return_0;
 
 	*vg->system_id = '\0';
