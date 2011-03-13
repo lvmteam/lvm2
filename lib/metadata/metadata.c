@@ -934,7 +934,7 @@ struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name)
 	}
 
 	vg->status = (RESIZEABLE_VG | LVM_READ | LVM_WRITE);
-	if (!(vg->system_id = dm_pool_alloc(vg->vgmem, NAME_LEN)))
+	if (!(vg->system_id = dm_pool_zalloc(vg->vgmem, NAME_LEN + 1)))
 		goto_bad;
 
 	*vg->system_id = '\0';
