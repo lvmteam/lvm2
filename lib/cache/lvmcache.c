@@ -1287,7 +1287,7 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 		return NULL;
 	}
 
-	strncpy(pvid_s, pvid, sizeof(pvid_s));
+	strncpy(pvid_s, pvid, sizeof(pvid_s) - 1);
 	pvid_s[sizeof(pvid_s) - 1] = '\0';
 
 	if (!(existing = info_from_pvid(pvid_s, 0)) &&
