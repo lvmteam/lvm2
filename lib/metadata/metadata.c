@@ -1066,6 +1066,12 @@ static dm_bitset_t _bitset_with_random_bits(struct dm_pool *mem, uint32_t num_bi
 		}
 	}
 
+	if (!dm_pool_grow_object(mem, "\0", 1)) {
+		log_error("Failed to finish list of random bits.");
+		dm_pool_free(mem, bs);
+		return NULL;
+	}
+
 	log_debug("Selected %" PRIu32 " random bits from %" PRIu32 ": %s", num_set_bits, num_bits, (char *) dm_pool_end_object(mem));
 
 	return bs;
