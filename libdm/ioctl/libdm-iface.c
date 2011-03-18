@@ -965,8 +965,10 @@ int dm_check_version(void)
 	if (_check_version(dmversion, sizeof(dmversion), _dm_compat))
 		return 1;
 
-	if (!_dm_compat)
+	if (!_dm_compat) {
+		log_error("Support for older device-mapped version is disabled.");
 		goto bad;
+	}
 
 	log_verbose("device-mapper ioctl protocol version %u failed. "
 		    "Trying protocol version 1.", _dm_version);

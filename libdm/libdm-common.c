@@ -183,7 +183,7 @@ struct dm_task *dm_task_create(int type)
 
 	if (!dm_check_version()) {
 		dm_free(dmt);
-		return NULL;
+		return_NULL;
 	}
 
 	dmt->type = type;
