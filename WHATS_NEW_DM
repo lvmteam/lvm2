@@ -1,5 +1,6 @@
 Version 1.02.64 - 
 ===================================
+  Improve stack debug reporting in dm_task_create().
   Fallback to control node creation only if node doesn't exist yet.
   Change dm_hash API for binary data to accept const void *key.
   Fix memory access of empty params string in _reload_with_suppression_v4().
