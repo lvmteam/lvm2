@@ -365,8 +365,9 @@ static int _open_and_assign_control_fd(const char *control,
 	_close_control_fd();
 
 	if ((_control_fd = open(control, O_RDWR)) < 0) {
-		if (!(ignore_nodev && errno == ENODEV))
-			log_sys_error("open", control);
+		if (ignore_nodev && errno == ENODEV)
+			return 1;
+		log_sys_error("open", control);
 		return 0;
 	}
 
@@ -412,7 +413,9 @@ static int _open_control(void)
 		    !_create_control(control, major, MAPPER_CTRL_MINOR))
 			goto error;
 
-		_open_and_assign_control_fd(control, 1);
+		/* Fallback to old code only if control node doesn't exist */
+		if (!_open_and_assign_control_fd(control, 1))
+			goto error;
 	}
 
 	/*
