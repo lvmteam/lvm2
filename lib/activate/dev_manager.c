@@ -141,10 +141,8 @@ int device_is_usable(struct device *dev)
 	int only_error_target = 1;
 	int r = 0;
 
-	if (!(dmt = dm_task_create(DM_DEVICE_STATUS))) {
-		log_error("Failed to create dm_task struct to check dev status");
-		return 0;
-	}
+	if (!(dmt = dm_task_create(DM_DEVICE_STATUS)))
+		return_0;
 
 	if (!dm_task_set_major_minor(dmt, MAJOR(dev->dev), MINOR(dev->dev), 1))
 		goto_out;

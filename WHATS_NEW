@@ -1,5 +1,6 @@
 Version 2.02.85 - 
 ===================================
+  Mitigate annoying error warning from device is usable check if run as non-root.
   Add missing \0 for grown debug object in _bitset_with_random_bits().
   Fix allocation of system_id buffer in volume_group structure.
   Fix readlink usage inside get_primary_dev().
