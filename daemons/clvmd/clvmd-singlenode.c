@@ -28,6 +28,8 @@
 
 static const char SINGLENODE_CLVMD_SOCKNAME[] = DEFAULT_RUN_DIR "/clvmd_singlenode.sock";
 static int listen_fd = -1;
+static int *_locks = NULL;
+static char **_resources = NULL;
 
 static void close_comms(void)
 {
@@ -97,6 +99,10 @@ static void _cluster_closedown(void)
 
 	DEBUGLOG("cluster_closedown\n");
 	destroy_lvhash();
+	dm_free(_locks);
+	dm_free(_resources);
+	_locks = NULL;
+	_resources = NULL;
 }
 
 static void _get_our_csid(char *csid)
@@ -136,8 +142,6 @@ static int _cluster_do_node_callback(struct local_client *master_client,
 
 int _lock_file(const char *file, uint32_t flags);
 
-static int *_locks = NULL;
-static char **_resources = NULL;
 static int _lock_max = 1;
 static pthread_mutex_t _lock_mutex = PTHREAD_MUTEX_INITIALIZER;
 
