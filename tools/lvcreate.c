@@ -346,7 +346,7 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 	lp->mirrors = 1;
 
 	/* Default to 2 mirrored areas if --type mirror */
-	if (seg_is_mirrored(lp))
+	if (segtype_is_mirrored(lp->segtype))
 		lp->mirrors = 2;
 
 	if (arg_count(cmd, mirrors_ARG)) {
