@@ -760,7 +760,7 @@ int init_multiple_segtype(struct segtype_library *seglib)
 {
 	struct segment_type *segtype;
 
-	if (!(segtype = dm_malloc(sizeof(*segtype))))
+	if (!(segtype = dm_zalloc(sizeof(*segtype))))
 		return_0;
 
 	segtype->ops = &_replicator_ops;
@@ -773,7 +773,7 @@ int init_multiple_segtype(struct segtype_library *seglib)
 
 	log_very_verbose("Initialised segtype: " REPLICATOR_MODULE);
 
-	if (!(segtype = dm_malloc(sizeof(*segtype))))
+	if (!(segtype = dm_zalloc(sizeof(*segtype))))
 		return_0;
 
 	segtype->ops = &_replicator_dev_ops;

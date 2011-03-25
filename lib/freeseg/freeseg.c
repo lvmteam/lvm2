@@ -43,7 +43,7 @@ static struct segtype_handler _freeseg_ops = {
 
 struct segment_type *init_free_segtype(struct cmd_context *cmd)
 {
-	struct segment_type *segtype = dm_malloc(sizeof(*segtype));
+	struct segment_type *segtype = dm_zalloc(sizeof(*segtype));
 
 	if (!segtype)
 		return_NULL;
