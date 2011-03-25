@@ -2950,7 +2950,8 @@ static int _move_lv_segments(struct logical_volume *lv_to,
 		}
 	}
 
-	lv_to->segments = lv_from->segments;
+	if (!dm_list_empty(&lv_from->segments))
+		lv_to->segments = lv_from->segments;
 	lv_to->segments.n->p = &lv_to->segments;
 	lv_to->segments.p->n = &lv_to->segments;
 
