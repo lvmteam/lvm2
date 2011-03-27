@@ -54,7 +54,7 @@ static void _invalid_format(const char *str)
  * Checks that the config file contains vg metadata, and that it
  * we recognise the version number,
  */
-static int _check_version(const struct config_tree *cft)
+static int _vsn1_check_version(const struct config_tree *cft)
 {
 	const struct config_node *cn;
 	const struct config_value *cv;
@@ -871,7 +871,7 @@ static const char *_read_vgname(const struct format_type *fmt,
 }
 
 static struct text_vg_version_ops _vsn1_ops = {
-	.check_version = _check_version,
+	.check_version = _vsn1_check_version,
 	.read_vg = _read_vg,
 	.read_desc = _read_desc,
 	.read_vgname = _read_vgname,
