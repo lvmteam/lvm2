@@ -567,6 +567,7 @@ static void _unregister_for_timeout(struct thread_status *thread)
 	pthread_mutex_unlock(&_timeout_mutex);
 }
 
+__attribute__((format(printf, 4, 5)))
 static void _no_intr_log(int level, const char *file, int line,
 			const char *f, ...)
 {
