@@ -1225,6 +1225,7 @@ static void _init_fifos(struct dm_event_fifos *fifos)
 static int _open_fifos(struct dm_event_fifos *fifos)
 {
 	int orig_errno;
+	struct stat st;
 
 	/* Create client fifo. */
 	(void) dm_prepare_selinux_context(fifos->client_path, S_IFIFO);
@@ -1247,8 +1248,6 @@ static int _open_fifos(struct dm_event_fifos *fifos)
 	}
 
 	(void) dm_prepare_selinux_context(NULL, 0);
-
-	struct stat st;
 
 	/* Warn about wrong permissions if applicable */
 	if ((!stat(fifos->client_path, &st)) && (st.st_mode & 0777) != 0600)

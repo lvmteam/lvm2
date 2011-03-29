@@ -1104,7 +1104,7 @@ static char *_add_error_device(struct dev_manager *dm, struct dm_tree *dtree,
 	char errid[32];
 	struct dm_tree_node *node;
 	struct lv_segment *seg_i;
-	int segno = -1, i = 0;;
+	int segno = -1, i = 0;
 	uint64_t size = seg->len * seg->lv->vg->extent_size;
 
 	dm_list_iterate_items(seg_i, &seg->lv->segments) {

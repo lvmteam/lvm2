@@ -609,7 +609,7 @@ int main(int argc, char *argv[])
 
 /* Called when the GuLM cluster layer has completed initialisation.
    We send the version message */
-void clvmd_cluster_init_completed()
+void clvmd_cluster_init_completed(void)
 {
 	send_version_message();
 }
@@ -802,9 +802,10 @@ static void request_timed_out(struct local_client *client)
 /* This is where the real work happens */
 static void main_loop(int local_sock, int cmd_timeout)
 {
+	sigset_t ss;
+
 	DEBUGLOG("Using timeout of %d seconds\n", cmd_timeout);
 
-	sigset_t ss;
 	sigemptyset(&ss);
 	sigaddset(&ss, SIGINT);
 	sigaddset(&ss, SIGTERM);
@@ -1826,7 +1827,7 @@ static void free_reply(struct local_client *client)
 }
 
 /* Send our version number to the cluster */
-static void send_version_message()
+static void send_version_message(void)
 {
 	char message[sizeof(struct clvm_header) + sizeof(int) * 3];
 	struct clvm_header *msg = (struct clvm_header *) message;
@@ -2056,7 +2057,7 @@ static void close_local_sock(int local_socket)
 }
 
 /* Open the local socket, that's the one we talk to libclvm down */
-static int open_local_sock()
+static int open_local_sock(void)
 {
 	int local_socket = -1;
 	struct sockaddr_un sockaddr;
@@ -2218,7 +2219,7 @@ static if_type_t parse_cluster_interface(char *ifname)
  * only called if the command-line option is not present, and if it fails
  * we still try the interfaces in order.
  */
-static if_type_t get_cluster_type()
+static if_type_t get_cluster_type(void)
 {
 #ifdef HAVE_COROSYNC_CONFDB_H
 	confdb_handle_t handle;
