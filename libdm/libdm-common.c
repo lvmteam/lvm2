@@ -78,6 +78,7 @@ static int _udev_checking = 1;
  * function.
  */
 
+__attribute__((format(printf, 5, 0)))
 static void _default_log_line(int level,
 	    const char *file __attribute__((unused)),
 	    int line __attribute__((unused)), int dm_errno, 
@@ -101,6 +102,7 @@ static void _default_log_line(int level,
 		fprintf(use_stderr ? stderr : stdout, "\n");
 }
 
+__attribute__((format(printf, 5, 6)))
 static void _default_log_with_errno(int level,
 	    const char *file __attribute__((unused)),
 	    int line __attribute__((unused)), int dm_errno, 
@@ -113,6 +115,7 @@ static void _default_log_with_errno(int level,
 	va_end(ap);
 }
 
+__attribute__((format(printf, 4, 5)))
 static void _default_log(int level, const char *file,
 			 int line, const char *f, ...)
 {
