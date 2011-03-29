@@ -2455,7 +2455,7 @@ static int _dm_subsystem_disp(struct dm_report *rh,
 			       struct dm_report_field *field, const void *data,
 			       void *private __attribute__((unused)))
 {
-	return dm_report_field_string(rh, field, (const char **) data);
+	return dm_report_field_string(rh, field, (const char *const *) data);
 }
 
 static int _dm_vg_name_disp(struct dm_report *rh,
@@ -2464,7 +2464,7 @@ static int _dm_vg_name_disp(struct dm_report *rh,
 			     void *private __attribute__((unused)))
 {
 
-	return dm_report_field_string(rh, field, (const char **) data);
+	return dm_report_field_string(rh, field, (const char *const *) data);
 }
 
 static int _dm_lv_name_disp(struct dm_report *rh,
@@ -2473,7 +2473,7 @@ static int _dm_lv_name_disp(struct dm_report *rh,
 			     void *private __attribute__((unused)))
 
 {
-	return dm_report_field_string(rh, field, (const char **) data);
+	return dm_report_field_string(rh, field, (const char *const *) data);
 }
 
 static int _dm_lv_layer_name_disp(struct dm_report *rh,
@@ -2482,7 +2482,7 @@ static int _dm_lv_layer_name_disp(struct dm_report *rh,
 				   void *private __attribute__((unused)))
 
 {
-	return dm_report_field_string(rh, field, (const char **) data);
+	return dm_report_field_string(rh, field, (const char *const *) data);
 }
 
 static void *_task_get_obj(void *obj)
