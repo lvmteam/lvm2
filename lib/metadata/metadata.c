@@ -3043,8 +3043,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 				continue;
 			}
 
-			if (strncmp((char *)vg->id.uuid,
-			    (char *)correct_vg->id.uuid, ID_LEN)) {
+			if (!id_equal(&vg->id, &correct_vg->id)) {
 				inconsistent = 1;
 				inconsistent_vgid = 1;
 			}
@@ -3292,7 +3291,7 @@ static struct volume_group *_vg_read_by_vgid(struct cmd_context *cmd,
 	    vginfo->vgname && !is_orphan_vg(vginfo->vgname)) {
 		if ((vg = _vg_read(cmd, NULL, vgid, 1,
 				   &consistent, precommitted)) &&
-		    !strncmp((char *)vg->id.uuid, vgid, ID_LEN)) {
+		    id_equal(&vg->id, (const struct id *)vgid)) {
 			if (!consistent)
 				log_error("Volume group %s metadata is "
 					  "inconsistent", vg->name);
@@ -3323,7 +3322,7 @@ static struct volume_group *_vg_read_by_vgid(struct cmd_context *cmd,
 		consistent = 0;
 		if ((vg = _vg_read(cmd, vgname, vgid, 1, &consistent,
 				   precommitted)) &&
-		    !strncmp((char *)vg->id.uuid, vgid, ID_LEN)) {
+		    id_equal(&vg->id, (const struct id *)vgid)) {
 			if (!consistent) {
 				log_error("Volume group %s metadata is "
 					  "inconsistent", vgname);
