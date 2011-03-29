@@ -1,5 +1,6 @@
 Version 2.02.85 - 
 ===================================
+  Fix lvmcache_info transfer to orphan_vginfo in _lvmcache_update_vgname().
   Fix -Wold-style-definition gcc warnings.
   Fixes for lvconvert (including --repair) of temporary mirror stacks.
   Mitigate annoying error warning from device is usable check if run as non-root.
