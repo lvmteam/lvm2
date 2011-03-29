@@ -1050,6 +1050,7 @@ static int _udevreleasecookie(CMD_ARGS)
 	return dm_udev_wait(_udev_cookie);
 }
 
+__attribute__((format(printf, 1, 2)))
 static char _yes_no_prompt(const char *prompt, ...)
 {
 	int c = 0, ret = 0;
