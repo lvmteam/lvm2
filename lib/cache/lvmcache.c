@@ -1107,17 +1107,17 @@ static int _lvmcache_update_vgname(struct lvmcache_info *info,
 		 * Otherwise we risk bogus warnings of duplicate VGs.
 		 */
 		while ((primary_vginfo = vginfo_from_vgname(vgname, NULL)) &&
-		       _scanning_in_progress && _vginfo_is_invalid(primary_vginfo))
+		       _scanning_in_progress && _vginfo_is_invalid(primary_vginfo)) {
+			orphan_vginfo = vginfo_from_vgname(primary_vginfo->fmt->orphan_vg_name, NULL);
+			if (!orphan_vginfo) {
+				log_error(INTERNAL_ERROR "Orphan vginfo %s lost from cache.",
+					  primary_vginfo->fmt->orphan_vg_name);
+				dm_free(vginfo->vgname);
+				dm_free(vginfo);
+				return 0;
+			}
 			dm_list_iterate_items_safe(info2, info3, &primary_vginfo->infos) {
-				orphan_vginfo = vginfo_from_vgname(primary_vginfo->fmt->orphan_vg_name, NULL);
-				if (!orphan_vginfo) {
-					log_error(INTERNAL_ERROR "Orphan vginfo %s lost from cache.",
-						  primary_vginfo->fmt->orphan_vg_name);
-					dm_free(vginfo->vgname);
-					dm_free(vginfo);
-					return 0;
-				}
-				_drop_vginfo(info2, primary_vginfo);	
+				_vginfo_detach_info(info2);
 				_vginfo_attach_info(orphan_vginfo, info2);
 				if (info2->mdas.n)
 					sprintf(mdabuf, " with %u mdas",
@@ -1129,6 +1129,10 @@ static int _lvmcache_update_vgname(struct lvmcache_info *info,
 					  vgname, orphan_vginfo->vgid[0] ? " (" : "",
 					  orphan_vginfo->vgid[0] ? orphan_vginfo->vgid : "",
 					  orphan_vginfo->vgid[0] ? ")" : "", mdabuf);
+			}
+
+			if (!_drop_vginfo(NULL, primary_vginfo))
+				return_0;
 		}
 
 		if (!_insert_vginfo(vginfo, vgid, vgstatus, creation_host,
