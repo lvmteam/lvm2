@@ -701,7 +701,7 @@ static int _split_mirror_images(struct logical_volume *lv,
 		if (!remove_layer_from_lv(lv, sub_lv))
 			return_0;
 		lv->status &= ~MIRRORED;
-		lv->status &= ~MIRROR_NOTSYNCED;
+		lv->status &= ~LV_NOTSYNCED;
 	}
 
 	if (!vg_write(mirrored_seg->lv->vg)) {
@@ -882,7 +882,7 @@ static int _remove_mirror_images(struct logical_volume *lv,
                  */
                 if (lv_mirror_count(lv) == 1) {
                     lv->status &= ~MIRRORED;
-                    lv->status &= ~MIRROR_NOTSYNCED;
+                    lv->status &= ~LV_NOTSYNCED;
                 }
 		mirrored_seg = first_seg(lv);
 		if (remove_log && !detached_log_lv)
@@ -894,7 +894,7 @@ static int _remove_mirror_images(struct logical_volume *lv,
 		 * It can happen for vgreduce --removemissing. */
 		detached_log_lv = detach_mirror_log(mirrored_seg);
 		lv->status &= ~MIRRORED;
-		lv->status &= ~MIRROR_NOTSYNCED;
+		lv->status &= ~LV_NOTSYNCED;
 		if (!replace_lv_with_error_segment(lv))
 			return_0;
 	} else if (remove_log)
@@ -1671,7 +1671,7 @@ int remove_mirror_log(struct cmd_context *cmd,
 		init_mirror_in_sync(1);
 	else {
 		/* A full resync will take place */
-		lv->status &= ~MIRROR_NOTSYNCED;
+		lv->status &= ~LV_NOTSYNCED;
 		init_mirror_in_sync(0);
 	}
 
