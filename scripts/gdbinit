@@ -31,6 +31,7 @@ printf "break lv_extend\n"
 printf "break check_lv_segments\n"
 printf "break text_import_areas\n"
 printf "run --type raid1 -L 200M -n lv vg\n"
+printf "run -m1 -L 200M -n lv vg\n"
 printf "lv_status_r lv\n"
 printf "\n\n"
 
@@ -390,7 +391,14 @@ define __lv_status_r
 
 	if ($_s == $_seg_list_head)
 		if ($argc == 1)
+			__print_indent $indent 1
 			printf "[ No segments for %s ]\n", $_lv->name
+		end
+		__get_only_segment_using_this_lv $_seg $_lv
+
+		if ($_seg && $indent)
+			set $indent--
+			__lv_status_r $_lv $_seg
 		end
 	else
 		set $_seg = (struct lv_segment *)$_s
