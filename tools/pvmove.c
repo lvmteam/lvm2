@@ -121,7 +121,7 @@ static struct dm_list *_get_allocatable_pvs(struct cmd_context *cmd, int argc,
 		}
 
 		/* Remove PV if full */
-		if ((pvl->pv->pe_count == pvl->pv->pe_alloc_count))
+		if (pvl->pv->pe_count == pvl->pv->pe_alloc_count)
 			dm_list_del(&pvl->list);
 	}
 
@@ -202,7 +202,7 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 	/* Find segments to be moved and set up mirrors */
 	dm_list_iterate_items(lvl, &vg->lvs) {
 		lv = lvl->lv;
-		if ((lv == lv_mirr))
+		if (lv == lv_mirr)
 			continue;
 		if (lv_name) {
 			if (strcmp(lv->name, lv_name))

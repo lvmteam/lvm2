@@ -329,13 +329,13 @@ static void _remove_from_bottomlevel(struct dm_tree_node *node)
 static int _link_tree_nodes(struct dm_tree_node *parent, struct dm_tree_node *child)
 {
 	/* Don't link to root node if child already has a parent */
-	if ((parent == &parent->dtree->root)) {
+	if (parent == &parent->dtree->root) {
 		if (dm_tree_node_num_children(child, 1))
 			return 1;
 	} else
 		_remove_from_toplevel(child);
 
-	if ((child == &child->dtree->root)) {
+	if (child == &child->dtree->root) {
 		if (dm_tree_node_num_children(parent, 0))
 			return 1;
 	} else

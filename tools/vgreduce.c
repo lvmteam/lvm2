@@ -287,8 +287,8 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 			if (mirrored_seg->log_lv) {
 				dm_list_iterate_items(seg, &mirrored_seg->log_lv->segments) {
 					/* FIXME: The second test shouldn't be required */
-					if ((seg->segtype ==
-					     get_segtype_from_string(vg->cmd, "error"))) {
+					if (seg->segtype ==
+					    get_segtype_from_string(vg->cmd, "error")) {
 						log_print("The log device for %s/%s has failed.",
 							  vg->name, mirrored_seg->lv->name);
 						remove_log = 1;
