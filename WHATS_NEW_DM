@@ -1,5 +1,6 @@
 Version 1.02.64 - 
 ===================================
+  Fix const cast in dmsetup calls of dm_report_field_string().
   Streamline /dev/mapper/control node code for common cases.
   Use hard-coded dm control node device number for 2.6.36 kernels and above.
   Improve stack debug reporting in dm_task_create().
