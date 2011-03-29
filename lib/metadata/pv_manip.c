@@ -468,7 +468,7 @@ int pv_resize(struct physical_volume *pv,
 			return 0;
 		}
 
-		if ((new_pe_count == old_pe_count)) {
+		if (new_pe_count == old_pe_count) {
 			pv->pe_count = old_pe_count;
 			log_verbose("No change to size of physical volume %s.",
 				    pv_dev_name(pv));

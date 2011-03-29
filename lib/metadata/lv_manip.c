@@ -736,11 +736,11 @@ static void _init_alloc_parms(struct alloc_handle *ah, struct alloc_parms *alloc
 
 	/* Are there any preceding segments we must follow on from? */
 	if (alloc_parms->prev_lvseg) {
-		if ((alloc_parms->alloc == ALLOC_CONTIGUOUS))
+		if (alloc_parms->alloc == ALLOC_CONTIGUOUS)
 			alloc_parms->flags |= A_CONTIGUOUS;
-		else if ((alloc_parms->alloc == ALLOC_CLING))
+		else if (alloc_parms->alloc == ALLOC_CLING)
 			alloc_parms->flags |= A_CLING;
-		else if ((alloc_parms->alloc == ALLOC_CLING_BY_TAGS)) {
+		else if (alloc_parms->alloc == ALLOC_CLING_BY_TAGS) {
 			alloc_parms->flags |= A_CLING;
 			alloc_parms->flags |= A_CLING_BY_TAGS;
 		}

@@ -126,7 +126,7 @@ static int _get_block_size(struct device *dev, unsigned int *size)
 {
 	const char *name = dev_name(dev);
 
-	if ((dev->block_size == -1)) {
+	if (dev->block_size == -1) {
 		if (ioctl(dev_fd(dev), BLKBSZGET, &dev->block_size) < 0) {
 			log_sys_error("ioctl BLKBSZGET", name);
 			return 0;
