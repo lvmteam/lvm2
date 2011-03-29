@@ -1,5 +1,6 @@
 Version 2.02.85 - 
 ===================================
+  Fix -Wold-style-definition gcc warnings.
   Fixes for lvconvert (including --repair) of temporary mirror stacks.
   Mitigate annoying error warning from device is usable check if run as non-root.
   Add missing \0 for grown debug object in _bitset_with_random_bits().

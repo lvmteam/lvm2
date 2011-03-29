@@ -147,7 +147,7 @@ static const char *decode_flags(unsigned char flags)
 	return buf;
 }
 
-char *get_last_lvm_error()
+char *get_last_lvm_error(void)
 {
 	return last_error;
 }
@@ -194,7 +194,7 @@ static int get_current_lock(char *resource)
 }
 
 
-void init_lvhash()
+void init_lvhash(void)
 {
 	/* Create hash table for keeping LV locks & status */
 	lv_hash = dm_hash_create(1024);
@@ -203,7 +203,7 @@ void init_lvhash()
 }
 
 /* Called at shutdown to tidy the lockspace */
-void destroy_lvhash()
+void destroy_lvhash(void)
 {
 	struct dm_hash_node *v;
 	struct lv_info *lvi;
@@ -621,7 +621,7 @@ int do_check_lvm1(const char *vgname)
 	return status == 1 ? 0 : EBUSY;
 }
 
-int do_refresh_cache()
+int do_refresh_cache(void)
 {
 	DEBUGLOG("Refreshing context\n");
 	log_notice("Refreshing context");

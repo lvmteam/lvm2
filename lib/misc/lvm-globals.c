@@ -147,7 +147,7 @@ void set_sysfs_dir_path(const char *path)
 	_sysfs_dir_path[sizeof(_sysfs_dir_path) - 1] = '\0';
 }
 
-const char *log_command_name()
+const char *log_command_name(void)
 {
 	if (!_log_cmd_name)
 		return "";
@@ -165,42 +165,42 @@ int error_message_produced(void)
 	return _error_message_produced;
 }
 
-int test_mode()
+int test_mode(void)
 {
 	return _test;
 }
 
-int md_filtering()
+int md_filtering(void)
 {
 	return _md_filtering;
 }
 
-int pvmove_mode()
+int pvmove_mode(void)
 {
 	return _pvmove;
 }
 
-int full_scan_done()
+int full_scan_done(void)
 {
 	return _full_scan_done;
 }
 
-int trust_cache()
+int trust_cache(void)
 {
 	return _trust_cache;
 }
 
-int background_polling()
+int background_polling(void)
 {
 	return _background_polling;
 }
 
-int ignorelockingfailure()
+int ignorelockingfailure(void)
 {
 	return _ignorelockingfailure;
 }
 
-int security_level()
+int security_level(void)
 {
 	return _security_level;
 }
@@ -225,12 +225,12 @@ void init_debug(int level)
 	_debug_level = level;
 }
 
-int verbose_level()
+int verbose_level(void)
 {
 	return _verbose_level;
 }
 
-int debug_level()
+int debug_level(void)
 {
 	return _debug_level;
 }
@@ -245,7 +245,7 @@ int udev_checking(void)
 	return _udev_checking;
 }
 
-const char *sysfs_dir_path()
+const char *sysfs_dir_path(void)
 {
 	return _sysfs_dir_path;
 }
