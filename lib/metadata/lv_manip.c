@@ -3586,7 +3586,7 @@ int lv_create_single(struct volume_group *vg,
 		if (lp->nosync) {
 			log_warn("WARNING: New mirror won't be synchronised. "
 				  "Don't read what you didn't write!");
-			status |= MIRROR_NOTSYNCED;
+			status |= LV_NOTSYNCED;
 		}
 	}
 

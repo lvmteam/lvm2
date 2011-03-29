@@ -245,7 +245,7 @@ static int lvchange_resync(struct cmd_context *cmd,
 	 * it to reset the sync status.  We only need to
 	 * worry about persistent logs.
 	 */
-	if (!log_lv && !(lv->status & MIRROR_NOTSYNCED)) {
+	if (!log_lv && !(lv->status & LV_NOTSYNCED)) {
 		if (active && !activate_lv(cmd, lv)) {
 			log_error("Failed to reactivate %s to resynchronize "
 				  "mirror", lv->name);
@@ -254,7 +254,7 @@ static int lvchange_resync(struct cmd_context *cmd,
 		return 1;
 	}
 
-	lv->status &= ~MIRROR_NOTSYNCED;
+	lv->status &= ~LV_NOTSYNCED;
 
 	if (log_lv) {
 		/* Separate mirror log so we can clear it */
