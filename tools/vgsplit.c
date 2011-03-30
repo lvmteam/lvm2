@@ -487,12 +487,12 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	r = ECMD_PROCESSED;
 
 bad:
-	if (lock_vg_from_first) {
-		unlock_and_free_vg(cmd, vg_to, vg_name_to);
-		unlock_and_free_vg(cmd, vg_from, vg_name_from);
-	} else {
-		unlock_and_free_vg(cmd, vg_from, vg_name_from);
-		unlock_and_free_vg(cmd, vg_to, vg_name_to);
-	}
+	/*
+	 * Note: as vg_to is referencing moved elements from vg_from
+	 * the order of free_vg calls is mandatory.
+	 */
+	unlock_and_free_vg(cmd, vg_to, vg_name_to);
+	unlock_and_free_vg(cmd, vg_from, vg_name_from);
+
 	return r;
 }
