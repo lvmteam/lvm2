@@ -47,7 +47,7 @@ aux prepare_vg 1 100
 # test full merge of a single LV
 setup_merge $vg $lv1
 # now that snapshot LV is created: test if snapshot-merge target is available
-$(dmsetup targets | grep -q snapshot-merge) || exit 200
+$(dmsetup targets | grep snapshot-merge >/dev/null) || exit 200
 lvs -a
 # make sure lvconvert --merge requires explicit LV listing
 not lvconvert --merge 2>err
@@ -73,11 +73,12 @@ lvconvert --merge $vg/$(snap_lv_name_ $lv1)
 lvchange --refresh $vg/$lv1
 umount test_mnt
 rm -r test_mnt
-dmsetup table ${vg}-${lv1} | grep -q " snapshot-origin "
+dmsetup table ${vg}-${lv1} | grep " snapshot-origin "
+
 # -- refresh LV to start merge (now that FS is unmounted),
 #    an active merge uses the 'snapshot-merge' target
 lvchange --refresh $vg/$lv1
-dmsetup table ${vg}-${lv1} | grep -q " snapshot-merge "
+dmsetup table ${vg}-${lv1} | grep " snapshot-merge "
 # -- don't care if merge is still active; lvremove at this point
 #    may test stopping an active merge
 lvremove -f $vg/$lv1
@@ -96,7 +97,7 @@ lvconvert --merge $vg/$(snap_lv_name_ $lv1)
 lvchange --refresh $vg/$lv1
 umount test_mnt
 rm -r test_mnt
-dmsetup table ${vg}-${lv1} | grep -q " snapshot-origin "
+dmsetup table ${vg}-${lv1} | grep " snapshot-origin " >/dev/null
 lvremove -f $vg/$lv1
 
 
