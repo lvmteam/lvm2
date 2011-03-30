@@ -103,8 +103,6 @@ static int child_pipe[2];
 
 typedef enum {IF_AUTO, IF_CMAN, IF_GULM, IF_OPENAIS, IF_COROSYNC, IF_SINGLENODE} if_type_t;
 
-typedef void *(lvm_pthread_fn_t)(void*);
-
 /* Prototypes for code further down */
 static void sigusr2_handler(int sig);
 static void sighup_handler(int sig);
@@ -134,7 +132,7 @@ static int check_all_clvmds_running(struct local_client *client);
 static int local_rendezvous_callback(struct local_client *thisfd, char *buf,
 				     int len, const char *csid,
 				     struct local_client **new_client);
-static void lvm_thread_fn(void *) __attribute__ ((noreturn));
+static void *lvm_thread_fn(void *);
 static int add_to_lvmqueue(struct local_client *client, struct clvm_header *msg,
 			   int msglen, const char *csid);
 static int distribute_command(struct local_client *thisfd);
@@ -333,7 +331,7 @@ static void check_permissions(void)
 int main(int argc, char *argv[])
 {
 	int local_sock;
-	struct local_client *newfd;
+	struct local_client *newfd, *delfd;
 	struct utsname nodeinfo;
 	struct lvm_startup_params lvm_params;
 	int opt;
@@ -581,8 +579,7 @@ int main(int argc, char *argv[])
 	pthread_mutex_lock(&lvm_start_mutex);
 	lvm_params.using_gulm = using_gulm;
 	lvm_params.argv = argv;
-	pthread_create(&lvm_thread, NULL, (lvm_pthread_fn_t*)lvm_thread_fn,
-			(void *)&lvm_params);
+	pthread_create(&lvm_thread, NULL, lvm_thread_fn, &lvm_params);
 
 	/* Tell the rest of the cluster our version number */
 	/* CMAN can do this immediately, gulm needs to wait until
@@ -601,8 +598,26 @@ int main(int argc, char *argv[])
 	/* Do some work */
 	main_loop(local_sock, cmd_timeout);
 
+	pthread_mutex_lock(&lvm_thread_mutex);
+	pthread_cond_signal(&lvm_thread_cond);
+	pthread_mutex_unlock(&lvm_thread_mutex);
+	if ((errno = pthread_join(lvm_thread, NULL)))
+		log_sys_error("pthread_join", "");
+
 	close_local_sock(local_sock);
 	destroy_lvm();
+
+	for (newfd = local_client_head.next; newfd != NULL;) {
+		delfd = newfd;
+		newfd = newfd->next;
+		/*
+		 * FIXME:
+		 * needs cleanup code from read_from_local_sock() for now
+		 * break of 'clvmd' may access already free memory here.
+		 */
+		safe_close(&(delfd->fd));
+		free(delfd);
+	}
 
 	return 0;
 }
@@ -1932,7 +1947,7 @@ static int process_work_item(struct lvm_thread_cmd *cmd)
 /*
  * Routine that runs in the "LVM thread".
  */
-static void lvm_thread_fn(void *arg)
+static void *lvm_thread_fn(void *arg)
 {
 	struct dm_list *cmdl, *tmp;
 	sigset_t ss;
@@ -1953,7 +1968,7 @@ static void lvm_thread_fn(void *arg)
 	pthread_mutex_unlock(&lvm_start_mutex);
 
 	/* Now wait for some actual work */
-	for (;;) {
+	while (!quit) {
 		DEBUGLOG("LVM thread waiting for work\n");
 
 		pthread_mutex_lock(&lvm_thread_mutex);
@@ -1976,6 +1991,8 @@ static void lvm_thread_fn(void *arg)
 		}
 		pthread_mutex_unlock(&lvm_thread_mutex);
 	}
+
+	pthread_exit(NULL);
 }
 
 /* Pass down some work to the LVM thread */
