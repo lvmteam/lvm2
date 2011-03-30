@@ -102,7 +102,7 @@ for i in 0 1 2 3
 do
 # vgcreate (lvm2) succeeds writing LVM label at sector $i
     vgcreate -c n --labelsector $i $vg $dev1
-    dd if=$dev1 bs=512 skip=$i count=1 2>/dev/null | strings | grep -q LABELONE;
+    dd if=$dev1 bs=512 skip=$i count=1 2>/dev/null | strings | grep LABELONE >/dev/null
     vgremove -f $vg
     pvremove -f $dev1
 done

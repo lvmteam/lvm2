@@ -27,7 +27,7 @@ lv_devices_() {
                sed 's/ //g' | sed 's/,/ /g')
 
   for d in $devs; do
-    (echo $devices | grep -q $d)  || return 1
+    (echo $devices | grep $d >/dev/null)  || return 1
     devices=$(echo $devices | sed "s/$d//")
   done
 

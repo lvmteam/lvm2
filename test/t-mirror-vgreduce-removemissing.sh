@@ -66,7 +66,7 @@ lv_is_linear_()
 {
 	echo "Check if $1 is linear LV (i.e. not a mirror)"
 	lvs -o stripes,attr --noheadings $vg/$1 | sed 's/ //g'
-	lvs -o stripes,attr --noheadings $vg/$1 | sed 's/ //g' | grep -q '^1-'
+	lvs -o stripes,attr --noheadings $vg/$1 | sed 's/ //g' | grep '^1-' >/dev/null
 }
 
 rest_pvs_()
