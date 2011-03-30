@@ -48,7 +48,7 @@ struct dm_pool {
 
 struct dm_pool *dm_pool_create(const char *name, size_t chunk_hint)
 {
-	struct dm_pool *mem = dm_malloc(sizeof(*mem));
+	struct dm_pool *mem = dm_zalloc(sizeof(*mem));
 
 	if (!mem) {
 		log_error("Couldn't create memory pool %s (size %"
@@ -57,16 +57,6 @@ struct dm_pool *dm_pool_create(const char *name, size_t chunk_hint)
 	}
 
 	mem->name = name;
-	mem->begun = 0;
-	mem->object = 0;
-	mem->blocks = mem->tail = NULL;
-
-	mem->stats.block_serialno = 0;
-	mem->stats.blocks_allocated = 0;
-	mem->stats.blocks_max = 0;
-	mem->stats.bytes = 0;
-	mem->stats.maxbytes = 0;
-
 	mem->orig_pool = mem;
 
 #ifdef DEBUG_POOL
