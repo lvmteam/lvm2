@@ -794,7 +794,7 @@ static void _del_node_op(struct node_op_parms *nop)
 /* Check if there is other the type of node operation stacked */
 static int _other_node_ops(node_op_t type)
 {
-	int i;
+	unsigned i;
 
 	for (i = 0; i < NUM_NODES; i++)
 		if (type != i && _count_node_ops[i])
@@ -958,8 +958,7 @@ int dm_set_dev_dir(const char *dev_dir)
 	len = strlen(dev_dir);
 	slash = dev_dir[len-1] == '/' ? "" : "/";
 
-	if (snprintf(_dm_dir, sizeof _dm_dir, "%s%s%s", dev_dir, slash, DM_DIR)
-	    >= sizeof _dm_dir) {
+	if (dm_snprintf(_dm_dir, sizeof _dm_dir, "%s%s%s", dev_dir, slash, DM_DIR) < 0) {
 		log_debug("Invalid dev_dir value, %s: name too long.", dev_dir);
 		return 0;
 	}
