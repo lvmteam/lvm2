@@ -43,6 +43,9 @@ static lvm2_log_fn_t _lvm2_log_fn = NULL;
 static int _lvm_errno = 0;
 static int _store_errmsg = 0;
 static char *_lvm_errmsg = NULL;
+static size_t _lvm_errmsg_size = 0;
+static size_t _lvm_errmsg_len = 0;
+#define MAX_ERRMSG_LEN (512 * 1024)  /* Max size of error buffer 512KB */
 
 void init_log_fn(lvm2_log_fn_t log_fn)
 {
@@ -154,6 +157,7 @@ void reset_lvm_errno(int store_errmsg)
 	if (_lvm_errmsg) {
 		dm_free(_lvm_errmsg);
 		_lvm_errmsg = NULL;
+		_lvm_errmsg_size = _lvm_errmsg_len = 0;
 	}
 
 	_store_errmsg = store_errmsg;
@@ -189,6 +193,7 @@ void print_log(int level, const char *file, int line, int dm_errno,
 	int use_stderr = level & _LOG_STDERR;
 	int log_once = level & _LOG_ONCE;
 	int fatal_internal_error = 0;
+	size_t msglen;
 
 	level &= ~(_LOG_STDERR|_LOG_ONCE);
 
@@ -229,14 +234,24 @@ void print_log(int level, const char *file, int line, int dm_errno,
 		message = &buf2[0];
 	}
 
-	if (_store_errmsg && (level <= _LOG_ERR)) {
-		if (!_lvm_errmsg)
-			_lvm_errmsg = dm_strdup(message);
-		else if ((newbuf = dm_realloc(_lvm_errmsg,
- 					      strlen(_lvm_errmsg) +
-					      strlen(message) + 2))) {
-			_lvm_errmsg = strcat(newbuf, "\n");
-			_lvm_errmsg = strcat(newbuf, message);
+	if (_store_errmsg && (level <= _LOG_ERR) &&
+	    _lvm_errmsg_len < MAX_ERRMSG_LEN) {
+		msglen = strlen(message);
+		if ((_lvm_errmsg_len + msglen + 1) >= _lvm_errmsg_size) {
+			_lvm_errmsg_size = 2 * (_lvm_errmsg_len + msglen + 1);
+			if ((newbuf = dm_realloc(_lvm_errmsg,
+						 _lvm_errmsg_size)))
+				_lvm_errmsg = newbuf;
+			else
+				_lvm_errmsg_size = _lvm_errmsg_len;
+		}
+		if (_lvm_errmsg &&
+		    (_lvm_errmsg_len + msglen + 2) < _lvm_errmsg_size) {
+			/* prepend '\n' and copy with '\0' but do not count in */
+                        if (_lvm_errmsg_len)
+				_lvm_errmsg[_lvm_errmsg_len++] = '\n';
+			memcpy(_lvm_errmsg + _lvm_errmsg_len, message, msglen + 1);
+			_lvm_errmsg_len += msglen;
 		}
 	}
 
