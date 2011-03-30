@@ -99,6 +99,7 @@ static void _store_metadata(struct volume_group *vg, unsigned precommitted)
 {
 	char uuid[64] __attribute__((aligned(8)));
 	struct lvmcache_vginfo *vginfo;
+	char *data;
 	int size;
 
 	if (!(vginfo = vginfo_from_vgid((const char *)&vg->id))) {
@@ -106,12 +107,20 @@ static void _store_metadata(struct volume_group *vg, unsigned precommitted)
 		return;
 	}
 
-	if (vginfo->vgmetadata)
-		_free_cached_vgmetadata(vginfo);
-
-	if (!(size = export_vg_to_buffer(vg, &vginfo->vgmetadata))) {
+	if (!(size = export_vg_to_buffer(vg, &data))) {
 		stack;
+		_free_cached_vgmetadata(vginfo);
 		return;
+	}
+
+	/* Avoid reparsing of the same data string */
+	if (vginfo->vgmetadata && vginfo->vgmetadata_size == size &&
+	    strcmp(vginfo->vgmetadata, data) == 0)
+		dm_free(data);
+	else {
+		_free_cached_vgmetadata(vginfo);
+		vginfo->vgmetadata_size = size;
+		vginfo->vgmetadata = data;
 	}
 
 	vginfo->precommitted = precommitted;
