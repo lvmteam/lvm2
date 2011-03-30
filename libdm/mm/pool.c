@@ -27,7 +27,7 @@ void dm_pools_check_leaks(void);
 
 char *dm_pool_strdup(struct dm_pool *p, const char *str)
 {
-	char *ret = dm_pool_alloc(p, strlen(str) + 1);
+	char *ret = dm_pool_alloc_aligned(p, strlen(str) + 1, 2);
 
 	if (ret)
 		strcpy(ret, str);
@@ -37,7 +37,7 @@ char *dm_pool_strdup(struct dm_pool *p, const char *str)
 
 char *dm_pool_strndup(struct dm_pool *p, const char *str, size_t n)
 {
-	char *ret = dm_pool_alloc(p, n + 1);
+	char *ret = dm_pool_alloc_aligned(p, n + 1, 2);
 
 	if (ret) {
 		strncpy(ret, str, n);
