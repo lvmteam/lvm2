@@ -195,6 +195,14 @@ static int _maps_line(const struct config_node *cn, lvmlock_t lock,
 		}
 	}
 
+#ifdef VALGRIND_POOL
+	/*
+	 * Valgrind is continually eating memory while executing code
+	 * so we need to deactivate check of locked memory size
+         */
+	sz -= sz; /* = 0, but avoids getting warning about dead assigment */
+
+#endif
 	*mstats += sz;
 	log_debug("%s %10ldKiB %12lx - %12lx %c%c%c%c%s",
 		  (lock == LVM_MLOCK) ? "mlock" : "munlock",
