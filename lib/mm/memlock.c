@@ -89,9 +89,11 @@ static const char * const _ignore_maps[] = {
 /* default blacklist for maps */
 static const char * const _blacklist_maps[] = {
     "locale/locale-archive",
+    "/LC_MESSAGES/",
     "gconv/gconv-modules.cache",
     "/libreadline.so.",	/* not using readline during mlock */
     "/libncurses.so.",	/* not using readline during mlock */
+    "/libtinfo.so.",	/* not using readline during mlock */
     "/libdl-",		/* not using dlopen,dlsym during mlock */
     /* "/libdevmapper-event.so" */
 };

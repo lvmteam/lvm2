@@ -1,5 +1,6 @@
 Version 2.02.85 - 
 ===================================
+  Extend the set of memory regions, that are not locked to memory.
   Enhance usability with the valgrind memcheck tool.
   Support regular quit of the lvm_thread_fn function in clvmd.
   Fix reading of unallocated memory in lvm1 format import function.
