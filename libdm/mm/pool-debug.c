@@ -136,7 +136,7 @@ static struct block *_new_block(size_t s, unsigned alignment)
 	 * I don't think LVM will use anything but default
 	 * align.
 	 */
-	assert(alignment == DEFAULT_ALIGNMENT);
+	assert(alignment <= DEFAULT_ALIGNMENT);
 
 	if (!b) {
 		log_error("Out of memory");
