@@ -63,8 +63,12 @@ static struct dm_hash_table *_create_lv_maps(struct dm_pool *mem,
 			goto_bad;
 
 		lvm->lv = ll->lv;
+		/*
+		 * Alloc 1 extra element, so the loop in _area_length() and
+		 * _check_stripe() finds the last map member as noncontinuous.
+		 */
 		if (!(lvm->map = dm_pool_zalloc(mem, sizeof(*lvm->map)
-					     * ll->lv->le_count)))
+					     * (ll->lv->le_count + 1))))
 			goto_bad;
 
 		if (!dm_hash_insert(maps, ll->lv->name, lvm))
