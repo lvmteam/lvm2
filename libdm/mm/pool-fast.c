@@ -238,6 +238,9 @@ void *dm_pool_end_object(struct dm_pool *p)
 
 void dm_pool_abandon_object(struct dm_pool *p)
 {
+#ifdef VALGRIND_POOL
+	VALGRIND_MAKE_MEM_NOACCESS(p->chunk, p->object_len);
+#endif
 	p->object_len = 0;
 	p->object_alignment = DEFAULT_ALIGNMENT;
 }
@@ -278,11 +281,5 @@ static struct chunk *_new_chunk(struct dm_pool *p, size_t s)
 
 static void _free_chunk(struct chunk *c)
 {
-	if (c) {
-#ifdef VALGRIND_POOL
-		VALGRIND_MAKE_MEM_UNDEFINED(c, c->end - (char *) c);
-#endif
-
-		dm_free(c);
-	}
+	dm_free(c);
 }
