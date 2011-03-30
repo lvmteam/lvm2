@@ -1,5 +1,7 @@
 Version 1.02.64 - 
 ===================================
+  Use dm_snprintf() to fix signess warning in dm_set_dev_dir().
+  Use unsigned loop counter to fix signess warning in _other_node_ops().
   Fix const cast in dmsetup calls of dm_report_field_string().
   Streamline /dev/mapper/control node code for common cases.
   Use hard-coded dm control node device number for 2.6.36 kernels and above.
