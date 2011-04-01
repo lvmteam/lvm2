@@ -3243,19 +3243,10 @@ void free_pv_fid(struct physical_volume *pv)
 
 void free_vg(struct volume_group *vg)
 {
-	struct pv_list *pvl;
-
 	if (!vg)
 		return;
 
-	dm_list_iterate_items(pvl, &vg->pvs)
-		pvl->pv->fid->fmt->ops->destroy_instance(pvl->pv->fid);
-
-	dm_list_iterate_items(pvl, &vg->removed_pvs)
-		pvl->pv->fid->fmt->ops->destroy_instance(pvl->pv->fid);
-
-	if (vg->fid)
-		vg->fid->fmt->ops->destroy_instance(vg->fid);
+	vg_set_fid(vg, NULL);
 
 	if (vg->cmd && vg->vgmem == vg->cmd->mem) {
 		log_error(INTERNAL_ERROR "global memory pool used for VG %s",
@@ -4048,12 +4039,13 @@ bad:
 void pv_set_fid(struct physical_volume *pv,
 		struct format_instance *fid)
 {
+	if (fid)
+		fid->ref_count++;
+
 	if (pv->fid)
 		pv->fid->fmt->ops->destroy_instance(pv->fid);
 
 	pv->fid = fid;
-	if (fid)
-		fid->ref_count++;
 }
 
 void vg_set_fid(struct volume_group *vg,
@@ -4061,15 +4053,19 @@ void vg_set_fid(struct volume_group *vg,
 {
 	struct pv_list *pvl;
 
-	if (vg->fid)
-		vg->fid->fmt->ops->destroy_instance(vg->fid);
-
-	vg->fid = fid;
 	if (fid)
 		fid->ref_count++;
 
 	dm_list_iterate_items(pvl, &vg->pvs)
 		pv_set_fid(pvl->pv, fid);
+
+	dm_list_iterate_items(pvl, &vg->removed_pvs)
+		pv_set_fid(pvl->pv, fid);
+
+	if (vg->fid)
+		vg->fid->fmt->ops->destroy_instance(vg->fid);
+
+	vg->fid = fid;
 }
 
 static int _convert_key_to_string(const char *key, size_t key_len,
