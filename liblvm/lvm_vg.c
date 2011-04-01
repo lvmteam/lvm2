@@ -147,6 +147,7 @@ int lvm_vg_write(vg_t vg)
 	if (! dm_list_empty(&vg->removed_pvs)) {
 		dm_list_iterate_items(pvl, &vg->removed_pvs) {
 			pv_write_orphan(vg->cmd, pvl->pv);
+			pv_set_fid(pvl->pv, NULL);
 			/* FIXME: do pvremove / label_remove()? */
 		}
 		dm_list_init(&vg->removed_pvs);
