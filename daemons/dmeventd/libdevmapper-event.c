@@ -782,6 +782,36 @@ int dm_event_get_registered_device(struct dm_event_handler *dmevh, int next)
 	return ret;
 }
 
+/*
+ * You can (and have to) call this at the stage of the protocol where
+ *     daemon_talk(fifos, &msg, DM_EVENT_CMD_HELLO, NULL, NULL, 0, 0)
+ *
+ * would be normally sent. This call will parse the version reply from
+ * dmeventd, in addition to above call. It is not safe to call this at any
+ * other place in the protocol.
+ *
+ * This is an internal function, not exposed in the public API.
+ */
+
+int dm_event_get_version(struct dm_event_fifos *fifos, int *version) {
+	char *p;
+	struct dm_event_daemon_message msg = { 0, 0, NULL };
+
+	if (daemon_talk(fifos, &msg, DM_EVENT_CMD_HELLO, NULL, NULL, 0, 0))
+		return 0;
+	p = msg.data;
+	*version = 0;
+
+	p = strchr(p, ' ') + 1; /* Message ID */
+        if (!p) return 0;
+	p = strchr(p, ' ') + 1; /* HELLO */
+        if (!p) return 0;
+	p = strchr(p, ' '); /* HELLO, once more */
+	if (p)
+		*version = atoi(p);
+	return 1;
+}
+
 #if 0				/* left out for now */
 
 static char *_skip_string(char *src, const int delimiter)

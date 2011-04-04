@@ -69,5 +69,6 @@ int daemon_talk(struct dm_event_fifos *fifos,
 		enum dm_event_mask evmask, uint32_t timeout);
 int init_fifos(struct dm_event_fifos *fifos);
 void fini_fifos(struct dm_event_fifos *fifos);
+int dm_event_get_version(struct dm_event_fifos *fifos, int *version);
 
 #endif /* __DMEVENTD_DOT_H__ */

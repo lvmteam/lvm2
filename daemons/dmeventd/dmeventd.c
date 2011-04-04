@@ -1424,8 +1424,9 @@ static int _do_process_request(struct dm_event_daemon_message *msg)
 		ret = 0;
 		answer = msg->data;
 		if (answer) {
-			msg->size = dm_asprintf(&(msg->data), "%s %s", answer,
-						msg->cmd == DM_EVENT_CMD_DIE ? "DYING" : "HELLO");
+			msg->size = dm_asprintf(&(msg->data), "%s %s %d", answer,
+						msg->cmd == DM_EVENT_CMD_DIE ? "DYING" : "HELLO",
+                                                DM_EVENT_PROTOCOL_VERSION);
 			dm_free(answer);
 		} else {
 			msg->size = 0;
@@ -1704,6 +1705,7 @@ static void restart(void)
 	int i, count = 0;
 	char *message;
 	int length;
+	int version;
 
 	/* Get the list of registrations from the running daemon. */
 
@@ -1712,10 +1714,17 @@ static void restart(void)
 		return;
 	}
 
-	if (daemon_talk(&fifos, &msg, DM_EVENT_CMD_HELLO, NULL, NULL, 0, 0)) {
+	if (!dm_event_get_version(&fifos, &version)) {
 		fprintf(stderr, "WARNING: Could not communicate with existing dmeventd.\n");
 		fini_fifos(&fifos);
 		return;
+	}
+
+	if (version < 1) {
+		fprintf(stderr, "WARNING: The running dmeventd instance is too old.\n"
+			        "Protocol version %d (required: 1). Action cancelled.\n",
+			        version);
+		exit(EXIT_FAILURE);
 	}
 
 	if (daemon_talk(&fifos, &msg, DM_EVENT_CMD_GET_STATUS, "-", "-", 0, 0)) {
