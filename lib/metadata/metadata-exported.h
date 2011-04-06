@@ -500,10 +500,9 @@ int replace_lv_with_error_segment(struct logical_volume *lv);
 int lv_extend(struct logical_volume *lv,
 	      const struct segment_type *segtype,
 	      uint32_t stripes, uint32_t stripe_size,
-	      uint32_t mirrors, uint32_t extents,
-	      struct physical_volume *mirrored_pv, uint32_t mirrored_pe,
-	      uint64_t status, struct dm_list *allocatable_pvs,
-	      alloc_policy_t alloc);
+	      uint32_t mirrors, uint32_t region_size,
+	      uint32_t extents,
+	      struct dm_list *allocatable_pvs, alloc_policy_t alloc);
 
 /* lv must be part of lv->vg->lvs */
 int lv_remove(struct logical_volume *lv);

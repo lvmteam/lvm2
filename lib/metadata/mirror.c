@@ -1899,8 +1899,9 @@ int add_mirror_log(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	/* check sync status */
-	if (lv_mirror_percent(cmd, lv, 0, &sync_percent, NULL) &&
-	    (sync_percent == PERCENT_100))
+	if (mirror_in_sync() ||
+	    (lv_mirror_percent(cmd, lv, 0, &sync_percent, NULL) &&
+	     (sync_percent == PERCENT_100)))
 		in_sync = 1;
 	else
 		in_sync = 0;
