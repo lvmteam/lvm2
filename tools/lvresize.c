@@ -670,10 +670,11 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 			return ECMD_FAILED;
 		}
 	} else if ((lp->extents > lv->le_count) && /* Ensure we extend */
-		   !lv_extend(lv, lp->segtype, lp->stripes,
-			      lp->stripe_size, lp->mirrors,
+		   !lv_extend(lv, lp->segtype,
+			      lp->stripes, lp->stripe_size,
+			      lp->mirrors, first_seg(lv)->region_size,
 			      lp->extents - lv->le_count,
-			      NULL, 0u, 0u, pvh, alloc)) {
+			      pvh, alloc)) {
 		stack;
 		return ECMD_FAILED;
 	}
