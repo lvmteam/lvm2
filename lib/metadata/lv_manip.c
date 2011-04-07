@@ -2114,8 +2114,8 @@ static int _lv_insert_empty_sublvs(struct logical_volume *lv,
 	struct logical_volume *sub_lv;
 	uint32_t i;
 	uint64_t status = 0;
-	char *img_name;
-	size_t len;
+	size_t len = strlen(lv->name) + 32;
+	char img_name[len];
 	struct lv_segment *mapseg;
 
 	if (lv->le_count || first_seg(lv)) {
@@ -2141,9 +2141,6 @@ static int _lv_insert_empty_sublvs(struct logical_volume *lv,
 	/*
 	 * Next, create all of our sub_lv's and link them in.
 	 */
-	len = strlen(lv->name) + 32;
-	if (!(img_name = dm_pool_alloc(lv->vg->cmd->mem, len)))
-		return_0;
 	if (dm_snprintf(img_name, len, "%s%s", lv->name, "_mimage_%d") < 0)
 		return_0;
 
@@ -2157,7 +2154,6 @@ static int _lv_insert_empty_sublvs(struct logical_volume *lv,
 	}
 	dm_list_add(&lv->segments, &mapseg->list);
 
-	dm_pool_free(lv->vg->cmd->mem, img_name);
 	return 1;
 }
 
