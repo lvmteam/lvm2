@@ -125,8 +125,8 @@ static int _extend(const char *device)
 		syslog(LOG_ERR, "Unable to determine VG name from %s.", device);
 		return 0;
 	}
-	if (sizeof(cmd_str) <= snprintf(cmd_str, sizeof(cmd_str),
-					"lvextend --use-policies %s/%s", vg, lv)) {
+	if (dm_snprintf(cmd_str, sizeof(cmd_str),
+			"lvextend --use-policies %s/%s", vg, lv) < 0) {
 		syslog(LOG_ERR, "Unable to form LVM command: Device name too long.");
 		return 0;
 	}
