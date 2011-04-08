@@ -1274,7 +1274,7 @@ static void _close_stray_fds(const char *command)
 	if (getenv("LVM_SUPPRESS_FD_WARNINGS"))
 		suppress_warnings = 1;
 
-	for (fd = 3; fd < rlim.rlim_cur; fd++)
+	for (fd = 3; fd < (int)rlim.rlim_cur; fd++)
 		_close_descriptor(fd, suppress_warnings, command, ppid,
 				  parent_cmdline);
 }

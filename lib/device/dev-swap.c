@@ -42,7 +42,8 @@ int dev_is_swap(struct device *dev, uint64_t *signature)
 {
 	char buf[10];
 	uint64_t size;
-	int page, ret = 0;
+	unsigned page;
+	int ret = 0;
 
 	if (!dev_get_size(dev, &size)) {
 		stack;

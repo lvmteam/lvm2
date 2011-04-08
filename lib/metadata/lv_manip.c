@@ -976,7 +976,7 @@ static int _for_each_pv(struct cmd_context *cmd, struct logical_volume *lv,
 					       (le - seg->le) / area_multiple,
 					       area_len, NULL, max_seg_len, 0,
 					       (stripes_per_mimage == 1) && only_single_area_segments ? 1U : 0U,
-					       top_level_area_index != -1 ? top_level_area_index : (int) s * stripes_per_mimage,
+					       (top_level_area_index != -1) ? top_level_area_index : (int) (s * stripes_per_mimage),
 					       only_single_area_segments, fn,
 					       data)))
 				stack;

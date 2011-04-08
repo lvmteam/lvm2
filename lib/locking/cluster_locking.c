@@ -100,7 +100,7 @@ static int _send_request(char *inbuf, int inlen, char **retbuf)
 	char outbuf[PIPE_BUF] __attribute__((aligned(8)));
 	struct clvm_header *outheader = (struct clvm_header *) outbuf;
 	int len;
-	int off;
+	unsigned off;
 	int buflen;
 	int err;
 

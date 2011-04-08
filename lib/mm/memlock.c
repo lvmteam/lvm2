@@ -151,7 +151,8 @@ static int _maps_line(const struct config_node *cn, lvmlock_t lock,
 {
 	const struct config_value *cv;
 	long from, to;
-	int pos, i;
+	int pos;
+	unsigned i;
 	char fr, fw, fx, fp;
 	size_t sz;
 
