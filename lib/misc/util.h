@@ -25,7 +25,7 @@
 		     (void) (&_a == &_b); \
 		     _a > _b ? _a : _b; })
 
-#ifdef __clang__
+#if defined(__clang__) || (defined(__GNUC__) && __GNUC__ >= 4 && __GNUC_MINOR__ >= 6)
 #define uninitialized_var(x) x
 #else
 #define uninitialized_var(x) x = x
