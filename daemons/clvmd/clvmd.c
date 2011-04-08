@@ -2157,7 +2157,7 @@ static struct local_client *find_client(int clientid)
 {
 	struct local_client *thisfd;
 	for (thisfd = &local_client_head; thisfd != NULL; thisfd = thisfd->next) {
-		if (thisfd->fd == ntohl(clientid))
+		if (thisfd->fd == (int)ntohl(clientid))
 			return thisfd;
 	}
 	return NULL;

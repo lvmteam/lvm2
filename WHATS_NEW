@@ -1,5 +1,6 @@
 Version 2.02.85 - 
 ===================================
+  Fix some unmatching sign comparation gcc warnings in the code.
   Allow lv_extend() to work on zero length intrinsically layered LVs.
   Keep the cache content when the exported vg buffer is matching.
   Extend the set of memory regions, that are not locked to memory.

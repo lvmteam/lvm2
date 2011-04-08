@@ -200,7 +200,7 @@ uint32_t adjusted_mirror_region_size(uint32_t extent_size, uint32_t extents,
  */
 int shift_mirror_images(struct lv_segment *mirrored_seg, unsigned mimage)
 {
-	int i;
+	unsigned i;
 	struct lv_segment_area area;
 
 	if (mimage >= mirrored_seg->area_count) {
@@ -1836,7 +1836,7 @@ int add_mirror_log(struct cmd_context *cmd, struct logical_volume *lv,
 	int in_sync;
 	struct logical_volume *log_lv;
 	struct lvinfo info;
-	int old_log_count;
+	unsigned old_log_count;
 	int r = 0;
 
 	if (dm_list_size(&lv->segments) != 1) {

@@ -100,7 +100,7 @@ static void _fill_table(struct dm_regex *m, struct rx_node *rx)
 
 static void _create_bitsets(struct dm_regex *m)
 {
-	int i;
+	unsigned i;
 
 	for (i = 0; i < m->num_nodes; i++) {
 		struct rx_node *n = m->nodes[i];
@@ -112,7 +112,7 @@ static void _create_bitsets(struct dm_regex *m)
 
 static void _calc_functions(struct dm_regex *m)
 {
-	int i, j, final = 1;
+	unsigned i, j, final = 1;
 	struct rx_node *rx, *c1, *c2;
 
 	for (i = 0; i < m->num_nodes; i++) {
@@ -253,7 +253,8 @@ static int _calc_states(struct dm_regex *m, struct rx_node *rx)
 {
 	unsigned iwidth = (m->num_charsets / DM_BITS_PER_INT) + 1;
 	struct dfa_state *dfa;
-	int i, a;
+	unsigned i;
+	int a;
 
 	m->tt = ttree_create(m->scratch, iwidth);
 	if (!m->tt)
@@ -314,7 +315,7 @@ struct dm_regex *dm_regex_create(struct dm_pool *mem, const char * const *patter
 				 unsigned num_patterns)
 {
 	char *all, *ptr;
-	int i;
+	unsigned i;
 	size_t len = 0;
 	struct rx_node *rx;
 	struct dm_regex *m;

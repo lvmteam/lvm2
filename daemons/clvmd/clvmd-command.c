@@ -377,7 +377,7 @@ static int restart_clvmd(void)
 	/* Propogate debug options */
 	if (clvmd_get_debug()) {
 		if (!(debug_arg = malloc(16)) ||
-		    dm_snprintf(debug_arg, 16, "-d%d", (int)clvmd_get_debug()) < 0)
+		    dm_snprintf(debug_arg, 16, "-d%u", clvmd_get_debug()) < 0)
 			goto_out;
 		argv[argc++] = debug_arg;
 		debug_arg = NULL;

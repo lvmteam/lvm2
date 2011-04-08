@@ -80,7 +80,7 @@ static int _send_request(const char *inbuf, int inlen, char **retbuf, int no_res
 	char outbuf[PIPE_BUF];
 	struct clvm_header *outheader = (struct clvm_header *) outbuf;
 	int len;
-	int off;
+	unsigned off;
 	int buflen;
 	int err;
 

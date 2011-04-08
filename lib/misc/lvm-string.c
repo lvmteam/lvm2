@@ -144,7 +144,7 @@ static void _unquote_one_character(char *src, const char orig_char,
  * process several characters in one go.
  */
 static void _unquote_characters(char *src, const char *orig_chars,
-				const int num_orig_chars, 
+				size_t num_orig_chars,
 				const char quote_char,
 				char *arr_substr_first_unquoted[])
 {

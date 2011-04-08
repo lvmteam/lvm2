@@ -327,7 +327,7 @@ static void _del_fs_op(struct fs_op_parms *fsp)
 /* Check if there is other the type of fs operation stacked */
 static int _other_fs_ops(fs_op_t type)
 {
-	int i;
+	unsigned i;
 
 	for (i = 0; i < NUM_FS_OPS; i++)
 		if (type != i && _count_fs_ops[i])

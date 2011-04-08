@@ -734,8 +734,8 @@ int dm_report_object(struct dm_report *rh, void *object)
 			return 0;
 		}
 
-		if ((strlen(field->report_string) > field->props->width))
-			field->props->width = strlen(field->report_string);
+		if (((int) strlen(field->report_string) > field->props->width))
+			field->props->width = (int) strlen(field->report_string);
 
 		if ((rh->flags & RH_SORT_REQUIRED) &&
 		    (field->props->flags & FLD_SORT_KEY)) {
@@ -775,8 +775,8 @@ static int _report_headings(struct dm_report *rh)
 	}
 
 	dm_list_iterate_items(fp, &rh->field_props) {
-		if (buf_size < fp->width)
-			buf_size = fp->width;
+		if ((int) buf_size < fp->width)
+			buf_size = (size_t) fp->width;
 	}
 	/* Including trailing '\0'! */
 	buf_size++;

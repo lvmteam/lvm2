@@ -555,7 +555,7 @@ static int _failed_mirrors_count(struct logical_volume *lv)
 {
 	struct lv_segment *lvseg;
 	int ret = 0;
-	int s;
+	unsigned s;
 
 	dm_list_iterate_items(lvseg, &lv->segments) {
 		if (!seg_is_mirrored(lvseg))

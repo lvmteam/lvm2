@@ -2412,7 +2412,7 @@ static int _dm_deps_disp(struct dm_report *rh, struct dm_pool *mem,
 			 void *private)
 {
 	const struct dm_deps *deps = data;
-	int i;
+	unsigned i;
 	char buf[DM_MAX_TYPE_NAME], *repstr;
 
 	if (!dm_pool_begin_object(mem, 16)) {

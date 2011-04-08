@@ -149,7 +149,7 @@ retry_fcntl:
 		goto fail_close_unlink;
 	}
 
-	if ((write_out == 0) || (write_out < bufferlen)) {
+	if ((write_out == 0) || ((size_t)write_out < bufferlen)) {
 		log_error("Cannot write pid to pidfile [%s], shortwrite of"
 			  "[%" PRIsize_t "] bytes, expected [%" PRIsize_t "]\n",
 			  lockfile, write_out, bufferlen);

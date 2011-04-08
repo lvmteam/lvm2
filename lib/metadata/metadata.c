@@ -1987,7 +1987,7 @@ static int _lv_each_dependency(struct logical_volume *lv,
 			       int (*fn)(struct logical_volume *lv, void *data),
 			       void *data)
 {
-	int i, s;
+	unsigned i, s;
 	struct lv_segment *lvseg;
 
 	struct logical_volume *deps[] = {
@@ -2111,7 +2111,7 @@ static int _lv_mark_if_partial_collect(struct logical_volume *lv, void *data)
 
 static int _lv_mark_if_partial_single(struct logical_volume *lv, void *data)
 {
-	int s;
+	unsigned s;
 	struct _lv_mark_if_partial_baton baton;
 	struct lv_segment *lvseg;
 
@@ -2200,7 +2200,7 @@ static int _lv_validate_references_single(struct logical_volume *lv, void *data)
 	struct validate_hash *vhash = data;
 	struct lv_segment *lvseg;
 	struct physical_volume *pv;
-	int s;
+	unsigned s;
 	int r = 1;
 
 	if (lv != dm_hash_lookup_binary(vhash->lvid, &lv->lvid.id[1],
