@@ -127,7 +127,7 @@ void fin_log(void)
 	}
 }
 
-void fin_syslog()
+void fin_syslog(void)
 {
 	if (_syslog)
 		closelog();
