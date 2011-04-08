@@ -55,7 +55,7 @@ static uint32_t _shuffle(uint32_t k)
 #endif
 }
 
-static struct node **_lookup(struct node *const *c, uint32_t key,
+static struct node *const *_lookup(struct node *const *c, uint32_t key,
 			     struct node **p)
 {
 	*p = NULL;
@@ -71,20 +71,20 @@ static struct node **_lookup(struct node *const *c, uint32_t key,
 			c = &(*c)->r;
 	}
 
-	return (struct node **)c;
+	return c;
 }
 
 void *btree_lookup(const struct btree *t, uint32_t k)
 {
 	uint32_t key = _shuffle(k);
-	struct node *p, **c = _lookup(&t->root, key, &p);
+	struct node *p, *const *c = _lookup(&t->root, key, &p);
 	return (*c) ? (*c)->data : NULL;
 }
 
 int btree_insert(struct btree *t, uint32_t k, void *data)
 {
 	uint32_t key = _shuffle(k);
-	struct node *p, **c = _lookup(&t->root, key, &p), *n;
+	struct node *p, **c = (struct node **) _lookup(&t->root, key, &p), *n;
 
 	if (!*c) {
 		if (!(n = dm_pool_alloc(t->mem, sizeof(*n))))
