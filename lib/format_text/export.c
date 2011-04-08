@@ -27,6 +27,7 @@
 #include <sys/utsname.h>
 
 struct formatter;
+__attribute__((format(printf, 3, 0)))
 typedef int (*out_with_comment_fn) (struct formatter * f, const char *comment,
 				    const char *fmt, va_list ap);
 typedef int (*nl_fn) (struct formatter * f);
@@ -147,6 +148,7 @@ static int _nl_raw(struct formatter *f)
 }
 
 #define COMMENT_TAB 6
+__attribute__((format(printf, 3, 0)))
 static int _out_with_comment_file(struct formatter *f, const char *comment,
 				  const char *fmt, va_list ap)
 {
@@ -182,6 +184,7 @@ static int _out_with_comment_file(struct formatter *f, const char *comment,
 	return 1;
 }
 
+__attribute__((format(printf, 3, 0)))
 static int _out_with_comment_raw(struct formatter *f,
 				 const char *comment __attribute__((unused)),
 				 const char *fmt, va_list ap)
