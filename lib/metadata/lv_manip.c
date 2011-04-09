@@ -2296,7 +2296,7 @@ static int _rename_sub_lv(struct cmd_context *cmd,
 		log_error("Failed to allocate space for new name");
 		return 0;
 	}
-	if (!dm_snprintf(new_name, len, "%s%s", lv_name_new, suffix)) {
+	if (dm_snprintf(new_name, len, "%s%s", lv_name_new, suffix) < 0) {
 		log_error("Failed to create new name");
 		return 0;
 	}

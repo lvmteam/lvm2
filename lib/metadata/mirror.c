@@ -1787,7 +1787,7 @@ static struct logical_volume *_set_up_mirror_log(struct cmd_context *cmd,
 	} else if ((lv_name = strstr(lv->name, MIRROR_SYNC_LAYER))) {
 		len = lv_name - lv->name + 1;
 		if (!(tmp_name = alloca(len)) ||
-		    !dm_snprintf(tmp_name, len, "%s", lv->name)) {
+		    (dm_snprintf(tmp_name, len, "%s", lv->name) < 0)) {
 			log_error("mirror log name allocation failed");
 			return 0;
 		}
