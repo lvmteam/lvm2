@@ -481,7 +481,7 @@ int lvconvert_poll(struct cmd_context *cmd, struct logical_volume *lv,
 	if (!uuid || !lv_full_name)
 		return_0;
 
-	if (!dm_snprintf(lv_full_name, len, "%s/%s", lv->vg->name, lv->name))
+	if (dm_snprintf(lv_full_name, len, "%s/%s", lv->vg->name, lv->name) < 0)
 		return_0;
 
 	memcpy(uuid, &lv->lvid, sizeof(lv->lvid));
