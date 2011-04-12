@@ -873,6 +873,10 @@ static void _lvsegs_in_lv(char **argv, int argc)
 		_print_property_value("seg_start_pe", v);
 		v = lvm_lvseg_get_property(lvl->lvseg, "seg_size");
 		_print_property_value("seg_size", v);
+		v = lvm_lvseg_get_property(lvl->lvseg, "devices");
+		_print_property_value("devices", v);
+		v = lvm_lvseg_get_property(lvl->lvseg, "seg_pe_ranges");
+		_print_property_value("seg_pe_ranges", v);
 	}
 }
 

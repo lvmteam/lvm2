@@ -249,9 +249,10 @@ GET_LVSEG_NUM_PROPERTY_FN(seg_size, (SECTOR_SIZE * lvseg_size(lvseg)))
 #define _seg_size_set _not_implemented_set
 GET_LVSEG_STR_PROPERTY_FN(seg_tags, lvseg_tags_dup(lvseg))
 #define _seg_tags_set _not_implemented_set
-#define _seg_pe_ranges_get _not_implemented_get
+GET_LVSEG_STR_PROPERTY_FN(seg_pe_ranges,
+			  lvseg_seg_pe_ranges(lvseg->lv->vg->vgmem, lvseg))
 #define _seg_pe_ranges_set _not_implemented_set
-#define _devices_get _not_implemented_get
+GET_LVSEG_STR_PROPERTY_FN(devices, lvseg_devices(lvseg->lv->vg->vgmem, lvseg))
 #define _devices_set _not_implemented_set
 
 
