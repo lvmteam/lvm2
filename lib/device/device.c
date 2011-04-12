@@ -455,6 +455,20 @@ unsigned long dev_optimal_io_size(const char *sysfs_dir,
 				       sysfs_dir, dev);
 }
 
+unsigned long dev_discard_max_bytes(const char *sysfs_dir,
+				    struct device *dev)
+{
+	return _dev_topology_attribute("queue/discard_max_bytes",
+				       sysfs_dir, dev);
+}
+
+unsigned long dev_discard_granularity(const char *sysfs_dir,
+				      struct device *dev)
+{
+	return _dev_topology_attribute("queue/discard_granularity",
+				       sysfs_dir, dev);
+}
+
 #else
 
 int get_primary_dev(const char *sysfs_dir,
@@ -477,6 +491,18 @@ unsigned long dev_minimum_io_size(const char *sysfs_dir,
 
 unsigned long dev_optimal_io_size(const char *sysfs_dir,
 				  struct device *dev)
+{
+	return 0UL;
+}
+
+unsigned long dev_discard_max_bytes(const char *sysfs_dir,
+				    struct device *dev)
+{
+	return 0UL;
+}
+
+unsigned long dev_discard_granularity(const char *sysfs_dir,
+				      struct device *dev)
 {
 	return 0UL;
 }

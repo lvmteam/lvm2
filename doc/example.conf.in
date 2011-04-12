@@ -151,6 +151,14 @@ devices {
     # Example: Ignore devices smaller than 2MB (i.e. floppy drives).
     # pv_min_size = 2048
     pv_min_size = 512
+
+    # Issue discards to an LV's underlying PV(s) when the LV is removed.
+    # Discards inform the storage that a region is no longer in use.  If set
+    # to 1, discards will only be issued if both the storage and kernel provide
+    # support.  Not all storage will support or benefit from discards but SSDs
+    # or thinly provisioned LUNs generally do.
+    # 1 enables; 0 disables.
+    issue_discards = 0
 }
 
 # This section allows you to configure the way in which LVM selects

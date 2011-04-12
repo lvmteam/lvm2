@@ -36,6 +36,9 @@
 #  ifndef BLKGETSIZE64		/* fs.h out-of-date */
 #    define BLKGETSIZE64 _IOR(0x12, 114, size_t)
 #  endif /* BLKGETSIZE64 */
+#  ifndef BLKDISCARD
+#    define BLKDISCARD	_IO(0x12,119)
+#  endif
 #else
 #  include <sys/disk.h>
 #  define BLKBSZGET DKIOCGETBLOCKSIZE
@@ -301,6 +304,33 @@ static int _dev_read_ahead_dev(struct device *dev, uint32_t *read_ahead)
 	return 1;
 }
 
+static int _dev_discard_blocks(struct device *dev, uint64_t offset_bytes, uint64_t size_bytes)
+{
+	uint64_t discard_range[2];
+
+	if (!dev_open(dev))
+		return_0;
+
+	discard_range[0] = offset_bytes;
+	discard_range[1] = size_bytes;
+
+	log_debug("Discarding %" PRIu64 " bytes offset %" PRIu64 " bytes on %s.",
+		  size_bytes, offset_bytes, dev_name(dev));
+	if (ioctl(dev->fd, BLKDISCARD, &discard_range) < 0) {
+		log_error("%s: BLKDISCARD ioctl at offset %" PRIu64 " size %" PRIu64 " failed: %s.",
+			  dev_name(dev), offset_bytes, size_bytes, strerror(errno));
+		if (!dev_close(dev))
+			stack;
+		/* It doesn't matter if discard failed, so return success. */
+		return 1;
+	}
+
+	if (!dev_close(dev))
+		stack;
+
+	return 1;
+}
+
 /*-----------------------------------------------------------------
  * Public functions
  *---------------------------------------------------------------*/
@@ -327,6 +357,17 @@ int dev_get_read_ahead(struct device *dev, uint32_t *read_ahead)
 	}
 
 	return _dev_read_ahead_dev(dev, read_ahead);
+}
+
+int dev_discard_blocks(struct device *dev, uint64_t offset_bytes, uint64_t size_bytes)
+{
+	if (!dev)
+		return 0;
+
+	if (dev->flags & DEV_REGULAR)
+		return 1;
+
+	return _dev_discard_blocks(dev, offset_bytes, size_bytes);
 }
 
 /* FIXME Unused

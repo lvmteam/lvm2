@@ -20,6 +20,7 @@
 #include "archiver.h"
 #include "locking.h"
 #include "lvmcache.h"
+#include "defaults.h"
 
 static struct pv_segment *_alloc_pv_segment(struct dm_pool *mem,
 					    struct physical_volume *pv,
@@ -190,10 +191,36 @@ struct pv_segment *assign_peg_to_lvseg(struct physical_volume *pv,
 
 int release_pv_segment(struct pv_segment *peg, uint32_t area_reduction)
 {
+	uint64_t discard_offset;
+	uint64_t pe_start = peg->pv->pe_start;
+	uint64_t discard_area_reduction = area_reduction;
+
 	if (!peg->lvseg) {
 		log_error("release_pv_segment with unallocated segment: "
 			  "%s PE %" PRIu32, pv_dev_name(peg->pv), peg->pe);
 		return 0;
+	}
+
+	/*
+	 * Only issue discards if enabled in lvm.conf and both
+	 * the device and kernel (>= 2.6.35) supports discards.
+	 */
+	if (find_config_tree_bool(peg->pv->fmt->cmd,
+				  "devices/issue_discards", DEFAULT_ISSUE_DISCARDS) &&
+	    dev_discard_max_bytes(peg->pv->fmt->cmd->sysfs_dir, peg->pv->dev) &&
+	    dev_discard_granularity(peg->pv->fmt->cmd->sysfs_dir, peg->pv->dev)) {
+		if (!pe_start) {
+			/* skip the first extent */
+			pe_start = peg->pv->vg->extent_size;
+			discard_area_reduction--;
+		}
+		discard_offset = peg->pe + peg->lvseg->area_len - area_reduction;
+		discard_offset = (discard_offset * peg->pv->vg->extent_size) + pe_start;
+		log_debug("Discarding %" PRIu32 " extents offset %" PRIu64 " sectors on %s.",
+			 discard_area_reduction, discard_offset, dev_name(peg->pv->dev));
+		if (!dev_discard_blocks(peg->pv->dev, discard_offset << SECTOR_SHIFT,
+					discard_area_reduction * peg->pv->vg->extent_size * SECTOR_SIZE))
+			return_0;
 	}
 
 	if (peg->lvseg->area_len == area_reduction) {
