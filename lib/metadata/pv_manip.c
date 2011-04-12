@@ -193,7 +193,7 @@ int release_pv_segment(struct pv_segment *peg, uint32_t area_reduction)
 {
 	uint64_t discard_offset;
 	uint64_t pe_start = peg->pv->pe_start;
-	uint64_t discard_area_reduction = area_reduction;
+	uint32_t discard_area_reduction = area_reduction;
 
 	if (!peg->lvseg) {
 		log_error("release_pv_segment with unallocated segment: "
