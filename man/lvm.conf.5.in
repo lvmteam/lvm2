@@ -180,6 +180,13 @@ ignore devices smaller than 2MB (i.e. floppy drives):
 .IP
 pv_min_size = 2048
 .IP
+\fBissue_discards\fP \(em
+Issue discards to an LV's underlying PV(s) when the LV is removed.  Discards
+inform the storage that a region is no longer in use.  If set to 1, discards will
+only be issued if both the storage and kernel provide support.  Not all storage
+will support or benefit from discards but SSDs or thinly provisioned LUNs
+generally do.
+.IP
 .TP
 \fBallocation\fP \(em Space allocation policies
 .IP

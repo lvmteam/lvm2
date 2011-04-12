@@ -68,6 +68,7 @@ struct device_area {
 int dev_get_size(const struct device *dev, uint64_t *size);
 int dev_get_sectsize(struct device *dev, uint32_t *size);
 int dev_get_read_ahead(struct device *dev, uint32_t *read_ahead);
+int dev_discard_blocks(struct device *dev, uint64_t offset_bytes, uint64_t size_bytes);
 
 /* Use quiet version if device number could change e.g. when opening LV */
 int dev_open(struct device *dev);
@@ -114,5 +115,11 @@ unsigned long dev_minimum_io_size(const char *sysfs_dir,
 
 unsigned long dev_optimal_io_size(const char *sysfs_dir,
 				  struct device *dev);
+
+unsigned long dev_discard_max_bytes(const char *sysfs_dir,
+				    struct device *dev);
+
+unsigned long dev_discard_granularity(const char *sysfs_dir,
+				      struct device *dev);
 
 #endif
