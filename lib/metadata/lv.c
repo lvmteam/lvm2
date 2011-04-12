@@ -21,6 +21,88 @@
 #include "segtype.h"
 #include "str_list.h"
 
+static char *_format_pvsegs(struct dm_pool *mem, const struct lv_segment *seg,
+			     int range_format)
+{
+	unsigned int s;
+	const char *name = NULL;
+	uint32_t extent = 0;
+	char extent_str[32];
+
+	if (!dm_pool_begin_object(mem, 256)) {
+		log_error("dm_pool_begin_object failed");
+		return NULL;
+	}
+
+	for (s = 0; s < seg->area_count; s++) {
+		switch (seg_type(seg, s)) {
+		case AREA_LV:
+			name = seg_lv(seg, s)->name;
+			extent = seg_le(seg, s);
+			break;
+		case AREA_PV:
+			name = dev_name(seg_dev(seg, s));
+			extent = seg_pe(seg, s);
+			break;
+		case AREA_UNASSIGNED:
+			name = "unassigned";
+			extent = 0;
+		}
+
+		if (!dm_pool_grow_object(mem, name, strlen(name))) {
+			log_error("dm_pool_grow_object failed");
+			return NULL;
+		}
+
+		if (dm_snprintf(extent_str, sizeof(extent_str),
+				"%s%" PRIu32 "%s",
+				range_format ? ":" : "(", extent,
+				range_format ? "-"  : ")") < 0) {
+			log_error("Extent number dm_snprintf failed");
+			return NULL;
+		}
+		if (!dm_pool_grow_object(mem, extent_str, strlen(extent_str))) {
+			log_error("dm_pool_grow_object failed");
+			return NULL;
+		}
+
+		if (range_format) {
+			if (dm_snprintf(extent_str, sizeof(extent_str),
+					"%" PRIu32, extent + seg->area_len - 1) < 0) {
+				log_error("Extent number dm_snprintf failed");
+				return NULL;
+			}
+			if (!dm_pool_grow_object(mem, extent_str, strlen(extent_str))) {
+				log_error("dm_pool_grow_object failed");
+				return NULL;
+			}
+		}
+
+		if ((s != seg->area_count - 1) &&
+		    !dm_pool_grow_object(mem, range_format ? " " : ",", 1)) {
+			log_error("dm_pool_grow_object failed");
+			return NULL;
+		}
+	}
+
+	if (!dm_pool_grow_object(mem, "\0", 1)) {
+		log_error("dm_pool_grow_object failed");
+		return NULL;
+	}
+
+	return dm_pool_end_object(mem);
+}
+
+char *lvseg_devices(struct dm_pool *mem, const struct lv_segment *seg)
+{
+	return _format_pvsegs(mem, seg, 0);
+}
+
+char *lvseg_seg_pe_ranges(struct dm_pool *mem, const struct lv_segment *seg)
+{
+	return _format_pvsegs(mem, seg, 1);
+}
+
 char *lvseg_tags_dup(const struct lv_segment *seg)
 {
 	return tags_format_and_copy(seg->lv->vg->vgmem, &seg->tags);
