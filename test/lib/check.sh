@@ -209,6 +209,14 @@ inactive() {
 	}
 }
 
+lv_exists() {
+	lv="$1/$2"
+	lvl "$lv" >& /dev/null || {
+		echo "$lv expected to exist but does not"
+		exit 1
+	}
+}
+
 pv_field()
 {
     actual=$(trim $(pvs --noheadings $4 -o $2 $1))
