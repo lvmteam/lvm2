@@ -191,9 +191,9 @@ struct pv_segment *assign_peg_to_lvseg(struct physical_volume *pv,
 
 int release_pv_segment(struct pv_segment *peg, uint32_t area_reduction)
 {
-	uint64_t discard_offset;
+	uint64_t discard_offset_sectors;
 	uint64_t pe_start = peg->pv->pe_start;
-	uint32_t discard_area_reduction = area_reduction;
+	uint64_t discard_area_reduction = area_reduction;
 
 	if (!peg->lvseg) {
 		log_error("release_pv_segment with unallocated segment: "
@@ -209,16 +209,20 @@ int release_pv_segment(struct pv_segment *peg, uint32_t area_reduction)
 				  "devices/issue_discards", DEFAULT_ISSUE_DISCARDS) &&
 	    dev_discard_max_bytes(peg->pv->fmt->cmd->sysfs_dir, peg->pv->dev) &&
 	    dev_discard_granularity(peg->pv->fmt->cmd->sysfs_dir, peg->pv->dev)) {
-		if (!pe_start) {
-			/* skip the first extent */
-			pe_start = peg->pv->vg->extent_size;
+		discard_offset_sectors = (peg->pe + peg->lvseg->area_len - area_reduction) *
+			peg->pv->vg->extent_size + pe_start;
+		if (!discard_offset_sectors) {
+			/*
+			 * pe_start=0 and the PV's first extent contains the label.
+			 * Must skip past the first extent.
+			 */
+			discard_offset_sectors = peg->pv->vg->extent_size;
 			discard_area_reduction--;
 		}
-		discard_offset = peg->pe + peg->lvseg->area_len - area_reduction;
-		discard_offset = (discard_offset * peg->pv->vg->extent_size) + pe_start;
-		log_debug("Discarding %" PRIu32 " extents offset %" PRIu64 " sectors on %s.",
-			 discard_area_reduction, discard_offset, dev_name(peg->pv->dev));
-		if (!dev_discard_blocks(peg->pv->dev, discard_offset << SECTOR_SHIFT,
+		log_debug("Discarding %" PRIu64 " extents offset %" PRIu64 " sectors on %s.",
+			  discard_area_reduction, discard_offset_sectors, dev_name(peg->pv->dev));
+		if (discard_area_reduction &&
+		    !dev_discard_blocks(peg->pv->dev, discard_offset_sectors << SECTOR_SHIFT,
 					discard_area_reduction * peg->pv->vg->extent_size * SECTOR_SIZE))
 			return_0;
 	}

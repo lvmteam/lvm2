@@ -1,7 +1,7 @@
 Version 2.02.85 - 
 ===================================
   Add "devices/issue_discards" to lvm.conf.
-  Issue discards on lvremove if enabled and both storage and kernel have support.
+  Issue discards on lvremove, lvreduce, etc if enabled and supported.
   Fix incorrect tests for dm_snprintf() failure.
   Fix some unmatching sign comparation gcc warnings in the code.
   Allow lv_extend() to work on zero length intrinsically layered LVs.
