@@ -857,11 +857,8 @@ static int _free_vginfo(struct lvmcache_vginfo *vginfo)
 		}
  	while ((vginfo2 = vginfo2->next));
 
-	if (vginfo->vgname)
-		dm_free(vginfo->vgname);
-
-	if (vginfo->creation_host)
-		dm_free(vginfo->creation_host);
+	dm_free(vginfo->vgname);
+	dm_free(vginfo->creation_host);
 
 	if (*vginfo->vgid && _vgid_hash &&
 	    vginfo_from_vgid(vginfo->vgid) == vginfo)
