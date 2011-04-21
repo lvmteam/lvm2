@@ -1395,11 +1395,23 @@ static int _add_raw(struct dm_list *raw_list, struct device_area *dev_area)
 static int _get_pv_if_in_vg(struct lvmcache_info *info,
 			    struct physical_volume *pv)
 {
+	char vgname[NAME_LEN + 1];
+	char vgid[ID_LEN + 1];
+
 	if (info->vginfo && info->vginfo->vgname &&
-	    !is_orphan_vg(info->vginfo->vgname) &&
-	    get_pv_from_vg_by_id(info->fmt, info->vginfo->vgname,
-				 info->vginfo->vgid, info->dev->pvid, pv))
-		return 1;
+	    !is_orphan_vg(info->vginfo->vgname)) {
+		/*
+		 * get_pv_from_vg_by_id() may call
+		 * lvmcache_label_scan() and drop cached
+		 * vginfo so make a local copy of string.
+		 */
+		strcpy(vgname, info->vginfo->vgname);
+		memcpy(vgid, info->vginfo->vgid, sizeof(vgid));
+
+		if (get_pv_from_vg_by_id(info->fmt, vgname, vgid,
+					 info->dev->pvid, pv))
+			return 1;
+	}
 
 	return 0;
 }
