@@ -2771,6 +2771,9 @@ static void check_reappeared_pv(struct volume_group *correct_vg,
  * If precommitted is set, use precommitted metadata if present.
  *
  * Either of vgname or vgid may be NULL.
+ *
+ * Note: vginfo structs must not be held or used as parameters
+ *       across the call to this function.
  */
 static struct volume_group *_vg_read(struct cmd_context *cmd,
 				     const char *vgname,

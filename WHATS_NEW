@@ -1,5 +1,6 @@
 Version 2.02.85 - 
 ===================================
+  Fix use of released memory when duplicate PV is found.
   Add "devices/issue_discards" to lvm.conf.
   Issue discards on lvremove, lvreduce, etc if enabled and supported.
   Fix incorrect tests for dm_snprintf() failure.
