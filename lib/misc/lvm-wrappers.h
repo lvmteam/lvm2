@@ -16,6 +16,16 @@
 #ifndef _LVM_WRAPPERS_H
 #define _LVM_WRAPPERS_H
 
+#ifdef UDEV_SYNC_SUPPORT
+#include <libudev.h>
+struct udev *udev_get_library_context(void);
+#endif
+
+int udev_init_library_context(void);
+void udev_fin_library_context(void);
+int udev_is_running(void);
+const char *udev_get_dev_dir(void);
+
 int lvm_getpagesize(void);
 
 /*
