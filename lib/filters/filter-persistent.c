@@ -103,6 +103,17 @@ int persistent_filter_load(struct dev_filter *f, struct config_tree **cft_out)
 	struct stat info;
 	int r = 0;
 
+	if (obtain_device_list_from_udev()) {
+		if (!stat(pf->file, &info)) {
+			log_very_verbose("Obtaining device list from "
+					 "udev. Removing obolete %s.",
+					 pf->file);
+			if (unlink(pf->file) < 0)
+				log_sys_error("unlink", pf->file);
+		}
+		return 1;
+	}
+
 	if (!stat(pf->file, &info))
 		pf->ctime = info.st_ctime;
 	else {
@@ -179,6 +190,9 @@ int persistent_filter_dump(struct dev_filter *f, int merge_existing)
 	FILE *fp;
 	int lockfd;
 	int r = 0;
+
+	if (obtain_device_list_from_udev())
+		return 1;
 
 	if (!f)
 		return_0;

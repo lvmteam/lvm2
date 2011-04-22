@@ -1282,6 +1282,9 @@ struct cmd_context *init_lvm(void)
 {
 	struct cmd_context *cmd;
 
+	if (!udev_init_library_context())
+		stack;
+
 	if (!(cmd = create_toolcontext(0, NULL)))
 		return_NULL;
 
@@ -1313,6 +1316,7 @@ void lvm_fin(struct cmd_context *cmd)
 {
 	_fin_commands();
 	destroy_toolcontext(cmd);
+	udev_fin_library_context();
 }
 
 static int _run_script(struct cmd_context *cmd, int argc, char **argv)

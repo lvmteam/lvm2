@@ -1,5 +1,7 @@
 Version 2.02.85 - 
 ===================================
+  Add new obtain_device_list_from_udev setting to lvm.conf.
+  Obtain device list from udev by default if LVM2 is compiled with udev support.
   Add nightly test for vgimportclone and querying of vgnames with duplicate pvs.
   Fix use of released memory when duplicate PV is found.
   Add "devices/issue_discards" to lvm.conf.
