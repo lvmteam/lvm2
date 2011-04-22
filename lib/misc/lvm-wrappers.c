@@ -17,6 +17,91 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+#ifdef UDEV_SYNC_SUPPORT
+static const char _no_context_msg[] = "Udev library context not set.";
+struct udev *_udev;
+
+int udev_init_library_context(void)
+{
+	if (_udev)
+		udev_unref(_udev);
+
+	if (!(_udev = udev_new())) {
+		log_error("Failed to create udev library context.");
+		return 0;
+	}
+
+	return 1;
+}
+
+void udev_fin_library_context(void)
+{
+	udev_unref(_udev);
+	_udev = NULL;
+}
+
+int udev_is_running(void)
+{
+	struct udev_queue *udev_queue;
+	int r;
+
+	if (!_udev) {
+		log_debug(_no_context_msg);
+		goto bad;
+	}
+
+	if (!(udev_queue = udev_queue_new(_udev))) {
+		log_debug("Could not get udev state.");
+		goto bad;
+	}
+
+	r = udev_queue_get_udev_is_active(udev_queue);
+	udev_queue_unref(udev_queue);
+
+	return r;
+
+bad:
+	log_debug("Assuming udev is not running.");
+	return 0;
+}
+
+const char *udev_get_dev_dir(void)
+{
+	if (!_udev) {
+		log_debug(_no_context_msg);
+		return NULL;
+	}
+
+	return udev_get_dev_path(_udev);
+}
+
+struct udev* udev_get_library_context(void)
+{
+	return _udev;
+}
+
+#else	/* UDEV_SYNC_SUPPORT */
+
+int udev_init_library_context(void)
+{
+	return 1;
+}
+
+void udev_fin_library_context(void)
+{
+}
+
+int udev_is_running(void)
+{
+	return 0;
+}
+
+const char *udev_get_dev_dir(void)
+{
+	return NULL;
+}
+#endif
+
 int lvm_getpagesize(void)
 {
 	return getpagesize();
