@@ -955,13 +955,11 @@ static void _apply_settings(struct cmd_context *cmd)
 static int _set_udev_checking(struct cmd_context *cmd)
 {
 #ifdef UDEV_SYNC_SUPPORT
-	struct udev *udev;
 	const char *udev_dev_dir;
 	size_t udev_dev_dir_len;
 	int dirs_diff;
 
-	if (!(udev = udev_new()) ||
-	    !(udev_dev_dir = udev_get_dev_path(udev)) ||
+	if (!(udev_dev_dir = udev_get_dev_dir()) ||
 	    !*udev_dev_dir) {
 		log_error("Could not get udev dev path.");
 		return 0;
@@ -988,7 +986,6 @@ static int _set_udev_checking(struct cmd_context *cmd)
 		init_udev_checking(0);
 	}
 
-	udev_unref(udev);
 #endif
 	return 1;
 }
