@@ -52,7 +52,7 @@ static struct {
 #define _free(x) dm_pool_free(_cache.mem, (x))
 #define _strdup(x) dm_pool_strdup(_cache.mem, (x))
 
-static int _insert(const char *path, int rec);
+static int _insert(const char *path, int rec, int check_with_udev_db);
 
 struct device *dev_create_file(const char *filename, struct device *dev,
 			       struct str_list *alias, int use_malloc)
@@ -319,8 +319,7 @@ static int _add_alias(struct device *dev, const char *path)
 		}
 	}
 
-	if (!(sl->str = dm_pool_strdup(_cache.mem, path)))
-		return_0;
+	sl->str = path;
 
 	if (!dm_list_empty(&dev->aliases)) {
 		oldpath = dm_list_item(dev->aliases.n, struct str_list)->str;
@@ -348,6 +347,7 @@ static int _insert_dev(const char *path, dev_t d)
 	struct device *dev;
 	static dev_t loopfile_count = 0;
 	int loopfile = 0;
+	char *path_copy;
 
 	/* Generate pretend device numbers for loopfiles */
 	if (!d) {
@@ -374,12 +374,17 @@ static int _insert_dev(const char *path, dev_t d)
 		}
 	}
 
-	if (!loopfile && !_add_alias(dev, path)) {
+	if (!(path_copy = dm_pool_strdup(_cache.mem, path))) {
+		log_error("Failed to duplicate path string.");
+		return 0;
+	}
+
+	if (!loopfile && !_add_alias(dev, path_copy)) {
 		log_error("Couldn't add alias to dev cache.");
 		return 0;
 	}
 
-	if (!dm_hash_insert(_cache.names, path, dev)) {
+	if (!dm_hash_insert(_cache.names, path_copy, dev)) {
 		log_error("Couldn't add name to hash in dev cache.");
 		return 0;
 	}
@@ -437,7 +442,7 @@ static int _insert_dir(const char *dir)
 				return_0;
 
 			_collapse_slashes(path);
-			r &= _insert(path, 1);
+			r &= _insert(path, 1, 0);
 			dm_free(path);
 
 			free(dirent[n]);
@@ -468,13 +473,113 @@ static int _insert_file(const char *path)
 	return 1;
 }
 
-static int _insert(const char *path, int rec)
+#ifdef UDEV_SYNC_SUPPORT
+
+static int _device_in_udev_db(const dev_t d)
+{
+	struct udev *udev;
+	struct udev_device *udev_device;
+
+	if (!(udev = udev_get_library_context()))
+		return_0;
+
+	if ((udev_device = udev_device_new_from_devnum(udev, 'b', d))) {
+		udev_device_unref(udev_device);
+		return 1;
+	}
+
+	return 0;
+}
+
+static int _insert_udev_dir(struct udev *udev, const char *dir)
+{
+	struct udev_enumerate *udev_enum = NULL;
+	struct udev_list_entry *device_entry, *symlink_entry;
+	const char *node_name, *symlink_name;
+	struct udev_device *device;
+	int r = 1;
+
+	if (!(udev_enum = udev_enumerate_new(udev)))
+		goto bad;
+
+	if (udev_enumerate_add_match_subsystem(udev_enum, "block") ||
+	    udev_enumerate_scan_devices(udev_enum))
+		goto bad;
+
+	udev_list_entry_foreach(device_entry, udev_enumerate_get_list_entry(udev_enum)) {
+		device = udev_device_new_from_syspath(udev, udev_list_entry_get_name(device_entry));
+
+		node_name = udev_device_get_devnode(device);
+		r &= _insert(node_name, 0, 0);
+
+		udev_list_entry_foreach(symlink_entry, udev_device_get_devlinks_list_entry(device)) {
+			symlink_name = udev_list_entry_get_name(symlink_entry);
+			r &= _insert(symlink_name, 0, 0);
+		}
+
+		udev_device_unref(device);
+	}
+
+	udev_enumerate_unref(udev_enum);
+	return r;
+
+bad:
+	log_error("Failed to enumerate udev device list.");
+	udev_enumerate_unref(udev_enum);
+	return 0;
+}
+
+static void _insert_dirs(struct dm_list *dirs)
+{
+	struct dir_list *dl;
+	struct udev *udev;
+	int with_udev;
+
+	with_udev = obtain_device_list_from_udev() &&
+		    (udev = udev_get_library_context());
+
+	dm_list_iterate_items(dl, &_cache.dirs) {
+		if (with_udev) {
+			if (!_insert_udev_dir(udev, dl->dir))
+				log_debug("%s: Failed to insert devices from "
+					  "udev-managed directory to device "
+					  "cache fully", dl->dir);
+		}
+		else if (!_insert_dir(dl->dir))
+			log_debug("%s: Failed to insert devices to"
+				  "device cache fully", dl->dir);
+	}
+}
+
+#else	/* UDEV_SYNC_SUPPORT */
+
+static int _device_in_udev_db(const dev_t d)
+{
+	return 0;
+}
+
+static void _insert_dirs(struct dm_list *dirs)
+{
+	struct dir_list *dl;
+
+	dm_list_iterate_items(dl, &_cache.dirs)
+		_insert_dir(dl->dir);
+}
+
+#endif	/* UDEV_SYNC_SUPPORT */
+
+static int _insert(const char *path, int rec, int check_with_udev_db)
 {
 	struct stat info;
 	int r = 0;
 
 	if (stat(path, &info) < 0) {
 		log_sys_very_verbose("stat", path);
+		return 0;
+	}
+
+	if (check_with_udev_db && !_device_in_udev_db(info.st_rdev)) {
+		log_very_verbose("%s: Not in udev db", path);
 		return 0;
 	}
 
@@ -515,8 +620,7 @@ static void _full_scan(int dev_scan)
 	if (_cache.has_scanned && !dev_scan)
 		return;
 
-	dm_list_iterate_items(dl, &_cache.dirs)
-		_insert_dir(dl->dir);
+	_insert_dirs(&_cache.dirs);
 
 	dm_list_iterate_items(dl, &_cache.files)
 		_insert_file(dl->dir);
@@ -760,7 +864,7 @@ const char *dev_name_confirmed(struct device *dev, int quiet)
 		if (dm_list_size(&dev->aliases) > 1) {
 			dm_list_del(dev->aliases.n);
 			if (!r)
-				_insert(name, 0);
+				_insert(name, 0, obtain_device_list_from_udev());
 			continue;
 		}
 
@@ -788,7 +892,7 @@ struct device *dev_cache_get(const char *name, struct dev_filter *f)
 	}
 
 	if (!d) {
-		_insert(name, 0);
+		_insert(name, 0, obtain_device_list_from_udev());
 		d = (struct device *) dm_hash_lookup(_cache.names, name);
 		if (!d) {
 			_full_scan(0);

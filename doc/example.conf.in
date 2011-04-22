@@ -19,6 +19,16 @@ devices {
     # to use with LVM2.
     scan = [ "/dev" ]
 
+    # If set, the cache of block device nodes with all associated symlinks
+    # will be constructed out of the existing udev database content.
+    # This avoids using and opening any inapplicable non-block devices or
+    # subdirectories found in the device directory. This setting is applied
+    # to udev-managed device directory only, other directories will be scanned
+    # fully. LVM2 needs to be compiled with udev support for this setting to
+    # take effect. N.B. Any device node or symlink not managed by udev in
+    # udev directory will be ignored with this setting on.
+    # obtain_device_list_from_udev = 1
+
     # If several entries in the scanned directories correspond to the
     # same block device and the tools need to display a name for device,
     # all the pathnames are matched against each item in the following
