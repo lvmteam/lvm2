@@ -1,5 +1,6 @@
 Version 1.02.64 - 
 ===================================
+  Require libudev >= 143 when compiling with udev support.
   Use word alignment for dm_pool_strdup() and dm_pool_strndup().
   Use dm_snprintf() to fix signess warning in dm_set_dev_dir().
   Use unsigned loop counter to fix signess warning in _other_node_ops().

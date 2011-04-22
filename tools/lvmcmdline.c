@@ -43,7 +43,6 @@ extern char *optarg;
 #endif
 
 #ifdef UDEV_SYNC_SUPPORT
-#  define LIBUDEV_I_KNOW_THE_API_IS_SUBJECT_TO_CHANGE
 #  include <libudev.h>
 #endif
 
