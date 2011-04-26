@@ -27,7 +27,7 @@ devices {
     # fully. LVM2 needs to be compiled with udev support for this setting to
     # take effect. N.B. Any device node or symlink not managed by udev in
     # udev directory will be ignored with this setting on.
-    # obtain_device_list_from_udev = 1
+    obtain_device_list_from_udev = 1
 
     # If several entries in the scanned directories correspond to the
     # same block device and the tools need to display a name for device,
