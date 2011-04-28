@@ -987,11 +987,11 @@ static int _remove_mirror_images(struct logical_volume *lv,
 	}
 
 	/* FIXME: second suspend should not be needed
-	 * Explicitly suspend temporary LV
-	 * This balance critical_section_inc() calls with critical_section_dec() in resume
-	 * (both localy and in cluster) and also properly propagates precommited
+	 * Explicitly suspend temporary LV.
+	 * This balances critical_section_inc() calls with critical_section_dec()
+	 * in resume (both local and cluster) and also properly propagates precommitted
 	 * metadata into dm table on other nodes.
-	 * (visible flag set causes the suspend is not properly propagated?)
+	 * FIXME: check propagation of suspend with visible flag
 	 */
 	if (temp_layer_lv && !suspend_lv(temp_layer_lv->vg->cmd, temp_layer_lv))
 		log_error("Problem suspending temporary LV %s", temp_layer_lv->name);

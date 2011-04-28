@@ -18,6 +18,19 @@
 
 struct cmd_context;
 
+/*
+ * Inside a critical section, memory is always locked.
+ *
+ * After leaving the critical section, memory stays locked until 
+ * memlock_unlock() is called.  This happens with
+ * sync_local_dev_names() and sync_dev_names().
+ *
+ * This allows critical sections to be entered and exited repeatedly without
+ * incurring the expense of locking memory every time.
+ *
+ * memlock_reset() is necessary to clear the state after forking (polldaemon).
+ */
+
 void critical_section_inc(struct cmd_context *cmd);
 void critical_section_dec(struct cmd_context *cmd);
 int critical_section(void);

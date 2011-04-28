@@ -39,6 +39,9 @@ int remote_lock_held(const char *vol, int *exclusive);
  *   acquired in alphabetical order of 'vol' (to avoid deadlocks), with
  *   VG_ORPHANS last.
  *
+ *   Use VG_SYNC_NAMES to wait for any outstanding asynchronous /dev nodes 
+ *   events to complete.
+ *
  * LCK_LV:
  *   Lock/unlock an individual logical volume
  *   char *vol holds lvid
@@ -127,6 +130,9 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 
 #define LCK_VG_BACKUP		(LCK_VG | LCK_CACHE)
 
+#define LCK_VG_SYNC		(LCK_NONE | LCK_CACHE)
+#define LCK_VG_SYNC_LOCAL	(LCK_NONE | LCK_CACHE | LCK_LOCAL)
+
 #define LCK_LV_EXCLUSIVE	(LCK_LV | LCK_EXCL)
 #define LCK_LV_SUSPEND		(LCK_LV | LCK_WRITE)
 #define LCK_LV_RESUME		(LCK_LV | LCK_UNLOCK)
@@ -175,12 +181,7 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 	lock_vol((vg)->cmd, (vg)->name, LCK_VG_REVERT)
 #define remote_backup_metadata(vg)	\
 	lock_vol((vg)->cmd, (vg)->name, LCK_VG_BACKUP)
-/* cleanup later
-#define sync_local_dev_names(cmd)	\
-	lock_vol(cmd, VG_SYNC_NAMES, LCK_NONE | LCK_CACHE | LCK_LOCAL)
-#define sync_dev_names(cmd)	\
-	lock_vol(cmd, VG_SYNC_NAMES, LCK_NONE | LCK_CACHE)
-*/
+
 int sync_local_dev_names(struct cmd_context* cmd);
 int sync_dev_names(struct cmd_context* cmd);
 
