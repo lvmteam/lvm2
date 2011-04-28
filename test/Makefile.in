@@ -106,6 +106,7 @@ clean:
 	for i in lvm $$(cat ../tools/.commands); do rm -f lib/$$i; done
 	if test "$(srcdir)" != . ; then rm -f $(subst $(srcdir)/, ,$(RUN)) lvm2app.sh ; fi
 
-CLEAN_TARGETS += .lib-dir-stamp .test-stamp $(LIB) lib/dmsetup lib/clvmd lib/dmeventd
+CLEAN_TARGETS += .lib-dir-stamp .test-stamp $(LIB) \
+	lib/dmsetup lib/clvmd lib/dmeventd lib/vgimportclone
 
 .NOTPARALLEL:
