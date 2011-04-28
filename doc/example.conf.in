@@ -6,6 +6,9 @@
 #
 # To put this file in a different directory and override @DEFAULT_SYS_DIR@ set
 # the environment variable LVM_SYSTEM_DIR before running the tools.
+#
+# N.B. Take care that each setting only appears once if uncommenting
+# example settings in this file.
 
 
 # This section allows you to configure which block devices should
@@ -155,12 +158,15 @@ devices {
     # Allow use of pvcreate --uuid without requiring --restorefile.
     require_restorefile_with_uuid = 1
 
-    # Minimal size (in KB) of the block device which can be used as a PV.
-    # In clustered environment all nodes have to use the same value.
+    # Minimum size (in KB) of block devices which can be used as PVs.
+    # In a clustered environment all nodes must use the same value.
     # Any value smaller than 512KB is ignored.
-    # Example: Ignore devices smaller than 2MB (i.e. floppy drives).
-    # pv_min_size = 2048
-    pv_min_size = 512
+
+    # Ignore devices smaller than 2MB such as floppy drives.
+    pv_min_size = 2048
+
+    # The original built-in setting was 512 up to and including version 2.02.84.
+    # pv_min_size = 512
 
     # Issue discards to a logical volumes's underlying physical volume(s) when
     # the logical volume is no longer using the physical volumes' space (e.g.
