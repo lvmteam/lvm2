@@ -803,6 +803,10 @@ AC_ARG_ENABLE(udev_sync,
 AC_MSG_RESULT($UDEV_SYNC)
 
 if test x$UDEV_SYNC = xyes; then
+	dnl -- init pkgconfig if required
+	if  test x$PKGCONFIG_INIT != x1; then
+		pkg_config_init
+	fi
 	PKG_CHECK_MODULES(UDEV, libudev >= 143, [UDEV_PC="libudev"])
 	AC_DEFINE([UDEV_SYNC_SUPPORT], 1, [Define to 1 to enable synchronisation with udev processing.])
 fi

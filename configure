@@ -8767,6 +8767,9 @@ fi
 $as_echo "$UDEV_SYNC" >&6; }
 
 if test x$UDEV_SYNC = xyes; then
+		if  test x$PKGCONFIG_INIT != x1; then
+		pkg_config_init
+	fi
 
 pkg_failed=no
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for UDEV" >&5
