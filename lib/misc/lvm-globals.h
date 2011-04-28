@@ -18,7 +18,6 @@
 
 #define VERBOSE_BASE_LEVEL _LOG_WARN
 #define SECURITY_LEVEL 0
-#define DEFAULT_PV_MIN_SIZE_KB		512		/* 512 KB */
 
 void init_verbose(int level);
 void init_test(int level);

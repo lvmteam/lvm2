@@ -325,7 +325,7 @@ static int _process_config(struct cmd_context *cmd)
 			 pv_min_kb, DEFAULT_PV_MIN_SIZE_KB);
 		pv_min_kb = DEFAULT_PV_MIN_SIZE_KB;
 	}
-	/* lvm internally works with device size in 512b sectors */
+	/* LVM stores sizes internally in units of 512-byte sectors. */
 	init_pv_min_size((uint64_t)pv_min_kb * (1024 >> SECTOR_SHIFT));
 
 	return 1;
