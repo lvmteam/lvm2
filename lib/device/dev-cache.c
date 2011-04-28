@@ -546,7 +546,7 @@ static void _insert_dirs(struct dm_list *dirs)
 					  "cache fully", dl->dir);
 		}
 		else if (!_insert_dir(dl->dir))
-			log_debug("%s: Failed to insert devices to"
+			log_debug("%s: Failed to insert devices to "
 				  "device cache fully", dl->dir);
 	}
 }
