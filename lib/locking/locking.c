@@ -574,11 +574,13 @@ int remote_lock_held(const char *vol, int *exclusive)
 int sync_local_dev_names(struct cmd_context* cmd)
 {
 	memlock_unlock(cmd);
-	return lock_vol(cmd, VG_SYNC_NAMES, LCK_NONE | LCK_CACHE | LCK_LOCAL);
+
+	return lock_vol(cmd, VG_SYNC_NAMES, LCK_VG_SYNC_LOCAL);
 }
 
 int sync_dev_names(struct cmd_context* cmd)
 {
 	memlock_unlock(cmd);
-	return lock_vol(cmd, VG_SYNC_NAMES, LCK_NONE | LCK_CACHE);
+
+	return lock_vol(cmd, VG_SYNC_NAMES, LCK_VG_SYNC);
 }

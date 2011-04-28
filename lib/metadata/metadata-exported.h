@@ -196,7 +196,7 @@ struct pv_segment {
 #define FMT_INSTANCE_PRIVATE_MDAS 	0x00000008U
 
 struct format_instance {
-	unsigned ref_count;
+	unsigned ref_count;	/* Refs to this fid from VG and PV structs */
 	struct dm_pool *mem;
 
 	uint32_t type;
