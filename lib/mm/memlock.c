@@ -360,7 +360,8 @@ static void _unlock_mem(struct cmd_context *cmd)
 					  "Maps lock %ld < unlock %ld",
 					  (long)_mstats, (long)unlock_mstats);
 			else
-				log_debug("Maps lock %ld < unlock %ld, 1 page difference!",
+				/* FIXME Believed due to incorrect use of yes_no_prompt while locks held */
+				log_debug("Suppressed internal error: Maps lock %ld < unlock %ld, a one-page difference.",
 					  (long)_mstats, (long)unlock_mstats);
 		}
 	}

@@ -39,8 +39,8 @@ int remote_lock_held(const char *vol, int *exclusive);
  *   acquired in alphabetical order of 'vol' (to avoid deadlocks), with
  *   VG_ORPHANS last.
  *
- *   Use VG_SYNC_NAMES to wait for any outstanding asynchronous /dev nodes 
- *   events to complete.
+ *   Use VG_SYNC_NAMES to ensure /dev is up-to-date for example, with udev,
+ *   by waiting for any asynchronous events issued to have completed.
  *
  * LCK_LV:
  *   Lock/unlock an individual logical volume
