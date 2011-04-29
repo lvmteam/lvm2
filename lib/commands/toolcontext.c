@@ -573,9 +573,9 @@ static int _init_dev_cache(struct cmd_context *cmd)
 {
 	const struct config_node *cn;
 	const struct config_value *cv;
-	size_t udev_dir_len, len;
+	size_t uninitialized_var(udev_dir_len), len;
 	int device_list_from_udev;
-	const char *udev_dir;
+	const char *uninitialized_var(udev_dir);
 
 	init_dev_disable_after_error_count(
 		find_config_tree_int(cmd, "devices/disable_after_error_count",
