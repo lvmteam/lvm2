@@ -10,15 +10,18 @@ Version 1.02.64 -
   Improve stack debug reporting in dm_task_create().
   Fallback to control node creation only if node doesn't exist yet.
   Change dm_hash API for binary data to accept const void *key.
-  Fix memory access of empty params string in _reload_with_suppression_v4().
+  Fix uninitialised memory use with empty params in _reload_with_suppression_v4.
   Lower severity of selabel_lookup and matchpathcon failure to log_debug.
+  Add dm_event_get_version to dmeventd for use with -R.
+  Avoid dmeventd core dumps when handling request with unknown command ID.
+  Have dmeventd -R start up even when no existing copy is running.
   Accept multiple mapped device names on many dmsetup command lines.
   Fix dm_udev_wait calls in dmsetup to occur before readahead display not after.
   Include an implicit dm_task_update_nodes() within dm_udev_wait().
   Fix _create_and_load_v4 not to lose the --addnodeoncreate setting (1.02.62).
   Add inactive table query support for kernel driver >= 4.11.6 (RHEL 5.7).
   Log debug open_count in _node_has_closed_parents().
-  Change dm_report_field_string() API to accept const char *const *data.
+  Add a const to dm_report_field_string() data parameter.
 
 Version 1.02.63 - 9th February 2011
 ===================================

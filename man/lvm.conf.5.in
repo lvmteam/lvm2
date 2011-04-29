@@ -175,10 +175,9 @@ altogether.
 \fBpv_min_size\fP \(em
 Minimal size (in KB) of the block device which can be used as a PV.
 In clustered environment all nodes have to use the same value.
-Any value smaller than 512KB is ignored.  An example to
-ignore devices smaller than 2MB (i.e. floppy drives):
-.IP
-pv_min_size = 2048
+Any value smaller than 512KB is ignored.  Up to and include version 2.02.84
+the default was 512KB.  From 2.02.85 onwards it was changed to 2MB to
+avoid floppy drives by default.
 .IP
 \fBissue_discards\fP \(em
 Issue discards to a logical volumes's underlying physical volume(s) when the

@@ -234,6 +234,7 @@ void print_log(int level, const char *file, int line, int dm_errno,
 		message = &buf2[0];
 	}
 
+/* FIXME Avoid pointless use of message buffer when it'll never be read! */
 	if (_store_errmsg && (level <= _LOG_ERR) &&
 	    _lvm_errmsg_len < MAX_ERRMSG_LEN) {
 		msglen = strlen(message);

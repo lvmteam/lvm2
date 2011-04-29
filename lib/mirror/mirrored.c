@@ -613,11 +613,11 @@ static struct segtype_handler _mirrored_ops = {
 	.target_percent = _mirrored_target_percent,
 	.target_present = _mirrored_target_present,
 	.check_transient_status = _mirrored_transient_status,
-#ifdef DMEVENTD
+#  ifdef DMEVENTD
 	.target_monitored = _target_registered,
 	.target_monitor_events = _target_monitor_events,
 	.target_unmonitor_events = _target_unmonitor_events,
-#endif
+#  endif	/* DMEVENTD */
 #endif
 	.modules_needed = _mirrored_modules_needed,
 	.destroy = _mirrored_destroy,
@@ -642,10 +642,10 @@ struct segment_type *init_segtype(struct cmd_context *cmd)
 	segtype->flags = SEG_AREAS_MIRRORED;
 
 #ifdef DEVMAPPER_SUPPORT
-#ifdef DMEVENTD
+#  ifdef DMEVENTD
 	if (_get_mirror_dso_path(cmd))
 		segtype->flags |= SEG_MONITORED;
-#endif
+#  endif	/* DMEVENTD */
 #endif
 
 	log_very_verbose("Initialised segtype: %s", segtype->name);
