@@ -1,3 +1,6 @@
+Version 2.02.86 - 
+=================================
+
 Version 2.02.85 - 29th April 2011
 =================================
   Add new obtain_device_list_from_udev setting to lvm.conf.
