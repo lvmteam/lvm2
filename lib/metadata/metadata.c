@@ -2138,11 +2138,16 @@ static int _lv_mark_if_partial_single(struct logical_volume *lv, void *data)
  * propagated transitively, so LVs referencing other LVs are marked
  * partial as well, if any of their referenced LVs are marked partial.
  */
-int vg_mark_partial_lvs(struct volume_group *vg)
+int vg_mark_partial_lvs(struct volume_group *vg, int clear)
 {
+	struct lv_list *lvl;
+
+	if (clear)
+		dm_list_iterate_items(lvl, &vg->lvs)
+			lvl->lv->status &= ~PARTIAL_LV;
+
 	if (!_lv_postorder_vg(vg, _lv_mark_if_partial_single, NULL))
 		return_0;
-
 	return 1;
 }
 
@@ -2825,7 +2830,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		if (vg_missing_pv_count(correct_vg)) {
 			log_verbose("There are %d physical volumes missing.",
 				    vg_missing_pv_count(correct_vg));
-			vg_mark_partial_lvs(correct_vg);
+			vg_mark_partial_lvs(correct_vg, 1);
 		}
 		return correct_vg;
 	} else {
@@ -3179,7 +3184,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	if (vg_missing_pv_count(correct_vg)) {
 		log_verbose("There are %d physical volumes missing.",
 			    vg_missing_pv_count(correct_vg));
-		vg_mark_partial_lvs(correct_vg);
+		vg_mark_partial_lvs(correct_vg, 1);
 	}
 
 	if ((correct_vg->status & PVMOVE) && !pvmove_mode()) {

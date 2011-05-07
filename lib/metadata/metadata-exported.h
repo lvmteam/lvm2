@@ -763,6 +763,8 @@ int vg_check_write_mode(struct volume_group *vg);
 int lv_has_unknown_segments(const struct logical_volume *lv);
 int vg_has_unknown_segments(const struct volume_group *vg);
 
+int vg_mark_partial_lvs(struct volume_group *vg, int clear);
+
 struct vgcreate_params {
 	const char *vg_name;
 	uint32_t extent_size;

@@ -343,7 +343,7 @@ static int _mirrored_transient_status(struct lv_segment *seg, char *params)
 
 	/* update PARTIAL_LV flags across the VG */
 	if (failed)
-		vg_mark_partial_lvs(lv->vg);
+		vg_mark_partial_lvs(lv->vg, 0);
 
 	return 1;
 }
