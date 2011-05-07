@@ -95,7 +95,7 @@ aux prepare_vg 5
 prepare_lvs_()
 {
 	lvremove -ff $vg;
-	if dmsetup table|grep $vg; then
+	if dmsetup table|grep -v -- "-missing_"|grep $vg; then
 		echo "ERROR: lvremove did leave some some mappings in DM behind!"
 		return 1
 	fi
@@ -208,13 +208,14 @@ test_3way_mirror_plus_1_fail_1_()
 	lvcreate -l2 -m2 -n $lv1 $vg $dev1 $dev2 $dev3 $dev5:0
 	lvchange -an $vg/$lv1 
 	lvconvert -m+1 $vg/$lv1 $dev4 
-	mimages_are_on_ $lv1 $dev1 $dev2 $dev3 $dev4 
-	mirrorlog_is_on_ $lv1 $dev5 
-	eval aux disable_dev \$dev$n 
+	check mirror_images_on $vg $lv1 $dev1 $dev2 $dev3 $dev4 
+	check mirror_log_on $vg $lv1 $dev5 
+	eval aux disable_dev \$dev$index 
+        lvs -a -o +devices
 	vgreduce --removemissing --force $vg 
-	lvs -a -o+devices $vg 
-	mimages_are_on_ $lv1 $(rest_pvs_ $index 4) 
-	mirrorlog_is_on_ $lv1 $dev5
+	lvs -a -o+devices # $vg 
+	check mirror_images_on $vg $lv1 $dev5 # $(rest_pvs_ $index 4) 
+	check mirror_log_on $vg $lv1 $dev5
 }
 
 for n in $(seq 1 4); do
@@ -234,16 +235,17 @@ test_3way_mirror_plus_1_fail_3_()
 	local index=$1
 
 	lvcreate -l2 -m2 -n $lv1 $vg $dev1 $dev2 $dev3 $dev5:0
-	lvchange -an $vg/$lv1 
-	lvconvert -m+1 $vg/$lv1 $dev4 
-	mimages_are_on_ $lv1 $dev1 $dev2 $dev3 $dev4 
-	mirrorlog_is_on_ $lv1 $dev5 
-	aux disable_dev $(rest_pvs_ $index 4) 
-	vgreduce --removemissing --force $vg 
-	lvs -a -o+devices $vg 
+	lvchange -an $vg/$lv1
+	lvconvert -m+1 $vg/$lv1 $dev4
+	check mirror_images_on $vg $lv1 $dev1 $dev2 $dev3 $dev4
+	check mirror_log_on $vg $lv1 $dev5
+	lvs -a -o+devices $vg
+	aux disable_dev $(rest_pvs_ $index 4)
+	vgreduce --removemissing --force $vg
+	lvs -a -o+devices $vg
 	eval local dev=\$dev$n
-	mimages_are_on_ $lv1 $dev || lv_is_on_ $lv1 $dev
-	not mirrorlog_is_on_ $lv1 $dev5
+	check linear $vg $lv1
+        check lv_on $vg $lv1 $dev
 }
 
 for n in $(seq 1 4); do
