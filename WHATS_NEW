@@ -1,5 +1,8 @@
 Version 2.02.86 -  
 =================================
+  Avoid memlock size mismatch by preallocating stdio line buffers.
+  Reorganize lvconvert --repair code to allow reuse.
+  Rewrite vgreduce --removemissing --force leveraging shared lvconvert code.
 
 Version 2.02.85 - 29th April 2011
 =================================
