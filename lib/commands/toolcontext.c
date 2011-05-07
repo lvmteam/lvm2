@@ -58,6 +58,8 @@
 #  include <malloc.h>
 #endif
 
+static const size_t linebuffer_size = 4096;
+
 static int _get_env_vars(struct cmd_context *cmd)
 {
 	const char *e;
@@ -1148,7 +1150,8 @@ static void _init_globals(struct cmd_context *cmd)
 
 /* Entry point */
 struct cmd_context *create_toolcontext(unsigned is_long_lived,
-				       const char *system_dir)
+				       const char *system_dir,
+				       unsigned set_buffering)
 {
 	struct cmd_context *cmd;
 
@@ -1182,6 +1185,22 @@ struct cmd_context *create_toolcontext(unsigned is_long_lived,
 
 	/* FIXME Make this configurable? */
 	reset_lvm_errno(1);
+
+	/* Set in/out stream buffering before glibc */
+	if (set_buffering) {
+		/* Allocate 2 buffers */
+		if (!(cmd->linebuffer = dm_malloc(2 * linebuffer_size))) {
+			log_error("Failed to allocate line buffer.");
+			goto out;
+		}
+		if ((setvbuf(stdin, cmd->linebuffer, _IOLBF, linebuffer_size) ||
+		     setvbuf(stdout, cmd->linebuffer + linebuffer_size,
+			     _IOLBF, linebuffer_size))) {
+			log_sys_error("setvbuf", "");
+			goto out;
+		}
+		/* Buffers are used for lines without '\n' */
+	}
 
 	/*
 	 * Environment variable LVM_SYSTEM_DIR overrides this below.
@@ -1419,6 +1438,15 @@ void destroy_toolcontext(struct cmd_context *cmd)
 	_destroy_tag_configs(cmd);
 	if (cmd->libmem)
 		dm_pool_destroy(cmd->libmem);
+
+	if (cmd->linebuffer) {
+		/* Reset stream buffering to defaults */
+		setlinebuf(stdin);
+		fflush(stdout);
+		setlinebuf(stdout);
+		dm_free(cmd->linebuffer);
+	}
+
 	dm_free(cmd);
 
 	release_log_memory();

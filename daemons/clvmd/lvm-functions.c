@@ -919,7 +919,7 @@ int init_clvm(int using_gulm, char **argv)
 	init_syslog(LOG_DAEMON);
 	openlog("clvmd", LOG_PID, LOG_DAEMON);
 
-	if (!(cmd = create_toolcontext(1, NULL))) {
+	if (!(cmd = create_toolcontext(1, NULL, 0))) {
 		log_error("Failed to allocate command context");
 		return 0;
 	}
