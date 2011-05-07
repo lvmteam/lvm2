@@ -1282,7 +1282,7 @@ struct cmd_context *init_lvm(void)
 	if (!udev_init_library_context())
 		stack;
 
-	if (!(cmd = create_toolcontext(0, NULL)))
+	if (!(cmd = create_toolcontext(0, NULL, 1)))
 		return_NULL;
 
 	_cmdline.arg_props = &_arg_props[0];
