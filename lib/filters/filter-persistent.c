@@ -108,7 +108,7 @@ int persistent_filter_load(struct dev_filter *f, struct config_tree **cft_out)
 			log_very_verbose("Obtaining device list from "
 					 "udev. Removing obolete %s.",
 					 pf->file);
-			if (unlink(pf->file) < 0)
+			if (unlink(pf->file) < 0 && errno != EROFS)
 				log_sys_error("unlink", pf->file);
 		}
 		return 1;
