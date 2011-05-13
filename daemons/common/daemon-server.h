@@ -23,6 +23,19 @@ typedef struct {
 } client_handle;
 
 typedef struct {
+	/*
+	 * The maximal stack size for individual daemon threads. This is
+	 * essential for daemons that need to be locked into memory, since
+	 * pthread's default is 10M per thread.
+	 */
+	int thread_stack_size;
+
+	/* Flags & attributes affecting the behaviour of the daemon. */
+	unsigned avoid_oom:1;
+	unsigned foreground:1;
+	const char *name;
+	const char *pidfile;
+
 	void *private; /* the global daemon state */
 } daemon_state;
 
@@ -45,7 +58,8 @@ typedef response (*handle_request)(daemon_state s, client_handle h, request r);
 
 /*
  * Start serving the requests. This does all the daemonisation, socket setup
- * work and so on.
+ * work and so on. This function takes over the process, and upon failure, it
+ * will terminate execution. It may be called at most once.
  */
 void daemon_start(daemon_state s, handle_request r);
 
