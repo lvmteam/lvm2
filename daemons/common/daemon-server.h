@@ -35,6 +35,10 @@ typedef struct {
 	unsigned foreground:1;
 	const char *name;
 	const char *pidfile;
+	const char *socket_path;
+
+	/* Global runtime info maintained by the framework. */
+	int socket_fd;
 
 	void *private; /* the global daemon state */
 } daemon_state;
