@@ -18,11 +18,16 @@
 #include <sys/wait.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <netinet/in.h>
+#include <sys/un.h>
 #include <unistd.h>
 #include <signal.h>
 
 #include <syslog.h>
+#include "daemon-server.h"
+#include "libdevmapper.h"
 
+#if 0
 /* Create a device monitoring thread. */
 static int _pthread_create(pthread_t *t, void *(*fun)(void *), void *arg, int stacksize)
 {
@@ -34,6 +39,7 @@ static int _pthread_create(pthread_t *t, void *(*fun)(void *), void *arg, int st
 	pthread_attr_setstacksize(&attr, stacksize);
 	return pthread_create(t, &attr, fun, arg);
 }
+#endif
 
 static volatile sig_atomic_t _shutdown_requested = 0;
 
@@ -44,6 +50,7 @@ static void _exit_handler(int sig __attribute__((unused)))
 
 #ifdef linux
 #  define OOM_ADJ_FILE "/proc/self/oom_adj"
+#  include <stdio.h>
 
 /* From linux/oom.h */
 #  define OOM_DISABLE (-17)
@@ -72,7 +79,7 @@ static int _set_oom_adj(int val)
 	}
 
 	fprintf(fp, "%i", val);
-	if (dm_fclose(fp))
+	if (fclose(fp))
 		perror(OOM_ADJ_FILE ": fclose failed");
 
 	return 1;
@@ -91,13 +98,13 @@ static int _open_socket(daemon_state s)
 	/* Open local socket */
 	fd = socket(PF_UNIX, SOCK_STREAM, 0);
 	if (fd < 0) {
-		log_error("Can't create local socket: %m");
+		perror("Can't create local socket.");
 		goto error;
 	}
 
 	/* Set Close-on-exec & non-blocking */
 	if (fcntl(fd, F_SETFD, 1))
-		DEBUGLOG("setting CLOEXEC on socket fd %d failed: %s\n", fd, strerror(errno));
+		fprintf(stderr, "setting CLOEXEC on socket fd %d failed: %s\n", fd, strerror(errno));
 	fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) | O_NONBLOCK);
 
 	memset(&sockaddr, 0, sizeof(sockaddr));
@@ -105,11 +112,11 @@ static int _open_socket(daemon_state s)
 	sockaddr.sun_family = AF_UNIX;
 
 	if (bind(fd, (struct sockaddr *) &sockaddr, sizeof(sockaddr))) {
-		log_error("can't bind local socket: %m");
+		perror("can't bind local socket.");
 		goto error;
 	}
 	if (listen(fd, 1) != 0) {
-		log_error("listen local: %m");
+		perror("listen local");
 		goto error;
 	}
 
@@ -129,7 +136,7 @@ error:
 static void remove_lockfile(const char *file)
 {
 	if (unlink(file))
-		perror(file ": unlink failed");
+		perror("unlink failed");
 }
 
 static void _daemonise(void)
@@ -158,7 +165,7 @@ static void _daemonise(void)
 
 	default:
 		/* Wait for response from child */
-		while (!waitpid(pid, &child_status, WNOHANG) && !_exit_now) {
+		while (!waitpid(pid, &child_status, WNOHANG) && !_shutdown_requested) {
 			tval.tv_sec = 0;
 			tval.tv_usec = 250000;	/* .25 sec */
 			select(0, NULL, NULL, NULL, &tval);
@@ -168,16 +175,7 @@ static void _daemonise(void)
 			exit(0);
 
 		/* Problem with child.  Determine what it is by exit code */
-		switch (WEXITSTATUS(child_status)) {
-		case EXIT_DESC_CLOSE_FAILURE:
-		case EXIT_DESC_OPEN_FAILURE:
-		case EXIT_FIFO_FAILURE:
-		case EXIT_CHDIR_FAILURE:
-		default:
-			fprintf(stderr, "Child exited with code %d\n", WEXITSTATUS(child_status));
-			break;
-		}
-
+		fprintf(stderr, "Child exited with code %d\n", WEXITSTATUS(child_status));
 		exit(WEXITSTATUS(child_status));
 	}
 
@@ -200,7 +198,7 @@ static void _daemonise(void)
 	setsid();
 }
 
-void daemon_start(daemon_state s, handle_request r)
+void daemon_start(daemon_state s)
 {
 	int failed = 0;
 	/*

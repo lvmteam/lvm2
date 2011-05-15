@@ -32,7 +32,7 @@ typedef struct {
 } daemon_request;
 
 typedef struct {
-	int errno; /* 0 for success */
+	int error; /* 0 for success */
 	char *reply; /* textual reply */
 	struct config_tree *cft; /* parsed reply, if available */
 } daemon_reply;
@@ -51,7 +51,7 @@ daemon_handle daemon_open(daemon_info i);
  * the daemon is synchronous. The function handles the IO details and parses the
  * response, handling common error conditions. See "daemon_reply" for details.
  */
-daemon_reply daemon_request(daemon_handle h, daemon_request r);
+daemon_reply daemon_send(daemon_handle h, daemon_request r);
 
 /* Shut down the communication to the daemon. Compulsory. */
 void daemon_close(daemon_handle h);
