@@ -12,8 +12,10 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef _LVM_DAEMON_COMMON_CLIENT_H
-#define _LVM_DAEMON_COMMON_CLIENT_H
+#include "daemon-client.h"
+
+#ifndef _LVM_DAEMON_COMMON_SERVER_H
+#define _LVM_DAEMON_COMMON_SERVER_H
 
 typedef struct {
 	int socket_fd; /* the fd we use to talk to the client */
@@ -23,6 +25,26 @@ typedef struct {
 } client_handle;
 
 typedef struct {
+	struct config_tree *cft;
+} request;
+
+typedef struct {
+	int error;
+	struct config_tree *cft;
+} response;
+
+struct daemon_state;
+
+/*
+ * The callback. Called once per request issued, in the respective client's
+ * thread. It is presented by a parsed request (in the form of a config tree).
+ * The output is a new config tree that is serialised and sent back to the
+ * client. The client blocks until the request processing is done and reply is
+ * sent.
+ */
+typedef response (*handle_request)(struct daemon_state s, client_handle h, request r);
+
+typedef struct daemon_state {
 	/*
 	 * The maximal stack size for individual daemon threads. This is
 	 * essential for daemons that need to be locked into memory, since
@@ -36,6 +58,9 @@ typedef struct {
 	const char *name;
 	const char *pidfile;
 	const char *socket_path;
+	int log_level;
+	handle_request handler;
+	int (*setup_post)(struct daemon_state *st);
 
 	/* Global runtime info maintained by the framework. */
 	int socket_fd;
@@ -43,29 +68,12 @@ typedef struct {
 	void *private; /* the global daemon state */
 } daemon_state;
 
-typedef struct {
-	struct config_tree *cft;
-} request;
-
-typedef struct {
-	struct config_tree *cft;
-} response;
-
-/*
- * The callback. Called once per request issued, in the respective client's
- * thread. It is presented by a parsed request (in the form of a config tree).
- * The output is a new config tree that is serialised and sent back to the
- * client. The client blocks until the request processing is done and reply is
- * sent.
- */
-typedef response (*handle_request)(daemon_state s, client_handle h, request r);
-
 /*
  * Start serving the requests. This does all the daemonisation, socket setup
  * work and so on. This function takes over the process, and upon failure, it
  * will terminate execution. It may be called at most once.
  */
-void daemon_start(daemon_state s, handle_request r);
+void daemon_start(daemon_state s);
 
 /*
  * Take over from an already running daemon. This function handles connecting
