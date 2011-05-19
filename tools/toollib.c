@@ -351,11 +351,13 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 			ret = process_each_lv_in_vg(cmd, cvl_vg->vg, &lvnames,
 						    tags_arg, &failed_lvnames,
 						    handle, process_single_lv);
-			if (ret != ECMD_PROCESSED ||
-			    dm_list_empty(&failed_lvnames)) {
+			if (ret != ECMD_PROCESSED) {
 				stack;
 				break;
 			}
+
+			if (dm_list_empty(&failed_lvnames))
+				break;
 
 			/* Try again with failed LVs in this VG */
 			dm_list_init(&lvnames);
