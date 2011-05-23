@@ -184,3 +184,14 @@ Since (at least bare-bones) lvmetad has no disk interaction and is fed metadata
 externally, it should be very amenable to automated testing. We need to provide
 a client that can feed arbitrary, synthetic metadata to the daemon and request
 the data back, providing reasonable (nearly unit-level) testing infrastructure.
+
+Battle plan & code layout
+=========================
+
+- config_tree from lib/config needs to move to libdm/
+- daemon/common *client* code can go to libdm/ as well (say
+  libdm/libdm-daemon.{h,c} or such)
+- daemon/common *server* code stays, is built in daemon/ toplevel as a static
+  library, say libdaemon-common.a
+- daemon/lvmetad *client* code goes to lib/lvmetad
+- daemon/lvmetad *server* code stays (links in daemon/libdaemon_common.a)
