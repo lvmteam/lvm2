@@ -74,6 +74,9 @@ int dev_discard_blocks(struct device *dev, uint64_t offset_bytes, uint64_t size_
 int dev_open(struct device *dev);
 int dev_open_quiet(struct device *dev);
 int dev_open_flags(struct device *dev, int flags, int direct, int quiet);
+int dev_open_readonly(struct device *dev);
+int dev_open_readonly_buffered(struct device *dev);
+int dev_open_readonly_quiet(struct device *dev);
 int dev_close(struct device *dev);
 int dev_close_immediate(struct device *dev);
 void dev_close_all(void);

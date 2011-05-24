@@ -295,7 +295,7 @@ int read_config_file(struct config_tree *cft)
 		if (!(c->dev = dev_create_file(c->filename, NULL, NULL, 1)))
 			return_0;
 
-		if (!dev_open_flags(c->dev, O_RDONLY, 0, 0)) {
+		if (!dev_open_readonly_buffered(c->dev)) {
 			c->dev = 0;
 			return_0;
 		}

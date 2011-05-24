@@ -1,5 +1,6 @@
 Version 2.02.86 -  
 =================================
+  Add and use dev_open_readonly and variations.
   Do not log a superfluous stack message when the lv is properly processed.
   Do not issue an error message when unable to remove .cache on read-only fs.
   Avoid memlock size mismatch by preallocating stdio line buffers.
