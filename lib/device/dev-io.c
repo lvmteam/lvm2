@@ -556,6 +556,21 @@ int dev_open(struct device *dev)
 	return dev_open_flags(dev, flags, 1, 0);
 }
 
+int dev_open_readonly(struct device *dev)
+{
+	return dev_open_flags(dev, O_RDONLY, 1, 0);
+}
+
+int dev_open_readonly_buffered(struct device *dev)
+{
+	return dev_open_flags(dev, O_RDONLY, 0, 0);
+}
+
+int dev_open_readonly_quiet(struct device *dev)
+{
+	return dev_open_flags(dev, O_RDONLY, 1, 1);
+}
+
 int dev_test_excl(struct device *dev)
 {
 	int flags;
