@@ -50,7 +50,7 @@ int dev_is_swap(struct device *dev, uint64_t *signature)
 		return -1;
 	}
 
-	if (!dev_open(dev)) {
+	if (!dev_open_readonly(dev)) {
 		stack;
 		return -1;
 	}

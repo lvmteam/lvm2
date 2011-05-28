@@ -431,9 +431,8 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 		}
 
 		if (dev->open_count && !need_excl) {
-			/* FIXME Ensure we never get here */
-			log_error(INTERNAL_ERROR "%s already opened read-only",
-				 dev_name(dev));
+			log_debug("%s already opened read-only. Upgrading "
+				  "to read-write.", dev_name(dev));
 			dev->open_count++;
 		}
 
@@ -540,20 +539,12 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 
 int dev_open_quiet(struct device *dev)
 {
-	int flags;
-
-	flags = vg_write_lock_held() ? O_RDWR : O_RDONLY;
-
-	return dev_open_flags(dev, flags, 1, 1);
+	return dev_open_flags(dev, O_RDWR, 1, 1);
 }
 
 int dev_open(struct device *dev)
 {
-	int flags;
-
-	flags = vg_write_lock_held() ? O_RDWR : O_RDONLY;
-
-	return dev_open_flags(dev, flags, 1, 0);
+	return dev_open_flags(dev, O_RDWR, 1, 0);
 }
 
 int dev_open_readonly(struct device *dev)

@@ -415,7 +415,7 @@ struct disk_list *read_disk(const struct format_type *fmt, struct device *dev,
 {
 	struct disk_list *dl;
 
-	if (!dev_open(dev))
+	if (!dev_open_readonly(dev))
 		return_NULL;
 
 	dl = __read_disk(fmt, dev, mem, vg_name);

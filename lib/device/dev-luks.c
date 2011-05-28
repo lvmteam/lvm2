@@ -23,7 +23,7 @@ int dev_is_luks(struct device *dev, uint64_t *signature)
 	char buf[LUKS_SIGNATURE_SIZE];
 	int ret = -1;
 
-	if (!dev_open(dev)) {
+	if (!dev_open_readonly(dev)) {
 		stack;
 		return -1;
 	}

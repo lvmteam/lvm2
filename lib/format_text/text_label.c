@@ -302,7 +302,7 @@ static int _text_read(struct labeller *l, struct device *dev, void *buf,
 
 	dm_list_iterate_items(mda, &info->mdas) {
 		mdac = (struct mda_context *) mda->metadata_locn;
-		if (!dev_open(mdac->area.dev)) {
+		if (!dev_open_readonly(mdac->area.dev)) {
 			mda_set_ignored(mda, 1);
 			stack;
 			continue;
