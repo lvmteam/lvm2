@@ -94,7 +94,7 @@ int dev_is_md(struct device *dev, uint64_t *sb)
 	if (size < MD_RESERVED_SECTORS * 2)
 		return 0;
 
-	if (!dev_open(dev)) {
+	if (!dev_open_readonly(dev)) {
 		stack;
 		return -1;
 	}

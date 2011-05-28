@@ -184,7 +184,7 @@ static int _pv_analyze_mda_raw (const struct format_type * fmt,
 		  PRIu64, mdac->area.start, mdac->area.size);
 	area = &mdac->area;
 
-	if (!dev_open(area->dev))
+	if (!dev_open_readonly(area->dev))
 		return_0;
 
 	if (!(mdah = raw_read_mda_header(fmt, area)))
@@ -462,7 +462,7 @@ static int _raw_holds_vgname(struct format_instance *fid,
 	int noprecommit = 0;
 	struct mda_header *mdah;
 
-	if (!dev_open(dev_area->dev))
+	if (!dev_open_readonly(dev_area->dev))
 		return_0;
 
 	if (!(mdah = raw_read_mda_header(fid->fmt, dev_area)))
@@ -533,7 +533,7 @@ static struct volume_group *_vg_read_raw(struct format_instance *fid,
 	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
 	struct volume_group *vg;
 
-	if (!dev_open(mdac->area.dev))
+	if (!dev_open_readonly(mdac->area.dev))
 		return_NULL;
 
 	vg = _vg_read_raw_area(fid, vgname, &mdac->area, 0);
@@ -551,7 +551,7 @@ static struct volume_group *_vg_read_precommit_raw(struct format_instance *fid,
 	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
 	struct volume_group *vg;
 
-	if (!dev_open(mdac->area.dev))
+	if (!dev_open_readonly(mdac->area.dev))
 		return_NULL;
 
 	vg = _vg_read_raw_area(fid, vgname, &mdac->area, 1);
@@ -1218,7 +1218,7 @@ static int _scan_raw(const struct format_type *fmt, const char *vgname __attribu
 
 	dm_list_iterate_items(rl, raw_list) {
 		/* FIXME We're reading mdah twice here... */
-		if (!dev_open(rl->dev_area.dev)) {
+		if (!dev_open_readonly(rl->dev_area.dev)) {
 			stack;
 			continue;
 		}
