@@ -374,6 +374,8 @@ static void _unlock_mem(struct cmd_context *cmd)
 
 static void _lock_mem_if_needed(struct cmd_context *cmd)
 {
+	log_debug("Lock: Memlock counters: locked:%d critical:%d daemon:%d",
+		  _mem_locked, _critical_section_count, _memlock_count_daemon);
 	if (!_mem_locked &&
 	    ((_critical_section_count + _memlock_count_daemon) == 1)) {
 		_mem_locked = 1;
@@ -383,8 +385,8 @@ static void _lock_mem_if_needed(struct cmd_context *cmd)
 
 static void _unlock_mem_if_possible(struct cmd_context *cmd)
 {
-	log_debug("UnlockMem l:%d cs:%d md:%d", _mem_locked,
-		  _critical_section_count, _memlock_count_daemon);
+	log_debug("Unlock: Memlock counters: locked:%d critical:%d daemon:%d",
+		  _mem_locked, _critical_section_count, _memlock_count_daemon);
 	if (_mem_locked &&
 	    !_critical_section_count &&
 	    !_memlock_count_daemon) {
