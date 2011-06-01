@@ -329,6 +329,9 @@ static int _lock_for_cluster(struct cmd_context *cmd, unsigned char clvmd_cmd,
 	if (mirror_in_sync())
 		args[1] |= LCK_MIRROR_NOSYNC_MODE;
 
+	if (test_mode())
+		args[1] |= LCK_TEST_MODE;
+
 	/*
 	 * Must handle tri-state return from dmeventd_monitor_mode.
 	 * But DMEVENTD_MONITOR_IGNORE is not propagated across the cluster.
