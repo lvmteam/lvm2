@@ -1,5 +1,6 @@
 Version 2.02.86 -  
 =================================
+  Permit --available with lvcreate so non-snapshot LVs need not be activated.
   Report sector containing label in verbose message.
   Clarify error message when unable to convert an LV into a snapshot of an LV.
   Add and use dev_open_readonly and variations.

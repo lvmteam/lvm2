@@ -87,14 +87,6 @@ typedef enum {
 	PERCENT_ORIGIN
 } percent_type_t;
 
-enum {
-	CHANGE_AY = 0,
-	CHANGE_AN = 1,
-	CHANGE_AE = 2,
-	CHANGE_ALY = 3,
-	CHANGE_ALN = 4
-};
-
 #define ARG_COUNTABLE 0x00000001	/* E.g. -vvvv */
 #define ARG_GROUPABLE 0x00000002	/* E.g. --addtag */
 

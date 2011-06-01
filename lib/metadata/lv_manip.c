@@ -3711,7 +3711,9 @@ int lv_create_single(struct volume_group *vg,
 				  "exception store.");
 			goto revert_new_lv;
 		}
-	} else if (!activate_lv(cmd, lv)) {
+	} else if ((lp->activate == CHANGE_AY && !activate_lv(cmd, lv)) ||
+		   (lp->activate == CHANGE_AE && !activate_lv_excl(cmd, lv)) ||
+		   (lp->activate == CHANGE_ALY && !activate_lv_local(cmd, lv))) {
 		log_error("Failed to activate new LV.");
 		if (lp->zero)
 			goto deactivate_and_revert_new_lv;
