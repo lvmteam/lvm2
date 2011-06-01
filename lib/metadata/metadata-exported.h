@@ -78,6 +78,7 @@
 
 #define REPLICATOR		0x20000000U	/* LV -internal use only for replicator */
 #define REPLICATOR_LOG		0x40000000U	/* LV -internal use only for replicator-dev */
+#define UNLABELLED_PV           0x80000000U     /* PV -this PV had no label written yet */
 
 #define LVM_READ              	0x00000100U	/* LV VG */
 #define LVM_WRITE             	0x00000200U	/* LV VG */
@@ -360,7 +361,8 @@ struct pvcreate_params {
 
 struct physical_volume *pvcreate_single(struct cmd_context *cmd,
 					const char *pv_name,
-					struct pvcreate_params *pp);
+					struct pvcreate_params *pp,
+					int write_now);
 void pvcreate_params_set_defaults(struct pvcreate_params *pp);
 
 /*
@@ -372,7 +374,7 @@ int vg_revert(struct volume_group *vg);
 struct volume_group *vg_read_internal(struct cmd_context *cmd, const char *vg_name,
 			     const char *vgid, int warnings, int *consistent);
 struct physical_volume *pv_read(struct cmd_context *cmd, const char *pv_name,
-				uint64_t *label_sector, int warnings,
+				int warnings,
 				int scan_label_only);
 struct dm_list *get_pvs(struct cmd_context *cmd);
 
@@ -519,6 +521,17 @@ int lv_rename(struct cmd_context *cmd, struct logical_volume *lv,
 uint64_t extents_from_size(struct cmd_context *cmd, uint64_t size,
 			   uint32_t extent_size);
 
+/*
+ * Activation options
+ */
+typedef enum {
+	CHANGE_AY = 0,
+	CHANGE_AN = 1,
+	CHANGE_AE = 2,
+	CHANGE_ALY = 3,
+	CHANGE_ALN = 4
+} activation_change_t;
+
 /* FIXME: refactor and reduce the size of this struct! */
 struct lvcreate_params {
 	/* flags */
@@ -529,6 +542,7 @@ struct lvcreate_params {
 	int log_count; /* mirror */
 	int nosync; /* mirror */
 	int activation_monitoring; /* all */
+	activation_change_t activate; /* non-snapshot, non-mirror */
 
 	char *origin; /* snap */
 	const char *vg_name; /* all */

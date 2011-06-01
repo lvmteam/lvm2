@@ -429,11 +429,20 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 	    !_read_mirror_params(lp, cmd))
 		return_0;
 
+	lp->activate = arg_uint_value(cmd, available_ARG, CHANGE_AY);
+
 	/*
 	 * Should we zero the lv.
 	 */
 	lp->zero = strcmp(arg_str_value(cmd, zero_ARG,
 		(lp->segtype->flags & SEG_CANNOT_BE_ZEROED) ? "n" : "y"), "n");
+
+	if (lp->activate == CHANGE_AN || lp->activate == CHANGE_ALN) {
+		if (lp->zero) {
+			log_error("--available n requires --zero n");
+			return 0;
+		}
+	}
 
 	/*
 	 * Alloc policy
