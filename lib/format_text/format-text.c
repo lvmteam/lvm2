@@ -45,10 +45,6 @@ struct text_fid_context {
 	uint32_t raw_metadata_buf_size;
 };
 
-struct text_fid_pv_context {
-	int64_t label_sector;
-};
-
 struct dir_list {
 	struct dm_list list;
 	char dir[0];
@@ -1252,11 +1248,9 @@ static int _text_scan(const struct format_type *fmt, const char *vgname)
 /* Only for orphans */
 static int _text_pv_write(const struct format_type *fmt, struct physical_volume *pv)
 {
-	struct text_fid_pv_context *fid_pv_tc;
 	struct format_instance *fid = pv->fid;
 	const char *pvid = (const char *) (*pv->old_id.uuid ? &pv->old_id : &pv->id);
 	struct label *label;
-	int64_t label_sector;
 	struct lvmcache_info *info;
 	struct mda_context *mdac;
 	struct metadata_area *mda;
@@ -1271,15 +1265,7 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 		return_0;
 
 	label = info->label;
-
-	/*
-	 * We can change the label sector for a
-	 * plain PV that is not part of a VG only!
-	 */
-	if (fid && (!fid->type & FMT_INSTANCE_VG) &&
-	    (fid_pv_tc = (struct text_fid_pv_context *) pv->fid->private) &&
-	    ((label_sector = fid_pv_tc->label_sector) != -1))
-		label->sector = label_sector;
+	label->sector = pv->label_sector;
 
 	info->device_size = pv->size << SECTOR_SHIFT;
 	info->fmt = fmt;
@@ -1517,8 +1503,6 @@ static int _text_pv_initialise(const struct format_type *fmt,
 			       unsigned long data_alignment_offset,
 			       struct physical_volume *pv)
 {
-	struct text_fid_pv_context *fid_pv_tc;
-
 	/*
 	 * Try to keep the value of PE start set to a firm value if requested.
 	 * This is usefull when restoring existing PE start value (backups etc.).
@@ -1569,10 +1553,8 @@ static int _text_pv_initialise(const struct format_type *fmt,
 		return 0;
 	}
 
-	if (label_sector != -1) {
-		fid_pv_tc = (struct text_fid_pv_context *) pv->fid->private;
-		fid_pv_tc->label_sector = label_sector;
-	}
+	if (label_sector != -1)
+                pv->label_sector = label_sector;
 
 	return 1;
 }
@@ -1735,16 +1717,9 @@ static int _text_pv_setup(const struct format_type *fmt,
 static int _create_pv_text_instance(struct format_instance *fid,
                                     const struct format_instance_ctx *fic)
 {
-	struct text_fid_pv_context *fid_pv_tc;
 	struct lvmcache_info *info;
 
-	if (!(fid_pv_tc = (struct text_fid_pv_context *)
-			dm_pool_zalloc(fid->mem, sizeof(*fid_pv_tc)))) {
-		log_error("Couldn't allocate text_fid_pv_context.");
-		return 0;
-	}
-	fid_pv_tc->label_sector = -1;
-	fid->private = (void *) fid_pv_tc;
+	fid->private = NULL;
 
 	if (!(fid->metadata_areas_index.array = dm_pool_zalloc(fid->mem,
 					FMT_TEXT_MAX_MDAS_PER_PV *
@@ -2332,7 +2307,7 @@ static int _get_config_disk_area(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (!(dev_area.dev = device_from_pvid(cmd, &id, NULL))) {
+	if (!(dev_area.dev = device_from_pvid(cmd, &id, NULL, NULL))) {
 		char buffer[64] __attribute__((aligned(8)));
 
 		if (!id_write_format(&id, buffer, sizeof(buffer)))

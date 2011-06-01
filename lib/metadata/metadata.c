@@ -38,7 +38,6 @@ static struct physical_volume *_pv_read(struct cmd_context *cmd,
 					struct dm_pool *pvmem,
 					const char *pv_name,
 					struct format_instance *fid,
-					uint64_t *label_sector,
 					int warnings, int scan_label_only);
 
 static struct physical_volume *_find_pv_by_name(struct cmd_context *cmd,
@@ -192,6 +191,7 @@ void del_pvl_from_vgs(struct volume_group *vg, struct pv_list *pvl)
  * @vg - volume group to add to
  * @pv_name - name of the pv (to be removed)
  * @pv - physical volume to add to volume group
+ * @pp - physical volume creation params (OPTIONAL)
  *
  * Returns:
  *  0 - failure
@@ -199,8 +199,9 @@ void del_pvl_from_vgs(struct volume_group *vg, struct pv_list *pvl)
  * FIXME: remove pv_name - obtain safely from pv
  */
 int add_pv_to_vg(struct volume_group *vg, const char *pv_name,
-		 struct physical_volume *pv)
+		 struct physical_volume *pv, struct pvcreate_params *pp)
 {
+	struct pv_to_create *pvc;
 	struct pv_list *pvl;
 	struct format_instance *fid = vg->fid;
 	struct dm_pool *mem = vg->vgmem;
@@ -288,6 +289,16 @@ int add_pv_to_vg(struct volume_group *vg, const char *pv_name,
 	add_pvl_to_vgs(vg, pvl);
 	vg->extent_count += pv->pe_count;
 	vg->free_count += pv->pe_count;
+
+	if (pv->status & UNLABELLED_PV) {
+		if (!(pvc = dm_pool_zalloc(mem, sizeof(*pvc)))) {
+			log_error("pv_to_create allocation for '%s' failed", pv_name);
+			return 0;
+		}
+		pvc->pv = pv;
+		pvc->pp = pp;
+		dm_list_add(&vg->pvs_to_create, &pvc->list);
+	}
 
 	return 1;
 }
@@ -640,11 +651,11 @@ static int vg_extend_single_pv(struct volume_group *vg, char *pv_name,
 			  "physical volume", pv_name);
 		return 0;
 	} else if (!pv && pp) {
-		pv = pvcreate_single(vg->cmd, pv_name, pp);
+		pv = pvcreate_single(vg->cmd, pv_name, pp, 0);
 		if (!pv)
 			return 0;
 	}
-	if (!add_pv_to_vg(vg, pv_name, pv)) {
+	if (!add_pv_to_vg(vg, pv_name, pv, pp)) {
 		free_pv_fid(pv);
 		return 0;
 	}
@@ -1318,7 +1329,7 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name,
 	/* FIXME Check partition type is LVM unless --force is given */
 
 	/* Is there a pv here already? */
-	pv = pv_read(cmd, name, NULL, 0, 0);
+	pv = pv_read(cmd, name, 0, 0);
 
 	/*
 	 * If a PV has no MDAs it may appear to be an orphan until the
@@ -1330,7 +1341,7 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name,
 		free_pv_fid(pv);
 		if (!scan_vgs_for_pvs(cmd, 0))
 			return_0;
-		pv = pv_read(cmd, name, NULL, 0, 0);
+		pv = pv_read(cmd, name, 0, 0);
 	}
 
 	/* Allow partial & exported VGs to be destroyed. */
@@ -1425,6 +1436,47 @@ void pvcreate_params_set_defaults(struct pvcreate_params *pp)
 	pp->metadataignore = DEFAULT_PVMETADATAIGNORE;
 }
 
+
+static int _pvcreate_write(struct cmd_context *cmd, struct pv_to_create *pvc)
+{
+	int zero = pvc->pp->zero;
+	struct physical_volume *pv = pvc->pv;
+	struct device *dev = pv->dev;
+	const char *pv_name = dev_name(dev);
+
+	/* Wipe existing label first */
+	if (!label_remove(pv_dev(pv))) {
+		log_error("Failed to wipe existing label on %s", pv_name);
+		return 0;
+	}
+
+	if (zero) {
+		log_verbose("Zeroing start of device %s", pv_name);
+		if (!dev_open_quiet(dev)) {
+			log_error("%s not opened: device not zeroed", pv_name);
+			return 0;
+		}
+
+		if (!dev_set(dev, UINT64_C(0), (size_t) 2048, 0)) {
+			log_error("%s not wiped: aborting", pv_name);
+			dev_close(dev);
+			return 0;
+		}
+		dev_close(dev);
+	}
+
+	log_error("Writing physical volume data to disk \"%s\"",
+			 pv_name);
+
+	if (!(pv_write(cmd, pv, 1))) {
+		log_error("Failed to write physical volume \"%s\"", pv_name);
+		return 0;
+	}
+
+	log_print("Physical volume \"%s\" successfully created", pv_name);
+	return 1;
+}
+
 /*
  * pvcreate_single() - initialize a device with PV label and metadata area
  *
@@ -1438,7 +1490,8 @@ void pvcreate_params_set_defaults(struct pvcreate_params *pp)
  */
 struct physical_volume * pvcreate_single(struct cmd_context *cmd,
 					 const char *pv_name,
-					 struct pvcreate_params *pp)
+					 struct pvcreate_params *pp,
+					 int write_now)
 {
 	struct physical_volume *pv = NULL;
 	struct device *dev;
@@ -1451,7 +1504,7 @@ struct physical_volume * pvcreate_single(struct cmd_context *cmd,
 		pp = &default_pp;
 
 	if (pp->idp) {
-		if ((dev = device_from_pvid(cmd, pp->idp, NULL)) &&
+		if ((dev = device_from_pvid(cmd, pp->idp, NULL, NULL)) &&
 		    (dev != dev_cache_get(pv_name, cmd->filter))) {
 			if (!id_write_format((const struct id*)&pp->idp->uuid,
 			    buffer, sizeof(buffer)))
@@ -1475,6 +1528,7 @@ struct physical_volume * pvcreate_single(struct cmd_context *cmd,
 	}
 
 	dm_list_init(&mdas);
+
 	if (!(pv = pv_create(cmd, dev, pp->idp, pp->size,
 			     pp->data_alignment, pp->data_alignment_offset,
 			     pp->pe_start ? pp->pe_start : PV_PE_START_CALC,
@@ -1488,36 +1542,15 @@ struct physical_volume * pvcreate_single(struct cmd_context *cmd,
 	log_verbose("Set up physical volume for \"%s\" with %" PRIu64
 		    " available sectors", pv_name, pv_size(pv));
 
-	/* Wipe existing label first */
-	if (!label_remove(pv_dev(pv))) {
-		log_error("Failed to wipe existing label on %s", pv_name);
-		goto bad;
-	}
-
-	if (pp->zero) {
-		log_verbose("Zeroing start of device %s", pv_name);
-		if (!dev_open_quiet(dev)) {
-			log_error("%s not opened: device not zeroed", pv_name);
+	if (write_now) {
+		struct pv_to_create pvc;
+		pvc.pp = pp;
+		pvc.pv = pv;
+		if (!_pvcreate_write(cmd, &pvc))
 			goto bad;
-		}
-
-		if (!dev_set(dev, UINT64_C(0), (size_t) 2048, 0)) {
-			log_error("%s not wiped: aborting", pv_name);
-			dev_close(dev);
-			goto bad;
-		}
-		dev_close(dev);
+	} else {
+		pv->status |= UNLABELLED_PV;
 	}
-
-	log_very_verbose("Writing physical volume data to disk \"%s\"",
-			 pv_name);
-
-	if (!(pv_write(cmd, pv, 0))) {
-		log_error("Failed to write physical volume \"%s\"", pv_name);
-		goto bad;
-	}
-
-	log_print("Physical volume \"%s\" successfully created", pv_name);
 
 	return pv;
 
@@ -1815,7 +1848,7 @@ static struct physical_volume *_find_pv_by_name(struct cmd_context *cmd,
 {
 	struct physical_volume *pv;
 
-	if (!(pv = _pv_read(cmd, cmd->mem, pv_name, NULL, NULL, 1, 0))) {
+	if (!(pv = _pv_read(cmd, cmd->mem, pv_name, NULL, 1, 0))) {
 		log_error("Physical volume %s not found", pv_name);
 		goto bad;
 	}
@@ -1825,7 +1858,7 @@ static struct physical_volume *_find_pv_by_name(struct cmd_context *cmd,
 		if (!scan_vgs_for_pvs(cmd, 1))
 			goto_bad;
 		free_pv_fid(pv);
-		if (!(pv = _pv_read(cmd, cmd->mem, pv_name, NULL, NULL, 1, 0))) {
+		if (!(pv = _pv_read(cmd, cmd->mem, pv_name, NULL, 1, 0))) {
 			log_error("Physical volume %s not found", pv_name);
 			goto bad;
 		}
@@ -2470,6 +2503,7 @@ out:
 int vg_write(struct volume_group *vg)
 {
 	struct dm_list *mdah;
+        struct pv_to_create *pv_to_create;
 	struct metadata_area *mda;
 
 	if (!vg_validate(vg))
@@ -2506,6 +2540,12 @@ int vg_write(struct volume_group *vg)
 	}
 
 	vg->seqno++;
+
+        dm_list_iterate_items(pv_to_create, &vg->pvs_to_create) {
+		if (!_pvcreate_write(vg->cmd, pv_to_create))
+			return 0;
+		pv_to_create->pv->status &= ~UNLABELLED_PV;
+        }
 
 	/* Write to each copy of the metadata area */
 	dm_list_iterate_items(mda, &vg->fid->metadata_areas_in_use) {
@@ -2676,7 +2716,7 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd,
 
 	dm_list_iterate_items(info, &vginfo->infos) {
 		if (!(pv = _pv_read(cmd, vg->vgmem, dev_name(info->dev),
-				    vg->fid, NULL, warnings, 0))) {
+				    vg->fid, warnings, 0))) {
 			continue;
 		}
 		if (!(pvl = dm_pool_zalloc(vg->vgmem, sizeof(*pvl)))) {
@@ -3429,10 +3469,10 @@ const char *find_vgname_from_pvname(struct cmd_context *cmd,
  *   FIXME - liblvm todo - make into function that returns handle
  */
 struct physical_volume *pv_read(struct cmd_context *cmd, const char *pv_name,
-				uint64_t *label_sector, int warnings,
+				int warnings,
 				int scan_label_only)
 {
-	return _pv_read(cmd, cmd->mem, pv_name, NULL, label_sector, warnings, scan_label_only);
+	return _pv_read(cmd, cmd->mem, pv_name, NULL, warnings, scan_label_only);
 }
 
 /* FIXME Use label functions instead of PV functions */
@@ -3440,7 +3480,6 @@ static struct physical_volume *_pv_read(struct cmd_context *cmd,
 					struct dm_pool *pvmem,
 					const char *pv_name,
 					struct format_instance *fid,
-					uint64_t *label_sector,
 					int warnings, int scan_label_only)
 {
 	struct physical_volume *pv;
@@ -3460,14 +3499,14 @@ static struct physical_volume *_pv_read(struct cmd_context *cmd,
 	}
 
 	info = (struct lvmcache_info *) label->info;
-	if (label_sector && *label_sector)
-		*label_sector = label->sector;
 
 	pv = _alloc_pv(pvmem, dev);
 	if (!pv) {
 		log_error("pv allocation for '%s' failed", pv_name);
 		return NULL;
 	}
+
+	pv->label_sector = label->sector;
 
 	/* FIXME Move more common code up here */
 	if (!(info->fmt->ops->pv_read(info->fmt, pv_name, pv, scan_label_only))) {
@@ -4367,5 +4406,5 @@ char *tags_format_and_copy(struct dm_pool *mem, const struct dm_list *tags)
  */
 struct physical_volume *pv_by_path(struct cmd_context *cmd, const char *pv_name)
 {
-	return _pv_read(cmd, cmd->mem, pv_name, NULL, NULL, 1, 0);
+	return _pv_read(cmd, cmd->mem, pv_name, NULL, 1, 0);
 }
