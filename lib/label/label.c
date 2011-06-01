@@ -156,8 +156,10 @@ static struct labeller *_find_labeller(struct device *dev, char *buf,
 		dm_list_iterate_items(li, &_labellers) {
 			if (li->l->ops->can_handle(li->l, (char *) lh,
 						   sector + scan_sector)) {
-				log_very_verbose("%s: %s label detected",
-						 dev_name(dev), li->name);
+				log_very_verbose("%s: %s label detected at "
+					         "sector %" PRIu64, 
+						 dev_name(dev), li->name,
+						 sector + scan_sector);
 				if (found) {
 					log_error("Ignoring additional label "
 						  "on %s at sector %" PRIu64,
