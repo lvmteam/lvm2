@@ -1,5 +1,7 @@
 Version 2.02.86 -  
 =================================
+  Defer writing PV labels to vg_write.
+  Store label_sector only in struct physical_volume.
   Permit --available with lvcreate so non-snapshot LVs need not be activated.
   Report sector containing label in verbose message.
   Clarify error message when unable to convert an LV into a snapshot of an LV.

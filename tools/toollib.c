@@ -651,7 +651,7 @@ static int _process_all_devs(struct cmd_context *cmd, void *handle,
 	}
 
 	while ((dev = dev_iter_get(iter))) {
-		if (!(pv = pv_read(cmd, dev_name(dev), NULL, 0, 0))) {
+		if (!(pv = pv_read(cmd, dev_name(dev), 0, 0))) {
 			memset(&pv_dummy, 0, sizeof(pv_dummy));
 			dm_list_init(&pv_dummy.tags);
 			dm_list_init(&pv_dummy.segments);
@@ -737,7 +737,7 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 				}
 				pv = pvl->pv;
 			} else {
-				if (!(pv = pv_read(cmd, argv[opt], NULL,
+				if (!(pv = pv_read(cmd, argv[opt],
 						   1, scan_label_only))) {
 					log_error("Failed to read physical "
 						  "volume \"%s\"", argv[opt]);
@@ -764,7 +764,7 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 					scanned = 1;
 					free_pv_fid(pv);
 					if (!(pv = pv_read(cmd, argv[opt],
-							   NULL, 1,
+							   1,
 							   scan_label_only))) {
 						log_error("Failed to read "
 							  "physical volume "

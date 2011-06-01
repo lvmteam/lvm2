@@ -96,6 +96,8 @@ int import_pv(const struct format_type *fmt, struct dm_pool *mem,
 	pv->pe_count = pvd->pe_total;
 	pv->pe_alloc_count = 0;
 	pv->pe_align = 0;
+        pv->is_labelled = 0; /* format1 PVs have no label */
+        pv->label_sector = 0;
 
 	/* Fix up pv size if missing or impossibly large */
 	if (!pv->size || pv->size > (1ULL << 62)) {
@@ -149,7 +151,7 @@ int export_pv(struct cmd_context *cmd, struct dm_pool *mem __attribute__((unused
 
 	memcpy(pvd->pv_uuid, pv->id.uuid, ID_LEN);
 
-	if (pv->vg_name && !is_orphan(pv)) {
+	if (pv->vg_name && !is_orphan(pv) && !(pv->status & UNLABELLED_PV)) {
 		if (!_check_vg_name(pv->vg_name))
 			return_0;
 		strncpy((char *)pvd->vg_name, pv->vg_name, sizeof(pvd->vg_name));

@@ -31,6 +31,12 @@ typedef enum {
 	ALLOC_INHERIT
 } alloc_policy_t;
 
+struct pv_to_create {
+	struct dm_list list;
+	struct physical_volume *pv;
+	struct pvcreate_params *pp;
+};
+
 struct volume_group {
 	struct cmd_context *cmd;
 	struct dm_pool *vgmem;
@@ -57,6 +63,13 @@ struct volume_group {
 	/* physical volumes */
 	uint32_t pv_count;
 	struct dm_list pvs;
+
+	/*
+	 * List of physical volumes that were used in vgextend but do not carry
+	 * a PV label yet. They need to be pvcreate'd at vg_write time.
+	 */
+
+	struct dm_list pvs_to_create;
 
 	/*
 	 * logical volumes

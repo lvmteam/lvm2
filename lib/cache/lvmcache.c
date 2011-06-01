@@ -539,7 +539,7 @@ char *lvmcache_vgname_from_pvid(struct cmd_context *cmd, const char *pvid)
 	struct lvmcache_info *info;
 	char *vgname;
 
-	if (!device_from_pvid(cmd, (const struct id *)pvid, NULL)) {
+	if (!device_from_pvid(cmd, (const struct id *)pvid, NULL, NULL)) {
 		log_error("Couldn't find device with uuid %s.", pvid);
 		return NULL;
 	}
@@ -769,31 +769,41 @@ struct dm_list *lvmcache_get_pvids(struct cmd_context *cmd, const char *vgname,
 	return pvids;
 }
 
-struct device *device_from_pvid(struct cmd_context *cmd, const struct id *pvid,
-				unsigned *scan_done_once)
+static struct device *_device_from_pvid(const struct id *pvid,
+					uint64_t *label_sector)
 {
-	struct label *label;
 	struct lvmcache_info *info;
+	struct label *label;
 
-	/* Already cached ? */
 	if ((info = info_from_pvid((const char *) pvid, 0))) {
 		if (label_read(info->dev, &label, UINT64_C(0))) {
 			info = (struct lvmcache_info *) label->info;
-			if (id_equal(pvid, (struct id *) &info->dev->pvid))
+			if (id_equal(pvid, (struct id *) &info->dev->pvid)) {
+				if (label_sector)
+					*label_sector = label->sector;
 				return info->dev;
+                        }
 		}
 	}
+	return NULL;
+}
+
+struct device *device_from_pvid(struct cmd_context *cmd, const struct id *pvid,
+				unsigned *scan_done_once, uint64_t *label_sector)
+{
+	struct device *dev;
+
+	/* Already cached ? */
+	dev = _device_from_pvid(pvid, label_sector);
+	if (dev)
+		return dev;
 
 	lvmcache_label_scan(cmd, 0);
 
 	/* Try again */
-	if ((info = info_from_pvid((const char *) pvid, 0))) {
-		if (label_read(info->dev, &label, UINT64_C(0))) {
-			info = (struct lvmcache_info *) label->info;
-			if (id_equal(pvid, (struct id *) &info->dev->pvid))
-				return info->dev;
-		}
-	}
+	dev = _device_from_pvid(pvid, label_sector);
+	if (dev)
+		return dev;
 
 	if (critical_section() || (scan_done_once && *scan_done_once))
 		return NULL;
@@ -803,13 +813,9 @@ struct device *device_from_pvid(struct cmd_context *cmd, const struct id *pvid,
 		*scan_done_once = 1;
 
 	/* Try again */
-	if ((info = info_from_pvid((const char *) pvid, 0))) {
-		if (label_read(info->dev, &label, UINT64_C(0))) {
-			info = (struct lvmcache_info *) label->info;
-			if (id_equal(pvid, (struct id *) &info->dev->pvid))
-				return info->dev;
-		}
-	}
+	dev = _device_from_pvid(pvid, label_sector);
+	if (dev)
+		return dev;
 
 	return NULL;
 }

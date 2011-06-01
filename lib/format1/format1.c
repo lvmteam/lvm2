@@ -406,6 +406,8 @@ static int _format1_pv_write(const struct format_type *fmt, struct physical_volu
 	struct disk_list *dl;
 	struct dm_list pvs;
 	struct lvmcache_info *info;
+	int pe_count, pe_size, pe_start;
+	int r = 1;
 
 	if (!(info = lvmcache_add(fmt->labeller, (char *) &pv->id, pv->dev,
 				  pv->vg_name, NULL, 0)))
@@ -417,6 +419,10 @@ static int _format1_pv_write(const struct format_type *fmt, struct physical_volu
 	dm_list_init(&info->mdas);
 
 	dm_list_init(&pvs);
+
+	pe_count = pv->pe_count;
+	pe_size = pv->pe_size;
+	pe_start = pv->pe_start;
 
 	/* Ensure any residual PE structure is gone */
 	pv->pe_size = pv->pe_count = 0;
@@ -430,6 +436,8 @@ static int _format1_pv_write(const struct format_type *fmt, struct physical_volu
 
 	dl->mem = mem;
 	dl->dev = pv->dev;
+	dm_list_init(&dl->uuids);
+	dm_list_init(&dl->lvds);
 
 	if (!export_pv(fmt->cmd, mem, NULL, &dl->pvd, pv))
 		goto_bad;
@@ -444,12 +452,18 @@ static int _format1_pv_write(const struct format_type *fmt, struct physical_volu
 	if (!write_disks(fmt, &pvs))
 		goto_bad;
 
-	dm_pool_destroy(mem);
-	return 1;
+	goto out;
 
       bad:
+	r = 0;
+
+      out:
+	pv->pe_size = pe_size;
+	pv->pe_count = pe_count;
+	pv->pe_start = pe_start;
+
 	dm_pool_destroy(mem);
-	return 0;
+	return r;
 }
 
 static int _format1_vg_setup(struct format_instance *fid, struct volume_group *vg)
