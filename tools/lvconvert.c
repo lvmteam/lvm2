@@ -1391,7 +1391,7 @@ static int lvconvert_snapshot(struct cmd_context *cmd,
 	}
 
 	if (org->status & (LOCKED|PVMOVE|MIRRORED) || lv_is_cow(org)) {
-		log_error("Unable to create a snapshot of a %s LV.",
+		log_error("Unable to convert an LV into a snapshot of a %s LV.",
 			  org->status & LOCKED ? "locked" :
 			  org->status & PVMOVE ? "pvmove" :
 			  org->status & MIRRORED ? "mirrored" :
