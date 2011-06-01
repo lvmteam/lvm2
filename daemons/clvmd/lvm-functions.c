@@ -137,6 +137,7 @@ static const char *decode_flags(unsigned char flags)
 		flags & LCK_MIRROR_NOSYNC_MODE	  ? "MIRROR_NOSYNC|" : "",
 		flags & LCK_DMEVENTD_MONITOR_MODE ? "DMEVENTD_MONITOR|" : "",
 		flags & LCK_ORIGIN_ONLY_MODE ? "ORIGIN_ONLY|" : "",
+		flags & LCK_TEST_MODE ? "TEST|" : "",
 		flags & LCK_CONVERT ? "CONVERT|" : "");
 
 	if (len > 1)
@@ -235,6 +236,9 @@ static int hold_lock(char *resource, int mode, int flags)
 	int saved_errno;
 	struct lv_info *lvi;
 
+	if (test_mode())
+		return 0;
+
 	/* Mask off invalid options */
 	flags &= LCKF_NOQUEUE | LCKF_CONVERT;
 
@@ -297,6 +301,9 @@ static int hold_unlock(char *resource)
 	struct lv_info *lvi;
 	int status;
 	int saved_errno;
+
+	if (test_mode())
+		return 0;
 
 	if (!(lvi = lookup_info(resource))) {
 		DEBUGLOG("hold_unlock, lock not already held\n");

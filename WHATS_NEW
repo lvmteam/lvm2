@@ -1,5 +1,6 @@
 Version 2.02.86 -  
 =================================
+  Propagate test mode to clvmd to skip activation and changes to held locks.
   Defer writing PV labels to vg_write.
   Store label_sector only in struct physical_volume.
   Permit --available with lvcreate so non-snapshot LVs need not be activated.
