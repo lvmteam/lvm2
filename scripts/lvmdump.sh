@@ -146,7 +146,7 @@ if (( $clustered )); then
 	echo "----------------------------------"
 	if [ -f /proc/cluster/dlm_locks ]
 	then
-		echo clvmd >> /proc/cluster/dlm_locks
+		echo clvmd > /proc/cluster/dlm_locks
 		cat /proc/cluster/dlm_locks
 		echo
 		echo "RESOURCE DIR:"
