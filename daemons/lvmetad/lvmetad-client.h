@@ -66,7 +66,7 @@ static inline daemon_handle lvmetad_open()
 	/* TODO configurable */
 	daemon_info lvmetad_info = {
 		.path = "lvmetad",
-		.socket = "/var/run/lvmetad.socket",
+		.socket = "/var/run/lvm/lvmetad.socket",
 		.autostart = 1
 	};
 
