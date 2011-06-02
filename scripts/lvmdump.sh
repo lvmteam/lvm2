@@ -55,7 +55,7 @@ function usage {
 	echo "    -d <directory> dump into a directory instead of tarball"
 	echo "    -c if running clvmd, gather cluster data as well"
 	echo ""
-	
+
 	exit 1
 }
 
@@ -116,7 +116,7 @@ if (( $advanced )); then
 	myecho "Gathering LVM volume info..."
 
 	myecho "  vgscan..."
-	log "\"$LVM\" vgscan -vvvv > \"$dir/vgscan\" 2>&1"
+	log "\"$LVM\" vgscan -vvvv >> \"$dir/vgscan\" 2>&1"
 
 	myecho "  pvscan..."
 	log "\"$LVM\" pvscan -v >> \"$dir/pvscan\" 2>> \"$log\""
@@ -125,10 +125,10 @@ if (( $advanced )); then
 	log "\"$LVM\" lvs -a -o +devices >> \"$dir/lvs\" 2>> \"$log\""
 
 	myecho "  pvs..."
-	log "\"$LVM\" pvs -a -v > \"$dir/pvs\" 2>> \"$log\""
+	log "\"$LVM\" pvs -a -v >> \"$dir/pvs\" 2>> \"$log\""
 
 	myecho "  vgs..."
-	log "\"$LVM\" vgs -v > \"$dir/vgs\" 2>> \"$log\""
+	log "\"$LVM\" vgs -v >> \"$dir/vgs\" 2>> \"$log\""
 fi
 
 if (( $clustered )); then
@@ -146,7 +146,7 @@ if (( $clustered )); then
 	echo "----------------------------------"
 	if [ -f /proc/cluster/dlm_locks ]
 	then
-		echo clvmd > /proc/cluster/dlm_locks
+		echo clvmd >> /proc/cluster/dlm_locks
 		cat /proc/cluster/dlm_locks
 		echo
 		echo "RESOURCE DIR:"
@@ -166,11 +166,11 @@ if (( $clustered )); then
 		echo "MASTER:"
 		cat /debug/dlm/clvmd_master
 	fi
-	} > $dir/cluster_info
+	} >> $dir/cluster_info
 fi
 
 myecho "Gathering LVM & device-mapper version info..."
-echo "LVM VERSION:" > "$dir/versions"
+echo "LVM VERSION:" >> "$dir/versions"
 "$LVM" lvs --version >> "$dir/versions" 2>> "$log"
 echo "DEVICE MAPPER VERSION:" >> "$dir/versions"
 "$DMSETUP" --version >> "$dir/versions" 2>> "$log"
@@ -180,25 +180,27 @@ echo "DM TARGETS VERSIONS:" >> "$dir/versions"
 "$DMSETUP" targets >> "$dir/versions" 2>> "$log"
 
 myecho "Gathering dmsetup info..."
-log "\"$DMSETUP\" info -c > \"$dir/dmsetup_info\" 2>> \"$log\""
-log "\"$DMSETUP\" table > \"$dir/dmsetup_table\" 2>> \"$log\""
-log "\"$DMSETUP\" status > \"$dir/dmsetup_status\" 2>> \"$log\""
-log "\"$DMSETUP\" ls --tree > \"$dir/dmsetup_ls_tree\" 2>> \"$log\""
+log "\"$DMSETUP\" info -c >> \"$dir/dmsetup_info\" 2>> \"$log\""
+log "\"$DMSETUP\" table >> \"$dir/dmsetup_table\" 2>> \"$log\""
+log "\"$DMSETUP\" status >> \"$dir/dmsetup_status\" 2>> \"$log\""
+
+# cat as workaround to avoid tty ioctl (selinux)
+log "\"$DMSETUP\" ls --tree 2>> \"$log\" | cat >> \"$dir/dmsetup_ls_tree\""
 
 myecho "Gathering process info..."
-log "$PS alx > \"$dir/ps_info\" 2>> \"$log\""
+log "$PS alx >> \"$dir/ps_info\" 2>> \"$log\""
 
 myecho "Gathering console messages..."
-log "$TAIL -n 75 /var/log/messages > \"$dir/messages\" 2>> \"$log\""
+log "$TAIL -n 75 /var/log/messages >> \"$dir/messages\" 2>> \"$log\""
 
 myecho "Gathering /etc/lvm info..."
 log "$CP -a /etc/lvm \"$dir/lvm\" 2>> \"$log\""
 
 myecho "Gathering /dev listing..."
-log "$LS -laR /dev > \"$dir/dev_listing\" 2>> \"$log\""
+log "$LS -laR /dev >> \"$dir/dev_listing\" 2>> \"$log\""
 
 myecho "Gathering /sys/block listing..."
-log "$LS -laR /sys/block > \"$dir/sysblock_listing\"  2>> \"$log\""
+log "$LS -laR /sys/block >> \"$dir/sysblock_listing\"  2>> \"$log\""
 log "$LS -laR /sys/devices/virtual/block >> \"$dir/sysblock_listing\"  2>> \"$log\""
 
 if (( $metadata )); then
@@ -233,4 +235,3 @@ if test -z "$userdir"; then
 fi
 
 exit 0
-
