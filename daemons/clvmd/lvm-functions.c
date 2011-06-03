@@ -132,7 +132,7 @@ static const char *decode_flags(unsigned char flags)
 	static char buf[128];
 	int len;
 
-	len = sprintf(buf, "0x%x ( %s%s%s%s%s)", flags,
+	len = sprintf(buf, "0x%x ( %s%s%s%s%s%s)", flags,
 		flags & LCK_PARTIAL_MODE	  ? "PARTIAL_MODE|" : "",
 		flags & LCK_MIRROR_NOSYNC_MODE	  ? "MIRROR_NOSYNC|" : "",
 		flags & LCK_DMEVENTD_MONITOR_MODE ? "DMEVENTD_MONITOR|" : "",
