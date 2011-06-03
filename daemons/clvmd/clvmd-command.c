@@ -57,6 +57,7 @@
 #include "clvmd-comms.h"
 #include "clvm.h"
 #include "clvmd.h"
+#include "lvm-globals.h"
 #include "lvm-functions.h"
 
 #include "locking.h"
