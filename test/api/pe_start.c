@@ -27,13 +27,13 @@ int main(int argc, char *argv[])
 	handle = lvm_init(NULL);
         assert(handle);
 
-	vg = lvm_vg_create(handle, "test_vg");
+	vg = lvm_vg_create(handle, argv[1]);
         assert(vg);
 
-	if (lvm_vg_extend(vg, argv[1]))
+	if (lvm_vg_extend(vg, argv[2]))
 		abort();
 
-	pv = lvm_pv_from_name(vg, argv[1]);
+	pv = lvm_pv_from_name(vg, argv[2]);
 	assert(pv);
 
         v = lvm_pv_get_property(pv, "pe_start");

@@ -14,4 +14,6 @@
 . lib/test
 
 aux prepare_devs 2
-aux apitest pe_start $dev1
+aux apitest pe_start test_vg $dev1
+not vgs test_vg
+not pvs $dev1
