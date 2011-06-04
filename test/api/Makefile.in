@@ -26,7 +26,7 @@ test_SOURCES = test.c
 wrapper_SOURCES = test.c
 INCLUDES += -I../../include
 
-TARGETS += vgtest.t percent.t
+TARGETS += vgtest.t percent.t pe_start.t
 endif
 
 LVMLIBS = @LVM2APP_LIB@ -ldevmapper
