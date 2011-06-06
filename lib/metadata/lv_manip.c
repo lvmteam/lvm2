@@ -418,7 +418,7 @@ static int _lv_segment_reduce(struct lv_segment *seg, uint32_t reduction)
 	if (seg_is_striped(seg)) {
 		if (reduction % seg->area_count) {
 			log_error("Segment extent reduction %" PRIu32
-				  "not divisible by #stripes %" PRIu32,
+				  " not divisible by #stripes %" PRIu32,
 				  reduction, seg->area_count);
 			return 0;
 		}
