@@ -35,6 +35,7 @@ int create_temp_name(const char *dir, char *buffer, size_t len, int *fd,
 	int i, num;
 	pid_t pid;
 	char hostname[255];
+	char *p;
 	struct flock lock = {
 		.l_type = F_WRLCK,
 		.l_whence = 0,
@@ -47,6 +48,12 @@ int create_temp_name(const char *dir, char *buffer, size_t len, int *fd,
 	if (gethostname(hostname, sizeof(hostname)) < 0) {
 		log_sys_error("gethostname", "");
 		strcpy(hostname, "nohostname");
+	}
+	else {
+		/* Replace any '/' with '?' found in the hostname. */
+		p = hostname;
+		while ((p = strchr(p, '/')))
+			*p = '?';
 	}
 
 	for (i = 0; i < 20; i++, num++) {
