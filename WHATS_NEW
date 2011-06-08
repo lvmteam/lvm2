@@ -1,5 +1,6 @@
 Version 2.02.86 -  
 =================================
+  Fix create_temp_name to replace any '/' found in the hostname with '?'.
   Always use append to file in lvmdump (selinux policy - no file truncation).
   Propagate test mode to clvmd to skip activation and changes to held locks.
   Defer writing PV labels to vg_write.
