@@ -204,6 +204,16 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 					inc_error_count;
 				}
 			}
+
+			if (complete_vg && seg_is_mirrored(seg) &&
+			    seg_type(seg, s) == AREA_LV &&
+			    seg_lv(seg, s)->le_count != seg->area_len) {
+				log_error("LV %s: mirrored LV segment %u has "
+					  "wrong size %u (should be %u).",
+					  lv->name, s, seg_lv(seg, s)->le_count,
+					  seg->area_len);
+				inc_error_count;
+			}
 		}
 
 		le += seg->len;
