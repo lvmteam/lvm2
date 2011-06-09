@@ -575,11 +575,17 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 		return EINVALID_CMD_LINE;
 	}
 
-	if ((lp->stripes > 1)) {
+	if (lp->stripes > 1) {
 		if (!(stripesize_extents = lp->stripe_size / vg->extent_size))
 			stripesize_extents = 1;
 
-		if ((size_rest = seg_size % (lp->stripes * stripesize_extents))) {
+		size_rest = seg_size % (lp->stripes * stripesize_extents);
+		if (size_rest && lp->resize == LV_REDUCE) {
+			log_print("Rounding size (%d extents) up to stripe "
+				  "boundary size for segment (%d extents)",
+				  lp->extents, lp->extents + size_rest);
+			lp->extents = lp->extents + size_rest;
+		} else if (size_rest) {
 			log_print("Rounding size (%d extents) down to stripe "
 				  "boundary size for segment (%d extents)",
 				  lp->extents, lp->extents - size_rest);

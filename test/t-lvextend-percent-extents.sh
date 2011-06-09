@@ -99,3 +99,8 @@ check lv_field $vg/$lv seg_count 2
 lvreduce -f -l -$(( $pe_count * 1 )) $vg/$lv
 check lv_field $vg/$lv seg_count 1
 
+# do not reduce to 0 extents
+lvremove -f $vg/$lv
+lvcreate -i2 -I 64k -l10 -n $lv $vg
+lvreduce -f -l1 $vg/$lv
+check lv_field $vg/$lv lv_size "8.00m"
