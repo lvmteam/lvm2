@@ -1544,13 +1544,20 @@ static int _mirror_emit_segment_line(struct dm_task *dmt, uint32_t major,
 	int dm_log_userspace = 0;
 	struct utsname uts;
 	unsigned log_parm_count;
-	int pos = 0;
+	int pos = 0, parts;
 	char logbuf[DM_FORMAT_DEV_BUFSIZE];
 	const char *logtype;
-	unsigned kmaj, kmin, krel;
+	unsigned kmaj = 0, kmin = 0, krel = 0;
 
-	if (uname(&uts) == -1 || sscanf(uts.release, "%u.%u.%u", &kmaj, &kmin, &krel) != 3) {
-		log_error("Cannot read kernel release version");
+	if (uname(&uts) == -1) {
+		log_error("Cannot read kernel release version.");
+		return 0;
+	}
+
+	/* Kernels with a major number of 2 always had 3 parts. */
+	parts = sscanf(uts.release, "%u.%u.%u", &kmaj, &kmin, &krel);
+	if (parts < 1 || (kmaj < 3 && parts < 3)) {
+		log_error("Wrong kernel release version %s.", uts.release);
 		return 0;
 	}
 
