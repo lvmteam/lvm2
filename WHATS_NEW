@@ -1,5 +1,6 @@
 Version 2.02.86 -  
 =================================
+  Validate mirror segments size.
   Fix extent rounding for striped volumes (never reduce more than requested).
   Fix create_temp_name to replace any '/' found in the hostname with '?'.
   Always use append to file in lvmdump (selinux policy - no file truncation).
