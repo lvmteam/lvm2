@@ -152,6 +152,23 @@ skip() {
     exit 200
 }
 
+kernel_at_least() {
+    major=$(uname -r |cut -d. -f1)
+    minor=$(uname -r |cut -d. -f2 | cut -d- -f1)
+
+    test $major -gt $1 && return 0
+    test $major -lt $1 && return 1
+    test $minor -gt $2 && return 0
+    test $minor -lt $2 && return 1
+    test -z "$3" && return 0
+
+    minor2=$(uname -r | cut -d. -f3)
+    test -z "$minor2" && return 0
+    test $minor2 -ge $3 2>/dev/null && return 0
+
+    return 1
+}
+
 . lib/paths || { echo >&2 you must run make first; exit 1; }
 
 PATH=$abs_top_builddir/test/lib:$PATH
