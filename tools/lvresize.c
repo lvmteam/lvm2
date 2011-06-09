@@ -305,6 +305,34 @@ static int _adjust_policy_params(struct cmd_context *cmd,
 	return 1;
 }
 
+static uint32_t lvseg_get_stripes(struct lv_segment *seg, uint32_t *stripesize)
+{
+	uint32_t s;
+	struct lv_segment *seg_mirr;
+
+	/* If segment mirrored, check if images are striped */
+	if (seg_is_mirrored(seg))
+		for (s = 0; s < seg->area_count; s++) {
+			if (seg_type(seg, s) != AREA_LV)
+				continue;
+			seg_mirr = first_seg(seg_lv(seg, s));
+
+			if (seg_is_striped(seg_mirr)) {
+				seg = seg_mirr;
+				break;
+			}
+		}
+
+
+	if (seg_is_striped(seg)) {
+		*stripesize = seg->stripe_size;
+		return seg->area_count;
+	}
+
+	*stripesize = 0;
+	return 0;
+}
+
 static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 		     struct lvresize_params *lp)
 {
@@ -548,10 +576,8 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 		dm_list_iterate_items(seg, &lv->segments) {
 			seg_extents = seg->len;
 
-			if (seg_is_striped(seg)) {
-				seg_stripesize = seg->stripe_size;
-				seg_stripes = seg->area_count;
-			}
+			/* Check for underlying stripe sizes */
+			seg_stripes = lvseg_get_stripes(seg, &seg_stripesize);
 
 			if (seg_is_mirrored(seg))
 				seg_mirrors = lv_mirror_count(seg->lv);

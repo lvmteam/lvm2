@@ -1,5 +1,6 @@
 Version 2.02.86 -  
 =================================
+  Fix reduction of mirrors with striped segments to always align to stripe size.
   Validate mirror segments size.
   Fix extent rounding for striped volumes (never reduce more than requested).
   Fix create_temp_name to replace any '/' found in the hostname with '?'.
