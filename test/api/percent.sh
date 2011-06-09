@@ -13,8 +13,7 @@
 
 . lib/test
 
-linux_minor=$(echo `uname -r` | cut -d'.' -f3 | cut -d'-' -f1)
-test $linux_minor -le 32 && skip
+kernel_at_least 2 6 33 || skip
 
 aux prepare_devs 2
 vgcreate -c n -s 4k $vg $(cat DEVICES)

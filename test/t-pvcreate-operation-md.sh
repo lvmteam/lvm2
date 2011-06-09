@@ -70,12 +70,10 @@ pvcreate --metadatasize 128k \
     $mddev
 check pv_field $mddev pe_start $pv_align
 
-# Get linux minor version
-linux_minor=$(echo `uname -r` | cut -d'.' -f3 | cut -d'-' -f1)
 
 # Test newer topology-aware alignment detection
 # - first added to 2.6.31 but not "reliable" until 2.6.33
-if [ $linux_minor -ge 33 ]; then
+if kernel_at_least 2 6 33 ; then
     pv_align="1.00m"
     # optimal_io_size=131072, minimum_io_size=65536
     pvcreate --metadatasize 128k \
@@ -84,7 +82,7 @@ if [ $linux_minor -ge 33 ]; then
 fi
 
 # partition MD array directly, depends on blkext in Linux >= 2.6.28
-if [ $linux_minor -ge 28 ]; then
+if kernel_at_least 2 6 28 ; then
     # create one partition
     sfdisk $mddev <<EOF
 ,,83
@@ -111,11 +109,11 @@ EOF
     # Checking for 'alignment_offset' in sysfs implies Linux >= 2.6.31
     # but reliable alignment_offset support requires kernel.org Linux >= 2.6.33
     sysfs_alignment_offset=/sys/dev/block/${mddev_maj_min}/${base_mddev_p}/alignment_offset
-    [ -f $sysfs_alignment_offset -a $linux_minor -ge 33 ] && \
+    [ -f $sysfs_alignment_offset ] && kernel_at_least 2 6 33 && \
 	alignment_offset=`cat $sysfs_alignment_offset` || \
 	alignment_offset=0
 
-    if [ $alignment_offset -gt 0 ]; then    
+    if [ $alignment_offset -gt 0 ]; then
         # default alignment is 1M, add alignment_offset
 	pv_align=$((1048576+$alignment_offset))B
 	pvcreate --metadatasize 128k $mddev_p
@@ -125,7 +123,7 @@ EOF
 fi
 
 # Test newer topology-aware alignment detection w/ --dataalignment override
-if [ $linux_minor -ge 33 ]; then
+if kernel_at_least 2 6 33 ; then
     cleanup_md
     pvcreate -f $dev1
     pvcreate -f $dev2
