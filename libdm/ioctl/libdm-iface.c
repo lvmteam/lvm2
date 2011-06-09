@@ -73,9 +73,9 @@ static unsigned _dm_version_minor = 0;
 static unsigned _dm_version_patchlevel = 0;
 static int _log_suppress = 0;
 
-static int _kernel_major;
-static int _kernel_minor;
-static int _kernel_release;
+static int _kernel_major = 0;
+static int _kernel_minor = 0;
+static int _kernel_release = 0;
 
 /*
  * If the kernel dm driver only supports one major number
@@ -152,6 +152,7 @@ static int _uname(void)
 {
 	static int _uts_set = 0;
 	struct utsname _uts;
+	int parts;
 
 	if (_uts_set)
 		return 1;
@@ -160,10 +161,14 @@ static int _uname(void)
 		log_error("uname failed: %s", strerror(errno));
 		return 0;
 	}
-	if (sscanf(_uts.release, "%d.%d.%d",
+
+	parts = sscanf(_uts.release, "%d.%d.%d",
 			&_kernel_major,
 			&_kernel_minor,
-			&_kernel_release) != 3) {
+			&_kernel_release);
+
+	/* Kernels with a major number of 2 always had 3 parts. */
+	if (parts < 1 || (_kernel_major < 3 && parts < 3)) {
 		log_error("Could not determine kernel version used.");
 		return 0;
 	}
