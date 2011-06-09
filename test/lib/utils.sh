@@ -162,8 +162,8 @@ kernel_at_least() {
     test $minor -lt $2 && return 1
     test -z "$3" && return 0
 
-    minor2=$(uname -r | cut -d. -f3)
-    test -z "$minor2" && return 0
+    minor2=$(uname -r | cut -d. -f3 | cut -d- -f1)
+    test -z "$minor2" -a $3 -ne 0 && return 1
     test $minor2 -ge $3 2>/dev/null && return 0
 
     return 1
