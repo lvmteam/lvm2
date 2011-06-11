@@ -1445,7 +1445,10 @@ const char *get_pvmove_pvname_from_lv_mirr(struct logical_volume *lv_mirr)
 	return NULL;
 }
 
-const char *get_pvmove_pvname_from_lv(struct logical_volume *lv)
+/*
+ * Find first pvmove LV referenced by a segment of an LV.
+ */
+struct logical_volume *find_pvmove_lv_in_lv(struct logical_volume *lv)
 {
 	struct lv_segment *seg;
 	uint32_t s;
@@ -1454,11 +1457,24 @@ const char *get_pvmove_pvname_from_lv(struct logical_volume *lv)
 		for (s = 0; s < seg->area_count; s++) {
 			if (seg_type(seg, s) != AREA_LV)
 				continue;
-			return get_pvmove_pvname_from_lv_mirr(seg_lv(seg, s));
+			if (seg_lv(seg, s)->status & PVMOVE)
+				return seg_lv(seg, s);
 		}
 	}
 
 	return NULL;
+}
+
+const char *get_pvmove_pvname_from_lv(struct logical_volume *lv)
+{
+	struct logical_volume *pvmove_lv;
+
+	pvmove_lv = find_pvmove_lv_in_lv(lv);
+
+	if (pvmove_lv)
+		return get_pvmove_pvname_from_lv_mirr(pvmove_lv);
+	else
+		return NULL;
 }
 
 struct logical_volume *find_pvmove_lv(struct volume_group *vg,

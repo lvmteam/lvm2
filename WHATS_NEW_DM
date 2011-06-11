@@ -1,6 +1,7 @@
 Version 1.02.65 - 
 ==================================
-  Accept new kernel version 3 formats in initialisation.
+  Delay resuming new preloaded mirror devices with core logs in deptree code.
+  Accept new kernel version 3 uname formats in initialisation.
 
 Version 1.02.64 - 29th April 2011
 ==================================

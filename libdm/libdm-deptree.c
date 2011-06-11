@@ -149,7 +149,16 @@ struct load_properties {
 	 * and processing of dm tree). This will also flush all stacked dev
 	 * node operations, synchronizing with udev.
 	 */
-	int immediate_dev_node;
+	unsigned immediate_dev_node;
+
+	/*
+	 * If the device size changed from zero and this is set,
+	 * don't resume the device immediately, even if the device
+	 * has parents.  This works provided the parents do not
+	 * validate the device size and is required by pvmove to
+	 * avoid starting the mirror resync operation too early.
+	 */
+	unsigned delay_resume_if_new;
 };
 
 /* Two of these used to join two nodes with uses and used_by. */
@@ -1795,7 +1804,7 @@ static int _load_node(struct dm_tree_node *dnode)
 	int r = 0;
 	struct dm_task *dmt;
 	struct load_segment *seg;
-	uint64_t seg_start = 0;
+	uint64_t seg_start = 0, existing_table_size;
 
 	log_verbose("Loading %s table (%" PRIu32 ":%" PRIu32 ")", dnode->name,
 		    dnode->info.major, dnode->info.minor);
@@ -1833,12 +1842,20 @@ static int _load_node(struct dm_tree_node *dnode)
 			log_verbose("Suppressed %s identical table reload.",
 				    dnode->name);
 
+		existing_table_size = dm_task_get_existing_table_size(dmt);
 		if ((dnode->props.size_changed =
-		     (dm_task_get_existing_table_size(dmt) == seg_start) ? 0 : 1))
+		     (existing_table_size == seg_start) ? 0 : 1)) {
 			log_debug("Table size changed from %" PRIu64 " to %"
-				  PRIu64 " for %s",
-				  dm_task_get_existing_table_size(dmt),
+				  PRIu64 " for %s", existing_table_size,
 				  seg_start, dnode->name);
+			/*
+			 * Kernel usually skips size validation on zero-length devices
+			 * now so no need to preload them.
+			 */
+			/* FIXME In which kernel version did this begin? */
+			if (!existing_table_size && dnode->props.delay_resume_if_new)
+				dnode->props.size_changed = 0;
+		}
 	}
 
 	dnode->props.segment_count = 0;
@@ -2181,7 +2198,10 @@ int dm_tree_node_add_mirror_target_log(struct dm_tree_node *node,
 			log_error("log uuid pool_strdup failed");
 			return 0;
 		}
-		if (!(flags & DM_CORELOG)) {
+		if ((flags & DM_CORELOG))
+			/* For pvmove: immediate resume (for size validation) isn't needed. */
+			node->props.delay_resume_if_new = 1;
+		else {
 			if (!(log_node = dm_tree_find_node_by_uuid(node->dtree, log_uuid))) {
 				log_error("Couldn't find mirror log uuid %s.", log_uuid);
 				return 0;

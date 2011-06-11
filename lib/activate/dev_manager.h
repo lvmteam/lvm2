@@ -29,7 +29,8 @@ struct device;
  * Constructor and destructor.
  */
 struct dev_manager *dev_manager_create(struct cmd_context *cmd,
-				       const char *vg_name);
+				       const char *vg_name,
+				       unsigned track_pvmove_deps);
 void dev_manager_destroy(struct dev_manager *dm);
 void dev_manager_release(void);
 void dev_manager_exit(void);

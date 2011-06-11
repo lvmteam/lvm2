@@ -395,19 +395,21 @@ static void _unlock_mem_if_possible(struct cmd_context *cmd)
 	}
 }
 
-void critical_section_inc(struct cmd_context *cmd)
+void critical_section_inc(struct cmd_context *cmd, const char *reason)
 {
 	++_critical_section_count;
-	log_debug("critical_section_inc to %d", _critical_section_count);
+	log_debug("critical_section_inc to %d (%s).", _critical_section_count,
+		  reason);
 	_lock_mem_if_needed(cmd);
 }
 
-void critical_section_dec(struct cmd_context *cmd)
+void critical_section_dec(struct cmd_context *cmd, const char *reason)
 {
 	if (!_critical_section_count)
 		log_error(INTERNAL_ERROR "_critical_section has dropped below 0.");
 	--_critical_section_count;
-	log_debug("critical_section_dec to %d", _critical_section_count);
+	log_debug("critical_section_dec to %d (%s).", _critical_section_count,
+		  reason);
 }
 
 int critical_section(void)

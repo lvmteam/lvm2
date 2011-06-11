@@ -384,9 +384,9 @@ static int do_activate_lv(char *resource, unsigned char lock_flags, int mode)
 		goto error;
 
 	if (lvi.suspended) {
-		critical_section_inc(cmd);
+		critical_section_inc(cmd, "resuming");
 		if (!lv_resume(cmd, resource, 0)) {
-			critical_section_dec(cmd);
+			critical_section_dec(cmd, "resumed");
 			goto error;
 		}
 	}

@@ -523,7 +523,7 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 	}
 
 	if (!arg_count(cmd, refresh_ARG) &&
-	    arg_count(cmd, poll_ARG))
+	    background_polling())
 		if (!_vgchange_background_polling(cmd, vg))
 			return ECMD_FAILED;
 

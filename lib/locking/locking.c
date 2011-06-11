@@ -167,7 +167,7 @@ static void _lock_memory(struct cmd_context *cmd, lv_operation_t lv_op)
 		return;
 
 	if (lv_op == LV_SUSPEND)
-		critical_section_inc(cmd);
+		critical_section_inc(cmd, "locking for suspend");
 }
 
 static void _unlock_memory(struct cmd_context *cmd, lv_operation_t lv_op)
@@ -176,7 +176,7 @@ static void _unlock_memory(struct cmd_context *cmd, lv_operation_t lv_op)
 		return;
 
 	if (lv_op == LV_RESUME)
-		critical_section_dec(cmd);
+		critical_section_dec(cmd, "unlocking on resume");
 }
 
 void reset_locking(void)
