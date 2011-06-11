@@ -2210,6 +2210,10 @@ int dm_tree_node_add_mirror_target_log(struct dm_tree_node *node,
 			if (clustered)
 				log_node->props.immediate_dev_node = 1;
 
+			/* The kernel validates the size of disk logs. */
+			/* FIXME Propagate to any devices below */
+			log_node->props.delay_resume_if_new = 0;
+
 			if (!_link_tree_nodes(node, log_node))
 				return_0;
 		}
