@@ -494,15 +494,19 @@ int replace_lv_with_error_segment(struct logical_volume *lv)
 {
 	uint32_t len = lv->le_count;
 
-	if (!lv_empty(lv))
+	if (len && !lv_empty(lv))
 		return_0;
+
+	/* Minimum size required for a table. */
+	if (!len)
+		len = 1;
 
 	/*
 	 * Since we are replacing the whatever-was-there with
 	 * an error segment, we should also clear any flags
 	 * that suggest it is anything other than "error".
 	 */
-	lv->status &= ~MIRRORED;
+	lv->status &= ~(MIRRORED|PVMOVE);
 
 	/* FIXME: Should we bug if we find a log_lv attached? */
 

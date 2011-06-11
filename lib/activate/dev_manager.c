@@ -49,6 +49,7 @@ struct dev_manager {
 	void *target_state;
 	uint32_t pvmove_mirror_count;
 	int flush_required;
+	unsigned track_pvmove_deps;
 
 	char *vg_name;
 };
@@ -640,7 +641,8 @@ int dev_manager_transient(struct dev_manager *dm, struct logical_volume *lv)
  * dev_manager implementation.
  */
 struct dev_manager *dev_manager_create(struct cmd_context *cmd,
-				       const char *vg_name)
+				       const char *vg_name,
+				       unsigned track_pvmove_deps)
 {
 	struct dm_pool *mem;
 	struct dev_manager *dm;
@@ -656,6 +658,12 @@ struct dev_manager *dev_manager_create(struct cmd_context *cmd,
 
 	if (!(dm->vg_name = dm_pool_strdup(dm->mem, vg_name)))
 		goto_bad;
+
+	/*
+	 * When we manipulate (normally suspend/resume) the PVMOVE
+	 * device directly, there's no need to touch the LVs above.
+	 */
+	dm->track_pvmove_deps = track_pvmove_deps;
 
 	dm->target_state = NULL;
 
@@ -1039,6 +1047,8 @@ static int _add_partial_replicator_to_dtree(struct dev_manager *dm,
  */
 static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree, struct logical_volume *lv, unsigned origin_only)
 {
+	struct seg_list *sl;
+
 	if (!origin_only && !_add_dev_to_dtree(dm, dtree, lv, NULL))
 		return_0;
 
@@ -1052,6 +1062,12 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree, struc
 	if ((lv->status & MIRRORED) && first_seg(lv)->log_lv &&
 	    !_add_dev_to_dtree(dm, dtree, first_seg(lv)->log_lv, NULL))
 		return_0;
+
+	/* Add any LVs referencing a PVMOVE LV unless told not to. */
+	if (dm->track_pvmove_deps && lv->status & PVMOVE)
+		dm_list_iterate_items(sl, &lv->segs_using_this_lv)
+			if (!_add_lv_to_dtree(dm, dtree, sl->seg->lv, origin_only))
+				return_0;
 
 	/* Adding LV head of replicator adds all other related devs */
 	if (lv_is_replicator_dev(lv) &&
@@ -1436,10 +1452,11 @@ static int _add_segment_to_dtree(struct dev_manager *dm,
 }
 
 static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
-				  struct logical_volume *lv, const char *layer)
+				struct logical_volume *lv, const char *layer)
 {
 	struct lv_segment *seg;
 	struct lv_layer *lvlayer;
+	struct seg_list *sl;
 	struct dm_tree_node *dnode;
 	const struct dm_info *dinfo;
 	char *name, *dlid;
@@ -1492,6 +1509,9 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	 * existing inactive table left behind.
 	 * Major/minor settings only apply to the visible layer.
 	 */
+	/* FIXME Move the clear from here until later, so we can leave
+	 * identical inactive tables untouched. (For pvmove.)
+	 */
 	if (!(dnode = dm_tree_add_new_dev_with_udev_flags(dtree, name, dlid,
 					     layer ? UINT32_C(0) : (uint32_t) lv->major,
 					     layer ? UINT32_C(0) : (uint32_t) lv->minor,
@@ -1527,6 +1547,12 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	}
 
 	dm_tree_node_set_read_ahead(dnode, read_ahead, read_ahead_flags);
+
+	/* Add any LVs referencing a PVMOVE LV unless told not to */
+	if (dm->track_pvmove_deps && (lv->status & PVMOVE))
+		dm_list_iterate_items(sl, &lv->segs_using_this_lv)
+			if (!_add_new_lv_to_dtree(dm, dtree, sl->seg->lv, NULL))
+				return_0;
 
 	return 1;
 }
@@ -1744,10 +1770,6 @@ int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv, unsi
 int dev_manager_preload(struct dev_manager *dm, struct logical_volume *lv,
 			unsigned origin_only, int *flush_required)
 {
-	/* FIXME Update the pvmove implementation! */
-	if ((lv->status & PVMOVE) || (lv->status & LOCKED))
-		return 1;
-
 	if (!_tree_action(dm, lv, origin_only, PRELOAD))
 		return 0;
 

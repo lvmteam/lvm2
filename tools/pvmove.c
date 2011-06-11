@@ -305,6 +305,51 @@ static int _detach_pvmove_mirror(struct cmd_context *cmd,
 	return 1;
 }
 
+static int _suspend_lvs(struct cmd_context *cmd, unsigned first_time,
+			struct logical_volume *lv_mirr,
+			struct dm_list *lvs_changed)
+{
+	/*
+	 * Suspend lvs_changed the first time.
+	 * Suspend mirrors on subsequent calls.
+	 */
+	if (first_time) {
+		if (!suspend_lvs(cmd, lvs_changed))
+			return_0;
+	} else if (!suspend_lv(cmd, lv_mirr))
+		return_0;
+
+	return 1;
+}
+
+static int _resume_lvs(struct cmd_context *cmd, unsigned first_time,
+		       struct logical_volume *lv_mirr,
+		       struct dm_list *lvs_changed)
+{
+	/*
+	 * Suspend lvs_changed the first time.
+	 * Suspend mirrors on subsequent calls.
+	 */
+
+	if (first_time) {
+		if (!resume_lvs(cmd, lvs_changed)) {
+			log_error("Unable to resume logical volumes");
+			return 0;
+		}
+	} else if (!resume_lv(cmd, lv_mirr)) {
+		log_error("Unable to reactivate logical volume \"%s\"",
+			  lv_mirr->name);
+		return 0;
+	}
+
+	return 1;
+}
+
+/*
+ * Called to set up initial pvmove LV and to advance the mirror
+ * to successive sections of it.
+ * (Not called after the last section completes.)
+ */
 static int _update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 			    struct logical_volume *lv_mirr,
 			    struct dm_list *lvs_changed, unsigned flags)
@@ -319,30 +364,14 @@ static int _update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 		return 0;
 	}
 
-	/* Suspend lvs_changed */
-	if (!suspend_lvs(cmd, lvs_changed)) {
+	if (!_suspend_lvs(cmd, first_time, lv_mirr, lvs_changed)) {
 		vg_revert(vg);
 		goto_out;
-	}
-
-	/* Suspend mirrors on subsequent calls */
-	if (!first_time) {
-		if (!suspend_lv(cmd, lv_mirr)) {
-			if (!resume_lvs(cmd, lvs_changed))
-				stack;
-			vg_revert(vg);
-			goto_out;
-		}
 	}
 
 	/* Commit on-disk metadata */
 	if (!vg_commit(vg)) {
 		log_error("ABORTING: Volume group metadata update failed.");
-		if (!first_time)
-			if (!resume_lv(cmd, lv_mirr))
-				stack;
-		if (!resume_lvs(cmd, lvs_changed))
-			stack;
 		vg_revert(vg);
 		goto out;
 	}
@@ -358,9 +387,6 @@ static int _update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 			}
 
 			/*
-			 * FIXME: review ordering of operations above,
-			 * temporary mirror should be preloaded in suspend.
-			 * Also banned operation here when suspended.
 			 * Nothing changed yet, try to revert pvmove.
 			 */
 			log_error("Temporary pvmove mirror activation failed.");
@@ -374,29 +400,16 @@ static int _update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 			    !vg_write(vg) || !vg_commit(vg))
 				log_error("ABORTING: Restoring original configuration "
 					  "before pvmove failed. Run pvmove --abort.");
-
-			/* Unsuspend LVs */
-			if(!resume_lvs(cmd, lvs_changed))
-				stack;
-
-			goto out;
+			goto_out;
 		}
-	} else if (!resume_lv(cmd, lv_mirr)) {
-		log_error("Unable to reactivate logical volume \"%s\"",
-			  lv_mirr->name);
-		if (!resume_lvs(cmd, lvs_changed))
-			stack;
-		goto out;
-	}
-
-	/* Unsuspend LVs */
-	if (!resume_lvs(cmd, lvs_changed)) {
-		log_error("Unable to resume logical volumes");
-		goto out;
 	}
 
 	r = 1;
+
 out:
+	if (!_resume_lvs(cmd, first_time, lv_mirr, lvs_changed))
+		r = 0;
+
 	backup(vg);
 	return r;
 }
@@ -524,7 +537,8 @@ static int _finish_pvmove(struct cmd_context *cmd, struct volume_group *vg,
 	int r = 1;
 
 	if (!dm_list_empty(lvs_changed) &&
-	    !_detach_pvmove_mirror(cmd, lv_mirr)) {
+	    (!_detach_pvmove_mirror(cmd, lv_mirr) ||
+	    !replace_lv_with_error_segment(lv_mirr))) {
 		log_error("ABORTING: Removal of temporary mirror failed");
 		return 0;
 	}
@@ -536,15 +550,9 @@ static int _finish_pvmove(struct cmd_context *cmd, struct volume_group *vg,
 		return 0;
 	}
 
-	/* Suspend LVs changed */
+	/* Suspend LVs changed (implicitly suspends lv_mirr) */
 	if (!suspend_lvs(cmd, lvs_changed)) {
 		log_error("Locking LVs to remove temporary mirror failed");
-		r = 0;
-	}
-
-	/* Suspend mirror LV to flush pending I/O */
-	if (!suspend_lv(cmd, lv_mirr)) {
-		log_error("Suspension of temporary mirror LV failed");
 		r = 0;
 	}
 

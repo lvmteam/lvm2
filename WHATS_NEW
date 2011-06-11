@@ -1,5 +1,8 @@
 Version 2.02.86 -  
 =================================
+  Fix ignored background polling default in vgchange -ay.
+  Fix pvmove activation sequences to avoid trapped I/O with multiple LVs.
+  Annotate critical section debug messages.
   Fix reduction of mirrors with striped segments to always align to stripe size.
   Validate mirror segments size.
   Fix extent rounding for striped volumes (never reduce more than requested).

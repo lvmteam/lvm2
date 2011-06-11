@@ -534,7 +534,7 @@ int lv_check_transient(struct logical_volume *lv)
 	if (!activation())
 		return 0;
 
-	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name)))
+	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
 		return_0;
 
 	if (!(r = dev_manager_transient(dm, lv)))
@@ -556,7 +556,7 @@ int lv_snapshot_percent(const struct logical_volume *lv, percent_t *percent)
 	if (!activation())
 		return 0;
 
-	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name)))
+	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
 		return_0;
 
 	if (!(r = dev_manager_snapshot_percent(dm, lv, percent)))
@@ -591,7 +591,7 @@ int lv_mirror_percent(struct cmd_context *cmd, const struct logical_volume *lv,
 	if (!info.exists)
 		return 0;
 
-	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name)))
+	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
 		return_0;
 
 	if (!(r = dev_manager_mirror_percent(dm, lv, wait, percent, event_nr)))
@@ -631,7 +631,7 @@ static int _lv_activate_lv(struct logical_volume *lv, unsigned origin_only)
 	int r;
 	struct dev_manager *dm;
 
-	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name)))
+	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, (lv->status & PVMOVE) ? 0 : 1)))
 		return_0;
 
 	if (!(r = dev_manager_activate(dm, lv, origin_only)))
@@ -646,7 +646,7 @@ static int _lv_preload(struct logical_volume *lv, unsigned origin_only, int *flu
 	int r;
 	struct dev_manager *dm;
 
-	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name)))
+	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, (lv->status & PVMOVE) ? 0 : 1)))
 		return_0;
 
 	if (!(r = dev_manager_preload(dm, lv, origin_only, flush_required)))
@@ -661,7 +661,7 @@ static int _lv_deactivate(struct logical_volume *lv)
 	int r;
 	struct dev_manager *dm;
 
-	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name)))
+	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
 		return_0;
 
 	if (!(r = dev_manager_deactivate(dm, lv)))
@@ -676,7 +676,11 @@ static int _lv_suspend_lv(struct logical_volume *lv, unsigned origin_only, int l
 	int r;
 	struct dev_manager *dm;
 
-	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name)))
+	/*
+	 * When we are asked to manipulate (normally suspend/resume) the PVMOVE
+	 * device directly, we don't want to touch the devices that use it.
+	 */
+	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, (lv->status & PVMOVE) ? 0 : 1)))
 		return_0;
 
 	if (!(r = dev_manager_suspend(dm, lv, origin_only, lockfs, flush_required)))
@@ -1080,7 +1084,9 @@ int monitor_dev_for_events(struct cmd_context *cmd, struct logical_volume *lv,
 static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 		       unsigned origin_only, int error_if_not_suspended)
 {
-	struct logical_volume *lv = NULL, *lv_pre = NULL;
+	struct logical_volume *lv = NULL, *lv_pre = NULL, *pvmove_lv = NULL;
+	struct lv_list *lvl_pre;
+	struct seg_list *sl;
 	struct lvinfo info;
 	int r = 0, lockfs = 0, flush_required = 0;
 
@@ -1111,7 +1117,7 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 		if (!error_if_not_suspended) {
 			r = 1;
 			if (info.suspended)
-				critical_section_inc(cmd);
+				critical_section_inc(cmd, "already suspended");
 		}
 		goto out;
 	}
@@ -1121,27 +1127,76 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 
 	lv_calculate_readahead(lv, NULL);
 
-	/* If VG was precommitted, preload devices for the LV */
+	/*
+	 * If VG was precommitted, preload devices for the LV.
+	 * If the PVMOVE LV is being removed, it's only present in the old
+	 * metadata and not the new, so we must explicitly add the new
+	 * tables for all the changed LVs here, as the relationships
+	 * are not found by walking the new metadata.
+	 */
 	if ((lv_pre->vg->status & PRECOMMITTED)) {
-		if (!_lv_preload(lv_pre, origin_only, &flush_required)) {
+		if (!(lv_pre->status & LOCKED) &&
+		    (lv->status & LOCKED) &&
+		    (pvmove_lv = find_pvmove_lv_in_lv(lv))) {
+			/* Preload all the LVs above the PVMOVE LV */
+			dm_list_iterate_items(sl, &pvmove_lv->segs_using_this_lv) {
+				if (!(lvl_pre = find_lv_in_vg(lv_pre->vg, sl->seg->lv->name))) {
+					/* FIXME Internal error? */
+					log_error("LV %s missing from preload metadata", sl->seg->lv->name);
+					goto out;
+				}
+				if (!_lv_preload(lvl_pre->lv, origin_only, &flush_required))
+					goto_out;
+			}
+			/* Now preload the PVMOVE LV itself */
+			if (!(lvl_pre = find_lv_in_vg(lv_pre->vg, pvmove_lv->name))) {
+				/* FIXME Internal error? */
+				log_error("LV %s missing from preload metadata", pvmove_lv->name);
+				goto out;
+			}
+			if (!_lv_preload(lvl_pre->lv, origin_only, &flush_required))
+				goto_out;
+		} else if (!_lv_preload(lv_pre, origin_only, &flush_required))
 			/* FIXME Revert preloading */
 			goto_out;
-		}
 	}
 
 	if (!monitor_dev_for_events(cmd, lv, origin_only, 0))
 		/* FIXME Consider aborting here */
 		stack;
 
-	critical_section_inc(cmd);
+	critical_section_inc(cmd, "suspending");
+	if (pvmove_lv)
+		critical_section_inc(cmd, "suspending pvmove LV");
 
 	if (!origin_only &&
 	    (lv_is_origin(lv_pre) || lv_is_cow(lv_pre)))
 		lockfs = 1;
 
-	if (!_lv_suspend_lv(lv, origin_only, lockfs, flush_required)) {
-		critical_section_dec(cmd);
-		goto out;
+	/*
+	 * Suspending an LV directly above a PVMOVE LV also
+ 	 * suspends other LVs using that same PVMOVE LV.
+	 * FIXME Remove this and delay the 'clear node' until
+ 	 * after the code knows whether there's a different
+ 	 * inactive table to load or not instead so lv_suspend
+ 	 * can be called separately for each LV safely.
+ 	 */
+	if ((lv_pre->vg->status & PRECOMMITTED) &&
+	    (lv_pre->status & LOCKED) && find_pvmove_lv_in_lv(lv_pre)) {
+		if (!_lv_suspend_lv(lv_pre, origin_only, lockfs, flush_required)) {
+			critical_section_dec(cmd, "failed precommitted suspend");
+			if (pvmove_lv)
+				critical_section_dec(cmd, "failed precommitted suspend (pvmove)");
+			goto_out;
+		}
+	} else {
+		/* Normal suspend */
+		if (!_lv_suspend_lv(lv, origin_only, lockfs, flush_required)) {
+			critical_section_dec(cmd, "failed suspend");
+			if (pvmove_lv)
+				critical_section_dec(cmd, "failed suspend (pvmove)");
+			goto_out;
+		}
 	}
 
 	r = 1;
@@ -1210,6 +1265,8 @@ static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
 		if (error_if_not_active)
 			goto_out;
 		r = 1;
+		if (!info.suspended)
+			critical_section_dec(cmd, "already resumed");
 		goto out;
 	}
 
@@ -1224,7 +1281,7 @@ static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
 	if (!_lv_activate_lv(lv, origin_only))
 		goto_out;
 
-	critical_section_dec(cmd);
+	critical_section_dec(cmd, "resumed");
 
 	if (!monitor_dev_for_events(cmd, lv, origin_only, 1))
 		stack;
@@ -1316,9 +1373,9 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s)
 	if (!monitor_dev_for_events(cmd, lv, 0, 0))
 		stack;
 
-	critical_section_inc(cmd);
+	critical_section_inc(cmd, "deactivating");
 	r = _lv_deactivate(lv);
-	critical_section_dec(cmd);
+	critical_section_dec(cmd, "deactivated");
 
 	if (!lv_info(cmd, lv, 0, &info, 0, 0) || info.exists)
 		r = 0;
@@ -1413,10 +1470,10 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 	if (exclusive)
 		lv->status |= ACTIVATE_EXCL;
 
-	critical_section_inc(cmd);
+	critical_section_inc(cmd, "activating");
 	if (!(r = _lv_activate_lv(lv, 0)))
 		stack;
-	critical_section_dec(cmd);
+	critical_section_dec(cmd, "activated");
 
 	if (r && !monitor_dev_for_events(cmd, lv, 0, 1))
 		stack;
