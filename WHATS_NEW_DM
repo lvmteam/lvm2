@@ -1,5 +1,6 @@
 Version 1.02.65 - 
 ==================================
+  Fix "all" report field prefix matching to include label fields with pv_all.
   Delay resuming new preloaded mirror devices with core logs in deptree code.
   Accept new kernel version 3 uname formats in initialisation.
 

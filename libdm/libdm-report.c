@@ -367,33 +367,32 @@ static uint32_t _all_match(struct dm_report *rh, const char *field, size_t flen)
 {
 	size_t prefix_len;
 	const struct dm_report_object_type *t;
-	char prefixed_all[32];
+	uint32_t report_types = 0;
+	unsigned unprefixed_all_matched = 0;
 
 	if (!strncasecmp(field, "all", 3) && flen == 3) {
-		if (strlen(rh->field_prefix)) {
-			strcpy(prefixed_all, rh->field_prefix);
-			strcat(prefixed_all, "all");
-			/*
-			 * Add also prefix to receive all attributes
-			 * (e.g.LABEL/PVS use the same prefix)
-			 */
-			return rh->report_types |
-			       _all_match(rh, prefixed_all,
-					  strlen(prefixed_all));
-		} else
-			return (rh->report_types)
-				? rh->report_types : REPORT_TYPES_ALL;
+		/* If there's no report prefix, match all report types */
+		if (!(flen = strlen(rh->field_prefix)))
+			return rh->report_types ? : REPORT_TYPES_ALL;
+
+		/* otherwise include all fields beginning with the report prefix. */
+		unprefixed_all_matched = 1;
+		field = rh->field_prefix;
+		report_types = rh->report_types;
 	}
 
+	/* Combine all report types that have a matching prefix. */
 	for (t = rh->types; t->data_fn; t++) {
 		prefix_len = strlen(t->prefix);
+
 		if (!strncasecmp(t->prefix, field, prefix_len) &&
-		    !strncasecmp(field + prefix_len, "all", 3) &&
-		    flen == prefix_len + 3)
-			return t->id;
+		    ((unprefixed_all_matched && (flen == prefix_len)) ||
+		     (!strncasecmp(field + prefix_len, "all", 3) &&
+		      (flen == prefix_len + 3))))
+			report_types |= t->id;
 	}
 
-	return 0;
+	return report_types;
 }
 
 /*
