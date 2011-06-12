@@ -405,8 +405,9 @@ void critical_section_inc(struct cmd_context *cmd, const char *reason)
 
 void critical_section_dec(struct cmd_context *cmd, const char *reason)
 {
+	/* FIXME Maintain accurate suspended device counter in libdevmapper */
 	if (!_critical_section_count)
-		log_error(INTERNAL_ERROR "_critical_section has dropped below 0.");
+		log_debug("_critical_section has dropped below 0.");
 	--_critical_section_count;
 	log_debug("critical_section_dec to %d (%s).", _critical_section_count,
 		  reason);
