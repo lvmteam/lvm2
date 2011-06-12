@@ -1,5 +1,6 @@
 Version 2.02.86 -  
 =================================
+  Downgrade critical_section errors to debug level until it is moved to libdm.
   Fix ignored background polling default in vgchange -ay.
   Fix pvmove activation sequences to avoid trapped I/O with multiple LVs.
   Annotate critical section debug messages.
