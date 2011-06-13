@@ -74,6 +74,11 @@ void dm_log_init(dm_log_fn fn);
  */
 int dm_log_is_non_default(void);
 
+/*
+ * Number of devices currently in suspended state (via the library).
+ */
+int dm_get_suspended_counter(void);
+
 enum {
 	DM_DEVICE_CREATE,
 	DM_DEVICE_RELOAD,

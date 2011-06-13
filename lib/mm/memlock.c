@@ -75,7 +75,7 @@ static size_t _size_malloc = 2000000;
 
 static void *_malloc_mem = NULL;
 static int _mem_locked = 0;
-static int _critical_section_count = 0;
+static int _critical_section = 0;
 static int _memlock_count_daemon = 0;
 static int _priority;
 static int _default_priority;
@@ -374,10 +374,10 @@ static void _unlock_mem(struct cmd_context *cmd)
 
 static void _lock_mem_if_needed(struct cmd_context *cmd)
 {
-	log_debug("Lock: Memlock counters: locked:%d critical:%d daemon:%d",
-		  _mem_locked, _critical_section_count, _memlock_count_daemon);
+	log_debug("Lock:   Memlock counters: locked:%d critical:%d daemon:%d suspended:%d",
+		  _mem_locked, _critical_section, _memlock_count_daemon, dm_get_suspended_counter());
 	if (!_mem_locked &&
-	    ((_critical_section_count + _memlock_count_daemon) == 1)) {
+	    ((_critical_section + _memlock_count_daemon) == 1)) {
 		_mem_locked = 1;
 		_lock_mem(cmd);
 	}
@@ -385,10 +385,10 @@ static void _lock_mem_if_needed(struct cmd_context *cmd)
 
 static void _unlock_mem_if_possible(struct cmd_context *cmd)
 {
-	log_debug("Unlock: Memlock counters: locked:%d critical:%d daemon:%d",
-		  _mem_locked, _critical_section_count, _memlock_count_daemon);
+	log_debug("Unlock: Memlock counters: locked:%d critical:%d daemon:%d suspended:%d",
+		  _mem_locked, _critical_section, _memlock_count_daemon, dm_get_suspended_counter());
 	if (_mem_locked &&
-	    !_critical_section_count &&
+	    !_critical_section &&
 	    !_memlock_count_daemon) {
 		_unlock_mem(cmd);
 		_mem_locked = 0;
@@ -397,25 +397,25 @@ static void _unlock_mem_if_possible(struct cmd_context *cmd)
 
 void critical_section_inc(struct cmd_context *cmd, const char *reason)
 {
-	++_critical_section_count;
-	log_debug("critical_section_inc to %d (%s).", _critical_section_count,
-		  reason);
+	if (!_critical_section) {
+		_critical_section = 1;
+		log_debug("Entering critical section (%s).", reason);
+	}
+
 	_lock_mem_if_needed(cmd);
 }
 
 void critical_section_dec(struct cmd_context *cmd, const char *reason)
 {
-	/* FIXME Maintain accurate suspended device counter in libdevmapper */
-	if (!_critical_section_count)
-		log_debug("_critical_section has dropped below 0.");
-	--_critical_section_count;
-	log_debug("critical_section_dec to %d (%s).", _critical_section_count,
-		  reason);
+	if (_critical_section && !dm_get_suspended_counter()) {
+		_critical_section = 0;
+		log_debug("Leaving critical section (%s).", reason);
+	}
 }
 
 int critical_section(void)
 {
-	return _critical_section_count;
+	return _critical_section;
 }
 
 /*
@@ -428,7 +428,7 @@ int critical_section(void)
 void memlock_inc_daemon(struct cmd_context *cmd)
 {
 	++_memlock_count_daemon;
-	if (_memlock_count_daemon == 1 && _critical_section_count > 0)
+	if (_memlock_count_daemon == 1 && _critical_section > 0)
                 log_error(INTERNAL_ERROR "_memlock_inc_daemon used in critical section.");
 	log_debug("memlock_count_daemon inc to %d", _memlock_count_daemon);
 	_lock_mem_if_needed(cmd);
@@ -460,7 +460,7 @@ void memlock_reset(void)
 {
 	log_debug("memlock reset.");
 	_mem_locked = 0;
-	_critical_section_count = 0;
+	_critical_section = 0;
 	_memlock_count_daemon = 0;
 }
 

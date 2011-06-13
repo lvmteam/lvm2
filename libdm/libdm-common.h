@@ -33,4 +33,7 @@ int set_dev_node_read_ahead(const char *dev_name, uint32_t read_ahead,
 void update_devs(void);
 void selinux_release(void);
 
+void inc_suspended(void);
+void dec_suspended(void);
+
 #endif
