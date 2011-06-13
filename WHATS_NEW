@@ -1,5 +1,6 @@
 Version 2.02.86 -  
 =================================
+  Fix last snapshot removal to avoid table reload while a device is suspended.
   Use dm_get_suspended_counter in replacement critical_section logic.
   Downgrade critical_section errors to debug level until it is moved to libdm.
   Fix ignored background polling default in vgchange -ay.
