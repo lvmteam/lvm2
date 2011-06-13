@@ -534,6 +534,8 @@ int lv_check_transient(struct logical_volume *lv)
 	if (!activation())
 		return 0;
 
+	log_debug("Checking transient status for LV %s/%s", lv->vg->name, lv->name);
+
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
 		return_0;
 
@@ -555,6 +557,8 @@ int lv_snapshot_percent(const struct logical_volume *lv, percent_t *percent)
 
 	if (!activation())
 		return 0;
+
+	log_debug("Checking snapshot percent for LV %s/%s", lv->vg->name, lv->name);
 
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
 		return_0;
@@ -584,6 +588,8 @@ int lv_mirror_percent(struct cmd_context *cmd, const struct logical_volume *lv,
 
 	if (!activation())
 		return 0;
+
+	log_debug("Checking mirror percent for LV %s/%s", lv->vg->name, lv->name);
 
 	if (!lv_info(cmd, lv, 0, &info, 0, 0))
 		return_0;
@@ -692,7 +698,7 @@ static int _lv_suspend_lv(struct logical_volume *lv, unsigned origin_only, int l
 
 /*
  * These two functions return the number of visible LVs in the state,
- * or -1 on error.
+ * or -1 on error.  FIXME Check this.
  */
 int lvs_in_vg_activated(struct volume_group *vg)
 {
@@ -702,10 +708,11 @@ int lvs_in_vg_activated(struct volume_group *vg)
 	if (!activation())
 		return 0;
 
-	dm_list_iterate_items(lvl, &vg->lvs) {
+	dm_list_iterate_items(lvl, &vg->lvs)
 		if (lv_is_visible(lvl->lv))
 			count += (_lv_active(vg->cmd, lvl->lv) == 1);
-	}
+
+	log_debug("Counted %d active LVs in VG %s", count, vg->name);
 
 	return count;
 }
@@ -718,10 +725,11 @@ int lvs_in_vg_opened(const struct volume_group *vg)
 	if (!activation())
 		return 0;
 
-	dm_list_iterate_items(lvl, &vg->lvs) {
+	dm_list_iterate_items(lvl, &vg->lvs)
 		if (lv_is_visible(lvl->lv))
 			count += (_lv_open_count(vg->cmd, lvl->lv) > 0);
-	}
+
+	log_debug("Counted %d open LVs in VG %s", count, vg->name);
 
 	return count;
 }
@@ -822,12 +830,14 @@ int lv_is_active_locally(struct logical_volume *lv)
 int lv_is_active_exclusive_locally(struct logical_volume *lv)
 {
 	int l, e;
+
 	return _lv_is_active(lv, &l, &e) && l && e;
 }
 
 int lv_is_active_exclusive_remotely(struct logical_volume *lv)
 {
 	int l, e;
+
 	return _lv_is_active(lv, &l, &e) && !l && e;
 }
 
@@ -1258,6 +1268,10 @@ static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
 		goto out;
 	}
 
+	log_debug("Resuming LV %s/%s%s%s.", lv->vg->name, lv->name,
+		  error_if_not_active ? "" : " if active",
+		  origin_only ? " without snapshots" : "");
+
 	if (!lv_info(cmd, lv, origin_only, &info, 0, 0))
 		goto_out;
 
@@ -1346,6 +1360,8 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s)
 		r = 1;
 		goto out;
 	}
+
+	log_debug("Deactivating %s/%s.", lv->vg->name, lv->name);
 
 	if (!lv_info(cmd, lv, 0, &info, 1, 0))
 		goto_out;
@@ -1453,6 +1469,8 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 		r = 1;
 		goto out;
 	}
+
+	log_debug("Activating %s/%s%s.", lv->vg->name, lv->name, exclusive ? " exclusively" : "");
 
 	if (!lv_info(cmd, lv, 0, &info, 0, 0))
 		goto_out;

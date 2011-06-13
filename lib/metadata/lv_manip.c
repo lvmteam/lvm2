@@ -2677,6 +2677,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	struct lvinfo info;
 	struct logical_volume *origin = NULL;
 	int was_merging = 0;
+	int reload_required = 0;
 
 	vg = lv->vg;
 
@@ -2738,6 +2739,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 			return_0;
 	}
 
+	/* FIXME Review and fix the snapshot error paths! */
 	if (!deactivate_lv(cmd, lv)) {
 		log_error("Unable to deactivate logical volume \"%s\"",
 			  lv->name);
@@ -2750,20 +2752,24 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return 0;
 	}
 
+	/* If no snapshots left, and was not merging, reload without -real. */
+	if (origin && (!lv_is_origin(origin) && !was_merging))
+		reload_required = 1;
+
 	/* store it on disks */
-	if (!vg_write(vg) || !vg_commit(vg))
+	if (!vg_write(vg))
 		return_0;
 
-	/* If no snapshots left, and was not merging, reload without -real. */
-	if (origin && (!lv_is_origin(origin) && !was_merging)) {
-		if (!suspend_lv(cmd, origin)) {
-			log_error("Failed to refresh %s without snapshot.", origin->name);
-			return 0;
-		}
-		if (!resume_lv(cmd, origin)) {
-			log_error("Failed to resume %s.", origin->name);
-			return 0;
-		}
+	if (reload_required && !suspend_lv(cmd, origin))
+		log_error("Failed to refresh %s without snapshot.", origin->name);
+		/* FIXME Falls through because first part of change already in kernel! */
+
+	if (!vg_commit(vg))
+		return_0;
+
+	if (reload_required && !resume_lv(cmd, origin)) {
+		log_error("Failed to resume %s.", origin->name);
+		return 0;
 	}
 
 	backup(vg);
