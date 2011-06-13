@@ -2026,6 +2026,7 @@ int dm_task_run(struct dm_task *dmt)
 	unsigned command;
 	int check_udev;
 	int udev_only;
+	int suspended_counter;
 
 #ifdef DM_COMPAT
 	if (_dm_version == 1)
@@ -2056,6 +2057,22 @@ int dm_task_run(struct dm_task *dmt)
 		_udev_complete(dmt);
 		return 0;
 	}
+
+	if ((suspended_counter = dm_get_suspended_counter()) &&
+	    dmt->type == DM_DEVICE_RELOAD)
+		log_error("Performing unsafe table load while %d device(s) "
+			  "are known to be suspended: "
+			  "%s%s %s %s%.0d%s%.0d%s%s",
+			  suspended_counter,
+	                  dmt->new_uuid ? "UUID " : "",
+	                  dmi->name,
+			  dmi->uuid,
+	                  dmt->major > 0 ? "(" : "",
+	                  dmt->major > 0 ? dmt->major : 0,
+	                  dmt->major > 0 ? ":" : "",
+	                  dmt->minor > 0 ? dmt->minor : 0,
+	                  dmt->major > 0 && dmt->minor == 0 ? "0" : "",
+	                  dmt->major > 0 ? ") " : "");
 
 	/* FIXME Detect and warn if cookie set but should not be. */
 repeat_ioctl:

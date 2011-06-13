@@ -60,6 +60,7 @@ union semun
 static char _dm_dir[PATH_MAX] = DEV_DIR DM_DIR;
 
 static int _verbose = 0;
+static int _suspended_dev_counter = 0;
 
 #ifdef HAVE_SELINUX_LABEL_H
 static struct selabel_handle *_selabel_handle = NULL;
@@ -171,6 +172,28 @@ int dm_get_library_version(char *version, size_t size)
 {
 	strncpy(version, DM_LIB_VERSION, size);
 	return 1;
+}
+
+void inc_suspended(void)
+{
+	_suspended_dev_counter++;
+	log_debug("Suspended device counter increased to %d", _suspended_dev_counter);
+}
+
+void dec_suspended(void)
+{
+	if (!_suspended_dev_counter) {
+		log_error("Attempted to decrement suspended device counter below zero.");
+		return;
+	}
+
+	_suspended_dev_counter--;
+	log_debug("Suspended device counter reduced to %d", _suspended_dev_counter);
+}
+
+int dm_get_suspended_counter(void)
+{
+	return _suspended_dev_counter;
 }
 
 struct dm_task *dm_task_create(int type)

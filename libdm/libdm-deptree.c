@@ -1034,7 +1034,7 @@ out:
 static int _resume_node(const char *name, uint32_t major, uint32_t minor,
 			uint32_t read_ahead, uint32_t read_ahead_flags,
 			struct dm_info *newinfo, uint32_t *cookie,
-			uint16_t udev_flags)
+			uint16_t udev_flags, int already_suspended)
 {
 	struct dm_task *dmt;
 	int r = 0;
@@ -1066,8 +1066,11 @@ static int _resume_node(const char *name, uint32_t major, uint32_t minor,
 	if (!dm_task_set_cookie(dmt, cookie, udev_flags))
 		goto out;
 
-	if ((r = dm_task_run(dmt)))
+	if ((r = dm_task_run(dmt))) {
+		if (already_suspended)
+			dec_suspended();
 		r = dm_task_get_info(dmt, newinfo);
+	}
 
 out:
 	dm_task_destroy(dmt);
@@ -1106,8 +1109,10 @@ static int _suspend_node(const char *name, uint32_t major, uint32_t minor,
 	if (no_flush && !dm_task_no_flush(dmt))
 		log_error("Failed to set no_flush flag.");
 
-	if ((r = dm_task_run(dmt)))
+	if ((r = dm_task_run(dmt))) {
+		inc_suspended();
 		r = dm_task_get_info(dmt, newinfo);
+	}
 
 	dm_task_destroy(dmt);
 
@@ -1352,7 +1357,7 @@ int dm_tree_activate_children(struct dm_tree_node *dnode,
 
 			if (!_resume_node(child->name, child->info.major, child->info.minor,
 					  child->props.read_ahead, child->props.read_ahead_flags,
-					  &newinfo, &child->dtree->cookie, child->udev_flags)) {
+					  &newinfo, &child->dtree->cookie, child->udev_flags, child->info.suspended)) {
 				log_error("Unable to resume %s (%" PRIu32
 					  ":%" PRIu32 ")", child->name, child->info.major,
 					  child->info.minor);
@@ -1919,7 +1924,8 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 
 		if (!_resume_node(child->name, child->info.major, child->info.minor,
 				  child->props.read_ahead, child->props.read_ahead_flags,
-				  &newinfo, &child->dtree->cookie, child->udev_flags)) {
+				  &newinfo, &child->dtree->cookie, child->udev_flags,
+				  child->info.suspended)) {
 			log_error("Unable to resume %s (%" PRIu32
 				  ":%" PRIu32 ")", child->name, child->info.major,
 				  child->info.minor);
