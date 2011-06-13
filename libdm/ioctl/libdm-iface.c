@@ -2062,11 +2062,11 @@ int dm_task_run(struct dm_task *dmt)
 	    dmt->type == DM_DEVICE_RELOAD)
 		log_error("Performing unsafe table load while %d device(s) "
 			  "are known to be suspended: "
-			  "%s%s %s %s%.0d%s%.0d%s%s",
+			  "%s%s%s %s%.0d%s%.0d%s%s",
 			  suspended_counter,
-	                  dmt->new_uuid ? "UUID " : "",
-	                  dmi->name,
-			  dmi->uuid,
+	                  dmt->dev_name ? : "",
+	                  dmt->uuid ? " UUID " : "",
+			  dmt->uuid ? : "",
 	                  dmt->major > 0 ? "(" : "",
 	                  dmt->major > 0 ? dmt->major : 0,
 	                  dmt->major > 0 ? ":" : "",
