@@ -16,6 +16,7 @@
 #define _LVM_LVMETAD_CLIENT_H
 
 #include "daemon-client.h"
+#include "metadata-exported.h"
 
 /* Different types of replies we may get from lvmetad. */
 
