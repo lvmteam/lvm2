@@ -107,8 +107,9 @@ static int _open_socket(daemon_state s)
 		fprintf(stderr, "setting CLOEXEC on socket fd %d failed: %s\n", fd, strerror(errno));
 	fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) | O_NONBLOCK);
 
+	fprintf(stderr, "creating %s\n", s.socket_path);
 	memset(&sockaddr, 0, sizeof(sockaddr));
-	memcpy(sockaddr.sun_path, s.socket_path, strlen(s.socket_path));
+	strcpy(sockaddr.sun_path, s.socket_path);
 	sockaddr.sun_family = AF_UNIX;
 
 	if (bind(fd, (struct sockaddr *) &sockaddr, sizeof(sockaddr))) {
@@ -128,6 +129,7 @@ out:
 error:
 	if (fd >= 0) {
 		close(fd);
+		unlink(s.socket_path);
 		fd = -1;
 	}
 	goto out;
@@ -198,6 +200,60 @@ static void _daemonise(void)
 	setsid();
 }
 
+struct thread_baton {
+	daemon_state s;
+	client_handle client;
+};
+
+void *client_thread(void *baton)
+{
+	struct thread_baton *b = baton;
+	request req;
+	while (1) {
+		if (!read_buffer(b->client.socket_fd, &req.buffer))
+			goto fail;
+
+		/* TODO parse the buffer into req.cft */
+		response res = b->s.handler(b->s, b->client, req);
+
+		if (!res.buffer) {
+			/* TODO fill in the buffer from res.cft */
+		}
+
+		write_buffer(b->client.socket_fd, res.buffer, strlen(res.buffer));
+
+		free(res.buffer);
+		free(req.buffer);
+	}
+fail:
+	/* TODO what should we really do here? */
+	return NULL;
+}
+
+int handle_connect(daemon_state s)
+{
+	struct sockaddr_un sockaddr;
+	client_handle client;
+	socklen_t sl = sizeof(sockaddr);
+	int client_fd = accept(s.socket_fd, (struct sockaddr *) &sockaddr, &sl);
+	if (client_fd < 0)
+		return 0;
+
+	struct thread_baton *baton = malloc(sizeof(struct thread_baton));
+	if (!baton)
+		return 0;
+
+	client.socket_fd = client_fd;
+	client.read_buf = 0;
+	client.private = 0;
+	baton->s = s;
+	baton->client = client;
+
+	if (pthread_create(&baton->client.thread_id, NULL, client_thread, baton))
+		return 0;
+	return 1;
+}
+
 void daemon_start(daemon_state s)
 {
 	int failed = 0;
@@ -230,6 +286,8 @@ void daemon_start(daemon_state s)
 	signal(SIGINT, &_exit_handler);
 	signal(SIGHUP, &_exit_handler);
 	signal(SIGQUIT, &_exit_handler);
+	signal(SIGTERM, &_exit_handler);
+	signal(SIGPIPE, SIG_IGN);
 
 #ifdef linux
 	if (s.avoid_oom && !_set_oom_adj(OOM_DISABLE) && !_set_oom_adj(OOM_ADJUST_MIN))
@@ -247,8 +305,19 @@ void daemon_start(daemon_state s)
 		kill(getppid(), SIGTERM);
 
 	while (!_shutdown_requested && !failed) {
-		/* TODO: do work */
+		int status;
+		fd_set in;
+		FD_ZERO(&in);
+		FD_SET(s.socket_fd, &in);
+		if (select(FD_SETSIZE, &in, NULL, NULL, NULL) < 0 && errno != EINTR)
+			perror("select error");
+		if (FD_ISSET(s.socket_fd, &in))
+			if (!handle_connect(s))
+				syslog(LOG_ERR, "Failed to handle a client connection.");
 	}
+
+	if (s.socket_fd >= 0)
+		unlink(s.socket_path);
 
 	syslog(LOG_NOTICE, "%s shutting down", s.name);
 	closelog();

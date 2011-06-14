@@ -13,6 +13,7 @@
  */
 
 #include "daemon-client.h"
+#include "config.h" // XXX will be in libdevmapper.h later
 
 #ifndef _LVM_DAEMON_COMMON_SERVER_H
 #define _LVM_DAEMON_COMMON_SERVER_H
@@ -25,12 +26,14 @@ typedef struct {
 } client_handle;
 
 typedef struct {
-	struct config_tree *cft;
+	struct config_node *cft;
+	char *buffer;
 } request;
 
 typedef struct {
 	int error;
-	struct config_tree *cft;
+	struct config_node *cft;
+	char *buffer;
 } response;
 
 struct daemon_state;
