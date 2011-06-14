@@ -12,6 +12,8 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include "config.h" // should become part of libdevmapper later
+
 #ifndef _LVM_DAEMON_COMMON_CLIENT_H
 #define _LVM_DAEMON_COMMON_CLIENT_H
 
@@ -28,13 +30,14 @@ typedef struct {
 } daemon_info;
 
 typedef struct {
-	char *request;
+	char *buffer;
+	struct config_node *cft;
 } daemon_request;
 
 typedef struct {
 	int error; /* 0 for success */
-	char *reply; /* textual reply */
-	struct config_tree *cft; /* parsed reply, if available */
+	char *buffer; /* textual reply */
+	struct config_node *cft; /* parsed reply, if available */
 } daemon_reply;
 
 /*
