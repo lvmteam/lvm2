@@ -127,6 +127,12 @@ static unsigned _mda_locns_match_raw(struct metadata_area *mda1,
 	return 0;
 }
 
+static struct device *_mda_get_device_raw(struct metadata_area *mda)
+{
+	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
+	return mdac->area.dev;
+}
+
 /*
  * For circular region between region_start and region_start + region_size,
  * back up one SECTOR_SIZE from 'region_ptr' and return the value.
@@ -1629,7 +1635,8 @@ static struct metadata_area_ops _metadata_text_raw_ops = {
 	.mda_total_sectors = _mda_total_sectors_raw,
 	.mda_in_vg = _mda_in_vg_raw,
 	.pv_analyze_mda = _pv_analyze_mda_raw,
-	.mda_locns_match = _mda_locns_match_raw
+	.mda_locns_match = _mda_locns_match_raw,
+	.mda_get_device = _mda_get_device_raw
 };
 
 static int _text_pv_setup(const struct format_type *fmt,

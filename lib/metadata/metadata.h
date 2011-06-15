@@ -175,9 +175,12 @@ struct metadata_area_ops {
 	 */
 	unsigned (*mda_locns_match)(struct metadata_area *mda1,
 				    struct metadata_area *mda2);
+
+	struct device *(*mda_get_device)(struct metadata_area *mda);
 };
 
-#define MDA_IGNORED 0x00000001
+#define MDA_IGNORED      0x00000001
+#define MDA_INCONSISTENT 0x00000002
 
 struct metadata_area {
 	struct dm_list list;
@@ -191,6 +194,7 @@ struct metadata_area *mda_copy(struct dm_pool *mem,
 unsigned mda_is_ignored(struct metadata_area *mda);
 void mda_set_ignored(struct metadata_area *mda, unsigned ignored);
 unsigned mda_locns_match(struct metadata_area *mda1, struct metadata_area *mda2);
+struct device *mda_get_device(struct metadata_area *mda);
 
 struct format_instance_ctx {
 	uint32_t type;

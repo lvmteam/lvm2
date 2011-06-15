@@ -19,9 +19,9 @@ lvchange --monitor y $vg/4way
 aux disable_dev $dev2 $dev4
 mkfs.ext3 $DM_DEV_DIR/$vg/4way
 aux enable_dev $dev2 $dev4
-sleep 10
+sleep 3
 lvs -a -o +devices | not grep unknown
 check mirror $vg 4way
 check mirror_legs $vg 4way 2
-lvs -a -o +devices | should not grep mimage_1
-lvs -a -o +devices | should not grep mimage_3
+lvs -a -o +devices | not grep mimage_1
+lvs -a -o +devices | not grep mimage_3
