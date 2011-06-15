@@ -2837,6 +2837,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	int inconsistent_pvs = 0;
 	int inconsistent_seqno = 0;
 	int inconsistent_mdas = 0;
+	int inconsistent_mda_count = 0;
 	unsigned use_precommitted = precommitted;
 	unsigned saved_handles_missing_pvs = cmd->handles_missing_pvs;
 	struct dm_list *pvids;
@@ -2913,6 +2914,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		return_NULL;
 
 	/* Ensure contents of all metadata areas match - else do recovery */
+	inconsistent_mda_count=0;
 	dm_list_iterate_items(mda, &fid->metadata_areas_in_use) {
 		if ((use_precommitted &&
 		     !(vg = mda->ops->vg_read_precommit(fid, vgname, mda))) ||
@@ -2922,6 +2924,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 			free_vg(vg);
 			continue;
 		}
+
 		if (!correct_vg) {
 			correct_vg = vg;
 			continue;
@@ -2940,6 +2943,9 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 			if (vg->seqno > correct_vg->seqno) {
 				free_vg(correct_vg);
 				correct_vg = vg;
+			} else {
+				mda->status |= MDA_INCONSISTENT;
+				++inconsistent_mda_count;
 			}
 		}
 
@@ -3067,6 +3073,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		}
 
 		/* Ensure contents of all metadata areas match - else recover */
+		inconsistent_mda_count=0;
 		dm_list_iterate_items(mda, &fid->metadata_areas_in_use) {
 			if ((use_precommitted &&
 			     !(vg = mda->ops->vg_read_precommit(fid, vgname,
@@ -3111,6 +3118,9 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 				if (vg->seqno > correct_vg->seqno) {
 					free_vg(correct_vg);
 					correct_vg = vg;
+				} else {
+					mda->status |= MDA_INCONSISTENT;
+					++inconsistent_mda_count;
 				}
 			}
 
@@ -3137,13 +3147,26 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		if (use_precommitted) {
 			log_error("Inconsistent pre-commit metadata copies "
 				  "for volume group %s", vgname);
-			/* FIXME: during repair, there is inconsistent flag set because some metadata areas
-			 * are missing (on missing PVs). Code should create list of missing PVs, compare it
-			 * with PV marked missing in metadata and if equals, use it as consistent vg.
-			 * For now, return precommited metadata if remainng seq match here to allow
-			 * preloading table in suspend call.
+
+			/*
+			 * Check whether all of the inconsistent MDAs were on
+			 * MISSING PVs -- in that case, we should be safe.
 			 */
-			if (!inconsistent_seqno) {
+			dm_list_iterate_items(mda, &fid->metadata_areas_in_use) {
+				if (mda->status & MDA_INCONSISTENT) {
+					log_debug("Checking inconsistent MDA: %s", dev_name(mda_get_device(mda)));
+					dm_list_iterate_items(pvl, &correct_vg->pvs) {
+						if (mda_get_device(mda) == pvl->pv->dev &&
+						    (pvl->pv->status & MISSING_PV))
+							--inconsistent_mda_count;
+					}
+				}
+			}
+
+			if (inconsistent_mda_count < 0)
+				log_error(INTERNAL_ERROR "Too many inconsistent MDAs.");
+
+			if (!inconsistent_mda_count) {
 				*consistent = 0;
 				_free_pv_list(&all_pvs);
 				return correct_vg;
@@ -4283,6 +4306,13 @@ unsigned mda_locns_match(struct metadata_area *mda1, struct metadata_area *mda2)
 		return 0;
 
 	return mda1->ops->mda_locns_match(mda1, mda2);
+}
+
+struct device *mda_get_device(struct metadata_area *mda)
+{
+	if (!mda->ops->mda_get_device)
+		return NULL;
+	return mda->ops->mda_get_device(mda);
 }
 
 unsigned mda_is_ignored(struct metadata_area *mda)
