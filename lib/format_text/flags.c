@@ -62,7 +62,6 @@ static const struct flag _lv_flags[] = {
 	{VIRTUAL, NULL, 0},
 	{SNAPSHOT, NULL, 0},
 	{MERGING, NULL, 0},
-	{ACTIVATE_EXCL, NULL, 0},
 	{CONVERTING, NULL, 0},
 	{PARTIAL_LV, NULL, 0},
 	{POSTORDER_FLAG, NULL, 0},

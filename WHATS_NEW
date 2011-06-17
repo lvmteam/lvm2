@@ -1,5 +1,6 @@
 Version 2.02.86 -  
 =================================
+  Remove unused internal flag ACTIVATE_EXCL from the code.
   Remove useless test of ACTIVATE_EXCL in lv_add_mirrors() clustered code path.
   Use lv_activate_opts struct instead of MERGING status flag.
   Use lv_activate_opts struct instead of ACTIVATE_EXCL status flag.
