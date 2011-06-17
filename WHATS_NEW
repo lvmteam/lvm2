@@ -1,5 +1,6 @@
 Version 2.02.86 -  
 =================================
+  Use lv_activate_opts struct instead of MERGING status flag.
   Use lv_activate_opts struct instead of ACTIVATE_EXCL status flag.
   Add lv_activate_opts structure for activation (replacing activation flags).
   Fix a problem with inconsistent pre-commit metadata on MISSING_PV devices.

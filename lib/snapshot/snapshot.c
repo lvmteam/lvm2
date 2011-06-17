@@ -31,7 +31,7 @@ static const char *_snap_name(const struct lv_segment *seg)
 static const char *_snap_target_name(const struct lv_segment *seg,
 				     const struct lv_activate_opts *laopts)
 {
-	if (seg->status & MERGING)
+	if (!laopts->no_merging && (seg->status & MERGING))
 		return "snapshot-merge";
 
 	return _snap_name(seg);
