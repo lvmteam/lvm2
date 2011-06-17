@@ -795,12 +795,14 @@ static int _lv_is_active(struct logical_volume *lv,
 		goto out;
 	}
 
+	/* FIXME: Is this fallback alright? */
 	if (activate_lv_excl(lv->vg->cmd, lv)) {
 		if (!deactivate_lv(lv->vg->cmd, lv))
 			stack;
+		/* FIXME: locally & exclusive are undefined. */
 		return 0;
 	}
-
+	/* FIXME: Check exclusive value here. */
 out:
 	if (locally)
 		*locally = l;
