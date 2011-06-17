@@ -1,5 +1,6 @@
 Version 2.02.86 -  
 =================================
+  Call vg_mark_partial_lvs() before VG structure is returned from the cache.
   Remove unused internal flag ACTIVATE_EXCL from the code.
   Remove useless test of ACTIVATE_EXCL in lv_add_mirrors() clustered code path.
   Use lv_activate_opts struct instead of MERGING status flag.
