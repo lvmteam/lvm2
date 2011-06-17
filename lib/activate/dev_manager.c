@@ -874,6 +874,13 @@ static uint16_t _get_udev_flags(struct dev_manager *dm, struct logical_volume *l
 	uint16_t udev_flags = 0;
 
 	/*
+	 * Instruct also libdevmapper to disable udev
+	 * fallback in accordance to LVM2 settings.
+	 */
+	if (!dm->cmd->current_settings.udev_fallback)
+		udev_flags |= DM_UDEV_DISABLE_LIBRARY_FALLBACK;
+
+	/*
 	 * Is this top-level and visible device?
 	 * If not, create just the /dev/mapper content.
 	 */
@@ -1584,6 +1591,10 @@ static int _create_lv_symlinks(struct dev_manager *dm, struct dm_tree_node *root
 	const char *name;
 	int r = 1;
 
+	/* Nothing to do if udev fallback is disabled. */
+	if (!dm->cmd->current_settings.udev_fallback)
+		return 1;
+
 	while ((child = dm_tree_next_child(&handle, root, 0))) {
 		if (!(lvlayer = dm_tree_node_get_context(child)))
 			continue;
@@ -1625,6 +1636,10 @@ static int _remove_lv_symlinks(struct dev_manager *dm, struct dm_tree_node *root
 	struct dm_tree_node *child;
 	char *vgname, *lvname, *layer;
 	int r = 1;
+
+	/* Nothing to do if udev fallback is disabled. */
+	if (!dm->cmd->current_settings.udev_fallback)
+		return 1;
 
 	while ((child = dm_tree_next_child(&handle, root, 0))) {
 		if (!dm_split_lvm_name(dm->mem, dm_tree_node_get_name(child), &vgname, &lvname, &layer)) {

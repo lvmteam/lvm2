@@ -285,6 +285,21 @@ static int _process_config(struct cmd_context *cmd)
 								"activation/udev_sync",
 								DEFAULT_UDEV_SYNC);
 
+	#ifdef UDEV_SYNC_SUPPORT
+	/*
+	 * We need udev rules to be applied, otherwise we would end up with no
+	 * nodes and symlinks! However, we can disable the synchronization itself
+	 * in runtime and still have only udev to create the nodes and symlinks
+	 * without any fallback.
+	 */
+	cmd->default_settings.udev_fallback = cmd->default_settings.udev_rules ?
+					find_config_tree_int(cmd, "activation/udev_fallback",
+							     DEFAULT_UDEV_FALLBACK) : 1;
+	#else
+	/* We must use old node/symlink creation code if not compiled with udev support at all! */
+	cmd->default_settings.udev_fallback = 1;
+	#endif
+
 	cmd->stripe_filler = find_config_tree_str(cmd,
 						  "activation/missing_stripe_filler",
 						  DEFAULT_STRIPE_FILLER);
