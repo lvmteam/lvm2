@@ -428,6 +428,13 @@ activation {
     # while any logical volumes are active.
     udev_rules = 1
 
+    # Set to 1 to enable udev fallback. This will enable additional checks and
+    # possible repairs done on entries in the device directory after udev has
+    # completed processing the events. This is normally not needed if udev
+    # works correctly but it may be used in some problematic situations or
+    # for debugging purposes.
+    udev_fallback = 0
+
     # How to fill in missing stripes if activating an incomplete volume.
     # Using "error" will make inaccessible parts of the device return
     # I/O errors on access.  You can instead use a device path, in which 

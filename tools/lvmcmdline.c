@@ -952,7 +952,7 @@ static void _apply_settings(struct cmd_context *cmd)
 	cmd->handles_missing_pvs = 0;
 }
 
-static int _set_udev_checking(struct cmd_context *cmd)
+static int _set_udev_fallback(struct cmd_context *cmd)
 {
 #ifdef UDEV_SYNC_SUPPORT
 	const char *udev_dev_dir;
@@ -984,6 +984,9 @@ static int _set_udev_checking(struct cmd_context *cmd)
 			   cmd->dev_dir, udev_dev_dir);
 		dm_udev_set_checking(0);
 		init_udev_checking(0);
+
+		/* Device directories differ - we must use the fallback code! */
+		cmd->current_settings.udev_fallback = 1;
 	}
 
 #endif
@@ -1088,7 +1091,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	log_debug("O_DIRECT will be used");
 #endif
 
-	if (!_set_udev_checking(cmd))
+	if (!_set_udev_fallback(cmd))
 		goto_out;
 
 	if ((ret = _process_common_commands(cmd))) {
