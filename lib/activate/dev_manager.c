@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2002-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2010 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2011 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -1045,7 +1045,7 @@ static int _add_partial_replicator_to_dtree(struct dev_manager *dm,
 /*
  * Add LV and any known dependencies
  */
-static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree, struct logical_volume *lv, unsigned origin_only)
+static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree, struct logical_volume *lv, int origin_only)
 {
 	struct seg_list *sl;
 
@@ -1077,7 +1077,7 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree, struc
 	return 1;
 }
 
-static struct dm_tree *_create_partial_dtree(struct dev_manager *dm, struct logical_volume *lv, unsigned origin_only)
+static struct dm_tree *_create_partial_dtree(struct dev_manager *dm, struct logical_volume *lv, int origin_only)
 {
 	struct dm_tree *dtree;
 	struct dm_list *snh, *snht;
@@ -1254,8 +1254,9 @@ static int _add_snapshot_merge_target_to_dtree(struct dev_manager *dm,
 }
 
 static int _add_snapshot_target_to_dtree(struct dev_manager *dm,
-					   struct dm_tree_node *dnode,
-					   struct logical_volume *lv)
+					 struct dm_tree_node *dnode,
+					 struct logical_volume *lv,
+					 struct lv_activate_opts *laopts)
 {
 	const char *origin_dlid;
 	const char *cow_dlid;
@@ -1288,8 +1289,9 @@ static int _add_snapshot_target_to_dtree(struct dev_manager *dm,
 }
 
 static int _add_target_to_dtree(struct dev_manager *dm,
-				  struct dm_tree_node *dnode,
-				  struct lv_segment *seg)
+				struct dm_tree_node *dnode,
+				struct lv_segment *seg,
+				struct lv_activate_opts *laopts)
 {
 	uint64_t extent_size = seg->lv->vg->extent_size;
 
@@ -1301,47 +1303,52 @@ static int _add_target_to_dtree(struct dev_manager *dm,
 
 	return seg->segtype->ops->add_target_line(dm, dm->mem, dm->cmd,
 						  &dm->target_state, seg,
-						  dnode,
+						  laopts, dnode,
 						  extent_size * seg->len,
 						  &dm-> pvmove_mirror_count);
 }
 
 static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
-				  struct logical_volume *lv, const char *layer);
+				struct logical_volume *lv,
+				struct lv_activate_opts *laopts,
+				const char *layer);
 
 /* Add all replicators' LVs */
 static int _add_replicator_dev_target_to_dtree(struct dev_manager *dm,
 					       struct dm_tree *dtree,
-					       struct lv_segment *seg)
+					       struct lv_segment *seg,
+					       struct lv_activate_opts *laopts)
 {
 	struct replicator_device *rdev;
 	struct replicator_site *rsite;
 
 	/* For inactive replicator add linear mapping */
 	if (!lv_is_active_replicator_dev(seg->lv)) {
-		if (!_add_new_lv_to_dtree(dm, dtree, seg->lv->rdevice->lv, NULL))
+		if (!_add_new_lv_to_dtree(dm, dtree, seg->lv->rdevice->lv, laopts, NULL))
 			return_0;
 		return 1;
 	}
 
 	/* Add rlog and replicator nodes */
 	if (!seg->replicator ||
-            !first_seg(seg->replicator)->rlog_lv ||
+	    !first_seg(seg->replicator)->rlog_lv ||
 	    !_add_new_lv_to_dtree(dm, dtree,
-				  first_seg(seg->replicator)->rlog_lv, NULL) ||
-	    !_add_new_lv_to_dtree(dm, dtree, seg->replicator, NULL))
+				  first_seg(seg->replicator)->rlog_lv,
+				  laopts, NULL) ||
+	    !_add_new_lv_to_dtree(dm, dtree, seg->replicator, laopts, NULL))
 	    return_0;
 
 	/* Activation of one replicator_dev node activates all other nodes */
 	dm_list_iterate_items(rsite, &seg->replicator->rsites) {
 		dm_list_iterate_items(rdev, &rsite->rdevices) {
 			if (rdev->lv &&
-			    !_add_new_lv_to_dtree(dm, dtree, rdev->lv, NULL))
+			    !_add_new_lv_to_dtree(dm, dtree, rdev->lv,
+						  laopts, NULL))
 				return_0;
 
 			if (rdev->slog &&
-			    !_add_new_lv_to_dtree(dm, dtree,
-						  rdev->slog, NULL))
+			    !_add_new_lv_to_dtree(dm, dtree, rdev->slog,
+						  laopts, NULL))
 				return_0;
 		}
 	}
@@ -1356,7 +1363,7 @@ static int _add_replicator_dev_target_to_dtree(struct dev_manager *dm,
 			if (!rdev->replicator_dev->lv ||
 			    !_add_new_lv_to_dtree(dm, dtree,
 						  rdev->replicator_dev->lv,
-						  NULL))
+						  laopts, NULL))
 				return_0;
 		}
 	}
@@ -1365,10 +1372,11 @@ static int _add_replicator_dev_target_to_dtree(struct dev_manager *dm,
 }
 
 static int _add_segment_to_dtree(struct dev_manager *dm,
-				   struct dm_tree *dtree,
-				   struct dm_tree_node *dnode,
-				   struct lv_segment *seg,
-				   const char *layer)
+				 struct dm_tree *dtree,
+				 struct dm_tree_node *dnode,
+				 struct lv_segment *seg,
+				 struct lv_activate_opts *laopts,
+				 const char *layer)
 {
 	uint32_t s;
 	struct dm_list *snh;
@@ -1378,7 +1386,7 @@ static int _add_segment_to_dtree(struct dev_manager *dm,
 	/* Ensure required device-mapper targets are loaded */
 	seg_present = find_cow(seg->lv) ? : seg;
 	target_name = (seg_present->segtype->ops->target_name ?
-		       seg_present->segtype->ops->target_name(seg_present) :
+		       seg_present->segtype->ops->target_name(seg_present, laopts) :
 		       seg_present->segtype->name);
 
 	log_debug("Checking kernel supports %s segment type for %s%s%s",
@@ -1395,35 +1403,35 @@ static int _add_segment_to_dtree(struct dev_manager *dm,
 
 	/* Add mirror log */
 	if (seg->log_lv &&
-	    !_add_new_lv_to_dtree(dm, dtree, seg->log_lv, NULL))
+	    !_add_new_lv_to_dtree(dm, dtree, seg->log_lv, laopts, NULL))
 		return_0;
 
 	if (seg_is_replicator_dev(seg)) {
-		if (!_add_replicator_dev_target_to_dtree(dm, dtree, seg))
+		if (!_add_replicator_dev_target_to_dtree(dm, dtree, seg, laopts))
 			return_0;
 	/* If this is a snapshot origin, add real LV */
 	/* If this is a snapshot origin + merging snapshot, add cow + real LV */
 	} else if (lv_is_origin(seg->lv) && !layer) {
 		if (lv_is_merging_origin(seg->lv)) {
 			if (!_add_new_lv_to_dtree(dm, dtree,
-			     find_merging_cow(seg->lv)->cow, "cow"))
+			     find_merging_cow(seg->lv)->cow, laopts, "cow"))
 				return_0;
 			/*
 			 * Must also add "real" LV for use when
 			 * snapshot-merge target is added
 			 */
 		}
-		if (!_add_new_lv_to_dtree(dm, dtree, seg->lv, "real"))
+		if (!_add_new_lv_to_dtree(dm, dtree, seg->lv, laopts, "real"))
 			return_0;
 	} else if (lv_is_cow(seg->lv) && !layer) {
-		if (!_add_new_lv_to_dtree(dm, dtree, seg->lv, "cow"))
+		if (!_add_new_lv_to_dtree(dm, dtree, seg->lv, laopts, "cow"))
 			return_0;
 	} else {
 		/* Add any LVs used by this segment */
 		for (s = 0; s < seg->area_count; s++)
 			if ((seg_type(seg, s) == AREA_LV) &&
 			    (!_add_new_lv_to_dtree(dm, dtree, seg_lv(seg, s),
-						   NULL)))
+						   laopts, NULL)))
 				return_0;
 	}
 
@@ -1437,22 +1445,24 @@ static int _add_segment_to_dtree(struct dev_manager *dm,
 				return_0;
 		}
 	} else if (lv_is_cow(seg->lv) && !layer) {
-		if (!_add_snapshot_target_to_dtree(dm, dnode, seg->lv))
+		if (!_add_snapshot_target_to_dtree(dm, dnode, seg->lv, laopts))
 			return_0;
-	} else if (!_add_target_to_dtree(dm, dnode, seg))
+	} else if (!_add_target_to_dtree(dm, dnode, seg, laopts))
 		return_0;
 
 	if (lv_is_origin(seg->lv) && !layer)
 		/* Add any snapshots of this LV */
 		dm_list_iterate(snh, &seg->lv->snapshot_segs)
-			if (!_add_new_lv_to_dtree(dm, dtree, dm_list_struct_base(snh, struct lv_segment, origin_list)->cow, NULL))
+			if (!_add_new_lv_to_dtree(dm, dtree, dm_list_struct_base(snh, struct lv_segment, origin_list)->cow,
+						  laopts, NULL))
 				return_0;
 
 	return 1;
 }
 
 static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
-				struct logical_volume *lv, const char *layer)
+				struct logical_volume *lv, struct lv_activate_opts *laopts,
+				const char *layer)
 {
 	struct lv_segment *seg;
 	struct lv_layer *lvlayer;
@@ -1527,7 +1537,7 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	/* Create table */
 	dm->pvmove_mirror_count = 0u;
 	dm_list_iterate_items(seg, &lv->segments) {
-		if (!_add_segment_to_dtree(dm, dtree, dnode, seg, layer))
+		if (!_add_segment_to_dtree(dm, dtree, dnode, seg, laopts, layer))
 			return_0;
 		/* These aren't real segments in the LVM2 metadata */
 		if (lv_is_origin(lv) && !layer)
@@ -1551,7 +1561,7 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	/* Add any LVs referencing a PVMOVE LV unless told not to */
 	if (dm->track_pvmove_deps && (lv->status & PVMOVE))
 		dm_list_iterate_items(sl, &lv->segs_using_this_lv)
-			if (!_add_new_lv_to_dtree(dm, dtree, sl->seg->lv, NULL))
+			if (!_add_new_lv_to_dtree(dm, dtree, sl->seg->lv, laopts, NULL))
 				return_0;
 
 	return 1;
@@ -1671,14 +1681,14 @@ static int _clean_tree(struct dev_manager *dm, struct dm_tree_node *root, char *
 }
 
 static int _tree_action(struct dev_manager *dm, struct logical_volume *lv,
-			unsigned origin_only, action_t action)
+			struct lv_activate_opts *laopts, action_t action)
 {
 	struct dm_tree *dtree;
 	struct dm_tree_node *root;
 	char *dlid;
 	int r = 0;
 
-	if (!(dtree = _create_partial_dtree(dm, lv, origin_only)))
+	if (!(dtree = _create_partial_dtree(dm, lv, laopts->origin_only)))
 		return_0;
 
 	if (!(root = dm_tree_find_node(dtree, 0, 0))) {
@@ -1689,14 +1699,14 @@ static int _tree_action(struct dev_manager *dm, struct logical_volume *lv,
 	/* Restore fs cookie */
 	dm_tree_set_cookie(root, fs_get_cookie());
 
-	if (!(dlid = build_dm_uuid(dm->mem, lv->lvid.s, origin_only ? "real" : NULL)))
+	if (!(dlid = build_dm_uuid(dm->mem, lv->lvid.s, laopts->origin_only ? "real" : NULL)))
 		goto_out;
 
 	/* Only process nodes with uuid of "LVM-" plus VG id. */
 	switch(action) {
 	case CLEAN:
 		/* Deactivate any unused non-toplevel nodes */
-		if (!_clean_tree(dm, root, origin_only ? dlid : NULL))
+		if (!_clean_tree(dm, root, laopts->origin_only ? dlid : NULL))
 			goto_out;
 		break;
 	case DEACTIVATE:
@@ -1719,7 +1729,7 @@ static int _tree_action(struct dev_manager *dm, struct logical_volume *lv,
 	case PRELOAD:
 	case ACTIVATE:
 		/* Add all required new devices to tree */
-		if (!_add_new_lv_to_dtree(dm, dtree, lv, origin_only ? "real" : NULL))
+		if (!_add_new_lv_to_dtree(dm, dtree, lv, laopts, laopts->origin_only ? "real" : NULL))
 			goto_out;
 
 		/* Preload any devices required before any suspensions */
@@ -1758,19 +1768,24 @@ out_no_root:
 }
 
 /* origin_only may only be set if we are resuming (not activating) an origin LV */
-int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv, unsigned origin_only)
+int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv,
+			 struct lv_activate_opts *laopts)
 {
-	if (!_tree_action(dm, lv, origin_only, ACTIVATE))
+	if (!_tree_action(dm, lv, laopts, ACTIVATE))
 		return_0;
 
-	return _tree_action(dm, lv, origin_only, CLEAN);
+	return _tree_action(dm, lv, laopts, CLEAN);
 }
 
 /* origin_only may only be set if we are resuming (not activating) an origin LV */
 int dev_manager_preload(struct dev_manager *dm, struct logical_volume *lv,
-			unsigned origin_only, int *flush_required)
+			struct lv_activate_opts *laopts, int *flush_required)
 {
-	if (!_tree_action(dm, lv, origin_only, PRELOAD))
+	/* FIXME Update the pvmove implementation! */
+	if ((lv->status & PVMOVE) || (lv->status & LOCKED))
+		return 1;
+
+	if (!_tree_action(dm, lv, laopts, PRELOAD))
 		return 0;
 
 	*flush_required = dm->flush_required;
@@ -1780,19 +1795,20 @@ int dev_manager_preload(struct dev_manager *dm, struct logical_volume *lv,
 
 int dev_manager_deactivate(struct dev_manager *dm, struct logical_volume *lv)
 {
+	struct lv_activate_opts laopts = { 0 };
 	int r;
 
-	r = _tree_action(dm, lv, 0, DEACTIVATE);
+	r = _tree_action(dm, lv, &laopts, DEACTIVATE);
 
 	return r;
 }
 
 int dev_manager_suspend(struct dev_manager *dm, struct logical_volume *lv,
-			unsigned origin_only, int lockfs, int flush_required)
+			struct lv_activate_opts *laopts, int lockfs, int flush_required)
 {
 	dm->flush_required = flush_required;
 
-	return _tree_action(dm, lv, origin_only, lockfs ? SUSPEND_WITH_LOCKFS : SUSPEND);
+	return _tree_action(dm, lv, laopts, lockfs ? SUSPEND_WITH_LOCKFS : SUSPEND);
 }
 
 /*

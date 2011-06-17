@@ -22,6 +22,7 @@ struct segtype_handler;
 struct cmd_context;
 struct config_tree;
 struct lv_segment;
+struct lv_activate_opts;
 struct formatter;
 struct config_node;
 struct dev_manager;
@@ -66,7 +67,8 @@ struct segment_type {
 
 struct segtype_handler {
 	const char *(*name) (const struct lv_segment * seg);
-	const char *(*target_name) (const struct lv_segment * seg);
+	const char *(*target_name) (const struct lv_segment *seg,
+				    const struct lv_activate_opts *laopts);
 	void (*display) (const struct lv_segment * seg);
 	int (*text_export) (const struct lv_segment * seg,
 			    struct formatter * f);
@@ -78,10 +80,11 @@ struct segtype_handler {
 	int (*merge_segments) (struct lv_segment * seg1,
 			       struct lv_segment * seg2);
 	int (*add_target_line) (struct dev_manager *dm, struct dm_pool *mem,
-                                struct cmd_context *cmd, void **target_state,
-                                struct lv_segment *seg,
-                                struct dm_tree_node *node, uint64_t len,
-                                uint32_t *pvmove_mirror_count);
+				struct cmd_context *cmd, void **target_state,
+				struct lv_segment *seg,
+				const struct lv_activate_opts *laopts,
+				struct dm_tree_node *node, uint64_t len,
+				uint32_t *pvmove_mirror_count);
 	int (*target_status_compatible) (const char *type);
 	int (*check_transient_status) (struct lv_segment *seg, char *params);
 	int (*target_percent) (void **target_state,

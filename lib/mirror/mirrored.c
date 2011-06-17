@@ -349,6 +349,7 @@ static int _mirrored_transient_status(struct lv_segment *seg, char *params)
 }
 
 static int _add_log(struct dm_pool *mem, struct lv_segment *seg,
+		    const struct lv_activate_opts *laopts,
 		    struct dm_tree_node *node, uint32_t area_count, uint32_t region_size)
 {
 	unsigned clustered = 0;
@@ -390,10 +391,11 @@ static int _add_log(struct dm_pool *mem, struct lv_segment *seg,
 }
 
 static int _mirrored_add_target_line(struct dev_manager *dm, struct dm_pool *mem,
-				struct cmd_context *cmd, void **target_state,
-				struct lv_segment *seg,
-				struct dm_tree_node *node, uint64_t len,
-				uint32_t *pvmove_mirror_count)
+				     struct cmd_context *cmd, void **target_state,
+				     struct lv_segment *seg,
+				     const struct lv_activate_opts *laopts,
+				     struct dm_tree_node *node, uint64_t len,
+				     uint32_t *pvmove_mirror_count)
 {
 	struct mirror_state *mirr_state;
 	uint32_t area_count = seg->area_count;
@@ -451,7 +453,7 @@ static int _mirrored_add_target_line(struct dev_manager *dm, struct dm_pool *mem
 	if (!dm_tree_node_add_mirror_target(node, len))
 		return_0;
 
-	if ((r = _add_log(mem, seg, node, area_count, region_size)) <= 0) {
+	if ((r = _add_log(mem, seg, laopts, node, area_count, region_size)) <= 0) {
 		stack;
 		return r;
 	}

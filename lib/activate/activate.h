@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.  
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2011 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -28,6 +28,12 @@ struct lvinfo {
 	int live_table;
 	int inactive_table;
 	uint32_t read_ahead;
+};
+
+struct lv_activate_opts {
+	int exclusive;
+	int origin_only;
+	int no_merging;
 };
 
 /* target attribute flags */
@@ -102,7 +108,7 @@ int lv_has_target_type(struct dm_pool *mem, struct logical_volume *lv,
 		       const char *layer, const char *target_type);
 
 int monitor_dev_for_events(struct cmd_context *cmd, struct logical_volume *lv,
-			   unsigned origin_only, int do_reg);
+			   const struct lv_activate_opts *laopts, int do_reg);
 
 #ifdef DMEVENTD
 #  include "libdevmapper-event.h"
