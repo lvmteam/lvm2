@@ -71,7 +71,6 @@
 //#define MIRROR_LOG		0x00020000U	/* LV */
 //#define MIRROR_IMAGE		0x00040000U	/* LV */
 //#define MIRROR_NOTSYNCED	0x00080000U	/* LV */
-#define ACTIVATE_EXCL		0x00100000U	/* LV - internal use only */
 #define PRECOMMITTED		0x00200000U	/* VG - internal use only */
 //#define CONVERTING		0x00400000U	/* LV */
 

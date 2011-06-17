@@ -1293,14 +1293,6 @@ static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
 		goto out;
 	}
 
-	/*
-	 * When targets are activated exclusively in a cluster, the
-	 * non-clustered target should be used.  This only happens
-	 * if ACTIVATE_EXCL is set in lv->status.
-	 */
-	if (laopts->exclusive)
-		lv->status |= ACTIVATE_EXCL;
-
 	if (!_lv_activate_lv(lv, laopts))
 		goto_out;
 
