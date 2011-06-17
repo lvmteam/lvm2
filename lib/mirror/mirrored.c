@@ -360,8 +360,7 @@ static int _add_log(struct dm_pool *mem, struct lv_segment *seg,
 	 * Use clustered mirror log for non-exclusive activation
 	 * in clustered VG.
 	 */
-	if ((!(seg->lv->status & ACTIVATE_EXCL) &&
-	      (vg_is_clustered(seg->lv->vg))))
+	if (!laopts->exclusive && vg_is_clustered(seg->lv->vg))
 		clustered = 1;
 
 	if (seg->log_lv) {
