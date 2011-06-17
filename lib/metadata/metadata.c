@@ -2868,11 +2868,6 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		else	/* Inconsistent but we can't repair it */
 			correct_vg->status &= ~INCONSISTENT_VG;
 
-		if (vg_missing_pv_count(correct_vg)) {
-			log_verbose("There are %d physical volumes missing.",
-				    vg_missing_pv_count(correct_vg));
-			vg_mark_partial_lvs(correct_vg, 1);
-		}
 		return correct_vg;
 	} else {
 		free_vg(correct_vg);

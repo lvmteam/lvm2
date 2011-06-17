@@ -136,6 +136,7 @@ struct volume_group *import_vg_from_config_tree(const struct config_tree *cft,
 {
 	struct volume_group *vg = NULL;
 	struct text_vg_version_ops **vsn;
+	int vg_missing;
 
 	_init_text_import();
 
@@ -148,6 +149,12 @@ struct volume_group *import_vg_from_config_tree(const struct config_tree *cft,
 		 */
 		if (!(vg = (*vsn)->read_vg(fid, cft, 1)))
 			stack;
+		else if ((vg_missing = vg_missing_pv_count(vg))) {
+			log_verbose("There are %d physical volumes missing.",
+				    vg_missing);
+			vg_mark_partial_lvs(vg, 1);
+			/* FIXME: move this code inside read_vg() */
+		}
 		break;
 	}
 
