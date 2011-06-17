@@ -1,5 +1,6 @@
 Version 2.02.86 -  
 =================================
+  Add lv_activate_opts structure for activation (replacing activation flags).
   Fix a problem with inconsistent pre-commit metadata on MISSING_PV devices.
   Add proper udev library context initialization and finalization to liblvm.
   Fix last snapshot removal to avoid table reload while a device is suspended.

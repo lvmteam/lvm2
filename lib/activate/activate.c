@@ -243,7 +243,7 @@ int lv_check_transient(struct logical_volume *lv)
 	return 1;
 }
 int monitor_dev_for_events(struct cmd_context *cmd, struct logical_volume *lv,
-			   unsigned origin_only, int monitor)
+			   struct lv_activate_opts *laopts, int monitor)
 {
 	return 1;
 }
@@ -632,7 +632,7 @@ static int _lv_open_count(struct cmd_context *cmd, struct logical_volume *lv)
 	return info.open_count;
 }
 
-static int _lv_activate_lv(struct logical_volume *lv, unsigned origin_only)
+static int _lv_activate_lv(struct logical_volume *lv, struct lv_activate_opts *laopts)
 {
 	int r;
 	struct dev_manager *dm;
@@ -640,14 +640,15 @@ static int _lv_activate_lv(struct logical_volume *lv, unsigned origin_only)
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, (lv->status & PVMOVE) ? 0 : 1)))
 		return_0;
 
-	if (!(r = dev_manager_activate(dm, lv, origin_only)))
+	if (!(r = dev_manager_activate(dm, lv, laopts)))
 		stack;
 
 	dev_manager_destroy(dm);
 	return r;
 }
 
-static int _lv_preload(struct logical_volume *lv, unsigned origin_only, int *flush_required)
+static int _lv_preload(struct logical_volume *lv, struct lv_activate_opts *laopts,
+		       int *flush_required)
 {
 	int r;
 	struct dev_manager *dm;
@@ -655,7 +656,7 @@ static int _lv_preload(struct logical_volume *lv, unsigned origin_only, int *flu
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, (lv->status & PVMOVE) ? 0 : 1)))
 		return_0;
 
-	if (!(r = dev_manager_preload(dm, lv, origin_only, flush_required)))
+	if (!(r = dev_manager_preload(dm, lv, laopts, flush_required)))
 		stack;
 
 	dev_manager_destroy(dm);
@@ -677,7 +678,8 @@ static int _lv_deactivate(struct logical_volume *lv)
 	return r;
 }
 
-static int _lv_suspend_lv(struct logical_volume *lv, unsigned origin_only, int lockfs, int flush_required)
+static int _lv_suspend_lv(struct logical_volume *lv, struct lv_activate_opts *laopts,
+			  int lockfs, int flush_required)
 {
 	int r;
 	struct dev_manager *dm;
@@ -689,7 +691,7 @@ static int _lv_suspend_lv(struct logical_volume *lv, unsigned origin_only, int l
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, (lv->status & PVMOVE) ? 0 : 1)))
 		return_0;
 
-	if (!(r = dev_manager_suspend(dm, lv, origin_only, lockfs, flush_required)))
+	if (!(r = dev_manager_suspend(dm, lv, laopts, lockfs, flush_required)))
 		stack;
 
 	dev_manager_destroy(dm);
@@ -955,7 +957,7 @@ int target_register_events(struct cmd_context *cmd, const char *dso, struct logi
  * Returns 1 otherwise.
  */
 int monitor_dev_for_events(struct cmd_context *cmd, struct logical_volume *lv,
-			   unsigned origin_only, int monitor)
+			   const struct lv_activate_opts *laopts, int monitor)
 {
 #ifdef DMEVENTD
 	int i, pending = 0, monitored;
@@ -965,6 +967,10 @@ int monitor_dev_for_events(struct cmd_context *cmd, struct logical_volume *lv,
 	struct lv_segment *log_seg;
 	int (*monitor_fn) (struct lv_segment *s, int e);
 	uint32_t s;
+	static const struct lv_activate_opts zlaopts = { 0 };
+
+	if (!laopts)
+		laopts = &zlaopts;
 
 	/* skip dmeventd code altogether */
 	if (dmeventd_monitor_mode() == DMEVENTD_MONITOR_IGNORE)
@@ -988,10 +994,10 @@ int monitor_dev_for_events(struct cmd_context *cmd, struct logical_volume *lv,
 	 * each of its respective snapshots.  The origin itself may
 	 * also need to be monitored if it is a mirror, for example.
 	 */
-	if (!origin_only && lv_is_origin(lv))
+	if (!laopts->origin_only && lv_is_origin(lv))
 		dm_list_iterate_safe(snh, snht, &lv->snapshot_segs)
 			if (!monitor_dev_for_events(cmd, dm_list_struct_base(snh,
-				    struct lv_segment, origin_list)->cow, 0, monitor))
+				    struct lv_segment, origin_list)->cow, NULL, monitor))
 				r = 0;
 
 	/*
@@ -1001,7 +1007,7 @@ int monitor_dev_for_events(struct cmd_context *cmd, struct logical_volume *lv,
 	if ((seg = first_seg(lv)) != NULL && seg->log_lv != NULL &&
 	    (log_seg = first_seg(seg->log_lv)) != NULL &&
 	    seg_is_mirrored(log_seg))
-		if (!monitor_dev_for_events(cmd, seg->log_lv, 0, monitor))
+		if (!monitor_dev_for_events(cmd, seg->log_lv, NULL, monitor))
 			r = 0;
 
 	dm_list_iterate(tmp, &lv->segments) {
@@ -1011,7 +1017,7 @@ int monitor_dev_for_events(struct cmd_context *cmd, struct logical_volume *lv,
 		for (s = 0; s < seg->area_count; s++) {
 			if (seg_type(seg, s) != AREA_LV)
 				continue;
-			if (!monitor_dev_for_events(cmd, seg_lv(seg, s), 0,
+			if (!monitor_dev_for_events(cmd, seg_lv(seg, s), NULL,
 						    monitor)) {
 				log_error("Failed to %smonitor %s",
 					  monitor ? "" : "un",
@@ -1092,7 +1098,7 @@ int monitor_dev_for_events(struct cmd_context *cmd, struct logical_volume *lv,
 }
 
 static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
-		       unsigned origin_only, int error_if_not_suspended)
+		       struct lv_activate_opts *laopts, int error_if_not_suspended)
 {
 	struct logical_volume *lv = NULL, *lv_pre = NULL, *pvmove_lv = NULL;
 	struct lv_list *lvl_pre;
@@ -1112,15 +1118,15 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 
 	/* Ignore origin_only unless LV is origin in both old and new metadata */
 	if (!lv_is_origin(lv) || !lv_is_origin(lv_pre))
-		origin_only = 0;
+		laopts->origin_only = 0;
 
 	if (test_mode()) {
-		_skip("Suspending %s%s.", lv->name, origin_only ? " origin without snapshots" : "");
+		_skip("Suspending %s%s.", lv->name, laopts->origin_only ? " origin without snapshots" : "");
 		r = 1;
 		goto out;
 	}
 
-	if (!lv_info(cmd, lv, origin_only, &info, 0, 0))
+	if (!lv_info(cmd, lv, laopts->origin_only, &info, 0, 0))
 		goto_out;
 
 	if (!info.exists || info.suspended) {
@@ -1155,7 +1161,7 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 					log_error("LV %s missing from preload metadata", sl->seg->lv->name);
 					goto out;
 				}
-				if (!_lv_preload(lvl_pre->lv, origin_only, &flush_required))
+				if (!_lv_preload(lvl_pre->lv, laopts, &flush_required))
 					goto_out;
 			}
 			/* Now preload the PVMOVE LV itself */
@@ -1164,14 +1170,14 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 				log_error("LV %s missing from preload metadata", pvmove_lv->name);
 				goto out;
 			}
-			if (!_lv_preload(lvl_pre->lv, origin_only, &flush_required))
+			if (!_lv_preload(lvl_pre->lv, laopts, &flush_required))
 				goto_out;
-		} else if (!_lv_preload(lv_pre, origin_only, &flush_required))
+		} else if (!_lv_preload(lv_pre, laopts, &flush_required))
 			/* FIXME Revert preloading */
 			goto_out;
 	}
 
-	if (!monitor_dev_for_events(cmd, lv, origin_only, 0))
+	if (!monitor_dev_for_events(cmd, lv, laopts, 0))
 		/* FIXME Consider aborting here */
 		stack;
 
@@ -1179,7 +1185,7 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 	if (pvmove_lv)
 		critical_section_inc(cmd, "suspending pvmove LV");
 
-	if (!origin_only &&
+	if (!laopts->origin_only &&
 	    (lv_is_origin(lv_pre) || lv_is_cow(lv_pre)))
 		lockfs = 1;
 
@@ -1193,7 +1199,7 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
  	 */
 	if ((lv_pre->vg->status & PRECOMMITTED) &&
 	    (lv_pre->status & LOCKED) && find_pvmove_lv_in_lv(lv_pre)) {
-		if (!_lv_suspend_lv(lv_pre, origin_only, lockfs, flush_required)) {
+		if (!_lv_suspend_lv(lv_pre, laopts, lockfs, flush_required)) {
 			critical_section_dec(cmd, "failed precommitted suspend");
 			if (pvmove_lv)
 				critical_section_dec(cmd, "failed precommitted suspend (pvmove)");
@@ -1201,7 +1207,7 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 		}
 	} else {
 		/* Normal suspend */
-		if (!_lv_suspend_lv(lv, origin_only, lockfs, flush_required)) {
+		if (!_lv_suspend_lv(lv, laopts, lockfs, flush_required)) {
 			critical_section_dec(cmd, "failed suspend");
 			if (pvmove_lv)
 				critical_section_dec(cmd, "failed suspend (pvmove)");
@@ -1224,7 +1230,9 @@ out:
 /* Returns success if the device is not active */
 int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only)
 {
-	return _lv_suspend(cmd, lvid_s, origin_only, 0);
+	struct lv_activate_opts laopts = { .origin_only = origin_only };
+
+	return _lv_suspend(cmd, lvid_s, &laopts, 0);
 }
 
 /* No longer used */
@@ -1246,8 +1254,7 @@ int lv_suspend(struct cmd_context *cmd, const char *lvid_s)
   * @error_if_not_active
   */
 static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
-		      unsigned origin_only, unsigned exclusive,
-		      int error_if_not_active)
+		      struct lv_activate_opts *laopts, int error_if_not_active)
 {
 	struct logical_volume *lv;
 	struct lvinfo info;
@@ -1260,19 +1267,19 @@ static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
 		goto_out;
 
 	if (!lv_is_origin(lv))
-		origin_only = 0;
+		laopts->origin_only = 0;
 
 	if (test_mode()) {
-		_skip("Resuming %s%s.", lv->name, origin_only ? " without snapshots" : "");
+		_skip("Resuming %s%s.", lv->name, laopts->origin_only ? " without snapshots" : "");
 		r = 1;
 		goto out;
 	}
 
 	log_debug("Resuming LV %s/%s%s%s.", lv->vg->name, lv->name,
 		  error_if_not_active ? "" : " if active",
-		  origin_only ? " without snapshots" : "");
+		  laopts->origin_only ? " without snapshots" : "");
 
-	if (!lv_info(cmd, lv, origin_only, &info, 0, 0))
+	if (!lv_info(cmd, lv, laopts->origin_only, &info, 0, 0))
 		goto_out;
 
 	if (!info.exists || !info.suspended) {
@@ -1289,15 +1296,15 @@ static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
 	 * non-clustered target should be used.  This only happens
 	 * if ACTIVATE_EXCL is set in lv->status.
 	 */
-	if (exclusive)
+	if (laopts->exclusive)
 		lv->status |= ACTIVATE_EXCL;
 
-	if (!_lv_activate_lv(lv, origin_only))
+	if (!_lv_activate_lv(lv, laopts))
 		goto_out;
 
 	critical_section_dec(cmd, "resumed");
 
-	if (!monitor_dev_for_events(cmd, lv, origin_only, 1))
+	if (!monitor_dev_for_events(cmd, lv, laopts, 1))
 		stack;
 
 	r = 1;
@@ -1312,12 +1319,24 @@ out:
 int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s,
 			unsigned origin_only, unsigned exclusive)
 {
-	return _lv_resume(cmd, lvid_s, origin_only, exclusive, 0);
+	struct lv_activate_opts laopts = {
+		.origin_only = origin_only,
+		/*
+		 * When targets are activated exclusively in a cluster, the
+		 * non-clustered target should be used.  This only happens
+		 * if exclusive is set.
+		 */
+		.exclusive = exclusive
+	};
+
+	return _lv_resume(cmd, lvid_s, &laopts, 0);
 }
 
 int lv_resume(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only)
 {
-	return _lv_resume(cmd, lvid_s, origin_only, 0, 1);
+	struct lv_activate_opts laopts = { .origin_only = origin_only, };
+
+	return _lv_resume(cmd, lvid_s, &laopts, 1);
 }
 
 static int _lv_has_open_snapshots(struct logical_volume *lv)
@@ -1386,7 +1405,7 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s)
 
 	lv_calculate_readahead(lv, NULL);
 
-	if (!monitor_dev_for_events(cmd, lv, 0, 0))
+	if (!monitor_dev_for_events(cmd, lv, NULL, 0))
 		stack;
 
 	critical_section_inc(cmd, "deactivating");
@@ -1434,7 +1453,7 @@ out:
 }
 
 static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
-			int exclusive, int filter)
+			struct lv_activate_opts *laopts, int filter)
 {
 	struct logical_volume *lv;
 	struct lvinfo info;
@@ -1470,7 +1489,8 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 		goto out;
 	}
 
-	log_debug("Activating %s/%s%s.", lv->vg->name, lv->name, exclusive ? " exclusively" : "");
+	log_debug("Activating %s/%s%s.", lv->vg->name, lv->name,
+		  laopts->exclusive ? " exclusively" : "");
 
 	if (!lv_info(cmd, lv, 0, &info, 0, 0))
 		goto_out;
@@ -1485,15 +1505,12 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 
 	lv_calculate_readahead(lv, NULL);
 
-	if (exclusive)
-		lv->status |= ACTIVATE_EXCL;
-
 	critical_section_inc(cmd, "activating");
-	if (!(r = _lv_activate_lv(lv, 0)))
+	if (!(r = _lv_activate_lv(lv, laopts)))
 		stack;
 	critical_section_dec(cmd, "activated");
 
-	if (r && !monitor_dev_for_events(cmd, lv, 0, 1))
+	if (r && !monitor_dev_for_events(cmd, lv, laopts, 1))
 		stack;
 
 out:
@@ -1508,7 +1525,9 @@ out:
 /* Activate LV */
 int lv_activate(struct cmd_context *cmd, const char *lvid_s, int exclusive)
 {
-	if (!_lv_activate(cmd, lvid_s, exclusive, 0))
+	struct lv_activate_opts laopts = { .exclusive = exclusive };
+
+	if (!_lv_activate(cmd, lvid_s, &laopts, 0))
 		return_0;
 
 	return 1;
@@ -1517,7 +1536,9 @@ int lv_activate(struct cmd_context *cmd, const char *lvid_s, int exclusive)
 /* Activate LV only if it passes filter */
 int lv_activate_with_filter(struct cmd_context *cmd, const char *lvid_s, int exclusive)
 {
-	if (!_lv_activate(cmd, lvid_s, exclusive, 1))
+	struct lv_activate_opts laopts = { .exclusive = exclusive };
+
+	if (!_lv_activate(cmd, lvid_s, &laopts, 1))
 		return_0;
 
 	return 1;
