@@ -823,13 +823,11 @@ int lv_is_active(struct logical_volume *lv)
 	return _lv_is_active(lv, NULL, NULL);
 }
 
-/*
-int lv_is_active_locally(struct logical_volume *lv)
+int lv_is_active_but_not_locally(struct logical_volume *lv)
 {
 	int l;
-	return _lv_is_active(lv, &l, NULL) && l;
+	return _lv_is_active(lv, &l, NULL) && !l;
 }
-*/
 
 int lv_is_active_exclusive_locally(struct logical_volume *lv)
 {

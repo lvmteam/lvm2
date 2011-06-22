@@ -1857,15 +1857,9 @@ int add_mirror_log(struct cmd_context *cmd, struct logical_volume *lv,
 		return 0;
 	}
 
-	/*
-	 * We are unable to convert the log of inactive cluster mirrors
-	 * due to the inability to detect whether the mirror is active
-	 * on remote nodes (even though it is inactive on this node)
-	 */
-	if (vg_is_clustered(lv->vg) &&
-	    !(lv_info(cmd, lv, 0, &info, 0, 0) && info.exists)) {
-		log_error("Unable to convert the log of inactive "
-			  "cluster mirror %s", lv->name);
+	if (lv_is_active_but_not_locally(lv)) {
+		log_error("Unable to convert the log of a mirror, %s, that is "
+			  "active remotely but not locally", lv->name);
 		return 0;
 	}
 
