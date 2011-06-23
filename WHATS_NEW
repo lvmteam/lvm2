@@ -1,5 +1,6 @@
 Version 2.02.86 -  
 =================================
+  Fix to preserve exclusive activation of mirror while up-converting.
   Reject allocation if number of extents is not divisible by area count.
   Fix issue preventing cluster mirror creation.
   Disable udev fallback by default and add activation/udev_fallback to lvm.conf.

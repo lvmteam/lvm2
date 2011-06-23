@@ -419,8 +419,13 @@ static int _delete_lv(struct logical_volume *mirror_lv, struct logical_volume *l
 		}
 	}
 
-	if (!activate_lv(cmd, lv))
-		return_0;
+	if (lv_is_active_exclusive_locally(lv)) {
+		if (!activate_lv_excl(cmd, lv))
+			return_0;
+	} else {
+		if (!activate_lv(cmd, lv))
+			return_0;
+	}
 
 	if (!deactivate_lv(cmd, lv))
 		return_0;

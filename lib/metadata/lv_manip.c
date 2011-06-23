@@ -3103,11 +3103,13 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 					   uint64_t status,
 					   const char *layer_suffix)
 {
+	int r;
 	struct logical_volume *layer_lv;
 	char *name;
 	size_t len;
 	struct segment_type *segtype;
 	struct lv_segment *mapseg;
+	unsigned exclusive = 0;
 
 	/* create an empty layer LV */
 	len = strlen(lv_where->name) + 32;
@@ -3128,6 +3130,9 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 		log_error("Creation of layer LV failed");
 		return NULL;
 	}
+
+	if (lv_is_active_exclusive_locally(lv_where))
+		exclusive = 1;
 
 	if (lv_is_active(lv_where) && strstr(name, "_mimagetmp")) {
 		log_very_verbose("Creating transient LV %s for mirror conversion in VG %s.", name, lv_where->vg->name);
@@ -3150,8 +3155,15 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 			return NULL;
 		}
 
-		if (!activate_lv(cmd, layer_lv)) {
-			log_error("Failed to resume transient error LV %s for mirror conversion in VG %s.", name, lv_where->vg->name);
+		if (exclusive)
+			r = activate_lv_excl(cmd, layer_lv);
+		else
+			r = activate_lv(cmd, layer_lv);
+
+		if (!r) {
+			log_error("Failed to resume transient LV"
+				  " %s for mirror conversion in VG %s.",
+				  name, lv_where->vg->name);
 			return NULL;
 		}
 	}
