@@ -1,5 +1,6 @@
 Version 2.02.86 -  
 =================================
+  Reject allocation if number of extents is not divisible by area count.
   Fix issue preventing cluster mirror creation.
   Disable udev fallback by default and add activation/udev_fallback to lvm.conf.
   Call vg_mark_partial_lvs() before VG structure is returned from the cache.
