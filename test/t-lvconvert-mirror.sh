@@ -248,3 +248,8 @@ lvconvert -m1 -i1 $vg/$lv1
 lvreduce -f -l1 $vg/$lv1
 lvextend -f -l10 $vg/$lv1
 lvremove -ff $vg/$lv1
+
+# extents must be divisible
+lvcreate -l15 -n $lv1 $vg
+not lvconvert -m1 --corelog --stripes 2 $vg/$lv1
+lvremove -ff $vg/$lv1

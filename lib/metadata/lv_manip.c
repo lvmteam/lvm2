@@ -1716,6 +1716,13 @@ static int _allocate(struct alloc_handle *ah,
 		return 1;
 	}
 
+        if (ah->area_multiple > 1 &&
+            (ah->new_extents - alloc_state.allocated) % ah->area_count) {
+		log_error("Number of extents requested (%d) needs to be divisible by %d.",
+			  ah->new_extents - alloc_state.allocated, ah->area_count);
+		return 0;
+	}
+
 	alloc_state.log_area_count_still_needed = ah->log_area_count;
 
 	if (ah->alloc == ALLOC_CONTIGUOUS)
