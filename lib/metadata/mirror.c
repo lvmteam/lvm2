@@ -1853,7 +1853,6 @@ int add_mirror_log(struct cmd_context *cmd, struct logical_volume *lv,
 	percent_t sync_percent;
 	int in_sync;
 	struct logical_volume *log_lv;
-	struct lvinfo info;
 	unsigned old_log_count;
 	int r = 0;
 
