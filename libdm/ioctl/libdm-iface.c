@@ -2173,6 +2173,15 @@ void dm_pools_check_leaks(void);
 
 void dm_lib_exit(void)
 {
+	int suspended_counter;
+	static unsigned _exited = 0;
+
+	if (_exited++)
+		return;
+
+	if ((suspended_counter = dm_get_suspended_counter()))
+		log_error("libdevmapper exiting with %d device(s) still suspended.", suspended_counter);
+
 	dm_lib_release();
 	selinux_release();
 	if (_dm_bitset)

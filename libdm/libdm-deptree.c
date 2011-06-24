@@ -1188,7 +1188,8 @@ static int _dm_tree_deactivate_children(struct dm_tree_node *dnode,
 				  info.minor);
 			r = 0;
 			continue;
-		}
+		} else if (info.suspended)
+			dec_suspended();
 
 		if (dm_tree_node_num_children(child, 0)) {
 			if (!_dm_tree_deactivate_children(child, uuid_prefix, uuid_prefix_len, level + 1))
