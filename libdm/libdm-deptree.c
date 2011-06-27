@@ -985,7 +985,7 @@ static int _deactivate_node(const char *name, uint32_t major, uint32_t minor,
 
 	/* FIXME Until kernel returns actual name so dm-iface.c can handle it */
 	rm_dev_node(name, dmt->cookie_set && !(udev_flags & DM_UDEV_DISABLE_DM_RULES_FLAG),
-			  dmt->cookie_set && !(udev_flags & DM_UDEV_DISABLE_LIBRARY_FALLBACK));
+			  dmt->cookie_set && (udev_flags & DM_UDEV_DISABLE_LIBRARY_FALLBACK));
 
 	/* FIXME Remove node from tree or mark invalid? */
 
