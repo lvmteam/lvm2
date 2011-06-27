@@ -39,6 +39,12 @@ typedef struct {
 struct daemon_state;
 
 /*
+ * Craft a simple reply, without the need to construct a config_tree. See
+ * daemon_send_simple in daemon-client.h for the description of the parameters.
+ */
+response daemon_reply_simple(char *id, ...);
+
+/*
  * The callback. Called once per request issued, in the respective client's
  * thread. It is presented by a parsed request (in the form of a config tree).
  * The output is a new config tree that is serialised and sent back to the
