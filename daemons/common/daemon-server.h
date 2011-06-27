@@ -44,6 +44,14 @@ struct daemon_state;
  */
 response daemon_reply_simple(char *id, ...);
 
+static inline int daemon_request_int(request r, const char *path, int def) {
+	return find_config_int(r.cft->root, path, def);
+}
+
+static inline const char *daemon_request_str(request r, const char *path, const char *def) {
+	return find_config_str(r.cft->root, path, def);
+}
+
 /*
  * The callback. Called once per request issued, in the respective client's
  * thread. It is presented by a parsed request (in the form of a config tree).

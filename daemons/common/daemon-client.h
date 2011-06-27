@@ -81,6 +81,15 @@ daemon_reply daemon_send_simple(daemon_handle h, char *id, ...);
 
 void daemon_reply_destroy(daemon_reply r);
 
+static inline int daemon_reply_int(daemon_reply r, const char *path, int def) {
+	return find_config_int(r.cft->root, path, def);
+}
+
+static inline const char *daemon_reply_str(daemon_reply r, const char *path, const char *def) {
+	return find_config_str(r.cft->root, path, def);
+}
+
+
 /* Shut down the communication to the daemon. Compulsory. */
 void daemon_close(daemon_handle h);
 
