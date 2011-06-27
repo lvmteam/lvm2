@@ -26,13 +26,13 @@ typedef struct {
 } client_handle;
 
 typedef struct {
-	struct config_node *cft;
+	struct config_tree *cft;
 	char *buffer;
 } request;
 
 typedef struct {
 	int error;
-	struct config_node *cft;
+	struct config_tree *cft;
 	char *buffer;
 } response;
 
