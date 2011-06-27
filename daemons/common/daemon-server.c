@@ -107,7 +107,7 @@ static int _open_socket(daemon_state s)
 		fprintf(stderr, "setting CLOEXEC on socket fd %d failed: %s\n", fd, strerror(errno));
 	fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) | O_NONBLOCK);
 
-	fprintf(stderr, "creating %s\n", s.socket_path);
+	fprintf(stderr, "[D] creating %s\n", s.socket_path);
 	memset(&sockaddr, 0, sizeof(sockaddr));
 	strcpy(sockaddr.sun_path, s.socket_path);
 	sockaddr.sun_family = AF_UNIX;
@@ -213,8 +213,10 @@ void *client_thread(void *baton)
 		if (!read_buffer(b->client.socket_fd, &req.buffer))
 			goto fail;
 
-		/* TODO parse the buffer into req.cft */
+		req.cft = create_config_tree_from_string(req.buffer);
 		response res = b->s.handler(b->s, b->client, req);
+		destroy_config_tree(req.cft);
+		dm_free(req.buffer);
 
 		if (!res.buffer) {
 			/* TODO fill in the buffer from res.cft */
@@ -223,7 +225,6 @@ void *client_thread(void *baton)
 		write_buffer(b->client.socket_fd, res.buffer, strlen(res.buffer));
 
 		free(res.buffer);
-		free(req.buffer);
 	}
 fail:
 	/* TODO what should we really do here? */

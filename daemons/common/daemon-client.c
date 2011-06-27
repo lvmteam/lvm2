@@ -15,7 +15,7 @@ daemon_handle daemon_open(daemon_info i) {
 		goto error;
 	}
 	memset(&sockaddr, 0, sizeof(sockaddr));
-	fprintf(stderr, "connecting to %s\n", i.socket);
+	fprintf(stderr, "[C] connecting to %s\n", i.socket);
 	strcpy(sockaddr.sun_path, i.socket);
 	sockaddr.sun_family = AF_UNIX;
 	if (connect(h.socket_fd,(struct sockaddr *) &sockaddr, sizeof(sockaddr))) {
