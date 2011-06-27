@@ -42,10 +42,6 @@ extern char *optarg;
 #  define OPTIND_INIT 1
 #endif
 
-#ifdef UDEV_SYNC_SUPPORT
-#  include <libudev.h>
-#endif
-
 /*
  * Table of valid switches
  */
@@ -864,8 +860,10 @@ static int _get_settings(struct cmd_context *cmd)
 	} else
 		init_trust_cache(0);
 
-	if (arg_count(cmd, noudevsync_ARG))
+	if (arg_count(cmd, noudevsync_ARG)) {
 		cmd->current_settings.udev_sync = 0;
+		cmd->current_settings.udev_fallback = 1;
+	}
 
 	/* Handle synonyms */
 	if (!_merge_synonym(cmd, resizable_ARG, resizeable_ARG) ||
@@ -950,47 +948,6 @@ static void _apply_settings(struct cmd_context *cmd)
 				      cmd->current_settings.fmt_name));
 
 	cmd->handles_missing_pvs = 0;
-}
-
-static int _set_udev_fallback(struct cmd_context *cmd)
-{
-#ifdef UDEV_SYNC_SUPPORT
-	const char *udev_dev_dir;
-	size_t udev_dev_dir_len;
-	int dirs_diff;
-
-	if (!(udev_dev_dir = udev_get_dev_dir()) ||
-	    !*udev_dev_dir) {
-		log_error("Could not get udev dev path.");
-		return 0;
-	}
-	udev_dev_dir_len = strlen(udev_dev_dir);
-
-	/* There's always a slash at the end of dev_dir. But check udev_dev_dir! */
-	if (udev_dev_dir[udev_dev_dir_len - 1] != '/')
-		dirs_diff = strncmp(cmd->dev_dir, udev_dev_dir,
-				    udev_dev_dir_len);
-	else
-		dirs_diff = strcmp(cmd->dev_dir, udev_dev_dir);
-
-	if (dirs_diff) {
-		log_debug("The path %s used for creating device nodes and "
-			  "symlinks that is set in the configuration differs "
-			  "from the path %s that is used by udev. All warnings "
-			  "about udev not working correctly while processing "
-			  "particular nodes and symlinks will be suppressed. "
-			  "These nodes and symlinks will be managed in each "
-			  "directory separately.",
-			   cmd->dev_dir, udev_dev_dir);
-		dm_udev_set_checking(0);
-		init_udev_checking(0);
-
-		/* Device directories differ - we must use the fallback code! */
-		cmd->current_settings.udev_fallback = 1;
-	}
-
-#endif
-	return 1;
 }
 
 static const char *_copy_command_line(struct cmd_context *cmd, int argc, char **argv)
@@ -1090,9 +1047,6 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 #ifdef O_DIRECT_SUPPORT
 	log_debug("O_DIRECT will be used");
 #endif
-
-	if (!_set_udev_fallback(cmd))
-		goto_out;
 
 	if ((ret = _process_common_commands(cmd))) {
 		if (ret != ECMD_PROCESSED)
