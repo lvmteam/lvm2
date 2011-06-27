@@ -44,11 +44,16 @@ daemon_reply daemon_send(daemon_handle h, daemon_request rq)
 	write_buffer(h.socket_fd, rq.buffer, strlen(rq.buffer));
 
 	if (read_buffer(h.socket_fd, &reply.buffer)) {
-		/* TODO: parse reply.buffer into reply.cft */
+		reply.cft = create_config_tree_from_string(reply.buffer);
 	} else
 		reply.error = 1;
 
 	return reply;
+}
+
+void daemon_reply_destroy(daemon_reply r) {
+	if (r.cft)
+		destroy_config_tree(r.cft);
 }
 
 daemon_reply daemon_send_simple(daemon_handle h, char *id, ...)

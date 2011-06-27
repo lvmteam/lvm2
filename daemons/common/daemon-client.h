@@ -41,13 +41,13 @@ typedef struct {
 	 *        knobs = [ "twiddle", "tweak" ]
 	 *    }
 	 */
-	struct config_node *cft;
+	struct config_tree *cft;
 } daemon_request;
 
 typedef struct {
 	int error; /* 0 for success */
 	char *buffer; /* textual reply */
-	struct config_node *cft; /* parsed reply, if available */
+	struct config_tree *cft; /* parsed reply, if available */
 } daemon_reply;
 
 /*
@@ -78,6 +78,8 @@ daemon_reply daemon_send(daemon_handle h, daemon_request r);
  * for ? in %?: d for integer, s for string.
  */
 daemon_reply daemon_send_simple(daemon_handle h, char *id, ...);
+
+void daemon_reply_destroy(daemon_reply r);
 
 /* Shut down the communication to the daemon. Compulsory. */
 void daemon_close(daemon_handle h);

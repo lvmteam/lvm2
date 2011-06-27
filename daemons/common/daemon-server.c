@@ -25,6 +25,7 @@
 
 #include <syslog.h>
 #include "daemon-server.h"
+#include "daemon-shared.h"
 #include "libdevmapper.h"
 
 #if 0
@@ -198,6 +199,18 @@ static void _daemonise(void)
 		exit(1);
 
 	setsid();
+}
+
+response daemon_reply_simple(char *id, ...)
+{
+	va_list ap;
+	va_start(ap, id);
+	response res = { .buffer = format_buffer(id, ap), .cft = NULL };
+
+	if (!res.buffer)
+		res.error = ENOMEM;
+
+	return res;
 }
 
 struct thread_baton {
