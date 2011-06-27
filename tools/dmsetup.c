@@ -135,7 +135,6 @@ enum {
 	UDEVCOOKIE_ARG,
 	NOUDEVRULES_ARG,
 	NOUDEVSYNC_ARG,
-	UDEVFALLBACK_ARG,
 	OPTIONS_ARG,
 	READAHEAD_ARG,
 	ROWS_ARG,
@@ -151,6 +150,7 @@ enum {
 	UNQUOTED_ARG,
 	UUID_ARG,
 	VERBOSE_ARG,
+	VERIFYUDEV_ARG,
 	VERSION_ARG,
 	YES_ARG,
 	ADD_NODE_ON_RESUME_ARG,
@@ -1007,7 +1007,7 @@ static int _set_up_udev_support(const char *dev_dir)
 	else
 		dirs_diff = strcmp(dev_dir, udev_dev_dir);
 
-	_udev_only = !dirs_diff && (_udev_cookie || !_switches[UDEVFALLBACK_ARG]);
+	_udev_only = !dirs_diff && (_udev_cookie || !_switches[VERIFYUDEV_ARG]);
 
 	if (dirs_diff) {
 		log_debug("The path %s used for creating device nodes that is "
@@ -2745,7 +2745,7 @@ static void _usage(FILE *out)
 	fprintf(out, "dmsetup [--version] [-h|--help [-c|-C|--columns]]\n"
 		"        [-v|--verbose [-v|--verbose ...]]\n"
 		"        [-r|--readonly] [--noopencount] [--nolockfs] [--inactive]\n"
-		"        [--udevcookie] [--noudevrules] [--noudevsync] [--udevfallback]\n"
+		"        [--udevcookie] [--noudevrules] [--noudevsync] [--verifyudev]\n"
 		"        [-y|--yes] [--readahead [+]<sectors>|auto|none]\n"
 		"        [-c|-C|--columns] [-o <fields>] [-O|--sort <sort_fields>]\n"
 		"        [--nameprefixes] [--noheadings] [--separator <separator>]\n\n");
@@ -3116,7 +3116,6 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 		{"udevcookie", 1, &ind, UDEVCOOKIE_ARG},
 		{"noudevrules", 0, &ind, NOUDEVRULES_ARG},
 		{"noudevsync", 0, &ind, NOUDEVSYNC_ARG},
-		{"udevfallback", 0, &ind, UDEVFALLBACK_ARG},
 		{"options", 1, &ind, OPTIONS_ARG},
 		{"readahead", 1, &ind, READAHEAD_ARG},
 		{"rows", 0, &ind, ROWS_ARG},
@@ -3132,6 +3131,7 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 		{"unbuffered", 0, &ind, UNBUFFERED_ARG},
 		{"unquoted", 0, &ind, UNQUOTED_ARG},
 		{"verbose", 1, &ind, VERBOSE_ARG},
+		{"verifyudev", 0, &ind, VERIFYUDEV_ARG},
 		{"version", 0, &ind, VERSION_ARG},
 		{"yes", 0, &ind, YES_ARG},
 		{"addnodeonresume", 0, &ind, ADD_NODE_ON_RESUME_ARG},
@@ -3245,8 +3245,8 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 			_switches[NOUDEVRULES_ARG]++;
 		if (ind == NOUDEVSYNC_ARG)
 			_switches[NOUDEVSYNC_ARG]++;
-		if (ind == UDEVFALLBACK_ARG)
-			_switches[UDEVFALLBACK_ARG]++;
+		if (ind == VERIFYUDEV_ARG)
+			_switches[VERIFYUDEV_ARG]++;
 		if (c == 'G' || ind == GID_ARG) {
 			_switches[GID_ARG]++;
 			_int_args[GID_ARG] = atoi(optarg);

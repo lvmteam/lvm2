@@ -181,6 +181,10 @@ Answer yes to all prompts automatically.
 .IP \fB-v|--verbose\ [-v|--verbose]
 .br
 Produce additional output.
+.IP \fB--verifyudev
+If udev synchronisation is enabled, verify that udev operations get performed
+correctly and try to fix up the device nodes afterwards if not.
+.br
 .IP \fB--version
 .br
 Display the library and kernel driver version.

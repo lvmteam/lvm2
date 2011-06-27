@@ -2025,7 +2025,7 @@ int dm_task_run(struct dm_task *dmt)
 	struct dm_ioctl *dmi;
 	unsigned command;
 	int check_udev;
-	int udev_only;
+	int rely_on_udev;
 	int suspended_counter;
 
 #ifdef DM_COMPAT
@@ -2097,40 +2097,43 @@ repeat_ioctl:
 		}
 	}
 
+	/*
+	 * Are we expecting a udev operation to occur that we need to check for?
+	 */
 	check_udev = dmt->cookie_set &&
 		     !(dmt->event_nr >> DM_UDEV_FLAGS_SHIFT &
 		       DM_UDEV_DISABLE_DM_RULES_FLAG);
 
-	udev_only = dmt->cookie_set ? (dmt->event_nr >> DM_UDEV_FLAGS_SHIFT &
-					DM_UDEV_DISABLE_LIBRARY_FALLBACK) : 0;
+	rely_on_udev = dmt->cookie_set ? (dmt->event_nr >> DM_UDEV_FLAGS_SHIFT &
+					  DM_UDEV_DISABLE_LIBRARY_FALLBACK) : 0;
 
 	switch (dmt->type) {
 	case DM_DEVICE_CREATE:
 		if ((dmt->add_node == DM_ADD_NODE_ON_CREATE) &&
-		    dmt->dev_name && *dmt->dev_name && !udev_only)
+		    dmt->dev_name && *dmt->dev_name && !rely_on_udev)
 			add_dev_node(dmt->dev_name, MAJOR(dmi->dev),
 				     MINOR(dmi->dev), dmt->uid, dmt->gid,
-				     dmt->mode, check_udev);
+				     dmt->mode, check_udev, rely_on_udev);
 		break;
 	case DM_DEVICE_REMOVE:
 		/* FIXME Kernel needs to fill in dmi->name */
-		if (dmt->dev_name && !udev_only)
-			rm_dev_node(dmt->dev_name, check_udev);
+		if (dmt->dev_name && !rely_on_udev)
+			rm_dev_node(dmt->dev_name, check_udev, rely_on_udev);
 		break;
 
 	case DM_DEVICE_RENAME:
 		/* FIXME Kernel needs to fill in dmi->name */
-		if (!dmt->new_uuid && dmt->dev_name && !udev_only)
+		if (!dmt->new_uuid && dmt->dev_name)
 			rename_dev_node(dmt->dev_name, dmt->newname,
-					check_udev);
+					check_udev, rely_on_udev);
 		break;
 
 	case DM_DEVICE_RESUME:
 		if ((dmt->add_node == DM_ADD_NODE_ON_RESUME) &&
-		    dmt->dev_name && *dmt->dev_name && !udev_only)
+		    dmt->dev_name && *dmt->dev_name)
 			add_dev_node(dmt->dev_name, MAJOR(dmi->dev),
 				     MINOR(dmi->dev), dmt->uid, dmt->gid,
-				     dmt->mode, check_udev);
+				     dmt->mode, check_udev, rely_on_udev);
 		/* FIXME Kernel needs to fill in dmi->name */
 		set_dev_node_read_ahead(dmt->dev_name, dmt->read_ahead,
 					dmt->read_ahead_flags);
@@ -2140,9 +2143,9 @@ repeat_ioctl:
 		if (dmi->flags & DM_EXISTS_FLAG)
 			add_dev_node(dmi->name, MAJOR(dmi->dev),
 				     MINOR(dmi->dev), dmt->uid,
-				     dmt->gid, dmt->mode, 0);
+				     dmt->gid, dmt->mode, 0, rely_on_udev);
 		else if (dmt->dev_name)
-			rm_dev_node(dmt->dev_name, 0);
+			rm_dev_node(dmt->dev_name, 0, rely_on_udev);
 		break;
 
 	case DM_DEVICE_STATUS:
