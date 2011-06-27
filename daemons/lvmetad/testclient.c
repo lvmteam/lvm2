@@ -8,5 +8,6 @@ int main() {
 		daemon_reply reply = daemon_send(h, rq);
 		fprintf(stderr, "daemon says: %s\n", reply.buffer);
 	}
+	daemon_close(h);
 	return 0;
 }
