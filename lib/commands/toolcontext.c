@@ -293,8 +293,8 @@ static int _process_config(struct cmd_context *cmd)
 	 * without any fallback.
 	 */
 	cmd->default_settings.udev_fallback = cmd->default_settings.udev_rules ?
-					find_config_tree_int(cmd, "activation/udev_fallback",
-							     DEFAULT_UDEV_FALLBACK) : 1;
+					find_config_tree_int(cmd, "activation/verify_udev_operations",
+							     DEFAULT_VERIFY_UDEV_OPERATIONS) : 1;
 	#else
 	/* We must use old node/symlink creation code if not compiled with udev support at all! */
 	cmd->default_settings.udev_fallback = 1;

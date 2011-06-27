@@ -501,8 +501,13 @@ void selinux_release(void)
 #endif
 }
 
+static int _warn_if_op_needed(int warn_if_udev_failed)
+{
+    return warn_if_udev_failed && dm_udev_get_sync_support() && dm_udev_get_checking();
+}
+
 static int _add_dev_node(const char *dev_name, uint32_t major, uint32_t minor,
-			 uid_t uid, gid_t gid, mode_t mode, int check_udev)
+			 uid_t uid, gid_t gid, mode_t mode, int warn_if_udev_failed)
 {
 	char path[PATH_MAX];
 	struct stat info;
@@ -527,8 +532,7 @@ static int _add_dev_node(const char *dev_name, uint32_t major, uint32_t minor,
 				  dev_name);
 			return 0;
 		}
-	} else if (dm_udev_get_sync_support() && dm_udev_get_checking() &&
-		   check_udev)
+	} else if (_warn_if_op_needed(warn_if_udev_failed))
 		log_warn("%s not set up by udev: Falling back to direct "
 			 "node creation.", path);
 
@@ -553,7 +557,7 @@ static int _add_dev_node(const char *dev_name, uint32_t major, uint32_t minor,
 	return 1;
 }
 
-static int _rm_dev_node(const char *dev_name, int check_udev)
+static int _rm_dev_node(const char *dev_name, int warn_if_udev_failed)
 {
 	char path[PATH_MAX];
 	struct stat info;
@@ -562,8 +566,7 @@ static int _rm_dev_node(const char *dev_name, int check_udev)
 
 	if (stat(path, &info) < 0)
 		return 1;
-	else if (dm_udev_get_sync_support() && dm_udev_get_checking() &&
-		 check_udev)
+	else if (_warn_if_op_needed(warn_if_udev_failed))
 		log_warn("Node %s was not removed by udev. "
 			 "Falling back to direct node removal.", path);
 
@@ -578,7 +581,7 @@ static int _rm_dev_node(const char *dev_name, int check_udev)
 }
 
 static int _rename_dev_node(const char *old_name, const char *new_name,
-			    int check_udev)
+			    int warn_if_udev_failed)
 {
 	char oldpath[PATH_MAX];
 	char newpath[PATH_MAX];
@@ -593,8 +596,7 @@ static int _rename_dev_node(const char *old_name, const char *new_name,
 				  "is already present", newpath);
 			return 0;
 		}
-		else if (dm_udev_get_sync_support() && dm_udev_get_checking() &&
-			 check_udev) {
+		else if (_warn_if_op_needed(warn_if_udev_failed)) {
 			if (stat(oldpath, &info) < 0 &&
 				 errno == ENOENT)
 				/* assume udev already deleted this */
@@ -618,8 +620,7 @@ static int _rename_dev_node(const char *old_name, const char *new_name,
 			return 0;
 		}
 	}
-	else if (dm_udev_get_sync_support() && dm_udev_get_checking() &&
-		 check_udev)
+	else if (_warn_if_op_needed(warn_if_udev_failed))
 		log_warn("The node %s should have been renamed to %s "
 			 "by udev but new node is not present. "
 			 "Falling back to direct node rename.",
@@ -759,16 +760,16 @@ typedef enum {
 static int _do_node_op(node_op_t type, const char *dev_name, uint32_t major,
 		       uint32_t minor, uid_t uid, gid_t gid, mode_t mode,
 		       const char *old_name, uint32_t read_ahead,
-		       uint32_t read_ahead_flags, int check_udev)
+		       uint32_t read_ahead_flags, int warn_if_udev_failed)
 {
 	switch (type) {
 	case NODE_ADD:
 		return _add_dev_node(dev_name, major, minor, uid, gid,
-				     mode, check_udev);
+				     mode, warn_if_udev_failed);
 	case NODE_DEL:
-		return _rm_dev_node(dev_name, check_udev);
+		return _rm_dev_node(dev_name, warn_if_udev_failed);
 	case NODE_RENAME:
-		return _rename_dev_node(old_name, dev_name, check_udev);
+		return _rename_dev_node(old_name, dev_name, warn_if_udev_failed);
 	case NODE_READ_AHEAD:
 		return _set_dev_node_read_ahead(dev_name, read_ahead,
 						read_ahead_flags);
@@ -794,7 +795,8 @@ struct node_op_parms {
 	uint32_t read_ahead;
 	uint32_t read_ahead_flags;
 	char *old_name;
-	int check_udev;
+	int warn_if_udev_failed;
+	unsigned rely_on_udev;
 	char names[0];
 };
 
@@ -824,16 +826,33 @@ static int _other_node_ops(node_op_t type)
 	return 0;
 }
 
-/* Check if udev is supposed to create nodes */
-static int _check_udev(int check_udev)
+static void _log_node_op(const char *action_str, struct node_op_parms *nop)
 {
-    return check_udev && dm_udev_get_sync_support() && dm_udev_get_checking();
+	switch (nop->type) {
+	case NODE_ADD:
+		log_debug("%s: %s NODE_ADD (%" PRIu32 ",%" PRIu32 ") %u:%u 0%o",
+			  nop->dev_name, action_str, nop->major, nop->minor, nop->uid, nop->gid, nop->mode);
+		break;
+	case NODE_DEL:
+		log_debug("%s: %s NODE_DEL", nop->dev_name, action_str);
+		break;
+	case NODE_RENAME:
+		log_debug("%s: %s NODE_RENAME to %s", nop->old_name, action_str, nop->dev_name);
+		break;
+	case NODE_READ_AHEAD:
+		log_debug("%s: %s NODE_READ_AHEAD %" PRIu32 " (flags=%" PRIu32
+			  ")", nop->dev_name, action_str, nop->read_ahead, nop->read_ahead_flags);
+		break;
+	default:
+		; /* NOTREACHED */
+	}
 }
 
 static int _stack_node_op(node_op_t type, const char *dev_name, uint32_t major,
 			  uint32_t minor, uid_t uid, gid_t gid, mode_t mode,
 			  const char *old_name, uint32_t read_ahead,
-			  uint32_t read_ahead_flags, int check_udev)
+			  uint32_t read_ahead_flags, int warn_if_udev_failed,
+			  unsigned rely_on_udev)
 {
 	struct node_op_parms *nop;
 	struct dm_list *noph, *nopht;
@@ -841,7 +860,7 @@ static int _stack_node_op(node_op_t type, const char *dev_name, uint32_t major,
 	char *pos;
 
 	/*
-	 * Note: check_udev must have valid content
+	 * Note: warn_if_udev_failed must have valid content
 	 */
 	if ((type == NODE_DEL) && _other_node_ops(type))
 		/*
@@ -850,27 +869,29 @@ static int _stack_node_op(node_op_t type, const char *dev_name, uint32_t major,
 		dm_list_iterate_safe(noph, nopht, &_node_ops) {
 			nop = dm_list_item(noph, struct node_op_parms);
 			if (!strcmp(dev_name, nop->dev_name)) {
+				_log_node_op("Unstacking", nop);
 				_del_node_op(nop);
 				if (!_other_node_ops(type))
 					break; /* no other non DEL ops */
 			}
 		}
-	else if ((type == NODE_ADD) && _count_node_ops[NODE_DEL] && _check_udev(check_udev))
+	else if ((type == NODE_ADD) && _count_node_ops[NODE_DEL])
 		/*
-		 * If udev is running ignore previous DEL operation on added node.
+		 * Ignore previous DEL operation on added node.
 		 * (No other operations for this device then DEL could be stacked here).
 		 */
 		dm_list_iterate_safe(noph, nopht, &_node_ops) {
 			nop = dm_list_item(noph, struct node_op_parms);
 			if ((nop->type == NODE_DEL) &&
 			    !strcmp(dev_name, nop->dev_name)) {
+				_log_node_op("Unstacking", nop);
 				_del_node_op(nop);
 				break; /* no other DEL ops */
 			}
 		}
-	else if ((type == NODE_RENAME) && _check_udev(check_udev))
+	else if ((type == NODE_RENAME))
 		/*
-		 * If udev is running ignore any outstanding operations if renaming it.
+		 * Ignore any outstanding operations if renaming it.
 		 *
 		 * Currently  RENAME operation happens through 'suspend -> resume'.
 		 * On 'resume' device is added with read_ahead settings, so it is
@@ -880,6 +901,7 @@ static int _stack_node_op(node_op_t type, const char *dev_name, uint32_t major,
 		dm_list_iterate_safe(noph, nopht, &_node_ops) {
 			nop = dm_list_item(noph, struct node_op_parms);
 			if (!strcmp(old_name, nop->dev_name))
+				_log_node_op("Unstacking", nop);
 				_del_node_op(nop);
 		}
 
@@ -897,13 +919,16 @@ static int _stack_node_op(node_op_t type, const char *dev_name, uint32_t major,
 	nop->mode = mode;
 	nop->read_ahead = read_ahead;
 	nop->read_ahead_flags = read_ahead_flags;
-	nop->check_udev = check_udev;
+	nop->warn_if_udev_failed = warn_if_udev_failed;
+	nop->rely_on_udev = rely_on_udev;
 
 	_store_str(&pos, &nop->dev_name, dev_name);
 	_store_str(&pos, &nop->old_name, old_name);
 
 	_count_node_ops[type]++;
 	dm_list_add(&_node_ops, &nop->list);
+
+	_log_node_op("Stacking", nop);
 
 	return 1;
 }
@@ -915,38 +940,35 @@ static void _pop_node_ops(void)
 
 	dm_list_iterate_safe(noph, nopht, &_node_ops) {
 		nop = dm_list_item(noph, struct node_op_parms);
-		_do_node_op(nop->type, nop->dev_name, nop->major, nop->minor,
-			    nop->uid, nop->gid, nop->mode, nop->old_name,
-			    nop->read_ahead, nop->read_ahead_flags,
-			    nop->check_udev);
+		if (!nop->rely_on_udev) {
+			_log_node_op("Processing", nop);
+			_do_node_op(nop->type, nop->dev_name, nop->major, nop->minor,
+				    nop->uid, nop->gid, nop->mode, nop->old_name,
+				    nop->read_ahead, nop->read_ahead_flags,
+				    nop->warn_if_udev_failed);
+		} else
+			_log_node_op("Skipping (udev)", nop);
 		_del_node_op(nop);
 	}
 }
 
 int add_dev_node(const char *dev_name, uint32_t major, uint32_t minor,
-		 uid_t uid, gid_t gid, mode_t mode, int check_udev)
+		 uid_t uid, gid_t gid, mode_t mode, int check_udev, unsigned rely_on_udev)
 {
-	log_debug("%s: Stacking NODE_ADD (%" PRIu32 ",%" PRIu32 ") %u:%u 0%o",
-		  dev_name, major, minor, uid, gid, mode);
-
 	return _stack_node_op(NODE_ADD, dev_name, major, minor, uid,
-			      gid, mode, "", 0, 0, check_udev);
+			      gid, mode, "", 0, 0, check_udev, rely_on_udev);
 }
 
-int rename_dev_node(const char *old_name, const char *new_name, int check_udev)
+int rename_dev_node(const char *old_name, const char *new_name, int check_udev, unsigned rely_on_udev)
 {
-	log_debug("%s: Stacking NODE_RENAME to %s", old_name, new_name);
-
 	return _stack_node_op(NODE_RENAME, new_name, 0, 0, 0,
-			      0, 0, old_name, 0, 0, check_udev);
+			      0, 0, old_name, 0, 0, check_udev, rely_on_udev);
 }
 
-int rm_dev_node(const char *dev_name, int check_udev)
+int rm_dev_node(const char *dev_name, int check_udev, unsigned rely_on_udev)
 {
-	log_debug("%s: Stacking NODE_DEL (replaces other stacked ops)", dev_name);
-
 	return _stack_node_op(NODE_DEL, dev_name, 0, 0, 0,
-			      0, 0, "", 0, 0, check_udev);
+			      0, 0, "", 0, 0, check_udev, rely_on_udev);
 }
 
 int set_dev_node_read_ahead(const char *dev_name, uint32_t read_ahead,
@@ -955,11 +977,8 @@ int set_dev_node_read_ahead(const char *dev_name, uint32_t read_ahead,
 	if (read_ahead == DM_READ_AHEAD_AUTO)
 		return 1;
 
-	log_debug("%s: Stacking NODE_READ_AHEAD %" PRIu32 " (flags=%" PRIu32
-		  ")", dev_name, read_ahead, read_ahead_flags);
-
 	return _stack_node_op(NODE_READ_AHEAD, dev_name, 0, 0, 0, 0,
-                              0, "", read_ahead, read_ahead_flags, 0);
+                              0, "", read_ahead, read_ahead_flags, 0, 0);
 }
 
 void update_devs(void)
@@ -1428,7 +1447,7 @@ static int _udev_wait(uint32_t cookie)
 		return 0;
 	}
 
-	log_debug("Udev cookie 0x%" PRIx32 " (semid %d): Waiting for zero",
+	log_debug("Udev cookie 0x%" PRIx32 " (semid %d) waiting for zero",
 		  cookie, semid);
 
 repeat_wait:

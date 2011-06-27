@@ -1,7 +1,7 @@
 Version 1.02.65 - 
 ==================================
-  Return immediately dm_lib_exit() if called more than once.
-  Disable udev fallback by default and add --udevfallback option to dmsetup.
+  Return immediately from dm_lib_exit() if called more than once.
+  Disable udev fallback by default and add --verifyudev option to dmsetup.
   Warn if a table is loaded while a device is known to be in suspended state.
   Add dm_get_suspended_counter() for number of devs in suspended state by lib.
   Fix "all" report field prefix matching to include label fields with pv_all.
