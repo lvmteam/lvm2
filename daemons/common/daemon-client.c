@@ -5,11 +5,12 @@
 #include <string.h>
 #include <stdio.h>
 #include <assert.h>
+#include <errno.h> // ENOMEM
 
 daemon_handle daemon_open(daemon_info i) {
 	daemon_handle h;
 	struct sockaddr_un sockaddr;
-	if ((h.socket_fd = socket(PF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0)) < 0) {
+	if ((h.socket_fd = socket(PF_UNIX, SOCK_STREAM /* | SOCK_NONBLOCK */, 0)) < 0) {
 		perror("socket");
 		goto error;
 	}
@@ -50,5 +51,22 @@ daemon_reply daemon_send(daemon_handle h, daemon_request rq)
 	return reply;
 }
 
-void daemon_close(daemon_handle h) {
+daemon_reply daemon_send_simple(daemon_handle h, char *id, ...)
+{
+	va_list ap;
+	va_start(ap, id);
+	daemon_request rq = { .buffer = format_buffer(id, ap) };
+
+	if (!rq.buffer) {
+		daemon_reply err = { .error = ENOMEM, .buffer = NULL, .cft = NULL };
+		return err;
+	}
+
+	daemon_reply repl = daemon_send(h, rq);
+	dm_free(rq.buffer);
+	return repl;
+}
+
+void daemon_close(daemon_handle h)
+{
 }
