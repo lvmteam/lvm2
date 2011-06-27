@@ -13,9 +13,10 @@ SHARED_H = ../common/daemon-shared.h
 CLIENT_H = ../common/daemon-client.h $(SHARED_H)
 SERVER_H = ../common/daemon-server.h $(SHARED_H)
 
-LIBS = -ldevmapper -lpthread
+LIBS = -ldevmapper -lpthread -ldevmapper-event -llvm-internal -ldl
 IPATH = -I../common -I/srv/build/lvm2/cvs-lvmetad/default/include
-LPATH = -L/srv/build/lvm2/cvs-lvmetad/default/libdm
+BUILDDIR = /srv/build/lvm2/cvs-lvmetad/default
+LPATH = -L$(BUILDDIR)/libdm -L$(BUILDDIR)/lib -L$(BUILDDIR)/daemons/dmeventd
 
 all: testclient lvmetad
 
@@ -24,3 +25,6 @@ testclient: testclient.c $(CLIENT_H) $(CLIENT)
 
 lvmetad: lvmetad-core.c ../common/daemon-server.c ../common/daemon-server.h ../common/daemon-shared.h ../common/daemon-shared.c
 	gcc -g lvmetad-core.c $(SERVER) $(IPATH) $(LPATH) $(LIBS) -o lvmetad
+
+check: testclient lvmetad
+	./test.sh "$(BUILDDIR)/libdm:$(BUILDDIR)/daemons/dmeventd"
