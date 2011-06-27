@@ -2,12 +2,15 @@
 #include <stdio.h>
 #include <malloc.h>
 #include <string.h>
+#include "daemon-shared.h"
 
 /*
  * Read a single message from a (socket) filedescriptor. Messages are delimited
  * by blank lines. This call will block until all of a message is received. The
  * memory will be allocated from heap. Upon error, all memory is freed and the
  * buffer pointer is set to NULL.
+ *
+ * See also write_buffer about blocking (read_buffer has identical behaviour).
  */
 int read_buffer(int fd, char **buffer) {
 	int bytes = 0;
@@ -65,4 +68,44 @@ int write_buffer(int fd, char *buffer, int length) {
 			return 1; /* done */
 	}
 	return 0;
+}
+
+char *format_buffer(char *id, va_list ap)
+{
+	char *buffer, *old;
+	char *next;
+	char *format;
+
+	dm_asprintf(&buffer, "request = \"%s\"\n", id);
+	if (!buffer) goto fail;
+
+	while (next = va_arg(ap, char *)) {
+		old = buffer;
+		if (strstr(next, "%d") || strstr(next, "%s")) {
+			dm_asprintf(&format, "%%s%s\n", next);
+			if (!format) goto fail;
+
+			if (strstr(format, "%d"))
+				dm_asprintf(&buffer, format, buffer, va_arg(ap, int));
+			else
+				dm_asprintf(&buffer, format, buffer, va_arg(ap, char *));
+
+			dm_free(format);
+			dm_free(old);
+			if (!buffer) goto fail;
+		} else {
+			dm_asprintf(&buffer, "%s%s", buffer, next);
+			dm_free(old);
+			if (!buffer) goto fail;
+		}
+	}
+
+	old = buffer;
+	dm_asprintf(&buffer, "%s\n", buffer);
+	dm_free(old);
+
+	return buffer;
+fail:
+	dm_free(buffer);
+	return NULL;
 }

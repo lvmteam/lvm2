@@ -7,7 +7,7 @@ typedef struct {
 static response handler(daemon_state s, client_handle h, request r)
 {
 	response res;
-	fprintf(stderr, "handling client request: %s\n", r.buffer);
+	fprintf(stderr, "---- server obtained:\n%s\n----------------------\n", r.buffer);
 	res.error = 1;
 	res.buffer = strdup("hey hey.\n\n");
 	return res;
