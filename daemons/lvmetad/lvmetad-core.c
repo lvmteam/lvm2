@@ -6,8 +6,8 @@ typedef struct {
 
 static response handler(daemon_state s, client_handle h, request r)
 {
-	fprintf(stderr, "[D] REQUEST: %s, param = %d\n", find_config_str(r.cft->root, "request", "NONE"),
-		                                         find_config_int(r.cft->root, "param", -1));
+	fprintf(stderr, "[D] REQUEST: %s, param = %d\n", daemon_request_str(r, "request", "NONE"),
+		                                         daemon_request_int(r, "param", -1));
 	return daemon_reply_simple("hey there", "param = %d", 42, NULL);
 }
 
