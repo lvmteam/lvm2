@@ -313,6 +313,11 @@ prepare_vg() {
 
 lvmconf() {
     if test -z "$LVM_TEST_LOCKING"; then LVM_TEST_LOCKING=1; fi
+    if test "$DM_DEV_DIR" = "/dev"; then
+	UDEV_RULES=1;
+    else
+	UDEV_RULES=0;
+    fi
     test -f CONFIG_VALUES || {
         cat > CONFIG_VALUES <<-EOF
 devices/dir = "$DM_DEV_DIR"
@@ -336,7 +341,7 @@ global/locking_type=$LVM_TEST_LOCKING
 global/si_unit_consistency = 1
 global/fallback_to_local_locking = 0
 activation/udev_sync = 1
-activation/udev_rules = 1
+activation/udev_rules = $UDEV_RULES
 activation/polling_interval = 0
 activation/snapshot_autoextend_percent = 50
 activation/snapshot_autoextend_threshold = 50
