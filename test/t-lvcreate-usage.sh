@@ -131,11 +131,22 @@ check lv_field $vg/$lv lv_read_ahead "auto"
 lvremove -ff $vg
 lvcreate -L 32m -n $lv --readahead none $vg
 check lv_field $vg/$lv lv_read_ahead "0"
+check lv_field $vg/$lv lv_kernel_read_ahead "0"
 lvremove -ff $vg
 lvcreate -L 32m -n $lv --readahead 8k $vg
 check lv_field $vg/$lv lv_read_ahead "8.00k"
+check lv_field $vg/$lv lv_kernel_read_ahead "8.00k"
 lvremove -ff $vg
 lvcreate -L 32m -n $lv --readahead auto $vg
 check lv_field $vg/$lv lv_read_ahead "auto"
+check lv_field $vg/$lv lv_kernel_read_ahead "128.00k"
+lvremove -ff $vg
+lvcreate -L 32m -n $lv -i2 --stripesize 16k --readahead auto $vg
+check lv_field $vg/$lv lv_read_ahead "auto"
+check lv_field $vg/$lv lv_kernel_read_ahead "128.00k"
+lvremove -ff $vg
+lvcreate -L 32m -n $lv -i2 --stripesize 128k --readahead auto $vg
+check lv_field $vg/$lv lv_read_ahead "auto"
+check lv_field $vg/$lv lv_kernel_read_ahead "512.00k"
 lvremove -ff $vg
 
