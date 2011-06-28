@@ -169,11 +169,6 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 			return_0;
 
 		lp->keep_mimages = 1;
-		if (arg_sign_value(cmd, mirrors_ARG, 0) == SIGN_MINUS) {
-			log_error("Argument to --splitmirrors"
-				  " cannot be negative");
-			return 0;
-		}
 		lp->mirrors = arg_uint_value(cmd, splitmirrors_ARG, 0);
 		lp->mirrors_sign = SIGN_MINUS;
 	} else if (arg_count(cmd, name_ARG)) {
