@@ -295,6 +295,9 @@ static const char *decode_cmd(unsigned char cmdl)
 	case CLVMD_CMD_RESTART:
 		command = "RESTART";
 		break;
+	case CLVMD_CMD_SYNC_NAMES:
+		command = "SYNC_NAMES";
+		break;
 	default:
 		command = "unknown";
 		break;
