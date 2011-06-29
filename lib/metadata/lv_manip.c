@@ -2157,7 +2157,8 @@ static int _lv_insert_empty_sublvs(struct logical_volume *lv,
 
 	for (i = 0; i < devices; i++) {
 		sub_lv = lv_create_empty(img_name, NULL,
-					 MIRROR_IMAGE, lv->alloc, lv->vg);
+					 LVM_READ | LVM_WRITE | MIRROR_IMAGE,
+					 lv->alloc, lv->vg);
 		if (!sub_lv)
 			return_0;
 		if (!set_lv_segment_area_lv(mapseg, i, sub_lv, 0, status))
