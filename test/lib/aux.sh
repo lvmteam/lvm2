@@ -86,6 +86,9 @@ teardown_devs() {
 	fi
 	rm -f DEVICES # devs is set in prepare_devs()
 	rm -f LOOP
+
+	# Delete any remaining dm/udev semaphores
+	dmsetup udevcomplete_all -y
 }
 
 teardown() {
