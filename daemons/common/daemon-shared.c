@@ -70,13 +70,13 @@ int write_buffer(int fd, char *buffer, int length) {
 	return 0;
 }
 
-char *format_buffer(char *id, va_list ap)
+char *format_buffer(const char *what, const char *id, va_list ap)
 {
 	char *buffer, *old;
 	char *next;
 	char *format;
 
-	dm_asprintf(&buffer, "request = \"%s\"\n", id);
+	dm_asprintf(&buffer, "%s = \"%s\"\n", what, id);
 	if (!buffer) goto fail;
 
 	while (next = va_arg(ap, char *)) {

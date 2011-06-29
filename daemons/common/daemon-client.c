@@ -60,7 +60,7 @@ daemon_reply daemon_send_simple(daemon_handle h, char *id, ...)
 {
 	va_list ap;
 	va_start(ap, id);
-	daemon_request rq = { .buffer = format_buffer(id, ap) };
+	daemon_request rq = { .buffer = format_buffer("request", id, ap) };
 
 	if (!rq.buffer) {
 		daemon_reply err = { .error = ENOMEM, .buffer = NULL, .cft = NULL };

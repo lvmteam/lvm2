@@ -205,7 +205,7 @@ response daemon_reply_simple(char *id, ...)
 {
 	va_list ap;
 	va_start(ap, id);
-	response res = { .buffer = format_buffer(id, ap), .cft = NULL };
+	response res = { .buffer = format_buffer("response", id, ap), .cft = NULL };
 
 	if (!res.buffer)
 		res.error = ENOMEM;
