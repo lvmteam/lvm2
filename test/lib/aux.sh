@@ -260,11 +260,7 @@ disable_dev() {
 
 	init_udev_transaction
 	for dev in "$@"; do
-        # first we make the device inaccessible
-		echo 0 10000000 error | dmsetup load $dev
-		dmsetup resume $dev
-        # now let's try to get rid of it if it's unused
-        #dmsetup remove $dev
+        	dmsetup remove -f $dev
 	done
 	finish_udev_transaction
 
