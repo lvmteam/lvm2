@@ -62,7 +62,7 @@ prepare_dmeventd() {
 
 teardown_devs() {
 	# Delete any remaining dm/udev semaphores
-	dmsetup udevcomplete_all -y
+	teardown_udev_cookies
 
 	test -n "$PREFIX" && {
 		rm -rf $TESTDIR/dev/$PREFIX*

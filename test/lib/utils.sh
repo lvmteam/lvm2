@@ -147,6 +147,12 @@ finish_udev_transaction() {
     fi
 }
 
+teardown_udev_cookies() {
+    if test "$DM_UDEV_SYNCHRONISATION" = 1; then
+	dmsetup udevcomplete_all -y
+    fi
+}
+
 skip() {
     touch SKIP_THIS_TEST
     exit 200
