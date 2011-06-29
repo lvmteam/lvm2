@@ -59,7 +59,7 @@ pvseg_start, and pvseg_size.
 .IP
 With --segments, any "pvseg_" prefixes are optional; otherwise any
 "pv_" prefixes are optional.  Columns mentioned in \fBvgs (8)\fP can also
-be chosen. The pv_attr bits are: (a)llocatable and e(x)ported.
+be chosen. The pv_attr bits are: (a)llocatable, e(x)ported and (m)issing.
 .TP
 .I \-\-segments
 Produces one line of output for each contiguous allocation of space on each

@@ -197,6 +197,7 @@ char *pv_attr_dup(struct dm_pool *mem, const struct physical_volume *pv)
 
 	repstr[0] = (pv->status & ALLOCATABLE_PV) ? 'a' : '-';
 	repstr[1] = (pv->status & EXPORTED_VG) ? 'x' : '-';
+	repstr[2] = (pv->status & MISSING_PV) ? 'm' : '-';
 	return repstr;
 }
 
