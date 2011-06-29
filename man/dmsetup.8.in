@@ -80,6 +80,7 @@ dmsetup \- low level logical volume management
 .I cookie
 .br
 .B dmsetup udevcomplete_all
+.I [age_in_minutes]
 .br
 .B dmsetup udevcookies
 .br
@@ -389,8 +390,10 @@ always reported as DM_SUBSYSTEM_UDEV_FLAG<flag_position>='1'. There are
 .br
 Wake any processes that are waiting for udev to complete processing the specified cookie.
 .br
-.IP \fBudevcomplete_all
-Remove all cookies. Any process waiting on a cookie will be resumed immediately.
+.IP \fBudevcomplete_all 
+.I[age_in_minutes]
+Remove all cookies older than the specified number of minutes. 
+Any process waiting on a cookie will be resumed immediately.
 .br
 .IP \fBudevcookies
 List all existing cookies. Cookies are system-wide semaphores with keys
