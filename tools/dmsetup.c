@@ -1085,10 +1085,19 @@ static int _udevcomplete_all(CMD_ARGS)
 	struct seminfo sinfo;
 	struct semid_ds sdata;
 	int counter = 0;
+	int skipped = 0;
+	unsigned age = 0;
+	time_t t;
+
+	if (argc == 2 && (sscanf(argv[1], "%i", &age) != 1)) {
+		log_error("Failed to read age_in_minutes parameter.");
+		return 0;
+	}
 
 	if (!_switches[YES_ARG]) {
-		log_warn("This operation will destroy all semaphores with keys "
+		log_warn("This operation will destroy all semaphores %s%.0d%swith keys "
 			 "that have a prefix %" PRIu16 " (0x%" PRIx16 ").",
+			 age ? "older than " : "", age, age ? " minutes " : "",
 			 DM_COOKIE_MAGIC, DM_COOKIE_MAGIC);
 
 		if (_yes_no_prompt("Do you really want to continue? [y/n]: ") == 'n') {
@@ -1109,6 +1118,13 @@ static int _udevcomplete_all(CMD_ARGS)
 			continue;
 
 		if (sdata.sem_perm.__key >> 16 == DM_COOKIE_MAGIC) {
+			t = time(NULL);
+
+			if (sdata.sem_ctime + age * 60 > t ||
+			    sdata.sem_otime + age * 60 > t) {
+				skipped++;
+				continue;
+			}
 			if (semctl(sid, 0, IPC_RMID, 0) < 0) {
 				log_error("Could not cleanup notification semaphore "
 					  "with semid %d and cookie value "
@@ -1122,8 +1138,8 @@ static int _udevcomplete_all(CMD_ARGS)
 	}
 
 	log_print("%d semaphores with keys prefixed by "
-		  "%" PRIu16 " (0x%" PRIx16 ") destroyed.",
-		  counter, DM_COOKIE_MAGIC, DM_COOKIE_MAGIC);
+		  "%" PRIu16 " (0x%" PRIx16 ") destroyed. %d skipped.",
+		  counter, DM_COOKIE_MAGIC, DM_COOKIE_MAGIC, skipped);
 
 	return 1;
 }
@@ -1134,14 +1150,15 @@ static int _udevcookies(CMD_ARGS)
 	struct seminfo sinfo;
 	struct semid_ds sdata;
 	int val;
-	char *time_str;
+	char otime_str[26], ctime_str[26];
+	char *otimes, *ctimes;
 
 	if ((max_id = semctl(0, 0, SEM_INFO, &sinfo)) < 0) {
 		log_sys_error("sem_ctl", "SEM_INFO");
 		return 0;
 	}
 
-	printf("cookie       semid      value      last_semop_time\n");
+	printf("Cookie       Semid      Value      Last semop time           Last change time\n");
 
 	for (id = 0; id <= max_id; id++) {
 		if ((sid = semctl(id, 0, SEM_STAT, &sdata)) < 0)
@@ -1156,10 +1173,14 @@ static int _udevcookies(CMD_ARGS)
 				continue;
 			}
 
-			time_str = ctime((const time_t *) &sdata.sem_otime);
+			if ((otimes = ctime_r((const time_t *) &sdata.sem_otime, (char *)&otime_str)))
+				otime_str[strlen(otimes)-1] = '\0';
+			if ((ctimes = ctime_r((const time_t *) &sdata.sem_ctime, (char *)&ctime_str)))
+				ctime_str[strlen(ctimes)-1] = '\0';
 
-			printf("0x%-10x %-10d %-10d %s", sdata.sem_perm.__key,
-				sid, val, time_str ? time_str : "unknown\n");
+			printf("0x%-10x %-10d %-10d %s  %s\n", sdata.sem_perm.__key,
+				sid, val, otimes ? : "unknown",
+				ctimes? : "unknown");
 		}
 	}
 
@@ -2728,7 +2749,7 @@ static struct command _commands[] = {
 	{"udevreleasecookie", "[<cookie>]", 0, 1, 0, _udevreleasecookie},
 	{"udevflags", "<cookie>", 1, 1, 0, _udevflags},
 	{"udevcomplete", "<cookie>", 1, 1, 0, _udevcomplete},
-	{"udevcomplete_all", "", 0, 0, 0, _udevcomplete_all},
+	{"udevcomplete_all", "<age_in_minutes>", 0, 1, 0, _udevcomplete_all},
 	{"udevcookies", "", 0, 0, 0, _udevcookies},
 	{"targets", "", 0, 0, 0, _targets},
 	{"version", "", 0, 0, 0, _version},
@@ -2745,7 +2766,7 @@ static void _usage(FILE *out)
 	fprintf(out, "dmsetup [--version] [-h|--help [-c|-C|--columns]]\n"
 		"        [-v|--verbose [-v|--verbose ...]]\n"
 		"        [-r|--readonly] [--noopencount] [--nolockfs] [--inactive]\n"
-		"        [--udevcookie] [--noudevrules] [--noudevsync] [--verifyudev]\n"
+		"        [--udevcookie [cookie]] [--noudevrules] [--noudevsync] [--verifyudev]\n"
 		"        [-y|--yes] [--readahead [+]<sectors>|auto|none]\n"
 		"        [-c|-C|--columns] [-o <fields>] [-O|--sort <sort_fields>]\n"
 		"        [--nameprefixes] [--noheadings] [--separator <separator>]\n\n");

@@ -149,7 +149,9 @@ finish_udev_transaction() {
 
 teardown_udev_cookies() {
     if test "$DM_UDEV_SYNCHRONISATION" = 1; then
-	dmsetup udevcomplete_all -y
+	# Delete any cookies created more than 10 minutes ago 
+	# and not used in the last 10 minutes.
+	dmsetup udevcomplete_all -y 10
     fi
 }
 
