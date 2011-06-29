@@ -1963,7 +1963,7 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 	}
 
 	log_debug("dm %s %s%s %s%s%s %s%.0d%s%.0d%s"
-		  "%s%c%c%s%s%s %.0" PRIu64 " %s [%u]",
+		  "%s%c%c%s%s%s%s %.0" PRIu64 " %s [%u]",
 		  _cmd_data_v4[dmt->type].name,
 		  dmt->new_uuid ? "UUID " : "",
 		  dmi->name, dmi->uuid, dmt->newname ? " " : "",
@@ -1976,6 +1976,7 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 		  dmt->major > 0 ? ") " : "",
 		  dmt->no_open_count ? 'N' : 'O',
 		  dmt->no_flush ? 'N' : 'F',
+		  dmt->read_only ? "R" : "",
 		  dmt->skip_lockfs ? "S " : "",
 		  dmt->secure_data ? "W " : "",
 		  dmt->query_inactive_table ? "I " : "",
