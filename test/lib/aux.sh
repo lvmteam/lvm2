@@ -89,6 +89,9 @@ teardown_devs() {
 
 	# Delete any remaining dm/udev semaphores
 	dmsetup udevcomplete_all -y
+
+	# Display any loop devices that failed to get torn down
+	losetup -a
 }
 
 teardown() {
