@@ -61,6 +61,9 @@ prepare_dmeventd() {
 }
 
 teardown_devs() {
+	# Delete any remaining dm/udev semaphores
+	dmsetup udevcomplete_all -y
+
 	test -n "$PREFIX" && {
 		rm -rf $TESTDIR/dev/$PREFIX*
 
@@ -86,9 +89,6 @@ teardown_devs() {
 	fi
 	rm -f DEVICES # devs is set in prepare_devs()
 	rm -f LOOP
-
-	# Delete any remaining dm/udev semaphores
-	dmsetup udevcomplete_all -y
 
 	# Display any loop devices that failed to get torn down
 	losetup -a
