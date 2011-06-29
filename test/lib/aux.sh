@@ -116,7 +116,7 @@ teardown() {
 }
 
 make_ioerror() {
-	echo 0 10000000 error | dmsetup create ioerror
+	echo 0 10000000 error | dmsetup create -u TEST-ioerror ioerror
 	ln -s $DM_DEV_DIR/mapper/ioerror $DM_DEV_DIR/ioerror
 }
 
@@ -239,7 +239,7 @@ prepare_devs() {
 		local dev="$DM_DEV_DIR/mapper/$name"
 		devs="$devs $dev"
 		echo 0 $size linear $LOOP $((($i-1)*$size)) > $name.table
-		dmsetup create $name $name.table
+		dmsetup create -u TEST-$name $name $name.table
 	done
 	finish_udev_transaction
 
@@ -271,7 +271,7 @@ enable_dev() {
 	init_udev_transaction
 	for dev in "$@"; do
 		local name=`echo "$dev" | sed -e 's,.*/,,'`
-		dmsetup create $name $name.table || dmsetup load $name $name.table
+		dmsetup create -u TEST-$name $name $name.table || dmsetup load $name $name.table
 		dmsetup resume $dev
 	done
 	finish_udev_transaction
