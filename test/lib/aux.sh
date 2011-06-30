@@ -117,7 +117,7 @@ teardown_devs() {
 			dmsetup info -c | grep ^$COMMON_PREFIX
 			for dm in $STRAY_DEVS ; do
 				echo dmsetup remove $dm
-				dmsetup remove $dm || true
+				dmsetup remove -f $dm || true
 			done
 			NUM_REMAINING_DEVS=$NUM_DEVS
 		done
