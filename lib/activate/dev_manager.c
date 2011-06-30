@@ -1096,11 +1096,11 @@ static struct dm_tree *_create_partial_dtree(struct dev_manager *dm, struct logi
 		return NULL;
 	}
 
-	if (!_add_lv_to_dtree(dm, dtree, lv, origin_only))
+	if (!_add_lv_to_dtree(dm, dtree, lv, lv_is_origin(lv) ? origin_only : 0))
 		goto_bad;
 
 	/* Add any snapshots of this LV */
-	if (!origin_only)
+	if (!origin_only && lv_is_origin(lv))
 		dm_list_iterate_safe(snh, snht, &lv->snapshot_segs)
 			if (!_add_lv_to_dtree(dm, dtree, dm_list_struct_base(snh, struct lv_segment, origin_list)->cow, 0))
 				goto_bad;
@@ -1714,7 +1714,7 @@ static int _tree_action(struct dev_manager *dm, struct logical_volume *lv,
 	/* Restore fs cookie */
 	dm_tree_set_cookie(root, fs_get_cookie());
 
-	if (!(dlid = build_dm_uuid(dm->mem, lv->lvid.s, laopts->origin_only ? "real" : NULL)))
+	if (!(dlid = build_dm_uuid(dm->mem, lv->lvid.s, (lv_is_origin(lv) && laopts->origin_only) ? "real" : NULL)))
 		goto_out;
 
 	/* Only process nodes with uuid of "LVM-" plus VG id. */
@@ -1744,7 +1744,7 @@ static int _tree_action(struct dev_manager *dm, struct logical_volume *lv,
 	case PRELOAD:
 	case ACTIVATE:
 		/* Add all required new devices to tree */
-		if (!_add_new_lv_to_dtree(dm, dtree, lv, laopts, laopts->origin_only ? "real" : NULL))
+		if (!_add_new_lv_to_dtree(dm, dtree, lv, laopts, (lv_is_origin(lv) && laopts->origin_only) ? "real" : NULL))
 			goto_out;
 
 		/* Preload any devices required before any suspensions */

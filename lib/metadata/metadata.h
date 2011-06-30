@@ -441,6 +441,11 @@ int add_seg_to_segs_using_this_lv(struct logical_volume *lv, struct lv_segment *
 int remove_seg_from_segs_using_this_lv(struct logical_volume *lv, struct lv_segment *seg);
 struct lv_segment *get_only_segment_using_this_lv(struct logical_volume *lv);
 
+int for_each_sub_lv(struct cmd_context *cmd, struct logical_volume *lv,
+                    int (*fn)(struct cmd_context *cmd,
+                              struct logical_volume *lv, void *data),
+                    void *data);
+
 /*
  * Calculate readahead from underlying PV devices
  */
