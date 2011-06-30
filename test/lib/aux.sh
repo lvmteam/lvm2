@@ -71,7 +71,7 @@ teardown_devs() {
 		while dmsetup table | grep -q ^$PREFIX; do
 			for s in `dmsetup info -c -o name --noheading | grep ^$PREFIX`; do
 				umount -fl $DM_DEV_DIR/mapper/$s >& /dev/null || true
-				dmsetup remove $s >& /dev/null || true
+				dmsetup remove -f $s >& /dev/null || true
 			done
 		done
 		finish_udev_transaction
@@ -292,7 +292,7 @@ disable_dev() {
 
 	init_udev_transaction
 	for dev in "$@"; do
-        	dmsetup remove -f $dev
+        	dmsetup remove -f $dev || true
 	done
 	finish_udev_transaction
 
