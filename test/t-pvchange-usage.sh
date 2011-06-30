@@ -30,9 +30,9 @@ do
 
 # "vgchange disable/enable allocation for pvs with metadatacopies = $mda (bz452982)"
 	pvchange $dev1 -x n 
-	check pv_field $dev1 pv_attr  --  
+	check pv_field $dev1 pv_attr  ---
 	pvchange $dev1 -x y 
-	check pv_field $dev1 pv_attr  a- 
+	check pv_field $dev1 pv_attr  a--
 
 # 'remove pv'
 	vgremove $vg1 
