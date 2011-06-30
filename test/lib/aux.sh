@@ -90,10 +90,13 @@ teardown_devs() {
 	rm -f DEVICES # devs is set in prepare_devs()
 	rm -f LOOP
 
-	# Remove any loop devices that failed to get torn down
-	losetup -a
-	echo losetup -d `losetup -a | grep $COMMON_PREFIX | cut -d: -f1` 2>/dev/null || true
-	losetup -a
+	# Remove any loop devices that failed to get torn down if earlier tests aborted
+        STRAY_LOOPS=`losetup -a | grep $COMMON_PREFIX | cut -d: -f1`
+        if test -n "$STRAY_LOOPS"; then
+                echo "Removing stray loop devices containing $COMMON_PREFIX:"
+                losetup -a | grep $COMMON_PREFIX
+                losetup -d $STRAY_LOOPS 2>/dev/null || true
+        fi
 }
 
 teardown() {
