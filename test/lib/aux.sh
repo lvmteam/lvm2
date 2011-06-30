@@ -90,7 +90,9 @@ teardown_devs() {
 	rm -f DEVICES # devs is set in prepare_devs()
 	rm -f LOOP
 
-	# Display any loop devices that failed to get torn down
+	# Remove any loop devices that failed to get torn down
+	losetup -a
+	echo losetup -d `losetup -a | grep $COMMON_PREFIX | cut -d: -f1` 2>/dev/null || true
 	losetup -a
 }
 

@@ -19,11 +19,13 @@ unset CDPATH
 . lib/utils
 
 OLDPWD="`pwd`"
-PREFIX="LVMTEST$$"
+COMMON_PREFIX="LVMTEST"
+PREFIX="${COMMON_PREFIX}$$"
 
 TESTDIR=$(mkdtemp ${LVM_TEST_DIR-$(pwd)} $PREFIX.XXXXXXXXXX) \
 	|| { echo "failed to create temporary directory in ${LVM_TEST_DIR-$(pwd)}"; exit 1; }
 
+export COMMON_PREFIX
 export PREFIX
 export TESTDIR
 
