@@ -2317,7 +2317,7 @@ static int _rename_sub_lv(struct cmd_context *cmd,
 	return _rename_single_lv(lv, new_name);
 }
 
-/* Callback for _for_each_sub_lv */
+/* Callback for for_each_sub_lv */
 static int _rename_cb(struct cmd_context *cmd, struct logical_volume *lv,
 		      void *data)
 {
@@ -2327,32 +2327,31 @@ static int _rename_cb(struct cmd_context *cmd, struct logical_volume *lv,
 }
 
 /*
- * Loop down sub LVs and call "func" for each.
- * "func" is responsible to log necessary information on failure.
+ * Loop down sub LVs and call fn for each.
+ * fn is responsible to log necessary information on failure.
  */
-static int _for_each_sub_lv(struct cmd_context *cmd, struct logical_volume *lv,
-			    int (*func)(struct cmd_context *cmd,
-					struct logical_volume *lv,
-					void *data),
-			    void *data)
+int for_each_sub_lv(struct cmd_context *cmd, struct logical_volume *lv,
+		    int (*fn)(struct cmd_context *cmd,
+			      struct logical_volume *lv, void *data),
+		    void *data)
 {
 	struct logical_volume *org;
 	struct lv_segment *seg;
 	uint32_t s;
 
 	if (lv_is_cow(lv) && lv_is_virtual_origin(org = origin_from_cow(lv)))
-		if (!func(cmd, org, data))
+		if (!fn(cmd, org, data))
 			return_0;
 
 	dm_list_iterate_items(seg, &lv->segments) {
-		if (seg->log_lv && !func(cmd, seg->log_lv, data))
+		if (seg->log_lv && !fn(cmd, seg->log_lv, data))
 			return_0;
 		for (s = 0; s < seg->area_count; s++) {
 			if (seg_type(seg, s) != AREA_LV)
 				continue;
-			if (!func(cmd, seg_lv(seg, s), data))
+			if (!fn(cmd, seg_lv(seg, s), data))
 				return_0;
-			if (!_for_each_sub_lv(cmd, seg_lv(seg, s), func, data))
+			if (!for_each_sub_lv(cmd, seg_lv(seg, s), fn, data))
 				return_0;
 		}
 	}
@@ -2397,7 +2396,7 @@ int lv_rename(struct cmd_context *cmd, struct logical_volume *lv,
 	/* rename sub LVs */
 	lv_names.old = lv->name;
 	lv_names.new = new_name;
-	if (!_for_each_sub_lv(cmd, lv, _rename_cb, (void *) &lv_names))
+	if (!for_each_sub_lv(cmd, lv, _rename_cb, (void *) &lv_names))
 		return 0;
 
 	/* rename main LV */

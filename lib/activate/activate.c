@@ -1097,6 +1097,26 @@ int monitor_dev_for_events(struct cmd_context *cmd, struct logical_volume *lv,
 #endif
 }
 
+struct detached_lv_data {
+	struct logical_volume *lv_pre;
+	struct lv_activate_opts *laopts;
+	int *flush_required;
+};
+
+static int _preload_detached_lv(struct cmd_context *cmd, struct logical_volume *lv, void *data)
+{
+	struct detached_lv_data *detached = data;
+	struct lv_list *lvl_pre;
+
+	if ((lvl_pre = find_lv_in_vg(detached->lv_pre->vg, lv->name))) {
+		if (lv_is_visible(lvl_pre->lv) && lv_is_active(lv) &&
+		    !_lv_preload(lvl_pre->lv, detached->laopts, detached->flush_required))
+			return_0;
+	}
+
+	return 1;
+}
+
 static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 		       struct lv_activate_opts *laopts, int error_if_not_suspended)
 {
@@ -1105,6 +1125,7 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 	struct seg_list *sl;
 	struct lvinfo info;
 	int r = 0, lockfs = 0, flush_required = 0;
+	struct detached_lv_data detached;
 
 	if (!activation())
 		return 1;
@@ -1172,9 +1193,21 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 			}
 			if (!_lv_preload(lvl_pre->lv, laopts, &flush_required))
 				goto_out;
-		} else if (!_lv_preload(lv_pre, laopts, &flush_required))
-			/* FIXME Revert preloading */
-			goto_out;
+		} else {
+			if (!_lv_preload(lv_pre, laopts, &flush_required))
+				/* FIXME Revert preloading */
+				goto_out;
+
+			/*
+			 * Search for existing LVs that have become detached and preload them.
+			 */
+			detached.lv_pre = lv_pre;
+			detached.laopts = laopts;
+			detached.flush_required = &flush_required;
+
+			if (!for_each_sub_lv(cmd, lv, &_preload_detached_lv, &detached))
+				goto_out;
+		}
 	}
 
 	if (!monitor_dev_for_events(cmd, lv, laopts, 0))
