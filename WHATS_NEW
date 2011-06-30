@@ -1,5 +1,6 @@
 Version 2.02.86 -  
 =================================
+  Teardown any stray devices with $COMMON_PREFIX during test runs.
   Reinstate correct permissions when creating mirrors. [2.02.85]
   Append 'm' attribute to pv_attr for missing PVs.
   Annotate CLVMD_CMD_SYNC_NAMES in decode_cmd.
