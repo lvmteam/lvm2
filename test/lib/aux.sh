@@ -90,6 +90,27 @@ teardown_devs() {
 	rm -f DEVICES # devs is set in prepare_devs()
 	rm -f LOOP
 
+	# Try to remove test devices
+	# resume any linears to be sure we do not deadlock
+	STRAY_DEVS=$(dmsetup table | grep linear | sed 's/:.*//' | grep $COMMON_PREFIX | cut -d' '  -f 1)
+	for dm in $STRAY_DEVS ; do
+		# FIXME: only those really suspended
+		dmsetup resume $dm 2>/dev/null
+	done
+
+	# Now try to remove devices
+	finish=0
+	while [ $finish -eq 0 ] ; do
+		finish=1
+		STRAY_DEVS=$(dmsetup table | sed 's/:.*//' | grep $COMMON_PREFIX | cut -d' '  -f 1)
+		for dm in $STRAY_DEVS ; do
+			echo "Trying to remove stalled $dm"
+			dmsetup remove $dm 2>/dev/null
+			# Sucessful remove means repeat the loop once more
+			[ $? -eq 0 ] && finish=0
+		done
+	done
+
 	# Remove any loop devices that failed to get torn down if earlier tests aborted
         STRAY_LOOPS=`losetup -a | grep $COMMON_PREFIX | cut -d: -f1`
         if test -n "$STRAY_LOOPS"; then
