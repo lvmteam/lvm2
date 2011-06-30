@@ -1754,6 +1754,10 @@ static int _emit_segment_line(struct dm_task *dmt, uint32_t major,
 			stack;
 			return r;
 		}
+		if (!params[0])
+			log_error(INTERNAL_ERROR "Empty parameters for "
+				  "%s %u:%u.", dm_segtypes[seg->type].target,
+				  major, minor);
 		break;
 	}
 
