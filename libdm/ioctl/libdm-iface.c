@@ -1884,6 +1884,16 @@ no_match:
 	return r;
 }
 
+static int _suspend_with_validation_v4(struct dm_task *dmt)
+{
+	/*
+	 * FIXME Ensure we can't leave any I/O trapped between suspended devices.
+	 */
+	dmt->enable_checks = 0;
+	
+	return dm_task_run(dmt);
+}
+
 static const char *_sanitise_message(char *message)
 {
 	const char *sanitised_message = message ?: "";
@@ -1963,7 +1973,7 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 	}
 
 	log_debug("dm %s %s%s %s%s%s %s%.0d%s%.0d%s"
-		  "%s%c%c%s%s%s%s %.0" PRIu64 " %s [%u]",
+		  "%s%c%c%s%s%s%s%s %.0" PRIu64 " %s [%u]",
 		  _cmd_data_v4[dmt->type].name,
 		  dmt->new_uuid ? "UUID " : "",
 		  dmi->name, dmi->uuid, dmt->newname ? " " : "",
@@ -1980,6 +1990,7 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 		  dmt->skip_lockfs ? "S " : "",
 		  dmt->secure_data ? "W " : "",
 		  dmt->query_inactive_table ? "I " : "",
+		  dmt->enable_checks ? "C" : "",
 		  dmt->sector, _sanitise_message(dmt->message),
 		  dmi->data_size);
 #ifdef DM_IOCTLS
@@ -2053,6 +2064,9 @@ int dm_task_run(struct dm_task *dmt)
 
 	if ((dmt->type == DM_DEVICE_RELOAD) && dmt->suppress_identical_reload)
 		return _reload_with_suppression_v4(dmt);
+
+	if ((dmt->type == DM_DEVICE_SUSPEND) && dmt->enable_checks)
+		return _suspend_with_validation_v4(dmt);
 
 	if (!_open_control()) {
 		_udev_complete(dmt);

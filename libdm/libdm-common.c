@@ -395,6 +395,13 @@ int dm_task_set_mode(struct dm_task *dmt, mode_t mode)
 	return 1;
 }
 
+int dm_task_enable_checks(struct dm_task *dmt)
+{
+	dmt->enable_checks = 1;
+
+	return 1;
+}
+
 int dm_task_add_target(struct dm_task *dmt, uint64_t start, uint64_t size,
 		       const char *ttype, const char *params)
 {

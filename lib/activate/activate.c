@@ -394,6 +394,9 @@ int target_version(const char *target_name, uint32_t *maj,
 	if (!(dmt = dm_task_create(DM_DEVICE_LIST_VERSIONS)))
 		return_0;
 
+        if (activation_checks() && !dm_task_enable_checks(dmt))
+                goto_out;
+
 	if (!dm_task_run(dmt)) {
 		log_debug("Failed to get %s target version", target_name);
 		/* Assume this was because LIST_VERSIONS isn't supported */

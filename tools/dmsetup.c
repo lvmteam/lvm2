@@ -117,6 +117,9 @@ extern char *optarg;
  */
 enum {
 	READ_ONLY = 0,
+	ADD_NODE_ON_CREATE_ARG,
+	ADD_NODE_ON_RESUME_ARG,
+	CHECKS_ARG,
 	COLS_ARG,
 	EXEC_ARG,
 	FORCE_ARG,
@@ -153,8 +156,6 @@ enum {
 	VERIFYUDEV_ARG,
 	VERSION_ARG,
 	YES_ARG,
-	ADD_NODE_ON_RESUME_ARG,
-	ADD_NODE_ON_CREATE_ARG,
 	NUM_SWITCHES
 };
 
@@ -315,6 +316,9 @@ static struct dm_task *_get_deps_task(int major, int minor)
 		goto err;
 
 	if (_switches[INACTIVE_ARG] && !dm_task_query_inactive_table(dmt))
+		goto err;
+
+	if (_switches[CHECKS_ARG] && !dm_task_enable_checks(dmt))
 		goto err;
 
 	if (!dm_task_run(dmt))
@@ -572,6 +576,9 @@ static int _load(CMD_ARGS)
 	if (_switches[INACTIVE_ARG] && !dm_task_query_inactive_table(dmt))
 		goto out;
 
+	if (_switches[CHECKS_ARG] && !dm_task_enable_checks(dmt))
+		goto out;
+
 	if (!dm_task_run(dmt))
 		goto out;
 
@@ -645,6 +652,8 @@ static int _create(CMD_ARGS)
 		udev_flags |= DM_UDEV_DISABLE_DM_RULES_FLAG |
 			      DM_UDEV_DISABLE_SUBSYSTEM_RULES_FLAG;
 
+	if (_switches[CHECKS_ARG] && !dm_task_enable_checks(dmt))
+		goto out;
 
 	if (!_set_task_add_node(dmt))
                 goto out;
@@ -697,6 +706,9 @@ static int _rename(CMD_ARGS)
 		goto out;
 
 	if (_switches[INACTIVE_ARG] && !dm_task_query_inactive_table(dmt))
+		goto out;
+
+	if (_switches[CHECKS_ARG] && !dm_task_enable_checks(dmt))
 		goto out;
 
 	if (_switches[NOUDEVRULES_ARG])
@@ -778,6 +790,9 @@ static int _message(CMD_ARGS)
 	if (_switches[INACTIVE_ARG] && !dm_task_query_inactive_table(dmt))
 		goto out;
 
+	if (_switches[CHECKS_ARG] && !dm_task_enable_checks(dmt))
+		goto out;
+
 	if (!dm_task_run(dmt))
 		goto out;
 
@@ -814,6 +829,9 @@ static int _setgeometry(CMD_ARGS)
 		goto out;
 
 	if (_switches[INACTIVE_ARG] && !dm_task_query_inactive_table(dmt))
+		goto out;
+
+	if (_switches[CHECKS_ARG] && !dm_task_enable_checks(dmt))
 		goto out;
 
 	/* run the task */
@@ -1234,6 +1252,9 @@ static int _simple(int task, const char *name, uint32_t event_nr, int display)
 	if (_switches[NOLOCKFS_ARG] && !dm_task_skip_lockfs(dmt))
 		goto out;
 
+	if (_switches[CHECKS_ARG] && !dm_task_enable_checks(dmt))
+		goto out;
+
 	/* FIXME: needs to coperate with udev */
 	if (!_set_task_add_node(dmt))
                 goto out;
@@ -1314,6 +1335,9 @@ static int _process_all(const struct command *cmd, int argc, char **argv, int si
 	if (!(dmt = dm_task_create(DM_DEVICE_LIST)))
 		return 0;
 
+	if (_switches[CHECKS_ARG] && !dm_task_enable_checks(dmt))
+		goto out;
+
 	if (!dm_task_run(dmt)) {
 		r = 0;
 		goto out;
@@ -1360,6 +1384,9 @@ static uint64_t _get_device_size(const char *name)
 		goto out;
 
 	if (_switches[INACTIVE_ARG] && !dm_task_query_inactive_table(dmt))
+		goto out;
+
+	if (_switches[CHECKS_ARG] && !dm_task_enable_checks(dmt))
 		goto out;
 
 	if (!dm_task_run(dmt))
@@ -1409,6 +1436,9 @@ static int _error_device(CMD_ARGS)
 		goto error;
 
 	if (_switches[INACTIVE_ARG] && !dm_task_query_inactive_table(dmt))
+		goto error;
+
+	if (_switches[CHECKS_ARG] && !dm_task_enable_checks(dmt))
 		goto error;
 
 	if (!dm_task_run(dmt))
@@ -1586,6 +1616,9 @@ static int _status(CMD_ARGS)
 	if (_switches[INACTIVE_ARG] && !dm_task_query_inactive_table(dmt))
 		goto out;
 
+	if (_switches[CHECKS_ARG] && !dm_task_enable_checks(dmt))
+		goto out;
+
 	if (!dm_task_run(dmt))
 		goto out;
 
@@ -1659,6 +1692,9 @@ static int _targets(CMD_ARGS)
 	if (!(dmt = dm_task_create(DM_DEVICE_LIST_VERSIONS)))
 		return 0;
 
+	if (_switches[CHECKS_ARG] && !dm_task_enable_checks(dmt))
+		goto out;
+
 	if (!dm_task_run(dmt))
 		goto out;
 
@@ -1709,6 +1745,9 @@ static int _info(CMD_ARGS)
 	if (_switches[INACTIVE_ARG] && !dm_task_query_inactive_table(dmt))
 		goto out;
 
+	if (_switches[CHECKS_ARG] && !dm_task_enable_checks(dmt))
+		goto out;
+
 	if (!dm_task_run(dmt))
 		goto out;
 
@@ -1747,6 +1786,9 @@ static int _deps(CMD_ARGS)
 		goto out;
 
 	if (_switches[INACTIVE_ARG] && !dm_task_query_inactive_table(dmt))
+		goto out;
+
+	if (_switches[CHECKS_ARG] && !dm_task_enable_checks(dmt))
 		goto out;
 
 	if (!dm_task_run(dmt))
@@ -2764,7 +2806,7 @@ static void _usage(FILE *out)
 
 	fprintf(out, "Usage:\n\n");
 	fprintf(out, "dmsetup [--version] [-h|--help [-c|-C|--columns]]\n"
-		"        [-v|--verbose [-v|--verbose ...]]\n"
+		"        [--checks] [-v|--verbose [-v|--verbose ...]]\n"
 		"        [-r|--readonly] [--noopencount] [--nolockfs] [--inactive]\n"
 		"        [--udevcookie [cookie]] [--noudevrules] [--noudevsync] [--verifyudev]\n"
 		"        [-y|--yes] [--readahead [+]<sectors>|auto|none]\n"
@@ -3119,6 +3161,7 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 #ifdef HAVE_GETOPTLONG
 	static struct option long_options[] = {
 		{"readonly", 0, &ind, READ_ONLY},
+		{"checks", 0, &ind, CHECKS_ARG},
 		{"columns", 0, &ind, COLS_ARG},
 		{"exec", 1, &ind, EXEC_ARG},
 		{"force", 0, &ind, FORCE_ARG},
@@ -3258,6 +3301,8 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 			_switches[ADD_NODE_ON_RESUME_ARG]++;
 		if (ind == ADD_NODE_ON_CREATE_ARG)
 			_switches[ADD_NODE_ON_CREATE_ARG]++;
+		if (ind == CHECKS_ARG)
+			_switches[CHECKS_ARG]++;
 		if (ind == UDEVCOOKIE_ARG) {
 			_switches[UDEVCOOKIE_ARG]++;
 			_udev_cookie = _get_cookie_value(optarg);
