@@ -88,6 +88,9 @@ static struct dm_task *_setup_task(const char *name, const char *uuid,
 	if (major && !dm_task_set_major_minor(dmt, major, minor, 1))
 		goto_out;
 
+	if (activation_checks() && !dm_task_enable_checks(dmt))
+		goto_out;
+		
 	return dmt;
       out:
 	dm_task_destroy(dmt);
@@ -148,6 +151,9 @@ int device_is_usable(struct device *dev)
 	if (!dm_task_set_major_minor(dmt, MAJOR(dev->dev), MINOR(dev->dev), 1))
 		goto_out;
 
+	if (activation_checks() && !dm_task_enable_checks(dmt))
+		goto_out;
+		
 	if (!dm_task_run(dmt)) {
 		log_error("Failed to get state of mapped device");
 		goto out;

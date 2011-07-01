@@ -411,6 +411,12 @@ global {
 }
 
 activation {
+    # Set to 1 to perform internal checks on the operations issued to
+    # libdevmapper.  Useful for debugging problems with activation.
+    # Some of the checks may be expensive, so it's best to use this
+    # only when there seems to be a problem.
+    checks = 0
+
     # Set to 0 to disable udev synchronisation (if compiled into the binaries).
     # Processes will not wait for notification from udev.
     # They will continue irrespective of any possible udev processing

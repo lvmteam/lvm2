@@ -42,6 +42,7 @@ static int _ignore_suspended_devices = 0;
 static int _error_message_produced = 0;
 static unsigned _is_static = 0;
 static int _udev_checking = 1;
+static int _activation_checks = 0;
 static char _sysfs_dir_path[PATH_MAX] = "";
 static int _dev_disable_after_error_count = DEFAULT_DISABLE_AFTER_ERROR_COUNT;
 static uint64_t _pv_min_size = (DEFAULT_PV_MIN_SIZE_KB * 1024L >> SECTOR_SHIFT);
@@ -129,6 +130,14 @@ void init_udev_checking(int checking)
 		log_debug("LVM udev checking enabled");
 	else
 		log_debug("LVM udev checking disabled");
+}
+
+void init_activation_checks(int checks)
+{
+	if ((_activation_checks = checks))
+		log_debug("LVM activation checks enabled");
+	else
+		log_debug("LVM activation checks disabled");
 }
 
 void init_dev_disable_after_error_count(int value)
@@ -254,6 +263,11 @@ unsigned is_static(void)
 int udev_checking(void)
 {
 	return _udev_checking;
+}
+
+int activation_checks(void)
+{
+	return _activation_checks;
 }
 
 const char *sysfs_dir_path(void)

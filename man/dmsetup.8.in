@@ -114,6 +114,10 @@ Invoking the command as \fBdevmap_name\fP is equivalent to
 .br
 \fBdmsetup info -c --noheadings -j \fImajor\fB -m \fIminor\fP.
 .SH OPTIONS
+.IP \fB--checks
+Perform additional checks on the operations requested and report
+potential problems.  Useful when debugging scripts.
+In some cases these checks may slow down operations noticeably.
 .IP \fB-c|-C|--columns
 .br
 Display output in columns rather than as Field: Value lines.

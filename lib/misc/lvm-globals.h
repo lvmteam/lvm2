@@ -40,6 +40,7 @@ void init_is_static(unsigned value);
 void init_udev_checking(int checking);
 void init_dev_disable_after_error_count(int value);
 void init_pv_min_size(uint64_t sectors);
+void init_activation_checks(int checks);
 
 void set_cmd_name(const char *cmd_name);
 void set_sysfs_dir_path(const char *path);
@@ -63,6 +64,7 @@ unsigned is_static(void);
 int udev_checking(void);
 const char *sysfs_dir_path(void);
 uint64_t pv_min_size(void);
+int activation_checks(void);
 
 #define DMEVENTD_MONITOR_IGNORE -1
 int dmeventd_monitor_mode(void);

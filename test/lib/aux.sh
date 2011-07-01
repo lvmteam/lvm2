@@ -381,6 +381,7 @@ global/locking_dir = "$TESTDIR/var/lock/lvm"
 global/locking_type=$LVM_TEST_LOCKING
 global/si_unit_consistency = 1
 global/fallback_to_local_locking = 0
+activation/checks = 1
 activation/udev_sync = 1
 activation/udev_rules = 1
 activation/verify_udev_operations = $VERIFY_UDEV

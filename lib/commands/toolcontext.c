@@ -285,6 +285,9 @@ static int _process_config(struct cmd_context *cmd)
 								"activation/udev_sync",
 								DEFAULT_UDEV_SYNC);
 
+	init_activation_checks(find_config_tree_int(cmd, "activation/checks",
+						      DEFAULT_ACTIVATION_CHECKS));
+
 #ifdef UDEV_SYNC_SUPPORT
 	/*
 	 * We need udev rules to be applied, otherwise we would end up with no

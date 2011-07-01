@@ -1,5 +1,6 @@
 Version 1.02.65 - 
 ==================================
+  Add dmsetup --checks and dm_task_enable_checks framework to validate ioctls.
   Add age_in_minutes parameter to dmsetup udevcomplete_all.
   Return immediately from dm_lib_exit() if called more than once.
   Disable udev fallback by default and add --verifyudev option to dmsetup.
