@@ -1884,13 +1884,104 @@ no_match:
 	return r;
 }
 
+static int _check_children_not_suspended_v4(struct dm_task *dmt, uint64_t device)
+{
+	struct dm_task *task;
+	struct dm_info info;
+	struct dm_deps *deps;
+	int r = 0;
+	uint32_t i;
+
+	/* Find dependencies */
+	if (!(task = dm_task_create(DM_DEVICE_DEPS)))
+		return 0;
+
+	/* Copy across or set relevant fields */
+	if (device) {
+		task->major = MAJOR(device);
+		task->minor = MINOR(device);
+	} else {
+		if (dmt->dev_name && !dm_task_set_name(task, dmt->dev_name))
+			goto out;
+
+		if (dmt->uuid && !dm_task_set_uuid(task, dmt->uuid))
+			goto out;
+
+		task->major = dmt->major;
+		task->minor = dmt->minor;
+	}
+
+	task->uid = dmt->uid;
+	task->gid = dmt->gid;
+	task->mode = dmt->mode;
+	/* FIXME: Just for udev_check in dm_task_run. Can we avoid this? */
+	task->event_nr = dmt->event_nr & DM_UDEV_FLAGS_MASK;
+	task->cookie_set = dmt->cookie_set;
+	task->add_node = dmt->add_node;
+	
+	if (!(r = dm_task_run(task)))
+		goto out;
+
+	if (!dm_task_get_info(task, &info) || !info.exists)
+		goto out;
+
+	/*
+	 * Warn if any of the devices this device depends upon are already
+	 * suspended: I/O could become trapped between the two devices.
+	 */
+	if (info.suspended) {
+		if (!device)
+			log_debug("Attempting to suspend a device that is already suspended "
+				  "(%u:%u)", info.major, info.minor);
+		else
+			log_error(INTERNAL_ERROR "Attempt to suspend device %s%s%s%.0d%s%.0d%s%s"
+				  "that uses already-suspended device (%u:%u)", 
+				  dmt->dev_name ? : "", dmt->uuid ? : "", 
+				  dmt->major > 0 ? "(" : "",
+				  dmt->major > 0 ? dmt->major : 0,
+				  dmt->major > 0 ? ":" : "",
+				  dmt->minor > 0 ? dmt->minor : 0,
+				  dmt->major > 0 && dmt->minor == 0 ? "0" : "",
+				  dmt->major > 0 ? ") " : "",
+				  info.major, info.minor);
+
+		/* No need for further recursion */
+		r = 1;
+		goto out;
+	}
+
+        if (!(deps = dm_task_get_deps(task)))
+                goto out;
+
+	for (i = 0; i < deps->count; i++) {
+		/* Only recurse with dm devices */
+		if (MAJOR(deps->device[i]) != _dm_device_major)
+			continue;
+
+		if (!_check_children_not_suspended_v4(task, deps->device[i]))
+			goto out;
+	}
+
+	r = 1;
+
+out:
+	dm_task_destroy(task);
+
+	return r;
+}
+
 static int _suspend_with_validation_v4(struct dm_task *dmt)
 {
-	/*
-	 * FIXME Ensure we can't leave any I/O trapped between suspended devices.
-	 */
+	/* Avoid recursion */
 	dmt->enable_checks = 0;
-	
+
+	/*
+	 * Ensure we can't leave any I/O trapped between suspended devices.
+	 */
+	if (!_check_children_not_suspended_v4(dmt, 0))
+		return 0;
+
+	/* Finally, perform the original suspend. */
 	return dm_task_run(dmt);
 }
 

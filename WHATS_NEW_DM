@@ -1,5 +1,6 @@
 Version 1.02.65 - 
 ==================================
+  Report internal error if suspending a device using an already-suspended dev.
   Add dmsetup --checks and dm_task_enable_checks framework to validate ioctls.
   Add age_in_minutes parameter to dmsetup udevcomplete_all.
   Return immediately from dm_lib_exit() if called more than once.
