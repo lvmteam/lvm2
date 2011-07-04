@@ -1802,10 +1802,6 @@ int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv,
 int dev_manager_preload(struct dev_manager *dm, struct logical_volume *lv,
 			struct lv_activate_opts *laopts, int *flush_required)
 {
-	/* FIXME Update the pvmove implementation! */
-	if ((lv->status & PVMOVE) || (lv->status & LOCKED))
-		return 1;
-
 	if (!_tree_action(dm, lv, laopts, PRELOAD))
 		return 0;
 
