@@ -63,6 +63,7 @@ check pvlv_counts $vg1 2 3 0
 # cleanup
 aux enable_dev $dev1
 vgremove -ff $vg1
+vgremove -ff $vg1
 
 #COMM "vgreduce rejects --removemissing --mirrorsonly --force when nonmirror lv lost too"
 # (lvm$mdatype) setup: create mirror + linear lvs
