@@ -1436,7 +1436,7 @@ static int _add_segment_to_dtree(struct dev_manager *dm,
 		}
 		if (!_add_new_lv_to_dtree(dm, dtree, seg->lv, laopts, "real"))
 			return_0;
-	} else if (!laopts->no_merging && lv_is_cow(seg->lv) && !layer) {
+	} else if (lv_is_cow(seg->lv) && !layer) {
 		if (!_add_new_lv_to_dtree(dm, dtree, seg->lv, laopts, "cow"))
 			return_0;
 	} else {
@@ -1457,7 +1457,7 @@ static int _add_segment_to_dtree(struct dev_manager *dm,
 			if (!_add_snapshot_merge_target_to_dtree(dm, dnode, seg->lv))
 				return_0;
 		}
-	} else if (!laopts->no_merging && lv_is_cow(seg->lv) && !layer) {
+	} else if (lv_is_cow(seg->lv) && !layer) {
 		if (!_add_snapshot_target_to_dtree(dm, dnode, seg->lv, laopts))
 			return_0;
 	} else if (!_add_target_to_dtree(dm, dnode, seg, laopts))
