@@ -1,5 +1,6 @@
 Version 2.02.86 -  
 =================================
+  Abort operation if dm_tree_node_add_target_area fails.
   Add activation/checks to lvm.conf to perform additional ioctl validation.
   When suspending, automatically preload newly-visible existing LVs.
   Report internal error when parameters are missing on table load.

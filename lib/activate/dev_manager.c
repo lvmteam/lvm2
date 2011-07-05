@@ -1178,12 +1178,11 @@ static int _add_error_area(struct dev_manager *dm, struct dm_tree_node *node,
 		dlid = _add_error_device(dm, *tree, seg, s);
 		if (!dlid)
 			return_0;
-		dm_tree_node_add_target_area(node, NULL, dlid,
-					     extent_size * seg_le(seg, s));
+		if (!dm_tree_node_add_target_area(node, NULL, dlid, extent_size * seg_le(seg, s)))
+			return_0;
 	} else
-		dm_tree_node_add_target_area(node,
-					     dm->cmd->stripe_filler,
-					     NULL, UINT64_C(0));
+		if (!dm_tree_node_add_target_area(node, dm->cmd->stripe_filler, NULL, UINT64_C(0)))
+			return_0;
 
 	return 1;
 }
@@ -1204,19 +1203,15 @@ int add_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 		    (seg_type(seg, s) == AREA_LV && !seg_lv(seg, s))) {
 			if (!_add_error_area(dm, node, seg, s))
 				return_0;
-		} else if (seg_type(seg, s) == AREA_PV)
-			dm_tree_node_add_target_area(node,
-							dev_name(seg_dev(seg, s)),
-							NULL,
-							(seg_pv(seg, s)->pe_start +
-							 (extent_size * seg_pe(seg, s))));
-		else if (seg_type(seg, s) == AREA_LV) {
-			if (!(dlid = build_dm_uuid(dm->mem,
-						   seg_lv(seg, s)->lvid.s,
-						   NULL)))
+		} else if (seg_type(seg, s) == AREA_PV) {
+			if (!dm_tree_node_add_target_area(node, dev_name(seg_dev(seg, s)), NULL,
+				    (seg_pv(seg, s)->pe_start + (extent_size * seg_pe(seg, s)))))
 				return_0;
-			dm_tree_node_add_target_area(node, NULL, dlid,
-							extent_size * seg_le(seg, s));
+		} else if (seg_type(seg, s) == AREA_LV) {
+			if (!(dlid = build_dm_uuid(dm->mem, seg_lv(seg, s)->lvid.s, NULL)))
+				return_0;
+			if (!dm_tree_node_add_target_area(node, NULL, dlid, extent_size * seg_le(seg, s)))
+				return_0;
 		} else {
 			log_error(INTERNAL_ERROR "Unassigned area found in LV %s.",
 				  seg->lv->name);
