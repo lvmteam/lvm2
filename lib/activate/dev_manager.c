@@ -1194,13 +1194,21 @@ int add_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 	uint64_t extent_size = seg->lv->vg->extent_size;
 	uint32_t s;
 	char *dlid;
+	struct stat info;
+	const char *name;
 
+	/* FIXME Avoid repeating identical stat in dm_tree_node_add_target_area */
 	for (s = start_area; s < areas; s++) {
 		if ((seg_type(seg, s) == AREA_PV &&
-		     (!seg_pvseg(seg, s) ||
-		      !seg_pv(seg, s) ||
-		      !seg_dev(seg, s))) ||
+		     (!seg_pvseg(seg, s) || !seg_pv(seg, s) || !seg_dev(seg, s) ||
+		       !(name = dev_name(seg_dev(seg, s))) || !*name ||
+		       stat(name, &info) < 0 || !S_ISBLK(info.st_mode))) ||
 		    (seg_type(seg, s) == AREA_LV && !seg_lv(seg, s))) {
+			if (!seg->lv->vg->cmd->partial_activation) {
+				log_error("Aborting.  LV %s is now incomplete "
+					  "and --partial was not specified.", seg->lv->name);
+				return 0;
+			}
 			if (!_add_error_area(dm, node, seg, s))
 				return_0;
 		} else if (seg_type(seg, s) == AREA_PV) {
