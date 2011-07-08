@@ -1214,9 +1214,9 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 		 */
 		if (!laopts->origin_only && lv_is_origin(lv)) {
         		dm_list_iterate_items_gen(snap_seg, &lv->snapshot_segs, origin_list) {
-				if (!(lvl_pre = find_lv_in_vg(lv_pre->vg, snap_seg->cow->name))) {
-					log_error(INTERNAL_ERROR "LV %s missing from preload metadata",
-						  snap_seg->cow->name);
+				if (!(lvl_pre = find_lv_in_vg_by_lvid(lv_pre->vg, &snap_seg->cow->lvid))) {
+					log_error(INTERNAL_ERROR "LV %s (%s) missing from preload metadata",
+						  snap_seg->cow->name, snap_seg->cow->lvid.id[1].uuid);
 					goto out;
 				}
 				if (!lv_is_cow(lvl_pre->lv) &&
