@@ -1112,7 +1112,7 @@ static int _preload_detached_lv(struct cmd_context *cmd, struct logical_volume *
 	struct lv_list *lvl_pre;
 
 	if ((lvl_pre = find_lv_in_vg(detached->lv_pre->vg, lv->name))) {
-		if (lv_is_visible(lvl_pre->lv) && lv_is_active(lv) && !lv_is_cow(lv) &&
+		if (lv_is_visible(lvl_pre->lv) && lv_is_active(lv) && (!lv_is_cow(lv) || !lv_is_cow(lvl_pre->lv)) &&
 		    !_lv_preload(lvl_pre->lv, detached->laopts, detached->flush_required))
 			return_0;
 	}
@@ -1126,6 +1126,7 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 	struct logical_volume *lv = NULL, *lv_pre = NULL, *pvmove_lv = NULL;
 	struct lv_list *lvl_pre;
 	struct seg_list *sl;
+        struct lv_segment *snap_seg;
 	struct lvinfo info;
 	int r = 0, lockfs = 0, flush_required = 0;
 	struct detached_lv_data detached;
@@ -1180,8 +1181,7 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 		/* Preload all the LVs above the PVMOVE LV */
 		dm_list_iterate_items(sl, &pvmove_lv->segs_using_this_lv) {
 			if (!(lvl_pre = find_lv_in_vg(lv_pre->vg, sl->seg->lv->name))) {
-				/* FIXME Internal error? */
-				log_error("LV %s missing from preload metadata", sl->seg->lv->name);
+				log_error(INTERNAL_ERROR "LV %s missing from preload metadata", sl->seg->lv->name);
 				goto out;
 			}
 			if (!_lv_preload(lvl_pre->lv, laopts, &flush_required))
@@ -1189,8 +1189,7 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 		}
 		/* Now preload the PVMOVE LV itself */
 		if (!(lvl_pre = find_lv_in_vg(lv_pre->vg, pvmove_lv->name))) {
-			/* FIXME Internal error? */
-			log_error("LV %s missing from preload metadata", pvmove_lv->name);
+			log_error(INTERNAL_ERROR "LV %s missing from preload metadata", pvmove_lv->name);
 			goto out;
 		}
 		if (!_lv_preload(lvl_pre->lv, laopts, &flush_required))
@@ -1209,6 +1208,22 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 
 		if (!for_each_sub_lv(cmd, lv, &_preload_detached_lv, &detached))
 			goto_out;
+
+		/*
+		 * Preload any snapshots that are being removed.
+		 */
+		if (!laopts->origin_only && lv_is_origin(lv)) {
+        		dm_list_iterate_items_gen(snap_seg, &lv->snapshot_segs, origin_list) {
+				if (!(lvl_pre = find_lv_in_vg(lv_pre->vg, snap_seg->cow->name))) {
+					log_error(INTERNAL_ERROR "LV %s missing from preload metadata",
+						  snap_seg->cow->name);
+					goto out;
+				}
+				if (!lv_is_cow(lvl_pre->lv) &&
+				    !_lv_preload(lvl_pre->lv, laopts, &flush_required))
+					goto_out;
+			}
+		}
 	}
 
 	if (!monitor_dev_for_events(cmd, lv, laopts, 0))
