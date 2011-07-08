@@ -200,6 +200,21 @@ static void _init_logging(struct cmd_context *cmd)
 	reset_lvm_errno(1);
 }
 
+/*
+ * Until the DM_UEVENT_GENERATED_FLAG was introduced in kernel patch 
+ * 856a6f1dbd8940e72755af145ebcd806408ecedd
+ * some operations could not be performed by udev, requiring our fallback code.
+ */
+static int _dm_driver_has_stable_udev_support()
+{
+	char vsn[80];
+	unsigned maj, min, patchlevel;
+
+	return driver_version(vsn, sizeof(vsn)) &&
+	       (sscanf(vsn, "%u.%u.%u", &maj, &min, &patchlevel) == 3) &&
+	       (maj == 4 ? min >= 18 : maj > 4);
+}
+
 static int _process_config(struct cmd_context *cmd)
 {
 	mode_t old_umask;
@@ -298,6 +313,13 @@ static int _process_config(struct cmd_context *cmd)
 	cmd->default_settings.udev_fallback = cmd->default_settings.udev_rules ?
 		find_config_tree_int(cmd, "activation/verify_udev_operations",
 				     DEFAULT_VERIFY_UDEV_OPERATIONS) : 1;
+
+	/* Do not rely fully on udev if the udev support is known to be incomplete. */
+	if (!cmd->default_settings.udev_fallback && !_dm_driver_has_stable_udev_support()) {
+		log_very_verbose("Kernel driver has incomplete udev support so "
+				 "LVM will check and perform some operations itself.");
+		cmd->default_settings.udev_fallback = 1;
+	}
 
 #else
 	/* We must use old node/symlink creation code if not compiled with udev support at all! */
