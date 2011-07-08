@@ -16,7 +16,6 @@
 #include "polldaemon.h"
 #include "lv_alloc.h"
 #include "metadata.h"
-#include "lvconvert.h"
 
 struct lvconvert_params {
 	int snapshot;
