@@ -15,7 +15,6 @@
 
 #include "tools.h"
 #include "lv_alloc.h"
-#include "lvconvert.h"
 
 static int _remove_pv(struct volume_group *vg, struct pv_list *pvl, int silent)
 {

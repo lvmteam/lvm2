@@ -178,4 +178,7 @@ const char *command_name(struct cmd_context *cmd);
 int pvmove_poll(struct cmd_context *cmd, const char *pv, unsigned background);
 int lvconvert_poll(struct cmd_context *cmd, struct logical_volume *lv, unsigned background);
 
+int mirror_remove_missing(struct cmd_context *cmd,
+			  struct logical_volume *lv, int force);
+
 #endif
