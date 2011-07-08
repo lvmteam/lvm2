@@ -1,3 +1,6 @@
+Version 2.02.87 - 
+===============================
+
 Version 2.02.86 - 8th July 2011
 ===============================
   Remove unnecessary warning in pvcreate for MD linear devices.
