@@ -1,5 +1,6 @@
 Version 2.02.86 -  
 =================================
+  Fix warning in pvcreate for MD linear devices.
   Move snapshot removal activation logic into lib/activate.
   Cope with a PV only discovered missing when creating deptree.
   Abort operation if dm_tree_node_add_target_area fails.
