@@ -1,12 +1,13 @@
-Version 1.02.65 - 
-==================================
+Version 1.02.65 - 8th July 2011
+===============================
   Remove dev name prefix from dmsetup line output if exactly one dev requested.
   Report internal error if suspending a device using an already-suspended dev.
+  Report error if a table load requiring target parameters has none supplied.
   Add dmsetup --checks and dm_task_enable_checks framework to validate ioctls.
   Add age_in_minutes parameter to dmsetup udevcomplete_all.
   Return immediately from dm_lib_exit() if called more than once.
   Disable udev fallback by default and add --verifyudev option to dmsetup.
-  Warn if a table is loaded while a device is known to be in suspended state.
+  Report internal error if any table is loaded while any dev is known suspended.
   Add dm_get_suspended_counter() for number of devs in suspended state by lib.
   Fix "all" report field prefix matching to include label fields with pv_all.
   Delay resuming new preloaded mirror devices with core logs in deptree code.
