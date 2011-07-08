@@ -426,7 +426,7 @@ udev_wait() {
 	if test -n "$1" ; then
 		udevadm settle --exit-if-exists=$1
 	else
-		udevadm settle --timeout=5 
+		udevadm settle --timeout=15
 	fi
 }
 
