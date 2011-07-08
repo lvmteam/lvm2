@@ -172,7 +172,7 @@ int vg_add_snapshot(struct logical_volume *origin,
 
 int vg_remove_snapshot(struct logical_volume *cow)
 {
-	int preload_origin = 0;
+	int merging_snapshot = 0;
 	struct logical_volume *origin = origin_from_cow(cow);
 
 	dm_list_del(&cow->snapshot->origin_list);
@@ -193,7 +193,7 @@ int vg_remove_snapshot(struct logical_volume *cow)
 			 *   when transitioning from "snapshot-merge" to
 			 *   "snapshot-origin after a merge completes.
 			 */
-			preload_origin = 1;
+			merging_snapshot = 1;
 		}
 	}
 
@@ -206,20 +206,22 @@ int vg_remove_snapshot(struct logical_volume *cow)
 	cow->snapshot = NULL;
 	lv_set_visible(cow);
 
-	if (preload_origin) {
-		if (!vg_write(origin->vg))
-			return_0;
-		if (!suspend_lv(origin->vg->cmd, origin)) {
-			log_error("Failed to refresh %s without snapshot.",
-				  origin->name);
-			return 0;
-		}
-		if (!vg_commit(origin->vg))
-			return_0;
-		if (!resume_lv(origin->vg->cmd, origin)) {
-			log_error("Failed to resume %s.", origin->name);
-			return 0;
-		}
+	if (!vg_write(origin->vg))
+		return_0;
+	if (!suspend_lv(origin->vg->cmd, origin)) {
+		log_error("Failed to refresh %s without snapshot.",
+			  origin->name);
+		return 0;
+	}
+	if (!vg_commit(origin->vg))
+		return_0;
+	if (!merging_snapshot && !resume_lv(origin->vg->cmd, cow)) {
+		log_error("Failed to resume %s.", cow->name);
+		return 0;
+	}
+	if (!resume_lv(origin->vg->cmd, origin)) {
+		log_error("Failed to resume %s.", origin->name);
+		return 0;
 	}
 
 	return 1;

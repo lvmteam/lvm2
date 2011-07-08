@@ -2683,8 +2683,6 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	struct volume_group *vg;
 	struct lvinfo info;
 	struct logical_volume *origin = NULL;
-	int was_merging = 0;
-	int reload_required = 0;
 
 	vg = lv->vg;
 
@@ -2739,9 +2737,8 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 	if (lv_is_cow(lv)) {
 		origin = origin_from_cow(lv);
-		was_merging = lv_is_merging_origin(origin);
 		log_verbose("Removing snapshot %s", lv->name);
-		/* vg_remove_snapshot() will preload origin if it was merging */
+		/* vg_remove_snapshot() will preload origin/former snapshots */
 		if (!vg_remove_snapshot(lv))
 			return_0;
 	}
@@ -2759,25 +2756,12 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return 0;
 	}
 
-	/* If no snapshots left, and was not merging, reload without -real. */
-	if (origin && (!lv_is_origin(origin) && !was_merging))
-		reload_required = 1;
-
 	/* store it on disks */
 	if (!vg_write(vg))
 		return_0;
 
-	if (reload_required && !suspend_lv(cmd, origin))
-		log_error("Failed to refresh %s without snapshot.", origin->name);
-		/* FIXME Falls through because first part of change already in kernel! */
-
 	if (!vg_commit(vg))
 		return_0;
-
-	if (reload_required && !resume_lv(cmd, origin)) {
-		log_error("Failed to resume %s.", origin->name);
-		return 0;
-	}
 
 	backup(vg);
 
