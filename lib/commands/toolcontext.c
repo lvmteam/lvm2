@@ -200,6 +200,7 @@ static void _init_logging(struct cmd_context *cmd)
 	reset_lvm_errno(1);
 }
 
+#ifdef UDEV_SYNC_SUPPORT
 /*
  * Until the DM_UEVENT_GENERATED_FLAG was introduced in kernel patch 
  * 856a6f1dbd8940e72755af145ebcd806408ecedd
@@ -214,6 +215,7 @@ static int _dm_driver_has_stable_udev_support()
 	       (sscanf(vsn, "%u.%u.%u", &maj, &min, &patchlevel) == 3) &&
 	       (maj == 4 ? min >= 18 : maj > 4);
 }
+#endif
 
 static int _process_config(struct cmd_context *cmd)
 {
