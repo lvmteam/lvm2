@@ -1413,10 +1413,7 @@ static int _error_device(CMD_ARGS)
 	uint64_t size;
 	int r = 0;
 
-	if (names)
-		name = names->name;
-	else
-		name = argv[1];
+	name = names ? names->name : argv[1];
 
 	size = _get_device_size(name);
 
@@ -1592,8 +1589,7 @@ static int _status(CMD_ARGS)
 	else {
 		if (argc == 1 && !_switches[UUID_ARG] && !_switches[MAJOR_ARG])
 			return _process_all(cmd, argc, argv, 0, _status);
-		if (multiple_devices)
-			name = argv[1];
+		name = argv[1];
 	}
 
 	if (!strcmp(cmd->name, "table"))
@@ -1729,8 +1725,7 @@ static int _info(CMD_ARGS)
 	else {
 		if (argc == 1 && !_switches[UUID_ARG] && !_switches[MAJOR_ARG])
 			return _process_all(cmd, argc, argv, 0, _info);
-		if (multiple_devices)
-			name = argv[1];
+		name = argv[1];
 	}
 
 	if (!(dmt = dm_task_create(DM_DEVICE_INFO)))
@@ -1772,8 +1767,7 @@ static int _deps(CMD_ARGS)
 	else {
 		if (argc == 1 && !_switches[UUID_ARG] && !_switches[MAJOR_ARG])
 			return _process_all(cmd, argc, argv, 0, _deps);
-		if (multiple_devices)
-			name = argv[1];
+		name = argv[1];
 	}
 
 	if (!(dmt = dm_task_create(DM_DEVICE_DEPS)))
@@ -3482,7 +3476,7 @@ int main(int argc, char **argv)
 	#endif
 
       doit:
-	multiple_devices = (argc > 1);
+	multiple_devices = (argc != 2 && cmd->repeatable_cmd);
 	do {
 		if (!cmd->fn(cmd, argc--, argv++, NULL, multiple_devices)) {
 			fprintf(stderr, "Command failed\n");
