@@ -1,3 +1,6 @@
+Version 1.02.66 - 
+===============================
+
 Version 1.02.65 - 8th July 2011
 ===============================
   Remove dev name prefix from dmsetup line output if exactly one dev requested.
