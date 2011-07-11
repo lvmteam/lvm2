@@ -62,8 +62,9 @@ check lv_field $vg1/$lv1 segtype linear
 check pvlv_counts $vg1 2 3 0
 # cleanup
 aux enable_dev $dev1
+pvscan
 vgremove -ff $vg1
-vgremove -ff $vg1
+not vgs $vg1 # just double-check it's really gone
 
 #COMM "vgreduce rejects --removemissing --mirrorsonly --force when nonmirror lv lost too"
 # (lvm$mdatype) setup: create mirror + linear lvs
