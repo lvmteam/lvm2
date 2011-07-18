@@ -71,7 +71,7 @@ done
 dd if="$dev1" of=backup_i bs=256K count=1
 dd if="$dev2" of=backup_j bs=256K count=1
 
-lvcreate -l1 -n $lv1 $vg $dev1
+lvcreate -l1 $vg $dev1
 
 dd if=backup_j of="$dev2" bs=256K count=1
 dd if=backup_i of="$dev1" bs=256K count=1
@@ -94,4 +94,4 @@ vgreduce --removemissing --force $vg
 # device-mapper: create ioctl failed: Device or resource busy
 # Failed to activate new LV.
 
-should lvcreate -l1 -n $lv1 $vg $dev1
+should lvcreate -l1 $vg $dev1
