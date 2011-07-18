@@ -218,6 +218,22 @@ struct thread_baton {
 	client_handle client;
 };
 
+int buffer_rewrite(char **buf, const char *format, const char *string) {
+	char *old = *buf;
+	dm_asprintf(buf, format, *buf, string);
+	dm_free(old);
+	return 0;
+}
+
+int buffer_line(const char *line, void *baton) {
+	response *r = baton;
+	if (r->buffer)
+		buffer_rewrite(&r->buffer, "%s\n%s", line);
+	else
+		dm_asprintf(&r->buffer, "%s\n", line);
+	return 0;
+}
+
 void *client_thread(void *baton)
 {
 	struct thread_baton *b = baton;
@@ -227,12 +243,16 @@ void *client_thread(void *baton)
 			goto fail;
 
 		req.cft = create_config_tree_from_string(req.buffer);
+		if (!req.cft)
+			fprintf(stderr, "error parsing request:\n %s\n", req.buffer);
 		response res = b->s.handler(b->s, b->client, req);
-		destroy_config_tree(req.cft);
+		if (req.cft)
+			destroy_config_tree(req.cft);
 		dm_free(req.buffer);
 
 		if (!res.buffer) {
-			/* TODO fill in the buffer from res.cft */
+			write_config_node(res.cft->root, buffer_line, &res);
+			buffer_rewrite(&res.buffer, "%s\n\n", NULL);
 		}
 
 		write_buffer(b->client.socket_fd, res.buffer, strlen(res.buffer));
@@ -318,6 +338,9 @@ void daemon_start(daemon_state s)
 	if (!s.foreground)
 		kill(getppid(), SIGTERM);
 
+	if (s.daemon_init)
+		s.daemon_init(&s);
+
 	while (!_shutdown_requested && !failed) {
 		int status;
 		fd_set in;
@@ -332,6 +355,9 @@ void daemon_start(daemon_state s)
 
 	if (s.socket_fd >= 0)
 		unlink(s.socket_path);
+
+	if (s.daemon_fini)
+		s.daemon_fini(&s);
 
 	syslog(LOG_NOTICE, "%s shutting down", s.name);
 	closelog();
