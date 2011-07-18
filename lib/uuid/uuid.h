@@ -16,6 +16,10 @@
 #ifndef _LVM_UUID_H
 #define _LVM_UUID_H
 
+#include <stdint.h> /* int8_t */
+#include <malloc.h> /* size_t */
+#include "libdevmapper.h"
+
 #define ID_LEN 32
 #define ID_LEN_S "32"
 
