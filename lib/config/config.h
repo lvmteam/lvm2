@@ -54,8 +54,8 @@ struct config_tree_list {
 };
 
 struct config_tree *create_config_tree(const char *filename, int keep_open);
-struct config_tree *create_config_tree_from_string(struct cmd_context *cmd,
-						   const char *config_settings);
+struct config_tree *create_config_tree_from_string(const char *config_settings);
+
 int override_config_tree_from_string(struct cmd_context *cmd,
 				     const char *config_settings);
 void destroy_config_tree(struct config_tree *cft);
@@ -120,6 +120,13 @@ unsigned maybe_config_section(const char *str, unsigned len);
 
 const char *config_parent_name(const struct config_node *n);
 
-struct config_node *clone_config_node(struct dm_pool *mem, const struct config_node *cn,
+struct config_node *clone_config_node_with_mem(struct dm_pool *mem,
+					       const struct config_node *node,
+					       int siblings);
+struct config_node *create_config_node(struct config_tree *cft, const char *key);
+struct config_node *clone_config_node(struct config_tree *cft, const struct config_node *cn,
 				      int siblings);
+
+struct dm_pool *config_tree_memory(struct config_tree *cft);
+
 #endif

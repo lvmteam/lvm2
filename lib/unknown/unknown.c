@@ -42,7 +42,7 @@ static int _unknown_text_import(struct lv_segment *seg, const struct config_node
 		if (!strcmp(current->key, "type") || !strcmp(current->key, "start_extent") ||
 		    !strcmp(current->key, "tags") || !strcmp(current->key, "extent_count"))
 			continue;
-		new = clone_config_node(seg->lv->vg->vgmem, current, 0);
+		new = clone_config_node_with_mem(seg->lv->vg->vgmem, current, 0);
 		if (!new)
 			return_0;
 		if (last)
