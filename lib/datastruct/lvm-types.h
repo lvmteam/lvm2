@@ -16,7 +16,6 @@
 #ifndef _LVM_TYPES_H
 #define _LVM_TYPES_H
 
-#include <libdevmapper.h> // dm_list
 #include <sys/types.h>
 #include <inttypes.h>
 
