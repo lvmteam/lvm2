@@ -671,8 +671,7 @@ struct volume_group *lvmcache_get_vg(const char *vgid, unsigned precommitted)
 	/* Build config tree from vgmetadata, if not yet cached */
 	if (!vginfo->cft &&
 	    !(vginfo->cft =
-	      create_config_tree_from_string(fid->fmt->cmd,
-					     vginfo->vgmetadata)))
+	      create_config_tree_from_string(vginfo->vgmetadata)))
 		goto_bad;
 
 	if (!(vg = import_vg_from_config_tree(vginfo->cft, fid)))
