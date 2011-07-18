@@ -45,10 +45,14 @@ struct daemon_state;
 response daemon_reply_simple(char *id, ...);
 
 static inline int daemon_request_int(request r, const char *path, int def) {
+	if (!r.cft)
+		return def;
 	return find_config_int(r.cft->root, path, def);
 }
 
 static inline const char *daemon_request_str(request r, const char *path, const char *def) {
+	if (!r.cft)
+		return def;
 	return find_config_str(r.cft->root, path, def);
 }
 
@@ -77,7 +81,8 @@ typedef struct daemon_state {
 	const char *socket_path;
 	int log_level;
 	handle_request handler;
-	int (*setup_post)(struct daemon_state *st);
+	int (*daemon_init)(struct daemon_state *st);
+	int (*daemon_fini)(struct daemon_state *st);
 
 	/* Global runtime info maintained by the framework. */
 	int socket_fd;

@@ -12,6 +12,7 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include "libdevmapper.h" // for dm_list, needed by config.h
 #include "config.h" // should become part of libdevmapper later
 
 #ifndef _LVM_DAEMON_COMMON_CLIENT_H
