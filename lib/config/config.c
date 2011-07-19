@@ -486,11 +486,11 @@ static int _write_config(const struct config_node *n, int only_one,
 			line_append("=");
 			if (v->next) {
 				line_append("[");
-				while (v) {
+				while (v && v->type != CFG_EMPTY_ARRAY) {
 					if (!_write_value(outline, v))
 						return_0;
 					v = v->next;
-					if (v)
+					if (v && v->type != CFG_EMPTY_ARRAY)
 						line_append(", ");
 				}
 				line_append("]");
