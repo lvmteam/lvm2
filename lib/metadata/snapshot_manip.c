@@ -81,7 +81,9 @@ struct lv_segment *find_cow(const struct logical_volume *lv)
 /* Given a cow LV, return its origin */
 struct logical_volume *origin_from_cow(const struct logical_volume *lv)
 {
-	return lv->snapshot->origin;
+	if (lv->snapshot)
+		return lv->snapshot->origin;
+	return NULL;
 }
 
 void init_snapshot_seg(struct lv_segment *seg, struct logical_volume *origin,
