@@ -2575,10 +2575,10 @@ static int _add_pvs(struct cmd_context *cmd, struct pv_segment *peg,
  * Construct dm_list of segments of LVs showing which PVs they use.
  * For pvmove we use the *parent* LV so we can pick up stripes & existing mirrors etc.
  */
-struct dm_list *build_parallel_areas_from_lv(struct cmd_context *cmd,
-					     struct logical_volume *lv,
+struct dm_list *build_parallel_areas_from_lv(struct logical_volume *lv,
 					     unsigned use_pvmove_parent_lv)
 {
+	struct cmd_context *cmd = lv->vg->cmd;
 	struct dm_list *parallel_areas;
 	struct seg_pvs *spvs;
 	uint32_t current_le = 0;
@@ -2866,7 +2866,7 @@ int split_parent_segments_for_layer(struct cmd_context *cmd,
 	uint32_t s;
 	struct dm_list *parallel_areas;
 
-	if (!(parallel_areas = build_parallel_areas_from_lv(cmd, layer_lv, 0)))
+	if (!(parallel_areas = build_parallel_areas_from_lv(layer_lv, 0)))
 		return_0;
 
 	/* Loop through all LVs except itself */
