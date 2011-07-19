@@ -1419,6 +1419,12 @@ struct config_node *create_config_node(struct config_tree *cft, const char *key)
 	return cn;
 }
 
+struct config_value *create_config_value(struct config_tree *cft)
+{
+	struct cs *c = (struct cs *) cft;
+	return _create_value(c->mem);
+}
+
 struct dm_pool *config_tree_memory(struct config_tree *cft)
 {
 	struct cs *c = (struct cs *) cft;
