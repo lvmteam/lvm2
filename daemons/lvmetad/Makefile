@@ -28,3 +28,6 @@ lvmetad: lvmetad-core.c ../common/daemon-server.c ../common/daemon-server.h ../c
 
 check: testclient lvmetad
 	./test.sh "$(BUILDDIR)/libdm:$(BUILDDIR)/daemons/dmeventd"
+
+clean:
+	rm -f testclient lvmetad

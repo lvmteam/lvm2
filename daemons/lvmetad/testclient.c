@@ -17,6 +17,9 @@ const char *metadata2 = "{\n"
 	"    pv1 {\n"
 	"        id = \"bbcd-efgh\"\n"
 	"    }\n"
+	"    pv2 {\n"
+	"        id = \"cbcd-efgh\"\n"
+	"    }\n"
 	"}\n"
 	"}\n";
 
