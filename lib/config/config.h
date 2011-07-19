@@ -124,6 +124,7 @@ struct config_node *clone_config_node_with_mem(struct dm_pool *mem,
 					       const struct config_node *node,
 					       int siblings);
 struct config_node *create_config_node(struct config_tree *cft, const char *key);
+struct config_value *create_config_value(struct config_tree *cft);
 struct config_node *clone_config_node(struct config_tree *cft, const struct config_node *cn,
 				      int siblings);
 
