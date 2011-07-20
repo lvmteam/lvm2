@@ -166,11 +166,8 @@ static int vg_status(lvmetad_state *s, const char *vgid)
 
 	while (pv) {
 		const char *uuid = find_config_str(pv->child, "id", NULL);
-		if (!uuid)
-			continue; // FIXME?
-
 		lock_pvs(s);
-		int found = dm_hash_lookup(s->pvs, uuid) ? 1 : 0;
+		int found = uuid ? (dm_hash_lookup(s->pvs, uuid) ? 1 : 0) : 0;
 		unlock_pvs(s);
 		if (!found) {
 			unlock_vg(s, vgid);
