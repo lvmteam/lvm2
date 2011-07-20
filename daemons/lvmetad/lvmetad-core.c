@@ -83,12 +83,17 @@ static void set_flag(struct config_tree *cft, struct config_node *parent,
 	}
 }
 
-static void update_pv_status_in_vg(lvmetad_state *s, struct config_tree *vg)
+struct config_node *pvs(struct config_tree *vg)
 {
 	struct config_node *pv = find_config_node(vg->root, "metadata/physical_volumes");
 	if (pv)
 		pv = pv->child;
+	return pv;
+}
 
+static void update_pv_status_in_vg(lvmetad_state *s, struct config_tree *vg)
+{
+	struct config_node *pv = pvs(vg);
 	while (pv) {
 		const char *uuid = find_config_str(pv->child, "id", "N/A");
 		const char *vgid = find_config_str(vg->root, "metadata/id", "N/A");
@@ -101,9 +106,7 @@ static void update_pv_status_in_vg(lvmetad_state *s, struct config_tree *vg)
 static int vg_status(lvmetad_state *s, const char *vgid)
 {
 	struct config_tree *vg = dm_hash_lookup(s->vgs, vgid);
-	struct config_node *pv = find_config_node(vg->root, "metadata/physical_volumes");
-	if (pv)
-		pv = pv->child;
+	struct config_node *pv = pvs(vg);
 
 	while (pv) {
 		const char *uuid = find_config_str(pv->child, "id", "N/A");
@@ -139,6 +142,26 @@ static void update_pv_status(lvmetad_state *s, const char *pvid)
 			n = dm_hash_get_next(s->vgs, n);
 		}
 	}
+}
+
+struct config_tree *vg_from_pvid(lvmetad_state *s, const char *pvid)
+{
+	struct dm_hash_node *n = dm_hash_get_first(s->vgs);
+
+	while (n) {
+		struct config_tree *vg = dm_hash_get_data(s->vgs, n);
+		struct config_node *pv = pvs(vg);
+
+		while (pv) {
+			const char *uuid = find_config_str(pv->child, "id", "N/A");
+			if (!strcmp(uuid, pvid))
+				return vg;
+			pv = pv->sib;
+		}
+
+		n = dm_hash_get_next(s->vgs, n);
+	}
+	return NULL;
 }
 
 static int update_metadata(lvmetad_state *s, const char *vgid, struct config_node *metadata)
@@ -198,8 +221,9 @@ static response pv_add(lvmetad_state *s, request r)
 			return daemon_reply_simple("failed", "reason = %s",
 						   "metadata update failed", NULL);
 	} else {
-		// TODO: find the corresponding VGID when available to give to
-		// the caller, and to find out whether the VG is complete
+		struct config_tree *vg = vg_from_pvid(s, pvid);
+		if (vg)
+			vgid = find_config_str(vg->root, "metadata/id", NULL);
 	}
 
 	update_pv_status(s, NULL);
@@ -207,7 +231,7 @@ static response pv_add(lvmetad_state *s, request r)
 
 	return daemon_reply_simple("OK",
 				   "status = %s", complete ? "complete" : "partial",
-				   vgid ? "vgid = %s" : "", vgid,
+				   "vgid = %s", vgid ? vgid : "#orphan",
 				   NULL);
 }
 
