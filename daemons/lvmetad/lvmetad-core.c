@@ -7,7 +7,6 @@
 #include "../common/daemon-server.h"
 
 typedef struct {
-	struct dm_pool *mem;
 	struct dm_hash_table *pvs;
 	struct dm_hash_table *vgs;
 	struct dm_hash_table *pvid_to_vgid;
@@ -262,9 +261,8 @@ static int init(daemon_state *s)
 
 	ls->pvs = dm_hash_create(32);
 	ls->vgs = dm_hash_create(32);
-	ls->mem = dm_pool_create("lvmetad", 1024); /* whatever */
 	fprintf(stderr, "[D] initialised state: vgs = %p\n", ls->vgs);
-	if (!ls->pvs || !ls->vgs || !ls->mem)
+	if (!ls->pvs || !ls->vgs)
 		return 0;
 
 	/* if (ls->initial_registrations)
@@ -276,7 +274,6 @@ static int init(daemon_state *s)
 static int fini(daemon_state *s)
 {
 	lvmetad_state *ls = s->private;
-	dm_pool_destroy(ls->mem);
 	return 1;
 }
 
