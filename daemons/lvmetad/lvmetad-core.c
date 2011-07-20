@@ -274,6 +274,13 @@ static int init(daemon_state *s)
 static int fini(daemon_state *s)
 {
 	lvmetad_state *ls = s->private;
+	struct dm_hash_node *n = dm_hash_get_first(ls->vgs);
+	while (n) {
+		destroy_config_tree(dm_hash_get_data(ls->vgs, n));
+		n = dm_hash_get_next(ls->vgs, n);
+	}
+	dm_hash_destroy(ls->pvs);
+	dm_hash_destroy(ls->vgs);
 	return 1;
 }
 
