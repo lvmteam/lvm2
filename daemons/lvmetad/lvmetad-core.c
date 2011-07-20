@@ -149,9 +149,8 @@ static void update_pv_status(lvmetad_state *s, struct config_tree *vg)
 	lock_pvs(s);
 	struct config_node *pv = pvs(vg);
 	while (pv) {
-		const char *uuid = find_config_str(pv->child, "id", "N/A");
-		const char *vgid = find_config_str(vg->root, "metadata/id", "N/A");
-		int found = dm_hash_lookup(s->pvs, uuid) ? 1 : 0;
+		const char *uuid = find_config_str(pv->child, "id", NULL);
+		int found = uuid ? (dm_hash_lookup(s->pvs, uuid) ? 1 : 0) : 0;
 		// TODO: avoid the override here if MISSING came from the actual
 		// metadata, as opposed from our manipulation...
 		set_flag(vg, pv, "status", "MISSING", !found);
