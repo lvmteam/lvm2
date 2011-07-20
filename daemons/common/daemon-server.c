@@ -253,6 +253,7 @@ void *client_thread(void *baton)
 		if (!res.buffer) {
 			write_config_node(res.cft->root, buffer_line, &res);
 			buffer_rewrite(&res.buffer, "%s\n\n", NULL);
+			destroy_config_tree(res.cft);
 		}
 
 		write_buffer(b->client.socket_fd, res.buffer, strlen(res.buffer));
@@ -261,6 +262,7 @@ void *client_thread(void *baton)
 	}
 fail:
 	/* TODO what should we really do here? */
+	free(baton);
 	return NULL;
 }
 
