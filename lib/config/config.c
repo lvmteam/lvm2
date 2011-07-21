@@ -62,6 +62,7 @@ struct cs {
 	struct config_tree cft;
 	struct dm_pool *mem;
 	time_t timestamp;
+	off_t st_size;
 	char *filename;
 	int exists;
 	int keep_open;
@@ -309,6 +310,7 @@ int read_config_file(struct config_tree *cft)
 	}
 
 	c->timestamp = info.st_ctime;
+	c->st_size = info.st_size;
 
 	return r;
 }
@@ -352,7 +354,7 @@ int config_file_changed(struct config_tree *cft)
 	}
 
 	/* Unchanged? */
-	if (c->timestamp == info.st_ctime)
+	if (c->timestamp == info.st_ctime && c->st_size == info.st_size)
 		return 0;
 
       reload:

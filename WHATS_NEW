@@ -1,5 +1,6 @@
 Version 2.02.87 - 
 ===============================
+  Compare also file size to detect changed config file.
 
 Version 2.02.86 - 8th July 2011
 ===============================
