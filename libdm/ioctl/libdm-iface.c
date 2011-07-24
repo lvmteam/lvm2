@@ -1848,7 +1848,7 @@ static int _reload_with_suppression_v4(struct dm_task *dmt)
 		t2 = t2->next;
 	dmt->existing_table_size = t2 ? t2->start + t2->length : 0;
 
-	if ((task->dmi.v4->flags & DM_READONLY_FLAG) ? 1 : 0 != dmt->read_only)
+	if (((task->dmi.v4->flags & DM_READONLY_FLAG) ? 1 : 0) != dmt->read_only)
 		goto no_match;
 
 	t1 = dmt->head;
