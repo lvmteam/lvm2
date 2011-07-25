@@ -29,6 +29,7 @@ aux vgcreate -c n $vg $(cat DEVICES)
 # Create snapshots of LVs on --metadatacopies 0 PV (bz450651)
 lvcreate -n$lv1 -l4 $vg $dev1
 lvcreate -n$lv2 -l4 -s $vg/$lv1
+lvcreate -n$lv3 -l4 --permission r -s $vg/$lv1
 cleanup_lvs
 
 # ---
