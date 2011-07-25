@@ -96,6 +96,54 @@ static response vg_by_uuid(lvmetad_state *s, request r)
 }
 
 /*
+ * TODO: Accept different flag permutations? Or else, ensure fixed ordering of
+ * flags in set_flag below (following the same order as we have in
+ * lib/format_text/flags.c).
+ */
+static int compare_value(struct config_value *a, struct config_value *b)
+{
+	if (a->type > b->type)
+		return 1;
+	if (a->type < b->type)
+		return -1;
+
+	switch (a->type) {
+	case CFG_STRING: return strcmp(a->v.str, b->v.str);
+	case CFG_FLOAT: return a->v.r == b->v.r;
+	case CFG_INT: return a->v.i == b->v.i;
+	case CFG_EMPTY_ARRAY: return 0;
+	}
+
+	if (a->next && b->next)
+		return compare_value(a->next, b->next);
+}
+
+static int compare_config(struct config_node *a, struct config_node *b)
+{
+	int result = 0;
+	if (a->v && b->v)
+		result = compare_value(a->v, b->v);
+	if (a->v && !b->v)
+		result = 1;
+	if (!a->v && b->v)
+		result = -1;
+	if (a->child && b->child)
+		result = compare_config(a->child, b->child);
+
+	if (result)
+		return result;
+
+	if (a->sib && b->sib)
+		result = compare_config(a->sib, b->sib);
+	if (a->sib && !b->sib)
+		result = 1;
+	if (!a->sib && b->sib)
+		result = -1;
+
+	return result;
+}
+
+/*
  * TODO: This set_flag function is pretty generic and might make sense in a
  * library here or there.
  */
@@ -212,8 +260,10 @@ static int update_metadata(lvmetad_state *s, const char *_vgid, struct config_no
 		goto out;
 
 	if (seq == haveseq) {
-		// TODO: compare old->root with metadata to ensure equality
 		retval = 1;
+		// TODO: disregard the MISSING_PV flag status in this comparison
+		if (compare_config(metadata, old->root))
+			retval = 0;
 		goto out;
 	}
 
