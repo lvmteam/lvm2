@@ -65,82 +65,12 @@ void unlock_vg(lvmetad_state *s, const char *id) {
 	unlock_vgs(s);
 }
 
-static response vg_by_uuid(lvmetad_state *s, request r)
+static struct config_node *pvs(struct config_node *vg)
 {
-	const char *uuid = daemon_request_str(r, "uuid", "NONE");
-	debug("vg_by_uuid: %s (vgs = %p)\n", uuid, s->vgs);
-	struct config_tree *cft = lock_vg(s, uuid);
-	if (!cft || !cft->root) {
-		unlock_vg(s, uuid);
-		return daemon_reply_simple("failed", "reason = %s", "uuid not found", NULL);
-	}
-
-	struct config_node *metadata = cft->root;
-
-	response res = { .buffer = NULL };
-	struct config_node *n;
-	res.cft = create_config_tree(NULL, 0);
-
-	/* The response field */
-	res.cft->root = n = create_config_node(res.cft, "response");
-	n->v->type = CFG_STRING;
-	n->v->v.str = "OK";
-
-	/* The metadata section */
-	n = n->sib = clone_config_node(res.cft, metadata, 1);
-	n->parent = res.cft->root;
-	res.error = 0;
-	unlock_vg(s, uuid);
-
-	return res;
-}
-
-/*
- * TODO: Accept different flag permutations? Or else, ensure fixed ordering of
- * flags in set_flag below (following the same order as we have in
- * lib/format_text/flags.c).
- */
-static int compare_value(struct config_value *a, struct config_value *b)
-{
-	if (a->type > b->type)
-		return 1;
-	if (a->type < b->type)
-		return -1;
-
-	switch (a->type) {
-	case CFG_STRING: return strcmp(a->v.str, b->v.str);
-	case CFG_FLOAT: return a->v.r == b->v.r;
-	case CFG_INT: return a->v.i == b->v.i;
-	case CFG_EMPTY_ARRAY: return 0;
-	}
-
-	if (a->next && b->next)
-		return compare_value(a->next, b->next);
-}
-
-static int compare_config(struct config_node *a, struct config_node *b)
-{
-	int result = 0;
-	if (a->v && b->v)
-		result = compare_value(a->v, b->v);
-	if (a->v && !b->v)
-		result = 1;
-	if (!a->v && b->v)
-		result = -1;
-	if (a->child && b->child)
-		result = compare_config(a->child, b->child);
-
-	if (result)
-		return result;
-
-	if (a->sib && b->sib)
-		result = compare_config(a->sib, b->sib);
-	if (a->sib && !b->sib)
-		result = 1;
-	if (!a->sib && b->sib)
-		result = -1;
-
-	return result;
+	struct config_node *pv = find_config_node(vg, "metadata/physical_volumes");
+	if (pv)
+		pv = pv->child;
+	return pv;
 }
 
 /*
@@ -191,17 +121,9 @@ static void set_flag(struct config_tree *cft, struct config_node *parent,
 	}
 }
 
-struct config_node *pvs(struct config_tree *vg)
-{
-	struct config_node *pv = find_config_node(vg->root, "metadata/physical_volumes");
-	if (pv)
-		pv = pv->child;
-	return pv;
-}
-
 /* Either the "big" vgs lock, or a per-vg lock needs to be held before entering
  * this function. */
-static int update_pv_status(lvmetad_state *s, struct config_tree *vg)
+static int update_pv_status(lvmetad_state *s, struct config_tree *cft, struct config_node *vg, int act)
 {
 	int complete = 1;
 
@@ -210,16 +132,95 @@ static int update_pv_status(lvmetad_state *s, struct config_tree *vg)
 	while (pv) {
 		const char *uuid = find_config_str(pv->child, "id", NULL);
 		int found = uuid ? (dm_hash_lookup(s->pvs, uuid) ? 1 : 0) : 0;
-		// TODO: avoid the override here if MISSING came from the actual
-		// metadata, as opposed from our manipulation...
-		set_flag(vg, pv, "status", "MISSING", !found);
-		if (!found)
+		if (act)
+			set_flag(cft, pv, "status", "MISSING", !found);
+		if (!found) {
 			complete = 0;
+			if (!act) { // optimisation
+				unlock_pvs(s);
+				return complete;
+			}
+		}
 		pv = pv->sib;
 	}
 	unlock_pvs(s);
 
 	return complete;
+}
+
+static response vg_by_uuid(lvmetad_state *s, request r)
+{
+	const char *uuid = daemon_request_str(r, "uuid", "NONE");
+	debug("vg_by_uuid: %s (vgs = %p)\n", uuid, s->vgs);
+	struct config_tree *cft = lock_vg(s, uuid);
+	if (!cft || !cft->root) {
+		unlock_vg(s, uuid);
+		return daemon_reply_simple("failed", "reason = %s", "uuid not found", NULL);
+	}
+
+	struct config_node *metadata = cft->root;
+
+	response res = { .buffer = NULL };
+	struct config_node *n;
+	res.cft = create_config_tree(NULL, 0);
+
+	/* The response field */
+	res.cft->root = n = create_config_node(res.cft, "response");
+	n->v->type = CFG_STRING;
+	n->v->v.str = "OK";
+
+	/* The metadata section */
+	n = n->sib = clone_config_node(res.cft, metadata, 1);
+	n->parent = res.cft->root;
+	res.error = 0;
+	unlock_vg(s, uuid);
+
+	update_pv_status(s, cft, n, 1);
+
+	return res;
+}
+
+static int compare_value(struct config_value *a, struct config_value *b)
+{
+	if (a->type > b->type)
+		return 1;
+	if (a->type < b->type)
+		return -1;
+
+	switch (a->type) {
+	case CFG_STRING: return strcmp(a->v.str, b->v.str);
+	case CFG_FLOAT: return a->v.r == b->v.r;
+	case CFG_INT: return a->v.i == b->v.i;
+	case CFG_EMPTY_ARRAY: return 0;
+	}
+
+	if (a->next && b->next)
+		return compare_value(a->next, b->next);
+}
+
+static int compare_config(struct config_node *a, struct config_node *b)
+{
+	int result = 0;
+	if (a->v && b->v)
+		result = compare_value(a->v, b->v);
+	if (a->v && !b->v)
+		result = 1;
+	if (!a->v && b->v)
+		result = -1;
+	if (a->child && b->child)
+		result = compare_config(a->child, b->child);
+
+	if (result)
+		return result;
+
+	if (a->sib && b->sib)
+		result = compare_config(a->sib, b->sib);
+	if (a->sib && !b->sib)
+		result = 1;
+	if (!a->sib && b->sib)
+		result = -1;
+
+	return result;
 }
 
 /* You need to be holding the pvid_map lock already to call this. */
@@ -261,7 +262,6 @@ static int update_metadata(lvmetad_state *s, const char *_vgid, struct config_no
 
 	if (seq == haveseq) {
 		retval = 1;
-		// TODO: disregard the MISSING_PV flag status in this comparison
 		if (compare_config(metadata, old->root))
 			retval = 0;
 		goto out;
@@ -337,7 +337,7 @@ static response pv_add(lvmetad_state *s, request r)
 	int complete = 0;
 	if (vgid) {
 		struct config_tree *cft = lock_vg(s, vgid);
-		complete = update_pv_status(s, cft);
+		complete = update_pv_status(s, cft, cft->root, 0);
 		unlock_vg(s, vgid);
 	}
 
