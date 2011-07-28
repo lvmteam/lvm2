@@ -1,5 +1,6 @@
 Version 1.02.66 - 
 ===============================
+  Add systemd unit files for dmeventd.
   Fix read-only identical table reload supression.
 
 Version 1.02.65 - 8th July 2011
