@@ -1,5 +1,6 @@
 Version 1.02.66 - 
 ===============================
+  Add support for new oom killer adjustment interface (oom_score_adj).
   Add systemd unit files for dmeventd.
   Fix read-only identical table reload supression.
 
