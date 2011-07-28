@@ -92,6 +92,9 @@ install_system_dirs:
 install_initscripts: 
 	$(MAKE) -C scripts install_initscripts
 
+install_systemd_units:
+	$(MAKE) -C scripts install_systemd_units
+
 LCOV_TRACES = libdm.info lib.info tools.info \
 	daemons/dmeventd.info daemons/clvmd.info
 CLEAN_TARGETS += $(LCOV_TRACES)

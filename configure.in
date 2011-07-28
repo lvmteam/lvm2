@@ -1371,6 +1371,7 @@ AC_SUBST(UDEV_PC)
 AC_SUBST(UDEV_RULES)
 AC_SUBST(UDEV_SYNC)
 AC_SUBST(WRITE_INSTALL)
+AC_SUBST(DMEVENTD_PIDFILE)
 AC_SUBST(interface)
 AC_SUBST(kerneldir)
 AC_SUBST(missingkernel)
@@ -1417,6 +1418,8 @@ po/Makefile
 scripts/clvmd_init_red_hat
 scripts/cmirrord_init_red_hat
 scripts/lvm2_monitoring_init_red_hat
+scripts/dm_event_systemd_red_hat.service
+scripts/lvm2_monitoring_systemd_red_hat.service
 scripts/Makefile
 test/Makefile
 test/api/Makefile
