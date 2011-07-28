@@ -1,0 +1,14 @@
+[Unit]
+Description=Device-mapper event daemon
+After=fedora-storage-init.service fedora-storage-init-late.service
+Before=local-fs.target
+DefaultDependencies=no
+
+[Service]
+Type=forking
+ExecStart=@sbindir@/dmeventd
+PIDFile=@DMEVENTD_PIDFILE@
+OOMScoreAdjust=-1000
+
+[Install]
+WantedBy=sysinit.target
