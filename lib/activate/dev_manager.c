@@ -751,6 +751,7 @@ int dev_manager_mirror_percent(struct dev_manager *dm,
 {
 	char *name;
 	const char *dlid;
+	const char *target_type = first_seg(lv)->segtype->name;
 	const char *layer = (lv_is_origin(lv)) ? "real" : NULL;
 
 	/*
@@ -766,8 +767,9 @@ int dev_manager_mirror_percent(struct dev_manager *dm,
 		return 0;
 	}
 
-	log_debug("Getting device mirror status percentage for %s", name);
-	if (!(_percent(dm, name, dlid, "mirror", wait, lv, percent,
+	log_debug("Getting device %s status percentage for %s",
+		  target_type, name);
+	if (!(_percent(dm, name, dlid, target_type, wait, lv, percent,
 		       event_nr, 0)))
 		return_0;
 
@@ -1216,6 +1218,15 @@ int add_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 				    (seg_pv(seg, s)->pe_start + (extent_size * seg_pe(seg, s)))))
 				return_0;
 		} else if (seg_type(seg, s) == AREA_LV) {
+			if (seg_is_raid(seg)) {
+				dlid = build_dm_uuid(dm->mem,
+						     seg_metalv(seg, s)->lvid.s,
+						     NULL);
+				if (!dlid)
+					return_0;
+				dm_tree_node_add_target_area(node, NULL, dlid,
+							     extent_size * seg_metale(seg, s));
+			}
 			if (!(dlid = build_dm_uuid(dm->mem, seg_lv(seg, s)->lvid.s, NULL)))
 				return_0;
 			if (!dm_tree_node_add_target_area(node, NULL, dlid, extent_size * seg_le(seg, s)))
@@ -1444,11 +1455,16 @@ static int _add_segment_to_dtree(struct dev_manager *dm,
 			return_0;
 	} else {
 		/* Add any LVs used by this segment */
-		for (s = 0; s < seg->area_count; s++)
+		for (s = 0; s < seg->area_count; s++) {
 			if ((seg_type(seg, s) == AREA_LV) &&
 			    (!_add_new_lv_to_dtree(dm, dtree, seg_lv(seg, s),
 						   laopts, NULL)))
 				return_0;
+			if (seg_is_raid(seg) &&
+			    !_add_new_lv_to_dtree(dm, dtree, seg_metalv(seg, s),
+						  laopts, NULL))
+				return_0;
+		}
 	}
 
 	/* Now we've added its dependencies, we can add the target itself */

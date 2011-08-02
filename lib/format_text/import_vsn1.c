@@ -365,10 +365,13 @@ static int _read_segment(struct dm_pool *mem, struct volume_group *vg,
 	if (seg_is_mirrored(seg))
 		lv->status |= MIRRORED;
 
+	if (seg_is_raid(seg))
+		lv->status |= RAID;
+
 	if (seg_is_virtual(seg))
 		lv->status |= VIRTUAL;
 
-	if (_is_converting(lv))
+	if (!seg_is_raid(seg) && _is_converting(lv))
 		lv->status |= CONVERTING;
 
 	return 1;

@@ -320,6 +320,50 @@ static int _read_mirror_params(struct lvcreate_params *lp,
 	return 1;
 }
 
+static int _read_raid_params(struct lvcreate_params *lp,
+			     struct cmd_context *cmd)
+{
+	if (!segtype_is_raid(lp->segtype))
+		return 1;
+
+	if (arg_count(cmd, corelog_ARG) ||
+	    arg_count(cmd, mirrorlog_ARG)) {
+		log_error("Log options not applicable to %s segtype",
+			  lp->segtype->name);
+		return 0;
+	}
+
+	/*
+	 * get_stripe_params is called before _read_raid_params
+	 * and already sets:
+	 *   lp->stripes
+	 *   lp->stripe_size
+	 *
+	 * For RAID 4/5/6, these values must be set.
+	 */
+	if (!segtype_is_mirrored(lp->segtype) && (lp->stripes < 2)) {
+		log_error("Number of stripes to %s not specified",
+			  lp->segtype->name);
+		return 0;
+	}
+
+	/*
+	 * _read_mirror_params is called before _read_raid_params
+	 * and already sets:
+	 *   lp->nosync
+	 *   lp->region_size
+	 *
+	 * But let's ensure that programmers don't reorder
+	 * that by checking and warning if they aren't set.
+	 */
+	if (!lp->region_size) {
+		log_error("Programmer error: lp->region_size not set.");
+		return 0;
+	}
+
+	return 1;
+}
+
 static int _lvcreate_params(struct lvcreate_params *lp,
 			    struct lvcreate_cmdline_params *lcp,
 			    struct cmd_context *cmd,
@@ -328,6 +372,7 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 	int contiguous;
 	unsigned pagesize;
 	struct arg_value_group_list *current_group;
+	const char *segtype_str;
 	const char *tag;
 
 	memset(lp, 0, sizeof(*lp));
@@ -337,7 +382,11 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 	/*
 	 * Check selected options are compatible and determine segtype
 	 */
-	lp->segtype = get_segtype_from_string(cmd, arg_str_value(cmd, type_ARG, "striped"));
+	segtype_str = "striped";
+	if (arg_count(cmd, mirrors_ARG))
+		segtype_str = find_config_tree_str(cmd, "activation/mirror_segtype_default", DEFAULT_MIRROR_SEGTYPE);
+
+	lp->segtype = get_segtype_from_string(cmd, arg_str_value(cmd, type_ARG, segtype_str));
 
 	if (arg_count(cmd, snapshot_ARG) || seg_is_snapshot(lp) ||
 	    arg_count(cmd, virtualsize_ARG))
@@ -345,7 +394,7 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 
 	lp->mirrors = 1;
 
-	/* Default to 2 mirrored areas if --type mirror */
+	/* Default to 2 mirrored areas if '--type mirror|raid1' */
 	if (segtype_is_mirrored(lp->segtype))
 		lp->mirrors = 2;
 
@@ -386,15 +435,12 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 		}
 	}
 
-	if (lp->mirrors > 1) {
+	if (segtype_is_mirrored(lp->segtype) || segtype_is_raid(lp->segtype)) {
 		if (lp->snapshot) {
 			log_error("mirrors and snapshots are currently "
 				  "incompatible");
 			return 0;
 		}
-
-		if (!(lp->segtype = get_segtype_from_string(cmd, "striped")))
-			return_0;
 	} else {
 		if (arg_count(cmd, corelog_ARG)) {
 			log_error("--corelog is only available with mirrors");
@@ -426,7 +472,8 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 	if (!_lvcreate_name_params(lp, cmd, &argc, &argv) ||
 	    !_read_size_params(lp, lcp, cmd) ||
 	    !get_stripe_params(cmd, &lp->stripes, &lp->stripe_size) ||
-	    !_read_mirror_params(lp, cmd))
+	    !_read_mirror_params(lp, cmd) ||
+	    !_read_raid_params(lp, cmd))
 		return_0;
 
 	lp->activate = arg_uint_value(cmd, available_ARG, CHANGE_AY);

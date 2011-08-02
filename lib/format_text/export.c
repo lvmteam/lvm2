@@ -544,10 +544,25 @@ int out_areas(struct formatter *f, const struct lv_segment *seg,
 			     (s == seg->area_count - 1) ? "" : ",");
 			break;
 		case AREA_LV:
-			outf(f, "\"%s\", %u%s",
-			     seg_lv(seg, s)->name,
-			     seg_le(seg, s),
+			if (!(seg->status & RAID)) {
+				outf(f, "\"%s\", %u%s",
+				     seg_lv(seg, s)->name,
+				     seg_le(seg, s),
+				     (s == seg->area_count - 1) ? "" : ",");
+				continue;
+			}
+
+			/* RAID devices are laid-out in metadata/data pairs */
+			if (!(seg_lv(seg, s)->status & RAID_IMAGE) ||
+			    !(seg_metalv(seg, s)->status & RAID_META)) {
+				log_error("RAID segment has non-RAID areas");
+				return 0;
+			}
+
+			outf(f, "\"%s\", \"%s\"%s",
+			     seg_metalv(seg, s)->name, seg_lv(seg, s)->name,
 			     (s == seg->area_count - 1) ? "" : ",");
+
 			break;
 		case AREA_UNASSIGNED:
 			return 0;

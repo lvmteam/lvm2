@@ -493,6 +493,9 @@
 /* Define to 1 to include built-in support for GFS pool metadata. */
 #undef POOL_INTERNAL
 
+/* Define to 1 to include built-in support for raid. */
+#undef RAID_INTERNAL
+
 /* Define to 1 to include the LVM readline shell. */
 #undef READLINE_SUPPORT
 

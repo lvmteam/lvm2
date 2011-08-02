@@ -233,6 +233,7 @@ int mdas_empty_or_ignored(struct dm_list *mdas);
 #define seg_dev(seg, s)		(seg)->areas[(s)].u.pv.pvseg->pv->dev
 #define seg_pe(seg, s)		(seg)->areas[(s)].u.pv.pvseg->pe
 #define seg_le(seg, s)		(seg)->areas[(s)].u.lv.le
+#define seg_metale(seg, s)	(seg)->meta_areas[(s)].u.lv.le
 
 struct name_list {
 	struct dm_list list;
