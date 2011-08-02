@@ -341,6 +341,26 @@ if test x$MIRRORS = xinternal; then
 fi
 
 ################################################################################
+dnl -- raid inclusion type
+AC_MSG_CHECKING(whether to include raid)
+AC_ARG_WITH(raid,
+	    AC_HELP_STRING([--with-raid=TYPE],
+			   [mirror support: internal/shared/none
+			    [[TYPE=internal]]]),
+	    RAID=$withval, RAID=internal)
+AC_MSG_RESULT($RAID)
+
+if [[ "x$RAID" != xnone -a "x$RAID" != xinternal -a "x$RAID" != xshared ]];
+ then  AC_MSG_ERROR(
+--with-raid parameter invalid
+)
+fi;
+
+if test x$RAID = xinternal; then
+	AC_DEFINE([RAID_INTERNAL], 1, [Define to 1 to include built-in support for raid.])
+fi
+
+################################################################################
 dnl -- asynchronous volume replicator inclusion type
 AC_MSG_CHECKING(whether to include replicators)
 AC_ARG_WITH(replicators,
@@ -961,6 +981,7 @@ AC_CHECK_LIB(dl, dlopen, [
 dnl -- Check for shared/static conflicts
 if [[ \( "x$LVM1" = xshared -o "x$POOL" = xshared -o "x$CLUSTER" = xshared \
       -o "x$SNAPSHOTS" = xshared -o "x$MIRRORS" = xshared \
+      -o "x$RAID" = xshared \
       \) -a "x$STATIC_LINK" = xyes ]];
  then  AC_MSG_ERROR(
 Features cannot be 'shared' when building statically
@@ -1346,16 +1367,17 @@ AC_SUBST(LVM_PATCHLEVEL)
 AC_SUBST(LVM_RELEASE)
 AC_SUBST(LVM_RELEASE_DATE)
 AC_SUBST(MIRRORS)
+AC_SUBST(MSGFMT)
 AC_SUBST(OCF)
 AC_SUBST(OCFDIR)
-AC_SUBST(REPLICATORS)
-AC_SUBST(MSGFMT)
 AC_SUBST(PKGCONFIG)
 AC_SUBST(POOL)
 AC_SUBST(PTHREAD_LIBS)
 AC_SUBST(QUORUM_CFLAGS)
 AC_SUBST(QUORUM_LIBS)
+AC_SUBST(RAID)
 AC_SUBST(READLINE_LIBS)
+AC_SUBST(REPLICATORS)
 AC_SUBST(SACKPT_CFLAGS)
 AC_SUBST(SACKPT_LIBS)
 AC_SUBST(SALCK_CFLAGS)

@@ -474,6 +474,26 @@ activation {
     # "auto" - Use default value chosen by kernel.
     readahead = "auto"
 
+    # 'mirror_segtype_default' defines which segtype will be used when the
+    # shorthand '-m' option is used for mirroring.  The possible options are:
+    #
+    # "mirror" - The original RAID1 implementation provided by LVM2/DM.  It is
+    # 	         characterized by a flexible log solution (core, disk, mirrored)
+    #		 and by the necessity to block I/O while reconfiguring in the
+    #		 event of a failure.  Snapshots of this type of RAID1 can be
+    #		 problematic.
+    #
+    # "raid1"  - This implementation leverages MD's RAID1 personality through
+    # 	       	 device-mapper.  It is characterized by a lack of log options.
+    #		 (A log is always allocated for every device and they are placed
+    #		 on the same device as the image - no separate devices are
+    #		 required.)  This mirror implementation does not require I/O
+    #		 to be blocked in the kernel in the event of a failure.
+    #
+    # Specify the '--type <mirror|raid1>' option to override this default
+    # setting.
+    mirror_segtype_default = "mirror"
+
     # 'mirror_image_fault_policy' and 'mirror_log_fault_policy' define
     # how a device failure affecting a mirror is handled.
     # A mirror is composed of mirror images (copies) and a log.

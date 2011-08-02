@@ -94,18 +94,22 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 			inc_error_count;
 		}
 
-		if (complete_vg && seg->log_lv) {
-			if (!seg_is_mirrored(seg)) {
-				log_error("LV %s: segment %u has log LV but "
-					  "is not mirrored",
-					  lv->name, seg_count);
-				inc_error_count;
-			}
+		if (complete_vg && seg->log_lv &&
+		    !seg_is_mirrored(seg) && !(seg->status & RAID_IMAGE)) {
+			log_error("LV %s: segment %u log LV %s is not a "
+				  "mirror log or a RAID image",
+				  lv->name, seg_count, seg->log_lv->name);
+			inc_error_count;
+		}
 
+		/*
+		 * Check mirror log - which is attached to the mirrored seg
+		 */
+		if (complete_vg && seg->log_lv && seg_is_mirrored(seg)) {
 			if (!(seg->log_lv->status & MIRROR_LOG)) {
 				log_error("LV %s: segment %u log LV %s is not "
 					  "a mirror log",
-					   lv->name, seg_count, seg->log_lv->name);
+					  lv->name, seg_count, seg->log_lv->name);
 				inc_error_count;
 			}
 
@@ -113,7 +117,7 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 			    find_mirror_seg(seg2) != seg) {
 				log_error("LV %s: segment %u log LV does not "
 					  "point back to mirror segment",
-					   lv->name, seg_count);
+					  lv->name, seg_count);
 				inc_error_count;
 			}
 		}
@@ -189,6 +193,7 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 				dm_list_iterate_items(sl, &seg_lv(seg, s)->segs_using_this_lv)
 					if (sl->seg == seg)
 						seg_found++;
+
 				if (!seg_found) {
 					log_error("LV %s segment %d uses LV %s,"
 						  " but missing ptr from %s to %s",
@@ -205,7 +210,8 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 				}
 			}
 
-			if (complete_vg && seg_is_mirrored(seg) &&
+			if (complete_vg &&
+			    seg_is_mirrored(seg) && !seg_is_raid(seg) &&
 			    seg_type(seg, s) == AREA_LV &&
 			    seg_lv(seg, s)->le_count != seg->area_len) {
 				log_error("LV %s: mirrored LV segment %u has "
@@ -226,6 +232,8 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 			if (seg_type(seg, s) != AREA_LV)
 				continue;
 			if (lv == seg_lv(seg, s))
+				seg_found++;
+			if (seg_is_raid(seg) && (lv == seg_metalv(seg, s)))
 				seg_found++;
 		}
 		if (seg_is_replicator_dev(seg)) {

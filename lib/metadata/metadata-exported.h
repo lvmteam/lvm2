@@ -46,6 +46,14 @@
 #define EXPORTED_VG          	0x00000002U	/* VG PV */
 #define RESIZEABLE_VG        	0x00000004U	/* VG */
 
+/*
+ * Since the RAID flags are LV (and seg) only and the above three
+ * are VG/PV only, these flags are reused.
+ */
+#define RAID                    0x00000001U	/* LV */
+#define RAID_META               0x00000002U	/* LV */
+#define RAID_IMAGE              0x00000004U	/* LV */
+
 /* May any free extents on this PV be used or must they be left free? */
 #define ALLOCATABLE_PV         	0x00000008U	/* PV */
 
@@ -293,7 +301,7 @@ struct lv_segment {
 	uint64_t status;
 
 	/* FIXME Fields depend on segment type */
-	uint32_t stripe_size;
+	uint32_t stripe_size;   /* For stripe and RAID - in sectors */
 	uint32_t area_count;
 	uint32_t area_len;
 	uint32_t chunk_size;	/* For snapshots - in sectors */
@@ -309,6 +317,7 @@ struct lv_segment {
 	struct dm_list tags;
 
 	struct lv_segment_area *areas;
+	struct lv_segment_area *meta_areas; /* For RAID */
 
 	struct logical_volume *replicator;/* For replicator-devs - link to replicator LV */
 	struct logical_volume *rlog_lv;	/* For replicators */
@@ -320,6 +329,7 @@ struct lv_segment {
 #define seg_type(seg, s)	(seg)->areas[(s)].type
 #define seg_pv(seg, s)		(seg)->areas[(s)].u.pv.pvseg->pv
 #define seg_lv(seg, s)		(seg)->areas[(s)].u.lv.lv
+#define seg_metalv(seg, s)	(seg)->meta_areas[(s)].u.lv.lv
 
 struct pe_range {
 	struct dm_list list;

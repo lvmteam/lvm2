@@ -361,6 +361,18 @@ int apply_lvname_restrictions(const char *name)
 		return 0;
 	}
 
+	if (strstr(name, "_rimage")) {
+		log_error("Names including \"_rimage\" are reserved. "
+			  "Please choose a different LV name.");
+		return 0;
+	}
+
+	if (strstr(name, "_rmeta")) {
+		log_error("Names including \"_rmeta\" are reserved. "
+			  "Please choose a different LV name.");
+		return 0;
+	}
+
 	if (strstr(name, "_vorigin")) {
 		log_error("Names including \"_vorigin\" are reserved. "
 			  "Please choose a different LV name.");

@@ -42,6 +42,16 @@ enum {
 	SEG_SNAPSHOT_MERGE,
 	SEG_STRIPED,
 	SEG_ZERO,
+	SEG_RAID1,
+	SEG_RAID4,
+	SEG_RAID5_LA,
+	SEG_RAID5_RA,
+	SEG_RAID5_LS,
+	SEG_RAID5_RS,
+	SEG_RAID6_ZR,
+	SEG_RAID6_NR,
+	SEG_RAID6_NC,
+	SEG_LAST,
 };
 
 /* FIXME Add crypt and multipath support */
@@ -61,6 +71,18 @@ struct {
 	{ SEG_SNAPSHOT_MERGE, "snapshot-merge" },
 	{ SEG_STRIPED, "striped" },
 	{ SEG_ZERO, "zero"},
+	{ SEG_RAID1, "raid1"},
+	{ SEG_RAID4, "raid4"},
+	{ SEG_RAID5_LA, "raid5_la"},
+	{ SEG_RAID5_RA, "raid5_ra"},
+	{ SEG_RAID5_LS, "raid5_ls"},
+	{ SEG_RAID5_RS, "raid5_rs"},
+	{ SEG_RAID6_ZR, "raid6_zr"},
+	{ SEG_RAID6_NR, "raid6_nr"},
+	{ SEG_RAID6_NC, "raid6_nc"},
+	{ SEG_RAID5_LS, "raid5"}, /* same as "raid5_ls" (default for MD also) */
+	{ SEG_RAID6_ZR, "raid6"}, /* same as "raid6_zr" */
+	{ SEG_LAST, NULL },
 };
 
 /* Some segment types have a list of areas of other devices attached */
@@ -100,7 +122,7 @@ struct load_segment {
 	unsigned area_count;		/* Linear + Striped + Mirrored + Crypt + Replicator */
 	struct dm_list areas;		/* Linear + Striped + Mirrored + Crypt + Replicator */
 
-	uint32_t stripe_size;		/* Striped */
+	uint32_t stripe_size;		/* Striped + raid */
 
 	int persistent;			/* Snapshot */
 	uint32_t chunk_size;		/* Snapshot */
@@ -109,7 +131,7 @@ struct load_segment {
 	struct dm_tree_node *merge;	/* Snapshot */
 
 	struct dm_tree_node *log;	/* Mirror + Replicator */
-	uint32_t region_size;		/* Mirror */
+	uint32_t region_size;		/* Mirror + raid */
 	unsigned clustered;		/* Mirror */
 	unsigned mirror_area_count;	/* Mirror */
 	uint32_t flags;			/* Mirror log */
@@ -1499,6 +1521,17 @@ static int _emit_areas_line(struct dm_task *dmt __attribute__((unused)),
 					EMIT_PARAMS(*pos, "%s", synctype);
 			}
 			break;
+		case SEG_RAID1:
+		case SEG_RAID4:
+		case SEG_RAID5_LA:
+		case SEG_RAID5_RA:
+		case SEG_RAID5_LS:
+		case SEG_RAID5_RS:
+		case SEG_RAID6_ZR:
+		case SEG_RAID6_NR:
+		case SEG_RAID6_NC:
+			EMIT_PARAMS(*pos, " %s", devbuf);
+			break;
 		default:
 			EMIT_PARAMS(*pos, "%s%s %" PRIu64, first_time ? "" : " ",
 				    devbuf, area->offset);
@@ -1676,6 +1709,43 @@ static int _mirror_emit_segment_line(struct dm_task *dmt, uint32_t major,
 	return 1;
 }
 
+static int _raid_emit_segment_line(struct dm_task *dmt, uint32_t major,
+				   uint32_t minor, struct load_segment *seg,
+				   uint64_t *seg_start, char *params,
+				   size_t paramsize)
+{
+	int param_count = 1; /* mandatory 'chunk size'/'stripe size' arg */
+	int pos = 0;
+
+	if ((seg->flags & DM_NOSYNC) || (seg->flags & DM_FORCESYNC))
+		param_count++;
+
+	if (seg->region_size)
+		param_count += 2;
+
+	if ((seg->type == SEG_RAID1) && seg->stripe_size)
+		log_error("WARNING: Ignoring RAID1 stripe size");
+
+	EMIT_PARAMS(pos, "%s %d %u", dm_segtypes[seg->type].target,
+		    param_count, seg->stripe_size);
+
+	if (seg->flags & DM_NOSYNC)
+		EMIT_PARAMS(pos, " nosync");
+	else if (seg->flags & DM_FORCESYNC)
+		EMIT_PARAMS(pos, " sync");
+
+	if (seg->region_size)
+		EMIT_PARAMS(pos, " region_size %u", seg->region_size);
+
+	/* Print number of metadata/data device pairs */
+	EMIT_PARAMS(pos, " %u", seg->area_count/2);
+
+	if (_emit_areas_line(dmt, seg, params, paramsize, &pos) <= 0)
+		return_0;
+
+	return 1;
+}
+
 static int _emit_segment_line(struct dm_task *dmt, uint32_t major,
 			      uint32_t minor, struct load_segment *seg,
 			      uint64_t *seg_start, char *params,
@@ -1683,6 +1753,7 @@ static int _emit_segment_line(struct dm_task *dmt, uint32_t major,
 {
 	int pos = 0;
 	int r;
+	int target_type_is_raid = 0;
 	char originbuf[DM_FORMAT_DEV_BUFSIZE], cowbuf[DM_FORMAT_DEV_BUFSIZE];
 
 	switch(seg->type) {
@@ -1736,6 +1807,22 @@ static int _emit_segment_line(struct dm_task *dmt, uint32_t major,
 			    seg->iv_offset != DM_CRYPT_IV_DEFAULT ?
 			    seg->iv_offset : *seg_start);
 		break;
+	case SEG_RAID1:
+	case SEG_RAID4:
+	case SEG_RAID5_LA:
+	case SEG_RAID5_RA:
+	case SEG_RAID5_LS:
+	case SEG_RAID5_RS:
+	case SEG_RAID6_ZR:
+	case SEG_RAID6_NR:
+	case SEG_RAID6_NC:
+		target_type_is_raid = 1;
+		r = _raid_emit_segment_line(dmt, major, minor, seg, seg_start,
+					    params, paramsize);
+		if (!r)
+			return_0;
+
+		break;
 	}
 
 	switch(seg->type) {
@@ -1767,7 +1854,9 @@ static int _emit_segment_line(struct dm_task *dmt, uint32_t major,
 		  " %" PRIu64 " %s %s", major, minor,
 		  *seg_start, seg->size, dm_segtypes[seg->type].target, params);
 
-	if (!dm_task_add_target(dmt, *seg_start, seg->size, dm_segtypes[seg->type].target, params))
+	if (!dm_task_add_target(dmt, *seg_start, seg->size,
+				target_type_is_raid ? "raid" :
+				dm_segtypes[seg->type].target, params))
 		return_0;
 
 	*seg_start += seg->size;
@@ -2246,6 +2335,30 @@ int dm_tree_node_add_mirror_target(struct dm_tree_node *node,
 {
 	if (!_add_segment(node, SEG_MIRRORED, size))
 		return_0;
+
+	return 1;
+}
+
+int dm_tree_node_add_raid_target(struct dm_tree_node *node,
+				 uint64_t size,
+				 const char *raid_type,
+				 uint32_t region_size,
+				 uint32_t stripe_size,
+				 uint64_t reserved1,
+				 uint64_t reserved2)
+{
+	int i;
+	struct load_segment *seg = NULL;
+
+	for (i = 0; dm_segtypes[i].target && !seg; i++)
+		if (!strcmp(raid_type, dm_segtypes[i].target))
+			if (!(seg = _add_segment(node,
+						 dm_segtypes[i].type, size)))
+				return_0;
+
+	seg->region_size = region_size;
+	seg->stripe_size = stripe_size;
+	seg->area_count = 0;
 
 	return 1;
 }

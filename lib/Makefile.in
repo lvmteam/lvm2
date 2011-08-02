@@ -32,6 +32,10 @@ ifeq ("@MIRRORS@", "shared")
   SUBDIRS += mirror
 endif
 
+ifeq ("@RAID@", "shared")
+  SUBDIRS += raid
+endif
+
 ifeq ("@REPLICATORS@", "shared")
   SUBDIRS += replicator
 endif
@@ -140,6 +144,10 @@ ifeq ("@MIRRORS@", "internal")
   SOURCES += mirror/mirrored.c
 endif
 
+ifeq ("@RAID@", "internal")
+  SOURCES += raid/raid.c
+endif
+
 ifeq ("@REPLICATORS@", "internal")
   SOURCES += replicator/replicator.c
 endif
@@ -170,6 +178,7 @@ ifeq ($(MAKECMDGOALS),distclean)
 	format_pool \
 	snapshot \
 	mirror \
+	raid \
 	replicator \
 	locking
 endif

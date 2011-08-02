@@ -1,5 +1,6 @@
 Version 2.02.87 - 
 ===============================
+  Add basic support for RAID 1/4/5/6 (i.e. create, remove, display)
   Change DEFAULT_UDEV_SYNC to 1 so udev_sync is used even without any config.
   Add systemd unit file to provide lvm2 monitoring.
   Compare also file size to detect changed config file.
