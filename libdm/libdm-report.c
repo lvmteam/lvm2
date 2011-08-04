@@ -139,7 +139,7 @@ int dm_report_field_int(struct dm_report *rh,
 		return 0;
 	}
 
-	*sortval = (const uint64_t) value;
+	*sortval = (uint64_t) value;
 	field->sort_value = sortval;
 	field->report_string = repstr;
 
@@ -168,7 +168,7 @@ int dm_report_field_uint32(struct dm_report *rh,
 		return 0;
 	}
 
-	*sortval = (const uint64_t) value;
+	*sortval = (uint64_t) value;
 	field->sort_value = sortval;
 	field->report_string = repstr;
 
@@ -197,7 +197,7 @@ int dm_report_field_int32(struct dm_report *rh,
 		return 0;
 	}
 
-	*sortval = (const uint64_t) value;
+	*sortval = (uint64_t) value;
 	field->sort_value = sortval;
 	field->report_string = repstr;
 
