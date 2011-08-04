@@ -75,7 +75,7 @@ int exec_cmd(struct cmd_context *cmd, const char *const argv[],
 		/* FIXME Fix effect of reset_locking on cache then include this */
 		/* destroy_toolcontext(cmd); */
 		/* FIXME Use execve directly */
-		execvp(argv[0], (char **const) argv);
+		execvp(argv[0], (char **) argv);
 		log_sys_error("execvp", argv[0]);
 		_exit(errno);
 	}

@@ -350,7 +350,7 @@ static int _size32_disp(struct dm_report *rh __attribute__((unused)), struct dm_
 		return 0;
 	}
 
-	*sortval = (const uint64_t) size;
+	*sortval = (uint64_t) size;
 
 	dm_report_field_set_value(field, repstr, sortval);
 
