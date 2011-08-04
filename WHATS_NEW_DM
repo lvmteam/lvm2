@@ -1,5 +1,6 @@
 Version 1.02.66 - 
 ===============================
+  Add missing check for allocation failure _create_dir_recursive().
   Add support for systemd file descriptor handover in dmeventd.
   Add support for new oom killer adjustment interface (oom_score_adj).
   Add systemd unit files for dmeventd.
