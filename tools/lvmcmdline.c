@@ -274,8 +274,7 @@ static int _size_arg(struct cmd_context *cmd __attribute__((unused)), struct arg
 		if (i < 0) {
 			return 0;
 		} else if (i == 7) {
-			/* sectors */
-			v = v;
+			/* v is already in sectors */
 		} else if (i == 6) {
 			/* bytes */
 			v_tmp = (uint64_t) v;
