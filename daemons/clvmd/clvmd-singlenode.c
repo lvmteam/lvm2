@@ -55,7 +55,10 @@ static int init_comms(void)
 		goto error;
 	}
 	/* Set Close-on-exec */
-	fcntl(listen_fd, F_SETFD, 1);
+	if (fcntl(listen_fd, F_SETFD, 1)) {
+		DEBUGLOG("Setting CLOEXEC on client fd faile: %s\n", strerror(errno));
+		goto error;
+	}
 
 	memset(&addr, 0, sizeof(addr));
 	memcpy(addr.sun_path, SINGLENODE_CLVMD_SOCKNAME,
