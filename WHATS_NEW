@@ -1,5 +1,6 @@
 Version 2.02.87 - 
 ===============================
+  Add test for fcntl error in singlenode client code.
   Remove --force option from lvrename manpage.
   Add missing new line in lvrename help text.
   Add basic support for RAID 1/4/5/6 (i.e. create, remove, display)
