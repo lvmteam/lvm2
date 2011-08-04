@@ -779,10 +779,12 @@ static int _message(CMD_ARGS)
 		strcat(str, argv[i]);
 	}
 
-	if (!dm_task_set_message(dmt, str))
-		goto out;
+	i = dm_task_set_message(dmt, str);
 
 	dm_free(str);
+
+	if (!i)
+		goto out;
 
 	if (_switches[NOOPENCOUNT_ARG] && !dm_task_no_open_count(dmt))
 		goto out;

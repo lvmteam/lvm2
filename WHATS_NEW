@@ -1,5 +1,6 @@
 Version 2.02.87 - 
 ===============================
+  Fix memory leak in dmsetup _message() memory allocation error path.
   Add test for fcntl error in singlenode client code.
   Remove --force option from lvrename manpage.
   Add missing new line in lvrename help text.
