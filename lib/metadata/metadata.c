@@ -2835,7 +2835,6 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	int inconsistent = 0;
 	int inconsistent_vgid = 0;
 	int inconsistent_pvs = 0;
-	int inconsistent_seqno = 0;
 	int inconsistent_mdas = 0;
 	int inconsistent_mda_count = 0;
 	unsigned use_precommitted = precommitted;
@@ -2931,10 +2930,9 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 				log_very_verbose("Not repairing VG %s metadata seqno (%d != %d) "
 						  "as global/metadata_read_only is set.",
 						  vgname, vg->seqno, correct_vg->seqno);
-			else {
+			else
 				inconsistent = 1;
-				inconsistent_seqno = 1;
-			}
+
 			if (vg->seqno > correct_vg->seqno) {
 				free_vg(correct_vg);
 				correct_vg = vg;
@@ -3100,10 +3098,9 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 					log_very_verbose("Not repairing VG %s metadata seqno (%d != %d) "
 							  "as global/metadata_read_only is set.",
 							  vgname, vg->seqno, correct_vg->seqno);
-				else {
+				else
 					inconsistent = 1;
-					inconsistent_seqno = 1;
-				}
+
 				if (!_update_pv_list(cmd->mem, &all_pvs, vg)) {
 					_free_pv_list(&all_pvs);
 					free_vg(vg);
