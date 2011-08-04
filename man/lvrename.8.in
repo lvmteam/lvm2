@@ -5,7 +5,6 @@ lvrename \- rename a logical volume
 .B lvrename
 .RB [ \-A | \-\-autobackup " {" y | n }]
 .RB [ \-d | \-\-debug ]
-.RB [ \-f | \-\-force ]
 .RB [ \-h | \-\-help ]
 .RB [ \-\-noudevsync ]
 .RB [ \-t | \-\-test ]
