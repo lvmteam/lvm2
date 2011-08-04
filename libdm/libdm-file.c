@@ -27,6 +27,11 @@ static int _create_dir_recursive(const char *dir)
 	log_verbose("Creating directory \"%s\"", dir);
 	/* Create parent directories */
 	orig = s = dm_strdup(dir);
+	if (!s) {
+		log_error("Failed to duplicate directory name.");
+		return 0;
+	}
+
 	while ((s = strchr(s, '/')) != NULL) {
 		*s = '\0';
 		if (*orig) {
