@@ -362,7 +362,7 @@ xx(lvremove,
 xx(lvrename,
    "Rename a logical volume",
    0,
-   "lvrename "
+   "lvrename\n"
    "\t[-A|--autobackup {y|n}] " "\n"
    "\t[-d|--debug] " "\n"
    "\t[-h|-?|--help] " "\n"
