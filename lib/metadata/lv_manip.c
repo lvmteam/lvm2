@@ -2923,7 +2923,6 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 {
 	struct volume_group *vg;
 	struct lvinfo info;
-	struct logical_volume *origin = NULL;
 
 	vg = lv->vg;
 
@@ -2983,7 +2982,6 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return 0;
 
 	if (lv_is_cow(lv)) {
-		origin = origin_from_cow(lv);
 		log_verbose("Removing snapshot %s", lv->name);
 		/* vg_remove_snapshot() will preload origin/former snapshots */
 		if (!vg_remove_snapshot(lv))
