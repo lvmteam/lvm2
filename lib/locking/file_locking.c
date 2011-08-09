@@ -332,7 +332,8 @@ static int _file_lock_resource(struct cmd_context *cmd, const char *resource,
 	return 1;
 }
 
-int init_file_locking(struct locking_type *locking, struct cmd_context *cmd)
+int init_file_locking(struct locking_type *locking, struct cmd_context *cmd,
+		      int suppress_messages)
 {
 	int r;
 
@@ -364,12 +365,14 @@ int init_file_locking(struct locking_type *locking, struct cmd_context *cmd)
 	dm_list_init(&_lock_list);
 
 	if (sigfillset(&_intsigset) || sigfillset(&_fullsigset)) {
-		log_sys_error("sigfillset", "init_file_locking");
+		log_sys_error_suppress(suppress_messages, "sigfillset",
+				       "init_file_locking");
 		return 0;
 	}
 
 	if (sigdelset(&_intsigset, SIGINT)) {
-		log_sys_error("sigdelset", "init_file_locking");
+		log_sys_error_suppress(suppress_messages, "sigdelset",
+				       "init_file_locking");
 		return 0;
 	}
 
