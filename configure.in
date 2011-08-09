@@ -423,7 +423,6 @@ AC_MSG_CHECKING(whether to build cluster LVM daemon)
 AC_ARG_WITH(clvmd,
   [  --with-clvmd=TYPE       build cluster LVM Daemon
                           The following cluster manager combinations are valid:
-                           * cman,gulm             (RHEL4 or equivalent)
                            * cman                  (RHEL5 or equivalent)
                            * cman,corosync,openais (or selection of them)
                            * singlenode            (localhost only)
@@ -449,14 +448,12 @@ fi
 dnl -- Express clvmd init script Required-Start / Required-Stop
 CLVMD_CMANAGERS=""
 dnl -- On RHEL4/RHEL5, qdiskd is started from a separate init script.
-dnl -- Enable if we are build for either cman or gulm.
+dnl -- Enable if we are build for cman.
 CLVMD_NEEDS_QDISKD=no
 
 dnl -- define build types
 if [[ `expr x"$CLVMD" : '.*gulm.*'` != 0 ]]; then
-	BUILDGULM=yes
-	CLVMD_CMANAGERS="$CLVMD_CMANAGERS lock_gulmd"
-	CLVMD_NEEDS_QDISKD=yes
+	AC_MSG_ERROR([Since version 2.02.87 GULM locking is no longer supported.]);
 fi
 if [[ `expr x"$CLVMD" : '.*cman.*'` != 0 ]]; then
 	BUILDCMAN=yes
@@ -475,14 +472,6 @@ if test x$CLVMD_NEEDS_QDISKD != xno; then
 	CLVMD_CMANAGERS="$CLVMD_CMANAGERS qdiskd"
 fi
 
-dnl -- sanity check around user selection
-if test x$BUILDGULM = xyes; then
-	if test x$BUILDCOROSYNC = xyes || \
-	   test x$BUILDOPENAIS = xyes; then
-		AC_MSG_ERROR([requested clvmd configuration is not valid])
-	fi
-fi
-
 dnl -- define a soft bailout if we are autodetecting
 soft_bailout() {
 	NOTFOUND=1
@@ -494,10 +483,9 @@ hard_bailout() {
 
 dnl -- if clvmd=all then set soft_bailout (we don't want to error)
 dnl -- and set all builds to yes. We need to do this here
-dnl -- to skip the gulm + openais|corosync sanity check above.
+dnl -- to skip the openais|corosync sanity check above.
 if test x$CLVMD = xall; then
 	bailout=soft_bailout
-	BUILDGULM=yes
 	BUILDCMAN=yes
 	BUILDCOROSYNC=yes
 	BUILDOPENAIS=yes
@@ -518,28 +506,6 @@ check_lib_no_libs() {
 		     [$lib_no_libs_args])
 	LIBS=$ac_check_lib_save_LIBS
 }
-
-dnl -- Look for gulm libraries if required.
-if test x$BUILDGULM = xyes; then
-	PKG_CHECK_MODULES(CCS, libccs, [HAVE_CCS=yes],
-		[NOTFOUND=0
-		AC_CHECK_HEADERS(ccs.h,,$bailout)
-		check_lib_no_libs ccs ccs_connect
-		if test $NOTFOUND = 0; then
-			AC_MSG_RESULT([no pkg for libccs, using -lccs])
-			CCS_LIBS="-lccs"
-			HAVE_CCS=yes
-		fi])
-	PKG_CHECK_MODULES(GULM, libgulm, [HAVE_GULM=yes],
-		[NOTFOUND=0
-		AC_CHECK_HEADERS(libgulm.h,,$bailout)
-		check_lib_no_libs gulm lg_core_login
-		if test $NOTFOUND = 0; then
-			AC_MSG_RESULT([no pkg for libgulm, using -lgulm])
-			GULM_LIBS="-lgulm"
-			HAVE_GULM=yes
-		fi])
-fi
 
 dnl -- Look for cman libraries if required.
 if test x$BUILDCMAN = xyes; then
@@ -633,13 +599,6 @@ if test x$CLVMD = xall; then
 	CLVMD=none
 	CLVMD_CMANAGERS=""
 	CLVMD_NEEDS_QDISKD=no
-	if test x$HAVE_CCS = xyes && \
-	   test x$HAVE_GULM = xyes; then
-		AC_MSG_RESULT([Enabling clvmd gulm cluster manager])
-		CLVMD="$CLVMD,gulm"
-		CLVMD_CMANAGERS="$CLVMD_CMANAGERS lock_gulmd"
-		CLVMD_NEEDS_QDISKD=yes
-	fi
 	if test x$HAVE_CMAN = xyes && \
 	   test x$HAVE_DLM = xyes; then
 		AC_MSG_RESULT([Enabling clvmd cman cluster manager])
@@ -1354,8 +1313,6 @@ AC_SUBST(DM_IOCTLS)
 AC_SUBST(DM_LIB_VERSION)
 AC_SUBST(DM_LIB_PATCHLEVEL)
 AC_SUBST(FSADM)
-AC_SUBST(GULM_CFLAGS)
-AC_SUBST(GULM_LIBS)
 AC_SUBST(HAVE_LIBDL)
 AC_SUBST(HAVE_REALTIME)
 AC_SUBST(INTL)

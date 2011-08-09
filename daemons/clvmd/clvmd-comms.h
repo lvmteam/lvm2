@@ -54,13 +54,6 @@ struct cluster_ops {
 
 };
 
-#ifdef USE_GULM
-#  include "tcp-comms.h"
-struct cluster_ops *init_gulm_cluster(void);
-#define MAX_CSID_LEN 			GULM_MAX_CSID_LEN
-#define MAX_CLUSTER_MEMBER_NAME_LEN	GULM_MAX_CLUSTER_MEMBER_NAME_LEN
-#endif
-
 #ifdef USE_CMAN
 #  include <netinet/in.h>
 #  include "libcman.h"
