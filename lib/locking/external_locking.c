@@ -65,12 +65,13 @@ static void _reset_external_locking(void)
 		_reset_fn();
 }
 
-int init_external_locking(struct locking_type *locking, struct cmd_context *cmd)
+int init_external_locking(struct locking_type *locking, struct cmd_context *cmd,
+			  int suppress_messages)
 {
 	const char *libname;
 
 	if (_locking_lib) {
-		log_error("External locking already initialised");
+		log_error_suppress(suppress_messages, "External locking already initialised");
 		return 1;
 	}
 
@@ -90,16 +91,16 @@ int init_external_locking(struct locking_type *locking, struct cmd_context *cmd)
 	    !(_lock_fn = dlsym(_locking_lib, "lock_resource")) ||
 	    !(_reset_fn = dlsym(_locking_lib, "reset_locking")) ||
 	    !(_end_fn = dlsym(_locking_lib, "locking_end"))) {
-		log_error("Shared library %s does not contain locking "
-			  "functions", libname);
+		log_error_suppress(suppress_messages, "Shared library %s does "
+				   "not contain locking functions", libname);
 		dlclose(_locking_lib);
 		_locking_lib = NULL;
 		return 0;
 	}
 
 	if (!(_lock_query_fn = dlsym(_locking_lib, "query_resource")))
-		log_warn("WARNING: %s: _query_resource() missing: "
-			 "Using inferior activation method.", libname);
+		log_warn_suppress(suppress_messages, "WARNING: %s: _query_resource() "
+				  "missing: Using inferior activation method.", libname);
 
 	log_verbose("Loaded external locking library %s", libname);
 	return _init_fn(2, cmd->cft, &locking->flags);

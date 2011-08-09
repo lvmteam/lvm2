@@ -232,7 +232,7 @@ int init_locking(int type, struct cmd_context *cmd, int suppress_messages)
 
 	switch (type) {
 	case 0:
-		init_no_locking(&_locking, cmd);
+		init_no_locking(&_locking, cmd, suppress_messages);
 		log_warn("WARNING: Locking disabled. Be careful! "
 			  "This could corrupt your metadata.");
 		return 1;
@@ -241,7 +241,7 @@ int init_locking(int type, struct cmd_context *cmd, int suppress_messages)
 		log_very_verbose("%sFile-based locking selected.",
 				 _blocking_supported ? "" : "Non-blocking ");
 
-		if (!init_file_locking(&_locking, cmd)) {
+		if (!init_file_locking(&_locking, cmd, suppress_messages)) {
 			log_error_suppress(suppress_messages,
 					   "File-based locking initialisation failed.");
 			break;
@@ -252,13 +252,13 @@ int init_locking(int type, struct cmd_context *cmd, int suppress_messages)
 	case 2:
 		if (!is_static()) {
 			log_very_verbose("External locking selected.");
-			if (init_external_locking(&_locking, cmd))
+			if (init_external_locking(&_locking, cmd, suppress_messages))
 				return 1;
 		}
 		if (!find_config_tree_int(cmd, "locking/fallback_to_clustered_locking",
 			    find_config_tree_int(cmd, "global/fallback_to_clustered_locking",
 						 DEFAULT_FALLBACK_TO_CLUSTERED_LOCKING))) {
-			log_error("External locking initialisation failed.");
+			log_error_suppress(suppress_messages, "External locking initialisation failed.");
 			break;
 		}
 #endif
@@ -269,7 +269,7 @@ int init_locking(int type, struct cmd_context *cmd, int suppress_messages)
 
 	case 3:
 		log_very_verbose("Cluster locking selected.");
-		if (!init_cluster_locking(&_locking, cmd)) {
+		if (!init_cluster_locking(&_locking, cmd, suppress_messages)) {
 			log_error_suppress(suppress_messages,
 					   "Internal cluster locking initialisation failed.");
 			break;
@@ -280,7 +280,7 @@ int init_locking(int type, struct cmd_context *cmd, int suppress_messages)
 	case 4:
 		log_verbose("Read-only locking selected. "
 			    "Only read operations permitted.");
-		if (!init_readonly_locking(&_locking, cmd))
+		if (!init_readonly_locking(&_locking, cmd, suppress_messages))
 			break;
 		return 1;
 
@@ -297,7 +297,7 @@ int init_locking(int type, struct cmd_context *cmd, int suppress_messages)
 		log_warn_suppress(suppress_messages,
 				  "Volume Groups with the clustered attribute will "
 				  "be inaccessible.");
-		if (init_file_locking(&_locking, cmd))
+		if (init_file_locking(&_locking, cmd, suppress_messages))
 			return 1;
 		else
 			log_error_suppress(suppress_messages,
@@ -308,7 +308,7 @@ int init_locking(int type, struct cmd_context *cmd, int suppress_messages)
 		return 0;
 
 	log_verbose("Locking disabled - only read operations permitted.");
-	init_readonly_locking(&_locking, cmd);
+	init_readonly_locking(&_locking, cmd, suppress_messages);
 
 	return 1;
 }

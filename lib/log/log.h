@@ -76,6 +76,8 @@
 /* System call equivalents */
 #define log_sys_error(x, y) \
 		log_err("%s: %s failed: %s", y, x, strerror(errno))
+#define log_sys_error_suppress(s, x, y) \
+		log_err_suppress(s, "%s: %s failed: %s", y, x, strerror(errno))
 #define log_sys_very_verbose(x, y) \
 		log_info("%s: %s failed: %s", y, x, strerror(errno))
 #define log_sys_debug(x, y) \

@@ -62,14 +62,15 @@ static int _clvmd_sock = -1;
 /* FIXME Install SIGPIPE handler? */
 
 /* Open connection to the Cluster Manager daemon */
-static int _open_local_sock(void)
+static int _open_local_sock(int suppress_messages)
 {
 	int local_socket;
 	struct sockaddr_un sockaddr;
 
 	/* Open local socket */
 	if ((local_socket = socket(PF_UNIX, SOCK_STREAM, 0)) < 0) {
-		log_error("Local socket creation failed: %s", strerror(errno));
+		log_error_suppress(suppress_messages, "Local socket "
+				   "creation failed: %s", strerror(errno));
 		return -1;
 	}
 
@@ -82,8 +83,8 @@ static int _open_local_sock(void)
 		    sizeof(sockaddr))) {
 		int saved_errno = errno;
 
-		log_error("connect() failed on local socket: %s",
-			  strerror(errno));
+		log_error_suppress(suppress_messages, "connect() failed "
+				   "on local socket: %s", strerror(errno));
 		if (close(local_socket))
 			stack;
 
@@ -212,7 +213,7 @@ static int _cluster_request(char clvmd_cmd, const char *node, void *data, int le
 	*num = 0;
 
 	if (_clvmd_sock == -1)
-		_clvmd_sock = _open_local_sock();
+		_clvmd_sock = _open_local_sock(0);
 
 	if (_clvmd_sock == -1)
 		return 0;
@@ -583,13 +584,14 @@ void reset_locking(void)
 	if (close(_clvmd_sock))
 		stack;
 
-	_clvmd_sock = _open_local_sock();
+	_clvmd_sock = _open_local_sock(0);
 	if (_clvmd_sock == -1)
 		stack;
 }
 
 #ifdef CLUSTER_LOCKING_INTERNAL
-int init_cluster_locking(struct locking_type *locking, struct cmd_context *cmd)
+int init_cluster_locking(struct locking_type *locking, struct cmd_context *cmd,
+			 int suppress_messages)
 {
 	locking->lock_resource = _lock_resource;
 	locking->query_resource = _query_resource;
@@ -597,7 +599,7 @@ int init_cluster_locking(struct locking_type *locking, struct cmd_context *cmd)
 	locking->reset_locking = _reset_locking;
 	locking->flags = LCK_PRE_MEMLOCK | LCK_CLUSTERED;
 
-	_clvmd_sock = _open_local_sock();
+	_clvmd_sock = _open_local_sock(suppress_messages);
 	if (_clvmd_sock == -1)
 		return 0;
 
@@ -606,7 +608,7 @@ int init_cluster_locking(struct locking_type *locking, struct cmd_context *cmd)
 #else
 int locking_init(int type, struct config_tree *cf, uint32_t *flags)
 {
-	_clvmd_sock = _open_local_sock();
+	_clvmd_sock = _open_local_sock(0);
 	if (_clvmd_sock == -1)
 		return 0;
 
