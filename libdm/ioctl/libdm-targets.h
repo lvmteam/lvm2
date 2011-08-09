@@ -20,7 +20,6 @@
 #include <sys/types.h>
 
 struct dm_ioctl;
-struct dm_ioctl_v1;
 
 struct target {
 	uint64_t start;
@@ -49,7 +48,6 @@ struct dm_task {
 	uint32_t read_ahead_flags;
 	union {
 		struct dm_ioctl *v4;
-		struct dm_ioctl_v1 *v1;
 	} dmi;
 	char *newname;
 	char *message;

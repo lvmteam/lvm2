@@ -8917,6 +8917,13 @@ else
 fi
 
 
+if test x$DM_COMPAT = xyes; then
+	as_fn_error $? "--enable-compat is not currently supported.
+Since device-mapper version 1.02.66, only one version (4) of the device-mapper
+ioctl protocol is supported.
+	" "$LINENO" 5
+fi
+
 ################################################################################
 # Check whether --enable-units-compat was given.
 if test "${enable_units_compat+set}" = set; then :
