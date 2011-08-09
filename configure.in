@@ -846,6 +846,14 @@ AC_ARG_ENABLE(compat,
 			     [enable support for old device-mapper versions]),
 	      DM_COMPAT=$enableval, DM_COMPAT=no)
 
+if test x$DM_COMPAT = xyes; then
+	AC_MSG_ERROR(
+                 [--enable-compat is not currently supported.
+Since device-mapper version 1.02.66, only one version (4) of the device-mapper 
+ioctl protocol is supported.]
+	)
+fi
+
 ################################################################################
 dnl -- Compatible units suffix mode
 AC_ARG_ENABLE(units-compat,
