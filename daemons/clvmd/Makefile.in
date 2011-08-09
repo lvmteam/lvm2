@@ -25,8 +25,6 @@ CPG_LIBS = @CPG_LIBS@
 CPG_CFLAGS = @CPG_CFLAGS@
 DLM_LIBS = @DLM_LIBS@
 DLM_CFLAGS = @DLM_CFLAGS@
-GULM_LIBS = @GULM_LIBS@
-GULM_CFLAGS = @GULM_CFLAGS@
 QUORUM_LIBS = @QUORUM_LIBS@
 QUORUM_CFLAGS = @QUORUM_CFLAGS@
 SALCK_LIBS = @SALCK_LIBS@
@@ -40,13 +38,6 @@ SOURCES = \
 
 ifeq ("@DEBUG@", "yes")
 	DEFS += -DDEBUG
-endif
-
-ifneq (,$(findstring gulm,, "@CLVMD@,"))
-	SOURCES += clvmd-gulm.c tcp-comms.c
-	LMLIBS += $(CCS_LIBS) $(GULM_LIBS)
-	CFLAGS += $(CCS_CFLAGS) $(GULM_CFLAGS)
-	DEFS += -DUSE_GULM
 endif
 
 ifneq (,$(findstring cman,, "@CLVMD@,"))
@@ -76,7 +67,6 @@ ifneq (,$(findstring singlenode,, &quot;@CLVMD@,&quot;))
 endif
 
 ifeq ($(MAKECMDGOALS),distclean)
-	SOURCES += clvmd-gulm.c tcp-comms.c
 	SOURCES += clvmd-cman.c
 	SOURCES += clvmd-openais.c
 	SOURCES += clvmd-corosync.c

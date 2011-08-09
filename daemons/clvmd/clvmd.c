@@ -78,7 +78,6 @@ struct lvm_thread_cmd {
 };
 
 struct lvm_startup_params {
-	int using_gulm;
 	char **argv;
 };
 
@@ -101,7 +100,7 @@ static int child_pipe[2];
 #define DFAIL_TIMEOUT    5
 #define SUCCESS          0
 
-typedef enum {IF_AUTO, IF_CMAN, IF_GULM, IF_OPENAIS, IF_COROSYNC, IF_SINGLENODE} if_type_t;
+typedef enum {IF_AUTO, IF_CMAN, IF_OPENAIS, IF_COROSYNC, IF_SINGLENODE} if_type_t;
 
 /* Prototypes for code further down */
 static void sigusr2_handler(int sig);
@@ -165,9 +164,6 @@ static void usage(const char *prog, FILE *file)
 #endif
 #ifdef USE_OPENAIS
 		"openais "
-#endif
-#ifdef USE_GULM
-		"gulm "
 #endif
 #ifdef USE_SINGLENODE
 		"singlenode "
@@ -342,7 +338,6 @@ int main(int argc, char *argv[])
 	int start_timeout = 0;
 	if_type_t cluster_iface = IF_AUTO;
 	sigset_t ss;
-	int using_gulm = 0;
 	int debug_opt = 0;
 	debug_t debug_arg = DEBUG_OFF;
 	int clusterwide_opt = 0;
@@ -473,7 +468,7 @@ int main(int argc, char *argv[])
 
 	/* Set up signal handlers, USR1 is for cluster change notifications (in cman)
 	   USR2 causes child threads to exit.
-	   HUP causes gulm version to re-read nodes list from CCS.
+	   HUP causes to re-read nodes list from CCS.
 	   PIPE should be ignored */
 	signal(SIGUSR2, sigusr2_handler);
 	signal(SIGHUP,  sighup_handler);
@@ -504,16 +499,6 @@ int main(int argc, char *argv[])
 		max_cluster_member_name_len = CMAN_MAX_NODENAME_LEN;
 		syslog(LOG_NOTICE, "Cluster LVM daemon started - connected to CMAN");
 	}
-#endif
-#ifdef USE_GULM
-	if (!clops)
-		if ((cluster_iface == IF_AUTO || cluster_iface == IF_GULM) && (clops = init_gulm_cluster())) {
-			max_csid_len = GULM_MAX_CSID_LEN;
-			max_cluster_message = GULM_MAX_CLUSTER_MESSAGE;
-			max_cluster_member_name_len = GULM_MAX_CLUSTER_MEMBER_NAME_LEN;
-			using_gulm = 1;
-			syslog(LOG_NOTICE, "Cluster LVM daemon started - connected to GULM");
-		}
 #endif
 #ifdef USE_COROSYNC
 	if (!clops)
@@ -580,14 +565,10 @@ int main(int argc, char *argv[])
 
 	/* Don't let anyone else to do work until we are started */
 	pthread_mutex_lock(&lvm_start_mutex);
-	lvm_params.using_gulm = using_gulm;
 	lvm_params.argv = argv;
 	pthread_create(&lvm_thread, NULL, lvm_thread_fn, &lvm_params);
 
 	/* Tell the rest of the cluster our version number */
-	/* CMAN can do this immediately, gulm needs to wait until
-	   the core initialisation has finished and the node list
-	   has been gathered */
 	if (clops->cluster_init_completed)
 		clops->cluster_init_completed();
 
@@ -625,7 +606,7 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
-/* Called when the GuLM cluster layer has completed initialisation.
+/* Called when the cluster layer has completed initialisation.
    We send the version message */
 void clvmd_cluster_init_completed(void)
 {
@@ -1965,7 +1946,7 @@ static void *lvm_thread_fn(void *arg)
 	pthread_sigmask(SIG_BLOCK, &ss, NULL);
 
 	/* Initialise the interface to liblvm */
-	init_clvm(lvm_params->using_gulm, lvm_params->argv);
+	init_clvm(lvm_params->argv);
 
 	/* Allow others to get moving */
 	pthread_mutex_unlock(&lvm_start_mutex);
@@ -2222,8 +2203,6 @@ static if_type_t parse_cluster_interface(char *ifname)
 		iface = IF_AUTO;
 	if (!strcmp(ifname, "cman"))
 		iface = IF_CMAN;
-	if (!strcmp(ifname, "gulm"))
-		iface = IF_GULM;
 	if (!strcmp(ifname, "openais"))
 		iface = IF_OPENAIS;
 	if (!strcmp(ifname, "corosync"))

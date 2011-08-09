@@ -650,46 +650,6 @@ int do_refresh_cache(void)
 	return 0;
 }
 
-
-/* Only called at gulm startup. Drop any leftover VG or P_orphan locks
-   that might be hanging around if we died for any reason
-*/
-static void drop_vg_locks(void)
-{
-	char vg[128];
-	char line[255];
-	FILE *vgs =
-	    popen
-	    (LVM_PATH " pvs  --config 'log{command_names=0 prefix=\"\"}' --nolocking --noheadings -o vg_name", "r");
-
-	sync_unlock("P_" VG_ORPHANS, LCK_EXCL);
-	sync_unlock("P_" VG_GLOBAL, LCK_EXCL);
-
-	if (!vgs)
-		return;
-
-	while (fgets(line, sizeof(line), vgs)) {
-		char *vgend;
-		char *vgstart;
-
-		if (line[strlen(line)-1] == '\n')
-			line[strlen(line)-1] = '\0';
-
-		vgstart = line + strspn(line, " ");
-		vgend = vgstart + strcspn(vgstart, " ");
-		*vgend = '\0';
-
-		if (strncmp(vgstart, "WARNING:", 8) == 0)
-			continue;
-
-		sprintf(vg, "V_%s", vgstart);
-		sync_unlock(vg, LCK_EXCL);
-
-	}
-	if (fclose(vgs))
-		DEBUGLOG("vgs fclose failed: %s\n", strerror(errno));
-}
-
 /*
  * Handle VG lock - drop metadata or update lvmcache state
  */
@@ -920,7 +880,7 @@ void lvm_do_fs_unlock(void)
 }
 
 /* Called to initialise the LVM context of the daemon */
-int init_clvm(int using_gulm, char **argv)
+int init_clvm(char **argv)
 {
 	/* Use LOG_DAEMON for syslog messages instead of LOG_USER */
 	init_syslog(LOG_DAEMON);
@@ -941,10 +901,6 @@ int init_clvm(int using_gulm, char **argv)
 	/* Check lvm.conf is setup for cluster-LVM */
 	check_config();
 	init_ignore_suspended_devices(1);
-
-	/* Remove any non-LV locks that may have been left around */
-	if (using_gulm)
-		drop_vg_locks();
 
 	get_initial_state(argv);
 

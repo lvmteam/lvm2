@@ -85,7 +85,7 @@ exclusive LV locks into shared locks.)
 Selects the cluster manager to use for locking and internal communications,
 the available managers will be listed as part of the 'clvmd -h' output.
 clvmd will use the first cluster manager that succeeds, and it checks them
-in the order cman,gulm,corosync,openais. As it is quite possible to have
+in the order cman,corosync,openais. As it is quite possible to have
 (eg) corosync and cman available on the same system you might have to
 manually specify this option to override the search.
 .TP
