@@ -403,7 +403,7 @@ int process_each_segment_in_pv(struct cmd_context *cmd,
 
 		vg = vg_read(cmd, vg_name, NULL, 0);
 		if (vg_read_error(vg)) {
-			free_vg(vg);
+			release_vg(vg);
 			log_error("Skipping volume group %s", vg_name);
 			return ECMD_FAILED;
 		}
@@ -415,7 +415,7 @@ int process_each_segment_in_pv(struct cmd_context *cmd,
 		if (!(pvl = find_pv_in_vg(vg, pv_dev_name(pv)))) {
 			 log_error("Unable to find %s in volume group %s",
 				   pv_dev_name(pv), vg_name);
-			 unlock_and_free_vg(cmd, vg, vg_name);
+			 unlock_and_release_vg(cmd, vg, vg_name);
 			 return ECMD_FAILED;
 		}
 
@@ -438,7 +438,7 @@ int process_each_segment_in_pv(struct cmd_context *cmd,
 	if (vg_name)
 		unlock_vg(cmd, vg_name);
 	if (!old_vg)
-		free_vg(vg);
+		release_vg(vg);
 
 	return ret_max;
 }
@@ -795,7 +795,7 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 				vg = vg_read(cmd, sll->str, NULL, flags);
 				if (vg_read_error(vg)) {
 					ret_max = ECMD_FAILED;
-					free_vg(vg);
+					release_vg(vg);
 					stack;
 					continue;
 				}
@@ -804,7 +804,7 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 							    handle,
 							    process_single_pv);
 
-				unlock_and_free_vg(cmd, vg, sll->str);
+				unlock_and_release_vg(cmd, vg, sll->str);
 
 				if (ret > ret_max)
 					ret_max = ret;

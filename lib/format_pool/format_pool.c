@@ -156,7 +156,7 @@ static struct volume_group *_pool_vg_read(struct format_instance *fid,
 	return vg;
 
 bad:
-	free_vg(vg);
+	release_vg(vg);
 
 	return NULL;
 }

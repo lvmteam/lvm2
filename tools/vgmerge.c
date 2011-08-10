@@ -22,7 +22,7 @@ static struct volume_group *_vgmerge_vg_read(struct cmd_context *cmd,
 	log_verbose("Checking for volume group \"%s\"", vg_name);
 	vg = vg_read_for_update(cmd, vg_name, NULL, 0);
 	if (vg_read_error(vg)) {
-		free_vg(vg);
+		release_vg(vg);
 		return NULL;
 	}
 	return vg;
@@ -54,7 +54,7 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 		vg_to = _vgmerge_vg_read(cmd, vg_name_to);
 		if (!vg_to) {
 			stack;
-			unlock_and_free_vg(cmd, vg_from, vg_name_from);
+			unlock_and_release_vg(cmd, vg_from, vg_name_from);
 			return ECMD_FAILED;
 		}
 	} else {
@@ -67,7 +67,7 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 		vg_from = _vgmerge_vg_read(cmd, vg_name_from);
 		if (!vg_from) {
 			stack;
-			unlock_and_free_vg(cmd, vg_to, vg_name_to);
+			unlock_and_release_vg(cmd, vg_to, vg_name_to);
 			return ECMD_FAILED;
 		}
 	}
@@ -153,10 +153,10 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 bad:
 	/*
 	 * Note: as vg_to is referencing moved elements from vg_from
-	 * the order of free_vg calls is mandatory.
+	 * the order of release_vg calls is mandatory.
 	 */
-	unlock_and_free_vg(cmd, vg_to, vg_name_to);
-	unlock_and_free_vg(cmd, vg_from, vg_name_from);
+	unlock_and_release_vg(cmd, vg_to, vg_name_to);
+	unlock_and_release_vg(cmd, vg_from, vg_name_from);
 
 	return r;
 }

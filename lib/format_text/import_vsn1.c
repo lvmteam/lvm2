@@ -814,7 +814,7 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 	if (lv_hash)
 		dm_hash_destroy(lv_hash);
 
-	free_vg(vg);
+	release_vg(vg);
 	return NULL;
 }
 

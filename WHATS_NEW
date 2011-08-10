@@ -1,5 +1,6 @@
 Version 2.02.87 - 
 ===============================
+  Replace free_vg with release_vg and move it to vg.c.
   Remove INCONSISTENT_VG flag from the code.
   Remove lock from cache even if unlock fails.
   Initialise clvmd locks before lvm context to avoid open descriptor leaks.

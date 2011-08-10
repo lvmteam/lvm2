@@ -17,6 +17,7 @@
 #include "metadata.h"
 #include "display.h"
 #include "activate.h"
+#include "toolcontext.h"
 
 struct volume_group *alloc_vg(const char *pool_name, struct cmd_context *cmd,
 			      const char *vg_name)
@@ -49,6 +50,27 @@ struct volume_group *alloc_vg(const char *pool_name, struct cmd_context *cmd,
 	dm_list_init(&vg->removed_pvs);
 
 	return vg;
+}
+
+static void _free_vg(struct volume_group *vg)
+{
+	vg_set_fid(vg, NULL);
+
+	if (vg->cmd && vg->vgmem == vg->cmd->mem) {
+		log_error(INTERNAL_ERROR "global memory pool used for VG %s",
+			  vg->name);
+		return;
+	}
+
+	dm_pool_destroy(vg->vgmem);
+}
+
+void release_vg(struct volume_group *vg)
+{
+	if (!vg)
+		return;
+
+	_free_vg(vg);
 }
 
 char *vg_fmt_dup(const struct volume_group *vg)

@@ -74,7 +74,7 @@ static int pvcreate_restore_params_validate(struct cmd_context *cmd,
 		pp->pe_start = pv_pe_start(existing_pvl->pv);
 		pp->extent_size = pv_pe_size(existing_pvl->pv);
 		pp->extent_count = pv_pe_count(existing_pvl->pv);
-		free_vg(vg);
+		release_vg(vg);
 	}
 
 	if (arg_sign_value(cmd, physicalvolumesize_ARG, 0) == SIGN_MINUS) {

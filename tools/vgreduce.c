@@ -194,7 +194,7 @@ static int _vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 bad:
 	if (pvl)
 		free_pv_fid(pvl->pv);
-	unlock_and_free_vg(cmd, orphan_vg, VG_ORPHANS);
+	unlock_and_release_vg(cmd, orphan_vg, VG_ORPHANS);
 	return r;
 }
 
@@ -268,7 +268,7 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 			goto out;
 		}
 
-		free_vg(vg);
+		release_vg(vg);
 		log_verbose("Trying to open VG %s for recovery...", vg_name);
 
 		vg = vg_read_for_update(cmd, vg_name, NULL,
@@ -314,7 +314,7 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 	}
 out:
 	init_ignore_suspended_devices(saved_ignore_suspended_devices);
-	unlock_and_free_vg(cmd, vg, vg_name);
+	unlock_and_release_vg(cmd, vg, vg_name);
 
 	return ret;
 

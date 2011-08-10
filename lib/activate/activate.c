@@ -521,7 +521,7 @@ int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s,
 		origin_only = 0;
 
 	r = lv_info(cmd, lv, origin_only, info, with_open_count, with_read_ahead);
-	free_vg(lv->vg);
+	release_vg(lv->vg);
 
 	return r;
 }
@@ -1267,10 +1267,10 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 	r = 1;
 out:
 	if (lv_pre)
-		free_vg(lv_pre->vg);
+		release_vg(lv_pre->vg);
 	if (lv) {
 		lv_release_replicator_vgs(lv);
-		free_vg(lv->vg);
+		release_vg(lv->vg);
 	}
 
 	return r;
@@ -1351,7 +1351,7 @@ static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
 	r = 1;
 out:
 	if (lv)
-		free_vg(lv->vg);
+		release_vg(lv->vg);
 
 	return r;
 }
@@ -1458,7 +1458,7 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s)
 out:
 	if (lv) {
 		lv_release_replicator_vgs(lv);
-		free_vg(lv->vg);
+		release_vg(lv->vg);
 	}
 
 	return r;
@@ -1488,7 +1488,7 @@ int lv_activation_filter(struct cmd_context *cmd, const char *lvid_s,
 	r = 1;
 out:
 	if (lv)
-		free_vg(lv->vg);
+		release_vg(lv->vg);
 
 	return r;
 }
@@ -1557,7 +1557,7 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 out:
 	if (lv) {
 		lv_release_replicator_vgs(lv);
-		free_vg(lv->vg);
+		release_vg(lv->vg);
 	}
 
 	return r;

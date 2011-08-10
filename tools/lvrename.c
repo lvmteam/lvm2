@@ -104,7 +104,7 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 	log_verbose("Checking for existing volume group \"%s\"", vg_name);
 	vg = vg_read_for_update(cmd, vg_name, NULL, 0);
 	if (vg_read_error(vg)) {
-		free_vg(vg);
+		release_vg(vg);
 		stack;
 		return ECMD_FAILED;
 	}
@@ -123,6 +123,6 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 
 	r = ECMD_PROCESSED;
 error:
-	unlock_and_free_vg(cmd, vg, vg_name);
+	unlock_and_release_vg(cmd, vg, vg_name);
 	return r;
 }
