@@ -2861,12 +2861,8 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	 * the missing PV logic below.
 	 */
 	if ((correct_vg = lvmcache_get_vg(vgid, precommitted)) &&
-	    (use_precommitted || !*consistent || !(correct_vg->status & INCONSISTENT_VG))) {
-		if (!(correct_vg->status & INCONSISTENT_VG))
-			*consistent = 1;
-		else	/* Inconsistent but we can't repair it */
-			correct_vg->status &= ~INCONSISTENT_VG;
-
+	    (use_precommitted || !*consistent)) {
+		*consistent = 1;
 		return correct_vg;
 	} else {
 		free_vg(correct_vg);
@@ -3131,8 +3127,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	 * If there is no precommitted metadata, committed metadata
 	 * is read and stored in the cache even if use_precommitted is set
 	 */
-	lvmcache_update_vg(correct_vg, correct_vg->status & PRECOMMITTED &
-			   (inconsistent ? INCONSISTENT_VG : 0));
+	lvmcache_update_vg(correct_vg, (correct_vg->status & PRECOMMITTED));
 
 	if (inconsistent) {
 		/* FIXME Test should be if we're *using* precommitted metadata not if we were searching for it */
