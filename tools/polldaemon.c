@@ -187,7 +187,7 @@ static int _wait_for_single_lv(struct cmd_context *cmd, const char *name, const 
 		/* Locks the (possibly renamed) VG again */
 		vg = parms->poll_fns->get_copy_vg(cmd, name, uuid);
 		if (vg_read_error(vg)) {
-			free_vg(vg);
+			release_vg(vg);
 			log_error("ABORTING: Can't reread VG for %s", name);
 			/* What more could we do here? */
 			return 0;
@@ -198,23 +198,23 @@ static int _wait_for_single_lv(struct cmd_context *cmd, const char *name, const 
 		if (!lv && parms->lv_type == PVMOVE) {
 			log_print("%s: no pvmove in progress - already finished or aborted.",
 				  name);
-			unlock_and_free_vg(cmd, vg, vg->name);
+			unlock_and_release_vg(cmd, vg, vg->name);
 			return 1;
 		}
 
 		if (!lv) {
 			log_error("ABORTING: Can't find LV in %s for %s",
 				  vg->name, name);
-			unlock_and_free_vg(cmd, vg, vg->name);
+			unlock_and_release_vg(cmd, vg, vg->name);
 			return 0;
 		}
 
 		if (!_check_lv_status(cmd, vg, lv, name, parms, &finished)) {
-			unlock_and_free_vg(cmd, vg, vg->name);
+			unlock_and_release_vg(cmd, vg, vg->name);
 			return_0;
 		}
 
-		unlock_and_free_vg(cmd, vg, vg->name);
+		unlock_and_release_vg(cmd, vg, vg->name);
 
 		/*
 		 * FIXME Sleeping after testing, while preferred, also works around

@@ -332,7 +332,7 @@ static void _display_archive(struct cmd_context *cmd, struct archive_file *af)
 	log_print("Description:\t%s", desc ? : "<No description>");
 	log_print("Backup Time:\t%s", ctime(&when));
 
-	free_vg(vg);
+	release_vg(vg);
 }
 
 int archive_list(struct cmd_context *cmd, const char *dir, const char *vgname)

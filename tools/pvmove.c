@@ -460,7 +460,7 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 
 	vg = _get_vg(cmd, pv_vg_name(pv));
 	if (vg_read_error(vg)) {
-		free_vg(vg);
+		release_vg(vg);
 		stack;
 		return ECMD_FAILED;
 	}
@@ -526,7 +526,7 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 	r = ECMD_PROCESSED;
 out:
 	free_pv_fid(pv);
-	unlock_and_free_vg(cmd, vg, pv_vg_name(pv));
+	unlock_and_release_vg(cmd, vg, pv_vg_name(pv));
 	return r;
 }
 

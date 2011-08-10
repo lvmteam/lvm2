@@ -156,10 +156,10 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 			sync_dev_names(cmd); \
 		lock_vol(cmd, vol, LCK_VG_UNLOCK); \
 	} while (0)
-#define unlock_and_free_vg(cmd, vg, vol) \
+#define unlock_and_release_vg(cmd, vg, vol) \
 	do { \
 		unlock_vg(cmd, vol); \
-		free_vg(vg); \
+		release_vg(vg); \
 	} while (0)
 
 #define resume_lv(cmd, lv)	lock_lv_vol(cmd, lv, LCK_LV_RESUME)

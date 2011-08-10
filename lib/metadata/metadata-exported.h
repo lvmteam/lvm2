@@ -479,12 +479,6 @@ int remove_lvs_in_vg(struct cmd_context *cmd,
  */
 void free_pv_fid(struct physical_volume *pv);
 
-/*
- * free_vg() must be called on every struct volume_group allocated
- * by vg_create() or vg_read_internal() to free it when no longer required.
- */
-void free_vg(struct volume_group *vg);
-
 /* Manipulate LVs */
 struct logical_volume *lv_create_empty(const char *name,
 				       union lvid *lvid,

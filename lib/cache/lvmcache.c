@@ -683,7 +683,7 @@ struct volume_group *lvmcache_get_vg(const char *vgid, unsigned precommitted)
 	return vg;
 
 bad:
-	free_vg(vg);
+	release_vg(vg);
 	_free_cached_vgmetadata(vginfo);
 	return NULL;
 }

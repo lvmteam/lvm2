@@ -362,7 +362,7 @@ int backup_restore_from_file(struct cmd_context *cmd, const char *vg_name,
 		log_error("Cannot restore Volume Group %s with %i PVs "
 			  "marked as missing.", vg->name, missing_pvs);
 
-	free_vg(vg);
+	release_vg(vg);
 	return r;
 }
 
@@ -447,7 +447,7 @@ void check_current_backup(struct volume_group *vg)
 	    (vg->seqno == vg_backup->seqno) &&
 	    (id_equal(&vg->id, &vg_backup->id))) {
 		log_suppress(old_suppress);
-		free_vg(vg_backup);
+		release_vg(vg_backup);
 		return;
 	}
 	log_suppress(old_suppress);
@@ -455,7 +455,7 @@ void check_current_backup(struct volume_group *vg)
 	if (vg_backup) {
 		if (!archive(vg_backup))
 			stack;
-		free_vg(vg_backup);
+		release_vg(vg_backup);
 	}
 	if (!archive(vg))
 		stack;

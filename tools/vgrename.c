@@ -25,7 +25,7 @@ static struct volume_group *_get_old_vg_for_rename(struct cmd_context *cmd,
 	   nevertheless. */
 	vg = vg_read_for_update(cmd, vg_name_old, vgid, READ_ALLOW_EXPORTED);
 	if (vg_read_error(vg)) {
-		free_vg(vg);
+		release_vg(vg);
 		return_NULL;
 	}
 
@@ -117,7 +117,7 @@ static int vg_rename_path(struct cmd_context *cmd, const char *old_vg_path,
 			return_0;
 
 		if (!_lock_new_vg_for_rename(cmd, vg_name_new)) {
-			unlock_and_free_vg(cmd, vg, vg_name_old);
+			unlock_and_release_vg(cmd, vg, vg_name_old);
 			return_0;
 		}
 	} else {
@@ -170,7 +170,7 @@ static int vg_rename_path(struct cmd_context *cmd, const char *old_vg_path,
 		stack;
 
 	unlock_vg(cmd, vg_name_new);
-	unlock_and_free_vg(cmd, vg, vg_name_old);
+	unlock_and_release_vg(cmd, vg, vg_name_old);
 
 	log_print("Volume group \"%s\" successfully renamed to \"%s\"",
 		  vg_name_old, vg_name_new);
@@ -184,9 +184,9 @@ static int vg_rename_path(struct cmd_context *cmd, const char *old_vg_path,
       error:
 	if (lock_vg_old_first) {
 		unlock_vg(cmd, vg_name_new);
-		unlock_and_free_vg(cmd, vg, vg_name_old);
+		unlock_and_release_vg(cmd, vg, vg_name_old);
 	} else {
-		unlock_and_free_vg(cmd, vg, vg_name_old);
+		unlock_and_release_vg(cmd, vg, vg_name_old);
 		unlock_vg(cmd, vg_name_new);
 	}
 	return 0;

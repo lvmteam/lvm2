@@ -56,7 +56,7 @@ vg_t lvm_vg_create(lvm_t libh, const char *vg_name)
 	vg = vg_create((struct cmd_context *)libh, vg_name);
 	/* FIXME: error handling is still TBD */
 	if (vg_read_error(vg)) {
-		free_vg(vg);
+		release_vg(vg);
 		return NULL;
 	}
 	vg->open_mode = 'w';
@@ -160,9 +160,9 @@ int lvm_vg_write(vg_t vg)
 int lvm_vg_close(vg_t vg)
 {
 	if (vg_read_error(vg) == FAILED_LOCKING)
-		free_vg(vg);
+		release_vg(vg);
 	else
-		unlock_and_free_vg(vg->cmd, vg, vg->name);
+		unlock_and_release_vg(vg->cmd, vg, vg->name);
 	return 0;
 }
 
@@ -197,7 +197,7 @@ vg_t lvm_vg_open(lvm_t libh, const char *vgname, const char *mode,
 	vg = vg_read((struct cmd_context *)libh, vgname, NULL, internal_flags);
 	if (vg_read_error(vg)) {
 		/* FIXME: use log_errno either here in inside vg_read */
-		free_vg(vg);
+		release_vg(vg);
 		return NULL;
 	}
 	/* FIXME: combine this with locking ? */

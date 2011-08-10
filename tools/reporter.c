@@ -142,7 +142,7 @@ static int _pvs_single(struct cmd_context *cmd, struct volume_group *vg,
 		vg = vg_read(cmd, vg_name, (char *)&pv->vgid, 0);
 		if (vg_read_error(vg)) {
 			log_error("Skipping volume group %s", vg_name);
-			free_vg(vg);
+			release_vg(vg);
 			return ECMD_FAILED;
 		}
 
@@ -182,7 +182,7 @@ out:
 		unlock_vg(cmd, vg_name);
 
 	if (!old_vg)
-		free_vg(vg);
+		release_vg(vg);
 
 	return ret;
 }

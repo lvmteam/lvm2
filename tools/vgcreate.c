@@ -56,7 +56,7 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 			log_error("A volume group called %s already exists.", vp_new.vg_name);
 		else
 			log_error("Can't get lock for %s.", vp_new.vg_name);
-		free_vg(vg);
+		release_vg(vg);
 		return ECMD_FAILED;
 	}
 
@@ -120,13 +120,13 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	log_print("%s%colume group \"%s\" successfully created",
 		  clustered_message, *clustered_message ? 'v' : 'V', vg->name);
 
-	free_vg(vg);
+	release_vg(vg);
 	return ECMD_PROCESSED;
 
 bad:
 	unlock_vg(cmd, VG_ORPHANS);
 bad_orphan:
-	free_vg(vg);
+	release_vg(vg);
 	unlock_vg(cmd, vp_new.vg_name);
 	return ECMD_FAILED;
 }

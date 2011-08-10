@@ -218,7 +218,7 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 			}
 			vg = vg_read_for_update(cmd, vg_name, NULL, 0);
 			if (vg_read_error(vg)) {
-				free_vg(vg);
+				release_vg(vg);
 				stack;
 				continue;
 			}
@@ -232,7 +232,7 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 			total++;
 			done += _pvchange_single(cmd, vg,
 						 pvl->pv, NULL);
-			unlock_and_free_vg(cmd, vg, vg_name);
+			unlock_and_release_vg(cmd, vg, vg_name);
 		}
 	} else {
 		log_verbose("Scanning for physical volume names");
@@ -253,7 +253,7 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 			dm_list_iterate_items(sll, vgnames) {
 				vg = vg_read_for_update(cmd, sll->str, NULL, 0);
 				if (vg_read_error(vg)) {
-					free_vg(vg);
+					release_vg(vg);
 					stack;
 					continue;
 				}
@@ -263,7 +263,7 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 								 pvl->pv,
 								 NULL);
 				}
-				unlock_and_free_vg(cmd, vg, sll->str);
+				unlock_and_release_vg(cmd, vg, sll->str);
 			}
 		}
 		unlock_vg(cmd, VG_GLOBAL);

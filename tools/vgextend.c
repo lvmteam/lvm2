@@ -72,7 +72,7 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 	log_verbose("Checking for volume group \"%s\"", vg_name);
 	vg = vg_read_for_update(cmd, vg_name, NULL, 0);
 	if (vg_read_error(vg)) {
-		free_vg(vg);
+		release_vg(vg);
 		stack;
 		return ECMD_FAILED;
 	}
@@ -92,7 +92,7 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 	} else { /* no --restore, normal vgextend */
 		if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE)) {
 			log_error("Can't get lock for orphan PVs");
-			unlock_and_free_vg(cmd, vg, vg_name);
+			unlock_and_release_vg(cmd, vg, vg_name);
 			return ECMD_FAILED;
 		}
 
@@ -135,6 +135,6 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 bad:
 	if (!arg_count(cmd, restoremissing_ARG))
 		unlock_vg(cmd, VG_ORPHANS);
-	unlock_and_free_vg(cmd, vg, vg_name);
+	unlock_and_release_vg(cmd, vg, vg_name);
 	return r;
 }
