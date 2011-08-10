@@ -1,5 +1,6 @@
 Version 2.02.87 - 
 ===============================
+  Remove INCONSISTENT_VG flag from the code.
   Remove lock from cache even if unlock fails.
   Initialise clvmd locks before lvm context to avoid open descriptor leaks.
   Remove obsoleted GULM clvmd cluster locking support.
