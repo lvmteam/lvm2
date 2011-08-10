@@ -1,5 +1,6 @@
 Version 2.02.87 - 
 ===============================
+  Initialise clvmd locks before lvm context to avoid open descriptor leaks.
   Remove obsoleted GULM clvmd cluster locking support.
   Suppress low-level locking errors and warnings while using --sysinit.
   Remove unused inconsistent_seqno variable in _vg_read().

@@ -721,7 +721,7 @@ static int was_ex_lock(char *uuid, char **argv)
  * but this may not be the case...
  * I suppose this also comes in handy if clvmd crashes, not that it would!
  */
-static void *get_initial_state(char **argv)
+static int get_initial_state(char **argv)
 {
 	int lock_mode;
 	char lv[64], vg[64], flags[25], vg_flags[25];
@@ -733,7 +733,7 @@ static void *get_initial_state(char **argv)
 	     "r");
 
 	if (!lvs)
-		return NULL;
+		return 1;
 
 	while (fgets(line, sizeof(line), lvs)) {
 	        if (sscanf(line, "%s %s %s %s\n", vg, lv, flags, vg_flags) == 4) {
@@ -773,7 +773,7 @@ static void *get_initial_state(char **argv)
 	}
 	if (fclose(lvs))
 		DEBUGLOG("lvs fclose failed: %s\n", strerror(errno));
-	return NULL;
+	return 0;
 }
 
 static void lvm2_log_fn(int level, const char *file, int line, int dm_errno,
@@ -886,6 +886,10 @@ int init_clvm(char **argv)
 	init_syslog(LOG_DAEMON);
 	openlog("clvmd", LOG_PID, LOG_DAEMON);
 
+	/* Initialise already held locks */
+	if (get_initial_state(argv))
+		log_error("Cannot load initial lock states.");
+
 	if (!(cmd = create_toolcontext(1, NULL, 0))) {
 		log_error("Failed to allocate command context");
 		return 0;
@@ -901,8 +905,6 @@ int init_clvm(char **argv)
 	/* Check lvm.conf is setup for cluster-LVM */
 	check_config();
 	init_ignore_suspended_devices(1);
-
-	get_initial_state(argv);
 
 	/* Trap log messages so we can pass them back to the user */
 	init_log_fn(lvm2_log_fn);
