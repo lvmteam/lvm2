@@ -2389,7 +2389,7 @@ static int _lv_extend_layered_lv(struct alloc_handle *ah,
 		/*
 		 * We must clear the metadata areas upon creation.
 		 */
-		if (!vg_write(meta_lv->vg) || !vg_commit(meta_lv->vg))
+		if (!vg_write(lv->vg) || !vg_commit(lv->vg))
 			return_0;
 
 		for (s = 0; s < seg->area_count; s++) {
