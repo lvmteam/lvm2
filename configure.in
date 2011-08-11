@@ -1396,6 +1396,7 @@ lib/locking/Makefile
 lib/mirror/Makefile
 lib/replicator/Makefile
 lib/misc/lvm-version.h
+lib/raid/Makefile
 lib/snapshot/Makefile
 libdm/Makefile
 libdm/libdevmapper.pc

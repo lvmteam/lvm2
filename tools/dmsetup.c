@@ -3479,7 +3479,7 @@ int main(int argc, char **argv)
 
       doit:
 	multiple_devices = (cmd->repeatable_cmd && argc != 2 &&
-			   (argc != 1 || (!_switches[UUID_ARG] && !_switches[MAJOR_ARG])));
+			    (argc != 1 || (!_switches[UUID_ARG] && !_switches[MAJOR_ARG])));
 	do {
 		if (!cmd->fn(cmd, argc--, argv++, NULL, multiple_devices)) {
 			fprintf(stderr, "Command failed\n");
