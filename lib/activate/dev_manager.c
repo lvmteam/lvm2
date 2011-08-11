@@ -1060,9 +1060,12 @@ static int _add_partial_replicator_to_dtree(struct dev_manager *dm,
 /*
  * Add LV and any known dependencies
  */
-static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree, struct logical_volume *lv, int origin_only)
+static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
+			    struct logical_volume *lv, int origin_only)
 {
+	uint32_t s;
 	struct seg_list *sl;
+	struct lv_segment *seg = first_seg(lv);
 
 	if (!origin_only && !_add_dev_to_dtree(dm, dtree, lv, NULL))
 		return_0;
@@ -1074,9 +1077,15 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree, struc
 	if (!origin_only && !_add_dev_to_dtree(dm, dtree, lv, "cow"))
 		return_0;
 
-	if ((lv->status & MIRRORED) && first_seg(lv)->log_lv &&
-	    !_add_dev_to_dtree(dm, dtree, first_seg(lv)->log_lv, NULL))
+	if ((lv->status & MIRRORED) && seg->log_lv &&
+	    !_add_dev_to_dtree(dm, dtree, seg->log_lv, NULL))
 		return_0;
+
+	if (lv->status & RAID)
+		for (s = 0; s < seg->area_count; s++)
+			if (!_add_lv_to_dtree(dm, dtree,
+					      seg_metalv(seg, s), origin_only))
+				return_0;
 
 	/* Add any LVs referencing a PVMOVE LV unless told not to. */
 	if (dm->track_pvmove_deps && lv->status & PVMOVE)
