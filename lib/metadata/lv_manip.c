@@ -312,13 +312,22 @@ void release_lv_segment_area(struct lv_segment *seg, uint32_t s,
 		if (area_reduction != seg->area_len) {
 			log_error("Unable to reduce RAID LV - operation not implemented.");
 			return;
-		} else
-			lv_remove(seg_lv(seg, s));
+		} else {
+			if (!lv_remove(seg_lv(seg, s))) {
+				log_error("Failed to remove RAID image %s",
+					  seg_lv(seg, s)->name);
+				return;
+			}
+		}
 
 		/* Remove metadata area if image has been removed */
 		if (area_reduction == seg->area_len) {
-			lv_reduce(seg_metalv(seg, s),
-				  seg_metalv(seg, s)->le_count);
+			if (!lv_reduce(seg_metalv(seg, s),
+				       seg_metalv(seg, s)->le_count)) {
+				log_error("Failed to remove RAID meta-device %s",
+					  seg_metalv(seg, s)->name);
+				return;
+			}
 		}
 		return;
 	}
