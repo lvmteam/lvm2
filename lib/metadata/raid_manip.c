@@ -242,7 +242,7 @@ static int _extract_image_components(struct lv_segment *seg, uint32_t idx,
 {
 	int len;
 	char *tmp_name;
-	struct cmd_context *cmd = seg->lv->vg->cmd;
+	struct volume_group *vg = seg->lv->vg;
 	struct logical_volume *data_lv = seg_lv(seg, idx);
 	struct logical_volume *meta_lv = seg_metalv(seg, idx);
 
@@ -262,14 +262,14 @@ static int _extract_image_components(struct lv_segment *seg, uint32_t idx,
 	seg_metatype(seg, idx) = AREA_UNASSIGNED;
 
 	len = strlen(meta_lv->name) + strlen("_extracted") + 1;
-	tmp_name = dm_pool_alloc(cmd->mem, len);
+	tmp_name = dm_pool_alloc(vg->vgmem, len);
 	if (!tmp_name)
 		return_0;
 	sprintf(tmp_name, "%s_extracted", meta_lv->name);
 	meta_lv->name = tmp_name;
 
 	len = strlen(data_lv->name) + strlen("_extracted") + 1;
-	tmp_name = dm_pool_alloc(cmd->mem, len);
+	tmp_name = dm_pool_alloc(vg->vgmem, len);
 	if (!tmp_name)
 		return_0;
 	sprintf(tmp_name, "%s_extracted", data_lv->name);
