@@ -93,6 +93,7 @@ int lv_check_transient(struct logical_volume *lv);
 int lv_snapshot_percent(const struct logical_volume *lv, percent_t *percent);
 int lv_mirror_percent(struct cmd_context *cmd, const struct logical_volume *lv,
 		      int wait, percent_t *percent, uint32_t *event_nr);
+int lv_raid_percent(const struct logical_volume *lv, percent_t *percent);
 
 /*
  * Return number of LVs in the VG that are active.

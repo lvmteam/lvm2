@@ -737,6 +737,13 @@ int lv_is_rlog(const struct logical_volume *lv);
 int lv_is_slog(const struct logical_volume *lv);
 struct logical_volume *first_replicator_dev(const struct logical_volume *lv);
 /* --  metadata/replicator_manip.c */
+
+/* ++  metadata/raid_manip.c */
+uint32_t lv_raid_image_count(const struct logical_volume *lv);
+int lv_raid_change_image_count(struct logical_volume *lv,
+			       uint32_t new_count, struct dm_list *pvs);
+/* --  metadata/raid_manip.c */
+
 struct cmd_vg *cmd_vg_add(struct dm_pool *mem, struct dm_list *cmd_vgs,
 			  const char *vg_name, const char *vgid,
 			  uint32_t flags);
