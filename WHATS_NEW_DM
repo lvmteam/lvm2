@@ -1,5 +1,6 @@
 Version 1.02.66 - 
 ===============================
+  Release geometry buffer in dm_task_destroy.
   Add memory pool locking functions to aid debuging of shared VG structs.
   Remove dev name prefix from dmsetup line output if major and minor is used.
   Remove support for the original version 1 dm ioctls.
