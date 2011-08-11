@@ -276,8 +276,8 @@ void print_log(int level, const char *file, int line, int dm_errno,
       log_it:
 	if (!_log_suppress) {
 		if (verbose_level() > _LOG_DEBUG)
-			dm_snprintf(locn, sizeof(locn), "#%s:%d ",
-				     file, line);
+			(void) dm_snprintf(locn, sizeof(locn), "#%s:%d ",
+					   file, line);
 		else
 			locn[0] = '\0';
 
