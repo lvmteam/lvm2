@@ -2595,6 +2595,19 @@ int for_each_sub_lv(struct cmd_context *cmd, struct logical_volume *lv,
 			if (!for_each_sub_lv(cmd, seg_lv(seg, s), fn, data))
 				return_0;
 		}
+
+		if (!seg_is_raid(seg))
+			continue;
+
+		/* RAID has meta_areas */
+		for (s = 0; s < seg->area_count; s++) {
+			if (seg_metatype(seg, s) != AREA_LV)
+				continue;
+			if (!fn(cmd, seg_metalv(seg, s), data))
+				return_0;
+			if (!for_each_sub_lv(cmd, seg_metalv(seg, s), fn, data))
+				return_0;
+		}
 	}
 
 	return 1;
