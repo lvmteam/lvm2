@@ -373,6 +373,10 @@ static int _process_config(struct cmd_context *cmd)
 	/* LVM stores sizes internally in units of 512-byte sectors. */
 	init_pv_min_size((uint64_t)pv_min_kb * (1024 >> SECTOR_SHIFT));
 
+	init_detect_internal_vg_cache_corruption
+		(find_config_tree_int(cmd, "global/detect_internal_vg_cache_corruption()",
+				      DEFAULT_DETECT_INTERNAL_VG_CACHE_CORRUPTION));
+
 	return 1;
 }
 

@@ -689,7 +689,7 @@ struct volume_group *lvmcache_get_vg(const char *vgid, unsigned precommitted)
 	vginfo->vg_use_count = 0;
 	vg->vginfo = vginfo;
 
-	if (!dm_pool_lock(vg->vgmem, 1))
+	if (!dm_pool_lock(vg->vgmem, detect_internal_vg_cache_corruption()))
 		goto_bad;
 
 out:
@@ -720,6 +720,7 @@ int vginfo_holders_dec_and_test_for_zero(struct lvmcache_vginfo *vginfo)
 
 	/* Debug perform crc check only when it's been used more then once */
 	if (!dm_pool_unlock(vginfo->cached_vg->vgmem,
+			    detect_internal_vg_cache_corruption() &&
 			    (vginfo->vg_use_count > 1)))
 		stack;
 
