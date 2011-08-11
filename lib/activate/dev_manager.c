@@ -1233,8 +1233,9 @@ int add_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 						     NULL);
 				if (!dlid)
 					return_0;
-				dm_tree_node_add_target_area(node, NULL, dlid,
-							     extent_size * seg_metale(seg, s));
+				if (!dm_tree_node_add_target_area(node, NULL, dlid,
+								  extent_size * seg_metale(seg, s)))
+					return_0;
 			}
 			if (!(dlid = build_dm_uuid(dm->mem, seg_lv(seg, s)->lvid.s, NULL)))
 				return_0;
