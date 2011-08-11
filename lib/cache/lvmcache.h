@@ -50,6 +50,9 @@ struct lvmcache_vginfo {
 	char *vgmetadata;	/* Copy of VG metadata as format_text string */
 	struct config_tree *cft; /* Config tree created from vgmetadata */
 				/* Lifetime is directly tied to vgmetadata */
+	struct volume_group *cached_vg;
+	unsigned holders;
+	unsigned vg_use_count;	/* Counter of vg reusage */
 	unsigned precommitted;	/* Is vgmetadata live or precommitted? */
 };
 
@@ -93,6 +96,8 @@ int lvmcache_verify_lock_order(const char *vgname);
 
 /* Queries */
 const struct format_type *fmt_from_vgname(const char *vgname, const char *vgid, unsigned revalidate_labels);
+/* Decrement and test if there are still vg holders in vginfo. */
+int vginfo_holders_dec_and_test_for_zero(struct lvmcache_vginfo *vginfo);
 struct lvmcache_vginfo *vginfo_from_vgname(const char *vgname,
 					   const char *vgid);
 struct lvmcache_vginfo *vginfo_from_vgid(const char *vgid);

@@ -1,5 +1,6 @@
 Version 2.02.87 - 
 ===============================
+  Cache and share generated VG structs.
   Fix possible format instance memory leaks and premature releases in _vg_read.
   Suppress locking error messages in monitoring init scripts.
   If pipe in clvmd fails, return busy instead of using uninitialised descriptors.
