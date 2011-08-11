@@ -2768,6 +2768,14 @@ static void _free_pv_list(struct dm_list *all_pvs)
 		pvl->pv->fid->fmt->ops->destroy_instance(pvl->pv->fid);
 }
 
+static void _destroy_fid(struct format_instance **fid)
+{
+	if (*fid) {
+		(*fid)->fmt->ops->destroy_instance(*fid);
+		*fid = NULL;
+	}
+}
+
 int vg_missing_pv_count(const struct volume_group *vg)
 {
 	int ret = 0;
@@ -2826,7 +2834,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 				     int warnings, 
 				     int *consistent, unsigned precommitted)
 {
-	struct format_instance *fid;
+	struct format_instance *fid = NULL;
 	struct format_instance_ctx fic;
 	const struct format_type *fmt;
 	struct volume_group *vg, *correct_vg = NULL;
@@ -2900,12 +2908,20 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	}
 
 	/* Store pvids for later so we can check if any are missing */
-	if (!(pvids = lvmcache_get_pvids(cmd, vgname, vgid)))
+	if (!(pvids = lvmcache_get_pvids(cmd, vgname, vgid))) {
+		_destroy_fid(&fid);
 		return_NULL;
+	}
 
+	/*
+	 * We use the fid globally here so prevent the release_vg
+	 * call to destroy the fid - we may want to reuse it!
+	 */
+	fid->ref_count++;
 	/* Ensure contents of all metadata areas match - else do recovery */
 	inconsistent_mda_count=0;
 	dm_list_iterate_items(mda, &fid->metadata_areas_in_use) {
+
 		if ((use_precommitted &&
 		     !(vg = mda->ops->vg_read_precommit(fid, vgname, mda))) ||
 		    (!use_precommitted &&
@@ -2941,6 +2957,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		if (vg != correct_vg)
 			release_vg(vg);
 	}
+	fid->ref_count--;
 
 	/* Ensure every PV in the VG was in the cache */
 	if (correct_vg) {
@@ -2972,8 +2989,10 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 				}
 				if (dm_list_size(&info->mdas)) {
 					if (!fid_add_mdas(fid, &info->mdas,
-							  info->dev->pvid, ID_LEN))
+							  info->dev->pvid, ID_LEN)) {
+						release_vg(correct_vg);
 						return_NULL;
+					}
 					 
 					log_debug("Empty mda found for VG %s.", vgname);
 
@@ -3002,11 +3021,14 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 				 */
 				lvmcache_update_vg(correct_vg, correct_vg->status & PRECOMMITTED);
 
-				if (!(pvids = lvmcache_get_pvids(cmd, vgname, vgid)))
+				if (!(pvids = lvmcache_get_pvids(cmd, vgname, vgid))) {
+					release_vg(correct_vg);
 					return_NULL;
+				}
 			}
 		}
 
+		fid->ref_count++;
 		if (dm_list_size(&correct_vg->pvs) !=
 		    dm_list_size(pvids) + vg_missing_pv_count(correct_vg)) {
 			log_debug("Cached VG %s had incorrect PV list",
@@ -3034,12 +3056,20 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 			release_vg(correct_vg);
 			correct_vg = NULL;
 		}
+		fid->ref_count--;
 	}
 
 	dm_list_init(&all_pvs);
 
 	/* Failed to find VG where we expected it - full scan and retry */
 	if (!correct_vg) {
+		/*
+		 * Free outstanding format instance that remained unassigned
+		 * from previous step where we tried to get the "correct_vg",
+		 * but we failed to do so (so there's a dangling fid now).
+		 */
+		_destroy_fid(&fid);
+
 		inconsistent = 0;
 
 		/* Independent MDAs aren't supported under low memory */
@@ -3061,6 +3091,11 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 			return NULL;
 		}
 
+		/*
+		 * We use the fid globally here so prevent the release_vg
+		 * call to destroy the fid - we may want to reuse it!
+		*/
+		fid->ref_count++;
 		/* Ensure contents of all metadata areas match - else recover */
 		inconsistent_mda_count=0;
 		dm_list_iterate_items(mda, &fid->metadata_areas_in_use) {
@@ -3076,6 +3111,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 				correct_vg = vg;
 				if (!_update_pv_list(cmd->mem, &all_pvs, correct_vg)) {
 					_free_pv_list(&all_pvs);
+					fid->ref_count--;
 					release_vg(vg);
 					return_NULL;
 				}
@@ -3099,6 +3135,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 
 				if (!_update_pv_list(cmd->mem, &all_pvs, vg)) {
 					_free_pv_list(&all_pvs);
+					fid->ref_count--;
 					release_vg(vg);
 					release_vg(correct_vg);
 					return_NULL;
@@ -3115,10 +3152,12 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 			if (vg != correct_vg)
 				release_vg(vg);
 		}
+		fid->ref_count--;
 
 		/* Give up looking */
 		if (!correct_vg) {
 			_free_pv_list(&all_pvs);
+			_destroy_fid(&fid);
 			return_NULL;
 		}
 	}
