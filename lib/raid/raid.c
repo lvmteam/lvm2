@@ -25,6 +25,7 @@
 #include "activate.h"
 #include "metadata.h"
 #include "lv_alloc.h"
+#include "defaults.h"
 
 static const char *_raid_name(const struct lv_segment *seg)
 {
@@ -261,6 +262,39 @@ static void _raid_destroy(struct segment_type *segtype)
 	dm_free((void *) segtype);
 }
 
+static const char *_get_raid_dso_path(struct cmd_context *cmd)
+{
+	const char *config_str = find_config_tree_str(cmd, "dmeventd/raid_library",
+						      DEFAULT_DMEVENTD_RAID_LIB);
+	return get_monitor_dso_path(cmd, config_str);
+}
+
+static int _raid_target_monitored(struct lv_segment *seg, int *pending)
+{
+	struct cmd_context *cmd = seg->lv->vg->cmd;
+	const char *dso_path = _get_raid_dso_path(cmd);
+
+	return target_registered_with_dmeventd(cmd, dso_path, seg->lv, pending);
+}
+
+static int _raid_set_events(struct lv_segment *seg, int evmask, int set)
+{
+	struct cmd_context *cmd = seg->lv->vg->cmd;
+	const char *dso_path = _get_raid_dso_path(cmd);
+
+	return target_register_events(cmd, dso_path, seg->lv, evmask, set, 0);
+}
+
+static int _raid_target_monitor_events(struct lv_segment *seg, int events)
+{
+	return _raid_set_events(seg, events, 1);
+}
+
+static int _raid_target_unmonitor_events(struct lv_segment *seg, int events)
+{
+	return _raid_set_events(seg, events, 0);
+}
+
 static struct segtype_handler _raid_ops = {
 	.name = _raid_name,
 	.text_import_area_count = _raid_text_import_area_count,
@@ -272,6 +306,9 @@ static struct segtype_handler _raid_ops = {
 	.target_present = _raid_target_present,
 	.modules_needed = _raid_modules_needed,
 	.destroy = _raid_destroy,
+	.target_monitored = _raid_target_monitored,
+	.target_monitor_events = _raid_target_monitor_events,
+	.target_unmonitor_events = _raid_target_unmonitor_events,
 };
 
 static struct segment_type *init_raid_segtype(struct cmd_context *cmd,
@@ -285,6 +322,12 @@ static struct segment_type *init_raid_segtype(struct cmd_context *cmd,
 	segtype->cmd = cmd;
 
 	segtype->flags = SEG_RAID;
+#ifdef DEVMAPPER_SUPPORT
+#ifdef DMEVENTD
+	if (_get_raid_dso_path(cmd))
+		segtype->flags |= SEG_MONITORED;
+#endif
+#endif
 	segtype->parity_devs = strstr(raid_type, "raid6") ? 2 : 1;
 
 	segtype->ops = &_raid_ops;
