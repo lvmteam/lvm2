@@ -262,6 +262,8 @@ static void _raid_destroy(struct segment_type *segtype)
 	dm_free((void *) segtype);
 }
 
+#ifdef DEVMAPPER_SUPPORT
+#ifdef DMEVENTD
 static const char *_get_raid_dso_path(struct cmd_context *cmd)
 {
 	const char *config_str = find_config_tree_str(cmd, "dmeventd/raid_library",
@@ -294,7 +296,8 @@ static int _raid_target_unmonitor_events(struct lv_segment *seg, int events)
 {
 	return _raid_set_events(seg, events, 0);
 }
-
+#endif /* DEVMAPPER_SUPPORT */
+#endif /* DMEVENTD */
 static struct segtype_handler _raid_ops = {
 	.name = _raid_name,
 	.text_import_area_count = _raid_text_import_area_count,
