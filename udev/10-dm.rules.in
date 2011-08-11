@@ -24,12 +24,6 @@ ENV{DM_SBIN_PATH}="/sbin"
 TEST!="$env{DM_SBIN_PATH}/dmsetup", ENV{DM_SBIN_PATH}="/usr/sbin"
 TEST!="$env{DM_SBIN_PATH}/dmsetup", GOTO="dm_end"
 
-# Decode udev control flags and set environment variables appropriately.
-# These flags are encoded in DM_COOKIE variable that was introduced in
-# kernel version 2.6.31. Therefore, we can use this feature with
-# kernels >= 2.6.31 only.
-ENV{DM_COOKIE}=="?*", IMPORT{program}="$env{DM_SBIN_PATH}/dmsetup udevflags $env{DM_COOKIE}"
-
 # Device created, major and minor number assigned - "add" event generated.
 # Table loaded - no event generated.
 # Device resumed (or renamed) - "change" event generated.
@@ -41,6 +35,12 @@ ENV{DM_COOKIE}=="?*", IMPORT{program}="$env{DM_SBIN_PATH}/dmsetup udevflags $env
 # loaded and is properly resumed. For this reason, direct use of dm-X nodes
 # is not recommended.
 ACTION!="add|change", GOTO="dm_end"
+
+# Decode udev control flags and set environment variables appropriately.
+# These flags are encoded in DM_COOKIE variable that was introduced in
+# kernel version 2.6.31. Therefore, we can use this feature with
+# kernels >= 2.6.31 only. Cookie is not decoded for remove event.
+ENV{DM_COOKIE}=="?*", IMPORT{program}="$env{DM_SBIN_PATH}/dmsetup udevflags $env{DM_COOKIE}"
 
 # Rule out easy-to-detect inappropriate events first.
 ENV{DISK_RO}=="1", GOTO="dm_disable"

@@ -1,5 +1,6 @@
 Version 2.02.87 - 
 ===============================
+  Update udev rules to skip DM flags decoding for removed devices.
   Add detect_internal_vg_cache_corruption to lvm.conf, disabled by default.
   Use memory pool locking to check for corruption of internal VG structs.
   Cache and share generated VG structs.
