@@ -1263,9 +1263,19 @@ static int read_from_local_sock(struct local_client *thisfd)
 		}
 
 		/* Create a pipe and add the reading end to our FD list */
-		if (pipe(comms_pipe))
+		if (pipe(comms_pipe)) {
+			struct clvm_header reply;
 			DEBUGLOG("creating pipe failed: %s\n", strerror(errno));
-		
+			reply.cmd = CLVMD_CMD_REPLY;
+			reply.status = EBUSY;
+			reply.arglen = 0;
+			reply.flags = 0;
+			send_message(&reply, sizeof(reply), our_csid,
+				     thisfd->fd,
+				     "Error sending EBUSY reply to local user");
+			return len;
+		}
+
 		newfd = malloc(sizeof(struct local_client));
 		if (!newfd) {
 			struct clvm_header reply;

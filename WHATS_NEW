@@ -1,5 +1,6 @@
 Version 2.02.87 - 
 ===============================
+  If pipe in clvmd fails, return busy instead of using uninitialised descriptors.
   Add dmeventd monitoring shared library for RAID.
   Add RAID metadata devices to considered devices in _add_lv_to_dtree.
   Fix renaming of RAID logical volumes.
