@@ -376,6 +376,7 @@ log/activation = 1
 backup/backup = 0
 backup/archive = 0
 global/abort_on_internal_errors = 1
+global/detect_internal_vg_cache_corruption = 1
 global/library_dir = "$TESTDIR/lib"
 global/locking_dir = "$TESTDIR/var/lock/lvm"
 global/locking_type=$LVM_TEST_LOCKING

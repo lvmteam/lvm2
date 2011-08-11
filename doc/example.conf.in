@@ -402,6 +402,11 @@ global {
     # encountered the internal error. Please only enable for debugging.
     abort_on_internal_errors = 0
 
+    # Check whether CRC is matching when parsed VG is used multiple times.
+    # This is useful to catch unexpected internal cached volume group
+    # structure modification. Please only enable for debugging.
+    detect_internal_vg_cache_corruption = 0
+
     # If set to 1, no operations that change on-disk metadata will be permitted.
     # Additionally, read-only commands that encounter metadata in need of repair
     # will still be allowed to proceed exactly as if the repair had been 
