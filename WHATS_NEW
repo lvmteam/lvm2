@@ -8,14 +8,14 @@ Version 2.02.87 -
   Fix possible format instance memory leaks and premature releases in _vg_read.
   Suppress locking error messages in monitoring init scripts.
   If pipe in clvmd fails, return busy instead of using uninitialised descriptors.
-  Add dmeventd monitoring shared library for RAID.
-  Add RAID metadata devices to considered devices in _add_lv_to_dtree.
+  Add dmeventd monitoring shared library for raid.
+  Add raid metadata devices to considered devices in _add_lv_to_dtree.
   Fix renaming of RAID logical volumes.
   Replace free_vg with release_vg and move it to vg.c.
   Remove INCONSISTENT_VG flag from the code.
   Remove lock from cache even if unlock fails.
   Initialise clvmd locks before lvm context to avoid open descriptor leaks.
-  Remove obsoleted GULM clvmd cluster locking support.
+  Remove obsolete gulm clvmd cluster locking support.
   Suppress low-level locking errors and warnings while using --sysinit.
   Remove unused inconsistent_seqno variable in _vg_read().
   Remove meaningless const type qualifiers on cast type.
@@ -23,7 +23,7 @@ Version 2.02.87 -
   Add test for fcntl error in singlenode client code.
   Remove --force option from lvrename manpage.
   Add missing new line in lvrename help text.
-  Add basic support for RAID 1/4/5/6 (i.e. create, remove, display)
+  Add basic support for MD RAID 1/4/5/6 as new segment type called raid.
   Change DEFAULT_UDEV_SYNC to 1 so udev_sync is used even without any config.
   Add systemd unit file to provide lvm2 monitoring.
   Compare also file size to detect changed config file.
