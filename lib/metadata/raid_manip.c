@@ -179,16 +179,20 @@ static int _shift_and_rename_image_components(struct lv_segment *seg)
 
 		/* Alter rmeta name */
 		shift_name = dm_pool_strdup(cmd->mem, seg_metalv(seg, s)->name);
-		if (!shift_name)
-			return_0;
+		if (!shift_name) {
+			log_error("Memory allocation failed.");
+			return 0;
+		}
 		len = strlen(shift_name) - 1;
 		shift_name[len] -= missing;
 		seg_metalv(seg, s)->name = shift_name;
 
 		/* Alter rimage name */
 		shift_name = dm_pool_strdup(cmd->mem, seg_lv(seg, s)->name);
-		if (!shift_name)
-			return_0;
+		if (!shift_name) {
+			log_error("Memory allocation failed.");
+			return 0;
+		}
 		len = strlen(shift_name) - 1;
 		shift_name[len] -= missing;
 		seg_lv(seg, s)->name = shift_name;

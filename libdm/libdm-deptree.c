@@ -2356,6 +2356,9 @@ int dm_tree_node_add_raid_target(struct dm_tree_node *node,
 						 dm_segtypes[i].type, size)))
 				return_0;
 
+	if (!seg)
+		return_0;
+
 	seg->region_size = region_size;
 	seg->stripe_size = stripe_size;
 	seg->area_count = 0;
