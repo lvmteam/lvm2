@@ -149,7 +149,11 @@ ifeq ("@DM_IOCTLS@", "yes")
   DEFS += -DDM_IOCTLS
 endif
 
+# Combination of DEBUG_POOL and DEBUG_ENFORCE_POOL_LOCKING is not suppored.
 #DEFS += -DDEBUG_POOL
+# Default pool locking is using the crc checksum. With mprotect memory
+# enforcing compilation faulty memory write could be easily found.
+#DEFS += -DDEBUG_ENFORCE_POOL_LOCKING
 #DEFS += -DBOUNDS_CHECK
 
 #CFLAGS += -pg
