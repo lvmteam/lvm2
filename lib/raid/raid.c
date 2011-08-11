@@ -321,11 +321,13 @@ static struct segtype_handler _raid_ops = {
 static struct segment_type *init_raid_segtype(struct cmd_context *cmd,
 					      const char *raid_type)
 {
-	struct segment_type *segtype = dm_malloc(sizeof(*segtype));
+	struct segment_type *segtype = dm_zalloc(sizeof(*segtype));
 
-	if (!segtype)
+	if (!segtype) {
+		log_error("Failed to allocate memory for %s segtype",
+			  raid_type);
 		return_NULL;
-
+	}
 	segtype->cmd = cmd;
 
 	segtype->flags = SEG_RAID;
