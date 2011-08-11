@@ -302,13 +302,17 @@ static struct segtype_handler _raid_ops = {
 	.text_export = _raid_text_export,
 	.add_target_line = _raid_add_target_line,
 	.target_status_compatible = _raid_target_status_compatible,
+#ifdef DEVMAPPER_SUPPORT
 	.target_percent = _raid_target_percent,
 	.target_present = _raid_target_present,
-	.modules_needed = _raid_modules_needed,
-	.destroy = _raid_destroy,
+#  ifdef DMEVENTD
 	.target_monitored = _raid_target_monitored,
 	.target_monitor_events = _raid_target_monitor_events,
 	.target_unmonitor_events = _raid_target_unmonitor_events,
+#  endif        /* DMEVENTD */
+#endif
+	.modules_needed = _raid_modules_needed,
+	.destroy = _raid_destroy,
 };
 
 static struct segment_type *init_raid_segtype(struct cmd_context *cmd,
