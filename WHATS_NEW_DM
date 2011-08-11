@@ -1,5 +1,6 @@
 Version 1.02.66 - 
 ===============================
+  Remove dev name prefix from dmsetup line output if major and minor is used.
   Remove support for the original version 1 dm ioctls.
   Add missing check for allocation failure _create_dir_recursive().
   Add support for systemd file descriptor handover in dmeventd.
