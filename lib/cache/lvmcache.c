@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2008 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2011 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -90,6 +90,8 @@ static void _free_cached_vgmetadata(struct lvmcache_vginfo *vginfo)
 	}
 
 	log_debug("Metadata cache: VG %s wiped.", vginfo->vgname);
+
+	release_vg(vginfo->cached_vg);
 }
 
 /*
@@ -662,6 +664,10 @@ struct volume_group *lvmcache_get_vg(const char *vgid, unsigned precommitted)
 	    (!precommitted && vginfo->precommitted && !critical_section()))
 		return NULL;
 
+	/* Use already-cached VG struct when available */
+	if ((vg = vginfo->cached_vg))
+		goto out;
+
 	fic.type = FMT_INSTANCE_VG | FMT_INSTANCE_MDAS | FMT_INSTANCE_AUX_MDAS;
 	fic.context.vg_ref.vg_name = vginfo->vgname;
 	fic.context.vg_ref.vg_id = vgid;
@@ -677,15 +683,42 @@ struct volume_group *lvmcache_get_vg(const char *vgid, unsigned precommitted)
 	if (!(vg = import_vg_from_config_tree(vginfo->cft, fid)))
 		goto_bad;
 
-	log_debug("Using cached %smetadata for VG %s.",
-		  vginfo->precommitted ? "pre-committed" : "", vginfo->vgname);
+	/* Cache VG struct for reuse */
+	vginfo->cached_vg = vg;
+	vginfo->holders = 1;
+	vginfo->vg_use_count = 0;
+	vg->vginfo = vginfo;
+
+out:
+	vginfo->holders++;
+	vginfo->vg_use_count++;
+	log_debug("Using cached %smetadata for VG %s with %u holder(s).",
+		  vginfo->precommitted ? "pre-committed " : "",
+		  vginfo->vgname, vginfo->holders);
 
 	return vg;
 
 bad:
-	release_vg(vg);
 	_free_cached_vgmetadata(vginfo);
 	return NULL;
+}
+
+int vginfo_holders_dec_and_test_for_zero(struct lvmcache_vginfo *vginfo)
+{
+	log_debug("VG %s decrementing %d holder(s) at %p.",
+		  vginfo->cached_vg->name, vginfo->holders, vginfo->cached_vg);
+
+	if (--vginfo->holders)
+		return 0;
+
+	if (vginfo->vg_use_count > 1)
+		log_debug("VG %s reused %d times.",
+			  vginfo->cached_vg->name, vginfo->vg_use_count);
+
+	vginfo->cached_vg->vginfo = NULL;
+	vginfo->cached_vg = NULL;
+
+	return 1;
 }
 
 struct dm_list *lvmcache_get_vgids(struct cmd_context *cmd,
