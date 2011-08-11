@@ -2107,8 +2107,17 @@ static int _lv_postorder(struct logical_volume *lv,
 			       void *data)
 {
 	int r;
+	int pool_locked = dm_pool_locked(lv->vg->vgmem);
+
+	if (pool_locked && !dm_pool_unlock(lv->vg->vgmem, 0))
+		return_0;
+
 	r = _lv_postorder_visit(lv, fn, data);
 	_lv_postorder_cleanup(lv, 0);
+
+	if (pool_locked && !dm_pool_lock(lv->vg->vgmem, 0))
+		return_0;
+
 	return r;
 }
 
@@ -2122,6 +2131,10 @@ static int _lv_postorder_vg(struct volume_group *vg,
 {
 	struct lv_list *lvl;
 	int r = 1;
+	int pool_locked = dm_pool_locked(vg->vgmem);
+
+	if (pool_locked && !dm_pool_unlock(vg->vgmem, 0))
+		return_0;
 
 	dm_list_iterate_items(lvl, &vg->lvs)
 		if (!_lv_postorder_visit(lvl->lv, fn, data)) {
@@ -2131,6 +2144,9 @@ static int _lv_postorder_vg(struct volume_group *vg,
 
 	dm_list_iterate_items(lvl, &vg->lvs)
 		_lv_postorder_cleanup(lvl->lv, 0);
+
+	if (pool_locked && !dm_pool_lock(vg->vgmem, 0))
+		return_0;
 
 	return r;
 }

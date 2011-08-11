@@ -689,6 +689,9 @@ struct volume_group *lvmcache_get_vg(const char *vgid, unsigned precommitted)
 	vginfo->vg_use_count = 0;
 	vg->vginfo = vginfo;
 
+	if (!dm_pool_lock(vg->vgmem, 1))
+		goto_bad;
+
 out:
 	vginfo->holders++;
 	vginfo->vg_use_count++;
@@ -714,6 +717,11 @@ int vginfo_holders_dec_and_test_for_zero(struct lvmcache_vginfo *vginfo)
 	if (vginfo->vg_use_count > 1)
 		log_debug("VG %s reused %d times.",
 			  vginfo->cached_vg->name, vginfo->vg_use_count);
+
+	/* Debug perform crc check only when it's been used more then once */
+	if (!dm_pool_unlock(vginfo->cached_vg->vgmem,
+			    (vginfo->vg_use_count > 1)))
+		stack;
 
 	vginfo->cached_vg->vginfo = NULL;
 	vginfo->cached_vg = NULL;
