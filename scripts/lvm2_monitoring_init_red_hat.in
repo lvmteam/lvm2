@@ -42,6 +42,7 @@ VGS=${sbindir}/vgs
 LOCK_FILE="/var/lock/subsys/$DAEMON"
 
 WARN=1
+export LVM_SUPPRESS_LOCKING_FAILURE_MESSAGES=1
 
 start()
 {
