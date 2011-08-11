@@ -8,6 +8,7 @@ Conflicts=shutdown.target
 
 [Service]
 Type=oneshot
+Environment=LVM_SUPPRESS_LOCKING_FAILURE_MESSAGES=1
 ExecStart=@sbindir@/lvm vgchange --monitor y
 ExecStop=@sbindir@/lvm vgchange --monitor n
 RemainAfterExit=yes
