@@ -33,6 +33,8 @@ struct dm_pool {
 	struct dm_list list;
 	const char *name;
 	void *orig_pool;	/* to pair it with first allocation call */
+	unsigned locked;
+	long crc;
 
 	int begun;
 	struct block *object;
@@ -70,6 +72,10 @@ struct dm_pool *dm_pool_create(const char *name, size_t chunk_hint)
 static void _free_blocks(struct dm_pool *p, struct block *b)
 {
 	struct block *n;
+
+	if (p->locked)
+		log_error(INTERNAL_ERROR "_free_blocks from locked pool %s",
+			  p->name);
 
 	while (b) {
 		p->stats.bytes -= b->size;
@@ -109,6 +115,10 @@ void *dm_pool_alloc(struct dm_pool *p, size_t s)
 
 static void _append_block(struct dm_pool *p, struct block *b)
 {
+	if (p->locked)
+		log_error(INTERNAL_ERROR "_append_blocks to locked pool %s",
+			  p->name);
+
 	if (p->tail) {
 		p->tail->next = b;
 		p->tail = b;
@@ -216,6 +226,10 @@ int dm_pool_grow_object(struct dm_pool *p, const void *extra, size_t delta)
 	struct block *new;
 	size_t new_size;
 
+	if (p->locked)
+		log_error(INTERNAL_ERROR "Grow objects in locked pool %s",
+			  p->name);
+
 	if (!delta)
 		delta = strlen(extra);
 
@@ -259,4 +273,20 @@ void dm_pool_abandon_object(struct dm_pool *p)
 	dm_free(p->object);
 	p->begun = 0;
 	p->object = NULL;
+}
+
+static long _pool_crc(const struct dm_pool *p)
+{
+#ifndef DEBUG_ENFORCE_POOL_LOCKING
+#warning pool crc not implemented with pool debug
+#endif
+	return 0;
+}
+
+static int _pool_protect(struct dm_pool *p, int prot)
+{
+#ifdef DEBUG_ENFORCE_POOL_LOCKING
+#warning pool mprotect not implemented with pool debug
+#endif
+	return 1;
 }
