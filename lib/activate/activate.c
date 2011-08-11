@@ -611,6 +611,11 @@ int lv_mirror_percent(struct cmd_context *cmd, const struct logical_volume *lv,
 	return r;
 }
 
+int lv_raid_percent(const struct logical_volume *lv, percent_t *percent)
+{
+	return lv_mirror_percent(lv->vg->cmd, lv, 0, percent, NULL);
+}
+
 static int _lv_active(struct cmd_context *cmd, struct logical_volume *lv)
 {
 	struct lvinfo info;

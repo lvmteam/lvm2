@@ -39,7 +39,7 @@ struct lvconvert_params {
 	uint32_t stripes;
 	uint32_t stripe_size;
 
-	struct segment_type *segtype;
+	const struct segment_type *segtype;
 
 	alloc_policy_t alloc;
 
@@ -1366,6 +1366,62 @@ static int _lvconvert_mirrors(struct cmd_context *cmd,
 	return 1;
 }
 
+static int is_valid_raid_conversion(const struct segment_type *from_segtype,
+				    const struct segment_type *to_segtype)
+{
+	if (from_segtype == to_segtype)
+		return 1;
+
+	if (!segtype_is_raid(from_segtype) && !segtype_is_raid(to_segtype))
+		return_0;  /* Not converting to or from RAID? */
+
+	return 0;
+}
+
+static int lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *lp)
+{
+	int image_count;
+	struct cmd_context *cmd = lv->vg->cmd;
+	struct lv_segment *seg = first_seg(lv);
+
+	if (!arg_count(cmd, type_ARG))
+		lp->segtype = seg->segtype;
+
+	if (arg_count(cmd, mirrors_ARG) && !seg_is_mirrored(seg)) {
+		log_error("'--mirrors/-m' is not compatible with %s",
+			  seg->segtype->name);
+		return 0;
+	}
+
+	if (!is_valid_raid_conversion(seg->segtype, lp->segtype)) {
+		log_error("Unable to convert %s/%s from %s to %s",
+			  lv->vg->name, lv->name,
+			  seg->segtype->name, lp->segtype->name);
+		return 0;
+	}
+
+	/* Change number of RAID1 images */
+	if (arg_count(cmd, mirrors_ARG)) {
+		image_count = lv_raid_image_count(lv);
+		if (lp->mirrors_sign == SIGN_PLUS)
+			image_count += lp->mirrors;
+		else if (lp->mirrors_sign == SIGN_MINUS)
+			image_count -= lp->mirrors;
+		else
+			image_count = lp->mirrors + 1;
+
+		if (image_count < 1) {
+			log_error("Unable to reduce images by specified amount");
+			return 0;
+		}
+
+		return lv_raid_change_image_count(lv, image_count, lp->pvh);
+	}
+
+	log_error("Conversion operation not yet supported.");
+	return 0;
+}
+
 static int lvconvert_snapshot(struct cmd_context *cmd,
 			      struct logical_volume *lv,
 			      struct lvconvert_params *lp)
@@ -1580,6 +1636,24 @@ static int _lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 			stack;
 			return ECMD_FAILED;
 		}
+	} else if (segtype_is_raid(lp->segtype) || (lv->status & RAID)) {
+		if (!archive(lv->vg)) {
+			stack;
+			return ECMD_FAILED;
+		}
+		if (!lvconvert_raid(lv, lp)) {
+			stack;
+			return ECMD_FAILED;
+		}
+
+		if (!(failed_pvs = _failed_pv_list(lv->vg))) {
+			stack;
+			return ECMD_FAILED;
+		}
+
+		/* If repairing and using policies, remove missing PVs from VG */
+		if (arg_count(cmd, repair_ARG) && arg_count(cmd, use_policies_ARG))
+			_remove_missing_empty_pv(lv->vg, failed_pvs);
 	} else if (arg_count(cmd, mirrors_ARG) ||
 		   arg_count(cmd, splitmirrors_ARG) ||
 		   (lv->status & MIRRORED)) {

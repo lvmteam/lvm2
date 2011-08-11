@@ -85,6 +85,7 @@ SOURCES =\
 	metadata/pv.c \
 	metadata/pv_manip.c \
 	metadata/pv_map.c \
+	metadata/raid_manip.c \
 	metadata/replicator_manip.c \
 	metadata/segtype.c \
 	metadata/snapshot_manip.c \
