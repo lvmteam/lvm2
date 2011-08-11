@@ -451,6 +451,7 @@ void dm_task_destroy(struct dm_task *dmt)
 	dm_free(dmt->dev_name);
 	dm_free(dmt->newname);
 	dm_free(dmt->message);
+	dm_free(dmt->geometry);
 	dm_free(dmt->uuid);
 	dm_free(dmt);
 }
