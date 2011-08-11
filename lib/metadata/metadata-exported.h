@@ -330,6 +330,7 @@ struct lv_segment {
 #define seg_pv(seg, s)		(seg)->areas[(s)].u.pv.pvseg->pv
 #define seg_lv(seg, s)		(seg)->areas[(s)].u.lv.lv
 #define seg_metalv(seg, s)	(seg)->meta_areas[(s)].u.lv.lv
+#define seg_metatype(seg, s)	(seg)->meta_areas[(s)].type
 
 struct pe_range {
 	struct dm_list list;
