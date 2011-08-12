@@ -1,3 +1,6 @@
+Version 2.02.88 - 
+==================================
+
 Version 2.02.87 - 12th August 2011
 ==================================
   Add global/detect_internal_vg_cache_corruption to lvm.conf.
@@ -18,6 +21,7 @@ Version 2.02.87 - 12th August 2011
   Remove meaningless const type qualifiers on cast type.
   Add test for fcntl error in singlenode client code.
   Remove --force option from lvrename manpage.
+  Add global/mirror_segtype_default to pick md raid or dm mirror as default.
   Add configure --with-raid for new segtype 'raid' for MD RAID 1/4/5/6 support.
   Change DEFAULT_UDEV_SYNC to 1 so udev_sync is used if there is no config file.
   Add systemd unit file to provide lvm2 monitoring.
