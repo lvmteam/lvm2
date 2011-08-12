@@ -370,7 +370,7 @@ clean: $(SUBDIRS.clean) cleandir
 
 distclean: cleandir $(SUBDIRS.distclean)
 	test -z "$(DISTCLEAN_DIRS)" || $(RM) -r $(DISTCLEAN_DIRS)
-	$(RM) $(DISTCLEAN_TARGETS) Makefile core
+	$(RM) $(DISTCLEAN_TARGETS) Makefile 
 
 .exported_symbols_generated: $(EXPORTED_HEADER) .exported_symbols
 	set -e; \
