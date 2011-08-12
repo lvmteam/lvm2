@@ -1,8 +1,10 @@
 Version 2.02.88 - 
 ==================================
+  Fix make clean not to remove Makefile.  (2.02.87)
 
 Version 2.02.87 - 12th August 2011
 ==================================
+  Fix make distclean to remove stray dmeventd and exported symbols files.
   Add global/detect_internal_vg_cache_corruption to lvm.conf.
   Use memory pool locking to check for corruption of internal VG structs.
   Cache and share generated VG structs.
