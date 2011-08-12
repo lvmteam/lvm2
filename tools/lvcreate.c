@@ -384,7 +384,7 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 	 */
 	segtype_str = "striped";
 	if (arg_count(cmd, mirrors_ARG))
-		segtype_str = find_config_tree_str(cmd, "activation/mirror_segtype_default", DEFAULT_MIRROR_SEGTYPE);
+		segtype_str = find_config_tree_str(cmd, "global/mirror_segtype_default", DEFAULT_MIRROR_SEGTYPE);
 
 	lp->segtype = get_segtype_from_string(cmd, arg_str_value(cmd, type_ARG, segtype_str));
 

@@ -468,7 +468,7 @@ int main(int argc, char *argv[])
 
 	/* Set up signal handlers, USR1 is for cluster change notifications (in cman)
 	   USR2 causes child threads to exit.
-	   HUP causes to re-read nodes list from CCS.
+	   (HUP used to cause gulm to re-read the nodes list from CCS.)
 	   PIPE should be ignored */
 	signal(SIGUSR2, sigusr2_handler);
 	signal(SIGHUP,  sighup_handler);
