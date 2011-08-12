@@ -1,12 +1,14 @@
-Version 1.02.66 - 
-===============================
+Version 1.02.66 - 12th August 2011
+==================================
   Release geometry buffer in dm_task_destroy.
-  Add memory pool locking functions to aid debuging of shared VG structs.
-  Remove dev name prefix from dmsetup line output if major and minor is used.
+  Update udev rules to skip DM flags decoding for removed devices.
+  Add compile-time pool memory locking options (to debug shared VG structs).
+  Remove device name prefix from dmsetup line output if -j & -m or -u supplied.
   Remove support for the original version 1 dm ioctls.
   Add missing check for allocation failure _create_dir_recursive().
   Add support for systemd file descriptor handover in dmeventd.
-  Add support for new oom killer adjustment interface (oom_score_adj).
+  Fix memory leak in dmsetup _message() memory allocation error path.
+  Use new oom killer adjustment interface (oom_score_adj) when available.
   Add systemd unit files for dmeventd.
   Fix read-only identical table reload supression.
 
