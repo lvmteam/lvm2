@@ -1,32 +1,27 @@
-Version 2.02.87 - 
-===============================
-  Add ability to down-convert RAID1 arrays.
-  Update udev rules to skip DM flags decoding for removed devices.
-  Add detect_internal_vg_cache_corruption to lvm.conf, disabled by default.
+Version 2.02.87 - 12th August 2011
+==================================
+  Add global/detect_internal_vg_cache_corruption to lvm.conf.
   Use memory pool locking to check for corruption of internal VG structs.
   Cache and share generated VG structs.
   Fix possible format instance memory leaks and premature releases in _vg_read.
   Suppress locking error messages in monitoring init scripts.
-  If pipe in clvmd fails, return busy instead of using uninitialised descriptors.
-  Add dmeventd monitoring shared library for raid.
-  Add raid metadata devices to considered devices in _add_lv_to_dtree.
-  Fix renaming of RAID logical volumes.
+  If pipe in clvmd fails return busy instead of using uninitialised descriptors.
+  Add ability to reduce the number of mirrors in raid1 arrays to lvconvert.
+  Add dmeventd plugin for raid.
   Replace free_vg with release_vg and move it to vg.c.
   Remove INCONSISTENT_VG flag from the code.
-  Remove lock from cache even if unlock fails.
+  Remove lock from cache in _lock_vol even if unlock fails.
   Initialise clvmd locks before lvm context to avoid open descriptor leaks.
   Remove obsolete gulm clvmd cluster locking support.
   Suppress low-level locking errors and warnings while using --sysinit.
   Remove unused inconsistent_seqno variable in _vg_read().
   Remove meaningless const type qualifiers on cast type.
-  Fix memory leak in dmsetup _message() memory allocation error path.
   Add test for fcntl error in singlenode client code.
   Remove --force option from lvrename manpage.
-  Add missing new line in lvrename help text.
-  Add basic support for MD RAID 1/4/5/6 as new segment type called raid.
-  Change DEFAULT_UDEV_SYNC to 1 so udev_sync is used even without any config.
+  Add configure --with-raid for new segtype 'raid' for MD RAID 1/4/5/6 support.
+  Change DEFAULT_UDEV_SYNC to 1 so udev_sync is used if there is no config file.
   Add systemd unit file to provide lvm2 monitoring.
-  Compare also file size to detect changed config file.
+  Compare file size (as well as timestamp) to detect changed config file.
 
 Version 2.02.86 - 8th July 2011
 ===============================
