@@ -669,8 +669,6 @@ CLUSTER
 CLDWHOLEARCHIVE
 CLDNOWHOLEARCHIVE
 CLDFLAGS
-CCS_LIBS
-CCS_CFLAGS
 BUILD_DMEVENTD
 BUILD_CMIRRORD
 APPLIB
@@ -10062,8 +10060,6 @@ LVM_PATCHLEVEL=`echo "$VER" | $AWK -F '[(.]' '{print $3}'`
 LVM_LIBAPI=`echo "$VER" | $AWK -F '[()]' '{print $2}'`
 
 ################################################################################
-
-
 
 
 
