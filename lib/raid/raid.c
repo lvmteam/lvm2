@@ -349,6 +349,20 @@ static struct segment_type *init_raid_segtype(struct cmd_context *cmd,
 	return segtype;
 }
 
+#ifndef RAID_INTERNAL /* Shared */
+struct segment_type *init_raid1_segtype(struct cmd_context *cmd);
+struct segment_type *init_raid4_segtype(struct cmd_context *cmd);
+struct segment_type *init_raid5_segtype(struct cmd_context *cmd);
+struct segment_type *init_raid5_la_segtype(struct cmd_context *cmd);
+struct segment_type *init_raid5_ra_segtype(struct cmd_context *cmd);
+struct segment_type *init_raid5_ls_segtype(struct cmd_context *cmd);
+struct segment_type *init_raid5_rs_segtype(struct cmd_context *cmd);
+struct segment_type *init_raid6_segtype(struct cmd_context *cmd);
+struct segment_type *init_raid6_zr_segtype(struct cmd_context *cmd);
+struct segment_type *init_raid6_nr_segtype(struct cmd_context *cmd);
+struct segment_type *init_raid6_nc_segtype(struct cmd_context *cmd);
+#endif
+
 struct segment_type *init_raid1_segtype(struct cmd_context *cmd)
 {
 	struct segment_type *segtype;
