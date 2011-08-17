@@ -175,7 +175,7 @@ xx(lvcreate,
 
    "lvcreate \n"
    "\t{ {-s|--snapshot} OriginalLogicalVolume[Path] |\n"
-   "\t  [-s|--snapshot] VolumeGroupName[Path] --virtualsize VirtualSize}\n"
+   "\t  [-s|--snapshot] VolumeGroupName[Path] -V|--virtualsize VirtualSize}\n"
    "\t[-c|--chunksize]\n"
    "\t[-A|--autobackup {y|n}]\n"
    "\t[--addtag Tag]\n"
