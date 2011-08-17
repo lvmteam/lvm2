@@ -36,7 +36,7 @@ VolumeGroupName [PhysicalVolumePath[:PE[-PE]]...]
 {{\-s|\-\-snapshot}
 OriginalLogicalVolumePath | 
 [\-s|\-\-snapshot]
-VolumeGroupName \-\-virtualsize VirtualSize}
+VolumeGroupName \-V|\-\-virtualsize VirtualSize}
 .SH DESCRIPTION
 lvcreate creates a new logical volume in a volume group ( see
 .B vgcreate(8), vgchange(8)
@@ -205,7 +205,7 @@ commandline switch alias that will enable their use (-s is an alias for
 commandline switch alias is available for the desired type, as is the case
 with "error", "zero", "raid4", "raid5", or "raid6".
 .TP
-.I \-\-virtualsize VirtualSize
+.I -V, \-\-virtualsize VirtualSize
 Create a sparse device of the given size (in MB by default) using a snapshot.  
 Anything written to the device will be returned when reading from it.
 Reading from other areas of the device will return blocks of zeros.

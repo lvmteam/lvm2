@@ -1,5 +1,6 @@
 Version 2.02.88 - 
 ==================================
+  Add -V as short form of --virtualsize in lvcreate.
   Fix make clean not to remove Makefile.  (2.02.87)
 
 Version 2.02.87 - 12th August 2011
