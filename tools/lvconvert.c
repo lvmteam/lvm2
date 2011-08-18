@@ -1401,7 +1401,7 @@ static int lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *lp
 	}
 
 	/* Change number of RAID1 images */
-	if (arg_count(cmd, mirrors_ARG)) {
+	if (arg_count(cmd, mirrors_ARG) || arg_count(cmd, splitmirrors_ARG)) {
 		image_count = lv_raid_image_count(lv);
 		if (lp->mirrors_sign == SIGN_PLUS)
 			image_count += lp->mirrors;
@@ -1411,11 +1411,18 @@ static int lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *lp
 			image_count = lp->mirrors + 1;
 
 		if (image_count < 1) {
-			log_error("Unable to reduce images by specified amount");
+			log_error("Unable to %s images by specified amount",
+				  arg_count(cmd, splitmirrors_ARG) ?
+				  "split" : "reduce");
 			return 0;
 		}
 
-		return lv_raid_change_image_count(lv, image_count, lp->pvh);
+		if (arg_count(cmd, splitmirrors_ARG))
+			return lv_raid_split(lv, lp->lv_split_name,
+					     image_count, lp->pvh);
+		else
+			return lv_raid_change_image_count(lv, image_count,
+							  lp->pvh);
 	}
 
 	log_error("Conversion operation not yet supported.");

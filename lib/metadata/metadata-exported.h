@@ -742,6 +742,9 @@ struct logical_volume *first_replicator_dev(const struct logical_volume *lv);
 uint32_t lv_raid_image_count(const struct logical_volume *lv);
 int lv_raid_change_image_count(struct logical_volume *lv,
 			       uint32_t new_count, struct dm_list *pvs);
+int lv_raid_split(struct logical_volume *lv, const char *split_name,
+		  uint32_t new_count, struct dm_list *splittable_pvs);
+
 /* --  metadata/raid_manip.c */
 
 struct cmd_vg *cmd_vg_add(struct dm_pool *mem, struct dm_list *cmd_vgs,
