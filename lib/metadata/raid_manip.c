@@ -515,3 +515,111 @@ int lv_raid_change_image_count(struct logical_volume *lv,
 
 	return 1;
 }
+
+int lv_raid_split(struct logical_volume *lv, const char *split_name,
+		  uint32_t new_count, struct dm_list *splittable_pvs)
+{
+	const char *old_name;
+	struct lv_list *lvl;
+	struct dm_list removal_list, data_list;
+	struct cmd_context *cmd = lv->vg->cmd;
+	uint32_t old_count = lv_raid_image_count(lv);
+
+	dm_list_init(&removal_list);
+	dm_list_init(&data_list);
+
+	if ((old_count - new_count) != 1) {
+		log_error("Unable to split more than one image from %s/%s",
+			  lv->vg->name, lv->name);
+		return 0;
+	}
+
+	if (!seg_is_mirrored(first_seg(lv))) {
+		log_error("Unable to split logical volume of segment type, %s",
+			  first_seg(lv)->segtype->name);
+		return 0;
+	}
+
+	if (find_lv_in_vg(lv->vg, split_name)) {
+		log_error("Logical Volume \"%s\" already exists in %s",
+			  split_name, lv->vg->name);
+		return 0;
+	}
+
+	if (!raid_in_sync(lv)) {
+		log_error("Unable to split %s/%s while it is not in-sync.",
+			  lv->vg->name, lv->name);
+		return 0;
+	}
+
+	if (!raid_extract_images(lv, new_count, splittable_pvs, 1,
+				 &removal_list, &data_list)) {
+		log_error("Failed to extract images from %s/%s",
+			  lv->vg->name, lv->name);
+		return 0;
+	}
+
+	/* Convert to linear? */
+	if ((new_count == 1) && !raid_remove_top_layer(lv, &removal_list)) {
+		log_error("Failed to remove RAID layer after linear conversion");
+		return 0;
+	}
+
+	/* Get first item */
+	dm_list_iterate_items(lvl, &data_list)
+		break;
+
+	old_name = lvl->lv->name;
+	lvl->lv->name = split_name;
+
+	if (!vg_write(lv->vg)) {
+		log_error("Failed to write changes to %s in %s",
+			  lv->name, lv->vg->name);
+		return 0;
+	}
+
+	if (!suspend_lv(cmd, lv)) {
+		log_error("Failed to suspend %s/%s before committing changes",
+			  lv->vg->name, lv->name);
+		return 0;
+	}
+
+	if (!vg_commit(lv->vg)) {
+		log_error("Failed to commit changes to %s in %s",
+			  lv->name, lv->vg->name);
+		return 0;
+	}
+
+	/*
+	 * Resume original LV
+	 * This also resumes all other sub-lvs (including the extracted)
+	 */
+	if (!resume_lv(cmd, lv)) {
+		log_error("Failed to resume %s/%s after committing changes",
+			  lv->vg->name, lv->name);
+		return 0;
+	}
+
+	/* Recycle newly split LV so it is properly renamed */
+	if (!suspend_lv(cmd, lvl->lv) || !resume_lv(cmd, lvl->lv)) {
+		log_error("Failed to rename %s to %s after committing changes",
+			  old_name, split_name);
+		return 0;
+	}
+
+	/*
+	 * Eliminate the residual LVs
+	 */
+	dm_list_iterate_items(lvl, &removal_list) {
+		if (!deactivate_lv(cmd, lvl->lv))
+			return_0;
+
+		if (!lv_remove(lvl->lv))
+			return_0;
+	}
+
+	if (!vg_write(lv->vg) || !vg_commit(lv->vg))
+		return_0;
+
+	return 1;
+}
