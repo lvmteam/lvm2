@@ -78,36 +78,81 @@ is_raid_available || exit 200
 
 aux prepare_vg 5 80
 
-
 ###########################################
-# Create, wait for sync, remove tests
+# RAID1 convert tests
 ###########################################
+for i in 2 3 4; do
+	for j in 1 2 3 4; do
+		if [ $i -eq 1 ]; then
+			from="linear"
+		else
+			from="$i-way"
+		fi
+		if [ $j -eq 1 ]; then
+			to="linear"
+		else
+			to="$j-way"
+		fi
+		echo "Converting from $from to $to"
+		lvcreate --type raid1 -m $(($i - 1)) -l 2 -n $lv1 $vg
+		wait_for_raid_sync $vg/$lv1
+		lvconvert -m $((j - 1))  $vg/$lv1
 
-# Create RAID1 (implicit 2-way)
-lvcreate --type raid1 -l 2 -n $lv1 $vg
-wait_for_raid_sync $vg/$lv1
-lvremove -ff $vg
+		# FIXME: ensure no residual devices
 
-# Create RAID1 (explicit 2-way)
-lvcreate --type raid1 -m 1 -l 2 -n $lv1 $vg
-wait_for_raid_sync $vg/$lv1
-lvremove -ff $vg
-
-# Create RAID1 (explicit 3-way)
-lvcreate --type raid1 -m 2 -l 2 -n $lv1 $vg
-wait_for_raid_sync $vg/$lv1
-lvremove -ff $vg
-
-# Create RAID 4/5/6 (explicit 3-stripe + parity devs)
-for i in raid4 \
-	raid5 raid5_ls raid5_la raid5_rs raid5_ra \
-	raid6 raid6_zr raid6_nr raid6_nc; do
-
-	lvcreate --type $i -l 3 -i 3 -n $lv1 $vg
-	wait_for_raid_sync $vg/$lv1
-	lvremove -ff $vg
+		if [ $j -eq 1 ]; then
+			check linear $vg $lv1
+		fi
+		lvremove -ff $vg
+	done
 done
 
 #
-# FIXME: Add tests that specify particular PVs to use for creation
+# FIXME: Add tests that specify particular devices to be removed
 #
+
+###########################################
+# RAID1 split tests
+###########################################
+# 3-way to 2-way/linear
+lvcreate --type raid1 -m 2 -l 2 -n $lv1 $vg
+wait_for_raid_sync $vg/$lv1
+lvconvert --splitmirrors 1 -n $lv2 $vg/$lv1
+check lv_exists $vg $lv1
+check linear $vg $lv2
+# FIXME: ensure no residual devices
+lvremove -ff $vg
+
+# 2-way to linear/linear
+lvcreate --type raid1 -m 1 -l 2 -n $lv1 $vg
+wait_for_raid_sync $vg/$lv1
+lvconvert --splitmirrors 1 -n $lv2 $vg/$lv1
+check linear $vg $lv1
+check linear $vg $lv2
+# FIXME: ensure no residual devices
+lvremove -ff $vg
+
+# 3-way to linear/2-way
+lvcreate --type raid1 -m 2 -l 2 -n $lv1 $vg
+wait_for_raid_sync $vg/$lv1
+
+# FIXME: Can't split off a mirror from a mirror yet
+#lvconvert --splitmirrors 2 -n $lv2 $vg/$lv1
+#check linear $vg $lv1
+#check lv_exists $vg $lv2
+
+# FIXME: ensure no residual devices
+lvremove -ff $vg
+
+###########################################
+# RAID1 split + trackchanges / merge
+###########################################
+# 3-way to 2-way/linear
+lvcreate --type raid1 -m 2 -l 2 -n $lv1 $vg
+wait_for_raid_sync $vg/$lv1
+lvconvert --splitmirrors 1 --trackchanges $vg/$lv1
+check lv_exists $vg $lv1
+check linear $vg ${lv1}_rimage_2
+lvconvert --merge $vg/${lv1}_rimage_2
+# FIXME: ensure no residual devices
+lvremove -ff $vg
