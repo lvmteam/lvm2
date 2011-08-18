@@ -149,6 +149,8 @@ struct load_segment {
 	unsigned rdevice_count;		/* Replicator */
 	struct dm_tree_node *replicator;/* Replicator-dev */
 	uint64_t rdevice_index;		/* Replicator-dev */
+
+	uint64_t rebuilds;              /* raid */
 };
 
 /* Per-device properties */
@@ -1724,6 +1726,7 @@ static int _raid_emit_segment_line(struct dm_task *dmt, uint32_t major,
 				   uint64_t *seg_start, char *params,
 				   size_t paramsize)
 {
+	uint32_t i, *tmp;
 	int param_count = 1; /* mandatory 'chunk size'/'stripe size' arg */
 	int pos = 0;
 
@@ -1732,6 +1735,10 @@ static int _raid_emit_segment_line(struct dm_task *dmt, uint32_t major,
 
 	if (seg->region_size)
 		param_count += 2;
+
+	tmp = (uint32_t *)(&seg->rebuilds); /* rebuilds is 64-bit */
+	param_count += 2 * hweight32(tmp[0]);
+	param_count += 2 * hweight32(tmp[1]);
 
 	if ((seg->type == SEG_RAID1) && seg->stripe_size)
 		log_error("WARNING: Ignoring RAID1 stripe size");
@@ -1746,6 +1753,10 @@ static int _raid_emit_segment_line(struct dm_task *dmt, uint32_t major,
 
 	if (seg->region_size)
 		EMIT_PARAMS(pos, " region_size %u", seg->region_size);
+
+	for (i = 0; i < (seg->area_count / 2); i++)
+		if (seg->rebuilds & (1 << i))
+			EMIT_PARAMS(pos, " rebuild %u", i);
 
 	/* Print number of metadata/data device pairs */
 	EMIT_PARAMS(pos, " %u", seg->area_count/2);
@@ -1862,7 +1873,8 @@ static int _emit_segment_line(struct dm_task *dmt, uint32_t major,
 
 	log_debug("Adding target to (%" PRIu32 ":%" PRIu32 "): %" PRIu64
 		  " %" PRIu64 " %s %s", major, minor,
-		  *seg_start, seg->size, dm_segtypes[seg->type].target, params);
+		  *seg_start, seg->size, target_type_is_raid ? "raid" :
+		  dm_segtypes[seg->type].target, params);
 
 	if (!dm_task_add_target(dmt, *seg_start, seg->size,
 				target_type_is_raid ? "raid" :
@@ -2354,7 +2366,7 @@ int dm_tree_node_add_raid_target(struct dm_tree_node *node,
 				 const char *raid_type,
 				 uint32_t region_size,
 				 uint32_t stripe_size,
-				 uint64_t reserved1,
+				 uint64_t rebuilds,
 				 uint64_t reserved2)
 {
 	int i;
@@ -2372,6 +2384,7 @@ int dm_tree_node_add_raid_target(struct dm_tree_node *node,
 	seg->region_size = region_size;
 	seg->stripe_size = stripe_size;
 	seg->area_count = 0;
+	seg->rebuilds = rebuilds;
 
 	return 1;
 }

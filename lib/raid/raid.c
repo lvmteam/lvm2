@@ -161,9 +161,22 @@ _raid_add_target_line(struct dev_manager *dm __attribute__((unused)),
 		      struct dm_tree_node *node, uint64_t len,
 		      uint32_t *pvmove_mirror_count __attribute__((unused)))
 {
+	uint32_t s;
+	uint64_t rebuilds = 0;
+
 	if (!seg->area_count) {
 		log_error(INTERNAL_ERROR "_raid_add_target_line called "
 			  "with no areas for %s.", seg->lv->name);
+		return 0;
+	}
+
+	/*
+	 * 64 device restriction imposed by kernel as well.  It is
+	 * not strictly a userspace limitation.
+	 */
+	if (seg->area_count > 64) {
+		log_error("Unable to handle more than 64 devices in a "
+			  "single RAID array");
 		return 0;
 	}
 
@@ -172,9 +185,13 @@ _raid_add_target_line(struct dev_manager *dm __attribute__((unused)),
 		return 0;
 	}
 
+	for (s = 0; s < seg->area_count; s++)
+		if (seg_lv(seg, s)->status & LV_NOTSYNCED)
+			rebuilds |= 1 << s;
+
 	if (!dm_tree_node_add_raid_target(node, len, _raid_name(seg),
 					  seg->region_size, seg->stripe_size,
-					  0, 0))
+					  rebuilds, 0))
 		return_0;
 
 	return add_areas_line(dm, seg, node, 0u, seg->area_count);
