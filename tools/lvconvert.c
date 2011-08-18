@@ -20,6 +20,7 @@
 struct lvconvert_params {
 	int snapshot;
 	int merge;
+	int merge_mirror;
 	int zero;
 
 	const char *origin;
@@ -107,7 +108,7 @@ static int _lvconvert_name_params(struct lvconvert_params *lp,
 	if ((ptr = strrchr(lp->lv_name_full, '/')))
 		lp->lv_name = ptr + 1;
 
-	if (!apply_lvname_restrictions(lp->lv_name))
+	if (!lp->merge_mirror && !apply_lvname_restrictions(lp->lv_name))
 		return_0;
 
 	if (*pargc && lp->snapshot) {
@@ -178,8 +179,12 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (arg_count(cmd, merge_ARG))
-		lp->merge = 1;
+	if (arg_count(cmd, merge_ARG)) {
+		if ((argc == 1) && strstr(argv[0], "_rimage_"))
+			lp->merge_mirror = 1;
+		else
+			lp->merge = 1;
+	}
 
 	if (arg_count(cmd, mirrors_ARG)) {
 		/*
@@ -1339,6 +1344,12 @@ static int _lvconvert_mirrors(struct cmd_context *cmd,
 	uint32_t new_mimage_count;
 	uint32_t new_log_count;
 
+	if (lp->merge_mirror) {
+		log_error("Unable to merge mirror images"
+			  "of segment type 'mirror'");
+		return 0;
+	}
+
 	/* Adjust mimage and/or log count */
 	if (!_lvconvert_mirrors_parse_params(cmd, lv, lp,
 					     &old_mimage_count, &old_log_count,
@@ -1423,16 +1434,20 @@ static int lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *lp
 				  "split" : "reduce");
 			return 0;
 		}
-
-		if (arg_count(cmd, trackchanges_ARG))
-			return lv_raid_split_and_track(lv, lp->pvh);
-		else if (arg_count(cmd, splitmirrors_ARG))
-			return lv_raid_split(lv, lp->lv_split_name,
-					     image_count, lp->pvh);
-		else
-			return lv_raid_change_image_count(lv, image_count,
-							  lp->pvh);
 	}
+
+	if (lp->merge_mirror)
+		return lv_raid_merge(lv);
+
+	if (arg_count(cmd, trackchanges_ARG))
+		return lv_raid_split_and_track(lv, lp->pvh);
+
+	if (arg_count(cmd, splitmirrors_ARG))
+		return lv_raid_split(lv, lp->lv_split_name,
+				     image_count, lp->pvh);
+
+	if (arg_count(cmd, mirrors_ARG))
+		return lv_raid_change_image_count(lv, image_count, lp->pvh);
 
 	log_error("Conversion operation not yet supported.");
 	return 0;
@@ -1652,7 +1667,8 @@ static int _lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 			stack;
 			return ECMD_FAILED;
 		}
-	} else if (segtype_is_raid(lp->segtype) || (lv->status & RAID)) {
+	} else if (segtype_is_raid(lp->segtype) ||
+		   (lv->status & RAID) || lp->merge_mirror) {
 		if (!archive(lv->vg)) {
 			stack;
 			return ECMD_FAILED;

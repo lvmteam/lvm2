@@ -1639,9 +1639,10 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 				    	    _cmd_data_v4[dmt->type].name,
 					    strerror(errno));
 			else
-				log_error("device-mapper: %s ioctl "
+				log_error("device-mapper: %s ioctl for %s "
 					  "failed: %s",
-				    	   _cmd_data_v4[dmt->type].name,
+					  _cmd_data_v4[dmt->type].name,
+					  dmi->name ? dmi->name : dmi->uuid,
 					  strerror(errno));
 			_dm_zfree_dmi(dmi);
 			return NULL;

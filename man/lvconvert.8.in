@@ -40,7 +40,7 @@ OriginalLogicalVolume[Path] SnapshotLogicalVolume[Path]
 [\-h|\-?|\-\-help]
 [\-v|\-\-verbose]
 [\-\-version]
-SnapshotLogicalVolume[Path]...
+LogicalVolume[Path]...
 .br
 
 .br
@@ -146,8 +146,11 @@ Controls zeroing of the first KB of data in the snapshot.
 If the volume is read-only the snapshot will not be zeroed.
 .TP
 .I \-\-merge
-Merges a snapshot into its origin volume.  To check if your kernel
-supports this feature, look for 'snapshot-merge' in the output
+Merges a snapshot into its origin volume or merges a RAID1 image that has
+been split from its mirror with \-\-trackchanges back into its mirror.
+
+To check if your kernel supports the snapshot merge feature, look
+for 'snapshot-merge' in the output
 of 'dmsetup targets'.  If both the origin and snapshot volume are not
 open the merge will start immediately.  Otherwise, the merge will start
 the first time either the origin or snapshot are activated and both are closed.
@@ -206,7 +209,7 @@ converts linear logical volume "vg00/lvol1" to a two-way mirror, using physical
 extents /dev/sda:0-15 and /dev/sdb:0-15 for allocation of new extents.
 
 .br
-"lvconvert -m0 vg00/lvmirror1 /dev/sda
+"lvconvert -m0 vg00/lvmirror1 /dev/sda"
 .br
 converts mirror logical volume "vg00/lvmirror1" to linear, freeing physical
 extents from /dev/sda.
@@ -223,6 +226,32 @@ If vg00/lvol1, vg00/lvol2, and vg00/lvol3 are all tagged with "some_tag"
 each snapshot logical volume will be merged serially, e.g.: vg00/lvol1,
 then vg00/lvol2, then vg00/lvol3.  If --background were used it would start
 all snapshot logical volume merges in parallel.
+
+.br
+"lvconvert --splitmirrors 1 --name lv_split vg00/lvmirror1"
+.br
+Extract one image from the mirror, making it a new logical volume named
+"lv_split".  The mirror the image is extracted from is reduced accordingly.
+If it was a 2-way mirror (created with '-m 1'), then the resulting original
+volume will be linear.
+
+.br
+"lvconvert --splitmirrors 1 --trackchanges vg00/lv_raid1"
+.br
+A mirrored logical volume that uses the "raid1" segment type (i.e. created
+with '--type raid1') can use the '\-\-trackchanges' argument when splitting
+off an image.  The split-off image cannot be given a new name, as it is still
+part of the original RAID1 logical volume in the sense that changes between
+the two are being tracked for future integration upon merging.  The device that
+results from the split will be read-only and will be named similarly to the
+original - in this case "lv_raid1_rimage_N", where 'N' is the index of the
+image that has been split.
+
+.br
+"lvconvert --merge vg00/lv_raid1_rimage_1"
+.br
+Merge an image back into the mirror it was split from when the '\-\-trackchanges'
+argument was used.
 
 .SH SEE ALSO
 .BR lvm (8),
