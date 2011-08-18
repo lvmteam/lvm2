@@ -34,6 +34,22 @@ uint32_t lv_raid_image_count(const struct logical_volume *lv)
 	return seg->area_count;
 }
 
+static int _activate_sublv_preserving_excl(struct logical_volume *top_lv,
+					   struct logical_volume *sub_lv)
+{
+	struct cmd_context *cmd = top_lv->vg->cmd;
+
+	/* If top RAID was EX, use EX */
+	if (lv_is_active_exclusive_locally(top_lv)) {
+		if (!activate_lv_excl(cmd, sub_lv))
+			return_0;
+	} else {
+		if (!activate_lv(cmd, sub_lv))
+			return_0;
+	}
+	return 1;
+}
+
 /*
  * lv_is_on_pv
  * @lv:
@@ -621,5 +637,85 @@ int lv_raid_split(struct logical_volume *lv, const char *split_name,
 	if (!vg_write(lv->vg) || !vg_commit(lv->vg))
 		return_0;
 
+	return 1;
+}
+
+/*
+ * lv_raid_split_and_track
+ * @lv
+ * @splittable_pvs
+ *
+ * Only allows a single image to be split while tracking.  The image
+ * never actually leaves the mirror.  It is simply made visible.  This
+ * action triggers two things: 1) users are able to access the (data) image
+ * and 2) lower layers replace images marked with a visible flag with
+ * error targets.
+ *
+ * Returns: 1 on success, 0 on error
+ */
+int lv_raid_split_and_track(struct logical_volume *lv,
+			    struct dm_list *splittable_pvs)
+{
+	int s;
+	struct lv_segment *seg = first_seg(lv);
+
+	if (!seg_is_mirrored(seg)) {
+		log_error("Unable to split images from non-mirrored RAID");
+		return 0;
+	}
+
+	if (!raid_in_sync(lv)) {
+		log_error("Unable to split image from %s/%s while not in-sync",
+			  lv->vg->name, lv->name);
+		return 0;
+	}
+
+	for (s = seg->area_count - 1; s >= 0; s--) {
+		if (!lv_is_on_pvs(seg_lv(seg, s), splittable_pvs))
+			continue;
+		lv_set_visible(seg_lv(seg, s));
+		seg_lv(seg, s)->status &= ~LVM_WRITE;
+		break;
+	}
+
+	if (s >= seg->area_count) {
+		log_error("Unable to find image to satisfy request");
+		return 0;
+	}
+
+	if (!vg_write(lv->vg)) {
+		log_error("Failed to write changes to %s in %s",
+			  lv->name, lv->vg->name);
+		return 0;
+	}
+
+	if (!suspend_lv(lv->vg->cmd, lv)) {
+		log_error("Failed to suspend %s/%s before committing changes",
+			  lv->vg->name, lv->name);
+		return 0;
+	}
+
+	if (!vg_commit(lv->vg)) {
+		log_error("Failed to commit changes to %s in %s",
+			  lv->name, lv->vg->name);
+		return 0;
+	}
+
+	log_print("%s split from %s for read-only purposes.",
+		  seg_lv(seg, s)->name, lv->name);
+
+	/* Resume original LV */
+	if (!resume_lv(lv->vg->cmd, lv)) {
+		log_error("Failed to resume %s/%s after committing changes",
+			  lv->vg->name, lv->name);
+		return 0;
+	}
+
+	/* Activate the split (and tracking) LV */
+	if (!_activate_sublv_preserving_excl(lv, seg_lv(seg, s)))
+		return 0;
+
+	log_print("Use 'lvconvert --merge %s/%s' to merge back into %s",
+		  lv->vg->name, seg_lv(seg, s)->name, lv->name);
 	return 1;
 }

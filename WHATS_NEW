@@ -1,5 +1,6 @@
 Version 2.02.88 - 
 ==================================
+  Add --trackchanges support to --splitmirrors option for RAID1
   Add --splitmirrors support for RAID1 (1 image only)
   When down-converting RAID1, don't activate sub-lvs between suspend/resume
   Add -V as short form of --virtualsize in lvcreate.
