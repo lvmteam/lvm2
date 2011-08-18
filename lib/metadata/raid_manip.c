@@ -1016,3 +1016,89 @@ int lv_raid_split_and_track(struct logical_volume *lv,
 		  lv->vg->name, seg_lv(seg, s)->name, lv->name);
 	return 1;
 }
+
+int lv_raid_merge(struct logical_volume *image_lv)
+{
+	uint32_t s;
+	char *p, *lv_name;
+	struct lv_list *lvl;
+	struct logical_volume *lv;
+	struct logical_volume *meta_lv = NULL;
+	struct lv_segment *seg;
+	struct volume_group *vg = image_lv->vg;
+
+	lv_name = dm_pool_strdup(vg->vgmem, image_lv->name);
+	if (!lv_name)
+		return_0;
+
+	if (!(p = strstr(lv_name, "_rimage_"))) {
+		log_error("Unable to merge non-mirror image %s/%s",
+			  vg->name, image_lv->name);
+		return 0;
+	}
+	*p = '\0'; /* lv_name is now that of top-level RAID */
+
+	if (image_lv->status & LVM_WRITE) {
+		log_error("%s/%s is not read-only - refusing to merge",
+			  vg->name, image_lv->name);
+		return 0;
+	}
+
+	if (!(lvl = find_lv_in_vg(vg, lv_name))) {
+		log_error("Unable to find containing RAID array for %s/%s",
+			  vg->name, image_lv->name);
+		return 0;
+	}
+	lv = lvl->lv;
+	seg = first_seg(lv);
+	for (s = 0; s < seg->area_count; s++) {
+		if (seg_lv(seg, s) == image_lv) {
+			meta_lv = seg_metalv(seg, s);
+		}
+	}
+	if (!meta_lv)
+		return_0;
+
+	if (!deactivate_lv(vg->cmd, meta_lv)) {
+		log_error("Failed to deactivate %s", meta_lv->name);
+		return 0;
+	}
+
+	if (!deactivate_lv(vg->cmd, image_lv)) {
+		log_error("Failed to deactivate %s/%s before merging",
+			  vg->name, image_lv->name);
+		return 0;
+	}
+	lv_set_hidden(image_lv);
+	image_lv->status |= (lv->status & LVM_WRITE);
+	image_lv->status |= RAID_IMAGE;
+
+	if (!vg_write(vg)) {
+		log_error("Failed to write changes to %s in %s",
+			  lv->name, vg->name);
+		return 0;
+	}
+
+	if (!suspend_lv(vg->cmd, lv)) {
+		log_error("Failed to suspend %s/%s before committing changes",
+			  vg->name, lv->name);
+		return 0;
+	}
+
+	if (!vg_commit(vg)) {
+		log_error("Failed to commit changes to %s in %s",
+			  lv->name, vg->name);
+		return 0;
+	}
+
+	if (!resume_lv(vg->cmd, lv)) {
+		log_error("Failed to resume %s/%s after committing changes",
+			  vg->name, lv->name);
+		return 0;
+	}
+
+	log_print("%s/%s successfully merged back into %s/%s",
+		  vg->name, image_lv->name,
+		  vg->name, lv->name);
+	return 1;
+}

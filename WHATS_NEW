@@ -1,5 +1,6 @@
 Version 2.02.88 - 
 ==================================
+  Add --merge support for RAID1 images that were split with --trackchanges
   Add support for m-way to n-way up-convert in RAID1 (no linear to n-way yet)
   Add --trackchanges support to --splitmirrors option for RAID1
   Add --splitmirrors support for RAID1 (1 image only)
