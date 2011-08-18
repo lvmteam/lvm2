@@ -1,5 +1,6 @@
 Version 2.02.88 - 
 ==================================
+  Add support for m-way to n-way up-convert in RAID1 (no linear to n-way yet)
   Add --trackchanges support to --splitmirrors option for RAID1
   Add --splitmirrors support for RAID1 (1 image only)
   When down-converting RAID1, don't activate sub-lvs between suspend/resume

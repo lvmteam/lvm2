@@ -1027,7 +1027,8 @@ static int _alloc_parallel_area(struct alloc_handle *ah, uint32_t max_to_allocat
 			log_debug("Allocating parallel metadata area %" PRIu32
 				  " on %s start PE %" PRIu32
 				  " length %" PRIu32 ".",
-				  s, pv_dev_name(aa[s].pv), aa[s].pe,
+				  (s - (ah->area_count + ah->parity_count)),
+				  pv_dev_name(aa[s].pv), aa[s].pe,
 				  ah->log_len);
 
 			consume_pv_area(pva, ah->log_len);
@@ -1536,6 +1537,35 @@ static void _clear_areas(struct alloc_state *alloc_state)
 		alloc_state->areas[s].pva = NULL;
 }
 
+static void _report_needed_allocation_space(struct alloc_handle *ah,
+					    struct alloc_state *alloc_state)
+{
+	const char *metadata_type;
+	uint32_t p_areas_count, p_area_size;
+	uint32_t metadata_count, metadata_size;
+
+	p_area_size = (ah->new_extents - alloc_state->allocated);
+	p_area_size /= ah->area_multiple;
+	p_area_size -= (ah->alloc_and_split_meta) ? ah->log_len : 0;
+	p_areas_count = ah->area_count + ah->parity_count;
+
+	metadata_size = ah->log_len;
+	if (ah->alloc_and_split_meta) {
+		metadata_type = "RAID metadata area";
+		metadata_count = p_areas_count;
+	} else {
+		metadata_type = "mirror log";
+		metadata_count = alloc_state->log_area_count_still_needed;
+	}
+
+	log_debug("Still need %" PRIu32 " total extents:",
+		p_area_size * p_areas_count + metadata_size * metadata_count);
+	log_debug("  %" PRIu32 " (%" PRIu32 " data/%" PRIu32
+		  " parity) parallel areas of %" PRIu32 " extents each",
+		  p_areas_count, ah->area_count, ah->parity_count, p_area_size);
+	log_debug("  %" PRIu32 " %ss of %" PRIu32 " extents each",
+		  metadata_count, metadata_type, metadata_size);
+}
 /*
  * Returns 1 regardless of whether any space was found, except on error.
  */
@@ -1571,13 +1601,7 @@ static int _find_some_parallel_space(struct alloc_handle *ah, const struct alloc
 
 	_clear_areas(alloc_state);
 
-	log_debug("Still need %" PRIu32 " extents for %" PRIu32 " parallel areas and %" PRIu32 " log areas of %" PRIu32 " extents. "
-		  "(Total %" PRIu32 " extents.)",
-		  (ah->new_extents - alloc_state->allocated) / ah->area_multiple,
-		  devices_needed, alloc_state->log_area_count_still_needed,
-		  alloc_state->log_area_count_still_needed ? ah->log_len : 0,
-		  (ah->new_extents - alloc_state->allocated) * devices_needed / ah->area_multiple +
-			alloc_state->log_area_count_still_needed * ah->log_len);
+	_report_needed_allocation_space(ah, alloc_state);
 
 	/* ix holds the number of areas found on other PVs */
 	do {
@@ -1769,6 +1793,7 @@ static int _find_some_parallel_space(struct alloc_handle *ah, const struct alloc
 static int _find_max_parallel_space_for_one_policy(struct alloc_handle *ah, struct alloc_parms *alloc_parms,
 						   struct dm_list *pvms, struct alloc_state *alloc_state)
 {
+	uint32_t max_tmp;
 	uint32_t max_to_allocate;	/* Maximum extents to allocate this time */
 	uint32_t old_allocated;
 	uint32_t next_le;
@@ -1791,8 +1816,20 @@ static int _find_max_parallel_space_for_one_policy(struct alloc_handle *ah, stru
 				if (next_le >= spvs->le + spvs->len)
 					continue;
 
-				if (max_to_allocate + alloc_state->allocated > (spvs->le + spvs->len) * ah->area_multiple)
+				max_tmp = max_to_allocate +
+					alloc_state->allocated;
+
+				/*
+				 * Because a request that groups metadata and
+				 * data together will be split, we must adjust
+				 * the comparison accordingly.
+				 */
+				if (ah->alloc_and_split_meta)
+					max_tmp -= ah->log_len;
+				if (max_tmp > (spvs->le + spvs->len) * ah->area_multiple) {
 					max_to_allocate = (spvs->le + spvs->len) * ah->area_multiple - alloc_state->allocated;
+					max_to_allocate += ah->alloc_and_split_meta ? ah->log_len : 0;
+				}
 				parallel_pvs = &spvs->pvs;
 				break;
 			}
