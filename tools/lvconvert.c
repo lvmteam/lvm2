@@ -158,13 +158,15 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 	 * discarding it.
 	 */
 	if (arg_count(cmd, splitmirrors_ARG)) {
-		if (!arg_count(cmd, name_ARG)) {
+		if (!arg_count(cmd, name_ARG) &&
+		    !arg_count(cmd, trackchanges_ARG)) {
 			log_error("Please name the new logical volume using '--name'");
 			return 0;
 		}
 
 		lp->lv_split_name = arg_value(cmd, name_ARG);
-		if (!apply_lvname_restrictions(lp->lv_split_name))
+		if (lp->lv_split_name &&
+		    !apply_lvname_restrictions(lp->lv_split_name))
 			return_0;
 
 		lp->keep_mimages = 1;
@@ -1146,6 +1148,11 @@ static int _lvconvert_mirrors_aux(struct cmd_context *cmd,
 
 		/* Reduce number of mirrors */
 		if (lp->keep_mimages) {
+			if (arg_count(cmd, trackchanges_ARG)) {
+				log_error("--trackchanges is not available "
+					  "to 'mirror' segment type");
+				return 0;
+			}
 			if (!lv_split_mirror_images(lv, lp->lv_split_name,
 						    nmc, operable_pvs))
 				return 0;
@@ -1417,7 +1424,9 @@ static int lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *lp
 			return 0;
 		}
 
-		if (arg_count(cmd, splitmirrors_ARG))
+		if (arg_count(cmd, trackchanges_ARG))
+			return lv_raid_split_and_track(lv, lp->pvh);
+		else if (arg_count(cmd, splitmirrors_ARG))
 			return lv_raid_split(lv, lp->lv_split_name,
 					     image_count, lp->pvh);
 		else

@@ -1226,17 +1226,39 @@ int add_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 			if (!dm_tree_node_add_target_area(node, dev_name(seg_dev(seg, s)), NULL,
 				    (seg_pv(seg, s)->pe_start + (extent_size * seg_pe(seg, s)))))
 				return_0;
-		} else if (seg_type(seg, s) == AREA_LV) {
-			if (seg_is_raid(seg)) {
-				dlid = build_dm_uuid(dm->mem,
-						     seg_metalv(seg, s)->lvid.s,
-						     NULL);
-				if (!dlid)
+		} else if (seg_is_raid(seg)) {
+			/*
+			 * RAID can handle unassigned areas.  It simple puts
+			 * '- -' in for the metadata/data device pair.  This
+			 * is a valid way to indicate to the RAID target that
+			 * the device is missing.
+			 *
+			 * If an image is marked as VISIBLE_LV and !LVM_WRITE,
+			 * it means the device has temporarily been extracted
+			 * from the array.  It may come back at a future date,
+			 * so the bitmap must track differences.  Again, '- -'
+			 * is used in the CTR table.
+			 */
+			if ((seg_type(seg, s) == AREA_UNASSIGNED) ||
+			    ((seg_lv(seg, s)->status & VISIBLE_LV) &&
+			     !(seg_lv(seg, s)->status & LVM_WRITE))) {
+				/* One each for metadata area and data area */
+				if (!dm_tree_node_add_null_area(node, 0) ||
+				    !dm_tree_node_add_null_area(node, 0))
 					return_0;
-				if (!dm_tree_node_add_target_area(node, NULL, dlid,
-								  extent_size * seg_metale(seg, s)))
-					return_0;
+				continue;
 			}
+			if (!(dlid = build_dm_uuid(dm->mem, seg_metalv(seg, s)->lvid.s, NULL)))
+				return_0;
+			if (!dm_tree_node_add_target_area(node, NULL, dlid, extent_size * seg_metale(seg, s)))
+				return_0;
+
+			if (!(dlid = build_dm_uuid(dm->mem, seg_lv(seg, s)->lvid.s, NULL)))
+				return_0;
+			if (!dm_tree_node_add_target_area(node, NULL, dlid, extent_size * seg_le(seg, s)))
+				return_0;
+		} else if (seg_type(seg, s) == AREA_LV) {
+
 			if (!(dlid = build_dm_uuid(dm->mem, seg_lv(seg, s)->lvid.s, NULL)))
 				return_0;
 			if (!dm_tree_node_add_target_area(node, NULL, dlid, extent_size * seg_le(seg, s)))

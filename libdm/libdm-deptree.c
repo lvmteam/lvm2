@@ -1484,11 +1484,11 @@ static int _emit_areas_line(struct dm_task *dmt __attribute__((unused)),
 	unsigned log_parm_count;
 
 	dm_list_iterate_items(area, &seg->areas) {
-		if (!_build_dev_string(devbuf, sizeof(devbuf), area->dev_node))
-			return_0;
-
 		switch (seg->type) {
 		case SEG_REPLICATOR_DEV:
+			if (!_build_dev_string(devbuf, sizeof(devbuf), area->dev_node))
+				return_0;
+
 			EMIT_PARAMS(*pos, " %d 1 %s", area->rsite_index, devbuf);
 			if (first_time)
 				EMIT_PARAMS(*pos, " nolog 0");
@@ -1530,9 +1530,19 @@ static int _emit_areas_line(struct dm_task *dmt __attribute__((unused)),
 		case SEG_RAID6_ZR:
 		case SEG_RAID6_NR:
 		case SEG_RAID6_NC:
+			if (!area->dev_node) {
+				EMIT_PARAMS(*pos, " -");
+				break;
+			}
+			if (!_build_dev_string(devbuf, sizeof(devbuf), area->dev_node))
+				return_0;
+
 			EMIT_PARAMS(*pos, " %s", devbuf);
 			break;
 		default:
+			if (!_build_dev_string(devbuf, sizeof(devbuf), area->dev_node))
+				return_0;
+
 			EMIT_PARAMS(*pos, "%s%s %" PRIu64, first_time ? "" : " ",
 				    devbuf, area->offset);
 		}
@@ -2571,7 +2581,7 @@ int dm_tree_node_add_target_area(struct dm_tree_node *node,
 		if (!_link_tree_nodes(node, dev_node))
 			return_0;
 	} else {
-        	if (stat(dev_name, &info) < 0) {
+		if (stat(dev_name, &info) < 0) {
 			log_error("Device %s not found.", dev_name);
 			return 0;
 		}
@@ -2595,6 +2605,18 @@ int dm_tree_node_add_target_area(struct dm_tree_node *node,
 	seg = dm_list_item(dm_list_last(&node->props.segs), struct load_segment);
 
 	if (!_add_area(node, seg, dev_node, offset))
+		return_0;
+
+	return 1;
+}
+
+int dm_tree_node_add_null_area(struct dm_tree_node *node, uint64_t offset)
+{
+	struct load_segment *seg;
+
+	seg = dm_list_item(dm_list_last(&node->props.segs), struct load_segment);
+
+	if (!_add_area(node, seg, NULL, offset))
 		return_0;
 
 	return 1;

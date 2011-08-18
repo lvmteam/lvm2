@@ -516,6 +516,7 @@ int dm_tree_node_add_target_area(struct dm_tree_node *node,
 				    const char *dev_name,
 				    const char *dlid,
 				    uint64_t offset);
+int dm_tree_node_add_null_area(struct dm_tree_node *node, uint64_t offset);
 
 /*
  * Set readahead (in sectors) after loading the node.

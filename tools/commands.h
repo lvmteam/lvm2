@@ -114,6 +114,7 @@ xx(lvconvert,
    "\tLogicalVolume[Path] [PhysicalVolume[Path]...]\n\n"
 
    "lvconvert "
+   "[--splitmirrors Images --trackchanges]\n"
    "[--splitmirrors Images --name SplitLogicalVolumeName]\n"
    "\tLogicalVolume[Path] [SplittablePhysicalVolume[Path]...]\n\n"
 
@@ -139,7 +140,7 @@ xx(lvconvert,
 
    alloc_ARG, background_ARG, chunksize_ARG, corelog_ARG, interval_ARG,
    merge_ARG, mirrorlog_ARG, mirrors_ARG, name_ARG, noudevsync_ARG,
-   regionsize_ARG, repair_ARG, snapshot_ARG, splitmirrors_ARG,
+   regionsize_ARG, repair_ARG, snapshot_ARG, splitmirrors_ARG, trackchanges_ARG,
    stripes_long_ARG, stripesize_ARG, test_ARG,
    use_policies_ARG, yes_ARG, force_ARG, zero_ARG)
 

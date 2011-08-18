@@ -17,7 +17,7 @@ LogicalVolume[Path] [PhysicalVolume[Path][:PE[-PE]]...]
 
 .br
 .B lvconvert
-\-\-splitmirrors Images \-\-name SplitLogicalVolumeName
+\-\-splitmirrors Images [\-\-name SplitLogicalVolumeName] [\-\-trackchanges]
 .br
 MirrorLogicalVolume[Path] [SplittablePhysicalVolume[Path][:PE[-PE]]...]
 .br
@@ -114,7 +114,8 @@ or has rules that ignore the devices LVM2 creates.
 .I \-\-splitmirrors Images
 The number of redundant Images of a mirror to be split off and used
 to form a new logical volume.  A name must be supplied for the
-newly-split-off logical volume using the \-\-name argument.
+newly-split-off logical volume using the \-\-name argument, unless
+the \-\-trackchanges argument is given.
 
 .TP
 .I \-n Name
@@ -122,6 +123,15 @@ The name to apply to a logical volume which has been split off from
 a mirror logical volume.
 .br
 
+.TP
+.I \-\-trackchanges
+This argument is used along with \-\-splitmirrors when the intention
+is to use the split-off image temporarily in a read-only fashion.  Splitting
+off an image in this way allows it to be merged back into the mirror later
+- only resynchronizing those portions of the image that have changed since
+the split occurred.  This option is only available to the "raid1" segment
+type.
+.br
 
 .TP
 .I \-s, \-\-snapshot
