@@ -488,22 +488,9 @@ int lv_raid_change_image_count(struct logical_volume *lv,
 	}
 
 	/*
-	 * Bring extracted LVs into existance, so there are no
-	 * conflicts for the main RAID device's resume
+	 * Resume original LV
+	 * This also resumes all other sub-lvs (including the extracted)
 	 */
-	if (!dm_list_empty(&removal_list)) {
-		dm_list_iterate_items(lvl, &removal_list) {
-			/* If top RAID was EX, use EX */
-			if (lv_is_active_exclusive_locally(lv)) {
-				if (!activate_lv_excl(lv->vg->cmd, lvl->lv))
-					return_0;
-			} else {
-				if (!activate_lv(lv->vg->cmd, lvl->lv))
-					return_0;
-			}
-		}
-	}
-
 	if (!resume_lv(lv->vg->cmd, lv)) {
 		log_error("Failed to resume %s/%s after committing changes",
 			  lv->vg->name, lv->name);
@@ -513,6 +500,7 @@ int lv_raid_change_image_count(struct logical_volume *lv,
 	/*
 	 * Eliminate the extracted LVs
 	 */
+	sync_local_dev_names(lv->vg->cmd);
 	if (!dm_list_empty(&removal_list)) {
 		dm_list_iterate_items(lvl, &removal_list) {
 			if (!deactivate_lv(lv->vg->cmd, lvl->lv))
