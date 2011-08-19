@@ -1706,10 +1706,8 @@ static int _find_some_parallel_space(struct alloc_handle *ah, const struct alloc
 			if ((alloc_parms->alloc == ALLOC_ANYWHERE &&
 			    ix + ix_offset >= devices_needed + alloc_state->log_area_count_still_needed) ||
 			    (preferred_count == ix_offset &&
-			     (ix_offset == devices_needed + alloc_state->log_area_count_still_needed))) {
-				log_error("Breaking: preferred_count = %d, ix_offset = %d, devices_needed = %d", preferred_count, ix_offset, devices_needed);
+			     (ix_offset == devices_needed + alloc_state->log_area_count_still_needed)))
 				break;
-			}
 		}
 	} while ((alloc_parms->alloc == ALLOC_ANYWHERE && last_ix != ix && ix < devices_needed + alloc_state->log_area_count_still_needed) ||
 		/* With cling_to_alloced, if there were gaps in the preferred areas, have a second iteration */
