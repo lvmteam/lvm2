@@ -1541,28 +1541,28 @@ static void _report_needed_allocation_space(struct alloc_handle *ah,
 					    struct alloc_state *alloc_state)
 {
 	const char *metadata_type;
-	uint32_t p_areas_count, p_area_size;
+	uint32_t parallel_areas_count, parallel_area_size;
 	uint32_t metadata_count, metadata_size;
 
-	p_area_size = (ah->new_extents - alloc_state->allocated);
-	p_area_size /= ah->area_multiple;
-	p_area_size -= (ah->alloc_and_split_meta) ? ah->log_len : 0;
-	p_areas_count = ah->area_count + ah->parity_count;
+	parallel_area_size = (ah->new_extents - alloc_state->allocated) / ah->area_multiple -
+		      ((ah->alloc_and_split_meta) ? ah->log_len : 0);
+
+	parallel_areas_count = ah->area_count + ah->parity_count;
 
 	metadata_size = ah->log_len;
 	if (ah->alloc_and_split_meta) {
 		metadata_type = "RAID metadata area";
-		metadata_count = p_areas_count;
+		metadata_count = parallel_areas_count;
 	} else {
 		metadata_type = "mirror log";
 		metadata_count = alloc_state->log_area_count_still_needed;
 	}
 
 	log_debug("Still need %" PRIu32 " total extents:",
-		p_area_size * p_areas_count + metadata_size * metadata_count);
+		parallel_area_size * parallel_areas_count + metadata_size * metadata_count);
 	log_debug("  %" PRIu32 " (%" PRIu32 " data/%" PRIu32
 		  " parity) parallel areas of %" PRIu32 " extents each",
-		  p_areas_count, ah->area_count, ah->parity_count, p_area_size);
+		  parallel_areas_count, ah->area_count, ah->parity_count, parallel_area_size);
 	log_debug("  %" PRIu32 " %ss of %" PRIu32 " extents each",
 		  metadata_count, metadata_type, metadata_size);
 }
