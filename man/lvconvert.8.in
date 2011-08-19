@@ -125,12 +125,12 @@ a mirror logical volume.
 
 .TP
 .I \-\-trackchanges
-This argument is used along with \-\-splitmirrors when the intention
-is to use the split-off image temporarily in a read-only fashion.  Splitting
-off an image in this way allows it to be merged back into the mirror later
-- only resynchronizing those portions of the image that have changed since
-the split occurred.  This option is only available to the "raid1" segment
-type.
+Used with \-\-splitmirrors on a raid1 device, this tracks changes so that the
+read-only detached image can be merged efficiently back into the mirror later.
+Only the regions of the detatched device where the data changed get resynchronized.
+
+Please note that this feature is only supported with the new md-based mirror
+implementation and not with the original device-mapper mirror implementation.
 .br
 
 .TP
@@ -146,7 +146,7 @@ Controls zeroing of the first KB of data in the snapshot.
 If the volume is read-only the snapshot will not be zeroed.
 .TP
 .I \-\-merge
-Merges a snapshot into its origin volume or merges a RAID1 image that has
+Merges a snapshot into its origin volume or merges a raid1 image that has
 been split from its mirror with \-\-trackchanges back into its mirror.
 
 To check if your kernel supports the snapshot merge feature, look
@@ -163,7 +163,6 @@ merge finishes, the merged snapshot is removed.  Multiple snapshots may
 be specified on the commandline or a @tag may be used to specify
 multiple snapshots be merged to their respective origin.
 .br
-
 
 .TP
 .I \-\-repair
@@ -238,20 +237,20 @@ volume will be linear.
 .br
 "lvconvert --splitmirrors 1 --trackchanges vg00/lv_raid1"
 .br
-A mirrored logical volume that uses the "raid1" segment type (i.e. created
-with '--type raid1') can use the '\-\-trackchanges' argument when splitting
-off an image.  The split-off image cannot be given a new name, as it is still
-part of the original RAID1 logical volume in the sense that changes between
-the two are being tracked for future integration upon merging.  The device that
-results from the split will be read-only and will be named similarly to the
-original - in this case "lv_raid1_rimage_N", where 'N' is the index of the
-image that has been split.
+A mirrored logical volume created with --type raid1 can use the '\-\-trackchanges' argument when splitting
+off an image.  
+
+Detach one image from the mirrored logical volume lv_raid1 as a separate
+read-only device and track the changes made to the mirror while it is detached.
+The split-off device has a name of the form lv_raid1_rimage_N, where N is
+a number, and it cannot be renamed.
 
 .br
 "lvconvert --merge vg00/lv_raid1_rimage_1"
 .br
-Merge an image back into the mirror it was split from when the '\-\-trackchanges'
-argument was used.
+Merge an image that was detached temporarily from its mirror with 
+the '\-\-trackchanges' argument back into its original mirror and
+bring its contents back up-to-date.
 
 .SH SEE ALSO
 .BR lvm (8),
