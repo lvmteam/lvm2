@@ -1,5 +1,6 @@
 Version 1.02.67 - 
 ==================================
+  Add dm_tree_node_add_null_area for temporarily-missing raid devs tracked.
 
 Version 1.02.66 - 12th August 2011
 ==================================
