@@ -1,4 +1,4 @@
-Version 2.02.88 - 
+Version 2.02.88 - 19th August 2011
 ==================================
   Add lvconvert --merge support for raid1 devices split with --trackchanges.
   Support lvconvert of -m1 raid1 devices to a higher number.
