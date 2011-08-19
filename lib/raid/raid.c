@@ -43,9 +43,9 @@ static int _raid_text_import_area_count(const struct config_node *sn,
 	return 1;
 }
 
-static int
-_raid_text_import_areas(struct lv_segment *seg, const struct config_node *sn,
-			const struct config_node *cn)
+static int _raid_text_import_areas(struct lv_segment *seg,
+				   const struct config_node *sn,
+				   const struct config_node *cn)
 {
 	unsigned int s;
 	const struct config_value *cv;
@@ -100,9 +100,9 @@ _raid_text_import_areas(struct lv_segment *seg, const struct config_node *sn,
 	return 1;
 }
 
-static int
-_raid_text_import(struct lv_segment *seg, const struct config_node *sn,
-		  struct dm_hash_table *pv_hash)
+static int _raid_text_import(struct lv_segment *seg,
+			     const struct config_node *sn,
+			     struct dm_hash_table *pv_hash)
 {
 	const struct config_node *cn;
 
@@ -139,8 +139,7 @@ _raid_text_import(struct lv_segment *seg, const struct config_node *sn,
 	return 1;
 }
 
-static int
-_raid_text_export(const struct lv_segment *seg, struct formatter *f)
+static int _raid_text_export(const struct lv_segment *seg, struct formatter *f)
 {
 	outf(f, "device_count = %u", seg->area_count);
 	if (seg->region_size)
@@ -151,15 +150,14 @@ _raid_text_export(const struct lv_segment *seg, struct formatter *f)
 	return out_areas(f, seg, "raid");
 }
 
-static int
-_raid_add_target_line(struct dev_manager *dm __attribute__((unused)),
-		      struct dm_pool *mem __attribute__((unused)),
-		      struct cmd_context *cmd __attribute__((unused)),
-		      void **target_state __attribute__((unused)),
-		      struct lv_segment *seg,
-		      const struct lv_activate_opts *laopts __attribute__((unused)),
-		      struct dm_tree_node *node, uint64_t len,
-		      uint32_t *pvmove_mirror_count __attribute__((unused)))
+static int _raid_add_target_line(struct dev_manager *dm __attribute__((unused)),
+				 struct dm_pool *mem __attribute__((unused)),
+				 struct cmd_context *cmd __attribute__((unused)),
+				 void **target_state __attribute__((unused)),
+				 struct lv_segment *seg,
+				 const struct lv_activate_opts *laopts __attribute__((unused)),
+				 struct dm_tree_node *node, uint64_t len,
+				 uint32_t *pvmove_mirror_count __attribute__((unused)))
 {
 	uint32_t s;
 	uint64_t rebuilds = 0;
@@ -245,10 +243,9 @@ static int _raid_target_percent(void **target_state,
 }
 
 
-static int
-_raid_target_present(struct cmd_context *cmd,
-		     const struct lv_segment *seg __attribute__((unused)),
-		     unsigned *attributes __attribute__((unused)))
+static int _raid_target_present(struct cmd_context *cmd,
+				const struct lv_segment *seg __attribute__((unused)),
+				unsigned *attributes __attribute__((unused)))
 {
 	static int _raid_checked = 0;
 	static int _raid_present = 0;
@@ -261,10 +258,9 @@ _raid_target_present(struct cmd_context *cmd,
 	return _raid_present;
 }
 
-static int
-_raid_modules_needed(struct dm_pool *mem,
-		     const struct lv_segment *seg __attribute__((unused)),
-		     struct dm_list *modules)
+static int _raid_modules_needed(struct dm_pool *mem,
+				const struct lv_segment *seg __attribute__((unused)),
+				struct dm_list *modules)
 {
 	if (!str_list_add(mem, modules, "raid")) {
 		log_error("raid module string list allocation failed");
