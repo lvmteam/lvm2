@@ -542,8 +542,8 @@ int dm_check_version(void)
 int dm_cookie_supported(void)
 {
 	return (dm_check_version() &&
-	        _dm_version >= 4 &&
-	        _dm_version_minor >= 15);
+		_dm_version >= 4 &&
+		_dm_version_minor >= 15);
 }
 
 static int dm_inactive_supported(void)
@@ -647,12 +647,12 @@ int dm_task_get_info(struct dm_task *dmt, struct dm_info *info)
 }
 
 uint32_t dm_task_get_read_ahead(const struct dm_task *dmt, uint32_t *read_ahead)
-{              
+{
 	const char *dev_name;
 
 	*read_ahead = 0;
 
-        if (!dmt->dmi.v4 || !(dmt->dmi.v4->flags & DM_EXISTS_FLAG))
+	if (!dmt->dmi.v4 || !(dmt->dmi.v4->flags & DM_EXISTS_FLAG))
 		return 0;
 
 	if (*dmt->dmi.v4->name)
@@ -1336,7 +1336,7 @@ static int _create_and_load_v4(struct dm_task *dmt)
 		if (!dm_task_set_cookie(dmt, &cookie,
 					(dmt->event_nr & DM_UDEV_FLAGS_MASK) >>
 					DM_UDEV_FLAGS_SHIFT))
-                        stack; /* keep going */
+			stack; /* keep going */
 	}
 
 	if (!dm_task_run(dmt))
@@ -1492,8 +1492,8 @@ static int _check_children_not_suspended_v4(struct dm_task *dmt, uint64_t device
 		goto out;
 	}
 
-        if (!(deps = dm_task_get_deps(task)))
-                goto out;
+	if (!(deps = dm_task_get_deps(task)))
+		goto out;
 
 	for (i = 0; i < deps->count; i++) {
 		/* Only recurse with dm devices */
@@ -1707,15 +1707,15 @@ int dm_task_run(struct dm_task *dmt)
 			  "are known to be suspended: "
 			  "%s%s%s %s%.0d%s%.0d%s%s",
 			  suspended_counter,
-	                  dmt->dev_name ? : "",
-	                  dmt->uuid ? " UUID " : "",
+			  dmt->dev_name ? : "",
+			  dmt->uuid ? " UUID " : "",
 			  dmt->uuid ? : "",
-	                  dmt->major > 0 ? "(" : "",
-	                  dmt->major > 0 ? dmt->major : 0,
-	                  dmt->major > 0 ? ":" : "",
-	                  dmt->minor > 0 ? dmt->minor : 0,
-	                  dmt->major > 0 && dmt->minor == 0 ? "0" : "",
-	                  dmt->major > 0 ? ") " : "");
+			  dmt->major > 0 ? "(" : "",
+			  dmt->major > 0 ? dmt->major : 0,
+			  dmt->major > 0 ? ":" : "",
+			  dmt->minor > 0 ? dmt->minor : 0,
+			  dmt->major > 0 && dmt->minor == 0 ? "0" : "",
+			  dmt->major > 0 ? ") " : "");
 
 	/* FIXME Detect and warn if cookie set but should not be. */
 repeat_ioctl:

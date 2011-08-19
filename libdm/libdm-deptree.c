@@ -150,7 +150,7 @@ struct load_segment {
 	struct dm_tree_node *replicator;/* Replicator-dev */
 	uint64_t rdevice_index;		/* Replicator-dev */
 
-	uint64_t rebuilds;              /* raid */
+	uint64_t rebuilds;	      /* raid */
 };
 
 /* Per-device properties */
@@ -194,12 +194,12 @@ struct dm_tree_link {
 struct dm_tree_node {
 	struct dm_tree *dtree;
 
-        const char *name;
-        const char *uuid;
-        struct dm_info info;
+	const char *name;
+	const char *uuid;
+	struct dm_info info;
 
-        struct dm_list uses;       	/* Nodes this node uses */
-        struct dm_list used_by;    	/* Nodes that use this node */
+	struct dm_list uses;       	/* Nodes this node uses */
+	struct dm_list used_by;    	/* Nodes that use this node */
 
 	int activation_priority;	/* 0 gets activated first */
 
@@ -1038,7 +1038,7 @@ static int _rename_node(const char *old_name, const char *new_name, uint32_t maj
 	}
 
 	if (!dm_task_set_newname(dmt, new_name))
-                goto_out;
+		goto_out;
 
 	if (!dm_task_no_open_count(dmt))
 		log_error("Failed to disable open_count");
@@ -1450,10 +1450,10 @@ out:
 static int _build_dev_string(char *devbuf, size_t bufsize, struct dm_tree_node *node)
 {
 	if (!dm_format_dev(devbuf, bufsize, node->info.major, node->info.minor)) {
-                log_error("Failed to format %s device number for %s as dm "
-                          "target (%u,%u)",
-                          node->name, node->uuid, node->info.major, node->info.minor);
-                return 0;
+		log_error("Failed to format %s device number for %s as dm "
+			  "target (%u,%u)",
+			  node->name, node->uuid, node->info.major, node->info.minor);
+		return 0;
 	}
 
 	return 1;
@@ -2132,8 +2132,8 @@ static struct load_segment *_add_segment(struct dm_tree_node *dnode, unsigned ty
 }
 
 int dm_tree_node_add_snapshot_origin_target(struct dm_tree_node *dnode,
-                                               uint64_t size,
-                                               const char *origin_uuid)
+					       uint64_t size,
+					       const char *origin_uuid)
 {
 	struct load_segment *seg;
 	struct dm_tree_node *origin_node;
@@ -2238,7 +2238,7 @@ int dm_tree_node_add_snapshot_merge_target(struct dm_tree_node *node,
 }
 
 int dm_tree_node_add_error_target(struct dm_tree_node *node,
-                                     uint64_t size)
+				     uint64_t size)
 {
 	if (!_add_segment(node, SEG_ERROR, size))
 		return_0;
@@ -2247,7 +2247,7 @@ int dm_tree_node_add_error_target(struct dm_tree_node *node,
 }
 
 int dm_tree_node_add_zero_target(struct dm_tree_node *node,
-                                    uint64_t size)
+				    uint64_t size)
 {
 	if (!_add_segment(node, SEG_ZERO, size))
 		return_0;
@@ -2256,7 +2256,7 @@ int dm_tree_node_add_zero_target(struct dm_tree_node *node,
 }
 
 int dm_tree_node_add_linear_target(struct dm_tree_node *node,
-                                      uint64_t size)
+				      uint64_t size)
 {
 	if (!_add_segment(node, SEG_LINEAR, size))
 		return_0;
@@ -2265,8 +2265,8 @@ int dm_tree_node_add_linear_target(struct dm_tree_node *node,
 }
 
 int dm_tree_node_add_striped_target(struct dm_tree_node *node,
-                                       uint64_t size,
-                                       uint32_t stripe_size)
+				       uint64_t size,
+				       uint32_t stripe_size)
 {
 	struct load_segment *seg;
 
@@ -2353,7 +2353,7 @@ int dm_tree_node_add_mirror_target_log(struct dm_tree_node *node,
 }
 
 int dm_tree_node_add_mirror_target(struct dm_tree_node *node,
-                                      uint64_t size)
+				      uint64_t size)
 {
 	if (!_add_segment(node, SEG_MIRRORED, size))
 		return_0;
@@ -2573,9 +2573,9 @@ static int _add_area(struct dm_tree_node *node, struct load_segment *seg, struct
 }
 
 int dm_tree_node_add_target_area(struct dm_tree_node *node,
-                                    const char *dev_name,
-                                    const char *uuid,
-                                    uint64_t offset)
+				    const char *dev_name,
+				    const char *uuid,
+				    uint64_t offset)
 {
 	struct load_segment *seg;
 	struct stat info;
@@ -2599,7 +2599,7 @@ int dm_tree_node_add_target_area(struct dm_tree_node *node,
 			return 0;
 		}
 
-        	if (!S_ISBLK(info.st_mode)) {
+		if (!S_ISBLK(info.st_mode)) {
 			log_error("Device %s is not a block device.", dev_name);
 			return 0;
 		}
