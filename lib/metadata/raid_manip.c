@@ -220,7 +220,7 @@ static int _clear_lv(struct logical_volume *lv)
 		    lv->vg->name, lv->name);
 	/*
 	 * Rather than wiping lv->size, we can simply
-	 * wipe '1' to remove the superblock of any previous
+	 * wipe the first sector to remove the superblock of any previous
 	 * RAID devices.  It is much quicker.
 	 */
 	if (!set_lv(lv->vg->cmd, lv, 1, 0)) {
@@ -572,7 +572,7 @@ to be left for these sub-lvs.
 	return 1;
 
 fail:
-	/* Cleanly remove newly allocated LVs that failed insertion attempt */
+	/* Cleanly remove newly-allocated LVs that failed insertion attempt */
 
 	dm_list_iterate_items(lvl, &meta_lvs)
 		if (!lv_remove(lvl->lv))
