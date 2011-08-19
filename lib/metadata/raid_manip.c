@@ -51,7 +51,7 @@ static int _activate_sublv_preserving_excl(struct logical_volume *top_lv,
 }
 
 /*
- * lv_is_on_pv
+ * _lv_is_on_pv
  * @lv:
  * @pv:
  *
@@ -65,7 +65,7 @@ static int _activate_sublv_preserving_excl(struct logical_volume *top_lv,
  * and be put in lv_manip.c.  'for_each_sub_lv' does not yet allow us to
  * short-circuit execution or pass back the values we need yet though...
  */
-static int lv_is_on_pv(struct logical_volume *lv, struct physical_volume *pv)
+static int _lv_is_on_pv(struct logical_volume *lv, struct physical_volume *pv)
 {
 	uint32_t s;
 	struct physical_volume *pv2;
@@ -79,7 +79,7 @@ static int lv_is_on_pv(struct logical_volume *lv, struct physical_volume *pv)
 		return 0;
 
 	/* Check mirror log */
-	if (lv_is_on_pv(seg->log_lv, pv))
+	if (_lv_is_on_pv(seg->log_lv, pv))
 		return 1;
 
 	/* Check stack of LVs */
@@ -95,14 +95,14 @@ static int lv_is_on_pv(struct logical_volume *lv, struct physical_volume *pv)
 			}
 
 			if ((seg_type(seg, s) == AREA_LV) &&
-			    lv_is_on_pv(seg_lv(seg, s), pv))
+			    _lv_is_on_pv(seg_lv(seg, s), pv))
 				return 1;
 
 			if (!seg_is_raid(seg))
 				continue;
 
 			/* This is RAID, so we know the meta_area is AREA_LV */
-			if (lv_is_on_pv(seg_metalv(seg, s), pv))
+			if (_lv_is_on_pv(seg_metalv(seg, s), pv))
 				return 1;
 		}
 	}
@@ -110,12 +110,12 @@ static int lv_is_on_pv(struct logical_volume *lv, struct physical_volume *pv)
 	return 0;
 }
 
-static int lv_is_on_pvs(struct logical_volume *lv, struct dm_list *pvs)
+static int _lv_is_on_pvs(struct logical_volume *lv, struct dm_list *pvs)
 {
 	struct pv_list *pvl;
 
 	dm_list_iterate_items(pvl, pvs)
-		if (lv_is_on_pv(lv, pvl->pv)) {
+		if (_lv_is_on_pv(lv, pvl->pv)) {
 			log_debug("%s is on %s", lv->name,
 				  pv_dev_name(pvl->pv));
 			return 1;
@@ -125,7 +125,7 @@ static int lv_is_on_pvs(struct logical_volume *lv, struct dm_list *pvs)
 	return 0;
 }
 
-static int raid_in_sync(struct logical_volume *lv)
+static int _raid_in_sync(struct logical_volume *lv)
 {
 	percent_t sync_percent;
 
@@ -139,7 +139,7 @@ static int raid_in_sync(struct logical_volume *lv)
 }
 
 /*
- * raid_remove_top_layer
+ * _raid_remove_top_layer
  * @lv
  * @removal_list
  *
@@ -149,8 +149,8 @@ static int raid_in_sync(struct logical_volume *lv)
  *
  * Returns: 1 on succes, 0 on failure
  */
-static int raid_remove_top_layer(struct logical_volume *lv,
-				 struct dm_list *removal_list)
+static int _raid_remove_top_layer(struct logical_volume *lv,
+				  struct dm_list *removal_list)
 {
 	struct lv_list *lvl_array, *lvl;
 	struct lv_segment *seg = first_seg(lv);
@@ -196,7 +196,7 @@ static int raid_remove_top_layer(struct logical_volume *lv,
 }
 
 /*
- * clear_lv
+ * _clear_lv
  * @lv
  *
  * If LV is active:
@@ -206,7 +206,7 @@ static int raid_remove_top_layer(struct logical_volume *lv,
  *
  * Returns: 1 on success, 0 on failure
  */
-static int clear_lv(struct logical_volume *lv)
+static int _clear_lv(struct logical_volume *lv)
 {
 	int was_active = lv_is_active(lv);
 
@@ -237,7 +237,7 @@ static int clear_lv(struct logical_volume *lv)
 }
 
 /* Makes on-disk metadata changes */
-static int clear_lvs(struct dm_list *lv_list)
+static int _clear_lvs(struct dm_list *lv_list)
 {
 	struct lv_list *lvl;
 	struct volume_group *vg = NULL;
@@ -264,7 +264,7 @@ static int clear_lvs(struct dm_list *lv_list)
 		return_0;
 
 	dm_list_iterate_items(lvl, lv_list)
-		if (!clear_lv(lvl->lv))
+		if (!_clear_lv(lvl->lv))
 			return 0;
 
 	return 1;
@@ -452,8 +452,8 @@ static int _alloc_image_components(struct logical_volume *lv,
 	return 1;
 }
 
-static int raid_add_images(struct logical_volume *lv,
-			   uint32_t new_count, struct dm_list *pvs)
+static int _raid_add_images(struct logical_volume *lv,
+			    uint32_t new_count, struct dm_list *pvs)
 {
 	uint32_t s;
 	uint32_t old_count = lv_raid_image_count(lv);
@@ -479,7 +479,7 @@ static int raid_add_images(struct logical_volume *lv,
 	}
 
 	/* Metadata LVs must be cleared before being added to the array */
-	if (!clear_lvs(&meta_lvs))
+	if (!_clear_lvs(&meta_lvs))
 		goto fail;
 
 /*
@@ -650,7 +650,7 @@ static int _extract_image_components(struct lv_segment *seg, uint32_t idx,
 }
 
 /*
- * raid_extract_images
+ * _raid_extract_images
  * @lv
  * @new_count:  The absolute count of images (e.g. '2' for a 2-way mirror)
  * @target_pvs:  The list of PVs that are candidates for removal
@@ -666,10 +666,10 @@ static int _extract_image_components(struct lv_segment *seg, uint32_t idx,
  *
  * Returns: 1 on success, 0 on failure
  */
-static int raid_extract_images(struct logical_volume *lv, uint32_t new_count,
-			       struct dm_list *target_pvs, int shift,
-			       struct dm_list *extracted_meta_lvs,
-			       struct dm_list *extracted_data_lvs)
+static int _raid_extract_images(struct logical_volume *lv, uint32_t new_count,
+			        struct dm_list *target_pvs, int shift,
+			        struct dm_list *extracted_meta_lvs,
+			        struct dm_list *extracted_data_lvs)
 {
 	int s, extract, lvl_idx = 0;
 	struct lv_list *lvl_array;
@@ -687,10 +687,10 @@ static int raid_extract_images(struct logical_volume *lv, uint32_t new_count,
 		return_0;
 
 	for (s = seg->area_count - 1; (s >= 0) && extract; s--) {
-		if (!lv_is_on_pvs(seg_lv(seg, s), target_pvs) ||
-		    !lv_is_on_pvs(seg_metalv(seg, s), target_pvs))
+		if (!_lv_is_on_pvs(seg_lv(seg, s), target_pvs) ||
+		    !_lv_is_on_pvs(seg_metalv(seg, s), target_pvs))
 			continue;
-		if (!raid_in_sync(lv) &&
+		if (!_raid_in_sync(lv) &&
 		    (!seg_is_mirrored(seg) || (s == 0))) {
 			log_error("Unable to extract %sRAID image"
 				  " while RAID array is not in-sync",
@@ -724,15 +724,15 @@ static int raid_extract_images(struct logical_volume *lv, uint32_t new_count,
 	return 1;
 }
 
-static int raid_remove_images(struct logical_volume *lv,
-			      uint32_t new_count, struct dm_list *pvs)
+static int _raid_remove_images(struct logical_volume *lv,
+			       uint32_t new_count, struct dm_list *pvs)
 {
 	struct dm_list removal_list;
 	struct lv_list *lvl;
 
 	dm_list_init(&removal_list);
 
-	if (!raid_extract_images(lv, new_count, pvs, 1,
+	if (!_raid_extract_images(lv, new_count, pvs, 1,
 				 &removal_list, &removal_list)) {
 		log_error("Failed to extract images from %s/%s",
 			  lv->vg->name, lv->name);
@@ -740,7 +740,7 @@ static int raid_remove_images(struct logical_volume *lv,
 	}
 
 	/* Convert to linear? */
-	if ((new_count == 1) && !raid_remove_top_layer(lv, &removal_list)) {
+	if ((new_count == 1) && !_raid_remove_top_layer(lv, &removal_list)) {
 		log_error("Failed to remove RAID layer after linear conversion");
 		return 0;
 	}
@@ -824,9 +824,9 @@ int lv_raid_change_image_count(struct logical_volume *lv,
 	}
 
 	if (old_count > new_count)
-		return raid_remove_images(lv, new_count, pvs);
+		return _raid_remove_images(lv, new_count, pvs);
 
-	return raid_add_images(lv, new_count, pvs);
+	return _raid_add_images(lv, new_count, pvs);
 }
 
 int lv_raid_split(struct logical_volume *lv, const char *split_name,
@@ -859,13 +859,13 @@ int lv_raid_split(struct logical_volume *lv, const char *split_name,
 		return 0;
 	}
 
-	if (!raid_in_sync(lv)) {
+	if (!_raid_in_sync(lv)) {
 		log_error("Unable to split %s/%s while it is not in-sync.",
 			  lv->vg->name, lv->name);
 		return 0;
 	}
 
-	if (!raid_extract_images(lv, new_count, splittable_pvs, 1,
+	if (!_raid_extract_images(lv, new_count, splittable_pvs, 1,
 				 &removal_list, &data_list)) {
 		log_error("Failed to extract images from %s/%s",
 			  lv->vg->name, lv->name);
@@ -873,7 +873,7 @@ int lv_raid_split(struct logical_volume *lv, const char *split_name,
 	}
 
 	/* Convert to linear? */
-	if ((new_count == 1) && !raid_remove_top_layer(lv, &removal_list)) {
+	if ((new_count == 1) && !_raid_remove_top_layer(lv, &removal_list)) {
 		log_error("Failed to remove RAID layer after linear conversion");
 		return 0;
 	}
@@ -961,14 +961,14 @@ int lv_raid_split_and_track(struct logical_volume *lv,
 		return 0;
 	}
 
-	if (!raid_in_sync(lv)) {
+	if (!_raid_in_sync(lv)) {
 		log_error("Unable to split image from %s/%s while not in-sync",
 			  lv->vg->name, lv->name);
 		return 0;
 	}
 
 	for (s = seg->area_count - 1; s >= 0; s--) {
-		if (!lv_is_on_pvs(seg_lv(seg, s), splittable_pvs))
+		if (!_lv_is_on_pvs(seg_lv(seg, s), splittable_pvs))
 			continue;
 		lv_set_visible(seg_lv(seg, s));
 		seg_lv(seg, s)->status &= ~LVM_WRITE;

@@ -1,10 +1,10 @@
 Version 2.02.88 - 
 ==================================
-  Add --merge support for RAID1 images that were split with --trackchanges
-  Add support for m-way to n-way up-convert in RAID1 (no linear to n-way yet)
-  Add --trackchanges support to --splitmirrors option for RAID1
-  Add --splitmirrors support for RAID1 (1 image only)
-  When down-converting RAID1, don't activate sub-lvs between suspend/resume
+  Add lvconvert --merge support for raid1 devices split with --trackchanges.
+  Support lvconvert of -m1 raid1 devices to a higher number.
+  Add --trackchanges support to lvconvert --splitmirrors option for raid1.
+  Support splitting off a single raid1 rimage in lvconvert --splitmirrors.
+  Use sync_local_dev_names when reducing number of raid rimages in lvconvert.
   Add -V as short form of --virtualsize in lvcreate.
   Fix make clean not to remove Makefile.  (2.02.87)
 
