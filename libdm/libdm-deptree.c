@@ -2629,6 +2629,22 @@ int dm_tree_node_add_null_area(struct dm_tree_node *node, uint64_t offset)
 
 	seg = dm_list_item(dm_list_last(&node->props.segs), struct load_segment);
 
+	switch (seg->type) {
+	case SEG_RAID1:
+	case SEG_RAID4:
+	case SEG_RAID5_LA:
+	case SEG_RAID5_RA:
+	case SEG_RAID5_LS:
+	case SEG_RAID5_RS:
+	case SEG_RAID6_ZR:
+	case SEG_RAID6_NR:
+	case SEG_RAID6_NC:
+		break;
+	default:
+		log_error("dm_tree_node_add_null_area() called on an unsupported segment type");
+		return 0;
+	}
+
 	if (!_add_area(node, seg, NULL, offset))
 		return_0;
 
