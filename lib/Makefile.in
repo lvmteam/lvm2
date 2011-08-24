@@ -40,6 +40,10 @@ ifeq ("@REPLICATORS@", "shared")
   SUBDIRS += replicator
 endif
 
+ifeq ("@THIN@", "shared")
+  SUBDIRS += thin
+endif
+
 SOURCES =\
 	activate/activate.c \
 	cache/lvmcache.c \
@@ -153,6 +157,10 @@ ifeq ("@REPLICATORS@", "internal")
   SOURCES += replicator/replicator.c
 endif
 
+ifeq ("@THIN@", "internal")
+  SOURCES += thin/thin.c
+endif
+
 ifeq ("@DEVMAPPER@", "yes")
   SOURCES +=\
 	activate/dev_manager.c \
@@ -181,6 +189,7 @@ ifeq ($(MAKECMDGOALS),distclean)
 	mirror \
 	raid \
 	replicator \
+	thin \
 	locking
 endif
 
