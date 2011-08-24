@@ -754,10 +754,10 @@ static struct segtype_handler _replicator_dev_ops = {
 };
 
 #ifdef REPLICATOR_INTERNAL
-int init_replicator_segtype(struct segtype_library *seglib)
+int init_replicator_segtype(struct cmd_context *cmd, struct segtype_library *seglib)
 #else /* Shared */
-int init_multiple_segtype(struct segtype_library *seglib);
-int init_multiple_segtype(struct segtype_library *seglib)
+int init_multiple_segtype(struct cmd_context *cmd, struct segtype_library *seglib);
+int init_multiple_segtype(struct cmd_context *cmd, struct segtype_library *seglib)
 #endif
 {
 	struct segment_type *segtype;

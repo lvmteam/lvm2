@@ -994,24 +994,17 @@ static int _init_segtypes(struct cmd_context *cmd)
 {
 	int i;
 	struct segment_type *segtype;
-	struct segtype_library seglib = { .cmd = cmd };
+	struct segtype_library seglib = { .cmd = cmd, .lib = NULL };
 	struct segment_type *(*init_segtype_array[])(struct cmd_context *cmd) = {
 		init_striped_segtype,
 		init_zero_segtype,
 		init_error_segtype,
 		init_free_segtype,
-#ifdef RAID_INTERNAL
-		init_raid1_segtype,
-		init_raid4_segtype,
-		init_raid5_segtype,
-		init_raid5_la_segtype,
-		init_raid5_ra_segtype,
-		init_raid5_ls_segtype,
-		init_raid5_rs_segtype,
-		init_raid6_segtype,
-		init_raid6_zr_segtype,
-		init_raid6_nr_segtype,
-		init_raid6_nc_segtype,
+#ifdef SNAPSHOT_INTERNAL
+		init_snapshot_segtype,
+#endif
+#ifdef MIRRORED_INTERNAL
+		init_mirrored_segtype,
 #endif
 		NULL
 	};
@@ -1027,22 +1020,13 @@ static int _init_segtypes(struct cmd_context *cmd)
 		dm_list_add(&cmd->segtypes, &segtype->list);
 	}
 
-#ifdef SNAPSHOT_INTERNAL
-	if (!(segtype = init_snapshot_segtype(cmd)))
-		return 0;
-	segtype->library = NULL;
-	dm_list_add(&cmd->segtypes, &segtype->list);
-#endif
-
-#ifdef MIRRORED_INTERNAL
-	if (!(segtype = init_mirrored_segtype(cmd)))
-		return 0;
-	segtype->library = NULL;
-	dm_list_add(&cmd->segtypes, &segtype->list);
-#endif
-
 #ifdef REPLICATOR_INTERNAL
-	if (!init_replicator_segtype(&seglib))
+	if (!init_replicator_segtype(cmd, &seglib))
+		return 0;
+#endif
+
+#ifdef RAID_INTERNAL
+	if (!init_raid_segtypes(cmd, &seglib))
 		return 0;
 #endif
 

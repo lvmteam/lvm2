@@ -130,21 +130,11 @@ struct segment_type *init_free_segtype(struct cmd_context *cmd);
 struct segment_type *init_unknown_segtype(struct cmd_context *cmd,
 					  const char *name);
 #ifdef RAID_INTERNAL
-struct segment_type *init_raid1_segtype(struct cmd_context *cmd);
-struct segment_type *init_raid4_segtype(struct cmd_context *cmd);
-struct segment_type *init_raid5_segtype(struct cmd_context *cmd);
-struct segment_type *init_raid5_la_segtype(struct cmd_context *cmd);
-struct segment_type *init_raid5_ra_segtype(struct cmd_context *cmd);
-struct segment_type *init_raid5_ls_segtype(struct cmd_context *cmd);
-struct segment_type *init_raid5_rs_segtype(struct cmd_context *cmd);
-struct segment_type *init_raid6_segtype(struct cmd_context *cmd);
-struct segment_type *init_raid6_zr_segtype(struct cmd_context *cmd);
-struct segment_type *init_raid6_nr_segtype(struct cmd_context *cmd);
-struct segment_type *init_raid6_nc_segtype(struct cmd_context *cmd);
+int init_raid_segtypes(struct cmd_context *cmd, struct segtype_library *seglib);
 #endif
 
 #ifdef REPLICATOR_INTERNAL
-int init_replicator_segtype(struct segtype_library *seglib);
+int init_replicator_segtype(struct cmd_context *cmd, struct segtype_library *seglib);
 #endif
 
 #ifdef SNAPSHOT_INTERNAL
