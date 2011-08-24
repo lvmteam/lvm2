@@ -378,6 +378,23 @@ case "$REPLICATORS" in
 esac
 
 ################################################################################
+dnl -- thin provisioning
+AC_MSG_CHECKING(whether to include thin provisioning)
+AC_ARG_WITH(thin,
+	    AC_HELP_STRING([--with-thin=TYPE],
+			   [thin provisioning support: internal/shared/none
+			    [[TYPE=none]]]),
+	    THIN=$withval, THIN=none)
+AC_MSG_RESULT($THIN)
+
+case "$THIN" in
+  none|shared) ;;
+  internal) AC_DEFINE([THIN_INTERNAL], 1,
+		[Define to 1 to include built-in support for thin provisioning.]) ;;
+  *) AC_MSG_ERROR([--with-thin parameter invalid ($THIN)]) ;;
+esac
+
+################################################################################
 dnl -- Disable readline
 AC_MSG_CHECKING(whether to enable readline)
 AC_ARG_ENABLE([readline],
@@ -1351,6 +1368,7 @@ AC_SUBST(SNAPSHOTS)
 AC_SUBST(STATICDIR)
 AC_SUBST(STATIC_LINK)
 AC_SUBST(TESTING)
+AC_SUBST(THIN)
 AC_SUBST(UDEV_LIBS)
 AC_SUBST(UDEV_PC)
 AC_SUBST(UDEV_RULES)
@@ -1396,6 +1414,7 @@ lib/replicator/Makefile
 lib/misc/lvm-version.h
 lib/raid/Makefile
 lib/snapshot/Makefile
+lib/thin/Makefile
 libdm/Makefile
 libdm/libdevmapper.pc
 liblvm/Makefile
