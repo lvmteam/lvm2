@@ -40,6 +40,7 @@ struct dev_manager;
 #define SEG_REPLICATOR_DEV	0x00000200U
 #define SEG_RAID		0x00000400U
 #define SEG_THIN		0x00000800U
+#define SEG_THIN_POOL		0x00001000U
 #define SEG_UNKNOWN		0x80000000U
 
 #define seg_is_mirrored(seg)	((seg)->segtype->flags & SEG_AREAS_MIRRORED ? 1 : 0)
@@ -50,6 +51,7 @@ struct dev_manager;
 #define seg_is_virtual(seg)	((seg)->segtype->flags & SEG_VIRTUAL ? 1 : 0)
 #define seg_is_raid(seg)	((seg)->segtype->flags & SEG_RAID ? 1 : 0)
 #define seg_is_thin(seg)	((seg)->segtype->flags & SEG_THIN ? 1 : 0)
+#define seg_is_thin_pool(seg)	((seg)->segtype->flags & SEG_THIN_POOL ? 1 : 0)
 #define seg_can_split(seg)	((seg)->segtype->flags & SEG_CAN_SPLIT ? 1 : 0)
 #define seg_cannot_be_zeroed(seg) ((seg)->segtype->flags & SEG_CANNOT_BE_ZEROED ? 1 : 0)
 #define seg_monitored(seg)	((seg)->segtype->flags & SEG_MONITORED ? 1 : 0)
@@ -59,6 +61,7 @@ struct dev_manager;
 #define segtype_is_mirrored(segtype)	((segtype)->flags & SEG_AREAS_MIRRORED ? 1 : 0)
 #define segtype_is_raid(segtype)	((segtype)->flags & SEG_RAID ? 1 : 0)
 #define segtype_is_thin(segtype)	((segtype)->flags & SEG_THIN ? 1 : 0)
+#define segtype_is_thin_pool(segtype)	((segtype)->flags & SEG_THIN_POOL ? 1 : 0)
 #define segtype_is_virtual(segtype)	((segtype)->flags & SEG_VIRTUAL ? 1 : 0)
 
 struct segment_type {
@@ -137,6 +140,10 @@ int init_raid_segtypes(struct cmd_context *cmd, struct segtype_library *seglib);
 int init_replicator_segtype(struct cmd_context *cmd, struct segtype_library *seglib);
 #endif
 
+#ifdef THIN_INTERNAL
+int init_thin_segtypes(struct cmd_context *cmd, struct segtype_library *seglib);
+#endif
+
 #ifdef SNAPSHOT_INTERNAL
 struct segment_type *init_snapshot_segtype(struct cmd_context *cmd);
 #endif
@@ -147,10 +154,6 @@ struct segment_type *init_mirrored_segtype(struct cmd_context *cmd);
 
 #ifdef CRYPT_INTERNAL
 struct segment_type *init_crypt_segtype(struct cmd_context *cmd);
-#endif
-
-#ifdef THIN_INTERNAL
-struct segment_type *init_thin_segtype(struct cmd_context *cmd);
 #endif
 
 #endif
