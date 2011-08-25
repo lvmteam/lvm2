@@ -30,6 +30,22 @@
 /* Dm kernel module name for thin provisiong */
 #define THIN_MODULE "thin-pool"
 
+static const char *_thin_pool_name(const struct lv_segment *seg)
+{
+	return seg->segtype->name;
+}
+
+
+static int _thin_pool_text_import(struct lv_segment *seg, const struct config_node *sn,
+			struct dm_hash_table *pv_hash __attribute__((unused)))
+{
+	return 1;
+}
+
+static int _thin_pool_text_export(const struct lv_segment *seg, struct formatter *f)
+{
+	return 1;
+}
 
 static const char *_thin_name(const struct lv_segment *seg)
 {
@@ -67,7 +83,7 @@ static int _thin_target_present(struct cmd_context *cmd,
 	static int _present = 0;
 
 	if (!_checked) {
-		_present = target_present(cmd, "thin-pool", 1);
+		_present = target_present(cmd, THIN_MODULE, 1);
 		_checked = 1;
 	}
 
@@ -93,6 +109,14 @@ static void _thin_destroy(struct segment_type *segtype)
 	dm_free(segtype);
 }
 
+static struct segtype_handler _thin_pool_ops = {
+	.name = _thin_pool_name,
+	.text_import = _thin_pool_text_import,
+	.text_export = _thin_pool_text_export,
+	.modules_needed = _thin_modules_needed,
+	.destroy = _thin_destroy,
+};
+
 static struct segtype_handler _thin_ops = {
 	.name = _thin_name,
 	.text_import = _thin_text_import,
@@ -106,30 +130,48 @@ static struct segtype_handler _thin_ops = {
 };
 
 #ifdef THIN_INTERNAL
-struct segment_type *init_thin_segtype(struct cmd_context *cmd)
-#else				/* Shared */
-struct segment_type *init_segtype(struct cmd_context *cmd);
-struct segment_type *init_segtype(struct cmd_context *cmd)
+int init_thin_segtypes(struct cmd_context *cmd, struct segtype_library *seglib)
+#else /* Shared */
+int init_multiple_segtypes(struct cmd_context *cmd, struct segtype_library *seglib);
+int init_multiple_segtypes(struct cmd_context *cmd, struct segtype_library *seglib)
 #endif
 {
-	struct segment_type *segtype = dm_zalloc(sizeof(*segtype));
+	static const struct {
+		struct segtype_handler *ops;
+		const char name[16];
+		uint32_t flags;
+	} reg_segtypes[] = {
+		{ &_thin_pool_ops, "thin_pool", SEG_THIN_POOL },
+		{ &_thin_ops, "thin", SEG_THIN }
+	};
 
-	if (!segtype)
-		return_NULL;
+	struct segment_type *segtype;
+	unsigned i;
 
-	segtype->cmd = cmd;
-	segtype->ops = &_thin_ops;
-	segtype->name = "thin";
-	segtype->private = NULL;
-	segtype->flags = SEG_THIN;
+	for (i = 0; i < sizeof(reg_segtypes)/sizeof(reg_segtypes[0]); ++i) {
+		segtype = dm_zalloc(sizeof(*segtype));
+
+		if (!segtype) {
+			log_error("Failed to allocate memory for %s segtype",
+				  reg_segtypes[i].name);
+			return 0;
+		}
+
+		segtype->ops = reg_segtypes[i].ops;
+		segtype->name = reg_segtypes[i].name;
+		segtype->flags = reg_segtypes[i].flags;
 
 #ifdef DEVMAPPER_SUPPORT
 #  ifdef DMEVENTD
-	if (_get_thin_dso_path(cmd))
-		segtype->flags |= SEG_MONITORED;
+		if (_get_thin_dso_path(cmd))
+			segtype->flags |= SEG_MONITORED;
 #  endif	/* DMEVENTD */
 #endif
-	log_very_verbose("Initialised segtype: %s", segtype->name);
+		if (!lvm_register_segtype(seglib, segtype))
+			return_0;
 
-	return segtype;
+		log_very_verbose("Initialised segtype: %s", segtype->name);
+	}
+
+	return 1;
 }

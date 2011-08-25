@@ -1030,6 +1030,11 @@ static int _init_segtypes(struct cmd_context *cmd)
 		return 0;
 #endif
 
+#ifdef THIN_INTERNAL
+	if (!init_thin_segtypes(cmd, &seglib))
+		return 0;
+#endif
+
 #ifdef HAVE_LIBDL
 	/* Load any formats in shared libs unless static */
 	if (!is_static() &&
