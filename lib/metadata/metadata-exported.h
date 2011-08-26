@@ -318,6 +318,13 @@ struct lv_segment {
 
 	struct lv_segment_area *areas;
 	struct lv_segment_area *meta_areas; /* For RAID */
+	struct logical_volume *data_lv;		/* For thin_pool */
+	struct logical_volume *metadata_lv;	/* For thin_pool */
+	uint64_t transaction_id;		/* For thin_pool */
+	uint32_t zero_new_blocks;		/* For thin_pool */
+	struct logical_volume *thin_pool_lv;	/* For thin */
+	struct logical_volume *origin_lv;	/* For thin */
+	uint64_t device_id;			/* For thin */
 
 	struct logical_volume *replicator;/* For replicator-devs - link to replicator LV */
 	struct logical_volume *rlog_lv;	/* For replicators */
