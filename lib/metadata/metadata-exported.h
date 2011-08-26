@@ -305,7 +305,7 @@ struct lv_segment {
 	uint32_t area_count;
 	uint32_t area_len;
 	uint32_t chunk_size;	/* For snapshots - in sectors */
-	struct logical_volume *origin;
+	struct logical_volume *origin;	/* snap and thin */
 	struct logical_volume *cow;
 	struct dm_list origin_list;
 	uint32_t region_size;	/* For mirrors, replicators - in sectors */
@@ -323,7 +323,6 @@ struct lv_segment {
 	uint64_t transaction_id;		/* For thin_pool */
 	uint32_t zero_new_blocks;		/* For thin_pool */
 	struct logical_volume *thin_pool_lv;	/* For thin */
-	struct logical_volume *origin_lv;	/* For thin */
 	uint64_t device_id;			/* For thin */
 
 	struct logical_volume *replicator;/* For replicator-devs - link to replicator LV */
@@ -547,6 +546,8 @@ typedef enum {
 struct lvcreate_params {
 	/* flags */
 	int snapshot; /* snap */
+	int thin; /* thin */
+	int create_thin_pool; /* thin */
 	int zero; /* all */
 	int major; /* all */
 	int minor; /* all */
@@ -556,6 +557,7 @@ struct lvcreate_params {
 	activation_change_t activate; /* non-snapshot, non-mirror */
 
 	char *origin; /* snap */
+	char *pool;   /* thin */
 	const char *vg_name; /* all */
 	const char *lv_name; /* all */
 
