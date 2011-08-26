@@ -107,7 +107,7 @@ static int _thin_text_import(struct lv_segment *seg, const struct config_node *s
                 if (!cn->v || cn->v->type != CFG_STRING)
 			return SEG_LOG_ERROR("Thin pool origin must be a string in");
 
-		if (!(seg->origin_lv = find_lv(seg->lv->vg, cn->v->v.str)))
+		if (!(seg->origin = find_lv(seg->lv->vg, cn->v->v.str)))
 			return SEG_LOG_ERROR("Unknown origin %s in",
 					     cn->v->v.str);
 	}
@@ -123,8 +123,8 @@ static int _thin_text_export(const struct lv_segment *seg, struct formatter *f)
 	outf(f, "thin_pool = \"%s\"", seg->thin_pool_lv->name);
 	outf(f, "device_id = %" PRIu64, seg->device_id);
 
-	if (seg->origin_lv)
-		outf(f, "origin = \"%s\"", seg->origin_lv->name);
+	if (seg->origin)
+		outf(f, "origin = \"%s\"", seg->origin->name);
 
 	return 1;
 }
@@ -229,8 +229,8 @@ int init_multiple_segtypes(struct cmd_context *cmd, struct segtype_library *segl
 
 #ifdef DEVMAPPER_SUPPORT
 #  ifdef DMEVENTD
-		if (_get_thin_dso_path(cmd))
-			segtype->flags |= SEG_MONITORED;
+// FIXME		if (_get_thin_dso_path(cmd))
+// FIXME			segtype->flags |= SEG_MONITORED;
 #  endif	/* DMEVENTD */
 #endif
 		if (!lvm_register_segtype(seglib, segtype))
