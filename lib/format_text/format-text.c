@@ -226,7 +226,7 @@ static int _pv_analyze_mda_raw (const struct format_type * fmt,
 		 * "maybe_config_section" returning true when there's no valid
 		 * metadata in a sector (sectors with all nulls).
 		 */
-		if (!(buf = dm_pool_alloc(fmt->cmd->mem, size + size2)))
+		if (!(buf = dm_malloc(size + size2)))
 			goto_out;
 
 		if (!dev_read_circular(area->dev, offset, size,
@@ -261,14 +261,14 @@ static int _pv_analyze_mda_raw (const struct format_type * fmt,
 				size += SECTOR_SIZE;
 			}
 		}
-		dm_pool_free(fmt->cmd->mem, buf);
+		dm_free(buf);
 		buf = NULL;
 	}
 
 	r = 1;
  out:
 	if (buf)
-		dm_pool_free(fmt->cmd->mem, buf);
+		dm_free(buf);
 	if (!dev_close(area->dev))
 		stack;
 	return r;
