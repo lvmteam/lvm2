@@ -36,39 +36,39 @@
  */
 #define SEG_LOG_ERROR(t, p...) \
 	log_error(t " segment %s of logical volume %s.", ## p, \
-		  config_parent_name(sn), seg->lv->name), 0;
+		  dm_config_parent_name(sn), seg->lv->name), 0;
 
 static const char *_thin_pool_name(const struct lv_segment *seg)
 {
 	return seg->segtype->name;
 }
 
-static int _thin_pool_text_import(struct lv_segment *seg, const struct config_node *sn,
+static int _thin_pool_text_import(struct lv_segment *seg, const struct dm_config_node *sn,
 			struct dm_hash_table *pv_hash __attribute__((unused)))
 {
-	const struct config_node *cn;
+	const struct dm_config_node *cn;
 
-	if (!(cn = find_config_node(sn, "data")) ||
-	    !cn->v || cn->v->type != CFG_STRING)
+	if (!(cn = dm_config_find_node(sn, "data")) ||
+	    !cn->v || cn->v->type != DM_CFG_STRING)
 		return SEG_LOG_ERROR("Thin pool data must be a string in");
 
 	if (!(seg->data_lv = find_lv(seg->lv->vg, cn->v->v.str)))
 		return SEG_LOG_ERROR("Unknown pool data %s in",
 				     cn->v->v.str);
 
-	if (!(cn = find_config_node(sn, "metadata")) ||
-	    !cn->v || cn->v->type != CFG_STRING)
+	if (!(cn = dm_config_find_node(sn, "metadata")) ||
+	    !cn->v || cn->v->type != DM_CFG_STRING)
 		return SEG_LOG_ERROR("Thin pool metadata must be a string in");
 
 	if (!(seg->metadata_lv = find_lv(seg->lv->vg, cn->v->v.str)))
 		return SEG_LOG_ERROR("Unknown pool metadata %s in",
 				     cn->v->v.str);
 
-	if (!get_config_uint64(sn, "transaction_id", &seg->transaction_id))
+	if (!dm_config_get_uint64(sn, "transaction_id", &seg->transaction_id))
 		return SEG_LOG_ERROR("Could not read transaction_id for");
 
-	if (find_config_node(sn, "zero_new_blocks") &&
-	    !get_config_uint32(sn, "zero_new_blocks", &seg->zero_new_blocks))
+	if (dm_config_find_node(sn, "zero_new_blocks") &&
+	    !dm_config_get_uint32(sn, "zero_new_blocks", &seg->zero_new_blocks))
 		return SEG_LOG_ERROR("Could not read zero_new_blocks for");
 
 	return 1;
@@ -90,21 +90,21 @@ static const char *_thin_name(const struct lv_segment *seg)
 	return seg->segtype->name;
 }
 
-static int _thin_text_import(struct lv_segment *seg, const struct config_node *sn,
+static int _thin_text_import(struct lv_segment *seg, const struct dm_config_node *sn,
 			struct dm_hash_table *pv_hash __attribute__((unused)))
 {
-	const struct config_node *cn;
+	const struct dm_config_node *cn;
 
-	if (!(cn = find_config_node(sn, "thin_pool")) ||
-	    !cn->v || cn->v->type != CFG_STRING)
+	if (!(cn = dm_config_find_node(sn, "thin_pool")) ||
+	    !cn->v || cn->v->type != DM_CFG_STRING)
 		return SEG_LOG_ERROR("Thin pool must be a string in");
 
 	if (!(seg->thin_pool_lv = find_lv(seg->lv->vg, cn->v->v.str)))
 		return SEG_LOG_ERROR("Unknown thin pool %s in",
 				     cn->v->v.str);
 
-	if ((cn = find_config_node(sn, "origin"))) {
-                if (!cn->v || cn->v->type != CFG_STRING)
+	if ((cn = dm_config_find_node(sn, "origin"))) {
+                if (!cn->v || cn->v->type != DM_CFG_STRING)
 			return SEG_LOG_ERROR("Thin pool origin must be a string in");
 
 		if (!(seg->origin = find_lv(seg->lv->vg, cn->v->v.str)))
@@ -112,7 +112,7 @@ static int _thin_text_import(struct lv_segment *seg, const struct config_node *s
 					     cn->v->v.str);
 	}
 
-	if (!get_config_uint64(sn, "device_id", &seg->device_id))
+	if (!dm_config_get_uint64(sn, "device_id", &seg->device_id))
 		return SEG_LOG_ERROR("Could not read device_id for");
 
 	return 1;

@@ -140,7 +140,7 @@ int print_flags(uint64_t status, int type, char *buffer, size_t size)
 	return 1;
 }
 
-int read_flags(uint64_t *status, int type, const struct config_value *cv)
+int read_flags(uint64_t *status, int type, const struct dm_config_value *cv)
 {
 	int f;
 	uint64_t s = UINT64_C(0);
@@ -149,11 +149,11 @@ int read_flags(uint64_t *status, int type, const struct config_value *cv)
 	if (!(flags = _get_flags(type)))
 		return_0;
 
-	if (cv->type == CFG_EMPTY_ARRAY)
+	if (cv->type == DM_CFG_EMPTY_ARRAY)
 		goto out;
 
 	while (cv) {
-		if (cv->type != CFG_STRING) {
+		if (cv->type != DM_CFG_STRING) {
 			log_error("Status value is not a string.");
 			return 0;
 		}

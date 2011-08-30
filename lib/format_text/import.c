@@ -43,13 +43,13 @@ const char *text_vgname_import(const struct format_type *fmt,
 			       struct id *vgid, uint64_t *vgstatus,
 			       char **creation_host)
 {
-	struct config_tree *cft;
+	struct dm_config_tree *cft;
 	struct text_vg_version_ops **vsn;
 	const char *vgname = NULL;
 
 	_init_text_import();
 
-	if (!(cft = create_config_tree(NULL, 0)))
+	if (!(cft = dm_config_create(NULL, 0)))
 		return_NULL;
 
 	if ((!dev && !read_config_file(cft)) ||
@@ -86,7 +86,7 @@ struct volume_group *text_vg_import_fd(struct format_instance *fid,
 				       time_t *when, char **desc)
 {
 	struct volume_group *vg = NULL;
-	struct config_tree *cft;
+	struct dm_config_tree *cft;
 	struct text_vg_version_ops **vsn;
 
 	_init_text_import();
@@ -94,7 +94,7 @@ struct volume_group *text_vg_import_fd(struct format_instance *fid,
 	*desc = NULL;
 	*when = 0;
 
-	if (!(cft = create_config_tree(file, 0)))
+	if (!(cft = dm_config_create(file, 0)))
 		return_NULL;
 
 	if ((!dev && !read_config_file(cft)) ||
@@ -131,7 +131,7 @@ struct volume_group *text_vg_import_file(struct format_instance *fid,
 				 when, desc);
 }
 
-struct volume_group *import_vg_from_config_tree(const struct config_tree *cft,
+struct volume_group *import_vg_from_config_tree(const struct dm_config_tree *cft,
 						struct format_instance *fid)
 {
 	struct volume_group *vg = NULL;

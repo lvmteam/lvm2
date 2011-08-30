@@ -64,13 +64,13 @@ int persistent_filter_wipe(struct dev_filter *f)
 	return 1;
 }
 
-static int _read_array(struct pfilter *pf, struct config_tree *cft,
+static int _read_array(struct pfilter *pf, struct dm_config_tree *cft,
 		       const char *path, void *data)
 {
-	const struct config_node *cn;
-	const struct config_value *cv;
+	const struct dm_config_node *cn;
+	const struct dm_config_value *cv;
 
-	if (!(cn = find_config_node(cft->root, path))) {
+	if (!(cn = dm_config_find_node(cft->root, path))) {
 		log_very_verbose("Couldn't find %s array in '%s'",
 				 path, pf->file);
 		return 0;
@@ -81,7 +81,7 @@ static int _read_array(struct pfilter *pf, struct config_tree *cft,
 	 * devices as we go.
 	 */
 	for (cv = cn->v; cv; cv = cv->next) {
-		if (cv->type != CFG_STRING) {
+		if (cv->type != DM_CFG_STRING) {
 			log_verbose("Devices array contains a value "
 				    "which is not a string ... ignoring");
 			continue;
@@ -96,10 +96,10 @@ static int _read_array(struct pfilter *pf, struct config_tree *cft,
 	return 1;
 }
 
-int persistent_filter_load(struct dev_filter *f, struct config_tree **cft_out)
+int persistent_filter_load(struct dev_filter *f, struct dm_config_tree **cft_out)
 {
 	struct pfilter *pf = (struct pfilter *) f->private;
-	struct config_tree *cft;
+	struct dm_config_tree *cft;
 	struct stat info;
 	int r = 0;
 
@@ -122,7 +122,7 @@ int persistent_filter_load(struct dev_filter *f, struct config_tree **cft_out)
 		return_0;
 	}
 
-	if (!(cft = create_config_tree(pf->file, 1)))
+	if (!(cft = dm_config_create(pf->file, 1)))
 		return_0;
 
 	if (!read_config_file(cft))
@@ -173,7 +173,7 @@ static void _write_array(struct pfilter *pf, FILE *fp, const char *path,
 			first = 0;
 		}
 
-		escape_double_quotes(buf, dm_hash_get_key(pf->devices, n));
+		dm_escape_double_quotes(buf, dm_hash_get_key(pf->devices, n));
 		fprintf(fp, "\t\t\"%s\"", buf);
 	}
 
@@ -186,7 +186,7 @@ int persistent_filter_dump(struct dev_filter *f, int merge_existing)
 	struct pfilter *pf;
 	char *tmp_file;
 	struct stat info, info2;
-	struct config_tree *cft = NULL;
+	struct dm_config_tree *cft = NULL;
 	FILE *fp;
 	int lockfd;
 	int r = 0;

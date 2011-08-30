@@ -177,7 +177,7 @@ static int _passes_lvm_type_device_filter(struct dev_filter *f __attribute__((un
 	return ret;
 }
 
-static int _scan_proc_dev(const char *proc, const struct config_node *cn)
+static int _scan_proc_dev(const char *proc, const struct dm_config_node *cn)
 {
 	char line[80];
 	char proc_devices[PATH_MAX];
@@ -186,7 +186,7 @@ static int _scan_proc_dev(const char *proc, const struct config_node *cn)
 	int line_maj = 0;
 	int blocksection = 0;
 	size_t dev_len = 0;
-	const struct config_value *cv;
+	const struct dm_config_value *cv;
 	const char *name;
 
 
@@ -269,7 +269,7 @@ static int _scan_proc_dev(const char *proc, const struct config_node *cn)
 
 		/* Check devices/types for local variations */
 		for (cv = cn->v; cv; cv = cv->next) {
-			if (cv->type != CFG_STRING) {
+			if (cv->type != DM_CFG_STRING) {
 				log_error("Expecting string in devices/types "
 					  "in config file");
 				if (fclose(pd))
@@ -279,7 +279,7 @@ static int _scan_proc_dev(const char *proc, const struct config_node *cn)
 			dev_len = strlen(cv->v.str);
 			name = cv->v.str;
 			cv = cv->next;
-			if (!cv || cv->type != CFG_INT) {
+			if (!cv || cv->type != DM_CFG_INT) {
 				log_error("Max partition count missing for %s "
 					  "in devices/types in config file",
 					  name);
@@ -316,7 +316,7 @@ int max_partitions(int major)
 }
 
 struct dev_filter *lvm_type_filter_create(const char *proc,
-					  const struct config_node *cn)
+					  const struct dm_config_node *cn)
 {
 	struct dev_filter *f;
 

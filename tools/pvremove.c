@@ -150,7 +150,7 @@ int pvremove(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	for (i = 0; i < argc; i++) {
-		unescape_colons_and_at_signs(argv[i], NULL, NULL);
+		dm_unescape_colons_and_at_signs(argv[i], NULL, NULL);
 		r = pvremove_single(cmd, argv[i], NULL);
 		if (r > ret)
 			ret = r;

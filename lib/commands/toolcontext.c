@@ -222,8 +222,8 @@ static int _process_config(struct cmd_context *cmd)
 	mode_t old_umask;
 	const char *read_ahead;
 	struct stat st;
-	const struct config_node *cn;
-	const struct config_value *cv;
+	const struct dm_config_node *cn;
+	const struct dm_config_value *cv;
 	int64_t pv_min_kb;
 
 	/* umask */
@@ -358,7 +358,7 @@ static int _process_config(struct cmd_context *cmd)
 
 	if ((cn = find_config_tree_node(cmd, "activation/mlock_filter")))
 		for (cv = cn->v; cv; cv = cv->next) 
-			if ((cv->type != CFG_STRING) || !cv->v.str[0]) 
+			if ((cv->type != DM_CFG_STRING) || !cv->v.str[0]) 
 				log_error("Ignoring invalid activation/mlock_filter entry in config file");
 
 	cmd->metadata_read_only = find_config_tree_int(cmd, "global/metadata_read_only",
@@ -392,11 +392,11 @@ static int _set_tag(struct cmd_context *cmd, const char *tag)
 	return 1;
 }
 
-static int _check_host_filters(struct cmd_context *cmd, const struct config_node *hn,
+static int _check_host_filters(struct cmd_context *cmd, const struct dm_config_node *hn,
 			       int *passes)
 {
-	const struct config_node *cn;
-	const struct config_value *cv;
+	const struct dm_config_node *cn;
+	const struct dm_config_value *cv;
 
 	*passes = 1;
 
@@ -405,10 +405,10 @@ static int _check_host_filters(struct cmd_context *cmd, const struct config_node
 			continue;
 		if (!strcmp(cn->key, "host_list")) {
 			*passes = 0;
-			if (cn->v->type == CFG_EMPTY_ARRAY)
+			if (cn->v->type == DM_CFG_EMPTY_ARRAY)
 				continue;
 			for (cv = cn->v; cv; cv = cv->next) {
-				if (cv->type != CFG_STRING) {
+				if (cv->type != DM_CFG_STRING) {
 					log_error("Invalid hostname string "
 						  "for tag %s", cn->key);
 					return 0;
@@ -428,17 +428,17 @@ static int _check_host_filters(struct cmd_context *cmd, const struct config_node
 	return 1;
 }
 
-static int _init_tags(struct cmd_context *cmd, struct config_tree *cft)
+static int _init_tags(struct cmd_context *cmd, struct dm_config_tree *cft)
 {
-	const struct config_node *tn, *cn;
+	const struct dm_config_node *tn, *cn;
 	const char *tag;
 	int passes;
 
-	if (!(tn = find_config_node(cft->root, "tags")) || !tn->child)
+	if (!(tn = dm_config_find_node(cft->root, "tags")) || !tn->child)
 		return 1;
 
 	/* NB hosttags 0 when already 1 intentionally does not delete the tag */
-	if (!cmd->hosttags && find_config_int(cft->root, "tags/hosttags",
+	if (!cmd->hosttags && dm_config_find_int(cft->root, "tags/hosttags",
 					      DEFAULT_HOSTTAGS)) {
 		/* FIXME Strip out invalid chars: only A-Za-z0-9_+.- */
 		if (!_set_tag(cmd, cmd->hostname))
@@ -491,7 +491,7 @@ static int _load_config_file(struct cmd_context *cmd, const char *tag)
 		return 0;
 	}
 
-	if (!(cfl->cft = create_config_tree(config_file, 0))) {
+	if (!(cfl->cft = dm_config_create(config_file, 0))) {
 		log_error("config_tree allocation failed");
 		return 0;
 	}
@@ -531,7 +531,7 @@ static int _init_lvm_conf(struct cmd_context *cmd)
 {
 	/* No config file if LVM_SYSTEM_DIR is empty */
 	if (!*cmd->system_dir) {
-		if (!(cmd->cft = create_config_tree(NULL, 0))) {
+		if (!(cmd->cft = dm_config_create(NULL, 0))) {
 			log_error("Failed to create config tree");
 			return 0;
 		}
@@ -564,7 +564,7 @@ static int _merge_config_files(struct cmd_context *cmd)
 
 	/* Replace temporary duplicate copy of lvm.conf */
 	if (cmd->cft->root) {
-		if (!(cmd->cft = create_config_tree(NULL, 0))) {
+		if (!(cmd->cft = dm_config_create(NULL, 0))) {
 			log_error("Failed to create config tree");
 			return 0;
 		}
@@ -593,7 +593,7 @@ int config_files_changed(struct cmd_context *cmd)
 	struct config_tree_list *cfl;
 
 	dm_list_iterate_items(cfl, &cmd->config_files) {
-		if (config_file_changed(cfl->cft))
+		if (dm_config_changed(cfl->cft))
 			return 1;
 	}
 
@@ -620,8 +620,8 @@ static void _destroy_tag_configs(struct cmd_context *cmd)
 
 static int _init_dev_cache(struct cmd_context *cmd)
 {
-	const struct config_node *cn;
-	const struct config_value *cv;
+	const struct dm_config_node *cn;
+	const struct dm_config_value *cv;
 	size_t uninitialized_var(udev_dir_len), len;
 	int device_list_from_udev;
 	const char *uninitialized_var(udev_dir);
@@ -653,7 +653,7 @@ static int _init_dev_cache(struct cmd_context *cmd)
 	}
 
 	for (cv = cn->v; cv; cv = cv->next) {
-		if (cv->type != CFG_STRING) {
+		if (cv->type != DM_CFG_STRING) {
 			log_error("Invalid string in config file: "
 				  "devices/scan");
 			return 0;
@@ -680,7 +680,7 @@ static int _init_dev_cache(struct cmd_context *cmd)
 		return 1;
 
 	for (cv = cn->v; cv; cv = cv->next) {
-		if (cv->type != CFG_STRING) {
+		if (cv->type != DM_CFG_STRING) {
 			log_error("Invalid string in config file: "
 				  "devices/loopfiles");
 			return 0;
@@ -702,7 +702,7 @@ static int _init_dev_cache(struct cmd_context *cmd)
 static struct dev_filter *_init_filter_components(struct cmd_context *cmd)
 {
 	unsigned nr_filt = 0;
-	const struct config_node *cn;
+	const struct dm_config_node *cn;
 	struct dev_filter *filters[MAX_FILTERS];
 
 	memset(filters, 0, sizeof(filters));
@@ -823,7 +823,7 @@ static int _init_filters(struct cmd_context *cmd, unsigned load_persistent_cache
 	 */
 	if (load_persistent_cache && !cmd->is_long_lived &&
 	    !stat(dev_cache, &st) &&
-	    (st.st_ctime > config_file_timestamp(cmd->cft)) &&
+	    (st.st_ctime > dm_config_timestamp(cmd->cft)) &&
 	    !persistent_filter_load(f4, NULL))
 		log_verbose("Failed to load existing device cache from %s",
 			    dev_cache);
@@ -853,7 +853,7 @@ static int _init_formats(struct cmd_context *cmd)
 	struct format_type *fmt;
 
 #ifdef HAVE_LIBDL
-	const struct config_node *cn;
+	const struct dm_config_node *cn;
 #endif
 
 	label_init();
@@ -877,12 +877,12 @@ static int _init_formats(struct cmd_context *cmd)
 	if (!is_static() &&
 	    (cn = find_config_tree_node(cmd, "global/format_libraries"))) {
 
-		const struct config_value *cv;
+		const struct dm_config_value *cv;
 		struct format_type *(*init_format_fn) (struct cmd_context *);
 		void *lib;
 
 		for (cv = cn->v; cv; cv = cv->next) {
-			if (cv->type != CFG_STRING) {
+			if (cv->type != DM_CFG_STRING) {
 				log_error("Invalid string in config file: "
 					  "global/format_libraries");
 				return 0;
@@ -1010,7 +1010,7 @@ static int _init_segtypes(struct cmd_context *cmd)
 	};
 
 #ifdef HAVE_LIBDL
-	const struct config_node *cn;
+	const struct dm_config_node *cn;
 #endif
 
 	for (i = 0; init_segtype_array[i]; i++) {
@@ -1040,12 +1040,12 @@ static int _init_segtypes(struct cmd_context *cmd)
 	if (!is_static() &&
 	    (cn = find_config_tree_node(cmd, "global/segment_libraries"))) {
 
-		const struct config_value *cv;
+		const struct dm_config_value *cv;
 		int (*init_multiple_segtypes_fn) (struct cmd_context *,
 						  struct segtype_library *);
 
 		for (cv = cn->v; cv; cv = cv->next) {
-			if (cv->type != CFG_STRING) {
+			if (cv->type != DM_CFG_STRING) {
 				log_error("Invalid string in config file: "
 					  "global/segment_libraries");
 				return 0;

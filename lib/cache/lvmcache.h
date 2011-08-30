@@ -33,7 +33,7 @@
 struct cmd_context;
 struct format_type;
 struct volume_group;
-struct config_tree;
+struct dm_config_tree;
 
 /* One per VG */
 struct lvmcache_vginfo {
@@ -48,8 +48,8 @@ struct lvmcache_vginfo {
 	char *creation_host;
 	size_t vgmetadata_size;
 	char *vgmetadata;	/* Copy of VG metadata as format_text string */
-	struct config_tree *cft; /* Config tree created from vgmetadata */
-				/* Lifetime is directly tied to vgmetadata */
+	struct dm_config_tree *cft; /* Config tree created from vgmetadata */
+				    /* Lifetime is directly tied to vgmetadata */
 	struct volume_group *cached_vg;
 	unsigned holders;
 	unsigned vg_use_count;	/* Counter of vg reusage */

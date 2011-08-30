@@ -687,7 +687,7 @@ int vg_extend(struct volume_group *vg, int pv_count, const char *const *pv_names
 			log_error("Failed to duplicate pv name %s.", pv_names[i]);
 			return 0;
 		}
-		unescape_colons_and_at_signs(pv_name, NULL, NULL);
+		dm_unescape_colons_and_at_signs(pv_name, NULL, NULL);
 		if (!vg_extend_single_pv(vg, pv_name, pp)) {
 			log_error("Unable to add physical volume '%s' to "
 				  "volume group '%s'.", pv_name, vg->name);

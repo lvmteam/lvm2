@@ -21,76 +21,26 @@
 struct device;
 struct cmd_context;
 
-enum {
-	CFG_STRING,
-	CFG_FLOAT,
-	CFG_INT,
-	CFG_EMPTY_ARRAY
-};
-
-struct config_value {
-	int type;
-	union {
-		int64_t i;
-		float r;
-		const char *str;
-	} v;
-	struct config_value *next;	/* for arrays */
-};
-
-struct config_node {
-	const char *key;
-	struct config_node *parent, *sib, *child;
-	struct config_value *v;
-};
-
-struct config_tree {
-	struct config_node *root;
-};
-
-struct config_tree_list {
-	struct dm_list list;
-	struct config_tree *cft;
-};
-
-struct config_tree *create_config_tree(const char *filename, int keep_open);
-struct config_tree *create_config_tree_from_string(const char *config_settings);
-
 int override_config_tree_from_string(struct cmd_context *cmd,
 				     const char *config_settings);
-void destroy_config_tree(struct config_tree *cft);
+void destroy_config_tree(struct dm_config_tree *cft);
 
 typedef uint32_t (*checksum_fn_t) (uint32_t initial, const uint8_t *buf, uint32_t size);
 
-int read_config_fd(struct config_tree *cft, struct device *dev,
+int read_config_fd(struct dm_config_tree *cft, struct device *dev,
 		   off_t offset, size_t size, off_t offset2, size_t size2,
 		   checksum_fn_t checksum_fn, uint32_t checksum);
 
-int read_config_file(struct config_tree *cft);
-int write_config_file(struct config_tree *cft, const char *file,
-		      int argc, char **argv);
+int read_config_file(struct dm_config_tree *cft);
 
-typedef int (*putline_fn)(const char *line, void *baton);
-int write_config_node(const struct config_node *cn, putline_fn putline, void *baton);
-
-time_t config_file_timestamp(struct config_tree *cft);
-int config_file_changed(struct config_tree *cft);
-int merge_config_tree(struct cmd_context *cmd, struct config_tree *cft,
-		      struct config_tree *newdata);
-
-const struct config_node *find_config_node(const struct config_node *cn,
-					   const char *path);
-const char *find_config_str(const struct config_node *cn, const char *path,
-			    const char *fail);
-int find_config_int(const struct config_node *cn, const char *path, int fail);
-float find_config_float(const struct config_node *cn, const char *path,
-			float fail);
+int merge_config_tree(struct cmd_context *cmd, struct dm_config_tree *cft,
+		      struct dm_config_tree *newdata);
 
 /*
  * These versions check an override tree, if present, first.
  */
-const struct config_node *find_config_tree_node(struct cmd_context *cmd,
-						const char *path);
+const struct dm_config_node *find_config_tree_node(struct cmd_context *cmd,
+						   const char *path);
 const char *find_config_tree_str(struct cmd_context *cmd,
 				 const char *path, const char *fail);
 int find_config_tree_int(struct cmd_context *cmd, const char *path,
@@ -100,34 +50,6 @@ int64_t find_config_tree_int64(struct cmd_context *cmd, const char *path,
 float find_config_tree_float(struct cmd_context *cmd, const char *path,
 			     float fail);
 
-/*
- * Understands (0, ~0), (y, n), (yes, no), (on,
- * off), (true, false).
- */
-int find_config_bool(const struct config_node *cn, const char *path, int fail);
 int find_config_tree_bool(struct cmd_context *cmd, const char *path, int fail);
-
-int get_config_uint32(const struct config_node *cn, const char *path,
-		      uint32_t *result);
-
-int get_config_uint64(const struct config_node *cn, const char *path,
-		      uint64_t *result);
-
-int get_config_str(const struct config_node *cn, const char *path,
-		   const char **result);
-
-unsigned maybe_config_section(const char *str, unsigned len);
-
-const char *config_parent_name(const struct config_node *n);
-
-struct config_node *clone_config_node_with_mem(struct dm_pool *mem,
-					       const struct config_node *node,
-					       int siblings);
-struct config_node *create_config_node(struct config_tree *cft, const char *key);
-struct config_value *create_config_value(struct config_tree *cft);
-struct config_node *clone_config_node(struct config_tree *cft, const struct config_node *cn,
-				      int siblings);
-
-struct dm_pool *config_tree_memory(struct config_tree *cft);
 
 #endif

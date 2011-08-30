@@ -644,8 +644,8 @@ void dev_cache_scan(int do_scan)
 
 static int _init_preferred_names(struct cmd_context *cmd)
 {
-	const struct config_node *cn;
-	const struct config_value *v;
+	const struct dm_config_node *cn;
+	const struct dm_config_value *v;
 	struct dm_pool *scratch = NULL;
 	const char **regex;
 	unsigned count = 0;
@@ -654,14 +654,14 @@ static int _init_preferred_names(struct cmd_context *cmd)
 	_cache.preferred_names_matcher = NULL;
 
 	if (!(cn = find_config_tree_node(cmd, "devices/preferred_names")) ||
-	    cn->v->type == CFG_EMPTY_ARRAY) {
+	    cn->v->type == DM_CFG_EMPTY_ARRAY) {
 		log_very_verbose("devices/preferred_names not found in config file: "
 				 "using built-in preferences");
 		return 1;
 	}
 
 	for (v = cn->v; v; v = v->next) {
-		if (v->type != CFG_STRING) {
+		if (v->type != DM_CFG_STRING) {
 			log_error("preferred_names patterns must be enclosed in quotes");
 			return 0;
 		}

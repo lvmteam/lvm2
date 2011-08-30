@@ -664,7 +664,7 @@ int pvmove(struct cmd_context *cmd, int argc, char **argv)
 			return ECMD_FAILED;
 		}
 
-		unescape_colons_and_at_signs(pv_name, &colon, NULL);
+		dm_unescape_colons_and_at_signs(pv_name, &colon, NULL);
 
 		/* Drop any PE lists from PV name */
 		if (colon)

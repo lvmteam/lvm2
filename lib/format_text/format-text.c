@@ -223,7 +223,7 @@ static int _pv_analyze_mda_raw (const struct format_type * fmt,
 		 * area->start to area->start+area->size is not used.
 		 * Only ~32KB seems to contain valid metadata records
 		 * (LVM2 format - format_text).  As a result, I end up with
-		 * "maybe_config_section" returning true when there's no valid
+		 * "dm_config_maybe_section" returning true when there's no valid
 		 * metadata in a sector (sectors with all nulls).
 		 */
 		if (!(buf = dm_malloc(size + size2)))
@@ -236,7 +236,7 @@ static int _pv_analyze_mda_raw (const struct format_type * fmt,
 		/*
 		 * FIXME: We could add more sophisticated metadata detection
 		 */
-		if (maybe_config_section(buf, size + size2)) {
+		if (dm_config_maybe_section(buf, size + size2)) {
 			/* FIXME: Validate region, pull out timestamp?, etc */
 			/* FIXME: Do something with this region */
 			log_verbose ("Found LVM2 metadata record at "
@@ -2277,7 +2277,7 @@ static int _add_dir(const char *dir, struct dm_list *dir_list)
 }
 
 static int _get_config_disk_area(struct cmd_context *cmd,
-				 const struct config_node *cn, struct dm_list *raw_list)
+				 const struct dm_config_node *cn, struct dm_list *raw_list)
 {
 	struct device_area dev_area;
 	const char *id_str;
@@ -2288,21 +2288,21 @@ static int _get_config_disk_area(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (!get_config_uint64(cn, "start_sector", &dev_area.start)) {
+	if (!dm_config_get_uint64(cn, "start_sector", &dev_area.start)) {
 		log_error("Missing start_sector in metadata disk_area section "
 			  "of config file");
 		return 0;
 	}
 	dev_area.start <<= SECTOR_SHIFT;
 
-	if (!get_config_uint64(cn, "size", &dev_area.size)) {
+	if (!dm_config_get_uint64(cn, "size", &dev_area.size)) {
 		log_error("Missing size in metadata disk_area section "
 			  "of config file");
 		return 0;
 	}
 	dev_area.size <<= SECTOR_SHIFT;
 
-	if (!get_config_str(cn, "id", &id_str)) {
+	if (!dm_config_get_str(cn, "id", &id_str)) {
 		log_error("Missing uuid in metadata disk_area section "
 			  "of config file");
 		return 0;
@@ -2332,8 +2332,8 @@ static int _get_config_disk_area(struct cmd_context *cmd,
 struct format_type *create_text_format(struct cmd_context *cmd)
 {
 	struct format_type *fmt;
-	const struct config_node *cn;
-	const struct config_value *cv;
+	const struct dm_config_node *cn;
+	const struct dm_config_value *cv;
 	struct mda_lists *mda_lists;
 
 	if (!(fmt = dm_malloc(sizeof(*fmt))))
@@ -2374,7 +2374,7 @@ struct format_type *create_text_format(struct cmd_context *cmd)
 
 	if ((cn = find_config_tree_node(cmd, "metadata/dirs"))) {
 		for (cv = cn->v; cv; cv = cv->next) {
-			if (cv->type != CFG_STRING) {
+			if (cv->type != DM_CFG_STRING) {
 				log_error("Invalid string in config file: "
 					  "metadata/dirs");
 				goto err;

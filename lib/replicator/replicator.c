@@ -36,7 +36,7 @@
  */
 #define SEG_LOG_ERROR(t, p...) \
 	log_error(t " segment %s of logical volume %s.", ## p, \
-		  config_parent_name(sn), seg->lv->name), 0;
+		  dm_config_parent_name(sn), seg->lv->name), 0;
 
 
 /*
@@ -58,24 +58,24 @@ static void _replicator_display(const struct lv_segment *seg)
 		log_print("  Replicator volume\t%s", seg->rlog_lv->name);
 }
 
-/* Wrapper for get_config_uint32() with default value */
-static uint32_t _get_config_uint32(const struct config_node *cn,
+/* Wrapper for dm_config_get_uint32() with default value */
+static uint32_t _get_config_uint32(const struct dm_config_node *cn,
 				   const char *path,
 				   uint32_t def)
 {
 	uint32_t t;
 
-	return get_config_uint32(cn, path, &t) ? t : def;
+	return dm_config_get_uint32(cn, path, &t) ? t : def;
 }
 
-/* Wrapper for get_config_uint64() with default value */
-static uint64_t _get_config_uint64(const struct config_node *cn,
+/* Wrapper for dm_config_get_uint64() with default value */
+static uint64_t _get_config_uint64(const struct dm_config_node *cn,
 				   const char *path,
 				   uint64_t def)
 {
 	uint64_t t;
 
-	return get_config_uint64(cn, path, &t) ? t : def;
+	return dm_config_get_uint64(cn, path, &t) ? t : def;
 }
 
 
@@ -86,13 +86,13 @@ static const char _state_txt[NUM_REPLICATOR_STATE][8] = {
 };
 
 /* Parse state string */
-static replicator_state_t _get_state(const struct config_node *sn,
+static replicator_state_t _get_state(const struct dm_config_node *sn,
 				     const char *path, replicator_state_t def)
 {
 	const char *str;
 	unsigned i;
 
-	if (get_config_str(sn, path, &str)) {
+	if (dm_config_get_str(sn, path, &str)) {
 		for (i = 0; i < sizeof(_state_txt)/sizeof(_state_txt[0]); ++i)
 			if (strcasecmp(str, _state_txt[i]) == 0)
 				return (replicator_state_t) i;
@@ -115,13 +115,13 @@ static const char _op_mode_txt[NUM_DM_REPLICATOR_MODES][8] = {
 
 
 /* Parse action string */
-static dm_replicator_mode_t _get_op_mode(const struct config_node *sn,
+static dm_replicator_mode_t _get_op_mode(const struct dm_config_node *sn,
 					 const char *path, dm_replicator_mode_t def)
 {
 	const char *str;
 	unsigned i;
 
-	if (get_config_str(sn, path, &str)) {
+	if (dm_config_get_str(sn, path, &str)) {
 		for (i = 0; i < sizeof(_op_mode_txt)/sizeof(_op_mode_txt[0]); ++i)
 			if (strcasecmp(str, _op_mode_txt[i]) == 0) {
 				log_very_verbose("Setting %s to %s",
@@ -162,16 +162,16 @@ static struct replicator_site *_get_site(struct logical_volume *replicator,
 /* Parse replicator site element */
 static int _add_site(struct lv_segment *seg,
 		     const char *key,
-		     const struct config_node *sn)
+		     const struct dm_config_node *sn)
 {
 	struct dm_pool *mem = seg->lv->vg->vgmem;
-	const struct config_node *cn;
+	const struct dm_config_node *cn;
 	struct replicator_site *rsite;
 
 	if (!(rsite = _get_site(seg->lv, key)))
 		return_0;
 
-	if (!find_config_node(sn, "site_index"))
+	if (!dm_config_find_node(sn, "site_index"))
 		return SEG_LOG_ERROR("Mandatory site_index is missing for");
 
 	rsite->state = _get_state(sn, "state", REPLICATOR_STATE_PASSIVE);
@@ -204,8 +204,8 @@ static int _add_site(struct lv_segment *seg,
 					      rsite->op_mode);
 	}
 
-	if ((cn = find_config_node(sn, "volume_group"))) {
-		if (!cn->v || cn->v->type != CFG_STRING)
+	if ((cn = dm_config_find_node(sn, "volume_group"))) {
+		if (!cn->v || cn->v->type != DM_CFG_STRING)
 			return SEG_LOG_ERROR("volume_group must be a string in");
 
 		if (!(rsite->vg_name = dm_pool_strdup(mem, cn->v->v.str)))
@@ -220,25 +220,25 @@ static int _add_site(struct lv_segment *seg,
 
 /* Import replicator segment */
 static int _replicator_text_import(struct lv_segment *seg,
-				   const struct config_node *sn,
+				   const struct dm_config_node *sn,
 				   struct dm_hash_table *pv_hash __attribute__((unused)))
 {
-	const struct config_node *cn;
+	const struct dm_config_node *cn;
 	struct logical_volume *rlog_lv;
 
 	if (!replicator_add_replicator_dev(seg->lv, NULL))
 		return_0;
 
-	if (!(cn = find_config_node(sn, "replicator_log")) ||
-	    !cn->v || cn->v->type != CFG_STRING)
+	if (!(cn = dm_config_find_node(sn, "replicator_log")) ||
+	    !cn->v || cn->v->type != DM_CFG_STRING)
 		return SEG_LOG_ERROR("Replicator log type must be a string in");
 
 	if (!(rlog_lv = find_lv(seg->lv->vg, cn->v->v.str)))
 		return SEG_LOG_ERROR("Unknown replicator log %s in",
 				     cn->v->v.str);
 
-	if (!(cn = find_config_node(sn, "replicator_log_type")) ||
-	    !cn->v || cn->v->type != CFG_STRING)
+	if (!(cn = dm_config_find_node(sn, "replicator_log_type")) ||
+	    !cn->v || cn->v->type != DM_CFG_STRING)
 		return SEG_LOG_ERROR("Replicator log's type must be a string in");
 	if (strcasecmp(cn->v->v.str, "ringbuffer"))
 		return SEG_LOG_ERROR("Only ringbuffer replicator log type is supported in");
@@ -443,7 +443,7 @@ static void _replicator_dev_display(const struct lv_segment *seg)
 
 static int _add_device(struct lv_segment *seg,
 		       const char *site_name,
-		       const struct config_node *sn,
+		       const struct dm_config_node *sn,
 		       uint64_t devidx)
 {
 	struct dm_pool *mem = seg->lv->vg->vgmem;
@@ -453,19 +453,19 @@ static int _add_device(struct lv_segment *seg,
 	struct replicator_device *rdev;
 	const char *dev_str = NULL;
 	const char *slog_str = NULL;
-	const struct config_node *cn;
+	const struct dm_config_node *cn;
 
 	dm_list_iterate_items(rdev, &rsite->rdevices)
 		if (rdev->replicator_dev == seg)
 			return SEG_LOG_ERROR("Duplicate site found in");
 
-	if ((cn = find_config_node(sn, "sync_log"))) {
+	if ((cn = dm_config_find_node(sn, "sync_log"))) {
 		if (!cn->v || !cn->v->v.str)
 			return SEG_LOG_ERROR("Sync log must be a string in");
 		slog_str = cn->v->v.str;
 	}
 
-	if (!(cn = find_config_node(sn, "logical_volume")) ||
+	if (!(cn = dm_config_find_node(sn, "logical_volume")) ||
 	    !cn->v || !cn->v->v.str)
 		return SEG_LOG_ERROR("Logical volume must be a string in");
 
@@ -520,14 +520,14 @@ static int _add_device(struct lv_segment *seg,
 
 /* Import replicator segment */
 static int _replicator_dev_text_import(struct lv_segment *seg,
-				       const struct config_node *sn,
+				       const struct dm_config_node *sn,
 				       struct dm_hash_table *pv_hash __attribute__((unused)))
 {
-	const struct config_node *cn;
+	const struct dm_config_node *cn;
 	struct logical_volume *replicator;
 	uint64_t devidx;
 
-	if (!(cn = find_config_node(sn, "replicator")))
+	if (!(cn = dm_config_find_node(sn, "replicator")))
 		return SEG_LOG_ERROR("Replicator is missing for");
 
 	if (!cn->v || !cn->v->v.str)
@@ -542,8 +542,8 @@ static int _replicator_dev_text_import(struct lv_segment *seg,
 	log_very_verbose("replicator=%s", replicator->name);
 
 	/* Mandatory */
-	if (!find_config_node(sn, "device_index") ||
-	    !get_config_uint64(sn, "device_index", &devidx))
+	if (!dm_config_find_node(sn, "device_index") ||
+	    !dm_config_get_uint64(sn, "device_index", &devidx))
 		return SEG_LOG_ERROR("Could not read 'device_index' for");
 
 	/* Read devices from sites */

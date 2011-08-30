@@ -110,7 +110,7 @@ int pvcreate(struct cmd_context *cmd, int argc, char **argv)
 			return ECMD_FAILED;
 		}
 
-		unescape_colons_and_at_signs(argv[i], NULL, NULL);
+		dm_unescape_colons_and_at_signs(argv[i], NULL, NULL);
 
 		if (!(pv = pvcreate_single(cmd, argv[i], &pp, 1))) {
 			stack;

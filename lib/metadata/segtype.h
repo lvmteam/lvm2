@@ -20,11 +20,11 @@
 
 struct segtype_handler;
 struct cmd_context;
-struct config_tree;
+struct dm_config_tree;
 struct lv_segment;
 struct lv_activate_opts;
 struct formatter;
-struct config_node;
+struct dm_config_node;
 struct dev_manager;
 
 /* Feature flags */
@@ -87,10 +87,10 @@ struct segtype_handler {
 	void (*display) (const struct lv_segment * seg);
 	int (*text_export) (const struct lv_segment * seg,
 			    struct formatter * f);
-	int (*text_import_area_count) (const struct config_node * sn,
+	int (*text_import_area_count) (const struct dm_config_node * sn,
 				       uint32_t *area_count);
 	int (*text_import) (struct lv_segment * seg,
-			    const struct config_node * sn,
+			    const struct dm_config_node * sn,
 			    struct dm_hash_table * pv_hash);
 	int (*merge_segments) (struct lv_segment * seg1,
 			       struct lv_segment * seg2);

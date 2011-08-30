@@ -26,7 +26,7 @@ static void (*_reset_fn) (void) = NULL;
 static void (*_end_fn) (void) = NULL;
 static int (*_lock_fn) (struct cmd_context * cmd, const char *resource,
 			uint32_t flags) = NULL;
-static int (*_init_fn) (int type, struct config_tree * cft,
+static int (*_init_fn) (int type, struct dm_config_tree * cft,
 			uint32_t *flags) = NULL;
 static int (*_lock_query_fn) (const char *resource, int *mode) = NULL;
 

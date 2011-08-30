@@ -19,6 +19,7 @@
 #include <inttypes.h>
 #include <stdarg.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 
 #ifdef linux
 #  include <linux/types.h>
@@ -1014,6 +1015,46 @@ int dm_snprintf(char *buf, size_t bufsize, const char *format, ...)
  */
 const char *dm_basename(const char *path);
 
+/*
+ * Count occurences of 'c' in 'str' of length 'size'.
+ *
+ * Returns:
+ *   Number of occurrences of 'c'
+ */
+unsigned dm_count_chars(const char *str, size_t len, const int c);
+
+/*
+ * Length of string after escaping double quotes and backslashes.
+ */
+size_t dm_escaped_len(const char *str);
+
+/*
+ * <vg>-<lv>-<layer> or if !layer just <vg>-<lv>.
+ */
+char *dm_build_dm_name(struct dm_pool *mem, const char *vgname,
+		       const char *lvname, const char *layer);
+char *dm_build_dm_uuid(struct dm_pool *mem, const char *prefix, const char *lvid, const char *layer);
+
+/*
+ * Copies a string, quoting double quotes with backslashes.
+ */
+char *dm_escape_double_quotes(char *out, const char *src);
+
+/*
+ * Undo quoting in situ.
+ */
+void dm_unescape_double_quotes(char *src);
+
+/*
+ * Unescape colons and "at" signs in situ and save the substrings
+ * starting at the position of the first unescaped colon and the
+ * first unescaped "at" sign. This is normally used to unescape
+ * device names used as PVs.
+ */
+void dm_unescape_colons_and_at_signs(char *src,
+				     char **substr_first_unquoted_colon,
+				     char **substr_first_unquoted_at_sign);
+
 /**************************
  * file/stream manipulation
  **************************/
@@ -1180,6 +1221,108 @@ int dm_report_field_uint64(struct dm_report *rh, struct dm_report_field *field,
  */
 void dm_report_field_set_value(struct dm_report_field *field, const void *value,
 			       const void *sortvalue);
+
+
+/*********************************
+ * config file parse/prettyprint
+ *********************************/
+enum {
+	DM_CFG_STRING,
+	DM_CFG_FLOAT,
+	DM_CFG_INT,
+	DM_CFG_EMPTY_ARRAY
+};
+
+struct dm_config_value {
+	int type;
+	union {
+		int64_t i;
+		float r;
+		const char *str;
+	} v;
+	struct dm_config_value *next;	/* for arrays */
+};
+
+struct dm_config_node {
+	const char *key;
+	struct dm_config_node *parent, *sib, *child;
+	struct dm_config_value *v;
+};
+
+struct dm_config_tree {
+	struct dm_config_node *root;
+	struct dm_config_tree *cascade;
+};
+
+struct dm_config_tree *dm_config_create(const char *filename, int keep_open);
+struct dm_config_tree *dm_config_from_string(const char *config_settings);
+int dm_config_parse(struct dm_config_tree *cft, const char *start, const char *end);
+
+void *dm_config_get_custom(struct dm_config_tree *cft);
+int dm_config_check_file(struct dm_config_tree *cft, const char **filename, struct stat *info);
+int dm_config_keep_open(struct dm_config_tree *ctf);
+
+void dm_config_set_custom(struct dm_config_tree *cft, void *custom);
+
+void dm_config_destroy(struct dm_config_tree *cft);
+
+int dm_config_write(struct dm_config_tree *cft, const char *file,
+		    int argc, char **argv);
+
+typedef int (*dm_putline_fn)(const char *line, void *baton);
+int dm_config_write_node(const struct dm_config_node *cn, dm_putline_fn putline, void *baton);
+
+time_t dm_config_timestamp(struct dm_config_tree *cft);
+int dm_config_changed(struct dm_config_tree *cft);
+
+const struct dm_config_node *dm_config_find_node(const struct dm_config_node *cn, const char *path);
+const char *dm_config_find_str(const struct dm_config_node *cn, const char *path, const char *fail);
+int dm_config_find_int(const struct dm_config_node *cn, const char *path, int fail);
+float dm_config_find_float(const struct dm_config_node *cn, const char *path, float fail);
+
+const struct dm_config_node *dm_config_tree_find_node(
+	const struct dm_config_tree *cft, const char *path);
+const char *dm_config_tree_find_str(const struct dm_config_tree *cft,
+				    const char *path, const char *fail);
+int dm_config_tree_find_int(const struct dm_config_tree *cft,
+			    const char *path, int fail);
+int64_t dm_config_tree_find_int64(const struct dm_config_tree *cft,
+				  const char *path, int64_t fail);
+float dm_config_tree_find_float(const struct dm_config_tree *cft,
+				const char *path, float fail);
+int dm_config_tree_find_bool(const struct dm_config_tree *cft,
+			     const char *path, int fail);
+
+/*
+ * Understands (0, ~0), (y, n), (yes, no), (on,
+ * off), (true, false).
+ */
+int dm_config_find_bool(const struct dm_config_node *cn, const char *path, int fail);
+
+int dm_config_get_uint32(const struct dm_config_node *cn, const char *path,
+			 uint32_t *result);
+
+int dm_config_get_uint64(const struct dm_config_node *cn, const char *path,
+			 uint64_t *result);
+
+int dm_config_get_str(const struct dm_config_node *cn, const char *path,
+		      const char **result);
+
+unsigned dm_config_maybe_section(const char *str, unsigned len);
+
+const char *dm_config_parent_name(const struct dm_config_node *n);
+
+struct dm_config_node *dm_config_clone_node_with_mem(struct dm_pool *mem,
+						     const struct dm_config_node *node,
+						     int siblings);
+struct dm_config_node *dm_config_create_node(struct dm_config_tree *cft, const char *key);
+struct dm_config_value *dm_config_create_value(struct dm_config_tree *cft);
+struct dm_config_node *dm_config_clone_node(struct dm_config_tree *cft,
+					    const struct dm_config_node *cn,
+					    int siblings);
+
+struct dm_pool *dm_config_memory(struct dm_config_tree *cft);
+
 
 /* Cookie prefixes.
  * The cookie value consists of a prefix (16 bits) and a base (16 bits).

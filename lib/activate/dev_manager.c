@@ -269,7 +269,7 @@ int dev_manager_info(struct dm_pool *mem, const struct logical_volume *lv,
 	char *dlid, *name;
 	int r;
 
-	if (!(name = build_dm_name(mem, lv->vg->name, lv->name, layer))) {
+	if (!(name = dm_build_dm_name(mem, lv->vg->name, lv->name, layer))) {
 		log_error("name build failed for %s", lv->name);
 		return 0;
 	}
@@ -723,7 +723,7 @@ int dev_manager_snapshot_percent(struct dev_manager *dm,
 	/*
 	 * Build a name for the top layer.
 	 */
-	if (!(name = build_dm_name(dm->mem, lv->vg->name, lv->name, NULL)))
+	if (!(name = dm_build_dm_name(dm->mem, lv->vg->name, lv->name, NULL)))
 		return_0;
 
 	if (!(dlid = build_dm_uuid(dm->mem, lv->lvid.s, NULL)))
@@ -757,7 +757,7 @@ int dev_manager_mirror_percent(struct dev_manager *dm,
 	/*
 	 * Build a name for the top layer.
 	 */
-	if (!(name = build_dm_name(dm->mem, lv->vg->name, lv->name, layer)))
+	if (!(name = dm_build_dm_name(dm->mem, lv->vg->name, lv->name, layer)))
 		return_0;
 
 	/* FIXME dm_pool_free ? */
@@ -800,7 +800,7 @@ int dev_manager_mirror_percent(struct dev_manager *dm,
 	/* Rename? */
 		if ((suffix = strrchr(dl->dlid + sizeof(UUID_PREFIX) - 1, '-')))
 			suffix++;
-		new_name = build_dm_name(dm->mem, dm->vg_name, dl->lv->name,
+		new_name = dm_build_dm_name(dm->mem, dm->vg_name, dl->lv->name,
 					suffix);
 
 static int _belong_to_vg(const char *vgname, const char *name)
@@ -843,7 +843,7 @@ static int _dev_manager_lv_mknodes(const struct logical_volume *lv)
 {
 	char *name;
 
-	if (!(name = build_dm_name(lv->vg->cmd->mem, lv->vg->name,
+	if (!(name = dm_build_dm_name(lv->vg->cmd->mem, lv->vg->name,
 				   lv->name, NULL)))
 		return_0;
 
@@ -861,7 +861,7 @@ int dev_manager_mknodes(const struct logical_volume *lv)
 	char *name;
 	int r = 0;
 
-	if (!(name = build_dm_name(lv->vg->cmd->mem, lv->vg->name, lv->name, NULL)))
+	if (!(name = dm_build_dm_name(lv->vg->cmd->mem, lv->vg->name, lv->name, NULL)))
 		return_0;
 
 	if ((r = _info_run(name, NULL, &dminfo, NULL, 1, 0, 0, 0, 0))) {
@@ -933,7 +933,7 @@ static int _add_dev_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	char *dlid, *name;
 	struct dm_info info, info2;
 
-	if (!(name = build_dm_name(dm->mem, lv->vg->name, lv->name, layer)))
+	if (!(name = dm_build_dm_name(dm->mem, lv->vg->name, lv->name, layer)))
 		return_0;
 
 	if (!(dlid = build_dm_uuid(dm->mem, lv->lvid.s, layer)))
@@ -1163,7 +1163,7 @@ static char *_add_error_device(struct dev_manager *dm, struct dm_tree *dtree,
 	if (!(id = build_dm_uuid(dm->mem, seg->lv->lvid.s, errid)))
 		return_NULL;
 
-	if (!(name = build_dm_name(dm->mem, seg->lv->vg->name,
+	if (!(name = dm_build_dm_name(dm->mem, seg->lv->vg->name,
 				   seg->lv->name, errid)))
 		return_NULL;
 	if (!(node = dm_tree_add_new_dev(dtree, name, id, 0, 0, 0, 0, 0)))
@@ -1558,7 +1558,7 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		}
 	}
 
-	if (!(name = build_dm_name(dm->mem, lv->vg->name, lv->name, layer)))
+	if (!(name = dm_build_dm_name(dm->mem, lv->vg->name, lv->name, layer)))
 		return_0;
 
 	if (!(dlid = build_dm_uuid(dm->mem, lv->lvid.s, layer)))

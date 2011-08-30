@@ -146,10 +146,10 @@ static void _release_memory(void)
  * mlock/munlock memory areas from /proc/self/maps
  * format described in kernel/Documentation/filesystem/proc.txt
  */
-static int _maps_line(const struct config_node *cn, lvmlock_t lock,
+static int _maps_line(const struct dm_config_node *cn, lvmlock_t lock,
 		      const char* line, size_t* mstats)
 {
-	const struct config_value *cv;
+	const struct dm_config_value *cv;
 	long from, to;
 	int pos;
 	unsigned i;
@@ -188,7 +188,7 @@ static int _maps_line(const struct config_node *cn, lvmlock_t lock,
 			}
 	} else {
 		for (cv = cn->v; cv; cv = cv->next) {
-			if ((cv->type != CFG_STRING) || !cv->v.str[0])
+			if ((cv->type != DM_CFG_STRING) || !cv->v.str[0])
 				continue;
 			if (strstr(line + pos, cv->v.str)) {
 				log_debug("mlock_filter '%s' matches '%s': Skipping.",
@@ -228,7 +228,7 @@ static int _maps_line(const struct config_node *cn, lvmlock_t lock,
 
 static int _memlock_maps(struct cmd_context *cmd, lvmlock_t lock, size_t *mstats)
 {
-	const struct config_node *cn;
+	const struct dm_config_node *cn;
 	char *line, *line_end;
 	size_t len;
 	ssize_t n;

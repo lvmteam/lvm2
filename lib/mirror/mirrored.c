@@ -69,46 +69,46 @@ static void _mirrored_display(const struct lv_segment *seg)
 	log_print(" ");
 }
 
-static int _mirrored_text_import_area_count(const struct config_node *sn, uint32_t *area_count)
+static int _mirrored_text_import_area_count(const struct dm_config_node *sn, uint32_t *area_count)
 {
-	if (!get_config_uint32(sn, "mirror_count", area_count)) {
+	if (!dm_config_get_uint32(sn, "mirror_count", area_count)) {
 		log_error("Couldn't read 'mirror_count' for "
-			  "segment '%s'.", config_parent_name(sn));
+			  "segment '%s'.", dm_config_parent_name(sn));
 		return 0;
 	}
 
 	return 1;
 }
 
-static int _mirrored_text_import(struct lv_segment *seg, const struct config_node *sn,
+static int _mirrored_text_import(struct lv_segment *seg, const struct dm_config_node *sn,
 			struct dm_hash_table *pv_hash)
 {
-	const struct config_node *cn;
+	const struct dm_config_node *cn;
 	const char *logname = NULL;
 
-	if (find_config_node(sn, "extents_moved")) {
-		if (get_config_uint32(sn, "extents_moved",
+	if (dm_config_find_node(sn, "extents_moved")) {
+		if (dm_config_get_uint32(sn, "extents_moved",
 				      &seg->extents_copied))
 			seg->status |= PVMOVE;
 		else {
 			log_error("Couldn't read 'extents_moved' for "
 				  "segment %s of logical volume %s.",
-				  config_parent_name(sn), seg->lv->name);
+				  dm_config_parent_name(sn), seg->lv->name);
 			return 0;
 		}
 	}
 
-	if (find_config_node(sn, "region_size")) {
-		if (!get_config_uint32(sn, "region_size",
+	if (dm_config_find_node(sn, "region_size")) {
+		if (!dm_config_get_uint32(sn, "region_size",
 				      &seg->region_size)) {
 			log_error("Couldn't read 'region_size' for "
 				  "segment %s of logical volume %s.",
-				  config_parent_name(sn), seg->lv->name);
+				  dm_config_parent_name(sn), seg->lv->name);
 			return 0;
 		}
 	}
 
-	if ((cn = find_config_node(sn, "mirror_log"))) {
+	if ((cn = dm_config_find_node(sn, "mirror_log"))) {
 		if (!cn->v || !cn->v->v.str) {
 			log_error("Mirror log type must be a string.");
 			return 0;
@@ -117,7 +117,7 @@ static int _mirrored_text_import(struct lv_segment *seg, const struct config_nod
 		if (!(seg->log_lv = find_lv(seg->lv->vg, logname))) {
 			log_error("Unrecognised mirror log in "
 				  "segment %s of logical volume %s.",
-				  config_parent_name(sn), seg->lv->name);
+				  dm_config_parent_name(sn), seg->lv->name);
 			return 0;
 		}
 		seg->log_lv->status |= MIRROR_LOG;
@@ -126,14 +126,14 @@ static int _mirrored_text_import(struct lv_segment *seg, const struct config_nod
 	if (logname && !seg->region_size) {
 		log_error("Missing region size for mirror log for "
 			  "segment %s of logical volume %s.",
-			  config_parent_name(sn), seg->lv->name);
+			  dm_config_parent_name(sn), seg->lv->name);
 		return 0;
 	}
 
-	if (!(cn = find_config_node(sn, "mirrors"))) {
+	if (!(cn = dm_config_find_node(sn, "mirrors"))) {
 		log_error("Couldn't find mirrors array for "
 			  "segment %s of logical volume %s.",
-			  config_parent_name(sn), seg->lv->name);
+			  dm_config_parent_name(sn), seg->lv->name);
 		return 0;
 	}
 
