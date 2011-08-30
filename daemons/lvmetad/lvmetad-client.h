@@ -27,7 +27,7 @@ typedef struct {
 
 typedef struct {
 	daemon_reply r;
-	struct config_tree *cft;
+	struct dm_config_tree *cft;
 } lvmetad_vg;
 
 static inline daemon_handle lvmetad_open();
