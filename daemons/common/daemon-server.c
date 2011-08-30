@@ -242,7 +242,7 @@ void *client_thread(void *baton)
 		if (!read_buffer(b->client.socket_fd, &req.buffer))
 			goto fail;
 
-		req.cft = create_config_tree_from_string(req.buffer);
+		req.cft = dm_config_from_string(req.buffer);
 		if (!req.cft)
 			fprintf(stderr, "error parsing request:\n %s\n", req.buffer);
 		response res = b->s.handler(b->s, b->client, req);
@@ -251,7 +251,7 @@ void *client_thread(void *baton)
 		dm_free(req.buffer);
 
 		if (!res.buffer) {
-			write_config_node(res.cft->root, buffer_line, &res);
+			dm_config_write_node(res.cft->root, buffer_line, &res);
 			buffer_rewrite(&res.buffer, "%s\n\n", NULL);
 			destroy_config_tree(res.cft);
 		}
@@ -323,6 +323,7 @@ void daemon_start(daemon_state s)
 	signal(SIGHUP, &_exit_handler);
 	signal(SIGQUIT, &_exit_handler);
 	signal(SIGTERM, &_exit_handler);
+	signal(SIGALRM, &_exit_handler);
 	signal(SIGPIPE, SIG_IGN);
 
 #ifdef linux
