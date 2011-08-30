@@ -24,7 +24,7 @@
 
 struct formatter;
 struct lv_segment;
-struct config_node;
+struct dm_config_node;
 
 int out_size(struct formatter *f, uint64_t size, const char *fmt, ...)
     __attribute__ ((format(printf, 3, 4)));
@@ -35,7 +35,7 @@ int out_hint(struct formatter *f, const char *fmt, ...)
 int out_text(struct formatter *f, const char *fmt, ...)
     __attribute__ ((format(printf, 2, 3)));
 
-int out_config_node(struct formatter *f, const struct config_node *cn);
+int out_config_node(struct formatter *f, const struct dm_config_node *cn);
 
 int out_areas(struct formatter *f, const struct lv_segment *seg,
 	      const char *type);

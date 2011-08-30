@@ -27,6 +27,6 @@
  * r|.*|             - reject everything else
  */
 
-struct dev_filter *regex_filter_create(const struct config_value *patterns);
+struct dev_filter *regex_filter_create(const struct dm_config_value *patterns);
 
 #endif

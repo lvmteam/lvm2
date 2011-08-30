@@ -36,7 +36,7 @@
 int lock_resource(struct cmd_context *cmd, const char *resource, uint32_t flags);
 int query_resource(const char *resource, int *mode);
 void locking_end(void);
-int locking_init(int type, struct config_tree *cf, uint32_t *flags);
+int locking_init(int type, struct dm_config_tree *cf, uint32_t *flags);
 #endif
 
 typedef struct lvm_response {
@@ -606,7 +606,7 @@ int init_cluster_locking(struct locking_type *locking, struct cmd_context *cmd,
 	return 1;
 }
 #else
-int locking_init(int type, struct config_tree *cf, uint32_t *flags)
+int locking_init(int type, struct dm_config_tree *cf, uint32_t *flags)
 {
 	_clvmd_sock = _open_local_sock(0);
 	if (_clvmd_sock == -1)

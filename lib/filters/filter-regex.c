@@ -87,10 +87,10 @@ static int _extract_pattern(struct dm_pool *mem, const char *pat,
 	return 1;
 }
 
-static int _build_matcher(struct rfilter *rf, const struct config_value *val)
+static int _build_matcher(struct rfilter *rf, const struct dm_config_value *val)
 {
 	struct dm_pool *scratch;
-	const struct config_value *v;
+	const struct dm_config_value *v;
 	char **regex;
 	unsigned count = 0;
 	int i, r = 0;
@@ -102,7 +102,7 @@ static int _build_matcher(struct rfilter *rf, const struct config_value *val)
 	 * count how many patterns we have.
 	 */
 	for (v = val; v; v = v->next) {
-		if (v->type != CFG_STRING) {
+		if (v->type != DM_CFG_STRING) {
 			log_error("Filter patterns must be enclosed in quotes.");
 			goto out;
 		}
@@ -188,7 +188,7 @@ static void _regex_destroy(struct dev_filter *f)
 	dm_pool_destroy(rf->mem);
 }
 
-struct dev_filter *regex_filter_create(const struct config_value *patterns)
+struct dev_filter *regex_filter_create(const struct dm_config_value *patterns)
 {
 	struct dm_pool *mem = dm_pool_create("filter regex", 10 * 1024);
 	struct rfilter *rf;

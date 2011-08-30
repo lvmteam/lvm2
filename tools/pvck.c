@@ -31,7 +31,7 @@ int pvck(struct cmd_context *cmd, int argc, char **argv)
 		/* FIXME: warning and/or check if in use? */
 		log_verbose("Scanning %s", argv[i]);
 
-		unescape_colons_and_at_signs(argv[i], NULL, NULL);
+		dm_unescape_colons_and_at_signs(argv[i], NULL, NULL);
 		pv_analyze(cmd, argv[i],
 			   arg_uint64_value(cmd, labelsector_ARG,
 					   UINT64_C(0)));

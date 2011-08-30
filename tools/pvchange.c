@@ -209,7 +209,7 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 		log_verbose("Using physical volume(s) on command line");
 		for (; opt < argc; opt++) {
 			pv_name = argv[opt];
-			unescape_colons_and_at_signs(pv_name, NULL, NULL);
+			dm_unescape_colons_and_at_signs(pv_name, NULL, NULL);
 			vg_name = find_vgname_from_pvname(cmd, pv_name);
 			if (!vg_name) {
 				log_error("Failed to read physical volume %s",

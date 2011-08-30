@@ -628,7 +628,7 @@ struct alloc_handle {
 	 */
 	unsigned alloc_and_split_meta;
 
-	const struct config_node *cling_tag_list_cn;
+	const struct dm_config_node *cling_tag_list_cn;
 
 	struct dm_list *parallel_areas;	/* PVs to avoid */
 
@@ -1161,7 +1161,7 @@ struct pv_match {
 	struct pv_area_used *areas;
 	struct pv_area *pva;
 	uint32_t areas_size;
-	const struct config_node *cling_tag_list_cn;
+	const struct dm_config_node *cling_tag_list_cn;
 	int s;	/* Area index of match */
 };
 
@@ -1182,12 +1182,12 @@ static int _is_same_pv(struct pv_match *pvmatch __attribute((unused)), struct pv
  */
 static int _has_matching_pv_tag(struct pv_match *pvmatch, struct pv_segment *pvseg, struct pv_area *pva)
 {
-	const struct config_value *cv;
+	const struct dm_config_value *cv;
 	const char *str;
 	const char *tag_matched;
 
 	for (cv = pvmatch->cling_tag_list_cn->v; cv; cv = cv->next) {
-		if (cv->type != CFG_STRING) {
+		if (cv->type != DM_CFG_STRING) {
 			log_error("Ignoring invalid string in config file entry "
 				  "allocation/cling_tag_list");
 			continue;
@@ -1292,7 +1292,7 @@ static int _is_condition(struct cmd_context *cmd __attribute__((unused)),
  * Is pva on same PV as any existing areas?
  */
 static int _check_cling(struct alloc_handle *ah,
-			const struct config_node *cling_tag_list_cn,
+			const struct dm_config_node *cling_tag_list_cn,
 			struct lv_segment *prev_lvseg, struct pv_area *pva,
 			struct alloc_state *alloc_state)
 {

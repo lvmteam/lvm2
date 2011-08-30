@@ -32,17 +32,17 @@ static const char *_unknown_name(const struct lv_segment *seg)
 	return seg->segtype->name;
 }
 
-static int _unknown_text_import(struct lv_segment *seg, const struct config_node *sn,
+static int _unknown_text_import(struct lv_segment *seg, const struct dm_config_node *sn,
 				struct dm_hash_table *pv_hash)
 {
-	struct config_node *new, *last = NULL, *head = NULL;
-	const struct config_node *current;
+	struct dm_config_node *new, *last = NULL, *head = NULL;
+	const struct dm_config_node *current;
 	log_verbose("importing unknown segment");
 	for (current = sn; current != NULL; current = current->sib) {
 		if (!strcmp(current->key, "type") || !strcmp(current->key, "start_extent") ||
 		    !strcmp(current->key, "tags") || !strcmp(current->key, "extent_count"))
 			continue;
-		new = clone_config_node_with_mem(seg->lv->vg->vgmem, current, 0);
+		new = dm_config_clone_node_with_mem(seg->lv->vg->vgmem, current, 0);
 		if (!new)
 			return_0;
 		if (last)
@@ -57,7 +57,7 @@ static int _unknown_text_import(struct lv_segment *seg, const struct config_node
 
 static int _unknown_text_export(const struct lv_segment *seg, struct formatter *f)
 {
-	struct config_node *cn = seg->segtype_private;
+	struct dm_config_node *cn = seg->segtype_private;
 	return out_config_node(f, cn);
 }
 

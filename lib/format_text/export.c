@@ -319,9 +319,9 @@ static int _out_line(const char *line, void *_f) {
 	return out_text(f, "%s", line);
 }
 
-int out_config_node(struct formatter *f, const struct config_node *cn)
+int out_config_node(struct formatter *f, const struct dm_config_node *cn)
 {
-	return write_config_node(cn, _out_line, f);
+	return dm_config_write_node(cn, _out_line, f);
 }
 
 static int _print_header(struct formatter *f,
@@ -337,12 +337,12 @@ static int _print_header(struct formatter *f,
 	outf(f, FORMAT_VERSION_FIELD " = %d", FORMAT_VERSION_VALUE);
 	outnl(f);
 
-	if (!(buf = alloca(escaped_len(desc)))) {
+	if (!(buf = alloca(dm_escaped_len(desc)))) {
 		log_error("temporary stack allocation for description"
 			  "string failed");
 		return 0;
 	}
-	outf(f, "description = \"%s\"", escape_double_quotes(buf, desc));
+	outf(f, "description = \"%s\"", dm_escape_double_quotes(buf, desc));
 	outnl(f);
 	outf(f, "creation_host = \"%s\"\t# %s %s %s %s %s", _utsname.nodename,
 	     _utsname.sysname, _utsname.nodename, _utsname.release,
@@ -465,14 +465,14 @@ static int _print_pvs(struct formatter *f, struct volume_group *vg)
 
 		outf(f, "id = \"%s\"", buffer);
 
-		if (!(buf = alloca(escaped_len(pv_dev_name(pv))))) {
+		if (!(buf = alloca(dm_escaped_len(pv_dev_name(pv))))) {
 			log_error("temporary stack allocation for device name"
 				  "string failed");
 			return 0;
 		}
 
 		outhint(f, "device = \"%s\"",
-			escape_double_quotes(buf, pv_dev_name(pv)));
+			dm_escape_double_quotes(buf, pv_dev_name(pv)));
 		outnl(f);
 
 		if (!_print_flag_config(f, pv->status, PV_FLAGS))

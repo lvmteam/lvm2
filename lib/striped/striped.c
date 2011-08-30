@@ -57,32 +57,32 @@ static void _striped_display(const struct lv_segment *seg)
 	log_print(" ");
 }
 
-static int _striped_text_import_area_count(const struct config_node *sn, uint32_t *area_count)
+static int _striped_text_import_area_count(const struct dm_config_node *sn, uint32_t *area_count)
 {
-	if (!get_config_uint32(sn, "stripe_count", area_count)) {
+	if (!dm_config_get_uint32(sn, "stripe_count", area_count)) {
 		log_error("Couldn't read 'stripe_count' for "
-			  "segment '%s'.", config_parent_name(sn));
+			  "segment '%s'.", dm_config_parent_name(sn));
 		return 0;
 	}
 
 	return 1;
 }
 
-static int _striped_text_import(struct lv_segment *seg, const struct config_node *sn,
+static int _striped_text_import(struct lv_segment *seg, const struct dm_config_node *sn,
 			struct dm_hash_table *pv_hash)
 {
-	const struct config_node *cn;
+	const struct dm_config_node *cn;
 
 	if ((seg->area_count != 1) &&
-	    !get_config_uint32(sn, "stripe_size", &seg->stripe_size)) {
+	    !dm_config_get_uint32(sn, "stripe_size", &seg->stripe_size)) {
 		log_error("Couldn't read stripe_size for segment %s "
-			  "of logical volume %s.", config_parent_name(sn), seg->lv->name);
+			  "of logical volume %s.", dm_config_parent_name(sn), seg->lv->name);
 		return 0;
 	}
 
-	if (!(cn = find_config_node(sn, "stripes"))) {
+	if (!(cn = dm_config_find_node(sn, "stripes"))) {
 		log_error("Couldn't find stripes array for segment %s "
-			  "of logical volume %s.", config_parent_name(sn), seg->lv->name);
+			  "of logical volume %s.", dm_config_parent_name(sn), seg->lv->name);
 		return 0;
 	}
 

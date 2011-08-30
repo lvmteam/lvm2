@@ -32,25 +32,25 @@ static const char *_raid_name(const struct lv_segment *seg)
 	return seg->segtype->name;
 }
 
-static int _raid_text_import_area_count(const struct config_node *sn,
+static int _raid_text_import_area_count(const struct dm_config_node *sn,
 					uint32_t *area_count)
 {
-	if (!get_config_uint32(sn, "device_count", area_count)) {
+	if (!dm_config_get_uint32(sn, "device_count", area_count)) {
 		log_error("Couldn't read 'device_count' for "
-			  "segment '%s'.", config_parent_name(sn));
+			  "segment '%s'.", dm_config_parent_name(sn));
 		return 0;
 	}
 	return 1;
 }
 
 static int _raid_text_import_areas(struct lv_segment *seg,
-				   const struct config_node *sn,
-				   const struct config_node *cn)
+				   const struct dm_config_node *sn,
+				   const struct dm_config_node *cn)
 {
 	unsigned int s;
-	const struct config_value *cv;
+	const struct dm_config_value *cv;
 	struct logical_volume *lv1;
-	const char *seg_name = config_parent_name(sn);
+	const char *seg_name = dm_config_parent_name(sn);
 
 	if (!seg->area_count) {
 		log_error("No areas found for segment %s", seg_name);
@@ -58,7 +58,7 @@ static int _raid_text_import_areas(struct lv_segment *seg,
 	}
 
 	for (cv = cn->v, s = 0; cv && s < seg->area_count; s++, cv = cv->next) {
-		if (cv->type != CFG_STRING) {
+		if (cv->type != DM_CFG_STRING) {
 			log_error("Bad volume name in areas array for segment %s.", seg_name);
 			return 0;
 		}
@@ -101,31 +101,31 @@ static int _raid_text_import_areas(struct lv_segment *seg,
 }
 
 static int _raid_text_import(struct lv_segment *seg,
-			     const struct config_node *sn,
+			     const struct dm_config_node *sn,
 			     struct dm_hash_table *pv_hash)
 {
-	const struct config_node *cn;
+	const struct dm_config_node *cn;
 
-	if (find_config_node(sn, "region_size")) {
-		if (!get_config_uint32(sn, "region_size", &seg->region_size)) {
+	if (dm_config_find_node(sn, "region_size")) {
+		if (!dm_config_get_uint32(sn, "region_size", &seg->region_size)) {
 			log_error("Couldn't read 'region_size' for "
 				  "segment %s of logical volume %s.",
-				  config_parent_name(sn), seg->lv->name);
+				  dm_config_parent_name(sn), seg->lv->name);
 			return 0;
 		}
 	}
-	if (find_config_node(sn, "stripe_size")) {
-		if (!get_config_uint32(sn, "stripe_size", &seg->stripe_size)) {
+	if (dm_config_find_node(sn, "stripe_size")) {
+		if (!dm_config_get_uint32(sn, "stripe_size", &seg->stripe_size)) {
 			log_error("Couldn't read 'stripe_size' for "
 				  "segment %s of logical volume %s.",
-				  config_parent_name(sn), seg->lv->name);
+				  dm_config_parent_name(sn), seg->lv->name);
 			return 0;
 		}
 	}
-	if (!(cn = find_config_node(sn, "raids"))) {
+	if (!(cn = dm_config_find_node(sn, "raids"))) {
 		log_error("Couldn't find RAID array for "
 			  "segment %s of logical volume %s.",
-			  config_parent_name(sn), seg->lv->name);
+			  dm_config_parent_name(sn), seg->lv->name);
 		return 0;
 	}
 

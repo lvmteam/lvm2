@@ -707,7 +707,7 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 	if (argc) {
 		log_verbose("Using physical volume(s) on command line");
 		for (; opt < argc; opt++) {
-			unescape_colons_and_at_signs(argv[opt], NULL, &at_sign);
+			dm_unescape_colons_and_at_signs(argv[opt], NULL, &at_sign);
 			if (at_sign && (at_sign == argv[opt])) {
 				tagname = at_sign + 1;
 
@@ -1129,7 +1129,7 @@ struct dm_list *create_pv_list(struct dm_pool *mem, struct volume_group *vg, int
 	dm_list_init(&arg_pvnames);
 
 	for (i = 0; i < argc; i++) {
-		unescape_colons_and_at_signs(argv[i], &colon, &at_sign);
+		dm_unescape_colons_and_at_signs(argv[i], &colon, &at_sign);
 
 		if (at_sign && (at_sign == argv[i])) {
 			tagname = at_sign + 1;

@@ -98,7 +98,7 @@
 //#define FMT_RESIZE_PV		0x00000080U	/* Supports pvresize? */
 //#define FMT_UNLIMITED_STRIPESIZE 0x00000100U	/* Unlimited stripe size? */
 
-struct config_tree;
+struct dm_config_tree;
 struct metadata_area;
 
 /* Per-format per-metadata area operations */
@@ -455,9 +455,10 @@ void lv_calculate_readahead(const struct logical_volume *lv, uint32_t *read_ahea
  * For internal metadata caching.
  */
 int export_vg_to_buffer(struct volume_group *vg, char **buf);
+int export_vg_to_config_tree(struct volume_group *vg, struct dm_config_tree **cft);
 struct volume_group *import_vg_from_buffer(const char *buf,
 					   struct format_instance *fid);
-struct volume_group *import_vg_from_config_tree(const struct config_tree *cft,
+struct volume_group *import_vg_from_config_tree(const struct dm_config_tree *cft,
 						struct format_instance *fid);
 
 /*

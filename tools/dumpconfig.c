@@ -19,7 +19,7 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 {
 	const char *file = arg_str_value(cmd, file_ARG, NULL);
 
-	if (!write_config_file(cmd->cft, file, argc, argv)) {
+	if (!dm_config_write(cmd->cft, file, argc, argv)) {
 		stack;
 		return ECMD_FAILED;
 	}

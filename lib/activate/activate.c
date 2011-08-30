@@ -273,8 +273,8 @@ int activation(void)
 static int _passes_activation_filter(struct cmd_context *cmd,
 				     struct logical_volume *lv)
 {
-	const struct config_node *cn;
-	const struct config_value *cv;
+	const struct dm_config_node *cn;
+	const struct dm_config_value *cv;
 	const char *str;
 	char path[PATH_MAX];
 
@@ -304,7 +304,7 @@ static int _passes_activation_filter(struct cmd_context *cmd,
 			    lv->vg->name, lv->name);
 
 	for (cv = cn->v; cv; cv = cv->next) {
-		if (cv->type != CFG_STRING) {
+		if (cv->type != DM_CFG_STRING) {
 			log_error("Ignoring invalid string in config file "
 				  "activation/volume_list");
 			continue;

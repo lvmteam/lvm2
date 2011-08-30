@@ -47,10 +47,15 @@ struct config_info {
 	char _padding[1];
 };
 
-struct config_tree;
+struct dm_config_tree;
 struct archive_params;
 struct backup_params;
 struct arg_values;
+
+struct config_tree_list {
+	struct dm_list list;
+	struct dm_config_tree *cft;
+};
 
 /* FIXME Split into tool & library contexts */
 /* command-instance-related variables needed by library */
@@ -87,8 +92,8 @@ struct cmd_context {
 
 	struct dm_list config_files;
 	int config_valid;
-	struct config_tree *cft;
-	struct config_tree *cft_override;
+	struct dm_config_tree *cft;
+	struct dm_config_tree *cft_override;
 	struct config_info default_settings;
 	struct config_info current_settings;
 

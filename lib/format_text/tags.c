@@ -61,13 +61,13 @@ bad:
 	return_NULL;
 }
 
-int read_tags(struct dm_pool *mem, struct dm_list *tags, const struct config_value *cv)
+int read_tags(struct dm_pool *mem, struct dm_list *tags, const struct dm_config_value *cv)
 {
-	if (cv->type == CFG_EMPTY_ARRAY)
+	if (cv->type == DM_CFG_EMPTY_ARRAY)
 		return 1;
 
 	while (cv) {
-		if (cv->type != CFG_STRING) {
+		if (cv->type != DM_CFG_STRING) {
 			log_error("Found a tag that is not a string");
 			return 0;
 		}
