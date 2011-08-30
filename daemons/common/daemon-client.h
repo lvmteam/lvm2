@@ -13,7 +13,6 @@
  */
 
 #include "libdevmapper.h" // for dm_list, needed by config.h
-#include "config.h" // should become part of libdevmapper later
 
 #ifndef _LVM_DAEMON_COMMON_CLIENT_H
 #define _LVM_DAEMON_COMMON_CLIENT_H
@@ -42,13 +41,13 @@ typedef struct {
 	 *        knobs = [ "twiddle", "tweak" ]
 	 *    }
 	 */
-	struct config_tree *cft;
+	struct dm_config_tree *cft;
 } daemon_request;
 
 typedef struct {
 	int error; /* 0 for success */
 	char *buffer; /* textual reply */
-	struct config_tree *cft; /* parsed reply, if available */
+	struct dm_config_tree *cft; /* parsed reply, if available */
 } daemon_reply;
 
 /*
@@ -83,11 +82,11 @@ daemon_reply daemon_send_simple(daemon_handle h, char *id, ...);
 void daemon_reply_destroy(daemon_reply r);
 
 static inline int daemon_reply_int(daemon_reply r, const char *path, int def) {
-	return find_config_int(r.cft->root, path, def);
+	return dm_config_find_int(r.cft->root, path, def);
 }
 
 static inline const char *daemon_reply_str(daemon_reply r, const char *path, const char *def) {
-	return find_config_str(r.cft->root, path, def);
+	return dm_config_find_str(r.cft->root, path, def);
 }
 
 

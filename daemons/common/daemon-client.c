@@ -44,7 +44,7 @@ daemon_reply daemon_send(daemon_handle h, daemon_request rq)
 	write_buffer(h.socket_fd, rq.buffer, strlen(rq.buffer));
 
 	if (read_buffer(h.socket_fd, &reply.buffer)) {
-		reply.cft = create_config_tree_from_string(reply.buffer);
+		reply.cft = dm_config_from_string(reply.buffer);
 	} else
 		reply.error = 1;
 
