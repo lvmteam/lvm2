@@ -1275,7 +1275,7 @@ int dm_config_write_node(const struct dm_config_node *cn, dm_putline_fn putline,
 time_t dm_config_timestamp(struct dm_config_tree *cft);
 int dm_config_changed(struct dm_config_tree *cft);
 
-const struct dm_config_node *dm_config_find_node(const struct dm_config_node *cn, const char *path);
+struct dm_config_node *dm_config_find_node(const struct dm_config_node *cn, const char *path);
 const char *dm_config_find_str(const struct dm_config_node *cn, const char *path, const char *fail);
 int dm_config_find_int(const struct dm_config_node *cn, const char *path, int fail);
 float dm_config_find_float(const struct dm_config_node *cn, const char *path, float fail);

@@ -1,11 +1,11 @@
 #include <assert.h>
 #include <pthread.h>
-
-#include "libdevmapper.h"
 #include <malloc.h>
 #include <stdint.h>
+#include <unistd.h>
 
-#include "../common/daemon-server.h"
+#include "libdevmapper.h"
+#include "daemon-server.h"
 
 typedef struct {
 	struct dm_hash_table *pvs;
@@ -19,29 +19,29 @@ typedef struct {
 	} lock;
 } lvmetad_state;
 
-void debug(const char *fmt, ...) {
+static void debug(const char *fmt, ...) {
 	va_list ap;
 	va_start(ap, fmt);
-	fprintf(stderr, "[D %u] ", pthread_self());
+	fprintf(stderr, "[D %lu] ", pthread_self());
 	vfprintf(stderr, fmt, ap);
 	va_end(ap);
 };
 
-void lock_pvs(lvmetad_state *s) { pthread_mutex_lock(&s->lock.pvs); }
-void unlock_pvs(lvmetad_state *s) { pthread_mutex_unlock(&s->lock.pvs); }
+static void lock_pvs(lvmetad_state *s) { pthread_mutex_lock(&s->lock.pvs); }
+static void unlock_pvs(lvmetad_state *s) { pthread_mutex_unlock(&s->lock.pvs); }
 
-void lock_vgs(lvmetad_state *s) { pthread_mutex_lock(&s->lock.vgs); }
-void unlock_vgs(lvmetad_state *s) { pthread_mutex_unlock(&s->lock.vgs); }
+static void lock_vgs(lvmetad_state *s) { pthread_mutex_lock(&s->lock.vgs); }
+static void unlock_vgs(lvmetad_state *s) { pthread_mutex_unlock(&s->lock.vgs); }
 
-void lock_pvid_map(lvmetad_state *s) { pthread_mutex_lock(&s->lock.pvid_map); }
-void unlock_pvid_map(lvmetad_state *s) { pthread_mutex_unlock(&s->lock.pvid_map); }
+static void lock_pvid_map(lvmetad_state *s) { pthread_mutex_lock(&s->lock.pvid_map); }
+static void unlock_pvid_map(lvmetad_state *s) { pthread_mutex_unlock(&s->lock.pvid_map); }
 
 /*
  * TODO: It may be beneficial to clean up the vg lock hash from time to time,
  * since if we have many "rogue" requests for nonexistent things, we will keep
  * allocating memory that we never release. Not good.
  */
-struct dm_config_tree *lock_vg(lvmetad_state *s, const char *id) {
+static struct dm_config_tree *lock_vg(lvmetad_state *s, const char *id) {
 	lock_vgs(s);
 	pthread_mutex_t *vg = dm_hash_lookup(s->lock.vg, id);
 	if (!vg) {
@@ -58,7 +58,7 @@ struct dm_config_tree *lock_vg(lvmetad_state *s, const char *id) {
 	return cft;
 }
 
-void unlock_vg(lvmetad_state *s, const char *id) {
+static void unlock_vg(lvmetad_state *s, const char *id) {
 	lock_vgs(s); /* someone might be changing the s->lock.vg structure right
 		      * now, so avoid stepping on each other's toes */
 	pthread_mutex_unlock(dm_hash_lookup(s->lock.vg, id));
@@ -78,10 +78,9 @@ static struct dm_config_node *pvs(struct dm_config_node *vg)
  * library here or there.
  */
 static void set_flag(struct dm_config_tree *cft, struct dm_config_node *parent,
-		     char *field, const char *flag, int want) {
+		     const char *field, const char *flag, int want) {
 	struct dm_config_value *value = NULL, *pred = NULL;
 	struct dm_config_node *node = dm_config_find_node(parent->child, field);
-	int found = 0;
 
 	if (node)
 		value = node->v;
@@ -184,20 +183,23 @@ static response vg_by_uuid(lvmetad_state *s, request r)
 
 static int compare_value(struct dm_config_value *a, struct dm_config_value *b)
 {
+	int r = 0;
+
 	if (a->type > b->type)
 		return 1;
 	if (a->type < b->type)
 		return -1;
 
 	switch (a->type) {
-	case DM_CFG_STRING: return strcmp(a->v.str, b->v.str);
-	case DM_CFG_FLOAT: return a->v.r == b->v.r;
-	case DM_CFG_INT: return a->v.i == b->v.i;
+	case DM_CFG_STRING: r = strcmp(a->v.str, b->v.str);
+	case DM_CFG_FLOAT: r = (a->v.r == b->v.r);
+	case DM_CFG_INT: r = (a->v.i == b->v.i);
 	case DM_CFG_EMPTY_ARRAY: return 0;
 	}
 
-	if (a->next && b->next)
-		return compare_value(a->next, b->next);
+	if (r == 0 && a->next && b->next)
+		r = compare_value(a->next, b->next);
+	return r;
 }
 
 static int compare_config(struct dm_config_node *a, struct dm_config_node *b)
@@ -226,7 +228,7 @@ static int compare_config(struct dm_config_node *a, struct dm_config_node *b)
 }
 
 /* You need to be holding the pvid_map lock already to call this. */
-int update_pvid_map(lvmetad_state *s, struct dm_config_tree *vg, const char *vgid)
+static int update_pvid_map(lvmetad_state *s, struct dm_config_tree *vg, const char *vgid)
 {
 	struct dm_config_node *pv = pvs(vg->root);
 
@@ -234,8 +236,8 @@ int update_pvid_map(lvmetad_state *s, struct dm_config_tree *vg, const char *vgi
 		return 0;
 
 	while (pv) {
-		char *pvid = dm_config_find_str(pv->child, "id", NULL);
-		dm_hash_insert(s->pvid_map, pvid, vgid);
+		const char *pvid = dm_config_find_str(pv->child, "id", NULL);
+		dm_hash_insert(s->pvid_map, pvid, (void *) vgid);
 		pv = pv->sib;
 	}
 
