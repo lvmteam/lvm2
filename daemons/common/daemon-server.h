@@ -41,7 +41,7 @@ struct daemon_state;
  * Craft a simple reply, without the need to construct a config_tree. See
  * daemon_send_simple in daemon-client.h for the description of the parameters.
  */
-response daemon_reply_simple(char *id, ...);
+response daemon_reply_simple(const char *id, ...);
 
 static inline int daemon_request_int(request r, const char *path, int def) {
 	if (!r.cft)

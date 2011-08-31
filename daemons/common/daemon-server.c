@@ -201,7 +201,7 @@ static void _daemonise(void)
 	setsid();
 }
 
-response daemon_reply_simple(char *id, ...)
+response daemon_reply_simple(const char *id, ...)
 {
 	va_list ap;
 	va_start(ap, id);
