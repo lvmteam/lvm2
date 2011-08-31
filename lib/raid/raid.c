@@ -45,10 +45,9 @@ static int _raid_text_import_area_count(const struct dm_config_node *sn,
 
 static int _raid_text_import_areas(struct lv_segment *seg,
 				   const struct dm_config_node *sn,
-				   const struct dm_config_node *cn)
+				   const struct dm_config_value *cv)
 {
 	unsigned int s;
-	const struct dm_config_value *cv;
 	struct logical_volume *lv1;
 	const char *seg_name = dm_config_parent_name(sn);
 
@@ -57,7 +56,7 @@ static int _raid_text_import_areas(struct lv_segment *seg,
 		return 0;
 	}
 
-	for (cv = cn->v, s = 0; cv && s < seg->area_count; s++, cv = cv->next) {
+	for (s = 0; cv && s < seg->area_count; s++, cv = cv->next) {
 		if (cv->type != DM_CFG_STRING) {
 			log_error("Bad volume name in areas array for segment %s.", seg_name);
 			return 0;
@@ -104,9 +103,9 @@ static int _raid_text_import(struct lv_segment *seg,
 			     const struct dm_config_node *sn,
 			     struct dm_hash_table *pv_hash)
 {
-	const struct dm_config_node *cn;
+	const struct dm_config_value *cv;
 
-	if (dm_config_find_node(sn, "region_size")) {
+	if (dm_config_has_node(sn, "region_size")) {
 		if (!dm_config_get_uint32(sn, "region_size", &seg->region_size)) {
 			log_error("Couldn't read 'region_size' for "
 				  "segment %s of logical volume %s.",
@@ -114,7 +113,7 @@ static int _raid_text_import(struct lv_segment *seg,
 			return 0;
 		}
 	}
-	if (dm_config_find_node(sn, "stripe_size")) {
+	if (dm_config_has_node(sn, "stripe_size")) {
 		if (!dm_config_get_uint32(sn, "stripe_size", &seg->stripe_size)) {
 			log_error("Couldn't read 'stripe_size' for "
 				  "segment %s of logical volume %s.",
@@ -122,14 +121,14 @@ static int _raid_text_import(struct lv_segment *seg,
 			return 0;
 		}
 	}
-	if (!(cn = dm_config_find_node(sn, "raids"))) {
+	if (!dm_config_get_list(sn, "raids", &cv)) {
 		log_error("Couldn't find RAID array for "
 			  "segment %s of logical volume %s.",
 			  dm_config_parent_name(sn), seg->lv->name);
 		return 0;
 	}
 
-	if (!_raid_text_import_areas(seg, sn, cn)) {
+	if (!_raid_text_import_areas(seg, sn, cv)) {
 		log_error("Failed to import RAID images");
 		return 0;
 	}

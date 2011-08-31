@@ -973,7 +973,7 @@ static int _find_config_bool(const void *start, _node_lookup_fn find,
  * node-based lookup
  **/
 
-struct dm_config_node *dm_config_find_node(const struct dm_config_node *cn,
+struct dm_config_node *dm_config_find_node(struct dm_config_node *cn,
 					   const char *path)
 {
 	return _find_config_node(cn, path);
@@ -1038,11 +1038,11 @@ int dm_config_tree_find_bool(const struct dm_config_tree *cft, const char *path,
 
 
 int dm_config_get_uint32(const struct dm_config_node *cn, const char *path,
-			      uint32_t *result)
+			 uint32_t *result)
 {
 	const struct dm_config_node *n;
 
-	n = dm_config_find_node(cn, path);
+	n = _find_config_node(cn, path);
 
 	if (!n || !n->v || n->v->type != DM_CFG_INT)
 		return 0;
@@ -1056,7 +1056,7 @@ int dm_config_get_uint64(const struct dm_config_node *cn, const char *path,
 {
 	const struct dm_config_node *n;
 
-	n = dm_config_find_node(cn, path);
+	n = _find_config_node(cn, path);
 
 	if (!n || !n->v || n->v->type != DM_CFG_INT)
 		return 0;
@@ -1070,13 +1070,46 @@ int dm_config_get_str(const struct dm_config_node *cn, const char *path,
 {
 	const struct dm_config_node *n;
 
-	n = dm_config_find_node(cn, path);
+	n = _find_config_node(cn, path);
 
 	if (!n || !n->v || n->v->type != DM_CFG_STRING)
 		return 0;
 
 	*result = n->v->v.str;
 	return 1;
+}
+
+int dm_config_get_list(const struct dm_config_node *cn, const char *path,
+		       const struct dm_config_value **result)
+{
+	const struct dm_config_node *n;
+
+	n = _find_config_node(cn, path);
+	/* TODO when we represent single-item lists consistently, add a check
+	 * for n->v->next != NULL */
+	if (!n || !n->v)
+		return 0;
+
+	*result = n->v;
+	return 1;
+}
+
+int dm_config_get_section(const struct dm_config_node *cn, const char *path,
+			  const struct dm_config_node **result)
+{
+	const struct dm_config_node *n;
+
+	n = _find_config_node(cn, path);
+	if (!n || n->v)
+		return 0;
+
+	*result = n;
+	return 1;
+}
+
+int dm_config_has_node(const struct dm_config_node *cn, const char *path)
+{
+	return _find_config_node(cn, path) ? 1 : 0;
 }
 
 /*

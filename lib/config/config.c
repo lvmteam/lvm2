@@ -222,7 +222,7 @@ static void _merge_section(struct dm_config_node *cn1, struct dm_config_node *cn
 			/* Ignore - we don't have any of these yet */
 			continue;
 		/* Not already present? */
-		if (!(oldn = (struct dm_config_node*)dm_config_find_node(cn1->child, cn->key))) {
+		if (!(oldn = dm_config_find_node(cn1->child, cn->key))) {
 			_insert_config_node(&cn1->child, cn);
 			continue;
 		}
@@ -266,7 +266,7 @@ static int _match_host_tags(struct dm_list *tags, const struct dm_config_node *t
 int merge_config_tree(struct cmd_context *cmd, struct dm_config_tree *cft,
 		      struct dm_config_tree *newdata)
 {
-	const struct dm_config_node *root = cft->root;
+	struct dm_config_node *root = cft->root;
 	struct dm_config_node *cn, *nextn, *oldn, *cn2;
 	const struct dm_config_node *tn;
 
@@ -280,7 +280,7 @@ int merge_config_tree(struct cmd_context *cmd, struct dm_config_tree *cft,
 			if (!_match_host_tags(&cmd->tags, tn))
 				continue;
 		}
-		if (!(oldn = (struct dm_config_node *)dm_config_find_node(root, cn->key))) {
+		if (!(oldn = dm_config_find_node(root, cn->key))) {
 			_insert_config_node(&cft->root, cn);
 			/* Remove any "tags" nodes */
 			for (cn2 = cn->child; cn2; cn2 = cn2->sib) {

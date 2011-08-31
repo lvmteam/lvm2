@@ -71,7 +71,7 @@ static int _striped_text_import_area_count(const struct dm_config_node *sn, uint
 static int _striped_text_import(struct lv_segment *seg, const struct dm_config_node *sn,
 			struct dm_hash_table *pv_hash)
 {
-	const struct dm_config_node *cn;
+	const struct dm_config_value *cv;
 
 	if ((seg->area_count != 1) &&
 	    !dm_config_get_uint32(sn, "stripe_size", &seg->stripe_size)) {
@@ -80,7 +80,7 @@ static int _striped_text_import(struct lv_segment *seg, const struct dm_config_n
 		return 0;
 	}
 
-	if (!(cn = dm_config_find_node(sn, "stripes"))) {
+	if (!dm_config_get_list(sn, "stripes", &cv)) {
 		log_error("Couldn't find stripes array for segment %s "
 			  "of logical volume %s.", dm_config_parent_name(sn), seg->lv->name);
 		return 0;
@@ -88,7 +88,7 @@ static int _striped_text_import(struct lv_segment *seg, const struct dm_config_n
 
 	seg->area_len /= seg->area_count;
 
-	return text_import_areas(seg, sn, cn, pv_hash, 0);
+	return text_import_areas(seg, sn, cv, pv_hash, 0);
 }
 
 static int _striped_text_export(const struct lv_segment *seg, struct formatter *f)

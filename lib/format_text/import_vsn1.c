@@ -108,20 +108,14 @@ static int _is_converting(struct logical_volume *lv)
 
 static int _read_id(struct id *id, const struct dm_config_node *cn, const char *path)
 {
-	const struct dm_config_value *cv;
+	const char *uuid;
 
-	if (!(cn = dm_config_find_node(cn, path))) {
+	if (!dm_config_get_str(cn, path, &uuid)) {
 		log_error("Couldn't find uuid.");
 		return 0;
 	}
 
-	cv = cn->v;
-	if (!cv || !cv->v.str) {
-		log_error("uuid must be a string.");
-		return 0;
-	}
-
-	if (!id_read_format(id, cv->v.str)) {
+	if (!id_read_format(id, uuid)) {
 		log_error("Invalid uuid.");
 		return 0;
 	}
@@ -131,21 +125,21 @@ static int _read_id(struct id *id, const struct dm_config_node *cn, const char *
 
 static int _read_flag_config(const struct dm_config_node *n, uint64_t *status, int type)
 {
-	const struct dm_config_node *cn;
+	const struct dm_config_value *cv;
 	*status = 0;
 
-	if (!(cn = dm_config_find_node(n, "status"))) {
+	if (!dm_config_get_list(n, "status", &cv)) {
 		log_error("Could not find status flags.");
 		return 0;
 	}
 
-	if (!(read_flags(status, type | STATUS_FLAG, cn->v))) {
+	if (!(read_flags(status, type | STATUS_FLAG, cv))) {
 		log_error("Could not read status flags.");
 		return 0;
 	}
 
-	if ((cn = dm_config_find_node(n, "flags"))) {
-		if (!(read_flags(status, type, cn->v))) {
+	if (dm_config_get_list(n, "flags", &cv)) {
+		if (!(read_flags(status, type, cv))) {
 			log_error("Could not read flags.");
 			return 0;
 		}
@@ -164,7 +158,7 @@ static int _read_pv(struct format_instance *fid, struct dm_pool *mem,
 {
 	struct physical_volume *pv;
 	struct pv_list *pvl;
-	const struct dm_config_node *cn;
+	const struct dm_config_value *cv;
 	uint64_t size;
 
 	if (!(pvl = dm_pool_zalloc(mem, sizeof(*pvl))) ||
@@ -238,8 +232,8 @@ static int _read_pv(struct format_instance *fid, struct dm_pool *mem,
 	dm_list_init(&pv->segments);
 
 	/* Optional tags */
-	if ((cn = dm_config_find_node(pvn, "tags")) &&
-	    !(read_tags(mem, &pv->tags, cn->v))) {
+	if (dm_config_get_list(pvn, "tags", &cv) &&
+	    !(read_tags(mem, &pv->tags, cv))) {
 		log_error("Couldn't read tags for physical volume %s in %s.",
 			  pv_dev_name(pv), vg->name);
 		return 0;
@@ -297,7 +291,7 @@ static int _read_segment(struct dm_pool *mem, struct volume_group *vg,
 {
 	uint32_t area_count = 0u;
 	struct lv_segment *seg;
-	const struct dm_config_node *cn, *sn_child = sn->child;
+	const struct dm_config_node *sn_child = sn->child;
 	const struct dm_config_value *cv;
 	uint32_t start_extent, extent_count;
 	struct segment_type *segtype;
@@ -322,13 +316,9 @@ static int _read_segment(struct dm_pool *mem, struct volume_group *vg,
 
 	segtype_str = "striped";
 
-	if ((cn = dm_config_find_node(sn_child, "type"))) {
-		cv = cn->v;
-		if (!cv || !cv->v.str) {
-			log_error("Segment type must be a string.");
-			return 0;
-		}
-		segtype_str = cv->v.str;
+	if (!dm_config_get_str(sn_child, "type", &segtype_str)) {
+		log_error("Segment type must be a string.");
+		return 0;
 	}
 
 	if (!(segtype = get_segtype_from_string(vg->cmd, segtype_str)))
@@ -350,8 +340,8 @@ static int _read_segment(struct dm_pool *mem, struct volume_group *vg,
 		return_0;
 
 	/* Optional tags */
-	if ((cn = dm_config_find_node(sn_child, "tags")) &&
-	    !(read_tags(mem, &seg->tags, cn->v))) {
+	if (dm_config_get_list(sn_child, "tags", &cv) &&
+	    !(read_tags(mem, &seg->tags, cv))) {
 		log_error("Couldn't read tags for a segment of %s/%s.",
 			  vg->name, lv->name);
 		return 0;
@@ -378,11 +368,10 @@ static int _read_segment(struct dm_pool *mem, struct volume_group *vg,
 }
 
 int text_import_areas(struct lv_segment *seg, const struct dm_config_node *sn,
-		      const struct dm_config_node *cn, struct dm_hash_table *pv_hash,
+		      const struct dm_config_value *cv, struct dm_hash_table *pv_hash,
 		      uint64_t status)
 {
 	unsigned int s;
-	const struct dm_config_value *cv;
 	struct logical_volume *lv1;
 	struct physical_volume *pv;
 	const char *seg_name = dm_config_parent_name(sn);
@@ -392,7 +381,7 @@ int text_import_areas(struct lv_segment *seg, const struct dm_config_node *sn,
 		return 0;
 	}
 
-	for (cv = cn->v, s = 0; cv && s < seg->area_count; s++, cv = cv->next) {
+	for (s = 0; cv && s < seg->area_count; s++, cv = cv->next) {
 
 		/* first we read the pv */
 		if (cv->type != DM_CFG_STRING) {
@@ -503,7 +492,8 @@ static int _read_lvnames(struct format_instance *fid __attribute__((unused)),
 			 unsigned report_missing_devices __attribute__((unused)))
 {
 	struct logical_volume *lv;
-	const struct dm_config_node *cn;
+	const char *lv_alloc;
+	const struct dm_config_value *cv;
 
 	if (!(lv = alloc_lv(mem)))
 		return_0;
@@ -523,16 +513,10 @@ static int _read_lvnames(struct format_instance *fid __attribute__((unused)),
 	}
 
 	lv->alloc = ALLOC_INHERIT;
-	if ((cn = dm_config_find_node(lvn, "allocation_policy"))) {
-		const struct dm_config_value *cv = cn->v;
-		if (!cv || !cv->v.str) {
-			log_error("allocation_policy must be a string.");
-			return 0;
-		}
-
-		lv->alloc = get_alloc_from_string(cv->v.str);
+	if (dm_config_get_str(lvn, "allocation_policy", &lv_alloc)) {
+		lv->alloc = get_alloc_from_string(lv_alloc);
 		if (lv->alloc == ALLOC_INVALID) {
-			log_warn("WARNING: Ignoring unrecognised allocation policy %s for LV %s", cv->v.str, lv->name);
+			log_warn("WARNING: Ignoring unrecognised allocation policy %s for LV %s", lv_alloc, lv->name);
 			lv->alloc = ALLOC_INHERIT;
 		}
 	}
@@ -554,8 +538,8 @@ static int _read_lvnames(struct format_instance *fid __attribute__((unused)),
 	}
 
 	/* Optional tags */
-	if ((cn = dm_config_find_node(lvn, "tags")) &&
-	    !(read_tags(mem, &lv->tags, cn->v))) {
+	if (dm_config_get_list(lvn, "tags", &cv) &&
+	    !(read_tags(mem, &lv->tags, cv))) {
 		log_error("Couldn't read tags for logical volume %s/%s.",
 			  vg->name, lv->name);
 		return 0;
@@ -633,7 +617,7 @@ static int _read_sections(struct format_instance *fid,
 	/* Only report missing devices when doing a scan */
 	unsigned report_missing_devices = scan_done_once ? !*scan_done_once : 1;
 
-	if (!(n = dm_config_find_node(vgn, section))) {
+	if (!dm_config_get_section(vgn, section, &n)) {
 		if (!optional) {
 			log_error("Couldn't find section '%s'.", section);
 			return 0;
@@ -655,7 +639,9 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 				     const struct dm_config_tree *cft,
 				     unsigned use_cached_pvs)
 {
-	const struct dm_config_node *vgn, *cn;
+	const struct dm_config_node *vgn;
+	const struct dm_config_value *cv;
+	const char *str;
 	struct volume_group *vg;
 	struct dm_hash_table *pv_hash = NULL, *lv_hash = NULL;
 	unsigned scan_done_once = use_cached_pvs;
@@ -677,12 +663,8 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 
 	vgn = vgn->child;
 
-	if ((cn = dm_config_find_node(vgn, "system_id")) && cn->v) {
-		if (!cn->v->v.str) {
-			log_error("system_id must be a string");
-			goto bad;
-		}
-		strncpy(vg->system_id, cn->v->v.str, NAME_LEN);
+	if (dm_config_get_str(vgn, "system_id", &str)) {
+		strncpy(vg->system_id, str, NAME_LEN);
 	}
 
 	if (!_read_id(&vg->id, vgn, "id")) {
@@ -725,16 +707,10 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 		goto bad;
 	}
 
-	if ((cn = dm_config_find_node(vgn, "allocation_policy"))) {
-		const struct dm_config_value *cv = cn->v;
-		if (!cv || !cv->v.str) {
-			log_error("allocation_policy must be a string.");
-			goto bad;
-		}
-
-		vg->alloc = get_alloc_from_string(cv->v.str);
+	if (dm_config_get_str(vgn, "allocation_policy", &str)) {
+		vg->alloc = get_alloc_from_string(str);
 		if (vg->alloc == ALLOC_INVALID) {
-			log_warn("WARNING: Ignoring unrecognised allocation policy %s for VG %s", cv->v.str, vg->name);
+			log_warn("WARNING: Ignoring unrecognised allocation policy %s for VG %s", str, vg->name);
 			vg->alloc = ALLOC_NORMAL;
 		}
 	}
@@ -760,8 +736,8 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 	}
 
 	/* Optional tags */
-	if ((cn = dm_config_find_node(vgn, "tags")) &&
-	    !(read_tags(vg->vgmem, &vg->tags, cn->v))) {
+	if (dm_config_get_list(vgn, "tags", &cv) &&
+	    !(read_tags(vg->vgmem, &vg->tags, cv))) {
 		log_error("Couldn't read tags for volume group %s.", vg->name);
 		goto bad;
 	}
