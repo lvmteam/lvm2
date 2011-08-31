@@ -751,8 +751,10 @@ static struct dm_task *_get_device_status(struct thread_status *ts)
 	if (!dmt)
 		return NULL;
 
-	if (!dm_task_set_uuid(dmt, ts->device.uuid))
-                return NULL;
+	if (!dm_task_set_uuid(dmt, ts->device.uuid)) {
+		dm_task_destroy(dmt);
+		return NULL;
+	}
 
 	if (!dm_task_run(dmt)) {
 		dm_task_destroy(dmt);
