@@ -37,6 +37,7 @@ case "$host_os" in
 		LDFLAGS="$LDFLAGS -Wl,--export-dynamic"
 		LIB_SUFFIX=so
 		DEVMAPPER=yes
+		LVMETAD=no
 		ODIRECT=yes
 		DM_IOCTLS=yes
 		SELINUX=yes
@@ -790,6 +791,17 @@ if test x$DEVMAPPER = xyes; then
 fi
 
 ################################################################################
+dnl -- Build lvmetad
+AC_MSG_CHECKING(whether to build LVMetaD)
+AC_ARG_ENABLE(lvmetad,
+	      AC_HELP_STRING([--disable-lvmetad],
+			     [disable the LVM Metadata Daemon]),
+	      LVMETAD=$enableval)
+AC_MSG_RESULT($LVMETAD)
+
+BUILD_LVMETAD=$LVMETAD
+
+################################################################################
 dnl -- Enable udev synchronisation
 AC_MSG_CHECKING(whether to enable synchronisation with udev processing)
 AC_ARG_ENABLE(udev_sync,
@@ -1288,6 +1300,7 @@ AC_SUBST(APPLIB)
 AC_SUBST(AWK)
 AC_SUBST(BUILD_CMIRRORD)
 AC_SUBST(BUILD_DMEVENTD)
+AC_SUBST(BUILD_LVMETAD)
 AC_SUBST(CFLAGS)
 AC_SUBST(CFLOW_CMD)
 AC_SUBST(CLDFLAGS)
@@ -1401,6 +1414,7 @@ daemons/dmeventd/plugins/lvm2/Makefile
 daemons/dmeventd/plugins/raid/Makefile
 daemons/dmeventd/plugins/mirror/Makefile
 daemons/dmeventd/plugins/snapshot/Makefile
+daemons/lvmetad/Makefile
 doc/Makefile
 doc/example.conf
 include/.symlinks

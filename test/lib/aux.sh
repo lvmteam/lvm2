@@ -60,6 +60,21 @@ prepare_dmeventd() {
 	sleep 1
 }
 
+prepare_lvmetad() {
+	# skip if we don't have our own lvmetad...
+	(which lvmetad | grep $abs_builddir) || {
+		touch SKIP_THIS_TEST
+		exit 1
+	}
+
+	lvmconf "global/lvmetad = 1"
+
+	lvmetad -f "$@" &
+	echo "$!" > LOCAL_LVMETAD
+
+	sleep 1
+}
+
 teardown_devs() {
 	# Delete any remaining dm/udev semaphores
 	teardown_udev_cookies
@@ -145,6 +160,7 @@ teardown() {
     echo -n .
 
     test -f LOCAL_DMEVENTD && kill -9 "$(cat LOCAL_DMEVENTD)"
+    test -f LOCAL_LVMETAD && kill -9 "$(cat LOCAL_LVMETAD)"
 
     echo -n .
 

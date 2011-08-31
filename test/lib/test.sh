@@ -54,6 +54,7 @@ ln -s $abs_top_builddir/test/lib/* $TESTDIR/lib
 set -eE -o pipefail
 aux lvmconf
 aux prepare_clvmd
+aux prepare_lvmetad
 echo "@TESTDIR=$TESTDIR"
 echo "@PREFIX=$PREFIX"
 
