@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <malloc.h>
 #include <string.h>
+#include <unistd.h>
 #include <assert.h>
 #include "daemon-shared.h"
 
@@ -80,7 +81,7 @@ char *format_buffer(const char *what, const char *id, va_list ap)
 	dm_asprintf(&buffer, "%s = \"%s\"\n", what, id);
 	if (!buffer) goto fail;
 
-	while (next = va_arg(ap, char *)) {
+	while ((next = va_arg(ap, char *))) {
 		old = buffer;
 		assert(strchr(next, '='));
 		keylen = strchr(next, '=') - next;

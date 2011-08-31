@@ -218,14 +218,14 @@ struct thread_baton {
 	client_handle client;
 };
 
-int buffer_rewrite(char **buf, const char *format, const char *string) {
+static int buffer_rewrite(char **buf, const char *format, const char *string) {
 	char *old = *buf;
 	dm_asprintf(buf, format, *buf, string);
 	dm_free(old);
 	return 0;
 }
 
-int buffer_line(const char *line, void *baton) {
+static int buffer_line(const char *line, void *baton) {
 	response *r = baton;
 	if (r->buffer)
 		buffer_rewrite(&r->buffer, "%s\n%s", line);
@@ -234,7 +234,7 @@ int buffer_line(const char *line, void *baton) {
 	return 0;
 }
 
-void *client_thread(void *baton)
+static void *client_thread(void *baton)
 {
 	struct thread_baton *b = baton;
 	request req;
@@ -266,7 +266,7 @@ fail:
 	return NULL;
 }
 
-int handle_connect(daemon_state s)
+static int handle_connect(daemon_state s)
 {
 	struct sockaddr_un sockaddr;
 	client_handle client;
@@ -345,7 +345,6 @@ void daemon_start(daemon_state s)
 		s.daemon_init(&s);
 
 	while (!_shutdown_requested && !failed) {
-		int status;
 		fd_set in;
 		FD_ZERO(&in);
 		FD_SET(s.socket_fd, &in);

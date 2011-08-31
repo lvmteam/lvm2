@@ -4,6 +4,7 @@
 #include <sys/socket.h>
 #include <string.h>
 #include <stdio.h>
+#include <unistd.h>
 #include <assert.h>
 #include <errno.h> // ENOMEM
 
@@ -53,7 +54,7 @@ daemon_reply daemon_send(daemon_handle h, daemon_request rq)
 
 void daemon_reply_destroy(daemon_reply r) {
 	if (r.cft)
-		destroy_config_tree(r.cft);
+		dm_config_destroy(r.cft);
 }
 
 daemon_reply daemon_send_simple(daemon_handle h, char *id, ...)
