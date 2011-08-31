@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Fix resource leak when strdup fails in _get_device_status() (2.02.85).
   Directly allocate buffer memory in a pvck scan instead of using a mempool.
   Add configure --with-thin for (unimplemented) segtypes "thin" and "thin_pool".
   Fix raid shared lib segtype registration (2.02.87).
