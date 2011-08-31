@@ -96,10 +96,11 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	for i in lvm $$(cat ../tools/.commands); do \
 	  ln -fs lvm-wrapper lib/$$i; \
 	done
-	ln -s "$(abs_top_builddir)/tools/dmsetup" lib/dmsetup
-	ln -s "$(abs_top_builddir)/daemons/clvmd/clvmd" lib/clvmd
-	ln -s "$(abs_top_builddir)/daemons/dmeventd/dmeventd" lib/dmeventd
-	ln -s "$(abs_top_builddir)/scripts/vgimportclone.sh" lib/vgimportclone
+	ln -fs "$(abs_top_builddir)/tools/dmsetup" lib/dmsetup
+	ln -fs "$(abs_top_builddir)/daemons/clvmd/clvmd" lib/clvmd
+	ln -fs "$(abs_top_builddir)/daemons/dmeventd/dmeventd" lib/dmeventd
+	ln -fs "$(abs_top_builddir)/daemons/lvmetad/lvmetad" lib/lvmetad
+	ln -fs "$(abs_top_builddir)/scripts/vgimportclone.sh" lib/vgimportclone
 	touch $@
 
 clean:

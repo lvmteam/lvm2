@@ -247,13 +247,13 @@ void *client_thread(void *baton)
 			fprintf(stderr, "error parsing request:\n %s\n", req.buffer);
 		response res = b->s.handler(b->s, b->client, req);
 		if (req.cft)
-			destroy_config_tree(req.cft);
+			dm_config_destroy(req.cft);
 		dm_free(req.buffer);
 
 		if (!res.buffer) {
 			dm_config_write_node(res.cft->root, buffer_line, &res);
 			buffer_rewrite(&res.buffer, "%s\n\n", NULL);
-			destroy_config_tree(res.cft);
+			dm_config_destroy(res.cft);
 		}
 
 		write_buffer(b->client.socket_fd, res.buffer, strlen(res.buffer));
