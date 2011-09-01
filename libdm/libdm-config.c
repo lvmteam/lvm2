@@ -809,8 +809,8 @@ static char *_dup_tok(struct parser *p)
 /*
  * utility functions
  */
-static struct dm_config_node *_find_config_node(const void *start,
-						const char *path)
+static const struct dm_config_node *_find_config_node(const void *start,
+						      const char *path)
 {
 	const char *e;
 	const struct dm_config_node *cn = start;
@@ -848,15 +848,15 @@ static struct dm_config_node *_find_config_node(const void *start,
 		path = e;
 	}
 
-	return (struct dm_config_node *) cn_found;
+	return cn_found;
 }
 
-typedef struct dm_config_node *_node_lookup_fn(const void *start, const char *path);
+typedef const struct dm_config_node *_node_lookup_fn(const void *start, const char *path);
 
-static struct dm_config_node *_find_first_config_node(const void *start, const char *path)
+static const struct dm_config_node *_find_first_config_node(const void *start, const char *path)
 {
 	const struct dm_config_tree *cft = start;
-	struct dm_config_node *cn = NULL;
+	const struct dm_config_node *cn = NULL;
 
 	while (cft) {
 		if ((cn = _find_config_node(cft->root, path)))
@@ -976,7 +976,7 @@ static int _find_config_bool(const void *start, _node_lookup_fn find,
 struct dm_config_node *dm_config_find_node(struct dm_config_node *cn,
 					   const char *path)
 {
-	return _find_config_node(cn, path);
+	return (struct dm_config_node *) _find_config_node(cn, path);
 }
 
 int dm_config_find_int(const struct dm_config_node *cn, const char *path, int fail)
