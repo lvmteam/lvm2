@@ -775,10 +775,10 @@ int text_vg_export_file(struct volume_group *vg, const char *desc, FILE *fp)
 }
 
 /* Returns amount of buffer used incl. terminating NUL */
-int text_vg_export_raw(struct volume_group *vg, const char *desc, char **buf)
+size_t text_vg_export_raw(struct volume_group *vg, const char *desc, char **buf)
 {
 	struct formatter *f;
-	int r = 0;
+	size_t r = 0;
 
 	_init();
 
@@ -809,7 +809,7 @@ int text_vg_export_raw(struct volume_group *vg, const char *desc, char **buf)
 	return r;
 }
 
-int export_vg_to_buffer(struct volume_group *vg, char **buf)
+size_t export_vg_to_buffer(struct volume_group *vg, char **buf)
 {
 	return text_vg_export_raw(vg, "", buf);
 }

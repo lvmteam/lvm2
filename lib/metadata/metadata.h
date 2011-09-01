@@ -454,7 +454,7 @@ void lv_calculate_readahead(const struct logical_volume *lv, uint32_t *read_ahea
 /*
  * For internal metadata caching.
  */
-int export_vg_to_buffer(struct volume_group *vg, char **buf);
+size_t export_vg_to_buffer(struct volume_group *vg, char **buf);
 int export_vg_to_config_tree(struct volume_group *vg, struct dm_config_tree **cft);
 struct volume_group *import_vg_from_buffer(const char *buf,
 					   struct format_instance *fid);
