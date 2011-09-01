@@ -57,7 +57,7 @@ struct cs {
 	off_t st_size;
 	char *filename;
 	int exists;
-	int keep_open;
+	int keep_open; // FIXME AGK Remove this before release
 	void *custom; /* LVM uses this for a device pointer */
 };
 
@@ -135,18 +135,21 @@ struct dm_config_tree *dm_config_create(const char *filename, int keep_open)
 void dm_config_set_custom(struct dm_config_tree *cft, void *custom)
 {
 	struct cs *c = (struct cs *) cft;
+
 	c->custom = custom;
 }
 
 void *dm_config_get_custom(struct dm_config_tree *cft)
 {
 	struct cs *c = (struct cs *) cft;
+
 	return c->custom;
 }
 
 int dm_config_keep_open(struct dm_config_tree *cft)
 {
 	struct cs *c = (struct cs *) cft;
+
 	return c->keep_open;
 }
 
@@ -228,6 +231,7 @@ int dm_config_check_file(struct dm_config_tree *cft, const char **filename, stru
 time_t dm_config_timestamp(struct dm_config_tree *cft)
 {
 	struct cs *c = (struct cs *) cft;
+
 	return c->timestamp;
 }
 
@@ -345,7 +349,7 @@ static int _write_value(struct output_line *outline, const struct dm_config_valu
 		break;
 
 	case DM_CFG_FLOAT:
-		line_append("%f", v->v.r);
+		line_append("%f", v->v.f);
 		break;
 
 	case DM_CFG_INT:
@@ -442,6 +446,7 @@ int dm_config_write(struct dm_config_tree *cft, const char *file,
 	outline.fp = NULL;
 	outline.putline = NULL;
 
+// FIXME AGK remove the fopen from libdm before release
 	if (!file)
 		file = "stdout";
 	else if (!(outline.fp = fopen(file, "w"))) {
@@ -593,7 +598,7 @@ static struct dm_config_value *_type(struct parser *p)
 
 	case TOK_FLOAT:
 		v->type = DM_CFG_FLOAT;
-		v->v.r = strtod(p->tb, NULL);	/* FIXME: check error */
+		v->v.f = strtod(p->tb, NULL);	/* FIXME: check error */
 		match(TOK_FLOAT);
 		break;
 
@@ -807,8 +812,19 @@ static char *_dup_tok(struct parser *p)
 }
 
 /*
- * utility functions
+ * Utility functions
  */
+
+/*
+ * node_lookup_fn is either:
+ *   _find_config_node to perform a lookup starting from a given config_node 
+ *   in a config_tree;
+ * or
+ *   _find_first_config_node to find the first config_node in a set of 
+ *   cascaded trees.
+ */
+typedef const struct dm_config_node *node_lookup_fn(const void *start, const char *path);
+
 static const struct dm_config_node *_find_config_node(const void *start,
 						      const char *path)
 {
@@ -851,8 +867,6 @@ static const struct dm_config_node *_find_config_node(const void *start,
 	return cn_found;
 }
 
-typedef const struct dm_config_node *_node_lookup_fn(const void *start, const char *path);
-
 static const struct dm_config_node *_find_first_config_node(const void *start, const char *path)
 {
 	const struct dm_config_tree *cft = start;
@@ -867,10 +881,10 @@ static const struct dm_config_node *_find_first_config_node(const void *start, c
 	return NULL;
 }
 
-static const char *_find_config_str(const void *start, _node_lookup_fn find,
+static const char *_find_config_str(const void *start, node_lookup_fn find_fn,
 				    const char *path, const char *fail)
 {
-	const struct dm_config_node *n = find(start, path);
+	const struct dm_config_node *n = find_fn(start, path);
 
 	/* Empty strings are ignored */
 	if ((n && n->v && n->v->type == DM_CFG_STRING) && (*n->v->v.str)) {
@@ -890,7 +904,7 @@ const char *dm_config_find_str(const struct dm_config_node *cn,
 	return _find_config_str(cn, _find_config_node, path, fail);
 }
 
-static int64_t _find_config_int64(const void *start, _node_lookup_fn find,
+static int64_t _find_config_int64(const void *start, node_lookup_fn find,
 				  const char *path, int64_t fail)
 {
 	const struct dm_config_node *n = find(start, path);
@@ -905,14 +919,14 @@ static int64_t _find_config_int64(const void *start, _node_lookup_fn find,
 	return fail;
 }
 
-static float _find_config_float(const void *start, _node_lookup_fn find,
+static float _find_config_float(const void *start, node_lookup_fn find,
 				const char *path, float fail)
 {
 	const struct dm_config_node *n = find(start, path);
 
 	if (n && n->v && n->v->type == DM_CFG_FLOAT) {
-		log_very_verbose("Setting %s to %f", path, n->v->v.r);
-		return n->v->v.r;
+		log_very_verbose("Setting %s to %f", path, n->v->v.f);
+		return n->v->v.f;
 	}
 
 	log_very_verbose("%s not found in config: defaulting to %f",
@@ -947,7 +961,7 @@ static int _str_to_bool(const char *str, int fail)
 	return fail;
 }
 
-static int _find_config_bool(const void *start, _node_lookup_fn find,
+static int _find_config_bool(const void *start, node_lookup_fn find,
 			     const char *path, int fail)
 {
 	const struct dm_config_node *n = find(start, path);

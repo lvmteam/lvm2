@@ -120,7 +120,7 @@ int read_config_file(struct dm_config_tree *cft)
 	int r;
 
 	if (!dm_config_check_file(cft, &filename, &info))
-		return 0;
+		return_0;
 
 	if (!dev) {
 		if (!(dev = dev_create_file(filename, NULL, NULL, 1)))
@@ -142,16 +142,17 @@ int read_config_file(struct dm_config_tree *cft)
 	return r;
 }
 
+// FIXME AGK Move to override_config_tree_from_string before next release
 static struct dm_config_tree *_setup_context_tree(struct cmd_context *cmd)
 {
-	struct dm_config_tree *r = cmd->cft_override;
+	struct dm_config_tree *cft = cmd->cft_override;
 
-	if (r)
-		r->cascade = cmd->cft;
+	if (cft)
+		cft->cascade = cmd->cft;
 	else
-		r = cmd->cft;
+		cft = cmd->cft;
 
-	return r;
+	return cft;
 }
 
 const struct dm_config_node *find_config_tree_node(struct cmd_context *cmd,

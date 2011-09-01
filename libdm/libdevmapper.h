@@ -1016,10 +1016,7 @@ int dm_snprintf(char *buf, size_t bufsize, const char *format, ...)
 const char *dm_basename(const char *path);
 
 /*
- * Count occurences of 'c' in 'str' of length 'size'.
- *
- * Returns:
- *   Number of occurrences of 'c'
+ * Returns number of occurrences of 'c' in 'str' of length 'size'.
  */
 unsigned dm_count_chars(const char *str, size_t len, const int c);
 
@@ -1223,9 +1220,10 @@ void dm_report_field_set_value(struct dm_report_field *field, const void *value,
 			       const void *sortvalue);
 
 
-/*********************************
- * config file parse/prettyprint
- *********************************/
+/*************************
+ * config file parse/print
+ *************************/
+// FIXME AGK Review this interface before inclusion in a release.
 enum {
 	DM_CFG_STRING,
 	DM_CFG_FLOAT,
@@ -1237,10 +1235,11 @@ struct dm_config_value {
 	int type;
 	union {
 		int64_t i;
-		float r;
+		float f;
+		double d;	/* For completeness.  (Unused.) */
 		const char *str;
 	} v;
-	struct dm_config_value *next;	/* for arrays */
+	struct dm_config_value *next;	/* For arrays */
 };
 
 struct dm_config_node {
@@ -1281,8 +1280,7 @@ const char *dm_config_find_str(const struct dm_config_node *cn, const char *path
 int dm_config_find_int(const struct dm_config_node *cn, const char *path, int fail);
 float dm_config_find_float(const struct dm_config_node *cn, const char *path, float fail);
 
-const struct dm_config_node *dm_config_tree_find_node(
-	const struct dm_config_tree *cft, const char *path);
+const struct dm_config_node *dm_config_tree_find_node(const struct dm_config_tree *cft, const char *path);
 const char *dm_config_tree_find_str(const struct dm_config_tree *cft,
 				    const char *path, const char *fail);
 int dm_config_tree_find_int(const struct dm_config_tree *cft,
