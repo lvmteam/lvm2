@@ -207,7 +207,7 @@ int full_scan_done(void)
 	return _full_scan_done;
 }
 
-int obtain_device_list_from_udev()
+int obtain_device_list_from_udev(void)
 {
 	return _obtain_device_list_from_udev;
 }
