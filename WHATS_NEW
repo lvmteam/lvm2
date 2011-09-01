@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Fix unsafe table load when splitting off smaller mirror from a larger one.
   Use size_t return type for text_vg_export_raw() and export_vg_to_buffer().
   Add configure --enable-lvmetad for building the (experimental) LVMetaD.
   Fix resource leak when strdup fails in _get_device_status() (2.02.85).
