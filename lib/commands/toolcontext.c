@@ -206,7 +206,7 @@ static void _init_logging(struct cmd_context *cmd)
  * 856a6f1dbd8940e72755af145ebcd806408ecedd
  * some operations could not be performed by udev, requiring our fallback code.
  */
-static int _dm_driver_has_stable_udev_support()
+static int _dm_driver_has_stable_udev_support(void)
 {
 	char vsn[80];
 	unsigned maj, min, patchlevel;

@@ -114,6 +114,6 @@ void daemon_start(daemon_state s);
 daemon_reply daemon_takeover(daemon_info i, daemon_request r);
 
 /* Call this to request a clean shutdown of the daemon. Async safe. */
-void daemon_stop();
+void daemon_stop(void);
 
 #endif
