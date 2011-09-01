@@ -1,5 +1,6 @@
 Version 1.02.68 -
 ==================================
+  Add dm_config and string character escaping functions to libdevmapper.
   Mark unreleased memory pools as internal error.
 
 Version 1.02.67 - 19th August 2011
