@@ -65,7 +65,7 @@ char *alloc_printed_tags(struct dm_list *tags);
 int read_tags(struct dm_pool *mem, struct dm_list *tags, const struct dm_config_value *cv);
 
 int text_vg_export_file(struct volume_group *vg, const char *desc, FILE *fp);
-int text_vg_export_raw(struct volume_group *vg, const char *desc, char **buf);
+size_t text_vg_export_raw(struct volume_group *vg, const char *desc, char **buf);
 struct volume_group *text_vg_import_file(struct format_instance *fid,
 					 const char *file,
 					 time_t *when, char **desc);

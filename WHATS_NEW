@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Use size_t return type for text_vg_export_raw() and export_vg_to_buffer().
   Add configure --enable-lvmetad for building the (experimental) LVMetaD.
   Fix resource leak when strdup fails in _get_device_status() (2.02.85).
   Directly allocate buffer memory in a pvck scan instead of using a mempool.

@@ -102,7 +102,7 @@ static void _store_metadata(struct volume_group *vg, unsigned precommitted)
 	char uuid[64] __attribute__((aligned(8)));
 	struct lvmcache_vginfo *vginfo;
 	char *data;
-	int size;
+	size_t size;
 
 	if (!(vginfo = vginfo_from_vgid((const char *)&vg->id))) {
 		stack;
@@ -132,7 +132,7 @@ static void _store_metadata(struct volume_group *vg, unsigned precommitted)
 		return;
 	}
 
-	log_debug("Metadata cache: VG %s (%s) stored (%d bytes%s).",
+	log_debug("Metadata cache: VG %s (%s) stored (%" PRIsize_t " bytes%s).",
 		  vginfo->vgname, uuid, size,
 		  precommitted ? ", precommitted" : "");
 }
