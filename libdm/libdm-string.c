@@ -13,7 +13,6 @@
  */
 
 #include "dmlib.h"
-#include "libdevmapper.h"
 
 #include <ctype.h>
 
@@ -179,6 +178,12 @@ static void _count_chars(const char *str, size_t *len, int *count,
 			(*count)++;
 }
 
+/*
+ * Count occurrences of 'c' in 'str' of length 'size'.
+ *
+ * Returns:
+ *   Number of occurrences of 'c'
+ */
 unsigned dm_count_chars(const char *str, size_t len, const int c)
 {
 	size_t i;
@@ -191,6 +196,9 @@ unsigned dm_count_chars(const char *str, size_t len, const int c)
 	return count;
 }
 
+/*
+ * Length of string after escaping double quotes and backslashes.
+ */
 size_t dm_escaped_len(const char *str)
 {
 	size_t len = 1;
@@ -289,6 +297,9 @@ static void _quote_hyphens(char **out, const char *src)
 	_quote_characters(out, src, '-', '-', 0);
 }
 
+/*
+ * <vg>-<lv>-<layer> or if !layer just <vg>-<lv>.
+ */
 char *dm_build_dm_name(struct dm_pool *mem, const char *vgname,
 		       const char *lvname, const char *layer)
 {
@@ -328,7 +339,7 @@ char *dm_build_dm_name(struct dm_pool *mem, const char *vgname,
 	return r;
 }
 
-char *dm_build_dm_uuid(struct dm_pool *mem, const char *prefix, const char *lvid, const char *layer)
+char *dm_build_dm_uuid(struct dm_pool *mem, const char *uuid_prefix, const char *lvid, const char *layer)
 {
 	char *dmuuid;
 	size_t len;
@@ -336,7 +347,7 @@ char *dm_build_dm_uuid(struct dm_pool *mem, const char *prefix, const char *lvid
 	if (!layer)
 		layer = "";
 
-	len = strlen(prefix) + strlen(lvid) + strlen(layer) + 1;
+	len = strlen(uuid_prefix) + strlen(lvid) + strlen(layer) + 1;
 
 	if (!(dmuuid = dm_pool_alloc(mem, len))) {
 		log_error("build_dm_name: Allocation failed for %" PRIsize_t
@@ -344,7 +355,7 @@ char *dm_build_dm_uuid(struct dm_pool *mem, const char *prefix, const char *lvid
 		return NULL;
 	}
 
-	sprintf(dmuuid, "%s%s%s%s", prefix, lvid, (*layer) ? "-" : "", layer);
+	sprintf(dmuuid, "%s%s%s%s", uuid_prefix, lvid, (*layer) ? "-" : "", layer);
 
 	return dmuuid;
 }
@@ -362,11 +373,20 @@ char *dm_escape_double_quotes(char *out, const char *src)
 	return out;
 }
 
+/*
+ * Undo quoting in situ.
+ */
 void dm_unescape_double_quotes(char *src)
 {
 	_unquote_one_character(src, '\"', '\\');
 }
 
+/*
+ * Unescape colons and "at" signs in situ and save the substrings
+ * starting at the position of the first unescaped colon and the
+ * first unescaped "at" sign. This is normally used to unescape
+ * device names used as PVs.
+ */
 void dm_unescape_colons_and_at_signs(char *src,
 				     char **substr_first_unquoted_colon,
 				     char **substr_first_unquoted_at_sign)
