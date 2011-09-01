@@ -15,8 +15,10 @@ srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 top_builddir = @top_builddir@
 
+ifeq ("@BUILD_LVMETAD@", "yes")
 LIB_STATIC=libdaemon.a
 SOURCES = common/daemon-shared.c common/daemon-server.c common/daemon-client.c
+endif
 
 .PHONY: dmeventd clvmd cmirrord lvmetad
 
@@ -30,6 +32,7 @@ endif
 
 ifeq ("@BUILD_LVMETAD@", "yes")
   SUBDIRS += lvmetad
+device-mapper: libdaemon.a
 endif
 
 ifeq ("@BUILD_DMEVENTD@", "yes")
@@ -48,5 +51,3 @@ include $(top_builddir)/make.tmpl
 ifeq ("@BUILD_DMEVENTD@", "yes")
 device-mapper: dmeventd.device-mapper
 endif
-
-device-mapper: libdaemon.a
