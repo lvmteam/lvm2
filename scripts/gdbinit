@@ -27,8 +27,8 @@ printf " - \n"
 printf "Use 'help <command>' for more info\n"
 printf "\n\n"
 printf "Popular breakpoints:\n"
-printf "break lv_raid_change_image_count\n"
-printf "run -m1 vg/lv\n"
+printf "break _split_mirror_images\n"
+printf "run --splitmirrors 2 -n new vg/lv\n"
 printf "\n\n"
 
 set follow-fork-mode child
@@ -114,7 +114,7 @@ define __seg_metaitem
 	set $_SMI_seg  = (struct lv_segment *)$arg1
 	set $_SMI_index= $arg2
 
-	if ($_SMI_index < $_SMI_seg->area_count)
+	if (($_SMI_index < $_SMI_seg->area_count) && $_SMI_seg->meta_areas)
 		set $_SMI_area = $_SMI_seg->meta_areas[$_SMI_index]
 		set $_SMI_type = $_SMI_area.type
 
@@ -174,6 +174,21 @@ define __status
 
 #	Constants defined in metadata-exported.h
 
+#	if ($_s_status & RAID)
+	if ($_s_status & 0x00000001U)
+		set $_s_status = $_s_status & ~0x00000001U
+		printf " RAID"
+	end
+#	if ($_s_status & RAID_META)
+	if ($_s_status & 0x00000002U)
+		set $_s_status = $_s_status & ~0x00000002U
+		printf " RAID_META"
+	end
+#	if ($_s_status & RAID_IMAGE)
+	if ($_s_status & 0x00000004U)
+		set $_s_status = $_s_status & ~0x00000004U
+		printf " RAID_IMAGE"
+	end
 #	if ($_s_status & VISIBLE_LV)
 	if ($_s_status & 0x00000040U)
 		printf " VISIBLE_LV"
@@ -185,6 +200,16 @@ define __status
 	if ($_s_status & 0x00000080U)
 		set $_s_status = $_s_status & ~0x00000080U
 		printf " FIXED_MINOR"
+	end
+#	if ($_s_status & LVM_READ)
+	if ($_s_status & 0x00000100U)
+		set $_s_status = $_s_status & ~0x00000100U
+		printf " LVM_READ"
+	end
+#	if ($_s_status & LVM_WRITE)
+	if ($_s_status & 0x00000200U)
+		set $_s_status = $_s_status & ~0x00000200U
+		printf " LVM_WRITE"
 	end
 #	if ($_s_status & SNAPSHOT)
 	if ($_s_status & 0x00001000U)
@@ -216,21 +241,6 @@ define __status
 		set $_s_status = $_s_status & ~0x00040000U
 		printf " MIRROR_IMAGE"
 	end
-#	if ($_s_status & RAID)
-	if ($_s_status & 0x00000001U)
-		set $_s_status = $_s_status & ~0x00000001U
-		printf " RAID"
-	end
-#	if ($_s_status & RAID_META)
-	if ($_s_status & 0x00000002U)
-		set $_s_status = $_s_status & ~0x00000002U
-		printf " RAID_META"
-	end
-#	if ($_s_status & RAID_IMAGE)
-	if ($_s_status & 0x00000004U)
-		set $_s_status = $_s_status & ~0x00000004U
-		printf " RAID_IMAGE"
-	end
 #	if ($_s_status & LV_NOTSYNCED)
 	if ($_s_status & 0x00080000U)
 		set $_s_status = $_s_status & ~0x00080000U
@@ -241,15 +251,10 @@ define __status
 		set $_s_status = $_s_status & ~0x00400000U
 		printf " CONVERTING"
 	end
-#	if ($_s_status & LVM_READ)
-	if ($_s_status & 0x00000100U)
-		set $_s_status = $_s_status & ~0x00000100U
-		printf " LVM_READ"
-	end
-#	if ($_s_status & LVM_WRITE)
-	if ($_s_status & 0x00000200U)
-		set $_s_status = $_s_status & ~0x00000200U
-		printf " LVM_WRITE"
+#	if ($_s_status & MERGING)
+	if ($_s_status & 0x10000000U)
+		set $_s_status = $_s_status & ~0x10000000U
+		printf " MERGING"
 	end
 
 	if ($_s_status)
@@ -417,7 +422,9 @@ end
 # __lv_status_r <LV>
 # Decend tree, printing LV and seg status as we go.  This
 # performs a depth first approach (but can't come up) 
+#
 # or
+#
 # __lv_status_r <sub_lv> <seg using sub_lv>
 # Try continuing decent of tree by first shifting to the
 # next 'area' in the seg ($arg1).  If no more areas, then
@@ -464,7 +471,6 @@ define __lv_status_r
 		if (!$_area_index)
 			seg_status $_seg $indent
 		end
-
 		__seg_type $_type $_seg $_area_index
 		if ($_type == AREA_LV)
 			set $indent++
