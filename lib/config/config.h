@@ -24,6 +24,7 @@ struct cmd_context;
 int override_config_tree_from_string(struct cmd_context *cmd,
 				     const char *config_settings);
 void destroy_config_tree(struct dm_config_tree *cft);
+struct dm_config_tree *remove_overridden_config_tree(struct cmd_context *cmd);
 
 typedef uint32_t (*checksum_fn_t) (uint32_t initial, const uint8_t *buf, uint32_t size);
 
