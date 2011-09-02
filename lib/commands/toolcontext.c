@@ -558,7 +558,7 @@ static int _init_tag_configs(struct cmd_context *cmd)
 	return 1;
 }
 
-struct dm_config_tree *_merge_config_files(struct cmd_context *cmd, struct dm_config_tree *cft)
+static struct dm_config_tree *_merge_config_files(struct cmd_context *cmd, struct dm_config_tree *cft)
 {
 	struct config_tree_list *cfl;
 
