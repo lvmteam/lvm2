@@ -192,7 +192,7 @@ static int compare_value(struct dm_config_value *a, struct dm_config_value *b)
 
 	switch (a->type) {
 	case DM_CFG_STRING: r = strcmp(a->v.str, b->v.str);
-	case DM_CFG_FLOAT: r = (a->v.r == b->v.r);
+	case DM_CFG_FLOAT: r = (a->v.f == b->v.f);
 	case DM_CFG_INT: r = (a->v.i == b->v.i);
 	case DM_CFG_EMPTY_ARRAY: return 0;
 	}
