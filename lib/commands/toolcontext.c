@@ -608,6 +608,7 @@ static struct dm_config_tree *_destroy_tag_configs(struct cmd_context *cmd)
 	struct config_tree_list *cfl;
 	struct dm_config_tree *cft_cmdline = NULL, *cft;
 
+// FIXME No need for this - only one config tree now
 	cft = dm_config_remove_cascaded_tree(cmd->cft);
 	if (cft) {
 		cft_cmdline = cmd->cft;
@@ -1429,6 +1430,7 @@ int refresh_toolcontext(struct cmd_context *cmd)
 	}
 	dev_cache_exit();
 	_destroy_tags(cmd);
+// FIXME Use cmd->cft_cmdline instead here.
 	cft_cmdline = _destroy_tag_configs(cmd);
 
 	cmd->config_valid = 0;
@@ -1441,6 +1443,7 @@ int refresh_toolcontext(struct cmd_context *cmd)
 	/* Temporary duplicate cft pointer holding lvm.conf - replaced later */
 	cft_tmp = cmd->cft;
 	if (cft_cmdline)
+// FIXME Use cmd->cft_cmdline (convert string to cft again?) and merge instead
 		cmd->cft = dm_config_insert_cascaded_tree(cft_cmdline, cft_tmp);
 
 	/* Uses cmd->cft i.e. cft_cmdline + lvm.conf */
@@ -1454,11 +1457,15 @@ int refresh_toolcontext(struct cmd_context *cmd)
 	if (!_init_tag_configs(cmd))
 		return 0;
 
+// FIXME Will need to use a fresh copy of the lvm.conf cft as the original
+// FIXME got destroyed when cft_cmdline was merged into it
 	/* Merge all the tag config files with lvm.conf, returning a
 	 * fresh cft pointer in place of cft_tmp. */
 	if (!(cmd->cft = _merge_config_files(cmd, cft_tmp)))
 		return 0;
 
+// FIXME Merge instead - but keep a clean copy of cmd->cft at this point
+// FIXME so we can easily 'remove' the effect of cft_cmdline after each cmd
 	/* Finally we can make the proper, fully-merged, cmd->cft */
 	if (cft_cmdline)
 		cmd->cft = dm_config_insert_cascaded_tree(cft_cmdline, cmd->cft);
@@ -1509,6 +1516,8 @@ void destroy_toolcontext(struct cmd_context *cmd)
 		dm_pool_destroy(cmd->mem);
 	dev_cache_exit();
 	_destroy_tags(cmd);
+
+// FIXME destroy_tag_configs handles this itself again
 	if ((cft_cmdline = _destroy_tag_configs(cmd)))
 		dm_config_destroy(cft_cmdline);
 	if (cmd->libmem)
