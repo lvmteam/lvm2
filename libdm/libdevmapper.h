@@ -1248,6 +1248,7 @@ struct dm_config_node {
 	struct dm_config_value *v;
 };
 
+/* FIXME Move cascade to dm_config_node and remove this struct */
 struct dm_config_tree {
 	struct dm_config_node *root;
 	struct dm_config_tree *cascade;
@@ -1262,6 +1263,17 @@ int dm_config_check_file(struct dm_config_tree *cft, const char **filename, stru
 int dm_config_keep_open(struct dm_config_tree *ctf);
 
 void dm_config_set_custom(struct dm_config_tree *cft, void *custom);
+
+/*
+ * If there's a cascaded dm_config_tree, remove the top layer
+ * and return the layer below.  Otherwise return NULL.
+ */
+struct dm_config_tree *dm_config_remove_cascaded_tree(struct dm_config_tree *cft);
+
+/*
+ * When searching, first_cft is checked before second_cft.
+ */
+struct dm_config_tree *dm_config_insert_cascaded_tree(struct dm_config_tree *first_cft, struct dm_config_tree *second_cft);
 
 void dm_config_destroy(struct dm_config_tree *cft);
 

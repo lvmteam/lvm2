@@ -558,13 +558,13 @@ static int _init_tag_configs(struct cmd_context *cmd)
 	return 1;
 }
 
-static int _merge_config_files(struct cmd_context *cmd)
+struct dm_config_tree *_merge_config_files(struct cmd_context *cmd, struct dm_config_tree *cft)
 {
 	struct config_tree_list *cfl;
 
 	/* Replace temporary duplicate copy of lvm.conf */
-	if (cmd->cft->root) {
-		if (!(cmd->cft = dm_config_create(NULL, 0))) {
+	if (cft->root) {
+		if (!(cft = dm_config_create(NULL, 0))) {
 			log_error("Failed to create config tree");
 			return 0;
 		}
@@ -572,11 +572,11 @@ static int _merge_config_files(struct cmd_context *cmd)
 
 	dm_list_iterate_items(cfl, &cmd->config_files) {
 		/* Merge all config trees into cmd->cft using merge/tag rules */
-		if (!merge_config_tree(cmd, cmd->cft, cfl->cft))
+		if (!merge_config_tree(cmd, cft, cfl->cft))
 			return_0;
 	}
 
-	return 1;
+	return cft;
 }
 
 static void _destroy_tags(struct cmd_context *cmd)
@@ -600,9 +600,19 @@ int config_files_changed(struct cmd_context *cmd)
 	return 0;
 }
 
-static void _destroy_tag_configs(struct cmd_context *cmd)
+/*
+ * Returns cmdline config_tree that overrides all others, if present.
+ */
+static struct dm_config_tree *_destroy_tag_configs(struct cmd_context *cmd)
 {
 	struct config_tree_list *cfl;
+	struct dm_config_tree *cft_cmdline = NULL, *cft;
+
+	cft = dm_config_remove_cascaded_tree(cmd->cft);
+	if (cft) {
+		cft_cmdline = cmd->cft;
+		cmd->cft = cft;
+	}
 
 	dm_list_iterate_items(cfl, &cmd->config_files) {
 		if (cfl->cft == cmd->cft)
@@ -616,6 +626,8 @@ static void _destroy_tag_configs(struct cmd_context *cmd)
 	}
 
 	dm_list_init(&cmd->config_files);
+
+	return cft_cmdline;
 }
 
 static int _init_dev_cache(struct cmd_context *cmd)
@@ -1285,7 +1297,7 @@ struct cmd_context *create_toolcontext(unsigned is_long_lived,
 	if (!_init_tag_configs(cmd))
 		goto_out;
 
-	if (!_merge_config_files(cmd))
+	if (!(cmd->cft = _merge_config_files(cmd, cmd->cft)))
 		goto_out;
 
 	if (!_process_config(cmd))
@@ -1397,6 +1409,8 @@ int refresh_filters(struct cmd_context *cmd)
 
 int refresh_toolcontext(struct cmd_context *cmd)
 {
+	struct dm_config_tree *cft_cmdline, *cft_tmp;
+
 	log_verbose("Reloading config files");
 
 	/*
@@ -1415,7 +1429,7 @@ int refresh_toolcontext(struct cmd_context *cmd)
 	}
 	dev_cache_exit();
 	_destroy_tags(cmd);
-	_destroy_tag_configs(cmd);
+	cft_cmdline = _destroy_tag_configs(cmd);
 
 	cmd->config_valid = 0;
 
@@ -1424,16 +1438,30 @@ int refresh_toolcontext(struct cmd_context *cmd)
 	if (!_init_lvm_conf(cmd))
 		return 0;
 
+	/* Temporary duplicate cft pointer holding lvm.conf - replaced later */
+	cft_tmp = cmd->cft;
+	if (cft_cmdline)
+		cmd->cft = dm_config_insert_cascaded_tree(cft_cmdline, cft_tmp);
+
+	/* Uses cmd->cft i.e. cft_cmdline + lvm.conf */
 	_init_logging(cmd);
 
-	if (!_init_tags(cmd, cmd->cft))
+	/* Init tags from lvm.conf. */
+	if (!_init_tags(cmd, cft_tmp))
 		return 0;
 
+	/* Doesn't change cmd->cft */
 	if (!_init_tag_configs(cmd))
 		return 0;
 
-	if (!_merge_config_files(cmd))
+	/* Merge all the tag config files with lvm.conf, returning a
+	 * fresh cft pointer in place of cft_tmp. */
+	if (!(cmd->cft = _merge_config_files(cmd, cft_tmp)))
 		return 0;
+
+	/* Finally we can make the proper, fully-merged, cmd->cft */
+	if (cft_cmdline)
+		cmd->cft = dm_config_insert_cascaded_tree(cft_cmdline, cmd->cft);
 
 	if (!_process_config(cmd))
 		return 0;
@@ -1464,6 +1492,8 @@ int refresh_toolcontext(struct cmd_context *cmd)
 
 void destroy_toolcontext(struct cmd_context *cmd)
 {
+	struct dm_config_tree *cft_cmdline;
+
 	if (cmd->dump_filter)
 		persistent_filter_dump(cmd->filter, 1);
 
@@ -1479,7 +1509,8 @@ void destroy_toolcontext(struct cmd_context *cmd)
 		dm_pool_destroy(cmd->mem);
 	dev_cache_exit();
 	_destroy_tags(cmd);
-	_destroy_tag_configs(cmd);
+	if ((cft_cmdline = _destroy_tag_configs(cmd)))
+		dm_config_destroy(cft_cmdline);
 	if (cmd->libmem)
 		dm_pool_destroy(cmd->libmem);
 

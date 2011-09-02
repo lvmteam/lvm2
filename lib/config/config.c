@@ -40,13 +40,33 @@ void destroy_config_tree(struct dm_config_tree *cft)
 	dm_config_destroy(cft);
 }
 
+/*
+ * Returns config tree if it was removed.
+ */
+struct dm_config_tree *remove_overridden_config_tree(struct cmd_context *cmd)
+{
+	struct dm_config_tree *old_cft = cmd->cft;
+	struct dm_config_tree *cft = dm_config_remove_cascaded_tree(cmd->cft);
+
+	if (!cft)
+		return NULL;
+
+	cmd->cft = cft;
+
+	return old_cft;
+}
+
 int override_config_tree_from_string(struct cmd_context *cmd,
 				     const char *config_settings)
 {
-	if (!(cmd->cft_override = dm_config_from_string(config_settings))) {
+	struct dm_config_tree *cft_new;
+
+	if (!(cft_new = dm_config_from_string(config_settings))) {
 		log_error("Failed to set overridden configuration entries.");
 		return 1;
 	}
+
+	cmd->cft = dm_config_insert_cascaded_tree(cft_new, cmd->cft);
 
 	return 0;
 }
@@ -114,13 +134,17 @@ int read_config_fd(struct dm_config_tree *cft, struct device *dev,
 
 int read_config_file(struct dm_config_tree *cft)
 {
-	const char *filename;
+	const char *filename = NULL;
 	struct device *dev = dm_config_get_custom(cft);
 	struct stat info;
 	int r;
 
 	if (!dm_config_check_file(cft, &filename, &info))
 		return_0;
+
+	/* Nothing to do.  E.g. empty file. */
+	if (!filename)
+		return 1;
 
 	if (!dev) {
 		if (!(dev = dev_create_file(filename, NULL, NULL, 1)))
@@ -142,51 +166,38 @@ int read_config_file(struct dm_config_tree *cft)
 	return r;
 }
 
-// FIXME AGK Move to override_config_tree_from_string before next release
-static struct dm_config_tree *_setup_context_tree(struct cmd_context *cmd)
-{
-	struct dm_config_tree *cft = cmd->cft_override;
-
-	if (cft)
-		cft->cascade = cmd->cft;
-	else
-		cft = cmd->cft;
-
-	return cft;
-}
-
 const struct dm_config_node *find_config_tree_node(struct cmd_context *cmd,
 						   const char *path)
 {
-	return dm_config_tree_find_node(_setup_context_tree(cmd), path);
+	return dm_config_tree_find_node(cmd->cft, path);
 }
 
 const char *find_config_tree_str(struct cmd_context *cmd,
 				 const char *path, const char *fail)
 {
-	return dm_config_tree_find_str(_setup_context_tree(cmd), path, fail);
+	return dm_config_tree_find_str(cmd->cft, path, fail);
 }
 
 int find_config_tree_int(struct cmd_context *cmd, const char *path,
 			 int fail)
 {
-	return dm_config_tree_find_int(_setup_context_tree(cmd), path, fail);
+	return dm_config_tree_find_int(cmd->cft, path, fail);
 }
 
 int64_t find_config_tree_int64(struct cmd_context *cmd, const char *path, int64_t fail)
 {
-	return dm_config_tree_find_int64(_setup_context_tree(cmd), path, fail);
+	return dm_config_tree_find_int64(cmd->cft, path, fail);
 }
 
 float find_config_tree_float(struct cmd_context *cmd, const char *path,
 			     float fail)
 {
-	return dm_config_tree_find_float(_setup_context_tree(cmd), path, fail);
+	return dm_config_tree_find_float(cmd->cft, path, fail);
 }
 
 int find_config_tree_bool(struct cmd_context *cmd, const char *path, int fail)
 {
-	return dm_config_tree_find_bool(_setup_context_tree(cmd), path, fail);
+	return dm_config_tree_find_bool(cmd->cft, path, fail);
 }
 
 /* Insert cn2 after cn1 */

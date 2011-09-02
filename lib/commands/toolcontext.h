@@ -93,7 +93,6 @@ struct cmd_context {
 	struct dm_list config_files;
 	int config_valid;
 	struct dm_config_tree *cft;
-	struct dm_config_tree *cft_override;
 	struct config_info default_settings;
 	struct config_info current_settings;
 

@@ -159,6 +159,29 @@ void dm_config_destroy(struct dm_config_tree *cft)
 	dm_pool_destroy(c->mem);
 }
 
+/*
+ * If there's a cascaded dm_config_tree, remove and return it, otherwise
+ * return NULL.
+ */
+struct dm_config_tree *dm_config_remove_cascaded_tree(struct dm_config_tree *cft)
+{
+	struct dm_config_tree *second_cft = cft->cascade;
+
+	cft->cascade = NULL;
+
+	return second_cft;
+}
+
+/*
+ * When searching, first_cft is checked before second_cft.
+ */
+struct dm_config_tree *dm_config_insert_cascaded_tree(struct dm_config_tree *first_cft, struct dm_config_tree *second_cft)
+{
+	first_cft->cascade = second_cft;
+
+	return first_cft;
+}
+
 int dm_config_parse(struct dm_config_tree *cft, const char *start, const char *end)
 {
 	/* TODO? if (start == end) return 1; */
@@ -196,14 +219,16 @@ struct dm_config_tree *dm_config_from_string(const char *config_settings)
 	return cft;
 }
 
+/*
+ * Doesn't populate filename if the file is empty.
+ */
 int dm_config_check_file(struct dm_config_tree *cft, const char **filename, struct stat *info)
 {
 	struct cs *c = (struct cs *) cft;
 	struct stat _info;
+
 	if (!info)
 		info = &_info;
-	if (filename)
-		*filename = c->filename;
 
 	if (stat(c->filename, info)) {
 		log_sys_error("stat", c->filename);
@@ -218,12 +243,13 @@ int dm_config_check_file(struct dm_config_tree *cft, const char **filename, stru
 	}
 
 	c->exists = 1;
+	c->timestamp = info->st_ctime;
+	c->st_size = info->st_size;
 
 	if (info->st_size == 0)
 		log_verbose("%s is empty", c->filename);
-
-	c->timestamp = info->st_ctime;
-	c->st_size = info->st_size;
+	else if (filename)
+		*filename = c->filename;
 
 	return 1;
 }
