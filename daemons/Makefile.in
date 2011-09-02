@@ -32,7 +32,8 @@ endif
 
 ifeq ("@BUILD_LVMETAD@", "yes")
   SUBDIRS += lvmetad
-device-mapper: libdaemon.a
+# FIXME: build dependency order needs rule fixing, using hack
+all: libdaemon.a
 endif
 
 ifeq ("@BUILD_DMEVENTD@", "yes")
