@@ -715,10 +715,8 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 
 	if (!update &&
             !arg_count(cmd, available_ARG) && !arg_count(cmd, refresh_ARG) &&
-            !arg_count(cmd, monitor_ARG) && !arg_count(cmd, poll_ARG) &&
-            /* for persistent_ARG */
-	    !arg_count(cmd, minor_ARG) && !arg_count(cmd, major_ARG)) {
-		log_error("Need 1 or more of -a, -C, -j, -m, -M, -p, -r, "
+            !arg_count(cmd, monitor_ARG) && !arg_count(cmd, poll_ARG)) {
+		log_error("Need 1 or more of -a, -C, -M, -p, -r, "
 			  "--resync, --refresh, --alloc, --addtag, --deltag, "
 			  "--monitor or --poll");
 		return EINVALID_CMD_LINE;
