@@ -257,7 +257,7 @@ struct lv_segment *alloc_lv_segment(struct dm_pool *mem,
 
 	if (log_lv) {
 		if (thin_pool_lv) {
-			if (!attach_pool_metadata(seg, log_lv))
+			if (!attach_pool_metadata_lv(seg, log_lv))
 				return_NULL;
 		} else if (!attach_mirror_log(seg, log_lv))
 			return_NULL;
