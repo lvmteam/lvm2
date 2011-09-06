@@ -619,6 +619,7 @@ open_retry:
 	if (rv != SA_AIS_OK) {
 		LOG_ERROR("[%s] Failed to open checkpoint: %s",
 			  SHORT_UUID(entry->name.value), str_ais_error(rv));
+		free(bitmap);
 		return -EIO; /* FIXME: better error */
 	}
 
@@ -647,6 +648,7 @@ init_retry:
 	if (rv != SA_AIS_OK) {
 		LOG_ERROR("[%s] Sync checkpoint section creation failed: %s",
 			  SHORT_UUID(entry->name.value), str_ais_error(rv));
+		free(bitmap);
 		return -EIO; /* FIXME: better error */
 	}
 

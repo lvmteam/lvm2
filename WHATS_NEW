@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Fix error path bitmap leak in cmirrord import_checkpoint().
   Log unlink() error in cmirrord remove_lockfile().
   Remove incorrect requirement for -j or -m from lvchange error message.
   Fix unsafe table load when splitting off smaller mirror from a larger one.
