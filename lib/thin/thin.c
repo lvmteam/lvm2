@@ -47,20 +47,25 @@ static int _thin_pool_text_import(struct lv_segment *seg, const struct dm_config
 			struct dm_hash_table *pv_hash __attribute__((unused)))
 {
 	const char *lv_name;
+	struct logical_volume *pool_data_lv, *pool_metadata_lv;
 
 	if (!dm_config_get_str(sn, "pool", &lv_name))
 		return SEG_LOG_ERROR("Pool must be a string in");
 
-// Use attach_pool_lv
-	if (!(seg->pool_lv = find_lv(seg->lv->vg, lv_name)))
+	if (!(pool_data_lv = find_lv(seg->lv->vg, lv_name)))
 		return SEG_LOG_ERROR("Unknown pool %s in", lv_name);
 
 	if (!dm_config_get_str(sn, "metadata", &lv_name))
 		return SEG_LOG_ERROR("Metadata must be a string in");
 
-// Use attach_pool_metadata()
-	if (!(seg->metadata_lv = find_lv(seg->lv->vg, lv_name)))
+	if (!(pool_metadata_lv = find_lv(seg->lv->vg, lv_name)))
 		return SEG_LOG_ERROR("Unknown metadata %s in", lv_name);
+
+	if (!attach_pool_metadata_lv(seg, pool_metadata_lv))
+		return_0;
+
+	if (!attach_pool_data_lv(seg, pool_data_lv))
+		return_0;
 
 	if (!dm_config_get_uint64(sn, "transaction_id", &seg->transaction_id))
 		return SEG_LOG_ERROR("Could not read transaction_id for");
@@ -74,8 +79,8 @@ static int _thin_pool_text_import(struct lv_segment *seg, const struct dm_config
 
 static int _thin_pool_text_export(const struct lv_segment *seg, struct formatter *f)
 {
-	outf(f, "pool = \"%s\"", seg->pool_lv->name);
-	outf(f, "metadata = \"%s\"", seg->metadata_lv->name);
+	outf(f, "pool = \"%s\"", seg->pool_data_lv->name);
+	outf(f, "metadata = \"%s\"", seg->pool_metadata_lv->name);
 	outf(f, "transaction_id = %" PRIu64, seg->transaction_id);
 	if (seg->zero_new_blocks)
 		outf(f, "zero_new_blocks = 1");
@@ -92,12 +97,16 @@ static int _thin_text_import(struct lv_segment *seg, const struct dm_config_node
 			struct dm_hash_table *pv_hash __attribute__((unused)))
 {
 	const char *lv_name;
+	struct logical_volume *pool_lv;
 
 	if (!dm_config_get_str(sn, "thin_pool", &lv_name))
 		return SEG_LOG_ERROR("Thin pool must be a string in");
 
-	if (!(seg->thin_pool_lv = find_lv(seg->lv->vg, lv_name)))
+	if (!(pool_lv = find_lv(seg->lv->vg, lv_name)))
 		return SEG_LOG_ERROR("Unknown thin pool %s in", lv_name);
+
+	if (!attach_pool_lv(seg, pool_lv))
+		return_0;
 
 	if (dm_config_has_node(sn, "origin")) {
 		if (!dm_config_get_str(sn, "origin", &lv_name))
@@ -115,7 +124,7 @@ static int _thin_text_import(struct lv_segment *seg, const struct dm_config_node
 
 static int _thin_text_export(const struct lv_segment *seg, struct formatter *f)
 {
-	outf(f, "thin_pool = \"%s\"", seg->thin_pool_lv->name);
+	outf(f, "thin_pool = \"%s\"", seg->pool_lv->name);
 	outf(f, "device_id = %" PRIu64, seg->device_id);
 
 	if (seg->origin)

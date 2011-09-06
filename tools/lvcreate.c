@@ -198,13 +198,12 @@ static int _determine_snapshot_type(struct volume_group *vg,
 		return 0;
 	}
 
-	/* FIXME Replace with lv_is_thin_volume() once more flags are added */
 	if (lv_is_thin_volume(lvl->lv)) {
 		lp->thin = 1;
 		if (!(lp->segtype = get_segtype_from_string(vg->cmd, "thin")))
 			return_0;
 
-		lp->pool = first_seg(lvl->lv)->thin_pool_lv->name;
+		lp->pool = first_seg(lvl->lv)->pool_lv->name;
 	}
 
 	if (!lp->thin && !arg_count(vg->cmd, extents_ARG) && !arg_count(vg->cmd, size_ARG)) {

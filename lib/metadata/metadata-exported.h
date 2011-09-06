@@ -85,6 +85,8 @@
 
 #define THIN_VOLUME		UINT64_C(0x0000001000000000)	/* LV */
 #define THIN_POOL		UINT64_C(0x0000002000000000)	/* LV */
+#define THIN_POOL_DATA		UINT64_C(0x0000002000000000)	/* LV */
+#define THIN_POOL_METADATA	UINT64_C(0x0000004000000000)	/* LV */
 
 #define LVM_READ		0x00000100U	/* LV VG 32-bit */
 #define LVM_WRITE		0x00000200U	/* LV VG 32-bit */
@@ -134,6 +136,8 @@
 
 #define lv_is_thin_volume(lv)	((lv)->status & THIN_VOLUME ? 1 : 0)
 #define lv_is_thin_pool(lv)	((lv)->status & THIN_POOL ? 1 : 0)
+#define lv_is_thin_pool_data(lv)	((lv)->status & THIN_POOL_DATA ? 1 : 0)
+#define lv_is_thin_pool_metadata(lv)	((lv)->status & THIN_POOL_METADATA ? 1 : 0)
 #define lv_is_mirrored(lv)	((lv)->status & MIRRORED ? 1 : 0)
 #define lv_is_rlog(lv)		((lv)->status & REPLICATOR_LOG ? 1 : 0)
 
@@ -322,12 +326,12 @@ struct lv_segment {
 	struct dm_list tags;
 
 	struct lv_segment_area *areas;
-	struct lv_segment_area *meta_areas; /* For RAID */
-	struct logical_volume *pool_lv;		/* For thin_pool */
-	struct logical_volume *metadata_lv;	/* For thin_pool */
+	struct lv_segment_area *meta_areas;	/* For RAID */
+	struct logical_volume *pool_data_lv;	/* For thin_pool */
+	struct logical_volume *pool_metadata_lv;/* For thin_pool */
 	uint64_t transaction_id;		/* For thin_pool */
 	uint32_t zero_new_blocks;		/* For thin_pool */
-	struct logical_volume *thin_pool_lv;	/* For thin */
+	struct logical_volume *pool_lv;		/* For thin */
 	uint64_t device_id;			/* For thin */
 
 	struct logical_volume *replicator;/* For replicator-devs - link to replicator LV */

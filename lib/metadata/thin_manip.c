@@ -15,19 +15,28 @@
 #include "lib.h"
 #include "metadata.h"
 
-int attach_pool_metadata(struct lv_segment *seg, struct logical_volume *thin_pool_metadata)
+int attach_pool_metadata_lv(struct lv_segment *seg, struct logical_volume *pool_metadata_lv)
 {
-	// FIXME Housekeeping needed here (cf attach_mirror_log)
-	seg->metadata_lv = thin_pool_metadata;
+	seg->pool_metadata_lv = pool_metadata_lv;
+	pool_metadata_lv->status |= THIN_POOL_METADATA;
+        lv_set_hidden(pool_metadata_lv);
 
-	return 1;
+        return add_seg_to_segs_using_this_lv(pool_metadata_lv, seg);
 }
 
-int attach_pool_lv(struct lv_segment *seg, struct logical_volume *thin_pool_lv)
+int attach_pool_data_lv(struct lv_segment *seg, struct logical_volume *pool_data_lv)
 {
-	// FIXME Housekeeping needed here (cf attach_mirror_log)
-	seg->thin_pool_lv = thin_pool_lv;
+	seg->pool_data_lv = pool_data_lv;
+	pool_data_lv->status |= THIN_POOL_DATA;
+        lv_set_hidden(pool_data_lv);
 
-	return 1;
+        return add_seg_to_segs_using_this_lv(pool_data_lv, seg);
 }
 
+int attach_pool_lv(struct lv_segment *seg, struct logical_volume *pool_lv)
+{
+	seg->pool_lv = pool_lv;
+	pool_lv->status |= THIN_POOL;
+
+        return add_seg_to_segs_using_this_lv(pool_lv, seg);
+}
