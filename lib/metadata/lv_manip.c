@@ -2354,7 +2354,7 @@ static int _lv_insert_empty_sublvs(struct logical_volume *lv,
 		// lv->status |= THIN_POOL;
 		// status = THIN_IMAGE;
 		layer_name = "tdata";
-	}
+	} else
 		return_0;
 
 	/*
