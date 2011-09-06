@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Log unlink() error in cmirrord remove_lockfile().
   Remove incorrect requirement for -j or -m from lvchange error message.
   Fix unsafe table load when splitting off smaller mirror from a larger one.
   Use size_t return type for text_vg_export_raw() and export_vg_to_buffer().

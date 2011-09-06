@@ -121,7 +121,8 @@ static void process_signals(void)
 
 static void remove_lockfile(void)
 {
-	unlink(CMIRRORD_PIDFILE);
+	if (unlink(CMIRRORD_PIDFILE))
+		LOG_ERROR("Unable to remove \"" CMIRRORD_PIDFILE "\" %s", strerror(errno));
 }
 
 /*
