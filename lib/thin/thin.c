@@ -48,19 +48,19 @@ static int _thin_pool_text_import(struct lv_segment *seg, const struct dm_config
 {
 	const char *lv_name;
 
-	if (!dm_config_get_str(sn, "data", &lv_name))
-		return SEG_LOG_ERROR("Thin pool data must be a string in");
+	if (!dm_config_get_str(sn, "pool", &lv_name))
+		return SEG_LOG_ERROR("Pool must be a string in");
 
 // Use attach_pool_lv
 	if (!(seg->pool_lv = find_lv(seg->lv->vg, lv_name)))
-		return SEG_LOG_ERROR("Unknown pool data %s in", lv_name);
+		return SEG_LOG_ERROR("Unknown pool %s in", lv_name);
 
 	if (!dm_config_get_str(sn, "metadata", &lv_name))
-		return SEG_LOG_ERROR("Thin pool metadata must be a string in");
+		return SEG_LOG_ERROR("Metadata must be a string in");
 
 // Use attach_pool_metadata()
 	if (!(seg->metadata_lv = find_lv(seg->lv->vg, lv_name)))
-		return SEG_LOG_ERROR("Unknown pool metadata %s in", lv_name);
+		return SEG_LOG_ERROR("Unknown metadata %s in", lv_name);
 
 	if (!dm_config_get_uint64(sn, "transaction_id", &seg->transaction_id))
 		return SEG_LOG_ERROR("Could not read transaction_id for");
@@ -74,7 +74,7 @@ static int _thin_pool_text_import(struct lv_segment *seg, const struct dm_config
 
 static int _thin_pool_text_export(const struct lv_segment *seg, struct formatter *f)
 {
-	outf(f, "data = \"%s\"", seg->pool_lv->name);
+	outf(f, "pool = \"%s\"", seg->pool_lv->name);
 	outf(f, "metadata = \"%s\"", seg->metadata_lv->name);
 	outf(f, "transaction_id = %" PRIu64, seg->transaction_id);
 	if (seg->zero_new_blocks)
@@ -101,7 +101,7 @@ static int _thin_text_import(struct lv_segment *seg, const struct dm_config_node
 
 	if (dm_config_has_node(sn, "origin")) {
 		if (!dm_config_get_str(sn, "origin", &lv_name))
-			return SEG_LOG_ERROR("Thin pool origin must be a string in");
+			return SEG_LOG_ERROR("Origin must be a string in");
 
 		if (!(seg->origin = find_lv(seg->lv->vg, lv_name)))
 			return SEG_LOG_ERROR("Unknown origin %s in", lv_name);
