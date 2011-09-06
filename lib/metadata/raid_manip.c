@@ -359,7 +359,7 @@ static int _shift_and_rename_image_components(struct lv_segment *seg)
  */
 static int _alloc_image_component(struct logical_volume *lv,
 				  struct alloc_handle *ah, uint32_t first_area,
-				  uint32_t type, struct logical_volume **new_lv)
+				  uint64_t type, struct logical_volume **new_lv)
 {
 	uint64_t status;
 	size_t len = strlen(lv->name) + 32;

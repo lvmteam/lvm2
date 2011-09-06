@@ -342,7 +342,7 @@ static struct logical_volume *_get_lvconvert_lv(struct cmd_context *cmd __attrib
 						struct volume_group *vg,
 						const char *name,
 						const char *uuid,
-						uint32_t lv_type __attribute__((unused)))
+						uint64_t lv_type __attribute__((unused)))
 {
 	struct logical_volume *lv = find_lv(vg, name);
 

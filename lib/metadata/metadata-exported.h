@@ -42,55 +42,55 @@
 /* Various flags */
 /* Note that the bits no longer necessarily correspond to LVM1 disk format */
 
-#define PARTIAL_VG		0x00000001U	/* VG */
-#define EXPORTED_VG          	0x00000002U	/* VG PV */
-#define RESIZEABLE_VG        	0x00000004U	/* VG */
-
-/*
- * Since the RAID flags are LV (and seg) only and the above three
- * are VG/PV only, these flags are reused.
- */
-#define RAID                    0x00000001U	/* LV */
-#define RAID_META               0x00000002U	/* LV */
-#define RAID_IMAGE              0x00000004U	/* LV */
+#define PARTIAL_VG		UINT64_C(0x00000001)	/* VG */
+#define EXPORTED_VG		UINT64_C(0x00000002)	/* VG PV */
+#define RESIZEABLE_VG		UINT64_C(0x00000004)	/* VG */
 
 /* May any free extents on this PV be used or must they be left free? */
-#define ALLOCATABLE_PV         	0x00000008U	/* PV */
+#define ALLOCATABLE_PV		UINT64_C(0x00000008)	/* PV */
 
-//#define SPINDOWN_LV          	0x00000010U	/* LV */
-//#define BADBLOCK_ON       	0x00000020U	/* LV */
-#define VISIBLE_LV		0x00000040U	/* LV */
-#define FIXED_MINOR		0x00000080U	/* LV */
+//#define SPINDOWN_LV		UINT64_C(0x00000010)	/* LV */
+//#define BADBLOCK_ON		UINT64_C(0x00000020)	/* LV */
+#define VISIBLE_LV		UINT64_C(0x00000040)	/* LV */
+#define FIXED_MINOR		UINT64_C(0x00000080)	/* LV */
 /* FIXME Remove when metadata restructuring is completed */
-#define SNAPSHOT		0x00001000U	/* LV - internal use only */
-#define PVMOVE			0x00002000U	/* VG LV SEG */
-#define LOCKED			0x00004000U	/* LV */
-#define MIRRORED		0x00008000U	/* LV - internal use only */
-//#define VIRTUAL			0x00010000U	/* LV - internal use only */
-#define MIRROR_LOG		0x00020000U	/* LV */
-#define MIRROR_IMAGE		0x00040000U	/* LV */
-#define LV_NOTSYNCED		0x00080000U	/* LV */
-//#define PRECOMMITTED		0x00200000U	/* VG - internal use only */
-#define CONVERTING		0x00400000U	/* LV */
+#define SNAPSHOT		UINT64_C(0x00001000)	/* LV - internal use only */
+#define PVMOVE			UINT64_C(0x00002000)	/* VG LV SEG */
+#define LOCKED			UINT64_C(0x00004000)	/* LV */
+#define MIRRORED		UINT64_C(0x00008000)	/* LV - internal use only */
+//#define VIRTUAL		UINT64_C(0x00010000)	/* LV - internal use only */
+#define MIRROR_LOG		UINT64_C(0x00020000)	/* LV */
+#define MIRROR_IMAGE		UINT64_C(0x00040000)	/* LV */
+#define LV_NOTSYNCED		UINT64_C(0x00080000)	/* LV */
+//#define PRECOMMITTED		UINT64_C(0x00200000)	/* VG - internal use only */
+#define CONVERTING		UINT64_C(0x00400000)	/* LV */
 
-#define MISSING_PV              0x00800000U	/* PV */
-#define PARTIAL_LV              0x01000000U	/* LV - derived flag, not
-						   written out in metadata*/
+#define MISSING_PV		UINT64_C(0x00800000)	/* PV */
+#define PARTIAL_LV		UINT64_C(0x01000000)	/* LV - derived flag, not
+							   written out in metadata*/
 
-//#define POSTORDER_FLAG	0x02000000U /* Not real flags, reserved for
-//#define POSTORDER_OPEN_FLAG	0x04000000U    temporary use inside vg_read_internal. */
-//#define VIRTUAL_ORIGIN	0x08000000U	/* LV - internal use only */
+//#define POSTORDER_FLAG	UINT64_C(0x02000000) /* Not real flags, reserved for
+//#define POSTORDER_OPEN_FLAG	UINT64_C(0x04000000)    temporary use inside vg_read_internal. */
+//#define VIRTUAL_ORIGIN	UINT64_C(0x08000000)	/* LV - internal use only */
 
-#define MERGING			0x10000000U	/* LV SEG */
+#define MERGING			UINT64_C(0x10000000)	/* LV SEG */
 
-#define REPLICATOR		0x20000000U	/* LV -internal use only for replicator */
-#define REPLICATOR_LOG		0x40000000U	/* LV -internal use only for replicator-dev */
-#define UNLABELLED_PV           0x80000000U     /* PV -this PV had no label written yet */
+#define REPLICATOR		UINT64_C(0x20000000)	/* LV -internal use only for replicator */
+#define REPLICATOR_LOG		UINT64_C(0x40000000)	/* LV -internal use only for replicator-dev */
+#define UNLABELLED_PV		UINT64_C(0x80000000)	/* PV -this PV had no label written yet */
 
-#define LVM_READ              	0x00000100U	/* LV VG */
-#define LVM_WRITE             	0x00000200U	/* LV VG */
-#define CLUSTERED         	0x00000400U	/* VG */
-//#define SHARED            	0x00000800U	/* VG */
+#define RAID			UINT64_C(0x0000000100000000)	/* LV */
+#define RAID_META		UINT64_C(0x0000000200000000)	/* LV */
+#define RAID_IMAGE		UINT64_C(0x0000000400000000)	/* LV */
+
+#define THIN_VOLUME		UINT64_C(0x0000001000000000)	/* LV */
+#define THIN_POOL		UINT64_C(0x0000002000000000)	/* LV */
+
+#define LVM_READ		0x00000100U	/* LV VG 32-bit */
+#define LVM_WRITE		0x00000200U	/* LV VG 32-bit */
+
+#define CLUSTERED		UINT64_C(0x00000400)	/* VG */
+//#define SHARED		UINT64_C(0x00000800)	/* VG */
 
 /* Format features flags */
 #define FMT_SEGMENTS		0x00000001U	/* Arbitrary segment params? */
@@ -112,10 +112,10 @@
 /* vg_read and vg_read_for_update flags */
 #define READ_ALLOW_INCONSISTENT	0x00010000U
 #define READ_ALLOW_EXPORTED	0x00020000U
-#define READ_WITHOUT_LOCK       0x00040000U
+#define READ_WITHOUT_LOCK	0x00040000U
 
 /* A meta-flag, useful with toollib for_each_* functions. */
-#define READ_FOR_UPDATE 	0x00100000U
+#define READ_FOR_UPDATE		0x00100000U
 
 /* vg's "read_status" field */
 #define FAILED_INCONSISTENT	0x00000001U
@@ -189,19 +189,19 @@ struct pv_segment {
  */
 
 /* PV-based format instance */
-#define FMT_INSTANCE_PV 		0x00000000U
+#define FMT_INSTANCE_PV			0x00000000U
 
 /* VG-based format instance */
-#define FMT_INSTANCE_VG 		0x00000001U
+#define FMT_INSTANCE_VG			0x00000001U
 
 /* Include any existing PV mdas during format_instance initialisation */
-#define FMT_INSTANCE_MDAS 		0x00000002U
+#define FMT_INSTANCE_MDAS		0x00000002U
 
 /* Include any auxiliary mdas during format_instance intialisation */
-#define FMT_INSTANCE_AUX_MDAS 		0x00000004U
+#define FMT_INSTANCE_AUX_MDAS		0x00000004U
 
 /* Include any other format-specific mdas during format_instance initialisation */
-#define FMT_INSTANCE_PRIVATE_MDAS 	0x00000008U
+#define FMT_INSTANCE_PRIVATE_MDAS	0x00000008U
 
 struct format_instance {
 	unsigned ref_count;	/* Refs to this fid from VG and PV structs */
@@ -265,9 +265,9 @@ struct replicator_site {
 
 	struct logical_volume *replicator; /* Reference to replicator */
 
-	const char *name;               /* Site name */
+	const char *name;		/* Site name */
 	const char *vg_name;		/* VG name */
-	struct volume_group *vg;        /* resolved vg  (activate/deactive) */
+	struct volume_group *vg;	/* resolved vg  (activate/deactive) */
 	unsigned site_index;
 	replicator_state_t state;	/* Active or pasive state of site */
 	dm_replicator_mode_t op_mode;	/* Operation mode sync or async fail|warn|drop|stall */
@@ -301,7 +301,7 @@ struct lv_segment {
 	uint64_t status;
 
 	/* FIXME Fields depend on segment type */
-	uint32_t stripe_size;   /* For stripe and RAID - in sectors */
+	uint32_t stripe_size;	/* For stripe and RAID - in sectors */
 	uint32_t area_count;
 	uint32_t area_len;
 	uint32_t chunk_size;	/* For snapshots - in sectors */
@@ -388,7 +388,7 @@ int vg_write(struct volume_group *vg);
 int vg_commit(struct volume_group *vg);
 int vg_revert(struct volume_group *vg);
 struct volume_group *vg_read_internal(struct cmd_context *cmd, const char *vg_name,
-			     const char *vgid, int warnings, int *consistent);
+				      const char *vgid, int warnings, int *consistent);
 struct physical_volume *pv_read(struct cmd_context *cmd, const char *pv_name,
 				int warnings,
 				int scan_label_only);
@@ -425,9 +425,9 @@ uint32_t vg_lock_newname(struct cmd_context *cmd, const char *vgname);
  * Return a handle to VG metadata.
  */
 struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name,
-              const char *vgid, uint32_t flags);
+			     const char *vgid, uint32_t flags);
 struct volume_group *vg_read_for_update(struct cmd_context *cmd, const char *vg_name,
-                         const char *vgid, uint32_t flags);
+			 const char *vgid, uint32_t flags);
 
 /* 
  * Test validity of a VG handle.
@@ -450,7 +450,7 @@ struct physical_volume *pv_create(const struct cmd_context *cmd,
 				  uint64_t pvmetadatasize,
 				  unsigned metadataignore);
 int pv_resize(struct physical_volume *pv, struct volume_group *vg,
-             uint64_t size);
+	      uint64_t size);
 int pv_analyze(struct cmd_context *cmd, const char *pv_name,
 	       uint64_t label_sector);
 
@@ -495,7 +495,7 @@ struct logical_volume *lv_create_empty(const char *name,
 
 /* Write out LV contents */
 int set_lv(struct cmd_context *cmd, struct logical_volume *lv,
-           uint64_t sectors, int value);
+	   uint64_t sectors, int value);
 
 int lv_change_tag(struct logical_volume *lv, const char *tag, int add_tag);
 
@@ -699,7 +699,7 @@ struct logical_volume * find_temporary_mirror(const struct logical_volume *lv);
 int lv_is_mirrored(const struct logical_volume *lv);
 uint32_t lv_mirror_count(const struct logical_volume *lv);
 uint32_t adjusted_mirror_region_size(uint32_t extent_size, uint32_t extents,
-                                    uint32_t region_size);
+				    uint32_t region_size);
 int remove_mirrors_from_segments(struct logical_volume *lv,
 				 uint32_t new_mirrors, uint64_t status_mask);
 int add_mirrors_to_segments(struct cmd_context *cmd, struct logical_volume *lv,
@@ -773,12 +773,12 @@ int lv_read_replicator_vgs(struct logical_volume *lv);
 void lv_release_replicator_vgs(struct logical_volume *lv);
 
 struct logical_volume *find_pvmove_lv(struct volume_group *vg,
-				      struct device *dev, uint32_t lv_type);
+				      struct device *dev, uint64_t lv_type);
 struct logical_volume *find_pvmove_lv_from_pvname(struct cmd_context *cmd,
 						  struct volume_group *vg,
 						  const char *name,
 						  const char *uuid,
-						  uint32_t lv_type);
+						  uint64_t lv_type);
 struct logical_volume *find_pvmove_lv_in_lv(struct logical_volume *lv);
 const char *get_pvmove_pvname_from_lv(struct logical_volume *lv);
 const char *get_pvmove_pvname_from_lv_mirr(struct logical_volume *lv_mirr);

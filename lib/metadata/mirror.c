@@ -1528,7 +1528,7 @@ const char *get_pvmove_pvname_from_lv(struct logical_volume *lv)
 
 struct logical_volume *find_pvmove_lv(struct volume_group *vg,
 				      struct device *dev,
-				      uint32_t lv_type)
+				      uint64_t lv_type)
 {
 	struct lv_list *lvl;
 	struct logical_volume *lv;
@@ -1558,7 +1558,7 @@ struct logical_volume *find_pvmove_lv_from_pvname(struct cmd_context *cmd,
 						  struct volume_group *vg,
 						  const char *name,
 						  const char *uuid __attribute__((unused)),
-						  uint32_t lv_type)
+						  uint64_t lv_type)
 {
 	struct physical_volume *pv;
 	struct logical_volume *lv;
