@@ -283,7 +283,7 @@ static void _poll_for_all_vgs(struct cmd_context *cmd,
  */
 int poll_daemon(struct cmd_context *cmd, const char *name, const char *uuid,
 		unsigned background,
-		uint32_t lv_type, struct poll_functions *poll_fns,
+		uint64_t lv_type, struct poll_functions *poll_fns,
 		const char *progress_title)
 {
 	struct daemon_parms parms;

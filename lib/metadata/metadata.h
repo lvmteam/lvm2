@@ -49,54 +49,23 @@
 
 
 /* Various flags */
+/* See metadata-exported.h for the complete list. */
 /* Note that the bits no longer necessarily correspond to LVM1 disk format */
 
-//#define PARTIAL_VG		0x00000001U	/* VG */
-//#define EXPORTED_VG          	0x00000002U	/* VG PV */
-//#define RESIZEABLE_VG        	0x00000004U	/* VG */
-
 /* May any free extents on this PV be used or must they be left free? */
-//#define ALLOCATABLE_PV         	0x00000008U	/* PV */
 
-#define SPINDOWN_LV          	0x00000010U	/* LV */
-#define BADBLOCK_ON       	0x00000020U	/* LV */
-//#define VISIBLE_LV		0x00000040U	/* LV */
-//#define FIXED_MINOR		0x00000080U	/* LV */
-/* FIXME Remove when metadata restructuring is completed */
-//#define SNAPSHOT		0x00001000U	/* LV - internal use only */
-//#define PVMOVE			0x00002000U	/* VG LV SEG */
-//#define LOCKED			0x00004000U	/* LV */
-//#define MIRRORED		0x00008000U	/* LV - internal use only */
-#define VIRTUAL			0x00010000U	/* LV - internal use only */
-//#define MIRROR_LOG		0x00020000U	/* LV */
-//#define MIRROR_IMAGE		0x00040000U	/* LV */
-//#define MIRROR_NOTSYNCED	0x00080000U	/* LV */
-#define PRECOMMITTED		0x00200000U	/* VG - internal use only */
-//#define CONVERTING		0x00400000U	/* LV */
+#define SPINDOWN_LV          	UINT64_C(0x00000010)	/* LV */
+#define BADBLOCK_ON       	UINT64_C(0x00000020)	/* LV */
+#define VIRTUAL			UINT64_C(0x00010000)	/* LV - internal use only */
+#define PRECOMMITTED		UINT64_C(0x00200000)	/* VG - internal use only */
+#define POSTORDER_FLAG		UINT64_C(0x02000000) /* Not real flags, reserved for  */
+#define POSTORDER_OPEN_FLAG	UINT64_C(0x04000000) /* temporary use inside vg_read_internal. */
+#define VIRTUAL_ORIGIN		UINT64_C(0x08000000)	/* LV - internal use only */
 
-//#define MISSING_PV		0x00800000U	/* PV */
-//#define PARTIAL_LV		0x01000000U	/* LV - derived flag, not
-//						   written out in metadata*/
-
-#define POSTORDER_FLAG		0x02000000U /* Not real flags, reserved for  */
-#define POSTORDER_OPEN_FLAG	0x04000000U /* temporary use inside vg_read_internal. */
-#define VIRTUAL_ORIGIN		0x08000000U	/* LV - internal use only */
-
-//#define LVM_READ              	0x00000100U	/* LV VG */
-//#define LVM_WRITE             	0x00000200U	/* LV VG */
-//#define CLUSTERED         	0x00000400U	/* VG */
-#define SHARED            	0x00000800U	/* VG */
+#define SHARED            	UINT64_C(0x00000800)	/* VG */
 
 /* Format features flags */
-//#define FMT_SEGMENTS		0x00000001U	/* Arbitrary segment params? */
-//#define FMT_MDAS		0x00000002U	/* Proper metadata areas? */
-//#define FMT_TAGS		0x00000004U	/* Tagging? */
-//#define FMT_UNLIMITED_VOLS	0x00000008U	/* Unlimited PVs/LVs? */
-//#define FMT_RESTRICTED_LVIDS	0x00000010U	/* LVID <= 255 */
-//#define FMT_ORPHAN_ALLOCATABLE	0x00000020U	/* Orphan PV allocatable? */
 #define FMT_PRECOMMIT		0x00000040U	/* Supports pre-commit? */
-//#define FMT_RESIZE_PV		0x00000080U	/* Supports pvresize? */
-//#define FMT_UNLIMITED_STRIPESIZE 0x00000100U	/* Unlimited stripe size? */
 
 struct dm_config_tree;
 struct metadata_area;

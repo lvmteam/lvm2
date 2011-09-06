@@ -1675,7 +1675,7 @@ static int _find_some_parallel_space(struct alloc_handle *ah, const struct alloc
 						if (alloc_state->areas[s].pva && alloc_state->areas[s].pva->map->pv == pvm->pv)
 							goto next_pv;
 				/* On a second pass, avoid PVs already used in an uncommitted area */
- 				} else if (iteration_count)
+				} else if (iteration_count)
 					for (s = 0; s < devices_needed; s++)
 						if (alloc_state->areas[s].pva && alloc_state->areas[s].pva->map->pv == pvm->pv)
 							goto next_pv;
@@ -1907,8 +1907,8 @@ static int _allocate(struct alloc_handle *ah,
 		return 1;
 	}
 
-        if (ah->area_multiple > 1 &&
-            (ah->new_extents - alloc_state.allocated) % ah->area_count) {
+	if (ah->area_multiple > 1 &&
+	    (ah->new_extents - alloc_state.allocated) % ah->area_count) {
 		log_error("Number of extents requested (%d) needs to be divisible by %d.",
 			  ah->new_extents - alloc_state.allocated, ah->area_count);
 		return 0;
@@ -2306,7 +2306,7 @@ int lv_add_mirror_lvs(struct logical_volume *lv,
  * If we used AREA_PVs under the mirror layer of a log, we could
  * assemble it all at once by calling 'lv_add_segment' with the
  * appropriate segtype (mirror/stripe), like this:
- * 	lv_add_segment(ah, ah->area_count, ah->log_area_count,
+ *	lv_add_segment(ah, ah->area_count, ah->log_area_count,
  *		       log_lv, segtype, 0, MIRROR_LOG, 0);
  *
  * For now, we use the same mechanism to build a mirrored log as we
@@ -2353,7 +2353,7 @@ static int _lv_insert_empty_sublvs(struct logical_volume *lv,
 	} else if (segtype_is_thin_pool(segtype)) {
 		// lv->status |= THIN_POOL;
 		// status = THIN_IMAGE;
-		layer_name = "tdata";
+		layer_name = "tpool";
 	} else
 		return_0;
 
@@ -3775,7 +3775,7 @@ int set_lv(struct cmd_context *cmd, struct logical_volume *lv,
 	dev_flush(dev);
 
 	if (!dev_close_immediate(dev))
-                stack;
+		stack;
 
 	return 1;
 }
@@ -4198,7 +4198,7 @@ int lv_create_single(struct volume_group *vg,
 		lp->pool = lv->name;
 	
 		if (!(lp->segtype = get_segtype_from_string(vg->cmd, "thin")))
-		return_0;
+			return_0;
 	}
 
 	if (!(lv = _lv_create_an_lv(vg, lp, lp->lv_name)))
