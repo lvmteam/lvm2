@@ -1817,8 +1817,11 @@ int pull_state(const char *uuid, uint64_t luid,
 	}
 
 	if (!strncmp(which, "recovering_region", 17)) {
-		sscanf(buf, "%llu %u", (unsigned long long *)&lc->recovering_region,
-		       &lc->recoverer);
+		if (sscanf(buf, "%llu %u", (unsigned long long *)&lc->recovering_region,
+			   &lc->recoverer) != 2) {
+			LOG_ERROR("cannot parse recovering region from: %s", buf);
+			return -EINVAL;
+		}
 		LOG_SPRINT(lc, "CKPT INIT - SEQ#=X, UUID=%s, nodeid = X:: "
 			   "recovering_region=%llu, recoverer=%u",
 			   SHORT_UUID(lc->uuid),
