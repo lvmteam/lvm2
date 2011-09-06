@@ -22,6 +22,7 @@ struct lv_segment *alloc_lv_segment(struct dm_pool *mem,
 				    uint64_t status,
 				    uint32_t stripe_size,
 				    struct logical_volume *log_lv,
+				    struct logical_volume *thin_pool_lv,
 				    uint32_t area_count,
 				    uint32_t area_len,
 				    uint32_t chunk_size,
@@ -72,7 +73,9 @@ int lv_add_mirror_lvs(struct logical_volume *lv,
 int lv_add_log_segment(struct alloc_handle *ah, uint32_t first_area,
 		       struct logical_volume *log_lv, uint64_t status);
 int lv_add_virtual_segment(struct logical_volume *lv, uint64_t status,
-                           uint32_t extents, const struct segment_type *segtype);
+                           uint32_t extents,
+			   const struct segment_type *segtype,
+			   const char *thin_pool_name);
 
 void alloc_destroy(struct alloc_handle *ah);
 

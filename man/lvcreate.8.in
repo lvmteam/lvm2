@@ -32,11 +32,13 @@ VolumeGroupName [PhysicalVolumePath[:PE[-PE]]...]
 [\-\-noudevsync]
 [\-\-ignoremonitoring]
 [\-\-monitor {y|n}]
-\-n|\-\-name SnapshotLogicalVolumeName
+[--thinpool ThinPoolLogicalVolumeName]
+[\-n|\-\-name SnapshotLogicalVolumeName]
 {{\-s|\-\-snapshot}
 OriginalLogicalVolumePath | 
 [\-s|\-\-snapshot]
-VolumeGroupName \-V|\-\-virtualsize VirtualSize}
+VolumeGroupName \-V|\-\-virtualsize VirtualSize |
+-T VolumeGroupName[/ThinPoolLogicalVolumeName] \-V|\-\-virtualsize VirtualSize}
 .SH DESCRIPTION
 lvcreate creates a new logical volume in a volume group ( see
 .B vgcreate(8), vgchange(8)
