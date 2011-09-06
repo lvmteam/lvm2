@@ -195,7 +195,7 @@ static int _add_stripe_seg(struct dm_pool *mem,
 
 	if (!(seg = alloc_lv_segment(mem, segtype, lv, *le_cur,
 				     area_len * usp->num_devs, 0,
-				     usp->striping, NULL, usp->num_devs,
+				     usp->striping, NULL, NULL, usp->num_devs,
 				     area_len, 0, 0, 0, NULL))) {
 		log_error("Unable to allocate striped lv_segment structure");
 		return 0;
@@ -235,7 +235,7 @@ static int _add_linear_seg(struct dm_pool *mem,
 
 		if (!(seg = alloc_lv_segment(mem, segtype, lv, *le_cur,
 					     area_len, 0, usp->striping,
-					     NULL, 1, area_len,
+					     NULL, NULL, 1, area_len,
 					     POOL_PE_SIZE, 0, 0, NULL))) {
 			log_error("Unable to allocate linear lv_segment "
 				  "structure");

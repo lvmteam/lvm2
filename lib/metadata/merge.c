@@ -313,7 +313,7 @@ static int _lv_split_segment(struct logical_volume *lv, struct lv_segment *seg,
 	if (!(split_seg = alloc_lv_segment(lv->vg->vgmem, seg->segtype,
 					   seg->lv, seg->le, seg->len,
 					   seg->status, seg->stripe_size,
-					   seg->log_lv,
+					   seg->log_lv, seg->thin_pool_lv,
 					   seg->area_count, seg->area_len,
 					   seg->chunk_size, seg->region_size,
 					   seg->extents_copied, seg->pvmove_source_seg))) {

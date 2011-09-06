@@ -198,6 +198,22 @@ uint32_t find_free_lvnum(struct logical_volume *lv)
 	return i;
 }
 
+static int _attach_pool_metadata(struct lv_segment *seg, struct logical_volume *thin_pool_metadata)
+{
+	// FIXME Housekeeping needed here (cf attach_mirror_log)
+	seg->metadata_lv = thin_pool_metadata;
+
+	return 1;
+}
+
+static int _attach_pool_lv(struct lv_segment *seg, struct logical_volume *thin_pool_lv)
+{
+	// FIXME Housekeeping needed here (cf attach_mirror_log)
+	seg->thin_pool_lv = thin_pool_lv;
+
+	return 1;
+}
+
 /*
  * All lv_segments get created here.
  */
@@ -208,6 +224,7 @@ struct lv_segment *alloc_lv_segment(struct dm_pool *mem,
 				    uint64_t status,
 				    uint32_t stripe_size,
 				    struct logical_volume *log_lv,
+				    struct logical_volume *thin_pool_lv,
 				    uint32_t area_count,
 				    uint32_t area_len,
 				    uint32_t chunk_size,
@@ -248,12 +265,19 @@ struct lv_segment *alloc_lv_segment(struct dm_pool *mem,
 	seg->chunk_size = chunk_size;
 	seg->region_size = region_size;
 	seg->extents_copied = extents_copied;
-	seg->log_lv = log_lv;
 	seg->pvmove_source_seg = pvmove_source_seg;
 	dm_list_init(&seg->tags);
 
-	if (log_lv && !attach_mirror_log(seg, log_lv))
+	if (thin_pool_lv && !_attach_pool_lv(seg, thin_pool_lv))
 		return_NULL;
+
+	if (log_lv) {
+		if (thin_pool_lv) {
+			if (!_attach_pool_metadata(seg, log_lv))
+				return_NULL;
+		} else if (!attach_mirror_log(seg, log_lv))
+			return_NULL;
+	}
 
 	return seg;
 }
@@ -272,7 +296,7 @@ struct lv_segment *alloc_snapshot_seg(struct logical_volume *lv,
 
 	if (!(seg = alloc_lv_segment(lv->vg->cmd->mem, segtype, lv, old_le_count,
 				     lv->le_count - old_le_count, status, 0,
-				     NULL, 0, lv->le_count - old_le_count,
+				     NULL, NULL, 0, lv->le_count - old_le_count,
 				     0, 0, 0, NULL))) {
 		log_error("Couldn't allocate new snapshot segment.");
 		return NULL;
@@ -559,9 +583,7 @@ int replace_lv_with_error_segment(struct logical_volume *lv)
 
 	/* FIXME: Should we bug if we find a log_lv attached? */
 
-	if (!lv_add_virtual_segment(lv, 0, len,
-				    get_segtype_from_string(lv->vg->cmd,
-							    "error")))
+	if (!lv_add_virtual_segment(lv, 0, len, get_segtype_from_string(lv->vg->cmd, "error"), NULL))
 		return_0;
 
 	return 1;
@@ -917,7 +939,7 @@ static int _setup_alloced_segment(struct logical_volume *lv, uint64_t status,
 	if (!(seg = alloc_lv_segment(lv->vg->cmd->mem, segtype, lv,
 				     lv->le_count,
 				     aa[0].len * area_multiple,
-				     status, stripe_size, NULL,
+				     status, stripe_size, NULL, NULL,
 				     area_count,
 				     aa[0].len, 0u, region_size, 0u, NULL))) {
 		log_error("Couldn't allocate new LV segment.");
@@ -1987,13 +2009,25 @@ static int _allocate(struct alloc_handle *ah,
 }
 
 int lv_add_virtual_segment(struct logical_volume *lv, uint64_t status,
-			   uint32_t extents, const struct segment_type *segtype)
+			   uint32_t extents, const struct segment_type *segtype,
+			   const char *thin_pool_name)
 {
 	struct lv_segment *seg;
+	struct logical_volume *thin_pool_lv = NULL;
+	struct lv_list *lvl;
+
+	if (thin_pool_name) {
+		if (!(lvl = find_lv_in_vg(lv->vg, thin_pool_name))) {
+			log_error("Unable to find existing pool LV %s in VG %s.",
+				  thin_pool_name, lv->vg->name);
+			return 0;
+		}
+		thin_pool_lv = lvl->lv;
+	}
 
 	if (!(seg = alloc_lv_segment(lv->vg->cmd->mem, segtype, lv,
 				     lv->le_count, extents, status, 0,
-				     NULL, 0, extents, 0, 0, 0, NULL))) {
+				     NULL, thin_pool_lv, 0, extents, 0, 0, 0, NULL))) {
 		log_error("Couldn't allocate new zero segment.");
 		return 0;
 	}
@@ -2129,7 +2163,7 @@ static struct lv_segment *_convert_seg_to_mirror(struct lv_segment *seg,
 					get_segtype_from_string(seg->lv->vg->cmd, "mirror"),
 					seg->lv, seg->le, seg->len,
 					seg->status, seg->stripe_size,
-					log_lv,
+					log_lv, NULL,
 					seg->area_count, seg->area_len,
 					seg->chunk_size, region_size,
 					seg->extents_copied, NULL))) {
@@ -2316,14 +2350,18 @@ static int _lv_insert_empty_sublvs(struct logical_volume *lv,
 		lv->status |= MIRRORED;
 		status = MIRROR_IMAGE;
 		layer_name = "mimage";
-	} else
+	} else if (segtype_is_thin_pool(segtype)) {
+		// lv->status |= THIN_POOL;
+		// status = THIN_IMAGE;
+		layer_name = "tdata";
+	}
 		return_0;
 
 	/*
 	 * First, create our top-level segment for our top-level LV
 	 */
 	if (!(mapseg = alloc_lv_segment(lv->vg->cmd->mem, segtype,
-					lv, 0, 0, lv->status, stripe_size, NULL,
+					lv, 0, 0, lv->status, stripe_size, NULL, NULL,
 					devices, 0, 0, region_size, 0, NULL))) {
 		log_error("Failed to create mapping segment for %s", lv->name);
 		return 0;
@@ -2362,6 +2400,8 @@ static int _lv_insert_empty_sublvs(struct logical_volume *lv,
 			return_0;
 	}
 	dm_list_add(&lv->segments, &mapseg->list);
+
+// FIXME If thin pool, create one "log_lv" as tmeta here lv->metadata_lv
 
 	return 1;
 }
@@ -2481,7 +2521,7 @@ int lv_extend(struct logical_volume *lv,
 	      const struct segment_type *segtype,
 	      uint32_t stripes, uint32_t stripe_size,
 	      uint32_t mirrors, uint32_t region_size,
-	      uint32_t extents,
+	      uint32_t extents, const char *thin_pool_name,
 	      struct dm_list *allocatable_pvs, alloc_policy_t alloc)
 {
 	int r = 1;
@@ -2492,17 +2532,19 @@ int lv_extend(struct logical_volume *lv,
 	log_very_verbose("Extending segment type, %s", segtype->name);
 
 	if (segtype_is_virtual(segtype))
-		return lv_add_virtual_segment(lv, 0u, extents, segtype);
+		return lv_add_virtual_segment(lv, 0u, extents, segtype, thin_pool_name);
 
 	if (segtype_is_raid(segtype) && !lv->le_count)
 		raid_logs = mirrors * stripes;
+
+// For thin pool, ensure space for "log_lv" ->metadata_lv is allocated simultaneously here
 
 	if (!(ah = allocate_extents(lv->vg, lv, segtype, stripes, mirrors,
 				    raid_logs, region_size, extents,
 				    allocatable_pvs, alloc, NULL)))
 		return_0;
 
-	if (!segtype_is_mirrored(segtype) && !segtype_is_raid(segtype))
+	if (!segtype_is_mirrored(segtype) && !segtype_is_raid(segtype) && !segtype_is_thin_pool(segtype))
 		r = lv_add_segment(ah, 0, ah->area_count, lv, segtype,
 				   stripe_size, 0u, 0);
 	else {
@@ -2524,6 +2566,7 @@ int lv_extend(struct logical_volume *lv,
 			return 0;
 		}
 
+// For thin_pool, populate tmeta here too
 		r = _lv_extend_layered_lv(ah, lv, extents, 0,
 					  stripes, stripe_size);
 	}
@@ -3372,7 +3415,7 @@ int remove_layer_from_lv(struct logical_volume *lv,
 
 	/* Replace the empty layer with error segment */
 	segtype = get_segtype_from_string(lv->vg->cmd, "error");
-	if (!lv_add_virtual_segment(layer_lv, 0, parent->le_count, segtype))
+	if (!lv_add_virtual_segment(layer_lv, 0, parent->le_count, segtype, NULL))
 		return_0;
 
 	return 1;
@@ -3425,7 +3468,7 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 
 		segtype = get_segtype_from_string(cmd, "error");
 
-		if (!lv_add_virtual_segment(layer_lv, 0, lv_where->le_count, segtype)) {
+		if (!lv_add_virtual_segment(layer_lv, 0, lv_where->le_count, segtype, NULL)) {
 			log_error("Creation of transient LV %s for mirror conversion in VG %s failed.", name, lv_where->vg->name);
 			return NULL;
 		}
@@ -3466,7 +3509,7 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 	/* allocate a new linear segment */
 	if (!(mapseg = alloc_lv_segment(cmd->mem, segtype,
 					lv_where, 0, layer_lv->le_count,
-					status, 0, NULL, 1, layer_lv->le_count,
+					status, 0, NULL, NULL, 1, layer_lv->le_count,
 					0, 0, 0, NULL)))
 		return_NULL;
 
@@ -3510,7 +3553,7 @@ static int _extend_layer_lv_for_segment(struct logical_volume *layer_lv,
 	if (!(mapseg = alloc_lv_segment(layer_lv->vg->cmd->mem, segtype,
 					layer_lv, layer_lv->le_count,
 					seg->area_len, status, 0,
-					NULL, 1, seg->area_len, 0, 0, 0, seg)))
+					NULL, NULL, 1, seg->area_len, 0, 0, 0, seg)))
 		return_0;
 
 	/* map the new segment to the original underlying are */
@@ -3737,7 +3780,6 @@ int set_lv(struct cmd_context *cmd, struct logical_volume *lv,
 	return 1;
 }
 
-
 static struct logical_volume *_create_virtual_origin(struct cmd_context *cmd,
 						     struct volume_group *vg,
 						     const char *lv_name,
@@ -3766,7 +3808,7 @@ static struct logical_volume *_create_virtual_origin(struct cmd_context *cmd,
 		return_NULL;
 
 	if (!lv_extend(lv, segtype, 1, 0, 1, 0, voriginextents,
-		       NULL, ALLOC_INHERIT))
+		       NULL, NULL, ALLOC_INHERIT))
 		return_NULL;
 
 	/* store vg on disk(s) */
@@ -3778,8 +3820,14 @@ static struct logical_volume *_create_virtual_origin(struct cmd_context *cmd,
 	return lv;
 }
 
-int lv_create_single(struct volume_group *vg,
-		     struct lvcreate_params *lp)
+/* Thin notes:
+ * If lp->thin OR lp->activate is AY*, activate the pool if not already active.
+ * If lp->thin, create thin LV within the pool - as a snapshot if lp->snapshot.
+ *   If lp->activate is AY*, activate it.
+ *   If lp->activate was AN* and the pool was originally inactive, deactivate it.
+ */
+static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct lvcreate_params *lp,
+					       const char *new_lv_name)
 {
 	struct cmd_context *cmd = vg->cmd;
 	uint32_t size_rest;
@@ -3788,24 +3836,24 @@ int lv_create_single(struct volume_group *vg,
 	int origin_active = 0;
 	struct lvinfo info;
 
-	if (lp->lv_name && find_lv_in_vg(vg, lp->lv_name)) {
+	if (new_lv_name && find_lv_in_vg(vg, new_lv_name)) {
 		log_error("Logical volume \"%s\" already exists in "
-			  "volume group \"%s\"", lp->lv_name, lp->vg_name);
-		return 0;
+			  "volume group \"%s\"", new_lv_name, lp->vg_name);
+		return NULL;
 	}
 
 	if (vg_max_lv_reached(vg)) {
 		log_error("Maximum number of logical volumes (%u) reached "
 			  "in volume group %s", vg->max_lv, vg->name);
-		return 0;
+		return NULL;
 	}
 
 	if ((segtype_is_mirrored(lp->segtype) ||
-	     segtype_is_raid(lp->segtype)) &&
+	     segtype_is_raid(lp->segtype) || segtype_is_thin(lp->segtype)) &&
 	    !(vg->fid->fmt->features & FMT_SEGMENTS)) {
-		log_error("Metadata does not support %s.",
-			  segtype_is_raid(lp->segtype) ? "RAID" : "mirroring");
-		return 0;
+		log_error("Metadata does not support %s segments.",
+			  lp->segtype->name);
+		return NULL;
 	}
 
 	if (lp->read_ahead != DM_READ_AHEAD_AUTO &&
@@ -3813,7 +3861,7 @@ int lv_create_single(struct volume_group *vg,
 	    (vg->fid->fmt->features & FMT_RESTRICTED_READAHEAD) &&
 	    (lp->read_ahead < 2 || lp->read_ahead > 120)) {
 		log_error("Metadata only supports readahead values between 2 and 120.");
-		return 0;
+		return NULL;
 	}
 
 	if (lp->stripe_size > vg->extent_size) {
@@ -3830,7 +3878,7 @@ int lv_create_single(struct volume_group *vg,
 	    (lp->stripe_size > STRIPE_SIZE_MAX)) {
 		log_error("Stripe size may not exceed %s",
 			  display_size(cmd, (uint64_t) STRIPE_SIZE_MAX));
-		return 0;
+		return NULL;
 	}
 
 	if ((size_rest = lp->extents % lp->stripes)) {
@@ -3840,19 +3888,20 @@ int lv_create_single(struct volume_group *vg,
 		lp->extents = lp->extents - size_rest + lp->stripes;
 	}
 
-	if (lp->zero && !activation()) {
+	if (lp->zero && !segtype_is_thin(lp->segtype) && !activation()) {
 		log_error("Can't wipe start of new LV without using "
 			  "device-mapper kernel driver");
-		return 0;
+		return NULL;
 	}
 
 	status |= lp->permission | VISIBLE_LV;
 
+	/* FIXME Thin snapshots are different */
 	if (lp->snapshot) {
 		if (!activation()) {
 			log_error("Can't create snapshot without using "
 				  "device-mapper kernel driver");
-			return 0;
+			return NULL;
 		}
 
 		/* Must zero cow */
@@ -3865,27 +3914,27 @@ int lv_create_single(struct volume_group *vg,
 			if (!(org = find_lv(vg, lp->origin))) {
 				log_error("Couldn't find origin volume '%s'.",
 					  lp->origin);
-				return 0;
+				return NULL;
 			}
 			if (lv_is_virtual_origin(org)) {
 				log_error("Can't share virtual origins. "
 					  "Use --virtualsize.");
-				return 0;
+				return NULL;
 			}
 			if (lv_is_cow(org)) {
 				log_error("Snapshots of snapshots are not "
 					  "supported yet.");
-				return 0;
+				return NULL;
 			}
 			if (org->status & LOCKED) {
 				log_error("Snapshots of locked devices are not "
 					  "supported yet");
-				return 0;
+				return NULL;
 			}
 			if (lv_is_merging_origin(org)) {
 				log_error("Snapshots of an origin that has a "
 					  "merging snapshot is not supported");
-				return 0;
+				return NULL;
 			}
 			if ((org->status & MIRROR_IMAGE) ||
 			    (org->status & MIRROR_LOG)) {
@@ -3893,13 +3942,13 @@ int lv_create_single(struct volume_group *vg,
 					  "are not supported",
 					  (org->status & MIRROR_LOG) ?
 					  "log" : "image");
-				return 0;
+				return NULL;
 			}
 
 			if (!lv_info(cmd, org, 0, &info, 0, 0)) {
 				log_error("Check for existence of snapshot "
 					  "origin '%s' failed.", org->name);
-				return 0;
+				return NULL;
 			}
 			origin_active = info.exists;
 
@@ -3907,19 +3956,19 @@ int lv_create_single(struct volume_group *vg,
 			    !lv_is_active_exclusive_locally(org)) {
 				log_error("%s must be active exclusively to"
 					  " create snapshot", org->name);
-				return 0;
+				return NULL;
 			}
 		}
 	}
 
-	if (!lp->extents) {
+	if (!lp->thin && !lp->extents) {
 		log_error("Unable to create new logical volume with no extents");
-		return 0;
+		return NULL;
 	}
 
 	if (lp->snapshot && (lp->extents * vg->extent_size < 2 * lp->chunk_size)) {
 		log_error("Unable to create a snapshot smaller than 2 chunks.");
-		return 0;
+		return NULL;
 	}
 
 	if (!seg_is_virtual(lp) &&
@@ -3927,38 +3976,38 @@ int lv_create_single(struct volume_group *vg,
 		log_error("Volume group \"%s\" has insufficient free space "
 			  "(%u extents): %u required.",
 			  vg->name, vg->free_count, lp->extents);
-		return 0;
+		return NULL;
 	}
 
 	if (lp->stripes > dm_list_size(lp->pvh) && lp->alloc != ALLOC_ANYWHERE) {
 		log_error("Number of stripes (%u) must not exceed "
 			  "number of physical volumes (%d)", lp->stripes,
 			  dm_list_size(lp->pvh));
-		return 0;
+		return NULL;
 	}
 
 	if ((segtype_is_mirrored(lp->segtype) ||
-	     segtype_is_raid(lp->segtype)) && !activation()) {
+	     segtype_is_raid(lp->segtype) || seg_is_thin_volume(lp)) && !activation()) {
 		log_error("Can't create %s without using "
 			  "device-mapper kernel driver.",
 			  segtype_is_raid(lp->segtype) ? lp->segtype->name :
 			  "mirror");
-		return 0;
+		return NULL;
 	}
 
 	/* The snapshot segment gets created later */
 	if (lp->snapshot &&
 	    !(lp->segtype = get_segtype_from_string(cmd, "striped")))
-		return_0;
+		return_NULL;
 
 	if (!archive(vg))
-		return 0;
+		return_NULL;
 
 	if (!dm_list_empty(&lp->tags)) {
 		if (!(vg->fid->fmt->features & FMT_TAGS)) {
 			log_error("Volume group %s does not support tags",
 				  vg->name);
-			return 0;
+			return NULL;
 		}
 	}
 
@@ -3973,16 +4022,16 @@ int lv_create_single(struct volume_group *vg,
 		}
 	}
 
-	if (!(lv = lv_create_empty(lp->lv_name ? lp->lv_name : "lvol%d", NULL,
+	if (!(lv = lv_create_empty(new_lv_name ? : "lvol%d", NULL,
 				   status, lp->alloc, vg)))
-		return_0;
+		return_NULL;
 
 	if (lp->read_ahead != lv->read_ahead) {
 		log_verbose("Setting read ahead sectors");
 		lv->read_ahead = lp->read_ahead;
 	}
 
-	if (lp->minor >= 0) {
+	if (!seg_is_thin_pool(lp) && lp->minor >= 0) {
 		lv->major = lp->major;
 		lv->minor = lp->minor;
 		lv->status |= FIXED_MINOR;
@@ -4000,8 +4049,12 @@ int lv_create_single(struct volume_group *vg,
 	if (!lv_extend(lv, lp->segtype,
 		       lp->stripes, lp->stripe_size,
 		       lp->mirrors, lp->region_size,
-		       lp->extents, lp->pvh, lp->alloc))
-		return_0;
+		       seg_is_thin_volume(lp) ? lp->voriginextents : lp->extents,
+		       seg_is_thin_volume(lp) ? lp->pool : NULL, lp->pvh, lp->alloc))
+		return_NULL;
+
+	if (seg_is_thin_pool(lp) && lp->zero)
+		first_seg(lv)->zero_new_blocks = 1;
 
 	if (lp->log_count &&
 	    !seg_is_raid(first_seg(lv)) && seg_is_mirrored(first_seg(lv))) {
@@ -4015,7 +4068,7 @@ int lv_create_single(struct volume_group *vg,
 
 	/* store vg on disk(s) */
 	if (!vg_write(vg) || !vg_commit(vg))
-		return_0;
+		return_NULL;
 
 	backup(vg);
 
@@ -4038,12 +4091,12 @@ int lv_create_single(struct volume_group *vg,
 		log_error("Failed to activate new LV.");
 		if (lp->zero)
 			goto deactivate_and_revert_new_lv;
-		return 0;
+		return NULL;
 	}
 
-	if (!lp->zero && !lp->snapshot)
+	if (!seg_is_thin(lp) && !lp->zero && !lp->snapshot)
 		log_warn("WARNING: \"%s\" not zeroed", lv->name);
-	else if (!set_lv(cmd, lv, UINT64_C(0), 0)) {
+	else if (!seg_is_thin(lp) && !set_lv(cmd, lv, UINT64_C(0), 0)) {
 		log_error("Aborting. Failed to wipe %s.",
 			  lp->snapshot ? "snapshot exception store" :
 					 "start of new LV");
@@ -4059,7 +4112,7 @@ int lv_create_single(struct volume_group *vg,
 		if (!origin_active && !deactivate_lv(cmd, lv)) {
 			log_error("Aborting. Couldn't deactivate snapshot "
 				  "COW area. Manual intervention required.");
-			return 0;
+			return NULL;
 		}
 
 		/* A virtual origin must be activated explicitly. */
@@ -4085,40 +4138,33 @@ int lv_create_single(struct volume_group *vg,
 
 		/* store vg on disk(s) */
 		if (!vg_write(vg))
-			return_0;
+			return_NULL;
 
 		if (!suspend_lv(cmd, org)) {
 			log_error("Failed to suspend origin %s", org->name);
 			vg_revert(vg);
-			return 0;
+			return NULL;
 		}
 
 		if (!vg_commit(vg))
-			return_0;
+			return_NULL;
 
 		if (!resume_lv(cmd, org)) {
 			log_error("Problem reactivating origin %s", org->name);
-			return 0;
+			return NULL;
 		}
 	}
 	/* FIXME out of sequence */
 	backup(vg);
 
 out:
-	log_print("Logical volume \"%s\" created", lv->name);
-
-	/*
-	 * FIXME: as a sanity check we could try reading the
-	 * last block of the device ?
-	 */
-
-	return 1;
+	return lv;
 
 deactivate_and_revert_new_lv:
 	if (!deactivate_lv(cmd, lv)) {
 		log_error("Unable to deactivate failed new LV. "
 			  "Manual intervention required.");
-		return 0;
+		return NULL;
 	}
 
 revert_new_lv:
@@ -4129,6 +4175,37 @@ revert_new_lv:
 	else
 		backup(vg);
 
-	return 0;
+	return NULL;
 }
 
+int lv_create_single(struct volume_group *vg,
+		     struct lvcreate_params *lp)
+{
+	struct logical_volume *lv;
+
+	/* Create thin pool first if necessary */
+	if (lp->create_thin_pool) {
+		if (!seg_is_thin_pool(lp) &&
+		    !(lp->segtype = get_segtype_from_string(vg->cmd, "thin_pool")))
+			return_0;
+		
+		if (!(lv = _lv_create_an_lv(vg, lp, lp->pool)))
+			return_0;
+
+		if (!lp->thin)
+			goto out;
+
+		lp->pool = lv->name;
+	
+		if (!(lp->segtype = get_segtype_from_string(vg->cmd, "thin")))
+		return_0;
+	}
+
+	if (!(lv = _lv_create_an_lv(vg, lp, lp->lv_name)))
+		return_0;
+
+out:
+	log_print("Logical volume \"%s\" created", lv->name);
+
+	return 1;
+}

@@ -513,7 +513,7 @@ int lv_extend(struct logical_volume *lv,
 	      const struct segment_type *segtype,
 	      uint32_t stripes, uint32_t stripe_size,
 	      uint32_t mirrors, uint32_t region_size,
-	      uint32_t extents,
+	      uint32_t extents, const char *thin_pool_name,
 	      struct dm_list *allocatable_pvs, alloc_policy_t alloc);
 
 /* lv must be part of lv->vg->lvs */
@@ -556,8 +556,8 @@ struct lvcreate_params {
 	int activation_monitoring; /* all */
 	activation_change_t activate; /* non-snapshot, non-mirror */
 
-	char *origin; /* snap */
-	char *pool;   /* thin */
+	const char *origin; /* snap */
+	const char *pool;   /* thin */
 	const char *vg_name; /* all */
 	const char *lv_name; /* all */
 

@@ -707,7 +707,7 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 		   !lv_extend(lv, lp->segtype,
 			      lp->stripes, lp->stripe_size,
 			      lp->mirrors, first_seg(lv)->region_size,
-			      lp->extents - lv->le_count,
+			      lp->extents - lv->le_count, NULL,
 			      pvh, alloc)) {
 		stack;
 		return ECMD_FAILED;

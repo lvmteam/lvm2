@@ -177,6 +177,8 @@ xx(lvcreate,
    "lvcreate \n"
    "\t{ {-s|--snapshot} OriginalLogicalVolume[Path] |\n"
    "\t  [-s|--snapshot] VolumeGroupName[Path] -V|--virtualsize VirtualSize}\n"
+   "\t  {-T|--thin} VolumeGroupName[Path][/PoolLogicalVolume] \n"
+   "\t              -V|--virtualsize VirtualSize}\n"
    "\t[-c|--chunksize]\n"
    "\t[-A|--autobackup {y|n}]\n"
    "\t[--addtag Tag]\n"
@@ -195,6 +197,7 @@ xx(lvcreate,
    "\t[-p|--permission {r|rw}]\n"
    "\t[-r|--readahead ReadAheadSectors|auto|none]\n"
    "\t[-t|--test]\n"
+   "\t[--thinpool] PoolLogicalVolume\n"
    "\t[-v|--verbose]\n"
    "\t[--version]\n"
 
@@ -205,7 +208,8 @@ xx(lvcreate,
    minor_ARG, mirrorlog_ARG, mirrors_ARG, monitor_ARG, name_ARG, nosync_ARG,
    noudevsync_ARG, permission_ARG, persistent_ARG, readahead_ARG,
    regionsize_ARG, size_ARG, snapshot_ARG, stripes_ARG, stripesize_ARG,
-   test_ARG, type_ARG, virtualoriginsize_ARG, virtualsize_ARG, zero_ARG)
+   test_ARG, thin_ARG, thinpool_ARG, type_ARG, virtualoriginsize_ARG,
+   virtualsize_ARG, zero_ARG)
 
 xx(lvdisplay,
    "Display information about a logical volume",
