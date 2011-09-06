@@ -198,22 +198,6 @@ uint32_t find_free_lvnum(struct logical_volume *lv)
 	return i;
 }
 
-static int _attach_pool_metadata(struct lv_segment *seg, struct logical_volume *thin_pool_metadata)
-{
-	// FIXME Housekeeping needed here (cf attach_mirror_log)
-	seg->metadata_lv = thin_pool_metadata;
-
-	return 1;
-}
-
-static int _attach_pool_lv(struct lv_segment *seg, struct logical_volume *thin_pool_lv)
-{
-	// FIXME Housekeeping needed here (cf attach_mirror_log)
-	seg->thin_pool_lv = thin_pool_lv;
-
-	return 1;
-}
-
 /*
  * All lv_segments get created here.
  */
@@ -268,12 +252,12 @@ struct lv_segment *alloc_lv_segment(struct dm_pool *mem,
 	seg->pvmove_source_seg = pvmove_source_seg;
 	dm_list_init(&seg->tags);
 
-	if (thin_pool_lv && !_attach_pool_lv(seg, thin_pool_lv))
+	if (thin_pool_lv && !attach_pool_lv(seg, thin_pool_lv))
 		return_NULL;
 
 	if (log_lv) {
 		if (thin_pool_lv) {
-			if (!_attach_pool_metadata(seg, log_lv))
+			if (!attach_pool_metadata(seg, log_lv))
 				return_NULL;
 		} else if (!attach_mirror_log(seg, log_lv))
 			return_NULL;

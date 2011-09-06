@@ -446,14 +446,6 @@ int lv_is_rimage(const struct logical_volume *lv)
 }
 
 /**
- * Is this LV rlog
- */
-int lv_is_rlog(const struct logical_volume *lv)
-{
-	return (lv->status & REPLICATOR_LOG);
-}
-
-/**
  * Is this LV sync log
  */
 int lv_is_slog(const struct logical_volume *lv)

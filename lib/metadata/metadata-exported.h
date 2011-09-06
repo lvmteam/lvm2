@@ -132,6 +132,11 @@
 #define VGMETADATACOPIES_ALL UINT32_MAX
 #define VGMETADATACOPIES_UNMANAGED 0
 
+#define lv_is_thin_volume(lv)	((lv)->status & THIN_VOLUME ? 1 : 0)
+#define lv_is_thin_pool(lv)	((lv)->status & THIN_POOL ? 1 : 0)
+#define lv_is_mirrored(lv)	((lv)->status & MIRRORED ? 1 : 0)
+#define lv_is_rlog(lv)		((lv)->status & REPLICATOR_LOG ? 1 : 0)
+
 /* Ordered list - see lv_manip.c */
 typedef enum {
 	AREA_UNASSIGNED,
@@ -318,7 +323,7 @@ struct lv_segment {
 
 	struct lv_segment_area *areas;
 	struct lv_segment_area *meta_areas; /* For RAID */
-	struct logical_volume *data_lv;		/* For thin_pool */
+	struct logical_volume *pool_lv;		/* For thin_pool */
 	struct logical_volume *metadata_lv;	/* For thin_pool */
 	uint64_t transaction_id;		/* For thin_pool */
 	uint32_t zero_new_blocks;		/* For thin_pool */
@@ -696,7 +701,6 @@ int lv_remove_mirrors(struct cmd_context *cmd, struct logical_volume *lv,
 
 int is_temporary_mirror_layer(const struct logical_volume *lv);
 struct logical_volume * find_temporary_mirror(const struct logical_volume *lv);
-int lv_is_mirrored(const struct logical_volume *lv);
 uint32_t lv_mirror_count(const struct logical_volume *lv);
 uint32_t adjusted_mirror_region_size(uint32_t extent_size, uint32_t extents,
 				    uint32_t region_size);
@@ -742,7 +746,6 @@ int lv_is_active_replicator_dev(const struct logical_volume *lv);
 int lv_is_replicator(const struct logical_volume *lv);
 int lv_is_replicator_dev(const struct logical_volume *lv);
 int lv_is_rimage(const struct logical_volume *lv);
-int lv_is_rlog(const struct logical_volume *lv);
 int lv_is_slog(const struct logical_volume *lv);
 struct logical_volume *first_replicator_dev(const struct logical_volume *lv);
 /* --  metadata/replicator_manip.c */

@@ -440,6 +440,13 @@ struct volume_group *import_vg_from_config_tree(const struct dm_config_tree *cft
 int fixup_imported_mirrors(struct volume_group *vg);
 
 /*
+ * From thin_manip.c
+ */
+int attach_pool_metadata(struct lv_segment *seg,
+			 struct logical_volume *thin_pool_metadata);
+int attach_pool_lv(struct lv_segment *seg, struct logical_volume *thin_pool_lv);
+
+/*
  * Begin skeleton for external LVM library
  */
 struct id pv_id(const struct physical_volume *pv);
