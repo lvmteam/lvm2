@@ -51,12 +51,14 @@ static int _thin_pool_text_import(struct lv_segment *seg, const struct dm_config
 	if (!dm_config_get_str(sn, "data", &lv_name))
 		return SEG_LOG_ERROR("Thin pool data must be a string in");
 
-	if (!(seg->data_lv = find_lv(seg->lv->vg, lv_name)))
+// Use attach_pool_lv
+	if (!(seg->pool_lv = find_lv(seg->lv->vg, lv_name)))
 		return SEG_LOG_ERROR("Unknown pool data %s in", lv_name);
 
 	if (!dm_config_get_str(sn, "metadata", &lv_name))
 		return SEG_LOG_ERROR("Thin pool metadata must be a string in");
 
+// Use attach_pool_metadata()
 	if (!(seg->metadata_lv = find_lv(seg->lv->vg, lv_name)))
 		return SEG_LOG_ERROR("Unknown pool metadata %s in", lv_name);
 
@@ -72,7 +74,7 @@ static int _thin_pool_text_import(struct lv_segment *seg, const struct dm_config
 
 static int _thin_pool_text_export(const struct lv_segment *seg, struct formatter *f)
 {
-	outf(f, "data = \"%s\"", seg->data_lv->name);
+	outf(f, "data = \"%s\"", seg->pool_lv->name);
 	outf(f, "metadata = \"%s\"", seg->metadata_lv->name);
 	outf(f, "transaction_id = %" PRIu64, seg->transaction_id);
 	if (seg->zero_new_blocks)

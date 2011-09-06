@@ -192,7 +192,6 @@ static int _determine_snapshot_type(struct volume_group *vg,
 				  struct lvcreate_params *lp)
 {
 	struct lv_list *lvl;
-	struct lv_segment *seg;
 
 	if (!(lvl = find_lv_in_vg(vg, lp->origin))) {
 		log_error("Snapshot origin LV %s not found in Volume group %s.", lp->origin, vg->name);
@@ -200,12 +199,12 @@ static int _determine_snapshot_type(struct volume_group *vg,
 	}
 
 	/* FIXME Replace with lv_is_thin_volume() once more flags are added */
-	if (seg_is_thin_volume(seg = first_seg(lvl->lv))) {
+	if (lv_is_thin_volume(lvl->lv)) {
 		lp->thin = 1;
 		if (!(lp->segtype = get_segtype_from_string(vg->cmd, "thin")))
 			return_0;
 
-		lp->pool = seg->thin_pool_lv->name;
+		lp->pool = first_seg(lvl->lv)->thin_pool_lv->name;
 	}
 
 	if (!lp->thin && !arg_count(vg->cmd, extents_ARG) && !arg_count(vg->cmd, size_ARG)) {
@@ -804,8 +803,7 @@ static int _check_thin_parameters(struct volume_group *vg, struct lvcreate_param
 			log_error("Pool %s not found in Volume group %s.", lp->pool, vg->name);
 			return 0;
 		}
-		/* FIXME Use lv_is_thin_pool() */
-		if (!seg_is_thin_pool(first_seg(lvl->lv))) {
+		if (!lv_is_thin_pool(lvl->lv)) {
 			log_error("Logical volume %s is not a thin pool.", lp->pool);
 			return 0;
 		}
