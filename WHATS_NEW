@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Switch int to unsigned type for pvmetadatacopies for pv_create().
   Replace :space: with [\t ] for awk in vgimportclone (not widely supported).
   Begin using 64-bit status field flags.
   Detect sscanf recovering_region input error in cmirrord pull_state().
