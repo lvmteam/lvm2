@@ -90,7 +90,11 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd,
 	struct logical_volume *lv;
 	int count = 0, expected_count = 0;
 
+	sigint_allow();
 	dm_list_iterate_items(lvl, &vg->lvs) {
+		if (sigint_caught())
+			return_0;
+
 		lv = lvl->lv;
 
 		if (!lv_is_visible(lv))
@@ -159,6 +163,8 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd,
 
 		count++;
 	}
+
+	sigint_restore();
 
 	if (expected_count)
 		log_verbose("%s %d logical volumes in volume group %s",
