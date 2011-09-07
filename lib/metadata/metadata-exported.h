@@ -455,7 +455,7 @@ struct physical_volume *pv_create(const struct cmd_context *cmd,
 				  uint32_t existing_extent_count,
 				  uint32_t existing_extent_size,
 				  uint64_t label_sector,
-				  int pvmetadatacopies,
+				  unsigned pvmetadatacopies,
 				  uint64_t pvmetadatasize,
 				  unsigned metadataignore);
 int pv_resize(struct physical_volume *pv, struct volume_group *vg,
