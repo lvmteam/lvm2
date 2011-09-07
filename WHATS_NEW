@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Fix 'not not' typo in pvcreate man page.
   Improve man page style for fsadm, lvreduce, lvremove, lvrename, lvresize.
   Support break for vgchange and vgrefresh operation.
   Switch int to unsigned type for pvmetadatacopies for pv_create().
