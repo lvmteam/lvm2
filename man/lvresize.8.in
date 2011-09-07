@@ -3,17 +3,19 @@
 lvresize \- resize a logical volume
 .SH SYNOPSIS
 .B lvresize
-[\-\-alloc AllocationPolicy]
-[\-A|\-\-autobackup y|n] [\-d|\-\-debug] [\-h|\-?|\-\-help]
-[\-\-noudevsync]
-[\-i|\-\-stripes Stripes [\-I|\-\-stripesize StripeSize]]
-{\-l|\-\-extents [+]LogicalExtentsNumber[%{VG|LV|PVS|FREE|ORIGIN}] |
-\-L|\-\-size [+]LogicalVolumeSize[bBsSkKmMgGtTpPeE]}
-[\-f|\-\-force]
-[\-n|\-\-nofsck]
-[\-r|\-\-resizefs]
-[\-t|\-\-test]
-[\-v|\-\-verbose] LogicalVolumePath [PhysicalVolumePath[:PE[-PE]]...]
+.RB [ \-\-alloc " " \fIAllocationPolicy ]
+.RB [ \-\-noudevsync ]
+.RB [ \-i | \-\-stripes " " \fIStripes
+.RB [ \-I | \-\-stripesize " " \fIStripeSize ]]
+.RB {[ \-l | \-\-extents
+.RI [ + | \- ] LogicalExtentsNumber [ % { VG | LV | PVS | FREE | ORIGIN "}] |"
+.RB [ \-L | \-\-size
+.RI [ + | \- ] LogicalVolumeSize [ bBsSkKmMgGtTpPeE ]}
+.RB [ \-f | \-\-force ]
+.RB [ \-n | \-\-nofsck ]
+.RB [ \-r | \-\-resizefs ]
+.IR LogicalVolume { Name | Path }
+.RI [ PhysicalVolumePath [ :PE [ -PE ]]...]
 .SH DESCRIPTION
 lvresize allows you to resize a logical volume.
 Be careful when reducing a logical volume's size, because data in the reduced
@@ -21,74 +23,73 @@ part is lost!!!
 You should therefore ensure that any filesystem on the volume is
 shrunk first so that the extents that are to be removed are not in use.
 Resizing snapshot logical volumes (see
-.B lvcreate(8)
+.BR lvcreate (8)
 for information about creating snapshots) is supported as well.
 But to change the number of copies in a mirrored logical
 volume use 
 .BR lvconvert (8).
 .SH OPTIONS
-See \fBlvm\fP for common options.
+See \fBlvm\fP(8) for common options.
 .TP
-.I \-f, \-\-force
+.BR \-f ", " \-\-force
 Force resize without prompting even when it may cause data loss.
 .TP
-.I \-l, \-\-extents [+|-]LogicalExtentsNumber[%{VG|LV|PVS|FREE|ORIGIN}]
-Change or set the logical volume size in units of logical extents.
-With the + or - sign the value is added to or subtracted from the actual size
-of the logical volume and without it, the value is taken as an absolute one.
-The number can also be expressed as a percentage of the total space
-in the Volume Group with the suffix %VG, relative to the existing
-size of the Logical Volume with the suffix %LV, as a percentage of
-the remaining free space of the PhysicalVolumes on the command line with the
-suffix %PVS, as a percentage of the remaining free space in the
-Volume Group with the suffix %FREE, or (for a snapshot) as a percentage
-of the total space in the Origin Logical Volume with the suffix %ORIGIN.
-.TP
-.I \-n, \-\-nofsck
+.BR \-n ", " \-\-nofsck
 Do not perform fsck before resizing filesystem when filesystem
 requires it. You may need to use \fB--force\fR to proceed with 
 this option.
 .TP
-.I \-\-noudevsync
-Disable udev synchronisation. The
-process will not wait for notification from udev.
-It will continue irrespective of any possible udev processing
-in the background.  You should only use this if udev is not running
-or has rules that ignore the devices LVM2 creates.
-.TP
-.I \-r, \-\-resizefs
+.BR \-r ", " \-\-resizefs
 Resize underlying filesystem together with the logical volume using 
 \fBfsadm\fR(8).
 .TP
-.I \-L, \-\-size [+|-]LogicalVolumeSize[bBsSkKmMgGtTpPeE]
+.IR \fB\-l ", " \fB\-\-extents " [" + | - ] LogicalExtentsNumber [ % { VG | LV | PVS | FREE | ORIGIN }]
+Change or set the logical volume size in units of logical extents.
+With the \fI+\fP or \fI-\fP sign the value is added to or subtracted from the actual size
+of the logical volume and without it, the value is taken as an absolute one.
+The number can also be expressed as a percentage of the total space
+in the Volume Group with the suffix \fI%VG\fP, relative to the existing
+size of the Logical Volume with the suffix \fI%LV\fP, as a percentage of
+the remaining free space of the PhysicalVolumes on the command line with the
+suffix \fI%PVS\fP, as a percentage of the remaining free space in the
+Volume Group with the suffix \fI%FREE\fP, or (for a snapshot) as a percentage
+of the total space in the Origin Logical Volume with the suffix \fI%ORIGIN\fP.
+.TP
+.IR \fB\-L ", " \fB\-\-size " [" + | - ] LogicalVolumeSize [ bBsSkKmMgGtTpPeE ]
 Change or set the logical volume size in units of megabytes.
-A size suffix of M for megabytes,
-G for gigabytes, T for terabytes, P for petabytes 
-or E for exabytes is optional.
-With the + or - sign the value is added to or subtracted from
+A size suffix of \fIM\fP for megabytes,
+\fIG\fP for gigabytes, \fIT\fP for terabytes, \fIP\fP for petabytes
+or \fIE\fP for exabytes is optional.
+With the \fI+\fP or \fI-\fP sign the value is added to or subtracted from
 the actual size of the logical volume and without it, the value is taken as an
 absolute one.
 .TP
-.I \-i, \-\-stripes Stripes
+.BR \-i ", " \-\-stripes " " \fIStripes
 Gives the number of stripes to use when extending a Logical Volume.
 Defaults to whatever the last segment of the Logical Volume uses.
 Not applicable to LVs using the original metadata LVM format, which must
 use a single value throughout.
 .TP
-.I \-I, \-\-stripesize StripeSize
+.BR \-I ", " \-\-stripesize " " \fIStripeSize
 Gives the number of kilobytes for the granularity of the stripes.
 Defaults to whatever the last segment of the Logical Volume uses.
 Not applicable to LVs using the original metadata LVM format, which
 must use a single value throughout.
 .br
-StripeSize must be 2^n (n = 2 to 9)
-.SH Examples
+StripeSize must be 2^n (n = 2 to 9).
+.TP
+.B \-\-noudevsync
+Disable udev synchronisation. The
+process will not wait for notification from udev.
+It will continue irrespective of any possible udev processing
+in the background.  You should only use this if udev is not running
+or has rules that ignore the devices LVM2 creates.
+.SH EXAMPLES
 .br
-"lvresize -L+16M vg1/lv1 /dev/sda:0-1 /dev/sdb:0-1"
-.br
-tries to extend a logical volume "vg1/lv1" by 16MB using physical extents
-/dev/sda:0-1 and /dev/sdb:0-1 for allocation of extents.
-
+Extend a logical volume vg1/lv1 by 16MB using physical extents
+/dev/sda:0-1 and /dev/sdb:0-1 for allocation of extents:
+.sp
+.B lvresize -L+16M vg1/lv1 /dev/sda:0-1 /dev/sdb:0-1
 .SH SEE ALSO
 .BR fsadm (8),
 .BR lvm (8), 

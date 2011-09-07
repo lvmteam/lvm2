@@ -3,11 +3,17 @@
 lvremove \- remove a logical volume
 .SH SYNOPSIS
 .B lvremove
-[\-A|\-\-autobackup y|n] [\-d|\-\-debug] [\-f|\-\-force]
-[\-h|\-?|\-\-help] 
-[\-\-noudevsync]
-[\-t|\-\-test]
-[\-v|\-\-verbose] LogicalVolumePath [LogicalVolumePath...]
+.RB [ \-A | \-\-autobackup
+.RI { y | n }]
+.RB [ \-d | \-\-debug ]
+.RB [ \-h | \-\-help ]
+.RB [ \-t | \-\-test ]
+.RB [ \-v | \-\-verbose ]
+.RB [ \-\-version ]
+.RB [ \-f | \-\-force ]
+.RB [ \-\-noudevsync ]
+.IR LogicalVolume { Name |  Path }
+.RI [ LogicalVolume { Name | Path }...]
 .SH DESCRIPTION
 \fBlvremove\fP removes one or more logical volumes.
 Confirmation will be requested before deactivating any active logical
@@ -21,10 +27,10 @@ issued from one node can do this.
 .SH OPTIONS
 See \fBlvm\fP(8) for common options.
 .TP
-.I \-f, \-\-force
+.BR \-f ", " \-\-force
 Remove active logical volumes without confirmation.
 .TP
-.I \-\-noudevsync
+.B \-\-noudevsync
 Disable udev synchronisation. The
 process will not wait for notification from udev.
 It will continue irrespective of any possible udev processing
@@ -34,11 +40,11 @@ or has rules that ignore the devices LVM2 creates.
 Remove the active logical volume lvol1 in volume group vg00 
 without asking for confirmation:
 .sp
-\	\fBlvremove -f vg00/lvol1\fP
+.B lvremove -f vg00/lvol1
 .sp
 Remove all logical volumes in volume group vg00:
 .sp
-\	\fBlvremove vg00\fP
+.B lvremove vg00
 .SH SEE ALSO
 .BR lvcreate (8), 
 .BR lvdisplay (8),

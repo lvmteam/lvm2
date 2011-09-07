@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Improve man page style for fsadm, lvreduce, lvremove, lvrename, lvresize.
   Support break for vgchange and vgrefresh operation.
   Switch int to unsigned type for pvmetadatacopies for pv_create().
   Replace :space: with [\t ] for awk in vgimportclone (not widely supported).
