@@ -1323,10 +1323,17 @@ int vg_refresh_visible(struct cmd_context *cmd, struct volume_group *vg)
 	struct lv_list *lvl;
 	int r = 1;
 
-	dm_list_iterate_items(lvl, &vg->lvs)
+	sigint_allow();
+	dm_list_iterate_items(lvl, &vg->lvs) {
+		if (sigint_caught())
+			return_0;
+
 		if (lv_is_visible(lvl->lv))
 			if (!lv_refresh(cmd, lvl->lv))
 				r = 0;
+	}
+
+	sigint_restore();
 
 	return r;
 }
