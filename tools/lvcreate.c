@@ -896,7 +896,7 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	if (lp.snapshot && !_determine_snapshot_type(vg, &lp)) {
+	if (lp.snapshot && lp.origin && !_determine_snapshot_type(vg, &lp)) {
 		r = ECMD_FAILED;
 		goto_out;
 	}
