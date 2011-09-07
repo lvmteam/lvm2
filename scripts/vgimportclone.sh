@@ -242,13 +242,14 @@ export FILTER="filter=[ ${FILTER} \"r|.*|\" ]"
 
 LVMCONF=${TMP_LVM_SYSTEM_DIR}/lvm.conf
 
+# FIXME convert to cmdline override
 "$LVM" dumpconfig ${LVM_OPTS} | \
 "$AWK" -v DEV=${TMP_LVM_SYSTEM_DIR} -v CACHE=${TMP_LVM_SYSTEM_DIR}/.cache \
     -v CACHE_DIR=${TMP_LVM_SYSTEM_DIR}/cache \
-    '/^[[:space:]]*filter[[:space:]]*=/{print ENVIRON["FILTER"];next} \
-     /^[[:space:]]*scan[[:space:]]*=/{print "scan = [ \"" DEV "\" ]";next} \
-     /^[[:space:]]*cache[[:space:]]*=/{print "cache = \"" CACHE "\"";next} \
-     /^[[:space:]]*cache_dir[[:space:]]*=/{print "cache_dir = \"" CACHE_DIR "\"";next} \
+    '/^[ \t]*filter[ \t]*=/{print ENVIRON["FILTER"];next} \
+     /^[ \t]*scan[ \t]*=/{print "scan = [ \"" DEV "\" ]";next} \
+     /^[ \t]*cache[ \t]*=/{print "cache = \"" CACHE "\"";next} \
+     /^[ \t]*cache_dir[ \t]*=/{print "cache_dir = \"" CACHE_DIR "\"";next} \
      {print $0}' > ${LVMCONF}
 
 checkvalue $? "Failed to generate ${LVMCONF}"
@@ -282,7 +283,7 @@ checkvalue $? "PV info could not be collected without errors"
 
 # output VG info so each line looks like: name:exported?:disk1,disk2,...
 VGINFO=`echo "${PVINFO}" | \
-    "$AWK" -F : '{{sub(/^[[:space:]]*/,"")} \
+    "$AWK" -F : '{{sub(/^[ \t]*/,"")} \
     {sub(/unknown device/,"unknown_device")} \
     {vg[$2]=$1","vg[$2]} if($3 ~ /^..x/){x[$2]="x"}} \
     END{for(k in vg){printf("%s:%s:%s\n", k, x[k], vg[k])}}'`

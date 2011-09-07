@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Replace :space: with [\t ] for awk in vgimportclone (not widely supported).
   Begin using 64-bit status field flags.
   Detect sscanf recovering_region input error in cmirrord pull_state().
   Fix error path bitmap leak in cmirrord import_checkpoint().
