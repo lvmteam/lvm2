@@ -141,6 +141,12 @@
 #define lv_is_mirrored(lv)	((lv)->status & MIRRORED ? 1 : 0)
 #define lv_is_rlog(lv)		((lv)->status & REPLICATOR_LOG ? 1 : 0)
 
+#define lv_is_thin_type(lv)	((lv)->status & (THIN_POOL | THIN_VOLUME | THIN_POOL_DATA | THIN_POOL_METADATA) ? 1 : 0)
+#define lv_is_mirror_type(lv)	((lv)->status & (MIRROR_LOG | MIRROR_IMAGE | MIRRORED | PVMOVE) ? 1 : 0)
+#define lv_is_raid_type(lv)	((lv)->status & (RAID | RAID_IMAGE | RAID_META))
+
+#define lv_is_virtual(lv)	((lv)->status & VIRTUAL)
+
 /* Ordered list - see lv_manip.c */
 typedef enum {
 	AREA_UNASSIGNED,
