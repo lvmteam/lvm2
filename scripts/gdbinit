@@ -27,8 +27,8 @@ printf " - \n"
 printf "Use 'help <command>' for more info\n"
 printf "\n\n"
 printf "Popular breakpoints:\n"
-printf "break _split_mirror_images\n"
-printf "run --splitmirrors 2 -n new vg/lv\n"
+printf "break _raid_add_images\n"
+printf "run --type raid1 -m 1 vg/lv\n"
 printf "\n\n"
 
 set follow-fork-mode child
@@ -175,18 +175,18 @@ define __status
 #	Constants defined in metadata-exported.h
 
 #	if ($_s_status & RAID)
-	if ($_s_status & 0x00000001U)
-		set $_s_status = $_s_status & ~0x00000001U
+	if ($_s_status & 0x0000000100000000LU)
+		set $_s_status = $_s_status & ~0x0000000100000000LU
 		printf " RAID"
 	end
 #	if ($_s_status & RAID_META)
-	if ($_s_status & 0x00000002U)
-		set $_s_status = $_s_status & ~0x00000002U
+	if ($_s_status & 0x0000000200000000LU)
+		set $_s_status = $_s_status & ~0x0000000200000000LU
 		printf " RAID_META"
 	end
 #	if ($_s_status & RAID_IMAGE)
-	if ($_s_status & 0x00000004U)
-		set $_s_status = $_s_status & ~0x00000004U
+	if ($_s_status & 0x0000000400000000LU)
+		set $_s_status = $_s_status & ~0x0000000400000000LU
 		printf " RAID_IMAGE"
 	end
 #	if ($_s_status & VISIBLE_LV)
