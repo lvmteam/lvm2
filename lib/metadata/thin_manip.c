@@ -14,6 +14,8 @@
 
 #include "lib.h"
 #include "metadata.h"
+#include "segtype.h"
+#include "lv_alloc.h"
 
 int attach_pool_metadata_lv(struct lv_segment *seg, struct logical_volume *pool_metadata_lv)
 {
@@ -26,17 +28,55 @@ int attach_pool_metadata_lv(struct lv_segment *seg, struct logical_volume *pool_
 
 int attach_pool_data_lv(struct lv_segment *seg, struct logical_volume *pool_data_lv)
 {
-	seg->pool_data_lv = pool_data_lv;
-	pool_data_lv->status |= THIN_POOL_DATA;
+	if (!set_lv_segment_area_lv(seg, 0, pool_data_lv, 0, THIN_POOL_DATA))
+		return_0;
+
         lv_set_hidden(pool_data_lv);
 
-        return add_seg_to_segs_using_this_lv(pool_data_lv, seg);
+        return 1;
 }
 
 int attach_pool_lv(struct lv_segment *seg, struct logical_volume *pool_lv)
 {
+	if (!lv_is_thin_pool(pool_lv)) {
+		log_error(INTERNAL_ERROR "LV %s is not a thin pool",
+			  pool_lv->name);
+		return 0;
+	}
+
 	seg->pool_lv = pool_lv;
-	pool_lv->status |= THIN_POOL;
+	seg->lv->status |= THIN_VOLUME;
 
         return add_seg_to_segs_using_this_lv(pool_lv, seg);
+}
+
+int detach_pool_lv(struct lv_segment *seg)
+{
+	if (!lv_is_thin_pool(seg->pool_lv)) {
+		log_error(INTERNAL_ERROR "LV %s is not a thin pool",
+			  seg->pool_lv->name);
+		return 0;
+	}
+
+	return remove_seg_from_segs_using_this_lv(seg->pool_lv, seg);
+}
+
+struct lv_segment *find_pool_seg(struct lv_segment *seg)
+{
+        struct lv_segment *pool_seg;
+
+        pool_seg = get_only_segment_using_this_lv(seg->lv);
+
+        if (!pool_seg) {
+                log_error("Failed to find pool_seg for %s", seg->lv->name);
+                return NULL;
+        }
+
+        if (!seg_is_thin_pool(pool_seg)) {
+                log_error("%s on %s is not a pool segment",
+                          pool_seg->lv->name, seg->lv->name);
+                return NULL;
+        }
+
+        return pool_seg;
 }

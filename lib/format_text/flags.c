@@ -71,6 +71,10 @@ static const struct flag _lv_flags[] = {
 	{VIRTUAL_ORIGIN, NULL, 0},
 	{REPLICATOR, NULL, 0},
 	{REPLICATOR_LOG, NULL, 0},
+	{THIN_VOLUME, NULL, 0},
+	{THIN_POOL, NULL, 0},
+	{THIN_POOL_DATA, NULL, 0},
+	{THIN_POOL_METADATA, NULL, 0},
 	{0, NULL, 0}
 };
 

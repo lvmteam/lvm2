@@ -255,13 +255,8 @@ struct lv_segment *alloc_lv_segment(struct dm_pool *mem,
 	if (thin_pool_lv && !attach_pool_lv(seg, thin_pool_lv))
 		return_NULL;
 
-	if (log_lv) {
-		if (thin_pool_lv) {
-			if (!attach_pool_metadata_lv(seg, log_lv))
-				return_NULL;
-		} else if (!attach_mirror_log(seg, log_lv))
-			return_NULL;
-	}
+	if (log_lv && !attach_mirror_log(seg, log_lv))
+		return_NULL;
 
 	return seg;
 }
@@ -306,6 +301,11 @@ void release_lv_segment_area(struct lv_segment *seg, uint32_t s,
 	}
 
 	if (seg_lv(seg, s)->status & MIRROR_IMAGE) {
+		lv_reduce(seg_lv(seg, s), area_reduction);
+		return;
+	}
+
+	if (seg_lv(seg, s)->status & THIN_POOL_DATA) {
 		lv_reduce(seg_lv(seg, s), area_reduction);
 		return;
 	}
@@ -510,6 +510,12 @@ static int _lv_reduce(struct logical_volume *lv, uint32_t extents, int delete)
 			/* FIXME Check this is safe */
 			if (seg->log_lv && !lv_remove(seg->log_lv))
 				return_0;
+			if (seg->pool_metadata_lv && !lv_remove(seg->pool_metadata_lv))
+				return_0;
+
+			if (seg->pool_lv && !detach_pool_lv(seg))
+				return_0;
+
 			dm_list_del(&seg->list);
 			reduction = seg->len;
 		} else
@@ -770,7 +776,14 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 			 * RAID device's metadata_area
 			 */
 			ah->new_extents += (ah->log_len * ah->area_multiple);
+		} else {
+			ah->log_area_count = 0;
+			ah->log_len = 0;
 		}
+	} else if (segtype_is_thin_pool(segtype)) {
+		ah->log_area_count = metadata_area_count;
+// FIXME Calculate thin metadata area size
+		ah->log_len = 1;
 	} else {
 		ah->log_area_count = metadata_area_count;
 		ah->log_len = !metadata_area_count ? 0 :
@@ -2314,7 +2327,7 @@ static int _lv_insert_empty_sublvs(struct logical_volume *lv,
 {
 	struct logical_volume *sub_lv;
 	uint32_t i;
-	uint64_t status = 0;
+	uint64_t sub_lv_status = 0;
 	const char *layer_name;
 	size_t len = strlen(lv->name) + 32;
 	char img_name[len];
@@ -2328,15 +2341,14 @@ static int _lv_insert_empty_sublvs(struct logical_volume *lv,
 
 	if (segtype_is_raid(segtype)) {
 		lv->status |= RAID;
-		status = RAID_IMAGE;
+		sub_lv_status = RAID_IMAGE;
 		layer_name = "rimage";
 	} else if (segtype_is_mirrored(segtype)) {
 		lv->status |= MIRRORED;
-		status = MIRROR_IMAGE;
+		sub_lv_status = MIRROR_IMAGE;
 		layer_name = "mimage";
 	} else if (segtype_is_thin_pool(segtype)) {
-		// lv->status |= THIN_POOL;
-		// status = THIN_IMAGE;
+		lv->status |= THIN_POOL;
 		layer_name = "tpool";
 	} else
 		return_0;
@@ -2356,36 +2368,51 @@ static int _lv_insert_empty_sublvs(struct logical_volume *lv,
 	 */
 	for (i = 0; i < devices; i++) {
 		/* Data LVs */
-		if (dm_snprintf(img_name, len, "%s_%s_%u",
-				lv->name, layer_name, i) < 0)
+		if (devices > 1) {
+			if (dm_snprintf(img_name, len, "%s_%s_%u",
+					lv->name, layer_name, i) < 0)
+				return_0;
+		} else {
+			if (dm_snprintf(img_name, len, "%s_%s",
+					lv->name, layer_name) < 0)
+				return_0;
+		}
+
+		/* FIXME Should use ALLOC_INHERIT here and inherit from parent LV */
+		if (!(sub_lv = lv_create_empty(img_name, NULL,
+					 LVM_READ | LVM_WRITE,
+					 lv->alloc, lv->vg)))
 			return_0;
 
-		sub_lv = lv_create_empty(img_name, NULL,
-					 LVM_READ | LVM_WRITE | status,
-					 lv->alloc, lv->vg);
+		if (segtype_is_thin_pool(segtype)) {
+			if (!attach_pool_data_lv(mapseg, sub_lv))
+				return_0;
+		} else if (!set_lv_segment_area_lv(mapseg, i, sub_lv, 0, sub_lv_status))
+			return_0;
 
-		if (!sub_lv)
-			return_0;
-		if (!set_lv_segment_area_lv(mapseg, i, sub_lv, 0, status))
-			return_0;
-		if (!segtype_is_raid(segtype))
+		/* Metadata LVs for raid or thin pool */
+		if (segtype_is_raid(segtype)) {
+			if (dm_snprintf(img_name, len, "%s_rmeta_%u", lv->name, i) < 0)
+				return_0;
+		} else if (segtype_is_thin_pool(segtype)) {
+			if (dm_snprintf(img_name, len, "%s_tmeta", lv->name) < 0)
+				return_0;
+		} else
 			continue;
 
-		/* RAID meta LVs */
-		if (dm_snprintf(img_name, len, "%s_rmeta_%u", lv->name, i) < 0)
+		/* FIXME Should use ALLOC_INHERIT here and inherit from parent LV */
+		if (!(sub_lv = lv_create_empty(img_name, NULL,
+					       LVM_READ | LVM_WRITE,
+					       lv->alloc, lv->vg)))
 			return_0;
 
-		sub_lv = lv_create_empty(img_name, NULL,
-					 LVM_READ | LVM_WRITE | RAID_META,
-					 lv->alloc, lv->vg);
-		if (!sub_lv)
-			return_0;
-		if (!set_lv_segment_area_lv(mapseg, i, sub_lv, 0, RAID_META))
-			return_0;
+		if (segtype_is_thin_pool(segtype)) {
+			if (!attach_pool_metadata_lv(mapseg, sub_lv))
+				return_0;
+		} else if (!set_lv_segment_area_lv(mapseg, i, sub_lv, 0, RAID_META))
+				return_0;
 	}
 	dm_list_add(&lv->segments, &mapseg->list);
-
-// FIXME If thin pool, create one "log_lv" as tmeta here lv->metadata_lv
 
 	return 1;
 }
@@ -2509,9 +2536,22 @@ int lv_extend(struct logical_volume *lv,
 	      struct dm_list *allocatable_pvs, alloc_policy_t alloc)
 {
 	int r = 1;
-	int raid_logs = 0;
+	int log_count = 0;
 	struct alloc_handle *ah;
-	uint32_t dev_count = mirrors * stripes + segtype->parity_devs;
+	uint32_t sub_lv_count;
+
+	/*
+	 * For RAID, all the devices are AREA_LV.
+	 * However, for 'mirror on stripe' using non-RAID targets,
+	 * the mirror legs are AREA_LV while the stripes underneath
+	 * are AREA_PV.  
+	 */
+	if (segtype_is_raid(segtype))
+		sub_lv_count = mirrors * stripes + segtype->parity_devs;
+	else if (segtype_is_thin_pool(segtype))
+		sub_lv_count = 1;
+	else
+		sub_lv_count = mirrors;
 
 	log_very_verbose("Extending segment type, %s", segtype->name);
 
@@ -2519,12 +2559,14 @@ int lv_extend(struct logical_volume *lv,
 		return lv_add_virtual_segment(lv, 0u, extents, segtype, thin_pool_name);
 
 	if (segtype_is_raid(segtype) && !lv->le_count)
-		raid_logs = mirrors * stripes;
+		log_count = mirrors * stripes;
 
-// For thin pool, ensure space for "log_lv" ->metadata_lv is allocated simultaneously here
+	if (segtype_is_thin_pool(segtype))
+		log_count = 1;
 
+	/* Thin pool allocation treats its metadata device like a mirror log. */
 	if (!(ah = allocate_extents(lv->vg, lv, segtype, stripes, mirrors,
-				    raid_logs, region_size, extents,
+				    log_count, region_size, extents,
 				    allocatable_pvs, alloc, NULL)))
 		return_0;
 
@@ -2532,27 +2574,20 @@ int lv_extend(struct logical_volume *lv,
 		r = lv_add_segment(ah, 0, ah->area_count, lv, segtype,
 				   stripe_size, 0u, 0);
 	else {
-		/*
-		 * For RAID, all the devices are AREA_LV.
-		 * However, for 'mirror on stripe' using non-RAID targets,
-		 * the mirror legs are AREA_LV while the stripes underneath
-		 * are AREA_PV.  So if this is not RAID, reset dev_count to
-		 * just 'mirrors' - the necessary sub_lv count.
-		 */
-		if (!segtype_is_raid(segtype))
-			dev_count = mirrors;
-
 		if (!lv->le_count &&
 		    !_lv_insert_empty_sublvs(lv, segtype, stripe_size,
-					     region_size, dev_count)) {
+					     region_size, sub_lv_count)) {
 			log_error("Failed to insert layer for %s", lv->name);
 			alloc_destroy(ah);
 			return 0;
 		}
 
-// For thin_pool, populate tmeta here too
 		r = _lv_extend_layered_lv(ah, lv, extents, 0,
 					  stripes, stripe_size);
+
+		if (r && segtype_is_thin_pool(segtype))
+			r = lv_add_segment(ah, ah->area_count, 1, first_seg(lv)->pool_metadata_lv,
+					   get_segtype_from_string(lv->vg->cmd, "striped"), 0, 0, 0);
 	}
 	alloc_destroy(ah);
 	return r;
@@ -3872,6 +3907,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 		lp->extents = lp->extents - size_rest + lp->stripes;
 	}
 
+	/* Does LV need to be zeroed?  Thin handles this as a per-pool in-kernel setting. */
 	if (lp->zero && !segtype_is_thin(lp->segtype) && !activation()) {
 		log_error("Can't wipe start of new LV without using "
 			  "device-mapper kernel driver");
@@ -3945,7 +3981,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 		}
 	}
 
-	if (!lp->thin && !lp->extents) {
+	if (!seg_is_thin_volume(lp) && !lp->extents) {
 		log_error("Unable to create new logical volume with no extents");
 		return NULL;
 	}
@@ -3975,7 +4011,8 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 		log_error("Can't create %s without using "
 			  "device-mapper kernel driver.",
 			  segtype_is_raid(lp->segtype) ? lp->segtype->name :
-			  "mirror");
+			  segtype_is_mirrored(lp->segtype) ?  "mirror" :
+			  "thin volume");
 		return NULL;
 	}
 
@@ -4073,7 +4110,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 		   (lp->activate == CHANGE_AE && !activate_lv_excl(cmd, lv)) ||
 		   (lp->activate == CHANGE_ALY && !activate_lv_local(cmd, lv))) {
 		log_error("Failed to activate new LV.");
-		if (lp->zero)
+		if (lp->zero && !seg_is_thin(lp))
 			goto deactivate_and_revert_new_lv;
 		return NULL;
 	}

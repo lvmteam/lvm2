@@ -371,6 +371,9 @@ struct pv_list *find_pv_in_pv_list(const struct dm_list *pl,
 /* Find LV segment containing given LE */
 struct lv_segment *find_seg_by_le(const struct logical_volume *lv, uint32_t le);
 
+/* Find pool LV segment given a thin pool data or metadata segment. */
+struct lv_segment *find_pool_seg(struct lv_segment *seg);
+
 /*
  * Remove a dev_dir if present.
  */
@@ -447,6 +450,7 @@ int attach_pool_metadata_lv(struct lv_segment *seg,
 int attach_pool_data_lv(struct lv_segment *seg,
 			struct logical_volume *pool_data_lv);
 int attach_pool_lv(struct lv_segment *seg, struct logical_volume *pool_lv);
+int detach_pool_lv(struct lv_segment *seg);
 
 /*
  * Begin skeleton for external LVM library

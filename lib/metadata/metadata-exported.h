@@ -85,8 +85,8 @@
 
 #define THIN_VOLUME		UINT64_C(0x0000001000000000)	/* LV */
 #define THIN_POOL		UINT64_C(0x0000002000000000)	/* LV */
-#define THIN_POOL_DATA		UINT64_C(0x0000002000000000)	/* LV */
-#define THIN_POOL_METADATA	UINT64_C(0x0000004000000000)	/* LV */
+#define THIN_POOL_DATA		UINT64_C(0x0000004000000000)	/* LV */
+#define THIN_POOL_METADATA	UINT64_C(0x0000008000000000)	/* LV */
 
 #define LVM_READ		0x00000100U	/* LV VG 32-bit */
 #define LVM_WRITE		0x00000200U	/* LV VG 32-bit */
@@ -327,7 +327,6 @@ struct lv_segment {
 
 	struct lv_segment_area *areas;
 	struct lv_segment_area *meta_areas;	/* For RAID */
-	struct logical_volume *pool_data_lv;	/* For thin_pool */
 	struct logical_volume *pool_metadata_lv;/* For thin_pool */
 	uint64_t transaction_id;		/* For thin_pool */
 	uint32_t zero_new_blocks;		/* For thin_pool */
