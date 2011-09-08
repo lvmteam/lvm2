@@ -61,10 +61,10 @@ static int _thin_pool_text_import(struct lv_segment *seg, const struct dm_config
 	if (!(pool_metadata_lv = find_lv(seg->lv->vg, lv_name)))
 		return SEG_LOG_ERROR("Unknown metadata %s in", lv_name);
 
-	if (!attach_pool_metadata_lv(seg, pool_metadata_lv))
+	if (!attach_pool_data_lv(seg, pool_data_lv))
 		return_0;
 
-	if (!attach_pool_data_lv(seg, pool_data_lv))
+	if (!attach_pool_metadata_lv(seg, pool_metadata_lv))
 		return_0;
 
 	if (!dm_config_get_uint64(sn, "transaction_id", &seg->transaction_id))
@@ -74,12 +74,22 @@ static int _thin_pool_text_import(struct lv_segment *seg, const struct dm_config
 	    !dm_config_get_uint32(sn, "zero_new_blocks", &seg->zero_new_blocks))
 		return SEG_LOG_ERROR("Could not read zero_new_blocks for");
 
+	seg->lv->status |= THIN_POOL;
+
+	return 1;
+}
+
+static int _thin_pool_text_import_area_count(const struct dm_config_node *sn,
+					     uint32_t *area_count)
+{
+	*area_count = 1;
+
 	return 1;
 }
 
 static int _thin_pool_text_export(const struct lv_segment *seg, struct formatter *f)
 {
-	outf(f, "pool = \"%s\"", seg->pool_data_lv->name);
+	outf(f, "pool = \"%s\"", seg_lv(seg, 0)->name);
 	outf(f, "metadata = \"%s\"", seg->pool_metadata_lv->name);
 	outf(f, "transaction_id = %" PRIu64, seg->transaction_id);
 	if (seg->zero_new_blocks)
@@ -182,6 +192,7 @@ static void _thin_destroy(struct segment_type *segtype)
 static struct segtype_handler _thin_pool_ops = {
 	.name = _thin_pool_name,
 	.text_import = _thin_pool_text_import,
+	.text_import_area_count = _thin_pool_text_import_area_count,
 	.text_export = _thin_pool_text_export,
 	.modules_needed = _thin_modules_needed,
 	.destroy = _thin_destroy,

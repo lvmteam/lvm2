@@ -75,6 +75,40 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 	struct replicator_site *rsite;
 	struct replicator_device *rdev;
 
+	/* Check LV flags match first segment type */
+	if (complete_vg) {
+		if (lv_is_thin_volume(lv) &&
+		    (!(seg2 = first_seg(lv)) || !seg_is_thin_volume(seg2))) {
+			log_error("LV %s is thin volume without first thin volume segment",
+				  lv->name);
+			inc_error_count;
+		}
+
+		if (lv_is_thin_pool(lv) &&
+		    (!(seg2 = first_seg(lv)) || !seg_is_thin_pool(seg2))) {
+			log_error("LV %s is thin pool without first thin pool segment",
+				  lv->name);
+			inc_error_count;
+		}
+
+		if (lv_is_thin_pool_data(lv) &&
+		    (!(seg2 = first_seg(lv)) || !(seg2 = find_pool_seg(seg2)) ||
+		     seg2->area_count != 1 || seg_type(seg2, 0) != AREA_LV ||
+		     seg_lv(seg2, 0) != lv)) {
+			log_error("LV %s: segment 1 pool data LV does not point back to same LV",
+				  lv->name);
+			inc_error_count;
+		}
+
+		if (lv_is_thin_pool_metadata(lv) &&
+		    (!(seg2 = first_seg(lv)) || !(seg2 = find_pool_seg(seg2)) ||
+		     seg2->pool_metadata_lv != lv)) {
+			log_error("LV %s: segment 1 pool metadata LV does not point back to same LV",
+				  lv->name);
+			inc_error_count;
+		}
+	}
+
 	dm_list_iterate_items(seg, &lv->segments) {
 		seg_count++;
 		if (seg->le != le) {
@@ -129,6 +163,80 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 					  "is not mirrored",
 					  lv->name, seg_count);
 				inc_error_count;
+			}
+		}
+
+		/* Check the various thin segment types */
+		if (complete_vg) {
+			if (seg_is_thin_pool(seg)) {
+				if (!lv_is_thin_pool(lv)) {
+					log_error("LV %s is missing thin pool flag for segment %u",
+						  lv->name, seg_count);
+					inc_error_count;
+				}
+
+				if (lv_is_thin_volume(lv)) {
+					log_error("LV %s is a thin volume that must not contain thin pool segment %u",
+						  lv->name, seg_count);
+					inc_error_count;
+				}
+
+				if (seg->area_count != 1 || seg_type(seg, 0) != AREA_LV) {
+					log_error("LV %s: thin pool segment %u is missing a pool data LV",
+						  lv->name, seg_count);
+					inc_error_count;
+				} else if (!(seg2 = first_seg(seg_lv(seg, 0))) || find_pool_seg(seg2) != seg) {
+					log_error("LV %s: thin pool segment %u data LV does not refer back to pool LV",
+						  lv->name, seg_count);
+					inc_error_count;
+				}
+
+				if (!seg->pool_metadata_lv) {
+					log_error("LV %s: thin pool segment %u is missing a pool metadata LV",
+						  lv->name, seg_count);
+					inc_error_count;
+				} else if (!(seg2 = first_seg(seg->pool_metadata_lv)) ||
+					   find_pool_seg(seg2) != seg) {
+					log_error("LV %s: thin pool segment %u metadata LV does not refer back to pool LV",
+						  lv->name, seg_count);
+					inc_error_count;
+				}
+			} else {
+				if (seg->pool_metadata_lv) {	
+					log_error("LV %s: segment %u must not have thin pool metadata LV set",
+						  lv->name, seg_count);
+					inc_error_count;
+				}
+			}
+
+			if (seg_is_thin_volume(seg)) {
+				if (!lv_is_thin_volume(lv)) {
+					log_error("LV %s is missing thin volume flag for segment %u",
+						  lv->name, seg_count);
+					inc_error_count;
+				}
+
+				if (lv_is_thin_pool(lv)) {
+					log_error("LV %s is a thin pool that must not contain thin volume segment %u",
+						  lv->name, seg_count);
+					inc_error_count;
+				}
+
+				if (!seg->pool_lv) {	
+					log_error("LV %s: segment %u is missing thin pool LV",
+						  lv->name, seg_count);
+					inc_error_count;
+				} else if (!lv_is_thin_pool(seg->pool_lv)) {
+					log_error("LV %s: thin volume segment %u pool LV is not flagged as a pool LV",
+						  lv->name, seg_count);
+					inc_error_count;
+				}
+			} else {
+				if (seg->pool_lv) {	
+					log_error("LV %s: segment %u must not have thin pool LV set",
+						  lv->name, seg_count);
+					inc_error_count;
+				}
 			}
 		}
 
@@ -249,6 +357,8 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 		if (seg_is_replicator(seg) && lv == seg->rlog_lv)
 				seg_found++;
 		if (seg->log_lv == lv)
+			seg_found++;
+		if (seg->pool_metadata_lv == lv || seg->pool_lv == lv)
 			seg_found++;
 		if (!seg_found) {
 			log_error("LV %s is used by LV %s:%" PRIu32 "-%" PRIu32

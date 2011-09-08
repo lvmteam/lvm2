@@ -590,6 +590,11 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 
 	lp->segtype = get_segtype_from_string(cmd, arg_str_value(cmd, type_ARG, segtype_str));
 
+	if (seg_unknown(lp)) {
+		log_error("Unable to create LV with unknown segment type %s.", arg_str_value(cmd, type_ARG, segtype_str));
+		return 0;
+	}
+
 	if (arg_count(cmd, snapshot_ARG) || seg_is_snapshot(lp) ||
 	    (!seg_is_thin(lp) && arg_count(cmd, virtualsize_ARG)))
 		lp->snapshot = 1;
