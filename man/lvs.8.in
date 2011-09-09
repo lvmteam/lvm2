@@ -94,6 +94,8 @@ for example, mirror images, mirror logs as well as mirrors themselves appear as
 equivalents using the md raid kernel driver all appear as (r).
 Snapshots using the original device-mapper driver appear as (s); whereas
 snapshots of thin volumes using the new thin provisioning driver appear as (t).
+.IP 8 3
+Newly-allocated data blocks are overwritten with blocks of (z)eroes before use.
 .RE
 .TP
 .I \-\-segments
