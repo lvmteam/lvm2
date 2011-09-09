@@ -372,7 +372,7 @@ struct pv_list *find_pv_in_pv_list(const struct dm_list *pl,
 struct lv_segment *find_seg_by_le(const struct logical_volume *lv, uint32_t le);
 
 /* Find pool LV segment given a thin pool data or metadata segment. */
-struct lv_segment *find_pool_seg(struct lv_segment *seg);
+struct lv_segment *find_pool_seg(const struct lv_segment *seg);
 
 /*
  * Remove a dev_dir if present.

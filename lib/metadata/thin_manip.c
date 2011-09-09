@@ -61,7 +61,7 @@ int detach_pool_lv(struct lv_segment *seg)
 	return remove_seg_from_segs_using_this_lv(seg->pool_lv, seg);
 }
 
-struct lv_segment *find_pool_seg(struct lv_segment *seg)
+struct lv_segment *find_pool_seg(const struct lv_segment *seg)
 {
         struct lv_segment *pool_seg;
 
