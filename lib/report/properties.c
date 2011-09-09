@@ -175,6 +175,8 @@ GET_LV_STR_PROPERTY_FN(lv_tags, lv_tags_dup(lv))
 #define _lv_tags_set _not_implemented_set
 GET_LV_STR_PROPERTY_FN(mirror_log, lv_mirror_log_dup(lv->vg->vgmem, lv))
 #define _mirror_log_set _not_implemented_set
+GET_LV_STR_PROPERTY_FN(thin_pool, lv_pool_lv_dup(lv->vg->vgmem, lv))
+#define _thin_pool_set _not_implemented_set
 GET_LV_STR_PROPERTY_FN(modules, lv_modules_dup(lv->vg->vgmem, lv))
 #define _modules_set _not_implemented_set
 
