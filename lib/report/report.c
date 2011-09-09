@@ -240,6 +240,19 @@ static int _loglv_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((
 	return 1;
 }
 
+static int _poollv_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
+			struct dm_report_field *field,
+			const void *data, void *private __attribute__((unused)))
+{
+	const struct logical_volume *lv = (const struct logical_volume *) data;
+	const char *name;
+
+	if ((name = lv_pool_lv_dup(mem, lv)))
+		return dm_report_field_string(rh, field, &name);
+
+	dm_report_field_set_value(field, "", NULL);
+	return 1;
+}
 static int _lvname_disp(struct dm_report *rh, struct dm_pool *mem,
 			struct dm_report_field *field,
 			const void *data, void *private __attribute__((unused)))
