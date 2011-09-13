@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Fix mirrored log creation when PE size is small - force log_size >= region_size
   Fix improper RAID 64-bit status flag reset when and'ing against 32-bit flag.
   Fix log size calculation when only a log is being added to a mirror.
   Work around resume_lv causing error LV scanning during splitmirror operation.

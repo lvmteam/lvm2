@@ -687,8 +687,21 @@ static uint32_t mirror_log_extents(uint32_t region_size, uint32_t pe_size, uint3
 	/* Log device holds both header and bitset. */
 	log_size = dm_round_up((MIRROR_LOG_OFFSET << SECTOR_SHIFT) + bitset_size, 1 << SECTOR_SHIFT);
 	log_size >>= SECTOR_SHIFT;
+	log_size = dm_div_up(log_size, pe_size);
 
-	return dm_div_up(log_size, pe_size);
+	/*
+	 * Kernel requires a mirror to be at least 1 region large.  So,
+	 * if our mirror log is itself a mirror, it must be at least
+	 * 1 region large.  This restriction may not be necessary for
+	 * non-mirrored logs, but we apply the rule anyway.
+	 *
+	 * (The other option is to make the region size of the log
+	 * mirror smaller than the mirror it is acting as a log for,
+	 * but that really complicates things.  It's much easier to
+	 * keep the region_size the same for both.)
+	 */
+	return (log_size > (region_size / pe_size)) ? log_size :
+		(region_size / pe_size);
 }
 
 /*
