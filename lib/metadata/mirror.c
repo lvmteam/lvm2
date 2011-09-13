@@ -419,6 +419,7 @@ static int _delete_lv(struct logical_volume *mirror_lv, struct logical_volume *l
 			return_0;
 	}
 
+	sync_local_dev_names(lv->vg->cmd);
 	if (!deactivate_lv(cmd, lv))
 		return_0;
 
