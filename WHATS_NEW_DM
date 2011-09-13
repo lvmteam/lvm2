@@ -1,5 +1,6 @@
 Version 1.02.68 -
 ==================================
+  Retry DM_DEVICE_REMOVE ioctl if device is busy.
   Remove unused passed parameters for _mirror_emit_segment_line().
   Add dm_config and string character escaping functions to libdevmapper.
   Mark unreleased memory pools as internal error.
