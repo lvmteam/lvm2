@@ -1966,7 +1966,7 @@ int add_mirror_log(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	/* allocate destination extents */
-	ah = allocate_extents(lv->vg, NULL, segtype,
+	ah = allocate_extents(lv->vg, lv, segtype,
 			      0, 0, log_count - old_log_count, region_size, 0,
 			      allocatable_pvs, alloc, parallel_areas);
 	if (!ah) {
