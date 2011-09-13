@@ -666,12 +666,52 @@ static int _split_mirror_images(struct logical_volume *lv,
 		return 0;
 	}
 
+	/* Suspend temporary error target (see FIXME for resume below) */
+	if (sub_lv && !suspend_lv(sub_lv->vg->cmd, sub_lv))
+		return_0;
+
 	if (!vg_commit(mirrored_seg->lv->vg)) {
 		resume_lv(cmd, mirrored_seg->lv);
 		return 0;
 	}
 
 	log_very_verbose("Updating \"%s\" in kernel", mirrored_seg->lv->name);
+
+	/*
+	 * FIXME:
+When an image is split from a 2-way mirror, the original mirror is converted to
+a linear device.  To do this, the top "layer" must be removed.  The segments
+are transferred from the sub-lv to the top-level LV and the link is severed. 
+The former sub-lv - having its segments transferred - now contains a temporary
+error target.
+
+When the original LV is resumed, the old sub-lv that now contains an error
+segment is activated and scanned.  This causes I/O error messages.  There are
+three ways to fix this problem:
+
+1) Do not set the sub-lv which contains the error target as "visible" before
+suspending the original LV.  This way, when the original is resumed, the sub-lv
+device node is not created and it is not scanned - avoiding the error messages.
+ The problem with this approach is that if the machine crashes after the
+resume, it leaves the *hidden* LV in place and the user has a more difficult
+time noticing that it needs to be cleaned up.  Thus, this type of processing is
+frowned upon.
+
+2) Do like _remove_mirror_images does and suspend the original, then suspend
+the sub-lv (the error target), then resume the sub-lv, and finally resume the
+original LV.  This seems like extra pointless operations to me, but it does not
+produce the error message (although, I'm not sure why) and it allows us to
+leave the visible flag in place.  ** THIS IS THE CHOSEN SOLUTION HERE **
+
+3) Flag the sub-lv (error target) with a "do not scan" flag.  This seems like
+the cleanest approach, but I have been unable to find the method for doing
+this.  LVs get tagged in such a way by _get_udev_flags, but in this case the
+resume of the original LV also resumes the error target LV without running it
+through _get_udev_flags (likely because they are no longer linked).  Could
+there be something wrong in resume_lv?
+	*/
+	if (sub_lv && !resume_lv(sub_lv->vg->cmd, sub_lv))
+		return_0;
 
 	/*
 	 * Resume the mirror - this also activates the visible, independent
