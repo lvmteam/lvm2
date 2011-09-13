@@ -1539,11 +1539,14 @@ static const char *_sanitise_message(char *message)
 	return sanitised_message;
 }
 
+#define DM_REMOVE_IOCTL_RETRIES 25
+
 static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 				     unsigned repeat_count)
 {
 	struct dm_ioctl *dmi;
 	int ioctl_with_uevent;
+	int retries = DM_REMOVE_IOCTL_RETRIES;
 
 	dmi = _flatten(dmt, repeat_count);
 	if (!dmi) {
@@ -1627,11 +1630,23 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 		  dmt->sector, _sanitise_message(dmt->message),
 		  dmi->data_size);
 #ifdef DM_IOCTLS
+repeat_dm_ioctl:
 	if (ioctl(_control_fd, command, dmi) < 0) {
 		if (errno == ENXIO && ((dmt->type == DM_DEVICE_INFO) ||
 				       (dmt->type == DM_DEVICE_MKNODES) ||
 				       (dmt->type == DM_DEVICE_STATUS)))
 			dmi->flags &= ~DM_EXISTS_FLAG;	/* FIXME */
+		/*
+		 * FIXME: This is a workaround for asynchronous events generated
+		 *        as a result of using the WATCH udev rule with which we
+		 *        have no way of synchronizing. Processing such events in
+		 *        parallel causes devices to be open.
+		 */
+		else if (errno == EBUSY && (dmt->type == DM_DEVICE_REMOVE) && retries--) {
+			log_debug("device-mapper: device is busy, retrying removal");
+			usleep(200000);
+			goto repeat_dm_ioctl;
+		}
 		else {
 			if (_log_suppress)
 				log_verbose("device-mapper: %s ioctl "
