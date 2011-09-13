@@ -189,6 +189,21 @@ define __status
 		set $_s_status = $_s_status & ~0x0000000400000000LU
 		printf " RAID_IMAGE"
 	end
+#	if ($_s_status & MIRRORED)
+	if ($_s_status & 0x00008000U)
+		set $_s_status = $_s_status & ~0x00008000U
+		printf " MIRRORED"
+	end
+#	if ($_s_status & MIRROR_LOG)
+	if ($_s_status & 0x00020000U)
+		set $_s_status = $_s_status & ~0x00020000U
+		printf " MIRROR_LOG"
+	end
+#	if ($_s_status & MIRROR_IMAGE)
+	if ($_s_status & 0x00040000U)
+		set $_s_status = $_s_status & ~0x00040000U
+		printf " MIRROR_IMAGE"
+	end
 #	if ($_s_status & VISIBLE_LV)
 	if ($_s_status & 0x00000040U)
 		printf " VISIBLE_LV"
@@ -225,21 +240,6 @@ define __status
 	if ($_s_status & 0x00004000U)
 		set $_s_status = $_s_status & ~0x00004000U
 		printf " LOCKED"
-	end
-#	if ($_s_status & MIRRORED)
-	if ($_s_status & 0x00008000U)
-		set $_s_status = $_s_status & ~0x00008000U
-		printf " MIRRORED"
-	end
-#	if ($_s_status & MIRROR_LOG)
-	if ($_s_status & 0x00020000U)
-		set $_s_status = $_s_status & ~0x00020000U
-		printf " MIRROR_LOG"
-	end
-#	if ($_s_status & MIRROR_IMAGE)
-	if ($_s_status & 0x00040000U)
-		set $_s_status = $_s_status & ~0x00040000U
-		printf " MIRROR_IMAGE"
 	end
 #	if ($_s_status & LV_NOTSYNCED)
 	if ($_s_status & 0x00080000U)
