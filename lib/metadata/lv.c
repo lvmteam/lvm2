@@ -406,8 +406,8 @@ char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 	else
 		repstr[6] = '-';
 
-	if ((lv_is_thin_volume(lv) && (seg = first_seg(lv)) && seg->pool_lv && (seg = first_seg(seg->pool_lv))) ||
-	    (lv_is_thin_pool(lv) && (seg = first_seg(lv))) &&
+	if (((lv_is_thin_volume(lv) && (seg = first_seg(lv)) && seg->pool_lv && (seg = first_seg(seg->pool_lv))) ||
+	     (lv_is_thin_pool(lv) && (seg = first_seg(lv)))) &&
 	    seg->zero_new_blocks)
 		repstr[7] = 'z';
 	else
