@@ -971,11 +971,7 @@ int lv_raid_split_and_track(struct logical_volume *lv,
 		if (!_lv_is_on_pvs(seg_lv(seg, s), splittable_pvs))
 			continue;
 		lv_set_visible(seg_lv(seg, s));
-		/*
-		 * LVM_WRITE is 32-bit, if we don't '|' it with
-		 * UINT64_C(0) it will remove all higher order flags
-		 */
-		seg_lv(seg, s)->status &= ~(UINT64_C(0) | LVM_WRITE);
+		seg_lv(seg, s)->status &= ~LVM_WRITE;
 		break;
 	}
 
