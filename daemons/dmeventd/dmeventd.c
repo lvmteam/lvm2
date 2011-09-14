@@ -1632,7 +1632,7 @@ static int _set_oom_adj(const char *oom_adj_path, int val)
 /*
  * Protection against OOM killer if kernel supports it
  */
-static int _protect_against_oom_killer()
+static int _protect_against_oom_killer(void)
 {
 	struct stat st;
 
