@@ -81,7 +81,7 @@ struct logical_volume *find_temporary_mirror(const struct logical_volume *lv)
  *
  * Returns: 1 if available, 0 otherwise
  */
-static int cluster_mirror_is_available(struct logical_volume *lv)
+static int _cluster_mirror_is_available(struct logical_volume *lv)
 {
        unsigned attr = 0;
        struct cmd_context *cmd = lv->vg->cmd;
@@ -1256,7 +1256,7 @@ int collapse_mirrored_lv(struct logical_volume *lv)
 	return 1;
 }
 
-static int get_mirror_fault_policy(struct cmd_context *cmd __attribute__((unused)),
+static int _get_mirror_fault_policy(struct cmd_context *cmd __attribute__((unused)),
 				   int log_policy)
 {
 	const char *policy;
@@ -1287,14 +1287,14 @@ static int get_mirror_fault_policy(struct cmd_context *cmd __attribute__((unused
 	return MIRROR_REMOVE;
 }
 
-static int get_mirror_log_fault_policy(struct cmd_context *cmd)
+static int _get_mirror_log_fault_policy(struct cmd_context *cmd)
 {
-	return get_mirror_fault_policy(cmd, 1);
+	return _get_mirror_fault_policy(cmd, 1);
 }
 
-static int get_mirror_device_fault_policy(struct cmd_context *cmd)
+static int _get_mirror_device_fault_policy(struct cmd_context *cmd)
 {
-	return get_mirror_fault_policy(cmd, 0);
+	return _get_mirror_fault_policy(cmd, 0);
 }
 
 /*
@@ -1310,7 +1310,7 @@ static int get_mirror_device_fault_policy(struct cmd_context *cmd)
  *
  * Returns: 0 on failure, 1 on reconfig, -1 if no reconfig done
  */
-static int replace_mirror_images(struct lv_segment *mirrored_seg,
+static int _replace_mirror_images(struct lv_segment *mirrored_seg,
 				 uint32_t num_mirrors,
 				 int log_policy, int in_sync)
 {
@@ -1381,10 +1381,10 @@ int reconfigure_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirr
 	log_warn("WARNING: Bad device removed from mirror volume, %s/%s",
 		  mirrored_seg->lv->vg->name, mirrored_seg->lv->name);
 
-	log_policy = get_mirror_log_fault_policy(mirrored_seg->lv->vg->cmd);
-	dev_policy = get_mirror_device_fault_policy(mirrored_seg->lv->vg->cmd);
+	log_policy = _get_mirror_log_fault_policy(mirrored_seg->lv->vg->cmd);
+	dev_policy = _get_mirror_device_fault_policy(mirrored_seg->lv->vg->cmd);
 
-	r = replace_mirror_images(mirrored_seg,
+	r = _replace_mirror_images(mirrored_seg,
 				  (dev_policy != MIRROR_REMOVE) ?
 				  old_num_mirrors : num_mirrors,
 				  log_policy, in_sync);
@@ -2103,7 +2103,7 @@ int lv_add_mirrors(struct cmd_context *cmd, struct logical_volume *lv,
 
 	if (vg_is_clustered(lv->vg)) {
 		/* FIXME: review check of lv_is_active_remotely */
-		if (!cluster_mirror_is_available(lv)) {
+		if (!_cluster_mirror_is_available(lv)) {
 			log_error("Shared cluster mirrors are not available.");
 			return 0;
 		}
