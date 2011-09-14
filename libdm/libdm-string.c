@@ -347,7 +347,7 @@ char *dm_build_dm_uuid(struct dm_pool *mem, const char *uuid_prefix, const char 
 	if (!layer)
 		layer = "";
 
-	len = strlen(uuid_prefix) + strlen(lvid) + strlen(layer) + 1;
+	len = strlen(uuid_prefix) + strlen(lvid) + strlen(layer) + 2;
 
 	if (!(dmuuid = dm_pool_alloc(mem, len))) {
 		log_error("build_dm_name: Allocation failed for %" PRIsize_t
