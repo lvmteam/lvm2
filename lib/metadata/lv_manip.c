@@ -4154,7 +4154,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 		    (!(org = _create_virtual_origin(cmd, vg, lv->name,
 						    lp->permission,
 						    lp->voriginextents)) ||
-		     !activate_lv(cmd, org))) {
+		     !activate_lv_excl(cmd, org))) {
 			log_error("Couldn't create virtual origin for LV %s",
 				  lv->name);
 			if (org && !lv_remove(org))
