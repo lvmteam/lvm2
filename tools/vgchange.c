@@ -100,6 +100,10 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd,
 		if (!lv_is_visible(lv))
 			continue;
 
+		/* If LV is sparse, activate origin instead */
+		if (lv_is_cow(lv) && lv_is_virtual_origin(origin_from_cow(lv)))
+			lv = origin_from_cow(lv);
+
 		/* Only request activation of snapshot origin devices */
 		if ((lv->status & SNAPSHOT) || lv_is_cow(lv))
 			continue;
