@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Fix possible overflow of size if %FREE or %VG is used.
   Fix vgchange activation of snapshot with virtual origin.
   Activate virtual snapshot origin exclusively (only on local node in cluster).
   Fix lv_mirror_count to handle mirrored stripes properly.
