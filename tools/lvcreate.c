@@ -250,17 +250,17 @@ static int _update_extents_params(struct volume_group *vg,
 
 	switch(lcp->percent) {
 		case PERCENT_VG:
-			lp->extents = lp->extents * vg->extent_count / 100;
+			lp->extents = percent_of_extents(lp->extents, vg->extent_count);
 			break;
 		case PERCENT_FREE:
-			lp->extents = lp->extents * vg->free_count / 100;
+			lp->extents = percent_of_extents(lp->extents, vg->free_count);
 			break;
 		case PERCENT_PVS:
 			if (!lcp->pv_count)
-				lp->extents = lp->extents * vg->extent_count / 100;
+				lp->extents = percent_of_extents(lp->extents, vg->extent_count);
 			else {
 				pv_extent_count = pv_list_extents_free(lp->pvh);
-				lp->extents = lp->extents * pv_extent_count / 100;
+				lp->extents = percent_of_extents(lp->extents, pv_extent_count);
 			}
 			break;
 		case PERCENT_LV:
@@ -278,7 +278,7 @@ static int _update_extents_params(struct volume_group *vg,
 				log_error(INTERNAL_ERROR "Couldn't find origin volume.");
 				return 0;
 			}
-			lp->extents = lp->extents * origin->le_count / 100;
+			lp->extents = percent_of_extents(lp->extents, origin->le_count);
 			break;
 		case PERCENT_NONE:
 			break;
