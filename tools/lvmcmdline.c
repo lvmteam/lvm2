@@ -641,7 +641,7 @@ static void _add_getopt_arg(int arg, char **ptr, struct option **o)
 		if (a->short_arg)
 			(*o)->val = a->short_arg;
 		else
-			(*o)->val = arg;
+			(*o)->val = arg + 128;
 		(*o)++;
 	}
 #endif
@@ -662,7 +662,7 @@ static int _find_arg(struct command *com, int opt)
 		 * the_args.
 		 */
 		if ((a->short_arg && (opt == a->short_arg)) ||
-		    (!a->short_arg && (opt == arg)))
+		    (!a->short_arg && (opt == (arg + 128))))
 			return arg;
 	}
 
