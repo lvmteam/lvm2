@@ -13,6 +13,9 @@
 
 . lib/test
 
+# FIXME: remove it later when locking in virtual origin is fixed
+test -e LOCAL_CLVMD && exit 200
+
 aux prepare_vg 4
 
 lvcreate -s -l 100%FREE -n $lv $vg --virtualsize 1024T
