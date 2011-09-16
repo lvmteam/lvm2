@@ -747,6 +747,7 @@ there be something wrong in resume_lv?
 	 *   - commit VG changes
 	 *   - activate the new LV
 	 */
+	sync_local_dev_names(lv->vg->cmd);
 	new_lv = NULL;
 	dm_list_iterate_items(lvl, &split_images) {
 		if (!new_lv) {
