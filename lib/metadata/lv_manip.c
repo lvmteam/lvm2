@@ -3178,6 +3178,22 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 		}
 	}
 
+	if (lv_is_thin_pool(lv) && dm_list_size(&lv->segs_using_this_lv)) {
+		/* remove thin LVs first */
+		if ((force == PROMPT) &&
+		    yes_no_prompt("Do you really want to remove all thin volumes when removing "
+				  "pool logical volume %s? [y/n]: ", lv->name) == 'n') {
+			log_error("Logical volume %s not removed", lv->name);
+			return 0;
+		}
+		dm_list_iterate_safe(snh, snht, &lv->segs_using_this_lv) {
+			if (!lv_remove_with_dependencies(cmd,
+							 dm_list_item(snh, struct seg_list)->seg->lv,
+							 force, level + 1))
+				return 0;
+		}
+	}
+
 	return lv_remove_single(cmd, lv, force);
 }
 
