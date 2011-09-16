@@ -43,3 +43,5 @@ not lvcreate -l1 -m3 --corelog $vg @fast
 
 # lvcreate mirror with a single PV arg
 not lvcreate -l1 -m1 --corelog $vg $dev1
+
+vgremove -ff $vg
