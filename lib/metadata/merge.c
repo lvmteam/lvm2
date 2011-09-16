@@ -202,7 +202,7 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 					inc_error_count;
 				}
 			} else {
-				if (seg->pool_metadata_lv) {	
+				if (seg->pool_metadata_lv) {
 					log_error("LV %s: segment %u must not have thin pool metadata LV set",
 						  lv->name, seg_count);
 					inc_error_count;
@@ -222,7 +222,7 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 					inc_error_count;
 				}
 
-				if (!seg->pool_lv) {	
+				if (!seg->pool_lv) {
 					log_error("LV %s: segment %u is missing thin pool LV",
 						  lv->name, seg_count);
 					inc_error_count;
@@ -232,7 +232,7 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 					inc_error_count;
 				}
 			} else {
-				if (seg->pool_lv) {	
+				if (seg->pool_lv) {
 					log_error("LV %s: segment %u must not have thin pool LV set",
 						  lv->name, seg_count);
 					inc_error_count;
