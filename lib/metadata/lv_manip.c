@@ -767,7 +767,10 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 		return NULL;
 	}
 
-	ah->new_extents = new_extents;
+	if (mirrors || stripes)
+		ah->new_extents = new_extents;
+	else
+		ah->new_extents = 0;
 	ah->area_count = area_count;
 	ah->parity_count = segtype->parity_devs;
 	ah->region_size = region_size;
@@ -801,7 +804,7 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 		ah->log_area_count = metadata_area_count;
 		ah->log_len = !metadata_area_count ? 0 :
 			mirror_log_extents(ah->region_size, extent_size,
-					   ah->new_extents / ah->area_multiple);
+					   new_extents / ah->area_multiple);
 	}
 
 	for (s = 0; s < alloc_count; s++)
