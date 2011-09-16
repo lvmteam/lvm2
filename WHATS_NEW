@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Fix command line option decoding.
   Reset LV status when unlinking LV from VG.
   Fix overly strict extent-count divisibility requirements for striped mirrors.
   Fix rounding direction in lvresize when reducing volume size.
