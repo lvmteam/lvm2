@@ -1061,6 +1061,7 @@ static int read_from_local_sock(struct local_client *thisfd)
 	int missing_len;
 	char buffer[PIPE_BUF];
 
+	memset(buffer, 0, PIPE_BUF);
 	len = read(thisfd->fd, buffer, sizeof(buffer));
 	if (len == -1 && errno == EINTR)
 		return 1;
@@ -1169,9 +1170,6 @@ static int read_from_local_sock(struct local_client *thisfd)
 			return len;
 		}
 
-		/* Free any old buffer space */
-		free(thisfd->bits.localsock.cmd);
-
 		/* See if we have the whole message */
 		argslen =
 		    len - strlen(inheader->node) - sizeof(struct clvm_header);
@@ -1179,6 +1177,22 @@ static int read_from_local_sock(struct local_client *thisfd)
 
 		if (missing_len < 0)
 			missing_len = 0;
+
+		/* We need at least sizeof(struct clvm_header) bytes in buffer */
+		if (len < sizeof(struct clvm_header) || argslen < 0) {
+			struct clvm_header reply;
+			reply.cmd = CLVMD_CMD_REPLY;
+			reply.status = EINVAL;
+			reply.arglen = 0;
+			reply.flags = 0;
+			send_message(&reply, sizeof(reply), our_csid,
+				     thisfd->fd,
+				     "Error sending EINVAL reply to local user");
+			return 0;
+		}
+
+		/* Free any old buffer space */
+		free(thisfd->bits.localsock.cmd);
 
 		/* Save the message */
 		thisfd->bits.localsock.cmd = malloc(len + missing_len);
@@ -1203,15 +1217,23 @@ static int read_from_local_sock(struct local_client *thisfd)
 			char *argptr =
 			    inheader->node + strlen(inheader->node) + 1;
 
-			while (missing_len > 0 && len >= 0) {
+			while (missing_len > 0) {
 				DEBUGLOG
 				    ("got %d bytes, need another %d (total %d)\n",
 				     argslen, missing_len, inheader->arglen);
 				len = read(thisfd->fd, argptr + argslen,
 					   missing_len);
-				if (len >= 0) {
+				if (len == -1 && errno == EINTR)
+					continue;
+				if (len > 0) {
 					missing_len -= len;
 					argslen += len;
+				} else {
+					/* EOF or error on socket */
+					DEBUGLOG("EOF on local socket\n");
+					free(thisfd->bits.localsock.cmd);
+					thisfd->bits.localsock.cmd = NULL;
+					return 0;
 				}
 			}
 		}
