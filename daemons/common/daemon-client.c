@@ -9,8 +9,9 @@
 #include <errno.h> // ENOMEM
 
 daemon_handle daemon_open(daemon_info i) {
-	daemon_handle h;
+	daemon_handle h = { .protocol = 0 };
 	struct sockaddr_un sockaddr;
+
 	if ((h.socket_fd = socket(PF_UNIX, SOCK_STREAM /* | SOCK_NONBLOCK */, 0)) < 0) {
 		perror("socket");
 		goto error;
@@ -23,7 +24,6 @@ daemon_handle daemon_open(daemon_info i) {
 		perror("connect");
 		goto error;
 	}
-	h.protocol = 0;
 	return h;
 error:
 	if (h.socket_fd >= 0)
@@ -59,16 +59,19 @@ void daemon_reply_destroy(daemon_reply r) {
 
 daemon_reply daemon_send_simple(daemon_handle h, char *id, ...)
 {
+	static const daemon_reply err = { .error = ENOMEM, .buffer = NULL, .cft = NULL };
+	daemon_request rq;
+	daemon_reply repl;
 	va_list ap;
+
 	va_start(ap, id);
-	daemon_request rq = { .buffer = format_buffer("request", id, ap) };
+	rq.buffer = format_buffer("request", id, ap);
+	va_end(ap);
 
-	if (!rq.buffer) {
-		daemon_reply err = { .error = ENOMEM, .buffer = NULL, .cft = NULL };
+	if (!rq.buffer)
 		return err;
-	}
 
-	daemon_reply repl = daemon_send(h, rq);
+	repl = daemon_send(h, rq);
 	dm_free(rq.buffer);
 	return repl;
 }
