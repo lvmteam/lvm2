@@ -204,11 +204,14 @@ static void _daemonise(void)
 response daemon_reply_simple(const char *id, ...)
 {
 	va_list ap;
-	va_start(ap, id);
-	response res = { .buffer = format_buffer("response", id, ap), .cft = NULL };
+	response res = { .cft = NULL };
 
-	if (!res.buffer)
+	va_start(ap, id);
+
+	if (!(res.buffer = format_buffer("response", id, ap)))
 		res.error = ENOMEM;
+
+	va_end(ap);
 
 	return res;
 }
@@ -238,6 +241,8 @@ static void *client_thread(void *baton)
 {
 	struct thread_baton *b = baton;
 	request req;
+	response res;
+
 	while (1) {
 		if (!read_buffer(b->client.socket_fd, &req.buffer))
 			goto fail;
@@ -245,7 +250,7 @@ static void *client_thread(void *baton)
 		req.cft = dm_config_from_string(req.buffer);
 		if (!req.cft)
 			fprintf(stderr, "error parsing request:\n %s\n", req.buffer);
-		response res = b->s.handler(b->s, b->client, req);
+		res = b->s.handler(b->s, b->client, req);
 		if (req.cft)
 			dm_config_destroy(req.cft);
 		dm_free(req.buffer);
@@ -268,25 +273,24 @@ fail:
 
 static int handle_connect(daemon_state s)
 {
+	struct thread_baton *baton;
 	struct sockaddr_un sockaddr;
-	client_handle client;
+	client_handle client = { .thread_id = 0 };
 	socklen_t sl = sizeof(sockaddr);
-	int client_fd = accept(s.socket_fd, (struct sockaddr *) &sockaddr, &sl);
-	if (client_fd < 0)
+
+	client.socket_fd = accept(s.socket_fd, (struct sockaddr *) &sockaddr, &sl);
+	if (client.socket_fd < 0)
 		return 0;
 
-	struct thread_baton *baton = malloc(sizeof(struct thread_baton));
-	if (!baton)
+	if (!(baton = malloc(sizeof(struct thread_baton))))
 		return 0;
 
-	client.socket_fd = client_fd;
-	client.read_buf = 0;
-	client.private = 0;
 	baton->s = s;
 	baton->client = client;
 
 	if (pthread_create(&baton->client.thread_id, NULL, client_thread, baton))
 		return 0;
+
 	return 1;
 }
 
