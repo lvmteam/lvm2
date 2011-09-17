@@ -19,11 +19,9 @@ SOURCES2 = testclient.c
 
 TARGETS = lvmetad lvmetad-testclient
 
-.PHONY: install_lib_dynamic install_lib_static install_include \
-	install_pkgconfig install_dmeventd_dynamic install_dmeventd_static \
-	install_lib install_dmeventd
+.PHONY: install_lvmetad
 
-INCLUDES += -I$(top_srcdir)/daemons/common/
+INCLUDES += -I$(top_srcdir)/daemons/common
 INSTALL_LVMETAD_TARGETS = install_lvmetad
 CLEAN_TARGETS = lvmetad lvmetad-testclient
 
@@ -52,7 +50,8 @@ lvmetad: lvmetad-core.o
 #-include $(top_builddir)/daemons/dmeventd/plugins/mirror/$(LIB_NAME)-lvm2mirror.cflow
 #endif
 
-install_lvmetad: $(INSTALL_DMEVENTD_TARGETS)
+install_lvmetad: lvmetad
+	$(INSTALL_PROGRAM) -D $< $(sbindir)/$(<F)
 
 install: install_lvmetad
 

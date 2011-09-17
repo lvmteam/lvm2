@@ -16,8 +16,11 @@ top_srcdir = @top_srcdir@
 top_builddir = @top_builddir@
 
 ifeq ("@BUILD_LVMETAD@", "yes")
-LIB_STATIC=libdaemon.a
+  SUBDIRS += lvmetad
+
+LIB_STATIC = libdaemon.a
 SOURCES = common/daemon-shared.c common/daemon-server.c common/daemon-client.c
+lvmetad.device-mapper: $(LIB_STATIC)
 endif
 
 .PHONY: dmeventd clvmd cmirrord lvmetad
@@ -28,12 +31,6 @@ endif
 
 ifeq ("@BUILD_CMIRRORD@", "yes")
   SUBDIRS += cmirrord
-endif
-
-ifeq ("@BUILD_LVMETAD@", "yes")
-  SUBDIRS += lvmetad
-# FIXME: build dependency order needs rule fixing, using hack
-all: libdaemon.a
 endif
 
 ifeq ("@BUILD_DMEVENTD@", "yes")
