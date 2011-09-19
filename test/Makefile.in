@@ -101,6 +101,7 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	ln -fs "$(abs_top_builddir)/daemons/dmeventd/dmeventd" lib/dmeventd
 	ln -fs "$(abs_top_builddir)/daemons/lvmetad/lvmetad" lib/lvmetad
 	ln -fs "$(abs_top_builddir)/scripts/vgimportclone.sh" lib/vgimportclone
+	ln -fs "$(abs_top_builddir)/scripts/fsadm.sh" lib/fsadm
 	touch $@
 
 clean:
