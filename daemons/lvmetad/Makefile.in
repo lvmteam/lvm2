@@ -31,10 +31,9 @@ CFLOW_TARGET = lvmetad
 
 include $(top_builddir)/make.tmpl
 
-all: device-mapper
 device-mapper: $(TARGETS)
 
-LIBS += -ldevmapper -ldaemon -lpthread
+LIBS += -ldevmapper -ldaemon $(PTHREAD_LIBS)
 
 lvmetad: lvmetad-core.o
 	$(CC) $(CFLAGS) $(LDFLAGS) -L$(top_builddir)/daemons -o $@ lvmetad-core.o \
