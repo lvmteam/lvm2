@@ -63,6 +63,10 @@ All [y|n] questions will be answered 'y'.
 .TP
 .B TMPDIR
 The temporary directory name for mount points. Defaults to "/tmp". 
+.TP
+.B DM_DEV_DIR
+The device directory name.
+Defaults to "/dev" and must be an absolute path.
 
 .SH SEE ALSO
 .BR lvm (8),

@@ -67,12 +67,14 @@ DO_LVRESIZE=0
 FSTYPE=unknown
 VOLUME=unknown
 TEMPDIR="${TMPDIR:-/tmp}/${TOOL}_${RANDOM}$$/m"
+DM_DEV_DIR="${DM_DEV_DIR:-/dev}"
 BLOCKSIZE=
 BLOCKCOUNT=
 MOUNTPOINT=
 MOUNTED=
 REMOUNT=
 PROCMOUNTS="/proc/mounts"
+NULL="$DM_DEV_DIR/null"
 
 IFS_OLD=$IFS
 # without bash $'\n'
@@ -176,17 +178,18 @@ decode_size() {
 # dereference device name if it is symbolic link
 detect_fs() {
 	VOLUME_ORIG=$1
-	VOLUME=${1#/dev/}
-	VOLUME=$("$READLINK" $READLINK_E "/dev/$VOLUME") || VOLUME=$("$READLINK" $READLINK_E "$VOLUME_ORIG") || error "Cannot get readlink \"$1\""
+	VOLUME=${1/#"${DM_DEV_DIR}/"/}
+	VOLUME=$("$READLINK" $READLINK_E "$DM_DEV_DIR/$VOLUME") || error "Cannot get readlink \"$1\""
 	RVOLUME=$VOLUME
 	case "$RVOLUME" in
+          # hardcoded /dev  since udev does not create these entries elsewhere
 	  /dev/dm-[0-9]*)
-		read </sys/block/${RVOLUME#/dev/}/dm/name SYSVOLUME 2>&1 && VOLUME="/dev/mapper/$SYSVOLUME"
+		read </sys/block/${RVOLUME#/dev/}/dm/name SYSVOLUME 2>&1 && VOLUME="$DM_DEV_DIR/mapper/$SYSVOLUME"
 		;;
 	esac
-	# use /dev/null as cache file to be sure about the result
+	# use null device as cache file to be sure about the result
 	# not using option '-o value' to be compatible with older version of blkid
-	FSTYPE=$("$BLKID" -c /dev/null -s TYPE "$VOLUME") || error "Cannot get FSTYPE of \"$VOLUME\""
+	FSTYPE=$("$BLKID" -c "$NULL" -s TYPE "$VOLUME") || error "Cannot get FSTYPE of \"$VOLUME\""
 	FSTYPE=${FSTYPE##*TYPE=\"} # cut quotation marks
 	FSTYPE=${FSTYPE%%\"*}
 	verbose "\"$FSTYPE\" filesystem found on \"$VOLUME\""
@@ -221,7 +224,7 @@ detect_mounted()  {
 # get the full size of device in bytes
 detect_device_size() {
 	# check if blockdev supports getsize64
-	"$BLOCKDEV" 2>&1 | "$GREP" getsize64 >/dev/null
+	"$BLOCKDEV" 2>&1 | "$GREP" getsize64 >"$NULL"
 	if test $? -eq 0; then
 		DEVSIZE=$("$BLOCKDEV" --getsize64 "$VOLUME") || error "Cannot read size of device \"$VOLUME\""
 	else
@@ -389,7 +392,7 @@ resize() {
 #  only one supported
 ####################################
 diff_dates() {
-         echo $(( $("$DATE" -u -d"$1" +%s 2>/dev/null) - $("$DATE" -u -d"$2" +%s 2>/dev/null) ))
+         echo $(( $("$DATE" -u -d"$1" +%s 2>"$NULL") - $("$DATE" -u -d"$2" +%s 2>"$NULL") ))
 }
 
 ###################
@@ -451,11 +454,11 @@ test -n "$TUNE_EXT" -a -n "$RESIZE_EXT" -a -n "$TUNE_REISER" -a -n "$RESIZE_REIS
   -a -n "$DATE" -a -n "$FSCK" -a -n "$XFS_CHECK" -a -n "$LVM" \
   || error "Required command definitions in the script are missing!"
 
-"$LVM" version >/dev/null 2>&1 || error "Could not run lvm binary \"$LVM\""
-$("$READLINK" -e / >/dev/null 2>&1) || READLINK_E="-f"
+"$LVM" version >"$NULL" 2>&1 || error "Could not run lvm binary \"$LVM\""
+$("$READLINK" -e / >"$NULL" 2>&1) || READLINK_E="-f"
 TEST64BIT=$(( 1000 * 1000000000000 ))
 test "$TEST64BIT" -eq 1000000000000000 || error "Shell does not handle 64bit arithmetic"
-$(echo Y | "$GREP" Y >/dev/null) || error "Grep does not work properly"
+$(echo Y | "$GREP" Y >"$NULL") || error "Grep does not work properly"
 test $("$DATE" -u -d"Jan 01 00:00:01 1970" +%s) -eq 1 || error "Date translation does not work"
 
 
