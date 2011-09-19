@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Add support for non /dev device paths into fsadm script.
   Support different PATH setting for fsadm script testing.
   Surround all executed commands with quotes in fsadm script.
   Fix missing '$' in test for content of "$LVM" in fsadm script.
