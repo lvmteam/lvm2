@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Surround all executed commands with quotes in fsadm script.
   Fix missing '$' in test for content of "$LVM" in fsadm script.
   Move debug message in exec_cmd after sync_local_dev_names.
   Fix clvmd processing of invalid request on local socket.
