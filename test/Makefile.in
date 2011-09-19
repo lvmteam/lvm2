@@ -101,6 +101,7 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	ln -fs "$(abs_top_builddir)/daemons/dmeventd/dmeventd" lib/dmeventd
 	ln -fs "$(abs_top_builddir)/daemons/lvmetad/lvmetad" lib/lvmetad
 	ln -fs "$(abs_top_builddir)/scripts/vgimportclone.sh" lib/vgimportclone
+	chmod +x "$(abs_top_builddir)/scripts/fsadm.sh"
 	ln -fs "$(abs_top_builddir)/scripts/fsadm.sh" lib/fsadm
 	touch $@
 
@@ -109,6 +110,6 @@ clean:
 	if test "$(srcdir)" != . ; then rm -f $(subst $(srcdir)/, ,$(RUN)) lvm2app.sh ; fi
 
 CLEAN_TARGETS += .lib-dir-stamp .test-stamp $(LIB) \
-	lib/dmsetup lib/clvmd lib/dmeventd lib/vgimportclone
+	lib/dmsetup lib/clvmd lib/dmeventd lib/vgimportclone lib/fsadm
 
 .NOTPARALLEL:
