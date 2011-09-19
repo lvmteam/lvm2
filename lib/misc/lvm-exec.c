@@ -96,7 +96,7 @@ int exec_cmd(struct cmd_context *cmd, const char *const argv[],
 	if (WEXITSTATUS(status)) {
 		if (rstatus) {
 			*rstatus = WEXITSTATUS(status);
-			log_error("%s failed: %u", argv[0], *rstatus);
+			log_verbose("%s failed: %u", argv[0], *rstatus);
 		} else
 			log_error("%s failed: %u", argv[0], WEXITSTATUS(status));
 		return 0;
