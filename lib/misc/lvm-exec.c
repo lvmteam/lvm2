@@ -54,7 +54,6 @@ int exec_cmd(struct cmd_context *cmd, const char *const argv[],
 	int status;
 	char buf[PATH_MAX * 2];
 
-	log_verbose("Executing: %s", _verbose_args(argv, buf, sizeof(buf)));
 
 	if (rstatus)
 		*rstatus = -1;
@@ -62,6 +61,8 @@ int exec_cmd(struct cmd_context *cmd, const char *const argv[],
 	if (sync_needed)
 		if (!sync_local_dev_names(cmd)) /* Flush ops and reset dm cookie */
 			return_0;
+
+	log_verbose("Executing: %s", _verbose_args(argv, buf, sizeof(buf)));
 
 	if ((pid = fork()) == -1) {
 		log_error("fork failed: %s", strerror(errno));
