@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Use log_error instead of log_verbose when executed command fails.
   Add support for non /dev device paths into fsadm script.
   Support different PATH setting for fsadm script testing.
   Surround all executed commands with quotes in fsadm script.
