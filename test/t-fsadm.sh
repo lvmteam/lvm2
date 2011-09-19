@@ -117,8 +117,9 @@ if check_missing reiserfs; then
 	fscheck_reiserfs
 	mount $dev_vg_lv $mount_dir
 
-	not fsadm -y --lvresize resize $vg_lv 20M
+	fsadm -y --lvresize resize $vg_lv 30M
 	umount $mount_dir
+	fscheck_reiserfs
 
 	lvresize -f -L20M $vg_lv
 fi
