@@ -177,7 +177,7 @@ decode_size() {
 detect_fs() {
 	VOLUME_ORIG=$1
 	VOLUME=${1#/dev/}
-	VOLUME=$("$READLINK" $READLINK_E "/dev/$VOLUME") || error "Cannot get readlink $1"
+	VOLUME=$("$READLINK" $READLINK_E "/dev/$VOLUME") || VOLUME=$("$READLINK" $READLINK_E "$VOLUME_ORIG") || error "Cannot get readlink \"$1\""
 	RVOLUME=$VOLUME
 	case "$RVOLUME" in
 	  /dev/dm-[0-9]*)
