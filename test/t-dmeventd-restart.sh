@@ -38,3 +38,5 @@ echo "$!" > LOCAL_DMEVENTD
 sleep 3
 lvchange --monitor y --verbose $vg/3way 2>&1 | tee lvchange.out
 not grep 'already monitored' lvchange.out
+
+vgremove -ff $vg
