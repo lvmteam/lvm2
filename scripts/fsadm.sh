@@ -31,6 +31,7 @@
 
 TOOL=fsadm
 
+_SAVEPATH=$PATH
 PATH=/sbin:/usr/sbin:/bin:/usr/sbin:$PATH
 
 # utilities
@@ -140,9 +141,10 @@ cleanup() {
 		_FSADM_YES=$YES
 		export _FSADM_YES
 		unset FSADM_RUNNING
+		test -n "$LVM_BINARY" && PATH=$_SAVEPATH
 		dry exec "$LVM" lvresize $VERB $FORCE -r -L${NEWSIZE}b "$VOLUME_ORIG"
 	fi
-        
+
 	# error exit status for break
 	exit ${1:-1}
 }
