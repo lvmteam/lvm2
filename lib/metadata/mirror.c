@@ -584,7 +584,7 @@ static int _split_mirror_images(struct logical_volume *lv,
 	struct logical_volume *detached_log_lv = NULL;
 	struct lv_segment *mirrored_seg = first_seg(lv);
 	struct dm_list split_images;
-	struct lv_list *lvl, *new_lvl;
+	struct lv_list *lvl, *new_lvl = NULL;
 	struct cmd_context *cmd = lv->vg->cmd;
 
 	if (!(lv->status & MIRRORED)) {
@@ -748,7 +748,6 @@ there be something wrong in resume_lv?
 	 *   - activate the new LV
 	 */
 	sync_local_dev_names(lv->vg->cmd);
-	new_lv = NULL;
 	dm_list_iterate_items(lvl, &split_images) {
 		if (!new_lv) {
 			/* Grab 1st sub-LV for later */
