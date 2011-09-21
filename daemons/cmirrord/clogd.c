@@ -134,6 +134,12 @@ static void daemonize(void)
 {
 	int pid;
 	int status;
+	int devnull;
+
+	if ((devnull = open("/dev/null", O_RDWR)) == -1) {
+		LOG_ERROR("Can't open /dev/null: %s", strerror(errno));
+		exit(EXIT_FAILURE);
+	}
 
 	signal(SIGTERM, &parent_exit_handler);
 
@@ -182,10 +188,15 @@ static void daemonize(void)
 	chdir("/");
 	umask(0);
 
-	close(0); close(1); close(2);
-	open("/dev/null", O_RDONLY); /* reopen stdin */
-	open("/dev/null", O_WRONLY); /* reopen stdout */
-	open("/dev/null", O_WRONLY); /* reopen stderr */
+	if (close(0) || close(1) || close(2)) {
+		LOG_ERROR("Failed to close terminal FDs");
+		exit(EXIT_FAILURE);
+	}
+
+	if ((dup2(devnull, 0) < 0) || /* reopen stdin */
+	    (dup2(devnull, 1) < 0) || /* reopen stdout */
+	    (dup2(devnull, 2) < 0))   /* reopen stderr */
+		exit(EXIT_FAILURE);
 
 	LOG_OPEN("cmirrord", LOG_PID, LOG_DAEMON);
 

@@ -329,7 +329,10 @@ static int find_disk_path(char *major_minor_str, char *path_rtn, int *unlink_pat
 		 */
 
 		sprintf(path_rtn, "/dev/mapper/%s", dep->d_name);
-		stat(path_rtn, &statbuf);
+		if (stat(path_rtn, &statbuf) < 0) {
+			LOG_DBG("Unable to stat %s", path_rtn);
+			continue;
+		}
 		if (S_ISBLK(statbuf.st_mode) &&
 		    (major(statbuf.st_rdev) == major) &&
 		    (minor(statbuf.st_rdev) == minor)) {
@@ -476,7 +479,12 @@ static int _clog_ctr(char *uuid, uint64_t luid,
 	lc->sync_count = (log_sync == NOSYNC) ? region_count : 0;
 
 	if (disk_log) {
-		page_size = sysconf(_SC_PAGESIZE);
+		if ((page_size = sysconf(_SC_PAGESIZE)) < 0) {
+			LOG_ERROR("Unable to read pagesize: %s",
+				  strerror(errno));
+			r = errno;
+			goto fail;
+		}
 		pages = *(lc->clean_bits) / page_size;
 		pages += *(lc->clean_bits) % page_size ? 1 : 0;
 		pages += 1; /* for header */
@@ -489,7 +497,10 @@ static int _clog_ctr(char *uuid, uint64_t luid,
 			goto fail;
 		}
 		if (unlink_path)
-			unlink(disk_path);
+			if (unlink(disk_path) < 0) {
+				LOG_DBG("Warning: Unable to unlink log device, %s: %s",
+					disk_path, strerror(errno));
+			}
 
 		lc->disk_fd = r;
 		lc->disk_size = pages * page_size;

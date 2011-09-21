@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Add missing error checks for some system calls in cmirrord.
   Add missing log_error() to lvresize command when fsadm tool fails.
   Add support for DM_DEV_DIR device path into fsadm script.
   Support different PATH setting for fsadm script testing.
