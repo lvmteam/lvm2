@@ -676,15 +676,15 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 		if (!lp->nofsck &&
 		    !_fsadm_cmd(cmd, vg, lp, FSADM_CMD_CHECK, &status)) {
 			if (status != FSADM_CHECK_FAILS_FOR_MOUNTED) {
-				stack;
+				log_error("Filesystem check failed.");
 				return ECMD_FAILED;
 			}
-                        /* some filesystems supports online resize */
+			/* some filesystems supports online resize */
 		}
 
 		if ((lp->resize == LV_REDUCE) &&
 		    !_fsadm_cmd(cmd, vg, lp, FSADM_CMD_RESIZE, NULL)) {
-			stack;
+			log_error("Filesystem resize failed.");
 			return ECMD_FAILED;
 		}
 	}

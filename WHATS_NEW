@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Add missing log_error() to lvresize command when fsadm tool fails.
   Add support for DM_DEV_DIR device path into fsadm script.
   Support different PATH setting for fsadm script testing.
   Surround all executed commands with quotes in fsadm script.
