@@ -149,14 +149,20 @@ static int _send_request(const char *inbuf, int inlen, char **retbuf, int no_res
 
 /* Build the structure header and parse-out wildcard node names */
 static void _build_header(struct clvm_header *head, int cmd, const char *node,
-			  int len)
+			  unsigned int len)
 {
 	head->cmd = cmd;
 	head->status = 0;
 	head->flags = 0;
 	head->xid = 0;
 	head->clientid = 0;
-	head->arglen = len;
+	if (len)
+		/* 1 byte is used from struct clvm_header.args[1], so -> len - 1 */
+		head->arglen = len - 1;
+	else {
+		head->arglen = 0;
+		*head->args = '\0';
+	}
 
 	if (node) {
 		/*
@@ -198,12 +204,12 @@ static int _cluster_request(char cmd, const char *node, void *data, int len,
 	if (_clvmd_sock == -1)
 		return 0;
 
-	/* 1 byte is used from struct clvm_header.args[1], so -> len - 1 */
-	_build_header(head, cmd, node, len - 1);
-	memcpy(head->node + strlen(head->node) + 1, data, len);
+	_build_header(head, cmd, node, len);
+	if (len)
+		memcpy(head->node + strlen(head->node) + 1, data, len);
 
 	status = _send_request(outbuf, sizeof(struct clvm_header) +
-			       strlen(head->node) + len - 1, &retbuf, no_response);
+			       strlen(head->node) + len, &retbuf, no_response);
 	if (!status || no_response)
 		goto out;
 
