@@ -940,6 +940,30 @@ static int _info_by_dev(uint32_t major, uint32_t minor, int with_open_count,
 	return r;
 }
 
+static int _check_device_not_in_use(struct dm_info *info)
+{
+	if (!info->exists)
+		return 1;
+
+	/* If sysfs is not used, use open_count information only. */
+	if (!*dm_sysfs_dir())
+		return !info->open_count;
+
+	if (dm_device_has_holders(info->major, info->minor)) {
+		log_error("Device %" PRIu32 ":%" PRIu32 " is used "
+			  "by another device.", info->major, info->minor);
+		return 0;
+	}
+
+	if (dm_device_has_mounted_fs(info->major, info->minor)) {
+		log_error("Device %" PRIu32 ":%" PRIu32 " contains "
+			  "a filesystem in use.", info->major, info->minor);
+		return 0;
+	}
+
+	return 1;
+}
+
 /* Check if all parent nodes of given node have open_count == 0 */
 static int _node_has_closed_parents(struct dm_tree_node *node,
 				    const char *uuid_prefix,
@@ -1184,9 +1208,11 @@ static int _dm_tree_deactivate_children(struct dm_tree_node *dnode,
 		    !info.exists)
 			continue;
 
+		if (!_check_device_not_in_use(&info))
+			continue;
+
 		/* Also checking open_count in parent nodes of presuspend_node */
-		if (info.open_count ||
-		    (child->presuspend_node &&
+		if ((child->presuspend_node &&
 		     !_node_has_closed_parents(child->presuspend_node,
 					       uuid_prefix, uuid_prefix_len))) {
 			/* Only report error from (likely non-internal) dependency at top level */

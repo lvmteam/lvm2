@@ -80,6 +80,9 @@ int lv_info(struct cmd_context *cmd, const struct logical_volume *lv,
 int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only,
 		    struct lvinfo *info, int with_open_count, int with_read_ahead);
 
+int lv_check_not_in_use(struct cmd_context *cmd, struct logical_volume *lv,
+			struct lvinfo *info);
+
 /*
  * Returns 1 if activate_lv has been set: 1 = activate; 0 = don't.
  */
