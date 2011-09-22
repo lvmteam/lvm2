@@ -618,8 +618,13 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 
 	if (arg_count(cmd, mirrors_ARG)) {
 		lp->mirrors = arg_uint_value(cmd, mirrors_ARG, 0) + 1;
-		if (lp->mirrors == 1)
+		if (lp->mirrors == 1) {
+			if (segtype_is_mirrored(lp->segtype)) {
+				log_error("Image count for segtype \"%s\" cannot be 0.", lp->segtype->name);
+				return 0;
+			}
 			log_print("Redundant mirrors argument: default is 0");
+		}
 		if (arg_sign_value(cmd, mirrors_ARG, 0) == SIGN_MINUS) {
 			log_error("Mirrors argument may not be negative");
 			return 0;

@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Disallow the creation of mirrors (mirror or raid1 segtype) with only one leg.
   Cleanup restart clvmd code (no memory allocation, debug print passed args).
   Add all exclusive locks to clvmd restart option args.
   Always send the whole clvmd packet header in refresh commands.
