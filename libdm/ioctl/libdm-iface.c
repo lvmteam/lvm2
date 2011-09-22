@@ -1689,7 +1689,7 @@ int dm_task_run(struct dm_task *dmt)
 	int rely_on_udev;
 	int suspended_counter;
 	unsigned ioctl_retry = 1;
-	int retryable;
+	int retryable = 0;
 
 	if ((unsigned) dmt->type >=
 	    (sizeof(_cmd_data_v4) / sizeof(*_cmd_data_v4))) {
