@@ -361,39 +361,38 @@ void cmd_client_cleanup(struct local_client *client)
 
 static int restart_clvmd(void)
 {
-	char **argv = NULL;
-	char *debug_arg = NULL, *lv_name;
-	int i, argc = 0, max_locks = 0;
+	const char **argv;
+	char *lv_name;
+	int argc = 0, max_locks = 0;
 	struct dm_hash_node *hn = NULL;
+	char debug_arg[16];
 
 	DEBUGLOG("clvmd restart requested\n");
 
 	/* Count exclusively-open LVs */
 	do {
 		hn = get_next_excl_lock(hn, &lv_name);
-		if (lv_name)
+		if (lv_name) {
 			max_locks++;
-	} while (hn && *lv_name);
+			if (!*lv_name)
+				break; /* FIXME: Is this error ? */
+		}
+	} while (hn);
 
 	/* clvmd + locks (-E uuid) + debug (-d X) + NULL */
-	argv = malloc((max_locks * 2 + 4) * sizeof(*argv));
-	if (!argv)
+	if (!(argv = malloc((max_locks * 2 + 4) * sizeof(*argv))))
 		goto_out;
 
 	/*
 	 * Build the command-line
 	 */
-	argv[argc++] = strdup("clvmd");
-	if (!argv[0])
-		goto_out;
+	argv[argc++] = "clvmd";
 
 	/* Propogate debug options */
 	if (clvmd_get_debug()) {
-		if (!(debug_arg = malloc(16)) ||
-		    dm_snprintf(debug_arg, 16, "-d%u", clvmd_get_debug()) < 0)
+		if (dm_snprintf(debug_arg, sizeof(debug_arg), "-d%u", clvmd_get_debug()) < 0)
 			goto_out;
 		argv[argc++] = debug_arg;
-		debug_arg = NULL;
 	}
 
 	/*
@@ -406,30 +405,26 @@ static int restart_clvmd(void)
 	do {
 		hn = get_next_excl_lock(hn, &lv_name);
 		if (lv_name) {
-			argv[argc] = strdup("-E");
-			if (!argv[argc++])
-				goto_out;
-			argv[argc] = strdup(lv_name);
-			if (!argv[argc++])
-				goto_out;
-
+			if (!*lv_name)
+				break; /* FIXME: Is this error ? */
+			argv[argc++] = "-E";
+			argv[argc++] = lv_name;
 			DEBUGLOG("excl lock: %s\n", lv_name);
 		}
-	} while (hn && *lv_name);
-	argv[argc++] = NULL;
+	} while (hn);
+	argv[argc] = NULL;
 
 	/* Exec new clvmd */
 	DEBUGLOG("--- Restarting %s ---\n", CLVMD_PATH);
+	for (argc = 1; argv[argc]; argc++) DEBUGLOG("--- %d: %s\n", argc, argv[argc]);
+
 	/* NOTE: This will fail when downgrading! */
-	execve(CLVMD_PATH, argv, NULL);
+	execve(CLVMD_PATH, (char **)argv, NULL);
 out:
 	/* We failed */
 	DEBUGLOG("Restart of clvmd failed.\n");
 
-	for (i = 0; i < argc && argv[i]; i++)
-		free(argv[i]);
 	free(argv);
-	free(debug_arg);
 
 	return EIO;
 }
