@@ -303,6 +303,9 @@ static int _process_config(struct cmd_context *cmd)
 								"activation/udev_sync",
 								DEFAULT_UDEV_SYNC);
 
+	init_retry_deactivation(find_config_tree_int(cmd, "activation/retry_deactivation",
+							DEFAULT_RETRY_DEACTIVATION));
+
 	init_activation_checks(find_config_tree_int(cmd, "activation/checks",
 						      DEFAULT_ACTIVATION_CHECKS));
 
