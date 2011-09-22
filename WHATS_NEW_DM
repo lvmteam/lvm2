@@ -1,5 +1,7 @@
 Version 1.02.68 -
 ==================================
+  Add dm_sysfs_dir to libdevmapper to retrieve sysfs location thas is set.
+  Add dm_set_sysfs_dir to libdevmapper to set sysfs location.
   Add --retry option for dmsetup remove to retry removal if not successful.
   Add dm_task_retry_remove fn to use retry logic for device removal.
   Remove unused passed parameters for _mirror_emit_segment_line().

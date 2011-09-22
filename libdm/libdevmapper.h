@@ -256,6 +256,12 @@ int dm_set_dev_dir(const char *dir);
 const char *dm_dir(void);
 
 /*
+ * Configure sysfs directory, /sys by default
+ */
+int dm_set_sysfs_dir(const char *dir);
+const char *dm_sysfs_dir(void);
+
+/*
  * Determine whether a major number belongs to device-mapper or not.
  */
 int dm_is_dm_major(uint32_t major);
