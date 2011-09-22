@@ -499,7 +499,6 @@ to be left for these sub-lvs.
 		goto fail;
 	memcpy(new_areas, seg->areas, seg->area_count * sizeof(*seg->areas));
 	seg->areas = new_areas;
-	seg->area_count = new_count;
 
 	/* Expand meta_areas array */
 	if (!(new_areas = dm_pool_zalloc(lv->vg->cmd->mem,
@@ -508,6 +507,7 @@ to be left for these sub-lvs.
 	memcpy(new_areas, seg->meta_areas,
 	       seg->area_count * sizeof(*seg->meta_areas));
 	seg->meta_areas = new_areas;
+	seg->area_count = new_count;
 
 	/* Set segment areas for metadata sub_lvs */
 	s = old_count;
