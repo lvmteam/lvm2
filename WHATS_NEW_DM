@@ -1,5 +1,6 @@
 Version 1.02.68 -
 ==================================
+  Add --retry option for dmsetup remove to retry removal if not successful.
   Add dm_task_retry_remove fn to use retry logic for device removal.
   Remove unused passed parameters for _mirror_emit_segment_line().
   Add dm_config and string character escaping functions to libdevmapper.

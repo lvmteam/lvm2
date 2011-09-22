@@ -11,7 +11,7 @@ dmsetup \- low level logical volume management
 .I [{ --addnodeonresume | --addnodeoncreate }]
 .br
 .B dmsetup remove
-.I [-f|--force] device_name
+.I [-f|--force] [--retry] device_name
 .br
 .B dmsetup remove_all
 .I [-f|--force]
@@ -280,7 +280,7 @@ If no device_name is supplied, ensure that all nodes in /dev/mapper
 correspond to mapped devices currently loaded by the device-mapper kernel
 driver, adding, changing or removing nodes as necessary.
 .IP \fBremove
-.I [-f|--force] device_name
+.I [-f|--force] [--retry] device_name
 .br
 Removes a device.  It will no longer be visible to dmsetup.
 Open devices cannot be removed except with older kernels
@@ -290,7 +290,10 @@ drops to zero.  From version 4.8.0 onwards, if a device can't
 be removed because an uninterruptible process is waiting for
 I/O to return from it, adding --force will replace the table 
 with one that fails all I/O, which might allow the 
-process to be killed.
+process to be killed. If an attempt to remove a device fails,
+perhaps because a process run from a quick udev rule
+temporarily opened the device, the --retry option will cause
+the operation to be retried for a few seconds before failing.
 .IP \fBremove_all
 .I [-f|--force]
 .br
