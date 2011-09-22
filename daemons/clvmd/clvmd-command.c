@@ -369,7 +369,6 @@ static int restart_clvmd(void)
 	DEBUGLOG("clvmd restart requested\n");
 
 	/* Count exclusively-open LVs */
-	hn = NULL;
 	do {
 		hn = get_next_excl_lock(hn, &lv_name);
 		if (lv_name)
@@ -403,6 +402,7 @@ static int restart_clvmd(void)
 	 */
 
 	/* Now add the exclusively-open LVs */
+	hn = NULL;
 	do {
 		hn = get_next_excl_lock(hn, &lv_name);
 		if (lv_name) {
@@ -414,7 +414,6 @@ static int restart_clvmd(void)
 				goto_out;
 
 			DEBUGLOG("excl lock: %s\n", lv_name);
-			hn = get_next_excl_lock(hn, &lv_name);
 		}
 	} while (hn && *lv_name);
 	argv[argc++] = NULL;
