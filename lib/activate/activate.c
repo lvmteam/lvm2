@@ -526,6 +526,31 @@ int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s,
 	return r;
 }
 
+int lv_check_not_in_use(struct cmd_context *cmd __attribute__((unused)),
+			struct logical_volume *lv, struct lvinfo *info)
+{
+	if (!info->exists)
+		return 1;
+
+	/* If sysfs is not used, use open_count information only. */
+	if (!*dm_sysfs_dir())
+		return !info->open_count;
+
+	if (dm_device_has_holders(info->major, info->minor)) {
+		log_error("Logical volume %s/%s is used by another device.",
+			  lv->vg->name, lv->name);
+		return 0;
+	}
+
+	if (dm_device_has_mounted_fs(info->major, info->minor)) {
+		log_error("Logical volume %s/%s contains a filesystem in use.",
+			  lv->vg->name, lv->name);
+		return 0;
+	}
+
+	return 1;
+}
+
 /*
  * Returns 1 if percent set, else 0 on failure.
  */
@@ -1437,11 +1462,9 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s)
 	}
 
 	if (lv_is_visible(lv)) {
-		if (info.open_count) {
-			log_error("LV %s/%s in use: not deactivating",
-				  lv->vg->name, lv->name);
-			goto out;
-		}
+		if (!lv_check_not_in_use(cmd, lv, &info))
+			goto_out;
+
 		if (lv_is_origin(lv) && _lv_has_open_snapshots(lv))
 			goto_out;
 	}

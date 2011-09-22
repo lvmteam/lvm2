@@ -264,6 +264,7 @@ static int _process_config(struct cmd_context *cmd)
 	/* FIXME Use global value of sysfs_dir everywhere instead cmd->sysfs_dir. */
 	_get_sysfs_dir(cmd);
 	set_sysfs_dir_path(cmd->sysfs_dir);
+	dm_set_sysfs_dir(cmd->sysfs_dir);
 
 	/* activation? */
 	cmd->default_settings.activation = find_config_tree_int(cmd,

@@ -3099,11 +3099,8 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	/* FIXME Ensure not referred to by another existing LVs */
 
 	if (lv_info(cmd, lv, 0, &info, 1, 0)) {
-		if (info.open_count) {
-			log_error("Can't remove open logical volume \"%s\"",
-				  lv->name);
-			return 0;
-		}
+		if (!lv_check_not_in_use(cmd, lv, &info))
+			return_0;
 
 		if (lv_is_active(lv) && (force == PROMPT) &&
 		    lv_is_visible(lv) &&
