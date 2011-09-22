@@ -222,7 +222,8 @@ struct dm_tree {
 	struct dm_hash_table *uuids;
 	struct dm_tree_node root;
 	int skip_lockfs;		/* 1 skips lockfs (for non-snapshots) */
-	int no_flush;		/* 1 sets noflush (mirrors/multipath) */
+	int no_flush;			/* 1 sets noflush (mirrors/multipath) */
+	int retry_remove;		/* 1 retries remove if not successful */
 	uint32_t cookie;
 };
 
@@ -1006,7 +1007,7 @@ static int _node_has_closed_parents(struct dm_tree_node *node,
 }
 
 static int _deactivate_node(const char *name, uint32_t major, uint32_t minor,
-			    uint32_t *cookie, uint16_t udev_flags)
+			    uint32_t *cookie, uint16_t udev_flags, int retry)
 {
 	struct dm_task *dmt;
 	int r = 0;
@@ -1028,6 +1029,10 @@ static int _deactivate_node(const char *name, uint32_t major, uint32_t minor,
 
 	if (!dm_task_set_cookie(dmt, cookie, udev_flags))
 		goto out;
+
+
+	if (retry)
+		dm_task_retry_remove(dmt);
 
 	r = dm_task_run(dmt);
 
@@ -1231,7 +1236,8 @@ static int _dm_tree_deactivate_children(struct dm_tree_node *dnode,
 			continue;
 
 		if (!_deactivate_node(name, info.major, info.minor,
-				      &child->dtree->cookie, child->udev_flags)) {
+				      &child->dtree->cookie, child->udev_flags,
+				      child->dtree->retry_remove)) {
 			log_error("Unable to deactivate %s (%" PRIu32
 				  ":%" PRIu32 ")", name, info.major,
 				  info.minor);
@@ -1264,6 +1270,11 @@ void dm_tree_skip_lockfs(struct dm_tree_node *dnode)
 void dm_tree_use_no_flush_suspend(struct dm_tree_node *dnode)
 {
 	dnode->dtree->no_flush = 1;
+}
+
+void dm_tree_retry_remove(struct dm_tree_node *dnode)
+{
+	dnode->dtree->retry_remove = 1;
 }
 
 int dm_tree_suspend_children(struct dm_tree_node *dnode,
