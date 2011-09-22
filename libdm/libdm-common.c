@@ -1056,6 +1056,106 @@ const char *dm_sysfs_dir(void)
 	return _sysfs_dir;
 }
 
+int dm_device_has_holders(uint32_t major, uint32_t minor)
+{
+	char sysfs_path[PATH_MAX];
+	struct stat st;
+
+	if (!*_sysfs_dir)
+		return 0;
+
+	if (dm_snprintf(sysfs_path, PATH_MAX, "%sdev/block/%" PRIu32
+			":%" PRIu32 "/holders", _sysfs_dir, major, minor) < 0) {
+		log_error("sysfs_path dm_snprintf failed");
+		return 0;
+	}
+
+	if (stat(sysfs_path, &st)) {
+		log_sys_error("stat", sysfs_path);
+		return 0;
+	}
+
+	return !dm_is_empty_dir(sysfs_path);
+}
+
+static int _mounted_fs_on_device(const char *kernel_dev_name)
+{
+	char sysfs_path[PATH_MAX];
+	struct dirent *dirent;
+	DIR *d;
+	struct stat st;
+	int r = 0;
+
+	if (dm_snprintf(sysfs_path, PATH_MAX, "%sfs", _sysfs_dir) < 0) {
+		log_error("sysfs_path dm_snprintf failed");
+		return 0;
+	}
+
+	if (!(d = opendir(sysfs_path))) {
+		if (errno != ENOENT)
+			log_sys_error("opendir", sysfs_path);
+		return 0;
+	}
+
+	while ((dirent = readdir(d))) {
+		if (!strcmp(dirent->d_name, ".") || !strcmp(dirent->d_name, ".."))
+			continue;
+
+		if (dm_snprintf(sysfs_path, PATH_MAX, "%sfs/%s/%s",
+				_sysfs_dir, dirent->d_name, kernel_dev_name) < 0) {
+			log_error("sysfs_path dm_snprintf failed");
+			break;
+		}
+
+		if (!stat(sysfs_path, &st)) {
+			/* found! */
+			r = 1;
+			break;
+		}
+		else if (errno != ENOENT) {
+			log_sys_error("stat", sysfs_path);
+			break;
+		}
+	}
+
+	if (closedir(d))
+		log_error("_fs_present_on_device: %s: closedir failed", kernel_dev_name);
+
+	return r;
+}
+
+int dm_device_has_mounted_fs(uint32_t major, uint32_t minor)
+{
+	char sysfs_path[PATH_MAX];
+	char temp_path[PATH_MAX];
+	char *kernel_dev_name;
+	ssize_t size;
+
+	if (!*_sysfs_dir)
+		return 0;
+
+	/* Get kernel device name first */
+	if (dm_snprintf(sysfs_path, PATH_MAX, "%sdev/block/%" PRIu32 ":%" PRIu32,
+			_sysfs_dir, major, minor) < 0) {
+		log_error("sysfs_path dm_snprintf failed");
+		return 0;
+	}
+
+	if ((size = readlink(sysfs_path, temp_path, PATH_MAX)) < 0) {
+		log_sys_error("readlink", sysfs_path);
+		return 0;
+	}
+
+	if (!(kernel_dev_name = strrchr(temp_path, '/'))) {
+		log_error("Could not locate device kernel name in sysfs path %s", temp_path);
+		return 0;
+	}
+	kernel_dev_name += 1;
+
+	/* Check /sys/fs/<fs_name>/<kernel_dev_name> presence */
+	return _mounted_fs_on_device(kernel_dev_name);
+}
+
 int dm_mknodes(const char *name)
 {
 	struct dm_task *dmt;
