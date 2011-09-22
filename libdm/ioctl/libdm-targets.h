@@ -63,6 +63,7 @@ struct dm_task {
 	int cookie_set;
 	int new_uuid;
 	int secure_data;
+	int retry_remove;
 	int enable_checks;
 
 	char *uuid;

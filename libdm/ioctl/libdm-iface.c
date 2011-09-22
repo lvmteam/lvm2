@@ -828,6 +828,13 @@ int dm_task_secure_data(struct dm_task *dmt)
 	return 1;
 }
 
+int dm_task_retry_remove(struct dm_task *dmt)
+{
+	dmt->retry_remove = 1;
+
+	return 1;
+}
+
 int dm_task_query_inactive_table(struct dm_task *dmt)
 {
 	dmt->query_inactive_table = 1;
@@ -1539,16 +1546,15 @@ static const char *_sanitise_message(char *message)
 	return sanitised_message;
 }
 
-#define DM_REMOVE_IOCTL_RETRIES 25
-
 static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
-				     unsigned repeat_count)
+				     unsigned buffer_repeat_count,
+				     unsigned retry_repeat_count,
+				     int *retryable)
 {
 	struct dm_ioctl *dmi;
 	int ioctl_with_uevent;
-	int retries = DM_REMOVE_IOCTL_RETRIES;
 
-	dmi = _flatten(dmt, repeat_count);
+	dmi = _flatten(dmt, buffer_repeat_count);
 	if (!dmi) {
 		log_error("Couldn't create ioctl argument.");
 		return NULL;
@@ -1609,7 +1615,7 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 	}
 
 	log_debug("dm %s %s%s %s%s%s %s%.0d%s%.0d%s"
-		  "%s%c%c%s%s%s%s%s %.0" PRIu64 " %s [%u]",
+		  "%s%c%c%s%s%s%s%s%s %.0" PRIu64 " %s [%u] (*%u)",
 		  _cmd_data_v4[dmt->type].name,
 		  dmt->new_uuid ? "UUID " : "",
 		  dmi->name, dmi->uuid, dmt->newname ? " " : "",
@@ -1624,29 +1630,18 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 		  dmt->no_flush ? 'N' : 'F',
 		  dmt->read_only ? "R" : "",
 		  dmt->skip_lockfs ? "S " : "",
+		  dmt->retry_remove ? "T " : "",
 		  dmt->secure_data ? "W " : "",
 		  dmt->query_inactive_table ? "I " : "",
 		  dmt->enable_checks ? "C" : "",
 		  dmt->sector, _sanitise_message(dmt->message),
-		  dmi->data_size);
+		  dmi->data_size, retry_repeat_count);
 #ifdef DM_IOCTLS
-repeat_dm_ioctl:
 	if (ioctl(_control_fd, command, dmi) < 0) {
 		if (errno == ENXIO && ((dmt->type == DM_DEVICE_INFO) ||
 				       (dmt->type == DM_DEVICE_MKNODES) ||
 				       (dmt->type == DM_DEVICE_STATUS)))
 			dmi->flags &= ~DM_EXISTS_FLAG;	/* FIXME */
-		/*
-		 * FIXME: This is a workaround for asynchronous events generated
-		 *        as a result of using the WATCH udev rule with which we
-		 *        have no way of synchronizing. Processing such events in
-		 *        parallel causes devices to be open.
-		 */
-		else if (errno == EBUSY && (dmt->type == DM_DEVICE_REMOVE) && retries--) {
-			log_debug("device-mapper: device is busy, retrying removal");
-			usleep(200000);
-			goto repeat_dm_ioctl;
-		}
 		else {
 			if (_log_suppress)
 				log_verbose("device-mapper: %s ioctl "
@@ -1658,6 +1653,9 @@ repeat_dm_ioctl:
 					  "failed: %s",
 					  _cmd_data_v4[dmt->type].name,
 					  strerror(errno));
+
+			*retryable = errno == EBUSY;
+
 			_dm_zfree_dmi(dmi);
 			return NULL;
 		}
@@ -1680,6 +1678,9 @@ void dm_task_update_nodes(void)
 	update_devs();
 }
 
+#define DM_IOCTL_RETRIES 25
+#define DM_RETRY_USLEEP_DELAY 200000
+
 int dm_task_run(struct dm_task *dmt)
 {
 	struct dm_ioctl *dmi;
@@ -1687,6 +1688,8 @@ int dm_task_run(struct dm_task *dmt)
 	int check_udev;
 	int rely_on_udev;
 	int suspended_counter;
+	unsigned ioctl_retry = 1;
+	int retryable;
 
 	if ((unsigned) dmt->type >=
 	    (sizeof(_cmd_data_v4) / sizeof(*_cmd_data_v4))) {
@@ -1734,7 +1737,14 @@ int dm_task_run(struct dm_task *dmt)
 
 	/* FIXME Detect and warn if cookie set but should not be. */
 repeat_ioctl:
-	if (!(dmi = _do_dm_ioctl(dmt, command, _ioctl_buffer_double_factor))) {
+	if (!(dmi = _do_dm_ioctl(dmt, command, _ioctl_buffer_double_factor,
+				 ioctl_retry, &retryable))) {
+		if (retryable && dmt->type == DM_DEVICE_REMOVE &&
+		    dmt->retry_remove && ++ioctl_retry <= DM_IOCTL_RETRIES) {
+			usleep(DM_RETRY_USLEEP_DELAY);
+			goto repeat_ioctl;
+		}
+
 		_udev_complete(dmt);
 		return 0;
 	}
