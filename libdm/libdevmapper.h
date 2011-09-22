@@ -422,6 +422,11 @@ void dm_tree_skip_lockfs(struct dm_tree_node *dnode);
 void dm_tree_use_no_flush_suspend(struct dm_tree_node *dnode);
 
 /*
+ * Retry removal of each device if not successful.
+ */
+void dm_tree_retry_remove(struct dm_tree_node *dnode);
+
+/*
  * Is the uuid prefix present in the tree?
  * Only returns 0 if every node was checked successfully.
  * Returns 1 if the tree walk has to be aborted.
