@@ -267,6 +267,19 @@ const char *dm_sysfs_dir(void);
 int dm_is_dm_major(uint32_t major);
 
 /*
+ * Determine whether a device has any holders (devices
+ * using this device). If sysfs is not used (or configured
+ * incorrectly), returns 0.
+ */
+int dm_device_has_holders(uint32_t major, uint32_t minor);
+
+/*
+ * Determine whether a device contains mounted filesystem.
+ * If sysfs is not used (or configured incorrectly), returns 0.
+ */
+int dm_device_has_mounted_fs(uint32_t major, uint32_t minor);
+
+/*
  * Release library resources
  */
 void dm_lib_release(void);
@@ -1068,6 +1081,8 @@ void dm_unescape_colons_and_at_signs(char *src,
  * Returns 1 on success, 0 on failure.
  */
 int dm_create_dir(const char *dir);
+
+int dm_is_empty_dir(const char *dir);
 
 /*
  * Close a stream, with nicer error checking than fclose's.
