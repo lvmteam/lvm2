@@ -465,6 +465,11 @@ activation {
     # Useful for diagnosing problems with LVM2/udev interactions.
     verify_udev_operations = 0
 
+    # If set to 1 and if deactivation of an LV fails, perhaps because
+    # a process run from a quick udev rule temporarily opened the device,
+    # retry the operation for a few seconds before failing.
+    retry_deactivation = 1
+
     # How to fill in missing stripes if activating an incomplete volume.
     # Using "error" will make inaccessible parts of the device return
     # I/O errors on access.  You can instead use a device path, in which 

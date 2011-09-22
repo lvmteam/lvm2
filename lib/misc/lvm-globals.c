@@ -42,6 +42,7 @@ static int _ignore_suspended_devices = 0;
 static int _error_message_produced = 0;
 static unsigned _is_static = 0;
 static int _udev_checking = 1;
+static int _retry_deactivation = DEFAULT_RETRY_DEACTIVATION;
 static int _activation_checks = 0;
 static char _sysfs_dir_path[PATH_MAX] = "";
 static int _dev_disable_after_error_count = DEFAULT_DISABLE_AFTER_ERROR_COUNT;
@@ -132,6 +133,11 @@ void init_udev_checking(int checking)
 		log_debug("LVM udev checking enabled");
 	else
 		log_debug("LVM udev checking disabled");
+}
+
+void init_retry_deactivation(int retry)
+{
+	_retry_deactivation = retry;
 }
 
 void init_activation_checks(int checks)
@@ -270,6 +276,11 @@ unsigned is_static(void)
 int udev_checking(void)
 {
 	return _udev_checking;
+}
+
+int retry_deactivation(void)
+{
+	return _retry_deactivation;
 }
 
 int activation_checks(void)
