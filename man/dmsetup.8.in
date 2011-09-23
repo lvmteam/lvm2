@@ -20,7 +20,7 @@ dmsetup \- low level logical volume management
 .I [--nolockfs] [--noflush] device_name
 .br
 .B dmsetup resume
-.I device_name
+.I device_name [{ --addnodeonresume | --addnodeoncreate }]
 .br
 .B dmsetup load
 .I device_name [--table <table> | table_file]
@@ -313,7 +313,7 @@ Renames a device.
 Sets the uuid of a device that was created without a uuid.
 After a uuid has been set it cannot be changed.
 .IP \fBresume
-.I device_name
+.I device_name [{ --addnodeonresume | --addnodeoncreate }]
 .br
 Un-suspends a device.  
 If an inactive table has been loaded, it becomes live.
