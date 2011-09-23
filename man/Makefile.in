@@ -68,7 +68,7 @@ device-mapper: $(MAN8DM)
 
 man: $(MAN5) $(MAN8) $(MAN8CLUSTER)
 
-$(MAN5) $(MAN8) $(MAN8CLUSTER):	Makefile
+$(MAN5) $(MAN8) $(MAN8DM) $(MAN8CLUSTER):	Makefile
 
 %: %.in
 	@case "$@" in \
