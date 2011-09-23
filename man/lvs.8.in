@@ -69,10 +69,11 @@ The lv_attr bits are:
 .RS
 .IP 1 3
 Volume type: (m)irrored, (M)irrored without initial sync, (o)rigin,
-(O)rigin with merging snapshot, (s)napshot, merging (S)napshot, (p)vmove,
-(v)irtual, mirror (i)mage, mirror (I)mage out-of-sync, mirror (l)og device,
-under (c)onversion, thin (V)olume, (t)hin pool, (T)hin pool data, thin pool 
-m(e)tadata
+(O)rigin with merging snapshot, (r)aid, (R)aid without initial sync,
+(s)napshot, merging (S)napshot, (p)vmove, (v)irtual,
+mirror or raid (i)mage, mirror or raid (I)mage out-of-sync, mirror (l)og device,
+under (c)onversion, thin (V)olume, (t)hin pool, (T)hin pool data, raid or
+thin pool m(e)tadata
 .IP 2 3
 Permissions: (w)riteable, (r)ead-only
 .IP 3 3
