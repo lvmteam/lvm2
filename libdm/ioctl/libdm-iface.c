@@ -1654,6 +1654,11 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 					  _cmd_data_v4[dmt->type].name,
 					  strerror(errno));
 
+			/*
+			 * It's sometimes worth retrying after EBUSY in case
+			 * it's a transient failure caused by an asynchronous
+			 * process quickly scanning the device.
+			 */
 			*retryable = errno == EBUSY;
 
 			_dm_zfree_dmi(dmi);
@@ -1739,6 +1744,12 @@ int dm_task_run(struct dm_task *dmt)
 repeat_ioctl:
 	if (!(dmi = _do_dm_ioctl(dmt, command, _ioctl_buffer_double_factor,
 				 ioctl_retry, &retryable))) {
+		/*
+		 * Async udev rules that scan devices commonly cause transient
+		 * failures.  Normally you'd expect the user to have made sure
+		 * nothing was using the device before issuing REMOVE, so it's
+		 * worth retrying in case the failure is indeed transient.
+		 */
 		if (retryable && dmt->type == DM_DEVICE_REMOVE &&
 		    dmt->retry_remove && ++ioctl_retry <= DM_IOCTL_RETRIES) {
 			usleep(DM_RETRY_USLEEP_DELAY);
