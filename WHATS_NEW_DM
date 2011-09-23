@@ -1,5 +1,6 @@
 Version 1.02.68 -
 ==================================
+  Add dependency for dm man pages to man subdirectory make target all:.
   Add dm_tree_retry_remove to use retry logic for device removal in a dm_tree.
   Add dm_device_has_mounted_fs fn to check mounted filesystem on a device.
   Add dm_device_has_holders fn to to check use of the device by another device.

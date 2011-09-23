@@ -1,6 +1,6 @@
 #
 # Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
-# Copyright (C) 2004-2010 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2004-2011 Red Hat, Inc. All rights reserved.
 #
 # This file is part of LVM2.
 #
@@ -60,7 +60,7 @@ ifneq ("@CLVMD@", "none")
   install: install_cluster
 endif
 
-all: man
+all: man device-mapper
 
 .PHONY: man install_man5 install_man8
 
