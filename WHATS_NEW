@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Add 'Volume Type' lv_attr characters for RAID and RAID_IMAGE.
   Add activation/retry_deactivation to lvm.conf to retry deactivation of an LV.
   Replace open_count check with holders/mounted_fs check on lvremove path.
   Disallow the creation of mirrors (mirror or raid1 segtype) with only one leg.
