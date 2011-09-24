@@ -34,10 +34,15 @@ trap 'aux teardown' EXIT # don't forget to clean up
 
 export LVM_SYSTEM_DIR=$TESTDIR/etc
 DM_DEV_DIR=$TESTDIR/dev
-test -n "$LVM_TEST_DEVDIR" && DM_DEV_DIR="$LVM_TEST_DEVDIR"
+mkdir $LVM_SYSTEM_DIR $TESTDIR/lib $DM_DEV_DIR
+if test -n "$LVM_TEST_DEVDIR" ; then
+	DM_DEV_DIR="$LVM_TEST_DEVDIR"
+else
+	mknod $DM_DEV_DIR/testnull c 1 3 || exit 1;
+	echo >$DM_DEV_DIR/testnull || { echo "Filesystem does support devices in $DM_DEV_DIR (mounted with nodev?)"; exit 1; }
+	mkdir -p $DM_DEV_DIR/mapper
+fi
 export DM_DEV_DIR
-mkdir $LVM_SYSTEM_DIR $TESTDIR/lib
-mkdir -p $DM_DEV_DIR $DM_DEV_DIR/mapper
 
 cd $TESTDIR
 

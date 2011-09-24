@@ -1,4 +1,4 @@
-# Copyright (C) 2009 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2009-2011 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -19,11 +19,6 @@ lvm pvmove --version|sed -n "1s/.*: *\([0-9][^ ]*\) .*/\1/p" > actual
 
 # ensure they are the same
 diff -u actual expected
-
-mknod $DM_DEV_DIR/null c 1 3 || \
-  error "Can't create nodes on filesystem"
-echo >$DM_DEV_DIR/null || \
-  error "Filesystem for tests does not allow using device nodes (check nodev)"
 
 # ensure we can create devices (uses dmsetup, etc)
 aux prepare_devs 5
