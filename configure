@@ -626,6 +626,7 @@ OCF
 MIRRORS
 LVM_RELEASE_DATE
 LVM_RELEASE
+LVM_PATH
 LVM_PATCHLEVEL
 LVM_MINOR
 LVM_MAJOR
@@ -664,6 +665,7 @@ DEBUG
 COPTIMISE_FLAG
 CONFDIR
 CMDLIB
+CLVMD_PATH
 CLVMD_CMANAGERS
 CLVMD
 CLUSTER
@@ -9913,18 +9915,20 @@ fi
 lvm_exec_prefix=$exec_prefix
 test "$lvm_exec_prefix" = NONE && lvm_exec_prefix=$prefix
 test "$lvm_exec_prefix" = NONE && lvm_exec_prefix=$ac_default_prefix
+LVM_PATH="$lvm_exec_prefix/sbin/lvm"
 
 cat >>confdefs.h <<_ACEOF
-#define LVM_PATH "$lvm_exec_prefix/sbin/lvm"
+#define LVM_PATH "$LVM_PATH"
 _ACEOF
 
 
 if  test "$CLVMD" != none; then
         clvmd_prefix=$ac_default_prefix
+        CLVMD_PATH="$clvmd_prefix/sbin/clvmd"
         test "$prefix" != NONE && clvmd_prefix=$prefix
 
 cat >>confdefs.h <<_ACEOF
-#define CLVMD_PATH "$clvmd_prefix/sbin/clvmd"
+#define CLVMD_PATH "$CLVMD_PATH"
 _ACEOF
 
 fi
@@ -10103,6 +10107,8 @@ LVM_PATCHLEVEL=`echo "$VER" | $AWK -F '[(.]' '{print $3}'`
 LVM_LIBAPI=`echo "$VER" | $AWK -F '[()]' '{print $2}'`
 
 ################################################################################
+
+
 
 
 

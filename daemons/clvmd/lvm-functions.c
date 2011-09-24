@@ -704,13 +704,20 @@ static int get_initial_state(struct dm_hash_table *excl_uuid)
 	char lv[64], vg[64], flags[25], vg_flags[25];
 	char uuid[65];
 	char line[255];
-	FILE *lvs =
-	    popen
-	    (LVM_PATH " lvs  --config 'log{command_names=0 prefix=\"\"}' --nolocking --noheadings -o vg_uuid,lv_uuid,lv_attr,vg_attr",
-	     "r");
+	char *lvs_cmd;
+	const char *lvm_binary = getenv("LVM_BINARY") ? : LVM_PATH;
+	FILE *lvs;
 
-	if (!lvs)
+	if (dm_asprintf(&lvs_cmd, "%s lvs  --config 'log{command_names=0 prefix=\"\"}' "
+			"--nolocking --noheadings -o vg_uuid,lv_uuid,lv_attr,vg_attr",
+			lvm_binary) < 0)
 		return 0;
+
+	/* FIXME: Maybe link and use liblvm2cmd directly instead of fork */
+	if (!(lvs = popen(lvs_cmd, "r"))) {
+		dm_free(lvs_cmd);
+		return 0;
+	}
 
 	while (fgets(line, sizeof(line), lvs)) {
 	        if (sscanf(line, "%s %s %s %s\n", vg, lv, flags, vg_flags) == 4) {
@@ -748,6 +755,8 @@ static int get_initial_state(struct dm_hash_table *excl_uuid)
 	}
 	if (fclose(lvs))
 		DEBUGLOG("lvs fclose failed: %s\n", strerror(errno));
+
+	dm_free(lvs_cmd);
 
 	return 1;
 }

@@ -95,5 +95,15 @@ manually specify this option to override the search.
 .TP
 .I \-V
 Display the version of the cluster LVM daemon.
+
+.SH ENVIRONMENT VARIABLES
+.TP
+.B LVM_CLVMD_BINARY
+The CLVMD binary to use when clmvd restart is requested.
+Defaults to #CLVMD_PATH#.
+.TP
+.B LVM_BINARY
+The LVM2 binary to use. Defaults to #LVM_PATH#.
+
 .SH SEE ALSO
 .BR lvm (8)

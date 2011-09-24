@@ -366,6 +366,7 @@ static int restart_clvmd(void)
 	int argc = 0, max_locks = 0;
 	struct dm_hash_node *hn = NULL;
 	char debug_arg[16];
+	const char *clvmd = getenv("LVM_CLVMD_BINARY") ? : CLVMD_PATH;
 
 	DEBUGLOG("clvmd restart requested\n");
 
@@ -415,11 +416,11 @@ static int restart_clvmd(void)
 	argv[argc] = NULL;
 
 	/* Exec new clvmd */
-	DEBUGLOG("--- Restarting %s ---\n", CLVMD_PATH);
+	DEBUGLOG("--- Restarting %s ---\n", clvmd);
 	for (argc = 1; argv[argc]; argc++) DEBUGLOG("--- %d: %s\n", argc, argv[argc]);
 
 	/* NOTE: This will fail when downgrading! */
-	execve(CLVMD_PATH, (char **)argv, NULL);
+	execve(clvmd, (char **)argv, NULL);
 out:
 	/* We failed */
 	DEBUGLOG("Restart of clvmd failed.\n");
