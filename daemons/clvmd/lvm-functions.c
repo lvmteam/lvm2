@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2002-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2010 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2011 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -694,34 +694,11 @@ void do_lock_vg(unsigned char command, unsigned char lock_flags, char *resource)
 }
 
 /*
- * Compare the uuid with the list of exclusive locks that clvmd
- * held before it was restarted, so we can get the right kind
- * of lock now we are restarting.
- */
-static int was_ex_lock(char *uuid, char **argv)
-{
-	int optnum = 0;
-	char *opt = argv[optnum];
-
-	while (opt) {
-		if (strcmp(opt, "-E") == 0) {
-			opt = argv[++optnum];
-			if (opt && (strcmp(opt, uuid) == 0)) {
-				DEBUGLOG("Lock %s is exclusive\n", uuid);
-				return 1;
-			}
-		}
-		opt = argv[++optnum];
-	}
-	return 0;
-}
-
-/*
  * Ideally, clvmd should be started before any LVs are active
  * but this may not be the case...
  * I suppose this also comes in handy if clvmd crashes, not that it would!
  */
-static int get_initial_state(char **argv)
+static int get_initial_state(struct dm_hash_table *excl_uuid)
 {
 	int lock_mode;
 	char lv[64], vg[64], flags[25], vg_flags[25];
@@ -733,7 +710,7 @@ static int get_initial_state(char **argv)
 	     "r");
 
 	if (!lvs)
-		return 1;
+		return 0;
 
 	while (fgets(line, sizeof(line), lvs)) {
 	        if (sscanf(line, "%s %s %s %s\n", vg, lv, flags, vg_flags) == 4) {
@@ -759,12 +736,10 @@ static int get_initial_state(char **argv)
 				memcpy(&uuid[58], &lv[32], 6);
 				uuid[64] = '\0';
 
-				lock_mode = LCK_READ;
-
 				/* Look for this lock in the list of EX locks
 				   we were passed on the command-line */
-				if (was_ex_lock(uuid, argv))
-					lock_mode = LCK_EXCL;
+				lock_mode = (dm_hash_lookup(excl_uuid, uuid)) ?
+					LCK_EXCL : LCK_READ;
 
 				DEBUGLOG("getting initial lock for %s\n", uuid);
 				hold_lock(uuid, lock_mode, LCKF_NOQUEUE);
@@ -773,7 +748,8 @@ static int get_initial_state(char **argv)
 	}
 	if (fclose(lvs))
 		DEBUGLOG("lvs fclose failed: %s\n", strerror(errno));
-	return 0;
+
+	return 1;
 }
 
 static void lvm2_log_fn(int level, const char *file, int line, int dm_errno,
@@ -880,14 +856,14 @@ void lvm_do_fs_unlock(void)
 }
 
 /* Called to initialise the LVM context of the daemon */
-int init_clvm(char **argv)
+int init_clvm(struct dm_hash_table *excl_uuid)
 {
 	/* Use LOG_DAEMON for syslog messages instead of LOG_USER */
 	init_syslog(LOG_DAEMON);
 	openlog("clvmd", LOG_PID, LOG_DAEMON);
 
 	/* Initialise already held locks */
-	if (get_initial_state(argv))
+	if (!get_initial_state(excl_uuid))
 		log_error("Cannot load initial lock states.");
 
 	if (!(cmd = create_toolcontext(1, NULL, 0))) {
