@@ -1145,6 +1145,7 @@ int dm_device_has_mounted_fs(uint32_t major, uint32_t minor)
 		log_sys_error("readlink", sysfs_path);
 		return 0;
 	}
+	temp_path[size] = '\0';
 
 	if (!(kernel_dev_name = strrchr(temp_path, '/'))) {
 		log_error("Could not locate device kernel name in sysfs path %s", temp_path);
