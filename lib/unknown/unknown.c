@@ -94,8 +94,10 @@ struct segment_type *init_unknown_segtype(struct cmd_context *cmd, const char *n
 {
 	struct segment_type *segtype = dm_zalloc(sizeof(*segtype));
 
-	if (!segtype)
-		return_NULL;
+	if (!segtype) {
+		log_error("Failed to allocate memory for unknown segtype");
+		return NULL;
+	}
 
 	segtype->cmd = cmd;
 	segtype->ops = &_unknown_ops;
