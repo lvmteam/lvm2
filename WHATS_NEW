@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Improve testing Makefile.
   Fix install_ocf make target when srcdir != builddir. (2.02.80)
   Support env vars LVM_CLVMD_BINARY and LVM_BINARY in clvmd.
   Fix restart of clvmd (preserve exlusive locks). (2.02.64)
