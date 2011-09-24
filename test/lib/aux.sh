@@ -371,9 +371,9 @@ prepare_vg() {
 lvmconf() {
     if test -z "$LVM_TEST_LOCKING"; then LVM_TEST_LOCKING=1; fi
     if test "$DM_DEV_DIR" = "/dev"; then
-	VERIFY_UDEV=0;
+	LVM_VERIFY_UDEV=${LVM_VERIFY_UDEV:-0};
     else
-	VERIFY_UDEV=1;
+	LVM_VERIFY_UDEV=${LVM_VERIFY_UDEV:-1};
     fi
     test -f CONFIG_VALUES || {
         cat > CONFIG_VALUES <<-EOF
@@ -401,7 +401,7 @@ global/fallback_to_local_locking = 0
 activation/checks = 1
 activation/udev_sync = 1
 activation/udev_rules = 1
-activation/verify_udev_operations = $VERIFY_UDEV
+activation/verify_udev_operations = $LVM_VERIFY_UDEV
 activation/polling_interval = 0
 activation/snapshot_autoextend_percent = 50
 activation/snapshot_autoextend_threshold = 50
