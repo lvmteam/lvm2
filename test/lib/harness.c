@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2010-2011 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -126,14 +126,13 @@ static void clear(void) {
 static void drain(void) {
 	int sz;
 	char buf[2048];
-	memset(buf, 0, 2048);
 
 	while (1) {
-		sz = read(fds[1], buf, 2047);
-		if (verbose)
-			write(1, buf, sz);
+		sz = read(fds[1], buf, sizeof(buf));
 		if (sz <= 0)
 			return;
+		if (verbose)
+			write(1, buf, sz);
 		if (readbuf_used + sz >= readbuf_sz) {
 			readbuf_sz = readbuf_sz ? 2 * readbuf_sz : 4096;
 			readbuf = realloc(readbuf, readbuf_sz);
@@ -290,6 +289,8 @@ int main(int argc, char **argv) {
 		printf("\n");
 		return s.nfailed > 0 || die;
 	}
+
+	free(readbuf);
 
 	return die;
 }
