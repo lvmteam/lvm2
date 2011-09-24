@@ -338,7 +338,7 @@ static struct segment_type *_init_raid_segtype(struct cmd_context *cmd,
 	if (!segtype) {
 		log_error("Failed to allocate memory for %s segtype",
 			  raid_type);
-		return_NULL;
+		return NULL;
 	}
 	segtype->cmd = cmd;
 

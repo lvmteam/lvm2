@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Fix log_error() usage in raid and unknown segtype initialisation.
   Improve testing Makefile.
   Fix install_ocf make target when srcdir != builddir. (2.02.80)
   Support env vars LVM_CLVMD_BINARY and LVM_BINARY in clvmd.
