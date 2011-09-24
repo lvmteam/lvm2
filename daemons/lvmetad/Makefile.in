@@ -22,8 +22,6 @@ TARGETS = lvmetad lvmetad-testclient
 .PHONY: install_lvmetad
 
 INCLUDES += -I$(top_srcdir)/daemons/common
-INSTALL_LVMETAD_TARGETS = install_lvmetad
-CLEAN_TARGETS = lvmetad lvmetad-testclient
 
 CFLOW_LIST = $(SOURCES)
 CFLOW_LIST_TARGET = $(LIB_NAME).cflow
@@ -31,12 +29,10 @@ CFLOW_TARGET = lvmetad
 
 include $(top_builddir)/make.tmpl
 
-device-mapper: $(TARGETS)
-
 LIBS += -ldevmapper -ldaemon $(PTHREAD_LIBS)
 
 lvmetad: lvmetad-core.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -L$(top_builddir)/daemons -o $@ lvmetad-core.o \
+	$(CC) $(CFLAGS) $(LDFLAGS) -L$(top_builddir)/daemons/common -o $@ lvmetad-core.o \
 	$(DL_LIBS) $(LVMLIBS) $(LIBS) -rdynamic
 
 # TODO: No idea. No idea how to test either.
@@ -52,6 +48,6 @@ lvmetad: lvmetad-core.o
 install_lvmetad: lvmetad
 	$(INSTALL_PROGRAM) -D $< $(sbindir)/$(<F)
 
-install: install_lvmetad
+install_lvm2: install_lvmetad
 
-install_device-mapper: install_lvmetad
+install: install_lvm2

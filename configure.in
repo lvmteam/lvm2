@@ -1410,6 +1410,7 @@ make.tmpl
 daemons/Makefile
 daemons/clvmd/Makefile
 daemons/cmirrord/Makefile
+daemons/common/Makefile
 daemons/dmeventd/Makefile
 daemons/dmeventd/libdevmapper-event.pc
 daemons/dmeventd/plugins/Makefile
