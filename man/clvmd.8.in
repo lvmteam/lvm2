@@ -4,6 +4,7 @@ clvmd \- cluster LVM daemon
 .SH SYNOPSIS
 .B clvmd
 [\-d[<value>]] [\-C] [\-h]
+[\-E <lock uuid>]
 [\-R]
 [\-S]
 [\-t <timeout>]
@@ -68,6 +69,9 @@ small or you will experience spurious errors. 10 or 20 seconds might be
 sensible.
 .br
 This timeout will be ignored if you start clvmd with the -d switch.
+.TP
+.I \-E <lock uuid>
+Pass lock uuid to be reacquired exclusively when clvmd is restarted.
 .TP
 .I \-R
 Tells all the running clvmds in the cluster to reload their device cache and

@@ -78,7 +78,7 @@ struct lvm_thread_cmd {
 };
 
 struct lvm_startup_params {
-	char **argv;
+	struct dm_hash_table *excl_uuid;
 };
 
 static debug_t debug = DEBUG_OFF;
@@ -149,6 +149,7 @@ static void usage(const char *prog, FILE *file)
 		"   -h       Show this help information\n"
 		"   -d[n]    Set debug logging (0:none, 1:stderr (implies -f option), 2:syslog)\n"
 		"   -f       Don't fork, run in the foreground\n"
+		"   -E<lockuuid> Take this lock uuid as exclusively locked resource (for restart)\n"
 		"   -R       Tell all running clvmds in the cluster to reload their device cache\n"
 		"   -S       Restart clvmd, preserving exclusive locks\n"
 		"   -C       Sets debug level (from -d) on all clvmd instances clusterwide\n"
@@ -348,6 +349,11 @@ int main(int argc, char *argv[])
 		{ NULL, 0, 0, 0 }
 	};
 
+	if (!(lvm_params.excl_uuid = dm_hash_create(128))) {
+		fprintf(stderr, "Failed to allocate hash table\n");
+		return 1;
+	}
+
 	/* Deal with command-line arguments */
 	opterr = 0;
 	optind = 0;
@@ -390,6 +396,12 @@ int main(int argc, char *argv[])
 			break;
 		case 'I':
 			cluster_iface = parse_cluster_interface(optarg);
+			break;
+		case 'E':
+			if (!dm_hash_insert(lvm_params.excl_uuid, optarg, optarg)) {
+				fprintf(stderr, "Failed to allocate hash entry\n");
+				return 1;
+			}
 			break;
 		case 'T':
 			start_timeout = atoi(optarg);
@@ -565,7 +577,6 @@ int main(int argc, char *argv[])
 
 	/* Don't let anyone else to do work until we are started */
 	pthread_mutex_lock(&lvm_start_mutex);
-	lvm_params.argv = argv;
 	pthread_create(&lvm_thread, NULL, lvm_thread_fn, &lvm_params);
 
 	/* Tell the rest of the cluster our version number */
@@ -602,6 +613,8 @@ int main(int argc, char *argv[])
 		safe_close(&(delfd->fd));
 		free(delfd);
 	}
+
+	dm_hash_destroy(lvm_params.excl_uuid);
 
 	return 0;
 }
@@ -1978,7 +1991,7 @@ static void *lvm_thread_fn(void *arg)
 	pthread_sigmask(SIG_BLOCK, &ss, NULL);
 
 	/* Initialise the interface to liblvm */
-	init_clvm(lvm_params->argv);
+	init_clvm(lvm_params->excl_uuid);
 
 	/* Allow others to get moving */
 	pthread_mutex_unlock(&lvm_start_mutex);
