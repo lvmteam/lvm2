@@ -164,7 +164,7 @@ teardown() {
 
     echo -n .
 
-    teardown_devs
+    test -d $DM_DEV_DIR/mapper && teardown_devs
 
     echo -n .
 
