@@ -598,6 +598,7 @@ out:
 }
 
 static struct cluster_ops _cluster_corosync_ops = {
+	.name                     = "corosync",
 	.cluster_init_completed   = NULL,
 	.cluster_send_message     = _cluster_send_message,
 	.name_from_csid           = _name_from_csid,

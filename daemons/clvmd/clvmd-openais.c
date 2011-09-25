@@ -667,6 +667,7 @@ static int _get_cluster_name(char *buf, int buflen)
 }
 
 static struct cluster_ops _cluster_openais_ops = {
+	.name                     = "openais",
 	.cluster_init_completed   = NULL,
 	.cluster_send_message     = _cluster_send_message,
 	.name_from_csid           = _name_from_csid,

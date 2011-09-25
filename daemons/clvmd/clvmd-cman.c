@@ -479,6 +479,7 @@ static int _get_cluster_name(char *buf, int buflen)
 }
 
 static struct cluster_ops _cluster_cman_ops = {
+	.name                     = "cman",
 	.cluster_init_completed   = _cluster_init_completed,
 	.cluster_send_message     = _cluster_send_message,
 	.name_from_csid           = _name_from_csid,

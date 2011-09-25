@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2002-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2011 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -381,7 +381,7 @@ static int restart_clvmd(void)
 	} while (hn);
 
 	/* clvmd + locks (-E uuid) + debug (-d X) + NULL */
-	if (!(argv = malloc((max_locks * 2 + 4) * sizeof(*argv))))
+	if (!(argv = malloc((max_locks * 2 + 5) * sizeof(*argv))))
 		goto_out;
 
 	/*
@@ -396,10 +396,8 @@ static int restart_clvmd(void)
 		argv[argc++] = debug_arg;
 	}
 
-	/*
-	 * FIXME: specify used cluster backend
-	 * argv[argc++] = strdup("-Isinglenode");
-	 */
+	argv[argc++] = "-I";
+	argv[argc++] = clops->name;
 
 	/* Now add the exclusively-open LVs */
 	hn = NULL;
