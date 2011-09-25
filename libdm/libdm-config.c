@@ -605,7 +605,8 @@ static struct dm_config_value *_value(struct parser *p)
 		}
 
 	} else
-		h = _type(p);
+		if (!(h = _type(p)))
+			return_NULL;
 
 	return h;
 }
