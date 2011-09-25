@@ -557,7 +557,7 @@ static struct dm_config_node *_section(struct parser *p)
 			if (!(n = _section(p)))
 				return_NULL;
 
-			if (!root->child)
+			if (!l)
 				root->child = n;
 			else
 				l->sib = n;
