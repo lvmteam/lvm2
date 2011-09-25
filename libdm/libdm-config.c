@@ -1225,13 +1225,11 @@ unsigned dm_config_maybe_section(const char *str, unsigned len)
 		return 0;
 }
 
+__attribute__((nonnull(1, 2)))
 static struct dm_config_value *_clone_config_value(struct dm_pool *mem,
 						   const struct dm_config_value *v)
 {
 	struct dm_config_value *new_cv;
-
-	if (!v)
-		return NULL;
 
 	if (!(new_cv = _create_value(mem))) {
 		log_error("Failed to clone config value.");
