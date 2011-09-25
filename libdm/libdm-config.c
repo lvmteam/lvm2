@@ -543,8 +543,10 @@ static struct dm_config_node *_section(struct parser *p)
 {
 	/* IDENTIFIER SECTION_B_CHAR VALUE* SECTION_E_CHAR */
 	struct dm_config_node *root, *n, *l = NULL;
-	if (!(root = _create_node(p->mem)))
-		return_NULL;
+	if (!(root = _create_node(p->mem))) {
+		log_error("Failed to allocate section node");
+		return NULL;
+	}
 
 	if (!(root->key = _dup_tok(p)))
 		return_NULL;
@@ -598,8 +600,10 @@ static struct dm_config_value *_value(struct parser *p)
 		 * Special case for an empty array.
 		 */
 		if (!h) {
-			if (!(h = _create_value(p->mem)))
-				return_NULL;
+			if (!(h = _create_value(p->mem))) {
+				log_error("Failed to allocate value");
+				return NULL;
+			}
 
 			h->type = DM_CFG_EMPTY_ARRAY;
 		}
@@ -617,8 +621,10 @@ static struct dm_config_value *_type(struct parser *p)
 	struct dm_config_value *v = _create_value(p->mem);
 	char *str;
 
-	if (!v)
+	if (!v) {
+		log_error("Failed to allocate type value");
 		return NULL;
+	}
 
 	switch (p->t) {
 	case TOK_INT:
@@ -1251,8 +1257,10 @@ struct dm_config_node *dm_config_clone_node_with_mem(struct dm_pool *mem, const 
 {
 	struct dm_config_node *new_cn;
 
-	if (!cn)
+	if (!cn) {
+		log_error("Cannot clone NULL config node.");
 		return NULL;
+	}
 
 	if (!(new_cn = _create_node(mem))) {
 		log_error("Failed to clone config node.");
