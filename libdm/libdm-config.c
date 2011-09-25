@@ -127,8 +127,13 @@ struct dm_config_tree *dm_config_create(const char *filename, int keep_open)
 	c->exists = 0;
 	c->keep_open = keep_open;
 	c->custom = NULL;
-	if (filename)
-		c->filename = dm_pool_strdup(c->mem, filename);
+	if (filename &&
+	    !(c->filename = dm_pool_strdup(c->mem, filename))) {
+		log_error("Failed to duplicate filename.");
+		dm_pool_destroy(mem);
+		return 0;
+	}
+
 	return &c->cft;
 }
 
