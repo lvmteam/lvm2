@@ -523,7 +523,7 @@ static struct dm_config_node *_file(struct parser *p)
 	struct dm_config_node *root = NULL, *n, *l = NULL;
 	while (p->t != TOK_EOF) {
 		if (!(n = _section(p)))
-			return_0;
+			return_NULL;
 
 		if (!root)
 			root = n;
@@ -540,10 +540,10 @@ static struct dm_config_node *_section(struct parser *p)
 	/* IDENTIFIER SECTION_B_CHAR VALUE* SECTION_E_CHAR */
 	struct dm_config_node *root, *n, *l = NULL;
 	if (!(root = _create_node(p->mem)))
-		return_0;
+		return_NULL;
 
 	if (!(root->key = _dup_tok(p)))
-		return_0;
+		return_NULL;
 
 	match(TOK_IDENTIFIER);
 
@@ -551,7 +551,7 @@ static struct dm_config_node *_section(struct parser *p)
 		match(TOK_SECTION_B);
 		while (p->t != TOK_SECTION_E) {
 			if (!(n = _section(p)))
-				return_0;
+				return_NULL;
 
 			if (!root->child)
 				root->child = n;
@@ -564,7 +564,7 @@ static struct dm_config_node *_section(struct parser *p)
 	} else {
 		match(TOK_EQ);
 		if (!(root->v = _value(p)))
-			return_0;
+			return_NULL;
 	}
 
 	return root;
@@ -578,7 +578,7 @@ static struct dm_config_value *_value(struct parser *p)
 		match(TOK_ARRAY_B);
 		while (p->t != TOK_ARRAY_E) {
 			if (!(l = _type(p)))
-				return_0;
+				return_NULL;
 
 			if (!h)
 				h = l;
@@ -595,7 +595,7 @@ static struct dm_config_value *_value(struct parser *p)
 		 */
 		if (!h) {
 			if (!(h = _create_value(p->mem)))
-				return NULL;
+				return_NULL;
 
 			h->type = DM_CFG_EMPTY_ARRAY;
 		}
@@ -633,7 +633,7 @@ static struct dm_config_value *_type(struct parser *p)
 
 		p->tb++, p->te--;	/* strip "'s */
 		if (!(v->v.str = _dup_tok(p)))
-			return_0;
+			return_NULL;
 		p->te++;
 		match(TOK_STRING);
 		break;
@@ -643,7 +643,7 @@ static struct dm_config_value *_type(struct parser *p)
 
 		p->tb++, p->te--;	/* strip "'s */
 		if (!(str = _dup_tok(p)))
-			return_0;
+			return_NULL;
 		dm_unescape_double_quotes(str);
 		v->v.str = str;
 		p->te++;
@@ -653,7 +653,7 @@ static struct dm_config_value *_type(struct parser *p)
 	default:
 		log_error("Parse error at byte %" PRIptrdiff_t " (line %d): expected a value",
 			  p->tb - p->fb + 1, p->line);
-		return 0;
+		return NULL;
 	}
 	return v;
 }
