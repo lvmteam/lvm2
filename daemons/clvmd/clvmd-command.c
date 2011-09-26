@@ -418,7 +418,7 @@ static int restart_clvmd(void)
 	for (argc = 1; argv[argc]; argc++) DEBUGLOG("--- %d: %s\n", argc, argv[argc]);
 
 	/* NOTE: This will fail when downgrading! */
-	execve(clvmd, (char **)argv, NULL);
+	execvp(clvmd, (char **)argv);
 out:
 	/* We failed */
 	DEBUGLOG("Restart of clvmd failed.\n");
