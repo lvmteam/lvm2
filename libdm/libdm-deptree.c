@@ -947,8 +947,15 @@ static int _check_device_not_in_use(struct dm_info *info)
 		return 1;
 
 	/* If sysfs is not used, use open_count information only. */
-	if (!*dm_sysfs_dir())
-		return !info->open_count;
+	if (!*dm_sysfs_dir()) {
+		if (info->open_count) {
+			log_error("Device %" PRIu32 ":%" PRIu32 " in use",
+				  info->major, info->minor);
+			return 0;
+		}
+
+		return 1;
+	}
 
 	if (dm_device_has_holders(info->major, info->minor)) {
 		log_error("Device %" PRIu32 ":%" PRIu32 " is used "

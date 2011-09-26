@@ -533,8 +533,15 @@ int lv_check_not_in_use(struct cmd_context *cmd __attribute__((unused)),
 		return 1;
 
 	/* If sysfs is not used, use open_count information only. */
-	if (!*dm_sysfs_dir())
-		return !info->open_count;
+	if (!*dm_sysfs_dir()) {
+		if (info->open_count) {
+			log_error("Logical volume %s/%s in use.",
+				  lv->vg->name, lv->name);
+			return 0;
+		}
+
+		return 1;
+	}
 
 	if (dm_device_has_holders(info->major, info->minor)) {
 		log_error("Logical volume %s/%s is used by another device.",
