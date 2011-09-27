@@ -406,7 +406,7 @@ error:
 /* Resume the LV if it was active */
 static int do_resume_lv(char *resource, unsigned char lock_flags)
 {
-	int oldmode, origin_only, exclusive;
+	int oldmode, origin_only, exclusive, revert;
 
 	/* Is it open ? */
 	oldmode = get_current_lock(resource);
@@ -416,8 +416,9 @@ static int do_resume_lv(char *resource, unsigned char lock_flags)
 	}
 	origin_only = (lock_flags & LCK_ORIGIN_ONLY_MODE) ? 1 : 0;
 	exclusive = (oldmode == LCK_EXCL) ? 1 : 0;
+	revert = (lock_flags & LCK_REVERT_MODE) ? 1 : 0;
 
-	if (!lv_resume_if_active(cmd, resource, origin_only, exclusive))
+	if (!lv_resume_if_active(cmd, resource, origin_only, exclusive, revert))
 		return EIO;
 
 	return 0;

@@ -257,6 +257,7 @@ static int _file_lock_resource(struct cmd_context *cmd, const char *resource,
 {
 	char lockfile[PATH_MAX];
 	unsigned origin_only = (flags & LCK_ORIGIN_ONLY) ? 1 : 0;
+	unsigned revert = (flags & LCK_REVERT) ? 1 : 0;
 
 	switch (flags & LCK_SCOPE_MASK) {
 	case LCK_VG:
@@ -292,8 +293,8 @@ static int _file_lock_resource(struct cmd_context *cmd, const char *resource,
 	case LCK_LV:
 		switch (flags & LCK_TYPE_MASK) {
 		case LCK_UNLOCK:
-			log_very_verbose("Unlocking LV %s%s", resource, origin_only ? " without snapshots" : "");
-			if (!lv_resume_if_active(cmd, resource, origin_only, 0))
+			log_very_verbose("Unlocking LV %s%s%s", resource, origin_only ? " without snapshots" : "", revert ? " (reverting)" : "");
+			if (!lv_resume_if_active(cmd, resource, origin_only, 0, revert))
 				return 0;
 			break;
 		case LCK_NULL:

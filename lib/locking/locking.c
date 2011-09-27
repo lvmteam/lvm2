@@ -493,6 +493,20 @@ int resume_lvs(struct cmd_context *cmd, struct dm_list *lvs)
 	return r;
 }
 
+/* Unlock and revert list of LVs */
+int revert_lvs(struct cmd_context *cmd, struct dm_list *lvs)
+{
+	struct lv_list *lvl;
+	int r = 1;
+
+	dm_list_iterate_items(lvl, lvs)
+		if (!revert_lv(cmd, lvl->lv)) {
+			r = 0;
+			stack;
+		}
+
+	return r;
+}
 /*
  * Lock a list of LVs.
  * On failure to lock any LV, calls vg_revert() if vg_to_revert is set and 
@@ -511,7 +525,7 @@ int suspend_lvs(struct cmd_context *cmd, struct dm_list *lvs,
 				vg_revert(vg_to_revert);
 			dm_list_uniterate(lvh, lvs, &lvl->list) {
 				lvl = dm_list_item(lvh, struct lv_list);
-				if (!resume_lv(cmd, lvl->lv))
+				if (!revert_lv(cmd, lvl->lv))
 					stack;
 			}
 

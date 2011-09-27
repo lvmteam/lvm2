@@ -610,6 +610,8 @@ static int _node_clear_table(struct dm_tree_node *dnode)
 	if (!info->exists || !info->inactive_table)
 		return 1;
 
+// FIXME Get inactive deps.  If any dev referenced has 1 opener and no live table, remove it after the clear.
+
 	log_verbose("Clearing inactive table %s (%" PRIu32 ":%" PRIu32 ")",
 		    name, info->major, info->minor);
 
