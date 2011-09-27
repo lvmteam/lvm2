@@ -493,8 +493,13 @@ int resume_lvs(struct cmd_context *cmd, struct dm_list *lvs)
 	return r;
 }
 
-/* Lock a list of LVs */
-int suspend_lvs(struct cmd_context *cmd, struct dm_list *lvs)
+/*
+ * Lock a list of LVs.
+ * On failure to lock any LV, calls vg_revert() if vg_to_revert is set and 
+ * then unlocks any LVs on the list already successfully locked.
+ */
+int suspend_lvs(struct cmd_context *cmd, struct dm_list *lvs,
+		struct volume_group *vg_to_revert)
 {
 	struct dm_list *lvh;
 	struct lv_list *lvl;
@@ -502,6 +507,8 @@ int suspend_lvs(struct cmd_context *cmd, struct dm_list *lvs)
 	dm_list_iterate_items(lvl, lvs) {
 		if (!suspend_lv(cmd, lvl->lv)) {
 			log_error("Failed to suspend %s", lvl->lv->name);
+			if (vg_to_revert)
+				vg_revert(vg_to_revert);
 			dm_list_uniterate(lvh, lvs, &lvl->list) {
 				lvl = dm_list_item(lvh, struct lv_list);
 				if (!resume_lv(cmd, lvl->lv))

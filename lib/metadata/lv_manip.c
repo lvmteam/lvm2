@@ -2793,11 +2793,8 @@ int lv_rename(struct cmd_context *cmd, struct logical_volume *lv,
 	if (!vg_write(vg))
 		return 0;
 
-
-	if (!suspend_lvs(cmd, &lvs_changed)) {
-		vg_revert(vg);
+	if (!suspend_lvs(cmd, &lvs_changed, vg))
 		goto_out;
-	}
 
 	if (!(r = vg_commit(vg)))
 		stack;
