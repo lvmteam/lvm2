@@ -552,7 +552,7 @@ int lvdisplay_full(struct cmd_context *cmd,
 		log_print("LV Thin pool           %s%s/%s", lv->vg->cmd->dev_dir,
 			  lv->vg->name, first_seg(lv)->pool_lv->name);
 	} else if (lv_is_thin_pool(lv)) {
-		log_print("LV Thin metadada       %s%s/%s", lv->vg->cmd->dev_dir,
+		log_print("LV Thin metadata       %s%s/%s", lv->vg->cmd->dev_dir,
 			  lv->vg->name, first_seg(lv)->pool_metadata_lv->name);
 		log_print("LV Thin data pool      %s%s/%s", lv->vg->cmd->dev_dir,
 			  lv->vg->name, seg_lv(first_seg(lv), 0)->name);
