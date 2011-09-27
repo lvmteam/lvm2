@@ -390,22 +390,9 @@ static int _update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 			}
 
 			/*
-			 * Nothing changed yet, try to revert pvmove.
-			 * FIXME This error path is incomplete and unsafe.
+			 * FIXME Run --abort internally here.
 			 */
-			log_error("Temporary pvmove mirror activation failed.");
-
-			/* Ensure that temporary mrror is deactivate even on other nodes. */
-			/* FIXME Unsafe to proceed if this fails without checking explicitly that no pvmove LVs are still active */
-			(void)deactivate_lv(cmd, lv_mirr);
-
-			/* Revert metadata */
-			/* FIXME Use --abort code instead? */
-			if (!_detach_pvmove_mirror(cmd, lv_mirr) ||
-			    !lv_remove(lv_mirr) ||
-			    !vg_write(vg) || !vg_commit(vg))
-				log_error("ABORTING: Restoring original configuration "
-					  "before pvmove failed. Run pvmove --abort.");
+			log_error("ABORTING: Temporary pvmove mirror activation failed. Run pvmove --abort.");
 			goto_out;
 		}
 	}
