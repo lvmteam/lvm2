@@ -400,7 +400,7 @@ void pvcreate_params_set_defaults(struct pvcreate_params *pp);
 */
 int vg_write(struct volume_group *vg);
 int vg_commit(struct volume_group *vg);
-int vg_revert(struct volume_group *vg);
+void vg_revert(struct volume_group *vg);
 struct volume_group *vg_read_internal(struct cmd_context *cmd, const char *vg_name,
 				      const char *vgid, int warnings, int *consistent);
 struct physical_volume *pv_read(struct cmd_context *cmd, const char *pv_name,

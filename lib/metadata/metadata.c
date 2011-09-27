@@ -2685,7 +2685,7 @@ int vg_commit(struct volume_group *vg)
 }
 
 /* Don't commit any pending changes */
-int vg_revert(struct volume_group *vg)
+void vg_revert(struct volume_group *vg)
 {
 	struct metadata_area *mda;
 
@@ -2701,8 +2701,6 @@ int vg_revert(struct volume_group *vg)
 			  "after reverted update for VG %s.", vg->name);
 
 	remote_revert_cached_metadata(vg);
-
-	return 1;
 }
 
 /* Make orphan PVs look like a VG */

@@ -307,17 +307,21 @@ static int _detach_pvmove_mirror(struct cmd_context *cmd,
 
 static int _suspend_lvs(struct cmd_context *cmd, unsigned first_time,
 			struct logical_volume *lv_mirr,
-			struct dm_list *lvs_changed)
+			struct dm_list *lvs_changed,
+			struct volume_group *vg_to_revert)
 {
 	/*
 	 * Suspend lvs_changed the first time.
 	 * Suspend mirrors on subsequent calls.
 	 */
 	if (first_time) {
-		if (!suspend_lvs(cmd, lvs_changed))
+		if (!suspend_lvs(cmd, lvs_changed, vg_to_revert))
 			return_0;
-	} else if (!suspend_lv(cmd, lv_mirr))
+	} else if (!suspend_lv(cmd, lv_mirr)) {
+		if (vg_to_revert)
+			vg_revert(vg_to_revert);
 		return_0;
+	}
 
 	return 1;
 }
@@ -364,16 +368,14 @@ static int _update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 		return 0;
 	}
 
-	if (!_suspend_lvs(cmd, first_time, lv_mirr, lvs_changed)) {
-		/* FIXME vg_revert must be moved *before* any LV resumes */
-		vg_revert(vg);
-		goto_out;
+	if (!_suspend_lvs(cmd, first_time, lv_mirr, lvs_changed, vg)) {
+		log_error("ABORTING: Volume group metadata update failed.");
+		goto out;
 	}
 
 	/* Commit on-disk metadata */
 	if (!vg_commit(vg)) {
 		log_error("ABORTING: Volume group metadata update failed.");
-		vg_revert(vg);
 		goto out;
 	}
 
@@ -555,16 +557,15 @@ static int _finish_pvmove(struct cmd_context *cmd, struct volume_group *vg,
 	}
 
 	/* Suspend LVs changed (implicitly suspends lv_mirr) */
-	if (!suspend_lvs(cmd, lvs_changed)) {
-		log_error("Locking LVs to remove temporary mirror failed");
-		r = 0;
+	if (!suspend_lvs(cmd, lvs_changed, vg)) {
+		log_error("ABORTING: Locking LVs to remove temporary mirror failed");
+		return 0;
 	}
 
 	/* Store metadata without dependencies on mirror segments */
 	if (!vg_commit(vg)) {
 		log_error("ABORTING: Failed to write new data locations "
 			  "to disk.");
-		vg_revert(vg);
 		if (!resume_lv(cmd, lv_mirr))
 			stack;
 		if (!resume_lvs(cmd, lvs_changed))

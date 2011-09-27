@@ -187,7 +187,9 @@ int sync_local_dev_names(struct cmd_context* cmd);
 int sync_dev_names(struct cmd_context* cmd);
 
 /* Process list of LVs */
-int suspend_lvs(struct cmd_context *cmd, struct dm_list *lvs);
+struct volume_group;
+int suspend_lvs(struct cmd_context *cmd, struct dm_list *lvs,
+		struct volume_group *vg_to_revert);
 int resume_lvs(struct cmd_context *cmd, struct dm_list *lvs);
 int activate_lvs(struct cmd_context *cmd, struct dm_list *lvs, unsigned exclusive);
 

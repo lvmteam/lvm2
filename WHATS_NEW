@@ -1,5 +1,8 @@
 Version 2.02.89 - 
 ==================================
+  Abort if _finish_pvmove suspend_lvs fails instead of cleaning up incompletely.
+  Change suspend_lvs to call vg_revert internally.
+  Change vg_revert to void and remove superfluous calls after failed vg_commit.
   Use execvp for CLVMD restart to preserve environment settings.
   Restart CLVMD with same cluster manager.
   Fix log_error() usage in raid and unknown segtype initialisation.
