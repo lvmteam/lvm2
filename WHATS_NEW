@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Replace incomplete pvmove activation failure recovery code with a message.
   Abort if _finish_pvmove suspend_lvs fails instead of cleaning up incompletely.
   Change suspend_lvs to call vg_revert internally.
   Change vg_revert to void and remove superfluous calls after failed vg_commit.
