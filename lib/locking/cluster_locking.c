@@ -327,6 +327,9 @@ static int _lock_for_cluster(struct cmd_context *cmd, unsigned char clvmd_cmd,
 	if (flags & LCK_ORIGIN_ONLY)
 		args[1] |= LCK_ORIGIN_ONLY_MODE;
 
+	if (flags & LCK_REVERT)
+		args[1] |= LCK_REVERT_MODE;
+
 	if (mirror_in_sync())
 		args[1] |= LCK_MIRROR_NOSYNC_MODE;
 

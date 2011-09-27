@@ -370,13 +370,19 @@ static int _update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 
 	if (!_suspend_lvs(cmd, first_time, lv_mirr, lvs_changed, vg)) {
 		log_error("ABORTING: Volume group metadata update failed.");
-		goto out;
+		if (!first_time && !revert_lv(cmd, lv_mirr))
+			stack;
+		return 0;
 	}
 
 	/* Commit on-disk metadata */
 	if (!vg_commit(vg)) {
 		log_error("ABORTING: Volume group metadata update failed.");
-		goto out;
+		if (!_resume_lvs(cmd, first_time, lv_mirr, lvs_changed))
+			stack;
+		if (!first_time && !revert_lv(cmd, lv_mirr))
+			stack;
+		return 0;
 	}
 
 	/* Activate the temporary mirror LV */
@@ -403,7 +409,9 @@ out:
 	if (!_resume_lvs(cmd, first_time, lv_mirr, lvs_changed))
 		r = 0;
 
-	backup(vg);
+	if (r)
+		backup(vg);
+
 	return r;
 }
 
@@ -546,6 +554,8 @@ static int _finish_pvmove(struct cmd_context *cmd, struct volume_group *vg,
 	/* Suspend LVs changed (implicitly suspends lv_mirr) */
 	if (!suspend_lvs(cmd, lvs_changed, vg)) {
 		log_error("ABORTING: Locking LVs to remove temporary mirror failed");
+		if (!revert_lv(cmd, lv_mirr))
+			stack;
 		return 0;
 	}
 
@@ -553,9 +563,9 @@ static int _finish_pvmove(struct cmd_context *cmd, struct volume_group *vg,
 	if (!vg_commit(vg)) {
 		log_error("ABORTING: Failed to write new data locations "
 			  "to disk.");
-		if (!resume_lv(cmd, lv_mirr))
+		if (!revert_lv(cmd, lv_mirr))
 			stack;
-		if (!resume_lvs(cmd, lvs_changed))
+		if (!revert_lvs(cmd, lvs_changed))
 			stack;
 		return 0;
 	}

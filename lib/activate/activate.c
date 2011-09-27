@@ -190,7 +190,7 @@ int lv_resume(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only)
 	return 1;
 }
 int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s,
-			unsigned origin_only, unsigned exclusive)
+			unsigned origin_only, unsigned exclusive, unsigned revert)
 {
 	return 1;
 }
@@ -1356,14 +1356,16 @@ static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
 		laopts->origin_only = 0;
 
 	if (test_mode()) {
-		_skip("Resuming %s%s.", lv->name, laopts->origin_only ? " without snapshots" : "");
+		_skip("Resuming %s%s%s.", lv->name, laopts->origin_only ? " without snapshots" : "",
+		      laopts->revert ? " (reverting)" : "");
 		r = 1;
 		goto out;
 	}
 
-	log_debug("Resuming LV %s/%s%s%s.", lv->vg->name, lv->name,
+	log_debug("Resuming LV %s/%s%s%s%s.", lv->vg->name, lv->name,
 		  error_if_not_active ? "" : " if active",
-		  laopts->origin_only ? " without snapshots" : "");
+		  laopts->origin_only ? " without snapshots" : "",
+		  laopts->revert ? " (reverting)" : "");
 
 	if (!lv_info(cmd, lv, laopts->origin_only, &info, 0, 0))
 		goto_out;
@@ -1395,7 +1397,7 @@ out:
 
 /* Returns success if the device is not active */
 int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s,
-			unsigned origin_only, unsigned exclusive)
+			unsigned origin_only, unsigned exclusive, unsigned revert)
 {
 	struct lv_activate_opts laopts = {
 		.origin_only = origin_only,
@@ -1404,7 +1406,8 @@ int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s,
 		 * non-clustered target should be used.  This only happens
 		 * if exclusive is set.
 		 */
-		.exclusive = exclusive
+		.exclusive = exclusive,
+		.revert = revert
 	};
 
 	return _lv_resume(cmd, lvid_s, &laopts, 0);

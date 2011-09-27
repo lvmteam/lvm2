@@ -97,6 +97,7 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 #define LCK_CLUSTER_VG	0x00000080U	/* VG is clustered */
 #define LCK_CACHE	0x00000100U	/* Operation on cache only using P_ lock */
 #define LCK_ORIGIN_ONLY	0x00000200U	/* Operation should bypass any snapshots */
+#define LCK_REVERT	0x00000400U	/* Revert any incomplete change */
 
 /*
  * Additional lock bits for cluster communication via args[1]
@@ -107,6 +108,7 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 #define LCK_CONVERT			0x08	/* Convert existing lock */
 #define LCK_ORIGIN_ONLY_MODE		0x20	/* Same as above */
 #define LCK_TEST_MODE			0x10    /* Test mode: No activation */
+#define LCK_REVERT_MODE			0x40	/* Remove inactive tables */
 
 /*
  * Special cases of VG locks.
@@ -164,6 +166,7 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 
 #define resume_lv(cmd, lv)	lock_lv_vol(cmd, lv, LCK_LV_RESUME)
 #define resume_lv_origin(cmd, lv)	lock_lv_vol(cmd, lv, LCK_LV_RESUME | LCK_ORIGIN_ONLY)
+#define revert_lv(cmd, lv)	lock_lv_vol(cmd, lv, LCK_LV_RESUME | LCK_REVERT)
 #define suspend_lv(cmd, lv)	lock_lv_vol(cmd, lv, LCK_LV_SUSPEND | LCK_HOLD)
 #define suspend_lv_origin(cmd, lv)	lock_lv_vol(cmd, lv, LCK_LV_SUSPEND | LCK_HOLD | LCK_ORIGIN_ONLY)
 #define deactivate_lv(cmd, lv)	lock_lv_vol(cmd, lv, LCK_LV_DEACTIVATE)
@@ -191,6 +194,7 @@ struct volume_group;
 int suspend_lvs(struct cmd_context *cmd, struct dm_list *lvs,
 		struct volume_group *vg_to_revert);
 int resume_lvs(struct cmd_context *cmd, struct dm_list *lvs);
+int revert_lvs(struct cmd_context *cmd, struct dm_list *lvs);
 int activate_lvs(struct cmd_context *cmd, struct dm_list *lvs, unsigned exclusive);
 
 /* Interrupt handling */

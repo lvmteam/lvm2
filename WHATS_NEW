@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Introduce revert_lv for better pvmove cleanup.
   Replace incomplete pvmove activation failure recovery code with a message.
   Abort if _finish_pvmove suspend_lvs fails instead of cleaning up incompletely.
   Change suspend_lvs to call vg_revert internally.
