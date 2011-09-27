@@ -575,10 +575,13 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 	/*
 	 * Check selected options are compatible and determine segtype
 	 */
+// FIXME -m0 implies *striped*
 	if (arg_count(cmd, thin_ARG) && arg_count(cmd,mirrors_ARG)) {
 		log_error("--thin and --mirrors are incompatible.");
 		return 0;
 	}
+
+// FIXME -m0 implies *striped*
 
 	/* Set default segtype */
 	if (arg_count(cmd, mirrors_ARG))
@@ -620,7 +623,7 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 		lp->mirrors = arg_uint_value(cmd, mirrors_ARG, 0) + 1;
 		if (lp->mirrors == 1) {
 			if (segtype_is_mirrored(lp->segtype)) {
-				log_error("Image count for segtype \"%s\" cannot be 0.", lp->segtype->name);
+				log_error("--mirrors must be at least 1 with segment type %s.", lp->segtype->name);
 				return 0;
 			}
 			log_print("Redundant mirrors argument: default is 0");
