@@ -16,6 +16,7 @@
 
 printf "\n\n"
 printf "Loading commands:\n"
+printf " - dm_list_size <list ptr>\n"
 printf " - first_seg <LV ptr>\n"
 printf " - lv_status <LV ptr>\n"
 printf " - lv_status_r <LV ptr>\n"
@@ -27,8 +28,8 @@ printf " - \n"
 printf "Use 'help <command>' for more info\n"
 printf "\n\n"
 printf "Popular breakpoints:\n"
-printf "break _raid_add_images\n"
-printf "run --type raid1 -m 1 vg/lv\n"
+printf "break _get_udev_flags\n"
+printf "run --splitmirrors 1 -n split vg/lv\n"
 printf "\n\n"
 
 set follow-fork-mode child
@@ -40,6 +41,24 @@ set follow-fork-mode child
 # External functions should have a corresponding 'document'
 # section.  Internal functions should have leading comments
 
+define dm_list_size
+	set $_DLS_list_head = (struct dm_list *)$arg0
+	set $_DLS_list = $_DLS_list_head->n
+	set $_DLS_size = 0
+	
+	while (($_DLS_list != $_DLS_list_head) && ($_DLS_size < 100))
+		set $_DLS_list = $_DLS_list->n
+		set $_DLS_size++
+	end
+
+	printf "%d list items\n", $_DLS_size
+end
+
+document dm_list_size
+Returns the number of elements in the dm_list
+
+	Usage: dm_list_size <list ptr>
+end
 
 #
 # __first_seg <return> <LV>
