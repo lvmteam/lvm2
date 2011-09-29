@@ -535,6 +535,22 @@ int dm_tree_node_add_replicator_dev_target(struct dm_tree_node *node,
 					   uint32_t slog_region_size);
 /* End of Replicator API */
 
+/* API for thin provisioning is experimental, DO NOT USE. */
+int dm_tree_node_add_thin_pool_target(struct dm_tree_node *node,
+				      uint64_t size,
+				      uint64_t transation_id,
+				      const char *pool_uuid,
+				      const char *metadata_uuid,
+				      uint32_t data_block_size,
+				      uint64_t low_water_mark,
+				      unsigned skip_block_zeroeing); /* Maybe separate _set_ call ? */
+
+int dm_tree_node_add_thin_target(struct dm_tree_node *node,
+				 uint64_t size,
+				 uint64_t transation_id,
+				 const char *thin_pool_uuid,
+				 uint32_t device_id);
+
 void dm_tree_node_set_presuspend_node(struct dm_tree_node *node,
 				      struct dm_tree_node *presuspend_node);
 

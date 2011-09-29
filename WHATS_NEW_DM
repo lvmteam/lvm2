@@ -1,5 +1,6 @@
 Version 1.02.68 -
 ==================================
+  Add functions to support thin provisioning target (API unstable).
   Improve libdm-config error path reporting.
   Update dmsetup resume man with --addnodeonresume/create options.
   Add dependency for dm man pages to man subdirectory make target all:.
