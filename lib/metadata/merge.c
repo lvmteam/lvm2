@@ -239,7 +239,7 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 				}
 
 				if (seg->device_id >= (1 << 24)) {
-					log_error("LV %s: thin volume segment %u pool LV to large device id %d",
+					log_error("LV %s: thin volume segment %u has too large device id %d",
 						  lv->name, seg_count, seg->device_id);
 					inc_error_count;
 				}
