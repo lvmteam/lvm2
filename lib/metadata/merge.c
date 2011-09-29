@@ -201,6 +201,12 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 						  lv->name, seg_count);
 					inc_error_count;
 				}
+
+				if (seg->data_block_size < 128 || seg->data_block_size > 2097152) {
+					log_error("LV %s: thin pool segment %u  data block size %d is out of range",
+						  lv->name, seg_count, seg->data_block_size);
+					inc_error_count;
+				}
 			} else {
 				if (seg->pool_metadata_lv) {
 					log_error("LV %s: segment %u must not have thin pool metadata LV set",
@@ -229,6 +235,12 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 				} else if (!lv_is_thin_pool(seg->pool_lv)) {
 					log_error("LV %s: thin volume segment %u pool LV is not flagged as a pool LV",
 						  lv->name, seg_count);
+					inc_error_count;
+				}
+
+				if (seg->device_id >= (1 << 24)) {
+					log_error("LV %s: thin volume segment %u pool LV to large device id %d",
+						  lv->name, seg_count, seg->device_id);
 					inc_error_count;
 				}
 			} else {
