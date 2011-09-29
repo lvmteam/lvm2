@@ -80,6 +80,11 @@ struct {
 	{ SEG_RAID6_ZR, "raid6_zr"},
 	{ SEG_RAID6_NR, "raid6_nr"},
 	{ SEG_RAID6_NC, "raid6_nc"},
+
+	/*
+	 *WARNING: Since 'raid' target overloads this 1:1 mapping table
+	 * for search do not add new enum elements past them!
+	 */
 	{ SEG_RAID5_LS, "raid5"}, /* same as "raid5_ls" (default for MD also) */
 	{ SEG_RAID6_ZR, "raid6"}, /* same as "raid6_zr" */
 	{ SEG_LAST, NULL },
