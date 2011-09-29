@@ -56,7 +56,7 @@ static int init_comms(void)
 	}
 	/* Set Close-on-exec */
 	if (fcntl(listen_fd, F_SETFD, 1)) {
-		DEBUGLOG("Setting CLOEXEC on client fd faile: %s\n", strerror(errno));
+		DEBUGLOG("Setting CLOEXEC on client fd failed: %s\n", strerror(errno));
 		goto error;
 	}
 
