@@ -19,7 +19,7 @@ export LVM_BINARY=lvm
 test -e LOCAL_CLVMD || skip
 read LOCAL_CLVMD < LOCAL_CLVMD
 
-aux prepare_devs 1
+aux prepare_pvs 1
 
 vgcreate --clustered y $vg $(cat DEVICES)
 
