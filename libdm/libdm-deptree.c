@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2010 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2005-2011 Red Hat, Inc. All rights reserved.
  *
  * This file is part of the device-mapper userspace tools.
  *
@@ -29,6 +29,12 @@
 
 #define REPLICATOR_LOCAL_SITE 0
 
+#define THIN_MIN_DATA_SIZE 128
+#define THIN_MAX_DATA_SIZE 2097152
+#define THIN_MAX_DEVICE_ID ((1 << 24) - 1)
+
+#define QUOTE(x) #x
+
 /* Supported segment types */
 enum {
 	SEG_CRYPT,
@@ -42,6 +48,8 @@ enum {
 	SEG_SNAPSHOT_MERGE,
 	SEG_STRIPED,
 	SEG_ZERO,
+	SEG_THIN_POOL,
+	SEG_THIN,
 	SEG_RAID1,
 	SEG_RAID4,
 	SEG_RAID5_LA,
@@ -71,6 +79,8 @@ struct {
 	{ SEG_SNAPSHOT_MERGE, "snapshot-merge" },
 	{ SEG_STRIPED, "striped" },
 	{ SEG_ZERO, "zero"},
+	{ SEG_THIN_POOL, "thin-pool"},
+	{ SEG_THIN, "thin"},
 	{ SEG_RAID1, "raid1"},
 	{ SEG_RAID4, "raid4"},
 	{ SEG_RAID5_LA, "raid5_la"},
@@ -156,6 +166,14 @@ struct load_segment {
 	uint64_t rdevice_index;		/* Replicator-dev */
 
 	uint64_t rebuilds;	      /* raid */
+
+	struct dm_tree_node *metadata;	/* Thin_pool */
+	struct dm_tree_node *pool;	/* Thin_pool, Thin */
+	uint32_t data_block_size;       /* Thin_pool */
+	uint64_t low_water_mark;	/* Thin_pool */
+	unsigned skip_block_zeroeing;	/* Thin_pool */
+	uint32_t device_id;		/* Thin */
+
 };
 
 /* Per-device properties */
@@ -1825,6 +1843,7 @@ static int _emit_segment_line(struct dm_task *dmt, uint32_t major,
 	int r;
 	int target_type_is_raid = 0;
 	char originbuf[DM_FORMAT_DEV_BUFSIZE], cowbuf[DM_FORMAT_DEV_BUFSIZE];
+	char pool[DM_FORMAT_DEV_BUFSIZE], metadata[DM_FORMAT_DEV_BUFSIZE];
 
 	switch(seg->type) {
 	case SEG_ERROR:
@@ -1892,6 +1911,20 @@ static int _emit_segment_line(struct dm_task *dmt, uint32_t major,
 			return_0;
 
 		break;
+	case SEG_THIN_POOL:
+		if (!_build_dev_string(metadata, sizeof(metadata), seg->metadata))
+			return_0;
+		if (!_build_dev_string(pool, sizeof(pool), seg->pool))
+			return_0;
+		EMIT_PARAMS(pos, "%s %s %d %" PRIu64 " %s", metadata, pool,
+			    seg->data_block_size, seg->low_water_mark,
+			    seg->skip_block_zeroeing ? "1 skip_block_zeroing" : "");
+		break;
+	case SEG_THIN:
+		if (!_build_dev_string(pool, sizeof(pool), seg->pool))
+			return_0;
+		EMIT_PARAMS(pos, "%s %d", pool, seg->device_id);
+		break;
 	}
 
 	switch(seg->type) {
@@ -1901,6 +1934,8 @@ static int _emit_segment_line(struct dm_task *dmt, uint32_t major,
 	case SEG_SNAPSHOT_ORIGIN:
 	case SEG_SNAPSHOT_MERGE:
 	case SEG_ZERO:
+	case SEG_THIN_POOL:
+	case SEG_THIN:
 		break;
 	case SEG_CRYPT:
 	case SEG_LINEAR:
@@ -2598,6 +2633,85 @@ int dm_tree_node_add_replicator_dev_target(struct dm_tree_node *node,
 	area->flags = slog_flags;
 	area->region_size = slog_region_size;
 	area->rsite_index = rsite_index;
+
+	return 1;
+}
+
+int dm_tree_node_add_thin_pool_target(struct dm_tree_node *node,
+				      uint64_t size,
+				      uint64_t transation_id,
+				      const char *pool_uuid,
+				      const char *metadata_uuid,
+				      uint32_t data_block_size,
+				      uint64_t low_water_mark,
+				      unsigned skip_block_zeroeing)
+{
+	struct load_segment *seg;
+
+	if (data_block_size < THIN_MIN_DATA_SIZE) {
+		log_error("Data block size %d is lower then "
+			  QUOTE(THIN_MIN_DATA_SIZE) " sectors.",
+			  data_block_size);
+		return 0;
+	}
+
+	if (data_block_size > THIN_MAX_DATA_SIZE) {
+		log_error("Data block size %d is higher then "
+			  QUOTE(THIN_MAX_DATA_SIZE) " sectors.",
+			  data_block_size);
+		return 0;
+	}
+
+	if (!(seg = _add_segment(node, SEG_THIN_POOL, size)))
+		return_0;
+
+	if (!(seg->metadata = dm_tree_find_node_by_uuid(node->dtree, metadata_uuid))) {
+		log_error("Missing metadata uuid %s.", metadata_uuid);
+		return 0;
+	}
+
+	if (!_link_tree_nodes(node, seg->metadata))
+		return_0;
+
+	if (!(seg->pool = dm_tree_find_node_by_uuid(node->dtree, pool_uuid))) {
+		log_error("Missing pool uuid %s.", pool_uuid);
+		return 0;
+	}
+
+	if (!_link_tree_nodes(node, seg->pool))
+		return_0;
+
+	seg->data_block_size = data_block_size;
+	seg->low_water_mark = low_water_mark;
+	seg->skip_block_zeroeing = skip_block_zeroeing;
+
+	return 1;
+}
+
+int dm_tree_node_add_thin_target(struct dm_tree_node *node,
+				 uint64_t size,
+				 uint64_t transation_id,
+				 const char *thin_pool_uuid,
+				 uint32_t device_id)
+{
+	struct load_segment *seg;
+
+	if (device_id > THIN_MAX_DEVICE_ID) {
+		log_error("Device id %d is higher then " QUOTE(THIN_MAX_DEVICE_ID) ".",
+			  device_id);
+		return 0;
+	}
+
+	if (!(seg = _add_segment(node, SEG_THIN, size)))
+		return_0;
+
+	if (!(seg->pool = dm_tree_find_node_by_uuid(node->dtree, thin_pool_uuid))) {
+		log_error("Missing thin pool uuid %s.", thin_pool_uuid);
+		return 0;
+	}
+
+	if (!_link_tree_nodes(node, seg->pool))
+		return_0;
 
 	return 1;
 }
