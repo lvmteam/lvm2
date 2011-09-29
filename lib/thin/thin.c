@@ -70,6 +70,12 @@ static int _thin_pool_text_import(struct lv_segment *seg, const struct dm_config
 	if (!dm_config_get_uint64(sn, "transaction_id", &seg->transaction_id))
 		return SEG_LOG_ERROR("Could not read transaction_id for");
 
+	if (!dm_config_get_uint64(sn, "low_water_mark", &seg->low_water_mark))
+		return SEG_LOG_ERROR("Could not read low_water_mark");
+
+	if (!dm_config_get_uint32(sn, "data_block_size", &seg->data_block_size))
+		return SEG_LOG_ERROR("Could not read data_block_size");
+
 	if (dm_config_has_node(sn, "zero_new_blocks") &&
 	    !dm_config_get_uint32(sn, "zero_new_blocks", &seg->zero_new_blocks))
 		return SEG_LOG_ERROR("Could not read zero_new_blocks for");
@@ -92,11 +98,44 @@ static int _thin_pool_text_export(const struct lv_segment *seg, struct formatter
 	outf(f, "pool = \"%s\"", seg_lv(seg, 0)->name);
 	outf(f, "metadata = \"%s\"", seg->pool_metadata_lv->name);
 	outf(f, "transaction_id = %" PRIu64, seg->transaction_id);
+	outf(f, "low_water_mark = %" PRIu64, seg->low_water_mark);
+	outf(f, "data_block_size = %d", seg->data_block_size);
 	if (seg->zero_new_blocks)
 		outf(f, "zero_new_blocks = 1");
 
 	return 1;
 }
+
+#ifdef DEVMAPPER_SUPPORT
+static int _thin_pool_add_target_line(struct dev_manager *dm,
+				 struct dm_pool *mem __attribute__((unused)),
+				 struct cmd_context *cmd __attribute__((unused)),
+				 void **target_state __attribute__((unused)),
+				 struct lv_segment *seg,
+				 const struct lv_activate_opts *laopts __attribute__((unused)),
+				 struct dm_tree_node *node, uint64_t len,
+				 uint32_t *pvmove_mirror_count __attribute__((unused)))
+{
+	char *metadata_dlid, *pool_dlid;
+
+	if (!(metadata_dlid = build_dm_uuid(mem, seg->pool_metadata_lv->lvid.s, NULL))) {
+		log_error("Failed to build uuid for metadata LV %s.", seg->pool_metadata_lv->name);
+		return 0;
+	}
+
+	if (!(pool_dlid = build_dm_uuid(mem, seg_lv(seg, 0)->lvid.s, NULL))) {
+		log_error("Failed to build uuid for pool LV %s.", seg_lv(seg, 0)->name);
+		return 0;
+	}
+
+	if (!dm_tree_node_add_thin_pool_target(node, len, 0, metadata_dlid, pool_dlid,
+					       seg->data_block_size, seg->low_water_mark,
+					       seg->zero_new_blocks ? 0 : 1))
+		return_0;
+
+	return 1;
+}
+#endif
 
 static const char *_thin_name(const struct lv_segment *seg)
 {
@@ -126,7 +165,7 @@ static int _thin_text_import(struct lv_segment *seg, const struct dm_config_node
 			return SEG_LOG_ERROR("Unknown origin %s in", lv_name);
 	}
 
-	if (!dm_config_get_uint64(sn, "device_id", &seg->device_id))
+	if (!dm_config_get_uint32(sn, "device_id", &seg->device_id))
 		return SEG_LOG_ERROR("Could not read device_id for");
 
 	return 1;
@@ -135,7 +174,7 @@ static int _thin_text_import(struct lv_segment *seg, const struct dm_config_node
 static int _thin_text_export(const struct lv_segment *seg, struct formatter *f)
 {
 	outf(f, "thin_pool = \"%s\"", seg->pool_lv->name);
-	outf(f, "device_id = %" PRIu64, seg->device_id);
+	outf(f, "device_id = %d", seg->device_id);
 
 	if (seg->origin)
 		outf(f, "origin = \"%s\"", seg->origin->name);
@@ -144,6 +183,28 @@ static int _thin_text_export(const struct lv_segment *seg, struct formatter *f)
 }
 
 #ifdef DEVMAPPER_SUPPORT
+static int _thin_add_target_line(struct dev_manager *dm,
+				 struct dm_pool *mem __attribute__((unused)),
+				 struct cmd_context *cmd __attribute__((unused)),
+				 void **target_state __attribute__((unused)),
+				 struct lv_segment *seg,
+				 const struct lv_activate_opts *laopts __attribute__((unused)),
+				 struct dm_tree_node *node, uint64_t len,
+				 uint32_t *pvmove_mirror_count __attribute__((unused)))
+{
+	char *thin_pool_dlid;
+
+	if (!(thin_pool_dlid = build_dm_uuid(mem, seg->pool_lv->lvid.s, NULL))) {
+		log_error("Failed to build uuid for thin pool LV %s.", seg->pool_lv->name);
+		return 0;
+	}
+
+	if (!dm_tree_node_add_thin_target(node, len, 0, thin_pool_dlid, seg->device_id))
+		return_0;
+
+	return 1;
+}
+
 static int _thin_target_percent(void **target_state __attribute__((unused)),
 				percent_t *percent,
 				struct dm_pool *mem __attribute__((unused)),
@@ -194,6 +255,10 @@ static struct segtype_handler _thin_pool_ops = {
 	.text_import = _thin_pool_text_import,
 	.text_import_area_count = _thin_pool_text_import_area_count,
 	.text_export = _thin_pool_text_export,
+#ifdef DEVMAPPER_SUPPORT
+	.add_target_line = _thin_pool_add_target_line,
+	.target_present = _thin_target_present,
+#endif
 	.modules_needed = _thin_modules_needed,
 	.destroy = _thin_destroy,
 };
@@ -203,6 +268,7 @@ static struct segtype_handler _thin_ops = {
 	.text_import = _thin_text_import,
 	.text_export = _thin_text_export,
 #ifdef DEVMAPPER_SUPPORT
+	.add_target_line = _thin_add_target_line,
 	.target_percent = _thin_target_percent,
 	.target_present = _thin_target_present,
 #endif

@@ -1485,7 +1485,13 @@ static int _add_segment_to_dtree(struct dev_manager *dm,
 	} else if (lv_is_cow(seg->lv) && !layer) {
 		if (!_add_new_lv_to_dtree(dm, dtree, seg->lv, laopts, "cow"))
 			return_0;
+	} else if (lv_is_thin_volume(seg->lv)) {
+		if (!_add_new_lv_to_dtree(dm, dtree, seg->pool_lv, laopts, NULL))
+			return_0;
 	} else {
+		if (lv_is_thin_pool(seg->lv) &&
+		    !_add_new_lv_to_dtree(dm, dtree, seg->pool_metadata_lv, laopts, NULL))
+			return_0;
 		/* Add any LVs used by this segment */
 		for (s = 0; s < seg->area_count; s++) {
 			if ((seg_type(seg, s) == AREA_LV) &&

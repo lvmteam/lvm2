@@ -2602,9 +2602,17 @@ int lv_extend(struct logical_volume *lv,
 		r = _lv_extend_layered_lv(ah, lv, extents, 0,
 					  stripes, stripe_size);
 
-		if (r && segtype_is_thin_pool(segtype))
-			r = lv_add_segment(ah, ah->area_count, 1, first_seg(lv)->pool_metadata_lv,
-					   get_segtype_from_string(lv->vg->cmd, "striped"), 0, 0, 0);
+		if (r && segtype_is_thin_pool(segtype)) {
+			/* FIXME: resize metadata size here for now */
+			struct logical_volume *tmeta = first_seg(lv)->pool_metadata_lv;
+			if ((r = lv_add_segment(ah, ah->area_count, 1, tmeta,
+						get_segtype_from_string(lv->vg->cmd, "striped"), 0, 0, 0))) {
+				if (!(r = lv_extend(tmeta, first_seg(tmeta)->segtype,
+						    1, 0, 1, 0, 10, NULL, allocatable_pvs, ALLOC_INHERIT)))
+					stack;
+			} else
+				stack;
+		}
 	}
 	alloc_destroy(ah);
 	return r;
@@ -4105,6 +4113,13 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 
 	if (seg_is_thin_pool(lp) && lp->zero)
 		first_seg(lv)->zero_new_blocks = 1;
+
+	if (seg_is_thin_pool(lp)) {
+		/* FIXME: add lvcreate params - maybe -c/--chunksize?,
+		 * use lowwatermark  via lvm.conf global for all thinpools ?*/
+		first_seg(lv)->data_block_size = 128;
+		first_seg(lv)->low_water_mark = 4096;
+	}
 
 	if (lp->log_count &&
 	    !seg_is_raid(first_seg(lv)) && seg_is_mirrored(first_seg(lv))) {
