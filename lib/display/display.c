@@ -552,6 +552,9 @@ int lvdisplay_full(struct cmd_context *cmd,
 		log_print("LV Thin pool           %s%s/%s", lv->vg->cmd->dev_dir,
 			  lv->vg->name, first_seg(lv)->pool_lv->name);
 	} else if (lv_is_thin_pool(lv)) {
+		/* FIXME: display thin_pool targets transid for activated LV as well */
+		log_print("LV Thin transaction id %" PRIu64,
+			  first_seg(lv)->transaction_id);
 		log_print("LV Thin metadata       %s%s/%s", lv->vg->cmd->dev_dir,
 			  lv->vg->name, first_seg(lv)->pool_metadata_lv->name);
 		log_print("LV Thin data pool      %s%s/%s", lv->vg->cmd->dev_dir,
