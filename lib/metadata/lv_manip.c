@@ -3889,6 +3889,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 	uint32_t size_rest;
 	uint64_t status = UINT64_C(0);
 	struct logical_volume *lv, *org = NULL;
+	struct logical_volume *pool_lv;
 	int origin_active = 0;
 	struct lvinfo info;
 
@@ -4113,6 +4114,27 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 
 	if (seg_is_thin_pool(lp) && lp->zero)
 		first_seg(lv)->zero_new_blocks = 1;
+	else if (seg_is_thin_volume(lp)) {
+		pool_lv = first_seg(lv)->pool_lv;
+
+		if (!(first_seg(lv)->device_id =
+		      get_free_pool_device_id(first_seg(pool_lv))))
+			return_NULL;
+
+		if (!activate_lv(pool_lv->vg->cmd, pool_lv)) {
+			log_error("Failed to activate %s/%s to send message.",
+				  pool_lv->vg->name, pool_lv->name);
+			return NULL;
+		}
+
+		if (!lv_send_message(pool_lv, "create_thin %u", first_seg(lv)->device_id))
+			return_NULL;
+
+		/*
+		 * FIXME: Skipping deactivate_lv(pool_lv) as it is going to be needed anyway
+		 * but revert_new_lv should revert to deactivated state.
+		 */
+	}
 
 	if (seg_is_thin_pool(lp)) {
 		/* FIXME: add lvcreate params - maybe -c/--chunksize?,
@@ -4166,6 +4188,10 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 			  lp->snapshot ? "snapshot exception store" :
 					 "start of new LV");
 		goto deactivate_and_revert_new_lv;
+	} else if (seg_is_thin_pool(lp)) {
+		if (!set_lv(cmd, first_seg(lv)->pool_metadata_lv, UINT64_C(0), 0))
+			log_error("Aborting. Failed to wipe pool metadata %s.",
+				  lv->name);
 	}
 
 	if (lp->snapshot) {
