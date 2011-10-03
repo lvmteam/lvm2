@@ -97,7 +97,7 @@ uint32_t get_free_pool_device_id(struct lv_segment *thin_pool_seg)
 
 	if (!seg_is_thin_pool(thin_pool_seg)) {
 		log_error("Segment in %s is not a thin pool segment.",
-			  pool_seg->lv->name);
+			  thin_pool_seg->lv->name);
 		return 0;
 	}
 
