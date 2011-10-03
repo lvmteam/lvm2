@@ -374,6 +374,9 @@ struct lv_segment *find_seg_by_le(const struct logical_volume *lv, uint32_t le);
 /* Find pool LV segment given a thin pool data or metadata segment. */
 struct lv_segment *find_pool_seg(const struct lv_segment *seg);
 
+/* Find some unused device_id for thin pool LV segment. */
+uint32_t get_free_pool_device_id(struct lv_segment *thin_pool_seg);
+
 /*
  * Remove a dev_dir if present.
  */

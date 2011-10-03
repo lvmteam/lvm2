@@ -80,3 +80,40 @@ struct lv_segment *find_pool_seg(const struct lv_segment *seg)
 
         return pool_seg;
 }
+
+/*
+ * Find a free device_id for given thin_pool segment.
+ *
+ * \return
+ * Free device id, or 0 if free device_id is not found.
+ *
+ * FIXME: Improve naive search and keep the value cached
+ * and updated during VG lifetime (so no const for lv_segment)
+ */
+uint32_t get_free_pool_device_id(struct lv_segment *thin_pool_seg)
+{
+	uint32_t dev_id, max_id = 0;
+	struct dm_list *h;
+
+	if (!seg_is_thin_pool(thin_pool_seg)) {
+		log_error("Segment in %s is not a thin pool segment.",
+			  pool_seg->lv->name);
+		return 0;
+	}
+
+	dm_list_iterate(h, &thin_pool_seg->lv->segs_using_this_lv) {
+		dev_id = dm_list_item(h, struct seg_list)->seg->device_id;
+		if (dev_id > max_id)
+			max_id = dev_id;
+	}
+
+	if (++max_id >= (1 << 24)) {
+		// FIXME: try to find empty holes....
+		log_error("Free device_id exhausted...");
+		return 0;
+	}
+
+	log_debug("Found free pool device_id %u.", max_id);
+
+	return max_id;
+}
