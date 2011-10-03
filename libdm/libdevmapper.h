@@ -538,7 +538,7 @@ int dm_tree_node_add_replicator_dev_target(struct dm_tree_node *node,
 /* API for thin provisioning is experimental, DO NOT USE. */
 int dm_tree_node_add_thin_pool_target(struct dm_tree_node *node,
 				      uint64_t size,
-				      uint64_t transation_id,
+				      uint64_t transaction_id,
 				      const char *pool_uuid,
 				      const char *metadata_uuid,
 				      uint32_t data_block_size,
