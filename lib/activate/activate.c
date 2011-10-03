@@ -215,6 +215,10 @@ int lv_mknodes(struct cmd_context *cmd, const struct logical_volume *lv)
 {
 	return 1;
 }
+int lv_send_message(const struct logical_volume *lv, const char *message)
+{
+	return 0;
+}
 int pv_uses_vg(struct physical_volume *pv,
 	       struct volume_group *vg)
 {
@@ -1639,6 +1643,55 @@ int lv_mknodes(struct cmd_context *cmd, const struct logical_volume *lv)
 	r = dev_manager_mknodes(lv);
 
 	fs_unlock();
+
+	return r;
+}
+
+#if 0
+// FIXME: Remove this - example of supported messages thin pool
+"create_thin %u", dev_id
+"create_snap %u", dev_id
+"delete %u", dev_id
+"trim %u %" PRIu64, dev_id, new_size_sec
+"set_transaction_id %" PRIu64 " %" PRIu64, cur_id, new_id
+#endif
+
+int lv_send_message(const struct logical_volume *lv, const char *msg_format, ...)
+{
+	va_list ap;
+	struct dev_manager *dm;
+	const size_t buf_size = 128;
+	char *buf = NULL;
+	int r = 0, pr;
+
+	if (!activation())
+		return 0;
+
+	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
+		return_0;
+
+	if (!(buf = dm_malloc(buf_size))) {
+		log_error("Failed to allocate message buffer.");
+		goto out;
+	}
+
+	va_start(ap, msg_format);
+	pr = vsnprintf(buf, buf_size, msg_format, ap);
+	va_end(ap);
+
+	if (pr < 0 || pr >= buf_size) {
+		log_error("Failed to create message in reserved buffer size "
+			  "%" PRIsize_t, buf_size);
+		goto out;
+	}
+
+	log_debug("Sending message '%s' to LV %s/%s", buf, lv->vg->name, lv->name);
+
+	if (!(r = dev_manager_send_message(dm, lv, buf)))
+		stack;
+out:
+	dm_free(buf);
+	dev_manager_destroy(dm);
 
 	return r;
 }
