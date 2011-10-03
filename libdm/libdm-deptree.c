@@ -1419,15 +1419,15 @@ int dm_tree_activate_children(struct dm_tree_node *dnode,
 
 	for (priority = 0; priority < 3; priority++) {
 		while ((child = dm_tree_next_child(&handle, dnode, 0))) {
+			if (priority != child->activation_priority)
+				continue;
+
 			if (!(uuid = dm_tree_node_get_uuid(child))) {
 				stack;
 				continue;
 			}
 
 			if (!_uuid_prefix_matches(uuid, uuid_prefix, uuid_prefix_len))
-				continue;
-
-			if (priority != child->activation_priority)
 				continue;
 
 			if (!(name = dm_tree_node_get_name(child))) {
