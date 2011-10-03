@@ -199,7 +199,7 @@ static int _thin_add_target_line(struct dev_manager *dm,
 		return 0;
 	}
 
-	if (!dm_tree_node_add_thin_target(node, len, 0, thin_pool_dlid, seg->device_id))
+	if (!dm_tree_node_add_thin_target(node, len, thin_pool_dlid, seg->device_id))
 		return_0;
 
 	return 1;

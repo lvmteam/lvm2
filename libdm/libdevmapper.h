@@ -547,7 +547,6 @@ int dm_tree_node_add_thin_pool_target(struct dm_tree_node *node,
 
 int dm_tree_node_add_thin_target(struct dm_tree_node *node,
 				 uint64_t size,
-				 uint64_t transation_id,
 				 const char *thin_pool_uuid,
 				 uint32_t device_id);
 
