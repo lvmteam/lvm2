@@ -1098,6 +1098,16 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	    !_add_partial_replicator_to_dtree(dm, dtree, lv))
 		return_0;
 
+	if (lv_is_thin_pool(lv)) {
+		    if (!_add_lv_to_dtree(dm, dtree, first_seg(lv)->pool_metadata_lv, origin_only))
+			    return_0;
+		    if (!_add_lv_to_dtree(dm, dtree, seg_lv(first_seg(lv), 0), origin_only))
+			    return_0;
+	} else if (lv_is_thin_volume(lv)) {
+		    if (!_add_lv_to_dtree(dm, dtree, first_seg(lv)->pool_lv, origin_only))
+			    return_0;
+	}
+
 	return 1;
 }
 
