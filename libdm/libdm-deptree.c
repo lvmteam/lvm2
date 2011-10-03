@@ -1127,13 +1127,13 @@ static int _resume_node(const char *name, uint32_t major, uint32_t minor,
 	log_verbose("Resuming %s (%" PRIu32 ":%" PRIu32 ")", name, major, minor);
 
 	if (!(dmt = dm_task_create(DM_DEVICE_RESUME))) {
-		log_error("Suspend dm_task creation failed for %s", name);
+		log_debug("Suspend dm_task creation failed for %s.", name);
 		return 0;
 	}
 
 	/* FIXME Kernel should fill in name on return instead */
 	if (!dm_task_set_name(dmt, name)) {
-		log_error("Failed to set readahead device name for %s", name);
+		log_debug("Failed to set device name for %s resumption.", name);
 		goto out;
 	}
 
@@ -1149,13 +1149,16 @@ static int _resume_node(const char *name, uint32_t major, uint32_t minor,
 		log_error("Failed to set read ahead");
 
 	if (!dm_task_set_cookie(dmt, cookie, udev_flags))
-		goto out;
+		goto_out;
 
-	if ((r = dm_task_run(dmt))) {
-		if (already_suspended)
-			dec_suspended();
-		r = dm_task_get_info(dmt, newinfo);
-	}
+	if (!(r = dm_task_run(dmt)))
+		goto_out;
+
+	if (already_suspended)
+		dec_suspended();
+
+	if (!(r = dm_task_get_info(dmt, newinfo)))
+		stack;
 
 out:
 	dm_task_destroy(dmt);
