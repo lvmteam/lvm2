@@ -51,9 +51,11 @@ devices {
 
     # Be careful if there there are symbolic links or multiple filesystem 
     # entries for the same device as each name is checked separately against
-    # the list of patterns.  The effect is that if any name matches any 'a'
-    # pattern, the device is accepted; otherwise if any name matches any 'r'
-    # pattern it is rejected; otherwise it is accepted.
+    # the list of patterns.  The effect is that if the first pattern in the 
+    # list to match a name is an 'a' pattern for any of the names, the device
+    # is accepted; otherwise if the first pattern in the list to match a name
+    # is an 'r' pattern for any of the names it is rejected; otherwise it is
+    # accepted.
 
     # Don't have more than one filter line active at once: only one gets used.
 
