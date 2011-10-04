@@ -97,10 +97,10 @@ will be accepted or rejected (ignored).  Devices that don't match
 any patterns are accepted. If you want to reject patterns that
 don't match, end the list with "r/.*/".
 If there are several names for the same device (e.g. symbolic links
-in /dev), if any name matches any \fBa\fP pattern, the
-device is accepted; otherwise if any name matches any \fBr\fP
-pattern it is rejected; otherwise it is accepted.
-As an example, to ignore /dev/cdrom you could use:
+in /dev), if the first matching pattern in the list for any of the names is an
+\fBa\fP pattern, the device is accepted; otherwise if the first matching
+pattern in the list for any of the names is an \fBr\fP pattern it is rejected;
+otherwise it is accepted.  As an example, to ignore /dev/cdrom you could use:
 .br
 \fBdevices { filter=["r|cdrom|"] }\fP 
 .IP
