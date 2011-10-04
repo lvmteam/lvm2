@@ -542,8 +542,8 @@ int dm_tree_node_add_thin_pool_target(struct dm_tree_node *node,
 				      const char *pool_uuid,
 				      const char *metadata_uuid,
 				      uint32_t data_block_size,
-				      uint64_t low_water_mark,
-				      unsigned skip_block_zeroeing); /* Maybe separate _set_ call ? */
+				      uint64_t low_water_mark_size,
+				      unsigned skip_block_zeroing);
 
 int dm_tree_node_add_thin_target(struct dm_tree_node *node,
 				 uint64_t size,
