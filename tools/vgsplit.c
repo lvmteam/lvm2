@@ -163,7 +163,7 @@ static int _move_mirrors(struct volume_group *vg_from,
 {
 	struct dm_list *lvh, *lvht;
 	struct logical_volume *lv;
-	struct lv_segment *seg;
+	struct lv_segment *seg, *log_seg;
 	unsigned s, seg_in, log_in;
 
 	dm_list_iterate_safe(lvh, lvht, &vg_from->lvs) {
@@ -179,7 +179,20 @@ static int _move_mirrors(struct volume_group *vg_from,
 			if (_lv_is_in_vg(vg_to, seg_lv(seg, s)))
 			    seg_in++;
 
-		log_in = (!seg->log_lv || _lv_is_in_vg(vg_to, seg->log_lv));
+		log_in = !seg->log_lv;
+		if (seg->log_lv) {
+			log_seg = first_seg(seg->log_lv);
+			if (seg_is_mirrored(log_seg)) {
+				log_in = 1;
+
+				/* Ensure each log dev is in vg_to */
+				for (s = 0; s < log_seg->area_count; s++)
+					log_in = log_in &&
+						_lv_is_in_vg(vg_to,
+							     seg_lv(log_seg, s));
+			} else
+				log_in = _lv_is_in_vg(vg_to, seg->log_lv);
+		}
 
 		if ((seg_in && seg_in < seg->area_count) ||
 		    (seg_in && seg->log_lv && !log_in) ||
