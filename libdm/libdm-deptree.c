@@ -741,6 +741,18 @@ struct dm_tree_node *dm_tree_add_new_dev_with_udev_flags(struct dm_tree *dtree,
 	return node;
 }
 
+void dm_tree_node_set_udev_flags(struct dm_tree_node *dnode, uint16_t udev_flags)
+
+{
+	struct dm_info *dinfo = &dnode->info;
+
+	if (udev_flags != dnode->udev_flags)
+		log_debug("Resetting %s (%" PRIu32 ":%" PRIu32
+			  ") udev_flags from 0x%x to 0x%x",
+			  dnode->name, dinfo->major, dinfo->minor,
+			  dnode->udev_flags, udev_flags);
+	dnode->udev_flags = udev_flags;
+}
 
 void dm_tree_node_set_read_ahead(struct dm_tree_node *dnode,
 				 uint32_t read_ahead,
