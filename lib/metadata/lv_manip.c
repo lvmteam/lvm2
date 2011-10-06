@@ -2599,10 +2599,11 @@ int lv_extend(struct logical_volume *lv,
 			return 0;
 		}
 
-		r = _lv_extend_layered_lv(ah, lv, extents, 0,
-					  stripes, stripe_size);
+		if (!(r = _lv_extend_layered_lv(ah, lv, extents, 0,
+						stripes, stripe_size)))
+			goto out;
 
-		if (r && segtype_is_thin_pool(segtype)) {
+		if (segtype_is_thin_pool(segtype)) {
 			/* FIXME: resize metadata size here for now */
 			struct logical_volume *tmeta = first_seg(lv)->pool_metadata_lv;
 			if ((r = lv_add_segment(ah, ah->area_count, 1, tmeta,
@@ -2613,7 +2614,52 @@ int lv_extend(struct logical_volume *lv,
 			} else
 				stack;
 		}
+
+		/*
+		 * If we are expanding an existing mirror, we can skip the
+		 * resync of the extension if the LV is currently in-sync
+		 * and the LV has the LV_NOTSYNCED flag set.
+		 */
+		if ((lv->le_count != extents) &&
+		    segtype_is_mirrored(segtype) &&
+		    (lv->status & LV_NOTSYNCED)) {
+			percent_t sync_percent = PERCENT_INVALID;
+
+			if (!lv_is_active(lv)) {
+				log_print("%s/%s is not active."
+					  "  Unable to get sync percent.",
+					  lv->vg->name, lv->name);
+				if (yes_no_prompt("Do full resync of extended "
+						  "portion of %s/%s?  [y/n]: ",
+						  lv->vg->name, lv->name) == 'y')
+					goto out;
+				r = 0;
+				goto out;
+			}
+
+			r = 0;
+			if (!lv_mirror_percent(lv->vg->cmd, lv, 0,
+					       &sync_percent, NULL)) {
+				log_error("Failed to get sync percent for %s/%s",
+					  lv->vg->name, lv->name);
+				goto out;
+			} else if (sync_percent == PERCENT_100) {
+				log_verbose("Skipping initial resync for "
+					    "extended portion of %s/%s",
+					    lv->vg->name, lv->name);
+				init_mirror_in_sync(1);
+				lv->status |= LV_NOTSYNCED;
+			} else {
+				log_error("%s/%s cannot be extended while"
+					  " it is recovering.",
+					  lv->vg->name, lv->name);
+				goto out;
+			}
+			r = 1;
+		}
 	}
+
+out:
 	alloc_destroy(ah);
 	return r;
 }
