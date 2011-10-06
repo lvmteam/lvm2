@@ -202,7 +202,8 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 					inc_error_count;
 				}
 
-				if (seg->data_block_size < 128 || seg->data_block_size > 2097152) {
+				if (seg->data_block_size < DM_THIN_MIN_DATA_SIZE ||
+				    seg->data_block_size > DM_THIN_MAX_DATA_SIZE) {
 					log_error("LV %s: thin pool segment %u  data block size %d is out of range",
 						  lv->name, seg_count, seg->data_block_size);
 					inc_error_count;
@@ -238,7 +239,7 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 					inc_error_count;
 				}
 
-				if (seg->device_id >= (1 << 24)) {
+				if (seg->device_id > DM_THIN_MAX_DEVICE_ID) {
 					log_error("LV %s: thin volume segment %u has too large device id %d",
 						  lv->name, seg_count, seg->device_id);
 					inc_error_count;
