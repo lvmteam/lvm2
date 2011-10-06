@@ -230,7 +230,16 @@ void activation_release(void)
 void activation_exit(void)
 {
 }
+
 int lv_is_active(struct logical_volume *lv)
+{
+	return 0;
+}
+int lv_is_active_but_not_locally(struct logical_volume *lv)
+{
+	return 0;
+}
+int lv_is_active_exclusive(struct logical_volume *lv)
 {
 	return 0;
 }
@@ -242,6 +251,7 @@ int lv_is_active_exclusive_remotely(struct logical_volume *lv)
 {
 	return 0;
 }
+
 int lv_check_transient(struct logical_volume *lv)
 {
 	return 1;
@@ -871,6 +881,13 @@ int lv_is_active_but_not_locally(struct logical_volume *lv)
 {
 	int l;
 	return _lv_is_active(lv, &l, NULL) && !l;
+}
+
+int lv_is_active_exclusive(struct logical_volume *lv)
+{
+	int e;
+
+	return _lv_is_active(lv, NULL, &e) && e;
 }
 
 int lv_is_active_exclusive_locally(struct logical_volume *lv)

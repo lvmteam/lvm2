@@ -109,6 +109,7 @@ int lvs_in_vg_opened(const struct volume_group *vg);
 
 int lv_is_active(struct logical_volume *lv);
 int lv_is_active_but_not_locally(struct logical_volume *lv);
+int lv_is_active_exclusive(struct logical_volume *lv);
 int lv_is_active_exclusive_locally(struct logical_volume *lv);
 int lv_is_active_exclusive_remotely(struct logical_volume *lv);
 
