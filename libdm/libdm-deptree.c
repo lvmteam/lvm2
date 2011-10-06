@@ -29,12 +29,6 @@
 
 #define REPLICATOR_LOCAL_SITE 0
 
-#define THIN_MIN_DATA_SIZE 128
-#define THIN_MAX_DATA_SIZE 2097152
-#define THIN_MAX_DEVICE_ID ((1 << 24) - 1)
-
-#define QUOTE(x) #x
-
 /* Supported segment types */
 enum {
 	SEG_CRYPT,
@@ -2720,17 +2714,15 @@ int dm_tree_node_add_thin_pool_target(struct dm_tree_node *node,
 {
 	struct load_segment *seg;
 
-	if (data_block_size < THIN_MIN_DATA_SIZE) {
-		log_error("Data block size %d is lower then "
-			  QUOTE(THIN_MIN_DATA_SIZE) " sectors.",
-			  data_block_size);
+	if (data_block_size < DM_THIN_MIN_DATA_SIZE) {
+		log_error("Data block size %u is lower then %u sectors.",
+			  data_block_size, DM_THIN_MIN_DATA_SIZE);
 		return 0;
 	}
 
-	if (data_block_size > THIN_MAX_DATA_SIZE) {
-		log_error("Data block size %d is higher then "
-			  QUOTE(THIN_MAX_DATA_SIZE) " sectors.",
-			  data_block_size);
+	if (data_block_size > DM_THIN_MAX_DATA_SIZE) {
+		log_error("Data block size %u is higher then %u sectors.",
+			  data_block_size, DM_THIN_MAX_DATA_SIZE);
 		return 0;
 	}
 
@@ -2768,9 +2760,9 @@ int dm_tree_node_add_thin_target(struct dm_tree_node *node,
 {
 	struct load_segment *seg;
 
-	if (device_id > THIN_MAX_DEVICE_ID) {
-		log_error("Device id %d is higher then " QUOTE(THIN_MAX_DEVICE_ID) ".",
-			  device_id);
+	if (device_id > DM_THIN_MAX_DEVICE_ID) {
+		log_error("Device id %u is higher then %u.",
+			  device_id, DM_THIN_MAX_DEVICE_ID);
 		return 0;
 	}
 
