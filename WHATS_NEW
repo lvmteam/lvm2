@@ -42,7 +42,6 @@ Version 2.02.89 -
   Fix failure to down-convert a mirror to linear due to udev "dev open" conflict
   Fix mirrored log creation when PE size is small - force log_size >= region_size
   Fix log size calculation when only a log is being added to a mirror.
-  Work around resume_lv causing error LV scanning during splitmirror operation.
   Add 7th lv_attr char to show the related kernel target.
   Terminate pv_attr field correctly. (2.02.86)
   Fix 'not not' typo in pvcreate man page.
