@@ -76,6 +76,11 @@ static int _thin_pool_text_import(struct lv_segment *seg, const struct dm_config
 	if (!dm_config_get_uint32(sn, "data_block_size", &seg->data_block_size))
 		return SEG_LOG_ERROR("Could not read data_block_size");
 
+	if ((seg->data_block_size < DM_THIN_MIN_DATA_SIZE) ||
+	    (seg->data_block_size > DM_THIN_MAX_DATA_SIZE))
+		return SEG_LOG_ERROR("Unsupported value %u for data_block_size",
+				     seg->device_id);
+
 	if (dm_config_has_node(sn, "zero_new_blocks") &&
 	    !dm_config_get_uint32(sn, "zero_new_blocks", &seg->zero_new_blocks))
 		return SEG_LOG_ERROR("Could not read zero_new_blocks for");
@@ -167,6 +172,10 @@ static int _thin_text_import(struct lv_segment *seg, const struct dm_config_node
 
 	if (!dm_config_get_uint32(sn, "device_id", &seg->device_id))
 		return SEG_LOG_ERROR("Could not read device_id for");
+
+	if (seg->device_id > DM_THIN_MAX_DEVICE_ID)
+		return SEG_LOG_ERROR("Unsupported value %u for device_id",
+				     seg->device_id);
 
 	return 1;
 }
