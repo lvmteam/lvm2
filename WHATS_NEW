@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Fix improper udev settings during suspend/resume for mirror sub-LVs.
   Fix vgsplit when there are mirrors that have mirrored logs.
   Clarify multi-name device filter pattern matching explanation in lvm.conf.5.
   Introduce lv_send_message and dev_manager_send_message.

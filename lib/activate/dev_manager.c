@@ -1568,6 +1568,57 @@ static int _add_segment_to_dtree(struct dev_manager *dm,
 	return 1;
 }
 
+static int _set_udev_flags_for_children(struct dev_manager *dm,
+					struct volume_group *vg,
+					struct dm_tree_node *dnode)
+{
+	char *p;
+	const char *uuid;
+	void *handle = NULL;
+	struct dm_tree_node *child;
+	const struct dm_info *info;
+	struct lv_list *lvl;
+
+	while ((child = dm_tree_next_child(&handle, dnode, 0))) {
+		/* Ignore root node */
+		if (!(info  = dm_tree_node_get_info(child)) || !info->exists)
+			continue;
+
+		if (!(uuid = dm_tree_node_get_uuid(child))) {
+			log_error(INTERNAL_ERROR
+				  "Failed to get uuid for %" PRIu32 ":%" PRIu32,
+				  info->major, info->minor);
+			continue;
+		}
+
+		/* Ignore non-LVM devices */
+		if (!(p = strstr(uuid, UUID_PREFIX)))
+			continue;
+		p += strlen(UUID_PREFIX);
+
+		/* Ignore LVs that belong to different VGs (due to stacking) */
+		if (strncmp(p, (char *)vg->id.uuid, ID_LEN))
+			continue;
+
+		/* Ignore LVM devices with 'layer' suffixes */
+		if (strrchr(p, '-'))
+			continue;
+
+		if (!(lvl = find_lv_in_vg_by_lvid(vg, (const union lvid *)p))) {
+			log_error(INTERNAL_ERROR
+				  "%s (%" PRIu32 ":%" PRIu32 ") not found in VG",
+				  dm_tree_node_get_name(child),
+				  info->major, info->minor);
+			return 0;
+		}
+
+		dm_tree_node_set_udev_flags(child,
+					    _get_udev_flags(dm, lvl->lv, NULL));
+	}
+
+	return 1;
+}
+
 static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 				struct logical_volume *lv, struct lv_activate_opts *laopts,
 				const char *layer)
@@ -1671,6 +1722,9 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		dm_list_iterate_items(sl, &lv->segs_using_this_lv)
 			if (!_add_new_lv_to_dtree(dm, dtree, sl->seg->lv, laopts, NULL))
 				return_0;
+
+	if (!_set_udev_flags_for_children(dm, lv->vg, dnode))
+		return_0;
 
 	return 1;
 }

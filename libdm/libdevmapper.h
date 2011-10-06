@@ -560,6 +560,8 @@ int dm_tree_node_add_thin_target(struct dm_tree_node *node,
 				 const char *thin_pool_uuid,
 				 uint32_t device_id);
 
+void dm_tree_node_set_udev_flags(struct dm_tree_node *node, uint16_t udev_flags);
+
 void dm_tree_node_set_presuspend_node(struct dm_tree_node *node,
 				      struct dm_tree_node *presuspend_node);
 
