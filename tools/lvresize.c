@@ -504,6 +504,13 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 
 	/* If extending, find mirrors of last segment */
 	if ((lp->extents > lv->le_count)) {
+		/*
+		 * Has the user specified that they would like the additional
+		 * extents of a mirror not to have an initial sync?
+		 */
+		if (seg_is_mirrored(first_seg(lv)) && arg_count(cmd, nosync_ARG))
+			lv->status |= LV_NOTSYNCED;
+
 		dm_list_iterate_back_items(mirr_seg, &lv->segments) {
 			if (seg_is_mirrored(mirr_seg))
 				seg_mirrors = lv_mirror_count(mirr_seg->lv);
