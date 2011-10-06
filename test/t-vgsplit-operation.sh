@@ -93,6 +93,31 @@ COMM "vgsplit correctly splits mirror LV into $i VG ($j args)"
 		fi 
 		lvremove -f $vg2/$lv1 
 		vgremove -f $vg2
+# FIXME: ensure split /doesn't/ work when not all devs of mirror specified
+
+COMM "vgsplit correctly splits mirror LV with mirrored log into $i VG ($j args)"
+		vgcreate -c n $vg1 $dev1 $dev2 $dev3 $dev4
+		if [ $i = existing ]; then
+		  vgcreate -c n $vg2 $dev5
+		fi
+
+		lvcreate -l 64 --mirrorlog mirrored -m1 -n $lv1 $vg1 \
+		    $dev1 $dev2 $dev3 $dev4
+
+		vgchange -an $vg1
+		if [ $j = PV ]; then
+		  vgsplit $vg1 $vg2 $dev1 $dev2 $dev3 $dev4
+		else
+		  vgsplit -n $lv1 $vg1 $vg2
+		fi
+		if [ $i = existing ]; then
+		  check pvlv_counts $vg2 5 1 0
+		else
+		  check pvlv_counts $vg2 4 1 0
+		fi
+		lvremove -f $vg2/$lv1
+		vgremove -f $vg2
+# FIXME: ensure split /doesn't/ work when not all devs of mirror specified
 
 COMM "vgsplit correctly splits origin and snapshot LV into $i VG ($j args)" 
 		vgcreate -c n $vg1 $dev1 $dev2 
