@@ -166,6 +166,16 @@ static int _get_pv_list_for_lv(struct logical_volume *lv, struct dm_list *pvs)
 	return 1;
 }
 
+/*
+ * _raid_in_sync
+ * @lv
+ *
+ * _raid_in_sync works for all types of RAID segtypes, as well
+ * as 'mirror' segtype.  (This is because 'lv_raid_percent' is
+ * simply a wrapper around 'lv_mirror_percent'.
+ *
+ * Returns: 1 if in-sync, 0 otherwise.
+ */
 static int _raid_in_sync(struct logical_volume *lv)
 {
 	percent_t sync_percent;
@@ -399,20 +409,22 @@ static int _shift_and_rename_image_components(struct lv_segment *seg)
  * This function does not make metadata changes.
  */
 static int _alloc_image_component(struct logical_volume *lv,
+				  const char *alt_base_name,
 				  struct alloc_handle *ah, uint32_t first_area,
 				  uint64_t type, struct logical_volume **new_lv)
 {
 	uint64_t status;
 	size_t len = strlen(lv->name) + 32;
 	char img_name[len];
+	const char *base_name = (alt_base_name) ? alt_base_name : lv->name;
 	struct logical_volume *tmp_lv;
 	const struct segment_type *segtype;
 
 	if (type == RAID_META) {
-		if (dm_snprintf(img_name, len, "%s_rmeta_%%d", lv->name) < 0)
+		if (dm_snprintf(img_name, len, "%s_rmeta_%%d", base_name) < 0)
 			return_0;
 	} else if (type == RAID_IMAGE) {
-		if (dm_snprintf(img_name, len, "%s_rimage_%%d", lv->name) < 0)
+		if (dm_snprintf(img_name, len, "%s_rimage_%%d", base_name) < 0)
 			return_0;
 	} else {
 		log_error(INTERNAL_ERROR
@@ -490,13 +502,14 @@ static int _alloc_image_components(struct logical_volume *lv,
 		 * allocated areas.  Thus, the metadata areas are pulled
 		 * from 's + count'.
 		 */
-		if (!_alloc_image_component(lv, ah, s + count,
+		if (!_alloc_image_component(lv, NULL, ah, s + count,
 					    RAID_META, &tmp_lv))
 			return_0;
 		lvl_array[s + count].lv = tmp_lv;
 		dm_list_add(new_meta_lvs, &(lvl_array[s + count].list));
 
-		if (!_alloc_image_component(lv, ah, s, RAID_IMAGE, &tmp_lv))
+		if (!_alloc_image_component(lv, NULL, ah, s,
+					    RAID_IMAGE, &tmp_lv))
 			return_0;
 		lvl_array[s].lv = tmp_lv;
 		dm_list_add(new_data_lvs, &(lvl_array[s].list));
@@ -519,6 +532,7 @@ static int _alloc_rmeta_for_lv(struct logical_volume *data_lv,
 	struct dm_list allocatable_pvs;
 	struct alloc_handle *ah;
 	struct lv_segment *seg = first_seg(data_lv);
+	char *p, base_name[strlen(data_lv->name) + 1];
 
 	dm_list_init(&allocatable_pvs);
 
@@ -528,10 +542,9 @@ static int _alloc_rmeta_for_lv(struct logical_volume *data_lv,
 		return 0;
 	}
 
-	if (strstr("_mimage_", data_lv->name)) {
-		log_error("Unable to alloc metadata device for mirror device");
-		return 0;
-	}
+	sprintf(base_name, "%s", data_lv->name);
+	if ((p = strstr(base_name, "_mimage_")))
+		*p = '\0';
 
 	if (!_get_pv_list_for_lv(data_lv, &allocatable_pvs)) {
 		log_error("Failed to build list of PVs for %s/%s",
@@ -545,7 +558,8 @@ static int _alloc_rmeta_for_lv(struct logical_volume *data_lv,
 				    &allocatable_pvs, data_lv->alloc, NULL)))
 		return_0;
 
-	if (!_alloc_image_component(data_lv, ah, 0, RAID_META, meta_lv))
+	if (!_alloc_image_component(data_lv, base_name, ah, 0,
+				    RAID_META, meta_lv))
 		return_0;
 
 	alloc_destroy(ah);
@@ -1263,4 +1277,154 @@ int lv_raid_merge(struct logical_volume *image_lv)
 		  vg->name, image_lv->name,
 		  vg->name, lv->name);
 	return 1;
+}
+
+static int _convert_mirror_to_raid1(struct logical_volume *lv,
+				    const struct segment_type *new_segtype)
+{
+	uint32_t s;
+	struct lv_segment *seg = first_seg(lv);
+	struct lv_list lvl_array[seg->area_count], *lvl;
+	struct dm_list meta_lvs;
+	struct lv_segment_area *meta_areas;
+
+	dm_list_init(&meta_lvs);
+
+	if (!_raid_in_sync(lv)) {
+		log_error("Unable to convert %s/%s while it is not in-sync",
+			  lv->vg->name, lv->name);
+		return 0;
+	}
+
+	meta_areas = dm_pool_zalloc(lv->vg->vgmem,
+				    lv_mirror_count(lv) * sizeof(*meta_areas));
+	if (!meta_areas) {
+		log_error("Failed to allocate memory");
+		return 0;
+	}
+
+	for (s = 0; s < seg->area_count; s++) {
+		log_debug("Allocating new metadata LV for %s",
+			  seg_lv(seg, s)->name);
+		if (!_alloc_rmeta_for_lv(seg_lv(seg, s), &(lvl_array[s].lv))) {
+			log_error("Failed to allocate metadata LV for %s in %s",
+				  seg_lv(seg, s)->name, lv->name);
+			return 0;
+		}
+		dm_list_add(&meta_lvs, &(lvl_array[s].list));
+	}
+
+	log_debug("Clearing newly allocated metadata LVs");
+	if (!_clear_lvs(&meta_lvs)) {
+		log_error("Failed to initialize metadata LVs");
+		return 0;
+	}
+
+	if (seg->log_lv) {
+		log_debug("Removing mirror log, %s", seg->log_lv->name);
+		if (!remove_mirror_log(lv->vg->cmd, lv, NULL, 0)) {
+			log_error("Failed to remove mirror log");
+			return 0;
+		}
+	}
+
+	seg->meta_areas = meta_areas;
+	s = 0;
+
+	dm_list_iterate_items(lvl, &meta_lvs) {
+		log_debug("Adding %s to %s", lvl->lv->name, lv->name);
+
+		/* Images are known to be in-sync */
+		lvl->lv->status &= ~LV_NOTSYNCED;
+		first_seg(lvl->lv)->status &= ~LV_NOTSYNCED;
+		lv_set_hidden(lvl->lv);
+
+		if (!set_lv_segment_area_lv(seg, s, lvl->lv, 0,
+					    lvl->lv->status)) {
+			log_error("Failed to add %s to %s",
+				  lvl->lv->name, lv->name);
+			return 0;
+		}
+		s++;
+	}
+
+	for (s = 0; s < seg->area_count; s++) {
+		char *new_name;
+
+		new_name = dm_pool_zalloc(lv->vg->vgmem,
+					  strlen(lv->name) +
+					  strlen("_rimage_XXn"));
+		if (!new_name) {
+			log_error("Failed to rename mirror images");
+			return 0;
+		}
+
+		sprintf(new_name, "%s_rimage_%u", lv->name, s);
+		log_debug("Renaming %s to %s", seg_lv(seg, s)->name, new_name);
+		seg_lv(seg, s)->name = new_name;
+		seg_lv(seg, s)->status &= ~MIRROR_IMAGE;
+		seg_lv(seg, s)->status |= RAID_IMAGE;
+	}
+	init_mirror_in_sync(1);
+
+	log_debug("Setting new segtype for %s", lv->name);
+	seg->segtype = new_segtype;
+	lv->status &= ~MIRRORED;
+	lv->status |= RAID;
+	seg->status |= RAID;
+
+	if (!vg_write(lv->vg)) {
+		log_error("Failed to write changes to %s in %s",
+			  lv->name, lv->vg->name);
+		return 0;
+	}
+
+	if (!suspend_lv(lv->vg->cmd, lv)) {
+		log_error("Failed to suspend %s/%s before committing changes",
+			  lv->vg->name, lv->name);
+		return 0;
+	}
+
+	if (!vg_commit(lv->vg)) {
+		log_error("Failed to commit changes to %s in %s",
+			  lv->name, lv->vg->name);
+		return 0;
+	}
+
+	if (!resume_lv(lv->vg->cmd, lv)) {
+		log_error("Failed to resume %s/%s after committing changes",
+			  lv->vg->name, lv->name);
+		return 0;
+	}
+
+	return 1;
+}
+
+/*
+ * lv_raid_reshape
+ * @lv
+ * @new_segtype
+ *
+ * Convert an LV from one RAID type (or 'mirror' segtype) to another.
+ *
+ * Returns: 1 on success, 0 on failure
+ */
+int lv_raid_reshape(struct logical_volume *lv,
+		    const struct segment_type *new_segtype)
+{
+	struct lv_segment *seg = first_seg(lv);
+
+	if (!new_segtype) {
+		log_error(INTERNAL_ERROR "New segtype not specified");
+		return 0;
+	}
+
+	if (!strcmp(seg->segtype->name, "mirror") &&
+	    (!strcmp(new_segtype->name, "raid1")))
+	    return _convert_mirror_to_raid1(lv, new_segtype);
+
+	log_error("Converting the segment type for %s/%s from %s to %s"
+		  " is not yet supported.", lv->vg->name, lv->name,
+		  seg->segtype->name, new_segtype->name);
+	return 0;
 }
