@@ -24,6 +24,8 @@
 #include "str_list.h"
 #include "memlock.h"
 
+#define RAID_REGION_SIZE 1024
+
 uint32_t lv_raid_image_count(const struct logical_volume *lv)
 {
 	struct lv_segment *seg = first_seg(lv);
@@ -123,6 +125,45 @@ static int _lv_is_on_pvs(struct logical_volume *lv, struct dm_list *pvs)
 			log_debug("%s is not on %s", lv->name,
 				  pv_dev_name(pvl->pv));
 	return 0;
+}
+
+static int _get_pv_list_for_lv(struct logical_volume *lv, struct dm_list *pvs)
+{
+	uint32_t s;
+	struct pv_list *pvl;
+	struct lv_segment *seg = first_seg(lv);
+
+	if (!seg_is_linear(seg)) {
+		log_error(INTERNAL_ERROR
+			  "_get_pv_list_for_lv only handles linear volumes");
+		return 0;
+	}
+
+	log_debug("Getting list of PVs that %s/%s is on:",
+		  lv->vg->name, lv->name);
+
+	dm_list_iterate_items(seg, &lv->segments) {
+		for (s = 0; s < seg->area_count; s++) {
+			if (seg_type(seg, s) != AREA_PV) {
+				log_error(INTERNAL_ERROR
+					  "Linear seg_type should be AREA_PV");
+				return 0;
+			}
+
+			if (!(pvl = dm_pool_zalloc(lv->vg->cmd->mem,
+						   sizeof(*pvl)))) {
+				log_error("Failed to allocate memory");
+				return 0;
+			}
+
+			pvl->pv = seg_pv(seg, s);
+			log_debug("  %s/%s is on %s", lv->vg->name, lv->name,
+				  pv_dev_name(pvl->pv));
+			dm_list_add(pvs, &pvl->list);
+		}
+	}
+
+	return 1;
 }
 
 static int _raid_in_sync(struct logical_volume *lv)
@@ -411,7 +452,9 @@ static int _alloc_image_components(struct logical_volume *lv,
 				   struct dm_list *new_data_lvs)
 {
 	uint32_t s;
+	uint32_t region_size;
 	struct lv_segment *seg = first_seg(lv);
+	const struct segment_type *segtype;
 	struct alloc_handle *ah;
 	struct dm_list *parallel_areas;
 	struct logical_volume *tmp_lv;
@@ -425,8 +468,18 @@ static int _alloc_image_components(struct logical_volume *lv,
 	if (!(parallel_areas = build_parallel_areas_from_lv(lv, 0)))
 		return_0;
 
-	if (!(ah = allocate_extents(lv->vg, NULL, seg->segtype, 0, count, count,
-				    seg->region_size, lv->le_count, pvs,
+	if (seg_is_linear(seg))
+		region_size = RAID_REGION_SIZE;
+	else
+		region_size = seg->region_size;
+
+	if (seg_is_raid(seg))
+		segtype = seg->segtype;
+	else if (!(segtype = get_segtype_from_string(lv->vg->cmd, "raid1")))
+		return_0;
+
+	if (!(ah = allocate_extents(lv->vg, NULL, segtype, 0, count, count,
+				    region_size, lv->le_count, pvs,
 				    lv->alloc, parallel_areas)))
 		return_0;
 
@@ -452,12 +505,60 @@ static int _alloc_image_components(struct logical_volume *lv,
 	return 1;
 }
 
+/*
+ * _alloc_rmeta_for_lv
+ * @lv
+ *
+ * Allocate a RAID metadata device for the given LV (which is or will
+ * be the associated RAID data device).  The new metadata device must
+ * be allocated from the same PV(s) as the data device.
+ */
+static int _alloc_rmeta_for_lv(struct logical_volume *data_lv,
+			       struct logical_volume **meta_lv)
+{
+	struct dm_list allocatable_pvs;
+	struct alloc_handle *ah;
+	struct lv_segment *seg = first_seg(data_lv);
+
+	dm_list_init(&allocatable_pvs);
+
+	if (!seg_is_linear(seg)) {
+		log_error(INTERNAL_ERROR "Unable to allocate RAID metadata "
+			  "area for non-linear LV, %s", data_lv->name);
+		return 0;
+	}
+
+	if (strstr("_mimage_", data_lv->name)) {
+		log_error("Unable to alloc metadata device for mirror device");
+		return 0;
+	}
+
+	if (!_get_pv_list_for_lv(data_lv, &allocatable_pvs)) {
+		log_error("Failed to build list of PVs for %s/%s",
+			  data_lv->vg->name, data_lv->name);
+		return 0;
+	}
+
+	if (!(ah = allocate_extents(data_lv->vg, NULL, seg->segtype, 0, 1, 0,
+				    seg->region_size,
+				    1 /*RAID_METADATA_AREA_LEN*/,
+				    &allocatable_pvs, data_lv->alloc, NULL)))
+		return_0;
+
+	if (!_alloc_image_component(data_lv, ah, 0, RAID_META, meta_lv))
+		return_0;
+
+	alloc_destroy(ah);
+	return 1;
+}
+
 static int _raid_add_images(struct logical_volume *lv,
 			    uint32_t new_count, struct dm_list *pvs)
 {
 	uint32_t s;
 	uint32_t old_count = lv_raid_image_count(lv);
 	uint32_t count = new_count - old_count;
+	uint64_t status_mask = -1;
 	struct cmd_context *cmd = lv->vg->cmd;
 	struct lv_segment *seg = first_seg(lv);
 	struct dm_list meta_lvs, data_lvs;
@@ -467,7 +568,24 @@ static int _raid_add_images(struct logical_volume *lv,
 	dm_list_init(&meta_lvs); /* For image addition */
 	dm_list_init(&data_lvs); /* For image addition */
 
-	if (!seg_is_raid(seg)) {
+	/*
+	 * If the segtype is linear, then we must allocate a metadata
+	 * LV to accompany it.
+	 */
+	if (seg_is_linear(seg)) {
+		/* A complete resync will be done, no need to mark each sub-lv */
+		status_mask = ~(LV_NOTSYNCED);
+
+		if (!(lvl = dm_pool_alloc(lv->vg->vgmem, sizeof(*lvl)))) {
+			log_error("Memory allocation failed");
+			return 0;
+		}
+
+		if (!_alloc_rmeta_for_lv(lv, &lvl->lv))
+			return_0;
+
+		dm_list_add(&meta_lvs, &lvl->list);
+	} else if (!seg_is_raid(seg)) {
 		log_error("Unable to add RAID images to %s of segment type %s",
 			  lv->name, seg->segtype->name);
 		return 0;
@@ -478,10 +596,52 @@ static int _raid_add_images(struct logical_volume *lv,
 		return 0;
 	}
 
+	/*
+	 * If linear, we must correct data LV names.  They are off-by-one
+	 * because the linear volume hasn't taken its proper name of "_rimage_0"
+	 * yet.  This action must be done before '_clear_lvs' because it
+	 * commits the LVM metadata before clearing the LVs.
+	 */
+	if (seg_is_linear(seg)) {
+		char *name;
+		size_t len;
+		struct dm_list *l;
+		struct lv_list *lvl_tmp;
+
+		dm_list_iterate(l, &data_lvs) {
+			if (l == dm_list_last(&data_lvs)) {
+				lvl = dm_list_item(l, struct lv_list);
+				len = strlen(lv->name) + strlen("_rimage_XXX");
+				name = dm_pool_alloc(lv->vg->vgmem, len);
+				sprintf(name, "%s_rimage_%u", lv->name, count);
+				lvl->lv->name = name;
+				continue;
+			}
+			lvl = dm_list_item(l, struct lv_list);
+			lvl_tmp = dm_list_item(l->n, struct lv_list);
+			lvl->lv->name = lvl_tmp->lv->name;
+		}
+	}
+
 	/* Metadata LVs must be cleared before being added to the array */
 	if (!_clear_lvs(&meta_lvs))
 		goto fail;
 
+	if (seg_is_linear(seg)) {
+		first_seg(lv)->status |= RAID_IMAGE;
+		if (!insert_layer_for_lv(lv->vg->cmd, lv,
+					 RAID | LVM_READ | LVM_WRITE,
+					 "_rimage_0"))
+			return_0;
+
+		lv->status |= RAID;
+		seg = first_seg(lv);
+		seg_lv(seg, 0)->status |= RAID_IMAGE | LVM_READ | LVM_WRITE;
+		seg->region_size = RAID_REGION_SIZE;
+		seg->segtype = get_segtype_from_string(lv->vg->cmd, "raid1");
+		if (!seg->segtype)
+			return_0;
+	}
 /*
 FIXME: It would be proper to activate the new LVs here, instead of having
 them activated by the suspend.  However, this causes residual device nodes
@@ -504,16 +664,21 @@ to be left for these sub-lvs.
 	if (!(new_areas = dm_pool_zalloc(lv->vg->cmd->mem,
 					 new_count * sizeof(*new_areas))))
 		goto fail;
-	memcpy(new_areas, seg->meta_areas,
-	       seg->area_count * sizeof(*seg->meta_areas));
+	if (seg->meta_areas)
+		memcpy(new_areas, seg->meta_areas,
+		       seg->area_count * sizeof(*seg->meta_areas));
 	seg->meta_areas = new_areas;
 	seg->area_count = new_count;
 
+	/* Add extra meta area when converting from linear */
+	s = (old_count == 1) ? 0 : old_count;
+
 	/* Set segment areas for metadata sub_lvs */
-	s = old_count;
 	dm_list_iterate_items(lvl, &meta_lvs) {
 		log_debug("Adding %s to %s",
 			  lvl->lv->name, lv->name);
+		lvl->lv->status &= status_mask;
+		first_seg(lvl->lv)->status &= status_mask;
 		if (!set_lv_segment_area_lv(seg, s, lvl->lv, 0,
 					    lvl->lv->status)) {
 			log_error("Failed to add %s to %s",
@@ -523,11 +688,14 @@ to be left for these sub-lvs.
 		s++;
 	}
 
-	/* Set segment areas for data sub_lvs */
 	s = old_count;
+
+	/* Set segment areas for data sub_lvs */
 	dm_list_iterate_items(lvl, &data_lvs) {
 		log_debug("Adding %s to %s",
 			  lvl->lv->name, lv->name);
+		lvl->lv->status &= status_mask;
+		first_seg(lvl->lv)->status &= status_mask;
 		if (!set_lv_segment_area_lv(seg, s, lvl->lv, 0,
 					    lvl->lv->status)) {
 			log_error("Failed to add %s to %s",
@@ -810,12 +978,6 @@ int lv_raid_change_image_count(struct logical_volume *lv,
 			       uint32_t new_count, struct dm_list *pvs)
 {
 	uint32_t old_count = lv_raid_image_count(lv);
-	struct lv_segment *seg = first_seg(lv);
-
-	if (!seg_is_mirrored(seg)) {
-		log_error("Unable to change image count of non-mirrored RAID.");
-		return 0;
-	}
 
 	if (old_count == new_count) {
 		log_error("%s/%s already has image count of %d",

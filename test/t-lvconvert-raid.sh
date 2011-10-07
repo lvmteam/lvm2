@@ -34,6 +34,11 @@ function is_raid_in_sync()
 		return 1
 	fi
 
+	if [[ ${a[$(($idx - 1))]} =~ a ]]; then
+		echo "$dm_name in-sync, but 'a' characters in health status"
+		exit 1
+	fi
+
 	echo "$dm_name (${a[3]}) is in-sync"
 	return 0
 }
@@ -81,7 +86,7 @@ aux prepare_vg 5 80
 ###########################################
 # RAID1 convert tests
 ###########################################
-for i in 2 3 4; do
+for i in 1 2 3 4; do
 	for j in 1 2 3 4; do
 		if [ $i -eq 1 ]; then
 			from="linear"
@@ -94,8 +99,15 @@ for i in 2 3 4; do
 			to="$j-way"
 		fi
 		echo "Converting from $from to $to"
-		lvcreate --type raid1 -m $(($i - 1)) -l 2 -n $lv1 $vg
-		wait_for_raid_sync $vg/$lv1
+		if [ $i -eq 1 ]; then
+			# Shouldn't be able to create with just 1 image
+			not lvcreate --type raid1 -m 0 -l 2 -n $lv1 $vg
+
+			lvcreate -l 2 -n $lv1 $vg
+		else
+			lvcreate --type raid1 -m $(($i - 1)) -l 2 -n $lv1 $vg
+			wait_for_raid_sync $vg/$lv1
+		fi
 		lvconvert -m $((j - 1))  $vg/$lv1
 
 		# FIXME: ensure no residual devices
@@ -135,12 +147,10 @@ lvremove -ff $vg
 # 3-way to linear/2-way
 lvcreate --type raid1 -m 2 -l 2 -n $lv1 $vg
 wait_for_raid_sync $vg/$lv1
-
 # FIXME: Can't split off a mirror from a mirror yet
-#lvconvert --splitmirrors 2 -n $lv2 $vg/$lv1
+should lvconvert --splitmirrors 2 -n $lv2 $vg/$lv1
 #check linear $vg $lv1
 #check lv_exists $vg $lv2
-
 # FIXME: ensure no residual devices
 lvremove -ff $vg
 

@@ -304,7 +304,8 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 			return 0;
 		}
 
-		if (!(lp->segtype = get_segtype_from_string(cmd, "mirror")))
+		lp->segtype = get_segtype_from_string(cmd, arg_str_value(cmd, type_ARG, "mirror"));
+		if (!lp->segtype)
 			return_0;
 	}
 
@@ -1393,7 +1394,7 @@ static int is_valid_raid_conversion(const struct segment_type *from_segtype,
 	if (!segtype_is_raid(from_segtype) && !segtype_is_raid(to_segtype))
 		return_0;  /* Not converting to or from RAID? */
 
-	return 0;
+	return 1;
 }
 
 static int lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *lp)
@@ -1405,7 +1406,9 @@ static int lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *lp
 	if (!arg_count(cmd, type_ARG))
 		lp->segtype = seg->segtype;
 
-	if (arg_count(cmd, mirrors_ARG) && !seg_is_mirrored(seg)) {
+	/* Can only change image count for raid1 and linear */
+	if (arg_count(cmd, mirrors_ARG) &&
+	    !seg_is_mirrored(seg) && !seg_is_linear(seg)) {
 		log_error("'--mirrors/-m' is not compatible with %s",
 			  seg->segtype->name);
 		return 0;

@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Add ability to convert from linear to RAID1.
   Add ability to extend mirrors with '--nosync' option.
   Fix splitmirror in cluster having different DM/LVM views of storage.
   Fix improper udev settings during suspend/resume for mirror sub-LVs.
