@@ -12,8 +12,8 @@
 
 . lib/test
 
-# is_raid_in_sync <VG/LV>
-function is_raid_in_sync()
+# is_in_sync <VG/LV>
+function is_in_sync()
 {
 	local dm_name
 	local a
@@ -26,7 +26,19 @@ function is_raid_in_sync()
 		echo "Unable to get sync status of $1"
 		exit 1
 	fi
-	idx=$((${#a[@]} - 1))
+
+	# 6th argument is the sync ratio for RAID and mirror
+	echo ${a[@]}
+	if [ ${a[2]} = "raid" ]; then
+		# Last argument is the sync ratio for RAID
+		idx=$((${#a[@]} - 1))
+	elif [ ${a[2]} = "mirror" ]; then
+		# 4th Arg tells us how far to the sync ratio
+		idx=$((${a[3]} + 4))
+	else
+		echo "Unable to get sync ratio for target type '${a[2]}'"
+		exit 1
+	fi
 	b=(`echo ${a[$idx]} | sed s:/:' ':`)
 
 	if [ ${b[0]} != ${b[1]} ]; then
@@ -39,16 +51,21 @@ function is_raid_in_sync()
 		exit 1
 	fi
 
-	echo "$dm_name (${a[3]}) is in-sync"
+	if [ ${a[2]} = "raid" ]; then
+		echo "$dm_name (${a[3]}) is in-sync"
+	else
+		echo "$dm_name (${a[2]}) is in-sync"
+	fi
+
 	return 0
 }
 
-# wait_for_raid_sync <VG/LV>
-function wait_for_raid_sync()
+# wait_for_sync <VG/LV>
+function wait_for_sync()
 {
 	local i=0
 
-	while ! is_raid_in_sync $1; do
+	while ! is_in_sync $1; do
 		sleep 2
 		i=$(($i + 1))
 		if [ $i -gt 500 ]; then
@@ -106,7 +123,7 @@ for i in 1 2 3 4; do
 			lvcreate -l 2 -n $lv1 $vg
 		else
 			lvcreate --type raid1 -m $(($i - 1)) -l 2 -n $lv1 $vg
-			wait_for_raid_sync $vg/$lv1
+			wait_for_sync $vg/$lv1
 		fi
 		lvconvert -m $((j - 1))  $vg/$lv1
 
@@ -128,7 +145,7 @@ done
 ###########################################
 # 3-way to 2-way/linear
 lvcreate --type raid1 -m 2 -l 2 -n $lv1 $vg
-wait_for_raid_sync $vg/$lv1
+wait_for_sync $vg/$lv1
 lvconvert --splitmirrors 1 -n $lv2 $vg/$lv1
 check lv_exists $vg $lv1
 check linear $vg $lv2
@@ -137,7 +154,7 @@ lvremove -ff $vg
 
 # 2-way to linear/linear
 lvcreate --type raid1 -m 1 -l 2 -n $lv1 $vg
-wait_for_raid_sync $vg/$lv1
+wait_for_sync $vg/$lv1
 lvconvert --splitmirrors 1 -n $lv2 $vg/$lv1
 check linear $vg $lv1
 check linear $vg $lv2
@@ -146,8 +163,8 @@ lvremove -ff $vg
 
 # 3-way to linear/2-way
 lvcreate --type raid1 -m 2 -l 2 -n $lv1 $vg
-wait_for_raid_sync $vg/$lv1
-# FIXME: Can't split off a mirror from a mirror yet
+wait_for_sync $vg/$lv1
+# FIXME: Can't split off a RAID1 from a RAID1 yet
 should lvconvert --splitmirrors 2 -n $lv2 $vg/$lv1
 #check linear $vg $lv1
 #check lv_exists $vg $lv2
@@ -159,10 +176,22 @@ lvremove -ff $vg
 ###########################################
 # 3-way to 2-way/linear
 lvcreate --type raid1 -m 2 -l 2 -n $lv1 $vg
-wait_for_raid_sync $vg/$lv1
+wait_for_sync $vg/$lv1
 lvconvert --splitmirrors 1 --trackchanges $vg/$lv1
 check lv_exists $vg $lv1
 check linear $vg ${lv1}_rimage_2
 lvconvert --merge $vg/${lv1}_rimage_2
 # FIXME: ensure no residual devices
 lvremove -ff $vg
+
+###########################################
+# Mirror to RAID1 conversion
+###########################################
+for i in 1 2 3 ; do
+	lvcreate --type mirror -m $i -l 2 -n $lv1 $vg
+	wait_for_sync $vg/$lv1
+	lvconvert --type raid1 $vg/$lv1
+	lvremove -ff $vg
+done
+
+exit 0

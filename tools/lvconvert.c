@@ -1452,6 +1452,9 @@ static int lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *lp
 	if (arg_count(cmd, mirrors_ARG))
 		return lv_raid_change_image_count(lv, image_count, lp->pvh);
 
+	if (arg_count(cmd, type_ARG))
+		return lv_raid_reshape(lv, lp->segtype);
+
 	log_error("Conversion operation not yet supported.");
 	return 0;
 }
