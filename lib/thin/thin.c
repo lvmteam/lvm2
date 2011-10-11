@@ -43,8 +43,9 @@ static const char *_thin_pool_name(const struct lv_segment *seg)
 	return seg->segtype->name;
 }
 
-static int _thin_pool_text_import(struct lv_segment *seg, const struct dm_config_node *sn,
-			struct dm_hash_table *pv_hash __attribute__((unused)))
+static int _thin_pool_text_import(struct lv_segment *seg,
+				  const struct dm_config_node *sn,
+				  struct dm_hash_table *pv_hash __attribute__((unused)))
 {
 	const char *lv_name;
 	struct logical_volume *pool_data_lv, *pool_metadata_lv;
@@ -113,13 +114,13 @@ static int _thin_pool_text_export(const struct lv_segment *seg, struct formatter
 
 #ifdef DEVMAPPER_SUPPORT
 static int _thin_pool_add_target_line(struct dev_manager *dm,
-				 struct dm_pool *mem __attribute__((unused)),
-				 struct cmd_context *cmd __attribute__((unused)),
-				 void **target_state __attribute__((unused)),
-				 struct lv_segment *seg,
-				 const struct lv_activate_opts *laopts __attribute__((unused)),
-				 struct dm_tree_node *node, uint64_t len,
-				 uint32_t *pvmove_mirror_count __attribute__((unused)))
+				      struct dm_pool *mem __attribute__((unused)),
+				      struct cmd_context *cmd __attribute__((unused)),
+				      void **target_state __attribute__((unused)),
+				      struct lv_segment *seg,
+				      const struct lv_activate_opts *laopts __attribute__((unused)),
+				      struct dm_tree_node *node, uint64_t len,
+				      uint32_t *pvmove_mirror_count __attribute__((unused)))
 {
 	char *metadata_dlid, *pool_dlid;
 
@@ -147,8 +148,9 @@ static const char *_thin_name(const struct lv_segment *seg)
 	return seg->segtype->name;
 }
 
-static int _thin_text_import(struct lv_segment *seg, const struct dm_config_node *sn,
-			struct dm_hash_table *pv_hash __attribute__((unused)))
+static int _thin_text_import(struct lv_segment *seg,
+			     const struct dm_config_node *sn,
+			     struct dm_hash_table *pv_hash __attribute__((unused)))
 {
 	const char *lv_name;
 	struct logical_volume *pool_lv;
