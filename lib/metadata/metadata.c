@@ -1373,7 +1373,9 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name,
 	/* Is there an md superblock here? */
 	/* FIXME: still possible issues here - rescan cache? */
 	if (!dev && md_filtering()) {
-		refresh_filters(cmd);
+		if (!refresh_filters(cmd))
+			goto_bad;
+
 		init_md_filtering(0);
 		dev = dev_cache_get(name, cmd->filter);
 		init_md_filtering(1);
