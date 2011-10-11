@@ -1989,7 +1989,6 @@ static int process_work_item(struct lvm_thread_cmd *cmd)
  */
 static void *lvm_thread_fn(void *arg)
 {
-	struct dm_list *cmdl, *tmp;
 	sigset_t ss;
 	struct lvm_startup_params *lvm_params = arg;
 	struct lvm_thread_cmd *cmd;
