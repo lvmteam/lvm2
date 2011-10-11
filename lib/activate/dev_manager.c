@@ -1941,7 +1941,10 @@ int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv,
 	if (!_tree_action(dm, lv, laopts, ACTIVATE))
 		return_0;
 
-	return _tree_action(dm, lv, laopts, CLEAN);
+	if (!_tree_action(dm, lv, laopts, CLEAN))
+		return_0;
+
+	return 1;
 }
 
 /* origin_only may only be set if we are resuming (not activating) an origin LV */
@@ -1949,7 +1952,7 @@ int dev_manager_preload(struct dev_manager *dm, struct logical_volume *lv,
 			struct lv_activate_opts *laopts, int *flush_required)
 {
 	if (!_tree_action(dm, lv, laopts, PRELOAD))
-		return 0;
+		return_0;
 
 	*flush_required = dm->flush_required;
 
@@ -1959,11 +1962,11 @@ int dev_manager_preload(struct dev_manager *dm, struct logical_volume *lv,
 int dev_manager_deactivate(struct dev_manager *dm, struct logical_volume *lv)
 {
 	struct lv_activate_opts laopts = { 0 };
-	int r;
 
-	r = _tree_action(dm, lv, &laopts, DEACTIVATE);
+	if (!_tree_action(dm, lv, &laopts, DEACTIVATE))
+		return_0;
 
-	return r;
+	return 1;
 }
 
 int dev_manager_suspend(struct dev_manager *dm, struct logical_volume *lv,
@@ -1971,7 +1974,10 @@ int dev_manager_suspend(struct dev_manager *dm, struct logical_volume *lv,
 {
 	dm->flush_required = flush_required;
 
-	return _tree_action(dm, lv, laopts, lockfs ? SUSPEND_WITH_LOCKFS : SUSPEND);
+	if (!_tree_action(dm, lv, laopts, lockfs ? SUSPEND_WITH_LOCKFS : SUSPEND))
+		return_0;
+
+	return 1;
 }
 
 /*
