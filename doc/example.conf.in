@@ -481,7 +481,8 @@ activation {
     missing_stripe_filler = "error"
 
     # How much stack (in KB) to reserve for use while devices suspended
-    reserved_stack = 256
+    # Prior to version 2.02.89 this used to be set to 256KB
+    reserved_stack = 64
 
     # How much memory (in KB) to reserve for use while devices suspended
     reserved_memory = 8192
