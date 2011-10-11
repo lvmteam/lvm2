@@ -1988,6 +1988,7 @@ static void *lvm_thread_fn(void *arg)
 	struct dm_list *cmdl, *tmp;
 	sigset_t ss;
 	struct lvm_startup_params *lvm_params = arg;
+	struct lvm_thread_cmd *cmd;
 
 	DEBUGLOG("LVM thread function started\n");
 
@@ -2005,18 +2006,15 @@ static void *lvm_thread_fn(void *arg)
 	DEBUGLOG("Sub thread ready for work.\n");
 
 	/* Now wait for some actual work */
+	pthread_mutex_lock(&lvm_thread_mutex);
+
 	while (!quit) {
-		DEBUGLOG("LVM thread waiting for work\n");
-
-		pthread_mutex_lock(&lvm_thread_mutex);
-		if (dm_list_empty(&lvm_cmd_head))
+		if (dm_list_empty(&lvm_cmd_head)) {
+			DEBUGLOG("LVM thread waiting for work\n");
 			pthread_cond_wait(&lvm_thread_cond, &lvm_thread_mutex);
-
-		dm_list_iterate_safe(cmdl, tmp, &lvm_cmd_head) {
-			struct lvm_thread_cmd *cmd;
-
-			cmd =
-			    dm_list_struct_base(cmdl, struct lvm_thread_cmd, list);
+		} else {
+			cmd = dm_list_item(dm_list_first(&lvm_cmd_head),
+					   struct lvm_thread_cmd);
 			dm_list_del(&cmd->list);
 			pthread_mutex_unlock(&lvm_thread_mutex);
 
@@ -2026,8 +2024,9 @@ static void *lvm_thread_fn(void *arg)
 
 			pthread_mutex_lock(&lvm_thread_mutex);
 		}
-		pthread_mutex_unlock(&lvm_thread_mutex);
 	}
+
+	pthread_mutex_unlock(&lvm_thread_mutex);
 
 	pthread_exit(NULL);
 }
