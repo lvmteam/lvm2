@@ -1886,7 +1886,7 @@ static int _tree_action(struct dev_manager *dm, struct logical_volume *lv,
 		if (!dm_tree_deactivate_children(root, dlid, ID_LEN + sizeof(UUID_PREFIX) - 1))
 			goto_out;
 		if (!_remove_lv_symlinks(dm, root))
-			log_error("Failed to remove all device symlinks associated with %s.", lv->name);
+			log_warn("Failed to remove all device symlinks associated with %s.", lv->name);
 		break;
 	case SUSPEND:
 		dm_tree_skip_lockfs(root);
@@ -1913,10 +1913,8 @@ static int _tree_action(struct dev_manager *dm, struct logical_volume *lv,
 		if (action == ACTIVATE) {
 			if (!dm_tree_activate_children(root, dlid, ID_LEN + sizeof(UUID_PREFIX) - 1))
 				goto_out;
-			if (!_create_lv_symlinks(dm, root)) {
-				log_error("Failed to create symlinks for %s.", lv->name);
-				goto out;
-			}
+			if (!_create_lv_symlinks(dm, root))
+				log_warn("Failed to create symlinks for %s.", lv->name);
 		}
 
 		break;
