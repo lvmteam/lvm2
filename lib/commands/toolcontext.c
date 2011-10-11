@@ -786,7 +786,7 @@ static int _init_filters(struct cmd_context *cmd, unsigned load_persistent_cache
 	cmd->dump_filter = 0;
 
 	if (!(f3 = _init_filter_components(cmd)))
-		return 0;
+		return_0;
 
 	init_ignore_suspended_devices(find_config_tree_int(cmd,
 	    "devices/ignore_suspended_devices", DEFAULT_IGNORE_SUSPENDED_DEVICES));
@@ -1402,7 +1402,8 @@ int refresh_filters(struct cmd_context *cmd)
 		cmd->filter = NULL;
 	}
 
-	r = _init_filters(cmd, 0);
+	if (!(r = _init_filters(cmd, 0)))
+                stack;
 
 	/*
 	 * During repair code must not reset suspended flag.
