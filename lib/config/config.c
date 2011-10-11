@@ -99,8 +99,10 @@ int read_config_fd(struct dm_config_tree *cft, struct device *dev,
 		}
 		fb = fb + mmap_offset;
 	} else {
-		if (!(buf = dm_malloc(size + size2)))
-			return_0;
+		if (!(buf = dm_malloc(size + size2))) {
+			log_error("Failed to allocate circular buffer.");
+			return 0;
+		}
 		if (!dev_read_circular(dev, (uint64_t) offset, size,
 				       (uint64_t) offset2, size2, buf)) {
 			goto out;
