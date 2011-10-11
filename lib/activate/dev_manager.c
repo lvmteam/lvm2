@@ -1193,7 +1193,7 @@ static char *_add_error_device(struct dev_manager *dm, struct dm_tree *dtree,
 
 	if (segno < 0) {
 		log_error("_add_error_device called with bad segment");
-		return_NULL;
+		return NULL;
 	}
 
 	sprintf(errid, "missing_%d_%d", segno, s);
