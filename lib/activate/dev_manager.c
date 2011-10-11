@@ -1224,8 +1224,7 @@ static int _add_error_area(struct dev_manager *dm, struct dm_tree_node *node,
 		 * we don't have the struct definition available.
 		 */
 		struct dm_tree **tree = (struct dm_tree **) node;
-		dlid = _add_error_device(dm, *tree, seg, s);
-		if (!dlid)
+		if (!(dlid = _add_error_device(dm, *tree, seg, s)))
 			return_0;
 		if (!dm_tree_node_add_target_area(node, NULL, dlid, extent_size * seg_le(seg, s)))
 			return_0;
