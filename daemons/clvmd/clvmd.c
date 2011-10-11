@@ -747,12 +747,16 @@ static int local_pipe_callback(struct local_client *thisfd, char *buf,
 				send_local_reply(sock_client, status,
 						 sock_client->fd);
 			else {
+				/* FIXME: closer inspect this code since state is write thread protected */
+				pthread_mutex_lock(&sock_client->bits.localsock.mutex);
 				if (sock_client->bits.localsock.state ==
 				    POST_COMMAND) {
+					pthread_mutex_unlock(&sock_client->bits.localsock.mutex);
 					send_local_reply(sock_client, 0,
 							 sock_client->fd);
 				} else	// PRE_COMMAND finished.
 				{
+					pthread_mutex_unlock(&sock_client->bits.localsock.mutex);
 					if (
 					    (status =
 					     distribute_command(sock_client)) !=
