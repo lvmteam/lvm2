@@ -1514,9 +1514,9 @@ static void process_remote_command(struct clvm_header *msg, int msglen, int fd,
 
 	if (replyargs != NULL) {
 		/* Run the command */
-		status =
-		    do_command(NULL, msg, msglen, &replyargs, buflen,
-			       &replylen);
+		/* FIXME: usage of init_test() is unprotected */
+		status = do_command(NULL, msg, msglen, &replyargs,
+				    buflen, &replylen);
 	} else {
 		status = ENOMEM;
 	}
@@ -1651,6 +1651,7 @@ static __attribute__ ((noreturn)) void *pre_and_post_thread(void *arg)
 	/* Loop around doing PRE and POST functions until the client goes away */
 	while (!client->bits.localsock.finished) {
 		/* Execute the code */
+		/* FIXME: usage of init_test() is unprotected as in do_command() */
 		status = do_pre_command(client);
 
 		if (status)
@@ -1733,6 +1734,7 @@ static int process_local_command(struct clvm_header *msg, int msglen,
 	if (replybuf == NULL)
 		return -1;
 
+	/* FIXME: usage of init_test() is unprotected */
 	status = do_command(client, msg, msglen, &replybuf, buflen, &replylen);
 
 	if (status)
