@@ -1147,7 +1147,7 @@ static struct dm_tree *_create_partial_dtree(struct dev_manager *dm, struct logi
 	uint32_t s;
 
 	if (!(dtree = dm_tree_create())) {
-		log_error("Partial dtree creation failed for %s.", lv->name);
+		log_debug("Partial dtree creation failed for %s.", lv->name);
 		return NULL;
 	}
 
