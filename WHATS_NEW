@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Improve backtrace reporting for some dev_manager_ functions.
   Change message severity to log_warn when symlink creation fails.
   Add ability to convert mirror segtype to RAID1 segtype.
   Add ability to convert from linear to RAID1.
