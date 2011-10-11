@@ -89,7 +89,7 @@ static const size_t STACK_SIZE = 128 * 1024;
 static pthread_attr_t stack_attr;
 static pthread_mutex_t lvm_thread_mutex;
 static pthread_cond_t lvm_thread_cond;
-static pthread_mutex_t lvm_start_mutex;
+static pthread_barrier_t lvm_start_barrier;
 static struct dm_list lvm_cmd_head;
 static volatile sig_atomic_t quit = 0;
 static volatile sig_atomic_t reread_config = 0;
@@ -505,7 +505,7 @@ int main(int argc, char *argv[])
 	}
 	pthread_mutex_init(&lvm_thread_mutex, NULL);
 	pthread_cond_init(&lvm_thread_cond, NULL);
-	pthread_mutex_init(&lvm_start_mutex, NULL);
+	pthread_barrier_init(&lvm_start_barrier, NULL, 2);
 	init_lvhash();
 
 	/* Start the cluster interface */
@@ -584,8 +584,10 @@ int main(int argc, char *argv[])
 	DEBUGLOG("starting LVM thread\n");
 
 	/* Don't let anyone else to do work until we are started */
-	pthread_mutex_lock(&lvm_start_mutex);
 	pthread_create(&lvm_thread, &stack_attr, lvm_thread_fn, &lvm_params);
+
+	/* Don't start until the LVM thread is ready */
+	pthread_barrier_wait(&lvm_start_barrier);
 
 	/* Tell the rest of the cluster our version number */
 	if (clops->cluster_init_completed)
@@ -1633,11 +1635,6 @@ static __attribute__ ((noreturn)) void *pre_and_post_thread(void *arg)
 	DEBUGLOG("in sub thread: client = %p\n", client);
 	pthread_mutex_lock(&client->bits.localsock.mutex);
 
-	/* Don't start until the LVM thread is ready */
-	pthread_mutex_lock(&lvm_start_mutex);
-	pthread_mutex_unlock(&lvm_start_mutex);
-	DEBUGLOG("Sub thread ready for work.\n");
-
 	/* Ignore SIGUSR1 (handled by master process) but enable
 	   SIGUSR2 (kills subthreads) */
 	sigemptyset(&ss);
@@ -2004,7 +2001,8 @@ static void *lvm_thread_fn(void *arg)
 	init_clvm(lvm_params->excl_uuid);
 
 	/* Allow others to get moving */
-	pthread_mutex_unlock(&lvm_start_mutex);
+	pthread_barrier_wait(&lvm_start_barrier);
+	DEBUGLOG("Sub thread ready for work.\n");
 
 	/* Now wait for some actual work */
 	while (!quit) {

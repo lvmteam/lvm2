@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Use pthread_barrier to synchronize clvmd threads at startup.
   Limit clvmd's thread size to 128KiB.
   Reduce default preallocated stack size to 64KiB.
   Add check for access through NULL pointer when refresh_filter() fails.
