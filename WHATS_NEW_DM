@@ -1,5 +1,6 @@
 Version 1.02.68 -
 ==================================
+  Allocate dm_tree structure from dm_tree pool.
   Update debug logging for _resume_node.
   Add functions to support thin provisioning target (API unstable).
   Improve libdm-config error path reporting.

@@ -248,10 +248,14 @@ struct dm_tree {
 
 struct dm_tree *dm_tree_create(void)
 {
+	struct dm_pool *dmem;
 	struct dm_tree *dtree;
 
-	if (!(dtree = dm_zalloc(sizeof(*dtree)))) {
-		log_error("dm_tree_create malloc failed");
+	if (!(dmem = dm_pool_create("dtree", 1024)) ||
+	    !(dtree = dm_pool_zalloc(dmem, sizeof(*dtree)))) {
+		log_error("Failed to allocate dtree.");
+		if (dmem)
+			dm_pool_destroy(dmem);
 		return NULL;
 	}
 
@@ -260,17 +264,11 @@ struct dm_tree *dm_tree_create(void)
 	dm_list_init(&dtree->root.used_by);
 	dtree->skip_lockfs = 0;
 	dtree->no_flush = 0;
-
-	if (!(dtree->mem = dm_pool_create("dtree", 1024))) {
-		log_error("dtree pool creation failed");
-		dm_free(dtree);
-		return NULL;
-	}
+	dtree->mem = dmem;
 
 	if (!(dtree->devs = dm_hash_create(8))) {
 		log_error("dtree hash creation failed");
 		dm_pool_destroy(dtree->mem);
-		dm_free(dtree);
 		return NULL;
 	}
 
@@ -278,7 +276,6 @@ struct dm_tree *dm_tree_create(void)
 		log_error("dtree uuid hash creation failed");
 		dm_hash_destroy(dtree->devs);
 		dm_pool_destroy(dtree->mem);
-		dm_free(dtree);
 		return NULL;
 	}
 
@@ -293,7 +290,6 @@ void dm_tree_free(struct dm_tree *dtree)
 	dm_hash_destroy(dtree->uuids);
 	dm_hash_destroy(dtree->devs);
 	dm_pool_destroy(dtree->mem);
-	dm_free(dtree);
 }
 
 static int _nodes_are_linked(const struct dm_tree_node *parent,
