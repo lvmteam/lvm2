@@ -32,6 +32,7 @@
  * Supports to wait for udev device settle only when needed.
  */
 static uint32_t _fs_cookie = DM_COOKIE_AUTO_CREATE;
+static int _fs_create = 0;
 
 static int _mk_dir(const char *dev_dir, const char *vg_name)
 {
@@ -427,6 +428,8 @@ static void _pop_fs_ops(void)
 			  fsp->dev, fsp->old_lv_name, fsp->check_udev);
 		_del_fs_op(fsp);
 	}
+
+	_fs_create = 0;
 }
 
 static int _fs_op(fs_op_t type, const char *dev_dir, const char *vg_name,
@@ -500,7 +503,12 @@ void fs_set_cookie(uint32_t cookie)
 	_fs_cookie = cookie;
 }
 
+void fs_set_create(void)
+{
+	_fs_create = 1;
+}
+
 int fs_has_non_delete_ops(void)
 {
-	return _other_fs_ops(FS_DEL);
+	return _fs_create || _other_fs_ops(FS_DEL);
 }

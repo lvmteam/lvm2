@@ -32,6 +32,7 @@ int fs_rename_lv(struct logical_volume *lv, const char *dev,
 /* void fs_unlock(void);  moved to activate.h */
 uint32_t fs_get_cookie(void);
 void fs_set_cookie(uint32_t cookie);
+void fs_set_create(void);
 int fs_has_non_delete_ops(void);
 
 #endif
