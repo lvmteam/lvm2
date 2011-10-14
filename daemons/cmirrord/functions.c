@@ -597,7 +597,10 @@ static int clog_ctr(struct dm_ulog_request *rq)
 	/* We join the CPG when we resume */
 
 	/* No returning data */
-	rq->data_size = 0;
+	if ((rq->version > 1) && !strcmp(argv[0], "clustered-disk"))
+		rq->data_size = sprintf(rq->data, "%s", argv[1]) + 1;
+	else
+		rq->data_size = 0;
 
 	if (r) {
 		LOG_ERROR("Failed to create cluster log (%s)", rq->uuid);
