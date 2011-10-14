@@ -1746,8 +1746,10 @@ static int _create_lv_symlinks(struct dev_manager *dm, struct dm_tree_node *root
 	int r = 1;
 
 	/* Nothing to do if udev fallback is disabled. */
-	if (!dm->cmd->current_settings.udev_fallback)
+	if (!dm->cmd->current_settings.udev_fallback) {
+		fs_set_create();
 		return 1;
+	}
 
 	while ((child = dm_tree_next_child(&handle, root, 0))) {
 		if (!(lvlayer = dm_tree_node_get_context(child)))
