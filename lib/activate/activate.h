@@ -71,8 +71,6 @@ int lv_activate_with_filter(struct cmd_context *cmd, const char *lvid_s,
 int lv_deactivate(struct cmd_context *cmd, const char *lvid_s);
 
 int lv_mknodes(struct cmd_context *cmd, const struct logical_volume *lv);
-__attribute__ ((format(printf, 2, 3)))
-int lv_send_message(const struct logical_volume *lv, const char *msg_format, ...);
 
 /*
  * Returns 1 if info structure has been populated, else 0.
