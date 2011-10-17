@@ -555,6 +555,42 @@ int dm_tree_node_add_thin_pool_target(struct dm_tree_node *node,
 				      uint64_t low_water_mark_size,
 				      unsigned skip_block_zeroing);
 
+/* Supported messages for thin provision target */
+typedef enum {
+	DM_THIN_MESSAGE_CREATE_SNAP,
+	DM_THIN_MESSAGE_CREATE_THIN,
+	DM_THIN_MESSAGE_DELETE,
+	DM_THIN_MESSAGE_SET_TRANSACTION_ID,
+	DM_THIN_MESSAGE_TRIM
+} dm_thin_message_t;
+
+struct dm_thin_message {
+	dm_thin_message_t type;
+	union {
+		struct {
+			uint32_t device_id;
+			uint32_t origin_id;
+		} m_create_snap;
+		struct {
+			uint32_t device_id;
+		} m_create_thin;
+		struct {
+			uint32_t device_id;
+		} m_delete;
+		struct {
+			uint64_t current_id;
+			uint64_t new_id;
+		} m_set_transaction_id;
+		struct {
+			uint32_t device_id;
+			uint64_t new_size;
+		} m_trim;
+	} u;
+};
+
+int dm_tree_node_add_thin_pool_message(struct dm_tree_node *node,
+                                       struct dm_thin_message *message);
+
 int dm_tree_node_add_thin_target(struct dm_tree_node *node,
 				 uint64_t size,
 				 const char *thin_pool_uuid,
