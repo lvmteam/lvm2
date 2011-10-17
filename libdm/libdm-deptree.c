@@ -1512,18 +1512,6 @@ int dm_tree_activate_children(struct dm_tree_node *dnode,
 
 			/* Update cached info */
 			child->info = newinfo;
-
-			/* FIXME: trial version - to avoid use of unsynchronized thin_pool transaction_id */
-			if (child->props.thin_pool_transaction_id &&
-			    !_check_thin_pool_transaction_id(child->name, child->info.major,
-							     child->info.minor,
-							     child->props.thin_pool_transaction_id)) {
-				stack;
-				if (!(dm_tree_deactivate_children(child, uuid_prefix, uuid_prefix_len)))
-					log_error("Failed to deactivate %s", child->name);
-				r = 0;
-				continue;
-			}
 		}
 	}
 
@@ -2207,18 +2195,6 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 		 */
 		if (child->props.immediate_dev_node)
 			update_devs_flag = 1;
-
-		/* FIXME: trial version - to avoid use of unsynchronized thin_pool transaction_id */
-		if (child->props.thin_pool_transaction_id &&
-		    !_check_thin_pool_transaction_id(child->name, child->info.major,
-						     child->info.minor,
-						     child->props.thin_pool_transaction_id)) {
-			stack;
-			if (!(dm_tree_deactivate_children(child, uuid_prefix, uuid_prefix_len)))
-				log_error("Failed to deactivate %s", child->name);
-			r = 0;
-			continue;
-		}
 	}
 
 	handle = NULL;
