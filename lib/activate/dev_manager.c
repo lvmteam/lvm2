@@ -876,34 +876,6 @@ int dev_manager_mknodes(const struct logical_volume *lv)
 	return r;
 }
 
-/*
- * Send message
- */
-int dev_manager_send_message(struct dev_manager *dm, const struct logical_volume *lv, const char *message)
-{
-	const char *name;
-	struct dm_task *dmt;
-	int r = 0;
-
-	if (!(name = dm_build_dm_name(dm->mem, lv->vg->name, lv->name, NULL)))
-		return_0;
-
-	if (!(dmt = _setup_task(name, NULL, NULL, DM_DEVICE_TARGET_MSG, 0, 0)))
-		return_0;
-
-	if (!dm_task_set_message(dmt, message))
-		goto_out;
-
-	if (!dm_task_run(dmt))
-		goto_out;
-
-	r = 1;
-out:
-	dm_task_destroy(dmt);
-
-	return r;
-}
-
 static uint16_t _get_udev_flags(struct dev_manager *dm, struct logical_volume *lv,
 				const char *layer)
 {
