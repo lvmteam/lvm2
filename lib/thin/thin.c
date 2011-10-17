@@ -221,12 +221,14 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 	struct dm_thin_message dmsg;
 
 	if (!(metadata_dlid = build_dm_uuid(mem, seg->pool_metadata_lv->lvid.s, NULL))) {
-		log_error("Failed to build uuid for metadata LV %s.", seg->pool_metadata_lv->name);
+		log_error("Failed to build uuid for metadata LV %s.",
+			  seg->pool_metadata_lv->name);
 		return 0;
 	}
 
 	if (!(pool_dlid = build_dm_uuid(mem, seg_lv(seg, 0)->lvid.s, NULL))) {
-		log_error("Failed to build uuid for pool LV %s.", seg_lv(seg, 0)->name);
+		log_error("Failed to build uuid for pool LV %s.",
+			  seg_lv(seg, 0)->name);
 		return 0;
 	}
 
