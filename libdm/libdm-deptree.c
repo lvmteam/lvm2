@@ -2687,6 +2687,17 @@ int dm_tree_node_add_replicator_dev_target(struct dm_tree_node *node,
 	return 1;
 }
 
+static int _thin_validate_device_id(uint32_t device_id)
+{
+	if (device_id > DM_THIN_MAX_DEVICE_ID) {
+		log_error("Device id %u is higher then %u.",
+			  device_id, DM_THIN_MAX_DEVICE_ID);
+		return 0;
+	}
+
+	return 1;
+}
+
 int dm_tree_node_add_thin_pool_target(struct dm_tree_node *node,
 				      uint64_t size,
 				      uint64_t transaction_id,
@@ -2744,11 +2755,8 @@ int dm_tree_node_add_thin_target(struct dm_tree_node *node,
 {
 	struct load_segment *seg;
 
-	if (device_id > DM_THIN_MAX_DEVICE_ID) {
-		log_error("Device id %u is higher then %u.",
-			  device_id, DM_THIN_MAX_DEVICE_ID);
-		return 0;
-	}
+	if (!_thin_validate_device_id(device_id))
+		return_0;
 
 	if (!(seg = _add_segment(node, SEG_THIN, size)))
 		return_0;
