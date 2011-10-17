@@ -454,6 +454,10 @@ int attach_pool_data_lv(struct lv_segment *seg,
 			struct logical_volume *pool_data_lv);
 int attach_pool_lv(struct lv_segment *seg, struct logical_volume *pool_lv);
 int detach_pool_lv(struct lv_segment *seg);
+int attach_pool_message(struct lv_segment *seg, dm_thin_message_t type,
+			struct logical_volume *lv, uint32_t device_id,
+			int read_only);
+int detach_pool_messages(struct lv_segment *seg);
 
 /*
  * Begin skeleton for external LVM library

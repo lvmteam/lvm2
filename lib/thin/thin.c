@@ -43,6 +43,48 @@ static const char *_thin_pool_name(const struct lv_segment *seg)
 	return seg->segtype->name;
 }
 
+static int _thin_pool_add_message(struct lv_segment *seg,
+				  const char *key,
+				  const struct dm_config_node *sn)
+{
+	const char *lv_name = NULL;
+	struct logical_volume *lv = NULL;
+	uint32_t device_id = 0;
+	dm_thin_message_t type;
+
+	/* Message must have only one from: create, trim, delete */
+	if (dm_config_get_str(sn, "create", &lv_name)) {
+		if (!(lv = find_lv(seg->lv->vg, lv_name)))
+			return SEG_LOG_ERROR("Unknown LV %s for create message in",
+					     lv_name);
+		/* FIXME: switch to _SNAP later, if the created LV has an origin */
+		type = DM_THIN_MESSAGE_CREATE_THIN;
+	}
+
+	if (dm_config_get_str(sn, "trim", &lv_name)) {
+		if (lv)
+			return SEG_LOG_ERROR("Unsupported message format in");
+		if (!(lv = find_lv(seg->lv->vg, lv_name)))
+			return SEG_LOG_ERROR("Unknown LV %s for trim message in",
+					     lv_name);
+		type = DM_THIN_MESSAGE_TRIM;
+	}
+
+	if (!dm_config_get_uint32(sn, "delete", &device_id)) {
+		if (!lv)
+			return SEG_LOG_ERROR("Unknown message in");
+	} else {
+		if (lv)
+			return SEG_LOG_ERROR("Unsupported message format in");
+		type = DM_THIN_MESSAGE_DELETE;
+	}
+
+	if (!attach_pool_message(seg, type, lv, device_id, 1))
+		return_0;
+
+	return 1;
+}
+
 static int _thin_pool_text_import(struct lv_segment *seg,
 				  const struct dm_config_node *sn,
 				  struct dm_hash_table *pv_hash __attribute__((unused)))
@@ -88,6 +130,11 @@ static int _thin_pool_text_import(struct lv_segment *seg,
 
 	seg->lv->status |= THIN_POOL;
 
+	/* Read messages */
+	for (; sn; sn = sn->sib)
+		if (!(sn->v) && !_thin_pool_add_message(seg, sn->key, sn->child))
+			return_0;
+
 	return 1;
 }
 
@@ -101,13 +148,60 @@ static int _thin_pool_text_import_area_count(const struct dm_config_node *sn,
 
 static int _thin_pool_text_export(const struct lv_segment *seg, struct formatter *f)
 {
+	unsigned cnt = 0;
+	struct lv_thin_message *tmsg;
+
 	outf(f, "pool = \"%s\"", seg_lv(seg, 0)->name);
 	outf(f, "metadata = \"%s\"", seg->pool_metadata_lv->name);
 	outf(f, "transaction_id = %" PRIu64, seg->transaction_id);
 	outf(f, "low_water_mark = %" PRIu64, seg->low_water_mark);
 	outf(f, "data_block_size = %d", seg->data_block_size);
+
 	if (seg->zero_new_blocks)
 		outf(f, "zero_new_blocks = 1");
+
+	dm_list_iterate_items(tmsg, &seg->thin_messages) {
+		/* Extra validation */
+		switch (tmsg->type) {
+		case DM_THIN_MESSAGE_CREATE_SNAP:
+		case DM_THIN_MESSAGE_CREATE_THIN:
+		case DM_THIN_MESSAGE_TRIM:
+			if (!lv_is_thin_volume(tmsg->u.lv)) {
+				log_error(INTERNAL_ERROR
+					  "LV %s is not a thin volume.",
+					  tmsg->u.lv->name);
+				return 0;
+			}
+			break;
+		default:
+			break;
+		}
+
+		if (!cnt)
+			outnl(f);
+
+		outf(f, "message%d {", ++cnt);
+		out_inc_indent(f);
+
+		switch (tmsg->type) {
+		case DM_THIN_MESSAGE_CREATE_SNAP:
+		case DM_THIN_MESSAGE_CREATE_THIN:
+			outf(f, "create = \"%s\"", tmsg->u.lv->name);
+			break;
+		case DM_THIN_MESSAGE_TRIM:
+			outf(f, "trim = \"%s\"", tmsg->u.lv->name);
+			break;
+		case DM_THIN_MESSAGE_DELETE:
+			outf(f, "delete = %d", tmsg->u.delete_id);
+			break;
+		default:
+			log_error(INTERNAL_ERROR "Passed unsupported message.");
+			return 0;
+		}
+
+		out_dec_indent(f);
+		outf(f, "}");
+	}
 
 	return 1;
 }
@@ -123,6 +217,8 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 				      uint32_t *pvmove_mirror_count __attribute__((unused)))
 {
 	char *metadata_dlid, *pool_dlid;
+	struct lv_thin_message *lmsg;
+	struct dm_thin_message dmsg;
 
 	if (!(metadata_dlid = build_dm_uuid(mem, seg->pool_metadata_lv->lvid.s, NULL))) {
 		log_error("Failed to build uuid for metadata LV %s.", seg->pool_metadata_lv->name);
@@ -134,10 +230,54 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 		return 0;
 	}
 
-	if (!dm_tree_node_add_thin_pool_target(node, len, 0, metadata_dlid, pool_dlid,
+	if (!dm_tree_node_add_thin_pool_target(node, len, seg->transaction_id,
+					       metadata_dlid, pool_dlid,
 					       seg->data_block_size, seg->low_water_mark,
 					       seg->zero_new_blocks ? 0 : 1))
 		return_0;
+
+	if (!dm_list_empty(&seg->thin_messages)) {
+		dm_list_iterate_items(lmsg, &seg->thin_messages) {
+			dmsg.type = lmsg->type;
+			switch (lmsg->type) {
+			case DM_THIN_MESSAGE_CREATE_SNAP:
+				/* FIXME: to be implemented */
+				log_debug("Thin pool create_snap %s.", lmsg->u.lv->name);
+				dmsg.u.m_create_snap.device_id = first_seg(lmsg->u.lv)->device_id;
+				dmsg.u.m_create_snap.origin_id = 0;//first_seg(first_seg(lmsg->u.lv)->origin)->device_id;
+				if (!dm_tree_node_add_thin_pool_message(node, &dmsg))
+					return_0;
+				log_error(INTERNAL_ERROR "Sorry, not implemented yet.");
+				return 0;
+			case DM_THIN_MESSAGE_CREATE_THIN:
+				log_debug("Thin pool create_thin %s.", lmsg->u.lv->name);
+				dmsg.u.m_create_thin.device_id = first_seg(lmsg->u.lv)->device_id;
+				if (!dm_tree_node_add_thin_pool_message(node, &dmsg))
+					return_0;
+				break;
+			case DM_THIN_MESSAGE_DELETE:
+				log_debug("Thin pool delete %u.", lmsg->u.delete_id);
+				dmsg.u.m_delete.device_id = lmsg->u.delete_id;
+				if (!dm_tree_node_add_thin_pool_message(node, &dmsg))
+					return_0;
+				break;
+			case DM_THIN_MESSAGE_TRIM:
+				/* FIXME: to be implemented */
+				log_error(INTERNAL_ERROR "Sorry, not implemented yet.");
+				return 0;
+			default:
+				log_error(INTERNAL_ERROR "Unsupported message.");
+				return 0;
+			}
+		}
+
+		log_debug("Thin pool set_transaction_id %" PRIu64 ".", seg->transaction_id);
+		dmsg.type = DM_THIN_MESSAGE_SET_TRANSACTION_ID;
+		dmsg.u.m_set_transaction_id.current_id = seg->transaction_id - 1;
+		dmsg.u.m_set_transaction_id.new_id = seg->transaction_id;
+		if (!dm_tree_node_add_thin_pool_message(node, &dmsg))
+			return_0;
+	}
 
 	return 1;
 }
