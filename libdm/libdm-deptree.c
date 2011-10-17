@@ -1856,7 +1856,7 @@ static int _raid_emit_segment_line(struct dm_task *dmt, uint32_t major,
 				   uint64_t *seg_start, char *params,
 				   size_t paramsize)
 {
-	uint32_t i, *tmp;
+	uint32_t i;
 	int param_count = 1; /* mandatory 'chunk size'/'stripe size' arg */
 	int pos = 0;
 
@@ -1866,9 +1866,9 @@ static int _raid_emit_segment_line(struct dm_task *dmt, uint32_t major,
 	if (seg->region_size)
 		param_count += 2;
 
-	tmp = (uint32_t *)(&seg->rebuilds); /* rebuilds is 64-bit */
-	param_count += 2 * hweight32(tmp[0]);
-	param_count += 2 * hweight32(tmp[1]);
+	/* rebuilds is 64-bit */
+	param_count += 2 * hweight32(seg->rebuilds & 0xFFFFFFFF);
+	param_count += 2 * hweight32(seg->rebuilds >> 32);
 
 	if ((seg->type == SEG_RAID1) && seg->stripe_size)
 		log_error("WARNING: Ignoring RAID1 stripe size");
