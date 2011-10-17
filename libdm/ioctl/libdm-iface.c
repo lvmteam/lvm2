@@ -852,15 +852,13 @@ int dm_task_set_event_nr(struct dm_task *dmt, uint32_t event_nr)
 struct target *create_target(uint64_t start, uint64_t len, const char *type,
 			     const char *params)
 {
-	struct target *t = dm_malloc(sizeof(*t));
+	struct target *t = dm_zalloc(sizeof(*t));
 
 	if (!t) {
 		log_error("create_target: malloc(%" PRIsize_t ") failed",
 			  sizeof(*t));
 		return NULL;
 	}
-
-	memset(t, 0, sizeof(*t));
 
 	if (!(t->params = dm_strdup(params))) {
 		log_error("create_target: strdup(params) failed");
