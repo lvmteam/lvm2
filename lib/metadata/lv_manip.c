@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2011 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -251,6 +251,7 @@ struct lv_segment *alloc_lv_segment(struct dm_pool *mem,
 	seg->extents_copied = extents_copied;
 	seg->pvmove_source_seg = pvmove_source_seg;
 	dm_list_init(&seg->tags);
+	dm_list_init(&seg->thin_messages);
 
 	if (thin_pool_lv && !attach_pool_lv(seg, thin_pool_lv))
 		return_NULL;
@@ -4173,9 +4174,9 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 			return NULL;
 		}
 
-		if (!lv_send_message(pool_lv, "create_thin %u", first_seg(lv)->device_id))
+		if (!attach_pool_message(first_seg(pool_lv),
+					 DM_THIN_MESSAGE_CREATE_THIN, lv, 0, 0))
 			return_NULL;
-
 		/*
 		 * FIXME: Skipping deactivate_lv(pool_lv) as it is going to be needed anyway
 		 * but revert_new_lv should revert to deactivated state.
@@ -4238,6 +4239,15 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 		if (!set_lv(cmd, first_seg(lv)->pool_metadata_lv, UINT64_C(0), 0))
 			log_error("Aborting. Failed to wipe pool metadata %s.",
 				  lv->name);
+	} else if (seg_is_thin_volume(lp)) {
+		/* since we've got here, we may drop any queued thin messages */
+		if (!detach_pool_messages(first_seg(first_seg(lv)->pool_lv)))
+			goto deactivate_and_revert_new_lv;
+
+		if (!vg_write(vg) || !vg_commit(vg))
+			goto deactivate_and_revert_new_lv;
+
+		backup(vg);
 	}
 
 	if (lp->snapshot) {

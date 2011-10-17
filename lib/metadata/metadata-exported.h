@@ -256,6 +256,15 @@ struct lv_segment_area {
 	} u;
 };
 
+struct lv_thin_message {
+	struct dm_list list;		/* Chained list of messages */
+	dm_thin_message_t type;		/* Use dm thin message datatype */
+	union {
+		struct logical_volume *lv; /* For: create_thin, create_snap, trim */
+		uint32_t delete_id;	/* For delete, needs device_id */
+	} u;
+};
+
 struct segment_type;
 
 /* List with vg_name, vgid and flags */
@@ -338,6 +347,7 @@ struct lv_segment {
 	uint64_t low_water_mark;		/* For thin_pool */
 	uint32_t data_block_size;		/* For thin_pool, 128..2097152 */
 	unsigned zero_new_blocks;		/* For thin_pool */
+	struct dm_list thin_messages;		/* For thin_pool */
 	struct logical_volume *pool_lv;		/* For thin */
 	uint32_t device_id;			/* For thin, 24bit */
 

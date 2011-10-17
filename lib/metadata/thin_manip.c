@@ -58,7 +58,73 @@ int detach_pool_lv(struct lv_segment *seg)
 		return 0;
 	}
 
+	if (!attach_pool_message(first_seg(seg->pool_lv),
+				 DM_THIN_MESSAGE_DELETE,
+				 NULL, seg->device_id, 0))
+		return_0;
+
 	return remove_seg_from_segs_using_this_lv(seg->pool_lv, seg);
+}
+
+int attach_pool_message(struct lv_segment *seg, dm_thin_message_t type,
+			struct logical_volume *lv, uint32_t device_id,
+			int read_only)
+{
+	struct lv_thin_message *tmsg;
+
+	if (!lv_is_thin_pool(seg->lv)) {
+		log_error(INTERNAL_ERROR "LV %s is not a thin pool.",
+			  seg->lv->name);
+		return 0;
+	}
+
+	if (!(tmsg = dm_pool_alloc(seg->lv->vg->vgmem, sizeof(*tmsg)))) {
+		log_error("Failed to allocate memory for message.");
+		return 0;
+	}
+
+	switch (type) {
+	case DM_THIN_MESSAGE_CREATE_SNAP:
+	case DM_THIN_MESSAGE_CREATE_THIN:
+	case DM_THIN_MESSAGE_TRIM:
+		tmsg->u.lv = lv;
+		break;
+	case DM_THIN_MESSAGE_DELETE:
+		tmsg->u.delete_id = device_id;
+		break;
+	default:
+		log_error(INTERNAL_ERROR "Unsupported message type %d", type);
+		return 0;
+	}
+
+	tmsg->type = type;
+
+	/* If the 1st message is add in non-read-only mode, modify transaction_id */
+	if (!read_only && dm_list_empty(&seg->thin_messages))
+		seg->transaction_id++;
+
+	dm_list_add(&seg->thin_messages, &tmsg->list);
+
+	log_debug("Added %s message",
+		  (type == DM_THIN_MESSAGE_CREATE_SNAP ||
+		   type == DM_THIN_MESSAGE_CREATE_THIN) ? "create" :
+		  (type == DM_THIN_MESSAGE_TRIM) ? "trim" :
+		  (type == DM_THIN_MESSAGE_DELETE) ? "delete" : "unknown");
+
+	return 1;
+}
+
+int detach_pool_messages(struct lv_segment *seg)
+{
+	if (!lv_is_thin_pool(seg->lv)) {
+		log_error(INTERNAL_ERROR "LV %s is not a thin pool.",
+			  seg->lv->name);
+		return 0;
+	}
+
+	dm_list_init(&seg->thin_messages);
+
+	return 1;
 }
 
 struct lv_segment *find_pool_seg(const struct lv_segment *seg)
