@@ -137,7 +137,7 @@ xx(lvconvert,
    "\t[-d|--debug]\n"
    "\t[-h|-?|--help]\n"
    "\t[-v|--verbose]\n"
-   "\tSnapshotLogicalVolume[Path]\n",
+   "\tLogicalVolume[Path]\n",
 
    alloc_ARG, background_ARG, chunksize_ARG, corelog_ARG, interval_ARG,
    merge_ARG, mirrorlog_ARG, mirrors_ARG, name_ARG, noudevsync_ARG,
