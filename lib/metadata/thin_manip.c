@@ -38,12 +38,6 @@ int attach_pool_data_lv(struct lv_segment *seg, struct logical_volume *pool_data
 
 int attach_pool_lv(struct lv_segment *seg, struct logical_volume *pool_lv)
 {
-	if (!lv_is_thin_pool(pool_lv)) {
-		log_error(INTERNAL_ERROR "LV %s is not a thin pool",
-			  pool_lv->name);
-		return 0;
-	}
-
 	seg->pool_lv = pool_lv;
 	seg->lv->status |= THIN_VOLUME;
 
@@ -71,12 +65,6 @@ int attach_pool_message(struct lv_segment *seg, dm_thin_message_t type,
 			int read_only)
 {
 	struct lv_thin_message *tmsg;
-
-	if (!lv_is_thin_pool(seg->lv)) {
-		log_error(INTERNAL_ERROR "LV %s is not a thin pool.",
-			  seg->lv->name);
-		return 0;
-	}
 
 	if (!(tmsg = dm_pool_alloc(seg->lv->vg->vgmem, sizeof(*tmsg)))) {
 		log_error("Failed to allocate memory for message.");
