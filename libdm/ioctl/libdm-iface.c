@@ -1635,7 +1635,8 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 		  dmt->sector, _sanitise_message(dmt->message),
 		  dmi->data_size, retry_repeat_count);
 #ifdef DM_IOCTLS
-	if (ioctl(_control_fd, command, dmi) < 0) {
+	if (ioctl(_control_fd, command, dmi) < 0 &&
+	    dmt->expected_errno != errno) {
 		if (errno == ENXIO && ((dmt->type == DM_DEVICE_INFO) ||
 				       (dmt->type == DM_DEVICE_MKNODES) ||
 				       (dmt->type == DM_DEVICE_STATUS)))

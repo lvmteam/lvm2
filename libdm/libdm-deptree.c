@@ -111,6 +111,7 @@ struct seg_area {
 struct thin_message {
 	struct dm_list list;
 	struct dm_thin_message message;
+	int expected_errno;
 };
 
 /* Replicator-log has a list of sites */
@@ -1313,6 +1314,9 @@ static int _thin_pool_node_message(struct dm_tree_node *dnode, struct thin_messa
 
 	if (!dm_task_set_message(dmt, buf))
 		goto_out;
+
+        /* Internal functionality of dm_task */
+	dmt->expected_errno = tm->expected_errno;
 
 	if (!dm_task_run(dmt))
 		goto_out;
@@ -2912,11 +2916,13 @@ int dm_tree_node_add_thin_pool_message(struct dm_tree_node *node,
 		if (!_thin_validate_device_id(message->u.m_create_thin.device_id))
 			return_0;
 		tm->message.u.m_create_thin.device_id = message->u.m_create_thin.device_id;
+		tm->expected_errno = EEXIST;
 		break;
 	case DM_THIN_MESSAGE_DELETE:
 		if (!_thin_validate_device_id(message->u.m_delete.device_id))
 			return_0;
 		tm->message.u.m_delete.device_id = message->u.m_delete.device_id;
+		tm->expected_errno = ENODATA;
 		break;
 	case DM_THIN_MESSAGE_TRIM:
 		if (!_thin_validate_device_id(message->u.m_trim.device_id))
