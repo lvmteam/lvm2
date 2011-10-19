@@ -119,7 +119,6 @@ static int _extend(const char *device)
 {
 	char *vg = NULL, *lv = NULL, *layer = NULL;
 	char cmd_str[1024];
-	int r = 0;
 
 	if (!dm_split_lvm_name(dmeventd_lvm2_pool(), device, &vg, &lv, &layer)) {
 		syslog(LOG_ERR, "Unable to determine VG name from %s.", device);
@@ -131,10 +130,7 @@ static int _extend(const char *device)
 		return 0;
 	}
 
-	r = dmeventd_lvm2_run(cmd_str);
-	syslog(LOG_INFO, "Extension of snapshot %s/%s %s.", vg, lv,
-	       (r == ECMD_PROCESSED) ? "finished successfully" : "failed");
-	return r == ECMD_PROCESSED;
+	return dmeventd_lvm2_run(cmd_str) == ECMD_PROCESSED;
 }
 
 static void _umount(const char *device, int major, int minor)
