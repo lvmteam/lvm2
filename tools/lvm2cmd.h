@@ -52,6 +52,12 @@ void lvm2_log_fn(lvm2_log_fn_t log_fn);
 void *lvm2_init(void);
 
 /*
+ * Disable any dmeventd calls that the library may otherwise do. Useful to avoid
+ * recursive calls from dmeventd to itself.
+ */
+void lvm2_disable_dmeventd_monitoring(void *handle);
+
+/*
  * Set log level (as above) if using built-in logging function. 
  * Default is LVM2_LOG_PRINT.  Use LVM2_LOG_SUPPRESS to suppress output.
  */

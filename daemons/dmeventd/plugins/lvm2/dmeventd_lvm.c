@@ -113,6 +113,7 @@ int dmeventd_lvm2_init(void)
 			_mem_pool = NULL;
 			goto out;
 		}
+		lvm2_disable_dmeventd_monitoring(_lvm_handle);
 		/* FIXME Temporary: move to dmeventd core */
 		lvm2_run(_lvm_handle, "_memlock_inc");
 	}

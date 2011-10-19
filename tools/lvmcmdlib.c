@@ -97,6 +97,10 @@ int lvm2_run(void *handle, const char *cmdline)
 	return ret;
 }
 
+void lvm2_disable_dmeventd_monitoring(void *handle) {
+	init_dmeventd_monitor(DMEVENTD_MONITOR_IGNORE);
+}
+
 void lvm2_log_level(void *handle, int level)
 {
 	struct cmd_context *cmd = (struct cmd_context *) handle;
