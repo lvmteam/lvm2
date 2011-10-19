@@ -46,10 +46,30 @@ int attach_pool_lv(struct lv_segment *seg, struct logical_volume *pool_lv)
 
 int detach_pool_lv(struct lv_segment *seg)
 {
+	struct lv_thin_message *tmsg;
+	struct dm_list *l, *lt;
+
 	if (!lv_is_thin_pool(seg->pool_lv)) {
 		log_error(INTERNAL_ERROR "LV %s is not a thin pool",
 			  seg->pool_lv->name);
 		return 0;
+	}
+
+	/* Drop any message referencing removed segment */
+	dm_list_iterate_safe(l, lt, &first_seg(seg->pool_lv)->thin_messages) {
+		tmsg = dm_list_item(l, struct lv_thin_message);
+		switch (tmsg->type) {
+		case DM_THIN_MESSAGE_CREATE_SNAP:
+		case DM_THIN_MESSAGE_CREATE_THIN:
+		case DM_THIN_MESSAGE_TRIM:
+			if (first_seg(tmsg->u.lv) == seg) {
+				log_debug("Discarding message for LV %s.",
+					  tmsg->u.lv->name);
+				dm_list_del(&tmsg->list);
+			}
+		default:
+			break;
+		}
 	}
 
 	if (!attach_pool_message(first_seg(seg->pool_lv),
