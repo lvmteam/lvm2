@@ -2906,26 +2906,24 @@ int dm_tree_node_add_thin_pool_message(struct dm_tree_node *node,
 		if (!_thin_validate_device_id(message->u.m_create_snap.device_id) ||
 		    !_thin_validate_device_id(message->u.m_create_snap.origin_id))
 			return_0;
-		tm->message.u.m_create_snap.device_id = message->u.m_create_snap.device_id;
-		tm->message.u.m_create_snap.origin_id = message->u.m_create_snap.origin_id;
+		tm->message.u.m_create_snap = message->u.m_create_snap;
 		break;
 	case DM_THIN_MESSAGE_CREATE_THIN:
 		if (!_thin_validate_device_id(message->u.m_create_thin.device_id))
 			return_0;
-		tm->message.u.m_create_thin.device_id = message->u.m_create_thin.device_id;
+		tm->message.u.m_create_thin = message->u.m_create_thin;
 		tm->expected_errno = EEXIST;
 		break;
 	case DM_THIN_MESSAGE_DELETE:
 		if (!_thin_validate_device_id(message->u.m_delete.device_id))
 			return_0;
-		tm->message.u.m_delete.device_id = message->u.m_delete.device_id;
+		tm->message.u.m_delete = message->u.m_delete;
 		tm->expected_errno = ENODATA;
 		break;
 	case DM_THIN_MESSAGE_TRIM:
 		if (!_thin_validate_device_id(message->u.m_trim.device_id))
 			return_0;
-		tm->message.u.m_trim.device_id = message->u.m_trim.device_id;
-		tm->message.u.m_trim.new_size = message->u.m_trim.new_size;
+		tm->message.u.m_trim = message->u.m_trim;
 		break;
 	case DM_THIN_MESSAGE_SET_TRANSACTION_ID:
 		if (message->u.m_set_transaction_id.current_id !=
@@ -2933,10 +2931,7 @@ int dm_tree_node_add_thin_pool_message(struct dm_tree_node *node,
 			log_error("New transaction_id must be sequential.");
 			return 0; /* FIXME: Maybe too strict here? */
 		}
-		tm->message.u.m_set_transaction_id.current_id =
-			message->u.m_set_transaction_id.current_id;
-		tm->message.u.m_set_transaction_id.new_id =
-			message->u.m_set_transaction_id.new_id;
+		tm->message.u.m_set_transaction_id = message->u.m_set_transaction_id;
 		break;
 	default:
 		log_error("Unsupported message type %d.", (int) message->type);
