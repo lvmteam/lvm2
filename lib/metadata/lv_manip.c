@@ -511,6 +511,7 @@ static int _lv_reduce(struct logical_volume *lv, uint32_t extents, int delete)
 			/* FIXME Check this is safe */
 			if (seg->log_lv && !lv_remove(seg->log_lv))
 				return_0;
+
 			if (seg->pool_metadata_lv && !lv_remove(seg->pool_metadata_lv))
 				return_0;
 

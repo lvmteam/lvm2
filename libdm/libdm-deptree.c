@@ -1342,7 +1342,6 @@ static int _thin_pool_node_send_messages(struct dm_tree_node *dnode,
 		return 1;
 
 	seg = dm_list_item(dm_list_last(&dnode->props.segs), struct load_segment);
-
 	if (seg->type != SEG_THIN_POOL)
 		return 1;
 
@@ -2887,7 +2886,6 @@ int dm_tree_node_add_thin_pool_message(struct dm_tree_node *node,
 	}
 
 	seg = dm_list_item(dm_list_last(&node->props.segs), struct load_segment);
-
 	if (seg->type != SEG_THIN_POOL) {
 		log_error(INTERNAL_ERROR "Attempt to use non thin pool segment %s.",
 			  dm_segtypes[seg->type].target);
