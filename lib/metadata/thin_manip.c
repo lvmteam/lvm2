@@ -21,9 +21,9 @@ int attach_pool_metadata_lv(struct lv_segment *seg, struct logical_volume *pool_
 {
 	seg->pool_metadata_lv = pool_metadata_lv;
 	pool_metadata_lv->status |= THIN_POOL_METADATA;
-        lv_set_hidden(pool_metadata_lv);
+	lv_set_hidden(pool_metadata_lv);
 
-        return add_seg_to_segs_using_this_lv(pool_metadata_lv, seg);
+	return add_seg_to_segs_using_this_lv(pool_metadata_lv, seg);
 }
 
 int attach_pool_data_lv(struct lv_segment *seg, struct logical_volume *pool_data_lv)
@@ -31,9 +31,9 @@ int attach_pool_data_lv(struct lv_segment *seg, struct logical_volume *pool_data
 	if (!set_lv_segment_area_lv(seg, 0, pool_data_lv, 0, THIN_POOL_DATA))
 		return_0;
 
-        lv_set_hidden(pool_data_lv);
+	lv_set_hidden(pool_data_lv);
 
-        return 1;
+	return 1;
 }
 
 int attach_pool_lv(struct lv_segment *seg, struct logical_volume *pool_lv)
@@ -41,7 +41,7 @@ int attach_pool_lv(struct lv_segment *seg, struct logical_volume *pool_lv)
 	seg->pool_lv = pool_lv;
 	seg->lv->status |= THIN_VOLUME;
 
-        return add_seg_to_segs_using_this_lv(pool_lv, seg);
+	return add_seg_to_segs_using_this_lv(pool_lv, seg);
 }
 
 int detach_pool_lv(struct lv_segment *seg)
@@ -117,22 +117,22 @@ int detach_pool_messages(struct lv_segment *seg)
 
 struct lv_segment *find_pool_seg(const struct lv_segment *seg)
 {
-        struct lv_segment *pool_seg;
+	struct lv_segment *pool_seg;
 
-        pool_seg = get_only_segment_using_this_lv(seg->lv);
+	pool_seg = get_only_segment_using_this_lv(seg->lv);
 
-        if (!pool_seg) {
-                log_error("Failed to find pool_seg for %s", seg->lv->name);
-                return NULL;
-        }
+	if (!pool_seg) {
+		log_error("Failed to find pool_seg for %s", seg->lv->name);
+		return NULL;
+	}
 
-        if (!seg_is_thin_pool(pool_seg)) {
-                log_error("%s on %s is not a pool segment",
-                          pool_seg->lv->name, seg->lv->name);
-                return NULL;
-        }
+	if (!seg_is_thin_pool(pool_seg)) {
+		log_error("%s on %s is not a pool segment",
+			  pool_seg->lv->name, seg->lv->name);
+		return NULL;
+	}
 
-        return pool_seg;
+	return pool_seg;
 }
 
 /*
