@@ -2880,13 +2880,13 @@ int dm_tree_node_add_thin_pool_message(struct dm_tree_node *node,
 	struct thin_message *tm;
 
 	if (node->props.segment_count != 1) {
-		log_error(INTERNAL_ERROR "Attempt to use non thin pool segment.");
+		log_error("Thin pool node must have only one segment.");
 		return 0;
 	}
 
 	seg = dm_list_item(dm_list_last(&node->props.segs), struct load_segment);
 	if (seg->type != SEG_THIN_POOL) {
-		log_error(INTERNAL_ERROR "Attempt to use non thin pool segment %s.",
+		log_error("Thin pool node has segment type %s.",
 			  dm_segtypes[seg->type].target);
 		return 0;
 	}
@@ -2898,9 +2898,9 @@ int dm_tree_node_add_thin_pool_message(struct dm_tree_node *node,
 
 	switch (message->type) {
 	case DM_THIN_MESSAGE_CREATE_SNAP:
-		/* Origin MUST be suspend! */
+		/* If the thin origin is active, it must be suspend first! */
 		if (message->u.m_create_snap.device_id == message->u.m_create_snap.origin_id) {
-			log_error("Same origin used for thin snapshot.");
+			log_error("Cannot use same device id for origin and its snapshot.");
 			return 0;
 		}
 		if (!_thin_validate_device_id(message->u.m_create_snap.device_id) ||
