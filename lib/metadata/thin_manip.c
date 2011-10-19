@@ -126,7 +126,7 @@ int attach_pool_message(struct lv_segment *seg, dm_thin_message_t type,
 		tmsg->u.delete_id = delete_id;
 		break;
 	default:
-		log_error(INTERNAL_ERROR "Unsupported message type %d", type);
+		log_error(INTERNAL_ERROR "Unsupported message type %u.", type);
 		return 0;
 	}
 
