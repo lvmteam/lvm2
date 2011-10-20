@@ -1250,23 +1250,16 @@ static int _create_and_load_v4(struct dm_task *dmt)
 
 	/* Use new task struct to create the device */
 	if (!(task = dm_task_create(DM_DEVICE_CREATE))) {
-		log_error("Failed to create device-mapper task struct");
 		_udev_complete(dmt);
-		return 0;
+		return_0;
 	}
 
 	/* Copy across relevant fields */
-	if (dmt->dev_name && !dm_task_set_name(task, dmt->dev_name)) {
-		dm_task_destroy(task);
-		_udev_complete(dmt);
-		return 0;
-	}
+	if (dmt->dev_name && !dm_task_set_name(task, dmt->dev_name))
+		goto_bad;
 
-	if (dmt->uuid && !dm_task_set_uuid(task, dmt->uuid)) {
-		dm_task_destroy(task);
-		_udev_complete(dmt);
-		return 0;
-	}
+	if (dmt->uuid && !dm_task_set_uuid(task, dmt->uuid))
+		goto_bad;
 
 	task->major = dmt->major;
 	task->minor = dmt->minor;
@@ -1278,26 +1271,23 @@ static int _create_and_load_v4(struct dm_task *dmt)
 	task->cookie_set = dmt->cookie_set;
 	task->add_node = dmt->add_node;
 
-	r = dm_task_run(task);
+	if (!dm_task_run(task))
+		goto_bad;
+
 	dm_task_destroy(task);
-	if (!r) {
-		_udev_complete(dmt);
-		return 0;
-	}
 
 	/* Next load the table */
 	if (!(task = dm_task_create(DM_DEVICE_RELOAD))) {
-		log_error("Failed to create device-mapper task struct");
+		stack;
 		_udev_complete(dmt);
-		r = 0;
 		goto revert;
 	}
 
 	/* Copy across relevant fields */
 	if (dmt->dev_name && !dm_task_set_name(task, dmt->dev_name)) {
+		stack;
 		dm_task_destroy(task);
 		_udev_complete(dmt);
-		r = 0;
 		goto revert;
 	}
 
@@ -1311,7 +1301,9 @@ static int _create_and_load_v4(struct dm_task *dmt)
 	task->head = NULL;
 	task->tail = NULL;
 	dm_task_destroy(task);
+
 	if (!r) {
+		stack;
 		_udev_complete(dmt);
 		goto revert;
 	}
@@ -1321,13 +1313,11 @@ static int _create_and_load_v4(struct dm_task *dmt)
 	dm_free(dmt->uuid);
 	dmt->uuid = NULL;
 
-	r = dm_task_run(dmt);
-
-	if (r)
-		return r;
+	if (dm_task_run(dmt))
+		return 1;
 
       revert:
- 	dmt->type = DM_DEVICE_REMOVE;
+	dmt->type = DM_DEVICE_REMOVE;
 	dm_free(dmt->uuid);
 	dmt->uuid = NULL;
 
@@ -1347,7 +1337,13 @@ static int _create_and_load_v4(struct dm_task *dmt)
 	if (!dm_task_run(dmt))
 		log_error("Failed to revert device creation.");
 
-	return r;
+	return 0;
+
+      bad:
+	dm_task_destroy(task);
+	_udev_complete(dmt);
+
+	return 0;
 }
 
 uint64_t dm_task_get_existing_table_size(struct dm_task *dmt)
@@ -1720,7 +1716,7 @@ int dm_task_run(struct dm_task *dmt)
 
 	if (!_open_control()) {
 		_udev_complete(dmt);
-		return 0;
+		return_0;
 	}
 
 	if ((suspended_counter = dm_get_suspended_counter()) &&
