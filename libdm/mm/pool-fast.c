@@ -23,7 +23,7 @@
 struct chunk {
 	char *begin, *end;
 	struct chunk *prev;
-};
+} __attribute__((aligned(8)));
 
 struct dm_pool {
 	struct dm_list list;
