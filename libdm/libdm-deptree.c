@@ -2086,7 +2086,7 @@ static int _emit_segment_line(struct dm_task *dmt, uint32_t major,
 			return_0;
 		EMIT_PARAMS(pos, "%s %s %d %" PRIu64 " %s", metadata, pool,
 			    seg->data_block_size, seg->low_water_mark,
-			    seg->skip_block_zeroing ? "1 skip_block_zeroing" : "");
+			    seg->skip_block_zeroing ? "1 skip_block_zeroing" : "0");
 		break;
 	case SEG_THIN:
 		if (!_build_dev_string(pool, sizeof(pool), seg->pool))
