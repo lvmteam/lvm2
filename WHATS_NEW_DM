@@ -1,5 +1,6 @@
 Version 1.02.68 -
 ==================================
+  Remove unused dbg_malloc.h file from source tree.
   Cleanup backtraces for _create_and_load_v4().
   Fix alignment warning in bitcount calculation for raid segment.
   Allocate dm_tree structure from dm_tree pool.
