@@ -1,5 +1,6 @@
 Version 1.02.68 -
 ==================================
+  Simplify some pointer operations in dm_free_aux() debug code..
   Remove unused dbg_malloc.h file from source tree.
   Cleanup backtraces for _create_and_load_v4().
   Fix alignment warning in bitcount calculation for raid segment.
