@@ -113,7 +113,8 @@ static int _thin_pool_text_import(struct lv_segment *seg,
 	if (!dm_config_get_uint64(sn, "transaction_id", &seg->transaction_id))
 		return SEG_LOG_ERROR("Could not read transaction_id for");
 
-	if (!dm_config_get_uint64(sn, "low_water_mark", &seg->low_water_mark))
+	if (dm_config_has_node(sn, "low_water_mark") &&
+	    !dm_config_get_uint64(sn, "low_water_mark", &seg->low_water_mark))
 		return SEG_LOG_ERROR("Could not read low_water_mark");
 
 	if (!dm_config_get_uint32(sn, "data_block_size", &seg->data_block_size))
@@ -154,8 +155,10 @@ static int _thin_pool_text_export(const struct lv_segment *seg, struct formatter
 	outf(f, "pool = \"%s\"", seg_lv(seg, 0)->name);
 	outf(f, "metadata = \"%s\"", seg->pool_metadata_lv->name);
 	outf(f, "transaction_id = %" PRIu64, seg->transaction_id);
-	outf(f, "low_water_mark = %" PRIu64, seg->low_water_mark);
 	outf(f, "data_block_size = %d", seg->data_block_size);
+
+	if (seg->low_water_mark)
+		outf(f, "low_water_mark = %" PRIu64, seg->low_water_mark);
 
 	if (seg->zero_new_blocks)
 		outf(f, "zero_new_blocks = 1");
