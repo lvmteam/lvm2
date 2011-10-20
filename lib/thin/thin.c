@@ -119,8 +119,8 @@ static int _thin_pool_text_import(struct lv_segment *seg,
 	if (!dm_config_get_uint32(sn, "data_block_size", &seg->data_block_size))
 		return SEG_LOG_ERROR("Could not read data_block_size");
 
-	if ((seg->data_block_size < DM_THIN_MIN_DATA_SIZE) ||
-	    (seg->data_block_size > DM_THIN_MAX_DATA_SIZE))
+	if ((seg->data_block_size < DM_THIN_MIN_DATA_BLOCK_SIZE) ||
+	    (seg->data_block_size > DM_THIN_MAX_DATA_BLOCK_SIZE))
 		return SEG_LOG_ERROR("Unsupported value %u for data_block_size",
 				     seg->device_id);
 

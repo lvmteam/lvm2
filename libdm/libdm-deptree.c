@@ -2833,15 +2833,15 @@ int dm_tree_node_add_thin_pool_target(struct dm_tree_node *node,
 {
 	struct load_segment *seg;
 
-	if (data_block_size < DM_THIN_MIN_DATA_SIZE) {
+	if (data_block_size < DM_THIN_MIN_DATA_BLOCK_SIZE) {
 		log_error("Data block size %u is lower then %u sectors.",
-			  data_block_size, DM_THIN_MIN_DATA_SIZE);
+			  data_block_size, DM_THIN_MIN_DATA_BLOCK_SIZE);
 		return 0;
 	}
 
-	if (data_block_size > DM_THIN_MAX_DATA_SIZE) {
+	if (data_block_size > DM_THIN_MAX_DATA_BLOCK_SIZE) {
 		log_error("Data block size %u is higher then %u sectors.",
-			  data_block_size, DM_THIN_MAX_DATA_SIZE);
+			  data_block_size, DM_THIN_MAX_DATA_BLOCK_SIZE);
 		return 0;
 	}
 

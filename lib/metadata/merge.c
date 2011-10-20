@@ -202,8 +202,8 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 					inc_error_count;
 				}
 
-				if (seg->data_block_size < DM_THIN_MIN_DATA_SIZE ||
-				    seg->data_block_size > DM_THIN_MAX_DATA_SIZE) {
+				if (seg->data_block_size < DM_THIN_MIN_DATA_BLOCK_SIZE ||
+				    seg->data_block_size > DM_THIN_MAX_DATA_BLOCK_SIZE) {
 					log_error("LV %s: thin pool segment %u  data block size %d is out of range",
 						  lv->name, seg_count, seg->data_block_size);
 					inc_error_count;
