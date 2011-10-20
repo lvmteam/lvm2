@@ -542,8 +542,8 @@ int dm_tree_node_add_replicator_dev_target(struct dm_tree_node *node,
  * DATA_DEV_BLOCK_SIZE_MAX_SECTORS (1024 * 1024 * 1024 >> SECTOR_SHIFT)
  * MAX_DEV_ID ((1 << 24) - 1)
  */
-#define DM_THIN_MIN_DATA_SIZE (UINT32_C(128))
-#define DM_THIN_MAX_DATA_SIZE (UINT32_C(2097152))
+#define DM_THIN_MIN_DATA_BLOCK_SIZE (UINT32_C(128))
+#define DM_THIN_MAX_DATA_BLOCK_SIZE (UINT32_C(2097152))
 #define DM_THIN_MAX_DEVICE_ID (UINT32_C((1 << 24) - 1))
 
 int dm_tree_node_add_thin_pool_target(struct dm_tree_node *node,
