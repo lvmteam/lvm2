@@ -300,6 +300,12 @@ static struct chunk *_new_chunk(struct dm_pool *p, size_t s)
 
 static void _free_chunk(struct chunk *c)
 {
+#ifdef VALGRIND_POOL
+#  ifdef DEBUG_MEM
+	if (c)
+		VALGRIND_MAKE_MEM_UNDEFINED(c + 1, c->end - (char *) (c + 1));
+#  endif
+#endif
 	dm_free(c);
 }
 

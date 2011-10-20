@@ -1,5 +1,6 @@
 Version 1.02.68 -
 ==================================
+  Fix valgrind error reports in free of pool chunks with DEBUG_MEM.
   Aling size of structure chunk for fast pool allocator to 8 bytes.
   Simplify some pointer operations in dm_free_aux() debug code.
   Remove unused dbg_malloc.h file from source tree.
