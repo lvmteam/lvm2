@@ -150,7 +150,7 @@ static int _thin_pool_text_import_area_count(const struct dm_config_node *sn,
 static int _thin_pool_text_export(const struct lv_segment *seg, struct formatter *f)
 {
 	unsigned cnt = 0;
-	struct lv_thin_message *tmsg;
+	const struct lv_thin_message *tmsg;
 
 	outf(f, "pool = \"%s\"", seg_lv(seg, 0)->name);
 	outf(f, "metadata = \"%s\"", seg->pool_metadata_lv->name);
@@ -220,7 +220,7 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 				      uint32_t *pvmove_mirror_count __attribute__((unused)))
 {
 	char *metadata_dlid, *pool_dlid;
-	struct lv_thin_message *lmsg;
+	const struct lv_thin_message *lmsg;
 	struct dm_thin_message dmsg;
 
 	if (!(metadata_dlid = build_dm_uuid(mem, seg->pool_metadata_lv->lvid.s, NULL))) {

@@ -589,7 +589,7 @@ struct dm_thin_message {
 };
 
 int dm_tree_node_add_thin_pool_message(struct dm_tree_node *node,
-                                       struct dm_thin_message *message);
+                                       const struct dm_thin_message *message);
 
 int dm_tree_node_add_thin_target(struct dm_tree_node *node,
 				 uint64_t size,
