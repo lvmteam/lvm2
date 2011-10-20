@@ -552,7 +552,7 @@ int dm_tree_node_add_thin_pool_target(struct dm_tree_node *node,
 				      const char *metadata_uuid,
 				      const char *pool_uuid,
 				      uint32_t data_block_size,
-				      uint64_t low_water_mark_size,
+				      uint64_t low_water_mark,
 				      unsigned skip_block_zeroing);
 
 /* Supported messages for thin provision target */
