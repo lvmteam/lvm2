@@ -143,9 +143,9 @@ void dm_free_aux(void *p)
 	assert(mb->magic == p);
 
 	/* check data at the far boundary */
-	ptr = ((char *) mb) + sizeof(struct memblock) + mb->length;
+	ptr = (char *) p + mb->length;
 	for (i = 0; i < sizeof(unsigned long); i++)
-		if (*ptr++ != (char) mb->id)
+		if (ptr[i] != (char) mb->id)
 			assert(!"Damage at far end of block");
 
 	/* have we freed this before ? */
@@ -165,9 +165,9 @@ void dm_free_aux(void *p)
 	mb->id = 0;
 
 	/* stomp a different pattern across the memory */
-	ptr = ((char *) mb) + sizeof(struct memblock);
+	ptr = p;
 	for (i = 0; i < mb->length; i++)
-		*ptr++ = i & 1 ? (char) 0xde : (char) 0xad;
+		ptr[i] = i & 1 ? (char) 0xde : (char) 0xad;
 
 	assert(_mem_stats.blocks_allocated);
 	_mem_stats.blocks_allocated--;
