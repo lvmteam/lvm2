@@ -4214,7 +4214,33 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 
 	init_dmeventd_monitor(lp->activation_monitoring);
 
-	if (lp->snapshot) {
+	if (seg_is_thin_pool(lp)) {
+		/* FIXME: skipping in test mode is not going work */
+		if (!activate_lv_excl(cmd, first_seg(lv)->pool_metadata_lv) ||
+		    /* First 4KB of metadata device must be cleared. */
+		    !set_lv(cmd, first_seg(lv)->pool_metadata_lv, UINT64_C(0), 0)) {
+			log_error("Aborting. Failed to wipe pool metadata %s.",
+				  lv->name);
+			goto revert_new_lv;
+		}
+		/* FIXME: we may postpone finish of the pool creation to the
+		 * moment of the first activation - but this needs more changes
+		 * so we would update metadata with vgchange -ay
+		 *
+		 * For now always activate.
+		 */
+		if (!activate_lv_excl(cmd, lv)) {
+			log_error("Aborting. Could not to activate thin pool %s.",
+				  lv->name);
+			goto revert_new_lv;
+		}
+	} else if (seg_is_thin(lp)) {
+		/* FIXME: same as with thin pool - add lazy creation support */
+		if (!activate_lv_excl(cmd, lv)) {
+			log_error("Aborting. Failed to activate thin %s.", lv->name);
+			goto revert_new_lv;
+		}
+	} else if (lp->snapshot) {
 		if (!activate_lv_excl(cmd, lv)) {
 			log_error("Aborting. Failed to activate snapshot "
 				  "exception store.");
@@ -4236,12 +4262,9 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 			  lp->snapshot ? "snapshot exception store" :
 					 "start of new LV");
 		goto deactivate_and_revert_new_lv;
-	} else if (seg_is_thin_pool(lp)) {
-		if (!set_lv(cmd, first_seg(lv)->pool_metadata_lv, UINT64_C(0), 0))
-			log_error("Aborting. Failed to wipe pool metadata %s.",
-				  lv->name);
 	} else if (seg_is_thin_volume(lp)) {
-		/* since we've got here, we may drop any queued thin messages */
+		/* FIXME: for now we may drop any queued thin messages
+		 * since we are sure everything was activated already */
 		if (!detach_pool_messages(first_seg(first_seg(lv)->pool_lv)))
 			goto deactivate_and_revert_new_lv;
 
