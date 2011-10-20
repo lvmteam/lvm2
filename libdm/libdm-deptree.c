@@ -2874,7 +2874,7 @@ int dm_tree_node_add_thin_pool_target(struct dm_tree_node *node,
 }
 
 int dm_tree_node_add_thin_pool_message(struct dm_tree_node *node,
-				       struct dm_thin_message *message)
+				       const struct dm_thin_message *message)
 {
 	struct load_segment *seg;
 	struct thin_message *tm;
