@@ -2266,19 +2266,13 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 				return_0;
 
 		/* FIXME Cope if name exists with no uuid? */
-		if (!child->info.exists) {
-			if (!_create_node(child)) {
-				stack;
-				return 0;
-			}
-		}
+		if (!child->info.exists && !_create_node(child))
+			return_0;
 
-		if (!child->info.inactive_table && child->props.segment_count) {
-			if (!_load_node(child)) {
-				stack;
-				return 0;
-			}
-		}
+		if (!child->info.inactive_table &&
+		    child->props.segment_count &&
+		    !_load_node(child))
+			return_0;
 
 		/* Propagate device size change change */
 		if (child->props.size_changed)
