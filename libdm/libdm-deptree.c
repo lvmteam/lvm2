@@ -170,7 +170,7 @@ struct load_segment {
 	struct dm_tree_node *metadata;	/* Thin_pool */
 	struct dm_tree_node *pool;	/* Thin_pool, Thin */
 	struct dm_list thin_messages;	/* Thin_pool */
-	uint64_t low_water_mark_size;	/* Thin_pool */
+	uint64_t low_water_mark;	/* Thin_pool */
 	uint32_t data_block_size;       /* Thin_pool */
 	unsigned skip_block_zeroing;	/* Thin_pool */
 	uint32_t device_id;		/* Thin */
@@ -2085,7 +2085,7 @@ static int _emit_segment_line(struct dm_task *dmt, uint32_t major,
 		if (!_build_dev_string(pool, sizeof(pool), seg->pool))
 			return_0;
 		EMIT_PARAMS(pos, "%s %s %d %" PRIu64 " %s", metadata, pool,
-			    seg->data_block_size, seg->low_water_mark_size,
+			    seg->data_block_size, seg->low_water_mark,
 			    seg->skip_block_zeroing ? "1 skip_block_zeroing" : "");
 		break;
 	case SEG_THIN:
@@ -2828,7 +2828,7 @@ int dm_tree_node_add_thin_pool_target(struct dm_tree_node *node,
 				      const char *metadata_uuid,
 				      const char *pool_uuid,
 				      uint32_t data_block_size,
-				      uint64_t low_water_mark_size,
+				      uint64_t low_water_mark,
 				      unsigned skip_block_zeroing)
 {
 	struct load_segment *seg;
@@ -2865,7 +2865,7 @@ int dm_tree_node_add_thin_pool_target(struct dm_tree_node *node,
 		return_0;
 
 	node->props.thin_pool_transaction_id = transaction_id; // compare on resume
-	seg->low_water_mark_size = low_water_mark_size;
+	seg->low_water_mark = low_water_mark;
 	seg->data_block_size = data_block_size;
 	seg->skip_block_zeroing = skip_block_zeroing;
 	dm_list_init(&seg->thin_messages);
