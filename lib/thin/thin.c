@@ -310,6 +310,9 @@ static int _thin_text_import(struct lv_segment *seg,
 	if (!attach_pool_lv(seg, pool_lv))
 		return_0;
 
+	if (!dm_config_get_uint64(sn, "transaction_id", &seg->transaction_id))
+		return SEG_LOG_ERROR("Could not read transaction_id for");
+
 	if (dm_config_has_node(sn, "origin")) {
 		if (!dm_config_get_str(sn, "origin", &lv_name))
 			return SEG_LOG_ERROR("Origin must be a string in");
@@ -331,6 +334,7 @@ static int _thin_text_import(struct lv_segment *seg,
 static int _thin_text_export(const struct lv_segment *seg, struct formatter *f)
 {
 	outf(f, "thin_pool = \"%s\"", seg->pool_lv->name);
+	outf(f, "transaction_id = %" PRIu64, seg->transaction_id);
 	outf(f, "device_id = %d", seg->device_id);
 
 	if (seg->origin)
