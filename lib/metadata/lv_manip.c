@@ -800,8 +800,8 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 		}
 	} else if (segtype_is_thin_pool(segtype)) {
 		ah->log_area_count = metadata_area_count;
-// FIXME Calculate thin metadata area size
-		ah->log_len = 1;
+// FIXME Calculate thin metadata area size (--metadatasize, or reuse --regionsize??)
+		ah->log_len = 128 * 1024 * 1024 / (512 * extent_size); /* Fixed 128MB */
 	} else {
 		ah->log_area_count = metadata_area_count;
 		ah->log_len = !metadata_area_count ? 0 :
@@ -2605,17 +2605,12 @@ int lv_extend(struct logical_volume *lv,
 						stripes, stripe_size)))
 			goto out;
 
-		if (segtype_is_thin_pool(segtype)) {
-			/* FIXME: resize metadata size here for now */
-			struct logical_volume *tmeta = first_seg(lv)->pool_metadata_lv;
-			if ((r = lv_add_segment(ah, ah->area_count, 1, tmeta,
-						get_segtype_from_string(lv->vg->cmd, "striped"), 0, 0, 0))) {
-				if (!(r = lv_extend(tmeta, first_seg(tmeta)->segtype,
-						    1, 0, 1, 0, 10, NULL, allocatable_pvs, ALLOC_INHERIT)))
-					stack;
-			} else
-				stack;
-		}
+		if (segtype_is_thin_pool(segtype) &&
+		    !(r = lv_add_segment(ah, ah->area_count, 1,
+					 first_seg(lv)->pool_metadata_lv,
+					 get_segtype_from_string(lv->vg->cmd,
+								 "striped"), 0, 0, 0)))
+			goto_out;
 
 		/*
 		 * If we are expanding an existing mirror, we can skip the
