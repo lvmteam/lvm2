@@ -253,8 +253,11 @@ struct lv_segment *alloc_lv_segment(struct dm_pool *mem,
 	dm_list_init(&seg->tags);
 	dm_list_init(&seg->thin_messages);
 
-	if (thin_pool_lv && !attach_pool_lv(seg, thin_pool_lv))
-		return_NULL;
+	if (thin_pool_lv) {
+		seg->transaction_id = first_seg(thin_pool_lv)->transaction_id;
+		if (!attach_pool_lv(seg, thin_pool_lv))
+			return_NULL;
+	}
 
 	if (log_lv && !attach_mirror_log(seg, log_lv))
 		return_NULL;
