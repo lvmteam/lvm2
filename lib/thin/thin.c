@@ -155,7 +155,7 @@ static int _thin_pool_text_export(const struct lv_segment *seg, struct formatter
 	outf(f, "pool = \"%s\"", seg_lv(seg, 0)->name);
 	outf(f, "metadata = \"%s\"", seg->pool_metadata_lv->name);
 	outf(f, "transaction_id = %" PRIu64, seg->transaction_id);
-	outf(f, "data_block_size = %d", seg->data_block_size);
+	outf(f, "data_block_size = %u", seg->data_block_size);
 
 	if (seg->low_water_mark)
 		outf(f, "low_water_mark = %" PRIu64, seg->low_water_mark);
