@@ -690,14 +690,26 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 			log_error("Negative chunk size is invalid");
 			return 0;
 		}
-		lp->chunk_size = arg_uint_value(cmd, chunksize_ARG, 8);
-		if (lp->chunk_size < 8 || lp->chunk_size > 1024 ||
-		    (lp->chunk_size & (lp->chunk_size - 1))) {
-			log_error("Chunk size must be a power of 2 in the "
-				  "range 4K to 512K");
-			return 0;
+		if (lp->snapshot) {
+			lp->chunk_size = arg_uint_value(cmd, chunksize_ARG, 8);
+			if (lp->chunk_size < 8 || lp->chunk_size > 1024 ||
+			    (lp->chunk_size & (lp->chunk_size - 1))) {
+				log_error("Chunk size must be a power of 2 in the "
+					  "range 4K to 512K");
+				return 0;
+			}
+		} else {
+			lp->chunk_size = arg_uint_value(cmd, chunksize_ARG, DM_THIN_MIN_DATA_BLOCK_SIZE);
+			if ((lp->chunk_size < DM_THIN_MIN_DATA_BLOCK_SIZE) ||
+			    (lp->chunk_size > DM_THIN_MAX_DATA_BLOCK_SIZE) ||
+			    (lp->chunk_size & (lp->chunk_size - 1))) {
+				log_error("Chunk size must be a power of 2 in the "
+					  "range %uK to %uK", (DM_THIN_MIN_DATA_BLOCK_SIZE / 2),
+					  (DM_THIN_MIN_DATA_BLOCK_SIZE / 2));
+				return 0;
+			}
 		}
-		log_verbose("Setting chunksize to %d sectors.", lp->chunk_size);
+		log_verbose("Setting chunksize to %u sectors.", lp->chunk_size);
 
 		if (!lp->thin && lp->snapshot && !(lp->segtype = get_segtype_from_string(cmd, "snapshot")))
 			return_0;

@@ -132,6 +132,8 @@ on one node and \fB-a\fIly\fR will activate only on the local node.
 Power of 2 chunk size in sector units (512b).
 For snapshot logical volume the value must be between 8 (4KB) and 1024 (512KB)
 and the default value is 8.
+For thin pool logical volume the value must be between 128 (64KB) and
+2097152 (1MB) and the default value is 128.
 .TP
 .BR \-C ", " \-\-contiguous " {" \fIy | \fIn }
 Sets or resets the contiguous allocation policy for

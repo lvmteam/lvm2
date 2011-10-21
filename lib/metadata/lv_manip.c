@@ -4160,9 +4160,12 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 		       seg_is_thin_volume(lp) ? lp->pool : NULL, lp->pvh, lp->alloc))
 		return_NULL;
 
-	if (seg_is_thin_pool(lp) && lp->zero)
-		first_seg(lv)->zero_new_blocks = 1;
-	else if (seg_is_thin_volume(lp)) {
+	if (seg_is_thin_pool(lp)) {
+		first_seg(lv)->zero_new_blocks = lp->zero ? 1 : 0;
+		first_seg(lv)->data_block_size = lp->chunk_size;
+		/* FIXME: use lowwatermark  via lvm.conf global for all thinpools ? */
+		first_seg(lv)->low_water_mark = 0;
+	} else if (seg_is_thin_volume(lp)) {
 		pool_lv = first_seg(lv)->pool_lv;
 
 		if (!(first_seg(lv)->device_id =
@@ -4182,13 +4185,6 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 		 * FIXME: Skipping deactivate_lv(pool_lv) as it is going to be needed anyway
 		 * but revert_new_lv should revert to deactivated state.
 		 */
-	}
-
-	if (seg_is_thin_pool(lp)) {
-		/* FIXME: add lvcreate params - maybe -c/--chunksize?,
-		 * use lowwatermark  via lvm.conf global for all thinpools ?*/
-		first_seg(lv)->data_block_size = 128;
-		first_seg(lv)->low_water_mark = 4096;
 	}
 
 	if (lp->log_count &&
@@ -4217,7 +4213,9 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 	if (seg_is_thin_pool(lp)) {
 		/* FIXME: skipping in test mode is not going work */
 		if (!activate_lv_excl(cmd, first_seg(lv)->pool_metadata_lv) ||
-		    /* First 4KB of metadata device must be cleared. */
+		    /* Clear 4KB of metadata device for new thin-pool. */
+		    // FIXME: maybe -zero n  should  allow to recreate same thin pool
+		    // and different option should be used for zero_new_blocks
 		    !set_lv(cmd, first_seg(lv)->pool_metadata_lv, UINT64_C(0), 0)) {
 			log_error("Aborting. Failed to wipe pool metadata %s.",
 				  lv->name);
