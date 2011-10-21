@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Improve lvcreate man documentation of the chunksize option.
   Improve man page style for lvcreate.
   Avoid recursive calls to dmeventd in its LVM plugins.
   Log dev name now returned to kernel for registering during cmirror CTR.

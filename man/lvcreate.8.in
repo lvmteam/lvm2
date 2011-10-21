@@ -129,7 +129,9 @@ If clustered locking is enabled, \fB-a\fIey\fR will activate exclusively
 on one node and \fB-a\fIly\fR will activate only on the local node.
 .TP
 .BR \-c ", " \-\-chunksize " " \fIChunkSize
-Power of 2 chunk size for the snapshot logical volume between 4k and 512k.
+Power of 2 chunk size in sector units (512b).
+For snapshot logical volume the value must be between 8 (4KB) and 1024 (512KB)
+and the default value is 8.
 .TP
 .BR \-C ", " \-\-contiguous " {" \fIy | \fIn }
 Sets or resets the contiguous allocation policy for
