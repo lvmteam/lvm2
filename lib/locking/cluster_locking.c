@@ -366,7 +366,6 @@ static int _lock_for_cluster(struct cmd_context *cmd, unsigned char clvmd_cmd,
 	} else if (clvmd_cmd != CLVMD_CMD_VG_BACKUP) {
 		if (strncmp(name, "P_", 2) &&
 		    (clvmd_cmd == CLVMD_CMD_LOCK_VG ||
-		     (flags & LCK_TYPE_MASK) == LCK_EXCL ||
 		     (flags & LCK_LOCAL) ||
 		     !(flags & LCK_CLUSTER_VG)))
 			node = ".";

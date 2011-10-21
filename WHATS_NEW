@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Pass exclusive LV locks to all nodes in the cluster.
   Improve lvcreate man documentation of the chunksize option.
   Improve man page style for lvcreate.
   Avoid recursive calls to dmeventd in its LVM plugins.
@@ -19,7 +20,7 @@ Version 2.02.89 -
   Fix splitmirror in cluster having different DM/LVM views of storage.
   Fix improper udev settings during suspend/resume for mirror sub-LVs.
   Fix vgsplit when there are mirrors that have mirrored logs.
-  Clarify multi-name device filter pattern matching explanation in lvm.conf.5.
+  Clarify multi-name device filter pattern matching explanation in lvm.conf.
   Introduce lv_send_message and dev_manager_send_message.
   Introduce revert_lv for better pvmove cleanup.
   Replace incomplete pvmove activation failure recovery code with a message.
