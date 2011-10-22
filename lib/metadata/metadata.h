@@ -69,6 +69,7 @@
 
 struct dm_config_tree;
 struct metadata_area;
+struct alloc_handle;
 
 /* Per-format per-metadata area operations */
 struct metadata_area_ops {
@@ -461,6 +462,8 @@ int attach_pool_message(struct lv_segment *seg, dm_thin_message_t type,
 			struct logical_volume *lv, uint32_t delete_id,
 			int read_only);
 int detach_pool_messages(struct lv_segment *seg);
+int extend_pool(struct logical_volume *lv, const struct segment_type *segtype,
+		struct alloc_handle *ah);
 
 /*
  * Begin skeleton for external LVM library
