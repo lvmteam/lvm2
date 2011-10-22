@@ -4139,8 +4139,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 			    lv->minor);
 	}
 
-	if (!dm_list_empty(&lp->tags))
-		dm_list_splice(&lv->tags, &lp->tags);
+	dm_list_splice(&lv->tags, &lp->tags);
 
 	lp->region_size = adjusted_mirror_region_size(vg->extent_size,
 						      lp->extents,
