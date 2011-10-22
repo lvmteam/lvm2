@@ -13,6 +13,8 @@
  */
 
 #include "lib.h"
+#include "activate.h"
+#include "locking.h"
 #include "metadata.h"
 #include "segtype.h"
 #include "lv_alloc.h"
@@ -215,4 +217,97 @@ uint32_t get_free_pool_device_id(struct lv_segment *thin_pool_seg)
 	log_debug("Found free pool device_id %u.", max_id);
 
 	return max_id;
+}
+
+int extend_pool(struct logical_volume *pool_lv, const struct segment_type *segtype,
+		struct alloc_handle *ah)
+{
+	const struct segment_type *striped;
+	struct logical_volume *meta_lv, *data_lv;
+	struct lv_segment *seg;
+	const size_t len = strlen(pool_lv->name) + 16;
+	char name[len];
+
+	if (lv_is_thin_pool(pool_lv)) {
+		log_error("Resize of pool %s not yet implemented.", pool_lv->name);
+		return 0;
+	}
+
+	/* LV is not yet a pool, so it's extension from lvcreate */
+	if (!(striped = get_segtype_from_string(pool_lv->vg->cmd, "striped")))
+		return_0;
+
+	if (activation() && segtype->ops->target_present &&
+	    !segtype->ops->target_present(pool_lv->vg->cmd, NULL, NULL)) {
+		log_error("%s: Required device-mapper target(s) not "
+			  "detected in your kernel.", segtype->name);
+		return 0;
+	}
+
+	/* Metadata segment */
+	if (!lv_add_segment(ah, 1, 1, pool_lv, striped, 1, 0, 0))
+		return_0;
+
+	if (activation()) {
+		if (!vg_write(pool_lv->vg) || !vg_commit(pool_lv->vg))
+			return_0;
+
+		/*
+		 * If killed here, only the VISIBLE striped pool LV is left
+		 * and user could easily remove it.
+		 *
+		 * FIXME: implement lazy clearing when activation is disabled
+		 */
+
+		// FIXME: activate_lv_local_excl is actually wanted here
+		if (!activate_lv_local(pool_lv->vg->cmd, pool_lv) ||
+		    // FIXME: maybe -zero n  should  allow to recreate same thin pool
+		    // and different option should be used for zero_new_blocks
+		    /* Clear 4KB of metadata device for new thin-pool. */
+		    !set_lv(pool_lv->vg->cmd, pool_lv, UINT64_C(0), 0)) {
+			log_error("Aborting. Failed to wipe pool metadata %s.",
+				  pool_lv->name);
+			return 0;
+		}
+
+		if (!deactivate_lv_local(pool_lv->vg->cmd, pool_lv)) {
+			log_error("Aborting. Could not deactivate pool metadata %s.",
+				  pool_lv->name);
+			return 0;
+		}
+	} else {
+		log_error("Pool %s created without initilization.", pool_lv->name);
+	}
+
+	if (dm_snprintf(name, len, "%s_tmeta", pool_lv->name) < 0)
+		return_0;
+
+	if (!(meta_lv = lv_create_empty(name, NULL, LVM_READ | LVM_WRITE,
+					ALLOC_INHERIT, pool_lv->vg)))
+		return_0;
+
+	if (!move_lv_segments(meta_lv, pool_lv, 0, 0))
+		return_0;
+
+	/* Pool data segment */
+	if (!lv_add_segment(ah, 0, 1, pool_lv, striped, 1, 0, 0))
+		return_0;
+
+	if (!(data_lv = insert_layer_for_lv(pool_lv->vg->cmd, pool_lv,
+					    pool_lv->status, "_tpool")))
+		return_0;
+
+	seg = first_seg(pool_lv);
+	seg->segtype = segtype; /* Set as thin_pool segment */
+	seg->lv->status |= THIN_POOL;
+
+	if (!attach_pool_metadata_lv(seg, meta_lv))
+		return_0;
+
+	/* Drop reference as attach_pool_data_lv() takes it again */
+	remove_seg_from_segs_using_this_lv(data_lv, seg);
+	if (!attach_pool_data_lv(seg, data_lv))
+		return_0;
+
+	return 1;
 }
