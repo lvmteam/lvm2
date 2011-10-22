@@ -185,7 +185,7 @@ void print_log(int level, const char *file, int line, int dm_errno,
 	       const char *format, ...)
 {
 	va_list ap;
-	char buf[1024], buf2[4096], locn[4096];
+	char buf[1024], locn[4096];
 	int bufused, n;
 	const char *message;
 	const char *trformat;		/* Translated format string */
@@ -221,7 +221,7 @@ void print_log(int level, const char *file, int line, int dm_errno,
 	    (_store_errmsg && (level <= _LOG_ERR)) ||
 	    log_once) {
 		va_start(ap, format);
-		n = vsnprintf(buf2, sizeof(buf2) - 1, trformat, ap);
+		n = vsnprintf(locn, sizeof(locn) - 1, trformat, ap);
 		va_end(ap);
 
 		if (n < 0) {
@@ -230,8 +230,8 @@ void print_log(int level, const char *file, int line, int dm_errno,
 			goto log_it;
 		}
 
-		buf2[sizeof(buf2) - 1] = '\0';
-		message = &buf2[0];
+		locn[sizeof(locn) - 1] = '\0';
+		message = &locn[0];
 	}
 
 /* FIXME Avoid pointless use of message buffer when it'll never be read! */
