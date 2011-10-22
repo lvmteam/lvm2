@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Make move_lv_segment non-static function and use dm_list function.
   Pass exclusive LV locks to all nodes in the cluster.
   Improve lvcreate man documentation of the chunksize option.
   Improve man page style for lvcreate.
