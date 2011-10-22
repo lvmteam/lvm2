@@ -145,7 +145,10 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd,
 				stack;
 				continue;
 			}
-		} else if (lv_is_origin(lv) || (activate == CHANGE_AE)) {
+		} else if (lv_is_origin(lv) ||
+			   lv_is_thin_pool(lv) ||
+			   lv_is_thin_volume(lv) ||
+			   (activate == CHANGE_AE)) {
 			if (!activate_lv_excl(cmd, lv)) {
 				stack;
 				continue;
