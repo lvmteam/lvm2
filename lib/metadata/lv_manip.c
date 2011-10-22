@@ -3446,31 +3446,26 @@ int remove_layers_for_segments_all(struct cmd_context *cmd,
 	return 1;
 }
 
-static int _move_lv_segments(struct logical_volume *lv_to,
-			     struct logical_volume *lv_from,
-			     uint64_t set_status, uint64_t reset_status)
+int move_lv_segments(struct logical_volume *lv_to,
+		     struct logical_volume *lv_from,
+		     uint64_t set_status, uint64_t reset_status)
 {
 	struct lv_segment *seg;
 
-	dm_list_iterate_items(seg, &lv_to->segments) {
+	dm_list_iterate_items(seg, &lv_to->segments)
 		if (seg->origin) {
-			log_error("Can't move snapshot segment");
+			log_error("Can't move snapshot segment.");
 			return 0;
 		}
-	}
 
-	if (!dm_list_empty(&lv_from->segments))
-		lv_to->segments = lv_from->segments;
-	lv_to->segments.n->p = &lv_to->segments;
-	lv_to->segments.p->n = &lv_to->segments;
+	dm_list_init(&lv_to->segments);
+	dm_list_splice(&lv_to->segments, &lv_from->segments);
 
 	dm_list_iterate_items(seg, &lv_to->segments) {
 		seg->lv = lv_to;
 		seg->status &= ~reset_status;
 		seg->status |= set_status;
 	}
-
-	dm_list_init(&lv_from->segments);
 
 	lv_to->le_count = lv_from->le_count;
 	lv_to->size = lv_from->size;
@@ -3512,7 +3507,7 @@ int remove_layer_from_lv(struct logical_volume *lv,
 	if (!lv_empty(parent))
 		return_0;
 
-	if (!_move_lv_segments(parent, layer_lv, 0, 0))
+	if (!move_lv_segments(parent, layer_lv, 0, 0))
 		return_0;
 
 	/* Replace the empty layer with error segment */
@@ -3602,7 +3597,7 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 	log_very_verbose("Inserting layer %s for %s",
 			 layer_lv->name, lv_where->name);
 
-	if (!_move_lv_segments(layer_lv, lv_where, 0, 0))
+	if (!move_lv_segments(layer_lv, lv_where, 0, 0))
 		return_NULL;
 
 	if (!(segtype = get_segtype_from_string(cmd, "striped")))

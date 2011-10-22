@@ -420,6 +420,9 @@ int for_each_sub_lv(struct cmd_context *cmd, struct logical_volume *lv,
                     int (*fn)(struct cmd_context *cmd,
                               struct logical_volume *lv, void *data),
                     void *data);
+int move_lv_segments(struct logical_volume *lv_to,
+		     struct logical_volume *lv_from,
+		     uint64_t set_status, uint64_t reset_status);
 
 /*
  * Calculate readahead from underlying PV devices
