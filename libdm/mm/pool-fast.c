@@ -306,7 +306,12 @@ static void _free_chunk(struct chunk *c)
 		VALGRIND_MAKE_MEM_UNDEFINED(c + 1, c->end - (char *) (c + 1));
 #  endif
 #endif
+#ifdef DEBUG_ENFORCE_POOL_LOCKING
+	/* since DEBUG_MEM is using own memory list */
+	free(c); /* for posix_memalign() */
+#else
 	dm_free(c);
+#endif
 }
 
 
