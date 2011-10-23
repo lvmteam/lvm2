@@ -333,7 +333,8 @@ enable_dev() {
 	for dev in "$@"; do
 		local name=`echo "$dev" | sed -e 's,.*/,,'`
 		dmsetup create -u TEST-$name $name $name.table || dmsetup load $name $name.table
-		dmsetup resume $dev
+		# using device name (since device path does not exists yes with udev)
+		dmsetup resume $name
 	done
 	finish_udev_transaction
 }
