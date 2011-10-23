@@ -201,8 +201,7 @@ uint32_t find_free_lvnum(struct logical_volume *lv)
 /*
  * All lv_segments get created here.
  */
-struct lv_segment *alloc_lv_segment(struct dm_pool *mem,
-				    const struct segment_type *segtype,
+struct lv_segment *alloc_lv_segment(const struct segment_type *segtype,
 				    struct logical_volume *lv,
 				    uint32_t le, uint32_t len,
 				    uint64_t status,
@@ -217,6 +216,7 @@ struct lv_segment *alloc_lv_segment(struct dm_pool *mem,
 				    struct lv_segment *pvmove_source_seg)
 {
 	struct lv_segment *seg;
+	struct dm_pool *mem = lv->vg->vgmem;
 	uint32_t areas_sz = area_count * sizeof(*seg->areas);
 
 	if (!segtype) {
@@ -277,7 +277,7 @@ struct lv_segment *alloc_snapshot_seg(struct logical_volume *lv,
 		return NULL;
 	}
 
-	if (!(seg = alloc_lv_segment(lv->vg->cmd->mem, segtype, lv, old_le_count,
+	if (!(seg = alloc_lv_segment(segtype, lv, old_le_count,
 				     lv->le_count - old_le_count, status, 0,
 				     NULL, NULL, 0, lv->le_count - old_le_count,
 				     0, 0, 0, NULL))) {
@@ -954,8 +954,7 @@ static int _setup_alloced_segment(struct logical_volume *lv, uint64_t status,
 
 	area_multiple = _calc_area_multiple(segtype, area_count, 0);
 
-	if (!(seg = alloc_lv_segment(lv->vg->cmd->mem, segtype, lv,
-				     lv->le_count,
+	if (!(seg = alloc_lv_segment(segtype, lv, lv->le_count,
 				     aa[0].len * area_multiple,
 				     status, stripe_size, NULL, NULL,
 				     area_count,
@@ -2044,9 +2043,9 @@ int lv_add_virtual_segment(struct logical_volume *lv, uint64_t status,
 		thin_pool_lv = lvl->lv;
 	}
 
-	if (!(seg = alloc_lv_segment(lv->vg->cmd->mem, segtype, lv,
-				     lv->le_count, extents, status, 0,
-				     NULL, thin_pool_lv, 0, extents, 0, 0, 0, NULL))) {
+	if (!(seg = alloc_lv_segment(segtype, lv, lv->le_count, extents,
+				     status, 0, NULL, thin_pool_lv, 0,
+				     extents, 0, 0, 0, NULL))) {
 		log_error("Couldn't allocate new zero segment.");
 		return 0;
 	}
@@ -2178,8 +2177,7 @@ static struct lv_segment *_convert_seg_to_mirror(struct lv_segment *seg,
 		return NULL;
 	}
 
-	if (!(newseg = alloc_lv_segment(seg->lv->vg->cmd->mem,
-					get_segtype_from_string(seg->lv->vg->cmd, "mirror"),
+	if (!(newseg = alloc_lv_segment(get_segtype_from_string(seg->lv->vg->cmd, "mirror"),
 					seg->lv, seg->le, seg->len,
 					seg->status, seg->stripe_size,
 					log_lv, NULL,
@@ -2375,8 +2373,8 @@ static int _lv_insert_empty_sublvs(struct logical_volume *lv,
 	/*
 	 * First, create our top-level segment for our top-level LV
 	 */
-	if (!(mapseg = alloc_lv_segment(lv->vg->cmd->mem, segtype,
-					lv, 0, 0, lv->status, stripe_size, NULL, NULL,
+	if (!(mapseg = alloc_lv_segment(segtype, lv, 0, 0, lv->status,
+					stripe_size, NULL, NULL,
 					devices, 0, 0, region_size, 0, NULL))) {
 		log_error("Failed to create mapping segment for %s", lv->name);
 		return 0;
@@ -3593,8 +3591,7 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 		return_NULL;
 
 	/* allocate a new linear segment */
-	if (!(mapseg = alloc_lv_segment(cmd->mem, segtype,
-					lv_where, 0, layer_lv->le_count,
+	if (!(mapseg = alloc_lv_segment(segtype, lv_where, 0, layer_lv->le_count,
 					status, 0, NULL, NULL, 1, layer_lv->le_count,
 					0, 0, 0, NULL)))
 		return_NULL;
@@ -3636,8 +3633,7 @@ static int _extend_layer_lv_for_segment(struct logical_volume *layer_lv,
 			 seg->lv->vg->name, seg->lv->name);
 
 	/* allocate a new segment */
-	if (!(mapseg = alloc_lv_segment(layer_lv->vg->cmd->mem, segtype,
-					layer_lv, layer_lv->le_count,
+	if (!(mapseg = alloc_lv_segment(segtype, layer_lv, layer_lv->le_count,
 					seg->area_len, status, 0,
 					NULL, NULL, 1, seg->area_len, 0, 0, 0, seg)))
 		return_0;

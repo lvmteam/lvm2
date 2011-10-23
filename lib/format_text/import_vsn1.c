@@ -328,7 +328,7 @@ static int _read_segment(struct dm_pool *mem, struct volume_group *vg,
 	    !segtype->ops->text_import_area_count(sn_child, &area_count))
 		return_0;
 
-	if (!(seg = alloc_lv_segment(mem, segtype, lv, start_extent,
+	if (!(seg = alloc_lv_segment(segtype, lv, start_extent,
 				     extent_count, 0, 0, NULL, NULL, area_count,
 				     extent_count, 0, 0, 0, NULL))) {
 		log_error("Segment allocation failed");

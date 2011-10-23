@@ -193,7 +193,7 @@ static int _add_stripe_seg(struct dm_pool *mem,
 						     "striped")))
 		return_0;
 
-	if (!(seg = alloc_lv_segment(mem, segtype, lv, *le_cur,
+	if (!(seg = alloc_lv_segment(segtype, lv, *le_cur,
 				     area_len * usp->num_devs, 0,
 				     usp->striping, NULL, NULL, usp->num_devs,
 				     area_len, 0, 0, 0, NULL))) {
@@ -233,7 +233,7 @@ static int _add_linear_seg(struct dm_pool *mem,
 	for (j = 0; j < usp->num_devs; j++) {
 		area_len = (usp->devs[j].blocks) / POOL_PE_SIZE;
 
-		if (!(seg = alloc_lv_segment(mem, segtype, lv, *le_cur,
+		if (!(seg = alloc_lv_segment(segtype, lv, *le_cur,
 					     area_len, 0, usp->striping,
 					     NULL, NULL, 1, area_len,
 					     POOL_PE_SIZE, 0, 0, NULL))) {
