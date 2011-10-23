@@ -13,9 +13,6 @@
 
 . lib/test
 
-# FIXME: remove it later when locking in virtual origin is fixed
-test -e LOCAL_CLVMD && exit 200
-
 aux prepare_vg 4
 
 lvcreate -s -l 100%FREE -n $lv $vg --virtualsize 1024T
@@ -26,7 +23,7 @@ lvcreate -s -l 100%FREE -n $lv $vg --virtualsize 1024T
 aux lvmconf 'devices/filter = [ "a/dev\/mapper\/.*$/", "a/dev\/LVMTEST/", "r/.*/" ]'
 
 pvcreate $DM_DEV_DIR/$vg/$lv
-vgcreate $vg1 $DM_DEV_DIR/$vg/$lv
+vgcreate -c n $vg1 $DM_DEV_DIR/$vg/$lv
 
 lvcreate -l 100%FREE -n $lv1 $vg1
 check lv_field $vg1/$lv1 size "1024.00t"
