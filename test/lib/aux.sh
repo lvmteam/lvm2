@@ -265,7 +265,7 @@ prepare_scsi_debug_dev()
     echo "$SCSI_DEBUG_DEV" > SCSI_DEBUG_DEV
     echo "$SCSI_DEBUG_DEV" > LOOP
     # Setting $LOOP provides means for prepare_devs() override
-    ln -snf $DEBUG_DEV $SCSI_DEBUG_DEV
+    test "$LVM_TEST_DEVDIR" != "/dev" && ln -snf $DEBUG_DEV $SCSI_DEBUG_DEV
     return 0
 }
 
