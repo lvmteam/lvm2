@@ -1,5 +1,6 @@
 Version 1.02.68 -
 ==================================
+  Fix compile-time pool memory locking with DEBUG_MEM.
   Fix valgrind error reports in free of pool chunks with DEBUG_MEM.
   Align size of structure chunk for fast pool allocator to 8 bytes.
   Simplify some pointer operations in dm_free_aux() debug code.
