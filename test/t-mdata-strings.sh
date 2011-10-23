@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (C) 2008 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2008-2011 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -13,8 +13,9 @@
 
 . lib/test
 
-aux prepare_devs 1
+aux prepare_devs 2
 
+# for udev impossible to create
 pv_ugly="__\"!@#\$%^&*,()|@||'\\\"__pv1"
 
 # 'set up temp files, loopback devices' 
@@ -23,9 +24,11 @@ dmsetup rename "$name" "$PREFIX$pv_ugly"
 dev1=$(dirname "$dev1")/$PREFIX$pv_ugly
 
 # 'pvcreate, vgcreate on filename with backslashed chars' 
-pvcreate "$dev1" 
-vgcreate $vg "$dev1"
-
+created=$dev1
+# when used with real udev without fallback, it will fail here
+pvcreate "$dev1" || created=$dev2
+pvs | should grep $dev1
+vgcreate $vg "$created"
 # 'no parse errors and VG really exists' 
 vgs 2>err
 not grep "Parse error" err;
