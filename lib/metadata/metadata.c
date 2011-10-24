@@ -3794,7 +3794,7 @@ int pv_analyze(struct cmd_context *cmd, const char *pv_name,
 		return 0;
 	}
 
-	log_print("Found label on %s, sector %"PRIu64", type=%s",
+	log_print("Found label on %s, sector %"PRIu64", type=%.8s",
 		  pv_name, label->sector, label->type);
 
 	/*

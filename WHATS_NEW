@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Don't print char type[8] as a plain string in pvck PV type.
   Use vg memory pool implicitely for vg read.
   Always use vg memory pool for allocated lv segment.
   Remove extra 4kB buffer allocated on stack in print_log().
