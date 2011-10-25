@@ -4,6 +4,7 @@ lvconvert \- convert a logical volume from linear to mirror or snapshot
 .SH SYNOPSIS
 .B lvconvert
 \-m|\-\-mirrors Mirrors [\-\-mirrorlog {disk|core|mirrored}] [\-\-corelog] [\-R|\-\-regionsize MirrorLogRegionSize]
+[\-\-type SegmentType]
 [\-A|\-\-alloc AllocationPolicy]
 [\-b|\-\-background] [\-f|\-\-force] [\-i|\-\-interval Seconds]
 [\-h|\-?|\-\-help]
@@ -50,6 +51,7 @@ LogicalVolume[Path]...
 [\-v|\-\-verbose]
 [\-\-version]
 LogicalVolume[Path] [PhysicalVolume[Path]...]
+
 .SH DESCRIPTION
 lvconvert is used to change the segment type (i.e. linear, mirror, etc) or
 characteristics of a logical volume.  For example, it can add or remove the
@@ -93,6 +95,11 @@ The optional argument "--corelog" is the same as specifying "--mirrorlog core".
 .I \-R, \-\-regionsize MirrorLogRegionSize
 A mirror is divided into regions of this size (in MB), and the mirror log
 uses this granularity to track which regions are in sync.
+.TP
+.I \-\-type SegmentType
+Used to convert a logical volume to another segment type or to explicitly state
+the desired RAID1 segment type ("mirror" or "raid1") when converting a linear
+logical volume to a mirror with the '-m' argument.
 .TP
 .I \-b, \-\-background
 Run the daemon in the background.
@@ -179,6 +186,12 @@ activation/mirror_device_fault_policy.
 .br
 converts the linear logical volume "vg00/lvol1" to
 a two-way mirror logical volume.
+.br
+.SH Examples
+"lvconvert --type raid1 -m1 vg00/lvol1"
+.br
+converts the linear logical volume "vg00/lvol1" to a two-way RAID1
+logical volume.
 
 "lvconvert --mirrorlog core vg00/lvol1"
 .br
@@ -194,6 +207,11 @@ to a mirror with a disk log.
 .br
 converts a mirror logical volume to a linear logical
 volume.
+.br
+"lvconvert --type raid1 vg00/mirror_lv"
+.br
+converts a mirror logical volume to a RAID1 logical volume with the same
+number of images.
 .br
 
 .br

@@ -267,7 +267,7 @@ Create a logical volume that uses the specified segment type
 commandline switch alias that will enable their use (-s is an alias for
 --type snapshot).  However, this argument must be used when no existing
 commandline switch alias is available for the desired type, as is the case
-with "error", "zero", "raid4", "raid5", or "raid6".
+with "error", "zero", "raid1", "raid4", "raid5", or "raid6".
 .TP
 .BR \-V ", " \-\-virtualsize " " \fIVirtualSize
 Create a sparse device of the given size (in MB by default) using a snapshot.  
