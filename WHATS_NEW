@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Support empty string for log/prefix.
   Fix regression that allowed mirrored logs for cluster mirrors.
   Don't print char type[8] as a plain string in pvck PV type.
   Use vg memory pool implicitely for vg read.

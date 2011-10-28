@@ -44,6 +44,8 @@ const struct dm_config_node *find_config_tree_node(struct cmd_context *cmd,
 						   const char *path);
 const char *find_config_tree_str(struct cmd_context *cmd,
 				 const char *path, const char *fail);
+const char *find_config_tree_str_allow_empty(struct cmd_context *cmd,
+					     const char *path, const char *fail);
 int find_config_tree_int(struct cmd_context *cmd, const char *path,
 			 int fail);
 int64_t find_config_tree_int64(struct cmd_context *cmd, const char *path,

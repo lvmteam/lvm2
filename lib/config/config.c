@@ -183,6 +183,12 @@ const char *find_config_tree_str(struct cmd_context *cmd,
 	return dm_config_tree_find_str(cmd->cft, path, fail);
 }
 
+const char *find_config_tree_str_allow_empty(struct cmd_context *cmd,
+					     const char *path, const char *fail)
+{
+	return dm_config_tree_find_str_allow_empty(cmd->cft, path, fail);
+}
+
 int find_config_tree_int(struct cmd_context *cmd, const char *path,
 			 int fail)
 {
