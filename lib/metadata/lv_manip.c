@@ -2596,13 +2596,6 @@ int lv_extend(struct logical_volume *lv,
 
 		if (!(r = _lv_extend_layered_lv(ah, lv, extents, 0,
 						stripes, stripe_size)))
-			goto out;
-
-		if (segtype_is_thin_pool(segtype) &&
-		    !(r = lv_add_segment(ah, ah->area_count, 1,
-					 first_seg(lv)->pool_metadata_lv,
-					 get_segtype_from_string(lv->vg->cmd,
-								 "striped"), 0, 0, 0)))
 			goto_out;
 
 		/*
