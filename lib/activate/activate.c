@@ -782,7 +782,7 @@ int lvs_in_vg_opened(const struct volume_group *vg)
 		return 0;
 
 	dm_list_iterate_items(lvl, &vg->lvs)
-		if (lv_is_visible(lvl->lv))
+		if (lv_is_visible(lvl->lv) && !lv_is_used_thin_pool(lvl->lv))
 			count += (_lv_open_count(vg->cmd, lvl->lv) > 0);
 
 	log_debug("Counted %d open LVs in VG %s", count, vg->name);

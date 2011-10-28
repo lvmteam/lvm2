@@ -532,6 +532,12 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return ECMD_FAILED;
 	}
 
+	if (lv_is_used_thin_pool(lv) &&
+	    (arg_count(cmd, available_ARG))) {
+		log_error("Can't change pool volume \"%s\".", lv->name);
+		return ECMD_FAILED;
+	}
+
 	if (lv_is_cow(lv) && !lv_is_virtual_origin(origin_from_cow(lv)) &&
 	    arg_count(cmd, available_ARG)) {
 		log_error("Can't change snapshot logical volume \"%s\"",

@@ -100,6 +100,10 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd,
 		if (!lv_is_visible(lv))
 			continue;
 
+		/* Never manipulate with thin pools in use */
+		if (lv_is_used_thin_pool(lv))
+			continue;
+
 		/* If LV is sparse, activate origin instead */
 		if (lv_is_cow(lv) && lv_is_virtual_origin(origin_from_cow(lv)))
 			lv = origin_from_cow(lv);
