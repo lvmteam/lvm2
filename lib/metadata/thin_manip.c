@@ -220,7 +220,7 @@ uint32_t get_free_pool_device_id(struct lv_segment *thin_pool_seg)
 }
 
 int extend_pool(struct logical_volume *pool_lv, const struct segment_type *segtype,
-		struct alloc_handle *ah)
+		struct alloc_handle *ah, uint32_t stripes, uint32_t stripe_size)
 {
 	const struct segment_type *striped;
 	struct logical_volume *meta_lv, *data_lv;
@@ -245,7 +245,7 @@ int extend_pool(struct logical_volume *pool_lv, const struct segment_type *segty
 	}
 
 	/* Metadata segment */
-	if (!lv_add_segment(ah, 1, 1, pool_lv, striped, 1, 0, 0))
+	if (!lv_add_segment(ah, stripes, 1, pool_lv, striped, 1, 0, 0))
 		return_0;
 
 	if (activation()) {
@@ -290,7 +290,7 @@ int extend_pool(struct logical_volume *pool_lv, const struct segment_type *segty
 		return_0;
 
 	/* Pool data segment */
-	if (!lv_add_segment(ah, 0, 1, pool_lv, striped, 1, 0, 0))
+	if (!lv_add_segment(ah, 0, stripes, pool_lv, striped, stripe_size, 0, 0))
 		return_0;
 
 	if (!(data_lv = insert_layer_for_lv(pool_lv->vg->cmd, pool_lv,
