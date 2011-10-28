@@ -3210,7 +3210,7 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 		}
 	}
 
-	if (lv_is_thin_pool(lv) && dm_list_size(&lv->segs_using_this_lv)) {
+	if (lv_is_used_thin_pool(lv)) {
 		/* remove thin LVs first */
 		if ((force == PROMPT) &&
 		    yes_no_prompt("Do you really want to remove all thin volumes when removing"
@@ -4139,23 +4139,26 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 	} else if (seg_is_thin_volume(lp)) {
 		pool_lv = first_seg(lv)->pool_lv;
 
+		/* Ensure unused thin pool is not active */
+		if (!lv_is_used_thin_pool(pool_lv) &&
+		    !deactivate_lv(cmd, pool_lv)) {
+			log_error("Failed to deactivate unused pool %s.",
+				  pool_lv->name);
+			return NULL;
+		}
+
+		/*
+		 * From now the thin pool de/activation is made
+		 * only via implicit thin volume dependency.
+		 */
+
 		if (!(first_seg(lv)->device_id =
 		      get_free_pool_device_id(first_seg(pool_lv))))
 			return_NULL;
 
-		if (!activate_lv(pool_lv->vg->cmd, pool_lv)) {
-			log_error("Failed to activate %s/%s to send message.",
-				  pool_lv->vg->name, pool_lv->name);
-			return NULL;
-		}
-
 		if (!attach_pool_message(first_seg(pool_lv),
 					 DM_THIN_MESSAGE_CREATE_THIN, lv, 0, 0))
 			return_NULL;
-		/*
-		 * FIXME: Skipping deactivate_lv(pool_lv) as it is going to be needed anyway
-		 * but revert_new_lv should revert to deactivated state.
-		 */
 	}
 
 	if (lp->log_count &&

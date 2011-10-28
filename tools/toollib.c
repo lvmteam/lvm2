@@ -126,6 +126,11 @@ int process_each_lv_in_vg(struct cmd_context *cmd,
 		if (lv_is_virtual_origin(lvl->lv) && !arg_count(cmd, all_ARG))
 			continue;
 
+		/* Only unused thin pool can change its availability */
+		if (!lvargs_supplied && lv_is_used_thin_pool(lvl->lv) &&
+		    arg_count(cmd, available_ARG))
+			continue;
+
 		/*
 		 * Only let hidden LVs through it --all was used or the LVs 
 		 * were specifically named on the command line.
