@@ -892,7 +892,8 @@ static uint16_t _get_udev_flags(struct dev_manager *dm, struct logical_volume *l
 	 * Is this top-level and visible device?
 	 * If not, create just the /dev/mapper content.
 	 */
-	if (layer || !lv_is_visible(lv))
+	/* FIXME: add target's method for this */
+	if (layer || !lv_is_visible(lv) || lv_is_thin_pool(lv))
 		udev_flags |= DM_UDEV_DISABLE_SUBSYSTEM_RULES_FLAG |
 			      DM_UDEV_DISABLE_DISK_RULES_FLAG |
 			      DM_UDEV_DISABLE_OTHER_RULES_FLAG;
