@@ -80,19 +80,26 @@ lvcreate \- create a logical volume in an existing volume group
 .br
 
 .B lvcreate
+.RB [ \-i | \-\-stripes
+.IR Stripes
+.RB [ \-I | \-\-stripesize
+.IR StripeSize ]]
 .RB [ \-l | \-\-extents
 .IR LogicalExtentsNumber [ % { VG | FREE | ORIGIN }]
 |
 .BR \-L | \-\-size
 .IR LogicalVolumeSize [ bBsSkKmMgGtTpPeE ]]
+.RB [ \-c | \-\-chunksize
+.IR ChunkSize ]
 .RB [ \-V | \-\-virtualsize
 .IR VirtualSize ]
 .RB [ \-n | \-\-name
 .IR ThinLogicalVolumeName ]
-.RB [ \-\-thinpool
-.IR ThinPoolLogicalVolumeName ]
-.B \-T
-.IR VolumeGroupName [/ ThinPoolLogicalVolumeName ]
+.RB [ \-T | \-\-thin
+.IR VolumeGroupName [/ ThinPoolLogicalVolumeName
+|
+.B \-\-thinpool
+.IR ThinPoolLogicalVolumeName ]]
 .br
 
 .SH DESCRIPTION
@@ -269,11 +276,18 @@ commandline switch alias that will enable their use (-s is an alias for
 commandline switch alias is available for the desired type, as is the case
 with "error", "zero", "raid1", "raid4", "raid5", or "raid6".
 .TP
+.BR \-T ", " \-\-thin " " \fIVolumeGroupName [/ \fIThinPoolLogicalVolumeName ]
+Defines the thin pool logical volume.
+.TP
+.BR \-\-thinpool " " \fIThinPoolLogicalVolumeName
+Specifies the thin pool logical volume.
+.TP
 .BR \-V ", " \-\-virtualsize " " \fIVirtualSize
-Create a sparse device of the given size (in MB by default) using a snapshot.  
+Create a sparse device of the given size (in MB by default) using a snapshot
+or thinly provisioned device when thin pool is specified.
 Anything written to the device will be returned when reading from it.
 Reading from other areas of the device will return blocks of zeros.
-It is implemented by creating a hidden virtual device of the
+Virtual snapshot is implemented by creating a hidden virtual device of the
 requested size using the zero target.  A suffix of _vorigin is used for
 this device.
 .TP
