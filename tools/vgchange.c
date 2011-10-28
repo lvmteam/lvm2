@@ -149,10 +149,10 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd,
 				stack;
 				continue;
 			}
-		} else if (lv_is_origin(lv) ||
-			   lv_is_thin_pool(lv) ||
-			   lv_is_thin_volume(lv) ||
-			   (activate == CHANGE_AE)) {
+		} else if ((activate == CHANGE_AE) ||
+			   lv_is_origin(lv) ||
+			   lv_is_thin_type(lv)) {
+			/* FIXME: duplicated test code with lvchange */
 			if (!activate_lv_excl(cmd, lv)) {
 				stack;
 				continue;

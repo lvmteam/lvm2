@@ -135,7 +135,9 @@ static int lvchange_availability(struct cmd_context *cmd,
 		if (!deactivate_lv(cmd, lv))
 			return_0;
 	} else {
-		if (lv_is_origin(lv) || (activate == CHANGE_AE)) {
+		if ((activate == CHANGE_AE) ||
+		    lv_is_origin(lv) ||
+		    lv_is_thin_type(lv)) {
 			log_verbose("Activating logical volume \"%s\" "
 				    "exclusively", lv->name);
 			if (!activate_lv_excl(cmd, lv))
