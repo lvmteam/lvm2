@@ -153,9 +153,9 @@ static void _init_logging(struct cmd_context *cmd)
 	init_abort_on_internal_errors(find_config_tree_int(cmd, "global/abort_on_internal_errors",
 							   DEFAULT_ABORT_ON_INTERNAL_ERRORS));
 
-	cmd->default_settings.msg_prefix = find_config_tree_str(cmd,
-							   "log/prefix",
-							   DEFAULT_MSG_PREFIX);
+	cmd->default_settings.msg_prefix =
+		find_config_tree_str_allow_empty(cmd, "log/prefix", DEFAULT_MSG_PREFIX);
+
 	init_msg_prefix(cmd->default_settings.msg_prefix);
 
 	cmd->default_settings.cmd_name = find_config_tree_int(cmd,

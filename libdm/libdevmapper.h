@@ -1385,6 +1385,8 @@ float dm_config_find_float(const struct dm_config_node *cn, const char *path, fl
 const struct dm_config_node *dm_config_tree_find_node(const struct dm_config_tree *cft, const char *path);
 const char *dm_config_tree_find_str(const struct dm_config_tree *cft,
 				    const char *path, const char *fail);
+const char *dm_config_tree_find_str_allow_empty(const struct dm_config_tree *cft,
+						const char *path, const char *fail);
 int dm_config_tree_find_int(const struct dm_config_tree *cft,
 			    const char *path, int fail);
 int64_t dm_config_tree_find_int64(const struct dm_config_tree *cft,

@@ -919,15 +919,18 @@ static const struct dm_config_node *_find_first_config_node(const void *start, c
 }
 
 static const char *_find_config_str(const void *start, node_lookup_fn find_fn,
-				    const char *path, const char *fail)
+				    const char *path, const char *fail, int allow_empty)
 {
 	const struct dm_config_node *n = find_fn(start, path);
 
 	/* Empty strings are ignored */
-	if ((n && n->v && n->v->type == DM_CFG_STRING) && (*n->v->v.str)) {
+	if ((n && n->v && n->v->type == DM_CFG_STRING) &&
+	    (allow_empty || (*n->v->v.str))) {
 		log_very_verbose("Setting %s to %s", path, n->v->v.str);
 		return n->v->v.str;
-	}
+	} else if (n && (!n->v || (n->v->type != DM_CFG_STRING) ||
+			 (!allow_empty && fail)))
+		log_warn("WARNING: Ignoring unsupported value for %s.", path);
 
 	if (fail)
 		log_very_verbose("%s not found in config: defaulting to %s",
@@ -938,7 +941,7 @@ static const char *_find_config_str(const void *start, node_lookup_fn find_fn,
 const char *dm_config_find_str(const struct dm_config_node *cn,
 			       const char *path, const char *fail)
 {
-	return _find_config_str(cn, _find_config_node, path, fail);
+	return _find_config_str(cn, _find_config_node, path, fail, 0);
 }
 
 static int64_t _find_config_int64(const void *start, node_lookup_fn find,
@@ -1060,7 +1063,13 @@ const struct dm_config_node *dm_config_tree_find_node(const struct dm_config_tre
 const char *dm_config_tree_find_str(const struct dm_config_tree *cft, const char *path,
 				    const char *fail)
 {
-	return _find_config_str(cft, _find_first_config_node, path, fail);
+	return _find_config_str(cft, _find_first_config_node, path, fail, 0);
+}
+
+const char *dm_config_tree_find_str_allow_empty(const struct dm_config_tree *cft, const char *path,
+						const char *fail)
+{
+	return _find_config_str(cft, _find_first_config_node, path, fail, 1);
 }
 
 int dm_config_tree_find_int(const struct dm_config_tree *cft, const char *path, int fail)
