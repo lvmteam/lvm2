@@ -155,7 +155,8 @@ static int _thin_pool_text_export(const struct lv_segment *seg, struct formatter
 	outf(f, "pool = \"%s\"", seg_lv(seg, 0)->name);
 	outf(f, "transaction_id = %" PRIu64, seg->transaction_id);
 // FIXME  maybe switch to use  chunksize (as with snapshot ??)
-	outf(f, "data_block_size = %u", seg->data_block_size);
+	outsize(f, (uint64_t) seg->data_block_size,
+		"data_block_size = %u", seg->data_block_size);
 
 	if (seg->low_water_mark)
 		outf(f, "low_water_mark = %" PRIu64, seg->low_water_mark);
