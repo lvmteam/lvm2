@@ -977,7 +977,7 @@ static int _info_by_dev(uint32_t major, uint32_t minor, int with_open_count,
 	return r;
 }
 
-static int _check_device_not_in_use(struct dm_info *info)
+static int _check_device_not_in_use(const char *name, struct dm_info *info)
 {
 	if (!info->exists)
 		return 1;
@@ -985,8 +985,8 @@ static int _check_device_not_in_use(struct dm_info *info)
 	/* If sysfs is not used, use open_count information only. */
 	if (!*dm_sysfs_dir()) {
 		if (info->open_count) {
-			log_error("Device %" PRIu32 ":%" PRIu32 " in use",
-				  info->major, info->minor);
+			log_error("Device %s (%" PRIu32 ":%" PRIu32 ") in use",
+				  name, info->major, info->minor);
 			return 0;
 		}
 
@@ -994,14 +994,14 @@ static int _check_device_not_in_use(struct dm_info *info)
 	}
 
 	if (dm_device_has_holders(info->major, info->minor)) {
-		log_error("Device %" PRIu32 ":%" PRIu32 " is used "
-			  "by another device.", info->major, info->minor);
+		log_error("Device %s (%" PRIu32 ":%" PRIu32 ") is used "
+			  "by another device.", name, info->major, info->minor);
 		return 0;
 	}
 
 	if (dm_device_has_mounted_fs(info->major, info->minor)) {
-		log_error("Device %" PRIu32 ":%" PRIu32 " contains "
-			  "a filesystem in use.", info->major, info->minor);
+		log_error("Device %s (%" PRIu32 ":%" PRIu32 ") contains "
+			  "a filesystem in use.", name, info->major, info->minor);
 		return 0;
 	}
 
@@ -1413,8 +1413,27 @@ static int _dm_tree_deactivate_children(struct dm_tree_node *dnode,
 		    !info.exists)
 			continue;
 
-		if (!_check_device_not_in_use(&info))
-			continue;
+		if (info.open_count) {
+			/* Skip internal non-toplevel opened nodes */
+			if (level)
+				continue;
+
+			/* When retry is not allowed, error */
+			if (!child->dtree->retry_remove) {
+				log_error("Unable to deactivate open %s (%" PRIu32
+					  ":%" PRIu32 ")", name, info.major, info.minor);
+				r = 0;
+				continue;
+			}
+
+			/* Check toplevel node for holders/mounted fs */
+			if (!_check_device_not_in_use(name, &info)) {
+				stack;
+				r = 0;
+				continue;
+			}
+			/* Go on with retry */
+		}
 
 		/* Also checking open_count in parent nodes of presuspend_node */
 		if ((child->presuspend_node &&
@@ -1437,7 +1456,7 @@ static int _dm_tree_deactivate_children(struct dm_tree_node *dnode,
 
 		if (!_deactivate_node(name, info.major, info.minor,
 				      &child->dtree->cookie, child->udev_flags,
-				      child->dtree->retry_remove)) {
+				      (level == 0) ? child->dtree->retry_remove : 0)) {
 			log_error("Unable to deactivate %s (%" PRIu32
 				  ":%" PRIu32 ")", name, info.major,
 				  info.minor);
