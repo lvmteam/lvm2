@@ -2571,10 +2571,11 @@ int lv_extend(struct logical_volume *lv,
 	if (segtype_is_thin_pool(segtype)) {
 		if (!(r = extend_pool(lv, segtype, ah)))
 			stack;
-	} else if (!segtype_is_mirrored(segtype) && !segtype_is_raid(segtype))
-		r = lv_add_segment(ah, 0, ah->area_count, lv, segtype,
-				   stripe_size, 0u, 0);
-	else {
+	} else if (!segtype_is_mirrored(segtype) && !segtype_is_raid(segtype)) {
+		if (!(r = lv_add_segment(ah, 0, ah->area_count, lv, segtype,
+					 stripe_size, 0u, 0)))
+			stack;
+	} else {
 		/*
 		 * For RAID, all the devices are AREA_LV.
 		 * However, for 'mirror on stripe' using non-RAID targets,
@@ -2587,11 +2588,10 @@ int lv_extend(struct logical_volume *lv,
 			sub_lv_count = mirrors;
 
 		if (!lv->le_count &&
-		    !_lv_insert_empty_sublvs(lv, segtype, stripe_size,
-					     region_size, sub_lv_count)) {
+		    !(r = _lv_insert_empty_sublvs(lv, segtype, stripe_size,
+						  region_size, sub_lv_count))) {
 			log_error("Failed to insert layer for %s", lv->name);
-			alloc_destroy(ah);
-			return 0;
+			goto out;
 		}
 
 		if (!(r = _lv_extend_layered_lv(ah, lv, extents, 0,
@@ -2620,9 +2620,8 @@ int lv_extend(struct logical_volume *lv,
 				goto out;
 			}
 
-			r = 0;
-			if (!lv_mirror_percent(lv->vg->cmd, lv, 0,
-					       &sync_percent, NULL)) {
+			if (!(r = lv_mirror_percent(lv->vg->cmd, lv, 0,
+						    &sync_percent, NULL))) {
 				log_error("Failed to get sync percent for %s/%s",
 					  lv->vg->name, lv->name);
 				goto out;
@@ -2638,7 +2637,6 @@ int lv_extend(struct logical_volume *lv,
 					  lv->vg->name, lv->name);
 				goto out;
 			}
-			r = 1;
 		}
 	}
 
