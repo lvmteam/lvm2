@@ -1906,6 +1906,16 @@ struct lv_segment *first_seg(const struct logical_volume *lv)
 	return NULL;
 }
 
+struct lv_segment *last_seg(const struct logical_volume *lv)
+{
+       struct lv_segment *seg;
+
+       dm_list_iterate_back_items(seg, &lv->segments)
+               return seg;
+
+       return NULL;
+}
+
 int vg_remove_mdas(struct volume_group *vg)
 {
 	struct metadata_area *mda;
