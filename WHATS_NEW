@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Increase virtual segment size instead of creating multiple segment list.
   Add last_seg(lv) internal function.
   Support empty string for log/prefix.
   Fix regression that allowed mirrored logs for cluster mirrors.

@@ -2043,19 +2043,22 @@ int lv_add_virtual_segment(struct logical_volume *lv, uint64_t status,
 		thin_pool_lv = lvl->lv;
 	}
 
-	if (!(seg = alloc_lv_segment(segtype, lv, lv->le_count, extents,
-				     status, 0, NULL, thin_pool_lv, 0,
-				     extents, 0, 0, 0, NULL))) {
-		log_error("Couldn't allocate new zero segment.");
-		return 0;
+	if ((seg = last_seg(lv)) && (seg->segtype == segtype)) {
+		seg->area_len += extents;
+		seg->len += extents;
+	} else {
+		if (!(seg = alloc_lv_segment(segtype, lv, lv->le_count, extents,
+					     status, 0, NULL, thin_pool_lv, 0,
+					     extents, 0, 0, 0, NULL))) {
+			log_error("Couldn't allocate new zero segment.");
+			return 0;
+		}
+		lv->status |= VIRTUAL;
+		dm_list_add(&lv->segments, &seg->list);
 	}
-
-	dm_list_add(&lv->segments, &seg->list);
 
 	lv->le_count += extents;
 	lv->size += (uint64_t) extents *lv->vg->extent_size;
-
-	lv->status |= VIRTUAL;
 
 	return 1;
 }
