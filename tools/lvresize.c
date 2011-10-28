@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2009 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2011 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -669,6 +669,25 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 		}
 	}
 
+	if (lv_is_thin_pool(lv)) {
+		if (lp->resize == LV_REDUCE) {
+			log_error("Thin pool volumes cannot be reduced in size yet.");
+			return ECMD_FAILED;
+		}
+
+		if (lp->resizefs) {
+			log_warn("Thin pool volumes do not have filesystem.");
+			lp->resizefs = 0;
+		}
+
+		if (!lp->stripes) {
+			/* Try to use the same strip settings for underlying pool data LV */
+			lp->stripes = last_seg(seg_lv(first_seg(lv), 0))->area_count;
+			if (!lp->stripe_size)
+				lp->stripe_size = last_seg(seg_lv(first_seg(lv), 0))->stripe_size;
+		}
+	}
+
 	if ((lp->resize == LV_REDUCE) && lp->argc)
 		log_warn("Ignoring PVs on command line when reducing");
 
@@ -730,6 +749,10 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 	/* If snapshot, must suspend all associated devices */
 	if (lv_is_cow(lv))
 		lock_lv = origin_from_cow(lv);
+	else if (lv_is_used_thin_pool(lv))
+		// FIXME: what to pick here - maybe an active thin?
+		// but it still seems to be racy in cluster
+		lock_lv = lv;
 	else
 		lock_lv = lv;
 

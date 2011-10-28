@@ -2557,19 +2557,23 @@ int lv_extend(struct logical_volume *lv,
 	if (segtype_is_virtual(segtype))
 		return lv_add_virtual_segment(lv, 0u, extents, segtype, thin_pool_name);
 
-	if (segtype_is_thin_pool(segtype))
+	if (!lv->le_count && segtype_is_thin_pool(segtype))
+		/* Thin pool allocation treats its metadata device like a mirror log. */
 		log_count = 1;
 	else if (segtype_is_raid(segtype) && !lv->le_count)
 		log_count = mirrors * stripes;
 
-	/* Thin pool allocation treats its metadata device like a mirror log. */
 	if (!(ah = allocate_extents(lv->vg, lv, segtype, stripes, mirrors,
 				    log_count, region_size, extents,
 				    allocatable_pvs, alloc, NULL)))
 		return_0;
 
 	if (segtype_is_thin_pool(segtype)) {
-		if (!(r = extend_pool(lv, segtype, ah)))
+		if (!lv->le_count) {
+			if (!(r = extend_pool(lv, segtype, ah)))
+				stack;
+		} else if (!(r = _lv_extend_layered_lv(ah, lv, extents, 0,
+						       stripes, stripe_size)))
 			stack;
 	} else if (!segtype_is_mirrored(segtype) && !segtype_is_raid(segtype)) {
 		if (!(r = lv_add_segment(ah, 0, ah->area_count, lv, segtype,
