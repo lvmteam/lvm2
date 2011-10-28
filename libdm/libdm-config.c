@@ -170,8 +170,12 @@ void dm_config_destroy(struct dm_config_tree *cft)
  */
 struct dm_config_tree *dm_config_remove_cascaded_tree(struct dm_config_tree *cft)
 {
-	struct dm_config_tree *second_cft = cft->cascade;
+	struct dm_config_tree *second_cft;
 
+	if (!cft)
+		return NULL;
+
+	second_cft = cft->cascade;
 	cft->cascade = NULL;
 
 	return second_cft;

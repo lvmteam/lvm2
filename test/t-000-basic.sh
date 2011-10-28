@@ -23,3 +23,6 @@ diff -u actual expected
 # ensure we can create devices (uses dmsetup, etc)
 aux prepare_devs 5
 
+# ensure we do not crash on a bug in config file
+aux lvmconf 'log/prefix = 1""'
+not lvs
