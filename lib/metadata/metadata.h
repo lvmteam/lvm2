@@ -463,7 +463,7 @@ int attach_pool_message(struct lv_segment *seg, dm_thin_message_t type,
 			int read_only);
 int detach_pool_messages(struct lv_segment *seg);
 int extend_pool(struct logical_volume *lv, const struct segment_type *segtype,
-		struct alloc_handle *ah);
+		struct alloc_handle *ah, uint32_t stripes, uint32_t stripe_size);
 
 /*
  * Begin skeleton for external LVM library
