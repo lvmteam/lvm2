@@ -2745,6 +2745,8 @@ int for_each_sub_lv(struct cmd_context *cmd, struct logical_volume *lv,
 	dm_list_iterate_items(seg, &lv->segments) {
 		if (seg->log_lv && !fn(cmd, seg->log_lv, data))
 			return_0;
+		if (seg->pool_metadata_lv && !fn(cmd, seg->pool_metadata_lv, data))
+			return_0;
 		for (s = 0; s < seg->area_count; s++) {
 			if (seg_type(seg, s) != AREA_LV)
 				continue;
