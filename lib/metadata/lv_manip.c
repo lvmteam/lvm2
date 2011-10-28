@@ -3215,9 +3215,9 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 	if (lv_is_thin_pool(lv) && dm_list_size(&lv->segs_using_this_lv)) {
 		/* remove thin LVs first */
 		if ((force == PROMPT) &&
-		    yes_no_prompt("Do you really want to remove all thin volumes when removing "
-				  "pool logical volume %s? [y/n]: ", lv->name) == 'n') {
-			log_error("Logical volume %s not removed", lv->name);
+		    yes_no_prompt("Do you really want to remove all thin volumes when removing"
+				  " pool logical volume %s? [y/n]: ", lv->name) == 'n') {
+			log_error("Logical volume %s not removed.", lv->name);
 			return 0;
 		}
 		dm_list_iterate_safe(snh, snht, &lv->segs_using_this_lv) {
@@ -4308,7 +4308,7 @@ int lv_create_single(struct volume_group *vg,
 		if (!seg_is_thin_pool(lp) &&
 		    !(lp->segtype = get_segtype_from_string(vg->cmd, "thin_pool")))
 			return_0;
-		
+
 		if (!(lv = _lv_create_an_lv(vg, lp, lp->pool)))
 			return_0;
 
@@ -4316,7 +4316,7 @@ int lv_create_single(struct volume_group *vg,
 			goto out;
 
 		lp->pool = lv->name;
-	
+
 		if (!(lp->segtype = get_segtype_from_string(vg->cmd, "thin")))
 			return_0;
 	}

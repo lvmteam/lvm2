@@ -1241,15 +1241,13 @@ static int _thin_pool_status_transaction_id(struct dm_tree_node *dnode, uint64_t
 	dm_get_next_target(dmt, NULL, &start, &length, &type, &params);
 
 	if (type && (strcmp(type, "thin-pool") != 0)) {
-		log_error(INTERNAL_ERROR
-			  "Expected thin-pool target for %d:%d and got %s.",
+		log_error("Expected thin-pool target for %d:%d and got %s.",
 			  dnode->info.major, dnode->info.minor, type);
 		goto out;
 	}
 
 	if (!params || (sscanf(params, "%" PRIu64, transaction_id) != 1)) {
-		log_error(INTERNAL_ERROR
-			  "Failed to parse transaction_id from %s.", params);
+		log_error("Failed to parse transaction_id from %s.", params);
 		goto out;
 	}
 
