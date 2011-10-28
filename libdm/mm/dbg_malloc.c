@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.  
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2011 Red Hat, Inc. All rights reserved.
  *
  * This file is part of the device-mapper userspace tools.
  *
@@ -14,6 +14,10 @@
  */
 
 #include "dmlib.h"
+
+#ifdef VALGRIND_POOL
+#include "valgrind/memcheck.h"
+#endif
 
 #include <assert.h>
 #include <stdarg.h>
@@ -115,7 +119,9 @@ void *dm_malloc_aux_debug(size_t s, const char *file, int line)
 
 	/* log_debug("Allocated: %u %u %u", nb->id, _mem_stats.blocks_allocated,
 		  _mem_stats.bytes); */
-
+#ifdef VALGRIND_POOL
+	VALGRIND_MAKE_MEM_UNDEFINED(nb + 1, s);
+#endif
 	return nb + 1;
 }
 
@@ -141,7 +147,9 @@ void dm_free_aux(void *p)
 
 	/* sanity check */
 	assert(mb->magic == p);
-
+#ifdef VALGRIND_POOL
+	VALGRIND_MAKE_MEM_DEFINED(p, mb->length);
+#endif
 	/* check data at the far boundary */
 	ptr = (char *) p + mb->length;
 	for (i = 0; i < sizeof(unsigned long); i++)
