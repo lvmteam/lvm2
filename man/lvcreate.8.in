@@ -42,7 +42,7 @@ lvcreate \- create a logical volume in an existing volume group
 .RB [ \-R | \-\-regionsize
 .IR MirrorLogRegionSize ]]
 .RB [ \-n | \-\-name
-.IR LogicalVolumeName ]
+.IR LogicalVolumeName [ Path ]]
 .RB [ \-p | \-\-permission
 .RI { r | rw }]
 .RB [ \-r | \-\-readahead
@@ -53,11 +53,10 @@ lvcreate \- create a logical volume in an existing volume group
 .RB [ \-v | \-\-verbose ]
 .RB [ \-Z | \-\-zero
 .RI { y | n }]
-.IR VolumeGroupName
+.IR VolumeGroupName [ Path ]
 .RI [ PhysicalVolumePath [ :PE [ -PE ]]...]
 .br
 
-.br
 .B lvcreate
 .RB { \-l | \-\-extents
 .IR LogicalExtentsNumber [ % { VG | FREE | ORIGIN }]
@@ -70,13 +69,13 @@ lvcreate \- create a logical volume in an existing volume group
 .RB [ \-\-ignoremonitoring ]
 .RB [ \-\-monitor " {" \fIy | \fIn }]
 .RB [ \-n | \-\-name
-.IR SnapshotLogicalVolumeName ]
+.IR SnapshotLogicalVolumeName [ Path ]]
 .BR \-s | \-\-snapshot
-.RI [ OriginalLogicalVolumePath
+.RI [ OriginalLogicalVolume [ Path ]
 |
-.IR VolumeGroupName
+.IR VolumeGroupName [ Path ]
 .BR \-V | \-\-virtualsize
-.IR VirtualSize ]
+.IR VirtualSize [ bBsSkKmMgGtTpPeE ]]
 .br
 
 .B lvcreate
@@ -282,7 +281,7 @@ Defines the thin pool logical volume.
 .BR \-\-thinpool " " \fIThinPoolLogicalVolumeName
 Specifies the thin pool logical volume.
 .TP
-.BR \-V ", " \-\-virtualsize " " \fIVirtualSize
+.IR \fB\-V ", " \fB\-\-virtualsize " " VirtualSize [ bBsSkKmMgGtTpPeE ]
 Create a sparse device of the given size (in MB by default) using a snapshot
 or thinly provisioned device when thin pool is specified.
 Anything written to the device will be returned when reading from it.
