@@ -60,7 +60,7 @@ void daemon_reply_destroy(daemon_reply r) {
 daemon_reply daemon_send_simple(daemon_handle h, char *id, ...)
 {
 	static const daemon_reply err = { .error = ENOMEM, .buffer = NULL, .cft = NULL };
-	daemon_request rq;
+	daemon_request rq = { .cft = NULL };
 	daemon_reply repl;
 	va_list ap;
 

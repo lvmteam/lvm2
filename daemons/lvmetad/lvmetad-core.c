@@ -453,7 +453,7 @@ static void usage(char *prog, FILE *file)
 int main(int argc, char *argv[])
 {
 	signed char opt;
-	daemon_state s;
+	daemon_state s = { .private = NULL };
 	lvmetad_state ls;
 	int _restart = 0;
 
