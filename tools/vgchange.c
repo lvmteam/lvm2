@@ -157,6 +157,12 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd,
 				stack;
 				continue;
 			}
+			/* Drop any left thin messages after activation */
+			if (lv_is_thin_volume(lv) &&
+			    !detach_pool_messages(first_seg(lv)->pool_lv)) {
+				stack;
+				continue;
+			}
 		} else if (activate == CHANGE_ALY) {
 			if (!activate_lv_local(cmd, lv)) {
 				stack;
