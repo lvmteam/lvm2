@@ -4206,7 +4206,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 		   (lp->activate == CHANGE_AE && !activate_lv_excl(cmd, lv)) ||
 		   (lp->activate == CHANGE_ALY && !activate_lv_local(cmd, lv))) {
 		log_error("Failed to activate new LV.");
-		if (lp->zero && !seg_is_thin(lp))
+		if (lp->zero)
 			goto deactivate_and_revert_new_lv;
 		return NULL;
 	}
