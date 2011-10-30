@@ -4150,7 +4150,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 		    !deactivate_lv(cmd, pool_lv)) {
 			log_error("Failed to deactivate unused pool %s.",
 				  pool_lv->name);
-			return NULL;
+			goto revert_new_lv;
 		}
 
 		/*
@@ -4159,12 +4159,16 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 		 */
 
 		if (!(first_seg(lv)->device_id =
-		      get_free_pool_device_id(first_seg(pool_lv))))
-			return_NULL;
+		      get_free_pool_device_id(first_seg(pool_lv)))) {
+			stack;
+			goto revert_new_lv;
+		}
 
 		if (!attach_pool_message(first_seg(pool_lv),
-					 DM_THIN_MESSAGE_CREATE_THIN, lv, 0, 0))
-			return_NULL;
+					 DM_THIN_MESSAGE_CREATE_THIN, lv, 0, 0)) {
+			stack;
+			goto revert_new_lv;
+		}
 	}
 
 	if (lp->log_count &&
@@ -4194,7 +4198,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 		if (!activate_lv_excl(cmd, lv)) {
 			log_error("Aborting. Failed to activate thin %s.",
 				  lv->name);
-			goto revert_new_lv;
+			goto deactivate_and_revert_new_lv;
 		}
 	} else if (lp->snapshot) {
 		if (!activate_lv_excl(cmd, lv)) {
