@@ -4221,13 +4221,10 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 	} else if (seg_is_thin_volume(lp)) {
 		/* FIXME: for now we may drop any queued thin messages
 		 * since we are sure everything was activated already */
-		if (!detach_pool_messages(first_seg(first_seg(lv)->pool_lv)))
+		if (!detach_pool_messages(first_seg(lv)->pool_lv)) {
+			stack;
 			goto deactivate_and_revert_new_lv;
-
-		if (!vg_write(vg) || !vg_commit(vg))
-			goto deactivate_and_revert_new_lv;
-
-		backup(vg);
+		}
 	}
 
 	if (lp->snapshot) {
