@@ -558,6 +558,8 @@ int lv_rename(struct cmd_context *cmd, struct logical_volume *lv,
 uint64_t extents_from_size(struct cmd_context *cmd, uint64_t size,
 			   uint32_t extent_size);
 
+int detach_pool_messages(struct logical_volume *pool_lv);
+
 /*
  * Activation options
  */

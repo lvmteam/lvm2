@@ -149,15 +149,22 @@ int attach_pool_message(struct lv_segment *seg, dm_thin_message_t type,
 	return 1;
 }
 
-int detach_pool_messages(struct lv_segment *seg)
+int detach_pool_messages(struct logical_volume *pool_lv)
 {
-	if (!lv_is_thin_pool(seg->lv)) {
+	if (!lv_is_thin_pool(pool_lv)) {
 		log_error(INTERNAL_ERROR "LV %s is not a thin pool.",
-			  seg->lv->name);
+			  pool_lv->name);
 		return 0;
 	}
 
-	dm_list_init(&seg->thin_messages);
+	if (!dm_list_empty(&first_seg(pool_lv)->thin_messages)) {
+		dm_list_init(&first_seg(pool_lv)->thin_messages);
+
+		if (!vg_write(pool_lv->vg) || !vg_commit(pool_lv->vg))
+			return_0;
+
+		backup(pool_lv->vg);
+	}
 
 	return 1;
 }
