@@ -1294,9 +1294,11 @@ static int _thin_pool_node_message(struct dm_tree_node *dnode, struct thin_messa
 				m->u.m_set_transaction_id.current_id,
 				m->u.m_set_transaction_id.new_id);
 		break;
+	default:
+		r = -1;
 	}
 
-	if (!r) {
+	if (r < 0) {
 		log_error("Failed to prepare message.");
 		return 0;
 	}

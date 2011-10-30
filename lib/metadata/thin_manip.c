@@ -18,6 +18,7 @@
 #include "metadata.h"
 #include "segtype.h"
 #include "lv_alloc.h"
+#include "archiver.h"
 
 int attach_pool_metadata_lv(struct lv_segment *seg, struct logical_volume *pool_metadata_lv)
 {
