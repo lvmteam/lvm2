@@ -4194,8 +4194,12 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 
 	init_dmeventd_monitor(lp->activation_monitoring);
 
-	if (seg_is_thin_pool(lp) || seg_is_thin(lp)) {
-		if (!activate_lv_excl(cmd, lv)) {
+	if (seg_is_thin(lp)) {
+		if ((lp->activate == CHANGE_AY) ||
+		    (lp->activate == CHANGE_ALY))
+                        lp->activate = CHANGE_AE;
+		if ((lp->activate == CHANGE_AE) &&
+		    !activate_lv_excl(cmd, lv)) {
 			log_error("Aborting. Failed to activate thin %s.",
 				  lv->name);
 			goto deactivate_and_revert_new_lv;
@@ -4222,7 +4226,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 			  lp->snapshot ? "snapshot exception store" :
 					 "start of new LV");
 		goto deactivate_and_revert_new_lv;
-	} else if (seg_is_thin_volume(lp)) {
+	} else if (seg_is_thin_volume(lp) && (lp->activate == CHANGE_AE)) {
 		/* FIXME: for now we may drop any queued thin messages
 		 * since we are sure everything was activated already */
 		if (!detach_pool_messages(first_seg(lv)->pool_lv)) {

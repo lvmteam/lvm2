@@ -142,6 +142,10 @@ static int lvchange_availability(struct cmd_context *cmd,
 				    "exclusively", lv->name);
 			if (!activate_lv_excl(cmd, lv))
 				return_0;
+			/* Drop any left thin messages after activation */
+			if (lv_is_thin_volume(lv) &&
+			    !detach_pool_messages(first_seg(lv)->pool_lv))
+				return_0;
 		} else if (activate == CHANGE_ALY) {
 			log_verbose("Activating logical volume \"%s\" locally",
 				    lv->name);
