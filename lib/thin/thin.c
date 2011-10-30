@@ -252,7 +252,7 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 			dmsg.u.m_create_snap.origin_id = 0;//first_seg(first_seg(lmsg->u.lv)->origin)->device_id;
 			if (!dm_tree_node_add_thin_pool_message(node, &dmsg))
 				return_0;
-			log_error("Sorry SNAPSHOTS is not yet supported.");
+			log_error("Sorry SNAPSHOT is not yet supported.");
 			return 0;
 		case DM_THIN_MESSAGE_CREATE_THIN:
 			log_debug("Thin pool create_thin %s.", lmsg->u.lv->name);
@@ -268,7 +268,7 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 			break;
 		case DM_THIN_MESSAGE_TRIM:
 			/* FIXME: to be implemented */
-			log_error("Sorry TRIM is not yes supported.");
+			log_error("Sorry TRIM is not yet supported.");
 			return 0;
 		default:
 			log_error(INTERNAL_ERROR "Unsupported message.");
@@ -346,7 +346,7 @@ static int _thin_text_export(const struct lv_segment *seg, struct formatter *f)
 
 #ifdef DEVMAPPER_SUPPORT
 static int _thin_add_target_line(struct dev_manager *dm,
-				 struct dm_pool *mem __attribute__((unused)),
+				 struct dm_pool *mem,
 				 struct cmd_context *cmd __attribute__((unused)),
 				 void **target_state __attribute__((unused)),
 				 struct lv_segment *seg,

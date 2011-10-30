@@ -197,7 +197,8 @@ uint32_t get_free_pool_device_id(struct lv_segment *thin_pool_seg)
 	struct dm_list *h;
 
 	if (!seg_is_thin_pool(thin_pool_seg)) {
-		log_error("Segment in %s is not a thin pool segment.",
+		log_error(INTERNAL_ERROR
+			  "Segment in %s is not a thin pool segment.",
 			  thin_pool_seg->lv->name);
 		return 0;
 	}
@@ -208,9 +209,9 @@ uint32_t get_free_pool_device_id(struct lv_segment *thin_pool_seg)
 			max_id = dev_id;
 	}
 
-	if (++max_id >= (1 << 24)) {
+	if (++max_id > DM_THIN_MAX_DEVICE_ID) {
 		// FIXME: try to find empty holes....
-		log_error("Free device_id exhausted...");
+		log_error("Cannot find free device_id.");
 		return 0;
 	}
 
@@ -228,8 +229,9 @@ int extend_pool(struct logical_volume *pool_lv, const struct segment_type *segty
 	const size_t len = strlen(pool_lv->name) + 16;
 	char name[len];
 
-	if (lv_is_thin_pool(pool_lv)) {
-		log_error("Resize of pool %s not yet implemented.", pool_lv->name);
+	if (pool_lv->le_count) {
+		/* FIXME move code for manipulation from lv_manip.c */
+		log_error(INTERNAL_ERROR "Pool %s has already extents.", pool_lv->name);
 		return 0;
 	}
 
@@ -276,7 +278,7 @@ int extend_pool(struct logical_volume *pool_lv, const struct segment_type *segty
 			return 0;
 		}
 	} else {
-		log_error("Pool %s created without initilization.", pool_lv->name);
+		log_warn("WARNING: Pool %s is created without initilization.", pool_lv->name);
 	}
 
 	if (dm_snprintf(name, len, "%s_tmeta", pool_lv->name) < 0)
