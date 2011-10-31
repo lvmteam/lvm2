@@ -7,6 +7,7 @@ DefaultDependencies=no
 [Service]
 Type=forking
 ExecStart=@sbindir@/dmeventd
+ExecReload=@sbindir@/dmeventd -R
 PIDFile=@DMEVENTD_PIDFILE@
 OOMScoreAdjust=-1000
 
