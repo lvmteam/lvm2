@@ -307,10 +307,11 @@ int update_pool_lv(struct logical_volume *lv, int activate)
 
 	if (activate) {
 		/* If the pool was not yet activated, do it */
-		if (!lv_is_active(lv) &&
-		    !activate_lv_excl(lv->vg->cmd, lv)) {
-			log_error("Failed to activate %s.", lv->name);
-			return 0;
+		if (!lv_is_active(lv)) {
+			if (!activate_lv_excl(lv->vg->cmd, lv))
+				return_0;
+			if (!deactivate_lv(lv->vg->cmd, lv))
+				return_0;
 		}
 		/* If already active, do suspend resume
 		 *
