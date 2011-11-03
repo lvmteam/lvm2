@@ -1100,13 +1100,16 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		return_0;
 
 	if (lv_is_thin_pool(lv)) {
-		    if (!_add_lv_to_dtree(dm, dtree, first_seg(lv)->pool_metadata_lv, origin_only))
-			    return_0;
-		    if (!_add_lv_to_dtree(dm, dtree, seg_lv(first_seg(lv), 0), origin_only))
-			    return_0;
+		if (!_add_dev_to_dtree(dm, dtree, lv, "tpool"))
+			return_0;
+		if (!_add_lv_to_dtree(dm, dtree, first_seg(lv)->pool_metadata_lv, origin_only))
+			return_0;
+		/* FIXME code from _create_partial_dtree() should be moved here */
+		if (!_add_lv_to_dtree(dm, dtree, seg_lv(first_seg(lv), 0), origin_only))
+			return_0;
 	} else if (lv_is_thin_volume(lv)) {
-		    if (!_add_lv_to_dtree(dm, dtree, first_seg(lv)->pool_lv, origin_only))
-			    return_0;
+		if (!_add_lv_to_dtree(dm, dtree, first_seg(lv)->pool_lv, origin_only))
+			return_0;
 	}
 
 	return 1;
@@ -1451,6 +1454,7 @@ static int _add_segment_to_dtree(struct dev_manager *dm,
 	struct dm_list *snh;
 	struct lv_segment *seg_present;
 	const char *target_name;
+	struct lv_activate_opts lva;
 
 	/* Ensure required device-mapper targets are loaded */
 	seg_present = find_cow(seg->lv) ? : seg;
@@ -1495,13 +1499,18 @@ static int _add_segment_to_dtree(struct dev_manager *dm,
 	} else if (lv_is_cow(seg->lv) && !layer) {
 		if (!_add_new_lv_to_dtree(dm, dtree, seg->lv, laopts, "cow"))
 			return_0;
-	} else if (lv_is_thin_volume(seg->lv)) {
-		if (!_add_new_lv_to_dtree(dm, dtree, seg->pool_lv, laopts, NULL))
+	} else if (!layer && (lv_is_thin_pool(seg->lv) ||
+			      lv_is_thin_volume(seg->lv))) {
+		lva = *laopts;
+		lva.real_pool = 1;
+		if (!_add_new_lv_to_dtree(dm, dtree, lv_is_thin_pool(seg->lv) ?
+					  seg->lv : seg->pool_lv, &lva, "tpool"))
 			return_0;
 	} else {
 		if (lv_is_thin_pool(seg->lv) &&
 		    !_add_new_lv_to_dtree(dm, dtree, seg->pool_metadata_lv, laopts, NULL))
 			return_0;
+
 		/* Add any LVs used by this segment */
 		for (s = 0; s < seg->area_count; s++) {
 			if ((seg_type(seg, s) == AREA_LV) &&
