@@ -108,6 +108,30 @@ struct seg_area {
 	uint32_t flags;			/* Replicator sync log flags */
 };
 
+struct dm_thin_message {
+	dm_thin_message_t type;
+	union {
+		struct {
+			uint32_t device_id;
+			uint32_t origin_id;
+		} m_create_snap;
+		struct {
+			uint32_t device_id;
+		} m_create_thin;
+		struct {
+			uint32_t device_id;
+		} m_delete;
+		struct {
+			uint64_t current_id;
+			uint64_t new_id;
+		} m_set_transaction_id;
+		struct {
+			uint32_t device_id;
+			uint64_t new_size;
+		} m_trim;
+	} u;
+};
+
 struct thin_message {
 	struct dm_list list;
 	struct dm_thin_message message;
@@ -2901,7 +2925,8 @@ int dm_tree_node_add_thin_pool_target(struct dm_tree_node *node,
 }
 
 int dm_tree_node_add_thin_pool_message(struct dm_tree_node *node,
-				       const struct dm_thin_message *message)
+				       dm_thin_message_t type,
+				       uint64_t id1, uint64_t id2)
 {
 	struct load_segment *seg;
 	struct thin_message *tm;
@@ -2923,49 +2948,55 @@ int dm_tree_node_add_thin_pool_message(struct dm_tree_node *node,
 		return 0;
 	}
 
-	switch (message->type) {
+	switch (type) {
 	case DM_THIN_MESSAGE_CREATE_SNAP:
 		/* If the thin origin is active, it must be suspend first! */
-		if (message->u.m_create_snap.device_id == message->u.m_create_snap.origin_id) {
+		if (id1 == id2) {
 			log_error("Cannot use same device id for origin and its snapshot.");
 			return 0;
 		}
-		if (!_thin_validate_device_id(message->u.m_create_snap.device_id) ||
-		    !_thin_validate_device_id(message->u.m_create_snap.origin_id))
+		if (!_thin_validate_device_id(id1) ||
+		    !_thin_validate_device_id(id2))
 			return_0;
-		tm->message.u.m_create_snap = message->u.m_create_snap;
+		tm->message.u.m_create_snap.device_id = id1;
+		tm->message.u.m_create_snap.origin_id = id2;
 		break;
 	case DM_THIN_MESSAGE_CREATE_THIN:
-		if (!_thin_validate_device_id(message->u.m_create_thin.device_id))
+		if (!_thin_validate_device_id(id1))
 			return_0;
-		tm->message.u.m_create_thin = message->u.m_create_thin;
+		tm->message.u.m_create_thin.device_id = id1;
 		tm->expected_errno = EEXIST;
 		break;
 	case DM_THIN_MESSAGE_DELETE:
-		if (!_thin_validate_device_id(message->u.m_delete.device_id))
+		if (!_thin_validate_device_id(id1))
 			return_0;
-		tm->message.u.m_delete = message->u.m_delete;
+		tm->message.u.m_delete.device_id = id1;
 		tm->expected_errno = ENODATA;
 		break;
 	case DM_THIN_MESSAGE_TRIM:
-		if (!_thin_validate_device_id(message->u.m_trim.device_id))
+		if (!_thin_validate_device_id(id1))
 			return_0;
-		tm->message.u.m_trim = message->u.m_trim;
+		tm->message.u.m_trim.device_id = id1;
+		tm->message.u.m_trim.new_size = id2;
 		break;
 	case DM_THIN_MESSAGE_SET_TRANSACTION_ID:
-		if (message->u.m_set_transaction_id.current_id !=
-		    (message->u.m_set_transaction_id.new_id - 1)) {
-			log_error("New transaction_id must be sequential.");
+		if ((id1 + 1) !=  id2) {
+			log_error("New transaction id must be sequential.");
 			return 0; /* FIXME: Maybe too strict here? */
 		}
-		tm->message.u.m_set_transaction_id = message->u.m_set_transaction_id;
+		if (id1 !=  seg->transaction_id) {
+			log_error("Current transaction id is different from thin pool.");
+			return 0; /* FIXME: Maybe too strict here? */
+		}
+		tm->message.u.m_set_transaction_id.current_id = id1;
+		tm->message.u.m_set_transaction_id.new_id = id2;
 		break;
 	default:
-		log_error("Unsupported message type %d.", (int) message->type);
+		log_error("Unsupported message type %d.", (int) type);
 		return 0;
 	}
 
-	tm->message.type = message->type;
+	tm->message.type = type;
 	dm_list_add(&seg->thin_messages, &tm->list);
 
 	return 1;
