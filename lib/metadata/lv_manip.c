@@ -137,7 +137,8 @@ struct lv_segment *get_only_segment_using_this_lv(struct logical_volume *lv)
 		return NULL;
 	}
 
-	sl = dm_list_item(dm_list_first(&lv->segs_using_this_lv), struct seg_list);
+	dm_list_iterate_items(sl, &lv->segs_using_this_lv)
+		break; /* first item */
 
 	if (sl->count != 1) {
 		log_error("%s is expected to have only one segment using it, "
