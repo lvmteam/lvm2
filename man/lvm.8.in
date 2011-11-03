@@ -276,7 +276,7 @@ VG and LV names cannot begin with a hyphen.
 There are also various reserved names that are used internally by lvm that can not be used as LV or VG names.
 A VG cannot be called anything that exists in /dev/ at the time of creation, nor can it be called '.' or '..'.
 A LV cannot be called '.' '..' 'snapshot' or 'pvmove'. The LV name may also not contain
-the strings '_mlog', '_mimage', '_tmeta', '_tpool'.
+the strings '_mlog', '_mimage', '_tdata', '_tmeta'.
 
 
 .SH DIAGNOSTICS
