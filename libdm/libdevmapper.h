@@ -555,39 +555,16 @@ int dm_tree_node_add_thin_pool_target(struct dm_tree_node *node,
 
 /* Supported messages for thin provision target */
 typedef enum {
-	DM_THIN_MESSAGE_CREATE_SNAP,
-	DM_THIN_MESSAGE_CREATE_THIN,
-	DM_THIN_MESSAGE_DELETE,
-	DM_THIN_MESSAGE_SET_TRANSACTION_ID,
-	DM_THIN_MESSAGE_TRIM
+	DM_THIN_MESSAGE_CREATE_SNAP,		/* device_id, origin_id */
+	DM_THIN_MESSAGE_CREATE_THIN,		/* device_id */
+	DM_THIN_MESSAGE_DELETE,			/* device_id */
+	DM_THIN_MESSAGE_SET_TRANSACTION_ID,	/* current_id, new_id */
+	DM_THIN_MESSAGE_TRIM			/* device_id, new_size */
 } dm_thin_message_t;
 
-struct dm_thin_message {
-	dm_thin_message_t type;
-	union {
-		struct {
-			uint32_t device_id;
-			uint32_t origin_id;
-		} m_create_snap;
-		struct {
-			uint32_t device_id;
-		} m_create_thin;
-		struct {
-			uint32_t device_id;
-		} m_delete;
-		struct {
-			uint64_t current_id;
-			uint64_t new_id;
-		} m_set_transaction_id;
-		struct {
-			uint32_t device_id;
-			uint64_t new_size;
-		} m_trim;
-	} u;
-};
-
 int dm_tree_node_add_thin_pool_message(struct dm_tree_node *node,
-                                       const struct dm_thin_message *message);
+				       dm_thin_message_t type,
+				       uint64_t id1, uint64_t id2);
 
 /*
  * FIXME: Defines bellow are based on kernel's dm-thin.c defines

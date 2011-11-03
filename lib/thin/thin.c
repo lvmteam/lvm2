@@ -222,7 +222,6 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 {
 	char *metadata_dlid, *pool_dlid;
 	const struct lv_thin_message *lmsg;
-	struct dm_thin_message dmsg;
 
 	if (!(metadata_dlid = build_dm_uuid(mem, seg->pool_metadata_lv->lvid.s, NULL))) {
 		log_error("Failed to build uuid for metadata LV %s.",
@@ -243,27 +242,30 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 		return_0;
 
 	dm_list_iterate_items(lmsg, &seg->thin_messages) {
-		dmsg.type = lmsg->type;
 		switch (lmsg->type) {
 		case DM_THIN_MESSAGE_CREATE_SNAP:
 			/* FIXME: to be implemented */
 			log_debug("Thin pool create_snap %s.", lmsg->u.lv->name);
-			dmsg.u.m_create_snap.device_id = first_seg(lmsg->u.lv)->device_id;
-			dmsg.u.m_create_snap.origin_id = 0;//first_seg(first_seg(lmsg->u.lv)->origin)->device_id;
-			if (!dm_tree_node_add_thin_pool_message(node, &dmsg))
+			if (!dm_tree_node_add_thin_pool_message(node,
+								lmsg->type,
+								first_seg(lmsg->u.lv)->device_id,
+								0))//first_seg(first_seg(lmsg->u.lv)->origin)->device_id;
 				return_0;
 			log_error("Sorry SNAPSHOT is not yet supported.");
 			return 0;
 		case DM_THIN_MESSAGE_CREATE_THIN:
 			log_debug("Thin pool create_thin %s.", lmsg->u.lv->name);
-			dmsg.u.m_create_thin.device_id = first_seg(lmsg->u.lv)->device_id;
-			if (!dm_tree_node_add_thin_pool_message(node, &dmsg))
+			if (!dm_tree_node_add_thin_pool_message(node,
+								lmsg->type,
+								first_seg(lmsg->u.lv)->device_id,
+								0))
 				return_0;
 			break;
 		case DM_THIN_MESSAGE_DELETE:
 			log_debug("Thin pool delete %u.", lmsg->u.delete_id);
-			dmsg.u.m_delete.device_id = lmsg->u.delete_id;
-			if (!dm_tree_node_add_thin_pool_message(node, &dmsg))
+			if (!dm_tree_node_add_thin_pool_message(node,
+								lmsg->type,
+								lmsg->u.delete_id, 0))
 				return_0;
 			break;
 		case DM_THIN_MESSAGE_TRIM:
@@ -278,11 +280,11 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 
 	if (!dm_list_empty(&seg->thin_messages)) {
 		/* Messages were passed, modify transaction_id as the last one */
-		log_debug("Thin pool set_transaction_id %" PRIu64 ".", seg->transaction_id);
-		dmsg.type = DM_THIN_MESSAGE_SET_TRANSACTION_ID;
-		dmsg.u.m_set_transaction_id.current_id = seg->transaction_id - 1;
-		dmsg.u.m_set_transaction_id.new_id = seg->transaction_id;
-		if (!dm_tree_node_add_thin_pool_message(node, &dmsg))
+		log_debug("Thin pool set transaction id %" PRIu64 ".", seg->transaction_id);
+		if (!dm_tree_node_add_thin_pool_message(node,
+							DM_THIN_MESSAGE_SET_TRANSACTION_ID,
+							seg->transaction_id - 1,
+							seg->transaction_id))
 			return_0;
 	}
 
