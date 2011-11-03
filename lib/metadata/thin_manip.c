@@ -49,18 +49,16 @@ int attach_pool_lv(struct lv_segment *seg, struct logical_volume *pool_lv)
 
 int detach_pool_lv(struct lv_segment *seg)
 {
-	struct lv_thin_message *tmsg;
-	struct dm_list *l, *lt;
+	struct lv_thin_message *tmsg, *tmp;
 
-	if (!lv_is_thin_pool(seg->pool_lv)) {
-		log_error(INTERNAL_ERROR "LV %s is not a thin pool",
-			  seg->pool_lv->name);
+	if (!seg->pool_lv || !lv_is_thin_pool(seg->pool_lv)) {
+		log_error(INTERNAL_ERROR "LV %s is not a thin volume",
+			  seg->lv->name);
 		return 0;
 	}
 
 	/* Drop any message referencing removed segment */
-	dm_list_iterate_safe(l, lt, &first_seg(seg->pool_lv)->thin_messages) {
-		tmsg = dm_list_item(l, struct lv_thin_message);
+	dm_list_iterate_items_safe(tmsg, tmp, &first_seg(seg->pool_lv)->thin_messages) {
 		switch (tmsg->type) {
 		case DM_THIN_MESSAGE_CREATE_SNAP:
 		case DM_THIN_MESSAGE_CREATE_THIN:
@@ -201,8 +199,8 @@ struct lv_segment *find_pool_seg(const struct lv_segment *seg)
  */
 uint32_t get_free_pool_device_id(struct lv_segment *thin_pool_seg)
 {
-	uint32_t dev_id, max_id = 0;
-	struct dm_list *h;
+	uint32_t max_id = 0;
+	struct seg_list *sl;
 
 	if (!seg_is_thin_pool(thin_pool_seg)) {
 		log_error(INTERNAL_ERROR
@@ -211,11 +209,9 @@ uint32_t get_free_pool_device_id(struct lv_segment *thin_pool_seg)
 		return 0;
 	}
 
-	dm_list_iterate(h, &thin_pool_seg->lv->segs_using_this_lv) {
-		dev_id = dm_list_item(h, struct seg_list)->seg->device_id;
-		if (dev_id > max_id)
-			max_id = dev_id;
-	}
+	dm_list_iterate_items(sl, &thin_pool_seg->lv->segs_using_this_lv)
+		if (sl->seg->device_id > max_id)
+			max_id = sl->seg->device_id;
 
 	if (++max_id > DM_THIN_MAX_DEVICE_ID) {
 		// FIXME: try to find empty holes....
