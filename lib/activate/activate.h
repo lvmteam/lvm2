@@ -34,6 +34,7 @@ struct lv_activate_opts {
 	int exclusive;
 	int origin_only;
 	int no_merging;
+	int real_pool;
 	unsigned revert;
 };
 
