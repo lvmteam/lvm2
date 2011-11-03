@@ -2973,26 +2973,33 @@ int dm_tree_node_add_thin_pool_message(struct dm_tree_node *node,
 
 int dm_tree_node_add_thin_target(struct dm_tree_node *node,
 				 uint64_t size,
-				 const char *thin_pool_uuid,
+				 const char *pool_uuid,
 				 uint32_t device_id)
 {
+	struct dm_tree_node *pool;
 	struct load_segment *seg;
 
-	if (!_thin_validate_device_id(device_id))
-		return_0;
-
-	if (!(seg = _add_segment(node, SEG_THIN, size)))
-		return_0;
-
-	if (!(seg->pool = dm_tree_find_node_by_uuid(node->dtree, thin_pool_uuid))) {
-		log_error("Missing thin pool uuid %s.", thin_pool_uuid);
+	if (!(pool = dm_tree_find_node_by_uuid(node->dtree, pool_uuid))) {
+		log_error("Missing thin pool uuid %s.", pool_uuid);
 		return 0;
 	}
 
-	if (!_link_tree_nodes(node, seg->pool))
+	if (!_link_tree_nodes(node, pool))
 		return_0;
 
-	seg->device_id = device_id;
+	if (device_id == DM_THIN_ERROR_DEVICE_ID) {
+		if (!dm_tree_node_add_error_target(node, size))
+			return_0;
+	} else {
+		if (!_thin_validate_device_id(device_id))
+			return_0;
+
+		if (!(seg = _add_segment(node, SEG_THIN, size)))
+			return_0;
+
+		seg->pool = pool;
+		seg->device_id = device_id;
+	}
 
 	return 1;
 }
