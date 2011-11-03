@@ -317,3 +317,43 @@ int extend_pool(struct logical_volume *pool_lv, const struct segment_type *segty
 
 	return 1;
 }
+
+int update_pool_lv(struct logical_volume *lv, int activate)
+{
+	if (!lv_is_thin_pool(lv)) {
+		log_error(INTERNAL_ERROR "Updated LV %s is not pool.", lv->name);
+		return 0;
+	}
+
+	if (activate) {
+		/* If the pool was not yet activated, do it */
+		if (!lv_is_active(lv) &&
+		    !activate_lv_excl(lv->vg->cmd, lv)) {
+			log_error("Failed to activate %s.", lv->name);
+			return 0;
+		}
+		/* If already active, do suspend resume
+		 *
+		 * TODO: Support pool resume without suspend,
+		 * since the real suspend is not needed here
+		 */
+		else if (!suspend_lv(lv->vg->cmd, lv)) {
+			log_error("Failed to suspend %s.", lv->name);
+			return 0;
+		} else if (!resume_lv(lv->vg->cmd, lv)) {
+			log_error("Failed to resume %s.", lv->name);
+			return 0;
+		}
+	}
+
+	if (!dm_list_empty(&first_seg(lv)->thin_messages)) {
+		dm_list_init(&first_seg(lv)->thin_messages);
+
+		if (!vg_write(lv->vg) || !vg_commit(lv->vg))
+			return_0;
+
+		backup(lv->vg);
+	}
+
+	return 1;
+}

@@ -560,6 +560,8 @@ uint64_t extents_from_size(struct cmd_context *cmd, uint64_t size,
 
 int detach_pool_messages(struct logical_volume *pool_lv);
 
+int update_pool_lv(struct logical_volume *lv, int activate);
+
 /*
  * Activation options
  */
