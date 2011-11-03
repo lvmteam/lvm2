@@ -300,7 +300,7 @@ int extend_pool(struct logical_volume *pool_lv, const struct segment_type *segty
 		return_0;
 
 	if (!(data_lv = insert_layer_for_lv(pool_lv->vg->cmd, pool_lv,
-					    pool_lv->status, "_tpool")))
+					    pool_lv->status, "_tdata")))
 		return_0;
 
 	seg = first_seg(pool_lv);

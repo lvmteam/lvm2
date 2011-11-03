@@ -107,7 +107,7 @@ int apply_lvname_restrictions(const char *name)
 		"_rimage",
 		"_rmeta",
 		"_vorigin",
-		"_tpool",
+		"_tdata",
 		"_tmeta",
 		NULL
 	};
