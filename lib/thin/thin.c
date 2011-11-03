@@ -49,7 +49,7 @@ static int _thin_pool_add_message(struct lv_segment *seg,
 {
 	const char *lv_name = NULL;
 	struct logical_volume *lv = NULL;
-	uint32_t device_id = 0;
+	uint32_t delete_id = 0;
 	dm_thin_message_t type;
 
 	/* Message must have only one from: create, trim, delete */
@@ -70,7 +70,7 @@ static int _thin_pool_add_message(struct lv_segment *seg,
 		type = DM_THIN_MESSAGE_TRIM;
 	}
 
-	if (!dm_config_get_uint32(sn, "delete", &device_id)) {
+	if (!dm_config_get_uint32(sn, "delete", &delete_id)) {
 		if (!lv)
 			return SEG_LOG_ERROR("Unknown message in");
 	} else {
@@ -79,7 +79,7 @@ static int _thin_pool_add_message(struct lv_segment *seg,
 		type = DM_THIN_MESSAGE_DELETE;
 	}
 
-	if (!attach_pool_message(seg, type, lv, device_id, 1))
+	if (!attach_pool_message(seg, type, lv, delete_id, 1))
 		return_0;
 
 	return 1;
