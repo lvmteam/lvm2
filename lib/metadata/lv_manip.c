@@ -4114,10 +4114,8 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 				  lp->pool, vg->name);
 			return 0;
 		}
-		if (!update_pool_lv(lvl->lv, 1)) {
-			stack;
-			goto revert_new_lv;
-		}
+		if (!update_pool_lv(lvl->lv, 1))
+			return_0;
 	}
 
 	if (segtype_is_mirrored(lp->segtype) || segtype_is_raid(lp->segtype)) {
