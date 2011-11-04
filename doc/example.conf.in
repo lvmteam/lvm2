@@ -213,6 +213,11 @@ devices {
 #    until version 2.02.85.
 #
 #    mirror_logs_require_separate_pvs = 0
+#
+#    Set to 1 to guarantee that thin pool metadata will always
+#    be placed on different PVs from the pool data.
+#
+#    thin_pool_metadata_require_separate_pvs = 0
 #}
 
 # This section that allows you to configure the nature of the

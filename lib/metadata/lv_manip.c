@@ -788,6 +788,8 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 	ah->region_size = region_size;
 	ah->alloc = alloc;
 	ah->area_multiple = _calc_area_multiple(segtype, area_count, stripes);
+	ah->mirror_logs_separate = find_config_tree_bool(cmd, "allocation/mirror_logs_require_separate_pvs",
+							 DEFAULT_MIRROR_LOGS_REQUIRE_SEPARATE_PVS);
 
 	if (segtype_is_raid(segtype)) {
 		if (metadata_area_count) {
@@ -813,6 +815,9 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 		/* thin_pool uses region_size to pass metadata size in extents */
 		ah->log_len = ah->region_size;
 		ah->region_size = 0;
+		ah->mirror_logs_separate =
+			find_config_tree_bool(cmd, "allocation/thin_pool_metadata_require_separate_pvs",
+					      DEFAULT_THIN_POOL_METADATA_REQUIRE_SEPARATE_PVS);
 	} else {
 		ah->log_area_count = metadata_area_count;
 		ah->log_len = !metadata_area_count ? 0 :
@@ -828,8 +833,6 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 	ah->cling_tag_list_cn = find_config_tree_node(cmd, "allocation/cling_tag_list");
 
 	ah->maximise_cling = find_config_tree_bool(cmd, "allocation/maximise_cling", DEFAULT_MAXIMISE_CLING);
-
-	ah->mirror_logs_separate = find_config_tree_bool(cmd, "allocation/mirror_logs_require_separate_pvs", DEFAULT_MIRROR_LOGS_REQUIRE_SEPARATE_PVS);
 
 	return ah;
 }
