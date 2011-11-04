@@ -37,6 +37,8 @@ struct pv_to_create {
 	struct pvcreate_params *pp;
 };
 
+#define MAX_EXTENT_COUNT  (UINT32_MAX)
+
 struct volume_group {
 	struct cmd_context *cmd;
 	struct dm_pool *vgmem;

@@ -276,12 +276,12 @@ int add_pv_to_vg(struct volume_group *vg, const char *pv_name,
 	if (!alloc_pv_segment_whole_pv(mem, pv))
 		return_0;
 
-	if ((uint64_t) vg->extent_count + pv->pe_count > UINT32_MAX) {
+	if ((uint64_t) vg->extent_count + pv->pe_count > MAX_EXTENT_COUNT) {
 		log_error("Unable to add %s to %s: new extent count (%"
 			  PRIu64 ") exceeds limit (%" PRIu32 ").",
 			  pv_name, vg->name,
 			  (uint64_t) vg->extent_count + pv->pe_count,
-			  UINT32_MAX);
+			  MAX_EXTENT_COUNT);
 		return 0;
 	}
 
@@ -1000,12 +1000,12 @@ uint64_t extents_from_size(struct cmd_context *cmd, uint64_t size,
 			  display_size(cmd, size));
 	}
 
-	if (size > (uint64_t) UINT32_MAX * extent_size) {
+	if (size > (uint64_t) MAX_EXTENT_COUNT * extent_size) {
 		log_error("Volume too large (%s) for extent size %s. "
 			  "Upper limit is %s.",
 			  display_size(cmd, size),
 			  display_size(cmd, (uint64_t) extent_size),
-			  display_size(cmd, (uint64_t) UINT32_MAX *
+			  display_size(cmd, (uint64_t) MAX_EXTENT_COUNT *
 				       extent_size));
 		return 0;
 	}

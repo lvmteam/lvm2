@@ -261,7 +261,7 @@ static int _recalc_extents(uint32_t *extents, const char *desc1,
 
 	size /= new_size;
 
-	if (size > UINT32_MAX) {
+	if (size > MAX_EXTENT_COUNT) {
 		log_error("New extent count %" PRIu64 " for %s%s exceeds "
 			  "32 bits.", size, desc1, desc2);
 		return 0;
