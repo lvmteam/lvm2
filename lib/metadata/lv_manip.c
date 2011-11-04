@@ -810,8 +810,9 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 		}
 	} else if (segtype_is_thin_pool(segtype)) {
 		ah->log_area_count = metadata_area_count;
-// FIXME Calculate thin metadata area size (--metadatasize, or reuse --regionsize??)
-		ah->log_len = 128 * 1024 * 1024 / (512 * extent_size); /* Fixed 128MB */
+		/* thin_pool uses region_size to pass metadata size in extents */
+		ah->log_len = ah->region_size;
+		ah->region_size = 0;
 	} else {
 		ah->log_area_count = metadata_area_count;
 		ah->log_len = !metadata_area_count ? 0 :
@@ -4161,7 +4162,8 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 
 	if (!lv_extend(lv, lp->segtype,
 		       lp->stripes, lp->stripe_size,
-		       lp->mirrors, lp->region_size,
+		       lp->mirrors,
+		       seg_is_thin_pool(lp) ? lp->poolmetadataextents : lp->region_size,
 		       seg_is_thin_volume(lp) ? lp->voriginextents : lp->extents,
 		       seg_is_thin_volume(lp) ? lp->pool : NULL, lp->pvh, lp->alloc))
 		return_NULL;
