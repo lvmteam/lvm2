@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Add missing lvrename mirrored log recursion in for_each_sub_lv.
   Improve lv_extend stack reporting.
   Increase virtual segment size instead of creating multiple segment list.
   Add last_seg(lv) internal function.
