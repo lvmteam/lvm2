@@ -2980,11 +2980,11 @@ int dm_tree_node_add_thin_pool_message(struct dm_tree_node *node,
 		tm->message.u.m_trim.new_size = id2;
 		break;
 	case DM_THIN_MESSAGE_SET_TRANSACTION_ID:
-		if ((id1 + 1) !=  id2) {
+		if ((id1 + 1) != id2) {
 			log_error("New transaction id must be sequential.");
 			return 0; /* FIXME: Maybe too strict here? */
 		}
-		if (id1 !=  seg->transaction_id) {
+		if (id2 != seg->transaction_id) {
 			log_error("Current transaction id is different from thin pool.");
 			return 0; /* FIXME: Maybe too strict here? */
 		}
