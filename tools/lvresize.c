@@ -459,8 +459,14 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 			break;
 	}
 
-	if (lp->sign == SIGN_PLUS)
+	if (lp->sign == SIGN_PLUS) {
+		if (lp->extents >= (MAX_EXTENT_COUNT - lv->le_count)) {
+			log_error("Unable to extend %s by %u extents, exceeds limit (%u).",
+				  lp->lv_name, lv->le_count, MAX_EXTENT_COUNT);
+			return EINVALID_CMD_LINE;
+		}
 		lp->extents += lv->le_count;
+	}
 
 	if (lp->sign == SIGN_MINUS) {
 		if (lp->extents >= lv->le_count) {

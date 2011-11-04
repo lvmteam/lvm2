@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Fix extent_count overflow with lvextend.
   Add missing lvrename mirrored log recursion in for_each_sub_lv.
   Improve lv_extend stack reporting.
   Increase virtual segment size instead of creating multiple segment list.
