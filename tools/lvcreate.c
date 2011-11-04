@@ -283,6 +283,17 @@ static int _update_extents_params(struct volume_group *vg,
 		case PERCENT_NONE:
 			break;
 	}
+
+	if (lp->create_thin_pool && !lp->poolmetadatasize)
+		/* Defaults to nr_pool_blocks * 64b */
+		lp->poolmetadatasize =  (uint64_t) lp->extents * vg->extent_size /
+			(uint64_t) lp->chunk_size * UINT64_C(64);
+
+	if (lp->poolmetadatasize &&
+	    !(lp->poolmetadataextents = extents_from_size(vg->cmd, lp->poolmetadatasize,
+							  vg->extent_size)))
+		return_0;
+
 	return 1;
 }
 
@@ -322,6 +333,18 @@ static int _read_size_params(struct lvcreate_params *lp,
 	/* If size/extents given with thin, then we are creating a thin pool */
 	if (lp->thin && (arg_count(cmd, size_ARG) || arg_count(cmd, extents_ARG)))
 		lp->create_thin_pool = 1;
+
+	if (arg_count(cmd, poolmetadatasize_ARG)) {
+		if (!seg_is_thin(lp)) {
+			log_error("--poolmetadatasize may only be specified when allocating the thin pool.");
+			return 0;
+		}
+		if (arg_sign_value(cmd, poolmetadatasize_ARG, 0) == SIGN_MINUS) {
+			log_error("Negative poolmetadatasize is invalid.");
+			return 0;
+		}
+		lp->poolmetadatasize = arg_uint64_value(cmd, poolmetadatasize_ARG, UINT64_C(0));
+	}
 
 	/* Size returned in kilobyte units; held in sectors */
 	if (arg_count(cmd, virtualsize_ARG)) {
@@ -472,6 +495,33 @@ static int _read_raid_params(struct lvcreate_params *lp,
 	 */
 	if (!lp->region_size) {
 		log_error(INTERNAL_ERROR "region_size not set.");
+		return 0;
+	}
+
+	return 1;
+}
+
+static int _read_thin_params(struct lvcreate_params *lp,
+			     struct cmd_context *cmd)
+{
+	if (!seg_is_thin(lp)) {
+		if (lp->poolmetadatasize) {
+			log_error("Pool metadata size option is only for pool creation.");
+			return 0;
+		}
+		return 1;
+	}
+
+	if (lp->create_thin_pool) {
+		if (lp->poolmetadatasize > (2 * DEFAULT_THIN_POOL_MAX_METADATA_SIZE)) {
+			log_warn("WARNING: Maximum supported pool metadata size is 16GB.");
+			lp->poolmetadatasize = 2 * DEFAULT_THIN_POOL_MAX_METADATA_SIZE;
+		} else if (lp->poolmetadatasize < (2 * DEFAULT_THIN_POOL_MIN_METADATA_SIZE))
+			lp->poolmetadatasize = 2 * DEFAULT_THIN_POOL_MIN_METADATA_SIZE;
+		log_verbose("Setting pool metadata size to %" PRIu64 " sectors.",
+			    lp->poolmetadatasize);
+	} else if (lp->poolmetadatasize) {
+		log_error("Pool metadata size options is only for pool creation.");
 		return 0;
 	}
 
@@ -677,7 +727,8 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 	    !_read_size_params(lp, lcp, cmd) ||
 	    !get_stripe_params(cmd, &lp->stripes, &lp->stripe_size) ||
 	    !_read_mirror_params(lp, cmd) ||
-	    !_read_raid_params(lp, cmd))
+	    !_read_raid_params(lp, cmd) ||
+	    !_read_thin_params(lp, cmd))
 		return_0;
 
 	if (lp->snapshot && lp->thin && arg_count(cmd, chunksize_ARG))
@@ -793,6 +844,11 @@ static int _check_thin_parameters(struct volume_group *vg, struct lvcreate_param
 
 		if (arg_count(vg->cmd, alloc_ARG)) {
 			log_error("--alloc may only be specified when allocating the thin pool.");
+			return 0;
+		}
+
+		if (arg_count(vg->cmd, poolmetadatasize_ARG)) {
+			log_error("--poolmetadatasize may only be specified when allocating the thin pool.");
 			return 0;
 		}
 

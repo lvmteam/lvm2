@@ -192,6 +192,7 @@ xx(lvcreate,
    "\t[-i|--stripes Stripes [-I|--stripesize StripeSize]]\n"
    "\t{-l|--extents LogicalExtentsNumber[%{VG|FREE|ORIGIN}] |\n"
    "\t -L|--size LogicalVolumeSize[bBsSkKmMgGtTpPeE]}\n"
+   "\t[--poolmetadatasize Size[bBsSkKmMgG]]\n"
    "\t[-M|--persistent {y|n}] [--major major] [--minor minor]\n"
    "\t[-n|--name LogicalVolumeName]\n"
    "\t[--noudevsync]\n"
@@ -210,7 +211,7 @@ xx(lvcreate,
    noudevsync_ARG, permission_ARG, persistent_ARG, readahead_ARG,
    regionsize_ARG, size_ARG, snapshot_ARG, stripes_ARG, stripesize_ARG,
    test_ARG, thin_ARG, thinpool_ARG, type_ARG, virtualoriginsize_ARG,
-   virtualsize_ARG, zero_ARG)
+   poolmetadatasize_ARG, virtualsize_ARG, zero_ARG)
 
 xx(lvdisplay,
    "Display information about a logical volume",
