@@ -2568,10 +2568,15 @@ int lv_extend(struct logical_volume *lv,
 	if (segtype_is_virtual(segtype))
 		return lv_add_virtual_segment(lv, 0u, extents, segtype, thin_pool_name);
 
-	if (!lv->le_count && segtype_is_thin_pool(segtype))
+	if (!lv->le_count && segtype_is_thin_pool(segtype)) {
+		if (stripes == 1 && (dm_list_size(allocatable_pvs) == 1)) {
+			log_warn("WARNING: Only one PV available for thin pool data and metadata.");
+			alloc = ALLOC_ANYWHERE;
+		}
 		/* Thin pool allocation treats its metadata device like a mirror log. */
+		/* TODO: add support for stripped metadata pool */
 		log_count = 1;
-	else if (segtype_is_raid(segtype) && !lv->le_count)
+	} else if (segtype_is_raid(segtype) && !lv->le_count)
 		log_count = mirrors * stripes;
 
 	if (!(ah = allocate_extents(lv->vg, lv, segtype, stripes, mirrors,
