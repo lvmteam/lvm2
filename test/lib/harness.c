@@ -180,9 +180,11 @@ static void failed(int i, char *f, int st) {
 		return;
 	}
 	printf("FAILED.\n");
-	printf("-- FAILED %s ------------------------------------\n", f);
-	dump();
-	printf("-- FAILED %s (end) ------------------------------\n", f);
+	if (!verbose) {
+		printf("-- FAILED %s ------------------------------------\n", f);
+		dump();
+		printf("-- FAILED %s (end) ------------------------------\n", f);
+	}
 }
 
 static void run(int i, char *f) {
