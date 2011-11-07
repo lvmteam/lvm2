@@ -157,6 +157,13 @@ static int _lock_resource(const char *resource, int mode, int flags, int *lockid
 	char **_resources_1;
 	int i, j;
 
+	if (mode == LCK_READ) { /* only track PREAD, aka PROTECTED READ */
+		DEBUGLOG("Not tracking CONCURRENT READ lock: %s, flags=%d, mode=%d\n",
+			 resource, flags, mode);
+		*lockid = -1;
+		return 0;
+	}
+
 	DEBUGLOG("Locking resource %s, flags=%d, mode=%d\n",
 		 resource, flags, mode);
 
@@ -224,6 +231,12 @@ bad:
 
 static int _unlock_resource(const char *resource, int lockid)
 {
+	if (lockid < 0) {
+		DEBUGLOG("Not tracking unlock of lockid -1: %s, lockid=%d\n",
+			 resource, lockid);
+		return 0;
+	}
+
 	DEBUGLOG("Unlocking resource %s, lockid=%d\n", resource, lockid);
 	pthread_mutex_lock(&_lock_mutex);
 
