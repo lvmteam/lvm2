@@ -88,27 +88,29 @@ int attach_pool_message(struct lv_segment *seg, dm_thin_message_t type,
 	struct lv_thin_message *tmsg;
 
 	dm_list_iterate_items(tmsg, &seg->thin_messages) {
-		if (tmsg->type == type) {
-			switch (tmsg->type) {
-			case DM_THIN_MESSAGE_CREATE_SNAP:
-			case DM_THIN_MESSAGE_CREATE_THIN:
-			case DM_THIN_MESSAGE_TRIM:
-				if (tmsg->u.lv == lv) {
-					log_error("Message referring LV %s already queued for %s.",
-						  tmsg->u.lv->name, seg->lv->name);
-					return 0;
-				}
-				break;
-			case DM_THIN_MESSAGE_DELETE:
-				if (tmsg->u.delete_id == delete_id) {
-					log_error("Delete of device %u already queued for %s.",
-						  tmsg->u.delete_id, seg->lv->name);
-					return 0;
-				}
-				break;
-			default:
-				break;
+		if (tmsg->type != type)
+			continue;
+
+		switch (tmsg->type) {
+		case DM_THIN_MESSAGE_CREATE_SNAP:
+		case DM_THIN_MESSAGE_CREATE_THIN:
+		case DM_THIN_MESSAGE_TRIM:
+			if (tmsg->u.lv == lv) {
+				log_error("Message referring LV %s already queued for %s.",
+					  tmsg->u.lv->name, seg->lv->name);
+				return 0;
 			}
+			break;
+		case DM_THIN_MESSAGE_DELETE:
+			if (tmsg->u.delete_id == delete_id) {
+				log_error("Delete of device %u already queued for %s.",
+					  tmsg->u.delete_id, seg->lv->name);
+				return 0;
+			}
+			break;
+		default:
+			log_error(INTERNAL_ERROR "Unsupported message type %u.", tmsg->type);
+			return 0;
 		}
 	}
 
