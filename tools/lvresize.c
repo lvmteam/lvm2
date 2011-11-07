@@ -755,10 +755,6 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 	/* If snapshot, must suspend all associated devices */
 	if (lv_is_cow(lv))
 		lock_lv = origin_from_cow(lv);
-	else if (lv_is_used_thin_pool(lv))
-		// FIXME: what to pick here - maybe an active thin?
-		// but it still seems to be racy in cluster
-		lock_lv = lv;
 	else
 		lock_lv = lv;
 
