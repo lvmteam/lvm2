@@ -4184,19 +4184,6 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 	} else if (seg_is_thin_volume(lp)) {
 		pool_lv = first_seg(lv)->pool_lv;
 
-		/* Ensure unused thin pool is not active */
-		if (!lv_is_used_thin_pool(pool_lv) &&
-		    !deactivate_lv(cmd, pool_lv)) {
-			log_error("Failed to deactivate unused pool %s.",
-				  pool_lv->name);
-			goto revert_new_lv;
-		}
-
-		/*
-		 * From now the thin pool de/activation is made
-		 * only via implicit thin volume dependency.
-		 */
-
 		if (!(first_seg(lv)->device_id =
 		      get_free_pool_device_id(first_seg(pool_lv)))) {
 			stack;
