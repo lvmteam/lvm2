@@ -93,6 +93,9 @@ static int _lvcreate_name_params(struct lvcreate_params *lp,
 				lp->origin = ptr + 1;
 		}
 
+		if (!lp->vg_name)
+			_set_vg_name(lp, extract_vgname(cmd, NULL));
+
 		if (!lp->vg_name) {
 			log_error("The origin name should include the "
 				  "volume group.");
@@ -111,7 +114,10 @@ static int _lvcreate_name_params(struct lvcreate_params *lp,
 			lp->pool = vg_name;
 			if (!_set_vg_name(lp, extract_vgname(cmd, lp->pool)))
 				return_0;
-	
+
+			if (!lp->vg_name)
+				_set_vg_name(lp, extract_vgname(cmd, NULL));
+
 			if (!lp->vg_name) {
 				log_error("The pool name should include the "
 					  "volume group.");
