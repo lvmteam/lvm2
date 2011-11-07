@@ -74,7 +74,16 @@ int detach_pool_lv(struct lv_segment *seg)
 					  tmsg->u.lv->name);
 				dm_list_del(&tmsg->list);
 			}
+			break;
+		case DM_THIN_MESSAGE_DELETE:
+			if (tmsg->u.delete_id == seg->device_id) {
+				log_error(INTERNAL_ERROR "Trying to delete %u again.",
+					  tmsg->u.delete_id);
+				return 0;
+			}
+			break;
 		default:
+			log_error(INTERNAL_ERROR "Unsupported message type %u.", tmsg->type);
 			break;
 		}
 	}
