@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Add missing default $LVM_VG_NAME usage for snapshots.
   Fix extent_count overflow with lvextend.
   Add missing lvrename mirrored log recursion in for_each_sub_lv.
   Improve lv_extend stack reporting.
