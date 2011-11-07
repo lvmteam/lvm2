@@ -1013,13 +1013,6 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 			    lp.pool, lp.vg_name, lp.snapshot ? " as snapshot of " : "",
 			    lp.snapshot ? lp.origin : "", lp.segtype->name);
 
-	/* FIXME Remove when thin snapshots are supported. */
-	if (lp.thin && lp.snapshot) {
-		log_error("Thin snapshots are not yet supported.");
-		r = ECMD_FAILED;
-		goto_out;
-	}
-
 	if (!lv_create_single(vg, &lp)) {
 		stack;
 		r = ECMD_FAILED;

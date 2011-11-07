@@ -255,9 +255,16 @@ struct lv_segment *alloc_lv_segment(const struct segment_type *segtype,
 	dm_list_init(&seg->thin_messages);
 
 	if (thin_pool_lv) {
-		seg->transaction_id = first_seg(thin_pool_lv)->transaction_id;
-		if (!attach_pool_lv(seg, thin_pool_lv))
-			return_NULL;
+		/* If this thin volume, thin snapshot is being created */
+		if (lv_is_thin_volume(thin_pool_lv)) {
+			seg->transaction_id = first_seg(first_seg(thin_pool_lv)->pool_lv)->transaction_id;
+			if (!attach_pool_lv(seg, first_seg(thin_pool_lv)->pool_lv, thin_pool_lv))
+				return_NULL;
+		} else {
+			seg->transaction_id = first_seg(thin_pool_lv)->transaction_id;
+			if (!attach_pool_lv(seg, thin_pool_lv, NULL))
+				return_NULL;
+		}
 	}
 
 	if (log_lv && !attach_mirror_log(seg, log_lv))
@@ -4004,8 +4011,20 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 
 	status |= lp->permission | VISIBLE_LV;
 
-	/* FIXME Thin snapshots are different */
-	if (lp->snapshot) {
+	if (lp->snapshot && lp->thin) {
+		if (!(org = find_lv(vg, lp->origin))) {
+			log_error("Couldn't find origin volume '%s'.",
+				  lp->origin);
+			return NULL;
+		}
+
+		if (org->status & LOCKED) {
+			log_error("Snapshots of locked devices are not supported.");
+			return NULL;
+		}
+
+		lp->voriginextents = org->le_count;
+	} else if (lp->snapshot) {
 		if (!activation()) {
 			log_error("Can't create snapshot without using "
 				  "device-mapper kernel driver");
@@ -4074,7 +4093,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 		return NULL;
 	}
 
-	if (lp->snapshot && (lp->extents * vg->extent_size < 2 * lp->chunk_size)) {
+	if (lp->snapshot && !lp->thin && (lp->extents * vg->extent_size < 2 * lp->chunk_size)) {
 		log_error("Unable to create a snapshot smaller than 2 chunks.");
 		return NULL;
 	}
@@ -4105,7 +4124,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 	}
 
 	/* The snapshot segment gets created later */
-	if (lp->snapshot &&
+	if (lp->snapshot && !lp->thin &&
 	    !(lp->segtype = get_segtype_from_string(cmd, "striped")))
 		return_NULL;
 
@@ -4173,7 +4192,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 		       lp->mirrors,
 		       seg_is_thin_pool(lp) ? lp->poolmetadataextents : lp->region_size,
 		       seg_is_thin_volume(lp) ? lp->voriginextents : lp->extents,
-		       seg_is_thin_volume(lp) ? lp->pool : NULL, lp->pvh, lp->alloc))
+		       seg_is_thin_volume(lp) ? (org ? org->name : lp->pool) : NULL, lp->pvh, lp->alloc))
 		return_NULL;
 
 	if (seg_is_thin_pool(lp)) {
@@ -4221,6 +4240,24 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 	init_dmeventd_monitor(lp->activation_monitoring);
 
 	if (seg_is_thin(lp)) {
+
+		/* For thin snapshot suspend active thin origin first */
+		if (org && lv_is_active(org)) {
+			if (!suspend_lv(cmd, org)) {
+				log_error("Failed to suspend thin origin %s.",
+					  org->name);
+				goto revert_new_lv;
+			} else if (!resume_lv(cmd, org)) {
+				log_error("Failed to resume thin origin %s.",
+					  org->name);
+				goto revert_new_lv;
+			}
+			/* At this point snapshot is active in kernel thin mda */
+			if (!update_pool_lv(first_seg(org)->pool_lv, 0)) {
+				stack;
+				goto deactivate_and_revert_new_lv;
+			}
+		}
 		if (((lp->activate == CHANGE_AY) ||
 		     (lp->activate == CHANGE_AE) ||
 		     (lp->activate == CHANGE_ALY))) {
@@ -4261,7 +4298,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 		goto deactivate_and_revert_new_lv;
 	}
 
-	if (lp->snapshot) {
+	if (lp->snapshot && !lp->thin) {
 		/* Reset permission after zeroing */
 		if (!(lp->permission & LVM_WRITE))
 			lv->status &= ~LVM_WRITE;

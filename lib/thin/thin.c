@@ -317,16 +317,13 @@ static int _thin_text_import(struct lv_segment *seg,
 			     struct dm_hash_table *pv_hash __attribute__((unused)))
 {
 	const char *lv_name;
-	struct logical_volume *pool_lv;
+	struct logical_volume *pool_lv, *origin = NULL;
 
 	if (!dm_config_get_str(sn, "thin_pool", &lv_name))
 		return SEG_LOG_ERROR("Thin pool must be a string in");
 
 	if (!(pool_lv = find_lv(seg->lv->vg, lv_name)))
 		return SEG_LOG_ERROR("Unknown thin pool %s in", lv_name);
-
-	if (!attach_pool_lv(seg, pool_lv))
-		return_0;
 
 	if (!dm_config_get_uint64(sn, "transaction_id", &seg->transaction_id))
 		return SEG_LOG_ERROR("Could not read transaction_id for");
@@ -335,7 +332,7 @@ static int _thin_text_import(struct lv_segment *seg,
 		if (!dm_config_get_str(sn, "origin", &lv_name))
 			return SEG_LOG_ERROR("Origin must be a string in");
 
-		if (!(seg->origin = find_lv(seg->lv->vg, lv_name)))
+		if (!(origin = find_lv(seg->lv->vg, lv_name)))
 			return SEG_LOG_ERROR("Unknown origin %s in", lv_name);
 	}
 
@@ -345,6 +342,9 @@ static int _thin_text_import(struct lv_segment *seg,
 	if (seg->device_id > DM_THIN_MAX_DEVICE_ID)
 		return SEG_LOG_ERROR("Unsupported value %u for device_id",
 				     seg->device_id);
+
+	if (!attach_pool_lv(seg, pool_lv, origin))
+		return_0;
 
 	return 1;
 }

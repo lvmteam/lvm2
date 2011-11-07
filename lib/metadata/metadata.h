@@ -456,7 +456,8 @@ int attach_pool_metadata_lv(struct lv_segment *seg,
 			    struct logical_volume *pool_metadata_lv);
 int attach_pool_data_lv(struct lv_segment *seg,
 			struct logical_volume *pool_data_lv);
-int attach_pool_lv(struct lv_segment *seg, struct logical_volume *pool_lv);
+int attach_pool_lv(struct lv_segment *seg, struct logical_volume *pool_lv,
+		   struct logical_volume *origin_lv);
 int detach_pool_lv(struct lv_segment *seg);
 int attach_pool_message(struct lv_segment *seg, dm_thin_message_t type,
 			struct logical_volume *lv, uint32_t delete_id,

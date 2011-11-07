@@ -39,10 +39,15 @@ int attach_pool_data_lv(struct lv_segment *seg, struct logical_volume *pool_data
 	return 1;
 }
 
-int attach_pool_lv(struct lv_segment *seg, struct logical_volume *pool_lv)
+int attach_pool_lv(struct lv_segment *seg, struct logical_volume *pool_lv,
+		   struct logical_volume *origin)
 {
 	seg->pool_lv = pool_lv;
 	seg->lv->status |= THIN_VOLUME;
+	seg->origin = origin;
+
+	if (origin && !add_seg_to_segs_using_this_lv(origin, seg))
+		return_0;
 
 	return add_seg_to_segs_using_this_lv(pool_lv, seg);
 }
@@ -50,6 +55,7 @@ int attach_pool_lv(struct lv_segment *seg, struct logical_volume *pool_lv)
 int detach_pool_lv(struct lv_segment *seg)
 {
 	struct lv_thin_message *tmsg, *tmp;
+	struct seg_list *sl, *tsl;
 
 	if (!seg->pool_lv || !lv_is_thin_pool(seg->pool_lv)) {
 		log_error(INTERNAL_ERROR "LV %s is not a thin volume",
@@ -78,7 +84,30 @@ int detach_pool_lv(struct lv_segment *seg)
 				 NULL, seg->device_id, 0))
 		return_0;
 
-	return remove_seg_from_segs_using_this_lv(seg->pool_lv, seg);
+	if (!remove_seg_from_segs_using_this_lv(seg->pool_lv, seg))
+		return_0;
+
+	if (seg->origin &&
+	    !remove_seg_from_segs_using_this_lv(seg->origin, seg))
+		return_0;
+
+	/* If thin origin, remove it from related thin snapshots */
+	/*
+	 * TODO: map removal of origin as snapshot lvconvert --merge?
+	 * i.e. rename thin snapshot to origin thin origin
+	 */
+	dm_list_iterate_items_safe(sl, tsl, &seg->lv->segs_using_this_lv) {
+		if (!seg_is_thin_volume(sl->seg) ||
+		    (seg->lv != sl->seg->origin))
+			continue;
+
+		if (!remove_seg_from_segs_using_this_lv(seg->lv, sl->seg))
+			return_0;
+		/* Thin snapshot is now regular thin volume */
+		sl->seg->origin = NULL;
+	}
+
+	return 1;
 }
 
 int attach_pool_message(struct lv_segment *seg, dm_thin_message_t type,

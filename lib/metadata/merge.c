@@ -373,6 +373,8 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 			seg_found++;
 		if (seg->pool_metadata_lv == lv || seg->pool_lv == lv)
 			seg_found++;
+		if (seg_is_thin_volume(seg) && seg->origin == lv)
+			seg_found++;
 		if (!seg_found) {
 			log_error("LV %s is used by LV %s:%" PRIu32 "-%" PRIu32
 				  ", but missing ptr from %s to %s",
