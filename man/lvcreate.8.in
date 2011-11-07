@@ -93,7 +93,7 @@ lvcreate \- create a logical volume in an existing volume group
 .RB [ \-c | \-\-chunksize
 .IR ChunkSize ]
 .RB [ \-\-poolmetadatasize
-.IR MetadataSize [ bBsSkKmMgGt ]]]
+.IR MetadataSize [ bBsSkKmMgG ]]]
 .RB [ \-\-thinpool
 .IR ThinPoolLogicalVolumeName [ Path ]]
 .RB [ \-V | \-\-virtualsize
@@ -240,6 +240,7 @@ Default is read and write.
 Set the size of thin pool's metadata logical volume.
 Supported value is in range between 2MiB and 16GiB.
 Default value is  (Pool_LV_size / Pool_LV_chunk_size * 64b).
+Default unit is megabytes.
 
 .TP
 .IR \fB\-r ", " \fB\-\-readahead " {" ReadAheadSectors | auto | none }
