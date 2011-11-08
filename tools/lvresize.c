@@ -781,6 +781,20 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 
 	backup(vg);
 
+	/*
+	 * Update lvm pool metadata (drop messages) if the pool has been
+	 * resumed and do a pool active/deactivate in other case.
+	 *
+	 * Note: Active thin pool can be waiting for resize.
+	 *
+	 * FIXME: Activate only when thin volume is active
+	 */
+	if (lv_is_thin_pool(lv) &&
+	    !update_pool_lv(lv, !lv_is_active(lv))) {
+		stack;
+		return ECMD_FAILED;
+	}
+
 	log_print("Logical volume %s successfully resized", lp->lv_name);
 
 	if (lp->resizefs && (lp->resize == LV_EXTEND) &&
