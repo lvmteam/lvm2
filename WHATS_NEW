@@ -15,7 +15,7 @@ Version 2.02.89 -
   Make move_lv_segment non-static function and use dm_list function.
   Pass exclusive LV locks to all nodes in the cluster.
   Improve lvcreate man documentation of the chunksize option.
-  Improve man page style for lvcreate.
+  Improve man page style for lvcreate, lvs.
   Avoid recursive calls to dmeventd in its LVM plugins.
   Log dev name now returned to kernel for registering during cmirror CTR.
   Fix lv_info open_count test for disabled verify_udev_operations (2.02.86).
