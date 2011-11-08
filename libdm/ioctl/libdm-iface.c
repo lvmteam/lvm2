@@ -172,7 +172,7 @@ static int _get_proc_number(const char *file, const char *name,
 {
 	FILE *fl;
 	char nm[256];
-	char *line;
+	char *line = NULL;
 	size_t len;
 	uint32_t num;
 
@@ -188,6 +188,7 @@ static int _get_proc_number(const char *file, const char *name,
 					*number = num;
 					if (fclose(fl))
 						log_sys_error("fclose", file);
+					free(line);
 					return 1;
 				}
 				dm_bit_set(_dm_bitset, num);
@@ -196,6 +197,7 @@ static int _get_proc_number(const char *file, const char *name,
 	}
 	if (fclose(fl))
 		log_sys_error("fclose", file);
+	free(line);
 
 	if (number) {
 		log_error("%s: No entry for %s found", file, name);
