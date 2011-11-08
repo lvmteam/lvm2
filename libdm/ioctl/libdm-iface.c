@@ -172,7 +172,8 @@ static int _get_proc_number(const char *file, const char *name,
 {
 	FILE *fl;
 	char nm[256];
-	int c;
+	char *line;
+	size_t len;
 	uint32_t num;
 
 	if (!(fl = fopen(file, "r"))) {
@@ -180,8 +181,8 @@ static int _get_proc_number(const char *file, const char *name,
 		return 0;
 	}
 
-	while (!feof(fl)) {
-		if (fscanf(fl, "%d %255s\n", &num, &nm[0]) == 2) {
+	while (getline(&line, &len, fl) != -1) {
+		if (sscanf(line, "%d %255s\n", &num, &nm[0]) == 2) {
 			if (!strcmp(name, nm)) {
 				if (number) {
 					*number = num;
@@ -191,9 +192,7 @@ static int _get_proc_number(const char *file, const char *name,
 				}
 				dm_bit_set(_dm_bitset, num);
 			}
-		} else do {
-			c = fgetc(fl);
-		} while (c != EOF && c != '\n');
+		}
 	}
 	if (fclose(fl))
 		log_sys_error("fclose", file);

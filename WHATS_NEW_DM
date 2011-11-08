@@ -1,5 +1,6 @@
 Version 1.02.68 -
 ==================================
+  Fix _get_proc_number to be tolerant of malformed /proc/misc entries.
   Add ExecReload to dm-event.service for systemd to reload dmeventd properly.
   Add dm_config_tree_find_str_allow_empty.
   Fix compile-time pool memory locking with DEBUG_MEM.
