@@ -192,7 +192,6 @@ int process_each_lv_in_vg(struct cmd_context *cmd,
 	int ret_max = ECMD_PROCESSED;
 	int ret;
 	unsigned process_all = 0;
-	unsigned process_lv = 0;
 	unsigned tags_supplied = 0;
 	unsigned lvargs_supplied = 0;
 	unsigned lvargs_matched = 0;
@@ -211,12 +210,10 @@ int process_each_lv_in_vg(struct cmd_context *cmd,
 	/* Process all LVs in this VG if no restrictions given */
 	if (!tags_supplied && !lvargs_supplied)
 		process_all = 1;
-
 	/* Or if VG tags match */
-	if (!process_lv && tags_supplied &&
-	    str_list_match_list(tags, &vg->tags, NULL)) {
+	else if (tags_supplied &&
+		 str_list_match_list(tags, &vg->tags, NULL))
 		process_all = 1;
-	}
 
 	/*
 	 * FIXME: In case of remove it goes through deleted entries,
@@ -242,26 +239,15 @@ int process_each_lv_in_vg(struct cmd_context *cmd,
 		if (!lvargs_supplied && !lv_is_visible(lvl->lv) && !arg_count(cmd, all_ARG))
 			continue;
 
-		/* Should we process this LV? */
-		if (process_all)
-			process_lv = 1;
-		else
-			process_lv = 0;
-
-		/* LV tag match? */
-		if (!process_lv && tags_supplied &&
-		    str_list_match_list(tags, &lvl->lv->tags, NULL)) {
-			process_lv = 1;
-		}
-
 		/* LV name match? */
 		if (lvargs_supplied &&
-		    str_list_match_item(arg_lvnames, lvl->lv->name)) {
-			process_lv = 1;
+		    str_list_match_item(arg_lvnames, lvl->lv->name))
+			/* Check even when process_all for counter */
 			lvargs_matched++;
-		}
-
-		if (!process_lv)
+		/* LV tag match?   skip test, when process_all */
+		else if (!process_all &&
+			 (!tags_supplied ||
+			  !str_list_match_list(tags, &lvl->lv->tags, NULL)))
 			continue;
 
 		if (sigint_caught())
