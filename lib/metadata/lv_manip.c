@@ -2051,6 +2051,7 @@ int lv_add_virtual_segment(struct logical_volume *lv, uint64_t status,
 	struct lv_segment *seg;
 	struct logical_volume *thin_pool_lv = NULL;
 	struct lv_list *lvl;
+	uint32_t size;
 
 	if (thin_pool_name) {
 		if (!(lvl = find_lv_in_vg(lv->vg, thin_pool_name))) {
@@ -2059,6 +2060,17 @@ int lv_add_virtual_segment(struct logical_volume *lv, uint64_t status,
 			return 0;
 		}
 		thin_pool_lv = lvl->lv;
+		size = first_seg(thin_pool_lv)->data_block_size;
+		if (lv->vg->extent_size < size) {
+			/* Align extents on chunk boundary size */
+			size = ((uint64_t)lv->vg->extent_size * extents + size - 1) /
+				size * size / lv->vg->extent_size;
+			if (size != extents) {
+				log_print("Rounding size (%d extents) up to chunk boundary "
+					  "size (%d extents).", extents, size);
+				extents = size;
+			}
+		}
 	}
 
 	if ((seg = last_seg(lv)) && (seg->segtype == segtype)) {
