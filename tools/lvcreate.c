@@ -200,7 +200,8 @@ static int _determine_snapshot_type(struct volume_group *vg,
 	struct lv_list *lvl;
 
 	if (!(lvl = find_lv_in_vg(vg, lp->origin))) {
-		log_error("Snapshot origin LV %s not found in Volume group %s.", lp->origin, vg->name);
+		log_error("Snapshot origin LV %s not found in Volume group %s.",
+			  lp->origin, vg->name);
 		return 0;
 	}
 
@@ -222,7 +223,7 @@ static int _determine_snapshot_type(struct volume_group *vg,
 
 /*
  * Update extents parameters based on other parameters which affect the size
- * calcuation.
+ * calculation.
  * NOTE: We must do this here because of the percent_t typedef and because we
  * need the vg.
  */
