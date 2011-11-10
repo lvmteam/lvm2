@@ -4110,13 +4110,21 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 		return NULL;
 	}
 
-	if ((segtype_is_mirrored(lp->segtype) ||
-	     segtype_is_raid(lp->segtype) || seg_is_thin_volume(lp)) && !activation()) {
+	if (!activation() &&
+	    (seg_is_mirrored(lp) ||
+	     seg_is_raid(lp) ||
+	     seg_is_thin_pool(lp))) {
+		/*
+		 * FIXME: For thin pool add some code to allow delayed
+		 * initialization of empty thin pool volume.
+		 * i.e. using some LV flag, fake message,...
+		 * and testing for metadata pool header signature?
+		 */
 		log_error("Can't create %s without using "
 			  "device-mapper kernel driver.",
 			  segtype_is_raid(lp->segtype) ? lp->segtype->name :
 			  segtype_is_mirrored(lp->segtype) ?  "mirror" :
-			  "thin volume");
+			  "thin pool volume");
 		return NULL;
 	}
 
