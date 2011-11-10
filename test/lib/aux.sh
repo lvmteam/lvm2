@@ -448,6 +448,39 @@ udev_wait() {
 	fi
 }
 
+#
+# Check wheter kernel [dm module] target exist
+# at least in expected version
+#
+# [dm-]target-name major minor revision
+#
+# i.e.   dm_target_at_least  dm-thin-pool  1 0
+target_at_least()
+{
+	case "$1" in
+	  dm-*) modprobe "$1" ;;
+	esac
+
+	version=$(dmsetup targets 2>/dev/null | grep "${1##dm-} " 2>/dev/null)
+	version=${version##* v}
+	shift
+	major=$(echo $version | cut -d. -f1)
+	minor=$(echo $version | cut -d. -f2)
+	revision=$(echo $version | cut -d. -f3)
+
+	test -z "$1" && return 0
+	test -z "$major" && return 1
+	test "$major" -gt "$1" && return 0
+	test "$major" -lt "$1" && return 1
+	test -z "$2" && return 0
+	test -z "$minor" && return 1
+	test "$minor" -gt "$2" && return 0
+	test "$minor" -lt "$2" && return 1
+	test -z "$4" && return 0
+	test -z "$revision" && return 1
+	test "$revision" -lt "$3" && return 1
+}
+
 test -f DEVICES && devs=$(cat DEVICES)
 test -f LOOP && LOOP=$(cat LOOP)
 
