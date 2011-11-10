@@ -145,10 +145,11 @@ check vg_field $vg lv_count 19
 lvremove -ff $vg
 check vg_field $vg lv_count 0
 
-
 # Create thin snapshot of thinLV
-lvcreate -L4M -V2G -T $vg/pool --name lv1
+lvcreate -L10M -V10M -T $vg/pool --name lv1
+mkfs.ext4 $DM_DEV_DIR/$vg/lv1
 lvcreate -s $vg/lv1
+fsck -p $DM_DEV_DIR/$vg/lvol0
 lvcreate -s $vg/lv1 --name lv2
 lvcreate -s $vg/lv1 --name $vg/lv3
 lvcreate --type snapshot $vg/lv1

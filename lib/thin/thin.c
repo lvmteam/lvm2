@@ -222,6 +222,7 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 {
 	char *metadata_dlid, *pool_dlid;
 	const struct lv_thin_message *lmsg;
+	const struct logical_volume *origin;
 
 	if (!laopts->real_pool) {
 		if (!(pool_dlid = build_dm_uuid(mem, seg->lv->lvid.s, "tpool"))) {
@@ -258,22 +259,13 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 
 	dm_list_iterate_items(lmsg, &seg->thin_messages) {
 		switch (lmsg->type) {
-		case DM_THIN_MESSAGE_CREATE_SNAP:
-			/* FIXME: to be implemented */
-			log_debug("Thin pool create_snap %s.", lmsg->u.lv->name);
-			if (!dm_tree_node_add_thin_pool_message(node,
-								lmsg->type,
-								first_seg(lmsg->u.lv)->device_id,
-								0))//first_seg(first_seg(lmsg->u.lv)->origin)->device_id;
-				return_0;
-			log_error("Sorry SNAPSHOT is not yet supported.");
-			return 0;
 		case DM_THIN_MESSAGE_CREATE_THIN:
-			log_debug("Thin pool create_thin %s.", lmsg->u.lv->name);
+			origin = first_seg(lmsg->u.lv)->origin;
+			log_debug("Thin pool create_%s %s.", (!origin) ? "thin" : "snap", lmsg->u.lv->name);
 			if (!dm_tree_node_add_thin_pool_message(node,
-								lmsg->type,
+								(!origin) ? lmsg->type : DM_THIN_MESSAGE_CREATE_SNAP,
 								first_seg(lmsg->u.lv)->device_id,
-								0))
+								(!origin) ? 0 : first_seg(origin)->device_id))
 				return_0;
 			break;
 		case DM_THIN_MESSAGE_DELETE:
