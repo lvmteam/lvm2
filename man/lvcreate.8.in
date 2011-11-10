@@ -23,11 +23,14 @@ lvcreate \- create a logical volume in an existing volume group
 .IR Stripes
 .RB [ \-I | \-\-stripesize
 .IR StripeSize ]]
-.RB { \-l | \-\-extents
+.RB {[ \-l | \-\-extents
 .IR LogicalExtentsNumber [ % { VG | PVS | FREE }]
 |
 .BR \-L | \-\-size
-.IR LogicalVolumeSize [ bBsSkKmMgGtTpPeE ]}
+.IR LogicalVolumeSize [ bBsSkKmMgGtTpPeE ]]
+|
+.BR \-V | \-\-virtualsize
+.IR VirtualSize [ bBsSkKmMgGtTpPeE ]}
 .RB [ \-M | \-\-persistent
 .RI { y | n }]
 .RB [ \-\-minor
@@ -48,21 +51,29 @@ lvcreate \- create a logical volume in an existing volume group
 .RB [ \-r | \-\-readahead
 .RI { ReadAheadSectors | auto | none }]
 .RB [ \-t | \-\-test ]
+.RB [ \-T | \-\-thin
+.RI [ ThinPoolLogicalVolume { Name | Path }]
+.RB [ \-c | \-\-chunksize
+.IR ChunkSize ]
+.RB [ \-\-poolmetadatasize
+.IR MetadataSize [ bBsSkKmMgG ]]]
+.RB [ \-\-thinpool
+.IR ThinPoolLogicalVolume { Name | Path }]
 .RB [ \-\-type
 .IR SegmentType ]
 .RB [ \-v | \-\-verbose ]
 .RB [ \-Z | \-\-zero
 .RI { y | n }]
-.IR VolumeGroup { Name | Path }
+.IR VolumeGroup { Name | Path }[/ ThinPoolLogicalVolumeName ]
 .RI [ PhysicalVolumePath [ :PE [ -PE ]]...]
 .br
 
 .B lvcreate
-.RB { \-l | \-\-extents
+.RB [ \-l | \-\-extents
 .IR LogicalExtentsNumber [ % { VG | FREE | ORIGIN }]
 |
 .BR \-L | \-\-size
-.IR LogicalVolumeSize [ bBsSkKmMgGtTpPeE ]}
+.IR LogicalVolumeSize [ bBsSkKmMgGtTpPeE ]]
 .RB [ \-c | \-\-chunksize
 .IR ChunkSize ]
 .RB [ \-\-noudevsync ]
@@ -76,30 +87,6 @@ lvcreate \- create a logical volume in an existing volume group
 .IR VolumeGroup { Name | Path }
 .BR \-V | \-\-virtualsize
 .IR VirtualSize [ bBsSkKmMgGtTpPeE ]}
-.br
-
-.B lvcreate
-.BR \-T | \-\-thin
-.IR VolumeGroup { Name | Path }[/ ThinPoolLogicalVolumeName ]
-.RB [{ \-l | \-\-extents
-.IR LogicalExtentsNumber [ % { VG | FREE | ORIGIN }]
-|
-.BR \-L | \-\-size
-.IR LogicalVolumeSize [ bBsSkKmMgGtTpPeE ]}
-.RB [ \-i | \-\-stripes
-.IR Stripes
-.RB [ \-I | \-\-stripesize
-.IR StripeSize ]]
-.RB [ \-c | \-\-chunksize
-.IR ChunkSize ]
-.RB [ \-\-poolmetadatasize
-.IR MetadataSize [ bBsSkKmMgG ]]]
-.RB [ \-\-thinpool
-.IR ThinPoolLogicalVolume { Name | Path }]
-.RB [ \-V | \-\-virtualsize
-.IR VirtualSize [ bBsSkKmMgGtTpPeE ]]
-.RB [ \-n | \-\-name
-.IR ThinLogicalVolume { Name | Path }]
 .br
 
 .SH DESCRIPTION
