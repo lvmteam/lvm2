@@ -789,9 +789,6 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 		return 0;
 	}
 
-	if (!_read_activation_params(lp, cmd))
-		return_0;
-
 	/*
 	 * Allocation parameters
 	 */
@@ -989,6 +986,15 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	if (seg_is_thin(&lp) && !_check_thin_parameters(vg, &lp, &lcp)) {
+		r = ECMD_FAILED;
+		goto_out;
+	}
+
+	/*
+	 * Check activation parameters to support inactive thin snapshot creation
+	 * FIXME: anything else needs to be moved past _determine_snapshot_type()?
+	 */
+	if (!_read_activation_params(&lp, cmd)) {
 		r = ECMD_FAILED;
 		goto_out;
 	}
