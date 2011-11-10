@@ -204,17 +204,17 @@ static int _determine_snapshot_type(struct volume_group *vg,
 		return 0;
 	}
 
-	if (lv_is_thin_volume(lvl->lv)) {
+	if (!arg_count(vg->cmd, extents_ARG) && !arg_count(vg->cmd, size_ARG)) {
+		if (!lv_is_thin_volume(lvl->lv)) {
+			log_error("Please specify either size or extents with snapshots.");
+			return 0;
+		}
+
 		lp->thin = 1;
 		if (!(lp->segtype = get_segtype_from_string(vg->cmd, "thin")))
 			return_0;
 
 		lp->pool = first_seg(lvl->lv)->pool_lv->name;
-	}
-
-	if (!lp->thin && !arg_count(vg->cmd, extents_ARG) && !arg_count(vg->cmd, size_ARG)) {
-		log_error("Please specify either size or extents with snapshots.");
-		return 0;
 	}
 
 	return 1;
