@@ -4263,7 +4263,6 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 	init_dmeventd_monitor(lp->activation_monitoring);
 
 	if (seg_is_thin(lp)) {
-
 		/* For thin snapshot suspend active thin origin first */
 		if (org && lv_is_active(org)) {
 			if (!suspend_lv(cmd, org)) {

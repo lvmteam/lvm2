@@ -329,6 +329,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 		dm_list_iterate_items(sll, &arg_lvnames) {
 			const char *vg_name = sll->str;
 			const char *lv_name = strchr(vg_name, '/');
+log_error("VGNAME strdup %p %s   %s", lv_name, vg_name,  vgname);
 
 			if ((!lv_name && !strcmp(vg_name, vgname))) {
 				/* Process all LVs in this VG */

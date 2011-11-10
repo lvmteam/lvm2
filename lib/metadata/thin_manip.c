@@ -346,7 +346,7 @@ int update_pool_lv(struct logical_volume *lv, int activate)
 	}
 
 	if (activate) {
-		/* If the pool was not yet activated, do it */
+		/* If the pool is not active, do activate deactivate */
 		if (!lv_is_active(lv)) {
 			if (!activate_lv_excl(lv->vg->cmd, lv))
 				return_0;
