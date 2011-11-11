@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Add filter to avoid scan of device if it is part of active multipath.
   Add missing default $LVM_VG_NAME usage for snapshots.
   Fix extent_count overflow with lvextend.
   Add missing lvrename mirrored log recursion in for_each_sub_lv.

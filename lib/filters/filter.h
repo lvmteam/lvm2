@@ -39,6 +39,7 @@ int dm_major(void);
 int md_major(void);
 int blkext_major(void);
 int max_partitions(int major);
+int major_is_scsi_device(int major);
 
 int dev_subsystem_part_major(const struct device *dev);
 const char *dev_subsystem_name(const struct device *dev);

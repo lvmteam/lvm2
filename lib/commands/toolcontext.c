@@ -22,6 +22,7 @@
 #include "filter.h"
 #include "filter-composite.h"
 #include "filter-md.h"
+#include "filter-mpath.h"
 #include "filter-persistent.h"
 #include "filter-regex.h"
 #include "filter-sysfs.h"
@@ -714,7 +715,7 @@ static int _init_dev_cache(struct cmd_context *cmd)
 	return 1;
 }
 
-#define MAX_FILTERS 4
+#define MAX_FILTERS 5
 
 static struct dev_filter *_init_filter_components(struct cmd_context *cmd)
 {
@@ -763,6 +764,13 @@ static struct dev_filter *_init_filter_components(struct cmd_context *cmd)
 			     DEFAULT_MD_COMPONENT_DETECTION)) {
 		init_md_filtering(1);
 		if ((filters[nr_filt] = md_filter_create()))
+			nr_filt++;
+	}
+
+	/* mpath component filter. Optional, non-critical. */
+	if (find_config_tree_bool(cmd, "devices/multipath_component_detection",
+			     DEFAULT_MULTIPATH_COMPONENT_DETECTION)) {
+		if ((filters[nr_filt] = mpath_filter_create(cmd->sysfs_dir)))
 			nr_filt++;
 	}
 

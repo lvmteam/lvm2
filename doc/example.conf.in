@@ -103,6 +103,11 @@ devices {
     # 1 enables; 0 disables.
     sysfs_scan = 1
 
+    # By default, LVM2 will ignore devices used as component paths
+    # of device-mapper multipath devices.
+    # 1 enables; 0 disables.
+    multipath_component_detection = 1
+
     # By default, LVM2 will ignore devices used as components of
     # software RAID (md) devices by looking for md superblocks.
     # 1 enables; 0 disables.

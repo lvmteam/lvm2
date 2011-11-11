@@ -65,6 +65,7 @@ SOURCES =\
 	filters/filter-regex.c \
 	filters/filter-sysfs.c \
 	filters/filter-md.c \
+	filters/filter-mpath.c \
 	filters/filter.c \
 	format_text/archive.c \
 	format_text/archiver.c \
