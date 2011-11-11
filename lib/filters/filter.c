@@ -154,7 +154,7 @@ static int _passes_lvm_type_device_filter(struct dev_filter *f __attribute__((un
 		log_debug("%s: Skipping: open failed", name);
 		return 0;
 	}
-	
+
 	/* Check it's not too small */
 	if (!dev_get_size(dev, &size)) {
 		log_debug("%s: Skipping: dev_get_size failed", name);
@@ -319,7 +319,7 @@ static int _scan_proc_dev(const char *proc, const struct dm_config_node *cn)
 
 int max_partitions(int major)
 {
-	if (major > NUMBER_OF_MAJORS)
+	if (major >= NUMBER_OF_MAJORS)
 		return 0;
 
 	return _partitions[major].max_partitions;
@@ -327,7 +327,7 @@ int max_partitions(int major)
 
 int major_is_scsi_device(int major)
 {
-	if (major > NUMBER_OF_MAJORS)
+	if (major >= NUMBER_OF_MAJORS)
 		return 0;
 
 	return (_partitions[major].flags & PARTITION_SCSI_DEVICE) ? 1 : 0;
