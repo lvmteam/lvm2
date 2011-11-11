@@ -443,7 +443,7 @@ int target_version(const char *target_name, uint32_t *maj,
 	return r;
 }
 
-int lvm_dm_prefix_check(const char *sysfs_dir, int major, int minor, const char *prefix)
+int lvm_dm_prefix_check(int major, int minor, const char *prefix)
 {
 	struct dm_task *dmt;
 	const char *uuid;

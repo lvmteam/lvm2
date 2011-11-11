@@ -136,7 +136,7 @@ static int dev_is_mpath(struct dev_filter *f, struct device *dev)
 	if (major != dm_major())
 		return 0;
 
-	return lvm_dm_prefix_check(sysfs_dir, major, minor, MPATH_PREFIX);
+	return lvm_dm_prefix_check(major, minor, MPATH_PREFIX);
 }
 
 static int _ignore_mpath(struct dev_filter *f, struct device *dev)
