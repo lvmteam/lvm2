@@ -147,7 +147,7 @@ int target_present(struct cmd_context *cmd, const char *target_name,
 {
 	return 0;
 }
-int dm_prefix_check(const char *sysfs_dir, int major, int minor, const char *prefix)
+int lvm_dm_prefix_check(const char *sysfs_dir, int major, int minor, const char *prefix)
 {
 	return 0;
 }
@@ -443,14 +443,14 @@ int target_version(const char *target_name, uint32_t *maj,
 	return r;
 }
 
-int dm_prefix_check(const char *sysfs_dir, int major, int minor, const char *prefix)
+int lvm_dm_prefix_check(const char *sysfs_dir, int major, int minor, const char *prefix)
 {
 	struct dm_task *dmt;
 	const char *uuid;
 	int r;
 
 	if (!(dmt = dm_task_create(DM_DEVICE_STATUS)))
-		return 0;
+		return_0;
 
 	if (!dm_task_set_minor(dmt, minor) ||
 	    !dm_task_set_major(dmt, major) ||
@@ -463,7 +463,7 @@ int dm_prefix_check(const char *sysfs_dir, int major, int minor, const char *pre
 	r = strncasecmp(uuid, prefix, strlen(prefix));
 	dm_task_destroy(dmt);
 
-	return (r == 0) ? 1 : 0;
+	return r ? 0 : 1;
 }
 
 int module_present(struct cmd_context *cmd, const char *target_name)
