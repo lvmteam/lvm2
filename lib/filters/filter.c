@@ -29,8 +29,11 @@
 
 #define NUMBER_OF_MAJORS 4096
 
-/* 0 means LVM won't use this major number. */
-static int _max_partitions_by_major[NUMBER_OF_MAJORS];
+#define PARTITION_SCSI_DEVICE (1 << 0)
+static struct {
+	int max_partitions; /* 0 means LVM won't use this major number. */
+	int flags;
+} _partitions[NUMBER_OF_MAJORS];
 
 typedef struct {
 	const char *name;
@@ -140,7 +143,7 @@ static int _passes_lvm_type_device_filter(struct dev_filter *f __attribute__((un
 	uint64_t size;
 
 	/* Is this a recognised device type? */
-	if (!_max_partitions_by_major[MAJOR(dev->dev)]) {
+	if (!_partitions[MAJOR(dev->dev)].max_partitions) {
 		log_debug("%s: Skipping: Unrecognised LVM device type %"
 			  PRIu64, name, (uint64_t) MAJOR(dev->dev));
 		return 0;
@@ -194,12 +197,12 @@ static int _scan_proc_dev(const char *proc, const struct dm_config_node *cn)
 		log_verbose("No proc filesystem found: using all block device "
 			    "types");
 		for (i = 0; i < NUMBER_OF_MAJORS; i++)
-			_max_partitions_by_major[i] = 1;
+			_partitions[i].max_partitions = 1;
 		return 1;
 	}
 
 	/* All types unrecognised initially */
-	memset(_max_partitions_by_major, 0, sizeof(int) * NUMBER_OF_MAJORS);
+	memset(_partitions, 0, sizeof(_partitions));
 
 	if (dm_snprintf(proc_devices, sizeof(proc_devices),
 			 "%s/devices", proc) < 0) {
@@ -251,6 +254,10 @@ static int _scan_proc_dev(const char *proc, const struct dm_config_node *cn)
 		if (!strncmp("device-mapper", line + i, 13) && isspace(*(line + i + 13)))
 			_device_mapper_major = line_maj;
 
+		/* Major is SCSI device */
+		if (!strncmp("sd", line + i, 2) && isspace(*(line + i + 2)))
+			_partitions[line_maj].flags |= PARTITION_SCSI_DEVICE;
+
 		/* Go through the valid device names and if there is a
 		   match store max number of partitions */
 		for (j = 0; device_info[j].name != NULL; j++) {
@@ -258,7 +265,7 @@ static int _scan_proc_dev(const char *proc, const struct dm_config_node *cn)
 			if (dev_len <= strlen(line + i) &&
 			    !strncmp(device_info[j].name, line + i, dev_len) &&
 			    (line_maj < NUMBER_OF_MAJORS)) {
-				_max_partitions_by_major[line_maj] =
+				_partitions[line_maj].max_partitions =
 				    device_info[j].max_partitions;
 				break;
 			}
@@ -298,7 +305,7 @@ static int _scan_proc_dev(const char *proc, const struct dm_config_node *cn)
 			if (dev_len <= strlen(line + i) &&
 			    !strncmp(name, line + i, dev_len) &&
 			    (line_maj < NUMBER_OF_MAJORS)) {
-				_max_partitions_by_major[line_maj] = cv->v.i;
+				_partitions[line_maj].max_partitions = cv->v.i;
 				break;
 			}
 		}
@@ -312,7 +319,18 @@ static int _scan_proc_dev(const char *proc, const struct dm_config_node *cn)
 
 int max_partitions(int major)
 {
-	return _max_partitions_by_major[major];
+	if (major > NUMBER_OF_MAJORS)
+		return 0;
+
+	return _partitions[major].max_partitions;
+}
+
+int major_is_scsi_device(int major)
+{
+	if (major > NUMBER_OF_MAJORS)
+		return 0;
+
+	return (_partitions[major].flags & PARTITION_SCSI_DEVICE) ? 1 : 0;
 }
 
 struct dev_filter *lvm_type_filter_create(const char *proc,

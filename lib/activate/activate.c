@@ -147,6 +147,10 @@ int target_present(struct cmd_context *cmd, const char *target_name,
 {
 	return 0;
 }
+int dm_prefix_check(const char *sysfs_dir, int major, int minor, const char *prefix)
+{
+	return 0;
+}
 int lv_info(struct cmd_context *cmd, const struct logical_volume *lv, unsigned origin_only,
 	    struct lvinfo *info, int with_open_count, int with_read_ahead)
 {
@@ -437,6 +441,29 @@ int target_version(const char *target_name, uint32_t *maj,
 	dm_task_destroy(dmt);
 
 	return r;
+}
+
+int dm_prefix_check(const char *sysfs_dir, int major, int minor, const char *prefix)
+{
+	struct dm_task *dmt;
+	const char *uuid;
+	int r;
+
+	if (!(dmt = dm_task_create(DM_DEVICE_STATUS)))
+		return 0;
+
+	if (!dm_task_set_minor(dmt, minor) ||
+	    !dm_task_set_major(dmt, major) ||
+	    !dm_task_run(dmt) ||
+	    !(uuid = dm_task_get_uuid(dmt))) {
+		dm_task_destroy(dmt);
+		return 0;
+	}
+
+	r = strncasecmp(uuid, prefix, strlen(prefix));
+	dm_task_destroy(dmt);
+
+	return (r == 0) ? 1 : 0;
 }
 
 int module_present(struct cmd_context *cmd, const char *target_name)
