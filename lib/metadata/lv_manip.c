@@ -3248,12 +3248,11 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 
 	if (lv_is_origin(lv)) {
 		/* remove snapshot LVs first */
-		dm_list_iterate_safe(snh, snht, &lv->snapshot_segs) {
+		dm_list_iterate_safe(snh, snht, &lv->snapshot_segs)
 			if (!lv_remove_with_dependencies(cmd, dm_list_struct_base(snh, struct lv_segment,
 										  origin_list)->cow,
 							 force, level + 1))
-				return 0;
-		}
+				return_0;
 	}
 
 	if (lv_is_used_thin_pool(lv)) {
