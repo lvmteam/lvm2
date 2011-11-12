@@ -74,7 +74,7 @@ usage () {
 	echo "      -e|--extra     extra files to add to initrd"
 	echo "      -r|--raid      raid devices to start in initrd"
 	echo "      -R|--raidconf  location of mdadm.conf file to include"
-	echo "      -M|--makedev   set MAKEDEV type (debian or redhat)"
+	echo "      -M|--makedev   set MAKEDEV type (debian, redhat, gentoo)"
 }
 
 verbose () {
@@ -379,7 +379,7 @@ redhat)
     RETCODE=$?
     ;;
 gentoo)
-    (cd $TMPMNT/dev; /usr/sbin/MAKEDEV $OPT_Q $BASICDEVICES $BLOCKDEVICES)
+    (cd $TMPMNT/dev; /sbin/MAKEDEV $OPT_Q $BASICDEVICES $BLOCKDEVICES)
     RETCODE=$?
     ;;
 *)
