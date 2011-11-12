@@ -3235,6 +3235,7 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 				const force_t force, unsigned level)
 {
 	struct dm_list *snh, *snht;
+	struct seg_list *sl, *tsl;
 
 	if (lv_is_cow(lv)) {
 		/* A merging snapshot cannot be removed directly */
@@ -3263,12 +3264,11 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 			log_error("Logical volume %s not removed.", lv->name);
 			return 0;
 		}
-		dm_list_iterate_safe(snh, snht, &lv->segs_using_this_lv) {
-			if (!lv_remove_with_dependencies(cmd,
-							 dm_list_item(snh, struct seg_list)->seg->lv,
+
+		dm_list_iterate_items_safe(sl, tsl, &lv->segs_using_this_lv)
+			if (!lv_remove_with_dependencies(cmd, sl->seg->lv,
 							 force, level + 1))
-				return 0;
-		}
+				return_0;
 	}
 
 	return lv_remove_single(cmd, lv, force);
