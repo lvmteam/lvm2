@@ -107,11 +107,11 @@ specified via the B<$RAIDCONF> environment variable.
 
 =item B<-M|--makedev> I<style>
 
-Set MAKEDEV invocation style. The script currently supports 2 styles of
-MAKEDEV programs I<debian> and I<redhat>. The default is I<debian>. Set
-to I<redhat> if using the RedHat/Fedora binary MAKEDEV program. Please send
-a bug report to maintainer if your distrib doesn't work with any of the
-current options.
+Set MAKEDEV invocation style. The script currently supports 3 styles of
+MAKEDEV programs I<debian>, I<redhat> and I<gentoo>. The default is I<debian>.
+Set to I<redhat> if using the RedHat/Fedora binary MAKEDEV program. I<gentoo>
+has the same binary but in /sbin instead of /dev. Please send a bug report to
+maintainer if your distribution doesn't work with any of the current options.
 
 =back
 
