@@ -535,7 +535,6 @@ int dm_tree_node_add_replicator_dev_target(struct dm_tree_node *node,
 					   uint32_t slog_region_size);
 /* End of Replicator API */
 
-/* API for thin provisioning is experimental, DO NOT USE. */
 /*
  * FIXME: Defines bellow are based on kernel's dm-thin.c defines
  * DATA_DEV_BLOCK_SIZE_MIN_SECTORS (64 * 1024 >> SECTOR_SHIFT)
@@ -571,10 +570,6 @@ int dm_tree_node_add_thin_pool_message(struct dm_tree_node *node,
  * MAX_DEV_ID ((1 << 24) - 1)
  */
 #define DM_THIN_MAX_DEVICE_ID (UINT32_C((1 << 24) - 1))
-/* Reserved device_id for error (deleted) thin device */
-// FIXME - only needed for in-delete thin is not activated
-#define DM_THIN_ERROR_DEVICE_ID (UINT32_MAX)
-
 int dm_tree_node_add_thin_target(struct dm_tree_node *node,
 				 uint64_t size,
 				 const char *pool_uuid,

@@ -3018,19 +3018,14 @@ int dm_tree_node_add_thin_target(struct dm_tree_node *node,
 	if (!_link_tree_nodes(node, pool))
 		return_0;
 
-	if (device_id == DM_THIN_ERROR_DEVICE_ID) {
-		if (!dm_tree_node_add_error_target(node, size))
-			return_0;
-	} else {
-		if (!_thin_validate_device_id(device_id))
-			return_0;
+	if (!_thin_validate_device_id(device_id))
+		return_0;
 
-		if (!(seg = _add_segment(node, SEG_THIN, size)))
-			return_0;
+	if (!(seg = _add_segment(node, SEG_THIN, size)))
+		return_0;
 
-		seg->pool = pool;
-		seg->device_id = device_id;
-	}
+	seg->pool = pool;
+	seg->device_id = device_id;
 
 	return 1;
 }

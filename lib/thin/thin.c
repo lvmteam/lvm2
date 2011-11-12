@@ -230,8 +230,6 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 			return 0;
 		}
 
-		//if (!dm_tree_node_add_thin_target(node, len, pool_dlid,
-		//				    DM_THIN_ERROR_DEVICE_ID))
 		if (!dm_tree_node_add_linear_target(node, len) ||
 		    !dm_tree_node_add_target_area(node, NULL, pool_dlid, 0))
 			return_0;
