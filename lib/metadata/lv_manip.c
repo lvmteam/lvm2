@@ -3142,7 +3142,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	vg = lv->vg;
 
 	if (!vg_check_status(vg, LVM_WRITE))
-		return 0;
+		return_0;
 
 	if (lv_is_origin(lv)) {
 		log_error("Can't remove logical volume \"%s\" under snapshot",
