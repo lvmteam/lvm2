@@ -532,6 +532,7 @@ Use \-v to see the event number returned.
 To wait until the next event is triggered, use \fBinfo\fP to find
 the last event number.
 .SH TABLE FORMAT
+// FIXME Rewrite safely (a lot of work) or remove.
 Each line of the table specifies a single target and is of the form:
 .P
 .I logical_start_sector num_sectors
