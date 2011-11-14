@@ -31,10 +31,11 @@ case "$host_os" in
 		CFLAGS="$CFLAGS"
 		COPTIMISE_FLAG="-O2"
 		CLDFLAGS="$CLDFLAGS -Wl,--version-script,.export.sym"
+		ELDFLAGS="-Wl,--export-dynamic"
+		# FIXME Generate list and use --dynamic-list=.dlopen.sym
 		CLDWHOLEARCHIVE="-Wl,-whole-archive"
 		CLDNOWHOLEARCHIVE="-Wl,-no-whole-archive"
 		LDDEPS="$LDDEPS .export.sym"
-		LDFLAGS="$LDFLAGS -Wl,--export-dynamic"
 		LIB_SUFFIX=so
 		DEVMAPPER=yes
 		LVMETAD=no
@@ -48,6 +49,7 @@ case "$host_os" in
 		CFLAGS="$CFLAGS -no-cpp-precomp -fno-common"
 		COPTIMISE_FLAG="-O2"
 		CLDFLAGS="$CLDFLAGS"
+		ELDFLAGS=
 		CLDWHOLEARCHIVE="-all_load"
 		CLDNOWHOLEARCHIVE=
 		LIB_SUFFIX=dylib
@@ -1342,6 +1344,7 @@ AC_SUBST(DM_DEVICE_UID)
 AC_SUBST(DM_IOCTLS)
 AC_SUBST(DM_LIB_VERSION)
 AC_SUBST(DM_LIB_PATCHLEVEL)
+AC_SUBST(ELDFLAGS)
 AC_SUBST(FSADM)
 AC_SUBST(HAVE_LIBDL)
 AC_SUBST(HAVE_REALTIME)
