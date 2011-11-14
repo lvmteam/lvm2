@@ -643,6 +643,7 @@ INTL
 HAVE_REALTIME
 HAVE_LIBDL
 FSADM
+ELDFLAGS
 DM_LIB_PATCHLEVEL
 DM_LIB_VERSION
 DM_IOCTLS
@@ -2807,10 +2808,11 @@ case "$host_os" in
 		CFLAGS="$CFLAGS"
 		COPTIMISE_FLAG="-O2"
 		CLDFLAGS="$CLDFLAGS -Wl,--version-script,.export.sym"
+		ELDFLAGS="-Wl,--export-dynamic"
+		# FIXME Generate list and use --dynamic-list=.dlopen.sym
 		CLDWHOLEARCHIVE="-Wl,-whole-archive"
 		CLDNOWHOLEARCHIVE="-Wl,-no-whole-archive"
 		LDDEPS="$LDDEPS .export.sym"
-		LDFLAGS="$LDFLAGS -Wl,--export-dynamic"
 		LIB_SUFFIX=so
 		DEVMAPPER=yes
 		LVMETAD=no
@@ -2824,6 +2826,7 @@ case "$host_os" in
 		CFLAGS="$CFLAGS -no-cpp-precomp -fno-common"
 		COPTIMISE_FLAG="-O2"
 		CLDFLAGS="$CLDFLAGS"
+		ELDFLAGS=
 		CLDWHOLEARCHIVE="-all_load"
 		CLDNOWHOLEARCHIVE=
 		LIB_SUFFIX=dylib
@@ -10107,6 +10110,7 @@ LVM_PATCHLEVEL=`echo "$VER" | $AWK -F '[(.]' '{print $3}'`
 LVM_LIBAPI=`echo "$VER" | $AWK -F '[()]' '{print $2}'`
 
 ################################################################################
+
 
 
 
