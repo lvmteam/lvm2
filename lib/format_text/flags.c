@@ -45,6 +45,7 @@ static const struct flag _pv_flags[] = {
 	{ALLOCATABLE_PV, "ALLOCATABLE", STATUS_FLAG},
 	{EXPORTED_VG, "EXPORTED", STATUS_FLAG},
 	{MISSING_PV, "MISSING", COMPATIBLE_FLAG},
+	{UNLABELLED_PV, NULL, 0},
 	{0, NULL, 0}
 };
 
