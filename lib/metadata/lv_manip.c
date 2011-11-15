@@ -3179,8 +3179,9 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		if (!lv_check_not_in_use(cmd, lv, &info))
 			return_0;
 
-		if (lv_is_active(lv) && (force == PROMPT) &&
+		if ((force == PROMPT) &&
 		    lv_is_visible(lv) &&
+		    lv_is_active(lv) &&
 		    yes_no_prompt("Do you really want to remove active "
 				  "%slogical volume %s? [y/n]: ",
 				  vg_is_clustered(vg) ? "clustered " : "",
