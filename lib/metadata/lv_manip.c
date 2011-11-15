@@ -3257,10 +3257,12 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 	}
 
 	if (lv_is_used_thin_pool(lv)) {
-		/* remove thin LVs first */
+		/* Remove thin LVs first */
 		if ((force == PROMPT) &&
-		    yes_no_prompt("Do you really want to remove all thin volumes when removing"
-				  " pool logical volume %s? [y/n]: ", lv->name) == 'n') {
+		    yes_no_prompt("Removing pool %s will also remove %u "
+				  "thin volume(s). OK? [y/n]: ", lv->name,
+				  /* Note: Snaphosts not included */
+				  dm_list_size(&lv->segs_using_this_lv)) == 'n') {
 			log_error("Logical volume %s not removed.", lv->name);
 			return 0;
 		}
