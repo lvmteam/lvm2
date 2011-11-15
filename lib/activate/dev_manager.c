@@ -1455,6 +1455,7 @@ static int _add_segment_to_dtree(struct dev_manager *dm,
 	struct lv_segment *seg_present;
 	const char *target_name;
 	struct lv_activate_opts lva;
+	static const char tpool_layer[] = "tpool";
 
 	/* Ensure required device-mapper targets are loaded */
 	seg_present = find_cow(seg->lv) ? : seg;
@@ -1499,15 +1500,14 @@ static int _add_segment_to_dtree(struct dev_manager *dm,
 	} else if (lv_is_cow(seg->lv) && !layer) {
 		if (!_add_new_lv_to_dtree(dm, dtree, seg->lv, laopts, "cow"))
 			return_0;
-	} else if (!layer && (lv_is_thin_pool(seg->lv) ||
-			      lv_is_thin_volume(seg->lv))) {
+	} else if ((layer != tpool_layer) && seg_is_thin(seg)) {
 		lva = *laopts;
 		lva.real_pool = 1;
-		if (!_add_new_lv_to_dtree(dm, dtree, lv_is_thin_pool(seg->lv) ?
-					  seg->lv : seg->pool_lv, &lva, "tpool"))
+		if (!_add_new_lv_to_dtree(dm, dtree, seg_is_thin_pool(seg) ?
+					  seg->lv : seg->pool_lv, &lva, tpool_layer))
 			return_0;
 	} else {
-		if (lv_is_thin_pool(seg->lv) &&
+		if (seg_is_thin_pool(seg) &&
 		    !_add_new_lv_to_dtree(dm, dtree, seg->pool_metadata_lv, laopts, NULL))
 			return_0;
 
