@@ -4071,6 +4071,16 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 					  "merging snapshot is not supported");
 				return NULL;
 			}
+
+			if (lv_is_thin_type(org) && !lv_is_thin_volume(org)) {
+				log_error("Snapshots of thin pool %sdevices "
+					  "are not supported.",
+					  lv_is_thin_pool_data(org) ? "data " :
+					  lv_is_thin_pool_metadata(org) ?
+					  "metadata " : "");
+				return NULL;
+			}
+
 			if ((org->status & MIRROR_IMAGE) ||
 			    (org->status & MIRROR_LOG)) {
 				log_error("Snapshots of mirror %ss "
