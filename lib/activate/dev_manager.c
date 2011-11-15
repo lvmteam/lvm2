@@ -1118,7 +1118,7 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 static struct dm_tree *_create_partial_dtree(struct dev_manager *dm, struct logical_volume *lv, int origin_only)
 {
 	struct dm_tree *dtree;
-	struct dm_list *snh, *snht;
+	struct dm_list *snh;
 	struct lv_segment *seg;
 	uint32_t s;
 
@@ -1132,7 +1132,7 @@ static struct dm_tree *_create_partial_dtree(struct dev_manager *dm, struct logi
 
 	/* Add any snapshots of this LV */
 	if (!origin_only && lv_is_origin(lv))
-		dm_list_iterate_safe(snh, snht, &lv->snapshot_segs)
+		dm_list_iterate(snh, &lv->snapshot_segs)
 			if (!_add_lv_to_dtree(dm, dtree, dm_list_struct_base(snh, struct lv_segment, origin_list)->cow, 0))
 				goto_bad;
 
