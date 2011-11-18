@@ -407,9 +407,8 @@ int dm_task_add_target(struct dm_task *dmt, uint64_t start, uint64_t size,
 		       const char *ttype, const char *params)
 {
 	struct target *t = create_target(start, size, ttype, params);
-
 	if (!t)
-		return 0;
+		return_0;
 
 	if (!dmt->head)
 		dmt->head = dmt->tail = t;
