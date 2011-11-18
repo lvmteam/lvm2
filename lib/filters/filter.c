@@ -64,9 +64,6 @@ int dev_subsystem_part_major(const struct device *dev)
 {
 	dev_t primary_dev;
 
-	if (MAJOR(dev->dev) == -1)
-		return 0;
-
 	if (MAJOR(dev->dev) == _md_major)
 		return 1;
 
