@@ -452,12 +452,12 @@ int move_pvs_used_by_lv(struct volume_group *vg_from,
 
 static int validate_new_vg_name(struct cmd_context *cmd, const char *vg_name)
 {
-	char vg_path[PATH_MAX];
+	static char vg_path[PATH_MAX];
 
 	if (!validate_name(vg_name))
 		return_0;
 
-	snprintf(vg_path, PATH_MAX, "%s%s", cmd->dev_dir, vg_name);
+	snprintf(vg_path, sizeof(vg_path), "%s%s", cmd->dev_dir, vg_name);
 	if (path_exists(vg_path)) {
 		log_error("%s: already exists in filesystem", vg_path);
 		return 0;
@@ -4201,7 +4201,7 @@ static int _convert_key_to_string(const char *key, size_t key_len,
 int fid_add_mda(struct format_instance *fid, struct metadata_area *mda,
 		 const char *key, size_t key_len, const unsigned sub_key)
 {
-	char full_key[PATH_MAX];
+	static char full_key[PATH_MAX];
 	dm_list_add(mda_is_ignored(mda) ? &fid->metadata_areas_ignored :
 					  &fid->metadata_areas_in_use, &mda->list);
 
@@ -4212,7 +4212,7 @@ int fid_add_mda(struct format_instance *fid, struct metadata_area *mda,
 	/* Add metadata area to index. */
 	if (fid->type & FMT_INSTANCE_VG) {
 		if (!_convert_key_to_string(key, key_len, sub_key,
-					    full_key, PATH_MAX))
+					    full_key, sizeof(full_key)))
 		return_0;
 
 		dm_hash_insert(fid->metadata_areas_index.hash,
@@ -4246,13 +4246,13 @@ struct metadata_area *fid_get_mda_indexed(struct format_instance *fid,
 					  const char *key, size_t key_len,
 					  const unsigned sub_key)
 {
-	char full_key[PATH_MAX];
+	static char full_key[PATH_MAX];
 	struct metadata_area *mda = NULL;
 
 
 	if (fid->type & FMT_INSTANCE_VG) {
 		if (!_convert_key_to_string(key, key_len, sub_key,
-					    full_key, PATH_MAX))
+					    full_key, sizeof(full_key)))
 			return_NULL;
 		mda = (struct metadata_area *) dm_hash_lookup(fid->metadata_areas_index.hash,
 							      full_key);
@@ -4266,8 +4266,8 @@ struct metadata_area *fid_get_mda_indexed(struct format_instance *fid,
 int fid_remove_mda(struct format_instance *fid, struct metadata_area *mda,
 		   const char *key, size_t key_len, const unsigned sub_key)
 {
+	static char full_key[PATH_MAX];
 	struct metadata_area *mda_indexed = NULL;
-	char full_key[PATH_MAX];
 
 	/* At least one of mda or key must be specified. */
 	if (!mda && !key)
@@ -4287,7 +4287,7 @@ int fid_remove_mda(struct format_instance *fid, struct metadata_area *mda,
 
 		if (fid->type & FMT_INSTANCE_VG) {
 			if (!_convert_key_to_string(key, key_len, sub_key,
-					    full_key, PATH_MAX))
+					    full_key, sizeof(full_key)))
 				return_0;
 
 			dm_hash_remove(fid->metadata_areas_index.hash, full_key);

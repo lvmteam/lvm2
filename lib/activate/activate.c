@@ -38,7 +38,7 @@
 
 int lvm1_present(struct cmd_context *cmd)
 {
-	char path[PATH_MAX];
+	static char path[PATH_MAX];
 
 	if (dm_snprintf(path, sizeof(path), "%s/lvm/global", cmd->proc_dir)
 	    < 0) {
@@ -294,7 +294,7 @@ static int _passes_activation_filter(struct cmd_context *cmd,
 	const struct dm_config_node *cn;
 	const struct dm_config_value *cv;
 	const char *str;
-	char path[PATH_MAX];
+	static char path[PATH_MAX];
 
 	if (!(cn = find_config_tree_node(cmd, "activation/volume_list"))) {
 		log_verbose("activation/volume_list configuration setting "

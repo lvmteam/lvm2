@@ -36,7 +36,7 @@ static int _fs_create = 0;
 
 static int _mk_dir(const char *dev_dir, const char *vg_name)
 {
-	char vg_path[PATH_MAX];
+	static char vg_path[PATH_MAX];
 	mode_t old_umask;
 
 	if (dm_snprintf(vg_path, sizeof(vg_path), "%s%s",
@@ -67,7 +67,7 @@ static int _mk_dir(const char *dev_dir, const char *vg_name)
 
 static int _rm_dir(const char *dev_dir, const char *vg_name)
 {
-	char vg_path[PATH_MAX];
+	static char vg_path[PATH_MAX];
 
 	if (dm_snprintf(vg_path, sizeof(vg_path), "%s%s",
 			 dev_dir, vg_name) == -1) {
@@ -87,7 +87,7 @@ static int _rm_dir(const char *dev_dir, const char *vg_name)
 static void _rm_blks(const char *dir)
 {
 	const char *name;
-	char path[PATH_MAX];
+	static char path[PATH_MAX];
 	struct dirent *dirent;
 	struct stat buf;
 	DIR *d;
@@ -124,8 +124,8 @@ static void _rm_blks(const char *dir)
 static int _mk_link(const char *dev_dir, const char *vg_name,
 		    const char *lv_name, const char *dev, int check_udev)
 {
-	char lv_path[PATH_MAX], link_path[PATH_MAX], lvm1_group_path[PATH_MAX];
-	char vg_path[PATH_MAX];
+	static char lv_path[PATH_MAX], link_path[PATH_MAX], lvm1_group_path[PATH_MAX];
+	static char vg_path[PATH_MAX];
 	struct stat buf, buf_lp;
 
 	if (dm_snprintf(vg_path, sizeof(vg_path), "%s%s",
@@ -226,7 +226,7 @@ static int _rm_link(const char *dev_dir, const char *vg_name,
 		    const char *lv_name, int check_udev)
 {
 	struct stat buf;
-	char lv_path[PATH_MAX];
+	static char lv_path[PATH_MAX];
 
 	if (dm_snprintf(lv_path, sizeof(lv_path), "%s%s/%s",
 			 dev_dir, vg_name, lv_name) == -1) {

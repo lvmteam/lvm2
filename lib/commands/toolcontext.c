@@ -477,7 +477,7 @@ static int _init_tags(struct cmd_context *cmd, struct dm_config_tree *cft)
 
 static int _load_config_file(struct cmd_context *cmd, const char *tag)
 {
-	char config_file[PATH_MAX] = "";
+	static char config_file[PATH_MAX] = "";
 	const char *filler = "";
 	struct stat info;
 	struct config_tree_list *cfl;
@@ -786,10 +786,10 @@ err:
 
 static int _init_filters(struct cmd_context *cmd, unsigned load_persistent_cache)
 {
+	static char cache_file[PATH_MAX];
 	const char *dev_cache = NULL, *cache_dir, *cache_file_prefix;
 	struct dev_filter *f3, *f4;
 	struct stat st;
-	char cache_file[PATH_MAX];
 
 	cmd->dump_filter = 0;
 
@@ -1138,8 +1138,8 @@ static int _init_hostname(struct cmd_context *cmd)
 
 static int _init_backup(struct cmd_context *cmd)
 {
+	static char default_dir[PATH_MAX];
 	uint32_t days, min;
-	char default_dir[PATH_MAX];
 	const char *dir;
 
 	if (!cmd->system_dir[0]) {
