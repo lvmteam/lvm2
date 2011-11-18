@@ -1,6 +1,7 @@
 Version 2.02.89 - 
 ==================================
-  Skip non-virtual origins for availability change for lvchange.
+  Allow changing availability state of snapshots.
+  Skip non-virtual snapshots for availability change for lvchange with vg name.
   Adjusted mirror region size only for mirrors and raids.
   Reorder prompt conditions for removal of active volumes.
   Avoid 'mda inconsistency' by properly registering UNLABELLED_PV flag (2.02.86).

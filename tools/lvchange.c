@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2011 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -124,6 +124,9 @@ static int lvchange_availability(struct cmd_context *cmd,
 	int activate;
 
 	activate = arg_uint_value(cmd, available_ARG, 0);
+
+	if (lv_is_cow(lv) && !lv_is_virtual_origin(origin_from_cow(lv)))
+		lv = origin_from_cow(lv);
 
 	if (activate == CHANGE_ALN) {
 		log_verbose("Deactivating logical volume \"%s\" locally",
@@ -515,6 +518,7 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 	int doit = 0, docmds = 0;
 	int dmeventd_mode, archived = 0;
 	struct logical_volume *origin;
+	char snaps_msg[128];
 
 	if (!(lv->vg->status & LVM_WRITE) &&
 	    (arg_count(cmd, contiguous_ARG) || arg_count(cmd, permission_ARG) ||
@@ -534,11 +538,24 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return ECMD_FAILED;
 	}
 
-	if (lv_is_cow(lv) && !lv_is_virtual_origin(origin_from_cow(lv)) &&
+	if (lv_is_cow(lv) && !lv_is_virtual_origin(origin = origin_from_cow(lv)) &&
 	    arg_count(cmd, available_ARG)) {
-		log_error("Can't change snapshot logical volume \"%s\"",
-			  lv->name);
-		return ECMD_FAILED;
+		if (origin->origin_count < 2)
+			snaps_msg[0] = '\0';
+		else if (dm_snprintf(snaps_msg, sizeof(snaps_msg),
+				     " and %u other snapshot(s)",
+				     origin->origin_count - 1) < 0) {
+			log_error("Failed to prepare message.");
+			return ECMD_FAILED;
+		}
+
+		if (!arg_count(cmd, yes_ARG) &&
+		    (yes_no_prompt("Change of snapshot %s will also change its"
+				   " origin %s%s. Proceed? [y/n]: ", lv->name,
+				   origin->name, snaps_msg) == 'n')) {
+			log_error("Logical volume %s not changed.", lv->name);
+			return ECMD_FAILED;
+		}
 	}
 
 	if (lv->status & PVMOVE) {
