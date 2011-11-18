@@ -2573,6 +2573,12 @@ int vg_write(struct volume_group *vg)
 		return 0;
 	}
 
+	if (critical_section())
+		log_error(INTERNAL_ERROR
+			  "Writing metadata in critical section.");
+
+	/* Unlock memory if possible */
+	memlock_unlock(vg->cmd);
 	vg->seqno++;
 
         dm_list_iterate_items(pv_to_create, &vg->pvs_to_create) {
