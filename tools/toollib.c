@@ -123,6 +123,12 @@ int process_each_lv_in_vg(struct cmd_context *cmd,
 		if (lvl->lv->status & SNAPSHOT)
 			continue;
 
+		/* Skip availability change for non-virt snaps when processing all LVs */
+		/* FIXME: pass process_all to process_single_lv() */
+		if (process_all && arg_count(cmd, available_ARG) &&
+		    lv_is_cow(lvl->lv) && !lv_is_virtual_origin(origin_from_cow(lvl->lv)))
+			continue;
+
 		if (lv_is_virtual_origin(lvl->lv) && !arg_count(cmd, all_ARG))
 			continue;
 
