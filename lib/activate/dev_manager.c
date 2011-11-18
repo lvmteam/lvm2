@@ -411,7 +411,7 @@ int lv_has_target_type(struct dm_pool *mem, struct logical_volume *lv,
 
 	if (!(dmt = _setup_task(NULL, dlid, 0,
 				DM_DEVICE_STATUS, 0, 0)))
-		return_0;
+		goto_bad;
 
 	if (!dm_task_no_open_count(dmt))
 		log_error("Failed to disable open_count");
@@ -433,8 +433,11 @@ int lv_has_target_type(struct dm_pool *mem, struct logical_volume *lv,
 		}
 	} while (next);
 
- out:
+out:
 	dm_task_destroy(dmt);
+bad:
+	dm_pool_free(mem, dlid);
+
 	return r;
 }
 
@@ -737,8 +740,6 @@ int dev_manager_snapshot_percent(struct dev_manager *dm,
 		       NULL, fail_if_percent_unsupported)))
 		return_0;
 
-	/* FIXME dm_pool_free ? */
-
 	/* If the snapshot isn't available, percent will be -1 */
 	return 1;
 }
@@ -759,8 +760,6 @@ int dev_manager_mirror_percent(struct dev_manager *dm,
 	 */
 	if (!(name = dm_build_dm_name(dm->mem, lv->vg->name, lv->name, layer)))
 		return_0;
-
-	/* FIXME dm_pool_free ? */
 
 	if (!(dlid = build_dm_uuid(dm->mem, lv->lvid.s, layer))) {
 		log_error("dlid build failed for %s", lv->name);
