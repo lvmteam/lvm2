@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Add query before removing snapshots when inactive snapshot origin is removed.
   Allow changing availability state of snapshots.
   Skip non-virtual snapshots for availability change for lvchange with vg name.
   Adjusted mirror region size only for mirrors and raids.
