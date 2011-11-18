@@ -3248,7 +3248,17 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 	}
 
 	if (lv_is_origin(lv)) {
-		/* remove snapshot LVs first */
+		/* Remove snapshot LVs first */
+		if ((force == PROMPT) &&
+		    /* Active snapshot already needs to confirm each active LV */
+		    !lv_is_active(lv) &&
+		    yes_no_prompt("Removing origin %s will also remove %u "
+				  "snapshots(s). Proceed? [y/n]: ",
+				  lv->name, lv->origin_count) == 'n') {
+			log_error("Logical volume %s not removed.", lv->name);
+			return 0;
+		}
+
 		dm_list_iterate_safe(snh, snht, &lv->snapshot_segs)
 			if (!lv_remove_with_dependencies(cmd, dm_list_struct_base(snh, struct lv_segment,
 										  origin_list)->cow,

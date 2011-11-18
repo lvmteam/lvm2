@@ -122,7 +122,7 @@ lvcreate -s --virtualoriginsize 64m -L 32m -n $lv1 $vg
 lvrename $vg/$lv1 $vg/$lv2
 lvcreate -s --virtualoriginsize 64m -L 32m -n $lv1 $vg
 lvchange -a n $vg/$lv1
-lvremove $vg/$lv1
+lvremove -ff $vg/$lv1
 lvremove -ff $vg
 
 # readahead default (auto), none, #, auto
