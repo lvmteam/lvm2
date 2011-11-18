@@ -853,9 +853,14 @@ int dm_task_set_event_nr(struct dm_task *dmt, uint32_t event_nr)
 struct target *create_target(uint64_t start, uint64_t len, const char *type,
 			     const char *params)
 {
-	struct target *t = dm_zalloc(sizeof(*t));
+	struct target *t;
 
-	if (!t) {
+	if (strlen(type) >= DM_MAX_TYPE_NAME) {
+		log_error("Target type name %s is too long.", type);
+		return NULL;
+	}
+
+	if (!(t = dm_zalloc(sizeof(*t)))) {
 		log_error("create_target: malloc(%" PRIsize_t ") failed",
 			  sizeof(*t));
 		return NULL;
@@ -889,19 +894,24 @@ static char *_add_target(struct target *t, char *out, char *end)
 	size_t sp_size = sizeof(struct dm_target_spec);
 	int len;
 
-	out += sp_size;
-	if (out >= end)
-		return_NULL;
+	if (strlen(t->type) >= sizeof(sp.target_type)) {
+		log_error("Target type name %s is too long.", t->type);
+		return NULL;
+	}
 
 	sp.status = 0;
 	sp.sector_start = t->start;
 	sp.length = t->length;
-	strncpy(sp.target_type, t->type, sizeof(sp.target_type));
+	strncpy(sp.target_type, t->type, sizeof(sp.target_type) - 1);
+	sp.target_type[sizeof(sp.target_type) - 1] = '\0';
 
+	out += sp_size;
 	len = strlen(t->params);
 
-	if ((out + len + 1) >= end)
-		return_NULL;
+	if ((out >= end) || (out + len + 1) >= end) {
+		log_error("Ran out of memory building ioctl parameter");
+		return NULL;
+	}
 
 	strcpy(out, t->params);
 	out += len + 1;
@@ -1110,10 +1120,8 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 	e = (char *) dmi + len;
 
 	for (t = dmt->head; t; t = t->next)
-		if (!(b = _add_target(t, b, e))) {
-			log_error("Ran out of memory building ioctl parameter");
-			goto bad;
-		}
+		if (!(b = _add_target(t, b, e)))
+			goto_bad;
 
 	if (dmt->newname)
 		strcpy(b, dmt->newname);
