@@ -1791,6 +1791,7 @@ static void *_create_text_context(struct dm_pool *mem, struct text_context *tc)
 static int _create_vg_text_instance(struct format_instance *fid,
                                     const struct format_instance_ctx *fic)
 {
+	static char path[PATH_MAX];
 	uint32_t type = fic->type;
 	struct text_fid_context *fidtc;
 	struct metadata_area *mda;
@@ -1798,7 +1799,6 @@ static int _create_vg_text_instance(struct format_instance *fid,
 	struct dir_list *dl;
 	struct raw_list *rl;
 	struct dm_list *dir_list, *raw_list;
-	char path[PATH_MAX];
 	struct text_context tc;
 	struct lvmcache_vginfo *vginfo;
 	struct lvmcache_info *info;

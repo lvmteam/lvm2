@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Reduce stack allocation of some PATH_MAX sized char buffers.
   Unlock memory before writing metadata.
   Add query before removing snapshots when inactive snapshot origin is removed.
   Allow changing availability state of snapshots.
