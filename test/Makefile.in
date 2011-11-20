@@ -43,7 +43,7 @@ endif
 all: check
 
 check: .tests-stamp
-	@echo Running API (liblvm2app) tests
+	@echo "Running API (liblvm2app) tests"
 	make -C api tests
 ifeq ("$(TESTING)", "yes")
 	@echo Running unit tests
