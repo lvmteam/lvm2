@@ -1450,6 +1450,7 @@ scripts/lvm2_monitoring_systemd_red_hat.service
 scripts/Makefile
 test/Makefile
 test/api/Makefile
+test/unit/Makefile
 tools/Makefile
 udev/Makefile
 unit-tests/datastruct/Makefile

@@ -43,7 +43,12 @@ endif
 all: check
 
 check: .tests-stamp
+	@echo Running API (liblvm2app) tests
 	make -C api tests
+ifeq ("$(TESTING)", "yes")
+	@echo Running unit tests
+	make unit
+endif
 	@echo Testing with locking_type 1
 	VERBOSE=$(VERBOSE) ./lib/harness $(RUN_BASE)
 	@echo Testing with locking_type 3
@@ -110,6 +115,11 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 clean:
 	make -C api clean
 	test "$(srcdir)" != . && rm -f $(RUN_BASE) lvm2app.sh
+
+.PHONY: unit
+
+unit:
+	make -C unit $(@)
 
 CLEAN_TARGETS += .lib-dir-stamp .tests-stamp $(LIB) $(addprefix lib/,$(CMDS)) \
 	lib/clvmd lib/dmeventd lib/dmsetup lib/lvmetad lib/fsadm lib/vgimportclone
