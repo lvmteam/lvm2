@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Don't ignore configure --mandir and --infodir.
   Drop pool memory allocated within lv_has_target_type().
   Reduce stack allocation of some PATH_MAX sized char buffers.
   Unlock memory before writing metadata.
@@ -8,7 +9,7 @@ Version 2.02.89 -
   Skip non-virtual snapshots for availability change for lvchange with vg name.
   Adjusted mirror region size only for mirrors and raids.
   Reorder prompt conditions for removal of active volumes.
-  Avoid 'mda inconsistency' by properly registering UNLABELLED_PV flag (2.02.86).
+  Avoid 'mda inconsistency' by properly registering UNLABELLED_PV flag (2.02.86)
   Fix --enable-static_link unless using --enable-dmeventd / --enable-udev_sync.
   Move gentoo MAKEDEV to /sbin in lvm2create_initrd.
   Add filter to avoid scan of device if it is part of active multipath.
