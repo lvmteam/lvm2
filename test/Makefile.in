@@ -29,8 +29,8 @@ include $(top_builddir)/make.tmpl
 T ?= .
 S ?= @ # never match anything by default
 VERBOSE ?= 0
-ALL = $(shell find $(srcdir) \( -name t-\*.sh -or -path */api/\*.sh \) | sort)
-RUN = $(shell find $(srcdir) -regextype posix-egrep \( -name t-\*.sh -or -path */api/\*.sh \) -and -regex "$(srcdir)/.*($(T)).*" -and -not -regex "$(srcdir)/.*($(S)).*" | sort)
+ALL = $(shell find $(srcdir) \( -path \*/shell/\*.sh -or -path \*/api/\*.sh \) | sort)
+RUN = $(shell find $(srcdir) -regextype posix-egrep \( -path \*/shell/\*.sh -or -path \*/api/\*.sh \) -and -regex "$(srcdir)/.*($(T)).*" -and -not -regex "$(srcdir)/.*($(S)).*" | sort)
 RUN_BASE = $(subst $(srcdir)/,,$(RUN))
 
 # Shell quote;
@@ -91,6 +91,7 @@ LIB = lib/not lib/should lib/harness \
 CMDS = lvm $(shell cat $(top_builddir)/tools/.commands)
 
 .tests-stamp: $(ALL) $(LIB)
+	mkdir -p shell
 	@if test "$(srcdir)" != . ; then \
 	    echo "Copying tests to builddir."; \
 	    for f in $(ALL); do cp $$f `echo $$f | sed -e s,^$(srcdir)/,,`; done; \
