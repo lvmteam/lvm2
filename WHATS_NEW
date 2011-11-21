@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Fix dmeventd snapshot monitoring when multiple extensions were involved.
   Don't ignore configure --mandir and --infodir.
   Drop pool memory allocated within lv_has_target_type().
   Reduce stack allocation of some PATH_MAX sized char buffers.
