@@ -27,7 +27,7 @@ percent() {
 
 which mkfs.ext2 || exit 200
 
-aux prepare_vg 2
+aux prepare_vg 3
 aux prepare_dmeventd
 
 lvcreate -l 8 -n base $vg
@@ -44,7 +44,18 @@ sleep 10 # dmeventd only checks every 10 seconds :(
 post=`percent`
 
 test $pre = $post
+
 write 2 5000
+pre=`percent`
+sleep 10 # dmeventd only checks every 10 seconds :(
+post=`percent`
+test $pre -gt $post
+
+# check that a second extension happens; we used to fail to extend when the
+# utilisation ended up between THRESH and (THRESH + 10)... see RHBZ 754198
+# (the utilisation after the write should be 57 %)
+
+write 3 5000
 pre=`percent`
 sleep 10 # dmeventd only checks every 10 seconds :(
 post=`percent`
