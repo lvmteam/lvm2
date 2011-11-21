@@ -120,6 +120,7 @@ CFLAGS += -fPIC -Wall -Wundef -Wshadow -Wcast-align -Wwrite-strings -Wmissing-pr
 #CFLAGS += -DDEBUG_CRC32
 
 CFLAGS += @COPTIMISE_FLAG@
+LDFLAGS += @COPTIMISE_FLAG@
 
 ifeq ("@DEBUG@", "yes")
   CFLAGS += -g -fno-omit-frame-pointer
