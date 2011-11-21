@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Replace the unit testing framework with CUnit (--enable-testing).
   Fix dmeventd snapshot monitoring when multiple extensions were involved.
   Don't ignore configure --mandir and --infodir.
   Drop pool memory allocated within lv_has_target_type().
