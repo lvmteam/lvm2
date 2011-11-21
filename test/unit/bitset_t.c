@@ -36,7 +36,7 @@ int bitset_fini() {
 
 static void test_get_next()
 {
-        int i, j, last, first;
+        int i, j, last = 0, first;
         dm_bitset_t bs = dm_bitset_create(mem, NR_BITS);
 
         for (i = 0; i < NR_BITS; i++)
