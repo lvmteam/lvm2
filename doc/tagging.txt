@@ -85,7 +85,7 @@ Usage Examples
   From any machine in the cluster, add db1 to the list of machines that
   activate vg1/lvol2:
 
-  lvchange --tag @db1 vg1/lvol2
+  lvchange --addtag @db1 vg1/lvol2
   (followed by lvchange -ay to actually activate it)
 
 
@@ -98,10 +98,10 @@ Usage Examples
 
   Option (i) - centralised admin, static configuration replicated between hosts  
     # Add @database tag to vg1's metadata
-    vgchange --tag @database vg1
+    vgchange --addtag @database vg1
 
     # Add @fileserver tag to vg2's metadata
-    vgchange --tag @fileserver vg2
+    vgchange --addtag @fileserver vg2
 
     lvm.conf:  (Identical on every machine)
       tags {
@@ -122,17 +122,17 @@ Usage Examples
       }
   
   In the event of the fileserver host going down, vg2 can be brought up
-  on fsb1 by running *on any node* 'vgchange --tag @fileserverbackup vg2'
+  on fsb1 by running *on any node* 'vgchange --addtag @fileserverbackup vg2'
   followed by 'vgchange -ay vg2'
   
   
   Option (ii) - localised admin & configuation
   (i.e. each host holds *locally* which classes of volumes to activate)
     # Add @database tag to vg1's metadata
-    vgchange --tag @database vg1
+    vgchange --addtag @database vg1
   
     # Add @fileserver tag to vg2's metadata
-    vgchange --tag @fileserver vg2
+    vgchange --addtag @fileserver vg2
   
     lvm.conf:  (Identical on every machine - global settings)
       tags {
