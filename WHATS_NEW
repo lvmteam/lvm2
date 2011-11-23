@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Move y/n prompts to stderr and repeat if response has both 'n' and 'y'.
   Replace the unit testing framework with CUnit (--enable-testing).
   Fix dmeventd snapshot monitoring when multiple extensions were involved.
   Don't ignore configure --mandir and --infodir.

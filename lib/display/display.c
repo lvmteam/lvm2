@@ -850,9 +850,10 @@ char yes_no_prompt(const char *prompt, ...)
 	do {
 		if (c == '\n' || !c) {
 			va_start(ap, prompt);
-			vprintf(prompt, ap);
+			vfprintf(stderr, prompt, ap);
 			va_end(ap);
-			fflush(stdout);
+			fflush(stderr);
+			ret = 0;
 		}
 
 		if ((c = getchar()) == EOF) {
@@ -861,9 +862,14 @@ char yes_no_prompt(const char *prompt, ...)
 		}
 
 		c = tolower(c);
-		if ((c == 'y') || (c == 'n'))
-			ret = c;
-	} while (!ret || c != '\n');
+		if ((c == 'y') || (c == 'n')) {
+			/* If both 'y' and 'n' given, begin again. */
+			if (ret && c != ret)
+				ret = -1;
+			else
+				ret = c;
+		}
+	} while (ret < 1 || c != '\n');
 
 	sigint_restore();
 
