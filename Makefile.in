@@ -36,7 +36,7 @@ endif
 ifeq ($(MAKECMDGOALS),distclean)
   SUBDIRS = doc include man scripts \
     lib tools daemons libdm \
-    udev po liblvm test/api test \
+    udev po liblvm test \
     unit-tests/datastruct unit-tests/mm unit-tests/regex
 endif
 DISTCLEAN_DIRS += lcov_reports*

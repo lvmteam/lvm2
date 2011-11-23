@@ -12,10 +12,9 @@
 
 #TEST_OPTS=--verbose --debug
 SHELL_PATH ?= $(SHELL)
-TAR ?= $(TAR)
 RM ?= rm -f
 
-subdir := $(shell pwd|sed 's,.*/,,')
+subdir = $(shell pwd|sed 's,.*/,,')
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -24,6 +23,9 @@ abs_srcdir = @abs_srcdir@
 abs_builddir = @abs_builddir@
 abs_top_builddir = @abs_top_builddir@
 abs_top_srcdir = @abs_top_srcdir@
+
+SUBDIRS = api unit
+
 include $(top_builddir)/make.tmpl
 
 T ?= .
@@ -43,24 +45,16 @@ endif
 all: check
 
 check: .tests-stamp
-	@echo "Running API (liblvm2app) tests"
-	make -C api tests
-ifeq ("$(TESTING)", "yes")
-	@echo Running unit tests
-	make unit
-endif
 	@echo Testing with locking_type 1
 	VERBOSE=$(VERBOSE) ./lib/harness $(RUN_BASE)
 	@echo Testing with locking_type 3
 	VERBOSE=$(VERBOSE) LVM_TEST_LOCKING=3 ./lib/harness $(RUN_BASE)
 
 check_cluster: .tests-stamp
-	make -C api tests
 	@echo Testing with locking_type 3
 	VERBOSE=$(VERBOSE) LVM_TEST_LOCKING=3 ./lib/harness $(RUN_BASE)
 
 check_local: .tests-stamp
-	make -C api tests
 	@echo Testing with locking_type 1
 	VERBOSE=$(VERBOSE) LVM_TEST_LOCKING=1 ./lib/harness $(RUN_BASE)
 
@@ -75,7 +69,7 @@ lib/%: $(srcdir)/lib/%.sh .lib-dir-stamp
 	chmod +x $@
 
 lib/paths: $(srcdir)/Makefile.in .lib-dir-stamp
-	rm -f $@-t
+	$(RM) $@-t
 	echo 'top_srcdir=$(top_srcdir)' >> $@-t
 	echo 'abs_top_builddir=$(abs_top_builddir)' >> $@-t
 	echo 'abs_top_srcdir=$(abs_top_srcdir)' >> $@-t
@@ -90,39 +84,34 @@ LIB = lib/not lib/should lib/harness \
 
 CMDS = lvm $(shell cat $(top_builddir)/tools/.commands)
 
-.tests-stamp: $(ALL) $(LIB)
-	mkdir -p shell
+.tests-stamp: $(ALL) $(LIB) $(SUBDIRS)
 	@if test "$(srcdir)" != . ; then \
-	    echo "Copying tests to builddir."; \
-	    for f in $(ALL); do cp $$f `echo $$f | sed -e s,^$(srcdir)/,,`; done; \
+		echo "Linking tests to builddir."; \
+		$(MKDIR_P) shell; \
+		for f in $(subst $(srcdir)/,,$(ALL)); do \
+			ln -sf $(abs_top_srcdir)/test/$$f $$f; \
+		done; \
 	fi
 	touch $@
 
-Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
-	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
-
-.lib-dir-stamp: $(top_srcdir)/scripts/fsadm.sh
-	mkdir -p lib
+.lib-dir-stamp:
+	$(MKDIR_P) lib
 	for i in $(CMDS); do ln -fs lvm-wrapper lib/$$i; done
 	ln -fs "$(abs_top_builddir)/tools/dmsetup" lib/dmsetup
 	ln -fs "$(abs_top_builddir)/daemons/clvmd/clvmd" lib/clvmd
 	ln -fs "$(abs_top_builddir)/daemons/dmeventd/dmeventd" lib/dmeventd
 	ln -fs "$(abs_top_builddir)/daemons/lvmetad/lvmetad" lib/lvmetad
 	ln -fs "$(abs_top_srcdir)/scripts/vgimportclone.sh" lib/vgimportclone
-	cp -f "$(top_srcdir)/scripts/fsadm.sh" lib/fsadm
-	@chmod +x lib/fsadm
+	ln -fs "$(abs_top_srcdir)/scripts/fsadm.sh" lib/fsadm
 	touch $@
 
 clean:
-	make -C api clean
-	test "$(srcdir)" != . && rm -f $(RUN_BASE) lvm2app.sh
-
-.PHONY: unit
-
-unit:
-	make -C unit $(@)
+	test "$(srcdir)" != . && $(RM) $(RUN_BASE) lvm2app.sh
 
 CLEAN_TARGETS += .lib-dir-stamp .tests-stamp $(LIB) $(addprefix lib/,$(CMDS)) \
 	lib/clvmd lib/dmeventd lib/dmsetup lib/lvmetad lib/fsadm lib/vgimportclone
+
+Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 
 .NOTPARALLEL:
