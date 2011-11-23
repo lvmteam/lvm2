@@ -113,13 +113,16 @@ INSTALL_SCRIPT = $(INSTALL) -p $(M_INSTALL_PROGRAM)
 
 .SUFFIXES: .c .d .o .so .a .po .pot .mo .dylib
 
-CFLAGS += -fPIC -Wall -Wundef -Wshadow -Wcast-align -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wnested-externs -Winline -Wmissing-noreturn -Wformat-security -Wredundant-decls -Wpointer-arith
+WFLAGS += -Wall -Wundef -Wshadow -Wcast-align -Wwrite-strings \
+ -Wmissing-prototypes -Wmissing-declarations -Wnested-externs \
+ -Winline -Wmissing-noreturn -Wformat-security -Wredundant-decls \
+ -Wpointer-arith
 
-#CFLAGS += -W -Wconversion -Wbad-function-cast -Wcast-qual
-#CFLAGS += -pedantic -std=gnu99
-#CFLAGS += -DDEBUG_CRC32
+#WFLAGS += -W -Wconversion -Wbad-function-cast -Wcast-qual
+#WFLAGS += -pedantic -std=gnu99
+#DEFS += -DDEBUG_CRC32
 
-CFLAGS += @COPTIMISE_FLAG@
+CFLAGS += -fPIC  @COPTIMISE_FLAG@
 LDFLAGS += @COPTIMISE_FLAG@
 
 ifeq ("@DEBUG@", "yes")
@@ -303,14 +306,14 @@ endif
 $(TARGETS): $(OBJECTS)
 
 %.o: %.c
-	$(CC) -c $(INCLUDES) $(DEFS) $(CFLAGS) $< -o $@
+	$(CC) -c $(INCLUDES) $(DEFS) $(WFLAGS) $(CFLAGS) $< -o $@
 
 %.pot: %.c Makefile
 	$(CC) -E $(INCLUDES) -include $(top_srcdir)/include/pogen.h \
-		$(DEFS) $(CFLAGS) $< > $@
+		$(DEFS) $(WFLAGS) $(CFLAGS) $< > $@
 
 %.so: %.o
-	$(CC) -c $(INCLUDES) $(DEFS) $(CFLAGS) $(CLDFLAGS) $< $(LIBS) -o $@
+	$(CC) -c $(CFLAGS) $(CLDFLAGS) $< $(LIBS) -o $@
 
 ifneq (,$(LIB_SHARED))
 
@@ -355,7 +358,7 @@ $(LIB_STATIC): $(OBJECTS)
 	set -e; \
 	FILE=`echo $@ | sed 's/\\//\\\\\\//g;s/\\.d//g'`; \
 	DEPS=`echo $(DEPS) | sed -e 's/\\//\\\\\\//g'`; \
-	$(CC) -MM $(INCLUDES) $(DEFS) $(CFLAGS) -o $@ $<; \
+	$(CC) -MM $(INCLUDES) $(DEFS) -o $@ $<; \
 	sed -i "s/\(.*\)\.o[ :]*/$$FILE.o $$FILE.d $$FILE.pot: $$DEPS /g" $@; \
 	[ -s $@ ] || $(RM) $@
 
@@ -378,8 +381,8 @@ distclean: cleandir $(SUBDIRS.distclean)
 	set -e; \
 	( cat $(srcdir)/.exported_symbols; \
 	  if test x$(EXPORTED_HEADER) != x; then \
-        	$(CC) -E -P $(INCLUDES) $(DEFS) $(CFLAGS) $(EXPORTED_HEADER) | \
-        	$(SED) -ne "/^typedef|}/!s/.*[ \*]\(\$(EXPORTED_FN_PREFIX)_[a-z0-9_]*\)(.*/\1/p"; \
+		$(CC) -E -P $(INCLUDES) $(DEFS) $(EXPORTED_HEADER) | \
+		$(SED) -ne "/^typedef|}/!s/.*[ \*]\(\$(EXPORTED_FN_PREFIX)_[a-z0-9_]*\)(.*/\1/p"; \
 	  fi \
 	) > $@
 
