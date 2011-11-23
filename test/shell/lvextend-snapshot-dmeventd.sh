@@ -40,14 +40,14 @@ mkdir mnt
 
 write 1 4096
 pre=`percent`
-sleep 10 # dmeventd only checks every 10 seconds :(
+sleep 15 # dmeventd only checks every 10 seconds :(
 post=`percent`
 
 test $pre = $post
 
 write 2 5000
 pre=`percent`
-sleep 10 # dmeventd only checks every 10 seconds :(
+sleep 15 # dmeventd only checks every 10 seconds :(
 post=`percent`
 test $pre -gt $post
 
@@ -57,6 +57,6 @@ test $pre -gt $post
 
 write 3 5000
 pre=`percent`
-sleep 10 # dmeventd only checks every 10 seconds :(
+sleep 15 # dmeventd only checks every 10 seconds :(
 post=`percent`
 test $pre -gt $post
