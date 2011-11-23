@@ -106,7 +106,7 @@ CMDS = lvm $(shell cat $(top_builddir)/tools/.commands)
 	touch $@
 
 clean:
-	test "$(srcdir)" != . && $(RM) $(RUN_BASE) lvm2app.sh
+	test "$(srcdir)" = . || $(RM) $(RUN_BASE)
 
 CLEAN_TARGETS += .lib-dir-stamp .tests-stamp $(LIB) $(addprefix lib/,$(CMDS)) \
 	lib/clvmd lib/dmeventd lib/dmsetup lib/lvmetad lib/fsadm lib/vgimportclone
