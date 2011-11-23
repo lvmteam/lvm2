@@ -21,6 +21,7 @@ TARGETS += test
 SOURCES = test.c
 
 TARGETS += vgtest.t percent.t pe_start.t
+SOURCES2 = vgtest.c percent.c pe_start.c
 endif
 
 include $(top_builddir)/make.tmpl
