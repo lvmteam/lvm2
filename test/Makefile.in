@@ -25,6 +25,7 @@ abs_top_builddir = @abs_top_builddir@
 abs_top_srcdir = @abs_top_srcdir@
 
 SUBDIRS = api unit
+SOURCES = lib/not.c lib/harness.c
 
 include $(top_builddir)/make.tmpl
 
@@ -61,8 +62,8 @@ check_local: .tests-stamp
 lib/should: lib/not
 	ln -sf not lib/should
 
-lib/%: $(srcdir)/lib/%.c .lib-dir-stamp
-	$(CC) $(DEFS) $(CFLAGS) -o $@ $<
+lib/%: lib/%.o .lib-dir-stamp
+	$(CC) $(LDFLAGS) -o $@ $<
 
 lib/%: $(srcdir)/lib/%.sh .lib-dir-stamp
 	cp $< $@

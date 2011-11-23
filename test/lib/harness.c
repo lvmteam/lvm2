@@ -208,7 +208,7 @@ static void run(int i, char *f) {
 		char buf[128];
 		snprintf(buf, 128, "%s ...", f);
 		buf[127] = 0;
-		printf("Running %-40s ", buf);
+		printf("Running %-50s ", buf);
 		fflush(stdout);
 		while ((w = waitpid(pid, &st, WNOHANG)) == 0) {
 			drain();
