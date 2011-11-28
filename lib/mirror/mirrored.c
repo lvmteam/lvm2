@@ -427,7 +427,9 @@ static int _mirrored_add_target_line(struct dev_manager *dm, struct dm_pool *mem
 	}
 
 	if (mirror_status != MIRR_RUNNING) {
-		if (!dm_tree_node_add_linear_target(node, len))
+		if (!add_linear_area_to_dtree(node, len, seg->lv->vg->extent_size,
+					      cmd->use_linear_target,
+					      seg->lv->vg->name, seg->lv->name))
 			return_0;
 		goto done;
 	}

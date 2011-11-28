@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Add activation/use_linear_target enabled by default.
   Use gcc warning options only with .c to .o compilation.
   Move y/n prompts to stderr and repeat if response has both 'n' and 'y'.
   Replace the unit testing framework with CUnit (--enable-testing).

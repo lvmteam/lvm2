@@ -490,6 +490,11 @@ activation {
     # or snapshotted volumes is likely to result in data corruption.
     missing_stripe_filler = "error"
 
+    # The linear target is an optimised version of the striped target
+    # that only handles a single stripe.  Set this to 0 to disable this
+    # optimisation and always use the striped target.
+    use_linear_target = 1
+
     # How much stack (in KB) to reserve for use while devices suspended
     # Prior to version 2.02.89 this used to be set to 256KB
     reserved_stack = 64

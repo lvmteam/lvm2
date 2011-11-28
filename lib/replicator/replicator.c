@@ -625,7 +625,9 @@ static int _replicator_dev_add_target_line(struct dev_manager *dm,
 		/* Create passive linear mapping */
 		log_very_verbose("Inactive replicator %s using %s.",
 				 seg->lv->name, seg->lv->rdevice->lv->name);
-		if (!dm_tree_node_add_linear_target(node, seg->lv->size))
+		if (!add_linear_area_to_dtree(node, seg->lv->size, seg->lv->vg->extent_size,
+					      dm->cmd->use_linear_target,
+					      seg->lv->vg->name, seg->lv_name))
 			return_0;
 		if (!(rdev_dlid = build_dm_uuid(mem, seg->lv->rdevice->lv->lvid.s, NULL)))
 			return_0;

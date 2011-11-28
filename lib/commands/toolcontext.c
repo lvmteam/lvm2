@@ -333,6 +333,10 @@ static int _process_config(struct cmd_context *cmd)
 	cmd->default_settings.udev_fallback = 1;
 #endif
 
+	cmd->use_linear_target = find_config_tree_int(cmd,
+						      "activation/use_linear_target",
+						       DEFAULT_USE_LINEAR_TARGET);
+
 	cmd->stripe_filler = find_config_tree_str(cmd,
 						  "activation/missing_stripe_filler",
 						  DEFAULT_STRIPE_FILLER);

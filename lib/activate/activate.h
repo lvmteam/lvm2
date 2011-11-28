@@ -128,6 +128,10 @@ int target_register_events(struct cmd_context *cmd, const char *dso, struct logi
 			    int evmask __attribute__((unused)), int set, int timeout);
 #endif
 
+int add_linear_area_to_dtree(struct dm_tree_node *node, uint64_t size,
+			     uint32_t extent_size, int use_linear_target,
+			     const char *vgname, const char *lvname);
+
 /*
  * Returns 1 if PV has a dependency tree that uses anything in VG.
  */
