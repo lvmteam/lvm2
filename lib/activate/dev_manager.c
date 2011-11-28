@@ -441,6 +441,42 @@ bad:
 	return r;
 }
 
+int add_linear_area_to_dtree(struct dm_tree_node *node, uint64_t size, uint32_t extent_size, int use_linear_target, const char *vgname, const char *lvname)
+{
+	uint32_t page_size;
+
+	/*
+	 * Use striped or linear target?
+	 */
+	if (!use_linear_target) {
+		page_size = lvm_getpagesize() >> SECTOR_SHIFT;
+
+		/*
+		 * We'll use the extent size as the stripe size.
+		 * Extent size and page size are always powers of 2.
+		 * The striped target requires that the stripe size is
+		 * divisible by the page size.
+		 */
+		if (extent_size >= page_size) {
+			/* Use striped target */
+			if (!dm_tree_node_add_striped_target(node, size, extent_size))
+				return_0;
+			return 1;
+		} else
+			/* Some exotic cases are unsupported by striped. */
+			log_warn("WARNING: Using linear target for %s/%s: Striped requires extent size (%" PRIu32 " sectors) >= page size (%" PRIu32 ").",
+				 vgname, lvname, extent_size, page_size);
+	}
+
+	/*
+	 * Use linear target.
+	 */
+	if (!dm_tree_node_add_linear_target(node, size))
+		return_0;
+
+	return 1;
+}
+
 static percent_range_t _combine_percent(percent_t a, percent_t b,
                                         uint32_t numerator, uint32_t denominator)
 {

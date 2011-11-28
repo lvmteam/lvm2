@@ -81,6 +81,7 @@ struct cmd_context {
 	unsigned is_long_lived:1;	/* Optimises persistent_filter handling */
 	unsigned handles_missing_pvs:1;
 	unsigned handles_unknown_segments:1;
+	unsigned use_linear_target:1;
 	unsigned partial_activation:1;
 	unsigned si_unit_consistency:1;
 	unsigned metadata_read_only:1;

@@ -230,7 +230,9 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 			return 0;
 		}
 
-		if (!dm_tree_node_add_linear_target(node, len) ||
+		if (!add_linear_area_to_dtree(node, len, seg->lv->vg->extent_size,
+					      cmd->use_linear_target,
+					      seg->lv->vg->name, seg->lv->name) ||
 		    !dm_tree_node_add_target_area(node, NULL, pool_dlid, 0))
 			return_0;
 

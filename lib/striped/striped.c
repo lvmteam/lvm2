@@ -174,7 +174,9 @@ static int _striped_add_target_line(struct dev_manager *dm,
 		return 0;
 	}
 	if (seg->area_count == 1) {
-		if (!dm_tree_node_add_linear_target(node, len))
+		if (!add_linear_area_to_dtree(node, len, seg->lv->vg->extent_size,
+					      cmd->use_linear_target,
+					      seg->lv->vg->name, seg->lv->name))
 			return_0;
 	} else if (!dm_tree_node_add_striped_target(node, len,
 						  seg->stripe_size))
