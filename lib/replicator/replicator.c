@@ -626,8 +626,8 @@ static int _replicator_dev_add_target_line(struct dev_manager *dm,
 		log_very_verbose("Inactive replicator %s using %s.",
 				 seg->lv->name, seg->lv->rdevice->lv->name);
 		if (!add_linear_area_to_dtree(node, seg->lv->size, seg->lv->vg->extent_size,
-					      dm->cmd->use_linear_target,
-					      seg->lv->vg->name, seg->lv_name))
+					      cmd->use_linear_target,
+					      seg->lv->vg->name, seg->lv->name))
 			return_0;
 		if (!(rdev_dlid = build_dm_uuid(mem, seg->lv->rdevice->lv->lvid.s, NULL)))
 			return_0;
