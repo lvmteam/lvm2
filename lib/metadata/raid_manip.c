@@ -440,7 +440,7 @@ static int _alloc_image_component(struct logical_volume *lv,
 		return 0;
 	}
 
-	status = LVM_READ | LVM_WRITE | LV_NOTSYNCED | type;
+	status = LVM_READ | LVM_WRITE | LV_REBUILD | type;
 	tmp_lv = lv_create_empty(img_name, NULL, status, ALLOC_INHERIT, lv->vg);
 	if (!tmp_lv) {
 		log_error("Failed to allocate new raid component, %s", img_name);
@@ -569,6 +569,7 @@ static int _alloc_rmeta_for_lv(struct logical_volume *data_lv,
 static int _raid_add_images(struct logical_volume *lv,
 			    uint32_t new_count, struct dm_list *pvs)
 {
+	int rebuild_flag_cleared = 0;
 	uint32_t s;
 	uint32_t old_count = lv_raid_image_count(lv);
 	uint32_t count = new_count - old_count;
@@ -588,7 +589,7 @@ static int _raid_add_images(struct logical_volume *lv,
 	 */
 	if (seg_is_linear(seg)) {
 		/* A complete resync will be done, no need to mark each sub-lv */
-		status_mask = ~(LV_NOTSYNCED);
+		status_mask = ~(LV_REBUILD);
 
 		if (!(lvl = dm_pool_alloc(lv->vg->vgmem, sizeof(*lvl)))) {
 			log_error("Memory allocation failed");
@@ -747,6 +748,27 @@ to be left for these sub-lvs.
 
 	if (!resume_lv(cmd, lv)) {
 		log_error("Failed to resume %s/%s after committing changes",
+			  lv->vg->name, lv->name);
+		return 0;
+	}
+
+	/*
+	 * Now that the 'REBUILD' has made its way to the kernel, we must
+	 * remove the flag so that the individual devices are not rebuilt
+	 * upon every activation.
+	 */
+	seg = first_seg(lv);
+	for (s = 0; s < seg->area_count; s++) {
+		if ((seg_lv(seg, s)->status & LV_REBUILD) ||
+		    (seg_metalv(seg, s)->status & LV_REBUILD)) {
+			seg_metalv(seg, s)->status &= ~LV_REBUILD;
+			seg_lv(seg, s)->status &= ~LV_REBUILD;
+			rebuild_flag_cleared = 1;
+		}
+	}
+	if (rebuild_flag_cleared &&
+	    (!vg_write(lv->vg) || !vg_commit(lv->vg))) {
+		log_error("Failed to clear REBUILD flag for %s/%s components",
 			  lv->vg->name, lv->name);
 		return 0;
 	}
@@ -1335,8 +1357,8 @@ static int _convert_mirror_to_raid1(struct logical_volume *lv,
 		log_debug("Adding %s to %s", lvl->lv->name, lv->name);
 
 		/* Images are known to be in-sync */
-		lvl->lv->status &= ~LV_NOTSYNCED;
-		first_seg(lvl->lv)->status &= ~LV_NOTSYNCED;
+		lvl->lv->status &= ~LV_REBUILD;
+		first_seg(lvl->lv)->status &= ~LV_REBUILD;
 		lv_set_hidden(lvl->lv);
 
 		if (!set_lv_segment_area_lv(seg, s, lvl->lv, 0,
@@ -1427,4 +1449,217 @@ int lv_raid_reshape(struct logical_volume *lv,
 		  " is not yet supported.", lv->vg->name, lv->name,
 		  seg->segtype->name, new_segtype->name);
 	return 0;
+}
+
+/*
+ * lv_raid_replace
+ * @lv
+ * @replace_pvs
+ * @allocatable_pvs
+ *
+ * Replace the specified PVs.
+ */
+int lv_raid_replace(struct logical_volume *lv,
+		    struct dm_list *remove_pvs,
+		    struct dm_list *allocate_pvs)
+{
+	uint32_t s, sd, match_count = 0;
+	struct dm_list old_meta_lvs, old_data_lvs;
+	struct dm_list new_meta_lvs, new_data_lvs;
+	struct lv_segment *raid_seg = first_seg(lv);
+	struct lv_list *lvl;
+	char *tmp_names[raid_seg->area_count * 2];
+
+	dm_list_init(&old_meta_lvs);
+	dm_list_init(&old_data_lvs);
+	dm_list_init(&new_meta_lvs);
+	dm_list_init(&new_data_lvs);
+
+	/*
+	 * How many sub-LVs are being removed?
+	 */
+	for (s = 0; s < raid_seg->area_count; s++) {
+		if ((seg_type(raid_seg, s) == AREA_UNASSIGNED) ||
+		    (seg_metatype(raid_seg, s) == AREA_UNASSIGNED)) {
+			log_error("Unable to replace RAID images while the "
+				  "array has unassigned areas");
+			return 0;
+		}
+
+		if (_lv_is_on_pvs(seg_lv(raid_seg, s), remove_pvs) ||
+		    _lv_is_on_pvs(seg_metalv(raid_seg, s), remove_pvs))
+			match_count++;
+	}
+
+	if (!match_count) {
+		log_verbose("%s/%s does not contain devices specified"
+			    " for replacement", lv->vg->name, lv->name);
+		return 1;
+	} else if (match_count == raid_seg->area_count) {
+		log_error("Unable to remove all PVs from %s/%s at once.",
+			  lv->vg->name, lv->name);
+		return 0;
+	} else if (raid_seg->segtype->parity_devs &&
+		   (match_count > raid_seg->segtype->parity_devs)) {
+		log_error("Unable to replace more than %u PVs from (%s) %s/%s",
+			  raid_seg->segtype->parity_devs,
+			  raid_seg->segtype->name, lv->vg->name, lv->name);
+		return 0;
+	}
+
+	/*
+	 * Allocate the new image components first
+	 * - This makes it easy to avoid all currently used devs
+	 * - We can immediately tell if there is enough space
+	 *
+	 * - We need to change the LV names when we insert them.
+	 */
+	if (!_alloc_image_components(lv, allocate_pvs, match_count,
+				     &new_meta_lvs, &new_data_lvs)) {
+		log_error("Failed to allocate replacement images for %s/%s",
+			  lv->vg->name, lv->name);
+		return 0;
+	}
+
+	/*
+	 * Remove the old images
+	 * - If we did this before the allocate, we wouldn't have to rename
+	 *   the allocated images, but it'd be much harder to avoid the right
+	 *   PVs during allocation.
+	 */
+	if (!_raid_extract_images(lv, raid_seg->area_count - match_count,
+				  remove_pvs, 0,
+				  &old_meta_lvs, &old_data_lvs)) {
+		log_error("Failed to remove the specified images from %s/%s",
+			  lv->vg->name, lv->name);
+		return 0;
+	}
+
+	/*
+	 * Skip metadata operation normally done to clear the metadata sub-LVs.
+	 *
+	 * The LV_REBUILD flag is set on the new sub-LVs,
+	 * so they will be rebuilt and we don't need to clear the metadata dev.
+	 */
+
+	for (s = 0; s < raid_seg->area_count; s++) {
+		tmp_names[s] = NULL;
+		sd = s + raid_seg->area_count;
+		tmp_names[sd] = NULL;
+
+		if ((seg_type(raid_seg, s) == AREA_UNASSIGNED) &&
+		    (seg_metatype(raid_seg, s) == AREA_UNASSIGNED)) {
+			/* Adjust the new metadata LV name */
+			lvl = dm_list_item(dm_list_first(&new_meta_lvs),
+					   struct lv_list);
+			dm_list_del(&lvl->list);
+			tmp_names[s] = dm_pool_alloc(lv->vg->vgmem,
+						    strlen(lvl->lv->name) + 1);
+			if (!tmp_names[s])
+				return_0;
+			if (dm_snprintf(tmp_names[s], strlen(lvl->lv->name) + 1,
+					"%s_rmeta_%u", lv->name, s) < 0)
+				return_0;
+			if (!set_lv_segment_area_lv(raid_seg, s, lvl->lv, 0,
+						    lvl->lv->status)) {
+				log_error("Failed to add %s to %s",
+					  lvl->lv->name, lv->name);
+				return 0;
+			}
+			lv_set_hidden(lvl->lv);
+
+			/* Adjust the new data LV name */
+			lvl = dm_list_item(dm_list_first(&new_data_lvs),
+					   struct lv_list);
+			dm_list_del(&lvl->list);
+			tmp_names[sd] = dm_pool_alloc(lv->vg->vgmem,
+						     strlen(lvl->lv->name) + 1);
+			if (!tmp_names[sd])
+				return_0;
+			if (dm_snprintf(tmp_names[sd], strlen(lvl->lv->name) + 1,
+					"%s_rimage_%u", lv->name, s) < 0)
+				return_0;
+			if (!set_lv_segment_area_lv(raid_seg, s, lvl->lv, 0,
+						    lvl->lv->status)) {
+				log_error("Failed to add %s to %s",
+					  lvl->lv->name, lv->name);
+				return 0;
+			}
+			lv_set_hidden(lvl->lv);
+		}
+	}
+
+	if (!vg_write(lv->vg)) {
+		log_error("Failed to write changes to %s in %s",
+			  lv->name, lv->vg->name);
+		return 0;
+	}
+
+	if (!suspend_lv(lv->vg->cmd, lv)) {
+		log_error("Failed to suspend %s/%s before committing changes",
+			  lv->vg->name, lv->name);
+		return 0;
+	}
+
+	if (!vg_commit(lv->vg)) {
+		log_error("Failed to commit changes to %s in %s",
+			  lv->name, lv->vg->name);
+		return 0;
+	}
+
+	if (!resume_lv(lv->vg->cmd, lv)) {
+		log_error("Failed to resume %s/%s after committing changes",
+			  lv->vg->name, lv->name);
+		return 0;
+	}
+
+	dm_list_iterate_items(lvl, &old_meta_lvs) {
+		if (!deactivate_lv(lv->vg->cmd, lvl->lv))
+			return_0;
+		if (!lv_remove(lvl->lv))
+			return_0;
+	}
+	dm_list_iterate_items(lvl, &old_data_lvs) {
+		if (!deactivate_lv(lv->vg->cmd, lvl->lv))
+			return_0;
+		if (!lv_remove(lvl->lv))
+			return_0;
+	}
+
+	/* Update new sub-LVs to correct name and clear REBUILD flag */
+	for (s = 0; s < raid_seg->area_count; s++) {
+		sd = s + raid_seg->area_count;
+		if (tmp_names[s] && tmp_names[sd]) {
+			seg_metalv(raid_seg, s)->name = tmp_names[s];
+			seg_lv(raid_seg, s)->name = tmp_names[sd];
+			seg_metalv(raid_seg, s)->status &= ~LV_REBUILD;
+			seg_lv(raid_seg, s)->status &= ~LV_REBUILD;
+		}
+	}
+
+	if (!vg_write(lv->vg)) {
+		log_error("Failed to write changes to %s in %s",
+			  lv->name, lv->vg->name);
+		return 0;
+	}
+
+	if (!suspend_lv(lv->vg->cmd, lv)) {
+		log_error("Failed to suspend %s/%s before committing changes",
+			  lv->vg->name, lv->name);
+		return 0;
+	}
+
+	if (!vg_commit(lv->vg)) {
+		log_error("Failed to commit changes to %s in %s",
+			  lv->name, lv->vg->name);
+		return 0;
+	}
+
+	if (!resume_lv(lv->vg->cmd, lv)) {
+		log_error("Failed to resume %s/%s after committing changes",
+			  lv->vg->name, lv->name);
+		return 0;
+	}
+
+	return 1;
 }

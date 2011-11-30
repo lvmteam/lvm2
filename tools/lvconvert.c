@@ -48,6 +48,10 @@ struct lvconvert_params {
 	char **pvs;
 	struct dm_list *pvh;
 
+	int replace_pv_count;
+	char **replace_pvs;
+	struct dm_list *replace_pvh;
+
 	struct logical_volume *lv_to_poll;
 };
 
@@ -122,6 +126,9 @@ static int _lvconvert_name_params(struct lvconvert_params *lp,
 static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 			int argc, char **argv)
 {
+	int i;
+	const char *tmp_str;
+	struct arg_value_group_list *group;
 	int region_size;
 	int pagesize = lvm_getpagesize();
 
@@ -243,7 +250,27 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 						 SEG_CANNOT_BE_ZEROED) ?
 						"n" : "y"), "n");
 
-	} else {	/* Mirrors */
+	} else if (arg_count(cmd, replace_ARG)) { /* RAID device replacement */
+		lp->replace_pv_count = arg_count(cmd, replace_ARG);
+		lp->replace_pvs = dm_pool_alloc(cmd->mem, sizeof(char *) * lp->replace_pv_count);
+		if (!lp->replace_pvs)
+			return_0;
+
+		i = 0;
+		dm_list_iterate_items(group, &cmd->arg_value_groups) {
+			if (!grouped_arg_is_set(group->arg_values, replace_ARG))
+				continue;
+			if (!(tmp_str = grouped_arg_str_value(group->arg_values,
+							      replace_ARG,
+							      NULL))) {
+				log_error("Failed to get '--replace' argument");
+				return 0;
+			}
+			if (!(lp->replace_pvs[i++] = dm_pool_strdup(cmd->mem,
+								    tmp_str)))
+				return_0;
+		}
+	} else { /* Mirrors (and some RAID functions) */
 		if (arg_count(cmd, chunksize_ARG)) {
 			log_error("--chunksize is only available with "
 				  "snapshots");
@@ -309,7 +336,7 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 			return_0;
 	}
 
-	if (activation() && lp->segtype->ops->target_present &&
+	if (activation() && lp->segtype && lp->segtype->ops->target_present &&
 	    !lp->segtype->ops->target_present(cmd, NULL, NULL)) {
 		log_error("%s: Required device-mapper target(s) not "
 			  "detected in your kernel", lp->segtype->name);
@@ -1455,6 +1482,9 @@ static int lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *lp
 	if (arg_count(cmd, type_ARG))
 		return lv_raid_reshape(lv, lp->segtype);
 
+	if (arg_count(cmd, replace_ARG))
+		return lv_raid_replace(lv, lp->replace_pvh, lp->pvh);
+
 	log_error("Conversion operation not yet supported.");
 	return 0;
 }
@@ -1646,6 +1676,9 @@ static int _lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return ECMD_FAILED;
 	}
 
+	if (!lp->segtype)
+		lp->segtype = first_seg(lv)->segtype;
+
 	if (lp->merge) {
 		if (!lv_is_cow(lv)) {
 			log_error("Logical volume \"%s\" is not a snapshot",
@@ -1784,6 +1817,12 @@ static int lvconvert_single(struct cmd_context *cmd, struct lvconvert_params *lp
 			goto_bad;
 	} else
 		lp->pvh = &lv->vg->pvs;
+
+	if (lp->replace_pv_count &&
+	    !(lp->replace_pvh = create_pv_list(cmd->mem, lv->vg,
+					       lp->replace_pv_count,
+					       lp->replace_pvs, 0)))
+			goto_bad;
 
 	lp->lv_to_poll = lv;
 	ret = _lvconvert_single(cmd, lv, lp);

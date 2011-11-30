@@ -1653,10 +1653,10 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 				    	    _cmd_data_v4[dmt->type].name,
 					    strerror(errno));
 			else
-				log_error("device-mapper: %s ioctl "
+				log_error("device-mapper: %s ioctl on %s "
 					  "failed: %s",
 					  _cmd_data_v4[dmt->type].name,
-					  strerror(errno));
+					  dmi->name, strerror(errno));
 
 			/*
 			 * It's sometimes worth retrying after EBUSY in case
