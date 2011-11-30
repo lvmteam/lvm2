@@ -341,7 +341,10 @@ static int _lock_for_cluster(struct cmd_context *cmd, unsigned char clvmd_cmd,
 	 * But DMEVENTD_MONITOR_IGNORE is not propagated across the cluster.
 	 */
 	dmeventd_mode = dmeventd_monitor_mode();
-	if (dmeventd_mode != DMEVENTD_MONITOR_IGNORE && dmeventd_mode)
+	if (dmeventd_mode == DMEVENTD_MONITOR_IGNORE)
+		args[1] |= LCK_DMEVENTD_MONITOR_IGNORE;
+
+	if (dmeventd_mode)
 		args[1] |= LCK_DMEVENTD_MONITOR_MODE;
 
 	if (cmd->partial_activation)

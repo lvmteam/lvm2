@@ -132,13 +132,14 @@ static const char *decode_flags(unsigned char flags)
 	static char buf[128];
 	int len;
 
-	len = sprintf(buf, "0x%x ( %s%s%s%s%s%s)", flags,
+	len = sprintf(buf, "0x%x ( %s%s%s%s%s%s%s)", flags,
 		flags & LCK_PARTIAL_MODE	  ? "PARTIAL_MODE|" : "",
 		flags & LCK_MIRROR_NOSYNC_MODE	  ? "MIRROR_NOSYNC|" : "",
 		flags & LCK_DMEVENTD_MONITOR_MODE ? "DMEVENTD_MONITOR|" : "",
 		flags & LCK_ORIGIN_ONLY_MODE ? "ORIGIN_ONLY|" : "",
 		flags & LCK_TEST_MODE ? "TEST|" : "",
-		flags & LCK_CONVERT ? "CONVERT|" : "");
+		flags & LCK_CONVERT ? "CONVERT|" : "",
+		flags & LCK_DMEVENTD_MONITOR_IGNORE ? "DMEVENTD_MONITOR_IGNORE|" : "");
 
 	if (len > 1)
 		buf[len - 2] = ' ';
@@ -512,10 +513,14 @@ int do_lock_lv(unsigned char command, unsigned char lock_flags, char *resource)
 	if (lock_flags & LCK_MIRROR_NOSYNC_MODE)
 		init_mirror_in_sync(1);
 
-	if (lock_flags & LCK_DMEVENTD_MONITOR_MODE)
-		init_dmeventd_monitor(1);
-	else
-		init_dmeventd_monitor(0);
+	if (lock_flags & LCK_DMEVENTD_MONITOR_IGNORE)
+		init_dmeventd_monitor(DMEVENTD_MONITOR_IGNORE);
+	else {
+		if (lock_flags & LCK_DMEVENTD_MONITOR_MODE)
+			init_dmeventd_monitor(1);
+		else
+			init_dmeventd_monitor(0);
+	}
 
 	cmd->partial_activation = (lock_flags & LCK_PARTIAL_MODE) ? 1 : 0;
 
