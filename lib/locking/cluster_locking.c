@@ -337,8 +337,9 @@ static int _lock_for_cluster(struct cmd_context *cmd, unsigned char clvmd_cmd,
 		args[1] |= LCK_TEST_MODE;
 
 	/*
-	 * Must handle tri-state return from dmeventd_monitor_mode.
-	 * But DMEVENTD_MONITOR_IGNORE is not propagated across the cluster.
+	 * We propagate dmeventd_monitor_mode() to clvmd faithfully, since
+	 * dmeventd monitoring is tied to activation which happens inside clvmd
+	 * when locking_type = 3.
 	 */
 	dmeventd_mode = dmeventd_monitor_mode();
 	if (dmeventd_mode == DMEVENTD_MONITOR_IGNORE)
