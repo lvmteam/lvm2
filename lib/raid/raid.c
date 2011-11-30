@@ -183,7 +183,7 @@ static int _raid_add_target_line(struct dev_manager *dm __attribute__((unused)),
 	}
 
 	for (s = 0; s < seg->area_count; s++)
-		if (seg_lv(seg, s)->status & LV_NOTSYNCED)
+		if (seg_lv(seg, s)->status & LV_REBUILD)
 			rebuilds |= 1 << s;
 
 	if (!dm_tree_node_add_raid_target(node, len, _raid_name(seg),

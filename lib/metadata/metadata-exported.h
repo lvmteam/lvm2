@@ -61,7 +61,9 @@
 //#define VIRTUAL		UINT64_C(0x00010000)	/* LV - internal use only */
 #define MIRROR_LOG		UINT64_C(0x00020000)	/* LV */
 #define MIRROR_IMAGE		UINT64_C(0x00040000)	/* LV */
+
 #define LV_NOTSYNCED		UINT64_C(0x00080000)	/* LV */
+#define LV_REBUILD		UINT64_C(0x00100000)	/* LV - internal use only */
 //#define PRECOMMITTED		UINT64_C(0x00200000)	/* VG - internal use only */
 #define CONVERTING		UINT64_C(0x00400000)	/* LV */
 
@@ -788,6 +790,8 @@ int lv_raid_split_and_track(struct logical_volume *lv,
 int lv_raid_merge(struct logical_volume *lv);
 int lv_raid_reshape(struct logical_volume *lv,
 		    const struct segment_type *new_segtype);
+int lv_raid_replace(struct logical_volume *lv, struct dm_list *remove_pvs,
+		    struct dm_list *allocate_pvs);
 
 /* --  metadata/raid_manip.c */
 

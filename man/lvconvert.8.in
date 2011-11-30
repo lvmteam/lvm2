@@ -52,6 +52,14 @@ LogicalVolume[Path]...
 [\-\-version]
 LogicalVolume[Path] [PhysicalVolume[Path]...]
 
+.br
+.B lvconvert
+\-\-replace PhysicalVolume
+[\-h|\-?|\-\-help]
+[\-v|\-\-verbose]
+[\-\-version]
+LogicalVolume[Path] [PhysicalVolume[Path]...]
+
 .SH DESCRIPTION
 lvconvert is used to change the segment type (i.e. linear, mirror, etc) or
 characteristics of a logical volume.  For example, it can add or remove the
@@ -181,6 +189,14 @@ Use \-f if you do not want any replacement.  Additionally, you may use
 viz. activation/mirror_log_fault_policy or
 activation/mirror_device_fault_policy.
 .br
+
+.TP
+.I \-\-replace PhysicalVolume
+Remove the specified device (PhysicalVolume) and replace it with one that is
+available in the volume group or from the specific list provided.  This option
+is only available to RAID segment types (e.g. "raid1", "raid5", etc).
+.br
+
 .SH Examples
 "lvconvert -m1 vg00/lvol1"
 .br
@@ -269,6 +285,14 @@ a number, and it cannot be renamed.
 Merge an image that was detached temporarily from its mirror with 
 the '\-\-trackchanges' argument back into its original mirror and
 bring its contents back up-to-date.
+
+.br
+"lvconvert --replace /dev/sdb1 vg00/my_raid1 /dev/sdf1"
+.br
+Replace the physical volume "/dev/sdb1" in the RAID1 logical volume "my_raid1"
+with the specified physical volume "/dev/sdf1".  Had the argument "/dev/sdf1"
+been left out, lvconvert would attempt to find a suitable device from those
+available in the volume group.
 
 .SH SEE ALSO
 .BR lvm (8),
