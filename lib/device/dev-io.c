@@ -446,9 +446,7 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 		log_verbose("dev_open(%s) called while suspended",
 			    dev_name(dev));
 
-	if (dev->flags & DEV_REGULAR)
-		name = dev_name(dev);
-	else if (!(name = dev_name_confirmed(dev, quiet)))
+	if (!(name = dev_name_confirmed(dev, quiet)))
 		return_0;
 
 #ifdef O_DIRECT_SUPPORT
