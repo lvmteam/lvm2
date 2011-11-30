@@ -63,7 +63,7 @@
 #define MIRROR_IMAGE		UINT64_C(0x00040000)	/* LV */
 
 #define LV_NOTSYNCED		UINT64_C(0x00080000)	/* LV */
-#define LV_REBUILD		UINT64_C(0x00100000)	/* LV - internal use only */
+#define LV_REBUILD		UINT64_C(0x00100000)	/* LV */
 //#define PRECOMMITTED		UINT64_C(0x00200000)	/* VG - internal use only */
 #define CONVERTING		UINT64_C(0x00400000)	/* LV */
 
