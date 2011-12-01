@@ -43,6 +43,14 @@ static int lvchange_permission(struct cmd_context *cmd,
 		return 0;
 	}
 
+	/* Not allowed to change permissions on RAID sub-LVs directly */
+	if ((lv->status & RAID_META) || (lv->status & RAID_IMAGE)) {
+		log_error("Cannot change permissions of RAID %s \"%s\"",
+			  (lv->status & RAID_IMAGE) ? "image" :
+			  "metadata area", lv->name);
+		return 0;
+	}
+
 	if (lv_access & LVM_WRITE) {
 		lv->status |= LVM_WRITE;
 		log_verbose("Setting logical volume \"%s\" read/write",
