@@ -26,20 +26,32 @@
 
 #define RAID_REGION_SIZE 1024
 
-int lv_is_raid_with_tracking(const struct logical_volume *lv)
+static int _lv_is_raid_with_tracking(const struct logical_volume *lv,
+				     struct logical_volume **tracking)
 {
 	uint32_t s;
 	struct lv_segment *seg;
 
-	if (lv->status & RAID) {
-		seg = first_seg(lv);
+	*tracking = NULL;
+	seg = first_seg(lv);
 
-		for (s = 0; s < seg->area_count; s++)
-			if (lv_is_visible(seg_lv(seg, s)) &&
-			    !(seg_lv(seg, s)->status & LVM_WRITE))
-				return 1;
-	}
-	return 0;
+	if (!(lv->status & RAID))
+		return 0;
+
+	for (s = 0; s < seg->area_count; s++)
+		if (lv_is_visible(seg_lv(seg, s)) &&
+		    !(seg_lv(seg, s)->status & LVM_WRITE))
+			*tracking = seg_lv(seg, s);
+
+
+	return *tracking ? 1 : 0;
+}
+
+int lv_is_raid_with_tracking(const struct logical_volume *lv)
+{
+	struct logical_volume *tracking;
+
+	return _lv_is_raid_with_tracking(lv, &tracking);
 }
 
 uint32_t lv_raid_image_count(const struct logical_volume *lv)
@@ -1051,6 +1063,8 @@ int lv_raid_split(struct logical_volume *lv, const char *split_name,
 	struct dm_list removal_list, data_list;
 	struct cmd_context *cmd = lv->vg->cmd;
 	uint32_t old_count = lv_raid_image_count(lv);
+	struct logical_volume *tracking;
+	struct dm_list tracking_pvs;
 
 	dm_list_init(&removal_list);
 	dm_list_init(&data_list);
@@ -1077,6 +1091,25 @@ int lv_raid_split(struct logical_volume *lv, const char *split_name,
 		log_error("Unable to split %s/%s while it is not in-sync.",
 			  lv->vg->name, lv->name);
 		return 0;
+	}
+
+	/*
+	 * We only allow a split while there is tracking if it is to
+	 * complete the split of the tracking sub-LV
+	 */
+	if (_lv_is_raid_with_tracking(lv, &tracking)) {
+		if (!_lv_is_on_pvs(tracking, splittable_pvs)) {
+			log_error("Unable to split additional image from %s "
+				  "while tracking changes for %s",
+				  lv->name, tracking->name);
+			return 0;
+		} else {
+			/* Ensure we only split the tracking image */
+			dm_list_init(&tracking_pvs);
+			splittable_pvs = &tracking_pvs;
+			if (!_get_pv_list_for_lv(tracking, splittable_pvs))
+				return_0;
+		}
 	}
 
 	if (!_raid_extract_images(lv, new_count, splittable_pvs, 1,
@@ -1178,6 +1211,12 @@ int lv_raid_split_and_track(struct logical_volume *lv,
 	if (!_raid_in_sync(lv)) {
 		log_error("Unable to split image from %s/%s while not in-sync",
 			  lv->vg->name, lv->name);
+		return 0;
+	}
+
+	/* Cannot track two split images at once */
+	if (lv_is_raid_with_tracking(lv)) {
+		log_error("Cannot track more than one split image at a time");
 		return 0;
 	}
 
