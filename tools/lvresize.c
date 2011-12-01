@@ -361,6 +361,19 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 		return ECMD_FAILED;
 	}
 
+	if (lvl->lv->status & (RAID_IMAGE | RAID_META)) {
+		log_error("Cannot resize a RAID %s directly",
+			  (lvl->lv->status & RAID_IMAGE) ? "image" :
+			  "metadata area");
+		return ECMD_FAILED;
+	}
+
+	if (lv_is_raid_with_tracking(lvl->lv)) {
+		log_error("Cannot resize %s while it is tracking a split image",
+			  lvl->lv->name);
+		return ECMD_FAILED;
+	}
+
 	if (arg_count(cmd, stripes_ARG)) {
 		if (vg->fid->fmt->features & FMT_SEGMENTS)
 			lp->stripes = arg_uint_value(cmd, stripes_ARG, 1);
