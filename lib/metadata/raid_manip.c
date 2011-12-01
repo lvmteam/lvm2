@@ -26,6 +26,22 @@
 
 #define RAID_REGION_SIZE 1024
 
+int lv_is_raid_with_tracking(const struct logical_volume *lv)
+{
+	uint32_t s;
+	struct lv_segment *seg;
+
+	if (lv->status & RAID) {
+		seg = first_seg(lv);
+
+		for (s = 0; s < seg->area_count; s++)
+			if (lv_is_visible(seg_lv(seg, s)) &&
+			    !(seg_lv(seg, s)->status & LVM_WRITE))
+				return 1;
+	}
+	return 0;
+}
+
 uint32_t lv_raid_image_count(const struct logical_volume *lv)
 {
 	struct lv_segment *seg = first_seg(lv);

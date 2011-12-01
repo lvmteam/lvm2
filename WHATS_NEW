@@ -1,5 +1,7 @@
 Version 2.02.89 - 
 ==================================
+  Don't allow name change of RAID LV while tracking a split image.
+  Do not allow users to change the name of RAID sub-LVs
   Do not allow users to change permissions on RAID sub-LVs
   Support the ability to replace specific devices in a RAID array via lvconvert.
   Add activation/use_linear_target enabled by default.
