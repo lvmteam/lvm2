@@ -2049,6 +2049,11 @@ static void _display_tree_attributes(struct dm_tree_node *node)
 		_out_char(']');
 }
 
+/* FIXME Display table or status line. (Disallow both?) */
+static void _display_tree_targets(struct dm_tree_node *node, unsigned depth)
+{
+}
+
 static void _display_tree_node(struct dm_tree_node *node, unsigned depth,
 			       unsigned first_child __attribute__((unused)),
 			       unsigned last_child, unsigned has_children)
@@ -2109,7 +2114,7 @@ static void _display_tree_node(struct dm_tree_node *node, unsigned depth,
 
 	if (TR_PRINT_TARGETS) {
 		_tree_more[depth + 1] = has_children;
-		// FIXME _display_tree_targets(name, depth + 2);
+		_display_tree_targets(node, depth + 2);
 	}
 }
 
