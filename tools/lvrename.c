@@ -115,6 +115,21 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 		goto error;
 	}
 
+	if (lvl->lv->status & (RAID_IMAGE | RAID_META)) {
+		log_error("Cannot rename a RAID %s directly",
+			  (lvl->lv->status & RAID_IMAGE) ? "image" :
+			  "metadata area");
+		r = ECMD_FAILED;
+		goto error;
+	}
+
+	if (lv_is_raid_with_tracking(lvl->lv)) {
+		log_error("Cannot rename %s while it is tracking a split image",
+			  lvl->lv->name);
+		r = ECMD_FAILED;
+		goto error;
+	}
+
 	if (!lv_rename(cmd, lvl->lv, lv_name_new))
 		goto error;
 
