@@ -94,7 +94,8 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 #define LCK_NONBLOCK	0x00000010U	/* Don't block waiting for lock? */
 #define LCK_HOLD	0x00000020U	/* Hold lock when lock_vol returns? */
 #define LCK_LOCAL	0x00000040U	/* Don't propagate to other nodes */
-#define LCK_CLUSTER_VG	0x00000080U	/* VG is clustered */
+// FIXME: not used in lock bit byte
+//#define LCK_CLUSTER_VG	0x00000080U	/* VG is clustered */
 #define LCK_CACHE	0x00000100U	/* Operation on cache only using P_ lock */
 #define LCK_ORIGIN_ONLY	0x00000200U	/* Operation should bypass any snapshots */
 #define LCK_REVERT	0x00000400U	/* Revert any incomplete change */
@@ -106,10 +107,13 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 #define LCK_MIRROR_NOSYNC_MODE		0x02	/* Mirrors don't require sync */
 #define LCK_DMEVENTD_MONITOR_MODE	0x04	/* Register with dmeventd */
 #define LCK_CONVERT			0x08	/* Convert existing lock */
-#define LCK_ORIGIN_ONLY_MODE		0x20	/* Same as above */
 #define LCK_TEST_MODE			0x10    /* Test mode: No activation */
-#define LCK_REVERT_MODE			0x40	/* Remove inactive tables */
-#define LCK_DMEVENTD_MONITOR_IGNORE     0x80	/* Whether to ignore dmeventd */
+#define LCK_ORIGIN_ONLY_MODE		0x20	/* Same as above */
+#define LCK_DMEVENTD_MONITOR_IGNORE     0x40	/* Whether to ignore dmeventd */
+
+// FIXME: conlict here (CLUSTER_VG is used in lock bits byte)
+#define LCK_REVERT_MODE			0x80	/* Remove inactive tables */
+#define LCK_CLUSTER_VG			0x80	/* VG is clustered */
 
 /*
  * Special cases of VG locks.
