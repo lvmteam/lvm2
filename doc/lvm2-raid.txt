@@ -380,7 +380,7 @@ until all possible changes have been made.  This reduces the likelyhood of bad
 intermediate stages being left due to a failure of operation or machine crash.
 
 RAID1 '--splitmirrors', '--trackchanges', and '--merge' operations
------------------------------------------------------------------
+------------------------------------------------------------------
 This suite of operations is only available to the "raid1" segment type.
 
 Splitting an image from a RAID1 array is almost identical to the removal of
@@ -404,3 +404,72 @@ set as "hidden" again.  Recycling the array (suspend/resume) restores the sub-LV
 to its position in the array and begins the process of sync'ing the changes that
 were made since the time it was split from the array.
 
+RAID device replacement with '--replace'
+----------------------------------------
+This option is available to all RAID segment types.
+
+The '--replace' option can be used to remove a particular device from a RAID
+logical volume and replace it with a different one in one action (CLI command).
+The device device to be removed is specified as the argument to the '--replace'
+option.  This option can be specified more than once in a single command,
+allowing multiple devices to be replaced at the same time - provided the RAID
+logical volume has the necessary redundancy to allow the action.  The devices
+to be used as replacements can also be specified in the command; similar to the
+way allocatable devices are specified during an up-convert.
+
+Example> lvconvert --replace /dev/sdd1 --replace /dev/sde1 vg/lv /dev/sd[bc]1
+
+RAID '--repair'
+---------------
+This 'lvconvert' option is available to all RAID segment types and is described
+under "RAID Fault Handling".
+
+
+RAID Fault Handling
+===================
+RAID is not like traditional LVM mirroring (i.e. the "mirror" segment type).
+LVM mirroring required failed devices to be removed or the logical volume would
+simply hang.  RAID arrays can keep on running with failed devices.  In fact, for
+RAID types other than RAID1 removing a device would mean substituting an error
+target or converting to a lower level RAID (e.g. RAID6 -> RAID5, or RAID4/5 to
+RAID0).  Therefore, rather than removing a failed device unconditionally, the
+user has a couple of options to choose from.
+
+The automated response to a device failure is handled according to the user's
+preference defined in lvm.conf:activation.raid_fault_policy.  The options are:
+    # "warn"    - Use the system log to warn the user that a device in the RAID
+    #             logical volume has failed.  It is left to the user to run
+    #             'lvconvert --repair' manually to remove or replace the failed
+    #             device.  As long as the number of failed devices does not
+    #             exceed the redundancy of the logical volume (1 device for
+    #             raid4/5, 2 for raid6, etc) the logical volume will remain
+    #             usable.
+    #
+    # "remove"  - NOT CURRENTLY IMPLEMENTED OR DOCUMENTED IN example.conf.in.
+    #             Remove the failed device and reduce the RAID logical volume
+    #             accordingly.  If a single device dies in a 3-way mirror,
+    #             remove it and reduce the mirror to 2-way.  If a single device
+    #             dies in a RAID 4/5 logical volume, reshape it to a striped
+    #             volume, etc - RAID 6 -> RAID 4/5 -> RAID 0.  If devices
+    #             cannot be removed for lack of redundancy, fail.
+    #             THIS OPTION CANNOT YET BE IMPLEMENTED BECAUSE RESHAPE IS NOT
+    #             YET SUPPORTED IN linux/drivers/md/dm-raid.c.  The superblock
+    #             does not yet hold enough information to support reshaping.
+    #
+    # "allocate" - Attempt to use any extra physical volumes in the volume
+    #             group as spares and replace faulty devices.
+
+If manual intervention is taken, either in response to the automated solution's
+"warn" mode or simply because dmeventd hadn't run, then the user can call
+'lvconvert --repair vg/lv' and follow the prompts.  They will be prompted
+whether or not to replace the device and cause a full recovery of the failed
+device.
+
+If replacement is chosen via the manual method or "allocate" is the policy taken
+by the automated response, then 'lvconvert --replace' is the mechanism used to
+attempt the replacement of the failed device.
+
+'vgreduce --removemissing' is ineffectual at repairing RAID logical volumes.  It
+will remove the failed device, but the RAID logical volume will simply continue
+to operate with an <unknown> sub-LV.  The user should clear the failed device
+with 'lvconvert --repair'.

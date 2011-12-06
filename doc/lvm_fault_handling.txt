@@ -15,6 +15,12 @@ from (e.g. a power failure, intermittent network outage, block
 relocation, etc).  The policies for handling both types of failures
 is described herein.
 
+Users need to be aware that there are two implementations of RAID1 in LVM.
+The first is defined by the "mirror" segment type.  The second is defined by
+the "raid1" segment type.  The characteristics of each of these are defined
+in lvm.conf under 'mirror_segtype_default' - the configuration setting used to
+identify the default RAID1 implementation used for LVM operations.
+
 Available Operations During a Device Failure
 --------------------------------------------
 When there is a device failure, LVM behaves somewhat differently because
@@ -51,30 +57,36 @@ are as follows:
   a linear, stripe, or snapshot device is located on the failed device
   the command will not proceed without a '--force' option.  The result
   of using the '--force' option is the entire removal and complete
-  loss of the non-redundant logical volume.  Once this operation is
-  complete, the volume group will again have a complete and consistent
-  view of the devices it contains.  Thus, all operations will be
-  permitted - including creation, conversion, and resizing operations.
+  loss of the non-redundant logical volume.  If an image or metadata area
+  of a RAID logical volume is on the failed device, the sub-LV affected is
+  replace with an error target device - appearing as <unknown> in 'lvs'
+  output.  RAID logical volumes cannot be completely repaired by vgreduce -
+  'lvconvert --repair' (listed below) must be used.  Once this operation is
+  complete on volume groups not containing RAID logical volumes, the volume
+  group will again have a complete and consistent view of the devices it
+  contains.  Thus, all operations will be permitted - including creation,
+  conversion, and resizing operations.  It is currently the preferred method
+  to call 'lvconvert --repair' on the individual logical volumes to repair
+  them followed by 'vgreduce --removemissing' to extract the physical volume's
+  representation in the volume group.
 
 - 'lvconvert --repair <VG/LV>':  This action is designed specifically
-  to operate on mirrored logical volumes.  It is used on logical volumes
-  individually and does not remove the faulty device from the volume
-  group.  If, for example, a failed device happened to contain the
-  images of four distinct mirrors, it would be necessary to run
-  'lvconvert --repair' on each of them.  The ultimate result is to leave
-  the faulty device in the volume group, but have no logical volumes
-  referencing it.  In addition to removing mirror images that reside
-  on failed devices, 'lvconvert --repair' can also replace the failed
-  device if there are spare devices available in the volume group.  The
-  user is prompted whether to simply remove the failed portions of the
-  mirror or to also allocate a replacement, if run from the command-line.
-  Optionally, the '--use-policies' flag can be specified which will
-  cause the operation not to prompt the user, but instead respect
+  to operate on individual logical volumes.  If, for example, a failed
+  device happened to contain the images of four distinct mirrors, it would
+  be necessary to run 'lvconvert --repair' on each of them.  The ultimate
+  result is to leave the faulty device in the volume group, but have no logical
+  volumes referencing it.  (This allows for 'vgreduce --removemissing' to
+  removed the physical volumes cleanly.)  In addition to removing mirror or
+  RAID images that reside on failed devices, 'lvconvert --repair' can also
+  replace the failed device if there are spare devices available in the
+  volume group.  The user is prompted whether to simply remove the failed
+  portions of the mirror or to also allocate a replacement, if run from the
+  command-line.  Optionally, the '--use-policies' flag can be specified which
+  will cause the operation not to prompt the user, but instead respect
   the policies outlined in the LVM configuration file - usually,
-  /etc/lvm/lvm.conf.  Once this operation is complete, mirrored logical
-  volumes will be consistent and I/O will be allowed to continue.
-  However, the volume group will still be inconsistent -  due to the
-  refernced-but-missing device/PV - and operations will still be
+  /etc/lvm/lvm.conf.  Once this operation is complete, the logical volumes
+  will be consistent.  However, the volume group will still be inconsistent -
+  due to the refernced-but-missing device/PV - and operations will still be
   restricted to the aformentioned actions until either the device is
   restored or 'vgreduce --removemissing' is run.
 
@@ -98,13 +110,15 @@ following possible exceptions exist:
 
 Automated Target Response to Failures:
 --------------------------------------
-The only LVM target type (i.e. "personality") that has an automated
-response to failures is a mirrored logical volume.  The other target
+The only LVM target types (i.e. "personalities") that have an automated
+response to failures are the mirror and RAID logical volumes.  The other target
 types (linear, stripe, snapshot, etc) will simply propagate the failure.
 [A snapshot becomes invalid if its underlying device fails, but the
 origin will remain valid - presuming the origin device has not failed.]
-There are three types of errors that a mirror can suffer - read, write,
-and resynchronization errors.  Each is described in depth below.
+
+Starting with the "mirror" segment type, there are three types of errors that
+a mirror can suffer - read, write, and resynchronization errors.  Each is
+described in depth below.
 
 Mirror read failures:
 If a mirror is 'in-sync' (i.e. all images have been initialized and
@@ -184,38 +198,5 @@ command are set in the LVM configuration file.  They are:
   choice of when to incure the extra performance costs of replacing
   the failed image.
 
-TODO...
-The appropriate time to take permanent corrective action on a mirror
-should be driven by policy.  There should be a directive that takes
-a time or percentage argument.  Something like the following:
-- mirror_fault_policy_WHEN = "10sec"/"10%"
-A time value would signal the amount of time to wait for transient
-failures to resolve themselves.  The percentage value would signal the
-amount a mirror could become out-of-sync before the faulty device is
-removed.
-
-A mirror cannot be used unless /some/ corrective action is taken,
-however.  One option is to replace the failed mirror image with an
-error target, forgo the use of 'handle_errors', and simply let the
-out-of-sync regions accumulate and be tracked by the log.  Mirrors
-that have more than 2 images would have to "stack" to perform the
-tracking, as each failed image would have to be associated with a
-log.  If the failure is transient, the device would replace the
-error target that was holding its spot and the log that was tracking
-the deltas would be used to quickly restore the portions that changed.
-
-One unresolved issue with the above scheme is how to know which
-regions of the mirror are out-of-sync when a problem occurs.  When
-a write failure occurs in the kernel, the log will contain those
-regions that are not in-sync.  If the log is a disk log, that log
-could continue to be used to track differences.  However, if the
-log was a core log - or if the log device failed at the same time
-as an image device - there would be no way to determine which
-regions are out-of-sync to begin with as we start to track the
-deltas for the failed image.  I don't have a solution for this
-problem other than to only be able to handle errors in this way
-if conditions are right.  These issues will have to be ironed out
-before proceeding.  This could be another case, where it is better
-to handle failures in the kernel by allowing the kernel to store
-updates in various metadata areas.
-...TODO
+RAID logical volume device failures are handled differently from the "mirror"
+segment type.  Discussion of this can be found in lvm2-raid.txt.

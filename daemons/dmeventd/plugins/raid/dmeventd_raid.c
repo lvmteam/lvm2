@@ -24,6 +24,41 @@
 /* FIXME Replace most syslogs with log_error() style messages and add complete context. */
 /* FIXME Reformat to 80 char lines. */
 
+/*
+ * run_repair is a close copy to
+ * plugins/mirror/dmeventd_mirror.c:_remove_failed_devices()
+ */
+static int run_repair(const char *device)
+{
+	int r;
+#define CMD_SIZE 256	/* FIXME Use system restriction */
+	char cmd_str[CMD_SIZE];
+	char *vg = NULL, *lv = NULL, *layer = NULL;
+
+	if (strlen(device) > 200)  /* FIXME Use real restriction */
+		return -1;
+
+	if (!dm_split_lvm_name(dmeventd_lvm2_pool(), device, &vg, &lv, &layer)) {
+		syslog(LOG_ERR, "Unable to determine VG name from %s.",
+		       device);
+		return -1;
+	}
+
+	/* FIXME Is any sanity-checking required on %s? */
+	if (CMD_SIZE <= snprintf(cmd_str, CMD_SIZE, "lvconvert --config devices{ignore_suspended_devices=1} --repair --use-policies %s/%s", vg, lv)) {
+		/* this error should be caught above, but doesn't hurt to check again */
+		syslog(LOG_ERR, "Unable to form LVM command: Device name too long.");
+		return -1;
+	}
+
+	r = dmeventd_lvm2_run(cmd_str);
+
+	if (r != ECMD_PROCESSED)
+		syslog(LOG_INFO, "Repair of RAID LV %s/%s failed.", vg, lv);
+
+	return (r == ECMD_PROCESSED) ? 0 : -1;
+}
+
 static int _process_raid_event(char *params, const char *device)
 {
 	int i, n, failure = 0;
@@ -71,7 +106,7 @@ static int _process_raid_event(char *params, const char *device)
 			break;
 		}
 		if (failure)
-			return 0; /* Don't bother parsing rest of status */
+			return run_repair(device);
 	}
 
 	p = strstr(resync_ratio, "/");
