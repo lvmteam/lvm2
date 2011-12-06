@@ -1424,9 +1424,44 @@ static int is_valid_raid_conversion(const struct segment_type *from_segtype,
 	return 1;
 }
 
+static void _lvconvert_raid_repair_ask(struct cmd_context *cmd, int *replace_dev)
+{
+	const char *dev_policy = NULL;
+
+	int force = arg_count(cmd, force_ARG);
+	int yes = arg_count(cmd, yes_ARG);
+
+	*replace_dev = 0;
+
+	if (arg_count(cmd, use_policies_ARG)) {
+		dev_policy = find_config_tree_str(cmd, "activation/raid_fault_policy", DEFAULT_RAID_FAULT_POLICY);
+
+		if (!strcmp(dev_policy, "allocate") ||
+		    !strcmp(dev_policy, "replace"))
+			*replace_dev = 1;
+		/* else if (!strcmp(dev_policy, "anything_else")) -- ignore */
+		return;
+	}
+
+	if (yes) {
+		*replace_dev = 1;
+		return;
+	}
+
+	if (force != PROMPT)
+		return;
+
+	if (yes_no_prompt("Attempt to replace failed RAID images "
+			  "(requires full device resync)? [y/n]: ") == 'y') {
+		*replace_dev = 1;
+	}
+}
+
 static int lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *lp)
 {
+	int replace = 0;
 	int image_count;
+	struct dm_list *failed_pvs;
 	struct cmd_context *cmd = lv->vg->cmd;
 	struct lv_segment *seg = first_seg(lv);
 
@@ -1484,6 +1519,25 @@ static int lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *lp
 
 	if (arg_count(cmd, replace_ARG))
 		return lv_raid_replace(lv, lp->replace_pvh, lp->pvh);
+
+	if (arg_count(cmd, repair_ARG)) {
+		_lvconvert_raid_repair_ask(cmd, &replace);
+
+		if (replace) {
+			if (!(failed_pvs = _failed_pv_list(lv->vg))) {
+				stack;
+				return ECMD_FAILED;
+			}
+			return lv_raid_replace(lv, failed_pvs, lp->pvh);
+		}
+
+		/* "warn" if policy not set to replace */
+		if (arg_count(cmd, use_policies_ARG))
+			log_error("Issue 'lvconvert --repair %s/%s' to "
+				  "replace failed device",
+				  lv->vg->name, lv->name);
+		return 1;
+	}
 
 	log_error("Conversion operation not yet supported.");
 	return 0;
