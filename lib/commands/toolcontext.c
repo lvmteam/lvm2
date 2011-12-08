@@ -1224,7 +1224,8 @@ static void _init_globals(struct cmd_context *cmd)
 /* Entry point */
 struct cmd_context *create_toolcontext(unsigned is_long_lived,
 				       const char *system_dir,
-				       unsigned set_buffering)
+				       unsigned set_buffering,
+				       unsigned threaded)
 {
 	struct cmd_context *cmd;
 
@@ -1246,6 +1247,7 @@ struct cmd_context *create_toolcontext(unsigned is_long_lived,
 		return NULL;
 	}
 	cmd->is_long_lived = is_long_lived;
+	cmd->threaded = threaded ? 1 : 0;
 	cmd->handles_missing_pvs = 0;
 	cmd->handles_unknown_segments = 0;
 	cmd->independent_metadata_areas = 0;

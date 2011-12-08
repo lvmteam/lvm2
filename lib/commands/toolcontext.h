@@ -85,6 +85,7 @@ struct cmd_context {
 	unsigned partial_activation:1;
 	unsigned si_unit_consistency:1;
 	unsigned metadata_read_only:1;
+	unsigned threaded:1;		/* Set if running within a thread e.g. clvmd */
 
 	unsigned independent_metadata_areas:1;	/* Active formats have MDAs outside PVs */
 
@@ -117,7 +118,8 @@ struct cmd_context {
  */
 struct cmd_context *create_toolcontext(unsigned is_long_lived,
 				       const char *system_dir,
-				       unsigned set_buffering);
+				       unsigned set_buffering,
+				       unsigned threaded);
 void destroy_toolcontext(struct cmd_context *cmd);
 int refresh_toolcontext(struct cmd_context *cmd);
 int refresh_filters(struct cmd_context *cmd);

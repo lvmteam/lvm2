@@ -47,7 +47,7 @@ Version 2.02.89 -
   Fix lv_info open_count test for disabled verify_udev_operations (2.02.86).
   Simplify code for lvm worker thread in clvmd.                     
   Use pthread_barrier to synchronize clvmd threads at startup.
-  Limit clvmd's thread size to 128KiB.
+  Limit clvmd's thread size to 128KiB and ignore activation/reserved_stack.
   Reduce default preallocated stack size to 64KiB.
   Add check for access through NULL pointer when refresh_filter() fails.
   Use pthread condition for SINGLENODE lock implementation.
