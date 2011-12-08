@@ -320,9 +320,10 @@ static int _lock_for_cluster(struct cmd_context *cmd, unsigned char clvmd_cmd,
 	args = alloca(len);
 	strcpy(args + 2, name);
 
-	/* Mask off lock flags */
-	args[0] = flags & (LCK_SCOPE_MASK | LCK_TYPE_MASK | LCK_NONBLOCK | LCK_HOLD); 
-	args[1] = flags & (LCK_LOCAL | LCK_CLUSTER_VG);
+	/* args[0] holds bottom 8 bits except LCK_LOCAL (0x40). */
+	args[0] = flags & (LCK_SCOPE_MASK | LCK_TYPE_MASK | LCK_NONBLOCK | LCK_HOLD | LCK_CLUSTER_VG); 
+
+	args[1] = 0;
 
 	if (flags & LCK_ORIGIN_ONLY)
 		args[1] |= LCK_ORIGIN_ONLY_MODE;
@@ -492,7 +493,7 @@ int lock_resource(struct cmd_context *cmd, const char *resource, uint32_t flags)
 		return 0;
 	}
 
-	log_very_verbose("Locking %s %s %s (%s%s%s%s%s%s%s) (0x%x)", lock_scope, lockname,
+	log_very_verbose("Locking %s %s %s (%s%s%s%s%s%s%s%s) (0x%x)", lock_scope, lockname,
 			 lock_type, lock_scope,
 			 flags & LCK_NONBLOCK ? "|NONBLOCK" : "",
 			 flags & LCK_HOLD ? "|HOLD" : "",
@@ -500,6 +501,7 @@ int lock_resource(struct cmd_context *cmd, const char *resource, uint32_t flags)
 			 flags & LCK_CLUSTER_VG ? "|CLUSTER" : "",
 			 flags & LCK_CACHE ? "|CACHE" : "",
 			 flags & LCK_ORIGIN_ONLY ? "|ORIGIN_ONLY" : "",
+			 flags & LCK_REVERT ? "|REVERT" : "",
 			 flags);
 
 	/* Send a message to the cluster manager */
