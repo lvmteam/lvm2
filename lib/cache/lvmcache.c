@@ -205,6 +205,10 @@ static void _drop_metadata(const char *vgname, int drop_precommitted)
 			info->status |= CACHE_INVALID;
 
 	_free_cached_vgmetadata(vginfo);
+
+	/* VG revert */
+	if (drop_precommitted)
+		vginfo->precommitted = 0;
 }
 
 /*
