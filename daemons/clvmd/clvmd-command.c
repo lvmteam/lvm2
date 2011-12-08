@@ -120,7 +120,7 @@ int do_command(struct local_client *client, struct clvm_header *msg, int msglen,
 
 	case CLVMD_CMD_LOCK_LV:
 		/* This is the biggie */
-		lock_cmd = args[0] & (LCK_NONBLOCK | LCK_HOLD | LCK_SCOPE_MASK | LCK_TYPE_MASK);
+		lock_cmd = args[0];
 		lock_flags = args[1];
 		lockname = &args[2];
 		if (lock_flags & LCK_TEST_MODE)
