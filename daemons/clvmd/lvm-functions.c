@@ -880,7 +880,7 @@ int init_clvm(struct dm_hash_table *excl_uuid)
 	if (!get_initial_state(excl_uuid))
 		log_error("Cannot load initial lock states.");
 
-	if (!(cmd = create_toolcontext(1, NULL, 0))) {
+	if (!(cmd = create_toolcontext(1, NULL, 0, 1))) {
 		log_error("Failed to allocate command context");
 		return 0;
 	}
