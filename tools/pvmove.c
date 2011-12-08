@@ -370,8 +370,8 @@ static int _update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 
 	if (!_suspend_lvs(cmd, first_time, lv_mirr, lvs_changed, vg)) {
 		log_error("ABORTING: Volume group metadata update failed. (first_time: %d)", first_time);
-		//FIXME:  - currently this check breaks pvmove testing
-		if (/*!first_time &&*/ !revert_lv(cmd, lv_mirr))
+		/* FIXME Add a recovery path for first time too. */
+		if (!first_time && !revert_lv(cmd, lv_mirr))
 			stack;
 		return 0;
 	}
