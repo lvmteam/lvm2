@@ -12,7 +12,7 @@
 
 lvm version
 
-v=$abs_top_srcdir/lib/misc/lvm-version.h
+v=$abs_top_builddir/lib/misc/lvm-version.h
 sed -n "/#define LVM_VERSION ./s///p" "$v" | sed "s/ .*//" > expected
 
 lvm pvmove --version|sed -n "1s/.*: *\([0-9][^ ]*\) .*/\1/p" > actual
