@@ -244,6 +244,7 @@ uint32_t get_free_pool_device_id(struct lv_segment *thin_pool_seg)
 	return max_id;
 }
 
+// FIXME Rename this fn: it doesn't extend an already-existing pool AFAICT
 int extend_pool(struct logical_volume *pool_lv, const struct segment_type *segtype,
 		struct alloc_handle *ah, uint32_t stripes, uint32_t stripe_size)
 {
@@ -285,10 +286,8 @@ int extend_pool(struct logical_volume *pool_lv, const struct segment_type *segty
 		 * FIXME: implement lazy clearing when activation is disabled
 		 */
 
-		// FIXME: activate_lv_local_excl is actually wanted here
+		/* pool_lv is a new LV so the VG lock protects us */
 		if (!activate_lv_local(pool_lv->vg->cmd, pool_lv) ||
-		    // FIXME: maybe -zero n  should  allow to recreate same thin pool
-		    // and different option should be used for zero_new_blocks
 		    /* Clear 4KB of metadata device for new thin-pool. */
 		    !set_lv(pool_lv->vg->cmd, pool_lv, UINT64_C(0), 0)) {
 			log_error("Aborting. Failed to wipe pool metadata %s.",
