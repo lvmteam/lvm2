@@ -19,12 +19,13 @@ SOURCES = bitset_t.c matcher_t.c run.c
 TARGETS = run
 
 include $(top_builddir)/make.tmpl
-LDFLAGS += -ldevmapper -lcunit
-
 ifeq ("$(TESTING)", "yes")
+LDFLAGS += -ldevmapper @CUNIT_LIBS@
+CFLAGS += @CUNIT_CFLAGS@
+
 all: unit
-endif
 
 unit: $(TARGETS)
 	@echo Running unit tests
 	LD_LIBRARY_PATH=$(top_builddir)/libdm ./$(TARGETS)
+endif
