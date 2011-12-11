@@ -15,7 +15,7 @@ top_srcdir = @top_srcdir@
 top_builddir = @top_builddir@
 
 VPATH = $(srcdir)
-SOURCES = bitset_t.c matcher_t.c run.c
+SOURCES = bitset_t.c matcher_t.c config_t.c run.c
 TARGETS = run
 
 include $(top_builddir)/make.tmpl
