@@ -324,3 +324,51 @@ int merge_config_tree(struct cmd_context *cmd, struct dm_config_tree *cft,
 	return 1;
 }
 
+static int _putline_fn(const char *line, void *baton) {
+	FILE *fp = baton;
+	fprintf(fp, "%s\n", line);
+	return 1;
+};
+
+int config_write(struct dm_config_tree *cft, const char *file,
+		 int argc, char **argv)
+{
+	const struct dm_config_node *cn;
+	int r = 1;
+	FILE *fp = NULL;
+
+	if (!file) {
+		fp = stdout;
+		file = "stdout";
+	} else if (!(fp = fopen(file, "w"))) {
+		log_sys_error("open", file);
+		return 0;
+	}
+
+	log_verbose("Dumping configuration to %s", file);
+	if (!argc) {
+		if (!dm_config_write_node(cft->root, _putline_fn, fp)) {
+			log_error("Failure while writing to %s", file);
+			r = 0;
+		}
+	} else while (argc--) {
+		if ((cn = dm_config_find_node(cft->root, *argv))) {
+			if (!dm_config_write_node(cn, _putline_fn, fp)) {
+				log_error("Failure while writing to %s", file);
+				r = 0;
+			}
+		} else {
+			log_error("Configuration node %s not found", *argv);
+			r = 0;
+		}
+		argv++;
+	}
+
+out:
+	if (fp && dm_fclose(fp)) {
+		stack;
+		r = 0;
+	}
+
+	return r;
+}
