@@ -62,7 +62,6 @@ struct cs {
 };
 
 struct output_line {
-	FILE *fp;
 	struct dm_pool *mem;
 	dm_putline_fn putline;
 	void *putline_baton;
@@ -356,14 +355,11 @@ static int _line_end(struct output_line *outline)
 	}
 
 	line = dm_pool_end_object(outline->mem);
-	if (outline->putline)
-		outline->putline(line, outline->putline_baton);
-	else {
-		if (!outline->fp)
-			log_print("%s", line);
-		else
-			fprintf(outline->fp, "%s\n", line);
-	}
+
+	if (!outline->putline)
+		return 0;
+
+	outline->putline(line, outline->putline_baton);
 
 	return 1;
 }
@@ -458,7 +454,6 @@ static int _write_config(const struct dm_config_node *n, int only_one,
 int dm_config_write_node(const struct dm_config_node *cn, dm_putline_fn putline, void *baton)
 {
 	struct output_line outline;
-	outline.fp = NULL;
 	if (!(outline.mem = dm_pool_create("config_line", 1024)))
 		return_0;
 	outline.putline = putline;
@@ -471,57 +466,6 @@ int dm_config_write_node(const struct dm_config_node *cn, dm_putline_fn putline,
 	return 1;
 }
 
-int dm_config_write(struct dm_config_tree *cft, const char *file,
-		    int argc, char **argv)
-{
-	const struct dm_config_node *cn;
-	int r = 1;
-	struct output_line outline;
-	outline.fp = NULL;
-	outline.putline = NULL;
-
-// FIXME AGK remove the fopen from libdm before release
-	if (!file)
-		file = "stdout";
-	else if (!(outline.fp = fopen(file, "w"))) {
-		log_sys_error("open", file);
-		return 0;
-	}
-
-	if (!(outline.mem = dm_pool_create("config_line", 1024))) {
-		r = 0;
-		goto_out;
-	}
-
-	log_verbose("Dumping configuration to %s", file);
-	if (!argc) {
-		if (!_write_config(cft->root, 0, &outline, 0)) {
-			log_error("Failure while writing to %s", file);
-			r = 0;
-		}
-	} else while (argc--) {
-		if ((cn = dm_config_find_node(cft->root, *argv))) {
-			if (!_write_config(cn, 1, &outline, 0)) {
-				log_error("Failure while writing to %s", file);
-				r = 0;
-			}
-		} else {
-			log_error("Configuration node %s not found", *argv);
-			r = 0;
-		}
-		argv++;
-	}
-
-	dm_pool_destroy(outline.mem);
-
-out:
-	if (outline.fp && dm_fclose(outline.fp)) {
-		stack;
-		r = 0;
-	}
-
-	return r;
-}
 
 /*
  * parser

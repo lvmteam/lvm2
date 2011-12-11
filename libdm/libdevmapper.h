@@ -1346,9 +1346,6 @@ struct dm_config_tree *dm_config_insert_cascaded_tree(struct dm_config_tree *fir
 
 void dm_config_destroy(struct dm_config_tree *cft);
 
-int dm_config_write(struct dm_config_tree *cft, const char *file,
-		    int argc, char **argv);
-
 typedef int (*dm_putline_fn)(const char *line, void *baton);
 int dm_config_write_node(const struct dm_config_node *cn, dm_putline_fn putline, void *baton);
 

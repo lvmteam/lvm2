@@ -32,6 +32,9 @@ int read_config_fd(struct dm_config_tree *cft, struct device *dev,
 		   off_t offset, size_t size, off_t offset2, size_t size2,
 		   checksum_fn_t checksum_fn, uint32_t checksum);
 
+int config_write(struct dm_config_tree *cft, const char *file,
+		 int argc, char **argv);
+
 int read_config_file(struct dm_config_tree *cft);
 
 int merge_config_tree(struct cmd_context *cmd, struct dm_config_tree *cft,
