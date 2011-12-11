@@ -1111,7 +1111,8 @@ int dm_config_get_uint32(const struct dm_config_node *cn, const char *path,
 	if (!n || !n->v || n->v->type != DM_CFG_INT)
 		return 0;
 
-	*result = n->v->v.i;
+	if (result)
+		*result = n->v->v.i;
 	return 1;
 }
 
@@ -1125,7 +1126,8 @@ int dm_config_get_uint64(const struct dm_config_node *cn, const char *path,
 	if (!n || !n->v || n->v->type != DM_CFG_INT)
 		return 0;
 
-	*result = (uint64_t) n->v->v.i;
+	if (result)
+		*result = (uint64_t) n->v->v.i;
 	return 1;
 }
 
@@ -1139,7 +1141,8 @@ int dm_config_get_str(const struct dm_config_node *cn, const char *path,
 	if (!n || !n->v || n->v->type != DM_CFG_STRING)
 		return 0;
 
-	*result = n->v->v.str;
+	if (result)
+		*result = n->v->v.str;
 	return 1;
 }
 
@@ -1154,7 +1157,8 @@ int dm_config_get_list(const struct dm_config_node *cn, const char *path,
 	if (!n || !n->v)
 		return 0;
 
-	*result = n->v;
+	if (result)
+		*result = n->v;
 	return 1;
 }
 
@@ -1167,7 +1171,8 @@ int dm_config_get_section(const struct dm_config_node *cn, const char *path,
 	if (!n || n->v)
 		return 0;
 
-	*result = n;
+	if (result)
+		*result = n;
 	return 1;
 }
 
