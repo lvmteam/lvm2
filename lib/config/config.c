@@ -364,7 +364,6 @@ int config_write(struct dm_config_tree *cft, const char *file,
 		argv++;
 	}
 
-out:
 	if (fp && dm_fclose(fp)) {
 		stack;
 		r = 0;
