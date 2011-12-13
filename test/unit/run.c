@@ -3,8 +3,8 @@
 
 #define DECL(n) \
 	extern CU_TestInfo n ## _list[]; \
-	int n ## _init(); \
-	int n ## _fini();
+	int n ## _init(void); \
+	int n ## _fini(void);
 #define USE(n) { (char*) #n, n##_init, n##_fini, n##_list }
 
 DECL(bitset);
@@ -18,7 +18,7 @@ CU_SuiteInfo suites[] = {
 	CU_SUITE_INFO_NULL
 };
 
-int main() {
+int main(int argc, char **argv) {
 	CU_initialize_registry();
 	CU_register_suites(suites);
 	CU_basic_set_mode(CU_BRM_VERBOSE);

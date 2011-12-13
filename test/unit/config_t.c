@@ -15,14 +15,17 @@
 #include "libdevmapper.h"
 #include <CUnit/CUnit.h>
 
+int config_init(void);
+int config_fini(void);
+
 static struct dm_pool *mem;
 
-int config_init() {
+int config_init(void) {
 	mem = dm_pool_create("config test", 1024);
 	return mem == NULL;
 }
 
-int config_fini() {
+int config_fini(void) {
 	dm_pool_destroy(mem);
 	return 0;
 }
@@ -45,12 +48,12 @@ static const char *conf =
 	"    }\n"
 	"}\n";
 
-static void test_parse()
+static void test_parse(void)
 {
 	struct dm_config_tree *tree = dm_config_from_string(conf);
-	struct dm_config_value *value;
+	const struct dm_config_value *value;
 
-	CU_ASSERT(tree);
+	CU_ASSERT((long) tree);
 	CU_ASSERT(dm_config_has_node(tree->root, "id"));
 	CU_ASSERT(dm_config_has_node(tree->root, "physical_volumes"));
 	CU_ASSERT(dm_config_has_node(tree->root, "physical_volumes/pv0"));
@@ -77,11 +80,11 @@ static void test_parse()
 	dm_config_destroy(tree);
 }
 
-static void test_clone()
+static void test_clone(void)
 {
 	struct dm_config_tree *tree = dm_config_from_string(conf);
 	struct dm_config_node *n = dm_config_clone_node(tree, tree->root, 1);
-	struct dm_config_value *value;
+	const struct dm_config_value *value;
 
 	/* Check that the nodes are actually distinct. */
 	CU_ASSERT(n != tree->root);
@@ -112,6 +115,8 @@ static void test_clone()
 	CU_ASSERT(value->next == NULL); /* an empty list */
 	CU_ASSERT(dm_config_get_list(n, "status", &value));
 	CU_ASSERT(value->next != NULL); /* a non-empty list */
+
+	dm_config_destroy(tree);
 }
 
 CU_TestInfo config_list[] = {
@@ -119,4 +124,3 @@ CU_TestInfo config_list[] = {
 	{ (char*)"clone", test_clone },
 	CU_TEST_INFO_NULL
 };
-

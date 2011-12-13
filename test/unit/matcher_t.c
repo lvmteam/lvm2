@@ -33,27 +33,28 @@ int regex_fini(void);
 
 static struct dm_pool *mem = NULL;
 
-int regex_init() {
+int regex_init(void) {
 	mem = dm_pool_create("bitset test", 1024);
 	return mem == NULL;
 }
 
-int regex_fini() {
+int regex_fini(void) {
 	dm_pool_destroy(mem);
 	return 0;
 }
 
 static struct dm_regex *make_scanner(const char **rx)
 {
+	struct dm_regex *scanner;
 	int nrx = 0;
 	for (; rx[nrx]; ++nrx);
 
-	struct dm_regex *scanner = dm_regex_create(mem, rx, nrx);
+	scanner = dm_regex_create(mem, rx, nrx);
 	CU_ASSERT_FATAL(scanner != NULL);
 	return scanner;
 }
 
-static void test_fingerprints() {
+static void test_fingerprints(void) {
 	struct dm_regex *scanner;
 
 	scanner = make_scanner(dev_patterns);
@@ -63,7 +64,7 @@ static void test_fingerprints() {
 	CU_ASSERT_EQUAL(dm_regex_fingerprint(scanner), 0xeed8ceb8);
 }
 
-static void test_matching() {
+static void test_matching(void) {
 	struct dm_regex *scanner;
 	int i;
 
