@@ -24,17 +24,17 @@ enum {
 
 static struct dm_pool *mem;
 
-int bitset_init() {
+int bitset_init(void) {
 	mem = dm_pool_create("bitset test", 1024);
 	return mem == NULL;
 }
 
-int bitset_fini() {
+int bitset_fini(void) {
 	dm_pool_destroy(mem);
 	return 0;
 }
 
-static void test_get_next()
+static void test_get_next(void)
 {
         int i, j, last = 0, first;
         dm_bitset_t bs = dm_bitset_create(mem, NR_BITS);
@@ -68,7 +68,7 @@ static void bit_flip(dm_bitset_t bs, int bit)
                 dm_bit_set(bs, bit);
 }
 
-static void test_equal()
+static void test_equal(void)
 {
         dm_bitset_t bs1 = dm_bitset_create(mem, NR_BITS);
         dm_bitset_t bs2 = dm_bitset_create(mem, NR_BITS);
@@ -92,7 +92,7 @@ static void test_equal()
         }
 }
 
-static void test_and()
+static void test_and(void)
 {
         dm_bitset_t bs1 = dm_bitset_create(mem, NR_BITS);
         dm_bitset_t bs2 = dm_bitset_create(mem, NR_BITS);
@@ -131,4 +131,3 @@ CU_TestInfo bitset_list[] = {
 	{ (char*)"and", test_and },
 	CU_TEST_INFO_NULL
 };
-
