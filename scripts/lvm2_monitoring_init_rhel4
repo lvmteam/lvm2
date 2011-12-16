@@ -34,7 +34,7 @@ start()
 	VGS=`vgs --noheadings -o name --config 'log{command_names=0 prefix="  "}' 2> /dev/null`
 	for vg in $VGS
 	do
-	    action "Starting monitoring for VG $vg:" $VGCHANGE --monitor y $vg || ret=$?
+	    action "Starting monitoring for VG $vg:" $VGCHANGE --monitor y --config 'log{command_names=0 prefix="  "}' $vg || ret=$?
 	done
 
 	return $ret
@@ -52,7 +52,7 @@ stop()
 	VGS=`vgs --noheadings -o name --config 'log{command_names=0 prefix="  "}' 2> /dev/null`
 	for vg in $VGS
 	do
-	    action "Stopping monitoring for VG $vg:" $VGCHANGE --monitor n $vg || ret=$?
+	    action "Stopping monitoring for VG $vg:" $VGCHANGE --monitor n --config 'log{command_names=0 prefix="  "}' $vg || ret=$?
 	done
 	return $ret
 }
