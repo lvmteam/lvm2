@@ -48,6 +48,18 @@ static const char *conf =
 	"    }\n"
 	"}\n";
 
+static const char *overlay =
+	"id = \"yoda-soda\"\n"
+	"flags = [\"FOO\"]\n"
+	"physical_volumes {\n"
+	"    pv1 {\n"
+	"        id = \"hgfe-dcba\"\n"
+	"    }\n"
+	"    pv3 {\n"
+	"        id = \"dbcd-efgh\"\n"
+	"    }\n"
+	"}\n";
+
 static void test_parse(void)
 {
 	struct dm_config_tree *tree = dm_config_from_string(conf);
@@ -119,8 +131,26 @@ static void test_clone(void)
 	dm_config_destroy(tree);
 }
 
+static void test_cascade()
+{
+	struct dm_config_tree *t1 = dm_config_from_string(conf),
+		              *t2 = dm_config_from_string(overlay),
+		              *tree = dm_config_insert_cascaded_tree(t2, t1);
+
+	CU_ASSERT(!strcmp(dm_config_tree_find_str(tree, "id", "foo"), "yoda-soda"));
+	CU_ASSERT(!strcmp(dm_config_tree_find_str(tree, "idt", "foo"), "foo"));
+
+	CU_ASSERT(!strcmp(dm_config_tree_find_str(tree, "physical_volumes/pv0/bb", "foo"), "foo"));
+	CU_ASSERT(!strcmp(dm_config_tree_find_str(tree, "physical_volumes/pv1/id", "foo"), "hgfe-dcba"));
+	CU_ASSERT(!strcmp(dm_config_tree_find_str(tree, "physical_volumes/pv3/id", "foo"), "dbcd-efgh"));
+
+	dm_config_destroy(t1);
+	dm_config_destroy(t2);
+}
+
 CU_TestInfo config_list[] = {
 	{ (char*)"parse", test_parse },
 	{ (char*)"clone", test_clone },
+	{ (char*)"cascade", test_cascade },
 	CU_TEST_INFO_NULL
 };
