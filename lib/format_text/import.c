@@ -49,12 +49,12 @@ const char *text_vgname_import(const struct format_type *fmt,
 
 	_init_text_import();
 
-	if (!(cft = dm_config_create(NULL, 0)))
+	if (!(cft = config_file_open(NULL, 0)))
 		return_NULL;
 
-	if ((!dev && !read_config_file(cft)) ||
-	    (dev && !read_config_fd(cft, dev, offset, size,
-				    offset2, size2, checksum_fn, checksum)))
+	if ((!dev && !config_file_read(cft)) ||
+	    (dev && !config_file_read_fd(cft, dev, offset, size,
+					 offset2, size2, checksum_fn, checksum)))
 		goto_out;
 
 	/*
@@ -72,7 +72,7 @@ const char *text_vgname_import(const struct format_type *fmt,
 	}
 
       out:
-	destroy_config_tree(cft);
+	config_file_destroy(cft);
 	return vgname;
 }
 
@@ -94,12 +94,12 @@ struct volume_group *text_vg_import_fd(struct format_instance *fid,
 	*desc = NULL;
 	*when = 0;
 
-	if (!(cft = dm_config_create(file, 0)))
+	if (!(cft = config_file_open(file, 0)))
 		return_NULL;
 
-	if ((!dev && !read_config_file(cft)) ||
-	    (dev && !read_config_fd(cft, dev, offset, size,
-				    offset2, size2, checksum_fn, checksum))) {
+	if ((!dev && !config_file_read(cft)) ||
+	    (dev && !config_file_read_fd(cft, dev, offset, size,
+					 offset2, size2, checksum_fn, checksum))) {
 		log_error("Couldn't read volume group metadata.");
 		goto out;
 	}
@@ -119,7 +119,7 @@ struct volume_group *text_vg_import_fd(struct format_instance *fid,
 	}
 
       out:
-	destroy_config_tree(cft);
+	config_file_destroy(cft);
 	return vg;
 }
 

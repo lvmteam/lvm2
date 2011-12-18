@@ -23,19 +23,23 @@ struct cmd_context;
 
 int override_config_tree_from_string(struct cmd_context *cmd,
 				     const char *config_settings);
-void destroy_config_tree(struct dm_config_tree *cft);
 struct dm_config_tree *remove_overridden_config_tree(struct cmd_context *cmd);
 
 typedef uint32_t (*checksum_fn_t) (uint32_t initial, const uint8_t *buf, uint32_t size);
 
-int read_config_fd(struct dm_config_tree *cft, struct device *dev,
-		   off_t offset, size_t size, off_t offset2, size_t size2,
-		   checksum_fn_t checksum_fn, uint32_t checksum);
-
+struct dm_config_tree *config_file_open(const char *filename, int keep_open);
+int config_file_read_fd(struct dm_config_tree *cft, struct device *dev,
+			off_t offset, size_t size, off_t offset2, size_t size2,
+			checksum_fn_t checksum_fn, uint32_t checksum);
+	int config_file_read(struct dm_config_tree *cft);
 int config_write(struct dm_config_tree *cft, const char *file,
 		 int argc, char **argv);
+void config_file_destroy(struct dm_config_tree *cft);
 
-int read_config_file(struct dm_config_tree *cft);
+time_t config_file_timestamp(struct dm_config_tree *cft);
+int config_file_changed(struct dm_config_tree *cft);
+int config_file_check(struct dm_config_tree *cft, const char **filename, struct stat *info);
+
 
 int merge_config_tree(struct cmd_context *cmd, struct dm_config_tree *cft,
 		      struct dm_config_tree *newdata);

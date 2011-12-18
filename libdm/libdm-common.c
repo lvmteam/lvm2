@@ -900,7 +900,7 @@ static int _stack_node_op(node_op_t type, const char *dev_name, uint32_t major,
 				break; /* no other DEL ops */
 			}
 		}
-	else if ((type == NODE_RENAME))
+	else if (type == NODE_RENAME)
 		/*
 		 * Ignore any outstanding operations if renaming it.
 		 *

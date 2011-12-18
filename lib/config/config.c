@@ -29,13 +29,128 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <ctype.h>
+#include <assert.h>
 
-void destroy_config_tree(struct dm_config_tree *cft)
+struct config_file {
+	time_t timestamp;
+	off_t st_size;
+	char *filename;
+	int exists;
+	int keep_open;
+	struct device *dev;
+};
+
+/*
+ * public interface
+ */
+struct dm_config_tree *config_file_open(const char *filename, int keep_open)
 {
-	struct device *dev = dm_config_get_custom(cft);
+	struct dm_config_tree *cft = dm_config_create();
+	struct config_file *cf;
+	if (!cft)
+		return NULL;
 
-	if (dev)
-		dev_close(dev);
+	cf = dm_pool_zalloc(cft->mem, sizeof(struct config_file));
+	if (!cf) goto fail;
+
+	cf->timestamp = 0;
+	cf->exists = 0;
+	cf->keep_open = keep_open;
+	dm_config_set_custom(cft, cf);
+
+	if (filename &&
+	    !(cf->filename = dm_pool_strdup(cft->mem, filename))) {
+		log_error("Failed to duplicate filename.");
+		goto fail;
+	}
+
+	return cft;
+fail:
+	dm_config_destroy(cft);
+	return NULL;
+}
+
+/*
+ * Doesn't populate filename if the file is empty.
+ */
+int config_file_check(struct dm_config_tree *cft, const char **filename, struct stat *info)
+{
+	struct config_file *cf = dm_config_get_custom(cft);
+	struct stat _info;
+
+	if (!info)
+		info = &_info;
+
+	if (stat(cf->filename, info)) {
+		log_sys_error("stat", cf->filename);
+		cf->exists = 0;
+		return 0;
+	}
+
+	if (!S_ISREG(info->st_mode)) {
+		log_error("%s is not a regular file", cf->filename);
+		cf->exists = 0;
+		return 0;
+	}
+
+	cf->exists = 1;
+	cf->timestamp = info->st_ctime;
+	cf->st_size = info->st_size;
+
+	if (info->st_size == 0)
+		log_verbose("%s is empty", cf->filename);
+	else if (filename)
+		*filename = cf->filename;
+
+	return 1;
+}
+
+/*
+ * Return 1 if config files ought to be reloaded
+ */
+int config_file_changed(struct dm_config_tree *cft)
+{
+	struct config_file *cf = dm_config_get_custom(cft);
+	struct stat info;
+
+	if (!cf->filename)
+		return 0;
+
+	if (stat(cf->filename, &info) == -1) {
+		/* Ignore a deleted config file: still use original data */
+		if (errno == ENOENT) {
+			if (!cf->exists)
+				return 0;
+			log_very_verbose("Config file %s has disappeared!",
+					 cf->filename);
+			goto reload;
+		}
+		log_sys_error("stat", cf->filename);
+		log_error("Failed to reload configuration files");
+		return 0;
+	}
+
+	if (!S_ISREG(info.st_mode)) {
+		log_error("Configuration file %s is not a regular file",
+			  cf->filename);
+		goto reload;
+	}
+
+	/* Unchanged? */
+	if (cf->timestamp == info.st_ctime && cf->st_size == info.st_size)
+		return 0;
+
+      reload:
+	log_verbose("Detected config file change to %s", cf->filename);
+	return 1;
+}
+
+void config_file_destroy(struct dm_config_tree *cft)
+{
+	struct config_file *cf = dm_config_get_custom(cft);
+
+	if (cf && cf->dev)
+		dev_close(cf->dev);
 
 	dm_config_destroy(cft);
 }
@@ -74,9 +189,9 @@ int override_config_tree_from_string(struct cmd_context *cmd,
 	return 0;
 }
 
-int read_config_fd(struct dm_config_tree *cft, struct device *dev,
-		   off_t offset, size_t size, off_t offset2, size_t size2,
-		   checksum_fn_t checksum_fn, uint32_t checksum)
+int config_file_read_fd(struct dm_config_tree *cft, struct device *dev,
+			off_t offset, size_t size, off_t offset2, size_t size2,
+			checksum_fn_t checksum_fn, uint32_t checksum)
 {
 	const char *fb, *fe;
 	int r = 0;
@@ -137,38 +252,44 @@ int read_config_fd(struct dm_config_tree *cft, struct device *dev,
 	return r;
 }
 
-int read_config_file(struct dm_config_tree *cft)
+int config_file_read(struct dm_config_tree *cft)
 {
 	const char *filename = NULL;
-	struct device *dev = dm_config_get_custom(cft);
+	struct config_file *cf = dm_config_get_custom(cft);
 	struct stat info;
 	int r;
 
-	if (!dm_config_check_file(cft, &filename, &info))
+	if (!config_file_check(cft, &filename, &info))
 		return_0;
 
 	/* Nothing to do.  E.g. empty file. */
 	if (!filename)
 		return 1;
 
-	if (!dev) {
-		if (!(dev = dev_create_file(filename, NULL, NULL, 1)))
+	if (!cf->dev) {
+		if (!(cf->dev = dev_create_file(filename, NULL, NULL, 1)))
 			return_0;
 
-		if (!dev_open_readonly_buffered(dev))
+		if (!dev_open_readonly_buffered(cf->dev))
 			return_0;
 	}
 
-	dm_config_set_custom(cft, dev);
-	r = read_config_fd(cft, dev, 0, (size_t) info.st_size, 0, 0,
-			   (checksum_fn_t) NULL, 0);
+	r = config_file_read_fd(cft, cf->dev, 0, (size_t) info.st_size, 0, 0,
+				(checksum_fn_t) NULL, 0);
 
-	if (!dm_config_keep_open(cft)) {
-		dev_close(dev);
-		dm_config_set_custom(cft, NULL);
+	if (!cf->keep_open) {
+		dev_close(cf->dev);
+		cf->dev = NULL;
 	}
 
 	return r;
+}
+
+time_t config_file_timestamp(struct dm_config_tree *cft)
+{
+	struct config_file *cf = dm_config_get_custom(cft);
+	assert(cf);
+	return cf->timestamp;
 }
 
 const struct dm_config_node *find_config_tree_node(struct cmd_context *cmd,

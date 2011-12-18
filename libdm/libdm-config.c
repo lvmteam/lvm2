@@ -50,17 +50,6 @@ struct parser {
 	struct dm_pool *mem;
 };
 
-struct cs {
-	struct dm_config_tree cft;
-	struct dm_pool *mem;
-	time_t timestamp;
-	off_t st_size;
-	char *filename;
-	int exists;
-	int keep_open; // FIXME AGK Remove this before release
-	void *custom; /* LVM uses this for a device pointer */
-};
-
 struct output_line {
 	struct dm_pool *mem;
 	dm_putline_fn putline;
@@ -100,12 +89,9 @@ static int _tok_match(const char *str, const char *b, const char *e)
 	return !(*str || (b != e));
 }
 
-/*
- * public interface
- */
-struct dm_config_tree *dm_config_create(const char *filename, int keep_open)
+struct dm_config_tree *dm_config_create()
 {
-	struct cs *c;
+	struct dm_config_tree *cft;
 	struct dm_pool *mem = dm_pool_create("config", 10 * 1024);
 
 	if (!mem) {
@@ -113,54 +99,31 @@ struct dm_config_tree *dm_config_create(const char *filename, int keep_open)
 		return 0;
 	}
 
-	if (!(c = dm_pool_zalloc(mem, sizeof(*c)))) {
+	if (!(cft = dm_pool_zalloc(mem, sizeof(*cft)))) {
 		log_error("Failed to allocate config tree.");
 		dm_pool_destroy(mem);
 		return 0;
 	}
-
-	c->mem = mem;
-	c->cft.root = (struct dm_config_node *) NULL;
-	c->cft.cascade = NULL;
-	c->timestamp = 0;
-	c->exists = 0;
-	c->keep_open = keep_open;
-	c->custom = NULL;
-	if (filename &&
-	    !(c->filename = dm_pool_strdup(c->mem, filename))) {
-		log_error("Failed to duplicate filename.");
-		dm_pool_destroy(mem);
-		return 0;
-	}
-
-	return &c->cft;
+	cft->root = NULL;
+	cft->cascade = NULL;
+	cft->custom = NULL;
+	cft->mem = mem;
+	return cft;
 }
 
 void dm_config_set_custom(struct dm_config_tree *cft, void *custom)
 {
-	struct cs *c = (struct cs *) cft;
-
-	c->custom = custom;
+	cft->custom = custom;
 }
 
 void *dm_config_get_custom(struct dm_config_tree *cft)
 {
-	struct cs *c = (struct cs *) cft;
-
-	return c->custom;
-}
-
-int dm_config_keep_open(struct dm_config_tree *cft)
-{
-	struct cs *c = (struct cs *) cft;
-
-	return c->keep_open;
+	return cft->custom;
 }
 
 void dm_config_destroy(struct dm_config_tree *cft)
 {
-	struct cs *c = (struct cs *) cft;
-	dm_pool_destroy(c->mem);
+	dm_pool_destroy(cft->mem);
 }
 
 /*
@@ -194,12 +157,11 @@ int dm_config_parse(struct dm_config_tree *cft, const char *start, const char *e
 {
 	/* TODO? if (start == end) return 1; */
 
-	struct cs *c = (struct cs *) cft;
 	struct parser *p;
-	if (!(p = dm_pool_alloc(c->mem, sizeof(*p))))
+	if (!(p = dm_pool_alloc(cft->mem, sizeof(*p))))
 		return_0;
 
-	p->mem = c->mem;
+	p->mem = cft->mem;
 	p->fb = start;
 	p->fe = end;
 	p->tb = p->te = p->fb;
@@ -216,7 +178,7 @@ struct dm_config_tree *dm_config_from_string(const char *config_settings)
 {
 	struct dm_config_tree *cft;
 
-	if (!(cft = dm_config_create(NULL, 0)))
+	if (!(cft = dm_config_create()))
 		return_NULL;
 
 	if (!dm_config_parse(cft, config_settings, config_settings + strlen(config_settings))) {
@@ -225,88 +187,6 @@ struct dm_config_tree *dm_config_from_string(const char *config_settings)
 	}
 
 	return cft;
-}
-
-/*
- * Doesn't populate filename if the file is empty.
- */
-int dm_config_check_file(struct dm_config_tree *cft, const char **filename, struct stat *info)
-{
-	struct cs *c = (struct cs *) cft;
-	struct stat _info;
-
-	if (!info)
-		info = &_info;
-
-	if (stat(c->filename, info)) {
-		log_sys_error("stat", c->filename);
-		c->exists = 0;
-		return 0;
-	}
-
-	if (!S_ISREG(info->st_mode)) {
-		log_error("%s is not a regular file", c->filename);
-		c->exists = 0;
-		return 0;
-	}
-
-	c->exists = 1;
-	c->timestamp = info->st_ctime;
-	c->st_size = info->st_size;
-
-	if (info->st_size == 0)
-		log_verbose("%s is empty", c->filename);
-	else if (filename)
-		*filename = c->filename;
-
-	return 1;
-}
-
-time_t dm_config_timestamp(struct dm_config_tree *cft)
-{
-	struct cs *c = (struct cs *) cft;
-
-	return c->timestamp;
-}
-
-/*
- * Return 1 if config files ought to be reloaded
- */
-int dm_config_changed(struct dm_config_tree *cft)
-{
-	struct cs *c = (struct cs *) cft;
-	struct stat info;
-
-	if (!c->filename)
-		return 0;
-
-	if (stat(c->filename, &info) == -1) {
-		/* Ignore a deleted config file: still use original data */
-		if (errno == ENOENT) {
-			if (!c->exists)
-				return 0;
-			log_very_verbose("Config file %s has disappeared!",
-					 c->filename);
-			goto reload;
-		}
-		log_sys_error("stat", c->filename);
-		log_error("Failed to reload configuration files");
-		return 0;
-	}
-
-	if (!S_ISREG(info.st_mode)) {
-		log_error("Configuration file %s is not a regular file",
-			  c->filename);
-		goto reload;
-	}
-
-	/* Unchanged? */
-	if (c->timestamp == info.st_ctime && c->st_size == info.st_size)
-		return 0;
-
-      reload:
-	log_verbose("Detected config file change to %s", c->filename);
-	return 1;
 }
 
 static int _line_start(struct output_line *outline)
@@ -1242,24 +1122,22 @@ struct dm_config_node *dm_config_clone_node_with_mem(struct dm_pool *mem, const 
 
 struct dm_config_node *dm_config_clone_node(struct dm_config_tree *cft, const struct dm_config_node *node, int sib)
 {
-	struct cs *c = (struct cs *) cft;
-	return dm_config_clone_node_with_mem(c->mem, node, sib);
+	return dm_config_clone_node_with_mem(cft->mem, node, sib);
 }
 
 struct dm_config_node *dm_config_create_node(struct dm_config_tree *cft, const char *key)
 {
-	struct cs *c = (struct cs *) cft;
 	struct dm_config_node *cn;
 
-	if (!(cn = _create_node(c->mem))) {
+	if (!(cn = _create_node(cft->mem))) {
 		log_error("Failed to create config node.");
 		return NULL;
 	}
-	if (!(cn->key = dm_pool_strdup(c->mem, key))) {
+	if (!(cn->key = dm_pool_strdup(cft->mem, key))) {
 		log_error("Failed to create config node's key.");
 		return NULL;
 	}
-	if (!(cn->v = _create_value(c->mem))) {
+	if (!(cn->v = _create_value(cft->mem))) {
 		log_error("Failed to create config node's value.");
 		return NULL;
 	}
@@ -1272,12 +1150,10 @@ struct dm_config_node *dm_config_create_node(struct dm_config_tree *cft, const c
 
 struct dm_config_value *dm_config_create_value(struct dm_config_tree *cft)
 {
-	struct cs *c = (struct cs *) cft;
-	return _create_value(c->mem);
+	return _create_value(cft->mem);
 }
 
 struct dm_pool *dm_config_memory(struct dm_config_tree *cft)
 {
-	struct cs *c = (struct cs *) cft;
-	return c->mem;
+	return cft->mem;
 }

@@ -122,10 +122,10 @@ int persistent_filter_load(struct dev_filter *f, struct dm_config_tree **cft_out
 		return_0;
 	}
 
-	if (!(cft = dm_config_create(pf->file, 1)))
+	if (!(cft = config_file_open(pf->file, 1)))
 		return_0;
 
-	if (!read_config_file(cft))
+	if (!config_file_read(cft))
 		goto_out;
 
 	_read_array(pf, cft, "persistent_filter_cache/valid_devices",
@@ -147,7 +147,7 @@ int persistent_filter_load(struct dev_filter *f, struct dm_config_tree **cft_out
 	if (r && cft_out)
 		*cft_out = cft;
 	else
-		destroy_config_tree(cft);
+		config_file_destroy(cft);
 	return r;
 }
 
@@ -271,7 +271,7 @@ out:
 	fcntl_unlock_file(lockfd);
 
 	if (cft)
-		destroy_config_tree(cft);
+		config_file_destroy(cft);
 
 	return r;
 }
