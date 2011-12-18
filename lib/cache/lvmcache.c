@@ -85,7 +85,7 @@ static void _free_cached_vgmetadata(struct lvmcache_vginfo *vginfo)
 
 	/* Release also cached config tree */
 	if (vginfo->cft) {
-		destroy_config_tree(vginfo->cft);
+		dm_config_destroy(vginfo->cft);
 		vginfo->cft = NULL;
 	}
 

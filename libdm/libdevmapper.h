@@ -1321,16 +1321,15 @@ struct dm_config_node {
 struct dm_config_tree {
 	struct dm_config_node *root;
 	struct dm_config_tree *cascade;
+	struct dm_pool *mem;
+	void *custom;
 };
 
-struct dm_config_tree *dm_config_create(const char *filename, int keep_open);
+struct dm_config_tree *dm_config_create(void);
 struct dm_config_tree *dm_config_from_string(const char *config_settings);
 int dm_config_parse(struct dm_config_tree *cft, const char *start, const char *end);
 
 void *dm_config_get_custom(struct dm_config_tree *cft);
-int dm_config_check_file(struct dm_config_tree *cft, const char **filename, struct stat *info);
-int dm_config_keep_open(struct dm_config_tree *ctf);
-
 void dm_config_set_custom(struct dm_config_tree *cft, void *custom);
 
 /*
@@ -1348,9 +1347,6 @@ void dm_config_destroy(struct dm_config_tree *cft);
 
 typedef int (*dm_putline_fn)(const char *line, void *baton);
 int dm_config_write_node(const struct dm_config_node *cn, dm_putline_fn putline, void *baton);
-
-time_t dm_config_timestamp(struct dm_config_tree *cft);
-int dm_config_changed(struct dm_config_tree *cft);
 
 struct dm_config_node *dm_config_find_node(struct dm_config_node *cn, const char *path);
 int dm_config_has_node(const struct dm_config_node *cn, const char *path);

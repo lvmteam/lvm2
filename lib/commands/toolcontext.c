@@ -500,7 +500,7 @@ static int _load_config_file(struct cmd_context *cmd, const char *tag)
 		return 0;
 	}
 
-	if (!(cfl->cft = dm_config_create(config_file, 0))) {
+	if (!(cfl->cft = config_file_open(config_file, 0))) {
 		log_error("config_tree allocation failed");
 		return 0;
 	}
@@ -512,14 +512,14 @@ static int _load_config_file(struct cmd_context *cmd, const char *tag)
 			goto out;
 		}
 		log_sys_error("stat", config_file);
-		destroy_config_tree(cfl->cft);
+		config_file_destroy(cfl->cft);
 		return 0;
 	}
 
 	log_very_verbose("Loading config file: %s", config_file);
-	if (!read_config_file(cfl->cft)) {
+	if (!config_file_read(cfl->cft)) {
 		log_error("Failed to load config file %s", config_file);
-		destroy_config_tree(cfl->cft);
+		config_file_destroy(cfl->cft);
 		return 0;
 	}
 
@@ -540,7 +540,7 @@ static int _init_lvm_conf(struct cmd_context *cmd)
 {
 	/* No config file if LVM_SYSTEM_DIR is empty */
 	if (!*cmd->system_dir) {
-		if (!(cmd->cft = dm_config_create(NULL, 0))) {
+		if (!(cmd->cft = config_file_open(NULL, 0))) {
 			log_error("Failed to create config tree");
 			return 0;
 		}
@@ -573,7 +573,7 @@ static struct dm_config_tree *_merge_config_files(struct cmd_context *cmd, struc
 
 	/* Replace temporary duplicate copy of lvm.conf */
 	if (cft->root) {
-		if (!(cft = dm_config_create(NULL, 0))) {
+		if (!(cft = config_file_open(NULL, 0))) {
 			log_error("Failed to create config tree");
 			return 0;
 		}
@@ -602,7 +602,7 @@ int config_files_changed(struct cmd_context *cmd)
 	struct config_tree_list *cfl;
 
 	dm_list_iterate_items(cfl, &cmd->config_files) {
-		if (dm_config_changed(cfl->cft))
+		if (config_file_changed(cfl->cft))
 			return 1;
 	}
 
@@ -627,11 +627,11 @@ static struct dm_config_tree *_destroy_tag_configs(struct cmd_context *cmd)
 	dm_list_iterate_items(cfl, &cmd->config_files) {
 		if (cfl->cft == cmd->cft)
 			cmd->cft = NULL;
-		destroy_config_tree(cfl->cft);
+		config_file_destroy(cfl->cft);
 	}
 
 	if (cmd->cft) {
-		destroy_config_tree(cmd->cft);
+		config_file_destroy(cmd->cft);
 		cmd->cft = NULL;
 	}
 
@@ -852,7 +852,7 @@ static int _init_filters(struct cmd_context *cmd, unsigned load_persistent_cache
 	 */
 	if (load_persistent_cache && !cmd->is_long_lived &&
 	    !stat(dev_cache, &st) &&
-	    (st.st_ctime > dm_config_timestamp(cmd->cft)) &&
+	    (st.st_ctime > config_file_timestamp(cmd->cft)) &&
 	    !persistent_filter_load(f4, NULL))
 		log_verbose("Failed to load existing device cache from %s",
 			    dev_cache);
