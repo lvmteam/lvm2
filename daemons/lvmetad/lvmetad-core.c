@@ -175,7 +175,7 @@ static response vg_by_uuid(lvmetad_state *s, request r)
 
 	metadata = cft->root;
 
-	res.cft = dm_config_create(NULL, 0);
+	res.cft = dm_config_create();
 
 	/* The response field */
 	res.cft->root = n = dm_config_create_node(res.cft, "response");
@@ -295,7 +295,7 @@ static int update_metadata(lvmetad_state *s, const char *_vgid, struct dm_config
 		goto out;
 	}
 
-	cft = dm_config_create(NULL, 0);
+	cft = dm_config_create();
 	cft->root = dm_config_clone_node(cft, metadata, 0);
 	vgid = dm_config_find_str(cft->root, "metadata/id", NULL);
 
