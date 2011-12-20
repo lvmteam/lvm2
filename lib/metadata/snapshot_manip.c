@@ -208,6 +208,10 @@ int vg_remove_snapshot(struct logical_volume *cow)
 	cow->snapshot = NULL;
 	lv_set_visible(cow);
 
+	/* format1 must do the change in one step, with the commit last. */
+	if (!(origin->vg->fid->fmt->features & FMT_MDAS))
+		return 1;
+
 	if (!vg_write(origin->vg))
 		return_0;
 	if (!suspend_lv(origin->vg->cmd, origin)) {
