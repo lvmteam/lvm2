@@ -1,5 +1,7 @@
 Version 2.02.89 - 
 ==================================
+  Issue deprecation warning when removing last lvm1-format snapshot.
+  Reinstate support for snapshot removal with lvm1 format. (2.02.86)
   Add policy based automated repair of RAID logical volumes
   Don't allow two images to be split and tracked from a RAID LV at one time
   Don't allow size change of RAID LV that is tracking changes for a split image
