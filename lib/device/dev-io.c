@@ -449,17 +449,6 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 	else if (!(name = dev_name_confirmed(dev, quiet)))
 		return_0;
 
-	if (!(dev->flags & DEV_REGULAR)) {
-		if (stat(name, &buf) < 0) {
-			log_sys_error("%s: stat failed", name);
-			return 0;
-		}
-		if (buf.st_rdev != dev->dev) {
-			log_error("%s: device changed", name);
-			return 0;
-		}
-	}
-
 #ifdef O_DIRECT_SUPPORT
 	if (direct) {
 		if (!(dev->flags & DEV_O_DIRECT_TESTED))
