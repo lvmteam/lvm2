@@ -285,23 +285,40 @@ static int _adjust_policy_params(struct cmd_context *cmd,
 	percent_t percent;
 	int policy_threshold, policy_amount;
 
-	policy_threshold =
-		find_config_tree_int(cmd, "activation/snapshot_autoextend_threshold",
-				     DEFAULT_SNAPSHOT_AUTOEXTEND_THRESHOLD) * PERCENT_1;
-	policy_amount =
-		find_config_tree_int(cmd, "activation/snapshot_autoextend_percent",
-				     DEFAULT_SNAPSHOT_AUTOEXTEND_PERCENT);
+	if (lv_is_thin_pool(lv)) {
+		policy_threshold =
+			find_config_tree_int(cmd, "activation/thin_pool_autoextend_threshold",
+					     DEFAULT_THIN_POOL_AUTOEXTEND_THRESHOLD) * PERCENT_1;
+		policy_amount =
+			find_config_tree_int(cmd, "activation/thin_pool_autoextend_percent",
+					     DEFAULT_THIN_POOL_AUTOEXTEND_PERCENT);
+	} else {
+		policy_threshold =
+			find_config_tree_int(cmd, "activation/snapshot_autoextend_threshold",
+					     DEFAULT_SNAPSHOT_AUTOEXTEND_THRESHOLD) * PERCENT_1;
+		policy_amount =
+			find_config_tree_int(cmd, "activation/snapshot_autoextend_percent",
+					     DEFAULT_SNAPSHOT_AUTOEXTEND_PERCENT);
+	}
 
 	if (policy_threshold >= PERCENT_100)
 		return 1; /* nothing to do */
 
-	if (!lv_snapshot_percent(lv, &percent))
-		return_0;
-
-	if (!(PERCENT_0 < percent && percent < PERCENT_100) || percent <= policy_threshold)
-		return 1; /* nothing to do */
+	if (lv_is_thin_pool(lv)) {
+		if (!lv_thin_pool_percent(lv, &percent))
+			return_0;
+		if (!(PERCENT_0 < percent && percent <= PERCENT_100) ||
+		    percent <= policy_threshold)
+			return 1; /* nothing to do */
+	} else {
+		if (!lv_snapshot_percent(lv, &percent))
+			return_0;
+		if (!(PERCENT_0 < percent && percent < PERCENT_100) || percent <= policy_threshold)
+			return 1; /* nothing to do */
+	}
 
 	lp->extents = policy_amount;
+
 	return 1;
 }
 
@@ -399,8 +416,9 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 	lv = lvl->lv;
 
 	if (use_policy) {
-		if (!lv_is_cow(lv)) {
-			log_error("Can't use policy-based resize for non-snapshot volumes.");
+		if (!lv_is_cow(lv) &&
+		    !lv_is_thin_pool(lv)) {
+			log_error("Policy-based resize is supported only for snapshot and thin pool volumes.");
 			return ECMD_FAILED;
 		}
 		_adjust_policy_params(cmd, lv, lp);
