@@ -800,7 +800,7 @@ static void _read_desc(struct dm_pool *mem,
 	int old_suppress;
 
 	old_suppress = log_suppress(1);
-	d = dm_config_find_str(cft->root, "description", "");
+	d = dm_config_find_str_allow_empty(cft->root, "description", "");
 	log_suppress(old_suppress);
 	*desc = dm_pool_strdup(mem, d);
 
@@ -819,7 +819,7 @@ static const char *_read_vgname(const struct format_type *fmt,
 
 	old_suppress = log_suppress(2);
 	*creation_host = dm_pool_strdup(mem,
-					dm_config_find_str(cft->root,
+					dm_config_find_str_allow_empty(cft->root,
 							"creation_host", ""));
 	log_suppress(old_suppress);
 
