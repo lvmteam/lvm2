@@ -372,19 +372,6 @@ static int _thin_add_target_line(struct dev_manager *dm,
 		return 0;
 	}
 
-#if 0
-{
-	/* If we would need to activate 'to be deleted' thin LVs */
-	struct lv_thin_message *tmsg;
-	dm_list_iterate_items(tmsg, &first_seg(seg->pool_lv)->thin_messages)
-		/* If this node is going to be deleted - use the error target */
-		if ((tmsg->type == DM_THIN_MESSAGE_DELETE) &&
-		    (tmsg->u.delete_id == seg->device_id)) {
-			device_id = DM_THIN_ERROR_DEVICE_ID;
-			break;
-		}
-}
-#endif
 	if (!dm_tree_node_add_thin_target(node, len, pool_dlid, device_id))
 		return_0;
 
