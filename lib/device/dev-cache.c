@@ -259,6 +259,13 @@ static int _compare_paths(const char *path0, const char *path1)
 	s0 = &p0[0] + 1;
 	s1 = &p1[0] + 1;
 
+	/*
+	 * If we reach here, both paths are the same length.
+	 * Now skip past identical path components.
+	 */
+	while (*s0 && *s0 == *s1)
+		s0++, s1++;
+
 	/* We prefer symlinks - they exist for a reason!
 	 * So we prefer a shorter path before the first symlink in the name.
 	 * FIXME Configuration option to invert this? */
