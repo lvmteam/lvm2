@@ -3030,6 +3030,54 @@ int dm_tree_node_add_thin_target(struct dm_tree_node *node,
 	return 1;
 }
 
+
+int dm_get_status_thin_pool(struct dm_pool *mem, const char *params,
+			    struct dm_status_thin_pool **status)
+{
+	struct dm_status_thin_pool *s;
+
+	if (!(s = dm_pool_zalloc(mem, sizeof(struct dm_status_thin_pool)))) {
+		log_error("Failed to allocate thin_pool status structure.");
+		return 0;
+	}
+
+	if (sscanf(params, "%" PRIu64 " %" PRIu64 "/%" PRIu64 " %" PRIu64 "/%" PRIu64,
+		   &s->transaction_id,
+		   &s->used_meta_blocks,
+		   &s->total_meta_blocks,
+		   &s->used_data_blocks,
+		   &s->total_data_blocks) != 5) {
+		log_error("Failed to parse thin pool params: %s.", params);
+		return 0;
+	}
+
+	*status = s;
+
+	return 1;
+}
+
+int dm_get_status_thin(struct dm_pool *mem, const char *params,
+		       struct dm_status_thin **status)
+{
+	struct dm_status_thin *s;
+
+	if (!(s = dm_pool_zalloc(mem, sizeof(struct dm_status_thin)))) {
+		log_error("Failed to allocate thin status structure.");
+		return 0;
+	}
+
+	if (sscanf(params, "%" PRIu64 " %" PRIu64,
+		   &s->mapped_sectors,
+		   &s->highest_mapped_sector) != 2) {
+		log_error("Failed to parse thin params: %s.", params);
+		return 0;
+	}
+
+	*status = s;
+
+	return 1;
+}
+
 static int _add_area(struct dm_tree_node *node, struct load_segment *seg, struct dm_tree_node *dev_node, uint64_t offset)
 {
 	struct seg_area *area;
