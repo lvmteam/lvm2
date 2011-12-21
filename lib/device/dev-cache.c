@@ -54,6 +54,18 @@ static struct {
 
 static int _insert(const char *path, int rec, int check_with_udev_db);
 
+/* Setup non-zero members of passed zeroed 'struct device' */
+static void _dev_init(struct device *dev, int max_error_count)
+{
+	dev->block_size = -1;
+	dev->fd = -1;
+	dev->read_ahead = -1;
+	dev->max_error_count = max_error_count;
+
+	dm_list_init(&dev->aliases);
+	dm_list_init(&dev->open_list);
+}
+
 struct device *dev_create_file(const char *filename, struct device *dev,
 			       struct str_list *alias, int use_malloc)
 {
@@ -76,7 +88,6 @@ struct device *dev_create_file(const char *filename, struct device *dev,
 				dm_free(alias);
 				return NULL;
 			}
-			dev->flags = DEV_ALLOCED;
 		} else {
 			if (!(dev = _zalloc(sizeof(*dev)))) {
 				log_error("struct device allocation failed");
@@ -97,19 +108,9 @@ struct device *dev_create_file(const char *filename, struct device *dev,
 		return NULL;
 	}
 
-	dev->flags |= DEV_REGULAR;
-	dm_list_init(&dev->aliases);
+	_dev_init(dev, NO_DEV_ERROR_COUNT_LIMIT);
+	dev->flags = DEV_REGULAR | ((use_malloc) ? DEV_ALLOCED : 0);
 	dm_list_add(&dev->aliases, &alias->list);
-	dev->end = UINT64_C(0);
-	dev->dev = 0;
-	dev->fd = -1;
-	dev->open_count = 0;
-	dev->error_count = 0;
-	dev->max_error_count = NO_DEV_ERROR_COUNT_LIMIT;
-	dev->block_size = -1;
-	dev->read_ahead = -1;
-	memset(dev->pvid, 0, sizeof(dev->pvid));
-	dm_list_init(&dev->open_list);
 
 	return dev;
 }
@@ -122,17 +123,9 @@ static struct device *_dev_create(dev_t d)
 		log_error("struct device allocation failed");
 		return NULL;
 	}
-	dev->flags = 0;
-	dm_list_init(&dev->aliases);
+
+	_dev_init(dev, dev_disable_after_error_count());
 	dev->dev = d;
-	dev->fd = -1;
-	dev->open_count = 0;
-	dev->max_error_count = dev_disable_after_error_count();
-	dev->block_size = -1;
-	dev->read_ahead = -1;
-	dev->end = UINT64_C(0);
-	memset(dev->pvid, 0, sizeof(dev->pvid));
-	dm_list_init(&dev->open_list);
 
 	return dev;
 }
