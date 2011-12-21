@@ -59,6 +59,8 @@ struct lv_layer {
 	const char *old_name;
 };
 
+static const char thin_layer[] = "tpool";
+
 static int _read_only_lv(struct logical_volume *lv)
 {
 	return (!(lv->vg->status & LVM_WRITE) || !(lv->status & LVM_WRITE));
@@ -1140,7 +1142,7 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		/* FIXME code from _create_partial_dtree() should be moved here */
 		if (!_add_lv_to_dtree(dm, dtree, seg_lv(seg, 0), origin_only))
 			return_0;
-		if (!_add_dev_to_dtree(dm, dtree, lv, "tpool"))
+		if (!_add_dev_to_dtree(dm, dtree, lv, thin_layer))
 			return_0;
 	} else if (lv_is_thin_volume(lv) &&
 		   !_add_lv_to_dtree(dm, dtree, seg->pool_lv, origin_only))
@@ -1489,7 +1491,6 @@ static int _add_segment_to_dtree(struct dev_manager *dm,
 	struct lv_segment *seg_present;
 	const char *target_name;
 	struct lv_activate_opts lva;
-	static const char tpool_layer[] = "tpool";
 
 	/* Ensure required device-mapper targets are loaded */
 	seg_present = find_cow(seg->lv) ? : seg;
@@ -1534,11 +1535,11 @@ static int _add_segment_to_dtree(struct dev_manager *dm,
 	} else if (lv_is_cow(seg->lv) && !layer) {
 		if (!_add_new_lv_to_dtree(dm, dtree, seg->lv, laopts, "cow"))
 			return_0;
-	} else if ((layer != tpool_layer) && seg_is_thin(seg)) {
+	} else if ((layer != thin_layer) && seg_is_thin(seg)) {
 		lva = *laopts;
 		lva.real_pool = 1;
 		if (!_add_new_lv_to_dtree(dm, dtree, seg_is_thin_pool(seg) ?
-					  seg->lv : seg->pool_lv, &lva, tpool_layer))
+					  seg->lv : seg->pool_lv, &lva, thin_layer))
 			return_0;
 	} else {
 		if (seg_is_thin_pool(seg) &&
