@@ -30,8 +30,12 @@ ifneq ("@RAID@", "none")
   SUBDIRS += raid
 endif
 
+ifneq ("@THIN@", "none")
+  SUBDIRS += thin
+endif
+
 ifeq ($(MAKECMDGOALS),distclean)
-  SUBDIRS = lvm2 mirror snapshot raid
+  SUBDIRS = lvm2 mirror snapshot raid thin
 endif
 
 include $(top_builddir)/make.tmpl
@@ -39,3 +43,4 @@ include $(top_builddir)/make.tmpl
 snapshot: lvm2
 mirror: lvm2
 raid: lvm2
+thin: lvm2
