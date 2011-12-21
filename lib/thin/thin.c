@@ -474,7 +474,7 @@ int init_multiple_segtypes(struct cmd_context *cmd, struct segtype_library *segl
 		const char name[16];
 		uint32_t flags;
 	} reg_segtypes[] = {
-		{ &_thin_pool_ops, "thin_pool", SEG_THIN_POOL },
+		{ &_thin_pool_ops, "thin-pool", SEG_THIN_POOL },
 		/* FIXME Maybe use SEG_THIN_VOLUME instead of SEG_VIRTUAL */
 		{ &_thin_ops, "thin", SEG_THIN_VOLUME | SEG_VIRTUAL }
 	};

@@ -4450,7 +4450,7 @@ int lv_create_single(struct volume_group *vg,
 	/* Create thin pool first if necessary */
 	if (lp->create_thin_pool) {
 		if (!seg_is_thin_pool(lp) &&
-		    !(lp->segtype = get_segtype_from_string(vg->cmd, "thin_pool")))
+		    !(lp->segtype = get_segtype_from_string(vg->cmd, "thin-pool")))
 			return_0;
 
 		if (!(lv = _lv_create_an_lv(vg, lp, lp->pool)))

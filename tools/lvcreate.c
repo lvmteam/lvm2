@@ -371,7 +371,7 @@ static int _read_size_params(struct lvcreate_params *lp,
 		}
 	} else {
 		/* No virtual size given, so no thin LV to create. */
-		if (seg_is_thin_volume(lp) && !(lp->segtype = get_segtype_from_string(cmd, "thin_pool")))
+		if (seg_is_thin_volume(lp) && !(lp->segtype = get_segtype_from_string(cmd, "thin-pool")))
 			return_0;
 
 		lp->thin = 0;
