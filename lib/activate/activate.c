@@ -689,6 +689,30 @@ int lv_raid_percent(const struct logical_volume *lv, percent_t *percent)
 	return lv_mirror_percent(lv->vg->cmd, lv, 0, percent, NULL);
 }
 
+/*
+ * Returns 1 if percent set, else 0 on failure.
+ */
+int lv_thin_pool_percent(const struct logical_volume *lv, percent_t *percent)
+{
+	int r;
+	struct dev_manager *dm;
+
+	if (!activation())
+		return 0;
+
+	log_debug("Checking thin pool percent for LV %s/%s", lv->vg->name, lv->name);
+
+	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
+		return_0;
+
+	if (!(r = dev_manager_thin_pool_percent(dm, lv, percent)))
+		stack;
+
+	dev_manager_destroy(dm);
+
+	return r;
+}
+
 static int _lv_active(struct cmd_context *cmd, struct logical_volume *lv)
 {
 	struct lvinfo info;
