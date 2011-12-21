@@ -48,7 +48,7 @@ static struct {
 
 } _cache;
 
-#define _alloc(x) dm_pool_zalloc(_cache.mem, (x))
+#define _zalloc(x) dm_pool_zalloc(_cache.mem, (x))
 #define _free(x) dm_pool_free(_cache.mem, (x))
 #define _strdup(x) dm_pool_strdup(_cache.mem, (x))
 
@@ -61,11 +61,11 @@ struct device *dev_create_file(const char *filename, struct device *dev,
 
 	if (allocate) {
 		if (use_malloc) {
-			if (!(dev = dm_malloc(sizeof(*dev)))) {
+			if (!(dev = dm_zalloc(sizeof(*dev)))) {
 				log_error("struct device allocation failed");
 				return NULL;
 			}
-			if (!(alias = dm_malloc(sizeof(*alias)))) {
+			if (!(alias = dm_zalloc(sizeof(*alias)))) {
 				log_error("struct str_list allocation failed");
 				dm_free(dev);
 				return NULL;
@@ -78,11 +78,11 @@ struct device *dev_create_file(const char *filename, struct device *dev,
 			}
 			dev->flags = DEV_ALLOCED;
 		} else {
-			if (!(dev = _alloc(sizeof(*dev)))) {
+			if (!(dev = _zalloc(sizeof(*dev)))) {
 				log_error("struct device allocation failed");
 				return NULL;
 			}
-			if (!(alias = _alloc(sizeof(*alias)))) {
+			if (!(alias = _zalloc(sizeof(*alias)))) {
 				log_error("struct str_list allocation failed");
 				_free(dev);
 				return NULL;
@@ -118,7 +118,7 @@ static struct device *_dev_create(dev_t d)
 {
 	struct device *dev;
 
-	if (!(dev = _alloc(sizeof(*dev)))) {
+	if (!(dev = _zalloc(sizeof(*dev)))) {
 		log_error("struct device allocation failed");
 		return NULL;
 	}
@@ -303,7 +303,7 @@ static int _compare_paths(const char *path0, const char *path1)
 
 static int _add_alias(struct device *dev, const char *path)
 {
-	struct str_list *sl = _alloc(sizeof(*sl));
+	struct str_list *sl = _zalloc(sizeof(*sl));
 	struct str_list *strl;
 	const char *oldpath;
 	int prefer_old = 1;
@@ -788,7 +788,7 @@ int dev_cache_add_dir(const char *path)
 		return 1;
 	}
 
-	if (!(dl = _alloc(sizeof(*dl) + strlen(path) + 1))) {
+	if (!(dl = _zalloc(sizeof(*dl) + strlen(path) + 1))) {
 		log_error("dir_list allocation failed");
 		return 0;
 	}
@@ -814,7 +814,7 @@ int dev_cache_add_loopfile(const char *path)
 		return 1;
 	}
 
-	if (!(dl = _alloc(sizeof(*dl) + strlen(path) + 1))) {
+	if (!(dl = _zalloc(sizeof(*dl) + strlen(path) + 1))) {
 		log_error("dir_list allocation failed for file");
 		return 0;
 	}
