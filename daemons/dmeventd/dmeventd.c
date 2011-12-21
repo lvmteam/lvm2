@@ -739,8 +739,10 @@ static void _monitor_unregister(void *arg)
 			return;
 		}
 	thread->status = DM_THREAD_DONE;
+	pthread_mutex_lock(&_timeout_mutex);
 	UNLINK_THREAD(thread);
 	LINK(thread, &_thread_registry_unused);
+	pthread_mutex_unlock(&_timeout_mutex);
 	_unlock_mutex();
 }
 
@@ -1078,8 +1080,10 @@ static int _unregister_for_event(struct message_data *message_data)
 	 * unlink and terminate its monitoring thread.
 	 */
 	if (!thread->events) {
+		pthread_mutex_lock(&_timeout_mutex);
 		UNLINK_THREAD(thread);
 		LINK(thread, &_thread_registry_unused);
+		pthread_mutex_unlock(&_timeout_mutex);
 	}
 	_unlock_mutex();
 

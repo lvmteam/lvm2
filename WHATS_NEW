@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Fix missing thread list manipulation protection in dmeventd.
   Do not derefence lv pointer in _percent_run() function before NULL check.
   Allow empty strings for description and creation_host config fields.
   Issue deprecation warning when removing last lvm1-format snapshot.
