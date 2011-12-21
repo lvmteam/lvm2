@@ -52,6 +52,9 @@ int dev_manager_snapshot_percent(struct dev_manager *dm,
 int dev_manager_mirror_percent(struct dev_manager *dm,
 			       const struct logical_volume *lv, int wait,
 			       percent_t *percent, uint32_t *event_nr);
+int dev_manager_thin_pool_percent(struct dev_manager *dm,
+				  const struct logical_volume *lv,
+				  percent_t *percent);
 int dev_manager_suspend(struct dev_manager *dm, struct logical_volume *lv,
 			struct lv_activate_opts *laopts, int lockfs, int flush_required);
 int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv,
