@@ -54,9 +54,9 @@ lvcreate -l1 -T --thinpool pool3 $vg
 lvcreate -l1 --type thin $vg/pool4
 lvcreate -l1 --type thin --thinpool $vg/pool5
 lvcreate -l1 --type thin --thinpool pool6 $vg
-lvcreate -l1 --type thin_pool $vg/pool7
-lvcreate -l1 --type thin_pool --thinpool $vg/pool8
-lvcreate -l1 --type thin_pool --thinpool pool9 $vg
+lvcreate -l1 --type thin-pool $vg/pool7
+lvcreate -l1 --type thin-pool --thinpool $vg/pool8
+lvcreate -l1 --type thin-pool --thinpool pool9 $vg
 
 lvremove -ff $vg/pool1 $vg/pool2 $vg/pool3 $vg/pool4 $vg/pool5 $vg/pool6 $vg/pool7 $vg/pool8 $vg/pool9
 check vg_field $vg lv_count 0
@@ -65,7 +65,7 @@ check vg_field $vg lv_count 0
 # Create default pool name
 lvcreate -l1 -T $vg
 lvcreate -l1 --type thin $vg
-lvcreate -l1 --type thin_pool $vg
+lvcreate -l1 --type thin-pool $vg
 
 lvremove -ff $vg/lvol0 $vg/lvol1 $vg/lvol2
 check vg_field $vg lv_count 0
