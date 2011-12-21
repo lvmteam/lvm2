@@ -872,6 +872,30 @@ static int _belong_to_vg(const char *vgname, const char *name)
 
 #endif
 
+int dev_manager_thin_pool_percent(struct dev_manager *dm,
+				  const struct logical_volume *lv,
+				  percent_t *percent)
+{
+	char *name;
+	const char *dlid;
+
+	/*
+	 * Build a name for the top layer.
+	 */
+	if (!(name = dm_build_dm_name(dm->mem, lv->vg->name, lv->name, thin_layer)))
+		return_0;
+
+	if (!(dlid = build_dm_uuid(dm->mem, lv->lvid.s, thin_layer)))
+		return_0;
+
+	log_debug("Getting device status percentage for %s", name);
+	if (!(_percent(dm, name, dlid, "thin-pool", 0, NULL, percent,
+		       NULL, 1)))
+		return_0;
+
+	return 1;
+}
+
 /*************************/
 /*  NEW CODE STARTS HERE */
 /*************************/
