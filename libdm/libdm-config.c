@@ -772,6 +772,12 @@ const char *dm_config_find_str(const struct dm_config_node *cn,
 	return _find_config_str(cn, _find_config_node, path, fail, 0);
 }
 
+const char *dm_config_find_str_allow_empty(const struct dm_config_node *cn,
+					   const char *path, const char *fail)
+{
+	return _find_config_str(cn, _find_config_node, path, fail, 1);
+}
+
 static int64_t _find_config_int64(const void *start, node_lookup_fn find,
 				  const char *path, int64_t fail)
 {
