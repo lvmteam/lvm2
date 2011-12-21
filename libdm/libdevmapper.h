@@ -238,6 +238,29 @@ void *dm_get_next_target(struct dm_task *dmt,
 			 void *next, uint64_t *start, uint64_t *length,
 			 char **target_type, char **params);
 
+/* Parse params from STATUS call for thin_pool target */
+struct dm_pool;
+
+struct dm_status_thin_pool {
+	uint64_t transaction_id;
+	uint64_t used_meta_blocks;
+	uint64_t total_meta_blocks;
+	uint64_t used_data_blocks;
+	uint64_t total_data_blocks;
+};
+
+int dm_get_status_thin_pool(struct dm_pool *mem, const char *params,
+			    struct dm_status_thin_pool **status);
+
+/* Parse params from STATUS call for thin target */
+struct dm_status_thin {
+	uint64_t mapped_sectors;
+	uint64_t highest_mapped_sector;
+};
+
+int dm_get_status_thin(struct dm_pool *mem, const char *params,
+		       struct dm_status_thin **status);
+
 /*
  * Call this to actually run the ioctl.
  */
