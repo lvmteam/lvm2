@@ -1419,6 +1419,7 @@ daemons/dmeventd/plugins/lvm2/Makefile
 daemons/dmeventd/plugins/raid/Makefile
 daemons/dmeventd/plugins/mirror/Makefile
 daemons/dmeventd/plugins/snapshot/Makefile
+daemons/dmeventd/plugins/thin/Makefile
 daemons/lvmetad/Makefile
 doc/Makefile
 doc/example.conf

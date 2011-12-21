@@ -973,20 +973,32 @@ char *get_monitor_dso_path(struct cmd_context *cmd, const char *libpath)
 	return path;
 }
 
+static char *_build_target_uuid(struct cmd_context *cmd, struct logical_volume *lv)
+{
+	const char *layer;
+
+	if (lv_is_thin_pool(lv))
+		layer = "tpool"; /* Monitor "tpool" for the "thin pool". */
+	else if (lv_is_origin(lv))
+		layer = "real"; /* Monitor "real" for "snapshot-origin". */
+	else
+		layer = NULL;
+
+	return build_dm_uuid(cmd->mem, lv->lvid.s, layer);
+}
+
 int target_registered_with_dmeventd(struct cmd_context *cmd, const char *dso,
 				    struct logical_volume *lv, int *pending)
 {
 	char *uuid;
 	enum dm_event_mask evmask = 0;
 	struct dm_event_handler *dmevh;
-
 	*pending = 0;
 
 	if (!dso)
 		return_0;
 
-	/* We always monitor the "real" device, never the "snapshot-origin" itself. */
-	if (!(uuid = build_dm_uuid(cmd->mem, lv->lvid.s, lv_is_origin(lv) ? "real" : NULL)))
+	if (!(uuid = _build_target_uuid(cmd, lv)))
 		return_0;
 
 	if (!(dmevh = _create_dm_event_handler(cmd, uuid, dso, 0, DM_EVENT_ALL_ERRORS)))
@@ -1019,7 +1031,7 @@ int target_register_events(struct cmd_context *cmd, const char *dso, struct logi
 		return_0;
 
 	/* We always monitor the "real" device, never the "snapshot-origin" itself. */
-	if (!(uuid = build_dm_uuid(cmd->mem, lv->lvid.s, lv_is_origin(lv) ? "real" : NULL)))
+	if (!(uuid = _build_target_uuid(cmd, lv)))
 		return_0;
 
 	if (!(dmevh = _create_dm_event_handler(cmd, uuid, dso, timeout,

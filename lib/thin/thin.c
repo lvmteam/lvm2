@@ -21,6 +21,7 @@
 #include "config.h"
 #include "activate.h"
 #include "str_list.h"
+#include "defaults.h"
 
 #ifdef DMEVENTD
 #  include "sharedlib.h"
@@ -297,7 +298,40 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 
 	return 1;
 }
-#endif
+
+static int _thin_pool_target_percent(void **target_state __attribute__((unused)),
+				     percent_t *percent,
+				     struct dm_pool *mem,
+				     struct cmd_context *cmd __attribute__((unused)),
+				     struct lv_segment *seg __attribute__((unused)),
+				     char *params,
+				     uint64_t *total_numerator,
+				     uint64_t *total_denominator)
+{
+	struct dm_status_thin_pool *s;
+	percent_t meta_percent;
+	percent_t data_percent;
+
+	if (!dm_get_status_thin_pool(mem, params, &s))
+		return_0;
+
+	/*
+	 * FIXME: how to handle exhaust of metadata space
+	 * pick the max from data and meta?
+	 * Support for metadata resize is needed.
+	 */
+	meta_percent = make_percent(s->used_meta_blocks,
+				    s->total_meta_blocks);
+	data_percent = make_percent(s->used_data_blocks,
+				    s->total_data_blocks);
+
+	*percent = data_percent;
+	*total_numerator += s->used_data_blocks;
+	*total_denominator += s->total_data_blocks;
+
+	return 1;
+}
+#endif /* DEVMAPPER_SUPPORT */
 
 static const char *_thin_name(const struct lv_segment *seg)
 {
@@ -378,17 +412,6 @@ static int _thin_add_target_line(struct dev_manager *dm,
 	return 1;
 }
 
-static int _thin_target_percent(void **target_state __attribute__((unused)),
-				percent_t *percent,
-				struct dm_pool *mem __attribute__((unused)),
-				struct cmd_context *cmd __attribute__((unused)),
-				struct lv_segment *seg __attribute__((unused)),
-				char *params, uint64_t *total_numerator,
-				uint64_t *total_denominator)
-{
-	return 1;
-}
-
 static int _thin_target_present(struct cmd_context *cmd,
 				const struct lv_segment *seg,
 				unsigned *attributes __attribute__((unused)))
@@ -404,6 +427,42 @@ static int _thin_target_present(struct cmd_context *cmd,
 	return _present;
 }
 
+#  ifdef DMEVENTD
+static const char *_get_thin_dso_path(struct cmd_context *cmd)
+{
+	return get_monitor_dso_path(cmd, find_config_tree_str(cmd, "dmeventd/thin_library",
+							      DEFAULT_DMEVENTD_THIN_LIB));
+}
+
+/* FIXME Cache this */
+static int _target_registered(struct lv_segment *seg, int *pending)
+{
+	return target_registered_with_dmeventd(seg->lv->vg->cmd,
+					       _get_thin_dso_path(seg->lv->vg->cmd),
+					       seg->pool_lv, pending);
+}
+
+/* FIXME This gets run while suspended and performs banned operations. */
+static int _target_set_events(struct lv_segment *seg, int evmask, int set)
+{
+	/* FIXME Make timeout (10) configurable */
+	return target_register_events(seg->lv->vg->cmd,
+				      _get_thin_dso_path(seg->lv->vg->cmd),
+				      seg->pool_lv, evmask, set, 10);
+}
+
+static int _target_register_events(struct lv_segment *seg,
+				   int events)
+{
+	return _target_set_events(seg, events, 1);
+}
+
+static int _target_unregister_events(struct lv_segment *seg,
+				     int events)
+{
+	return _target_set_events(seg, events, 0);
+}
+#  endif /* DMEVENTD */
 #endif
 
 static int _thin_modules_needed(struct dm_pool *mem,
@@ -430,6 +489,7 @@ static struct segtype_handler _thin_pool_ops = {
 	.text_export = _thin_pool_text_export,
 #ifdef DEVMAPPER_SUPPORT
 	.add_target_line = _thin_pool_add_target_line,
+	.target_percent = _thin_pool_target_percent,
 	.target_present = _thin_target_present,
 #endif
 	.modules_needed = _thin_modules_needed,
@@ -442,8 +502,12 @@ static struct segtype_handler _thin_ops = {
 	.text_export = _thin_text_export,
 #ifdef DEVMAPPER_SUPPORT
 	.add_target_line = _thin_add_target_line,
-	.target_percent = _thin_target_percent,
 	.target_present = _thin_target_present,
+#  ifdef DMEVENTD
+	.target_monitored = _target_registered,
+	.target_monitor_events = _target_register_events,
+	.target_unmonitor_events = _target_unregister_events,
+#  endif /* DMEVENTD */
 #endif
 	.modules_needed = _thin_modules_needed,
 	.destroy = _thin_destroy,
@@ -484,9 +548,9 @@ int init_multiple_segtypes(struct cmd_context *cmd, struct segtype_library *segl
 
 #ifdef DEVMAPPER_SUPPORT
 #  ifdef DMEVENTD
-// FIXME		if (_get_thin_dso_path(cmd))
-// FIXME			segtype->flags |= SEG_MONITORED;
-#  endif	/* DMEVENTD */
+		if (_get_thin_dso_path(cmd))
+			segtype->flags |= SEG_MONITORED;
+#  endif /* DMEVENTD */
 #endif
 		if (!lvm_register_segtype(seglib, segtype))
 			return_0;

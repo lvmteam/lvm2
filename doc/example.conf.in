@@ -701,6 +701,15 @@ dmeventd {
 
     snapshot_library = "libdevmapper-event-lvm2snapshot.so"
 
+    # thin_library is the library used when monitoring a thin device.
+    #
+    # "libdevmapper-event-lvm2thin.so" monitors the filling of
+    # pool and emits a warning through syslog when the use of
+    # the pool exceeds 80%. The warning is repeated when 85%, 90% and
+    # 95% of the pool is filled.
+
+    thin_library = "libdevmapper-event-lvm2thin.so"
+
     # Full path of the dmeventd binary.
     #
     # executable = "@DMEVENTD_PATH@"
