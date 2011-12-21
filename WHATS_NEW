@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Drop extra stat call before opening device.
   Reduce number of lstat calls when selecting device alias.
   Add function to inialize common structure device members.
   Always zalloc device structure during initialization.
