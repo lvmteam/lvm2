@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Do not derefence lv pointer in _percent_run() function before NULL check.
   Allow empty strings for description and creation_host config fields.
   Issue deprecation warning when removing last lvm1-format snapshot.
   Reinstate support for snapshot removal with lvm1 format. (2.02.86)

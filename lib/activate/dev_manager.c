@@ -507,7 +507,7 @@ static int _percent_run(struct dev_manager *dm, const char *name,
 	uint64_t start, length;
 	char *type = NULL;
 	char *params = NULL;
-	const struct dm_list *segh = &lv->segments;
+	const struct dm_list *segh = lv ? &lv->segments : NULL;
 	struct lv_segment *seg = NULL;
 	struct segment_type *segtype;
 	int first_time = 1;
