@@ -52,7 +52,6 @@ lvcreate \- create a logical volume in an existing volume group
 .RI { ReadAheadSectors | auto | none }]
 .RB [ \-t | \-\-test ]
 .RB [ \-T | \-\-thin
-.RI [ ThinPoolLogicalVolume { Name | Path }]
 .RB [ \-c | \-\-chunksize
 .IR ChunkSize ]
 .RB [ \-\-poolmetadatasize
@@ -277,7 +276,7 @@ from kernel 3.2 or newer.
 .TP
 .B \-\-type \fISegmentType
 Create a logical volume that uses the specified segment type
-(e.g. "raid5", "mirror", "snapshot", "thin", "thin_pool").
+(e.g. "raid5", "mirror", "snapshot", "thin", "thin-pool").
 Many segment types have a
 commandline switch alias that will enable their use (-s is an alias for
 --type snapshot).  However, this argument must be used when no existing
