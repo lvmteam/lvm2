@@ -42,14 +42,13 @@ struct dso_state {
 	int data_percent_check;
 	uint64_t known_meta_size;
 	uint64_t known_data_size;
-	char *vg, *lv, *layer;
 	char cmd_str[1024];
 };
 
 static int _extend(struct dso_state *state)
 {
 #if THIN_DEBUG
-	syslog(LOG_INFO, "dmeventd executes: %s.", state->cmd_str);
+	syslog(LOG_INFO, "dmeventd executes: %s.\n", state->cmd_str);
 #endif
 	return (dmeventd_lvm2_run(state->cmd_str) == ECMD_PROCESSED);
 }
@@ -159,7 +158,7 @@ void process_event(struct dm_task *dmt,
 	dm_get_next_target(dmt, next, &start, &length, &target_type, &params);
 
 	if (!target_type || (strcmp(target_type, "thin-pool") != 0)) {
-		syslog(LOG_ERR, "Invalid targe type.\n");
+		syslog(LOG_ERR, "Invalid target type.\n");
 		goto out;
 	}
 
@@ -244,18 +243,19 @@ int register_device(const char *device,
 	struct dm_pool *statemem = NULL;
 	struct dso_state *state;
 
-	if (!dmeventd_lvm2_init() ||
-	    !(statemem = dm_pool_create("thin_pool_state", 2048)) ||
+	if (!dmeventd_lvm2_init())
+		goto bad;
+
+	if (!(statemem = dm_pool_create("thin_pool_state", 2048)) ||
 	    !(state = dm_pool_zalloc(statemem, sizeof(*state))) ||
-	    !dm_split_lvm_name(statemem, device, &state->vg, &state->lv,
-			       &state->layer) ||
-	    (dm_snprintf(state->cmd_str, sizeof(state->cmd_str),
-			 "lvextend --use-policies %s/%s", state->vg, state->lv) < 0)) {
-		syslog(LOG_ERR, "Failed to monitor thin %s.\n", device);
+	    !dmeventd_lvm2_command(statemem, state->cmd_str,
+				   sizeof(state->cmd_str),
+				   "lvextend --use-policies",
+				   device)) {
 		if (statemem)
 			dm_pool_destroy(statemem);
-
-		return 0;
+		dmeventd_lvm2_exit();
+		goto bad;
 	}
 
 	state->mem = statemem;
@@ -266,6 +266,10 @@ int register_device(const char *device,
 	syslog(LOG_INFO, "Monitoring thin %s.\n", device);
 
 	return 1;
+bad:
+	syslog(LOG_ERR, "Failed to monitor thin %s.\n", device);
+
+	return 0;
 }
 
 int unregister_device(const char *device,
@@ -276,10 +280,9 @@ int unregister_device(const char *device,
 {
 	struct dso_state *state = *private;
 
+	syslog(LOG_INFO, "No longer monitoring thin %s.\n", device);
 	dm_pool_destroy(state->mem);
 	dmeventd_lvm2_exit();
-
-	syslog(LOG_INFO, "No longer monitoring thin %s.\n", device);
 
 	return 1;
 }
