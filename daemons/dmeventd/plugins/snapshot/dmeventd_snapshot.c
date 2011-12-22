@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2007-2011 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -43,6 +43,7 @@ struct snap_status {
 struct dso_state {
 	int percent_check;
 	int known_size;
+	char cmd_str[1024];
 };
 
 /* FIXME possibly reconcile this with target_percent when we gain
@@ -120,22 +121,9 @@ static int _run(const char *cmd, ...)
         return 1; /* all good */
 }
 
-static int _extend(const char *device)
+static int _extend(const char *cmd)
 {
-	char *vg = NULL, *lv = NULL, *layer = NULL;
-	char cmd_str[1024];
-
-	if (!dm_split_lvm_name(dmeventd_lvm2_pool(), device, &vg, &lv, &layer)) {
-		syslog(LOG_ERR, "Unable to determine VG name from %s.", device);
-		return 0;
-	}
-	if (dm_snprintf(cmd_str, sizeof(cmd_str),
-			"lvextend --use-policies %s/%s", vg, lv) < 0) {
-		syslog(LOG_ERR, "Unable to form LVM command: Device name too long.");
-		return 0;
-	}
-
-	return dmeventd_lvm2_run(cmd_str) == ECMD_PROCESSED;
+	return dmeventd_lvm2_run(cmd) == ECMD_PROCESSED;
 }
 
 static void _umount(const char *device, int major, int minor)
@@ -165,9 +153,9 @@ static void _umount(const char *device, int major, int minor)
 		if (S_ISBLK(st.st_mode) &&
 		    major(st.st_rdev) == major &&
 		    minor(st.st_rdev) == minor) {
-			syslog(LOG_ERR, "Unmounting invalid snapshot %s from %s.", device, words[1]);
+			syslog(LOG_ERR, "Unmounting invalid snapshot %s from %s.\n", device, words[1]);
                         if (!_run(UMOUNT_COMMAND, "-fl", words[1], NULL))
-                                syslog(LOG_ERR, "Failed to umount snapshot %s from %s: %s.",
+                                syslog(LOG_ERR, "Failed to umount snapshot %s from %s: %s.\n",
                                        device, words[1], strerror(errno));
 		}
 	}
@@ -235,8 +223,8 @@ void process_event(struct dm_task *dmt,
 		if (percent >= WARNING_THRESH) /* Print a warning to syslog. */
 			syslog(LOG_WARNING, "Snapshot %s is now %i%% full.\n", device, percent);
 		/* Try to extend the snapshot, in accord with user-set policies */
-		if (!_extend(device))
-			syslog(LOG_ERR, "Failed to extend snapshot %s.", device);
+		if (!_extend(state->cmd_str))
+			syslog(LOG_ERR, "Failed to extend snapshot %s.\n", device);
 	}
 
 out:
@@ -249,17 +237,33 @@ int register_device(const char *device,
 		    int minor __attribute__((unused)),
 		    void **private)
 {
-	struct dso_state **state = (struct dso_state **) private;
-	int r = dmeventd_lvm2_init();
+	struct dso_state *state;
 
-	if (!(*state = dm_malloc(sizeof (struct dso_state))))
-		return 0;
+	if (!dmeventd_lvm2_init())
+		goto out;
 
-	(*state)->percent_check = CHECK_MINIMUM;
-	(*state)->known_size = 0;
+	if (!(state = dm_zalloc(sizeof(*state))))
+		goto bad;
+
+	if (!dmeventd_lvm2_command(dmeventd_lvm2_pool(),
+                                   state->cmd_str, sizeof(state->cmd_str),
+				   "lvextend --use-policies", device))
+		goto bad;
+
+	state->percent_check = CHECK_MINIMUM;
+	state->known_size = 0;
+	*private = state;
 
 	syslog(LOG_INFO, "Monitoring snapshot %s\n", device);
-	return r;
+
+	return 1;
+bad:
+	dm_free(state);
+	dmeventd_lvm2_exit();
+out:
+	syslog(LOG_ERR, "Failed to monitor snapshot %s.\n", device);
+
+	return 0;
 }
 
 int unregister_device(const char *device,
@@ -269,10 +273,10 @@ int unregister_device(const char *device,
 		      void **private)
 {
 	struct dso_state *state = *private;
-	syslog(LOG_INFO, "No longer monitoring snapshot %s\n",
-	       device);
 
+	syslog(LOG_INFO, "No longer monitoring snapshot %s\n", device);
 	dm_free(state);
 	dmeventd_lvm2_exit();
+
 	return 1;
 }
