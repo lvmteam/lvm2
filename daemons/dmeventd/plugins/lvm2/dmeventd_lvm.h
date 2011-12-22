@@ -36,4 +36,7 @@ void dmeventd_lvm2_unlock(void);
 
 struct dm_pool *dmeventd_lvm2_pool(void);
 
+int dmeventd_lvm2_command(struct dm_pool *mem, char *buffer, size_t size,
+			  const char *cmd, const char *device);
+
 #endif /* _DMEVENTD_LVMWRAP_H */

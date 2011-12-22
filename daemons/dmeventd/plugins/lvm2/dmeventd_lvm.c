@@ -151,3 +151,26 @@ int dmeventd_lvm2_run(const char *cmdline)
 	return lvm2_run(_lvm_handle, cmdline);
 }
 
+int dmeventd_lvm2_command(struct dm_pool *mem, char *buffer, size_t size,
+			  const char *cmd, const char *device)
+{
+	char *vg = NULL, *lv = NULL, *layer;
+	int r;
+
+	if (!dm_split_lvm_name(mem, device, &vg, &lv, &layer)) {
+		syslog(LOG_ERR, "Unable to determine VG name from %s.\n",
+		       device);
+		return 0;
+	}
+
+	r = dm_snprintf(buffer, size, "%s %s/%s", cmd, vg, lv);
+
+	dm_pool_free(mem, vg);
+
+	if (r < 0) {
+		syslog(LOG_ERR, "Unable to form LVM command. (too long).\n");
+		return 0;
+	}
+
+	return 1;
+}
