@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2010 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2005-2011 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -133,32 +133,15 @@ static int _remove_failed_devices(const char *device)
 	int r;
 #define CMD_SIZE 256	/* FIXME Use system restriction */
 	char cmd_str[CMD_SIZE];
-	char *vg = NULL, *lv = NULL, *layer = NULL;
 
-	if (strlen(device) > 200)  /* FIXME Use real restriction */
-		return -ENAMETOOLONG;	/* FIXME These return code distinctions are not used so remove them! */
-
-	if (!dm_split_lvm_name(dmeventd_lvm2_pool(), device, &vg, &lv, &layer)) {
-		syslog(LOG_ERR, "Unable to determine VG name from %s.",
-		       device);
-		return -ENOMEM;	/* FIXME Replace with generic error return - reason for failure has already got logged */
-	}
-
-	/* strip off the mirror component designations */
-	layer = strstr(lv, "_mlog");
-	if (layer)
-		*layer = '\0';
-
-	/* FIXME Is any sanity-checking required on %s? */
-	if (CMD_SIZE <= snprintf(cmd_str, CMD_SIZE, "lvconvert --config devices{ignore_suspended_devices=1} --repair --use-policies %s/%s", vg, lv)) {
-		/* this error should be caught above, but doesn't hurt to check again */
-		syslog(LOG_ERR, "Unable to form LVM command: Device name too long.");
+	if (!dmeventd_lvm2_command(dmeventd_lvm2_pool(), cmd_str, sizeof(cmd_str),
+				  "lvconvert --config devices{ignore_suspended_devices=1} "
+				  "--repair --use-policies", device))
 		return -ENAMETOOLONG; /* FIXME Replace with generic error return - reason for failure has already got logged */
-	}
 
 	r = dmeventd_lvm2_run(cmd_str);
 
-	syslog(LOG_INFO, "Repair of mirrored LV %s/%s %s.", vg, lv,
+	syslog(LOG_INFO, "Repair of mirrored device %s %s.", device,
 	       (r == ECMD_PROCESSED) ? "finished successfully" : "failed");
 
 	return (r == ECMD_PROCESSED) ? 0 : -1;
@@ -227,9 +210,12 @@ int register_device(const char *device,
 		    int minor __attribute__((unused)),
 		    void **unused __attribute__((unused)))
 {
-	int r = dmeventd_lvm2_init();
+	if (!dmeventd_lvm2_init())
+		return 0;
+
 	syslog(LOG_INFO, "Monitoring mirror device %s for events.", device);
-	return r;
+
+	return 1;
 }
 
 int unregister_device(const char *device,
@@ -241,5 +227,6 @@ int unregister_device(const char *device,
 	syslog(LOG_INFO, "No longer monitoring mirror device %s for events.",
 	       device);
 	dmeventd_lvm2_exit();
+
 	return 1;
 }

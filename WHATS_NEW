@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Use dmeventd_lvm2_command in dmeventd plugins snapshot, raid, mirror.
   Add helper dmeventd_lvm2_command() into libdevmapper-event-lvm2 library.
   Updated documentation for dmeventd.
   Drop extra stat call before opening device.
