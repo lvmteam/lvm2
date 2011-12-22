@@ -1872,11 +1872,12 @@ out:
 static void usage(char *prog, FILE *file)
 {
 	fprintf(file, "Usage:\n"
-		"%s [-V] [-h] [-d] [-d] [-d] [-f]\n\n"
-		"   -V       Show version of dmeventd\n"
-		"   -h       Show this help information\n"
+		"%s [-d [-d [-d]]] [-f] [-h] [-R] [-V] [-?]\n\n"
 		"   -d       Log debug messages to syslog (-d, -dd, -ddd)\n"
-		"   -f       Don't fork, run in the foreground\n\n", prog);
+		"   -f       Don't fork, run in the foreground\n"
+		"   -h -?    Show this help information\n"
+		"   -R       Restart dmeventd\n"
+		"   -V       Show version of dmeventd\n\n", prog);
 }
 
 int main(int argc, char *argv[])
