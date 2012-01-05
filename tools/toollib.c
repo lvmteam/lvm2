@@ -1630,8 +1630,9 @@ int change_tag(struct cmd_context *cmd, struct volume_group *vg,
 	return 1;
 }
 
-/* Return percents of extents and avoid overflow */
-uint32_t percent_of_extents(uint32_t percents, uint32_t count)
+/* Return percents of extents and avoid overflow, with optional roundup */
+uint32_t percent_of_extents(uint32_t percents, uint32_t count, int roundup)
 {
-	return (uint32_t)((uint64_t)percents * (uint64_t)count / 100);
+	return (uint32_t)(((uint64_t)percents * (uint64_t)count +
+			   ((roundup) ? 99 : 0)) / 100);
 }

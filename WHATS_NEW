@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Supports rounding of percentage (%LV, %VG...) for LV resize upward.
   Use dmeventd_lvm2_command in dmeventd plugins snapshot, raid, mirror.
   Add helper dmeventd_lvm2_command() into libdevmapper-event-lvm2 library.
   Updated documentation for dmeventd.

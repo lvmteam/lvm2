@@ -43,6 +43,7 @@ free space for the specified PhysicalVolume(s) with the suffix %PVS,
 as a percentage of the remaining free space in the Volume Group
 with the suffix %FREE, or (for a snapshot) as a percentage of the total
 space in the Origin Logical Volume with the suffix %ORIGIN.
+The resulting value is rounded upward.
 .TP
 .I \-L, \-\-size [+]LogicalVolumeSize[bBsSkKmMgGtTpPeE]
 Extend or set the logical volume size in units of megabytes.

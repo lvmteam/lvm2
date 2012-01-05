@@ -181,5 +181,5 @@ int lvconvert_poll(struct cmd_context *cmd, struct logical_volume *lv, unsigned 
 int mirror_remove_missing(struct cmd_context *cmd,
 			  struct logical_volume *lv, int force);
 
-uint32_t percent_of_extents(uint32_t percents, uint32_t count);
+uint32_t percent_of_extents(uint32_t percents, uint32_t count, int roundup);
 #endif
