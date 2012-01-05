@@ -464,27 +464,33 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 
 	switch(lp->percent) {
 		case PERCENT_VG:
-			lp->extents = percent_of_extents(lp->extents, vg->extent_count);
+			lp->extents = percent_of_extents(lp->extents, vg->extent_count,
+							 (lp->sign != SIGN_MINUS));
 			break;
 		case PERCENT_FREE:
-			lp->extents = percent_of_extents(lp->extents, vg->free_count);
+			lp->extents = percent_of_extents(lp->extents, vg->free_count,
+							 (lp->sign != SIGN_MINUS));
 			break;
 		case PERCENT_LV:
-			lp->extents = percent_of_extents(lp->extents, lv->le_count);
+			lp->extents = percent_of_extents(lp->extents, lv->le_count,
+							 (lp->sign != SIGN_MINUS));
 			break;
 		case PERCENT_PVS:
 			if (lp->argc) {
 				pv_extent_count = pv_list_extents_free(pvh);
-				lp->extents = percent_of_extents(lp->extents, pv_extent_count);
+				lp->extents = percent_of_extents(lp->extents, pv_extent_count,
+								 (lp->sign != SIGN_MINUS));
 			} else
-				lp->extents = percent_of_extents(lp->extents, vg->extent_count);
+				lp->extents = percent_of_extents(lp->extents, vg->extent_count,
+								 (lp->sign != SIGN_MINUS));
 			break;
 		case PERCENT_ORIGIN:
 			if (!lv_is_cow(lv)) {
 				log_error("Specified LV does not have an origin LV.");
 				return EINVALID_CMD_LINE;
 			}
-			lp->extents = percent_of_extents(lp->extents, origin_from_cow(lv)->le_count);
+			lp->extents = percent_of_extents(lp->extents, origin_from_cow(lv)->le_count,
+							 (lp->sign != SIGN_MINUS));
 			break;
 		case PERCENT_NONE:
 			break;
