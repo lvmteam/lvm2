@@ -131,7 +131,7 @@ static void test_clone(void)
 	dm_config_destroy(tree);
 }
 
-static void test_cascade()
+static void test_cascade(void)
 {
 	struct dm_config_tree *t1 = dm_config_from_string(conf),
 		              *t2 = dm_config_from_string(overlay),
