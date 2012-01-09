@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2012 Red Hat, Inc. All rights reserved.
  *
  * This file is part of the device-mapper userspace tools.
  *
@@ -27,9 +27,10 @@ int add_dev_node(const char *dev_name, uint32_t minor, uint32_t major,
 int rm_dev_node(const char *dev_name, int check_udev, unsigned rely_on_udev);
 int rename_dev_node(const char *old_name, const char *new_name,
 		    int check_udev, unsigned rely_on_udev);
-int get_dev_node_read_ahead(const char *dev_name, uint32_t *read_ahead);
-int set_dev_node_read_ahead(const char *dev_name, uint32_t read_ahead,
-			    uint32_t read_ahead_flags);
+int get_dev_node_read_ahead(const char *dev_name, uint32_t major, uint32_t minor,
+			    uint32_t *read_ahead);
+int set_dev_node_read_ahead(const char *dev_name, uint32_t major, uint32_t minor,
+			    uint32_t read_ahead, uint32_t read_ahead_flags);
 void update_devs(void);
 void selinux_release(void);
 
