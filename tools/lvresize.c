@@ -421,7 +421,8 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 			log_error("Policy-based resize is supported only for snapshot and thin pool volumes.");
 			return ECMD_FAILED;
 		}
-		_adjust_policy_params(cmd, lv, lp);
+		if (!_adjust_policy_params(cmd, lv, lp))
+			return ECMD_FAILED;
 	}
 
 	if (!lv_is_visible(lv)) {
