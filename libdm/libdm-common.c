@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2012 Red Hat, Inc. All rights reserved.
  *
  * This file is part of the device-mapper userspace tools.
  *
@@ -59,6 +59,7 @@ union semun
 
 static char _dm_dir[PATH_MAX] = DEV_DIR DM_DIR;
 static char _sysfs_dir[PATH_MAX] = "/sys/";
+static char _path0[PATH_MAX];           /* path buffer, safe 4kB on stack */
 
 static int _verbose = 0;
 static int _suspended_dev_counter = 0;
@@ -658,12 +659,53 @@ static int _open_dev_node(const char *dev_name)
 	return fd;
 }
 
-int get_dev_node_read_ahead(const char *dev_name, uint32_t *read_ahead)
+int get_dev_node_read_ahead(const char *dev_name, uint32_t major, uint32_t minor,
+			    uint32_t *read_ahead)
 {
+	char buf[24];
+	int len;
 	int r = 1;
 	int fd;
 	long read_ahead_long;
 
+	/*
+	 * If we know the device number, use sysfs if we can.
+	 * Otherwise use BLKRAGET ioctl.
+	 */
+	if (*_sysfs_dir && major != 0) {
+		if (dm_snprintf(_path0, sizeof(_path0), "%sdev/block/%" PRIu32
+				":%" PRIu32 "/bdi/read_ahead_kb", _sysfs_dir,
+				major, minor) < 0) {
+			log_error("Failed to build sysfs_path.");
+			return 0;
+		}
+
+		if ((fd = open(_path0, O_RDONLY, 0)) != -1) {
+			/* Reading from sysfs, expecting number\n */
+			if ((len = read(fd, buf, sizeof(buf))) < 1) {
+				log_sys_error("read", _path0);
+				r = 0;
+			} else {
+				buf[len] = 0; /* kill \n and ensure \0 */
+				*read_ahead = atoi(buf) * 2;
+				log_debug("%s (%d:%d): read ahead is %" PRIu32,
+					  dev_name, major, minor, *read_ahead);
+			}
+
+			if (close(fd))
+				log_sys_debug("close", _path0);
+
+			return r;
+		}
+
+		log_sys_debug("open", _path0);
+		/* Fall back to use dev_name */
+	}
+
+	/*
+	 * Open/close dev_name may block the process
+	 * (i.e. overfilled thin pool volume)
+	 */
 	if (!*dev_name) {
 		log_error("Empty device name passed to BLKRAGET");
 		return 0;
@@ -676,22 +718,63 @@ int get_dev_node_read_ahead(const char *dev_name, uint32_t *read_ahead)
 		log_sys_error("BLKRAGET", dev_name);
 		*read_ahead = 0;
 		r = 0;
-	}  else {
+	} else {
 		*read_ahead = (uint32_t) read_ahead_long;
 		log_debug("%s: read ahead is %" PRIu32, dev_name, *read_ahead);
 	}
 
 	if (close(fd))
-		stack;
+		log_sys_debug("close", dev_name);
 
 	return r;
 }
 
-static int _set_read_ahead(const char *dev_name, uint32_t read_ahead)
+static int _set_read_ahead(const char *dev_name, uint32_t major, uint32_t minor,
+			   uint32_t read_ahead)
 {
+	char buf[24];
+	int len;
 	int r = 1;
 	int fd;
 	long read_ahead_long = (long) read_ahead;
+
+	log_debug("%s (%d:%d): Setting read ahead to %" PRIu32, dev_name,
+		  major, minor, read_ahead);
+
+	/*
+	 * If we know the device number, use sysfs if we can.
+	 * Otherwise use BLKRASET ioctl. RA is set after resume.
+	 */
+	if (*_sysfs_dir && major != 0) {
+		if (dm_snprintf(_path0, sizeof(_path0), "%sdev/block/%" PRIu32
+				":%" PRIu32 "/bdi/read_ahead_kb",
+				_sysfs_dir, major, minor) < 0) {
+			log_error("Failed to build sysfs_path.");
+			return 0;
+		}
+
+		/* Sysfs is kB based, round up to kB */
+		if ((len = dm_snprintf(buf, sizeof(buf), "%" PRIu32,
+				       (read_ahead + 1) / 2)) < 0) {
+			log_error("Failed to build size in kB.");
+			return 0;
+		}
+
+		if ((fd = open(_path0, O_WRONLY, 0)) != -1) {
+			if (write(fd, buf, len) < len) {
+				log_sys_error("write", _path0);
+				r = 0;
+			}
+
+			if (close(fd))
+				log_sys_debug("close", _path0);
+
+			return r;
+		}
+
+		log_sys_debug("open", _path0);
+		/* Fall back to use dev_name */
+	}
 
 	if (!*dev_name) {
 		log_error("Empty device name passed to BLKRAGET");
@@ -701,21 +784,20 @@ static int _set_read_ahead(const char *dev_name, uint32_t read_ahead)
 	if ((fd = _open_dev_node(dev_name)) < 0)
 		return_0;
 
-	log_debug("%s: Setting read ahead to %" PRIu32, dev_name, read_ahead);
-
 	if (ioctl(fd, BLKRASET, read_ahead_long)) {
 		log_sys_error("BLKRASET", dev_name);
 		r = 0;
 	}
 
 	if (close(fd))
-		stack;
+		log_sys_debug("close", dev_name);
 
 	return r;
 }
 
-static int _set_dev_node_read_ahead(const char *dev_name, uint32_t read_ahead,
-				    uint32_t read_ahead_flags)
+static int _set_dev_node_read_ahead(const char *dev_name,
+				    uint32_t major, uint32_t minor,
+				    uint32_t read_ahead, uint32_t read_ahead_flags)
 {
 	uint32_t current_read_ahead;
 
@@ -726,7 +808,7 @@ static int _set_dev_node_read_ahead(const char *dev_name, uint32_t read_ahead,
 		read_ahead = 0;
 
 	if (read_ahead_flags & DM_READ_AHEAD_MINIMUM_FLAG) {
-		if (!get_dev_node_read_ahead(dev_name, &current_read_ahead))
+		if (!get_dev_node_read_ahead(dev_name, major, minor, &current_read_ahead))
 			return_0;
 
 		if (current_read_ahead > read_ahead) {
@@ -737,7 +819,7 @@ static int _set_dev_node_read_ahead(const char *dev_name, uint32_t read_ahead,
 		}
 	}
 
-	return _set_read_ahead(dev_name, read_ahead);
+	return _set_read_ahead(dev_name, major, minor, read_ahead);
 }
 
 #else
@@ -749,8 +831,9 @@ int get_dev_node_read_ahead(const char *dev_name, uint32_t *read_ahead)
 	return 1;
 }
 
-static int _set_dev_node_read_ahead(const char *dev_name, uint32_t read_ahead,
-				    uint32_t read_ahead_flags)
+static int _set_dev_node_read_ahead(const char *dev_name,
+				    uint32_t major, uint32_t minor,
+				    uint32_t read_ahead, uint32_t read_ahead_flags)
 {
 	return 1;
 }
@@ -778,8 +861,8 @@ static int _do_node_op(node_op_t type, const char *dev_name, uint32_t major,
 	case NODE_RENAME:
 		return _rename_dev_node(old_name, dev_name, warn_if_udev_failed);
 	case NODE_READ_AHEAD:
-		return _set_dev_node_read_ahead(dev_name, read_ahead,
-						read_ahead_flags);
+		return _set_dev_node_read_ahead(dev_name, major, minor,
+						read_ahead, read_ahead_flags);
 	default:
 		; /* NOTREACHED */
 	}
@@ -993,13 +1076,14 @@ int rm_dev_node(const char *dev_name, int check_udev, unsigned rely_on_udev)
 			      0, 0, "", 0, 0, check_udev, rely_on_udev);
 }
 
-int set_dev_node_read_ahead(const char *dev_name, uint32_t read_ahead,
-			    uint32_t read_ahead_flags)
+int set_dev_node_read_ahead(const char *dev_name,
+                            uint32_t major, uint32_t minor,
+			    uint32_t read_ahead, uint32_t read_ahead_flags)
 {
 	if (read_ahead == DM_READ_AHEAD_AUTO)
 		return 1;
 
-	return _stack_node_op(NODE_READ_AHEAD, dev_name, 0, 0, 0, 0,
+	return _stack_node_op(NODE_READ_AHEAD, dev_name, major, minor, 0, 0,
                               0, "", read_ahead, read_ahead_flags, 0, 0);
 }
 

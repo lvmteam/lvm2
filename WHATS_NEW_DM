@@ -1,5 +1,6 @@
 Version 1.02.68 -
 ==================================
+  Use sysfs to set/get of read-ahead setting if possible.
   Fix lvm2-monitor init script to use normalized output when using vgs.
   Add test for max length (DM_MAX_TYPE_NAME) of target type name.
   Include a copy of kernel DM documentation in doc/kernel.

@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2011 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2012 Red Hat, Inc. All rights reserved.
  *
  * This file is part of the device-mapper userspace tools.
  *
@@ -665,7 +665,8 @@ uint32_t dm_task_get_read_ahead(const struct dm_task *dmt, uint32_t *read_ahead)
 		return 0;
 	}
 
-	return get_dev_node_read_ahead(dev_name, read_ahead);
+	return get_dev_node_read_ahead(dev_name, MAJOR(dmt->dmi.v4->dev),
+				       MINOR(dmt->dmi.v4->dev), read_ahead);
 }
 
 const char *dm_task_get_name(const struct dm_task *dmt)
@@ -1818,8 +1819,9 @@ repeat_ioctl:
 				     MINOR(dmi->dev), dmt->uid, dmt->gid,
 				     dmt->mode, check_udev, rely_on_udev);
 		/* FIXME Kernel needs to fill in dmi->name */
-		set_dev_node_read_ahead(dmt->dev_name, dmt->read_ahead,
-					dmt->read_ahead_flags);
+		set_dev_node_read_ahead(dmt->dev_name,
+					MAJOR(dmi->dev), MINOR(dmi->dev),
+					dmt->read_ahead, dmt->read_ahead_flags);
 		break;
 	
 	case DM_DEVICE_MKNODES:
