@@ -24,9 +24,6 @@
 
 #define MAX_TARGET_PARAMSIZE 500000
 
-/* FIXME Fix interface so this is used only by LVM */
-#define UUID_PREFIX "LVM-"
-
 #define REPLICATOR_LOCAL_SITE 0
 
 /* Supported segment types */
@@ -488,25 +485,32 @@ static struct dm_tree_node *_find_dm_tree_node_by_uuid(struct dm_tree *dtree,
 						       const char *uuid)
 {
 	struct dm_tree_node *node;
+	const char *default_uuid_prefix;
+	size_t default_uuid_prefix_len;
 
 	if ((node = dm_hash_lookup(dtree->uuids, uuid)))
 		return node;
 
-	if (strncmp(uuid, UUID_PREFIX, sizeof(UUID_PREFIX) - 1))
+	default_uuid_prefix = dm_uuid_prefix();
+	default_uuid_prefix_len = strlen(default_uuid_prefix);
+
+	if (strncmp(uuid, default_uuid_prefix, default_uuid_prefix_len))
 		return NULL;
 
-	return dm_hash_lookup(dtree->uuids, uuid + sizeof(UUID_PREFIX) - 1);
+	return dm_hash_lookup(dtree->uuids, uuid + default_uuid_prefix_len);
 }
 
 static int _deps(struct dm_task **dmt, struct dm_pool *mem, uint32_t major, uint32_t minor,
-		 const char **name, const char **uuid,
+		 const char **name, const char **uuid, unsigned inactive_table,
 		 struct dm_info *info, struct dm_deps **deps)
 {
 	memset(info, 0, sizeof(*info));
 
 	if (!dm_is_dm_major(major)) {
-		*name = "";
-		*uuid = "";
+		if (name)
+			*name = "";
+		if (uuid)
+			*uuid = "";
 		*deps = NULL;
 		info->major = major;
 		info->minor = minor;
@@ -534,6 +538,12 @@ static int _deps(struct dm_task **dmt, struct dm_pool *mem, uint32_t major, uint
 		goto failed;
 	}
 
+	if (inactive_table && !dm_task_query_inactive_table(*dmt)) {
+		log_error("_deps: failed to set inactive table for (%" PRIu32 ":%" PRIu32 ")",
+			  major, minor);
+		goto failed;
+	}
+
 	if (!dm_task_run(*dmt)) {
 		log_error("_deps: task run failed for (%" PRIu32 ":%" PRIu32 ")",
 			  major, minor);
@@ -547,8 +557,10 @@ static int _deps(struct dm_task **dmt, struct dm_pool *mem, uint32_t major, uint
 	}
 
 	if (!info->exists) {
-		*name = "";
-		*uuid = "";
+		if (name)
+			*name = "";
+		if (uuid)
+			*uuid = "";
 		*deps = NULL;
 	} else {
 		if (info->major != major) {
@@ -561,11 +573,11 @@ static int _deps(struct dm_task **dmt, struct dm_pool *mem, uint32_t major, uint
 				  minor, info->minor);
 			goto failed;
 		}
-		if (!(*name = dm_pool_strdup(mem, dm_task_get_name(*dmt)))) {
+		if (name && !(*name = dm_pool_strdup(mem, dm_task_get_name(*dmt)))) {
 			log_error("name pool_strdup failed");
 			goto failed;
 		}
-		if (!(*uuid = dm_pool_strdup(mem, dm_task_get_uuid(*dmt)))) {
+		if (uuid && !(*uuid = dm_pool_strdup(mem, dm_task_get_uuid(*dmt)))) {
 			log_error("uuid pool_strdup failed");
 			goto failed;
 		}
@@ -595,7 +607,7 @@ static struct dm_tree_node *_add_dev(struct dm_tree *dtree,
 
 	/* Already in tree? */
 	if (!(node = _find_dm_tree_node(dtree, major, minor))) {
-		if (!_deps(&dmt, dtree->mem, major, minor, &name, &uuid, &info, &deps))
+		if (!_deps(&dmt, dtree->mem, major, minor, &name, &uuid, 0, &info, &deps))
 			return_NULL;
 
 		if (!(node = _create_dm_tree_node(dtree, name, uuid, &info,
@@ -637,12 +649,22 @@ out:
 	return node;
 }
 
-static int _node_clear_table(struct dm_tree_node *dnode)
+// FIXME Move fn group down.
+static int _info_by_dev(uint32_t major, uint32_t minor, int with_open_count,
+			struct dm_info *info, struct dm_pool *mem,
+			const char **name, const char **uuid);
+static int _deactivate_node(const char *name, uint32_t major, uint32_t minor,
+			    uint32_t *cookie, uint16_t udev_flags, int retry);
+static int _node_clear_table(struct dm_tree_node *dnode, uint16_t udev_flags)
 {
-	struct dm_task *dmt;
-	struct dm_info *info;
-	const char *name;
-	int r;
+	struct dm_task *dmt = NULL, *deps_dmt = NULL;
+	struct dm_info *info, deps_info;
+	struct dm_deps *deps = NULL;
+	const char *name, *uuid;
+	const char *default_uuid_prefix;
+	size_t default_uuid_prefix_len;
+	uint32_t i;
+	int r = 0;
 
 	if (!(info = &dnode->info)) {
 		log_error("_node_clear_table failed: missing info");
@@ -658,21 +680,24 @@ static int _node_clear_table(struct dm_tree_node *dnode)
 	if (!info->exists || !info->inactive_table)
 		return 1;
 
-// FIXME Get inactive deps.  If any dev referenced has 1 opener and no live table, remove it after the clear.
+	/* Get devices used by inactive table that's about to be deleted. */
+	if (!_deps(&deps_dmt, dnode->dtree->mem, info->major, info->minor, NULL, NULL, 1, info, &deps)) {
+		log_error("Failed to obtain dependencies for %s before clearing table.", name);
+		return 0;
+	}
 
 	log_verbose("Clearing inactive table %s (%" PRIu32 ":%" PRIu32 ")",
 		    name, info->major, info->minor);
 
 	if (!(dmt = dm_task_create(DM_DEVICE_CLEAR))) {
 		log_error("Table clear dm_task creation failed for %s", name);
-		return 0;
+		goto_out;
 	}
 
 	if (!dm_task_set_major(dmt, info->major) ||
 	    !dm_task_set_minor(dmt, info->minor)) {
 		log_error("Failed to set device number for %s table clear", name);
-		dm_task_destroy(dmt);
-		return 0;
+		goto_out;
 	}
 
 	r = dm_task_run(dmt);
@@ -682,18 +707,60 @@ static int _node_clear_table(struct dm_tree_node *dnode)
 		r = 0;
 	}
 
-	dm_task_destroy(dmt);
+	if (!r || !deps)
+		goto_out;
+
+	/*
+	 * Remove (incomplete) devices that the inactive table referred to but
+	 * which are not in the tree, no longer referenced and don't have a live
+	 * table.
+	 */
+	default_uuid_prefix = dm_uuid_prefix();
+	default_uuid_prefix_len = strlen(default_uuid_prefix);
+
+	for (i = 0; i < deps->count; i++) {
+		/* If already in tree, assume it's under control */
+		if (_find_dm_tree_node(dnode->dtree, MAJOR(deps->device[i]), MINOR(deps->device[i])))
+			continue;
+
+		if (!_info_by_dev(MAJOR(deps->device[i]), MINOR(deps->device[i]), 1,
+				  &deps_info, dnode->dtree->mem, &name, &uuid))
+			continue;
+
+		/* Proceed if device is an 'orphan' - unreferenced and without a live table. */
+		if (!deps_info.exists || deps_info.live_table || deps_info.open_count)
+			continue;
+
+		if (strncmp(uuid, default_uuid_prefix, default_uuid_prefix_len))
+			continue;
+
+		/* Remove device. */
+		if (!_deactivate_node(name, deps_info.major, deps_info.minor, &dnode->dtree->cookie, udev_flags, 0)) {
+			log_error("Failed to deactivate no-longer-used device %s (%"
+				  PRIu32 ":%" PRIu32 ")", name, deps_info.major, deps_info.minor);
+		} else if (deps_info.suspended)
+			dec_suspended();
+	}
+
+out:
+	if (dmt)
+		dm_task_destroy(dmt);
+
+	if (deps_dmt)
+		dm_task_destroy(deps_dmt);
 
 	return r;
 }
 
-struct dm_tree_node *dm_tree_add_new_dev(struct dm_tree *dtree,
-					    const char *name,
-					    const char *uuid,
-					    uint32_t major, uint32_t minor,
-					    int read_only,
-					    int clear_inactive,
-					    void *context)
+struct dm_tree_node *dm_tree_add_new_dev_with_udev_flags(struct dm_tree *dtree,
+							 const char *name,
+							 const char *uuid,
+							 uint32_t major,
+							 uint32_t minor,
+							 int read_only,
+							 int clear_inactive,
+							 void *context,
+							 uint16_t udev_flags)
 {
 	struct dm_tree_node *dnode;
 	struct dm_info info;
@@ -734,7 +801,7 @@ struct dm_tree_node *dm_tree_add_new_dev(struct dm_tree *dtree,
 		/* Do we need to rename node? */
 		if (!(dnode->props.new_name = dm_pool_strdup(dtree->mem, name))) {
 			log_error("name pool_strdup failed");
-			return 0;
+			return NULL;
 		}
 	}
 
@@ -742,32 +809,21 @@ struct dm_tree_node *dm_tree_add_new_dev(struct dm_tree *dtree,
 	dnode->props.read_ahead = DM_READ_AHEAD_AUTO;
 	dnode->props.read_ahead_flags = 0;
 
-	if (clear_inactive && !_node_clear_table(dnode))
+	if (clear_inactive && !_node_clear_table(dnode, udev_flags))
 		return_NULL;
 
 	dnode->context = context;
-	dnode->udev_flags = 0;
+	dnode->udev_flags = udev_flags;
 
 	return dnode;
 }
 
-struct dm_tree_node *dm_tree_add_new_dev_with_udev_flags(struct dm_tree *dtree,
-							 const char *name,
-							 const char *uuid,
-							 uint32_t major,
-							 uint32_t minor,
-							 int read_only,
-							 int clear_inactive,
-							 void *context,
-							 uint16_t udev_flags)
+struct dm_tree_node *dm_tree_add_new_dev(struct dm_tree *dtree, const char *name,
+					 const char *uuid, uint32_t major, uint32_t minor,
+					 int read_only, int clear_inactive, void *context)
 {
-	struct dm_tree_node *node;
-
-	if ((node = dm_tree_add_new_dev(dtree, name, uuid, major, minor, read_only,
-				       clear_inactive, context)))
-		node->udev_flags = udev_flags;
-
-	return node;
+	return dm_tree_add_new_dev_with_udev_flags(dtree, name, uuid, major, minor,
+						   read_only, clear_inactive, context, 0);
 }
 
 void dm_tree_node_set_udev_flags(struct dm_tree_node *dnode, uint16_t udev_flags)
@@ -852,6 +908,9 @@ int dm_tree_node_num_children(const struct dm_tree_node *node, uint32_t inverted
  */
 static int _uuid_prefix_matches(const char *uuid, const char *uuid_prefix, size_t uuid_prefix_len)
 {
+	const char *default_uuid_prefix = dm_uuid_prefix();
+	size_t default_uuid_prefix_len = strlen(default_uuid_prefix);
+
 	if (!uuid_prefix)
 		return 1;
 
@@ -862,13 +921,13 @@ static int _uuid_prefix_matches(const char *uuid, const char *uuid_prefix, size_
 	if (uuid_prefix_len <= 4)
 		return 0;
 
-	if (!strncmp(uuid, UUID_PREFIX, sizeof(UUID_PREFIX) - 1))
+	if (!strncmp(uuid, default_uuid_prefix, default_uuid_prefix_len))
 		return 0;
 
-	if (strncmp(uuid_prefix, UUID_PREFIX, sizeof(UUID_PREFIX) - 1))
+	if (strncmp(uuid_prefix, default_uuid_prefix, default_uuid_prefix_len))
 		return 0;
 
-	if (!strncmp(uuid, uuid_prefix + sizeof(UUID_PREFIX) - 1, uuid_prefix_len - (sizeof(UUID_PREFIX) - 1)))
+	if (!strncmp(uuid, uuid_prefix + default_uuid_prefix_len, uuid_prefix_len - default_uuid_prefix_len))
 		return 1;
 
 	return 0;
@@ -976,7 +1035,8 @@ struct dm_tree_node *dm_tree_next_child(void **handle,
  * Deactivate a device with its dependencies if the uuid prefix matches.
  */
 static int _info_by_dev(uint32_t major, uint32_t minor, int with_open_count,
-			struct dm_info *info)
+			struct dm_info *info, struct dm_pool *mem,
+			const char **name, const char **uuid)
 {
 	struct dm_task *dmt;
 	int r;
@@ -995,9 +1055,25 @@ static int _info_by_dev(uint32_t major, uint32_t minor, int with_open_count,
 	if (!with_open_count && !dm_task_no_open_count(dmt))
 		log_error("Failed to disable open_count");
 
-	if ((r = dm_task_run(dmt)))
-		r = dm_task_get_info(dmt, info);
+	if (!(r = dm_task_run(dmt)))
+		goto_out;
 
+	if (!(r = dm_task_get_info(dmt, info)))
+		goto_out;
+
+	if (name && !(*name = dm_pool_strdup(mem, dm_task_get_name(dmt)))) {
+		log_error("name pool_strdup failed");
+		r = 0;
+		goto_out;
+	}
+
+	if (uuid && !(*uuid = dm_pool_strdup(mem, dm_task_get_uuid(dmt)))) {
+		log_error("uuid pool_strdup failed");
+		r = 0;
+		goto_out;
+	}
+
+out:
 	dm_task_destroy(dmt);
 
 	return r;
@@ -1061,7 +1137,7 @@ static int _node_has_closed_parents(struct dm_tree_node *node,
 		}
 
 		/* Refresh open_count */
-		if (!_info_by_dev(dinfo->major, dinfo->minor, 1, &info) ||
+		if (!_info_by_dev(dinfo->major, dinfo->minor, 1, &info, NULL, NULL, NULL) ||
 		    !info.exists)
 			continue;
 
@@ -1096,9 +1172,9 @@ static int _deactivate_node(const char *name, uint32_t major, uint32_t minor,
 	if (!dm_task_no_open_count(dmt))
 		log_error("Failed to disable open_count");
 
-	if (!dm_task_set_cookie(dmt, cookie, udev_flags))
-		goto out;
-
+	if (cookie)
+		if (!dm_task_set_cookie(dmt, cookie, udev_flags))
+			goto out;
 
 	if (retry)
 		dm_task_retry_remove(dmt);
@@ -1107,7 +1183,7 @@ static int _deactivate_node(const char *name, uint32_t major, uint32_t minor,
 
 	/* FIXME Until kernel returns actual name so dm-iface.c can handle it */
 	rm_dev_node(name, dmt->cookie_set && !(udev_flags & DM_UDEV_DISABLE_DM_RULES_FLAG),
-			  dmt->cookie_set && (udev_flags & DM_UDEV_DISABLE_LIBRARY_FALLBACK));
+		    dmt->cookie_set && (udev_flags & DM_UDEV_DISABLE_LIBRARY_FALLBACK));
 
 	/* FIXME Remove node from tree or mark invalid? */
 
@@ -1440,7 +1516,7 @@ static int _dm_tree_deactivate_children(struct dm_tree_node *dnode,
 			continue;
 
 		/* Refresh open_count */
-		if (!_info_by_dev(dinfo->major, dinfo->minor, 1, &info) ||
+		if (!_info_by_dev(dinfo->major, dinfo->minor, 1, &info, NULL, NULL, NULL) ||
 		    !info.exists)
 			continue;
 
@@ -1564,7 +1640,7 @@ int dm_tree_suspend_children(struct dm_tree_node *dnode,
 		if (!_children_suspended(child, 1, uuid_prefix, uuid_prefix_len))
 			continue;
 
-		if (!_info_by_dev(dinfo->major, dinfo->minor, 0, &info) ||
+		if (!_info_by_dev(dinfo->major, dinfo->minor, 0, &info, NULL, NULL, NULL) ||
 		    !info.exists || info.suspended)
 			continue;
 

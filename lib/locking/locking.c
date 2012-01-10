@@ -515,7 +515,6 @@ int revert_lvs(struct cmd_context *cmd, struct dm_list *lvs)
 int suspend_lvs(struct cmd_context *cmd, struct dm_list *lvs,
 		struct volume_group *vg_to_revert)
 {
-	struct dm_list *lvh;
 	struct lv_list *lvl;
 
 	dm_list_iterate_items(lvl, lvs) {
@@ -523,11 +522,15 @@ int suspend_lvs(struct cmd_context *cmd, struct dm_list *lvs,
 			log_error("Failed to suspend %s", lvl->lv->name);
 			if (vg_to_revert)
 				vg_revert(vg_to_revert);
-			dm_list_uniterate(lvh, lvs, &lvl->list) {
-				lvl = dm_list_item(lvh, struct lv_list);
+			/*
+			 * FIXME Should be
+			 * 	dm_list_uniterate(lvh, lvs, &lvl->list) {
+			 *	lvl = dm_list_item(lvh, struct lv_list);
+			 * but revert would need fixing to use identical tree deps first.
+			 */
+			dm_list_iterate_items(lvl, lvs)
 				if (!revert_lv(cmd, lvl->lv))
 					stack;
-			}
 
 			return 0;
 		}

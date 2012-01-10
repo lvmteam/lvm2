@@ -285,6 +285,16 @@ int dm_set_sysfs_dir(const char *dir);
 const char *dm_sysfs_dir(void);
 
 /*
+ * Configure default UUID prefix string.
+ * Conventionally this is a short capitalised prefix indicating the subsystem
+ * that is managing the devices, e.g. "LVM-" or "MPATH-".
+ * To support stacks of devices from different subsystems, recursive functions
+ * stop recursing if they reach a device with a different prefix.
+ */
+int dm_set_uuid_prefix(const char *uuid_prefix);
+const char *dm_uuid_prefix(void);
+
+/*
  * Determine whether a major number belongs to device-mapper or not.
  */
 int dm_is_dm_major(uint32_t major);

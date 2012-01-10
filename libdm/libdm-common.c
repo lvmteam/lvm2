@@ -61,6 +61,9 @@ static char _dm_dir[PATH_MAX] = DEV_DIR DM_DIR;
 static char _sysfs_dir[PATH_MAX] = "/sys/";
 static char _path0[PATH_MAX];           /* path buffer, safe 4kB on stack */
 
+#define DM_MAX_UUID_PREFIX_LEN	15
+static char _default_uuid_prefix[DM_MAX_UUID_PREFIX_LEN + 1] = "LVM-";
+
 static int _verbose = 0;
 static int _suspended_dev_counter = 0;
 
@@ -1137,6 +1140,29 @@ int dm_set_sysfs_dir(const char *sysfs_dir)
 const char *dm_sysfs_dir(void)
 {
 	return _sysfs_dir;
+}
+
+/*
+ * Replace existing uuid_prefix provided it isn't too long.
+ */
+int dm_set_uuid_prefix(const char *uuid_prefix)
+{
+	if (!uuid_prefix)
+		return_0;
+
+	if (strlen(uuid_prefix) > DM_MAX_UUID_PREFIX_LEN) {
+		log_error("New uuid prefix %s too long.", uuid_prefix);
+		return 0;
+	}
+
+	strcpy(_default_uuid_prefix, uuid_prefix);
+
+	return 1;
+}
+
+const char *dm_uuid_prefix(void)
+{
+	return _default_uuid_prefix;
 }
 
 int dm_device_has_holders(uint32_t major, uint32_t minor)

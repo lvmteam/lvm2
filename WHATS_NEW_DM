@@ -1,11 +1,13 @@
 Version 1.02.68 -
 ==================================
+  Remove empty devices when clearing left-over inactive tables in deptree.
+  Add dm_uuid_prefix/dm_set_uuid_prefix to override hard-coded LVM- prefix.
   Improve dmsetup man page about readahead parameter.
   Use sysfs to set/get of read-ahead setting if possible.
   Fix lvm2-monitor init script to use normalized output when using vgs.
   Add test for max length (DM_MAX_TYPE_NAME) of target type name.
   Include a copy of kernel DM documentation in doc/kernel.
-  Improve man page style for dmsetup.
+  Improve man page style for dmsetup and mention more targets.
   Fix _get_proc_number to be tolerant of malformed /proc/misc entries.
   Add ExecReload to dm-event.service for systemd to reload dmeventd properly.
   Add dm_config_tree_find_str_allow_empty and dm_config_find_str_allow_empty.
