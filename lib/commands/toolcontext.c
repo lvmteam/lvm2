@@ -98,7 +98,7 @@ static void _get_sysfs_dir(struct cmd_context *cmd)
 	}
 
 	if (!(fp = fopen(proc_mounts, "r"))) {
-		log_sys_error("_get_sysfs_dir: fopen %s", proc_mounts);
+		log_sys_error("_get_sysfs_dir fopen", proc_mounts);
 		return;
 	}
 
