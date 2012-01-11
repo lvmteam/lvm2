@@ -300,6 +300,21 @@ const char *dm_uuid_prefix(void);
 int dm_is_dm_major(uint32_t major);
 
 /*
+ * Get associated device name for given major and minor number by reading
+ * the sysfs content. If this is a dm device, get associated dm name, the one
+ * that appears in /dev/mapper. DM names could be resolved this way only if
+ * kernel used >= 2.6.29, kernel name is found otherwise (e.g. dm-0).
+ * If prefer_kernel_name is set, the kernel name is always preferred over
+ * device-mapper name for dm devices no matter what the kernel version is.
+ * For non-dm devices, we always get associated kernel name, e.g sda, md0 etc.
+ * Returns 0 on error or if sysfs is not used (or configured incorrectly),
+ * otherwise returns 1 and the supplied buffer holds the device name.
+ */
+int dm_device_get_name(uint32_t major, uint32_t minor,
+		       int prefer_kernel_name,
+		       char *buf, size_t buf_size);
+
+/*
  * Determine whether a device has any holders (devices
  * using this device). If sysfs is not used (or configured
  * incorrectly), returns 0.

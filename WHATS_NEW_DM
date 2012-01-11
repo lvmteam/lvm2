@@ -1,5 +1,6 @@
 Version 1.02.68 -
 ==================================
+  Add dm_device_get_name to get map name or block device name for given devno.
   Remove empty devices when clearing left-over inactive tables in deptree.
   Add dm_uuid_prefix/dm_set_uuid_prefix to override hard-coded LVM- prefix.
   Improve dmsetup man page about readahead parameter.

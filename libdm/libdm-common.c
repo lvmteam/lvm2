@@ -1165,6 +1165,133 @@ const char *dm_uuid_prefix(void)
 	return _default_uuid_prefix;
 }
 
+static int _sysfs_get_dm_name(uint32_t major, uint32_t minor, char *buf, size_t buf_size)
+{
+	char *sysfs_path, *temp_buf;
+	FILE *fp;
+
+	if (!(sysfs_path = dm_malloc(PATH_MAX)) ||
+	    !(temp_buf = dm_malloc(PATH_MAX))) {
+		log_error("_sysfs_get_dm_name: failed to allocate temporary buffers");
+		if (sysfs_path)
+			dm_free(sysfs_path);
+		return 0;
+	}
+
+	if (dm_snprintf(sysfs_path, PATH_MAX, "%sdev/block/%" PRIu32 ":%" PRIu32
+			"/dm/name", _sysfs_dir, major, minor) < 0) {
+		log_error("_sysfs_get_dm_name: dm_snprintf failed");
+		goto error;
+	}
+
+	if (!(fp = fopen(sysfs_path, "r"))) {
+		if (errno != ENOENT)
+			log_sys_error("fopen", sysfs_path);
+		else
+			log_sys_debug("fopen", sysfs_path);
+		goto error;
+	}
+
+	if (!fgets(temp_buf, PATH_MAX, fp)) {
+		log_sys_error("fgets", sysfs_path);
+		goto error;
+	}
+	temp_buf[strlen(temp_buf) - 1] = '\0';
+
+	if (fclose(fp))
+		log_sys_error("fclose", sysfs_path);
+
+	if (buf_size < strlen(temp_buf) + 1) {
+		log_error("_sysfs_get_dm_name: supplied buffer too small");
+		goto error;
+	}
+
+	strncpy(buf, temp_buf, buf_size);
+	dm_free(sysfs_path);
+	dm_free(temp_buf);
+	return 1;
+
+error:
+	dm_free(sysfs_path);
+	dm_free(temp_buf);
+	return 0;
+}
+
+static int _sysfs_get_kernel_name(uint32_t major, uint32_t minor, char *buf, size_t buf_size)
+{
+	char *sysfs_path, *temp_buf, *name;
+	ssize_t size;
+
+	if (!(sysfs_path = dm_malloc(PATH_MAX)) ||
+	    !(temp_buf = dm_malloc(PATH_MAX))) {
+		log_error("_sysfs_get_kernel_name: failed to allocate temporary buffers");
+		if (sysfs_path)
+			dm_free(sysfs_path);
+		return 0;
+	}
+
+	if (dm_snprintf(sysfs_path, PATH_MAX, "%sdev/block/%" PRIu32 ":%" PRIu32,
+			_sysfs_dir, major, minor) < 0) {
+		log_error("_sysfs_get_kernel_name: dm_snprintf failed");
+		goto error;
+	}
+
+	if ((size = readlink(sysfs_path, temp_buf, PATH_MAX)) < 0) {
+		if (errno != ENOENT)
+			log_sys_error("readlink", sysfs_path);
+		else
+			log_sys_debug("readlink", sysfs_path);
+		goto error;
+	}
+	temp_buf[size] = '\0';
+
+	if (!(name = strrchr(temp_buf, '/'))) {
+		log_error("Could not locate device kernel name in sysfs path %s", temp_buf);
+		goto error;
+	}
+	name += 1;
+
+	if (buf_size < strlen(name) + 1) {
+		log_error("_sysfs_get_kernel_name: output buffer too small");
+		goto error;
+	}
+
+	strncpy(buf, name, buf_size);
+	dm_free(sysfs_path);
+	dm_free(temp_buf);
+	return 1;
+
+error:
+	dm_free(sysfs_path);
+	dm_free(temp_buf);
+	return 0;
+}
+
+int dm_device_get_name(uint32_t major, uint32_t minor, int prefer_kernel_name,
+		       char *buf, size_t buf_size)
+{
+	if (!*_sysfs_dir)
+		return 0;
+
+	/*
+	 * device-mapper devices and prefer_kernel_name = 0
+	 * get dm name by reading /sys/dev/block/major:minor/dm/name,
+	 * fallback to _sysfs_get_kernel_name if not successful
+	 */
+	if (dm_is_dm_major(major) && !prefer_kernel_name) {
+		if (_sysfs_get_dm_name(major, minor, buf, buf_size))
+			return 1;
+		else
+			stack;
+	}
+
+	/*
+	 * non-device-mapper devices or prefer_kernel_name = 1
+	 * get kernel name using readlink /sys/dev/block/major:minor -> .../dm-X
+	 */
+	return _sysfs_get_kernel_name(major, minor, buf, buf_size);
+}
+
 int dm_device_has_holders(uint32_t major, uint32_t minor)
 {
 	char sysfs_path[PATH_MAX];
@@ -1235,32 +1362,11 @@ static int _mounted_fs_on_device(const char *kernel_dev_name)
 
 int dm_device_has_mounted_fs(uint32_t major, uint32_t minor)
 {
-	char sysfs_path[PATH_MAX];
-	char temp_path[PATH_MAX];
-	char *kernel_dev_name;
-	ssize_t size;
-
-	if (!*_sysfs_dir)
-		return 0;
+	char kernel_dev_name[PATH_MAX];
 
 	/* Get kernel device name first */
-	if (dm_snprintf(sysfs_path, PATH_MAX, "%sdev/block/%" PRIu32 ":%" PRIu32,
-			_sysfs_dir, major, minor) < 0) {
-		log_error("sysfs_path dm_snprintf failed");
+	if (!dm_device_get_name(major, minor, 1, kernel_dev_name, PATH_MAX))
 		return 0;
-	}
-
-	if ((size = readlink(sysfs_path, temp_path, PATH_MAX)) < 0) {
-		log_sys_error("readlink", sysfs_path);
-		return 0;
-	}
-	temp_path[size] = '\0';
-
-	if (!(kernel_dev_name = strrchr(temp_path, '/'))) {
-		log_error("Could not locate device kernel name in sysfs path %s", temp_path);
-		return 0;
-	}
-	kernel_dev_name += 1;
 
 	/* Check /sys/fs/<fs_name>/<kernel_dev_name> presence */
 	return _mounted_fs_on_device(kernel_dev_name);
