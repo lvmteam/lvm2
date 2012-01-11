@@ -44,6 +44,7 @@ static int _md_major = -1;
 static int _blkext_major = -1;
 static int _drbd_major = -1;
 static int _device_mapper_major = -1;
+static int _emcpower_major = -1;
 
 int dm_major(void)
 {
@@ -70,6 +71,9 @@ int dev_subsystem_part_major(const struct device *dev)
 	if (MAJOR(dev->dev) == _drbd_major)
 		return 1;
 
+	if (MAJOR(dev->dev) == _emcpower_major)
+		return 1;
+
 	if ((MAJOR(dev->dev) == _blkext_major) &&
 	    (get_primary_dev(sysfs_dir_path(), dev, &primary_dev)) &&
 	    (MAJOR(primary_dev) == _md_major))
@@ -85,6 +89,9 @@ const char *dev_subsystem_name(const struct device *dev)
 
 	if (MAJOR(dev->dev) == _drbd_major)
 		return "DRBD";
+
+	if (MAJOR(dev->dev) == _emcpower_major)
+		return "EMCPOWER";
 
 	if (MAJOR(dev->dev) == _blkext_major)
 		return "BLKEXT";
@@ -245,6 +252,10 @@ static int _scan_proc_dev(const char *proc, const struct dm_config_node *cn)
 		/* Look for drbd device */
 		if (!strncmp("drbd", line + i, 4) && isspace(*(line + i + 4)))
 			_drbd_major = line_maj;
+
+		/* Look for EMC powerpath */
+		if (!strncmp("emcpower", line + i, 8) && isspace(*(line + i + 8)))
+			_emcpower_major = line_maj;
 
 		/* Look for device-mapper device */
 		/* FIXME Cope with multiple majors */
