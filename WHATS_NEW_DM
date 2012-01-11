@@ -1,5 +1,8 @@
 Version 1.02.68 -
 ==================================
+  Add 'blkdevname' and 'blkdevs_used' field to dmsetup info -c -o.
+  Add 'blkdevname' option to dmsetup ls --tree to see block device names.
+  Add '-o options' to dmsetup deps and ls to select device name type on output.
   Add dm_device_get_name to get map name or block device name for given devno.
   Remove empty devices when clearing left-over inactive tables in deptree.
   Add dm_uuid_prefix/dm_set_uuid_prefix to override hard-coded LVM- prefix.
