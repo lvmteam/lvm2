@@ -20,6 +20,8 @@ dmsetup \- low level logical volume management
 .RE
 .br
 .B dmsetup deps
+.RB [ \-o
+.IR options ]
 .RI [ device_name ]
 .br
 .B dmsetup help
@@ -51,10 +53,9 @@ dmsetup \- low level logical volume management
 .IR target_type ]
 .RB [ \-\-exec
 .IR command ]
-.RB [ \-\-tree
-.RS
+.RB [ \-\-tree ]
 .RB [ \-o
-.IR options ]]
+.IR options ]
 .RE
 .br
 .B dmsetup message
@@ -268,10 +269,14 @@ See below for information on the table format.
 .br
 .TP
 .B deps
+.RB [ \-o
+.IR options ]
 .RI [ device_name ]
 .br
-Outputs a list of (major, minor) pairs for devices referenced by the
-live table for the specified device.
+Outputs a list of devices referenced by the live table for the specified
+device. Device names on output can be customised by following options:
+devno (major and minor pair, used by default), blkdevname (block device name),
+devname (map name for device-mapper devices, equal to blkdevname otherwise).
 .br
 .TP
 .B help
@@ -323,17 +328,20 @@ Precede any sort_field with - for a reverse sort on that column.
 .IR target_type ]
 .RB [ \-\-exec
 .IR command ]
-.RB [ \-\-tree
+.RB [ \-\-tree ]
 .RB [ \-o
-.IR options ]]
+.IR options ]
 .br
 List device names.  Optionally only list devices that have at least
 one target of the specified type.  Optionally execute a command for
 each device.  The device name is appended to the supplied command.
+Device names on output can be customised by following options: devno (major
+and minor pair, used by default), blkdevname (block device name),
+devname (map name for device-mapper devices, equal to blkdevname otherwise).
 --tree displays dependencies between devices as a tree.
 It accepts a comma-separate list of options.
 Some specify the information displayed against each node:
-device/nodevice; active, open, rw, uuid.
+device/nodevice; blkdevname; active, open, rw, uuid.
 Others specify how the tree is displayed:
 ascii, utf, vt100; compact, inverted, notrunc.
 .br
