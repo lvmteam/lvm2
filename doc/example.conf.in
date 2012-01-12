@@ -513,6 +513,16 @@ activation {
     #
     # volume_list = [ "vg1", "vg2/lvol1", "@tag1", "@*" ]
 
+    # If read_only_volume_list is defined, each LV that is to be activated 
+    # is checked against the list, and if it matches, it as activated
+    # in read-only mode.  (This overrides '--permission rw' stored in the
+    # metadata.)
+    #   "vgname" and "vgname/lvname" are matched exactly.
+    #   "@tag" matches any tag set in the LV or VG.
+    #   "@*" matches if any tag defined on the host is also set in the LV or VG
+    #
+    # read_only_volume_list = [ "vg1", "vg2/lvol1", "@tag1", "@*" ]
+
     # Size (in KB) of each copy operation when mirroring
     mirror_region_size = 512
 

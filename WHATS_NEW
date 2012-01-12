@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Add activation/read_only_volume_list to override LV permission in metadata.
   Give priority to emcpower devices with duplicate PVIDs.
   Add check for error in _adjust_policy_params() (lvextend --use-policies).
   Supports rounding of percentage (%LV, %VG...) for LV resize upward.
