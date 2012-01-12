@@ -485,7 +485,8 @@ void lvdisplay_colons(const struct logical_volume *lv)
 		  lv->vg->name,
 		  lv->name,
 		  lv->vg->name,
-		  (lv->status & (LVM_READ | LVM_WRITE)) >> 8, inkernel ? 1 : 0,
+		  ((lv->status & (LVM_READ | LVM_WRITE)) >> 8) |
+		  ((inkernel & info.read_only) ? 4 : 0), inkernel ? 1 : 0,
 		  /* FIXME lv->lv_number,  */
 		  inkernel ? info.open_count : 0, lv->size, lv->le_count,
 		  /* FIXME Add num allocated to struct! lv->lv_allocated_le, */
@@ -500,6 +501,7 @@ int lvdisplay_full(struct cmd_context *cmd,
 	struct lvinfo info;
 	int inkernel, snap_active = 0;
 	char uuid[64] __attribute__((aligned(8)));
+	const char *access_str;
 	struct lv_segment *snap_seg = NULL, *mirror_seg = NULL;
 	percent_t snap_percent;
 
@@ -507,6 +509,13 @@ int lvdisplay_full(struct cmd_context *cmd,
 		return_0;
 
 	inkernel = lv_info(cmd, lv, 0, &info, 1, 1) && info.exists;
+
+	if ((lv->status & LVM_WRITE) && inkernel && info.read_only)
+		access_str = "read/write (activated read only)";
+	else if (lv->status & LVM_WRITE)
+		access_str = "read/write";
+	else
+		access_str = "read only";
 
 	log_print("--- Logical volume ---");
 
@@ -516,8 +525,7 @@ int lvdisplay_full(struct cmd_context *cmd,
 
 	log_print("LV UUID                %s", uuid);
 
-	log_print("LV Write Access        %s",
-		  (lv->status & LVM_WRITE) ? "read/write" : "read only");
+	log_print("LV Write Access        %s", access_str);
 
 	if (lv_is_origin(lv)) {
 		log_print("LV snapshot status     source of");

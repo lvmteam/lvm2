@@ -1,5 +1,7 @@
 Version 2.02.89 - 
 ==================================
+  Use R lv_attr to indicate read-only activation of non-read-only device in lvs.
+  Show read-only activation override in lvdisplay & add 4 to perms in -c.
   Add activation/read_only_volume_list to override LV permission in metadata.
   Give priority to emcpower devices with duplicate PVIDs.
   Add check for error in _adjust_policy_params() (lvextend --use-policies).

@@ -431,6 +431,13 @@ char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 				repstr[4] = 'I'; /* Invalid snapshot */
 		}
 
+		/*
+		 * 'R' indicates read-only activation of a device that
+		 * does not have metadata flagging it as read-only.
+		 */
+		if (repstr[1] != 'r' && info.read_only)
+			repstr[1] = 'R';
+
 		repstr[5] = (info.open_count) ? 'o' : '-';
 	} else {
 		repstr[4] = '-';
