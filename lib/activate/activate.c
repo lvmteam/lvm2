@@ -395,7 +395,7 @@ static int _passes_activation_filter(struct cmd_context *cmd,
 static int _passes_readonly_filter(struct cmd_context *cmd,
 				   struct logical_volume *lv)
 {
-	struct dm_config_node *cn;
+	const struct dm_config_node *cn;
 
 	if (!(cn = find_config_tree_node(cmd, "activation/read_only_volume_list")))
 		return 0;
