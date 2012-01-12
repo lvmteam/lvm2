@@ -423,6 +423,18 @@ metadata for a match.
 \fBtags\fP above).
 Logical volume and volume groups can also be included in the list
 by name e.g. vg00, vg00/lvol1.
+.IP
+\fBread_only_volume_list\fP \(em This acts as a filter through
+which all requests to activate a logical volume on this machine
+are passed.  A logical volume is activated in read-only mode (instead
+of read-write) if it matches an item in the list.  Volumes must first
+pass the \fBvolume_list\fP filter, if present.  Tags must be preceded
+by @ and are checked against all tags defined in the logical volume
+and volume group metadata for a match.
+@* is short-hand to check every tag set on the host machine (see
+\fBtags\fP above).
+Logical volume and volume groups can also be included in the list
+by name e.g. vg00, vg00/lvol1.
 .TP
 \fBmetadata\fP \(em Advanced metadata settings
 .IP
