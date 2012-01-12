@@ -94,7 +94,8 @@ mirror or raid (i)mage, mirror or raid (I)mage out-of-sync, mirror (l)og device,
 under (c)onversion, thin (V)olume, (t)hin pool, (T)hin pool data, raid or
 thin pool m(e)tadata
 .IP 2 3
-Permissions: (w)riteable, (r)ead-only
+Permissions: (w)riteable, (r)ead-only, (R)ead-only activation of non-read-only
+volume
 .IP 3 3
 Allocation policy: (c)ontiguous, c(l)ing, (n)ormal, (a)nywhere, (i)nherited
 This is capitalised if the volume is currently locked against allocation
