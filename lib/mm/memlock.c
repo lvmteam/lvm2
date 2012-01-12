@@ -147,7 +147,7 @@ static void _release_memory(void)
  * format described in kernel/Documentation/filesystem/proc.txt
  */
 static int _maps_line(const struct dm_config_node *cn, lvmlock_t lock,
-		      const char* line, size_t* mstats)
+		      const char *line, size_t *mstats)
 {
 	const struct dm_config_value *cv;
 	long from, to;
@@ -357,7 +357,7 @@ static void _unlock_mem(struct cmd_context *cmd)
 		if (_mstats < unlock_mstats) {
 			if ((_mstats + lvm_getpagesize()) < unlock_mstats)
 				log_error(INTERNAL_ERROR
-					  "Maps lock %ld < unlock %ld",
+					  "Reserved memory (%ld) not enough: used %ld. Increase activation/reserved_memory?",
 					  (long)_mstats, (long)unlock_mstats);
 			else
 				/* FIXME Believed due to incorrect use of yes_no_prompt while locks held */
