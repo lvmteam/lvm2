@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2011 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2012 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -288,49 +288,29 @@ int activation(void)
 	return _activation;
 }
 
-static int _passes_activation_filter(struct cmd_context *cmd,
-				     struct logical_volume *lv)
+static int _passes_volumes_filter(struct cmd_context *cmd,
+				  struct logical_volume *lv,
+				  const struct dm_config_node *cn,
+				  const char *config_path)
 {
-	const struct dm_config_node *cn;
 	const struct dm_config_value *cv;
 	const char *str;
 	static char path[PATH_MAX];
 
-	if (!(cn = find_config_tree_node(cmd, "activation/volume_list"))) {
-		log_verbose("activation/volume_list configuration setting "
-			    "not defined, checking only host tags for %s/%s",
-			    lv->vg->name, lv->name);
-
-		/* If no host tags defined, activate */
-		if (dm_list_empty(&cmd->tags))
-			return 1;
-
-		/* If any host tag matches any LV or VG tag, activate */
-		if (str_list_match_list(&cmd->tags, &lv->tags, NULL) ||
-		    str_list_match_list(&cmd->tags, &lv->vg->tags, NULL))
-			return 1;
-
-		log_verbose("No host tag matches %s/%s",
-			    lv->vg->name, lv->name);
-
-		/* Don't activate */
-		return 0;
-	}
-	else
-		log_verbose("activation/volume_list configuration setting "
-			    "defined, checking the list to match %s/%s",
-			    lv->vg->name, lv->name);
+	log_verbose("%s configuration setting defined: "
+		    "Checking the list to match %s/%s",
+		    config_path, lv->vg->name, lv->name);
 
 	for (cv = cn->v; cv; cv = cv->next) {
 		if (cv->type != DM_CFG_STRING) {
-			log_error("Ignoring invalid string in config file "
-				  "activation/volume_list");
+			log_error("Ignoring invalid string in config file %s",
+				  config_path);
 			continue;
 		}
 		str = cv->v.str;
 		if (!*str) {
-			log_error("Ignoring empty string in config file "
-				  "activation/volume_list");
+			log_error("Ignoring empty string in config file %s",
+				  config_path);
 			continue;
 		}
 
@@ -340,7 +320,7 @@ static int _passes_activation_filter(struct cmd_context *cmd,
 			str++;
 			if (!*str) {
 				log_error("Ignoring empty tag in config file "
-					  "activation/volume_list");
+					  "%s", config_path);
 				continue;
 			}
 			/* If any host tag matches any LV or VG tag, activate */
@@ -377,10 +357,50 @@ static int _passes_activation_filter(struct cmd_context *cmd,
 			return 1;
 	}
 
-	log_verbose("No item supplied in activation/volume_list configuration "
-		    "setting matches %s/%s", lv->vg->name, lv->name);
+	log_verbose("No item supplied in %s configuration setting "
+		    "matches %s/%s", config_path, lv->vg->name, lv->name);
 
 	return 0;
+}
+
+static int _passes_activation_filter(struct cmd_context *cmd,
+				     struct logical_volume *lv)
+{
+	const struct dm_config_node *cn;
+
+	if (!(cn = find_config_tree_node(cmd, "activation/volume_list"))) {
+		log_verbose("activation/volume_list configuration setting "
+			    "not defined: Checking only host tags for %s/%s",
+			    lv->vg->name, lv->name);
+
+		/* If no host tags defined, activate */
+		if (dm_list_empty(&cmd->tags))
+			return 1;
+
+		/* If any host tag matches any LV or VG tag, activate */
+		if (str_list_match_list(&cmd->tags, &lv->tags, NULL) ||
+		    str_list_match_list(&cmd->tags, &lv->vg->tags, NULL))
+			return 1;
+
+		log_verbose("No host tag matches %s/%s",
+			    lv->vg->name, lv->name);
+
+		/* Don't activate */
+		return 0;
+	}
+
+	return _passes_volumes_filter(cmd, lv, cn, "activation/volume_list");
+}
+
+static int _passes_readonly_filter(struct cmd_context *cmd,
+				   struct logical_volume *lv)
+{
+	struct dm_config_node *cn;
+
+	if (!(cn = find_config_tree_node(cmd, "activation/read_only_volume_list")))
+		return 0;
+
+	return _passes_volumes_filter(cmd, lv, cn, "activation/read_only_volume_list");
 }
 
 int library_version(char *version, size_t size)
@@ -755,16 +775,22 @@ static int _lv_activate_lv(struct logical_volume *lv, struct lv_activate_opts *l
 static int _lv_preload(struct logical_volume *lv, struct lv_activate_opts *laopts,
 		       int *flush_required)
 {
-	int r;
+	int r = 0;
 	struct dev_manager *dm;
+	int old_readonly = laopts->read_only;
+
+	laopts->read_only = _passes_readonly_filter(lv->vg->cmd, lv);
 
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, (lv->status & PVMOVE) ? 0 : 1)))
-		return_0;
+		goto_out;
 
 	if (!(r = dev_manager_preload(dm, lv, laopts, flush_required)))
 		stack;
 
 	dev_manager_destroy(dm);
+
+	laopts->read_only = old_readonly;
+out:
 	return r;
 }
 
@@ -788,6 +814,8 @@ static int _lv_suspend_lv(struct logical_volume *lv, struct lv_activate_opts *la
 {
 	int r;
 	struct dev_manager *dm;
+
+	laopts->read_only = _passes_readonly_filter(lv->vg->cmd, lv);
 
 	/*
 	 * When we are asked to manipulate (normally suspend/resume) the PVMOVE
@@ -1463,6 +1491,8 @@ static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
 		goto out;
 	}
 
+	laopts->read_only = _passes_readonly_filter(cmd, lv);
+
 	if (!_lv_activate_lv(lv, laopts))
 		goto_out;
 
@@ -1652,13 +1682,21 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 		goto out;
 	}
 
-	log_debug("Activating %s/%s%s.", lv->vg->name, lv->name,
-		  laopts->exclusive ? " exclusively" : "");
+	if (filter)
+		laopts->read_only = _passes_readonly_filter(cmd, lv);
+
+	log_debug("Activating %s/%s%s%s.", lv->vg->name, lv->name,
+		  laopts->exclusive ? " exclusively" : "",
+		  laopts->read_only ? " read-only" : "");
 
 	if (!lv_info(cmd, lv, 0, &info, 0, 0))
 		goto_out;
 
-	if (info.exists && !info.suspended && info.live_table) {
+	/*
+	 * Nothing to do?
+	 */
+	if (info.exists && !info.suspended && info.live_table &&
+	    (info.read_only == read_only_lv(lv, laopts))) {
 		r = 1;
 		goto out;
 	}
