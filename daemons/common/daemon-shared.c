@@ -38,7 +38,7 @@ int read_buffer(int fd, char **buffer) {
 			*buffer = new;
 		} else {
 			(*buffer)[bytes] = 0;
-			if ((end = strstr((*buffer) + bytes - 2, "\n\n"))) {
+			if ((end = strstr((*buffer) + bytes - 4, "\n##\n"))) {
 				*end = 0;
 				break; /* success, we have the full message now */
 			}
@@ -58,18 +58,29 @@ fail:
  *
  * TODO use select on EWOULDBLOCK/EAGAIN to avoid useless spinning
  */
-int write_buffer(int fd, char *buffer, int length) {
+int write_buffer(int fd, const char *buffer, int length) {
+	int done = 0;
 	int written = 0;
+write:
 	while (1) {
 		int result = write(fd, buffer + written, length - written);
 		if (result > 0)
 			written += result;
 		if (result < 0 && errno != EWOULDBLOCK && errno != EAGAIN)
-			break; /* too bad */
-		if (written == length)
-			return 1; /* done */
+			return 0; /* too bad */
+		if (written == length) {
+			if (done)
+				return 1;
+			else
+				break; /* done */
+		}
 	}
-	return 0;
+	const char *terminate = "\n##\n";
+	buffer = terminate;
+	length = 4;
+	written = 0;
+	done = 1;
+	goto write;
 }
 
 char *format_buffer(const char *what, const char *id, va_list ap)
@@ -105,10 +116,6 @@ char *format_buffer(const char *what, const char *id, va_list ap)
 		}
 		if (!buffer) goto fail;
 	}
-
-	old = buffer;
-	dm_asprintf(&buffer, "%s\n", buffer);
-	dm_free(old);
 
 	return buffer;
 fail:
