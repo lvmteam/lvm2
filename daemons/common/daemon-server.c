@@ -251,9 +251,6 @@ static void *client_thread(void *baton)
 		if (!req.cft)
 			fprintf(stderr, "error parsing request:\n %s\n", req.buffer);
 		res = b->s.handler(b->s, b->client, req);
-		if (req.cft)
-			dm_config_destroy(req.cft);
-		dm_free(req.buffer);
 
 		if (!res.buffer) {
 			dm_config_write_node(res.cft->root, buffer_line, &res);
@@ -261,12 +258,17 @@ static void *client_thread(void *baton)
 			dm_config_destroy(res.cft);
 		}
 
+		if (req.cft)
+			dm_config_destroy(req.cft);
+		dm_free(req.buffer);
+
 		write_buffer(b->client.socket_fd, res.buffer, strlen(res.buffer));
 
 		free(res.buffer);
 	}
 fail:
 	/* TODO what should we really do here? */
+	close(b->client.socket_fd);
 	free(baton);
 	return NULL;
 }
@@ -290,6 +292,8 @@ static int handle_connect(daemon_state s)
 
 	if (pthread_create(&baton->client.thread_id, NULL, client_thread, baton))
 		return 0;
+
+	pthread_detach(baton->client.thread_id);
 
 	return 1;
 }
