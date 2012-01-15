@@ -57,7 +57,7 @@ void daemon_reply_destroy(daemon_reply r) {
 		dm_config_destroy(r.cft);
 }
 
-daemon_reply daemon_send_simple(daemon_handle h, char *id, ...)
+daemon_reply daemon_send_simple(daemon_handle h, const char *id, ...)
 {
 	static const daemon_reply err = { .error = ENOMEM, .buffer = NULL, .cft = NULL };
 	daemon_request rq = { .cft = NULL };

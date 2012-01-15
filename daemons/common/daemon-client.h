@@ -77,7 +77,7 @@ daemon_reply daemon_send(daemon_handle h, daemon_request r);
  * type (string, integer) of the value is indicated by a character substituted
  * for ? in %?: d for integer, s for string.
  */
-daemon_reply daemon_send_simple(daemon_handle h, char *id, ...);
+daemon_reply daemon_send_simple(daemon_handle h, const char *id, ...);
 
 void daemon_reply_destroy(daemon_reply r);
 
