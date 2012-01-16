@@ -30,20 +30,19 @@ int read_buffer(int fd, char **buffer) {
 		if (result < 0 && errno != EAGAIN && errno != EWOULDBLOCK)
 			goto fail;
 
+		if ((!strncmp((*buffer) + bytes - 4, "\n##\n", 4))) {
+			*(*buffer + bytes - 4) = 0;
+			break; /* success, we have the full message now */
+		}
+
 		if (bytes == buffersize) {
 			buffersize += 1024;
 			if (!(new = realloc(*buffer, buffersize + 1)))
 				goto fail;
 
 			*buffer = new;
-		} else {
-			(*buffer)[bytes] = 0;
-			if ((end = strstr((*buffer) + bytes - 4, "\n##\n"))) {
-				*end = 0;
-				break; /* success, we have the full message now */
-			}
-			/* TODO call select here if we encountered EAGAIN/EWOULDBLOCK */
 		}
+		/* TODO call select here if we encountered EAGAIN/EWOULDBLOCK */
 	}
 	return 1;
 fail:
