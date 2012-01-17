@@ -342,6 +342,27 @@ int dm_task_set_name(struct dm_task *dmt, const char *name)
 	return 1;
 }
 
+int dm_task_set_newname(struct dm_task *dmt, const char *newname)
+{
+	if (strchr(newname, '/')) {
+		log_error("Name \"%s\" invalid. It contains \"/\".", newname);
+		return 0;
+	}
+
+	if (strlen(newname) >= DM_NAME_LEN) {
+		log_error("Name \"%s\" too long", newname);
+		return 0;
+	}
+
+	if (!(dmt->newname = dm_strdup(newname))) {
+		log_error("dm_task_set_newname: strdup(%s) failed", newname);
+		return 0;
+	}
+	dmt->new_uuid = 0;
+
+	return 1;
+}
+
 int dm_task_set_uuid(struct dm_task *dmt, const char *uuid)
 {
 	dm_free(dmt->uuid);
