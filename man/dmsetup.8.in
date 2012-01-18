@@ -69,6 +69,9 @@ dmsetup \- low level logical volume management
 .RB [ \-\-table
 .RI < table >| table_file ]
 .br
+.B dmsetup wipe_table
+.I device_name
+.br
 .B dmsetup remove
 .RB [ \-f | \-\-force ]
 .RB [ \-\-retry ]
@@ -353,6 +356,15 @@ ascii, utf, vt100; compact, inverted, notrunc.
 .br
 Loads <table> or table_file into the inactive table slot for device_name.
 If neither is supplied, reads a table from standard input.
+.br
+.HP
+.B wipe_table
+.I device_name
+.br
+Wait for any I/O in-flight through the device to complete, then
+replace the table with a new table that fails any new I/O
+sent to the device.  If successful, this should release any devices 
+held open by the device's table(s).
 .br
 .HP
 .B message

@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2011 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2012 Red Hat, Inc. All rights reserved.
  * Copyright (C) 2005-2007 NEC Corporation
  *
  * This file is part of the device-mapper userspace tools.
@@ -2870,6 +2870,7 @@ static struct command _commands[] = {
 	{"load", "<device> [<table_file>]", 0, 2, 0, _load},
 	{"clear", "<device>", 0, -1, 1, _clear},
 	{"reload", "<device> [<table_file>]", 0, 2, 0, _load},
+	{"wipe_table", "<device>", 0, -1, 1, _error_device},
 	{"rename", "<device> [--setuuid] <new_name_or_uuid>", 1, 2, 0, _rename},
 	{"message", "<device> <sector> <message>", 2, -1, 0, _message},
 	{"ls", "[--target <target_type>] [--exec <command>] [-o options] [--tree]", 0, 0, 0, _ls},
