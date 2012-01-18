@@ -1,5 +1,6 @@
 Version 1.02.68 -
 ==================================
+  Add dmsetup wipe_table to replace table with one that uses error target.
   Add 'blkdevname' and 'blkdevs_used' field to dmsetup info -c -o.
   Add 'blkdevname' option to dmsetup ls --tree to see block device names.
   Add '-o options' to dmsetup deps and ls to select device name type on output.
