@@ -3143,7 +3143,10 @@ int dm_get_status_thin(struct dm_pool *mem, const char *params,
 		return 0;
 	}
 
-	if (sscanf(params, "%" PRIu64 " %" PRIu64,
+	if (strchr(params, '-')) {
+		s->mapped_sectors = 0;
+		s->highest_mapped_sector = 0;
+	} else if (sscanf(params, "%" PRIu64 " %" PRIu64,
 		   &s->mapped_sectors,
 		   &s->highest_mapped_sector) != 2) {
 		log_error("Failed to parse thin params: %s.", params);
