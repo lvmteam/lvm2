@@ -523,7 +523,7 @@ static int _lv_reduce(struct logical_volume *lv, uint32_t extents, int delete)
 			if (seg->log_lv && !lv_remove(seg->log_lv))
 				return_0;
 
-			if (seg->pool_metadata_lv && !lv_remove(seg->pool_metadata_lv))
+			if (seg->metadata_lv && !lv_remove(seg->metadata_lv))
 				return_0;
 
 			if (seg->pool_lv) {
@@ -2788,7 +2788,7 @@ int for_each_sub_lv(struct cmd_context *cmd, struct logical_volume *lv,
 			if (!for_each_sub_lv(cmd, seg->log_lv, fn, data))
 				return_0;
 		}
-		if (seg->pool_metadata_lv && !fn(cmd, seg->pool_metadata_lv, data))
+		if (seg->metadata_lv && !fn(cmd, seg->metadata_lv, data))
 			return_0;
 		for (s = 0; s < seg->area_count; s++) {
 			if (seg_type(seg, s) != AREA_LV)

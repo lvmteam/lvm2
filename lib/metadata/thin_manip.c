@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2011-2012 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -20,13 +20,13 @@
 #include "lv_alloc.h"
 #include "archiver.h"
 
-int attach_pool_metadata_lv(struct lv_segment *seg, struct logical_volume *pool_metadata_lv)
+int attach_pool_metadata_lv(struct lv_segment *seg, struct logical_volume *metadata_lv)
 {
-	seg->pool_metadata_lv = pool_metadata_lv;
-	pool_metadata_lv->status |= THIN_POOL_METADATA;
-	lv_set_hidden(pool_metadata_lv);
+	seg->metadata_lv = metadata_lv;
+	metadata_lv->status |= THIN_POOL_METADATA;
+	lv_set_hidden(metadata_lv);
 
-	return add_seg_to_segs_using_this_lv(pool_metadata_lv, seg);
+	return add_seg_to_segs_using_this_lv(metadata_lv, seg);
 }
 
 int attach_pool_data_lv(struct lv_segment *seg, struct logical_volume *pool_data_lv)

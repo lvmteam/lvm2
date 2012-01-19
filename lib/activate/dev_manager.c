@@ -1160,7 +1160,7 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		return_0;
 
 	if (lv_is_thin_pool(lv)) {
-		if (!_add_lv_to_dtree(dm, dtree, seg->pool_metadata_lv, origin_only))
+		if (!_add_lv_to_dtree(dm, dtree, seg->metadata_lv, origin_only))
 			return_0;
 		/* FIXME code from _create_partial_dtree() should be moved here */
 		if (!_add_lv_to_dtree(dm, dtree, seg_lv(seg, 0), origin_only))
@@ -1566,7 +1566,7 @@ static int _add_segment_to_dtree(struct dev_manager *dm,
 			return_0;
 	} else {
 		if (seg_is_thin_pool(seg) &&
-		    !_add_new_lv_to_dtree(dm, dtree, seg->pool_metadata_lv, laopts, NULL))
+		    !_add_new_lv_to_dtree(dm, dtree, seg->metadata_lv, laopts, NULL))
 			return_0;
 
 		/* Add any LVs used by this segment */

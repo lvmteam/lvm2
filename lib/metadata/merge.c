@@ -102,7 +102,7 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 
 		if (lv_is_thin_pool_metadata(lv) &&
 		    (!(seg2 = first_seg(lv)) || !(seg2 = find_pool_seg(seg2)) ||
-		     seg2->pool_metadata_lv != lv)) {
+		     seg2->metadata_lv != lv)) {
 			log_error("LV %s: segment 1 pool metadata LV does not point back to same LV",
 				  lv->name);
 			inc_error_count;
@@ -191,11 +191,11 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 					inc_error_count;
 				}
 
-				if (!seg->pool_metadata_lv) {
+				if (!seg->metadata_lv) {
 					log_error("LV %s: thin pool segment %u is missing a pool metadata LV",
 						  lv->name, seg_count);
 					inc_error_count;
-				} else if (!(seg2 = first_seg(seg->pool_metadata_lv)) ||
+				} else if (!(seg2 = first_seg(seg->metadata_lv)) ||
 					   find_pool_seg(seg2) != seg) {
 					log_error("LV %s: thin pool segment %u metadata LV does not refer back to pool LV",
 						  lv->name, seg_count);
@@ -209,7 +209,7 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 					inc_error_count;
 				}
 			} else {
-				if (seg->pool_metadata_lv) {
+				if (seg->metadata_lv) {
 					log_error("LV %s: segment %u must not have thin pool metadata LV set",
 						  lv->name, seg_count);
 					inc_error_count;
@@ -371,7 +371,7 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 				seg_found++;
 		if (seg->log_lv == lv)
 			seg_found++;
-		if (seg->pool_metadata_lv == lv || seg->pool_lv == lv)
+		if (seg->metadata_lv == lv || seg->pool_lv == lv)
 			seg_found++;
 		if (seg_is_thin_volume(seg) && seg->origin == lv)
 			seg_found++;
