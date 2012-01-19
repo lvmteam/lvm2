@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2010 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2012 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -129,8 +129,11 @@ uint64_t lvseg_chunksize(const struct lv_segment *seg)
 
 	if (lv_is_cow(seg->lv))
 		size = (uint64_t) find_cow(seg->lv)->chunk_size;
+	else if (lv_is_thin_pool(seg->lv))
+		size = (uint64_t) seg->data_block_size;
 	else
 		size = UINT64_C(0);
+
 	return size;
 }
 
@@ -203,6 +206,18 @@ char *lv_pool_lv_dup(struct dm_pool *mem, const struct logical_volume *lv)
 	return NULL;
 }
 
+char *lv_data_lv_dup(struct dm_pool *mem, const struct logical_volume *lv)
+{
+	return lv_is_thin_pool(lv) ?
+		dm_pool_strdup(mem, seg_lv(first_seg(lv), 0)->name) : NULL;
+}
+
+char *lv_metadata_lv_dup(struct dm_pool *mem, const struct logical_volume *lv)
+{
+	return lv_is_thin_pool(lv) ?
+		dm_pool_strdup(mem, first_seg(lv)->metadata_lv->name) : NULL;
+}
+
 int lv_kernel_minor(const struct logical_volume *lv)
 {
 	struct lvinfo info;
@@ -253,6 +268,11 @@ uint64_t lv_origin_size(const struct logical_volume *lv)
 	if (lv_is_origin(lv))
 		return lv->size;
 	return 0;
+}
+
+uint64_t lv_metadata_size(const struct logical_volume *lv)
+{
+	return lv_is_thin_pool(lv) ? first_seg(lv)->metadata_lv->size : 0;
 }
 
 char *lv_path_dup(struct dm_pool *mem, const struct logical_volume *lv)

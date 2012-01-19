@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2010-2012 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -100,6 +100,20 @@ static percent_t _snap_percent(const struct logical_volume *lv) {
 	return perc;
 }
 
+static percent_t _data_percent(const struct logical_volume *lv)
+{
+	percent_t perc;
+
+	return lv_thin_pool_percent(lv, 0, &perc) ? perc : PERCENT_INVALID;
+}
+
+static percent_t _metadata_percent(const struct logical_volume *lv)
+{
+	percent_t perc;
+
+	return lv_thin_pool_percent(lv, 1, &perc) ? perc : PERCENT_INVALID;
+}
+
 /* PV */
 GET_PV_STR_PROPERTY_FN(pv_fmt, pv_fmt_dup(pv))
 #define _pv_fmt_set _not_implemented_set
@@ -175,10 +189,24 @@ GET_LV_STR_PROPERTY_FN(lv_tags, lv_tags_dup(lv))
 #define _lv_tags_set _not_implemented_set
 GET_LV_STR_PROPERTY_FN(mirror_log, lv_mirror_log_dup(lv->vg->vgmem, lv))
 #define _mirror_log_set _not_implemented_set
-GET_LV_STR_PROPERTY_FN(thin_pool, lv_pool_lv_dup(lv->vg->vgmem, lv))
-#define _thin_pool_set _not_implemented_set
 GET_LV_STR_PROPERTY_FN(modules, lv_modules_dup(lv->vg->vgmem, lv))
 #define _modules_set _not_implemented_set
+GET_LV_STR_PROPERTY_FN(data_lv, lv_data_lv_dup(lv->vg->vgmem, lv))
+#define _data_lv_set _not_implemented_set
+GET_LV_STR_PROPERTY_FN(metadata_lv, lv_metadata_lv_dup(lv->vg->vgmem, lv))
+#define _metadata_lv_set _not_implemented_set
+GET_LV_STR_PROPERTY_FN(pool_lv, lv_pool_lv_dup(lv->vg->vgmem, lv))
+#define _pool_lv_set _not_implemented_set
+GET_LV_NUM_PROPERTY_FN(data_percent, _data_percent(lv))
+#define _data_percent_set _not_implemented_set
+GET_LV_NUM_PROPERTY_FN(metadata_percent, _metadata_percent(lv))
+#define _metadata_percent_set _not_implemented_set
+GET_LV_NUM_PROPERTY_FN(lv_metadata_size, lv_metadata_size(lv) * SECTOR_SIZE)
+#define _lv_metadata_size_set _not_implemented_set
+GET_LV_STR_PROPERTY_FN(lv_time, lv_time_dup(lv->vg->vgmem, lv))
+#define _lv_time_set _not_implemented_set
+GET_LV_STR_PROPERTY_FN(lv_host, lv_host_dup(lv->vg->vgmem, lv))
+#define _lv_host_set _not_implemented_set
 
 /* VG */
 GET_VG_STR_PROPERTY_FN(vg_fmt, vg_fmt_dup(vg))
@@ -243,6 +271,12 @@ GET_LVSEG_NUM_PROPERTY_FN(chunksize, lvseg_chunksize(lvseg))
 #define _chunksize_set _not_implemented_set
 GET_LVSEG_NUM_PROPERTY_FN(chunk_size, lvseg_chunksize(lvseg))
 #define _chunk_size_set _not_implemented_set
+GET_LVSEG_NUM_PROPERTY_FN(thin_count, dm_list_size(&lvseg->lv->segs_using_this_lv))
+#define _thin_count_set _not_implemented_set
+GET_LVSEG_NUM_PROPERTY_FN(zero, lvseg->zero_new_blocks)
+#define _zero_set _not_implemented_set
+GET_LVSEG_NUM_PROPERTY_FN(transaction_id, lvseg->transaction_id)
+#define _transaction_id_set _not_implemented_set
 GET_LVSEG_NUM_PROPERTY_FN(seg_start, lvseg_start(lvseg))
 #define _seg_start_set _not_implemented_set
 GET_LVSEG_NUM_PROPERTY_FN(seg_start_pe, lvseg->le)
