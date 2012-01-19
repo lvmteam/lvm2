@@ -3117,10 +3117,11 @@ int dm_get_status_thin_pool(struct dm_pool *mem, const char *params,
 		return 0;
 	}
 
+	/* FIXME: add support for held metadata root */
 	if (sscanf(params, "%" PRIu64 " %" PRIu64 "/%" PRIu64 " %" PRIu64 "/%" PRIu64,
 		   &s->transaction_id,
-		   &s->used_meta_blocks,
-		   &s->total_meta_blocks,
+		   &s->used_metadata_blocks,
+		   &s->total_metadata_blocks,
 		   &s->used_data_blocks,
 		   &s->total_data_blocks) != 5) {
 		log_error("Failed to parse thin pool params: %s.", params);

@@ -38,9 +38,9 @@
 
 struct dso_state {
 	struct dm_pool *mem;
-	int meta_percent_check;
+	int metadata_percent_check;
 	int data_percent_check;
-	uint64_t known_meta_size;
+	uint64_t known_metadata_size;
 	uint64_t known_data_size;
 	char cmd_str[1024];
 };
@@ -183,9 +183,9 @@ void process_event(struct dm_task *dmt,
 #endif
 
 	/* Thin pool size had changed. Clear the threshold. */
-	if (state->known_meta_size != tps->total_meta_blocks) {
-		state->meta_percent_check = CHECK_MINIMUM;
-		state->known_meta_size = tps->total_meta_blocks;
+	if (state->known_metadata_size != tps->total_metadata_blocks) {
+		state->metadata_percent_check = CHECK_MINIMUM;
+		state->known_metadata_size = tps->total_metadata_blocks;
 	}
 
 	if (state->known_data_size != tps->total_data_blocks) {
@@ -193,13 +193,13 @@ void process_event(struct dm_task *dmt,
 		state->known_data_size = tps->total_data_blocks;
 	}
 
-	percent = 100 * tps->used_meta_blocks / tps->total_meta_blocks;
-	if (percent >= state->meta_percent_check) {
+	percent = 100 * tps->used_metadata_blocks / tps->total_metadata_blocks;
+	if (percent >= state->metadata_percent_check) {
 		/*
 		 * Usage has raised more than CHECK_STEP since the last
 		 * time. Run actions.
 		 */
-		state->meta_percent_check = (percent / CHECK_STEP) * CHECK_STEP + CHECK_STEP;
+		state->metadata_percent_check = (percent / CHECK_STEP) * CHECK_STEP + CHECK_STEP;
 
 		/* FIXME: extension of metadata needs to be written! */
 		if (percent >= WARNING_THRESH) /* Print a warning to syslog. */
@@ -259,7 +259,7 @@ int register_device(const char *device,
 	}
 
 	state->mem = statemem;
-	state->meta_percent_check = CHECK_MINIMUM;
+	state->metadata_percent_check = CHECK_MINIMUM;
 	state->data_percent_check = CHECK_MINIMUM;
 	*private = state;
 

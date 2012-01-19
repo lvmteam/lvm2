@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2011-2012 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -303,31 +303,28 @@ static int _thin_pool_target_percent(void **target_state __attribute__((unused))
 				     percent_t *percent,
 				     struct dm_pool *mem,
 				     struct cmd_context *cmd __attribute__((unused)),
-				     struct lv_segment *seg __attribute__((unused)),
+				     struct lv_segment *seg,
 				     char *params,
 				     uint64_t *total_numerator,
 				     uint64_t *total_denominator)
 {
 	struct dm_status_thin_pool *s;
-	percent_t meta_percent;
-	percent_t data_percent;
 
 	if (!dm_get_status_thin_pool(mem, params, &s))
 		return_0;
 
-	/*
-	 * FIXME: how to handle exhaust of metadata space
-	 * pick the max from data and meta?
-	 * Support for metadata resize is needed.
-	 */
-	meta_percent = make_percent(s->used_meta_blocks,
-				    s->total_meta_blocks);
-	data_percent = make_percent(s->used_data_blocks,
-				    s->total_data_blocks);
-
-	*percent = data_percent;
-	*total_numerator += s->used_data_blocks;
-	*total_denominator += s->total_data_blocks;
+        /* With seg report metadata percent, otherwice data percent */
+	if (seg) {
+		*percent = make_percent(s->used_metadata_blocks,
+					s->total_metadata_blocks);
+		*total_numerator += s->used_metadata_blocks;
+		*total_denominator += s->total_metadata_blocks;
+	} else {
+		*percent = make_percent(s->used_data_blocks,
+					s->total_data_blocks);
+		*total_numerator += s->used_data_blocks;
+		*total_denominator += s->total_data_blocks;
+	}
 
 	return 1;
 }
