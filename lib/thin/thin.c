@@ -313,7 +313,7 @@ static int _thin_pool_target_percent(void **target_state __attribute__((unused))
 	if (!dm_get_status_thin_pool(mem, params, &s))
 		return_0;
 
-        /* With seg report metadata percent, otherwice data percent */
+	/* With 'seg' report metadata percent, otherwice data percent */
 	if (seg) {
 		*percent = make_percent(s->used_metadata_blocks,
 					s->total_metadata_blocks);
