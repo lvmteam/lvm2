@@ -243,10 +243,11 @@ struct dm_pool;
 
 struct dm_status_thin_pool {
 	uint64_t transaction_id;
-	uint64_t used_meta_blocks;
-	uint64_t total_meta_blocks;
+	uint64_t used_metadata_blocks;
+	uint64_t total_metadata_blocks;
 	uint64_t used_data_blocks;
 	uint64_t total_data_blocks;
+	uint64_t held_metadata_root;
 };
 
 int dm_get_status_thin_pool(struct dm_pool *mem, const char *params,
