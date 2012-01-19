@@ -2993,6 +2993,9 @@ struct logical_volume *lv_create_empty(const char *name,
 
 	if (!link_lv_to_vg(vg, lv))
 		goto_bad;
+
+	if (!lv_set_creation(lv, NULL, 0))
+		goto_bad;
  
 	if (fi->fmt->ops->lv_setup && !fi->fmt->ops->lv_setup(fi, lv))
 		goto_bad;

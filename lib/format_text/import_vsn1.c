@@ -494,6 +494,8 @@ static int _read_lvnames(struct format_instance *fid __attribute__((unused)),
 	struct logical_volume *lv;
 	const char *lv_alloc;
 	const struct dm_config_value *cv;
+	const char *hostname;
+	uint64_t timestamp = 0;
 
 	if (!(lv = alloc_lv(mem)))
 		return_0;
@@ -508,6 +510,23 @@ static int _read_lvnames(struct format_instance *fid __attribute__((unused)),
 
 	if (!_read_flag_config(lvn, &lv->status, LV_FLAGS)) {
 		log_error("Couldn't read status flags for logical volume %s.",
+			  lv->name);
+		return 0;
+	}
+
+	if (dm_config_has_node(lvn, "creation_time")) {
+		if (!_read_uint64(lvn, "creation_time", &timestamp)) {
+			log_error("Invalid creation_time for logical volume %s.",
+				  lv->name);
+			return 0;
+		}
+		if (!dm_config_get_str(lvn, "creation_host", &hostname)) {
+			log_error("Couldn't read creation_host for logical volume %s.",
+				  lv->name);
+			return 0;
+		}
+	} else if (dm_config_has_node(lvn, "creation_host")) {
+		log_error("Missing creation_time for logical volume %s.",
 			  lv->name);
 		return 0;
 	}
@@ -548,7 +567,13 @@ static int _read_lvnames(struct format_instance *fid __attribute__((unused)),
 	if (!dm_hash_insert(lv_hash, lv->name, lv))
 		return_0;
 
-	return link_lv_to_vg(vg, lv);
+	if (!link_lv_to_vg(vg, lv))
+		return_0;
+
+	if (timestamp && !lv_set_creation(lv, hostname, timestamp))
+		return_0;
+
+	return 1;
 }
 
 static int _read_lvsegs(struct format_instance *fid __attribute__((unused)),

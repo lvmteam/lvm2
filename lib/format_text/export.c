@@ -579,6 +579,8 @@ static int _print_lv(struct formatter *f, struct logical_volume *lv)
 	struct lv_segment *seg;
 	char buffer[4096];
 	int seg_count;
+	struct tm *local_tm;
+	time_t ts;
 
 	outnl(f);
 	outf(f, "%s {", lv->name);
@@ -595,6 +597,19 @@ static int _print_lv(struct formatter *f, struct logical_volume *lv)
 
 	if (!_out_tags(f, &lv->tags))
 		return_0;
+
+	if (lv->timestamp) {
+		ts = (time_t)lv->timestamp;
+		strncpy(buffer, "# ", sizeof(buffer));
+		if (!(local_tm = localtime(&ts)) ||
+		    !strftime(buffer + 2, sizeof(buffer) - 2,
+			      "%Y-%m-%d %T %z", local_tm))
+			buffer[0] = 0;
+
+		outf(f, "creation_host = \"%s\"", lv->hostname);
+		outfc(f, buffer, "creation_time = %" PRIu64,
+		      lv->timestamp);
+	}
 
 	if (lv->alloc != ALLOC_INHERIT)
 		outf(f, "allocation_policy = \"%s\"",
