@@ -152,7 +152,7 @@ static int _thin_pool_text_export(const struct lv_segment *seg, struct formatter
 	unsigned cnt = 0;
 	const struct lv_thin_message *tmsg;
 
-	outf(f, "metadata = \"%s\"", seg->pool_metadata_lv->name);
+	outf(f, "metadata = \"%s\"", seg->metadata_lv->name);
 	outf(f, "pool = \"%s\"", seg_lv(seg, 0)->name);
 	outf(f, "transaction_id = %" PRIu64, seg->transaction_id);
 // FIXME  maybe switch to use  chunksize (as with snapshot ??)
@@ -240,9 +240,9 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 		return 1;
 	}
 
-	if (!(metadata_dlid = build_dm_uuid(mem, seg->pool_metadata_lv->lvid.s, NULL))) {
+	if (!(metadata_dlid = build_dm_uuid(mem, seg->metadata_lv->lvid.s, NULL))) {
 		log_error("Failed to build uuid for metadata LV %s.",
-			  seg->pool_metadata_lv->name);
+			  seg->metadata_lv->name);
 		return 0;
 	}
 

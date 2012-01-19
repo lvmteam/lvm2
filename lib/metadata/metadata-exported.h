@@ -345,7 +345,7 @@ struct lv_segment {
 
 	struct lv_segment_area *areas;
 	struct lv_segment_area *meta_areas;	/* For RAID */
-	struct logical_volume *pool_metadata_lv;/* For thin_pool */
+	struct logical_volume *metadata_lv;	/* For thin_pool */
 	uint64_t transaction_id;		/* For thin_pool, thin */
 	uint64_t low_water_mark;		/* For thin_pool */
 	uint32_t data_block_size;		/* For thin_pool, 128..2097152 */
