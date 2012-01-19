@@ -3996,6 +3996,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 	struct logical_volume *lv, *org = NULL;
 	struct logical_volume *pool_lv;
 	struct lv_list *lvl;
+	percent_t percent;
 	int origin_active = 0;
 	struct lvinfo info;
 
@@ -4315,6 +4316,14 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 	if (seg_is_thin(lp)) {
 		/* For thin snapshot suspend active thin origin first */
 		if (org && lv_is_active(org)) {
+			lv_thin_pool_percent(first_seg(org)->pool_lv, 0, &percent);
+			percent /= PERCENT_1;
+			if (percent >= (find_config_tree_int(cmd, "activation/thin_pool_autoextend_threshold",
+							     DEFAULT_THIN_POOL_AUTOEXTEND_THRESHOLD))) {
+				log_error("Failed to create snapshot, pool is filled over "
+					  "the autoextend threshold (%d%%).", percent);
+				goto revert_new_lv;
+			}
 			if (!suspend_lv(cmd, org)) {
 				log_error("Failed to suspend thin origin %s.",
 					  org->name);
