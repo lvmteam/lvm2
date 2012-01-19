@@ -994,10 +994,11 @@ static int xstrtouint32(const char *s, char **p, int base, uint32_t *result)
 
 	errno = 0;
 	ul = strtoul(s, p, base);
-	if (errno || *p == s || (uint32_t) ul != ul)
-		return -1;
+	if (errno || *p == s || ul > UINT32_MAX)
+		return 0;
 	*result = ul;
-	return 0;
+
+	return 1;
 }
 
 static int _parse_pes(struct dm_pool *mem, char *c, struct dm_list *pe_ranges,
@@ -1029,7 +1030,7 @@ static int _parse_pes(struct dm_pool *mem, char *c, struct dm_list *pe_ranges,
 
 		/* Start extent given? */
 		if (isdigit(*c)) {
-			if (xstrtouint32(c, &endptr, 10, &start))
+			if (!xstrtouint32(c, &endptr, 10, &start))
 				goto error;
 			c = endptr;
 			/* Just one number given? */
@@ -1040,7 +1041,7 @@ static int _parse_pes(struct dm_pool *mem, char *c, struct dm_list *pe_ranges,
 		if (*c == '-') {
 			c++;
 			if (isdigit(*c)) {
-				if (xstrtouint32(c, &endptr, 10, &end))
+				if (!xstrtouint32(c, &endptr, 10, &end))
 					goto error;
 				c = endptr;
 			}
