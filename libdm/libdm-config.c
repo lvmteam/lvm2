@@ -89,7 +89,7 @@ static int _tok_match(const char *str, const char *b, const char *e)
 	return !(*str || (b != e));
 }
 
-struct dm_config_tree *dm_config_create()
+struct dm_config_tree *dm_config_create(void)
 {
 	struct dm_config_tree *cft;
 	struct dm_pool *mem = dm_pool_create("config", 10 * 1024);
