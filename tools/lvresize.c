@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2011 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2012 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -305,7 +305,16 @@ static int _adjust_policy_params(struct cmd_context *cmd,
 		return 1; /* nothing to do */
 
 	if (lv_is_thin_pool(lv)) {
-		if (!lv_thin_pool_percent(lv, &percent))
+		if (!lv_thin_pool_percent(lv, 1, &percent))
+			return_0;
+		if (percent > policy_threshold) {
+			/* FIXME: metadata resize support missing */
+			log_error("Resize for %s/%s is not yet supported.",
+				  lp->vg_name, lp->lv_name);
+			return ECMD_FAILED;
+		}
+
+		if (!lv_thin_pool_percent(lv, 0, &percent))
 			return_0;
 		if (!(PERCENT_0 < percent && percent <= PERCENT_100) ||
 		    percent <= policy_threshold)

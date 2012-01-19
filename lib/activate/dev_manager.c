@@ -874,7 +874,7 @@ static int _belong_to_vg(const char *vgname, const char *name)
 
 int dev_manager_thin_pool_percent(struct dev_manager *dm,
 				  const struct logical_volume *lv,
-				  percent_t *percent)
+				  int metadata, percent_t *percent)
 {
 	char *name;
 	const char *dlid;
@@ -888,8 +888,8 @@ int dev_manager_thin_pool_percent(struct dev_manager *dm,
 		return_0;
 
 	log_debug("Getting device status percentage for %s", name);
-	if (!(_percent(dm, name, dlid, "thin-pool", 0, NULL, percent,
-		       NULL, 1)))
+	if (!(_percent(dm, name, dlid, "thin-pool", 0,
+		       (metadata) ? lv : NULL, percent, NULL, 1)))
 		return_0;
 
 	return 1;
