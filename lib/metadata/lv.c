@@ -21,6 +21,12 @@
 #include "segtype.h"
 #include "str_list.h"
 
+#include <time.h>
+#include <sys/utsname.h>
+
+static struct utsname _utsname;
+static int _utsinit = 0;
+
 static char *_format_pvsegs(struct dm_pool *mem, const struct lv_segment *seg,
 			     int range_format)
 {
@@ -468,4 +474,59 @@ char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 
 out:
 	return repstr;
+}
+
+int lv_set_creation(struct logical_volume *lv,
+		    const char *hostname, uint64_t timestamp)
+{
+	const char *hn;
+
+	if (!hostname) {
+		if (!_utsinit) {
+			if (uname(&_utsname)) {
+				log_error("uname failed: %s", strerror(errno));
+				memset(&_utsname, 0, sizeof(_utsname));
+			}
+
+			_utsinit = 1;
+		}
+
+		hostname = _utsname.nodename;
+	}
+
+	if (!(hn = dm_hash_lookup(lv->vg->hostnames, hostname))) {
+		if (!(hn = dm_pool_strdup(lv->vg->vgmem, hostname))) {
+			log_error("Failed to duplicate hostname");
+			return 0;
+		}
+
+		if (!dm_hash_insert(lv->vg->hostnames, hostname, (void*)hn))
+			return_0;
+	}
+
+	lv->hostname = hn;
+	lv->timestamp = timestamp ? : time(NULL);
+
+	return 1;
+}
+
+char *lv_time_dup(struct dm_pool *mem, const struct logical_volume *lv)
+{
+	char buffer[50];
+	struct tm *local_tm;
+	time_t ts = (time_t)lv->timestamp;
+
+	if (!ts ||
+	    !(local_tm = localtime(&ts)) ||
+	    /* FIXME: make this lvm.conf configurable */
+	    !strftime(buffer, sizeof(buffer),
+		      "%Y-%m-%d %T %z", local_tm))
+		buffer[0] = 0;
+
+	return dm_pool_strdup(mem, buffer);
+}
+
+char *lv_host_dup(struct dm_pool *mem, const struct logical_volume *lv)
+{
+	return dm_pool_strdup(mem, lv->hostname ? : "");
 }

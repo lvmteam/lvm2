@@ -44,6 +44,12 @@ struct volume_group *alloc_vg(const char *pool_name, struct cmd_context *cmd,
 	vg->vgmem = vgmem;
 	vg->alloc = ALLOC_NORMAL;
 
+	if (!(vg->hostnames = dm_hash_create(16))) {
+		log_error("Failed to allocate VG hostname hashtable.");
+		dm_pool_destroy(vgmem);
+		return NULL;
+	}
+
 	dm_list_init(&vg->pvs);
 	dm_list_init(&vg->pvs_to_create);
 	dm_list_init(&vg->lvs);
@@ -67,6 +73,7 @@ static void _free_vg(struct volume_group *vg)
 
 	log_debug("Freeing VG %s at %p.", vg->name, vg);
 
+	dm_hash_destroy(vg->hostnames);
 	dm_pool_destroy(vg->vgmem);
 }
 

@@ -109,6 +109,8 @@ struct volume_group {
 	 */
 	uint32_t read_status;
 	uint32_t mda_copies; /* target number of mdas for this VG */
+
+	struct dm_hash_table *hostnames; /* map of creation hostnames */
 };
 
 struct volume_group *alloc_vg(const char *pool_name, struct cmd_context *cmd,
