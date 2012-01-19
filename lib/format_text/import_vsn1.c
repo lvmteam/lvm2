@@ -39,7 +39,7 @@ typedef int (*section_fn) (struct format_instance * fid,
 #define _read_uint32(root, path, result) \
 	dm_config_get_uint32(root, path, result)
 
-#define _read_int64(root, path, result) \
+#define _read_uint64(root, path, result) \
 	dm_config_get_uint64(root, path, result)
 
 /*
@@ -216,9 +216,9 @@ static int _read_pv(struct format_instance *fid,
 		pv->status |= MISSING_PV;
 
 	/* Late addition */
-	_read_int64(pvn, "dev_size", &pv->size);
+	_read_uint64(pvn, "dev_size", &pv->size);
 
-	if (!_read_int64(pvn, "pe_start", &pv->pe_start)) {
+	if (!_read_uint64(pvn, "pe_start", &pv->pe_start)) {
 		log_error("Couldn't read extent size for physical volume.");
 		return 0;
 	}
