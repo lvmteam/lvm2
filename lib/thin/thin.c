@@ -409,6 +409,36 @@ static int _thin_add_target_line(struct dev_manager *dm,
 	return 1;
 }
 
+static int _thin_target_percent(void **target_state __attribute__((unused)),
+				percent_t *percent,
+				struct dm_pool *mem,
+				struct cmd_context *cmd __attribute__((unused)),
+				struct lv_segment *seg,
+				char *params,
+				uint64_t *total_numerator,
+				uint64_t *total_denominator)
+{
+	struct dm_status_thin *s;
+
+	/* Status for thin device is in sectors */
+	if (!dm_get_status_thin(mem, params, &s))
+		return_0;
+
+	if (seg) {
+		*percent = make_percent(s->mapped_sectors, seg->lv->size);
+		*total_denominator += seg->lv->size;
+	} else {
+		/* No lv_segment info here */
+		*percent = PERCENT_INVALID;
+		/* FIXME: Using denominator to pass the mapped info upward? */
+		*total_denominator += s->highest_mapped_sector;
+	}
+
+	*total_numerator += s->mapped_sectors;
+
+	return 1;
+}
+
 static int _thin_target_present(struct cmd_context *cmd,
 				const struct lv_segment *seg,
 				unsigned *attributes __attribute__((unused)))
@@ -499,6 +529,7 @@ static struct segtype_handler _thin_ops = {
 	.text_export = _thin_text_export,
 #ifdef DEVMAPPER_SUPPORT
 	.add_target_line = _thin_add_target_line,
+	.target_percent = _thin_target_percent,
 	.target_present = _thin_target_present,
 #  ifdef DMEVENTD
 	.target_monitored = _target_registered,
