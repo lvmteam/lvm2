@@ -18,7 +18,6 @@ int read_buffer(int fd, char **buffer) {
 	int bytes = 0;
 	int buffersize = 32;
 	char *new;
-	char *end;
 	*buffer = malloc(buffersize + 1);
 
 	while (1) {
