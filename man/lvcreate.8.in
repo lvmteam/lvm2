@@ -81,9 +81,7 @@ lvcreate \- create a logical volume in an existing volume group
 .RB [ \-n | \-\-name
 .IR SnapshotLogicalVolume { Name | Path }]
 .BR \-s | \-\-snapshot
-.RI { OriginalLogicalVolume { Name | Path }
-|
-.IR VolumeGroup { Name | Path }
+.RI {[ VolumeGroup { Name | Path }/] OriginalLogicalVolumeName
 .BR \-V | \-\-virtualsize
 .IR VirtualSize [ bBsSkKmMgGtTpPeE ]}
 .br
@@ -241,16 +239,19 @@ a suitable value automatically.
 A mirror is divided into regions of this size (in MB), and the mirror log 
 uses this granularity to track which regions are in sync.
 .TP
-.IR \fB\-s ", " \fB\-\-snapshot " " OriginalLogicalVolume { Name | Path } 
-.RI "| " VolumeGroup { Name | Path }
+.IR \fB\-s ", " \fB\-\-snapshot " " OriginalLogicalVolume { Name | Path }
 
 Create a snapshot logical volume (or snapshot) for an existing, so called
 original logical volume (or origin).
 Snapshots provide a 'frozen image' of the contents of the origin
 while the origin can still be updated. They enable consistent
-backups and online recovery of removed/overwritten data/files. The snapshot
-does not need the same amount of storage the origin has. In a typical scenario,
-15-20% might be enough. In case the snapshot runs out of storage, use
+backups and online recovery of removed/overwritten data/files.
+Thin snapshot is created when the origin is a thin volume and
+the size is not specified. Thin snapshot shares same blocks within
+the thin pool volume.
+The snapshot with the specified size does not need the same amount of
+storage the origin has. In a typical scenario, 15-20% might be enough.
+In case the snapshot runs out of storage, use
 .BR lvextend (8)
 to grow it. Shrinking a snapshot is supported by
 .BR lvreduce (8)
