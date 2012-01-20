@@ -348,12 +348,23 @@ int backup_restore_from_file(struct cmd_context *cmd, const char *vg_name,
 {
 	struct volume_group *vg;
 	int missing_pvs, r = 0;
+	const struct lv_list *lvl;
 
 	/*
 	 * Read in the volume group from the text file.
 	 */
 	if (!(vg = backup_read_vg(cmd, vg_name, file)))
 		return_0;
+
+	/* FIXME: Restore support is missing for now */
+	dm_list_iterate_items(lvl, &vg->lvs)
+		if (lv_is_thin_type(lvl->lv)) {
+			log_error("Cannot restore Volume Group %s with "
+				  "thin logical volumes. "
+				  "(not yet supported).", vg->name);
+			r = 0;
+			goto out;
+		}
 
 	missing_pvs = vg_missing_pv_count(vg);
 	if (missing_pvs == 0)
@@ -362,6 +373,7 @@ int backup_restore_from_file(struct cmd_context *cmd, const char *vg_name,
 		log_error("Cannot restore Volume Group %s with %i PVs "
 			  "marked as missing.", vg->name, missing_pvs);
 
+out:
 	release_vg(vg);
 	return r;
 }
