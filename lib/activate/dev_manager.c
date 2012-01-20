@@ -482,6 +482,9 @@ int add_linear_area_to_dtree(struct dm_tree_node *node, uint64_t size, uint32_t 
 static percent_range_t _combine_percent(percent_t a, percent_t b,
                                         uint32_t numerator, uint32_t denominator)
 {
+	if (a == PERCENT_MERGE_FAILED || b == PERCENT_MERGE_FAILED)
+		return PERCENT_MERGE_FAILED;
+
 	if (a == PERCENT_INVALID || b == PERCENT_INVALID)
 		return PERCENT_INVALID;
 
