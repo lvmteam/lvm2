@@ -1709,6 +1709,8 @@ static int _lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 {
 	struct lvconvert_params *lp = handle;
 	struct dm_list *failed_pvs;
+	struct lvinfo info;
+	percent_t snap_percent;
 
 	if (lv->status & LOCKED) {
 		log_error("Cannot convert locked LV %s", lv->name);
@@ -1740,6 +1742,13 @@ static int _lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 		if (!lv_is_cow(lv)) {
 			log_error("Logical volume \"%s\" is not a snapshot",
 				  lv->name);
+			return ECMD_FAILED;
+		}
+	        if (lv_info(lv->vg->cmd, lv, 0, &info, 1, 0)
+		    && info.exists && info.live_table &&
+		    (!lv_snapshot_percent(lv, &snap_percent) ||
+		     snap_percent == PERCENT_INVALID)) {
+			log_error("Unable to merge invalidated snapshot LV \"%s\"", lv->name);
 			return ECMD_FAILED;
 		}
 		if (!archive(lv->vg)) {

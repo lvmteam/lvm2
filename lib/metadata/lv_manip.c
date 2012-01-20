@@ -3263,15 +3263,27 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *lv,
 				const force_t force, unsigned level)
 {
+	percent_t snap_percent;
 	struct dm_list *snh, *snht;
 	struct seg_list *sl, *tsl;
+	struct lvinfo info;
 
 	if (lv_is_cow(lv)) {
-		/* A merging snapshot cannot be removed directly */
+		/*
+		 * A merging snapshot cannot be removed directly unless
+		 * it has been invalidated.
+		 */
 		if (lv_is_merging_cow(lv) && !level) {
-			log_error("Can't remove merging snapshot logical volume \"%s\"",
-				  lv->name);
-			return 0;
+			if (lv_info(lv->vg->cmd, lv, 0, &info, 1, 0) &&
+			    info.exists && info.live_table) {
+				if (lv_snapshot_percent(lv, &snap_percent) &&
+				    ((snap_percent != PERCENT_INVALID) &&
+				     (snap_percent != PERCENT_MERGE_FAILED))) {
+					log_error("Can't remove merging snapshot logical volume \"%s\"",
+						  lv->name);
+					return 0;
+				}
+			}
 		}
 	}
 

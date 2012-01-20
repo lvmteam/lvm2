@@ -1,5 +1,7 @@
 Version 2.02.89 - 
 ==================================
+  Allow removal of an invalid snapshot that was to be merged on next activation.
+  Don't allow a user to merge an invalid snapshot.
   Use m and M lv_attr to indicate that a snapshot merge failed in lvs.
   Differentiate between snapshot status of "Invalid" and "Merge failed".
   Lookup snapshot usage percent of origin volume when a snapshot is merging.
