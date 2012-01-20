@@ -116,10 +116,6 @@ char *lvseg_tags_dup(const struct lv_segment *seg)
 
 char *lvseg_segtype_dup(struct dm_pool *mem, const struct lv_segment *seg)
 {
-	if (seg->area_count == 1) {
-		return (char *)"linear";
-	}
-
 	return dm_pool_strdup(mem, seg->segtype->ops->name(seg));
 }
 
