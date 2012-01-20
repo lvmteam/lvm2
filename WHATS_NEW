@@ -1,6 +1,7 @@
 Version 2.02.89 - 
 ==================================
-  Keep into about creation host and time for each logical volume.
+  Preserve exclusive activation of cluster mirror when converting.
+  Keep info about creation host and time for each logical volume.
   Make error message hit when preallocated memlock memory exceeded clearer.
   Use R lv_attr to indicate read-only activation of non-read-only device in lvs.
   Show read-only activation override in lvdisplay & add 4 to perms in -c.

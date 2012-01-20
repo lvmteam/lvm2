@@ -1455,9 +1455,12 @@ out:
 }
 
 /* Returns success if the device is not active */
-int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only)
+int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only, unsigned exclusive)
 {
-	struct lv_activate_opts laopts = { .origin_only = origin_only };
+	struct lv_activate_opts laopts = {
+		.origin_only = origin_only,
+		.exclusive = exclusive
+	};
 
 	return _lv_suspend(cmd, lvid_s, &laopts, 0);
 }
