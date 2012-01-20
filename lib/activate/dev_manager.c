@@ -742,6 +742,7 @@ int dev_manager_snapshot_percent(struct dev_manager *dm,
 				 const struct logical_volume *lv,
 				 percent_t *percent)
 {
+	const struct logical_volume *snap_lv;
 	char *name;
 	const char *dlid;
 	int fail_if_percent_unsupported = 0;
@@ -761,13 +762,19 @@ int dev_manager_snapshot_percent(struct dev_manager *dm,
 		fail_if_percent_unsupported = 1;
 	}
 
+	if (lv_is_merging_cow(lv)) {
+		/* must check percent of origin for a merging snapshot */
+		snap_lv = origin_from_cow(lv);
+	} else
+		snap_lv = lv;
+
 	/*
 	 * Build a name for the top layer.
 	 */
-	if (!(name = dm_build_dm_name(dm->mem, lv->vg->name, lv->name, NULL)))
+	if (!(name = dm_build_dm_name(dm->mem, snap_lv->vg->name, snap_lv->name, NULL)))
 		return_0;
 
-	if (!(dlid = build_dm_uuid(dm->mem, lv->lvid.s, NULL)))
+	if (!(dlid = build_dm_uuid(dm->mem, snap_lv->lvid.s, NULL)))
 		return_0;
 
 	/*
