@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Use m and M lv_attr to indicate that a snapshot merge failed in lvs.
   Differentiate between snapshot status of "Invalid" and "Merge failed".
   Lookup snapshot usage percent of origin volume when a snapshot is merging.
   Update lvdisplay with backward compat. config opt. lvm1_compatible_display.

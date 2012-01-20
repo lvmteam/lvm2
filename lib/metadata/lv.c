@@ -441,14 +441,21 @@ char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 			repstr[4] = 'd';	/* Inactive without table */
 
 		/* Snapshot dropped? */
-		if (info.live_table && lv_is_cow(lv) &&
-		    (!lv_snapshot_percent(lv, &snap_percent) ||
-		     snap_percent == PERCENT_INVALID)) {
-			repstr[0] = toupper(repstr[0]);
-			if (info.suspended)
-				repstr[4] = 'S'; /* Susp Inv snapshot */
-			else
-				repstr[4] = 'I'; /* Invalid snapshot */
+		if (info.live_table && lv_is_cow(lv)) {
+			if (!lv_snapshot_percent(lv, &snap_percent) ||
+			    snap_percent == PERCENT_INVALID) {
+				repstr[0] = toupper(repstr[0]);
+				if (info.suspended)
+					repstr[4] = 'S'; /* Susp Inv snapshot */
+				else
+					repstr[4] = 'I'; /* Invalid snapshot */
+			}
+			else if (snap_percent == PERCENT_MERGE_FAILED) {
+				if (info.suspended)
+					repstr[4] = 'M'; /* Susp snapshot merge failed */
+				else
+					repstr[4] = 'm'; /* snapshot merge failed */
+			}
 		}
 
 		/*

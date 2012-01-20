@@ -105,6 +105,7 @@ changes, for example during
 fixed (m)inor
 .IP 5 3
 State: (a)ctive, (s)uspended, (I)nvalid snapshot, invalid (S)uspended snapshot,
+snapshot (m)erge failed, suspended snapshot (M)erge failed,
 mapped (d)evice present without tables, mapped device present with (i)nactive table
 .IP 6 3
 device (o)pen
