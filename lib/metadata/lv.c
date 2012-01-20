@@ -182,11 +182,10 @@ char *lv_mirror_log_dup(struct dm_pool *mem, const struct logical_volume *lv)
 {
 	struct lv_segment *seg;
 
-	dm_list_iterate_items(seg, &lv->segments) {
-		if (!seg_is_mirrored(seg) || !seg->log_lv)
-			continue;
-		return dm_pool_strdup(mem, seg->log_lv->name);
-	}
+	dm_list_iterate_items(seg, &lv->segments)
+		if (seg_is_mirrored(seg) && seg->log_lv)
+			return dm_pool_strdup(mem, seg->log_lv->name);
+
 	return NULL;
 }
 
@@ -194,11 +193,10 @@ char *lv_pool_lv_dup(struct dm_pool *mem, const struct logical_volume *lv)
 {
 	struct lv_segment *seg;
 
-	dm_list_iterate_items(seg, &lv->segments) {
-		if (!seg_is_thin_volume(seg) || !seg->pool_lv)
-			continue;
-		return dm_pool_strdup(mem, seg->pool_lv->name);
-	}
+	dm_list_iterate_items(seg, &lv->segments)
+		if (seg_is_thin_volume(seg) && seg->pool_lv)
+			return dm_pool_strdup(mem, seg->pool_lv->name);
+
 	return NULL;
 }
 
