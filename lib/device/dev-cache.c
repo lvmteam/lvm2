@@ -256,8 +256,8 @@ static int _compare_paths(const char *path0, const char *path1)
 
 	strncpy(p0, path0, PATH_MAX);
 	strncpy(p1, path1, PATH_MAX);
-	s0 = &p0[0] + 1;
-	s1 = &p1[0] + 1;
+	s0 = p0 + 1;
+	s1 = p1 + 1;
 
 	/*
 	 * If we reach here, both paths are the same length.
