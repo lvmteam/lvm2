@@ -1454,7 +1454,12 @@ out:
 	return r;
 }
 
-/* Returns success if the device is not active */
+/*
+ * In a cluster, set exclusive to indicate that only one node is using the
+ * device.  Any preloaded tables may then use non-clustered targets.
+ *
+ * Returns success if the device is not active
+ */
 int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only, unsigned exclusive)
 {
 	struct lv_activate_opts laopts = {
@@ -1541,17 +1546,18 @@ out:
 	return r;
 }
 
-/* Returns success if the device is not active */
+/*
+ * In a cluster, set exclusive to indicate that only one node is using the
+ * device.  Any tables loaded may then use non-clustered targets.
+ *
+ * Returns success if the device is not active
+ */
 int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s,
-			unsigned origin_only, unsigned exclusive, unsigned revert)
+			unsigned origin_only, unsigned exclusive,
+			unsigned revert)
 {
 	struct lv_activate_opts laopts = {
 		.origin_only = origin_only,
-		/*
-		 * When targets are activated exclusively in a cluster, the
-		 * non-clustered target should be used.  This only happens
-		 * if exclusive is set.
-		 */
 		.exclusive = exclusive,
 		.revert = revert
 	};
