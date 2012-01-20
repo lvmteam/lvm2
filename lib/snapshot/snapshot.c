@@ -136,9 +136,11 @@ static int _snap_target_percent(void **target_state __attribute__((unused)),
 			*percent = PERCENT_100;
 		else
 			*percent = make_percent(*total_numerator, *total_denominator);
-	} else if (!strcmp(params, "Invalid") ||
-		   !strcmp(params, "Merge failed"))
+	}
+	else if (!strcmp(params, "Invalid"))
 		*percent = PERCENT_INVALID;
+	else if (!strcmp(params, "Merge failed"))
+		*percent = PERCENT_MERGE_FAILED;
 	else
 		return 0;
 

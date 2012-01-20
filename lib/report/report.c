@@ -836,7 +836,7 @@ static int _snpercent_disp(struct dm_report *rh __attribute__((unused)), struct 
 	}
 
 	if (!lv_snapshot_percent(lv, &snap_percent) ||
-				 (snap_percent == PERCENT_INVALID)) {
+	    (snap_percent == PERCENT_INVALID) || (snap_percent == PERCENT_MERGE_FAILED)) {
 		if (!lv_is_merging_origin(lv)) {
 			*sortval = UINT64_C(100);
 			dm_report_field_set_value(field, "100.00", sortval);

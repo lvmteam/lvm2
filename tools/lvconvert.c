@@ -461,6 +461,9 @@ static progress_t _poll_merge_progress(struct cmd_context *cmd,
 	} else if (percent == PERCENT_INVALID) {
 		log_error("%s: Merging snapshot invalidated. Aborting merge.", lv->name);
 		return PROGRESS_CHECK_FAILED;
+	} else if (percent == PERCENT_MERGE_FAILED) {
+		log_error("%s: Merge failed. Retry merge or inspect manually.", lv->name);
+		return PROGRESS_CHECK_FAILED;
 	}
 
 	if (parms->progress_display)

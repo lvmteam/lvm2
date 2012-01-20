@@ -1591,7 +1591,8 @@ typedef enum {
 	PERCENT_0 = 0,
 	PERCENT_1 = 1000000,
 	PERCENT_100 = 100 * PERCENT_1,
-	PERCENT_INVALID = -1
+	PERCENT_INVALID = -1,
+	PERCENT_MERGE_FAILED = -2
 } percent_range_t;
 
 typedef int32_t percent_t;

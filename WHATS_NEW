@@ -1,6 +1,7 @@
 Version 2.02.89 - 
 ==================================
-  Lookup snapshot usage percent of origin when a snapshot is merging.
+  Differentiate between snapshot status of "Invalid" and "Merge failed".
+  Lookup snapshot usage percent of origin volume when a snapshot is merging.
   Update lvdisplay with backward compat. config opt. lvm1_compatible_display.
   Do not report linear segtype for non-striped targets.
   Keep info about creation host and time for each logical volume.
