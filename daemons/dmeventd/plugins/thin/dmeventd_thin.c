@@ -142,7 +142,7 @@ void process_event(struct dm_task *dmt,
 	const char *device = dm_task_get_name(dmt);
 	int percent;
 	struct dso_state *state = *private;
-	struct dm_status_thin_pool *tps;
+	struct dm_status_thin_pool *tps = NULL;
 	void *next = NULL;
 	uint64_t start, length;
 	char *target_type = NULL;
