@@ -312,7 +312,7 @@ static int _file_lock_resource(struct cmd_context *cmd, const char *resource,
 			break;
 		case LCK_WRITE:
 			log_very_verbose("Locking LV %s (W)%s", resource, origin_only ? " without snapshots" : "");
-			if (!lv_suspend_if_active(cmd, resource, origin_only))
+			if (!lv_suspend_if_active(cmd, resource, origin_only, 0))
 				return 0;
 			break;
 		case LCK_EXCL:
