@@ -1,6 +1,5 @@
 Version 2.02.89 - 
 ==================================
-  Preserve exclusive activation of cluster mirror when converting.
   Keep info about creation host and time for each logical volume.
   Make error message hit when preallocated memlock memory exceeded clearer.
   Use R lv_attr to indicate read-only activation of non-read-only device in lvs.
@@ -192,7 +191,7 @@ Version 2.02.86 - 8th July 2011
   Append 'm' attribute to pv_attr for missing PVs.
   Annotate CLVMD_CMD_SYNC_NAMES in decode_cmd.
   Remove enforcement of udev verification when using non-standard /dev location.
-  Fix to preserve exclusive activation of mirror while up-converting.
+  Keep an exclusive mirror non-clustered if reloaded e.g. during conversion.
   Reject allocation if number of extents is not divisible by area count.
   Fix cluster mirror creation to work with new mirror allocation algorithm.
   Ignore activation/verify_udev_operations if dm kernel driver vsn < 4.18.
