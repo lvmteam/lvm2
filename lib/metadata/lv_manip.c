@@ -3271,7 +3271,7 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 	if (lv_is_cow(lv)) {
 		/*
 		 * A merging snapshot cannot be removed directly unless
-		 * it has been invalidated.
+		 * it has been invalidated or failed merge removal is requested.
 		 */
 		if (lv_is_merging_cow(lv) && !level) {
 			if (lv_info(lv->vg->cmd, lv, 0, &info, 1, 0) &&
@@ -3281,6 +3281,13 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 				     (snap_percent != PERCENT_MERGE_FAILED))) {
 					log_error("Can't remove merging snapshot logical volume \"%s\"",
 						  lv->name);
+					return 0;
+				}
+				else if ((snap_percent == PERCENT_MERGE_FAILED) &&
+					 (force == PROMPT) &&
+					 yes_no_prompt("Removing snapshot \"%s\" that failed to merge may leave origin \"%s\" inconsistent. "
+						       "Proceed? [y/n]: ", lv->name, origin_from_cow(lv)->name) == 'n') {
+					log_error("Logical volume %s not removed.", lv->name);
 					return 0;
 				}
 			}
