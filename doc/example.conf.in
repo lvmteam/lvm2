@@ -445,6 +445,11 @@ global {
     # Specify the '--type <mirror|raid1>' option to override this default
     # setting.
     mirror_segtype_default = "mirror"
+
+    # Whether to lvdisplay LV name in lvm1 compatible format /dev/vgname/lvname
+    # Default is now to display LV name and path (if exists) separately.
+    # If the old behavior is preffered use set to 1.
+    # lvm1_compatible_display = 1
 }
 
 activation {
