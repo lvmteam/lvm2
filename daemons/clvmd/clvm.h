@@ -36,16 +36,17 @@ struct clvm_header {
 	char node[1];		/* Actually a NUL-terminated string, node name.
 				   If this is empty then the command is 
 				   forwarded to all cluster nodes unless 
-				   FLAG_LOCAL is also set. */
+				   FLAG_LOCAL or FLAG_REMOTE is also set. */
 	char args[1];		/* Arguments for the command follow the 
 				   node name, This member is only
 				   valid if the node name is empty */
 } __attribute__ ((packed));
 
 /* Flags */
-#define CLVMD_FLAG_LOCAL        1	/* Only do this on the local node */
-#define CLVMD_FLAG_SYSTEMLV     2	/* Data in system LV under my node name */
-#define CLVMD_FLAG_NODEERRS     4       /* Reply has errors in node-specific portion */
+#define CLVMD_FLAG_LOCAL	1	/* Only do this on the local node */
+#define CLVMD_FLAG_SYSTEMLV	2	/* Data in system LV under my node name */
+#define CLVMD_FLAG_NODEERRS	4	/* Reply has errors in node-specific portion */
+#define CLVMD_FLAG_REMOTE	8	/* Do this on all nodes except for the local node */
 
 /* Name of the local socket to communicate between lvm and clvmd */
 static const char CLVMD_SOCKNAME[]= DEFAULT_RUN_DIR "/clvmd.sock";
@@ -72,4 +73,10 @@ static const char CLVMD_SOCKNAME[]= DEFAULT_RUN_DIR "/clvmd.sock";
 #define CLVMD_CMD_VG_BACKUP	    43
 #define CLVMD_CMD_RESTART	    44
 #define CLVMD_CMD_SYNC_NAMES	    45
+
+/* Used internally by some callers, but not part of the protocol.*/
+#define NODE_ALL	"*"
+#define NODE_LOCAL	"."
+#define NODE_REMOTE	"^"
+
 #endif
