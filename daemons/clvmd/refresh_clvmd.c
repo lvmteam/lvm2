@@ -13,6 +13,8 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+/* FIXME Remove duplicated functions from this file. */
+
 /*
  * Send a command to a running clvmd from the command-line
  */
@@ -164,21 +166,16 @@ static void _build_header(struct clvm_header *head, int cmd, const char *node,
 		*head->args = '\0';
 	}
 
-	if (node) {
-		/*
-		 * Allow a couple of special node names:
-		 * "*" for all nodes,
-		 * "." for the local node only
-		 */
-		if (strcmp(node, "*") == 0) {
-			head->node[0] = '\0';
-		} else if (strcmp(node, ".") == 0) {
-			head->node[0] = '\0';
-			head->flags = CLVMD_FLAG_LOCAL;
-		} else
-			strcpy(head->node, node);
-	} else
+	/*
+	 * Translate special node names.
+	 */
+	if (!node || !strcmp(node, NODE_ALL))
 		head->node[0] = '\0';
+	else if (!strcmp(node, NODE_LOCAL)) {
+		head->node[0] = '\0';
+		head->flags = CLVMD_FLAG_LOCAL;
+	} else
+		strcpy(head->node, node);
 }
 
 /*
@@ -298,7 +295,7 @@ int refresh_clvmd(int all_nodes)
 	int status;
 	int i;
 
-	status = _cluster_request(CLVMD_CMD_REFRESH, all_nodes?"*":".", args, 0, &response, &num_responses, 0);
+	status = _cluster_request(CLVMD_CMD_REFRESH, all_nodes ? NODE_ALL : NODE_LOCAL, args, 0, &response, &num_responses, 0);
 
 	/* If any nodes were down then display them and return an error */
 	for (i = 0; i < num_responses; i++) {
@@ -329,7 +326,7 @@ int restart_clvmd(int all_nodes)
 {
 	int dummy, status;
 
-	status = _cluster_request(CLVMD_CMD_RESTART, all_nodes?"*":".", NULL, 0, NULL, &dummy, 1);
+	status = _cluster_request(CLVMD_CMD_RESTART, all_nodes ? NODE_ALL : NODE_LOCAL, NULL, 0, NULL, &dummy, 1);
 
 	/*
 	 * FIXME: we cannot receive response, clvmd re-exec before it.
@@ -356,9 +353,9 @@ int debug_clvmd(int level, int clusterwide)
 
 	args[0] = level;
 	if (clusterwide)
-		nodes = "*";
+		nodes = NODE_ALL;
 	else
-		nodes = ".";
+		nodes = NODE_LOCAL;
 
 	status = _cluster_request(CLVMD_CMD_SET_DEBUG, nodes, args, 1, &response, &num_responses, 0);
 

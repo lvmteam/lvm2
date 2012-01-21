@@ -1396,7 +1396,10 @@ static int distribute_command(struct local_client *thisfd)
 	int len = thisfd->bits.localsock.cmd_len;
 
 	thisfd->xid = global_xid++;
-	DEBUGLOG("distribute command: XID = %d\n", thisfd->xid);
+	DEBUGLOG("distribute command: XID = %d, flags=0x%x (%s%s)\n",
+		 thisfd->xid, inheader->flags,
+		(inheader->flags & CLVMD_FLAG_LOCAL) ? "LOCAL" : "",
+		(inheader->flags & CLVMD_FLAG_REMOTE) ? "REMOTE" : "");
 
 	/* Forward it to other nodes in the cluster if needed */
 	if (!(inheader->flags & CLVMD_FLAG_LOCAL)) {
@@ -1409,7 +1412,11 @@ static int distribute_command(struct local_client *thisfd)
 			thisfd->bits.localsock.in_progress = TRUE;
 			thisfd->bits.localsock.sent_out = TRUE;
 
-			/* Do it here first */
+			/*
+			 * Send to local node first, even if CLVMD_FLAG_REMOTE
+			 * is set so we still get a reply if this is the
+			 * only node.
+			 */
 			add_to_lvmqueue(thisfd, inheader, len, NULL);
 
 			DEBUGLOG("Sending message to all cluster nodes\n");
@@ -1735,8 +1742,12 @@ static int process_local_command(struct clvm_header *msg, int msglen,
 	if (replybuf == NULL)
 		return -1;
 
-	/* FIXME: usage of init_test() is unprotected */
-	status = do_command(client, msg, msglen, &replybuf, buflen, &replylen);
+	/* If remote flag is set, just set a successful status code. */
+	if (msg->flags & CLVMD_FLAG_REMOTE)
+		status = 0;
+	else
+		/* FIXME: usage of init_test() is unprotected */
+		status = do_command(client, msg, msglen, &replybuf, buflen, &replylen);
 
 	if (status)
 		client->bits.localsock.all_success = 0;
