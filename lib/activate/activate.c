@@ -930,7 +930,8 @@ static int _lv_is_active(struct logical_volume *lv,
 		l = 1;
 
 	if (!vg_is_clustered(lv->vg)) {
-		e = 1;  /* exclusive by definition */
+		if (l)
+			e = 1;  /* exclusive by definition */
 		goto out;
 	}
 
@@ -950,21 +951,15 @@ static int _lv_is_active(struct logical_volume *lv,
 	 * New users of this function who specifically ask for 'exclusive'
 	 * will be given an error message.
 	 */
-	if (l) {
-		if (exclusive)
-			log_error("Unable to determine exclusivity of %s",
-				  lv->name);
-		goto out;
-	}
+	log_error("Unable to determine exclusivity of %s", lv->name);
 
-	/* FIXME: Is this fallback alright? */
-	if (activate_lv_excl(lv->vg->cmd, lv)) {
-		if (!deactivate_lv(lv->vg->cmd, lv))
-			stack;
-		/* FIXME: locally & exclusive are undefined. */
-		return 0;
-	}
-	/* FIXME: Check exclusive value here. */
+	e = 0;
+
+	/*
+	 * We used to attempt activate_lv_excl_local(lv->vg->cmd, lv) here,
+	 * but it's unreliable.
+	 */
+
 out:
 	if (locally)
 		*locally = l;
