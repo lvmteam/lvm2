@@ -178,21 +178,19 @@ static void _build_header(struct clvm_header *head, int clvmd_cmd, const char *n
 	head->clientid = 0;
 	head->arglen = len;
 
-	if (node) {
-		/*
-		 * Allow a couple of special node names:
-		 * "*" for all nodes,
-		 * "." for the local node only
-		 */
-		if (strcmp(node, "*") == 0) {
-			head->node[0] = '\0';
-		} else if (strcmp(node, ".") == 0) {
-			head->node[0] = '\0';
-			head->flags = CLVMD_FLAG_LOCAL;
-		} else
-			strcpy(head->node, node);
-	} else
+	/*
+	 * Handle special node names.
+	 */
+	if (!node || !strcmp(node, NODE_ALL))
 		head->node[0] = '\0';
+	else if (!strcmp(node, NODE_LOCAL)) {
+		head->node[0] = '\0';
+		head->flags = CLVMD_FLAG_LOCAL;
+	} else if (!strcmp(node, NODE_REMOTE)) {
+		head->node[0] = '\0';
+		head->flags = CLVMD_FLAG_REMOTE;
+	} else
+		strcpy(head->node, node);
 }
 
 /*
@@ -357,9 +355,6 @@ static int _lock_for_cluster(struct cmd_context *cmd, unsigned char clvmd_cmd,
 	 * so we only need to do them on the local node because all
 	 * locks are cluster-wide.
 	 *
-	 * Also, if the lock is exclusive it makes no sense to try to
-	 * acquire it on all nodes, so just do that on the local node too.
-	 *
 	 * P_ locks /do/ get distributed across the cluster because they might
 	 * have side-effects.
 	 *
@@ -367,13 +362,15 @@ static int _lock_for_cluster(struct cmd_context *cmd, unsigned char clvmd_cmd,
 	 */
 	if (clvmd_cmd == CLVMD_CMD_SYNC_NAMES) {
 		if (flags & LCK_LOCAL)
-			node = ".";
+			node = NODE_LOCAL;
 	} else if (clvmd_cmd != CLVMD_CMD_VG_BACKUP) {
 		if (strncmp(name, "P_", 2) &&
 		    (clvmd_cmd == CLVMD_CMD_LOCK_VG ||
 		     (flags & LCK_LOCAL) ||
 		     !(flags & LCK_CLUSTER_VG)))
-			node = ".";
+			node = NODE_LOCAL;
+		else if (flags & LCK_REMOTE)
+			node = NODE_REMOTE;
 	}
 
 	status = _cluster_request(clvmd_cmd, node, args, len,
@@ -493,12 +490,13 @@ int lock_resource(struct cmd_context *cmd, const char *resource, uint32_t flags)
 		return 0;
 	}
 
-	log_very_verbose("Locking %s %s %s (%s%s%s%s%s%s%s%s) (0x%x)", lock_scope, lockname,
+	log_very_verbose("Locking %s %s %s (%s%s%s%s%s%s%s%s%s) (0x%x)", lock_scope, lockname,
 			 lock_type, lock_scope,
 			 flags & LCK_NONBLOCK ? "|NONBLOCK" : "",
 			 flags & LCK_HOLD ? "|HOLD" : "",
-			 flags & LCK_LOCAL ? "|LOCAL" : "",
 			 flags & LCK_CLUSTER_VG ? "|CLUSTER" : "",
+			 flags & LCK_LOCAL ? "|LOCAL" : "",
+			 flags & LCK_REMOTE ? "|REMOTE" : "",
 			 flags & LCK_CACHE ? "|CACHE" : "",
 			 flags & LCK_ORIGIN_ONLY ? "|ORIGIN_ONLY" : "",
 			 flags & LCK_REVERT ? "|REVERT" : "",

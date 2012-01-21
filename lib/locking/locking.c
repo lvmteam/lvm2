@@ -539,6 +539,33 @@ int suspend_lvs(struct cmd_context *cmd, struct dm_list *lvs,
 	return 1;
 }
 
+/*
+ * First try to activate exclusively locally.
+ * Then if the VG is clustered and the LV is not yet active (e.g. due to 
+ * an activation filter) try activating on remote nodes.
+ */
+int activate_lv_excl(struct cmd_context *cmd, struct logical_volume *lv) 
+{
+	/* Non-clustered VGs are only activated locally. */
+	if (!vg_is_clustered(lv->vg))
+		return activate_lv_excl_local(cmd, lv);
+
+	if (lv_is_active_exclusive(lv))
+		return 1;
+
+	if (!activate_lv_excl_local(cmd, lv))
+		return_0;
+
+	if (lv_is_active_exclusive(lv))
+		return 1;
+
+	/* FIXME Deal with error return codes. */
+	if (activate_lv_excl_remote(cmd, lv))
+		stack;
+
+	return lv_is_active_exclusive(lv);
+}
+
 /* Lock a list of LVs */
 int activate_lvs(struct cmd_context *cmd, struct dm_list *lvs, unsigned exclusive)
 {
