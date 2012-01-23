@@ -852,6 +852,8 @@ static int _find_config_bool(const void *start, node_lookup_fn find,
 
 	case DM_CFG_STRING:
 		return _str_to_bool(v->v.str, fail);
+	default:
+		;
 	}
 
 	return fail;
@@ -861,7 +863,7 @@ static int _find_config_bool(const void *start, node_lookup_fn find,
  * node-based lookup
  **/
 
-struct dm_config_node *dm_config_find_node(struct dm_config_node *cn,
+struct dm_config_node *dm_config_find_node(const struct dm_config_node *cn,
 					   const char *path)
 {
 	return (struct dm_config_node *) _find_config_node(cn, path);
