@@ -1176,8 +1176,8 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 
 	if (lv->status & RAID)
 		for (s = 0; s < seg->area_count; s++)
-			if (!_add_lv_to_dtree(dm, dtree,
-					      seg_metalv(seg, s), origin_only))
+			if (!_add_dev_to_dtree(dm, dtree,
+					       seg_metalv(seg, s), NULL))
 				return_0;
 
 	/* Add any LVs referencing a PVMOVE LV unless told not to. */
