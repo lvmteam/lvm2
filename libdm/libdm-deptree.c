@@ -276,6 +276,9 @@ struct dm_tree {
 	uint32_t cookie;
 };
 
+/*
+ * Tree functions.
+ */
 struct dm_tree *dm_tree_create(void)
 {
 	struct dm_pool *dmem;
@@ -322,6 +325,34 @@ void dm_tree_free(struct dm_tree *dtree)
 	dm_pool_destroy(dtree->mem);
 }
 
+void dm_tree_set_cookie(struct dm_tree_node *node, uint32_t cookie)
+{
+	node->dtree->cookie = cookie;
+}
+
+uint32_t dm_tree_get_cookie(struct dm_tree_node *node)
+{
+	return node->dtree->cookie;
+}
+
+void dm_tree_skip_lockfs(struct dm_tree_node *dnode)
+{
+	dnode->dtree->skip_lockfs = 1;
+}
+
+void dm_tree_use_no_flush_suspend(struct dm_tree_node *dnode)
+{
+	dnode->dtree->no_flush = 1;
+}
+
+void dm_tree_retry_remove(struct dm_tree_node *dnode)
+{
+	dnode->dtree->retry_remove = 1;
+}
+
+/*
+ * Node functions.
+ */
 static int _nodes_are_linked(const struct dm_tree_node *parent,
 			     const struct dm_tree_node *child)
 {
@@ -500,6 +531,200 @@ static struct dm_tree_node *_find_dm_tree_node_by_uuid(struct dm_tree *dtree,
 	return dm_hash_lookup(dtree->uuids, uuid + default_uuid_prefix_len);
 }
 
+void dm_tree_node_set_udev_flags(struct dm_tree_node *dnode, uint16_t udev_flags)
+
+{
+	struct dm_info *dinfo = &dnode->info;
+
+	if (udev_flags != dnode->udev_flags)
+		log_debug("Resetting %s (%" PRIu32 ":%" PRIu32
+			  ") udev_flags from 0x%x to 0x%x",
+			  dnode->name, dinfo->major, dinfo->minor,
+			  dnode->udev_flags, udev_flags);
+	dnode->udev_flags = udev_flags;
+}
+
+void dm_tree_node_set_read_ahead(struct dm_tree_node *dnode,
+				 uint32_t read_ahead,
+				 uint32_t read_ahead_flags)
+{
+	dnode->props.read_ahead = read_ahead;
+	dnode->props.read_ahead_flags = read_ahead_flags;
+}
+
+void dm_tree_node_set_presuspend_node(struct dm_tree_node *node,
+				      struct dm_tree_node *presuspend_node)
+{
+	node->presuspend_node = presuspend_node;
+}
+
+const char *dm_tree_node_get_name(const struct dm_tree_node *node)
+{
+	return node->info.exists ? node->name : "";
+}
+
+const char *dm_tree_node_get_uuid(const struct dm_tree_node *node)
+{
+	return node->info.exists ? node->uuid : "";
+}
+
+const struct dm_info *dm_tree_node_get_info(const struct dm_tree_node *node)
+{
+	return &node->info;
+}
+
+void *dm_tree_node_get_context(const struct dm_tree_node *node)
+{
+	return node->context;
+}
+
+int dm_tree_node_size_changed(const struct dm_tree_node *dnode)
+{
+	return dnode->props.size_changed;
+}
+
+int dm_tree_node_num_children(const struct dm_tree_node *node, uint32_t inverted)
+{
+	if (inverted) {
+		if (_nodes_are_linked(&node->dtree->root, node))
+			return 0;
+		return dm_list_size(&node->used_by);
+	}
+
+	if (_nodes_are_linked(node, &node->dtree->root))
+		return 0;
+
+	return dm_list_size(&node->uses);
+}
+
+/*
+ * Returns 1 if no prefix supplied
+ */
+static int _uuid_prefix_matches(const char *uuid, const char *uuid_prefix, size_t uuid_prefix_len)
+{
+	const char *default_uuid_prefix = dm_uuid_prefix();
+	size_t default_uuid_prefix_len = strlen(default_uuid_prefix);
+
+	if (!uuid_prefix)
+		return 1;
+
+	if (!strncmp(uuid, uuid_prefix, uuid_prefix_len))
+		return 1;
+
+	/* Handle transition: active device uuids might be missing the prefix */
+	if (uuid_prefix_len <= 4)
+		return 0;
+
+	if (!strncmp(uuid, default_uuid_prefix, default_uuid_prefix_len))
+		return 0;
+
+	if (strncmp(uuid_prefix, default_uuid_prefix, default_uuid_prefix_len))
+		return 0;
+
+	if (!strncmp(uuid, uuid_prefix + default_uuid_prefix_len, uuid_prefix_len - default_uuid_prefix_len))
+		return 1;
+
+	return 0;
+}
+
+/*
+ * Returns 1 if no children.
+ */
+static int _children_suspended(struct dm_tree_node *node,
+			       uint32_t inverted,
+			       const char *uuid_prefix,
+			       size_t uuid_prefix_len)
+{
+	struct dm_list *list;
+	struct dm_tree_link *dlink;
+	const struct dm_info *dinfo;
+	const char *uuid;
+
+	if (inverted) {
+		if (_nodes_are_linked(&node->dtree->root, node))
+			return 1;
+		list = &node->used_by;
+	} else {
+		if (_nodes_are_linked(node, &node->dtree->root))
+			return 1;
+		list = &node->uses;
+	}
+
+	dm_list_iterate_items(dlink, list) {
+		if (!(uuid = dm_tree_node_get_uuid(dlink->node))) {
+			stack;
+			continue;
+		}
+
+		/* Ignore if it doesn't belong to this VG */
+		if (!_uuid_prefix_matches(uuid, uuid_prefix, uuid_prefix_len))
+			continue;
+
+		/* Ignore if parent node wants to presuspend this node */
+		if (dlink->node->presuspend_node == node)
+			continue;
+
+		if (!(dinfo = dm_tree_node_get_info(dlink->node))) {
+			stack;	/* FIXME Is this normal? */
+			return 0;
+		}
+
+		if (!dinfo->suspended)
+			return 0;
+	}
+
+	return 1;
+}
+
+/*
+ * Set major and minor to zero for root of tree.
+ */
+struct dm_tree_node *dm_tree_find_node(struct dm_tree *dtree,
+					  uint32_t major,
+					  uint32_t minor)
+{
+	if (!major && !minor)
+		return &dtree->root;
+
+	return _find_dm_tree_node(dtree, major, minor);
+}
+
+/*
+ * Set uuid to NULL for root of tree.
+ */
+struct dm_tree_node *dm_tree_find_node_by_uuid(struct dm_tree *dtree,
+						  const char *uuid)
+{
+	if (!uuid || !*uuid)
+		return &dtree->root;
+
+	return _find_dm_tree_node_by_uuid(dtree, uuid);
+}
+
+/*
+ * First time set *handle to NULL.
+ * Set inverted to invert the tree.
+ */
+struct dm_tree_node *dm_tree_next_child(void **handle,
+					const struct dm_tree_node *parent,
+					uint32_t inverted)
+{
+	struct dm_list **dlink = (struct dm_list **) handle;
+	const struct dm_list *use_list;
+
+	if (inverted)
+		use_list = &parent->used_by;
+	else
+		use_list = &parent->uses;
+
+	if (!*dlink)
+		*dlink = dm_list_first(use_list);
+	else
+		*dlink = dm_list_next(use_list, *dlink);
+
+	return (*dlink) ? dm_list_item(*dlink, struct dm_tree_link)->node : NULL;
+}
+
 static int _deps(struct dm_task **dmt, struct dm_pool *mem, uint32_t major, uint32_t minor,
 		 const char **name, const char **uuid, unsigned inactive_table,
 		 struct dm_info *info, struct dm_deps **deps)
@@ -591,70 +816,168 @@ failed:
 	return 0;
 }
 
-static struct dm_tree_node *_add_dev(struct dm_tree *dtree,
-				     struct dm_tree_node *parent,
-				     uint32_t major, uint32_t minor,
-				     uint16_t udev_flags)
+/*
+ * Deactivate a device with its dependencies if the uuid prefix matches.
+ */
+static int _info_by_dev(uint32_t major, uint32_t minor, int with_open_count,
+			struct dm_info *info, struct dm_pool *mem,
+			const char **name, const char **uuid)
 {
-	struct dm_task *dmt = NULL;
-	struct dm_info info;
-	struct dm_deps *deps = NULL;
-	const char *name = NULL;
-	const char *uuid = NULL;
-	struct dm_tree_node *node = NULL;
-	uint32_t i;
-	int new = 0;
+	struct dm_task *dmt;
+	int r;
 
-	/* Already in tree? */
-	if (!(node = _find_dm_tree_node(dtree, major, minor))) {
-		if (!_deps(&dmt, dtree->mem, major, minor, &name, &uuid, 0, &info, &deps))
-			return_NULL;
-
-		if (!(node = _create_dm_tree_node(dtree, name, uuid, &info,
-						  NULL, udev_flags)))
-			goto_out;
-		new = 1;
+	if (!(dmt = dm_task_create(DM_DEVICE_INFO))) {
+		log_error("_info_by_dev: dm_task creation failed");
+		return 0;
 	}
 
-	if (!_link_tree_nodes(parent, node)) {
-		node = NULL;
+	if (!dm_task_set_major(dmt, major) || !dm_task_set_minor(dmt, minor)) {
+		log_error("_info_by_dev: Failed to set device number");
+		dm_task_destroy(dmt);
+		return 0;
+	}
+
+	if (!with_open_count && !dm_task_no_open_count(dmt))
+		log_error("Failed to disable open_count");
+
+	if (!(r = dm_task_run(dmt)))
+		goto_out;
+
+	if (!(r = dm_task_get_info(dmt, info)))
+		goto_out;
+
+	if (name && !(*name = dm_pool_strdup(mem, dm_task_get_name(dmt)))) {
+		log_error("name pool_strdup failed");
+		r = 0;
 		goto_out;
 	}
 
-	/* If node was already in tree, no need to recurse. */
-	if (!new)
-		goto out;
+	if (uuid && !(*uuid = dm_pool_strdup(mem, dm_task_get_uuid(dmt)))) {
+		log_error("uuid pool_strdup failed");
+		r = 0;
+		goto_out;
+	}
 
-	/* Can't recurse if not a mapped device or there are no dependencies */
-	if (!node->info.exists || !deps->count) {
-		if (!_add_to_bottomlevel(node)) {
-			stack;
-			node = NULL;
+out:
+	dm_task_destroy(dmt);
+
+	return r;
+}
+
+static int _check_device_not_in_use(const char *name, struct dm_info *info)
+{
+	if (!info->exists)
+		return 1;
+
+	/* If sysfs is not used, use open_count information only. */
+	if (!*dm_sysfs_dir()) {
+		if (info->open_count) {
+			log_error("Device %s (%" PRIu32 ":%" PRIu32 ") in use",
+				  name, info->major, info->minor);
+			return 0;
 		}
+
+		return 1;
+	}
+
+	if (dm_device_has_holders(info->major, info->minor)) {
+		log_error("Device %s (%" PRIu32 ":%" PRIu32 ") is used "
+			  "by another device.", name, info->major, info->minor);
+		return 0;
+	}
+
+	if (dm_device_has_mounted_fs(info->major, info->minor)) {
+		log_error("Device %s (%" PRIu32 ":%" PRIu32 ") contains "
+			  "a filesystem in use.", name, info->major, info->minor);
+		return 0;
+	}
+
+	return 1;
+}
+
+/* Check if all parent nodes of given node have open_count == 0 */
+static int _node_has_closed_parents(struct dm_tree_node *node,
+				    const char *uuid_prefix,
+				    size_t uuid_prefix_len)
+{
+	struct dm_tree_link *dlink;
+	const struct dm_info *dinfo;
+	struct dm_info info;
+	const char *uuid;
+
+	/* Iterate through parents of this node */
+	dm_list_iterate_items(dlink, &node->used_by) {
+		if (!(uuid = dm_tree_node_get_uuid(dlink->node))) {
+			stack;
+			continue;
+		}
+
+		/* Ignore if it doesn't belong to this VG */
+		if (!_uuid_prefix_matches(uuid, uuid_prefix, uuid_prefix_len))
+			continue;
+
+		if (!(dinfo = dm_tree_node_get_info(dlink->node))) {
+			stack;	/* FIXME Is this normal? */
+			return 0;
+		}
+
+		/* Refresh open_count */
+		if (!_info_by_dev(dinfo->major, dinfo->minor, 1, &info, NULL, NULL, NULL) ||
+		    !info.exists)
+			continue;
+
+		if (info.open_count) {
+			log_debug("Node %s %d:%d has open_count %d", uuid_prefix,
+				  dinfo->major, dinfo->minor, info.open_count);
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
+static int _deactivate_node(const char *name, uint32_t major, uint32_t minor,
+			    uint32_t *cookie, uint16_t udev_flags, int retry)
+{
+	struct dm_task *dmt;
+	int r = 0;
+
+	log_verbose("Removing %s (%" PRIu32 ":%" PRIu32 ")", name, major, minor);
+
+	if (!(dmt = dm_task_create(DM_DEVICE_REMOVE))) {
+		log_error("Deactivation dm_task creation failed for %s", name);
+		return 0;
+	}
+
+	if (!dm_task_set_major(dmt, major) || !dm_task_set_minor(dmt, minor)) {
+		log_error("Failed to set device number for %s deactivation", name);
 		goto out;
 	}
 
-	/* Add dependencies to tree */
-	for (i = 0; i < deps->count; i++)
-		if (!_add_dev(dtree, node, MAJOR(deps->device[i]),
-			      MINOR(deps->device[i]), udev_flags)) {
-			node = NULL;
-			goto_out;
-		}
+	if (!dm_task_no_open_count(dmt))
+		log_error("Failed to disable open_count");
+
+	if (cookie)
+		if (!dm_task_set_cookie(dmt, cookie, udev_flags))
+			goto out;
+
+	if (retry)
+		dm_task_retry_remove(dmt);
+
+	r = dm_task_run(dmt);
+
+	/* FIXME Until kernel returns actual name so dm-iface.c can handle it */
+	rm_dev_node(name, dmt->cookie_set && !(udev_flags & DM_UDEV_DISABLE_DM_RULES_FLAG),
+		    dmt->cookie_set && (udev_flags & DM_UDEV_DISABLE_LIBRARY_FALLBACK));
+
+	/* FIXME Remove node from tree or mark invalid? */
 
 out:
-	if (dmt)
-		dm_task_destroy(dmt);
+	dm_task_destroy(dmt);
 
-	return node;
+	return r;
 }
 
-// FIXME Move fn group down.
-static int _info_by_dev(uint32_t major, uint32_t minor, int with_open_count,
-			struct dm_info *info, struct dm_pool *mem,
-			const char **name, const char **uuid);
-static int _deactivate_node(const char *name, uint32_t major, uint32_t minor,
-			    uint32_t *cookie, uint16_t udev_flags, int retry);
 static int _node_clear_table(struct dm_tree_node *dnode, uint16_t udev_flags)
 {
 	struct dm_task *dmt = NULL, *deps_dmt = NULL;
@@ -826,31 +1149,62 @@ struct dm_tree_node *dm_tree_add_new_dev(struct dm_tree *dtree, const char *name
 						   read_only, clear_inactive, context, 0);
 }
 
-void dm_tree_node_set_udev_flags(struct dm_tree_node *dnode, uint16_t udev_flags)
-
+static struct dm_tree_node *_add_dev(struct dm_tree *dtree,
+				     struct dm_tree_node *parent,
+				     uint32_t major, uint32_t minor,
+				     uint16_t udev_flags)
 {
-	struct dm_info *dinfo = &dnode->info;
+	struct dm_task *dmt = NULL;
+	struct dm_info info;
+	struct dm_deps *deps = NULL;
+	const char *name = NULL;
+	const char *uuid = NULL;
+	struct dm_tree_node *node = NULL;
+	uint32_t i;
+	int new = 0;
 
-	if (udev_flags != dnode->udev_flags)
-		log_debug("Resetting %s (%" PRIu32 ":%" PRIu32
-			  ") udev_flags from 0x%x to 0x%x",
-			  dnode->name, dinfo->major, dinfo->minor,
-			  dnode->udev_flags, udev_flags);
-	dnode->udev_flags = udev_flags;
-}
+	/* Already in tree? */
+	if (!(node = _find_dm_tree_node(dtree, major, minor))) {
+		if (!_deps(&dmt, dtree->mem, major, minor, &name, &uuid, 0, &info, &deps))
+			return_NULL;
 
-void dm_tree_node_set_read_ahead(struct dm_tree_node *dnode,
-				 uint32_t read_ahead,
-				 uint32_t read_ahead_flags)
-{
-	dnode->props.read_ahead = read_ahead;
-	dnode->props.read_ahead_flags = read_ahead_flags;
-}
+		if (!(node = _create_dm_tree_node(dtree, name, uuid, &info,
+						  NULL, udev_flags)))
+			goto_out;
+		new = 1;
+	}
 
-void dm_tree_node_set_presuspend_node(struct dm_tree_node *node,
-				      struct dm_tree_node *presuspend_node)
-{
-	node->presuspend_node = presuspend_node;
+	if (!_link_tree_nodes(parent, node)) {
+		node = NULL;
+		goto_out;
+	}
+
+	/* If node was already in tree, no need to recurse. */
+	if (!new)
+		goto out;
+
+	/* Can't recurse if not a mapped device or there are no dependencies */
+	if (!node->info.exists || !deps->count) {
+		if (!_add_to_bottomlevel(node)) {
+			stack;
+			node = NULL;
+		}
+		goto out;
+	}
+
+	/* Add dependencies to tree */
+	for (i = 0; i < deps->count; i++)
+		if (!_add_dev(dtree, node, MAJOR(deps->device[i]),
+			      MINOR(deps->device[i]), udev_flags)) {
+			node = NULL;
+			goto_out;
+		}
+
+out:
+	if (dmt)
+		dm_task_destroy(dmt);
+
+	return node;
 }
 
 int dm_tree_add_dev(struct dm_tree *dtree, uint32_t major, uint32_t minor)
@@ -862,335 +1216,6 @@ int dm_tree_add_dev_with_udev_flags(struct dm_tree *dtree, uint32_t major,
 				    uint32_t minor, uint16_t udev_flags)
 {
 	return _add_dev(dtree, &dtree->root, major, minor, udev_flags) ? 1 : 0;
-}
-
-const char *dm_tree_node_get_name(const struct dm_tree_node *node)
-{
-	return node->info.exists ? node->name : "";
-}
-
-const char *dm_tree_node_get_uuid(const struct dm_tree_node *node)
-{
-	return node->info.exists ? node->uuid : "";
-}
-
-const struct dm_info *dm_tree_node_get_info(const struct dm_tree_node *node)
-{
-	return &node->info;
-}
-
-void *dm_tree_node_get_context(const struct dm_tree_node *node)
-{
-	return node->context;
-}
-
-int dm_tree_node_size_changed(const struct dm_tree_node *dnode)
-{
-	return dnode->props.size_changed;
-}
-
-int dm_tree_node_num_children(const struct dm_tree_node *node, uint32_t inverted)
-{
-	if (inverted) {
-		if (_nodes_are_linked(&node->dtree->root, node))
-			return 0;
-		return dm_list_size(&node->used_by);
-	}
-
-	if (_nodes_are_linked(node, &node->dtree->root))
-		return 0;
-
-	return dm_list_size(&node->uses);
-}
-
-/*
- * Returns 1 if no prefix supplied
- */
-static int _uuid_prefix_matches(const char *uuid, const char *uuid_prefix, size_t uuid_prefix_len)
-{
-	const char *default_uuid_prefix = dm_uuid_prefix();
-	size_t default_uuid_prefix_len = strlen(default_uuid_prefix);
-
-	if (!uuid_prefix)
-		return 1;
-
-	if (!strncmp(uuid, uuid_prefix, uuid_prefix_len))
-		return 1;
-
-	/* Handle transition: active device uuids might be missing the prefix */
-	if (uuid_prefix_len <= 4)
-		return 0;
-
-	if (!strncmp(uuid, default_uuid_prefix, default_uuid_prefix_len))
-		return 0;
-
-	if (strncmp(uuid_prefix, default_uuid_prefix, default_uuid_prefix_len))
-		return 0;
-
-	if (!strncmp(uuid, uuid_prefix + default_uuid_prefix_len, uuid_prefix_len - default_uuid_prefix_len))
-		return 1;
-
-	return 0;
-}
-
-/*
- * Returns 1 if no children.
- */
-static int _children_suspended(struct dm_tree_node *node,
-			       uint32_t inverted,
-			       const char *uuid_prefix,
-			       size_t uuid_prefix_len)
-{
-	struct dm_list *list;
-	struct dm_tree_link *dlink;
-	const struct dm_info *dinfo;
-	const char *uuid;
-
-	if (inverted) {
-		if (_nodes_are_linked(&node->dtree->root, node))
-			return 1;
-		list = &node->used_by;
-	} else {
-		if (_nodes_are_linked(node, &node->dtree->root))
-			return 1;
-		list = &node->uses;
-	}
-
-	dm_list_iterate_items(dlink, list) {
-		if (!(uuid = dm_tree_node_get_uuid(dlink->node))) {
-			stack;
-			continue;
-		}
-
-		/* Ignore if it doesn't belong to this VG */
-		if (!_uuid_prefix_matches(uuid, uuid_prefix, uuid_prefix_len))
-			continue;
-
-		/* Ignore if parent node wants to presuspend this node */
-		if (dlink->node->presuspend_node == node)
-			continue;
-
-		if (!(dinfo = dm_tree_node_get_info(dlink->node))) {
-			stack;	/* FIXME Is this normal? */
-			return 0;
-		}
-
-		if (!dinfo->suspended)
-			return 0;
-	}
-
-	return 1;
-}
-
-/*
- * Set major and minor to zero for root of tree.
- */
-struct dm_tree_node *dm_tree_find_node(struct dm_tree *dtree,
-					  uint32_t major,
-					  uint32_t minor)
-{
-	if (!major && !minor)
-		return &dtree->root;
-
-	return _find_dm_tree_node(dtree, major, minor);
-}
-
-/*
- * Set uuid to NULL for root of tree.
- */
-struct dm_tree_node *dm_tree_find_node_by_uuid(struct dm_tree *dtree,
-						  const char *uuid)
-{
-	if (!uuid || !*uuid)
-		return &dtree->root;
-
-	return _find_dm_tree_node_by_uuid(dtree, uuid);
-}
-
-/*
- * First time set *handle to NULL.
- * Set inverted to invert the tree.
- */
-struct dm_tree_node *dm_tree_next_child(void **handle,
-					const struct dm_tree_node *parent,
-					uint32_t inverted)
-{
-	struct dm_list **dlink = (struct dm_list **) handle;
-	const struct dm_list *use_list;
-
-	if (inverted)
-		use_list = &parent->used_by;
-	else
-		use_list = &parent->uses;
-
-	if (!*dlink)
-		*dlink = dm_list_first(use_list);
-	else
-		*dlink = dm_list_next(use_list, *dlink);
-
-	return (*dlink) ? dm_list_item(*dlink, struct dm_tree_link)->node : NULL;
-}
-
-/*
- * Deactivate a device with its dependencies if the uuid prefix matches.
- */
-static int _info_by_dev(uint32_t major, uint32_t minor, int with_open_count,
-			struct dm_info *info, struct dm_pool *mem,
-			const char **name, const char **uuid)
-{
-	struct dm_task *dmt;
-	int r;
-
-	if (!(dmt = dm_task_create(DM_DEVICE_INFO))) {
-		log_error("_info_by_dev: dm_task creation failed");
-		return 0;
-	}
-
-	if (!dm_task_set_major(dmt, major) || !dm_task_set_minor(dmt, minor)) {
-		log_error("_info_by_dev: Failed to set device number");
-		dm_task_destroy(dmt);
-		return 0;
-	}
-
-	if (!with_open_count && !dm_task_no_open_count(dmt))
-		log_error("Failed to disable open_count");
-
-	if (!(r = dm_task_run(dmt)))
-		goto_out;
-
-	if (!(r = dm_task_get_info(dmt, info)))
-		goto_out;
-
-	if (name && !(*name = dm_pool_strdup(mem, dm_task_get_name(dmt)))) {
-		log_error("name pool_strdup failed");
-		r = 0;
-		goto_out;
-	}
-
-	if (uuid && !(*uuid = dm_pool_strdup(mem, dm_task_get_uuid(dmt)))) {
-		log_error("uuid pool_strdup failed");
-		r = 0;
-		goto_out;
-	}
-
-out:
-	dm_task_destroy(dmt);
-
-	return r;
-}
-
-static int _check_device_not_in_use(const char *name, struct dm_info *info)
-{
-	if (!info->exists)
-		return 1;
-
-	/* If sysfs is not used, use open_count information only. */
-	if (!*dm_sysfs_dir()) {
-		if (info->open_count) {
-			log_error("Device %s (%" PRIu32 ":%" PRIu32 ") in use",
-				  name, info->major, info->minor);
-			return 0;
-		}
-
-		return 1;
-	}
-
-	if (dm_device_has_holders(info->major, info->minor)) {
-		log_error("Device %s (%" PRIu32 ":%" PRIu32 ") is used "
-			  "by another device.", name, info->major, info->minor);
-		return 0;
-	}
-
-	if (dm_device_has_mounted_fs(info->major, info->minor)) {
-		log_error("Device %s (%" PRIu32 ":%" PRIu32 ") contains "
-			  "a filesystem in use.", name, info->major, info->minor);
-		return 0;
-	}
-
-	return 1;
-}
-
-/* Check if all parent nodes of given node have open_count == 0 */
-static int _node_has_closed_parents(struct dm_tree_node *node,
-				    const char *uuid_prefix,
-				    size_t uuid_prefix_len)
-{
-	struct dm_tree_link *dlink;
-	const struct dm_info *dinfo;
-	struct dm_info info;
-	const char *uuid;
-
-	/* Iterate through parents of this node */
-	dm_list_iterate_items(dlink, &node->used_by) {
-		if (!(uuid = dm_tree_node_get_uuid(dlink->node))) {
-			stack;
-			continue;
-		}
-
-		/* Ignore if it doesn't belong to this VG */
-		if (!_uuid_prefix_matches(uuid, uuid_prefix, uuid_prefix_len))
-			continue;
-
-		if (!(dinfo = dm_tree_node_get_info(dlink->node))) {
-			stack;	/* FIXME Is this normal? */
-			return 0;
-		}
-
-		/* Refresh open_count */
-		if (!_info_by_dev(dinfo->major, dinfo->minor, 1, &info, NULL, NULL, NULL) ||
-		    !info.exists)
-			continue;
-
-		if (info.open_count) {
-			log_debug("Node %s %d:%d has open_count %d", uuid_prefix,
-				  dinfo->major, dinfo->minor, info.open_count);
-			return 0;
-		}
-	}
-
-	return 1;
-}
-
-static int _deactivate_node(const char *name, uint32_t major, uint32_t minor,
-			    uint32_t *cookie, uint16_t udev_flags, int retry)
-{
-	struct dm_task *dmt;
-	int r = 0;
-
-	log_verbose("Removing %s (%" PRIu32 ":%" PRIu32 ")", name, major, minor);
-
-	if (!(dmt = dm_task_create(DM_DEVICE_REMOVE))) {
-		log_error("Deactivation dm_task creation failed for %s", name);
-		return 0;
-	}
-
-	if (!dm_task_set_major(dmt, major) || !dm_task_set_minor(dmt, minor)) {
-		log_error("Failed to set device number for %s deactivation", name);
-		goto out;
-	}
-
-	if (!dm_task_no_open_count(dmt))
-		log_error("Failed to disable open_count");
-
-	if (cookie)
-		if (!dm_task_set_cookie(dmt, cookie, udev_flags))
-			goto out;
-
-	if (retry)
-		dm_task_retry_remove(dmt);
-
-	r = dm_task_run(dmt);
-
-	/* FIXME Until kernel returns actual name so dm-iface.c can handle it */
-	rm_dev_node(name, dmt->cookie_set && !(udev_flags & DM_UDEV_DISABLE_DM_RULES_FLAG),
-		    dmt->cookie_set && (udev_flags & DM_UDEV_DISABLE_LIBRARY_FALLBACK));
-
-	/* FIXME Remove node from tree or mark invalid? */
-
-out:
-	dm_task_destroy(dmt);
-
-	return r;
 }
 
 static int _rename_node(const char *old_name, const char *new_name, uint32_t major,
@@ -1586,21 +1611,6 @@ int dm_tree_deactivate_children(struct dm_tree_node *dnode,
 				   size_t uuid_prefix_len)
 {
 	return _dm_tree_deactivate_children(dnode, uuid_prefix, uuid_prefix_len, 0);
-}
-
-void dm_tree_skip_lockfs(struct dm_tree_node *dnode)
-{
-	dnode->dtree->skip_lockfs = 1;
-}
-
-void dm_tree_use_no_flush_suspend(struct dm_tree_node *dnode)
-{
-	dnode->dtree->no_flush = 1;
-}
-
-void dm_tree_retry_remove(struct dm_tree_node *dnode)
-{
-	dnode->dtree->retry_remove = 1;
 }
 
 int dm_tree_suspend_children(struct dm_tree_node *dnode,
@@ -3253,14 +3263,4 @@ int dm_tree_node_add_null_area(struct dm_tree_node *node, uint64_t offset)
 		return_0;
 
 	return 1;
-}
-
-void dm_tree_set_cookie(struct dm_tree_node *node, uint32_t cookie)
-{
-	node->dtree->cookie = cookie;
-}
-
-uint32_t dm_tree_get_cookie(struct dm_tree_node *node)
-{
-	return node->dtree->cookie;
 }
