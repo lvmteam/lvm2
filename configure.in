@@ -792,8 +792,8 @@ fi
 dnl -- Build lvmetad
 AC_MSG_CHECKING(whether to build LVMetaD)
 AC_ARG_ENABLE(lvmetad,
-	      AC_HELP_STRING([--disable-lvmetad],
-			     [disable the LVM Metadata Daemon]),
+	      AC_HELP_STRING([--enable-lvmetad],
+			     [enable the LVM Metadata Daemon]),
 	      LVMETAD=$enableval)
 AC_MSG_RESULT($LVMETAD)
 

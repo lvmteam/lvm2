@@ -1510,7 +1510,7 @@ Optional Features:
   --enable-testing        enable testing targets in the makefile
   --enable-valgrind-pool  enable valgrind awareness of pools
   --disable-devmapper     disable LVM2 device-mapper interaction
-  --disable-lvmetad       disable the LVM Metadata Daemon
+  --enable-lvmetad        enable the LVM Metadata Daemon
   --enable-udev_sync      enable synchronisation with udev processing
   --enable-udev_rules     install rule files needed for udev synchronisation
   --enable-compat         enable support for old device-mapper versions
