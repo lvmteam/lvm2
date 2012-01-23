@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Fix the way RAID meta LVs are added to the dependency tree.
   Change exclusive LV activation logic to try local node before remote nodes.
   Add CLVMD_FLAG_REMOTE to skip processing on local node.
   Prompt if request is made to remove a snapshot whose "Merge failed".
