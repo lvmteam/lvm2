@@ -234,7 +234,7 @@ uint32_t get_free_pool_device_id(struct lv_segment *thin_pool_seg)
 			max_id = sl->seg->device_id;
 
 	if (++max_id > DM_THIN_MAX_DEVICE_ID) {
-		// FIXME: try to find empty holes....
+		/* FIXME Find empty holes instead of aborting! */
 		log_error("Cannot find free device_id.");
 		return 0;
 	}

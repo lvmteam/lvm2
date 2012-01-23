@@ -1337,26 +1337,26 @@ int dm_report_field_uint64(struct dm_report *rh, struct dm_report_field *field,
 void dm_report_field_set_value(struct dm_report_field *field, const void *value,
 			       const void *sortvalue);
 
-
 /*************************
  * config file parse/print
  *************************/
-// FIXME AGK Review this interface before inclusion in a release.
-enum {
-	DM_CFG_STRING,
-	DM_CFG_FLOAT,
+typedef enum {
 	DM_CFG_INT,
+	DM_CFG_FLOAT,
+	DM_CFG_STRING,
 	DM_CFG_EMPTY_ARRAY
-};
+} dm_config_value_type_t;
 
 struct dm_config_value {
-	int type;
+	dm_config_value_type_t type;
+
 	union {
 		int64_t i;
 		float f;
-		double d;	/* For completeness.  (Unused.) */
+		double d;       	/* Unused. */
 		const char *str;
 	} v;
+
 	struct dm_config_value *next;	/* For arrays */
 };
 
@@ -1366,7 +1366,6 @@ struct dm_config_node {
 	struct dm_config_value *v;
 };
 
-/* FIXME Move cascade to dm_config_node and remove this struct */
 struct dm_config_tree {
 	struct dm_config_node *root;
 	struct dm_config_tree *cascade;
@@ -1382,22 +1381,22 @@ void *dm_config_get_custom(struct dm_config_tree *cft);
 void dm_config_set_custom(struct dm_config_tree *cft, void *custom);
 
 /*
+ * When searching, first_cft is checked before second_cft.
+ */
+struct dm_config_tree *dm_config_insert_cascaded_tree(struct dm_config_tree *first_cft, struct dm_config_tree *second_cft);
+
+/*
  * If there's a cascaded dm_config_tree, remove the top layer
  * and return the layer below.  Otherwise return NULL.
  */
 struct dm_config_tree *dm_config_remove_cascaded_tree(struct dm_config_tree *cft);
-
-/*
- * When searching, first_cft is checked before second_cft.
- */
-struct dm_config_tree *dm_config_insert_cascaded_tree(struct dm_config_tree *first_cft, struct dm_config_tree *second_cft);
 
 void dm_config_destroy(struct dm_config_tree *cft);
 
 typedef int (*dm_putline_fn)(const char *line, void *baton);
 int dm_config_write_node(const struct dm_config_node *cn, dm_putline_fn putline, void *baton);
 
-struct dm_config_node *dm_config_find_node(struct dm_config_node *cn, const char *path);
+struct dm_config_node *dm_config_find_node(const struct dm_config_node *cn, const char *path);
 int dm_config_has_node(const struct dm_config_node *cn, const char *path);
 const char *dm_config_find_str(const struct dm_config_node *cn, const char *path, const char *fail);
 const char *dm_config_find_str_allow_empty(const struct dm_config_node *cn, const char *path, const char *fail);
@@ -1405,18 +1404,12 @@ int dm_config_find_int(const struct dm_config_node *cn, const char *path, int fa
 float dm_config_find_float(const struct dm_config_node *cn, const char *path, float fail);
 
 const struct dm_config_node *dm_config_tree_find_node(const struct dm_config_tree *cft, const char *path);
-const char *dm_config_tree_find_str(const struct dm_config_tree *cft,
-				    const char *path, const char *fail);
-const char *dm_config_tree_find_str_allow_empty(const struct dm_config_tree *cft,
-						const char *path, const char *fail);
-int dm_config_tree_find_int(const struct dm_config_tree *cft,
-			    const char *path, int fail);
-int64_t dm_config_tree_find_int64(const struct dm_config_tree *cft,
-				  const char *path, int64_t fail);
-float dm_config_tree_find_float(const struct dm_config_tree *cft,
-				const char *path, float fail);
-int dm_config_tree_find_bool(const struct dm_config_tree *cft,
-			     const char *path, int fail);
+const char *dm_config_tree_find_str(const struct dm_config_tree *cft, const char *path, const char *fail);
+const char *dm_config_tree_find_str_allow_empty(const struct dm_config_tree *cft, const char *path, const char *fail);
+int dm_config_tree_find_int(const struct dm_config_tree *cft, const char *path, int fail);
+int64_t dm_config_tree_find_int64(const struct dm_config_tree *cft, const char *path, int64_t fail);
+float dm_config_tree_find_float(const struct dm_config_tree *cft, const char *path, float fail);
+int dm_config_tree_find_bool(const struct dm_config_tree *cft, const char *path, int fail);
 
 /*
  * Understands (0, ~0), (y, n), (yes, no), (on,
@@ -1424,36 +1417,25 @@ int dm_config_tree_find_bool(const struct dm_config_tree *cft,
  */
 int dm_config_find_bool(const struct dm_config_node *cn, const char *path, int fail);
 
-int dm_config_get_uint32(const struct dm_config_node *cn, const char *path,
-			 uint32_t *result);
-
-int dm_config_get_uint64(const struct dm_config_node *cn, const char *path,
-			 uint64_t *result);
-
-int dm_config_get_str(const struct dm_config_node *cn, const char *path,
-		      const char **result);
-int dm_config_get_list(const struct dm_config_node *cn, const char *path,
-		       const struct dm_config_value **result);
-int dm_config_get_section(const struct dm_config_node *cn, const char *path,
-			  const struct dm_config_node **result);
+int dm_config_get_uint32(const struct dm_config_node *cn, const char *path, uint32_t *result);
+int dm_config_get_uint64(const struct dm_config_node *cn, const char *path, uint64_t *result);
+int dm_config_get_str(const struct dm_config_node *cn, const char *path, const char **result);
+int dm_config_get_list(const struct dm_config_node *cn, const char *path, const struct dm_config_value **result);
+int dm_config_get_section(const struct dm_config_node *cn, const char *path, const struct dm_config_node **result);
 
 unsigned dm_config_maybe_section(const char *str, unsigned len);
 
 const char *dm_config_parent_name(const struct dm_config_node *n);
 
-struct dm_config_node *dm_config_clone_node_with_mem(struct dm_pool *mem,
-						     const struct dm_config_node *node,
-						     int siblings);
+struct dm_config_node *dm_config_clone_node_with_mem(struct dm_pool *mem, const struct dm_config_node *node, int siblings);
 struct dm_config_node *dm_config_create_node(struct dm_config_tree *cft, const char *key);
 struct dm_config_value *dm_config_create_value(struct dm_config_tree *cft);
-struct dm_config_node *dm_config_clone_node(struct dm_config_tree *cft,
-					    const struct dm_config_node *cn,
-					    int siblings);
+struct dm_config_node *dm_config_clone_node(struct dm_config_tree *cft, const struct dm_config_node *cn, int siblings);
 
 struct dm_pool *dm_config_memory(struct dm_config_tree *cft);
 
-
 /* Cookie prefixes.
+ *
  * The cookie value consists of a prefix (16 bits) and a base (16 bits).
  * We can use the prefix to store the flags. These flags are sent to
  * kernel within given dm task. When returned back to userspace in
@@ -1461,6 +1443,7 @@ struct dm_pool *dm_config_memory(struct dm_config_tree *cft);
  * of udev rules we use by decoding the cookie prefix. When doing the
  * notification, we replace the cookie prefix with DM_COOKIE_MAGIC,
  * so we notify the right semaphore.
+ *
  * It is still possible to use cookies for passing the flags to udev
  * rules even when udev_sync is disabled. The base part of the cookie
  * will be zero (there's no notification semaphore) and prefix will be

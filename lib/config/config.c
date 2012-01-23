@@ -160,7 +160,6 @@ void config_file_destroy(struct dm_config_tree *cft)
  */
 struct dm_config_tree *remove_overridden_config_tree(struct cmd_context *cmd)
 {
-// FIXME Replace cmd->cft with clean copy of merged lvm*.conf tree
 	struct dm_config_tree *old_cft = cmd->cft;
 	struct dm_config_tree *cft = dm_config_remove_cascaded_tree(cmd->cft);
 
@@ -172,8 +171,6 @@ struct dm_config_tree *remove_overridden_config_tree(struct cmd_context *cmd)
 	return old_cft;
 }
 
-// FIXME Retain a copy of the string (or tree?) in cmd->cft_cmdline
-// FIXME and merge into cmd->cft
 int override_config_tree_from_string(struct cmd_context *cmd,
 				     const char *config_settings)
 {
