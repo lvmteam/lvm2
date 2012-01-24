@@ -2060,7 +2060,7 @@ int lv_add_virtual_segment(struct logical_volume *lv, uint64_t status,
 			return 0;
 		}
 		thin_pool_lv = lvl->lv;
-		size = first_seg(thin_pool_lv)->data_block_size;
+		size = first_seg(thin_pool_lv)->chunk_size;
 		if (lv->vg->extent_size < size) {
 			/* Align extents on chunk boundary size */
 			size = ((uint64_t)lv->vg->extent_size * extents + size - 1) /
@@ -4290,7 +4290,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 
 	if (seg_is_thin_pool(lp)) {
 		first_seg(lv)->zero_new_blocks = lp->zero ? 1 : 0;
-		first_seg(lv)->data_block_size = lp->chunk_size;
+		first_seg(lv)->chunk_size = lp->chunk_size;
 		/* FIXME: use lowwatermark  via lvm.conf global for all thinpools ? */
 		first_seg(lv)->low_water_mark = 0;
 	} else if (seg_is_thin_volume(lp)) {

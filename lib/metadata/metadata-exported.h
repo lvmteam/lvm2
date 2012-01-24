@@ -331,7 +331,8 @@ struct lv_segment {
 	uint32_t stripe_size;	/* For stripe and RAID - in sectors */
 	uint32_t area_count;
 	uint32_t area_len;
-	uint32_t chunk_size;	/* For snapshots - in sectors */
+	uint32_t chunk_size;	/* For snapshots/thin_pool.  In sectors. */
+				/* For thin_pool, 128..2097152. */
 	struct logical_volume *origin;	/* snap and thin */
 	struct logical_volume *cow;
 	struct dm_list origin_list;
@@ -348,7 +349,6 @@ struct lv_segment {
 	struct logical_volume *metadata_lv;	/* For thin_pool */
 	uint64_t transaction_id;		/* For thin_pool, thin */
 	uint64_t low_water_mark;		/* For thin_pool */
-	uint32_t data_block_size;		/* For thin_pool, 128..2097152 */
 	unsigned zero_new_blocks;		/* For thin_pool */
 	struct dm_list thin_messages;		/* For thin_pool */
 	struct logical_volume *pool_lv;		/* For thin */

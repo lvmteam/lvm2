@@ -607,7 +607,7 @@ int lvdisplay_full(struct cmd_context *cmd,
 		log_print("LV Pool metadata       %s", seg->metadata_lv->name);
 		log_print("LV Pool data           %s", seg_lv(seg, 0)->name);
 		log_print("LV Pool chunk size     %s",
-			  display_size(cmd, seg->data_block_size));
+			  display_size(cmd, seg->chunk_size));
 		log_print("LV Zero new blocks     %s",
 			  seg->zero_new_blocks ? "yes" : "no");
 	}

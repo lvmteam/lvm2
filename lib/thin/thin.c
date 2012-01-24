@@ -115,16 +115,16 @@ static int _thin_pool_text_import(struct lv_segment *seg,
 	if (!dm_config_get_uint64(sn, "transaction_id", &seg->transaction_id))
 		return SEG_LOG_ERROR("Could not read transaction_id for");
 
-	if (!dm_config_get_uint32(sn, "data_block_size", &seg->data_block_size))
-		return SEG_LOG_ERROR("Could not read data_block_size");
+	if (!dm_config_get_uint32(sn, "chunk_size", &seg->chunk_size))
+		return SEG_LOG_ERROR("Could not read chunk_size");
 
 	if (dm_config_has_node(sn, "low_water_mark") &&
 	    !dm_config_get_uint64(sn, "low_water_mark", &seg->low_water_mark))
 		return SEG_LOG_ERROR("Could not read low_water_mark");
 
-	if ((seg->data_block_size < DM_THIN_MIN_DATA_BLOCK_SIZE) ||
-	    (seg->data_block_size > DM_THIN_MAX_DATA_BLOCK_SIZE))
-		return SEG_LOG_ERROR("Unsupported value %u for data_block_size",
+	if ((seg->chunk_size < DM_THIN_MIN_DATA_BLOCK_SIZE) ||
+	    (seg->chunk_size > DM_THIN_MAX_DATA_BLOCK_SIZE))
+		return SEG_LOG_ERROR("Unsupported value %u for chunk_size",
 				     seg->device_id);
 
 	if (dm_config_has_node(sn, "zero_new_blocks") &&
@@ -155,9 +155,8 @@ static int _thin_pool_text_export(const struct lv_segment *seg, struct formatter
 	outf(f, "metadata = \"%s\"", seg->metadata_lv->name);
 	outf(f, "pool = \"%s\"", seg_lv(seg, 0)->name);
 	outf(f, "transaction_id = %" PRIu64, seg->transaction_id);
-// FIXME  maybe switch to use  chunksize (as with snapshot ??)
-	outsize(f, (uint64_t) seg->data_block_size,
-		"data_block_size = %u", seg->data_block_size);
+	outsize(f, (uint64_t) seg->chunk_size,
+		"chunk_size = %u", seg->chunk_size);
 
 	if (seg->low_water_mark)
 		outf(f, "low_water_mark = %" PRIu64, seg->low_water_mark);
@@ -254,7 +253,7 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 
 	if (!dm_tree_node_add_thin_pool_target(node, len, seg->transaction_id,
 					       metadata_dlid, pool_dlid,
-					       seg->data_block_size, seg->low_water_mark,
+					       seg->chunk_size, seg->low_water_mark,
 					       seg->zero_new_blocks ? 0 : 1))
 		return_0;
 
