@@ -3143,6 +3143,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	struct lvinfo info;
 	struct logical_volume *format1_origin = NULL;
 	int format1_reload_required = 0;
+	int visible;
 
 	vg = lv->vg;
 
@@ -3217,6 +3218,8 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return 0;
 	}
 
+	visible = lv_is_visible(lv);
+
 	log_verbose("Releasing logical volume \"%s\"", lv->name);
 	if (!lv_remove(lv)) {
 		log_error("Error releasing logical volume \"%s\"", lv->name);
@@ -3251,7 +3254,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 	backup(vg);
 
-	if (lv_is_visible(lv))
+	if (visible)
 		log_print("Logical volume \"%s\" successfully removed", lv->name);
 
 	return 1;
