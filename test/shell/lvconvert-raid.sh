@@ -25,10 +25,14 @@ function is_in_sync()
 	if ! a=(`dmsetup status $dm_name`); then
 		echo "Unable to get sync status of $1"
 		exit 1
+	elif [ ${a[2]} = "snapshot-origin" ]; then
+		if ! a=(`dmsetup status ${dm_name}-real`); then
+			echo "Unable to get sync status of $1"
+			exit 1
+		fi
 	fi
 
 	# 6th argument is the sync ratio for RAID and mirror
-	echo ${a[@]}
 	if [ ${a[2]} = "raid" ]; then
 		# Last argument is the sync ratio for RAID
 		idx=$((${#a[@]} - 1))
@@ -103,6 +107,11 @@ aux prepare_vg 5 80
 ###########################################
 # RAID1 convert tests
 ###########################################
+#
+# FIXME: Snapshots of RAID is available, but there are kernel bugs that
+#        still prevent its use.
+#for under_snap in false true; do
+for under_snap in false; do
 for i in 1 2 3 4; do
 	for j in 1 2 3 4; do
 		if [ $i -eq 1 ]; then
@@ -115,7 +124,13 @@ for i in 1 2 3 4; do
 		else
 			to="$j-way"
 		fi
-		echo "Converting from $from to $to"
+
+		echo -n "Converting from $from to $to"
+		if $under_snap; then
+			echo -n " (while under a snapshot)"
+		fi
+		echo
+
 		if [ $i -eq 1 ]; then
 			# Shouldn't be able to create with just 1 image
 			not lvcreate --type raid1 -m 0 -l 2 -n $lv1 $vg
@@ -125,6 +140,11 @@ for i in 1 2 3 4; do
 			lvcreate --type raid1 -m $(($i - 1)) -l 2 -n $lv1 $vg
 			wait_for_sync $vg/$lv1
 		fi
+
+		if $under_snap; then
+			lvcreate -s $vg/$lv1 -n snap -l 2
+		fi
+
 		lvconvert -m $((j - 1))  $vg/$lv1
 
 		# FIXME: ensure no residual devices
@@ -135,7 +155,7 @@ for i in 1 2 3 4; do
 		lvremove -ff $vg
 	done
 done
-
+done
 #
 # FIXME: Add tests that specify particular devices to be removed
 #

@@ -762,7 +762,7 @@ to be left for these sub-lvs.
 		return 0;
 	}
 
-	if (!suspend_lv(cmd, lv)) {
+	if (!suspend_lv_origin(cmd, lv)) {
 		log_error("Failed to suspend %s/%s before committing changes",
 			  lv->vg->name, lv->name);
 		return 0;
@@ -774,7 +774,7 @@ to be left for these sub-lvs.
 		return 0;
 	}
 
-	if (!resume_lv(cmd, lv)) {
+	if (!resume_lv_origin(cmd, lv)) {
 		log_error("Failed to resume %s/%s after committing changes",
 			  lv->vg->name, lv->name);
 		return 0;
