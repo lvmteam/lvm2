@@ -3111,8 +3111,6 @@ int unlink_lv_from_vg(struct logical_volume *lv)
 
 	dm_list_del(&lvl->list);
 
-	lv->status = 0;   /* Reset */
-
 	return 1;
 }
 
