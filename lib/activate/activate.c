@@ -147,7 +147,7 @@ int target_present(struct cmd_context *cmd, const char *target_name,
 {
 	return 0;
 }
-int lvm_dm_prefix_check(const char *sysfs_dir, int major, int minor, const char *prefix)
+int lvm_dm_prefix_check(int major, int minor, const char *prefix)
 {
 	return 0;
 }
@@ -161,12 +161,36 @@ int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s, int use_layer,
 {
 	return 0;
 }
+int lv_check_not_in_use(struct cmd_context *cmd __attribute__((unused)),
+			struct logical_volume *lv, struct lvinfo *info)
+{
+        return 0;
+}
 int lv_snapshot_percent(const struct logical_volume *lv, percent_t *percent)
 {
 	return 0;
 }
 int lv_mirror_percent(struct cmd_context *cmd, const struct logical_volume *lv,
 		      int wait, percent_t *percent, uint32_t *event_nr)
+{
+	return 0;
+}
+int lv_raid_percent(const struct logical_volume *lv, percent_t *percent)
+{
+	return 0;
+}
+int lv_thin_pool_percent(const struct logical_volume *lv, int metadata,
+			 percent_t *percent)
+{
+	return 0;
+}
+int lv_thin_percent(const struct logical_volume *lv, int mapped,
+		    percent_t *percent)
+{
+	return 0;
+}
+int lv_thin_pool_transaction_id(const struct logical_volume *lv,
+				uint64_t *transaction_id)
 {
 	return 0;
 }
@@ -184,7 +208,7 @@ int lv_suspend(struct cmd_context *cmd, const char *lvid_s)
 	return 1;
 }
 *******/
-int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only)
+int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only, unsigned exclusive)
 {
 	return 1;
 }
@@ -260,9 +284,29 @@ int lv_check_transient(struct logical_volume *lv)
 	return 1;
 }
 int monitor_dev_for_events(struct cmd_context *cmd, struct logical_volume *lv,
-			   struct lv_activate_opts *laopts, int monitor)
+			   const struct lv_activate_opts *laopts, int monitor)
 {
 	return 1;
+}
+/* fs.c */
+void fs_unlock(void)
+{
+}
+/* dev_manager.c */
+int add_areas_line(struct dev_manager *dm, struct lv_segment *seg,
+		   struct dm_tree_node *node, uint32_t start_area,
+		   uint32_t areas)
+{
+        return 0;
+}
+int device_is_usable(struct device *dev)
+{
+        return 0;
+}
+int lv_has_target_type(struct dm_pool *mem, struct logical_volume *lv,
+		       const char *layer, const char *target_type)
+{
+        return 0;
 }
 #else				/* DEVMAPPER_SUPPORT */
 
