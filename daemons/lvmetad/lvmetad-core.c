@@ -167,6 +167,10 @@ static int update_pv_status(lvmetad_state *s,
 
 static response vg_lookup(lvmetad_state *s, request r)
 {
+	struct dm_config_tree *cft;
+	struct dm_config_node *metadata, *n;
+	response res = { .buffer = NULL };
+
 	const char *uuid = daemon_request_str(r, "uuid", NULL),
 		   *name = daemon_request_str(r, "name", NULL);
 	debug("vg_lookup: uuid = %s, name = %s\n", uuid, name);
@@ -185,15 +189,13 @@ static response vg_lookup(lvmetad_state *s, request r)
 	if (!uuid)
 		return daemon_reply_simple("failed", "reason = %s", "VG not found", NULL);
 
-	struct dm_config_tree *cft = lock_vg(s, uuid);
+	cft = lock_vg(s, uuid);
 	if (!cft || !cft->root) {
 		unlock_vg(s, uuid);
 		return daemon_reply_simple("failed", "reason = %s", "UUID not found", NULL);
 	}
 
-	struct dm_config_node *metadata = cft->root, *n;
-	response res = { .buffer = NULL };
-
+	metadata = cft->root;
 	res.cft = dm_config_create();
 
 	/* The response field */
@@ -284,9 +286,11 @@ static int update_pvid_map(lvmetad_state *s, struct dm_config_tree *vg, const ch
 /* A pvid map lock needs to be held. */
 static int remove_metadata(lvmetad_state *s, const char *vgid)
 {
+	struct dm_config_tree *old;
+	const char *oldname;
 	lock_vgs(s);
-	struct dm_config_tree *old = dm_hash_lookup(s->vgs, vgid);
-	const char *oldname = dm_hash_lookup(s->vg_names, vgid);
+	old = dm_hash_lookup(s->vgs, vgid);
+	oldname = dm_hash_lookup(s->vg_names, vgid);
 	unlock_vgs(s);
 
 	if (!old)
@@ -310,15 +314,17 @@ static int update_metadata(lvmetad_state *s, const char *name, const char *_vgid
 	struct dm_config_tree *cft;
 	struct dm_config_tree *old;
 	int retval = 0;
+	int seq;
+	int haveseq = -1;
+	const char *oldname = NULL;
+	const char *vgid;
 
 	lock_vgs(s);
 	old = dm_hash_lookup(s->vgs, _vgid);
 	lock_vg(s, _vgid);
 	unlock_vgs(s);
 
-	int seq = dm_config_find_int(metadata, "metadata/seqno", -1);
-	int haveseq = -1;
-	const char *oldname = NULL;
+	seq = dm_config_find_int(metadata, "metadata/seqno", -1);
 
 	if (old) {
 		haveseq = dm_config_find_int(old->root, "metadata/seqno", -1);
@@ -348,7 +354,7 @@ static int update_metadata(lvmetad_state *s, const char *name, const char *_vgid
 	cft = dm_config_create();
 	cft->root = dm_config_clone_node(cft, metadata, 0);
 
-	const char *vgid = dm_config_find_str(cft->root, "metadata/id", NULL);
+	vgid = dm_config_find_str(cft->root, "metadata/id", NULL);
 
 	if (!vgid || !name) {
 		debug("Name '%s' or uuid '%s' missing!\n", name, vgid);

@@ -57,6 +57,7 @@ fail:
  * TODO use select on EWOULDBLOCK/EAGAIN to avoid useless spinning
  */
 int write_buffer(int fd, const char *buffer, int length) {
+	static const char terminate[] = "\n##\n";
 	int done = 0;
 	int written = 0;
 write:
@@ -73,7 +74,7 @@ write:
 				break; /* done */
 		}
 	}
-	const char *terminate = "\n##\n";
+
 	buffer = terminate;
 	length = 4;
 	written = 0;
