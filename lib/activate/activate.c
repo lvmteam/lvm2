@@ -481,7 +481,11 @@ int target_version(const char *target_name, uint32_t *maj,
 	if (!dm_task_run(dmt)) {
 		log_debug("Failed to get %s target version", target_name);
 		/* Assume this was because LIST_VERSIONS isn't supported */
-		return 1;
+		*maj = 0;
+		*min = 0;
+		*patchlevel = 0;
+		r = 1;
+		goto out;
 	}
 
 	target = dm_task_get_versions(dmt);

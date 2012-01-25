@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Fix memleak in target_version() error path (unsupported LIST_VERSIONS).
   Limit alignment to 32bit values.
   Check for correctness of uint64 dev_size value.
   Rename origin_only parameter to more generic flag use_layer for lv_info().
