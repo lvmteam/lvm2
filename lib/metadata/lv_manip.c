@@ -4354,16 +4354,17 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 					  "the autoextend threshold (%d%%).", percent);
 				goto revert_new_lv;
 			}
-			if (!suspend_lv(cmd, org)) {
-				log_error("Failed to suspend thin origin %s.",
-					  org->name);
-				goto revert_new_lv;
-			} else if (!resume_lv(cmd, org)) {
-				log_error("Failed to resume thin origin %s.",
+			if (!suspend_lv_origin(cmd, org)) {
+				log_error("Failed to suspend thin snapshot origin %s.",
 					  org->name);
 				goto revert_new_lv;
 			}
-			/* At this point snapshot is active in kernel thin mda */
+			if (!resume_lv_origin(cmd, org)) { /* deptree updates thin-pool */
+				log_error("Failed to resume thin snapshot origin %s.",
+					  org->name);
+				goto revert_new_lv;
+			}
+			/* At this point remove pool messages, snapshot is active */
 			if (!update_pool_lv(first_seg(org)->pool_lv, 0)) {
 				stack;
 				goto deactivate_and_revert_new_lv;
