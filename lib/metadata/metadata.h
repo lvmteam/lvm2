@@ -452,16 +452,18 @@ int fixup_imported_mirrors(struct volume_group *vg);
 /*
  * From thin_manip.c
  */
-int attach_pool_metadata_lv(struct lv_segment *seg,
+int attach_pool_metadata_lv(struct lv_segment *pool_seg,
 			    struct logical_volume *pool_metadata_lv);
-int attach_pool_data_lv(struct lv_segment *seg,
+int attach_pool_data_lv(struct lv_segment *pool_seg,
 			struct logical_volume *pool_data_lv);
 int attach_pool_lv(struct lv_segment *seg, struct logical_volume *pool_lv,
 		   struct logical_volume *origin_lv);
 int detach_pool_lv(struct lv_segment *seg);
-int attach_pool_message(struct lv_segment *seg, dm_thin_message_t type,
+int attach_pool_message(struct lv_segment *pool_seg, dm_thin_message_t type,
 			struct logical_volume *lv, uint32_t delete_id,
-			int read_only);
+			int auto_increment);
+int pool_has_message(const struct lv_segment *seg,
+		     const struct logical_volume *lv, uint32_t device_id);
 int extend_pool(struct logical_volume *lv, const struct segment_type *segtype,
 		struct alloc_handle *ah, uint32_t stripes, uint32_t stripe_size);
 
