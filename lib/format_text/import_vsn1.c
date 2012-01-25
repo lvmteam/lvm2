@@ -216,7 +216,11 @@ static int _read_pv(struct format_instance *fid,
 		pv->status |= MISSING_PV;
 
 	/* Late addition */
-	_read_uint64(pvn, "dev_size", &pv->size);
+	if (dm_config_has_node(pvn, "dev_size") &&
+	    !_read_uint64(pvn, "dev_size", &pv->size)) {
+		log_error("Couldn't read dev size for physical volume.");
+		return 0;
+	}
 
 	if (!_read_uint64(pvn, "pe_start", &pv->pe_start)) {
 		log_error("Couldn't read extent size for physical volume.");
