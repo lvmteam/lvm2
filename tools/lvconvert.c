@@ -1084,10 +1084,9 @@ static int _lvconvert_mirrors_aux(struct cmd_context *cmd,
 		 */
 		if (!lv_add_mirrors(cmd, lv, new_mimage_count - 1, lp->stripes,
 				    lp->stripe_size, region_size, new_log_count, operable_pvs,
-				    lp->alloc, MIRROR_BY_LV)) {
-			stack;
-			return 0;
-		}
+				    lp->alloc, MIRROR_BY_LV))
+			return_0;
+
 		if (lp->wait_completion)
 			lp->need_polling = 1;
 
