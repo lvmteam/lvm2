@@ -38,12 +38,12 @@ void memlock_dec_daemon(struct cmd_context *cmd)
 	return;
 }
 
-void critical_section_inc(struct cmd_context *cmd)
+void critical_section_inc(struct cmd_context *cmd, const char *reason)
 {
 	return;
 }
 
-void critical_section_dec(struct cmd_context *cmd)
+void critical_section_dec(struct cmd_context *cmd, const char *reason)
 {
 	return;
 }
