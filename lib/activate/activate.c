@@ -762,6 +762,35 @@ int lv_thin_percent(const struct logical_volume *lv,
 	return r;
 }
 
+/*
+ * Returns 1 if transaction_id set, else 0 on failure.
+ */
+int lv_thin_pool_transaction_id(const struct logical_volume *lv,
+				uint64_t *transaction_id)
+{
+	int r;
+	struct dev_manager *dm;
+	struct dm_status_thin_pool *status;
+
+	if (!activation())
+		return 0;
+
+	log_debug("Checking thin percent for LV %s/%s",
+		  lv->vg->name, lv->name);
+
+	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
+		return_0;
+
+	if (!(r = dev_manager_thin_pool_status(dm, lv, &status)))
+		stack;
+	else
+		*transaction_id = status->transaction_id;
+
+	dev_manager_destroy(dm);
+
+	return r;
+}
+
 static int _lv_active(struct cmd_context *cmd, struct logical_volume *lv)
 {
 	struct lvinfo info;
