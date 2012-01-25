@@ -151,13 +151,12 @@ int lvm_dm_prefix_check(const char *sysfs_dir, int major, int minor, const char 
 {
 	return 0;
 }
-int lv_info(struct cmd_context *cmd, const struct logical_volume *lv, unsigned origin_only,
+int lv_info(struct cmd_context *cmd, const struct logical_volume *lv, int use_layer,
 	    struct lvinfo *info, int with_open_count, int with_read_ahead)
 {
 	return 0;
 }
-int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s,
-		    unsigned origin_only,
+int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s, int use_layer,
 		    struct lvinfo *info, int with_open_count, int with_read_ahead)
 {
 	return 0;
@@ -532,10 +531,11 @@ int target_present(struct cmd_context *cmd, const char *target_name,
 /*
  * Returns 1 if info structure populated, else 0 on failure.
  */
-int lv_info(struct cmd_context *cmd, const struct logical_volume *lv, unsigned origin_only,
+int lv_info(struct cmd_context *cmd, const struct logical_volume *lv, int use_layer,
 	    struct lvinfo *info, int with_open_count, int with_read_ahead)
 {
 	struct dm_info dminfo;
+	const char *layer;
 
 	if (!activation())
 		return 0;
@@ -552,7 +552,14 @@ int lv_info(struct cmd_context *cmd, const struct logical_volume *lv, unsigned o
 			fs_unlock(); /* For non clustered - wait if there are non-delete ops */
 	}
 
-	if (!dev_manager_info(lv->vg->cmd->mem, lv, (lv_is_origin(lv) && origin_only) ? "real" : NULL, with_open_count,
+	if (use_layer && lv_is_thin_pool(lv))
+		layer = "tpool";
+	else if (use_layer && lv_is_origin(lv))
+		layer = "real";
+	else
+		layer = NULL;
+
+	if (!dev_manager_info(lv->vg->cmd->mem, lv, layer, with_open_count,
 			      with_read_ahead, &dminfo, &info->read_ahead))
 		return_0;
 
@@ -568,8 +575,7 @@ int lv_info(struct cmd_context *cmd, const struct logical_volume *lv, unsigned o
 	return 1;
 }
 
-int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s,
-		    unsigned origin_only,
+int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s, int use_layer,
 		    struct lvinfo *info, int with_open_count, int with_read_ahead)
 {
 	int r;
@@ -578,10 +584,7 @@ int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s,
 	if (!(lv = lv_from_lvid(cmd, lvid_s, 0)))
 		return 0;
 
-	if (!lv_is_origin(lv))
-		origin_only = 0;
-
-	r = lv_info(cmd, lv, origin_only, info, with_open_count, with_read_ahead);
+	r = lv_info(cmd, lv, use_layer, info, with_open_count, with_read_ahead);
 	release_vg(lv->vg);
 
 	return r;
