@@ -1189,7 +1189,8 @@ const char *dm_uuid_prefix(void)
 static int _sysfs_get_dm_name(uint32_t major, uint32_t minor, char *buf, size_t buf_size)
 {
 	char *sysfs_path, *temp_buf;
-	FILE *fp;
+	FILE *fp = NULL;
+	int r = 0;
 
 	if (!(sysfs_path = dm_malloc(PATH_MAX)) ||
 	    !(temp_buf = dm_malloc(PATH_MAX))) {
@@ -1219,23 +1220,21 @@ static int _sysfs_get_dm_name(uint32_t major, uint32_t minor, char *buf, size_t 
 	}
 	temp_buf[strlen(temp_buf) - 1] = '\0';
 
-	if (fclose(fp))
-		log_sys_error("fclose", sysfs_path);
-
 	if (buf_size < strlen(temp_buf) + 1) {
 		log_error("_sysfs_get_dm_name: supplied buffer too small");
 		goto error;
 	}
 
 	strncpy(buf, temp_buf, buf_size);
-	dm_free(sysfs_path);
-	dm_free(temp_buf);
-	return 1;
-
+	r = 1;
 error:
+	if (fp && fclose(fp))
+		log_sys_error("fclose", sysfs_path);
+
 	dm_free(sysfs_path);
 	dm_free(temp_buf);
-	return 0;
+
+	return r;
 }
 
 static int _sysfs_get_kernel_name(uint32_t major, uint32_t minor, char *buf, size_t buf_size)
