@@ -1201,10 +1201,11 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	uint32_t s;
 	struct seg_list *sl;
 	struct lv_segment *seg = first_seg(lv);
-	/* FIXME: Resolve skip_childrens
+#if 0
+	/* FIXME For dm_tree_node_skip_children optimisation below */
 	struct dm_tree_node *thin_node;
 	const char *uuid;
-	*/
+#endif
 
 	if ((!origin_only || lv_is_thin_volume(lv)) &&
 	    !_add_dev_to_dtree(dm, dtree, lv, NULL))
@@ -1239,14 +1240,15 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		return_0;
 
 	if (lv_is_thin_volume(lv)) {
-		/* FIXME: Resolve skip_childrens
+#if 0
+		/* FIXME Implement dm_tree_node_skip_children optimisation */
 		if (origin_only) {
 			if (!(uuid = build_dm_uuid(dm->mem, lv->lvid.s, NULL)))
 				return_0;
 			if ((thin_node = dm_tree_find_node_by_uuid(dtree, uuid)))
-				dm_tree_node_skip_childrens(thin_node, 1);
+				dm_tree_node_skip_children(thin_node, 1);
 		}
-		*/
+#endif
 		/* Add thin pool LV layer */
 		lv = seg->pool_lv;
 		seg = first_seg(lv);
