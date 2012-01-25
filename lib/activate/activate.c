@@ -1502,16 +1502,6 @@ int lv_suspend(struct cmd_context *cmd, const char *lvid_s)
 }
 ***********/
 
- /*
-  * _lv_resume
-  * @cmd
-  * @lvid_s
-  * @origin_only
-  * @exclusive:  This parameter only has an affect in cluster-context.
-  *		 It forces local target type to be used (instead of
-  *		 cluster-aware type).
-  * @error_if_not_active
-  */
 static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
 		      struct lv_activate_opts *laopts, int error_if_not_active)
 {
@@ -1574,6 +1564,10 @@ out:
  * In a cluster, set exclusive to indicate that only one node is using the
  * device.  Any tables loaded may then use non-clustered targets.
  *
+ * @origin_only
+ * @exclusive   This parameter only has an affect in cluster-context.
+ *              It forces local target type to be used (instead of
+ *              cluster-aware type).
  * Returns success if the device is not active
  */
 int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s,
