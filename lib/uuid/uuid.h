@@ -19,6 +19,11 @@
 #define ID_LEN 32
 #define ID_LEN_S "32"
 
+#include <inttypes.h>
+#include <sys/types.h>
+
+struct dm_pool;
+
 struct id {
 	int8_t uuid[ID_LEN];
 };

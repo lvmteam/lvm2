@@ -15,7 +15,9 @@
 #ifndef _LVM_PV_H
 #define _LVM_PV_H
 
-struct id;
+#include "uuid.h"
+#include "libdevmapper.h"
+
 struct device;
 struct format_type;
 struct volume_group;

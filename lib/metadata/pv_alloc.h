@@ -14,6 +14,15 @@
 
 #ifndef _LVM_PV_ALLOC_H
 
+#include <inttypes.h>
+
+struct dm_list;
+struct dm_pool;
+struct lv_segment;
+struct physical_volume;
+struct pv_segment;
+struct volume_group;
+
 int alloc_pv_segment_whole_pv(struct dm_pool *mem, struct physical_volume *pv);
 int peg_dup(struct dm_pool *mem, struct dm_list *peg_new, struct dm_list *peg_old);
 struct pv_segment *assign_peg_to_lvseg(struct physical_volume *pv, uint32_t pe,

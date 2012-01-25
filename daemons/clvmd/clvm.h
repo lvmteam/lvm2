@@ -23,6 +23,7 @@
 #define _CLVM_H
 
 #include "configure.h"
+#include <inttypes.h>
 
 struct clvm_header {
 	uint8_t  cmd;	        /* See below */

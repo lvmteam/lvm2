@@ -16,6 +16,9 @@
 #ifndef _LVM_TEXT_IMPORT_H
 #define _LVM_TEXT_IMPORT_H
 
+#include <inttypes.h>
+
+struct dm_hash_table;
 struct lv_segment;
 struct dm_config_node;
 

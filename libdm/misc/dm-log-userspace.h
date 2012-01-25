@@ -7,6 +7,8 @@
 #ifndef __DM_LOG_USERSPACE_H__
 #define __DM_LOG_USERSPACE_H__
 
+#include <inttypes.h>
+
 #include "dm-ioctl.h" /* For DM_UUID_LEN */
 
 /*

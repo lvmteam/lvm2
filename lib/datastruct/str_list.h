@@ -16,6 +16,9 @@
 #ifndef _LVM_STR_LIST_H
 #define _LVM_STR_LIST_H
 
+struct dm_list;
+struct dm_pool;
+
 struct dm_list *str_list_create(struct dm_pool *mem);
 int str_list_add(struct dm_pool *mem, struct dm_list *sll, const char *str);
 void str_list_del(struct dm_list *sll, const char *str);

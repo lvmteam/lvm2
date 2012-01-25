@@ -17,6 +17,7 @@
 #define _LVM_DEVICE_H
 
 #include "uuid.h"
+#include "lvm-types.h"
 
 #include <fcntl.h>
 

@@ -16,6 +16,8 @@
 #ifndef _LVM_LV_ALLOC_H
 #define _LVM_LV_ALLOC_H
 
+#include "metadata-exported.h"
+
 struct lv_segment *alloc_lv_segment(const struct segment_type *segtype,
 				    struct logical_volume *lv,
 				    uint32_t le, uint32_t len,

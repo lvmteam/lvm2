@@ -15,11 +15,11 @@
 #ifndef _LVM_VG_H
 #define _LVM_VG_H
 
+#include "uuid.h"
+#include "libdevmapper.h"
+
 struct cmd_context;
-struct dm_pool;
 struct format_instance;
-struct dm_list;
-struct id;
 struct logical_volume;
 
 typedef enum {

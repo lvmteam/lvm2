@@ -48,6 +48,7 @@ enum dm_event_mask {
 #define DM_EVENT_ALL_ERRORS DM_EVENT_ERROR_MASK
 #define DM_EVENT_PROTOCOL_VERSION 1
 
+struct dm_task;
 struct dm_event_handler;
 
 struct dm_event_handler *dm_event_handler_create(void);

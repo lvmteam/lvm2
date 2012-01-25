@@ -19,6 +19,8 @@
 #include <sys/types.h>
 #include <inttypes.h>
 
+#include "libdevmapper.h"
+
 /* Define some portable printing types */
 #define PRIsize_t "zu"
 #define PRIptrdiff_t "td"

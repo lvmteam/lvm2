@@ -15,9 +15,9 @@
 #ifndef _LVM_LV_H
 #define _LVM_LV_H
 
+#include "vg.h"
+
 union lvid;
-struct volume_group;
-struct dm_list;
 struct lv_segment;
 struct replicator_device;
 enum activation_change;
