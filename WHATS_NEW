@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Update lv_info to use -real layer for origin_only LVs.
   Add lv_thin_pool_transaction_id to read the transaction_id value.
   Use suspend|resume_origin_only when up-converting RAID, as mirrors do.
   Fix the way RAID meta LVs are added to the dependency tree.
