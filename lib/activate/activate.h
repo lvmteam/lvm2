@@ -79,10 +79,9 @@ int lv_mknodes(struct cmd_context *cmd, const struct logical_volume *lv);
 /*
  * Returns 1 if info structure has been populated, else 0.
  */
-int lv_info(struct cmd_context *cmd, const struct logical_volume *lv,
-	    unsigned origin_only, struct lvinfo *info,
-	    int with_open_count, int with_read_ahead);
-int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only,
+int lv_info(struct cmd_context *cmd, const struct logical_volume *lv, int use_layer,
+	    struct lvinfo *info, int with_open_count, int with_read_ahead);
+int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s, int use_layer,
 		    struct lvinfo *info, int with_open_count, int with_read_ahead);
 
 int lv_check_not_in_use(struct cmd_context *cmd, struct logical_volume *lv,

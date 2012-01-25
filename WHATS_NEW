@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Rename origin_only parameter to more generic flag use_layer for lv_info().
   Thin pools have segment fields thin_count, zero, transaction_id.
   Each new created LV volume has creation lv_time and lv_host.
   Print data_percent and metadata_percent for verbose lvs.
