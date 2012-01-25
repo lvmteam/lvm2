@@ -1,5 +1,6 @@
 Version 1.02.68 -
 ==================================
+  Reset all members of info struct in dm_tree_add_new_dev_with_udev_flags.
   Add dmsetup wipe_table to replace table with one that uses error target.
   Add 'blkdevname' and 'blkdevs_used' field to dmsetup info -c -o.
   Add 'blkdevname' option to dmsetup ls --tree to see block device names.

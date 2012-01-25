@@ -1101,12 +1101,7 @@ struct dm_tree_node *dm_tree_add_new_dev_with_udev_flags(struct dm_tree *dtree,
 			return NULL;
 		}
 
-		info.major = 0;
-		info.minor = 0;
-		info.exists = 0;
-		info.live_table = 0;
-		info.inactive_table = 0;
-		info.read_only = 0;
+		memset(&info, 0, sizeof(info));
 
 		if (!(dnode = _create_dm_tree_node(dtree, name2, uuid2, &info,
 						   context, 0)))
