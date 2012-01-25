@@ -1438,7 +1438,7 @@ int pvcreate_params_validate(struct cmd_context *cmd,
 	}
 	pp->data_alignment = arg_uint64_value(cmd, dataalignment_ARG, UINT64_C(0));
 
-	if (pp->data_alignment > ULONG_MAX) {
+	if (pp->data_alignment > UINT32_MAX) {
 		log_error("Physical volume data alignment is too big.");
 		return 0;
 	}
@@ -1457,7 +1457,7 @@ int pvcreate_params_validate(struct cmd_context *cmd,
 	}
 	pp->data_alignment_offset = arg_uint64_value(cmd, dataalignmentoffset_ARG, UINT64_C(0));
 
-	if (pp->data_alignment_offset > ULONG_MAX) {
+	if (pp->data_alignment_offset > UINT32_MAX) {
 		log_error("Physical volume data alignment offset is too big.");
 		return 0;
 	}
