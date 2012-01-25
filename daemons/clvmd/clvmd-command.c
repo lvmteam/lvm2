@@ -257,7 +257,7 @@ int do_pre_command(struct local_client *client)
 	unsigned char lock_cmd;
 	unsigned char lock_flags;
 	char *args = header->node + strlen(header->node) + 1;
-	int lockid;
+	int lockid = 0;
 	int status = 0;
 	char *lockname;
 
