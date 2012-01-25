@@ -882,6 +882,48 @@ static int _belong_to_vg(const char *vgname, const char *name)
 
 #endif
 
+int dev_manager_thin_pool_status(struct dev_manager *dm,
+				 const struct logical_volume *lv,
+				 struct dm_status_thin_pool **status)
+{
+	const char *dlid;
+	struct dm_task *dmt;
+	struct dm_info info;
+	uint64_t start, length;
+	char *type = NULL;
+	char *params = NULL;
+	int r = 0;
+
+	/* Build dlid for the thin pool layer */
+	if (!(dlid = build_dm_uuid(dm->mem, lv->lvid.s, _thin_layer)))
+		return_0;
+
+	log_debug("Getting thin pool device status for %s.", lv->name);
+
+	if (!(dmt = _setup_task(NULL, dlid, 0, DM_DEVICE_STATUS, 0, 0)))
+		return_0;
+
+	if (!dm_task_no_open_count(dmt))
+		log_error("Failed to disable open_count.");
+
+	if (!dm_task_run(dmt))
+		goto_out;
+
+	if (!dm_task_get_info(dmt, &info) || !info.exists)
+		goto_out;
+
+	dm_get_next_target(dmt, NULL, &start, &length, &type, &params);
+
+	if (!dm_get_status_thin_pool(dm->mem, params, status))
+		goto_out;
+
+	r = 1;
+out:
+	dm_task_destroy(dmt);
+
+	return r;
+}
+
 int dev_manager_thin_pool_percent(struct dev_manager *dm,
 				  const struct logical_volume *lv,
 				  int metadata, percent_t *percent)
