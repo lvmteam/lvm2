@@ -129,8 +129,10 @@ out:
 
 error:
 	if (fd >= 0) {
-		close(fd);
-		unlink(s.socket_path);
+		if (close(fd))
+			perror("close failed");
+		if (unlink(s.socket_path))
+			perror("unlink failed");
 		fd = -1;
 	}
 	goto out;
@@ -364,7 +366,8 @@ void daemon_start(daemon_state s)
 	}
 
 	if (s.socket_fd >= 0)
-		unlink(s.socket_path);
+		if (unlink(s.socket_path))
+			perror("unlink error");
 
 	if (s.daemon_fini)
 		s.daemon_fini(&s);
