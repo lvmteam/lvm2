@@ -606,8 +606,10 @@ int init_multiple_segtypes(struct cmd_context *cmd, struct segtype_library *segl
 			segtype->flags |= SEG_MONITORED;
 #  endif /* DMEVENTD */
 #endif
-		if (!lvm_register_segtype(seglib, segtype))
+		if (!lvm_register_segtype(seglib, segtype)) {
+			dm_free(segtype);
 			return_0;
+		}
 
 		log_very_verbose("Initialised segtype: %s", segtype->name);
 	}
