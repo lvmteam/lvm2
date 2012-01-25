@@ -4340,9 +4340,13 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 	init_dmeventd_monitor(lp->activation_monitoring);
 
 	if (seg_is_thin(lp)) {
-		/* For thin snapshot suspend active thin origin first */
+		/* For snapshot, suspend active thin origin first */
 		if (org && lv_is_active(org)) {
-			lv_thin_pool_percent(first_seg(org)->pool_lv, 0, &percent);
+			/* Check if the pool is bellow threshold (Works only for active thin) */
+			if (!lv_thin_pool_percent(first_seg(org)->pool_lv, 0, &percent)) {
+				stack;
+				goto revert_new_lv;
+			}
 			percent /= PERCENT_1;
 			if (percent >= (find_config_tree_int(cmd, "activation/thin_pool_autoextend_threshold",
 							     DEFAULT_THIN_POOL_AUTOEXTEND_THRESHOLD))) {
