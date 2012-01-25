@@ -379,15 +379,11 @@ int update_pool_lv(struct logical_volume *lv, int activate)
 			if (!deactivate_lv(lv->vg->cmd, lv))
 				return_0;
 		}
-		/* If already active, do suspend resume
-		 *
-		 * TODO: Support pool resume without suspend,
-		 * since the real suspend is not needed here
+		/*
+		 * Resume active pool to send thin messages.
+		 * origin_only is used to skip check for resumed state
 		 */
-		else if (!suspend_lv(lv->vg->cmd, lv)) {
-			log_error("Failed to suspend %s.", lv->name);
-			return 0;
-		} else if (!resume_lv(lv->vg->cmd, lv)) {
+		else if (!resume_lv_origin(lv->vg->cmd, lv)) {
 			log_error("Failed to resume %s.", lv->name);
 			return 0;
 		}

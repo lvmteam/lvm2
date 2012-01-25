@@ -1508,12 +1508,16 @@ static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
 	struct logical_volume *lv;
 	struct lvinfo info;
 	int r = 0;
+	int messages_only = 0;
 
 	if (!activation())
 		return 1;
 
 	if (!(lv = lv_from_lvid(cmd, lvid_s, 0)))
 		goto_out;
+
+	if (lv_is_thin_pool(lv) && laopts->origin_only)
+		messages_only = 1;
 
 	if (!lv_is_origin(lv))
 		laopts->origin_only = 0;
@@ -1533,7 +1537,7 @@ static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
 	if (!lv_info(cmd, lv, laopts->origin_only, &info, 0, 0))
 		goto_out;
 
-	if (!info.exists || !info.suspended) {
+	if (!info.exists || !(info.suspended || messages_only)) {
 		if (error_if_not_active)
 			goto_out;
 		r = 1;
