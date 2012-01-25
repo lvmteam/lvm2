@@ -527,10 +527,6 @@ static int _lv_reduce(struct logical_volume *lv, uint32_t extents, int delete)
 				return_0;
 
 			if (seg->pool_lv) {
-                                /* For now, clear stacked messages here */
-				if (!update_pool_lv(seg->pool_lv, 1))
-					return_0;
-
 				if (!detach_pool_lv(seg))
 					return_0;
 			}
@@ -3142,6 +3138,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	struct logical_volume *format1_origin = NULL;
 	int format1_reload_required = 0;
 	int visible;
+	struct logical_volume *pool_lv = NULL;
 
 	vg = lv->vg;
 
@@ -3176,7 +3173,8 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		log_error("Can't remove logical volume %s used by a thin pool.",
 			  lv->name);
 		return 0;
-	}
+	} else if (lv_is_thin_volume(lv))
+		pool_lv = first_seg(lv)->pool_lv;
 
 	if (lv->status & LOCKED) {
 		log_error("Can't remove locked LV %s", lv->name);
@@ -3222,6 +3220,13 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return 0;
 	}
 
+	/* Clear thin pool stacked messages */
+	if (pool_lv && !pool_has_message(first_seg(pool_lv), lv, 0) &&
+	    !update_pool_lv(pool_lv, 1)) {
+		log_error("Failed to update thin pool %s.", pool_lv->name);
+		return 0;
+	}
+
 	visible = lv_is_visible(lv);
 
 	log_verbose("Releasing logical volume \"%s\"", lv->name);
@@ -3253,6 +3258,13 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	/* format1 */
 	if (format1_reload_required && !resume_lv(cmd, format1_origin)) {
 		log_error("Failed to resume %s.", format1_origin->name);
+		return 0;
+	}
+
+	/* Release unneeded blocks in thin pool */
+	/* TODO: defer when multiple LVs relased at once */
+	if (pool_lv && !update_pool_lv(pool_lv, 1)) {
+		log_error("Failed to update thin pool %s.", pool_lv->name);
 		return 0;
 	}
 
