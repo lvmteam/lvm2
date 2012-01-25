@@ -99,7 +99,9 @@ int do_command(struct local_client *client, struct clvm_header *msg, int msglen,
 			*buf = new_buf;
 		}
 		if (*buf) {
-			uname(&nodeinfo);
+			if (uname(&nodeinfo))
+				memset(&nodeinfo, 0, sizeof(nodeinfo));
+
 			*retlen = 1 + dm_snprintf(*buf, buflen,
 						  "TEST from %s: %s v%s",
 						  nodeinfo.nodename, args,
