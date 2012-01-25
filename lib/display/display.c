@@ -487,7 +487,7 @@ void lvdisplay_colons(const struct logical_volume *lv)
 		  lv->name,
 		  lv->vg->name,
 		  ((lv->status & (LVM_READ | LVM_WRITE)) >> 8) |
-		  ((inkernel & info.read_only) ? 4 : 0), inkernel ? 1 : 0,
+		  ((inkernel && info.read_only) ? 4 : 0), inkernel ? 1 : 0,
 		  /* FIXME lv->lv_number,  */
 		  inkernel ? info.open_count : 0, lv->size, lv->le_count,
 		  /* FIXME Add num allocated to struct! lv->lv_allocated_le, */
