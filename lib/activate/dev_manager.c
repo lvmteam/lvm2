@@ -1201,8 +1201,13 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	uint32_t s;
 	struct seg_list *sl;
 	struct lv_segment *seg = first_seg(lv);
+	/* FIXME: Resolve skip_childrens
+	struct dm_tree_node *thin_node;
+	const char *uuid;
+	*/
 
-	if (!origin_only && !_add_dev_to_dtree(dm, dtree, lv, NULL))
+	if ((!origin_only || lv_is_thin_volume(lv)) &&
+	    !_add_dev_to_dtree(dm, dtree, lv, NULL))
 		return_0;
 
 	/* FIXME Can we avoid doing this every time? */
@@ -1233,17 +1238,29 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	    !_add_partial_replicator_to_dtree(dm, dtree, lv))
 		return_0;
 
+	if (lv_is_thin_volume(lv)) {
+		/* FIXME: Resolve skip_childrens
+		if (origin_only) {
+			if (!(uuid = build_dm_uuid(dm->mem, lv->lvid.s, NULL)))
+				return_0;
+			if ((thin_node = dm_tree_find_node_by_uuid(dtree, uuid)))
+				dm_tree_node_skip_childrens(thin_node, 1);
+		}
+		*/
+		/* Add thin pool LV layer */
+		lv = seg->pool_lv;
+		seg = first_seg(lv);
+	}
+
 	if (lv_is_thin_pool(lv)) {
-		if (!_add_lv_to_dtree(dm, dtree, seg->metadata_lv, origin_only))
+		if (!_add_lv_to_dtree(dm, dtree, seg->metadata_lv, 0))
 			return_0;
 		/* FIXME code from _create_partial_dtree() should be moved here */
-		if (!_add_lv_to_dtree(dm, dtree, seg_lv(seg, 0), origin_only))
+		if (!_add_lv_to_dtree(dm, dtree, seg_lv(seg, 0), 0))
 			return_0;
 		if (!_add_dev_to_dtree(dm, dtree, lv, _thin_layer))
 			return_0;
-	} else if (lv_is_thin_volume(lv) &&
-		   !_add_lv_to_dtree(dm, dtree, seg->pool_lv, origin_only))
-		return_0;
+	}
 
 	return 1;
 }
@@ -1260,7 +1277,7 @@ static struct dm_tree *_create_partial_dtree(struct dev_manager *dm, struct logi
 		return NULL;
 	}
 
-	if (!_add_lv_to_dtree(dm, dtree, lv, lv_is_origin(lv) ? origin_only : 0))
+	if (!_add_lv_to_dtree(dm, dtree, lv, (lv_is_origin(lv) || lv_is_thin_volume(lv)) ? origin_only : 0))
 		goto_bad;
 
 	/* Add any snapshots of this LV */
