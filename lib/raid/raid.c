@@ -452,8 +452,10 @@ int init_multiple_segtypes(struct cmd_context *cmd, struct segtype_library *segl
 
 	do {
 		if ((segtype = raid_segtype_fn[i](cmd)) &&
-		    !lvm_register_segtype(seglib, segtype))
-			return 0;
+		    !lvm_register_segtype(seglib, segtype)) {
+			dm_free(segtype);
+			return_0;
+		}
 	} while (raid_segtype_fn[++i]);
 
 	return 1;
