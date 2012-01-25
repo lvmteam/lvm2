@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Check for correctness of uint64 dev_size value.
   Rename origin_only parameter to more generic flag use_layer for lv_info().
   Thin pools have segment fields thin_count, zero, transaction_id.
   Each new created LV volume has creation lv_time and lv_host.
