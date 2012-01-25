@@ -919,7 +919,7 @@ static int _dtpercent_disp(int metadata, struct dm_report *rh,
 	char *repstr;
 
 	/* Suppress data percent if not thin pool/volume or not using driver */
-	if (!lv_info(lv->vg->cmd, lv, 0, &info, 0, 0) || !info.exists) {
+	if (!lv_info(lv->vg->cmd, lv, 1, &info, 0, 0) || !info.exists) {
 		dm_report_field_set_value(field, "", NULL);
 		return 1;
 	}
