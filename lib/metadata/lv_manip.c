@@ -3172,6 +3172,12 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return 0;
 	}
 
+	if (lv_is_thin_pool_data(lv) || lv_is_thin_pool_metadata(lv)) {
+		log_error("Can't remove logical volume %s used by a thin pool.",
+			  lv->name);
+		return 0;
+	}
+
 	if (lv->status & LOCKED) {
 		log_error("Can't remove locked LV %s", lv->name);
 		return 0;
