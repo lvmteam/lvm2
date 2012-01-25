@@ -223,6 +223,8 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 	char *metadata_dlid, *pool_dlid;
 	const struct lv_thin_message *lmsg;
 	const struct logical_volume *origin;
+	struct lvinfo info;
+	uint64_t transaction_id = 0;
 
 	if (!laopts->real_pool) {
 		if (!(pool_dlid = build_dm_uuid(mem, seg->lv->lvid.s, "tpool"))) {
@@ -257,10 +259,35 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 					       seg->zero_new_blocks ? 0 : 1))
 		return_0;
 
+	/*
+	 * Add messages only for activation tree.
+	 * Otherwise avoid checking for existence of suspended origin.
+	 * Also transation_id is checked only when snapshot origin is active.
+	 * (This might change later)
+	 */
+	if (!laopts->is_activate)
+		return 1;
+
 	dm_list_iterate_items(lmsg, &seg->thin_messages) {
 		switch (lmsg->type) {
 		case DM_THIN_MESSAGE_CREATE_THIN:
 			origin = first_seg(lmsg->u.lv)->origin;
+			/* Check if the origin is suspended */
+			if (origin && lv_info(cmd, origin, 0, &info, 0, 0) &&
+			    info.exists && !info.suspended) {
+				/* Origin is not suspended, but the transaction may have been
+				 * already transfered, so test for transaction_id and
+				 * allow to pass in the message for dmtree processing
+				 * so it will skip all messages later.
+				 */
+				if (!lv_thin_pool_transaction_id(seg->lv, &transaction_id))
+					return_0; /* Thin pool should exist and work */
+				if (transaction_id != seg->transaction_id) {
+					log_error("Can't create snapshot %s as origin %s is not suspended.",
+						  lmsg->u.lv->name, origin->name);
+					return 0;
+				}
+			}
 			log_debug("Thin pool create_%s %s.", (!origin) ? "thin" : "snap", lmsg->u.lv->name);
 			if (!dm_tree_node_add_thin_pool_message(node,
 								(!origin) ? lmsg->type : DM_THIN_MESSAGE_CREATE_SNAP,
