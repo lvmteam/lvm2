@@ -212,11 +212,11 @@ static int _thin_pool_text_export(const struct lv_segment *seg, struct formatter
 
 #ifdef DEVMAPPER_SUPPORT
 static int _thin_pool_add_target_line(struct dev_manager *dm,
-				      struct dm_pool *mem __attribute__((unused)),
-				      struct cmd_context *cmd __attribute__((unused)),
+				      struct dm_pool *mem,
+				      struct cmd_context *cmd,
 				      void **target_state __attribute__((unused)),
 				      struct lv_segment *seg,
-				      const struct lv_activate_opts *laopts __attribute__((unused)),
+				      const struct lv_activate_opts *laopts,
 				      struct dm_tree_node *node, uint64_t len,
 				      uint32_t *pvmove_mirror_count __attribute__((unused)))
 {
