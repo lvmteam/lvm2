@@ -757,11 +757,15 @@ static int _text_vg_export(struct formatter *f,
 	r = 1;
 
       out:
-	if (f->mem)
+	if (f->mem) {
 		dm_pool_destroy(f->mem);
+		f->mem = NULL;
+	}
 
-	if (f->pv_names)
+	if (f->pv_names) {
 		dm_hash_destroy(f->pv_names);
+		f->pv_names = NULL;
+	}
 
 	return r;
 }
