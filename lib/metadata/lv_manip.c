@@ -4373,16 +4373,15 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 		if (((lp->activate == CHANGE_AY) ||
 		     (lp->activate == CHANGE_AE) ||
 		     (lp->activate == CHANGE_ALY))) {
+			/* At this point send message to kernel thin mda */
+			pool_lv = lv_is_thin_pool(lv) ? lv : first_seg(lv)->pool_lv;
+			if (!update_pool_lv(pool_lv, 1)) {
+				stack;
+				goto deactivate_and_revert_new_lv;
+			}
 			if (!activate_lv_excl(cmd, lv)) {
 				log_error("Aborting. Failed to activate thin %s.",
 					  lv->name);
-				goto deactivate_and_revert_new_lv;
-			}
-
-			pool_lv = lv_is_thin_pool(lv) ? lv : first_seg(lv)->pool_lv;
-			/* Drop any queued thin messages after activation */
-			if (!update_pool_lv(pool_lv, 0)) {
-				stack;
 				goto deactivate_and_revert_new_lv;
 			}
 		}
