@@ -552,7 +552,7 @@ int lv_info(struct cmd_context *cmd, const struct logical_volume *lv, unsigned o
 			fs_unlock(); /* For non clustered - wait if there are non-delete ops */
 	}
 
-	if (!dev_manager_info(lv->vg->cmd->mem, lv, origin_only ? "real" : NULL, with_open_count,
+	if (!dev_manager_info(lv->vg->cmd->mem, lv, (lv_is_origin(lv) && origin_only) ? "real" : NULL, with_open_count,
 			      with_read_ahead, &dminfo, &info->read_ahead))
 		return_0;
 
