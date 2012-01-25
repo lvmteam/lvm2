@@ -2056,6 +2056,10 @@ static int _lv_each_dependency(struct logical_volume *lv,
 			return_0;
 		if (lvseg->rlog_lv && !fn(lvseg->rlog_lv, data))
 			return_0;
+		if (lvseg->pool_lv && !fn(lvseg->pool_lv, data))
+			return_0;
+		if (lvseg->metadata_lv && !fn(lvseg->metadata_lv, data))
+			return_0;
 		for (s = 0; s < lvseg->area_count; ++s) {
 			if (seg_type(lvseg, s) == AREA_LV && !fn(seg_lv(lvseg,s), data))
 				return_0;
