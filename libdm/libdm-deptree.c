@@ -1768,6 +1768,17 @@ int dm_tree_activate_children(struct dm_tree_node *dnode,
 		}
 	}
 
+	/*
+	 * FIXME: Implement delayed error reporting
+	 * activation should be stopped only in the case,
+	 * the submission of transation_id message fails,
+	 * resume should continue further, just whole command
+	 * has to report failure.
+	 */
+	if (r && dnode->props.send_messages &&
+	    !(r = _node_send_messages(dnode, uuid_prefix, uuid_prefix_len)))
+		stack;
+
 	handle = NULL;
 
 	return r;
@@ -2434,11 +2445,6 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 
 		/* Update cached info */
 		child->info = newinfo;
-		if (child->props.send_messages &&
-		    !(r = _node_send_messages(child, uuid_prefix, uuid_prefix_len))) {
-			stack;
-			continue;
-		}
 		/*
 		 * Prepare for immediate synchronization with udev and flush all stacked
 		 * dev node operations if requested by immediate_dev_node property. But
@@ -2448,21 +2454,10 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 			update_devs_flag = 1;
 	}
 
-	if (r && dnode->props.send_messages &&
-	    !(r = _node_send_messages(dnode, uuid_prefix, uuid_prefix_len)))
-		stack;
-
 	if (update_devs_flag) {
 		if (!dm_udev_wait(dm_tree_get_cookie(dnode)))
 			stack;
 		dm_tree_set_cookie(dnode, 0);
-	}
-
-	if (r && !_node_send_messages(dnode, uuid_prefix, uuid_prefix_len)) {
-		stack;
-		if (!(dm_tree_deactivate_children(dnode, uuid_prefix, uuid_prefix_len)))
-			log_error("Failed to deactivate %s", dnode->name);
-		r = 0;
 	}
 
 	return r;
