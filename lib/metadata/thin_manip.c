@@ -371,6 +371,9 @@ int update_pool_lv(struct logical_volume *lv, int activate)
 		return 0;
 	}
 
+	if (dm_list_empty(&(first_seg(lv)->thin_messages)))
+		return 1; /* No messages */
+
 	if (activate) {
 		/* If the pool is not active, do activate deactivate */
 		if (!lv_is_active(lv)) {
@@ -389,14 +392,12 @@ int update_pool_lv(struct logical_volume *lv, int activate)
 		}
 	}
 
-	if (!dm_list_empty(&first_seg(lv)->thin_messages)) {
-		dm_list_init(&first_seg(lv)->thin_messages);
+	dm_list_init(&(first_seg(lv)->thin_messages));
 
-		if (!vg_write(lv->vg) || !vg_commit(lv->vg))
-			return_0;
+	if (!vg_write(lv->vg) || !vg_commit(lv->vg))
+		return_0;
 
-		backup(lv->vg);
-	}
+	backup(lv->vg);
 
 	return 1;
 }
