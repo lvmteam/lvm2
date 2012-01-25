@@ -1,5 +1,6 @@
 Version 2.02.89 - 
 ==================================
+  Add missing check for uname result in clvmd TEST processing.
   Fix memleak in target_version() error path (unsupported LIST_VERSIONS).
   Limit alignment to 32bit values.
   Check for correctness of uint64 dev_size value.
