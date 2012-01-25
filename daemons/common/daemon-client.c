@@ -34,7 +34,7 @@ error:
 
 daemon_reply daemon_send(daemon_handle h, daemon_request rq)
 {
-	daemon_reply reply;
+	daemon_reply reply = { .cft = NULL };
 	assert(h.socket_fd >= 0);
 
 	if (!rq.buffer) {
