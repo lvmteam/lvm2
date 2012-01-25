@@ -1344,7 +1344,7 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 		goto_out;
 
 	/* Ignore origin_only unless LV is origin in both old and new metadata */
-	if (!lv_is_origin(lv) || !lv_is_origin(lv_pre))
+	if (!lv_is_thin_volume(lv) && !(lv_is_origin(lv) && lv_is_origin(lv_pre)))
 		laopts->origin_only = 0;
 
 	if (test_mode()) {
