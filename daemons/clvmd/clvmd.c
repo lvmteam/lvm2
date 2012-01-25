@@ -441,6 +441,7 @@ int main(int argc, char *argv[])
 
 	/* Setting debug options on an existing clvmd */
 	if (debug_opt && !check_local_clvmd())
+		dm_hash_destroy(lvm_params.excl_uuid);
 		return debug_clvmd(debug_arg, clusterwide_opt)==1?0:1;
 
 	clvmd_set_debug(debug_opt);
