@@ -15,6 +15,7 @@ Version 1.02.68 - 26th January 2012
   Include a copy of kernel DM documentation in doc/kernel.
   Improve man page style for dmsetup and mention more targets.
   Fix _get_proc_number to be tolerant of malformed /proc/misc entries.
+  Fix missing thread list manipulation protection in dmeventd.
   Add ExecReload to dm-event.service for systemd to reload dmeventd properly.
   Add dm_config_tree_find_str_allow_empty and dm_config_find_str_allow_empty.
   Fix compile-time pool memory locking with DEBUG_MEM.

@@ -526,14 +526,14 @@ int lvdisplay_full(struct cmd_context *cmd,
 
 	log_print("--- Logical volume ---");
 
-	lvm1compat = find_config_tree_int(cmd, "global/lvm1_compatible_display",
-					  DEFAULT_LVM1_COMPATIBLE_DISPLAY);
+	lvm1compat = find_config_tree_int(cmd, "global/lvdisplay_shows_full_device_path",
+					  DEFAULT_LVDISPLAY_SHOWS_FULL_DEVICE_PATH);
 
-	if (lvm1compat) {
-		/* Note: Invisible devices do not get /dev/vg/lv */
+	if (lvm1compat)
+		/* /dev/vgname/lvname doen't actually exist for internal devices */
 		log_print("LV Name                %s%s/%s",
 			  lv->vg->cmd->dev_dir, lv->vg->name, lv->name);
-	} else if (lv_is_visible(lv)) {
+	else if (lv_is_visible(lv)) {
 		/* Thin pool does not have /dev/vg/name link */
 		if (!lv_is_thin_pool(lv))
 			log_print("LV Path                %s%s/%s",
@@ -541,7 +541,7 @@ int lvdisplay_full(struct cmd_context *cmd,
 				  lv->vg->name, lv->name);
 		log_print("LV Name                %s", lv->name);
 	} else
-		log_print("Invisible LV Name      %s", lv->name);
+		log_print("Internal LV Name       %s", lv->name);
 
 	log_print("VG Name                %s", lv->vg->name);
 	log_print("LV UUID                %s", uuid);

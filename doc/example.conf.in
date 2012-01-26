@@ -446,10 +446,13 @@ global {
     # setting.
     mirror_segtype_default = "mirror"
 
-    # Whether to lvdisplay LV name in lvm1 compatible format /dev/vgname/lvname
-    # Default is now to display LV name and path (if exists) separately.
-    # If the old behavior is preffered use set to 1.
-    # lvm1_compatible_display = 1
+    # The default format for displaying LV names in lvdisplay was changed 
+    # in version 2.02.89 to show the LV name and path separately.
+    # Previously this was always shown as /dev/vgname/lvname even when that
+    # was never a valid path in the /dev filesystem.
+    # Set to 1 to reinstate the previous format.
+    #
+    # lvdisplay_shows_full_device_path = 0
 }
 
 activation {
