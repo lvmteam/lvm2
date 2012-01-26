@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) 2011 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2011-2012 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -34,8 +34,8 @@ prepare_clvmd() {
 
 	# check that it is really running now
 	sleep .1
-	ps $LOCAL_CLVMD || skip
-        echo "$LOCAL_CLVMD" > LOCAL_CLVMD
+	ps $LOCAL_CLVMD || die
+	echo "$LOCAL_CLVMD" > LOCAL_CLVMD
 }
 
 prepare_dmeventd() {
