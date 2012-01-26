@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2011 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2012 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -2784,8 +2784,21 @@ int for_each_sub_lv(struct cmd_context *cmd, struct logical_volume *lv,
 			if (!for_each_sub_lv(cmd, seg->log_lv, fn, data))
 				return_0;
 		}
-		if (seg->metadata_lv && !fn(cmd, seg->metadata_lv, data))
-			return_0;
+
+		if (seg->pool_lv) {
+			if (!fn(cmd, seg->pool_lv, data))
+				return_0;
+			if (!for_each_sub_lv(cmd, seg->pool_lv, fn, data))
+				return_0;
+		}
+
+		if (seg->metadata_lv) {
+			if (!fn(cmd, seg->metadata_lv, data))
+				return_0;
+			if (!for_each_sub_lv(cmd, seg->metadata_lv, fn, data))
+				return_0;
+		}
+
 		for (s = 0; s < seg->area_count; s++) {
 			if (seg_type(seg, s) != AREA_LV)
 				continue;
