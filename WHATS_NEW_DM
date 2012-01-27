@@ -1,3 +1,6 @@
+Version 1.02.69 - 
+===================================
+
 Version 1.02.68 - 26th January 2012
 ===================================
   Reset all members of info struct in dm_tree_add_new_dev_with_udev_flags.
