@@ -16,10 +16,12 @@ top_builddir = @top_builddir@
 
 VPATH = $(srcdir)
 SOURCES = bitset_t.c matcher_t.c config_t.c run.c
+ifeq ("@TESTING@", "yes")
+TARGETS = run
+endif
 
 include $(top_builddir)/make.tmpl
 ifeq ("$(TESTING)", "yes")
-TARGETS = run
 LDLIBS += -ldevmapper @CUNIT_LIBS@
 CFLAGS += @CUNIT_CFLAGS@
 
