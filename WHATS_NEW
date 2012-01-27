@@ -1,3 +1,6 @@
+Version 2.02.90 - 
+===================================
+
 Version 2.02.89 - 26th January 2012
 ===================================
   Add missing check for uname result in clvmd TEST processing.
