@@ -953,12 +953,13 @@ int dev_manager_thin_percent(struct dev_manager *dm,
 {
 	char *name;
 	const char *dlid;
+	const char *layer = lv_is_origin(lv) ? "real" : NULL;
 
 	/* Build a name for the top layer */
-	if (!(name = dm_build_dm_name(dm->mem, lv->vg->name, lv->name, NULL)))
+	if (!(name = dm_build_dm_name(dm->mem, lv->vg->name, lv->name, layer)))
 		return_0;
 
-	if (!(dlid = build_dm_uuid(dm->mem, lv->lvid.s, NULL)))
+	if (!(dlid = build_dm_uuid(dm->mem, lv->lvid.s, layer)))
 		return_0;
 
 	log_debug("Getting device status percentage for %s", name);
