@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2009-2012 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -30,7 +30,15 @@
 
 #include <corosync/cpg.h>
 #include <corosync/quorum.h>
-#include <corosync/confdb.h>
+
+#ifdef HAVE_COROSYNC_CONFDB_H
+#  include <corosync/confdb.h>
+#elif defined HAVE_COROSYNC_CMAP_H
+#  include <corosync/cmap.h>
+#else
+#  error "Either HAVE_COROSYNC_CONFDB_H or HAVE_COROSYNC_CMAP_H must be defined."
+#endif
+
 #include <libdlm.h>
 
 #include <syslog.h>
@@ -274,6 +282,10 @@ static int _init_cluster(void)
 {
 	cs_error_t err;
 
+#ifdef QUORUM_SET	/* corosync/quorum.h */
+	uint32_t quorum_type;
+#endif
+
 	node_hash = dm_hash_create(100);
 
 	err = cpg_initialize(&cpg_handle,
@@ -285,8 +297,21 @@ static int _init_cluster(void)
 		return cs_to_errno(err);
 	}
 
+#ifdef QUORUM_SET
+	err = quorum_initialize(&quorum_handle,
+				&quorum_callbacks,
+				&quorum_type);
+
+	if (quorum_type != QUORUM_SET) {
+		syslog(LOG_ERR, "Corosync quorum service is not configured");
+		DEBUGLOG("Corosync quorum service is not configured");
+		return EINVAL;
+	}
+#else
 	err = quorum_initialize(&quorum_handle,
 				&quorum_callbacks);
+#endif
+
 	if (err != CS_OK) {
 		syslog(LOG_ERR, "Cannot initialise Corosync quorum service: %d",
 		       err);
@@ -551,6 +576,7 @@ static int _cluster_send_message(const void *buf, int msglen, const char *csid,
 	return cs_to_errno(err);
 }
 
+#ifdef HAVE_COROSYNC_CONFDB_H
 /*
  * We are not necessarily connected to a Red Hat Cluster system,
  * but if we are, this returns the cluster name from cluster.conf.
@@ -596,6 +622,38 @@ out:
 	confdb_finalize(handle);
 	return 0;
 }
+
+#elif defined HAVE_COROSYNC_CMAP_H
+
+static int _get_cluster_name(char *buf, int buflen)
+{
+	cmap_handle_t cmap_handle = 0;
+	int result;
+	char *name = NULL;
+
+	/* This is a default in case everything else fails */
+	strncpy(buf, "Corosync", buflen);
+
+	/* Look for a cluster name in cmap */
+	result = cmap_initialize(&cmap_handle);
+	if (result != CS_OK)
+		return 0;
+
+	result = cmap_get_string(cmap_handle, "totem.cluster_name", &name);
+	if (result != CS_OK)
+		goto out;
+
+	memset(buf, 0, buflen);
+	strncpy(buf, name, buflen - 1);
+
+out:
+	if (name)
+		free(name);
+	cmap_finalize(cmap_handle);
+	return 0;
+}
+
+#endif
 
 static struct cluster_ops _cluster_corosync_ops = {
 	.name                     = "corosync",

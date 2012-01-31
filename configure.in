@@ -1,6 +1,6 @@
 ###############################################################################
 ## Copyright (C) 2000-2004 Sistina Software, Inc. All rights reserved.
-## Copyright (C) 2004-2011 Red Hat, Inc. All rights reserved.
+## Copyright (C) 2004-2012 Red Hat, Inc. All rights reserved.
 ##
 ## This copyrighted material is made available to anyone wishing to use,
 ## modify, copy, or redistribute it subject to the terms and conditions
@@ -549,6 +549,7 @@ if test x$BUILDCOROSYNC = xyes || \
    test x$BUILDOPENAIS = xyes; then
 	PKG_CHECK_MODULES(COROSYNC, corosync, [HAVE_COROSYNC=yes], $bailout)
 	CHECKCONFDB=yes
+	CHECKCMAP=yes
 fi
 
 dnl -- Look for corosync libraries if required.
@@ -567,7 +568,7 @@ fi
 dnl -- Below are checks for libraries common to more than one build.
 
 dnl -- Check confdb library.
-dnl -- mandatory for corosync build.
+dnl -- mandatory for corosync < 2.0 build.
 dnl -- optional for openais/cman build.
 
 if test x$CHECKCONFDB = xyes; then
@@ -586,11 +587,34 @@ if test x$CHECKCONFDB = xyes; then
 		CONFDB_LIBS="-lconfdb"
 		HAVE_CONFDB=yes
 	fi
+fi
 
-	if test x$BUILDCOROSYNC = xyes && \
-	   test x$HAVE_CONFDB != xyes &&
+dnl -- Check cmap library
+dnl -- mandatory for corosync >= 2.0 build.
+
+if test x$CHECKCMAP = xyes; then
+	PKG_CHECK_MODULES(CMAP, libcmap,
+			  [HAVE_CMAP=yes],
+			  [HAVE_CMAP=no])
+
+	AC_CHECK_HEADERS(corosync/cmap.h,
+		[HAVE_CMAP_H=yes],
+		[HAVE_CMAP_H=no])
+
+	if test x$HAVE_CMAP != xyes && \ 
+	   test x$HAVE_CMAP_H = xyes; then
+		check_lib_no_libs cmap cmap_initialize
+		AC_MSG_RESULT([no pkg for cmap, using -lcmap])
+		CMAP_LIBS="-lcmap"
+		HAVE_CMAP=yes
+	fi
+fi
+
+if test x$BUILDCOROSYNC = xyes; then
+	if test x$HAVE_CMAP != xyes && \
+	   test x$HAVE_CONFDB != xyes && \
 	   test x$CLVMD != xall; then
-		AC_MSG_ERROR([bailing out... confdb library is required])
+		AC_MSG_ERROR([bailing out... cmap (corosync >= 2.0) or confdb (corosync < 2.0) library is required])
 	fi
 fi
 
@@ -629,11 +653,12 @@ if test x$CLVMD = xall; then
 	if test x$HAVE_COROSYNC = xyes && \
 	   test x$HAVE_QUORUM = xyes && \
 	   test x$HAVE_CPG = xyes && \
-	   test x$HAVE_DLM = xyes && \
-	   test x$HAVE_CONFDB = xyes; then
+	   test x$HAVE_DLM = xyes; then
+	   if test x$HAVE_CONFDB = xyes || test x$HAVE_CMAP = xyes; then
 		AC_MSG_RESULT([Enabling clvmd corosync cluster manager])
 		CLVMD="$CLVMD,corosync"
 		CLVMD_CMANAGERS="$CLVMD_CMANAGERS corosync"
+	   fi
 	fi
 	if test x$HAVE_COROSYNC = xyes && \
 	   test x$HAVE_CPG = xyes && \
@@ -1311,6 +1336,8 @@ AC_SUBST(CLVMD_CMANAGERS)
 AC_SUBST(CLVMD_PATH)
 AC_SUBST(CMAN_CFLAGS)
 AC_SUBST(CMAN_LIBS)
+AC_SUBST(CMAP_CFLAGS)
+AC_SUBST(CMAP_LIBS)
 AC_SUBST(CMDLIB)
 AC_SUBST(CONFDB_CFLAGS)
 AC_SUBST(CONFDB_LIBS)
