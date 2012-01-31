@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Use lv_is_active() instead of lv_info() call.
   Cleanup some log_error message and use log_warn instead.
   
 Version 2.02.98 - 15th October 2012

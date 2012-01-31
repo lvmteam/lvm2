@@ -282,7 +282,6 @@ static int _init_mirror_log(struct cmd_context *cmd,
 			    struct dm_list *tags, int remove_on_failure)
 {
 	struct str_list *sl;
-	struct lvinfo info;
 	uint64_t orig_status = log_lv->status;
 	int was_active = 0;
 
@@ -298,14 +297,13 @@ static int _init_mirror_log(struct cmd_context *cmd,
 	}
 
 	/* If the LV is active, deactivate it first. */
-	if (lv_info(cmd, log_lv, 0, &info, 0, 0) && info.exists) {
-		(void)deactivate_lv(cmd, log_lv);
+	if (lv_is_active(log_lv)) {
 		/*
 		 * FIXME: workaround to fail early
 		 * Ensure that log is really deactivated because deactivate_lv
 		 * on cluster do not fail if there is log_lv with different UUID.
 		 */
-		if (lv_info(cmd, log_lv, 0, &info, 0, 0) && info.exists) {
+		if (!deactivate_lv(cmd, log_lv)) {
 			log_error("Aborting. Unable to deactivate mirror log.");
 			goto revert_new_lv;
 		}
@@ -1714,7 +1712,6 @@ int remove_mirror_log(struct cmd_context *cmd,
 		      int force)
 {
 	percent_t sync_percent;
-	struct lvinfo info;
 	struct volume_group *vg = lv->vg;
 
 	/* Unimplemented features */
@@ -1724,7 +1721,7 @@ int remove_mirror_log(struct cmd_context *cmd,
 	}
 
 	/* Had disk log, switch to core. */
-	if (lv_info(cmd, lv, 0, &info, 0, 0) && info.exists) {
+	if (lv_is_active(lv)) {
 		if (!lv_mirror_percent(cmd, lv, 0, &sync_percent,
 				       NULL)) {
 			log_error("Unable to determine mirror sync status.");

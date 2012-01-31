@@ -4218,7 +4218,6 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 	struct logical_volume *pool_lv;
 	struct lv_list *lvl;
 	int origin_active = 0;
-	struct lvinfo info;
 
 	if (new_lv_name && find_lv_in_vg(vg, new_lv_name)) {
 		log_error("Logical volume \"%s\" already exists in "
@@ -4350,12 +4349,12 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 				log_warn("WARNING: See global/mirror_segtype_default in lvm.conf.");
 			}
 
-			if (!lv_info(cmd, org, 0, &info, 0, 0)) {
+			if (!lv_is_active(org)) {
 				log_error("Check for existence of active snapshot "
 					  "origin '%s' failed.", org->name);
 				return NULL;
 			}
-			origin_active = info.exists;
+			origin_active = 1;
 
 			if (vg_is_clustered(vg) &&
 			    !lv_is_active_exclusive_locally(org)) {

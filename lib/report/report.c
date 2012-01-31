@@ -830,7 +830,6 @@ static int _snpercent_disp(struct dm_report *rh __attribute__((unused)), struct 
 			   const void *data, void *private __attribute__((unused)))
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
-	struct lvinfo info;
 	percent_t snap_percent;
 	uint64_t *sortval;
 	char *repstr;
@@ -847,7 +846,7 @@ static int _snpercent_disp(struct dm_report *rh __attribute__((unused)), struct 
 	}
 
 	if ((!lv_is_cow(lv) && !lv_is_merging_origin(lv)) ||
-	    !lv_info(lv->vg->cmd, lv, 0, &info, 0, 0) || !info.exists) {
+	    !lv_is_active(lv)) {
 		*sortval = UINT64_C(0);
 		dm_report_field_set_value(field, "", sortval);
 		return 1;
