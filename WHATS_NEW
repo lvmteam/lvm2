@@ -1,5 +1,6 @@
 Version 2.02.90 - 
 ===================================
+  Automatically detect whether corosync clvmd needs to use confdb or cmap.
   Fix data% report for thin volume used as origin for non-thin snapshot.
 
 Version 2.02.89 - 26th January 2012

@@ -87,6 +87,9 @@
 /* Define to 1 if your system has a working `chown' function. */
 #undef HAVE_CHOWN
 
+/* Define to 1 if you have the <corosync/cmap.h> header file. */
+#undef HAVE_COROSYNC_CMAP_H
+
 /* Define to 1 if you have the <corosync/confdb.h> header file. */
 #undef HAVE_COROSYNC_CONFDB_H
 

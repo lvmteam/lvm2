@@ -694,6 +694,8 @@ DLM_LIBS
 DLM_CFLAGS
 CPG_LIBS
 CPG_CFLAGS
+CMAP_LIBS
+CMAP_CFLAGS
 CONFDB_LIBS
 CONFDB_CFLAGS
 SALCK_LIBS
@@ -873,6 +875,8 @@ SALCK_CFLAGS
 SALCK_LIBS
 CONFDB_CFLAGS
 CONFDB_LIBS
+CMAP_CFLAGS
+CMAP_LIBS
 CPG_CFLAGS
 CPG_LIBS
 DLM_CFLAGS
@@ -1628,6 +1632,8 @@ Some influential environment variables:
   CONFDB_CFLAGS
               C compiler flags for CONFDB, overriding pkg-config
   CONFDB_LIBS linker flags for CONFDB, overriding pkg-config
+  CMAP_CFLAGS C compiler flags for CMAP, overriding pkg-config
+  CMAP_LIBS   linker flags for CMAP, overriding pkg-config
   CPG_CFLAGS  C compiler flags for CPG, overriding pkg-config
   CPG_LIBS    linker flags for CPG, overriding pkg-config
   DLM_CFLAGS  C compiler flags for DLM, overriding pkg-config
@@ -7514,6 +7520,7 @@ $as_echo "yes" >&6; }
 	HAVE_COROSYNC=yes
 fi
 	CHECKCONFDB=yes
+	CHECKCMAP=yes
 fi
 
 if test x$BUILDCOROSYNC = xyes; then
@@ -7759,11 +7766,110 @@ $as_echo "no pkg for confdb, using -lconfdb" >&6; }
 		CONFDB_LIBS="-lconfdb"
 		HAVE_CONFDB=yes
 	fi
+fi
 
-	if test x$BUILDCOROSYNC = xyes && \
-	   test x$HAVE_CONFDB != xyes &&
+
+if test x$CHECKCMAP = xyes; then
+
+pkg_failed=no
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for CMAP" >&5
+$as_echo_n "checking for CMAP... " >&6; }
+
+if test -n "$CMAP_CFLAGS"; then
+    pkg_cv_CMAP_CFLAGS="$CMAP_CFLAGS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libcmap\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "libcmap") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_CMAP_CFLAGS=`$PKG_CONFIG --cflags "libcmap" 2>/dev/null`
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+if test -n "$CMAP_LIBS"; then
+    pkg_cv_CMAP_LIBS="$CMAP_LIBS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libcmap\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "libcmap") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_CMAP_LIBS=`$PKG_CONFIG --libs "libcmap" 2>/dev/null`
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+
+
+
+if test $pkg_failed = yes; then
+   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        CMAP_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors "libcmap" 2>&1`
+        else
+	        CMAP_PKG_ERRORS=`$PKG_CONFIG --print-errors "libcmap" 2>&1`
+        fi
+	# Put the nasty error message in config.log where it belongs
+	echo "$CMAP_PKG_ERRORS" >&5
+
+	HAVE_CMAP=no
+elif test $pkg_failed = untried; then
+     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+	HAVE_CMAP=no
+else
+	CMAP_CFLAGS=$pkg_cv_CMAP_CFLAGS
+	CMAP_LIBS=$pkg_cv_CMAP_LIBS
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+	HAVE_CMAP=yes
+fi
+
+	for ac_header in corosync/cmap.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "corosync/cmap.h" "ac_cv_header_corosync_cmap_h" "$ac_includes_default"
+if test "x$ac_cv_header_corosync_cmap_h" = x""yes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_COROSYNC_CMAP_H 1
+_ACEOF
+ HAVE_CMAP_H=yes
+else
+  HAVE_CMAP_H=no
+fi
+
+done
+
+
+	if test x$HAVE_CMAP != xyes && \
+	   test x$HAVE_CMAP_H = xyes; then
+		check_lib_no_libs cmap cmap_initialize
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no pkg for cmap, using -lcmap" >&5
+$as_echo "no pkg for cmap, using -lcmap" >&6; }
+		CMAP_LIBS="-lcmap"
+		HAVE_CMAP=yes
+	fi
+fi
+
+if test x$BUILDCOROSYNC = xyes; then
+	if test x$HAVE_CMAP != xyes && \
+	   test x$HAVE_CONFDB != xyes && \
 	   test x$CLVMD != xall; then
-		as_fn_error $? "bailing out... confdb library is required" "$LINENO" 5
+		as_fn_error $? "bailing out... cmap (corosync >= 2.0) or confdb (corosync < 2.0) library is required" "$LINENO" 5
 	fi
 fi
 
@@ -7968,12 +8074,13 @@ $as_echo "Enabling clvmd cman cluster manager" >&6; }
 	if test x$HAVE_COROSYNC = xyes && \
 	   test x$HAVE_QUORUM = xyes && \
 	   test x$HAVE_CPG = xyes && \
-	   test x$HAVE_DLM = xyes && \
-	   test x$HAVE_CONFDB = xyes; then
+	   test x$HAVE_DLM = xyes; then
+	   if test x$HAVE_CONFDB = xyes || test x$HAVE_CMAP = xyes; then
 		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: Enabling clvmd corosync cluster manager" >&5
 $as_echo "Enabling clvmd corosync cluster manager" >&6; }
 		CLVMD="$CLVMD,corosync"
 		CLVMD_CMANAGERS="$CLVMD_CMANAGERS corosync"
+	   fi
 	fi
 	if test x$HAVE_COROSYNC = xyes && \
 	   test x$HAVE_CPG = xyes && \
@@ -10123,6 +10230,8 @@ LVM_PATCHLEVEL=`echo "$VER" | $AWK -F '[(.]' '{print $3}'`
 LVM_LIBAPI=`echo "$VER" | $AWK -F '[()]' '{print $2}'`
 
 ################################################################################
+
+
 
 
 
