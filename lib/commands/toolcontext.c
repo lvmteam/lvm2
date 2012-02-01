@@ -377,10 +377,10 @@ static int _process_config(struct cmd_context *cmd)
 						       DEFAULT_METADATA_READ_ONLY);
 
 	pv_min_kb = find_config_tree_int64(cmd, "devices/pv_min_size", DEFAULT_PV_MIN_SIZE_KB);
-	if (pv_min_kb < DEFAULT_PV_MIN_SIZE_KB) {
+	if (pv_min_kb < PV_MIN_SIZE_KB) {
 		log_warn("Ignoring too small pv_min_size %" PRId64 "KB, using default %dKB.",
-			 pv_min_kb, DEFAULT_PV_MIN_SIZE_KB);
-		pv_min_kb = DEFAULT_PV_MIN_SIZE_KB;
+			 pv_min_kb, PV_MIN_SIZE_KB);
+		pv_min_kb = PV_MIN_SIZE_KB;
 	}
 	/* LVM stores sizes internally in units of 512-byte sectors. */
 	init_pv_min_size((uint64_t)pv_min_kb * (1024 >> SECTOR_SHIFT));
