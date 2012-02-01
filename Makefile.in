@@ -116,7 +116,7 @@ lcov-reset:
 
 # maybe use subdirs processing to create tracefiles...
 $(LCOV_TRACES):
-	$(LCOV) -b $(top_srcdir)/$(basename $@) \
+	$(LCOV) -b $(basename $@) \
 		-d $(basename $@) -c -o - | $(SED) \
 		-e "s/\(dmeventd_lvm.[ch]\)/plugins\/lvm2\/\1/" \
 		-e "s/\(dmeventd_mirror.c\)/plugins\/mirror\/\1/" \
