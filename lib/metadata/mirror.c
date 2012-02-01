@@ -325,8 +325,9 @@ static int _init_mirror_log(struct cmd_context *cmd,
 
 	backup(log_lv->vg);
 
-	// FIXME: Wait here explicitly, so deactivation of log_lv is finished
+	/* Wait for events following any deactivation before reactivating */
 	sync_local_dev_names(cmd);
+
 	if (!activate_lv(cmd, log_lv)) {
 		log_error("Aborting. Failed to activate mirror log.");
 		goto revert_new_lv;
@@ -439,8 +440,9 @@ static int _delete_lv(struct logical_volume *mirror_lv, struct logical_volume *l
 	if (!_activate_lv_like_model(lv, lv))
 		return_0;
 
-	// FIXME: Wait here should not be need
+	/* FIXME Is this superfluous now? */
 	sync_local_dev_names(cmd);
+
 	if (!deactivate_lv(cmd, lv))
 		return_0;
 
