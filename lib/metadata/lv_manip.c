@@ -1458,6 +1458,8 @@ static area_use_t _check_pva(struct alloc_handle *ah, struct pv_area *pva, uint3
 			     const struct alloc_parms *alloc_parms, struct alloc_state *alloc_state,
 			     unsigned already_found_one, unsigned iteration_count, unsigned log_iteration_count)
 {
+	unsigned s;
+
 	/* Skip fully-reserved areas (which are not currently removed from the list). */
 	if (!pva->unreserved)
 		return NEXT_AREA;
