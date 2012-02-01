@@ -1,5 +1,6 @@
 Version 2.02.90 - 
 ===================================
+  Disable partial activation for thin LVs and LVs with all missing segments.
   Do not print warning for pv_min_size set in range between 512KB and 2MB.
   Clean up systemd unit ordering and requirements.
   Fix lcov reports when srcdir != builddir.

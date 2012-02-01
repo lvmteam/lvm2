@@ -1373,6 +1373,8 @@ int add_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 	char *dlid;
 	struct stat info;
 	const char *name;
+	unsigned num_error_areas = 0;
+	unsigned num_existing_areas = 0;
 
 	/* FIXME Avoid repeating identical stat in dm_tree_node_add_target_area */
 	for (s = start_area; s < areas; s++) {
@@ -1388,10 +1390,12 @@ int add_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 			}
 			if (!_add_error_area(dm, node, seg, s))
 				return_0;
+			num_error_areas++;
 		} else if (seg_type(seg, s) == AREA_PV) {
 			if (!dm_tree_node_add_target_area(node, dev_name(seg_dev(seg, s)), NULL,
 				    (seg_pv(seg, s)->pe_start + (extent_size * seg_pe(seg, s)))))
 				return_0;
+			num_existing_areas++;
 		} else if (seg_is_raid(seg)) {
 			/*
 			 * RAID can handle unassigned areas.  It simple puts
@@ -1432,6 +1436,28 @@ int add_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 		} else {
 			log_error(INTERNAL_ERROR "Unassigned area found in LV %s.",
 				  seg->lv->name);
+			return 0;
+		}
+	}
+
+        if (num_error_areas) {
+		/* Thins currently do not support partial activation */
+		if (lv_is_thin_type(seg->lv)) {
+			log_error("Cannot activate %s%s: pool incomplete.",
+				  seg->lv->vg->name, seg->lv->name);
+			return 0;
+		}
+
+		/*
+		 * Mirrors activate LVs replaced with error targets
+		 *
+		 * TODO: Can we eventually skip to activate such LVs ?
+		 */
+		if (!num_existing_areas &&
+		    !strstr(seg->lv->name, "_mimage_") &&
+		    !((name = strstr(seg->lv->name, "_mlog")) && !name[5])) {
+			log_error("Cannot activate %s/%s: all segments missing.",
+				  seg->lv->vg->name, seg->lv->name);
 			return 0;
 		}
 	}
