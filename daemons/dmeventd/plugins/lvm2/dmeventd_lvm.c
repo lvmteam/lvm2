@@ -82,10 +82,7 @@ static void _temporary_log_fn(int level,
 
 void dmeventd_lvm2_lock(void)
 {
-	if (pthread_mutex_trylock(&_event_mutex)) {
-		syslog(LOG_NOTICE, "Another thread is handling an event. Waiting...");
-		pthread_mutex_lock(&_event_mutex);
-	}
+	pthread_mutex_lock(&_event_mutex);
 }
 
 void dmeventd_lvm2_unlock(void)
