@@ -155,6 +155,7 @@ static int _maps_line(const struct dm_config_node *cn, lvmlock_t lock,
 	unsigned i;
 	char fr, fw, fx, fp;
 	size_t sz;
+	const char *lock_str = (lock == LVM_MLOCK) ? "mlock" : "munlock";
 
 	if (sscanf(line, "%lx-%lx %c%c%c%c%n",
 		   &from, &to, &fr, &fw, &fx, &fp, &pos) != 6) {
@@ -164,16 +165,15 @@ static int _maps_line(const struct dm_config_node *cn, lvmlock_t lock,
 
 	/* Select readable maps */
 	if (fr != 'r') {
-		log_debug("%s area unreadable %s : Skipping.",
-			  (lock == LVM_MLOCK) ? "mlock" : "munlock", line);
+		log_debug("%s area unreadable %s : Skipping.", lock_str, line);
 		return 1;
 	}
 
 	/* always ignored areas */
 	for (i = 0; i < sizeof(_ignore_maps) / sizeof(_ignore_maps[0]); ++i)
 		if (strstr(line + pos, _ignore_maps[i])) {
-			log_debug("mlock ignore filter '%s' matches '%s': Skipping.",
-				  _ignore_maps[i], line);
+			log_debug("%s ignore filter '%s' matches '%s': Skipping.",
+				  lock_str, _ignore_maps[i], line);
 			return 1;
 		}
 
@@ -182,8 +182,8 @@ static int _maps_line(const struct dm_config_node *cn, lvmlock_t lock,
 		/* If no blacklist configured, use an internal set */
 		for (i = 0; i < sizeof(_blacklist_maps) / sizeof(_blacklist_maps[0]); ++i)
 			if (strstr(line + pos, _blacklist_maps[i])) {
-				log_debug("mlock default filter '%s' matches '%s': Skipping.",
-					  _blacklist_maps[i], line);
+				log_debug("%s default filter '%s' matches '%s': Skipping.",
+					  lock_str, _blacklist_maps[i], line);
 				return 1;
 			}
 	} else {
@@ -191,8 +191,8 @@ static int _maps_line(const struct dm_config_node *cn, lvmlock_t lock,
 			if ((cv->type != DM_CFG_STRING) || !cv->v.str[0])
 				continue;
 			if (strstr(line + pos, cv->v.str)) {
-				log_debug("mlock_filter '%s' matches '%s': Skipping.",
-					  cv->v.str, line);
+				log_debug("%s_filter '%s' matches '%s': Skipping.",
+					  lock_str, cv->v.str, line);
 				return 1;
 			}
 		}
@@ -207,8 +207,7 @@ static int _maps_line(const struct dm_config_node *cn, lvmlock_t lock,
 
 #endif
 	*mstats += sz;
-	log_debug("%s %10ldKiB %12lx - %12lx %c%c%c%c%s",
-		  (lock == LVM_MLOCK) ? "mlock" : "munlock",
+	log_debug("%s %10ldKiB %12lx - %12lx %c%c%c%c%s", lock_str,
 		  ((long)sz + 1023) / 1024, from, to, fr, fw, fx, fp, line + pos);
 
 	if (lock == LVM_MLOCK) {
