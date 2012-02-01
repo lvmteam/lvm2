@@ -1,8 +1,8 @@
-Version 2.02.90 - 
+Version 2.02.90 - 1st February 2012
 ===================================
-  Add synchronization point in mirror log initialization.
+  sync_local_dev_names before (re)activating mirror log for initialisation.
   Disable partial activation for thin LVs and LVs with all missing segments.
-  Do not print warning for pv_min_size set in range between 512KB and 2MB.
+  Do not print warning for pv_min_size between 512KB and 2MB.
   Clean up systemd unit ordering and requirements.
   Fix lcov reports when srcdir != builddir.
   Allow ALLOC_NORMAL to track reserved extents for log and data on same PV.

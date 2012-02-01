@@ -1,5 +1,6 @@
-Version 1.02.69 - 
+Version 1.02.69 - 1st February 2012
 ===================================
+  Clean up dmeventd systemd unit ordering and requirements.
 
 Version 1.02.68 - 26th January 2012
 ===================================
