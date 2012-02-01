@@ -1,5 +1,6 @@
 Version 2.02.90 - 
 ===================================
+  Allow ALLOC_NORMAL to track reserved extents for log and data on same PV.
   Automatically detect whether corosync clvmd needs to use confdb or cmap.
   Fix data% report for thin volume used as origin for non-thin snapshot.
 

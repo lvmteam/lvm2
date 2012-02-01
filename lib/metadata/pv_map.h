@@ -31,7 +31,7 @@ struct pv_area {
 	uint32_t start;
 	uint32_t count;
 
-	/* Number of extents unreserved during ALLOC_ANYWHERE allocation. */
+	/* Number of extents unreserved during a single allocation pass. */
 	uint32_t unreserved;
 
 	struct dm_list list;		/* pv_map.areas */
@@ -66,7 +66,7 @@ struct dm_list *create_pv_maps(struct dm_pool *mem, struct volume_group *vg,
 			    struct dm_list *allocatable_pvs);
 
 void consume_pv_area(struct pv_area *area, uint32_t to_go);
-void reinsert_reduced_pv_area(struct pv_area *pva);
+void reinsert_changed_pv_area(struct pv_area *pva);
 
 uint32_t pv_maps_size(struct dm_list *pvms);
 
