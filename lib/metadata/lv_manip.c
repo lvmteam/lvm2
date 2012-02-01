@@ -1458,22 +1458,18 @@ static area_use_t _check_pva(struct alloc_handle *ah, struct pv_area *pva, uint3
 			     const struct alloc_parms *alloc_parms, struct alloc_state *alloc_state,
 			     unsigned already_found_one, unsigned iteration_count, unsigned log_iteration_count)
 {
-	unsigned s;
-
 	/* Skip fully-reserved areas (which are not currently removed from the list). */
 	if (!pva->unreserved)
 		return NEXT_AREA;
 
-	if (iteration_count + log_iteration_count) {
+	/* FIXME Should this test be removed? */
+	if (iteration_count)
 		/*
-		 * Don't use an area twice.
-		 * Only ALLOC_ANYWHERE currently supports that, by destroying the data structures,
-		 * which is OK because they are not needed again afterwards.
-		 */
+		* Don't use an area twice.
+		*/
 		for (s = 0; s < alloc_state->areas_size; s++)
 			if (alloc_state->areas[s].pva == pva)
 				return NEXT_AREA;
-	}
 
 	/* If maximise_cling is set, perform several checks, otherwise perform exactly one. */
 	if (!iteration_count && !log_iteration_count && alloc_parms->flags & (A_CONTIGUOUS | A_CLING | A_CLING_TO_ALLOCED)) {
@@ -1531,28 +1527,23 @@ static uint32_t _calc_required_extents(struct alloc_handle *ah, struct pv_area *
 {
 	uint32_t required = max_to_allocate / ah->area_multiple;
 
-	/* FIXME Maintain unreserved all the time, so other policies can split areas too. */
-
+	/*
+	 * Update amount unreserved - effectively splitting an area 
+	 * into two or more parts.  If the whole stripe doesn't fit,
+	 * reduce amount we're looking for.
+	 */
 	if (alloc == ALLOC_ANYWHERE) {
-		/*
-		 * Update amount unreserved - effectively splitting an area 
-		 * into two or more parts.  If the whole stripe doesn't fit,
-		 * reduce amount we're looking for.
-		 */
 		if (ix_pva - 1 >= ah->area_count)
 			required = ah->log_len;
-		if (required >= pva->unreserved) {
-			required = pva->unreserved;
-			pva->unreserved = 0;
-		} else {
-			pva->unreserved -= required;
-			reinsert_reduced_pv_area(pva);
-		}
+	} else if (required < ah->log_len)
+		required = ah->log_len;
+
+	if (required >= pva->unreserved) {
+		required = pva->unreserved;
+		pva->unreserved = 0;
 	} else {
-		if (required < ah->log_len)
-			required = ah->log_len;
-		if (required > pva->count)
-			required = pva->count;
+		pva->unreserved -= required;
+		reinsert_changed_pv_area(pva);
 	}
 
 	return required;
@@ -1576,8 +1567,7 @@ static int _reserve_required_area(struct alloc_handle *ah, uint32_t max_to_alloc
 			alloc_state->areas[s].pva = NULL;
 	}
 
-	_reserve_area(&alloc_state->areas[ix_pva - 1], pva, required, ix_pva, 
-		  (alloc == ALLOC_ANYWHERE) ? pva->unreserved : pva->count - required);
+	_reserve_area(&alloc_state->areas[ix_pva - 1], pva, required, ix_pva, pva->unreserved);
 
 	return 1;
 }
@@ -1588,6 +1578,19 @@ static void _clear_areas(struct alloc_state *alloc_state)
 
 	for (s = 0; s < alloc_state->areas_size; s++)
 		alloc_state->areas[s].pva = NULL;
+}
+
+static void _reset_unreserved(struct dm_list *pvms)
+{
+	struct pv_map *pvm;
+	struct pv_area *pva;
+
+	dm_list_iterate_items(pvm, pvms)
+		dm_list_iterate_items(pva, &pvm->areas)
+			if (pva->unreserved != pva->count) {
+				pva->unreserved = pva->count;
+				reinsert_changed_pv_area(pva);
+			}
 }
 
 static void _report_needed_allocation_space(struct alloc_handle *ah,
@@ -1653,6 +1656,7 @@ static int _find_some_parallel_space(struct alloc_handle *ah, const struct alloc
 			  alloc_parms->flags & A_CLING_TO_ALLOCED ? "" : "not ");
 
 	_clear_areas(alloc_state);
+	_reset_unreserved(pvms);
 
 	_report_needed_allocation_space(ah, alloc_state);
 
@@ -2590,6 +2594,7 @@ int lv_extend(struct logical_volume *lv,
 		log_count = 1;
 	} else if (segtype_is_raid(segtype) && !lv->le_count)
 		log_count = mirrors * stripes;
+	/* FIXME log_count should be 1 for mirrors */
 
 	if (!(ah = allocate_extents(lv->vg, lv, segtype, stripes, mirrors,
 				    log_count, region_size, extents,
@@ -4341,6 +4346,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 		}
 	}
 
+	/* FIXME Log allocation and attachment should have happened inside lv_extend. */
 	if (lp->log_count &&
 	    !seg_is_raid(first_seg(lv)) && seg_is_mirrored(first_seg(lv))) {
 		if (!add_mirror_log(cmd, lv, lp->log_count,

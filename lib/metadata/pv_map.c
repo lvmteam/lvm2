@@ -205,10 +205,10 @@ void consume_pv_area(struct pv_area *pva, uint32_t to_go)
 }
 
 /*
- * Remove an area from list and reinsert it based on its new smaller size
- * after a provisional allocation.
+ * Remove an area from list and reinsert it based on its new size
+ * after a provisional allocation (or reverting one).
  */
-void reinsert_reduced_pv_area(struct pv_area *pva)
+void reinsert_changed_pv_area(struct pv_area *pva)
 {
 	_remove_area(pva);
 	_insert_area(&pva->map->areas, pva, 1);
