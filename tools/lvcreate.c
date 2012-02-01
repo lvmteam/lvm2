@@ -1017,7 +1017,8 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 	if (lp.thin)
 		log_verbose("Making thin LV %s in pool %s in VG %s%s%s using segtype %s",
 			    lp.lv_name ? : "with generated name",
-			    lp.pool, lp.vg_name, lp.snapshot ? " as snapshot of " : "",
+			    lp.pool ? : "with generated name", lp.vg_name,
+			    lp.snapshot ? " as snapshot of " : "",
 			    lp.snapshot ? lp.origin : "", lp.segtype->name);
 
 	if (!lv_create_single(vg, &lp)) {
