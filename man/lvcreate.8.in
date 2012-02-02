@@ -129,10 +129,13 @@ activate only on the local node.
 Gives the size of chunk for snapshot and thin pool logical volumes.
 For snapshots the value must be power of 2 between 4KiB and 512KiB
 and the default value is 4.
-For thin pools the value must be power of 2 between 64KiB and
+For thin pools the value must be between 64KiB and
 1048576KiB and the default value starts with 64 and scales
 up to fit the pool metadata size within 128MB,
 if the poolmetadata size is not specified.
+Older dm thin pool target version (<1.2) requires the value to be power of 2.
+The newer version requires to be the multiple of 64KiB, however discard is
+not supported for non power of 2 values.
 Default unit is in kilobytes.
 .TP
 .BR \-C ", " \-\-contiguous " {" \fIy | \fIn }

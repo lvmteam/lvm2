@@ -241,6 +241,13 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 	if (!_thin_target_present(cmd, seg, &attr))
 		return_0;
 
+	if (!(attr & THIN_FEATURE_BLOCK_SIZE) &&
+	    (seg->chunk_size & (seg->chunk_size - 1))) {
+		log_error("Thin pool target does not support %uKiB chunk size "
+			  "(needs kernel >= 3.5).", seg->chunk_size / 2);
+		return 0;
+	}
+
 	if (!laopts->real_pool) {
 		if (!(pool_dlid = build_dm_uuid(mem, seg->lv->lvid.s, "tpool"))) {
 			log_error("Failed to build uuid for thin pool LV %s.", seg->pool_lv->name);
@@ -551,13 +558,13 @@ static int _thin_target_present(struct cmd_context *cmd,
 		else
 		/* FIXME Log this as WARNING later only if the user asked for the feature to be used but it's not present */
 			log_debug("Target " THIN_MODULE " does not support external origins.");
-#if 0
-		if (maj >=1 && min >= 1)
+
+		if (maj >=1 && min >= 2)
 			_attrs |= THIN_FEATURE_BLOCK_SIZE;
 		else
 		/* FIXME Log this as WARNING later only if the user asked for the feature to be used but it's not present */
 			log_debug("Target " THIN_MODULE " does not support non power of 2 block sizes.");
-#endif
+
 		_checked = 1;
 	}
 

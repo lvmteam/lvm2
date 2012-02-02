@@ -1,5 +1,6 @@
 Version 2.02.98 -
 =================================
+  Allow non power of 2 thin chunk sizes if thin pool driver supports that.
   Allow limited metadata changes when PVs are missing via [vg|lv]change.
   Do not start dmeventd for lvchange --resync when monitoring is off.
   Remove ExecStartPost with pvscan --cache from lvm2-lvmetad.service.

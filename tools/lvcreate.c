@@ -684,6 +684,7 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 	struct arg_value_group_list *current_group;
 	const char *segtype_str;
 	const char *tag;
+	unsigned attr = 0;
 
 	memset(lp, 0, sizeof(*lp));
 	memset(lcp, 0, sizeof(*lcp));
@@ -799,7 +800,7 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 	}
 
 	if (activation() && lp->segtype->ops->target_present &&
-	    !lp->segtype->ops->target_present(cmd, NULL, NULL)) {
+	    !lp->segtype->ops->target_present(cmd, NULL, &attr)) {
 		log_error("%s: Required device-mapper target(s) not "
 			  "detected in your kernel", lp->segtype->name);
 		return 0;
@@ -851,13 +852,24 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 			lp->chunk_size = arg_uint_value(cmd, chunksize_ARG,
 							DM_THIN_MIN_DATA_BLOCK_SIZE);
 			if ((lp->chunk_size < DM_THIN_MIN_DATA_BLOCK_SIZE) ||
-			    (lp->chunk_size > DM_THIN_MAX_DATA_BLOCK_SIZE) ||
-			    (lp->chunk_size & (lp->chunk_size - 1))) {
-				log_error("Chunk size must be a power of 2 in the "
-					  "range %uK to %uK",
+			    (lp->chunk_size > DM_THIN_MAX_DATA_BLOCK_SIZE)) {
+				log_error("Chunk size must be in the range %uK to %uK",
 					  (DM_THIN_MIN_DATA_BLOCK_SIZE / 2),
 					  (DM_THIN_MAX_DATA_BLOCK_SIZE / 2));
 				return 0;
+			}
+			if (!(attr & THIN_FEATURE_BLOCK_SIZE) &&
+			    (lp->chunk_size & (lp->chunk_size - 1))) {
+				log_error("Chunk size must be a power of 2 for this thin target version.");
+				return 0;
+			} else if (lp->chunk_size & (DM_THIN_MIN_DATA_BLOCK_SIZE - 1)) {
+				log_error("Chunk size must be multiple of %uK.",
+					  DM_THIN_MIN_DATA_BLOCK_SIZE / 2);
+				return 0;
+			} else if ((lp->discards != THIN_DISCARDS_IGNORE) &&
+				   (lp->chunk_size & (lp->chunk_size - 1))) {
+				log_warn("WARNING: Using discards ignore for chunk size non power of 2.");
+				lp->discards = THIN_DISCARDS_IGNORE;
 			}
 		}
 		log_verbose("Setting chunksize to %u sectors.", lp->chunk_size);
