@@ -657,6 +657,17 @@ int dm_tree_node_add_thin_pool_message(struct dm_tree_node *node,
 				       uint64_t id1, uint64_t id2);
 
 /*
+ * Set thin pool discard features
+ *   ignore      - Disable discard support
+ *   no_passdown - Don't pass discard down to underlaying data device,
+ *                 just remove the mapping
+ * Feature is available for 1.1
+ */
+int dm_tree_node_set_thin_pool_discard(struct dm_tree_node *node,
+				       unsigned ignore,
+				       unsigned no_passdown);
+
+/*
  * FIXME: Defines bellow are based on kernel's dm-thin.c defines
  * MAX_DEV_ID ((1 << 24) - 1)
  */
@@ -665,6 +676,9 @@ int dm_tree_node_add_thin_target(struct dm_tree_node *node,
 				 uint64_t size,
 				 const char *pool_uuid,
 				 uint32_t device_id);
+
+int dm_tree_node_set_thin_external_origin(struct dm_tree_node *node,
+					  const char *external_uuid);
 
 void dm_tree_node_set_udev_flags(struct dm_tree_node *node, uint16_t udev_flags);
 
