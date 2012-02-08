@@ -1,5 +1,6 @@
 Version 1.02.70 - 
 ===================================
+  Fix fd resource leak in error path for _udev_notify_sem_create().
   Leave space for '\0' for readline() call in _sysfs_get_kernel_name().
 
 Version 1.02.69 - 1st February 2012

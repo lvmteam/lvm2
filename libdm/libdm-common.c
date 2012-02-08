@@ -1738,7 +1738,7 @@ static int _udev_notify_sem_create(uint32_t *cookie, int *semid)
 		log_error("semid %d: sem_ctl GETVAL failed for "
 			  "cookie 0x%" PRIx32 ": %s",
 			  gen_semid, gen_cookie, strerror(errno));
-		return 0;		
+		goto bad;
 	}
 
 	log_debug("Udev cookie 0x%" PRIx32 " (semid %d) incremented to %d",
