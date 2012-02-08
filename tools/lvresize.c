@@ -159,6 +159,9 @@ static int _fsadm_cmd(struct cmd_context *cmd,
 
 	argv[i++] = (fcmd == FSADM_CMD_RESIZE) ? "resize" : "check";
 
+	if (status)
+		*status = -1;
+
 	if (dm_snprintf(lv_path, PATH_MAX, "%s%s/%s", cmd->dev_dir, lp->vg_name,
 			lp->lv_name) < 0) {
 		log_error("Couldn't create LV path for %s", lp->lv_name);
