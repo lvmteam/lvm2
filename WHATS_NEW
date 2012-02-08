@@ -1,5 +1,6 @@
 Version 2.02.91 -
 ===================================
+  Add pool_below_threshold() function to check thin pool percent status.
   Fix test for snap percent for failing merge when removing LV.
   Switch int to void return for str_list_del().
   Fix error path handling in _build_desc().

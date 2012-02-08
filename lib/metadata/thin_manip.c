@@ -19,6 +19,7 @@
 #include "segtype.h"
 #include "lv_alloc.h"
 #include "archiver.h"
+#include "defaults.h"
 
 int attach_pool_metadata_lv(struct lv_segment *pool_seg, struct logical_volume *metadata_lv)
 {
@@ -213,6 +214,35 @@ int pool_has_message(const struct lv_segment *seg,
 	}
 
 	return 0;
+}
+
+int pool_below_threshold(const struct lv_segment *pool_seg)
+{
+	percent_t percent;
+	int threshold = PERCENT_1 *
+		find_config_tree_int(pool_seg->lv->vg->cmd,
+				     "activation/thin_pool_autoextend_threshold",
+				     DEFAULT_THIN_POOL_AUTOEXTEND_THRESHOLD);
+
+	/* Data */
+	if (!lv_thin_pool_percent(pool_seg->lv, 0, &percent)) {
+		stack;
+		return 0;
+	}
+
+	if (percent >= threshold)
+		return 0;
+
+	/* Metadata */
+	if (!lv_thin_pool_percent(pool_seg->lv, 1, &percent)) {
+		stack;
+		return 0;
+	}
+
+	if (percent >= threshold)
+		return 0;
+
+	return 1;
 }
 
 struct lv_segment *find_pool_seg(const struct lv_segment *seg)
