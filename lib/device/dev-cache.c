@@ -254,8 +254,10 @@ static int _compare_paths(const char *path0, const char *path1)
 	if (slash1 < slash0)
 		return 1;
 
-	strncpy(p0, path0, PATH_MAX);
-	strncpy(p1, path1, PATH_MAX);
+	strncpy(p0, path0, sizeof(p0) - 1);
+	p0[sizeof(p0) - 1] = '\0';
+	strncpy(p1, path1, sizeof(p1) - 1);
+	p1[sizeof(p1) - 1] = '\0';
 	s0 = p0 + 1;
 	s1 = p1 + 1;
 

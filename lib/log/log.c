@@ -136,7 +136,7 @@ void fin_syslog(void)
 
 void init_msg_prefix(const char *prefix)
 {
-	strncpy(_msg_prefix, prefix, sizeof(_msg_prefix));
+	strncpy(_msg_prefix, prefix, sizeof(_msg_prefix) - 1);
 	_msg_prefix[sizeof(_msg_prefix) - 1] = '\0';
 }
 
