@@ -3315,14 +3315,14 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 		if (lv_is_merging_cow(lv) && !level) {
 			if (lv_info(lv->vg->cmd, lv, 0, &info, 1, 0) &&
 			    info.exists && info.live_table) {
-				if (lv_snapshot_percent(lv, &snap_percent) &&
-				    ((snap_percent != PERCENT_INVALID) &&
-				     (snap_percent != PERCENT_MERGE_FAILED))) {
+				if (!lv_snapshot_percent(lv, &snap_percent))
+					return_0;
+				if ((snap_percent != PERCENT_INVALID) &&
+				     (snap_percent != PERCENT_MERGE_FAILED)) {
 					log_error("Can't remove merging snapshot logical volume \"%s\"",
 						  lv->name);
 					return 0;
-				}
-				else if ((snap_percent == PERCENT_MERGE_FAILED) &&
+				} else if ((snap_percent == PERCENT_MERGE_FAILED) &&
 					 (force == PROMPT) &&
 					 yes_no_prompt("Removing snapshot \"%s\" that failed to merge may leave origin \"%s\" inconsistent. "
 						       "Proceed? [y/n]: ", lv->name, origin_from_cow(lv)->name) == 'n') {

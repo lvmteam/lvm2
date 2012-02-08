@@ -1,5 +1,6 @@
 Version 2.02.91 -
 ===================================
+  Fix test for snap percent for failing merge when removing LV.
   Switch int to void return for str_list_del().
   Fix error path handling in _build_desc().
   Add range test for device number in _scan_proc_dev().
