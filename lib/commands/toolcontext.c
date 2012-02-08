@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2009 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2012 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -728,6 +728,7 @@ static struct dev_filter *_init_filter_components(struct cmd_context *cmd)
 	unsigned nr_filt = 0;
 	const struct dm_config_node *cn;
 	struct dev_filter *filters[MAX_FILTERS];
+	struct dev_filter *composite;
 
 	memset(filters, 0, sizeof(filters));
 
@@ -781,8 +782,16 @@ static struct dev_filter *_init_filter_components(struct cmd_context *cmd)
 	}
 
 	/* Only build a composite filter if we really need it. */
-	return (nr_filt == 1) ?
-	    filters[0] : composite_filter_create(nr_filt, filters);
+	if (nr_filt == 1)
+		return filters[0];
+
+	if (!(composite = composite_filter_create(nr_filt, filters))) {
+		stack;
+		nr_filt++; /* compensate skip NULL */
+		goto err;
+	}
+
+	return composite;
 err:
 	nr_filt--; /* skip NULL */
 	while (nr_filt-- > 0)
