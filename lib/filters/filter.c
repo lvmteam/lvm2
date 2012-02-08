@@ -226,7 +226,7 @@ static int _scan_proc_dev(const char *proc, const struct dm_config_node *cn)
 
 		/* If it's not a number it may be name of section */
 		line_maj = atoi(((char *) (line + i)));
-		if (!line_maj) {
+		if ((line_maj <= 0) || (line_maj >= NUMBER_OF_MAJORS)) {
 			blocksection = (line[i] == 'B') ? 1 : 0;
 			continue;
 		}
