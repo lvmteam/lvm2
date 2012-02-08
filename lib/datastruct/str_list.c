@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2003-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2005 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2012 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -50,16 +50,13 @@ int str_list_add(struct dm_pool *mem, struct dm_list *sll, const char *str)
 	return 1;
 }
 
-int str_list_del(struct dm_list *sll, const char *str)
+void str_list_del(struct dm_list *sll, const char *str)
 {
 	struct dm_list *slh, *slht;
 
-	dm_list_iterate_safe(slh, slht, sll) {
+	dm_list_iterate_safe(slh, slht, sll)
 		if (!strcmp(str, dm_list_item(slh, struct str_list)->str))
 			 dm_list_del(slh);
-	}
-
-	return 1;
 }
 
 int str_list_dup(struct dm_pool *mem, struct dm_list *sllnew,

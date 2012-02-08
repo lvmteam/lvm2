@@ -335,9 +335,7 @@ static int _init_mirror_log(struct cmd_context *cmd,
 
 	/* Remove the temporary tags */
 	dm_list_iterate_items(sl, tags)
-		if (!str_list_del(&log_lv->tags, sl->str))
-			log_error("Failed to remove tag %s from mirror log.",
-				  sl->str);
+		str_list_del(&log_lv->tags, sl->str);
 
 	if (activation() && !set_lv(cmd, log_lv, log_lv->size,
 				    in_sync ? -1 : 0)) {
@@ -374,9 +372,7 @@ revert_new_lv:
 	log_lv->status = orig_status;
 
 	dm_list_iterate_items(sl, tags)
-		if (!str_list_del(&log_lv->tags, sl->str))
-			log_error("Failed to remove tag %s from mirror log.",
-				  sl->str);
+		str_list_del(&log_lv->tags, sl->str);
 
 	if (remove_on_failure && !lv_remove(log_lv)) {
 		log_error("Manual intervention may be required to remove "

@@ -770,13 +770,9 @@ int lv_change_tag(struct logical_volume *lv, const char *tag, int add_tag)
 				  tag, lv->vg->name, lv->name);
 			return 0;
 		}
-	} else {
-		if (!str_list_del(&lv->tags, tag)) {
-			log_error("Failed to remove tag %s from %s/%s",
-				  tag, lv->vg->name, lv->name);
-			return 0;
-		}
-	}
+	} else
+		str_list_del(&lv->tags, tag);
+
 	return 1;
 }
 
@@ -800,13 +796,9 @@ int vg_change_tag(struct volume_group *vg, const char *tag, int add_tag)
 				  tag, vg->name);
 			return 0;
 		}
-	} else {
-		if (!str_list_del(&vg->tags, tag)) {
-			log_error("Failed to remove tag %s from volume group "
-				  "%s", tag, vg->name);
-			return 0;
-		}
-	}
+	} else
+		str_list_del(&vg->tags, tag);
+
 	return 1;
 }
 
