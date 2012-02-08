@@ -34,8 +34,10 @@ void get_shared_library_path(struct cmd_context *cmd, const char *libname,
 	if (libname[0] == '/' ||
 	    !(lib_dir = find_config_tree_str(cmd, "global/library_dir", 0)) ||
 	    (dm_snprintf(path, path_len, "%s/%s", lib_dir,
-			  libname) == -1) || stat(path, &info) == -1)
-		strncpy(path, libname, path_len);
+			 libname) == -1) || stat(path, &info) == -1) {
+		strncpy(path, libname, path_len - 1);
+		path[path_len - 1] = '\0';
+	}
 }
 
 void *load_shared_library(struct cmd_context *cmd, const char *libname,

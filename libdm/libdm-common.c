@@ -706,7 +706,7 @@ int get_dev_node_read_ahead(const char *dev_name, uint32_t major, uint32_t minor
 
 		if ((fd = open(_path0, O_RDONLY, 0)) != -1) {
 			/* Reading from sysfs, expecting number\n */
-			if ((len = read(fd, buf, sizeof(buf))) < 1) {
+			if ((len = read(fd, buf, sizeof(buf) - 1)) < 1) {
 				log_sys_error("read", _path0);
 				r = 0;
 			} else {
@@ -1256,7 +1256,7 @@ static int _sysfs_get_kernel_name(uint32_t major, uint32_t minor, char *buf, siz
 		goto error;
 	}
 
-	if ((size = readlink(sysfs_path, temp_buf, PATH_MAX)) < 0) {
+	if ((size = readlink(sysfs_path, temp_buf, PATH_MAX - 1)) < 0) {
 		if (errno != ENOENT)
 			log_sys_error("readlink", sysfs_path);
 		else

@@ -3059,7 +3059,8 @@ static char *parse_loop_device_name(const char *dev, const char *dev_dir)
 		    device[strlen(dev_dir)] != '/')
 			goto error;
 
-		strncpy(buf, strrchr(device, '/') + 1, (size_t) PATH_MAX);
+		strncpy(buf, strrchr(device, '/') + 1, PATH_MAX - 1);
+		buf[PATH_MAX - 1] = '\0';
 		dm_free(device);
 
 	} else {

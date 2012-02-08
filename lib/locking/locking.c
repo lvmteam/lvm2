@@ -459,7 +459,8 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags)
 		return 0;
 	}
 
-	strncpy(resource, vol, sizeof(resource));
+	strncpy(resource, vol, sizeof(resource) - 1);
+	resource[sizeof(resource) - 1] = '\0';
 
 	if (!_lock_vol(cmd, resource, flags, lv_op))
 		return_0;

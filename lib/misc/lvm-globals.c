@@ -165,13 +165,13 @@ void init_detect_internal_vg_cache_corruption(int detect)
 
 void set_cmd_name(const char *cmd)
 {
-	strncpy(_cmd_name, cmd, sizeof(_cmd_name));
+	strncpy(_cmd_name, cmd, sizeof(_cmd_name) - 1);
 	_cmd_name[sizeof(_cmd_name) - 1] = '\0';
 }
 
 void set_sysfs_dir_path(const char *path)
 {
-	strncpy(_sysfs_dir_path, path, sizeof(_sysfs_dir_path));
+	strncpy(_sysfs_dir_path, path, sizeof(_sysfs_dir_path) - 1);
 	_sysfs_dir_path[sizeof(_sysfs_dir_path) - 1] = '\0';
 }
 
