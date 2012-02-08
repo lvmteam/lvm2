@@ -28,7 +28,7 @@ static char *_expand_filename(const char *template, const char *vg_name,
 		return NULL;
 	}
 
-	if (snprintf(filename, PATH_MAX, template, vg_name) < 0) {
+	if (dm_snprintf(filename, PATH_MAX, template, vg_name) < 0) {
 		log_error("Error processing filename template %s",
 			   template);
 		dm_free(filename);	
