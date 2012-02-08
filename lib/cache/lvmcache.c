@@ -987,6 +987,7 @@ static int _lvmcache_update_vgid(struct lvmcache_info *info,
 	if (vginfo && *vginfo->vgid)
 		dm_hash_remove(_vgid_hash, vginfo->vgid);
 	if (!vgid) {
+		/* FIXME: unreachable code path */
 		log_debug("lvmcache: %s: clearing VGID", info ? dev_name(info->dev) : vginfo->vgname);
 		return 1;
 	}
