@@ -1,5 +1,6 @@
 Version 2.02.91 -
 ===================================
+  Fix error path handling in _build_desc()
   Add range test for device number in _scan_proc_dev().
   Use signed long for sysconf() call in cmirrord.
   Do not write in front of log buffer in print_log().
