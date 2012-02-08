@@ -372,7 +372,7 @@ static int _clog_ctr(char *uuid, uint64_t luid,
 	enum sync log_sync = DEFAULTSYNC;
 	uint32_t block_on_error = 0;
 
-	int disk_log = 0;
+	int disk_log;
 	char disk_path[128];
 	int unlink_path = 0;
 	long page_size;

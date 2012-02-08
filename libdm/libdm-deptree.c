@@ -739,10 +739,6 @@ static int _deps(struct dm_task **dmt, struct dm_pool *mem, uint32_t major, uint
 		*deps = NULL;
 		info->major = major;
 		info->minor = minor;
-		info->exists = 0;
-		info->live_table = 0;
-		info->inactive_table = 0;
-		info->read_only = 0;
 		return 1;
 	}
 

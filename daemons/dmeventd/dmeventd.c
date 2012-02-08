@@ -448,7 +448,7 @@ static int _get_status(struct message_data *message_data)
 {
 	struct dm_event_daemon_message *msg = message_data->msg;
 	struct thread_status *thread;
-	int i = 0, j = 0;
+	int i, j;
 	int ret = -1;
 	int count = dm_list_size(&_thread_registry);
 	int size = 0, current = 0;
@@ -1169,8 +1169,6 @@ static int _get_registered_dev(struct message_data *message_data, int next)
 
 	if (!hit)
 		goto out;
-
-	thread = hit;
 
 	while (1) {
 		if (dm_list_end(&_thread_registry, &thread->list))
