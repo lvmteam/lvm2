@@ -896,8 +896,6 @@ static int _init_formats(struct cmd_context *cmd)
 	const struct dm_config_node *cn;
 #endif
 
-	label_init();
-
 #ifdef LVM1_INTERNAL
 	if (!(fmt = init_lvm1_format(cmd)))
 		return 0;
@@ -1268,6 +1266,7 @@ struct cmd_context *create_toolcontext(unsigned is_long_lived,
 	dm_list_init(&cmd->segtypes);
 	dm_list_init(&cmd->tags);
 	dm_list_init(&cmd->config_files);
+	label_init();
 
 	/* FIXME Make this configurable? */
 	reset_lvm_errno(1);
