@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2012 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -292,14 +292,14 @@ static int _dev_read_ahead_dev(struct device *dev, uint32_t *read_ahead)
 		return 0;
 	}
 
-	if (!dev_close(dev))
-		stack;
-
 	*read_ahead = (uint32_t) read_ahead_long;
 	dev->read_ahead = read_ahead_long;
 
 	log_very_verbose("%s: read_ahead is %u sectors",
 			 dev_name(dev), *read_ahead);
+
+	if (!dev_close(dev))
+		stack;
 
 	return 1;
 }
