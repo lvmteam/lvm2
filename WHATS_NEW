@@ -1,5 +1,6 @@
 Version 2.02.91 -
 ===================================
+  Check that whole locking_dir fits _lock_dir buffer in init_file_locking().
   Use list functions for label_exit().
   Ensure strncpy() function always ends with '\0'.
   Set status in _fsadm_cmd() for error path.

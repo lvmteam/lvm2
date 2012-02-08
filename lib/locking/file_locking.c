@@ -337,6 +337,7 @@ int init_file_locking(struct locking_type *locking, struct cmd_context *cmd,
 		      int suppress_messages)
 {
 	int r;
+	const char *locking_dir;
 
 	locking->lock_resource = _file_lock_resource;
 	locking->reset_locking = _reset_file_locking;
@@ -344,9 +345,14 @@ int init_file_locking(struct locking_type *locking, struct cmd_context *cmd,
 	locking->flags = 0;
 
 	/* Get lockfile directory from config file */
-	strncpy(_lock_dir, find_config_tree_str(cmd, "global/locking_dir",
-						DEFAULT_LOCK_DIR),
-		sizeof(_lock_dir));
+	locking_dir = find_config_tree_str(cmd, "global/locking_dir",
+					   DEFAULT_LOCK_DIR);
+	if (strlen(locking_dir) >= sizeof(_lock_dir)) {
+		log_error("Path for locking_dir %s is invalid.", locking_dir);
+		return 0;
+	}
+
+	strcpy(_lock_dir, locking_dir);
 
 	_prioritise_write_locks =
 	    find_config_tree_bool(cmd, "global/prioritise_write_locks",
