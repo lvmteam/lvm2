@@ -1,5 +1,6 @@
 Version 2.02.91 -
 ===================================
+  Set status in _fsadm_cmd() for error path.
   Add missing deps for lvm2api for rebuild when lvm-internal is changed.
   Fix resource leaks for failing allocation of formats (lvm1/2,pool).
   Release allocated resources in error path for composite_filter_create().
