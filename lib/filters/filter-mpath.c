@@ -60,7 +60,7 @@ static int get_sysfs_get_major_minor(const char *sysfs_dir, const char *kname, i
 {
 	char path[PATH_MAX], buffer[64];
 
-	if (snprintf(path, sizeof(path), "%s/block/%s/dev", sysfs_dir, kname) < 0)
+	if (dm_snprintf(path, sizeof(path), "%s/block/%s/dev", sysfs_dir, kname) < 0)
 		return_0;
 
 	if (!get_sysfs_string(path, buffer, sizeof(buffer)))

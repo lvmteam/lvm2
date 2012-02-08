@@ -696,9 +696,11 @@ static int _split_mirror_images(struct logical_volume *lv,
 		dm_list_iterate_items(lvl, &split_images) {
 			sub_lv = lvl->lv;
 
-			dm_snprintf(format, len, "%s_mimage_%%d",
-				    new_lv->name);
-
+			if (dm_snprintf(format, len, "%s_mimage_%%d",
+					new_lv->name) < 0) {
+				log_error("Failed to build new image name.");
+				return 0;
+			}
 			layer_name = dm_pool_alloc(lv->vg->vgmem, len);
 			if (!layer_name) {
 				log_error("Unable to allocate memory");
