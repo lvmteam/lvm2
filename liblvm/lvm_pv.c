@@ -107,12 +107,12 @@ pv_t lvm_pv_from_uuid(vg_t vg, const char *uuid)
 		log_errno (EINVAL, "Invalid UUID string length");
 		return NULL;
 	}
-	if (strlen(uuid) >= ID_LEN) {
-		if (!id_read_format(&id, uuid)) {
-			log_errno(EINVAL, "Invalid UUID format");
-			return NULL;
-		}
+
+	if (!id_read_format(&id, uuid)) {
+		log_errno(EINVAL, "Invalid UUID format.");
+		return NULL;
 	}
+
 	dm_list_iterate_items(pvl, &vg->pvs) {
 		if (id_equal(&id, &pvl->pv->id))
 			return pvl->pv;
