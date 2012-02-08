@@ -56,11 +56,6 @@ static struct labeller_i *_alloc_li(const char *name, struct labeller *l)
 	return li;
 }
 
-static void _free_li(struct labeller_i *li)
-{
-	dm_free(li);
-}
-
 int label_init(void)
 {
 	dm_list_init(&_labellers);
@@ -69,14 +64,12 @@ int label_init(void)
 
 void label_exit(void)
 {
-	struct dm_list *c, *n;
-	struct labeller_i *li;
+	struct labeller_i *li, *tli;
 
-	for (c = _labellers.n; c && c != &_labellers; c = n) {
-		n = c->n;
-		li = dm_list_item(c, struct labeller_i);
+	dm_list_iterate_items_safe(li, tli, &_labellers) {
+		dm_list_del(&li->list);
 		li->l->ops->destroy(li->l);
-		_free_li(li);
+		dm_free(li);
 	}
 
 	dm_list_init(&_labellers);
