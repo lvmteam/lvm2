@@ -83,13 +83,16 @@ static char *_build_desc(struct dm_pool *mem, const char *line, int before)
 	size_t len = strlen(line) + 32;
 	char *buffer;
 
-	if (!(buffer = dm_pool_zalloc(mem, strlen(line) + 32)))
-		return_NULL;
+	if (!(buffer = dm_pool_alloc(mem, len))) {
+		log_error("Failed to allocate desc.");
+		return NULL;
+	}
 
-	if (snprintf(buffer, len,
-		     "Created %s executing '%s'",
-		     before ? "*before*" : "*after*", line) < 0)
-		return_NULL;
+	if (dm_snprintf(buffer, len, "Created %s executing '%s'",
+			before ? "*before*" : "*after*", line) < 0) {
+		log_error("Failed to build desc.");
+		return NULL;
+	}
 
 	return buffer;
 }
