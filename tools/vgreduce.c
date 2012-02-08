@@ -213,7 +213,7 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 	
-	if (!argc && repairing) {
+	if (!argc) { /* repairing */
 		log_error("Please give volume group name");
 		return EINVALID_CMD_LINE;
 	}
