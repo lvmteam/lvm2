@@ -4054,7 +4054,6 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 	struct logical_volume *lv, *org = NULL;
 	struct logical_volume *pool_lv;
 	struct lv_list *lvl;
-	percent_t percent;
 	int origin_active = 0;
 	struct lvinfo info;
 
@@ -4375,26 +4374,20 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 	if (seg_is_thin(lp)) {
 		/* For snapshot, suspend active thin origin first */
 		if (org && lv_is_active(org)) {
-			/* Check if the pool is bellow threshold (Works only for active thin) */
-			if (!lv_thin_pool_percent(first_seg(org)->pool_lv, 0, &percent)) {
-				stack;
-				goto revert_new_lv;
-			}
-			percent /= PERCENT_1;
-			if (percent >= (find_config_tree_int(cmd, "activation/thin_pool_autoextend_threshold",
-							     DEFAULT_THIN_POOL_AUTOEXTEND_THRESHOLD))) {
-				log_error("Failed to create snapshot, pool is filled over "
-					  "the autoextend threshold (%d%%).", percent);
+			if (!pool_below_threshold(first_seg(first_seg(org)->pool_lv))) {
+				log_error("Cannot create thin snapshot. Pool %s/%s is filled "
+					  "over the autoextend threshold.",
+					  org->vg->name, first_seg(org)->pool_lv->name);
 				goto revert_new_lv;
 			}
 			if (!suspend_lv_origin(cmd, org)) {
-				log_error("Failed to suspend thin snapshot origin %s.",
-					  org->name);
+				log_error("Failed to suspend thin snapshot origin %s/%s.",
+					  org->vg->name, org->name);
 				goto revert_new_lv;
 			}
 			if (!resume_lv_origin(cmd, org)) { /* deptree updates thin-pool */
-				log_error("Failed to resume thin snapshot origin %s.",
-					  org->name);
+				log_error("Failed to resume thin snapshot origin %s/%s.",
+					  org->vg->name, org->name);
 				goto revert_new_lv;
 			}
 			/* At this point remove pool messages, snapshot is active */
