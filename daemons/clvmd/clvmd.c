@@ -741,8 +741,7 @@ static int local_pipe_callback(struct local_client *thisfd, char *buf,
 			 status, sock_client);
 		/* But has the client gone away ?? */
 		if (sock_client == NULL) {
-			DEBUGLOG
-			    ("Got PIPE response for dead client, ignoring it\n");
+			DEBUGLOG("Got PIPE response for dead client, ignoring it\n");
 		} else {
 			/* If error then just return that code */
 			if (status)
@@ -751,21 +750,16 @@ static int local_pipe_callback(struct local_client *thisfd, char *buf,
 			else {
 				/* FIXME: closer inspect this code since state is write thread protected */
 				pthread_mutex_lock(&sock_client->bits.localsock.mutex);
-				if (sock_client->bits.localsock.state ==
-				    POST_COMMAND) {
+				if (sock_client->bits.localsock.state == POST_COMMAND) {
 					pthread_mutex_unlock(&sock_client->bits.localsock.mutex);
 					send_local_reply(sock_client, 0,
 							 sock_client->fd);
-				} else	// PRE_COMMAND finished.
-				{
+				} else {
+					/* PRE_COMMAND finished. */
 					pthread_mutex_unlock(&sock_client->bits.localsock.mutex);
-					if (
-					    (status =
-					     distribute_command(sock_client)) !=
-					    0) send_local_reply(sock_client,
-								EFBIG,
-								sock_client->
-								fd);
+					if ((status = distribute_command(sock_client)))
+						send_local_reply(sock_client, EFBIG,
+								 sock_client->fd);
 				}
 			}
 		}
@@ -1247,9 +1241,8 @@ static int read_from_local_sock(struct local_client *thisfd)
 			    inheader->node + strlen(inheader->node) + 1;
 
 			while (missing_len > 0) {
-				DEBUGLOG
-				    ("got %d bytes, need another %d (total %d)\n",
-				     argslen, missing_len, inheader->arglen);
+				DEBUGLOG("got %d bytes, need another %d (total %d)\n",
+					 argslen, missing_len, inheader->arglen);
 				len = read(thisfd->fd, argptr + argslen,
 					   missing_len);
 				if (len == -1 && errno == EINTR)
