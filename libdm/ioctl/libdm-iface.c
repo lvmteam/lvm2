@@ -573,8 +573,13 @@ void *dm_get_next_target(struct dm_task *dmt, void *next,
 	if (!t)
 		t = dmt->head;
 
-	if (!t)
+	if (!t) {
+		*start = 0;
+		*length = 0;
+		*target_type = 0;
+		*params = 0;
 		return NULL;
+	}
 
 	*start = t->start;
 	*length = t->length;
