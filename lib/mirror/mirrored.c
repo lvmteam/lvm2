@@ -248,7 +248,7 @@ static int _mirrored_transient_status(struct lv_segment *seg, char *params)
 
 	p += strlen(p) + 1;
 
-	if (num_devs > DEFAULT_MIRROR_MAX_IMAGES) {
+	if (num_devs > DEFAULT_MIRROR_MAX_IMAGES || num_devs < 0) {
 		log_error("Unexpectedly many (%d) mirror images in %s.",
 			  num_devs, lv->name);
 		return_0;
@@ -261,14 +261,14 @@ static int _mirrored_transient_status(struct lv_segment *seg, char *params)
 		return_0;
 
 	log_argc = atoi(args[3 + num_devs]);
-	log_args = alloca(log_argc * sizeof(char *));
 
-	if (log_argc > 16) {
+	if (log_argc > 16 || log_argc < 0) {
 		log_error("Unexpectedly many (%d) log arguments in %s.",
 			  log_argc, lv->name);
 		return_0;
 	}
 
+	log_args = alloca(log_argc * sizeof(char *));
 
 	if (dm_split_words(args[3 + num_devs] + strlen(args[3 + num_devs]) + 1,
 			   log_argc, 0, log_args) < log_argc)
