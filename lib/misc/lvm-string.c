@@ -49,12 +49,13 @@ int emit_to_buffer(char **buffer, size_t *size, const char *fmt, ...)
 int validate_tag(const char *n)
 {
 	register char c;
-	register int len = 0;
+	/* int len = 0; */
 
 	if (!n || !*n)
 		return 0;
 
-	while ((len++, c = *n++))
+	/* FIXME: Is unlimited tag size support needed ? */
+	while ((/* len++, */ c = *n++))
 		if (!isalnum(c) && c != '.' && c != '_' && c != '-' && c != '+' && c != '/'
 		    && c != '=' && c != '!' && c != ':' && c != '&' && c != '#')
 			return 0;
