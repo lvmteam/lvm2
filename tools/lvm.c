@@ -60,7 +60,7 @@ static char *_list_args(const char *text, int state)
 	/* Initialise if this is a new completion attempt */
 	if (!state) {
 		char *s = rl_line_buffer;
-		int j = 0;
+		int j;
 
 		match_no = 0;
 		com = NULL;
