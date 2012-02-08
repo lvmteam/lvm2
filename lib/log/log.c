@@ -388,8 +388,8 @@ void print_log(int level, const char *file, int line, int dm_errno,
 		va_end(ap);
 		bufused += n;
 
-	      done:
 		buf[bufused - 1] = '\n';
+	      done:
 		buf[bufused] = '\n';
 		buf[sizeof(buf) - 1] = '\n';
 		/* FIXME real size bufused */
