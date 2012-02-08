@@ -1594,11 +1594,8 @@ static int _pv_change_tag(struct physical_volume *pv, const char *tag, int addta
 				  tag, pv_dev_name(pv));
 			return 0;
 		}
-	} else if (!str_list_del(&pv->tags, tag)) {
-		log_error("Failed to remove tag %s from physical volume" "%s",
-			  tag,  pv_dev_name(pv));
-		return 0;
-	}
+	} else
+		str_list_del(&pv->tags, tag);
 
 	return 1;
 }
