@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2011 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2005-2012 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -18,6 +18,7 @@
 #include "errors.h"
 #include "libdevmapper-event.h"
 #include "dmeventd_lvm.h"
+#include "defaults.h"
 
 #include <syslog.h> /* FIXME Replace syslog with multilog */
 /* FIXME Missing openlog? */
@@ -81,7 +82,8 @@ static int _get_mirror_event(char *params)
 	if (!dm_split_words(params, 1, 0, &p))
 		goto out_parse;
 
-	if (!(num_devs = atoi(p)))
+	if (!(num_devs = atoi(p)) ||
+	    (num_devs > DEFAULT_MIRROR_MAX_IMAGES) || (num_devs < 0))
 		goto out_parse;
 	p += strlen(p) + 1;
 
@@ -90,6 +92,7 @@ static int _get_mirror_event(char *params)
 	if (!args || dm_split_words(p, num_devs + 7, 0, args) < num_devs + 5)
 		goto out_parse;
 
+	/* FIXME: Code differs from lib/mirror/mirrored.c */
 	dev_status_str = args[2 + num_devs];
 	log_argc = atoi(args[3 + num_devs]);
 	log_status_str = args[3 + num_devs + log_argc];
