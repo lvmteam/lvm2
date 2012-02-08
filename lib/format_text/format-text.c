@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2012 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -2362,14 +2362,13 @@ struct format_type *create_text_format(struct cmd_context *cmd)
 
 	if (!(fmt->labeller = text_labeller_create(fmt))) {
 		log_error("Couldn't create text label handler.");
-		dm_free(fmt);
-		return NULL;
+		goto err;
 	}
 
 	if (!(label_register_handler(FMT_TEXT_NAME, fmt->labeller))) {
 		log_error("Couldn't register text label handler.");
-		dm_free(fmt);
-		return NULL;
+		fmt->labeller->ops->destroy(fmt->labeller);
+		goto err;
 	}
 
 	if ((cn = find_config_tree_node(cmd, "metadata/dirs"))) {
@@ -2402,8 +2401,7 @@ struct format_type *create_text_format(struct cmd_context *cmd)
 	return fmt;
 
       err:
-	_free_dirs(&mda_lists->dirs);
+	_text_destroy(fmt);
 
-	dm_free(fmt);
 	return NULL;
 }

@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2012 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -587,11 +587,14 @@ struct format_type *init_format(struct cmd_context *cmd)
 
 	if (!(fmt->labeller = lvm1_labeller_create(fmt))) {
 		log_error("Couldn't create lvm1 label handler.");
+		dm_free(fmt);
 		return NULL;
 	}
 
 	if (!(label_register_handler(FMT_LVM1_NAME, fmt->labeller))) {
 		log_error("Couldn't register lvm1 label handler.");
+		fmt->labeller->ops->destroy(fmt->labeller);
+		dm_free(fmt);
 		return NULL;
 	}
 

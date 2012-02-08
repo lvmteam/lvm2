@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 1997-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2006 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2012 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -298,11 +298,14 @@ struct format_type *init_format(struct cmd_context *cmd)
 
 	if (!(fmt->labeller = pool_labeller_create(fmt))) {
 		log_error("Couldn't create pool label handler.");
+		dm_free(fmt);
 		return NULL;
 	}
 
 	if (!(label_register_handler(FMT_POOL_NAME, fmt->labeller))) {
 		log_error("Couldn't register pool label handler.");
+		fmt->labeller->ops->destroy(fmt->labeller);
+		dm_free(fmt);
 		return NULL;
 	}
 
