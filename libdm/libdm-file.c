@@ -135,7 +135,6 @@ retry_fcntl:
 		switch (errno) {
 		case EINTR:
 			goto retry_fcntl;
-			break;
 		case EACCES:
 		case EAGAIN:
 			if (retries == 20) {
