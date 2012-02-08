@@ -1,5 +1,6 @@
 Version 2.02.91 -
 ===================================
+  Use signed long for sysconf() call in cmirrord.
   Do not write in front of log buffer in print_log().
   Add boundary test for number of mirror devs and logs.
   Check that whole locking_dir fits _lock_dir buffer in init_file_locking().

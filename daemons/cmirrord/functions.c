@@ -375,7 +375,7 @@ static int _clog_ctr(char *uuid, uint64_t luid,
 	int disk_log = 0;
 	char disk_path[128];
 	int unlink_path = 0;
-	size_t page_size;
+	long page_size;
 	int pages;
 
 	/* If core log request, then argv[0] will be region_size */
