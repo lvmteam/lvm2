@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2011 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2012 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -225,6 +225,7 @@ static int _mk_link(const char *dev_dir, const char *vg_name,
 static int _rm_link(const char *dev_dir, const char *vg_name,
 		    const char *lv_name, int check_udev)
 {
+	int r;
 	struct stat buf;
 	static char lv_path[PATH_MAX];
 
@@ -234,14 +235,14 @@ static int _rm_link(const char *dev_dir, const char *vg_name,
 		return 0;
 	}
 
-	if (lstat(lv_path, &buf) && errno == ENOENT)
+	if ((r = lstat(lv_path, &buf)) && errno == ENOENT)
 		return 1;
 	else if (dm_udev_get_sync_support() && udev_checking() && check_udev)
 		log_warn("The link %s should have been removed by udev "
 			 "but it is still present. Falling back to "
 			 "direct link removal.", lv_path);
 
-	if (!S_ISLNK(buf.st_mode)) {
+	if (r || !S_ISLNK(buf.st_mode)) {
 		log_error("%s not symbolic link - not removing", lv_path);
 		return 0;
 	}
