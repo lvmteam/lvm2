@@ -769,16 +769,11 @@ int dm_task_set_sector(struct dm_task *dmt, uint64_t sector)
 	return 1;
 }
 
-int dm_task_set_geometry(struct dm_task *dmt, const char *cylinders, const char *heads, const char *sectors, const char *start)
+int dm_task_set_geometry(struct dm_task *dmt, const char *cylinders, const char *heads,
+			 const char *sectors, const char *start)
 {
-	size_t len = strlen(cylinders) + 1 + strlen(heads) + 1 + strlen(sectors) + 1 + strlen(start) + 1;
-
-	if (!(dmt->geometry = dm_malloc(len))) {
-		log_error("dm_task_set_geometry: dm_malloc failed");
-		return 0;
-	}
-
-	if (sprintf(dmt->geometry, "%s %s %s %s", cylinders, heads, sectors, start) < 0) {
+	if (dm_asprintf(&(dmt->geometry), "%s %s %s %s",
+			cylinders, heads, sectors, start) < 0) {
 		log_error("dm_task_set_geometry: sprintf failed");
 		return 0;
 	}

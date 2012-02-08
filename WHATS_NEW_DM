@@ -1,5 +1,6 @@
 Version 1.02.70 - 
 ===================================
+  Simplify dm_task_set_geometry() and use dm_asprintf().
   Set all parameters to 0 for dm_get_next_target() for NULL return.
   Fix fd resource leak in error path for _udev_notify_sem_create().
   Leave space for '\0' for readline() call in _sysfs_get_kernel_name().
