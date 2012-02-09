@@ -2674,6 +2674,7 @@ int lv_extend(struct logical_volume *lv,
 				log_error("%s/%s cannot be extended while"
 					  " it is recovering.",
 					  lv->vg->name, lv->name);
+				r = 0;
 				goto out;
 			}
 		}
