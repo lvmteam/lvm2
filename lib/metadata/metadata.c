@@ -170,21 +170,17 @@ void add_pvl_to_vgs(struct volume_group *vg, struct pv_list *pvl)
 
 void del_pvl_from_vgs(struct volume_group *vg, struct pv_list *pvl)
 {
-	struct format_instance_ctx fic;
-	struct format_instance *fid;
+	struct lvmcache_info *info;
 
 	vg->pv_count--;
 	dm_list_del(&pvl->list);
-	pvl->pv->vg = NULL; /* orphan */
 
-	/* Use a new PV-based format instance since the PV is orphan now. */
-	fic.type = FMT_INSTANCE_PV | FMT_INSTANCE_MDAS | FMT_INSTANCE_AUX_MDAS;
-	fic.context.pv_id = (const char *) &pvl->pv->id;
-	fid = pvl->pv->fid->fmt->ops->create_instance(pvl->pv->fid->fmt, &fic);
-
-	pv_set_fid(pvl->pv, fid);
+	pvl->pv->vg = vg->fid->fmt->orphan_vg; /* orphan */
+	if ((info = lvmcache_info_from_pvid((const char *) &pvl->pv->id, 0)))
+		lvmcache_fid_add_mdas(info, vg->fid->fmt->orphan_vg->fid,
+				      (const char *) &pvl->pv->id, ID_LEN);
+	pv_set_fid(pvl->pv, vg->fid->fmt->orphan_vg->fid);
 }
-
 
 /**
  * add_pv_to_vg - Add a physical volume to a volume group
@@ -1663,13 +1659,16 @@ struct physical_volume *pv_create(const struct cmd_context *cmd,
 		goto bad;
 	}
 
-	fic.type = FMT_INSTANCE_PV;
-	fic.context.pv_id = (const char *) &pv->id;
-	if (!(fid = fmt->ops->create_instance(fmt, &fic))) {
-		log_error("Couldn't create format instance for PV %s.", pv_dev_name(pv));
+	struct pv_list *pvl;
+	if (!(pvl = dm_pool_zalloc(mem, sizeof(*pvl)))) {
+		log_error("pv_list allocation in pv_create failed");
 		goto bad;
 	}
-	pv_set_fid(pv, fid);
+
+	pvl->pv = pv;
+	add_pvl_to_vgs(fmt->orphan_vg, pvl);
+	fmt->orphan_vg->extent_count += pv->pe_count;
+	fmt->orphan_vg->free_count += pv->pe_count;
 
 	pv->fmt = fmt;
 	pv->vg_name = fmt->orphan_vg_name;
@@ -2762,18 +2761,7 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd,
 	if (!(fmt = lvmcache_fmt_from_vgname(orphan_vgname, NULL, 0)))
 		return_NULL;
 
-	if (!(vg = alloc_vg("vg_read_orphans", cmd, orphan_vgname)))
-		return_NULL;
-
-	/* create format instance with appropriate metadata area */
-	fic.type = FMT_INSTANCE_VG | FMT_INSTANCE_AUX_MDAS;
-	fic.context.vg_ref.vg_name = orphan_vgname;
-	fic.context.vg_ref.vg_id = NULL;
-	if (!(fid = fmt->ops->create_instance(fmt, &fic))) {
-		log_error("Failed to create format instance");
-		goto bad;
-	}
-	vg_set_fid(vg, fid);
+	vg = fmt->orphan_vg;
 
 	baton.warnings = warnings;
 	baton.vg = vg;
@@ -2781,7 +2769,6 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd,
 
 	return vg;
 bad:
-	release_vg(vg);
 	return NULL;
 }
 
@@ -3574,6 +3561,7 @@ static struct physical_volume *_pv_read(struct cmd_context *cmd,
 	struct label *label;
 	struct lvmcache_info *info;
 	struct device *dev;
+	const struct format_type *fmt;
 
 	if (!(dev = dev_cache_get(pv_name, cmd->filter)))
 		return_NULL;
@@ -3586,6 +3574,7 @@ static struct physical_volume *_pv_read(struct cmd_context *cmd,
 	}
 
 	info = (struct lvmcache_info *) label->info;
+	fmt = lvmcache_fmt(info);
 
 	pv = _alloc_pv(pvmem, dev);
 	if (!pv) {
@@ -3611,14 +3600,8 @@ static struct physical_volume *_pv_read(struct cmd_context *cmd,
 	if (fid)
 		lvmcache_fid_add_mdas(info, fid, (const char *) &pv->id, ID_LEN);
 	else {
-		fic.type = FMT_INSTANCE_PV | FMT_INSTANCE_MDAS | FMT_INSTANCE_AUX_MDAS;
-		fic.context.pv_id = (const char *) &pv->id;
-		if (!(fid = pv->fmt->ops->create_instance(pv->fmt, &fic))) {
-			log_error("_pv_read: Couldn't create format instance "
-				  "for PV %s", pv_name);
-			goto bad;
-		}
-		pv_set_fid(pv, fid);
+		lvmcache_fid_add_mdas(info, fmt->orphan_vg->fid, (const char *) &pv->id, ID_LEN);
+		pv_set_fid(pv, fmt->orphan_vg->fid);
 	}
 
 	return pv;
@@ -4236,11 +4219,9 @@ int fid_add_mda(struct format_instance *fid, struct metadata_area *mda,
 					    full_key, sizeof(full_key)))
 		return_0;
 
-		dm_hash_insert(fid->metadata_areas_index.hash,
+		dm_hash_insert(fid->metadata_areas_index,
 			       full_key, mda);
 	}
-	else
-		fid->metadata_areas_index.array[sub_key] = mda;
 
 	return 1;
 }
@@ -4275,11 +4256,9 @@ struct metadata_area *fid_get_mda_indexed(struct format_instance *fid,
 		if (!_convert_key_to_string(key, key_len, sub_key,
 					    full_key, sizeof(full_key)))
 			return_NULL;
-		mda = (struct metadata_area *) dm_hash_lookup(fid->metadata_areas_index.hash,
+		mda = (struct metadata_area *) dm_hash_lookup(fid->metadata_areas_index,
 							      full_key);
 	}
-	else
-		mda = fid->metadata_areas_index.array[sub_key];
 
 	return mda;
 }
@@ -4311,9 +4290,8 @@ int fid_remove_mda(struct format_instance *fid, struct metadata_area *mda,
 					    full_key, sizeof(full_key)))
 				return_0;
 
-			dm_hash_remove(fid->metadata_areas_index.hash, full_key);
-		} else
-			fid->metadata_areas_index.array[sub_key] = NULL;
+			dm_hash_remove(fid->metadata_areas_index, full_key);
+		}
 	}
 
 	dm_list_del(&mda->list);

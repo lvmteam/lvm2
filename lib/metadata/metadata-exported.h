@@ -178,6 +178,7 @@ struct format_type {
 	const char *name;
 	const char *alias;
 	const char *orphan_vg_name;
+	struct volume_group *orphan_vg; /* Only one ever exists. */
 	uint32_t features;
 	void *library;
 	void *private;
@@ -237,10 +238,7 @@ struct format_instance {
 	/* FIXME: Try to use the index only. Remove these lists. */
 	struct dm_list metadata_areas_in_use;
 	struct dm_list metadata_areas_ignored;
-	union {
-		struct metadata_area **array;
-		struct dm_hash_table *hash;
-	} metadata_areas_index;
+	struct dm_hash_table *metadata_areas_index;
 
 	void *private;
 };
