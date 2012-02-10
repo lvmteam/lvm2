@@ -3244,20 +3244,19 @@ static char *parse_loop_device_name(const char *dev, const char *dev_dir)
 		    device[strlen(dev_dir)] != '/')
 			goto error;
 
-		strncpy(buf, strrchr(device, '/') + 1, PATH_MAX - 1);
-		buf[PATH_MAX - 1] = '\0';
+		if (!dm_strncpy(buf, strrchr(device, '/') + 1, PATH_MAX))
+			goto error;
 		dm_free(device);
-
 	} else {
 		/* check for device number */
-		if (!strncmp(dev, "loop", strlen("loop")))
-			strncpy(buf, dev, (size_t) PATH_MAX);
-		else
+		if (strncmp(dev, "loop", sizeof("loop") - 1))
+			goto error;
+
+		if (!dm_strncpy(buf, dev, PATH_MAX))
 			goto error;
 	}
 
 	return buf;
-
 error:
 	dm_free(device);
 	dm_free(buf);
