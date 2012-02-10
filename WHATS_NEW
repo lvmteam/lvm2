@@ -1,5 +1,6 @@
 Version 2.02.91 -
 ===================================
+  Refactor format instances for orphan PVs (internal).
   Refactor lvmcache around an internal API.
   Stop processing lvextend if trying to extend a mirror that is being recovered.
   Add pool_below_threshold() function to check thin pool percent status.
