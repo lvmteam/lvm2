@@ -1,5 +1,6 @@
 Version 1.02.70 - 
 ===================================
+  Fix dm_event_get_version() check.
   Add pointer test for dependency check in _add_dev().
   Validate name and uuid params of dm_tree_add_new_dev_with_udev_flags().
   Do not crash for dm_report_init() sort_key == NULL and behave like "".
