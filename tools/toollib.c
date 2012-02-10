@@ -587,7 +587,7 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 		}
 		dm_list_iterate_items(sl, vgids) {
 			vgid = sl->str;
-			if (!(vgid) || !(vg_name = vgname_from_vgid(cmd->mem, vgid)))
+			if (!(vgid) || !(vg_name = lvmcache_vgname_from_vgid(cmd->mem, vgid)))
 				continue;
 			ret_max = _process_one_vg(cmd, vg_name, vgid, &tags,
 						  &arg_vgnames,

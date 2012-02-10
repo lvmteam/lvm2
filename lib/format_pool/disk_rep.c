@@ -101,12 +101,11 @@ int read_pool_label(struct pool_list *pl, struct labeller *l,
 				  (char *) &vgid, 0)))
 		return_0;
 	if (label)
-		*label = info->label;
+		*label = lvmcache_get_label(info);
 
-	info->device_size = xlate32_be(pd->pl_blocks) << SECTOR_SHIFT;
-	dm_list_init(&info->mdas);
-
-	info->status &= ~CACHE_INVALID;
+	lvmcache_set_device_size(info, xlate32_be(pd->pl_blocks) << SECTOR_SHIFT);
+	lvmcache_del_mdas(info);
+	lvmcache_make_valid(info);
 
 	pl->dev = dev;
 	pl->pv = NULL;
@@ -236,68 +235,92 @@ void get_pool_uuid(char *uuid, uint64_t poolid, uint32_t spid, uint32_t devid)
 
 }
 
-static int _read_vg_pds(const struct format_type *fmt, struct dm_pool *mem,
-			struct lvmcache_vginfo *vginfo, struct dm_list *head,
+struct _read_pool_pv_baton {
+	const struct format_type *fmt;
+	struct dm_pool *mem, *tmpmem;
+	struct pool_list *pl;
+	struct dm_list *head;
+	const char *vgname;
+	uint32_t *sp_devs;
+	int sp_count;
+	int failed;
+	int empty;
+};
+
+static int _read_pool_pv(struct lvmcache_info *info, void *baton)
+{
+	struct _read_pool_pv_baton *b = baton;
+
+	b->empty = 0;
+
+	if (lvmcache_device(info) &&
+	    !(b->pl = read_pool_disk(b->fmt, lvmcache_device(info), b->mem, b->vgname)))
+		return 0;
+
+	/*
+	 * We need to keep track of the total expected number
+	 * of devices per subpool
+	 */
+	if (!b->sp_count) {
+		/* FIXME pl left uninitialised if !info->dev */
+		if (!b->pl) {
+			log_error(INTERNAL_ERROR "device is missing");
+			dm_pool_destroy(b->tmpmem);
+			b->failed = 1;
+			return 0;
+		}
+		b->sp_count = b->pl->pd.pl_subpools;
+		if (!(b->sp_devs =
+		      dm_pool_zalloc(b->tmpmem,
+				     sizeof(uint32_t) * b->sp_count))) {
+			log_error("Unable to allocate %d 32-bit uints",
+				  b->sp_count);
+			dm_pool_destroy(b->tmpmem);
+			b->failed = 1;
+			return 0;
+		}
+	}
+
+	/*
+	 * watch out for a pool label with a different subpool
+	 * count than the original - give up if it does
+	 */
+	if (b->sp_count != b->pl->pd.pl_subpools)
+		return 0;
+
+	_add_pl_to_list(b->head, b->pl);
+
+	if (b->sp_count > b->pl->pd.pl_sp_id && b->sp_devs[b->pl->pd.pl_sp_id] == 0)
+		b->sp_devs[b->pl->pd.pl_sp_id] = b->pl->pd.pl_sp_devs;
+
+	return 1;
+}
+
+static int _read_vg_pds(struct _read_pool_pv_baton *b,
+			struct lvmcache_vginfo *vginfo,
 			uint32_t *devcount)
 {
-	struct lvmcache_info *info;
-	struct pool_list *pl = NULL;
-	struct dm_pool *tmpmem;
-
-	uint32_t sp_count = 0;
-	uint32_t *sp_devs = NULL;
 	uint32_t i;
+
+	b->sp_count = 0;
+	b->sp_devs = NULL;
+	b->failed = 0;
+	b->pl = NULL;
 
 	/* FIXME: maybe should return a different error in memory
 	 * allocation failure */
-	if (!(tmpmem = dm_pool_create("pool read_vg", 512)))
+	if (!(b->tmpmem = dm_pool_create("pool read_vg", 512)))
 		return_0;
 
-	dm_list_iterate_items(info, &vginfo->infos) {
-		if (info->dev &&
-		    !(pl = read_pool_disk(fmt, info->dev, mem, vginfo->vgname)))
-			    break;
-		/*
-		 * We need to keep track of the total expected number
-		 * of devices per subpool
-		 */
-		if (!sp_count) {
-			/* FIXME pl left uninitialised if !info->dev */
-			if (!pl) {
-				log_error(INTERNAL_ERROR "device is missing");
-				dm_pool_destroy(tmpmem);
-				return 0;
-			}
-			sp_count = pl->pd.pl_subpools;
-			if (!(sp_devs =
-			      dm_pool_zalloc(tmpmem,
-					  sizeof(uint32_t) * sp_count))) {
-				log_error("Unable to allocate %d 32-bit uints",
-					  sp_count);
-				dm_pool_destroy(tmpmem);
-				return 0;
-			}
-		}
-		/*
-		 * watch out for a pool label with a different subpool
-		 * count than the original - give up if it does
-		 */
-		if (sp_count != pl->pd.pl_subpools)
-			break;
-
-		_add_pl_to_list(head, pl);
-
-		if (sp_count > pl->pd.pl_sp_id && sp_devs[pl->pd.pl_sp_id] == 0)
-			sp_devs[pl->pd.pl_sp_id] = pl->pd.pl_sp_devs;
-	}
+	lvmcache_foreach_pv(vginfo, _read_pool_pv, b);
 
 	*devcount = 0;
-	for (i = 0; i < sp_count; i++)
-		*devcount += sp_devs[i];
+	for (i = 0; i < b->sp_count; i++)
+		*devcount += b->sp_devs[i];
 
-	dm_pool_destroy(tmpmem);
+	dm_pool_destroy(b->tmpmem);
 
-	if (pl && *pl->pd.pl_pool_name)
+	if (b->pl && *b->pl->pd.pl_pool_name)
 		return 1;
 
 	return 0;
@@ -311,29 +334,36 @@ int read_pool_pds(const struct format_type *fmt, const char *vg_name,
 	uint32_t totaldevs;
 	int full_scan = -1;
 
+	struct _read_pool_pv_baton baton;
+
+	baton.vgname = vg_name;
+	baton.mem = mem;
+	baton.fmt = fmt;
+	baton.head = pdhead;
+	baton.empty = 1;
+
 	do {
 		/*
 		 * If the cache scanning doesn't work, this will never work
 		 */
-		if (vg_name && (vginfo = vginfo_from_vgname(vg_name, NULL)) &&
-		    vginfo->infos.n) {
+		if (vg_name && (vginfo = lvmcache_vginfo_from_vgname(vg_name, NULL)) &&
+		    _read_vg_pds(&baton, vginfo, &totaldevs) && !baton.empty)
+		{
+			/*
+			 * If we found all the devices we were expecting, return
+			 * success
+			 */
+			if (dm_list_size(pdhead) == totaldevs)
+				return 1;
 
-			if (_read_vg_pds(fmt, mem, vginfo, pdhead, &totaldevs)) {
-				/*
-				 * If we found all the devices we were
-				 * expecting, return success
-				 */
-				if (dm_list_size(pdhead) == totaldevs)
-					return 1;
-
-				/*
-				 * accept partial pool if we've done a full
-				 * rescan of the cache
-				 */
-				if (full_scan > 0)
-					return 1;
-			}
+			/*
+			 * accept partial pool if we've done a full rescan of
+			 * the cache
+			 */
+			if (full_scan > 0)
+				return 1;
 		}
+
 		/* Failed */
 		dm_list_init(pdhead);
 

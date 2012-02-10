@@ -586,7 +586,6 @@ static void _close(struct device *dev)
 
 static int _dev_close(struct device *dev, int immediate)
 {
-	struct lvmcache_info *info;
 
 	if (dev->fd < 0) {
 		log_error("Attempt to close device '%s' "
@@ -608,10 +607,7 @@ static int _dev_close(struct device *dev, int immediate)
 
 	/* Close unless device is known to belong to a locked VG */
 	if (immediate ||
-	    (dev->open_count < 1 &&
-	     (!(info = info_from_pvid(dev->pvid, 0)) ||
-	      !info->vginfo ||
-	      !vgname_is_locked(info->vginfo->vgname))))
+	    (dev->open_count < 1 && !lvmcache_pvid_is_locked(dev->pvid)))
 		_close(dev);
 
 	return 1;

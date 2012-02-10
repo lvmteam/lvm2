@@ -77,12 +77,11 @@ static int _lvm1_read(struct labeller *l, struct device *dev, void *buf,
 	if (!(info = lvmcache_add(l, (char *)pvd->pv_uuid, dev, vgname, vgid,
 				  exported)))
 		return_0;
-	*label = info->label;
+	*label = lvmcache_get_label(info);
 
-	info->device_size = xlate32(pvd->pv_size) << SECTOR_SHIFT;
-	dm_list_init(&info->mdas);
-
-	info->status &= ~CACHE_INVALID;
+	lvmcache_set_device_size(info, xlate32(pvd->pv_size) << SECTOR_SHIFT);
+	lvmcache_del_mdas(info);
+	lvmcache_make_valid(info);
 
 	return 1;
 }

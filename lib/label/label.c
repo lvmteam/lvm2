@@ -172,9 +172,9 @@ static struct labeller *_find_labeller(struct device *dev, char *buf,
 
       out:
 	if (!found) {
-		if ((info = info_from_pvid(dev->pvid, 0)))
-			lvmcache_update_vgname_and_id(info, info->fmt->orphan_vg_name,
-						      info->fmt->orphan_vg_name,
+		if ((info = lvmcache_info_from_pvid(dev->pvid, 0)))
+			lvmcache_update_vgname_and_id(info, lvmcache_fmt(info)->orphan_vg_name,
+						      lvmcache_fmt(info)->orphan_vg_name,
 						      0, NULL);
 		log_very_verbose("%s: No label detected", dev_name(dev));
 	}
@@ -261,18 +261,18 @@ int label_read(struct device *dev, struct label **result,
 	struct lvmcache_info *info;
 	int r = 0;
 
-	if ((info = info_from_pvid(dev->pvid, 1))) {
+	if ((info = lvmcache_info_from_pvid(dev->pvid, 1))) {
 		log_debug("Using cached label for %s", dev_name(dev));
-		*result = info->label;
+		*result = lvmcache_get_label(info); /* leaked */
 		return 1;
 	}
 
 	if (!dev_open_readonly(dev)) {
 		stack;
 
-		if ((info = info_from_pvid(dev->pvid, 0)))
-			lvmcache_update_vgname_and_id(info, info->fmt->orphan_vg_name,
-						      info->fmt->orphan_vg_name,
+		if ((info = lvmcache_info_from_pvid(dev->pvid, 0)))
+			lvmcache_update_vgname_and_id(info, lvmcache_fmt(info)->orphan_vg_name,
+						      lvmcache_fmt(info)->orphan_vg_name,
 						      0, NULL);
 
 		return r;
@@ -348,9 +348,9 @@ int label_verify(struct device *dev)
 	int r = 0;
 
 	if (!dev_open_readonly(dev)) {
-		if ((info = info_from_pvid(dev->pvid, 0)))
-			lvmcache_update_vgname_and_id(info, info->fmt->orphan_vg_name,
-						      info->fmt->orphan_vg_name,
+		if ((info = lvmcache_info_from_pvid(dev->pvid, 0)))
+			lvmcache_update_vgname_and_id(info, lvmcache_fmt(info)->orphan_vg_name,
+						      lvmcache_fmt(info)->orphan_vg_name,
 						      0, NULL);
 
 		return_0;
