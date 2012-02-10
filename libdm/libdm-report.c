@@ -541,6 +541,9 @@ static int _parse_keys(struct dm_report *rh, const char *keys,
 	const char *ws;		/* Word start */
 	const char *we = keys;	/* Word end */
 
+	if (!keys)
+		return 1;
+
 	while (*we) {
 		/* Allow consecutive commas */
 		while (*we && *we == ',')

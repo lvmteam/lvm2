@@ -1,5 +1,6 @@
 Version 1.02.70 - 
 ===================================
+  Do not crash for dm_report_init() sort_key == NULL and behave like "".
   Return error for failing allocation in dm_asprintf().
   Add missing test for failing allocation in dm_realloc() code.
   Add test for memory allocation failures in regex matcher code.
