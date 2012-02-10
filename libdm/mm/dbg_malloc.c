@@ -192,7 +192,7 @@ void *dm_realloc_aux(void *p, unsigned int s, const char *file, int line)
 
 	r = dm_malloc_aux_debug(s, file, line);
 
-	if (p) {
+	if (r && p) {
 		memcpy(r, p, mb->length);
 		dm_free_aux(p);
 	}
