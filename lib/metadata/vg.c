@@ -79,7 +79,7 @@ static void _free_vg(struct volume_group *vg)
 
 void release_vg(struct volume_group *vg)
 {
-	if (!vg)
+	if (!vg || (vg->fid && vg == vg->fid->fmt->orphan_vg))
 		return;
 
 	/* Check if there are any vginfo holders */

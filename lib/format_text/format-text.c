@@ -1513,8 +1513,8 @@ static int _text_pv_initialise(const struct format_type *fmt,
 static void _text_destroy_instance(struct format_instance *fid)
 {
 	if (--fid->ref_count <= 1) {
-		if (fid->type & FMT_INSTANCE_VG && fid->metadata_areas_index.hash)
-			dm_hash_destroy(fid->metadata_areas_index.hash);
+		if (fid->type & FMT_INSTANCE_VG && fid->metadata_areas_index)
+			dm_hash_destroy(fid->metadata_areas_index);
 		dm_pool_destroy(fid->mem);
 	}
 }
@@ -1541,6 +1541,14 @@ static void _free_raws(struct dm_list *raw_list)
 
 static void _text_destroy(struct format_type *fmt)
 {
+	/* FIXME out of place, but the main (cmd) pool has been already
+	 * destroyed and touching the fid (also via release_vg) will crash the
+	 * program */
+	dm_hash_destroy(fmt->orphan_vg->fid->metadata_areas_index);
+	dm_hash_destroy(fmt->orphan_vg->hostnames);
+	dm_pool_destroy(fmt->orphan_vg->fid->mem);
+	dm_pool_destroy(fmt->orphan_vg->vgmem);
+
 	if (fmt->private) {
 		_free_dirs(&((struct mda_lists *) fmt->private)->dirs);
 		_free_raws(&((struct mda_lists *) fmt->private)->raws);
@@ -1666,22 +1674,7 @@ static int _text_pv_setup(const struct format_type *fmt,
 static int _create_pv_text_instance(struct format_instance *fid,
                                     const struct format_instance_ctx *fic)
 {
-	struct lvmcache_info *info;
-
-	fid->private = NULL;
-
-	if (!(fid->metadata_areas_index.array = dm_pool_zalloc(fid->mem,
-					FMT_TEXT_MAX_MDAS_PER_PV *
-					sizeof(struct metadata_area *)))) {
-		log_error("Couldn't allocate format instance metadata index.");
-		return 0;
-	}
-
-	if (fic->type & FMT_INSTANCE_MDAS &&
-	    (info = lvmcache_info_from_pvid(fic->context.pv_id, 0)))
-		lvmcache_fid_add_mdas_pv(info, fid);
-
-	return 1;
+	return 0; /* just fail */
 }
 
 static void *_create_text_context(struct dm_pool *mem, struct text_context *tc)
@@ -1760,13 +1753,13 @@ static int _create_vg_text_instance(struct format_instance *fid,
 		mda->ops = &_metadata_text_file_backup_ops;
 		mda->metadata_locn = _create_text_context(fid->mem, fic->context.private);
 		mda->status = 0;
-		fid->metadata_areas_index.hash = NULL;
+		fid->metadata_areas_index = NULL;
 		fid_add_mda(fid, mda, NULL, 0, 0);
 	} else {
 		vg_name = fic->context.vg_ref.vg_name;
 		vg_id = fic->context.vg_ref.vg_id;
 
-		if (!(fid->metadata_areas_index.hash = dm_hash_create(128))) {
+		if (!(fid->metadata_areas_index = dm_hash_create(128))) {
 			log_error("Couldn't create metadata index for format "
 				  "instance of VG %s.", vg_name);
 			return 0;
@@ -1872,6 +1865,10 @@ static int _add_metadata_area_to_pv(struct physical_volume *pv,
 	return 1;
 }
 
+static int _text_pv_remove_metadata_area(const struct format_type *fmt,
+					 struct physical_volume *pv,
+					 unsigned mda_index);
+
 static int _text_pv_add_metadata_area(const struct format_type *fmt,
 				      struct physical_volume *pv,
 				      int pe_start_locked,
@@ -1908,9 +1905,12 @@ static int _text_pv_add_metadata_area(const struct format_type *fmt,
 	mda_size = mda_size << SECTOR_SHIFT;
 
 	if (fid_get_mda_indexed(fid, pvid, ID_LEN, mda_index)) {
-		log_error(INTERNAL_ERROR "metadata area with index %u already "
-			"exists on PV %s.", mda_index, pv_dev_name(pv));
-		return 0;
+		if (!_text_pv_remove_metadata_area(fmt, pv, mda_index)) {
+			log_error(INTERNAL_ERROR "metadata area with index %u already "
+				  "exists on PV %s and removal failed.",
+				  mda_index, pv_dev_name(pv));
+			return 0;
+		}
 	}
 
 	/* First metadata area at the start of the device. */
@@ -2270,6 +2270,8 @@ static int _get_config_disk_area(struct cmd_context *cmd,
 
 struct format_type *create_text_format(struct cmd_context *cmd)
 {
+	struct format_instance_ctx fic;
+	struct format_instance *fid;
 	struct format_type *fmt;
 	const struct dm_config_node *cn;
 	const struct dm_config_value *cv;
@@ -2334,6 +2336,21 @@ struct format_type *create_text_format(struct cmd_context *cmd)
 			cmd->independent_metadata_areas = 1;
 		}
 	}
+
+	if (!(fmt->orphan_vg = alloc_vg("text_orphan", cmd, fmt->orphan_vg_name))) {
+		dm_free(fmt);
+		return NULL;
+	}
+
+	fic.type = FMT_INSTANCE_VG | FMT_INSTANCE_AUX_MDAS;
+	fic.context.vg_ref.vg_name = fmt->orphan_vg_name;
+	fic.context.vg_ref.vg_id = NULL;
+	if (!(fid = _text_create_text_instance(fmt, &fic))) {
+		log_error("Failed to create format instance");
+		release_vg(fmt->orphan_vg);
+		goto err;
+	}
+	vg_set_fid(fmt->orphan_vg, fid);
 
 	log_very_verbose("Initialised format: %s", fmt->name);
 

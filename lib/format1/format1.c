@@ -546,6 +546,13 @@ static void _format1_destroy_instance(struct format_instance *fid)
 
 static void _format1_destroy(struct format_type *fmt)
 {
+	/* FIXME out of place, but the main (cmd) pool has been already
+	 * destroyed and touching the fid (also via release_vg) will crash the
+	 * program */
+	dm_hash_destroy(fmt->orphan_vg->hostnames);
+	dm_pool_destroy(fmt->orphan_vg->fid->mem);
+	dm_pool_destroy(fmt->orphan_vg->vgmem);
+
 	dm_free(fmt);
 }
 
@@ -570,6 +577,8 @@ struct format_type *init_format(struct cmd_context *cmd)
 #endif
 {
 	struct format_type *fmt = dm_malloc(sizeof(*fmt));
+	struct format_instance_ctx fic;
+	struct format_instance *fid;
 
 	if (!fmt)
 		return_NULL;
@@ -595,6 +604,19 @@ struct format_type *init_format(struct cmd_context *cmd)
 		dm_free(fmt);
 		return NULL;
 	}
+
+	if (!(fmt->orphan_vg = alloc_vg("text_orphan", cmd, fmt->orphan_vg_name))) {
+		log_error("Couldn't create lvm1 orphan VG.");
+		return NULL;
+	}
+	fic.type = FMT_INSTANCE_VG | FMT_INSTANCE_AUX_MDAS;
+	fic.context.vg_ref.vg_name = fmt->orphan_vg_name;
+	fic.context.vg_ref.vg_id = NULL;
+	if (!(fid = _format1_create_instance(fmt, &fic))) {
+		log_error("Couldn't create lvm1 orphan VG format instance.");
+		return NULL;
+	}
+	vg_set_fid(fmt->orphan_vg, fid);
 
 	log_very_verbose("Initialised format: %s", fmt->name);
 
