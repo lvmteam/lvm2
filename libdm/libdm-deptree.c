@@ -1180,7 +1180,7 @@ static struct dm_tree_node *_add_dev(struct dm_tree *dtree,
 		goto out;
 
 	/* Can't recurse if not a mapped device or there are no dependencies */
-	if (!node->info.exists || !deps->count) {
+	if (!node->info.exists || !deps || !deps->count) {
 		if (!_add_to_bottomlevel(node)) {
 			stack;
 			node = NULL;
