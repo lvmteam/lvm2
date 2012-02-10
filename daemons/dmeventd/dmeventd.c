@@ -1907,7 +1907,6 @@ int main(int argc, char *argv[])
 		case 'V':
 			printf("dmeventd version: %s\n", DM_LIB_VERSION);
 			exit(1);
-			break;
 		}
 	}
 
