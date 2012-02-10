@@ -1086,6 +1086,11 @@ struct dm_tree_node *dm_tree_add_new_dev_with_udev_flags(struct dm_tree *dtree,
 	const char *name2;
 	const char *uuid2;
 
+	if (!name || !uuid) {
+		log_error("Cannot add device without name and uuid.");
+		return NULL;
+	}
+
 	/* Do we need to add node to tree? */
 	if (!(dnode = dm_tree_find_node_by_uuid(dtree, uuid))) {
 		if (!(name2 = dm_pool_strdup(dtree->mem, name))) {
