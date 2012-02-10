@@ -1,5 +1,6 @@
 Version 1.02.70 - 
 ===================================
+  Return error for failing allocation in dm_asprintf().
   Add missing test for failing allocation in dm_realloc() code.
   Add test for memory allocation failures in regex matcher code.
   Simplify dm_task_set_geometry() and use dm_asprintf().

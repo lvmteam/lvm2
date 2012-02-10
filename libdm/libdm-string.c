@@ -156,7 +156,9 @@ int dm_asprintf(char **result, const char *format, ...)
 		}
 	}
 
-	*result = dm_strdup(buf);
+	if (!(*result = dm_strdup(buf)))
+		n = -2; /* return -1 */
+
 	dm_free(buf);
 	return n + 1;
 }
