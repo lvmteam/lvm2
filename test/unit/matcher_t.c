@@ -58,10 +58,10 @@ static void test_fingerprints(void) {
 	struct dm_regex *scanner;
 
 	scanner = make_scanner(dev_patterns);
-	CU_ASSERT_EQUAL(dm_regex_fingerprint(scanner), 0x352b6c4f);
+	CU_ASSERT_EQUAL(dm_regex_fingerprint(scanner), 0x7f556c09);
 
 	scanner = make_scanner(random_patterns);
-	CU_ASSERT_EQUAL(dm_regex_fingerprint(scanner), 0xeed8ceb8);
+	CU_ASSERT_EQUAL(dm_regex_fingerprint(scanner), 0x9f11076c);
 }
 
 static void test_matching(void) {
