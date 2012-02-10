@@ -811,11 +811,11 @@ int dm_event_get_version(struct dm_event_fifos *fifos, int *version) {
 	p = msg.data;
 	*version = 0;
 
-	p = strchr(p, ' ') + 1; /* Message ID */
+	p = strchr(p, ' '); /* Message ID */
         if (!p) return 0;
-	p = strchr(p, ' ') + 1; /* HELLO */
+	p = strchr(p + 1, ' '); /* HELLO */
         if (!p) return 0;
-	p = strchr(p, ' '); /* HELLO, once more */
+	p = strchr(p + 1, ' '); /* HELLO, once more */
 	if (p)
 		*version = atoi(p);
 	return 1;
