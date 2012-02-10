@@ -62,4 +62,16 @@ int add_mda(const struct format_type *fmt, struct dm_pool *mem, struct dm_list *
 	    struct device *dev, uint64_t start, uint64_t size, unsigned ignored);
 void del_mdas(struct dm_list *mdas);
 
+/* On disk */
+struct disk_locn {
+	uint64_t offset;	/* Offset in bytes to start sector */
+	uint64_t size;		/* Bytes */
+} __attribute__ ((packed));
+
+/* Data areas (holding PEs) */
+struct data_area_list {
+	struct dm_list list;
+	struct disk_locn disk_locn;
+};
+
 #endif

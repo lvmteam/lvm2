@@ -413,10 +413,8 @@ static int _format1_pv_write(const struct format_type *fmt, struct physical_volu
 				  pv->vg_name, NULL, 0)))
 		return_0;
 
-	info->device_size = pv->size << SECTOR_SHIFT;
-	info->fmt = fmt;
-
-	dm_list_init(&info->mdas);
+	lvmcache_update_pv(info, pv, fmt);
+	lvmcache_del_mdas(info);
 
 	dm_list_init(&pvs);
 

@@ -84,7 +84,7 @@ void release_vg(struct volume_group *vg)
 
 	/* Check if there are any vginfo holders */
 	if (vg->vginfo &&
-	    !vginfo_holders_dec_and_test_for_zero(vg->vginfo))
+	    !lvmcache_vginfo_holders_dec_and_test_for_zero(vg->vginfo))
 		return;
 
 	_free_vg(vg);

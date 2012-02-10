@@ -21,17 +21,7 @@
 #include "metadata.h"
 #include "uuid.h"
 
-/* On disk */
-struct disk_locn {
-	uint64_t offset;	/* Offset in bytes to start sector */
-	uint64_t size;		/* Bytes */
-} __attribute__ ((packed));
-
-/* Data areas (holding PEs) */
-struct data_area_list {
-	struct dm_list list;
-	struct disk_locn disk_locn;
-};
+/* disk_locn and data_area_list are defined in format-text.h */
 
 /* Fields with the suffix _xl should be xlate'd wherever they appear */
 /* On disk */

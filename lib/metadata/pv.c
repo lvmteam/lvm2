@@ -143,23 +143,27 @@ uint32_t pv_mda_count(const struct physical_volume *pv)
 {
 	struct lvmcache_info *info;
 
-	info = info_from_pvid((const char *)&pv->id.uuid, 0);
-	return info ? dm_list_size(&info->mdas) : UINT64_C(0);
+	info = lvmcache_info_from_pvid((const char *)&pv->id.uuid, 0);
+	return info ? lvmcache_mda_count(info) : UINT64_C(0);
+}
+
+static int _count_unignored(struct metadata_area *mda, void *baton)
+{
+	uint32_t *count = baton;
+	if (!mda_is_ignored(mda))
+		(*count) ++;
+	return 1;
 }
 
 uint32_t pv_mda_used_count(const struct physical_volume *pv)
 {
 	struct lvmcache_info *info;
-	struct metadata_area *mda;
 	uint32_t used_count=0;
 
-	info = info_from_pvid((const char *)&pv->id.uuid, 0);
+	info = lvmcache_info_from_pvid((const char *)&pv->id.uuid, 0);
 	if (!info)
 		return 0;
-	dm_list_iterate_items(mda, &info->mdas) {
-		if (!mda_is_ignored(mda))
-			used_count++;
-	}
+	lvmcache_foreach_mda(info, _count_unignored, &used_count);
 	return used_count;
 }
 
@@ -209,29 +213,36 @@ uint64_t pv_mda_size(const struct physical_volume *pv)
 	const char *pvid = (const char *)(&pv->id.uuid);
 
 	/* PVs could have 2 mdas of different sizes (rounding effect) */
-	if ((info = info_from_pvid(pvid, 0)))
-		min_mda_size = find_min_mda_size(&info->mdas);
+	if ((info = lvmcache_info_from_pvid(pvid, 0)))
+		min_mda_size = lvmcache_smallest_mda_size(info);
 	return min_mda_size;
+}
+
+static int _pv_mda_free(struct metadata_area *mda, void *baton) {
+	uint64_t mda_free;
+	uint64_t *freespace = baton;
+
+	if (!mda->ops->mda_free_sectors)
+		return 1;
+
+	mda_free = mda->ops->mda_free_sectors(mda);
+	if (mda_free < *freespace)
+		*freespace = mda_free;
+	return 1;
 }
 
 uint64_t pv_mda_free(const struct physical_volume *pv)
 {
 	struct lvmcache_info *info;
-	uint64_t freespace = UINT64_MAX, mda_free;
+	uint64_t freespace = UINT64_MAX;
 	const char *pvid = (const char *)&pv->id.uuid;
-	struct metadata_area *mda;
 
-	if ((info = info_from_pvid(pvid, 0)))
-		dm_list_iterate_items(mda, &info->mdas) {
-			if (!mda->ops->mda_free_sectors)
-				continue;
-			mda_free = mda->ops->mda_free_sectors(mda);
-			if (mda_free < freespace)
-				freespace = mda_free;
-		}
+	if ((info = lvmcache_info_from_pvid(pvid, 0)))
+		lvmcache_foreach_mda(info, _pv_mda_free, &freespace);
 
 	if (freespace == UINT64_MAX)
 		freespace = UINT64_C(0);
+
 	return freespace;
 }
 
@@ -246,22 +257,51 @@ uint64_t pv_used(const struct physical_volume *pv)
 	return used;
 }
 
+struct _pv_mda_set_ignored_baton {
+	unsigned mda_ignored;
+	struct dm_list *mdas_in_use, *mdas_ignored, *mdas_to_change;
+};
+
+static int _pv_mda_set_ignored_one(struct metadata_area *mda, void *baton)
+{
+	struct _pv_mda_set_ignored_baton *b = baton;
+	struct metadata_area *vg_mda, *tmda;
+
+	if (mda_is_ignored(mda) && !b->mda_ignored) {
+		/* Changing an ignored mda to one in_use requires moving it */
+		dm_list_iterate_items_safe(vg_mda, tmda, b->mdas_ignored)
+			if (mda_locns_match(mda, vg_mda)) {
+				mda_set_ignored(vg_mda, b->mda_ignored);
+				dm_list_move(b->mdas_in_use, &vg_mda->list);
+			}
+	}
+
+	dm_list_iterate_items_safe(vg_mda, tmda, b->mdas_in_use)
+		if (mda_locns_match(mda, vg_mda))
+			/* Don't move mda: needs writing to disk. */
+			mda_set_ignored(vg_mda, b->mda_ignored);
+
+	mda_set_ignored(mda, b->mda_ignored);
+	return 1;
+}
+
 unsigned pv_mda_set_ignored(const struct physical_volume *pv, unsigned mda_ignored)
 {
 	struct lvmcache_info *info;
-	struct metadata_area *mda, *vg_mda, *tmda;
-	struct dm_list *mdas_in_use, *mdas_ignored, *mdas_to_change;
+	struct _pv_mda_set_ignored_baton baton;
+	struct metadata_area *mda;
 
-	if (!(info = info_from_pvid((const char *)&pv->id.uuid, 0)))
+	if (!(info = lvmcache_info_from_pvid((const char *)&pv->id.uuid, 0)))
 		return_0;
 
-	mdas_in_use = &pv->fid->metadata_areas_in_use;
-	mdas_ignored = &pv->fid->metadata_areas_ignored;
-	mdas_to_change = mda_ignored ? mdas_in_use : mdas_ignored;
+	baton.mda_ignored = mda_ignored;
+	baton.mdas_in_use = &pv->fid->metadata_areas_in_use;
+	baton.mdas_ignored = &pv->fid->metadata_areas_ignored;
+	baton.mdas_to_change = baton.mda_ignored ? baton.mdas_in_use : baton.mdas_ignored;
 
 	if (is_orphan(pv)) {
-		dm_list_iterate_items(mda, mdas_to_change)
-			mda_set_ignored(mda, mda_ignored);
+		dm_list_iterate_items(mda, baton.mdas_to_change)
+			mda_set_ignored(mda, baton.mda_ignored);
 		return 1;
 	}
 
@@ -288,22 +328,8 @@ unsigned pv_mda_set_ignored(const struct physical_volume *pv, unsigned mda_ignor
 	/* FIXME: Try not to update the cache here! Also, try to iterate over
 	 *	  PV mdas only using the format instance's index somehow
 	 * 	  (i.e. try to avoid using mda_locn_match call). */
-	dm_list_iterate_items(mda, &info->mdas) {
-		if (mda_is_ignored(mda) && !mda_ignored)
-			/* Changing an ignored mda to one in_use requires moving it */
-			dm_list_iterate_items_safe(vg_mda, tmda, mdas_ignored)
-				if (mda_locns_match(mda, vg_mda)) {
-					mda_set_ignored(vg_mda, mda_ignored);
-					dm_list_move(mdas_in_use, &vg_mda->list);
-				}
 
-		dm_list_iterate_items_safe(vg_mda, tmda, mdas_in_use)
-			if (mda_locns_match(mda, vg_mda))
-				/* Don't move mda: needs writing to disk. */
-				mda_set_ignored(vg_mda, mda_ignored);
-
-		mda_set_ignored(mda, mda_ignored);
-	}
+	lvmcache_foreach_mda(info, _pv_mda_set_ignored_one, &baton);
 
 	return 1;
 }

@@ -432,7 +432,7 @@ static struct raw_locn *_find_vg_rlocn(struct device_area *dev_area,
 			  "not match expected name %s.", vgname);
 
       bad:
-	if ((info = info_from_pvid(dev_area->dev->pvid, 0)))
+	if ((info = lvmcache_info_from_pvid(dev_area->dev->pvid, 0)))
 		lvmcache_update_vgname_and_id(info, FMT_TEXT_ORPHAN_VG_NAME,
 					      FMT_TEXT_ORPHAN_VG_NAME, 0, NULL);
 
@@ -1251,6 +1251,33 @@ static int _text_scan(const struct format_type *fmt, const char *vgname)
 	return (_scan_file(fmt, vgname) & _scan_raw(fmt, vgname));
 }
 
+struct _write_single_mda_baton {
+	const struct format_type *fmt;
+	struct physical_volume *pv;
+};
+
+static int _write_single_mda(struct metadata_area *mda, void *baton)
+{
+	struct _write_single_mda_baton *p = baton;
+	struct mda_context *mdac;
+
+	char buf[MDA_HEADER_SIZE] __attribute__((aligned(8)));
+	struct mda_header *mdah = (struct mda_header *) buf;
+
+	mdac = mda->metadata_locn;
+	memset(&buf, 0, sizeof(buf));
+	mdah->size = mdac->area.size;
+	rlocn_set_ignored(mdah->raw_locns, mda_is_ignored(mda));
+
+	if (!_raw_write_mda_header(p->fmt, mdac->area.dev,
+				   mdac->area.start, mdah)) {
+		if (!dev_close(p->pv->dev))
+			stack;
+		return_0;
+	}
+	return 1;
+}
+
 /* Only for orphans */
 static int _text_pv_write(const struct format_type *fmt, struct physical_volume *pv)
 {
@@ -1260,27 +1287,21 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 	struct lvmcache_info *info;
 	struct mda_context *mdac;
 	struct metadata_area *mda;
+	struct _write_single_mda_baton baton;
 	unsigned mda_index;
-	char buf[MDA_HEADER_SIZE] __attribute__((aligned(8)));
-	struct mda_header *mdah = (struct mda_header *) buf;
-	struct data_area_list *da;
 
 	/* Add a new cache entry with PV info or update existing one. */
 	if (!(info = lvmcache_add(fmt->labeller, (const char *) &pv->id,
 				  pv->dev, pv->vg_name, NULL, 0)))
 		return_0;
 
-	label = info->label;
+	label = lvmcache_get_label(info);
 	label->sector = pv->label_sector;
 
-	info->device_size = pv->size << SECTOR_SHIFT;
-	info->fmt = fmt;
+	lvmcache_update_pv(info, pv, fmt);
 
 	/* Flush all cached metadata areas, we will reenter new/modified ones. */
-	if (info->mdas.n)
-		del_mdas(&info->mdas);
-	else
-		dm_list_init(&info->mdas);
+	lvmcache_del_mdas(info);
 
 	/*
 	 * Add all new or modified metadata areas for this PV stored in
@@ -1299,8 +1320,10 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 			  dev_name(mdac->area.dev),
 			  mdac->area.start >> SECTOR_SHIFT,
 			  mdac->area.size >> SECTOR_SHIFT);
-		add_mda(fmt, NULL, &info->mdas, mdac->area.dev,
-			mdac->area.start, mdac->area.size, mda_is_ignored(mda));
+
+		// if fmt is not the same as info->fmt we are in trouble
+		lvmcache_add_mda(info, mdac->area.dev,
+				 mdac->area.start, mdac->area.size, mda_is_ignored(mda));
 	}
 
 	/*
@@ -1318,34 +1341,20 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 	 * pvcreate --restorefile. However, we can can have this value in
 	 * metadata which will override the value in the PV header.
 	 */
-	if (info->das.n) {
-		if (!pv->pe_start)
-			dm_list_iterate_items(da, &info->das)
-				pv->pe_start = da->disk_locn.offset >> SECTOR_SHIFT;
-		del_das(&info->das);
-	} else
-		dm_list_init(&info->das);
 
-	if (!add_da(NULL, &info->das, pv->pe_start << SECTOR_SHIFT, UINT64_C(0)))
+	if (!lvmcache_update_das(info, pv))
 		return_0;
 
 	if (!dev_open(pv->dev))
 		return_0;
 
-	dm_list_iterate_items(mda, &info->mdas) {
-		mdac = mda->metadata_locn;
-		memset(&buf, 0, sizeof(buf));
-		mdah->size = mdac->area.size;
-		rlocn_set_ignored(mdah->raw_locns, mda_is_ignored(mda));
-		if (!_raw_write_mda_header(fmt, mdac->area.dev,
-					   mdac->area.start, mdah)) {
-			if (!dev_close(pv->dev))
-				stack;
-			return_0;
-		}
-	}
+	baton.pv = pv;
+	baton.fmt = fmt;
 
-	if (!label_write(pv->dev, info->label)) {
+	if (!lvmcache_foreach_mda(info, _write_single_mda, &baton))
+		return_0;
+
+	if (!label_write(pv->dev, label)) {
 		dev_close(pv->dev);
 		return_0;
 	}
@@ -1380,68 +1389,6 @@ static int _add_raw(struct dm_list *raw_list, struct device_area *dev_area)
 	}
 	memcpy(&rl->dev_area, dev_area, sizeof(*dev_area));
 	dm_list_add(raw_list, &rl->list);
-
-	return 1;
-}
-
-static int _get_pv_if_in_vg(struct lvmcache_info *info,
-			    struct physical_volume *pv)
-{
-	char vgname[NAME_LEN + 1];
-	char vgid[ID_LEN + 1];
-
-	if (info->vginfo && info->vginfo->vgname &&
-	    !is_orphan_vg(info->vginfo->vgname)) {
-		/*
-		 * get_pv_from_vg_by_id() may call
-		 * lvmcache_label_scan() and drop cached
-		 * vginfo so make a local copy of string.
-		 */
-		strcpy(vgname, info->vginfo->vgname);
-		memcpy(vgid, info->vginfo->vgid, sizeof(vgid));
-
-		if (get_pv_from_vg_by_id(info->fmt, vgname, vgid,
-					 info->dev->pvid, pv))
-			return 1;
-	}
-
-	return 0;
-}
-
-static int _populate_pv_fields(struct lvmcache_info *info,
-			       struct physical_volume *pv,
-			       int scan_label_only)
-{
-	struct data_area_list *da;
-
-	/* Have we already cached vgname? */
-	if (!scan_label_only && _get_pv_if_in_vg(info, pv))
-		return 1;
-
-	/* Perform full scan (just the first time) and try again */
-	if (!scan_label_only && !critical_section() && !full_scan_done()) {
-		lvmcache_label_scan(info->fmt->cmd, 2);
-
-		if (_get_pv_if_in_vg(info, pv))
-			return 1;
-	}
-
-	/* Orphan */
-	pv->dev = info->dev;
-	pv->fmt = info->fmt;
-	pv->size = info->device_size >> SECTOR_SHIFT;
-	pv->vg_name = FMT_TEXT_ORPHAN_VG_NAME;
-	memcpy(&pv->id, &info->dev->pvid, sizeof(pv->id));
-
-	/* Currently only support exactly one data area */
-	if (dm_list_size(&info->das) != 1) {
-		log_error("Must be exactly one data area (found %d) on PV %s",
-			  dm_list_size(&info->das), dev_name(info->dev));
-		return 0;
-	}
-
-	dm_list_iterate_items(da, &info->das)
-		pv->pe_start = da->disk_locn.offset >> SECTOR_SHIFT;
 
 	return 1;
 }
@@ -1485,16 +1432,14 @@ static int _text_pv_read(const struct format_type *fmt, const char *pv_name,
 {
 	struct label *label;
 	struct device *dev;
-	struct lvmcache_info *info;
 
 	if (!(dev = dev_cache_get(pv_name, fmt->cmd->filter)))
 		return_0;
 
 	if (!(label_read(dev, &label, UINT64_C(0))))
 		return_0;
-	info = (struct lvmcache_info *) label->info;
 
-	if (!_populate_pv_fields(info, pv, scan_label_only))
+	if (!lvmcache_populate_pv_fields(label->info, pv, scan_label_only))
 		return 0;
 
 	return 1;
@@ -1670,18 +1615,15 @@ static int _text_pv_setup(const struct format_type *fmt,
 	 * reread PV mda information from the cache and add it to vg->fid.
 	 */
 	else {
-		if (!(info = info_from_pvid(pv->dev->pvid, 0))) {
+		if (!(info = lvmcache_info_from_pvid(pv->dev->pvid, 0))) {
 			log_error("PV %s missing from cache", pv_dev_name(pv));
 			return 0;
 		}
 
-		if (fmt != info->fmt) {
-			log_error("PV %s is a different format (seqno %s)",
-				  pv_dev_name(pv), info->fmt->name);
-			return 0;
-		}
+		if (!lvmcache_check_format(info, fmt))
+			return_0;
 
-		if (!fid_add_mdas(vg->fid, &info->mdas, pvid, ID_LEN))
+		if (!lvmcache_fid_add_mdas_pv(info, fid))
 			return_0;
 	}
 
@@ -1736,8 +1678,8 @@ static int _create_pv_text_instance(struct format_instance *fid,
 	}
 
 	if (fic->type & FMT_INSTANCE_MDAS &&
-	    (info = info_from_pvid(fic->context.pv_id, 0)))
-		fid_add_mdas(fid, &info->mdas, fic->context.pv_id, ID_LEN);
+	    (info = lvmcache_info_from_pvid(fic->context.pv_id, 0)))
+		lvmcache_fid_add_mdas_pv(info, fid);
 
 	return 1;
 }
@@ -1801,7 +1743,6 @@ static int _create_vg_text_instance(struct format_instance *fid,
 	struct dm_list *dir_list, *raw_list;
 	struct text_context tc;
 	struct lvmcache_vginfo *vginfo;
-	struct lvmcache_info *info;
 	const char *vg_name, *vg_id;
 
 	if (!(fidtc = (struct text_fid_context *)
@@ -1873,12 +1814,10 @@ static int _create_vg_text_instance(struct format_instance *fid,
 		if (type & FMT_INSTANCE_MDAS) {
 			/* Scan PVs in VG for any further MDAs */
 			lvmcache_label_scan(fid->fmt->cmd, 0);
-			if (!(vginfo = vginfo_from_vgname(vg_name, vg_id)))
+			if (!(vginfo = lvmcache_vginfo_from_vgname(vg_name, vg_id)))
 				goto_out;
-			dm_list_iterate_items(info, &vginfo->infos) {
-				if (!fid_add_mdas(fid, &info->mdas, info->dev->pvid, ID_LEN))
-					return_0;
-			}
+			if (!lvmcache_fid_add_mdas_vg(vginfo, fid))
+				goto_out;
 		}
 
 		/* FIXME Check raw metadata area count - rescan if required */
@@ -2314,7 +2253,7 @@ static int _get_config_disk_area(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (!(dev_area.dev = device_from_pvid(cmd, &id, NULL, NULL))) {
+	if (!(dev_area.dev = lvmcache_device_from_pvid(cmd, &id, NULL, NULL))) {
 		char buffer[64] __attribute__((aligned(8)));
 
 		if (!id_write_format(&id, buffer, sizeof(buffer)))
