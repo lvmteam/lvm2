@@ -1084,7 +1084,7 @@ static int _scan_file(const struct format_type *fmt, const char *vgname)
 
 				/* FIXME stat file to see if it's changed */
 				/* FIXME: Check this fid is OK! */
-				fic.type = FMT_INSTANCE_VG | FMT_INSTANCE_PRIVATE_MDAS;
+				fic.type = FMT_INSTANCE_PRIVATE_MDAS;
 				fic.context.private = NULL;
 				fid = _text_create_text_instance(fmt, &fic);
 				if ((vg = _vg_read_file_name(fid, scanned_vgname,
@@ -1513,7 +1513,7 @@ static int _text_pv_initialise(const struct format_type *fmt,
 static void _text_destroy_instance(struct format_instance *fid)
 {
 	if (--fid->ref_count <= 1) {
-		if (fid->type & FMT_INSTANCE_VG && fid->metadata_areas_index)
+		if (fid->metadata_areas_index)
 			dm_hash_destroy(fid->metadata_areas_index);
 		dm_pool_destroy(fid->mem);
 	}
@@ -1669,12 +1669,6 @@ static int _text_pv_setup(const struct format_type *fmt,
 	pv->status |= ALLOCATABLE_PV;
 
 	return 1;
-}
-
-static int _create_pv_text_instance(struct format_instance *fid,
-                                    const struct format_instance_ctx *fic)
-{
-	return 0; /* just fail */
 }
 
 static void *_create_text_context(struct dm_pool *mem, struct text_context *tc)
@@ -2173,8 +2167,7 @@ static struct format_instance *_text_create_text_instance(const struct format_ty
 	if (!(fid = alloc_fid(fmt, fic)))
 		return_NULL;
 
-	if (fid->type & FMT_INSTANCE_VG ? _create_vg_text_instance(fid, fic) :
-					  _create_pv_text_instance(fid, fic))
+	if (_create_vg_text_instance(fid, fic))
 		return fid;
 
 	dm_pool_destroy(fid->mem);
@@ -2342,7 +2335,7 @@ struct format_type *create_text_format(struct cmd_context *cmd)
 		return NULL;
 	}
 
-	fic.type = FMT_INSTANCE_VG | FMT_INSTANCE_AUX_MDAS;
+	fic.type = FMT_INSTANCE_AUX_MDAS;
 	fic.context.vg_ref.vg_name = fmt->orphan_vg_name;
 	fic.context.vg_ref.vg_id = NULL;
 	if (!(fid = _text_create_text_instance(fmt, &fic))) {

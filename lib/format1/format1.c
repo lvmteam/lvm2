@@ -609,7 +609,7 @@ struct format_type *init_format(struct cmd_context *cmd)
 		log_error("Couldn't create lvm1 orphan VG.");
 		return NULL;
 	}
-	fic.type = FMT_INSTANCE_VG | FMT_INSTANCE_AUX_MDAS;
+	fic.type = FMT_INSTANCE_AUX_MDAS;
 	fic.context.vg_ref.vg_name = fmt->orphan_vg_name;
 	fic.context.vg_ref.vg_id = NULL;
 	if (!(fid = _format1_create_instance(fmt, &fic))) {

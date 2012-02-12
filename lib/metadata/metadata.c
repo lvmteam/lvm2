@@ -956,7 +956,7 @@ struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name)
 
 	vg->pv_count = 0;
 
-	fic.type = FMT_INSTANCE_VG | FMT_INSTANCE_MDAS | FMT_INSTANCE_AUX_MDAS;
+	fic.type = FMT_INSTANCE_MDAS | FMT_INSTANCE_AUX_MDAS;
 	fic.context.vg_ref.vg_name = vg_name;
 	fic.context.vg_ref.vg_id = NULL;
 	if (!(fid = cmd->fmt->ops->create_instance(cmd->fmt, &fic))) {
@@ -2940,7 +2940,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		use_precommitted = 0;
 
 	/* create format instance with appropriate metadata area */
-	fic.type = FMT_INSTANCE_VG | FMT_INSTANCE_MDAS | FMT_INSTANCE_AUX_MDAS;
+	fic.type = FMT_INSTANCE_MDAS | FMT_INSTANCE_AUX_MDAS;
 	fic.context.vg_ref.vg_name = vgname;
 	fic.context.vg_ref.vg_id = vgid;
 	if (!(fid = fmt->ops->create_instance(fmt, &fic))) {
@@ -3120,7 +3120,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 			use_precommitted = 0;
 
 		/* create format instance with appropriate metadata area */
-		fic.type = FMT_INSTANCE_VG | FMT_INSTANCE_MDAS | FMT_INSTANCE_AUX_MDAS;
+		fic.type = FMT_INSTANCE_MDAS | FMT_INSTANCE_AUX_MDAS;
 		fic.context.vg_ref.vg_name = vgname;
 		fic.context.vg_ref.vg_id = vgid;
 		if (!(fid = fmt->ops->create_instance(fmt, &fic))) {
@@ -4207,14 +4207,12 @@ int fid_add_mda(struct format_instance *fid, struct metadata_area *mda,
 		return 1;
 
 	/* Add metadata area to index. */
-	if (fid->type & FMT_INSTANCE_VG) {
-		if (!_convert_key_to_string(key, key_len, sub_key,
-					    full_key, sizeof(full_key)))
-		return_0;
+	if (!_convert_key_to_string(key, key_len, sub_key,
+				    full_key, sizeof(full_key)))
+	return_0;
 
-		dm_hash_insert(fid->metadata_areas_index,
-			       full_key, mda);
-	}
+	dm_hash_insert(fid->metadata_areas_index,
+		       full_key, mda);
 
 	return 1;
 }
@@ -4245,13 +4243,11 @@ struct metadata_area *fid_get_mda_indexed(struct format_instance *fid,
 	struct metadata_area *mda = NULL;
 
 
-	if (fid->type & FMT_INSTANCE_VG) {
-		if (!_convert_key_to_string(key, key_len, sub_key,
-					    full_key, sizeof(full_key)))
-			return_NULL;
-		mda = (struct metadata_area *) dm_hash_lookup(fid->metadata_areas_index,
-							      full_key);
-	}
+	if (!_convert_key_to_string(key, key_len, sub_key,
+				    full_key, sizeof(full_key)))
+		return_NULL;
+	mda = (struct metadata_area *) dm_hash_lookup(fid->metadata_areas_index,
+						      full_key);
 
 	return mda;
 }
@@ -4278,13 +4274,11 @@ int fid_remove_mda(struct format_instance *fid, struct metadata_area *mda,
 
 		mda = mda_indexed;
 
-		if (fid->type & FMT_INSTANCE_VG) {
-			if (!_convert_key_to_string(key, key_len, sub_key,
-					    full_key, sizeof(full_key)))
-				return_0;
+		if (!_convert_key_to_string(key, key_len, sub_key,
+				    full_key, sizeof(full_key)))
+			return_0;
 
-			dm_hash_remove(fid->metadata_areas_index, full_key);
-		}
+		dm_hash_remove(fid->metadata_areas_index, full_key);
 	}
 
 	dm_list_del(&mda->list);

@@ -279,7 +279,7 @@ struct volume_group *backup_read_vg(struct cmd_context *cmd,
 				  .desc = cmd->cmd_line};
 	struct metadata_area *mda;
 
-	fic.type = FMT_INSTANCE_VG | FMT_INSTANCE_PRIVATE_MDAS;
+	fic.type = FMT_INSTANCE_PRIVATE_MDAS;
 	fic.context.private = &tc;
 	if (!(tf = cmd->fmt_backup->ops->create_instance(cmd->fmt_backup, &fic))) {
 		log_error("Couldn't create text format object.");
@@ -312,7 +312,7 @@ int backup_restore_vg(struct cmd_context *cmd, struct volume_group *vg)
 	 */
 
 	/* Attempt to write out using currently active format */
-	fic.type = FMT_INSTANCE_VG | FMT_INSTANCE_AUX_MDAS;
+	fic.type = FMT_INSTANCE_AUX_MDAS;
 	fic.context.vg_ref.vg_name = vg->name;
 	fic.context.vg_ref.vg_id = NULL;
 	if (!(fid = cmd->fmt->ops->create_instance(cmd->fmt, &fic))) {
@@ -409,7 +409,7 @@ int backup_to_file(const char *file, const char *desc, struct volume_group *vg)
 
 	log_verbose("Creating volume group backup \"%s\" (seqno %u).", file, vg->seqno);
 
-	fic.type = FMT_INSTANCE_VG | FMT_INSTANCE_PRIVATE_MDAS;
+	fic.type = FMT_INSTANCE_PRIVATE_MDAS;
 	fic.context.private = &tc;
 	if (!(tf = cmd->fmt_backup->ops->create_instance(cmd->fmt_backup, &fic))) {
 		log_error("Couldn't create backup object.");

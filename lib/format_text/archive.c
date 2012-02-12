@@ -310,7 +310,7 @@ static void _display_archive(struct cmd_context *cmd, struct archive_file *af)
 	log_print(" ");
 	log_print("File:\t\t%s", af->path);
 
-	fic.type = FMT_INSTANCE_VG | FMT_INSTANCE_PRIVATE_MDAS;
+	fic.type = FMT_INSTANCE_PRIVATE_MDAS;
 	fic.context.private = &tc;
 	if (!(tf = cmd->fmt_backup->ops->create_instance(cmd->fmt_backup, &fic))) {
 		log_error("Couldn't create text instance object.");
