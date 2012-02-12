@@ -225,22 +225,18 @@ int pool_below_threshold(const struct lv_segment *pool_seg)
 				     DEFAULT_THIN_POOL_AUTOEXTEND_THRESHOLD);
 
 	/* Data */
-	if (!lv_thin_pool_percent(pool_seg->lv, 0, &percent)) {
-		stack;
-		return 0;
-	}
+	if (!lv_thin_pool_percent(pool_seg->lv, 0, &percent))
+		return_0;
 
 	if (percent >= threshold)
-		return 0;
+		return_0;
 
 	/* Metadata */
-	if (!lv_thin_pool_percent(pool_seg->lv, 1, &percent)) {
-		stack;
-		return 0;
-	}
+	if (!lv_thin_pool_percent(pool_seg->lv, 1, &percent))
+		return_0;
 
 	if (percent >= threshold)
-		return 0;
+		return_0;
 
 	return 1;
 }
