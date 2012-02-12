@@ -199,20 +199,15 @@ struct pv_segment {
 #define pvseg_is_allocated(pvseg) ((pvseg)->lvseg)
 
 /*
- * These flags define the type of the format instance to be created.
- * There used to be a PV-based type, but all are now VG-based.
- * We can further control the format_instance initialisation and functionality
- * by using the other flags. Today, the primary role of the format_instance
- * is to temporarily store metadata area information we are working with. More
- * flags can be defined to cover even more functionality in the future...
+ * Properties of each format instance type.
+ * The primary role of the format_instance is to temporarily store metadata
+ * area information we are working with.
  */
-
-/* VG-based format instance */
-#define FMT_INSTANCE_VG			0x00000001U
 
 /* Include any existing PV mdas during format_instance initialisation */
 #define FMT_INSTANCE_MDAS		0x00000002U
 
+/* FIXME Define auxiliary here! */
 /* Include any auxiliary mdas during format_instance intialisation */
 #define FMT_INSTANCE_AUX_MDAS		0x00000004U
 

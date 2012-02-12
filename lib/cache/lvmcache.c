@@ -707,7 +707,7 @@ struct volume_group *lvmcache_get_vg(const char *vgid, unsigned precommitted)
 	if ((vg = vginfo->cached_vg))
 		goto out;
 
-	fic.type = FMT_INSTANCE_VG | FMT_INSTANCE_MDAS | FMT_INSTANCE_AUX_MDAS;
+	fic.type = FMT_INSTANCE_MDAS | FMT_INSTANCE_AUX_MDAS;
 	fic.context.vg_ref.vg_name = vginfo->vgname;
 	fic.context.vg_ref.vg_id = vgid;
 	if (!(fid = vginfo->fmt->ops->create_instance(vginfo->fmt, &fic)))
