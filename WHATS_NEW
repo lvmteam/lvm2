@@ -1,5 +1,5 @@
-Version 2.02.91 -
-===================================
+Version 2.02.91 - 12th February 2012
+====================================
   Remove PV-based format instances (which are no longer needed).
   Link all orphan PVs directly to a per-format global orphan VG.
   Refactor lvmcache around an internal API.
