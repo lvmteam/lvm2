@@ -200,15 +200,12 @@ struct pv_segment {
 
 /*
  * These flags define the type of the format instance to be created.
- * There are two basic types: a PV-based and a VG-based format instance.
+ * There used to be a PV-based type, but all are now VG-based.
  * We can further control the format_instance initialisation and functionality
  * by using the other flags. Today, the primary role of the format_instance
  * is to temporarily store metadata area information we are working with. More
  * flags can be defined to cover even more functionality in the future...
  */
-
-/* PV-based format instance */
-#define FMT_INSTANCE_PV			0x00000000U
 
 /* VG-based format instance */
 #define FMT_INSTANCE_VG			0x00000001U
