@@ -1616,8 +1616,6 @@ struct physical_volume *pv_create(const struct cmd_context *cmd,
 				  unsigned metadataignore)
 {
 	const struct format_type *fmt = cmd->fmt;
-	struct format_instance_ctx fic;
-	struct format_instance *fid;
 	struct dm_pool *mem = fmt->cmd->mem;
 	struct physical_volume *pv = _alloc_pv(mem, dev);
 	unsigned mda_index;
@@ -2746,8 +2744,6 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd,
 					     int warnings,
 					     const char *orphan_vgname)
 {
-	struct format_instance_ctx fic;
-	struct format_instance *fid;
 	const struct format_type *fmt;
 	struct lvmcache_vginfo *vginfo;
 	struct volume_group *vg = NULL;
@@ -2768,8 +2764,6 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd,
 	lvmcache_foreach_pv(vginfo, _vg_read_orphan_pv, &baton);
 
 	return vg;
-bad:
-	return NULL;
 }
 
 static int _update_pv_list(struct dm_pool *pvmem, struct dm_list *all_pvs, struct volume_group *vg)
@@ -3557,7 +3551,6 @@ static struct physical_volume *_pv_read(struct cmd_context *cmd,
 					int warnings, int scan_label_only)
 {
 	struct physical_volume *pv;
-	struct format_instance_ctx fic;
 	struct label *label;
 	struct lvmcache_info *info;
 	struct device *dev;
