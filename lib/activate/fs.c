@@ -225,7 +225,6 @@ static int _mk_link(const char *dev_dir, const char *vg_name,
 static int _rm_link(const char *dev_dir, const char *vg_name,
 		    const char *lv_name, int check_udev)
 {
-	int r;
 	struct stat buf;
 	static char lv_path[PATH_MAX];
 
@@ -235,14 +234,17 @@ static int _rm_link(const char *dev_dir, const char *vg_name,
 		return 0;
 	}
 
-	if ((r = lstat(lv_path, &buf)) && errno == ENOENT)
-		return 1;
-	else if (dm_udev_get_sync_support() && udev_checking() && check_udev)
+	if (lstat(lv_path, &buf)) {
+		if (errno == ENOENT)
+			return 1;
+		log_sys_error("lstat", lv_path);
+		return 0;
+	} else if (dm_udev_get_sync_support() && udev_checking() && check_udev)
 		log_warn("The link %s should have been removed by udev "
 			 "but it is still present. Falling back to "
 			 "direct link removal.", lv_path);
 
-	if (r || !S_ISLNK(buf.st_mode)) {
+	if (!S_ISLNK(buf.st_mode)) {
 		log_error("%s not symbolic link - not removing", lv_path);
 		return 0;
 	}
