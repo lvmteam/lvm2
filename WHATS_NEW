@@ -1,5 +1,6 @@
 Version 2.02.92 - 
 ====================================
+  Add check for rimage name allocation failure in _raid_add_images().
   Add check for mda_copy failure in _text_pv_setup().
   Add check for _mirrored_init_target failure.
   Add free_orphan_vg.
