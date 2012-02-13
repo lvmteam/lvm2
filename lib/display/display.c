@@ -60,7 +60,7 @@ uint64_t units_to_bytes(const char *units, char *unit_type)
 		v = 1;
 
 	/* Only one units char permitted. */
-	if (*(units + 1))
+	if (units[0] && units[1])
 		return 0;
 
 	if (v == 1)
