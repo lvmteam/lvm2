@@ -1537,7 +1537,7 @@ static int lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *lp
 
 		/* "warn" if policy not set to replace */
 		if (arg_count(cmd, use_policies_ARG))
-			log_error("Issue 'lvconvert --repair %s/%s' to "
+			log_error("Use 'lvconvert --repair %s/%s' to "
 				  "replace failed device",
 				  lv->vg->name, lv->name);
 		return 1;
