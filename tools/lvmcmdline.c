@@ -1149,7 +1149,7 @@ static const char *_get_cmdline(pid_t pid)
 
 	snprintf(buf, sizeof(buf), DEFAULT_PROC_DIR "/%u/cmdline", pid);
 	/* FIXME Use generic read code. */
-	if ((fd = open(buf, O_RDONLY)) > 0) {
+	if ((fd = open(buf, O_RDONLY)) >= 0) {
 		if ((n = read(fd, _proc_cmdline, sizeof(_proc_cmdline) - 1)) < 0) {
 			log_sys_error("read", buf);
 			n = 0;
