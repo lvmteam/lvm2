@@ -1,5 +1,6 @@
 Version 2.02.92 - 
 ====================================
+  Report allocation failure for allocation of PV structure.
   Add clvmd init dependency on dlm service when running with new corosync.
 
 Version 2.02.91 - 12th February 2012

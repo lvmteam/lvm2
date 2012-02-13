@@ -1557,21 +1557,14 @@ bad:
 
 static struct physical_volume *_alloc_pv(struct dm_pool *mem, struct device *dev)
 {
-	struct physical_volume *pv = dm_pool_zalloc(mem, sizeof(*pv));
+	struct physical_volume *pv;
 
-	if (!pv)
-		return_NULL;
+	if (!(pv = dm_pool_zalloc(mem, sizeof(*pv)))) {
+		log_error("Failed to allocate pv structure.");
+		return NULL;
+	}
 
-	pv_set_fid(pv, NULL);
-	pv->pe_size = 0;
-	pv->pe_start = 0;
-	pv->pe_count = 0;
-	pv->pe_alloc_count = 0;
-	pv->pe_align = 0;
-	pv->pe_align_offset = 0;
-	pv->fmt = NULL;
 	pv->dev = dev;
-
 	pv->status = ALLOCATABLE_PV;
 
 	dm_list_init(&pv->tags);
@@ -1621,7 +1614,7 @@ struct physical_volume *pv_create(const struct cmd_context *cmd,
 	unsigned mda_index;
 
 	if (!pv)
-		return NULL;
+		return_NULL;
 
 	if (id)
 		memcpy(&pv->id, id, sizeof(*id));
