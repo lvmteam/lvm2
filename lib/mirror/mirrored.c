@@ -398,8 +398,9 @@ static int _mirrored_add_target_line(struct dev_manager *dm, struct dm_pool *mem
 	uint32_t region_size;
 	int r;
 
-	if (!*target_state)
-		*target_state = _mirrored_init_target(mem, cmd);
+	if (!*target_state &&
+	    !(*target_state = _mirrored_init_target(mem, cmd)))
+                return_0;
 
 	mirr_state = *target_state;
 
