@@ -4149,6 +4149,9 @@ bad:
 void pv_set_fid(struct physical_volume *pv,
 		struct format_instance *fid)
 {
+	if (fid == pv->fid)
+		return;
+
 	if (fid)
 		fid->ref_count++;
 
@@ -4162,6 +4165,9 @@ void vg_set_fid(struct volume_group *vg,
 		 struct format_instance *fid)
 {
 	struct pv_list *pvl;
+
+	if (fid == vg->fid)
+		return;
 
 	if (fid)
 		fid->ref_count++;
