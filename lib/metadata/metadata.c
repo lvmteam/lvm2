@@ -2754,7 +2754,9 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd,
 
 	baton.warnings = warnings;
 	baton.vg = vg;
-	lvmcache_foreach_pv(vginfo, _vg_read_orphan_pv, &baton);
+
+	if (!lvmcache_foreach_pv(vginfo, _vg_read_orphan_pv, &baton))
+                return_NULL;
 
 	return vg;
 }
