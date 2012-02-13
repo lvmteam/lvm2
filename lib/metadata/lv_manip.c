@@ -2116,6 +2116,11 @@ struct alloc_handle *allocate_extents(struct volume_group *vg,
 		return NULL;
 	}
 
+	if (!allocatable_pvs) {
+		log_error(INTERNAL_ERROR "Missing allocatable pvs.");
+		return NULL;
+	}
+
 	if (vg->fid->fmt->ops->segtype_supported &&
 	    !vg->fid->fmt->ops->segtype_supported(vg->fid, segtype)) {
 		log_error("Metadata format (%s) does not support required "
