@@ -548,7 +548,7 @@ int dm_tree_node_add_raid_target(struct dm_tree_node *node,
 				 uint32_t region_size,
 				 uint32_t stripe_size,
 				 uint64_t rebuilds,
-				 uint64_t reserved2);
+				 uint64_t flags);
 
 /*
  * Replicator operation mode
