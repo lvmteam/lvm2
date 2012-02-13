@@ -315,6 +315,9 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 						  "report/pvsegs_cols_verbose",
 						  DEFAULT_PVSEGS_COLS_VERB);
 		break;
+	default:
+		log_error(INTERNAL_ERROR "Unknown report type.");
+		return ECMD_FAILED;
 	}
 
 	/* If -o supplied use it, else use default for report_type */
