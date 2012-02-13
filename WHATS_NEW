@@ -1,5 +1,6 @@
 Version 2.02.92 - 
 ====================================
+  Release vg in error path of _format1_vg_read() instead of just free().
   Report allocation failure for allocation of PV structure.
   Add clvmd init dependency on dlm service when running with new corosync.
 
