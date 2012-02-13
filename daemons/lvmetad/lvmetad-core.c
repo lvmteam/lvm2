@@ -88,7 +88,7 @@ static struct dm_config_node *pvs(struct dm_config_node *vg)
  * TODO: This set_flag function is pretty generic and might make sense in a
  * library here or there.
  */
-static void set_flag(struct dm_config_tree *cft, struct dm_config_node *parent,
+static int set_flag(struct dm_config_tree *cft, struct dm_config_node *parent,
 		     const char *field, const char *flag, int want) {
 	struct dm_config_value *value = NULL, *pred = NULL;
 	struct dm_config_node *node = dm_config_find_node(parent->child, field);
@@ -103,10 +103,10 @@ static void set_flag(struct dm_config_tree *cft, struct dm_config_node *parent,
 	}
 
 	if (value && want)
-		return;
+		return 1;
 
 	if (!value && !want)
-		return;
+		return 1;
 
 	if (value && !want) {
 		if (pred) {
@@ -127,12 +127,17 @@ static void set_flag(struct dm_config_tree *cft, struct dm_config_node *parent,
 			node->parent = parent;
 			parent->child = node;
 		}
-		new = dm_config_create_value(cft);
+		if (!(new = dm_config_create_value(cft))) {
+			/* FIXME error reporting */
+			return 0;
+		}
 		new->type = DM_CFG_STRING;
 		new->v.str = flag;
 		new->next = node->v;
 		node->v = new;
 	}
+
+	return 1;
 }
 
 /* Either the "big" vgs lock, or a per-vg lock needs to be held before entering
@@ -149,8 +154,11 @@ static int update_pv_status(lvmetad_state *s,
 	while (pv) {
 		const char *uuid = dm_config_find_str(pv->child, "id", NULL);
 		int found = uuid ? (dm_hash_lookup(s->pvs, uuid) ? 1 : 0) : 0;
-		if (act)
-			set_flag(cft, pv, "status", "MISSING", !found);
+		if (act &&
+		    !set_flag(cft, pv, "status", "MISSING", !found)) {
+			complete =  0;
+			break;
+		}
 		if (!found) {
 			complete = 0;
 			if (!act) { // optimisation
@@ -215,7 +223,7 @@ static response vg_lookup(lvmetad_state *s, request r)
 	res.error = 0;
 	unlock_vg(s, uuid);
 
-	update_pv_status(s, cft, n, 1);
+	update_pv_status(s, cft, n, 1); /* FIXME error reporting */
 
 	return res;
 }
@@ -615,7 +623,6 @@ int main(int argc, char *argv[])
 		case 'V':
 			printf("lvmetad version 0\n");
 			exit(1);
-			break;
 		}
 	}
 
