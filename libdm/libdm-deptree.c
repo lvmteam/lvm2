@@ -2751,7 +2751,7 @@ int dm_tree_node_add_raid_target(struct dm_tree_node *node,
 				 uint32_t region_size,
 				 uint32_t stripe_size,
 				 uint64_t rebuilds,
-				 uint64_t reserved2)
+				 uint64_t flags)
 {
 	int i;
 	struct load_segment *seg = NULL;
@@ -2769,6 +2769,7 @@ int dm_tree_node_add_raid_target(struct dm_tree_node *node,
 	seg->stripe_size = stripe_size;
 	seg->area_count = 0;
 	seg->rebuilds = rebuilds;
+	seg->flags = flags;
 
 	return 1;
 }

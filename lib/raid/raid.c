@@ -159,6 +159,7 @@ static int _raid_add_target_line(struct dev_manager *dm __attribute__((unused)),
 				 uint32_t *pvmove_mirror_count __attribute__((unused)))
 {
 	uint32_t s;
+	uint64_t flags = 0;
 	uint64_t rebuilds = 0;
 
 	if (!seg->area_count) {
@@ -186,9 +187,12 @@ static int _raid_add_target_line(struct dev_manager *dm __attribute__((unused)),
 		if (seg_lv(seg, s)->status & LV_REBUILD)
 			rebuilds |= 1 << s;
 
+	if (mirror_in_sync())
+		flags = DM_NOSYNC;
+
 	if (!dm_tree_node_add_raid_target(node, len, _raid_name(seg),
 					  seg->region_size, seg->stripe_size,
-					  rebuilds, 0))
+					  rebuilds, flags))
 		return_0;
 
 	return add_areas_line(dm, seg, node, 0u, seg->area_count);
