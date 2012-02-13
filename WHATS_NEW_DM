@@ -1,5 +1,6 @@
 Version 1.02.71 - 
 ====================================
+  Fix potential risk of writing in front of buffer in _sysfs_get_dm_name().
 
 Version 1.02.70 - 12th February 2012
 ====================================
