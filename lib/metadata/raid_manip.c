@@ -655,7 +655,10 @@ static int _raid_add_images(struct logical_volume *lv,
 			if (l == dm_list_last(&data_lvs)) {
 				lvl = dm_list_item(l, struct lv_list);
 				len = strlen(lv->name) + strlen("_rimage_XXX");
-				name = dm_pool_alloc(lv->vg->vgmem, len);
+				if (!(name = dm_pool_alloc(lv->vg->vgmem, len))) {
+					log_error("Failed to allocate rimage name.");
+					return 0;
+				}
 				sprintf(name, "%s_rimage_%u", lv->name, count);
 				lvl->lv->name = name;
 				continue;
