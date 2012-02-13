@@ -110,16 +110,17 @@ static int _build_matcher(struct rfilter *rf, const struct dm_config_value *val)
 		count++;
 	}
 
-	/*
-	 * allocate space for them
-	 */
-	if (!(regex = dm_pool_alloc(scratch, sizeof(*regex) * count)))
-		goto_out;
+	/* Allocate space for them */
+	if (!(regex = dm_pool_alloc(scratch, sizeof(*regex) * count))) {
+		log_error("Failed to allocate regex.");
+		goto out;
+	}
 
-	/*
-	 * create the accept/reject bitset
-	 */
-	rf->accept = dm_bitset_create(rf->mem, count);
+	/* Create the accept/reject bitset */
+	if (!(rf->accept = dm_bitset_create(rf->mem, count))) {
+		log_error("Failed to create bitset.");
+		goto out;
+	}
 
 	/*
 	 * fill the array back to front because we
