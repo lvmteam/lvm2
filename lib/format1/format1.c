@@ -580,8 +580,10 @@ struct format_type *init_format(struct cmd_context *cmd)
 	struct format_instance_ctx fic;
 	struct format_instance *fid;
 
-	if (!fmt)
-		return_NULL;
+	if (!fmt) {
+		log_error("Failed to allocate format1 format type structure.");
+		return NULL;
+	}
 
 	fmt->cmd = cmd;
 	fmt->ops = &_format1_ops;
@@ -607,15 +609,19 @@ struct format_type *init_format(struct cmd_context *cmd)
 
 	if (!(fmt->orphan_vg = alloc_vg("text_orphan", cmd, fmt->orphan_vg_name))) {
 		log_error("Couldn't create lvm1 orphan VG.");
+		dm_free(fmt);
 		return NULL;
 	}
+
 	fic.type = FMT_INSTANCE_AUX_MDAS;
 	fic.context.vg_ref.vg_name = fmt->orphan_vg_name;
 	fic.context.vg_ref.vg_id = NULL;
+
 	if (!(fid = _format1_create_instance(fmt, &fic))) {
-		log_error("Couldn't create lvm1 orphan VG format instance.");
-		return NULL;
+		_format1_destroy(fmt);
+		return_NULL;
 	}
+
 	vg_set_fid(fmt->orphan_vg, fid);
 
 	log_very_verbose("Initialised format: %s", fmt->name);
