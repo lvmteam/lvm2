@@ -422,16 +422,24 @@ static int _display_info_cols(struct dm_task *dmt, struct dm_info *info)
 	obj.split_name = NULL;
 
 	if (_report_type & DR_TREE)
-		obj.tree_node = dm_tree_find_node(_dtree, info->major, info->minor);
+		if (!(obj.tree_node = dm_tree_find_node(_dtree, info->major, info->minor))) {
+			log_error("Cannot find node %d:%d.", info->major, info->minor);
+			goto out;
+		}
 
 	if (_report_type & DR_DEPS)
-		obj.deps_task = _get_deps_task(info->major, info->minor);
+		if (!(obj.deps_task = _get_deps_task(info->major, info->minor))) {
+			log_error("Cannot get deps for %d:%d.", info->major, info->minor);
+			goto out;
+		}
 
 	if (_report_type & DR_NAME)
-		obj.split_name = _get_split_name(dm_task_get_uuid(dmt), dm_task_get_name(dmt), '-');
+		if (!(obj.split_name = _get_split_name(dm_task_get_uuid(dmt),
+						       dm_task_get_name(dmt), '-')))
+			goto_out;
 
 	if (!dm_report_object(_report, &obj))
-		goto out;
+		goto_out;
 
 	r = 1;
 
@@ -865,8 +873,9 @@ static int _splitname(CMD_ARGS)
 	obj.info = NULL;
 	obj.deps_task = NULL;
 	obj.tree_node = NULL;
-	obj.split_name = _get_split_name((argc == 3) ? argv[2] : "LVM",
-					 argv[1], '\0');
+	if (!(obj.split_name = _get_split_name((argc == 3) ? argv[2] : "LVM",
+					       argv[1], '\0')))
+                return_0;
 
 	r = dm_report_object(_report, &obj);
 	_destroy_split_name(obj.split_name);
@@ -3234,9 +3243,9 @@ static int _process_losetup_switches(const char *base, int *argc, char ***argv,
 		return 0;
 	}
 
-	/* FIXME Missing free */
 	_table = dm_malloc(LOOP_TABLE_SIZE);
-	if (!_loop_table(_table, (size_t) LOOP_TABLE_SIZE, loop_file, device_name, offset)) {
+	if (!_table ||
+	    !_loop_table(_table, (size_t) LOOP_TABLE_SIZE, loop_file, device_name, offset)) {
 		fprintf(stderr, "Could not build device-mapper table for %s\n", (*argv)[0]);
 		dm_free(device_name);
 		return 0;
@@ -3355,7 +3364,10 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 	memset(&_int_args, 0, sizeof(_int_args));
 	_read_ahead_flags = 0;
 
-	namebase = strdup((*argv)[0]);
+	if (!(namebase = strdup((*argv)[0]))) {
+		fprintf(stderr, "Failed to duplicate name.\n");
+		return 0;
+	}
 	base = basename(namebase);
 
 	if (!strcmp(base, "devmap_name")) {
@@ -3645,6 +3657,8 @@ out:
 
 	if (_dtree)
 		dm_tree_free(_dtree);
+
+	dm_free(_table);
 
 	return r;
 }
