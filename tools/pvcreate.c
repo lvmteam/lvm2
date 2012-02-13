@@ -117,7 +117,6 @@ int pvcreate(struct cmd_context *cmd, int argc, char **argv)
 			ret = ECMD_FAILED;
 		}
 
-		free_pv_fid(pv);
 		unlock_vg(cmd, VG_ORPHANS);
 		if (sigint_caught())
 			return ret;

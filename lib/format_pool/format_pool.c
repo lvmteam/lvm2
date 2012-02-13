@@ -259,12 +259,8 @@ static void _pool_destroy_instance(struct format_instance *fid)
 
 static void _pool_destroy(struct format_type *fmt)
 {
-	/* FIXME out of place, but the main (cmd) pool has been already
-	 * destroyed and touching the fid (also via release_vg) will crash the
-	 * program */
-	dm_hash_destroy(fmt->orphan_vg->hostnames);
-	dm_pool_destroy(fmt->orphan_vg->fid->mem);
-	dm_pool_destroy(fmt->orphan_vg->vgmem);
+	if (fmt->orphan_vg)
+		free_orphan_vg(fmt->orphan_vg);
 
 	dm_free(fmt);
 }

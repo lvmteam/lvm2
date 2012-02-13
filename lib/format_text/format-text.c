@@ -1541,13 +1541,8 @@ static void _free_raws(struct dm_list *raw_list)
 
 static void _text_destroy(struct format_type *fmt)
 {
-	/* FIXME out of place, but the main (cmd) pool has been already
-	 * destroyed and touching the fid (also via release_vg) will crash the
-	 * program */
-	dm_hash_destroy(fmt->orphan_vg->fid->metadata_areas_index);
-	dm_hash_destroy(fmt->orphan_vg->hostnames);
-	dm_pool_destroy(fmt->orphan_vg->fid->mem);
-	dm_pool_destroy(fmt->orphan_vg->vgmem);
+	if (fmt->orphan_vg)
+		free_orphan_vg(fmt->orphan_vg);
 
 	if (fmt->private) {
 		_free_dirs(&((struct mda_lists *) fmt->private)->dirs);

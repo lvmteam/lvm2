@@ -121,6 +121,7 @@ struct volume_group *alloc_vg(const char *pool_name, struct cmd_context *cmd,
  * by vg_create() or vg_read_internal() to free it when no longer required.
  */
 void release_vg(struct volume_group *vg);
+void free_orphan_vg(struct volume_group *vg);
 
 char *vg_fmt_dup(const struct volume_group *vg);
 char *vg_name_dup(const struct volume_group *vg);
