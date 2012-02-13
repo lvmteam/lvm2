@@ -1,5 +1,6 @@
 Version 1.02.71 - 
 ====================================
+  Test for parsed words in _umount() dmeventd snapshot plugin.
   Fix memory leak in fail path of parse_loop_device_name() in dmsetup.
   Check for missing reply_uuid in dm_event_get_registered_device().
   Check for allocation failure in dmeventd restart().

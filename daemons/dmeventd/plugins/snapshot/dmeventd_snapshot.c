@@ -144,7 +144,8 @@ static void _umount(const char *device, int major, int minor)
 			break; /* eof, likely */
 
 		/* words[0] is the mount point and words[1] is the device path */
-		dm_split_words(buffer, 3, 0, words);
+		if (dm_split_words(buffer, 3, 0, words) < 2)
+			continue;
 
 		/* find the major/minor of the device */
 		if (stat(words[0], &st))
