@@ -770,8 +770,10 @@ static int _lv_update_log_type(struct cmd_context *cmd,
 			       struct dm_list *operable_pvs,
 			       int log_count)
 {
-	uint32_t region_size;
 	int old_log_count;
+	uint32_t region_size = (lp) ? lp->region_size :
+		first_seg(lv)->region_size;
+	alloc_policy_t alloc = (lp) ? lp->alloc : lv->alloc;
 	struct logical_volume *original_lv;
 	struct logical_volume *log_lv;
 
@@ -793,13 +795,12 @@ static int _lv_update_log_type(struct cmd_context *cmd,
 
 	/* Adding redundancy to the log */
 	if (old_log_count < log_count) {
-
 		region_size = adjusted_mirror_region_size(lv->vg->extent_size,
 							  lv->le_count,
-							  lp->region_size);
+							  region_size);
 
 		if (!add_mirror_log(cmd, original_lv, log_count,
-				    region_size, operable_pvs, lp->alloc))
+				    region_size, operable_pvs, alloc))
 			return_0;
 		/*
 		 * FIXME: This simple approach won't work in cluster mirrors,
@@ -812,7 +813,8 @@ static int _lv_update_log_type(struct cmd_context *cmd,
 	}
 
 	/* Reducing redundancy of the log */
-	return remove_mirror_images(log_lv, log_count, is_mirror_image_removable, operable_pvs, 1U);
+	return remove_mirror_images(log_lv, log_count,
+				    is_mirror_image_removable, operable_pvs, 1U);
 }
 
 /*
