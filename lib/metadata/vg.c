@@ -90,6 +90,18 @@ void release_vg(struct volume_group *vg)
 	_free_vg(vg);
 }
 
+/*
+ * FIXME out of place, but the main (cmd) pool has been already
+ * destroyed and touching the fid (also via release_vg) will crash the
+ * program
+ *
+ * For now quick wrapper to allow destroy of orphan vg
+ */
+void free_orphan_vg(struct volume_group *vg)
+{
+	_free_vg(vg);
+}
+
 char *vg_fmt_dup(const struct volume_group *vg)
 {
 	if (!vg->fid || !vg->fid->fmt)

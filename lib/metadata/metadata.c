@@ -1551,7 +1551,6 @@ struct physical_volume * pvcreate_single(struct cmd_context *cmd,
 	return pv;
 
 bad:
-	free_pv_fid(pv);
 	return NULL;
 }
 
@@ -1575,6 +1574,7 @@ static struct physical_volume *_alloc_pv(struct dm_pool *mem, struct device *dev
 
 /**
  * pv_create - initialize a physical volume for use with a volume group
+ * created PV belongs to Orphan VG.
  *
  * @fmt: format type
  * @dev: PV device to initialize
@@ -1609,9 +1609,10 @@ struct physical_volume *pv_create(const struct cmd_context *cmd,
 				  unsigned metadataignore)
 {
 	const struct format_type *fmt = cmd->fmt;
-	struct dm_pool *mem = fmt->cmd->mem;
+	struct dm_pool *mem = fmt->orphan_vg->vgmem;
 	struct physical_volume *pv = _alloc_pv(mem, dev);
 	unsigned mda_index;
+	struct pv_list *pvl;
 
 	if (!pv)
 		return_NULL;
@@ -1650,7 +1651,6 @@ struct physical_volume *pv_create(const struct cmd_context *cmd,
 		goto bad;
 	}
 
-	struct pv_list *pvl;
 	if (!(pvl = dm_pool_zalloc(mem, sizeof(*pvl)))) {
 		log_error("pv_list allocation in pv_create failed");
 		goto bad;
@@ -1687,8 +1687,9 @@ struct physical_volume *pv_create(const struct cmd_context *cmd,
 	return pv;
 
       bad:
-	free_pv_fid(pv);
-	dm_pool_free(mem, pv);
+	// FIXME: detach from orphan in error path
+	//free_pv_fid(pv);
+	//dm_pool_free(mem, pv);
 	return NULL;
 }
 

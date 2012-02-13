@@ -146,7 +146,6 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 				  pv_dev_name(pv));
 			log_error("Use pvcreate and vgcfgrestore to repair "
 				  "from archived metadata.");
-			free_pv_fid(pv);
 			return ECMD_FAILED;
 		}
 
@@ -157,13 +156,10 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 				  pv_dev_name(pv));
 			log_error("Use pvcreate and vgcfgrestore to repair "
 				  "from archived metadata.");
-			free_pv_fid(pv);
 			return ECMD_FAILED;
 		}
 		log_verbose("Physical volume \"%s\" successfully created",
 			    pv_dev_name(pv));
-
-		free_pv_fid(pv);
 	}
 
 	log_verbose("Deleting existing metadata for VG %s", vg_name);
