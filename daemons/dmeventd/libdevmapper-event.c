@@ -743,6 +743,10 @@ int dm_event_get_registered_device(struct dm_event_handler *dmevh, int next)
 	msg.data = NULL;
 
 	_dm_event_handler_clear_dev_info(dmevh);
+	if (!reply_uuid) {
+		ret = -ENXIO; /* dmeventd probably gave us bogus uuid back */
+		goto fail;
+	}
 	dmevh->uuid = dm_strdup(reply_uuid);
 	if (!dmevh->uuid) {
 		ret = -ENOMEM;
