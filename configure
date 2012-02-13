@@ -596,6 +596,7 @@ ac_default_prefix=/usr
 ac_subst_vars='LTLIBOBJS
 usrsbindir
 usrlibdir
+systemdsystemunitdir
 udevdir
 udev_prefix
 tmpdir
@@ -840,6 +841,7 @@ with_usrlibdir
 with_usrsbindir
 with_udev_prefix
 with_udevdir
+with_systemdsystemunitdir
 with_dmeventd_pidfile
 with_dmeventd_path
 with_default_run_dir
@@ -1580,6 +1582,8 @@ Optional Packages:
   --with-udev-prefix=UPREFIX
                           install udev rule files in UPREFIX [[EPREFIX]]
   --with-udevdir=DIR      udev rules in DIR [[UPREFIX/lib/udev/rules.d]]
+  --with-systemdsystemunitdir=DIR
+                          systemd service files in DIR
   --with-dmeventd-pidfile=PATH
                           dmeventd pidfile [[/var/run/dmeventd.pid]]
   --with-dmeventd-path=PATH
@@ -9701,6 +9705,23 @@ fi
 
 
 ################################################################################
+
+# Check whether --with-systemdsystemunitdir was given.
+if test "${with_systemdsystemunitdir+set}" = set; then :
+  withval=$with_systemdsystemunitdir; systemdsystemunitdir=$withval
+else
+  pkg_systemdsystemunitdir=$($PKG_CONFIG --variable=systemdsystemunitdir systemd)
+fi
+
+
+if test -n "$pkg_systemdsystemunitdir"; then
+	    systemdsystemunitdir=$pkg_systemdsystemunitdir;
+fi
+
+if test -z "$systemdsystemunitdir"; then
+	    systemdsystemunitdir='/lib/systemd/system';
+fi
+################################################################################
 if test x$READLINE = xyes; then
 	for ac_header in readline/readline.h readline/history.h
 do :
@@ -10236,6 +10257,7 @@ LVM_PATCHLEVEL=`echo "$VER" | $AWK -F '[(.]' '{print $3}'`
 LVM_LIBAPI=`echo "$VER" | $AWK -F '[()]' '{print $2}'`
 
 ################################################################################
+
 
 
 
