@@ -1191,19 +1191,18 @@ static int _sysfs_get_dm_name(uint32_t major, uint32_t minor, char *buf, size_t 
 	char *sysfs_path, *temp_buf;
 	FILE *fp = NULL;
 	int r = 0;
+	size_t len;
 
 	if (!(sysfs_path = dm_malloc(PATH_MAX)) ||
 	    !(temp_buf = dm_malloc(PATH_MAX))) {
 		log_error("_sysfs_get_dm_name: failed to allocate temporary buffers");
-		if (sysfs_path)
-			dm_free(sysfs_path);
-		return 0;
+		goto bad;
 	}
 
 	if (dm_snprintf(sysfs_path, PATH_MAX, "%sdev/block/%" PRIu32 ":%" PRIu32
 			"/dm/name", _sysfs_dir, major, minor) < 0) {
 		log_error("_sysfs_get_dm_name: dm_snprintf failed");
-		goto error;
+		goto bad;
 	}
 
 	if (!(fp = fopen(sysfs_path, "r"))) {
@@ -1211,23 +1210,25 @@ static int _sysfs_get_dm_name(uint32_t major, uint32_t minor, char *buf, size_t 
 			log_sys_error("fopen", sysfs_path);
 		else
 			log_sys_debug("fopen", sysfs_path);
-		goto error;
+		goto bad;
 	}
 
 	if (!fgets(temp_buf, PATH_MAX, fp)) {
 		log_sys_error("fgets", sysfs_path);
-		goto error;
+		goto bad;
 	}
-	temp_buf[strlen(temp_buf) - 1] = '\0';
 
-	if (buf_size < strlen(temp_buf) + 1) {
+	len = strlen(temp_buf);
+
+	if (len > buf_size) {
 		log_error("_sysfs_get_dm_name: supplied buffer too small");
-		goto error;
+		goto bad;
 	}
 
-	strncpy(buf, temp_buf, buf_size);
+	temp_buf[len ? len - 1 : 0] = '\0'; /* \n */
+	strcpy(buf, temp_buf);
 	r = 1;
-error:
+bad:
 	if (fp && fclose(fp))
 		log_sys_error("fclose", sysfs_path);
 
@@ -1241,19 +1242,19 @@ static int _sysfs_get_kernel_name(uint32_t major, uint32_t minor, char *buf, siz
 {
 	char *sysfs_path, *temp_buf, *name;
 	ssize_t size;
+	size_t len;
+	int r = 0;
 
 	if (!(sysfs_path = dm_malloc(PATH_MAX)) ||
 	    !(temp_buf = dm_malloc(PATH_MAX))) {
 		log_error("_sysfs_get_kernel_name: failed to allocate temporary buffers");
-		if (sysfs_path)
-			dm_free(sysfs_path);
-		return 0;
+		goto bad;
 	}
 
 	if (dm_snprintf(sysfs_path, PATH_MAX, "%sdev/block/%" PRIu32 ":%" PRIu32,
 			_sysfs_dir, major, minor) < 0) {
 		log_error("_sysfs_get_kernel_name: dm_snprintf failed");
-		goto error;
+		goto bad;
 	}
 
 	if ((size = readlink(sysfs_path, temp_buf, PATH_MAX - 1)) < 0) {
@@ -1261,30 +1262,29 @@ static int _sysfs_get_kernel_name(uint32_t major, uint32_t minor, char *buf, siz
 			log_sys_error("readlink", sysfs_path);
 		else
 			log_sys_debug("readlink", sysfs_path);
-		goto error;
+		goto bad;
 	}
 	temp_buf[size] = '\0';
 
 	if (!(name = strrchr(temp_buf, '/'))) {
 		log_error("Could not locate device kernel name in sysfs path %s", temp_buf);
-		goto error;
+		goto bad;
 	}
 	name += 1;
+	len = size - (name - temp_buf) + 1;
 
-	if (buf_size < strlen(name) + 1) {
+	if (len > buf_size) {
 		log_error("_sysfs_get_kernel_name: output buffer too small");
-		goto error;
+		goto bad;
 	}
 
-	strncpy(buf, name, buf_size);
+	strcpy(buf, name);
+	r = 1;
+bad:
 	dm_free(sysfs_path);
 	dm_free(temp_buf);
-	return 1;
 
-error:
-	dm_free(sysfs_path);
-	dm_free(temp_buf);
-	return 0;
+	return r;
 }
 
 int dm_device_get_name(uint32_t major, uint32_t minor, int prefer_kernel_name,
