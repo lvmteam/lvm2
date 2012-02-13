@@ -320,15 +320,19 @@ struct format_type *init_format(struct cmd_context *cmd)
 
 	if (!(fmt->orphan_vg = alloc_vg("text_orphan", cmd, fmt->orphan_vg_name))) {
 		log_error("Couldn't create lvm1 orphan VG.");
+		dm_free(fmt);
 		return NULL;
 	}
+
 	fic.type = FMT_INSTANCE_AUX_MDAS;
 	fic.context.vg_ref.vg_name = fmt->orphan_vg_name;
 	fic.context.vg_ref.vg_id = NULL;
+
 	if (!(fid = _pool_create_instance(fmt, &fic))) {
-		log_error("Couldn't create lvm1 orphan VG format instance.");
+		_pool_destroy(fmt);
 		return NULL;
 	}
+
 	vg_set_fid(fmt->orphan_vg, fid);
 
 	log_very_verbose("Initialised format: %s", fmt->name);
