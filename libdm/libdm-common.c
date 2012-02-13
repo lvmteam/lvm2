@@ -1188,7 +1188,7 @@ const char *dm_uuid_prefix(void)
 
 static int _sysfs_get_dm_name(uint32_t major, uint32_t minor, char *buf, size_t buf_size)
 {
-	char *sysfs_path, *temp_buf;
+	char *sysfs_path, *temp_buf = NULL;
 	FILE *fp = NULL;
 	int r = 0;
 	size_t len;
@@ -1232,15 +1232,15 @@ bad:
 	if (fp && fclose(fp))
 		log_sys_error("fclose", sysfs_path);
 
-	dm_free(sysfs_path);
 	dm_free(temp_buf);
+	dm_free(sysfs_path);
 
 	return r;
 }
 
 static int _sysfs_get_kernel_name(uint32_t major, uint32_t minor, char *buf, size_t buf_size)
 {
-	char *sysfs_path, *temp_buf, *name;
+	char *name, *sysfs_path, *temp_buf = NULL;
 	ssize_t size;
 	size_t len;
 	int r = 0;
@@ -1281,8 +1281,8 @@ static int _sysfs_get_kernel_name(uint32_t major, uint32_t minor, char *buf, siz
 	strcpy(buf, name);
 	r = 1;
 bad:
-	dm_free(sysfs_path);
 	dm_free(temp_buf);
+	dm_free(sysfs_path);
 
 	return r;
 }
