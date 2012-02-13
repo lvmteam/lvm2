@@ -1608,7 +1608,8 @@ static int _text_pv_setup(const struct format_type *fmt,
 
 			/* Be sure it's not already in VG's format instance! */
 			if (!fid_get_mda_indexed(vg->fid, pvid, ID_LEN, mda_index)) {
-				pv_mda_copy = mda_copy(vg->fid->mem, pv_mda);
+				if (!(pv_mda_copy = mda_copy(vg->fid->mem, pv_mda)))
+					return_0;
 				fid_add_mda(vg->fid, pv_mda_copy, pvid, ID_LEN, mda_index);
 			}
 		}

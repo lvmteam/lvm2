@@ -1,5 +1,6 @@
 Version 2.02.92 - 
 ====================================
+  Add check for mda_copy failure in _text_pv_setup().
   Add check for _mirrored_init_target failure.
   Add free_orphan_vg.
   Skip pv/vg_set_fid processing if the fid is same.
