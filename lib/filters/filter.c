@@ -221,7 +221,7 @@ static int _scan_proc_dev(const char *proc, const struct dm_config_node *cn)
 
 	while (fgets(line, 80, pd) != NULL) {
 		i = 0;
-		while (line[i] == ' ' && line[i] != '\0')
+		while (line[i] == ' ')
 			i++;
 
 		/* If it's not a number it may be name of section */
@@ -238,7 +238,7 @@ static int _scan_proc_dev(const char *proc, const struct dm_config_node *cn)
 		/* Find the start of the device major name */
 		while (line[i] != ' ' && line[i] != '\0')
 			i++;
-		while (line[i] == ' ' && line[i] != '\0')
+		while (line[i] == ' ')
 			i++;
 
 		/* Look for md device */
