@@ -675,6 +675,15 @@ if test x$CLVMD = xall; then
 	fi
 fi
 
+dnl -- Fixup CLVMD_CMANAGERS with new corosync
+dnl -- clvmd built with corosync >= 2.0 needs dlm (either init or systemd service)
+dnl -- to be started.
+if [[ `expr x"$CLVMD" : '.*corosync.*'` != 0 ]]; then
+   if test x$HAVE_CMAP = xyes; then
+	CLVMD_CMANAGERS="$CLVMD_CMANAGERS dlm"
+   fi
+fi
+
 ################################################################################
 dnl -- clvmd pidfile
 if test "x$CLVMD" != xnone; then
