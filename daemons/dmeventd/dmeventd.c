@@ -1782,9 +1782,16 @@ static void restart(void)
 		}
 	}
 
-	_initial_registrations = dm_malloc(sizeof(char*) * (count + 1));
+	if (!(_initial_registrations = dm_malloc(sizeof(char*) * (count + 1)))) {
+		fprintf(stderr, "Memory allocation registration failed.\n");
+		exit(EXIT_FAILURE);
+	}
+
 	for (i = 0; i < count; ++i) {
-		_initial_registrations[i] = dm_strdup(message);
+		if (!(_initial_registrations[i] = dm_strdup(message))) {
+			fprintf(stderr, "Memory allocation for message failed.\n");
+			exit(EXIT_FAILURE);
+		}
 		message += strlen(message) + 1;
 	}
 	_initial_registrations[count] = 0;

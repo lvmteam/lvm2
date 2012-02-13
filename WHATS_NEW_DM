@@ -1,5 +1,6 @@
 Version 1.02.71 - 
 ====================================
+  Check for allocation failure in dmeventd restart().
   Add few missing allocation failures tests in dmsetup.
   Fix potential risk of writing in front of buffer in _sysfs_get_dm_name().
 
