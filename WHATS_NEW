@@ -1,5 +1,6 @@
 Version 2.02.92 - 
 ====================================
+  Check for foreach loop errors in _vg_read_orphans() (2.02.91).
   Clean error paths for format instance creation (2.02.91).
   Release vg in error path of _format1_vg_read() instead of just free().
   Report allocation failure for allocation of PV structure.
