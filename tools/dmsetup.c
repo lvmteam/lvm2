@@ -3043,6 +3043,8 @@ static char *_get_abspath(const char *path)
 	_path = canonicalize_file_name(path);
 #else
 	/* FIXME Provide alternative */
+	log_error(INTERNAL_ERROR "Unimplemented _get_abspath.");
+	_path = NULL;
 #endif
 	return _path;
 }
@@ -3050,7 +3052,7 @@ static char *_get_abspath(const char *path)
 static char *parse_loop_device_name(const char *dev, const char *dev_dir)
 {
 	char *buf;
-	char *device;
+	char *device = NULL;
 
 	if (!(buf = dm_malloc(PATH_MAX)))
 		return NULL;
@@ -3083,7 +3085,9 @@ static char *parse_loop_device_name(const char *dev, const char *dev_dir)
 	return buf;
 
 error:
+	dm_free(device);
 	dm_free(buf);
+
 	return NULL;
 }
 
