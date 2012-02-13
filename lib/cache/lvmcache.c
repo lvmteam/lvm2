@@ -321,13 +321,17 @@ int lvmcache_verify_lock_order(const char *vgname)
 		if (!dm_hash_get_data(_lock_hash, n))
 			return_0;
 
-		vgname2 = dm_hash_get_key(_lock_hash, n);
+		if (!(vgname2 = dm_hash_get_key(_lock_hash, n))) {
+			log_error(INTERNAL_ERROR "VG lock %s hits NULL.",
+				 vgname);
+			return 0;
+		}
 
 		if (!_vgname_order_correct(vgname2, vgname)) {
 			log_errno(EDEADLK, INTERNAL_ERROR "VG lock %s must "
 				  "be requested before %s, not after.",
 				  vgname, vgname2);
-			return_0;
+			return 0;
 		}
 	}
 
