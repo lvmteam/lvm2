@@ -1168,6 +1168,22 @@ AC_ARG_WITH(udevdir,
 	    udevdir=$withval, udevdir='${udev_prefix}/lib/udev/rules.d')
 
 ################################################################################
+dnl -- Get the systemd system unit dir value from pkg_config automatically if value not given explicitly.
+dnl -- This follows the recommendation for systemd integration best practices mentioned in daemon(7) manpage.
+AC_ARG_WITH(systemdsystemunitdir,
+	    AC_HELP_STRING([--with-systemdsystemunitdir=DIR],
+			   [systemd service files in DIR]),
+	    systemdsystemunitdir=$withval,
+	    pkg_systemdsystemunitdir=$($PKG_CONFIG --variable=systemdsystemunitdir systemd))
+
+if test -n "$pkg_systemdsystemunitdir"; then
+	    systemdsystemunitdir=$pkg_systemdsystemunitdir;
+fi
+
+if test -z "$systemdsystemunitdir"; then
+	    systemdsystemunitdir='/lib/systemd/system';
+fi
+################################################################################
 dnl -- Ensure additional headers required
 if test x$READLINE = xyes; then
 	AC_CHECK_HEADERS(readline/readline.h readline/history.h,,AC_MSG_ERROR(bailing out))
@@ -1435,6 +1451,7 @@ AC_SUBST(kernelvsn)
 AC_SUBST(tmpdir)
 AC_SUBST(udev_prefix)
 AC_SUBST(udevdir)
+AC_SUBST(systemdsystemunitdir)
 AC_SUBST(usrlibdir)
 AC_SUBST(usrsbindir)
 

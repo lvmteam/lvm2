@@ -1,5 +1,6 @@
 Version 2.02.92 - 
 ====================================
+  Add configure --with-systemdsystemunitdir.
   Add check for allocation failure in _build_matcher().
   Add check for rimage name allocation failure in _raid_add_images().
   Add check for mda_copy failure in _text_pv_setup().
