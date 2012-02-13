@@ -8099,6 +8099,12 @@ $as_echo "Disabling clvmd build. No cluster manager detected." >&6; }
 	fi
 fi
 
+if [ `expr x"$CLVMD" : '.*corosync.*'` != 0 ]; then
+   if test x$HAVE_CMAP = xyes; then
+	CLVMD_CMANAGERS="$CLVMD_CMANAGERS dlm"
+   fi
+fi
+
 ################################################################################
 if test "x$CLVMD" != xnone; then
 
