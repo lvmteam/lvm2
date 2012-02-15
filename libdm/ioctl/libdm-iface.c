@@ -450,6 +450,7 @@ void dm_task_destroy(struct dm_task *dmt)
 
 	_dm_zfree_dmi(dmt->dmi.v4);
 	dm_free(dmt->dev_name);
+	dm_free(dmt->mangled_dev_name);
 	dm_free(dmt->newname);
 	dm_free(dmt->message);
 	dm_free(dmt->geometry);
@@ -672,11 +673,6 @@ uint32_t dm_task_get_read_ahead(const struct dm_task *dmt, uint32_t *read_ahead)
 
 	return get_dev_node_read_ahead(dev_name, MAJOR(dmt->dmi.v4->dev),
 				       MINOR(dmt->dmi.v4->dev), read_ahead);
-}
-
-const char *dm_task_get_name(const struct dm_task *dmt)
-{
-	return (dmt->dmi.v4->name);
 }
 
 const char *dm_task_get_uuid(const struct dm_task *dmt)

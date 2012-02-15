@@ -287,6 +287,12 @@ typedef enum {
 } dm_string_mangling_t;
 
 /*
+ * Set/get mangling mode used for device-mapper names.
+ */
+int dm_set_name_mangling_mode(dm_string_mangling_t name_mangling);
+dm_string_mangling_t dm_get_name_mangling_mode(void);
+
+/*
  * Configure the device-mapper directory
  */
 int dm_set_dev_dir(const char *dir);

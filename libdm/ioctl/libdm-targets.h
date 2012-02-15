@@ -33,6 +33,7 @@ struct target {
 struct dm_task {
 	int type;
 	char *dev_name;
+	char *mangled_dev_name;
 
 	struct target *head, *tail;
 
