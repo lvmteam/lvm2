@@ -38,6 +38,9 @@
 /* Define default node creation behavior with dmsetup create */
 #undef DEFAULT_DM_ADD_NODE
 
+/* Define default name mangling behaviour */
+#undef DEFAULT_DM_NAME_MANGLING
+
 /* Name of default locking directory. */
 #undef DEFAULT_LOCK_DIR
 

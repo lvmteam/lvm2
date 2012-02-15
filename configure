@@ -796,6 +796,7 @@ with_device_uid
 with_device_gid
 with_device_mode
 with_device_nodes_on
+with_default_name_mangling
 enable_lvm1_fallback
 with_lvm1
 with_pool
@@ -1543,6 +1544,9 @@ Optional Packages:
   --with-device-mode=MODE set the mode used for new device nodes [[MODE=0600]]
   --with-device-nodes-on=ON
                           create nodes on resume or create [[ON=resume]]
+  --with-default-name-mangling=MANGLING
+                          default name mangling: auto/none/hex
+                          [[MANGLING=auto]]
   --with-lvm1=TYPE        LVM1 metadata support: internal/shared/none
                           [[TYPE=internal]]
   --with-pool=TYPE        GFS pool read-only support: internal/shared/none
@@ -6759,6 +6763,30 @@ $as_echo "on $ADD_NODE" >&6; }
 
 cat >>confdefs.h <<_ACEOF
 #define DEFAULT_DM_ADD_NODE $add_on
+_ACEOF
+
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking default name mangling" >&5
+$as_echo_n "checking default name mangling... " >&6; }
+
+# Check whether --with-default-name-mangling was given.
+if test "${with_default_name_mangling+set}" = set; then :
+  withval=$with_default_name_mangling; MANGLING=$withval
+else
+  MANGLING=auto
+fi
+
+case "$MANGLING" in
+ auto) mangling=DM_STRING_MANGLING_AUTO;;
+ disabled) mangling=DM_STRING_MANGLING_NONE;;
+ hex) mangling=DM_STRING_MANGLING_HEX;;
+ *) as_fn_error $? "--with-default-name-mangling parameter invalid" "$LINENO" 5;;
+esac
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $MANGLING" >&5
+$as_echo "$MANGLING" >&6; }
+
+cat >>confdefs.h <<_ACEOF
+#define DEFAULT_DM_NAME_MANGLING $mangling
 _ACEOF
 
 
