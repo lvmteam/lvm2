@@ -60,8 +60,8 @@ static int _consolidate_vg(struct cmd_context *cmd, struct volume_group *vg)
 
 	if (!r) {
 		cmd->handles_missing_pvs = 1;
-		log_warn("WARNING: There are still partial LVs in VG %s.", vg->name);
-		log_warn("To remove them unconditionally use: vgreduce --removemissing --force.");
+		log_error("There are still partial LVs in VG %s.", vg->name);
+		log_error("To remove them unconditionally use: vgreduce --removemissing --force.");
 		log_warn("Proceeding to remove empty missing PVs.");
 	}
 
