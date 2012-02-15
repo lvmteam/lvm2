@@ -78,7 +78,8 @@ dmsetup table ${vg}-${lv1} | grep " snapshot-origin "
 # -- refresh LV to start merge (now that FS is unmounted),
 #    an active merge uses the 'snapshot-merge' target
 lvchange --refresh $vg/$lv1
-dmsetup table ${vg}-${lv1} | grep " snapshot-merge "
+# check whether it's still merging - or maybe got already merged (slow test)
+dmsetup table ${vg}-${lv1} | grep " snapshot-merge " || dmsetup table ${vg}-${lv1} | grep " linear "
 # -- don't care if merge is still active; lvremove at this point
 #    may test stopping an active merge
 lvremove -f $vg/$lv1
