@@ -365,6 +365,12 @@ int dm_device_has_holders(uint32_t major, uint32_t minor);
  */
 int dm_device_has_mounted_fs(uint32_t major, uint32_t minor);
 
+
+/*
+ * Initialise library
+ */
+void dm_lib_init(void) __attribute__((constructor));
+
 /*
  * Release library resources
  */

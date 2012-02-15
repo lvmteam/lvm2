@@ -43,6 +43,8 @@
 #  include <selinux/label.h>
 #endif
 
+#define DM_DEFAULT_NAME_MANGLING_MODE_ENV_VAR_NAME "DM_DEFAULT_NAME_MANGLING_MODE"
+
 #define DEV_DIR "/dev/"
 
 #ifdef UDEV_SYNC_SUPPORT
@@ -66,7 +68,7 @@ static char _default_uuid_prefix[DM_MAX_UUID_PREFIX_LEN + 1] = "LVM-";
 
 static int _verbose = 0;
 static int _suspended_dev_counter = 0;
-static int _name_mangling_mode = DEFAULT_DM_NAME_MANGLING;
+static int _name_mangling_mode = -1;
 
 #ifdef HAVE_SELINUX_LABEL_H
 static struct selabel_handle *_selabel_handle = NULL;
@@ -78,6 +80,22 @@ static int _udev_running = -1;
 static int _sync_with_udev = 1;
 static int _udev_checking = 1;
 #endif
+
+void dm_lib_init(void)
+{
+	const char *env;
+
+	env = getenv(DM_DEFAULT_NAME_MANGLING_MODE_ENV_VAR_NAME);
+	if (env && *env) {
+		if (!strcasecmp(env, "none"))
+			_name_mangling_mode = DM_STRING_MANGLING_NONE;
+		else if (!strcasecmp(env, "auto"))
+			_name_mangling_mode = DM_STRING_MANGLING_AUTO;
+		else if (!strcasecmp(env, "hex"))
+			_name_mangling_mode = DM_STRING_MANGLING_HEX;
+	} else
+		_name_mangling_mode = DEFAULT_DM_NAME_MANGLING;
+}
 
 /*
  * Library users can provide their own logging
