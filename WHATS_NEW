@@ -1,5 +1,6 @@
 Version 2.02.92 - 
 ====================================
+  Initialize monitoring support only for thin pools and skip thin volumes.
   Make conversion from a synced 'mirror' to 'raid1' not cause a full resync.
   Properly test buffer for unit check in units_to_bytes().
   Add configure --with-systemdsystemunitdir.
