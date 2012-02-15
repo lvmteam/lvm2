@@ -126,6 +126,7 @@ enum {
 	GID_ARG,
 	HELP_ARG,
 	INACTIVE_ARG,
+	MANGLENAME_ARG,
 	MAJOR_ARG,
 	MINOR_ARG,
 	MODE_ARG,
@@ -2908,7 +2909,7 @@ static void _usage(FILE *out)
 
 	fprintf(out, "Usage:\n\n");
 	fprintf(out, "dmsetup [--version] [-h|--help [-c|-C|--columns]]\n"
-		"        [--checks] [-v|--verbose [-v|--verbose ...]]\n"
+		"        [--checks] [--manglename <mangling_mode>] [-v|--verbose [-v|--verbose ...]]\n"
 		"        [-r|--readonly] [--noopencount] [--nolockfs] [--inactive]\n"
 		"        [--udevcookie [cookie]] [--noudevrules] [--noudevsync] [--verifyudev]\n"
 		"        [-y|--yes] [--readahead [+]<sectors>|auto|none] [--retry]\n"
@@ -2918,6 +2919,7 @@ static void _usage(FILE *out)
 		fprintf(out, "\t%s %s\n", _commands[i].name, _commands[i].help);
 	fprintf(out, "\n<device> may be device name or -u <uuid> or "
 		     "-j <major> -m <minor>\n");
+	fprintf(out, "<mangling_mode> is one of 'none', 'auto' and 'hex'.\n");
 	fprintf(out, "<fields> are comma-separated.  Use 'help -c' for list.\n");
 	fprintf(out, "Table_file contents may be supplied on stdin.\n");
 	fprintf(out, "Options are: devno, devname, blkdevname.\n");
@@ -3322,6 +3324,7 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 		{"gid", 1, &ind, GID_ARG},
 		{"help", 0, &ind, HELP_ARG},
 		{"inactive", 0, &ind, INACTIVE_ARG},
+		{"manglename", 1, &ind, MANGLENAME_ARG},
 		{"major", 1, &ind, MAJOR_ARG},
 		{"minor", 1, &ind, MINOR_ARG},
 		{"mode", 1, &ind, MODE_ARG},
@@ -3494,6 +3497,20 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 		}
 		if (ind == INACTIVE_ARG)
 		       _switches[INACTIVE_ARG]++;
+		if ((ind == MANGLENAME_ARG)) {
+			_switches[MANGLENAME_ARG]++;
+			if (!strcasecmp(optarg, "none"))
+				_int_args[MANGLENAME_ARG] = DM_STRING_MANGLING_NONE;
+			else if (!strcasecmp(optarg, "auto"))
+				_int_args[MANGLENAME_ARG] = DM_STRING_MANGLING_AUTO;
+			else if (!strcasecmp(optarg, "hex"))
+				_int_args[MANGLENAME_ARG] = DM_STRING_MANGLING_HEX;
+			else {
+				log_error("Unknown name mangling mode");
+				return 0;
+			}
+			dm_set_name_mangling_mode(_int_args[MANGLENAME_ARG]);
+		}
 		if (ind == NAMEPREFIXES_ARG)
 			_switches[NAMEPREFIXES_ARG]++;
 		if (ind == NOFLUSH_ARG)
