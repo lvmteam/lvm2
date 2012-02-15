@@ -1,5 +1,6 @@
 Version 1.02.71 - 
 ====================================
+  Add "watch" rule to 13-dm-disk.rules.
   Detect failing fifo and skip 20s retry communication period.
   Add DM_DEFAULT_NAME_MANGLING_MODE env. variable to override configured value.
   Add dm_lib_init to automatically initialise device-mapper library on load.
