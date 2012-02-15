@@ -524,7 +524,7 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 			   void *handle __attribute__((unused)))
 {
 	int doit = 0, docmds = 0;
-	int dmeventd_mode, archived = 0;
+	int archived = 0;
 	struct logical_volume *origin;
 	char snaps_msg[128];
 
@@ -594,11 +594,6 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 			  lv->name);
 		return ECMD_FAILED;
 	}
-
-	if (!get_activation_monitoring_mode(cmd, lv->vg, &dmeventd_mode))
-		return ECMD_FAILED;
-
-	init_dmeventd_monitor(dmeventd_mode);
 
 	/*
 	 * FIXME: DEFAULT_BACKGROUND_POLLING should be "unspecified".

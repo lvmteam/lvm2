@@ -447,7 +447,6 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 			   struct volume_group *vg,
 			   void *handle __attribute__((unused)))
 {
-	int dmeventd_mode;
 	int archived = 0;
 	int i;
 
@@ -472,11 +471,6 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 		log_error("Volume group \"%s\" is exported", vg_name);
 		return ECMD_FAILED;
 	}
-
-	if (!get_activation_monitoring_mode(cmd, vg, &dmeventd_mode))
-		return ECMD_FAILED;
-
-	init_dmeventd_monitor(dmeventd_mode);
 
 	/*
 	 * FIXME: DEFAULT_BACKGROUND_POLLING should be "unspecified".
