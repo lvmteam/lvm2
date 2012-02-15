@@ -119,6 +119,14 @@ static void dump(void) {
 	}
 }
 
+static void trickle() {
+	static int counter_last = -1, counter = 0;
+	while ( counter < readbuf_used && counter != counter_last ) {
+		counter_last = counter;
+		counter = outline( readbuf, counter, 1 );
+	}
+}
+
 static void clear(void) {
 	readbuf_used = 0;
 }
@@ -131,12 +139,12 @@ static void drain(void) {
 		sz = read(fds[1], buf, sizeof(buf));
 		if (sz <= 0)
 			return;
-		if (verbose)
-			write(1, buf, sz);
 		if (readbuf_used + sz >= readbuf_sz) {
 			readbuf_sz = readbuf_sz ? 2 * readbuf_sz : 4096;
 			readbuf = realloc(readbuf, readbuf_sz);
 		}
+		if (verbose)
+			trickle();
 		if (!readbuf)
 			exit(205);
 		memcpy(readbuf + readbuf_used, buf, sz);
