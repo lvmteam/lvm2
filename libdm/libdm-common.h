@@ -18,6 +18,8 @@
 
 #include "libdevmapper.h"
 
+#define DM_DEFAULT_NAME_MANGLING_MODE_ENV_VAR_NAME "DM_DEFAULT_NAME_MANGLING_MODE"
+
 #define DEV_NAME(dmt) (dmt->mangled_dev_name ? : dmt->dev_name)
 
 int mangle_name(const char *str, size_t len, char *buf,
