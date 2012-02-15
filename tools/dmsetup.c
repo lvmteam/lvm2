@@ -2262,6 +2262,38 @@ static int _dm_name_disp(struct dm_report *rh,
 	return dm_report_field_string(rh, field, &name);
 }
 
+static int _dm_mangled_name_disp(struct dm_report *rh,
+				 struct dm_pool *mem __attribute__((unused)),
+				 struct dm_report_field *field, const void *data,
+				 void *private __attribute__((unused)))
+{
+	char *name;
+	int r = 0;
+
+	if ((name = dm_task_get_name_mangled((const struct dm_task *) data))) {
+		r = dm_report_field_string(rh, field, (const char **) &name);
+		dm_free(name);
+	}
+
+	return r;
+}
+
+static int _dm_unmangled_name_disp(struct dm_report *rh,
+				   struct dm_pool *mem __attribute__((unused)),
+				   struct dm_report_field *field, const void *data,
+				   void *private __attribute__((unused)))
+{
+	char *name;
+	int r = 0;
+
+	if ((name = dm_task_get_name_unmangled((const struct dm_task *) data))) {
+		r = dm_report_field_string(rh, field, (const char **) &name);
+		dm_free(name);
+	}
+
+	return r;
+}
+
 static int _dm_uuid_disp(struct dm_report *rh,
 			 struct dm_pool *mem __attribute__((unused)),
 			 struct dm_report_field *field,
@@ -2693,6 +2725,8 @@ static const struct dm_report_object_type _report_types[] = {
 static const struct dm_report_field_type _report_fields[] = {
 /* *INDENT-OFF* */
 FIELD_F(TASK, STR, "Name", 16, dm_name, "name", "Name of mapped device.")
+FIELD_F(TASK, STR, "MangledName", 16, dm_mangled_name, "mangled_name", "Mangled name of mapped device.")
+FIELD_F(TASK, STR, "UnmangledName", 16, dm_unmangled_name, "unmangled_name", "Unmangled name of mapped device.")
 FIELD_F(TASK, STR, "UUID", 32, dm_uuid, "uuid", "Unique (optional) identifier for mapped device.")
 
 /* FIXME Next one should be INFO */
