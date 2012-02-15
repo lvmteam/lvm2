@@ -315,7 +315,7 @@ struct format_type *init_format(struct cmd_context *cmd)
 	}
 
 	if (!(fmt->orphan_vg = alloc_vg("pool_orphan", cmd, fmt->orphan_vg_name))) {
-		log_error("Couldn't create lvm1 orphan VG.");
+		log_error("Couldn't create pool orphan VG.");
 		dm_free(fmt);
 		return NULL;
 	}
