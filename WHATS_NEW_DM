@@ -1,5 +1,6 @@
 Version 1.02.71 - 
 ====================================
+  Add dm_task_get_name_mangled/unmangled to libdevmapper.
   Mangle device name on dm_task_set_name/newname call if necessary.
   Add dm_set/get_name_mangling_mode to set/get name mangling in libdevmapper.
   Add configure --with-default-name-mangling.

@@ -171,6 +171,7 @@ struct dm_deps *dm_task_get_deps(struct dm_task *dmt);
 struct dm_names *dm_task_get_names(struct dm_task *dmt);
 struct dm_versions *dm_task_get_versions(struct dm_task *dmt);
 
+
 int dm_task_set_ro(struct dm_task *dmt);
 int dm_task_set_newname(struct dm_task *dmt, const char *newname);
 int dm_task_set_newuuid(struct dm_task *dmt, const char *newuuid);
@@ -291,6 +292,14 @@ typedef enum {
  */
 int dm_set_name_mangling_mode(dm_string_mangling_t name_mangling);
 dm_string_mangling_t dm_get_name_mangling_mode(void);
+
+/*
+ * Get mangled/unmangled form of the device-mapper name
+ * irrespective of the global setting (set by dm_set_name_mangling_mode).
+ * The name returned needs to be freed after use by calling dm_free!
+ */
+char *dm_task_get_name_mangled(const struct dm_task *dmt);
+char *dm_task_get_name_unmangled(const struct dm_task *dmt);
 
 /*
  * Configure the device-mapper directory
