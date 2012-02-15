@@ -1,5 +1,6 @@
 Version 1.02.71 - 
 ====================================
+  Replace any '\' char with '\\' in table specification on input.
   Add mangle command to dmsetup to provide renaming to correct mangled form.
   Add 'mangled_name' and 'unmangled_name' fields to dmsetup info -c -o.
   Add --manglename option to dmsetup to select the name mangling mode.

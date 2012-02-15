@@ -866,7 +866,9 @@ static char *_add_target(struct target *t, char *out, char *end)
 	char *out_sp = out;
 	struct dm_target_spec sp;
 	size_t sp_size = sizeof(struct dm_target_spec);
+	unsigned int backslash_count = 0;
 	int len;
+	char *pt;
 
 	if (strlen(t->type) >= sizeof(sp.target_type)) {
 		log_error("Target type name %s is too long.", t->type);
@@ -880,15 +882,32 @@ static char *_add_target(struct target *t, char *out, char *end)
 	sp.target_type[sizeof(sp.target_type) - 1] = '\0';
 
 	out += sp_size;
-	len = strlen(t->params);
+	pt = t->params;
+
+	while (*pt)
+		if (*pt++ == '\\')
+			backslash_count++;
+	len = strlen(t->params) + backslash_count;
 
 	if ((out >= end) || (out + len + 1) >= end) {
 		log_error("Ran out of memory building ioctl parameter");
 		return NULL;
 	}
 
-	strcpy(out, t->params);
-	out += len + 1;
+	if (backslash_count) {
+		/* replace "\" with "\\" */
+		pt = t->params;
+		do {
+			if (*pt == '\\')
+				*out++ = '\\';
+			*out++ = *pt++;
+		} while (*pt);
+		*out++ = '\0';
+	}
+	else {
+		strcpy(out, t->params);
+		out += len + 1;
+	}
 
 	/* align next block */
 	out = _align(out, ALIGNMENT);
