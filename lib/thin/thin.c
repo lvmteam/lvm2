@@ -602,7 +602,8 @@ int init_multiple_segtypes(struct cmd_context *cmd, struct segtype_library *segl
 
 #ifdef DEVMAPPER_SUPPORT
 #  ifdef DMEVENTD
-		if (_get_thin_dso_path(cmd))
+		if ((reg_segtypes[i].flags & SEG_THIN_POOL) &&
+		    _get_thin_dso_path(cmd))
 			segtype->flags |= SEG_MONITORED;
 #  endif /* DMEVENTD */
 #endif
