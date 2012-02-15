@@ -1,5 +1,6 @@
 Version 1.02.71 - 
 ====================================
+  Add mangle command to dmsetup to provide renaming to correct mangled form.
   Add 'mangled_name' and 'unmangled_name' fields to dmsetup info -c -o.
   Add --manglename option to dmsetup to select the name mangling mode.
   Add dm_task_get_name_mangled/unmangled to libdevmapper.
