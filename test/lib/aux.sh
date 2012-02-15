@@ -61,15 +61,17 @@ prepare_dmeventd() {
 }
 
 prepare_lvmetad() {
+	echo preparing lvmetad...
+
 	# skip if we don't have our own lvmetad...
 	(which lvmetad | grep $abs_builddir) || {
 		touch SKIP_THIS_TEST
 		exit 1
 	}
 
-	lvmconf "global/lvmetad = 1"
+	lvmconf "global/use_lvmetad = 1"
 
-	lvmetad -f "$@" &
+	lvmetad -f "$@" -s $TESTDIR/lvmetad.socket &
 	echo "$!" > LOCAL_LVMETAD
 
 	sleep 1
@@ -322,6 +324,7 @@ disable_dev() {
 	init_udev_transaction
 	for dev in "$@"; do
         	dmsetup remove -f $dev || true
+		pvscan --lvmetad $dev || true
 	done
 	finish_udev_transaction
 
@@ -335,6 +338,7 @@ enable_dev() {
 		dmsetup create -u TEST-$name $name $name.table || dmsetup load $name $name.table
 		# using device name (since device path does not exists yes with udev)
 		dmsetup resume $name
+		pvscan --lvmetad $dev || true
 	done
 	finish_udev_transaction
 }

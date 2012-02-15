@@ -59,6 +59,10 @@ ln -s $abs_top_builddir/test/lib/* $TESTDIR/lib
 set -eE -o pipefail
 aux lvmconf
 aux prepare_clvmd
+test -n "$LVM_TEST_LVMETAD" && {
+    aux prepare_lvmetad
+    export LVM_LVMETAD_SOCKET="$TESTDIR/lvmetad.socket"
+}
 echo "@TESTDIR=$TESTDIR"
 echo "@PREFIX=$PREFIX"
 
