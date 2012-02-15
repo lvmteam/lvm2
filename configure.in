@@ -229,6 +229,20 @@ esac
 AC_MSG_RESULT(on $ADD_NODE)
 AC_DEFINE_UNQUOTED([DEFAULT_DM_ADD_NODE], $add_on, [Define default node creation behavior with dmsetup create])
 
+AC_MSG_CHECKING(default name mangling)
+AC_ARG_WITH(default-name-mangling,
+	    AC_HELP_STRING([--with-default-name-mangling=MANGLING],
+			   [default name mangling: auto/none/hex [[MANGLING=auto]]]),
+	    MANGLING=$withval, MANGLING=auto)
+case "$MANGLING" in
+ auto) mangling=DM_STRING_MANGLING_AUTO;;
+ disabled) mangling=DM_STRING_MANGLING_NONE;;
+ hex) mangling=DM_STRING_MANGLING_HEX;;
+ *) AC_MSG_ERROR([--with-default-name-mangling parameter invalid]);;
+esac
+AC_MSG_RESULT($MANGLING)
+AC_DEFINE_UNQUOTED([DEFAULT_DM_NAME_MANGLING], $mangling, [Define default name mangling behaviour])
+
 ################################################################################
 dnl -- LVM1 tool fallback option
 AC_MSG_CHECKING(whether to enable lvm1 fallback)

@@ -274,6 +274,19 @@ int dm_task_run(struct dm_task *dmt);
 void dm_task_update_nodes(void);
 
 /*
+ * Mangling support
+ *
+ * Character whitelist: 0-9, A-Z, a-z, #+-.:=@_
+ * HEX mangling format: \xNN, NN being the hex value of the character.
+ * (whitelist and format supported by udev)
+*/
+typedef enum {
+	DM_STRING_MANGLING_NONE, /* do not mangle at all */
+	DM_STRING_MANGLING_AUTO, /* mangle only if not already mangled with hex, error when mixed */
+	DM_STRING_MANGLING_HEX	 /* always mangle with hex encoding, no matter what the input is */
+} dm_string_mangling_t;
+
+/*
  * Configure the device-mapper directory
  */
 int dm_set_dev_dir(const char *dir);
