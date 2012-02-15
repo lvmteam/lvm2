@@ -3654,7 +3654,11 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 			_switches[SHOWKEYS_ARG]++;
 		if (ind == TABLE_ARG) {
 			_switches[TABLE_ARG]++;
-			_table = optarg;
+			if (!(_table = dm_malloc(strlen(optarg + 1)))) {
+				log_error("Could not allocate memory for table string.");
+				return 0;
+			}
+			strcpy(_table, optarg);
 		}
 		if (ind == TREE_ARG)
 			_switches[TREE_ARG]++;
