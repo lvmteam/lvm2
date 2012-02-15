@@ -283,7 +283,7 @@ static struct dm_config_node *make_pv_node(lvmetad_state *s, const char *pvid,
 
 static response pv_list(lvmetad_state *s, request r)
 {
-	struct dm_config_node *cn = NULL, *cn_pvs, *cn_last = NULL;
+	struct dm_config_node *cn = NULL, *cn_pvs;
 	response res = { .buffer = NULL };
 	res.cft = dm_config_create();
 
