@@ -935,6 +935,7 @@ static void _apply_settings(struct cmd_context *cmd)
 	init_test(cmd->current_settings.test);
 	init_full_scan_done(0);
 	init_mirror_in_sync(0);
+	init_dmeventd_monitor(DEFAULT_DMEVENTD_MONITOR);
 
 	init_msg_prefix(cmd->default_settings.msg_prefix);
 	init_cmd_name(cmd->default_settings.cmd_name);
@@ -996,6 +997,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 {
 	int ret = 0;
 	int locking_type;
+	int monitoring;
 	struct dm_config_tree *old_cft;
 
 	init_error_message_produced(0);
@@ -1040,6 +1042,10 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	if ((ret = _get_settings(cmd)))
 		goto_out;
 	_apply_settings(cmd);
+
+	if (!get_activation_monitoring_mode(cmd, &monitoring))
+		goto_out;
+	init_dmeventd_monitor(monitoring);
 
 	log_debug("Processing: %s", cmd->cmd_line);
 
