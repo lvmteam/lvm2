@@ -603,7 +603,7 @@ struct format_type *init_format(struct cmd_context *cmd)
 		return NULL;
 	}
 
-	if (!(fmt->orphan_vg = alloc_vg("text_orphan", cmd, fmt->orphan_vg_name))) {
+	if (!(fmt->orphan_vg = alloc_vg("format1_orphan", cmd, fmt->orphan_vg_name))) {
 		log_error("Couldn't create lvm1 orphan VG.");
 		dm_free(fmt);
 		return NULL;
