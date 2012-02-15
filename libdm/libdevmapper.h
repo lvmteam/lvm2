@@ -164,13 +164,22 @@ struct dm_versions {
 int dm_get_library_version(char *version, size_t size);
 int dm_task_get_driver_version(struct dm_task *dmt, char *version, size_t size);
 int dm_task_get_info(struct dm_task *dmt, struct dm_info *dmi);
-const char *dm_task_get_name(const struct dm_task *dmt);
 const char *dm_task_get_uuid(const struct dm_task *dmt);
 
 struct dm_deps *dm_task_get_deps(struct dm_task *dmt);
-struct dm_names *dm_task_get_names(struct dm_task *dmt);
 struct dm_versions *dm_task_get_versions(struct dm_task *dmt);
 
+/*
+ * These functions return device-mapper names based on the value
+ * of the mangling mode set during preceding dm_task_run call:
+ *   - unmangled name for DM_STRING_MANGLING_{AUTO, HEX},
+ *   - name without any changes for DM_STRING_MANGLING_NONE.
+ *
+ * To get mangled or unmangled form of the name directly, use
+ * dm_task_get_name_mangled or dm_task_get_name_unmangled function.
+ */
+const char *dm_task_get_name(const struct dm_task *dmt);
+struct dm_names *dm_task_get_names(struct dm_task *dmt);
 
 int dm_task_set_ro(struct dm_task *dmt);
 int dm_task_set_newname(struct dm_task *dmt, const char *newname);

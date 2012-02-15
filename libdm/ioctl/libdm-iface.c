@@ -1523,6 +1523,39 @@ static const char *_sanitise_message(char *message)
 	return sanitised_message;
 }
 
+static void _do_dm_ioctl_unmangle_name(char *name)
+{
+	char buf[DM_NAME_LEN];
+	int r;
+
+	if ((r = unmangle_name(name, DM_NAME_LEN, buf, sizeof(buf),
+			       dm_get_name_mangling_mode())) < 0)
+		log_debug("_do_dm_ioctl_unmangle_name: failed to "
+			  "unmangle \"%s\"", name);
+	else if (r)
+		memcpy(name, buf, strlen(buf) + 1);
+}
+
+static void _dm_ioctl_unmangle_names(int type, struct dm_ioctl *dmi)
+{
+	struct dm_names *names;
+	unsigned next = 0;
+	char *name;
+
+	if ((name = dmi->name))
+		_do_dm_ioctl_unmangle_name(name);
+
+	if (type == DM_DEVICE_LIST &&
+	    ((names = ((struct dm_names *) ((char *)dmi + dmi->data_start)))) &&
+	    names->dev) {
+		do {
+			names = (struct dm_names *)((char *) names + next);
+			_do_dm_ioctl_unmangle_name(names->name);
+			next = names->next;
+		} while (next);
+	}
+}
+
 static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 				     unsigned buffer_repeat_count,
 				     unsigned retry_repeat_count,
@@ -1650,6 +1683,8 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 			  "internally to avoid process lock-up.");
 		_udev_complete(dmt);
 	}
+
+	(void) _dm_ioctl_unmangle_names(dmt->type, dmi);
 
 #else /* Userspace alternative for testing */
 #endif
