@@ -232,6 +232,7 @@ static int _daemon_read(struct dm_event_fifos *fifos,
 	size_t size = 2 * sizeof(uint32_t);	/* status + size */
 	uint32_t *header = alloca(size);
 	char *buf = (char *)header;
+	struct stat fstatbuf;
 
 	while (bytes < size) {
 		for (i = 0, ret = 0; (i < 20) && (ret < 1); i++) {
@@ -243,6 +244,13 @@ static int _daemon_read(struct dm_event_fifos *fifos,
 				     &tval);
 			if (ret < 0 && errno != EINTR) {
 				log_error("Unable to read from event server");
+				return 0;
+			}
+			/* Check whether fifo is still alive */
+			if ((ret == 0) &&
+			    fstat(fifos->server + 1, &fstatbuf) &&
+			    (errno == EBADF)) {
+				log_error("Fifo fd is bad for event server.");
 				return 0;
 			}
 		}
