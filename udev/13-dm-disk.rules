@@ -25,7 +25,7 @@ ENV{ID_FS_USAGE}=="filesystem|other|crypto", ENV{ID_FS_UUID_ENC}=="?*", SYMLINK+
 ENV{ID_FS_USAGE}=="filesystem|other", ENV{ID_FS_LABEL_ENC}=="?*", SYMLINK+="disk/by-label/$env{ID_FS_LABEL_ENC}"
 
 # Add inotify watch to track changes on this device.
-# Using the watch rule is not optimal - it generetes a lot of spurious
+# Using the watch rule is not optimal - it generates a lot of spurious
 # and useless events whenever the device opened for read-write is closed.
 # The best would be to generete the event directly in the tool changing
 # relevant information so only relevant events will be processed
