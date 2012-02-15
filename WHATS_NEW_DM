@@ -1,5 +1,6 @@
 Version 1.02.71 - 
 ====================================
+  Add 'mangled_name' and 'unmangled_name' fields to dmsetup info -c -o.
   Add --manglename option to dmsetup to select the name mangling mode.
   Add dm_task_get_name_mangled/unmangled to libdevmapper.
   Mangle device name on dm_task_set_name/newname call if necessary.
