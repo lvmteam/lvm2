@@ -1,5 +1,6 @@
 Version 1.02.71 - 
 ====================================
+  Switch to using built-in blkid in 13-dm-disk.rules.
   Add "watch" rule to 13-dm-disk.rules.
   Detect failing fifo and skip 20s retry communication period.
   Add DM_DEFAULT_NAME_MANGLING_MODE env. variable to override configured value.
