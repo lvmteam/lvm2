@@ -1,7 +1,7 @@
-Version 2.02.92 - 
+Version 2.02.92 - 20th February 2012
 ====================================
-  Read monitoring config settings for every lvm command.
-  Initialize monitoring support only for thin pools and skip thin volumes.
+  Read dmeventd monitoring config settings for every lvm command.
+  For thin devices, initialize monitoring only for thin pools not thin volumes.
   Make conversion from a synced 'mirror' to 'raid1' not cause a full resync.
   Properly test buffer for unit check in units_to_bytes().
   Add configure --with-systemdsystemunitdir.
