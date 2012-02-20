@@ -1,9 +1,9 @@
-Version 1.02.71 - 
+Version 1.02.71 - 20th February 2012
 ====================================
   Switch to using built-in blkid in 13-dm-disk.rules.
   Add "watch" rule to 13-dm-disk.rules.
   Detect failing fifo and skip 20s retry communication period.
-  Add DM_DEFAULT_NAME_MANGLING_MODE env. variable to override configured value.
+  Add DM_DEFAULT_NAME_MANGLING_MODE environment variable as an override.
   Add dm_lib_init to automatically initialise device-mapper library on load.
   Replace any '\' char with '\\' in table specification on input.
   Add mangle command to dmsetup to provide renaming to correct mangled form.
@@ -12,7 +12,7 @@ Version 1.02.71 -
   Add dm_task_get_name_mangled/unmangled to libdevmapper.
   Mangle device name on dm_task_set_name/newname call if necessary.
   Add dm_set/get_name_mangling_mode to set/get name mangling in libdevmapper.
-  Add configure --with-default-name-mangling.
+  Add configure --with-default-name-mangling for udev-friendly dev name charset.
   Test for parsed words in _umount() dmeventd snapshot plugin.
   Fix memory leak in fail path of parse_loop_device_name() in dmsetup.
   Check for missing reply_uuid in dm_event_get_registered_device().
