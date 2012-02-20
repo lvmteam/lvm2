@@ -873,6 +873,17 @@ AC_ARG_ENABLE(udev_rules,
 	      UDEV_RULES=$enableval, UDEV_RULES=$UDEV_SYNC)
 AC_MSG_RESULT($UDEV_RULES)
 
+if test x$UDEV_RULES = xyes; then
+	AC_MSG_CHECKING(whether udev supports builtin blkid)
+	udev_version=$(udevadm info --version 2>/dev/null)
+	if test -n "$udev_version" && test "$udev_version" -ge 176; then
+		UDEV_HAS_BUILTIN_BLKID=yes
+	else
+		UDEV_HAS_BUILTIN_BLKID=no
+	fi
+	AC_MSG_RESULT($UDEV_HAS_BUILTIN_BLKID)
+fi
+
 ################################################################################
 dnl -- Compatibility mode
 AC_ARG_ENABLE(compat,
@@ -1454,6 +1465,7 @@ AC_SUBST(UDEV_LIBS)
 AC_SUBST(UDEV_PC)
 AC_SUBST(UDEV_RULES)
 AC_SUBST(UDEV_SYNC)
+AC_SUBST(UDEV_HAS_BUILTIN_BLKID)
 AC_SUBST(CUNIT_LIBS)
 AC_SUBST(CUNIT_CFLAGS)
 AC_SUBST(WRITE_INSTALL)
