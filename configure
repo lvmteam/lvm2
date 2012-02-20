@@ -606,6 +606,7 @@ kerneldir
 interface
 DMEVENTD_PIDFILE
 WRITE_INSTALL
+UDEV_HAS_BUILTIN_BLKID
 UDEV_SYNC
 UDEV_RULES
 UDEV_PC
@@ -8858,6 +8859,19 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $UDEV_RULES" >&5
 $as_echo "$UDEV_RULES" >&6; }
 
+if test x$UDEV_RULES = xyes; then
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether udev supports builtin blkid" >&5
+$as_echo_n "checking whether udev supports builtin blkid... " >&6; }
+	udev_version=$(udevadm info --version 2>/dev/null)
+	if test -n "$udev_version" && test "$udev_version" -ge 176; then
+		UDEV_HAS_BUILTIN_BLKID=yes
+	else
+		UDEV_HAS_BUILTIN_BLKID=no
+	fi
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $UDEV_HAS_BUILTIN_BLKID" >&5
+$as_echo "$UDEV_HAS_BUILTIN_BLKID" >&6; }
+fi
+
 ################################################################################
 # Check whether --enable-compat was given.
 if test "${enable_compat+set}" = set; then :
@@ -10285,6 +10299,7 @@ LVM_PATCHLEVEL=`echo "$VER" | $AWK -F '[(.]' '{print $3}'`
 LVM_LIBAPI=`echo "$VER" | $AWK -F '[()]' '{print $2}'`
 
 ################################################################################
+
 
 
 
