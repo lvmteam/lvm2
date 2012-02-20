@@ -1,3 +1,6 @@
+Version 1.02.72 - 
+====================================
+
 Version 1.02.71 - 20th February 2012
 ====================================
   Switch to using built-in blkid in 13-dm-disk.rules.
@@ -5,7 +8,7 @@ Version 1.02.71 - 20th February 2012
   Detect failing fifo and skip 20s retry communication period.
   Add DM_DEFAULT_NAME_MANGLING_MODE environment variable as an override.
   Add dm_lib_init to automatically initialise device-mapper library on load.
-  Replace any '\' char with '\\' in table specification on input.
+  Replace any '\' char with '\\' in dm table specification on input.
   Add mangle command to dmsetup to provide renaming to correct mangled form.
   Add 'mangled_name' and 'unmangled_name' fields to dmsetup info -c -o.
   Add --manglename option to dmsetup to select the name mangling mode.
