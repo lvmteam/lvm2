@@ -19,6 +19,12 @@ DM_RULES=10-dm.rules 13-dm-disk.rules 95-dm-notify.rules
 LVM_RULES=11-dm-lvm.rules
 DM_DIR=$(shell grep "\#define DM_DIR" $(top_srcdir)/libdm/misc/dm-ioctl.h | awk '{print $$3}')
 
+ifeq ("@UDEV_HAS_BUILTIN_BLKID@", "yes")
+	BLKID_RULE=IMPORT{builtin}=\"blkid\"
+else
+	BLKID_RULE=IMPORT{program}=\"\$$env{DM_SBIN_PATH}\/blkid -o udev -p \$$tempnode\"
+endif
+
 CLEAN_TARGETS=10-dm.rules
 
 include $(top_builddir)/make.tmpl
@@ -26,7 +32,7 @@ include $(top_builddir)/make.tmpl
 vpath %.rules $(srcdir)
 
 %.rules: %.rules.in
-	$(SED) -e "s/(DM_DIR)/$(DM_DIR)/" $< >$@
+	$(SED) -e "s/(DM_DIR)/$(DM_DIR)/" -e "s/(BLKID_RULE)/$(BLKID_RULE)/" $< >$@
 
 %_install: %.rules
 	$(INSTALL_DATA) -D $< $(udevdir)/$(<F)
