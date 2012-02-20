@@ -1,3 +1,6 @@
+Version 2.02.93 - 
+====================================
+
 Version 2.02.92 - 20th February 2012
 ====================================
   Read dmeventd monitoring config settings for every lvm command.
