@@ -3061,7 +3061,8 @@ struct dm_list *build_parallel_areas_from_lv(struct logical_volume *lv,
 	struct dm_list *parallel_areas;
 	struct seg_pvs *spvs;
 	uint32_t current_le = 0;
-	struct lv_segment * uninitialized_var(seg);
+	uint32_t raid_multiple;
+	struct lv_segment *seg = first_seg(lv);
 
 	if (!(parallel_areas = dm_pool_alloc(cmd->mem, sizeof(*parallel_areas)))) {
 		log_error("parallel_areas allocation failed");
@@ -3100,7 +3101,9 @@ struct dm_list *build_parallel_areas_from_lv(struct logical_volume *lv,
 			return_NULL;
 
 		current_le = spvs->le + spvs->len;
-	} while (current_le < lv->le_count);
+		raid_multiple = (seg->segtype->parity_devs) ?
+			seg->area_count - seg->segtype->parity_devs : 1;
+	} while ((current_le * raid_multiple) < lv->le_count);
 
 	/* FIXME Merge adjacent segments with identical PV lists (avoids need for contiguous allocation attempts between successful allocations) */
 
