@@ -1531,7 +1531,15 @@ static int lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *lp
 			if (!(failed_pvs = _failed_pv_list(lv->vg)))
 				return_0;
 
-			return lv_raid_replace(lv, failed_pvs, lp->pvh);
+			if (!lv_raid_replace(lv, failed_pvs, lp->pvh)) {
+				log_error("Failed to replace faulty devices in"
+					  " %s/%s.", lv->vg->name, lv->name);
+				return 0;
+			}
+
+			log_print("Faulty devices in %s/%s successfully"
+				  " replaced.", lv->vg->name, lv->name);
+			return 1;
 		}
 
 		/* "warn" if policy not set to replace */
