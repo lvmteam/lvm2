@@ -1528,10 +1528,9 @@ static int lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *lp
 		_lvconvert_raid_repair_ask(cmd, &replace);
 
 		if (replace) {
-			if (!(failed_pvs = _failed_pv_list(lv->vg))) {
-				stack;
-				return ECMD_FAILED;
-			}
+			if (!(failed_pvs = _failed_pv_list(lv->vg)))
+				return_0;
+
 			return lv_raid_replace(lv, failed_pvs, lp->pvh);
 		}
 
