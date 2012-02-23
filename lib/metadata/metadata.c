@@ -20,6 +20,7 @@
 #include "lvm-string.h"
 #include "lvm-file.h"
 #include "lvmcache.h"
+#include "lvmetad.h"
 #include "memlock.h"
 #include "str_list.h"
 #include "pv_alloc.h"
@@ -257,7 +258,7 @@ int add_pv_to_vg(struct volume_group *vg, const char *pv_name,
 			stack;
 			uuid[0] = '\0';
 		}
-		log_error("Physical volume '%s (%s)' listed more than once.",
+		log_error("Physical volume '%s (%s)' already in the VG.",
 			  pv_name, uuid);
 		return 0;
 	}
@@ -614,6 +615,10 @@ int vg_remove(struct volume_group *vg)
 			ret = 0;
 		}
 	}
+
+	/* FIXME Handle partial failures from above. */
+	if (!lvmetad_vg_remove(vg))
+		stack;
 
 	if (!backup_remove(vg->cmd, vg->name))
 		stack;
@@ -2678,6 +2683,7 @@ static int _vg_commit_mdas(struct volume_group *vg)
 		/* Update cache first time we succeed */
 		if (!failed && !cache_updated) {
 			lvmcache_update_vg(vg, 0);
+			// lvmetad_vg_commit(vg);
 			cache_updated = 1;
 		}
 	}
@@ -2694,6 +2700,9 @@ int vg_commit(struct volume_group *vg)
 			  "without locking %s", vg->name);
 		return cache_updated;
 	}
+
+	if (!lvmetad_vg_update(vg))
+		return 0;
 
 	cache_updated = _vg_commit_mdas(vg);
 
@@ -2750,6 +2759,7 @@ static int _vg_read_orphan_pv(struct lvmcache_info *info, void *baton)
 			    b->vg->fid, b->warnings, 0))) {
 		return 1;
 	}
+
 	if (!(pvl = dm_pool_zalloc(b->vg->vgmem, sizeof(*pvl)))) {
 		log_error("pv_list allocation failed");
 		free_pv_fid(pv);
@@ -2771,11 +2781,12 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd,
 	struct _vg_read_orphan_baton baton;
 
 	lvmcache_label_scan(cmd, 0);
+	lvmcache_seed_infos_from_lvmetad(cmd);
 
 	if (!(vginfo = lvmcache_vginfo_from_vgname(orphan_vgname, NULL)))
 		return_NULL;
 
-	if (!(fmt = lvmcache_fmt_from_vgname(orphan_vgname, NULL, 0)))
+	if (!(fmt = lvmcache_fmt_from_vgname(cmd, orphan_vgname, NULL, 0)))
 		return_NULL;
 
 	vg = fmt->orphan_vg;
@@ -2915,6 +2926,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	struct pv_list *pvl, *pvl2;
 	struct dm_list all_pvs;
 	char uuid[64] __attribute__((aligned(8)));
+	int seqno = 0;
 
 	if (is_orphan_vg(vgname)) {
 		if (use_precommitted) {
@@ -2926,31 +2938,39 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		return _vg_read_orphans(cmd, warnings, vgname);
 	}
 
+	if (lvmetad_active() && !use_precommitted) {
+		*consistent = 1;
+		return lvmcache_get_vg(cmd, vgname, vgid, precommitted);
+	}
+
 	/*
 	 * If cached metadata was inconsistent and *consistent is set
 	 * then repair it now.  Otherwise just return it.
 	 * Also return if use_precommitted is set due to the FIXME in
 	 * the missing PV logic below.
 	 */
-	if ((correct_vg = lvmcache_get_vg(vgid, precommitted)) &&
+	if ((correct_vg = lvmcache_get_vg(cmd, vgname, vgid, precommitted)) &&
 	    (use_precommitted || !*consistent)) {
 		*consistent = 1;
 		return correct_vg;
 	} else {
+		if (correct_vg && correct_vg->seqno > seqno)
+			seqno = correct_vg->seqno;
 		release_vg(correct_vg);
 		correct_vg = NULL;
 	}
 
+
 	/* Find the vgname in the cache */
 	/* If it's not there we must do full scan to be completely sure */
-	if (!(fmt = lvmcache_fmt_from_vgname(vgname, vgid, 1))) {
+	if (!(fmt = lvmcache_fmt_from_vgname(cmd, vgname, vgid, 1))) {
 		lvmcache_label_scan(cmd, 0);
-		if (!(fmt = lvmcache_fmt_from_vgname(vgname, vgid, 1))) {
+		if (!(fmt = lvmcache_fmt_from_vgname(cmd, vgname, vgid, 1))) {
 			/* Independent MDAs aren't supported under low memory */
 			if (!cmd->independent_metadata_areas && critical_section())
 				return_NULL;
 			lvmcache_label_scan(cmd, 2);
-			if (!(fmt = lvmcache_fmt_from_vgname(vgname, vgid, 0)))
+			if (!(fmt = lvmcache_fmt_from_vgname(cmd, vgname, vgid, 0)))
 				return_NULL;
 		}
 	}
@@ -3025,6 +3045,12 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 
 	/* Ensure every PV in the VG was in the cache */
 	if (correct_vg) {
+		/*
+		 * Update the seqno from the cache, for the benefit of
+		 * retro-style metadata formats like LVM1.
+		 */
+		// correct_vg->seqno = seqno > correct_vg->seqno ? seqno : correct_vg->seqno;
+
 		/*
 		 * If the VG has PVs without mdas, or ignored mdas, they may
 		 * still be orphans in the cache: update the cache state here,
@@ -3136,7 +3162,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		if (!cmd->independent_metadata_areas && critical_section())
 			return_NULL;
 		lvmcache_label_scan(cmd, 2);
-		if (!(fmt = lvmcache_fmt_from_vgname(vgname, vgid, 0)))
+		if (!(fmt = lvmcache_fmt_from_vgname(cmd, vgname, vgid, 0)))
 			return_NULL;
 
 		if (precommitted && !(fmt->features & FMT_PRECOMMIT))
@@ -3582,14 +3608,22 @@ static struct physical_volume *_pv_read(struct cmd_context *cmd,
 	if (!(dev = dev_cache_get(pv_name, cmd->filter)))
 		return_NULL;
 
-	if (!(label_read(dev, &label, UINT64_C(0)))) {
-		if (warnings)
-			log_error("No physical volume label read from %s",
-				  pv_name);
-		return NULL;
+	if (lvmetad_active()) {
+		info = lvmcache_info_from_pvid(dev->pvid, 0);
+		if (!info && !lvmetad_pv_lookup_by_devt(cmd, dev->dev))
+			return NULL;
+		info = lvmcache_info_from_pvid(dev->pvid, 0);
+		label = lvmcache_get_label(info);
+	} else {
+		if (!(label_read(dev, &label, UINT64_C(0)))) {
+			if (warnings)
+				log_error("No physical volume label read from %s",
+					  pv_name);
+			return NULL;
+		}
+		info = (struct lvmcache_info *) label->info;
 	}
 
-	info = (struct lvmcache_info *) label->info;
 	fmt = lvmcache_fmt(info);
 
 	pv = _alloc_pv(pvmem, dev);
@@ -3746,6 +3780,9 @@ int pv_write(struct cmd_context *cmd __attribute__((unused)),
 	}
 
 	if (!pv->fmt->ops->pv_write(pv->fmt, pv))
+		return_0;
+
+	if (!lvmetad_pv_found(pv->id, pv->dev, pv->fmt, pv->label_sector, NULL))
 		return_0;
 
 	return 1;
@@ -4120,9 +4157,9 @@ uint32_t vg_lock_newname(struct cmd_context *cmd, const char *vgname)
 
 	/* Find the vgname in the cache */
 	/* If it's not there we must do full scan to be completely sure */
-	if (!lvmcache_fmt_from_vgname(vgname, NULL, 1)) {
+	if (!lvmcache_fmt_from_vgname(cmd, vgname, NULL, 1)) {
 		lvmcache_label_scan(cmd, 0);
-		if (!lvmcache_fmt_from_vgname(vgname, NULL, 1)) {
+		if (!lvmcache_fmt_from_vgname(cmd, vgname, NULL, 1)) {
 			/* Independent MDAs aren't supported under low memory */
 			if (!cmd->independent_metadata_areas && critical_section()) {
 				/*
@@ -4133,7 +4170,7 @@ uint32_t vg_lock_newname(struct cmd_context *cmd, const char *vgname)
 				return FAILED_LOCKING;
 			}
 			lvmcache_label_scan(cmd, 2);
-			if (!lvmcache_fmt_from_vgname(vgname, NULL, 0)) {
+			if (!lvmcache_fmt_from_vgname(cmd, vgname, NULL, 0)) {
 				/* vgname not found after scanning */
 				return SUCCESS;
 			}
@@ -4228,8 +4265,9 @@ int fid_add_mda(struct format_instance *fid, struct metadata_area *mda,
 		 const char *key, size_t key_len, const unsigned sub_key)
 {
 	static char full_key[PATH_MAX];
+
 	dm_list_add(mda_is_ignored(mda) ? &fid->metadata_areas_ignored :
-					  &fid->metadata_areas_in_use, &mda->list);
+		                          &fid->metadata_areas_in_use, &mda->list);
 
 	/* Return if the mda is not supposed to be indexed. */
 	if (!key)
@@ -4238,7 +4276,7 @@ int fid_add_mda(struct format_instance *fid, struct metadata_area *mda,
 	/* Add metadata area to index. */
 	if (!_convert_key_to_string(key, key_len, sub_key,
 				    full_key, sizeof(full_key)))
-	return_0;
+		return_0;
 
 	dm_hash_insert(fid->metadata_areas_index,
 		       full_key, mda);

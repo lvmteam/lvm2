@@ -453,6 +453,16 @@ global {
     # Set to 1 to reinstate the previous format.
     #
     # lvdisplay_shows_full_device_path = 0
+
+    # Whether to use (trust) a running instance of lvmetad. If this is set to
+    # 0, all commands fall back to the usual scanning mechanisms. When set to 1
+    # *and* when lvmetad is running (it is not auto-started), the volume group
+    # metadata and PV state flags are obtained from the lvmetad instance and no
+    # scanning is done by the individual commands. In a setup with lvmetad,
+    # lvmetad udev rules *must* be set up for LVM to work correctly. Without
+    # proper udev rules, all changes in block device configuration will be
+    # *ignored* until a manual 'vgscan' is performed.
+    use_lvmetad = 0
 }
 
 activation {

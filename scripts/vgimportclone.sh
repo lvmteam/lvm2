@@ -249,6 +249,7 @@ LVMCONF=${TMP_LVM_SYSTEM_DIR}/lvm.conf
     '/^[ \t]*filter[ \t]*=/{print ENVIRON["FILTER"];next} \
      /^[ \t]*scan[ \t]*=/{print "scan = [ \"" DEV "\" ]";next} \
      /^[ \t]*cache[ \t]*=/{print "cache = \"" CACHE "\"";next} \
+     /^[ \t]*use_lvmetad[ \t]*=/{print "use_lvmetad = 0";next} \
      /^[ \t]*cache_dir[ \t]*=/{print "cache_dir = \"" CACHE_DIR "\"";next} \
      {print $0}' > ${LVMCONF}
 

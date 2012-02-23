@@ -1883,7 +1883,7 @@ int lv_mknodes(struct cmd_context *cmd, const struct logical_volume *lv)
 int pv_uses_vg(struct physical_volume *pv,
 	       struct volume_group *vg)
 {
-	if (!activation())
+	if (!activation() || !pv->dev)
 		return 0;
 
 	if (!dm_is_dm_major(MAJOR(pv->dev->dev)))

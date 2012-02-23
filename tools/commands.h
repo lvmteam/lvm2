@@ -670,11 +670,12 @@ xx(pvscan,
    "\t[-P|--partial] " "\n"
    "\t[-s|--short] " "\n"
    "\t[-u|--uuid] " "\n"
+   "\t[--lvmetad DEVICE] " "\n"
    "\t[-v|--verbose] " "\n"
    "\t[--version]\n",
 
    exported_ARG, ignorelockingfailure_ARG, novolumegroup_ARG, partial_ARG,
-   short_ARG, uuid_ARG)
+   short_ARG, uuid_ARG, lvmetad_ARG)
 
 xx(segtypes,
    "List available segment types",

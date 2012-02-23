@@ -906,6 +906,39 @@ struct device *dev_cache_get(const char *name, struct dev_filter *f)
 		      f->passes_filter(f, d))) ? d : NULL;
 }
 
+static struct device *_dev_cache_seek_devt(dev_t dev)
+{
+	struct device *d = NULL;
+	struct dm_hash_node *n = dm_hash_get_first(_cache.names);
+	while (n) {
+		d = dm_hash_get_data(_cache.names, n);
+		if (d->dev == dev)
+			return d;
+		n = dm_hash_get_next(_cache.names, n);
+	}
+	return NULL;
+}
+
+/*
+ * TODO This is very inefficient. We probably want a hash table indexed by
+ * major:minor for keys to speed up these lookups.
+ */
+struct device *dev_cache_get_by_devt(dev_t dev, struct dev_filter *f)
+{
+	struct device *d = _dev_cache_seek_devt(dev);
+
+	if (d && (d->flags & DEV_REGULAR))
+		return d;
+
+	if (!d) {
+		_full_scan(0);
+		d = _dev_cache_seek_devt(dev);
+	}
+
+	return (d && (!f || (d->flags & DEV_REGULAR) ||
+		      f->passes_filter(f, d))) ? d : NULL;
+}
+
 struct dev_iter *dev_iter_create(struct dev_filter *f, int dev_scan)
 {
 	struct dev_iter *di = dm_malloc(sizeof(*di));

@@ -17,6 +17,7 @@ lvcreate -l100%FREE -n $lv1 $vg1
 
 # Clone the LUN
 dd if=$dev1 of=$dev2 bs=256K count=1
+pvscan --lvmetad $dev2 || true
 
 # Verify pvs works on each device to give us vgname
 check pv_field $dev1 vg_name $vg1
@@ -24,6 +25,13 @@ check pv_field $dev2 vg_name $vg1
 
 # Import the cloned PV to a new VG
 vgimportclone --basevgname $vg2 $dev2
+
+# We need to re-scan *both* $dev1 and $dev2 since a PV, as far as lvmetad is
+# concerned, can only live on a single device. With the last pvscan, we told it
+# that PV from $dev1 now lives on $dev2, but in fact this is not true anymore,
+# since we wrote a different PV over $dev2.
+pvscan --lvmetad $dev2 || true
+pvscan --lvmetad $dev1 || true
 
 # Verify we can activate / deactivate the LV from both VGs
 lvchange -ay $vg1/$lv1 $vg2/$lv1

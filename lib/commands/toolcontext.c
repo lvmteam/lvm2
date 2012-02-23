@@ -34,6 +34,7 @@
 #include "str_list.h"
 #include "segtype.h"
 #include "lvmcache.h"
+#include "lvmetad.h"
 #include "dev-cache.h"
 #include "archiver.h"
 
@@ -388,6 +389,8 @@ static int _process_config(struct cmd_context *cmd)
 	init_detect_internal_vg_cache_corruption
 		(find_config_tree_int(cmd, "global/detect_internal_vg_cache_corruption()",
 				      DEFAULT_DETECT_INTERNAL_VG_CACHE_CORRUPTION));
+
+	lvmetad_set_active(find_config_tree_int(cmd, "global/use_lvmetad", 0));
 
 	return 1;
 }

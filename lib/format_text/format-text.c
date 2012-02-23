@@ -29,6 +29,7 @@
 #include "label.h"
 #include "memlock.h"
 #include "lvmcache.h"
+#include "lvmetad.h"
 
 #include <unistd.h>
 #include <sys/file.h>
@@ -738,6 +739,7 @@ static int _vg_commit_raw_rlocn(struct format_instance *fid,
 			  dev_name(mdac->area.dev), mdac->area.start);
 
 	rlocn_set_ignored(mdah->raw_locns, mda_is_ignored(mda));
+
 	if (!_raw_write_mda_header(fid->fmt, mdac->area.dev, mdac->area.start,
 				   mdah)) {
 		dm_pool_free(fid->fmt->cmd->mem, mdah);
@@ -1430,16 +1432,25 @@ static uint64_t _metadata_locn_offset_raw(void *metadata_locn)
 static int _text_pv_read(const struct format_type *fmt, const char *pv_name,
 		    struct physical_volume *pv, int scan_label_only)
 {
-	struct label *label;
+	struct lvmcache_info *info;
 	struct device *dev;
 
 	if (!(dev = dev_cache_get(pv_name, fmt->cmd->filter)))
 		return_0;
 
-	if (!(label_read(dev, &label, UINT64_C(0))))
-		return_0;
+	if (lvmetad_active()) {
+		info = lvmcache_info_from_pvid(dev->pvid, 0);
+		if (!info && !lvmetad_pv_lookup_by_devt(fmt->cmd, dev->dev))
+			return 0;
+		info = lvmcache_info_from_pvid(dev->pvid, 0);
+	} else {
+		struct label *label;
+		if (!(label_read(dev, &label, UINT64_C(0))))
+			return_0;
+		info = label->info;
+	}
 
-	if (!lvmcache_populate_pv_fields(label->info, pv, scan_label_only))
+	if (!lvmcache_populate_pv_fields(info, pv, scan_label_only))
 		return 0;
 
 	return 1;
@@ -1568,6 +1579,9 @@ static struct metadata_area_ops _metadata_text_file_backup_ops = {
 	.vg_commit = _vg_commit_file_backup
 };
 
+static char *_mda_export_text_raw(struct metadata_area *mda);
+static int _mda_import_text_raw(struct lvmcache_info *info, const struct dm_config_node *cn);
+
 static struct metadata_area_ops _metadata_text_raw_ops = {
 	.vg_read = _vg_read_raw,
 	.vg_read_precommit = _vg_read_precommit_raw,
@@ -1584,8 +1598,41 @@ static struct metadata_area_ops _metadata_text_raw_ops = {
 	.mda_in_vg = _mda_in_vg_raw,
 	.pv_analyze_mda = _pv_analyze_mda_raw,
 	.mda_locns_match = _mda_locns_match_raw,
-	.mda_get_device = _mda_get_device_raw
+	.mda_get_device = _mda_get_device_raw,
+	.mda_export_text = _mda_export_text_raw,
+	.mda_import_text = _mda_import_text_raw
 };
+
+static char *_mda_export_text_raw(struct metadata_area *mda)
+{
+	struct mda_context *mdc = (struct mda_context *) mda->metadata_locn;
+	char *result;
+	dm_asprintf(&result,
+		    "ignore = %d "
+		    "start = %" PRIu64" "
+		    "size = %" PRIu64 " "
+		    "free_sectors = %" PRIu64,
+		    mda_is_ignored(mda), mdc->area.start, mdc->area.size, mdc->free_sectors);
+	return result;
+}
+
+static int _mda_import_text_raw(struct lvmcache_info *info, const struct dm_config_node *cn)
+{
+	if (!cn->child)
+		return 0;
+	cn = cn->child;
+
+	struct device *device = lvmcache_device(info);
+	uint64_t offset = dm_config_find_int(cn, "start", 0);
+	uint64_t size = dm_config_find_int(cn, "size", 0);
+	int ignore = dm_config_find_int(cn, "ignore", 0);
+
+	if (!device || !size)
+		return 0;
+
+	lvmcache_add_mda(info, device, offset, size, ignore);
+	return 1;
+}
 
 static int _text_pv_setup(const struct format_type *fmt,
 			  struct physical_volume *pv,
@@ -1619,7 +1666,9 @@ static int _text_pv_setup(const struct format_type *fmt,
 	 * reread PV mda information from the cache and add it to vg->fid.
 	 */
 	else {
-		if (!(info = lvmcache_info_from_pvid(pv->dev->pvid, 0))) {
+		if (!pv->dev ||
+		    !pv->dev->pvid ||
+		    !(info = lvmcache_info_from_pvid(pv->dev->pvid, 0))) {
 			log_error("PV %s missing from cache", pv_dev_name(pv));
 			return 0;
 		}
@@ -2291,6 +2340,9 @@ struct format_type *create_text_format(struct cmd_context *cmd)
 	mda_lists->file_ops = &_metadata_text_file_ops;
 	mda_lists->raw_ops = &_metadata_text_raw_ops;
 	fmt->private = (void *) mda_lists;
+
+	dm_list_init(&fmt->mda_ops);
+	dm_list_add(&fmt->mda_ops, &_metadata_text_raw_ops.list);
 
 	if (!(fmt->labeller = text_labeller_create(fmt))) {
 		log_error("Couldn't create text label handler.");

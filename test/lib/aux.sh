@@ -70,6 +70,7 @@ prepare_lvmetad() {
 	}
 
 	lvmconf "global/use_lvmetad = 1"
+	lvmconf "devices/md_component_detection = 0"
 
 	lvmetad -f "$@" -s $TESTDIR/lvmetad.socket &
 	echo "$!" > LOCAL_LVMETAD
@@ -323,8 +324,11 @@ disable_dev() {
 
 	init_udev_transaction
 	for dev in "$@"; do
-        	dmsetup remove -f $dev || true
-		pvscan --lvmetad $dev || true
+	    maj=$(($(stat --printf=0x%t $dev)))
+	    min=$(($(stat --printf=0x%T $dev)))
+	    echo "disabling device $dev ($maj:$min)"
+            dmsetup remove -f $dev || true
+	    pvscan --lvmetad $maj:$min || true
 	done
 	finish_udev_transaction
 

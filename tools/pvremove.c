@@ -128,6 +128,8 @@ static int pvremove_single(struct cmd_context *cmd, const char *pv_name,
 		goto error;
 	}
 
+	lvmetad_pv_gone(dev->dev);
+
 	log_print("Labels on physical volume \"%s\" successfully wiped",
 		  pv_name);
 

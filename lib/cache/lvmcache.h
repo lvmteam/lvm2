@@ -34,11 +34,13 @@ struct physical_volume;
 struct dm_config_tree;
 struct format_instance;
 struct metadata_area;
-struct data_area_list;
+struct disk_locn;
 
 struct lvmcache_vginfo;
 
 int lvmcache_init(void);
+void lvmcache_allow_reads_with_lvmetad();
+
 void lvmcache_destroy(struct cmd_context *cmd, int retain_orphans);
 
 /* Set full_scan to 1 to reread every filtered device label or
@@ -64,7 +66,7 @@ void lvmcache_unlock_vgname(const char *vgname);
 int lvmcache_verify_lock_order(const char *vgname);
 
 /* Queries */
-const struct format_type *lvmcache_fmt_from_vgname(const char *vgname, const char *vgid, unsigned revalidate_labels);
+const struct format_type *lvmcache_fmt_from_vgname(struct cmd_context *cmd, const char *vgname, const char *vgid, unsigned revalidate_labels);
 
 /* Decrement and test if there are still vg holders in vginfo. */
 int lvmcache_vginfo_holders_dec_and_test_for_zero(struct lvmcache_vginfo *vginfo);
@@ -79,8 +81,11 @@ struct device *lvmcache_device_from_pvid(struct cmd_context *cmd, const struct i
 const char *lvmcache_pvid_from_devname(struct cmd_context *cmd,
 			      const char *dev_name);
 char *lvmcache_vgname_from_pvid(struct cmd_context *cmd, const char *pvid);
+const char *lvmcache_vgname_from_info(struct lvmcache_info *info);
 int lvmcache_vgs_locked(void);
 int lvmcache_vgname_is_locked(const char *vgname);
+
+void lvmcache_seed_infos_from_lvmetad(struct cmd_context *cmd);
 
 /* Returns list of struct str_lists containing pool-allocated copy of vgnames */
 /* If include_internal is not set, return only proper vg names. */
@@ -97,7 +102,8 @@ struct dm_list *lvmcache_get_pvids(struct cmd_context *cmd, const char *vgname,
 				const char *vgid);
 
 /* Returns cached volume group metadata. */
-struct volume_group *lvmcache_get_vg(const char *vgid, unsigned precommitted);
+struct volume_group *lvmcache_get_vg(struct cmd_context *cmd, const char *vgname,
+				     const char *vgid, unsigned precommitted);
 void lvmcache_drop_metadata(const char *vgname, int drop_precommitted);
 void lvmcache_commit_metadata(const char *vgname);
 
@@ -127,7 +133,7 @@ int lvmcache_foreach_mda(struct lvmcache_info *info,
 			 void *baton);
 
 int lvmcache_foreach_da(struct lvmcache_info *info,
-			int (*fun)(struct data_area_list *, void *),
+			int (*fun)(struct disk_locn *, void *),
 			void *baton);
 
 int lvmcache_foreach_pv(struct lvmcache_vginfo *vg,

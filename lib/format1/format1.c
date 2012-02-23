@@ -415,6 +415,7 @@ static int _format1_pv_write(const struct format_type *fmt, struct physical_volu
 
 	lvmcache_update_pv(info, pv, fmt);
 	lvmcache_del_mdas(info);
+	lvmcache_del_das(info);
 
 	dm_list_init(&pvs);
 
@@ -589,6 +590,8 @@ struct format_type *init_format(struct cmd_context *cmd)
 	fmt->features = FMT_RESTRICTED_LVIDS | FMT_ORPHAN_ALLOCATABLE |
 			FMT_RESTRICTED_READAHEAD;
 	fmt->private = NULL;
+
+	dm_list_init(&fmt->mda_ops);
 
 	if (!(fmt->labeller = lvm1_labeller_create(fmt))) {
 		log_error("Couldn't create lvm1 label handler.");

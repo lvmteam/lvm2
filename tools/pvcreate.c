@@ -56,6 +56,7 @@ static int pvcreate_restore_params_validate(struct cmd_context *cmd,
 		if (!id_read_format(&pp->id, uuid))
 			return 0;
 		pp->idp = &pp->id;
+		lvmcache_seed_infos_from_lvmetad(cmd); /* need to check for UUID dups */
 	}
 
 	if (arg_count(cmd, restorefile_ARG)) {

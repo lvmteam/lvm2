@@ -28,6 +28,8 @@
 #include "format1.h"
 #include "config.h"
 
+#include "lvmetad.h"
+
 #define CACHE_INVALID	0x00000001
 #define CACHE_LOCKED	0x00000002
 
@@ -107,8 +109,19 @@ int lvmcache_init(void)
 		_vg_global_lock_held = 0;
 	}
 
+	lvmetad_init();
+
 	return 1;
 }
+
+void lvmcache_seed_infos_from_lvmetad(struct cmd_context *cmd)
+{
+	if (lvmetad_active() && !_has_scanned) {
+		lvmetad_pv_list_to_lvmcache(cmd);
+		_has_scanned = 1;
+	}
+};
+
 
 /* Volume Group metadata cache functions */
 static void _free_cached_vgmetadata(struct lvmcache_vginfo *vginfo)
@@ -429,7 +442,9 @@ struct lvmcache_vginfo *lvmcache_vginfo_from_vgname(const char *vgname, const ch
 	return vginfo;
 }
 
-const struct format_type *lvmcache_fmt_from_vgname(const char *vgname, const char *vgid, unsigned revalidate_labels)
+const struct format_type *lvmcache_fmt_from_vgname(struct cmd_context *cmd,
+						   const char *vgname, const char *vgid,
+						   unsigned revalidate_labels)
 {
 	struct lvmcache_vginfo *vginfo;
 	struct lvmcache_info *info;
@@ -439,8 +454,19 @@ const struct format_type *lvmcache_fmt_from_vgname(const char *vgname, const cha
 	struct device_list *devl;
 	char vgid_found[ID_LEN + 1] __attribute__((aligned(8)));
 
-	if (!(vginfo = lvmcache_vginfo_from_vgname(vgname, vgid)))
+	if (!(vginfo = lvmcache_vginfo_from_vgname(vgname, vgid))) {
+		if (!lvmetad_active())
+			return NULL; /* too bad */
+		/* If we don't have the info but we have lvmetad, we can ask
+		 * there before failing. */
+		struct volume_group *vg = lvmetad_vg_lookup(cmd, vgname, vgid);
+		if (vg) {
+			const struct format_type *fmt = vg->fid->fmt;
+			release_vg(vg);
+			return fmt;
+		}
 		return NULL;
+	}
 
 	/*
 	 * If this function is called repeatedly, only the first one needs to revalidate.
@@ -581,6 +607,13 @@ struct lvmcache_info *lvmcache_info_from_pvid(const char *pvid, int valid_only)
 	return info;
 }
 
+const char *lvmcache_vgname_from_info(struct lvmcache_info *info)
+{
+	if (info->vginfo)
+		return info->vginfo->vgname;
+	return NULL;
+}
+
 char *lvmcache_vgname_from_pvid(struct cmd_context *cmd, const char *pvid)
 {
 	struct lvmcache_info *info;
@@ -625,6 +658,9 @@ int lvmcache_label_scan(struct cmd_context *cmd, int full_scan)
 	struct format_type *fmt;
 
 	int r = 0;
+
+	if (lvmetad_active())
+		return 1;
 
 	/* Avoid recursion when a PVID can't be found! */
 	if (_scanning_in_progress)
@@ -678,12 +714,27 @@ int lvmcache_label_scan(struct cmd_context *cmd, int full_scan)
 	return r;
 }
 
-struct volume_group *lvmcache_get_vg(const char *vgid, unsigned precommitted)
+struct volume_group *lvmcache_get_vg(struct cmd_context *cmd, const char *vgname,
+				     const char *vgid, unsigned precommitted)
 {
 	struct lvmcache_vginfo *vginfo;
 	struct volume_group *vg = NULL;
 	struct format_instance *fid;
 	struct format_instance_ctx fic;
+
+	/*
+	 * We currently do not store precommitted metadata in lvmetad at
+	 * all. This means that any request for precommitted metadata is served
+	 * using the classic scanning mechanics, and read from disk or from
+	 * lvmcache.
+	 */
+	if (lvmetad_active() && !precommitted) {
+		/* Still serve the locally cached VG if available */
+		if (vgid && (vginfo = lvmcache_vginfo_from_vgid(vgid)) &&
+		    vginfo->vgmetadata && (vg = vginfo->cached_vg))
+			goto out;
+		return lvmetad_vg_lookup(cmd, vgname, vgid);
+	}
 
 	if (!vgid || !(vginfo = lvmcache_vginfo_from_vgid(vgid)) || !vginfo->vgmetadata)
 		return NULL;
@@ -781,6 +832,7 @@ struct dm_list *lvmcache_get_vgids(struct cmd_context *cmd,
 	struct dm_list *vgids;
 	struct lvmcache_vginfo *vginfo;
 
+	// TODO plug into lvmetad here automagically?
 	lvmcache_label_scan(cmd, 0);
 
 	if (!(vgids = str_list_create(cmd->mem))) {
@@ -862,6 +914,12 @@ static struct device *_device_from_pvid(const struct id *pvid,
 	struct label *label;
 
 	if ((info = lvmcache_info_from_pvid((const char *) pvid, 0))) {
+		if (lvmetad_active()) {
+			if (info->label && label_sector)
+				*label_sector = info->label->sector;
+			return info->dev;
+		}
+
 		if (label_read(info->dev, &label, UINT64_C(0))) {
 			info = (struct lvmcache_info *) label->info;
 			if (id_equal(pvid, (struct id *) &info->dev->pvid)) {
@@ -1333,6 +1391,10 @@ int lvmcache_update_vgname_and_id(struct lvmcache_info *info,
 		vgid = vgname;
 	}
 
+	/* When using lvmetad, the PV could not have become orphaned. */
+	if (lvmetad_active() && is_orphan_vg(vgname) && info->vginfo)
+		return 1;
+
 	/* If PV without mdas is already in a real VG, don't make it orphan */
 	if (is_orphan_vg(vgname) && info->vginfo &&
 	    mdas_empty_or_ignored(&info->mdas) &&
@@ -1408,6 +1470,9 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 		info->label = label;
 		dm_list_init(&info->list);
 		info->dev = dev;
+
+		lvmcache_del_mdas(info);
+		lvmcache_del_das(info);
 	} else {
 		if (existing->dev != dev) {
 			/* Is the existing entry a duplicate pvid e.g. md ? */
@@ -1711,7 +1776,7 @@ int lvmcache_update_das(struct lvmcache_info *info, struct physical_volume *pv)
 	} else
 		dm_list_init(&info->das);
 
-	if (!add_da(NULL, &info->das, pv->pe_start << SECTOR_SHIFT, UINT64_C(0)))
+	if (!add_da(NULL, &info->das, pv->pe_start << SECTOR_SHIFT, 0 /*pv->size << SECTOR_SHIFT*/))
 		return_0;
 
 	return 1;
@@ -1749,12 +1814,12 @@ int lvmcache_mda_count(struct lvmcache_info *info)
 }
 
 int lvmcache_foreach_da(struct lvmcache_info *info,
-			int (*fun)(struct data_area_list *, void *),
+			int (*fun)(struct disk_locn *, void *),
 			void *baton)
 {
 	struct data_area_list *da;
 	dm_list_iterate_items(da, &info->das) {
-		if (!fun(da, baton))
+		if (!fun(&da->disk_locn, baton))
 			return_0;
 	}
 
@@ -1793,6 +1858,10 @@ int lvmcache_is_orphan(struct lvmcache_info *info) {
 
 int lvmcache_vgid_is_cached(const char *vgid) {
 	struct lvmcache_vginfo *vginfo;
+
+	if (lvmetad_active())
+		return 1;
+
 	vginfo = lvmcache_vginfo_from_vgid(vgid);
 
 	if (!vginfo || !vginfo->vgname)

@@ -28,6 +28,7 @@
 #include "activate.h"
 #include "archiver.h"
 #include "lvmcache.h"
+#include "lvmetad.h"
 #include "config.h"
 #include "defaults.h"
 #include "dev-cache.h"

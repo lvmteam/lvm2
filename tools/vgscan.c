@@ -24,13 +24,14 @@ static int vgscan_single(struct cmd_context *cmd, const char *vg_name,
 		  vg->fid->fmt->name);
 
 	check_current_backup(vg);
+	lvmetad_vg_update(vg); /* keep lvmetad up to date */
 
 	return ECMD_PROCESSED;
 }
 
 int vgscan(struct cmd_context *cmd, int argc, char **argv)
 {
-	int maxret, ret;
+	int maxret, ret, lvmetad;
 
 	if (argc) {
 		log_error("Too many parameters on command line");
@@ -44,6 +45,8 @@ int vgscan(struct cmd_context *cmd, int argc, char **argv)
 
 	persistent_filter_wipe(cmd->filter);
 	lvmcache_destroy(cmd, 1);
+	lvmetad = lvmetad_active();
+	lvmetad_set_active(0); /* do not rely on lvmetad info */
 
 	log_print("Reading all physical volumes.  This may take a while...");
 
@@ -56,6 +59,7 @@ int vgscan(struct cmd_context *cmd, int argc, char **argv)
 			maxret = ret;
 	}
 
+	lvmetad_set_active(lvmetad); /* restore */
 	unlock_vg(cmd, VG_GLOBAL);
 	return maxret;
 }

@@ -18,6 +18,7 @@
 #include "crc.h"
 #include "xlate.h"
 #include "lvmcache.h"
+#include "lvmetad.h"
 #include "metadata.h"
 
 #include <sys/stat.h>
@@ -263,7 +264,7 @@ int label_read(struct device *dev, struct label **result,
 
 	if ((info = lvmcache_info_from_pvid(dev->pvid, 1))) {
 		log_debug("Using cached label for %s", dev_name(dev));
-		*result = lvmcache_get_label(info); /* leaked */
+		*result = lvmcache_get_label(info);
 		return 1;
 	}
 
