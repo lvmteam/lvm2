@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2006-2012 Red Hat, Inc. All rights reserved.
  *
  * This file is part of the device-mapper userspace tools.
  *
@@ -131,7 +131,7 @@ const char *dm_basename(const char *path)
 
 int dm_asprintf(char **result, const char *format, ...)
 {
-	int n, ok = 0, size = 32;
+	int i, n, size = 16;
 	va_list ap;
 	char *buf = dm_malloc(size);
 
@@ -140,26 +140,30 @@ int dm_asprintf(char **result, const char *format, ...)
 	if (!buf)
 		return -1;
 
-	while (!ok) {
+	for (i = 0;; i++) {
 		va_start(ap, format);
 		n = vsnprintf(buf, size, format, ap);
 		va_end(ap);
 
 		if (0 <= n && n < size)
-			ok = 1;
-		else {
-			dm_free(buf);
-			size *= 2;
-			buf = dm_malloc(size);
-			if (!buf)
-				return -1;
-		}
+			break;
+
+		dm_free(buf);
+		/* Up to glibc 2.0.6 returns -1 */
+		size = (n < 0) ? size * 2 : n + 1;
+		if (!(buf = dm_malloc(size)))
+			return -1;
 	}
 
-	if (!(*result = dm_strdup(buf)))
-		n = -2; /* return -1 */
+	if (i > 1) {
+		/* Reallocating more then once? */
+		if (!(*result = dm_strdup(buf))) {
+			dm_free(buf);
+			return -1;
+		}
+	} else
+		*result = buf;
 
-	dm_free(buf);
 	return n + 1;
 }
 
