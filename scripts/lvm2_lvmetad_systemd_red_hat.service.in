@@ -8,8 +8,9 @@ Conflicts=shutdown.target
 [Service]
 Type=forking
 ExecStart=@sbindir@/lvmetad
+ExecStartPost=@sbindir@/vgscan
 ExecReload=@sbindir@/lvmetad -R
-PIDFile=/var/run/lvm/lvmetad.pid
+PIDFile=@DEFAULT_RUN_DIR@/lvmetad.pid
 
 [Install]
 WantedBy=sysinit.target
