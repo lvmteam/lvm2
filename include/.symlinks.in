@@ -4,6 +4,7 @@
 @top_srcdir@/lib/activate/activate.h
 @top_srcdir@/lib/activate/targets.h
 @top_srcdir@/lib/cache/lvmcache.h
+@top_srcdir@/lib/cache/lvmetad.h
 @top_srcdir@/lib/commands/errors.h
 @top_srcdir@/lib/commands/toolcontext.h
 @top_srcdir@/lib/config/config.h
