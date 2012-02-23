@@ -1,5 +1,6 @@
 Version 1.02.73 - 
 ====================================
+  Add dm_strncpy() function as a faster strncpy() replacement.
 
 Version 1.02.72 - 23rd February 2012
 ====================================

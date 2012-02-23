@@ -410,3 +410,13 @@ void dm_unescape_colons_and_at_signs(char *src,
 		*substr_first_unquoted_at_sign = arr_substr_first_unquoted[1];
 }
 
+int dm_strncpy(char *dest, const char *src, size_t n)
+{
+	if (memccpy(dest, src, 0, n))
+		return 1;
+
+	if (n > 0)
+		dest[n - 1] = '\0';
+
+	return 0;
+}
