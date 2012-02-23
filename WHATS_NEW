@@ -1,3 +1,7 @@
+Version 2.02.94 - 
+====================================
+  Integrate client-side lvmetad into build.
+
 Version 2.02.93 - 23rd February 2012
 ====================================
   Require number of stripes to be greater than parity devices in higher RAID.
