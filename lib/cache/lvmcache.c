@@ -452,6 +452,8 @@ const struct format_type *lvmcache_fmt_from_vgname(struct cmd_context *cmd,
 	struct dm_list *devh, *tmp;
 	struct dm_list devs;
 	struct device_list *devl;
+	struct volume_group *vg;
+	const struct format_type *fmt;
 	char vgid_found[ID_LEN + 1] __attribute__((aligned(8)));
 
 	if (!(vginfo = lvmcache_vginfo_from_vgname(vgname, vgid))) {
@@ -459,9 +461,8 @@ const struct format_type *lvmcache_fmt_from_vgname(struct cmd_context *cmd,
 			return NULL; /* too bad */
 		/* If we don't have the info but we have lvmetad, we can ask
 		 * there before failing. */
-		struct volume_group *vg = lvmetad_vg_lookup(cmd, vgname, vgid);
-		if (vg) {
-			const struct format_type *fmt = vg->fid->fmt;
+		if ((vg = lvmetad_vg_lookup(cmd, vgname, vgid))) {
+			fmt = vg->fid->fmt;
 			release_vg(vg);
 			return fmt;
 		}

@@ -341,23 +341,25 @@ int do_post_command(struct local_client *client)
 /* Called when the client is about to be deleted */
 void cmd_client_cleanup(struct local_client *client)
 {
-    if (client->bits.localsock.private) {
-
 	struct dm_hash_node *v;
-	struct dm_hash_table *lock_hash =
-	    (struct dm_hash_table *)client->bits.localsock.private;
+	struct dm_hash_table *lock_hash;
+	int lkid;
+	char *lockname;
+
+	if (!client->bits.localsock.private)
+		return;
+
+	lock_hash = (struct dm_hash_table *)client->bits.localsock.private;
 
 	dm_hash_iterate(v, lock_hash) {
-		int lkid = (int)(long)dm_hash_get_data(lock_hash, v);
-		char *lockname = dm_hash_get_key(lock_hash, v);
-
+		lkid = (int)(long)dm_hash_get_data(lock_hash, v);
+		lockname = dm_hash_get_key(lock_hash, v);
 		DEBUGLOG("cleanup: Unlocking lock %s %x\n", lockname, lkid);
 		sync_unlock(lockname, lkid);
 	}
 
 	dm_hash_destroy(lock_hash);
 	client->bits.localsock.private = 0;
-    }
 }
 
 
