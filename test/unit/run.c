@@ -10,11 +10,13 @@
 DECL(bitset);
 DECL(regex);
 DECL(config);
+DECL(string);
 
 CU_SuiteInfo suites[] = {
 	USE(bitset),
 	USE(regex),
 	USE(config),
+	USE(string),
 	CU_SUITE_INFO_NULL
 };
 
