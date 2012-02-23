@@ -2331,7 +2331,7 @@ int lv_add_mirror_lvs(struct logical_volume *lv,
 
 	if (dm_list_size(&lv->segments) != 1 || seg_type(seg, 0) != AREA_LV) {
 		log_error("Mirror layer must be inserted before adding mirrors");
-		return_0;
+		return 0;
 	}
 
 	mirror_segtype = get_segtype_from_string(lv->vg->cmd, "mirror");
