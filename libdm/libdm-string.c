@@ -161,6 +161,7 @@ int dm_asprintf(char **result, const char *format, ...)
 			dm_free(buf);
 			return -1;
 		}
+		dm_free(buf);
 	} else
 		*result = buf;
 
