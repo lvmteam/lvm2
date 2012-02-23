@@ -78,6 +78,12 @@ prepare_lvmetad() {
 	sleep 1
 }
 
+notify_lvmetad() {
+	if test -e LOCAL_LVMETAD; then
+		pvscan --lvmetad "$@" || true
+	fi
+}
+
 teardown_devs() {
 	# Delete any remaining dm/udev semaphores
 	teardown_udev_cookies
@@ -328,7 +334,7 @@ disable_dev() {
 	    min=$(($(stat --printf=0x%T $dev)))
 	    echo "disabling device $dev ($maj:$min)"
             dmsetup remove -f $dev || true
-	    pvscan --lvmetad $maj:$min || true
+	    notify_lvmetad $maj:$min
 	done
 	finish_udev_transaction
 
@@ -342,7 +348,7 @@ enable_dev() {
 		dmsetup create -u TEST-$name $name $name.table || dmsetup load $name $name.table
 		# using device name (since device path does not exists yes with udev)
 		dmsetup resume $name
-		pvscan --lvmetad $dev || true
+		notify_lvmetad $dev
 	done
 	finish_udev_transaction
 }
