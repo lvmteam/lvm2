@@ -519,9 +519,18 @@ static int _alloc_image_components(struct logical_volume *lv,
 	else if (!(segtype = get_segtype_from_string(lv->vg->cmd, "raid1")))
 		return_0;
 
+	/*
+	 * The number of extents is based on the RAID type.  For RAID1,
+	 * each of the rimages is the same size - 'le_count'.  However
+	 * for RAID 4/5/6, the stripes add together (NOT including the parity
+	 * devices) to equal 'le_count'.  Thus, when we are allocating
+	 * individual devies, we must specify how large the individual device
+	 * is along with the number we want ('count').
+	 */
 	extents = (segtype->parity_devs) ?
 		(lv->le_count / (seg->area_count - segtype->parity_devs)) :
 		lv->le_count;
+
 	if (!(ah = allocate_extents(lv->vg, NULL, segtype, 0, count, count,
 				    region_size, extents, pvs,
 				    lv->alloc, parallel_areas)))

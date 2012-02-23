@@ -1,5 +1,6 @@
 Version 2.02.93 - 
 ====================================
+  Require number of stripes to be greater than parity devices in higher RAID.
   Add LVMetaD systemd units.
   Fix allocation code to allow replacement of single RAID 4/5/6 device.
   Check all tags and LV names are in a valid form in vg_validate.

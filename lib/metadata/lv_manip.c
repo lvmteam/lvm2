@@ -752,6 +752,22 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 		area_count = stripes;
 
 	size = sizeof(*ah);
+
+	/*
+	 * It is a requirement that RAID 4/5/6 are created with a number of
+	 * stripes that is greater than the number of parity devices.  (e.g
+	 * RAID4/5 must have at least 2 stripes and RAID6 must have at least
+	 * 3.)  It is also a constraint that, when replacing individual devices
+	 * in a RAID 4/5/6 array, no more devices can be replaced than
+	 * there are parity devices.  (Otherwise, there would not be enough
+	 * redundancy to maintain the array.)  Understanding these two
+	 * constraints allows us to infer whether the caller of this function
+	 * is intending to allocate an entire array or just replacement
+	 * component devices.  In the former case, we must account for the
+	 * necessary parity_count.  In the later case, we do not need to
+	 * account for the extra parity devices because the array already
+	 * exists and they only want replacement drives.
+	 */
 	parity_count = (area_count <= segtype->parity_devs) ? 0 :
 		segtype->parity_devs;
 	alloc_count = area_count + parity_count;

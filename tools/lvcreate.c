@@ -485,9 +485,10 @@ static int _read_raid_params(struct lvcreate_params *lp,
 	 *
 	 * For RAID 4/5/6, these values must be set.
 	 */
-	if (!segtype_is_mirrored(lp->segtype) && (lp->stripes < 2)) {
-		log_error("Number of stripes to %s not specified",
-			  lp->segtype->name);
+	if (!segtype_is_mirrored(lp->segtype) &&
+	    (lp->stripes <= lp->segtype->parity_devs)) {
+		log_error("Number of stripes must be at least %d for %s",
+			  lp->segtype->parity_devs + 1, lp->segtype->name);
 		return 0;
 	}
 
