@@ -873,7 +873,7 @@ static int _remove_mirror_images(struct logical_volume *lv,
 			if ((s == 0) && !_mirrored_lv_in_sync(lv) &&
 			    !(lv->status & PARTIAL_LV)) {
 				log_error("Unable to remove primary mirror image while mirror is not in-sync");
-				return_0;
+				return 0;
 			}
 			if (!shift_mirror_images(mirrored_seg, s))
 				return_0;
@@ -1015,7 +1015,7 @@ static int _remove_mirror_images(struct logical_volume *lv,
 		if (!resume_lv(detached_log_lv->vg->cmd, detached_log_lv)) {
 			log_error("Failed to resume %s",
 				  detached_log_lv->name);
-			return_0;
+			return 0;
 		}
 	}
 
@@ -1091,7 +1091,7 @@ static int _remove_mirror_images(struct logical_volume *lv,
 			/* As a result, unnecessary sync may run after
 			 * collapsing. But safe.*/
 			log_error("Failed to initialize log device");
-			return_0;
+			return 0;
 		}
 	}
 
@@ -2136,7 +2136,7 @@ int lv_split_mirror_images(struct logical_volume *lv, const char *split_name,
 	/* Can't split a mirror that is not in-sync... unless force? */
 	if (!_mirrored_lv_in_sync(lv)) {
 		log_error("Unable to split mirror that is not in-sync.");
-		return_0;
+		return 0;
 	}
 
 	/*

@@ -245,7 +245,7 @@ int lvmetad_vg_update(struct volume_group *vg)
 	 * request.  */
 	if (!export_vg_to_buffer(vg, &buf)) {
 		log_error("Could not format VG metadata.");
-		return_0;
+		return 0;
 	}
 
 	reply = daemon_send_simple(_lvmetad, "vg_update", "vgname = %s", vg->name,

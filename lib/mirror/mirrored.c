@@ -251,7 +251,7 @@ static int _mirrored_transient_status(struct lv_segment *seg, char *params)
 	if (num_devs > DEFAULT_MIRROR_MAX_IMAGES || num_devs < 0) {
 		log_error("Unexpectedly many (%d) mirror images in %s.",
 			  num_devs, lv->name);
-		return_0;
+		return 0;
 	}
 
 	args = alloca((num_devs + 5) * sizeof(char *));
@@ -265,7 +265,7 @@ static int _mirrored_transient_status(struct lv_segment *seg, char *params)
 	if (log_argc > 16 || log_argc < 0) {
 		log_error("Unexpectedly many (%d) log arguments in %s.",
 			  log_argc, lv->name);
-		return_0;
+		return 0;
 	}
 
 	log_args = alloca(log_argc * sizeof(char *));
@@ -277,7 +277,7 @@ static int _mirrored_transient_status(struct lv_segment *seg, char *params)
 	if (num_devs != seg->area_count) {
 		log_error("Active mirror has a wrong number of mirror images!");
 		log_error("Metadata says %d, kernel says %d.", seg->area_count, num_devs);
-		return_0;
+		return 0;
 	}
 
 	if (!strcmp(log_args[0], "disk")) {
@@ -293,7 +293,7 @@ static int _mirrored_transient_status(struct lv_segment *seg, char *params)
 		if (strcmp(buf, log_args[1])) {
 			log_error("Mirror log mismatch. Metadata says %s, kernel says %s.",
 				  buf, log_args[1]);
-			return_0;
+			return 0;
 		}
 		log_very_verbose("Status of log (%s): %s", buf, log_args[2]);
 		if (log_args[2][0] != 'A') {
@@ -327,7 +327,7 @@ static int _mirrored_transient_status(struct lv_segment *seg, char *params)
 	for (i = 0; i < num_devs; ++i) {
 		if (!images[i]) {
 			log_error("Failed to find image %d (%s).", i, args[i]);
-			return_0;
+			return 0;
 		}
 		log_very_verbose("Status of image %d: %c", i, status[i]);
 		if (status[i] != 'A') {
