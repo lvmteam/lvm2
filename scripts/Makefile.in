@@ -46,7 +46,9 @@ install: install_lvm2 install_ocf
 # FIXME Customise for other distributions
 install_initscripts:
 	$(INSTALL_DIR) $(initdir)
+ifeq ("@BUILD_DMEVENTD@", "yes")
 	$(INSTALL_SCRIPT) lvm2_monitoring_init_red_hat $(initdir)/lvm2-monitor
+endif
 ifneq ("@CLVMD@", "none")
 	$(INSTALL_SCRIPT) clvmd_init_red_hat $(initdir)/clvmd
 endif
@@ -56,9 +58,11 @@ endif
 
 install_systemd_units:
 	$(INSTALL_DIR) $(systemd_dir)
+ifeq ("@BUILD_DMEVENTD@", "yes")
 	$(INSTALL_DATA) dm_event_systemd_red_hat.socket $(systemd_dir)/dm-event.socket
 	$(INSTALL_DATA) dm_event_systemd_red_hat.service $(systemd_dir)/dm-event.service
 	$(INSTALL_DATA) lvm2_monitoring_systemd_red_hat.service $(systemd_dir)/lvm2-monitor.service
+endif
 
 install_tmpfiles_configuration:
 	$(INSTALL_DIR) $(tmpfiles_dir)
