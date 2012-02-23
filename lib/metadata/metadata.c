@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2011 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2012 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -2294,6 +2294,7 @@ int vg_validate(struct volume_group *vg)
 	struct pv_list *pvl;
 	struct lv_list *lvl;
 	struct lv_segment *seg;
+	struct str_list *sl;
 	char uuid[64] __attribute__((aligned(8)));
 	int r = 1;
 	uint32_t hidden_lv_count = 0, lv_count = 0, lv_visible_count = 0;
@@ -2312,6 +2313,13 @@ int vg_validate(struct volume_group *vg)
 		log_error("Failed to allocate pvid hash.");
 		return 0;
 	}
+
+	dm_list_iterate_items(sl, &vg->tags)
+		if (!validate_tag(sl->str)) {
+			log_error(INTERNAL_ERROR "VG %s tag %s has invalid form.",
+				  vg->name, sl->str);
+			r = 0;
+		}
 
 	dm_list_iterate_items(pvl, &vg->pvs) {
 		if (++pv_count > vg->pv_count) {
@@ -2344,6 +2352,13 @@ int vg_validate(struct volume_group *vg)
 				  vg->name);
 			r = 0;
 		}
+
+		dm_list_iterate_items(sl, &pvl->pv->tags)
+			if (!validate_tag(sl->str)) {
+				log_error(INTERNAL_ERROR "PV %s tag %s has invalid form.",
+					  pv_dev_name(pvl->pv), sl->str);
+				r = 0;
+			}
 
 		if (!dm_hash_insert_binary(vhash.pvid, &pvl->pv->id,
 					   sizeof(pvl->pv->id), pvl->pv)) {
@@ -2383,6 +2398,18 @@ int vg_validate(struct volume_group *vg)
 				  lvl->lv->name);
 			r = 0;
 		}
+
+		if (!validate_name(lvl->lv->name)) {
+			log_error(INTERNAL_ERROR "LV name %s has invalid form.", lvl->lv->name);
+			r = 0;
+		}
+
+		dm_list_iterate_items(sl, &lvl->lv->tags)
+			if (!validate_tag(sl->str)) {
+				log_error(INTERNAL_ERROR "LV %s tag %s has invalid form.",
+					  lvl->lv->name, sl->str);
+				r = 0;
+			}
 
 		if (lvl->lv->status & VISIBLE_LV)
 			continue;
