@@ -1,13 +1,13 @@
-Version 2.02.93 - 
+Version 2.02.93 - 23rd February 2012
 ====================================
   Require number of stripes to be greater than parity devices in higher RAID.
-  Add LVMetaD systemd units.
   Fix allocation code to allow replacement of single RAID 4/5/6 device.
   Check all tags and LV names are in a valid form in vg_validate.
   Add tmpfiles.d style configuration for lvm2 lock and run directory.
   Add configure --with-tmpfilesdir for dir holding volatile-file configuration.
-  Allow 'lvconvert --repair' to operate on RAID 4/5/6
-  Fix 'build_parallel_areas_from_lv' to work properly with RAID 4/5/6
+  Allow 'lvconvert --repair' to operate on RAID 4/5/6.
+  Fix build_parallel_areas_from_lv to account correctly for raid parity devices.
+  Print message when faulty raid devices have been replaced.
 
 Version 2.02.92 - 20th February 2012
 ====================================
