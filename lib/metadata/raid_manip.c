@@ -493,6 +493,7 @@ static int _alloc_image_components(struct logical_volume *lv,
 {
 	uint32_t s;
 	uint32_t region_size;
+	uint32_t extents;
 	struct lv_segment *seg = first_seg(lv);
 	const struct segment_type *segtype;
 	struct alloc_handle *ah;
@@ -518,8 +519,11 @@ static int _alloc_image_components(struct logical_volume *lv,
 	else if (!(segtype = get_segtype_from_string(lv->vg->cmd, "raid1")))
 		return_0;
 
+	extents = (segtype->parity_devs) ?
+		(lv->le_count / (seg->area_count - segtype->parity_devs)) :
+		lv->le_count;
 	if (!(ah = allocate_extents(lv->vg, NULL, segtype, 0, count, count,
-				    region_size, lv->le_count, pvs,
+				    region_size, extents, pvs,
 				    lv->alloc, parallel_areas)))
 		return_0;
 
