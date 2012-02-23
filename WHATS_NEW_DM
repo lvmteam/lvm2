@@ -1,5 +1,6 @@
 Version 1.02.72 - 
 ====================================
+  Avoid memory reallocation for dm_asprintf.
 
 Version 1.02.71 - 20th February 2012
 ====================================
