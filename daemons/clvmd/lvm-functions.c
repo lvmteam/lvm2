@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2002-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2011 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2012 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -729,7 +729,7 @@ static int get_initial_state(struct dm_hash_table *excl_uuid)
 	}
 
 	while (fgets(line, sizeof(line), lvs)) {
-	        if (sscanf(line, "%s %s %s %s\n", vg, lv, flags, vg_flags) == 4) {
+	        if (sscanf(line, "%64s %64s %25s %25s\n", vg, lv, flags, vg_flags) == 4) {
 
 			/* States: s:suspended a:active S:dropped snapshot I:invalid snapshot */
 		        if (strlen(vg) == 38 &&                         /* is is a valid UUID ? */

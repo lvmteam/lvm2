@@ -1,5 +1,6 @@
 Version 2.02.94 - 
 ====================================
+  Limit sscanf parameters with buffer size in clvmd get_initial_state().
   Use const lv pointer for lv_is_active...() functions. 
   Use same signed numbers in _mirrored_transient_status().
   Integrate client-side lvmetad into build.
