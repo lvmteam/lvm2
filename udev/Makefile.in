@@ -25,7 +25,7 @@ else
 	BLKID_RULE=IMPORT{program}=\"\$$env{DM_SBIN_PATH}\/blkid -o udev -p \$$tempnode\"
 endif
 
-CLEAN_TARGETS=10-dm.rules
+CLEAN_TARGETS = 10-dm.rules 13-dm-disk.rules
 
 include $(top_builddir)/make.tmpl
 
