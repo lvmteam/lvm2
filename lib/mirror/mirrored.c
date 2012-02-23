@@ -226,14 +226,14 @@ static int _mirrored_target_percent(void **target_state,
 
 static int _mirrored_transient_status(struct lv_segment *seg, char *params)
 {
-	int i, j;
+	unsigned i, j;
 	struct logical_volume *lv = seg->lv;
 	struct lvinfo info;
 	char *p = NULL;
 	char **args, **log_args;
 	struct logical_volume **images;
 	struct logical_volume *log;
-	int num_devs, log_argc;
+	unsigned num_devs, log_argc;
 	int failed = 0;
 	char *status;
 
@@ -243,12 +243,12 @@ static int _mirrored_transient_status(struct lv_segment *seg, char *params)
 	if (!dm_split_words(params, 1, 0, &p))
 		return_0;
 
-	if (!(num_devs = atoi(p)))
+	if (!(num_devs = (unsigned) atoi(p)))
 		return_0;
 
 	p += strlen(p) + 1;
 
-	if (num_devs > DEFAULT_MIRROR_MAX_IMAGES || num_devs < 0) {
+	if (num_devs > DEFAULT_MIRROR_MAX_IMAGES) {
 		log_error("Unexpectedly many (%d) mirror images in %s.",
 			  num_devs, lv->name);
 		return 0;
@@ -257,12 +257,13 @@ static int _mirrored_transient_status(struct lv_segment *seg, char *params)
 	args = alloca((num_devs + 5) * sizeof(char *));
 	images = alloca(num_devs * sizeof(struct logical_volume *));
 
-	if (dm_split_words(p, num_devs + 4, 0, args) < num_devs + 4)
+	/* FIXME: dm_split_words()  should return unsigned */
+	if ((unsigned)dm_split_words(p, num_devs + 4, 0, args) < num_devs + 4)
 		return_0;
 
-	log_argc = atoi(args[3 + num_devs]);
+	log_argc = (unsigned) atoi(args[3 + num_devs]);
 
-	if (log_argc > 16 || log_argc < 0) {
+	if (log_argc > 16) {
 		log_error("Unexpectedly many (%d) log arguments in %s.",
 			  log_argc, lv->name);
 		return 0;
@@ -270,8 +271,8 @@ static int _mirrored_transient_status(struct lv_segment *seg, char *params)
 
 	log_args = alloca(log_argc * sizeof(char *));
 
-	if (dm_split_words(args[3 + num_devs] + strlen(args[3 + num_devs]) + 1,
-			   log_argc, 0, log_args) < log_argc)
+	if ((unsigned)dm_split_words(args[3 + num_devs] + strlen(args[3 + num_devs]) + 1,
+				     log_argc, 0, log_args) < log_argc)
 		return_0;
 
 	if (num_devs != seg->area_count) {

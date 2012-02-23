@@ -1,5 +1,6 @@
 Version 2.02.94 - 
 ====================================
+  Use same signed numbers in _mirrored_transient_status().
   Integrate client-side lvmetad into build.
 
 Version 2.02.93 - 23rd February 2012
