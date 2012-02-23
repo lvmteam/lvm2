@@ -194,7 +194,7 @@ int lv_thin_pool_transaction_id(const struct logical_volume *lv,
 {
 	return 0;
 }
-int lvs_in_vg_activated(struct volume_group *vg)
+int lvs_in_vg_activated(const struct volume_group *vg)
 {
 	return 0;
 }
@@ -242,10 +242,6 @@ int lv_mknodes(struct cmd_context *cmd, const struct logical_volume *lv)
 {
 	return 1;
 }
-int lv_send_message(const struct logical_volume *lv, const char *message)
-{
-	return 0;
-}
 int pv_uses_vg(struct physical_volume *pv,
 	       struct volume_group *vg)
 {
@@ -258,23 +254,23 @@ void activation_exit(void)
 {
 }
 
-int lv_is_active(struct logical_volume *lv)
+int lv_is_active(const struct logical_volume *lv)
 {
 	return 0;
 }
-int lv_is_active_but_not_locally(struct logical_volume *lv)
+int lv_is_active_but_not_locally(const struct logical_volume *lv)
 {
 	return 0;
 }
-int lv_is_active_exclusive(struct logical_volume *lv)
+int lv_is_active_exclusive(const struct logical_volume *lv)
 {
 	return 0;
 }
-int lv_is_active_exclusive_locally(struct logical_volume *lv)
+int lv_is_active_exclusive_locally(const struct logical_volume *lv)
 {
 	return 0;
 }
-int lv_is_active_exclusive_remotely(struct logical_volume *lv)
+int lv_is_active_exclusive_remotely(const struct logical_volume *lv)
 {
 	return 0;
 }
@@ -293,6 +289,7 @@ void fs_unlock(void)
 {
 }
 /* dev_manager.c */
+#include "targets.h"
 int add_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 		   struct dm_tree_node *node, uint32_t start_area,
 		   uint32_t areas)
@@ -842,7 +839,7 @@ int lv_thin_pool_transaction_id(const struct logical_volume *lv,
 	return r;
 }
 
-static int _lv_active(struct cmd_context *cmd, struct logical_volume *lv)
+static int _lv_active(struct cmd_context *cmd, const struct logical_volume *lv)
 {
 	struct lvinfo info;
 
@@ -944,7 +941,7 @@ static int _lv_suspend_lv(struct logical_volume *lv, struct lv_activate_opts *la
  * These two functions return the number of visible LVs in the state,
  * or -1 on error.  FIXME Check this.
  */
-int lvs_in_vg_activated(struct volume_group *vg)
+int lvs_in_vg_activated(const struct volume_group *vg)
 {
 	struct lv_list *lvl;
 	int count = 0;
@@ -999,7 +996,7 @@ int lvs_in_vg_opened(const struct volume_group *vg)
  *
  * Returns: 0 or 1
  */
-static int _lv_is_active(struct logical_volume *lv,
+static int _lv_is_active(const struct logical_volume *lv,
 			 int *locally, int *exclusive)
 {
 	int r, l, e; /* remote, local, and exclusive */
@@ -1055,32 +1052,32 @@ out:
 	return r || l;
 }
 
-int lv_is_active(struct logical_volume *lv)
+int lv_is_active(const struct logical_volume *lv)
 {
 	return _lv_is_active(lv, NULL, NULL);
 }
 
-int lv_is_active_but_not_locally(struct logical_volume *lv)
+int lv_is_active_but_not_locally(const struct logical_volume *lv)
 {
 	int l;
 	return _lv_is_active(lv, &l, NULL) && !l;
 }
 
-int lv_is_active_exclusive(struct logical_volume *lv)
+int lv_is_active_exclusive(const struct logical_volume *lv)
 {
 	int e;
 
 	return _lv_is_active(lv, NULL, &e) && e;
 }
 
-int lv_is_active_exclusive_locally(struct logical_volume *lv)
+int lv_is_active_exclusive_locally(const struct logical_volume *lv)
 {
 	int l, e;
 
 	return _lv_is_active(lv, &l, &e) && l && e;
 }
 
-int lv_is_active_exclusive_remotely(struct logical_volume *lv)
+int lv_is_active_exclusive_remotely(const struct logical_volume *lv)
 {
 	int l, e;
 

@@ -111,14 +111,14 @@ int lv_thin_pool_transaction_id(const struct logical_volume *lv,
 /*
  * Return number of LVs in the VG that are active.
  */
-int lvs_in_vg_activated(struct volume_group *vg);
+int lvs_in_vg_activated(const struct volume_group *vg);
 int lvs_in_vg_opened(const struct volume_group *vg);
 
-int lv_is_active(struct logical_volume *lv);
-int lv_is_active_but_not_locally(struct logical_volume *lv);
-int lv_is_active_exclusive(struct logical_volume *lv);
-int lv_is_active_exclusive_locally(struct logical_volume *lv);
-int lv_is_active_exclusive_remotely(struct logical_volume *lv);
+int lv_is_active(const struct logical_volume *lv);
+int lv_is_active_but_not_locally(const struct logical_volume *lv);
+int lv_is_active_exclusive(const struct logical_volume *lv);
+int lv_is_active_exclusive_locally(const struct logical_volume *lv);
+int lv_is_active_exclusive_remotely(const struct logical_volume *lv);
 
 int lv_has_target_type(struct dm_pool *mem, struct logical_volume *lv,
 		       const char *layer, const char *target_type);
