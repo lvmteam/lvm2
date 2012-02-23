@@ -190,7 +190,7 @@ int config_file_read_fd(struct dm_config_tree *cft, struct device *dev,
 			off_t offset, size_t size, off_t offset2, size_t size2,
 			checksum_fn_t checksum_fn, uint32_t checksum)
 {
-	const char *fb, *fe;
+	char *fb, *fe;
 	int r = 0;
 	int use_mmap = 1;
 	off_t mmap_offset = 0;
@@ -240,7 +240,7 @@ int config_file_read_fd(struct dm_config_tree *cft, struct device *dev,
 		dm_free(buf);
 	else {
 		/* unmap the file */
-		if (munmap((char *) (fb - mmap_offset), size + mmap_offset)) {
+		if (munmap(fb - mmap_offset, size + mmap_offset)) {
 			log_sys_error("munmap", dev_name(dev));
 			r = 0;
 		}
