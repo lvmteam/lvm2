@@ -596,7 +596,8 @@ static int _failed_mirrors_count(struct logical_volume *lv)
 
 static int _failed_logs_count(struct logical_volume *lv)
 {
-	int ret = 0, s;
+	int ret = 0;
+	unsigned s;
 	struct logical_volume *log_lv = first_seg(lv)->log_lv;
 	if (log_lv && (log_lv->status & PARTIAL_LV)) {
 		if (log_lv->status & MIRRORED)
