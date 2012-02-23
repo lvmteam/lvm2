@@ -52,3 +52,4 @@ ifeq ("@BUILD_LVMETAD@", "yes")
 lvmetad: common.device-mapper
 endif
 
+device-mapper: common.device-mapper
