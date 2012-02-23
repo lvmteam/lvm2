@@ -737,7 +737,7 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 					struct dm_list *parallel_areas)
 {
 	struct alloc_handle *ah;
-	uint32_t s, area_count, alloc_count;
+	uint32_t s, area_count, alloc_count, parity_count;
 	size_t size = 0;
 
 	/* FIXME Caller should ensure this */
@@ -752,7 +752,9 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 		area_count = stripes;
 
 	size = sizeof(*ah);
-	alloc_count = area_count + segtype->parity_devs;
+	parity_count = (area_count <= segtype->parity_devs) ? 0 :
+		segtype->parity_devs;
+	alloc_count = area_count + parity_count;
 	if (segtype_is_raid(segtype) && metadata_area_count)
 		/* RAID has a meta area for each device */
 		alloc_count *= 2;
@@ -787,7 +789,7 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 	else
 		ah->new_extents = 0;
 	ah->area_count = area_count;
-	ah->parity_count = segtype->parity_devs;
+	ah->parity_count = parity_count;
 	ah->region_size = region_size;
 	ah->alloc = alloc;
 	ah->area_multiple = _calc_area_multiple(segtype, area_count, stripes);

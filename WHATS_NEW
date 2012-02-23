@@ -1,5 +1,6 @@
 Version 2.02.93 - 
 ====================================
+  Fix allocation code to allow replacement of single RAID 4/5/6 device.
   Check all tags and LV names are in a valid form in vg_validate.
   Add tmpfiles.d style configuration for lvm2 lock and run directory.
   Add configure --with-tmpfilesdir for dir holding volatile-file configuration.
