@@ -86,7 +86,7 @@ dd if=backup_i of="$dev1" bs=256K count=1
 
 # dirty game
 dd if=/dev/zero of="$dev3" bs=256K count=1
-pvscan --lvmetad $dev3 || true # udev be watching you
+aux notify_lvmetad $dev3 # udev be watching you
 
 vgreduce --removemissing --force $vg
 

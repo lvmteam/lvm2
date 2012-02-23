@@ -18,7 +18,7 @@ create_pool_label_()
   # printf comes from coreutils, and is probably not posix either
   env printf "\x01\x16\x70\x06\x5f\xcf\xff\xb9\xf8\x24\x8apool1" | dd of=$2 bs=5 seek=1 conv=notrunc
   env printf "\x04\x01\x03\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x02\x00\x00\x00\x0$1\x68\x01\x16\x70\x00\x00\x00\x00\x00\x06\x5f\xd0" | dd of=$2 bs=273 seek=1 conv=notrunc
-  pvscan --lvmetad "$2" || true
+  aux notify_lvmetad "$2"
 }
 
 env printf "" || exit 200 # skip if printf is not available
