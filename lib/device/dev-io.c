@@ -664,6 +664,8 @@ int dev_read(struct device *dev, uint64_t offset, size_t len, void *buffer)
 	where.start = offset;
 	where.size = len;
 
+	// fprintf(stderr, "READ: %s, %lld, %d\n", dev_name(dev), offset, len);
+
 	ret = _aligned_io(&where, buffer, 0);
 	if (!ret)
 		_dev_inc_error_count(dev);

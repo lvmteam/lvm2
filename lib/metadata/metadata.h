@@ -70,9 +70,11 @@
 struct dm_config_tree;
 struct metadata_area;
 struct alloc_handle;
+struct lvmcache_info;
 
 /* Per-format per-metadata area operations */
 struct metadata_area_ops {
+	struct dm_list list;
 	struct volume_group *(*vg_read) (struct format_instance * fi,
 					 const char *vg_name,
 					 struct metadata_area * mda);
@@ -145,6 +147,8 @@ struct metadata_area_ops {
 				    struct metadata_area *mda2);
 
 	struct device *(*mda_get_device)(struct metadata_area *mda);
+	char *(*mda_export_text)(struct metadata_area *mda);
+	int (*mda_import_text)(struct lvmcache_info *info, const struct dm_config_node *cn);
 };
 
 #define MDA_IGNORED      0x00000001

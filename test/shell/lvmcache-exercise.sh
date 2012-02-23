@@ -19,5 +19,5 @@ aux disable_dev $dev1
 pvscan
 vgcreate $vg1 $dev2
 aux enable_dev $dev1
-pvs
+valgrind --trace-children=yes pvs
 pvs

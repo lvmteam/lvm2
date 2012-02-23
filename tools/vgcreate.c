@@ -49,6 +49,8 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	if (vgcreate_params_validate(cmd, &vp_new))
 	    return EINVALID_CMD_LINE;
 
+	lvmcache_seed_infos_from_lvmetad(cmd);
+
 	/* Create the new VG */
 	vg = vg_create(cmd, vp_new.vg_name);
 	if (vg_read_error(vg)) {

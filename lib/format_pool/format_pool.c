@@ -301,6 +301,8 @@ struct format_type *init_format(struct cmd_context *cmd)
 	fmt->features = 0;
 	fmt->private = NULL;
 
+	dm_list_init(&fmt->mda_ops);
+
 	if (!(fmt->labeller = pool_labeller_create(fmt))) {
 		log_error("Couldn't create pool label handler.");
 		dm_free(fmt);

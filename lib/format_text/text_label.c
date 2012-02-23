@@ -19,6 +19,7 @@
 #include "label.h"
 #include "xlate.h"
 #include "lvmcache.h"
+#include "lvmetad.h"
 
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -40,11 +41,11 @@ struct _da_setup_baton {
 	struct device *dev;
 };
 
-static int _da_setup(struct data_area_list *da, void *baton)
+static int _da_setup(struct disk_locn *da, void *baton)
 {
 	struct _da_setup_baton *p = baton;
-	p->pvh_dlocn_xl->offset = xlate64(da->disk_locn.offset);
-	p->pvh_dlocn_xl->size = xlate64(da->disk_locn.size);
+	p->pvh_dlocn_xl->offset = xlate64(da->offset);
+	p->pvh_dlocn_xl->size = xlate64(da->size);
 	p->pvh_dlocn_xl++;
 	return 1;
 }
@@ -275,7 +276,7 @@ static int _update_mda(struct metadata_area *mda, void *baton)
 	const struct format_type *fmt = p->label->labeller->private; // Oh dear.
 	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
 	struct mda_header *mdah;
-	const char *vgname;
+	const char *vgname = NULL;
 	struct id vgid;
 	uint64_t vgstatus;
 	char *creation_host;
@@ -337,7 +338,6 @@ static int _text_read(struct labeller *l, struct device *dev, void *buf,
 				  FMT_TEXT_ORPHAN_VG_NAME, 0)))
 		return_0;
 
-	/* this one is leaked forever */
 	*label = lvmcache_get_label(info);
 
 	lvmcache_set_device_size(info, xlate64(pvhdr->device_size_xl));

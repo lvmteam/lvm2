@@ -64,11 +64,10 @@ daemon_reply lvmetad_supersede_vg(daemon_handle h, struct volume_group *vg);
 
 static inline daemon_handle lvmetad_open(const char *socket)
 {
-	/* TODO configurable */
 	daemon_info lvmetad_info = {
 		.path = "lvmetad",
 		.socket = socket ?: DEFAULT_RUN_DIR "/lvmetad.socket",
-		.autostart = 1
+		.autostart = 0
 	};
 
 	return daemon_open(lvmetad_info);

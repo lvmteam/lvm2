@@ -40,29 +40,32 @@ vgscan 2>&1 | tee cmd.out
 not grep "Inconsistent metadata found for VG $vg" cmd.out
 check
 
-# vgdisplay fixes
-init
-vgdisplay 2>&1 | tee cmd.out
-grep "Inconsistent metadata found for VG $vg" cmd.out
-vgdisplay 2>&1 | tee cmd.out
-not grep "Inconsistent metadata found for VG $vg" cmd.out
-check
+# only vgscan would have noticed metadata inconsistencies when lvmetad is active
+if !test -e LOCAL_LVMETAD; then
+	# vgdisplay fixes
+	init
+	vgdisplay 2>&1 | tee cmd.out
+	grep "Inconsistent metadata found for VG $vg" cmd.out
+	vgdisplay 2>&1 | tee cmd.out
+	not grep "Inconsistent metadata found for VG $vg" cmd.out
+	check
 
-# lvs fixes up
-init
-lvs 2>&1 | tee cmd.out
-grep "Inconsistent metadata found for VG $vg" cmd.out
-vgdisplay 2>&1 | tee cmd.out
-not grep "Inconsistent metadata found for VG $vg" cmd.out
-check
+	# lvs fixes up
+	init
+	lvs 2>&1 | tee cmd.out
+	grep "Inconsistent metadata found for VG $vg" cmd.out
+	vgdisplay 2>&1 | tee cmd.out
+	not grep "Inconsistent metadata found for VG $vg" cmd.out
+	check
 
-# vgs fixes up as well
-init
-vgs 2>&1 | tee cmd.out
-grep "Inconsistent metadata found for VG $vg" cmd.out
-vgs 2>&1 | tee cmd.out
-not grep "Inconsistent metadata found for VG $vg" cmd.out
-check
+	# vgs fixes up as well
+	init
+	vgs 2>&1 | tee cmd.out
+	grep "Inconsistent metadata found for VG $vg" cmd.out
+	vgs 2>&1 | tee cmd.out
+	not grep "Inconsistent metadata found for VG $vg" cmd.out
+	check
+fi
 
 echo Check auto-repair of failed vgextend - metadata written to original pv but not new pv
 vgremove -f $vg

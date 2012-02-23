@@ -14,31 +14,32 @@
 aux prepare_vg 3
 
 # fail multiple devices
-for i in pv1 pv2 pv3 ; do
-	for j in pv2 pv3 ; do
+for i in $dev1 $dev2 $dev3 ; do
+	for j in $dev2 $dev3 ; do
 
 		if test $i = $j ; then continue ; fi
 
 		vgremove -ff $vg
 		vgcreate $vg $dev1 $dev2 $dev3
+		# exit 1
 
 		lvcreate -l1 -n $lv1 $vg $dev1
 
-		aux lvmconf "devices/filter = [ \"r/.*$i$/\", \"r/.*$j$/\", \"a/dev\/mapper\/.*pv[0-9_]*$/\", \"r/.*/\" ]"
+		aux disable_dev $i $j
 
 		vgreduce --removemissing --force $vg
 
 		# check if reduced device was removed
-		test $i = pv1 && dmsetup table | not egrep "$vg-$lv1: *[^ ]+" >/dev/null
+		test $i = $dev1 && dmsetup table | not egrep "$vg-$lv1: *[^ ]+" >/dev/null
 
 		lvcreate -l1 -n $lv2 $vg
 
-		test $i != pv1 && check lv_exists $vg $lv1
+		test $i != $dev1 && check lv_exists $vg $lv1
 		check lv_exists $vg $lv2
 
-		aux lvmconf 'devices/filter = [ "a/dev\/mapper\/.*pv[0-9_]*$/", "r/.*/" ]'
+		aux enable_dev $i $j
 
-		test $i != pv1 && check lv_exists $vg $lv1
+		test $i != $dev1 && check lv_exists $vg $lv1
 		check lv_exists $vg $lv2
 	done
 done
@@ -84,6 +85,7 @@ dd if=backup_i of="$dev1" bs=256K count=1
 
 # dirty game
 dd if=/dev/zero of="$dev3" bs=256K count=1
+pvscan --lvmetad $dev3 || true # udev be watching you
 
 vgreduce --removemissing --force $vg
 

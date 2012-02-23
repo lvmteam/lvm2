@@ -79,6 +79,7 @@ should not lvconvert -m-1 $vg/$lv1 $dev1
 lvconvert $vg/$lv1 # wait
 lvconvert -m2 $vg/$lv1 $dev1 $dev2 $dev4 $dev3:0 # If the above "should" failed...
 
+sleep 1
 lvconvert -m-1 $vg/$lv1 $dev1
 check mirror_images_on $lv1 $dev2 $dev4
 lvconvert -m-1 $vg/$lv1 $dev2

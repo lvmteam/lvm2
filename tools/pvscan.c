@@ -15,6 +15,9 @@
 
 #include "tools.h"
 
+#include "lvmetad.h"
+#include "lvmcache.h"
+
 int pv_max_name_len = 0;
 int vg_max_name_len = 0;
 
@@ -96,8 +99,7 @@ static void _pvscan_display_single(struct cmd_context *cmd,
 					   pv_pe_size(pv)));
 }
 
-int pvscan(struct cmd_context *cmd, int argc __attribute__((unused)),
-	   char **argv __attribute__((unused)))
+int pvscan(struct cmd_context *cmd, int argc, char **argv)
 {
 	int new_pvs_found = 0;
 	int pvs_found = 0;
@@ -112,6 +114,12 @@ int pvscan(struct cmd_context *cmd, int argc __attribute__((unused)),
 	int len = 0;
 	pv_max_name_len = 0;
 	vg_max_name_len = 0;
+
+	if (arg_count(cmd, lvmetad_ARG)) {
+		if (!pvscan_lvmetad(cmd, argc, argv))
+			return ECMD_FAILED;
+		return ECMD_PROCESSED;
+	}
 
 	if (arg_count(cmd, novolumegroup_ARG) && arg_count(cmd, exported_ARG)) {
 		log_error("Options -e and -n are incompatible");
@@ -184,8 +192,8 @@ int pvscan(struct cmd_context *cmd, int argc __attribute__((unused)),
 	vg_max_name_len += 2;
 
 	dm_list_iterate_items(pvl, pvslist) {
-	    _pvscan_display_single(cmd, pvl->pv, NULL);
-	    free_pv_fid(pvl->pv);
+		_pvscan_display_single(cmd, pvl->pv, NULL);
+		free_pv_fid(pvl->pv);
 	}
 
 	if (!pvs_found) {

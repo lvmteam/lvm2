@@ -25,7 +25,7 @@ ifeq ("$(TESTING)", "yes")
 LDLIBS += -ldevmapper @CUNIT_LIBS@
 CFLAGS += @CUNIT_CFLAGS@
 
-all: unit
+check: unit
 
 unit: $(TARGETS)
 	@echo Running unit tests

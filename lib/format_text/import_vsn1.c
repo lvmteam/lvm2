@@ -19,6 +19,7 @@
 #include "display.h"
 #include "toolcontext.h"
 #include "lvmcache.h"
+#include "lvmetad.h"
 #include "lv_alloc.h"
 #include "pv_alloc.h"
 #include "segtype.h"
@@ -58,6 +59,10 @@ static int _vsn1_check_version(const struct dm_config_tree *cft)
 {
 	const struct dm_config_node *cn;
 	const struct dm_config_value *cv;
+
+	// TODO if this is pvscan --lvmetad, we want this check back.
+	if (lvmetad_active())
+		return 1;
 
 	/*
 	 * Check the contents field.
@@ -212,7 +217,8 @@ static int _read_pv(struct format_instance *fid,
 		return 0;
 	}
 
-	if (!pv->dev)
+	/* TODO is the !lvmetad_active() too coarse here? */
+	if (!pv->dev && !lvmetad_active())
 		pv->status |= MISSING_PV;
 
 	/* Late addition */
