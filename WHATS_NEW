@@ -1,5 +1,6 @@
 Version 2.02.94 - 
 ====================================
+  Use const lv pointer for lv_is_active...() functions. 
   Use same signed numbers in _mirrored_transient_status().
   Integrate client-side lvmetad into build.
 
@@ -172,7 +173,6 @@ Version 2.02.89 - 26th January 2012
   Apply appropriate udev flags when suspending/resuming mirror sub-LVs.
   Fix vgsplit to handle mirrored logs.
   Clarify multi-name device filter pattern matching explanation in lvm.conf.
-  Introduce lv_send_message and dev_manager_send_message.
   Introduce revert_lv for better pvmove cleanup.
   Replace incomplete pvmove activation failure recovery code with a message.
   Abort if _finish_pvmove suspend_lvs fails instead of cleaning up incompletely.
