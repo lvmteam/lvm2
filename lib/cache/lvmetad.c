@@ -229,7 +229,7 @@ int lvmetad_vg_update(struct volume_group *vg)
 	char mda_id[128], *num;
 	struct pv_list *pvl;
 	struct lvmcache_info *info;
-	struct _fixup_baton baton = { .i = 0 };
+	struct _fixup_baton baton;
 
 	if (!vg)
 		return 0;
@@ -264,6 +264,7 @@ int lvmetad_vg_update(struct volume_group *vg)
 			*num = 0;
 			++num;
 			if ((info = lvmcache_info_from_pvid(mda_id, 0))) {
+				memset(&baton, 0, sizeof(baton));
 				baton.find = atoi(num);
 				baton.ignore = mda_is_ignored(mda);
 				lvmcache_foreach_mda(info, _fixup_ignored, &baton);
