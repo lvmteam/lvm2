@@ -529,7 +529,7 @@ int lv_set_creation(struct logical_volume *lv,
 	}
 
 	lv->hostname = hn;
-	lv->timestamp = timestamp ? : time(NULL);
+	lv->timestamp = timestamp ? : (uint64_t) time(NULL);
 
 	return 1;
 }
