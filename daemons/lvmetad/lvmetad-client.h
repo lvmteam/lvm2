@@ -64,6 +64,8 @@ static inline daemon_handle lvmetad_open(const char *socket)
 	daemon_info lvmetad_info = {
 		.path = "lvmetad",
 		.socket = socket ?: DEFAULT_RUN_DIR "/lvmetad.socket",
+		.protocol = "lvmetad",
+		.protocol_version = 1,
 		.autostart = 0
 	};
 
