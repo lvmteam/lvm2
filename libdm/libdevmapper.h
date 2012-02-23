@@ -1211,6 +1211,15 @@ void dm_unescape_colons_and_at_signs(char *src,
 				     char **substr_first_unquoted_colon,
 				     char **substr_first_unquoted_at_sign);
 
+/*
+ * Replacement for strncpy() function.
+ *
+ * Copies no more than n bytes from string pointed by src to the buffer
+ * pointed by dest and ensure string is finished with '\0'.
+ * Returns 0 if the whole string does not fit.
+ */
+int dm_strncpy(char *dest, const char *src, size_t n);
+
 /**************************
  * file/stream manipulation
  **************************/
