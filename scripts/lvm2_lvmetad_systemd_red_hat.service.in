@@ -1,0 +1,15 @@
+[Unit]
+Description=LVM2 metadata daemon
+Requires=lvm2-lvmetad.socket
+After=lvm2-lvmetad.socket
+DefaultDependencies=no
+Conflicts=shutdown.target
+
+[Service]
+Type=forking
+ExecStart=@sbindir@/lvmetad
+ExecReload=@sbindir@/lvmetad -R
+PIDFile=/var/run/lvm/lvmetad.pid
+
+[Install]
+WantedBy=sysinit.target

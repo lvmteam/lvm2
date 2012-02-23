@@ -1,0 +1,10 @@
+[Unit]
+Description=LVM2 metadata daemon socket
+DefaultDependencies=no
+
+[Socket]
+ListenStream=/var/run/lvm/lvmetad.socket
+SocketMode=0600
+
+[Install]
+WantedBy=sockets.target

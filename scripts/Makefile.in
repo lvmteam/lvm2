@@ -63,6 +63,10 @@ ifeq ("@BUILD_DMEVENTD@", "yes")
 	$(INSTALL_DATA) dm_event_systemd_red_hat.service $(systemd_dir)/dm-event.service
 	$(INSTALL_DATA) lvm2_monitoring_systemd_red_hat.service $(systemd_dir)/lvm2-monitor.service
 endif
+ifeq ("@BUILD_LVMETAD@", "yes")
+	$(INSTALL_DATA) lvm2_lvmetad_systemd_red_hat.socket $(systemd_dir)/lvm2-lvmetad.socket
+	$(INSTALL_DATA) lvm2_lvmetad_systemd_red_hat.service.in $(systemd_dir)/lvm2-lvmetad.service
+endif
 
 install_tmpfiles_configuration:
 	$(INSTALL_DIR) $(tmpfiles_dir)
