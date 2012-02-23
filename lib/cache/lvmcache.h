@@ -39,7 +39,7 @@ struct disk_locn;
 struct lvmcache_vginfo;
 
 int lvmcache_init(void);
-void lvmcache_allow_reads_with_lvmetad();
+void lvmcache_allow_reads_with_lvmetad(void);
 
 void lvmcache_destroy(struct cmd_context *cmd, int retain_orphans);
 

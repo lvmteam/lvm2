@@ -30,9 +30,6 @@ typedef struct {
 	struct dm_config_tree *cft;
 } lvmetad_vg;
 
-static inline daemon_handle lvmetad_open();
-static inline void lvmetad_close(daemon_handle h);
-
 /* Get a list of VG UUIDs that match a given VG name. */
 lvmetad_uuidlist lvmetad_lookup_vgname(daemon_handle h, const char *name);
 

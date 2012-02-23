@@ -46,17 +46,26 @@ static int _read_mda(struct lvmcache_info *info,
 		     const struct dm_config_node *cn)
 {
 	struct metadata_area_ops *ops;
-	struct metadata_area *mda = NULL;
-	dm_list_iterate_items(ops, &fmt->mda_ops) {
+
+	dm_list_iterate_items(ops, &fmt->mda_ops)
 		if (ops->mda_import_text && ops->mda_import_text(info, cn))
 			return 1;
-	}
+
 	return 0;
 }
 
 static struct lvmcache_info *_pv_populate_lvmcache(
 	struct cmd_context *cmd, struct dm_config_node *cn, dev_t fallback)
 {
+	struct device *device;
+	struct id pvid, vgid;
+	char mda_id[32];
+	char da_id[32];
+	int i = 0;
+	struct dm_config_node *mda = NULL;
+	struct dm_config_node *da = NULL;
+	uint64_t offset, size;
+	struct lvmcache_info *info;
 	const char *pvid_txt = dm_config_find_str(cn->child, "id", NULL),
 		   *vgid_txt = dm_config_find_str(cn->child, "vgid", NULL),
 		   *vgname = dm_config_find_str(cn->child, "vgname", NULL),
@@ -69,23 +78,21 @@ static struct lvmcache_info *_pv_populate_lvmcache(
 
 	if (!fmt) {
 		log_warn("No format for PV %s. It is probably missing.", pvid_txt);
-		return_NULL;
+		return NULL;
 	}
 
-	struct device *device = dev_cache_get_by_devt(devt, cmd->filter);
-	struct id pvid, vgid;
-
+	device = dev_cache_get_by_devt(devt, cmd->filter);
 	if (!device && fallback)
 		device = dev_cache_get_by_devt(fallback, cmd->filter);
 
 	if (!device) {
 		log_warn("No device for PV %s.", pvid_txt);
-		return_NULL;
+		return NULL;
 	}
 
 	if (!pvid_txt || !id_read_format(&pvid, pvid_txt)) {
 		log_warn("Missing or ill-formatted PVID for PV: %s.", pvid_txt);
-		return_NULL;
+		return NULL;
 	}
 
 	if (vgid_txt)
@@ -96,19 +103,15 @@ static struct lvmcache_info *_pv_populate_lvmcache(
 	if (!vgname)
 		vgname = fmt->orphan_vg_name;
 
-	struct lvmcache_info *info =
-		lvmcache_add(fmt->labeller, (const char *)&pvid, device,
-			     vgname, (const char *)&vgid, 0);
+	info = lvmcache_add(fmt->labeller, (const char *)&pvid, device,
+			    vgname, (const char *)&vgid, 0);
 
 	lvmcache_get_label(info)->sector = label_sector;
 	lvmcache_set_device_size(info, devsize);
 	lvmcache_del_das(info);
 	lvmcache_del_mdas(info);
 
-	int i = 0;
-	struct dm_config_node *mda = NULL;
 	do {
-		char mda_id[32];
 		sprintf(mda_id, "mda%d", i);
 		mda = dm_config_find_node(cn->child, mda_id);
 		if (mda)
@@ -117,13 +120,10 @@ static struct lvmcache_info *_pv_populate_lvmcache(
 	} while (mda);
 
 	i = 0;
-	struct dm_config_node *da = NULL;
 	do {
-		char da_id[32];
 		sprintf(da_id, "da%d", i);
 		da = dm_config_find_node(cn->child, da_id);
 		if (da) {
-			uint64_t offset, size;
 			if (!dm_config_get_uint64(da->child, "offset", &offset)) return_0;
 			if (!dm_config_get_uint64(da->child, "size", &size)) return_0;
 			lvmcache_add_da(info, offset, size);
@@ -136,14 +136,24 @@ static struct lvmcache_info *_pv_populate_lvmcache(
 
 struct volume_group *lvmetad_vg_lookup(struct cmd_context *cmd, const char *vgname, const char *vgid)
 {
+	struct volume_group *vg = NULL;
+	daemon_reply reply;
+	char uuid[64];
+	struct format_instance *fid;
+	struct format_instance_ctx fic;
+	struct dm_config_node *top;
+	const char *name;
+	const char *fmt_name;
+	struct format_type *fmt;
+	struct dm_config_node *pvcn;
+	struct pv_list *pvl;
+	struct lvmcache_info *info;
+
 	if (!_using_lvmetad)
 		return NULL;
 
-	struct volume_group *vg = NULL;
-	daemon_reply reply;
 	if (vgid) {
-		char uuid[64];
-		id_write_format((struct id*)vgid, uuid, 64);
+		id_write_format((const struct id*)vgid, uuid, 64);
 		reply = daemon_send_simple(_lvmetad, "vg_lookup", "uuid = %s", uuid, NULL);
 	} else {
 		if (!vgname)
@@ -153,16 +163,12 @@ struct volume_group *lvmetad_vg_lookup(struct cmd_context *cmd, const char *vgna
 
 	if (!strcmp(daemon_reply_str(reply, "response", ""), "OK")) {
 
-		struct dm_config_node *top = dm_config_find_node(reply.cft->root, "metadata");
-		const char *name = daemon_reply_str(reply, "name", NULL);
-
-		struct format_instance *fid;
-		struct format_instance_ctx fic;
+		top = dm_config_find_node(reply.cft->root, "metadata");
+		name = daemon_reply_str(reply, "name", NULL);
 
 		/* fall back to lvm2 if we don't know better */
-		const char *fmt_name = dm_config_find_str(top, "metadata/format", "lvm2");
-		struct format_type *fmt = get_format_by_name(cmd, fmt_name);
-		if (!fmt) {
+		fmt_name = dm_config_find_str(top, "metadata/format", "lvm2");
+		if (!(fmt = get_format_by_name(cmd, fmt_name))) {
 			log_error(INTERNAL_ERROR
 				  "We do not know the format (%s) reported by lvmetad.",
 				  fmt_name);
@@ -176,8 +182,7 @@ struct volume_group *lvmetad_vg_lookup(struct cmd_context *cmd, const char *vgna
 		if (!(fid = fmt->ops->create_instance(fmt, &fic)))
 			return_NULL;
 
-		struct dm_config_node *pvcn =
-			dm_config_find_node(top, "metadata/physical_volumes")->child;
+		pvcn = dm_config_find_node(top, "metadata/physical_volumes")->child;
 		while (pvcn) {
 			_pv_populate_lvmcache(cmd, pvcn, 0);
 			pvcn = pvcn->sib;
@@ -186,11 +191,8 @@ struct volume_group *lvmetad_vg_lookup(struct cmd_context *cmd, const char *vgna
 		top->key = name;
 		vg = import_vg_from_config_tree(reply.cft, fid);
 
-		struct pv_list *pvl;
 		dm_list_iterate_items(pvl, &vg->pvs) {
-			struct lvmcache_info *info =
-				lvmcache_info_from_pvid((const char *)&pvl->pv->id, 0);
-			if (info) {
+			if ((info = lvmcache_info_from_pvid((const char *)&pvl->pv->id, 0))) {
 				pvl->pv->label_sector = lvmcache_get_label(info)->sector;
 				pvl->pv->dev = lvmcache_device(info);
 				lvmcache_fid_add_mdas_pv(info, fid);
@@ -221,8 +223,17 @@ static int _fixup_ignored(struct metadata_area *mda, void *baton) {
 int lvmetad_vg_update(struct volume_group *vg)
 {
 	char *buf = NULL;
+	daemon_reply reply;
+	struct dm_hash_node *n;
+	struct metadata_area *mda;
+	char mda_id[128], *num;
+	struct pv_list *pvl;
+	struct lvmcache_info *info;
+	struct _fixup_baton baton = { .i = 0 };
+
 	if (!vg)
 		return 0;
+
 	if (!_using_lvmetad)
 		return 1; /* fake it */
 
@@ -237,8 +248,6 @@ int lvmetad_vg_update(struct volume_group *vg)
 		return_0;
 	}
 
-	daemon_reply reply;
-
 	reply = daemon_send_simple(_lvmetad, "vg_update", "vgname = %s", vg->name,
 				             "metadata = %b", strchr(buf, '{'),
 				   NULL);
@@ -246,26 +255,23 @@ int lvmetad_vg_update(struct volume_group *vg)
 	if (!_lvmetad_handle_reply(reply, "update VG", vg->name))
 		return 0;
 
-	struct dm_hash_node *n = (vg->fid && vg->fid->metadata_areas_index) ?
+	n = (vg->fid && vg->fid->metadata_areas_index) ?
 		dm_hash_get_first(vg->fid->metadata_areas_index) : NULL;
 	while (n) {
-		struct metadata_area *mda = dm_hash_get_data(vg->fid->metadata_areas_index, n);
-		char mda_id[128], *num;
+		mda = dm_hash_get_data(vg->fid->metadata_areas_index, n);
 		strcpy(mda_id, dm_hash_get_key(vg->fid->metadata_areas_index, n));
 		if ((num = strchr(mda_id, '_'))) {
 			*num = 0;
 			++num;
-			struct lvmcache_info *info =
-				lvmcache_info_from_pvid(mda_id, 0);
-			struct _fixup_baton baton = { .i = 0, .find = atoi(num),
-						      .ignore = mda_is_ignored(mda) };
-			if (info)
+			if ((info = lvmcache_info_from_pvid(mda_id, 0))) {
+				baton.find = atoi(num);
+				baton.ignore = mda_is_ignored(mda);
 				lvmcache_foreach_mda(info, _fixup_ignored, &baton);
+			}
 		}
 		n = dm_hash_get_next(vg->fid->metadata_areas_index, n);
 	}
 
-	struct pv_list *pvl;
 	dm_list_iterate_items(pvl, &vg->pvs) {
 		/* NB. the PV fmt pointer is sometimes wrong during vgconvert */
 		if (pvl->pv->dev && !lvmetad_pv_found(pvl->pv->id, pvl->pv->dev,
@@ -279,34 +285,38 @@ int lvmetad_vg_update(struct volume_group *vg)
 
 int lvmetad_vg_remove(struct volume_group *vg)
 {
+	char uuid[64];
+	daemon_reply reply;
+
 	if (!_using_lvmetad)
 		return 1; /* just fake it */
-	char uuid[64];
+
 	id_write_format(&vg->id, uuid, 64);
-	daemon_reply reply =
-		daemon_send_simple(_lvmetad, "vg_remove", "uuid = %s", uuid, NULL);
+	reply = daemon_send_simple(_lvmetad, "vg_remove", "uuid = %s", uuid, NULL);
 
 	return _lvmetad_handle_reply(reply, "remove VG", vg->name);
 }
 
 int lvmetad_pv_lookup(struct cmd_context *cmd, struct id pvid)
 {
+	char uuid[64];
+	daemon_reply reply;
+	int result = 1;
+	struct dm_config_node *cn;
+
 	if (!_using_lvmetad)
 		return_0;
 
-	int result = 1;
-	char uuid[64];
 	id_write_format(&pvid, uuid, 64);
 
-	daemon_reply reply =
-		daemon_send_simple(_lvmetad, "pv_lookup", "uuid = %s", uuid, NULL);
+	reply = daemon_send_simple(_lvmetad, "pv_lookup", "uuid = %s", uuid, NULL);
 
 	if (reply.error || strcmp(daemon_reply_str(reply, "response", ""), "OK")) {
 		_lvmetad_handle_reply(reply, "lookup PVs", "");
 		return_0;
 	}
 
-	struct dm_config_node *cn = dm_config_find_node(reply.cft->root, "physical_volume");
+	cn = dm_config_find_node(reply.cft->root, "physical_volume");
 	if (!_pv_populate_lvmcache(cmd, cn, 0))
 		result = 0;
 
@@ -316,20 +326,21 @@ int lvmetad_pv_lookup(struct cmd_context *cmd, struct id pvid)
 
 int lvmetad_pv_lookup_by_devt(struct cmd_context *cmd, dev_t device)
 {
+	int result = 1;
+	daemon_reply reply;
+	struct dm_config_node *cn;
+
 	if (!_using_lvmetad)
 		return_0;
 
-	int result = 1;
-
-	daemon_reply reply =
-		daemon_send_simple(_lvmetad, "pv_lookup", "device = %d", device, NULL);
+	reply = daemon_send_simple(_lvmetad, "pv_lookup", "device = %d", device, NULL);
 
 	if (reply.error || strcmp(daemon_reply_str(reply, "response", ""), "OK")) {
 		_lvmetad_handle_reply(reply, "lookup PVs", "");
 		return_0;
 	}
 
-	struct dm_config_node *cn = dm_config_find_node(reply.cft->root, "physical_volume");
+	cn = dm_config_find_node(reply.cft->root, "physical_volume");
 	if (!_pv_populate_lvmcache(cmd, cn, device))
 		result = 0;
 
@@ -339,18 +350,20 @@ int lvmetad_pv_lookup_by_devt(struct cmd_context *cmd, dev_t device)
 
 int lvmetad_pv_list_to_lvmcache(struct cmd_context *cmd)
 {
+	daemon_reply reply;
+	struct dm_config_node *cn;
+
 	if (!_using_lvmetad)
 		return_0;
 
-	daemon_reply reply =
-		daemon_send_simple(_lvmetad, "pv_list", NULL);
+	reply = daemon_send_simple(_lvmetad, "pv_list", NULL);
 
 	if (reply.error || strcmp(daemon_reply_str(reply, "response", ""), "OK")) {
 		_lvmetad_handle_reply(reply, "list PVs", "");
 		return_0;
 	}
 
-	struct dm_config_node *cn = dm_config_find_node(reply.cft->root, "physical_volumes")->child;
+	cn = dm_config_find_node(reply.cft->root, "physical_volumes")->child;
 	while (cn) {
 		_pv_populate_lvmcache(cmd, cn, 0);
 		cn = cn->sib;
@@ -362,28 +375,29 @@ int lvmetad_pv_list_to_lvmcache(struct cmd_context *cmd)
 
 int lvmetad_vg_list_to_lvmcache(struct cmd_context *cmd)
 {
+	struct volume_group *tmp;
+	struct id vgid;
+	const char *vgid_txt;
+	daemon_reply reply;
+	struct dm_config_node *cn;
+
 	if (!_using_lvmetad)
 		return_0;
 
-	daemon_reply reply =
-		daemon_send_simple(_lvmetad, "vg_list", NULL);
-
+	reply = daemon_send_simple(_lvmetad, "vg_list", NULL);
 	if (reply.error || strcmp(daemon_reply_str(reply, "response", ""), "OK")) {
 		_lvmetad_handle_reply(reply, "list VGs", "");
 		return_0;
 	}
 
-	struct dm_config_node *cn = dm_config_find_node(reply.cft->root, "volume_groups")->child;
+	cn = dm_config_find_node(reply.cft->root, "volume_groups")->child;
 	while (cn) {
-		struct id vgid;
-		const char *vgid_txt = cn->key,
-			   *name = dm_config_find_str(cn->child, "name", NULL);
+		vgid_txt = cn->key;
 		id_read_format(&vgid, vgid_txt);
-
 		cn = cn->sib;
 
 		/* the call to lvmetad_vg_lookup will poke the VG into lvmcache */
-		struct volume_group *tmp = lvmetad_vg_lookup(cmd, NULL, (const char*)&vgid);
+		tmp = lvmetad_vg_lookup(cmd, NULL, (const char*)&vgid);
 		release_vg(tmp);
 	}
 
@@ -400,12 +414,13 @@ static int _print_mda(struct metadata_area *mda, void *baton)
 {
 	int result = 0;
 	struct _print_mda_baton *b = baton;
+	char *buf, *mda_txt;
 
 	if (!mda->ops->mda_export_text) /* do nothing */
 		return 1;
 
-	char *buf = b->buffer;
-	char *mda_txt = mda->ops->mda_export_text(mda);
+	buf = b->buffer;
+	mda_txt = mda->ops->mda_export_text(mda);
 	if (!dm_asprintf(&b->buffer, "%s mda%i { %s }", b->buffer ?: "", b->i, mda_txt))
 		goto_out;
 	b->i ++;
@@ -418,13 +433,16 @@ out:
 
 static int _print_da(struct disk_locn *da, void *baton)
 {
+	struct _print_mda_baton *b;
+	char *buf;
+
 	if (!da)
 		return 1;
 
-	struct _print_mda_baton *b = baton;
-
-	char *buf = b->buffer;
-	if (!dm_asprintf(&b->buffer, "%s da%i { offset = %lld size = %lld }",
+	b = baton;
+	buf = b->buffer;
+	if (!dm_asprintf(&b->buffer, "%s da%i { offset = %" PRIu64
+			 " size = %" PRIu64 " }",
 			 b->buffer ?: "", b->i, da->offset, da->size))
 	{
 		dm_free(buf);
@@ -432,52 +450,55 @@ static int _print_da(struct disk_locn *da, void *baton)
 	}
 	b->i ++;
 	dm_free(buf);
+
 	return 1;
 }
 
 static const char *_print_mdas(struct lvmcache_info *info)
 {
 	struct _print_mda_baton baton = { .i = 0, .buffer = NULL };
+
 	if (!lvmcache_foreach_mda(info, &_print_mda, &baton))
 		return NULL;
 	baton.i = 0;
 	if (!lvmcache_foreach_da(info, &_print_da, &baton))
 		return NULL;
+
 	return baton.buffer;
 }
 
 int lvmetad_pv_found(struct id pvid, struct device *device, const struct format_type *fmt,
 		     uint64_t label_sector, struct volume_group *vg)
 {
+	char uuid[64];
+	daemon_reply reply;
+	struct lvmcache_info *info;
+	const char *mdas = NULL;
+	char *pvmeta;
+	char *buf = NULL;
+
 	if (!_using_lvmetad)
 		return 1;
-
-	char uuid[64];
 
 	id_write_format(&pvid, uuid, 64);
 
 	/* FIXME A more direct route would be much preferable. */
-	struct lvmcache_info *info = lvmcache_info_from_pvid((const char *)&pvid, 0);
-	const char *mdas = NULL;
-	if (info)
+	if ((info = lvmcache_info_from_pvid((const char *)&pvid, 0)))
 		mdas = _print_mdas(info);
 
-	char *pvmeta;
 	if (!dm_asprintf(&pvmeta,
-			 "{ device = %lld\n"
-			 "  dev_size = %lld\n"
+			 "{ device = %" PRIu64 "\n"
+			 "  dev_size = %" PRIu64 "\n"
 			 "  format = \"%s\"\n"
-			 "  label_sector = %lld\n"
+			 "  label_sector = %" PRIu64 "\n"
 			 "  id = \"%s\"\n"
 			 "  %s"
-			 "}", device->dev, info ? lvmcache_device_size(info) : 0,
+			 "}", device->dev,
+			 info ? lvmcache_device_size(info) : 0,
 			 fmt->name, label_sector, uuid, mdas ?: ""))
 		return_0;
 
-	daemon_reply reply;
-
 	if (vg) {
-		char *buf = NULL;
 		/*
 		 * TODO. This is not entirely correct, since export_vg_to_buffer
 		 * adds trailing garbage to the buffer. We may need to use
@@ -513,7 +534,7 @@ int lvmetad_pv_gone(dev_t device)
 	return _lvmetad_handle_reply(reply, "drop PV", "");
 }
 
-int lvmetad_active()
+int lvmetad_active(void)
 {
 	return _using_lvmetad;
 }
@@ -545,15 +566,20 @@ static int _pvscan_lvmetad_single(struct metadata_area *mda, void *baton)
 static dev_t _parse_devt(const char *str) { /* Oh. */
 	char *where = (char *) str;
 	int major = strtol(str, &where, 10);
+	int minor;
+
 	if (where == str)
 		return -1;
+
 	if (*where != ':')
 		return -1;
-	++where;
-	str = where;
-	int minor = strtol(str, &where, 10);
+
+	str = ++where;
+	minor = strtol(str, &where, 10);
+
 	if (where == str)
 		return -1;
+
 	if (*where)
 		return -1;
 
@@ -562,6 +588,14 @@ static dev_t _parse_devt(const char *str) { /* Oh. */
 
 int pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
 {
+	struct device *dev;
+	struct label *label;
+	struct lvmcache_info *info;
+	struct physical_volume pv;
+	struct _pvscan_lvmetad_baton baton;
+	/* Create a dummy instance. */
+	struct format_instance_ctx fic = { .type = 0 };
+
 	if (argc != 1) {
 		log_error("Exactly one device parameter required.");
 		return 0;
@@ -572,7 +606,7 @@ int pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
 		return 0;
 	}
 
-	struct device *dev = dev_cache_get(argv[0], NULL);
+	dev = dev_cache_get(argv[0], NULL);
 	if (!dev && _parse_devt(argv[0]) != -1)
 		dev = dev_cache_get_by_devt(_parse_devt(argv[0]), NULL);
 
@@ -589,7 +623,6 @@ int pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
 		return 1;
 	}
 
-	struct label *label;
 	if (!label_read(dev, &label, 0)) {
 		log_warn("No PV label found on %s.", dev_name(dev));
 		if (!lvmetad_pv_gone(dev->dev))
@@ -597,18 +630,12 @@ int pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
 		return 1;
 	}
 
-	struct lvmcache_info *info = (struct lvmcache_info *) label->info;
-	struct physical_volume pv;
+	info = (struct lvmcache_info *) label->info;
 	memset(&pv, 0, sizeof(pv));
 
-	struct _pvscan_lvmetad_baton baton;
 	baton.vg = NULL;
-
-	/* Create a dummy instance. */
-	struct format_instance_ctx fic = { .type = 0 };
-	baton.fid =
-		lvmcache_fmt(info)->ops->create_instance(lvmcache_fmt(info), &fic);
-	struct metadata_area *mda;
+	baton.fid = lvmcache_fmt(info)->ops->create_instance(lvmcache_fmt(info),
+							     &fic);
 
 	lvmcache_foreach_mda(info, _pvscan_lvmetad_single, &baton);
 
