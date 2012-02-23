@@ -226,10 +226,12 @@ static void filter_metadata(struct dm_config_node *vg) {
 
 static void merge_pvmeta(struct dm_config_node *pv, struct dm_config_node *pvmeta)
 {
+	struct dm_config_node *tmp;
+
 	if (!pvmeta)
 		return;
 
-	struct dm_config_node *tmp = pvmeta;
+	tmp = pvmeta;
 	while (tmp->sib) {
 		/* drop the redundant ID and dev_size nodes */
 		if (!strcmp(tmp->sib->key, "id") || !strcmp(tmp->sib->key, "dev_size"))
@@ -286,6 +288,8 @@ static struct dm_config_node *make_pv_node(lvmetad_state *s, const char *pvid,
 {
 	struct dm_config_tree *pvmeta = dm_hash_lookup(s->pvid_to_pvmeta, pvid);
 	const char *vgid = dm_hash_lookup(s->pvid_to_vgid, pvid), *vgname = NULL;
+	struct dm_config_node *pv;
+	struct dm_config_node *cn = NULL;
 
 	if (!pvmeta)
 		return NULL;
@@ -297,7 +301,7 @@ static struct dm_config_node *make_pv_node(lvmetad_state *s, const char *pvid,
 	}
 
 	/* Nick the pvmeta config tree. */
-	struct dm_config_node *pv = dm_config_clone_node(cft, pvmeta->root, 0);
+	pv = dm_config_clone_node(cft, pvmeta->root, 0);
 	if (pre_sib)
 		pre_sib->sib = pv;
 	if (parent && !parent->child)
@@ -306,7 +310,6 @@ static struct dm_config_node *make_pv_node(lvmetad_state *s, const char *pvid,
 	pv->key = pvid;
 
 	/* Add the "variable" bits to it. */
-	struct dm_config_node *cn = NULL;
 
 	if (vgid && strcmp(vgid, "#orphan"))
 		cn = make_text_node(cft, "vgid", vgid, pv, cn);
@@ -319,6 +322,8 @@ static struct dm_config_node *make_pv_node(lvmetad_state *s, const char *pvid,
 static response pv_list(lvmetad_state *s, request r)
 {
 	struct dm_config_node *cn = NULL, *cn_pvs;
+	struct dm_hash_node *n;
+	const char *id;
 	response res = { .buffer = NULL };
 	res.cft = dm_config_create();
 
@@ -328,9 +333,9 @@ static response pv_list(lvmetad_state *s, request r)
 
 	lock_pvid_to_pvmeta(s);
 
-	struct dm_hash_node *n = dm_hash_get_first(s->pvid_to_pvmeta);
+	n = dm_hash_get_first(s->pvid_to_pvmeta);
 	while (n) {
-		const char *id = dm_hash_get_key(s->pvid_to_pvmeta, n);
+		id = dm_hash_get_key(s->pvid_to_pvmeta, n);
 		cn = make_pv_node(s, id, res.cft, cn_pvs, cn);
 		n = dm_hash_get_next(s->pvid_to_pvmeta, n);
 	}
@@ -344,21 +349,21 @@ static response pv_lookup(lvmetad_state *s, request r)
 {
 	const char *pvid = daemon_request_str(r, "uuid", NULL);
 	int64_t devt = daemon_request_int(r, "device", 0);
+	response res = { .buffer = NULL };
+	struct dm_config_node *pv;
+
 	if (!pvid && !devt)
 		return daemon_reply_simple("failed", "reason = %s", "need PVID or device", NULL);
 
-	response res = { .buffer = NULL };
 	res.cft = dm_config_create();
 	res.cft->root = make_text_node(res.cft, "response", "OK", NULL, NULL);
-
-	struct dm_config_node *pv;
 
 	lock_pvid_to_pvmeta(s);
 	if (!pvid && devt)
 		pvid = dm_hash_lookup_binary(s->device_to_pvid, &devt, sizeof(devt));
 
 	if (!pvid) {
-		debug("pv_lookup: could not find device %lld\n", devt);
+		debug("pv_lookup: could not find device %" PRIu64 "\n", devt);
 		unlock_pvid_to_pvmeta(s);
 		return daemon_reply_simple("failed", "reason = %s", "device not found", NULL);
 	}
@@ -378,6 +383,9 @@ static response pv_lookup(lvmetad_state *s, request r)
 static response vg_list(lvmetad_state *s, request r)
 {
 	struct dm_config_node *cn, *cn_vgs, *cn_last = NULL;
+	struct dm_hash_node *n;
+	const char *id;
+	const char *name;
 	response res = { .buffer = NULL };
 	res.cft = dm_config_create();
 
@@ -395,10 +403,10 @@ static response vg_list(lvmetad_state *s, request r)
 
 	lock_vgid_to_metadata(s);
 
-	struct dm_hash_node *n = dm_hash_get_first(s->vgid_to_vgname);
+	n = dm_hash_get_first(s->vgid_to_vgname);
 	while (n) {
-		const char *id = dm_hash_get_key(s->vgid_to_vgname, n),
-			 *name = dm_hash_get_data(s->vgid_to_vgname, n);
+		id = dm_hash_get_key(s->vgid_to_vgname, n),
+		name = dm_hash_get_data(s->vgid_to_vgname, n);
 
 		cn = dm_config_create_node(res.cft, id);
 		if (cn_last)
@@ -433,17 +441,17 @@ static response vg_lookup(lvmetad_state *s, request r)
 	struct dm_config_node *metadata, *n;
 	response res = { .buffer = NULL };
 
-	const char *uuid = daemon_request_str(r, "uuid", NULL),
-		   *name = daemon_request_str(r, "name", NULL);
+	const char *uuid = daemon_request_str(r, "uuid", NULL);
+	const char *name = daemon_request_str(r, "name", NULL);
 
 	debug("vg_lookup: uuid = %s, name = %s\n", uuid, name);
 
 	if (!uuid || !name) {
 		lock_vgid_to_metadata(s);
 		if (name && !uuid)
-			uuid = dm_hash_lookup(s->vgname_to_vgid, (void *)name);
+			uuid = dm_hash_lookup(s->vgname_to_vgid, name);
 		if (uuid && !name)
-			name = dm_hash_lookup(s->vgid_to_vgname, (void *)uuid);
+			name = dm_hash_lookup(s->vgid_to_vgname, uuid);
 		unlock_vgid_to_metadata(s);
 	}
 
@@ -539,22 +547,24 @@ static int update_pvid_to_vgid(lvmetad_state *s, struct dm_config_tree *vg,
 {
 	struct dm_config_node *pv = pvs(vg->root);
 	struct dm_hash_table *to_check = dm_hash_create(32);
+	struct dm_hash_node *n;
+	const char *pvid;
+	const char *vgid_old;
 
 	if (!vgid)
 		return 0;
 
 	while (pv) {
-		const char *pvid = dm_config_find_str(pv->child, "id", NULL);
-		const char *vgid_old = dm_hash_lookup(s->pvid_to_vgid, pvid);
+		pvid = dm_config_find_str(pv->child, "id", NULL);
+		vgid_old = dm_hash_lookup(s->pvid_to_vgid, pvid);
 		if (vgid_old && nuke_empty)
 			dm_hash_insert(to_check, vgid_old, (void*) 1);
-		dm_hash_insert(s->pvid_to_vgid, pvid, (void *) vgid);
+		dm_hash_insert(s->pvid_to_vgid, pvid, (void*) vgid);
 		debug("remap PV %s to VG %s\n", pvid, vgid);
 		pv = pv->sib;
 	}
 
-	struct dm_hash_node *n = dm_hash_get_first(to_check);
-
+	n = dm_hash_get_first(to_check);
 	while (n) {
 		const char *check_vgid = dm_hash_get_key(to_check, n);
 		lock_vg(s, check_vgid);
@@ -594,17 +604,17 @@ static int remove_metadata(lvmetad_state *s, const char *vgid, int update_pvids)
 /* The VG must be locked. */
 static int vg_remove_if_missing(lvmetad_state *s, const char *vgid)
 {
+	struct dm_config_tree *vg;
+	struct dm_config_node *pv;
+	int missing = 1;
+
 	if (!vgid)
 		return 0;
 
-	struct dm_config_tree *vg = dm_hash_lookup(s->vgid_to_metadata, vgid);
-	if (!vg)
+	if (!(vg = dm_hash_lookup(s->vgid_to_metadata, vgid)))
 		return 1;
 
-	struct dm_config_node *pv = pvs(vg->root);
-
-	int missing = 1;
-
+	pv = pvs(vg->root);
 	lock_pvid_to_pvmeta(s);
 
 	while (pv) {
@@ -700,7 +710,7 @@ static int update_metadata(lvmetad_state *s, const char *name, const char *_vgid
 	dm_hash_insert(s->vgid_to_metadata, vgid, cft);
 	debug("Mapping %s to %s\n", vgid, name);
 	dm_hash_insert(s->vgid_to_vgname, vgid, dm_pool_strdup(dm_config_memory(cft), name));
-	dm_hash_insert(s->vgname_to_vgid, name, (void *)vgid);
+	dm_hash_insert(s->vgname_to_vgid, name, (void*) vgid);
 	unlock_vgid_to_metadata(s);
 
 	update_pvid_to_vgid(s, cft, vgid, 1);
@@ -714,11 +724,11 @@ out:
 
 static response pv_gone(lvmetad_state *s, request r)
 {
-	int found = 0;
 	const char *pvid = daemon_request_str(r, "uuid", NULL);
 	int64_t device = daemon_request_int(r, "device", 0);
+	struct dm_config_tree *pvmeta;
 
-	debug("pv_gone: %s / %lld\n", pvid, device);
+	debug("pv_gone: %s / %" PRIu64 "\n", pvid, device);
 
 	lock_pvid_to_pvmeta(s);
 	if (!pvid && device > 0)
@@ -728,9 +738,9 @@ static response pv_gone(lvmetad_state *s, request r)
 		return daemon_reply_simple("failed", "reason = %s", "device not in cache", NULL);
 	}
 
-	debug("pv_gone (updated): %s / %lld\n", pvid, device);
+	debug("pv_gone (updated): %s / %" PRIu64 "\n", pvid, device);
 
-	struct dm_config_tree *pvmeta = dm_hash_lookup(s->pvid_to_pvmeta, pvid);
+	pvmeta = dm_hash_lookup(s->pvid_to_pvmeta, pvid);
 	dm_hash_remove_binary(s->device_to_pvid, &device, sizeof(device));
 	dm_hash_remove(s->pvid_to_pvmeta, pvid);
 	vg_remove_if_missing(s, dm_hash_lookup(s->pvid_to_vgid, pvid));
@@ -751,7 +761,9 @@ static response pv_found(lvmetad_state *s, request r)
 	const char *vgid = daemon_request_str(r, "metadata/id", NULL);
 	struct dm_config_node *pvmeta = dm_config_find_node(r.cft->root, "pvmeta");
 	uint64_t device;
-
+	struct dm_config_tree *cft;
+	const char *old;
+	const char *pvid_dup;
 	int complete = 0, orphan = 0;
 
 	if (!pvid)
@@ -762,20 +774,19 @@ static response pv_found(lvmetad_state *s, request r)
 	if (!dm_config_get_uint64(pvmeta, "pvmeta/device", &device))
 		return daemon_reply_simple("failed", "reason = %s", "need PV device number", NULL);
 
-	debug("pv_found %s, vgid = %s, device = %lld\n", pvid, vgid, device);
+	debug("pv_found %s, vgid = %s, device = %" PRIu64 "\n", pvid, vgid, device);
 
 	lock_pvid_to_pvmeta(s);
-	{
-		const char *old = dm_hash_lookup_binary(s->device_to_pvid, &device, sizeof(device));
-		if (old)
-			dm_hash_remove(s->pvid_to_pvmeta, old);
 
-		struct dm_config_tree *cft = dm_config_create();
-		cft->root = dm_config_clone_node(cft, pvmeta, 0);
-		const char *pvid_dup = dm_config_find_str(cft->root, "pvmeta/id", NULL);
-		dm_hash_insert(s->pvid_to_pvmeta, pvid, cft);
-		dm_hash_insert_binary(s->device_to_pvid, &device, sizeof(device), (void*)pvid_dup);
-	}
+	if ((old = dm_hash_lookup_binary(s->device_to_pvid, &device, sizeof(device))))
+		dm_hash_remove(s->pvid_to_pvmeta, old);
+
+	cft = dm_config_create();
+	cft->root = dm_config_clone_node(cft, pvmeta, 0);
+	pvid_dup = dm_config_find_str(cft->root, "pvmeta/id", NULL);
+	dm_hash_insert(s->pvid_to_pvmeta, pvid, cft);
+	dm_hash_insert_binary(s->device_to_pvid, &device, sizeof(device), (void*)pvid_dup);
+
 	unlock_pvid_to_pvmeta(s);
 
 	if (metadata) {
@@ -797,12 +808,11 @@ static response pv_found(lvmetad_state *s, request r)
 	}
 
 	if (vgid) {
-		struct dm_config_tree *cft = lock_vg(s, vgid);
-		if (cft) {
+		if ((cft = lock_vg(s, vgid)))
 			complete = update_pv_status(s, cft, cft->root, 0);
-		} else if (!strcmp(vgid, "#orphan")) {
+		else if (!strcmp(vgid, "#orphan"))
 			orphan = 1;
-		} else {
+		else {
 			unlock_vg(s, vgid);
 			return daemon_reply_simple("failed", "reason = %s",
 						   "internal treason!", NULL);

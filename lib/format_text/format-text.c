@@ -1607,30 +1607,39 @@ static char *_mda_export_text_raw(struct metadata_area *mda)
 {
 	struct mda_context *mdc = (struct mda_context *) mda->metadata_locn;
 	char *result;
+
 	dm_asprintf(&result,
 		    "ignore = %d "
 		    "start = %" PRIu64" "
 		    "size = %" PRIu64 " "
 		    "free_sectors = %" PRIu64,
 		    mda_is_ignored(mda), mdc->area.start, mdc->area.size, mdc->free_sectors);
+
 	return result;
 }
 
 static int _mda_import_text_raw(struct lvmcache_info *info, const struct dm_config_node *cn)
 {
+	struct device *device;
+	uint64_t offset;
+	uint64_t size;
+	int ignore;
+
 	if (!cn->child)
 		return 0;
-	cn = cn->child;
 
-	struct device *device = lvmcache_device(info);
-	uint64_t offset = dm_config_find_int(cn, "start", 0);
-	uint64_t size = dm_config_find_int(cn, "size", 0);
-	int ignore = dm_config_find_int(cn, "ignore", 0);
+	cn = cn->child;
+	device = lvmcache_device(info);
+	size = dm_config_find_int(cn, "size", 0);
 
 	if (!device || !size)
 		return 0;
 
+	offset = dm_config_find_int(cn, "start", 0);
+	ignore = dm_config_find_int(cn, "ignore", 0);
+
 	lvmcache_add_mda(info, device, offset, size, ignore);
+
 	return 1;
 }
 
