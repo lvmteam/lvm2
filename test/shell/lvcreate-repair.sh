@@ -38,6 +38,7 @@ for i in $dev1 $dev2 $dev3 ; do
 		check lv_exists $vg $lv2
 
 		aux enable_dev $i $j
+		vgscan
 
 		test $i != $dev1 && check lv_exists $vg $lv1
 		check lv_exists $vg $lv2
