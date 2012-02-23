@@ -19,13 +19,21 @@
 
 typedef struct {
 	int socket_fd; /* the fd we use to talk to the daemon */
-	int protocol;  /* version of the protocol the daemon uses */
+	const char *protocol;
+	int protocol_version;  /* version of the protocol the daemon uses */
 } daemon_handle;
 
 typedef struct {
 	const char *path; /* the binary of the daemon */
 	const char *socket; /* path to the comms socket */
 	unsigned autostart:1; /* start the daemon if not running? */
+
+	/*
+	 * If the following are not NULL/0, an attempt to talk to a daemon which
+	 * uses a different protocol or version will fail.
+	 */
+	const char *protocol;
+	int protocol_version;
 } daemon_info;
 
 typedef struct {

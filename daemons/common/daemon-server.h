@@ -78,6 +78,9 @@ typedef struct daemon_state {
 	const char *name;
 	const char *pidfile;
 	const char *socket_path;
+	const char *protocol;
+	int protocol_version;
+
 	int log_level;
 	handle_request handler;
 	int (*daemon_init)(struct daemon_state *st);

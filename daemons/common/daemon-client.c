@@ -9,7 +9,7 @@
 #include <errno.h> // ENOMEM
 
 daemon_handle daemon_open(daemon_info i) {
-	daemon_handle h = { .protocol = 0 };
+	daemon_handle h = { .protocol_version = 0 };
 	struct sockaddr_un sockaddr;
 
 	if ((h.socket_fd = socket(PF_UNIX, SOCK_STREAM /* | SOCK_NONBLOCK */, 0)) < 0) {
@@ -24,10 +24,28 @@ daemon_handle daemon_open(daemon_info i) {
 		perror("connect");
 		goto error;
 	}
+
+	daemon_reply r = daemon_send_simple(h, "hello", NULL);
+	if (r.error || strcmp(daemon_reply_str(r, "response", "unknown"), "OK"))
+		goto error;
+
+	h.protocol = daemon_reply_str(r, "protocol", NULL);
+	if (h.protocol)
+		h.protocol = dm_strdup(h.protocol); /* keep around */
+	h.protocol_version = daemon_reply_int(r, "version", 0);
+
+	if (i.protocol && (!h.protocol || strcmp(h.protocol, i.protocol)))
+		goto error;
+	if (i.protocol_version && h.protocol_version != i.protocol_version)
+		goto error;
+
+	daemon_reply_destroy(r);
 	return h;
 error:
 	if (h.socket_fd >= 0)
 		close(h.socket_fd);
+	if (r.cft)
+		daemon_reply_destroy(r);
 	h.socket_fd = -1;
 	return h;
 }
@@ -43,6 +61,7 @@ daemon_reply daemon_send(daemon_handle h, daemon_request rq)
 
 	assert(rq.buffer);
 	write_buffer(h.socket_fd, rq.buffer, strlen(rq.buffer));
+	dm_free(rq.buffer);
 
 	if (read_buffer(h.socket_fd, &reply.buffer)) {
 		reply.cft = dm_config_from_string(reply.buffer);
@@ -55,6 +74,7 @@ daemon_reply daemon_send(daemon_handle h, daemon_request rq)
 void daemon_reply_destroy(daemon_reply r) {
 	if (r.cft)
 		dm_config_destroy(r.cft);
+	dm_free(r.buffer);
 }
 
 daemon_reply daemon_send_simple(daemon_handle h, const char *id, ...)
@@ -72,10 +92,10 @@ daemon_reply daemon_send_simple(daemon_handle h, const char *id, ...)
 		return err;
 
 	repl = daemon_send(h, rq);
-	dm_free(rq.buffer);
 	return repl;
 }
 
 void daemon_close(daemon_handle h)
 {
+	dm_free((char *)h.protocol);
 }

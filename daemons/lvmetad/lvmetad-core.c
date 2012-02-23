@@ -984,6 +984,8 @@ int main(int argc, char *argv[])
 		s.socket_path = DEFAULT_RUN_DIR "/lvmetad.socket";
 	s.pidfile = DEFAULT_RUN_DIR "/lvmetad.pid";
         s.log_level = 0;
+	s.protocol = "lvmetad";
+	s.protocol_version = 1;
 
 	// use getopt_long
 	while ((opt = getopt(argc, argv, "?fhVdRs:")) != EOF) {

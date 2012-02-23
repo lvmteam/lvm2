@@ -239,6 +239,19 @@ static int buffer_line(const char *line, void *baton) {
 	return 0;
 }
 
+static response builtin_handler(daemon_state s, client_handle h, request r)
+{
+	const char *rq = daemon_request_str(r, "request", "NONE");
+
+	if (!strcmp(rq, "hello")) {
+		return daemon_reply_simple("OK", "protocol = %s", s.protocol ?: "default",
+					   "version = %d", s.protocol_version, NULL);
+	}
+
+	response res = { .buffer = NULL, .error = EPROTO };
+	return res;
+}
+
 static void *client_thread(void *baton)
 {
 	struct thread_baton *b = baton;
@@ -252,7 +265,11 @@ static void *client_thread(void *baton)
 		req.cft = dm_config_from_string(req.buffer);
 		if (!req.cft)
 			fprintf(stderr, "error parsing request:\n %s\n", req.buffer);
-		res = b->s.handler(b->s, b->client, req);
+
+		res = builtin_handler(b->s, b->client, req);
+
+		if (res.error == EPROTO) /* Not a builtin, delegate to the custom handler. */
+			res = b->s.handler(b->s, b->client, req);
 
 		if (!res.buffer) {
 			dm_config_write_node(res.cft->root, buffer_line, &res);
