@@ -10,6 +10,7 @@
 
 daemon_handle daemon_open(daemon_info i) {
 	daemon_handle h = { .protocol_version = 0 };
+	daemon_reply r = { .cft = NULL };
 	struct sockaddr_un sockaddr;
 
 	if ((h.socket_fd = socket(PF_UNIX, SOCK_STREAM /* | SOCK_NONBLOCK */, 0)) < 0) {
@@ -25,7 +26,7 @@ daemon_handle daemon_open(daemon_info i) {
 		goto error;
 	}
 
-	daemon_reply r = daemon_send_simple(h, "hello", NULL);
+	r = daemon_send_simple(h, "hello", NULL);
 	if (r.error || strcmp(daemon_reply_str(r, "response", "unknown"), "OK"))
 		goto error;
 
