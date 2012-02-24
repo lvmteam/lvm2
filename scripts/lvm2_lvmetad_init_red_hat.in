@@ -41,10 +41,11 @@ sbindir=@sbindir@
 lvm_vgscan=${sbindir}/vgscan
 
 LOCK_FILE="/var/lock/subsys/$DAEMON"
+PID_FILE="@DEFAULT_RUN_DIR@/${DAEMON}.pid"
 
 
 rh_status() {
-	status $DAEMON
+	status -p $PID_FILE $DAEMON
 }
 
 rh_status_q() {
@@ -62,7 +63,7 @@ start()
 stop()
 {
 	ret=0
-	action "Signaling LVM metadata daemon to exit:" kill -TERM $(pidofproc $DAEMON) || ret=$?
+	action "Signaling LVM metadata daemon to exit:" kill -TERM $(pidofproc -p $PID_FILE $DAEMON) || ret=$?
 	return $ret
 }
 
@@ -102,7 +103,8 @@ case "$1" in
 	;;
 
   status)
-	status $DAEMON
+	rh_status
+	rtrn=$?
 	;;
 
   *)
