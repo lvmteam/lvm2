@@ -54,7 +54,7 @@ rh_status_q() {
 start()
 {
 	ret=0
-	action "Starting LVM metadata daemon:" $DAEMON || ${lvm_vgscan} || ret=$?
+	action "Starting LVM metadata daemon:" $DAEMON && ${lvm_vgscan} || ret=$?
 	return $ret
 }
 
