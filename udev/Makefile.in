@@ -19,6 +19,10 @@ DM_RULES=10-dm.rules 13-dm-disk.rules 95-dm-notify.rules
 LVM_RULES=11-dm-lvm.rules
 DM_DIR=$(shell grep "\#define DM_DIR" $(top_srcdir)/libdm/misc/dm-ioctl.h | awk '{print $$3}')
 
+ifeq ("@BUILD_LVMETAD@", "yes")
+LVM_RULES+=69-dm-lvm-metad.rules
+endif
+
 ifeq ("@UDEV_HAS_BUILTIN_BLKID@", "yes")
 	BLKID_RULE=IMPORT{builtin}=\"blkid\"
 else

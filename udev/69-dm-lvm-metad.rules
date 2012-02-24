@@ -1,0 +1,25 @@
+# Copyright (C) 2012 Red Hat, Inc. All rights reserved.
+#
+# This file is part of LVM2.
+
+# Udev rules for LVM.
+#
+# Scan all block devices having a PV label for LVM metadata.
+# Store this information in LVMetaD (the LVM metadata daemon) and maintain LVM
+# metadata state for improved performance by avoiding further scans while
+# running subsequent LVM commands or while using lvm2app library.
+# Also, notify LVMetaD about any relevant block device removal.
+#
+# This rule is essential for having the information in LVMetaD up-to-date.
+# It also requires blkid to be called on block devices before so only devices
+# used as LVM PVs are processed (ID_FS_TYPE="LVM2_member" or "LVM1_member").
+
+SUBSYSTEM!="block", GOTO="lvm_end"
+
+# Device-mapper devices are processed only on change event or on supported synthesized event.
+KERNEL=="dm-[0-9]*", ENV{DM_UDEV_RULES_VSN}!="?*", GOTO="lvm_end"
+
+# Only process devices already marked as a PV - this requires blkid to be called before.
+ENV{ID_FS_TYPE}=="LVM2_member|LVM1_member", RUN+="$env{DM_SBIN_PATH}/pvscan --lvmetad $major:$minor"
+
+LABEL="lvm_end"
