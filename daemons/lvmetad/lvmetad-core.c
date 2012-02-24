@@ -365,12 +365,14 @@ static response pv_lookup(lvmetad_state *s, request r)
 	if (!pvid) {
 		debug("pv_lookup: could not find device %" PRIu64 "\n", devt);
 		unlock_pvid_to_pvmeta(s);
+		dm_config_destroy(res.cft);
 		return daemon_reply_simple("failed", "reason = %s", "device not found", NULL);
 	}
 
 	pv = make_pv_node(s, pvid, res.cft, NULL, res.cft->root);
 	if (!pv) {
 		unlock_pvid_to_pvmeta(s);
+		dm_config_destroy(res.cft);
 		return daemon_reply_simple("failed", "reason = %s", "PV not found", NULL);
 	}
 
@@ -761,7 +763,7 @@ static response pv_found(lvmetad_state *s, request r)
 	const char *vgid = daemon_request_str(r, "metadata/id", NULL);
 	struct dm_config_node *pvmeta = dm_config_find_node(r.cft->root, "pvmeta");
 	uint64_t device;
-	struct dm_config_tree *cft;
+	struct dm_config_tree *cft, *pvmeta_old = NULL;
 	const char *old;
 	const char *pvid_dup;
 	int complete = 0, orphan = 0;
@@ -778,14 +780,18 @@ static response pv_found(lvmetad_state *s, request r)
 
 	lock_pvid_to_pvmeta(s);
 
-	if ((old = dm_hash_lookup_binary(s->device_to_pvid, &device, sizeof(device))))
+	if ((old = dm_hash_lookup_binary(s->device_to_pvid, &device, sizeof(device)))) {
+		pvmeta_old = dm_hash_lookup(s->pvid_to_pvmeta, old);
 		dm_hash_remove(s->pvid_to_pvmeta, old);
+	}
 
 	cft = dm_config_create();
 	cft->root = dm_config_clone_node(cft, pvmeta, 0);
 	pvid_dup = dm_config_find_str(cft->root, "pvmeta/id", NULL);
 	dm_hash_insert(s->pvid_to_pvmeta, pvid, cft);
 	dm_hash_insert_binary(s->device_to_pvid, &device, sizeof(device), (void*)pvid_dup);
+	if (pvmeta_old)
+		dm_config_destroy(pvmeta_old);
 
 	unlock_pvid_to_pvmeta(s);
 
