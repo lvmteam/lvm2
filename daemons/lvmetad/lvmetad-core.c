@@ -941,6 +941,12 @@ static int fini(daemon_state *s)
 		n = dm_hash_get_next(ls->vgid_to_metadata, n);
 	}
 
+	n = dm_hash_get_first(ls->pvid_to_pvmeta);
+	while (n) {
+		dm_config_destroy(dm_hash_get_data(ls->pvid_to_pvmeta, n));
+		n = dm_hash_get_next(ls->pvid_to_pvmeta, n);
+	}
+
 	n = dm_hash_get_first(ls->lock.vg);
 	while (n) {
 		pthread_mutex_destroy(dm_hash_get_data(ls->lock.vg, n));
@@ -952,6 +958,8 @@ static int fini(daemon_state *s)
 	dm_hash_destroy(ls->pvid_to_pvmeta);
 	dm_hash_destroy(ls->device_to_pvid);
 	dm_hash_destroy(ls->vgid_to_metadata);
+	dm_hash_destroy(ls->vgid_to_vgname);
+	dm_hash_destroy(ls->vgname_to_vgid);
 	dm_hash_destroy(ls->pvid_to_vgid);
 	return 1;
 }
