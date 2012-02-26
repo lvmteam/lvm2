@@ -21,6 +21,7 @@ typedef struct {
 	int socket_fd; /* the fd we use to talk to the daemon */
 	const char *protocol;
 	int protocol_version;  /* version of the protocol the daemon uses */
+	int error;
 } daemon_handle;
 
 typedef struct {
