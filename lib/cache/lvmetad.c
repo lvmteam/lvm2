@@ -566,9 +566,10 @@ static int _pvscan_lvmetad_single(struct metadata_area *mda, void *baton)
 {
 	struct _pvscan_lvmetad_baton *b = baton;
 	struct volume_group *this = mda->ops->vg_read(b->fid, "", mda);
-	if ((this && !b->vg) || this->seqno > b->vg->seqno)
+	if (!b->vg || this->seqno > b->vg->seqno)
 		b->vg = this;
-	else release_vg(this);
+	else if (b->vg)
+		release_vg(this);
 	return 1;
 }
 
@@ -647,6 +648,8 @@ int pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
 							     &fic);
 
 	lvmcache_foreach_mda(info, _pvscan_lvmetad_single, &baton);
+	if (!baton.vg)
+		lvmcache_fmt(info)->ops->destroy_instance(baton.fid);
 
 	/*
 	 * NB. If this command failed and we are relying on lvmetad to have an
