@@ -24,12 +24,14 @@ int read_buffer(int fd, char **buffer) {
 		int result = read(fd, (*buffer) + bytes, buffersize - bytes);
 		if (result > 0)
 			bytes += result;
-		if (result == 0)
+		if (result == 0) {
+			errno = ECONNRESET;
 			goto fail; /* we should never encounter EOF here */
+		}
 		if (result < 0 && errno != EAGAIN && errno != EWOULDBLOCK)
 			goto fail;
 
-		if ((!strncmp((*buffer) + bytes - 4, "\n##\n", 4))) {
+		if (!strncmp((*buffer) + bytes - 4, "\n##\n", 4)) {
 			*(*buffer + bytes - 4) = 0;
 			break; /* success, we have the full message now */
 		}

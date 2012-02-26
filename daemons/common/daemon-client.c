@@ -9,22 +9,18 @@
 #include <errno.h> // ENOMEM
 
 daemon_handle daemon_open(daemon_info i) {
-	daemon_handle h = { .protocol_version = 0 };
+	daemon_handle h = { .protocol_version = 0, .error = 0 };
 	daemon_reply r = { .cft = NULL };
 	struct sockaddr_un sockaddr;
 
-	if ((h.socket_fd = socket(PF_UNIX, SOCK_STREAM /* | SOCK_NONBLOCK */, 0)) < 0) {
-		perror("socket");
+	if ((h.socket_fd = socket(PF_UNIX, SOCK_STREAM /* | SOCK_NONBLOCK */, 0)) < 0)
 		goto error;
-	}
+
 	memset(&sockaddr, 0, sizeof(sockaddr));
-	fprintf(stderr, "[C] connecting to %s\n", i.socket);
 	strcpy(sockaddr.sun_path, i.socket);
 	sockaddr.sun_family = AF_UNIX;
-	if (connect(h.socket_fd,(struct sockaddr *) &sockaddr, sizeof(sockaddr))) {
-		perror("connect");
+	if (connect(h.socket_fd,(struct sockaddr *) &sockaddr, sizeof(sockaddr)))
 		goto error;
-	}
 
 	r = daemon_send_simple(h, "hello", NULL);
 	if (r.error || strcmp(daemon_reply_str(r, "response", "unknown"), "OK"))
@@ -42,7 +38,9 @@ daemon_handle daemon_open(daemon_info i) {
 
 	daemon_reply_destroy(r);
 	return h;
+
 error:
+	h.error = errno;
 	if (h.socket_fd >= 0)
 		close(h.socket_fd);
 	if (r.cft)
@@ -61,13 +59,15 @@ daemon_reply daemon_send(daemon_handle h, daemon_request rq)
 	}
 
 	assert(rq.buffer);
-	write_buffer(h.socket_fd, rq.buffer, strlen(rq.buffer));
+	if (!write_buffer(h.socket_fd, rq.buffer, strlen(rq.buffer)))
+		reply.error = errno;
+
 	dm_free(rq.buffer);
 
 	if (read_buffer(h.socket_fd, &reply.buffer)) {
 		reply.cft = dm_config_from_string(reply.buffer);
 	} else
-		reply.error = 1;
+		reply.error = errno;
 
 	return reply;
 }
