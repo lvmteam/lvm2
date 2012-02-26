@@ -16,8 +16,8 @@ void lvmetad_init(void)
 	const char *socket = getenv("LVM_LVMETAD_SOCKET");
 	if (_using_lvmetad) { /* configured by the toolcontext */
 		_lvmetad = lvmetad_open(socket ?: DEFAULT_RUN_DIR "/lvmetad.socket");
-		if (_lvmetad.socket_fd < 0) {
-			log_warn("Failed to connect to lvmetad. Falling back to scanning.");
+		if (_lvmetad.socket_fd < 0 || _lvmetad.error) {
+			log_warn("Failed to connect to lvmetad: %s. Falling back to scanning.", strerror(_lvmetad.error));
 			_using_lvmetad = 0;
 		}
 	}
@@ -251,6 +251,7 @@ int lvmetad_vg_update(struct volume_group *vg)
 	reply = daemon_send_simple(_lvmetad, "vg_update", "vgname = %s", vg->name,
 				             "metadata = %b", strchr(buf, '{'),
 				   NULL);
+	dm_free(buf);
 
 	if (!_lvmetad_handle_reply(reply, "update VG", vg->name))
 		return 0;
@@ -496,8 +497,12 @@ int lvmetad_pv_found(struct id pvid, struct device *device, const struct format_
 			 "  %s"
 			 "}", device->dev,
 			 info ? lvmcache_device_size(info) : 0,
-			 fmt->name, label_sector, uuid, mdas ?: ""))
+			 fmt->name, label_sector, uuid, mdas ?: "")) {
+		dm_free((char *)mdas);
 		return_0;
+	}
+
+	dm_free((char *)mdas);
 
 	if (vg) {
 		/*
@@ -529,6 +534,9 @@ int lvmetad_pv_found(struct id pvid, struct device *device, const struct format_
 
 int lvmetad_pv_gone(dev_t device)
 {
+	if (!_using_lvmetad)
+		return 1;
+
 	daemon_reply reply =
 		daemon_send_simple(_lvmetad, "pv_gone", "device = %d", device, NULL);
 
