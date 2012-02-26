@@ -87,7 +87,12 @@ int lvmetad_pv_lookup_by_devt(struct cmd_context *cmd, dev_t dev);
  */
 int lvmetad_vg_list_to_lvmcache(struct cmd_context *cmd);
 
-struct volume_group *lvmetad_vg_lookup(struct cmd_context *cmd, const char *vgname, const char *vgid);
+/*
+ * Find a VG by its ID or its name in the lvmetad cache. Gives NULL if the VG is
+ * not found.
+ */
+struct volume_group *lvmetad_vg_lookup(struct cmd_context *cmd,
+				       const char *vgname, const char *vgid);
 
 /*
  * Scan a single device and update lvmetad with the result(s). If the device
