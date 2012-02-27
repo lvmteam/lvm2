@@ -303,7 +303,7 @@ static const char *decode_cmd(unsigned char cmdl)
 		break;
 	}
 
-	sprintf(buf, "%s (0x%x)", command, cmdl);
+	snprintf(buf, sizeof(buf), "%s (0x%x)", command, cmdl);
 
 	return buf;
 }
