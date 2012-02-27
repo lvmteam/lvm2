@@ -113,7 +113,9 @@ static struct dev_set *_dev_set_create(struct dm_pool *mem,
 		return NULL;
 
 	ds->mem = mem;
-	ds->sys_block = dm_pool_strdup(mem, sys_block);
+	if (!(ds->sys_block = dm_pool_strdup(mem, sys_block)))
+		return NULL;
+
 	ds->sysfs_depth = sysfs_depth;
 	ds->initialised = 0;
 
