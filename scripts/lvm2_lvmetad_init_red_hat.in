@@ -63,7 +63,7 @@ start()
 stop()
 {
 	ret=0
-	action "Signaling LVM metadata daemon to exit:" kill -TERM $(pidofproc -p $PID_FILE $DAEMON) || ret=$?
+	action "Signaling LVM metadata daemon to exit:" killproc -p $PID_FILE $DAEMON -TERM || ret=$?
 	return $ret
 }
 
