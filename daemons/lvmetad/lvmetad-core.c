@@ -548,12 +548,15 @@ static int update_pvid_to_vgid(lvmetad_state *s, struct dm_config_tree *vg,
 			       const char *vgid, int nuke_empty)
 {
 	struct dm_config_node *pv = pvs(vg->root);
-	struct dm_hash_table *to_check = dm_hash_create(32);
+	struct dm_hash_table *to_check;
 	struct dm_hash_node *n;
 	const char *pvid;
 	const char *vgid_old;
 
 	if (!vgid)
+		return 0;
+
+	if (!(to_check = dm_hash_create(32)))
 		return 0;
 
 	while (pv) {
