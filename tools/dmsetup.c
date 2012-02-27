@@ -719,7 +719,7 @@ static int _do_rename(const char *name, const char *new_name, const char *new_uu
 	if (new_uuid) {
 		if (!dm_task_set_newuuid(dmt, new_uuid))
 			goto out;
-	} else if (!dm_task_set_newname(dmt, new_name))
+	} else if (!new_name || !dm_task_set_newname(dmt, new_name))
 		goto out;
 
 	if (_switches[NOOPENCOUNT_ARG] && !dm_task_no_open_count(dmt))
