@@ -3240,7 +3240,8 @@ static int _loop_table(char *table, size_t tlen, char *file,
 	blksize = fsbuf.f_frsize;
 #endif
 
-	close(fd);
+	if (close(fd))
+                log_sys_error("close", file);
 
 	if (dm_snprintf(table, tlen, "%llu %llu loop %s %llu\n", 0ULL,
 			(long long unsigned)sectors, file, (long long unsigned)off) < 0)
@@ -3252,8 +3253,9 @@ static int _loop_table(char *table, size_t tlen, char *file,
 	return 1;
 
 error:
-	if (fd > -1)
-		close(fd);
+	if (fd > -1 && close(fd))
+		log_sys_error("close", file);
+
 	return 0;
 }
 

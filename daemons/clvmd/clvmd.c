@@ -198,7 +198,8 @@ static void safe_close(int *fd)
 	if (*fd >= 0) {
 		int to_close = *fd;
 		*fd = -1;
-		close(to_close);
+		if (close(to_close))
+			log_sys_error("close", ""); /* path */
 	}
 }
 
