@@ -2708,7 +2708,8 @@ int vg_commit(struct volume_group *vg)
 
 	if (cache_updated) {
 		/* Instruct remote nodes to upgrade cached metadata. */
-		remote_commit_cached_metadata(vg);
+		if (!remote_commit_cached_metadata(vg))
+			stack; // FIXME: What should we do?
 		/*
 		 * We need to clear old_name after a successful commit.
 		 * The volume_group structure could be reused later.
@@ -2741,7 +2742,8 @@ void vg_revert(struct volume_group *vg)
 		log_error("Attempt to drop cached metadata failed "
 			  "after reverted update for VG %s.", vg->name);
 
-	remote_revert_cached_metadata(vg);
+	if (!remote_revert_cached_metadata(vg))
+		stack; // FIXME: What should we do?
 }
 
 struct _vg_read_orphan_baton {

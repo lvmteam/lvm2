@@ -244,7 +244,8 @@ int backup_locally(struct volume_group *vg)
 int backup(struct volume_group *vg)
 {
 	if (vg_is_clustered(vg))
-		remote_backup_metadata(vg);
+		if (!remote_backup_metadata(vg))
+			stack;
 
 	return backup_locally(vg);
 }
