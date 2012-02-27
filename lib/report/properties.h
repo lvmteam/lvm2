@@ -20,7 +20,7 @@
 #include "report.h"
 
 struct lvm_property_type {
-	report_type_t type;
+	unsigned type;
 	const char *id;
 	unsigned is_settable:1;
 	unsigned is_string:1;
