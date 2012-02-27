@@ -1,5 +1,6 @@
 Version 2.02.94 - 
 ====================================
+  Drop unused call to uname() during clvmd initia.lization.
   Test allocation result in sysfs filter creation.
   Limit sscanf parameters with buffer size in clvmd get_initial_state().
   Use const lv pointer for lv_is_active...() functions. 

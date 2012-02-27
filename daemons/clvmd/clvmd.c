@@ -335,7 +335,6 @@ int main(int argc, char *argv[])
 {
 	int local_sock;
 	struct local_client *newfd, *delfd;
-	struct utsname nodeinfo;
 	struct lvm_startup_params lvm_params;
 	int opt;
 	int cmd_timeout = DEFAULT_CMD_TIMEOUT;
@@ -559,7 +558,6 @@ int main(int argc, char *argv[])
 	DEBUGLOG("Cluster ready, doing some more initialisation\n");
 
 	/* Save our CSID */
-	uname(&nodeinfo);
 	clops->get_our_csid(our_csid);
 
 	/* Initialise the FD list head */
