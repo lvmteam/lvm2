@@ -532,9 +532,10 @@ static int _load_config_file(struct cmd_context *cmd, const char *tag)
 	dm_list_add(&cmd->config_files, &cfl->list);
 
       out:
-	if (*tag)
-		_init_tags(cmd, cfl->cft);
-	else
+	if (*tag) {
+		if (!_init_tags(cmd, cfl->cft))
+			return_0;
+	} else
 		/* Use temporary copy of lvm.conf while loading other files */
 		cmd->cft = cfl->cft;
 
