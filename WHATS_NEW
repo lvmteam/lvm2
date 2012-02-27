@@ -1,5 +1,6 @@
 Version 2.02.94 - 
-====================================                       
+====================================
+  Test seg pointer for non-null it in raid_target_percent error path.
   Check for errors in _init_tags() during config loading.
   Always check result of _set_vg_name() in lvcreate.
   Drop unused call to uname() during clvmd initialization.
