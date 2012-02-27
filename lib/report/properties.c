@@ -315,7 +315,7 @@ struct lvm_property_type _properties[] = {
 
 
 static int _get_property(const void *obj, struct lvm_property_type *prop,
-			 report_type_t type)
+			 unsigned type)
 {
 	struct lvm_property_type *p;
 
@@ -343,7 +343,7 @@ static int _get_property(const void *obj, struct lvm_property_type *prop,
 }
 
 static int _set_property(void *obj, struct lvm_property_type *prop,
-			 report_type_t type)
+			 unsigned type)
 {
 	struct lvm_property_type *p;
 
