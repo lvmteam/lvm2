@@ -63,6 +63,7 @@ struct dm_event_fifos {
 #define EXIT_CHDIR_FAILURE       7
 
 /* Implemented in libdevmapper-event.c, but not part of public API. */
+// FIXME  misuse of bitmask as enum
 int daemon_talk(struct dm_event_fifos *fifos,
 		struct dm_event_daemon_message *msg, int cmd,
 		const char *dso_name, const char *dev_name,
