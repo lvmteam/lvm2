@@ -595,6 +595,7 @@ static int remove_metadata(lvmetad_state *s, const char *vgid, int update_pvids)
 
 	if (!old)
 		return 0;
+	assert(oldname);
 
 	if (update_pvids)
 		update_pvid_to_vgid(s, old, "#orphan", 0);
