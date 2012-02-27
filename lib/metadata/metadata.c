@@ -1896,12 +1896,12 @@ struct lv_segment *first_seg(const struct logical_volume *lv)
 
 struct lv_segment *last_seg(const struct logical_volume *lv)
 {
-       struct lv_segment *seg;
+	struct lv_segment *seg;
 
-       dm_list_iterate_back_items(seg, &lv->segments)
-               return seg;
+	dm_list_iterate_back_items(seg, &lv->segments)
+		return seg;
 
-       return NULL;
+	return NULL;
 }
 
 int vg_remove_mdas(struct volume_group *vg)
