@@ -110,7 +110,8 @@ static struct volume_group *_pool_vg_read(struct format_instance *fid,
 	/* We can safely ignore the mda passed in */
 
 	/* Strip dev_dir if present */
-	vg_name = strip_dir(vg_name, fid->fmt->cmd->dev_dir);
+	if (vg_name)
+		vg_name = strip_dir(vg_name, fid->fmt->cmd->dev_dir);
 
 	/* Set vg_name through read_pool_pds() */
 	if (!(vg = alloc_vg("pool_vg_read", fid->fmt->cmd, NULL)))
