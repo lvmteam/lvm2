@@ -104,7 +104,7 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 			if (!lv_is_visible(lv))
 				continue;
 			log_warn("Removing partial LV %s.", lv->name);
-			if (!lv_remove_with_dependencies(cmd, lv, 1, 0))
+			if (!lv_remove_with_dependencies(cmd, lv, DONT_PROMPT, 0))
 				return_0;
 			goto restart;
 		}

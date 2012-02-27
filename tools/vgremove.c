@@ -29,7 +29,7 @@ static int vgremove_single(struct cmd_context *cmd, const char *vg_name,
 
 	lv_count = vg_visible_lvs(vg);
 
-	force = arg_count(cmd, force_ARG);
+	force = (force_t) arg_count(cmd, force_ARG);
 	if (lv_count) {
 		if (force == PROMPT) {
 			if ((missing = vg_missing_pv_count(vg)))
