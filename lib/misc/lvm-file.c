@@ -253,7 +253,8 @@ int fcntl_lock_file(const char *file, short lock_type, int warn_if_read_only)
 
 	if (fcntl(lockfd, F_SETLKW, &lock)) {
 		log_sys_error("fcntl", file);
-		close(lockfd);
+		if (close(lockfd))
+                        log_sys_error("close", file);
 		return -1;
 	}
 
