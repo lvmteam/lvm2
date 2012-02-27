@@ -355,7 +355,7 @@ void cmd_client_cleanup(struct local_client *client)
 		lkid = (int)(long)dm_hash_get_data(lock_hash, v);
 		lockname = dm_hash_get_key(lock_hash, v);
 		DEBUGLOG("cleanup: Unlocking lock %s %x\n", lockname, lkid);
-		sync_unlock(lockname, lkid);
+		(void) sync_unlock(lockname, lkid);
 	}
 
 	dm_hash_destroy(lock_hash);
