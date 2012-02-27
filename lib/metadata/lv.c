@@ -53,6 +53,7 @@ static char *_format_pvsegs(struct dm_pool *mem, const struct lv_segment *seg,
 		case AREA_UNASSIGNED:
 			name = "unassigned";
 			extent = 0;
+			break;
 		default:
 			log_error(INTERNAL_ERROR "Unknown area segtype.");
 			return NULL;
