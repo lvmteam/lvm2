@@ -694,6 +694,24 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 	if (!(vg->system_id = dm_pool_zalloc(vg->vgmem, NAME_LEN + 1)))
 		goto_bad;
 
+	/*
+	 * The pv hash memorises the pv section names -> pv
+	 * structures.
+	 */
+	if (!(pv_hash = dm_hash_create(64))) {
+		log_error("Couldn't create pv hash table.");
+		goto bad;
+	}
+
+	/*
+	 * The lv hash memorises the lv section names -> lv
+	 * structures.
+	 */
+	if (!(lv_hash = dm_hash_create(1024))) {
+		log_error("Couldn't create lv hash table.");
+		goto bad;
+	}
+
 	vgn = vgn->child;
 
 	if (dm_config_get_str(vgn, "system_id", &str)) {
@@ -752,15 +770,6 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 		vg->mda_copies = DEFAULT_VGMETADATACOPIES;
 	}
 
-	/*
-	 * The pv hash memorises the pv section names -> pv
-	 * structures.
-	 */
-	if (!(pv_hash = dm_hash_create(64))) {
-		log_error("Couldn't create hash table.");
-		goto bad;
-	}
-
 	if (!_read_sections(fid, "physical_volumes", _read_pv, vg,
 			    vgn, pv_hash, lv_hash, 0, &scan_done_once)) {
 		log_error("Couldn't find all physical volumes for volume "
@@ -772,15 +781,6 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 	if (dm_config_get_list(vgn, "tags", &cv) &&
 	    !(read_tags(vg->vgmem, &vg->tags, cv))) {
 		log_error("Couldn't read tags for volume group %s.", vg->name);
-		goto bad;
-	}
-
-	/*
-	 * The lv hash memorises the lv section names -> lv
-	 * structures.
-	 */
-	if (!(lv_hash = dm_hash_create(1024))) {
-		log_error("Couldn't create hash table.");
 		goto bad;
 	}
 
