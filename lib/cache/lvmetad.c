@@ -153,7 +153,8 @@ struct volume_group *lvmetad_vg_lookup(struct cmd_context *cmd, const char *vgna
 		return NULL;
 
 	if (vgid) {
-		id_write_format((const struct id*)vgid, uuid, 64);
+		if (!id_write_format((const struct id*)vgid, uuid, sizeof(uuid)))
+			return_0;
 		reply = daemon_send_simple(_lvmetad, "vg_lookup", "uuid = %s", uuid, NULL);
 	} else {
 		if (!vgname)
@@ -293,7 +294,9 @@ int lvmetad_vg_remove(struct volume_group *vg)
 	if (!_using_lvmetad)
 		return 1; /* just fake it */
 
-	id_write_format(&vg->id, uuid, 64);
+	if (!id_write_format(&vg->id, uuid, sizeof(uuid)))
+		return_0;
+
 	reply = daemon_send_simple(_lvmetad, "vg_remove", "uuid = %s", uuid, NULL);
 
 	return _lvmetad_handle_reply(reply, "remove VG", vg->name);
@@ -309,7 +312,8 @@ int lvmetad_pv_lookup(struct cmd_context *cmd, struct id pvid)
 	if (!_using_lvmetad)
 		return_0;
 
-	id_write_format(&pvid, uuid, 64);
+	if (!id_write_format(&pvid, uuid, sizeof(uuid)))
+		return_0;
 
 	reply = daemon_send_simple(_lvmetad, "pv_lookup", "uuid = %s", uuid, NULL);
 
@@ -482,7 +486,8 @@ int lvmetad_pv_found(struct id pvid, struct device *device, const struct format_
 	if (!_using_lvmetad)
 		return 1;
 
-	id_write_format(&pvid, uuid, 64);
+	if (!id_write_format(&pvid, uuid, sizeof(uuid)))
+                return_0;
 
 	/* FIXME A more direct route would be much preferable. */
 	if ((info = lvmcache_info_from_pvid((const char *)&pvid, 0)))
