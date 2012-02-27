@@ -1,5 +1,6 @@
 Version 2.02.94 - 
 ====================================
+  Add missing cleanup of excl_uuid hash on some exit paths of clvmd.
   Check for existance of vg_name in _format1/_pool_vg_read().
   Fix missing break in _format_pvsegs (2.02.92).
   Test seg pointer for non-null it in raid_target_percent error path.

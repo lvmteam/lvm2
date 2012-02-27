@@ -345,6 +345,7 @@ int main(int argc, char *argv[])
 	debug_t debug_arg = DEBUG_OFF;
 	int clusterwide_opt = 0;
 	mode_t old_mask;
+	int ret = 1;
 
 	struct option longopts[] = {
 		{ "help", 0, 0, 'h' },
@@ -372,7 +373,8 @@ int main(int argc, char *argv[])
 
 		case 'S':
 			check_permissions();
-			return restart_clvmd(clusterwide_opt)==1?0:1;
+			ret = (restart_clvmd(clusterwide_opt) == 1) ? 0 : 1;
+			goto out;
 
 		case 'C':
 			clusterwide_opt = 1;
@@ -402,7 +404,7 @@ int main(int argc, char *argv[])
 		case 'E':
 			if (!dm_hash_insert(lvm_params.excl_uuid, optarg, optarg)) {
 				fprintf(stderr, "Failed to allocate hash entry\n");
-				return 1;
+				goto out;
 			}
 			break;
 		case 'T':
@@ -624,9 +626,11 @@ int main(int argc, char *argv[])
 		free(delfd);
 	}
 
+	ret = 0;
+out:
 	dm_hash_destroy(lvm_params.excl_uuid);
 
-	return 0;
+	return ret;
 }
 
 /* Called when the cluster layer has completed initialisation.
