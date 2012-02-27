@@ -82,6 +82,7 @@ void dm_event_handler_set_timeout(struct dm_event_handler *dmevh, int timeout);
 /*
  * Specify mask for events to monitor.
  */
+// FIXME  misuse of bitmask as enum
 void dm_event_handler_set_event_mask(struct dm_event_handler *dmevh,
 				     enum dm_event_mask evmask);
 
@@ -91,6 +92,7 @@ const char *dm_event_handler_get_uuid(const struct dm_event_handler *dmevh);
 int dm_event_handler_get_major(const struct dm_event_handler *dmevh);
 int dm_event_handler_get_minor(const struct dm_event_handler *dmevh);
 int dm_event_handler_get_timeout(const struct dm_event_handler *dmevh);
+// FIXME  misuse of bitmask as enum
 enum dm_event_mask dm_event_handler_get_event_mask(const struct dm_event_handler *dmevh);
 
 /* FIXME Review interface (what about this next thing?) */
@@ -104,6 +106,7 @@ int dm_event_unregister_handler(const struct dm_event_handler *dmevh);
 
 /* Prototypes for DSO interface, see dmeventd.c, struct dso_data for
    detailed descriptions. */
+// FIXME  misuse of bitmask as enum
 void process_event(struct dm_task *dmt, enum dm_event_mask evmask, void **user);
 int register_device(const char *device_name, const char *uuid, int major, int minor, void **user);
 int unregister_device(const char *device_name, const char *uuid, int major,
