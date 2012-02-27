@@ -186,7 +186,8 @@ static struct volume_group *_format1_vg_read(struct format_instance *fid,
 	DM_LIST_INIT(pvs);
 
 	/* Strip dev_dir if present */
-	vg_name = strip_dir(vg_name, fid->fmt->cmd->dev_dir);
+	if (vg_name)
+		vg_name = strip_dir(vg_name, fid->fmt->cmd->dev_dir);
 
 	if (!(vg = alloc_vg("format1_vg_read", fid->fmt->cmd, NULL)))
 		return_NULL;

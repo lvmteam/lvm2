@@ -1,5 +1,6 @@
 Version 2.02.94 - 
 ====================================
+  Check for existance of vg_name in _format1/_pool_vg_read().
   Fix missing break in _format_pvsegs (2.02.92).
   Test seg pointer for non-null it in raid_target_percent error path.
   Check for errors in _init_tags() during config loading.
