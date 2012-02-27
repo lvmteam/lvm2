@@ -1676,7 +1676,6 @@ static int _text_pv_setup(const struct format_type *fmt,
 	 */
 	else {
 		if (!pv->dev ||
-		    !pv->dev->pvid ||
 		    !(info = lvmcache_info_from_pvid(pv->dev->pvid, 0))) {
 			log_error("PV %s missing from cache", pv_dev_name(pv));
 			return 0;
