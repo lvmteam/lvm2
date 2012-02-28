@@ -339,18 +339,23 @@ struct thread_baton {
 
 static int buffer_rewrite(char **buf, const char *format, const char *string) {
 	char *old = *buf;
-	dm_asprintf(buf, format, *buf, string);
+	int r = dm_asprintf(buf, format, *buf, string);
+
 	dm_free(old);
-	return 0;
+
+	return (r < 0) ? 0 : 1;
 }
 
 static int buffer_line(const char *line, void *baton) {
 	response *r = baton;
-	if (r->buffer)
-		buffer_rewrite(&r->buffer, "%s\n%s", line);
-	else
-		dm_asprintf(&r->buffer, "%s\n", line);
-	return 0;
+
+	if (r->buffer) {
+		if (!buffer_rewrite(&r->buffer, "%s\n%s", line))
+			return 0;
+	} else if (dm_asprintf(&r->buffer, "%s\n", line) < 0)
+		return 0;
+
+	return 1;
 }
 
 static response builtin_handler(daemon_state s, client_handle h, request r)
@@ -387,7 +392,8 @@ static void *client_thread(void *baton)
 
 		if (!res.buffer) {
 			dm_config_write_node(res.cft->root, buffer_line, &res);
-			buffer_rewrite(&res.buffer, "%s\n\n", NULL);
+			if (!buffer_rewrite(&res.buffer, "%s\n\n", NULL))
+				goto fail;
 			dm_config_destroy(res.cft);
 		}
 
