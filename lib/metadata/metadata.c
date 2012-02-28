@@ -1460,10 +1460,12 @@ static int _pvcreate_write(struct cmd_context *cmd, struct pv_to_create *pvc)
 
 		if (!dev_set(dev, UINT64_C(0), (size_t) 2048, 0)) {
 			log_error("%s not wiped: aborting", pv_name);
-			dev_close(dev);
+			if (!dev_close(dev))
+				stack;
 			return 0;
 		}
-		dev_close(dev);
+		if (!dev_close(dev))
+			stack;
 	}
 
 	log_error("Writing physical volume data to disk \"%s\"",
