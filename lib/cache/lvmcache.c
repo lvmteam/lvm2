@@ -641,7 +641,7 @@ static void _rescan_entry(struct lvmcache_info *info)
 	struct label *label;
 
 	if (info->status & CACHE_INVALID)
-		label_read(info->dev, &label, UINT64_C(0));
+		(void) label_read(info->dev, &label, UINT64_C(0));
 }
 
 static int _scan_invalid(void)
@@ -688,7 +688,7 @@ int lvmcache_label_scan(struct cmd_context *cmd, int full_scan)
 	}
 
 	while ((dev = dev_iter_get(iter)))
-		label_read(dev, &label, UINT64_C(0));
+		(void) label_read(dev, &label, UINT64_C(0));
 
 	dev_iter_destroy(iter);
 
