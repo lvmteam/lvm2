@@ -49,7 +49,7 @@
 #endif
 
 #define MAX_RETRIES 4
-#define MAX_MISSING_LEN = 8000 /* Max supported clvmd message size ? */
+#define MAX_MISSING_LEN 8000 /* Max supported clvmd message size ? */
 
 #define ISLOCAL_CSID(c) (memcmp(c, our_csid, max_csid_len) == 0)
 
