@@ -1,3 +1,17 @@
+/*
+ * Copyright (C) 2012 Red Hat, Inc.
+ *
+ * This file is part of LVM2.
+ *
+ * This copyrighted material is made available to anyone wishing to use,
+ * modify, copy, or redistribute it subject to the terms and conditions
+ * of the GNU Lesser General Public License v.2.1.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program; if not, write to the Free Software Foundation,
+ * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
 #include "lib.h"
 #include "toolcontext.h"
 #include "metadata.h"
@@ -360,7 +374,7 @@ int lvmetad_pv_list_to_lvmcache(struct cmd_context *cmd)
 	struct dm_config_node *cn;
 
 	if (!_using_lvmetad)
-		return_0;
+		return 1;
 
 	reply = daemon_send_simple(_lvmetad, "pv_list", NULL);
 
@@ -388,7 +402,7 @@ int lvmetad_vg_list_to_lvmcache(struct cmd_context *cmd)
 	struct dm_config_node *cn;
 
 	if (!_using_lvmetad)
-		return_0;
+		return 1;
 
 	reply = daemon_send_simple(_lvmetad, "vg_list", NULL);
 	if (reply.error || strcmp(daemon_reply_str(reply, "response", ""), "OK")) {
@@ -678,4 +692,3 @@ fatal:
 		  "It is strongly recommended that you restart lvmetad immediately.");
 	return 0;
 }
-
