@@ -494,7 +494,7 @@ static percent_range_t _combine_percent(percent_t a, percent_t b,
 	if (a == PERCENT_0 && b == PERCENT_0)
 		return PERCENT_0;
 
-	return make_percent(numerator, denominator);
+	return (percent_range_t) make_percent(numerator, denominator);
 }
 
 static int _percent_run(struct dev_manager *dm, const char *name,

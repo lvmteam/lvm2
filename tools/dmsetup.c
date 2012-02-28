@@ -3614,7 +3614,7 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 				log_error("Unknown name mangling mode");
 				return 0;
 			}
-			dm_set_name_mangling_mode(_int_args[MANGLENAME_ARG]);
+			dm_set_name_mangling_mode((dm_string_mangling_t) _int_args[MANGLENAME_ARG]);
 		}
 		if (ind == NAMEPREFIXES_ARG)
 			_switches[NAMEPREFIXES_ARG]++;

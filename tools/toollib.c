@@ -1257,7 +1257,7 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 		/* Default depends on current locking type */
 		vp_new->clustered = locking_is_clustered();
 
-	if (arg_sign_value(cmd, physicalextentsize_ARG, 0) == SIGN_MINUS) {
+	if (arg_sign_value(cmd, physicalextentsize_ARG, SIGN_NONE) == SIGN_MINUS) {
 		log_error("Physical extent size may not be negative");
 		return 1;
 	}
@@ -1268,12 +1268,12 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 		return 1;
 	}
 
-	if (arg_sign_value(cmd, maxlogicalvolumes_ARG, 0) == SIGN_MINUS) {
+	if (arg_sign_value(cmd, maxlogicalvolumes_ARG, SIGN_NONE) == SIGN_MINUS) {
 		log_error("Max Logical Volumes may not be negative");
 		return 1;
 	}
 
-	if (arg_sign_value(cmd, maxphysicalvolumes_ARG, 0) == SIGN_MINUS) {
+	if (arg_sign_value(cmd, maxphysicalvolumes_ARG, SIGN_NONE) == SIGN_MINUS) {
 		log_error("Max Physical Volumes may not be negative");
 		return 1;
 	}
@@ -1435,7 +1435,7 @@ int pvcreate_params_validate(struct cmd_context *cmd,
 	if (arg_count(cmd, zero_ARG))
 		pp->zero = strcmp(arg_str_value(cmd, zero_ARG, "y"), "n");
 
-	if (arg_sign_value(cmd, dataalignment_ARG, 0) == SIGN_MINUS) {
+	if (arg_sign_value(cmd, dataalignment_ARG, SIGN_NONE) == SIGN_MINUS) {
 		log_error("Physical volume data alignment may not be negative");
 		return 0;
 	}
@@ -1454,7 +1454,7 @@ int pvcreate_params_validate(struct cmd_context *cmd,
 		pp->data_alignment = 0;
 	}
 
-	if (arg_sign_value(cmd, dataalignmentoffset_ARG, 0) == SIGN_MINUS) {
+	if (arg_sign_value(cmd, dataalignmentoffset_ARG, SIGN_NONE) == SIGN_MINUS) {
 		log_error("Physical volume data alignment offset may not be negative");
 		return 0;
 	}
@@ -1472,7 +1472,7 @@ int pvcreate_params_validate(struct cmd_context *cmd,
 		pp->data_alignment_offset = 0;
 	}
 
-	if (arg_sign_value(cmd, metadatasize_ARG, 0) == SIGN_MINUS) {
+	if (arg_sign_value(cmd, metadatasize_ARG, SIGN_NONE) == SIGN_MINUS) {
 		log_error("Metadata size may not be negative");
 		return 0;
 	}
@@ -1562,7 +1562,7 @@ int get_stripe_params(struct cmd_context *cmd, uint32_t *stripes, uint32_t *stri
 
 	*stripe_size = arg_uint_value(cmd, stripesize_ARG, 0);
 	if (*stripe_size) {
-		if (arg_sign_value(cmd, stripesize_ARG, 0) == SIGN_MINUS) {
+		if (arg_sign_value(cmd, stripesize_ARG, SIGN_NONE) == SIGN_MINUS) {
 			log_error("Negative stripesize is invalid");
 			return 0;
 		}

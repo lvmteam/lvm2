@@ -200,7 +200,7 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 		 * versus an additional qualifying argument being added here.
 		 */
 		lp->mirrors = arg_uint_value(cmd, mirrors_ARG, 0);
-		lp->mirrors_sign = arg_sign_value(cmd, mirrors_ARG, 0);
+		lp->mirrors_sign = arg_sign_value(cmd, mirrors_ARG, SIGN_NONE);
 	}
 
 	lp->alloc = arg_uint_value(cmd, alloc_ARG, ALLOC_INHERIT);
@@ -229,7 +229,7 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 			return 0;
 		}
 
-		if (arg_sign_value(cmd, chunksize_ARG, 0) == SIGN_MINUS) {
+		if (arg_sign_value(cmd, chunksize_ARG, SIGN_NONE) == SIGN_MINUS) {
 			log_error("Negative chunk size is invalid");
 			return 0;
 		}
@@ -288,7 +288,7 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 	 	 */
 
 		if (arg_count(cmd, regionsize_ARG)) {
-			if (arg_sign_value(cmd, regionsize_ARG, 0) ==
+			if (arg_sign_value(cmd, regionsize_ARG, SIGN_NONE) ==
 				    SIGN_MINUS) {
 				log_error("Negative regionsize is invalid");
 				return 0;

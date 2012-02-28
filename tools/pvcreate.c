@@ -78,7 +78,7 @@ static int pvcreate_restore_params_validate(struct cmd_context *cmd,
 		release_vg(vg);
 	}
 
-	if (arg_sign_value(cmd, physicalvolumesize_ARG, 0) == SIGN_MINUS) {
+	if (arg_sign_value(cmd, physicalvolumesize_ARG, SIGN_NONE) == SIGN_MINUS) {
 		log_error("Physical volume size may not be negative");
 		return 0;
 	}
