@@ -12,7 +12,7 @@ pvscan \- scan all disks for physical volumes
 .RB [ \-n | \-\-novolumegroup ]
 .RB [ \-s | \-\-short ]
 .RB [ \-u | \-\-uuid ]
-.RB [ \-\-lvmetad DevicePath ]
+.RB [ \-\-lvmetad " " DevicePath ]
 .SH DESCRIPTION
 .B pvscan
 scans all supported LVM block devices in the system for physical volumes.
@@ -31,7 +31,7 @@ Short listing format.
 .BR \-u ", " \-\-uuid
 Show UUIDs (Uniform Unique Identifiers) in addition to device special names.
 .TP
-.BR \-\-lvmetad DevicePath
+.BR \-\-lvmetad " " DevicePath
 Scan a single device and contact lvmetad to update its cached state. Called
 internally by udev rules. The device is processed \fBregardless\fP of any device
 filters set in lvm.conf.
