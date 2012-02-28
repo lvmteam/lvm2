@@ -518,7 +518,11 @@ int lvmetad_pv_found(struct id pvid, struct device *device, const struct format_
 		 * formatted and has no conflicting keys with the rest of the
 		 * request.
 		 */
-		export_vg_to_buffer(vg, &buf);
+		if (!export_vg_to_buffer(vg, &buf)) {
+			dm_free(pvmeta);
+			return_0;
+		}
+
 		reply = daemon_send_simple(_lvmetad,
 					   "pv_found",
 					   "pvmeta = %b", pvmeta,
