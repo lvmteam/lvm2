@@ -1,5 +1,7 @@
 Version 2.02.94 - 
 ====================================
+  Better detection of missing dmeventd fifo connection (2.02.93).
+  Add some close() and dev_close() error path backtraces.
   For polling daemon reopen stdin,stdout,stderr to /dev/null.
   Limit the max size of processed clvmd message to ~8KB.
   Do not send uninitilised bytes in cluster error reply messages.
