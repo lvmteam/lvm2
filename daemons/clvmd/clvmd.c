@@ -49,6 +49,7 @@
 #endif
 
 #define MAX_RETRIES 4
+#define MAX_MISSING_LEN = 8000 /* Max supported clvmd message size ? */
 
 #define ISLOCAL_CSID(c) (memcmp(c, our_csid, max_csid_len) == 0)
 
@@ -1204,7 +1205,8 @@ static int read_from_local_sock(struct local_client *thisfd)
 			missing_len = 0;
 
 		/* We need at least sizeof(struct clvm_header) bytes in buffer */
-		if (len < sizeof(struct clvm_header) || argslen < 0) {
+		if (len < sizeof(struct clvm_header) || argslen < 0 ||
+		    missing_len > MAX_MISSING_LEN) {
 			struct clvm_header reply = {
 				.cmd = CLVMD_CMD_REPLY,
 				.status = EINVAL
