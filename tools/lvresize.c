@@ -50,7 +50,7 @@ static int _validate_stripesize(struct cmd_context *cmd,
 				const struct volume_group *vg,
 				struct lvresize_params *lp)
 {
-	if (arg_sign_value(cmd, stripesize_ARG, 0) == SIGN_MINUS) {
+	if (arg_sign_value(cmd, stripesize_ARG, SIGN_NONE) == SIGN_MINUS) {
 		log_error("Stripesize may not be negative.");
 		return 0;
 	}
@@ -415,7 +415,7 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 			lp->mirrors = arg_uint_value(cmd, mirrors_ARG, 1) + 1;
 		else
 			log_warn("Mirrors not supported. Ignoring.");
-		if (arg_sign_value(cmd, mirrors_ARG, 0) == SIGN_MINUS) {
+		if (arg_sign_value(cmd, mirrors_ARG, SIGN_NONE) == SIGN_MINUS) {
 			log_error("Mirrors argument may not be negative");
 			return EINVALID_CMD_LINE;
 		}
@@ -452,7 +452,7 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 		return ECMD_FAILED;
 	}
 
-	alloc = arg_uint_value(cmd, alloc_ARG, lv->alloc);
+	alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG, lv->alloc);
 
 	if (lp->size) {
 		if (lp->size % vg->extent_size) {

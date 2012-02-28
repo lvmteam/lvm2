@@ -321,7 +321,7 @@ static int _read_size_params(struct lvcreate_params *lp,
 	}
 
 	if (arg_count(cmd, extents_ARG)) {
-		if (arg_sign_value(cmd, extents_ARG, 0) == SIGN_MINUS) {
+		if (arg_sign_value(cmd, extents_ARG, SIGN_NONE) == SIGN_MINUS) {
 			log_error("Negative number of extents is invalid");
 			return 0;
 		}
@@ -331,7 +331,7 @@ static int _read_size_params(struct lvcreate_params *lp,
 
 	/* Size returned in kilobyte units; held in sectors */
 	if (arg_count(cmd, size_ARG)) {
-		if (arg_sign_value(cmd, size_ARG, 0) == SIGN_MINUS) {
+		if (arg_sign_value(cmd, size_ARG, SIGN_NONE) == SIGN_MINUS) {
 			log_error("Negative size is invalid");
 			return 0;
 		}
@@ -348,7 +348,7 @@ static int _read_size_params(struct lvcreate_params *lp,
 			log_error("--poolmetadatasize may only be specified when allocating the thin pool.");
 			return 0;
 		}
-		if (arg_sign_value(cmd, poolmetadatasize_ARG, 0) == SIGN_MINUS) {
+		if (arg_sign_value(cmd, poolmetadatasize_ARG, SIGN_NONE) == SIGN_MINUS) {
 			log_error("Negative poolmetadatasize is invalid.");
 			return 0;
 		}
@@ -361,7 +361,7 @@ static int _read_size_params(struct lvcreate_params *lp,
 			log_error("Virtual size in incompatible with thin_pool segment type.");
 			return 0;
 		}
-		if (arg_sign_value(cmd, virtualsize_ARG, 0) == SIGN_MINUS) {
+		if (arg_sign_value(cmd, virtualsize_ARG, SIGN_NONE) == SIGN_MINUS) {
 			log_error("Negative virtual origin size is invalid");
 			return 0;
 		}
@@ -443,7 +443,7 @@ static int _read_mirror_params(struct lvcreate_params *lp,
 	lp->nosync = arg_is_set(cmd, nosync_ARG);
 
 	if (arg_count(cmd, regionsize_ARG)) {
-		if (arg_sign_value(cmd, regionsize_ARG, 0) == SIGN_MINUS) {
+		if (arg_sign_value(cmd, regionsize_ARG, SIGN_NONE) == SIGN_MINUS) {
 			log_error("Negative regionsize is invalid");
 			return 0;
 		}
@@ -542,7 +542,8 @@ static int _read_activation_params(struct lvcreate_params *lp, struct cmd_contex
 {
 	unsigned pagesize;
 
-	lp->activate = arg_uint_value(cmd, available_ARG, CHANGE_AY);
+	lp->activate = (activation_change_t)
+		arg_uint_value(cmd, available_ARG, CHANGE_AY);
 
 	if (lp->activate == CHANGE_AN || lp->activate == CHANGE_ALN) {
 		if (lp->zero && !seg_is_thin(lp)) {
@@ -688,7 +689,7 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 			}
 			log_print("Redundant mirrors argument: default is 0");
 		}
-		if (arg_sign_value(cmd, mirrors_ARG, 0) == SIGN_MINUS) {
+		if (arg_sign_value(cmd, mirrors_ARG, SIGN_NONE) == SIGN_MINUS) {
 			log_error("Mirrors argument may not be negative");
 			return 0;
 		}
@@ -743,7 +744,7 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 		if (arg_count(cmd, chunksize_ARG))
 			log_warn("WARNING: Ignoring --chunksize when using an existing pool.");
 	} else if (lp->snapshot || lp->create_thin_pool) {
-		if (arg_sign_value(cmd, chunksize_ARG, 0) == SIGN_MINUS) {
+		if (arg_sign_value(cmd, chunksize_ARG, SIGN_NONE) == SIGN_MINUS) {
 			log_error("Negative chunk size is invalid");
 			return 0;
 		}
@@ -796,7 +797,7 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 
 	lp->alloc = contiguous ? ALLOC_CONTIGUOUS : ALLOC_INHERIT;
 
-	lp->alloc = arg_uint_value(cmd, alloc_ARG, lp->alloc);
+	lp->alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG, lp->alloc);
 
 	if (contiguous && (lp->alloc != ALLOC_CONTIGUOUS)) {
 		log_error("Conflicting contiguous and alloc arguments");

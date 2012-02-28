@@ -310,7 +310,7 @@ int poll_daemon(struct cmd_context *cmd, const char *name, const char *uuid,
 
 	parms.aborting = arg_is_set(cmd, abort_ARG);
 	parms.background = background;
-	interval_sign = arg_sign_value(cmd, interval_ARG, 0);
+	interval_sign = arg_sign_value(cmd, interval_ARG, SIGN_NONE);
 	if (interval_sign == SIGN_MINUS)
 		log_error("Argument to --interval cannot be negative");
 	parms.interval = arg_uint_value(cmd, interval_ARG,

@@ -340,7 +340,7 @@ static int lvchange_alloc(struct cmd_context *cmd, struct logical_volume *lv)
 
 	want_contiguous = strcmp(arg_str_value(cmd, contiguous_ARG, "n"), "n");
 	alloc = want_contiguous ? ALLOC_CONTIGUOUS : ALLOC_INHERIT;
-	alloc = arg_uint_value(cmd, alloc_ARG, alloc);
+	alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG, alloc);
 
 	if (alloc == lv->alloc) {
 		log_error("Allocation policy of logical volume \"%s\" is "

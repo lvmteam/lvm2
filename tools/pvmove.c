@@ -492,7 +492,7 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 						  &pv_name_arg, 0)))
 			goto_out;
 
-		alloc = arg_uint_value(cmd, alloc_ARG, ALLOC_INHERIT);
+		alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG, ALLOC_INHERIT);
 		if (alloc == ALLOC_INHERIT)
 			alloc = vg->alloc;
 

@@ -68,7 +68,7 @@ static char _default_uuid_prefix[DM_MAX_UUID_PREFIX_LEN + 1] = "LVM-";
 
 static int _verbose = 0;
 static int _suspended_dev_counter = 0;
-static int _name_mangling_mode = -1;
+static dm_string_mangling_t _name_mangling_mode = DEFAULT_DM_NAME_MANGLING;
 
 #ifdef HAVE_SELINUX_LABEL_H
 static struct selabel_handle *_selabel_handle = NULL;
