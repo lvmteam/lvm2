@@ -179,7 +179,8 @@ static int _passes_lvm_type_device_filter(struct dev_filter *f __attribute__((un
 	ret = 1;
 
       out:
-	dev_close(dev);
+	if (!dev_close(dev))
+		stack;
 
 	return ret;
 }

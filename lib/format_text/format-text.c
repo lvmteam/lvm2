@@ -1357,8 +1357,10 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 		return_0;
 
 	if (!label_write(pv->dev, label)) {
-		dev_close(pv->dev);
-		return_0;
+		stack;
+		if (!dev_close(pv->dev))
+			stack;
+		return 0;
 	}
 
 	/*
