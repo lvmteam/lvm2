@@ -1628,7 +1628,8 @@ void lvmcache_destroy(struct cmd_context *cmd, int retain_orphans)
 	dm_list_init(&_vginfos);
 
 	if (retain_orphans)
-		init_lvmcache_orphans(cmd);
+		if (!init_lvmcache_orphans(cmd))
+			stack;
 }
 
 int lvmcache_pvid_is_locked(const char *pvid) {
