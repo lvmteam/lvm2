@@ -670,7 +670,7 @@ xx(pvscan,
    "\t[-P|--partial] " "\n"
    "\t[-s|--short] " "\n"
    "\t[-u|--uuid] " "\n"
-   "\t[--lvmetad DEVICE] " "\n"
+   "\t[--lvmetad DevicePath] " "\n"
    "\t[-v|--verbose] " "\n"
    "\t[--version]\n",
 

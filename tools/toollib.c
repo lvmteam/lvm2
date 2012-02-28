@@ -305,7 +305,8 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 
 	if (!argc || !dm_list_empty(&tags)) {
 		log_verbose("Finding all logical volumes");
-		lvmetad_vg_list_to_lvmcache(cmd);
+		if (!lvmetad_vg_list_to_lvmcache(cmd))
+			stack;
 		if (!(vgnames = get_vgnames(cmd, 0)) || dm_list_empty(vgnames)) {
 			log_error("No volume groups found");
 			return ret_max;
@@ -582,7 +583,8 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 
 	if (!argc || !dm_list_empty(&tags)) {
 		log_verbose("Finding all volume groups");
-		lvmetad_vg_list_to_lvmcache(cmd);
+		if (!lvmetad_vg_list_to_lvmcache(cmd))
+			stack;
 		if (!(vgids = get_vgids(cmd, 0)) || dm_list_empty(vgids)) {
 			log_error("No volume groups found");
 			return ret_max;

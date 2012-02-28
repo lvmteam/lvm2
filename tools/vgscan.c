@@ -24,7 +24,10 @@ static int vgscan_single(struct cmd_context *cmd, const char *vg_name,
 		  vg->fid->fmt->name);
 
 	check_current_backup(vg);
-	lvmetad_vg_update(vg); /* keep lvmetad up to date */
+
+	/* keep lvmetad up to date */
+	if (!lvmetad_vg_update(vg))
+		stack;
 
 	return ECMD_PROCESSED;
 }
