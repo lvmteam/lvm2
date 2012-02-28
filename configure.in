@@ -847,6 +847,10 @@ AC_MSG_RESULT($LVMETAD)
 
 BUILD_LVMETAD=$LVMETAD
 
+if test x$BUILD_LVMETAD = xyes; then
+	AC_DEFINE([LVMETAD_SUPPORT], 1, [Define to 1 to include code that uses lvmetad.])
+fi
+
 ################################################################################
 dnl -- Enable udev synchronisation
 AC_MSG_CHECKING(whether to enable synchronisation with udev processing)
@@ -1496,7 +1500,6 @@ make.tmpl
 daemons/Makefile
 daemons/clvmd/Makefile
 daemons/cmirrord/Makefile
-daemons/common/Makefile
 daemons/dmeventd/Makefile
 daemons/dmeventd/libdevmapper-event.pc
 daemons/dmeventd/plugins/Makefile
@@ -1520,6 +1523,9 @@ lib/misc/lvm-version.h
 lib/raid/Makefile
 lib/snapshot/Makefile
 lib/thin/Makefile
+libdaemon/Makefile
+libdaemon/client/Makefile
+libdaemon/server/Makefile
 libdm/Makefile
 libdm/libdevmapper.pc
 liblvm/Makefile
