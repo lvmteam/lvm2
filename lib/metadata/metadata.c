@@ -4283,8 +4283,11 @@ int fid_add_mda(struct format_instance *fid, struct metadata_area *mda,
 				    full_key, sizeof(full_key)))
 		return_0;
 
-	dm_hash_insert(fid->metadata_areas_index,
-		       full_key, mda);
+	if (!dm_hash_insert(fid->metadata_areas_index,
+			    full_key, mda)) {
+		log_error("Failed to hash mda.");
+		return 0;
+	}
 
 	return 1;
 }
