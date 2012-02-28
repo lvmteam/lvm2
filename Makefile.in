@@ -32,10 +32,14 @@ ifeq ("@APPLIB@", "yes")
   SUBDIRS += liblvm
 endif
 
+ifeq ("@BUILD_LVMETAD@", "yes")
+  SUBDIRS += libdaemon
+endif
+
 # FIXME Should use intermediate Makefiles here!
 ifeq ($(MAKECMDGOALS),distclean)
   SUBDIRS = doc include man scripts \
-    lib tools daemons libdm \
+    libdaemon lib tools daemons libdm \
     udev po liblvm test \
     unit-tests/datastruct unit-tests/mm unit-tests/regex
 endif
@@ -45,10 +49,10 @@ DISTCLEAN_TARGETS += config.cache config.log config.status make.tmpl
 include make.tmpl
 
 libdm: include
-lib: libdm
+lib: libdm libdaemon
 liblvm: lib
-daemons: lib tools
-tools: lib device-mapper
+daemons: lib libdaemon tools
+tools: lib libdaemon device-mapper
 po: tools daemons
 
 lib.device-mapper: include.device-mapper

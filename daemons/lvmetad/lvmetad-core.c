@@ -1,15 +1,28 @@
-#define _GNU_SOURCE
+/*
+ * Copyright (C) 2012 Red Hat, Inc.
+ *
+ * This file is part of LVM2.
+ *
+ * This copyrighted material is made available to anyone wishing to use,
+ * modify, copy, or redistribute it subject to the terms and conditions
+ * of the GNU Lesser General Public License v.2.1.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program; if not, write to the Free Software Foundation,
+ * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
 #define _XOPEN_SOURCE 500  /* pthread */
+
+#include "configure.h"
+#include "daemon-shared.h"
+#include "daemon-server.h"
 
 #include <assert.h>
 #include <pthread.h>
 #include <malloc.h>
 #include <stdint.h>
 #include <unistd.h>
-
-#include "configure.h"
-#include "libdevmapper.h"
-#include "daemon-server.h"
 
 typedef struct {
 	struct dm_hash_table *pvid_to_pvmeta;
@@ -196,6 +209,7 @@ static struct dm_config_node *make_text_node(struct dm_config_tree *cft,
 	return cn;
 }
 
+#if 0
 static struct dm_config_node *make_int_node(struct dm_config_tree *cft,
 					    const char *key,
 					    int64_t value,
@@ -208,6 +222,7 @@ static struct dm_config_node *make_int_node(struct dm_config_tree *cft,
 	cn->v->v.i = value;
 	return cn;
 }
+#endif
 
 static void filter_metadata(struct dm_config_node *vg) {
 	struct dm_config_node *pv = pvs(vg);

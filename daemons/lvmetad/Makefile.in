@@ -1,6 +1,7 @@
-# Copyright (C) 2011 Red Hat, Inc. All rights reserved.
 #
-# This file is part of the device-mapper userspace tools.
+# Copyright (C) 2011-2012 Red Hat, Inc.
+#
+# This file is part of LVM2.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -21,18 +22,23 @@ TARGETS = lvmetad lvmetad-testclient
 
 .PHONY: install_lvmetad
 
-INCLUDES += -I$(top_srcdir)/daemons/common
-
 CFLOW_LIST = $(SOURCES)
 CFLOW_LIST_TARGET = $(LIB_NAME).cflow
 CFLOW_TARGET = lvmetad
 
 include $(top_builddir)/make.tmpl
 
-LIBS += -ldevmapper -ldaemon $(PTHREAD_LIBS)
+INCLUDES += -I$(top_srcdir)/libdaemon/server
+LVMLIBS = -ldaemonserver $(LVMINTERNAL_LIBS) -ldevmapper
 
-lvmetad: lvmetad-core.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -L$(top_builddir)/daemons/common -o $@ lvmetad-core.o \
+LIBS += $(PTHREAD_LIBS)
+
+LDFLAGS += -L$(top_builddir)/libdaemon/server
+CLDFLAGS += -L$(top_builddir)/libdaemon/server
+
+lvmetad: $(OBJECTS) $(top_builddir)/libdaemon/client/libdaemonclient.a \
+		    $(top_builddir)/libdaemon/server/libdaemonserver.a
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJECTS) \
 	$(DL_LIBS) $(LVMLIBS) $(LIBS) -rdynamic
 
 # TODO: No idea. No idea how to test either.
