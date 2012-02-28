@@ -1087,10 +1087,9 @@ static int read_from_local_sock(struct local_client *thisfd)
 	int len;
 	int argslen;
 	int missing_len;
-	char buffer[PIPE_BUF];
+	char buffer[PIPE_BUF + 1];
 
-	memset(buffer, 0, PIPE_BUF);
-	len = read(thisfd->fd, buffer, sizeof(buffer));
+	len = read(thisfd->fd, buffer, sizeof(buffer) - 1);
 	if (len == -1 && errno == EINTR)
 		return 1;
 
@@ -1180,6 +1179,7 @@ static int read_from_local_sock(struct local_client *thisfd)
 		struct clvm_header *inheader;
 		int status;
 
+		buffer[len] = 0; /* Ensure \0 terminated */
 		inheader = (struct clvm_header *) buffer;
 
 		/* Fill in the client ID */
