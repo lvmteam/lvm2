@@ -292,7 +292,10 @@ static int _lookup_p(struct dev_filter *f, struct device *dev)
 	if (MAJOR(dev->dev) == dm_major()) {
 		if (!l)
 			dm_list_iterate_items(sl, &dev->aliases)
-				dm_hash_insert(pf->devices, sl->str, PF_GOOD_DEVICE);
+				if (!dm_hash_insert(pf->devices, sl->str, PF_GOOD_DEVICE)) {
+					log_error("Failed to hash device to filter.");
+					return 0;
+				}
 		if (!device_is_usable(dev)) {
 			log_debug("%s: Skipping unusable device", dev_name(dev));
 			return 0;
@@ -305,7 +308,10 @@ static int _lookup_p(struct dev_filter *f, struct device *dev)
 		l = pf->real->passes_filter(pf->real, dev) ?  PF_GOOD_DEVICE : PF_BAD_DEVICE;
 
 		dm_list_iterate_items(sl, &dev->aliases)
-			dm_hash_insert(pf->devices, sl->str, l);
+			if (!dm_hash_insert(pf->devices, sl->str, l)) {
+				log_error("Failed to hash alias to filter.");
+				return 0;
+			}
 	}
 
 	return (l == PF_BAD_DEVICE) ? 0 : 1;

@@ -1,5 +1,6 @@
 Version 2.02.94 - 
 ====================================
+  Test dm_hash_insert() failures in filter-persistent.c and fid_add_mda().
   Ensure clvmd message is always \0 terminated after read.
   Better detection of missing dmeventd fifo connection (2.02.93).
   Add some close() and dev_close() error path backtraces.
