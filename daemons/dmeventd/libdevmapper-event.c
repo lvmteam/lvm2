@@ -432,14 +432,12 @@ static int _start_daemon(char *dmeventd_path, struct dm_event_fifos *fifos)
 	fifos->client = open(fifos->client_path, O_WRONLY | O_NONBLOCK);
 	if (fifos->client >= 0) {
 		/* server is running and listening */
-
-		close(fifos->client);
+		if (close(fifos->client))
+			log_sys_error("close", fifos->client_path);
 		return 1;
 	} else if (errno != ENXIO) {
 		/* problem */
-
-		log_error("%s: Can't open client fifo %s: %s",
-			  __func__, fifos->client_path, strerror(errno));
+		log_sys_error("open", fifos->client_path);
 		return 0;
 	}
 
@@ -447,14 +445,14 @@ static int _start_daemon(char *dmeventd_path, struct dm_event_fifos *fifos)
 	/* server is not running */
 
 	if (!strncmp(DMEVENTD_PATH, "/", 1) && stat(DMEVENTD_PATH, &statbuf)) {
-		log_error("Unable to find dmeventd.");
+		log_sys_error("stat", DMEVENTD_PATH);
 		return 0;
 	}
 
 	pid = fork();
 
 	if (pid < 0)
-		log_error("Unable to fork.");
+		log_sys_error("fork", "");
 
 	else if (!pid) {
 		execvp(args[0], args);
@@ -484,23 +482,23 @@ int init_fifos(struct dm_event_fifos *fifos)
 
 	/* Open the fifo used to read from the daemon. */
 	if ((fifos->server = open(fifos->server_path, O_RDWR)) < 0) {
-		log_error("%s: open server fifo %s",
-			  __func__, fifos->server_path);
+		log_sys_error("open", fifos->server_path);
 		return 0;
 	}
 
 	/* Lock out anyone else trying to do communication with the daemon. */
 	if (flock(fifos->server, LOCK_EX) < 0) {
-		log_error("%s: flock %s", __func__, fifos->server_path);
-		close(fifos->server);
+		log_sys_error("flock", fifos->server_path);
+		if (close(fifos->server))
+			log_sys_error("close", fifos->server_path);
 		return 0;
 	}
 
 /*	if ((fifos->client = open(fifos->client_path, O_WRONLY | O_NONBLOCK)) < 0) {*/
 	if ((fifos->client = open(fifos->client_path, O_RDWR | O_NONBLOCK)) < 0) {
-		log_error("%s: Can't open client fifo %s: %s",
-			  __func__, fifos->client_path, strerror(errno));
-		close(fifos->server);
+		log_sys_error("open", fifos->client_path);
+		if (close(fifos->server))
+			log_sys_error("close", fifos->server_path);
 		return 0;
 	}
 
@@ -528,8 +526,10 @@ void fini_fifos(struct dm_event_fifos *fifos)
 	if (flock(fifos->server, LOCK_UN))
 		log_error("flock unlock %s", fifos->server_path);
 
-	close(fifos->client);
-	close(fifos->server);
+	if (close(fifos->client))
+		log_sys_error("close", fifos->client_path);
+	if (close(fifos->server))
+		log_sys_error("close", fifos->server_path);
 }
 
 /* Get uuid of a device */

@@ -669,7 +669,8 @@ static int local_rendezvous_callback(struct local_client *thisfd, char *buf,
 	if (client_fd >= 0) {
 		newfd = malloc(sizeof(struct local_client));
 		if (!newfd) {
-			close(client_fd);
+			if (close(client_fd))
+                                log_sys_error("close", "socket");
 			return 1;
 		}
 
@@ -2113,7 +2114,7 @@ static int check_local_clvmd(void)
 static void close_local_sock(int local_socket)
 {
 	if (local_socket != -1 && close(local_socket))
-		stack;
+		log_sys_error("close", CLVMD_SOCKNAME);
 
 	if (CLVMD_SOCKNAME[0] != '\0' && unlink(CLVMD_SOCKNAME))
 		stack;
