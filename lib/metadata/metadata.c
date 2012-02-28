@@ -2186,7 +2186,8 @@ static int _lv_mark_if_partial_single(struct logical_volume *lv, void *data)
 	}
 
 	baton.partial = 0;
-	_lv_each_dependency(lv, _lv_mark_if_partial_collect, &baton);
+	if (!_lv_each_dependency(lv, _lv_mark_if_partial_collect, &baton))
+		return_0;
 
 	if (baton.partial)
 		lv->status |= PARTIAL_LV;
