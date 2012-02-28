@@ -1,5 +1,6 @@
 Version 2.02.94 - 
 ====================================
+  Revert free of allocated segtype in init segment error path (2.02.89).
   Test dm_hash_insert() failures in filter-persistent.c and fid_add_mda().
   Ensure clvmd message is always \0 terminated after read.
   Better detection of missing dmeventd fifo connection (2.02.93).

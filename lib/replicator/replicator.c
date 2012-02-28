@@ -772,10 +772,9 @@ int init_multiple_segtype(struct cmd_context *cmd, struct segtype_library *segli
 	segtype->private = NULL;
 	segtype->flags = SEG_REPLICATOR;
 
-	if (!lvm_register_segtype(seglib, segtype)) {
-		dm_free(segtype);
+	if (!lvm_register_segtype(seglib, segtype))
+		/* segtype is already destroyed */
 		return_0;
-	}
 
 	log_very_verbose("Initialised segtype: " REPLICATOR_MODULE);
 
@@ -787,10 +786,9 @@ int init_multiple_segtype(struct cmd_context *cmd, struct segtype_library *segli
 	segtype->private = NULL;
 	segtype->flags = SEG_REPLICATOR_DEV;
 
-	if (!lvm_register_segtype(seglib, segtype)) {
-		dm_free(segtype);
+	if (!lvm_register_segtype(seglib, segtype))
+		/* segtype is already destroyed */
 		return_0;
-	}
 
 	log_very_verbose("Initialised segtype: " REPLICATOR_DEV_MODULE);
 
