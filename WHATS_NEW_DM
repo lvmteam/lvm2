@@ -1,5 +1,6 @@
 Version 1.02.73 - 
 ====================================
+  Fix dm_task_set_name to properly resolve path to dm name (1.02.71).
   Add dm_strncpy() function as a faster strncpy() replacement.
 
 Version 1.02.72 - 23rd February 2012
