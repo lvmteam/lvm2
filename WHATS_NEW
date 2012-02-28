@@ -1,5 +1,6 @@
 Version 2.02.94 - 
 ====================================
+  Do not send uninitilised bytes in cluster error reply messages.
   Use unsigned type for bitmask instead of enum type for lvm properties.
   Add missing cleanup of excl_uuid hash on some exit paths of clvmd.
   Check for existance of vg_name in _format1/_pool_vg_read().

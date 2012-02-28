@@ -1185,11 +1185,10 @@ static int read_from_local_sock(struct local_client *thisfd)
 
 		/* If we are already busy then return an error */
 		if (thisfd->bits.localsock.in_progress) {
-			struct clvm_header reply;
-			reply.cmd = CLVMD_CMD_REPLY;
-			reply.status = EBUSY;
-			reply.arglen = 0;
-			reply.flags = 0;
+			struct clvm_header reply = {
+				.cmd = CLVMD_CMD_REPLY,
+				.status = EBUSY
+			};
 			send_message(&reply, sizeof(reply), our_csid,
 				     thisfd->fd,
 				     "Error sending EBUSY reply to local user");
@@ -1206,11 +1205,10 @@ static int read_from_local_sock(struct local_client *thisfd)
 
 		/* We need at least sizeof(struct clvm_header) bytes in buffer */
 		if (len < sizeof(struct clvm_header) || argslen < 0) {
-			struct clvm_header reply;
-			reply.cmd = CLVMD_CMD_REPLY;
-			reply.status = EINVAL;
-			reply.arglen = 0;
-			reply.flags = 0;
+			struct clvm_header reply = {
+				.cmd = CLVMD_CMD_REPLY,
+				.status = EINVAL
+			};
 			send_message(&reply, sizeof(reply), our_csid,
 				     thisfd->fd,
 				     "Error sending EINVAL reply to local user");
@@ -1224,11 +1222,10 @@ static int read_from_local_sock(struct local_client *thisfd)
 		thisfd->bits.localsock.cmd = malloc(len + missing_len);
 
 		if (!thisfd->bits.localsock.cmd) {
-			struct clvm_header reply;
-			reply.cmd = CLVMD_CMD_REPLY;
-			reply.status = ENOMEM;
-			reply.arglen = 0;
-			reply.flags = 0;
+			struct clvm_header reply = {
+				.cmd = CLVMD_CMD_REPLY,
+				.status = ENOMEM
+			};
 			send_message(&reply, sizeof(reply), our_csid,
 				     thisfd->fd,
 				     "Error sending ENOMEM reply to local user");
@@ -1283,13 +1280,12 @@ static int read_from_local_sock(struct local_client *thisfd)
 		/* Check the node name for validity */
 		if (inheader->node[0] && clops->csid_from_name(csid, inheader->node)) {
 			/* Error, node is not in the cluster */
-			struct clvm_header reply;
-			DEBUGLOG("Unknown node: '%s'\n", inheader->node);
+			struct clvm_header reply = {
+				.cmd = CLVMD_CMD_REPLY,
+				.status = ENOENT
+			};
 
-			reply.cmd = CLVMD_CMD_REPLY;
-			reply.status = ENOENT;
-			reply.flags = 0;
-			reply.arglen = 0;
+			DEBUGLOG("Unknown node: '%s'\n", inheader->node);
 			send_message(&reply, sizeof(reply), our_csid,
 				     thisfd->fd,
 				     "Error sending ENOENT reply to local user");
@@ -1311,12 +1307,12 @@ static int read_from_local_sock(struct local_client *thisfd)
 
 		/* Create a pipe and add the reading end to our FD list */
 		if (pipe(comms_pipe)) {
-			struct clvm_header reply;
+			struct clvm_header reply = {
+				.cmd = CLVMD_CMD_REPLY,
+				.status = EBUSY
+			};
+
 			DEBUGLOG("creating pipe failed: %s\n", strerror(errno));
-			reply.cmd = CLVMD_CMD_REPLY;
-			reply.status = EBUSY;
-			reply.arglen = 0;
-			reply.flags = 0;
 			send_message(&reply, sizeof(reply), our_csid,
 				     thisfd->fd,
 				     "Error sending EBUSY reply to local user");
@@ -1325,14 +1321,14 @@ static int read_from_local_sock(struct local_client *thisfd)
 
 		newfd = malloc(sizeof(struct local_client));
 		if (!newfd) {
-			struct clvm_header reply;
+			struct clvm_header reply = {
+				.cmd = CLVMD_CMD_REPLY,
+				.status = ENOMEM
+			};
+
 			close(comms_pipe[0]);
 			close(comms_pipe[1]);
 
-			reply.cmd = CLVMD_CMD_REPLY;
-			reply.status = ENOMEM;
-			reply.arglen = 0;
-			reply.flags = 0;
 			send_message(&reply, sizeof(reply), our_csid,
 				     thisfd->fd,
 				     "Error sending ENOMEM reply to local user");
