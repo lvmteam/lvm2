@@ -526,7 +526,7 @@ static int _dm_task_set_name_from_path(struct dm_task *dmt, const char *path,
 		return 0;
 	}
 
-	if (!stat(path, &st2) && (st1.st_rdev == st2.st_rdev))
+	if (!stat(buf, &st2) && (st1.st_rdev == st2.st_rdev))
 		final_name = name;
 	else if (_find_dm_name_of_device(st1.st_rdev, buf, sizeof(buf)))
 		final_name = buf;
