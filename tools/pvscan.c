@@ -116,8 +116,10 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 	vg_max_name_len = 0;
 
 	if (arg_count(cmd, lvmetad_ARG)) {
-		if (!pvscan_lvmetad(cmd, argc, argv))
+		if (!pvscan_lvmetad(cmd, argc, argv)) {
+			stack;
 			return ECMD_FAILED;
+		}
 		return ECMD_PROCESSED;
 	}
 

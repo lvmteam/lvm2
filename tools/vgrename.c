@@ -79,7 +79,9 @@ static int vg_rename_path(struct cmd_context *cmd, const char *old_vg_path,
 
 	log_verbose("Checking for existing volume group \"%s\"", vg_name_old);
 
-	lvmetad_vg_list_to_lvmcache(cmd); /* populate lvmcache */
+	/* populate lvmcache */
+	if (!lvmetad_vg_list_to_lvmcache(cmd))
+		stack;
 
 	/* Avoid duplicates */
 	if (!(vgids = get_vgids(cmd, 0)) || dm_list_empty(vgids)) {
