@@ -751,14 +751,16 @@ static const char *_find_config_str(const void *start, node_lookup_fn find_fn,
 {
 	const struct dm_config_node *n = find_fn(start, path);
 
-	/* Empty strings are ignored */
-	if ((n && n->v && n->v->type == DM_CFG_STRING) &&
-	    (allow_empty || (*n->v->v.str))) {
-		log_very_verbose("Setting %s to %s", path, n->v->v.str);
-		return n->v->v.str;
-	} else if (n && (!n->v || (n->v->type != DM_CFG_STRING) ||
-			 (!allow_empty && fail)))
-		log_warn("WARNING: Ignoring unsupported value for %s.", path);
+	/* Empty strings are ignored if allow_empty is set */
+	if (n && n->v) {
+		if ((n->v->type == DM_CFG_STRING) &&
+		    (allow_empty || (*n->v->v.str))) {
+			log_very_verbose("Setting %s to %s", path, n->v->v.str);
+			return n->v->v.str;
+		}
+		if ((n->v->type != DM_CFG_STRING) || (!allow_empty && fail))
+			log_warn("WARNING: Ignoring unsupported value for %s.", path);
+	}
 
 	if (fail)
 		log_very_verbose("%s not found in config: defaulting to %s",
