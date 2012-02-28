@@ -7,6 +7,7 @@ Conflicts=shutdown.target
 
 [Service]
 Type=forking
+NonBlocking=true
 ExecStart=@sbindir@/lvmetad
 ExecStartPost=@sbindir@/vgscan
 ExecReload=@sbindir@/lvmetad -R
