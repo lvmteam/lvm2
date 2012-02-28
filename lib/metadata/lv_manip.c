@@ -2093,7 +2093,8 @@ int lv_add_virtual_segment(struct logical_volume *lv, uint64_t status,
 		}
 	}
 
-	if ((seg = last_seg(lv)) && (seg->segtype == segtype)) {
+	if (!dm_list_empty(&lv->segments) &&
+	    (seg = last_seg(lv)) && (seg->segtype == segtype)) {
 		seg->area_len += extents;
 		seg->len += extents;
 	} else {
@@ -2411,7 +2412,7 @@ static int _lv_insert_empty_sublvs(struct logical_volume *lv,
 	char img_name[len];
 	struct lv_segment *mapseg;
 
-	if (lv->le_count || first_seg(lv)) {
+	if (lv->le_count || !dm_list_empty(&lv->segments)) {
 		log_error(INTERNAL_ERROR
 			  "Non-empty LV passed to _lv_insert_empty_sublv");
 		return 0;
