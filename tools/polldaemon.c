@@ -32,6 +32,8 @@ static void _sigchld_handler(int sig __attribute__((unused)))
  */
 static int _become_daemon(struct cmd_context *cmd)
 {
+	static const char devnull[] = "/dev/null";
+	int null_fd;
 	pid_t pid;
 	struct sigaction act = {
 		{_sigchld_handler},
@@ -57,12 +59,27 @@ static int _become_daemon(struct cmd_context *cmd)
 	if (setsid() == -1)
 		log_error("Background process failed to setsid: %s",
 			  strerror(errno));
+
+	/* For poll debugging it's best to disable for compilation */
+#if 1
+	if ((null_fd = open(devnull, O_RDWR)) == -1) {
+		log_sys_error("open", devnull);
+		_exit(ECMD_FAILED);
+	}
+
+	if (dup2(null_fd, STDIN_FILENO)  || /* reopen stdin */
+	    dup2(null_fd, STDOUT_FILENO) || /* reopen stdout */
+	    dup2(null_fd, STDERR_FILENO)) { /* reopen stderr */
+		log_sys_error("dup2", "redirect");
+		(void) close(null_fd);
+		_exit(ECMD_FAILED);
+	}
+
+	if (null_fd > STDERR_FILENO)
+		(void) close(null_fd);
+
 	init_verbose(VERBOSE_BASE_LEVEL);
-
-	close(STDIN_FILENO);
-	close(STDOUT_FILENO);
-	close(STDERR_FILENO);
-
+#endif
 	strncpy(*cmd->argv, "(lvm2)", strlen(*cmd->argv));
 
 	reset_locking();
