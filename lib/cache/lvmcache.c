@@ -116,10 +116,15 @@ int lvmcache_init(void)
 
 void lvmcache_seed_infos_from_lvmetad(struct cmd_context *cmd)
 {
-	if (lvmetad_active() && !_has_scanned) {
-		lvmetad_pv_list_to_lvmcache(cmd);
-		_has_scanned = 1;
+	if (!lvmetad_active() || _has_scanned)
+		return;
+
+	if (!lvmetad_pv_list_to_lvmcache(cmd)) {
+		stack;
+		return;
 	}
+
+	_has_scanned = 1;
 };
 
 
