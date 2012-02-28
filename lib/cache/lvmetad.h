@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2012 Red Hat, Inc.
  *
  * This file is part of LVM2.
  *
@@ -19,6 +19,7 @@ struct volume_group;
 struct cmd_context;
 struct dm_config_tree;
 
+#ifdef LVMETAD_SUPPORT
 /*
  * Initialise the communication with lvmetad. Normally called by
  * lvmcache_init. Sets up a global handle for our process.
@@ -100,5 +101,22 @@ struct volume_group *lvmetad_vg_lookup(struct cmd_context *cmd,
  */
 int pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv);
 
-#endif
+#  else		/* LVMETAD_SUPPORT */
 
+#    define lvmetad_init()	do { } while (0)
+#    define lvmetad_set_active(a)	do { } while (0)
+#    define lvmetad_active()	(0)
+#    define lvmetad_vg_update(vg)	(1)
+#    define lvmetad_vg_remove(vg)	(1)
+#    define lvmetad_pv_found(pvid, device, fmt, label_sector, vg)	(1)
+#    define lvmetad_pv_gone(device)	(1)
+#    define lvmetad_pv_list_to_lvmcache(cmd)	(1)
+#    define lvmetad_pv_lookup(cmd, pvid)	(0)
+#    define lvmetad_pv_lookup_by_devt(cmd, dev)	(0)
+#    define lvmetad_vg_list_to_lvmcache(cmd)	(1)
+#    define lvmetad_vg_lookup(cmd, vgname, vgid)	(NULL)
+#    define pvscan_lvmetad(cmd, argc, argv)	(0)
+
+#  endif	/* LVMETAD_SUPPORT */
+
+#endif
