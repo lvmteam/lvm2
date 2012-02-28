@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2011-2012 Red Hat, Inc.
  *
  * This file is part of LVM2.
  *
@@ -16,7 +16,8 @@
 #define _LVM_LVMETAD_CLIENT_H
 
 #include "daemon-client.h"
-#include "metadata-exported.h"
+
+struct volume_group;
 
 /* Different types of replies we may get from lvmetad. */
 
@@ -44,7 +45,7 @@ daemon_reply lvmetad_add_pv(daemon_handle h, const char *pv_uuid, const char *md
 daemon_reply lvmetad_remove_pv(daemon_handle h, const char *pv_uuid);
 
 /* Trigger a full disk scan, throwing away all caches. XXX do we eventually want
- * this? Probalby not yet, anyway.
+ * this? Probably not yet, anyway.
  *     daemon_reply lvmetad_rescan(daemon_handle h);
  */
 
@@ -57,7 +58,7 @@ daemon_reply lvmetad_remove_pv(daemon_handle h, const char *pv_uuid);
  */
 daemon_reply lvmetad_supersede_vg(daemon_handle h, struct volume_group *vg);
 
-/* Implementation of inline functions */
+/* Wrappers to open/close connection */
 
 static inline daemon_handle lvmetad_open(const char *socket)
 {

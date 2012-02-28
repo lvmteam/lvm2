@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2011-2012 Red Hat, Inc.
  *
  * This copyrighted material is made available to anyone wishing to use,
  * modify, copy, or redistribute it subject to the terms and conditions
@@ -9,6 +9,9 @@
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
+#include "daemon-shared.h"
+#include "daemon-server.h"
 
 #include <dlfcn.h>
 #include <errno.h>
@@ -24,9 +27,6 @@
 #include <signal.h>
 
 #include <syslog.h>
-#include "daemon-server.h"
-#include "daemon-shared.h"
-#include "libdevmapper.h"
 
 #if 0
 /* Create a device monitoring thread. */

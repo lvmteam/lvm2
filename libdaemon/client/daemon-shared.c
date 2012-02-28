@@ -1,10 +1,26 @@
+/*
+ * Copyright (C) 2011-2012 Red Hat, Inc.
+ *
+ * This file is part of LVM2.
+ *
+ * This copyrighted material is made available to anyone wishing to use,
+ * modify, copy, or redistribute it subject to the terms and conditions
+ * of the GNU Lesser General Public License v.2.1.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program; if not, write to the Free Software Foundation,
+ * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
 #include <errno.h>
 #include <stdio.h>
 #include <malloc.h>
 #include <string.h>
 #include <unistd.h>
 #include <assert.h>
+
 #include "daemon-shared.h"
+#include "libdevmapper.h"
 
 /*
  * Read a single message from a (socket) filedescriptor. Messages are delimited

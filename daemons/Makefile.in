@@ -15,13 +15,11 @@ srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 top_builddir = @top_builddir@
 
-SUBDIRS += common
-
 ifeq ("@BUILD_LVMETAD@", "yes")
   SUBDIRS += lvmetad
 endif
 
-.PHONY: dmeventd clvmd common cmirrord lvmetad
+.PHONY: dmeventd clvmd cmirrord lvmetad
 
 ifneq ("@CLVMD@", "none")
   SUBDIRS += clvmd
@@ -39,7 +37,7 @@ endif
 endif
 
 ifeq ($(MAKECMDGOALS),distclean)
-  SUBDIRS = clvmd cmirrord common dmeventd lvmetad
+  SUBDIRS = clvmd cmirrord dmeventd lvmetad
 endif
 
 include $(top_builddir)/make.tmpl
@@ -47,9 +45,3 @@ include $(top_builddir)/make.tmpl
 ifeq ("@BUILD_DMEVENTD@", "yes")
 device-mapper: dmeventd.device-mapper
 endif
-
-ifeq ("@BUILD_LVMETAD@", "yes")
-lvmetad: common.device-mapper
-endif
-
-device-mapper: common.device-mapper

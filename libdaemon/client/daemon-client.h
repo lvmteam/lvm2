@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2011-2012 Red Hat, Inc.
  *
  * This file is part of LVM2.
  *
@@ -12,10 +12,10 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "libdevmapper.h" // for dm_list, needed by config.h
-
 #ifndef _LVM_DAEMON_COMMON_CLIENT_H
 #define _LVM_DAEMON_COMMON_CLIENT_H
+
+#include "libdevmapper.h"
 
 typedef struct {
 	int socket_fd; /* the fd we use to talk to the daemon */
