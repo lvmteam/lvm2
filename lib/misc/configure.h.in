@@ -452,6 +452,9 @@
 /* Define to 1 to include built-in support for LVM1 metadata. */
 #undef LVM1_INTERNAL
 
+/* Define to 1 to include code that uses lvmetad. */
+#undef LVMETAD_SUPPORT
+
 /* Path to lvm binary. */
 #undef LVM_PATH
 
