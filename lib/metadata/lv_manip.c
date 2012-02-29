@@ -4457,7 +4457,10 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 
 	if (!seg_is_thin(lp) && !lp->zero && !lp->snapshot)
 		log_warn("WARNING: \"%s\" not zeroed", lv->name);
-	else if (!seg_is_thin(lp) && !set_lv(cmd, lv, UINT64_C(0), 0)) {
+	else if ((!seg_is_thin(lp) ||
+		  (lv_is_thin_volume(lv) &&
+		   !first_seg(first_seg(lv)->pool_lv)->zero_new_blocks)) &&
+		 !set_lv(cmd, lv, UINT64_C(0), 0)) {
 		log_error("Aborting. Failed to wipe %s.",
 			  lp->snapshot ? "snapshot exception store" :
 					 "start of new LV");
