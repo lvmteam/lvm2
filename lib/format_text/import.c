@@ -78,6 +78,7 @@ const char *text_vgname_import(const struct format_type *fmt,
 
 struct volume_group *text_vg_import_fd(struct format_instance *fid,
 				       const char *file,
+				       int single_device,
 				       struct device *dev,
 				       off_t offset, uint32_t size,
 				       off_t offset2, uint32_t size2,
@@ -111,7 +112,7 @@ struct volume_group *text_vg_import_fd(struct format_instance *fid,
 		if (!(*vsn)->check_version(cft))
 			continue;
 
-		if (!(vg = (*vsn)->read_vg(fid, cft, 0)))
+		if (!(vg = (*vsn)->read_vg(fid, cft, single_device)))
 			goto_out;
 
 		(*vsn)->read_desc(vg->vgmem, cft, when, desc);
@@ -127,7 +128,7 @@ struct volume_group *text_vg_import_file(struct format_instance *fid,
 					 const char *file,
 					 time_t *when, char **desc)
 {
-	return text_vg_import_fd(fid, file, NULL, (off_t)0, 0, (off_t)0, 0, NULL, 0,
+	return text_vg_import_fd(fid, file, 0, NULL, (off_t)0, 0, (off_t)0, 0, NULL, 0,
 				 when, desc);
 }
 

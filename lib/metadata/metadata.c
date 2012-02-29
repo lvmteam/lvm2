@@ -3017,7 +3017,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		if ((use_precommitted &&
 		     !(vg = mda->ops->vg_read_precommit(fid, vgname, mda))) ||
 		    (!use_precommitted &&
-		     !(vg = mda->ops->vg_read(fid, vgname, mda)))) {
+		     !(vg = mda->ops->vg_read(fid, vgname, mda, 0)))) {
 			inconsistent = 1;
 			release_vg(vg);
 			continue;
@@ -3197,7 +3197,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 			     !(vg = mda->ops->vg_read_precommit(fid, vgname,
 								mda))) ||
 			    (!use_precommitted &&
-			     !(vg = mda->ops->vg_read(fid, vgname, mda)))) {
+			     !(vg = mda->ops->vg_read(fid, vgname, mda, 0)))) {
 				inconsistent = 1;
 				continue;
 			}
