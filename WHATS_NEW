@@ -1,5 +1,6 @@
 Version 2.02.94 - 
 ====================================
+  Allow cluster mirrors to handle the absence of the checkpoint lib (libSaCkpt).
   Revert free of allocated segtype in init segment error path (2.02.89).
   Test dm_hash_insert() failures in filter-persistent.c and fid_add_mda().
   Ensure clvmd message is always \0 terminated after read.
