@@ -2796,7 +2796,7 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd,
 		return_NULL;
 
 	vg = fmt->orphan_vg;
-        dm_list_init(&vg->pvs);
+	dm_list_init(&vg->pvs);
 	vg->pv_count = 0;
 
 	baton.warnings = warnings;
