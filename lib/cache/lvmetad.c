@@ -588,15 +588,18 @@ struct _pvscan_lvmetad_baton {
 static int _pvscan_lvmetad_single(struct metadata_area *mda, void *baton)
 {
 	struct _pvscan_lvmetad_baton *b = baton;
-	struct volume_group *this = mda->ops->vg_read(b->fid, "", mda);
+	struct volume_group *this = mda->ops->vg_read(b->fid, "", mda, 1);
+
 	if (!b->vg || this->seqno > b->vg->seqno)
 		b->vg = this;
 	else if (b->vg)
 		release_vg(this);
+
 	return 1;
 }
 
-static dev_t _parse_devt(const char *str) { /* Oh. */
+static dev_t _parse_devt(const char *str)
+{	/* Oh. */
 	char *where = (char *) str;
 	int major = strtol(str, &where, 10);
 	int minor;

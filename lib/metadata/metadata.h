@@ -77,7 +77,8 @@ struct metadata_area_ops {
 	struct dm_list list;
 	struct volume_group *(*vg_read) (struct format_instance * fi,
 					 const char *vg_name,
-					 struct metadata_area * mda);
+					 struct metadata_area * mda,
+					 int single_device);
 	struct volume_group *(*vg_read_precommit) (struct format_instance * fi,
 					 const char *vg_name,
 					 struct metadata_area * mda);

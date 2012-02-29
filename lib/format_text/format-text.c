@@ -483,7 +483,8 @@ static int _raw_holds_vgname(struct format_instance *fid,
 static struct volume_group *_vg_read_raw_area(struct format_instance *fid,
 					      const char *vgname,
 					      struct device_area *area,
-					      int precommitted)
+					      int precommitted,
+					      int single_device)
 {
 	struct volume_group *vg = NULL;
 	struct raw_locn *rlocn;
@@ -510,7 +511,7 @@ static struct volume_group *_vg_read_raw_area(struct format_instance *fid,
 	}
 
 	/* FIXME 64-bit */
-	if (!(vg = text_vg_import_fd(fid, NULL, area->dev,
+	if (!(vg = text_vg_import_fd(fid, NULL, single_device, area->dev, 
 				     (off_t) (area->start + rlocn->offset),
 				     (uint32_t) (rlocn->size - wrap),
 				     (off_t) (area->start + MDA_HEADER_SIZE),
@@ -531,7 +532,8 @@ static struct volume_group *_vg_read_raw_area(struct format_instance *fid,
 
 static struct volume_group *_vg_read_raw(struct format_instance *fid,
 					 const char *vgname,
-					 struct metadata_area *mda)
+					 struct metadata_area *mda,
+					 int single_device)
 {
 	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
 	struct volume_group *vg;
@@ -539,7 +541,7 @@ static struct volume_group *_vg_read_raw(struct format_instance *fid,
 	if (!dev_open_readonly(mdac->area.dev))
 		return_NULL;
 
-	vg = _vg_read_raw_area(fid, vgname, &mdac->area, 0);
+	vg = _vg_read_raw_area(fid, vgname, &mdac->area, 0, single_device);
 
 	if (!dev_close(mdac->area.dev))
 		stack;
@@ -557,7 +559,7 @@ static struct volume_group *_vg_read_precommit_raw(struct format_instance *fid,
 	if (!dev_open_readonly(mdac->area.dev))
 		return_NULL;
 
-	vg = _vg_read_raw_area(fid, vgname, &mdac->area, 1);
+	vg = _vg_read_raw_area(fid, vgname, &mdac->area, 1, 0);
 
 	if (!dev_close(mdac->area.dev))
 		stack;
@@ -869,7 +871,8 @@ static struct volume_group *_vg_read_file_name(struct format_instance *fid,
 
 static struct volume_group *_vg_read_file(struct format_instance *fid,
 					  const char *vgname,
-					  struct metadata_area *mda)
+					  struct metadata_area *mda,
+					  int single_device __attribute__((unused)))
 {
 	struct text_context *tc = (struct text_context *) mda->metadata_locn;
 
@@ -1235,7 +1238,7 @@ static int _scan_raw(const struct format_type *fmt, const char *vgname __attribu
 		if ((scanned_vgname = vgname_from_mda(fmt, mdah,
 					      &rl->dev_area, &vgid, &vgstatus,
 					      NULL, NULL))) {
-			vg = _vg_read_raw_area(&fid, scanned_vgname, &rl->dev_area, 0);
+			vg = _vg_read_raw_area(&fid, scanned_vgname, &rl->dev_area, 0, 0);
 			if (vg)
 				lvmcache_update_vg(vg, 0);
 
