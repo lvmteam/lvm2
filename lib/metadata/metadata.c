@@ -2775,7 +2775,8 @@ static int _vg_read_orphan_pv(struct lvmcache_info *info, void *baton)
 	return 1;
 }
 
-/* Make orphan PVs look like a VG */
+/* Make orphan PVs look like a VG. FIXME multiple runs will leak memory
+ * allocated to PVs into the orphan VG pool which is now global. */
 static struct volume_group *_vg_read_orphans(struct cmd_context *cmd,
 					     int warnings,
 					     const char *orphan_vgname)
@@ -2795,6 +2796,8 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd,
 		return_NULL;
 
 	vg = fmt->orphan_vg;
+        dm_list_init(&vg->pvs);
+	vg->pv_count = 0;
 
 	baton.warnings = warnings;
 	baton.vg = vg;
