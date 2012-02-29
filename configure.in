@@ -740,7 +740,12 @@ if [[ "x$BUILD_CMIRRORD" = xyes ]]; then
 	if  test x$PKGCONFIG_INIT != x1; then
 		pkg_config_init
 	fi
-	PKG_CHECK_MODULES(SACKPT, libSaCkpt)
+
+	AC_DEFINE([CMIRROR_HAS_CHECKPOINT], 1, [Define to 1 to include libSaCkpt.])
+	PKG_CHECK_MODULES(SACKPT, libSaCkpt, [HAVE_SACKPT=yes],
+		[AC_MSG_RESULT([no libSaCkpt, compiling without it])
+		AC_DEFINE([CMIRROR_HAS_CHECKPOINT], 0, [Define to 0 to exclude libSaCkpt.])])
+
 	if test x$HAVE_CPG != xyes; then
 		PKG_CHECK_MODULES(CPG, libcpg)
 	fi
