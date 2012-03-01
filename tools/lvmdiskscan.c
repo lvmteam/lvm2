@@ -72,11 +72,13 @@ static int _check_device(struct cmd_context *cmd, struct device *dev)
 	char buffer;
 	uint64_t size;
 
-	if (!dev_open_readonly(dev)) {
-		return 0;
-	}
+	if (!dev_open_readonly(dev))
+		return_0;
+
 	if (!dev_read(dev, UINT64_C(0), (size_t) 1, &buffer)) {
-		dev_close(dev);
+		stack;
+		if (!dev_close(dev))
+			stack;
 		return 0;
 	}
 	if (!dev_get_size(dev, &size)) {

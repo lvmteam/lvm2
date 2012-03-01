@@ -57,7 +57,8 @@ daemon_handle daemon_open(daemon_info i) {
 error:
 	h.error = errno;
 	if (h.socket_fd >= 0)
-		close(h.socket_fd);
+		if (close(h.socket_fd))
+			perror("close");
 	if (r.cft)
 		daemon_reply_destroy(r);
 	h.socket_fd = -1;
