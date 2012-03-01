@@ -498,7 +498,7 @@ const struct format_type *lvmcache_fmt_from_vgname(struct cmd_context *cmd,
 
 	dm_list_iterate_safe(devh, tmp, &devs) {
 		devl = dm_list_item(devh, struct device_list);
-		label_read(devl->dev, &label, UINT64_C(0));
+		(void) label_read(devl->dev, &label, UINT64_C(0));
 		dm_list_del(&devl->list);
 		dm_free(devl);
 	}
