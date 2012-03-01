@@ -167,11 +167,15 @@ static struct lv_info *lookup_info(const char *resource)
 	return lvi;
 }
 
-static void insert_info(const char *resource, struct lv_info *lvi)
+static int insert_info(const char *resource, struct lv_info *lvi)
 {
+	int ret;
+
 	pthread_mutex_lock(&lv_hash_lock);
-	dm_hash_insert(lv_hash, resource, lvi);
+	ret = dm_hash_insert(lv_hash, resource, lvi);
 	pthread_mutex_unlock(&lv_hash_lock);
+
+	return ret;
 }
 
 static void remove_info(const char *resource)
@@ -277,8 +281,10 @@ static int hold_lock(char *resource, int mode, int flags)
 		errno = saved_errno;
 	} else {
 		lvi = malloc(sizeof(struct lv_info));
-		if (!lvi)
+		if (!lvi) {
+			errno = ENOMEM;
 			return -1;
+		}
 
 		lvi->lock_mode = mode;
 		status = sync_lock(resource, mode, flags & ~LCKF_CONVERT, &lvi->lock_id);
@@ -288,7 +294,10 @@ static int hold_lock(char *resource, int mode, int flags)
 			DEBUGLOG("hold_lock. lock at %d failed: %s\n", mode,
 				 strerror(errno));
 		} else
-			insert_info(resource, lvi);
+			if (!insert_info(resource, lvi)) {
+				errno = ENOMEM;
+				return -1;
+			}
 
 		errno = saved_errno;
 	}

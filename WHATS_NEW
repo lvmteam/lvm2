@@ -1,5 +1,6 @@
 Version 2.02.94 - 
 ====================================
+  Check for allocation failure in hold_lock() in clvmd.
   Use set_lv() (wipe initial 4KiB) for non zeroed thin volume.
   Allow cluster mirrors to handle the absence of the checkpoint lib (libSaCkpt).
   Revert free of allocated segtype in init segment error path (2.02.89).
