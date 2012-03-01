@@ -312,13 +312,10 @@ void release_lv_segment_area(struct lv_segment *seg, uint32_t s,
 		return;
 	}
 
-	if (seg_lv(seg, s)->status & MIRROR_IMAGE) {
-		lv_reduce(seg_lv(seg, s), area_reduction);
-		return;
-	}
-
-	if (seg_lv(seg, s)->status & THIN_POOL_DATA) {
-		lv_reduce(seg_lv(seg, s), area_reduction);
+	if ((seg_lv(seg, s)->status & MIRROR_IMAGE) ||
+	    (seg_lv(seg, s)->status & THIN_POOL_DATA)) {
+		if (!lv_reduce(seg_lv(seg, s), area_reduction))
+			stack; /* FIXME: any upper level reporting */
 		return;
 	}
 
