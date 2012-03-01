@@ -90,8 +90,8 @@ daemon_reply daemon_send_simple(daemon_handle h, const char *id, ...);
 
 void daemon_reply_destroy(daemon_reply r);
 
-static inline int daemon_reply_int(daemon_reply r, const char *path, int def) {
-	return dm_config_find_int(r.cft->root, path, def);
+static inline int64_t daemon_reply_int(daemon_reply r, const char *path, int64_t def) {
+	return dm_config_find_int64(r.cft->root, path, def);
 }
 
 static inline const char *daemon_reply_str(daemon_reply r, const char *path, const char *def) {
