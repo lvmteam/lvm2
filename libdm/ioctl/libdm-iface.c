@@ -467,14 +467,21 @@ int dm_task_get_driver_version(struct dm_task *dmt, char *version, size_t size)
 	unsigned *v;
 
 	if (!dmt->dmi.v4) {
-		version[0] = '\0';
+		if (version)
+			version[0] = '\0';
 		return 0;
 	}
 
 	v = dmt->dmi.v4->version;
-	snprintf(version, size, "%u.%u.%u", v[0], v[1], v[2]);
 	_dm_version_minor = v[1];
 	_dm_version_patchlevel = v[2];
+	if (version &&
+	    (snprintf(version, size, "%u.%u.%u", v[0], v[1], v[2]) < 0)) {
+		log_error("Buffer for version is to short.");
+		if (size > 0)
+			version[0] = '\0'
+		return 0;
+	}
 
 	return 1;
 }
@@ -494,7 +501,8 @@ static int _check_version(char *version, size_t size, int log_suppress)
 		_log_suppress = 1;
 
 	r = dm_task_run(task);
-	dm_task_get_driver_version(task, version, size);
+	if (!dm_task_get_driver_version(task, version, size))
+		stack;
 	dm_task_destroy(task);
 	_log_suppress = 0;
 

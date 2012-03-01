@@ -1,5 +1,6 @@
 Version 1.02.73 - 
 ====================================
+  Support dm_task_get_driver_version() query without version string.
   Log failure of pthread_join when cleaning unused threads in dmeventd.
   Fix empty string warning logic in _find_config_str. (1.02.68)
   Fix dm_task_set_name to properly resolve path to dm name (1.02.71).
