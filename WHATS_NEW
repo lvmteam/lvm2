@@ -1,5 +1,6 @@
 Version 2.02.94 - 
 ====================================
+  Test for alloc fail from _alloc_pv_segment() in _extend_pv().
   Check for alloc fail from get_segtype_from_string() in _lvcreate_params().
   Add _rimage as reserved suffix to lvm.8 man page.
   Improve error logging from mpath filter.
