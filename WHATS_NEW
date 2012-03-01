@@ -1,5 +1,6 @@
 Version 2.02.94 - 
 ====================================
+  Check for alloc fail from get_segtype_from_string() in _lvcreate_params().
   Add _rimage as reserved suffix to lvm.8 man page.
   Improve error logging from mpath filter.
   Check for allocation failure in hold_lock() in clvmd.
