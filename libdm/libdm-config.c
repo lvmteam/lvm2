@@ -877,6 +877,11 @@ int dm_config_find_int(const struct dm_config_node *cn, const char *path, int fa
 	return (int) _find_config_int64(cn, _find_config_node, path, (int64_t) fail);
 }
 
+int64_t dm_config_find_int64(const struct dm_config_node *cn, const char *path, int64_t fail)
+{
+	return _find_config_int64(cn, _find_config_node, path, fail);
+}
+
 float dm_config_find_float(const struct dm_config_node *cn, const char *path,
 			   float fail)
 {
