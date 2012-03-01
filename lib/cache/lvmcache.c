@@ -1110,8 +1110,8 @@ static int _lvmcache_update_vgid(struct lvmcache_info *info,
 
 	if (!is_orphan_vg(vginfo->vgname))
 		log_debug("lvmcache: %s: setting %s VGID to %s",
-			  dev_name(info->dev), vginfo->vgname,
-			  vginfo->vgid);
+			  (info) ? dev_name(info->dev) : "",
+			  vginfo->vgname, vginfo->vgid);
 
 	return 1;
 }
