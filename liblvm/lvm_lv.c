@@ -153,15 +153,18 @@ lv_t lvm_vg_create_lv_linear(vg_t vg, const char *name, uint64_t size)
 	if (!vg_check_write_mode(vg))
 		return NULL;
 
-	extents = extents_from_size(vg->cmd, size / SECTOR_SIZE,
-				    vg->extent_size);
+	if (!(extents = extents_from_size(vg->cmd, size / SECTOR_SIZE,
+					  vg->extent_size))) {
+		log_error("Unable to create LV without size.");
+		return NULL;
+	}
+
 	_lv_set_default_params(&lp, vg, name, extents);
 	if (!_lv_set_default_linear_params(vg->cmd, &lp))
 		return_NULL;
 	if (!lv_create_single(vg, &lp))
-		return NULL;
-	lvl = find_lv_in_vg(vg, name);
-	if (!lvl)
+		return_NULL;
+	if (!(lvl = find_lv_in_vg(vg, name)))
 		return NULL;
 	return (lv_t) lvl->lv;
 }
