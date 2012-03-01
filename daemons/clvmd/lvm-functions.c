@@ -729,7 +729,7 @@ static int get_initial_state(struct dm_hash_table *excl_uuid)
 	if (dm_asprintf(&lvs_cmd, "%s lvs  --config 'log{command_names=0 prefix=\"\"}' "
 			"--nolocking --noheadings -o vg_uuid,lv_uuid,lv_attr,vg_attr",
 			lvm_binary) < 0)
-		return 0;
+		return_0;
 
 	/* FIXME: Maybe link and use liblvm2cmd directly instead of fork */
 	if (!(lvs = popen(lvs_cmd, "r"))) {
