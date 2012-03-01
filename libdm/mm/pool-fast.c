@@ -258,7 +258,7 @@ static struct chunk *_new_chunk(struct dm_pool *p, size_t s)
 	struct chunk *c;
 
 	if (p->spare_chunk &&
-	    ((p->spare_chunk->end - p->spare_chunk->begin) >= s)) {
+	    ((p->spare_chunk->end - p->spare_chunk->begin) >= (ptrdiff_t)s)) {
 		/* reuse old chunk */
 		c = p->spare_chunk;
 		p->spare_chunk = 0;
