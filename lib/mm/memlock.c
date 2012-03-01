@@ -269,7 +269,8 @@ static int _memlock_maps(struct cmd_context *cmd, lvmlock_t lock, size_t *mstats
 				return 0;
 			}
 		}
-		lseek(_maps_fd, 0, SEEK_SET);
+		if (lseek(_maps_fd, 0, SEEK_SET))
+			log_sys_error("lseek", _procselfmaps);
 		for (len = 0 ; len < _maps_len; len += n) {
 			if (!(n = read(_maps_fd, _maps_buffer + len, _maps_len - len))) {
 				_maps_buffer[len] = '\0';
