@@ -1504,9 +1504,10 @@ static void _process_initial_registrations(void)
 
 	while ((reg = _initial_registrations[i])) {
 		msg.cmd = DM_EVENT_CMD_REGISTER_FOR_EVENT;
-		msg.size = strlen(reg);
-		msg.data = reg;
-		_do_process_request(&msg);
+		if ((msg.size = strlen(reg))) {
+			msg.data = reg;
+			_do_process_request(&msg);
+		}
 		++ i;
 	}
 }
