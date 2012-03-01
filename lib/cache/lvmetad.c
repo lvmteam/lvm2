@@ -85,8 +85,8 @@ static struct lvmcache_info *_pv_populate_lvmcache(
 		   *vgname = dm_config_find_str(cn->child, "vgname", NULL),
 		   *fmt_name = dm_config_find_str(cn->child, "format", NULL);
 	dev_t devt = dm_config_find_int(cn->child, "device", 0);
-	uint64_t devsize = dm_config_find_int(cn->child, "dev_size", 0),
-		 label_sector = dm_config_find_int(cn->child, "label_sector", 0);
+	uint64_t devsize = dm_config_find_int64(cn->child, "dev_size", 0),
+		 label_sector = dm_config_find_int64(cn->child, "label_sector", 0);
 
 	struct format_type *fmt = fmt_name ? get_format_by_name(cmd, fmt_name) : NULL;
 
