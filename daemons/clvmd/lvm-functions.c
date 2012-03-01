@@ -767,7 +767,8 @@ static int get_initial_state(struct dm_hash_table *excl_uuid)
 					LCK_EXCL : LCK_READ;
 
 				DEBUGLOG("getting initial lock for %s\n", uuid);
-				hold_lock(uuid, lock_mode, LCKF_NOQUEUE);
+				if (hold_lock(uuid, lock_mode, LCKF_NOQUEUE))
+					DEBUGLOG("Failed to hold lock %s\n", uuid);
 			}
 		}
 	}
