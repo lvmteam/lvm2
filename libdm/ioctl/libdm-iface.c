@@ -479,7 +479,7 @@ int dm_task_get_driver_version(struct dm_task *dmt, char *version, size_t size)
 	    (snprintf(version, size, "%u.%u.%u", v[0], v[1], v[2]) < 0)) {
 		log_error("Buffer for version is to short.");
 		if (size > 0)
-			version[0] = '\0'
+			version[0] = '\0';
 		return 0;
 	}
 
