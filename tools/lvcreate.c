@@ -652,10 +652,13 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 	else
 		segtype_str = "striped";
 
-	lp->segtype = get_segtype_from_string(cmd, arg_str_value(cmd, type_ARG, segtype_str));
+	segtype_str = arg_str_value(cmd, type_ARG, segtype_str);
+
+	if (!(lp->segtype = get_segtype_from_string(cmd, segtype_str)))
+		return_0;
 
 	if (seg_unknown(lp)) {
-		log_error("Unable to create LV with unknown segment type %s.", arg_str_value(cmd, type_ARG, segtype_str));
+		log_error("Unable to create LV with unknown segment type %s.", segtype_str);
 		return 0;
 	}
 
