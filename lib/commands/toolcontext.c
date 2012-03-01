@@ -664,8 +664,9 @@ static int _init_dev_cache(struct cmd_context *cmd)
 	if ((device_list_from_udev = udev_is_running() ?
 		find_config_tree_bool(cmd, "devices/obtain_device_list_from_udev",
 				      DEFAULT_OBTAIN_DEVICE_LIST_FROM_UDEV) : 0)) {
-		udev_dir = udev_get_dev_dir();
-		udev_dir_len = strlen(udev_dir);
+		if (!(udev_dir = udev_get_dev_dir()))
+			stack;
+		udev_dir_len = (udev_dir) ? strlen(udev_dir) : 0;
 	}
 	init_obtain_device_list_from_udev(device_list_from_udev);
 
@@ -687,7 +688,7 @@ static int _init_dev_cache(struct cmd_context *cmd)
 			return 0;
 		}
 
-		if (device_list_from_udev) {
+		if (device_list_from_udev && udev_dir) {
 			len = strlen(cv->v.str);
 			len = udev_dir_len > len ? len : udev_dir_len;
 			if (strncmp(udev_dir, cv->v.str, len) ||
