@@ -139,7 +139,8 @@ static int vg_rename_path(struct cmd_context *cmd, const char *old_vg_path,
 		goto error;
 
 	/* Remove references based on old name */
-	drop_cached_metadata(vg);
+	if (!drop_cached_metadata(vg))
+		stack;
 
 	/* Change the volume group name */
 	vg_rename(cmd, vg, vg_name_new);

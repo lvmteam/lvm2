@@ -80,7 +80,8 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 	if (!archive(vg_from) || !archive(vg_to))
 		goto_bad;
 
-	drop_cached_metadata(vg_from);
+	if (!drop_cached_metadata(vg_from))
+		stack;
 
 	/* Merge volume groups */
 	dm_list_iterate_items_safe(pvl, tpvl, &vg_from->pvs) {
