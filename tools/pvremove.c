@@ -129,7 +129,7 @@ static int pvremove_single(struct cmd_context *cmd, const char *pv_name,
 	}
 
 	if (!lvmetad_pv_gone(dev->dev))
-		goto_out;
+		log_debug("PV gone"); /* FIXME any better idea */
 
 	log_print("Labels on physical volume \"%s\" successfully wiped",
 		  pv_name);
