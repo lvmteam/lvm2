@@ -1803,7 +1803,7 @@ static void _daemonize(void)
 		    (fd == SD_FD_FIFO_SERVER || fd == SD_FD_FIFO_CLIENT))
 			continue;
 #endif
-		close(fd);
+		(void) close(fd);
 	}
 
 	if ((open("/dev/null", O_RDONLY) < 0) ||

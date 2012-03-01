@@ -1052,11 +1052,11 @@ static void be_daemon(int timeout)
 		exit(2);
 
 	case 0:		/* Child */
-	        close(child_pipe[0]);
+		(void) close(child_pipe[0]);
 		break;
 
 	default:       /* Parent */
-		close(child_pipe[1]);
+		(void) close(child_pipe[1]);
 		wait_for_child(child_pipe[0], timeout);
 	}
 
@@ -1140,8 +1140,8 @@ static int read_from_local_sock(struct local_client *thisfd)
 				struct local_client *lastfd = NULL;
 				struct local_client *free_fd = NULL;
 
-				close(thisfd->bits.localsock.pipe_client->fd);	/* Close pipe */
-				close(thisfd->bits.localsock.pipe);
+				(void) close(thisfd->bits.localsock.pipe_client->fd);	/* Close pipe */
+				(void) close(thisfd->bits.localsock.pipe);
 
 				/* Remove pipe client */
 				for (newfd = &local_client_head; newfd != NULL;
@@ -1329,8 +1329,8 @@ static int read_from_local_sock(struct local_client *thisfd)
 				.status = ENOMEM
 			};
 
-			close(comms_pipe[0]);
-			close(comms_pipe[1]);
+			(void) close(comms_pipe[0]);
+			(void) close(comms_pipe[1]);
 
 			send_message(&reply, sizeof(reply), our_csid,
 				     thisfd->fd,
@@ -2107,7 +2107,9 @@ static int check_local_clvmd(void)
 		ret = -1;
 	}
 
-	close(local_socket);
+	if (close(local_socket))
+		log_sys_error("close", "local socket");
+
 	return ret;
 }
 

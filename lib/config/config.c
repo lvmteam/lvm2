@@ -150,7 +150,8 @@ void config_file_destroy(struct dm_config_tree *cft)
 	struct config_file *cf = dm_config_get_custom(cft);
 
 	if (cf && cf->dev)
-		dev_close(cf->dev);
+		if (!dev_close(cf->dev))
+			stack;
 
 	dm_config_destroy(cft);
 }
@@ -275,7 +276,8 @@ int config_file_read(struct dm_config_tree *cft)
 				(checksum_fn_t) NULL, 0);
 
 	if (!cf->keep_open) {
-		dev_close(cf->dev);
+		if (!dev_close(cf->dev))
+			stack;
 		cf->dev = NULL;
 	}
 

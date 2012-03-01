@@ -110,7 +110,7 @@ void release_log_memory(void)
 void fin_log(void)
 {
 	if (_log_direct) {
-		dev_close(&_log_dev);
+		(void) dev_close(&_log_dev);
 		_log_direct = 0;
 	}
 

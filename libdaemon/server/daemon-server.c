@@ -306,7 +306,7 @@ static void _daemonise(void)
 		if (_systemd_activation && fd == SD_FD_SOCKET_SERVER)
 			continue;
 #endif
-		close(fd);
+		(void) close(fd);
 	}
 
 	if ((open("/dev/null", O_RDONLY) < 0) ||
@@ -407,7 +407,8 @@ static void *client_thread(void *baton)
 	}
 fail:
 	/* TODO what should we really do here? */
-	close(b->client.socket_fd);
+	if (close(b->client.socket_fd))
+		perror("close");
 	free(baton);
 	return NULL;
 }

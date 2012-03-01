@@ -161,7 +161,8 @@ static int _do_flock(const char *file, int *fd, int operation, uint32_t nonblock
 		if (r) {
 			errno = old_errno;
 			log_sys_error("flock", file);
-			close(*fd);
+			if (close(*fd))
+				log_sys_error("close", file);
 			return 0;
 		}
 
