@@ -442,10 +442,12 @@ static int _extend_pv(struct physical_volume *pv, struct volume_group *vg,
 		return 0;
 	}
 
-	peg = _alloc_pv_segment(pv->fmt->cmd->mem, pv,
-				old_pe_count,
-				new_pe_count - old_pe_count,
-				NULL, 0);
+	if (!(peg = _alloc_pv_segment(pv->fmt->cmd->mem, pv,
+				      old_pe_count,
+				      new_pe_count - old_pe_count,
+				      NULL, 0)))
+		return_0;
+
 	dm_list_add(&pv->segments, &peg->list);
 
 	pv->pe_count = new_pe_count;
