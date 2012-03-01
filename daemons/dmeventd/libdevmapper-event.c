@@ -731,8 +731,8 @@ int dm_event_get_registered_device(struct dm_event_handler *dmevh, int next)
 	if (_do_event(next ? DM_EVENT_CMD_GET_NEXT_REGISTERED_DEVICE :
 		      DM_EVENT_CMD_GET_REGISTERED_DEVICE, dmevh->dmeventd_path,
 		      &msg, dmevh->dso, uuid, dmevh->mask, 0)) {
+		log_debug("%s: device not registered.", dm_task_get_name(dmt));
 		ret = -ENOENT;
-		stack;
 		goto fail;
 	}
 
