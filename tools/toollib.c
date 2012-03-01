@@ -1245,7 +1245,7 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 					vp_def->max_lv);
 	vp_new->max_pv = arg_uint_value(cmd, maxphysicalvolumes_ARG,
 					vp_def->max_pv);
-	vp_new->alloc = arg_uint_value(cmd, alloc_ARG, vp_def->alloc);
+	vp_new->alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG, vp_def->alloc);
 
 	/* Units of 512-byte sectors */
 	vp_new->extent_size =
@@ -1389,7 +1389,7 @@ int pvcreate_params_validate(struct cmd_context *cmd,
 	}
 
 	pp->yes = arg_count(cmd, yes_ARG);
-	pp->force = arg_count(cmd, force_ARG);
+	pp->force = (force_t) arg_count(cmd, force_ARG);
 
 	if (arg_int_value(cmd, labelsector_ARG, 0) >= LABEL_SCAN_SECTORS) {
 		log_error("labelsector must be less than %lu",

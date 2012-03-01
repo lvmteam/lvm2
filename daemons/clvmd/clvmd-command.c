@@ -153,7 +153,7 @@ int do_command(struct local_client *client, struct clvm_header *msg, int msglen,
 		break;
 
 	case CLVMD_CMD_SET_DEBUG:
-		clvmd_set_debug(args[0]);
+		clvmd_set_debug((debug_t) args[0]);
 		break;
 
 	case CLVMD_CMD_RESTART:
