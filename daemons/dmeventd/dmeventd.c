@@ -1517,6 +1517,7 @@ static void _cleanup_unused_threads(void)
 	int ret;
 	struct dm_list *l;
 	struct thread_status *thread;
+	int join_ret = 0;
 
 	_lock_mutex();
 	while ((l = dm_list_first(&_thread_registry_unused))) {
@@ -1556,12 +1557,15 @@ static void _cleanup_unused_threads(void)
 
 		if (thread->status == DM_THREAD_DONE) {
 			dm_list_del(l);
-			pthread_join(thread->thread, NULL);
+			join_ret = pthread_join(thread->thread, NULL);
 			_free_thread_status(thread);
 		}
 	}
 
 	_unlock_mutex();
+
+	if (join_ret)
+		syslog(LOG_ERR, "Failed pthread_join: %s\n", strerror(join_ret));
 }
 
 static void _sig_alarm(int signum __attribute__((unused)))
