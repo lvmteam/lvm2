@@ -1869,6 +1869,9 @@ static int _display_name(CMD_ARGS)
 {
 	char dev_name[PATH_MAX];
 
+	if (!names)
+		return 1;
+
 	if ((_dev_name_type == DN_BLK || _dev_name_type == DN_MAP) &&
 	    dm_device_get_name((int) MAJOR(names->dev), (int) MINOR(names->dev),
 			       _dev_name_type == DN_BLK, dev_name, PATH_MAX))
@@ -2203,7 +2206,8 @@ static void _display_tree_walk_children(struct dm_tree_node *node,
 
 static int _add_dep(CMD_ARGS)
 {
-	if (!dm_tree_add_dev(_dtree, (unsigned) MAJOR(names->dev), (unsigned) MINOR(names->dev)))
+	if (names &&
+	    !dm_tree_add_dev(_dtree, (unsigned) MAJOR(names->dev), (unsigned) MINOR(names->dev)))
 		return 0;
 
 	return 1;
@@ -3417,7 +3421,8 @@ static int _process_options(const char *options)
 
 static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 {
-	char *base, *namebase, *s;
+	const char *base;
+	char *namebase, *s;
 	static int ind;
 	int c, r;
 
@@ -3482,7 +3487,7 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 		fprintf(stderr, "Failed to duplicate name.\n");
 		return 0;
 	}
-	base = basename(namebase);
+	base = dm_basename(namebase);
 
 	if (!strcmp(base, "devmap_name")) {
 		free(namebase);
