@@ -197,20 +197,20 @@ struct volume_group *lvmetad_vg_lookup(struct cmd_context *cmd, const char *vgna
 		if (!(fid = fmt->ops->create_instance(fmt, &fic)))
 			return_NULL;
 
-		pvcn = dm_config_find_node(top, "metadata/physical_volumes")->child;
-		while (pvcn) {
-			_pv_populate_lvmcache(cmd, pvcn, 0);
-			pvcn = pvcn->sib;
-		}
+		if ((pvcn = dm_config_find_node(top, "metadata/physical_volumes")))
+			for (pvcn = pvcn->child; pvcn; pvcn = pvcn->sib)
+				_pv_populate_lvmcache(cmd, pvcn, 0);
 
 		top->key = name;
-		vg = import_vg_from_config_tree(reply.cft, fid);
+		if (!(vg = import_vg_from_config_tree(reply.cft, fid)))
+			return_NULL;
 
 		dm_list_iterate_items(pvl, &vg->pvs) {
 			if ((info = lvmcache_info_from_pvid((const char *)&pvl->pv->id, 0))) {
 				pvl->pv->label_sector = lvmcache_get_label(info)->sector;
 				pvl->pv->dev = lvmcache_device(info);
-				lvmcache_fid_add_mdas_pv(info, fid);
+				if (!lvmcache_fid_add_mdas_pv(info, fid))
+                                        return_NULL; /* FIXME error path */
 			} /* else probably missing */
 		}
 
@@ -336,8 +336,9 @@ int lvmetad_pv_lookup(struct cmd_context *cmd, struct id pvid)
 		return_0;
 	}
 
-	cn = dm_config_find_node(reply.cft->root, "physical_volume");
-	if (!_pv_populate_lvmcache(cmd, cn, 0))
+	if (!(cn = dm_config_find_node(reply.cft->root, "physical_volume")))
+		result = 0;
+        else if (!_pv_populate_lvmcache(cmd, cn, 0))
 		result = 0;
 
 	daemon_reply_destroy(reply);
@@ -361,7 +362,7 @@ int lvmetad_pv_lookup_by_devt(struct cmd_context *cmd, dev_t device)
 	}
 
 	cn = dm_config_find_node(reply.cft->root, "physical_volume");
-	if (!_pv_populate_lvmcache(cmd, cn, device))
+	if (!cn || !_pv_populate_lvmcache(cmd, cn, device))
 		result = 0;
 
 	daemon_reply_destroy(reply);
@@ -383,11 +384,9 @@ int lvmetad_pv_list_to_lvmcache(struct cmd_context *cmd)
 		return_0;
 	}
 
-	cn = dm_config_find_node(reply.cft->root, "physical_volumes")->child;
-	while (cn) {
-		_pv_populate_lvmcache(cmd, cn, 0);
-		cn = cn->sib;
-	}
+	if ((cn = dm_config_find_node(reply.cft->root, "physical_volumes")))
+		for (cn = cn->child; cn; cn = cn->sib)
+			_pv_populate_lvmcache(cmd, cn, 0);
 
 	daemon_reply_destroy(reply);
 	return 1;
@@ -410,16 +409,18 @@ int lvmetad_vg_list_to_lvmcache(struct cmd_context *cmd)
 		return_0;
 	}
 
-	cn = dm_config_find_node(reply.cft->root, "volume_groups")->child;
-	while (cn) {
-		vgid_txt = cn->key;
-		id_read_format(&vgid, vgid_txt);
-		cn = cn->sib;
+	if ((cn = dm_config_find_node(reply.cft->root, "volume_groups")))
+		for (cn = cn->child; cn; cn = cn->sib) {
+			vgid_txt = cn->key;
+			if (!id_read_format(&vgid, vgid_txt)) {
+				stack;
+				continue;
+			}
 
-		/* the call to lvmetad_vg_lookup will poke the VG into lvmcache */
-		tmp = lvmetad_vg_lookup(cmd, NULL, (const char*)&vgid);
-		release_vg(tmp);
-	}
+			/* the call to lvmetad_vg_lookup will poke the VG into lvmcache */
+			tmp = lvmetad_vg_lookup(cmd, NULL, (const char*)&vgid);
+			release_vg(tmp);
+		}
 
 	daemon_reply_destroy(reply);
 	return 1;
