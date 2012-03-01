@@ -197,7 +197,7 @@ int cluster_send(struct clog_request *rq)
 #else
 	r = cpg_mcast_joined(entry->handle, CPG_TYPE_AGREED, &iov, 1);
 #endif
-	if (r == CPG_OK)
+	if (r == CS_OK)
 		return 0;
 
 	/* error codes found in openais/cpg.h */
@@ -940,12 +940,12 @@ static int resend_requests(struct clog_cpg *entry)
 
 static int do_cluster_work(void *data __attribute__((unused)))
 {
-	int r = CPG_OK;
+	int r = CS_OK;
 	struct clog_cpg *entry, *tmp;
 
 	dm_list_iterate_items_safe(entry, tmp, &clog_cpg_list) {
-		r = cpg_dispatch(entry->handle, CPG_DISPATCH_ALL);
-		if (r != CPG_OK)
+		r = cpg_dispatch(entry->handle, CS_DISPATCH_ALL);
+		if (r != CS_OK)
 			LOG_ERROR("cpg_dispatch failed: %d", r);
 
 		if (entry->free_me) {
@@ -957,7 +957,7 @@ static int do_cluster_work(void *data __attribute__((unused)))
 		resend_requests(entry);
 	}
 
-	return (r == CPG_OK) ? 0 : -1;  /* FIXME: good error number? */
+	return (r == CS_OK) ? 0 : -1;  /* FIXME: good error number? */
 }
 
 static int flush_startup_list(struct clog_cpg *entry)
@@ -1585,14 +1585,14 @@ int create_cluster_cpg(char *uuid, uint64_t luid)
 			 SHORT_UUID(new->name.value));
 
 	r = cpg_initialize(&new->handle, &cpg_callbacks);
-	if (r != CPG_OK) {
+	if (r != CS_OK) {
 		LOG_ERROR("cpg_initialize failed:  Cannot join cluster");
 		free(new);
 		return -EPERM;
 	}
 
 	r = cpg_join(new->handle, &new->name);
-	if (r != CPG_OK) {
+	if (r != CS_OK) {
 		LOG_ERROR("cpg_join failed:  Cannot join cluster");
 		free(new);
 		return -EPERM;
@@ -1665,7 +1665,7 @@ static int _destroy_cluster_cpg(struct clog_cpg *del)
 		abort_startup(del);
 
 	r = cpg_leave(del->handle, &del->name);
-	if (r != CPG_OK)
+	if (r != CS_OK)
 		LOG_ERROR("Error leaving CPG!");
 	return 0;
 }
