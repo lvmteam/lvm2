@@ -1245,67 +1245,66 @@ static void _init_fifos(struct dm_event_fifos *fifos)
 /* Open fifos used for client communication. */
 static int _open_fifos(struct dm_event_fifos *fifos)
 {
-	int orig_errno;
 	struct stat st;
 
 	/* Create client fifo. */
 	(void) dm_prepare_selinux_context(fifos->client_path, S_IFIFO);
 	if ((mkfifo(fifos->client_path, 0600) == -1) && errno != EEXIST) {
-		syslog(LOG_ERR, "%s: Failed to create client fifo.\n", __func__);
-		orig_errno = errno;
+		syslog(LOG_ERR, "%s: Failed to create client fifo %s: %m.\n",
+		       __func__, fifos->client_path);
 		(void) dm_prepare_selinux_context(NULL, 0);
-		stack;
-		return -orig_errno;
+		return 0;
 	}
 
 	/* Create server fifo. */
 	(void) dm_prepare_selinux_context(fifos->server_path, S_IFIFO);
 	if ((mkfifo(fifos->server_path, 0600) == -1) && errno != EEXIST) {
-		syslog(LOG_ERR, "%s: Failed to create server fifo.\n", __func__);
-		orig_errno = errno;
+		syslog(LOG_ERR, "%s: Failed to create server fifo %s: %m.\n",
+		       __func__, fifos->server_path);
 		(void) dm_prepare_selinux_context(NULL, 0);
-		stack;
-		return -orig_errno;
+		return 0;
 	}
 
 	(void) dm_prepare_selinux_context(NULL, 0);
 
 	/* Warn about wrong permissions if applicable */
 	if ((!stat(fifos->client_path, &st)) && (st.st_mode & 0777) != 0600)
-		syslog(LOG_WARNING, "Fixing wrong permissions on %s",
+		syslog(LOG_WARNING, "Fixing wrong permissions on %s: %m.\n",
 		       fifos->client_path);
 
 	if ((!stat(fifos->server_path, &st)) && (st.st_mode & 0777) != 0600)
-		syslog(LOG_WARNING, "Fixing wrong permissions on %s",
+		syslog(LOG_WARNING, "Fixing wrong permissions on %s: %m.\n",
 		       fifos->server_path);
 
 	/* If they were already there, make sure permissions are ok. */
 	if (chmod(fifos->client_path, 0600)) {
-		syslog(LOG_ERR, "Unable to set correct file permissions on %s",
+		syslog(LOG_ERR, "Unable to set correct file permissions on %s: %m.\n",
 		       fifos->client_path);
-		return -errno;
+		return 0;
 	}
 
 	if (chmod(fifos->server_path, 0600)) {
-		syslog(LOG_ERR, "Unable to set correct file permissions on %s",
+		syslog(LOG_ERR, "Unable to set correct file permissions on %s: %m.\n",
 		       fifos->server_path);
-		return -errno;
+		return 0;
 	}
 
 	/* Need to open read+write or we will block or fail */
 	if ((fifos->server = open(fifos->server_path, O_RDWR)) < 0) {
-		stack;
-		return -errno;
+		syslog(LOG_ERR, "Failed to open fifo server %s: %m.\n",
+		       fifos->server_path);
+		return 0;
 	}
 
 	/* Need to open read+write for select() to work. */
 	if ((fifos->client = open(fifos->client_path, O_RDWR)) < 0) {
-		stack;
-		close(fifos->server);
-		return -errno;
+		syslog(LOG_ERR, "Failed to open fifo client %s: %m", fifos->client_path);
+		if (close(fifos->server))
+			syslog(LOG_ERR, "Failed to close fifo server %s: %m", fifos->server_path);
+		return 0;
 	}
 
-	return 0;
+	return 1;
 }
 
 /*
@@ -1973,7 +1972,7 @@ int main(int argc, char *argv[])
 
 	pthread_mutex_init(&_global_mutex, NULL);
 
-	if (!_systemd_activation && _open_fifos(&fifos))
+	if (!_systemd_activation && !_open_fifos(&fifos))
 		exit(EXIT_FIFO_FAILURE);
 
 	/* Signal parent, letting them know we are ready to go. */
