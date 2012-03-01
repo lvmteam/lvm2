@@ -67,9 +67,9 @@ static int _become_daemon(struct cmd_context *cmd)
 		_exit(ECMD_FAILED);
 	}
 
-	if (dup2(null_fd, STDIN_FILENO)  || /* reopen stdin */
-	    dup2(null_fd, STDOUT_FILENO) || /* reopen stdout */
-	    dup2(null_fd, STDERR_FILENO)) { /* reopen stderr */
+	if ((dup2(null_fd, STDIN_FILENO) < 0)  || /* reopen stdin */
+	    (dup2(null_fd, STDOUT_FILENO) < 0) || /* reopen stdout */
+	    (dup2(null_fd, STDERR_FILENO) < 0)) { /* reopen stderr */
 		log_sys_error("dup2", "redirect");
 		(void) close(null_fd);
 		_exit(ECMD_FAILED);
