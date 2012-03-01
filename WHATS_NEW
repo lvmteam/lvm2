@@ -1,5 +1,6 @@
 Version 2.02.94 - 
 ====================================
+  Add _rimage as reserved suffix to lvm.8 man page.
   Improve error logging from mpath filter.
   Check for allocation failure in hold_lock() in clvmd.
   Use set_lv() (wipe initial 4KiB) for non zeroed thin volume.
