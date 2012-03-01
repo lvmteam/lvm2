@@ -343,7 +343,7 @@ int main(int argc, char *argv[])
 	int start_timeout = 0;
 	if_type_t cluster_iface = IF_AUTO;
 	sigset_t ss;
-	int debug_opt = 0;
+	debug_t debug_opt = DEBUG_OFF;
 	debug_t debug_arg = DEBUG_OFF;
 	int clusterwide_opt = 0;
 	mode_t old_mask;
@@ -383,8 +383,8 @@ int main(int argc, char *argv[])
 			break;
 
 		case 'd':
-			debug_opt = 1;
-			debug_arg = optarg ? atoi(optarg) : DEBUG_STDERR;
+			debug_opt = DEBUG_STDERR;
+			debug_arg = optarg ? (debug_t) atoi(optarg) : DEBUG_STDERR;
 			if (debug_arg == DEBUG_STDERR)
 				foreground_mode = 1;
 			break;

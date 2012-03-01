@@ -203,7 +203,7 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 		lp->mirrors_sign = arg_sign_value(cmd, mirrors_ARG, SIGN_NONE);
 	}
 
-	lp->alloc = arg_uint_value(cmd, alloc_ARG, ALLOC_INHERIT);
+	lp->alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG, ALLOC_INHERIT);
 
 	/* There are three types of lvconvert. */
 	if (lp->merge) {	/* Snapshot merge */
@@ -1236,7 +1236,7 @@ int mirror_remove_missing(struct cmd_context *cmd,
 
         if (force && _failed_mirrors_count(lv) == lv_mirror_count(lv)) {
 		log_error("No usable images left in %s.", lv->name);
-		return lv_remove_with_dependencies(cmd, lv, 1, 0);
+		return lv_remove_with_dependencies(cmd, lv, DONT_PROMPT, 0);
         }
 
 	/*
