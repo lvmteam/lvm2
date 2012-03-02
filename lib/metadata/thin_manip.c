@@ -70,7 +70,6 @@ int detach_pool_lv(struct lv_segment *seg)
 		switch (tmsg->type) {
 		case DM_THIN_MESSAGE_CREATE_SNAP:
 		case DM_THIN_MESSAGE_CREATE_THIN:
-		case DM_THIN_MESSAGE_TRIM:
 			if (tmsg->u.lv == seg->lv) {
 				log_debug("Discarding message for LV %s.",
 					  tmsg->u.lv->name);
@@ -151,7 +150,6 @@ int attach_pool_message(struct lv_segment *pool_seg, dm_thin_message_t type,
 	switch (type) {
 	case DM_THIN_MESSAGE_CREATE_SNAP:
 	case DM_THIN_MESSAGE_CREATE_THIN:
-	case DM_THIN_MESSAGE_TRIM:
 		tmsg->u.lv = lv;
 		break;
 	case DM_THIN_MESSAGE_DELETE:
@@ -173,7 +171,6 @@ int attach_pool_message(struct lv_segment *pool_seg, dm_thin_message_t type,
 	log_debug("Added %s message",
 		  (type == DM_THIN_MESSAGE_CREATE_SNAP ||
 		   type == DM_THIN_MESSAGE_CREATE_THIN) ? "create" :
-		  (type == DM_THIN_MESSAGE_TRIM) ? "trim" :
 		  (type == DM_THIN_MESSAGE_DELETE) ? "delete" : "unknown");
 
 	return 1;
@@ -200,7 +197,6 @@ int pool_has_message(const struct lv_segment *seg,
 		switch (tmsg->type) {
 		case DM_THIN_MESSAGE_CREATE_SNAP:
 		case DM_THIN_MESSAGE_CREATE_THIN:
-		case DM_THIN_MESSAGE_TRIM:
 			if (tmsg->u.lv == lv)
 				return 1;
 			break;

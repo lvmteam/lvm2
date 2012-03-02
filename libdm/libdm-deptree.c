@@ -1404,11 +1404,6 @@ static int _thin_pool_node_message(struct dm_tree_node *dnode, struct thin_messa
 		r = dm_snprintf(buf, sizeof(buf), "delete %u",
 				m->u.m_delete.device_id);
 		break;
-	case DM_THIN_MESSAGE_TRIM:
-		r = dm_snprintf(buf, sizeof(buf), "trim %u %" PRIu64,
-				m->u.m_trim.device_id,
-				m->u.m_trim.new_size);
-		break;
 	case DM_THIN_MESSAGE_SET_TRANSACTION_ID:
 		r = dm_snprintf(buf, sizeof(buf),
 				"set_transaction_id %" PRIu64 " %" PRIu64,
@@ -3050,12 +3045,6 @@ int dm_tree_node_add_thin_pool_message(struct dm_tree_node *node,
 			return_0;
 		tm->message.u.m_delete.device_id = id1;
 		tm->expected_errno = ENODATA;
-		break;
-	case DM_THIN_MESSAGE_TRIM:
-		if (!_thin_validate_device_id(id1))
-			return_0;
-		tm->message.u.m_trim.device_id = id1;
-		tm->message.u.m_trim.new_size = id2;
 		break;
 	case DM_THIN_MESSAGE_SET_TRANSACTION_ID:
 		if ((id1 + 1) != id2) {

@@ -1,5 +1,6 @@
 Version 1.02.73 - 
 ====================================
+  Drop unsupported TRIM message for thin pool.
   Improve logging for fifo startup in dmeventd.
   Add few pointer validation in dmsetup.
   Support dm_task_get_driver_version() query without version string.

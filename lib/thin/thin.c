@@ -62,15 +62,6 @@ static int _thin_pool_add_message(struct lv_segment *seg,
 		type = DM_THIN_MESSAGE_CREATE_THIN;
 	}
 
-	if (dm_config_get_str(sn, "trim", &lv_name)) {
-		if (lv)
-			return SEG_LOG_ERROR("Unsupported message format in");
-		if (!(lv = find_lv(seg->lv->vg, lv_name)))
-			return SEG_LOG_ERROR("Unknown LV %s for trim message in",
-					     lv_name);
-		type = DM_THIN_MESSAGE_TRIM;
-	}
-
 	if (!dm_config_get_uint32(sn, "delete", &delete_id)) {
 		if (!lv)
 			return SEG_LOG_ERROR("Unknown message in");
@@ -169,7 +160,6 @@ static int _thin_pool_text_export(const struct lv_segment *seg, struct formatter
 		switch (tmsg->type) {
 		case DM_THIN_MESSAGE_CREATE_SNAP:
 		case DM_THIN_MESSAGE_CREATE_THIN:
-		case DM_THIN_MESSAGE_TRIM:
 			if (!lv_is_thin_volume(tmsg->u.lv)) {
 				log_error(INTERNAL_ERROR
 					  "LV %s is not a thin volume.",
@@ -191,9 +181,6 @@ static int _thin_pool_text_export(const struct lv_segment *seg, struct formatter
 		case DM_THIN_MESSAGE_CREATE_SNAP:
 		case DM_THIN_MESSAGE_CREATE_THIN:
 			outf(f, "create = \"%s\"", tmsg->u.lv->name);
-			break;
-		case DM_THIN_MESSAGE_TRIM:
-			outf(f, "trim = \"%s\"", tmsg->u.lv->name);
 			break;
 		case DM_THIN_MESSAGE_DELETE:
 			outf(f, "delete = %d", tmsg->u.delete_id);
@@ -302,10 +289,6 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 								lmsg->u.delete_id, 0))
 				return_0;
 			break;
-		case DM_THIN_MESSAGE_TRIM:
-			/* FIXME: to be implemented */
-			log_error("Sorry TRIM is not yet supported.");
-			return 0;
 		default:
 			log_error(INTERNAL_ERROR "Unsupported message.");
 			return 0;
