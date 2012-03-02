@@ -35,7 +35,7 @@ static char *_verbose_args(const char *const argv[], char *buf, size_t sz)
 	buf[0] = '\0';
 	for (i = 0; argv[i]; i++) {
 		if ((len = dm_snprintf(buf + pos, sz - pos,
-				       "%s ", argv[i])) < 0)
+				       " %s", argv[i])) < 0)
 			/* Truncated */
 			break;
 		pos += len;
@@ -62,7 +62,7 @@ int exec_cmd(struct cmd_context *cmd, const char *const argv[],
 		if (!sync_local_dev_names(cmd)) /* Flush ops and reset dm cookie */
 			return_0;
 
-	log_verbose("Executing: %s", _verbose_args(argv, buf, sizeof(buf)));
+	log_verbose("Executing:%s", _verbose_args(argv, buf, sizeof(buf)));
 
 	if ((pid = fork()) == -1) {
 		log_error("fork failed: %s", strerror(errno));
