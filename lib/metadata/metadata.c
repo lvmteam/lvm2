@@ -3620,6 +3620,7 @@ static struct physical_volume *_pv_read(struct cmd_context *cmd,
 
 	if (lvmetad_active()) {
 		info = lvmcache_info_from_pvid(dev->pvid, 0);
+// FIXME AGK no error unless 'warnings' set!
 		if (!info && !lvmetad_pv_lookup_by_devt(cmd, dev->dev))
 			return NULL;
 		info = lvmcache_info_from_pvid(dev->pvid, 0);

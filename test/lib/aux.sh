@@ -80,7 +80,7 @@ prepare_lvmetad() {
 
 notify_lvmetad() {
 	if test -e LOCAL_LVMETAD; then
-		pvscan --lvmetad "$@" || true
+		pvscan --cache "$@" || true
 	fi
 }
 

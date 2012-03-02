@@ -51,8 +51,8 @@ an accurate (up to the data it has received) image of the VGs available in the
 system. I imagine we could extend the pvscan command (or add a new one, say
 lvmetad_client, if pvscan is found to be inappropriate):
 
-    $ pvscan --lvmetad /dev/foo
-    $ pvscan --lvmetad --remove /dev/foo
+    $ pvscan --cache /dev/foo
+    $ pvscan --cache --remove /dev/foo
 
 These commands would simply read the label and the MDA (if applicable) from the
 given PV and feed that data to the running lvmetad, using

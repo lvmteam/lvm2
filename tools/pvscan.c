@@ -104,7 +104,7 @@ static int _pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
 	int ret = ECMD_PROCESSED;
 
 	if (!argc) {
-		log_error("List of Physical Volumes to tell lvmetad to cache required.");
+		log_error("List of Physical Volumes to be cached by the lvmetad daemon required.");
 		return EINVALID_CMD_LINE;
 	}
 
@@ -144,7 +144,7 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 	pv_max_name_len = 0;
 	vg_max_name_len = 0;
 
-	if (arg_count(cmd, lvmetad_ARG))
+	if (arg_count(cmd, cache_ARG))
 		return _pvscan_lvmetad(cmd, argc, argv);
 
 	if (arg_count(cmd, novolumegroup_ARG) && arg_count(cmd, exported_ARG)) {
