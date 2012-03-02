@@ -26,6 +26,7 @@
 #include "config.h"
 #include "filter.h"
 #include "activate.h"
+#include "lvm-exec.h"
 
 #include <limits.h>
 #include <dirent.h>
@@ -1193,6 +1194,89 @@ static int _add_partial_replicator_to_dtree(struct dev_manager *dm,
 	return 1;
 }
 
+struct thin_cb_data {
+	const struct logical_volume *pool_lv;
+	struct dev_manager *dm;
+};
+
+static int _thin_pool_callback(struct dm_tree_node *node,
+			       dm_node_callback_t type, void *cb_data)
+{
+	int ret, status;
+	const struct thin_cb_data *data = cb_data;
+	const char *dmdir = dm_dir();
+	const char *thin_check =
+		find_config_tree_str_allow_empty(data->pool_lv->vg->cmd,
+						 "global/thin_check_executable",
+						 DEFAULT_THIN_CHECK_EXECUTABLE);
+	const struct logical_volume *mlv = first_seg(data->pool_lv)->metadata_lv;
+	size_t len = strlen(dmdir) + strlen(mlv->vg->name) + strlen(mlv->name) + 3;
+	char meta_path[len];
+	int args;
+	char *argv[19]; /* Max supported 15 args */
+	char *split;
+
+	if (!thin_check[0])
+		return 1; /* Checking disabled */
+
+	if (dm_snprintf(meta_path, len, "%s/%s-%s", dmdir,
+			mlv->vg->name, mlv->name) < 0) {
+		log_error("Failed to build thin metadata path.");
+		return 0;
+	}
+
+	if (!(split = dm_pool_strdup(data->dm->mem, thin_check))) {
+		log_error("Failed to duplicate thin check string.");
+		return 0;
+	}
+
+	args = dm_split_words(split, 16, 0, argv);
+	argv[args++] = meta_path;
+	argv[args] = NULL;
+
+	if (!(ret = exec_cmd(data->pool_lv->vg->cmd, (const char * const *)argv,
+			     &status, 0))) {
+		log_err_once("Check of thin pool %s/%s failed (status:%d). "
+			     "Manual repair required (thin_repair %s)!",
+			     data->pool_lv->vg->name, data->pool_lv->name,
+			     status, meta_path);
+		/*
+		 * FIXME: What should we do here??
+		 *
+		 * Maybe mark the node, so it's not activating
+		 * as thin_pool but as error/linear and let the
+		 * dm tree resolve the issue.
+		 */
+	}
+
+	dm_pool_free(data->dm->mem, split);
+
+	return ret;
+}
+
+static int _thin_pool_register_callback(struct dev_manager *dm,
+					struct dm_tree_node *node,
+					const struct logical_volume *lv)
+{
+	struct thin_cb_data *data;
+
+	/* Skip metadata testing for unused pool. */
+	if (!first_seg(lv)->transaction_id)
+		return 1;
+
+	if (!(data = dm_pool_alloc(dm->mem, sizeof(*data)))) {
+		log_error("Failed to allocated path for callback.");
+		return 0;
+	}
+
+	data->dm = dm;
+	data->pool_lv = lv;
+
+	dm_tree_node_set_callback(node, _thin_pool_callback, data);
+
+	return 1;
+}
+
 /*
  * Add LV and any known dependencies
  */
@@ -1202,11 +1286,8 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	uint32_t s;
 	struct seg_list *sl;
 	struct lv_segment *seg = first_seg(lv);
-#if 0
-	/* FIXME For dm_tree_node_skip_children optimisation below */
 	struct dm_tree_node *thin_node;
 	const char *uuid;
-#endif
 
 	if ((!origin_only || lv_is_thin_volume(lv)) &&
 	    !_add_dev_to_dtree(dm, dtree, lv, NULL))
@@ -1262,6 +1343,12 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		if (!_add_lv_to_dtree(dm, dtree, seg_lv(seg, 0), 0))
 			return_0;
 		if (!_add_dev_to_dtree(dm, dtree, lv, _thin_layer))
+			return_0;
+		/* If the partial tree is used for deactivation, setup callback */
+		if (!(uuid = build_dm_uuid(dm->mem, lv->lvid.s, _thin_layer)))
+			return_0;
+		if ((thin_node = dm_tree_find_node_by_uuid(dtree, uuid)) &&
+		    !_thin_pool_register_callback(dm, thin_node, lv))
 			return_0;
 	}
 
@@ -1878,6 +1965,11 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	}
 
 	dm_tree_node_set_read_ahead(dnode, read_ahead, read_ahead_flags);
+
+	/* Setup thin pool callback */
+	if (layer && lv_is_thin_pool(lv) &&
+	    !_thin_pool_register_callback(dm, dnode, lv))
+		return_0;
 
 	/* Add any LVs referencing a PVMOVE LV unless told not to */
 	if (dm->track_pvmove_deps && (lv->status & PVMOVE))
