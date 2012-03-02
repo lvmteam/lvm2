@@ -263,6 +263,10 @@ struct dm_tree_node {
 	 * Note: only direct child is allowed
 	 */
 	struct dm_tree_node *presuspend_node;
+
+	/* Callback */
+	dm_node_callback_fn callback;
+	void *callback_data;
 };
 
 struct dm_tree {
@@ -1588,6 +1592,14 @@ static int _dm_tree_deactivate_children(struct dm_tree_node *dnode,
 		} else if (info.suspended)
 			dec_suspended();
 
+		if (child->callback &&
+		    !child->callback(child, DM_NODE_CALLBACK_DEACTIVATED,
+				     child->callback_data)) {
+			r = 0;
+			// FIXME: break tree shutdown or continue?
+			// hmm what about _node_clear_table()?
+		}
+
 		if (dm_tree_node_num_children(child, 0)) {
 			if (!_dm_tree_deactivate_children(child, uuid_prefix, uuid_prefix_len, level + 1))
 				return_0;
@@ -2445,10 +2457,16 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 			update_devs_flag = 1;
 	}
 
-	if (update_devs_flag) {
+	if (update_devs_flag ||
+	    (!dnode->info.exists && dnode->callback)) {
 		if (!dm_udev_wait(dm_tree_get_cookie(dnode)))
 			stack;
 		dm_tree_set_cookie(dnode, 0);
+
+		if (!dnode->info.exists && dnode->callback &&
+		    !dnode->callback(child, DM_NODE_CALLBACK_PRELOADED,
+				     dnode->callback_data))
+			return_0;
 	}
 
 	return r;
@@ -3244,4 +3262,11 @@ int dm_tree_node_add_null_area(struct dm_tree_node *node, uint64_t offset)
 		return_0;
 
 	return 1;
+}
+
+void dm_tree_node_set_callback(struct dm_tree_node *dnode,
+			       dm_node_callback_fn cb, void *data)
+{
+	dnode->callback = cb;
+	dnode->callback_data = data;
 }

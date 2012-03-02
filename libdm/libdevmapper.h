@@ -688,6 +688,20 @@ void dm_tree_node_set_read_ahead(struct dm_tree_node *dnode,
 				 uint32_t read_ahead,
 				 uint32_t read_ahead_flags);
 
+/*
+ * Set node callback hook before de/activation.
+ * Callback is called before 'activation' of node for activation tree,
+ * or 'deactivation' of node for deactivation tree.
+ */
+typedef enum {
+	DM_NODE_CALLBACK_PRELOADED,   /* Node has preload deps */
+	DM_NODE_CALLBACK_DEACTIVATED, /* Node is deactivated */
+} dm_node_callback_t;
+typedef int (*dm_node_callback_fn) (struct dm_tree_node *node,
+				    dm_node_callback_t type, void *cb_data);
+void dm_tree_node_set_callback(struct dm_tree_node *node,
+			       dm_node_callback_fn cb, void *cb_data);
+
 void dm_tree_set_cookie(struct dm_tree_node *node, uint32_t cookie);
 uint32_t dm_tree_get_cookie(struct dm_tree_node *node);
 
