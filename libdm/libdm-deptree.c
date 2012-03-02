@@ -2968,7 +2968,15 @@ int dm_tree_node_add_thin_pool_target(struct dm_tree_node *node,
 				      uint64_t low_water_mark,
 				      unsigned skip_block_zeroing)
 {
-	struct load_segment *seg;
+	struct load_segment *seg, *mseg;
+	uint64_t devsize = 0;
+	/*
+	 * Max supported size for thin pool  metadata device
+	 * Limitation is hardcoded into kernel and bigger
+	 * device size is not accepted. (16978542592)
+	 */
+	const uint64_t max_metadata_size =
+		255ULL * (1 << 14) * (4096 / (1 << 9)) - 256 * 1024;
 
 	if (data_block_size < DM_THIN_MIN_DATA_BLOCK_SIZE) {
 		log_error("Data block size %u is lower then %u sectors.",
@@ -2992,6 +3000,18 @@ int dm_tree_node_add_thin_pool_target(struct dm_tree_node *node,
 
 	if (!_link_tree_nodes(node, seg->metadata))
 		return_0;
+
+	/* FIXME: more complex target may need more tweaks */
+	dm_list_iterate_items(mseg, &seg->metadata->props.segs) {
+		devsize += mseg->size;
+		if (devsize > max_metadata_size) {
+			log_debug("Ignoring %" PRIu64 " of device.",
+				  devsize - max_metadata_size);
+			mseg->size -= (devsize - max_metadata_size);
+			devsize = max_metadata_size;
+			/* FIXME: drop remaining segs */
+		}
+	}
 
 	if (!(seg->pool = dm_tree_find_node_by_uuid(node->dtree, pool_uuid))) {
 		log_error("Missing pool uuid %s.", pool_uuid);
