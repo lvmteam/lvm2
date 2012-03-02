@@ -122,10 +122,6 @@ struct dm_thin_message {
 			uint64_t current_id;
 			uint64_t new_id;
 		} m_set_transaction_id;
-		struct {
-			uint32_t device_id;
-			uint64_t new_size;
-		} m_trim;
 	} u;
 };
 
