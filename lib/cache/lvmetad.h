@@ -120,7 +120,7 @@ int pvscan_lvmetad_single(struct cmd_context *cmd, const char *pv_name);
 #    define lvmetad_pv_lookup_by_dev(cmd, dev, found)	(0)
 #    define lvmetad_vg_list_to_lvmcache(cmd)	(1)
 #    define lvmetad_vg_lookup(cmd, vgname, vgid)	(NULL)
-#    define pvscan_lvmetad(cmd, argc, argv)	(0)
+#    define pvscan_lvmetad_single(cmd, pv_name)	(0)
 
 #  endif	/* LVMETAD_SUPPORT */
 
