@@ -1,5 +1,6 @@
 Version 1.02.73 - 
 ====================================
+  Added dm_tree_node_set_callback() for preload and deactivation hooks.
   Drop unsupported TRIM message for thin pool.
   Improve logging for fifo startup in dmeventd.
   Add few pointer validation in dmsetup.
