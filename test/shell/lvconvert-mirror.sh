@@ -11,6 +11,11 @@
 
 . lib/test
 
+wait_for_mirror_in_sync_()
+{
+	while [ $(lvs --noheadings -o copy_percent $1) != "100.00" ]; do sleep 1; done
+}
+
 # convert from linear to 2-way mirror
 aux prepare_vg 5
 lvcreate -l2 -n $lv1 $vg $dev1
@@ -79,7 +84,7 @@ should not lvconvert -m-1 $vg/$lv1 $dev1
 lvconvert $vg/$lv1 # wait
 lvconvert -m2 $vg/$lv1 $dev1 $dev2 $dev4 $dev3:0 # If the above "should" failed...
 
-sleep 1
+wait_for_mirror_in_sync_ $vg/$lv1
 lvconvert -m-1 $vg/$lv1 $dev1
 check mirror_images_on $lv1 $dev2 $dev4
 lvconvert -m-1 $vg/$lv1 $dev2
@@ -201,7 +206,7 @@ check mirror_legs $vg $lv1 2
 # "rhbz440405: lvconvert -m0 incorrectly fails if all PEs allocated"
 aux prepare_vg 5
 lvcreate -l`pvs --noheadings -ope_count $dev1` -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0
-while [ `lvs --noheadings -o copy_percent $vg/$lv1` != "100.00" ]; do sleep 1; done
+wait_for_mirror_in_sync_ $vg/$lv1
 lvconvert -m0 $vg/$lv1 $dev1
 check linear $vg $lv1
 
@@ -223,7 +228,7 @@ check mirror_legs $vg $lv1 2
 # BZ 463272: disk log mirror convert option is lost if downconvert option is also given
 aux prepare_vg 5
 lvcreate -l1 -m2 --corelog -n $lv1 $vg $dev1 $dev2 $dev3
-while [ `lvs --noheadings -o copy_percent $vg/$lv1` != "100.00" ]; do sleep 1; done
+wait_for_mirror_in_sync_ $vg/$lv1
 lvconvert -m1 --mirrorlog disk $vg/$lv1
 check mirror $vg $lv1
 not check mirror $vg $lv1 core
