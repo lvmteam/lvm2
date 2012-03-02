@@ -293,10 +293,10 @@ static int _update_extents_params(struct volume_group *vg,
 			break;
 	}
 
-	if (lp->create_thin_pool && !lp->poolmetadatasize)
+	if (lp->create_thin_pool && !arg_count(vg->cmd, poolmetadatasize_ARG))
 		/* Defaults to nr_pool_blocks * 64b */
 		lp->poolmetadatasize =  (uint64_t) lp->extents * vg->extent_size /
-			(uint64_t) lp->chunk_size * UINT64_C(64);
+			(uint64_t) (lp->chunk_size * (SECTOR_SIZE / UINT64_C(64)));
 
 	if (lp->poolmetadatasize &&
 	    !(lp->poolmetadataextents = extents_from_size(vg->cmd, lp->poolmetadatasize,
