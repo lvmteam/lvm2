@@ -79,8 +79,13 @@ int lvmetad_pv_gone(struct device *dev);
  */
 int lvmetad_pv_list_to_lvmcache(struct cmd_context *cmd);
 
-int lvmetad_pv_lookup(struct cmd_context *cmd, struct id pvid);
-int lvmetad_pv_lookup_by_devt(struct cmd_context *cmd, dev_t dev);
+/*
+ * Lookup an individual PV.
+ * If found is not NULL, it is set according to whether or not the PV is found,
+ * otherwise if the PV is not found an error is returned.
+ */
+int lvmetad_pv_lookup(struct cmd_context *cmd, struct id pvid, int *found);
+int lvmetad_pv_lookup_by_dev(struct cmd_context *cmd, struct device *dev, int *found);
 
 /*
  * Request a list of all VGs available to lvmetad and use it to fill in
@@ -111,8 +116,8 @@ int pvscan_lvmetad_single(struct cmd_context *cmd, const char *pv_name);
 #    define lvmetad_pv_found(pvid, device, fmt, label_sector, vg)	(1)
 #    define lvmetad_pv_gone(dev)	(1)
 #    define lvmetad_pv_list_to_lvmcache(cmd)	(1)
-#    define lvmetad_pv_lookup(cmd, pvid)	(0)
-#    define lvmetad_pv_lookup_by_devt(cmd, dev)	(0)
+#    define lvmetad_pv_lookup(cmd, pvid, found)	(0)
+#    define lvmetad_pv_lookup_by_dev(cmd, dev, found)	(0)
 #    define lvmetad_vg_list_to_lvmcache(cmd)	(1)
 #    define lvmetad_vg_lookup(cmd, vgname, vgid)	(NULL)
 #    define pvscan_lvmetad(cmd, argc, argv)	(0)

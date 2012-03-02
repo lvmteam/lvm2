@@ -47,6 +47,7 @@ static void debug(const char *fmt, ...) {
 	fprintf(stderr, "[D %lu] ", pthread_self());
 	vfprintf(stderr, fmt, ap);
 	va_end(ap);
+	fflush(stderr);
 }
 
 static int debug_cft_line(const char *line, void *baton) {
@@ -412,14 +413,14 @@ static response pv_lookup(lvmetad_state *s, request r)
 		debug("pv_lookup: could not find device %" PRIu64 "\n", devt);
 		unlock_pvid_to_pvmeta(s);
 		dm_config_destroy(res.cft);
-		return daemon_reply_simple("failed", "reason = %s", "device not found", NULL);
+		return daemon_reply_simple("unknown", "reason = %s", "device not found", NULL);
 	}
 
 	pv = make_pv_node(s, pvid, res.cft, NULL, res.cft->root);
 	if (!pv) {
 		unlock_pvid_to_pvmeta(s);
 		dm_config_destroy(res.cft);
-		return daemon_reply_simple("failed", "reason = %s", "PV not found", NULL);
+		return daemon_reply_simple("unknown", "reason = %s", "PV not found", NULL);
 	}
 
 	pv->key = "physical_volume";
@@ -520,12 +521,12 @@ static response vg_lookup(lvmetad_state *s, request r)
 	debug("vg_lookup: updated uuid = %s, name = %s\n", uuid, name);
 
 	if (!uuid)
-		return daemon_reply_simple("failed", "reason = %s", "VG not found", NULL);
+		return daemon_reply_simple("unknown", "reason = %s", "VG not found", NULL);
 
 	cft = lock_vg(s, uuid);
 	if (!cft || !cft->root) {
 		unlock_vg(s, uuid);
-		return daemon_reply_simple("failed", "reason = %s", "UUID not found", NULL);
+		return daemon_reply_simple("unknown", "reason = %s", "UUID not found", NULL);
 	}
 
 	metadata = cft->root;
@@ -821,7 +822,7 @@ static response pv_gone(lvmetad_state *s, request r)
 		pvid = dm_hash_lookup_binary(s->device_to_pvid, &device, sizeof(device));
 	if (!pvid) {
 		unlock_pvid_to_pvmeta(s);
-		return daemon_reply_simple("failed", "reason = %s", "device not in cache", NULL);
+		return daemon_reply_simple("unknown", "reason = %s", "device not in cache", NULL);
 	}
 
 	debug("pv_gone (updated): %s / %" PRIu64 "\n", pvid, device);
@@ -836,7 +837,7 @@ static response pv_gone(lvmetad_state *s, request r)
 		dm_config_destroy(pvmeta);
 		return daemon_reply_simple("OK", NULL);
 	} else
-		return daemon_reply_simple("failed", "reason = %s", "PVID does not exist", NULL);
+		return daemon_reply_simple("unknown", "reason = %s", "PVID does not exist", NULL);
 }
 
 static response pv_found(lvmetad_state *s, request r)
@@ -912,6 +913,7 @@ static response pv_found(lvmetad_state *s, request r)
 		else {
 			unlock_vg(s, vgid);
 			return daemon_reply_simple("failed", "reason = %s",
+// FIXME provide meaningful-to-user error message
 						   "internal treason!", NULL);
 		}
 		unlock_vg(s, vgid);

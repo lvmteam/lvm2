@@ -1445,7 +1445,7 @@ static int _text_pv_read(const struct format_type *fmt, const char *pv_name,
 
 	if (lvmetad_active()) {
 		info = lvmcache_info_from_pvid(dev->pvid, 0);
-		if (!info && !lvmetad_pv_lookup_by_devt(fmt->cmd, dev->dev))
+		if (!info && !lvmetad_pv_lookup_by_dev(fmt->cmd, dev, NULL))
 			return 0;
 		info = lvmcache_info_from_pvid(dev->pvid, 0);
 	} else {
