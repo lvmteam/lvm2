@@ -293,15 +293,29 @@ static int _update_extents_params(struct volume_group *vg,
 			break;
 	}
 
-	if (lp->create_thin_pool && !arg_count(vg->cmd, poolmetadatasize_ARG))
-		/* Defaults to nr_pool_blocks * 64b */
-		lp->poolmetadatasize =  (uint64_t) lp->extents * vg->extent_size /
-			(uint64_t) (lp->chunk_size * (SECTOR_SIZE / UINT64_C(64)));
+	if (lp->create_thin_pool) {
+		if (!arg_count(vg->cmd, poolmetadatasize_ARG))
+			/* Defaults to nr_pool_blocks * 64b */
+			lp->poolmetadatasize =  (uint64_t) lp->extents * vg->extent_size /
+				(uint64_t) (lp->chunk_size * (SECTOR_SIZE / UINT64_C(64)));
 
-	if (lp->poolmetadatasize &&
-	    !(lp->poolmetadataextents = extents_from_size(vg->cmd, lp->poolmetadatasize,
-							  vg->extent_size)))
-		return_0;
+		if (lp->poolmetadatasize > (2 * DEFAULT_THIN_POOL_MAX_METADATA_SIZE)) {
+			if (arg_count(vg->cmd, poolmetadatasize_ARG))
+				log_warn("WARNING: Maximum supported pool metadata size is 16GB.");
+			lp->poolmetadatasize = 2 * DEFAULT_THIN_POOL_MAX_METADATA_SIZE;
+		} else if (lp->poolmetadatasize < (2 * DEFAULT_THIN_POOL_MIN_METADATA_SIZE)) {
+			if (arg_count(vg->cmd, poolmetadatasize_ARG))
+				log_warn("WARNING: Minimum supported pool metadata size is 2M.");
+			lp->poolmetadatasize = 2 * DEFAULT_THIN_POOL_MIN_METADATA_SIZE;
+		}
+
+		log_verbose("Setting pool metadata size to %" PRIu64 " sectors.",
+			    lp->poolmetadatasize);
+
+		if (!(lp->poolmetadataextents =
+		      extents_from_size(vg->cmd, lp->poolmetadatasize, vg->extent_size)))
+			return_0;
+	}
 
 	return 1;
 }
@@ -511,33 +525,6 @@ static int _read_raid_params(struct lvcreate_params *lp,
 	return 1;
 }
 
-static int _read_thin_params(struct lvcreate_params *lp,
-			     struct cmd_context *cmd)
-{
-	if (!seg_is_thin(lp)) {
-		if (lp->poolmetadatasize) {
-			log_error("Pool metadata size option is only for pool creation.");
-			return 0;
-		}
-		return 1;
-	}
-
-	if (lp->create_thin_pool) {
-		if (lp->poolmetadatasize > (2 * DEFAULT_THIN_POOL_MAX_METADATA_SIZE)) {
-			log_warn("WARNING: Maximum supported pool metadata size is 16GB.");
-			lp->poolmetadatasize = 2 * DEFAULT_THIN_POOL_MAX_METADATA_SIZE;
-		} else if (lp->poolmetadatasize < (2 * DEFAULT_THIN_POOL_MIN_METADATA_SIZE))
-			lp->poolmetadatasize = 2 * DEFAULT_THIN_POOL_MIN_METADATA_SIZE;
-		log_verbose("Setting pool metadata size to %" PRIu64 " sectors.",
-			    lp->poolmetadatasize);
-	} else if (lp->poolmetadatasize) {
-		log_error("Pool metadata size options is only for pool creation.");
-		return 0;
-	}
-
-	return 1;
-}
-
 static int _read_activation_params(struct lvcreate_params *lp, struct cmd_context *cmd)
 {
 	unsigned pagesize;
@@ -737,8 +724,7 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 	    !_read_size_params(lp, lcp, cmd) ||
 	    !get_stripe_params(cmd, &lp->stripes, &lp->stripe_size) ||
 	    !_read_mirror_params(lp, cmd) ||
-	    !_read_raid_params(lp, cmd) ||
-	    !_read_thin_params(lp, cmd))
+	    !_read_raid_params(lp, cmd))
 		return_0;
 
 	if (lp->snapshot && lp->thin && arg_count(cmd, chunksize_ARG))
