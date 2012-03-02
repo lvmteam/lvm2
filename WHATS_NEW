@@ -1,5 +1,6 @@
 Version 2.02.94 - 
 ====================================
+  Add support to execute thin_check with each de/active of thin pool.
   Fix automatic estimation of metadata device size for thin pool.
   Test for alloc fail from _alloc_pv_segment() in _extend_pv().
   Check for alloc fail from get_segtype_from_string() in _lvcreate_params().

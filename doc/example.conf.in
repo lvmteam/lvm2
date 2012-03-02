@@ -650,6 +650,16 @@ activation {
     thin_pool_autoextend_threshold = 100
     thin_pool_autoextend_percent = 20
 
+    # Full path of the utility called to check that a thin metadata device
+    # is in a state that allows it to be used.
+    # Each time a thin pool needs to be activated, this utility is executed.
+    # The activation will only proceed if the utility has an exit status of 0.
+    # Set to "" to skip this check.  (Not recommended.)
+    # The thin tools are available as part of the device-mapper-persistent-data
+    # package from https://github.com/jthornber/thin-provisioning-tools.
+    #
+    thin_check_executable = "/sbin/thin_check -q"
+
     # While activating devices, I/O to devices being (re)configured is
     # suspended, and as a precaution against deadlocks, LVM2 needs to pin
     # any memory it is using so it is not paged out.  Groups of pages that
