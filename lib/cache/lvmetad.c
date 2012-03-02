@@ -31,7 +31,7 @@ void lvmetad_init(void)
 	if (_using_lvmetad) { /* configured by the toolcontext */
 		_lvmetad = lvmetad_open(socket ?: DEFAULT_RUN_DIR "/lvmetad.socket");
 		if (_lvmetad.socket_fd < 0 || _lvmetad.error) {
-			log_warn("Failed to connect to lvmetad: %s. Falling back to scanning.", strerror(_lvmetad.error));
+			log_warn("WARNING: Failed to connect to lvmetad: %s. Falling back to scanning.", strerror(_lvmetad.error));
 			_using_lvmetad = 0;
 		}
 	}
@@ -91,7 +91,7 @@ static struct lvmcache_info *_pv_populate_lvmcache(
 	struct format_type *fmt = fmt_name ? get_format_by_name(cmd, fmt_name) : NULL;
 
 	if (!fmt) {
-		log_warn("No format for PV %s. It is probably missing.", pvid_txt);
+		log_error("PV %s not recognised. Is the device missing?", pvid_txt);
 		return NULL;
 	}
 
@@ -100,12 +100,12 @@ static struct lvmcache_info *_pv_populate_lvmcache(
 		device = dev_cache_get_by_devt(fallback, cmd->filter);
 
 	if (!device) {
-		log_warn("No device for PV %s.", pvid_txt);
+		log_error("No device found for PV %s.", pvid_txt);
 		return NULL;
 	}
 
 	if (!pvid_txt || !id_read_format(&pvid, pvid_txt)) {
-		log_warn("Missing or ill-formatted PVID for PV: %s.", pvid_txt);
+		log_error("Missing or ill-formatted PVID for PV: %s.", pvid_txt);
 		return NULL;
 	}
 
@@ -556,7 +556,7 @@ int lvmetad_pv_found(struct id pvid, struct device *device, const struct format_
 	return _lvmetad_handle_reply(reply, "update PV", uuid);
 }
 
-int lvmetad_pv_gone(dev_t device)
+static int _lvmetad_pv_gone(dev_t device, const char *pv_name)
 {
 	if (!_using_lvmetad)
 		return 1;
@@ -564,7 +564,12 @@ int lvmetad_pv_gone(dev_t device)
 	daemon_reply reply =
 		daemon_send_simple(_lvmetad, "pv_gone", "device = %d", device, NULL);
 
-	return _lvmetad_handle_reply(reply, "drop PV", "");
+	return _lvmetad_handle_reply(reply, "drop PV", pv_name);
+}
+
+int lvmetad_pv_gone(struct device *dev)
+{
+	return _lvmetad_pv_gone(dev->dev, dev_name(dev));
 }
 
 int lvmetad_active(void)
@@ -623,7 +628,7 @@ static dev_t _parse_devt(const char *str)
 	return MKDEV(major, minor);
 }
 
-int pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
+int pvscan_lvmetad_single(struct cmd_context *cmd, const char *pv_name)
 {
 	struct device *dev;
 	struct label *label;
@@ -633,37 +638,32 @@ int pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
 	/* Create a dummy instance. */
 	struct format_instance_ctx fic = { .type = 0 };
 
-	if (argc != 1) {
-		log_error("Exactly one device parameter required.");
-		return 0;
-	}
-
 	if (!lvmetad_active()) {
 		log_error("Cannot proceed since lvmetad is not active.");
 		return 0;
 	}
 
-	dev = dev_cache_get(argv[0], NULL);
-	if (!dev && _parse_devt(argv[0]) != -1)
-		dev = dev_cache_get_by_devt(_parse_devt(argv[0]), NULL);
+	dev = dev_cache_get(pv_name, NULL);
+	if (!dev && _parse_devt(pv_name) != -1)
+		dev = dev_cache_get_by_devt(_parse_devt(pv_name), NULL);
 
 	if (!dev) {
-		if (_parse_devt(argv[0]) == -1) {
-			log_error("For devices that do not exist, we need a MAJOR:MINOR pair.");
+		if (_parse_devt(pv_name) == -1) {
+			log_error("Unrecognised device name %s.  (Use MAJOR:MINOR for new devices.)", pv_name);
 			return 0;
 		}
 
-		if (!lvmetad_pv_gone(_parse_devt(argv[0])))
-			goto fatal;
+		if (!_lvmetad_pv_gone(_parse_devt(pv_name), pv_name))
+			goto_bad;
 
-		log_info("Device %s not found and was wiped from lvmetad.", argv[0]);
+		log_print("Device %s not found.  Cleared from lvmetad cache.", pv_name);
 		return 1;
 	}
 
 	if (!label_read(dev, &label, 0)) {
-		log_warn("No PV label found on %s.", dev_name(dev));
-		if (!lvmetad_pv_gone(dev->dev))
-			goto fatal;
+		log_print("No PV label found on %s.", dev_name(dev));
+		if (!lvmetad_pv_gone(dev))
+			goto_bad;
 		return 1;
 	}
 
@@ -684,13 +684,15 @@ int pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
 	 * sync needs to be killed.
 	 */
 	if (!lvmetad_pv_found(*(struct id *)dev->pvid, dev, lvmcache_fmt(info),
-			      label->sector, baton.vg))
-		goto fatal;
+			      label->sector, baton.vg)) {
+		release_vg(baton.vg);
+		goto_bad;
+	}
 
 	release_vg(baton.vg);
 	return 1;
-fatal:
-	release_vg(baton.vg);
+
+bad:
 	/* FIXME kill lvmetad automatically if we can */
 	log_error("Update of lvmetad failed. This is a serious problem.\n  "
 		  "It is strongly recommended that you restart lvmetad immediately.");

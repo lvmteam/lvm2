@@ -71,7 +71,7 @@ int lvmetad_pv_found(struct id pvid, struct device *device,
  * multiple device names, so this needs a unique and stable name, the same as
  * provided to lvmetad_pv_found.
  */
-int lvmetad_pv_gone(dev_t device);
+int lvmetad_pv_gone(struct device *dev);
 
 /*
  * Request a list of all PVs available to lvmetad. If requested, this will also
@@ -99,7 +99,7 @@ struct volume_group *lvmetad_vg_lookup(struct cmd_context *cmd,
  * Scan a single device and update lvmetad with the result(s). If the device
  * node does not exist, it must be supplied in a major:minor format.
  */
-int pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv);
+int pvscan_lvmetad_single(struct cmd_context *cmd, const char *pv_name);
 
 #  else		/* LVMETAD_SUPPORT */
 
@@ -109,7 +109,7 @@ int pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv);
 #    define lvmetad_vg_update(vg)	(1)
 #    define lvmetad_vg_remove(vg)	(1)
 #    define lvmetad_pv_found(pvid, device, fmt, label_sector, vg)	(1)
-#    define lvmetad_pv_gone(device)	(1)
+#    define lvmetad_pv_gone(dev)	(1)
 #    define lvmetad_pv_list_to_lvmcache(cmd)	(1)
 #    define lvmetad_pv_lookup(cmd, pvid)	(0)
 #    define lvmetad_pv_lookup_by_devt(cmd, dev)	(0)
