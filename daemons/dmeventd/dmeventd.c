@@ -1491,9 +1491,9 @@ static void _process_request(struct dm_event_fifos *fifos)
 	if (!_client_write(fifos, &msg))
 		stack;
 
-	if (die) raise(9);
-
 	dm_free(msg.data);
+
+	if (die) raise(9);
 }
 
 static void _process_initial_registrations(void)
@@ -1987,11 +1987,13 @@ int main(int argc, char *argv[])
 	while (!_exit_now) {
 		_process_request(&fifos);
 		_cleanup_unused_threads();
+		_lock_mutex();
 		if (!dm_list_empty(&_thread_registry)
 		    || !dm_list_empty(&_thread_registry_unused))
 			_thread_registries_empty = 0;
 		else
 			_thread_registries_empty = 1;
+		_unlock_mutex();
 	}
 
 	_exit_dm_lib();

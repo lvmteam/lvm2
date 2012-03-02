@@ -12,7 +12,6 @@ Version 2.02.94 -
   Revert free of allocated segtype in init segment error path (2.02.89).
   Test dm_hash_insert() failures in filter-persistent.c and fid_add_mda().
   Ensure clvmd message is always \0 terminated after read.
-  Better detection of missing dmeventd fifo connection (2.02.93).
   Add some close() and dev_close() error path backtraces.
   For polling daemon reopen stdin,stdout,stderr to /dev/null.
   Limit the max size of processed clvmd message to ~8KB.
