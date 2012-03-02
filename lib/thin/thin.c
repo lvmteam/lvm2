@@ -53,7 +53,7 @@ static int _thin_pool_add_message(struct lv_segment *seg,
 	uint32_t delete_id = 0;
 	dm_thin_message_t type;
 
-	/* Message must have only one from: create, trim, delete */
+	/* Message must have only one from: create, delete */
 	if (dm_config_get_str(sn, "create", &lv_name)) {
 		if (!(lv = find_lv(seg->lv->vg, lv_name)))
 			return SEG_LOG_ERROR("Unknown LV %s for create message in",
