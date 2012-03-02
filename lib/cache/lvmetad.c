@@ -583,7 +583,7 @@ void lvmetad_set_active(int active)
 }
 
 /*
- * The following code implements pvscan --lvmetad.
+ * The following code implements pvscan --cache.
  */
 
 struct _pvscan_lvmetad_baton {

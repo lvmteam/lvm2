@@ -60,7 +60,7 @@ static int _vsn1_check_version(const struct dm_config_tree *cft)
 	const struct dm_config_node *cn;
 	const struct dm_config_value *cv;
 
-	// TODO if this is pvscan --lvmetad, we want this check back.
+	// TODO if this is pvscan --cache, we want this check back.
 	if (lvmetad_active())
 		return 1;
 

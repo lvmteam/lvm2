@@ -663,6 +663,7 @@ xx(pvscan,
    "List all physical volumes",
    PERMITTED_READ_ONLY,
    "pvscan " "\n"
+   "\t[--cache DevicePath [DevicePath...]] " "\n"
    "\t[-d|--debug] " "\n"
    "\t{-e|--exported | -n|--novolumegroup} " "\n"
    "\t[-h|-?|--help]" "\n"
@@ -670,12 +671,11 @@ xx(pvscan,
    "\t[-P|--partial] " "\n"
    "\t[-s|--short] " "\n"
    "\t[-u|--uuid] " "\n"
-   "\t[--lvmetad DevicePath [DevicePath...]] " "\n"
    "\t[-v|--verbose] " "\n"
    "\t[--version]\n",
 
-   exported_ARG, ignorelockingfailure_ARG, novolumegroup_ARG, partial_ARG,
-   short_ARG, uuid_ARG, lvmetad_ARG)
+   cache_ARG, exported_ARG, ignorelockingfailure_ARG, novolumegroup_ARG,
+   partial_ARG, short_ARG, uuid_ARG)
 
 xx(segtypes,
    "List available segment types",
