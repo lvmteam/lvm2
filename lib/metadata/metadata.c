@@ -3614,15 +3614,23 @@ static struct physical_volume *_pv_read(struct cmd_context *cmd,
 	struct lvmcache_info *info;
 	struct device *dev;
 	const struct format_type *fmt;
+	int found;
 
 	if (!(dev = dev_cache_get(pv_name, cmd->filter)))
 		return_NULL;
 
 	if (lvmetad_active()) {
 		info = lvmcache_info_from_pvid(dev->pvid, 0);
-// FIXME AGK no error unless 'warnings' set!
-		if (!info && !lvmetad_pv_lookup_by_devt(cmd, dev->dev))
-			return NULL;
+		if (!info) {
+			if (!lvmetad_pv_lookup_by_dev(cmd, dev, &found))
+				return_NULL;
+			if (!found) {
+				if (warnings)
+					log_error("No physical volume found in lvmetad cache for %s",
+						  pv_name);
+				return NULL;
+			}
+		}
 		info = lvmcache_info_from_pvid(dev->pvid, 0);
 		label = lvmcache_get_label(info);
 	} else {
