@@ -99,6 +99,35 @@ static void _pvscan_display_single(struct cmd_context *cmd,
 					   pv_pe_size(pv)));
 }
 
+static int _pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
+{
+	int ret = ECMD_PROCESSED;
+
+	if (!argc) {
+		log_error("List of Physical Volumes to tell lvmetad to cache required.");
+		return EINVALID_CMD_LINE;
+	}
+
+	if (!lock_vol(cmd, VG_GLOBAL, LCK_VG_READ)) {
+		log_error("Unable to obtain global lock.");
+		return ECMD_FAILED;
+	}
+
+	log_verbose("Using physical volume(s) on command line");
+	while (argc--) {
+		if (!pvscan_lvmetad_single(cmd, *argv++)) {
+			ret = ECMD_FAILED;
+			break;
+		}
+		if (sigint_caught())
+			break;
+	}
+
+	unlock_vg(cmd, VG_GLOBAL);
+
+	return ret;
+}
+
 int pvscan(struct cmd_context *cmd, int argc, char **argv)
 {
 	int new_pvs_found = 0;
@@ -115,20 +144,14 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 	pv_max_name_len = 0;
 	vg_max_name_len = 0;
 
-	if (arg_count(cmd, lvmetad_ARG)) {
-		if (!pvscan_lvmetad(cmd, argc, argv)) {
-			stack;
-			return ECMD_FAILED;
-		}
-		return ECMD_PROCESSED;
-	}
+	if (arg_count(cmd, lvmetad_ARG))
+		return _pvscan_lvmetad(cmd, argc, argv);
 
 	if (arg_count(cmd, novolumegroup_ARG) && arg_count(cmd, exported_ARG)) {
 		log_error("Options -e and -n are incompatible");
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(cmd, exported_ARG) || arg_count(cmd, novolumegroup_ARG))
 		log_warn("WARNING: only considering physical volumes %s",
 			  arg_count(cmd, exported_ARG) ?
 			  "of exported volume group(s)" : "in no volume group");
