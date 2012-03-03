@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2012 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -20,6 +20,52 @@
 
 int pv_max_name_len = 0;
 int vg_max_name_len = 0;
+
+static dev_t _parse_devt(const char *str)
+{	/* Oh. */
+	char *where = (char *) str;
+	int major = strtol(str, &where, 10);
+	int minor;
+
+	if (where == str)
+		return -1;
+
+	if (*where != ':')
+		return -1;
+
+	str = ++where;
+	minor = strtol(str, &where, 10);
+
+	if (where == str)
+		return -1;
+
+	if (*where)
+		return -1;
+
+	return MKDEV(major, minor);
+}
+
+/*
+ * Convert pv_name to struct device or to *devno.
+ */
+static struct device *_device_from_pv_name(const char *pv_name, dev_t *devno)
+{
+	struct device *dev;
+
+	if ((dev = dev_cache_get(pv_name, NULL)))
+		return dev;
+	
+        if ((*devno = _parse_devt(pv_name)) == -1) {
+		log_error("Unrecognised device name %s. "
+			  "(Use MAJOR:MINOR for new devices.)", pv_name);
+		return NULL;
+	}
+
+	if ((dev = dev_cache_get_by_devt(*devno, NULL)))
+		return dev;
+
+	return NULL;
+}
 
 static void _pvscan_display_single(struct cmd_context *cmd,
 				   struct physical_volume *pv,
@@ -99,30 +145,78 @@ static void _pvscan_display_single(struct cmd_context *cmd,
 					   pv_pe_size(pv)));
 }
 
+static int _pvscan_lvmetad_all_devs(struct cmd_context *cmd)
+{
+	struct dev_iter *iter;
+	struct device *dev;
+	int r = 1;
+
+	if (!(iter = dev_iter_create(cmd->filter, 1))) {
+		log_error("dev_iter creation failed");
+		return 0;
+	}
+
+	while ((dev = dev_iter_get(iter))) {
+		if (!pvscan_lvmetad_single(cmd, dev)) {
+			r = 0;
+			break;
+		}
+
+		if (sigint_caught())
+			break;
+	}
+
+	dev_iter_destroy(iter);
+
+	return r;
+}
+
 static int _pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
 {
 	int ret = ECMD_PROCESSED;
-
-	if (!argc) {
-		log_error("List of Physical Volumes to be cached by the lvmetad daemon required.");
-		return EINVALID_CMD_LINE;
-	}
+	struct device *dev;
+	const char *pv_name;
+	dev_t devno;
 
 	if (!lock_vol(cmd, VG_GLOBAL, LCK_VG_READ)) {
 		log_error("Unable to obtain global lock.");
 		return ECMD_FAILED;
 	}
 
+	if (!argc) {
+		if (!_pvscan_lvmetad_all_devs(cmd))
+			ret = ECMD_FAILED;
+		goto out;
+	}
+
 	log_verbose("Using physical volume(s) on command line");
+
 	while (argc--) {
-		if (!pvscan_lvmetad_single(cmd, *argv++)) {
+		pv_name = *argv++;
+		dev = _device_from_pv_name(pv_name, &devno);
+
+		if (!dev && devno != -1) {
+			/* FIXME Filters? */
+			if (!lvmetad_pv_gone(devno, pv_name)) {
+				ret = ECMD_FAILED;
+				break;
+			}
+
+			log_print("Device %s not found. "
+				  "Cleared from lvmetad cache.", pv_name);
+			continue;
+		}
+
+		if (!pvscan_lvmetad_single(cmd, dev)) {
 			ret = ECMD_FAILED;
 			break;
 		}
+
 		if (sigint_caught())
 			break;
 	}
 
+out:
 	unlock_vg(cmd, VG_GLOBAL);
 
 	return ret;
@@ -184,6 +278,7 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 		     && !(pv_status(pv) & EXPORTED_VG)) ||
 		    (arg_count(cmd, novolumegroup_ARG) && (!is_orphan(pv)))) {
 			dm_list_del(&pvl->list);
+			free_pv_fid(pv);
 			continue;
 		}
 

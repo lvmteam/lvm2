@@ -3,7 +3,7 @@
 pvscan \- scan all disks for physical volumes
 .SH SYNOPSIS
 .B pvscan
-.RB [ \-\-cache " " DevicePath [ DevicePath ... ] ]
+.RB [ \-\-cache " " [ DevicePath ... ] ]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-\-help ]
 .RB [ \-v | \-\-verbose ]
@@ -31,10 +31,11 @@ Short listing format.
 .BR \-u ", " \-\-uuid
 Show UUIDs (Uniform Unique Identifiers) in addition to device special names.
 .TP
-.BR \-\-cache " " DevicePath [ DevicePath... ]
-Scan a single device and instruct the lvmetad daemon to update its cached
-state.  Called internally by udev rules. The device is processed
-\fBregardless\fP of any device filters set in lvm.conf.
+.BR \-\-cache " " [ DevicePath... ]
+Scan one or more devices and instruct the lvmetad daemon to update its cached
+state accordingly.  Called internally by udev rules.
+All devices listed explicitly are processed \fBregardless\fP of any device
+filters set in lvm.conf.
 .SH SEE ALSO
 .BR lvm (8),
 .BR pvcreate (8),

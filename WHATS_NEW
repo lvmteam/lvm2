@@ -1,5 +1,8 @@
 Version 2.02.95 -
 ================================
+  Scan all devices for lvmetad if 'pvscan --cache' used without device list.
+  Populate lvmcache from lvmetad before displaying PVs in pvscan. (2.02.94)
+  Suppress incorrect -n pvscan warning now always displayed. (2.02.94)
 
 Version 2.02.94 - 3rd March 2012
 ================================
