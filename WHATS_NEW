@@ -28,6 +28,7 @@ Version 2.02.94 - 3rd March 2012
   Limit sscanf parameters with buffer size in clvmd get_initial_state().
   Use const lv pointer for lv_is_active...() functions. 
   Use same signed numbers in _mirrored_transient_status().
+  Support 'pvscan --cache' to update lvmetad state from specific PVs.
   Provide new metadata daemon for testing with configure --enable-lvmetad .
   Integrate client-side lvmetad into build.
 
