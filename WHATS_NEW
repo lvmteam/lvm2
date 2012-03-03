@@ -1,3 +1,6 @@
+Version 2.02.95 -
+================================
+
 Version 2.02.94 - 3rd March 2012
 ================================
   Add support to execute thin_check with each de/active of thin pool.

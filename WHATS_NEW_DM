@@ -1,3 +1,6 @@
+Version 1.02.74 - 
+================================
+
 Version 1.02.73 - 3rd March 2012
 ================================
   Test _thread_registry list with holding mutex in dmeventd.
