@@ -1,11 +1,11 @@
-Version 1.02.73 - 
-====================================
+Version 1.02.73 - 3rd March 2012
+================================
   Test _thread_registry list with holding mutex in dmeventd.
-  Added dm_tree_node_set_callback() for preload and deactivation hooks.
+  Add dm_tree_node_set_callback() for preload and deactivation hooks.
   Drop unsupported TRIM message for thin pool.
   Improve logging for fifo startup in dmeventd.
   Better detection of missing dmeventd fifo connection (1.02.71).
-  Add few pointer validation in dmsetup.
+  Add a few pointer validations in dmsetup.
   Support dm_task_get_driver_version() query without version string.
   Log failure of pthread_join when cleaning unused threads in dmeventd.
   Fix empty string warning logic in _find_config_str. (1.02.68)
