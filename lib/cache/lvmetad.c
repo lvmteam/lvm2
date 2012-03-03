@@ -607,7 +607,7 @@ int lvmetad_pv_found(struct id pvid, struct device *device, const struct format_
 	return result;
 }
 
-static int _lvmetad_pv_gone(dev_t device, const char *pv_name)
+int lvmetad_pv_gone(dev_t device, const char *pv_name)
 {
 	int result;
 	int found;
@@ -625,9 +625,9 @@ static int _lvmetad_pv_gone(dev_t device, const char *pv_name)
 	return result;
 }
 
-int lvmetad_pv_gone(struct device *dev)
+int lvmetad_pv_gone_by_dev(struct device *dev)
 {
-	return _lvmetad_pv_gone(dev->dev, dev_name(dev));
+	return lvmetad_pv_gone(dev->dev, dev_name(dev));
 }
 
 int lvmetad_active(void)
@@ -663,33 +663,8 @@ static int _pvscan_lvmetad_single(struct metadata_area *mda, void *baton)
 	return 1;
 }
 
-static dev_t _parse_devt(const char *str)
-{	/* Oh. */
-	char *where = (char *) str;
-	int major = strtol(str, &where, 10);
-	int minor;
-
-	if (where == str)
-		return -1;
-
-	if (*where != ':')
-		return -1;
-
-	str = ++where;
-	minor = strtol(str, &where, 10);
-
-	if (where == str)
-		return -1;
-
-	if (*where)
-		return -1;
-
-	return MKDEV(major, minor);
-}
-
-int pvscan_lvmetad_single(struct cmd_context *cmd, const char *pv_name)
+int pvscan_lvmetad_single(struct cmd_context *cmd, struct device *dev)
 {
-	struct device *dev;
 	struct label *label;
 	struct lvmcache_info *info;
 	struct physical_volume pv;
@@ -702,26 +677,9 @@ int pvscan_lvmetad_single(struct cmd_context *cmd, const char *pv_name)
 		return 0;
 	}
 
-	dev = dev_cache_get(pv_name, NULL);
-	if (!dev && _parse_devt(pv_name) != -1)
-		dev = dev_cache_get_by_devt(_parse_devt(pv_name), NULL);
-
-	if (!dev) {
-		if (_parse_devt(pv_name) == -1) {
-			log_error("Unrecognised device name %s.  (Use MAJOR:MINOR for new devices.)", pv_name);
-			return 0;
-		}
-
-		if (!_lvmetad_pv_gone(_parse_devt(pv_name), pv_name))
-			goto_bad;
-
-		log_print("Device %s not found.  Cleared from lvmetad cache.", pv_name);
-		return 1;
-	}
-
 	if (!label_read(dev, &label, 0)) {
 		log_print("No PV label found on %s.", dev_name(dev));
-		if (!lvmetad_pv_gone(dev))
+		if (!lvmetad_pv_gone_by_dev(dev))
 			goto_bad;
 		return 1;
 	}

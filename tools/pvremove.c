@@ -128,8 +128,7 @@ static int pvremove_single(struct cmd_context *cmd, const char *pv_name,
 		goto out;
 	}
 
-	/* FIXME Avoid error if we expect that daemon might not know device */
-	if (!lvmetad_pv_gone(dev))
+	if (!lvmetad_pv_gone_by_dev(dev))
 		goto_out;
 
 	log_print("Labels on physical volume \"%s\" successfully wiped",
