@@ -152,6 +152,7 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
+	if (arg_count(cmd, exported_ARG) || arg_count(cmd, novolumegroup_ARG))
 		log_warn("WARNING: only considering physical volumes %s",
 			  arg_count(cmd, exported_ARG) ?
 			  "of exported volume group(s)" : "in no volume group");
