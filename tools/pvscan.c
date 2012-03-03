@@ -165,6 +165,10 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 	persistent_filter_wipe(cmd->filter);
 	lvmcache_destroy(cmd, 1);
 
+	/* populate lvmcache */
+	if (!lvmetad_vg_list_to_lvmcache(cmd))
+		stack;
+
 	log_verbose("Walking through all physical volumes");
 	if (!(pvslist = get_pvs(cmd))) {
 		unlock_vg(cmd, VG_GLOBAL);
@@ -177,8 +181,8 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 		pv = pvl->pv;
 
 		if ((arg_count(cmd, exported_ARG)
-		     && !(pv_status(pv) & EXPORTED_VG))
-		    || (arg_count(cmd, novolumegroup_ARG) && (!is_orphan(pv)))) {
+		     && !(pv_status(pv) & EXPORTED_VG)) ||
+		    (arg_count(cmd, novolumegroup_ARG) && (!is_orphan(pv)))) {
 			dm_list_del(&pvl->list);
 			continue;
 		}
