@@ -1591,7 +1591,10 @@ static int _dm_tree_deactivate_children(struct dm_tree_node *dnode,
 		if (child->callback &&
 		    !child->callback(child, DM_NODE_CALLBACK_DEACTIVATED,
 				     child->callback_data))
-			r = 0; // FIXME: _node_clear_table() without callback ?
+			stack;
+			// FIXME: We need to let lvremove pass,
+			// so for now deactivation ignores check result
+			//r = 0; // FIXME: _node_clear_table() without callback ?
 
 		if (dm_tree_node_num_children(child, 0) &&
 		    !_dm_tree_deactivate_children(child, uuid_prefix, uuid_prefix_len, level + 1))
