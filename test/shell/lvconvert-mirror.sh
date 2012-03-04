@@ -17,13 +17,16 @@ wait_for_mirror_in_sync_()
 }
 
 # convert from linear to 2-way mirror
-aux prepare_vg 5
+aux prepare_pvs 5 10
+# FIXME - test fails with extent size < 512k
+vgcreate -c n -s 512k $vg $(cat DEVICES)
+
 lvcreate -l2 -n $lv1 $vg $dev1
 lvconvert -i1 -m+1 $vg/$lv1 $dev2 $dev3:0-1
 check mirror $vg $lv1 $dev3
+lvremove -ff $vg
 
 # convert from 2-way mirror to linear
-aux prepare_vg 5
 lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0-1
 lvconvert -m-1 $vg/$lv1
 check linear $vg $lv1
@@ -35,14 +38,12 @@ check lv_on $vg $lv1 $dev1
 lvremove -ff $vg
 
 # convert from disklog to corelog, active
-aux prepare_vg 5
 lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0-1
 lvconvert -f --mirrorlog core $vg/$lv1
 check mirror $vg $lv1 core
 lvremove -ff $vg
 
 # convert from corelog to disklog, active
-aux prepare_vg 5
 lvcreate -l2 -m1 --mirrorlog core -n $lv1 $vg $dev1 $dev2
 lvconvert --mirrorlog disk $vg/$lv1 $dev3:0-1
 check mirror $vg $lv1 $dev3
@@ -50,7 +51,6 @@ lvremove -ff $vg
 
 # bz192865: lvconvert log of an inactive mirror lv
 # convert from disklog to corelog, inactive
-aux prepare_vg 5
 lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0-1
 lvchange -an $vg/$lv1
 echo y | lvconvert -f --mirrorlog core $vg/$lv1
@@ -58,7 +58,6 @@ check mirror $vg $lv1 core
 lvremove -ff $vg
 
 # convert from corelog to disklog, inactive
-aux prepare_vg 5
 lvcreate -l2 -m1 --mirrorlog core -n $lv1 $vg $dev1 $dev2
 lvchange -an $vg/$lv1
 lvconvert --mirrorlog disk $vg/$lv1 $dev3:0-1
@@ -66,7 +65,6 @@ check mirror $vg $lv1 $dev3
 lvremove -ff $vg
 
 # convert linear to 2-way mirror with 1 PV
-aux prepare_vg 5
 lvcreate -l2 -n $lv1 $vg $dev1
 not lvconvert -m+1 --mirrorlog core $vg/$lv1 $dev1
 lvremove -ff $vg
@@ -90,10 +88,10 @@ check mirror_images_on $lv1 $dev2 $dev4
 lvconvert -m-1 $vg/$lv1 $dev2
 check linear $vg $lv1
 check lv_on $vg $lv1 $dev4
+lvremove -ff $vg
 
 # No parallel lvconverts on a single LV please
 
-aux prepare_vg 5
 lvcreate -l5 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0
 check mirror $vg $lv1
 check mirror_legs $vg $lv1 2
@@ -107,29 +105,29 @@ lvconvert -m2 $vg/$lv1 # In case the above "should" actually failed
 check mirror $vg $lv1 $dev3
 check mirror_no_temporaries $vg $lv1
 check mirror_legs $vg $lv1 3
+lvremove -ff $vg
 
 # add 1 mirror to core log mirror, but
 #  implicitly keep log as 'core'
-aux prepare_vg 5
 lvcreate -l2 -m1 --mirrorlog core -n $lv1 $vg $dev1 $dev2
 lvconvert -m +1 -i1 $vg/$lv1
 
 check mirror $vg $lv1 core
 check mirror_no_temporaries $vg $lv1
 check mirror_legs $vg $lv1 3
+lvremove -ff $vg
 
 # remove 1 mirror from corelog'ed mirror; should retain 'core' log type
-aux prepare_vg 5
 lvcreate -l2 -m2 --corelog -n $lv1 $vg
 lvconvert -m -1 -i1 $vg/$lv1
 
 check mirror $vg $lv1 core
 check mirror_no_temporaries $vg $lv1
 check mirror_legs $vg $lv1 2
+lvremove -ff $vg
 
 # add 1 mirror then add 1 more mirror during conversion
 # FIXME this has been explicitly forbidden?
-#aux prepare_vg 5
 #lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0
 #lvconvert -m+1 -b $vg/$lv1 $dev4
 #lvconvert -m+1 $vg/$lv1 $dev5
@@ -137,15 +135,15 @@ check mirror_legs $vg $lv1 2
 #check mirror $vg $lv1 $dev3
 #check mirror_no_temporaries $vg $lv1
 #check mirror_legs $vg $lv1 4
+#lvremove -ff $vg
 
 # Linear to mirror with mirrored log using --alloc anywhere
-aux prepare_vg 5
 lvcreate -l2 -n $lv1 $vg $dev1
 lvconvert -m +1 --mirrorlog mirrored $vg/$lv1 $dev1 $dev2 --alloc anywhere
 should check mirror $vg $lv1
+lvremove -ff $vg
 
 # convert inactive mirror and start polling
-aux prepare_vg 5
 lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0
 lvchange -an $vg/$lv1
 lvconvert -m+1 $vg/$lv1 $dev4
@@ -153,12 +151,12 @@ lvchange -ay $vg/$lv1
 lvconvert $vg/$lv1 # wait
 check mirror $vg $lv1 $dev3
 check mirror_no_temporaries $vg $lv1
+lvremove -ff $vg
 
 # ---------------------------------------------------------------------
 # removal during conversion
 
 # "remove newly added mirror"
-aux prepare_vg 5
 lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0
 lvconvert -m+1 -b $vg/$lv1 $dev4
 lvconvert -m-1 $vg/$lv1 $dev4
@@ -167,9 +165,9 @@ lvconvert $vg/$lv1 # wait
 check mirror $vg $lv1 $dev3
 check mirror_no_temporaries $vg $lv1
 check mirror_legs $vg $lv1 2
+lvremove -ff $vg
 
 # "remove one of newly added mirrors"
-aux prepare_vg 5
 lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0
 lvconvert -m+2 -b $vg/$lv1 $dev4 $dev5
 lvconvert -m-1 $vg/$lv1 $dev4
@@ -178,9 +176,9 @@ lvconvert $vg/$lv1 # wait
 check mirror $vg $lv1 $dev3
 check mirror_no_temporaries $vg $lv1
 check mirror_legs $vg $lv1 3
+lvremove -ff $vg
 
 # "remove from original mirror (the original is still mirror)"
-aux prepare_vg 5
 lvcreate -l2 -m2 -n $lv1 $vg $dev1 $dev2 $dev5 $dev3:0
 lvconvert -m+1 -b $vg/$lv1 $dev4 
 lvconvert -m-1 $vg/$lv1 $dev2 
@@ -189,9 +187,9 @@ lvconvert $vg/$lv1
 check mirror $vg $lv1 $dev3
 check mirror_no_temporaries $vg $lv1
 check mirror_legs $vg $lv1 3
+lvremove -ff $vg
 
 # "remove from original mirror (the original becomes linear)"
-aux prepare_vg 5
 lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0
 lvconvert -m+1 -b $vg/$lv1 $dev4 
 lvconvert -m-1 $vg/$lv1 $dev2 
@@ -200,44 +198,44 @@ lvconvert $vg/$lv1
 check mirror $vg $lv1 $dev3
 check mirror_no_temporaries $vg $lv1
 check mirror_legs $vg $lv1 2
+lvremove -ff $vg
 
 # ---------------------------------------------------------------------
 
 # "rhbz440405: lvconvert -m0 incorrectly fails if all PEs allocated"
-aux prepare_vg 5
 lvcreate -l`pvs --noheadings -ope_count $dev1` -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0
 wait_for_mirror_in_sync_ $vg/$lv1
 lvconvert -m0 $vg/$lv1 $dev1
 check linear $vg $lv1
+lvremove -ff $vg
 
 # "rhbz264241: lvm mirror doesn't lose it's "M" --nosync attribute after being down and the up converted"
-aux prepare_vg 5
 lvcreate -l2 -m1 -n$lv1 --nosync $vg 
 lvconvert -m0 $vg/$lv1
 lvconvert -m1 $vg/$lv1
 lvs --noheadings -o attr $vg/$lv1 | grep '^ *m'
+lvremove -ff $vg
 
 # lvconvert from linear (on multiple PVs) to mirror
-aux prepare_vg 5
 lvcreate -l 8 -n $lv1 $vg $dev1:0-3 $dev2:0-3
 lvconvert -m1 $vg/$lv1
 
 should check mirror $vg $lv1
 check mirror_legs $vg $lv1 2
+lvremove -ff $vg
 
 # BZ 463272: disk log mirror convert option is lost if downconvert option is also given
-aux prepare_vg 5
 lvcreate -l1 -m2 --corelog -n $lv1 $vg $dev1 $dev2 $dev3
 wait_for_mirror_in_sync_ $vg/$lv1
 lvconvert -m1 --mirrorlog disk $vg/$lv1
 check mirror $vg $lv1
 not check mirror $vg $lv1 core
+lvremove -ff $vg
 
 # ---
 # add mirror and disk log
 
 # "add 1 mirror and disk log" 
-aux prepare_vg 5
 lvcreate -l2 -m1 --mirrorlog core -n $lv1 $vg $dev1 $dev2
 
 # FIXME on next line, specifying $dev3:0 $dev4 (i.e log device first) fails (!)
@@ -246,9 +244,9 @@ lvconvert -m+1 --mirrorlog disk -i1 $vg/$lv1 $dev4 $dev3:0
 check mirror $vg $lv1 $dev3
 check mirror_no_temporaries $vg $lv1
 check mirror_legs $vg $lv1 3
+lvremove -ff $vg
 
 # simple mirrored stripe
-aux prepare_vg 5
 lvcreate -i2 -l10 -n $lv1 $vg
 lvconvert -m1 -i1 $vg/$lv1
 lvreduce -f -l1 $vg/$lv1
@@ -258,4 +256,4 @@ lvremove -ff $vg/$lv1
 # extents must be divisible
 lvcreate -l15 -n $lv1 $vg
 not lvconvert -m1 --corelog --stripes 2 $vg/$lv1
-lvremove -ff $vg/$lv1
+lvremove -ff $vg

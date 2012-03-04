@@ -121,7 +121,8 @@ test_lvconvert()
 	fi
 }
 
-aux prepare_vg 5 16
+aux prepare_pvs 5 5
+vgcreate -c n -s 128k $vg $(cat DEVICES)
 
 test_many() {
 	i=$1
