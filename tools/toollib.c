@@ -119,6 +119,10 @@ int process_each_lv_in_vg(struct cmd_context *cmd,
 		process_all = 1;
 	}
 
+	/*
+	 * FIXME: In case of remove it goes through deleted entries,
+	 * but it works since entries are allocated from vg mem pool.
+	 */
 	dm_list_iterate_items(lvl, &vg->lvs) {
 		if (lvl->lv->status & SNAPSHOT)
 			continue;
@@ -182,6 +186,10 @@ int process_each_lv_in_vg(struct cmd_context *cmd,
 	}
 
 	if (lvargs_supplied && lvargs_matched != dm_list_size(arg_lvnames)) {
+		/*
+		 * FIXME: lvm supports removal of LV with all its dependencies
+		 * this leads to miscalculation that depends on the order of args.
+		 */
 		log_error("One or more specified logical volume(s) not found.");
 		if (ret_max < ECMD_FAILED)
 			ret_max = ECMD_FAILED;
