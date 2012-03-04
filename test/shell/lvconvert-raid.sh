@@ -100,7 +100,7 @@ function is_raid_available()
 ########################################################
 # MAIN
 ########################################################
-is_raid_available || exit 200
+is_raid_available || skip
 
 aux prepare_vg 5 80
 
@@ -213,5 +213,3 @@ for i in 1 2 3 ; do
 	lvconvert --type raid1 $vg/$lv1
 	lvremove -ff $vg
 done
-
-exit 0

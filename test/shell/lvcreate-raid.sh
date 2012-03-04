@@ -44,7 +44,7 @@ function wait_for_raid_sync()
 	local i=0
 
 	while ! is_raid_in_sync $1; do
-		sleep 2
+		sleep .2
 		i=$(($i + 1))
 		if [ $i -gt 500 ]; then
 			echo "Sync is taking too long - assume stuck"
@@ -53,31 +53,13 @@ function wait_for_raid_sync()
 	done
 }
 
-function is_raid_available()
-{
-	local a
-
-	modprobe dm-raid
-	a=(`dmsetup targets | grep raid`)
-	if [ -z $a ]; then
-		echo "RAID target not available"
-		return 1
-	fi
-	if [ ${a[1]} != "v1.1.0" ]; then
-		echo "Bad RAID version"
-		return 1
-	fi
-
-	return 0
-}
-
 ########################################################
 # MAIN
 ########################################################
-is_raid_available || exit 200
+aux target_at_least dm-raid 1 1 0 || skip
 
-aux prepare_vg 5 80
-
+aux prepare_pvs 5 20
+vgcreate -c n -s 512k $vg $(cat DEVICES)
 
 ###########################################
 # Create, wait for sync, remove tests

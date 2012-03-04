@@ -11,6 +11,12 @@
 
 . lib/test
 
+recreate_vg_()
+{
+	vgremove -ff $vg
+	vgcreate -c n $vg $(cat DEVICES)
+}
+
 aux lvmconf 'allocation/maximise_cling = 0'
 aux lvmconf 'allocation/mirror_logs_require_separate_pvs = 1'
 
@@ -27,7 +33,7 @@ aux enable_dev $dev2 $dev4
 check mirror $vg 4way $dev5
 
 # 3-way, disk log => linear
-aux prepare_vg 5
+recreate_vg_
 lvcreate -m 2 --ig -L 1 -n 3way $vg
 aux disable_dev $dev1 $dev2
 echo n | lvconvert --repair $vg/3way
@@ -42,7 +48,7 @@ check linear $vg 3way
 # fail just log and get it removed
 
 # 3-way, disk log => 3-way, core log
-aux prepare_vg 5
+recreate_vg_
 lvcreate -m 2 --ig -L 1 -n 3way $vg $dev1 $dev2 $dev3 $dev4:0
 aux disable_dev $dev4
 echo n | lvconvert --repair $vg/3way
@@ -54,7 +60,7 @@ vgreduce --removemissing $vg
 aux enable_dev $dev4
 
 # 3-way, mirrored log => 3-way, core log
-aux prepare_vg 5
+recreate_vg_
 lvcreate -m 2 --mirrorlog mirrored --ig -L 1 -n 3way $vg \
     $dev1 $dev2 $dev3 $dev4:0 $dev5:0
 aux disable_dev $dev4 $dev5
@@ -67,7 +73,7 @@ vgreduce --removemissing $vg
 aux enable_dev $dev4 $dev5
 
 # 2-way, disk log => 2-way, core log
-aux prepare_vg 5
+recreate_vg_
 lvcreate -m 1 --ig -L 1 -n 2way $vg $dev1 $dev2 $dev3:0
 aux disable_dev $dev3
 echo n | lvconvert --repair $vg/2way
@@ -79,7 +85,7 @@ aux enable_dev $dev3
 
 # fail single devices
 
-aux prepare_vg 5
+recreate_vg_
 vgreduce $vg $dev4
 
 lvcreate -m 1 --ig -L 1 -n mirror $vg
@@ -105,4 +111,4 @@ lvconvert -y --repair $vg/mirror
 vgreduce --removemissing $vg
 aux enable_dev $dev3
 vgextend $vg $dev3
-lvremove -ff $vg
+vgremove -ff $vg

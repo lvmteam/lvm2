@@ -25,7 +25,7 @@ percent() {
 	lvs $vg/snap -o snap_percent --noheadings | cut -c4- | cut -d. -f1
 }
 
-which mkfs.ext2 || exit 200
+which mkfs.ext2 || skip
 
 aux prepare_vg 3
 aux prepare_dmeventd
