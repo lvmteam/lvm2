@@ -4218,7 +4218,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 			}
 
 			if (!lv_info(cmd, org, 0, &info, 0, 0)) {
-				log_error("Check for existence of snapshot "
+				log_error("Check for existence of active snapshot "
 					  "origin '%s' failed.", org->name);
 				return NULL;
 			}
