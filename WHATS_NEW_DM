@@ -1,5 +1,6 @@
 Version 1.02.74 - 
 ================================
+  Deactivation of failed thin check on thin pool returns success.
 
 Version 1.02.73 - 3rd March 2012
 ================================
