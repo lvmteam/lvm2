@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright (C) 2011 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2011-2012 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -38,14 +38,15 @@ check_lv_field_modules_()
 #
 aux target_at_least dm-thin-pool 1 0 0 || skip
 
-aux prepare_devs 2 64
+aux prepare_pvs 2 64
 
-pvcreate $dev1 $dev2
+# disable thin_check if not present in system
+which thin_check || aux lvmconf 'global/thin_check_executable = ""'
 
 clustered=
 test -e LOCAL_CLVMD && clustered="--clustered y"
 
-vgcreate $clustered $vg -s 64K $dev1 $dev2
+vgcreate $clustered $vg -s 64K $(cat DEVICES)
 
 # Create named pool only
 lvcreate -l1 -T $vg/pool1
@@ -184,3 +185,32 @@ not lvcreate --chunksize 32 -l1 -T $vg/pool1
 lvcreate -L4M -V2G --name lv1 -T $vg/pool1
 # Origin name is not accepted
 not lvcreate -s $vg/lv1 -L4M -V2G --name $vg/lv4
+vgremove -ff $vg
+
+
+# Test --poolmetadatasize
+# allocating large devices for testing
+aux teardown_devs
+aux prepare_pvs 7 16500
+vgcreate $clustered $vg -s 64K $(cat DEVICES)
+
+lvcreate -L4M --chunksize 128 -T $vg/pool
+lvcreate -L4M --chunksize 128 --poolmetadatasize 0 -T $vg/pool1 2>out
+grep "WARNING: Minimum" out
+# FIXME: metadata allocation fails, if PV doesn't have at least 16GB
+# i.e. pool metadata device cannot be multisegment
+lvcreate -L4M --chunksize 128 --poolmetadatasize 17G -T $vg/pool2 2>out
+grep "WARNING: Maximum" out
+check lv_field $vg/pool_tmeta size  "2.00m"
+check lv_field $vg/pool1_tmeta size "2.00m"
+check lv_field $vg/pool2_tmeta size "16.00g"
+lvremove -ff $vg
+
+# check automatic calculation of poolmetadatasize
+lvcreate -L10G --chunksize 128 -T $vg/pool
+lvcreate -L10G --chunksize 256 -T $vg/pool1
+lvcreate -L60G --chunksize 1024 -T $vg/pool2
+check lv_field $vg/pool_tmeta size  "5.00m"
+check lv_field $vg/pool1_tmeta size "2.50m"
+check lv_field $vg/pool2_tmeta size "3.75m"
+vgremove -ff $vg
