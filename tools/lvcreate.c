@@ -235,6 +235,7 @@ static int _update_extents_params(struct volume_group *vg,
 {
 	uint32_t pv_extent_count;
 	struct logical_volume *origin = NULL;
+	int changed = 0;
 
 	if (lcp->size &&
 	    !(lp->extents = extents_from_size(vg->cmd, lcp->size,
@@ -294,10 +295,25 @@ static int _update_extents_params(struct volume_group *vg,
 	}
 
 	if (lp->create_thin_pool) {
-		if (!arg_count(vg->cmd, poolmetadatasize_ARG))
+		if (!arg_count(vg->cmd, poolmetadatasize_ARG)) {
 			/* Defaults to nr_pool_blocks * 64b */
 			lp->poolmetadatasize =  (uint64_t) lp->extents * vg->extent_size /
 				(uint64_t) (lp->chunk_size * (SECTOR_SIZE / UINT64_C(64)));
+
+			/* Check if we could eventually use bigger chunk size */
+			if (!arg_count(vg->cmd, chunksize_ARG)) {
+				while ((lp->poolmetadatasize >
+					(DEFAULT_THIN_POOL_OPTIMAL_SIZE / SECTOR_SIZE)) &&
+				       (lp->chunk_size < DM_THIN_MAX_DATA_BLOCK_SIZE)) {
+					lp->chunk_size <<= 1;
+					lp->poolmetadatasize >>= 1;
+					changed++;
+				}
+				if (changed)
+					log_verbose("Changed chunksize to %u sectors.",
+						    lp->chunk_size);
+			}
+		}
 
 		if (lp->poolmetadatasize > (2 * DEFAULT_THIN_POOL_MAX_METADATA_SIZE)) {
 			if (arg_count(vg->cmd, poolmetadatasize_ARG))
