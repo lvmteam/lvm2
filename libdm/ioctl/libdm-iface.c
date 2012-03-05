@@ -1552,8 +1552,12 @@ static const char *_sanitise_message(char *message)
 
 static void _do_dm_ioctl_unmangle_name(char *name)
 {
+	dm_string_mangling_t mode = dm_get_name_mangling_mode();
 	char buf[DM_NAME_LEN];
 	int r;
+
+	if (mode == DM_STRING_MANGLING_NONE)
+		return;
 
 	if ((r = unmangle_name(name, DM_NAME_LEN, buf, sizeof(buf),
 			       dm_get_name_mangling_mode())) < 0)
