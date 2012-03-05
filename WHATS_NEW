@@ -1,5 +1,6 @@
 Version 2.02.95 -
 ================================
+  Print just warning on thin pool check callback path for failing check.
   Use 64bit math for verification of thin pool and snapshot chunk size.
   Validate udev structures in _insert_udev_dir().
   Scan all devices for lvmetad if 'pvscan --cache' used without device list.
