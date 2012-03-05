@@ -588,9 +588,14 @@ char *dm_task_get_name_unmangled(const struct dm_task *dmt)
 	const char *s = dm_task_get_name(dmt);
 	char buf[DM_NAME_LEN];
 	char *rs = NULL;
-	int r;
+	int r = 0;
 
-	if ((r = unmangle_name(s, strlen(s), buf, sizeof(buf),
+	/*
+	 * Unless the mode used is 'none', the name
+	 * is *already* unmangled on ioctl return!
+	 */
+	if (dm_get_name_mangling_mode() == DM_STRING_MANGLING_NONE &&
+	    (r = unmangle_name(s, strlen(s), buf, sizeof(buf),
 			       dm_get_name_mangling_mode())) < 0)
 		log_error("Failed to unmangle device name \"%s\".", s);
 	else if (!(rs = r ? dm_strdup(buf) : dm_strdup(s)))
