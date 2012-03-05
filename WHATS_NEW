@@ -1,5 +1,6 @@
 Version 2.02.95 -
 ================================
+  Try to fit thin pool metadata size into 128MB.
   Print just warning on thin pool check callback path for failing check.
   Use 64bit math for verification of thin pool and snapshot chunk size.
   Validate udev structures in _insert_udev_dir().
