@@ -1231,15 +1231,28 @@ static int _thin_pool_callback(struct dm_tree_node *node,
 	}
 
 	args = dm_split_words(split, 16, 0, argv);
+
+	if (args == 16) {
+		log_error("Too many options for thin check command.");
+		return 0;
+	}
 	argv[args++] = meta_path;
 	argv[args] = NULL;
 
 	if (!(ret = exec_cmd(data->pool_lv->vg->cmd, (const char * const *)argv,
 			     &status, 0))) {
-		log_err_once("Check of thin pool %s/%s failed (status:%d). "
-			     "Manual repair required (thin_repair %s)!",
-			     data->pool_lv->vg->name, data->pool_lv->name,
-			     status, meta_path);
+		switch (type) {
+		case DM_NODE_CALLBACK_PRELOADED:
+			log_err_once("Check of thin pool %s/%s failed (status:%d). "
+				     "Manual repair required (thin_dump --repair %s)!",
+				     data->pool_lv->vg->name, data->pool_lv->name,
+				     status, meta_path);
+			break;
+		default:
+			log_warn("WARNING: Integrity check of metadata for thin pool "
+				 "%s/%s failed.",
+				 data->pool_lv->vg->name, data->pool_lv->name);
+		}
 		/*
 		 * FIXME: What should we do here??
 		 *
