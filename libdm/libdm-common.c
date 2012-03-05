@@ -340,13 +340,16 @@ int mangle_name(const char *str, size_t len, char *buf,
 		return -1;
 
 	/* Is there anything to do at all? */
-	if (!*str || !len || mode == DM_STRING_MANGLING_NONE)
+	if (!*str || !len)
 		return 0;
 
 	if (buf_len < DM_NAME_LEN) {
 		log_error(INTERNAL_ERROR "mangle_name: supplied buffer too small");
 		return -1;
 	}
+
+	if (mode == DM_STRING_MANGLING_NONE)
+		mode = DM_STRING_MANGLING_AUTO;
 
 	for (i = 0, j = 0; str[i]; i++) {
 		if (mode == DM_STRING_MANGLING_AUTO) {
@@ -427,7 +430,7 @@ int unmangle_name(const char *str, size_t len, char *buf,
 		return -1;
 
 	/* Is there anything to do at all? */
-	if (!*str || !len || mode == DM_STRING_MANGLING_NONE)
+	if (!*str || !len)
 		return 0;
 
 	if (buf_len < DM_NAME_LEN) {
@@ -462,7 +465,7 @@ static int _dm_task_set_name(struct dm_task *dmt, const char *name,
 			     dm_string_mangling_t mangling_mode)
 {
 	char mangled_name[DM_NAME_LEN];
-	int r;
+	int r = 0;
 
 	dm_free(dmt->dev_name);
 	dmt->dev_name = NULL;
@@ -474,7 +477,8 @@ static int _dm_task_set_name(struct dm_task *dmt, const char *name,
 		return 0;
 	}
 
-	if ((r = mangle_name(name, strlen(name), mangled_name,
+	if (mangling_mode != DM_STRING_MANGLING_NONE &&
+	    (r = mangle_name(name, strlen(name), mangled_name,
 			     sizeof(mangled_name), mangling_mode)) < 0) {
 		log_error("Failed to mangle device name \"%s\".", name);
 		return 0;
@@ -562,13 +566,8 @@ char *dm_task_get_name_mangled(const struct dm_task *dmt)
 	char *rs = NULL;
 	int r;
 
-	/*
-	 * We're using 'auto mangling' here. If the name is already mangled,
-	 * this is detected and we keep it as it is. If the name is not mangled,
-	 * we do mangle it. This way we always get a mangled form of the name.
-	 */
 	if ((r = mangle_name(s, strlen(s), buf, sizeof(buf),
-			     DM_STRING_MANGLING_AUTO)) < 0)
+			     dm_get_name_mangling_mode())) < 0)
 		log_error("Failed to mangle device name \"%s\".", s);
 	else if (!(rs = r ? dm_strdup(buf) : dm_strdup(s)))
 		log_error("dm_task_get_name_mangled: dm_strdup failed");
@@ -583,12 +582,8 @@ char *dm_task_get_name_unmangled(const struct dm_task *dmt)
 	char *rs = NULL;
 	int r;
 
-	/*
-	 * We just want to unmangle the string.
-	 * Both auto and hex mode will do it.
-	 */
 	if ((r = unmangle_name(s, strlen(s), buf, sizeof(buf),
-			       DM_STRING_MANGLING_AUTO)) < 0)
+			       dm_get_name_mangling_mode())) < 0)
 		log_error("Failed to unmangle device name \"%s\".", s);
 	else if (!(rs = r ? dm_strdup(buf) : dm_strdup(s)))
 		log_error("dm_task_get_name_unmangled: dm_strdup failed");
@@ -600,7 +595,7 @@ int dm_task_set_newname(struct dm_task *dmt, const char *newname)
 {
 	dm_string_mangling_t mangling_mode = dm_get_name_mangling_mode();
 	char mangled_name[DM_NAME_LEN];
-	int r;
+	int r = 0;
 
 	if (strchr(newname, '/')) {
 		log_error("Name \"%s\" invalid. It contains \"/\".", newname);
@@ -612,7 +607,8 @@ int dm_task_set_newname(struct dm_task *dmt, const char *newname)
 		return 0;
 	}
 
-	if ((r = mangle_name(newname, strlen(newname), mangled_name,
+	if (mangling_mode != DM_STRING_MANGLING_NONE &&
+	    (r = mangle_name(newname, strlen(newname), mangled_name,
 			     sizeof(mangled_name), mangling_mode)) < 0) {
 		log_error("Failed to mangle new device name \"%s\"", newname);
 		return 0;
