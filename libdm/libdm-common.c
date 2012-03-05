@@ -421,6 +421,7 @@ bad2:
 int unmangle_name(const char *str, size_t len, char *buf,
 		  size_t buf_len, dm_string_mangling_t mode)
 {
+	int strict = mode != DM_STRING_MANGLING_NONE;
 	char str_rest[DM_NAME_LEN];
 	size_t i, j;
 	int code;
@@ -439,6 +440,13 @@ int unmangle_name(const char *str, size_t len, char *buf,
 	}
 
 	for (i = 0, j = 0; str[i]; i++, j++) {
+		if (strict && !(_is_whitelisted_char(str[i]) || str[i]=='\\')) {
+			log_error("The name \"%s\" should be mangled but "
+				  "it contains blacklisted characters.", str);
+			j=0; r=-1;
+			goto out;
+		}
+
 		if (str[i] == '\\' && str[i+1] == 'x') {
 			if (!sscanf(&str[i+2], "%2x%s", &code, str_rest)) {
 				log_debug("Hex encoding mismatch detected in \"%s\" "

@@ -1550,41 +1550,47 @@ static const char *_sanitise_message(char *message)
 	return sanitised_message;
 }
 
-static void _do_dm_ioctl_unmangle_name(char *name)
+static int _do_dm_ioctl_unmangle_name(char *name)
 {
 	dm_string_mangling_t mode = dm_get_name_mangling_mode();
 	char buf[DM_NAME_LEN];
 	int r;
 
 	if (mode == DM_STRING_MANGLING_NONE)
-		return;
+		return 1;
 
 	if ((r = unmangle_name(name, DM_NAME_LEN, buf, sizeof(buf),
-			       dm_get_name_mangling_mode())) < 0)
+			       dm_get_name_mangling_mode())) < 0) {
 		log_debug("_do_dm_ioctl_unmangle_name: failed to "
 			  "unmangle \"%s\"", name);
-	else if (r)
+		return 0;
+	} else if (r)
 		memcpy(name, buf, strlen(buf) + 1);
+
+	return 1;
 }
 
-static void _dm_ioctl_unmangle_names(int type, struct dm_ioctl *dmi)
+static int _dm_ioctl_unmangle_names(int type, struct dm_ioctl *dmi)
 {
 	struct dm_names *names;
 	unsigned next = 0;
 	char *name;
+	int r = 1;
 
 	if ((name = dmi->name))
-		_do_dm_ioctl_unmangle_name(name);
+		r = _do_dm_ioctl_unmangle_name(name);
 
 	if (type == DM_DEVICE_LIST &&
 	    ((names = ((struct dm_names *) ((char *)dmi + dmi->data_start)))) &&
 	    names->dev) {
 		do {
 			names = (struct dm_names *)((char *) names + next);
-			_do_dm_ioctl_unmangle_name(names->name);
+			r = _do_dm_ioctl_unmangle_name(names->name);
 			next = names->next;
 		} while (next);
 	}
+
+	return r;
 }
 
 static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
@@ -1703,8 +1709,7 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 			 */
 			*retryable = errno == EBUSY;
 
-			_dm_zfree_dmi(dmi);
-			return NULL;
+			goto error;
 		}
 	}
 
@@ -1715,11 +1720,16 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 		_udev_complete(dmt);
 	}
 
-	(void) _dm_ioctl_unmangle_names(dmt->type, dmi);
+	if (!_dm_ioctl_unmangle_names(dmt->type, dmi))
+		goto error;
 
 #else /* Userspace alternative for testing */
 #endif
 	return dmi;
+
+error:
+	_dm_zfree_dmi(dmi);
+	return NULL;
 }
 
 void dm_task_update_nodes(void)
