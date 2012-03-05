@@ -210,7 +210,7 @@ int release_pv_segment(struct pv_segment *peg, uint32_t area_reduction)
 	    dev_discard_max_bytes(peg->pv->fmt->cmd->sysfs_dir, peg->pv->dev) &&
 	    dev_discard_granularity(peg->pv->fmt->cmd->sysfs_dir, peg->pv->dev)) {
 		discard_offset_sectors = (peg->pe + peg->lvseg->area_len - area_reduction) *
-			peg->pv->vg->extent_size + pe_start;
+			(uint64_t) peg->pv->vg->extent_size + pe_start;
 		if (!discard_offset_sectors) {
 			/*
 			 * pe_start=0 and the PV's first extent contains the label.
@@ -223,7 +223,7 @@ int release_pv_segment(struct pv_segment *peg, uint32_t area_reduction)
 			  discard_area_reduction, discard_offset_sectors, dev_name(peg->pv->dev));
 		if (discard_area_reduction &&
 		    !dev_discard_blocks(peg->pv->dev, discard_offset_sectors << SECTOR_SHIFT,
-					discard_area_reduction * peg->pv->vg->extent_size * SECTOR_SIZE))
+					discard_area_reduction * (uint64_t) peg->pv->vg->extent_size * SECTOR_SIZE))
 			return_0;
 	}
 
