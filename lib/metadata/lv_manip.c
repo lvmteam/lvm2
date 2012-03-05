@@ -3768,7 +3768,7 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 	/* add the new segment to the layer LV */
 	dm_list_add(&lv_where->segments, &mapseg->list);
 	lv_where->le_count = layer_lv->le_count;
-	lv_where->size = lv_where->le_count * lv_where->vg->extent_size;
+	lv_where->size = (uint64_t) lv_where->le_count * lv_where->vg->extent_size;
 
 	return layer_lv;
 }
@@ -3810,7 +3810,7 @@ static int _extend_layer_lv_for_segment(struct logical_volume *layer_lv,
 	/* add the new segment to the layer LV */
 	dm_list_add(&layer_lv->segments, &mapseg->list);
 	layer_lv->le_count += seg->area_len;
-	layer_lv->size += seg->area_len * layer_lv->vg->extent_size;
+	layer_lv->size += (uint64_t) seg->area_len * layer_lv->vg->extent_size;
 
 	/* map the original area to the new segment */
 	if (!set_lv_segment_area_lv(seg, s, layer_lv, mapseg->le, 0))

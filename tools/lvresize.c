@@ -63,7 +63,7 @@ static int _validate_stripesize(struct cmd_context *cmd,
 
 	if (!(vg->fid->fmt->features & FMT_SEGMENTS))
 		log_warn("Varied stripesize not supported. Ignoring.");
-	else if (arg_uint_value(cmd, stripesize_ARG, 0) > vg->extent_size * 2) {
+	else if (arg_uint_value(cmd, stripesize_ARG, 0) > (uint64_t) vg->extent_size * 2) {
 		log_error("Reducing stripe size %s to maximum, "
 			  "physical extent size %s",
 			  display_size(cmd,
@@ -463,7 +463,7 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 				    (lp->size % vg->extent_size);
 
 			log_print("Rounding up size to full physical extent %s",
-				  display_size(cmd, (uint64_t) lp->size));
+				  display_size(cmd, lp->size));
 		}
 
 		lp->extents = lp->size / vg->extent_size;
