@@ -326,6 +326,17 @@ static int _is_whitelisted_char(char c)
         return 0;
 }
 
+int check_multiple_mangled_name_allowed(dm_string_mangling_t mode, const char *name)
+{
+	if (mode == DM_STRING_MANGLING_AUTO && strstr(name, "\\x5cx")) {
+		log_error("The name \"%s\" seems to be multiple mangled. "
+			  "This is not allowed in auto mode.", name);
+		return 0;
+	}
+
+	return 1;
+}
+
 /*
  * Mangle all characters in the input string which are not on a whitelist
  * with '\xNN' format where NN is the hex value of the character.
@@ -485,6 +496,9 @@ static int _dm_task_set_name(struct dm_task *dmt, const char *name,
 		return 0;
 	}
 
+	if (!check_multiple_mangled_name_allowed(mangling_mode, name))
+		return_0;
+
 	if (mangling_mode != DM_STRING_MANGLING_NONE &&
 	    (r = mangle_name(name, strlen(name), mangled_name,
 			     sizeof(mangled_name), mangling_mode)) < 0) {
@@ -619,6 +633,9 @@ int dm_task_set_newname(struct dm_task *dmt, const char *newname)
 		log_error("Name \"%s\" too long", newname);
 		return 0;
 	}
+
+	if (!check_multiple_mangled_name_allowed(mangling_mode, newname))
+		return_0;
 
 	if (mangling_mode != DM_STRING_MANGLING_NONE &&
 	    (r = mangle_name(newname, strlen(newname), mangled_name,

@@ -2944,6 +2944,12 @@ static int _mangle(CMD_ARGS)
 	target_format = _switches[MANGLENAME_ARG] ? _int_args[MANGLENAME_ARG]
 						  : DEFAULT_DM_NAME_MANGLING;
 
+	if (target_format == DM_STRING_MANGLING_AUTO && strstr(name, "\\x5cx")) {
+		log_error("The name \"%s\" seems to be multiple mangled. "
+			  "Manual intervention required to rename the device.", name);
+		goto out;
+	}
+
 	if (target_format == DM_STRING_MANGLING_NONE) {
 		if (!(new_name = dm_task_get_name_unmangled(dmt)))
 			goto out;
