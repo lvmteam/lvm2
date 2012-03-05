@@ -4239,12 +4239,12 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 	}
 
 	if (seg_is_thin_pool(lp) &&
-	    (lp->extents * vg->extent_size < lp->chunk_size)) {
+	    ((uint64_t)lp->extents * vg->extent_size < lp->chunk_size)) {
 		log_error("Unable to create thin pool smaller than 1 chunk.");
 		return NULL;
 	}
 
-	if (lp->snapshot && !lp->thin && (lp->extents * vg->extent_size < 2 * lp->chunk_size)) {
+	if (lp->snapshot && !lp->thin && ((uint64_t)lp->extents * vg->extent_size < 2 * lp->chunk_size)) {
 		log_error("Unable to create a snapshot smaller than 2 chunks.");
 		return NULL;
 	}
