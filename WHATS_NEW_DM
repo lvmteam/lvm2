@@ -1,5 +1,6 @@
 Version 1.02.74 - 
 ================================
+  Fix dm_task_get_name_unmangled to not unmangle already unmangled name.
   Check whether device names are properly mangled on ioctl return.
   Deactivation of failed thin check on thin pool returns success.
 
