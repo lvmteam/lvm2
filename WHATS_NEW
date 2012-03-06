@@ -1,8 +1,8 @@
-Version 2.02.95 -
+Version 2.02.95 - 6th March 2012
 ================================
-  Try to fit thin pool metadata size into 128MB.
+  If unspecified, adjust thin pool metadata and chunk size to fit into 128MB.
   Print just warning on thin pool check callback path for failing check.
-  Always use 64bit math with VG extent_size expression.
+  Always use 64bit arithmetic with VG extent_size expression.
   Validate udev structures in _insert_udev_dir().
   Take repeatable --major --minor with pvscan --cache instead of major:minor.
   Scan all devices for lvmetad if 'pvscan --cache' used without device list.
