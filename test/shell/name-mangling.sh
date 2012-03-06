@@ -14,7 +14,7 @@ name_prefix=$RANDOM
 
 CHARACTER_WHITELIST="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789#+-.:=@_"
 FAIL_MIXED_STR="contains mixed mangled and unmangled characters"
-FAIL_MULTI_STR="seems to be multiple mangled"
+FAIL_MULTI_STR="seems to be mangled more than once"
 FAIL_BLACK_STR="should be mangled but it contains blacklisted characters"
 CORRECT_FORM_STR="name already in correct form"
 RENAMING_STR="renaming to"
