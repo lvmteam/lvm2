@@ -587,6 +587,16 @@ static int _read_activation_params(struct lvcreate_params *lp, struct cmd_contex
 	if (!(lp->permission & LVM_WRITE))
 		lp->zero = 0;
 
+	if (arg_count(cmd, major_ARG) > 1) {
+		log_error("Option -j/--major may not be repeated.");
+		return 0;
+	}
+
+	if (arg_count(cmd, minor_ARG) > 1) {
+		log_error("Option --minor may not be repeated.");
+		return 0;
+	}
+
 	lp->minor = arg_int_value(cmd, minor_ARG, -1);
 	lp->major = arg_int_value(cmd, major_ARG, -1);
 
