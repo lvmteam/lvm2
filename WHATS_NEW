@@ -1,3 +1,6 @@
+Version 2.02.96 - 
+================================
+
 Version 2.02.95 - 6th March 2012
 ================================
   If unspecified, adjust thin pool metadata and chunk size to fit into 128MB.
