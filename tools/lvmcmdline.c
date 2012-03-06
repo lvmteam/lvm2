@@ -89,6 +89,11 @@ const char *grouped_arg_str_value(const struct arg_values *av, int a, const char
 	return grouped_arg_count(av, a) ? av[a].value : def;
 }
 
+int32_t grouped_arg_int_value(const struct arg_values *av, int a, const int32_t def)
+{
+	return grouped_arg_count(av, a) ? av[a].i_value : def;
+}
+
 int32_t arg_int_value(struct cmd_context *cmd, int a, const int32_t def)
 {
 	return arg_count(cmd, a) ? cmd->arg_values[a].i_value : def;

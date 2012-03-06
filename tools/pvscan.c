@@ -21,52 +21,6 @@
 int pv_max_name_len = 0;
 int vg_max_name_len = 0;
 
-static dev_t _parse_devt(const char *str)
-{	/* Oh. */
-	char *where = (char *) str;
-	int major = strtol(str, &where, 10);
-	int minor;
-
-	if (where == str)
-		return -1;
-
-	if (*where != ':')
-		return -1;
-
-	str = ++where;
-	minor = strtol(str, &where, 10);
-
-	if (where == str)
-		return -1;
-
-	if (*where)
-		return -1;
-
-	return MKDEV(major, minor);
-}
-
-/*
- * Convert pv_name to struct device or to *devno.
- */
-static struct device *_device_from_pv_name(const char *pv_name, dev_t *devno)
-{
-	struct device *dev;
-
-	if ((dev = dev_cache_get(pv_name, NULL)))
-		return dev;
-	
-        if ((*devno = _parse_devt(pv_name)) == -1) {
-		log_error("Unrecognised device name %s. "
-			  "(Use MAJOR:MINOR for new devices.)", pv_name);
-		return NULL;
-	}
-
-	if ((dev = dev_cache_get_by_devt(*devno, NULL)))
-		return dev;
-
-	return NULL;
-}
-
 static void _pvscan_display_single(struct cmd_context *cmd,
 				   struct physical_volume *pv,
 				   void *handle __attribute__((unused)))
@@ -176,14 +130,28 @@ static int _pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
 	int ret = ECMD_PROCESSED;
 	struct device *dev;
 	const char *pv_name;
+	int32_t major = -1;
+	int32_t minor = -1;
+	int devno_args = 0;
+	struct arg_value_group_list *current_group;
 	dev_t devno;
+	char *buf;
 
+	if (arg_count(cmd, major_ARG) + arg_count(cmd, minor_ARG))
+		devno_args = 1;
+
+	if (devno_args && (!arg_count(cmd, major_ARG) || !arg_count(cmd, minor_ARG))) {
+		log_error("Both --major and --minor required to identify devices.");
+		return EINVALID_CMD_LINE;
+	}
+	
 	if (!lock_vol(cmd, VG_GLOBAL, LCK_VG_READ)) {
 		log_error("Unable to obtain global lock.");
 		return ECMD_FAILED;
 	}
 
-	if (!argc) {
+	/* Scan everything? */
+	if (!argc && !devno_args) {
 		if (!_pvscan_lvmetad_all_devs(cmd))
 			ret = ECMD_FAILED;
 		goto out;
@@ -191,19 +159,52 @@ static int _pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
 
 	log_verbose("Using physical volume(s) on command line");
 
+	/* Process any command line PVs first. */
 	while (argc--) {
 		pv_name = *argv++;
-		dev = _device_from_pv_name(pv_name, &devno);
+		dev = dev_cache_get(pv_name, NULL);
+		if (!dev) {
+			log_error("Physical Volume %s not found.", pv_name);
+			ret = ECMD_FAILED;
+			continue;
+		}
 
-		if (!dev && devno != -1) {
+		if (!pvscan_lvmetad_single(cmd, dev)) {
+			ret = ECMD_FAILED;
+			break;
+		}
+		if (sigint_caught())
+			break;
+	}
+
+	if (!devno_args)
+		goto out;
+
+	/* Process any grouped --major --minor args */
+	dm_list_iterate_items(current_group, &cmd->arg_value_groups) {
+		major = grouped_arg_int_value(current_group->arg_values, major_ARG, major);
+		minor = grouped_arg_int_value(current_group->arg_values, minor_ARG, minor);
+
+		if (major < 0 || minor < 0)
+			continue;
+
+		devno = MKDEV(major, minor);
+
+		if (!(dev = dev_cache_get_by_devt(devno, NULL))) {
+			if (!dm_asprintf(&buf, "%" PRIi32 ":%" PRIi32, major, minor))
+				stack;
 			/* FIXME Filters? */
-			if (!lvmetad_pv_gone(devno, pv_name)) {
+			if (!lvmetad_pv_gone(devno, buf ? : "")) {
 				ret = ECMD_FAILED;
+				if (buf)
+					dm_free(buf);
 				break;
 			}
 
 			log_print("Device %s not found. "
-				  "Cleared from lvmetad cache.", pv_name);
+				  "Cleared from lvmetad cache.", buf ? : "");
+			if (buf)
+				dm_free(buf);
 			continue;
 		}
 
@@ -240,6 +241,11 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 
 	if (arg_count(cmd, cache_ARG))
 		return _pvscan_lvmetad(cmd, argc, argv);
+
+	if (arg_count(cmd, major_ARG) + arg_count(cmd, minor_ARG)) {
+		log_error("--major and --minor are only valid with --cache.");
+		return EINVALID_CMD_LINE;
+	}
 
 	if (arg_count(cmd, novolumegroup_ARG) && arg_count(cmd, exported_ARG)) {
 		log_error("Options -e and -n are incompatible");

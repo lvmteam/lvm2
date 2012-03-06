@@ -173,6 +173,7 @@ int arg_count_increment(struct cmd_context *cmd, int a);
 unsigned grouped_arg_count(const struct arg_values *av, int a);
 unsigned grouped_arg_is_set(const struct arg_values *av, int a);
 const char *grouped_arg_str_value(const struct arg_values *av, int a, const char *def);
+int32_t grouped_arg_int_value(const struct arg_values *av, int a, const int32_t def); 
 
 const char *command_name(struct cmd_context *cmd);
 

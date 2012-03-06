@@ -4,6 +4,7 @@ Version 2.02.95 -
   Print just warning on thin pool check callback path for failing check.
   Always use 64bit math with VG extent_size expression.
   Validate udev structures in _insert_udev_dir().
+  Take repeatable --major --minor with pvscan --cache instead of major:minor.
   Scan all devices for lvmetad if 'pvscan --cache' used without device list.
   Populate lvmcache from lvmetad before displaying PVs in pvscan. (2.02.94)
   Suppress incorrect -n pvscan warning now always displayed. (2.02.94)

@@ -456,6 +456,14 @@ static int lvchange_persistent(struct cmd_context *cmd,
 			log_error("Minor number must be specified with -My");
 			return 0;
 		}
+		if (arg_count(cmd, major_ARG) > 1) {
+			log_error("Option -j/--major may not be repeated.");
+			return 0;
+		}
+		if (arg_count(cmd, minor_ARG) > 1) {
+			log_error("Option --minor may not be repeated.");
+			return 0;
+		}
 		if (!arg_count(cmd, major_ARG) && lv->major < 0) {
 			log_error("Major number must be specified with -My");
 			return 0;
