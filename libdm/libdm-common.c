@@ -329,7 +329,7 @@ static int _is_whitelisted_char(char c)
 int check_multiple_mangled_name_allowed(dm_string_mangling_t mode, const char *name)
 {
 	if (mode == DM_STRING_MANGLING_AUTO && strstr(name, "\\x5cx")) {
-		log_error("The name \"%s\" seems to be multiple mangled. "
+		log_error("The name \"%s\" seems to be mangled more than once. "
 			  "This is not allowed in auto mode.", name);
 		return 0;
 	}
