@@ -510,18 +510,18 @@ static int _insert_udev_dir(struct udev *udev, const char *dir)
 
 	udev_list_entry_foreach(device_entry, udev_enumerate_get_list_entry(udev_enum)) {
 		if (!(device = udev_device_new_from_syspath(udev, udev_list_entry_get_name(device_entry)))) {
-			log_warn("Udev returns NULL device.");
+			log_warn("WARNING: udev failed to return a device entry.");
 			continue;
 		}
 
 		if (!(node_name = udev_device_get_devnode(device)))
-			log_warn("Udev returns NULL devnode.");
+			log_warn("WARNING: udev failed to return a device node.");
 		else
 			r &= _insert(node_name, 0, 0);
 
 		udev_list_entry_foreach(symlink_entry, udev_device_get_devlinks_list_entry(device)) {
 			if (!(symlink_name = udev_list_entry_get_name(symlink_entry)))
-				log_warn("Udev returns NULL name.");
+				log_warn("WARNING: udev failed to return a symlink name.");
 			else
 				r &= _insert(symlink_name, 0, 0);
 		}
