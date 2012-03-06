@@ -2945,7 +2945,7 @@ static int _mangle(CMD_ARGS)
 						  : DEFAULT_DM_NAME_MANGLING;
 
 	if (target_format == DM_STRING_MANGLING_AUTO && strstr(name, "\\x5cx")) {
-		log_error("The name \"%s\" seems to be multiple mangled. "
+		log_error("The name \"%s\" seems to be mangled more than once. "
 			  "Manual intervention required to rename the device.", name);
 		goto out;
 	}
