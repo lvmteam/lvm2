@@ -191,6 +191,8 @@ int vgchange_activate(struct cmd_context *cmd, struct volume_group *vg,
 		      activation_change_t activate)
 {
 	int lv_open, active, monitored = 0, r = 1, do_activate = 1;
+	const struct lv_list *lvl;
+	struct lvinfo info;
 
 	if ((activate == CHANGE_AN) || (activate == CHANGE_ALN))
 		do_activate = 0;
@@ -203,9 +205,14 @@ int vgchange_activate(struct cmd_context *cmd, struct volume_group *vg,
 
 	/* FIXME: Force argument to deactivate them? */
 	if (!do_activate && (lv_open = lvs_in_vg_opened(vg))) {
-		log_error("Can't deactivate volume group \"%s\" with %d open "
-			  "logical volume(s)", vg->name, lv_open);
-		return 0;
+		dm_list_iterate_items(lvl, &vg->lvs)
+			if (lv_is_visible(lvl->lv) &&
+			    lv_info(cmd, lvl->lv, 0, &info, 1, 0) &&
+			    !lv_check_not_in_use(cmd, lvl->lv, &info)) {
+				log_error("Can't deactivate volume group \"%s\" with %d open "
+					  "logical volume(s)", vg->name, lv_open);
+				return 0;
+			}
 	}
 
 	/* FIXME Move into library where clvmd can use it */
