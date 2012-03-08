@@ -508,7 +508,8 @@ void daemon_start(daemon_state s)
 				syslog(LOG_ERR, "Failed to handle a client connection.");
 	}
 
-	if (s.socket_fd >= 0)
+	/* If activated by systemd, do not unlink the socket - systemd takes care of that! */
+	if (!_systemd_activation && s.socket_fd >= 0)
 		if (unlink(s.socket_path))
 			perror("unlink error");
 
