@@ -30,14 +30,14 @@ struct clvm_header {
 	uint16_t xid;	        /* Transaction ID */
 	uint32_t clientid;	/* Only used in Daemon->Daemon comms */
 	int32_t  status;	/* For replies, whether request succeeded */
-	uint32_t arglen;	/* Length of argument below. 
-				   If >1500 then it will be passed 
+	uint32_t arglen;	/* Length of argument below.
+				   If >1500 then it will be passed
 				   around the cluster in the system LV */
 	char node[1];		/* Actually a NUL-terminated string, node name.
-				   If this is empty then the command is 
-				   forwarded to all cluster nodes unless 
+				   If this is empty then the command is
+				   forwarded to all cluster nodes unless
 				   FLAG_LOCAL or FLAG_REMOTE is also set. */
-	char args[1];		/* Arguments for the command follow the 
+	char args[1];		/* Arguments for the command follow the
 				   node name, This member is only
 				   valid if the node name is empty */
 } __attribute__ ((packed));
@@ -54,7 +54,7 @@ static const char CLVMD_SOCKNAME[]= DEFAULT_RUN_DIR "/clvmd.sock";
 /* Internal commands & replies */
 #define CLVMD_CMD_REPLY    1
 #define CLVMD_CMD_VERSION  2	/* Send version around cluster when we start */
-#define CLVMD_CMD_GOAWAY   3	/* Die if received this - we are running 
+#define CLVMD_CMD_GOAWAY   3	/* Die if received this - we are running
 				   an incompatible version */
 #define CLVMD_CMD_TEST     4	/* Just for mucking about */
 
