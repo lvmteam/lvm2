@@ -784,7 +784,7 @@ static int clog_resume(struct dm_ulog_request *rq)
 		else if (lc->disk_nr_regions > lc->region_count)
 			LOG_DBG("[%s] Mirror has shrunk, updating log bits",
 				SHORT_UUID(lc->uuid));
-		break;		
+		break;
 	case -EINVAL:
 		LOG_DBG("[%s] (Re)initializing mirror log - resync issued.",
 			SHORT_UUID(lc->uuid));
@@ -837,7 +837,7 @@ out:
 	lc->sync_search = 0;
 	lc->state = LOG_RESUMED;
 	lc->recovery_halted = 0;
-	
+
 	return rq->error;
 }
 
@@ -1032,7 +1032,7 @@ static int clog_flush(struct dm_ulog_request *rq, int server)
 {
 	int r = 0;
 	struct log_c *lc = get_log(rq->uuid, rq->luid);
-	
+
 	if (!lc)
 		return -EINVAL;
 
@@ -1614,7 +1614,7 @@ out:
 
 	rq->data_size = sizeof(*pkg);
 
-	return 0;	
+	return 0;
 }
 
 

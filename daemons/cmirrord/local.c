@@ -249,7 +249,7 @@ static int do_local_work(void *data __attribute__((unused)))
 		if (r)
 			LOG_ERROR("Failed to respond to kernel [%s]",
 				  RQ_TYPE(u_rq->request_type));
-			
+
 		break;
 	case DM_ULOG_RESUME:
 		/*

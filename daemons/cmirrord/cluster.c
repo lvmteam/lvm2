@@ -89,7 +89,7 @@ struct checkpoint_data {
 	char *clean_bits;
 	char *recovering_region;
 	struct checkpoint_data *next;
-};	
+};
 
 #define INVALID 0
 #define VALID   1
@@ -911,9 +911,9 @@ static int resend_requests(struct clog_cpg *entry)
 
 			rq->u_rq.data_size = 0;
 			kernel_send(&rq->u_rq);
-				
+
 			break;
-			
+
 		default:
 			/*
 			 * If an action or a response is required, then
@@ -1355,7 +1355,7 @@ static void cpg_leave_callback(struct clog_cpg *match,
 		match->free_me = 1;
 		match->lowest_id = 0xDEAD;
 		match->state = INVALID;
-	}			
+	}
 
 	/* Remove any pending checkpoints for the leaving node. */
 	for (p_cp = NULL, c_cp = match->checkpoint_list;
@@ -1411,7 +1411,7 @@ static void cpg_leave_callback(struct clog_cpg *match,
 			 left->nodeid);
 		return;
 	}
-		
+
 	match->lowest_id = member_list[0].nodeid;
 	for (i = 0; i < member_list_entries; i++)
 		if (match->lowest_id > member_list[i].nodeid)
@@ -1530,7 +1530,7 @@ unlink_retry:
                 usleep(1000);
                 goto unlink_retry;
         }
-	
+
 	if (rv != SA_AIS_OK) {
                 LOG_ERROR("[%s] Failed to unlink checkpoint: %s",
                           SHORT_UUID(entry->name.value), str_ais_error(rv));
@@ -1633,7 +1633,7 @@ static int _destroy_cluster_cpg(struct clog_cpg *del)
 {
 	int r;
 	int state;
-	
+
 	LOG_COND(log_resend_requests, "[%s] I am leaving.2.....",
 		 SHORT_UUID(del->name.value));
 

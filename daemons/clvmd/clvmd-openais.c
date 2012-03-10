@@ -506,7 +506,7 @@ static int _lock_resource(char *resource, int mode, int flags, int *lockid)
 		saLckResourceClose(res_handle);
 		return ais_to_errno(err);
 	}
-			
+
 	/* Wait for it to complete */
 
 	DEBUGLOG("lock_resource returning %d, lock_id=%" PRIx64 "\n",

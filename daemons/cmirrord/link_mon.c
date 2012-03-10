@@ -58,7 +58,7 @@ int links_register(int fd, const char *name, int (*callback)(void *data), void *
 			free(lc);
 			return -ENOMEM;
 		}
-		
+
 		pfds = tmp;
 		free_pfds = used_pfds + 1;
 	}
@@ -125,7 +125,7 @@ int links_monitor(void)
 	for (i = 0; i < used_pfds; i++)
 		if (pfds[i].revents & POLLIN) {
 			LOG_DBG("Data ready on %d", pfds[i].fd);
-				
+
 			/* FIXME: Add this back return 1;*/
 			r++;
 		}

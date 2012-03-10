@@ -124,7 +124,7 @@ static int _get_mirror_event(char *params)
 out:
 	dm_free(args);
 	return r;
-	
+
 out_parse:
 	dm_free(args);
 	syslog(LOG_ERR, "Unable to parse mirror status string.");
