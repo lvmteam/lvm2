@@ -245,7 +245,7 @@ static int _daemon_read(struct dm_event_fifos *fifos,
 				log_error("Unable to read from event server");
 				return 0;
 			}
-			if ((ret == 0) && i && !bytes) {
+			if ((ret == 0) && (i > 4) && !bytes) {
 				log_error("No input from event server.");
 				return 0;
 			}

@@ -1,5 +1,6 @@
 Version 1.02.75 - 
 ================================
+  Make the time window for reading fifo longer 5sec (1.02.73).
 
 Version 1.02.74 - 6th March 2012
 ================================
