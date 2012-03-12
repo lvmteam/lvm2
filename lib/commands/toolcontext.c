@@ -730,7 +730,7 @@ static int _init_dev_cache(struct cmd_context *cmd)
 
 static struct dev_filter *_init_filter_components(struct cmd_context *cmd)
 {
-	unsigned nr_filt = 0;
+	int nr_filt = 0;
 	const struct dm_config_node *cn;
 	struct dev_filter *filters[MAX_FILTERS];
 	struct dev_filter *composite;
@@ -761,14 +761,14 @@ static struct dev_filter *_init_filter_components(struct cmd_context *cmd)
 
 	else if (!(filters[nr_filt++] = regex_filter_create(cn->v))) {
 		log_error("Failed to create regex device filter");
-		goto err;
+		goto bad;
 	}
 
 	/* device type filter. Required. */
 	cn = find_config_tree_node(cmd, "devices/types");
 	if (!(filters[nr_filt++] = lvm_type_filter_create(cmd->proc_dir, cn))) {
 		log_error("Failed to create lvm type filter");
-		goto err;
+		goto bad;
 	}
 
 	/* md component filter. Optional, non-critical. */
@@ -790,17 +790,14 @@ static struct dev_filter *_init_filter_components(struct cmd_context *cmd)
 	if (nr_filt == 1)
 		return filters[0];
 
-	if (!(composite = composite_filter_create(nr_filt, filters))) {
-		stack;
-		nr_filt++; /* compensate skip NULL */
-		goto err;
-	}
+	if (!(composite = composite_filter_create(nr_filt, filters)))
+		goto_bad;
 
 	return composite;
-err:
-	nr_filt--; /* skip NULL */
-	while (nr_filt-- > 0)
+bad:
+	while (--nr_filt >= 0)
 		 filters[nr_filt]->destroy(filters[nr_filt]);
+
 	return NULL;
 }
 
