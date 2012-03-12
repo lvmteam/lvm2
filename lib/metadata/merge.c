@@ -204,7 +204,7 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 
 				if (seg->chunk_size < DM_THIN_MIN_DATA_BLOCK_SIZE ||
 				    seg->chunk_size > DM_THIN_MAX_DATA_BLOCK_SIZE) {
-					log_error("LV %s: thin pool segment %u  chunk size %d is out of range",
+					log_error("LV %s: thin pool segment %u has chunk size %u out of range.",
 						  lv->name, seg_count, seg->chunk_size);
 					inc_error_count;
 				}
@@ -240,7 +240,7 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 				}
 
 				if (seg->device_id > DM_THIN_MAX_DEVICE_ID) {
-					log_error("LV %s: thin volume segment %u has too large device id %d",
+					log_error("LV %s: thin volume segment %u has too large device id %u",
 						  lv->name, seg_count, seg->device_id);
 					inc_error_count;
 				}
@@ -316,7 +316,7 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 						seg_found++;
 
 				if (!seg_found) {
-					log_error("LV %s segment %d uses LV %s,"
+					log_error("LV %s segment %u uses LV %s,"
 						  " but missing ptr from %s to %s",
 						  lv->name, seg_count,
 						  seg_lv(seg, s)->name,
@@ -324,7 +324,7 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 					inc_error_count;
 				} else if (seg_found > 1) {
 					log_error("LV %s has duplicated links "
-						  "to LV %s segment %d",
+						  "to LV %s segment %u",
 						  seg_lv(seg, s)->name,
 						  lv->name, seg_count);
 					inc_error_count;
@@ -383,9 +383,9 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 				  seg->lv->name, lv->name);
 			inc_error_count;
 		} else if (seg_found != sl->count) {
-			log_error("Reference count mismatch: LV %s has %d "
+			log_error("Reference count mismatch: LV %s has %u "
 				  "links to LV %s:%" PRIu32 "-%" PRIu32
-				  ", which has %d links",
+				  ", which has %u links",
 				  lv->name, sl->count, seg->lv->name, seg->le,
 				  seg->le + seg->len - 1, seg_found);
 			inc_error_count;
