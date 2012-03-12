@@ -1,5 +1,6 @@
 Version 2.02.96 - 
 ================================
+  Change message severity for creation of VG over uninitialised devices.
   Fix error path for failing toolcontext creation.
   Fix warn msg for thin pool chunk size and update man for chunksize (2.02.89).
 

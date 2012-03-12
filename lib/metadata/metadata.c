@@ -1468,8 +1468,8 @@ static int _pvcreate_write(struct cmd_context *cmd, struct pv_to_create *pvc)
 			stack;
 	}
 
-	log_error("Writing physical volume data to disk \"%s\"",
-			 pv_name);
+	log_verbose("Writing physical volume data to disk \"%s\"",
+		    pv_name);
 
 	if (!(pv_write(cmd, pv, 1))) {
 		log_error("Failed to write physical volume \"%s\"", pv_name);
