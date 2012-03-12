@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2011 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2012 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -36,8 +36,8 @@ static struct {
 } _partitions[NUMBER_OF_MAJORS];
 
 typedef struct {
-	const char *name;
-	const int max_partitions;
+	const char name[15];
+	const int8_t max_partitions;
 } device_info_t;
 
 static int _md_major = -1;
@@ -107,7 +107,7 @@ const char *dev_subsystem_name(const struct device *dev)
  *
  * The list can be supplemented with devices/types in the config file.
  */
-static const device_info_t device_info[] = {
+static const device_info_t _device_info[] = {
 	{"ide", 64},		/* IDE disk */
 	{"sd", 16},		/* SCSI disk */
 	{"md", 1},		/* Multiple Disk driver (SoftRAID) */
@@ -136,7 +136,7 @@ static const device_info_t device_info[] = {
 	{"mmc", 16},		/* MMC block device */
 	{"blkext", 1},		/* Extended device partitions */
 	{"fio", 16},		/* Fusion */
-	{NULL, 0}
+	{"", 0}
 };
 
 static int _passes_lvm_type_device_filter(struct dev_filter *f __attribute__((unused)),
@@ -220,7 +220,7 @@ static int _scan_proc_dev(const char *proc, const struct dm_config_node *cn)
 		return 0;
 	}
 
-	while (fgets(line, 80, pd) != NULL) {
+	while (fgets(line, sizeof(line), pd) != NULL) {
 		i = 0;
 		while (line[i] == ' ')
 			i++;
@@ -269,13 +269,13 @@ static int _scan_proc_dev(const char *proc, const struct dm_config_node *cn)
 
 		/* Go through the valid device names and if there is a
 		   match store max number of partitions */
-		for (j = 0; device_info[j].name != NULL; j++) {
-			dev_len = strlen(device_info[j].name);
+		for (j = 0; _device_info[j].name[0]; j++) {
+			dev_len = strlen(_device_info[j].name);
 			if (dev_len <= strlen(line + i) &&
-			    !strncmp(device_info[j].name, line + i, dev_len) &&
+			    !strncmp(_device_info[j].name, line + i, dev_len) &&
 			    (line_maj < NUMBER_OF_MAJORS)) {
 				_partitions[line_maj].max_partitions =
-				    device_info[j].max_partitions;
+				    _device_info[j].max_partitions;
 				break;
 			}
 		}
@@ -342,6 +342,14 @@ int major_is_scsi_device(int major)
 	return (_partitions[major].flags & PARTITION_SCSI_DEVICE) ? 1 : 0;
 }
 
+static void _lvm_type_filter_destroy(struct dev_filter *f)
+{
+	if (f->use_count)
+		log_error(INTERNAL_ERROR "Destroying lvm_type filter while in use %u times.", f->use_count);
+
+	dm_free(f);
+}
+
 struct dev_filter *lvm_type_filter_create(const char *proc,
 					  const struct dm_config_node *cn)
 {
@@ -353,7 +361,7 @@ struct dev_filter *lvm_type_filter_create(const char *proc,
 	}
 
 	f->passes_filter = _passes_lvm_type_device_filter;
-	f->destroy = lvm_type_filter_destroy;
+	f->destroy = _lvm_type_filter_destroy;
 	f->use_count = 0;
 	f->private = NULL;
 
@@ -363,12 +371,4 @@ struct dev_filter *lvm_type_filter_create(const char *proc,
 	}
 
 	return f;
-}
-
-void lvm_type_filter_destroy(struct dev_filter *f)
-{
-	if (f->use_count)
-		log_error(INTERNAL_ERROR "Destroying lvm_type filter while in use %u times.", f->use_count);
-
-	dm_free(f);
 }
