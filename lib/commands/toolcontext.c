@@ -1371,6 +1371,11 @@ struct cmd_context *create_toolcontext(unsigned is_long_lived,
 
 	cmd->config_valid = 1;
 out:
+	if (cmd->config_valid != 1) {
+		destroy_toolcontext(cmd);
+		cmd = NULL;
+	}
+
 	return cmd;
 }
 

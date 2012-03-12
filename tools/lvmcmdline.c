@@ -1248,13 +1248,16 @@ struct cmd_context *init_lvm(void)
 	if (!udev_init_library_context())
 		stack;
 
-	if (!(cmd = create_toolcontext(0, NULL, 1, 0)))
+	if (!(cmd = create_toolcontext(0, NULL, 1, 0))) {
+		udev_fin_library_context();
 		return_NULL;
+	}
 
 	_cmdline.arg_props = &_arg_props[0];
 
 	if (stored_errno()) {
 		destroy_toolcontext(cmd);
+		udev_fin_library_context();
 		return_NULL;
 	}
 
