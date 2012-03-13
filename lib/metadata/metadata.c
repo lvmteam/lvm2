@@ -645,19 +645,19 @@ static int vg_extend_single_pv(struct volume_group *vg, char *pv_name,
 {
 	struct physical_volume *pv;
 
-	pv = pv_by_path(vg->fid->fmt->cmd, pv_name);
+	if (!(pv = pv_by_path(vg->fid->fmt->cmd, pv_name)))
+		stack;
 	if (!pv && !pp) {
 		log_error("%s not identified as an existing "
 			  "physical volume", pv_name);
 		return 0;
 	} else if (!pv && pp) {
-		pv = pvcreate_single(vg->cmd, pv_name, pp, 0);
-		if (!pv)
-			return 0;
+		if (!(pv = pvcreate_single(vg->cmd, pv_name, pp, 0)))
+			return_0;
 	}
 	if (!add_pv_to_vg(vg, pv_name, pv, pp)) {
 		free_pv_fid(pv);
-		return 0;
+		return_0;
 	}
 	return 1;
 }
@@ -679,7 +679,7 @@ int vg_extend(struct volume_group *vg, int pv_count, const char *const *pv_names
 	char *pv_name;
 
 	if (_vg_bad_status_bits(vg, RESIZEABLE_VG))
-		return 0;
+		return_0;
 
 	/* attach each pv */
 	for (i = 0; i < pv_count; i++) {
@@ -1327,7 +1327,8 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name,
 	/* FIXME Check partition type is LVM unless --force is given */
 
 	/* Is there a pv here already? */
-	pv = pv_read(cmd, name, 0, 0);
+	if (!(pv = pv_read(cmd, name, 0, 0)))
+		stack;
 
 	/*
 	 * If a PV has no MDAs it may appear to be an orphan until the
@@ -1339,7 +1340,8 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name,
 		free_pv_fid(pv);
 		if (!scan_vgs_for_pvs(cmd, 0))
 			return_0;
-		pv = pv_read(cmd, name, 0, 0);
+		if (!(pv = pv_read(cmd, name, 0, 0)))
+			stack;
 	}
 
 	/* Allow partial & exported VGs to be destroyed. */
@@ -1513,7 +1515,7 @@ struct physical_volume * pvcreate_single(struct cmd_context *cmd,
 				goto_bad;
 			log_error("uuid %s already in use on \"%s\"", buffer,
 				  dev_name(dev));
-			goto bad;;
+			goto bad;
 		}
 	}
 
@@ -2766,6 +2768,7 @@ static int _vg_read_orphan_pv(struct lvmcache_info *info, void *baton)
 
 	if (!(pv = _pv_read(b->vg->cmd, b->vg->vgmem, dev_name(lvmcache_device(info)),
 			    b->vg->fid, b->warnings, 0))) {
+		stack;
 		return 1;
 	}
 
