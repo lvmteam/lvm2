@@ -1,5 +1,6 @@
 Version 2.02.96 - 
 ================================
+  Fix error message when pvmove LV activation fails with name already in use.
   Better structure layout for device_info in dev_subsystem_name().
   Change message severity for creation of VG over uninitialised devices.
   Fix error path for failing toolcontext creation.

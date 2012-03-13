@@ -369,7 +369,7 @@ static int _update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 	}
 
 	if (!_suspend_lvs(cmd, first_time, lv_mirr, lvs_changed, vg)) {
-		log_error("ABORTING: Volume group metadata update failed. (first_time: %d)", first_time);
+		log_error("ABORTING: Temporary pvmove mirror %s failed.", first_time ? "activation" : "reload");
 		/* FIXME Add a recovery path for first time too. */
 		if (!first_time && !revert_lv(cmd, lv_mirr))
 			stack;
