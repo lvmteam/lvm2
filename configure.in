@@ -422,11 +422,11 @@ case "$THIN" in
 		AC_PATH_PROG(THIN_CHECK_CMD, thin_check)
 		test -z "$THIN_CHECK_CMD" && AC_MSG_ERROR(thin_check not found in path $PATH)
 	fi
-
-	AC_DEFINE_UNQUOTED([THIN_CHECK_CMD], ["$THIN_CHECK_CMD"],
-			   [The path to 'thin_check', if available.])
 	;;
 esac
+
+AC_DEFINE_UNQUOTED([THIN_CHECK_CMD], ["$THIN_CHECK_CMD"],
+		   [The path to 'thin_check', if available.])
 
 
 ################################################################################

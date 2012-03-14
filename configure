@@ -7064,14 +7064,14 @@ fi
 
 		test -z "$THIN_CHECK_CMD" && as_fn_error $? "thin_check not found in path $PATH" "$LINENO" 5
 	fi
+	;;
+esac
 
 
 cat >>confdefs.h <<_ACEOF
 #define THIN_CHECK_CMD "$THIN_CHECK_CMD"
 _ACEOF
 
-	;;
-esac
 
 
 ################################################################################
