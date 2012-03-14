@@ -609,13 +609,14 @@ int lvmetad_pv_found(struct id pvid, struct device *device, const struct format_
 
 int lvmetad_pv_gone(dev_t device, const char *pv_name)
 {
+	daemon_reply reply;
 	int result;
 	int found;
 
 	if (!_using_lvmetad)
 		return 1;
 
-	daemon_reply reply = daemon_send_simple(_lvmetad, "pv_gone", "device = %d", device, NULL);
+	reply = daemon_send_simple(_lvmetad, "pv_gone", "device = %d", device, NULL);
 
 	result = _lvmetad_handle_reply(reply, "drop PV", pv_name, &found);
 	/* We don't care whether or not the daemon had the PV cached. */
