@@ -1,4 +1,4 @@
-# Copyright (C) 2007-2011 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2007-2012 Red Hat, Inc. All rights reserved.
 #
 # This file is part of LVM2.
 #
@@ -19,10 +19,10 @@ subdir = $(shell pwd|sed 's,.*/,,')
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 top_builddir = @top_builddir@
-abs_srcdir = @abs_srcdir@
-abs_builddir = @abs_builddir@
-abs_top_builddir = @abs_top_builddir@
-abs_top_srcdir = @abs_top_srcdir@
+abs_srcdir = "@abs_srcdir@"
+abs_builddir = "@abs_builddir@"
+abs_top_builddir = "@abs_top_builddir@"
+abs_top_srcdir = "@abs_top_srcdir@"
 
 SUBDIRS = api unit
 SOURCES = lib/not.c lib/harness.c
@@ -98,12 +98,12 @@ CMDS = lvm $(shell cat $(top_builddir)/tools/.commands)
 .lib-dir-stamp:
 	$(MKDIR_P) lib
 	for i in $(CMDS); do ln -fs lvm-wrapper lib/$$i; done
-	ln -fs "$(abs_top_builddir)/tools/dmsetup" lib/dmsetup
-	ln -fs "$(abs_top_builddir)/daemons/clvmd/clvmd" lib/clvmd
-	ln -fs "$(abs_top_builddir)/daemons/dmeventd/dmeventd" lib/dmeventd
-	ln -fs "$(abs_top_builddir)/daemons/lvmetad/lvmetad" lib/lvmetad
-	ln -fs "$(abs_top_srcdir)/scripts/vgimportclone.sh" lib/vgimportclone
-	ln -fs "$(abs_top_srcdir)/scripts/fsadm.sh" lib/fsadm
+	ln -fs $(abs_top_builddir)/tools/dmsetup lib/dmsetup
+	ln -fs $(abs_top_builddir)/daemons/clvmd/clvmd lib/clvmd
+	ln -fs $(abs_top_builddir)/daemons/dmeventd/dmeventd lib/dmeventd
+	ln -fs $(abs_top_builddir)/daemons/lvmetad/lvmetad lib/lvmetad
+	ln -fs $(abs_top_srcdir)/scripts/vgimportclone.sh lib/vgimportclone
+	ln -fs $(abs_top_srcdir)/scripts/fsadm.sh lib/fsadm
 	touch $@
 
 clean:
