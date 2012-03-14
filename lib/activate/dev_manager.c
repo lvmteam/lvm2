@@ -1205,39 +1205,55 @@ static int _thin_pool_callback(struct dm_tree_node *node,
 	int ret, status;
 	const struct thin_cb_data *data = cb_data;
 	const char *dmdir = dm_dir();
+	const struct dm_config_node *cn;
+	const struct dm_config_value *cv;
 	const char *thin_check =
 		find_config_tree_str_allow_empty(data->pool_lv->vg->cmd,
 						 "global/thin_check_executable",
-						 DEFAULT_THIN_CHECK_EXECUTABLE);
+						 THIN_CHECK_CMD);
 	const struct logical_volume *mlv = first_seg(data->pool_lv)->metadata_lv;
-	size_t len = strlen(dmdir) + strlen(mlv->vg->name) + strlen(mlv->name) + 3;
+	size_t len = strlen(dmdir) + 2 * (strlen(mlv->vg->name) + strlen(mlv->name)) + 3;
 	char meta_path[len];
-	int args;
-	char *argv[19]; /* Max supported 15 args */
-	char *split;
+	int args = 0;
+	const char *argv[19]; /* Max supported 15 args */
+	char *split, *dm_name;
 
 	if (!thin_check[0])
 		return 1; /* Checking disabled */
 
-	if (dm_snprintf(meta_path, len, "%s/%s-%s", dmdir,
-			mlv->vg->name, mlv->name) < 0) {
+	if (!(dm_name = dm_build_dm_name(data->dm->mem, mlv->vg->name,
+					 mlv->name, NULL)) ||
+	    (dm_snprintf(meta_path, len, "%s/%s", dmdir, dm_name) < 0)) {
 		log_error("Failed to build thin metadata path.");
 		return 0;
 	}
 
-	if (!(split = dm_pool_strdup(data->dm->mem, thin_check))) {
-		log_error("Failed to duplicate thin check string.");
-		return 0;
+	if ((cn = find_config_tree_node(mlv->vg->cmd, "global/thin_check_options"))) {
+		for (cv = cn->v; cv && args < 16; cv = cv->next) {
+			if (cv->type != DM_CFG_STRING) {
+				log_error("Invalid string in config file: "
+					  "global/thin_check_options");
+				return 0;
+			}
+			argv[++args] = cv->v.str;
+		}
+	} else {
+		/* Use default options (no support for options with spaces) */
+		if (!(split = dm_pool_strdup(data->dm->mem, DEFAULT_THIN_CHECK_OPTIONS))) {
+			log_error("Failed to duplicate thin check string.");
+			return 0;
+		}
+		args = dm_split_words(split, 16, 0, (char**) argv + 1);
 	}
-
-	args = dm_split_words(split, 16, 0, argv);
 
 	if (args == 16) {
 		log_error("Too many options for thin check command.");
 		return 0;
 	}
-	argv[args++] = meta_path;
-	argv[args] = NULL;
+
+	argv[0] = thin_check;
+	argv[++args] = meta_path;
+	argv[++args] = NULL;
 
 	if (!(ret = exec_cmd(data->pool_lv->vg->cmd, (const char * const *)argv,
 			     &status, 0))) {
@@ -1262,7 +1278,7 @@ static int _thin_pool_callback(struct dm_tree_node *node,
 		 */
 	}
 
-	dm_pool_free(data->dm->mem, split);
+	dm_pool_free(data->dm->mem, dm_name);
 
 	return ret;
 }

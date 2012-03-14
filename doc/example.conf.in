@@ -658,7 +658,11 @@ activation {
     # The thin tools are available as part of the device-mapper-persistent-data
     # package from https://github.com/jthornber/thin-provisioning-tools.
     #
-    thin_check_executable = "/sbin/thin_check -q"
+    thin_check_executable = "@THIN_CHECK_CMD@"
+
+    # String with options passed with thin_check command. By default,
+    # option '-q' is for quite output.
+    thin_check_options = [ "-q", 121e321 ]
 
     # While activating devices, I/O to devices being (re)configured is
     # suspended, and as a precaution against deadlocks, LVM2 needs to pin
