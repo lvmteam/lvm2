@@ -1829,13 +1829,13 @@ static void restart(void)
 
 	if (!init_fifos(&fifos)) {
 		fprintf(stderr, "WARNING: Could not initiate communication with existing dmeventd.\n");
-		return;
+		exit(EXIT_FAILURE);
 	}
 
 	if (!dm_event_get_version(&fifos, &version)) {
 		fprintf(stderr, "WARNING: Could not communicate with existing dmeventd.\n");
 		fini_fifos(&fifos);
-		return;
+		exit(EXIT_FAILURE);
 	}
 
 	if (version < 1) {
