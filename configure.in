@@ -411,6 +411,24 @@ case "$THIN" in
   *) AC_MSG_ERROR([--with-thin parameter invalid ($THIN)]) ;;
 esac
 
+case "$THIN" in
+  internal|shared)
+	AC_ARG_WITH(thin-check,
+		AC_HELP_STRING([--with-thin-check=PATH],
+			       [thin_check tool: [[autodetect]]]),
+			       THIN_CHECK_CMD=$withval, THIN_CHECK_CMD="autodetect")
+	# Empty means a config way to ignore thin checking
+	if test "$THIN_CHECK_CMD" = "autodetect"; then
+		AC_PATH_PROG(THIN_CHECK_CMD, thin_check)
+		test -z "$THIN_CHECK_CMD" && AC_MSG_ERROR(thin_check not found in path $PATH)
+	fi
+
+	AC_DEFINE_UNQUOTED([THIN_CHECK_CMD], ["$THIN_CHECK_CMD"],
+			   [The path to 'thin_check', if available.])
+	;;
+esac
+
+
 ################################################################################
 dnl -- Disable readline
 AC_MSG_CHECKING(whether to enable readline)
@@ -1475,6 +1493,7 @@ AC_SUBST(STATICDIR)
 AC_SUBST(STATIC_LINK)
 AC_SUBST(TESTING)
 AC_SUBST(THIN)
+AC_SUBST(THIN_CHECK_CMD)
 AC_SUBST(UDEV_LIBS)
 AC_SUBST(UDEV_PC)
 AC_SUBST(UDEV_RULES)

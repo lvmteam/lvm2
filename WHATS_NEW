@@ -1,5 +1,6 @@
 Version 2.02.96 - 
 ================================
+  Add --with-thin-check configure option for path to thin_check.
   Detect lvm binary path in lvmetad udev rules.
   Fix error message when pvmove LV activation fails with name already in use.
   Better structure layout for device_info in dev_subsystem_name().

@@ -534,6 +534,9 @@
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
+/* The path to 'thin_check', if available. */
+#undef THIN_CHECK_CMD
+
 /* Define to 1 to include built-in support for thin provisioning. */
 #undef THIN_INTERNAL
 
