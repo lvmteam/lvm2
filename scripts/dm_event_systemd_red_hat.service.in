@@ -9,6 +9,7 @@ DefaultDependencies=no
 Type=forking
 ExecStart=@sbindir@/dmeventd
 ExecReload=@sbindir@/dmeventd -R
+Environment=SD_ACTIVATION=1
 PIDFile=@DMEVENTD_PIDFILE@
 OOMScoreAdjust=-1000
 

@@ -56,6 +56,7 @@
 #  define OOM_SCORE_ADJ_MIN (-1000)
 
 /* Systemd on-demand activation support */
+#  define SD_ACTIVATION_ENV_VAR_NAME "SD_ACTIVATION"
 #  define SD_LISTEN_PID_ENV_VAR_NAME "LISTEN_PID"
 #  define SD_LISTEN_FDS_ENV_VAR_NAME "LISTEN_FDS"
 #  define SD_LISTEN_FDS_START 3
@@ -1698,6 +1699,10 @@ static int _systemd_handover(struct dm_event_fifos *fifos)
 
 	memset(fifos, 0, sizeof(*fifos));
 
+	/* SD_ACTIVATION must be set! */
+	if (!(e = getenv(SD_ACTIVATION_ENV_VAR_NAME)) || strcmp(e, "1"))
+		goto out;
+
 	/* LISTEN_PID must be equal to our PID! */
 	if (!(e = getenv(SD_LISTEN_PID_ENV_VAR_NAME)))
 		goto out;
@@ -1729,6 +1734,7 @@ static int _systemd_handover(struct dm_event_fifos *fifos)
 	}
 
 out:
+	unsetenv(SD_ACTIVATION_ENV_VAR_NAME);
 	unsetenv(SD_LISTEN_PID_ENV_VAR_NAME);
 	unsetenv(SD_LISTEN_FDS_ENV_VAR_NAME);
 	return r;

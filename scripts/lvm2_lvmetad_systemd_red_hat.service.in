@@ -11,6 +11,7 @@ NonBlocking=true
 ExecStart=@sbindir@/lvmetad
 ExecStartPost=@sbindir@/vgscan
 ExecReload=@sbindir@/lvmetad -R
+Environment=SD_ACTIVATION=1
 Restart=on-abort
 PIDFile=@DEFAULT_RUN_DIR@/lvmetad.pid
 
