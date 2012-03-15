@@ -25,6 +25,7 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <sys/resource.h>
+#include <dirent.h>
 
 #ifdef HAVE_GETOPTLONG
 #  include <getopt.h>
@@ -1252,26 +1253,49 @@ static void _close_descriptor(int fd, unsigned suppress_warnings,
 	fprintf(stderr, " Parent PID %" PRIpid_t ": %s\n", ppid, parent_cmdline);
 }
 
-static void _close_stray_fds(const char *command)
+static int _close_stray_fds(const char *command)
 {
 	struct rlimit rlim;
 	int fd;
 	unsigned suppress_warnings = 0;
 	pid_t ppid = getppid();
 	const char *parent_cmdline = _get_cmdline(ppid);
-
-	if (getrlimit(RLIMIT_NOFILE, &rlim) < 0) {
-		fprintf(stderr, "getrlimit(RLIMIT_NOFILE) failed: %s\n",
-			strerror(errno));
-		return;
-	}
+	static const char _fd_dir[] = DEFAULT_PROC_DIR "/self/fd";
+	struct dirent *dirent;
+	DIR *d;
 
 	if (getenv("LVM_SUPPRESS_FD_WARNINGS"))
 		suppress_warnings = 1;
 
-	for (fd = 3; fd < (int)rlim.rlim_cur; fd++)
-		_close_descriptor(fd, suppress_warnings, command, ppid,
-				  parent_cmdline);
+	if (!(d = opendir(_fd_dir))) {
+		if (errno != ENOENT) {
+			log_sys_error("opendir", _fd_dir);
+			return 0; /* broken system */
+		}
+
+		/* Path does not exist, use the old way */
+		if (getrlimit(RLIMIT_NOFILE, &rlim) < 0) {
+			log_sys_error("getrlimit", "RLIMIT_NOFILE");
+			return 1;
+		}
+
+		for (fd = 3; fd < (int)rlim.rlim_cur; fd++)
+			_close_descriptor(fd, suppress_warnings, command, ppid,
+					  parent_cmdline);
+		return 1;
+	}
+
+	while ((dirent = readdir(d))) {
+		fd = atoi(dirent->d_name);
+		if (fd > 2 && fd != dirfd(d))
+			_close_descriptor(fd, suppress_warnings,
+					  command, ppid, parent_cmdline);
+	}
+
+	if (closedir(d))
+		log_sys_error("closedir", _fd_dir);
+
+	return 1;
 }
 
 struct cmd_context *init_lvm(void)
@@ -1426,7 +1450,8 @@ int lvm2_main(int argc, char **argv)
 	    strcmp(base, "initrd-lvm"))
 		alias = 1;
 
-	_close_stray_fds(base);
+	if (!_close_stray_fds(base))
+		return -1;
 
 	if (is_static() && strcmp(base, "lvm.static") &&
 	    path_exists(LVM_SHARED_PATH) &&
