@@ -156,6 +156,13 @@ for i in 1 2 3 4; do
 	done
 done
 done
+
+# 3-way to 2-way convert while specifying devices
+lvcreate --type raid1 -m 2 -l 2 -n $lv1 $vg $dev1 $dev2 $dev3
+wait_for_sync $vg/$lv1
+lvconvert -m1 $vg/$lv1 $dev2
+lvremove -ff $vg
+
 #
 # FIXME: Add tests that specify particular devices to be removed
 #

@@ -1012,8 +1012,20 @@ static int _raid_remove_images(struct logical_volume *lv,
 	}
 
 	/*
+	 * We resume the extracted sub-LVs first so they are renamed
+	 * and won't conflict with the remaining (possibly shifted)
+	 * sub-LVs.
+	 */
+	dm_list_iterate_items(lvl, &removal_list) {
+		if (!resume_lv(lv->vg->cmd, lvl->lv)) {
+			log_error("Failed to resume extracted LVs");
+			return 0;
+		}
+	}
+
+	/*
 	 * Resume original LV
-	 * This also resumes all other sub-lvs (including the extracted)
+	 * This also resumes all other sub-LVs
 	 */
 	if (!resume_lv(lv->vg->cmd, lv)) {
 		log_error("Failed to resume %s/%s after committing changes",
