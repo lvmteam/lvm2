@@ -23,10 +23,10 @@ aux prepare_devs 2 128
 pvcreate "$dev1"
 pvcreate --metadatacopies 0 "$dev2"
 
-# "check lv snapshot" 
-vgcreate -c n "$vg" "$dev1" "$dev2" 
-lvcreate -n "$lv" -l 60%FREE "$vg" 
-lvcreate -s -n $lv2 -l 10%FREE "$vg"/"$lv" 
-pvdisplay 
+# "check lv snapshot"
+vgcreate -c n $vg "$dev1" "$dev2"
+lvcreate -n $lv -l 60%FREE $vg
+lvcreate -s -n $lv2 -l 10%FREE $vg/$lv
+pvdisplay
 lvdisplay
-vgremove -f "$vg"
+vgremove -f $vg

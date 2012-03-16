@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # Copyright (C) 2008 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
@@ -20,10 +20,10 @@ aux lvmconf 'allocation/mirror_logs_require_separate_pvs = 1'
 # is always on $dev3.  ($dev4 behaves as a spare)
 cleanup() {
 	vgreduce --removemissing $vg
-	for d in "$@"; do aux enable_dev $d; done
-	for d in "$@"; do vgextend $vg $d; done
+	for d in "$@"; do aux enable_dev "$d"; done
+	for d in "$@"; do vgextend $vg "$d"; done
 	lvremove -ff $vg/mirror
-	lvcreate -m 1 --ig -l 2 -n mirror $vg $dev1 $dev2 $dev3:0
+	lvcreate -m 1 --ig -l 2 -n mirror $vg "$dev1" "$dev2" "$dev3":0
 }
 
 repair() {
@@ -34,58 +34,58 @@ lvcreate -m 1 -L 1 -n mirror $vg
 lvchange -a n $vg/mirror
 
 # Fail a leg of a mirror.
-aux disable_dev $dev1
+aux disable_dev "$dev1"
 lvchange --partial -a y $vg/mirror
 repair 'activation { mirror_image_fault_policy = "remove" }'
 check linear $vg mirror
-cleanup $dev1
+cleanup "$dev1"
 
 # Fail a leg of a mirror.
 # Expected result: Mirror (leg replaced, should retain log)
-aux disable_dev $dev1
+aux disable_dev "$dev1"
 repair 'activation { mirror_image_fault_policy = "replace" mirror_log_fault_policy = "remove" }'
 check mirror $vg mirror
 check active $vg mirror_mlog
-cleanup $dev1
+cleanup "$dev1"
 
 # Fail a leg of a mirror.
 # Expected result: Mirror (leg replaced)
-aux disable_dev $dev1
+aux disable_dev "$dev1"
 repair 'activation { mirror_image_fault_policy = "replace" }'
 check mirror $vg mirror
 check active $vg mirror_mlog
-cleanup $dev1
+cleanup "$dev1"
 
 # Fail a leg of a mirror (use old name for policy specification)
 # Expected result: Mirror (leg replaced)
-aux disable_dev $dev1
+aux disable_dev "$dev1"
 repair 'activation { mirror_image_fault_policy = "replace" }'
 check mirror $vg mirror
 check active $vg mirror_mlog
-cleanup $dev1
+cleanup "$dev1"
 
 # Fail a leg of a mirror w/ no available spare
 # Expected result: linear
 #                  (or 2-way with leg/log overlap if alloc anywhere)
-aux disable_dev $dev2 $dev4
+aux disable_dev "$dev2" "$dev4"
 repair 'activation { mirror_image_fault_policy = "replace" }'
 check mirror $vg mirror
 not check lv_exists $vg mirror_mlog
-cleanup $dev2 $dev4
+cleanup "$dev2" "$dev4"
 
 # Fail the log device of a mirror w/ no available spare
 # Expected result: mirror w/ corelog
-aux disable_dev $dev3 $dev4
+aux disable_dev "$dev3" "$dev4"
 repair 'activation { mirror_image_fault_policy = "replace" }' $vg/mirror
 check mirror $vg mirror
 not check lv_exists $vg mirror_mlog
-cleanup $dev3 $dev4
+cleanup "$dev3" "$dev4"
 
 # Fail the log device with a remove policy
 # Expected result: mirror w/ corelog
 lvchange -a y $vg/mirror
-aux disable_dev $dev3 $dev4
+aux disable_dev "$dev3" "$dev4"
 repair 'activation { mirror_log_fault_policy = "remove" }'
 check mirror $vg mirror core
 not check lv_exists $vg mirror_mlog
-cleanup $dev3 $dev4
+cleanup "$dev3" "$dev4"

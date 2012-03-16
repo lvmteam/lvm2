@@ -1,3 +1,4 @@
+#!/bin/sh
 # Copyright (C) 2012 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,

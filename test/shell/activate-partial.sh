@@ -1,3 +1,4 @@
+#!/bin/sh
 # Copyright (C) 2010 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
@@ -14,7 +15,7 @@ aux prepare_vg 3
 
 lvcreate -m 1 -l 1 -n mirror $vg
 lvchange -a n $vg/mirror
-aux disable_dev $dev1
+aux disable_dev "$dev1"
 
 not vgreduce --removemissing $vg
 not lvchange -v -a y $vg/mirror

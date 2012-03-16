@@ -1,6 +1,5 @@
-#!/bin/bash
-
-# Copyright (C) 2011 Red Hat, Inc. All rights reserved.
+#!/bin/sh
+# Copyright (C) 2011-2012 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -13,22 +12,19 @@
 . lib/test
 
 # is_in_sync <VG/LV>
-function is_in_sync()
-{
-	local dm_name
+is_in_sync_() {
 	local a
 	local b
 	local idx
-
-	dm_name=`echo $1 | sed s:-:--: | sed s:/:-:`
+	local dm_name=$(echo $1 | sed s:-:--: | sed s:/:-:)
 
 	if ! a=(`dmsetup status $dm_name`); then
 		echo "Unable to get sync status of $1"
-		exit 1
+		return 1
 	elif [ ${a[2]} = "snapshot-origin" ]; then
 		if ! a=(`dmsetup status ${dm_name}-real`); then
 			echo "Unable to get sync status of $1"
-			exit 1
+			return 1
 		fi
 	fi
 
@@ -41,9 +37,9 @@ function is_in_sync()
 		idx=$((${a[3]} + 4))
 	else
 		echo "Unable to get sync ratio for target type '${a[2]}'"
-		exit 1
+		return 1
 	fi
-	b=(`echo ${a[$idx]} | sed s:/:' ':`)
+	b=( $(echo ${a[$idx]} | sed s:/:' ':) )
 
 	if [ ${b[0]} != ${b[1]} ]; then
 		echo "$dm_name (${a[3]}) is not in-sync"
@@ -52,7 +48,7 @@ function is_in_sync()
 
 	if [[ ${a[$(($idx - 1))]} =~ a ]]; then
 		echo "$dm_name in-sync, but 'a' characters in health status"
-		exit 1
+		return 1
 	fi
 
 	if [ ${a[2]} = "raid" ]; then
@@ -60,49 +56,26 @@ function is_in_sync()
 	else
 		echo "$dm_name (${a[2]}) is in-sync"
 	fi
-
-	return 0
 }
 
 # wait_for_sync <VG/LV>
-function wait_for_sync()
-{
-	local i=0
-
-	while ! is_in_sync $1; do
-		sleep 2
-		i=$(($i + 1))
-		if [ $i -gt 500 ]; then
-			echo "Sync is taking too long - assume stuck"
-			exit 1
-		fi
+wait_for_sync_() {
+	for i in {1..100} ; do
+		is_in_sync_ $1 && return
+		sleep 1
 	done
-}
 
-function is_raid_available()
-{
-	local a
-
-	modprobe dm-raid
-	a=(`dmsetup targets | grep raid`)
-	if [ -z $a ]; then
-		echo "RAID target not available"
-		return 1
-	fi
-	if [ ${a[1]} != "v1.1.0" ]; then
-		echo "Bad RAID version"
-		return 1
-	fi
-
-	return 0
+	echo "Sync is taking too long - assume stuck"
+	return 1
 }
 
 ########################################################
 # MAIN
 ########################################################
-is_raid_available || skip
+aux target_at_least dm-raid 1 1 0 || skip
 
-aux prepare_vg 5 80
+aux prepare_pvs 5 80
+vgcreate -c n -s 256k $vg $(cat DEVICES)
 
 ###########################################
 # RAID1 convert tests
@@ -138,7 +111,7 @@ for i in 1 2 3 4; do
 			lvcreate -l 2 -n $lv1 $vg
 		else
 			lvcreate --type raid1 -m $(($i - 1)) -l 2 -n $lv1 $vg
-			wait_for_sync $vg/$lv1
+			wait_for_sync_ $vg/$lv1
 		fi
 
 		if $under_snap; then
@@ -159,7 +132,7 @@ done
 
 # 3-way to 2-way convert while specifying devices
 lvcreate --type raid1 -m 2 -l 2 -n $lv1 $vg $dev1 $dev2 $dev3
-wait_for_sync $vg/$lv1
+wait_for_sync_ $vg/$lv1
 lvconvert -m1 $vg/$lv1 $dev2
 lvremove -ff $vg
 
@@ -172,7 +145,7 @@ lvremove -ff $vg
 ###########################################
 # 3-way to 2-way/linear
 lvcreate --type raid1 -m 2 -l 2 -n $lv1 $vg
-wait_for_sync $vg/$lv1
+wait_for_sync_ $vg/$lv1
 lvconvert --splitmirrors 1 -n $lv2 $vg/$lv1
 check lv_exists $vg $lv1
 check linear $vg $lv2
@@ -181,7 +154,7 @@ lvremove -ff $vg
 
 # 2-way to linear/linear
 lvcreate --type raid1 -m 1 -l 2 -n $lv1 $vg
-wait_for_sync $vg/$lv1
+wait_for_sync_ $vg/$lv1
 lvconvert --splitmirrors 1 -n $lv2 $vg/$lv1
 check linear $vg $lv1
 check linear $vg $lv2
@@ -190,7 +163,7 @@ lvremove -ff $vg
 
 # 3-way to linear/2-way
 lvcreate --type raid1 -m 2 -l 2 -n $lv1 $vg
-wait_for_sync $vg/$lv1
+wait_for_sync_ $vg/$lv1
 # FIXME: Can't split off a RAID1 from a RAID1 yet
 should lvconvert --splitmirrors 2 -n $lv2 $vg/$lv1
 #check linear $vg $lv1
@@ -203,7 +176,7 @@ lvremove -ff $vg
 ###########################################
 # 3-way to 2-way/linear
 lvcreate --type raid1 -m 2 -l 2 -n $lv1 $vg
-wait_for_sync $vg/$lv1
+wait_for_sync_ $vg/$lv1
 lvconvert --splitmirrors 1 --trackchanges $vg/$lv1
 check lv_exists $vg $lv1
 check linear $vg ${lv1}_rimage_2
@@ -216,7 +189,7 @@ lvremove -ff $vg
 ###########################################
 for i in 1 2 3 ; do
 	lvcreate --type mirror -m $i -l 2 -n $lv1 $vg
-	wait_for_sync $vg/$lv1
+	wait_for_sync_ $vg/$lv1
 	lvconvert --type raid1 $vg/$lv1
 	lvremove -ff $vg
 done

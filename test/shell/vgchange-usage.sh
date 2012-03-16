@@ -14,7 +14,7 @@ test_description='Exercise some vgchange diagnostics'
 . lib/test
 
 aux prepare_pvs 3
-pvcreate --metadatacopies 0 $dev1
+pvcreate --metadatacopies 0 "$dev1"
 vgcreate $vg $(cat DEVICES)
 
 vgdisplay $vg
@@ -34,8 +34,8 @@ aux check vg_field $vg max_lv 0
 vgchange -l 128 $vg
 aux check vg_field $vg max_lv 128
 
-lvcreate -l4 -n$lv1 $vg
-lvcreate -l4 -n$lv2 $vg
+lvcreate -l4 -n $lv1 $vg
+lvcreate -l4 -n $lv2 $vg
 
 lv_count=$(get vg_field $vg lv_count)
 not vgchange -l 1 $vg 2>err

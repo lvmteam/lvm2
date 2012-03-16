@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # Copyright (C) 2012 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
@@ -11,10 +11,9 @@
 
 . lib/test
 
-aux prepare_devs 1 20000
-pvcreate $dev1
-pvs | grep $dev1
+aux prepare_pvs 1 20000
+pvs $(cat DEVICES) | grep "$dev1"
 
 # check for PV size overflows
-pvs | grep 19.53g
-pvs | not grep 16.00e
+pvs $(cat DEVICES) | grep 19.53g
+pvs $(cat DEVICES) | not grep 16.00e

@@ -18,22 +18,20 @@ aux prepare_devs 2
 # for udev impossible to create
 pv_ugly="__\"!@#\$%^&*,()|@||'\\\"__pv1"
 
-# 'set up temp files, loopback devices' 
+# 'set up temp files, loopback devices'
 name=$(basename "$dev1")
 dmsetup rename "$name" "$PREFIX$pv_ugly"
-dev1=$(dirname "$dev1")/$PREFIX$pv_ugly
+dev1=$(dirname "$dev1")/"$PREFIX$pv_ugly"
 
 dmsetup table | grep -F "$pv_ugly"
 
-# 'pvcreate, vgcreate on filename with backslashed chars' 
-created=$dev1
+# 'pvcreate, vgcreate on filename with backslashed chars'
+created="$dev1"
 # when used with real udev without fallback, it will fail here
-pvcreate "$dev1" || created=$dev2
+pvcreate "$dev1" || created="$dev2"
 pvdisplay | should grep -F "$pv_ugly"
 should check pv_field "$dev1" pv_name "$dev1"
 vgcreate $vg "$created"
-# 'no parse errors and VG really exists' 
-vgs 2>err
-not grep "Parse error" err;
-vgs $vg
-
+# 'no parse errors and VG really exists'
+vgs $vg 2>err
+not grep "Parse error" err

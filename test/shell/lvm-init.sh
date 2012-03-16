@@ -1,3 +1,4 @@
+#!/bin/sh
 # Copyright (C) 2008 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
@@ -18,4 +19,3 @@ aux prepare_devs 5
 
 # invalid units
 not pvs --config 'global { units = "<" }'
-

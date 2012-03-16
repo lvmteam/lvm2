@@ -14,17 +14,18 @@
 # excercises partition table scanning code path
 #
 
-which sfdisk || exit 200
 
 LVM_TEST_CONFIG_DEVICES="types = [\"device-mapper\", 142]"
 
 . lib/test
 
+which sfdisk || skip
+
 aux prepare_pvs 1 30
 
-pvs
+pvs "$dev1"
 
 # create small partition table
-echo "1 2" | sfdisk $dev1
+echo "1 2" | sfdisk "$dev1"
 
-pvs
+pvs "$dev1"

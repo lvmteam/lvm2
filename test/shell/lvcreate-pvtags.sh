@@ -1,3 +1,4 @@
+#!/bin/sh
 # Copyright (C) 2008 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
@@ -15,7 +16,7 @@ aux lvmconf 'allocation/maximise_cling = 0'
 aux lvmconf 'allocation/mirror_logs_require_separate_pvs = 1'
 
 # not required, just testing
-aux pvcreate --metadatacopies 0 $dev1
+aux pvcreate --metadatacopies 0 "$dev1"
 
 vgcreate -c n $vg $(cat DEVICES)
 pvchange --addtag fast $(cat DEVICES)
@@ -42,6 +43,6 @@ not lvcreate -l1 -m2 $vg @fast
 not lvcreate -l1 -m3 --corelog $vg @fast
 
 # lvcreate mirror with a single PV arg
-not lvcreate -l1 -m1 --corelog $vg $dev1
+not lvcreate -l1 -m1 --corelog $vg "$dev1"
 
 vgremove -ff $vg

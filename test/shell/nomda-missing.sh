@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Copyright (C) 2010 Red Hat, Inc. All rights reserved.
 #
@@ -13,22 +13,22 @@
 . lib/test
 
 aux prepare_devs 4
-pvcreate $dev1 $dev2
-pvcreate --metadatacopies 0 $dev3 $dev4
-vgcreate -c n $vg $dev1 $dev2 $dev3 $dev4
+pvcreate "$dev1" "$dev2"
+pvcreate --metadatacopies 0 "$dev3" "$dev4"
+vgcreate -c n $vg "$dev1" "$dev2" "$dev3" "$dev4"
 
-lvcreate -l1 -n linear1 $vg $dev1
-lvcreate -l1 -n linear2 $vg $dev2
-lvcreate -l2 -n linear12 $vg $dev1:4 $dev2:4
+lvcreate -l1 -n linear1 $vg "$dev1"
+lvcreate -l1 -n linear2 $vg "$dev2"
+lvcreate -l2 -n linear12 $vg "$dev1":4 "$dev2":4
 
-lvcreate -l1 -n origin1 $vg $dev1
-lvcreate -s $vg/origin1 -l1 -n s_napshot2 $dev2
+lvcreate -l1 -n origin1 $vg "$dev1"
+lvcreate -s $vg/origin1 -l1 -n s_napshot2 "$dev2"
 
-lvcreate -l1 -m1 -n mirror12 --mirrorlog core $vg $dev1 $dev2
-lvcreate -l1 -m1 -n mirror123 $vg $dev1 $dev2 $dev3
+lvcreate -l1 -m1 -n mirror12 --mirrorlog core $vg "$dev1" "$dev2"
+lvcreate -l1 -m1 -n mirror123 $vg "$dev1" "$dev2" "$dev3"
 
 vgchange -a n $vg
-aux disable_dev $dev1
+aux disable_dev "$dev1"
 not vgchange -a y $vg
 not vgck $vg
 
@@ -41,8 +41,8 @@ check inactive $vg mirror12
 check inactive $vg mirror123
 
 vgchange -a n $vg
-aux enable_dev $dev1
-aux disable_dev $dev2
+aux enable_dev "$dev1"
+aux disable_dev "$dev2"
 not vgchange -a y $vg
 not vgck $vg
 
@@ -55,8 +55,8 @@ check inactive $vg mirror12
 check inactive $vg mirror123
 
 vgchange -a n $vg
-aux enable_dev $dev2
-aux disable_dev $dev3
+aux enable_dev "$dev2"
+aux disable_dev "$dev3"
 not vgchange -a y $vg
 not vgck $vg
 
@@ -69,8 +69,8 @@ check inactive $vg mirror123
 check active $vg mirror12
 
 vgchange -a n $vg
-aux enable_dev $dev3
-aux disable_dev $dev4
+aux enable_dev "$dev3"
+aux disable_dev "$dev4"
 vgchange -a y $vg
 not vgck $vg
 

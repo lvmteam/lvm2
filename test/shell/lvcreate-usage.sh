@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (C) 2008 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2008-2011 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -14,7 +14,7 @@
 . lib/test
 
 aux prepare_pvs 4
-aux pvcreate --metadatacopies 0 $dev1
+aux pvcreate --metadatacopies 0 "$dev1"
 vgcreate -cn $vg $(cat DEVICES)
 
 # "lvcreate rejects repeated invocation (run 2 times) (bz178216)" 
@@ -26,34 +26,34 @@ not lvremove -ff $vg/$lv
 
 # "lvcreate rejects a negative stripe_size"
 not lvcreate -L 64m -n $lv -i2 --stripesize -4 $vg 2>err;
-grep "^  Negative stripesize is invalid\$" err
+grep "Negative stripesize is invalid" err
 
 # 'lvcreate rejects a too-large stripesize'
 not lvcreate -L 64m -n $lv -i2 --stripesize 4294967291 $vg 2>err
-grep "^  Stripe size cannot be larger than" err
+grep "Stripe size cannot be larger than" err
 
 # 'lvcreate w/single stripe succeeds with diagnostics to stdout' 
 lvcreate -L 64m -n $lv -i1 --stripesize 4 $vg 2> err | tee out
-grep "^  Ignoring stripesize argument with single stripe\$" out 
+grep "Ignoring stripesize argument with single stripe" out
 lvdisplay $vg 
 lvremove -ff $vg
 
 # 'lvcreate w/default (64KB) stripe size succeeds with diagnostics to stdout'
 lvcreate -L 64m -n $lv -i2 $vg > out
-grep "^  Using default stripesize" out 
+grep "Using default stripesize" out
 lvdisplay $vg 
 check lv_field $vg/$lv stripesize "64.00k"
 lvremove -ff $vg
 
 # 'lvcreate rejects an invalid number of stripes' 
 not lvcreate -L 64m -n $lv -i129 $vg 2>err
-grep "^  Number of stripes (129) must be between 1 and 128\$" err
+grep "Number of stripes (129) must be between 1 and 128" err
 
 # The case on lvdisplay output is to verify that the LV was not created.
 # 'lvcreate rejects an invalid stripe size'
 not lvcreate -L 64m -n $lv -i2 --stripesize 3 $vg 2>err
-grep "^  Invalid stripe size" err
-case $(lvdisplay $vg) in "") true ;; *) false ;; esac
+grep "Invalid stripe size" err
+test -z "$(lvdisplay $vg)"
 
 # Setting max_lv works. (bz490298)
 lvremove -ff $vg
@@ -70,8 +70,7 @@ not lvcreate -l1 -m1 -n $lv4 $vg
 
 lvremove -ff $vg/$lv3
 lvcreate -l1 -m1 -n $lv3 $vg
-lvs
-vgs -o +max_lv
+vgs -o +max_lv $vg
 not lvcreate -l1 -n $lv4 $vg
 not lvcreate -l1 -m1 -n $lv4 $vg
 
@@ -94,11 +93,11 @@ lvcreate -L 32m -n $lv1 $vg
 not lvcreate -L 8m -n $lv2 -s --chunksize 3k $vg/$lv1
 not lvcreate -L 8m -n $lv2 -s --chunksize 1024k $vg/$lv1
 lvcreate -L 8m -n $lv2 -s --chunksize 4k $vg/$lv1
-check lv_field $vg/$lv2 chunk_size 4.00k
-check lv_field $vg/$lv2 origin_size 32.00m
+check lv_field $vg/$lv2 chunk_size "4.00k"
+check lv_field $vg/$lv2 origin_size "32.00m"
 lvcreate -L 8m -n $lv3 -s --chunksize 512k $vg/$lv1
-check lv_field $vg/$lv3 chunk_size 512.00k
-check lv_field $vg/$lv3 origin_size 32.00m
+check lv_field $vg/$lv3 chunk_size "512.00k"
+check lv_field $vg/$lv3 origin_size "32.00m"
 lvremove -ff $vg
 vgchange -l 0 $vg
 
@@ -149,4 +148,3 @@ lvcreate -L 32m -n $lv -i2 --stripesize 128k --readahead auto $vg
 check lv_field $vg/$lv lv_read_ahead "auto"
 check lv_field $vg/$lv lv_kernel_read_ahead "512.00k"
 lvremove -ff $vg
-

@@ -10,19 +10,21 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 . lib/test
+
+aux prepare_dmeventd
 aux prepare_vg 3
 
 # force resync 2-way active mirror
-lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0-1
-check mirror $vg $lv1 $dev3
+lvcreate -l2 -m1 -n $lv1 $vg "$dev1" "$dev2" "$dev3":0-1
+check mirror $vg $lv1 "$dev3"
 echo y | lvchange --resync $vg/$lv1
-check mirror $vg $lv1 $dev3
+check mirror $vg $lv1 "$dev3"
 lvremove -ff $vg
 
 # force resync 2-way inactive mirror
-lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0-1
+lvcreate -l2 -m1 -n $lv1 $vg "$dev1" "$dev2" "$dev3":0-1
 lvchange -an $vg/$lv1
-check mirror $vg $lv1 $dev3
+check mirror $vg $lv1 "$dev3"
 lvchange --resync $vg/$lv1
-check mirror $vg $lv1 $dev3
+check mirror $vg $lv1 "$dev3"
 lvremove -ff $vg

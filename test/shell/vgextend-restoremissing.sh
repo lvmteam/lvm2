@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # Copyright (C) 2010 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
@@ -11,20 +11,20 @@
 
 . lib/test
 
-
 aux prepare_vg 3
+
 lvcreate -m 1 -l 1 -n mirror $vg
 lvchange -a n $vg/mirror
-lvcreate -l 1 -n lv1 $vg $dev1
+lvcreate -l 1 -n lv1 $vg "$dev1"
 
 # try to just change metadata; we expect the new version (with MISSING_PV set
 # on the reappeared volume) to be written out to the previously missing PV
-aux disable_dev $dev1
+aux disable_dev "$dev1"
 lvremove $vg/mirror
-aux enable_dev $dev1
+aux enable_dev "$dev1"
 not vgck $vg 2>&1 | tee log
 grep "missing 1 physical volume" log
 not lvcreate -m 1 -l 1 -n mirror $vg # write operations fail
-vgextend --restore $vg $dev1 # restore the missing device
+vgextend --restore $vg "$dev1" # restore the missing device
 vgck $vg
 lvcreate -m 1 -l 1 -n mirror $vg

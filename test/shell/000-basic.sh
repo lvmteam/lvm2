@@ -1,3 +1,4 @@
+#!/bin/sh
 # Copyright (C) 2009-2011 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
@@ -25,4 +26,4 @@ aux prepare_devs 5
 
 # ensure we do not crash on a bug in config file
 aux lvmconf 'log/prefix = 1""'
-not lvs
+not lvs $(cat DEVICES)

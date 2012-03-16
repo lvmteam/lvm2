@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # Copyright (C) 2008 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
@@ -11,10 +11,10 @@
 
 . lib/test
 
-aux prepare_vg 5
-aux prepare_dmeventd
+which mkfs.ext2 || skip
 
-which mkfs.ext2 || exit 200
+aux prepare_dmeventd
+aux prepare_vg 5
 
 lvcreate -m 3 --ig -L 1 -n 4way $vg
 lvchange --monitor y $vg/4way
@@ -32,11 +32,11 @@ lvchange --monitor y --verbose $vg/4way 2>&1 | tee lvchange.out
 grep 'already monitored' lvchange.out
 
 # now try what happens if no dmeventd is running
-kill -9 `cat LOCAL_DMEVENTD`
+kill -9 $(cat LOCAL_DMEVENTD)
 dmeventd -R -f &
-echo "$!" > LOCAL_DMEVENTD
 sleep 3
 lvchange --monitor y --verbose $vg/3way 2>&1 | tee lvchange.out
 not grep 'already monitored' lvchange.out
+pgrep dmeventd >LOCAL_DMEVENTD
 
 vgremove -ff $vg

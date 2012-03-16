@@ -1,5 +1,4 @@
-#!/bin/bash
-
+#!/bin/sh
 # Copyright (C) 2011 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
@@ -15,12 +14,10 @@
 # is_raid_in_sync <VG/LV>
 function is_raid_in_sync()
 {
-	local dm_name
+	local dm_name=$(echo $1 | sed s:-:--: | sed s:/:-:)
 	local a
 	local b
 	local idx
-
-	dm_name=`echo $1 | sed s:-:--: | sed s:/:-:`
 
 	if ! a=(`dmsetup status $dm_name`); then
 		echo "Unable to get sync status of $1"

@@ -13,27 +13,30 @@
 
 . lib/test
 
-which mkfs.ext2 || exit 200
+which mkfs.ext2 || skip
 
 aux lvmconf "activation/snapshot_autoextend_percent = 0" \
             "activation/snapshot_autoextend_threshold = 100"
 
-aux prepare_vg 2
 aux prepare_dmeventd
+aux prepare_vg 2
+mntdir="${PREFIX}mnt"
 
 lvcreate -l 8 -n base $vg
-mkfs.ext2 $DM_DEV_DIR/$vg/base
+mkfs.ext2 "$DM_DEV_DIR/$vg/base"
 
 lvcreate -s -l 4 -n snap $vg/base
 lvchange --monitor y $vg/snap
 
-mkdir mnt
-mount $DM_DEV_DIR/mapper/$vg-snap mnt
+mkdir "$mntdir"
+mount "$DM_DEV_DIR/mapper/$vg-snap" "$mntdir"
 mount
-cat /proc/mounts | grep $vg-snap
+cat /proc/mounts | grep "$mntdir"
 
-dd if=/dev/zero of=mnt/file$1 bs=1M count=17
+dd if=/dev/zero of="$mntdir/file$1" bs=1M count=17
 sync
 sleep 10 # dmeventd only checks every 10 seconds :(
 
-cat /proc/mounts | not grep $vg-snap
+cat /proc/mounts | not grep "$mntdir"
+
+vgremove -f $vg

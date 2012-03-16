@@ -1,5 +1,5 @@
-#!/bin/bash
-# Copyright (C) 2011 Red Hat, Inc. All rights reserved.
+#!/bin/sh
+# Copyright (C) 2011-2012 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -14,39 +14,38 @@
 aux prepare_vg 3
 
 # fail multiple devices
-for i in $dev1 $dev2 $dev3 ; do
-	for j in $dev2 $dev3 ; do
-
-		if test $i = $j ; then continue ; fi
+for i in "$dev1" "$dev2" "$dev3" ; do
+	for j in "$dev2" "$dev3" ; do
+		if test "$i" = "$j" ; then continue ; fi
 
 		vgremove -ff $vg
-		vgcreate $vg $dev1 $dev2 $dev3
+		vgcreate $vg "$dev1" "$dev2" "$dev3"
 		# exit 1
 
-		lvcreate -l1 -n $lv1 $vg $dev1
+		lvcreate -l1 -n $lv1 $vg "$dev1"
 
-		aux disable_dev $i $j
+		aux disable_dev "$i" "$j"
 
 		vgreduce --removemissing --force $vg
 
 		# check if reduced device was removed
-		test $i = $dev1 && dmsetup table | not egrep "$vg-$lv1: *[^ ]+" >/dev/null
+		test "$i" = "$dev1" && dmsetup table | not egrep "$vg-$lv1: *[^ ]+" >/dev/null
 
 		lvcreate -l1 -n $lv2 $vg
 
-		test $i != $dev1 && check lv_exists $vg $lv1
+		test "$i" != "$dev1" && check lv_exists $vg $lv1
 		check lv_exists $vg $lv2
 
-		aux enable_dev $i $j
+		aux enable_dev "$i" "$j"
 		vgscan
 
-		test $i != $dev1 && check lv_exists $vg $lv1
+		test "$i" != "$dev1" && check lv_exists $vg $lv1
 		check lv_exists $vg $lv2
 	done
 done
 
 vgremove -ff $vg
-vgcreate $vg $dev1 $dev2 $dev3
+vgcreate $vg "$dev1" "$dev2" "$dev3"
 
 # use tricky 'dd'
 for i in "$dev1" "$dev2" "$dev3" ; do
@@ -57,7 +56,7 @@ for i in "$dev1" "$dev2" "$dev3" ; do
 		dd if="$i" of=backup_i bs=256K count=1
 		dd if="$j" of=backup_j bs=256K count=1
 
-		lvcreate -l1 -n $lv1 $vg $dev1
+		lvcreate -l1 -n $lv1 $vg "$dev1"
 
 		dd if=backup_j of="$j" bs=256K count=1
 		dd if=backup_i of="$i" bs=256K count=1
@@ -73,7 +72,7 @@ done
 dd if="$dev1" of=backup_i bs=256K count=1
 dd if="$dev2" of=backup_j bs=256K count=1
 
-lvcreate -l1 $vg $dev1
+lvcreate -l1 $vg "$dev1"
 
 dd if=backup_j of="$dev2" bs=256K count=1
 dd if=backup_i of="$dev1" bs=256K count=1
@@ -86,7 +85,7 @@ dd if=backup_i of="$dev1" bs=256K count=1
 
 # dirty game
 dd if=/dev/zero of="$dev3" bs=256K count=1
-aux notify_lvmetad $dev3 # udev be watching you
+aux notify_lvmetad "$dev3" # udev be watching you
 
 vgreduce --removemissing --force $vg
 
@@ -97,4 +96,4 @@ vgreduce --removemissing --force $vg
 # device-mapper: create ioctl failed: Device or resource busy
 # Failed to activate new LV.
 
-should lvcreate -l1 $vg $dev1
+should lvcreate -l1 $vg "$dev1"

@@ -17,36 +17,23 @@ test_description='Test read-ahead functionality'
 
 . lib/test
 
-
-get_lvs_() {
-   lvs --units s --nosuffix --noheadings -o $1 "$vg"/"$lv"
-}
-
-check_lvs_() {
-   case $(get_lvs_ $1) in
-    *$2) true ;;
-    *) false ;;
-   esac
-}
-
 aux prepare_vg 5
 
 #COMM "test various read ahead settings (bz450922)"
-lvcreate -n "$lv" -l 100%FREE -i5 -I256 "$vg"
-ra="$(get_lvs_ lv_kernel_read_ahead)"
-test "$(( ( $ra / 5 ) * 5 ))" -eq $ra
-lvdisplay "$vg"/"$lv"
-not lvchange -r auto "$vg"/"$lv" 2>&1 | grep auto
-check_lvs_ lv_read_ahead auto
-check_lvs_ lv_kernel_read_ahead 5120
-lvchange -r 640 "$vg/$lv"
-check_lvs_ lv_read_ahead 640
-lvremove -ff "$vg"
+lvcreate -l 100%FREE -i5 -I256 -n $lv $vg
+ra=$(get lv_field $vg/$lv lv_kernel_read_ahead --units s --nosuffix)
+test $(( ( $ra / 5 ) * 5 )) -eq $ra
+not lvchange -r auto $vg/$lv 2>&1 | grep auto
+check lv_field $vg/$lv lv_read_ahead auto
+check lv_field $vg/$lv lv_kernel_read_ahead 5120 --units s --nosuffix
+lvchange -r 640 $vg/$lv
+check lv_field $vg/$lv lv_read_ahead 640 --units s --nosuffix
+lvremove -ff $vg
 
 #COMM "read ahead is properly inherited from underlying PV"
-blockdev --setra 768 $dev1
+blockdev --setra 768 "$dev1"
 vgscan
-lvcreate -n $lv -L4m $vg $dev1
+lvcreate -n $lv -L4m $vg "$dev1"
 test $(blockdev --getra $DM_DEV_DIR/$vg/$lv) -eq 768
 lvremove -ff $vg
 

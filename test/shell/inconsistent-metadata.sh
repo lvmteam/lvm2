@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # Copyright (C) 2008 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
@@ -24,7 +24,7 @@ init() {
 	lvs -o lv_name,lv_size --units k $vg | tee lvs.out
 	grep resized lvs.out | not grep 8192
 	lvresize -L 8192K $vg/resized
-	aux restore_dev $dev1
+	aux restore_dev "$dev1"
 }
 
 check() {
@@ -44,25 +44,25 @@ check
 if !test -e LOCAL_LVMETAD; then
 	# vgdisplay fixes
 	init
-	vgdisplay 2>&1 | tee cmd.out
+	vgdisplay $vg 2>&1 | tee cmd.out
 	grep "Inconsistent metadata found for VG $vg" cmd.out
-	vgdisplay 2>&1 | tee cmd.out
+	vgdisplay $vg 2>&1 | tee cmd.out
 	not grep "Inconsistent metadata found for VG $vg" cmd.out
 	check
 
 	# lvs fixes up
 	init
-	lvs 2>&1 | tee cmd.out
+	lvs $vg 2>&1 | tee cmd.out
 	grep "Inconsistent metadata found for VG $vg" cmd.out
-	vgdisplay 2>&1 | tee cmd.out
+	vgdisplay $vg 2>&1 | tee cmd.out
 	not grep "Inconsistent metadata found for VG $vg" cmd.out
 	check
 
 	# vgs fixes up as well
 	init
-	vgs 2>&1 | tee cmd.out
+	vgs $vg 2>&1 | tee cmd.out
 	grep "Inconsistent metadata found for VG $vg" cmd.out
-	vgs 2>&1 | tee cmd.out
+	vgs $vg 2>&1 | tee cmd.out
 	not grep "Inconsistent metadata found for VG $vg" cmd.out
 	check
 fi
@@ -71,8 +71,8 @@ echo Check auto-repair of failed vgextend - metadata written to original pv but 
 vgremove -f $vg
 pvremove -ff $(cat DEVICES)
 pvcreate $(cat DEVICES)
-aux backup_dev $dev2
-vgcreate $vg $dev1
-vgextend $vg $dev2
-aux restore_dev $dev2
-should check compare_fields vgs $vg vg_mda_count pvs $dev2 vg_mda_count
+aux backup_dev "$dev2"
+vgcreate $vg "$dev1"
+vgextend $vg "$dev2"
+aux restore_dev "$dev2"
+should check compare_fields vgs $vg vg_mda_count pvs "$dev2" vg_mda_count

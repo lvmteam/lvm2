@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # Copyright (C) 2008 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
@@ -11,16 +11,18 @@
 
 . lib/test
 
+which mkfs.ext2 || skip
+
 aux prepare_vg 5
 aux prepare_dmeventd
 
-which mkfs.ext2 || exit 200
-
 lvcreate -m 3 --ig -L 1 -n 4way $vg
 lvchange --monitor y $vg/4way
-aux disable_dev $dev2 $dev4
+aux disable_dev "$dev2" "$dev4"
 mkfs.ext2 $DM_DEV_DIR/$vg/4way
 sleep 10 # FIXME: need a "poll" utility, akin to "check"
-aux enable_dev $dev2 $dev4
+aux enable_dev "$dev2" "$dev4"
 check mirror $vg 4way
 check mirror_legs $vg 4way 2
+
+vgremove -ff $vg

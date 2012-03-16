@@ -1,4 +1,4 @@
-#
+#!/bin/sh
 # Copyright (C) 2011 Red Hat, Inc. All rights reserved.
 #
 # This file is part of LVM2.
@@ -14,6 +14,8 @@
 . lib/test
 
 aux prepare_devs 2
+
 aux apitest pe_start test_vg $dev1
+
 not vgs test_vg
 not pvs $dev1

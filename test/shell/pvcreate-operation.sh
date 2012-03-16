@@ -10,84 +10,83 @@
 
 . lib/test
 
+aux lvmconf 'devices/md_component_detection = 1'
+
 aux prepare_devs 4
 
 for mdatype in 1 2
 do
 # pvcreate (lvm$mdatype) refuses to overwrite an mounted filesystem (bz168330)
-	test ! -d $TESTDIR/mnt && mkdir $TESTDIR/mnt
-	if mke2fs $dev1; then
-		mount $dev1 $TESTDIR/mnt
-		not pvcreate -M$mdatype $dev1 2>err
-		grep "Can't open $dev1 exclusively.  Mounted filesystem?" err
-		umount $dev1
+	test ! -d mnt && mkdir mnt
+	if mke2fs "$dev1"; then
+		mount "$dev1" mnt
+		not pvcreate -M$mdatype "$dev1" 2>err
+		grep "Can't open "$dev1" exclusively.  Mounted filesystem?" err
+		umount "$dev1"
 	fi
 
 # pvcreate (lvm$mdatype) succeeds when run repeatedly (pv not in a vg) (bz178216)
-    pvcreate -M$mdatype $dev1
-    pvcreate -M$mdatype $dev1
-    pvremove -f $dev1
+    pvcreate -M$mdatype "$dev1"
+    pvcreate -M$mdatype "$dev1"
+    pvremove -f "$dev1"
 
-# pvcreate (lvm$mdatype) fails when PV belongs to VG" \
-    pvcreate -M$mdatype $dev1
-    vgcreate -M$mdatype $vg1 $dev1
-    not pvcreate -M$mdatype $dev1
+# pvcreate (lvm$mdatype) fails when PV belongs to VG
+#   pvcreate -M$mdatype "$dev1"
+    vgcreate -M$mdatype $vg1 "$dev1"
+    not pvcreate -M$mdatype "$dev1"
 
     vgremove -f $vg1
-    pvremove -f $dev1
+    pvremove -f "$dev1"
 
 # pvcreate (lvm$mdatype) fails when PV1 does and PV2 does not belong to VG
-    pvcreate -M$mdatype $dev1
-    pvcreate -M$mdatype $dev2
-    vgcreate -M$mdatype $vg1 $dev1
+    pvcreate -M$mdatype "$dev1"
+    pvcreate -M$mdatype "$dev2"
+    vgcreate -M$mdatype $vg1 "$dev1"
 
 # pvcreate a second time on $dev2 and $dev1
-    not pvcreate -M$mdatype $dev2 $dev1
+    not pvcreate -M$mdatype "$dev2" "$dev1"
 
     vgremove -f $vg1
-    pvremove -f $dev2
-    pvremove -f $dev1
+    pvremove -f "$dev2" "$dev1"
 
 # NOTE: Force pvcreate after test completion to ensure clean device
-#test_expect_success \
-#  "pvcreate (lvm$mdatype) fails on md component device" \
-#  'mdadm -C -l raid0 -n 2 /dev/md0 $dev1 $dev2 &&
-#   pvcreate -M$mdatype $dev1;
+#test_expect_success
+#  "pvcreate (lvm$mdatype) fails on md component device"
+#  'mdadm -C -l raid0 -n 2 /dev/md0 "$dev1" "$dev2" &&
+#   pvcreate -M$mdatype "$dev1";
 #   status=$?; echo status=$status; test $status != 0 &&
 #   mdadm --stop /dev/md0 &&
-#   pvcreate -ff -y -M$mdatype $dev1 $dev2 &&
-#   pvremove -f $dev1 $dev2'
+#   pvcreate -ff -y -M$mdatype "$dev1" "$dev2" &&
+#   pvremove -f "$dev1" "$dev2"'
 done
 
 # pvcreate (lvm2) fails without -ff when PV with metadatacopies=0 belongs to VG
-pvcreate --metadatacopies 0 $dev1
-pvcreate --metadatacopies 1 $dev2
-vgcreate $vg1 $dev1 $dev2
-not pvcreate $dev1
+pvcreate --metadatacopies 0 "$dev1"
+pvcreate --metadatacopies 1 "$dev2"
+vgcreate $vg1 "$dev1" "$dev2"
+not pvcreate "$dev1"
 vgremove -f $vg1
-pvremove -f $dev2
-pvremove -f $dev1
+pvremove -f "$dev2" "$dev1"
 
 # pvcreate (lvm2) succeeds with -ff when PV with metadatacopies=0 belongs to VG
-pvcreate --metadatacopies 0 $dev1 
-pvcreate --metadatacopies 1 $dev2
-vgcreate $vg1 $dev1 $dev2 
-pvcreate -ff -y $dev1 
-vgreduce --removemissing $vg1 
-vgremove -ff $vg1 
-pvremove -f $dev2 
-pvremove -f $dev1
+pvcreate --metadatacopies 0 "$dev1"
+pvcreate --metadatacopies 1 "$dev2"
+vgcreate $vg1 "$dev1" "$dev2"
+pvcreate -ff -y "$dev1"
+vgreduce --removemissing $vg1
+vgremove -ff $vg1
+pvremove -f "$dev2" "$dev1"
 
 for i in 0 1 2 3
 do
 # pvcreate (lvm2) succeeds writing LVM label at sector $i
-    pvcreate --labelsector $i $dev1
-    dd if=$dev1 bs=512 skip=$i count=1 2>/dev/null | strings | grep LABELONE >/dev/null
-    pvremove -f $dev1
+    pvcreate --labelsector $i "$dev1"
+    dd if="$dev1" bs=512 skip=$i count=1 2>/dev/null | strings | grep LABELONE >/dev/null
+    pvremove -f "$dev1"
 done
 
 # pvcreate (lvm2) fails writing LVM label at sector 4
-not pvcreate --labelsector 4 $dev1
+not pvcreate --labelsector 4 "$dev1"
 
 backupfile=$PREFIX.mybackupfile
 uuid1=freddy-fred-fred-fred-fred-fred-freddy
@@ -95,27 +94,27 @@ uuid2=freddy-fred-fred-fred-fred-fred-fredie
 bogusuuid=fred
 
 # pvcreate rejects uuid option with less than 32 characters
-not pvcreate --norestorefile --uuid $bogusuuid $dev1
+not pvcreate --norestorefile --uuid $bogusuuid "$dev1"
 
 # pvcreate rejects uuid option without restorefile
-not pvcreate --uuid $uuid1 $dev1
+not pvcreate --uuid $uuid1 "$dev1"
 
 # pvcreate rejects uuid already in use
-pvcreate --norestorefile --uuid $uuid1 $dev1
-not pvcreate --norestorefile --uuid $uuid1 $dev2
+pvcreate --norestorefile --uuid $uuid1 "$dev1"
+not pvcreate --norestorefile --uuid $uuid1 "$dev2"
 
 # pvcreate rejects non-existent file given with restorefile
-not pvcreate --uuid $uuid1 --restorefile $backupfile $dev1
+not pvcreate --uuid $uuid1 --restorefile $backupfile "$dev1"
 
 # pvcreate rejects restorefile with uuid not found in file
-pvcreate --norestorefile --uuid $uuid1 $dev1
+pvcreate --norestorefile --uuid $uuid1 "$dev1"
 vgcfgbackup -f $backupfile
-not pvcreate --uuid $uuid2 --restorefile $backupfile $dev2
+not pvcreate --uuid $uuid2 --restorefile $backupfile "$dev2"
 
 # pvcreate wipes swap signature when forced
-dd if=/dev/zero of=$dev1 bs=1024 count=64
-mkswap $dev1
-blkid -c /dev/null $dev1 | grep "swap"
-pvcreate -f $dev1
+dd if=/dev/zero of="$dev1" bs=1024 count=64
+mkswap "$dev1"
+blkid -c /dev/null "$dev1" | grep "swap"
+pvcreate -f "$dev1"
 # blkid cannot make up its mind whether not finding anything it knows is a failure or not
-(blkid -c /dev/null $dev1 || true) | not grep "swap"
+(blkid -c /dev/null "$dev1" || true) | not grep "swap"

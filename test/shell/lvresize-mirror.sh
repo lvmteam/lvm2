@@ -10,29 +10,30 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 . lib/test
+
 aux prepare_vg 5 80
 
 # extend 2-way mirror
-lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0-1
+lvcreate -l2 -m1 -n $lv1 $vg "$dev1" "$dev2" "$dev3":0-1
 lvchange -an $vg/$lv1
 lvextend -l+2 $vg/$lv1
-check mirror $vg $lv1 $dev3
+check mirror $vg $lv1 "$dev3"
 check mirror_images_contiguous $vg $lv1
 lvremove -ff $vg
 
 # reduce 2-way mirror
-lvcreate -l4 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0-1
+lvcreate -l4 -m1 -n $lv1 $vg "$dev1" "$dev2" "$dev3":0-1
 lvchange -an $vg/$lv1
 lvreduce -l-2 $vg/$lv1
-check mirror $vg $lv1 $dev3
+check mirror $vg $lv1 "$dev3"
 lvremove -ff $vg
 
 # extend 2-way mirror (cling if not contiguous)
-lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0-1
-lvcreate -l1 -n $lv2 $vg $dev1
-lvcreate -l1 -n $lv3 $vg $dev2
+lvcreate -l2 -m1 -n $lv1 $vg "$dev1" "$dev2" "$dev3":0-1
+lvcreate -l1 -n $lv2 $vg "$dev1"
+lvcreate -l1 -n $lv3 $vg "$dev2"
 lvchange -an $vg/$lv1
 lvextend -l+2 $vg/$lv1
-check mirror $vg $lv1 $dev3
+check mirror $vg $lv1 "$dev3"
 check mirror_images_clung $vg $lv1
 lvremove -ff $vg

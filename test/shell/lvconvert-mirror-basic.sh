@@ -1,4 +1,5 @@
-# Copyright (C) 2010 Red Hat, Inc. All rights reserved.
+#!/bin/sh
+# Copyright (C) 2010-2012 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -10,15 +11,12 @@
 
 . lib/test
 
-log_name_to_count()
-{
-	if [ "$1" = "mirrored" ]; then
-		echo 2
-	elif [ "$1" = "disk" ]; then
-		echo 1
-	else
-		echo 0
-	fi
+log_name_to_count() {
+	case "$1"  in
+	mirrored) echo 2 ;;
+	disk)	  echo 1 ;;
+	*)	  echo 0 ;;
+	esac
 }
 
 # FIXME: For test_[up|down]convert, I'd still like to be able
@@ -38,15 +36,14 @@ log_name_to_count()
 #          2-way disk-log mirror while not active
 # -> test_lvconvert 2 disk 3 disk 0
 
-test_lvconvert()
-{
+test_lvconvert() {
 	local start_count=$1
 	local start_count_p1=$(($start_count + 1))
 	local start_log_type=$2
 	local finish_count=$3
 	local finish_count_p1=$(($finish_count + 1))
 	local finish_log_type=$4
-	local dev_array=($dev1 $dev2 $dev3 $dev4 $dev5)
+	local dev_array=("$dev1" "$dev2" "$dev3" "$dev4" "$dev5")
 	local start_log_count
 	local finish_log_count
 	local max_log_count
@@ -58,19 +55,15 @@ test_lvconvert()
 	#test $finish_count -gt $start_count && up=true
 
 	# Do we have enough devices for the mirror images?
-	if [ $start_count_p1 -gt ${#dev_array[@]} ]; then
-		echo "Action requires too many devices"
-		return 1
-	fi
+	test $start_count_p1 -gt ${#dev_array[@]} && \
+		die "Action requires too many devices"
 
 	# Do we have enough devices for the mirror images?
-	if [ $finish_count_p1 -gt ${#dev_array[@]} ]; then
-		echo "Action requires too many devices"
-		return 1
-	fi
+	test $finish_count_p1 -gt ${#dev_array[@]} && \
+		die "Action requires too many devices"
 
-	start_log_count=`log_name_to_count $start_log_type`
-	finish_log_count=`log_name_to_count $finish_log_type`
+	start_log_count=$(log_name_to_count $start_log_type)
+	finish_log_count=$(log_name_to_count $finish_log_type)
 	if [ $finish_log_count -gt $start_log_count ]; then
 		max_log_count=$finish_log_count
 	else
@@ -92,9 +85,7 @@ test_lvconvert()
 	fi
 
 	lvs -a -o name,copy_percent,devices $vg
-	if ! $active; then
-		lvchange -an $vg/$lv1
-	fi
+	test $active || lvchange -an $vg/$lv1
 
 	# Are there extra devices for the log or do we overlap
 	if [ $(($finish_count_p1 + $finish_log_count)) -gt ${#dev_array[@]} ]; then
@@ -104,9 +95,7 @@ test_lvconvert()
 	lvconvert -m $finish_count --mirrorlog $finish_log_type \
 		$vg/$lv1 $alloc
 
-	if ! $active; then
-		lvchange -ay $vg/$lv1
-	fi
+	test $active || lvchange -ay $vg/$lv1
 
 	check mirror_no_temporaries $vg $lv1
 	if [ "$finish_count_p1" -eq 1 ]; then

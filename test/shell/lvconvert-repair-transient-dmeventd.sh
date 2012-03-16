@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # Copyright (C) 2011 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
@@ -16,12 +16,14 @@ aux prepare_dmeventd
 
 lvcreate -m 3 --ig -L 1 -n 4way $vg
 lvchange --monitor y $vg/4way
-aux disable_dev $dev2 $dev4
+aux disable_dev "$dev2" "$dev4"
 mkfs.ext3 $DM_DEV_DIR/$vg/4way
-aux enable_dev $dev2 $dev4
+aux enable_dev "$dev2" "$dev4"
 sleep 3
-lvs -a -o +devices | not grep unknown
+lvs -a -o +devices $vg | not grep unknown
 check mirror $vg 4way
 check mirror_legs $vg 4way 2
-lvs -a -o +devices | not grep mimage_1
-lvs -a -o +devices | not grep mimage_3
+lvs -a -o +devices $vg | not grep mimage_1
+lvs -a -o +devices $vg | not grep mimage_3
+
+vgremove -f $vg

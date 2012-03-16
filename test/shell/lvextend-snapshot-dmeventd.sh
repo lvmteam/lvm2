@@ -1,5 +1,5 @@
-#!/bin/bash
-# Copyright (C) 2010 Red Hat, Inc. All rights reserved.
+#!/bin/sh
+# Copyright (C) 2010-2012 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -15,48 +15,47 @@ extend() {
 	lvextend --use-policies --config "activation { snapshot_extend_threshold = $1 }" $vg/snap
 }
 
-write() {
-	mount $DM_DEV_DIR/$vg/snap mnt
-	dd if=/dev/zero of=mnt/file$1 bs=1k count=$2
-	umount mnt
+write_() {
+	dd if=/dev/zero of="$DM_DEV_DIR/$vg/snap" bs=1k count=$2 seek=$1
 }
 
-percent() {
-	lvs $vg/snap -o snap_percent --noheadings | cut -c4- | cut -d. -f1
+percent_() {
+	get lv_field $vg/snap snap_percent | cut -d. -f1
 }
 
-which mkfs.ext2 || skip
+wait_for_change_() {
+	# dmeventd only checks every 10 seconds :(
+	for i in $(seq 1 15) ; do
+		test "$(percent_)" != "$1" && return
+		sleep 1
+	done
 
-aux prepare_vg 3
+	return 1  # timeout
+}
+
 aux prepare_dmeventd
+aux prepare_vg 2
 
-lvcreate -l 8 -n base $vg
-mkfs.ext2 $DM_DEV_DIR/$vg/base
+lvcreate -L16M -n base $vg
+lvcreate -s -L4M -n snap $vg/base
 
-lvcreate -s -l 4 -n snap $vg/base
+write_ 0 1000
+test 24 -eq $(percent_)
+
 lvchange --monitor y $vg/snap
 
-mkdir mnt
-
-write 1 4096
-pre=`percent`
-sleep 15 # dmeventd only checks every 10 seconds :(
-post=`percent`
-
-test $pre = $post
-
-write 2 5000
-pre=`percent`
-sleep 15 # dmeventd only checks every 10 seconds :(
-post=`percent`
-test $pre -gt $post
+write_ 1000 1700
+pre=$(percent_)
+wait_for_change_ $pre
+test $pre -gt $(percent_)
 
 # check that a second extension happens; we used to fail to extend when the
 # utilisation ended up between THRESH and (THRESH + 10)... see RHBZ 754198
 # (the utilisation after the write should be 57 %)
 
-write 3 5000
-pre=`percent`
-sleep 15 # dmeventd only checks every 10 seconds :(
-post=`percent`
-test $pre -gt $post
+write_ 2700 2000
+pre=$(percent_)
+wait_for_change_ $pre
+test $pre -gt $(percent_)
+
+vgremove -f $vg

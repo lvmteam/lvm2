@@ -1,3 +1,4 @@
+#!/bin/sh
 # Copyright (C) 2010 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
@@ -8,39 +9,36 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-which mkfs.ext3 || exit 200
-
 . lib/test
 
-check_logical_block_size()
-{
+which mkfs.ext3 || skip
+
+check_logical_block_size() {
     local DEV_=$(cat SCSI_DEBUG_DEV)
     # Verify logical_block_size - requires Linux >= 2.6.31
-    SYSFS_LOGICAL_BLOCK_SIZE=`echo /sys/block/$(basename $DEV_)/queue/logical_block_size`
+    SYSFS_LOGICAL_BLOCK_SIZE=$(echo /sys/block/$(basename $DEV_)/queue/logical_block_size)
     if [ -f "$SYSFS_LOGICAL_BLOCK_SIZE" ] ; then
-	ACTUAL_LOGICAL_BLOCK_SIZE=`cat $SYSFS_LOGICAL_BLOCK_SIZE`
+	ACTUAL_LOGICAL_BLOCK_SIZE=$(cat $SYSFS_LOGICAL_BLOCK_SIZE)
 	test $ACTUAL_LOGICAL_BLOCK_SIZE = $1
     fi
 }
 
-lvdev_()
-{
+lvdev_() {
     echo "$DM_DEV_DIR/$1/$2"
 }
 
-test_snapshot_mount()
-{
-    lvcreate -L 16M -n $lv1 $vg $dev1
+test_snapshot_mount() {
+    lvcreate -L 16M -n $lv1 $vg "$dev1"
     mkfs.ext3 $(lvdev_ $vg $lv1)
     mkdir test_mnt
-    mount $(lvdev_ $vg $lv1) test_mnt
+    mount "$(lvdev_ $vg $lv1)" test_mnt
     lvcreate -L 16M -n $lv2 -s $vg/$lv1
     umount test_mnt
     # mount the origin
-    mount $(lvdev_ $vg $lv1) test_mnt
+    mount "$(lvdev_ $vg $lv1)" test_mnt
     umount test_mnt
     # mount the snapshot
-    mount $(lvdev_ $vg $lv2) test_mnt
+    mount "$(lvdev_ $vg $lv2)" test_mnt
     umount test_mnt
     rm -r test_mnt
     vgchange -an $vg
@@ -58,7 +56,7 @@ DEV_SIZE=$(($NUM_DEVS*$PER_DEV_SIZE))
 aux prepare_scsi_debug_dev $DEV_SIZE
 if [ ! -e /sys/block/$(basename $(cat SCSI_DEBUG_DEV))/alignment_offset ] ; then
 	aux cleanup_scsi_debug_dev
-	exit 200
+	skip
 fi
 aux cleanup_scsi_debug_dev
 

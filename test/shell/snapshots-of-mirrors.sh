@@ -1,3 +1,4 @@
+#!/bin/sh
 # Copyright (C) 2010 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
@@ -40,5 +41,5 @@ lvconvert --mirrorlog core $vg/lv
 # Log conversion (core -> disk)
 lvconvert --mirrorlog disk $vg/lv
 
-# Clean-up
-lvremove -ff $vg
+## Clean-up
+vgremove -f $vg

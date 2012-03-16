@@ -15,13 +15,6 @@
 
 . lib/test
 
-check_lv_exists_()
-{
-	for d in $*; do
-		check lv_exists $vg $d
-	done
-}
-
 check_lv_field_modules_()
 {
 	mod=$1
@@ -87,7 +80,7 @@ lvcreate -L4M -V2G --type thin $vg/pool4
 lvcreate -L4M -V2G --type thin --thinpool $vg/pool5
 lvcreate -L4M -V2G --type thin --thinpool pool6 $vg
 
-check_lv_exists_ lvol0 lvol1 lvol2 lvol3 lvol4 lvol5
+check lv_exists $vg lvol0 lvol1 lvol2 lvol3 lvol4 lvol5
 lvremove -ff $vg
 
 
@@ -99,7 +92,7 @@ lvcreate -L4M -V2G -T --thinpool $vg/pool4 --name $vg/lv4
 lvcreate -L4M -V2G -T --thinpool pool5 --name lv5 $vg
 lvcreate -L4M -V2G -T --thinpool pool6 --name $vg/lv6 $vg
 
-check_lv_exists_ lv1 lv2 lv3 lv4 lv5 lv6
+check lv_exists $vg lv1 lv2 lv3 lv4 lv5 lv6
 lvremove -ff $vg
 
 
@@ -110,7 +103,7 @@ lvcreate -L4M -V2G --type thin --thinpool $vg/pool4 --name $vg/lv4
 lvcreate -L4M -V2G --type thin --thinpool pool5 --name lv5 $vg
 lvcreate -L4M -V2G --type thin --thinpool pool6 --name $vg/lv6 $vg
 
-check_lv_exists_ lv1 lv2 lv3 lv4 lv5 lv6
+check lv_exists $vg lv1 lv2 lv3 lv4 lv5 lv6
 lvremove -ff $vg
 
 
@@ -123,7 +116,7 @@ lvcreate -V2G --type thin $vg/pool
 lvcreate -V2G --type thin --thinpool $vg/pool
 lvcreate -V2G --type thin --thinpool pool $vg
 
-check_lv_exists_ lvol0 lvol1 lvol2 lvol3 lvol4 lvol5
+check lv_exists $vg lvol0 lvol1 lvol2 lvol3 lvol4 lvol5
 
 
 # Create named thin LV in existing pool
@@ -140,7 +133,7 @@ lvcreate -V2G --type thin --thinpool $vg/pool --name $vg/lv10
 lvcreate -V2G --type thin --thinpool pool --name lv11 $vg
 lvcreate -V2G --type thin --thinpool pool --name $vg/lv12 $vg
 
-check_lv_exists_ lv1 lv2 lv3 lv4 lv5 lv6 lv7 lv8 lv9 lv10 lv11 lv12
+check lv_exists $vg lv1 lv2 lv3 lv4 lv5 lv6 lv7 lv8 lv9 lv10 lv11 lv12
 check vg_field $vg lv_count 19
 
 lvremove -ff $vg
@@ -181,6 +174,8 @@ check vg_field $vg lv_count 0
 not lvcreate --chunksize 256 -l1 -T $vg/pool1
 # Too small chunk size (min is 64KB -  128 sectors)
 not lvcreate --chunksize 32 -l1 -T $vg/pool1
+# Too large chunk size (max is 1GB)
+not lvcreate -L4M --chunksize 2G -T $vg/pool1
 
 lvcreate -L4M -V2G --name lv1 -T $vg/pool1
 # Origin name is not accepted
@@ -188,29 +183,30 @@ not lvcreate -s $vg/lv1 -L4M -V2G --name $vg/lv4
 vgremove -ff $vg
 
 
-# Test --poolmetadatasize
+# Test --poolmetadatasize range
 # allocating large devices for testing
 aux teardown_devs
-aux prepare_pvs 7 16500
+aux prepare_pvs 10 16500
 vgcreate $clustered $vg -s 64K $(cat DEVICES)
 
-lvcreate -L4M --chunksize 128 -T $vg/pool
 lvcreate -L4M --chunksize 128 --poolmetadatasize 0 -T $vg/pool1 2>out
 grep "WARNING: Minimum" out
 # FIXME: metadata allocation fails, if PV doesn't have at least 16GB
 # i.e. pool metadata device cannot be multisegment
-lvcreate -L4M --chunksize 128 --poolmetadatasize 17G -T $vg/pool2 2>out
+lvcreate -L4M --chunksize 64k --poolmetadatasize 17G -T $vg/pool2 2>out
 grep "WARNING: Maximum" out
-check lv_field $vg/pool_tmeta size  "2.00m"
 check lv_field $vg/pool1_tmeta size "2.00m"
 check lv_field $vg/pool2_tmeta size "16.00g"
 lvremove -ff $vg
 
-# check automatic calculation of poolmetadatasize
-lvcreate -L10G --chunksize 128 -T $vg/pool
+# Test automatic calculation of pool metadata size
+lvcreate -L160G -T $vg/pool
+check lv_field $vg/pool lv_metadata_size "80.00m"
+check lv_field $vg/pool chunksize        "128.00k"
+lvremove -ff $vg/pool
+
 lvcreate -L10G --chunksize 256 -T $vg/pool1
 lvcreate -L60G --chunksize 1024 -T $vg/pool2
-check lv_field $vg/pool_tmeta size  "5.00m"
 check lv_field $vg/pool1_tmeta size "2.50m"
 check lv_field $vg/pool2_tmeta size "3.75m"
 vgremove -ff $vg

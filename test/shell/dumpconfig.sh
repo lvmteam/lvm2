@@ -1,3 +1,4 @@
+#!/bin/sh
 # Copyright (C) 2011 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
@@ -18,7 +19,7 @@ flatten() {
     done
 }
 
-lvm dumpconfig -vvvv | flatten | sort > config.dump
+lvm dumpconfig | flatten | sort > config.dump
 flatten < etc/lvm.conf | sort > config.input
 
 # check that dumpconfig output corresponds to the lvm.conf input
@@ -32,4 +33,3 @@ aux lvmconf 'tags/@foo {}'
 echo 'log { verbose = 1 }' > etc/lvm_foo.conf
 lvm dumpconfig | flatten | grep 'log/verbose=1'
 lvm dumpconfig | flatten | grep 'log/indent=1'
-

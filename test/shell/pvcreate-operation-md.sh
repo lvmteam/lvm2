@@ -1,3 +1,4 @@
+#!/bin/sh
 # Copyright (C) 2009 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
@@ -8,18 +9,19 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-# skip this test if mdadm or sfdisk (or others) aren't available
-which mdadm || exit 200
-which sfdisk || exit 200
-which perl || exit 200
-which awk || exit 200
-which cut || exit 200
-
-test -f /proc/mdstat && grep -q raid0 /proc/mdstat || \
-modprobe raid0 || exit 200
-
 . lib/test
 
+# skip this test if mdadm or sfdisk (or others) aren't available
+which mdadm || skip
+which sfdisk || skip
+which perl || skip
+which awk || skip
+which cut || skip
+
+test -f /proc/mdstat && grep -q raid0 /proc/mdstat || \
+	modprobe raid0 || skip
+
+aux lvmconf 'devices/md_component_detection = 1'
 aux lvmconf 'devices/filter = [ "a|/dev/md.*|", "a/dev\/mapper\/.*$/", "r/.*/" ]'
 aux prepare_devs 2
 
@@ -50,10 +52,10 @@ cleanup_md_and_teardown() {
 }
 
 # create 2 disk MD raid0 array (stripe_width=128K)
-test -b "$mddev" && exit 200
-mdadm --create --metadata=1.0 $mddev --auto=md --level 0 --raid-devices=2 --chunk 64 $dev1 $dev2
+test -b "$mddev" && skip
+mdadm --create --metadata=1.0 $mddev --auto=md --level 0 --raid-devices=2 --chunk 64 "$dev1" "$dev2"
 trap 'cleanup_md_and_teardown' EXIT # cleanup this MD device at the end of the test
-test -b "$mddev" || exit 200
+test -b "$mddev" || skip
 
 # Test alignment of PV on MD without any MD-aware or topology-aware detection
 # - should treat $mddev just like any other block device
@@ -104,7 +106,7 @@ EOF
     # in case the system is running without devtmpfs /dev
     # wait here for created device node on tmpfs
     aux udev_wait $mddev_p
-    test -b $mddev_p || exit 200
+    test -b $mddev_p || skip
 
     # Checking for 'alignment_offset' in sysfs implies Linux >= 2.6.31
     # but reliable alignment_offset support requires kernel.org Linux >= 2.6.33
@@ -117,7 +119,7 @@ EOF
         # default alignment is 1M, add alignment_offset
 	pv_align=$((1048576+$alignment_offset))B
 	pvcreate --metadatasize 128k $mddev_p
-	check pv_field $mddev_p pe_start $pv_align "--units b"
+	check pv_field $mddev_p pe_start $pv_align --units b
 	pvremove $mddev_p
     fi
 fi
@@ -125,13 +127,13 @@ fi
 # Test newer topology-aware alignment detection w/ --dataalignment override
 if kernel_at_least 2 6 33 ; then
     cleanup_md
-    pvcreate -f $dev1
-    pvcreate -f $dev2
+    pvcreate -f "$dev1"
+    pvcreate -f "$dev2"
 
     # create 2 disk MD raid0 array (stripe_width=2M)
-    test -b "$mddev" && exit 200
-    mdadm --create --metadata=1.0 $mddev --auto=md --level 0 --raid-devices=2 --chunk 1024 $dev1 $dev2
-    test -b "$mddev" || exit 200
+    test -b "$mddev" && skip
+    mdadm --create --metadata=1.0 $mddev --auto=md --level 0 --raid-devices=2 --chunk 1024 "$dev1" "$dev2"
+    test -b "$mddev" || skip
 
     # optimal_io_size=2097152, minimum_io_size=1048576
     pv_align="2.00m"

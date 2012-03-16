@@ -16,29 +16,28 @@ aux prepare_pvs 4
 # vgcfgbackup handles similar VG names (bz458941)
 vg1=${PREFIX}vg00
 vg2=${PREFIX}vg01
-vgcreate $vg1 $dev1
-vgcreate $vg2 $dev2
+vgcreate $vg1 "$dev1"
+vgcreate $vg2 "$dev2"
 vgcfgbackup -f $TESTDIR/bak-%s >out
 grep "Volume group \"$vg1\" successfully backed up." out
 grep "Volume group \"$vg2\" successfully backed up." out
-vgremove -ff $vg1
-vgremove -ff $vg2
+vgremove -ff $vg1 $vg2
 
 # vgcfgbackup correctly stores metadata with missing PVs
 # and vgcfgrestore able to restore them when device reappears
-pv1_uuid=$(pvs --noheadings -o pv_uuid $dev1)
-pv2_uuid=$(pvs --noheadings -o pv_uuid $dev2)
+pv1_uuid=$(get pv_field "$dev1" pv_uuid)
+pv2_uuid=$(get pv_field "$dev2" pv_uuid)
 vgcreate $vg $(cat DEVICES)
-lvcreate -l1 -n $lv1 $vg $dev1
-lvcreate -l1 -n $lv2 $vg $dev2
-lvcreate -l1 -n $lv3 $vg $dev3
+lvcreate -l1 -n $lv1 $vg "$dev1"
+lvcreate -l1 -n $lv2 $vg "$dev2"
+lvcreate -l1 -n $lv3 $vg "$dev3"
 vgchange -a n $vg
-pvcreate -ff -y $dev1
-pvcreate -ff -y $dev2
+pvcreate -ff -y "$dev1"
+pvcreate -ff -y "$dev2"
 vgcfgbackup -f "$(pwd)/backup.$$" $vg
 sed 's/flags = \[\"MISSING\"\]/flags = \[\]/' "$(pwd)/backup.$$" > "$(pwd)/backup.$$1"
-pvcreate -ff -y --norestorefile -u $pv1_uuid $dev1
-pvcreate -ff -y --norestorefile -u $pv2_uuid $dev2
+pvcreate -ff -y --norestorefile -u $pv1_uuid "$dev1"
+pvcreate -ff -y --norestorefile -u $pv2_uuid "$dev2"
 vgcfgrestore -f "$(pwd)/backup.$$1" $vg
 vgremove -ff $vg
 
@@ -48,7 +47,7 @@ vgremove -ff $vg
 vgscan
 pvcreate -M1 $(cat DEVICES)
 vgcreate -M1 -c n $vg $(cat DEVICES)
-lvcreate -l1 -n $lv1 $vg $dev1
-pvremove -ff -y $dev2
-not lvcreate -l1 -n $lv1 $vg $dev3
+lvcreate -l1 -n $lv1 $vg "$dev1"
+pvremove -ff -y "$dev2"
+not lvcreate -l1 -n $lv1 $vg "$dev3"
 vgcfgbackup -f "$(pwd)/backup.$$" $vg

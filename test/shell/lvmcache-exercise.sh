@@ -1,3 +1,4 @@
+#!/bin/sh
 # Copyright (C) 2008 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
@@ -12,11 +13,11 @@
 
 aux prepare_pvs 5
 
-vgcreate $vg1 $dev1
-vgcreate $vg2 $dev3
+vgcreate $vg1 "$dev1"
+vgcreate $vg2 "$dev3"
 
-aux disable_dev $dev1
+aux disable_dev "$dev1"
 pvscan
-vgcreate $vg1 $dev2
-aux enable_dev $dev1
+vgcreate $vg1 "$dev2"
+aux enable_dev "$dev1"
 pvs
