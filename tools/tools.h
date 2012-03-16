@@ -162,6 +162,7 @@ unsigned arg_is_set(const struct cmd_context *cmd, int a);
 const char *arg_value(struct cmd_context *cmd, int a);
 const char *arg_str_value(struct cmd_context *cmd, int a, const char *def);
 int32_t arg_int_value(struct cmd_context *cmd, int a, const int32_t def); 
+int32_t first_grouped_arg_int_value(struct cmd_context *cmd, int a, const int32_t def); 
 uint32_t arg_uint_value(struct cmd_context *cmd, int a, const uint32_t def);
 int64_t arg_int64_value(struct cmd_context *cmd, int a, const int64_t def);
 uint64_t arg_uint64_value(struct cmd_context *cmd, int a, const uint64_t def);

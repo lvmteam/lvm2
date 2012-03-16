@@ -94,9 +94,24 @@ int32_t grouped_arg_int_value(const struct arg_values *av, int a, const int32_t 
 	return grouped_arg_count(av, a) ? av[a].i_value : def;
 }
 
+int32_t first_grouped_arg_int_value(struct cmd_context *cmd, int a, const int32_t def)
+{
+	struct arg_value_group_list *current_group;
+	struct arg_values *av;
+
+	dm_list_iterate_items(current_group, &cmd->arg_value_groups)  {
+		av = current_group->arg_values;
+		if (grouped_arg_count(av, a))
+			return grouped_arg_int_value(av, a, def);
+	}
+
+	return def;
+}
+
 int32_t arg_int_value(struct cmd_context *cmd, int a, const int32_t def)
 {
-	return arg_count(cmd, a) ? cmd->arg_values[a].i_value : def;
+	return (_cmdline.arg_props[a].flags & ARG_GROUPABLE) ?
+		first_grouped_arg_int_value(cmd, a, def) : (arg_count(cmd, a) ? cmd->arg_values[a].i_value : def);
 }
 
 uint32_t arg_uint_value(struct cmd_context *cmd, int a, const uint32_t def)
