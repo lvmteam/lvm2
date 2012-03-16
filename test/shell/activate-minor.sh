@@ -16,4 +16,4 @@ lvcreate -a n --zero n -l 1 -n foo $vg
 lvchange $vg/foo -My --major=255 --minor=123
 lvchange $vg/foo -a y
 dmsetup info $vg-foo | tee info
-grep "254, 123" info
+egrep "^Major, minor: *[0-9]+, 123" info
