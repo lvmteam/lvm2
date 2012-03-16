@@ -1,3 +1,4 @@
+#!/bin/bash
 # Copyright (C) 2011 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
@@ -13,55 +14,63 @@ LANG=C
 LC_ALL=C
 TZ=UTC
 
+# Put script name into variable, so it can used in external scripts
+TESTNAME=${0##*/}
+# Nice debug message
+PS4=' ${BASH_SOURCE[0]##*/}:${LINENO}+ '
+export TESTNAME PS4
+
 unset CDPATH
 
 # grab some common utilities
 . lib/utils
 
-OLDPWD="`pwd`"
+TESTOLDPWD=$(pwd)
 COMMON_PREFIX="LVMTEST"
 PREFIX="${COMMON_PREFIX}$$"
 
-TESTDIR=$(mkdtemp ${LVM_TEST_DIR-$(pwd)} $PREFIX.XXXXXXXXXX) \
-	|| { echo "failed to create temporary directory in ${LVM_TEST_DIR-$(pwd)}"; exit 1; }
+TESTDIR=$(mkdtemp "${LVM_TEST_DIR-$TESTOLDPWD}" "$PREFIX.XXXXXXXXXX") || \
+	die "failed to create temporary directory in ${LVM_TEST_DIR-$TESTOLDPWD}"
+RUNNING_DMEVENTD=$(pgrep dmeventd) || true
 
-export COMMON_PREFIX
-export PREFIX
-export TESTDIR
+export TESTOLDPWD TESTDIR COMMON_PREFIX PREFIX RUNNING_DMEVENTD
 
-trap 'set +vx; STACKTRACE; set -vx' ERR
+test -n "$BASH" && trap 'set +vx; STACKTRACE; set -vx' ERR
 trap 'aux teardown' EXIT # don't forget to clean up
 
-export LVM_SYSTEM_DIR=$TESTDIR/etc
-DM_DEV_DIR=$TESTDIR/dev
-mkdir $LVM_SYSTEM_DIR $TESTDIR/lib $DM_DEV_DIR
+DM_DEV_DIR="$TESTDIR/dev"
+LVM_SYSTEM_DIR="$TESTDIR/etc"
+mkdir "$LVM_SYSTEM_DIR" "$TESTDIR/lib" "$DM_DEV_DIR"
 if test -n "$LVM_TEST_DEVDIR" ; then
-	DM_DEV_DIR="$LVM_TEST_DEVDIR"
+	DM_DEV_DIR=$LVM_TEST_DEVDIR
 else
-	mknod $DM_DEV_DIR/testnull c 1 3 || exit 1;
-	echo >$DM_DEV_DIR/testnull || { echo "Filesystem does support devices in $DM_DEV_DIR (mounted with nodev?)"; exit 1; }
-	mkdir -p $DM_DEV_DIR/mapper
+	mknod "$DM_DEV_DIR/testnull" c 1 3 || die "mknod failed";
+	echo >"$DM_DEV_DIR/testnull" || \
+		die "Filesystem does support devices in $DM_DEV_DIR (mounted with nodev?)"
+	mkdir "$DM_DEV_DIR/mapper"
 fi
-export DM_DEV_DIR
 
-cd $TESTDIR
+export DM_DEV_DIR LVM_SYSTEM_DIR
 
-for i in `find $abs_top_builddir/daemons/dmeventd/plugins/ -name \*.so`; do
-	#echo Setting up symlink from $i to $TESTDIR/lib
-	ln -s $i $TESTDIR/lib
-done
+cd "$TESTDIR"
 
-ln -s $abs_top_builddir/test/lib/* $TESTDIR/lib
+echo "$TESTNAME" >TESTNAME
 
-# re-do the utils now that we have TESTDIR/PREFIX/...
-. lib/utils
+# Setting up symlink from $i to $TESTDIR/lib
+find "$abs_top_builddir/daemons/dmeventd/plugins/" -name \*.so \
+	-exec ln -s "{}" lib/ \;
+ln -s "$abs_top_builddir/test/lib/"* lib/
 
-set -eE -o pipefail
+# Set vars from utils now that we have TESTDIR/PREFIX/...
+prepare_test_vars
+
+test -n "$BASH" && set -eE -o pipefail
+
 aux lvmconf
 aux prepare_clvmd
 test -n "$LVM_TEST_LVMETAD" && {
-    aux prepare_lvmetad
-    export LVM_LVMETAD_SOCKET="$TESTDIR/lvmetad.socket"
+	aux prepare_lvmetad
+	export LVM_LVMETAD_SOCKET="$TESTDIR/lvmetad.socket"
 }
 echo "@TESTDIR=$TESTDIR"
 echo "@PREFIX=$PREFIX"
