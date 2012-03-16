@@ -14,6 +14,12 @@
 which mkfs.ext2 || skip
 
 aux prepare_dmeventd
+
+# Currently dmeventd doesn't support any other location
+# for dmeventd restart, so FIXME in dmeventd
+# and update this check
+test -x /sbin/dmeventd || skip
+
 aux prepare_vg 5
 
 lvcreate -m 3 --ig -L 1 -n 4way $vg
