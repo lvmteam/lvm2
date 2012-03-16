@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (C) 2007-2010 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2007-2012 Red Hat, Inc. All rights reserved.
 #
 # This file is part of LVM2.
 #
@@ -62,7 +62,7 @@ YES=${_FSADM_YES}
 DRY=0
 VERB=
 FORCE=
-EXTOFF=0
+EXTOFF=${_FSADM_EXTOFF:-0}
 DO_LVRESIZE=0
 FSTYPE=unknown
 VOLUME=unknown
@@ -121,7 +121,7 @@ dry() {
 		return 0
 	fi
 	verbose "Executing $@"
-	$@
+	"$@"
 }
 
 cleanup() {
@@ -141,7 +141,8 @@ cleanup() {
 		# start LVRESIZE with the filesystem modification flag
 		# and allow recursive call of fsadm
 		_FSADM_YES=$YES
-		export _FSADM_YES
+		_FSADM_EXTOFF=$EXTOFF
+		export _FSADM_YES _FSADM_EXTOFF
 		unset FSADM_RUNNING
 		test -n "$LVM_BINARY" && PATH=$_SAVEPATH
 		dry exec "$LVM" lvresize $VERB $FORCE -r -L${NEWSIZE}b "$VOLUME_ORIG"
@@ -200,10 +201,10 @@ detect_fs() {
 detect_mounted()  {
 	test -e "$PROCMOUNTS" || error "Cannot detect mounted device \"$VOLUME\""
 
-	MOUNTED=$("$GREP" ^"$VOLUME" "$PROCMOUNTS")
+	MOUNTED=$("$GREP" "^$VOLUME[ \t]" "$PROCMOUNTS")
 
 	# for empty string try again with real volume name
-	test -z "$MOUNTED" && MOUNTED=$("$GREP" ^"$RVOLUME" "$PROCMOUNTS")
+	test -z "$MOUNTED" && MOUNTED=$("$GREP" "^$RVOLUME[ \t]" "$PROCMOUNTS")
 
 	# cut device name prefix and trim everything past mountpoint
 	# echo translates \040 to spaces
@@ -212,8 +213,8 @@ detect_mounted()  {
 
 	# for systems with different device names - check also mount output
 	if test -z "$MOUNTED" ; then
-		MOUNTED=$(LANG=C "$MOUNT" | "$GREP" ^"$VOLUME")
-		test -z "$MOUNTED" && MOUNTED=$(LANG=C "$MOUNT" | "$GREP" ^"$RVOLUME")
+		MOUNTED=$(LANG=C "$MOUNT" | "$GREP" "^$VOLUME[ \t]")
+		test -z "$MOUNTED" && MOUNTED=$(LANG=C "$MOUNT" | "$GREP" "^$RVOLUME[ \t]")
 		MOUNTED=${MOUNTED##* on }
 		MOUNTED=${MOUNTED% type *} # allow type in the mount name
 	fi
@@ -483,6 +484,9 @@ do
 	esac
 	shift
 done
+
+test "$YES" = "-y" || YES=
+test "$EXTOFF" -eq 1 || EXTOFF=0
 
 if [ -n "$CHECK" ]; then
 	check "$CHECK"
