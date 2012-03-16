@@ -398,6 +398,7 @@ devices/filter = [ "a/dev\\\\/mirror/", "a/dev\\\\/mapper\\\\/.*pv[0-9_]*$/", "r
 devices/cache_dir = "$TESTDIR/etc"
 devices/sysfs_scan = 0
 devices/default_data_alignment = 1
+devices/md_component_detection  = 0
 log/syslog = 0
 log/indent = 1
 log/level = 9
