@@ -1,5 +1,6 @@
 Version 2.02.96 - 
 ================================
+  Fix a regression in handling of lvchange/lvcreate --major/--minor.
   Fix name conflicts that prevent down-converting RAID1 when specifying a device
   Improve thin_check option passing and use configured path.
   Add --with-thin-check configure option for path to thin_check.
