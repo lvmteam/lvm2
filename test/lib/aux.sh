@@ -92,8 +92,8 @@ teardown_devs() {
 		rm -rf $TESTDIR/dev/$PREFIX*
 
 		init_udev_transaction
-		while dmsetup table | grep -q ^$PREFIX; do
-			for s in `dmsetup info -c -o name --noheading | grep ^$PREFIX`; do
+		while dmsetup table | grep -q $PREFIX; do
+			for s in `dmsetup info -c -o name --noheading | grep $PREFIX`; do
 				umount -fl $DM_DEV_DIR/mapper/$s >& /dev/null || true
 				dmsetup remove -f $s >& /dev/null || true
 			done
