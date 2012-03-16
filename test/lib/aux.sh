@@ -36,7 +36,7 @@ prepare_clvmd() {
 	test -z "$LVM_VALGRIND_CLVMD" || run_valgrind="run_valgrind"
 	$run_valgrind lib/clvmd -Isinglenode -d 1 -f &
 	local local_clvmd=$!
-	sleep .1
+	sleep .3
 	# extra sleep for slow valgrind
 	test -z "$LVM_VALGRIND_CLVMD" || sleep 5
 	# check that it is really running now
@@ -176,7 +176,7 @@ teardown() {
 		kill -INT "$(cat LOCAL_CLVMD)"
 		test -z "$LVM_VALGRIND_CLVMD" || sleep 1
 		sleep .1
-		kill -9 "$(cat LOCAL_CLVMD)" || true
+		kill -9 "$(cat LOCAL_CLVMD)" &>/dev/null || true
 	}
 
 	echo -n .
@@ -288,7 +288,7 @@ prepare_scsi_debug_dev() {
 }
 
 cleanup_scsi_debug_dev() {
-	aux teardown_devs
+	teardown_devs
 	rm -f SCSI_DEBUG_DEV LOOP
 }
 
