@@ -197,7 +197,7 @@ teardown() {
 
 	echo "ok"
 
-	test -z "$RUNNING_DMEVENTD" && not pgrep dmeventd &>/dev/null
+	test -n "$RUNNING_DMEVENTD" || not pgrep dmeventd &>/dev/null
 }
 
 make_ioerror() {
