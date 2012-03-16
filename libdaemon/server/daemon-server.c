@@ -177,7 +177,7 @@ static int _systemd_handover(struct daemon_state *ds)
 	env_pid = strtoul(e, &p, 10);
 	if (errno || !p || *p || env_pid <= 0 ||
 	    getpid() != (pid_t) env_pid)
-		;
+		goto out;
 
 	/* LISTEN_FDS must be 1 and the fd must be a socket! */
 	if (!(e = getenv(SD_LISTEN_FDS_ENV_VAR_NAME)))
