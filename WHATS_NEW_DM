@@ -1,5 +1,6 @@
 Version 1.02.75 - 
 ================================
+  Properly support passed in dmevent path in dm_event_register_handler().
   Remove dmeventd fifos on exit if they are not managed by systemd.
   Use SD_ACTIVATION env. var. in systemd units to better detect systemd in use.
   Do not run a new dmeventd instance on restart if there's no existing one.

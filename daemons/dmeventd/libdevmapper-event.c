@@ -440,8 +440,8 @@ static int _start_daemon(char *dmeventd_path, struct dm_event_fifos *fifos)
       start_server:
 	/* server is not running */
 
-	if (!strncmp(DMEVENTD_PATH, "/", 1) && stat(DMEVENTD_PATH, &statbuf)) {
-		log_sys_error("stat", DMEVENTD_PATH);
+	if ((args[0][0] == '/') && stat(args[0], &statbuf)) {
+		log_sys_error("stat", args[0]);
 		return 0;
 	}
 
