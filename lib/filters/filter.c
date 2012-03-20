@@ -196,7 +196,7 @@ static int _scan_proc_dev(const char *proc, const struct dm_config_node *cn)
 	size_t dev_len = 0;
 	const struct dm_config_value *cv;
 	const char *name;
-
+	char *nl;
 
 	if (!*proc) {
 		log_verbose("No proc filesystem found: using all block device "
@@ -227,7 +227,20 @@ static int _scan_proc_dev(const char *proc, const struct dm_config_node *cn)
 
 		/* If it's not a number it may be name of section */
 		line_maj = atoi(((char *) (line + i)));
-		if ((line_maj <= 0) || (line_maj >= NUMBER_OF_MAJORS)) {
+
+		if (line_maj < 0 || line_maj >= NUMBER_OF_MAJORS) {
+			/*
+			 * Device numbers shown in /proc/devices are actually direct
+			 * numbers passed to registering function, however the kernel
+			 * uses only 12 bits, so use just 12 bits for major.
+			 */
+			if ((nl = strchr(line, '\n'))) *nl = '\0';
+			log_warn("WARNING: /proc/devices line: %s, replacing major with %d.",
+				 line, line_maj & (NUMBER_OF_MAJORS - 1));
+			line_maj &= (NUMBER_OF_MAJORS - 1);
+		}
+
+		if (!line_maj) {
 			blocksection = (line[i] == 'B') ? 1 : 0;
 			continue;
 		}
