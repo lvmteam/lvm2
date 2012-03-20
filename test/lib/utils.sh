@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) 2011 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2011-2012 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -11,6 +11,8 @@
 
 set -e
 MAX_TRIES=4
+IFS_NL='
+'
 
 die() {
 	echo "$@" >&2
@@ -62,8 +64,7 @@ mkdtemp() {
 	fail=0
 
 	# First, try to use mktemp.
-	d=$(env -u TMPDIR mktemp -d -t -p "$destdir" "$template" 2>/dev/null) \
-	  || fail=1
+	d=$(env -u TMPDIR mktemp -d -t -p "$destdir" "$template" 2>/dev/null) || fail=1
 
 	# The resulting name must be in the specified directory.
 	case "$d" in "${destdir}"*);; *) fail=1;; esac
@@ -165,15 +166,15 @@ kernel_at_least() {
 	local major=$(uname -r | cut -d. -f1)
 	local minor=$(uname -r | cut -d. -f2 | cut -d- -f1)
 
-	test $major -gt $1 && return 0
-	test $major -eq $1 || return 1
-	test $minor -gt $2 && return 0
-	test $minor -eq $2 || return 1
+	test "$major" -gt "$1" && return 0
+	test "$major" -eq "$1" || return 1
+	test "$minor" -gt "$2" && return 0
+	test "$minor" -eq "$2" || return 1
 	test -z "$3" && return 0
 
 	local minor2=$(uname -r | cut -d. -f3 | cut -d- -f1)
-	test -z "$minor2" -a $3 -ne 0 && return 1
-	test $minor2 -ge $3 2>/dev/null || return 1
+	test -z "$minor2" -a "$3" -ne 0 && return 1
+	test "$minor2" -ge "$3" 2>/dev/null || return 1
 }
 
 prepare_test_vars() {
@@ -189,13 +190,18 @@ prepare_test_vars() {
 	done
 }
 
-. lib/paths || die "you must run make first"
+# check if $abs_top_builddir was already set via 'lib/paths'
+test -n "${abs_top_builddir+varset}" || . lib/paths || die "you must run make first"
 
-PATH="$abs_top_builddir/test/lib":$PATH
-for d in daemons/dmeventd/plugins/mirror daemons/dmeventd/plugins/snapshot \
-	daemons/dmeventd/plugins/lvm2 daemons/dmeventd liblvm tools libdm; do
-	LD_LIBRARY_PATH="$abs_top_builddir/$d":$LD_LIBRARY_PATH
-done
-export PATH LD_LIBRARY_PATH
+case "$PATH" in
+*"$abs_top_builddir/test/lib"*) ;;
+*)
+        PATH="$abs_top_builddir/test/lib":$PATH
+        for d in daemons/dmeventd/plugins/mirror daemons/dmeventd/plugins/snapshot \
+                daemons/dmeventd/plugins/lvm2 daemons/dmeventd liblvm tools libdm; do
+                LD_LIBRARY_PATH="$abs_top_builddir/$d":$LD_LIBRARY_PATH
+        done
+        export PATH LD_LIBRARY_PATH ;;
+esac
 
 test -z "$PREFIX" || prepare_test_vars

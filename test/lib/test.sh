@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) 2011 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2011-2012 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -17,7 +17,7 @@ TZ=UTC
 # Put script name into variable, so it can used in external scripts
 TESTNAME=${0##*/}
 # Nice debug message
-PS4=' ${BASH_SOURCE[0]##*/}:${LINENO}+ '
+PS4='#${BASH_SOURCE[0]##*/}:${LINENO}+ '
 export TESTNAME PS4
 
 unset CDPATH
@@ -29,8 +29,8 @@ TESTOLDPWD=$(pwd)
 COMMON_PREFIX="LVMTEST"
 PREFIX="${COMMON_PREFIX}$$"
 
-TESTDIR=$(mkdtemp "${LVM_TEST_DIR-$TESTOLDPWD}" "$PREFIX.XXXXXXXXXX") || \
-	die "failed to create temporary directory in ${LVM_TEST_DIR-$TESTOLDPWD}"
+TESTDIR=$(mkdtemp "${LVM_TEST_DIR:-$TESTOLDPWD}" "$PREFIX.XXXXXXXXXX") || \
+	die "failed to create temporary directory in ${LVM_TEST_DIR:-$TESTOLDPWD}"
 RUNNING_DMEVENTD=$(pgrep dmeventd) || true
 
 export TESTOLDPWD TESTDIR COMMON_PREFIX PREFIX RUNNING_DMEVENTD
@@ -57,9 +57,10 @@ cd "$TESTDIR"
 echo "$TESTNAME" >TESTNAME
 
 # Setting up symlink from $i to $TESTDIR/lib
-find "$abs_top_builddir/daemons/dmeventd/plugins/" -name \*.so \
-	-exec ln -s "{}" lib/ \;
-ln -s "$abs_top_builddir/test/lib/"* lib/
+find "$abs_top_builddir/daemons/dmeventd/plugins/" -name '*.so' \
+	-exec ln -s -t lib "{}" +
+find "$abs_top_builddir/test/lib" ! \( -name '*.sh' -o -name '*.[cdo]' \
+	-o -name '*~' \)  -exec ln -s -t lib "{}" +
 
 # Set vars from utils now that we have TESTDIR/PREFIX/...
 prepare_test_vars

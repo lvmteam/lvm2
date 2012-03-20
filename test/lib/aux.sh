@@ -12,7 +12,7 @@
 . lib/utils
 
 run_valgrind() {
-	# Execute script which may use $TESTNAME for creating individal
+	# Execute script which may use $TESTNAME for creating individual
 	# log files for each execute command
 	exec "${VALGRIND:-valg}" "$@"
 }
@@ -59,7 +59,7 @@ prepare_dmeventd() {
 	echo $! > LOCAL_DMEVENTD
 
 	# FIXME wait for pipe in /var/run instead
-	sleep 1
+	sleep .3
 }
 
 prepare_lvmetad() {
@@ -73,7 +73,7 @@ prepare_lvmetad() {
 	lvmetad -f "$@" -s "$TESTDIR/lvmetad.socket" &
 	echo $! > LOCAL_LVMETAD
 
-	sleep 1
+	sleep .3
 }
 
 notify_lvmetad() {
@@ -82,37 +82,63 @@ notify_lvmetad() {
 	fi
 }
 
-teardown_devs() {
-	vgremove -ff $vg $vg1 $vg2 $vg3 $vg4 &>/dev/null || rm -f debug.log
+teardown_devs_prefixed() {
+	local prefix=$1
+	local stray=${2:-0}
+	local IFS=$IFS_NL
+	local dm
 
+	# Resume suspended devices first
+	for dm in $(dmsetup info -c -o suspended,name --noheadings | grep "^Suspended:.*$prefix"); do
+		echo "dmsetup resume \"${dm#Suspended:}\""
+		dmsetup resume "${dm#Suspended:}" || true
+	done
+
+	local mounts=( $(grep "$prefix" /proc/mounts | cut -d' ' -f1) )
+	if test ${#mounts[@]} -gt 0; then
+		test "$stray" -eq 0 || echo "Removing stray mounted devices containing $prefix: ${mounts[@]}"
+		if umount -fl "${mounts[@]}"; then
+			udev_wait
+		fi
+	fi
+
+	if test "$stray" -eq 0; then
+		dmsetup table | not egrep -q "$vg|$vg1|$vg2|$vg3|$vg4" || \
+			vgremove -ff $vg $vg1 $vg2 $vg3 $vg4 &>/dev/null || rm -f debug.log
+	fi
+
+	# Remove devices, start with closed (sorted by open count)
+	local remfail=no
+	local need_udev_wait=0
+	init_udev_transaction
+	for dm in $(dmsetup info -c -o name --sort open --noheadings | grep "$prefix"); do
+		dmsetup remove "$dm" &>/dev/null || remfail=yes
+		need_udev_wait=1
+	done
+	finish_udev_transaction
+	test $need_udev_wait -eq 0 || udev_wait
+
+	if test $remfail = yes; then
+		local num_devs
+		local num_remaining_devs=999
+		while num_devs=$(dmsetup table | grep "$prefix" | wc -l) && \
+		    test $num_devs -lt $num_remaining_devs -a $num_devs -ne 0; do
+			test "$stray" -eq 0 || echo "Removing $num_devs stray mapped devices with names beginning with $prefix: "
+			for dm in $(dmsetup info -c -o name --sort open --noheadings | grep "$prefix") ; do
+				dmsetup remove -f "$dm" || true
+			done
+			num_remaining_devs=$num_devs
+		done
+	fi
+}
+
+teardown_devs() {
 	# Delete any remaining dm/udev semaphores
 	teardown_udev_cookies
 
 	test -z "$PREFIX" || {
 		rm -rf "$TESTDIR/dev/$PREFIX"*
-
-		# Try unmount opened devices first
-		for s in $(dmsetup info -c -o open,name --sort -open --noheading | grep "$PREFIX"); do
-			test "${s%%:*}" -gt 0 || break
-			umount -fl "$DM_DEV_DIR/mapper/${s#[0..9]*:}" &>/dev/null || true
-		done
-
-		# Remove devices, start with closed (sorted by open count)
-		init_udev_transaction
-		for s in $(dmsetup info -c -o name --sort open --noheading | grep "$PREFIX"); do
-			dmsetup remove "$s" &>/dev/null || true
-		done
-		finish_udev_transaction
-		udev_wait
-
-		# Brute force, and without udev transaction
-		while dmsetup table | grep -q "$PREFIX"; do
-			for s in $(dmsetup info -c -o name --sort open --noheading | grep "$PREFIX"); do
-				umount -fl "$DM_DEV_DIR/mapper/$s" &>/dev/null || true
-				dmsetup remove -f "$s" &>/dev/null || true
-			done
-			udev_wait
-		done
+		teardown_devs_prefixed "$PREFIX"
 	}
 
 	# NOTE: SCSI_DEBUG_DEV test must come before the LOOP test because
@@ -120,7 +146,7 @@ teardown_devs() {
 	if test -f SCSI_DEBUG_DEV; then
 		modprobe -r scsi_debug
 	else
-		test ! -f LOOP || losetup -d $(cat LOOP)
+		test ! -f LOOP || losetup -d $(cat LOOP) || true
 		test ! -f LOOPFILE || rm -f $(cat LOOPFILE)
 	fi
 	rm -f DEVICES # devs is set in prepare_devs()
@@ -128,44 +154,12 @@ teardown_devs() {
 
 	# Attempt to remove any loop devices that failed to get torn down if earlier tests aborted
 	test -z "$COMMON_PREFIX" || {
-		# Resume any linears to be sure we do not deadlock
-		STRAY_DEVS=$(dmsetup table | sed 's/:.*//' | grep "$COMMON_PREFIX" | cut -d' '  -f 1)
-		for dm in $STRAY_DEVS ; do
-			# FIXME: only those really suspended
-			echo "dmsetup resume \"$dm\""
-			dmsetup resume "$dm" || true
-		done
-
-		STRAY_MOUNTS=$(mount | grep "$COMMON_PREFIX" | cut -d' ' -f1)
-		if test -n "$STRAY_MOUNTS"; then
-			echo "Removing stray mounted devices containing $COMMON_PREFIX:"
-			mount | grep "$COMMON_PREFIX"
-			umount -fl "$STRAY_MOUNTS" || true
-			udev_wait
-		fi
-
-		init_udev_transaction
-		NUM_REMAINING_DEVS=999
-		while NUM_DEVS=$(dmsetup table | grep "^$COMMON_PREFIX" | wc -l) && \
-		    test $NUM_DEVS -lt $NUM_REMAINING_DEVS -a $NUM_DEVS -ne 0; do
-			echo "Removing $NUM_DEVS stray mapped devices with names beginning with $COMMON_PREFIX:"
-			STRAY_DEVS=$(dmsetup table | sed 's/:.*//' | grep "$COMMON_PREFIX" | cut -d' '  -f 1)
-			dmsetup info -c | grep "^$COMMON_PREFIX"
-			for dm in $STRAY_DEVS ; do
-				echo "dmsetup remove -f \"$dm\""
-				dmsetup remove -f "$dm" || true
-			done
-			NUM_REMAINING_DEVS=$NUM_DEVS
-		done
-		finish_udev_transaction
-		udev_wait
-
-		STRAY_LOOPS=$(losetup -a | grep "$COMMON_PREFIX" | cut -d: -f1)
-		if test -n "$STRAY_LOOPS"; then
-			echo "Removing stray loop devices containing $COMMON_PREFIX:"
-			losetup -a | grep "$COMMON_PREFIX"
-			losetup -d "$STRAY_LOOPS" || true
-		fi
+		teardown_devs_prefixed "$COMMON_PREFIX" 1
+		local stray_loops=( $(losetup -a | grep "$COMMON_PREFIX" | cut -d: -f1) )
+		test ${#stray_loops[@]} -eq 0 || {
+			echo "Removing stray loop devices containing $COMMON_PREFIX: ${stray_loops[@]}"
+			losetup -d "${stray_loops[@]}"
+		}
 	}
 }
 
@@ -181,6 +175,7 @@ teardown() {
 
 	echo -n .
 
+	pgrep dmeventd || true
 	test -f LOCAL_DMEVENTD && kill -9 $(cat LOCAL_DMEVENTD) || true
 	test -f LOCAL_LVMETAD && kill -9 $(cat LOCAL_LVMETAD) || true
 
@@ -201,13 +196,16 @@ teardown() {
 }
 
 make_ioerror() {
-	echo 0 10000000 error | dmsetup create -u TEST-ioerror ioerror
+	echo 0 10000000 error | dmsetup create -u ${PREFIX}-ioerror ioerror
 	ln -s "$DM_DEV_DIR/mapper/ioerror" "$DM_DEV_DIR/ioerror"
 }
 
 prepare_loop() {
 	local size=${1=32}
+	local i
+	local slash
 
+	test -f LOOP && LOOP=$(cat LOOP)
 	echo -n "## preparing loop device..."
 
 	# skip if prepare_scsi_debug_dev() was used
@@ -296,6 +294,7 @@ prepare_devs() {
 	local n=${1:-3}
 	local devsize=${2:-34}
 	local pvname=${3:-pv}
+	local loopsz
 
 	prepare_loop $(($n*$devsize))
 	echo -n "## preparing $n devices..."
@@ -331,6 +330,8 @@ prepare_devs() {
 }
 
 disable_dev() {
+	local dev
+
 	init_udev_transaction
 	for dev in "$@"; do
 		maj=$(($(stat --printf=0x%t "$dev")))
@@ -340,10 +341,11 @@ disable_dev() {
 		notify_lvmetad --major "$maj" --minor "$min"
 	done
 	finish_udev_transaction
-
 }
 
 enable_dev() {
+	local dev
+
 	init_udev_transaction
 	for dev in "$@"; do
 		local name=$(echo "$dev" | sed -e 's,.*/,,')
@@ -357,12 +359,16 @@ enable_dev() {
 }
 
 backup_dev() {
+	local dev
+
 	for dev in "$@"; do
 		dd if="$dev" of="$dev.backup" bs=1024
 	done
 }
 
 restore_dev() {
+	local dev
+
 	for dev in "$@"; do
 		test -e "$dev.backup" || \
 			die "Internal error: $dev not backed up, can't restore!"
@@ -426,24 +432,27 @@ activation/monitoring = 0
 EOF
 	}
 
+	local v
 	for v in "$@"; do
 	    echo "$v" >> CONFIG_VALUES
 	done
 
 	rm -f CONFIG
+	local s
 	for s in $(cat CONFIG_VALUES | cut -f1 -d/ | sort | uniq); do
 		echo "$s {" >> CONFIG
-		for k in $(grep ^$s/ CONFIG_VALUES | cut -f1 -d= | sed -e 's, *$,,' | sort | uniq); do
+		local k
+		for k in $(grep ^"$s"/ CONFIG_VALUES | cut -f1 -d= | sed -e 's, *$,,' | sort | uniq); do
 			grep "^$k" CONFIG_VALUES | tail -n 1 | sed -e "s,^$s/,	  ," >> CONFIG
 		done
 		echo "}" >> CONFIG
 		echo >> CONFIG
 	done
-        mv -f CONFIG $TESTDIR/etc/lvm.conf
+	mv -f CONFIG etc/lvm.conf
 }
 
 apitest() {
-	t=$1
+	local t=$1
 	shift
 	test -x "$abs_top_builddir/test/api/$t.t" || skip
 	"$abs_top_builddir/test/api/$t.t" "$@" && rm -f debug.log
@@ -458,9 +467,9 @@ udev_wait() {
 	pgrep udev >/dev/null || return 0
 	which udevadm >/dev/null || return 0
 	if test -n "$1" ; then
-		udevadm settle --exit-if-exists=$1
+		udevadm settle --exit-if-exists="$1" || true
 	else
-		udevadm settle --timeout=15
+		udevadm settle --timeout=15 || true
 	fi
 }
 
@@ -477,28 +486,28 @@ target_at_least()
 	  dm-*) modprobe "$1" ;;
 	esac
 
-	version=$(dmsetup targets 2>/dev/null | grep "${1##dm-} " 2>/dev/null)
+	local version=$(dmsetup targets 2>/dev/null | grep "${1##dm-} " 2>/dev/null)
 	version=${version##* v}
 	shift
-	major=$(echo "$version" | cut -d. -f1)
-	minor=$(echo "$version" | cut -d. -f2)
-	revision=$(echo "$version" | cut -d. -f3)
 
+	local major=$(echo "$version" | cut -d. -f1)
 	test -z "$1" && return 0
 	test -n "$major" || return 1
 	test "$major" -gt "$1" && return 0
 	test "$major" -eq "$1" || return 1
+
 	test -z "$2" && return 0
+	local minor=$(echo "$version" | cut -d. -f2)
 	test -n "$minor" || return 1
 	test "$minor" -gt "$2" && return 0
 	test "$minor" -eq "$2" || return 1
-	test -z "$4" && return 0
-	test -n "$revision" || return 1
-	test "$revision" -eq "$3" || return 1
+
+	test -z "$3" && return 0
+	local revision=$(echo "$version" | cut -d. -f3)
+	test "$revision" -ge "$3" 2>/dev/null || return 1
 }
 
 test -f DEVICES && devs=$(cat DEVICES)
-test -f LOOP && LOOP=$(cat LOOP)
 
 unset LVM_VALGRIND
 "$@"
