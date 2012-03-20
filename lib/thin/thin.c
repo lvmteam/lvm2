@@ -337,6 +337,43 @@ static int _thin_pool_target_percent(void **target_state __attribute__((unused))
 
 	return 1;
 }
+
+#  ifdef DMEVENTD
+static const char *_get_thin_dso_path(struct cmd_context *cmd)
+{
+	return get_monitor_dso_path(cmd, find_config_tree_str(cmd, "dmeventd/thin_library",
+							      DEFAULT_DMEVENTD_THIN_LIB));
+}
+
+/* FIXME Cache this */
+static int _target_registered(struct lv_segment *seg, int *pending)
+{
+	return target_registered_with_dmeventd(seg->lv->vg->cmd,
+					       _get_thin_dso_path(seg->lv->vg->cmd),
+					       seg->lv, pending);
+}
+
+/* FIXME This gets run while suspended and performs banned operations. */
+static int _target_set_events(struct lv_segment *seg, int evmask, int set)
+{
+	/* FIXME Make timeout (10) configurable */
+	return target_register_events(seg->lv->vg->cmd,
+				      _get_thin_dso_path(seg->lv->vg->cmd),
+				      seg->lv, evmask, set, 10);
+}
+
+static int _target_register_events(struct lv_segment *seg,
+				   int events)
+{
+	return _target_set_events(seg, events, 1);
+}
+
+static int _target_unregister_events(struct lv_segment *seg,
+				     int events)
+{
+	return _target_set_events(seg, events, 0);
+}
+#  endif /* DMEVENTD */
 #endif /* DEVMAPPER_SUPPORT */
 
 static const char *_thin_name(const struct lv_segment *seg)
@@ -462,43 +499,6 @@ static int _thin_target_present(struct cmd_context *cmd,
 
 	return _present;
 }
-
-#  ifdef DMEVENTD
-static const char *_get_thin_dso_path(struct cmd_context *cmd)
-{
-	return get_monitor_dso_path(cmd, find_config_tree_str(cmd, "dmeventd/thin_library",
-							      DEFAULT_DMEVENTD_THIN_LIB));
-}
-
-/* FIXME Cache this */
-static int _target_registered(struct lv_segment *seg, int *pending)
-{
-	return target_registered_with_dmeventd(seg->lv->vg->cmd,
-					       _get_thin_dso_path(seg->lv->vg->cmd),
-					       seg->pool_lv, pending);
-}
-
-/* FIXME This gets run while suspended and performs banned operations. */
-static int _target_set_events(struct lv_segment *seg, int evmask, int set)
-{
-	/* FIXME Make timeout (10) configurable */
-	return target_register_events(seg->lv->vg->cmd,
-				      _get_thin_dso_path(seg->lv->vg->cmd),
-				      seg->pool_lv, evmask, set, 10);
-}
-
-static int _target_register_events(struct lv_segment *seg,
-				   int events)
-{
-	return _target_set_events(seg, events, 1);
-}
-
-static int _target_unregister_events(struct lv_segment *seg,
-				     int events)
-{
-	return _target_set_events(seg, events, 0);
-}
-#  endif /* DMEVENTD */
 #endif
 
 static int _thin_modules_needed(struct dm_pool *mem,
@@ -527,6 +527,11 @@ static struct segtype_handler _thin_pool_ops = {
 	.add_target_line = _thin_pool_add_target_line,
 	.target_percent = _thin_pool_target_percent,
 	.target_present = _thin_target_present,
+#  ifdef DMEVENTD
+	.target_monitored = _target_registered,
+	.target_monitor_events = _target_register_events,
+	.target_unmonitor_events = _target_unregister_events,
+#  endif /* DMEVENTD */
 #endif
 	.modules_needed = _thin_modules_needed,
 	.destroy = _thin_destroy,
@@ -540,11 +545,6 @@ static struct segtype_handler _thin_ops = {
 	.add_target_line = _thin_add_target_line,
 	.target_percent = _thin_target_percent,
 	.target_present = _thin_target_present,
-#  ifdef DMEVENTD
-	.target_monitored = _target_registered,
-	.target_monitor_events = _target_register_events,
-	.target_unmonitor_events = _target_unregister_events,
-#  endif /* DMEVENTD */
 #endif
 	.modules_needed = _thin_modules_needed,
 	.destroy = _thin_destroy,
