@@ -11,14 +11,7 @@
 
 . lib/test
 
-which mkfs.ext2 || skip
-
 aux prepare_dmeventd
-
-# Currently dmeventd doesn't support any other location
-# for dmeventd restart, so FIXME in dmeventd
-# and update this check
-test -x /sbin/dmeventd || skip
 
 aux prepare_vg 5
 
@@ -28,9 +21,8 @@ lvcreate -m 2 --ig -L 1 -n 3way $vg
 lvchange --monitor y $vg/3way
 
 dmeventd -R -f &
-echo "$!" > LOCAL_DMEVENTD
-
-sleep 1 # wait a bit, so we talk to the new dmeventd later
+echo $! >LOCAL_DMEVENTD
+sleep 2 # wait a bit, so we talk to the new dmeventd later
 
 lvchange --monitor y --verbose $vg/3way 2>&1 | tee lvchange.out
 grep 'already monitored' lvchange.out
@@ -40,9 +32,15 @@ grep 'already monitored' lvchange.out
 # now try what happens if no dmeventd is running
 kill -9 $(cat LOCAL_DMEVENTD)
 dmeventd -R -f &
-sleep 3
+sleep 1
+# now dmeventd should not be running
+pgrep dmeventd
+rm LOCAL_DMEVENTD
+
+# set dmeventd path
+aux lvmconf "dmeventd/executable=\"$abs_top_builddir/test/lib/dmeventd\""
 lvchange --monitor y --verbose $vg/3way 2>&1 | tee lvchange.out
-not grep 'already monitored' lvchange.out
 pgrep dmeventd >LOCAL_DMEVENTD
+not grep 'already monitored' lvchange.out
 
 vgremove -ff $vg
