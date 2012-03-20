@@ -31,10 +31,15 @@ grep 'already monitored' lvchange.out
 
 # now try what happens if no dmeventd is running
 kill -9 $(cat LOCAL_DMEVENTD)
+rm LOCAL_DMEVENTD
+
 dmeventd -R -f &
-sleep 1
+echo $! >LOCAL_DMEVENTD
+
+# wait longer as tries to communicate with killed daemon
+sleep 7
 # now dmeventd should not be running
-pgrep dmeventd
+not pgrep dmeventd
 rm LOCAL_DMEVENTD
 
 # set dmeventd path
