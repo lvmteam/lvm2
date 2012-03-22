@@ -1,5 +1,6 @@
 Version 1.02.84 -
 ====================================
+  Avoid busy looping on CPU when dmeventd reads event DM_WAIT_RETRY.
   Ensure global mutex is being hold when working with dmeventd thread.
   Drop taking timeout mutex for un/registering dmeventd monitor.
   Allow section names in config file data to be quoted strings.

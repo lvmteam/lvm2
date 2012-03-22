@@ -796,8 +796,10 @@ static void *_monitor_thread(void *arg)
 		thread->current_events = 0;
 
 		wait_error = _event_wait(thread, &task);
-		if (wait_error == DM_WAIT_RETRY)
+		if (wait_error == DM_WAIT_RETRY) {
+			usleep(100); /* avoid busy loop */
 			continue;
+		}
 
 		if (wait_error == DM_WAIT_FATAL)
 			break;
