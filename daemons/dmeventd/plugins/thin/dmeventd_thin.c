@@ -178,7 +178,7 @@ void process_event(struct dm_task *dmt,
 #if THIN_DEBUG
 	syslog(LOG_INFO, "%p: Got status %" PRIu64 " / %" PRIu64
 	       " %" PRIu64  " / %" PRIu64 ".\n", state,
-	       tps->used_meta_blocks, tps->total_meta_blocks,
+	       tps->used_metadata_blocks, tps->total_metadata_blocks,
 	       tps->used_data_blocks, tps->total_data_blocks);
 #endif
 
