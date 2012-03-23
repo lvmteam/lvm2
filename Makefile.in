@@ -123,11 +123,10 @@ lcov-reset:
 
 # maybe use subdirs processing to create tracefiles...
 $(LCOV_TRACES):
-	$(LCOV) -b $(basename $@) \
-		-d $(basename $@) -c -o - | $(SED) \
+	$(LCOV) -b $(basename $@) -d $(basename $@) \
+		--ignore-errors source -c -o - | $(SED) \
 		-e "s/\(dmeventd_lvm.[ch]\)/plugins\/lvm2\/\1/" \
-		-e "s/\(dmeventd_mirror.c\)/plugins\/mirror\/\1/" \
-		-e "s/\(dmeventd_snapshot.c\)/plugins\/snapshot\/\1/" \
+		-e "s/dmeventd_\(mirror\|snapshot\|thin\|raid\)\.c/plugins\/\1\/dmeventd_\1\.c/" \
 		>$@
 
 ifneq ("$(GENHTML)", "")
