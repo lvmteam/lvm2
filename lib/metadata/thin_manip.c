@@ -388,6 +388,8 @@ int extend_pool(struct logical_volume *pool_lv, const struct segment_type *segty
 
 int update_pool_lv(struct logical_volume *lv, int activate)
 {
+	int monitored;
+
 	if (!lv_is_thin_pool(lv)) {
 		log_error(INTERNAL_ERROR "Updated LV %s is not pool.", lv->name);
 		return 0;
@@ -399,10 +401,13 @@ int update_pool_lv(struct logical_volume *lv, int activate)
 	if (activate) {
 		/* If the pool is not active, do activate deactivate */
 		if (!lv_is_active(lv)) {
+			monitored = dmeventd_monitor_mode();
+			init_dmeventd_monitor(DMEVENTD_MONITOR_IGNORE);
 			if (!activate_lv_excl(lv->vg->cmd, lv))
 				return_0;
 			if (!deactivate_lv(lv->vg->cmd, lv))
 				return_0;
+			init_dmeventd_monitor(monitored);
 		}
 		/*
 		 * Resume active pool to send thin messages.

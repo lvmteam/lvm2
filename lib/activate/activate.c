@@ -1221,6 +1221,8 @@ int monitor_dev_for_events(struct cmd_context *cmd, struct logical_volume *lv,
 	int (*monitor_fn) (struct lv_segment *s, int e);
 	uint32_t s;
 	static const struct lv_activate_opts zlaopts = { 0 };
+	static const struct lv_activate_opts thinopts = { .skip_in_use = 1 };
+	struct lvinfo info;
 
 	if (!laopts)
 		laopts = &zlaopts;
@@ -1234,6 +1236,19 @@ int monitor_dev_for_events(struct cmd_context *cmd, struct logical_volume *lv,
 	 */
 	if (monitor && !dmeventd_monitor_mode())
 		return 1;
+
+	/*
+	 * Allow to unmonitor thin pool via explicit pool unmonitor
+	 * or unmonitor before the last thin pool user deactivation
+	 * Skip unmonitor, if invoked via unmonitor of thin volume
+	 * and there is another thin pool user (open_count > 1)
+	 */
+	if (laopts->skip_in_use && lv_info(lv->vg->cmd, lv, 1, &info, 1, 0) &&
+	    (info.open_count != 1)) {
+		log_debug("Skipping unmonitor of opened %s (open:%d)",
+			  lv->name, info.open_count);
+		return 1;
+	}
 
 	/*
 	 * In case of a snapshot device, we monitor lv->snapshot->lv,
@@ -1278,6 +1293,21 @@ int monitor_dev_for_events(struct cmd_context *cmd, struct logical_volume *lv,
 				r = 0;
 			}
 		}
+
+		/*
+		 * If requested unmonitoring of thin volume, request test
+		 * if there is no other thin pool user
+		 *
+		 * FIXME: code here looks like _lv_postorder()
+		 */
+		if (seg->pool_lv &&
+		    !monitor_dev_for_events(cmd, seg->pool_lv,
+					    (!monitor) ? &thinopts : NULL, monitor))
+			r = 0;
+
+		if (seg->metadata_lv &&
+		    !monitor_dev_for_events(cmd, seg->metadata_lv, NULL, monitor))
+			r = 0;
 
 		if (!seg_monitored(seg) || (seg->status & PVMOVE))
 			continue;

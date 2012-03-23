@@ -24,21 +24,19 @@ static int _monitor_lvs_in_vg(struct cmd_context *cmd,
 	struct lv_list *lvl;
 	struct logical_volume *lv;
 	struct lvinfo info;
-	int lv_active;
 	int r = 1;
 
 	dm_list_iterate_items(lvl, &vg->lvs) {
 		lv = lvl->lv;
 
-		if (!lv_info(cmd, lv, 0, &info, 0, 0))
-			lv_active = 0;
-		else
-			lv_active = info.exists;
-
+		if (!lv_info(cmd, lv, lv_is_thin_pool(lv) ? 1 : 0,
+			     &info, 0, 0) ||
+		    !info.exists)
+			continue;
 		/*
 		 * FIXME: Need to consider all cases... PVMOVE, etc
 		 */
-		if ((lv->status & PVMOVE) || !lv_active)
+		if (lv->status & PVMOVE)
 			continue;
 
 		if (!monitor_dev_for_events(cmd, lv, 0, reg)) {

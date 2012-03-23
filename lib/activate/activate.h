@@ -36,6 +36,7 @@ struct lv_activate_opts {
 	int no_merging;
 	int real_pool;
 	int is_activate;
+	int skip_in_use;
 	unsigned revert;
 	unsigned read_only;
 };
