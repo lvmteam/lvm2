@@ -622,6 +622,7 @@ static int update_pvid_to_vgid(lvmetad_state *s, struct dm_config_tree *vg,
 	const char *pvid;
 	const char *vgid_old;
 	const char *check_vgid;
+	int r = 0;
 
 	if (!vgid)
 		return 0;
@@ -636,10 +637,10 @@ static int update_pvid_to_vgid(lvmetad_state *s, struct dm_config_tree *vg,
 		if (nuke_empty &&
 		    (vgid_old = dm_hash_lookup(s->pvid_to_vgid, pvid)) &&
 		    !dm_hash_insert(to_check, vgid_old, (void*) 1))
-			return 0;
+			goto out;
 
 		if (!dm_hash_insert(s->pvid_to_vgid, pvid, (void*) vgid))
-			return 0;
+			goto out;
 
 		debug("remap PV %s to VG %s\n", pvid, vgid);
 	}
@@ -652,9 +653,11 @@ static int update_pvid_to_vgid(lvmetad_state *s, struct dm_config_tree *vg,
 		unlock_vg(s, check_vgid);
 	}
 
+	r = 1;
+    out:
 	dm_hash_destroy(to_check);
 
-	return 1;
+	return r;
 }
 
 /* A pvid map lock needs to be held if update_pvids = 1. */

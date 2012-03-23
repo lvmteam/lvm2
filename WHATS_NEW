@@ -1,5 +1,6 @@
 Version 2.02.96 - 
 ================================
+  Always free hash table on update_pvid_to_vgid() in lvmetad.
   Update and fix monitoring of thin pool devices.
   Check hash insert success in lock_vg clvmd.
   Check for buffer overwrite in get_cluster_type() clvmd.
