@@ -675,6 +675,7 @@ static int remove_metadata(lvmetad_state *s, const char *vgid, int update_pvids)
 	assert(oldname);
 
 	if (update_pvids)
+		/* FIXME: What should happen when update fails */
 		update_pvid_to_vgid(s, old, "#orphan", 0);
 	/* need to update what we have since we found a newer version */
 	dm_hash_remove(s->vgid_to_metadata, vgid);
@@ -804,7 +805,8 @@ static int update_metadata(lvmetad_state *s, const char *name, const char *_vgid
 	unlock_vgid_to_metadata(s);
 
 	if (retval)
-		update_pvid_to_vgid(s, cft, vgid, 1);
+		/* FIXME: What should happen when update fails */
+		retval = update_pvid_to_vgid(s, cft, vgid, 1);
 
 	unlock_pvid_to_vgid(s);
 out:
