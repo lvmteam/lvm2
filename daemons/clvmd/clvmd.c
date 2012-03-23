@@ -2323,6 +2323,9 @@ static if_type_t get_cluster_type(void)
         if (result != CS_OK)
 		goto out;
 
+	if (namelen >= sizeof(buf))
+		namelen = sizeof(buf) - 1;
+
 	buf[namelen] = '\0';
 	type = parse_cluster_interface(buf);
 	DEBUGLOG("got interface type '%s' from confdb\n", buf);
