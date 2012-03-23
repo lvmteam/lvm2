@@ -387,7 +387,7 @@ static int _process_config(struct cmd_context *cmd)
 	init_pv_min_size((uint64_t)pv_min_kb * (1024 >> SECTOR_SHIFT));
 
 	init_detect_internal_vg_cache_corruption
-		(find_config_tree_int(cmd, "global/detect_internal_vg_cache_corruption()",
+		(find_config_tree_int(cmd, "global/detect_internal_vg_cache_corruption",
 				      DEFAULT_DETECT_INTERNAL_VG_CACHE_CORRUPTION));
 
 	lvmetad_set_active(find_config_tree_int(cmd, "global/use_lvmetad", 0));

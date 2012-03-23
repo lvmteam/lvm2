@@ -1,5 +1,6 @@
 Version 2.02.96 - 
 ================================
+  Fix global/detect_internal_vg_cache_corruption config check.
   Update lcov Makefile target to support all dmeventd plugins.
   Fix initializiation of thin monitoring (2.02.92).
   Support improperly formated device numbers in /proc/devices (2.02.91).
