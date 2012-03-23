@@ -102,11 +102,6 @@ teardown_devs_prefixed() {
 		fi
 	fi
 
-	if test "$stray" -eq 0; then
-		dmsetup table | not egrep -q "$vg|$vg1|$vg2|$vg3|$vg4" || \
-			vgremove -ff $vg $vg1 $vg2 $vg3 $vg4 &>/dev/null || rm -f debug.log
-	fi
-
 	# Remove devices, start with closed (sorted by open count)
 	local remfail=no
 	local need_udev_wait=0
@@ -166,7 +161,14 @@ teardown_devs() {
 teardown() {
 	echo -n "## teardown..."
 
-	test -f LOCAL_CLVMD && {
+	dmsetup table | not egrep -q "$vg|$vg1|$vg2|$vg3|$vg4" || {
+		# Avoid activation of dmeventd if there is no pid
+		cfg=$(test -s LOCAL_DMEVENTD || echo "--config 'activation { monitoring = 0 }'")
+		vgremove -ff $cfg  \
+			$vg $vg1 $vg2 $vg3 $vg4 &>/dev/null || rm -f debug.log
+	}
+
+	test -s LOCAL_CLVMD && {
 		kill -INT "$(cat LOCAL_CLVMD)"
 		test -z "$LVM_VALGRIND_CLVMD" || sleep 1
 		sleep .1
@@ -176,8 +178,8 @@ teardown() {
 	echo -n .
 
 	pgrep dmeventd || true
-	test -f LOCAL_DMEVENTD && kill -9 $(cat LOCAL_DMEVENTD) || true
-	test -f LOCAL_LVMETAD && kill -9 $(cat LOCAL_LVMETAD) || true
+	test ! -s LOCAL_DMEVENTD || kill -9 "$(cat LOCAL_DMEVENTD)" || true
+	test ! -s LOCAL_LVMETAD || kill -9 "$(cat LOCAL_LVMETAD)" || true
 
 	echo -n .
 
