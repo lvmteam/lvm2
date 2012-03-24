@@ -62,6 +62,8 @@ case "$host_os" in
 		;;
 esac
 
+VERITYSETUP=no
+
 ################################################################################
 dnl -- Checks for programs.
 AC_PROG_SED
@@ -1030,6 +1032,71 @@ if test x$DMEVENTD = xyes; then
 fi
 
 ################################################################################
+dnl -- enable veritysetup
+AC_MSG_CHECKING(whether to install veritysetup)
+AC_ARG_WITH(veritysetup, AC_HELP_STRING([--with-veritysetup=TYPE], [build veritysetup using openssl/nss/gcrypt]),
+	      VERITYSETUP=$withval)
+AC_MSG_RESULT($VERITYSETUP)
+
+if test x$VERITYSETUP != xno -a x$VERITYSETUP != x; then
+	if test x$PKGCONFIG_INIT != x1; then
+		pkg_config_init
+	fi
+
+	dnl Test OPENSSL
+	if test -z "$VERITYSETUP_CFLAGS" && test x$VERITYSETUP = xyes -o x$VERITYSETUP = xopenssl; then
+		PKG_CHECK_MODULES(OPENSSL, openssl, [
+			AC_DEFINE([CRYPT_OPENSSL], 1, [Define to 1 if OpenSSL encryption is to be used.])
+			VERITYSETUP_CFLAGS="$OPENSSL_CFLAGS"
+			VERITYSETUP_LIBS="`echo "$OPENSSL_LIBS" | sed 's/-lssl\>//'`"
+		], [
+			AC_CHECK_LIB(crypto, EVP_get_digestbyname, [
+				AC_CHECK_HEADER(openssl/evp.h, [
+					AC_DEFINE([CRYPT_OPENSSL], 1, [Define to 1 if OpenSSL encryption is to be used.])
+					VERITYSETUP_CFLAGS=
+					VERITYSETUP_LIBS="-lcrypto"
+				])
+			])
+		])
+	fi
+
+	dnl Test NSS
+	if test -z "$VERITYSETUP_CFLAGS" && test x$VERITYSETUP = xyes -o x$VERITYSETUP = xnss; then
+		PKG_CHECK_MODULES(NSS, nss, [
+			AC_DEFINE([CRYPT_NSS], 1, [Define to 1 if nss encryption is to be used.])
+			VERITYSETUP_CFLAGS="$NSS_CFLAGS"
+			VERITYSETUP_LIBS="`echo "$NSS_LIBS" | sed 's/-lsmime3\>//' | sed 's/-lssl3\>//'`"
+		], true)
+	fi
+
+	dnl Test GCRYPT
+	if test -z "$VERITYSETUP_CFLAGS" && test x$VERITYSETUP = xyes -o x$VERITYSETUP = xgcrypt; then
+		AC_CHECK_LIB(gcrypt, gcry_md_map_name, [
+			AC_CHECK_HEADER(gcrypt.h, [
+				AC_DEFINE([CRYPT_GCRYPT], 1, [Define to 1 if gcrpyt encryption is to be used.])
+				VERITYSETUP_CFLAGS=
+				VERITYSETUP_LIBS="-lgcrypt"
+			])
+		])
+	fi
+
+	if test -z "$VERITYSETUP_LIBS"; then
+		AC_MSG_ERROR(No cryptographic library for veritysetup found)
+	fi
+	AC_CHECK_LIB(popt, poptGetContext, true, [
+		AC_MSG_ERROR(popt library was not found)
+	])
+	AC_CHECK_HEADER(popt.h, true, [
+		AC_MSG_ERROR(popt.h was not found)
+	])
+	VERITYSETUP_LIBS="$VERITYSETUP_LIBS -lpopt"
+	AC_SUBST(VERITYSETUP_CFLAGS)
+	AC_SUBST(VERITYSETUP_LIBS)
+	VERITYSETUP=yes
+fi
+AC_SUBST(VERITYSETUP)
+
+################################################################################
 dnl -- getline included in recent libc
 
 AC_CHECK_LIB(c, getline, AC_DEFINE([HAVE_GETLINE], 1,
@@ -1574,6 +1641,7 @@ udev/Makefile
 unit-tests/datastruct/Makefile
 unit-tests/regex/Makefile
 unit-tests/mm/Makefile
+veritysetup/Makefile
 ])
 AC_OUTPUT
 

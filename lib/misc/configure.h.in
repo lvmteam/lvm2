@@ -23,6 +23,15 @@
    */
 #undef CRAY_STACKSEG_END
 
+/* Define to 1 if gcrpyt encryption is to be used. */
+#undef CRYPT_GCRYPT
+
+/* Define to 1 if nss encryption is to be used. */
+#undef CRYPT_NSS
+
+/* Define to 1 if OpenSSL encryption is to be used. */
+#undef CRYPT_OPENSSL
+
 /* Define to 1 if using `alloca.c'. */
 #undef C_ALLOCA
 
