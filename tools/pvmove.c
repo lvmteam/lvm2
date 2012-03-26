@@ -175,13 +175,16 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 						const char *lv_name,
 						struct dm_list *allocatable_pvs,
 						alloc_policy_t alloc,
-						struct dm_list **lvs_changed)
+						struct dm_list **lvs_changed,
+						unsigned *exclusive)
 {
 	struct logical_volume *lv_mirr, *lv;
 	struct lv_list *lvl;
 	uint32_t log_count = 0;
 	int lv_found = 0;
 	int lv_skipped = 0;
+	int lv_active_count = 0;
+	int lv_exclusive_count = 0;
 
 	/* FIXME Cope with non-contiguous => splitting existing segments */
 	if (!(lv_mirr = lv_create_empty("pvmove%d", NULL,
@@ -235,6 +238,14 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 			log_print("Skipping locked LV %s", lv->name);
 			continue;
 		}
+
+		if (vg_is_clustered(vg)) {
+			if (lv_is_active_exclusive_locally(lv))
+				lv_exclusive_count++;
+			else if (lv_is_active(lv))
+				lv_active_count++;
+		}
+
 		if (!_insert_pvmove_mirrors(cmd, lv_mirr, source_pvl, lv,
 					    *lvs_changed))
 			return_NULL;
@@ -253,6 +264,17 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 				  "non-top level LVs only.");
 		log_error("No data to move for %s", vg->name);
 		return NULL;
+	}
+
+	if (lv_exclusive_count) {
+		if (lv_active_count) {
+			log_error("Cannot move in clustered VG %s "
+				  "if some LVs are activated "
+				  "exclusively while others don't.",
+				  vg->name);
+			return NULL;
+		}
+		*exclusive = 1;
 	}
 
 	if (!lv_add_mirrors(cmd, lv_mirr, 1, 1, 0, 0, log_count,
@@ -510,7 +532,7 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 
 		if (!(lv_mirr = _set_up_pvmove_lv(cmd, vg, source_pvl, lv_name,
 						  allocatable_pvs, alloc,
-						  &lvs_changed)))
+						  &lvs_changed, &exclusive)))
 			goto_out;
 	}
 
