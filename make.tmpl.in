@@ -194,6 +194,7 @@ OBJECTS = $(SOURCES:%.c=%.o)
 POTFILES = $(SOURCES:%.c=%.pot)
 
 .PHONY: all pofile distclean clean cleandir cflow device-mapper
+.PHONY: verity install_verity $(SUBDIRS.install_verity)
 .PHONY: install install_cluster install_device-mapper install_lvm2
 .PHONY: install_lib_shared install_dm_plugin install_lvm2_plugin
 .PHONY: install_ocf
@@ -207,6 +208,7 @@ SUBDIRS.install_cluster := $(SUBDIRS:=.install_cluster)
 SUBDIRS.install_device-mapper := $(SUBDIRS:=.install_device-mapper)
 SUBDIRS.install_lvm2 := $(SUBDIRS:=.install_lvm2)
 SUBDIRS.install_ocf := $(SUBDIRS:=.install_ocf)
+SUBDIRS.install_verity := $(SUBDIRS:=.install_verity)
 SUBDIRS.pofile := $(SUBDIRS:=.pofile)
 SUBDIRS.cflow := $(SUBDIRS:=.cflow)
 SUBDIRS.clean := $(SUBDIRS:=.clean)

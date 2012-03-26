@@ -24,8 +24,10 @@ include $(top_builddir)/make.tmpl
 
 VERITYSETUP_LIBS = @VERITYSETUP_LIBS@
 
+all: veritysetup
+
 veritysetup: $(OBJECTS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o veritysetup $(OBJECTS) $(VERITYSETUP_LIBS)
 
-install: $(TARGETS)
+install_verity: $(TARGETS)
 	$(INSTALL_PROGRAM) -D veritysetup $(sbindir)/veritysetup

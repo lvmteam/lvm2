@@ -1641,7 +1641,7 @@ udev/Makefile
 unit-tests/datastruct/Makefile
 unit-tests/regex/Makefile
 unit-tests/mm/Makefile
-veritysetup/Makefile
+verity/Makefile
 ])
 AC_OUTPUT
 
