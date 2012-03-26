@@ -199,6 +199,8 @@ void print_log(int level, const char *file, int line, int dm_errno_or_class,
 	int log_once = level & _LOG_ONCE;
 	int fatal_internal_error = 0;
 	size_t msglen;
+	const char *indent_spaces = "";
+	FILE *stream;
 
 	level &= ~(_LOG_STDERR|_LOG_ONCE);
 
@@ -278,76 +280,39 @@ void print_log(int level, const char *file, int line, int dm_errno_or_class,
 	}
 
       log_it:
-	if (!_log_suppress) {
-		if (verbose_level() > _LOG_DEBUG)
-			(void) dm_snprintf(locn, sizeof(locn), "#%s:%d ",
+	if ((verbose_level() >= level) && !_log_suppress) {
+		if (verbose_level() > _LOG_DEBUG) {
+			(void) dm_snprintf(buf, sizeof(buf), "#%s:%d ",
 					   file, line);
-		else
-			locn[0] = '\0';
+		} else
+			buf[0] = '\0';
+
+		if (_indent)
+			switch (level) {
+			case _LOG_NOTICE: indent_spaces = "  "; break;
+			case _LOG_INFO:   indent_spaces = "    "; break;
+			case _LOG_DEBUG:  indent_spaces = "      "; break;
+			default: /* nothing to do */;
+			}
 
 		va_start(ap, format);
 		switch (level) {
 		case _LOG_DEBUG:
-			if (!strcmp("<backtrace>", format) &&
-			    verbose_level() <= _LOG_DEBUG)
+			if ((verbose_level() == level) &&
+			    (strcmp("<backtrace>", format) == 0))
 				break;
 			if (verbose_level() < _LOG_DEBUG)
 				break;
 			if (!debug_class_is_logged(dm_errno_or_class))
 				break;
-			fprintf(stderr, "%s%s%s", locn, log_command_name(),
-				_msg_prefix);
-			if (_indent)
-				fprintf(stderr, "      ");
-			vfprintf(stderr, trformat, ap);
-			fputc('\n', stderr);
-			break;
-
-		case _LOG_INFO:
-			if (verbose_level() >= _LOG_INFO) {
-				fprintf(stderr, "%s%s%s", locn, log_command_name(),
-					_msg_prefix);
-				if (_indent)
-					fprintf(stderr, "    ");
-				vfprintf(stderr, trformat, ap);
-				fputc('\n', stderr);
-			}
-			break;
-		case _LOG_NOTICE:
-			if (verbose_level() >= _LOG_NOTICE) {
-				fprintf(stderr, "%s%s%s", locn, log_command_name(),
-					_msg_prefix);
-				if (_indent)
-					fprintf(stderr, "  ");
-				vfprintf(stderr, trformat, ap);
-				fputc('\n', stderr);
-			}
-			break;
-		case _LOG_WARN:
-			if (verbose_level() >= _LOG_WARN) {
-				fprintf(use_stderr ? stderr : stdout, "%s%s",
-					log_command_name(), _msg_prefix);
-				vfprintf(use_stderr ? stderr : stdout, trformat, ap);
-				fputc('\n', use_stderr ? stderr : stdout);
-			}
-			break;
-		case _LOG_ERR:
-			if (verbose_level() >= _LOG_ERR) {
-				fprintf(stderr, "%s%s%s", locn, log_command_name(),
-					_msg_prefix);
-				vfprintf(stderr, trformat, ap);
-				fputc('\n', stderr);
-			}
-			break;
-		case _LOG_FATAL:
+			/* fall through */
 		default:
-			if (verbose_level() >= _LOG_FATAL) {
-				fprintf(stderr, "%s%s%s", locn, log_command_name(),
-					_msg_prefix);
-				vfprintf(stderr, trformat, ap);
-				fputc('\n', stderr);
-			}
-			break;
+			/* Typically only log_warn goes to stdout */
+			stream = (use_stderr || (level != _LOG_WARN)) ? stderr : stdout;
+			fprintf(stream, "%s%s%s%s", buf, log_command_name(),
+				_msg_prefix, indent_spaces);
+			vfprintf(stream, trformat, ap);
+			fputc('\n', stream);
 		}
 		va_end(ap);
 	}
