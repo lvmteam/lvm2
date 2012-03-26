@@ -538,7 +538,7 @@ int query_resource(const char *resource, int *mode)
 	strcpy(args + 2, resource);
 
 	args[0] = 0;
-	args[1] = LCK_CLUSTER_VG;
+	args[1] = 0;
 
 	status = _cluster_request(CLVMD_CMD_LOCK_QUERY, node, args, len,
 				  &response, &num_responses);
