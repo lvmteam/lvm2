@@ -296,7 +296,7 @@ static int _activate_lv(struct cmd_context *cmd, struct logical_volume *lv_mirr,
 {
 	int r = 0;
 
-	if (exclusive)
+	if (exclusive || lv_is_active_exclusive(lv_mirr))
 		r = activate_lv_excl(cmd, lv_mirr);
 	else
 		r = activate_lv(cmd, lv_mirr);
