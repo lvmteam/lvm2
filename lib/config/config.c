@@ -478,9 +478,15 @@ int override_config_tree_from_profile(struct cmd_context *cmd,
 	return 0;
 }
 
+/*
+ * When skip_parse is set, the checksum of buffer is only matched
+ * and function avoids parsing of mda into config tree which
+ * remains unmodified and should not be used.
+ */
 int config_file_read_fd(struct dm_config_tree *cft, struct device *dev,
 			off_t offset, size_t size, off_t offset2, size_t size2,
-			checksum_fn_t checksum_fn, uint32_t checksum)
+			checksum_fn_t checksum_fn, uint32_t checksum,
+			int skip_parse)
 {
 	char *fb, *fe;
 	int r = 0;
@@ -529,9 +535,11 @@ int config_file_read_fd(struct dm_config_tree *cft, struct device *dev,
 		goto out;
 	}
 
-	fe = fb + size + size2;
-	if (!dm_config_parse(cft, fb, fe))
-		goto_out;
+	if (!skip_parse) {
+		fe = fb + size + size2;
+		if (!dm_config_parse(cft, fb, fe))
+			goto_out;
+	}
 
 	r = 1;
 
@@ -575,7 +583,7 @@ int config_file_read(struct dm_config_tree *cft)
 	}
 
 	r = config_file_read_fd(cft, cf->dev, 0, (size_t) info.st_size, 0, 0,
-				(checksum_fn_t) NULL, 0);
+				(checksum_fn_t) NULL, 0, 0);
 
 	if (!cf->keep_open) {
 		if (!dev_close(cf->dev))

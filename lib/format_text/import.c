@@ -51,7 +51,7 @@ const char *text_vgname_import(const struct format_type *fmt,
 
 	if ((!dev && !config_file_read(cft)) ||
 	    (dev && !config_file_read_fd(cft, dev, offset, size,
-					 offset2, size2, checksum_fn, checksum))) {
+					 offset2, size2, checksum_fn, checksum, 0))) {
 		log_error("Couldn't read volume group metadata.");
 		goto out;
 	}
@@ -88,6 +88,7 @@ struct volume_group *text_vg_import_fd(struct format_instance *fid,
 	struct volume_group *vg = NULL;
 	struct dm_config_tree *cft;
 	struct text_vg_version_ops **vsn;
+	int skip_parse;
 
 	_init_text_import();
 
@@ -97,10 +98,19 @@ struct volume_group *text_vg_import_fd(struct format_instance *fid,
 	if (!(cft = config_open(CONFIG_FILE_SPECIAL, file, 0)))
 		return_NULL;
 
+	skip_parse = fid->vg && (fid->mda_checksum == checksum) &&
+		(fid->mda_size == (size + size2));
+
 	if ((!dev && !config_file_read(cft)) ||
 	    (dev && !config_file_read_fd(cft, dev, offset, size,
-					 offset2, size2, checksum_fn, checksum)))
+					 offset2, size2, checksum_fn, checksum,
+					 skip_parse)))
 		goto_out;
+
+	if (skip_parse) {
+		vg = fid->vg;
+		goto out;
+	}
 
 	/*
 	 * Find a set of version functions that can read this file
@@ -114,6 +124,16 @@ struct volume_group *text_vg_import_fd(struct format_instance *fid,
 
 		(*vsn)->read_desc(vg->vgmem, cft, when, desc);
 		break;
+	}
+
+	if (vg && (!fid->vg || (vg->seqno > fid->vg->seqno))) {
+		/*
+		 * Remember vg pointer to newest VG for reuse.
+		 * NOTE: _vg_read() will not release same VG
+		 */
+		fid->vg = vg;
+		fid->mda_size = (size + size2);
+		fid->mda_checksum = checksum;
 	}
 
       out:

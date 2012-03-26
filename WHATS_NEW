@@ -1,5 +1,6 @@
 Version 2.02.118 - 
 =================================
+  Avoid reparsing same metadata when reading same metadata from multiple PVs.
   Save extra device open/close when scanning device for size.
   Fix seg_monitor field to report status also for mirrors and thick snapshots.
 

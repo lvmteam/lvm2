@@ -3365,6 +3365,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		}
 
 		if (vg != correct_vg)
+			/* NOTE: tied to fid->vg logic in text_vg_import_fd() */
 			release_vg(vg);
 	}
 	fid->ref_count--;
