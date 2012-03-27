@@ -79,7 +79,7 @@ Usage Examples
 
   lvm.conf:  (Identical on every machine - global settings)
     tags {
-      hostname_tags = 1
+      hosttags = 1
     }
 
   From any machine in the cluster, add db1 to the list of machines that
