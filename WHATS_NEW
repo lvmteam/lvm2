@@ -1,5 +1,6 @@
 Version 2.02.96 - 
 ================================
+  Fix exclusive lvchange running from other node. (2.02.89)
   Add 'vgscan --cache' functionality for consistency with 'pvscan --cache'.
   Keep exclusive activation in pvmove if LV is already active.
   Disallow pvmove for exclusive LV if some affected LVs are not exclusively activated.

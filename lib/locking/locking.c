@@ -551,7 +551,7 @@ int activate_lv_excl(struct cmd_context *cmd, struct logical_volume *lv)
 	if (!vg_is_clustered(lv->vg))
 		return activate_lv_excl_local(cmd, lv);
 
-	if (lv_is_active_exclusive(lv))
+	if (lv_is_active_exclusive_locally(lv))
 		return 1;
 
 	if (!activate_lv_excl_local(cmd, lv))
