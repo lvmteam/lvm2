@@ -274,7 +274,15 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 		return NULL;
 	}
 
-	if (lv_exclusive_count) {
+	if (vg_is_clustered(vg) && lv_active_count && *exclusive) {
+		log_error("Cannot move in clustered VG %s, "
+			  "clustered mirror (cmirror) not detected "
+			  "and LVs are activated non-exclusively.",
+			  vg->name);
+		return NULL;
+	}
+
+	if (vg_is_clustered(vg) && lv_exclusive_count) {
 		if (lv_active_count) {
 			log_error("Cannot move in clustered VG %s "
 				  "if some LVs are activated "
