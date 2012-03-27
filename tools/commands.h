@@ -1004,6 +1004,7 @@ xx(vgscan,
    "Search for all volume groups",
    PERMITTED_READ_ONLY,
    "vgscan "
+   "\t[--cache]\n"
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
    "\t[--ignorelockingfailure]\n"
@@ -1012,7 +1013,7 @@ xx(vgscan,
    "\t[-v|--verbose]\n"
    "\t[--version]" "\n",
 
-   ignorelockingfailure_ARG, mknodes_ARG, partial_ARG)
+   cache_ARG, ignorelockingfailure_ARG, mknodes_ARG, partial_ARG)
 
 xx(vgsplit,
    "Move physical volumes into a new or existing volume group",

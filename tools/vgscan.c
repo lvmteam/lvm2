@@ -15,6 +15,8 @@
 
 #include "tools.h"
 
+static int _lvmetad;
+
 static int vgscan_single(struct cmd_context *cmd, const char *vg_name,
 			 struct volume_group *vg,
 			 void *handle __attribute__((unused)))
@@ -25,16 +27,18 @@ static int vgscan_single(struct cmd_context *cmd, const char *vg_name,
 
 	check_current_backup(vg);
 
-	/* keep lvmetad up to date */
+	/* keep lvmetad up to date, restore the "active" state temporarily */
+	lvmetad_set_active(_lvmetad);
 	if (!lvmetad_vg_update(vg))
 		stack;
+	lvmetad_set_active(0);
 
 	return ECMD_PROCESSED;
 }
 
 int vgscan(struct cmd_context *cmd, int argc, char **argv)
 {
-	int maxret, ret, lvmetad;
+	int maxret, ret;
 
 	if (argc) {
 		log_error("Too many parameters on command line");
@@ -48,8 +52,17 @@ int vgscan(struct cmd_context *cmd, int argc, char **argv)
 
 	persistent_filter_wipe(cmd->filter);
 	lvmcache_destroy(cmd, 1);
-	lvmetad = lvmetad_active();
-	lvmetad_set_active(0); /* do not rely on lvmetad info */
+
+	_lvmetad = lvmetad_active();
+	if (arg_count(cmd, cache_ARG)) {
+		if (_lvmetad)
+			lvmetad_set_active(0); /* do not rely on lvmetad info */
+		else {
+			log_error("Cannot proceed since lvmetad is not active.");
+			unlock_vg(cmd, VG_GLOBAL);
+			return ECMD_FAILED;
+		}
+	}
 
 	log_print("Reading all physical volumes.  This may take a while...");
 
@@ -62,7 +75,7 @@ int vgscan(struct cmd_context *cmd, int argc, char **argv)
 			maxret = ret;
 	}
 
-	lvmetad_set_active(lvmetad); /* restore */
+	lvmetad_set_active(_lvmetad); /* restore */
 	unlock_vg(cmd, VG_GLOBAL);
 	return maxret;
 }

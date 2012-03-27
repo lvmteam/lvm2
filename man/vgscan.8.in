@@ -22,6 +22,10 @@ See \fBlvm\fP for common options.
 .I \-\-mknodes
 Also checks the LVM special files in /dev that are needed for active 
 logical volumes and creates any missing ones and removes unused ones.
+.TP
+.I \-\-cache
+Scan devices for LVM physical volumes and volume groups and instruct
+the lvmetad daemon to update its cached state accordingly.
 .SH SEE ALSO
 .BR lvm (8),
 .BR vgcreate (8),
