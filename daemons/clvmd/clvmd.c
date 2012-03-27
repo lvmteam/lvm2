@@ -619,6 +619,8 @@ int main(int argc, char *argv[])
 	for (newfd = local_client_head.next; newfd != NULL;) {
 		delfd = newfd;
 		newfd = newfd->next;
+		if (delfd->fd == local_sock)
+			delfd->fd = -1;
 		/*
 		 * FIXME:
 		 * needs cleanup code from read_from_local_sock() for now
