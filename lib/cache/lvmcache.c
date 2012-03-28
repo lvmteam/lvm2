@@ -125,8 +125,7 @@ void lvmcache_seed_infos_from_lvmetad(struct cmd_context *cmd)
 	}
 
 	_has_scanned = 1;
-};
-
+}
 
 /* Volume Group metadata cache functions */
 static void _free_cached_vgmetadata(struct lvmcache_vginfo *vginfo)

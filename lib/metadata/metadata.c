@@ -4035,13 +4035,13 @@ static struct volume_group *_vg_lock_and_read(struct cmd_context *cmd, const cha
 		log_error("Volume group \"%s\" not found", vg_name);
 
 		failure |= FAILED_NOTFOUND;
-		goto_bad;
+		goto bad;
 	}
 
 	if (vg_is_clustered(vg) && !locking_is_clustered()) {
 		log_error("Skipping clustered volume group %s", vg->name);
 		failure |= FAILED_CLUSTERED;
-		goto_bad;
+		goto bad;
 	}
 
 	/* consistent == 0 when VG is not found, but failed == FAILED_NOTFOUND */
