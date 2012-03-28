@@ -153,12 +153,11 @@ linear() {
 
 active() {
 	local lv=$1/$2
-	(get lv_field $lv attr $lv | grep "^....a...$" >/dev/null) || \
+	(get lv_field $lv attr | grep "^....a...$" >/dev/null) || \
 		die "$lv expected active, but lvs says it's not:" \
 			$(lvl $lv -o+devices)
-	(dmsetup table | egrep "$1-$2: *[^ ]+" >/dev/null) || \
-		die "$lv expected active, lvs thinks it is but there are no mappings!" \
-			$(dmsetup table | grep $1-$2:)
+	dmsetup info $1-$2 >/dev/null ||
+		die "$lv expected active, lvs thinks it is but there are no mappings!"
 }
 
 inactive() {
@@ -166,9 +165,8 @@ inactive() {
 	(get lv_field $lv attr | grep "^....[-isd]...$" >/dev/null) || \
 		die "$lv expected inactive, but lvs says it's not:" \
 			$(lvl $lv -o+devices)
-	(dmsetup table | not egrep "$1-$2: *[^ ]+" >/dev/null) || \
-		die "$lv expected inactive, lvs thinks it is but there are mappings!" \
-			$(dmsetup table | grep $1-$2:)
+	not dmsetup info $1-$2 2>/dev/null || \
+		die "$lv expected inactive, lvs thinks it is but there are mappings!" 
 }
 
 # Check for list of LVs from given VG

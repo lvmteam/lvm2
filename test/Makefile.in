@@ -45,6 +45,27 @@ endif
 
 all: check
 
+help:
+	@echo -e "\nAvailable targets:"
+	@echo "  all			Default target, run check."
+	@echo "  check			Run all tests."
+	@echo "  check_local		Run tests without clvmd and lvmetad."
+	@echo "  check_cluster		Run tests with cluster daemon."
+	@echo "  check_lvmetad		Run tests with lvmetad daemon."
+	@echo "  clean			Clean dir."
+	@echo "  help			Display callable targets."
+	@echo -e "\nSupported variables:"
+	@echo "  LVM_TEST_DEVDIR	Set to '/dev' to run on real /dev."
+	@echo "  LVM_TEST_DIR		Where to create test files [TMPDIR]."
+	@echo "  LVM_TEST_LOCKING	Normal (1), Cluster (3)."
+	@echo "  LVM_TEST_LVMETAD	Start lvmetad (1)."
+	@echo "  LVM_TEST_NODEBUG	Do not debug lvm commands."
+	@echo "  LVM_TEST_PARALLEL	May skip agresive wipe of LVMTEST resources."
+	@echo "  LVM_VERIFY_UDEV	Default verify state for lvm.conf."
+	@echo "  S			Skip given test (regex)."
+	@echo "  T			Run given test (regex)."
+	@echo "  VERBOSE		Verbose output (1), timing (2)."
+
 check: check_local check_cluster check_lvmetad
 
 check_cluster: .tests-stamp

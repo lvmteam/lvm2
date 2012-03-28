@@ -15,10 +15,8 @@
 
 cleanup_lvs() {
 	lvremove -ff $vg
-	if dmsetup table|grep $vg; then
-		echo "ERROR: lvremove did leave some some mappings in DM behind!"
-		return 1
-	fi
+	(dm_table | not grep $vg) || \
+		die "ERROR: lvremove did leave some some mappings in DM behind!"
 }
 
 aux prepare_pvs 2

@@ -109,7 +109,7 @@ STACKTRACE() {
 		i=$(($i + 1))
 	done
 
-	test -n "$RUNNING_DMEVENTD" -o -f LOCAL_DMEVENTD || {
+	test ${LVM_TEST_PARALLEL:-0} -eq 1 -o -n "$RUNNING_DMEVENTD" -o -f LOCAL_DMEVENTD || {
 		pgrep dmeventd &>/dev/null && \
 			die "** During test dmeventd has been started!"
 	}
@@ -155,6 +155,14 @@ teardown_udev_cookies() {
 		# Log only non-zero semaphores count
 		(dmsetup udevcomplete_all -y 10 | grep -v "^0 ") || true
 	fi
+}
+
+dm_info() {
+	should dmsetup info --noheadings -c -o "$@"
+}
+
+dm_table() {
+	should dmsetup table "$@"
 }
 
 skip() {

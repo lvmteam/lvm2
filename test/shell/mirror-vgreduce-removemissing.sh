@@ -93,20 +93,15 @@ aux prepare_vg 5
 
 prepare_lvs_()
 {
-	lvremove -ff $vg;
-	if (dmsetup table | grep -v -- "-missing_" | grep $vg); then
+	lvremove -ff $vg
+	(dm_table | not grep $vg) || \
 		die "ERROR: lvremove did leave some some mappings in DM behind!"
-	fi
-	:
 }
 
 check_and_cleanup_lvs_()
 {
 	lvs -a -o+devices $vg
-	lvremove -ff $vg
-	if (dmsetup table | grep $vg); then
-		die "ERROR: lvremove did leave some some mappings in DM behind!"
-	fi
+	prepare_lvs_
 }
 
 recover_vg_()

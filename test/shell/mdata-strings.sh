@@ -23,7 +23,7 @@ name=$(basename "$dev1")
 dmsetup rename "$name" "$PREFIX$pv_ugly"
 dev1=$(dirname "$dev1")/"$PREFIX$pv_ugly"
 
-dmsetup table | grep -F "$pv_ugly"
+dm_table | grep -F "$pv_ugly"
 
 # 'pvcreate, vgcreate on filename with backslashed chars'
 created="$dev1"

@@ -43,21 +43,11 @@ lv_convert_lv_() {
 # ---------------------------------------------------------------------
 # Common environment setup/cleanup for each sub testcases
 
-prepare_lvs_() {
-	lvremove -ff $vg
-	(dmsetup table | not grep $vg) || {
-		echo "ERROR: lvremove did leave some some mappings in DM behind!"
-		return 1
-	}
-}
-
 check_and_cleanup_lvs_() {
 	lvs -a -o+devices $vg
 	lvremove -ff $vg
-	(dmsetup table | not grep $vg) || {
-		echo "ERROR: lvremove did leave some some mappings in DM behind!"
-		return 1
-	}
+	(dm_table | not grep $vg) || \
+		die "ERROR: lvremove did leave some some mappings in DM behind!"
 }
 
 # ---------------------------------------------------------------------
@@ -65,14 +55,12 @@ check_and_cleanup_lvs_() {
 
 aux prepare_vg 5 80
 
-prepare_lvs_
 check_and_cleanup_lvs_
 
 # ---------------------------------------------------------------------
 # basic
 
 #COMM "init: lvcreate"
-prepare_lvs_
 
 #COMM "mirror images are ${lv1}_mimage_x"
 lvcreate -l2 -m1 -n $lv1 $vg
@@ -94,7 +82,6 @@ check_and_cleanup_lvs_
 # lvrename
 
 #COMM "init: lvrename"
-prepare_lvs_
 
 #COMM "renamed mirror names: $lv1 to $lv2"
 lvcreate -l2 -m1 -n $lv1 $vg
@@ -109,7 +96,6 @@ check_and_cleanup_lvs_
 # lvconvert
 
 #COMM "init: lvconvert"
-prepare_lvs_
 
 #COMM "converting mirror names is ${lv1}_mimagetmp_2"
 lvcreate -l2 -m1 -n $lv1 $vg

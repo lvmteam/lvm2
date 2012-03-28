@@ -89,7 +89,7 @@ teardown_devs_prefixed() {
 	local dm
 
 	# Resume suspended devices first
-	for dm in $(dmsetup info -c -o suspended,name --noheadings | grep "^Suspended:.*$prefix"); do
+	for dm in $(dm_info suspended,name | grep "^Suspended:.*$prefix"); do
 		echo "dmsetup resume \"${dm#Suspended:}\""
 		dmsetup resume "${dm#Suspended:}" || true
 	done
@@ -106,7 +106,7 @@ teardown_devs_prefixed() {
 	local remfail=no
 	local need_udev_wait=0
 	init_udev_transaction
-	for dm in $(dmsetup info -c -o name --sort open --noheadings | grep "$prefix"); do
+	for dm in $(dm_info name --sort open | grep "$prefix"); do
 		dmsetup remove "$dm" &>/dev/null || remfail=yes
 		need_udev_wait=1
 	done
@@ -116,10 +116,10 @@ teardown_devs_prefixed() {
 	if test $remfail = yes; then
 		local num_devs
 		local num_remaining_devs=999
-		while num_devs=$(dmsetup table | grep "$prefix" | wc -l) && \
+		while num_devs=$(dm_table | grep "$prefix" | wc -l) && \
 		    test $num_devs -lt $num_remaining_devs -a $num_devs -ne 0; do
 			test "$stray" -eq 0 || echo "Removing $num_devs stray mapped devices with names beginning with $prefix: "
-			for dm in $(dmsetup info -c -o name --sort open --noheadings | grep "$prefix") ; do
+			for dm in $(dm_info name --sort open | grep "$prefix") ; do
 				dmsetup remove -f "$dm" || true
 			done
 			num_remaining_devs=$num_devs
@@ -139,7 +139,7 @@ teardown_devs() {
 	# NOTE: SCSI_DEBUG_DEV test must come before the LOOP test because
 	# prepare_scsi_debug_dev() also sets LOOP to short-circuit prepare_loop()
 	if test -f SCSI_DEBUG_DEV; then
-		modprobe -r scsi_debug
+		test ${LVM_TEST_PARALLEL:-0} -eq 1 || modprobe -r scsi_debug
 	else
 		test ! -f LOOP || losetup -d $(cat LOOP) || true
 		test ! -f LOOPFILE || rm -f $(cat LOOPFILE)
@@ -148,7 +148,7 @@ teardown_devs() {
 	rm -f LOOP
 
 	# Attempt to remove any loop devices that failed to get torn down if earlier tests aborted
-	test -z "$COMMON_PREFIX" || {
+	test ${LVM_TEST_PARALLEL:-0} -eq 1 -o -z "$COMMON_PREFIX" || {
 		teardown_devs_prefixed "$COMMON_PREFIX" 1
 		local stray_loops=( $(losetup -a | grep "$COMMON_PREFIX" | cut -d: -f1) )
 		test ${#stray_loops[@]} -eq 0 || {
@@ -161,9 +161,9 @@ teardown_devs() {
 teardown() {
 	echo -n "## teardown..."
 
-	dmsetup table | not egrep -q "$vg|$vg1|$vg2|$vg3|$vg4" || {
+	dm_table | not egrep -q "$vg|$vg1|$vg2|$vg3|$vg4" || {
 		# Avoid activation of dmeventd if there is no pid
-		cfg=$(test -s LOCAL_DMEVENTD || echo "--config 'activation { monitoring = 0 }'")
+		cfg=$(test -s LOCAL_DMEVENTD || echo "--config activation{monitoring=0}")
 		vgremove -ff $cfg  \
 			$vg $vg1 $vg2 $vg3 $vg4 &>/dev/null || rm -f debug.log
 	}
@@ -194,7 +194,7 @@ teardown() {
 
 	echo "ok"
 
-	test -n "$RUNNING_DMEVENTD" || not pgrep dmeventd &>/dev/null
+	test ${LVM_TEST_PARALLEL:-0} -eq 1 -o -n "$RUNNING_DMEVENTD" || not pgrep dmeventd #&>/dev/null
 }
 
 make_ioerror() {
