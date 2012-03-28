@@ -32,11 +32,12 @@ check() {
 	grep resized lvs.out | grep 8192
 }
 
-# vgscan fixes up metadata
+# vgscan fixes up metadata (needs --cache option for direct scan if lvmetad is used)
+test -e LOCAL_LVMETAD && cache="--cache"
 init
-vgscan 2>&1 | tee cmd.out
+vgscan $cache 2>&1 | tee cmd.out
 grep "Inconsistent metadata found for VG $vg" cmd.out
-vgscan 2>&1 | tee cmd.out
+vgscan $cache 2>&1 | tee cmd.out
 not grep "Inconsistent metadata found for VG $vg" cmd.out
 check
 

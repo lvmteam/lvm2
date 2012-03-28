@@ -12,9 +12,11 @@
 . lib/test
 
 check_() {
-	vgscan 2>&1 | tee vgscan.out
+	# vgscan needs --cache option for direct scan if lvmetad is used
+	test -e LOCAL_LVMETAD && cache="--cache"
+	vgscan $cache 2>&1 | tee vgscan.out
 	grep "Inconsistent metadata found for VG $vg" vgscan.out
-	vgscan 2>&1 | tee vgscan.out
+	vgscan $cache 2>&1 | tee vgscan.out
 	not grep "Inconsistent metadata found for VG $vg" vgscan.out
 }
 
