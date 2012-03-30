@@ -206,6 +206,7 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 	int fixed = 1;
 	int repairing = arg_count(cmd, removemissing_ARG);
 	int saved_ignore_suspended_devices = ignore_suspended_devices();
+	int locked = 0;
 
 	if (!argc && !repairing) {
 		log_error("Please give volume group name and "
@@ -260,6 +261,8 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 	    && !arg_count(cmd, removemissing_ARG))
 		goto_out;
 
+	locked = !vg_read_error(vg);
+
 	if (repairing) {
 		if (!vg_read_error(vg) && !vg_missing_pv_count(vg)) {
 			log_error("Volume group \"%s\" is already consistent",
@@ -275,6 +278,7 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 					READ_ALLOW_INCONSISTENT
 					| READ_ALLOW_EXPORTED);
 
+		locked |= !vg_read_error(vg);
 		if (vg_read_error(vg) && vg_read_error(vg) != FAILED_READ_ONLY
 		    && vg_read_error(vg) != FAILED_INCONSISTENT)
 			goto_out;
@@ -314,7 +318,10 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 	}
 out:
 	init_ignore_suspended_devices(saved_ignore_suspended_devices);
-	unlock_and_release_vg(cmd, vg, vg_name);
+	if (locked)
+		unlock_vg(cmd, vg_name);
+
+	release_vg(vg);
 
 	return ret;
 

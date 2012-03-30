@@ -1,5 +1,6 @@
 Version 2.02.96 - 
 ================================
+  Fix unlocking volume group in vgreduce in error path.
   Exit immediately if LISTEN_PID env var incorrect during systemd handover.
   Detect VG name being part of the LV name in lvconvert --splitmirrors -n.
   Fix exclusive lvchange running from other node. (2.02.89)
