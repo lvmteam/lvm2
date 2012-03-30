@@ -173,9 +173,19 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 		}
 
 		lp->lv_split_name = arg_value(cmd, name_ARG);
-		if (lp->lv_split_name &&
-		    !apply_lvname_restrictions(lp->lv_split_name))
-			return_0;
+		if (lp->lv_split_name) {
+			if (strchr(lp->lv_split_name, '/')) {
+				if (!(lp->vg_name = extract_vgname(cmd, lp->lv_split_name)))
+					return_0;
+
+				/* Strip VG from lv_split_name */
+				if ((tmp_str = strrchr(lp->lv_split_name, '/')))
+					lp->lv_split_name = tmp_str + 1;
+			}
+
+			if (!apply_lvname_restrictions(lp->lv_split_name))
+				return_0;
+		}
 
 		lp->keep_mimages = 1;
 		lp->mirrors = arg_uint_value(cmd, splitmirrors_ARG, 0);

@@ -1,5 +1,6 @@
 Version 2.02.96 - 
 ================================
+  Detect VG name being part of the LV name in lvconvert --splitmirrors -n.
   Fix exclusive lvchange running from other node. (2.02.89)
   Add 'vgscan --cache' functionality for consistency with 'pvscan --cache'.
   Keep exclusive activation in pvmove if LV is already active.
