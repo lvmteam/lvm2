@@ -224,7 +224,7 @@ static int _open_socket(daemon_state s)
 
 	fprintf(stderr, "[D] creating %s\n", s.socket_path);
 	memset(&sockaddr, 0, sizeof(sockaddr));
-	strcpy(sockaddr.sun_path, s.socket_path);
+	strncpy(sockaddr.sun_path, s.socket_path, sizeof(sockaddr.sun_path));
 	sockaddr.sun_family = AF_UNIX;
 
 	if (bind(fd, (struct sockaddr *) &sockaddr, sizeof(sockaddr))) {

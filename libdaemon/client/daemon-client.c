@@ -32,7 +32,7 @@ daemon_handle daemon_open(daemon_info i) {
 		goto error;
 
 	memset(&sockaddr, 0, sizeof(sockaddr));
-	strcpy(sockaddr.sun_path, i.socket);
+	strncpy(sockaddr.sun_path, i.socket, sizeof(sockaddr.sun_path));
 	sockaddr.sun_family = AF_UNIX;
 	if (connect(h.socket_fd,(struct sockaddr *) &sockaddr, sizeof(sockaddr)))
 		goto error;
