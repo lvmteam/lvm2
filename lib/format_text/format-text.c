@@ -1455,6 +1455,9 @@ static int _text_pv_read(const struct format_type *fmt, const char *pv_name,
 		info = label->info;
 	}
 
+	if (!info)
+		return_0;
+
 	if (!lvmcache_populate_pv_fields(info, pv, scan_label_only))
 		return 0;
 

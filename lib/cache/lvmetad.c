@@ -138,8 +138,9 @@ static struct lvmcache_info *_pv_populate_lvmcache(
 	if (!vgname)
 		vgname = fmt->orphan_vg_name;
 
-	info = lvmcache_add(fmt->labeller, (const char *)&pvid, device,
-			    vgname, (const char *)&vgid, 0);
+	if (!(info = lvmcache_add(fmt->labeller, (const char *)&pvid, device,
+				  vgname, (const char *)&vgid, 0)))
+		return_NULL;
 
 	lvmcache_get_label(info)->sector = label_sector;
 	lvmcache_set_device_size(info, devsize);
