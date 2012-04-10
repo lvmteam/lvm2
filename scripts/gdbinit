@@ -17,6 +17,7 @@
 printf "\n\n"
 printf "Loading commands:\n"
 printf " - dm_list_size <list ptr>\n"
+printf " - pv_dev_name <PV ptr>\n"
 printf " - first_seg <LV ptr>\n"
 printf " - lv_status <LV ptr>\n"
 printf " - lv_status_r <LV ptr>\n"
@@ -24,12 +25,13 @@ printf " - lv_is_mirrored <LV ptr>\n"
 printf " - seg_item <seg ptr> <index>\n"
 printf " - seg_status <seg ptr>\n"
 printf " - segs_using_this_lv <seg ptr>\n"
+printf " - seg_pvs <list ptr>\n"
 printf " - \n"
 printf "Use 'help <command>' for more info\n"
 printf "\n\n"
 printf "Popular breakpoints:\n"
-printf "break _get_udev_flags\n"
-printf "run --splitmirrors 1 -n split vg/lv\n"
+printf "break _alloc_image_components\n"
+printf "run --repair --use-policies vg/lv\n"
 printf "\n\n"
 
 set follow-fork-mode child
@@ -40,6 +42,8 @@ set follow-fork-mode child
 #
 # External functions should have a corresponding 'document'
 # section.  Internal functions should have leading comments
+
+
 
 define dm_list_size
 	set $_DLS_list_head = (struct dm_list *)$arg0
@@ -58,6 +62,41 @@ document dm_list_size
 Returns the number of elements in the dm_list
 
 	Usage: dm_list_size <list ptr>
+end
+
+define pv_dev_name
+	set $_PDN_pv = (struct physical_volume *)$arg0
+	set $_PDN_dev = $_PDN_pv->dev
+	set $_PDN_strl = (struct str_list *)$_PDN_dev->aliases.n
+
+	printf "%s\n", $_PDN_strl->str
+end
+
+document pv_dev_name
+Print the name of the PV for the given PV pointer
+
+	Usage: pv_dev_name <PV ptr>
+end
+
+define seg_pvs
+	set $_SP_list_head = (struct dm_list *)$arg0
+	set $_SP_list = $_SP_list_head->n
+	
+	while (($_SP_list != $_SP_list_head) && ($_SP_size < 100))
+		set $_SP_spv = (struct seg_pvs *)$_SP_list
+
+		printf "* Can't print PV list\n"
+
+		set $_SP_list = $_SP_list->n
+	end
+
+	printf "%d list items\n", $_SP_size
+end
+
+document seg_pvs
+Print the elements of a seg_pvs list
+
+	Usage: seg_pvs <list ptr>
 end
 
 #
@@ -269,6 +308,16 @@ define __status
 	if ($_s_status & 0x00400000U)
 		set $_s_status = $_s_status & ~0x00400000U
 		printf " CONVERTING"
+	end
+#	if ($_s_status & LV_REBUILD)
+	if ($_s_status & 0x100000U)
+		set $_s_status = $_s_status & ~0x100000U
+		printf " LV_REBUILD"
+	end
+#	if ($_s_status & PARTIAL_LV)
+	if ($_s_status & 0x1000000U)
+		set $_s_status = $_s_status & ~0x1000000U
+		printf " PARTIAL_LV"
 	end
 #	if ($_s_status & MERGING)
 	if ($_s_status & 0x10000000U)
