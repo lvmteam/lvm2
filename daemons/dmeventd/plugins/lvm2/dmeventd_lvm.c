@@ -160,6 +160,11 @@ int dmeventd_lvm2_command(struct dm_pool *mem, char *buffer, size_t size,
 		return 0;
 	}
 
+	/* strip off the mirror component designations */
+	layer = strstr(lv, "_mlog");
+	if (layer)
+		*layer = '\0';
+
 	r = dm_snprintf(buffer, size, "%s %s/%s", cmd, vg, lv);
 
 	dm_pool_free(mem, vg);
