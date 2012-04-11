@@ -1,5 +1,6 @@
 Version 2.02.96 - 
 ================================
+  Change message severity to log_very_verbose for missing dev info in udev db.
   Fix problems when specifying PVs during RAID down-converts.
   Fix ability to handle failures in mirrored log (regression intro 2.02.89).
   Fix unlocking volume group in vgreduce in error path.
