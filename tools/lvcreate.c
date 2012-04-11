@@ -236,6 +236,8 @@ static int _update_extents_params(struct volume_group *vg,
 	uint32_t pv_extent_count;
 	struct logical_volume *origin = NULL;
 	int changed = 0;
+	uint32_t size_rest;
+	uint32_t stripesize_extents;
 
 	if (lcp->size &&
 	    !(lp->extents = extents_from_size(vg->cmd, lcp->size,
@@ -292,6 +294,18 @@ static int _update_extents_params(struct volume_group *vg,
 			break;
 		case PERCENT_NONE:
 			break;
+	}
+
+	if (!(stripesize_extents = lp->stripe_size / vg->extent_size))
+		stripesize_extents = 1;
+
+	if ((lcp->percent != PERCENT_NONE) && lp->stripes &&
+	    (size_rest = lp->extents % (lp->stripes * stripesize_extents)) &&
+	    (vg->free_count < lp->extents - size_rest + (lp->stripes * stripesize_extents))) {
+		log_print("Rounding size (%d extents) down to stripe boundary "
+			  "size (%d extents)", lp->extents,
+			  lp->extents - size_rest);
+		lp->extents = lp->extents - size_rest;
 	}
 
 	if (lp->create_thin_pool) {
