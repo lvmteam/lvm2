@@ -367,12 +367,12 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 {
 	struct logical_volume *lv;
 	struct lvinfo info;
-	uint32_t stripesize_extents = 0;
-	uint32_t seg_stripes = 0, seg_stripesize = 0, seg_size = 0;
+	uint32_t stripesize_extents;
+	uint32_t seg_stripes = 0, seg_stripesize = 0, seg_size;
 	uint32_t seg_mirrors = 0;
-	uint32_t extents_used = 0;
+	uint32_t extents_used;
 	uint32_t size_rest;
-	uint32_t pv_extent_count = 0;
+	uint32_t pv_extent_count;
 	alloc_policy_t alloc;
 	struct logical_volume *lock_lv;
 	struct lv_list *lvl;
@@ -665,6 +665,12 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 	}
 
 	if (lp->stripes > 1) {
+		if (lp->stripe_size < STRIPE_SIZE_MIN) {
+			log_error("Invalid stripe size %s",
+				  display_size(cmd, (uint64_t) lp->stripe_size));
+			return EINVALID_CMD_LINE;
+		}
+
 		if (!(stripesize_extents = lp->stripe_size / vg->extent_size))
 			stripesize_extents = 1;
 
@@ -684,11 +690,6 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 			lp->extents = lp->extents - size_rest;
 		}
 
-		if (lp->stripe_size < STRIPE_SIZE_MIN) {
-			log_error("Invalid stripe size %s",
-				  display_size(cmd, (uint64_t) lp->stripe_size));
-			return EINVALID_CMD_LINE;
-		}
 	}
 
 	if (lp->extents < lv->le_count) {
