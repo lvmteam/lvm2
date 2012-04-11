@@ -64,6 +64,24 @@ uint32_t lv_raid_image_count(const struct logical_volume *lv)
 	return seg->area_count;
 }
 
+/*
+ * Resume sub-LVs first, then top-level LV
+ */
+static int _bottom_up_resume(struct logical_volume *lv)
+{
+	uint32_t s;
+	struct lv_segment *seg = first_seg(lv);
+
+	if (seg_is_raid(seg) && (seg->area_count > 1)) {
+		for (s = 0; s < seg->area_count; s++)
+			if (!resume_lv(lv->vg->cmd, seg_lv(seg, s)) ||
+			    !resume_lv(lv->vg->cmd, seg_metalv(seg, s)))
+				return_0;
+	}
+
+	return resume_lv(lv->vg->cmd, lv);
+}
+
 static int _activate_sublv_preserving_excl(struct logical_volume *top_lv,
 					   struct logical_volume *sub_lv)
 {
@@ -975,8 +993,6 @@ static int _raid_extract_images(struct logical_volume *lv, uint32_t new_count,
 static int _raid_remove_images(struct logical_volume *lv,
 			       uint32_t new_count, struct dm_list *pvs)
 {
-	uint32_t s;
-	struct lv_segment *seg;
 	struct dm_list removal_list;
 	struct lv_list *lvl;
 
@@ -1035,13 +1051,7 @@ static int _raid_remove_images(struct logical_volume *lv,
 	 * tries to rename first, it will collide with the existing
 	 * position 1.
 	 */
-	seg = first_seg(lv);
-	for (s = 0; (new_count > 1) && (s < seg->area_count); s++) {
-		if (!resume_lv(lv->vg->cmd, seg_lv(seg, s)) ||
-		    !resume_lv(lv->vg->cmd, seg_metalv(seg, s)))
-			return_0;
-	}
-	if (!resume_lv(lv->vg->cmd, lv)) {
+	if (!_bottom_up_resume(lv)) {
 		log_error("Failed to resume %s/%s after committing changes",
 			  lv->vg->name, lv->name);
 		return 0;
@@ -1193,19 +1203,30 @@ int lv_raid_split(struct logical_volume *lv, const char *split_name,
 	}
 
 	/*
-	 * Resume original LV
-	 * This also resumes all other sub-lvs (including the extracted)
+	 * First resume the newly split LV and LVs on the removal list.
+	 * This is necessary so that there are no name collisions due to
+	 * the original RAID LV having possibly had sub-LVs that have been
+	 * shifted and renamed.
 	 */
-	if (!resume_lv(cmd, lv)) {
+	if (!resume_lv(cmd, lvl->lv))
+		return_0;
+	dm_list_iterate_items(lvl, &removal_list)
+		if (!resume_lv(cmd, lvl->lv))
+			return_0;
+
+	/*
+	 * Resume the remaining LVs
+	 * We must start by resuming the sub-LVs first (which would
+	 * otherwise be handled automatically) because the shifting
+	 * of positions could otherwise cause name collisions.  For
+	 * example, if position 0 of a 3-way array is split, position
+	 * 1 and 2 must be shifted and renamed 0 and 1.  If position 2
+	 * tries to rename first, it will collide with the existing
+	 * position 1.
+	 */
+	if (!_bottom_up_resume(lv)) {
 		log_error("Failed to resume %s/%s after committing changes",
 			  lv->vg->name, lv->name);
-		return 0;
-	}
-
-	/* Recycle newly split LV so it is properly renamed */
-	if (!suspend_lv(cmd, lvl->lv) || !resume_lv(cmd, lvl->lv)) {
-		log_error("Failed to rename %s to %s after committing changes",
-			  old_name, split_name);
 		return 0;
 	}
 

@@ -1,5 +1,6 @@
 Version 2.02.96 - 
 ================================
+  Fix inability to split RAID1 image while specifying a particular PV.
   Update man pages to give them same look&feel.
   Fix lvresize of thin pool for stipped devices.
   For lvresize round upward when specifying number of extents.
