@@ -3,15 +3,22 @@
 pvmove \- move physical extents
 .SH SYNOPSIS
 .B pvmove
-[\-\-abort]
-[\-\-alloc AllocationPolicy]
-[\-b|\-\-background]
-[\-d|\-\-debug] [\-h|\-\-help] [\-i|\-\-interval Seconds]
-[\-\-noudevsync] [\-v|\-\-verbose] [\-n|\-\-name LogicalVolume]
-[SourcePhysicalVolume[:PE[-PE]...] [DestinationPhysicalVolume[:PE[-PE]...]...]]
+.RB [ \-\-abort ]
+.RB [ \-\-alloc
+.IR AllocationPolicy ]
+.RB [ \-b | \-\-background ]
+.RB [ \-d | \-\-debug ]
+.RB [ \-h | \-\-help ]
+.RB [ \-i | \-\-interval
+.IR Seconds ]
+.RB [ \-\-noudevsync ]
+.RB [ \-v | \-\-verbose ]
+.RB [ \-n | \-\-name
+.IR LogicalVolume ]
+.RI [ SourcePhysicalVolume [ :PE [ -PE ]...]
+.RI [ DestinationPhysicalVolume [ :PE [ -PE ]...]...]]
 .SH DESCRIPTION
-.B pvmove
-allows you to move the allocated physical extents (PEs) on
+pvmove allows you to move the allocated physical extents (PEs) on
 .I SourcePhysicalVolume
 to one or more other physical volumes (PVs).
 You can optionally specify a source
@@ -23,8 +30,8 @@ If no
 .I DestinationPhysicalVolume
 is specified, the normal allocation rules for the Volume Group are used.
 
-If \fBpvmove\fP gets interrupted for any reason (e.g. the machine crashes)
-then run \fBpvmove\fP again without any PhysicalVolume arguments to
+If pvmove gets interrupted for any reason (e.g. the machine crashes)
+then run pvmove again without any PhysicalVolume arguments to
 restart any moves that were in progress from the last checkpoint.
 Alternatively use \fBpvmove --abort\fP at any time to abort them
 at the last checkpoint.
@@ -71,78 +78,74 @@ type of on-disk metadata.  Metadata can be converted using \fBvgconvert\fP(8).
 N.B. The moving of mirrors, snapshots and their origins is not yet supported.
 
 .SH OPTIONS
+See \fBlvm\fP(8) for common options.
 .TP
-.I \-\-abort
+.B \-\-abort
 Abort any moves in progress.
 .TP
-.I \-\-noudevsync
+.B \-\-noudevsync
 Disable udev synchronisation. The
 process will not wait for notification from udev.
 It will continue irrespective of any possible udev processing
 in the background.  You should only use this if udev is not running
 or has rules that ignore the devices LVM2 creates.
 .TP
-.I \-b, \-\-background
+.BR \-b ", " \-\-background
 Run the daemon in the background.
 .TP
-.I \-i, \-\-interval Seconds
+.BR \-i ", " \-\-interval " " \fISeconds
 Report progress as a percentage at regular intervals.
 .TP
-.I \-n, \-\-name " \fILogicalVolume\fR"
+.BR \-n ", " \-\-name " " \fILogicalVolume
 Move only the extents belonging to
 .I LogicalVolume
 from
 .I SourcePhysicalVolume
 instead of all allocated extents to the destination physical volume(s).
 
-.SH EXAMPLES
+.SH Examples
 To move all Physical Extents that are used by simple Logical Volumes on
-.B /dev/sdb1
-to free Physical Extents elsewhere in the Volume Group use:
+/dev/sdb1 to free Physical Extents elsewhere in the Volume Group use:
 .sp
-\	pvmove /dev/sdb1
+.B pvmove /dev/sdb1
 .P
 Any mirrors, snapshots and their origins are left unchanged.
 .P
-Additionally, a specific destination device
-.B /dev/sdc1
+Additionally, a specific destination device /dev/sdc1
 can be specified like this:
 .sp
-\	pvmove /dev/sdb1 /dev/sdc1
+.B pvmove /dev/sdb1 /dev/sdc1
 .P
 To perform the action only on extents belonging to the single Logical Volume 
-.B lvol1
-do this:
+lvol1 do this:
 .sp
-\	pvmove -n lvol1 /dev/sdb1 /dev/sdc1
+.B pvmove -n lvol1 /dev/sdb1 /dev/sdc1
 .P
 Rather than moving the contents of the entire device, it is possible to
-move a range of Physical Extents - for example numbers 1000 to 1999 inclusive on
-.B /dev/sdb1
-- like this:
+move a range of Physical Extents - for example numbers 1000 to 1999
+inclusive on /dev/sdb1 - like this:
 .sp
-\	pvmove /dev/sdb1:1000-1999
+.B pvmove /dev/sdb1:1000-1999
 .P
 To move a range of Physical Extents to a specific location (which must have
 sufficent free extents) use the form:
 .sp
-\	pvmove /dev/sdb1:1000-1999 /dev/sdc1
+.B pvmove /dev/sdb1:1000-1999 /dev/sdc1
 .sp
 or
 .sp
-\	pvmove /dev/sdb1:1000-1999 /dev/sdc1:0-999
+.B pvmove /dev/sdb1:1000-1999 /dev/sdc1:0-999
 .P
 If the source and destination are on the same disk, the 
 .B anywhere
 allocation policy would be needed, like this:
 .sp
-\	pvmove --alloc anywhere /dev/sdb1:1000-1999 /dev/sdb1:0-999
+.B pvmove --alloc anywhere /dev/sdb1:1000-1999 /dev/sdb1:0-999
 .P
-
 The part of a specific Logical Volume present within in a range of Physical
 Extents can also be picked out and moved, like this:
 .sp
-\	pvmove -n lvol1 /dev/sdb1:1000-1999 /dev/sdc1
+.B pvmove -n lvol1 /dev/sdb1:1000-1999 /dev/sdc1
 .SH SEE ALSO
 .BR lvm (8),
 .BR vgconvert (8)

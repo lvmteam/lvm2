@@ -3,25 +3,35 @@
 vgmerge \- merge two volume groups
 .SH SYNOPSIS
 .B vgmerge
-[\-A|\-\-autobackup y|n] [\-d|\-\-debug] [\-h|\-?|\-\-help] [\-l|\-\-list]
-[\-t|\-\-test] [\-v|\-\-verbose] DestinationVolumeGroupName
-SourceVolumeGroupName
+.RB [ \-A | \-\-autobackup
+.RI { y | n }]
+.RB [ \-d | \-\-debug ]
+.RB [ \-h | \-? | \-\-help ]
+.RB [ \-l | \-\-list ]
+.RB [ \-t | \-\-test ]
+.RB [ \-v | \-\-verbose ]
+.I DestinationVolumeGroupName
+.I SourceVolumeGroupName
 .SH DESCRIPTION
-vgmerge merges two existing volume groups. The inactive SourceVolumeGroupName
-will be merged into the DestinationVolumeGroupName if physical extent sizes
+vgmerge merges two existing volume groups. The inactive
+\fISourceVolumeGroupName\fP will be merged into 
+the \fIDestinationVolumeGroupName\fP if physical extent sizes
 are equal and physical and logical volume summaries of both volume groups
-fit into DestinationVolumeGroupName's limits.
+fit into \fIDestinationVolumeGroupName\fP's limits.
 .SH OPTIONS
-See \fBlvm\fP for common options.
-.I \-l, \-\-list
-Display merged DestinationVolumeGroupName like "vgdisplay -v".
+See \fBlvm\fP(8) for common options.
+.TP
+.BR \-l ", " \-\-list
+Display merged \fIDestinationVolumeGroupName\fP like \fBvgdisplay -v\fP.
 .TP 
-.I \-t, \-\-test
+.BR \-t ", " \-\-test
 Do a test run WITHOUT making any real changes.
 .SH Examples
-"vgmerge -v databases my_vg" merges the inactive volume group named "my_vg" 
+Merge the inactive volume group named "my_vg"
 into the active or inactive volume group named "databases" giving verbose
-runtime information.
+runtime information:
+.sp
+.B vgmerge -v databases my_vg
 .SH SEE ALSO
 .BR lvm (8),
 .BR vgcreate (8),

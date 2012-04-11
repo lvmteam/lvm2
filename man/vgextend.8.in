@@ -3,58 +3,63 @@
 vgextend \- add physical volumes to a volume group
 .SH SYNOPSIS
 .B vgextend
-[\-A|\-\-autobackup y|n] [\-d|\-\-debug] [\-h|\-?|\-\-help] 
-[\-\-restoremissing]
-[\-f|\-\-force]
-[\-t|\-\-test]
-[\-v|\-\-verbose]
-[ \fIPHYSICAL DEVICE OPTIONS\fP ]
-VolumeGroupName PhysicalDevicePath [PhysicalDevicePath...]
+.RB [ \-A | \-\-autobackup
+.RI { y | n }]
+.RB [ \-d | \-\-debug ]
+.RB [ \-h | \-? | \-\-help ]
+.RB [ \-\-restoremissing ]
+.RB [ \-f | \-\-force ]
+.RB [ \-t | \-\-test ]
+.RB [ \-v | \-\-verbose ]
+.RB [ "PHYSICAL DEVICE OPTIONS" ]
+.I VolumeGroupName PhysicalDevicePath
+.RI [ PhysicalDevicePath ...]
 .SH DESCRIPTION
-vgextend allows you to add one or more initialized physical volumes ( see
-.B pvcreate(8)
-) to an existing volume group to extend it in size. Moreover, it allows you to
+vgextend allows you to add one or more initialized physical volumes
+(see \fBpvcreate\fP(8)) to an existing volume group to extend it in size. Moreover, it allows you to
 re-add a physical volume that has gone missing previously, due to a transient
-device failure, without re-initialising it. Use vgextend \-\-restoremissing to
-that effect.
+device failure, without re-initialising it. Use
+\fBvgextend \-\-restoremissing\fP to that effect.
 .sp
 If \fIPhysicalDevicePath\fP was not previously configured for LVM with
-\fBpvcreate (8)\fP, the device will be initialized with the same
-default values used with \fBpvcreate\fP.  If non-default
-\fPpvcreate\fP values are are desired, they may be given on the
-commandline with the same options as \fPpvcreate\fP.  See
-\fBPHYSICAL DEVICE OPTIONS\fP for available options.  Note
-that the restore-related options such as --restorefile, --uuid,
-and --physicalvolumesize are not available.  If a restore operation
-is needed, use \fBpvcreate (8)\fP and \fBvgcfgrestore (8)\fP.
+\fBpvcreate\fP(8), the device will be initialized with the same
+default values used with \fBpvcreate\fP(8).  If non-default
+\fPpvcreate\fP(8) values are desired, they may be given on the
+commandline with the same options as \fPpvcreate\fP(8).  See
+.B PHYSICAL DEVICE OPTIONS
+for available options.  Note that the restore-related options such as
+.BR \-\-restorefile ", " \-\-uuid " and " \-\-physicalvolumesize
+are not available.  If a restore operation
+is needed, use \fBpvcreate\fP(8) and \fBvgcfgrestore\fP(8).
 .SH OPTIONS
-See \fBlvm\fP for common options.
+See \fBlvm\fP(8) for common options.
 .SH PHYSICAL DEVICE OPTIONS
 The following options are available for initializing physical devices in the
-volume group.  These options are further described in the pvcreate man page.
+volume group.  These options are further described in the
+\fBpvcreate\fP(8) man page.
 .TP
 .BR \-f ", " \-\-force
 .TP
 .BR \-y ", " \-\-yes
 .TP
-.BR \-Z ", " \-\-zero " y|n"
+.BR \-Z ", " \-\-zero " {" \fIy | \fIn }
 .TP
-.BR \-\-labelsector " sector"
+.B \-\-labelsector \fIsector
 .TP
-.BR \-\-metadatasize " size"
+.B \-\-metadatasize \fIsize
 .TP
-.RB [ \-\-metadataignore y|n ]
+.BR \-\-metadataignore " {" \fIy | \fIn }
 .TP
-.BR \-\-pvmetadatacopies " copies"
+.B \-\-pvmetadatacopies \fIcopies
 .TP
-.BR \-\-dataalignment " alignment"
+.B \-\-dataalignment \fIalignment
 .TP
-.BR \-\-dataalignmentoffset " alignment_offset"
+.B \-\-dataalignmentoffset \fIalignment_offset
 .SH Examples
-"vgextend vg00 /dev/sda4 /dev/sdn1" tries to extend the existing volume
-group "vg00" by the new physical volumes (see
-.B pvcreate(8)
-) "/dev/sdn1" and /dev/sda4".
+Extends the existing volume group "vg00" by the new physical volumes
+(see \fBpvcreate\fP(8)) "/dev/sda4" and "/dev/sdn1".
+.sp
+.B vgextend vg00 /dev/sda4 /dev/sdn1
 .SH SEE ALSO
 .BR lvm (8),
 .BR vgcreate (8),

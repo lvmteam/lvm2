@@ -7,8 +7,7 @@ lvmsar \- LVM system activity reporter
 .B lvmsar
 
 .SH "DESCRIPTION"
-.B lvmsar
-is not currently supported under LVM2.
+lvmsar is not currently supported under LVM2.
 
 .SH "SEE ALSO"
 .BR lvm (8)

@@ -5,18 +5,18 @@ lvm \- LVM2 tools
 .B lvm
 [command | file]
 .SH DESCRIPTION
-\fBlvm\fP provides the command-line tools for LVM2.  A separate
+lvm provides the command-line tools for LVM2.  A separate
 manual page describes each command in detail.
 .LP
 If \fBlvm\fP is invoked with no arguments it presents a readline prompt
 (assuming it was compiled with readline support).
-LVM commands may be entered interactively at this prompt with 
-readline facilities including history and command name and option 
+LVM commands may be entered interactively at this prompt with
+readline facilities including history and command name and option
 completion.  Refer to \fBreadline\fP(3) for details.
 .LP
 If \fBlvm\fP is invoked with argv[0] set to the name of a specific
-LVM command (for example by using a hard or soft link) it acts as 
-that command.  
+LVM command (for example by using a hard or soft link) it acts as
+that command.
 .LP
 On invocation, \fBlvm\fP requires that only the standard file descriptors
 stdin, stdout and stderr are available.  If others are found, they
@@ -24,16 +24,16 @@ get closed and messages are issued warning about the leak.
 .LP
 Where commands take VG or LV names as arguments, the full path name is
 optional.  An LV called "lvol0" in a VG called "vg0" can be specified
-as "vg0/lvol0".  Where a list of VGs is required but is left empty, 
+as "vg0/lvol0".  Where a list of VGs is required but is left empty,
 a list of all VGs will be substituted.  Where a list of LVs is required
 but a VG is given, a list of all the LVs in that VG will be substituted.
-So "lvdisplay vg0" will display all the LVs in "vg0".
-Tags can also be used - see \fBaddtag\fP below.
+So \fBlvdisplay vg0\fP will display all the LVs in "vg0".
+Tags can also be used - see \fB\-\-addtag\fP below.
 .LP
-One advantage of using the built-in shell is that configuration 
-information gets cached internally between commands.  
+One advantage of using the built-in shell is that configuration
+information gets cached internally between commands.
 .LP
-A file containing a simple script with one command per line 
+A file containing a simple script with one command per line
 can also be given on the command line.  The script can also be
 executed directly if the first line is #! followed by the absolute
 path of \fBlvm\fP.
@@ -41,8 +41,8 @@ path of \fBlvm\fP.
 The following commands are built into lvm without links normally
 being created in the filesystem for them.
 .TP
-\fBdumpconfig\fP \(em Display the configuration information after 
-loading \fBlvm.conf\fP (5) and any other configuration files.
+\fBdumpconfig\fP \(em Display the configuration information after
+loading \fBlvm.conf\fP(5) and any other configuration files.
 .TP
 \fBformats\fP \(em Display recognised metadata formats.
 .TP
@@ -143,111 +143,119 @@ The following commands implement the core LVM functionality.
 .TP
 The following commands are not implemented in LVM2 but might be in the future: lvmsadc, lvmsar, pvdata.
 .SH OPTIONS
-The following options are available for many of the commands. 
-They are implemented generically and documented here rather 
+The following options are available for many of the commands.
+They are implemented generically and documented here rather
 than repeated on individual manual pages.
 .TP
-\fB-h | --help\fP \(em Display the help text.
+.BR \-h ", " \-\-help
+Display the help text.
 .TP
-\fB--version\fP \(em Display version information.
+.B \-\-version
+Display version information.
 .TP
-\fB-v | --verbose\fP \(em Set verbose level.
-Repeat from 1 to 3 times to increase the detail of messages 
-sent to stdout and stderr.  Overrides config file setting.
+.BR \-v ", " \-\-verbose
+Set verbose level. Repeat from 1 to 3 times to increase the detail
+of messages sent to stdout and stderr.  Overrides config file setting.
 .TP
-\fB-d | --debug\fP \(em Set debug level.
-Repeat from 1 to 6 times to increase the detail of messages sent 
-to the log file and/or syslog (if configured).
+.BR \-d ", " \-\-debug
+Set debug level. Repeat from 1 to 6 times to increase the detail of
+messages sent to the log file and/or syslog (if configured).
 Overrides config file setting.
 .TP
-\fB--quiet\fP \(em Suppress output and log messages.
-Overrides -d and -v.
+.B \-\-quiet
+Suppress output and log messages.
+Overrides \fB\-d\fP and \fB\-v\fP.
 .TP
-\fB-t | --test\fP \(em Run in test mode.
-Commands will not update metadata.
+.BR \-t ", " \-\-test
+Run in test mode. Commands will not update metadata.
 This is implemented by disabling all metadata writing but nevertheless
 returning success to the calling function.  This may lead to unusual
 error messages in multi-stage operations if a tool relies on reading
 back metadata it believes has changed but hasn't.
 .TP
-\fB--driverloaded\fP { \fBy\fP | \fBn\fP }
+.BR \-\-driverloaded " {" \fIy | \fIn }
 Whether or not the device-mapper kernel driver is loaded.
-If you set this to \fBn\fP, no attempt will be made to contact the driver.
+If you set this to \fIn\fP, no attempt will be made to contact the driver.
 .TP
-\fB-A | --autobackup\fP { \fBy\fP | \fBn\fP }
-Whether or not to metadata should be backed up automatically after a change.  
+.BR \-A ", " \-\-autobackup " {" \fIy | \fIn }
+Whether or not to metadata should be backed up automatically after a change.
 You are strongly advised not to disable this!
-See
-.B vgcfgbackup (8).
+See \fBvgcfgbackup\fP(8).
 .TP
-\fB-P | --partial\fP
+.BR \-P ", " \-\-partial
 When set, the tools will do their best to provide access to volume groups
 that are only partially available (one or more physical volumes belonging
 to the volume group are missing from the system).  Where part of a logical
 volume is missing, \fB/dev/ioerror\fP will be substituted, and you could use
-\fBdmsetup (8)\fP to set this up to return I/O errors when accessed,
+\fBdmsetup\fP(8) to set this up to return I/O errors when accessed,
 or create it as a large block device of nulls.  Metadata may not be
 changed with this option. To insert a replacement physical volume
-of the same or large size use \fBpvcreate -u\fP to set the uuid to 
-match the original followed by \fBvgcfgrestore (8)\fP.
+of the same or large size use \fBpvcreate \-u\fP to set the uuid to
+match the original followed by \fBvgcfgrestore\fP(8).
 .TP
-\fB-M | --metadatatype type\fP
-Specifies which type of on-disk metadata to use, such as \fBlvm1\fP 
-or \fBlvm2\fP, which can be abbreviated to \fB1\fP or \fB2\fP respectively.
-The default (lvm2) can be changed by setting \fBformat\fP in the \fBglobal\fP
-section of the config file.
+.BR \-M ", " \-\-metadatatype " " \fIType
+Specifies which type of on-disk metadata to use, such as \fIlvm1\fP
+or \fIlvm2\fP, which can be abbreviated to \fI1\fP or \fI2\fP respectively.
+The default (\fIlvm2\fP) can be changed by setting \fBformat\fP
+in the \fBglobal\fP section of the config file.
 .TP
-\fB--ignorelockingfailure\fP
+.B \-\-ignorelockingfailure
 This lets you proceed with read-only metadata operations such as
-\fBlvchange -ay\fP and \fBvgchange -ay\fP even if the locking module fails.
-One use for this is in a system init script if the lock directory 
+\fBlvchange \-ay\fP and \fBvgchange \-ay\fP even if the locking module fails.
+One use for this is in a system init script if the lock directory
 is mounted read-only when the script runs.
 .TP
-\fB--addtag tag\fP
-Add the tag \fBtag\fP to a PV, VG or LV.  
+.B \-\-addtag \fITag
+Add the tag \fITag\fP to a PV, VG or LV.
 Supply this argument multiple times to add more than one tag at once.
-A tag is a word that can be used to group LVM2 objects of the same type 
-together. 
-Tags can be given on the command line in place of PV, VG or LV 
+A tag is a word that can be used to group LVM2 objects of the same type
+together.
+Tags can be given on the command line in place of PV, VG or LV
 arguments.  Tags should be prefixed with @ to avoid ambiguity.
 Each tag is expanded by replacing it with all objects possessing
 that tag which are of the type expected by its position on the command line.
 PVs can only possess tags while they are part of a Volume Group:
 PV tags are discarded if the PV is removed from the VG.
-As an example, you could tag some LVs as \fBdatabase\fP and others 
-as \fBuserdata\fP and then activate the database ones 
-with \fBlvchange -ay @database\fP.
+As an example, you could tag some LVs as \fBdatabase\fP and others
+as \fBuserdata\fP and then activate the database ones
+with \fBlvchange \-ay @database\fP.
 Objects can possess multiple tags simultaneously.
 Only the new LVM2 metadata format supports tagging: objects using the
 LVM1 metadata format cannot be tagged because the on-disk format does not
 support it.
 Snapshots cannot be tagged.
-Characters allowed in tags are: A-Z a-z 0-9 _ + . - and 
-as of version 2.02.78 the following characters are also
-accepted: / = ! : # &
+Characters allowed in tags are:
+.B A-Z a-z 0-9 _ + . -
+and as of version 2.02.78 the following characters are also accepted:
+.B / = ! : # &
 .TP
-\fB--deltag tag\fP
-Delete the tag \fBtag\fP from a PV, VG or LV, if it's present.
+.B \-\-deltag \fITag
+Delete the tag \fITag\fP from a PV, VG or LV, if it's present.
 Supply this argument multiple times to remove more than one tag at once.
 .TP
-\fB--alloc AllocationPolicy\fP
-The allocation policy to use: \fBcontiguous\fP, \fBcling\fP, \fBnormal\fP, \fBanywhere\fP or \fBinherit\fP.
+.B \-\-alloc \fIAllocationPolicy
+The allocation policy to use:
+.IR contiguous ,
+.IR cling ,
+.IR normal ,
+.IR anywhere " or"
+.IR inherit .
 When a command needs to allocate physical extents from the volume group,
-the allocation policy controls how they are chosen.  
+the allocation policy controls how they are chosen.
 Each volume group and logical volume has an allocation policy.
-The default for a volume group is \fBnormal\fP which applies
+The default for a volume group is \fInormal\fP which applies
 common-sense rules such as not placing parallel stripes on the same
-physical volume.  The default for a logical volume is \fBinherit\fP
+physical volume.  The default for a logical volume is \fIinherit\fP
 which applies the same policy as for the volume group.  These policies can
-be changed using \fBlvchange\fP (8) and \fBvgchange\fP (8) or over-ridden
+be changed using \fBlvchange\fP(8) and \fBvgchange\fP(8) or over-ridden
 on the command line of any command that performs allocation.
-The \fBcontiguous\fP policy requires that new extents be placed adjacent
-to existing extents. 
-The \fBcling\fP policy places new extents on the same physical
+The \fIcontiguous\fP policy requires that new extents be placed adjacent
+to existing extents.
+The \fIcling\fP policy places new extents on the same physical
 volume as existing extents in the same stripe of the Logical Volume.
 If there are sufficient free extents to satisfy
-an allocation request but \fBnormal\fP doesn't use them,
-\fBanywhere\fP will - even if that reduces performance by
+an allocation request but \fInormal\fP doesn't use them,
+\fIanywhere\fP will - even if that reduces performance by
 placing two stripes on the same physical volume.
 .IP
 N.B. The policies described above are not implemented fully yet.
@@ -255,22 +263,21 @@ In particular, contiguous free space cannot be broken up to
 satisfy allocation attempts.
 .SH ENVIRONMENT VARIABLES
 .TP
-\fBLVM_SYSTEM_DIR\fP 
-Directory containing lvm.conf and other LVM
-system files.
+.B HOME
+Directory containing \fI.lvm_history\fP if the internal readline
+shell is invoked.
+.TP
+.B LVM_SYSTEM_DIR
+Directory containing \fBlvm.conf\fP(5) and other LVM system files.
 Defaults to "#DEFAULT_SYS_DIR#".
 .TP
-\fBHOME\fP 
-Directory containing .lvm_history if the internal readline shell
-is invoked.
-.TP
-\fBLVM_VG_NAME\fP 
-The volume group name that is assumed for 
+.B LVM_VG_NAME
+The volume group name that is assumed for
 any reference to a logical volume that doesn't specify a path.
 Not set by default.
 .SH VALID NAMES
 The following characters are valid for VG and LV names:
-\fBa-z A-Z 0-9 + _ . -\fP
+.B a-z A-Z 0-9 + _ . -
 .LP
 VG and LV names cannot begin with a hyphen.
 There are also various reserved names that are used internally by lvm that can not be used as LV or VG names.
@@ -326,4 +333,3 @@ All tools return a status code of zero on success or non-zero on failure.
 .BR vgsplit (8),
 .BR readline (3),
 .BR lvm.conf (5)
-

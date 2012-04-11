@@ -3,11 +3,14 @@
 vgck \- check volume group metadata
 .SH SYNOPSIS
 .B vgck
-[\-d|\-\-debug] [\-h|\-?|\-\-help] [\-v|\-\-verbose] [VolumeGroupName...]
+.RB [ \-d | \-\-debug ]
+.RB [ \-h | \-? | \-\-help ]
+.RB [ \-v | \-\-verbose ]
+.RI [ VolumeGroupName ...]
 .SH DESCRIPTION
 vgck checks LVM metadata for each named volume group for consistency.
 .SH OPTIONS
-See \fBlvm\fP for common options.
+See \fBlvm\fP(8) for common options.
 .SH SEE ALSO
 .BR lvm (8),
 .BR vgcreate (8),

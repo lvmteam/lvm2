@@ -8,7 +8,7 @@ lvcreate \- create a logical volume in an existing volume group
 .RB [ \-\-alloc
 .IR AllocationPolicy ]
 .RB [ \-a | \-\-available
-.RI { y | n | ey | en | ly | ln }]
+.RI [ e | l ]{ y | n }]
 .RB [ \-A | \-\-autobackup
 .RI { y | n }]
 .RB [ \-C | \-\-contiguous
@@ -87,20 +87,20 @@ lvcreate \- create a logical volume in an existing volume group
 .br
 
 .SH DESCRIPTION
-lvcreate creates a new logical volume in a volume group ( see
-.BR vgcreate "(8), " vgchange (8)
-) by allocating logical extents from the free physical extent pool
+lvcreate creates a new logical volume in a volume group (see
+.BR vgcreate "(8), " vgchange (8))
+by allocating logical extents from the free physical extent pool
 of that volume group.  If there are not enough free physical extents then
-the volume group can be extended ( see
-.BR vgextend (8)
-) with other physical volumes or by reducing existing logical volumes
-of this volume group in size ( see
-.BR lvreduce (8)
-). If you specify one or more PhysicalVolumes, allocation of physical
+the volume group can be extended (see
+.BR vgextend (8))
+with other physical volumes or by reducing existing logical volumes
+of this volume group in size (see
+.BR lvreduce (8)).
+If you specify one or more PhysicalVolumes, allocation of physical
 extents will be restricted to these volumes.
 .br
 .br
-The second form supports the creation of snapshot logical volumes which 
+The second form supports the creation of snapshot logical volumes which
 keep the contents of the original logical volume for backup purposes.
 .SH OPTIONS
 See
@@ -108,16 +108,16 @@ See
 for common options.
 .TP
 .IR \fB\-a ", " \fB\-\-available " {" y | n | ey | en | ly | ln }
-Controls the availability of the Logical Volumes for immediate use after 
+Controls the availability of the Logical Volumes for immediate use after
 the command finishes running.
 By default, new Logical Volumes are activated automatically (\fB-a\fIy\fR).
-If it is possible technically, \fB-a\fIn\fR will leave the new Logical Volume inactive.
-But for example, snapshots can only be created
-in the active state so \fB-a\fIn\fR cannot be used with --snapshot.
-Normally the --zero n argument has to be supplied too because zeroing (the
-default behaviour) also requires activation.
-If clustered locking is enabled, \fB-a\fIey\fR will activate exclusively
-on one node and \fB-a\fIly\fR will activate only on the local node.
+If it is possible technically, \fB-a\fIn\fR will leave the new Logical
+Volume inactive. But for example, snapshots can only be created
+in the active state so \fB\-a\fIn\fR cannot be used with \fB\-\-snapshot\fP.
+Normally the \fB\-\-zero n\fP argument has to be supplied too because
+zeroing (the default behaviour) also requires activation.
+If clustered locking is enabled, \fB\-a\fIey\fR will activate exclusively
+on one node and \fB\-a\fIly\fR will activate only on the local node.
 .TP
 .BR \-c ", " \-\-chunksize " " \fIChunkSize
 Gives the size of chunk for snapshot and thin pool logical volumes.
@@ -125,7 +125,7 @@ For snapshots the value must be power of 2 between 4KiB and 512KiB
 and the default value is 4.
 For thin pools the value must be power of 2 between 64KiB and
 1048576KiB and the default value starts with 64 and scales
-up to fit the pool metadata size within 128MB, 
+up to fit the pool metadata size within 128MB,
 if the poolmetadata size is not specified.
 Default unit is in kilobytes.
 .TP
@@ -208,9 +208,9 @@ or has rules that ignore the devices LVM2 creates.
 .TP
 .BR \-\-monitor " {" \fIy | \fIn }
 Start or avoid monitoring a mirrored or snapshot logical volume with
-dmeventd, if it is installed. 
+dmeventd, if it is installed.
 If a device used by a monitored mirror reports an I/O error,
-the failure is handled according to 
+the failure is handled according to
 \fBmirror_image_fault_policy\fP and \fBmirror_log_fault_policy\fP
 set in \fBlvm.conf\fP.
 .TP
@@ -228,7 +228,6 @@ Set the size of thin pool's metadata logical volume.
 Supported value is in range between 2MiB and 16GiB.
 Default value is  (Pool_LV_size / Pool_LV_chunk_size * 64b).
 Default unit is megabytes.
-
 .TP
 .IR \fB\-r ", " \fB\-\-readahead " {" ReadAheadSectors | auto | none }
 Set read ahead sector count of this logical volume.
@@ -239,11 +238,10 @@ a suitable value automatically.
 "None" is equivalent to specifying zero.
 .TP
 .BR \-R ", " \-\-regionsize " " \fIMirrorLogRegionSize
-A mirror is divided into regions of this size (in MB), and the mirror log 
+A mirror is divided into regions of this size (in MB), and the mirror log
 uses this granularity to track which regions are in sync.
 .TP
 .IR \fB\-s ", " \fB\-\-snapshot " " OriginalLogicalVolume { Name | Path }
-
 Create a snapshot logical volume (or snapshot) for an existing, so called
 original logical volume (or origin).
 Snapshots provide a 'frozen image' of the contents of the origin
@@ -269,10 +267,10 @@ of space.
 .TP
 .IR \fB\-T ", " \fB\-\-thin ", " \fB\-\-thinpool " " ThinPoolLogicalVolume { Name | Path }
 Creates thin pool or thin logical volume or both.
-Specifying the optional argument --size will cause the creation of
+Specifying the optional argument \fB\-\-size\fP will cause the creation of
 the thin pool logical volume.
-Specifying the optional argument --virtualsize will cause the creation of
-the thin logical volume from given thin pool volume.
+Specifying the optional argument \fB\-\-virtualsize\fP will cause
+the creation of the thin logical volume from given thin pool volume.
 Specifying both arguments will cause the creation of both
 thin pool and thin volume using this pool.
 Requires device mapper kernel driver for thin provisioning
@@ -282,12 +280,14 @@ from kernel 3.2 or newer.
 Create a logical volume that uses the specified segment type
 (e.g. "raid5", "mirror", "snapshot", "thin", "thin-pool").
 Many segment types have a
-commandline switch alias that will enable their use (-s is an alias for
---type snapshot).  However, this argument must be used when no existing
-commandline switch alias is available for the desired type, as is the case
-with "error", "zero", "raid1", "raid4", "raid5", or "raid6".
+commandline switch alias that will enable their use
+(\fB\-s\fP is an alias for \fB\-\-type snapshot\fP).
+However, this argument must be used when no existing
+commandline switch alias is available for the desired type,
+as is the case with
+.IR error ", " zero ", " raid1 ", " raid4 ", " raid5 " or " raid6 .
 .TP
-.IR \fB\-V ", " \fB\-\-virtualsize " " VirtualSize [ bBsSkKmMgGtTpPeE ]
+.BR \-V ", " \-\-virtualsize " " \fIVirtualSize [ \fIbBsSkKmMgGtTpPeE ]
 Create a sparse device of the given size (in MB by default) using a snapshot
 or thinly provisioned device when thin pool is specified.
 Anything written to the device will be returned when reading from it.
@@ -309,59 +309,60 @@ Snapshot volumes are zeroed always.
 Warning: trying to mount an unzeroed logical volume can cause the system to
 hang.
 .SH Examples
-Creates a striped logical volume with 3 stripes, a stripesize of 8KB 
+Creates a striped logical volume with 3 stripes, a stripesize of 8KB
 and a size of 100MB in the volume group named vg00.
 The logical volume name will be chosen by lvcreate:
 .sp
-.B lvcreate -i 3 -I 8 -L 100M vg00
+.B lvcreate \-i 3 \-I 8 \-L 100M vg00
 
 Creates a mirror logical volume with 2 sides with a useable size of 500 MiB.
-This operation would require 3 devices (or option --alloc anywhere) - two 
-for the mirror devices and one for the disk log.
+This operation would require 3 devices (or option --alloc anywhere) - two
+for the mirror devices and one for the disk log:
 .sp
-.B lvcreate -m1 -L 500M vg00
+.B lvcreate \-m1 \-L 500M vg00
 
 Creates a mirror logical volume with 2 sides with a useable size of 500 MiB.
-This operation would require 2 devices - the log is "in-memory".
+This operation would require 2 devices - the log is "in-memory":
 .sp
-.B lvcreate -m1 --mirrorlog core -L 500M vg00
+.B lvcreate \-m1 \-\-mirrorlog core \-L 500M vg00
 
 Creates a snapshot logical volume named /dev/vg00/snap which has access to the
 contents of the original logical volume named /dev/vg00/lvol1
 at snapshot logical volume creation time. If the original logical volume
 contains a file system, you can mount the snapshot logical volume on an
 arbitrary directory in order to access the contents of the filesystem to run
-a backup while the original filesystem continues to get updated.
+a backup while the original filesystem continues to get updated:
 .sp
-.B lvcreate --size 100m --snapshot --name snap /dev/vg00/lvol1
+.B lvcreate \-\-size 100m \-\-snapshot \-\-name snap /dev/vg00/lvol1
 
-Creates a sparse device named /dev/vg1/sparse of size 1TB with space for just
-under 100MB of actual data on it.
+Creates a sparse device named /dev/vg1/sparse of size 1TiB with space for just
+under 100MiB of actual data on it:
 .sp
-.B lvcreate --virtualsize 1T --size 100M --snapshot --name sparse vg1
+.B lvcreate \-\-virtualsize 1T \-\-size 100M \-\-snapshot \-\-name sparse vg1
 
 Creates a linear logical volume "vg00/lvol1" using physical extents
-/dev/sda:0-7 and /dev/sdb:0-7 for allocation of extents.
+/dev/sda:0-7 and /dev/sdb:0-7 for allocation of extents:
 .sp
-.B lvcreate -L 64M -n lvol1 vg00 /dev/sda:0-7 /dev/sdb:0-7
+.B lvcreate \-L 64M -n lvol1 vg00 /dev/sda:0\-7 /dev/sdb:0\-7
 
 Creates a 5GiB RAID5 logical volume "vg00/my_lv", with 3 stripes (plus
-a parity drive for a total of 4 devices) and a stripesize of 64kiB.
+a parity drive for a total of 4 devices) and a stripesize of 64KiB:
 .sp
-.B lvcreate --type raid5 -L 5G -i 3 -I 64 -n my_lv vg00
+.B lvcreate \-\-type raid5 \-L 5G \-i 3 \-I 64 \-n my_lv vg00
 
 Creates 100MiB pool logical volume for thin provisioning
 build with 2 stripes 64KiB and chunk size 128KiB together with
-1TiB thin provisioned logical volume "vg00/thin_lv".
+1TiB thin provisioned logical volume "vg00/thin_lv":
 .sp
-.B lvcreate -i 2 -I 64 -c 256  -L100M -T vg00/pool -V 1T --name thin_lv
+.B lvcreate \-i 2 \-I 64 \-c 256 \-L100M \-T vg00/pool \-V 1T \-\-name thin_lv
 
 .SH SEE ALSO
-.BR lvm (8), 
-.BR vgcreate (8), 
-.BR lvremove (8), 
+.BR lvm (8),
+.BR vgcreate (8),
+.BR lvchange (8),
+.BR lvremove (8),
 .BR lvrename (8)
-.BR lvextend (8), 
-.BR lvreduce (8), 
-.BR lvdisplay (8), 
+.BR lvextend (8),
+.BR lvreduce (8),
+.BR lvdisplay (8),
 .BR lvscan (8)

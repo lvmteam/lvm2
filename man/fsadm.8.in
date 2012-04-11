@@ -14,18 +14,11 @@ fsadm \- utility to resize or check filesystem on a device
 .RI [ new_size [ BKMGTEP ]]
 .sp
 .SH DESCRIPTION
-.B fsadm
-utility checks or resizes the filesystem on a device.
+fsadm utility checks or resizes the filesystem on a device.
 It tries to use the same API for 
-.IR ext2 , ext3 , ext4 , ReiserFS
-and \fIXFS\fP filesystem.
+.IR ext2 ", " ext3 ", " ext4 ", " ReiserFS " and " XFS
+filesystem.
 .SH OPTIONS
-.TP
-.BR \-h ", " \-\-help
-Display the help text.
-.TP
-.BR \-v ", " \-\-verbose
-Be more verbose.
 .TP
 .BR \-e ", " \-\-ext\-offline
 Unmount ext2/ext3/ext4 filesystem before doing resize.
@@ -33,8 +26,14 @@ Unmount ext2/ext3/ext4 filesystem before doing resize.
 .BR \-f ", " \-\-force
 Bypass some sanity checks.
 .TP
+.BR \-h ", " \-\-help
+Display the help text.
+.TP
 .BR \-n ", " \-\-dry\-run
 Print commands without running them.
+.TP
+.BR \-v ", " \-\-verbose
+Be more verbose.
 .TP
 .BR \-y ", " \-\-yes
 Answer "yes" at any prompts.

@@ -3,32 +3,21 @@
 vgrename \- rename a volume group
 .SH SYNOPSIS
 .B vgrename
-[\-A|\-\-autobackup y|n]
-[\-d|\-\-debug]
-[\-h|\-?|\-\-help]
-[\-t|\-\-test]
-[\-v|\-\-verbose]
+.RB [ \-A | \-\-autobackup
+.RI { y | n }]
+.RB [ \-d | \-\-debug ]
+.RB [ \-h | \-? | \-\-help ]
+.RB [ \-t | \-\-test ]
+.RB [ \-v | \-\-verbose ]
 .IR OldVolumeGroup { Path | Name | UUID }
 .IR NewVolumeGroup { Path | Name }
 .SH DESCRIPTION
 vgrename renames an existing (see
-.B vgcreate(8)
-) volume group from
+.BR vgcreate (8))
+volume group from
 .IR OldVolumeGroup { Name | Path | UUID }
 to
 .IR NewVolumeGroup { Name | Path }.
-.SH OPTIONS
-See \fBlvm\fP for common options.
-.SH Examples
-"vgrename /dev/vg02 /dev/my_volume_group" renames existing
-volume group "vg02" to "my_volume_group".
-.TP
-"vgrename vg02 my_volume_group" does the same.
-.TP
-"vgrename Zvlifi-Ep3t-e0Ng-U42h-o0ye-KHu1-nl7Ns4 VolGroup00_tmp"
-changes the name of the Volume Group with UUID
-Zvlifi-Ep3t-e0Ng-U42h-o0ye-KHu1-nl7Ns4 to 
-"VolGroup00_tmp".
 
 All the Volume Groups visible to a system need to have different
 names.  Otherwise many LVM2 commands will refuse to run or give
@@ -41,7 +30,23 @@ not even boot correctly.  However, the two Volume Groups should have
 different UUIDs (unless the disk was cloned) so you can rename
 one of the conflicting Volume Groups with
 \fBvgrename\fP.
-.TP
+.SH OPTIONS
+See \fBlvm\fP(8) for common options.
+.SH Examples
+Renames existing volume group vg02 to my_volume_group:
+.sp
+.B vgrename /dev/vg02 /dev/my_volume_group
+
+or
+.sp
+.B vgrename vg02 my_volume_group
+
+Changes the name of the Volume Group with UUID
+.br
+Zvlifi-Ep3t-e0Ng-U42h-o0ye-KHu1-nl7Ns4 to VolGroup00_tmp:
+.sp
+.B vgrename Zvlifi-Ep3t-e0Ng-U42h-o0ye-KHu1-nl7Ns4 VolGroup00_tmp
+
 .SH SEE ALSO
 .BR lvm (8),
 .BR vgchange (8),

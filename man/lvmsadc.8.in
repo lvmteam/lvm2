@@ -7,8 +7,7 @@ lvmsadc \- LVM system activity data collector
 .B lvmsadc
 
 .SH "DESCRIPTION"
-.B lvmsadc
-is not currently supported under LVM2.
+lvmsadc is not currently supported under LVM2.
 
 .SH "SEE ALSO"
 .BR lvm (8)

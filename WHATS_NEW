@@ -1,5 +1,6 @@
 Version 2.02.96 - 
 ================================
+  Update man pages to give them same look&feel.
   Fix lvresize of thin pool for stipped devices.
   For lvresize round upward when specifying number of extents.
   For lvcreate with %FREE support rounding downward strip alignment.

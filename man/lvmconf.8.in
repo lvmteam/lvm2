@@ -6,15 +6,18 @@
 
 .SH "SYNOPSIS"
 .B lvmconf
-[\-\-disable-cluster]
-[\-\-enable-cluster]
-[\-\-file <configfile>]
-[\-\-lockinglib <lib>]
-[\-\-lockinglibdir <dir>]
+.RB [ \-\-disable-cluster ]
+.RB [ \-\-enable-cluster ]
+.RB [ \-\-file
+.RI < configfile >]
+.RB [ \-\-lockinglib
+.RI < lib >]
+.RB [ \-\-lockinglibdir
+.RI < dir >]
 
 .SH "DESCRIPTION"
-.B lvmconf
-is a script that modifies the locking configuration in an lvm configuration file. See \fBlvm.conf\fP(5).
+lvmconf is a script that modifies the locking configuration in
+an lvm configuration file. See \fBlvm.conf\fP(5).
 
 .SH "OPTIONS"
 .TP
@@ -24,13 +27,14 @@ Set \fBlocking_type\fR to the default non-clustered type.
 .BR \-\-enable-cluster
 Set \fBlocking_type\fR to the default clustered type on this system.
 .TP
-.BR \-\-file " " \fI<configfile>\fR
-Apply the changes to \fBconfigfile\fR instead of the default \fB#DEFAULT_SYS_DIR#/lvm.conf\fR.
+.BR \-\-file " <" \fIconfigfile >
+Apply the changes to \fIconfigfile\fP instead of the default
+\fI#DEFAULT_SYS_DIR#/lvm.conf\fP.
 .TP
-.BR \-\-lockinglib " " \fI<lib>\fR
+.BR \-\-lockinglib " <" \fIlib >
 Set external \fBlocking_library\fR locking library to load if an external locking type is used.
 .TP
-.BR \-\-lockinglibdir " " \fI<dir>\fR
+.BR \-\-lockinglibdir " <" \fIdir >
 .SH FILES
 .I #DEFAULT_SYS_DIR#/lvm.conf
 

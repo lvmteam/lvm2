@@ -13,8 +13,7 @@ pvresize \- resize a disk or partition in use by LVM2
 .I PhysicalVolume 
 .RI [ PhysicalVolume ...]
 .SH DESCRIPTION
-.B pvresize
-resizes
+pvresize resizes
 .I PhysicalVolume
 which may already be in a volume group and have active logical volumes
 allocated on it.
@@ -33,11 +32,10 @@ Shrink the PV on /dev/sda1 prior to shrinking the partition with fdisk
 (ensure that the PV size is appropriate for your intended new partition
 size):
 .sp
-.B pvresize --setphysicalvolumesize 40G /dev/sda1
+.B pvresize \-\-setphysicalvolumesize 40G /dev/sda1
 .sp
 .SH RESTRICTIONS
-.B pvresize
-will refuse to shrink
+pvresize will refuse to shrink
 .I PhysicalVolume
 if it has allocated extents after where its new end would be. In the future,
 it should relocate these elsewhere in the volume group if there is sufficient

@@ -11,29 +11,29 @@ lvscan \- scan (all disks) for Logical Volumes
 .RB [ \-P | \-\-partial ]
 .RB [ \-v | \-\-verbose ]
 .SH DESCRIPTION
-.B lvscan
-scans all known volume groups or all supported LVM block devices
+lvscan scans all known volume groups or all supported LVM block devices
 in the system for defined Logical Volumes.  The output consists
-of one line for each Logical Volume indicating whether or not it is active, 
+of one line for each Logical Volume indicating whether or not it is active,
 a snapshot or origin, the size of the device and its allocation policy.
-Use \fBlvs(8)\fP or \fBlvdisplay(8)\fP to obtain more-comprehensive information 
-about the Logical Volumes.
+Use \fBlvs\fP(8) or \fBlvdisplay\fP(8) to obtain more-comprehensive
+information about the Logical Volumes.
 .SH OPTIONS
-See \fBlvm\fP for common options.
+See \fBlvm\fP(8) for common options.
 .TP
 .BR \-\-all
 Include information in the output about internal Logical Volumes that
 are components of normally-accessible Logical Volumes, such as mirrors,
 but which are not independently accessible (e.g. not mountable).
-For example, after creating a mirror using 'lvcreate -m1 --mirrorlog disk',
+For example, after creating a mirror using
+.B lvcreate \-m1 \-\-mirrorlog disk\fR,
 this option will reveal three internal Logical Volumes, with suffixes
 mimage_0, mimage_1, and mlog.
 .TP
 .BR \-b ", " \-\-blockdevice
-This option is now ignored.  Instead, use \fBlvs(8)\fP or \fBlvdisplay(8)\fP to obtain
-the device number.
+This option is now ignored.  Instead, use \fBlvs\fP(8) or
+\fBlvdisplay\fP(8) to obtain the device number.
 .SH SEE ALSO
-.BR lvm (8), 
+.BR lvm (8),
 .BR lvcreate (8),
 .BR lvdisplay (8)
 .BR lvs (8)

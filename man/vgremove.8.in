@@ -3,9 +3,14 @@
 vgremove \- remove a volume group
 .SH SYNOPSIS
 .B vgremove
-[\-d|\-\-debug] [\-f|\-\-force] [\-h|\-?|\-\-help]
-[\-\-noudevsync] [\-t|\-\-test] [\-v|\-\-verbose]
-VolumeGroupName [VolumeGroupName...]
+.RB [ \-d | \-\-debug ]
+.RB [ \-f | \-\-force ]
+.RB [ \-h | \-? | \-\-help ]
+.RB [ \-\-noudevsync ]
+.RB [ \-t | \-\-test ]
+.RB [ \-v | \-\-verbose ]
+.I VolumeGroupName
+.RI [ VolumeGroupName ...]
 .SH DESCRIPTION
 vgremove allows you to remove one or more volume groups.
 If one or more physical volumes in the volume group are lost,
@@ -16,7 +21,7 @@ If there are logical volumes that exist in the volume group,
 a prompt will be given to confirm removal.  You can override
 the prompt with \fB-f\fP.
 .SH OPTIONS
-See \fBlvm\fP for common options.
+See \fBlvm\fP(8) for common options.
 .TP
 .BR \-f ", " \-\-force
 Force the removal of any logical volumes on the volume group

@@ -3,28 +3,34 @@
 vgreduce \- reduce a volume group
 .SH SYNOPSIS
 .B vgreduce
-[\-a|\-\-all] [\-A|\-\-autobackup y|n] [\-d|\-\-debug] [\-h|\-?|\-\-help]
-[\-\-removemissing]
-[\-t|\-\-test]
-[\-v|\-\-verbose] VolumeGroupName
-[PhysicalVolumePath...]
+.RB [ \-a | \-\-all ]
+.RB [ \-A | \-\-autobackup
+.RI { y | n }]
+.RB [ \-d | \-\-debug ]
+.RB [ \-h | \-? | \-\-help ]
+.RB [ \-\-removemissing ]
+.RB [ \-t | \-\-test ]
+.RB [ \-v | \-\-verbose ]
+.I VolumeGroupName
+.RI [ PhysicalVolumePath ...]
 .SH DESCRIPTION
 vgreduce allows you to remove one or more unused physical volumes
 from a volume group.
 .SH OPTIONS
-See \fBlvm\fP for common options.
+See \fBlvm\fP(8) for common options.
 .TP
-.I \-a, \-\-all
+.BR \-a ", " \-\-all
 Removes all empty physical volumes if none are given on command line.
 .TP
-.I \-\-removemissing
+.B \-\-removemissing
 Removes all missing physical volumes from the volume group, if there are no
 logical volumes allocated on those. This resumes normal operation of the volume
 group (new logical volumes may again be created, changed and so on).
 
 If this is not possible (there are logical volumes referencing the missing
 physical volumes) and you cannot or do not want to remove them manually, you
-can run this option with --force to have vgreduce remove any partial LVs.
+can run this option with \fB--force\fP to have \fBvgreduce\fP
+remove any partial LVs.
 
 Any logical volumes and dependent snapshots that were partly on the 
 missing disks get removed completely. This includes those parts 
@@ -32,7 +38,7 @@ that lie on disks that are still present.
 
 If your logical volumes spanned several disks including the ones that are
 lost, you might want to try to salvage data first by activating your
-logical volumes with --partial as described in \fBlvm (8)\fP.
+logical volumes with \fB--partial\fP as described in \fBlvm\fP(8).
 
 .SH SEE ALSO
 .BR lvm (8),

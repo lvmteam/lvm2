@@ -14,9 +14,8 @@ pvremove \- remove a physical volume
 .I PhysicalVolume
 .RI [ PhysicalVolume ...]
 .SH DESCRIPTION
-.B pvremove
-wipes the label on a device so that LVM will no longer recognise it
-as a physical volume.
+pvremove wipes the label on a device so that LVM will no longer
+recognise it as a physical volume.
 .SH OPTIONS
 See \fBlvm\fP(8) for common options.
 .TP

@@ -3,100 +3,114 @@
 lvextend \- extend the size of a logical volume
 .SH SYNOPSIS
 .B lvextend
-[\-\-alloc AllocationPolicy]
-[\-A|\-\-autobackup y|n] [\-d|\-\-debug] [\-h|\-?|\-\-help]
-[\-\-noudevsync]
-[\-i|\-\-stripes Stripes [\-I|\-\-stripesize StripeSize]]
-{\-l|\-\-extents [+]LogicalExtentsNumber[%{VG|LV|PVS|FREE|ORIGIN}] |
-\-L|\-\-size [+]LogicalVolumeSize[bBsSkKmMgGtTpPeE]}
-[\-f|\-\-force]
-[\-n|\-\-nofsck]
-[\-r|\-\-resizefs]
-[\-t|\-\-test]
-[\-v|\-\-verbose] LogicalVolumePath [PhysicalVolumePath[:PE[-PE]]...]
+.RB [ \-\-alloc
+.IR AllocationPolicy ]
+.RB [ \-A | \-\-autobackup
+.RI { y | n }]
+.RB [ \-d | \-\-debug ]
+.RB [ \-h | \-? | \-\-help ]
+.RB [ \-\-noudevsync]
+.RB [ \-i | \-\-stripes
+.I Stripes
+.RB [ \-I | \-\-stripesize
+.IR StripeSize ]]
+.RB { \-l | \-\-extents
+.RI [ + ] LogicalExtentsNumber [ % { VG | LV | PVS | FREE | ORIGIN }]
+|
+.BR \-L | \-\-size
+.RI [ + ] LogicalVolumeSize [ bBsSkKmMgGtTpPeE ]}
+.RB [ \-f | \-\-force ]
+.RB [ \-n | \-\-nofsck ]
+.RB [ \-r | \-\-resizefs ]
+.RB [ \-t | \-\-test ]
+.RB [ \-v | \-\-verbose ]
+.I LogicalVolumePath
+.RI [ PhysicalVolumePath [ :PE [ -PE ]]...]
 .SH DESCRIPTION
 lvextend allows you to extend the size of a logical volume.
 Extension of snapshot logical volumes (see
-.B lvcreate(8)
+.BR lvcreate (8)
 for information to create snapshots) is supported as well.
 But to change the number of copies in a mirrored logical
-volume use 
+volume use
 .BR lvconvert (8).
 .SH OPTIONS
-See \fBlvm\fP for common options.
+See \fBlvm\fP(8) for common options.
 .TP
-.I \-\-noudevsync
+.B \-\-noudevsync
 Disable udev synchronisation. The
 process will not wait for notification from udev.
 It will continue irrespective of any possible udev processing
 in the background.  You should only use this if udev is not running
 or has rules that ignore the devices LVM2 creates.
 .TP
-.I \-l, \-\-extents [+]LogicalExtentsNumber[%{VG|LV|PVS|FREE|ORIGIN}]
+.IR \fB\-l ", " \fB\-\-extents " [" + ] LogicalExtentsNumber [ % { VG | LV | PVS | FREE | ORIGIN }]
 Extend or set the logical volume size in units of logical extents.
-With the + sign the value is added to the actual size
+With the '\fI+\fP' sign the value is added to the actual size
 of the logical volume and without it, the value is taken as an absolute one.
 The number can also be expressed as a percentage of the total space
-in the Volume Group with the suffix %VG, relative to the existing
-size of the Logical Volume with the suffix %LV, of the remaining
-free space for the specified PhysicalVolume(s) with the suffix %PVS,
+in the Volume Group with the suffix \fI%VG\fP, relative to the existing
+size of the Logical Volume with the suffix \fI%LV\fP, of the remaining
+free space for the specified PhysicalVolume(s) with the suffix \fI%PVS\fP,
 as a percentage of the remaining free space in the Volume Group
-with the suffix %FREE, or (for a snapshot) as a percentage of the total
-space in the Origin Logical Volume with the suffix %ORIGIN.
+with the suffix \fI%FREE\fP, or (for a snapshot) as a percentage of the total
+space in the Origin Logical Volume with the suffix \fI%ORIGIN\fP.
 The resulting value is rounded upward.
 .TP
-.I \-L, \-\-size [+]LogicalVolumeSize[bBsSkKmMgGtTpPeE]
+.IR \fB\-L ", " \fB\-\-size " [" + ] LogicalVolumeSize [ bBsSkKmMgGtTpPeE ]
 Extend or set the logical volume size in units of megabytes.
 A size suffix of M for megabytes,
-G for gigabytes, T for terabytes, P for petabytes 
+G for gigabytes, T for terabytes, P for petabytes
 or E for exabytes is optional.
 With the + sign the value is added to the actual size
 of the logical volume and without it, the value is taken as an absolute one.
 .TP
-.I \-i, \-\-stripes Stripes
+.BR \-i ", " \-\-stripes " " \fIStripes
 Gives the number of stripes for the extension.
 Not applicable to LVs using the original metadata LVM format, which must
 use a single value throughout.
 .TP
-.I \-I, \-\-stripesize StripeSize
+.BR \-I ", " \-\-stripesize " " \fIStripeSize
 Gives the number of kilobytes for the granularity of the stripes.
 Not applicable to LVs using the original metadata LVM format, which must
 use a single value throughout.
 .br
 StripeSize must be 2^n (n = 2 to 9)
 .TP
-.I \-f, \-\-force
+.BR \-f ", " \-\-force
 Proceed with size extension without prompting.
 .TP
-.I \-n, \-\-nofsck
+.BR \-n ", " \-\-nofsck
 Do not perform fsck before extending filesystem when filesystem
-requires it. You may need to use \fB--force\fR to proceed with 
+requires it. You may need to use \fB\-\-force\fR to proceed with
 this option.
 .TP
-.I \-r, \-\-resizefs
-Resize underlying filesystem together with the logical volume using 
+.BR \-r ", " \-\-resizefs
+Resize underlying filesystem together with the logical volume using
 \fBfsadm\fR(8).
 .SH Examples
-"lvextend -L +54 /dev/vg01/lvol10 /dev/sdk3" tries to extend the size of
-that logical volume by 54MB on physical volume /dev/sdk3.
-This is only possible if /dev/sdk3 is a member of volume group vg01 and
-there are enough free physical extents in it.
+Extends the size of the logical volume "vg01/lvol10" by 54MiB on physical
+volume /dev/sdk3. This is only possible if /dev/sdk3 is a member of
+volume group vg01 and there are enough free physical extents in it:
+.sp
+.B lvextend -L +54 /dev/vg01/lvol10 /dev/sdk3
 
-"lvextend /dev/vg01/lvol01 /dev/sdk3" tries to extend the size of that
-logical volume by the amount of free space on physical volume /dev/sdk3.
-This is equivalent to specifying "-l +100%PVS" on the command line.
+Extends the size of logical volume "vg01/lvol01" by the amount of free
+space on physical volume /dev/sdk3. This is equivalent to specifying
+"-l +100%PVS" on the command line:
+.sp
+.B lvextend /dev/vg01/lvol01 /dev/sdk3
 
-.br
-"lvextend -L+16M vg01/lvol01 /dev/sda:8-9 /dev/sdb:8-9"
-.br
-tries to extend a logical volume "vg01/lvol01" by 16MB using physical extents
-/dev/sda:8-9 and /dev/sdb:8-9 for allocation of extents.
+Extends a logical volume "vg01/lvol01" by 16MiB using physical extents
+/dev/sda:8-9 and /dev/sdb:8-9 for allocation of extents:
+.sp
+.B lvextend -L+16M vg01/lvol01 /dev/sda:8-9 /dev/sdb:8-9
 
 .SH SEE ALSO
 .BR fsadm (8),
-.BR lvm (8), 
-.BR lvcreate (8), 
-.BR lvconvert (8), 
-.BR lvreduce (8), 
-.BR lvresize (8), 
+.BR lvm (8),
+.BR lvcreate (8),
+.BR lvconvert (8),
+.BR lvreduce (8),
+.BR lvresize (8),
 .BR lvchange (8)

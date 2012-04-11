@@ -5,8 +5,10 @@ vgsplit \- split a volume group into two
 .B vgsplit
 .RB [ \-\-alloc
 .IR AllocationPolicy ]
-.RB [ \-A | \-\-autobackup " {" y | n }]
-.RB [ \-c | \-\-clustered " {" y | n }]
+.RB [ \-A | \-\-autobackup
+.RI { y | n }]
+.RB [ \-c | \-\-clustered
+.RI { y | n }]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-\-help ]
 .RB [ \-l | \-\-maxlogicalvolumes
@@ -15,35 +17,36 @@ vgsplit \- split a volume group into two
 .IR type ]
 .RB [ -p | \-\-maxphysicalvolumes
 .IR MaxPhysicalVolumes ]
-.RB [ \-\-[vg]metadatacopies ]
-.IR NumberOfCopies|unmanaged|all ]
-.RB [ \-n | \-\-name 
+.RB [ \-\- [ vg ] metadatacopies
+.IR NumberOfCopies | unmanaged | all ]
+.RB [ \-n | \-\-name
 .IR LogicalVolumeName ]
 .RB [ \-t | \-\-test ]
 .RB [ \-v | \-\-verbose ]
-SourceVolumeGroupName DestinationVolumeGroupName
-[ PhysicalVolumePath ...]
+.I SourceVolumeGroupName DestinationVolumeGroupName
+.RI [ PhysicalVolumePath ...]
 .SH DESCRIPTION
-.B vgsplit 
-moves one or more physical volumes from
-.I SourceVolumeGroupName
-into
-.I DestinationVolumeGroupName\fP.  The physical volumes moved can be
-specified either explicitly via \fIPhysicalVolumePath\fP, or implicitly by
-\fB-n\fP \fILogicalVolumeName\fP, in which case only physical volumes
+vgsplit moves one or more physical volumes from
+\fISourceVolumeGroupName\fP into \fIDestinationVolumeGroupName\fP.
+The physical volumes moved can be specified either explicitly via
+\fIPhysicalVolumePath\fP, or implicitly by \fB\-n\fP
+\fILogicalVolumeName\fP, in which case only physical volumes
 underlying the specified logical volume will be moved.
 
-If
-.I DestinationVolumeGroupName
-does not exist, a new volume group will be created.  The default attributes
-for the new volume group can be specified with \fB\-\-alloc\fR,
-\fB\-\-clustered\fR, \fB\-\-maxlogicalvolumes\fR, \fB\-\-metadatatype\fR,
-\fB\-\-maxphysicalvolumes\fR and \fB\-\-[vg]metadatacopies\fR,
-(see \fBvgcreate(8)\fR for a description of these options).  If any
+If \fIDestinationVolumeGroupName\fP does not exist, a new volume
+group will be created.  The default attributes
+for the new volume group can be specified with
+.BR \-\-alloc ,
+.BR \-\-clustered ,
+.BR \-\-maxlogicalvolumes ,
+.BR \-\-metadatatype ,
+.B \-\-maxphysicalvolumes \fRand
+.BR \-\- [ vg ] metadatacopies
+(see \fBvgcreate\fP(8) for a description of these options).  If any
 of these options are not given, default attribute(s) are taken from
-.I SourceVolumeGroupName\fP.  If a non-LVM2 metadata type (e.g. lvm1) is
-being used, you should use the -M option to specify the metadata type
-directly.
+\fISourceVolumeGroupName\fP. If a non-LVM2 metadata type (e.g. lvm1) is
+being used, you should use the \fB\-M\fP option to specify the metadata
+type directly.
 
 If
 .I DestinationVolumeGroupName
@@ -53,20 +56,20 @@ before the physical volumes are moved. Specifying any of the above default
 volume group attributes with an existing destination volume group is an error,
 and no split will occur.
 
-Logical volumes cannot be split between volume groups. \fBVgsplit(8)\fP only
+Logical volumes cannot be split between volume groups. \fBvgsplit\fP(8) only
 moves complete physical volumes: To move part of a physical volume, use
-\fBpvmove(8)\fP.  Each existing logical volume must be entirely on the physical
+\fBpvmove\fP(8).  Each existing logical volume must be entirely on the physical
 volumes forming either the source or the destination volume group.  For this
-reason, \fBvgsplit(8)\fP may fail with an error if a split would result in a
+reason, \fBvgsplit\fP(8) may fail with an error if a split would result in a
 logical volume being split across volume groups.
 
-A \fBvgsplit\fP into an existing volume group retains the existing volume group's
-value of \fPvgmetadatacopies\fP (see \fBvgcreate\fP and \fBlvm.conf\fP for further
+A vgsplit into an existing volume group retains the existing volume group's
+value of \fPvgmetadatacopies\fP (see \fBvgcreate\fP(8) and \fBlvm.conf\fP(5) for further
 explanation of \fPvgmetadatacopies\fP).  To change the value of
-\fBvgmetadatacopies\fP, use \fBvgchange\fP.
+\fBvgmetadatacopies\fP, use \fBvgchange\fP(8).
 
 .SH OPTIONS
-See \fBlvm\fP for common options.
+See \fBlvm\fP(8) for common options.
 .SH SEE ALSO
 .BR lvm (8),
 .BR vgcreate (8),

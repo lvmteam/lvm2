@@ -5,6 +5,6 @@ lvmchange \- change attributes of the logical volume manager
 .B lvmchange
 .SH DESCRIPTION
 lvmchange is not currently supported under LVM2, although
-\fBdmsetup (8)\fP has a \fBremove_all\fP command.
+\fBdmsetup\fP(8) has a \fBremove_all\fP command.
 .SH SEE ALSO
 .BR dmsetup (8)

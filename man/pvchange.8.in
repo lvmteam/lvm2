@@ -3,40 +3,51 @@
 pvchange \- change attributes of a physical volume
 .SH SYNOPSIS
 .B pvchange
-[\-\-addtag Tag]
-[\-A|\-\-autobackup y|n] [\-d|\-\-debug] 
-[\-f|\-\-force]
-[\-\-deltag Tag]
-[\-\-metadataignore y|n]
-[\-h|\-?|\-\-help]
-[\-t|\-\-test]
-[\-v|\-\-verbose] [\-a|\-\-all] [\-x|\-\-allocatable y|n]
-[\-u|\-\-uuid] [PhysicalVolumePath...]
+.RB [ \-\-addtag
+.IR Tag ]
+.RB [ \-A | \-\-autobackup
+.RI { y | n }]
+.RB [ \-d | \-\-debug ]
+.RB [ \-f | \-\-force ]
+.RB [ \-\-deltag
+.IR Tag ]
+.RB [ \-\-metadataignore
+.RI { y | n }]
+.RB [ \-h | \-? | \-\-help ]
+.RB [ \-t | \-\-test ]
+.RB [ \-v | \-\-verbose ]
+.RB [ \-a | \-\-all ]
+.RB [ \-x | \-\-allocatable
+.RI { y | n }]
+.RB [ \-u | \-\-uuid ]
+.RI [ PhysicalVolumePath ...]
 .SH DESCRIPTION
 pvchange allows you to change the allocation permissions of one or
 more physical volumes.
 .SH OPTIONS
-See \fBlvm\fP for common options.
+See \fBlvm\fP(8) for common options.
 .TP
-.I \-a, \-\-all
+.BR \-a ", " \-\-all
 If PhysicalVolumePath is not specified on the command line all
 physical volumes are searched for and used.
 .TP
-.I \-\-metadataignore " y|n"
+.BR \-\-metadataignore " {" \fIy | \fIn }
 Ignore or un-ignore metadata areas on this physical volume.
 If metadata areas on a physical volume are ignored, LVM will
 not not store metadata in the metadata areas present on this Physical
 Volume.
 .TP
-.I \-u, \-\-uuid
+.BR \-u ", " \-\-uuid
 Generate new random UUID for specified physical volumes.
 .TP
-.I \-x, \-\-allocatable y|n
+.BR \-x ", " \-\-allocatable " {" \fIy | \fIn }
 Enable or disable allocation of physical extents on this physical volume.
 .SH Example
-"pvchange -x n /dev/sdk1" disallows the allocation of physical extents
-on this physical volume (possibly because of disk errors, or because it will
-be removed after freeing it.
+Disallows the allocation of physical extents on this physical volume
+(possibly because of disk errors, or because it will be removed after
+freeing it:
+.sp
+.B pvchange -x n /dev/sdk1
 .SH SEE ALSO
 .BR lvm (8),
 .BR pvcreate (8)

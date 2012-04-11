@@ -3,48 +3,61 @@
 pvdisplay \- display attributes of a physical volume
 .SH SYNOPSIS
 .B pvdisplay
-[\-c|\-\-colon]
-[\-d|\-\-debug] [\-h|\-?|\-\-help]
-[\-\-ignorelockingfailure]
-[\-\-maps]
-[\-\-nosuffix]
-[\-s|\-\-short]
-[\-\-units hsbkmgtHKMGT]
-[\-v[v]|\-\-verbose [\-\-verbose]]
-[\-\-version]
-[PhysicalVolumePath [PhysicalVolumePath...]]
+.RB [ \-c | \-\-colon ]
+.RB [ \-d | \-\-debug ]
+.RB [ \-h | \-? | \-\-help ]
+.RB [ \-\-ignorelockingfailure ]
+.RB [ \-\-maps ]
+.RB [ \-\-nosuffix ]
+.RB [ \-s | \-\-short ]
+.RB [ \-\-units
+.IR hsbkmgtHKMGT ]
+.RB [ \-v [ v ]| \-\-verbose
+.RB [ \-\-verbose ]]
+.RB [ \-\-version ]
+.RI [ PhysicalVolumePath
+.RI [ PhysicalVolumePath ...]]
 .br
 
 .br
-.B pvdisplay \-\-columns | \-C
-[\-\-aligned]
-[\-a|\-\-all]
-[\-d|\-\-debug] [\-h|\-?|\-\-help]
-[\-\-ignorelockingfailure]
-[\-\-noheadings]
-[\-\-nosuffix]
-[\-o|\-\-options [+]Field[,Field]]
-[\-O|\-\-sort [+|-]Key1[,[+|-]Key2[,...]]]
-[\-\-separator Separator]
-[\-\-unbuffered]
-[\-\-units hHbBsSkKmMgGtTpPeE]
-[\-v[v]|\-\-verbose [\-\-verbose]]
-[\-\-version]
-[PhysicalVolumePath [PhysicalVolumePath...]]
+.B pvdisplay
+.BR \-\-columns | \-C
+.RB [ \-\-aligned ]
+.RB [ \-a | \-\-all ]
+.RB [ \-d | \-\-debug ]
+.RB [ \-h | \-? | \-\-help ]
+.RB [ \-\-ignorelockingfailure ]
+.RB [ \-\-noheadings ]
+.RB [ \-\-nosuffix ]
+.RB [ \-o | \-\-options
+.RI [ + ] Field [ ,Field ...]]
+.RB [ \-O | \-\-sort
+.RI [ + | \- ] Key1 [ , [ + | \- ] Key2 ...
+.RI ]]
+.RB [ \-\-separator
+.IR Separator ]
+.RB [ \-\-unbuffered ]
+.RB [ \-\-units
+.IR hHbBsSkKmMgGtTpPeE ]
+.RB [ \-v [ v ]| \-\-verbose
+.RB [ \-\-verbose ]]
+.RB [ \-\-version ]
+.RI [ PhysicalVolumePath
+.RI [ PhysicalVolumePath ...]]
 .SH DESCRIPTION
 pvdisplay allows you to see the attributes of one or more physical volumes
 like size, physical extent size, space used for the volume group descriptor
 area and so on.
 .P
-\fBpvs\fP (8) is an alternative that provides the same information 
-in the style of \fBps\fP (1).
+\fBpvs\fP(8) is an alternative that provides the same information 
+in the style of \fBps\fP(1).
 .SH OPTIONS
 See \fBlvm\fP for common options and \fBpvs\fP for options given with
 \fB\-\-columns\fP.
 .TP
-.I \-c, \-\-colon
+.BR \-c ", " \-\-colon
 Generate colon separated output for easier parsing in scripts or programs.
-N.B. \fBpvs\fP (8) provides considerably more control over the output.
+N.B. \fBpvs\fP(8) provides considerably more control over the output.
 .nf
 
 The values are:
@@ -63,16 +76,16 @@ The values are:
 
 .fi
 .TP
-.I \-s, \-\-short
+.BR \-s ", " \-\-short
 Only display the size of the given physical volumes.
 .TP
-.I \-m, \-\-maps
+.BR \-m ", " \-\-maps
 Display the mapping of physical extents to logical volumes and
 logical extents.
 .TP
-.I \-\-columns | \-C
-Display output in columns, the equivalent of \fBpvs\fP (8).  See
-\fBpvs (8)\fP for a description of other options with this form of
+.BR \-\-columns ", " \-C
+Display output in columns, the equivalent of \fBpvs\fP(8).  See
+\fBpvs\fP(8) for a description of other options with this form of
 \fBpvdisplay\fP.
 .SH SEE ALSO
 .BR lvm (8),

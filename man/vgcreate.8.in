@@ -5,79 +5,83 @@ vgcreate \- create a volume group
 .B vgcreate
 .RB [ \-\-addtag
 .IR Tag ]
-.RB [ \-\-alloc 
+.RB [ \-\-alloc
 .IR AllocationPolicy ]
-.RB [ \-A | \-\-autobackup " {" y | n }]
-.RB [ \-c | \-\-clustered " {" y | n }]
+.RB [ \-A | \-\-autobackup
+.RI { y | n }]
+.RB [ \-c | \-\-clustered
+.RI { y | n }]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-\-help ]
 .RB [ \-l | \-\-maxlogicalvolumes
 .IR MaxLogicalVolumes ]
-.RB [ -M | \-\-metadatatype type]
+.RB [ -M | \-\-metadatatype
+.IR type ]
 .RB [ -p | \-\-maxphysicalvolumes
 .IR MaxPhysicalVolumes ]
-.RB [ \-\-[vg]metadatacopies ]
-.IR NumberOfCopies|unmanaged|all ]
+.RB [ \-\- [ vg ] metadatacopies
+.IR NumberOfCopies | unmanaged | all ]
 .RB [ \-s | \-\-physicalextentsize
-.IR PhysicalExtentSize [ \fBbBsSkKmMgGtTpPeE\fR ]]
+.IR PhysicalExtentSize [ bBsSkKmMgGtTpPeE ]]
 .RB [ \-t | \-\-test ]
 .RB [ \-v | \-\-verbose ]
 .RB [ \-\-version ]
-[ \fIPHYSICAL DEVICE OPTIONS\fP ]
+.RB [ "PHYSICAL DEVICE OPTIONS" ]
 .I VolumeGroupName PhysicalDevicePath
 .RI [ PhysicalDevicePath ...]
 .SH DESCRIPTION
-.B vgcreate
-creates a new volume group called
+vgcreate creates a new volume group called
 .I VolumeGroupName
 using the block special device \fIPhysicalDevicePath\fP.
 .sp
 If \fIPhysicalDevicePath\fP was not previously configured for LVM with
-\fBpvcreate (8)\fP, the device will be initialized with the same
-default values used with \fBpvcreate\fP.  If non-default
+\fBpvcreate\fP(8), the device will be initialized with the same
+default values used with \fBpvcreate\fP(8).  If non-default
 \fPpvcreate\fP values are desired, they may be given on the
-commandline with the same options as \fPpvcreate\fP.  See
-\fBPHYSICAL DEVICE OPTIONS\fP for available options.  Note
-that the restore-related options such as --restorefile, --uuid,
-and --physicalvolumesize are not available.  If a restore operation
-is needed, use \fBpvcreate (8)\fP and \fBvgcfgrestore (8)\fP.
+commandline with the same options as \fBpvcreate\fP(8).  See
+.B PHYSICAL DEVICE OPTIONS
+for available options.  Note that the restore-related options such as
+.BR \-\-restorefile ", " \-\-uuid " and " \-\-physicalvolumesize
+are not available.  If a restore operation is needed, use 
+\fBpvcreate\fP(8) and \fBvgcfgrestore\fP(8).
 .SH OPTIONS
-See \fBlvm\fP for common options.
+See \fBlvm\fP(8) for common options.
 .TP
-.BR \-c ", " \-\-clustered " " { y | n }
-If clustered locking is enabled, this defaults to \fBy\fP indicating that 
+.BR \-c ", " \-\-clustered " {" \fIy | \fIn }
+If clustered locking is enabled, this defaults to \fBy\fP indicating that
 this Volume Group is shared with other nodes in the cluster.
 
-If the new Volume Group contains only local disks that are not visible 
+If the new Volume Group contains only local disks that are not visible
 on the other nodes, you must specify \fB\-\-clustered\ n\fP.
 If the cluster infrastructure is unavailable on a particular node at a
 particular time, you may still be able to use such Volume Groups.
 .TP
-.BR \-l ", " \-\-maxlogicalvolumes " " \fIMaxLogicalVolumes\fR
+.BR \-l ", " \-\-maxlogicalvolumes " " \fIMaxLogicalVolumes
 Sets the maximum number of logical volumes allowed in this
-volume group. 
-The setting can be changed with \fBvgchange\fP.
+volume group.
+The setting can be changed with \fBvgchange\fP(8).
 For volume groups with metadata in lvm1 format, the limit
-and default value is 255.  
+and default value is 255.
 If the metadata uses lvm2 format, the default value is 0
 which removes this restriction: there is then no limit.
 .TP
-.BR \-p ", " \-\-maxphysicalvolumes " " \fIMaxPhysicalVolumes\fR
+.BR \-p ", " \-\-maxphysicalvolumes " " \fIMaxPhysicalVolumes
 Sets the maximum number of physical volumes that can belong
 to this volume group.
 The setting can be changed with \fBvgchange\fP.
 For volume groups with metadata in lvm1 format, the limit
-and default value is 255.  
+and default value is 255.
 If the metadata uses lvm2 format, the value 0 removes this restriction:
 there is then no limit.  If you have a large number of physical volumes in
 a volume group with metadata in lvm2 format, for tool performance reasons,
-you should consider some use of \fB--pvmetadatacopies 0\fP as described in
-\fBpvcreate(8)\fP, and/or use \fB--vgmetadatacopies\fP.
+you should consider some use of \fB\-\-pvmetadatacopies 0\fP as described in
+\fBpvcreate\fP(8), and/or use \fB\-\-vgmetadatacopies\fP.
 .TP
-.BR \-\-vgmetadatacopies " " \fINumberOfCopies|unmanaged|all\fP
+.BR \-\- [ vg ] metadatacopies " " \fINumberOfCopies | \fIunmanaged | \fIall
 Sets the desired number of metadata copies in the volume group.  If set to
 a non-zero value, LVM will automatically manage the 'metadataignore'
-flags on the physical volumes (see \fBpvcreate\fP or \fBpvchange\fP --metadataignore\fP) in order
+flags on the physical volumes (see \fBpvcreate\fP(8) or
+\fBpvchange \-\-metadataignore\fP) in order
 to achieve \fINumberOfCopies\fP copies of metadata.  If set to \fIunmanaged\fP,
 LVM will not automatically manage the 'metadataignore' flags.  If set to
 \fIall\fP, LVM will first clear all of the 'metadataignore' flags on all
@@ -87,56 +91,53 @@ large numbers of physical volumes with metadata as it may be used to
 minimize metadata read and write overhead.
 The default value is \fIunmanaged\fP.
 .TP
-.BR \-s ", " \-\-physicalextentsize " " \fIPhysicalExtentSize\fR[\fBbBsSkKmMgGtTpPeE\fR]
+.BR \-s ", " \-\-physicalextentsize " " \fIPhysicalExtentSize [ \fIbBsSkKmMgGtTpPeE ]
 Sets the physical extent size on physical volumes of this volume group.
 A size suffix (k for kilobytes up to t for terabytes) is optional, megabytes
-is the default if no suffix is present.  
-The default is 4 MB and it must be at least 1 KB and a power of 2.
+is the default if no suffix is present.
+The default is 4 MiB and it must be at least 1 KiB and a power of 2.
 
 Once this value has been set, it is difficult to change it without recreating
-the volume group which would involve backing up and restoring data on any 
+the volume group which would involve backing up and restoring data on any
 logical volumes.  However, if no extents need moving for the new
-value to apply, it can be altered using vgchange \-s.
+value to apply, it can be altered using \fBvgchange \-s\fP.
 
 If the volume group metadata uses lvm1 format, extents can vary in size from
-8KB to 16GB and there is a limit of 65534 extents in each logical volume.  The
-default of 4 MB leads to a maximum logical volume size of around 256GB.  
+8KiB to 16GiB and there is a limit of 65534 extents in each logical volume.  The
+default of 4 MiB leads to a maximum logical volume size of around 256GiB.
 
 If the volume group metadata uses lvm2 format those restrictions do not apply,
 but having a large number of extents will slow down the tools but have no
-impact on I/O performance to the logical volume.  The smallest PE is 1KB.
+impact on I/O performance to the logical volume.  The smallest PE is 1KiB
 
-The 2.4 kernel has a limitation of 2TB per block device.
+The 2.4 kernel has a limitation of 2TiB per block device.
+
 .SH PHYSICAL DEVICE OPTIONS
 The following options are available for initializing physical devices in the
-volume group.  These options are further described in the pvcreate man page.
+volume group.  These options are further described in the \fBpvcreate\fP(8)
+man page.
 .TP
 .BR \-f ", " \-\-force
 .TP
 .BR \-y ", " \-\-yes
 .TP
-.BR \-Z ", " \-\-zero " y|n"
+.BR \-Z ", " \-\-zero " {" \fIy | \fIn }
 .TP
-.BR \-\-labelsector " sector"
+.B \-\-labelsector \fIsector
 .TP
-.BR \-\-metadatasize " size"
+.B \-\-metadatasize \fIsize
 .TP
-.BR \-\-pvmetadatacopies " copies"
+.B \-\-pvmetadatacopies \fIcopies
 .TP
-.BR \-\-dataalignment " alignment"
+.B \-\-dataalignment \fIalignment
 .TP
-.BR \-\-dataalignmentoffset " alignment_offset"
-.SH EXAMPLES
-To create a volume group named
-.B test_vg 
-using physical volumes
-.BR /dev/sdk1 ", and " /dev/sdl1
-with default physical extent size of 4MB:
-.nf
+.B \-\-dataalignmentoffset \fIalignment_offset
+.SH Examples
+Creates a volume group named "test_vg" using physical volumes "/dev/sdk1"
+and "/dev/sdl1" with default physical extent size of 4MiB:
+.sp
+.B vgcreate test_vg /dev/sdk1 /dev/sdl1
 
-\	vgcreate test_vg /dev/sdk1 /dev/sdl1
-
-.fi
 .SH SEE ALSO
 .BR lvm (8),
 .BR pvdisplay (8),

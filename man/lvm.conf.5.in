@@ -4,35 +4,35 @@ lvm.conf \- Configuration file for LVM2
 .SH SYNOPSIS
 .B #DEFAULT_SYS_DIR#/lvm.conf
 .SH DESCRIPTION
-lvm.conf is loaded during the initialisation phase of 
-\fBlvm\fP (8).  This file can in turn lead to other files
+lvm.conf is loaded during the initialisation phase of
+\fBlvm\fP(8).  This file can in turn lead to other files
 being loaded - settings read in later override earlier
-settings.  File timestamps are checked between commands and if 
-any have changed, all the files are reloaded.  
+settings.  File timestamps are checked between commands and if
+any have changed, all the files are reloaded.
 .LP
 Use \fBlvm dumpconfig\fP to check what settings are in use.
 .SH SYNTAX
 .LP
 This section describes the configuration file syntax.
 .LP
-Whitespace is not significant unless it is within quotes. 
+Whitespace is not significant unless it is within quotes.
 This provides a wide choice of acceptable indentation styles.
 Comments begin with # and continue to the end of the line.
 They are treated as whitespace.
 .LP
 Here is an informal grammar:
 .TP
-\fBfile = value*\fP
+.BR file " = " value *
 .br
 A configuration file consists of a set of values.
 .TP
-\fBvalue = section | assignment\fP
+.BR value " = " section " | " assignment
 .br
 A value can either be a new section, or an assignment.
 .TP
-\fBsection = identifier '{' value* '}'\fP
+.BR section " = " identifier " '" { "' " value "* '" } '
 .br
-A section is groups associated values together.  
+A section is groups associated values together.
 .br
 It is denoted by a name and delimited by curly brackets.
 .br
@@ -42,27 +42,27 @@ e.g.	backup {
 .br
 	}
 .TP
-\fBassignment = identifier '=' (array | type)\fP
+.BR assignment " = " identifier " '" = "' ( " array " | " type " )"
 .br
 An assignment associates a type with an identifier.
 .br
 e.g.	max_archives = 42
 .br
 .TP
-\fBarray = '[' (type ',')* type ']' | '[' ']'\fP
+.BR array " =  '" [ "' ( " type " '" , "')* " type " '" ] "' | '" [ "' '" ] '
 .br
-Inhomogeneous arrays are supported. 
+Inhomogeneous arrays are supported.
 .br
-Elements must be separated by commas.  
+Elements must be separated by commas.
 .br
 An empty array is acceptable.
 .TP
-\fBtype = integer | float | string\fP
-\fBinteger = [0-9]*\fP
+.BR type " = " integer " | " float " | " string
+.BR integer " = [0-9]*"
 .br
-\fBfloat = [0-9]*\.[0-9]*\fP
+.BR float " = [0-9]*'" . '[0-9]*
 .br
-\fBstring = '"' .* '"'\fP
+.B string \fR= '\fB"\fR'.*'\fB"\fR'
 .IP
 Strings must be enclosed in double quotes.
 
@@ -73,10 +73,10 @@ The sections that may be present in the file are:
 \fBdevices\fP \(em Device settings
 .IP
 \fBdir\fP \(em Directory in which to create volume group device nodes.
-Defaults to "/dev".  Commands also accept this as a prefix on volume 
+Defaults to "/dev".  Commands also accept this as a prefix on volume
 group names.
 .IP
-\fBscan\fP \(em List of directories to scan recursively for 
+\fBscan\fP \(em List of directories to scan recursively for
 LVM physical volumes.
 Devices in directories outside this hierarchy will be ignored.
 Defaults to "/dev".
@@ -102,35 +102,35 @@ in /dev), if the first matching pattern in the list for any of the names is an
 pattern in the list for any of the names is an \fBr\fP pattern it is rejected;
 otherwise it is accepted.  As an example, to ignore /dev/cdrom you could use:
 .br
-\fBdevices { filter=["r|cdrom|"] }\fP 
+\fBdevices { filter=["r|cdrom|"] }\fP
 .IP
 \fBcache_dir\fP \(em Persistent filter cache file directory.
 Defaults to "#DEFAULT_CACHE_DIR#".
 .IP
-\fBwrite_cache_state\fP \(em Set to 0 to disable the writing out of the 
+\fBwrite_cache_state\fP \(em Set to 0 to disable the writing out of the
 persistent filter cache file when \fBlvm\fP exits.
 Defaults to 1.
 .IP
 \fBtypes\fP \(em List of pairs of additional acceptable block device types
 found in /proc/devices together with maximum (non-zero) number of
-partitions (normally 16).  By default, LVM2 supports ide, sd, md, loop, 
+partitions (normally 16).  By default, LVM2 supports ide, sd, md, loop,
 dasd, dac960, nbd, ida, cciss, ubd, ataraid, drbd, power2, i2o_block
 and iseries/vd.  Block devices with major
-numbers of different types are ignored by LVM2.  
+numbers of different types are ignored by LVM2.
 Example: \fBtypes = ["fd", 16]\fP.
 To create physical volumes on device-mapper volumes
 created outside LVM2, perhaps encrypted ones from \fBcryptsetup\fP,
 you'll need \fBtypes = ["device-mapper", 16]\fP.  But if you do this,
-be careful to avoid recursion within LVM2.  The figure for number 
+be careful to avoid recursion within LVM2.  The figure for number
 of partitions is not currently used in LVM2 - and might never be.
 .IP
-\fBsysfs_scan\fP \(em If set to 1 and your kernel supports sysfs and 
+\fBsysfs_scan\fP \(em If set to 1 and your kernel supports sysfs and
 it is mounted, sysfs will be used as a quick way of filtering out
 block devices that are not present.
 .IP
 \fBmd_component_detection\fP \(em If set to 1, LVM2 will ignore devices
 used as components of software RAID (md) devices by looking for md
-superblocks. This doesn't always work satisfactorily e.g. if a device 
+superblocks. This doesn't always work satisfactorily e.g. if a device
 has been reused without wiping the md superblocks first.
 .IP
 \fBmd_chunk_alignment\fP \(em If set to 1, and a Physical Volume is placed
@@ -187,7 +187,7 @@ Storage that supports discards advertise the protocol specific way discards
 should be issued by the kernel (TRIM, UNMAP, or WRITE SAME with UNMAP bit set).
 Not all storage will support or benefit from discards but SSDs and thinly
 provisioned LUNs generally do.  If set to 1, discards will only be issued if
-both the storage and kernel provide support.  
+both the storage and kernel provide support.
 .IP
 .TP
 \fBallocation\fP \(em Space allocation policies
@@ -200,9 +200,9 @@ segment of the existing LV.  If there is insufficient space and a
 list of tags is defined here, it will check whether any of them are
 attached to the PVs concerned and then seek to match those PV tags
 between existing extents and new extents.
-.IP 
+.IP
 The @ prefix for tags is required.
-Use the special tag "@*" as a wildcard to match any PV tag and so use 
+Use the special tag "@*" as a wildcard to match any PV tag and so use
 all PV tags for this purpose.
 .IP
 For example, LVs are mirrored between two sites within a single VG.
@@ -228,12 +228,12 @@ is invoked.  By default tools append messages to the log file.
 .IP
 \fBsyslog\fP \(em Set to 1 (the default) to send log messages through syslog.
 Turn off by setting to 0.  If you set to an integer greater than one,
-this is used - unvalidated - as the facility.  The default is LOG_USER.  
+this is used - unvalidated - as the facility.  The default is LOG_USER.
 See /usr/include/sys/syslog.h for safe facility values to use.
 For example, LOG_LOCAL0 might be 128.
 .IP
-\fBindent\fP \(em When set to 1 (the default) messages are indented 
-according to their severity, two spaces per level.  
+\fBindent\fP \(em When set to 1 (the default) messages are indented
+according to their severity, two spaces per level.
 Set to 0 to turn off indentation.
 .IP
 \fBcommand_names\fP \(em When set to 1, the command name is used as a
@@ -244,7 +244,7 @@ Default is 0 (off).
 Default is two spaces.
 .IP
 \fBactivation\fP \(em Set to 1 to log messages while
-devices are suspended during activation.  
+devices are suspended during activation.
 Only set this temporarily while debugging a problem because
 in low memory situations this setting can cause your machine to lock up.
 .TP
@@ -255,21 +255,21 @@ Backup copies of former metadata for each volume group are archived here.
 Defaults to "#DEFAULT_ARCHIVE_DIR#".
 .IP
 \fBbackup_dir\fP \(em Directory used for automatic metadata backups.
-A single backup copy of the current metadata for each volume group 
+A single backup copy of the current metadata for each volume group
 is stored here.
 Defaults to "#DEFAULT_BACKUP_DIR#".
 .IP
 \fBarchive\fP \(em Whether or not tools automatically archive existing
 metadata into \fBarchive_dir\fP before making changes to it.
-Default is 1 (automatic archives enabled).  
-Set to 0 to disable.  
-Disabling this might make metadata recovery difficult or impossible 
+Default is 1 (automatic archives enabled).
+Set to 0 to disable.
+Disabling this might make metadata recovery difficult or impossible
 if something goes wrong.
 .IP
-\fBbackup\fP \(em Whether or not tools make an automatic backup 
-into \fBbackup_dir\fP after changing metadata.  
+\fBbackup\fP \(em Whether or not tools make an automatic backup
+into \fBbackup_dir\fP after changing metadata.
 Default is 1 (automatic backups enabled).  Set to 0 to disable.
-Disabling this might make metadata recovery difficult or impossible 
+Disabling this might make metadata recovery difficult or impossible
 if something goes wrong.
 .IP
 \fBretain_min\fP \(em Minimum number of archives to keep.
@@ -297,23 +297,23 @@ Defaults to /proc.
 .IP
 \fBumask\fP \(em File creation mask for any files and directories created.
 Interpreted as octal if the first digit is zero.
-Defaults to 077.  
+Defaults to 077.
 Use 022 to allow other users to read the files by default.
 .IP
 \fBformat\fP \(em The default value of \fB--metadatatype\fP used
-to determine which format of metadata to use when creating new 
+to determine which format of metadata to use when creating new
 physical volumes and volume groups. \fBlvm1\fP or \fBlvm2\fP.
 .IP
-\fBfallback_to_lvm1\fP \(em Set this to 1 if you need to 
+\fBfallback_to_lvm1\fP \(em Set this to 1 if you need to
 be able to switch between 2.4 kernels using LVM1 and kernels
 including device-mapper.
 The LVM2 tools should be installed as normal and
 the LVM1 tools should be installed with a .lvm1 suffix e.g.
-vgscan.lvm1.  
+vgscan.lvm1.
 If an LVM2 tool is then run but unable to communicate
-with device-mapper, it will automatically invoke the equivalent LVM1 
-version of the tool.  Note that for LVM1 tools to 
-manipulate physical volumes and volume groups created by LVM2 you 
+with device-mapper, it will automatically invoke the equivalent LVM1
+version of the tool.  Note that for LVM1 tools to
+manipulate physical volumes and volume groups created by LVM2 you
 must use \fB--metadataformat lvm1\fP when creating them.
 .IP
 \fBlibrary_dir\fP \(em A directory searched for LVM2's shared libraries
@@ -330,7 +330,7 @@ avoid conflicting LVM2 commands running concurrently on a single
 machine. 0 disables locking and risks corrupting your metadata.
 If set to 2, the tools will load the external \fBlocking_library\fP
 (see below).
-If the tools were configured \fB--with-cluster=internal\fP 
+If the tools were configured \fB--with-cluster=internal\fP
 (the default) then 3 means to use built-in cluster-wide locking.
 Type 4 enforces read-only metadata and forbids any operations that
 might want to modify Volume Group metadata.
@@ -355,11 +355,11 @@ such a library, look at the lib/locking source code directory.
 Setting this to 0 does nothing, neither creating nor destroying any tag.
 The machine name used is the nodename as returned by \fBuname\fP (2).
 .IP
-Additional host tags to be set can be listed here as subsections. 
+Additional host tags to be set can be listed here as subsections.
 The @ prefix for tags is optional.
-Each of these host tag subsections can contain a \fBhost_list\fP 
-array of host names. If any one of these entries matches the machine 
-name exactly then the host tag gets defined on this particular host, 
+Each of these host tag subsections can contain a \fBhost_list\fP
+array of host names. If any one of these entries matches the machine
+name exactly then the host tag gets defined on this particular host,
 otherwise it doesn't.
 .IP
 After lvm.conf has been processed, LVM2 works through each host
@@ -378,9 +378,9 @@ tags { tag1 { } tag2 { host_list = [ "fs1", "fs2" ] } }
 .IP
 These options are useful if you are replicating configuration files
 around a cluster.  Use of \fBhosttags = 1\fP means every machine
-can have static and identical local configuration files yet use 
+can have static and identical local configuration files yet use
 different settings and activate different logical volumes by
-default.  See also \fBvolume_list\fP below and \fB--addtag\fP 
+default.  See also \fBvolume_list\fP below and \fB--addtag\fP
 in \fBlvm\fP (8).
 .TP
 \fBactivation\fP \(em Settings affecting device-mapper activation
@@ -399,13 +399,13 @@ returns zeros, see \fBlvcreate\fP (8).
 \fBmirror_region_size\fP \(em Unit size in KB for copy operations
 when mirroring.
 .IP
-\fBreadahead\fP \(em Used when there is no readahead value stored 
+\fBreadahead\fP \(em Used when there is no readahead value stored
 in the volume group metadata.  Set to \fBnone\fP to disable
 readahead in these circumstances or \fBauto\fP to use the default
 value chosen by the kernel.
 .IP
-\fBreserved_memory\fP, \fBreserved_stack\fP \(em How many KB to reserve 
-for LVM2 to use while logical volumes are suspended.  If insufficient 
+\fBreserved_memory\fP, \fBreserved_stack\fP \(em How many KB to reserve
+for LVM2 to use while logical volumes are suspended.  If insufficient
 memory is reserved before suspension, there is a risk of machine deadlock.
 .IP
 \fBprocess_priority\fP \(em The nice value to use while devices are
@@ -417,7 +417,7 @@ logical volumes getting queued) for the shortest possible time.
 all requests to activate a logical volume on this machine
 are passed.  A logical volume is only activated if it matches
 an item in the list.  Tags must be preceded by @ and are checked
-against all tags defined in the logical volume and volume group 
+against all tags defined in the logical volume and volume group
 metadata for a match.
 @* is short-hand to check every tag set on the host machine (see
 \fBtags\fP above).
@@ -440,8 +440,8 @@ by name e.g. vg00, vg00/lvol1.
 .IP
 \fBpvmetadatacopies\fP \(em When creating a physical volume using the
 LVM2 metadata format, this is the default number of copies of metadata
-to store on each physical volume.  
-Currently it can be set to 0, 1 or 2.  The default is 1.  
+to store on each physical volume.
+Currently it can be set to 0, 1 or 2.  The default is 1.
 If set to 2, one copy is placed at the beginning of the disk
 and the other is placed at the end.
 It can be overridden on the command line with \fB--pvmetadatacopies\fP
@@ -450,7 +450,7 @@ If creating a volume group with just one physical volume, it's a
 good idea to have 2 copies.  If creating a large volume group with
 many physical volumes, you may decide that 3 copies of the metadata
 is sufficient, i.e. setting it to 1 on three of the physical volumes,
-and 0 on the rest.  Every volume group must contain at least one 
+and 0 on the rest.  Every volume group must contain at least one
 physical volume with at least 1 copy of the metadata (unless using
 the text files described below).  The disadvantage of having lots
 of copies is that every time the tools access the volume group, every
@@ -459,7 +459,7 @@ tools.
 .IP
 \fBpvmetadatasize\fP \(em Approximate number of sectors to set aside
 for each copy of the metadata. Volume groups with large numbers of
-physical or logical volumes, or volumes groups containing complex 
+physical or logical volumes, or volumes groups containing complex
 logical volume structures will need additional space for their metadata.
 The metadata areas are treated as circular buffers, so
 unused space becomes filled with an archive of the most recent
@@ -507,16 +507,20 @@ and with no other on-disk metadata, \fBpvmetadatacopies = 0\fP.
 Alternatively these directories can be in addition to the
 on-disk metadata areas.  This feature was created during the
 development of the LVM2 metadata before the new on-disk metadata
-areas were designed and no longer gets tested.  
-It is not supported under low-memory conditions, and it is 
-important never to edit these metadata files unless you fully 
-understand how things work: to make changes you should always use 
+areas were designed and no longer gets tested.
+It is not supported under low-memory conditions, and it is
+important never to edit these metadata files unless you fully
+understand how things work: to make changes you should always use
 the tools as normal, or else vgcfgbackup, edit backup, vgcfgrestore.
 .SH FILES
 .I #DEFAULT_SYS_DIR#/lvm.conf
+.br
 .I #DEFAULT_ARCHIVE_DIR#
+.br
 .I #DEFAULT_BACKUP_DIR#
+.br
 .I #DEFAULT_CACHE_DIR#/.cache
+.br
 .I #DEFAULT_LOCK_DIR#
 .SH SEE ALSO
 .BR lvm (8),

@@ -3,56 +3,69 @@
 vgs \- report information about volume groups
 .SH SYNOPSIS
 .B vgs
-[\-a|\-\-all]
-[\-\-aligned] [\-d|\-\-debug] [\-h|\-?|\-\-help]
-[\-\-ignorelockingfailure] [\-\-nameprefixes] [\-\-noheadings] [\-\-nosuffix]
-[\-o|\-\-options [+]Field[,Field]]
-[\-O|\-\-sort [+|-]Key1[,[+|-]Key2[,...]]]
-[\-P|\-\-partial] [\-\-rows]
-[\-\-separator Separator] [\-\-unbuffered]
-[\-\-units hHbBsSkKmMgGtTpPeE]
-[\-\-unquoted]
-[\-v|\-\-verbose] 
-[\-\-version] [VolumeGroupName [VolumeGroupName...]]
+.RB [ \-a | \-\-all ]
+.RB [ \-\-aligned ]
+.RB [ \-d | \-\-debug ]
+.RB [ \-h | \-? | \-\-help ]
+.RB [ \-\-ignorelockingfailure ]
+.RB [ \-\-nameprefixes ]
+.RB [ \-\-noheadings ]
+.RB [ \-\-nosuffix ]
+.RB [ \-o | \-\-options
+.RI [ + ] Field1 [ ,Field2 ...]]
+.RB [ \-O | \-\-sort
+.RI [ + | \- ] Key1 [ , [ + | \- ] Key2 ...]]
+.RB [ \-P | \-\-partial ]
+.RB [ \-\-rows ]
+.RB [ \-\-separator
+.IR Separator ]
+.RB [ \-\-unbuffered ]
+.RB [ \-\-units
+.IR hHbBsSkKmMgGtTpPeE ]
+.RB [ \-\-unquoted ]
+.RB [ \-v | \-\-verbose ]
+.RB [ \-\-version ]
+.RI [ VolumeGroupName
+.RI [ VolumeGroupName ...]]
 .SH DESCRIPTION
 vgs produces formatted output about volume groups.
 .SH OPTIONS
-See \fBlvm\fP for common options.
+See \fBlvm\fP(8) for common options.
 .TP
-.I \-\-all
+.B \-\-all
 List all volume groups.  Equivalent to not specifying any volume groups.
 .TP
-.I \-\-aligned
-Use with \-\-separator to align the output columns.
+.B \-\-aligned
+Use with \fB\-\-separator\fP to align the output columns.
 .TP
-.I \-\-nameprefixes
+.B \-\-nameprefixes
 Add an "LVM2_" prefix plus the field name to the output.  Useful
-with --noheadings to produce a list of field=value pairs that can
-be used to set environment variables (for example, in \fBudev (7)\fP rules).
+with \fB\-\-noheadings\fP to produce a list of field=value pairs that can
+be used to set environment variables (for example, in \fBudev\fP(7) rules).
 .TP
-.I \-\-noheadings
+.B \-\-noheadings
 Suppress the headings line that is normally the first line of output.
 Useful if grepping the output.
 .TP
-.I \-\-nosuffix
-Suppress the suffix on output sizes.  Use with \-\-units (except h and H)
-if processing the output.
+.B \-\-nosuffix
+Suppress the suffix on output sizes.  Use with \fB\-\-units\fP
+(except h and H) if processing the output.
 .TP
-.I \-o, \-\-options
+.BR \-o ", " \-\-options
 Comma-separated ordered list of columns.  Precede the list with '+' to append
 to the default selection of columns.
 .IP
-Use \fb-o vg_all\fP to select all volume group columns.
+Use \fB\-o vg_all\fP to select all volume group columns.
 .IP
-Use \fb-o help\fP to view the full list of columns available.
+Use \fB\-o help\fP to view the full list of columns available.
 .IP
 Column names include: vg_fmt, vg_uuid, vg_name, vg_attr, vg_size, vg_free,
 vg_sysid, vg_extent_size, vg_extent_count, vg_free_count, max_lv, max_pv,
 pv_count, lv_count, snap_count, vg_seqno, vg_tags, vg_mda_count, vg_mda_free,
 and vg_mda_size, vg_mda_used_count.
 .IP
-Any "vg_" prefixes are optional.  Columns mentioned in either \fBpvs (8)\fP 
-or \fBlvs (8)\fP can also be chosen, but columns cannot be taken from both
+Any "vg_" prefixes are optional.  Columns mentioned in either \fBpvs\fP(8)
+or \fBlvs\fP(8) can also be chosen, but columns cannot be taken from both
 at the same time.  
 .IP
 The vg_attr bits are:
@@ -72,27 +85,29 @@ Allocation policy: (c)ontiguous, c(l)ing, (n)ormal, (a)nywhere, (i)nherited
 (c)lustered
 .RE
 .TP
-.I \-O, \-\-sort
+.BR \-O ", " \-\-sort
 Comma-separated ordered list of columns to sort by.  Replaces the default
-selection. Precede any column with - for a reverse sort on that column.
+selection. Precede any column with '\fI\-\fP' for a reverse sort on that
+column.
 .TP
-.I \-\-rows
+.B \-\-rows
 Output columns as rows.
 .TP
-.I \-\-separator Separator
+.B \-\-separator \fISeparator
 String to use to separate each column.  Useful if grepping the output.
 .TP
-.I \-\-unbuffered
+.B \-\-unbuffered
 Produce output immediately without sorting or aligning the columns properly.
 .TP
-.I \-\-units hHbBsSkKmMgGtTpPeE
+.B \-\-units \fIhHbBsSkKmMgGtTpPeE
 All sizes are output in these units: (h)uman-readable, (b)ytes, (s)ectors,
 (k)ilobytes, (m)egabytes, (g)igabytes, (t)erabytes, (p)etabytes, (e)xabytes.  
 Capitalise to use multiples of 1000 (S.I.) instead of 1024.  Can also specify 
 custom units e.g. \-\-units 3M
 .TP
-.I \-\-unquoted
-When used with --nameprefixes, output values in the field=value pairs are not quoted.
+.B \-\-unquoted
+When used with \fB\-\-nameprefixes\fP, output values in the field=value
+pairs are not quoted.
 .SH SEE ALSO
 .BR lvm (8),
 .BR vgdisplay (8),

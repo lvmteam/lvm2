@@ -2,9 +2,17 @@
 .SH NAME
 lvmdump - create lvm2 information dumps for diagnostic purposes
 .SH SYNOPSIS
-\fBlvmdump\fP [options] [-d directory]
+.B lvmdump
+.RB [ \-a ]
+.RB [ \-c ]
+.RB [ \-d
+.IR directory ]
+.RB [ \-h ]
+.RB [ \-m ]
 .SH DESCRIPTION
-\fBlvmdump\fP is a tool to dump various information concerning LVM2. By default, it creates a tarball suitable for submission along with a problem report.
+lvmdump is a tool to dump various information concerning LVM2.
+By default, it creates a tarball suitable for submission along
+with a problem report.
 .PP
 The content of the tarball is as follows:
 .br
@@ -22,33 +30,45 @@ The content of the tarball is as follows:
 .br
 - list of files present /sys/devices/virtual/block
 .br
-- if enabled with -m, metadata dump will be also included
+- if enabled with \-m, metadata dump will be also included
 .br
-- if enabled with -a, debug output of vgscan, pvscan and list of all available volume groups, physical volumes and logical volumes will be included
+- if enabled with \-a, debug output of vgscan, pvscan and list of all available volume groups, physical volumes and logical volumes will be included
 .br
-- if enabled with -c, cluster status info
+- if enabled with \-c, cluster status info
 .SH OPTIONS
 .TP
-\fB\-h\fR \(em print help message
+.B \-a
+Advanced collection.
+\fBWARNING\fR: if lvm is already hung, then this script may hang as well
+if \fB\-a\fR is used.
 .TP
-\fB\-a\fR \(em advanced collection 
-\fBWARNING\fR: if lvm is already hung, then this script may hang as well if \fB\-a\fR is used
+.B \-c
+If clvmd is running, gather cluster data as well.
 .TP
-\fB\-m\fR \(em gather LVM metadata from the PVs
-This option generates a 1:1 dump of the metadata area from all PVs visible to the system, which can cause the dump to increase in size considerably. However, the metadata dump may represent a valuable diagnostic resource.
+.B \-d  \fIdirectory
+Dump into a directory instead of tarball
+By default, lvmdump will produce a single compressed tarball containing
+all the information. Using this option, it can be instructed to only
+produce the raw dump tree, rooted in \fIdirectory\fP.
 .TP
-\fB\-d\fR directory \(em dump into a directory instead of tarball
-By default, lvmdump will produce a single compressed tarball containing all the information. Using this option, it can be instructed to only produce the raw dump tree, rooted in \fBdirectory\fP.
+.B \-h
+Print help message
 .TP
-\fB\-c\fR \(em if clvmd is running, gather cluster data as well
+.B \-m
+Gather LVM metadata from the PVs
+This option generates a 1:1 dump of the metadata area from all PVs visible
+to the system, which can cause the dump to increase in size considerably.
+However, the metadata dump may represent a valuable diagnostic resource.
 .SH ENVIRONMENT VARIABLES
 .TP
-\fBLVM_BINARY\fP 
+\fBLVM_BINARY\fP
 The LVM2 binary to use.
 Defaults to "lvm".
 Sometimes you might need to set this to "/sbin/lvm.static", for example.
 .TP
-\fBDMSETUP_BINARY\fP 
+\fBDMSETUP_BINARY\fP
 The dmsetup binary to use.
 Defaults to "dmsetup".
 .PP
+.SH SEE ALSO
+.BR lvm (8)

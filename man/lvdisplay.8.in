@@ -3,57 +3,70 @@
 lvdisplay \- display attributes of a logical volume
 .SH SYNOPSIS
 .B lvdisplay
-[\-a|\-\-all]
-[\-c|\-\-colon] [\-d|\-\-debug] [\-h|\-?|\-\-help]
-[\-\-ignorelockingfailure]
-[\-\-maps]
-[\-\-nosuffix]
-[\-P|\-\-partial]
-[\-\-units hHbBsSkKmMgGtTpPeE]
-[\-v|\-\-verbose]
-[\-\-version] [LogicalVolumePath [LogicalVolumePath...]]
+.RB [ \-a | \-\-all ]
+.RB [ \-c | \-\-colon ]
+.RB [ \-d | \-\-debug ]
+.RB [ \-h | \-? | \-\-help ]
+.RB [ \-\-ignorelockingfailure ]
+.RB [ \-\-maps ]
+.RB [ \-\-nosuffix ]
+.RB [ \-P | \-\-partial ]
+.RB [ \-\-units
+.IR hHbBsSkKmMgGtTpPeE ]
+.RB [ \-v | \-\-verbose ]
+.RB [ \-\-version ]
+.RI [ LogicalVolumePath
+.RI [ LogicalVolumePath ...]]
 .br
 
-.br
-.B lvdisplay \-\-columns | \-C
-[\-\-aligned]
-[\-a|\-\-all]
-[\-d|\-\-debug] [\-h|\-?|\-\-help]
-[\-\-ignorelockingfailure]
-[\-\-noheadings]
-[\-\-nosuffix]
-[\-o|\-\-options [+]Field[,Field]]
-[\-O|\-\-sort [+|-]Key1[,[+|-]Key2[,...]]]
-[\-P|\-\-partial]
-[\-\-segments]
-[\-\-separator Separator]
-[\-\-unbuffered]
-[\-\-units hHbBsSkKmMgGtTpPeE]
-[\-v|\-\-verbose]
-[\-\-version] [LogicalVolumePath [LogicalVolumePath...]]
+.B lvdisplay
+.BR \-\-columns | \-C
+.RB [ \-\-aligned ]
+.RB [ \-a | \-\-all ]
+.RB [ \-d | \-\-debug ]
+.RB [ \-h | \-? | \-\-help ]
+.RB [ \-\-ignorelockingfailure ]
+.RB [ \-\-noheadings ]
+.RB [ \-\-nosuffix ]
+.RB [ \-o | \-\-options
+.RI [ + ] Field [ ,Field ...]]
+.RB [ \-O | \-\-sort
+.RI [ + | - ] Key1 [ , [ + | - ] Key2 ...]]
+.RB [ \-P | \-\-partial ]
+.RB [ \-\-segments ]
+.RB [ \-\-separator
+.IR Separator ]
+.RB [ \-\-unbuffered ]
+.RB [ \-\-units
+.IR hHbBsSkKmMgGtTpPeE ]
+.RB [ \-v | \-\-verbose ]
+.RB [ \-\-version ]
+.RI [ LogicalVolumePath
+.RI [ LogicalVolumePath ...]]
 .SH DESCRIPTION
 lvdisplay allows you to see the attributes of a logical volume
 like size, read/write status, snapshot information etc.
 .P
-\fBlvs\fP (8) is an alternative that provides the same information 
-in the style of \fBps\fP (1).  \fBlvs\fP is recommended over
-\fBlvdisplay\fP.
+\fBlvs\fP(8) is an alternative that provides the same information
+in the style of \fBps\fP(1).
+\fBlvs\fP(8) is recommended over \fBlvdisplay\fP.
 
 .SH OPTIONS
-See \fBlvm\fP for common options and \fBlvs\fP for options given with
+See \fBlvm\fP(8) for common options and \fBlvs\fP for options given with
 \fB\-\-columns\fP.
 .TP
-.I \-\-all
+.B \-\-all
 Include information in the output about internal Logical Volumes that
 are components of normally-accessible Logical Volumes, such as mirrors,
 but which are not independently accessible (e.g. not mountable).
-For example, after creating a mirror using 'lvcreate -m1 --mirrorlog disk',
+For example, after creating a mirror using
+\fBlvcreate \-m1 \-\-mirrorlog disk\fP,
 this option will reveal three internal Logical Volumes, with suffixes
 mimage_0, mimage_1, and mlog.
 .TP
-.I \-c, \-\-colon
+.BR \-c ", " \-\-colon
 Generate colon separated output for easier parsing in scripts or programs.
-N.B. \fBlvs\fP (8) provides considerably more control over the output.
+N.B. \fBlvs\fP(8) provides considerably more control over the output.
 .nf
 
 The values are:
@@ -74,29 +87,30 @@ The values are:
 
 .fi
 .TP
-.I \-m, \-\-maps
+.BR \-m ", " \-\-maps
 Display the mapping of logical extents to physical volumes and
 physical extents.  To map physical extents
-to logical extents use
-.BR
-\fBpvs --segments -o+lv_name,seg_start_pe,segtype\fP.
+to logical extents use:
+.B pvs \-\-segments \-o+lv_name,seg_start_pe,segtype
 .TP
-.I \-\-columns | \-C
-Display output in columns, the equivalent of \fBlvs\fP.  Options listed
-are the same as options given in \fBlvs (8)\fP.
+.BR \-\-columns ", " \-C
+Display output in columns, the equivalent of \fBlvs\fP. Options listed
+are the same as options given in \fBlvs\fP(8).
 .SH Examples
-"lvdisplay -v /dev/vg00/lvol2" shows attributes of that logical volume.
-If snapshot
+Shows attributes of that logical volume. If snapshot
 logical volumes have been created for this original logical volume,
 this command shows a list of all snapshot logical volumes and their
-status (active or inactive) as well.
+status (active or inactive) as well:
+.sp
+.B lvdisplay \-v /dev/vg00/lvol2
 
-"lvdisplay /dev/vg00/snapshot" shows the attributes of this snapshot
-logical volume and also which original logical volume
-it is associated with.
+Shows the attributes of this snapshot logical volume and also which
+original logical volume it is associated with:
+.sp
+.B lvdisplay /dev/vg00/snapshot
 
 .SH SEE ALSO
-.BR lvm (8), 
-.BR lvcreate (8), 
+.BR lvm (8),
+.BR lvcreate (8),
 .BR lvscan (8),
 .BR pvs (8)
