@@ -1,5 +1,6 @@
 Version 2.02.96 - 
 ================================
+  For lvresize round upward when specifying number of extents.
   For lvcreate with %FREE support rounding downward strip alignment.
   Change message severity to log_very_verbose for missing dev info in udev db.
   Fix problems when specifying PVs during RAID down-converts.

@@ -676,7 +676,11 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 
 		size_rest = seg_size % (lp->stripes * stripesize_extents);
 		/* Round toward the original size. */
-		if (size_rest && lp->extents < lv->le_count) {
+		if (size_rest &&
+		    ((lp->extents < lv->le_count) ||
+		     !lp->percent ||
+		     (vg->free_count >= (lp->extents - lv->le_count - size_rest +
+					 (lp->stripes * stripesize_extents))))) {
 			log_print("Rounding size (%d extents) up to stripe "
 				  "boundary size for segment (%d extents)",
 				  lp->extents, lp->extents - size_rest +
@@ -689,7 +693,6 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 				  lp->extents, lp->extents - size_rest);
 			lp->extents = lp->extents - size_rest;
 		}
-
 	}
 
 	if (lp->extents < lv->le_count) {
