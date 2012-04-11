@@ -590,7 +590,10 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 	if ((lp->extents > lv->le_count) &&
 	    !(lp->stripes == 1 || (lp->stripes > 1 && lp->stripe_size))) {
 		/* FIXME Don't assume mirror seg will always be AREA_LV */
-		dm_list_iterate_items(seg, seg_mirrors ? &seg_lv(mirr_seg, 0)->segments : &lv->segments) {
+		/* FIXME We will need to support resize for metadata LV as well,
+		 *       and data LV could be any type (i.e. mirror)) */
+		dm_list_iterate_items(seg, seg_mirrors ? &seg_lv(mirr_seg, 0)->segments :
+				      lv_is_thin_pool(lv) ? &seg_lv(first_seg(lv), 0)->segments : &lv->segments) {
 			if (!seg_is_striped(seg))
 				continue;
 
@@ -738,13 +741,6 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 		if (lp->resizefs) {
 			log_warn("Thin pool volumes do not have filesystem.");
 			lp->resizefs = 0;
-		}
-
-		if (!lp->stripes) {
-			/* Try to use the same strip settings for underlying pool data LV */
-			lp->stripes = last_seg(seg_lv(first_seg(lv), 0))->area_count;
-			if (!lp->stripe_size)
-				lp->stripe_size = last_seg(seg_lv(first_seg(lv), 0))->stripe_size;
 		}
 	}
 
