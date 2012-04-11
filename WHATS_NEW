@@ -1,5 +1,6 @@
 Version 2.02.96 - 
 ================================
+  Fix problems when specifying PVs during RAID down-converts.
   Fix ability to handle failures in mirrored log (regression intro 2.02.89).
   Fix unlocking volume group in vgreduce in error path.
   Exit immediately if LISTEN_PID env var incorrect during systemd handover.

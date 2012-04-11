@@ -975,6 +975,8 @@ static int _raid_extract_images(struct logical_volume *lv, uint32_t new_count,
 static int _raid_remove_images(struct logical_volume *lv,
 			       uint32_t new_count, struct dm_list *pvs)
 {
+	uint32_t s;
+	struct lv_segment *seg;
 	struct dm_list removal_list;
 	struct lv_list *lvl;
 
@@ -1024,9 +1026,21 @@ static int _raid_remove_images(struct logical_volume *lv,
 	}
 
 	/*
-	 * Resume original LV
-	 * This also resumes all other sub-LVs
+	 * Resume the remaining LVs
+	 * We must start by resuming the sub-LVs first (which would
+	 * otherwise be handled automatically) because the shifting
+	 * of positions could otherwise cause name collisions.  For
+	 * example, if position 0 of a 3-way array is removed, position
+	 * 1 and 2 must be shifted and renamed 0 and 1.  If position 2
+	 * tries to rename first, it will collide with the existing
+	 * position 1.
 	 */
+	seg = first_seg(lv);
+	for (s = 0; (new_count > 1) && (s < seg->area_count); s++) {
+		if (!resume_lv(lv->vg->cmd, seg_lv(seg, s)) ||
+		    !resume_lv(lv->vg->cmd, seg_metalv(seg, s)))
+			return_0;
+	}
 	if (!resume_lv(lv->vg->cmd, lv)) {
 		log_error("Failed to resume %s/%s after committing changes",
 			  lv->vg->name, lv->name);
