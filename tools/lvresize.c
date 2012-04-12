@@ -454,6 +454,12 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 
 	alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG, lv->alloc);
 
+	/*
+	 * First adjust to an exact multiple of extent size.
+	 * When extending by a relative amount we round that amount up.
+	 * When reducing by a relative amount we remove at most that amount.
+	 * When changing to an absolute size, we round that size up.
+	 */
 	if (lp->size) {
 		if (lp->size % vg->extent_size) {
 			if (lp->sign == SIGN_MINUS)
@@ -462,7 +468,7 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 				lp->size += vg->extent_size -
 				    (lp->size % vg->extent_size);
 
-			log_print("Rounding up size to full physical extent %s",
+			log_print("Rounding size to boundary between physical extents: %s",
 				  display_size(cmd, lp->size));
 		}
 
@@ -711,6 +717,15 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 			log_error("New size given (%d extents) not less than "
 				  "existing size (%d extents)", lp->extents,
 				  lv->le_count);
+			return EINVALID_CMD_LINE;
+		}
+		lp->resize = LV_EXTEND;
+	} else if (lp->extents == lv->le_count) {
+		if (use_policy)
+			return ECMD_PROCESSED; /* Nothing to do. */
+		if (!lp->resizefs) {
+			log_error("New size (%d extents) matches existing size "
+				  "(%d extents)", lp->extents, lv->le_count);
 			return EINVALID_CMD_LINE;
 		}
 		lp->resize = LV_EXTEND;
