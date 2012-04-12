@@ -1713,7 +1713,7 @@ int lv_raid_replace(struct logical_volume *lv,
 		return 0;
 	}
 
-	if (!suspend_lv(lv->vg->cmd, lv)) {
+	if (!suspend_lv_origin(lv->vg->cmd, lv)) {
 		log_error("Failed to suspend %s/%s before committing changes",
 			  lv->vg->name, lv->name);
 		return 0;
@@ -1725,7 +1725,7 @@ int lv_raid_replace(struct logical_volume *lv,
 		return 0;
 	}
 
-	if (!resume_lv(lv->vg->cmd, lv)) {
+	if (!resume_lv_origin(lv->vg->cmd, lv)) {
 		log_error("Failed to resume %s/%s after committing changes",
 			  lv->vg->name, lv->name);
 		return 0;
@@ -1761,7 +1761,7 @@ int lv_raid_replace(struct logical_volume *lv,
 		return 0;
 	}
 
-	if (!suspend_lv(lv->vg->cmd, lv)) {
+	if (!suspend_lv_origin(lv->vg->cmd, lv)) {
 		log_error("Failed to suspend %s/%s before committing changes",
 			  lv->vg->name, lv->name);
 		return 0;
@@ -1773,7 +1773,7 @@ int lv_raid_replace(struct logical_volume *lv,
 		return 0;
 	}
 
-	if (!resume_lv(lv->vg->cmd, lv)) {
+	if (!resume_lv_origin(lv->vg->cmd, lv)) {
 		log_error("Failed to resume %s/%s after committing changes",
 			  lv->vg->name, lv->name);
 		return 0;
