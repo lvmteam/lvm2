@@ -1,0 +1,42 @@
+.TH LVMETAD 8 "LVM TOOLS #VERSION#" "Red Hat Inc" \" -*- nroff -*-
+.SH NAME
+lvmetad \- LVM metadata cache daemon
+.SH SYNOPSIS
+.B lvmetad
+.RB [ \-d ]
+.RB [ \-s ]
+.RB [ \-f ]
+.RB [ \-h ]
+.RB [ \-V ]
+.RB [ \-? ]
+.SH DESCRIPTION
+lvmetad is a metadata caching daemon for LVM. The daemon receives notifications
+from udev rules (which must be installed for LVM to work correctly when lvmetad
+is in use). Through these notifications, lvmetad has an up-to-date and
+consistent image of the volume groups available in the system.
+
+By default, lvmetad, even if running, is not used by LVM. See \fBlvm.conf\fP(5).
+.SH OPTIONS
+.TP
+.B \-d
+Repeat from 1 to 3 times (-d, -dd, -ddd) to increase the detail of
+debug messages sent to syslog.
+Each extra d adds more debugging information.
+.TP
+.B \-f
+Don't fork, run in the foreground.
+.TP
+.BR \-h ", " \-?
+Show help information.
+.TP
+.B \-s
+Path to the socket file to use. The option overrides both the built-in default
+(#DEFAULT_RUN_DIR#/lvmetad.socket) and the environment variable
+LVM_LVMETAD_SOCKET.
+.TP
+.B \-V
+Show version of dmeventd.
+
+.SH SEE ALSO
+.BR lvm (8),
+.BR lvm.conf (5)
