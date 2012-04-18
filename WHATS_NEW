@@ -1,5 +1,6 @@
 Version 2.02.96 - 
 ================================
+  Add udev info and context to lvmdump.
   Fix RAID device replacement code so that it works under snapshot.
   Fix inability to split RAID1 image while specifying a particular PV.
   Update man pages to give them same look&feel.
