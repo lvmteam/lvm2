@@ -1760,7 +1760,7 @@ static int _lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 	if (lp->merge) {
 		if (!lv_is_cow(lv)) {
-			log_error("Logical volume \"%s\" is not a snapshot",
+			log_error("\"%s\" is not a mergeable logical volume",
 				  lv->name);
 			return ECMD_FAILED;
 		}
