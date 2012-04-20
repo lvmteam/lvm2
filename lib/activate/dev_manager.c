@@ -2178,7 +2178,8 @@ static int _tree_action(struct dev_manager *dm, struct logical_volume *lv,
 		break;
 	case SUSPEND:
 		dm_tree_skip_lockfs(root);
-		if (!dm->flush_required && (lv->status & MIRRORED) && !(lv->status & PVMOVE))
+		if (!dm->flush_required && !seg_is_raid(first_seg(lv)) &&
+		    (lv->status & MIRRORED) && !(lv->status & PVMOVE))
 			dm_tree_use_no_flush_suspend(root);
 		/* Fall through */
 	case SUSPEND_WITH_LOCKFS:
