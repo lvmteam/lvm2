@@ -83,7 +83,7 @@ check vg_field $vg vg_free_count 3
 lvextend -l90%VG $vg/lv
 check vg_field $vg vg_free_count 0
 
-lvreduce -f -l-10%LV $vg/lv
+not lvreduce -f -l-10%LV $vg/lv
 check vg_field $vg vg_free_count 0
 
 lvreduce -f -l-20%LV $vg/lv
