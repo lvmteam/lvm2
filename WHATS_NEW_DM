@@ -1,5 +1,6 @@
 Version 1.02.75 - 
 ================================
+  Synchronize with dead of dmeventd.
   Rename (Blk)DevNames/DevNos dmsetup header to (Blk)DevNamesUsed/DevNosUsed.
   Add configure --with-veritysetup for independent veritysetup tool.
   Properly support passed in dmevent path in dm_event_register_handler().
