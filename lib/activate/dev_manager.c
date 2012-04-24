@@ -1423,10 +1423,11 @@ bad:
 static char *_add_error_device(struct dev_manager *dm, struct dm_tree *dtree,
 			       struct lv_segment *seg, int s)
 {
-	char *id, *name;
+	char *dlid, *name;
 	char errid[32];
 	struct dm_tree_node *node;
 	struct lv_segment *seg_i;
+	struct dm_info info;
 	int segno = -1, i = 0;
 	uint64_t size = (uint64_t) seg->len * seg->lv->vg->extent_size;
 
@@ -1443,18 +1444,35 @@ static char *_add_error_device(struct dev_manager *dm, struct dm_tree *dtree,
 
 	sprintf(errid, "missing_%d_%d", segno, s);
 
-	if (!(id = build_dm_uuid(dm->mem, seg->lv->lvid.s, errid)))
+	if (!(dlid = build_dm_uuid(dm->mem, seg->lv->lvid.s, errid)))
 		return_NULL;
 
 	if (!(name = dm_build_dm_name(dm->mem, seg->lv->vg->name,
 				   seg->lv->name, errid)))
 		return_NULL;
-	if (!(node = dm_tree_add_new_dev(dtree, name, id, 0, 0, 0, 0, 0)))
-		return_NULL;
-	if (!dm_tree_node_add_error_target(node, size))
-		return_NULL;
 
-	return id;
+	log_debug("Getting device info for %s [%s]", name, dlid);
+	if (!_info(dlid, 1, 0, &info, NULL)) {
+		log_error("Failed to get info for %s [%s].", name, dlid);
+		return 0;
+	}
+
+	if (!info.exists) {
+		/* Create new node */
+		if (!(node = dm_tree_add_new_dev(dtree, name, dlid, 0, 0, 0, 0, 0)))
+			return_NULL;
+		if (!dm_tree_node_add_error_target(node, size))
+			return_NULL;
+	} else {
+		/* Already exists */
+		if (!dm_tree_add_dev(dtree, info.major, info.minor)) {
+			log_error("Failed to add device (%" PRIu32 ":%" PRIu32") to dtree",
+				  info.major, info.minor);
+			return_NULL;
+		}
+	}
+
+	return dlid;
 }
 
 static int _add_error_area(struct dev_manager *dm, struct dm_tree_node *node,

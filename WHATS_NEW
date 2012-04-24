@@ -1,6 +1,7 @@
 Version 2.02.96 - 
 ================================
-  Unlike 'mirror' segtype, 'raid1' should perform flush on suspend.
+  Handle replacement of an active device that goes missing with an error device.
+  Change change raid1 segtype always to request a flush when suspending.
   Add udev info and context to lvmdump.
   Fix RAID device replacement code so that it works under snapshot.
   Fix inability to split RAID1 image while specifying a particular PV.
