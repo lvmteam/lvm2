@@ -1,5 +1,6 @@
 Version 1.02.75 - 
 ================================
+  Rename (Blk)DevNames header to (Blk)DevNamesUsed in dmsetup info -c output.
   Add configure --with-veritysetup for independent veritysetup tool.
   Properly support passed in dmevent path in dm_event_register_handler().
   Remove dmeventd fifos on exit if they are not managed by systemd.
