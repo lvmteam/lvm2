@@ -1,5 +1,6 @@
 Version 2.02.96 - 
 ================================
+  Allow subset of failed devices to be replaced in RAID LVs.
   Prevent resume from creating error devices that already exist from suspend.
   Improve clmvd singlenode locking for better testing.
   Update and correct lvs man page with supported column names.

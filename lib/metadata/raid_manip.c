@@ -1632,10 +1632,28 @@ int lv_raid_replace(struct logical_volume *lv,
 	 *
 	 * - We need to change the LV names when we insert them.
 	 */
+try_again:
 	if (!_alloc_image_components(lv, allocate_pvs, match_count,
 				     &new_meta_lvs, &new_data_lvs)) {
 		log_error("Failed to allocate replacement images for %s/%s",
 			  lv->vg->name, lv->name);
+
+		/*
+		 * If this is a repair, then try to
+		 * do better than all-or-nothing
+		 */
+		if (match_count > 1) {
+			log_error("Attempting replacement of %u devices"
+				  " instead of %u", match_count - 1, match_count);
+			match_count--;
+
+			/*
+			 * Since we are replacing some but not all of the bad
+			 * devices, we must set partial_activation
+			 */
+			lv->vg->cmd->partial_activation = 1;
+			goto try_again;
+		}
 		return 0;
 	}
 
