@@ -67,13 +67,13 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
  */
 #define LCK_TYPE_MASK	0x00000007U
 
-#define LCK_NULL	0x00000000U	/* LCK$_NLMODE */
-#define LCK_READ	0x00000001U	/* LCK$_CRMODE */
+#define LCK_NULL	0x00000000U	/* LCK$_NLMODE (Deactivate) */
+#define LCK_READ	0x00000001U	/* LCK$_CRMODE (Activate) */
 					/* LCK$_CWMODE */
 #define LCK_PREAD       0x00000003U	/* LCK$_PRMODE */
-#define LCK_WRITE	0x00000004U	/* LCK$_PWMODE */
-#define LCK_EXCL	0x00000005U	/* LCK$_EXMODE */
-#define LCK_UNLOCK      0x00000006U	/* This is ours */
+#define LCK_WRITE	0x00000004U	/* LCK$_PWMODE (Suspend) */
+#define LCK_EXCL	0x00000005U	/* LCK$_EXMODE (Exclusive) */
+#define LCK_UNLOCK      0x00000006U	/* This is ours (Resume) */
 
 /*
  * Lock flags - these numbers are the same as DLM
