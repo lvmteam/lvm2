@@ -1,5 +1,6 @@
 Version 2.02.96 - 
 ================================
+  Prevent resume from creating error devices that already exist from suspend.
   Improve clmvd singlenode locking for better testing.
   Update and correct lvs man page with supported column names.
   Handle replacement of an active device that goes missing with an error device.
