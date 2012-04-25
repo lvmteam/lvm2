@@ -517,9 +517,11 @@ int vg_set_clustered(struct volume_group *vg, int clustered)
 	 * on active mirrors or snapshots.
 	 */
 	dm_list_iterate_items(lvl, &vg->lvs) {
-		if (lv_is_mirrored(lvl->lv) && lv_is_active(lvl->lv)) {
-			log_error("Mirror logical volumes must be inactive "
-				  "when changing the cluster attribute.");
+		if (lv_is_active(lvl->lv) &&
+		    (lv_is_mirrored(lvl->lv) || lv_is_raid_type(lvl->lv))) {
+			log_error("%s logical volumes must be inactive "
+				  "when changing the cluster attribute.",
+				  lv_is_raid_type(lvl->lv) ? "RAID" : "Mirror");
 			return 0;
 		}
 

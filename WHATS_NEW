@@ -1,5 +1,6 @@
 Version 2.02.96 - 
 ================================
+  Disallow changing cluster attribute of VG while RAID LVs are active.
   Fix lvconvert error message for non-mergeable volumes.
   Allow subset of failed devices to be replaced in RAID LVs.
   Prevent resume from creating error devices that already exist from suspend.
