@@ -223,7 +223,6 @@ Objects can possess multiple tags simultaneously.
 Only the new LVM2 metadata format supports tagging: objects using the
 LVM1 metadata format cannot be tagged because the on-disk format does not
 support it.
-Snapshots cannot be tagged.
 Characters allowed in tags are:
 .B A-Z a-z 0-9 _ + . -
 and as of version 2.02.78 the following characters are also accepted:
