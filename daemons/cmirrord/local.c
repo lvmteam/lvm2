@@ -237,7 +237,6 @@ static int do_local_work(void *data __attribute__((unused)))
 	case DM_ULOG_GET_REGION_SIZE:
 	case DM_ULOG_IN_SYNC:
 	case DM_ULOG_GET_SYNC_COUNT:
-	case DM_ULOG_STATUS_INFO:
 	case DM_ULOG_STATUS_TABLE:
 	case DM_ULOG_PRESUSPEND:
 		/* We do not specify ourselves as server here */
@@ -273,6 +272,7 @@ static int do_local_work(void *data __attribute__((unused)))
 	case DM_ULOG_MARK_REGION:
 	case DM_ULOG_GET_RESYNC_WORK:
 	case DM_ULOG_SET_REGION_SYNC:
+	case DM_ULOG_STATUS_INFO:
 	case DM_ULOG_IS_REMOTE_RECOVERING:
 	case DM_ULOG_POSTSUSPEND:
 		r = cluster_send(rq);

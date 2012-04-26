@@ -1231,11 +1231,11 @@ out:
 				   _RQ_TYPE(rq->u_rq.request_type),
 				   rq->originator, (response) ? "YES" : "NO");
 		else
-			LOG_SPRINT(match, "SEQ#=%u, UUID=%s, TYPE=%s, ORIG=%u, RESP=%s, RSPR=%u",
+			LOG_SPRINT(match, "SEQ#=%u, UUID=%s, TYPE=%s, ORIG=%u, RESP=%s, RSPR=%u, error=%d",
 				   rq->u_rq.seq, SHORT_UUID(rq->u_rq.uuid),
 				   _RQ_TYPE(rq->u_rq.request_type),
 				   rq->originator, (response) ? "YES" : "NO",
-				   nodeid);
+				   nodeid, rq->u_rq.error);
 	}
 }
 
