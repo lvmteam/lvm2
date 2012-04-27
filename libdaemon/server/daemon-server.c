@@ -224,7 +224,10 @@ static int _open_socket(daemon_state s)
 
 	fprintf(stderr, "[D] creating %s\n", s.socket_path);
 	memset(&sockaddr, 0, sizeof(sockaddr));
-	strncpy(sockaddr.sun_path, s.socket_path, sizeof(sockaddr.sun_path));
+	if (!dm_strncpy(sockaddr.sun_path, s.socket_path, sizeof(sockaddr.sun_path))) {
+		fprintf(stderr, "%s: daemon socket path too long.\n", s.socket_path);
+		goto error;
+	}
 	sockaddr.sun_family = AF_UNIX;
 
 	if (bind(fd, (struct sockaddr *) &sockaddr, sizeof(sockaddr))) {

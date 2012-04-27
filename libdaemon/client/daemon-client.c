@@ -32,7 +32,10 @@ daemon_handle daemon_open(daemon_info i) {
 		goto error;
 
 	memset(&sockaddr, 0, sizeof(sockaddr));
-	strncpy(sockaddr.sun_path, i.socket, sizeof(sockaddr.sun_path));
+	if (!dm_strncpy(sockaddr.sun_path, i.socket, sizeof(sockaddr.sun_path))) {
+		fprintf(stderr, "%s: daemon socket path too long.\n", i.socket);
+		goto error;
+	}
 	sockaddr.sun_family = AF_UNIX;
 	if (connect(h.socket_fd,(struct sockaddr *) &sockaddr, sizeof(sockaddr)))
 		goto error;
