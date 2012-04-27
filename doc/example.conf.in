@@ -441,6 +441,8 @@ global {
     #		 on the same device as the image - no separate devices are
     #		 required.)  This mirror implementation does not require I/O
     #		 to be blocked in the kernel in the event of a failure.
+    #		 This mirror implementation is not cluster-aware and cannot be
+    #		 used in a shared (active/active) fashion in a cluster.
     #
     # Specify the '--type <mirror|raid1>' option to override this default
     # setting.
