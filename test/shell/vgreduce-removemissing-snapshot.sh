@@ -11,6 +11,14 @@
 
 . lib/test
 
+exit 0
+
+#
+# Snapshots of 'mirrors' are not supported.  They can no longer be created.
+# This file could be used to test some aspect of vgreduce, snapshot, and
+# RAID at some point though...
+#
+
 aux prepare_vg 5
 
 lvcreate -m 3 --ig -L 2M -n 4way $vg "$dev1" "$dev2" "$dev3" "$dev4" "$dev5":0

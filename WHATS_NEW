@@ -1,5 +1,6 @@
 Version 2.02.96 - 
 ================================
+  Disallow snapshots of mirror segment type.
   Fix bug in cmirror that caused incorrect status info to print on some nodes.
   Remove statement that snapshots cannot be tagged from lvm man page.
   Disallow changing cluster attribute of VG while RAID LVs are active.

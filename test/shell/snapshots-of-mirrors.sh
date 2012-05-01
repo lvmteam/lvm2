@@ -13,9 +13,15 @@
 
 aux prepare_vg 4
 
-# Create snapshot of a mirror origin
+# Attempt to create snapshot of a mirror origin - should fail
 lvcreate -m 1 -L 10M -n lv $vg
-lvcreate -s $vg/lv -L 10M -n snap
+not lvcreate -s $vg/lv -L 10M -n snap
+
+exit 0
+
+#
+# Snapshots of mirrors are no longer allowed.
+#
 
 # Down-convert (mirror -> linear) under a snapshot
 lvconvert -m0 $vg/lv

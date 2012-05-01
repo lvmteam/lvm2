@@ -4208,12 +4208,10 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 				return NULL;
 			}
 
-			if ((org->status & MIRROR_IMAGE) ||
-			    (org->status & MIRROR_LOG)) {
-				log_error("Snapshots of mirror %ss "
-					  "are not supported",
-					  (org->status & MIRROR_LOG) ?
-					  "log" : "image");
+			if (lv_is_mirror_type(org) &&
+			    !seg_is_raid(first_seg(org))) {
+				log_error("Snapshots of \"mirror\" segment types"
+					  " are not supported");
 				return NULL;
 			}
 
