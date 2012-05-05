@@ -1,5 +1,6 @@
 Version 2.02.96 - 
 ================================
+  Fix up-convert when mirror activation is controled by volume_list and tags.
   Disallow snapshots of mirror segment type.
   Fix bug in cmirror that caused incorrect status info to print on some nodes.
   Remove statement that snapshots cannot be tagged from lvm man page.

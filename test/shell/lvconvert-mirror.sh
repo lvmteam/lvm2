@@ -15,14 +15,26 @@ wait_for_mirror_in_sync_() {
 	while test $(get lv_field $1 copy_percent) != "100.00"; do sleep 1; done
 }
 
-# convert from linear to 2-way mirror
 aux prepare_pvs 5 10
 # FIXME - test fails with extent size < 512k
 vgcreate -c n -s 512k $vg $(cat DEVICES)
 
+# convert from linear to 2-way mirror
 lvcreate -l2 -n $lv1 $vg "$dev1"
 lvconvert -i1 -m+1 $vg/$lv1 "$dev2" "$dev3:0-1"
 check mirror $vg $lv1 "$dev3"
+lvremove -ff $vg
+
+# convert from linear to 2-way mirror - with tags and volume_list (bz683270)
+lvcreate -l2 -n $lv1 $vg --addtag hello
+lvconvert -i1 -m+1 $vg/$lv1 \
+    --config 'activation { volume_list = [ "@hello" ] }'
+lvremove -ff $vg
+
+# convert from 2-way to 3-way mirror - with tags and volume_list (bz683270)
+lvcreate -l2 -m1 -n $lv1 $vg --addtag hello
+lvconvert -i1 -m+1 $vg/$lv1 \
+    --config 'activation { volume_list = [ "@hello" ] }'
 lvremove -ff $vg
 
 # convert from 2-way mirror to linear

@@ -3682,9 +3682,10 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 					   const char *layer_suffix)
 {
 	int r;
-	struct logical_volume *layer_lv;
 	char *name;
 	size_t len;
+	struct str_list *sl;
+	struct logical_volume *layer_lv;
 	struct segment_type *segtype;
 	struct lv_segment *mapseg;
 	unsigned exclusive = 0;
@@ -3722,6 +3723,14 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 			return NULL;
 		}
 
+		/* Temporary tags for activation of the transient LV */
+		dm_list_iterate_items(sl, &lv_where->tags)
+			if (!str_list_add(cmd->mem, &layer_lv->tags, sl->str)) {
+				log_error("Aborting.  Unable to tag"
+					  " transient mirror layer.");
+				return NULL;
+			}
+
 		if (!vg_write(lv_where->vg)) {
 			log_error("Failed to write intermediate VG %s metadata for mirror conversion.", lv_where->vg->name);
 			return NULL;
@@ -3744,6 +3753,11 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 				  name, lv_where->vg->name);
 			return NULL;
 		}
+
+		/* Remove the temporary tags */
+		dm_list_iterate_items(sl, &lv_where->tags)
+			str_list_del(&layer_lv->tags, sl->str);
+
 	}
 
 	log_very_verbose("Inserting layer %s for %s",
