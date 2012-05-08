@@ -842,21 +842,28 @@ static int _find_config_bool(const void *start, node_lookup_fn find,
 {
 	const struct dm_config_node *n = find(start, path);
 	const struct dm_config_value *v;
+	int b;
 
-	if (!n)
-		return fail;
+	if (n) {
+		v = n->v;
 
-	v = n->v;
+		switch (v->type) {
+		case DM_CFG_INT:
+			b = v->v.i ? 1 : 0;
+			log_very_verbose("Setting %s to %d", path, b);
+			return b;
 
-	switch (v->type) {
-	case DM_CFG_INT:
-		return v->v.i ? 1 : 0;
-
-	case DM_CFG_STRING:
-		return _str_to_bool(v->v.str, fail);
-	default:
-		;
+		case DM_CFG_STRING:
+			b = _str_to_bool(v->v.str, fail);
+			log_very_verbose("Setting %s to %d", path, b);
+			return b;
+		default:
+			;
+		}
 	}
+
+	log_very_verbose("%s not found in config: defaulting to %d",
+			 path, fail);
 
 	return fail;
 }
