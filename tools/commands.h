@@ -138,12 +138,20 @@ xx(lvconvert,
    "\t[-d|--debug]\n"
    "\t[-h|-?|--help]\n"
    "\t[-v|--verbose]\n"
-   "\tLogicalVolume[Path]\n",
+   "\tLogicalVolume[Path]\n\n"
+
+   "lvconvert "
+   "--thinpool ThinPoolLogicalVolume[Path]\n"
+   "\t[--chunksize size]\n"
+   "\t[[--poolmetadatasize size] | ThinMetadataLogicalVolume[Path]]\n"
+   "\t[-z|--zero {y|n}]\n"
+   "\t[-d|--debug] [-h|-?|--help] [-v|--verbose]\n",
 
    alloc_ARG, background_ARG, chunksize_ARG, corelog_ARG, interval_ARG,
    merge_ARG, mirrorlog_ARG, mirrors_ARG, name_ARG, noudevsync_ARG,
    regionsize_ARG, repair_ARG, replace_ARG, snapshot_ARG, splitmirrors_ARG,
    trackchanges_ARG, type_ARG, stripes_long_ARG, stripesize_ARG, test_ARG,
+   chunksize_ARG, poolmetadatasize_ARG, thinpool_ARG,
    use_policies_ARG, yes_ARG, force_ARG, zero_ARG)
 
 xx(lvcreate,
