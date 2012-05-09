@@ -118,6 +118,8 @@ pvcreate --metadatasize $size_mb $dev1
 vgcreate $vg1 $dev1
 vgcfgbackup -f $backupfile
 vgcfgrestore -f $backupfile $vg1
+vgremove -f $vg1
+pvremove -f $dev1
 
 # pvcreate wipes swap signature when forced
 dd if=/dev/zero of="$dev1" bs=1024 count=64
