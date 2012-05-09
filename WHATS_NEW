@@ -1,5 +1,6 @@
 Version 2.02.96 - 
 ================================
+  Fix division by zero if PV with zero PE count is used during vgcfgrestore.
   Add initial support for thin pool lvconvert.
   Fix lvrename for thin volumes (regression in for_each_sub_lv() 2.02.89).
   Fix up-convert when mirror activation is controled by volume_list and tags.

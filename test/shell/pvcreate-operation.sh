@@ -111,6 +111,14 @@ pvcreate --norestorefile --uuid $uuid1 "$dev1"
 vgcfgbackup -f $backupfile
 not pvcreate --uuid $uuid2 --restorefile $backupfile "$dev2"
 
+# vgcfgrestore of a VG containing a PV with zero PEs (bz #820116)
+# (use case: one PV in a VG used solely to keep metadata)
+size_mb=$(($(blockdev --getsz $dev1) / 2048))
+pvcreate --metadatasize $size_mb $dev1
+vgcreate $vg1 $dev1
+vgcfgbackup -f $backupfile
+vgcfgrestore -f $backupfile $vg1
+
 # pvcreate wipes swap signature when forced
 dd if=/dev/zero of="$dev1" bs=1024 count=64
 mkswap "$dev1"

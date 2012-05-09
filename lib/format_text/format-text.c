@@ -1713,7 +1713,7 @@ static int _text_pv_setup(const struct format_type *fmt,
 			   pv->pe_start + size_reduction;
 
 	/* Recalculate number of extents that will fit */
-	if (!pv->pe_count) {
+	if (!pv->pe_count && vg->extent_size) {
 		pe_count = (pv->size - pv->pe_start - size_reduction) /
 			   vg->extent_size;
 		if (pe_count > UINT32_MAX) {
