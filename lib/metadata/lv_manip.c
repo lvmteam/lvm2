@@ -2814,13 +2814,6 @@ int for_each_sub_lv(struct cmd_context *cmd, struct logical_volume *lv,
 				return_0;
 		}
 
-		if (seg->pool_lv) {
-			if (!fn(cmd, seg->pool_lv, data))
-				return_0;
-			if (!for_each_sub_lv(cmd, seg->pool_lv, fn, data))
-				return_0;
-		}
-
 		if (seg->metadata_lv) {
 			if (!fn(cmd, seg->metadata_lv, data))
 				return_0;
