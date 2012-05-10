@@ -1293,6 +1293,8 @@ AC_ARG_WITH(systemdsystemunitdir,
 	    AC_HELP_STRING([--with-systemdsystemunitdir=DIR],
 			   [systemd service files in DIR]),
 	    systemdsystemunitdir=$withval,
+	    dnl -- init pkgconfig if required
+	    test x$PKGCONFIG_INIT != x1 && pkg_config_init
 	    pkg_systemdsystemunitdir=$($PKG_CONFIG --variable=systemdsystemunitdir systemd))
 
 if test -n "$pkg_systemdsystemunitdir"; then
