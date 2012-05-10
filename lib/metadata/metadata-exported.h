@@ -208,8 +208,11 @@ struct pv_segment {
 /* Include any existing PV mdas during format_instance initialisation */
 #define FMT_INSTANCE_MDAS		0x00000002U
 
-/* FIXME Define auxiliary here! */
-/* Include any auxiliary mdas during format_instance intialisation */
+/*
+ * Include any auxiliary mdas during format_instance intialisation.
+ * Currently, this includes metadata areas as defined by
+ * metadata/dirs and metadata/raws setting.
+ */
 #define FMT_INSTANCE_AUX_MDAS		0x00000004U
 
 /* Include any other format-specific mdas during format_instance initialisation */
