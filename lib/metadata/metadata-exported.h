@@ -205,7 +205,7 @@ struct pv_segment {
  * area information we are working with.
  */
 
-/* Include any existing PV mdas during format_instance initialisation */
+/* Include any existing PV ("on-disk") mdas during format_instance initialisation. */
 #define FMT_INSTANCE_MDAS		0x00000002U
 
 /*
@@ -215,7 +215,10 @@ struct pv_segment {
  */
 #define FMT_INSTANCE_AUX_MDAS		0x00000004U
 
-/* Include any other format-specific mdas during format_instance initialisation */
+/*
+ * Include any other format-specific mdas during format_instance initialisation.
+ * For example metadata areas used during backup/restore/archive handling.
+ */
 #define FMT_INSTANCE_PRIVATE_MDAS	0x00000008U
 
 struct format_instance {
