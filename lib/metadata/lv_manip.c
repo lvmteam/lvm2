@@ -1673,7 +1673,7 @@ static int _find_some_parallel_space(struct alloc_handle *ah, const struct alloc
 	if (alloc_parms->flags & A_CLING_TO_ALLOCED)
 		ix_offset = ah->area_count;
 
-	if (alloc_parms->alloc == ALLOC_NORMAL)
+	if (alloc_parms->alloc == ALLOC_NORMAL || (alloc_parms->flags & A_CLING_TO_ALLOCED))
 		log_debug("Cling_to_allocated is %sset",
 			  alloc_parms->flags & A_CLING_TO_ALLOCED ? "" : "not ");
 
