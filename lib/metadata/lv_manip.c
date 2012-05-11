@@ -1248,13 +1248,13 @@ static int _is_same_pv(struct pv_match *pvmatch __attribute((unused)), struct pv
  * Does PV area have a tag listed in allocation/cling_tag_list that 
  * matches a tag of the PV of the existing segment?
  */
-static int _has_matching_pv_tag(struct pv_match *pvmatch, struct pv_segment *pvseg, struct pv_area *pva)
+static int _pvs_have_matching_tag(const struct dm_config_node *cling_tag_list_cn, struct physical_volume *pv1, struct physical_volume *pv2)
 {
 	const struct dm_config_value *cv;
 	const char *str;
 	const char *tag_matched;
 
-	for (cv = pvmatch->cling_tag_list_cn->v; cv; cv = cv->next) {
+	for (cv = cling_tag_list_cn->v; cv; cv = cv->next) {
 		if (cv->type != DM_CFG_STRING) {
 			log_error("Ignoring invalid string in config file entry "
 				  "allocation/cling_tag_list");
@@ -1283,26 +1283,31 @@ static int _has_matching_pv_tag(struct pv_match *pvmatch, struct pv_segment *pvs
 
 		/* Wildcard matches any tag against any tag. */
 		if (!strcmp(str, "*")) {
-			if (!str_list_match_list(&pvseg->pv->tags, &pva->map->pv->tags, &tag_matched))
+			if (!str_list_match_list(&pv1->tags, &pv2->tags, &tag_matched))
 				continue;
 			else {
 				log_debug("Matched allocation PV tag %s on existing %s with free space on %s.",
-					  tag_matched, pv_dev_name(pvseg->pv), pv_dev_name(pva->map->pv));
+					  tag_matched, pv_dev_name(pv1), pv_dev_name(pv2));
 				return 1;
 			}
 		}
 
-		if (!str_list_match_item(&pvseg->pv->tags, str) ||
-		    !str_list_match_item(&pva->map->pv->tags, str))
+		if (!str_list_match_item(&pv1->tags, str) ||
+		    !str_list_match_item(&pv2->tags, str))
 			continue;
 		else {
 			log_debug("Matched allocation PV tag %s on existing %s with free space on %s.",
-				  str, pv_dev_name(pvseg->pv), pv_dev_name(pva->map->pv));
+				  str, pv_dev_name(pv1), pv_dev_name(pv2));
 			return 1;
 		}
 	}
 
 	return 0;
+}
+
+static int _has_matching_pv_tag(struct pv_match *pvmatch, struct pv_segment *pvseg, struct pv_area *pva)
+{
+	return _pvs_have_matching_tag(pvmatch->cling_tag_list_cn, pvseg->pv, pva->map->pv);
 }
 
 /*
