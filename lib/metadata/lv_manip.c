@@ -2022,7 +2022,7 @@ static int _allocate(struct alloc_handle *ah,
 		ah->alloc = ALLOC_CLING_BY_TAGS;
 
 	/* Attempt each defined allocation policy in turn */
-	for (alloc = ALLOC_CONTIGUOUS; alloc < ALLOC_INHERIT; alloc++) {
+	for (alloc = ALLOC_CONTIGUOUS; alloc <= ah->alloc; alloc++) {
 		/* Skip cling_by_tags if no list defined */
 		if (alloc == ALLOC_CLING_BY_TAGS && !ah->cling_tag_list_cn)
 			continue;
@@ -2039,7 +2039,7 @@ static int _allocate(struct alloc_handle *ah,
 		if (!_find_max_parallel_space_for_one_policy(ah, &alloc_parms, pvms, &alloc_state))
 			goto_out;
 
-		if ((alloc_state.allocated == ah->new_extents && !alloc_state.log_area_count_still_needed) || (ah->alloc == alloc) ||
+		if ((alloc_state.allocated == ah->new_extents && !alloc_state.log_area_count_still_needed) ||
 		    (!can_split && (alloc_state.allocated != old_allocated)))
 			break;
 	}
@@ -2154,7 +2154,7 @@ struct alloc_handle *allocate_extents(struct volume_group *vg,
 		return NULL;
 	}
 
-	if (alloc == ALLOC_INHERIT)
+	if (alloc >= ALLOC_INHERIT)
 		alloc = vg->alloc;
 
 	new_extents = (lv ? lv->le_count : 0) + extents;

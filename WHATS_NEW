@@ -1,5 +1,6 @@
 Version 2.02.96 - 
 ================================
+  Fix policy loop not to use later policies when --alloc cling without tags.
   Append _TO_LVSEG to names of internal A_CONTIGUOUS and A_CLING flags.
   Add missing pkg init --with-systemdsystemunitdir in configure.in (2.02.92).
   Fix division by zero if PV with zero PE count is used during vgcfgrestore.
