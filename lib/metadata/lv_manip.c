@@ -39,10 +39,12 @@ typedef enum {
 #define RAID_METADATA_AREA_LEN 1
 
 /* FIXME These ended up getting used differently from first intended.  Refactor. */
-#define A_CONTIGUOUS		0x01
-#define A_CLING			0x02
-#define A_CLING_BY_TAGS		0x04
-#define A_CLING_TO_ALLOCED	0x08	/* Only for ALLOC_NORMAL */
+/* Only one of A_CONTIGUOUS_TO_LVSEG, A_CLING_TO_LVSEG, A_CLING_TO_ALLOCED may be set */
+#define A_CONTIGUOUS_TO_LVSEG	0x01	/* Must be contiguous to an existing segment */
+#define A_CLING_TO_LVSEG	0x02	/* Must use same disks as existing LV segment */
+#define A_CLING_TO_ALLOCED	0x04	/* Must use same disks as already-allocated segment */
+
+#define A_CLING_BY_TAGS		0x08	/* Must match tags against existing segment */
 #define A_CAN_SPLIT		0x10
 
 /*
@@ -907,11 +909,11 @@ static void _init_alloc_parms(struct alloc_handle *ah, struct alloc_parms *alloc
 	/* Are there any preceding segments we must follow on from? */
 	if (alloc_parms->prev_lvseg) {
 		if (alloc_parms->alloc == ALLOC_CONTIGUOUS)
-			alloc_parms->flags |= A_CONTIGUOUS;
+			alloc_parms->flags |= A_CONTIGUOUS_TO_LVSEG;
 		else if (alloc_parms->alloc == ALLOC_CLING)
-			alloc_parms->flags |= A_CLING;
+			alloc_parms->flags |= A_CLING_TO_LVSEG;
 		else if (alloc_parms->alloc == ALLOC_CLING_BY_TAGS) {
-			alloc_parms->flags |= A_CLING;
+			alloc_parms->flags |= A_CLING_TO_LVSEG;
 			alloc_parms->flags |= A_CLING_BY_TAGS;
 		}
 	}
@@ -1494,14 +1496,14 @@ static area_use_t _check_pva(struct alloc_handle *ah, struct pv_area *pva, uint3
 				return NEXT_AREA;
 
 	/* If maximise_cling is set, perform several checks, otherwise perform exactly one. */
-	if (!iteration_count && !log_iteration_count && alloc_parms->flags & (A_CONTIGUOUS | A_CLING | A_CLING_TO_ALLOCED)) {
+	if (!iteration_count && !log_iteration_count && alloc_parms->flags & (A_CONTIGUOUS_TO_LVSEG | A_CLING_TO_LVSEG | A_CLING_TO_ALLOCED)) {
 		/* Contiguous? */
-		if (((alloc_parms->flags & A_CONTIGUOUS) || ah->maximise_cling) &&
-		    alloc_parms->prev_lvseg && _check_contiguous(ah->cmd, alloc_parms->prev_lvseg, pva, alloc_state))
+		if (((alloc_parms->flags & A_CONTIGUOUS_TO_LVSEG) || (ah->maximise_cling && alloc_parms->prev_lvseg)) &&
+		    _check_contiguous(ah->cmd, alloc_parms->prev_lvseg, pva, alloc_state))
 			return PREFERRED;
 	
 		/* Try next area on same PV if looking for contiguous space */
-		if (alloc_parms->flags & A_CONTIGUOUS)
+		if (alloc_parms->flags & A_CONTIGUOUS_TO_LVSEG)
 			return NEXT_AREA;
 	
 		/* Cling_to_alloced? */
@@ -1667,7 +1669,7 @@ static int _find_some_parallel_space(struct alloc_handle *ah, const struct alloc
 	uint32_t devices_needed = ah->area_count + ah->parity_count;
 
 	/* ix_offset holds the number of parallel allocations that must be contiguous/cling */
-	if (alloc_parms->flags & (A_CONTIGUOUS | A_CLING) && alloc_parms->prev_lvseg)
+	if (alloc_parms->flags & (A_CONTIGUOUS_TO_LVSEG | A_CLING_TO_LVSEG))
 		ix_offset = _stripes_per_mimage(alloc_parms->prev_lvseg) * alloc_parms->prev_lvseg->area_count;
 
 	if (alloc_parms->flags & A_CLING_TO_ALLOCED)
