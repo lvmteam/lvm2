@@ -910,13 +910,18 @@ static void _init_alloc_parms(struct alloc_handle *ah, struct alloc_parms *alloc
 	if (alloc_parms->prev_lvseg) {
 		if (alloc_parms->alloc == ALLOC_CONTIGUOUS)
 			alloc_parms->flags |= A_CONTIGUOUS_TO_LVSEG;
-		else if (alloc_parms->alloc == ALLOC_CLING)
+		else if ((alloc_parms->alloc == ALLOC_CLING) || (alloc_parms->alloc == ALLOC_CLING_BY_TAGS))
 			alloc_parms->flags |= A_CLING_TO_LVSEG;
-		else if (alloc_parms->alloc == ALLOC_CLING_BY_TAGS) {
-			alloc_parms->flags |= A_CLING_TO_LVSEG;
-			alloc_parms->flags |= A_CLING_BY_TAGS;
-		}
-	}
+	} else
+		/*
+		 * A cling allocation that follows a successful contiguous allocation
+		 * must use the same PVs (or else fail).
+		 */
+		if ((alloc_parms->alloc == ALLOC_CLING) || (alloc_parms->alloc == ALLOC_CLING_BY_TAGS))
+			alloc_parms->flags |= A_CLING_TO_ALLOCED;
+
+	if (alloc_parms->alloc == ALLOC_CLING_BY_TAGS)
+		alloc_parms->flags |= A_CLING_BY_TAGS;
 
 	/*
 	 * For normal allocations, if any extents have already been found 
@@ -1435,7 +1440,8 @@ static int _check_contiguous(struct cmd_context *cmd,
 /*
  * Is pva on same PV as any areas already used in this allocation attempt?
  */
-static int _check_cling_to_alloced(struct alloc_handle *ah, struct pv_area *pva, struct alloc_state *alloc_state)
+static int _check_cling_to_alloced(struct alloc_handle *ah, const struct dm_config_node *cling_tag_list_cn,
+				   struct pv_area *pva, struct alloc_state *alloc_state)
 {
 	unsigned s;
 	struct alloced_area *aa;
@@ -1451,7 +1457,8 @@ static int _check_cling_to_alloced(struct alloc_handle *ah, struct pv_area *pva,
 		if (alloc_state->areas[s].pva)
 			continue;	/* Area already assigned */
 		dm_list_iterate_items(aa, &ah->alloced_areas[s]) {
-			if (pva->map->pv == aa[0].pv) {
+			if ((!cling_tag_list_cn && (pva->map->pv == aa[0].pv)) ||
+			    (cling_tag_list_cn && _pvs_have_matching_tag(cling_tag_list_cn, pva->map->pv, aa[0].pv))) {
 				_reserve_area(&alloc_state->areas[s], pva, pva->count, s + 1, 0);
 				return 1;
 			}
@@ -1505,28 +1512,27 @@ static area_use_t _check_pva(struct alloc_handle *ah, struct pv_area *pva, uint3
 		/* Try next area on same PV if looking for contiguous space */
 		if (alloc_parms->flags & A_CONTIGUOUS_TO_LVSEG)
 			return NEXT_AREA;
-	
-		/* Cling_to_alloced? */
-		if ((alloc_parms->flags & A_CLING_TO_ALLOCED) &&
-		    _check_cling_to_alloced(ah, pva, alloc_state))
-			return PREFERRED;
 
-		/* Cling? */
-		if (!(alloc_parms->flags & A_CLING_BY_TAGS) &&
-		    alloc_parms->prev_lvseg && _check_cling(ah, NULL, alloc_parms->prev_lvseg, pva, alloc_state))
+		/* Cling to prev_lvseg? */
+		if (((alloc_parms->flags & A_CLING_TO_LVSEG) || (ah->maximise_cling && alloc_parms->prev_lvseg)) &&
+		    _check_cling(ah, NULL, alloc_parms->prev_lvseg, pva, alloc_state))
 			/* If this PV is suitable, use this first area */
 			return PREFERRED;
 
-		if (!ah->maximise_cling && !(alloc_parms->flags & A_CLING_BY_TAGS))
-			return NEXT_PV;
+		/* Cling_to_alloced? */
+		if ((alloc_parms->flags & A_CLING_TO_ALLOCED) &&
+		    _check_cling_to_alloced(ah, NULL, pva, alloc_state))
+			return PREFERRED;
 
 		/* Cling_by_tags? */
-		if ((alloc_parms->flags & (A_CLING_BY_TAGS | A_CLING_TO_ALLOCED)) && ah->cling_tag_list_cn &&
-		    alloc_parms->prev_lvseg && _check_cling(ah, ah->cling_tag_list_cn, alloc_parms->prev_lvseg, pva, alloc_state))
-			return PREFERRED;
-	
-		if (alloc_parms->flags & A_CLING_BY_TAGS)
+		if (!(alloc_parms->flags & A_CLING_BY_TAGS) || !ah->cling_tag_list_cn)
 			return NEXT_PV;
+
+		if (alloc_parms->prev_lvseg) {
+			if (_check_cling(ah, ah->cling_tag_list_cn, alloc_parms->prev_lvseg, pva, alloc_state))
+				return PREFERRED;
+		} else if (_check_cling_to_alloced(ah, ah->cling_tag_list_cn, pva, alloc_state))
+			return PREFERRED;
 
 		/* All areas on this PV give same result so pointless checking more */
 		return NEXT_PV;
@@ -1669,6 +1675,7 @@ static int _find_some_parallel_space(struct alloc_handle *ah, const struct alloc
 	uint32_t devices_needed = ah->area_count + ah->parity_count;
 
 	/* ix_offset holds the number of parallel allocations that must be contiguous/cling */
+	/* At most one of A_CONTIGUOUS_TO_LVSEG, A_CLING_TO_LVSEG or A_CLING_TO_ALLOCED may be set */
 	if (alloc_parms->flags & (A_CONTIGUOUS_TO_LVSEG | A_CLING_TO_LVSEG))
 		ix_offset = _stripes_per_mimage(alloc_parms->prev_lvseg) * alloc_parms->prev_lvseg->area_count;
 
@@ -1791,7 +1798,7 @@ static int _find_some_parallel_space(struct alloc_handle *ah, const struct alloc
 				break;
 		}
 	} while ((alloc_parms->alloc == ALLOC_ANYWHERE && last_ix != ix && ix < devices_needed + alloc_state->log_area_count_still_needed) ||
-		/* With cling_to_alloced, if there were gaps in the preferred areas, have a second iteration */
+		/* With cling_to_alloced and normal, if there were gaps in the preferred areas, have a second iteration */
 		 (alloc_parms->alloc == ALLOC_NORMAL && preferred_count &&
 		  (preferred_count < ix_offset || alloc_state->log_area_count_still_needed) &&
 		  (alloc_parms->flags & A_CLING_TO_ALLOCED) && !iteration_count++) ||
@@ -1920,7 +1927,7 @@ static int _find_max_parallel_space_for_one_policy(struct alloc_handle *ah, stru
 			return_0;
 
 		/*
-		 * If we didn't allocate anything this time and had
+		 * If we didn't allocate anything this time with ALLOC_NORMAL and had
 		 * A_CLING_TO_ALLOCED set, try again without it.
 		 *
 		 * For ALLOC_NORMAL, if we did allocate something without the
@@ -1928,7 +1935,7 @@ static int _find_max_parallel_space_for_one_policy(struct alloc_handle *ah, stru
 		 * remain on the same disks where possible.
 		 */
 		if (old_allocated == alloc_state->allocated) {
-			if (alloc_parms->flags & A_CLING_TO_ALLOCED)
+			if ((alloc_parms->alloc == ALLOC_NORMAL) && (alloc_parms->flags & A_CLING_TO_ALLOCED))
 				alloc_parms->flags &= ~A_CLING_TO_ALLOCED;
 			else
 				break;	/* Give up */
