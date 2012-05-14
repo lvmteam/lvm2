@@ -63,16 +63,12 @@ lvconvert \- convert a logical volume from linear to mirror or snapshot
 .IR ThinPoolLogicalVolume { Name | Path }
 .RB [ \-c | \-\-chunksize
 .IR ChunkSize ]
-.RB [[ \-\-poolmetadatasize
-.IR MetadataSize [ bBsSkKmMgG ]
-.RI [ PhysicalVolume [ Path ][ :PE [ -PE ]]...]]
-|
-.IR ThinMetadataLogicalVolume { Name | Path }]
-.RB [ \-Z | \-\-zero
-.RI { y | n }]
 .RB [ \-h | \-? | \-\-help ]
 .RB [ \-v | \-\-verbose ]
 .RB [ \-\-version ]
+.RB [ \-Z | \-\-zero
+.RI { y | n }]
+.IR ThinMetadataLogicalVolume { Name | Path }
 .sp
 .B lvconvert \-\-repair
 .RB [ \-h | \-? | \-\-help ]
