@@ -4231,9 +4231,9 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 
 			if (lv_is_mirror_type(org) &&
 			    !seg_is_raid(first_seg(org))) {
-				log_error("Snapshots of \"mirror\" segment types"
-					  " are not supported");
-				return NULL;
+				log_warn("WARNING: Snapshots of mirrors can deadlock under rare device failures.");
+				log_warn("WARNING: Consider using the raid1 mirror type to avoid this.");
+				log_warn("WARNING: See global/mirror_segtype_default in lvm.conf.");
 			}
 
 			if (!lv_info(cmd, org, 0, &info, 0, 0)) {
