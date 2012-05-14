@@ -430,8 +430,12 @@ global {
     # "mirror" - The original RAID1 implementation provided by LVM2/DM.  It is
     # 	         characterized by a flexible log solution (core, disk, mirrored)
     #		 and by the necessity to block I/O while reconfiguring in the
-    #		 event of a failure.  Snapshots of this type of RAID1 can be
-    #		 problematic.
+    #		 event of a failure.
+    #
+    #		 There is an inherent race in the dmeventd failure handling
+    #		 logic with snapshots of devices using this type of RAID1 that
+    #		 in the worst case could cause a deadlock.
+    #		   Ref: https://bugzilla.redhat.com/show_bug.cgi?id=817130#c10
     #
     # "raid1"  - This implementation leverages MD's RAID1 personality through
     # 	       	 device-mapper.  It is characterized by a lack of log options.
