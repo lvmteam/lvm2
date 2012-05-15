@@ -2373,8 +2373,9 @@ static int _load_node(struct dm_tree_node *dnode)
 				dnode->props.size_changed = 0;
 
 			log_debug("Table size changed from %" PRIu64 " to %"
-				  PRIu64 " for %s.%s", existing_table_size,
-				  seg_start, dnode->name,
+				  PRIu64 " for %s (%" PRIu32 ":%" PRIu32 ").%s",
+				  existing_table_size, seg_start, dnode->name,
+				  dnode->info.major, dnode->info.minor,
 				  dnode->props.size_changed ? "" : " (Ignoring.)");
 		}
 	}
