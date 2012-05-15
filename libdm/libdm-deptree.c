@@ -2364,9 +2364,6 @@ static int _load_node(struct dm_tree_node *dnode)
 		existing_table_size = dm_task_get_existing_table_size(dmt);
 		if ((dnode->props.size_changed =
 		     (existing_table_size == seg_start) ? 0 : 1)) {
-			log_debug("Table size changed from %" PRIu64 " to %"
-				  PRIu64 " for %s", existing_table_size,
-				  seg_start, dnode->name);
 			/*
 			 * Kernel usually skips size validation on zero-length devices
 			 * now so no need to preload them.
@@ -2374,6 +2371,11 @@ static int _load_node(struct dm_tree_node *dnode)
 			/* FIXME In which kernel version did this begin? */
 			if (!existing_table_size && dnode->props.delay_resume_if_new)
 				dnode->props.size_changed = 0;
+
+			log_debug("Table size changed from %" PRIu64 " to %"
+				  PRIu64 " for %s.%s", existing_table_size,
+				  seg_start, dnode->name,
+				  dnode->props.size_changed ? "" : " (Ignoring.)");
 		}
 	}
 
