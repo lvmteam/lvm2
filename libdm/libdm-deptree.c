@@ -2358,8 +2358,10 @@ static int _load_node(struct dm_tree_node *dnode)
 	if ((r = dm_task_run(dmt))) {
 		r = dm_task_get_info(dmt, &dnode->info);
 		if (r && !dnode->info.inactive_table)
-			log_verbose("Suppressed %s identical table reload.",
-				    dnode->name);
+			log_verbose("Suppressed %s (%" PRIu32 ":%" PRIu32
+				    ") identical table reload.",
+				    dnode->name,
+				    dnode->info.major, dnode->info.minor);
 
 		existing_table_size = dm_task_get_existing_table_size(dmt);
 		if ((dnode->props.size_changed =
@@ -2547,6 +2549,12 @@ int dm_tree_node_add_snapshot_origin_target(struct dm_tree_node *dnode,
 
 	/* Resume snapshot origins after new snapshots */
 	dnode->activation_priority = 1;
+
+	/*
+	 * Don't resume the origin immediately in case it is a non-trivial 
+	 * target that must not be active more than once concurrently!
+	 */
+	origin_node->props.delay_resume_if_new = 1;
 
 	return 1;
 }

@@ -1,5 +1,6 @@
 Version 1.02.75 - 
 ================================
+  Set delay_resume_if_new on deptree snapshot origin.
   Log value chosen in _find_config_bool like other variable types do.
   Synchronize with dead of dmeventd.
   Rename (Blk)DevNames/DevNos dmsetup header to (Blk)DevNamesUsed/DevNosUsed.
