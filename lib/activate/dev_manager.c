@@ -1581,22 +1581,6 @@ int add_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 				  seg->lv->vg->name, seg->lv->name);
 			return 0;
 		}
-
-		/*
-		 * Mirrors activate LVs replaced with error targets and
-		 * RAID can handle non-accessible sub-LVs.
-		 *
-		 * TODO: Can we eventually skip to activate such LVs ?
-		 */
-		if (!num_existing_areas &&
-		    !strstr(seg->lv->name, "_rmeta_") &&
-		    !strstr(seg->lv->name, "_rimage_") &&
-		    !strstr(seg->lv->name, "_mimage_") &&
-		    !((name = strstr(seg->lv->name, "_mlog")) && !name[5])) {
-			log_error("Cannot activate %s/%s: all segments missing.",
-				  seg->lv->vg->name, seg->lv->name);
-			return 0;
-		}
 	}
 
 	return 1;
