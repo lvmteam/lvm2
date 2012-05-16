@@ -17,6 +17,10 @@ run_valgrind() {
 	exec "${VALGRIND:-valg}" "$@"
 }
 
+expect_failure() {
+        echo "TEST EXPECT FAILURE"
+}
+
 prepare_clvmd() {
 	test "${LVM_TEST_LOCKING:-0}" -ne 3 && return # not needed
 

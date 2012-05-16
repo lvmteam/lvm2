@@ -32,6 +32,7 @@ struct stats {
 	int nfailed;
 	int nskipped;
 	int npassed;
+	int nknownfail;
 	int nwarned;
 	int status[MAX];
 };
@@ -55,6 +56,7 @@ static struct subst subst[2];
 #define SKIPPED 1
 #define FAILED 2
 #define WARNED 3
+#define KNOWNFAIL 4
 
 static void handler( int sig ) {
 	signal( sig, SIG_DFL );
@@ -227,7 +229,11 @@ static const char *duration(time_t start)
 }
 
 static void passed(int i, char *f, time_t t) {
-	if (readbuf && strstr(readbuf, "TEST WARNING")) {
+	if (readbuf && strstr(readbuf, "TEST EXPECT FAIL")) {
+		++ s.npassed;
+		s.status[i] = PASSED;
+		printf("passed (UNEXPECTED). %s\n", duration(t));
+	} else if (readbuf && strstr(readbuf, "TEST WARNING")) {
 		++s.nwarned;
 		s.status[i] = WARNED;
 		printf("warnings  %s\n", duration(t));
@@ -245,6 +251,13 @@ static void skipped(int i, char *f) {
 }
 
 static void failed(int i, char *f, int st) {
+	if (readbuf && strstr(readbuf, "TEST EXPECT FAIL")) {
+		printf("FAILED (expected).\n");
+		s.status[i] = KNOWNFAIL;
+		++ s.nknownfail;
+		return;
+	}
+
 	++ s.nfailed;
 	s.status[i] = FAILED;
 	if(die == 2) {
@@ -343,17 +356,20 @@ int main(int argc, char **argv) {
 			break;
 	}
 
-	printf("\n## %d tests %s : %d OK, %d warnings, %d failures; %d skipped\n",
+	printf("\n## %d tests %s : %d OK, %d warnings, %d failures, %d known failures; %d skipped\n",
 	       s.nwarned + s.npassed + s.nfailed + s.nskipped,
 	       duration(start),
-	       s.npassed, s.nwarned, s.nfailed, s.nskipped);
+	       s.npassed, s.nwarned, s.nfailed, s.nknownfail, s.nskipped);
 
 	/* print out a summary */
-	if (s.nfailed || s.nskipped) {
+	if (s.nfailed || s.nskipped || s.nknownfail) {
 		for (i = 1; i < argc; ++ i) {
 			switch (s.status[i]) {
 			case FAILED:
 				printf("FAILED: %s\n", argv[i]);
+				break;
+			case KNOWNFAIL:
+				printf("FAILED (expected): %s\n", argv[i]);
 				break;
 			case SKIPPED:
 				printf("skipped: %s\n", argv[i]);
