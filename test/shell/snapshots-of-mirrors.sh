@@ -15,7 +15,8 @@ aux prepare_vg 4
 
 # Attempt to create snapshot of a mirror origin - should fail
 lvcreate -m 1 -L 10M -n lv $vg
-not lvcreate -s $vg/lv -L 10M -n snap
+
+lvcreate -s $vg/lv -L 10M -n snap
 
 exit 0
 
