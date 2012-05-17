@@ -19,7 +19,6 @@
 . lib/test
 
 aux prepare_vg 2
-aux expect_failure
 
 lvcreate -l100%FREE -n span $vg
 vgchange -a n $vg
