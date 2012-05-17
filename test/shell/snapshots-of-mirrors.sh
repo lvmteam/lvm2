@@ -18,12 +18,6 @@ lvcreate -m 1 -L 10M -n lv $vg
 
 lvcreate -s $vg/lv -L 10M -n snap
 
-exit 0
-
-#
-# Snapshots of mirrors are no longer allowed.
-#
-
 # Down-convert (mirror -> linear) under a snapshot
 lvconvert -m0 $vg/lv
 

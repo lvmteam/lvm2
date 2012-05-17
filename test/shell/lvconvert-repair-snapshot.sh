@@ -11,13 +11,6 @@
 
 . lib/test
 
-exit 0
-#
-# Snapshots of 'mirrors' are not supported.  They can no longer be created.
-# This file could be used to test some aspect of lvconvert, snapshot, and
-# RAID at some point though...
-#
-
 aux prepare_vg 5
 aux lvmconf 'allocation/maximise_cling = 0'
 aux lvmconf 'allocation/mirror_logs_require_separate_pvs = 1'
