@@ -759,17 +759,19 @@ static struct dev_filter *_init_filter_components(struct cmd_context *cmd)
 		log_very_verbose("devices/filter not found in config file: "
 				 "no regex filter installed");
 
-	else if (!(filters[nr_filt++] = regex_filter_create(cn->v))) {
+	else if (!(filters[nr_filt] = regex_filter_create(cn->v))) {
 		log_error("Failed to create regex device filter");
 		goto bad;
-	}
+	} else
+		nr_filt++;
 
 	/* device type filter. Required. */
 	cn = find_config_tree_node(cmd, "devices/types");
-	if (!(filters[nr_filt++] = lvm_type_filter_create(cmd->proc_dir, cn))) {
+	if (!(filters[nr_filt] = lvm_type_filter_create(cmd->proc_dir, cn))) {
 		log_error("Failed to create lvm type filter");
 		goto bad;
 	}
+	nr_filt++;
 
 	/* md component filter. Optional, non-critical. */
 	if (find_config_tree_bool(cmd, "devices/md_component_detection",

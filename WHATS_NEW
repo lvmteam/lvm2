@@ -1,5 +1,6 @@
 Version 2.02.96 - 
 ================================
+  Fix error paths for regex filter initialization.
   Re-enable partial activation of non-thin LVs until it can be fixed. (2.02.90)
   Fix alloc cling to cling to PVs already found with contiguous policy.
   Fix cling policy not to behave like normal policy if no previous LV seg.
