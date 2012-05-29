@@ -1500,6 +1500,9 @@ struct dm_config_node *dm_config_clone_node(struct dm_config_tree *cft, const st
 
 struct dm_pool *dm_config_memory(struct dm_config_tree *cft);
 
+/* Udev device directory. */
+#define DM_UDEV_DEV_DIR "/dev/"
+
 /* Cookie prefixes.
  *
  * The cookie value consists of a prefix (16 bits) and a base (16 bits).

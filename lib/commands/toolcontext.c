@@ -650,9 +650,9 @@ static int _init_dev_cache(struct cmd_context *cmd)
 {
 	const struct dm_config_node *cn;
 	const struct dm_config_value *cv;
-	size_t uninitialized_var(udev_dir_len), len;
+	size_t len, udev_dir_len = strlen(DM_UDEV_DEV_DIR);
+	int len_diff;
 	int device_list_from_udev;
-	const char *uninitialized_var(udev_dir);
 
 	init_dev_disable_after_error_count(
 		find_config_tree_int(cmd, "devices/disable_after_error_count",
@@ -661,13 +661,9 @@ static int _init_dev_cache(struct cmd_context *cmd)
 	if (!dev_cache_init(cmd))
 		return_0;
 
-	if ((device_list_from_udev = udev_is_running() ?
+	device_list_from_udev = udev_is_running() ?
 		find_config_tree_bool(cmd, "devices/obtain_device_list_from_udev",
-				      DEFAULT_OBTAIN_DEVICE_LIST_FROM_UDEV) : 0)) {
-		if (!(udev_dir = udev_get_dev_dir()))
-			stack;
-		udev_dir_len = (udev_dir) ? strlen(udev_dir) : 0;
-	}
+				      DEFAULT_OBTAIN_DEVICE_LIST_FROM_UDEV) : 0;
 	init_obtain_device_list_from_udev(device_list_from_udev);
 
 	if (!(cn = find_config_tree_node(cmd, "devices/scan"))) {
@@ -688,11 +684,19 @@ static int _init_dev_cache(struct cmd_context *cmd)
 			return 0;
 		}
 
-		if (device_list_from_udev && udev_dir) {
+		if (device_list_from_udev) {
 			len = strlen(cv->v.str);
-			len = udev_dir_len > len ? len : udev_dir_len;
-			if (strncmp(udev_dir, cv->v.str, len) ||
-			    udev_dir[len] != cv->v.str[len]) {
+
+			/*
+			 * DM_UDEV_DEV_DIR always has '/' at its end.
+			 * If the item in the conf does not have it, be sure
+			 * to make the right comparison without the '/' char!
+			 */
+			len_diff = len && cv->v.str[len - 1] != '/' ?
+					udev_dir_len - 1 != len :
+					udev_dir_len != len;
+
+			if (len_diff || strncmp(DM_UDEV_DEV_DIR, cv->v.str, len)) {
 				device_list_from_udev = 0;
 				init_obtain_device_list_from_udev(0);
 			}

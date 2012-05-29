@@ -1008,11 +1008,9 @@ static int _udevcookies(CMD_ARGS)
 #else	/* UDEV_SYNC_SUPPORT */
 static int _set_up_udev_support(const char *dev_dir)
 {
-	struct udev *udev;
-	const char *udev_dev_dir;
-	size_t udev_dev_dir_len;
 	int dirs_diff;
 	const char *env;
+	size_t len = strlen(dev_dir), udev_dir_len = strlen(DM_UDEV_DEV_DIR);
 
 	if (_switches[NOUDEVSYNC_ARG])
 		dm_udev_set_sync_support(0);
@@ -1030,14 +1028,6 @@ static int _set_up_udev_support(const char *dev_dir)
 			  " defined by --udevcookie option.",
 			  _udev_cookie);
 
-	if (!(udev = udev_new()) ||
-	    !(udev_dev_dir = udev_get_dev_path(udev)) ||
-	    !*udev_dev_dir) {
-		log_error("Could not get udev dev path.");
-		return 0;
-	}
-	udev_dev_dir_len = strlen(udev_dev_dir);
-
 	/*
 	 * Normally, there's always a fallback action by libdevmapper if udev
 	 * has not done its job correctly, e.g. the nodes were not created.
@@ -1049,12 +1039,17 @@ static int _set_up_udev_support(const char *dev_dir)
 	 * is the same as "dev path" used by libdevmapper.
 	 */
 
-	/* There's always a slash at the end of dev_dir. But check udev_dev_dir! */
-	if (udev_dev_dir[udev_dev_dir_len - 1] != '/')
-		dirs_diff = strncmp(dev_dir, udev_dev_dir, udev_dev_dir_len);
-	else
-		dirs_diff = strcmp(dev_dir, udev_dev_dir);
 
+	/*
+	 * DM_UDEV_DEV_DIR always has '/' at its end.
+	 * If the dev_dir does not have it, be sure
+	 * to make the right comparison without the '/' char!
+	 */
+	if (dev_dir[len - 1] != '/')
+		udev_dir_len--;
+
+	dirs_diff = udev_dir_len != len ||
+		    strncmp(DM_UDEV_DEV_DIR, dev_dir, len);
 	_udev_only = !dirs_diff && (_udev_cookie || !_switches[VERIFYUDEV_ARG]);
 
 	if (dirs_diff) {
@@ -1064,11 +1059,10 @@ static int _set_up_udev_support(const char *dev_dir)
 			  "about udev not working correctly while processing "
 			  "particular nodes will be suppressed. These nodes "
 			  "and symlinks will be managed in each directory "
-			  "separately.", dev_dir, udev_dev_dir);
+			  "separately.", dev_dir, DM_UDEV_DEV_DIR);
 		dm_udev_set_checking(0);
 	}
 
-	udev_unref(udev);
 	return 1;
 }
 

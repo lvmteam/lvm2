@@ -65,16 +65,6 @@ bad:
 	return 0;
 }
 
-const char *udev_get_dev_dir(void)
-{
-	if (!_udev) {
-		log_debug(_no_context_msg);
-		return NULL;
-	}
-
-	return udev_get_dev_path(_udev);
-}
-
 struct udev* udev_get_library_context(void)
 {
 	return _udev;
@@ -96,10 +86,6 @@ int udev_is_running(void)
 	return 0;
 }
 
-const char *udev_get_dev_dir(void)
-{
-	return NULL;
-}
 #endif
 
 int lvm_getpagesize(void)
