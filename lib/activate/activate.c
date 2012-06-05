@@ -1518,6 +1518,9 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 	    (lv_is_origin(lv_pre) || lv_is_cow(lv_pre)))
 		lockfs = 1;
 
+	if (laopts->origin_only && lv_is_thin_volume(lv) && lv_is_thin_volume(lv_pre))
+		lockfs = 1;
+
 	/*
 	 * Suspending an LV directly above a PVMOVE LV also
  	 * suspends other LVs using that same PVMOVE LV.
@@ -1597,7 +1600,7 @@ static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
 	if (lv_is_thin_pool(lv) && laopts->origin_only)
 		messages_only = 1;
 
-	if (!lv_is_origin(lv))
+	if (!lv_is_origin(lv) && !lv_is_thin_volume(lv))
 		laopts->origin_only = 0;
 
 	if (test_mode()) {
