@@ -1841,8 +1841,8 @@ static int _lvconvert_thinpool(struct cmd_context *cmd,
 				      lp->pool_data_lv_name);
 
 	if (!pool_lv) {
-		log_error("Can't find pool logical volume %s.", pool_lv->name);
-		goto_out;
+		log_error("Can't find pool logical volume %s.", lp->lv_name);
+		return 0;
 	}
 
 	if ((pool_lv != metadata_lv)) {
