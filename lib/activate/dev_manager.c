@@ -1369,7 +1369,7 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		seg = first_seg(lv);
 	}
 
-	if (lv_is_thin_pool(lv)) {
+	if (!origin_only && lv_is_thin_pool(lv)) {
 		if (!_add_lv_to_dtree(dm, dtree, seg->metadata_lv, 0))
 			return_0;
 		/* FIXME code from _create_partial_dtree() should be moved here */

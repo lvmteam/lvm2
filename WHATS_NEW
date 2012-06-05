@@ -1,5 +1,6 @@
 Version 2.02.98 -
 =================================
+  Skip building dm tree for thin pool when called with origin_only flag.
   Add internal lv_rename_update() to rename LV without updating mda.
   Ensure descriptors 0,1,2 are always available.
   Use /proc/self/fd for closing openned descriptors.
