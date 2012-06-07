@@ -8,18 +8,20 @@ There is no warranty - see COPYING and COPYING.LIB.
 Tarballs are available from:
   ftp://sources.redhat.com/pub/lvm2/
 
-To access the CVS tree use:
-  cvs -d :pserver:cvs@sources.redhat.com:/cvs/lvm2 login
-  CVS password: cvs
-  cvs -d :pserver:cvs@sources.redhat.com:/cvs/lvm2 co LVM2
+The source code is stored in git:
+  http://git.fedorahosted.org/git/LVM2.git
+  git clone git://git.fedorahosted.org/git/LVM2.git
 
 Mailing list for general discussion related to LVM2:
   linux-lvm@redhat.com
   Subscribe from https://www.redhat.com/mailman/listinfo/linux-lvm
 
-Mailing list for LVM2 development, patches and commits:
+Mailing lists for LVM2 development, patches and commits:
   lvm-devel@redhat.com
   Subscribe from https://www.redhat.com/mailman/listinfo/linux-lvm
+
+  lvm2-commits@lists.fedorahosted.org (Read-only archive of commits)
+  Subscribe from https://fedorahosted.org/mailman/listinfo/lvm2-commits
 
 Mailing list for device-mapper development, including kernel patches
 and multipath-tools:
