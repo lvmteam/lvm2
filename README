@@ -27,3 +27,7 @@ Mailing list for device-mapper development, including kernel patches
 and multipath-tools:
   dm-devel@redhat.com
   Subscribe from https://www.redhat.com/mailman/listinfo/dm-devel
+
+The source code repository used until 7th June 2012 is accessible here:
+  http://sources.redhat.com/cgi-bin/cvsweb.cgi/LVM2/?cvsroot=lvm2.
+
