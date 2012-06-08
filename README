@@ -9,8 +9,8 @@ Tarballs are available from:
   ftp://sources.redhat.com/pub/lvm2/
 
 The source code is stored in git:
-  http://git.fedorahosted.org/git/LVM2.git
-  git clone git://git.fedorahosted.org/git/LVM2.git
+  http://git.fedorahosted.org/git/lvm2.git
+  git clone git://git.fedorahosted.org/git/lvm2.git
 
 Mailing list for general discussion related to LVM2:
   linux-lvm@redhat.com
