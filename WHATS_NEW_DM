@@ -1,17 +1,17 @@
-Version 1.02.75 - 
-================================
+Version 1.02.75 - 8th June 2012
+===============================
   Upstream source repo now fedorahosted.org git not sources.redhat.com CVS.
   Remove unsupported udev_get_dev_path libudev call used for checking udev dir.
   Set delay_resume_if_new on deptree snapshot origin.
   Log value chosen in _find_config_bool like other variable types do.
-  Synchronize with dead of dmeventd.
-  Rename (Blk)DevNames/DevNos dmsetup header to (Blk)DevNamesUsed/DevNosUsed.
+  Wait for dmeventd to exit after sending it DM_EVENT_CMD_DIE when restarting.
+  Append 'Used' to {Blk}DevNames/DevNos dmsetup report headers for clarity.
   Add configure --with-veritysetup for independent veritysetup tool.
-  Properly support passed in dmevent path in dm_event_register_handler().
+  Properly support supplied dmevent path in dm_event_register_handler().
   Remove dmeventd fifos on exit if they are not managed by systemd.
-  Use SD_ACTIVATION env. var. in systemd units to better detect systemd in use.
-  Do not run a new dmeventd instance on restart if there's no existing one.
-  Make the time window for reading fifo longer 5sec (1.02.73).
+  Use SD_ACTIVATION environment variable in systemd units to detect systemd.
+  Only start a new dmeventd instance on restart if one was already running.
+  Extend the time waited for input from dmeventd fifo to 5 secs. (1.02.73)
 
 Version 1.02.74 - 6th March 2012
 ================================
