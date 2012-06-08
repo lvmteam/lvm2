@@ -7,6 +7,7 @@
 *.pot
 *.so
 *.so.*
+*.swp
 
 .export.sym
 .exported_symbols_generated
