@@ -1893,7 +1893,10 @@ static void restart(void)
 		exit(EXIT_FAILURE);
 	}
 
-	/* Let's wait a bit till deamon dies - spaming him with messages meanwhile */
+	/*
+	 * Wait for daemon to die, detected by sending further DIE messages
+	 * until one fails.
+	 */
 	for (i = 0; i < 10; ++i) {
 		if (daemon_talk(&fifos, &msg, DM_EVENT_CMD_DIE, "-", "-", 0, 0))
 			break; /* yep, it's dead probably */
