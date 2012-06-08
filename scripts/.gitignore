@@ -1,0 +1,9 @@
+clvmd_init_red_hat
+cmirrord_init_red_hat
+dm_event_systemd_red_hat.service
+lvm2_lvmetad_init_red_hat
+lvm2_lvmetad_systemd_red_hat.service
+lvm2_lvmetad_systemd_red_hat.socket
+lvm2_monitoring_init_red_hat
+lvm2_monitoring_systemd_red_hat.service
+lvm2_tmpfiles_red_hat.conf

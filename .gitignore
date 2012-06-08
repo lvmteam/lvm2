@@ -1,11 +1,15 @@
 *.5
 *.8
+*.a
 *.d
 *.o
 *.pc
 *.pot
+*.so
+*.so.*
 
 .export.sym
+.exported_symbols_generated
 .gdb_history
 
 Makefile
