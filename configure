@@ -682,13 +682,6 @@ BUILD_CMIRRORD
 APPLIB
 MODPROBE_CMD
 MSGFMT
-VERITYSETUP
-VERITYSETUP_LIBS
-VERITYSETUP_CFLAGS
-NSS_LIBS
-NSS_CFLAGS
-OPENSSL_LIBS
-OPENSSL_CFLAGS
 LVM2CMD_LIB
 LVM2APP_LIB
 UDEV_LIBS
@@ -844,7 +837,6 @@ enable_pkgconfig
 enable_write_install
 enable_fsadm
 enable_dmeventd
-with_veritysetup
 enable_selinux
 enable_nls
 with_localedir
@@ -902,11 +894,7 @@ SACKPT_LIBS
 CUNIT_CFLAGS
 CUNIT_LIBS
 UDEV_CFLAGS
-UDEV_LIBS
-OPENSSL_CFLAGS
-OPENSSL_LIBS
-NSS_CFLAGS
-NSS_LIBS'
+UDEV_LIBS'
 
 
 # Initialize some variables set by options.
@@ -1596,7 +1584,6 @@ Optional Packages:
   --with-cmirrord-pidfile=PATH
                           cmirrord pidfile [[/var/run/cmirrord.pid]]
   --with-optimisation=OPT C optimisation flag [[OPT=-O2]]
-  --with-veritysetup=TYPE build veritysetup using openssl/nss/gcrypt
   --with-localedir=DIR    translation files in DIR [[PREFIX/share/locale]]
   --with-confdir=DIR      configuration files in DIR [[/etc]]
   --with-staticdir=DIR    static binaries in DIR [[EPREFIX/sbin]]
@@ -1676,12 +1663,6 @@ Some influential environment variables:
   CUNIT_LIBS  linker flags for CUNIT, overriding pkg-config
   UDEV_CFLAGS C compiler flags for UDEV, overriding pkg-config
   UDEV_LIBS   linker flags for UDEV, overriding pkg-config
-  OPENSSL_CFLAGS
-              C compiler flags for OPENSSL, overriding pkg-config
-  OPENSSL_LIBS
-              linker flags for OPENSSL, overriding pkg-config
-  NSS_CFLAGS  C compiler flags for NSS, overriding pkg-config
-  NSS_LIBS    linker flags for NSS, overriding pkg-config
 
 Use these variables to override the choices made by `configure' or to help
 it to find libraries and programs with nonstandard names/locations.
@@ -2885,8 +2866,6 @@ case "$host_os" in
 		FSADM=no
 		;;
 esac
-
-VERITYSETUP=no
 
 ################################################################################
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for a sed that does not truncate output" >&5
@@ -9111,407 +9090,6 @@ $as_echo "#define DMEVENTD 1" >>confdefs.h
 fi
 
 ################################################################################
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to install veritysetup" >&5
-$as_echo_n "checking whether to install veritysetup... " >&6; }
-
-# Check whether --with-veritysetup was given.
-if test "${with_veritysetup+set}" = set; then :
-  withval=$with_veritysetup; VERITYSETUP=$withval
-fi
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $VERITYSETUP" >&5
-$as_echo "$VERITYSETUP" >&6; }
-
-if test x$VERITYSETUP != xno -a x$VERITYSETUP != x; then
-	if test x$PKGCONFIG_INIT != x1; then
-		pkg_config_init
-	fi
-
-		if test -z "$VERITYSETUP_CFLAGS" && test x$VERITYSETUP = xyes -o x$VERITYSETUP = xopenssl; then
-
-pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for OPENSSL" >&5
-$as_echo_n "checking for OPENSSL... " >&6; }
-
-if test -n "$OPENSSL_CFLAGS"; then
-    pkg_cv_OPENSSL_CFLAGS="$OPENSSL_CFLAGS"
- elif test -n "$PKG_CONFIG"; then
-    if test -n "$PKG_CONFIG" && \
-    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"openssl\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "openssl") 2>&5
-  ac_status=$?
-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }; then
-  pkg_cv_OPENSSL_CFLAGS=`$PKG_CONFIG --cflags "openssl" 2>/dev/null`
-else
-  pkg_failed=yes
-fi
- else
-    pkg_failed=untried
-fi
-if test -n "$OPENSSL_LIBS"; then
-    pkg_cv_OPENSSL_LIBS="$OPENSSL_LIBS"
- elif test -n "$PKG_CONFIG"; then
-    if test -n "$PKG_CONFIG" && \
-    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"openssl\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "openssl") 2>&5
-  ac_status=$?
-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }; then
-  pkg_cv_OPENSSL_LIBS=`$PKG_CONFIG --libs "openssl" 2>/dev/null`
-else
-  pkg_failed=yes
-fi
- else
-    pkg_failed=untried
-fi
-
-
-
-if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        OPENSSL_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors "openssl" 2>&1`
-        else
-	        OPENSSL_PKG_ERRORS=`$PKG_CONFIG --print-errors "openssl" 2>&1`
-        fi
-	# Put the nasty error message in config.log where it belongs
-	echo "$OPENSSL_PKG_ERRORS" >&5
-
-
-			{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for EVP_get_digestbyname in -lcrypto" >&5
-$as_echo_n "checking for EVP_get_digestbyname in -lcrypto... " >&6; }
-if test "${ac_cv_lib_crypto_EVP_get_digestbyname+set}" = set; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lcrypto  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char EVP_get_digestbyname ();
-int
-main ()
-{
-return EVP_get_digestbyname ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_crypto_EVP_get_digestbyname=yes
-else
-  ac_cv_lib_crypto_EVP_get_digestbyname=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_crypto_EVP_get_digestbyname" >&5
-$as_echo "$ac_cv_lib_crypto_EVP_get_digestbyname" >&6; }
-if test "x$ac_cv_lib_crypto_EVP_get_digestbyname" = x""yes; then :
-
-				ac_fn_c_check_header_mongrel "$LINENO" "openssl/evp.h" "ac_cv_header_openssl_evp_h" "$ac_includes_default"
-if test "x$ac_cv_header_openssl_evp_h" = x""yes; then :
-
-
-$as_echo "#define CRYPT_OPENSSL 1" >>confdefs.h
-
-					VERITYSETUP_CFLAGS=
-					VERITYSETUP_LIBS="-lcrypto"
-
-fi
-
-
-
-fi
-
-
-elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-
-			{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for EVP_get_digestbyname in -lcrypto" >&5
-$as_echo_n "checking for EVP_get_digestbyname in -lcrypto... " >&6; }
-if test "${ac_cv_lib_crypto_EVP_get_digestbyname+set}" = set; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lcrypto  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char EVP_get_digestbyname ();
-int
-main ()
-{
-return EVP_get_digestbyname ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_crypto_EVP_get_digestbyname=yes
-else
-  ac_cv_lib_crypto_EVP_get_digestbyname=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_crypto_EVP_get_digestbyname" >&5
-$as_echo "$ac_cv_lib_crypto_EVP_get_digestbyname" >&6; }
-if test "x$ac_cv_lib_crypto_EVP_get_digestbyname" = x""yes; then :
-
-				ac_fn_c_check_header_mongrel "$LINENO" "openssl/evp.h" "ac_cv_header_openssl_evp_h" "$ac_includes_default"
-if test "x$ac_cv_header_openssl_evp_h" = x""yes; then :
-
-
-$as_echo "#define CRYPT_OPENSSL 1" >>confdefs.h
-
-					VERITYSETUP_CFLAGS=
-					VERITYSETUP_LIBS="-lcrypto"
-
-fi
-
-
-
-fi
-
-
-else
-	OPENSSL_CFLAGS=$pkg_cv_OPENSSL_CFLAGS
-	OPENSSL_LIBS=$pkg_cv_OPENSSL_LIBS
-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-$as_echo "yes" >&6; }
-
-
-$as_echo "#define CRYPT_OPENSSL 1" >>confdefs.h
-
-			VERITYSETUP_CFLAGS="$OPENSSL_CFLAGS"
-			VERITYSETUP_LIBS="`echo "$OPENSSL_LIBS" | sed 's/-lssl\>//'`"
-
-fi
-	fi
-
-		if test -z "$VERITYSETUP_CFLAGS" && test x$VERITYSETUP = xyes -o x$VERITYSETUP = xnss; then
-
-pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for NSS" >&5
-$as_echo_n "checking for NSS... " >&6; }
-
-if test -n "$NSS_CFLAGS"; then
-    pkg_cv_NSS_CFLAGS="$NSS_CFLAGS"
- elif test -n "$PKG_CONFIG"; then
-    if test -n "$PKG_CONFIG" && \
-    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"nss\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "nss") 2>&5
-  ac_status=$?
-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }; then
-  pkg_cv_NSS_CFLAGS=`$PKG_CONFIG --cflags "nss" 2>/dev/null`
-else
-  pkg_failed=yes
-fi
- else
-    pkg_failed=untried
-fi
-if test -n "$NSS_LIBS"; then
-    pkg_cv_NSS_LIBS="$NSS_LIBS"
- elif test -n "$PKG_CONFIG"; then
-    if test -n "$PKG_CONFIG" && \
-    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"nss\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "nss") 2>&5
-  ac_status=$?
-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }; then
-  pkg_cv_NSS_LIBS=`$PKG_CONFIG --libs "nss" 2>/dev/null`
-else
-  pkg_failed=yes
-fi
- else
-    pkg_failed=untried
-fi
-
-
-
-if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        NSS_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors "nss" 2>&1`
-        else
-	        NSS_PKG_ERRORS=`$PKG_CONFIG --print-errors "nss" 2>&1`
-        fi
-	# Put the nasty error message in config.log where it belongs
-	echo "$NSS_PKG_ERRORS" >&5
-
-	true
-elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-	true
-else
-	NSS_CFLAGS=$pkg_cv_NSS_CFLAGS
-	NSS_LIBS=$pkg_cv_NSS_LIBS
-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-$as_echo "yes" >&6; }
-
-
-$as_echo "#define CRYPT_NSS 1" >>confdefs.h
-
-			VERITYSETUP_CFLAGS="$NSS_CFLAGS"
-			VERITYSETUP_LIBS="`echo "$NSS_LIBS" | sed 's/-lsmime3\>//' | sed 's/-lssl3\>//'`"
-
-fi
-	fi
-
-		if test -z "$VERITYSETUP_CFLAGS" && test x$VERITYSETUP = xyes -o x$VERITYSETUP = xgcrypt; then
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for gcry_md_map_name in -lgcrypt" >&5
-$as_echo_n "checking for gcry_md_map_name in -lgcrypt... " >&6; }
-if test "${ac_cv_lib_gcrypt_gcry_md_map_name+set}" = set; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lgcrypt  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char gcry_md_map_name ();
-int
-main ()
-{
-return gcry_md_map_name ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_gcrypt_gcry_md_map_name=yes
-else
-  ac_cv_lib_gcrypt_gcry_md_map_name=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_gcrypt_gcry_md_map_name" >&5
-$as_echo "$ac_cv_lib_gcrypt_gcry_md_map_name" >&6; }
-if test "x$ac_cv_lib_gcrypt_gcry_md_map_name" = x""yes; then :
-
-			ac_fn_c_check_header_mongrel "$LINENO" "gcrypt.h" "ac_cv_header_gcrypt_h" "$ac_includes_default"
-if test "x$ac_cv_header_gcrypt_h" = x""yes; then :
-
-
-$as_echo "#define CRYPT_GCRYPT 1" >>confdefs.h
-
-				VERITYSETUP_CFLAGS=
-				VERITYSETUP_LIBS="-lgcrypt"
-
-fi
-
-
-
-fi
-
-	fi
-
-	if test -z "$VERITYSETUP_LIBS"; then
-		as_fn_error $? "No cryptographic library for veritysetup found" "$LINENO" 5
-	fi
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for poptGetContext in -lpopt" >&5
-$as_echo_n "checking for poptGetContext in -lpopt... " >&6; }
-if test "${ac_cv_lib_popt_poptGetContext+set}" = set; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lpopt  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char poptGetContext ();
-int
-main ()
-{
-return poptGetContext ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_popt_poptGetContext=yes
-else
-  ac_cv_lib_popt_poptGetContext=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_popt_poptGetContext" >&5
-$as_echo "$ac_cv_lib_popt_poptGetContext" >&6; }
-if test "x$ac_cv_lib_popt_poptGetContext" = x""yes; then :
-  true
-else
-
-		as_fn_error $? "popt library was not found" "$LINENO" 5
-
-fi
-
-	ac_fn_c_check_header_mongrel "$LINENO" "popt.h" "ac_cv_header_popt_h" "$ac_includes_default"
-if test "x$ac_cv_header_popt_h" = x""yes; then :
-  true
-else
-
-		as_fn_error $? "popt.h was not found" "$LINENO" 5
-
-fi
-
-
-	VERITYSETUP_LIBS="$VERITYSETUP_LIBS -lpopt"
-
-
-	VERITYSETUP=yes
-fi
-
-
-################################################################################
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for getline in -lc" >&5
 $as_echo_n "checking for getline in -lc... " >&6; }
@@ -10914,7 +10492,7 @@ LVM_LIBAPI=`echo "$VER" | $AWK -F '[()]' '{print $2}'`
 
 
 ################################################################################
-ac_config_files="$ac_config_files Makefile make.tmpl daemons/Makefile daemons/clvmd/Makefile daemons/cmirrord/Makefile daemons/dmeventd/Makefile daemons/dmeventd/libdevmapper-event.pc daemons/dmeventd/plugins/Makefile daemons/dmeventd/plugins/lvm2/Makefile daemons/dmeventd/plugins/raid/Makefile daemons/dmeventd/plugins/mirror/Makefile daemons/dmeventd/plugins/snapshot/Makefile daemons/dmeventd/plugins/thin/Makefile daemons/lvmetad/Makefile doc/Makefile doc/example.conf include/.symlinks include/Makefile lib/Makefile lib/format1/Makefile lib/format_pool/Makefile lib/locking/Makefile lib/mirror/Makefile lib/replicator/Makefile lib/misc/lvm-version.h lib/raid/Makefile lib/snapshot/Makefile lib/thin/Makefile libdaemon/Makefile libdaemon/client/Makefile libdaemon/server/Makefile libdm/Makefile libdm/libdevmapper.pc liblvm/Makefile liblvm/liblvm2app.pc man/Makefile po/Makefile scripts/clvmd_init_red_hat scripts/cmirrord_init_red_hat scripts/lvm2_lvmetad_init_red_hat scripts/lvm2_lvmetad_systemd_red_hat.socket scripts/lvm2_lvmetad_systemd_red_hat.service scripts/lvm2_monitoring_init_red_hat scripts/dm_event_systemd_red_hat.service scripts/lvm2_monitoring_systemd_red_hat.service scripts/lvm2_tmpfiles_red_hat.conf scripts/Makefile test/Makefile test/api/Makefile test/unit/Makefile tools/Makefile udev/Makefile unit-tests/datastruct/Makefile unit-tests/regex/Makefile unit-tests/mm/Makefile verity/Makefile"
+ac_config_files="$ac_config_files Makefile make.tmpl daemons/Makefile daemons/clvmd/Makefile daemons/cmirrord/Makefile daemons/dmeventd/Makefile daemons/dmeventd/libdevmapper-event.pc daemons/dmeventd/plugins/Makefile daemons/dmeventd/plugins/lvm2/Makefile daemons/dmeventd/plugins/raid/Makefile daemons/dmeventd/plugins/mirror/Makefile daemons/dmeventd/plugins/snapshot/Makefile daemons/dmeventd/plugins/thin/Makefile daemons/lvmetad/Makefile doc/Makefile doc/example.conf include/.symlinks include/Makefile lib/Makefile lib/format1/Makefile lib/format_pool/Makefile lib/locking/Makefile lib/mirror/Makefile lib/replicator/Makefile lib/misc/lvm-version.h lib/raid/Makefile lib/snapshot/Makefile lib/thin/Makefile libdaemon/Makefile libdaemon/client/Makefile libdaemon/server/Makefile libdm/Makefile libdm/libdevmapper.pc liblvm/Makefile liblvm/liblvm2app.pc man/Makefile po/Makefile scripts/clvmd_init_red_hat scripts/cmirrord_init_red_hat scripts/lvm2_lvmetad_init_red_hat scripts/lvm2_lvmetad_systemd_red_hat.socket scripts/lvm2_lvmetad_systemd_red_hat.service scripts/lvm2_monitoring_init_red_hat scripts/dm_event_systemd_red_hat.service scripts/lvm2_monitoring_systemd_red_hat.service scripts/lvm2_tmpfiles_red_hat.conf scripts/Makefile test/Makefile test/api/Makefile test/unit/Makefile tools/Makefile udev/Makefile unit-tests/datastruct/Makefile unit-tests/regex/Makefile unit-tests/mm/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -11658,7 +11236,6 @@ do
     "unit-tests/datastruct/Makefile") CONFIG_FILES="$CONFIG_FILES unit-tests/datastruct/Makefile" ;;
     "unit-tests/regex/Makefile") CONFIG_FILES="$CONFIG_FILES unit-tests/regex/Makefile" ;;
     "unit-tests/mm/Makefile") CONFIG_FILES="$CONFIG_FILES unit-tests/mm/Makefile" ;;
-    "verity/Makefile") CONFIG_FILES="$CONFIG_FILES verity/Makefile" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac

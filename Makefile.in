@@ -36,16 +36,12 @@ ifeq ("@BUILD_LVMETAD@", "yes")
   SUBDIRS += libdaemon
 endif
 
-ifeq ("@VERITYSETUP@", "yes")
-  SUBDIRS += verity
-endif
-
 # FIXME Should use intermediate Makefiles here!
 ifeq ($(MAKECMDGOALS),distclean)
   SUBDIRS = doc include man scripts \
     libdaemon lib tools daemons libdm \
     udev po liblvm test \
-    unit-tests/datastruct unit-tests/mm unit-tests/regex verity
+    unit-tests/datastruct unit-tests/mm unit-tests/regex
 endif
 DISTCLEAN_DIRS += lcov_reports*
 DISTCLEAN_TARGETS += config.cache config.log config.status make.tmpl
@@ -57,7 +53,6 @@ lib: libdm libdaemon
 liblvm: lib
 daemons: lib libdaemon tools
 tools: lib libdaemon device-mapper
-verity: libdm
 po: tools daemons
 
 lib.device-mapper: include.device-mapper
@@ -108,10 +103,6 @@ install_systemd_units:
 
 install_tmpfiles_configuration:
 	$(MAKE) -C scripts install_tmpfiles_configuration
-
-install_verity:
-	$(MAKE) -C verity install_verity
-	$(MAKE) -C man install_verity
 
 LCOV_TRACES = libdm.info lib.info tools.info \
 	daemons/dmeventd.info daemons/clvmd.info
