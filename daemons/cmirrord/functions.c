@@ -1875,7 +1875,7 @@ int pull_state(const char *uuid, uint64_t luid,
 
 		LOG_DBG("[%s] loading clean_bits:", SHORT_UUID(lc->uuid));
 
-		print_bits(lc->sync_bits, 0);
+		print_bits(lc->clean_bits, 0);
 	}
 
 	return 0;
