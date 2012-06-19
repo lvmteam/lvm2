@@ -185,7 +185,11 @@ static void daemonize(void)
 	}
 
 	setsid();
-	chdir("/");
+	if (chdir("/")) {
+		LOG_ERROR("Failed to chdir /: %s", strerror(errno));
+		exit(EXIT_FAILURE);
+	}
+
 	umask(0);
 
 	if (close(0) || close(1) || close(2)) {
