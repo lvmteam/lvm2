@@ -27,7 +27,7 @@
 #define CN_VAL_DM_USERSPACE_LOG         0x1
 #endif
 
-static int cn_fd;  /* Connector (netlink) socket fd */
+static int cn_fd = -1;  /* Connector (netlink) socket fd */
 static char recv_buf[2048];
 static char send_buf[2048];
 
@@ -384,14 +384,18 @@ int init_local(void)
 
 	r = bind(cn_fd, (struct sockaddr *) &addr, sizeof(addr));
 	if (r < 0) {
-		close(cn_fd);
+		if (close(cn_fd))
+			LOG_ERROR("Failed to close socket: %s",
+				  strerror(errno));
 		return EXIT_KERNEL_BIND;
 	}
 
 	opt = addr.nl_groups;
 	r = setsockopt(cn_fd, 270, NETLINK_ADD_MEMBERSHIP, &opt, sizeof(opt));
 	if (r) {
-		close(cn_fd);
+		if (close(cn_fd))
+			LOG_ERROR("Failed to close socket: %s",
+				  strerror(errno));
 		return EXIT_KERNEL_SETSOCKOPT;
 	}
 
@@ -412,5 +416,7 @@ int init_local(void)
 void cleanup_local(void)
 {
 	links_unregister(cn_fd);
-	close(cn_fd);
+	if (cn_fd >= 0 && close(cn_fd))
+		LOG_ERROR("Failed to close socket: %s",
+			  strerror(errno));
 }

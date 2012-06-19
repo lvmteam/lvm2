@@ -337,14 +337,18 @@ static int find_disk_path(char *major_minor_str, char *path_rtn, int *unlink_pat
 		    (major(statbuf.st_rdev) == major) &&
 		    (minor(statbuf.st_rdev) == minor)) {
 			LOG_DBG("  %s: YES", dep->d_name);
-			closedir(dp);
+			if (closedir(dp))
+				LOG_DBG("Unable to closedir /dev/mapper %s",
+					strerror(errno));
 			return 0;
 		} else {
 			LOG_DBG("  %s: NO", dep->d_name);
 		}
 	}
 
-	closedir(dp);
+	if (closedir(dp))
+		LOG_DBG("Unable to closedir /dev/mapper %s",
+			strerror(errno));
 
 	/* FIXME Find out why this was here and deal with underlying problem. */
 	LOG_DBG("Path not found for %d/%d", major, minor);
@@ -640,8 +644,9 @@ static int clog_dtr(struct dm_ulog_request *rq)
 	LOG_DBG("[%s] Cluster log removed", SHORT_UUID(lc->uuid));
 
 	dm_list_del(&lc->list);
-	if (lc->disk_fd != -1)
-		close(lc->disk_fd);
+	if (lc->disk_fd != -1 && close(lc->disk_fd))
+		LOG_ERROR("Failed to close disk log: %s",
+			  strerror(errno));
 	if (lc->disk_buffer)
 		free(lc->disk_buffer);
 	dm_free(lc->clean_bits);

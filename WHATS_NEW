@@ -1,5 +1,6 @@
 Version 2.02.97 - 
 ===============================
+  Add tests for errors from closedir(), close() in cmirrord.
   Fix missing sync of filesystem when creating thin volume snapshot.
 
 Version 2.02.96 - 8th June 2012
