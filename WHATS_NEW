@@ -1,5 +1,6 @@
 Version 2.02.97 - 
 ===============================
+  Add tests for kernel_send() errors in cmirrod.
   Print clean_bits in pull_state, fix cut&paste typo in cmirrord.
   Add tests for errors from closedir(), close() in cmirrord.
   Fix missing sync of filesystem when creating thin volume snapshot.

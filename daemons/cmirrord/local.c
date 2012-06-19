@@ -279,7 +279,9 @@ static int do_local_work(void *data __attribute__((unused)))
 		if (r) {
 			u_rq->data_size = 0;
 			u_rq->error = r;
-			kernel_send(u_rq);
+			if (kernel_send(u_rq))
+				LOG_ERROR("Failed to respond to kernel [%s]",
+					  RQ_TYPE(u_rq->request_type));
 		}
 
 		break;

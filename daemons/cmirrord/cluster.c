@@ -910,8 +910,9 @@ static int resend_requests(struct clog_cpg *entry)
 				   rq->u_rq.seq);
 
 			rq->u_rq.data_size = 0;
-			kernel_send(&rq->u_rq);
-
+			if (kernel_send(&rq->u_rq))
+				LOG_ERROR("Failed to respond to kernel [%s]",
+					  RQ_TYPE(rq->u_rq.request_type));
 			break;
 
 		default:
@@ -1346,7 +1347,9 @@ static void cpg_leave_callback(struct clog_cpg *match,
 			dm_list_del(&rq->u.list);
 
 			if (rq->u_rq.request_type == DM_ULOG_POSTSUSPEND)
-				kernel_send(&rq->u_rq);
+				if (kernel_send(&rq->u_rq))
+					LOG_ERROR("Failed to respond to kernel [%s]",
+						  RQ_TYPE(rq->u_rq.request_type));
 			free(rq);
 		}
 
