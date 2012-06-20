@@ -59,14 +59,10 @@ struct dm_event_handler *dm_event_handler_create(void)
 {
 	struct dm_event_handler *dmevh = NULL;
 
-	if (!(dmevh = dm_malloc(sizeof(*dmevh))))
+	if (!(dmevh = dm_zalloc(sizeof(*dmevh)))) {
+		log_error("Failed to allocate event handler.");
 		return NULL;
-
-	dmevh->dmeventd_path = NULL;
-	dmevh->dso = dmevh->dev_name = dmevh->uuid = NULL;
-	dmevh->major = dmevh->minor = 0;
-	dmevh->mask = 0;
-	dmevh->timeout = 0;
+	}
 
 	return dmevh;
 }
