@@ -514,11 +514,11 @@ static int _percent_run(struct dev_manager *dm, const char *name,
 	struct lv_segment *seg = NULL;
 	struct segment_type *segtype;
 	int first_time = 1;
-	percent_t percent;
+	percent_t percent = PERCENT_INVALID;
 
 	uint64_t total_numerator = 0, total_denominator = 0;
 
-	*overall_percent = PERCENT_INVALID;
+	*overall_percent = percent;
 
 	if (!(dmt = _setup_task(name, dlid, event_nr,
 				wait ? DM_DEVICE_WAITEVENT : DM_DEVICE_STATUS, 0, 0)))
