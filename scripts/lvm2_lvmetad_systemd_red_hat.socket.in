@@ -1,5 +1,6 @@
 [Unit]
 Description=LVM2 metadata daemon socket
+Documentation=man:lvmetad(8)
 DefaultDependencies=no
 
 [Socket]

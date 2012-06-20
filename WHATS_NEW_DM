@@ -1,5 +1,6 @@
 Version 1.02.76 - 
 ===============================
+  Add documentation references in systemd units.
   Remove veritysetup.  Now maintained with cryptsetup.
 
 Version 1.02.75 - 8th June 2012

@@ -1,5 +1,6 @@
 [Unit]
 Description=LVM2 metadata daemon
+Documentation=man:lvmetad(8)
 Requires=lvm2-lvmetad.socket
 After=lvm2-lvmetad.socket
 DefaultDependencies=no
