@@ -220,7 +220,8 @@ static int _open_socket(daemon_state s)
 	/* Set Close-on-exec & non-blocking */
 	if (fcntl(fd, F_SETFD, 1))
 		fprintf(stderr, "setting CLOEXEC on socket fd %d failed: %s\n", fd, strerror(errno));
-	fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) | O_NONBLOCK);
+	if (fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) | O_NONBLOCK))
+		fprintf(stderr, "setting O_NONBLOCK on socket fd %d failed: %s\n", fd, strerror(errno));
 
 	fprintf(stderr, "[D] creating %s\n", s.socket_path);
 	if (!dm_strncpy(sockaddr.sun_path, s.socket_path, sizeof(sockaddr.sun_path))) {

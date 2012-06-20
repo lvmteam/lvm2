@@ -2155,7 +2155,8 @@ static int open_local_sock(void)
 	/* Set Close-on-exec & non-blocking */
 	if (fcntl(local_socket, F_SETFD, 1))
 		DEBUGLOG("setting CLOEXEC on local_socket failed: %s\n", strerror(errno));
-	fcntl(local_socket, F_SETFL, fcntl(local_socket, F_GETFL, 0) | O_NONBLOCK);
+	if (fcntl(local_socket, F_SETFL, fcntl(local_socket, F_GETFL, 0) | O_NONBLOCK))
+		DEBUGLOG("setting O_NONBLOCK on local_socket failed: %s\n", strerror(errno));
 
 
 	if (bind(local_socket, (struct sockaddr *) &sockaddr, sizeof(sockaddr))) {
