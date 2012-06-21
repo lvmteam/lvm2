@@ -1,5 +1,9 @@
 Version 1.02.76 - 
 ===============================
+  Remove hard-coded paths for dmeventd fifos and use default-dm-run-dir.
+  Add configure --with-lvmetad-pidfile to remove hard-coded value.
+  Add configure --with-default-pid-dir for common directory with pid files.
+  Add configure --with-default-dm-run-dir to set run directory for dm tools.
   Add documentation references in systemd units.
   Remove veritysetup.  Now maintained with cryptsetup.
 

@@ -41,7 +41,7 @@ sbindir=@sbindir@
 lvm_pvscan="${sbindir}/lvm pvscan --cache"
 
 LOCK_FILE="/var/lock/subsys/$DAEMON"
-PID_FILE="@DEFAULT_RUN_DIR@/${DAEMON}.pid"
+PID_FILE="@LVMETAD_PIDFILE@"
 
 
 rh_status() {

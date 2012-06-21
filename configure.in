@@ -470,6 +470,32 @@ pkg_config_init() {
 }
 
 ################################################################################
+dnl -- Set up pidfile and run directory
+AH_TEMPLATE(DEFAULT_PID_DIR)
+AC_ARG_WITH(default-pid-dir,
+	    AC_HELP_STRING([--with-default-pid-dir=PID_DIR],
+			   [Default directory to keep PID files in. [[/var/run]]]),
+	    DEFAULT_PID_DIR="$withval", DEFAULT_PID_DIR="/var/run")
+AC_DEFINE_UNQUOTED(DEFAULT_PID_DIR, ["$DEFAULT_PID_DIR"],
+		   [Default directory to keep PID files in.])
+
+AH_TEMPLATE(DEFAULT_DM_RUN_DIR, [Name of default DM run directory.])
+AC_ARG_WITH(default-dm-run-dir,
+	    AC_HELP_STRING([--with-default-dm-run-dir=DM_RUN_DIR],
+			   [ Default DM run directory. [[/var/run]]]),
+	    DEFAULT_DM_RUN_DIR="$withval", DEFAULT_DM_RUN_DIR="/var/run")
+AC_DEFINE_UNQUOTED(DEFAULT_DM_RUN_DIR, ["$DEFAULT_DM_RUN_DIR"],
+		   [Default DM run directory.])
+
+AH_TEMPLATE(DEFAULT_RUN_DIR, [Name of default LVM run directory.])
+AC_ARG_WITH(default-run-dir,
+	    AC_HELP_STRING([--with-default-run-dir=RUN_DIR],
+			   [Default LVM run directory. [[/var/run/lvm]]]),
+	    DEFAULT_RUN_DIR="$withval", DEFAULT_RUN_DIR="/var/run/lvm")
+AC_DEFINE_UNQUOTED(DEFAULT_RUN_DIR, ["$DEFAULT_RUN_DIR"],
+		   [Default LVM run directory.])
+
+################################################################################
 dnl -- Build cluster LVM daemon
 AC_MSG_CHECKING(whether to build cluster LVM daemon)
 AC_ARG_WITH(clvmd,
@@ -721,9 +747,9 @@ dnl -- clvmd pidfile
 if test "x$CLVMD" != xnone; then
 	AC_ARG_WITH(clvmd-pidfile,
 		    AC_HELP_STRING([--with-clvmd-pidfile=PATH],
-				   [clvmd pidfile [[/var/run/clvmd.pid]]]),
+				   [clvmd pidfile [[PID_DIR/clvmd.pid]]]),
 		    CLVMD_PIDFILE=$withval,
-		    CLVMD_PIDFILE="/var/run/clvmd.pid")
+		    CLVMD_PIDFILE="$DEFAULT_PID_DIR/clvmd.pid")
 	AC_DEFINE_UNQUOTED(CLVMD_PIDFILE, ["$CLVMD_PIDFILE"],
 			   [Path to clvmd pidfile.])
 fi
@@ -744,9 +770,9 @@ dnl -- cmirrord pidfile
 if test "x$BUILD_CMIRRORD" = xyes; then
 	AC_ARG_WITH(cmirrord-pidfile,
 		    AC_HELP_STRING([--with-cmirrord-pidfile=PATH],
-				   [cmirrord pidfile [[/var/run/cmirrord.pid]]]),
+				   [cmirrord pidfile [[PID_DIR/cmirrord.pid]]]),
 		    CMIRRORD_PIDFILE=$withval,
-		    CMIRRORD_PIDFILE="/var/run/cmirrord.pid")
+		    CMIRRORD_PIDFILE="$DEFAULT_PID_DIR/cmirrord.pid")
 	AC_DEFINE_UNQUOTED(CMIRRORD_PIDFILE, ["$CMIRRORD_PIDFILE"],
 			   [Path to cmirrord pidfile.])
 fi
@@ -872,6 +898,14 @@ BUILD_LVMETAD=$LVMETAD
 
 if test x$BUILD_LVMETAD = xyes; then
 	AC_DEFINE([LVMETAD_SUPPORT], 1, [Define to 1 to include code that uses lvmetad.])
+
+	AC_ARG_WITH(lvmetad-pidfile,
+		    AC_HELP_STRING([--with-lvmetad-pidfile=PATH],
+				   [lvmetad pidfile [[PID_DIR/lvmetad.pid]]]),
+		    LVMETAD_PIDFILE=$withval,
+		    LVMETAD_PIDFILE="$DEFAULT_PID_DIR/lvmetad.pid")
+	AC_DEFINE_UNQUOTED(LVMETAD_PIDFILE, ["$LVMETAD_PIDFILE"],
+			   [Path to lvmetad pidfile.])
 fi
 
 ################################################################################
@@ -1302,9 +1336,9 @@ dnl -- dmeventd pidfile and executable path
 if test "$BUILD_DMEVENTD" = yes; then
 	AC_ARG_WITH(dmeventd-pidfile,
 		    AC_HELP_STRING([--with-dmeventd-pidfile=PATH],
-				   [dmeventd pidfile [[/var/run/dmeventd.pid]]]),
+				   [dmeventd pidfile [[PID_DIR/dmeventd.pid]]]),
 		    DMEVENTD_PIDFILE=$withval,
-		    DMEVENTD_PIDFILE="/var/run/dmeventd.pid")
+		    DMEVENTD_PIDFILE="$DEFAULT_PID_DIR/dmeventd.pid")
 	AC_DEFINE_UNQUOTED(DMEVENTD_PIDFILE, ["$DMEVENTD_PIDFILE"],
 			   [Path to dmeventd pidfile.])
 fi
@@ -1318,13 +1352,6 @@ if test "$BUILD_DMEVENTD" = yes; then
 	AC_DEFINE_UNQUOTED(DMEVENTD_PATH, ["$DMEVENTD_PATH"],
 			   [Path to dmeventd binary.])
 fi
-
-AH_TEMPLATE(DEFAULT_RUN_DIR, [Name of default run directory.])
-AC_ARG_WITH(default-run-dir,
-	    [  --with-default-run-dir=DIR       Default run directory [[/var/run/lvm]] ],
-	    [ DEFAULT_RUN_DIR="$withval" ],
-	    [ DEFAULT_RUN_DIR="/var/run/lvm" ])
-AC_DEFINE_UNQUOTED(DEFAULT_RUN_DIR,["$DEFAULT_RUN_DIR"] )
 
 ################################################################################
 dnl -- various defaults
@@ -1437,6 +1464,7 @@ AC_SUBST(DEFAULT_BACKUP_SUBDIR)
 AC_SUBST(DEFAULT_CACHE_SUBDIR)
 AC_SUBST(DEFAULT_DATA_ALIGNMENT)
 AC_SUBST(DEFAULT_LOCK_DIR)
+AC_SUBST(DEFAULT_DM_RUN_DIR)
 AC_SUBST(DEFAULT_RUN_DIR)
 AC_SUBST(DEVMAPPER)
 AC_SUBST(DLM_CFLAGS)
@@ -1505,6 +1533,7 @@ AC_SUBST(CUNIT_LIBS)
 AC_SUBST(CUNIT_CFLAGS)
 AC_SUBST(WRITE_INSTALL)
 AC_SUBST(DMEVENTD_PIDFILE)
+AC_SUBST(LVMETAD_PIDFILE)
 AC_SUBST(interface)
 AC_SUBST(kerneldir)
 AC_SUBST(missingkernel)
@@ -1564,6 +1593,7 @@ scripts/lvm2_lvmetad_init_red_hat
 scripts/lvm2_lvmetad_systemd_red_hat.socket
 scripts/lvm2_lvmetad_systemd_red_hat.service
 scripts/lvm2_monitoring_init_red_hat
+scripts/dm_event_systemd_red_hat.socket
 scripts/dm_event_systemd_red_hat.service
 scripts/lvm2_monitoring_systemd_red_hat.service
 scripts/lvm2_tmpfiles_red_hat.conf

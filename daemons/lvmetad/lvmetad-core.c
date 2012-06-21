@@ -1094,7 +1094,7 @@ int main(int argc, char *argv[])
 	s.socket_path = getenv("LVM_LVMETAD_SOCKET");
 	if (!s.socket_path)
 		s.socket_path = DEFAULT_RUN_DIR "/lvmetad.socket";
-	s.pidfile = DEFAULT_RUN_DIR "/lvmetad.pid";
+	s.pidfile = LVMETAD_PIDFILE;
         s.log_level = 0;
 	s.protocol = "lvmetad";
 	s.protocol_version = 1;
