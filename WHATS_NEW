@@ -1,5 +1,6 @@
 Version 2.02.97 - 
 ===============================
+  Check for create_instance() fail in pvscan_lvmetad_single().
   Use 64bit math for reserved memory and stack.
   Add tests for kernel_send() errors in cmirrod.
   Print clean_bits in pull_state, fix cut&paste typo in cmirrord.

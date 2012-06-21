@@ -691,6 +691,9 @@ int pvscan_lvmetad_single(struct cmd_context *cmd, struct device *dev)
 	baton.fid = lvmcache_fmt(info)->ops->create_instance(lvmcache_fmt(info),
 							     &fic);
 
+	if (!baton.fid)
+		goto_bad;
+
 	lvmcache_foreach_mda(info, _pvscan_lvmetad_single, &baton);
 	if (!baton.vg)
 		lvmcache_fmt(info)->ops->destroy_instance(baton.fid);
