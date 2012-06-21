@@ -669,7 +669,6 @@ int pvscan_lvmetad_single(struct cmd_context *cmd, struct device *dev)
 {
 	struct label *label;
 	struct lvmcache_info *info;
-	struct physical_volume pv;
 	struct _pvscan_lvmetad_baton baton;
 	/* Create a dummy instance. */
 	struct format_instance_ctx fic = { .type = 0 };
@@ -687,7 +686,6 @@ int pvscan_lvmetad_single(struct cmd_context *cmd, struct device *dev)
 	}
 
 	info = (struct lvmcache_info *) label->info;
-	memset(&pv, 0, sizeof(pv));
 
 	baton.vg = NULL;
 	baton.fid = lvmcache_fmt(info)->ops->create_instance(lvmcache_fmt(info),

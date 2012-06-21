@@ -736,10 +736,8 @@ static struct dev_filter *_init_filter_components(struct cmd_context *cmd)
 {
 	int nr_filt = 0;
 	const struct dm_config_node *cn;
-	struct dev_filter *filters[MAX_FILTERS];
+	struct dev_filter *filters[MAX_FILTERS] = { 0 };
 	struct dev_filter *composite;
-
-	memset(filters, 0, sizeof(filters));
 
 	/*
 	 * Filters listed in order: top one gets applied first.

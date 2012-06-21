@@ -1266,11 +1266,10 @@ static int _write_single_mda(struct metadata_area *mda, void *baton)
 	struct _write_single_mda_baton *p = baton;
 	struct mda_context *mdac;
 
-	char buf[MDA_HEADER_SIZE] __attribute__((aligned(8)));
+	char buf[MDA_HEADER_SIZE] __attribute__((aligned(8))) = { 0 };
 	struct mda_header *mdah = (struct mda_header *) buf;
 
 	mdac = mda->metadata_locn;
-	memset(&buf, 0, sizeof(buf));
 	mdah->size = mdac->area.size;
 	rlocn_set_ignored(mdah->raw_locns, mda_is_ignored(mda));
 

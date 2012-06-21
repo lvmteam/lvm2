@@ -674,7 +674,6 @@ static int _process_all_devs(struct cmd_context *cmd, void *handle,
 			dm_list_init(&pv_dummy.tags);
 			dm_list_init(&pv_dummy.segments);
 			pv_dummy.dev = dev;
-			pv_dummy.fmt = NULL;
 			pv = &pv_dummy;
 		}
 		ret = process_single_pv(cmd, NULL, pv, handle);

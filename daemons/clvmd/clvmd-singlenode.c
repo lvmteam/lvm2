@@ -48,8 +48,15 @@ static void close_comms(void)
 
 static int init_comms(void)
 {
-	struct sockaddr_un addr;
 	mode_t old_mask;
+	struct sockaddr_un addr = { .sun_family = AF_UNIX };
+
+	if (!dm_strncpy(addr.sun_path, SINGLENODE_CLVMD_SOCKNAME,
+			sizeof(addr.sun_path))) {
+		DEBUGLOG("%s: singlenode socket name too long.",
+			 SINGLENODE_CLVMD_SOCKNAME);
+		return -1;
+	}
 
 	close_comms();
 
@@ -66,11 +73,6 @@ static int init_comms(void)
 		DEBUGLOG("Setting CLOEXEC on client fd failed: %s\n", strerror(errno));
 		goto error;
 	}
-
-	memset(&addr, 0, sizeof(addr));
-	memcpy(addr.sun_path, SINGLENODE_CLVMD_SOCKNAME,
-	       sizeof(SINGLENODE_CLVMD_SOCKNAME));
-	addr.sun_family = AF_UNIX;
 
 	if (bind(listen_fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
 		DEBUGLOG("Can't bind local socket: %s\n", strerror(errno));

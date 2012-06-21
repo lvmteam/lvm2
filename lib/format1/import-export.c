@@ -556,7 +556,7 @@ int export_lvs(struct disk_list *dl, struct volume_group *vg,
 int import_snapshots(struct dm_pool *mem __attribute__((unused)), struct volume_group *vg,
 		     struct dm_list *pvds)
 {
-	struct logical_volume *lvs[MAX_LV];
+	struct logical_volume *lvs[MAX_LV] = { 0 };
 	struct disk_list *dl;
 	struct lvd_list *ll;
 	struct lv_disk *lvd;
@@ -564,7 +564,6 @@ int import_snapshots(struct dm_pool *mem __attribute__((unused)), struct volume_
 	struct logical_volume *org, *cow;
 
 	/* build an index of lv numbers */
-	memset(lvs, 0, sizeof(lvs));
 	dm_list_iterate_items(dl, pvds) {
 		dm_list_iterate_items(ll, &dl->lvds) {
 			lvd = &ll->lvd;

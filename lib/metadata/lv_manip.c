@@ -180,12 +180,10 @@ static struct seg_pvs *_find_seg_pvs_by_le(struct dm_list *list, uint32_t le)
  */
 uint32_t find_free_lvnum(struct logical_volume *lv)
 {
-	int lvnum_used[MAX_RESTRICTED_LVS + 1];
+	int lvnum_used[MAX_RESTRICTED_LVS + 1] = { 0 };
 	uint32_t i = 0;
 	struct lv_list *lvl;
 	int lvnum;
-
-	memset(&lvnum_used, 0, sizeof(lvnum_used));
 
 	dm_list_iterate_items(lvl, &lv->vg->lvs) {
 		lvnum = lvnum_from_lvid(&lvl->lv->lvid);

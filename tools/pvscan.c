@@ -28,9 +28,9 @@ static void _pvscan_display_single(struct cmd_context *cmd,
 	char uuid[64] __attribute__((aligned(8)));
 	unsigned vg_name_len = 0;
 
-	char pv_tmp_name[NAME_LEN] = { 0, };
-	char vg_tmp_name[NAME_LEN] = { 0, };
-	char vg_name_this[NAME_LEN] = { 0, };
+	char pv_tmp_name[NAME_LEN] = { 0 };
+	char vg_tmp_name[NAME_LEN] = { 0 };
+	char vg_name_this[NAME_LEN] = { 0 };
 
 	/* short listing? */
 	if (arg_count(cmd, short_ARG) > 0) {
@@ -48,8 +48,6 @@ static void _pvscan_display_single(struct cmd_context *cmd,
 		/* log_print(" "); */
 		/* return; */
 	}
-
-	memset(pv_tmp_name, 0, sizeof(pv_tmp_name));
 
 	vg_name_len = strlen(pv_vg_name(pv)) + 1;
 

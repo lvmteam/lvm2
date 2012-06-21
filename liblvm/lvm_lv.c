@@ -144,7 +144,7 @@ static int _lv_set_default_linear_params(struct cmd_context *cmd,
  */
 lv_t lvm_vg_create_lv_linear(vg_t vg, const char *name, uint64_t size)
 {
-	struct lvcreate_params lp;
+	struct lvcreate_params lp = { 0 };
 	uint64_t extents;
 	struct lv_list *lvl;
 
@@ -152,7 +152,7 @@ lv_t lvm_vg_create_lv_linear(vg_t vg, const char *name, uint64_t size)
 		return NULL;
 	if (!vg_check_write_mode(vg))
 		return NULL;
-	memset(&lp, 0, sizeof(lp));
+
 	extents = extents_from_size(vg->cmd, size / SECTOR_SIZE,
 				    vg->extent_size);
 	_lv_set_default_params(&lp, vg, name, extents);

@@ -1249,7 +1249,7 @@ static void cpg_join_callback(struct clog_cpg *match,
 	uint32_t my_pid = (uint32_t)getpid();
 	uint32_t lowest = match->lowest_id;
 	struct clog_request *rq;
-	char dbuf[32];
+	char dbuf[32] = { 0 };
 
 	/* Assign my_cluster_id */
 	if ((my_cluster_id == 0xDEAD) && (joined->pid == my_pid))
@@ -1265,7 +1265,6 @@ static void cpg_join_callback(struct clog_cpg *match,
 	if (joined->nodeid == my_cluster_id)
 		goto out;
 
-	memset(dbuf, 0, sizeof(dbuf));
 	for (i = 0; i < member_list_entries - 1; i++)
 		sprintf(dbuf+strlen(dbuf), "%u-", member_list[i].nodeid);
 	sprintf(dbuf+strlen(dbuf), "(%u)", joined->nodeid);

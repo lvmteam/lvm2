@@ -1437,11 +1437,9 @@ static int _do_process_request(struct dm_event_daemon_message *msg)
 {
 	int ret;
 	char *answer;
-	static struct message_data message_data;
+	struct message_data message_data = { .msg =  msg };
 
 	/* Parse the message. */
-	memset(&message_data, 0, sizeof(message_data));
-	message_data.msg = msg;
 	if (msg->cmd == DM_EVENT_CMD_HELLO || msg->cmd == DM_EVENT_CMD_DIE)  {
 		ret = 0;
 		answer = msg->data;
@@ -1473,9 +1471,7 @@ static int _do_process_request(struct dm_event_daemon_message *msg)
 static void _process_request(struct dm_event_fifos *fifos)
 {
 	int die = 0;
-	struct dm_event_daemon_message msg;
-
-	memset(&msg, 0, sizeof(msg));
+	struct dm_event_daemon_message msg = { 0 };
 
 	/*
 	 * Read the request from the client (client_read, client_write
@@ -1580,10 +1576,8 @@ static void _sig_alarm(int signum __attribute__((unused)))
 static void _init_thread_signals(void)
 {
 	sigset_t my_sigset;
-	struct sigaction act;
+	struct sigaction act = { .sa_handler = _sig_alarm };
 
-	memset(&act, 0, sizeof(act));
-	act.sa_handler = _sig_alarm;
 	sigaction(SIGALRM, &act, NULL);
 	sigfillset(&my_sigset);
 

@@ -158,10 +158,8 @@ static void check_object_growth()
 {
 	int i;
 	struct dm_pool *p = dm_pool_create("", 32);
-	char data[100];
+	char data[100] = { 0 };
 	void *obj;
-
-	memset(data, 0, sizeof(data));
 
 	dm_pool_begin_object(p, 43);
 	for (i = 1; i < 100; i++)

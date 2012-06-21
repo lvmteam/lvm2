@@ -26,17 +26,16 @@
 daemon_handle daemon_open(daemon_info i) {
 	daemon_handle h = { .protocol_version = 0, .error = 0 };
 	daemon_reply r = { .cft = NULL };
-	struct sockaddr_un sockaddr;
+	struct sockaddr_un sockaddr = { .sun_family = AF_UNIX };
 
 	if ((h.socket_fd = socket(PF_UNIX, SOCK_STREAM /* | SOCK_NONBLOCK */, 0)) < 0)
 		goto error;
 
-	memset(&sockaddr, 0, sizeof(sockaddr));
 	if (!dm_strncpy(sockaddr.sun_path, i.socket, sizeof(sockaddr.sun_path))) {
 		fprintf(stderr, "%s: daemon socket path too long.\n", i.socket);
 		goto error;
 	}
-	sockaddr.sun_family = AF_UNIX;
+
 	if (connect(h.socket_fd,(struct sockaddr *) &sockaddr, sizeof(sockaddr)))
 		goto error;
 

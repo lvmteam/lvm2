@@ -235,10 +235,8 @@ static int rw_log(struct log_c *lc, int do_write)
  */
 static int read_log(struct log_c *lc)
 {
-	struct log_header lh;
+	struct log_header lh = { 0 };
 	size_t bitset_size;
-
-	memset(&lh, 0, sizeof(struct log_header));
 
 	if (rw_log(lc, 0))
 		return -EIO; /* Failed disk read */
@@ -1724,13 +1722,11 @@ int do_request(struct clog_request *rq, int server)
 static void print_bits(dm_bitset_t bs, int print)
 {
 	int i, size;
-	char outbuf[128];
+	char outbuf[128] = { 0 };
 	unsigned char *buf = (unsigned char *)(bs + 1);
 
 	size = (*bs % 8) ? 1 : 0;
 	size += (*bs / 8);
-
-	memset(outbuf, 0, sizeof(outbuf));
 
 	for (i = 0; i < size; i++) {
 		if (!(i % 16)) {

@@ -2092,20 +2092,23 @@ static int add_to_lvmqueue(struct local_client *client, struct clvm_header *msg,
 static int check_local_clvmd(void)
 {
 	int local_socket;
-	struct sockaddr_un sockaddr;
 	int ret = 0;
+	struct sockaddr_un sockaddr = { .sun_family = AF_UNIX };
 
-	/* Open local socket */
-	if ((local_socket = socket(PF_UNIX, SOCK_STREAM, 0)) < 0) {
+	if (!dm_strncpy(sockaddr.sun_path, CLVMD_SOCKNAME, sizeof(sockaddr.sun_path))) {
+		log_error("%s: clvmd socket name too long.", CLVMD_SOCKNAME);
 		return -1;
 	}
 
-	memset(&sockaddr, 0, sizeof(sockaddr));
-	memcpy(sockaddr.sun_path, CLVMD_SOCKNAME, sizeof(CLVMD_SOCKNAME));
-	sockaddr.sun_family = AF_UNIX;
+	/* Open local socket */
+	if ((local_socket = socket(PF_UNIX, SOCK_STREAM, 0)) < 0) {
+		log_sys_error("socket", "local socket");
+		return -1;
+	}
 
 	if (connect(local_socket,(struct sockaddr *) &sockaddr,
 		    sizeof(sockaddr))) {
+		log_sys_error("connect", "local socket");
 		ret = -1;
 	}
 
@@ -2127,9 +2130,14 @@ static void close_local_sock(int local_socket)
 /* Open the local socket, that's the one we talk to libclvm down */
 static int open_local_sock(void)
 {
-	int local_socket = -1;
-	struct sockaddr_un sockaddr;
 	mode_t old_mask;
+	int local_socket = -1;
+	struct sockaddr_un sockaddr = { .sun_family = AF_UNIX };
+
+	if (!dm_strncpy(sockaddr.sun_path, CLVMD_SOCKNAME, sizeof(sockaddr.sun_path))) {
+		log_error("%s: clvmd socket name too long.", CLVMD_SOCKNAME);
+		return -1;
+	}
 
 	close_local_sock(local_socket);
 
@@ -2148,9 +2156,6 @@ static int open_local_sock(void)
 		DEBUGLOG("setting CLOEXEC on local_socket failed: %s\n", strerror(errno));
 	fcntl(local_socket, F_SETFL, fcntl(local_socket, F_GETFL, 0) | O_NONBLOCK);
 
-	memset(&sockaddr, 0, sizeof(sockaddr));
-	memcpy(sockaddr.sun_path, CLVMD_SOCKNAME, sizeof(CLVMD_SOCKNAME));
-	sockaddr.sun_family = AF_UNIX;
 
 	if (bind(local_socket, (struct sockaddr *) &sockaddr, sizeof(sockaddr))) {
 		log_error("can't bind local socket: %m");

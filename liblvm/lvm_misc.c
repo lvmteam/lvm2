@@ -50,9 +50,8 @@ struct lvm_property_value get_property(const pv_t pv, const vg_t vg,
 				       const pvseg_t pvseg, const char *name)
 {
 	struct lvm_property_type prop;
-	struct lvm_property_value v;
+	struct lvm_property_value v = { 0 };
 
-	memset(&v, 0, sizeof(v));
 	prop.id = name;
 
 	if (pv) {

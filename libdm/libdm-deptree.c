@@ -1082,7 +1082,7 @@ struct dm_tree_node *dm_tree_add_new_dev_with_udev_flags(struct dm_tree *dtree,
 							 uint16_t udev_flags)
 {
 	struct dm_tree_node *dnode;
-	struct dm_info info;
+	struct dm_info info = { 0 };
 	const char *name2;
 	const char *uuid2;
 
@@ -1101,8 +1101,6 @@ struct dm_tree_node *dm_tree_add_new_dev_with_udev_flags(struct dm_tree *dtree,
 			log_error("uuid pool_strdup failed");
 			return NULL;
 		}
-
-		memset(&info, 0, sizeof(info));
 
 		if (!(dnode = _create_dm_tree_node(dtree, name2, uuid2, &info,
 						   context, 0)))

@@ -129,7 +129,7 @@ union sockaddr_union {
 static int _handle_preloaded_socket(int fd, const char *path)
 {
 	struct stat st_fd;
-	union sockaddr_union sockaddr;
+	union sockaddr_union sockaddr = { .sa.sa_family = 0 };
 	int type = 0;
 	socklen_t len = sizeof(type);
 	size_t path_len = strlen(path);
@@ -144,7 +144,6 @@ static int _handle_preloaded_socket(int fd, const char *path)
 	    len != sizeof(type) || type != SOCK_STREAM)
 		return 0;
 
-	memset(&sockaddr, 0, sizeof(sockaddr));
 	len = sizeof(sockaddr);
 	if (getsockname(fd, &sockaddr.sa, &len) < 0 ||
 	    len < sizeof(sa_family_t) ||
@@ -204,7 +203,7 @@ out:
 static int _open_socket(daemon_state s)
 {
 	int fd = -1;
-	struct sockaddr_un sockaddr;
+	struct sockaddr_un sockaddr = { .sun_family = AF_UNIX };
 	mode_t old_mask;
 
 	(void) dm_prepare_selinux_context(s.socket_path, S_IFSOCK);
@@ -223,12 +222,10 @@ static int _open_socket(daemon_state s)
 	fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) | O_NONBLOCK);
 
 	fprintf(stderr, "[D] creating %s\n", s.socket_path);
-	memset(&sockaddr, 0, sizeof(sockaddr));
 	if (!dm_strncpy(sockaddr.sun_path, s.socket_path, sizeof(sockaddr.sun_path))) {
 		fprintf(stderr, "%s: daemon socket path too long.\n", s.socket_path);
 		goto error;
 	}
-	sockaddr.sun_family = AF_UNIX;
 
 	if (bind(fd, (struct sockaddr *) &sockaddr, sizeof(sockaddr))) {
 		perror("can't bind local socket.");

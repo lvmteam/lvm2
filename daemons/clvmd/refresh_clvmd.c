@@ -47,18 +47,18 @@ static int _clvmd_sock = -1;
 static int _open_local_sock(void)
 {
 	int local_socket;
-	struct sockaddr_un sockaddr;
+	struct sockaddr_un sockaddr = { .sun_family = AF_UNIX };
+
+	if (!dm_strncpy(sockaddr.sun_path, CLVMD_SOCKNAME, sizeof(sockaddr.sun_path))) {
+		fprintf(stderr, "%s: clvmd socket name too long.", CLVMD_SOCKNAME);
+		return -1;
+	}
 
 	/* Open local socket */
 	if ((local_socket = socket(PF_UNIX, SOCK_STREAM, 0)) < 0) {
 		fprintf(stderr, "Local socket creation failed: %s", strerror(errno));
 		return -1;
 	}
-
-	memset(&sockaddr, 0, sizeof(sockaddr));
-	memcpy(sockaddr.sun_path, CLVMD_SOCKNAME, sizeof(CLVMD_SOCKNAME));
-
-	sockaddr.sun_family = AF_UNIX;
 
 	if (connect(local_socket,(struct sockaddr *) &sockaddr,
 		    sizeof(sockaddr))) {

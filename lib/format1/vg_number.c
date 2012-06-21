@@ -29,7 +29,7 @@ int get_free_vg_number(struct format_instance *fid, struct dev_filter *filter,
 	struct dm_list all_pvs;
 	struct disk_list *dl;
 	struct dm_pool *mem = dm_pool_create("lvm1 vg_number", 10 * 1024);
-	int numbers[MAX_VG], i, r = 0;
+	int i, r = 0, numbers[MAX_VG] = { 0 };
 
 	dm_list_init(&all_pvs);
 
@@ -38,8 +38,6 @@ int get_free_vg_number(struct format_instance *fid, struct dev_filter *filter,
 
 	if (!read_pvs_in_vg(fid->fmt, NULL, filter, mem, &all_pvs))
 		goto_out;
-
-	memset(numbers, 0, sizeof(numbers));
 
 	dm_list_iterate_items(dl, &all_pvs) {
 		if (!*dl->pvd.vg_name || !strcmp((char *)dl->pvd.vg_name, candidate_vg))
