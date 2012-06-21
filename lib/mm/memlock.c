@@ -446,12 +446,12 @@ void memlock_dec_daemon(struct cmd_context *cmd)
 void memlock_init(struct cmd_context *cmd)
 {
 	/* When threaded, caller already limited stack size so just use the default. */
-	_size_stack = 1024 * (cmd->threaded ? DEFAULT_RESERVED_STACK :
-					      find_config_tree_int(cmd, "activation/reserved_stack",
-								   DEFAULT_RESERVED_STACK));
+	_size_stack = 1024ULL * (cmd->threaded ? DEFAULT_RESERVED_STACK :
+				 find_config_tree_int(cmd, "activation/reserved_stack",
+						      DEFAULT_RESERVED_STACK));
 	_size_malloc_tmp = find_config_tree_int(cmd,
 					   "activation/reserved_memory",
-					   DEFAULT_RESERVED_MEMORY) * 1024;
+					   DEFAULT_RESERVED_MEMORY) * 1024ULL;
 	_default_priority = find_config_tree_int(cmd,
 					    "activation/process_priority",
 					    DEFAULT_PROCESS_PRIORITY);
