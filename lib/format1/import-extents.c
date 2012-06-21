@@ -118,7 +118,10 @@ static int _fill_maps(struct dm_hash_table *maps, struct volume_group *vg,
 	uint32_t i, lv_num, le;
 
 	dm_list_iterate_items(dl, pvds) {
-		pv = find_pv(vg, dl->dev);
+		if (!(pv = find_pv(vg, dl->dev))) {
+			log_error("PV %s not found.", dl->dev->pvid);
+			return 0;
+		}
 		e = dl->extents;
 
 		/* build an array of lv's for this pv */
