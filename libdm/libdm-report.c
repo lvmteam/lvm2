@@ -695,6 +695,11 @@ int dm_report_object(struct dm_report *rh, void *object)
 	struct dm_report_field *field;
 	void *data = NULL;
 
+	if (!rh) {
+		log_error(INTERNAL_ERROR "dm_report handler is NULL.");
+		return 0;
+	}
+
 	if (!(row = dm_pool_zalloc(rh->mem, sizeof(*row)))) {
 		log_error("dm_report_object: struct row allocation failed");
 		return 0;

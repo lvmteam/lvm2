@@ -199,7 +199,11 @@ struct volume_group *lvmetad_vg_lookup(struct cmd_context *cmd, const char *vgna
 
 	if (!strcmp(daemon_reply_str(reply, "response", ""), "OK")) {
 
-		top = dm_config_find_node(reply.cft->root, "metadata");
+		if (!(top = dm_config_find_node(reply.cft->root, "metadata"))) {
+			log_error(INTERNAL_ERROR "metadata config node not found.");
+			goto out;
+		}
+
 		name = daemon_reply_str(reply, "name", NULL);
 
 		/* fall back to lvm2 if we don't know better */
@@ -593,6 +597,11 @@ int lvmetad_pv_found(struct id pvid, struct device *device, const struct format_
 					   "metadata = %b", strchr(buf, '{'),
 					   NULL);
 	} else {
+		if (handler) {
+			log_error(INTERNAL_ERROR "Handler needs existing VG.");
+			dm_free(pvmeta);
+			return 0;
+		}
 		/* There are no MDAs on this PV. */
 		reply = daemon_send_simple(_lvmetad,
 					   "pv_found",

@@ -1005,12 +1005,14 @@ static int _free_vginfo(struct lvmcache_vginfo *vginfo)
 				  vginfo->vgname);
 			r = 0;
 		}
-	} else do
-		if (vginfo2->next == vginfo) {
-			vginfo2->next = vginfo->next;
-			break;
+	} else
+		while (vginfo2) {
+			if (vginfo2->next == vginfo) {
+				vginfo2->next = vginfo->next;
+				break;
+			}
+			vginfo2 = vginfo2->next;
 		}
- 	while ((vginfo2 = vginfo2->next));
 
 	dm_free(vginfo->vgname);
 	dm_free(vginfo->creation_host);

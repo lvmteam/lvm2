@@ -668,6 +668,11 @@ int dev_manager_transient(struct dev_manager *dm, struct logical_volume *lv)
 		if (!type || !params)
 			continue;
 
+		if (!seg) {
+			log_error(INTERNAL_ERROR "Segment is not selected.");
+			goto out;
+		}
+
 		if (seg->segtype->ops->check_transient_status &&
 		    !seg->segtype->ops->check_transient_status(seg, params))
 			goto_out;

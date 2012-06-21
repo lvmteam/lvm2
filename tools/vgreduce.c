@@ -124,6 +124,11 @@ static int _vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 	int r = ECMD_FAILED;
 	const char *name = pv_dev_name(pv);
 
+	if (!vg) {
+		log_error(INTERNAL_ERROR "VG is NULL.");
+		return ECMD_FAILED;
+	}
+
 	if (pv_pe_alloc_count(pv)) {
 		log_error("Physical volume \"%s\" still in use", name);
 		return ECMD_FAILED;

@@ -261,6 +261,11 @@ static int _poll_vg(struct cmd_context *cmd, const char *vgname,
 	const char *name;
 	int finished;
 
+	if (!parms) {
+		log_error(INTERNAL_ERROR "Handle is undefined.");
+		return ECMD_FAILED;
+	}
+
 	dm_list_iterate_items(lvl, &vg->lvs) {
 		lv = lvl->lv;
 		if (!(lv->status & parms->lv_type))

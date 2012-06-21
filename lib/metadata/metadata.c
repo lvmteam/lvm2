@@ -2221,6 +2221,11 @@ static int _lv_read_ahead_single(struct logical_volume *lv, void *data)
 	struct lv_segment *seg = first_seg(lv);
 	uint32_t seg_read_ahead = 0, *read_ahead = data;
 
+	if (!read_ahead) {
+		log_error(INTERNAL_ERROR "Read ahead data missing.");
+		return 0;
+	}
+
 	if (seg && seg->area_count && seg_type(seg, 0) == AREA_PV)
 		dev_get_read_ahead(seg_pv(seg, 0)->dev, &seg_read_ahead);
 
