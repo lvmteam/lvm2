@@ -462,7 +462,7 @@ static struct dm_tree_node *_create_dm_tree_node(struct dm_tree *dtree,
 						 uint16_t udev_flags)
 {
 	struct dm_tree_node *node;
-	uint64_t dev;
+	dev_t dev;
 
 	if (!(node = dm_pool_zalloc(dtree->mem, sizeof(*node)))) {
 		log_error("_create_dm_tree_node alloc failed");
@@ -506,7 +506,7 @@ static struct dm_tree_node *_create_dm_tree_node(struct dm_tree *dtree,
 static struct dm_tree_node *_find_dm_tree_node(struct dm_tree *dtree,
 					       uint32_t major, uint32_t minor)
 {
-	uint64_t dev = MKDEV(major, minor);
+	dev_t dev = MKDEV(major, minor);
 
 	return dm_hash_lookup_binary(dtree->devs, (const char *) &dev,
 				  sizeof(dev));
