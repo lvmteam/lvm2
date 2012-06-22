@@ -1,5 +1,7 @@
 Version 1.02.76 - 
 ===============================
+  Add configure --enable-udev-rule-exec-detection to detect exec path in rules.
+  Use sbindir in udev rules by default and remove executable path detection.
   Remove hard-coded paths for dmeventd fifos and use default-dm-run-dir.
   Add configure --with-lvmetad-pidfile to remove hard-coded value.
   Add configure --with-default-pid-dir for common directory with pid files.

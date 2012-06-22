@@ -18,11 +18,7 @@ KERNEL=="device-mapper", NAME="(DM_DIR)/control"
 
 SUBSYSTEM!="block", GOTO="dm_end"
 KERNEL!="dm-[0-9]*", GOTO="dm_end"
-
-# Set proper sbin path, /sbin has higher priority than /usr/sbin.
-ENV{DM_SBIN_PATH}="/sbin"
-TEST!="$env{DM_SBIN_PATH}/dmsetup", ENV{DM_SBIN_PATH}="/usr/sbin"
-TEST!="$env{DM_SBIN_PATH}/dmsetup", GOTO="dm_end"
+(DM_EXEC_RULE)
 
 # Device created, major and minor number assigned - "add" event generated.
 # Table loaded - no event generated.
@@ -40,7 +36,7 @@ ACTION!="add|change", GOTO="dm_end"
 # These flags are encoded in DM_COOKIE variable that was introduced in
 # kernel version 2.6.31. Therefore, we can use this feature with
 # kernels >= 2.6.31 only. Cookie is not decoded for remove event.
-ENV{DM_COOKIE}=="?*", IMPORT{program}="$env{DM_SBIN_PATH}/dmsetup udevflags $env{DM_COOKIE}"
+ENV{DM_COOKIE}=="?*", IMPORT{program}="(DM_EXEC)/dmsetup udevflags $env{DM_COOKIE}"
 
 # Rule out easy-to-detect inappropriate events first.
 ENV{DISK_RO}=="1", GOTO="dm_disable"
@@ -91,8 +87,8 @@ ACTION=="add", ENV{DM_UDEV_RULES_VSN}!="1", ENV{DM_UDEV_PRIMARY_SOURCE_FLAG}!="1
 # so we also have to call dmsetup if the kernel version used
 # is in between these releases.
 TEST=="dm", ENV{DM_NAME}="$attr{dm/name}", ENV{DM_UUID}="$attr{dm/uuid}", ENV{DM_SUSPENDED}="$attr{dm/suspended}"
-TEST!="dm", IMPORT{program}="$env{DM_SBIN_PATH}/dmsetup info -j %M -m %m -c --nameprefixes --noheadings --rows -o name,uuid,suspended"
-ENV{DM_SUSPENDED}!="?*", IMPORT{program}="$env{DM_SBIN_PATH}/dmsetup info -j %M -m %m -c --nameprefixes --noheadings --rows -o suspended"
+TEST!="dm", IMPORT{program}="(DM_EXEC)/dmsetup info -j %M -m %m -c --nameprefixes --noheadings --rows -o name,uuid,suspended"
+ENV{DM_SUSPENDED}!="?*", IMPORT{program}="(DM_EXEC)/dmsetup info -j %M -m %m -c --nameprefixes --noheadings --rows -o suspended"
 
 # dmsetup tool provides suspended state information in textual
 # form with values "Suspended"/"Active". We translate it to

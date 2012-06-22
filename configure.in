@@ -934,16 +934,22 @@ AC_ARG_ENABLE(udev_rules,
 	      UDEV_RULES=$enableval, UDEV_RULES=$UDEV_SYNC)
 AC_MSG_RESULT($UDEV_RULES)
 
-if test x$UDEV_RULES = xyes; then
-	AC_MSG_CHECKING(whether udev supports builtin blkid)
-	udev_version=$(udevadm info --version 2>/dev/null)
-	if test -n "$udev_version" && test "$udev_version" -ge 176; then
-		UDEV_HAS_BUILTIN_BLKID=yes
-	else
-		UDEV_HAS_BUILTIN_BLKID=no
-	fi
-	AC_MSG_RESULT($UDEV_HAS_BUILTIN_BLKID)
+AC_MSG_CHECKING(whether to enable executable path detection in udev rules)
+AC_ARG_ENABLE(udev_rule_exec_detection,
+	      AC_HELP_STRING([--enable-udev-rule-exec-detection],
+			     [enable executable path detection in udev rules]),
+	      UDEV_RULE_EXEC_DETECTION=$enableval, UDEV_RULE_EXEC_DETECTION=no)
+AC_MSG_RESULT($UDEV_RULE_EXEC_DETECTION)
+
+dnl -- Check support for built-in blkid against target udev version
+AC_MSG_CHECKING(whether udev supports built-in blkid)
+test x$PKGCONFIG_INIT != x1 && pkg_config_init
+if $($PKG_CONFIG --atleast-version=176 libudev); then
+	UDEV_HAS_BUILTIN_BLKID=yes
+else
+	UDEV_HAS_BUILTIN_BLKID=no
 fi
+AC_MSG_RESULT($UDEV_HAS_BUILTIN_BLKID)
 
 ################################################################################
 dnl -- Compatibility mode
@@ -1528,6 +1534,7 @@ AC_SUBST(UDEV_LIBS)
 AC_SUBST(UDEV_PC)
 AC_SUBST(UDEV_RULES)
 AC_SUBST(UDEV_SYNC)
+AC_SUBST(UDEV_RULE_EXEC_DETECTION)
 AC_SUBST(UDEV_HAS_BUILTIN_BLKID)
 AC_SUBST(CUNIT_LIBS)
 AC_SUBST(CUNIT_CFLAGS)

@@ -9,4 +9,4 @@
 # a cookie value sent within "change" and "remove" events (the cookie
 # value is set before by that process for every action requested).
 
-ENV{DM_COOKIE}=="?*", RUN+="$env{DM_SBIN_PATH}/dmsetup udevcomplete $env{DM_COOKIE}"
+ENV{DM_COOKIE}=="?*", RUN+="(DM_EXEC)/dmsetup udevcomplete $env{DM_COOKIE}"
