@@ -124,8 +124,12 @@ static void _touch_memory(void *mem, size_t size)
 static void _allocate_memory(void)
 {
 	void *stack_mem, *temp_malloc_mem;
+	struct rlimit limit;
 
-	if ((stack_mem = alloca(_size_stack)))
+	/* Check if we could preallocate requested stack */
+	if ((getrlimit (RLIMIT_STACK, &limit) == 0) &&
+	    ((_size_stack * 2) < limit.rlim_cur) &&
+	    ((stack_mem = alloca(_size_stack))))
 		_touch_memory(stack_mem, _size_stack);
 
 	if ((temp_malloc_mem = malloc(_size_malloc_tmp)))
