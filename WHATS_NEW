@@ -1,5 +1,6 @@
 Version 2.02.97 - 
 ===============================
+  Open device read-only to obtain readahead value.
   Fix lvconvert error path NULL pointer dereference.
   Check for create_instance() fail in pvscan_lvmetad_single().
   Use 64bit math for reserved memory and stack.

@@ -282,7 +282,7 @@ static int _dev_read_ahead_dev(struct device *dev, uint32_t *read_ahead)
 		return 1;
 	}
 
-	if (!dev_open(dev))
+	if (!dev_open_readonly(dev))
 		return_0;
 
 	if (ioctl(dev->fd, BLKRAGET, &read_ahead_long) < 0) {
