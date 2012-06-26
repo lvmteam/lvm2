@@ -60,6 +60,7 @@ is_in_sync_() {
 
 # wait_for_sync <VG/LV>
 wait_for_sync_() {
+	local i
 	for i in {1..100} ; do
 		is_in_sync_ $1 && return
 		sleep 1
