@@ -1,5 +1,6 @@
 Version 2.02.97 - 
 ===============================
+  Add activation/auto_activation_volume_list to lvm.conf.
   Add --activate ay to lvcreate.
   Add --activate ay to lvchange.
   Add --activate ay to pvscan.
