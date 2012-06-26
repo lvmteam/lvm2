@@ -81,11 +81,7 @@ vgcreate -c n -s 256k $vg $(cat DEVICES)
 ###########################################
 # RAID1 convert tests
 ###########################################
-#
-# FIXME: Snapshots of RAID is available, but there are kernel bugs that
-#        still prevent its use.
-#for under_snap in false true; do
-for under_snap in false; do
+for under_snap in false true; do
 for i in 1 2 3 4; do
 	for j in 1 2 3 4; do
 		if [ $i -eq 1 ]; then
