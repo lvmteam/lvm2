@@ -598,11 +598,12 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 		 *       and data LV could be any type (i.e. mirror)) */
 		dm_list_iterate_items(seg, seg_mirrors ? &seg_lv(mirr_seg, 0)->segments :
 				      lv_is_thin_pool(lv) ? &seg_lv(first_seg(lv), 0)->segments : &lv->segments) {
-			if (!seg_is_striped(seg))
+			if (!seg_is_striped(seg) &&
+			    (!seg_is_raid(seg) || seg_is_mirrored(seg)))
 				continue;
 
 			sz = seg->stripe_size;
-			str = seg->area_count;
+			str = seg->area_count - lp->segtype->parity_devs;
 
 			if ((seg_stripesize && seg_stripesize != sz &&
 			     sz && !lp->stripe_size) ||
@@ -618,6 +619,11 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 
 		if (!lp->stripes)
 			lp->stripes = seg_stripes;
+		else if (seg_is_raid(first_seg(lv)) &&
+			 (lp->stripes != seg_stripes)) {
+			log_error("Unable to extend \"%s\" segment type with different number of stripes.", first_seg(lv)->segtype->name);
+			return ECMD_FAILED;
+		}
 
 		if (!lp->stripe_size && lp->stripes > 1) {
 			if (seg_stripesize) {

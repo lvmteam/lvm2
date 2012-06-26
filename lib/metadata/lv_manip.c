@@ -697,6 +697,10 @@ static uint32_t _calc_area_multiple(const struct segment_type *segtype,
 	if (segtype_is_striped(segtype))
 		return area_count;
 
+	/* Parity RAID (e.g. RAID 4/5/6) */
+	if (segtype_is_raid(segtype) && segtype->parity_devs)
+		return area_count - segtype->parity_devs;
+
 	/* Mirrored stripes */
 	if (stripes)
 		return stripes;
@@ -829,7 +833,15 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 	ah->parity_count = parity_count;
 	ah->region_size = region_size;
 	ah->alloc = alloc;
-	ah->area_multiple = _calc_area_multiple(segtype, area_count, stripes);
+
+	/*
+	 * For the purposes of allocation, area_count and parity_count are
+	 * kept separately.  However, the 'area_count' field in an
+	 * lv_segment includes both; and this is what '_calc_area_multiple'
+	 * is calculated from.  So, we must pass in the total count to get
+	 * a correct area_multiple.
+	 */
+	ah->area_multiple = _calc_area_multiple(segtype, area_count + parity_count, stripes);
 	ah->mirror_logs_separate = find_config_tree_bool(cmd, "allocation/mirror_logs_require_separate_pvs",
 							 DEFAULT_MIRROR_LOGS_REQUIRE_SEPARATE_PVS);
 
