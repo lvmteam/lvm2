@@ -41,7 +41,7 @@ function wait_for_raid_sync()
 	local i=0
 
 	while ! is_raid_in_sync $1; do
-		sleep .2
+		sleep 1
 		i=$(($i + 1))
 		if [ $i -gt 500 ]; then
 			echo "Sync is taking too long - assume stuck"
