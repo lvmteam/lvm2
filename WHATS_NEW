@@ -1,5 +1,6 @@
 Version 2.02.97 - 
 ===============================
+  Add --activate ay to pvscan.
   Add --activate ay to vgchange.
   Add support for volume autoactivation using lvmetad.
   Add --activate synonym for --available arg and prefer --activate.

@@ -97,6 +97,20 @@ static void _pvscan_display_single(struct cmd_context *cmd,
 					   pv_pe_size(pv)));
 }
 
+static int _auto_activation_handler(struct volume_group *vg, int partial, int activate)
+{
+	/* TODO: add support for partial and clustered VGs */
+	if (partial || vg_is_clustered(vg))
+		return 1;
+
+	if (!vgchange_activate(vg->cmd, vg, activate)) {
+		log_error("%s: autoactivation failed.", vg->name);
+		return 0;
+	}
+
+	return 1;
+}
+
 static int _pvscan_lvmetad_all_devs(struct cmd_context *cmd, activation_handler handler)
 {
 	struct dev_iter *iter;
@@ -135,6 +149,14 @@ static int _pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
 	dev_t devno;
 	char *buf;
 	activation_handler handler = NULL;
+
+	if (arg_count(cmd, activate_ARG)) {
+		if (arg_uint_value(cmd, activate_ARG, CHANGE_AAY) != CHANGE_AAY) {
+			log_error("Only --activate ay allowed with pvscan.");
+			return 0;
+		}
+		handler = _auto_activation_handler;
+	}
 
 	if (arg_count(cmd, major_ARG) + arg_count(cmd, minor_ARG))
 		devno_args = 1;
@@ -240,6 +262,11 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 
 	if (arg_count(cmd, cache_ARG))
 		return _pvscan_lvmetad(cmd, argc, argv);
+
+	if (arg_count(cmd, activate_ARG)) {
+		log_error("--activate is only valid with --cache.");
+		return EINVALID_CMD_LINE;
+	}
 
 	if (arg_count(cmd, major_ARG) + arg_count(cmd, minor_ARG)) {
 		log_error("--major and --minor are only valid with --cache.");
