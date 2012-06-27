@@ -567,7 +567,8 @@ typedef enum {
 	CHANGE_AN = 1,  /* deactivate */
 	CHANGE_AE = 2,  /* activate exclusively */
 	CHANGE_ALY = 3, /* activate locally */
-	CHANGE_ALN = 4  /* deactivate locally */
+	CHANGE_ALN = 4, /* deactivate locally */
+	CHANGE_AAY = 5  /* automatic activation */
 } activation_change_t;
 
 /* FIXME: refactor and reduce the size of this struct! */

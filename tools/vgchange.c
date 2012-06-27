@@ -81,8 +81,8 @@ static int _poll_lvs_in_vg(struct cmd_context *cmd,
 	return count;
 }
 
-static int _activate_lvs_in_vg(struct cmd_context *cmd,
-			       struct volume_group *vg, int activate)
+static int _activate_lvs_in_vg(struct cmd_context *cmd, struct volume_group *vg,
+			       activation_change_t activate)
 {
 	struct lv_list *lvl;
 	struct logical_volume *lv;
@@ -211,35 +211,32 @@ static int _vgchange_background_polling(struct cmd_context *cmd, struct volume_g
 	return 1;
 }
 
-static int _vgchange_activate(struct cmd_context *cmd, struct volume_group *vg)
+int vgchange_activate(struct cmd_context *cmd, struct volume_group *vg,
+		      activation_change_t activate)
 {
-	int lv_open, active, monitored = 0;
-	int activate_arg, r = 1;
-	int activate = 1;
+	int lv_open, active, monitored = 0, r = 1, do_activate = 1;
+
+	if ((activate == CHANGE_AN) || (activate == CHANGE_ALN))
+		do_activate = 0;
 
 	/*
 	 * Safe, since we never write out new metadata here. Required for
 	 * partial activation to work.
 	 */
-	cmd->handles_missing_pvs = 1;
-
-	activate_arg = arg_uint_value(cmd, activate_ARG, 0);
-
-	if ((activate_arg == CHANGE_AN) || (activate_arg == CHANGE_ALN))
-		activate = 0;
+        cmd->handles_missing_pvs = 1;
 
 	/* FIXME: Force argument to deactivate them? */
-	if (!activate && (lv_open = lvs_in_vg_opened(vg))) {
+	if (!do_activate && (lv_open = lvs_in_vg_opened(vg))) {
 		log_error("Can't deactivate volume group \"%s\" with %d open "
 			  "logical volume(s)", vg->name, lv_open);
 		return 0;
 	}
 
 	/* FIXME Move into library where clvmd can use it */
-	if (activate)
+	if (do_activate)
 		check_current_backup(vg);
 
-	if (activate && (active = lvs_in_vg_activated(vg))) {
+	if (do_activate && (active = lvs_in_vg_activated(vg))) {
 		log_verbose("%d logical volume(s) in volume group \"%s\" "
 			    "already active", active, vg->name);
 		if (dmeventd_monitor_mode() != DMEVENTD_MONITOR_IGNORE) {
@@ -252,7 +249,7 @@ static int _vgchange_activate(struct cmd_context *cmd, struct volume_group *vg)
 		}
 	}
 
-	if (!_activate_lvs_in_vg(cmd, vg, activate_arg))
+	if (!_activate_lvs_in_vg(cmd, vg, activate))
 		r = 0;
 
 	/* Print message only if there was not found a missing VG */
@@ -509,7 +506,7 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 	}
 
 	if (arg_count(cmd, activate_ARG)) {
-		if (!_vgchange_activate(cmd, vg))
+		if (!vgchange_activate(cmd, vg, arg_uint_value(cmd, activate_ARG, CHANGE_AY)))
 			return ECMD_FAILED;
 	}
 

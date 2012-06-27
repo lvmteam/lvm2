@@ -97,7 +97,7 @@ static void _pvscan_display_single(struct cmd_context *cmd,
 					   pv_pe_size(pv)));
 }
 
-static int _pvscan_lvmetad_all_devs(struct cmd_context *cmd)
+static int _pvscan_lvmetad_all_devs(struct cmd_context *cmd, activation_handler handler)
 {
 	struct dev_iter *iter;
 	struct device *dev;
@@ -109,7 +109,7 @@ static int _pvscan_lvmetad_all_devs(struct cmd_context *cmd)
 	}
 
 	while ((dev = dev_iter_get(iter))) {
-		if (!pvscan_lvmetad_single(cmd, dev)) {
+		if (!pvscan_lvmetad_single(cmd, dev, handler)) {
 			r = 0;
 			break;
 		}
@@ -134,6 +134,7 @@ static int _pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
 	struct arg_value_group_list *current_group;
 	dev_t devno;
 	char *buf;
+	activation_handler handler = NULL;
 
 	if (arg_count(cmd, major_ARG) + arg_count(cmd, minor_ARG))
 		devno_args = 1;
@@ -150,7 +151,7 @@ static int _pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
 
 	/* Scan everything? */
 	if (!argc && !devno_args) {
-		if (!_pvscan_lvmetad_all_devs(cmd))
+		if (!_pvscan_lvmetad_all_devs(cmd, handler))
 			ret = ECMD_FAILED;
 		goto out;
 	}
@@ -167,7 +168,7 @@ static int _pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
 			continue;
 		}
 
-		if (!pvscan_lvmetad_single(cmd, dev)) {
+		if (!pvscan_lvmetad_single(cmd, dev, handler)) {
 			ret = ECMD_FAILED;
 			break;
 		}
@@ -192,7 +193,7 @@ static int _pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
 			if (!dm_asprintf(&buf, "%" PRIi32 ":%" PRIi32, major, minor))
 				stack;
 			/* FIXME Filters? */
-			if (!lvmetad_pv_gone(devno, buf ? : "")) {
+			if (!lvmetad_pv_gone(devno, buf ? : "", handler)) {
 				ret = ECMD_FAILED;
 				if (buf)
 					dm_free(buf);
@@ -206,7 +207,7 @@ static int _pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
 			continue;
 		}
 
-		if (!pvscan_lvmetad_single(cmd, dev)) {
+		if (!pvscan_lvmetad_single(cmd, dev, handler)) {
 			ret = ECMD_FAILED;
 			break;
 		}

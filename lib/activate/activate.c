@@ -328,10 +328,8 @@ int activation(void)
 	return _activation;
 }
 
-static int _passes_volumes_filter(struct cmd_context *cmd,
-				  struct logical_volume *lv,
-				  const struct dm_config_node *cn,
-				  const char *config_path)
+int lv_passes_volumes_filter(struct cmd_context *cmd, struct logical_volume *lv,
+			     const struct dm_config_node *cn, const char *config_path)
 {
 	const struct dm_config_value *cv;
 	const char *str;
@@ -429,7 +427,7 @@ static int _passes_activation_filter(struct cmd_context *cmd,
 		return 0;
 	}
 
-	return _passes_volumes_filter(cmd, lv, cn, "activation/volume_list");
+	return lv_passes_volumes_filter(cmd, lv, cn, "activation/volume_list");
 }
 
 static int _passes_readonly_filter(struct cmd_context *cmd,
@@ -440,7 +438,21 @@ static int _passes_readonly_filter(struct cmd_context *cmd,
 	if (!(cn = find_config_tree_node(cmd, "activation/read_only_volume_list")))
 		return 0;
 
-	return _passes_volumes_filter(cmd, lv, cn, "activation/read_only_volume_list");
+	return lv_passes_volumes_filter(cmd, lv, cn, "activation/read_only_volume_list");
+}
+
+
+int lv_passes_auto_activation_filter(struct cmd_context *cmd, struct logical_volume *lv)
+{
+	const struct dm_config_node *cn;
+
+	if (!(cn = find_config_tree_node(cmd, "activation/auto_activation_volume_list"))) {
+		log_verbose("activation/auto_activation_volume_list configuration setting "
+			    "not defined: All logical volumes will be auto-activated.");
+		return 1;
+	}
+
+	return lv_passes_volumes_filter(cmd, lv, cn, "activation/auto_activation_volume_list");
 }
 
 int library_version(char *version, size_t size)

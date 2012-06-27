@@ -185,4 +185,7 @@ int mirror_remove_missing(struct cmd_context *cmd,
 			  struct logical_volume *lv, int force);
 
 uint32_t percent_of_extents(uint32_t percents, uint32_t count, int roundup);
+
+int vgchange_activate(struct cmd_context *cmd, struct volume_group *vg,
+		       activation_change_t activate);
 #endif

@@ -188,6 +188,12 @@ int activation_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_v
 		av->ui_value = CHANGE_AY;
 	}
 
+	else if (!strcmp(av->value, "a") || !strcmp(av->value, "ay") ||
+		 !strcmp(av->value, "ya")) {
+		av->i_value = CHANGE_AAY;
+		av->ui_value = CHANGE_AAY;
+	}
+
 	else if (!strcmp(av->value, "n") || !strcmp(av->value, "en") ||
 		 !strcmp(av->value, "ne")) {
 		av->i_value = CHANGE_AN;

@@ -3800,7 +3800,8 @@ int pv_write(struct cmd_context *cmd __attribute__((unused)),
 	if (!pv->fmt->ops->pv_write(pv->fmt, pv))
 		return_0;
 
-	if (!lvmetad_pv_found(pv->id, pv->dev, pv->fmt, pv->label_sector, NULL))
+	if (!lvmetad_pv_found(pv->id, pv->dev, pv->fmt, pv->label_sector,
+			      NULL, NULL))
 		return_0;
 
 	return 1;

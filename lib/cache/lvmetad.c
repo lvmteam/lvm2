@@ -322,7 +322,7 @@ int lvmetad_vg_update(struct volume_group *vg)
 		/* NB. the PV fmt pointer is sometimes wrong during vgconvert */
 		if (pvl->pv->dev && !lvmetad_pv_found(pvl->pv->id, pvl->pv->dev,
 						      vg->fid ? vg->fid->fmt : pvl->pv->fmt,
-						      pvl->pv->label_sector, NULL))
+						      pvl->pv->label_sector, NULL, NULL))
 			return 0;
 	}
 
@@ -536,7 +536,7 @@ static const char *_print_mdas(struct lvmcache_info *info)
 }
 
 int lvmetad_pv_found(struct id pvid, struct device *device, const struct format_type *fmt,
-		     uint64_t label_sector, struct volume_group *vg)
+		     uint64_t label_sector, struct volume_group *vg, activation_handler handler)
 {
 	char uuid[64];
 	daemon_reply reply;
@@ -544,6 +544,7 @@ int lvmetad_pv_found(struct id pvid, struct device *device, const struct format_
 	const char *mdas = NULL;
 	char *pvmeta;
 	char *buf = NULL;
+	const char *status;
 	int result;
 
 	if (!_using_lvmetad)
@@ -603,12 +604,26 @@ int lvmetad_pv_found(struct id pvid, struct device *device, const struct format_
 	dm_free(pvmeta);
 
 	result = _lvmetad_handle_reply(reply, "update PV", uuid, NULL);
+
+	if (result && handler) {
+		status = daemon_reply_str(reply, "status", "<missing>");
+		if (!strcmp(status, "partial"))
+			handler(vg, 1, CHANGE_AAY);
+		else if (!strcmp(status, "complete"))
+			handler(vg, 0, CHANGE_AAY);
+		else if (!strcmp(status, "orphan"))
+			;
+		else
+			log_error("Request to %s %s in lvmetad gave status %s.",
+			  "update PV", uuid, status);
+	}
+
 	daemon_reply_destroy(reply);
 
 	return result;
 }
 
-int lvmetad_pv_gone(dev_t device, const char *pv_name)
+int lvmetad_pv_gone(dev_t device, const char *pv_name, activation_handler handler)
 {
 	daemon_reply reply;
 	int result;
@@ -616,6 +631,13 @@ int lvmetad_pv_gone(dev_t device, const char *pv_name)
 
 	if (!_using_lvmetad)
 		return 1;
+
+	/*
+         *  TODO: automatic volume deactivation takes place here *before*
+         *        all cached info is gone - call handler. Also, consider
+         *        integrating existing deactivation script  that deactivates
+         *        the whole stack from top to bottom (not yet upstream).
+         */
 
 	reply = daemon_send_simple(_lvmetad, "pv_gone", "device = %d", device, NULL);
 
@@ -627,9 +649,9 @@ int lvmetad_pv_gone(dev_t device, const char *pv_name)
 	return result;
 }
 
-int lvmetad_pv_gone_by_dev(struct device *dev)
+int lvmetad_pv_gone_by_dev(struct device *dev, activation_handler handler)
 {
-	return lvmetad_pv_gone(dev->dev, dev_name(dev));
+	return lvmetad_pv_gone(dev->dev, dev_name(dev), handler);
 }
 
 int lvmetad_active(void)
@@ -665,7 +687,8 @@ static int _pvscan_lvmetad_single(struct metadata_area *mda, void *baton)
 	return 1;
 }
 
-int pvscan_lvmetad_single(struct cmd_context *cmd, struct device *dev)
+int pvscan_lvmetad_single(struct cmd_context *cmd, struct device *dev,
+			  activation_handler handler)
 {
 	struct label *label;
 	struct lvmcache_info *info;
@@ -680,7 +703,7 @@ int pvscan_lvmetad_single(struct cmd_context *cmd, struct device *dev)
 
 	if (!label_read(dev, &label, 0)) {
 		log_print("No PV label found on %s.", dev_name(dev));
-		if (!lvmetad_pv_gone_by_dev(dev))
+		if (!lvmetad_pv_gone_by_dev(dev, handler))
 			goto_bad;
 		return 1;
 	}
@@ -704,7 +727,7 @@ int pvscan_lvmetad_single(struct cmd_context *cmd, struct device *dev)
 	 * sync needs to be killed.
 	 */
 	if (!lvmetad_pv_found(*(struct id *)dev->pvid, dev, lvmcache_fmt(info),
-			      label->sector, baton.vg)) {
+			      label->sector, baton.vg, handler)) {
 		release_vg(baton.vg);
 		goto_bad;
 	}
