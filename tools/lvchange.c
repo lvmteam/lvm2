@@ -136,6 +136,12 @@ static int _lvchange_activate(struct cmd_context *cmd, struct logical_volume *lv
 	if (lv_is_cow(lv) && !lv_is_virtual_origin(origin_from_cow(lv)))
 		lv = origin_from_cow(lv);
 
+	if (activate == CHANGE_AAY) {
+		if (!lv_passes_auto_activation_filter(cmd, lv))
+			return 1;
+		activate = CHANGE_ALY;
+	}
+
 	if (activate == CHANGE_ALN) {
 		log_verbose("Deactivating logical volume \"%s\" locally",
 			    lv->name);
