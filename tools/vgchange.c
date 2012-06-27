@@ -131,6 +131,12 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 			continue;
 		}
 
+		if (activate == CHANGE_AAY) {
+			if (!lv_passes_auto_activation_filter(cmd, lv))
+				continue;
+			activate = CHANGE_ALY;
+		}
+
 		expected_count++;
 
 		if (activate == CHANGE_AN) {
