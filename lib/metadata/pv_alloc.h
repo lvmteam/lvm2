@@ -23,6 +23,7 @@ struct pv_segment *assign_peg_to_lvseg(struct physical_volume *pv, uint32_t pe,
 int pv_split_segment(struct dm_pool *mem,
 		     struct physical_volume *pv, uint32_t pe,
 		     struct pv_segment **pvseg_allocated);
+int discard_pv_segment(struct pv_segment *peg, uint32_t discard_area_reduction);
 int release_pv_segment(struct pv_segment *peg, uint32_t area_reduction);
 int check_pv_segments(struct volume_group *vg);
 void merge_pv_segments(struct pv_segment *peg1, struct pv_segment *peg2);
