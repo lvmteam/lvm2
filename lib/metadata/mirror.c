@@ -1469,7 +1469,7 @@ int remove_mirrors_from_segments(struct logical_volume *lv,
 		}
 
 		for (s = new_mirrors + 1; s < seg->area_count; s++)
-			if (!release_lv_segment_area(seg, s, seg->area_len))
+			if (!release_and_discard_lv_segment_area(seg, s, seg->area_len))
 				return_0;
 
 		seg->area_count = new_mirrors + 1;

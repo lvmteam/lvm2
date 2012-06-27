@@ -299,17 +299,22 @@ struct lv_segment *alloc_snapshot_seg(struct logical_volume *lv,
 	return seg;
 }
 
-int release_lv_segment_area(struct lv_segment *seg, uint32_t s,
-			    uint32_t area_reduction)
+static int _release_and_discard_lv_segment_area(struct lv_segment *seg, uint32_t s,
+						uint32_t area_reduction, int with_discard)
 {
 	if (seg_type(seg, s) == AREA_UNASSIGNED)
 		return 1;
 
 	if (seg_type(seg, s) == AREA_PV) {
+		if (with_discard && !discard_pv_segment(seg_pvseg(seg, s), area_reduction))
+			return_0;
+
 		if (!release_pv_segment(seg_pvseg(seg, s), area_reduction))
 			return_0;
+
 		if (seg->area_len == area_reduction)
 			seg_type(seg, s) = AREA_UNASSIGNED;
+
 		return 1;
 	}
 
@@ -363,6 +368,16 @@ int release_lv_segment_area(struct lv_segment *seg, uint32_t s,
 	}
 
 	return 1;
+}
+
+int release_and_discard_lv_segment_area(struct lv_segment *seg, uint32_t s, uint32_t area_reduction)
+{
+	return _release_and_discard_lv_segment_area(seg, s, area_reduction, 1);
+}
+
+int release_lv_segment_area(struct lv_segment *seg, uint32_t s, uint32_t area_reduction)
+{
+	return _release_and_discard_lv_segment_area(seg, s, area_reduction, 0);
 }
 
 /*
@@ -501,7 +516,7 @@ static int _lv_segment_reduce(struct lv_segment *seg, uint32_t reduction)
 		area_reduction = reduction;
 
 	for (s = 0; s < seg->area_count; s++)
-		if (!release_lv_segment_area(seg, s, area_reduction))
+		if (!release_and_discard_lv_segment_area(seg, s, area_reduction))
 			return_0;
 
 	seg->len -= reduction;
