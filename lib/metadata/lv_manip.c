@@ -299,24 +299,25 @@ struct lv_segment *alloc_snapshot_seg(struct logical_volume *lv,
 	return seg;
 }
 
-void release_lv_segment_area(struct lv_segment *seg, uint32_t s,
-			     uint32_t area_reduction)
+int release_lv_segment_area(struct lv_segment *seg, uint32_t s,
+			    uint32_t area_reduction)
 {
 	if (seg_type(seg, s) == AREA_UNASSIGNED)
-		return;
+		return 1;
 
 	if (seg_type(seg, s) == AREA_PV) {
-		if (release_pv_segment(seg_pvseg(seg, s), area_reduction) &&
-		    seg->area_len == area_reduction)
+		if (!release_pv_segment(seg_pvseg(seg, s), area_reduction))
+			return_0;
+		if (seg->area_len == area_reduction)
 			seg_type(seg, s) = AREA_UNASSIGNED;
-		return;
+		return 1;
 	}
 
 	if ((seg_lv(seg, s)->status & MIRROR_IMAGE) ||
 	    (seg_lv(seg, s)->status & THIN_POOL_DATA)) {
 		if (!lv_reduce(seg_lv(seg, s), area_reduction))
-			stack; /* FIXME: any upper level reporting */
-		return;
+			return_0; /* FIXME: any upper level reporting */
+		return 1;
 	}
 
 	if (seg_lv(seg, s)->status & RAID_IMAGE) {
@@ -328,12 +329,12 @@ void release_lv_segment_area(struct lv_segment *seg, uint32_t s,
 		*/
 		if (area_reduction != seg->area_len) {
 			log_error("Unable to reduce RAID LV - operation not implemented.");
-			return;
+			return_0;
 		} else {
 			if (!lv_remove(seg_lv(seg, s))) {
 				log_error("Failed to remove RAID image %s",
 					  seg_lv(seg, s)->name);
-				return;
+				return 0;
 			}
 		}
 
@@ -343,10 +344,10 @@ void release_lv_segment_area(struct lv_segment *seg, uint32_t s,
 				       seg_metalv(seg, s)->le_count)) {
 				log_error("Failed to remove RAID meta-device %s",
 					  seg_metalv(seg, s)->name);
-				return;
+				return 0;
 			}
 		}
-		return;
+		return 1;
 	}
 
 	if (area_reduction == seg->area_len) {
@@ -360,6 +361,8 @@ void release_lv_segment_area(struct lv_segment *seg, uint32_t s,
 		seg_le(seg, s) = 0;
 		seg_type(seg, s) = AREA_UNASSIGNED;
 	}
+
+	return 1;
 }
 
 /*
@@ -377,9 +380,11 @@ int move_lv_segment_area(struct lv_segment *seg_to, uint32_t area_to,
 		pv = seg_pv(seg_from, area_from);
 		pe = seg_pe(seg_from, area_from);
 
-		release_lv_segment_area(seg_from, area_from,
-					seg_from->area_len);
-		release_lv_segment_area(seg_to, area_to, seg_to->area_len);
+		if (!release_lv_segment_area(seg_from, area_from, seg_from->area_len))
+			return_0;
+
+		if (!release_lv_segment_area(seg_to, area_to, seg_to->area_len))
+			return_0;
 
 		if (!set_lv_segment_area_pv(seg_to, area_to, pv, pe))
 			return_0;
@@ -390,9 +395,11 @@ int move_lv_segment_area(struct lv_segment *seg_to, uint32_t area_to,
 		lv = seg_lv(seg_from, area_from);
 		le = seg_le(seg_from, area_from);
 
-		release_lv_segment_area(seg_from, area_from,
-					seg_from->area_len);
-		release_lv_segment_area(seg_to, area_to, seg_to->area_len);
+		if (!release_lv_segment_area(seg_from, area_from, seg_from->area_len))
+			return_0;
+
+		if (!release_lv_segment_area(seg_to, area_to, seg_to->area_len))
+			return_0;
 
 		if (!set_lv_segment_area_lv(seg_to, area_to, lv, le, 0))
 			return_0;
@@ -400,7 +407,8 @@ int move_lv_segment_area(struct lv_segment *seg_to, uint32_t area_to,
 		break;
 
 	case AREA_UNASSIGNED:
-		release_lv_segment_area(seg_to, area_to, seg_to->area_len);
+		if (!release_lv_segment_area(seg_to, area_to, seg_to->area_len))
+			return_0;
 	}
 
 	return 1;
@@ -493,7 +501,8 @@ static int _lv_segment_reduce(struct lv_segment *seg, uint32_t reduction)
 		area_reduction = reduction;
 
 	for (s = 0; s < seg->area_count; s++)
-		release_lv_segment_area(seg, s, area_reduction);
+		if (!release_lv_segment_area(seg, s, area_reduction))
+			return_0;
 
 	seg->len -= reduction;
 	seg->area_len -= area_reduction;

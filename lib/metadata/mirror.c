@@ -645,8 +645,8 @@ static int _split_mirror_images(struct logical_volume *lv,
 		sub_lv = seg_lv(mirrored_seg, mirrored_seg->area_count);
 
 		sub_lv->status &= ~MIRROR_IMAGE;
-		release_lv_segment_area(mirrored_seg, mirrored_seg->area_count,
-					mirrored_seg->area_len);
+		if (!release_lv_segment_area(mirrored_seg, mirrored_seg->area_count, mirrored_seg->area_len))
+			return_0;
 
 		log_very_verbose("%s assigned to be split", sub_lv->name);
 
@@ -906,7 +906,8 @@ static int _remove_mirror_images(struct logical_volume *lv,
 		}
 		lvl->lv = seg_lv(mirrored_seg, m);
 		dm_list_add(&tmp_orphan_lvs, &lvl->list);
-		release_lv_segment_area(mirrored_seg, m, mirrored_seg->area_len);
+		if (!release_lv_segment_area(mirrored_seg, m, mirrored_seg->area_len))
+			return_0;
 	}
 	mirrored_seg->area_count = new_area_count;
 
@@ -1468,7 +1469,8 @@ int remove_mirrors_from_segments(struct logical_volume *lv,
 		}
 
 		for (s = new_mirrors + 1; s < seg->area_count; s++)
-			release_lv_segment_area(seg, s, seg->area_len);
+			if (!release_lv_segment_area(seg, s, seg->area_len))
+				return_0;
 
 		seg->area_count = new_mirrors + 1;
 

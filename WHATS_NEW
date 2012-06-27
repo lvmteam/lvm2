@@ -1,5 +1,6 @@
 Version 2.02.97 - 
 ===============================
+  Allow release_lv_segment_area to fail as functions it calls can fail.
   Open device read-only to obtain readahead value.
   Fix lvconvert error path NULL pointer dereference.
   Check for create_instance() fail in pvscan_lvmetad_single().
