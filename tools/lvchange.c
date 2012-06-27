@@ -127,12 +127,11 @@ static int lvchange_background_polling(struct cmd_context *cmd,
 	return 1;
 }
 
-static int lvchange_availability(struct cmd_context *cmd,
-				 struct logical_volume *lv)
+static int _lvchange_activate(struct cmd_context *cmd, struct logical_volume *lv)
 {
 	int activate;
 
-	activate = arg_uint_value(cmd, available_ARG, 0);
+	activate = arg_uint_value(cmd, activate_ARG, 0);
 
 	if (lv_is_cow(lv) && !lv_is_virtual_origin(origin_from_cow(lv)))
 		lv = origin_from_cow(lv);
@@ -556,7 +555,7 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	if (lv_is_cow(lv) && !lv_is_virtual_origin(origin = origin_from_cow(lv)) &&
-	    arg_count(cmd, available_ARG)) {
+	    arg_count(cmd, activate_ARG)) {
 		if (origin->origin_count < 2)
 			snaps_msg[0] = '\0';
 		else if (dm_snprintf(snaps_msg, sizeof(snaps_msg),
@@ -577,7 +576,7 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 	if (lv->status & PVMOVE) {
 		log_error("Unable to change pvmove LV %s", lv->name);
-		if (arg_count(cmd, available_ARG))
+		if (arg_count(cmd, activate_ARG))
 			log_error("Use 'pvmove --abort' to abandon a pvmove");
 		return ECMD_FAILED;
 	}
@@ -594,7 +593,7 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	/* If LV is sparse, activate origin instead */
-	if (arg_count(cmd, available_ARG) && lv_is_cow(lv) &&
+	if (arg_count(cmd, activate_ARG) && lv_is_cow(lv) &&
 	    lv_is_virtual_origin(origin = origin_from_cow(lv)))
 		lv = origin;
 
@@ -696,9 +695,9 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 			return ECMD_FAILED;
 		}
 
-	/* availability change */
-	if (arg_count(cmd, available_ARG)) {
-		if (!lvchange_availability(cmd, lv)) {
+	/* activation change */
+	if (arg_count(cmd, activate_ARG)) {
+		if (!_lvchange_activate(cmd, lv)) {
 			stack;
 			return ECMD_FAILED;
 		}
@@ -710,7 +709,7 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 			return ECMD_FAILED;
 		}
 
-	if (!arg_count(cmd, available_ARG) &&
+	if (!arg_count(cmd, activate_ARG) &&
 	    !arg_count(cmd, refresh_ARG) &&
 	    arg_count(cmd, monitor_ARG)) {
 		if (!lvchange_monitoring(cmd, lv)) {
@@ -719,7 +718,7 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 		}
 	}
 
-	if (!arg_count(cmd, available_ARG) &&
+	if (!arg_count(cmd, activate_ARG) &&
 	    !arg_count(cmd, refresh_ARG) &&
 	    arg_count(cmd, poll_ARG)) {
 		if (!lvchange_background_polling(cmd, lv)) {
@@ -745,7 +744,7 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 		arg_count(cmd, resync_ARG) || arg_count(cmd, alloc_ARG);
 
 	if (!update &&
-            !arg_count(cmd, available_ARG) && !arg_count(cmd, refresh_ARG) &&
+            !arg_count(cmd, activate_ARG) && !arg_count(cmd, refresh_ARG) &&
             !arg_count(cmd, monitor_ARG) && !arg_count(cmd, poll_ARG)) {
 		log_error("Need 1 or more of -a, -C, -M, -p, -r, "
 			  "--resync, --refresh, --alloc, --addtag, --deltag, "
@@ -753,7 +752,7 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(cmd, available_ARG) && arg_count(cmd, refresh_ARG)) {
+	if (arg_count(cmd, activate_ARG) && arg_count(cmd, refresh_ARG)) {
 		log_error("Only one of -a and --refresh permitted.");
 		return EINVALID_CMD_LINE;
 	}

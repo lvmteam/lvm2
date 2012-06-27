@@ -79,11 +79,12 @@ arg(thinpool_ARG, '\0', "thinpool", string_arg, 0)
 /* Allow some variations */
 arg(resizable_ARG, '\0', "resizable", yes_no_arg, 0)
 arg(allocation_ARG, '\0', "allocation", yes_no_arg, 0)
+arg(available_ARG, '\0', "available", activation_arg, 0)
 
 /*
  * ... and now the short args.
  */
-arg(available_ARG, 'a', "available", yes_no_excl_arg, 0)
+arg(activate_ARG, 'a', "activate", activation_arg, 0)
 arg(all_ARG, 'a', "all", NULL, 0)
 arg(autobackup_ARG, 'A', "autobackup", yes_no_arg, 0)
 arg(activevolumegroups_ARG, 'A', "activevolumegroups", NULL, 0)

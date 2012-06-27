@@ -1,5 +1,6 @@
 Version 2.02.97 - 
 ===============================
+  Add --activate synonym for --available arg and prefer --activate.
   Never issue discards when LV extents are being reconfigured, not deleted.
   Allow release_lv_segment_area to fail as functions it calls can fail.
   Open device read-only to obtain readahead value.

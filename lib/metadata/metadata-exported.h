@@ -563,11 +563,11 @@ int update_pool_lv(struct logical_volume *lv, int activate);
  * Activation options
  */
 typedef enum {
-	CHANGE_AY = 0,
-	CHANGE_AN = 1,
-	CHANGE_AE = 2,
-	CHANGE_ALY = 3,
-	CHANGE_ALN = 4
+	CHANGE_AY = 0,  /* activate */
+	CHANGE_AN = 1,  /* deactivate */
+	CHANGE_AE = 2,  /* activate exclusively */
+	CHANGE_ALY = 3, /* activate locally */
+	CHANGE_ALN = 4  /* deactivate locally */
 } activation_change_t;
 
 /* FIXME: refactor and reduce the size of this struct! */

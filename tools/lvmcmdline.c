@@ -172,7 +172,7 @@ int yes_no_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_value
 	return 1;
 }
 
-int yes_no_excl_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av)
+int activation_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av)
 {
 	av->sign = SIGN_NONE;
 	av->percent = PERCENT_NONE;
@@ -889,7 +889,8 @@ static int _get_settings(struct cmd_context *cmd)
 	if (!_merge_synonym(cmd, resizable_ARG, resizeable_ARG) ||
 	    !_merge_synonym(cmd, allocation_ARG, allocatable_ARG) ||
 	    !_merge_synonym(cmd, allocation_ARG, resizeable_ARG) ||
-	    !_merge_synonym(cmd, virtualoriginsize_ARG, virtualsize_ARG))
+	    !_merge_synonym(cmd, virtualoriginsize_ARG, virtualsize_ARG) ||
+	    !_merge_synonym(cmd, available_ARG, activate_ARG))
 		return EINVALID_CMD_LINE;
 
 	if ((!strncmp(cmd->command->name, "pv", 2) &&

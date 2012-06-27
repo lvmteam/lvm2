@@ -7,7 +7,7 @@ lvchange \- change attributes of a logical volume
 .IR Tag ]
 .RB [ \-A | \-\-autobackup
 .RI { y | n }]
-.RB [ \-a | \-\-available
+.RB [ \-a | \-\-activate
 .RI [ e | l ]{ y | n }]
 .RB [ \-\-alloc
 .IR AllocationPolicy ]
@@ -46,7 +46,7 @@ including making them known to the kernel ready for use.
 .SH OPTIONS
 See \fBlvm\fP(8) for common options.
 .TP
-.BR \-a ", " \-\-available " [" \fIe | \fIl ]{ \fIy | \fIn }
+.BR \-a ", " \-\-activate " [" \fIe | \fIl ]{ \fIy | \fIn }
 Controls the availability of the logical volumes for use.
 Communicates with the kernel device-mapper driver via
 libdevmapper to activate (\-ay) or deactivate (\-an) the

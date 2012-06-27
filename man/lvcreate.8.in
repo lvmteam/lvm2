@@ -7,7 +7,7 @@ lvcreate \- create a logical volume in an existing volume group
 .IR Tag ]
 .RB [ \-\-alloc
 .IR AllocationPolicy ]
-.RB [ \-a | \-\-available
+.RB [ \-a | \-\-activate
 .RI [ e | l ]{ y | n }]
 .RB [ \-A | \-\-autobackup
 .RI { y | n }]
@@ -107,7 +107,7 @@ See
 .BR lvm (8)
 for common options.
 .TP
-.IR \fB\-a ", " \fB\-\-available " {" y | n | ey | en | ly | ln }
+.IR \fB\-a ", " \fB\-\-activate " {" y | n | ey | en | ly | ln }
 Controls the availability of the Logical Volumes for immediate use after
 the command finishes running.
 By default, new Logical Volumes are activated automatically (\fB-a\fIy\fR).

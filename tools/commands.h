@@ -61,7 +61,7 @@ xx(lvchange,
    CACHE_VGMETADATA | PERMITTED_READ_ONLY,
    "lvchange\n"
    "\t[-A|--autobackup y|n]\n"
-   "\t[-a|--available [e|l]y|n]\n"
+   "\t[-a|--activate [e|l]y|n]\n"
    "\t[--addtag Tag]\n"
    "\t[--alloc AllocationPolicy]\n"
    "\t[-C|--contiguous y|n]\n"
@@ -87,11 +87,11 @@ xx(lvchange,
    "\t[--version]" "\n"
    "\tLogicalVolume[Path] [LogicalVolume[Path]...]\n",
 
-   alloc_ARG, autobackup_ARG, available_ARG, contiguous_ARG, force_ARG,
-   ignorelockingfailure_ARG, ignoremonitoring_ARG, major_ARG, minor_ARG,
-   monitor_ARG, noudevsync_ARG, partial_ARG, permission_ARG, persistent_ARG,
-   poll_ARG, readahead_ARG, resync_ARG, refresh_ARG, addtag_ARG, deltag_ARG,
-   sysinit_ARG, test_ARG, yes_ARG)
+   alloc_ARG, autobackup_ARG, activate_ARG, available_ARG, contiguous_ARG,
+   force_ARG, ignorelockingfailure_ARG, ignoremonitoring_ARG, major_ARG,
+   minor_ARG, monitor_ARG, noudevsync_ARG, partial_ARG, permission_ARG,
+   persistent_ARG, poll_ARG, readahead_ARG, resync_ARG, refresh_ARG,
+   addtag_ARG, deltag_ARG, sysinit_ARG, test_ARG, yes_ARG)
 
 xx(lvconvert,
    "Change logical volume layout",
@@ -159,7 +159,7 @@ xx(lvcreate,
    0,
    "lvcreate " "\n"
    "\t[-A|--autobackup {y|n}]\n"
-   "\t[-a|--available [e|l]y|n]\n"
+   "\t[-a|--activate [e|l]y|n]\n"
    "\t[--addtag Tag]\n"
    "\t[--alloc AllocationPolicy]\n"
    "\t[-C|--contiguous {y|n}]\n"
@@ -214,13 +214,13 @@ xx(lvcreate,
 
    "\t[PhysicalVolumePath...]\n\n",
 
-   addtag_ARG, alloc_ARG, autobackup_ARG, available_ARG, chunksize_ARG,
-   contiguous_ARG, corelog_ARG, extents_ARG, ignoremonitoring_ARG, major_ARG,
-   minor_ARG, mirrorlog_ARG, mirrors_ARG, monitor_ARG, name_ARG, nosync_ARG,
-   noudevsync_ARG, permission_ARG, persistent_ARG, readahead_ARG,
-   regionsize_ARG, size_ARG, snapshot_ARG, stripes_ARG, stripesize_ARG,
-   test_ARG, thin_ARG, thinpool_ARG, type_ARG, virtualoriginsize_ARG,
-   poolmetadatasize_ARG, virtualsize_ARG, zero_ARG)
+   addtag_ARG, alloc_ARG, autobackup_ARG, activate_ARG, available_ARG,
+   chunksize_ARG, contiguous_ARG, corelog_ARG, extents_ARG,
+   ignoremonitoring_ARG, major_ARG, minor_ARG, mirrorlog_ARG, mirrors_ARG,
+   monitor_ARG, name_ARG, nosync_ARG, noudevsync_ARG, permission_ARG,
+   persistent_ARG, readahead_ARG, regionsize_ARG, size_ARG, snapshot_ARG,
+   stripes_ARG, stripesize_ARG, test_ARG, thin_ARG, thinpool_ARG, type_ARG,
+   virtualoriginsize_ARG, poolmetadatasize_ARG, virtualsize_ARG, zero_ARG)
 
 xx(lvdisplay,
    "Display information about a logical volume",
@@ -742,7 +742,7 @@ xx(vgchange,
    "\t[-u|--uuid] " "\n"
    "\t[-v|--verbose] " "\n"
    "\t[--version]" "\n"
-   "\t{-a|--available [e|l]{y|n}  |" "\n"
+   "\t{-a|--activate [e|l]{y|n}  |" "\n"
    "\t -c|--clustered {y|n} |" "\n"
    "\t -x|--resizeable {y|n} |" "\n"
    "\t -l|--logicalvolume MaxLogicalVolumes |" "\n"
@@ -752,11 +752,11 @@ xx(vgchange,
    "\t --deltag Tag}\n"
    "\t[VolumeGroupName...]\n",
 
-   addtag_ARG, alloc_ARG, allocation_ARG, autobackup_ARG, available_ARG,
-   clustered_ARG, deltag_ARG, ignorelockingfailure_ARG, ignoremonitoring_ARG,
-   logicalvolume_ARG, maxphysicalvolumes_ARG, monitor_ARG, noudevsync_ARG,
-   metadatacopies_ARG, vgmetadatacopies_ARG, partial_ARG,
-   physicalextentsize_ARG, poll_ARG, refresh_ARG, resizeable_ARG,
+   addtag_ARG, alloc_ARG, allocation_ARG, autobackup_ARG, activate_ARG,
+   available_ARG, clustered_ARG, deltag_ARG, ignorelockingfailure_ARG,
+   ignoremonitoring_ARG, logicalvolume_ARG, maxphysicalvolumes_ARG,
+   monitor_ARG, noudevsync_ARG, metadatacopies_ARG, vgmetadatacopies_ARG,
+   partial_ARG, physicalextentsize_ARG, poll_ARG, refresh_ARG, resizeable_ARG,
    resizable_ARG, sysinit_ARG, test_ARG, uuid_ARG)
 
 xx(vgck,

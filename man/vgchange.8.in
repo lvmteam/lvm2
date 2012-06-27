@@ -9,7 +9,7 @@ vgchange \- change attributes of a volume group
 .IR AllocationPolicy ]
 .RB [ \-A | \-\-autobackup
 .RI { y | n }]
-.RB [ \-a | \-\-available
+.RB [ \-a | \-\-activate
 .RI [ e | l ]
 .RI { y | n }]
 .RB [ \-\-monitor
@@ -64,7 +64,7 @@ Controls automatic backup of metadata after the change.  See
 .BR vgcfgbackup (8).
 Default is yes.
 .TP
-.BR \-a ", " \-\-available " [" \fIe | \fIl ]{ \fIy | \fIn }
+.BR \-a ", " \-\-activate " [" \fIe | \fIl ]{ \fIy | \fIn }
 Controls the availability of the logical volumes in the volume
 group for input/output.
 In other words, makes the logical volumes known/unknown to the kernel.

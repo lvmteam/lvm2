@@ -560,11 +560,11 @@ static int _read_activation_params(struct lvcreate_params *lp, struct cmd_contex
 	unsigned pagesize;
 
 	lp->activate = (activation_change_t)
-		arg_uint_value(cmd, available_ARG, CHANGE_AY);
+		arg_uint_value(cmd, activate_ARG, CHANGE_AY);
 
 	if (lp->activate == CHANGE_AN || lp->activate == CHANGE_ALN) {
 		if (lp->zero && !seg_is_thin(lp)) {
-			log_error("--available n requires --zero n");
+			log_error("--activate n requires --zero n");
 			return 0;
 		}
 	}
