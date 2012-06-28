@@ -89,6 +89,77 @@ out:
 	return r;
 }
 
+static int lvchange_pool_update(struct cmd_context *cmd,
+				struct logical_volume *lv)
+{
+	int r = 0;
+	int update = 0;
+	unsigned val;
+	thin_discard_t discard;
+
+	if (!lv_is_thin_pool(lv)) {
+		log_error("Logical volume \"%s\" is not a thinpool.", lv->name);
+		return 0;
+	}
+
+	if (arg_count(cmd, discard_ARG)) {
+		discard = arg_uint_value(cmd, discard_ARG, 0);
+		if (discard != first_seg(lv)->discard) {
+			if (((discard == THIN_DISCARD_IGNORE) ||
+			     (first_seg(lv)->discard == THIN_DISCARD_IGNORE)) &&
+			    lv_is_active(lv))
+				log_error("Cannot change discard state for active "
+					  "logical volume \"%s\".", lv->name);
+			else {
+				first_seg(lv)->discard = discard;
+				update++;
+			}
+		} else
+			log_error("Logical volume \"%s\" already uses discard %s.",
+				  lv->name, get_pool_discard_name(discard));
+	}
+
+	if (arg_count(cmd, zero_ARG)) {
+		val = arg_uint_value(cmd, zero_ARG, 1);
+		if (val != first_seg(lv)->zero_new_blocks) {
+			first_seg(lv)->zero_new_blocks = val;
+			update++;
+		} else
+			log_error("Logical volume \"%s\" already %szero new blocks.",
+				  lv->name, val ? "" : "does not ");
+	}
+
+	if (!update)
+		return 0;
+
+	log_very_verbose("Updating logical volume \"%s\" on disk(s).", lv->name);
+	if (!vg_write(lv->vg))
+		return_0;
+
+	if (!suspend_lv_origin(cmd, lv)) {
+		log_error("Failed to update active %s/%s (deactivation is needed).",
+			  lv->vg->name, lv->name);
+		vg_revert(lv->vg);
+		goto out;
+	}
+
+	if (!vg_commit(lv->vg)) {
+		if (!resume_lv_origin(cmd, lv))
+			stack;
+		goto_out;
+	}
+
+	if (!resume_lv_origin(cmd, lv)) {
+		log_error("Problem reactivating %s.", lv->name);
+		goto out;
+	}
+
+	r = 1;
+out:
+	backup(lv->vg);
+	return r;
+}
+
 static int lvchange_monitoring(struct cmd_context *cmd,
 			       struct logical_volume *lv)
 {
@@ -545,6 +616,8 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 	if (!(lv->vg->status & LVM_WRITE) &&
 	    (arg_count(cmd, contiguous_ARG) || arg_count(cmd, permission_ARG) ||
 	     arg_count(cmd, readahead_ARG) || arg_count(cmd, persistent_ARG) ||
+	     arg_count(cmd, discard_ARG) ||
+	     arg_count(cmd, zero_ARG) ||
 	     arg_count(cmd, alloc_ARG))) {
 		log_error("Only -a permitted with read-only volume "
 			  "group \"%s\"", lv->vg->name);
@@ -670,6 +743,17 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 		}
 	}
 
+	if (arg_count(cmd, discard_ARG) ||
+	    arg_count(cmd, zero_ARG)) {
+		if (!archived && !archive(lv->vg)) {
+			stack;
+			return ECMD_FAILED;
+		}
+		archived = 1;
+		doit += lvchange_pool_update(cmd, lv);
+		docmds++;
+	}
+
 	/* add tag */
 	if (arg_count(cmd, addtag_ARG)) {
 		if (!archived && !archive(lv->vg)) {
@@ -747,7 +831,9 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 		arg_count(cmd, contiguous_ARG) || arg_count(cmd, permission_ARG) ||
 		arg_count(cmd, readahead_ARG) || arg_count(cmd, persistent_ARG) ||
 		arg_count(cmd, addtag_ARG) || arg_count(cmd, deltag_ARG) ||
-		arg_count(cmd, resync_ARG) || arg_count(cmd, alloc_ARG);
+		arg_count(cmd, resync_ARG) || arg_count(cmd, alloc_ARG) ||
+		arg_count(cmd, discard_ARG) ||
+		arg_count(cmd, zero_ARG);
 
 	if (!update &&
             !arg_count(cmd, activate_ARG) && !arg_count(cmd, refresh_ARG) &&

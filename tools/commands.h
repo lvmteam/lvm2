@@ -69,6 +69,7 @@ xx(lvchange,
    "\t[--deltag Tag]\n"
    "\t[-f|--force]\n"
    "\t[-h|--help]\n"
+   "\t[--discard {ignore|nopassdown|passdown}]\n"
    "\t[--ignorelockingfailure]\n"
    "\t[--ignoremonitoring]\n"
    "\t[--monitor {y|n}]\n"
@@ -84,14 +85,16 @@ xx(lvchange,
    "\t[-t|--test]\n"
    "\t[-v|--verbose]\n"
    "\t[-y|--yes]\n"
-   "\t[--version]" "\n"
+   "\t[--version]\n"
+   "\t[-Z|--zero {y|n}]\n"
    "\tLogicalVolume[Path] [LogicalVolume[Path]...]\n",
 
    alloc_ARG, autobackup_ARG, activate_ARG, available_ARG, contiguous_ARG,
    force_ARG, ignorelockingfailure_ARG, ignoremonitoring_ARG, major_ARG,
    minor_ARG, monitor_ARG, noudevsync_ARG, partial_ARG, permission_ARG,
    persistent_ARG, poll_ARG, readahead_ARG, resync_ARG, refresh_ARG,
-   addtag_ARG, deltag_ARG, sysinit_ARG, test_ARG, yes_ARG)
+   addtag_ARG, deltag_ARG, sysinit_ARG, test_ARG, yes_ARG,
+   discard_ARG, zero_ARG)
 
 xx(lvconvert,
    "Change logical volume layout",

@@ -16,6 +16,8 @@ lvchange \- change attributes of a logical volume
 .RB [ \-d | \-\-debug ]
 .RB [ \-\-deltag
 .IR Tag ]
+.RB [ \-\-discard
+.RI { ignore | nopassdown | passdown }]
 .RB [ \-\-resync ]
 .RB [ \-h | \-? | \-\-help ]
 .RB [ \-\-ignorelockingfailure ]
@@ -37,7 +39,9 @@ lvchange \- change attributes of a logical volume
 .RI { ReadAheadSectors | auto | none }]
 .RB [ \-\-refresh ]
 .RB [ \-t | \-\-test ]
-.RB [ \-v | \-\-verbose]
+.RB [ \-v | \-\-verbose ]
+.RB [ \-Z | \-\-zero
+.RI { y | n }]
 .I LogicalVolumePath
 .RI [ LogicalVolumePath ...]
 .SH DESCRIPTION
@@ -67,6 +71,9 @@ Tries to set or reset the contiguous allocation policy for
 logical volumes. It's only possible to change a non-contiguous
 logical volume's allocation policy to contiguous, if all of the
 allocated physical extents are already contiguous.
+.TP
+.BR \-\-discard " {" \fIignore | \fInopassdown | \fIpassdown }
+Change discard behavior.
 .TP
 .B \-\-resync
 Forces the complete resynchronization of a mirror.  In normal
@@ -142,6 +149,11 @@ If the logical volume is active, reload its metadata.
 This is not necessary in normal operation, but may be useful
 if something has gone wrong or if you're doing clustering
 manually without a clustered lock manager.
+.TP
+.BR \-Z ", " \-\-zero " {" \fIy | \fIn }
+Set zeroing mode for thin pool. Note: already provisioned blocks from pool
+in non-zero mode are not cleared in unwritten parts when setting zero to
+\fIy\fP.
 .SH Examples
 Changes the permission on volume lvol1 in volume group vg00 to be read-only:
 .sp
