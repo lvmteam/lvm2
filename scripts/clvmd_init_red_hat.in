@@ -87,7 +87,7 @@ start()
 
 	${lvm_vgscan} > /dev/null 2>&1
 
-	action "Activating VG(s):" ${lvm_vgchange} -ayl $LVM_VGS || return $?
+	action "Activating VG(s):" ${lvm_vgchange} -aay $LVM_VGS || return $?
 
 	touch $LOCK_FILE
 

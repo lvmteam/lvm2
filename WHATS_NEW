@@ -1,5 +1,6 @@
 Version 2.02.97 - 
 ===============================
+  Use vgchange -aay instead of vgchange -ay in clmvd init script.
   Add activation/auto_activation_volume_list to lvm.conf.
   Add --activate ay to lvcreate.
   Add --activate ay to lvchange.
