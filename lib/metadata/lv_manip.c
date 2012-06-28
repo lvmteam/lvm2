@@ -1132,9 +1132,13 @@ static int _alloc_parallel_area(struct alloc_handle *ah, uint32_t max_to_allocat
 			dm_list_add(&ah->alloced_areas[s], &aa[s].list);
 			s -= ah->area_count + ah->parity_count;
 		}
+		aa[s].len = (ah->alloc_and_split_meta) ? len - ah->log_len : len;
+		/* Skip empty allocations */
+		if (!aa[s].len)
+			continue;
+
 		aa[s].pv = pva->map->pv;
 		aa[s].pe = pva->start;
-		aa[s].len = (ah->alloc_and_split_meta) ? len - ah->log_len : len;
 
 		log_debug("Allocating parallel area %" PRIu32
 			  " on %s start PE %" PRIu32 " length %" PRIu32 ".",
