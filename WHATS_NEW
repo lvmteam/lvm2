@@ -1,5 +1,6 @@
 Version 2.02.97 - 
 ===============================
+  Add --activate ay to lvcreate.
   Add --activate ay to lvchange.
   Add --activate ay to pvscan.
   Add --activate ay to vgchange.

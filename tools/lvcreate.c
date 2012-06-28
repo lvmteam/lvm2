@@ -567,6 +567,12 @@ static int _read_activation_params(struct lvcreate_params *lp, struct cmd_contex
 			log_error("--activate n requires --zero n");
 			return 0;
 		}
+	} else if (lp->activate == CHANGE_AAY) {
+		if (arg_count(cmd, zero_ARG)) {
+			log_error("-Z is incompatible with --activate a");
+			return 0;
+		}
+		lp->zero = 0;
 	}
 
 	/*

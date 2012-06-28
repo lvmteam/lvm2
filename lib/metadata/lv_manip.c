@@ -4433,6 +4433,15 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 
 	backup(vg);
 
+	/*
+	 * Check for autoactivation.
+	 * If the LV passes the auto activation filter, activate
+	 * it just as if CHANGE_AY was used, CHANGE_AN otherwise.
+	 */
+	if (lp->activate == CHANGE_AAY)
+		lp->activate = lv_passes_auto_activation_filter(cmd, lv) ?
+				CHANGE_ALY : CHANGE_ALN;
+
 	if (test_mode()) {
 		log_verbose("Test mode: Skipping activation and zeroing.");
 		goto out;
