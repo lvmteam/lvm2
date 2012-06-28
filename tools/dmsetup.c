@@ -977,7 +977,7 @@ static int _udevcomplete(CMD_ARGS)
 }
 
 #ifndef UDEV_SYNC_SUPPORT
-static const char _cmd_not_supported[] = "Command not supported. Recompile with \"--enable-udev-sync\" to enable.";
+static const char _cmd_not_supported[] = "Command not supported. Recompile with \"--enable-udev_sync\" to enable.";
 
 static int _udevcreatecookie(CMD_ARGS)
 {
