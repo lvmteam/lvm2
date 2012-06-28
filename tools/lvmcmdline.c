@@ -216,6 +216,19 @@ int activation_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_v
 	return 1;
 }
 
+int discard_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av)
+{
+	thin_discard_t discard;
+
+	if (!get_pool_discard(av->value, &discard))
+		return_0;
+
+	av->i_value = discard;
+	av->ui_value = discard;
+
+	return 1;
+}
+
 int metadatatype_arg(struct cmd_context *cmd, struct arg_values *av)
 {
 	return get_format_by_name(cmd, av->value) ? 1 : 0;

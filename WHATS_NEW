@@ -1,5 +1,6 @@
 Version 2.02.97 - 
 ===============================
+  Add support for controlling discard behavior of thin pool.
   Detect features for new 1.1 thin pool target.
   Count percentage of completeness upwards when merging a snapshot volume.
   Skip activation when using vg/lvchange --sysinit -a ay and lvmetad is active.

@@ -428,3 +428,38 @@ int update_pool_lv(struct logical_volume *lv, int activate)
 
 	return 1;
 }
+
+int get_pool_discard(const char *str, thin_discard_t *discard)
+{
+	if (!strcasecmp(str, "passdown"))
+		*discard = THIN_DISCARD_PASSDOWN;
+        /* Allow some variation in thin parameter */
+	else if (!strcasecmp(str, "nopassdown") ||
+		 !strcasecmp(str, "no-passdown") ||
+		 !strcasecmp(str, "no_passdown"))
+		*discard = THIN_DISCARD_NO_PASSDOWN;
+	else if (!strcasecmp(str, "ignore"))
+		*discard = THIN_DISCARD_IGNORE;
+	else {
+		log_error("Thin pool discard type %s is unknown.", str);
+		return 0;
+	}
+
+	return 1;
+}
+
+const char *get_pool_discard_name(thin_discard_t discard)
+{
+	switch (discard) {
+	case THIN_DISCARD_PASSDOWN:
+                return "passdown";
+	case THIN_DISCARD_NO_PASSDOWN:
+		return "nopassdown";
+	case THIN_DISCARD_IGNORE:
+		return "ignore";
+	}
+
+	log_error(INTERNAL_ERROR "Uknown discard type.");
+
+	return NULL;
+}
