@@ -550,9 +550,9 @@ activation {
     #
     # volume_list = [ "vg1", "vg2/lvol1", "@tag1", "@*" ]
 
-    # If auto_activation_volume_list is defined, each LV that is to be activated
-    # is checked against the list while using the --autoactivate option, and if
-    # it matches, it is activated.
+    # If auto_activation_volume_list is defined, each LV that is to be
+    # activated is checked against the list while using the autoactivation
+    # option (--activate ay/-a ay), and if it matches, it is activated.
     #   "vgname" and "vgname/lvname" are matched exactly.
     #   "@tag" matches any tag set in the LV or VG.
     #   "@*" matches if any tag defined on the host is also set in the LV or VG

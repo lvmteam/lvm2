@@ -93,9 +93,6 @@ int lv_check_not_in_use(struct cmd_context *cmd, struct logical_volume *lv,
  */
 int lv_activation_filter(struct cmd_context *cmd, const char *lvid_s,
 			 int *activate_lv);
-int lv_passes_volumes_filter(struct cmd_context *cmd, struct logical_volume *lv,
-			     const struct dm_config_node *cn, const char *config_path);
-
 /*
  * Checks against the auto_activation_volume_list and
  * returns 1 if the LV should be activated, 0 otherwise.
