@@ -8,7 +8,7 @@ lvchange \- change attributes of a logical volume
 .RB [ \-A | \-\-autobackup
 .RI { y | n }]
 .RB [ \-a | \-\-activate
-.RI [ e | l ]{ y | n }]
+.RI [ a | e | l ]{ y | n }]
 .RB [ \-\-alloc
 .IR AllocationPolicy ]
 .RB [ \-C | \-\-contiguous
@@ -46,11 +46,15 @@ including making them known to the kernel ready for use.
 .SH OPTIONS
 See \fBlvm\fP(8) for common options.
 .TP
-.BR \-a ", " \-\-activate " [" \fIe | \fIl ]{ \fIy | \fIn }
+.BR \-a ", " \-\-activate " [" \fIa | \fIe | \fIl ]{ \fIy | \fIn }
 Controls the availability of the logical volumes for use.
 Communicates with the kernel device-mapper driver via
 libdevmapper to activate (\-ay) or deactivate (\-an) the
-logical volumes.
+logical volumes. If autoactivation option is used (\-aay),
+the logical volume is activated only if it matches an item in
+the activation/auto_activation_volume_list set in lvm.conf.
+Autoactivation is not yet supported for logical volumes that
+are part of partial or clustered volume groups.
 .IP
 If clustered locking is enabled, -aey will activate exclusively
 on one node and -aly will activate only on the local node.

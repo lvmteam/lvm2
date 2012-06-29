@@ -8,7 +8,7 @@ lvcreate \- create a logical volume in an existing volume group
 .RB [ \-\-alloc
 .IR AllocationPolicy ]
 .RB [ \-a | \-\-activate
-.RI [ e | l ]{ y | n }]
+.RI [ a | e | l ]{ y | n }]
 .RB [ \-A | \-\-autobackup
 .RI { y | n }]
 .RB [ \-C | \-\-contiguous
@@ -107,17 +107,21 @@ See
 .BR lvm (8)
 for common options.
 .TP
-.IR \fB\-a ", " \fB\-\-activate " {" y | n | ey | en | ly | ln }
+.IR \fB\-a ", " \fB\-\-activate " {" y | ay | n | ey | en | ly | ln }
 Controls the availability of the Logical Volumes for immediate use after
 the command finishes running.
-By default, new Logical Volumes are activated automatically (\fB-a\fIy\fR).
+By default, new Logical Volumes are activated (\fB-a\fIy\fR).
 If it is possible technically, \fB-a\fIn\fR will leave the new Logical
 Volume inactive. But for example, snapshots can only be created
 in the active state so \fB\-a\fIn\fR cannot be used with \fB\-\-snapshot\fP.
 Normally the \fB\-\-zero n\fP argument has to be supplied too because
 zeroing (the default behaviour) also requires activation.
-If clustered locking is enabled, \fB\-a\fIey\fR will activate exclusively
-on one node and \fB\-a\fIly\fR will activate only on the local node.
+If autoactivation option is used (\fB\-a\fIay\fR), the logical volume is
+activated only if it matches an item in the activation/auto_activation_volume_list
+set in lvm.conf. For autoactivated logical volumes, \fB\-\-zero n\fP is
+always assumed and it can't be overridden. If clustered locking is enabled,
+\fB\-a\fIey\fR will activate exclusively on one node and \fB\-a\fIly\fR will
+activate only on the local node.
 .TP
 .BR \-c ", " \-\-chunksize " " \fIChunkSize
 Gives the size of chunk for snapshot and thin pool logical volumes.

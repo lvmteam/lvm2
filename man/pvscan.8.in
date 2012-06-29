@@ -18,6 +18,7 @@ pvscan \- scan all disks for physical volumes
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-\-help ]
 .B \-\-cache
+.RB [ \-a | \-\-activate " " \fIay ]
 .RB [ \-\-major
 .I major
 .B \-\-minor
@@ -41,6 +42,13 @@ Short listing format.
 .TP
 .BR \-u ", " \-\-uuid
 Show UUIDs (Uniform Unique Identifiers) in addition to device special names.
+.TP
+.BR \-a ", " \-\-activate " " \fIay
+Together with the information already cached in lvmetad, automatically activate
+any logical volumes that become activatable after the scan done on one or more devices.
+The logical volume to autoactivate is matched against the
+activation/auto_activation_volume_list set in lvm.conf. Autoactivation is not yet
+supported on logical volumes that are part of partial or clustered volume groups.
 .TP
 .BR \-\-cache " [" \-\-major " " \fImajor " " \-\-minor " " \fIminor " | " \fIDevicePath " ]..."
 Scan one or more devices and instruct the lvmetad daemon to update its cached

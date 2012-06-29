@@ -10,7 +10,7 @@ vgchange \- change attributes of a volume group
 .RB [ \-A | \-\-autobackup
 .RI { y | n }]
 .RB [ \-a | \-\-activate
-.RI [ e | l ]
+.RI [ a | e | l ]
 .RI { y | n }]
 .RB [ \-\-monitor
 .RI { y | n }]
@@ -64,10 +64,15 @@ Controls automatic backup of metadata after the change.  See
 .BR vgcfgbackup (8).
 Default is yes.
 .TP
-.BR \-a ", " \-\-activate " [" \fIe | \fIl ]{ \fIy | \fIn }
+.BR \-a ", " \-\-activate " [" \fIa | \fIe | \fIl ]{ \fIy | \fIn }
 Controls the availability of the logical volumes in the volume
 group for input/output.
 In other words, makes the logical volumes known/unknown to the kernel.
+If autoactivation option is used (\-aay), each logical volume in
+the volume group is activated only if it matches an item in the
+activation/auto_activation_volume_list set in lvm.conf.
+Autoactivation is not yet supported for partial or clustered
+volume groups.
 .IP
 If clustered locking is enabled, add 'e' to activate/deactivate
 exclusively on one node or 'l' to activate/deactivate only
