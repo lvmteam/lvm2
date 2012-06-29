@@ -1,5 +1,6 @@
 Version 2.02.97 - 
 ===============================
+  Fix test for PV with unknown VG in process_each_pv to ignore ignored mdas.
   Update man pages with --activate ay option and auto_activation_volume_list.
   Fix _alloc_parallel_area to avoid picking already-full areas for raid devices.
   Use vgchange -aay instead of vgchange -ay in clmvd init script.
