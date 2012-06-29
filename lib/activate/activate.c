@@ -1391,6 +1391,9 @@ int monitor_dev_for_events(struct cmd_context *cmd, struct logical_volume *lv,
 			r = (monitored && monitor) || (!monitored && !monitor);
 	}
 
+	if (!r && !error_message_produced())
+		log_error("%sonitoring %s/%s failed.", monitor ? "M" : "Not m",
+			  lv->vg->name, lv->name);
 	return r;
 #else
 	return 1;
