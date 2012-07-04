@@ -650,6 +650,8 @@ typedef enum {
 	DM_THIN_MESSAGE_CREATE_THIN,		/* device_id */
 	DM_THIN_MESSAGE_DELETE,			/* device_id */
 	DM_THIN_MESSAGE_SET_TRANSACTION_ID,	/* current_id, new_id */
+	DM_THIN_MESSAGE_RESERVE_METADATA_SNAP,	/* 1.1 */
+	DM_THIN_MESSAGE_RELEASE_METADATA_SNAP,	/* 1.1 */
 } dm_thin_message_t;
 
 int dm_tree_node_add_thin_pool_message(struct dm_tree_node *node,

@@ -1411,6 +1411,12 @@ static int _thin_pool_node_message(struct dm_tree_node *dnode, struct thin_messa
 				m->u.m_set_transaction_id.current_id,
 				m->u.m_set_transaction_id.new_id);
 		break;
+	case DM_THIN_MESSAGE_RESERVE_METADATA_SNAP: /* 1.1 */
+		r = dm_snprintf(buf, sizeof(buf), "reserve_metadata_snap");
+		break;
+	case DM_THIN_MESSAGE_RELEASE_METADATA_SNAP: /* 1.1 */
+		r = dm_snprintf(buf, sizeof(buf), "release_metadata_snap");
+		break;
 	default:
 		r = -1;
 	}

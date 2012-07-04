@@ -1,5 +1,6 @@
 Version 1.02.76 - 
 ===============================
+  Add support for thin pool message release/reserve_metadata_snap.
   Add support for thin pool discard and external origin.
   Add configure --enable-udev-rule-exec-detection to detect exec path in rules.
   Use sbindir in udev rules by default and remove executable path detection.
