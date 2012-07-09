@@ -564,6 +564,36 @@ static int _transactionid_disp(struct dm_report *rh, struct dm_pool *mem,
 	return  dm_report_field_uint64(rh, field, &seg->transaction_id);
 }
 
+static int _discard_disp(struct dm_report *rh, struct dm_pool *mem,
+			 struct dm_report_field *field,
+			 const void *data, void *private)
+{
+	static const struct {
+		const char c[2];
+		unsigned val;
+		thin_discard_t discard;
+	} const arr[] = {
+		{ "p", 0, THIN_DISCARD_PASSDOWN },
+		{ "n", 1, THIN_DISCARD_NO_PASSDOWN },
+		{ "i", 2, THIN_DISCARD_IGNORE },
+		{ "" }
+	};
+	const struct lv_segment *seg = (const struct lv_segment *) data;
+	unsigned i = 0;
+
+	if (seg_is_thin_volume(seg))
+		seg = first_seg(seg->pool_lv);
+
+	if (seg_is_thin_pool(seg)) {
+		while (arr[i].c[0] && seg->discard != arr[i].discard)
+			i++;
+
+		dm_report_field_set_value(field, arr[i].c, &arr[i].val);
+	} else
+		dm_report_field_set_value(field, "", NULL);
+
+	return 1;
+}
 
 static int _originsize_disp(struct dm_report *rh, struct dm_pool *mem,
 			    struct dm_report_field *field,
