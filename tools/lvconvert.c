@@ -580,10 +580,10 @@ static progress_t _poll_merge_progress(struct cmd_context *cmd,
 
 	if (parms->progress_display)
 		log_print("%s: %s: %.1f%%", lv->name, parms->progress_title,
-			  percent_to_float(percent));
+			  100.0 - percent_to_float(percent));
 	else
 		log_verbose("%s: %s: %.1f%%", lv->name, parms->progress_title,
-			    percent_to_float(percent));
+			    100.0 - percent_to_float(percent));
 
 	if (percent == PERCENT_0)
 		return PROGRESS_FINISHED_ALL;

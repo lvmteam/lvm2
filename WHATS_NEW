@@ -1,5 +1,6 @@
 Version 2.02.97 - 
 ===============================
+  Count percentage of completeness upwards when merging a snapshot volume.
   Skip activation when using vg/lvchange --sysinit -a ay and lvmetad is active.
   Fix extending RAID 4/5/6 logical volumes
   Fix test for PV with unknown VG in process_each_pv to ignore ignored mdas.
