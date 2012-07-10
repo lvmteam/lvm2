@@ -608,6 +608,13 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
+	if (arg_count(cmd, sysinit_ARG) && lvmetad_active() &&
+	    arg_uint_value(cmd, activate_ARG, 0) == CHANGE_AAY) {
+		log_warn("lvmetad is active while using --sysinit -a ay, "
+			 "skipping manual activation");
+		return ECMD_PROCESSED;
+	}
+
 	return process_each_vg(cmd, argc, argv, update ? READ_FOR_UPDATE : 0,
 			       NULL, &vgchange_single);
 }

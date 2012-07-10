@@ -121,6 +121,11 @@ this is equivalent to using
 .B \-\-poll n
 and setting \fBLVM_SUPPRESS_LOCKING_FAILURE_MESSAGES\fP
 environment variable.
+
+If \fB\-\-sysinit\fP is used in conjunction with lvmetad(8) enabled and running,
+autoactivation is preferred over manual activation via direct vgchange call.
+Logical volumes are autoactivated according to auto_activation_volume_list
+set in lvm.conf(5).
 .TP
 .BR \-\-noudevsync
 Disable udev synchronisation. The
