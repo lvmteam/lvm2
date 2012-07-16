@@ -1280,8 +1280,8 @@ fi
 ################################################################################
 AC_ARG_WITH(tmpfilesdir,
 	    AC_HELP_STRING([--with-tmpfilesdir=DIR],
-			   [install configuration files for management of volatile files and directories in DIR [[SYSCONFDIR/tmpfiles.d]]]),
-			   tmpfilesdir=$withval, tmpfilesdir='${sysconfdir}/tmpfiles.d')
+			   [install configuration files for management of volatile files and directories in DIR [[PREFIX/lib/tmpfiles.d]]]),
+			   tmpfilesdir=$withval, tmpfilesdir='${prefix}/lib/tmpfiles.d')
 ################################################################################
 dnl -- Ensure additional headers required
 if test x$READLINE = xyes; then

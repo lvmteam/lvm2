@@ -1613,7 +1613,7 @@ Optional Packages:
                           systemd service files in DIR
   --with-tmpfilesdir=DIR  install configuration files for management of
                           volatile files and directories in DIR
-                          [[SYSCONFDIR/tmpfiles.d]]
+                          [[PREFIX/lib/tmpfiles.d]]
   --with-dmeventd-pidfile=PATH
                           dmeventd pidfile [[PID_DIR/dmeventd.pid]]
   --with-dmeventd-path=PATH
@@ -9925,7 +9925,7 @@ fi
 if test "${with_tmpfilesdir+set}" = set; then :
   withval=$with_tmpfilesdir; tmpfilesdir=$withval
 else
-  tmpfilesdir='${sysconfdir}/tmpfiles.d'
+  tmpfilesdir='${prefix}/lib/tmpfiles.d'
 fi
 
 ################################################################################
