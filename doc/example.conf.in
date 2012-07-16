@@ -86,6 +86,9 @@ devices {
     # It is safe to delete the contents: the tools regenerate it.
     # (The old setting 'cache' is still respected if neither of
     # these new ones is present.)
+    # N.B. This type of caching is obsolete and existing .cache
+    # file is removed if the list of devices is obtained from
+    # udev by setting the obtain_device_list_from_udev to 1.
     cache_dir = "@DEFAULT_SYS_DIR@/@DEFAULT_CACHE_SUBDIR@"
     cache_file_prefix = ""
 
