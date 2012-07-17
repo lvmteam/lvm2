@@ -11,6 +11,8 @@
 
 . lib/test
 
+aux target_at_least dm-raid 1 1 0 || skip
+
 aux prepare_vg 5 80
 
 # Extend a 2-way RAID1
