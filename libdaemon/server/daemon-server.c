@@ -510,7 +510,7 @@ void daemon_start(daemon_state s)
 		if (select(FD_SETSIZE, &in, NULL, NULL, NULL) < 0 && errno != EINTR)
 			perror("select error");
 		if (FD_ISSET(s.socket_fd, &in))
-			if (!handle_connect(s))
+			if (!_shutdown_requested && !handle_connect(s))
 				syslog(LOG_ERR, "Failed to handle a client connection.");
 	}
 

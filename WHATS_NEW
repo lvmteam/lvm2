@@ -1,5 +1,6 @@
 Version 2.02.97 - 
 ===============================
+  Do not issue "Failed to handle a client connection" error if lvmetad killed.
   Support changing of discard and zeroing for thin pool.
   Report used discard for thin pool and volume.
   Add support for controlling discard behavior of thin pool.
