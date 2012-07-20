@@ -331,19 +331,30 @@ static int _write_config(const struct dm_config_node *n, int only_one,
 	return 1;
 }
 
-int dm_config_write_node(const struct dm_config_node *cn, dm_putline_fn putline, void *baton)
+static int _write_node(const struct dm_config_node *cn, int only_one,
+		       dm_putline_fn putline, void *baton)
 {
 	struct output_line outline;
 	if (!(outline.mem = dm_pool_create("config_line", 1024)))
 		return_0;
 	outline.putline = putline;
 	outline.putline_baton = baton;
-	if (!_write_config(cn, 0, &outline, 0)) {
+	if (!_write_config(cn, only_one, &outline, 0)) {
 		dm_pool_destroy(outline.mem);
 		return_0;
 	}
 	dm_pool_destroy(outline.mem);
 	return 1;
+}
+
+int dm_config_write_one_node(const struct dm_config_node *cn, dm_putline_fn putline, void *baton)
+{
+	return _write_node(cn, 1, putline, baton);
+}
+
+int dm_config_write_node(const struct dm_config_node *cn, dm_putline_fn putline, void *baton)
+{
+	return _write_node(cn, 0, putline, baton);
 }
 
 

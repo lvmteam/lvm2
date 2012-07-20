@@ -473,7 +473,7 @@ int config_write(struct dm_config_tree *cft, const char *file,
 		}
 	} else while (argc--) {
 		if ((cn = dm_config_find_node(cft->root, *argv))) {
-			if (!dm_config_write_node(cn, _putline_fn, fp)) {
+			if (!dm_config_write_one_node(cn, _putline_fn, fp)) {
 				log_error("Failure while writing to %s", file);
 				r = 0;
 			}

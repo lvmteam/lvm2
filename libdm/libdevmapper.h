@@ -1488,7 +1488,10 @@ struct dm_config_tree *dm_config_remove_cascaded_tree(struct dm_config_tree *cft
 void dm_config_destroy(struct dm_config_tree *cft);
 
 typedef int (*dm_putline_fn)(const char *line, void *baton);
+/* Write the node and any subsequent siblings it has. */
 int dm_config_write_node(const struct dm_config_node *cn, dm_putline_fn putline, void *baton);
+/* Write given node only without subsequent siblings. */
+int dm_config_write_one_node(const struct dm_config_node *cn, dm_putline_fn putline, void *baton);
 
 struct dm_config_node *dm_config_find_node(const struct dm_config_node *cn, const char *path);
 int dm_config_has_node(const struct dm_config_node *cn, const char *path);
