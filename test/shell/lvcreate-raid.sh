@@ -11,45 +11,6 @@
 
 . lib/test
 
-# is_raid_in_sync <VG/LV>
-function is_raid_in_sync()
-{
-	local dm_name=$(echo $1 | sed s:-:--: | sed s:/:-:)
-	local a
-	local b
-	local idx
-
-	if ! a=(`dmsetup status $dm_name`); then
-		echo "Unable to get sync status of $1"
-		exit 1
-	fi
-	idx=$((${#a[@]} - 1))
-	b=(`echo ${a[$idx]} | sed s:/:' ':`)
-
-	if [ ${b[0]} != ${b[1]} ]; then
-		echo "$dm_name (${a[3]}) is not in-sync"
-		return 1
-	fi
-
-	echo "$dm_name (${a[3]}) is in-sync"
-	return 0
-}
-
-# wait_for_raid_sync <VG/LV>
-function wait_for_raid_sync()
-{
-	local i=0
-
-	while ! is_raid_in_sync $1; do
-		sleep 1
-		i=$(($i + 1))
-		if [ $i -gt 500 ]; then
-			echo "Sync is taking too long - assume stuck"
-			exit 1
-		fi
-	done
-}
-
 ########################################################
 # MAIN
 ########################################################
@@ -64,17 +25,17 @@ vgcreate -c n -s 512k $vg $(cat DEVICES)
 
 # Create RAID1 (implicit 2-way)
 lvcreate --type raid1 -l 2 -n $lv1 $vg
-wait_for_raid_sync $vg/$lv1
+aux wait_for_sync $vg $lv1
 lvremove -ff $vg
 
 # Create RAID1 (explicit 2-way)
 lvcreate --type raid1 -m 1 -l 2 -n $lv1 $vg
-wait_for_raid_sync $vg/$lv1
+aux wait_for_sync $vg $lv1
 lvremove -ff $vg
 
 # Create RAID1 (explicit 3-way)
 lvcreate --type raid1 -m 2 -l 2 -n $lv1 $vg
-wait_for_raid_sync $vg/$lv1
+aux wait_for_sync $vg $lv1
 lvremove -ff $vg
 
 # Create RAID 4/5/6 (explicit 3-stripe + parity devs)
@@ -83,7 +44,7 @@ for i in raid4 \
 	raid6 raid6_zr raid6_nr raid6_nc; do
 
 	lvcreate --type $i -l 3 -i 3 -n $lv1 $vg
-	wait_for_raid_sync $vg/$lv1
+	aux wait_for_sync $vg $lv1
 	lvremove -ff $vg
 done
 
