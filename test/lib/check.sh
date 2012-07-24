@@ -151,6 +151,51 @@ linear() {
 			$(lvl $lv -o+devices)
 }
 
+# in_sync <VG> <LV>
+# Works for "mirror" and "raid*"
+in_sync() {
+	local a
+	local b
+	local idx
+	local type
+	local lvm_name="$1/$2"
+	local dm_name=$(echo $lvm_name | sed s:-:--: | sed s:/:-:)
+
+	if ! a=(`dmsetup status $dm_name`); then
+		die "Unable to get sync status of $1"
+	elif [ ${a[2]} = "snapshot-origin" ]; then
+		if ! a=(`dmsetup status ${dm_name}-real`); then
+			die "Unable to get sync status of $1"
+		fi
+	fi
+
+	if [ ${a[2]} = "raid" ]; then
+		# Last argument is the sync ratio for RAID
+		idx=$((${#a[@]} - 1))
+		type=${a[3]}
+	elif [ ${a[2]} = "mirror" ]; then
+		# 4th Arg tells us how far to the sync ratio
+		idx=$((${a[3]} + 4))
+		type=${a[2]}
+	else
+		die "Unable to get sync ratio for target type '${a[2]}'"
+	fi
+
+	b=( $(echo ${a[$idx]} | sed s:/:' ':) )
+
+	if [ ${b[0]} != ${b[1]} ]; then
+		echo "$lvm_name ($type) is not in-sync"
+		return 1
+	fi
+
+	if [[ ${a[$(($idx - 1))]} =~ a ]]; then
+		die "$lvm_name in-sync, but 'a' characters in health status"
+	fi
+
+	echo "$lvm_name ($type) is in-sync"
+	return 0
+}
+
 active() {
 	local lv=$1/$2
 	(get lv_field $lv attr | grep "^....a...$" >/dev/null) || \

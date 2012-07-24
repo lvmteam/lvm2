@@ -479,6 +479,18 @@ udev_wait() {
 	fi
 }
 
+# wait_for_sync <VG/LV>
+wait_for_sync() {
+	local i
+	for i in {1..500} ; do
+		check in_sync $1 $2 && return
+		sleep .2
+	done
+
+	echo "Sync is taking too long - assume stuck"
+	return 1
+}
+
 #
 # Check wheter kernel [dm module] target exist
 # at least in expected version
