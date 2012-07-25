@@ -23,7 +23,7 @@ aux lvmconf 'allocation/mirror_logs_require_separate_pvs = 1'
 # fail multiple devices
 
 # 4-way, disk log => 2-way, disk log
-aux prepare_vg 5
+aux prepare_vg 8
 lvcreate -m 3 --ig -L 1 -n 4way $vg "$dev1" "$dev2" "$dev3" "$dev4" "$dev5":0
 aux disable_dev "$dev2" "$dev4"
 echo n | lvconvert --repair $vg/4way 2>&1 | tee 4way.out
@@ -111,4 +111,28 @@ lvconvert -y --repair $vg/mirror
 vgreduce --removemissing $vg
 aux enable_dev "$dev3"
 vgextend $vg "$dev3"
+lvremove -ff $vg
+
+# RAID5 single replace
+lvcreate --type raid5 -i 2 -l 2 -n $lv1 $vg "$dev1" "$dev2" "$dev3"
+aux wait_for_sync $vg $lv1
+aux disable_dev "$dev3"
+lvconvert -y --repair $vg/$lv1
+vgreduce --removemissing $vg
+aux enable_dev "$dev3"
+vgextend $vg "$dev3"
+lvremove -ff $vg
+
+# RAID6 double replace
+lvcreate --type raid5 -i 3 -l 2 -n $lv1 $vg \
+    "$dev1" "$dev2" "$dev3" "$dev4" "$dev5"
+aux wait_for_sync $vg $lv1
+aux disable_dev "$dev4" "$dev5"
+lvconvert -y --repair $vg/$lv1
+vgreduce --removemissing $vg
+aux enable_dev "$dev4"
+aux enable_dev "$dev5"
+vgextend $vg "$dev4" "$dev5"
+lvremove -ff $vg
+
 vgremove -ff $vg

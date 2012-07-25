@@ -698,8 +698,17 @@ static uint32_t _calc_area_multiple(const struct segment_type *segtype,
 		return area_count;
 
 	/* Parity RAID (e.g. RAID 4/5/6) */
-	if (segtype_is_raid(segtype) && segtype->parity_devs)
+	if (segtype_is_raid(segtype) && segtype->parity_devs) {
+		/*
+		 * As articulated in _alloc_init, we can tell by
+		 * the area_count whether a replacement drive is
+		 * being allocated; and if this is the case, then
+		 * there is no area_multiple that should be used.
+		 */
+		if (area_count <= segtype->parity_devs)
+			return 1;
 		return area_count - segtype->parity_devs;
+	}
 
 	/* Mirrored stripes */
 	if (stripes)
