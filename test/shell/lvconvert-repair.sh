@@ -113,26 +113,28 @@ aux enable_dev "$dev3"
 vgextend $vg "$dev3"
 lvremove -ff $vg
 
-# RAID5 single replace
-lvcreate --type raid5 -i 2 -l 2 -n $lv1 $vg "$dev1" "$dev2" "$dev3"
-aux wait_for_sync $vg $lv1
-aux disable_dev "$dev3"
-lvconvert -y --repair $vg/$lv1
-vgreduce --removemissing $vg
-aux enable_dev "$dev3"
-vgextend $vg "$dev3"
-lvremove -ff $vg
+if aux target_at_least dm-raid 1 1 0; then
+	# RAID5 single replace
+	lvcreate --type raid5 -i 2 -l 2 -n $lv1 $vg "$dev1" "$dev2" "$dev3"
+	aux wait_for_sync $vg $lv1
+	aux disable_dev "$dev3"
+	lvconvert -y --repair $vg/$lv1
+	vgreduce --removemissing $vg
+	aux enable_dev "$dev3"
+	vgextend $vg "$dev3"
+	lvremove -ff $vg
 
-# RAID6 double replace
-lvcreate --type raid5 -i 3 -l 2 -n $lv1 $vg \
-    "$dev1" "$dev2" "$dev3" "$dev4" "$dev5"
-aux wait_for_sync $vg $lv1
-aux disable_dev "$dev4" "$dev5"
-lvconvert -y --repair $vg/$lv1
-vgreduce --removemissing $vg
-aux enable_dev "$dev4"
-aux enable_dev "$dev5"
-vgextend $vg "$dev4" "$dev5"
-lvremove -ff $vg
+	# RAID6 double replace
+	lvcreate --type raid5 -i 3 -l 2 -n $lv1 $vg \
+	    "$dev1" "$dev2" "$dev3" "$dev4" "$dev5"
+	aux wait_for_sync $vg $lv1
+	aux disable_dev "$dev4" "$dev5"
+	lvconvert -y --repair $vg/$lv1
+	vgreduce --removemissing $vg
+	aux enable_dev "$dev4"
+	aux enable_dev "$dev5"
+	vgextend $vg "$dev4" "$dev5"
+	lvremove -ff $vg
+fi
 
 vgremove -ff $vg
