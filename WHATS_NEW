@@ -1,5 +1,6 @@
 Version 2.02.97 - 
 ===============================
+  Fix segfault when attempting to replace RAID 4/5/6 device (2.02.97).
   Fix dumpconfig <node> to print only <node> without its siblings (2.02.89).
   Do not issue "Failed to handle a client connection" error if lvmetad killed.
   Support changing of discard and zeroing for thin pool.
