@@ -66,8 +66,13 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(cmd, restoremissing_ARG))
-		cmd->handles_missing_pvs = 1;
+	/*
+	 * It is always ok to add new PVs to a VG - even if there are
+	 * missing PVs.  No LVs are affected by this operation, but
+	 * repair processes - particularly for RAID segtypes - can
+	 * be facilitated.
+	 */
+	cmd->handles_missing_pvs = 1;
 
 	log_verbose("Checking for volume group \"%s\"", vg_name);
 	vg = vg_read_for_update(cmd, vg_name, NULL, 0);
