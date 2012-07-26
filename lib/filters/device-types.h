@@ -13,6 +13,11 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+typedef struct {
+	const char name[15];
+	const int8_t max_partitions;
+} device_info_t;
+
 /*
  * Devices are only checked for partition tables if their minor number
  * is a multiple of the number corresponding to their type below

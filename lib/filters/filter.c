@@ -27,6 +27,8 @@
 #include <fcntl.h>
 #include <limits.h>
 
+#include "device-types.h"
+
 #define NUMBER_OF_MAJORS 4096
 
 #define PARTITION_SCSI_DEVICE (1 << 0)
@@ -34,13 +36,6 @@ static struct {
 	int max_partitions; /* 0 means LVM won't use this major number. */
 	int flags;
 } _partitions[NUMBER_OF_MAJORS];
-
-typedef struct {
-	const char name[15];
-	const int8_t max_partitions;
-} device_info_t;
-
-#include "device-types.h"
 
 static int _md_major = -1;
 static int _blkext_major = -1;
