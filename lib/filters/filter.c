@@ -40,6 +40,8 @@ typedef struct {
 	const int8_t max_partitions;
 } device_info_t;
 
+#include "device-types.h"
+
 static int _md_major = -1;
 static int _blkext_major = -1;
 static int _drbd_major = -1;
@@ -98,46 +100,6 @@ const char *dev_subsystem_name(const struct device *dev)
 
 	return "";
 }
-
-/*
- * Devices are only checked for partition tables if their minor number
- * is a multiple of the number corresponding to their type below
- * i.e. this gives the granularity of whole-device minor numbers.
- * Use 1 if the device is not partitionable.
- *
- * The list can be supplemented with devices/types in the config file.
- */
-static const device_info_t _device_info[] = {
-	{"ide", 64},		/* IDE disk */
-	{"sd", 16},		/* SCSI disk */
-	{"md", 1},		/* Multiple Disk driver (SoftRAID) */
-	{"mdp", 1},		/* Partitionable MD */
-	{"loop", 1},		/* Loop device */
-	{"dasd", 4},		/* DASD disk (IBM S/390, zSeries) */
-	{"dac960", 8},		/* DAC960 */
-	{"nbd", 16},		/* Network Block Device */
-	{"ida", 16},		/* Compaq SMART2 */
-	{"cciss", 16},		/* Compaq CCISS array */
-	{"ubd", 16},		/* User-mode virtual block device */
-	{"ataraid", 16},	/* ATA Raid */
-	{"drbd", 16},		/* Distributed Replicated Block Device */
-	{"emcpower", 16},	/* EMC Powerpath */
-	{"power2", 16},		/* EMC Powerpath */
-	{"i2o_block", 16},	/* i2o Block Disk */
-	{"iseries/vd", 8},	/* iSeries disks */
-	{"gnbd", 1},		/* Network block device */
-	{"ramdisk", 1},		/* RAM disk */
-	{"aoe", 16},		/* ATA over Ethernet */
-	{"device-mapper", 1},	/* Other mapped devices */
-	{"xvd", 16},		/* Xen virtual block device */
-	{"vdisk", 8},		/* SUN's LDOM virtual block device */
-	{"ps3disk", 16},	/* PlayStation 3 internal disk */
-	{"virtblk", 8},		/* VirtIO disk */
-	{"mmc", 16},		/* MMC block device */
-	{"blkext", 1},		/* Extended device partitions */
-	{"fio", 16},		/* Fusion */
-	{"", 0}
-};
 
 static int _passes_lvm_type_device_filter(struct dev_filter *f __attribute__((unused)),
 					  struct device *dev)
