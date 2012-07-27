@@ -448,7 +448,6 @@ char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 		if (info.live_table && lv_is_cow(lv)) {
 			if (!lv_snapshot_percent(lv, &snap_percent) ||
 			    snap_percent == PERCENT_INVALID) {
-				repstr[0] = toupper(repstr[0]);
 				if (info.suspended)
 					repstr[4] = 'S'; /* Susp Inv snapshot */
 				else
