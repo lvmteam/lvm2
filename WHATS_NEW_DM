@@ -1,5 +1,6 @@
 Version 1.02.76 - 
 ===============================
+  Allow --noflush with dmsetup status and wait (for thin target).
   Add dm_config_write_one_node to libdevmapper.
   Add support for thin pool message release/reserve_metadata_snap.
   Add support for thin pool discard and external origin.

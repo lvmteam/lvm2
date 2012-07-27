@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001 - 2003 Sistina Software (UK) Limited.
- * Copyright (C) 2004 - 2009 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004 - 2012 Red Hat, Inc. All rights reserved.
  *
  * This file is released under the LGPL.
  */
@@ -269,9 +269,9 @@ enum {
 #define DM_DEV_SET_GEOMETRY	_IOWR(DM_IOCTL, DM_DEV_SET_GEOMETRY_CMD, struct dm_ioctl)
 
 #define DM_VERSION_MAJOR	4
-#define DM_VERSION_MINOR	20
+#define DM_VERSION_MINOR	23
 #define DM_VERSION_PATCHLEVEL	0
-#define DM_VERSION_EXTRA	"-ioctl (2011-02-02)"
+#define DM_VERSION_EXTRA	"-ioctl (2012-07-25)"
 
 /* Status bits */
 #define DM_READONLY_FLAG	(1 << 0) /* In/Out */
@@ -309,6 +309,8 @@ enum {
 
 /*
  * Set this to suspend without flushing queued ios.
+ * Also disables flushing uncommitted changes in the thin target before
+ * generating statistics for DM_TABLE_STATUS and DM_DEV_WAIT.
  */
 #define DM_NOFLUSH_FLAG		(1 << 11) /* In */
 
@@ -331,8 +333,8 @@ enum {
 #define DM_UUID_FLAG			(1 << 14) /* In */
 
 /*
- * If set, all buffers are wiped after use. Used when sending
- * or requesting sensitive data like crypt key.
+ * If set, all buffers are wiped after use. Use when sending
+ * or requesting sensitive data such as an encryption key.
  */
 #define DM_SECURE_DATA_FLAG		(1 << 15) /* In */
 

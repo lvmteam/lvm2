@@ -1642,6 +1642,9 @@ static int _status(CMD_ARGS)
 	if (_switches[CHECKS_ARG] && !dm_task_enable_checks(dmt))
 		goto out;
 
+	if (_switches[NOFLUSH_ARG] && !dm_task_no_flush(dmt))
+		goto out;
+
 	if (!dm_task_run(dmt))
 		goto out;
 
@@ -2994,9 +2997,9 @@ static struct command _commands[] = {
 	{"ls", "[--target <target_type>] [--exec <command>] [-o options] [--tree]", 0, 0, 0, _ls},
 	{"info", "[<device>]", 0, -1, 1, _info},
 	{"deps", "[-o options] [<device>]", 0, -1, 1, _deps},
-	{"status", "[<device>] [--target <target_type>]", 0, -1, 1, _status},
+	{"status", "[<device>] [--noflush] [--target <target_type>]", 0, -1, 1, _status},
 	{"table", "[<device>] [--target <target_type>] [--showkeys]", 0, -1, 1, _status},
-	{"wait", "<device> [<event_nr>]", 0, 2, 0, _wait},
+	{"wait", "<device> [<event_nr>] [--noflush]", 0, 2, 0, _wait},
 	{"mknodes", "[<device>]", 0, -1, 1, _mknodes},
 	{"mangle", "[<device>]", 0, -1, 1, _mangle},
 	{"udevcreatecookie", "", 0, 0, 0, _udevcreatecookie},
