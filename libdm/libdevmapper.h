@@ -1291,6 +1291,7 @@ int dm_fclose(FILE *stream);
  */
 int dm_asprintf(char **buf, const char *format, ...)
     __attribute__ ((format(printf, 2, 3)));
+int dm_vasprintf(char **buf, const char *format, va_list ap);
 
 /*
  * create lockfile (pidfile) - create and lock a lock file

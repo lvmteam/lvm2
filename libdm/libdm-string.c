@@ -129,7 +129,7 @@ const char *dm_basename(const char *path)
 	return p ? p + 1 : path;
 }
 
-int dm_asprintf(char **result, const char *format, ...)
+int dm_vasprintf(char **result, const char *format, va_list aq)
 {
 	int i, n, size = 16;
 	va_list ap;
@@ -141,7 +141,7 @@ int dm_asprintf(char **result, const char *format, ...)
 		return -1;
 
 	for (i = 0;; i++) {
-		va_start(ap, format);
+		va_copy(ap, aq);
 		n = vsnprintf(buf, size, format, ap);
 		va_end(ap);
 
@@ -166,6 +166,16 @@ int dm_asprintf(char **result, const char *format, ...)
 		*result = buf;
 
 	return n + 1;
+}
+
+int dm_asprintf(char **result, const char *format, ...)
+{
+	int r;
+	va_list ap;
+	va_start(ap, format);
+	r = dm_vasprintf(result, format, ap);
+	va_end(ap);
+	return r;
 }
 
 /*
