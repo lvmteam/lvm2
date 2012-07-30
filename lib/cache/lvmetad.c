@@ -275,7 +275,7 @@ int lvmetad_vg_update(struct volume_group *vg)
 	if (!vg)
 		return 0;
 
-	if (!_using_lvmetad)
+	if (!_using_lvmetad || test_mode())
 		return 1; /* fake it */
 
 	/* TODO. This is not entirely correct, since export_vg_to_buffer
@@ -335,7 +335,7 @@ int lvmetad_vg_remove(struct volume_group *vg)
 	daemon_reply reply;
 	int result;
 
-	if (!_using_lvmetad)
+	if (!_using_lvmetad || test_mode())
 		return 1; /* just fake it */
 
 	if (!id_write_format(&vg->id, uuid, sizeof(uuid)))
@@ -547,7 +547,7 @@ int lvmetad_pv_found(struct id pvid, struct device *device, const struct format_
 	const char *status;
 	int result;
 
-	if (!_using_lvmetad)
+	if (!_using_lvmetad || test_mode())
 		return 1;
 
 	if (!id_write_format(&pvid, uuid, sizeof(uuid)))
@@ -629,7 +629,7 @@ int lvmetad_pv_gone(dev_t device, const char *pv_name, activation_handler handle
 	int result;
 	int found;
 
-	if (!_using_lvmetad)
+	if (!_using_lvmetad || test_mode())
 		return 1;
 
 	/*

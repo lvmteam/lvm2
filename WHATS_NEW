@@ -1,5 +1,6 @@
 Version 2.02.97 - 
 ===============================
+  Respect --test also when using lvmetad.
   No longer capitalise first LV attribute char for invalid snapshots.
   Allow vgextend to add PVs to a VG that is missing PVs.
   Recognise Micron PCIe SSDs in filter and move array out to device-types.h.
