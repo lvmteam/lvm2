@@ -918,8 +918,7 @@ static response pv_found(lvmetad_state *s, request r)
 		else {
 			unlock_vg(s, vgid);
 			return daemon_reply_simple("failed", "reason = %s",
-// FIXME provide meaningful-to-user error message
-						   "internal treason!", NULL);
+						   "non-orphan VG without metadata encountered", NULL);
 		}
 		unlock_vg(s, vgid);
 	}
