@@ -303,6 +303,28 @@ int lvm_config_reload(lvm_t libh);
 int lvm_config_override(lvm_t libh, const char *config_string);
 
 /**
+ * Find a boolean value in the LVM configuration.
+ *
+ * \memberof lvm_t
+ *
+ * This function finds a boolean value associated with a path
+ * in current LVM configuration.
+ *
+ * \param   libh
+ * Handle obtained from lvm_init().
+ *
+ * \param   config_path
+ * A path in LVM configuration
+ *
+ * \param   fail
+ * Value to return if the path is not found.
+ *
+ * \return
+ * boolean value for 'config_path' (success) or the value of 'fail' (error)
+ */
+int lvm_config_find_bool(lvm_t libh, const char *config_path, int fail);
+
+/**
  * Return stored error no describing last LVM API error.
  *
  * \memberof lvm_t
