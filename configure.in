@@ -1275,7 +1275,12 @@ if test -n "$pkg_systemdsystemunitdir"; then
 fi
 
 if test -z "$systemdsystemunitdir"; then
-	    systemdsystemunitdir='/lib/systemd/system';
+	    systemdsystemunitdir='${exec_prefix}/lib/systemd/system';
+fi
+
+systemdutildir=$($PKG_CONFIG --variable=systemdutildir systemd)
+if test -z "$systemdutildir"; then
+	    systemdutildir='${exec_prefix}/lib/systemd';
 fi
 ################################################################################
 AC_ARG_WITH(tmpfilesdir,
@@ -1549,6 +1554,7 @@ AC_SUBST(tmpdir)
 AC_SUBST(udev_prefix)
 AC_SUBST(udevdir)
 AC_SUBST(systemdsystemunitdir)
+AC_SUBST(systemdutildir)
 AC_SUBST(tmpfilesdir)
 AC_SUBST(usrlibdir)
 AC_SUBST(usrsbindir)

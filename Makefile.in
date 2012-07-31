@@ -16,7 +16,7 @@ srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 top_builddir = @top_builddir@
 
-SUBDIRS = doc include man scripts
+SUBDIRS = doc include man
 
 ifeq ("@UDEV_RULES@", "yes")
   SUBDIRS += udev
@@ -35,6 +35,8 @@ endif
 ifeq ("@BUILD_LVMETAD@", "yes")
   SUBDIRS += libdaemon
 endif
+
+SUBDIRS += scripts
 
 # FIXME Should use intermediate Makefiles here!
 ifeq ($(MAKECMDGOALS),distclean)
@@ -97,6 +99,9 @@ install_system_dirs:
 
 install_initscripts: 
 	$(MAKE) -C scripts install_initscripts
+
+install_systemd_generators:
+	$(MAKE) -C scripts install_systemd_generators
 
 install_systemd_units:
 	$(MAKE) -C scripts install_systemd_units

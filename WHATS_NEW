@@ -1,5 +1,7 @@
 Version 2.02.97 - 
 ===============================
+  Add make install_systemd_generators.
+  Add generator for lvm2 activation systemd units.
   Add lvm_config_find_bool lvm2app fn to retrieve bool value from config tree.
   Respect --test also when using lvmetad.
   No longer capitalise first LV attribute char for invalid snapshots.

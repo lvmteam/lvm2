@@ -15,9 +15,16 @@ srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 top_builddir = @top_builddir@
 
+SOURCES = lvm2_activation_generator_systemd_red_hat.c
+TARGETS = lvm2_activation_generator_systemd_red_hat
+
 include $(top_builddir)/make.tmpl
 
+DEPLIBS += $(top_builddir)/liblvm/liblvm2app.so $(top_builddir)/libdm/libdevmapper.so
+LVMLIBS = @LVM2APP_LIB@ -ldevmapper
+
 SCRIPTS = lvmdump.sh lvmconf.sh vgimportclone.sh
+
 ifeq ("@FSADM@", "yes")
 	SCRIPTS += fsadm.sh
 endif
@@ -59,16 +66,23 @@ ifeq ("@BUILD_CMIRRORD@", "yes")
 	$(INSTALL_SCRIPT) cmirrord_init_red_hat $(initdir)/cmirrord
 endif
 
+lvm2_activation_generator_systemd_red_hat: $(OBJECTS) $(DEPLIBS)
+	$(CC) -o $@ $(OBJECTS) $(LVMLIBS)
+
+install_systemd_generators:
+	$(INSTALL_DIR) $(systemd_generator_dir)
+	$(INSTALL_PROGRAM) lvm2_activation_generator_systemd_red_hat $(systemd_generator_dir)/lvm2-activation-generator
+
 install_systemd_units:
-	$(INSTALL_DIR) $(systemd_dir)
+	$(INSTALL_DIR) $(systemd_unit_dir)
 ifeq ("@BUILD_DMEVENTD@", "yes")
-	$(INSTALL_DATA) dm_event_systemd_red_hat.socket $(systemd_dir)/dm-event.socket
-	$(INSTALL_DATA) dm_event_systemd_red_hat.service $(systemd_dir)/dm-event.service
-	$(INSTALL_DATA) lvm2_monitoring_systemd_red_hat.service $(systemd_dir)/lvm2-monitor.service
+	$(INSTALL_DATA) dm_event_systemd_red_hat.socket $(systemd_unit_dir)/dm-event.socket
+	$(INSTALL_DATA) dm_event_systemd_red_hat.service $(systemd_unit_dir)/dm-event.service
+	$(INSTALL_DATA) lvm2_monitoring_systemd_red_hat.service $(systemd_unit_dir)/lvm2-monitor.service
 endif
 ifeq ("@BUILD_LVMETAD@", "yes")
-	$(INSTALL_DATA) lvm2_lvmetad_systemd_red_hat.socket $(systemd_dir)/lvm2-lvmetad.socket
-	$(INSTALL_DATA) lvm2_lvmetad_systemd_red_hat.service $(systemd_dir)/lvm2-lvmetad.service
+	$(INSTALL_DATA) lvm2_lvmetad_systemd_red_hat.socket $(systemd_unit_dir)/lvm2-lvmetad.socket
+	$(INSTALL_DATA) lvm2_lvmetad_systemd_red_hat.service $(systemd_unit_dir)/lvm2-lvmetad.service
 endif
 
 install_tmpfiles_configuration:
