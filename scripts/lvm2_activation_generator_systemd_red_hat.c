@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
 	const char *dir;
 	int r = EXIT_SUCCESS;
 
-	kmsg_fd = open(KMSG_DEV_PATH, O_WRONLY|O_NOCTTY|O_CLOEXEC);
+	kmsg_fd = open(KMSG_DEV_PATH, O_WRONLY|O_NOCTTY);
 
 	if (argc > 1 && argc != 4) {
 		kmsg("LVM: Activation generator takes three or no arguments.\n");
