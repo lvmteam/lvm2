@@ -56,6 +56,7 @@ liblvm: lib
 daemons: lib libdaemon tools
 tools: lib libdaemon device-mapper
 po: tools daemons
+scripts: liblvm libdm
 
 lib.device-mapper: include.device-mapper
 libdm.device-mapper: include.device-mapper
