@@ -38,27 +38,26 @@ int read_buffer(int fd, char **buffer) {
 
 	while (1) {
 		int result = read(fd, (*buffer) + bytes, buffersize - bytes);
-		if (result > 0)
+		if (result > 0) {
 			bytes += result;
+			if (!strncmp((*buffer) + bytes - 4, "\n##\n", 4)) {
+				*(*buffer + bytes - 4) = 0;
+				break; /* success, we have the full message now */
+			}
+			if (bytes == buffersize) {
+				buffersize += 1024;
+				if (!(new = realloc(*buffer, buffersize + 1)))
+					goto fail;
+				*buffer = new;
+			}
+			continue;
+		}
 		if (result == 0) {
 			errno = ECONNRESET;
 			goto fail; /* we should never encounter EOF here */
 		}
 		if (result < 0 && errno != EAGAIN && errno != EWOULDBLOCK)
 			goto fail;
-
-		if (!strncmp((*buffer) + bytes - 4, "\n##\n", 4)) {
-			*(*buffer + bytes - 4) = 0;
-			break; /* success, we have the full message now */
-		}
-
-		if (bytes == buffersize) {
-			buffersize += 1024;
-			if (!(new = realloc(*buffer, buffersize + 1)))
-				goto fail;
-
-			*buffer = new;
-		}
 		/* TODO call select here if we encountered EAGAIN/EWOULDBLOCK */
 	}
 	return 1;
