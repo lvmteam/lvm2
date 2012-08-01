@@ -15,14 +15,18 @@ srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 top_builddir = @top_builddir@
 
-SOURCES = lvm2_activation_generator_systemd_red_hat.c
-TARGETS = lvm2_activation_generator_systemd_red_hat
+ifeq ("@APPLIB@", "yes")
+	SOURCES = lvm2_activation_generator_systemd_red_hat.c
+	TARGETS = lvm2_activation_generator_systemd_red_hat
+endif
 
 include $(top_builddir)/make.tmpl
 
-DEPLIBS += $(top_builddir)/liblvm/liblvm2app.so $(top_builddir)/libdm/libdevmapper.so
-LDFLAGS += -L$(top_builddir)/liblvm
-LVMLIBS = @LVM2APP_LIB@ -ldevmapper
+ifeq ("@APPLIB@", "yes")
+	DEPLIBS += $(top_builddir)/liblvm/liblvm2app.so $(top_builddir)/libdm/libdevmapper.so
+	LDFLAGS += -L$(top_builddir)/liblvm
+	LVMLIBS = @LVM2APP_LIB@ -ldevmapper
+endif
 
 ifeq ("@DMEVENTD@", "yes")
 	LVMLIBS += -ldevmapper-event
@@ -76,7 +80,12 @@ lvm2_activation_generator_systemd_red_hat: $(OBJECTS) $(DEPLIBS)
 
 install_systemd_generators:
 	$(INSTALL_DIR) $(systemd_generator_dir)
+ifeq ("@APPLIB@", "yes")
 	$(INSTALL_PROGRAM) lvm2_activation_generator_systemd_red_hat $(systemd_generator_dir)/lvm2-activation-generator
+else
+	@echo "WARNING: LVM2 activation systemd generator not installed." \
+	      "It requires the LVM2 application library to be built as well."
+endif
 
 install_systemd_units:
 	$(INSTALL_DIR) $(systemd_unit_dir)
