@@ -77,7 +77,7 @@ static const int sep = '/';
 		  p->tb - p->fb + 1, p->line); \
       return 0;\
    } \
-} while(0);
+} while(0)
 
 static int _tok_match(const char *str, const char *b, const char *e)
 {
