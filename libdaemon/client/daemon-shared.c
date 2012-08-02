@@ -56,9 +56,9 @@ int read_buffer(int fd, char **buffer) {
 			errno = ECONNRESET;
 			goto fail; /* we should never encounter EOF here */
 		}
-		if (result < 0 && errno != EAGAIN && errno != EWOULDBLOCK)
+		if (result < 0 && errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)
 			goto fail;
-		/* TODO call select here if we encountered EAGAIN/EWOULDBLOCK */
+		/* TODO call select here if we encountered EAGAIN/EWOULDBLOCK/EINTR */
 	}
 	return 1;
 fail:
@@ -71,7 +71,7 @@ fail:
  * Write a buffer to a filedescriptor. Keep trying. Blocks (even on
  * SOCK_NONBLOCK) until all of the write went through.
  *
- * TODO use select on EWOULDBLOCK/EAGAIN to avoid useless spinning
+ * TODO use select on EWOULDBLOCK/EAGAIN/EINTR to avoid useless spinning
  */
 int write_buffer(int fd, const char *buffer, int length) {
 	static const char terminate[] = "\n##\n";
@@ -82,7 +82,7 @@ write:
 		int result = write(fd, buffer + written, length - written);
 		if (result > 0)
 			written += result;
-		if (result < 0 && errno != EWOULDBLOCK && errno != EAGAIN)
+		if (result < 0 && errno != EWOULDBLOCK && errno != EAGAIN && errno != EINTR)
 			return 0; /* too bad */
 		if (written == length) {
 			if (done)
