@@ -492,50 +492,11 @@ static struct logical_volume *_get_lvconvert_lv(struct cmd_context *cmd __attrib
 	return lv;
 }
 
-static int _reload_lv(struct cmd_context *cmd, struct logical_volume *lv)
-{
-	log_very_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
-
-	if (!vg_write(lv->vg))
-		return_0;
-
-	if (!suspend_lv(cmd, lv)) {
-		log_error("Failed to lock %s", lv->name);
-		vg_revert(lv->vg);
-		return 0;
-	}
-
-	if (!vg_commit(lv->vg)) {
-		if (!resume_lv(cmd, lv))
-			stack;
-		return_0;
-	}
-
-	log_very_verbose("Updating \"%s\" in kernel", lv->name);
-
-	if (!resume_lv(cmd, lv)) {
-		log_error("Problem reactivating %s", lv->name);
-		return 0;
-	}
-	return 1;
-}
-
-static int _finish_lvconvert_mirror(struct cmd_context *cmd,
-				    struct volume_group *vg,
-				    struct logical_volume *lv,
-				    struct dm_list *lvs_changed __attribute__((unused)))
+static int _reload_lv(struct cmd_context *cmd,
+                      struct volume_group *vg,
+		      struct logical_volume *lv)
 {
 	int r = 0;
-
-	if (!(lv->status & CONVERTING))
-		return 1;
-
-	if (!collapse_mirrored_lv(lv)) {
-		log_error("Failed to remove temporary sync layer.");
-		return 0;
-	}
-
-	lv->status &= ~CONVERTING;
 
 	log_very_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
 
@@ -549,7 +510,8 @@ static int _finish_lvconvert_mirror(struct cmd_context *cmd,
 	}
 
 	if (!vg_commit(vg)) {
-		resume_lv(cmd, lv);
+		if (!resume_lv(cmd, lv))
+			stack;
 		goto_out;
 	}
 
@@ -561,10 +523,34 @@ static int _finish_lvconvert_mirror(struct cmd_context *cmd,
 	}
 
 	r = 1;
-	log_print("Logical volume %s converted.", lv->name);
 out:
 	backup(vg);
 	return r;
+}
+
+static int _finish_lvconvert_mirror(struct cmd_context *cmd,
+				    struct volume_group *vg,
+				    struct logical_volume *lv,
+				    struct dm_list *lvs_changed __attribute__((unused)))
+{
+	if (!(lv->status & CONVERTING))
+		return 1;
+
+	if (!collapse_mirrored_lv(lv)) {
+		log_error("Failed to remove temporary sync layer.");
+		return 0;
+	}
+
+	lv->status &= ~CONVERTING;
+
+	log_very_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
+
+	if (!(_reload_lv(cmd, vg, lv)))
+		return_0;
+
+	log_print("Logical volume %s converted.", lv->name);
+
+	return 1;
 }
 
 static int _finish_lvconvert_merge(struct cmd_context *cmd,
@@ -904,7 +890,6 @@ static int _lv_update_mirrored_log(struct logical_volume *lv,
 				    operable_pvs, 0U);
 }
 
-static int _reload_lv(struct cmd_context *cmd, struct logical_volume *lv);
 static int _lv_update_log_type(struct cmd_context *cmd,
 			       struct lvconvert_params *lp,
 			       struct logical_volume *lv,
@@ -948,8 +933,10 @@ static int _lv_update_log_type(struct cmd_context *cmd,
 		 *        but it doesn't matter because we don't support
 		 *        mirrored logs in cluster mirrors.
 		 */
-		if (old_log_count)
-			return _reload_lv(cmd, log_lv);
+		if (old_log_count &&
+		    !_reload_lv(cmd, log_lv->vg, log_lv))
+			return_0;
+
 		return 1;
 	}
 
@@ -1328,8 +1315,8 @@ out:
 
 out_skip_log_convert:
 
-	if (!_reload_lv(cmd, lv))
-		return 0;
+	if (!_reload_lv(cmd, lv->vg, lv))
+		return_0;
 
 	return 1;
 }
@@ -1369,8 +1356,8 @@ int mirror_remove_missing(struct cmd_context *cmd,
 				 log_count))
 		return 0;
 
-	if (!_reload_lv(cmd, lv))
-		return 0;
+	if (!_reload_lv(cmd, lv->vg, lv))
+		return_0;
 
 	return 1;
 }
@@ -1673,7 +1660,6 @@ static int lvconvert_snapshot(struct cmd_context *cmd,
 			      struct lvconvert_params *lp)
 {
 	struct logical_volume *org;
-	int r = 0;
 
 	if (!(org = find_lv(lv->vg, lp->origin))) {
 		log_error("Couldn't find origin volume '%s'.", lp->origin);
@@ -1714,28 +1700,12 @@ static int lvconvert_snapshot(struct cmd_context *cmd,
 	}
 
 	/* store vg on disk(s) */
-	if (!vg_write(lv->vg))
+	if (!_reload_lv(cmd, lv->vg, lv))
 		return_0;
 
-	if (!suspend_lv(cmd, org)) {
-		log_error("Failed to suspend origin %s", org->name);
-		vg_revert(lv->vg);
-		goto out;
-	}
-
-	if (!vg_commit(lv->vg))
-		goto_out;
-
-	if (!resume_lv(cmd, org)) {
-		log_error("Problem reactivating origin %s", org->name);
-		goto out;
-	}
-
 	log_print("Logical volume %s converted to snapshot.", lv->name);
-	r = 1;
-out:
-	backup(lv->vg);
-	return r;
+
+	return 1;
 }
 
 static int lvconvert_merge(struct cmd_context *cmd,
