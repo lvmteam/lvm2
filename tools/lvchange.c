@@ -516,6 +516,7 @@ static int lvchange_persistent(struct cmd_context *cmd,
 {
 	struct lvinfo info;
 	int active = 0;
+	int32_t major, minor;
 
 	if (!strcmp(arg_str_value(cmd, persistent_ARG, "n"), "n")) {
 		if (!(lv->status & FIXED_MINOR)) {
@@ -547,6 +548,12 @@ static int lvchange_persistent(struct cmd_context *cmd,
 		}
 		if (lv_info(cmd, lv, 0, &info, 0, 0) && info.exists)
 			active = 1;
+
+		major = arg_int_value(cmd, major_ARG, lv->major);
+		minor = arg_int_value(cmd, minor_ARG, lv->minor);
+		if (!major_minor_valid(cmd, lv->vg->fid->fmt, major, minor))
+			return 0;
+
 		if (active && !arg_count(cmd, force_ARG) &&
 		    yes_no_prompt("Logical volume %s will be "
 				  "deactivated temporarily. "
@@ -565,8 +572,8 @@ static int lvchange_persistent(struct cmd_context *cmd,
 			return 0;
 		}
 		lv->status |= FIXED_MINOR;
-		lv->minor = arg_int_value(cmd, minor_ARG, lv->minor);
-		lv->major = arg_int_value(cmd, major_ARG, lv->major);
+		lv->minor = minor;
+		lv->major = major;
 		log_verbose("Setting persistent device number to (%d, %d) "
 			    "for \"%s\"", lv->major, lv->minor, lv->name);
 

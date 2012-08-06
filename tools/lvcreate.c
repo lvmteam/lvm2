@@ -555,7 +555,8 @@ static int _read_raid_params(struct lvcreate_params *lp,
 	return 1;
 }
 
-static int _read_activation_params(struct lvcreate_params *lp, struct cmd_context *cmd)
+static int _read_activation_params(struct lvcreate_params *lp, struct cmd_context *cmd,
+				   struct volume_group *vg)
 {
 	unsigned pagesize;
 
@@ -637,6 +638,8 @@ static int _read_activation_params(struct lvcreate_params *lp, struct cmd_contex
 					  "--major when using -My");
 				return 0;
 			}
+			if (!major_minor_valid(cmd, vg->fid->fmt, lp->major, lp->minor))
+				return 0;
 		} else {
 			if ((lp->minor != -1) || (lp->major != -1)) {
 				log_error("--major and --minor incompatible "
@@ -1032,7 +1035,7 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 	 * Check activation parameters to support inactive thin snapshot creation
 	 * FIXME: anything else needs to be moved past _determine_snapshot_type()?
 	 */
-	if (!_read_activation_params(&lp, cmd)) {
+	if (!_read_activation_params(&lp, cmd, vg)) {
 		r = ECMD_FAILED;
 		goto_out;
 	}

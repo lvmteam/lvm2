@@ -407,38 +407,6 @@ int int_arg_with_sign_and_percent(struct cmd_context *cmd __attribute__((unused)
 	return 1;
 }
 
-int minor_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av)
-{
-	char *ptr;
-
-	if (!_get_int_arg(av, &ptr) || (*ptr) || (av->sign == SIGN_MINUS))
-		return 0;
-
-	if (av->i_value > 255) {
-		log_error("Minor number outside range 0-255");
-		return 0;
-	}
-
-	return 1;
-}
-
-int major_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av)
-{
-	char *ptr;
-
-	if (!_get_int_arg(av, &ptr) || (*ptr) || (av->sign == SIGN_MINUS))
-		return 0;
-
-	if (av->i_value > 255) {
-		log_error("Major number outside range 0-255");
-		return 0;
-	}
-
-	/* FIXME Also Check against /proc/devices */
-
-	return 1;
-}
-
 int string_arg(struct cmd_context *cmd __attribute__((unused)),
 	       struct arg_values *av __attribute__((unused)))
 {
@@ -538,6 +506,35 @@ int metadatacopies_arg(struct cmd_context *cmd, struct arg_values *av)
 	}
 
 	return int_arg(cmd, av);
+}
+
+int major_minor_valid(const struct cmd_context *cmd, const struct format_type *fmt,
+		      int32_t major, int32_t minor)
+{
+	if (!strncmp(cmd->kernel_vsn, "2.4.", 4) ||
+	    (fmt->features & FMT_RESTRICTED_LVIDS)) {
+		if (major < 0 || major > 255) {
+			log_error("Major number outside range 0-255");
+			return 0;
+		}
+		if (minor < 0 || minor > 255) {
+			log_error("Minor number outside range 0-255");
+			return 0;
+		}
+	} else {
+		/* 12 bits for major number */
+		if (major < 0 || major > 4095) {
+			log_error("Major number outside range 0-4095");
+			return 0;
+		}
+		/* 20 bits for minor number */
+		if (minor < 0 || minor > 1048575) {
+			log_error("Minor number outside range 0-1048575");
+			return 0;
+		}
+	}
+
+	return 1;
 }
 
 static void __alloc(int size)
