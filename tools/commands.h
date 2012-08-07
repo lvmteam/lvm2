@@ -90,11 +90,11 @@ xx(lvchange,
    "\tLogicalVolume[Path] [LogicalVolume[Path]...]\n",
 
    alloc_ARG, autobackup_ARG, activate_ARG, available_ARG, contiguous_ARG,
-   force_ARG, ignorelockingfailure_ARG, ignoremonitoring_ARG, major_ARG,
-   minor_ARG, monitor_ARG, noudevsync_ARG, partial_ARG, permission_ARG,
-   persistent_ARG, poll_ARG, readahead_ARG, resync_ARG, refresh_ARG,
-   addtag_ARG, deltag_ARG, sysinit_ARG, test_ARG, yes_ARG,
-   discard_ARG, zero_ARG)
+   discard_ARG, force_ARG, ignorelockingfailure_ARG, ignoremonitoring_ARG,
+   major_ARG, minor_ARG, monitor_ARG, noudevsync_ARG, partial_ARG,
+   permission_ARG, persistent_ARG, poll_ARG, readahead_ARG, resync_ARG,
+   refresh_ARG, addtag_ARG, deltag_ARG, sysinit_ARG, test_ARG, yes_ARG,
+   zero_ARG)
 
 xx(lvconvert,
    "Change logical volume layout",
@@ -180,10 +180,6 @@ xx(lvcreate,
    "\t[-p|--permission {r|rw}]\n"
    "\t[-r|--readahead ReadAheadSectors|auto|none]\n"
    "\t[-R|--regionsize MirrorLogRegionSize]\n"
-   "\t[-T|--thin  [-c|--chunksize  ChunkSize]\n"
-   "\t  [--discard {ignore|nopassdown|passdown}]\n"
-   "\t  [--poolmetadatasize MetadataSize[bBsSkKmMgG]]]\n"
-   "\t[--thinpool ThinPoolLogicalVolume{Name|Path}]\n"
    "\t[-t|--test]\n"
    "\t[--type VolumeType]\n"
    "\t[-v|--verbose]\n"
@@ -202,6 +198,7 @@ xx(lvcreate,
    "\t[--alloc AllocationPolicy]\n"
    "\t[-C|--contiguous {y|n}]\n"
    "\t[-d|--debug]\n"
+   "\t[--discard {ignore|nopassdown|passdown}]\n"
    "\t[-h|-?|--help]\n"
    "\t[--ignoremonitoring]\n"
    "\t[--monitor {y|n}]\n"
@@ -215,14 +212,14 @@ xx(lvcreate,
    "\t[-p|--permission {r|rw}]\n"
    "\t[-r|--readahead ReadAheadSectors|auto|none]\n"
    "\t[-t|--test]\n"
-   "\t[--thinpool] PoolLogicalVolume\n"
+   "\t[--thinpool ThinPoolLogicalVolume[Path]]\n"
    "\t[-v|--verbose]\n"
    "\t[--version]\n"
 
    "\t[PhysicalVolumePath...]\n\n",
 
    addtag_ARG, alloc_ARG, autobackup_ARG, activate_ARG, available_ARG,
-   chunksize_ARG, contiguous_ARG, corelog_ARG, extents_ARG, discard_ARG,
+   chunksize_ARG, contiguous_ARG, corelog_ARG, discard_ARG, extents_ARG,
    ignoremonitoring_ARG, major_ARG, minor_ARG, mirrorlog_ARG, mirrors_ARG,
    monitor_ARG, name_ARG, nosync_ARG, noudevsync_ARG, permission_ARG,
    persistent_ARG, readahead_ARG, regionsize_ARG, size_ARG, snapshot_ARG,
