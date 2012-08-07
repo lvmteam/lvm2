@@ -98,7 +98,7 @@ static int lvchange_pool_update(struct cmd_context *cmd,
 	thin_discard_t discard;
 
 	if (!lv_is_thin_pool(lv)) {
-		log_error("Logical volume \"%s\" is not a thinpool.", lv->name);
+		log_error("Logical volume \"%s\" is not a thin pool.", lv->name);
 		return 0;
 	}
 
@@ -839,15 +839,14 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 		arg_count(cmd, readahead_ARG) || arg_count(cmd, persistent_ARG) ||
 		arg_count(cmd, addtag_ARG) || arg_count(cmd, deltag_ARG) ||
 		arg_count(cmd, resync_ARG) || arg_count(cmd, alloc_ARG) ||
-		arg_count(cmd, discard_ARG) ||
-		arg_count(cmd, zero_ARG);
+		arg_count(cmd, discard_ARG) || arg_count(cmd, zero_ARG);
 
 	if (!update &&
             !arg_count(cmd, activate_ARG) && !arg_count(cmd, refresh_ARG) &&
             !arg_count(cmd, monitor_ARG) && !arg_count(cmd, poll_ARG)) {
-		log_error("Need 1 or more of -a, -C, -M, -p, -r, "
+		log_error("Need 1 or more of -a, -C, -M, -p, -r, -Z, "
 			  "--resync, --refresh, --alloc, --addtag, --deltag, "
-			  "--monitor or --poll");
+			  "--monitor, --poll or --discard");
 		return EINVALID_CMD_LINE;
 	}
 
