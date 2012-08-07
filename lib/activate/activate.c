@@ -514,6 +514,11 @@ int target_version(const char *target_name, uint32_t *maj,
 	} while (last_target != target);
 
       out:
+	if (r)
+		log_very_verbose("Found %s target "
+				 "v%" PRIu32 ".%" PRIu32 ".%" PRIu32 ".",
+				 target_name, *maj, *min, *patchlevel);
+
 	dm_task_destroy(dmt);
 
 	return r;
