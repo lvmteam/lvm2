@@ -650,8 +650,8 @@ typedef enum {
 	DM_THIN_MESSAGE_CREATE_THIN,		/* device_id */
 	DM_THIN_MESSAGE_DELETE,			/* device_id */
 	DM_THIN_MESSAGE_SET_TRANSACTION_ID,	/* current_id, new_id */
-	DM_THIN_MESSAGE_RESERVE_METADATA_SNAP,	/* 1.1 */
-	DM_THIN_MESSAGE_RELEASE_METADATA_SNAP,	/* 1.1 */
+	DM_THIN_MESSAGE_RESERVE_METADATA_SNAP,	/* target version >= 1.1 */
+	DM_THIN_MESSAGE_RELEASE_METADATA_SNAP,	/* target version >= 1.1 */
 } dm_thin_message_t;
 
 int dm_tree_node_add_thin_pool_message(struct dm_tree_node *node,
@@ -663,7 +663,7 @@ int dm_tree_node_add_thin_pool_message(struct dm_tree_node *node,
  *   ignore      - Disable discard support
  *   no_passdown - Don't pass discard down to underlaying data device,
  *                 just remove the mapping
- * Feature is available for 1.1
+ * Feature is available since version 1.1 of the thin target.
  */
 int dm_tree_node_set_thin_pool_discard(struct dm_tree_node *node,
 				       unsigned ignore,

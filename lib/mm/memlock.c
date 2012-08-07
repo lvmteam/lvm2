@@ -131,6 +131,7 @@ static void _allocate_memory(void)
 	    ((_size_stack * 2) < limit.rlim_cur) &&
 	    ((stack_mem = alloca(_size_stack))))
 		_touch_memory(stack_mem, _size_stack);
+	/* FIXME else warn user setting got ignored */
 
 	if ((temp_malloc_mem = malloc(_size_malloc_tmp)))
 		_touch_memory(temp_malloc_mem, _size_malloc_tmp);

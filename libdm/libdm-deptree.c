@@ -192,8 +192,8 @@ struct load_segment {
 	uint64_t low_water_mark;	/* Thin_pool */
 	uint32_t data_block_size;       /* Thin_pool */
 	unsigned skip_block_zeroing;	/* Thin_pool */
-	unsigned ignore_discard;	/* Thin_pool 1.1 */
-	unsigned no_discard_passdown;	/* Thin_pool 1.1 */
+	unsigned ignore_discard;	/* Thin_pool target vsn 1.1 */
+	unsigned no_discard_passdown;	/* Thin_pool target vsn 1.1 */
 	uint32_t device_id;		/* Thin */
 
 };
@@ -1411,10 +1411,10 @@ static int _thin_pool_node_message(struct dm_tree_node *dnode, struct thin_messa
 				m->u.m_set_transaction_id.current_id,
 				m->u.m_set_transaction_id.new_id);
 		break;
-	case DM_THIN_MESSAGE_RESERVE_METADATA_SNAP: /* 1.1 */
+	case DM_THIN_MESSAGE_RESERVE_METADATA_SNAP: /* target vsn 1.1 */
 		r = dm_snprintf(buf, sizeof(buf), "reserve_metadata_snap");
 		break;
-	case DM_THIN_MESSAGE_RELEASE_METADATA_SNAP: /* 1.1 */
+	case DM_THIN_MESSAGE_RELEASE_METADATA_SNAP: /* target vsn 1.1 */
 		r = dm_snprintf(buf, sizeof(buf), "release_metadata_snap");
 		break;
 	default:
