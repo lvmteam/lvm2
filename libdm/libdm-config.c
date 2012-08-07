@@ -357,7 +357,6 @@ int dm_config_write_node(const struct dm_config_node *cn, dm_putline_fn putline,
 	return _write_node(cn, 0, putline, baton);
 }
 
-
 /*
  * parser
  */
