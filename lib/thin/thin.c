@@ -115,7 +115,7 @@ static int _thin_pool_text_import(struct lv_segment *seg,
 		return SEG_LOG_ERROR("Could not read chunk_size");
 
 	if (dm_config_has_node(sn, "discards") &&
-	    !dm_config_get_str(sn, "discards", &discard_str))
+	    !dm_config_get_str(sn, "discards", &discards_str))
 		return SEG_LOG_ERROR("Could not read discards for");
 
 	if (!discards_str)
@@ -276,16 +276,15 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 					       seg->zero_new_blocks ? 0 : 1))
 		return_0;
 
-	if (seg->discards != THIN_DISCARDS_PASSDOWN)
-		if (attr & THIN_FEATURE_DISCARDS) {
-			/* FIXME: Check whether underlying dev supports discards */
-			if (!dm_tree_node_set_thin_pool_discard(node,
-								seg->discards == THIN_DISCARDS_IGNORE,
-								seg->discards == THIN_DISCARDS_NO_PASSDOWN))
-				return_0;
-		} else
-			log_warn_suppress(_no_discards++, "WARNING: Thin pool target does "
-					  "not support discards (needs kernel >= 3.4).");
+	if ((seg->discards != THIN_DISCARDS_PASSDOWN) && (attr & THIN_FEATURE_DISCARDS)) {
+		/* FIXME: Check whether underlying dev supports discards */
+		if (!dm_tree_node_set_thin_pool_discard(node,
+							seg->discards == THIN_DISCARDS_IGNORE,
+							seg->discards == THIN_DISCARDS_NO_PASSDOWN))
+			return_0;
+	} else
+		log_warn_suppress(_no_discards++, "WARNING: Thin pool target does "
+				  "not support discards (needs kernel >= 3.4).");
 
 	/*
 	 * Add messages only for activation tree.
