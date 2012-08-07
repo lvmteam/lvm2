@@ -433,10 +433,7 @@ int get_pool_discard(const char *str, thin_discard_t *discard)
 {
 	if (!strcasecmp(str, "passdown"))
 		*discard = THIN_DISCARD_PASSDOWN;
-        /* Allow some variation in thin parameter */
-	else if (!strcasecmp(str, "nopassdown") ||
-		 !strcasecmp(str, "no-passdown") ||
-		 !strcasecmp(str, "no_passdown"))
+	else if (!strcasecmp(str, "nopassdown"))
 		*discard = THIN_DISCARD_NO_PASSDOWN;
 	else if (!strcasecmp(str, "ignore"))
 		*discard = THIN_DISCARD_IGNORE;
@@ -459,7 +456,7 @@ const char *get_pool_discard_name(thin_discard_t discard)
 		return "ignore";
 	}
 
-	log_error(INTERNAL_ERROR "Uknown discard type.");
+	log_error(INTERNAL_ERROR "Uknown discard type encountered.");
 
-	return NULL;
+	return "unknown";
 }
