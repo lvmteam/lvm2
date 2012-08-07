@@ -73,7 +73,12 @@ logical volume's allocation policy to contiguous, if all of the
 allocated physical extents are already contiguous.
 .TP
 .BR \-\-discard " {" \fIignore | \fInopassdown | \fIpassdown }
-Change discard behavior.
+Set this to \fIignore\fP to ignore any discards received by a
+thin pool Logical Volume.  Set to \fInopassdown\fP to process such
+discards within the thin pool itself and allow the no-longer-needed
+extents to be overwritten by new data.  Set to \fIpassdown\fP to
+process them both within the thin pool itself and to pass them down
+the underlying device.
 .TP
 .B \-\-resync
 Forces the complete resynchronization of a mirror.  In normal
