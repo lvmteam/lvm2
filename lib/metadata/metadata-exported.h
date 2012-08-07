@@ -167,9 +167,9 @@ typedef enum {
 } force_t;
 
 typedef enum {
-	THIN_DISCARD_PASSDOWN,
-	THIN_DISCARD_NO_PASSDOWN,
 	THIN_DISCARD_IGNORE,
+	THIN_DISCARD_NO_PASSDOWN,
+	THIN_DISCARD_PASSDOWN,
 } thin_discard_t;
 
 struct cmd_context;
