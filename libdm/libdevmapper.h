@@ -660,8 +660,8 @@ int dm_tree_node_add_thin_pool_message(struct dm_tree_node *node,
 
 /*
  * Set thin pool discard features
- *   ignore      - Disable discard support
- *   no_passdown - Don't pass discard down to underlaying data device,
+ *   ignore      - Disable support for discards
+ *   no_passdown - Don't pass discards down to underlying data device,
  *                 just remove the mapping
  * Feature is available since version 1.1 of the thin target.
  */

@@ -11,9 +11,9 @@ Version 2.02.97 - 7th August 2012
   Recognise Micron PCIe SSDs in filter and move array out to device-types.h.
   Fix dumpconfig <node> to print only <node> without its siblings. (2.02.89)
   Do not issue "Failed to handle a client connection" error if lvmetad killed.
-  Support lvchange --discard and -Z with thin pools.
+  Support lvchange --discards and -Z with thin pools.
   Add discard LV segment field to reports.
-  Add --discard to lvcreate --thin.
+  Add --discards to lvcreate --thin.
   Set discard and external snapshot features if thin pool target is vsn 1.1+.
   Count percentage of completeness upwards not downwards when merging snapshot.
   Skip activation when using vg/lvchange --sysinit -a ay and lvmetad is active.

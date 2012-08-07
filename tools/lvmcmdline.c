@@ -216,15 +216,15 @@ int activation_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_v
 	return 1;
 }
 
-int discard_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av)
+int discards_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av)
 {
-	thin_discard_t discard;
+	thin_discards_t discards;
 
-	if (!get_pool_discard(av->value, &discard))
+	if (!get_pool_discards(av->value, &discards))
 		return_0;
 
-	av->i_value = discard;
-	av->ui_value = discard;
+	av->i_value = discards;
+	av->ui_value = discards;
 
 	return 1;
 }

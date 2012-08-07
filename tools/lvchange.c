@@ -95,28 +95,28 @@ static int lvchange_pool_update(struct cmd_context *cmd,
 	int r = 0;
 	int update = 0;
 	unsigned val;
-	thin_discard_t discard;
+	thin_discards_t discards;
 
 	if (!lv_is_thin_pool(lv)) {
 		log_error("Logical volume \"%s\" is not a thin pool.", lv->name);
 		return 0;
 	}
 
-	if (arg_count(cmd, discard_ARG)) {
-		discard = arg_uint_value(cmd, discard_ARG, 0);
-		if (discard != first_seg(lv)->discard) {
-			if (((discard == THIN_DISCARD_IGNORE) ||
-			     (first_seg(lv)->discard == THIN_DISCARD_IGNORE)) &&
+	if (arg_count(cmd, discards_ARG)) {
+		discards = arg_uint_value(cmd, discards_ARG, 0);
+		if (discards != first_seg(lv)->discards) {
+			if (((discards == THIN_DISCARDS_IGNORE) ||
+			     (first_seg(lv)->discards == THIN_DISCARDS_IGNORE)) &&
 			    lv_is_active(lv))
-				log_error("Cannot change discard state for active "
+				log_error("Cannot change discards state for active "
 					  "logical volume \"%s\".", lv->name);
 			else {
-				first_seg(lv)->discard = discard;
+				first_seg(lv)->discards = discards;
 				update++;
 			}
 		} else
-			log_error("Logical volume \"%s\" already uses discard %s.",
-				  lv->name, get_pool_discard_name(discard));
+			log_error("Logical volume \"%s\" already uses --discards %s.",
+				  lv->name, get_pool_discards_name(discards));
 	}
 
 	if (arg_count(cmd, zero_ARG)) {
@@ -623,7 +623,7 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 	if (!(lv->vg->status & LVM_WRITE) &&
 	    (arg_count(cmd, contiguous_ARG) || arg_count(cmd, permission_ARG) ||
 	     arg_count(cmd, readahead_ARG) || arg_count(cmd, persistent_ARG) ||
-	     arg_count(cmd, discard_ARG) ||
+	     arg_count(cmd, discards_ARG) ||
 	     arg_count(cmd, zero_ARG) ||
 	     arg_count(cmd, alloc_ARG))) {
 		log_error("Only -a permitted with read-only volume "
@@ -750,7 +750,7 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 		}
 	}
 
-	if (arg_count(cmd, discard_ARG) ||
+	if (arg_count(cmd, discards_ARG) ||
 	    arg_count(cmd, zero_ARG)) {
 		if (!archived && !archive(lv->vg)) {
 			stack;
@@ -839,14 +839,14 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 		arg_count(cmd, readahead_ARG) || arg_count(cmd, persistent_ARG) ||
 		arg_count(cmd, addtag_ARG) || arg_count(cmd, deltag_ARG) ||
 		arg_count(cmd, resync_ARG) || arg_count(cmd, alloc_ARG) ||
-		arg_count(cmd, discard_ARG) || arg_count(cmd, zero_ARG);
+		arg_count(cmd, discards_ARG) || arg_count(cmd, zero_ARG);
 
 	if (!update &&
             !arg_count(cmd, activate_ARG) && !arg_count(cmd, refresh_ARG) &&
             !arg_count(cmd, monitor_ARG) && !arg_count(cmd, poll_ARG)) {
 		log_error("Need 1 or more of -a, -C, -M, -p, -r, -Z, "
 			  "--resync, --refresh, --alloc, --addtag, --deltag, "
-			  "--monitor, --poll or --discard");
+			  "--monitor, --poll or --discards");
 		return EINVALID_CMD_LINE;
 	}
 

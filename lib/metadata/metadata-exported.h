@@ -167,10 +167,10 @@ typedef enum {
 } force_t;
 
 typedef enum {
-	THIN_DISCARD_IGNORE,
-	THIN_DISCARD_NO_PASSDOWN,
-	THIN_DISCARD_PASSDOWN,
-} thin_discard_t;
+	THIN_DISCARDS_IGNORE,
+	THIN_DISCARDS_NO_PASSDOWN,
+	THIN_DISCARDS_PASSDOWN,
+} thin_discards_t;
 
 struct cmd_context;
 struct format_handler;
@@ -353,7 +353,7 @@ struct lv_segment {
 	uint64_t transaction_id;		/* For thin_pool, thin */
 	uint64_t low_water_mark;		/* For thin_pool */
 	unsigned zero_new_blocks;		/* For thin_pool */
-	thin_discard_t discard;			/* For thin_pool */
+	thin_discards_t discards;		/* For thin_pool */
 	struct dm_list thin_messages;		/* For thin_pool */
 	struct logical_volume *pool_lv;		/* For thin */
 	uint32_t device_id;			/* For thin, 24bit */
@@ -565,8 +565,8 @@ uint64_t extents_from_size(struct cmd_context *cmd, uint64_t size,
 			   uint32_t extent_size);
 
 int update_pool_lv(struct logical_volume *lv, int activate);
-int get_pool_discard(const char *str, thin_discard_t *discard);
-const char *get_pool_discard_name(thin_discard_t discard);
+int get_pool_discards(const char *str, thin_discards_t *discards);
+const char *get_pool_discards_name(thin_discards_t discards);
 
 /*
  * Activation options

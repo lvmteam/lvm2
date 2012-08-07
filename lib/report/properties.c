@@ -277,8 +277,8 @@ GET_LVSEG_NUM_PROPERTY_FN(zero, lvseg->zero_new_blocks)
 #define _zero_set _not_implemented_set
 GET_LVSEG_NUM_PROPERTY_FN(transaction_id, lvseg->transaction_id)
 #define _transaction_id_set _not_implemented_set
-GET_LVSEG_NUM_PROPERTY_FN(discard, lvseg->discard)
-#define _discard_set _not_implemented_set
+GET_LVSEG_NUM_PROPERTY_FN(discards, lvseg->discards)
+#define _discards_set _not_implemented_set
 GET_LVSEG_NUM_PROPERTY_FN(seg_start, lvseg_start(lvseg))
 #define _seg_start_set _not_implemented_set
 GET_LVSEG_NUM_PROPERTY_FN(seg_start_pe, lvseg->le)

@@ -47,7 +47,7 @@ struct lv_activate_opts {
 /* thin target attribute flags */
 enum {
 	/* bitfields - new features from 1.1 version */
-	THIN_FEATURE_DISCARD			= (1 << 0),
+	THIN_FEATURE_DISCARDS			= (1 << 0),
 	THIN_FEATURE_EXTERNAL_ORIGIN		= (1 << 1),
 	THIN_FEATURE_HELD_ROOT			= (1 << 2),
 	THIN_FEATURE_BLOCK_SIZE			= (1 << 3),

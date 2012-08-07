@@ -4,7 +4,7 @@ Version 1.02.76 - 7th August 2012
   Allow --noflush with dmsetup status and wait (for thin target).
   Add dm_config_write_one_node to libdevmapper.
   Support thin pool message release/reserve_metadata_snap in libdevmapper.
-  Support thin pool discard and external origin features in libdevmapper.
+  Support thin pool discards and external origin features in libdevmapper.
   Add configure --enable-udev-rule-exec-detection to detect exec path in rules.
   Use sbindir in udev rules by default and remove executable path detection.
   Remove hard-coded paths for dmeventd fifos and use default-dm-run-dir.

@@ -564,19 +564,19 @@ static int _transactionid_disp(struct dm_report *rh, struct dm_pool *mem,
 	return  dm_report_field_uint64(rh, field, &seg->transaction_id);
 }
 
-static int _discard_disp(struct dm_report *rh, struct dm_pool *mem,
-			 struct dm_report_field *field,
-			 const void *data, void *private)
+static int _discards_disp(struct dm_report *rh, struct dm_pool *mem,
+			  struct dm_report_field *field,
+			  const void *data, void *private)
 {
 	const struct lv_segment *seg = (const struct lv_segment *) data;
-	const char *discard_str;
+	const char *discards_str;
 
 	if (seg_is_thin_volume(seg))
 		seg = first_seg(seg->pool_lv);
 
 	if (seg_is_thin_pool(seg)) {
-		discard_str = get_pool_discard_name(seg->discard);
-		return dm_report_field_string(rh, field, &discard_str);
+		discards_str = get_pool_discards_name(seg->discards);
+		return dm_report_field_string(rh, field, &discards_str);
 	}
 
 	dm_report_field_set_value(field, "", NULL);

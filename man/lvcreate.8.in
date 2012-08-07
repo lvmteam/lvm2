@@ -54,7 +54,7 @@ lvcreate \- create a logical volume in an existing volume group
 .RB [ \-T | \-\-thin
 .RB [ \-c | \-\-chunksize
 .IR ChunkSize ]
-.RB [ \-\-discard
+.RB [ \-\-discards
 .RI { ignore | nopassdown | passdown }]
 .RB [ \-\-poolmetadatasize
 .IR MetadataSize [ bBsSkKmMgG ]]]
@@ -140,8 +140,8 @@ Sets or resets the contiguous allocation policy for
 logical volumes. Default is no contiguous allocation based
 on a next free principle.
 .TP
-.BR \-\-discard " {" \fIignore | \fInopassdown | \fIpassdown }
-Set discard behavior.
+.BR \-\-discards " {" \fIignore | \fInopassdown | \fIpassdown }
+Set discards behavior.
 Default is \fIpassdown\fP.
 .TP
 .BR \-i ", " \-\-stripes " " \fIStripes

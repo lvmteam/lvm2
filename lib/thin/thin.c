@@ -87,7 +87,7 @@ static int _thin_pool_text_import(struct lv_segment *seg,
 {
 	const char *lv_name;
 	struct logical_volume *pool_data_lv, *pool_metadata_lv;
-	const char *discard_str = NULL;
+	const char *discards_str = NULL;
 
 	if (!dm_config_get_str(sn, "metadata", &lv_name))
 		return SEG_LOG_ERROR("Metadata must be a string in");
@@ -114,14 +114,14 @@ static int _thin_pool_text_import(struct lv_segment *seg,
 	if (!dm_config_get_uint32(sn, "chunk_size", &seg->chunk_size))
 		return SEG_LOG_ERROR("Could not read chunk_size");
 
-	if (dm_config_has_node(sn, "discard") &&
-	    !dm_config_get_str(sn, "discard", &discard_str))
-		return SEG_LOG_ERROR("Could not read discard for");
+	if (dm_config_has_node(sn, "discards") &&
+	    !dm_config_get_str(sn, "discards", &discard_str))
+		return SEG_LOG_ERROR("Could not read discards for");
 
-	if (!discard_str)
-		seg->discard = THIN_DISCARD_PASSDOWN;
-	else if (!get_pool_discard(discard_str, &seg->discard))
-		return SEG_LOG_ERROR("Discard option unsupported for");
+	if (!discards_str)
+		seg->discards = THIN_DISCARDS_PASSDOWN;
+	else if (!get_pool_discards(discards_str, &seg->discards))
+		return SEG_LOG_ERROR("Discards option unsupported for");
 
 	if (dm_config_has_node(sn, "low_water_mark") &&
 	    !dm_config_get_uint64(sn, "low_water_mark", &seg->low_water_mark))
@@ -163,14 +163,14 @@ static int _thin_pool_text_export(const struct lv_segment *seg, struct formatter
 	outsize(f, (uint64_t) seg->chunk_size,
 		"chunk_size = %u", seg->chunk_size);
 
-	switch (seg->discard) {
-	case THIN_DISCARD_PASSDOWN:
-	case THIN_DISCARD_NO_PASSDOWN:
-	case THIN_DISCARD_IGNORE:
-		outf(f, "discard = \"%s\"", get_pool_discard_name(seg->discard));
+	switch (seg->discards) {
+	case THIN_DISCARDS_PASSDOWN:
+	case THIN_DISCARDS_NO_PASSDOWN:
+	case THIN_DISCARDS_IGNORE:
+		outf(f, "discards = \"%s\"", get_pool_discards_name(seg->discards));
 		break;
 	default:
-		log_error(INTERNAL_ERROR "Invalid discard value %d.", seg->discard);
+		log_error(INTERNAL_ERROR "Invalid discards value %d.", seg->discards);
 		return 0;
 	}
 
@@ -232,7 +232,7 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 				      struct dm_tree_node *node, uint64_t len,
 				      uint32_t *pvmove_mirror_count __attribute__((unused)))
 {
-	static int _no_discard = 0;
+	static int _no_discards = 0;
 	char *metadata_dlid, *pool_dlid;
 	const struct lv_thin_message *lmsg;
 	const struct logical_volume *origin;
@@ -276,16 +276,16 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 					       seg->zero_new_blocks ? 0 : 1))
 		return_0;
 
-	if (seg->discard != THIN_DISCARD_PASSDOWN)
-		if (attr & THIN_FEATURE_DISCARD) {
-			/* FIXME: Check whether underlying dev supports discard */
+	if (seg->discards != THIN_DISCARDS_PASSDOWN)
+		if (attr & THIN_FEATURE_DISCARDS) {
+			/* FIXME: Check whether underlying dev supports discards */
 			if (!dm_tree_node_set_thin_pool_discard(node,
-								seg->discard == THIN_DISCARD_IGNORE,
-								seg->discard == THIN_DISCARD_NO_PASSDOWN))
+								seg->discards == THIN_DISCARDS_IGNORE,
+								seg->discards == THIN_DISCARDS_NO_PASSDOWN))
 				return_0;
 		} else
-			log_warn_suppress(_no_discard++, "WARNING: Thin pool target does "
-					  "not support discard (needs kernel >= 3.4).");
+			log_warn_suppress(_no_discards++, "WARNING: Thin pool target does "
+					  "not support discards (needs kernel >= 3.4).");
 
 	/*
 	 * Add messages only for activation tree.
@@ -544,7 +544,7 @@ static int _thin_target_present(struct cmd_context *cmd,
 		}
 
 		if (maj >=1 && min >= 1)
-			_attrs |= THIN_FEATURE_DISCARD;
+			_attrs |= THIN_FEATURE_DISCARDS;
 		else
 		/* FIXME Log this as WARNING later only if the user asked for the feature to be used but it's not present */
 			log_debug("Target " THIN_MODULE " does not support discards.");

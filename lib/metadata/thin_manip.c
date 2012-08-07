@@ -429,34 +429,34 @@ int update_pool_lv(struct logical_volume *lv, int activate)
 	return 1;
 }
 
-int get_pool_discard(const char *str, thin_discard_t *discard)
+int get_pool_discards(const char *str, thin_discards_t *discards)
 {
 	if (!strcasecmp(str, "passdown"))
-		*discard = THIN_DISCARD_PASSDOWN;
+		*discards = THIN_DISCARDS_PASSDOWN;
 	else if (!strcasecmp(str, "nopassdown"))
-		*discard = THIN_DISCARD_NO_PASSDOWN;
+		*discards = THIN_DISCARDS_NO_PASSDOWN;
 	else if (!strcasecmp(str, "ignore"))
-		*discard = THIN_DISCARD_IGNORE;
+		*discards = THIN_DISCARDS_IGNORE;
 	else {
-		log_error("Thin pool discard type %s is unknown.", str);
+		log_error("Thin pool discards type %s is unknown.", str);
 		return 0;
 	}
 
 	return 1;
 }
 
-const char *get_pool_discard_name(thin_discard_t discard)
+const char *get_pool_discards_name(thin_discards_t discards)
 {
-	switch (discard) {
-	case THIN_DISCARD_PASSDOWN:
+	switch (discards) {
+	case THIN_DISCARDS_PASSDOWN:
                 return "passdown";
-	case THIN_DISCARD_NO_PASSDOWN:
+	case THIN_DISCARDS_NO_PASSDOWN:
 		return "nopassdown";
-	case THIN_DISCARD_IGNORE:
+	case THIN_DISCARDS_IGNORE:
 		return "ignore";
 	}
 
-	log_error(INTERNAL_ERROR "Uknown discard type encountered.");
+	log_error(INTERNAL_ERROR "Uknown discards type encountered.");
 
 	return "unknown";
 }
