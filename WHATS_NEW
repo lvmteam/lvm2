@@ -1,22 +1,21 @@
-Version 2.02.97 - 
-===============================
+Version 2.02.97 - 7th August 2012
+=================================
   Improve documention of allocation policies in lvm.8.
   Increase limit for major:minor to 4095:1048575 when using -My option.
   Add make install_systemd_generators.
   Add generator for lvm2 activation systemd units.
   Add lvm_config_find_bool lvm2app fn to retrieve bool value from config tree.
-  Respect --test also when using lvmetad.
+  Respect --test when using lvmetad.
   No longer capitalise first LV attribute char for invalid snapshots.
   Allow vgextend to add PVs to a VG that is missing PVs.
   Recognise Micron PCIe SSDs in filter and move array out to device-types.h.
-  Fix segfault when attempting to replace RAID 4/5/6 device (2.02.97).
-  Fix dumpconfig <node> to print only <node> without its siblings (2.02.89).
+  Fix dumpconfig <node> to print only <node> without its siblings. (2.02.89)
   Do not issue "Failed to handle a client connection" error if lvmetad killed.
-  Support changing of discard and zeroing for thin pool.
-  Report used discard for thin pool and volume.
-  Add support for controlling discard behavior of thin pool.
-  Detect features for new 1.1 thin pool target.
-  Count percentage of completeness upwards when merging a snapshot volume.
+  Support lvchange --discard and -Z with thin pools.
+  Add discard LV segment field to reports.
+  Add --discard to lvcreate --thin.
+  Set discard and external snapshot features if thin pool target is vsn 1.1+.
+  Count percentage of completeness upwards not downwards when merging snapshot.
   Skip activation when using vg/lvchange --sysinit -a ay and lvmetad is active.
   Fix extending RAID 4/5/6 logical volumes
   Fix test for PV with unknown VG in process_each_pv to ignore ignored mdas.
@@ -29,13 +28,10 @@ Version 2.02.97 -
   Add --activate synonym for --available arg and prefer --activate.
   Never issue discards when LV extents are being reconfigured, not deleted.
   Allow release_lv_segment_area to fail as functions it calls can fail.
-  Open device read-only to obtain readahead value.
-  Fix lvconvert error path NULL pointer dereference.
-  Check for create_instance() fail in pvscan_lvmetad_single().
-  Use 64bit math for reserved memory and stack.
-  Add tests for kernel_send() errors in cmirrod.
-  Print clean_bits in pull_state, fix cut&paste typo in cmirrord.
-  Add tests for errors from closedir(), close() in cmirrord.
+  Open device read-only instead of read-write when obtaining readahead value.
+  Fix lvconvert thin pool error path NULL pointer dereference.
+  Detect create_instance() failure in pvscan_lvmetad_single().
+  Use 64-bit calculations for reserved memory and stack.
   Fix missing sync of filesystem when creating thin volume snapshot.
 
 Version 2.02.96 - 8th June 2012

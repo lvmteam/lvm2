@@ -1,15 +1,20 @@
-Version 1.02.76 - 
-===============================
+Version 1.02.76 - 7th August 2012
+=================================
+  Add dm_vasprintf to libdevmapper.
   Allow --noflush with dmsetup status and wait (for thin target).
   Add dm_config_write_one_node to libdevmapper.
-  Add support for thin pool message release/reserve_metadata_snap.
-  Add support for thin pool discard and external origin.
+  Support thin pool message release/reserve_metadata_snap in libdevmapper.
+  Support thin pool discard and external origin features in libdevmapper.
   Add configure --enable-udev-rule-exec-detection to detect exec path in rules.
   Use sbindir in udev rules by default and remove executable path detection.
   Remove hard-coded paths for dmeventd fifos and use default-dm-run-dir.
   Add configure --with-lvmetad-pidfile to remove hard-coded value.
   Add configure --with-default-pid-dir for common directory with pid files.
   Add configure --with-default-dm-run-dir to set run directory for dm tools.
+  Detect kernel_send() errors in cmirrord.
+  Add __attribute__ instrumentation to libdevmapper.h.
+  Print clean_bits instead of sync_bits in pull_state in cmirrord.
+  Add tests for errors from closedir(), close() in cmirrord.
   Add documentation references in systemd units.
   Remove veritysetup.  Now maintained with cryptsetup.
 
