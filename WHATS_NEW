@@ -1,5 +1,6 @@
 Version 2.02.97 - 7th August 2012
 =================================
+  Issue error message when arguments do not match specified RAID type.
   Improve documention of allocation policies in lvm.8.
   Increase limit for major:minor to 4095:1048575 when using -My option.
   Add make install_systemd_generators.

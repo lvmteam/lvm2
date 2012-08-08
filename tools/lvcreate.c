@@ -539,6 +539,27 @@ static int _read_raid_params(struct lvcreate_params *lp,
 	}
 
 	/*
+	 * RAID types without a mirror component do not take '-m' arg
+	 */
+	if (!segtype_is_mirrored(lp->segtype) &&
+	    arg_count(cmd, mirrors_ARG)) {
+		log_error("Mirror argument cannot be used with segment type, %s",
+			  lp->segtype->name);
+		return 0;
+	}
+
+	/*
+	 * RAID1 does not take a stripe arg
+	 */
+	if ((lp->stripes > 1) &&
+	    segtype_is_mirrored(lp->segtype) &&
+	    strcmp(lp->segtype->name, "raid10")) {
+		log_error("Stripe argument cannot be used with segment type, %s",
+			  lp->segtype->name);
+		return 0;
+	}
+
+	/*
 	 * _read_mirror_params is called before _read_raid_params
 	 * and already sets:
 	 *   lp->nosync
