@@ -17,6 +17,7 @@
 #include "configure.h"
 #include "daemon-shared.h"
 #include "daemon-server.h"
+#include "daemon-log.h"
 
 #include <assert.h>
 #include <pthread.h>
@@ -25,6 +26,9 @@
 #include <unistd.h>
 
 typedef struct {
+	log_state *log; /* convenience */
+	const char *debug_config;
+
 	struct dm_hash_table *pvid_to_pvmeta;
 	struct dm_hash_table *device_to_pvid; /* shares locks with above */
 
@@ -39,26 +43,6 @@ typedef struct {
 		pthread_mutex_t pvid_to_vgid;
 	} lock;
 } lvmetad_state;
-
-__attribute__ ((format(printf, 1, 2)))
-static void debug(const char *fmt, ...) {
-	va_list ap;
-	va_start(ap, fmt);
-	fprintf(stderr, "[D %lu] ", pthread_self());
-	vfprintf(stderr, fmt, ap);
-	va_end(ap);
-	fflush(stderr);
-}
-
-static int debug_cft_line(const char *line, void *baton) {
-	fprintf(stderr, "| %s\n", line);
-	return 0;
-}
-
-static void debug_cft(const char *id, struct dm_config_node *n) {
-	debug("%s\n", id);
-	dm_config_write_node(n, &debug_cft_line, NULL);
-}
 
 static void lock_pvid_to_pvmeta(lvmetad_state *s) {
 	pthread_mutex_lock(&s->lock.pvid_to_pvmeta); }
@@ -98,7 +82,7 @@ static struct dm_config_tree *lock_vg(lvmetad_state *s, const char *id) {
 			return NULL;
 		}
 	}
-	// debug("lock VG %s\n", id);
+	DEBUG(s, "locking VG %s", id);
 	pthread_mutex_lock(vg);
 	cft = dm_hash_lookup(s->vgid_to_metadata, id);
 	unlock_vgid_to_metadata(s);
@@ -108,7 +92,7 @@ static struct dm_config_tree *lock_vg(lvmetad_state *s, const char *id) {
 static void unlock_vg(lvmetad_state *s, const char *id) {
 	pthread_mutex_t *vg;
 
-	// debug("unlock VG %s\n", id);
+	DEBUG(s, "unlocking VG %s", id);
 	lock_vgid_to_metadata(s); /* someone might be changing the s->lock.vg structure right
 				   * now, so avoid stepping on each other's toes */
 	if ((vg = dm_hash_lookup(s->lock.vg, id)))
@@ -410,7 +394,7 @@ static response pv_lookup(lvmetad_state *s, request r)
 		pvid = dm_hash_lookup_binary(s->device_to_pvid, &devt, sizeof(devt));
 
 	if (!pvid) {
-		debug("pv_lookup: could not find device %" PRIu64 "\n", devt);
+		WARN(s, "pv_lookup: could not find device %" PRIu64, devt);
 		unlock_pvid_to_pvmeta(s);
 		dm_config_destroy(res.cft);
 		return daemon_reply_simple("unknown", "reason = %s", "device not found", NULL);
@@ -507,7 +491,7 @@ static response vg_lookup(lvmetad_state *s, request r)
 	const char *uuid = daemon_request_str(r, "uuid", NULL);
 	const char *name = daemon_request_str(r, "name", NULL);
 
-	debug("vg_lookup: uuid = %s, name = %s\n", uuid, name);
+	DEBUG(s, "vg_lookup: uuid = %s, name = %s", uuid, name);
 
 	if (!uuid || !name) {
 		lock_vgid_to_metadata(s);
@@ -518,7 +502,7 @@ static response vg_lookup(lvmetad_state *s, request r)
 		unlock_vgid_to_metadata(s);
 	}
 
-	debug("vg_lookup: updated uuid = %s, name = %s\n", uuid, name);
+	DEBUG(s, "vg_lookup: updated uuid = %s, name = %s", uuid, name);
 
 	if (!uuid)
 		return daemon_reply_simple("unknown", "reason = %s", "VG not found", NULL);
@@ -596,7 +580,7 @@ static int compare_config(struct dm_config_node *a, struct dm_config_node *b)
 		result = compare_config(a->child, b->child);
 
 	if (result) {
-		debug("config inequality at %s / %s\n", a->key, b->key);
+		// DEBUG("config inequality at %s / %s", a->key, b->key);
 		return result;
 	}
 
@@ -642,7 +626,7 @@ static int update_pvid_to_vgid(lvmetad_state *s, struct dm_config_tree *vg,
 		if (!dm_hash_insert(s->pvid_to_vgid, pvid, (void*) vgid))
 			goto out;
 
-		debug("remap PV %s to VG %s\n", pvid, vgid);
+		DEBUG(s, "moving PV %s to VG %s", pvid, vgid);
 	}
 
 	for (n = dm_hash_get_first(to_check); n;
@@ -712,7 +696,7 @@ static int vg_remove_if_missing(lvmetad_state *s, const char *vgid)
 	}
 
 	if (missing) {
-		debug("nuking VG %s\n", vgid);
+		DEBUG(s, "removing empty VG %s", vgid);
 		remove_metadata(s, vgid, 0);
 	}
 
@@ -758,17 +742,17 @@ static int update_metadata(lvmetad_state *s, const char *name, const char *_vgid
 		retval = 1;
 		if (compare_config(metadata, old->root))
 			retval = 0;
-		debug("Not updating metadata for %s at %d (%s)\n", _vgid, haveseq,
+		DEBUG(s, "Not updating metadata for %s at %d (%s)", _vgid, haveseq,
 		      retval ? "ok" : "MISMATCH");
 		if (!retval) {
-			debug_cft("OLD: ", old->root);
-			debug_cft("NEW: ", metadata);
+			DEBUG_cft(s, "OLD: ", old->root);
+			DEBUG_cft(s, "NEW: ", metadata);
 		}
 		goto out;
 	}
 
 	if (seq < haveseq) {
-		debug("Refusing to update metadata for %s at %d to %d\n", _vgid, haveseq, seq);
+		DEBUG(s, "Refusing to update metadata for %s (at %d) to %d", _vgid, haveseq, seq);
 		/* TODO: notify the client that their metadata is out of date? */
 		retval = 1;
 		goto out;
@@ -776,27 +760,27 @@ static int update_metadata(lvmetad_state *s, const char *name, const char *_vgid
 
 	if (!(cft = dm_config_create()) ||
 	    !(cft->root = dm_config_clone_node(cft, metadata, 0))) {
-		debug("Out of memory\n");
+		ERROR(s, "Out of memory");
 		goto out;
 	}
 
 	vgid = dm_config_find_str(cft->root, "metadata/id", NULL);
 
 	if (!vgid || !name) {
-		debug("Name '%s' or uuid '%s' missing!\n", name, vgid);
+		DEBUG(s, "Name '%s' or uuid '%s' missing!", name, vgid);
 		goto out;
 	}
 
 	lock_pvid_to_vgid(s);
 
 	if (haveseq >= 0 && haveseq < seq) {
-		debug("Updating metadata for %s at %d to %d\n", _vgid, haveseq, seq);
+		INFO(s, "Updating metadata for %s at %d to %d", _vgid, haveseq, seq);
 		/* temporarily orphan all of our PVs */
 		remove_metadata(s, vgid, 1);
 	}
 
 	lock_vgid_to_metadata(s);
-	debug("Mapping %s to %s\n", vgid, name);
+	DEBUG(s, "Mapping %s to %s", vgid, name);
 
 	retval = ((cfgname = dm_pool_strdup(dm_config_memory(cft), name)) &&
 		  dm_hash_insert(s->vgid_to_metadata, vgid, cft) &&
@@ -820,7 +804,7 @@ static response pv_gone(lvmetad_state *s, request r)
 	int64_t device = daemon_request_int(r, "device", 0);
 	struct dm_config_tree *pvmeta;
 
-	debug("pv_gone: %s / %" PRIu64 "\n", pvid, device);
+	DEBUG(s, "pv_gone: %s / %" PRIu64, pvid, device);
 
 	lock_pvid_to_pvmeta(s);
 	if (!pvid && device > 0)
@@ -830,7 +814,7 @@ static response pv_gone(lvmetad_state *s, request r)
 		return daemon_reply_simple("unknown", "reason = %s", "device not in cache", NULL);
 	}
 
-	debug("pv_gone (updated): %s / %" PRIu64 "\n", pvid, device);
+	DEBUG(s, "pv_gone (updated): %s / %" PRIu64, pvid, device);
 
 	pvmeta = dm_hash_lookup(s->pvid_to_pvmeta, pvid);
 	dm_hash_remove_binary(s->device_to_pvid, &device, sizeof(device));
@@ -866,7 +850,7 @@ static response pv_found(lvmetad_state *s, request r)
 	if (!dm_config_get_uint64(pvmeta, "pvmeta/device", &device))
 		return daemon_reply_simple("failed", "reason = %s", "need PV device number", NULL);
 
-	debug("pv_found %s, vgid = %s, device = %" PRIu64 "\n", pvid, vgid, device);
+	DEBUG(s, "pv_found %s, vgid = %s, device = %" PRIu64, pvid, vgid, device);
 
 	lock_pvid_to_pvmeta(s);
 
@@ -895,7 +879,7 @@ static response pv_found(lvmetad_state *s, request r)
 	if (metadata) {
 		if (!vgid)
 			return daemon_reply_simple("failed", "reason = %s", "need VG UUID", NULL);
-		debug("obtained vgid = %s, vgname = %s\n", vgid, vgname);
+		DEBUG(s, "obtained vgid = %s, vgname = %s", vgid, vgname);
 		if (!vgname)
 			return daemon_reply_simple("failed", "reason = %s", "need VG name", NULL);
 		if (daemon_request_int(r, "metadata/seqno", -1) < 0)
@@ -959,7 +943,7 @@ static response vg_remove(lvmetad_state *s, request r)
 	if (!vgid)
 		return daemon_reply_simple("failed", "reason = %s", "need VG UUID", NULL);
 
-	fprintf(stderr, "vg_remove: %s\n", vgid);
+	DEBUG(s, "vg_remove: %s", vgid);
 
 	lock_pvid_to_vgid(s);
 	remove_metadata(s, vgid, 1);
@@ -1009,6 +993,7 @@ static int init(daemon_state *s)
 {
 	pthread_mutexattr_t rec;
 	lvmetad_state *ls = s->private;
+	ls->log = s->log;
 
 	ls->pvid_to_pvmeta = dm_hash_create(32);
 	ls->device_to_pvid = dm_hash_create(32);
@@ -1023,7 +1008,10 @@ static int init(daemon_state *s)
 	pthread_mutex_init(&ls->lock.vgid_to_metadata, &rec);
 	pthread_mutex_init(&ls->lock.pvid_to_vgid, NULL);
 
-	debug("initialised state: vgid_to_metadata = %p\n", ls->vgid_to_metadata);
+	/* Set up stderr logging depending on the -d option. */
+	daemon_log_parse(ls->log, DAEMON_LOG_OUTLET_STDERR, ls->debug_config, 1);
+
+	DEBUG(s, "initialised state: vgid_to_metadata = %p", ls->vgid_to_metadata);
 	if (!ls->pvid_to_vgid || !ls->vgid_to_metadata)
 		return 0;
 
@@ -1038,7 +1026,7 @@ static int fini(daemon_state *s)
 	lvmetad_state *ls = s->private;
 	struct dm_hash_node *n = dm_hash_get_first(ls->vgid_to_metadata);
 
-	debug("fini\n");
+	DEBUG(s, "fini");
 	while (n) {
 		dm_config_destroy(dm_hash_get_data(ls->vgid_to_metadata, n));
 		n = dm_hash_get_next(ls->vgid_to_metadata, n);
@@ -1094,12 +1082,11 @@ int main(int argc, char *argv[])
 	if (!s.socket_path)
 		s.socket_path = DEFAULT_RUN_DIR "/lvmetad.socket";
 	s.pidfile = LVMETAD_PIDFILE;
-        s.log_level = 0;
 	s.protocol = "lvmetad";
 	s.protocol_version = 1;
 
 	// use getopt_long
-	while ((opt = getopt(argc, argv, "?fhVdRs:")) != EOF) {
+	while ((opt = getopt(argc, argv, "?fhVd:Rs:")) != EOF) {
 		switch (opt) {
 		case 'h':
 			usage(argv[0], stdout);
@@ -1114,7 +1101,7 @@ int main(int argc, char *argv[])
 			s.foreground = 1;
 			break;
 		case 'd':
-			s.log_level++;
+			ls.debug_config = optarg;
 			break;
 		case 's': // --socket
 			s.socket_path = optarg;

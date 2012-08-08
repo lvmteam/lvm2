@@ -74,7 +74,7 @@ prepare_lvmetad() {
 	lvmconf "devices/md_component_detection = 0"
 
 	echo "preparing lvmetad..."
-	lvmetad -f "$@" -s "$TESTDIR/lvmetad.socket" &
+	lvmetad -f "$@" -s "$TESTDIR/lvmetad.socket" -d wire,debug &
 	echo $! > LOCAL_LVMETAD
 
 	sleep .3

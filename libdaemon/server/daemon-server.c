@@ -12,6 +12,7 @@
 
 #include "daemon-shared.h"
 #include "daemon-server.h"
+#include "daemon-log.h"
 
 #include <dlfcn.h>
 #include <errno.h>
@@ -26,7 +27,7 @@
 #include <unistd.h>
 #include <signal.h>
 
-#include <syslog.h>
+#include <syslog.h> /* FIXME. For the global closelog(). */
 
 #if 0
 /* Create a device monitoring thread. */
@@ -391,6 +392,7 @@ static void *client_thread(void *baton)
 		if (!req.cft)
 			fprintf(stderr, "error parsing request:\n %s\n", req.buffer);
 
+		daemon_log_cft(b->s.log, DAEMON_LOG_WIRE, "<- ", req.cft->root);
 		res = builtin_handler(b->s, b->client, req);
 
 		if (res.error == EPROTO) /* Not a builtin, delegate to the custom handler. */
@@ -407,6 +409,7 @@ static void *client_thread(void *baton)
 			dm_config_destroy(req.cft);
 		dm_free(req.buffer);
 
+		daemon_log_multi(b->s.log, DAEMON_LOG_WIRE, "-> ", res.buffer);
 		write_buffer(b->client.socket_fd, res.buffer, strlen(res.buffer));
 
 		free(res.buffer);
@@ -462,8 +465,13 @@ void daemon_start(daemon_state s)
 	if (!s.foreground)
 		_daemonise();
 
-	/* TODO logging interface should be somewhat more elaborate */
-	openlog(s.name, LOG_PID, LOG_DAEMON);
+	log_state _log = { { 0 } };
+	s.log = &_log;
+	s.log->name = s.name;
+
+	/* Log important things to syslog by default. */
+	daemon_log_enable(s.log, DAEMON_LOG_OUTLET_SYSLOG, DAEMON_LOG_FATAL, 1);
+	daemon_log_enable(s.log, DAEMON_LOG_OUTLET_SYSLOG, DAEMON_LOG_ERROR, 1);
 
 	(void) dm_prepare_selinux_context(s.pidfile, S_IFREG);
 
@@ -487,7 +495,7 @@ void daemon_start(daemon_state s)
 #ifdef linux
 	/* Systemd has adjusted oom killer for us already */
 	if (s.avoid_oom && !_systemd_activation && !_protect_against_oom_killer())
-		syslog(LOG_ERR, "Failed to protect against OOM killer");
+		ERROR(&s, "Failed to protect against OOM killer");
 #endif
 
 	if (!_systemd_activation && s.socket_path) {
@@ -511,7 +519,7 @@ void daemon_start(daemon_state s)
 			perror("select error");
 		if (FD_ISSET(s.socket_fd, &in))
 			if (!_shutdown_requested && !handle_connect(s))
-				syslog(LOG_ERR, "Failed to handle a client connection.");
+				ERROR(&s, "Failed to handle a client connection.");
 	}
 
 	/* If activated by systemd, do not unlink the socket - systemd takes care of that! */
@@ -522,8 +530,9 @@ void daemon_start(daemon_state s)
 	if (s.daemon_fini)
 		s.daemon_fini(&s);
 
-	syslog(LOG_NOTICE, "%s shutting down", s.name);
-	closelog();
+	INFO(&s, "%s shutting down", s.name);
+
+	closelog(); /* FIXME */
 	remove_lockfile(s.pidfile);
 	if (failed)
 		exit(1);

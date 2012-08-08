@@ -15,7 +15,7 @@ top_srcdir = @top_srcdir@
 top_builddir = @top_builddir@
 
 LIB_STATIC = libdaemonserver.a
-SOURCES = daemon-server.c
+SOURCES = daemon-server.c daemon-log.c
 
 include $(top_builddir)/make.tmpl
 
