@@ -119,7 +119,7 @@ static int _thin_pool_text_import(struct lv_segment *seg,
 		return SEG_LOG_ERROR("Could not read discards for");
 
 	if (!discards_str)
-		seg->discards = THIN_DISCARDS_PASSDOWN;
+		seg->discards = THIN_DISCARDS_IGNORE;
 	else if (!get_pool_discards(discards_str, &seg->discards))
 		return SEG_LOG_ERROR("Discards option unsupported for");
 

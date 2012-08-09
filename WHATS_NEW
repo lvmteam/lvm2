@@ -1,3 +1,7 @@
+Version 2.02.98
+=================================
+  Use 'ignore' discards for thin metadata created with older versions.
+
 Version 2.02.97 - 7th August 2012
 =================================
   Issue error message when arguments do not match specified RAID type.
