@@ -2,6 +2,7 @@ Version 2.02.98
 =================================
   Use 'ignore' discards for thin metadata created with older versions.
   Use proper condition to check for unsupported discards settings.
+  Update lvs manpage with discards (2.02.97).
 
 Version 2.02.97 - 7th August 2012
 =================================
