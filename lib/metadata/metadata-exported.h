@@ -592,6 +592,7 @@ struct lvcreate_params {
 	int log_count; /* mirror */
 	int nosync; /* mirror */
 	activation_change_t activate; /* non-snapshot, non-mirror */
+	thin_discards_t discards;     /* thin */
 
 	const char *origin; /* snap */
 	const char *pool;   /* thin */

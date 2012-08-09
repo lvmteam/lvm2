@@ -797,6 +797,13 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 	    !_read_raid_params(lp, cmd))
 		return_0;
 
+	if (lp->create_thin_pool) {
+		lp->discards = arg_uint_value(cmd, discards_ARG, THIN_DISCARDS_PASSDOWN);
+	} else if (arg_count(cmd, discards_ARG)) {
+		log_error("--discards is only available for thin pool creation.");
+		return 0;
+	}
+
 	if (lp->snapshot && lp->thin && arg_count(cmd, chunksize_ARG))
 		log_warn("WARNING: Ignoring --chunksize with thin snapshots.");
 	else if (lp->thin && !lp->create_thin_pool) {
