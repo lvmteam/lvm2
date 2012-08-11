@@ -489,3 +489,4 @@ int config_write(struct dm_config_tree *cft, const char *file,
 
 	return r;
 }
+

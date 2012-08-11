@@ -329,14 +329,23 @@ response daemon_reply_simple(const char *id, ...)
 {
 	va_list ap;
 	response res = { .cft = NULL };
+	char *res_line = NULL;
 
 	va_start(ap, id);
 
-	if (!(res.buffer = format_buffer("response", id, ap)))
+	if (!(res_line = format_buffer("", "response = %s", id, NULL))) {
 		res.error = ENOMEM;
+		goto end;
+	}
 
+	if (!(res.buffer = format_buffer_v(res_line, ap))) {
+		res.error = ENOMEM;
+		goto end;
+	}
+
+end:
+	dm_free(res_line);
 	va_end(ap);
-
 	return res;
 }
 
@@ -344,27 +353,6 @@ struct thread_baton {
 	daemon_state s;
 	client_handle client;
 };
-
-static int buffer_rewrite(char **buf, const char *format, const char *string) {
-	char *old = *buf;
-	int r = dm_asprintf(buf, format, *buf, string);
-
-	dm_free(old);
-
-	return (r < 0) ? 0 : 1;
-}
-
-static int buffer_line(const char *line, void *baton) {
-	response *r = baton;
-
-	if (r->buffer) {
-		if (!buffer_rewrite(&r->buffer, "%s\n%s", line))
-			return 0;
-	} else if (dm_asprintf(&r->buffer, "%s\n", line) < 0)
-		return 0;
-
-	return 1;
-}
 
 static response builtin_handler(daemon_state s, client_handle h, request r)
 {
@@ -382,7 +370,7 @@ static response builtin_handler(daemon_state s, client_handle h, request r)
 static void *client_thread(void *baton)
 {
 	struct thread_baton *b = baton;
-	request req;
+	request req = { .buffer = NULL };
 	response res;
 
 	while (1) {
@@ -402,11 +390,9 @@ static void *client_thread(void *baton)
 			res = b->s.handler(b->s, b->client, req);
 
 		if (!res.buffer) {
-			dm_config_write_node(res.cft->root, buffer_line, &res);
-			if (!buffer_rewrite(&res.buffer, "%s\n\n", NULL)) {
-				dm_free(req.buffer);
+			dm_config_write_node(res.cft->root, buffer_line, &res.buffer);
+			if (!buffer_rewrite(&res.buffer, "%s\n\n", NULL))
 				goto fail;
-			}
 			dm_config_destroy(res.cft);
 		}
 
@@ -423,7 +409,8 @@ fail:
 	/* TODO what should we really do here? */
 	if (close(b->client.socket_fd))
 		perror("close");
-	free(baton);
+	dm_free(req.buffer);
+	dm_free(baton);
 	return NULL;
 }
 

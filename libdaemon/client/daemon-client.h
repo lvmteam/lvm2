@@ -87,6 +87,12 @@ daemon_reply daemon_send(daemon_handle h, daemon_request r);
  * for ? in %?: d for integer, s for string.
  */
 daemon_reply daemon_send_simple(daemon_handle h, const char *id, ...);
+daemon_reply daemon_send_simple_v(daemon_handle h, const char *id, va_list ap);
+
+daemon_request daemon_request_make(const char *id);
+int daemon_request_extend(daemon_request r, ...);
+int daemon_request_extend_v(daemon_request r, va_list ap);
+void daemon_request_destroy(daemon_request r);
 
 void daemon_reply_destroy(daemon_reply r);
 

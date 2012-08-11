@@ -72,9 +72,8 @@ daemon_reply daemon_send(daemon_handle h, daemon_request rq)
 	daemon_reply reply = { .cft = NULL, .error = 0 };
 	assert(h.socket_fd >= 0);
 
-	if (!rq.buffer) {
-		/* TODO: build the buffer from rq.cft */
-	}
+	if (!rq.buffer)
+		dm_config_write_node(rq.cft->root, buffer_line, &rq.buffer);
 
 	assert(rq.buffer);
 	if (!write_buffer(h.socket_fd, rq.buffer, strlen(rq.buffer)))
@@ -94,16 +93,19 @@ void daemon_reply_destroy(daemon_reply r) {
 	dm_free(r.buffer);
 }
 
-daemon_reply daemon_send_simple(daemon_handle h, const char *id, ...)
+daemon_reply daemon_send_simple_v(daemon_handle h, const char *id, va_list ap)
 {
 	static const daemon_reply err = { .error = ENOMEM, .buffer = NULL, .cft = NULL };
 	daemon_request rq = { .cft = NULL };
 	daemon_reply repl;
-	va_list ap;
+	char *rq_line;
 
-	va_start(ap, id);
-	rq.buffer = format_buffer("request", id, ap);
-	va_end(ap);
+	rq_line = format_buffer("", "request = %s", id, NULL);
+	if (!rq_line)
+		return err;
+
+	rq.buffer = format_buffer_v(rq_line, ap);
+	dm_free(rq_line);
 
 	if (!rq.buffer)
 		return err;
@@ -114,7 +116,63 @@ daemon_reply daemon_send_simple(daemon_handle h, const char *id, ...)
 	return repl;
 }
 
+daemon_reply daemon_send_simple(daemon_handle h, const char *id, ...)
+{
+	va_list ap;
+	va_start(ap, id);
+	daemon_reply r = daemon_send_simple_v(h, id, ap);
+	va_end(ap);
+	return r;
+}
+
 void daemon_close(daemon_handle h)
 {
 	dm_free((char *)h.protocol);
 }
+
+daemon_request daemon_request_make(const char *id)
+{
+	daemon_request r;
+	r.cft = NULL;
+	r.buffer = NULL;
+
+	if (!(r.cft = dm_config_create()))
+		goto bad;
+
+	if (!(r.cft->root = make_text_node(r.cft, "request", id, NULL, NULL)))
+		goto bad;
+
+	return r;
+bad:
+	if (r.cft)
+		dm_config_destroy(r.cft);
+	r.cft = NULL;
+	return r;
+}
+
+int daemon_request_extend_v(daemon_request r, va_list ap)
+{
+	if (!r.cft)
+		return 0;
+
+	if (!config_make_nodes_v(r.cft, NULL, r.cft->root, ap))
+		return 0;
+
+	return 1;
+}
+
+int daemon_request_extend(daemon_request r, ...)
+{
+	va_list ap;
+	va_start(ap, r);
+	int res = daemon_request_extend_v(r, ap);
+	va_end(ap);
+	return res;
+}
+
+void daemon_request_destroy(daemon_request r) {
+	if (r.cft)
+		dm_config_destroy(r.cft);
+	dm_free(r.buffer);
+}
+
