@@ -1584,7 +1584,9 @@ static struct metadata_area_ops _metadata_text_file_backup_ops = {
 	.vg_commit = _vg_commit_file_backup
 };
 
-static char *_mda_export_text_raw(struct metadata_area *mda);
+static int _mda_export_text_raw(struct metadata_area *mda,
+				struct dm_config_tree *cft,
+				struct dm_config_node *parent);
 static int _mda_import_text_raw(struct lvmcache_info *info, const struct dm_config_node *cn);
 
 static struct metadata_area_ops _metadata_text_raw_ops = {
@@ -1608,19 +1610,18 @@ static struct metadata_area_ops _metadata_text_raw_ops = {
 	.mda_import_text = _mda_import_text_raw
 };
 
-static char *_mda_export_text_raw(struct metadata_area *mda)
+static int _mda_export_text_raw(struct metadata_area *mda,
+				struct dm_config_tree *cft,
+				struct dm_config_node *parent)
 {
 	struct mda_context *mdc = (struct mda_context *) mda->metadata_locn;
-	char *result;
 
-	dm_asprintf(&result,
-		    "ignore = %d "
-		    "start = %" PRIu64" "
-		    "size = %" PRIu64 " "
-		    "free_sectors = %" PRIu64,
-		    mda_is_ignored(mda), mdc->area.start, mdc->area.size, mdc->free_sectors);
-
-	return result;
+	return config_make_nodes(cft, parent, NULL,
+				 "ignore = %d", mda_is_ignored(mda),
+				 "start = %d", mdc->area.start,
+				 "size = %d", mdc->area.size,
+				 "free_sectors = %d", mdc->free_sectors,
+				 NULL) ? 1 : 0;
 }
 
 static int _mda_import_text_raw(struct lvmcache_info *info, const struct dm_config_node *cn)

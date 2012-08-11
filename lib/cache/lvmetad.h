@@ -15,6 +15,8 @@
 #ifndef _LVM_METAD_H
 #define _LVM_METAD_H
 
+#include "daemon-shared.h" // XXX
+
 struct volume_group;
 struct cmd_context;
 struct dm_config_tree;

@@ -148,7 +148,8 @@ struct metadata_area_ops {
 				    struct metadata_area *mda2);
 
 	struct device *(*mda_get_device)(struct metadata_area *mda);
-	char *(*mda_export_text)(struct metadata_area *mda);
+	int (*mda_export_text)(struct metadata_area *mda, struct dm_config_tree *cft,
+			       struct dm_config_node *parent);
 	int (*mda_import_text)(struct lvmcache_info *info, const struct dm_config_node *cn);
 };
 
