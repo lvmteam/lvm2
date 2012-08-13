@@ -106,32 +106,6 @@ static int _auto_activation_handler(struct volume_group *vg, int partial,
 	return 1;
 }
 
-static int _pvscan_lvmetad_all_devs(struct cmd_context *cmd, activation_handler handler)
-{
-	struct dev_iter *iter;
-	struct device *dev;
-	int r = 1;
-
-	if (!(iter = dev_iter_create(cmd->filter, 1))) {
-		log_error("dev_iter creation failed");
-		return 0;
-	}
-
-	while ((dev = dev_iter_get(iter))) {
-		if (!pvscan_lvmetad_single(cmd, dev, handler)) {
-			r = 0;
-			break;
-		}
-
-		if (sigint_caught())
-			break;
-	}
-
-	dev_iter_destroy(iter);
-
-	return r;
-}
-
 static int _pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
 {
 	int ret = ECMD_PROCESSED;
@@ -168,7 +142,7 @@ static int _pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
 
 	/* Scan everything? */
 	if (!argc && !devno_args) {
-		if (!_pvscan_lvmetad_all_devs(cmd, handler))
+		if (!pvscan_lvmetad_all_devs(cmd, handler))
 			ret = ECMD_FAILED;
 		goto out;
 	}
@@ -283,7 +257,8 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	persistent_filter_wipe(cmd->filter);
+	if (cmd->filter->wipe)
+		cmd->filter->wipe(cmd->filter);
 	lvmcache_destroy(cmd, 1);
 
 	/* populate lvmcache */

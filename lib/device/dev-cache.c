@@ -971,8 +971,8 @@ struct dev_iter *dev_iter_create(struct dev_filter *f, int dev_scan)
 
 	if (dev_scan && !trust_cache()) {
 		/* Flag gets reset between each command */
-		if (!full_scan_done() && f)
-			persistent_filter_wipe(f); /* Calls _full_scan(1) */
+		if (!full_scan_done() && f && f->wipe)
+			f->wipe(f); /* Calls _full_scan(1) */
 	} else
 		_full_scan(0);
 

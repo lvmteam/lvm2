@@ -51,7 +51,7 @@ static int _init_hash(struct pfilter *pf)
 	return 1;
 }
 
-int persistent_filter_wipe(struct dev_filter *f)
+static void _persistent_filter_wipe(struct dev_filter *f)
 {
 	struct pfilter *pf = (struct pfilter *) f->private;
 
@@ -60,8 +60,6 @@ int persistent_filter_wipe(struct dev_filter *f)
 
 	/* Trigger complete device scan */
 	dev_cache_scan(1);
-
-	return 1;
 }
 
 static int _read_array(struct pfilter *pf, struct dm_config_tree *cft,
@@ -368,6 +366,7 @@ struct dev_filter *persistent_filter_create(struct dev_filter *real,
 	f->destroy = _persistent_destroy;
 	f->use_count = 0;
 	f->private = pf;
+	f->wipe = _persistent_filter_wipe;
 
 	return f;
 

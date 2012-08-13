@@ -221,8 +221,10 @@ static void chain_node(struct dm_config_node *cn,
 
 	if (parent && !parent->child)
 		parent->child = cn;
-	if (pre_sib)
+	if (pre_sib) {
+		cn->sib = pre_sib->sib;
 		pre_sib->sib = cn;
+	}
 
 }
 

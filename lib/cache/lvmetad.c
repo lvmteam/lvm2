@@ -20,38 +20,120 @@
 #include "lvmcache.h"
 #include "lvmetad-client.h"
 #include "format-text.h" // TODO for disk_locn, used as a DA representation
+#include "filter.h"
+#include "assert.h"
+#include "crc.h"
 
-static int _using_lvmetad = 0;
 static daemon_handle _lvmetad;
-static const char *_lvmetad_token;
+static int _lvmetad_use = 0;
+static int _lvmetad_connected = 0;
 
-void lvmetad_init(void)
+static char *_lvmetad_token = NULL;
+static const char *_lvmetad_socket = NULL;
+static struct cmd_context *_lvmetad_cmd = NULL;
+
+void lvmetad_disconnect(void)
 {
-	const char *socket = getenv("LVM_LVMETAD_SOCKET");
-	if (_using_lvmetad) { /* configured by the toolcontext */
-		_lvmetad = lvmetad_open(socket ?: DEFAULT_RUN_DIR "/lvmetad.socket");
-		if (_lvmetad.socket_fd < 0 || _lvmetad.error) {
+	daemon_close(_lvmetad);
+	_lvmetad_connected = 0;
+	_lvmetad_cmd = NULL;
+}
+
+void lvmetad_init(struct cmd_context *cmd)
+{
+	if (_lvmetad_use && _lvmetad_socket && !_lvmetad_connected) {
+		assert(_lvmetad_socket);
+		_lvmetad = lvmetad_open(_lvmetad_socket);
+		if (_lvmetad.socket_fd >= 0 && !_lvmetad.error) {
+			_lvmetad_connected = 1;
+			_lvmetad_cmd = cmd;
+		} else
 			log_warn("WARNING: Failed to connect to lvmetad: %s. Falling back to internal scanning.", strerror(_lvmetad.error));
-			_using_lvmetad = 0;
-		}
 	}
 }
+
+int lvmetad_active(void)
+{
+	return _lvmetad_use && _lvmetad_connected;
+}
+
+void lvmetad_set_active(int active)
+{
+	_lvmetad_use = active;
+}
+
+void lvmetad_set_token(const struct dm_config_value *filter)
+{
+	if (_lvmetad_token)
+		dm_free(_lvmetad_token);
+	int ft = 0;
+	while (filter && filter->type == DM_CFG_STRING) {
+		ft = calc_crc(ft, (const uint8_t *) filter->v.str, strlen(filter->v.str));
+		filter = filter->next;
+	}
+	if (!dm_asprintf(&_lvmetad_token, "filter:%u", ft))
+		log_warn("WARNING: Failed to set lvmetad token. Out of memory?");
+}
+
+void lvmetad_set_socket(const char *sock)
+{
+	_lvmetad_socket = sock;
+}
+
+static daemon_reply _lvmetad_send(const char *id, ...);
+
+static int _token_update()
+{
+	daemon_reply repl = _lvmetad_send("token_update", NULL);
+
+	if (strcmp(daemon_reply_str(repl, "response", ""), "OK")) {
+		daemon_reply_destroy(repl);
+		return 0;
+	}
+
+	daemon_reply_destroy(repl);
+	return 1;
+}
+
 
 static daemon_reply _lvmetad_send(const char *id, ...)
 {
 	va_list ap;
-	va_start(ap, id);
-	daemon_reply repl;
-	daemon_request req = daemon_request_make(id);
+	daemon_reply repl, token_set;
+	daemon_request req;
+	int try = 0;
+	char *future_token;
 
-	// daemon_request_extend(req, "token", _lvmetad_token, NULL);
+retry:
+	req = daemon_request_make(id);
+
+	if (_lvmetad_token)
+		daemon_request_extend(req, "token = %s", _lvmetad_token, NULL);
+
+	va_start(ap, id);
 	daemon_request_extend_v(req, ap);
+	va_end(ap);
 
 	repl = daemon_send(_lvmetad, req);
 
 	daemon_request_destroy(req);
 
-	va_end(ap);
+	if (!strcmp(daemon_reply_str(repl, "response", ""), "token_mismatch") && try < 2 && !test_mode()) {
+		future_token = _lvmetad_token;
+		_lvmetad_token = (char *) "update in progress";
+		if (!_token_update()) goto out;
+
+		if (pvscan_lvmetad_all_devs(_lvmetad_cmd, NULL)) {
+			_lvmetad_token = future_token;
+			if (!_token_update()) goto out;
+		}
+		_lvmetad_token = future_token;
+		++ try;
+		daemon_reply_destroy(repl);
+		goto retry;
+	}
+
+out:
 	return repl;
 }
 
@@ -203,7 +285,7 @@ struct volume_group *lvmetad_vg_lookup(struct cmd_context *cmd, const char *vgna
 	struct pv_list *pvl;
 	struct lvmcache_info *info;
 
-	if (!_using_lvmetad)
+	if (!lvmetad_active())
 		return NULL;
 
 	if (vgid) {
@@ -317,7 +399,7 @@ int lvmetad_vg_update(struct volume_group *vg)
 	if (!vg)
 		return 0;
 
-	if (!_using_lvmetad || test_mode())
+	if (!lvmetad_active() || test_mode())
 		return 1; /* fake it */
 
 	if (!(vgmeta = _export_vg_to_config_tree(vg)))
@@ -369,7 +451,7 @@ int lvmetad_vg_remove(struct volume_group *vg)
 	daemon_reply reply;
 	int result;
 
-	if (!_using_lvmetad || test_mode())
+	if (!lvmetad_active() || test_mode())
 		return 1; /* just fake it */
 
 	if (!id_write_format(&vg->id, uuid, sizeof(uuid)))
@@ -390,7 +472,7 @@ int lvmetad_pv_lookup(struct cmd_context *cmd, struct id pvid, int *found)
 	int result = 0;
 	struct dm_config_node *cn;
 
-	if (!_using_lvmetad)
+	if (!lvmetad_active())
 		return_0;
 
 	if (!id_write_format(&pvid, uuid, sizeof(uuid)))
@@ -423,7 +505,7 @@ int lvmetad_pv_lookup_by_dev(struct cmd_context *cmd, struct device *dev, int *f
 	daemon_reply reply;
 	struct dm_config_node *cn;
 
-	if (!_using_lvmetad)
+	if (!lvmetad_active())
 		return_0;
 
 	reply = _lvmetad_send("pv_lookup", "device = %d", dev->dev, NULL);
@@ -450,7 +532,7 @@ int lvmetad_pv_list_to_lvmcache(struct cmd_context *cmd)
 	daemon_reply reply;
 	struct dm_config_node *cn;
 
-	if (!_using_lvmetad)
+	if (!lvmetad_active())
 		return 1;
 
 	reply = _lvmetad_send("pv_list", NULL);
@@ -476,7 +558,7 @@ int lvmetad_vg_list_to_lvmcache(struct cmd_context *cmd)
 	daemon_reply reply;
 	struct dm_config_node *cn;
 
-	if (!_using_lvmetad)
+	if (!lvmetad_active())
 		return 1;
 
 	reply = _lvmetad_send("vg_list", NULL);
@@ -576,7 +658,7 @@ int lvmetad_pv_found(struct id pvid, struct device *device, const struct format_
 	const char *status;
 	int result;
 
-	if (!_using_lvmetad || test_mode())
+	if (!lvmetad_active() || test_mode())
 		return 1;
 
 	if (!id_write_format(&pvid, uuid, sizeof(uuid)))
@@ -659,7 +741,7 @@ int lvmetad_pv_gone(dev_t device, const char *pv_name, activation_handler handle
 	int result;
 	int found;
 
-	if (!_using_lvmetad || test_mode())
+	if (!lvmetad_active() || test_mode())
 		return 1;
 
 	/*
@@ -669,7 +751,7 @@ int lvmetad_pv_gone(dev_t device, const char *pv_name, activation_handler handle
          *        the whole stack from top to bottom (not yet upstream).
          */
 
-	reply = daemon_send_simple(_lvmetad, "pv_gone", "device = %d", device, NULL);
+	reply = _lvmetad_send("pv_gone", "device = %d", device, NULL);
 
 	result = _lvmetad_handle_reply(reply, "drop PV", pv_name, &found);
 	/* We don't care whether or not the daemon had the PV cached. */
@@ -682,16 +764,6 @@ int lvmetad_pv_gone(dev_t device, const char *pv_name, activation_handler handle
 int lvmetad_pv_gone_by_dev(struct device *dev, activation_handler handler)
 {
 	return lvmetad_pv_gone(dev->dev, dev_name(dev), handler);
-}
-
-int lvmetad_active(void)
-{
-	return _using_lvmetad;
-}
-
-void lvmetad_set_active(int active)
-{
-	_using_lvmetad = active;
 }
 
 /*
@@ -771,3 +843,30 @@ bad:
 		  "It is strongly recommended that you restart lvmetad immediately.");
 	return 0;
 }
+
+int pvscan_lvmetad_all_devs(struct cmd_context *cmd, activation_handler handler)
+{
+	struct dev_iter *iter;
+	struct device *dev;
+	int r = 1;
+
+	if (!(iter = dev_iter_create(cmd->lvmetad_filter, 1))) {
+		log_error("dev_iter creation failed");
+		return 0;
+	}
+
+	while ((dev = dev_iter_get(iter))) {
+		if (!pvscan_lvmetad_single(cmd, dev, handler)) {
+			r = 0;
+			break;
+		}
+
+		if (sigint_caught())
+			break;
+	}
+
+	dev_iter_destroy(iter);
+
+	return r;
+}
+

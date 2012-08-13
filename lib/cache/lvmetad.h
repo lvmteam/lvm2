@@ -30,7 +30,7 @@ typedef int (*activation_handler) (struct volume_group *vg, int partial,
  * Initialise the communication with lvmetad. Normally called by
  * lvmcache_init. Sets up a global handle for our process.
  */
-void lvmetad_init(void);
+void lvmetad_init(struct cmd_context *);
 
 /*
  * Override the use of lvmetad for retrieving scan results and metadata.
@@ -38,10 +38,27 @@ void lvmetad_init(void);
 void lvmetad_set_active(int);
 
 /*
+ * Configure the socket that lvmetad_init will use to connect to the daemon.
+ */
+void lvmetad_set_socket(const char *);
+
+/*
  * Check whether lvmetad is active (where active means both that it is running
  * and that we have a working connection with it).
  */
 int lvmetad_active(void);
+
+/*
+ * Drop connection to lvmetad. A subsequent lvmetad_init() will re-establish
+ * the connection (possibly at a different socket path).
+ */
+void lvmetad_disconnect(void);
+
+/*
+ * Set the "lvmetad validity token" (currently only consists of the lvmetad
+ * filter. See lvm.conf.
+ */
+void lvmetad_set_token(const struct dm_config_value *filter);
 
 /*
  * Send a new version of VG metadata to lvmetad. This is normally called after
@@ -111,11 +128,16 @@ struct volume_group *lvmetad_vg_lookup(struct cmd_context *cmd,
 int pvscan_lvmetad_single(struct cmd_context *cmd, struct device *dev,
 			  activation_handler handler);
 
+int pvscan_lvmetad_all_devs(struct cmd_context *cmd, activation_handler handler);
+
 #  else		/* LVMETAD_SUPPORT */
 
-#    define lvmetad_init()	do { } while (0)
+#    define lvmetad_init(cmd)	do { } while (0)
+#    define lvmetad_disconnect()	do { } while (0)
 #    define lvmetad_set_active(a)	do { } while (0)
+#    define lvmetad_set_socket(a)	do { } while (0)
 #    define lvmetad_active()	(0)
+#    define lvmetad_set_token(a)	do { } while (0)
 #    define lvmetad_vg_update(vg)	(1)
 #    define lvmetad_vg_remove(vg)	(1)
 #    define lvmetad_pv_found(pvid, device, fmt, label_sector, vg, handler)	(1)
@@ -127,6 +149,7 @@ int pvscan_lvmetad_single(struct cmd_context *cmd, struct device *dev,
 #    define lvmetad_vg_list_to_lvmcache(cmd)	(1)
 #    define lvmetad_vg_lookup(cmd, vgname, vgid)	(NULL)
 #    define pvscan_lvmetad_single(cmd, dev, handler)	(0)
+#    define pvscan_lvmetad_all_devs(cmd, handler)	(0)
 
 #  endif	/* LVMETAD_SUPPORT */
 

@@ -399,7 +399,20 @@ static int _process_config(struct cmd_context *cmd)
 		(find_config_tree_int(cmd, "global/detect_internal_vg_cache_corruption",
 				      DEFAULT_DETECT_INTERNAL_VG_CACHE_CORRUPTION));
 
+	lvmetad_disconnect();
+	const char *lvmetad_socket = getenv("LVM_LVMETAD_SOCKET");
+	if (!lvmetad_socket)
+		lvmetad_socket = DEFAULT_RUN_DIR "/lvmetad.socket";
+
+	/* TODO?
+		lvmetad_socket = find_config_tree_str(cmd, "lvmetad/socket_path",
+						      DEFAULT_RUN_DIR "/lvmetad.socket");
+	*/
+	lvmetad_set_socket(lvmetad_socket);
+	cn = find_config_tree_node(cmd, "devices/global_filter");
+	lvmetad_set_token(cn ? cn->v : NULL);
 	lvmetad_set_active(find_config_tree_int(cmd, "global/use_lvmetad", 0));
+	lvmetad_init(cmd);
 
 	return 1;
 }
@@ -818,13 +831,14 @@ static int _init_filters(struct cmd_context *cmd, unsigned load_persistent_cache
 {
 	static char cache_file[PATH_MAX];
 	const char *dev_cache = NULL, *cache_dir, *cache_file_prefix;
-	struct dev_filter *f3, *f4;
+	struct dev_filter *f3 = NULL, *f4 = NULL, *toplevel_components[2] = { 0 };
 	struct stat st;
+	const struct dm_config_node *cn;
 
 	cmd->dump_filter = 0;
 
 	if (!(f3 = _init_filter_components(cmd)))
-		return_0;
+		goto_bad;
 
 	init_ignore_suspended_devices(find_config_tree_int(cmd,
 	    "devices/ignore_suspended_devices", DEFAULT_IGNORE_SUSPENDED_DEVICES));
@@ -843,8 +857,7 @@ static int _init_filters(struct cmd_context *cmd, unsigned load_persistent_cache
 		    cache_dir ? : DEFAULT_CACHE_SUBDIR,
 		    cache_file_prefix ? : DEFAULT_CACHE_FILE_PREFIX) < 0) {
 			log_error("Persistent cache filename too long.");
-			f3->destroy(f3);
-			return 0;
+			goto bad;
 		}
 	} else if (!(dev_cache = find_config_tree_str(cmd, "devices/cache", NULL)) &&
 		   (dm_snprintf(cache_file, sizeof(cache_file),
@@ -852,8 +865,7 @@ static int _init_filters(struct cmd_context *cmd, unsigned load_persistent_cache
 				cmd->system_dir, DEFAULT_CACHE_SUBDIR,
 				DEFAULT_CACHE_FILE_PREFIX) < 0)) {
 		log_error("Persistent cache filename too long.");
-		f3->destroy(f3);
-		return 0;
+		goto bad;
 	}
 
 	if (!dev_cache)
@@ -883,9 +895,26 @@ static int _init_filters(struct cmd_context *cmd, unsigned load_persistent_cache
 		log_verbose("Failed to load existing device cache from %s",
 			    dev_cache);
 
-	cmd->filter = f4;
+	if (!(cn = find_config_tree_node(cmd, "devices/global_filter"))) {
+		cmd->filter = f4;
+	} else if (!(cmd->lvmetad_filter = regex_filter_create(cn->v)))
+		goto_bad;
+	else {
+		toplevel_components[0] = cmd->lvmetad_filter;
+		toplevel_components[1] = f4;
+		if (!(cmd->filter = composite_filter_create(2, toplevel_components)))
+			goto_bad;
+	}
 
 	return 1;
+bad:
+	if (f3)
+		f3->destroy(f3);
+	if (f4)
+		f4->destroy(f4);
+	if (toplevel_components[0])
+		toplevel_components[0]->destroy(toplevel_components[0]);
+	return 0;
 }
 
 struct format_type *get_format_by_name(struct cmd_context *cmd, const char *format)
@@ -1494,6 +1523,8 @@ int refresh_filters(struct cmd_context *cmd)
 		cmd->filter->destroy(cmd->filter);
 		cmd->filter = NULL;
 	}
+
+	cmd->lvmetad_filter = NULL;
 
 	if (!(r = _init_filters(cmd, 0)))
                 stack;

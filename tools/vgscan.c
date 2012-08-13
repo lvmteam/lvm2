@@ -50,7 +50,8 @@ int vgscan(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	persistent_filter_wipe(cmd->filter);
+	if (cmd->filter->wipe)
+		cmd->filter->wipe(cmd->filter);
 	lvmcache_destroy(cmd, 1);
 
 	_lvmetad = lvmetad_active();

@@ -109,8 +109,6 @@ int lvmcache_init(void)
 		_vg_global_lock_held = 0;
 	}
 
-	lvmetad_init();
-
 	return 1;
 }
 

@@ -91,6 +91,7 @@ struct cmd_context {
 	unsigned independent_metadata_areas:1;	/* Active formats have MDAs outside PVs */
 
 	struct dev_filter *filter;
+	struct dev_filter *lvmetad_filter;
 	int dump_filter;	/* Dump filter when exiting? */
 
 	struct dm_list config_files;

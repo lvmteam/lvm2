@@ -527,5 +527,5 @@ target_at_least()
 
 test -f DEVICES && devs=$(cat DEVICES)
 
-unset LVM_VALGRIND
+#unset LVM_VALGRIND
 "$@"

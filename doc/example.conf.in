@@ -79,6 +79,14 @@ devices {
     # Use anchors if you want to be really specific
     # filter = [ "a|^/dev/hda8$|", "r/.*/" ]
 
+    # Since "filter" is often overriden from command line, it is not suitable
+    # for system-wide device filtering (udev rules, lvmetad). To hide devices
+    # from LVM-specific udev processing and/or from lvmetad, you need to set
+    # global_filter. The syntax is the same as for normal "filter"
+    # above. Devices that fail the global_filter are not even opened by LVM.
+
+    # global_filter = []
+
     # The results of the filtering are cached on disk to avoid
     # rescanning dud devices (which can take a very long time).
     # By default this cache is stored in the @DEFAULT_SYS_DIR@/@DEFAULT_CACHE_SUBDIR@ directory
