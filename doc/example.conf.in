@@ -479,7 +479,7 @@ global {
     # scanning is done by the individual commands. In a setup with lvmetad,
     # lvmetad udev rules *must* be set up for LVM to work correctly. Without
     # proper udev rules, all changes in block device configuration will be
-    # *ignored* until a manual 'vgscan' is performed.
+    # *ignored* until a manual 'pvscan --cache' is performed.
     use_lvmetad = 0
 
     # Full path of the utility called to check that a thin metadata device
