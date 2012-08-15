@@ -1219,6 +1219,8 @@ int collapse_mirrored_lv(struct logical_volume *lv)
 	return 1;
 }
 
+#if 0
+/* FIXME: reconfigure_mirror_images: remove this code? */
 static int _get_mirror_fault_policy(struct cmd_context *cmd __attribute__((unused)),
 				   int log_policy)
 {
@@ -1375,6 +1377,7 @@ int reconfigure_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirr
 	 */
 	return 1;
 }
+#endif
 
 static int _create_mimage_lvs(struct alloc_handle *ah,
 			      uint32_t num_mirrors,
