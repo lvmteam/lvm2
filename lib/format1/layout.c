@@ -153,7 +153,7 @@ int calculate_extent_count(struct physical_volume *pv, uint32_t extent_size,
 
 		pvd->pe_start = _round_up(end, LVM1_PE_ALIGN);
 
-	} while ((pvd->pe_start + (pvd->pe_total * extent_size))
+	} while ((pvd->pe_start + ((uint64_t)pvd->pe_total * extent_size))
 		 > pv->size);
 
 	if (pvd->pe_total > MAX_PE_TOTAL) {

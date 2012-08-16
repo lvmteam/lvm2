@@ -54,7 +54,7 @@ static int _pvdisplay_single(struct cmd_context *cmd,
 	if (is_orphan(pv))
 		size = pv_size(pv);
 	else
-		size = (pv_pe_count(pv) - pv_pe_alloc_count(pv)) *
+		size = (uint64_t)(pv_pe_count(pv) - pv_pe_alloc_count(pv)) *
 			pv_pe_size(pv);
 
 	if (arg_count(cmd, short_ARG)) {

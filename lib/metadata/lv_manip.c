@@ -726,7 +726,7 @@ static uint32_t mirror_log_extents(uint32_t region_size, uint32_t pe_size, uint3
 {
 	size_t area_size, bitset_size, log_size, region_count;
 
-	area_size = area_len * pe_size;
+	area_size = (size_t)area_len * pe_size;
 	region_count = dm_div_up(area_size, region_size);
 
 	/* Work out how many "unsigned long"s we need to hold the bitset. */

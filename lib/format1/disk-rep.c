@@ -335,7 +335,7 @@ static void __update_lvmcache(const struct format_type *fmt,
 		return;
 	}
 
-	lvmcache_set_device_size(info, xlate32(dl->pvd.pv_size) << SECTOR_SHIFT);
+	lvmcache_set_device_size(info, ((uint64_t)xlate32(dl->pvd.pv_size)) << SECTOR_SHIFT);
 	lvmcache_del_mdas(info);
 	lvmcache_make_valid(info);
 }

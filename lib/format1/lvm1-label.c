@@ -79,7 +79,7 @@ static int _lvm1_read(struct labeller *l, struct device *dev, void *buf,
 		return_0;
 	*label = lvmcache_get_label(info);
 
-	lvmcache_set_device_size(info, xlate32(pvd->pv_size) << SECTOR_SHIFT);
+	lvmcache_set_device_size(info, ((uint64_t)xlate32(pvd->pv_size)) << SECTOR_SHIFT);
 	lvmcache_del_mdas(info);
 	lvmcache_make_valid(info);
 

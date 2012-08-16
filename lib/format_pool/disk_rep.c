@@ -103,7 +103,7 @@ int read_pool_label(struct pool_list *pl, struct labeller *l,
 	if (label)
 		*label = lvmcache_get_label(info);
 
-	lvmcache_set_device_size(info, xlate32_be(pd->pl_blocks) << SECTOR_SHIFT);
+	lvmcache_set_device_size(info, ((uint64_t)xlate32_be(pd->pl_blocks)) << SECTOR_SHIFT);
 	lvmcache_del_mdas(info);
 	lvmcache_make_valid(info);
 
