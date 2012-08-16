@@ -209,7 +209,7 @@ static int _pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
 		if (major < 0 || minor < 0)
 			continue;
 
-		devno = MKDEV(major, minor);
+		devno = MKDEV((dev_t)major, minor);
 
 		if (!(dev = dev_cache_get_by_devt(devno, NULL))) {
 			if (!dm_asprintf(&buf, "%" PRIi32 ":%" PRIi32, major, minor))

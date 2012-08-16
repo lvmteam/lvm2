@@ -347,7 +347,7 @@ int get_primary_dev(const char *sysfs_dir,
 			  path, buffer);
 		goto out;
 	}
-	*result = MKDEV(pri_maj, pri_min);
+	*result = MKDEV((dev_t)pri_maj, pri_min);
 	ret = 1;
 
 out:
