@@ -53,13 +53,15 @@ void daemon_log(log_state *s, int type, const char *message) {
 }
 
 void daemon_logf(log_state *s, int type, const char *fmt, ...) {
-	va_list ap;
-	va_start(ap, fmt);
 	char *buf;
-	if (dm_vasprintf(&buf, fmt, ap) < 0)
-		return; /* _0 */
-	daemon_log(s, type, buf);
-	dm_free(buf);
+	va_list ap;
+
+	va_start(ap, fmt);
+	if (dm_vasprintf(&buf, fmt, ap) >= 0) {
+		daemon_log(s, type, buf);
+		dm_free(buf);
+	} /* else return_0 */
+	va_end(ap);
 }
 
 struct log_line_baton {
