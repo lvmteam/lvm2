@@ -371,7 +371,8 @@ int main(int argc, char *argv[])
 
 		case 'R':
 			check_permissions();
-			return refresh_clvmd(1)==1?0:1;
+			ret = (refresh_clvmd(1) == 1) ? 0 : 1;
+			goto out;
 
 		case 'S':
 			check_permissions();
