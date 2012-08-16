@@ -1,7 +1,7 @@
 #include "daemon-server.h"
 #include "daemon-log.h"
 #include <syslog.h>
-#include "assert.h"
+#include <assert.h>
 
 struct backend {
 	int id;
