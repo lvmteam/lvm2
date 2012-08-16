@@ -46,7 +46,7 @@ static void kmsg(const char *format, ...)
 	if (kmsg_fd < 0 || (n < 0 || ((unsigned) n + 1 > sizeof(message))))
 		return;
 
-	write(kmsg_fd, message, n + 1);
+	(void) write(kmsg_fd, message, n + 1);
 }
 
 static int lvm_uses_lvmetad(void)
@@ -164,6 +164,6 @@ int main(int argc, char *argv[])
 out:
 	kmsg("LVM: Activation generator %s.\n", r ? "failed" : "successfully completed");
 	if (kmsg_fd != -1)
-		close(kmsg_fd);
+		(void) close(kmsg_fd);
 	return r;
 }
