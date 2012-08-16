@@ -59,6 +59,7 @@ void daemon_logf(log_state *s, int type, const char *fmt, ...) {
 	if (dm_vasprintf(&buf, fmt, ap) < 0)
 		return; /* _0 */
 	daemon_log(s, type, buf);
+	dm_free(buf);
 }
 
 struct log_line_baton {
@@ -134,10 +135,14 @@ int daemon_log_parse(log_state *s, int outlet, const char *types, int enable)
 		char *next = strchr(pos, ',');
 		if (next)
 			*next = 0;
-		if (!_parse_one(s, outlet, pos, enable))
+		if (!_parse_one(s, outlet, pos, enable)) {
+			dm_free(buf);
 			return 0;
+		}
 		pos = next ? next + 1 : 0;
 	}
+
+	dm_free(buf);
 
 	return 1;
 }
