@@ -15,7 +15,6 @@
 
 #include "lib.h"
 #include "lvm-file.h"
-#include "lvm-string.h"
 
 #include <unistd.h>
 #include <sys/stat.h>

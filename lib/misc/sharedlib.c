@@ -15,9 +15,7 @@
 
 #include "lib.h"
 #include "config.h"
-#include "lvm-string.h"
 #include "sharedlib.h"
-#include "toolcontext.h"
 
 #include <limits.h>
 #include <sys/stat.h>

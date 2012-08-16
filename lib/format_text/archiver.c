@@ -16,7 +16,6 @@
 #include "lib.h"
 #include "archiver.h"
 #include "format-text.h"
-#include "lvm-file.h"
 #include "lvm-string.h"
 #include "lvmcache.h"
 #include "toolcontext.h"

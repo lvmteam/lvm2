@@ -103,7 +103,6 @@ SOURCES =\
 	misc/lvm-string.c \
 	misc/lvm-wrappers.c \
 	misc/lvm-percent.c \
-	misc/util.c \
 	mm/memlock.c \
 	report/properties.c \
 	report/report.c \

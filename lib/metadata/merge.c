@@ -15,7 +15,6 @@
 
 #include "lib.h"
 #include "metadata.h"
-#include "toolcontext.h"
 #include "lv_alloc.h"
 #include "pv_alloc.h"
 #include "str_list.h"

@@ -30,7 +30,6 @@
 #include <dirent.h>
 #include <errno.h>
 #include <unistd.h>
-#include <libgen.h>
 #include <sys/wait.h>
 #include <unistd.h>
 #include <sys/param.h>

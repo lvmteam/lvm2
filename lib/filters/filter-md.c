@@ -15,7 +15,6 @@
 
 #include "lib.h"
 #include "filter-md.h"
-#include "metadata.h"
 
 #ifdef linux
 

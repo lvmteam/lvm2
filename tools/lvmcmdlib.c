@@ -17,13 +17,10 @@
 #include "lvm2cmdline.h"
 #include "label.h"
 #include "memlock.h"
-#include "lvm-version.h"
 
 #include "lvm2cmd.h"
 
 #include <signal.h>
-#include <syslog.h>
-#include <libgen.h>
 #include <sys/stat.h>
 #include <time.h>
 #include <sys/resource.h>

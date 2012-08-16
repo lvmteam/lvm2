@@ -16,10 +16,7 @@
 #include "lib.h"
 #include "device.h"
 #include "memlock.h"
-#include "lvm-string.h"
-#include "lvm-file.h"
 #include "defaults.h"
-#include "config.h"
 
 #include <stdarg.h>
 #include <syslog.h>

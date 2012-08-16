@@ -14,8 +14,6 @@
 
 #include "lib.h"
 #include "metadata.h"
-#include "xlate.h"
-#include "filter.h"
 
 #ifdef linux
 

@@ -17,14 +17,12 @@
 #include "metadata.h"
 #include "segtype.h"
 #include "text_export.h"
-#include "text_import.h"
 #include "config.h"
 #include "activate.h"
 #include "str_list.h"
 #include "defaults.h"
 
 #ifdef DMEVENTD
-#  include "sharedlib.h"
 #  include "libdevmapper-event.h"
 #endif
 

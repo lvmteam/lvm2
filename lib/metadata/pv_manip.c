@@ -17,9 +17,7 @@
 #include "metadata.h"
 #include "pv_alloc.h"
 #include "toolcontext.h"
-#include "archiver.h"
 #include "locking.h"
-#include "lvmcache.h"
 #include "defaults.h"
 
 static struct pv_segment *_alloc_pv_segment(struct dm_pool *mem,

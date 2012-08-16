@@ -27,12 +27,10 @@
 #include "crc.h"
 #include "xlate.h"
 #include "label.h"
-#include "memlock.h"
 #include "lvmcache.h"
 #include "lvmetad.h"
 
 #include <unistd.h>
-#include <sys/file.h>
 #include <sys/param.h>
 #include <limits.h>
 #include <dirent.h>

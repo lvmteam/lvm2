@@ -30,7 +30,6 @@
 #include "locking.h"
 #include "archiver.h"
 #include "defaults.h"
-#include "filter-persistent.h"
 
 #include <math.h>
 #include <sys/param.h>

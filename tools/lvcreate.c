@@ -14,7 +14,6 @@
  */
 
 #include "tools.h"
-#include "lv_alloc.h"
 
 #include <fcntl.h>
 

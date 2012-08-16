@@ -16,7 +16,6 @@
 #include "libdm-targets.h"
 #include "libdm-common.h"
 #include "kdev_t.h"
-#include "dm-ioctl.h"
 
 #include <stdarg.h>
 #include <sys/param.h>

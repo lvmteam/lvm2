@@ -16,9 +16,6 @@
 #include "lib.h"
 #include "metadata.h"
 #include "import-export.h"
-#include "display.h"
-#include "toolcontext.h"
-#include "lvmcache.h"
 
 /* FIXME Use tidier inclusion method */
 static struct text_vg_version_ops *(_text_vsn_list[2]);

@@ -14,11 +14,7 @@
  */
 
 #include "tools.h"
-#include "lv_alloc.h"
-#include "xlate.h"
-
 #include <sys/stat.h>
-#include <sys/wait.h>
 
 const char *command_name(struct cmd_context *cmd)
 {

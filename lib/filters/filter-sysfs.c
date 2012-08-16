@@ -14,7 +14,6 @@
 
 #include "lib.h"
 #include "filter-sysfs.h"
-#include "lvm-string.h"
 
 #ifdef linux
 

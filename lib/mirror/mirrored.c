@@ -25,7 +25,6 @@
 #include "lvm-string.h"
 #include "targets.h"
 #include "activate.h"
-#include "sharedlib.h"
 #include "str_list.h"
 
 #include <sys/utsname.h>

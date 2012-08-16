@@ -25,7 +25,6 @@
 #include "segtype.h"
 #include "pv_alloc.h"
 #include "display.h"
-#include "lvmcache.h"
 #include "metadata.h"
 
 #include <time.h>

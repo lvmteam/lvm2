@@ -51,9 +51,6 @@
 */
 
 #include "clvmd-common.h"
-
-#include <pthread.h>
-
 #include "clvmd-comms.h"
 #include "clvm.h"
 #include "clvmd.h"

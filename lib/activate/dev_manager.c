@@ -14,7 +14,6 @@
  */
 
 #include "lib.h"
-#include "str_list.h"
 #include "dev_manager.h"
 #include "lvm-string.h"
 #include "fs.h"

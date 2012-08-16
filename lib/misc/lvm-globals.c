@@ -17,7 +17,6 @@
 #include "device.h"
 #include "memlock.h"
 #include "lvm-string.h"
-#include "lvm-file.h"
 #include "defaults.h"
 #include "metadata-exported.h"
 

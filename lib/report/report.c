@@ -21,7 +21,6 @@
 #include "display.h"
 #include "activate.h"
 #include "segtype.h"
-#include "str_list.h"
 #include "lvmcache.h"
 
 #include <stddef.h> /* offsetof() */

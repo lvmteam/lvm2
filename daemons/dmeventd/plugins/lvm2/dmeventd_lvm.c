@@ -16,8 +16,6 @@
 #include "log.h"
 
 #include "lvm2cmd.h"
-#include "errors.h"
-#include "libdevmapper-event.h"
 #include "dmeventd_lvm.h"
 
 #include <pthread.h>

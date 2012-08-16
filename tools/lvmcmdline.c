@@ -19,12 +19,9 @@
 #include "lvm-version.h"
 
 #include "stub.h"
-#include "lvm2cmd.h"
 #include "last-path-component.h"
 
 #include <signal.h>
-#include <syslog.h>
-#include <libgen.h>
 #include <sys/stat.h>
 #include <time.h>
 #include <sys/resource.h>

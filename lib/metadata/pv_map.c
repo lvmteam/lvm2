@@ -15,7 +15,6 @@
 
 #include "lib.h"
 #include "pv_map.h"
-#include "pv_alloc.h"
 
 #include <assert.h>
 

@@ -16,7 +16,6 @@
 #include "lib.h"
 #include "label.h"
 #include "metadata.h"
-#include "xlate.h"
 #include "disk_rep.h"
 #include "pool_label.h"
 

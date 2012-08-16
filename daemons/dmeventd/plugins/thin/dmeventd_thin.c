@@ -19,8 +19,6 @@
 #include "libdevmapper-event.h"
 #include "dmeventd_lvm.h"
 
-#include "lvm-string.h"
-
 #include <sys/wait.h>
 #include <syslog.h> /* FIXME Replace syslog with multilog */
 /* FIXME Missing openlog? */

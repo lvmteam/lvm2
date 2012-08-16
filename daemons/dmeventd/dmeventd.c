@@ -39,8 +39,6 @@
 #include <arpa/inet.h>		/* for htonl, ntohl */
 
 #ifdef linux
-#  include <malloc.h>
-
 /*
  * Kernel version 2.6.36 and higher has
  * new OOM killer adjustment interface.

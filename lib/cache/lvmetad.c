@@ -20,7 +20,6 @@
 #include "lvmcache.h"
 #include "lvmetad-client.h"
 #include "format-text.h" // TODO for disk_locn, used as a DA representation
-#include "filter.h"
 
 static int _using_lvmetad = 0;
 static daemon_handle _lvmetad;

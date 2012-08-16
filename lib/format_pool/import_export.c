@@ -16,7 +16,6 @@
 #include "lib.h"
 #include "label.h"
 #include "metadata.h"
-#include "lvmcache.h"
 #include "disk_rep.h"
 #include "sptype_names.h"
 #include "lv_alloc.h"

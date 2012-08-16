@@ -17,12 +17,9 @@
 #include "toolcontext.h"
 #include "segtype.h"
 #include "display.h"
-#include "archiver.h"
 #include "activate.h"
 #include "lv_alloc.h"
 #include "lvm-string.h"
-#include "str_list.h"
-#include "memlock.h"
 
 #define RAID_REGION_SIZE 1024
 

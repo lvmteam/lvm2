@@ -21,14 +21,12 @@
 #include "device.h"
 #include "str_list.h"
 #include "toolcontext.h"
-#include "lvm-string.h"
 #include "lvm-file.h"
 
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <ctype.h>
 #include <assert.h>
 
 struct config_file {

@@ -15,16 +15,6 @@
 #include "lib.h"
 #include "toolcontext.h"
 #include "segtype.h"
-#include "display.h"
-#include "text_export.h"
-#include "text_import.h"
-#include "config.h"
-#include "str_list.h"
-#include "targets.h"
-#include "lvm-string.h"
-#include "activate.h"
-#include "str_list.h"
-#include "metadata.h"
 
 static const char *_freeseg_name(const struct lv_segment *seg)
 {
