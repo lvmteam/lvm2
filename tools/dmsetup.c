@@ -380,8 +380,10 @@ static struct dm_split_name *_get_split_name(const char *uuid, const char *name,
 		return NULL;
 	}
 
-	if (!(split_name->subsystem = _extract_uuid_prefix(uuid, separator)))
+	if (!(split_name->subsystem = _extract_uuid_prefix(uuid, separator))) {
+		dm_free(split_name);
 		return_NULL;
+	}
 
 	split_name->vg_name = split_name->lv_name =
 	    split_name->lv_layer = (char *) "";

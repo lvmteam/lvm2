@@ -1,3 +1,7 @@
+Version 1.02.77 -
+=================================
+  Fix memory leak in dmsetup _get_split_name() error path.
+
 Version 1.02.76 - 7th August 2012
 =================================
   Add dm_vasprintf to libdevmapper.
