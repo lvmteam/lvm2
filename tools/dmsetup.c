@@ -2283,7 +2283,7 @@ static int _dm_mangled_name_disp(struct dm_report *rh,
 	int r = 0;
 
 	if ((name = dm_task_get_name_mangled((const struct dm_task *) data))) {
-		r = dm_report_field_string(rh, field, (const char **) &name);
+		r = dm_report_field_string(rh, field, (const char * const *) &name);
 		dm_free(name);
 	}
 
@@ -2299,7 +2299,7 @@ static int _dm_unmangled_name_disp(struct dm_report *rh,
 	int r = 0;
 
 	if ((name = dm_task_get_name_unmangled((const struct dm_task *) data))) {
-		r = dm_report_field_string(rh, field, (const char **) &name);
+		r = dm_report_field_string(rh, field, (const char * const *) &name);
 		dm_free(name);
 	}
 
