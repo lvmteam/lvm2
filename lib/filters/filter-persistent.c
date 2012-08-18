@@ -355,7 +355,7 @@ struct dev_filter *persistent_filter_create(struct dev_filter *real,
 		goto bad;
 	}
 
-	if (!(f = dm_malloc(sizeof(*f)))) {
+	if (!(f = dm_zalloc(sizeof(*f)))) {
 		log_error("Allocation of device filter for persistent filter failed.");
 		goto bad;
 	}

@@ -325,7 +325,7 @@ struct dev_filter *lvm_type_filter_create(const char *proc,
 {
 	struct dev_filter *f;
 
-	if (!(f = dm_malloc(sizeof(struct dev_filter)))) {
+	if (!(f = dm_zalloc(sizeof(struct dev_filter)))) {
 		log_error("LVM type filter allocation failed");
 		return NULL;
 	}

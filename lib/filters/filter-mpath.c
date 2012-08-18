@@ -185,7 +185,7 @@ struct dev_filter *mpath_filter_create(const char *sysfs_dir)
 		return NULL;
 	}
 
-	if (!(f = dm_malloc(sizeof(*f)))) {
+	if (!(f = dm_zalloc(sizeof(*f)))) {
 		log_error("mpath filter allocation failed");
 		return NULL;
 	}

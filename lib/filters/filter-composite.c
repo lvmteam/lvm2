@@ -64,7 +64,7 @@ struct dev_filter *composite_filter_create(int n, struct dev_filter **filters)
 	memcpy(filters_copy, filters, sizeof(*filters) * n);
 	filters_copy[n] = NULL;
 
-	if (!(cft = dm_malloc(sizeof(*cft)))) {
+	if (!(cft = dm_zalloc(sizeof(*cft)))) {
 		log_error("compsoite filters allocation failed");
 		dm_free(filters_copy);
 		return NULL;
