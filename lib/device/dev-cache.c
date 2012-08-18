@@ -971,21 +971,23 @@ struct dev_iter *dev_iter_create(struct dev_filter *f, int dev_scan)
 
 	if (dev_scan && !trust_cache()) {
 		/* Flag gets reset between each command */
-		if (!full_scan_done())
+		if (!full_scan_done() && f)
 			persistent_filter_wipe(f); /* Calls _full_scan(1) */
 	} else
 		_full_scan(0);
 
 	di->current = btree_first(_cache.devices);
 	di->filter = f;
-	di->filter->use_count++;
+	if (di->filter)
+		di->filter->use_count++;
 
 	return di;
 }
 
 void dev_iter_destroy(struct dev_iter *iter)
 {
-	iter->filter->use_count--;
+	if (iter->filter)
+		iter->filter->use_count--;
 	dm_free(iter);
 }
 
