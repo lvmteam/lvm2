@@ -571,7 +571,7 @@ const char *get_pool_discards_name(thin_discards_t discards);
 /*
  * Activation options
  */
-typedef enum {
+typedef enum activation_change {
 	CHANGE_AY = 0,  /* activate */
 	CHANGE_AN = 1,  /* deactivate */
 	CHANGE_AE = 2,  /* activate exclusively */

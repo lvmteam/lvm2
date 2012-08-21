@@ -97,7 +97,8 @@ static void _pvscan_display_single(struct cmd_context *cmd,
 					   pv_pe_size(pv)));
 }
 
-static int _auto_activation_handler(struct volume_group *vg, int partial, int activate)
+static int _auto_activation_handler(struct volume_group *vg, int partial,
+				    activation_change_t activate)
 {
 	/* TODO: add support for partial and clustered VGs */
 	if (partial || vg_is_clustered(vg))

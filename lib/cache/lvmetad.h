@@ -18,8 +18,10 @@
 struct volume_group;
 struct cmd_context;
 struct dm_config_tree;
+typedef enum activation_change activation_change_t;
 
-typedef int (*activation_handler) (struct volume_group *vg, int partial, int activate);
+typedef int (*activation_handler) (struct volume_group *vg, int partial,
+				   activation_change_t activate);
 
 #ifdef LVMETAD_SUPPORT
 /*

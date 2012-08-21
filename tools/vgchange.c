@@ -512,7 +512,8 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 	}
 
 	if (arg_count(cmd, activate_ARG)) {
-		if (!vgchange_activate(cmd, vg, arg_uint_value(cmd, activate_ARG, CHANGE_AY)))
+		if (!vgchange_activate(cmd, vg, (activation_change_t)
+				       arg_uint_value(cmd, activate_ARG, CHANGE_AY)))
 			return ECMD_FAILED;
 	}
 
