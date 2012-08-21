@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2011 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2012 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -797,7 +797,7 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 		return_0;
 
 	if (lp->create_thin_pool) {
-		lp->discards = arg_uint_value(cmd, discards_ARG, THIN_DISCARDS_PASSDOWN);
+		lp->discards = (thin_discards_t) arg_uint_value(cmd, discards_ARG, THIN_DISCARDS_PASSDOWN);
 	} else if (arg_count(cmd, discards_ARG)) {
 		log_error("--discards is only available for thin pool creation.");
 		return 0;

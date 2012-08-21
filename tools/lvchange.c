@@ -103,7 +103,7 @@ static int lvchange_pool_update(struct cmd_context *cmd,
 	}
 
 	if (arg_count(cmd, discards_ARG)) {
-		discards = arg_uint_value(cmd, discards_ARG, 0);
+		discards = (thin_discards_t) arg_uint_value(cmd, discards_ARG, THIN_DISCARDS_IGNORE);
 		if (discards != first_seg(lv)->discards) {
 			if (((discards == THIN_DISCARDS_IGNORE) ||
 			     (first_seg(lv)->discards == THIN_DISCARDS_IGNORE)) &&
