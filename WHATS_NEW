@@ -1,5 +1,6 @@
 Version 2.02.98
 =================================
+  Fix dereference of NULL in lvmetad error path logging.
   Fix buffer memory leak in lvmetad logging.
   Use 'ignore' discards for thin metadata created with older versions.
   Use proper condition to check for unsupported discards settings.

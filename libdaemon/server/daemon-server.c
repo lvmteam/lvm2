@@ -389,10 +389,12 @@ static void *client_thread(void *baton)
 			goto fail;
 
 		req.cft = dm_config_from_string(req.buffer);
+
 		if (!req.cft)
 			fprintf(stderr, "error parsing request:\n %s\n", req.buffer);
+		else
+			daemon_log_cft(b->s.log, DAEMON_LOG_WIRE, "<- ", req.cft->root);
 
-		daemon_log_cft(b->s.log, DAEMON_LOG_WIRE, "<- ", req.cft->root);
 		res = builtin_handler(b->s, b->client, req);
 
 		if (res.error == EPROTO) /* Not a builtin, delegate to the custom handler. */
