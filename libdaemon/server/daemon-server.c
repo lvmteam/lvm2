@@ -400,8 +400,10 @@ static void *client_thread(void *baton)
 
 		if (!res.buffer) {
 			dm_config_write_node(res.cft->root, buffer_line, &res);
-			if (!buffer_rewrite(&res.buffer, "%s\n\n", NULL))
+			if (!buffer_rewrite(&res.buffer, "%s\n\n", NULL)) {
+				dm_free(req.buffer);
 				goto fail;
+			}
 			dm_config_destroy(res.cft);
 		}
 
