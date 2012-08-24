@@ -38,7 +38,7 @@ for deactivate in true false; do
 		lvchange -an $vg/$lv1
 	fi
 
-	should lvresize -l -2 $vg/$lv1
+	should lvresize -y -l -2 $vg/$lv1
 
 	#check raid_images_contiguous $vg $lv1
 
@@ -71,10 +71,41 @@ for i in 4 5 6 ; do
 			lvchange -an $vg/$lv1
 		fi
 
-		should lvresize -l -3 $vg/$lv1
+		should lvresize -y -l -3 $vg/$lv1
 
 		#check raid_images_contiguous $vg $lv1
 
 		lvremove -ff $vg
 	done
 done
+
+# Extend RAID10 (2-stripes, 2-mirror)
+for deactivate in true false; do
+	lvcreate --type raid10 -m 1 -i 2 -l 2 -n $lv1 $vg
+
+	if $deactivate; then
+		lvchange -an $vg/$lv1
+	fi
+
+	lvresize -l +2 $vg/$lv1
+
+	#check raid_images_contiguous $vg $lv1
+
+	lvremove -ff $vg
+done
+
+# Reduce RAID10 (2-stripes, 2-mirror)
+for deactivate in true false; do
+	lvcreate --type raid10 -m 1 -i 2 -l 4 -n $lv1 $vg
+
+	if $deactivate; then
+		lvchange -an $vg/$lv1
+	fi
+
+	should lvresize -y -l -2 $vg/$lv1
+
+	#check raid_images_contiguous $vg $lv1
+
+	lvremove -ff $vg
+done
+
