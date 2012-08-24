@@ -379,6 +379,20 @@ static struct segment_type *_init_raid1_segtype(struct cmd_context *cmd)
 	return segtype;
 }
 
+static struct segment_type *_init_raid10_segtype(struct cmd_context *cmd)
+{
+	struct segment_type *segtype;
+
+	segtype = _init_raid_segtype(cmd, "raid10");
+	if (!segtype)
+		return NULL;
+
+	segtype->flags |= SEG_AREAS_MIRRORED;
+	segtype->parity_devs = 0;
+
+	return segtype;
+}
+
 static struct segment_type *_init_raid4_segtype(struct cmd_context *cmd)
 {
 	return _init_raid_segtype(cmd, "raid4");
@@ -441,6 +455,7 @@ int init_multiple_segtypes(struct cmd_context *cmd, struct segtype_library *segl
 	unsigned i = 0;
 	struct segment_type *(*raid_segtype_fn[])(struct cmd_context *) =  {
 		_init_raid1_segtype,
+		_init_raid10_segtype,
 		_init_raid4_segtype,
 		_init_raid5_segtype,
 		_init_raid5_la_segtype,

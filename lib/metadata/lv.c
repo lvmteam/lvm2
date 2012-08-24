@@ -476,10 +476,10 @@ char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 
 	if (lv_is_thin_type(lv))
 		repstr[6] = 't';
-	else if (lv_is_mirror_type(lv))
-		repstr[6] = 'm';
 	else if (lv_is_raid_type(lv))
 		repstr[6] = 'r';
+	else if (lv_is_mirror_type(lv))
+		repstr[6] = 'm';
 	else if (lv_is_cow(lv) || lv_is_origin(lv))
 		repstr[6] = 's';
 	else if (lv_has_unknown_segments(lv))

@@ -702,6 +702,10 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 
 	/* Set default segtype */
 	if (arg_count(cmd, mirrors_ARG))
+		/*
+		 * FIXME: Add default setting for when -i and -m arguments
+		 *        are both given.  We should default to "raid10".
+		 */
 		segtype_str = find_config_tree_str(cmd, "global/mirror_segtype_default", DEFAULT_MIRROR_SEGTYPE);
 	else if (arg_count(cmd, thin_ARG) || arg_count(cmd, thinpool_ARG))
 		segtype_str = "thin";
@@ -735,7 +739,7 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 
 	lp->mirrors = 1;
 
-	/* Default to 2 mirrored areas if '--type mirror|raid1' */
+	/* Default to 2 mirrored areas if '--type mirror|raid1|raid10' */
 	if (segtype_is_mirrored(lp->segtype))
 		lp->mirrors = 2;
 
@@ -748,6 +752,18 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 			}
 			log_print("Redundant mirrors argument: default is 0");
 		}
+
+		if ((lp->mirrors > 2) && !strcmp(lp->segtype->name, "raid10")) {
+			/*
+			 * FIXME: When RAID10 is no longer limited to
+			 *        2-way mirror, 'lv_mirror_count()'
+			 *        must also change for RAID10.
+			 */
+			log_error("RAID10 currently supports "
+				  "only 2-way mirroring (i.e. '-m 1')");
+			return 0;
+		}
+
 		if (arg_sign_value(cmd, mirrors_ARG, SIGN_NONE) == SIGN_MINUS) {
 			log_error("Mirrors argument may not be negative");
 			return 0;
@@ -787,6 +803,16 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 		log_error("%s: Required device-mapper target(s) not "
 			  "detected in your kernel", lp->segtype->name);
 		return 0;
+	} else if (!strcmp(lp->segtype->name, "raid10")) {
+		uint32_t maj, min, patchlevel;
+		if (!target_version("raid", &maj, &min, &patchlevel)) {
+			log_error("Failed to determine version of RAID kernel module");
+			return 0;
+		}
+		if ((maj != 1) || (min < 3)) {
+			log_error("RAID module does not support RAID10");
+			return 0;
+		}
 	}
 
 	if (!_lvcreate_name_params(lp, cmd, &argc, &argv) ||

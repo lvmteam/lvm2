@@ -41,6 +41,7 @@ enum {
 	SEG_THIN_POOL,
 	SEG_THIN,
 	SEG_RAID1,
+	SEG_RAID10,
 	SEG_RAID4,
 	SEG_RAID5_LA,
 	SEG_RAID5_RA,
@@ -72,6 +73,7 @@ struct {
 	{ SEG_THIN_POOL, "thin-pool"},
 	{ SEG_THIN, "thin"},
 	{ SEG_RAID1, "raid1"},
+	{ SEG_RAID10, "raid10"},
 	{ SEG_RAID4, "raid4"},
 	{ SEG_RAID5_LA, "raid5_la"},
 	{ SEG_RAID5_RA, "raid5_ra"},
@@ -1912,6 +1914,7 @@ static int _emit_areas_line(struct dm_task *dmt __attribute__((unused)),
 			}
 			break;
 		case SEG_RAID1:
+		case SEG_RAID10:
 		case SEG_RAID4:
 		case SEG_RAID5_LA:
 		case SEG_RAID5_RA:
@@ -2265,6 +2268,7 @@ static int _emit_segment_line(struct dm_task *dmt, uint32_t major,
 			    seg->iv_offset : *seg_start);
 		break;
 	case SEG_RAID1:
+	case SEG_RAID10:
 	case SEG_RAID4:
 	case SEG_RAID5_LA:
 	case SEG_RAID5_RA:

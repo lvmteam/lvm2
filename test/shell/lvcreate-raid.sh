@@ -16,7 +16,7 @@
 ########################################################
 aux target_at_least dm-raid 1 1 0 || skip
 
-aux prepare_pvs 5 20
+aux prepare_pvs 6 20  # 6 devices for RAID10 (2-mirror,3-stripe) test
 vgcreate -c n -s 512k $vg $(cat DEVICES)
 
 ###########################################
@@ -47,6 +47,25 @@ for i in raid4 \
 	aux wait_for_sync $vg $lv1
 	lvremove -ff $vg
 done
+
+#
+# Create RAID10:
+#
+
+aux target_at_least dm-raid 1 3 0 || skip
+
+# Should not allow more than 2-way mirror
+not lvcreate --type raid10 -m 2 -i 2 -l 2 -n $lv1 $vg
+
+# 2-way mirror, 2-stripes
+lvcreate --type raid10 -m 1 -i 2 -l 2 -n $lv1 $vg
+aux wait_for_sync $vg $lv1
+lvremove -ff $vg
+
+# 2-way mirror, 3-stripes
+lvcreate --type raid10 -m 1 -i 3 -l 3 -n $lv1 $vg
+aux wait_for_sync $vg $lv1
+lvremove -ff $vg
 
 #
 # FIXME: Add tests that specify particular PVs to use for creation

@@ -578,6 +578,7 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 				seg_mirrors = 0;
 			break;
 		}
+
 		if (!arg_count(cmd, mirrors_ARG) && seg_mirrors) {
 			log_print("Extending %" PRIu32 " mirror images.",
 				  seg_mirrors);
@@ -588,18 +589,26 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 			log_error("Cannot vary number of mirrors in LV yet.");
 			return EINVALID_CMD_LINE;
 		}
+
+		if (seg_mirrors && !strcmp(mirr_seg->segtype->name, "raid10")) {
+			lp->stripes = mirr_seg->area_count / seg_mirrors;
+			lp->stripe_size = mirr_seg->stripe_size;
+		}
 	}
 
 	/* If extending, find stripes, stripesize & size of last segment */
 	if ((lp->extents > lv->le_count) &&
-	    !(lp->stripes == 1 || (lp->stripes > 1 && lp->stripe_size))) {
+	    !(lp->stripes == 1 || (lp->stripes > 1 && lp->stripe_size)) &&
+	    strcmp(mirr_seg->segtype->name, "raid10")) {
 		/* FIXME Don't assume mirror seg will always be AREA_LV */
 		/* FIXME We will need to support resize for metadata LV as well,
 		 *       and data LV could be any type (i.e. mirror)) */
 		dm_list_iterate_items(seg, seg_mirrors ? &seg_lv(mirr_seg, 0)->segments :
 				      lv_is_thin_pool(lv) ? &seg_lv(first_seg(lv), 0)->segments : &lv->segments) {
+			/* Allow through "striped" and RAID 4/5/6/10 */
 			if (!seg_is_striped(seg) &&
-			    (!seg_is_raid(seg) || seg_is_mirrored(seg)))
+			    (!seg_is_raid(seg) || seg_is_mirrored(seg)) &&
+			    strcmp(seg->segtype->name, "raid10"))
 				continue;
 
 			sz = seg->stripe_size;

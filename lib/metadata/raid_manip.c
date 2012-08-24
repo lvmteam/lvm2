@@ -1620,6 +1620,24 @@ int lv_raid_replace(struct logical_volume *lv,
 			  raid_seg->segtype->parity_devs,
 			  raid_seg->segtype->name, lv->vg->name, lv->name);
 		return 0;
+	} else if (!strcmp(raid_seg->segtype->name, "raid10")) {
+		uint32_t i, rebuilds_per_group = 0;
+		/* FIXME: We only support 2-way mirrors in RAID10 currently */
+		uint32_t copies = 2;
+
+		for (i = 0; i < raid_seg->area_count * copies; i++) {
+			s = i % raid_seg->area_count;
+			if (!(i % copies))
+				rebuilds_per_group = 0;
+			if (_lv_is_on_pvs(seg_lv(raid_seg, s), remove_pvs) ||
+			    _lv_is_on_pvs(seg_metalv(raid_seg, s), remove_pvs))
+				rebuilds_per_group++;
+			if (rebuilds_per_group >= copies) {
+				log_error("Unable to replace all the devices "
+					  "in a RAID10 mirror group.");
+				return 0;
+			}
+		}
 	}
 
 	/*
