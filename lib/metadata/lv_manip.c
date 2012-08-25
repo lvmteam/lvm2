@@ -2741,6 +2741,7 @@ int lv_extend(struct logical_volume *lv,
 				log_error("%s/%s is not active."
 					  "  Unable to get sync percent.",
 					  lv->vg->name, lv->name);
+				/* FIXME Support --force */
 				if (yes_no_prompt("Do full resync of extended "
 						  "portion of %s/%s?  [y/n]: ",
 						  lv->vg->name, lv->name) == 'y')

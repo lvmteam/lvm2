@@ -1,5 +1,7 @@
 Version 2.02.98 -
 =================================
+  Disable private buffering when using liblvm.
+  When private stdin/stdout buffering is not used always use silent mode.
   Add log/silent to lvm.conf equivalent to -qq.
   Suppress non-essential stdout with -qq.
   Switch non-essential log_print messages to log_print_unless_silent.

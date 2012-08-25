@@ -144,8 +144,12 @@ static void _init_logging(struct cmd_context *cmd)
 	    find_config_tree_int(cmd, "log/level", DEFAULT_LOGLEVEL);
 	init_debug(cmd->default_settings.debug);
 
-	/* Suppress all non-essential stdout? */
-	cmd->default_settings.silent = 
+	/*
+	 * Suppress all non-essential stdout?
+	 * -qq can override the default of 0 to 1 later.
+	 * Once set to 1, there is no facility to change it back to 0.
+	 */
+	cmd->default_settings.silent = silent_mode() ? :
 	    find_config_tree_int(cmd, "log/silent", DEFAULT_SILENT);
 	init_silent(cmd->default_settings.silent);
 
@@ -1296,7 +1300,9 @@ struct cmd_context *create_toolcontext(unsigned is_long_lived,
 			goto out;
 		}
 		/* Buffers are used for lines without '\n' */
-	}
+	} else
+		/* Without buffering, must not use stdin/stdout */
+		init_silent(1);
 
 	/*
 	 * Environment variable LVM_SYSTEM_DIR overrides this below.

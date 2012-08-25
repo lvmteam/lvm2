@@ -241,6 +241,8 @@ log {
     # pvs, version, vgcfgrestore -l, vgdisplay, vgs.
     # Non-essential messages are shifted from log level 4 to log level 5
     # for syslog and lvm2_log_fn purposes.
+    # Any 'yes' or 'no' questions not overridden by other arguments
+    # are suppressed and default to 'no'.
     silent = 0
 
     # Should we send log messages through syslog?
