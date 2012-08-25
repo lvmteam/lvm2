@@ -466,8 +466,8 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 				lp->size += vg->extent_size -
 				    (lp->size % vg->extent_size);
 
-			log_print("Rounding size to boundary between physical extents: %s",
-				  display_size(cmd, lp->size));
+			log_print_unless_silent("Rounding size to boundary between physical extents: %s",
+						display_size(cmd, lp->size));
 		}
 
 		lp->extents = lp->size / vg->extent_size;
@@ -580,8 +580,8 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 		}
 
 		if (!arg_count(cmd, mirrors_ARG) && seg_mirrors) {
-			log_print("Extending %" PRIu32 " mirror images.",
-				  seg_mirrors);
+			log_print_unless_silent("Extending %" PRIu32 " mirror images.",
+						seg_mirrors);
 			lp->mirrors = seg_mirrors;
 		}
 		if ((arg_count(cmd, mirrors_ARG) || seg_mirrors) &&
@@ -636,16 +636,16 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 
 		if (!lp->stripe_size && lp->stripes > 1) {
 			if (seg_stripesize) {
-				log_print("Using stripesize of last segment %s",
-					  display_size(cmd, (uint64_t) seg_stripesize));
+				log_print_unless_silent("Using stripesize of last segment %s",
+							display_size(cmd, (uint64_t) seg_stripesize));
 				lp->stripe_size = seg_stripesize;
 			} else {
 				lp->stripe_size =
 					find_config_tree_int(cmd,
 							"metadata/stripesize",
 							DEFAULT_STRIPESIZE) * 2;
-				log_print("Using default stripesize %s",
-					  display_size(cmd, (uint64_t) lp->stripe_size));
+				log_print_unless_silent("Using default stripesize %s",
+							display_size(cmd, (uint64_t) lp->stripe_size));
 			}
 		}
 	}
@@ -703,16 +703,16 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 		     !lp->percent ||
 		     (vg->free_count >= (lp->extents - lv->le_count - size_rest +
 					 (lp->stripes * stripesize_extents))))) {
-			log_print("Rounding size (%d extents) up to stripe "
-				  "boundary size for segment (%d extents)",
-				  lp->extents, lp->extents - size_rest +
-				  (lp->stripes * stripesize_extents));
+			log_print_unless_silent("Rounding size (%d extents) up to stripe "
+						"boundary size for segment (%d extents)",
+						lp->extents, lp->extents - size_rest +
+						(lp->stripes * stripesize_extents));
 			lp->extents = lp->extents - size_rest +
 				      (lp->stripes * stripesize_extents);
 		} else if (size_rest) {
-			log_print("Rounding size (%d extents) down to stripe "
-				  "boundary size for segment (%d extents)",
-				  lp->extents, lp->extents - size_rest);
+			log_print_unless_silent("Rounding size (%d extents) down to stripe "
+						"boundary size for segment (%d extents)",
+						lp->extents, lp->extents - size_rest);
 			lp->extents = lp->extents - size_rest;
 		}
 	}
@@ -802,10 +802,10 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 		return ECMD_FAILED;
 	}
 
-	log_print("%sing logical volume %s to %s",
-		  (lp->resize == LV_REDUCE) ? "Reduc" : "Extend",
-		  lp->lv_name,
-		  display_size(cmd, (uint64_t) lp->extents * vg->extent_size));
+	log_print_unless_silent("%sing logical volume %s to %s",
+				(lp->resize == LV_REDUCE) ? "Reduc" : "Extend",
+				lp->lv_name,
+				display_size(cmd, (uint64_t) lp->extents * vg->extent_size));
 
 	if (lp->resize == LV_REDUCE) {
 		if (!lv_reduce(lv, lv->le_count - lp->extents)) {
@@ -871,7 +871,7 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 		return ECMD_FAILED;
 	}
 
-	log_print("Logical volume %s successfully resized", lp->lv_name);
+	log_print_unless_silent("Logical volume %s successfully resized", lp->lv_name);
 
 	if (lp->resizefs && (lp->resize == LV_EXTEND) &&
 	    !_fsadm_cmd(cmd, vg, lp, FSADM_CMD_RESIZE, NULL)) {

@@ -59,10 +59,10 @@ static int lvscan_single(struct cmd_context *cmd, struct logical_volume *lv,
 	else
 		snapshot_str = "        ";
 
-	log_print("%s%s '%s%s/%s' [%s] %s", active_str, snapshot_str,
-		  cmd->dev_dir, lv->vg->name, lv->name,
-		  display_size(cmd, lv->size),
-		  get_alloc_string(lv->alloc));
+	log_print_unless_silent("%s%s '%s%s/%s' [%s] %s", active_str, snapshot_str,
+				cmd->dev_dir, lv->vg->name, lv->name,
+				display_size(cmd, lv->size),
+				get_alloc_string(lv->alloc));
 
 	return ECMD_PROCESSED;
 }

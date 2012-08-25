@@ -1,5 +1,9 @@
-Version 2.02.98
+Version 2.02.98 -
 =================================
+  Add log/silent to lvm.conf equivalent to -qq.
+  Suppress non-essential stdout with -qq.
+  Switch non-essential log_print messages to log_print_unless_silent.
+  Use -q as short form of --quiet.
   Add RAID10 support.
   Reuse _reload_lv() in more lvconvert functions.
   Fix dereference of NULL in lvmetad error path logging.

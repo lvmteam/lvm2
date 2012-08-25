@@ -177,8 +177,8 @@ static int vg_rename_path(struct cmd_context *cmd, const char *old_vg_path,
 	unlock_vg(cmd, vg_name_new);
 	unlock_and_release_vg(cmd, vg, vg_name_old);
 
-	log_print("Volume group \"%s\" successfully renamed to \"%s\"",
-		  vg_name_old, vg_name_new);
+	log_print_unless_silent("Volume group \"%s\" successfully renamed to \"%s\"",
+				vg_name_old, vg_name_new);
 
 	/* FIXME lvmcache corruption - vginfo duplicated instead of renamed */
 	persistent_filter_wipe(cmd->filter);

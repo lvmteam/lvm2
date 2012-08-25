@@ -623,7 +623,7 @@ int vg_remove(struct volume_group *vg)
 		stack;
 
 	if (ret)
-		log_print("Volume group \"%s\" successfully removed", vg->name);
+		log_print_unless_silent("Volume group \"%s\" successfully removed", vg->name);
 	else
 		log_error("Volume group \"%s\" not properly removed", vg->name);
 
@@ -988,8 +988,8 @@ uint64_t extents_from_size(struct cmd_context *cmd, uint64_t size,
 {
 	if (size % extent_size) {
 		size += extent_size - size % extent_size;
-		log_print("Rounding up size to full physical extent %s",
-			  display_size(cmd, size));
+		log_print_unless_silent("Rounding up size to full physical extent %s",
+			  		display_size(cmd, size));
 	}
 
 	if (size > (uint64_t) MAX_EXTENT_COUNT * extent_size) {
@@ -1305,7 +1305,7 @@ static int _wipe_sb(struct device *dev, const char *type, const char *name,
 		return 0;
 	}
 
-	log_print("Wiping %s on %s.", type, name);
+	log_print_unless_silent("Wiping %s on %s.", type, name);
 	if (!dev_set(dev, superblock, wipe_len, 0)) {
 		log_error("Failed to wipe %s on %s.", type, name);
 		return 0;
@@ -1477,7 +1477,7 @@ static int _pvcreate_write(struct cmd_context *cmd, struct pv_to_create *pvc)
 		return 0;
 	}
 
-	log_print("Physical volume \"%s\" successfully created", pv_name);
+	log_print_unless_silent("Physical volume \"%s\" successfully created", pv_name);
 	return 1;
 }
 

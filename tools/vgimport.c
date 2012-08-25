@@ -48,7 +48,7 @@ static int vgimport_single(struct cmd_context *cmd __attribute__((unused)),
 
 	backup(vg);
 
-	log_print("Volume group \"%s\" successfully imported", vg->name);
+	log_print_unless_silent("Volume group \"%s\" successfully imported", vg->name);
 
 	return ECMD_PROCESSED;
 

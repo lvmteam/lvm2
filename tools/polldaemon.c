@@ -108,8 +108,8 @@ progress_t poll_mirror_progress(struct cmd_context *cmd,
 
 	overall_percent = copy_percent(lv);
 	if (parms->progress_display)
-		log_print("%s: %s: %.1f%%", name, parms->progress_title,
-			  percent_to_float(overall_percent));
+		log_print_unless_silent("%s: %s: %.1f%%", name, parms->progress_title,
+					percent_to_float(overall_percent));
 	else
 		log_verbose("%s: %s: %.1f%%", name, parms->progress_title,
 			    percent_to_float(overall_percent));
@@ -213,8 +213,8 @@ static int _wait_for_single_lv(struct cmd_context *cmd, const char *name, const 
 		lv = parms->poll_fns->get_copy_lv(cmd, vg, name, uuid, parms->lv_type);
 
 		if (!lv && parms->lv_type == PVMOVE) {
-			log_print("%s: no pvmove in progress - already finished or aborted.",
-				  name);
+			log_print_unless_silent("%s: no pvmove in progress - already finished or aborted.",
+						name);
 			unlock_and_release_vg(cmd, vg, vg->name);
 			return 1;
 		}

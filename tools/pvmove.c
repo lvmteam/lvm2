@@ -215,35 +215,35 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 		}
 		if (lv_is_origin(lv) || lv_is_cow(lv)) {
 			lv_skipped = 1;
-			log_print("Skipping snapshot-related LV %s", lv->name);
+			log_print_unless_silent("Skipping snapshot-related LV %s", lv->name);
 			continue;
 		}
 		if (lv->status & MIRRORED) {
 			lv_skipped = 1;
-			log_print("Skipping mirror LV %s", lv->name);
+			log_print_unless_silent("Skipping mirror LV %s", lv->name);
 			continue;
 		}
 		if (lv->status & MIRROR_LOG) {
 			lv_skipped = 1;
-			log_print("Skipping mirror log LV %s", lv->name);
+			log_print_unless_silent("Skipping mirror log LV %s", lv->name);
 			continue;
 		}
 		if (lv->status & MIRROR_IMAGE) {
 			lv_skipped = 1;
-			log_print("Skipping mirror image LV %s", lv->name);
+			log_print_unless_silent("Skipping mirror image LV %s", lv->name);
 			continue;
 		}
 		if (lv->status & LOCKED) {
 			lv_skipped = 1;
-			log_print("Skipping locked LV %s", lv->name);
+			log_print_unless_silent("Skipping locked LV %s", lv->name);
 			continue;
 		}
 
 		if (vg_is_clustered(vg) &&
 		    lv_is_active_exclusive_remotely(lv)) {
 			lv_skipped = 1;
-			log_print("Skipping LV %s which is activated "
-				  "exclusively on remote node.", lv->name);
+			log_print_unless_silent("Skipping LV %s which is activated "
+						"exclusively on remote node.", lv->name);
 			continue;
 		}
 
@@ -512,7 +512,7 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 	exclusive = _pvmove_is_exclusive(cmd, vg);
 
 	if ((lv_mirr = find_pvmove_lv(vg, pv_dev(pv), PVMOVE))) {
-		log_print("Detected pvmove in progress for %s", pv_name);
+		log_print_unless_silent("Detected pvmove in progress for %s", pv_name);
 		if (argc || lv_name)
 			log_error("Ignoring remaining command line arguments");
 

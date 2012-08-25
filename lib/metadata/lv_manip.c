@@ -2152,8 +2152,8 @@ int lv_add_virtual_segment(struct logical_volume *lv, uint64_t status,
 			size = ((uint64_t)lv->vg->extent_size * extents + size - 1) /
 				size * size / lv->vg->extent_size;
 			if (size != extents) {
-				log_print("Rounding size (%d extents) up to chunk boundary "
-					  "size (%d extents).", extents, size);
+				log_print_unless_silent("Rounding size (%d extents) up to chunk boundary "
+							"size (%d extents).", extents, size);
 				extents = size;
 			}
 		}
@@ -2738,7 +2738,7 @@ int lv_extend(struct logical_volume *lv,
 			percent_t sync_percent = PERCENT_INVALID;
 
 			if (!lv_is_active(lv)) {
-				log_print("%s/%s is not active."
+				log_error("%s/%s is not active."
 					  "  Unable to get sync percent.",
 					  lv->vg->name, lv->name);
 				if (yes_no_prompt("Do full resync of extended "
@@ -3378,7 +3378,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	backup(vg);
 
 	if (visible)
-		log_print("Logical volume \"%s\" successfully removed", lv->name);
+		log_print_unless_silent("Logical volume \"%s\" successfully removed", lv->name);
 
 	return 1;
 }
@@ -4207,8 +4207,8 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 	}
 
 	if ((size_rest = lp->extents % lp->stripes)) {
-		log_print("Rounding size (%d extents) up to stripe boundary "
-			  "size (%d extents)", lp->extents,
+		log_print_unless_silent("Rounding size (%d extents) up to stripe boundary "
+					"size (%d extents)", lp->extents,
 			  lp->extents - size_rest + lp->stripes);
 		lp->extents = lp->extents - size_rest + lp->stripes;
 	}
@@ -4650,7 +4650,7 @@ int lv_create_single(struct volume_group *vg,
 		return_0;
 
 out:
-	log_print("Logical volume \"%s\" created", lv->name);
+	log_print_unless_silent("Logical volume \"%s\" created", lv->name);
 
 	return 1;
 }

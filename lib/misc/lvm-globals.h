@@ -21,6 +21,7 @@
 #define PV_MIN_SIZE_KB 512
 
 void init_verbose(int level);
+void init_silent(int silent);
 void init_test(int level);
 void init_md_filtering(int level);
 void init_pvmove(int level);
@@ -55,6 +56,7 @@ int full_scan_done(void);
 int obtain_device_list_from_udev(void);
 int trust_cache(void);
 int verbose_level(void);
+int silent_mode(void);
 int debug_level(void);
 int ignorelockingfailure(void);
 int lockingfailed(void);

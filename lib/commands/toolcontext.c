@@ -144,6 +144,11 @@ static void _init_logging(struct cmd_context *cmd)
 	    find_config_tree_int(cmd, "log/level", DEFAULT_LOGLEVEL);
 	init_debug(cmd->default_settings.debug);
 
+	/* Suppress all non-essential stdout? */
+	cmd->default_settings.silent = 
+	    find_config_tree_int(cmd, "log/silent", DEFAULT_SILENT);
+	init_silent(cmd->default_settings.silent);
+
 	/* Verbose level for tty output */
 	cmd->default_settings.verbose =
 	    find_config_tree_int(cmd, "log/verbose", DEFAULT_VERBOSE);

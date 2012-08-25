@@ -134,7 +134,7 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 		goto_bad;
 
 	backup(vg);
-	log_print("Volume group \"%s\" successfully extended", vg_name);
+	log_print_unless_silent("Volume group \"%s\" successfully extended", vg_name);
 	r = ECMD_PROCESSED;
 
 bad:

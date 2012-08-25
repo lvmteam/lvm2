@@ -784,7 +784,7 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	if (doit)
-		log_print("Logical volume \"%s\" changed", lv->name);
+		log_print_unless_silent("Logical volume \"%s\" changed", lv->name);
 
 	if (arg_count(cmd, resync_ARG))
 		if (!lvchange_resync(cmd, lv)) {

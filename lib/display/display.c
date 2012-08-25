@@ -935,7 +935,7 @@ char yes_no_prompt(const char *prompt, ...)
 	sigint_restore();
 
 	if (c != '\n')
-		printf("\n");
+		fprintf(stderr, "\n");
 
 	return ret;
 }

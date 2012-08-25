@@ -118,7 +118,7 @@ static int _pv_resize_single(struct cmd_context *cmd,
 		backup(vg);
 	}
 
-	log_print("Physical volume \"%s\" changed", pv_name);
+	log_print_unless_silent("Physical volume \"%s\" changed", pv_name);
 	r = 1;
 
 out:
@@ -176,8 +176,8 @@ int pvresize(struct cmd_context *cmd, int argc, char **argv)
 	ret = process_each_pv(cmd, argc, argv, NULL, READ_FOR_UPDATE, 0, &params,
 			      _pvresize_single);
 
-	log_print("%d physical volume(s) resized / %d physical volume(s) "
-		  "not resized", params.done, params.total - params.done);
+	log_print_unless_silent("%d physical volume(s) resized / %d physical volume(s) "
+				"not resized", params.done, params.total - params.done);
 
 	return ret;
 }

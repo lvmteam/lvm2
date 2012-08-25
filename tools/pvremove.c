@@ -131,8 +131,8 @@ static int pvremove_single(struct cmd_context *cmd, const char *pv_name,
 	if (!lvmetad_pv_gone_by_dev(dev, NULL))
 		goto_out;
 
-	log_print("Labels on physical volume \"%s\" successfully wiped",
-		  pv_name);
+	log_print_unless_silent("Labels on physical volume \"%s\" successfully wiped",
+				pv_name);
 
 	ret = ECMD_PROCESSED;
 

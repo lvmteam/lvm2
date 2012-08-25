@@ -148,8 +148,8 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 	/* FIXME Remove /dev/vgfrom */
 
 	backup(vg_to);
-	log_print("Volume group \"%s\" successfully merged into \"%s\"",
-		  vg_from->name, vg_to->name);
+	log_print_unless_silent("Volume group \"%s\" successfully merged into \"%s\"",
+				vg_from->name, vg_to->name);
 	r = ECMD_PROCESSED;
 bad:
 	/*

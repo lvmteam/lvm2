@@ -847,6 +847,9 @@ static int _get_settings(struct cmd_context *cmd)
 		cmd->current_settings.verbose = 0;
 	}
 
+	if (arg_count(cmd, quiet_ARG) > 1)
+		cmd->current_settings.silent = 1;
+
 	if (arg_count(cmd, test_ARG))
 		cmd->current_settings.test = arg_count(cmd, test_ARG);
 
@@ -863,7 +866,7 @@ static int _get_settings(struct cmd_context *cmd)
 
 	if (arg_count(cmd, partial_ARG)) {
 		cmd->partial_activation = 1;
-		log_print("Partial mode. Incomplete logical volumes will be processed.");
+		log_warn("PARTIAL MODE. Incomplete logical volumes will be processed.");
 	}
 
 	if (arg_count(cmd, ignorelockingfailure_ARG) || arg_count(cmd, sysinit_ARG))
@@ -966,6 +969,7 @@ static void _apply_settings(struct cmd_context *cmd)
 {
 	init_debug(cmd->current_settings.debug);
 	init_verbose(cmd->current_settings.verbose + VERBOSE_BASE_LEVEL);
+	init_silent(cmd->current_settings.silent);
 	init_test(cmd->current_settings.test);
 	init_full_scan_done(0);
 	init_mirror_in_sync(0);

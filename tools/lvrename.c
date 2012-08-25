@@ -133,8 +133,8 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 	if (!lv_rename(cmd, lvl->lv, lv_name_new))
 		goto error;
 
-	log_print("Renamed \"%s\" to \"%s\" in volume group \"%s\"",
-		  lv_name_old, lv_name_new, vg_name);
+	log_print_unless_silent("Renamed \"%s\" to \"%s\" in volume group \"%s\"",
+				lv_name_old, lv_name_new, vg_name);
 
 	r = ECMD_PROCESSED;
 error:

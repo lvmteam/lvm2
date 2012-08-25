@@ -186,7 +186,7 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 			  "archived metadata.");
 		return ECMD_FAILED;
 	}
-	log_print("Volume group %s successfully converted", vg_name);
+	log_print_unless_silent("Volume group %s successfully converted", vg_name);
 
 	backup(vg);
 

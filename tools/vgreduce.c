@@ -193,7 +193,7 @@ static int _vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 
 	backup(vg);
 
-	log_print("Removed \"%s\" from volume group \"%s\"", name, vg->name);
+	log_print_unless_silent("Removed \"%s\" from volume group \"%s\"", name, vg->name);
 	r = ECMD_PROCESSED;
 bad:
 	if (pvl)
@@ -304,8 +304,8 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 		backup(vg);
 
 		if (fixed) {
-			log_print("Wrote out consistent volume group %s",
-				  vg_name);
+			log_print_unless_silent("Wrote out consistent volume group %s",
+						vg_name);
 			ret = ECMD_PROCESSED;
 		} else
 			ret = ECMD_FAILED;

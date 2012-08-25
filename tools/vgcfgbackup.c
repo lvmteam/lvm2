@@ -81,7 +81,7 @@ static int vg_backup_single(struct cmd_context *cmd, const char *vg_name,
 		}
 	}
 
-	log_print("Volume group \"%s\" successfully backed up.", vg_name);
+	log_print_unless_silent("Volume group \"%s\" successfully backed up.", vg_name);
 	return ECMD_PROCESSED;
 }
 

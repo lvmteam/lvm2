@@ -165,7 +165,7 @@ Set debug level. Repeat from 1 to 6 times to increase the detail of
 messages sent to the log file and/or syslog (if configured).
 Overrides config file setting.
 .TP
-.B \-\-quiet
+.BR \-q ", "  \-\-quiet
 Suppress output and log messages.
 Overrides \fB\-d\fP and \fB\-v\fP.
 .TP

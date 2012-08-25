@@ -23,6 +23,7 @@
 #include <stdarg.h>
 
 static int _verbose_level = VERBOSE_BASE_LEVEL;
+static int _silent = 0;
 static int _test = 0;
 static int _md_filtering = 0;
 static int _pvmove = 0;
@@ -54,10 +55,15 @@ void init_verbose(int level)
 	_verbose_level = level;
 }
 
+void init_silent(int silent)
+{
+	_silent = silent;
+}
+
 void init_test(int level)
 {
 	if (!_test && level)
-		log_print("Test mode: Metadata will NOT be updated and volumes will not be (de)activated.");
+		log_warn("TEST MODE: Metadata will NOT be updated and volumes will not be (de)activated.");
 	_test = level;
 }
 
@@ -265,6 +271,11 @@ int verbose_level(void)
 int debug_level(void)
 {
 	return _debug_level;
+}
+
+int silent_mode(void)
+{
+	return _silent;
 }
 
 unsigned is_static(void)

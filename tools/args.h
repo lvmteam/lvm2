@@ -18,7 +18,6 @@
  */
 /* *INDENT-OFF* */
 arg(version_ARG, '\0', "version", NULL, 0)
-arg(quiet_ARG, '\0', "quiet", NULL, 0)
 arg(physicalvolumesize_ARG, '\0', "setphysicalvolumesize", size_mb_arg, 0)
 arg(ignorelockingfailure_ARG, '\0', "ignorelockingfailure", NULL, 0)
 arg(nolocking_ARG, '\0', "nolocking", NULL, 0)
@@ -131,6 +130,7 @@ arg(permission_ARG, 'p', "permission", permission_arg, 0)
 arg(maxphysicalvolumes_ARG, 'p', "maxphysicalvolumes", int_arg, 0)
 arg(partial_ARG, 'P', "partial", NULL, 0)
 arg(physicalvolume_ARG, 'P', "physicalvolume", NULL, 0)
+arg(quiet_ARG, 'q', "quiet", NULL, ARG_COUNTABLE)
 arg(readahead_ARG, 'r', "readahead", readahead_arg, 0)
 arg(resizefs_ARG, 'r', "resizefs", NULL, 0)
 arg(reset_ARG, 'R', "reset", NULL, 0)

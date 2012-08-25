@@ -234,6 +234,15 @@ log {
     # There are three levels of verbosity, 3 being the most verbose.
     verbose = 0
 
+    # Set to 1 to suppress all non-essential messages from stdout.
+    # This has the same effect as -qq.
+    # When this is set, the following commands still produce output:
+    # dumpconfig, lvdisplay, lvmdiskscan, lvs, pvck, pvdisplay, 
+    # pvs, version, vgcfgrestore -l, vgdisplay, vgs.
+    # Non-essential messages are shifted from log level 4 to log level 5
+    # for syslog and lvm2_log_fn purposes.
+    silent = 0
+
     # Should we send log messages through syslog?
     # 1 is yes; 0 is no.
     syslog = 1

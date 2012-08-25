@@ -194,9 +194,9 @@ static int _vgchange_monitoring(struct cmd_context *cmd, struct volume_group *vg
 	    dmeventd_monitor_mode() != DMEVENTD_MONITOR_IGNORE) {
 		if (!_monitor_lvs_in_vg(cmd, vg, dmeventd_monitor_mode(), &monitored))
 			r = 0;
-		log_print("%d logical volume(s) in volume group "
-			    "\"%s\" %smonitored",
-			    monitored, vg->name, (dmeventd_monitor_mode()) ? "" : "un");
+		log_print_unless_silent("%d logical volume(s) in volume group "
+					"\"%s\" %smonitored",
+					monitored, vg->name, (dmeventd_monitor_mode()) ? "" : "un");
 	}
 
 	return r;
@@ -209,9 +209,9 @@ static int _vgchange_background_polling(struct cmd_context *cmd, struct volume_g
 	if (lvs_in_vg_activated(vg) && background_polling()) {
 	        polled = _poll_lvs_in_vg(cmd, vg);
 		if (polled)
-			log_print("Background polling started for %d logical volume(s) "
-				  "in volume group \"%s\"",
-				  polled, vg->name);
+			log_print_unless_silent("Background polling started for %d logical volume(s) "
+						"in volume group \"%s\"",
+						polled, vg->name);
 	}
 
 	return 1;
@@ -260,8 +260,8 @@ int vgchange_activate(struct cmd_context *cmd, struct volume_group *vg,
 
 	/* Print message only if there was not found a missing VG */
 	if (!vg->cmd_missing_vgs)
-		log_print("%d logical volume(s) in volume group \"%s\" now active",
-			  lvs_in_vg_activated(vg), vg->name);
+		log_print_unless_silent("%d logical volume(s) in volume group \"%s\" now active",
+					lvs_in_vg_activated(vg), vg->name);
 	return r;
 }
 
@@ -508,7 +508,7 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 
 		backup(vg);
 
-		log_print("Volume group \"%s\" successfully changed", vg->name);
+		log_print_unless_silent("Volume group \"%s\" successfully changed", vg->name);
 	}
 
 	if (arg_count(cmd, activate_ARG)) {

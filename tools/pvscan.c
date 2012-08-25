@@ -34,7 +34,7 @@ static void _pvscan_display_single(struct cmd_context *cmd,
 
 	/* short listing? */
 	if (arg_count(cmd, short_ARG) > 0) {
-		log_print("%s", pv_dev_name(pv));
+		log_print_unless_silent("%s", pv_dev_name(pv));
 		return;
 	}
 
@@ -64,37 +64,31 @@ static void _pvscan_display_single(struct cmd_context *cmd,
 	}
 
 	if (is_orphan(pv)) {
-		log_print("PV %-*s    %-*s %s [%s]",
-			  pv_max_name_len, pv_tmp_name,
-			  vg_max_name_len, " ",
-			  pv->fmt ? pv->fmt->name : "    ",
-			  display_size(cmd, pv_size(pv)));
+		log_print_unless_silent("PV %-*s    %-*s %s [%s]",
+					pv_max_name_len, pv_tmp_name,
+					vg_max_name_len, " ",
+					pv->fmt ? pv->fmt->name : "    ",
+					display_size(cmd, pv_size(pv)));
 		return;
 	}
 
 	if (pv_status(pv) & EXPORTED_VG) {
 		strncpy(vg_name_this, pv_vg_name(pv), vg_name_len);
-		log_print("PV %-*s  is in exported VG %s "
-			  "[%s / %s free]",
-			  pv_max_name_len, pv_tmp_name,
-			  vg_name_this,
-			  display_size(cmd, (uint64_t) pv_pe_count(pv) *
-				       pv_pe_size(pv)),
-			  display_size(cmd, (uint64_t) (pv_pe_count(pv) -
-						pv_pe_alloc_count(pv))
-				       * pv_pe_size(pv)));
+		log_print_unless_silent("PV %-*s  is in exported VG %s "
+					"[%s / %s free]",
+					pv_max_name_len, pv_tmp_name,
+					vg_name_this,
+					display_size(cmd, (uint64_t) pv_pe_count(pv) * pv_pe_size(pv)),
+					display_size(cmd, (uint64_t) (pv_pe_count(pv) - pv_pe_alloc_count(pv)) * pv_pe_size(pv)));
 		return;
 	}
 
 	sprintf(vg_tmp_name, "%s", pv_vg_name(pv));
-	log_print("PV %-*s VG %-*s %s [%s / %s free]", pv_max_name_len,
-		  pv_tmp_name, vg_max_name_len, vg_tmp_name,
-		  pv->fmt ? pv->fmt->name : "    ",
-		  display_size(cmd, (uint64_t) pv_pe_count(pv) *
-					       pv_pe_size(pv)),
-		  display_size(cmd, (uint64_t) (pv_pe_count(pv) -
-						pv_pe_alloc_count(pv)) *
-					   pv_pe_size(pv)));
+	log_print_unless_silent("PV %-*s VG %-*s %s [%s / %s free]", pv_max_name_len,
+				pv_tmp_name, vg_max_name_len, vg_tmp_name,
+				pv->fmt ? pv->fmt->name : "    ",
+				display_size(cmd, (uint64_t) pv_pe_count(pv) * pv_pe_size(pv)),
+				display_size(cmd, (uint64_t) (pv_pe_count(pv) - pv_pe_alloc_count(pv)) * pv_pe_size(pv)));
 }
 
 static int _auto_activation_handler(struct volume_group *vg, int partial,
@@ -223,8 +217,8 @@ static int _pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
 				break;
 			}
 
-			log_print("Device %s not found. "
-				  "Cleared from lvmetad cache.", buf ? : "");
+			log_print_unless_silent("Device %s not found. "
+						"Cleared from lvmetad cache.", buf ? : "");
 			if (buf)
 				dm_free(buf);
 			continue;
@@ -355,17 +349,17 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	if (!pvs_found) {
-		log_print("No matching physical volumes found");
+		log_print_unless_silent("No matching physical volumes found");
 		unlock_vg(cmd, VG_GLOBAL);
 		return ECMD_PROCESSED;
 	}
 
-	log_print("Total: %d [%s] / in use: %d [%s] / in no VG: %d [%s]",
-		  pvs_found,
-		  display_size(cmd, size_total),
-		  pvs_found - new_pvs_found,
-		  display_size(cmd, (size_total - size_new)),
-		  new_pvs_found, display_size(cmd, size_new));
+	log_print_unless_silent("Total: %d [%s] / in use: %d [%s] / in no VG: %d [%s]",
+				pvs_found,
+				display_size(cmd, size_total),
+				pvs_found - new_pvs_found,
+				display_size(cmd, (size_total - size_new)),
+				new_pvs_found, display_size(cmd, size_new));
 
 	unlock_vg(cmd, VG_GLOBAL);
 

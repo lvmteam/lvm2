@@ -1311,8 +1311,8 @@ int lv_raid_split_and_track(struct logical_volume *lv,
 		return 0;
 	}
 
-	log_print("%s split from %s for read-only purposes.",
-		  seg_lv(seg, s)->name, lv->name);
+	log_print_unless_silent("%s split from %s for read-only purposes.",
+				seg_lv(seg, s)->name, lv->name);
 
 	/* Resume original LV */
 	if (!resume_lv(lv->vg->cmd, lv)) {
@@ -1325,8 +1325,8 @@ int lv_raid_split_and_track(struct logical_volume *lv,
 	if (!_activate_sublv_preserving_excl(lv, seg_lv(seg, s)))
 		return 0;
 
-	log_print("Use 'lvconvert --merge %s/%s' to merge back into %s",
-		  lv->vg->name, seg_lv(seg, s)->name, lv->name);
+	log_print_unless_silent("Use 'lvconvert --merge %s/%s' to merge back into %s",
+				lv->vg->name, seg_lv(seg, s)->name, lv->name);
 	return 1;
 }
 
@@ -1410,9 +1410,8 @@ int lv_raid_merge(struct logical_volume *image_lv)
 		return 0;
 	}
 
-	log_print("%s/%s successfully merged back into %s/%s",
-		  vg->name, image_lv->name,
-		  vg->name, lv->name);
+	log_print_unless_silent("%s/%s successfully merged back into %s/%s",
+				vg->name, image_lv->name, vg->name, lv->name);
 	return 1;
 }
 

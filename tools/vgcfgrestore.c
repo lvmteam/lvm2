@@ -70,7 +70,7 @@ int vgcfgrestore(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	log_print("Restored volume group %s", vg_name);
+	log_print_unless_silent("Restored volume group %s", vg_name);
 
 	unlock_vg(cmd, VG_ORPHANS);
 	unlock_vg(cmd, vg_name);

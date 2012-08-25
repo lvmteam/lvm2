@@ -21,9 +21,9 @@ static int vgscan_single(struct cmd_context *cmd, const char *vg_name,
 			 struct volume_group *vg,
 			 void *handle __attribute__((unused)))
 {
-	log_print("Found %svolume group \"%s\" using metadata type %s",
-		  vg_is_exported(vg) ? "exported " : "", vg_name,
-		  vg->fid->fmt->name);
+	log_print_unless_silent("Found %svolume group \"%s\" using metadata type %s",
+				vg_is_exported(vg) ? "exported " : "", vg_name,
+				vg->fid->fmt->name);
 
 	check_current_backup(vg);
 
@@ -64,7 +64,7 @@ int vgscan(struct cmd_context *cmd, int argc, char **argv)
 		}
 	}
 
-	log_print("Reading all physical volumes.  This may take a while...");
+	log_print_unless_silent("Reading all physical volumes.  This may take a while...");
 
 	maxret = process_each_vg(cmd, argc, argv, 0, NULL,
 				 &vgscan_single);

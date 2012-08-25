@@ -710,7 +710,7 @@ int pvscan_lvmetad_single(struct cmd_context *cmd, struct device *dev,
 	}
 
 	if (!label_read(dev, &label, 0)) {
-		log_print("No PV label found on %s.", dev_name(dev));
+		log_print_unless_silent("No PV label found on %s.", dev_name(dev));
 		if (!lvmetad_pv_gone_by_dev(dev, handler))
 			goto_bad;
 		return 1;

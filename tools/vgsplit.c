@@ -493,9 +493,9 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 
 	backup(vg_to);
 
-	log_print("%s volume group \"%s\" successfully split from \"%s\"",
-		  existing_vg ? "Existing" : "New",
-		  vg_to->name, vg_from->name);
+	log_print_unless_silent("%s volume group \"%s\" successfully split from \"%s\"",
+				existing_vg ? "Existing" : "New",
+				vg_to->name, vg_from->name);
 
 	r = ECMD_PROCESSED;
 

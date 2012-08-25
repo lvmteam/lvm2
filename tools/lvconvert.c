@@ -548,7 +548,7 @@ static int _finish_lvconvert_mirror(struct cmd_context *cmd,
 	if (!(_reload_lv(cmd, vg, lv)))
 		return_0;
 
-	log_print("Logical volume %s converted.", lv->name);
+	log_print_unless_silent("Logical volume %s converted.", lv->name);
 
 	return 1;
 }
@@ -564,7 +564,7 @@ static int _finish_lvconvert_merge(struct cmd_context *cmd,
 		return 0;
 	}
 
-	log_print("Merge of snapshot into logical volume %s has finished.", lv->name);
+	log_print_unless_silent("Merge of snapshot into logical volume %s has finished.", lv->name);
 	if (!lv_remove_single(cmd, snap_seg->cow, DONT_PROMPT)) {
 		log_error("Could not remove snapshot %s merged into %s.",
 			  snap_seg->cow->name, lv->name);
@@ -593,8 +593,8 @@ static progress_t _poll_merge_progress(struct cmd_context *cmd,
 	}
 
 	if (parms->progress_display)
-		log_print("%s: %s: %.1f%%", lv->name, parms->progress_title,
-			  100.0 - percent_to_float(percent));
+		log_print_unless_silent("%s: %s: %.1f%%", lv->name, parms->progress_title,
+					100.0 - percent_to_float(percent));
 	else
 		log_verbose("%s: %s: %.1f%%", lv->name, parms->progress_title,
 			    100.0 - percent_to_float(percent));
@@ -1511,7 +1511,7 @@ static int _lvconvert_mirrors(struct cmd_context *cmd,
 		return 0;
 
 	if (!lp->need_polling)
-		log_print("Logical volume %s converted.", lv->name);
+		log_print_unless_silent("Logical volume %s converted.", lv->name);
 
 	backup(lv->vg);
 	return 1;
@@ -1638,8 +1638,8 @@ static int lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *lp
 				return 0;
 			}
 
-			log_print("Faulty devices in %s/%s successfully"
-				  " replaced.", lv->vg->name, lv->name);
+			log_print_unless_silent("Faulty devices in %s/%s successfully"
+						" replaced.", lv->vg->name, lv->name);
 			return 1;
 		}
 
@@ -1703,7 +1703,7 @@ static int lvconvert_snapshot(struct cmd_context *cmd,
 	if (!_reload_lv(cmd, lv->vg, lv))
 		return_0;
 
-	log_print("Logical volume %s converted to snapshot.", lv->name);
+	log_print_unless_silent("Logical volume %s converted to snapshot.", lv->name);
 
 	return 1;
 }
@@ -1747,7 +1747,7 @@ static int lvconvert_merge(struct cmd_context *cmd,
 	}
 	if (lv_info(cmd, lv, 0, &info, 1, 0)) {
 		if (info.open_count) {
-			log_print("Can't merge when snapshot is open");
+			log_print_unless_silent("Can't merge when snapshot is open");
 			merge_on_activate = 1;
 		}
 	}
@@ -1763,8 +1763,8 @@ static int lvconvert_merge(struct cmd_context *cmd,
 		if (!vg_commit(lv->vg))
 			return_0;
 		r = 1;
-		log_print("Merging of snapshot %s will start "
-			  "next activation.", lv->name);
+		log_print_unless_silent("Merging of snapshot %s will start "
+					"next activation.", lv->name);
 		goto out;
 	}
 
@@ -1790,7 +1790,7 @@ static int lvconvert_merge(struct cmd_context *cmd,
 	lp->lv_to_poll = origin;
 
 	r = 1;
-	log_print("Merging of volume %s started.", lv->name);
+	log_print_unless_silent("Merging of volume %s started.", lv->name);
 out:
 	backup(lv->vg);
 	return r;
@@ -1892,8 +1892,8 @@ static int _lvconvert_thinpool(struct cmd_context *cmd,
 	if (!vg_write(pool_lv->vg) || !vg_commit(pool_lv->vg))
 		return_0;
 
-	log_print("Converted %s/%s to thin pool.",
-		  pool_lv->vg->name, pool_lv->name);
+	log_print_unless_silent("Converted %s/%s to thin pool.",
+				pool_lv->vg->name, pool_lv->name);
 	if (was_active && !activate_lv(cmd, pool_lv)) {
 		log_error("Failed to activate pool logical volume %s/%s.",
 			  pool_lv->vg->name, pool_lv->name);
@@ -2065,7 +2065,7 @@ static int poll_logical_volume(struct cmd_context *cmd, struct logical_volume *l
 	struct lvinfo info;
 
 	if (!lv_info(cmd, lv, 0, &info, 0, 0) || !info.exists) {
-		log_print("Conversion starts after activation.");
+		log_print_unless_silent("Conversion starts after activation.");
 		return ECMD_PROCESSED;
 	}
 	return lvconvert_poll(cmd, lv, wait_completion ? 0 : 1U);

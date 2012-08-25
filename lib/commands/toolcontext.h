@@ -27,6 +27,7 @@
 struct config_info {
 	int debug;
 	int verbose;
+	int silent;
 	int test;
 	int syslog;
 	int activation;

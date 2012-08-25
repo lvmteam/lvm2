@@ -168,7 +168,7 @@ static int _pvchange_single(struct cmd_context *cmd, struct volume_group *vg,
 		return 0;
 	}
 
-	log_print("Physical volume \"%s\" changed", pv_name);
+	log_print_unless_silent("Physical volume \"%s\" changed", pv_name);
 
 	return 1;
 }
@@ -269,10 +269,10 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 		unlock_vg(cmd, VG_GLOBAL);
 	}
 
-	log_print("%d physical volume%s changed / %d physical volume%s "
-		  "not changed",
-		  done, done == 1 ? "" : "s",
-		  total - done, (total - done) == 1 ? "" : "s");
+	log_print_unless_silent("%d physical volume%s changed / %d physical volume%s "
+				"not changed",
+				done, done == 1 ? "" : "s",
+				total - done, (total - done) == 1 ? "" : "s");
 
 	return (total == done) ? ECMD_PROCESSED : ECMD_FAILED;
 }

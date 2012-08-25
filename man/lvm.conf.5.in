@@ -226,6 +226,12 @@ is invoked.  By default tools append messages to the log file.
 \fBverbose\fP \(em Default level (0-3) of messages sent to stdout or stderr.
 3 is the most verbose; 0 should produce the least output.
 .IP
+\fBsilent\fP \(em Set to 1 to suppress all non-essential tool output.
+When set, display and reporting tools will still write the requested
+device properties to standard output, but messages confirming that
+something was or wasn't changed will be reduced to the 'verbose' level
+and not appear unless -v is supplied.
+.IP
 \fBsyslog\fP \(em Set to 1 (the default) to send log messages through syslog.
 Turn off by setting to 0.  If you set to an integer greater than one,
 this is used - unvalidated - as the facility.  The default is LOG_USER.
