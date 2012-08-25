@@ -1,5 +1,6 @@
 Version 2.02.98 -
 =================================
+  Fix setvbuf code by closing and reopening stream before changing buffer.
   Disable private buffering when using liblvm.
   When private stdin/stdout buffering is not used always use silent mode.
   Add log/silent to lvm.conf equivalent to -qq.
