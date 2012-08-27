@@ -51,6 +51,8 @@ void fcntl_unlock_file(int lockfd);
   ((buf1).st_ino == (buf2).st_ino && \
    (buf1).st_dev == (buf2).st_dev)
 
+#define is_valid_fd(fd) (!(fcntl(fd, F_GETFD) == -1 && errno == EBADF))
+
 /*
  * Close the specified stream, taking care to detect and diagnose any write
  * error.  If there is an error, use the supplied file name in a diagnostic

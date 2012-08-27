@@ -1230,7 +1230,7 @@ static void _close_descriptor(int fd, unsigned suppress_warnings,
 	const char *filename;
 
 	/* Ignore bad file descriptors */
-	if (fcntl(fd, F_GETFD) == -1 && errno == EBADF)
+	if (!is_valid_fd(fd))
 		return;
 
 	if (!suppress_warnings)
