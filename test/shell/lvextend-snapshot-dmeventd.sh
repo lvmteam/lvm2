@@ -12,7 +12,7 @@
 . lib/test
 
 extend() {
-	lvextend --use-policies --config "activation { snapshot_extend_threshold = $1 }" $vg/snap
+	lvextend --use-policies --config "activation { snapshot_autoextend_threshold = $1 }" $vg/snap
 }
 
 write_() {
