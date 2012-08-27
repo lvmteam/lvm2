@@ -40,9 +40,9 @@ SUBDIRS += scripts
 
 # FIXME Should use intermediate Makefiles here!
 ifeq ($(MAKECMDGOALS),distclean)
-  SUBDIRS = doc include man scripts \
+  SUBDIRS = doc include man test scripts \
     libdaemon lib tools daemons libdm \
-    udev po liblvm test \
+    udev po liblvm \
     unit-tests/datastruct unit-tests/mm unit-tests/regex
 endif
 DISTCLEAN_DIRS += lcov_reports*
