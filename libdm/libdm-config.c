@@ -1169,14 +1169,9 @@ struct dm_config_node *dm_config_create_node(struct dm_config_tree *cft, const c
 		log_error("Failed to create config node's key.");
 		return NULL;
 	}
-	if (!(cn->v = _create_value(cft->mem))) {
-		log_error("Failed to create config node's value.");
-		return NULL;
-	}
 	cn->parent = NULL;
-	cn->v->type = DM_CFG_INT;
-	cn->v->v.i = 0;
-	cn->v->next = NULL;
+	cn->v = NULL;
+
 	return cn;
 }
 

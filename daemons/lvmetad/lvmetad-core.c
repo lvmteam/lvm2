@@ -520,12 +520,19 @@ static response vg_lookup(lvmetad_state *s, request r)
 	if (!(res.cft->root = n = dm_config_create_node(res.cft, "response")))
 		goto bad;
 
+	if (!(n->v = dm_config_create_value(cft)))
+		goto bad;
+
 	n->parent = res.cft->root;
 	n->v->type = DM_CFG_STRING;
 	n->v->v.str = "OK";
 
 	if (!(n = n->sib = dm_config_create_node(res.cft, "name")))
 		goto bad;
+
+	if (!(n->v = dm_config_create_value(res.cft)))
+		goto bad;
+
 	n->parent = res.cft->root;
 	n->v->type = DM_CFG_STRING;
 	n->v->v.str = name;
