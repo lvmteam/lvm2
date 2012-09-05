@@ -252,7 +252,7 @@ static int _raid_remove_top_layer(struct logical_volume *lv,
 	if (!seg_is_mirrored(seg)) {
 		log_error(INTERNAL_ERROR
 			  "Unable to remove RAID layer from segment type %s",
-			  seg->segtype->name);
+			  seg->segtype->ops->name(seg));
 		return 0;
 	}
 
@@ -658,7 +658,7 @@ static int _raid_add_images(struct logical_volume *lv,
 		dm_list_add(&meta_lvs, &lvl->list);
 	} else if (!seg_is_raid(seg)) {
 		log_error("Unable to add RAID images to %s of segment type %s",
-			  lv->name, seg->segtype->name);
+			  lv->name, seg->segtype->ops->name(seg));
 		return 0;
 	}
 
@@ -1126,7 +1126,7 @@ int lv_raid_split(struct logical_volume *lv, const char *split_name,
 
 	if (!seg_is_mirrored(first_seg(lv))) {
 		log_error("Unable to split logical volume of segment type, %s",
-			  first_seg(lv)->segtype->name);
+			  first_seg(lv)->segtype->ops->name(first_seg(lv)));
 		return 0;
 	}
 
@@ -1561,7 +1561,7 @@ int lv_raid_reshape(struct logical_volume *lv,
 
 	log_error("Converting the segment type for %s/%s from %s to %s"
 		  " is not yet supported.", lv->vg->name, lv->name,
-		  seg->segtype->name, new_segtype->name);
+		  seg->segtype->ops->name(seg), new_segtype->name);
 	return 0;
 }
 
@@ -1617,7 +1617,8 @@ int lv_raid_replace(struct logical_volume *lv,
 		   (match_count > raid_seg->segtype->parity_devs)) {
 		log_error("Unable to replace more than %u PVs from (%s) %s/%s",
 			  raid_seg->segtype->parity_devs,
-			  raid_seg->segtype->name, lv->vg->name, lv->name);
+			  raid_seg->segtype->ops->name(raid_seg),
+			  lv->vg->name, lv->name);
 		return 0;
 	} else if (!strcmp(raid_seg->segtype->name, "raid10")) {
 		uint32_t i, rebuilds_per_group = 0;

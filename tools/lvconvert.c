@@ -1577,14 +1577,14 @@ static int lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *lp
 	if (arg_count(cmd, mirrors_ARG) &&
 	    !seg_is_mirrored(seg) && !seg_is_linear(seg)) {
 		log_error("'--mirrors/-m' is not compatible with %s",
-			  seg->segtype->name);
+			  seg->segtype->ops->name(seg));
 		return 0;
 	}
 
 	if (!is_valid_raid_conversion(seg->segtype, lp->segtype)) {
 		log_error("Unable to convert %s/%s from %s to %s",
 			  lv->vg->name, lv->name,
-			  seg->segtype->name, lp->segtype->name);
+			  seg->segtype->ops->name(seg), lp->segtype->name);
 		return 0;
 	}
 

@@ -429,7 +429,8 @@ static int _lv_split_segment(struct logical_volume *lv, struct lv_segment *seg,
 
 	if (!seg_can_split(seg)) {
 		log_error("Unable to split the %s segment at LE %" PRIu32
-			  " in LV %s", seg->segtype->name, le, lv->name);
+			  " in LV %s", seg->segtype->ops->name(seg),
+			  le, lv->name);
 		return 0;
 	}
 

@@ -630,7 +630,7 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 			lp->stripes = seg_stripes;
 		else if (seg_is_raid(first_seg(lv)) &&
 			 (lp->stripes != seg_stripes)) {
-			log_error("Unable to extend \"%s\" segment type with different number of stripes.", first_seg(lv)->segtype->name);
+			log_error("Unable to extend \"%s\" segment type with different number of stripes.", first_seg(lv)->segtype->ops->name(first_seg(lv)));
 			return ECMD_FAILED;
 		}
 
