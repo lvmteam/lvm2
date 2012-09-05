@@ -2623,6 +2623,12 @@ static int _lv_extend_layered_lv(struct alloc_handle *ah,
 
 		for (s = 0; s < seg->area_count; s++) {
 			meta_lv = seg_metalv(seg, s);
+
+			if (test_mode()) {
+				lv_set_hidden(meta_lv);
+				continue;
+			}
+
 			if (!activate_lv(meta_lv->vg->cmd, meta_lv)) {
 				log_error("Failed to activate %s/%s for clearing",
 					  meta_lv->vg->name, meta_lv->name);

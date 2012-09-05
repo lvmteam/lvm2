@@ -1,5 +1,6 @@
 Version 2.02.98 -
 =================================
+  Fix RAID LV creation with '--test' so valid commands do not fail.
   Add lvm_lv_rename() to lvm2api.
   Fix setvbuf code by closing and reopening stream before changing buffer.
   Disable private buffering when using liblvm.
