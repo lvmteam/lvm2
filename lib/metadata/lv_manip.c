@@ -3795,6 +3795,7 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 	struct logical_volume *layer_lv;
 	struct segment_type *segtype;
 	struct lv_segment *mapseg;
+	struct lv_names lv_names;
 	unsigned exclusive = 0;
 
 	/* create an empty layer LV */
@@ -3890,6 +3891,18 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 	dm_list_add(&lv_where->segments, &mapseg->list);
 	lv_where->le_count = layer_lv->le_count;
 	lv_where->size = (uint64_t) lv_where->le_count * lv_where->vg->extent_size;
+
+	/*
+	 * recuresively rename sub LVs
+	 *   currently supported only for thin data layer
+	 *   FIXME: without strcmp it breaks mirrors....
+	 */
+	if (strcmp(layer_suffix, "_tdata") == 0) {
+		lv_names.old = lv_where->name;
+		lv_names.new = layer_lv->name;
+		if (!for_each_sub_lv(cmd, layer_lv, _rename_cb, (void *) &lv_names))
+			return 0;
+	}
 
 	return layer_lv;
 }
