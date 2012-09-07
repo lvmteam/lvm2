@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2009 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2012 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -26,6 +26,7 @@
 #include <time.h>
 #include <sys/resource.h>
 #include <dirent.h>
+#include <paths.h>
 
 #ifdef HAVE_GETOPTLONG
 #  include <getopt.h>
@@ -1186,6 +1187,39 @@ int lvm_split(char *str, int *argc, char **argv, int max)
 	return *argc;
 }
 
+/* Make sure we have always valid filedescriptors 0,1,2 */
+static int _check_standard_fds(void)
+{
+	int err = is_valid_fd(STDERR_FILENO);
+
+	if (!is_valid_fd(STDIN_FILENO) &&
+	    !(stdin = fopen(_PATH_DEVNULL, "r"))) {
+		if (err)
+			perror("stdin stream open");
+		else
+			printf("stdin stream open: %s\n",
+			       strerror(errno));
+		return 0;
+	}
+
+	if (!is_valid_fd(STDOUT_FILENO) &&
+	    !(stdout = fopen(_PATH_DEVNULL, "w"))) {
+		if (err)
+			perror("stdout stream open");
+		/* else no stdout */
+		return 0;
+	}
+
+	if (!is_valid_fd(STDERR_FILENO) &&
+	    !(stderr = fopen(_PATH_DEVNULL, "w"))) {
+		printf("stderr stream open: %s\n",
+		       strerror(errno));
+		return 0;
+	}
+
+	return 1;
+}
+
 static const char *_get_cmdline(pid_t pid)
 {
 	static char _proc_cmdline[32];
@@ -1449,6 +1483,9 @@ int lvm2_main(int argc, char **argv)
 	if (strcmp(base, "lvm") && strcmp(base, "lvm.static") &&
 	    strcmp(base, "initrd-lvm"))
 		alias = 1;
+
+	if (!_check_standard_fds())
+		return -1;
 
 	if (!_close_stray_fds(base))
 		return -1;
