@@ -125,10 +125,10 @@ struct volume_group *lvmetad_vg_lookup(struct cmd_context *cmd,
 /*
  * Scan a single device and update lvmetad with the result(s).
  */
-int pvscan_lvmetad_single(struct cmd_context *cmd, struct device *dev,
+int lvmetad_pvscan_single(struct cmd_context *cmd, struct device *dev,
 			  activation_handler handler);
 
-int pvscan_lvmetad_all_devs(struct cmd_context *cmd, activation_handler handler);
+int lvmetad_pvscan_all_devs(struct cmd_context *cmd, activation_handler handler);
 
 #  else		/* LVMETAD_SUPPORT */
 
@@ -148,8 +148,8 @@ int pvscan_lvmetad_all_devs(struct cmd_context *cmd, activation_handler handler)
 #    define lvmetad_pv_lookup_by_dev(cmd, dev, found)	(0)
 #    define lvmetad_vg_list_to_lvmcache(cmd)	(1)
 #    define lvmetad_vg_lookup(cmd, vgname, vgid)	(NULL)
-#    define pvscan_lvmetad_single(cmd, dev, handler)	(0)
-#    define pvscan_lvmetad_all_devs(cmd, handler)	(0)
+#    define lvmetad_pvscan_single(cmd, dev, handler)	(0)
+#    define lvmetad_pvscan_all_devs(cmd, handler)	(0)
 
 #  endif	/* LVMETAD_SUPPORT */
 

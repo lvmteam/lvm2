@@ -123,7 +123,7 @@ retry:
 		_lvmetad_token = (char *) "update in progress";
 		if (!_token_update()) goto out;
 
-		if (pvscan_lvmetad_all_devs(_lvmetad_cmd, NULL)) {
+		if (lvmetad_pvscan_all_devs(_lvmetad_cmd, NULL)) {
 			_lvmetad_token = future_token;
 			if (!_token_update()) goto out;
 		}
@@ -773,14 +773,14 @@ int lvmetad_pv_gone_by_dev(struct device *dev, activation_handler handler)
  * The following code implements pvscan --cache.
  */
 
-struct _pvscan_lvmetad_baton {
+struct _lvmetad_pvscan_baton {
 	struct volume_group *vg;
 	struct format_instance *fid;
 };
 
-static int _pvscan_lvmetad_single(struct metadata_area *mda, void *baton)
+static int _lvmetad_pvscan_single(struct metadata_area *mda, void *baton)
 {
-	struct _pvscan_lvmetad_baton *b = baton;
+	struct _lvmetad_pvscan_baton *b = baton;
 	struct volume_group *this = mda->ops->vg_read(b->fid, "", mda, 1);
 
 	/* FIXME Also ensure contents match etc. */
@@ -792,12 +792,12 @@ static int _pvscan_lvmetad_single(struct metadata_area *mda, void *baton)
 	return 1;
 }
 
-int pvscan_lvmetad_single(struct cmd_context *cmd, struct device *dev,
+int lvmetad_pvscan_single(struct cmd_context *cmd, struct device *dev,
 			  activation_handler handler)
 {
 	struct label *label;
 	struct lvmcache_info *info;
-	struct _pvscan_lvmetad_baton baton;
+	struct _lvmetad_pvscan_baton baton;
 	/* Create a dummy instance. */
 	struct format_instance_ctx fic = { .type = 0 };
 
@@ -822,7 +822,7 @@ int pvscan_lvmetad_single(struct cmd_context *cmd, struct device *dev,
 	if (!baton.fid)
 		goto_bad;
 
-	lvmcache_foreach_mda(info, _pvscan_lvmetad_single, &baton);
+	lvmcache_foreach_mda(info, _lvmetad_pvscan_single, &baton);
 	if (!baton.vg)
 		lvmcache_fmt(info)->ops->destroy_instance(baton.fid);
 
@@ -847,7 +847,7 @@ bad:
 	return 0;
 }
 
-int pvscan_lvmetad_all_devs(struct cmd_context *cmd, activation_handler handler)
+int lvmetad_pvscan_all_devs(struct cmd_context *cmd, activation_handler handler)
 {
 	struct dev_iter *iter;
 	struct device *dev;
@@ -859,7 +859,7 @@ int pvscan_lvmetad_all_devs(struct cmd_context *cmd, activation_handler handler)
 	}
 
 	while ((dev = dev_iter_get(iter))) {
-		if (!pvscan_lvmetad_single(cmd, dev, handler)) {
+		if (!lvmetad_pvscan_single(cmd, dev, handler)) {
 			r = 0;
 			break;
 		}
