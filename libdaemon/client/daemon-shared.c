@@ -115,9 +115,9 @@ char *format_buffer_v(const char *head, va_list ap)
 			goto fail;
 		}
 		keylen = strchr(next, '=') - next;
-		if (strstr(next, "%d")) {
-			int value = va_arg(ap, int);
-			dm_asprintf(&buffer, "%s%.*s= %d\n", buffer, keylen, next, value);
+		if (strstr(next, "%d") || strstr(next, "%" PRId64)) {
+			int64_t value = va_arg(ap, int64_t);
+			dm_asprintf(&buffer, "%s%.*s= %" PRId64 "\n", buffer, keylen, next, value);
 			dm_free(old);
 		} else if (strstr(next, "%s")) {
 			char *value = va_arg(ap, char *);
@@ -301,7 +301,7 @@ struct dm_config_node *config_make_nodes_v(struct dm_config_tree *cft,
 		char *key = dm_pool_strdup(cft->mem, next);
 		*strchr(key, '=') = 0;
 
-		if (!strcmp(fmt, "%d")) {
+		if (!strcmp(fmt, "%d") || !strcmp(fmt, "%" PRId64)) {
 			int64_t value = va_arg(ap, int64_t);
 			if (!(cn = make_int_node(cft, key, value, parent, pre_sib)))
 				return 0;

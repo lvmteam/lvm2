@@ -508,7 +508,7 @@ int lvmetad_pv_lookup_by_dev(struct cmd_context *cmd, struct device *dev, int *f
 	if (!lvmetad_active())
 		return_0;
 
-	reply = _lvmetad_send("pv_lookup", "device = %d", dev->dev, NULL);
+	reply = _lvmetad_send("pv_lookup", "device = %" PRId64, (int64_t) dev->dev, NULL);
 	if (!_lvmetad_handle_reply(reply, "lookup PV", dev_name(dev), found))
 		goto_out;
 
@@ -624,7 +624,10 @@ static int _extract_da(struct disk_locn *da, void *baton)
 	dm_snprintf(id, 32, "da%d", b->i);
 	if (!(cn = make_config_node(b->cft, id, b->cft->root, b->pre_sib)))
 		return 0;
-	if (!config_make_nodes(b->cft, cn, NULL, "offset = %d", da->offset, "size = %d", da->size, NULL))
+	if (!config_make_nodes(b->cft, cn, NULL,
+			       "offset = %"PRId64, (int64_t) da->offset,
+			       "size = %"PRId64, (int64_t) da->size,
+			       NULL))
 		return 0;
 
 	b->i ++;
@@ -676,10 +679,10 @@ int lvmetad_pv_found(struct id pvid, struct device *device, const struct format_
 	}
 
 	if (!config_make_nodes(pvmeta, pvmeta->root, NULL,
-			       "device = %d", device->dev,
-			       "dev_size = %d", info ? lvmcache_device_size(info) : 0,
+			       "device = %"PRId64, (int64_t) device->dev,
+			       "dev_size = %"PRId64, (int64_t) (info ? lvmcache_device_size(info) : 0),
 			       "format = %s", fmt->name,
-			       "label_sector = %d", label_sector,
+			       "label_sector = %"PRId64, (int64_t) label_sector,
 			       "id = %s", uuid,
 			       NULL))
 	{
@@ -751,7 +754,7 @@ int lvmetad_pv_gone(dev_t device, const char *pv_name, activation_handler handle
          *        the whole stack from top to bottom (not yet upstream).
          */
 
-	reply = _lvmetad_send("pv_gone", "device = %d", device, NULL);
+	reply = _lvmetad_send("pv_gone", "device = %" PRId64, (int64_t) device, NULL);
 
 	result = _lvmetad_handle_reply(reply, "drop PV", pv_name, &found);
 	/* We don't care whether or not the daemon had the PV cached. */

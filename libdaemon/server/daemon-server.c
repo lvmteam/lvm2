@@ -360,7 +360,7 @@ static response builtin_handler(daemon_state s, client_handle h, request r)
 
 	if (!strcmp(rq, "hello")) {
 		return daemon_reply_simple("OK", "protocol = %s", s.protocol ?: "default",
-					   "version = %d", s.protocol_version, NULL);
+					   "version = %" PRId64, (int64_t) s.protocol_version, NULL);
 	}
 
 	response res = { .buffer = NULL, .error = EPROTO };

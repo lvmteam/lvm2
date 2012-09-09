@@ -1617,10 +1617,10 @@ static int _mda_export_text_raw(struct metadata_area *mda,
 	struct mda_context *mdc = (struct mda_context *) mda->metadata_locn;
 
 	return config_make_nodes(cft, parent, NULL,
-				 "ignore = %d", mda_is_ignored(mda),
-				 "start = %d", mdc->area.start,
-				 "size = %d", mdc->area.size,
-				 "free_sectors = %d", mdc->free_sectors,
+				 "ignore = %" PRId64, (int64_t) mda_is_ignored(mda),
+				 "start = %" PRId64, (int64_t) mdc->area.start,
+				 "size = %" PRId64, (int64_t) mdc->area.size,
+				 "free_sectors = %" PRId64, (int64_t) mdc->free_sectors,
 				 NULL) ? 1 : 0;
 }
 
