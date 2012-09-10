@@ -26,14 +26,10 @@ ifeq ("@INTL@", "yes")
   SUBDIRS += po
 endif
 
-SUBDIRS += lib tools daemons libdm
+SUBDIRS += lib tools daemons libdm libdaemon
 
 ifeq ("@APPLIB@", "yes")
   SUBDIRS += liblvm
-endif
-
-ifeq ("@BUILD_LVMETAD@", "yes")
-  SUBDIRS += libdaemon
 endif
 
 SUBDIRS += scripts

@@ -144,11 +144,9 @@ endif
 LDFLAGS += -L$(top_builddir)/libdm -L$(top_builddir)/lib
 CLDFLAGS += -L$(top_builddir)/libdm -L$(top_builddir)/lib
 
-ifeq ("@BUILD_LVMETAD@", "yes")
-  DAEMON_LIBS = -ldaemonclient
-  LDFLAGS += -L$(top_builddir)/libdaemon/client
-  CLDFLAGS += -L$(top_builddir)/libdaemon/client
-endif
+DAEMON_LIBS = -ldaemonclient
+LDFLAGS += -L$(top_builddir)/libdaemon/client
+CLDFLAGS += -L$(top_builddir)/libdaemon/client
 
 ifeq ("@DMEVENTD@", "yes")
   LDFLAGS += -L$(top_builddir)/daemons/dmeventd

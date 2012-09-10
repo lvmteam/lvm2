@@ -17,8 +17,10 @@ top_builddir = @top_builddir@
 
 .PHONY: client server
 
+SUBDIRS += client
+
 ifeq ("@BUILD_LVMETAD@", "yes")
-  SUBDIRS += client server
+  SUBDIRS += server
 server: client
 endif
 
