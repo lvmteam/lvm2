@@ -15,8 +15,6 @@
 
 #include "tools.h"
 
-static int _lvmetad;
-
 static int vgscan_single(struct cmd_context *cmd, const char *vg_name,
 			 struct volume_group *vg,
 			 void *handle __attribute__((unused)))
@@ -26,12 +24,6 @@ static int vgscan_single(struct cmd_context *cmd, const char *vg_name,
 				vg->fid->fmt->name);
 
 	check_current_backup(vg);
-
-	/* keep lvmetad up to date, restore the "active" state temporarily */
-	lvmetad_set_active(_lvmetad);
-	if (!lvmetad_vg_update(vg))
-		stack;
-	lvmetad_set_active(0);
 
 	return ECMD_PROCESSED;
 }
@@ -54,10 +46,11 @@ int vgscan(struct cmd_context *cmd, int argc, char **argv)
 		cmd->filter->wipe(cmd->filter);
 	lvmcache_destroy(cmd, 1);
 
-	_lvmetad = lvmetad_active();
 	if (arg_count(cmd, cache_ARG)) {
-		if (_lvmetad)
-			lvmetad_set_active(0); /* do not rely on lvmetad info */
+		if (lvmetad_active()) {
+			if (!lvmetad_pvscan_all_devs(cmd, NULL))
+				return ECMD_FAILED;
+		}
 		else {
 			log_error("Cannot proceed since lvmetad is not active.");
 			unlock_vg(cmd, VG_GLOBAL);
@@ -76,7 +69,6 @@ int vgscan(struct cmd_context *cmd, int argc, char **argv)
 			maxret = ret;
 	}
 
-	lvmetad_set_active(_lvmetad); /* restore */
 	unlock_vg(cmd, VG_GLOBAL);
 	return maxret;
 }
