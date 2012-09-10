@@ -73,8 +73,11 @@ prepare_lvmetad() {
 	lvmconf "global/use_lvmetad = 1"
 	lvmconf "devices/md_component_detection = 0"
 
+	local run_valgrind=
+	test -z "$LVM_VALGRIND_LVMETAD" || run_valgrind="run_valgrind"
+
 	echo "preparing lvmetad..."
-	lvmetad -f "$@" -s "$TESTDIR/lvmetad.socket" -d wire,debug &
+	$run_valgrind lvmetad -f "$@" -s "$TESTDIR/lvmetad.socket" -d wire,debug &
 	echo $! > LOCAL_LVMETAD
 
 	sleep .3
