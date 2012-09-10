@@ -663,6 +663,10 @@ static int _raid_add_images(struct logical_volume *lv,
 		log_error("Unable to add RAID images to %s of segment type %s",
 			  lv->name, seg->segtype->ops->name(seg));
 		return 0;
+	} else if (!_raid_in_sync(lv)) {
+		log_error("Unable to add RAID images until %s is in-sync",
+			  lv->name);
+		return 0;
 	}
 
 	if (!_alloc_image_components(lv, pvs, count, &meta_lvs, &data_lvs)) {
