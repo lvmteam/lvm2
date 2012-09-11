@@ -335,66 +335,78 @@ static int lvchange_resync(struct cmd_context *cmd,
 	 * it to reset the sync status.  We only need to
 	 * worry about persistent logs.
 	 */
-	if (!log_lv && !(lv->status & LV_NOTSYNCED)) {
+	if (!log_lv) {
+		if (!(lv->status & LV_NOTSYNCED)) {
+			lv->status &= ~LV_NOTSYNCED;
+			log_very_verbose("Updating logical volume \"%s\""
+					 " on disk(s)", lv->name);
+			if (!vg_write(lv->vg) || !vg_commit(lv->vg)) {
+				log_error("Failed to update metadata on disk.");
+				return 0;
+			}
+		}
+
 		if (active && !activate_lv(cmd, lv)) {
 			log_error("Failed to reactivate %s to resynchronize "
 				  "mirror", lv->name);
 			return 0;
 		}
+
 		return 1;
 	}
 
+	/*
+	 * Now we handle mirrors with log devices
+	 */
 	lv->status &= ~LV_NOTSYNCED;
 
-	if (log_lv) {
-		/* Separate mirror log so we can clear it */
-		detach_mirror_log(first_seg(lv));
+	/* Separate mirror log so we can clear it */
+	detach_mirror_log(first_seg(lv));
 
-		if (!vg_write(lv->vg)) {
-			log_error("Failed to write intermediate VG metadata.");
-			if (!attach_mirror_log(first_seg(lv), log_lv))
-				stack;
-			if (active && !activate_lv(cmd, lv))
-				stack;
-			return 0;
-		}
-
-		if (!vg_commit(lv->vg)) {
-			log_error("Failed to commit intermediate VG metadata.");
-			if (!attach_mirror_log(first_seg(lv), log_lv))
-				stack;
-			if (active && !activate_lv(cmd, lv))
-				stack;
-			return 0;
-		}
-
-		backup(lv->vg);
-
-		if (!activate_lv(cmd, log_lv)) {
-			log_error("Unable to activate %s for mirror log resync",
-				  log_lv->name);
-			return 0;
-		}
-
-		log_very_verbose("Clearing log device %s", log_lv->name);
-		if (!set_lv(cmd, log_lv, log_lv->size, 0)) {
-			log_error("Unable to reset sync status for %s", lv->name);
-			if (!deactivate_lv(cmd, log_lv))
-				log_error("Failed to deactivate log LV after "
-					  "wiping failed");
-			return 0;
-		}
-
-		if (!deactivate_lv(cmd, log_lv)) {
-			log_error("Unable to deactivate log LV %s after wiping "
-				  "for resync", log_lv->name);
-			return 0;
-		}
-
-		/* Put mirror log back in place */
+	if (!vg_write(lv->vg)) {
+		log_error("Failed to write intermediate VG metadata.");
 		if (!attach_mirror_log(first_seg(lv), log_lv))
 			stack;
+		if (active && !activate_lv(cmd, lv))
+			stack;
+		return 0;
 	}
+
+	if (!vg_commit(lv->vg)) {
+		log_error("Failed to commit intermediate VG metadata.");
+		if (!attach_mirror_log(first_seg(lv), log_lv))
+			stack;
+		if (active && !activate_lv(cmd, lv))
+			stack;
+		return 0;
+	}
+
+	backup(lv->vg);
+
+	if (!activate_lv(cmd, log_lv)) {
+		log_error("Unable to activate %s for mirror log resync",
+			  log_lv->name);
+		return 0;
+	}
+
+	log_very_verbose("Clearing log device %s", log_lv->name);
+	if (!set_lv(cmd, log_lv, log_lv->size, 0)) {
+		log_error("Unable to reset sync status for %s", lv->name);
+		if (!deactivate_lv(cmd, log_lv))
+			log_error("Failed to deactivate log LV after "
+				  "wiping failed");
+		return 0;
+	}
+
+	if (!deactivate_lv(cmd, log_lv)) {
+		log_error("Unable to deactivate log LV %s after wiping "
+			  "for resync", log_lv->name);
+		return 0;
+	}
+
+	/* Put mirror log back in place */
+	if (!attach_mirror_log(first_seg(lv), log_lv))
+		stack;
 
 	log_very_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
 	if (!vg_write(lv->vg) || !vg_commit(lv->vg)) {
