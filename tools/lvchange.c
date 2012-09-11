@@ -258,29 +258,50 @@ static int lvchange_refresh(struct cmd_context *cmd, struct logical_volume *lv)
 
 static int detach_metadata_devices(struct lv_segment *seg, struct dm_list *list)
 {
+	uint32_t s;
+	uint32_t num_meta_lvs;
 	struct cmd_context *cmd = seg->lv->vg->cmd;
 	struct lv_list *lvl;
 
-	if (seg_is_raid(seg)) {
-		return 0;
-	}
+	num_meta_lvs = seg_is_raid(seg) ? seg->area_count : !!seg->log_lv;
 
-	if (!(lvl = dm_pool_alloc(cmd->mem, sizeof(*lvl))))
+	if (!num_meta_lvs)
 		return_0;
 
-	lvl->lv = detach_mirror_log(seg);
-	dm_list_add(list, &lvl->list);
+	if (!(lvl = dm_pool_alloc(cmd->mem, sizeof(*lvl) * num_meta_lvs)))
+		return_0;
+
+	if (seg_is_raid(seg)) {
+		for (s = 0; s < seg->area_count; s++) {
+			if (!seg_metalv(seg, s))
+				return_0; /* Trap this future possibility */
+
+			lvl[s].lv = seg_metalv(seg, s);
+			lv_set_visible(lvl[s].lv);
+
+			dm_list_add(list, &lvl[s].list);
+		}
+		return 1;
+	}
+
+	lvl[0].lv = detach_mirror_log(seg);
+	dm_list_add(list, &lvl[0].list);
 
 	return 1;
 }
 
 static int attach_metadata_devices(struct lv_segment *seg, struct dm_list *list)
 {
+	uint32_t s = 0;
 	struct cmd_context *cmd = seg->lv->vg->cmd;
-	struct lv_list *lvl;
+	struct lv_list *lvl, *tmp;
 
 	if (seg_is_raid(seg)) {
-		return 0;
+		dm_list_iterate_items_safe(lvl, tmp, list) {
+			lv_set_hidden(lvl->lv);
+			dm_pool_free(cmd->mem, lvl);
+		}
+		return 1;
 	}
 
 	dm_list_iterate_items(lvl, list)
@@ -308,8 +329,8 @@ static int lvchange_resync(struct cmd_context *cmd,
 
 	dm_list_init(&device_list);
 
-	if (!(lv->status & MIRRORED)) {
-		log_error("Unable to resync %s because it is not mirrored.",
+	if (!(lv->status & MIRRORED) && !seg_is_raid(seg)) {
+		log_error("Unable to resync %s.  It is not RAID or mirrored.",
 			  lv->name);
 		return 1;
 	}
@@ -364,12 +385,14 @@ static int lvchange_resync(struct cmd_context *cmd,
 	}
 
 	init_dmeventd_monitor(monitored);
+	init_mirror_in_sync(0);
 
-	log_very_verbose("Starting resync of %s%s%s mirror \"%s\"",
+	log_very_verbose("Starting resync of %s%s%s%s \"%s\"",
 			 (active) ? "active " : "",
 			 vg_is_clustered(lv->vg) ? "clustered " : "",
-			 (seg->log_lv) ? "disk-logged" : "core-logged",
-			 lv->name);
+			 (seg->log_lv) ? "disk-logged " :
+			 seg_is_raid(seg) ? "" : "core-logged ",
+			 seg->segtype->ops->name(seg), lv->name);
 
 	/*
 	 * If this mirror has a core log (i.e. !seg->log_lv),
@@ -377,7 +400,7 @@ static int lvchange_resync(struct cmd_context *cmd,
 	 * it to reset the sync status.  We only need to
 	 * worry about persistent logs.
 	 */
-	if (!seg->log_lv) {
+	if (!seg_is_raid(seg) && !seg->log_lv) {
 		if (!(lv->status & LV_NOTSYNCED)) {
 			lv->status &= ~LV_NOTSYNCED;
 			log_very_verbose("Updating logical volume \"%s\""

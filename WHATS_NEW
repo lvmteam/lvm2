@@ -1,5 +1,6 @@
 Version 2.02.98 -
 =================================
+  Properly handle 'resync' of RAID LVs.
   Disallow addition of RAID images until the array is in-sync.
   Fix RAID LV creation with '--test' so valid commands do not fail.
   Add lvm_lv_rename() to lvm2api.
