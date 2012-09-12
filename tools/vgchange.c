@@ -131,11 +131,8 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 			continue;
 		}
 
-		if (activate == CHANGE_AAY) {
-			if (!lv_passes_auto_activation_filter(cmd, lv))
-				continue;
-			activate = CHANGE_ALY;
-		}
+		if (activate == CHANGE_AAY && !lv_passes_auto_activation_filter(cmd, lv))
+			continue;
 
 		expected_count++;
 
@@ -157,7 +154,7 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 				stack;
 				continue;
 			}
-		} else if (activate == CHANGE_ALY) {
+		} else if (activate == CHANGE_AAY || activate == CHANGE_ALY) {
 			if (!activate_lv_local(cmd, lv)) {
 				stack;
 				continue;
