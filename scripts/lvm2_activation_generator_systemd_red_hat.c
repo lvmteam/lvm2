@@ -116,12 +116,12 @@ static int generate_unit(const char *dir, int early)
 	      "DefaultDependencies=no\n", f);
 
 	if (early)
-		fputs("After=fedora-wait-storage.service\n", f);
+		fputs("After=systemd-udev-settle.service\n", f);
 	else
 		fputs("After=lvm2-activation-early.service cryptsetup.target\n", f);
 
 	fputs("Before=local-fs.target shutdown.target\n"
-	      "Wants=fedora-wait-storage.service\n\n"
+	      "Wants=systemd-udev-settle.service\n\n"
 	      "[Service]\n"
 	      "ExecStart=/usr/sbin/lvm vgchange -aay --sysinit\n"
 	      "Type=oneshot\n", f);
