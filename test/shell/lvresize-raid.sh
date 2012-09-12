@@ -79,6 +79,8 @@ for i in 4 5 6 ; do
 	done
 done
 
+aux target_at_least dm-raid 1 3 0 || skip
+
 # Extend RAID10 (2-stripes, 2-mirror)
 for deactivate in true false; do
 	lvcreate --type raid10 -m 1 -i 2 -l 2 -n $lv1 $vg
