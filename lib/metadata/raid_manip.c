@@ -1022,9 +1022,13 @@ static int _raid_remove_images(struct logical_volume *lv,
 	}
 
 	/* Convert to linear? */
-	if ((new_count == 1) && !_raid_remove_top_layer(lv, &removal_list)) {
-		log_error("Failed to remove RAID layer after linear conversion");
-		return 0;
+	if (new_count == 1) {
+		if (!_raid_remove_top_layer(lv, &removal_list)) {
+			log_error("Failed to remove RAID layer"
+				  " after linear conversion");
+			return 0;
+		}
+		lv->status &= ~LV_NOTSYNCED;
 	}
 
 	if (!vg_write(lv->vg)) {
