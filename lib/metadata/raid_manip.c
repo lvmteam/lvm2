@@ -639,6 +639,18 @@ static int _raid_add_images(struct logical_volume *lv,
 	struct lv_list *lvl;
 	struct lv_segment_area *new_areas;
 
+	if (lv->status & LV_NOTSYNCED) {
+		log_error("Can't add image to out-of-sync RAID LV:"
+			  " use 'lvchange --resync' first.");
+		return 0;
+	}
+
+	if (!_raid_in_sync(lv)) {
+		log_error("Can't add image to RAID LV that"
+			  " is still initializing.");
+		return 0;
+	}
+
 	dm_list_init(&meta_lvs); /* For image addition */
 	dm_list_init(&data_lvs); /* For image addition */
 
