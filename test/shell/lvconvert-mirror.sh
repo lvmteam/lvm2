@@ -264,3 +264,17 @@ lvremove -ff $vg/$lv1
 lvcreate -l15 -n $lv1 $vg
 not lvconvert -m1 --corelog --stripes 2 $vg/$lv1
 lvremove -ff $vg
+
+# Should not be able to add images to --nosync mirror
+# but should be able to after 'lvchange --resync'
+lvcreate -m 1 -l1 -n $lv1 $vg --nosync
+not lvconvert -m +1 $vg/$lv1
+lvchange --resync -y $vg/$lv1
+lvconvert -m +1 $vg/$lv1
+lvremove -ff $vg
+
+lvcreate -m 1 --corelog -l1 -n $lv1 $vg --nosync
+not lvconvert -m +1 $vg/$lv1
+lvchange --resync -y $vg/$lv1
+lvconvert -m +1 $vg/$lv1
+lvremove -ff $vg

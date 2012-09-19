@@ -79,6 +79,18 @@ for i in 1 2 3 4; do
 done
 done
 
+##############################################
+# RAID1 - shouldn't be able to add image
+#         if created '--nosync', but should
+#         be able to after 'lvchange --resync'
+##############################################
+lvcreate --type raid1 -m 1 -l 2 -n $lv1 $vg --nosync
+not lvconvert -m +1 $vg/$lv1
+lvchange --resync -y $vg/$lv1
+aux wait_for_sync $vg $lv1
+lvconvert -m +1 $vg/$lv1
+lvremove -ff $vg
+
 # 3-way to 2-way convert while specifying devices
 lvcreate --type raid1 -m 2 -l 2 -n $lv1 $vg $dev1 $dev2 $dev3
 aux wait_for_sync $vg $lv1

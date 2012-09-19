@@ -401,7 +401,7 @@ static int lvchange_resync(struct cmd_context *cmd,
 	 * worry about persistent logs.
 	 */
 	if (!seg_is_raid(seg) && !seg->log_lv) {
-		if (!(lv->status & LV_NOTSYNCED)) {
+		if (lv->status & LV_NOTSYNCED) {
 			lv->status &= ~LV_NOTSYNCED;
 			log_very_verbose("Updating logical volume \"%s\""
 					 " on disk(s)", lv->name);
