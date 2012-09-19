@@ -851,12 +851,18 @@ int lvmetad_pvscan_all_devs(struct cmd_context *cmd, activation_handler handler)
 {
 	struct dev_iter *iter;
 	struct device *dev;
+	daemon_reply reply;
 	int r = 1;
 
 	if (!(iter = dev_iter_create(cmd->lvmetad_filter, 1))) {
 		log_error("dev_iter creation failed");
 		return 0;
 	}
+
+	reply = _lvmetad_send("pv_clear_all", NULL);
+	if (!_lvmetad_handle_reply(reply, "clear status on all PVs", "", NULL))
+		r = 0;
+	daemon_reply_destroy(reply);
 
 	while ((dev = dev_iter_get(iter))) {
 		if (!lvmetad_pvscan_single(cmd, dev, handler)) {
