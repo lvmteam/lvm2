@@ -1,5 +1,6 @@
 Version 2.02.98 -
 =================================
+  Support changes of permissions for thin snapshot volumes.
   Enhance insert_layer_for_lv() with recursive rename for _tdata LVs.
   Skip building dm tree for thin pool when called with origin_only flag.
   Add internal lv_rename_update() to rename LV without updating mda.
