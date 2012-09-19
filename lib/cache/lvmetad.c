@@ -720,6 +720,11 @@ int lvmetad_pv_found(struct id pvid, struct device *device, const struct format_
 
 	result = _lvmetad_handle_reply(reply, "update PV", uuid, NULL);
 
+	if (vg && result &&
+	    (daemon_reply_int(reply, "seqno_after", -1) != vg->seqno ||
+	     daemon_reply_int(reply, "seqno_after", -1) != daemon_reply_int(reply, "seqno_before", -1)))
+		log_warn("WARNING: Inconsistent metadata found for VG %s", vg->name);
+
 	if (result && handler) {
 		status = daemon_reply_str(reply, "status", "<missing>");
 		if (!strcmp(status, "partial"))

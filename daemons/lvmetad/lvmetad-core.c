@@ -636,7 +636,7 @@ static int vg_remove_if_missing(lvmetad_state *s, const char *vgid)
  * this function, so they can be safely destroyed after update_metadata returns
  * (anything that might have been retained is copied). */
 static int update_metadata(lvmetad_state *s, const char *name, const char *_vgid,
-			   struct dm_config_node *metadata)
+			   struct dm_config_node *metadata, int64_t *oldseq)
 {
 	struct dm_config_tree *cft;
 	struct dm_config_tree *old;
@@ -664,6 +664,13 @@ static int update_metadata(lvmetad_state *s, const char *name, const char *_vgid
 		goto out;
 
 	filter_metadata(metadata); /* sanitize */
+
+	if (oldseq) {
+		if (old)
+			*oldseq = haveseq;
+		else
+			*oldseq = seq;
+	}
 
 	if (seq == haveseq) {
 		retval = 1;
@@ -786,6 +793,7 @@ static response pv_found(lvmetad_state *s, request r)
 	const char *old;
 	const char *pvid_dup;
 	int complete = 0, orphan = 0;
+	int64_t seqno = -1, seqno_old = -1;
 
 	if (!pvid)
 		return reply_fail("need PV UUID");
@@ -830,7 +838,7 @@ static response pv_found(lvmetad_state *s, request r)
 		if (daemon_request_int(r, "metadata/seqno", -1) < 0)
 			return reply_fail("need VG seqno");
 
-		if (!update_metadata(s, vgname, vgid, metadata))
+		if (!update_metadata(s, vgname, vgid, metadata, &seqno_old))
 			return reply_fail("metadata update failed");
 	} else {
 		lock_pvid_to_vgid(s);
@@ -839,9 +847,10 @@ static response pv_found(lvmetad_state *s, request r)
 	}
 
 	if (vgid) {
-		if ((cft = lock_vg(s, vgid)))
+		if ((cft = lock_vg(s, vgid))) {
 			complete = update_pv_status(s, cft, cft->root, 0);
-		else if (!strcmp(vgid, "#orphan"))
+			seqno = dm_config_find_int(cft->root, "metadata/seqno", -1);
+		} else if (!strcmp(vgid, "#orphan"))
 			orphan = 1;
 		else {
 			unlock_vg(s, vgid);
@@ -854,6 +863,8 @@ static response pv_found(lvmetad_state *s, request r)
 				   "status = %s", orphan ? "orphan" :
 				                     (complete ? "complete" : "partial"),
 				   "vgid = %s", vgid ? vgid : "#orphan",
+				   "seqno_before = %"PRId64, seqno_old,
+				   "seqno_after = %"PRId64, seqno,
 				   NULL);
 }
 
@@ -872,7 +883,7 @@ static response vg_update(lvmetad_state *s, request r)
 
 		/* TODO defer metadata update here; add a separate vg_commit
 		 * call; if client does not commit, die */
-		if (!update_metadata(s, vgname, vgid, metadata))
+		if (!update_metadata(s, vgname, vgid, metadata, NULL))
 			return reply_fail("metadata update failed");
 	}
 	return daemon_reply_simple("OK", NULL);
