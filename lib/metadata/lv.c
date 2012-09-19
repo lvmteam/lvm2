@@ -377,7 +377,7 @@ char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 	struct lv_segment *seg;
 	char *repstr;
 
-	if (!(repstr = dm_pool_zalloc(mem, 9))) {
+	if (!(repstr = dm_pool_zalloc(mem, 10))) {
 		log_error("dm_pool_alloc failed");
 		return 0;
 	}
@@ -495,6 +495,11 @@ char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 		repstr[7] = 'z';
 	else
 		repstr[7] = '-';
+
+	if (lv->status & PARTIAL_LV)
+		repstr[8] = 'p';
+	else
+		repstr[8] = '-';
 
 out:
 	return repstr;

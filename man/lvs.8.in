@@ -157,6 +157,9 @@ Snapshots using the original device-mapper driver appear as (s); whereas
 snapshots of thin volumes using the new thin provisioning driver appear as (t).
 .IP 8 3
 Newly-allocated data blocks are overwritten with blocks of (z)eroes before use.
+.IP 9 3
+(p)artial: One or more of the Physical Volumes this Logical Volume uses is
+missing from the system.
 .RE
 .TP
 .BR \-O ", " \-\-sort

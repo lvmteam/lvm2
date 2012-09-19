@@ -1,5 +1,6 @@
 Version 2.02.98 -
 =================================
+  Add (p)artial attribute to lvs.
   Don't try to issue discards to a missing PV to avoid segfault.
   Prevent lvremove from removing LVs that have any part missing.
   Clear LV_NOSYNCED flag when a RAID1 LV is converted to a linear LV.
