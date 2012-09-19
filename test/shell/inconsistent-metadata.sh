@@ -37,6 +37,7 @@ test -e LOCAL_LVMETAD && cache="--cache"
 init
 vgscan $cache 2>&1 | tee cmd.out
 grep "Inconsistent metadata found for VG $vg" cmd.out
+test -e LOCAL_LVMETAD && vgrename $vg foo && vgrename foo $vg # trigger a write
 vgscan $cache 2>&1 | tee cmd.out
 not grep "Inconsistent metadata found for VG $vg" cmd.out
 check
