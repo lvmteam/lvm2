@@ -191,6 +191,7 @@ int discard_pv_segment(struct pv_segment *peg, uint32_t discard_area_reduction)
 {
 	uint64_t discard_offset_sectors;
 	uint64_t pe_start = peg->pv->pe_start;
+	char uuid[64] __attribute__((aligned(8)));
 
 	if (!peg->lvseg) {
 		log_error("discard_pv_segment with unallocated segment: "
@@ -203,8 +204,20 @@ int discard_pv_segment(struct pv_segment *peg, uint32_t discard_area_reduction)
 	 * the device and kernel (>= 2.6.35) supports discards.
 	 */
 	if (!find_config_tree_bool(peg->pv->fmt->cmd,
-				   "devices/issue_discards", DEFAULT_ISSUE_DISCARDS) ||
-	    !dev_discard_max_bytes(peg->pv->fmt->cmd->sysfs_dir, peg->pv->dev) ||
+				   "devices/issue_discards", DEFAULT_ISSUE_DISCARDS))
+		return 1;
+ 
+	/* Missing PV? */
+	if (is_missing_pv(peg->pv) || !peg->pv->dev) {
+		if (!id_write_format(&peg->pv->id, uuid, sizeof(uuid)))
+			return_0;
+
+		log_verbose("Skipping discard on missing device with uuid %s.", uuid);
+
+		return 1;
+	}
+
+	if (!dev_discard_max_bytes(peg->pv->fmt->cmd->sysfs_dir, peg->pv->dev) ||
 	    !dev_discard_granularity(peg->pv->fmt->cmd->sysfs_dir, peg->pv->dev))
 		return 1;
 

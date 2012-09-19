@@ -26,6 +26,12 @@ static int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv,
         if (lv_is_cow(lv) && lv_is_virtual_origin(origin = origin_from_cow(lv)))
                 lv = origin;
 
+	if (lv->status & PARTIAL_LV) {
+		log_error("Not removing LV %s/%s because part or all of it is missing.",
+			  lv->vg->name, lv->name);
+		return ECMD_FAILED;
+	}
+
 	if (!lv_remove_with_dependencies(cmd, lv, arg_count(cmd, force_ARG), 0)) {
 		stack;
 		return ECMD_FAILED;
