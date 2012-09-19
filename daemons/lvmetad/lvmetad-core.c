@@ -1043,6 +1043,7 @@ int main(int argc, char *argv[])
 	s.pidfile = LVMETAD_PIDFILE;
 	s.protocol = "lvmetad";
 	s.protocol_version = 1;
+	ls.debug_config = "";
 
 	// use getopt_long
 	while ((opt = getopt(argc, argv, "?fhVd:Rs:")) != EOF) {
