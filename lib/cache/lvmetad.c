@@ -86,7 +86,7 @@ static int _token_update()
 {
 	daemon_reply repl = _lvmetad_send("token_update", NULL);
 
-	if (strcmp(daemon_reply_str(repl, "response", ""), "OK")) {
+	if (repl.error || strcmp(daemon_reply_str(repl, "response", ""), "OK")) {
 		daemon_reply_destroy(repl);
 		return 0;
 	}
@@ -118,7 +118,7 @@ retry:
 
 	daemon_request_destroy(req);
 
-	if (!strcmp(daemon_reply_str(repl, "response", ""), "token_mismatch") && try < 2 && !test_mode()) {
+	if (!repl.error && !strcmp(daemon_reply_str(repl, "response", ""), "token_mismatch") && try < 2 && !test_mode()) {
 		future_token = _lvmetad_token;
 		_lvmetad_token = (char *) "update in progress";
 		if (!_token_update()) goto out;
@@ -298,7 +298,7 @@ struct volume_group *lvmetad_vg_lookup(struct cmd_context *cmd, const char *vgna
 		reply = _lvmetad_send("vg_lookup", "name = %s", vgname, NULL);
 	}
 
-	if (!strcmp(daemon_reply_str(reply, "response", ""), "OK")) {
+	if (!reply.error && !strcmp(daemon_reply_str(reply, "response", ""), "OK")) {
 
 		if (!(top = dm_config_find_node(reply.cft->root, "metadata"))) {
 			log_error(INTERNAL_ERROR "metadata config node not found.");

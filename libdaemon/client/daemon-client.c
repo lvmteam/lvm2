@@ -81,6 +81,8 @@ daemon_reply daemon_send(daemon_handle h, daemon_request rq)
 
 	if (read_buffer(h.socket_fd, &reply.buffer)) {
 		reply.cft = dm_config_from_string(reply.buffer);
+		if (!reply.cft)
+			reply.error = EPROTO;
 	} else
 		reply.error = errno;
 
