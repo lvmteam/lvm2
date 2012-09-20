@@ -292,7 +292,6 @@ static int detach_metadata_devices(struct lv_segment *seg, struct dm_list *list)
 
 static int attach_metadata_devices(struct lv_segment *seg, struct dm_list *list)
 {
-	uint32_t s = 0;
 	struct cmd_context *cmd = seg->lv->vg->cmd;
 	struct lv_list *lvl, *tmp;
 
