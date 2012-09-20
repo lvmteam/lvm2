@@ -118,8 +118,8 @@ mirror() {
 mirror_nonredundant() {
 	local lv=$1/$2
 	local attr=$(get lv_field $lv attr)
-	(echo "$attr" | grep "^m.......$" >/dev/null) || {
-		if (echo "$attr" | grep "^o.......$" >/dev/null) &&
+	(echo "$attr" | grep "^m........$" >/dev/null) || {
+		if (echo "$attr" | grep "^o........$" >/dev/null) &&
 		   lvs -a | fgrep "[${2}_mimage" >/dev/null; then
 			echo "TEST WARNING: $lv is a snapshot origin and looks like a mirror,"
 			echo "assuming it is actually a mirror"
@@ -198,7 +198,7 @@ in_sync() {
 
 active() {
 	local lv=$1/$2
-	(get lv_field $lv attr | grep "^....a...$" >/dev/null) || \
+	(get lv_field $lv attr | grep "^....a....$" >/dev/null) || \
 		die "$lv expected active, but lvs says it's not:" \
 			$(lvl $lv -o+devices)
 	dmsetup info $1-$2 >/dev/null ||
@@ -207,7 +207,7 @@ active() {
 
 inactive() {
 	local lv=$1/$2
-	(get lv_field $lv attr | grep "^....[-isd]...$" >/dev/null) || \
+	(get lv_field $lv attr | grep "^....[-isd]....$" >/dev/null) || \
 		die "$lv expected inactive, but lvs says it's not:" \
 			$(lvl $lv -o+devices)
 	not dmsetup info $1-$2 2>/dev/null || \
