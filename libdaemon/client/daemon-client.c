@@ -12,8 +12,10 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "daemon-shared.h"
+#include "daemon-io.h"
+#include "config-util.h"
 #include "daemon-client.h"
+#include "dm-logging.h"
 
 #include <sys/un.h>
 #include <sys/socket.h>

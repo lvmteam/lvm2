@@ -61,7 +61,8 @@
 @top_srcdir@/lib/report/report.h
 @top_srcdir@/lib/uuid/uuid.h
 @top_srcdir@/libdaemon/client/daemon-client.h
-@top_srcdir@/libdaemon/client/daemon-shared.h
+@top_srcdir@/libdaemon/client/daemon-io.h
+@top_srcdir@/libdaemon/client/config-util.h
 @top_srcdir@/libdm/libdevmapper.h
 @top_srcdir@/libdm/misc/dm-ioctl.h
 @top_srcdir@/libdm/misc/dm-logging.h

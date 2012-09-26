@@ -12,22 +12,14 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef _LVM_DAEMON_SHARED_H
-#define _LVM_DAEMON_SHARED_H
+#ifndef _LVM_DAEMON_CONFIG_UTIL_H
+#define _LVM_DAEMON_CONFIG_UTIL_H
 
 #include "configure.h"
 #include "libdevmapper.h"
 
-#define _REENTRANT
-#define _GNU_SOURCE
-#define _FILE_OFFSET_BITS 64
-
-/* TODO function names */
-
 #include <stdarg.h>
 
-int read_buffer(int fd, char **buffer);
-int write_buffer(int fd, const char *buffer, int length);
 char *format_buffer_v(const char *head, va_list ap);
 char *format_buffer(const char *head, ...);
 

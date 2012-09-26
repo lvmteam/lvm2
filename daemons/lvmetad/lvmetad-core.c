@@ -15,7 +15,8 @@
 #define _XOPEN_SOURCE 500  /* pthread */
 
 #include "configure.h"
-#include "daemon-shared.h"
+#include "daemon-io.h"
+#include "config-util.h"
 #include "daemon-server.h"
 #include "daemon-log.h"
 
