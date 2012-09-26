@@ -14,7 +14,6 @@
 
 #include <errno.h>
 #include <stdio.h>
-#include <malloc.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -34,7 +33,7 @@ int read_buffer(int fd, char **buffer) {
 	int bytes = 0;
 	int buffersize = 32;
 	char *new;
-	*buffer = malloc(buffersize + 1);
+	*buffer = dm_malloc(buffersize + 1);
 
 	while (1) {
 		int result = read(fd, (*buffer) + bytes, buffersize - bytes);
@@ -62,7 +61,7 @@ int read_buffer(int fd, char **buffer) {
 	}
 	return 1;
 fail:
-	free(*buffer);
+	dm_free(*buffer);
 	*buffer = NULL;
 	return 0;
 }
