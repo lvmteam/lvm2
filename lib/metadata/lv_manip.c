@@ -3253,6 +3253,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	int format1_reload_required = 0;
 	int visible;
 	struct logical_volume *pool_lv = NULL;
+	int ask_discard;
 
 	vg = lv->vg;
 
@@ -3296,6 +3297,8 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	/* FIXME Ensure not referred to by another existing LVs */
+	ask_discard = find_config_tree_bool(cmd,
+					    "devices/issue_discards", DEFAULT_ISSUE_DISCARDS);
 
 	if (lv_info(cmd, lv, 0, &info, 1, 0)) {
 		if (!lv_check_not_in_use(cmd, lv, &info))
@@ -3303,14 +3306,26 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 		if ((force == PROMPT) &&
 		    lv_is_visible(lv) &&
-		    lv_is_active(lv) &&
-		    yes_no_prompt("Do you really want to remove active "
-				  "%slogical volume %s? [y/n]: ",
-				  vg_is_clustered(vg) ? "clustered " : "",
-				  lv->name) == 'n') {
-			log_error("Logical volume %s not removed", lv->name);
-			return 0;
+		    lv_is_active(lv)) {
+			if (yes_no_prompt("Do you really want to remove%s active "
+					  "%slogical volume %s? [y/n]: ",
+					  ask_discard ? " and DISCARD" : "",
+					  vg_is_clustered(vg) ? "clustered " : "",
+					  lv->name) == 'n') {
+				log_error("Logical volume %s not removed", lv->name);
+				return 0;
+			} else {
+				ask_discard = 0;
+			}
 		}
+	}
+
+	if ((force == PROMPT) && ask_discard &&
+	    yes_no_prompt("Do you really want to remove and DISCARD "
+			  "logical volume %s? [y/n]: ",
+			  lv->name) == 'n') {
+		log_error("Logical volume %s not removed", lv->name);
+		return 0;
 	}
 
 	if (!archive(vg))
