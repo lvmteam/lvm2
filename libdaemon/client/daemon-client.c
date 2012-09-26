@@ -60,7 +60,7 @@ error:
 	h.error = errno;
 	if (h.socket_fd >= 0)
 		if (close(h.socket_fd))
-			perror("close");
+			log_sys_error("close", "daemon_open");
 	if (r.cft)
 		daemon_reply_destroy(r);
 	h.socket_fd = -1;
