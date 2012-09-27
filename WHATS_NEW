@@ -1,5 +1,6 @@
 Version 2.02.98 -
 =================================
+  Fix inability to create, extend or convert to a large (> 1TiB) RAID LV.
   Add (p)artial attribute to lvs.
   Don't try to issue discards to a missing PV to avoid segfault.
   Prevent lvremove from removing LVs that have any part missing.

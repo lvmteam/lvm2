@@ -2660,7 +2660,17 @@ static int _lv_extend_layered_lv(struct alloc_handle *ah,
 	seg->area_len += extents;
 	seg->len += extents;
 	lv->le_count += extents;
-	lv->size += (uint64_t) extents *lv->vg->extent_size;
+	lv->size += (uint64_t) extents * lv->vg->extent_size;
+
+	/*
+	 * The MD bitmap is limited to being able to track 2^21 regions.
+	 * The region_size must be adjusted to meet that criteria.
+	 */
+	while (seg_is_raid(seg) && (seg->region_size < (lv->size / (1 << 21)))) {
+		seg->region_size *= 2;
+		log_very_verbose("Forced to adjust RAID region_size to %uS",
+				 seg->region_size);
+	}
 
 	return 1;
 }

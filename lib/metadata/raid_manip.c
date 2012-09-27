@@ -731,6 +731,12 @@ static int _raid_add_images(struct logical_volume *lv,
 		seg = first_seg(lv);
 		seg_lv(seg, 0)->status |= RAID_IMAGE | LVM_READ | LVM_WRITE;
 		seg->region_size = RAID_REGION_SIZE;
+		/* MD's bitmap is limited to tracking 2^21 regions */
+		while (seg->region_size < (lv->size / (1 << 21))) {
+			seg->region_size *= 2;
+			log_very_verbose("Setting RAID1 region_size to %uS",
+					 seg->region_size);
+		}
 		seg->segtype = get_segtype_from_string(lv->vg->cmd, "raid1");
 		if (!seg->segtype)
 			return_0;

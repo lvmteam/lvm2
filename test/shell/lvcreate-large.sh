@@ -13,28 +13,75 @@
 
 . lib/test
 
-aux prepare_vg 4
+aux prepare_vg 5
 
-lvcreate -s -l 100%FREE -n $lv $vg --virtualsize 1024T
+lvcreate -s -l 20%FREE -n $lv1 $vg --virtualsize 256T
+lvcreate -s -l 20%FREE -n $lv2 $vg --virtualsize 256T
+lvcreate -s -l 20%FREE -n $lv3 $vg --virtualsize 256T
+lvcreate -s -l 20%FREE -n $lv4 $vg --virtualsize 256T
+lvcreate -s -l 20%FREE -n $lv5 $vg --virtualsize 256T
 
 #FIXME this should be 1024T
 #check lv_field $vg/$lv size "128.00m"
 
 aux lvmconf 'devices/filter = [ "a/dev\/mapper\/.*$/", "a/dev\/LVMTEST/", "r/.*/" ]'
 
-pvcreate $DM_DEV_DIR/$vg/$lv
-vgcreate -c n $vg1 $DM_DEV_DIR/$vg/$lv
+pvcreate $DM_DEV_DIR/$vg/$lv[12345]
+vgcreate -c n $vg1 $DM_DEV_DIR/$vg/$lv[12345]
 
 lvcreate -l 100%FREE -n $lv1 $vg1
-check lv_field $vg1/$lv1 size "1024.00t"
+check lv_field $vg1/$lv1 size "1.25p"
 lvresize -f -l 72%VG $vg1/$lv1
-check lv_field $vg1/$lv1 size "737.28t"
+check lv_field $vg1/$lv1 size "921.60t"
 lvremove -ff $vg1/$lv1
 
 lvcreate -l 100%VG -n $lv1 $vg1
-check lv_field $vg1/$lv1 size "1024.00t"
+check lv_field $vg1/$lv1 size "1.25p"
 lvresize -f -l 72%VG $vg1/$lv1
-check lv_field $vg1/$lv1 size "737.28t"
+check lv_field $vg1/$lv1 size "921.60t"
 lvremove -ff $vg1/$lv1
 
-lvremove -ff $vg/$lv
+if aux target_at_least dm-raid 1 1 0; then
+	# bz837927 START
+
+	#
+	# Create large RAID LVs
+	#
+	# We need '--nosync' or our virtual devices won't work
+	lvcreate --type raid1 -m 1 -L 200T -n $lv1 $vg1 --nosync
+	check lv_field $vg1/$lv1 size "200.00t"
+	lvremove -ff $vg1
+
+	lvcreate --type raid10 -m 1 -i 2 -L 200T -n $lv1 $vg1 --nosync
+	check lv_field $vg1/$lv1 size "200.00t"
+	lvremove -ff $vg1
+
+	for segtype in raid4 raid5 raid6; do
+		lvcreate --type $segtype -i 3 -L 750T -n $lv1 $vg1 --nosync
+		check lv_field $vg1/$lv1 size "750.00t"
+		lvremove -ff $vg1
+	done
+
+	#
+	# Convert large linear to RAID1 (belong in different test script?)
+	#
+	lvcreate -L 200T -n $lv1 $vg1
+	# Need to deactivate or the up-convert will start sync'ing
+	lvchange -an $vg1/$lv1
+	lvconvert --type raid1 -m 1 $vg1/$lv1
+	check lv_field $vg1/$lv1 size "200.00t"
+	lvremove -ff $vg1
+
+	#
+	# Extending large RAID LV (belong in different script?)
+	#
+	lvcreate --type raid1 -m 1 -L 200T -n $lv1 $vg1 --nosync
+	check lv_field $vg1/$lv1 size "200.00t"
+	lvextend -L +200T $vg1/$lv1
+	check lv_field $vg1/$lv1 size "400.00t"
+	lvremove -ff $vg1
+
+	# bz837927 END
+fi
+
+lvremove -ff $vg
