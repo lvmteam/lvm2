@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2011 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2005-2012 Red Hat, Inc. All rights reserved.
  *
  * This file is part of the device-mapper userspace tools.
  *
@@ -3106,6 +3106,10 @@ int dm_tree_node_add_thin_pool_target(struct dm_tree_node *node,
 
 	if (!_link_tree_nodes(node, seg->pool))
 		return_0;
+
+	/* Clean flag delay_resume_if_new - so corelog gets resumed */
+	seg->metadata->props.delay_resume_if_new = 0;
+	seg->pool->props.delay_resume_if_new = 0;
 
 	node->props.send_messages = 1;
 	seg->transaction_id = transaction_id;

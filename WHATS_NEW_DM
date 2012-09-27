@@ -1,5 +1,6 @@
 Version 1.02.77 -
 =================================
+  Always reset delay_resume_if_new flag when stacking thin pool.
   Don't create value for dm_config_node and require dm_config_create_value call.
   Check for existing new_name for dmsetup rename.
   Fix memory leak in dmsetup _get_split_name() error path.
