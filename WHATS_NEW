@@ -1,5 +1,6 @@
 Version 2.02.98 -
 =================================
+  Add internal lv_rename_update() to rename LV without updating mda.
   Ensure descriptors 0,1,2 are always available.
   Use /proc/self/fd for closing openned descriptors.
   Add missing pkg init with --enable-testing in configure.in (2.02.71).

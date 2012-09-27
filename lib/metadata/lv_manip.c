@@ -2938,8 +2938,8 @@ int for_each_sub_lv(struct cmd_context *cmd, struct logical_volume *lv,
  * Core of LV renaming routine.
  * VG must be locked by caller.
  */
-int lv_rename(struct cmd_context *cmd, struct logical_volume *lv,
-	      const char *new_name)
+int lv_rename_update(struct cmd_context *cmd, struct logical_volume *lv,
+		     const char *new_name, int update_mda)
 {
 	struct volume_group *vg = lv->vg;
 	struct lv_names lv_names;
@@ -2964,7 +2964,7 @@ int lv_rename(struct cmd_context *cmd, struct logical_volume *lv,
 		return 0;
 	}
 
-	if (!archive(vg))
+	if (update_mda && !archive(vg))
 		return 0;
 
 	/* rename sub LVs */
@@ -2985,6 +2985,9 @@ int lv_rename(struct cmd_context *cmd, struct logical_volume *lv,
 	/* rename active virtual origin too */
 	if (lv_is_cow(lv) && lv_is_virtual_origin(lvl2.lv = origin_from_cow(lv)))
 		dm_list_add_h(&lvs_changed, &lvl2.list);
+
+	if (!update_mda)
+		return 1;
 
 	log_verbose("Writing out updated volume group");
 	if (!vg_write(vg))
@@ -3007,6 +3010,16 @@ int lv_rename(struct cmd_context *cmd, struct logical_volume *lv,
 out:
 	backup(vg);
 	return r;
+}
+
+/*
+ * Core of LV renaming routine.
+ * VG must be locked by caller.
+ */
+int lv_rename(struct cmd_context *cmd, struct logical_volume *lv,
+	      const char *new_name)
+{
+	return lv_rename_update(cmd, lv, new_name, 1);
 }
 
 char *generate_lv_name(struct volume_group *vg, const char *format,
