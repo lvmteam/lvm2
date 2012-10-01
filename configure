@@ -8704,6 +8704,9 @@ fi
 $as_echo "$TESTING" >&6; }
 
 if test "$TESTING" = yes; then
+	if  test x$PKGCONFIG_INIT != x1; then
+		pkg_config_init
+	fi
 
 pkg_failed=no
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for CUNIT" >&5
