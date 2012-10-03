@@ -4438,10 +4438,25 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 		if (!(lvl = find_lv_in_vg(vg, lp->pool))) {
 			log_error("Unable to find existing pool LV %s in VG %s.",
 				  lp->pool, vg->name);
-			return 0;
+			return NULL;
 		}
 		if (!update_pool_lv(lvl->lv, 1))
-			return_0;
+			return_NULL;
+	}
+
+	if (vg_is_clustered(vg) && segtype_is_raid(lp->segtype)) {
+		/*
+		 * FIXME:
+		 * We could allow a RAID LV to be created as long as it
+		 * is activated exclusively.  Any subsequent activations
+		 * would have to be enforced as exclusive also.
+		 *
+		 * For now, we disallow the existence of RAID LVs in a
+		 * cluster VG
+		 */
+		log_error("Unable to create a %s logical volume in a cluster.",
+			  lp->segtype->name);
+		return NULL;
 	}
 
 	if (segtype_is_mirrored(lp->segtype) || segtype_is_raid(lp->segtype)) {

@@ -514,9 +514,20 @@ int vg_set_clustered(struct volume_group *vg, int clustered)
 
 	/*
 	 * We do not currently support switching the cluster attribute
-	 * on active mirrors or snapshots.
+	 * on active mirrors, snapshots or RAID logical volumes.
 	 */
 	dm_list_iterate_items(lvl, &vg->lvs) {
+		/*
+		 * FIXME:
+		 * We could allow exclusive activation of RAID LVs, but
+		 * for now we disallow them in a cluster VG at all.
+		 */
+		if (lv_is_raid_type(lvl->lv)) {
+			log_error("RAID logical volumes are not allowed "
+				  "in a cluster volume group.");
+			return 0;
+		}
+
 		if (lv_is_active(lvl->lv) &&
 		    (lv_is_mirrored(lvl->lv) || lv_is_raid_type(lvl->lv))) {
 			log_error("%s logical volumes must be inactive "
