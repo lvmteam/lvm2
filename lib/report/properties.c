@@ -104,6 +104,12 @@ static percent_t _data_percent(const struct logical_volume *lv)
 {
 	percent_t perc;
 
+	if (lv_is_cow(lv))
+		return _snap_percent(lv);
+
+	if (lv_is_thin_volume(lv))
+		return lv_thin_percent(lv, 0, &perc) ? perc : PERCENT_INVALID;
+
 	return lv_thin_pool_percent(lv, 0, &perc) ? perc : PERCENT_INVALID;
 }
 
