@@ -23,6 +23,7 @@ int main(int argc, char *argv[])
 	vg_t vg = NULL;
 	lv_t lv;
 	struct lvm_property_value v;
+	struct lvm_property_value d;
 
 	handle = lvm_init(NULL);
         assert(handle);
@@ -50,6 +51,10 @@ int main(int argc, char *argv[])
         v = lvm_lv_get_property(lv, "snap_percent");
         assert(v.is_valid);
         assert(v.value.integer == 50 * PERCENT_1);
+
+	d = lvm_lv_get_property(lv, "data_percent");
+	assert(d.is_valid);
+	assert(d.value.integer == v.value.integer);
 
         lvm_vg_close(vg);
 
