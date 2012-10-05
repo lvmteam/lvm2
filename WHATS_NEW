@@ -1,5 +1,6 @@
 Version 2.02.98 -
 =================================
+  Disallow convertion of thins to mirrors.
   Fix lvm2api data_percent reporting for thin volumes.
   Do not allow RAID LVs in a clustered volume group.
   Update lvconvert to support stacking of devs for thin meta/data devs.

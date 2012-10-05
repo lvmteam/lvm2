@@ -1494,6 +1494,13 @@ static int _lvconvert_mirrors(struct cmd_context *cmd,
 		return 0;
 	}
 
+	/* TODO: decide what should be done here */
+	if (lv_is_thin_type(lv)) {
+		log_error("Converting segment type for %s/%s to mirror is not yet supported.",
+			 lv->vg->name, lv->name);
+		return 0;
+	}
+
 	/* Adjust mimage and/or log count */
 	if (!_lvconvert_mirrors_parse_params(cmd, lv, lp,
 					     &old_mimage_count, &old_log_count,
