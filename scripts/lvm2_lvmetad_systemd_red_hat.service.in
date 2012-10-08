@@ -10,7 +10,6 @@ Conflicts=shutdown.target
 Type=forking
 NonBlocking=true
 ExecStart=@sbindir@/lvmetad
-ExecStartPost=@sbindir@/lvm pvscan --cache
 ExecReload=@sbindir@/lvmetad -R
 Environment=SD_ACTIVATION=1
 Restart=on-abort
