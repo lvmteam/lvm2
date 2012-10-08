@@ -737,6 +737,8 @@ static int update_metadata(lvmetad_state *s, const char *name, const char *_vgid
 
 	unlock_pvid_to_vgid(s);
 out:
+	if (!retval && cft)
+		dm_config_destroy(cft);
 	unlock_vg(s, _vgid);
 	return retval;
 }
