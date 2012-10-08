@@ -102,7 +102,6 @@ static daemon_reply _lvmetad_send(const char *id, ...)
 	daemon_reply repl, token_set;
 	daemon_request req;
 	int try = 0;
-	char *future_token;
 
 retry:
 	req = daemon_request_make(id);
@@ -118,19 +117,13 @@ retry:
 
 	daemon_request_destroy(req);
 
-	if (!repl.error && !strcmp(daemon_reply_str(repl, "response", ""), "token_mismatch") && try < 2 && !test_mode()) {
-		future_token = _lvmetad_token;
-		_lvmetad_token = (char *) "update in progress";
-		if (!_token_update()) goto out;
-
+	if (!repl.error && !strcmp(daemon_reply_str(repl, "response", ""), "token_mismatch") &&
+	    try < 2 && !test_mode()) {
 		if (lvmetad_pvscan_all_devs(_lvmetad_cmd, NULL)) {
-			_lvmetad_token = future_token;
-			if (!_token_update()) goto out;
+			++ try;
+			daemon_reply_destroy(repl);
+			goto retry;
 		}
-		_lvmetad_token = future_token;
-		++ try;
-		daemon_reply_destroy(repl);
-		goto retry;
 	}
 
 out:
@@ -858,9 +851,17 @@ int lvmetad_pvscan_all_devs(struct cmd_context *cmd, activation_handler handler)
 	struct device *dev;
 	daemon_reply reply;
 	int r = 1;
+	char *future_token;
 
 	if (!(iter = dev_iter_create(cmd->lvmetad_filter, 1))) {
 		log_error("dev_iter creation failed");
+		return 0;
+	}
+
+	future_token = _lvmetad_token;
+	_lvmetad_token = (char *) "update in progress";
+	if (!_token_update()) {
+		_lvmetad_token = future_token;
 		return 0;
 	}
 
@@ -870,16 +871,18 @@ int lvmetad_pvscan_all_devs(struct cmd_context *cmd, activation_handler handler)
 	daemon_reply_destroy(reply);
 
 	while ((dev = dev_iter_get(iter))) {
-		if (!lvmetad_pvscan_single(cmd, dev, handler)) {
+		if (!lvmetad_pvscan_single(cmd, dev, handler))
 			r = 0;
-			break;
-		}
 
 		if (sigint_caught())
 			break;
 	}
 
 	dev_iter_destroy(iter);
+
+	_lvmetad_token = future_token;
+	if (!_token_update())
+		return 0;
 
 	return r;
 }
