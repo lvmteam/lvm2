@@ -79,8 +79,8 @@ prepare_lvmetad() {
 	echo "preparing lvmetad..."
 	$run_valgrind lvmetad -f "$@" -s "$TESTDIR/lvmetad.socket" -d wire,debug &
 	echo $! > LOCAL_LVMETAD
-
-	sleep .3
+	while ! test -e "$TESTDIR/lvmetad.socket"; do echo -n .; sleep .1; done # wait for the socket
+	echo ok
 }
 
 notify_lvmetad() {
