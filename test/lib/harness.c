@@ -44,6 +44,7 @@ static int readbuf_sz = 0, readbuf_used = 0;
 
 static int die = 0;
 static int verbose = 0; /* >1 with timestamps */
+static int interactive = 0; /* disable all redirections */
 
 struct subst {
 	const char *key;
@@ -278,11 +279,13 @@ static void run(int i, char *f) {
 		perror("Fork failed.");
 		exit(201);
 	} else if (pid == 0) {
-		close(0);
-		dup2(fds[0], 1);
-		dup2(fds[0], 2);
-		close(fds[0]);
-		close(fds[1]);
+		if (!interactive) {
+			close(0);
+			dup2(fds[0], 1);
+			dup2(fds[0], 2);
+			close(fds[0]);
+			close(fds[1]);
+		}
 		execlp("bash", "bash", f, NULL);
 		perror("execlp");
 		fflush(stderr);
@@ -320,7 +323,8 @@ static void run(int i, char *f) {
 }
 
 int main(int argc, char **argv) {
-	const char *be_verbose = getenv("VERBOSE");
+	const char *be_verbose = getenv("VERBOSE"),
+		   *be_interactive = getenv("INTERACTIVE");
 	time_t start = time(NULL);
 	int i;
 
@@ -331,6 +335,9 @@ int main(int argc, char **argv) {
 
 	if (be_verbose)
 		verbose = atoi(be_verbose);
+
+	if (be_interactive)
+		interactive = atoi(be_interactive);
 
 	if (socketpair(PF_UNIX, SOCK_STREAM, 0, fds)) {
 		perror("socketpair");
