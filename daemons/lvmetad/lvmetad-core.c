@@ -51,6 +51,7 @@ static void destroy_metadata_hashes(lvmetad_state *s)
 {
 	struct dm_hash_node *n = NULL;
 
+	n = dm_hash_get_first(s->vgid_to_metadata);
 	while (n) {
 		dm_config_destroy(dm_hash_get_data(s->vgid_to_metadata, n));
 		n = dm_hash_get_next(s->vgid_to_metadata, n);
