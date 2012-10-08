@@ -167,7 +167,9 @@ teardown_devs() {
 
 teardown() {
 	echo -n "## teardown..."
-	test ! -s LOCAL_LVMETAD || kill -9 "$(cat LOCAL_LVMETAD)" || true
+	test ! -s LOCAL_LVMETAD || \
+	    (kill -TERM "$(cat LOCAL_LVMETAD)" && sleep 1 &&
+	     kill -KILL "$(cat LOCAL_LVMETAD)" 2> /dev/null) || true
 
 	dm_table | not egrep -q "$vg|$vg1|$vg2|$vg3|$vg4" || {
 		# Avoid activation of dmeventd if there is no pid
