@@ -73,12 +73,13 @@ daemon_reply daemon_send(daemon_handle h, daemon_request rq)
 {
 	daemon_reply reply = { .cft = NULL, .error = 0 };
 	assert(h.socket_fd >= 0);
+	char *buffer = rq.buffer;
 
-	if (!rq.buffer)
-		dm_config_write_node(rq.cft->root, buffer_line, &rq.buffer);
+	if (!buffer)
+		dm_config_write_node(rq.cft->root, buffer_line, &buffer);
 
-	assert(rq.buffer);
-	if (!write_buffer(h.socket_fd, rq.buffer, strlen(rq.buffer)))
+	assert(buffer);
+	if (!write_buffer(h.socket_fd, buffer, strlen(buffer)))
 		reply.error = errno;
 
 	if (read_buffer(h.socket_fd, &reply.buffer)) {
@@ -87,6 +88,9 @@ daemon_reply daemon_send(daemon_handle h, daemon_request rq)
 			reply.error = EPROTO;
 	} else
 		reply.error = errno;
+
+	if (buffer != rq.buffer)
+		dm_free(buffer);
 
 	return reply;
 }
