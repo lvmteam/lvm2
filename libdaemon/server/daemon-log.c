@@ -98,6 +98,7 @@ void daemon_log_multi(log_state *s, int type, const char *prefix, const char *ms
 		_log_line(pos, &b);
 		pos = next ? next + 1 : 0;
 	}
+	dm_free(buf);
 }
 
 void daemon_log_enable(log_state *s, int outlet, int type, int enable)
