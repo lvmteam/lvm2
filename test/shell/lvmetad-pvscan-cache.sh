@@ -11,6 +11,8 @@
 
 . lib/test
 
+test -e LOCAL_LVMETAD || skip
+
 aux prepare_pvs 2
 
 vgcreate $vg1 $dev1 $dev2
