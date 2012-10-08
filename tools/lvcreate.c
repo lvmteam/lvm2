@@ -619,11 +619,6 @@ static int _read_activation_params(struct lvcreate_params *lp, struct cmd_contex
 	lp->permission = arg_uint_value(cmd, permission_ARG,
 					LVM_READ | LVM_WRITE);
 
-	if (lp->thin && !(lp->permission & LVM_WRITE)) {
-		log_error("Read-only thin volumes are not currently supported.");
-		return 0;
-	}
-
 	/* Must not zero read only volume */
 	if (!(lp->permission & LVM_WRITE))
 		lp->zero = 0;
