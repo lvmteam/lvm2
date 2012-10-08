@@ -52,6 +52,16 @@ void daemon_log(log_state *s, int type, const char *message) {
 	}
 }
 
+static int _type_interesting(log_state *s, int type) {
+	int i = 0;
+	while ( backend[i].id ) {
+		if ( (s->log_config[type] & backend[i].id) == backend[i].id )
+			return 1;
+		++ i;
+	}
+	return 0;
+}
+
 void daemon_logf(log_state *s, int type, const char *fmt, ...) {
 	char *buf;
 	va_list ap;
@@ -78,12 +88,18 @@ static int _log_line(const char *line, void *baton) {
 
 void daemon_log_cft(log_state *s, int type, const char *prefix, const struct dm_config_node *n)
 {
+	if (!_type_interesting(s, type))
+		return;
+
 	struct log_line_baton b = { .s = s, .type = type, .prefix = prefix };
 	dm_config_write_node(n, &_log_line, &b);
 }
 
 void daemon_log_multi(log_state *s, int type, const char *prefix, const char *msg)
 {
+	if (!_type_interesting(s, type))
+		return;
+
 	struct log_line_baton b = { .s = s, .type = type, .prefix = prefix };
 	char *buf = dm_strdup(msg);
 	char *pos = buf;
