@@ -1,5 +1,6 @@
 Version 2.02.98 -
 =================================
+  Report invalid percentage for property snap_percent of non-snaphot LVs.
   Disallow convertion of thins to mirrors.
   Fix lvm2api data_percent reporting for thin volumes.
   Do not allow RAID LVs in a clustered volume group.

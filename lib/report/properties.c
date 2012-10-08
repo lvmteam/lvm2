@@ -95,8 +95,10 @@ static percent_t _copy_percent(const struct logical_volume *lv) {
 
 static percent_t _snap_percent(const struct logical_volume *lv) {
 	percent_t perc;
-	if (!lv_snapshot_percent(lv, &perc))
+
+	if (!lv_is_cow(lv) || !lv_snapshot_percent(lv, &perc))
 		perc = PERCENT_INVALID;
+
 	return perc;
 }
 
