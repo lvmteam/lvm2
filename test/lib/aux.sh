@@ -506,7 +506,7 @@ wait_for_sync() {
 target_at_least()
 {
 	case "$1" in
-	  dm-*) modprobe "$1" ;;
+	  dm-*) modprobe "$1" || true ;;
 	esac
 
 	local version=$(dmsetup targets 2>/dev/null | grep "${1##dm-} " 2>/dev/null)
