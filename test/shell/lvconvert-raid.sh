@@ -13,11 +13,9 @@
 
 get_image_pvs() {
 	local d
-	local images=""
+	local images
 
-	for d in `ls /dev/mapper/${1}-${2}_?image_*`; do
-		images="$images `basename $d | sed s:-:/:`"
-	done
+	images=`dmsetup ls | grep ${1}-${2}_.image_.* | cut -f1 | sed -e s:-:/:`
 	lvs --noheadings -a -o devices $images | sed s/\(.\)//
 }
 
@@ -221,33 +219,4 @@ for i in 4 5 6; do
 	done
 
 	lvremove -ff $vg
-done
-
-# RAID10: Can replace 'copies - 1' devices from each stripe
-# Tests are run on 2-way mirror, 3-way stripe RAID10
-aux target_at_least dm-raid 1 3 1 || skip
-
-lvcreate --type raid10 -m 1 -i 3 -l 3 -n $lv1 $vg
-aux wait_for_sync $vg $lv1
-
-# Can replace any single device
-for i in $(get_image_pvs $vg $lv1); do
-	lvconvert --replace $i $vg/$lv1
-	aux wait_for_sync $vg $lv1
-done
-
-# Can't replace adjacent devices
-devices=( $(get_image_pvs $vg $lv1) )
-not lvconvert --replace ${devices[0]} --replace ${devices[1]} $vg/$lv1
-not lvconvert --replace ${devices[2]} --replace ${devices[3]} $vg/$lv1
-not lvconvert --replace ${devices[4]} --replace ${devices[5]} $vg/$lv1
-
-# Can replace non-adjacent devices
-for i in 0 1; do
-	lvconvert \
-		--replace ${devices[$i]} \
-		--replace ${devices[$(($i + 2))]} \
-		--replace ${devices[$(($i + 4))]} \
-		 $vg/$lv1
-	aux wait_for_sync $vg $lv1
 done
