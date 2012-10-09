@@ -350,7 +350,7 @@ int extend_pool(struct logical_volume *pool_lv, const struct segment_type *segty
 			return 0;
 		}
 	} else {
-		log_warn("WARNING: Pool %s is created without initilization.", pool_lv->name);
+		log_warn("WARNING: Pool %s is created without initialization.", pool_lv->name);
 	}
 
 	if (dm_snprintf(name, len, "%s_tmeta", pool_lv->name) < 0)
@@ -456,7 +456,7 @@ const char *get_pool_discards_name(thin_discards_t discards)
 		return "ignore";
 	}
 
-	log_error(INTERNAL_ERROR "Uknown discards type encountered.");
+	log_error(INTERNAL_ERROR "Unknown discards type encountered.");
 
 	return "unknown";
 }
