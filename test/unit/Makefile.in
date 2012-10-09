@@ -15,8 +15,8 @@ top_srcdir = @top_srcdir@
 top_builddir = @top_builddir@
 
 VPATH = $(srcdir)
-SOURCES = bitset_t.c matcher_t.c config_t.c string_t.c run.c
 ifeq ("@TESTING@", "yes")
+SOURCES = bitset_t.c matcher_t.c config_t.c string_t.c run.c
 TARGETS = run
 endif
 
