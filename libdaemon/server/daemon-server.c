@@ -466,16 +466,18 @@ void daemon_start(daemon_state s)
 	daemon_log_enable(s.log, DAEMON_LOG_OUTLET_SYSLOG, DAEMON_LOG_FATAL, 1);
 	daemon_log_enable(s.log, DAEMON_LOG_OUTLET_SYSLOG, DAEMON_LOG_ERROR, 1);
 
-	(void) dm_prepare_selinux_context(s.pidfile, S_IFREG);
+	if (s.pidfile) {
+		(void) dm_prepare_selinux_context(s.pidfile, S_IFREG);
 
-	/*
-	 * NB. Take care to not keep stale locks around. Best not exit(...)
-	 * after this point.
-	 */
-	if (dm_create_lockfile(s.pidfile) == 0)
-		exit(1);
+		/*
+		 * NB. Take care to not keep stale locks around. Best not exit(...)
+		 * after this point.
+		 */
+		if (dm_create_lockfile(s.pidfile) == 0)
+			exit(1);
 
-	(void) dm_prepare_selinux_context(NULL, 0);
+		(void) dm_prepare_selinux_context(NULL, 0);
+	}
 
 	/* Set normal exit signals to request shutdown instead of dying. */
 	signal(SIGINT, &_exit_handler);
@@ -526,7 +528,8 @@ void daemon_start(daemon_state s)
 	INFO(&s, "%s shutting down", s.name);
 
 	closelog(); /* FIXME */
-	remove_lockfile(s.pidfile);
+	if (s.pidfile)
+		remove_lockfile(s.pidfile);
 	if (failed)
 		exit(1);
 }
