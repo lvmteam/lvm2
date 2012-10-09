@@ -370,7 +370,8 @@ static int lvchange_resync(struct cmd_context *cmd,
 
 	/* Activate exclusively to ensure no nodes still have LV active */
 	monitored = dmeventd_monitor_mode();
-	init_dmeventd_monitor(0);
+	if (monitored != DMEVENTD_MONITOR_IGNORE)
+		init_dmeventd_monitor(0);
 
 	if (!deactivate_lv(cmd, lv)) {
 		log_error("Unable to deactivate %s for resync", lv->name);
@@ -383,7 +384,8 @@ static int lvchange_resync(struct cmd_context *cmd,
 		return 0;
 	}
 
-	init_dmeventd_monitor(monitored);
+	if (monitored != DMEVENTD_MONITOR_IGNORE)
+		init_dmeventd_monitor(monitored);
 	init_mirror_in_sync(0);
 
 	log_very_verbose("Starting resync of %s%s%s%s \"%s\"",

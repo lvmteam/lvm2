@@ -1,5 +1,6 @@
 Version 2.02.98 -
 =================================
+  Do not start dmeventd for lvchange --resync when monitoring is off.
   Remove ExecStartPost with pvscan --cache from lvm2-lvmetad.service.
   Report invalid percentage for property snap_percent of non-snaphot LVs.
   Disallow convertion of thins to mirrors.
