@@ -488,6 +488,9 @@ global {
     # lvmetad udev rules *must* be set up for LVM to work correctly. Without
     # proper udev rules, all changes in block device configuration will be
     # *ignored* until a manual 'pvscan --cache' is performed.
+    #
+    # If lvmetad has been running while use_lvmetad was 0, it MUST be stopped
+    # before changing use_lvmetad to 1 and started again afterwards.
     use_lvmetad = 0
 
     # Full path of the utility called to check that a thin metadata device
