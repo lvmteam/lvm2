@@ -34,6 +34,9 @@ SOURCES =\
 	$(interface)/libdm-iface.c
 
 INCLUDES = -I$(srcdir)/$(interface) -I$(srcdir)
+ifeq ("@VALGRIND_POOL@", "yes")
+INCLUDES += @VALGRIND_CFLAGS@
+endif
 
 ifeq ("@STATIC_LINK@", "yes")
 LIB_STATIC = $(interface)/libdevmapper.a

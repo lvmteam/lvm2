@@ -14,7 +14,7 @@
  */
 
 #ifdef VALGRIND_POOL
-#include "valgrind/memcheck.h"
+#include "memcheck.h"
 #endif
 
 #include "dmlib.h"
