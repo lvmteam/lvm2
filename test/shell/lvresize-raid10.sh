@@ -11,13 +11,13 @@
 
 . lib/test
 
-aux target_at_least dm-raid 1 1 0 || skip
+aux target_at_least dm-raid 1 3 0 || skip
 
 aux prepare_vg 5 80
 
-# Extend a 2-way RAID1
+# Extend RAID10 (2-stripes, 2-mirror)
 for deactivate in true false; do
-	lvcreate --type raid1 -m 1 -l 2 -n $lv1 $vg
+	lvcreate --type raid10 -m 1 -i 2 -l 2 -n $lv1 $vg
 
 	if $deactivate; then
 		lvchange -an $vg/$lv1
@@ -30,9 +30,9 @@ for deactivate in true false; do
 	lvremove -ff $vg
 done
 
-# Reduce 2-way RAID1
+# Reduce RAID10 (2-stripes, 2-mirror)
 for deactivate in true false; do
-	lvcreate --type raid1 -m 1 -l 4 -n $lv1 $vg
+	lvcreate --type raid10 -m 1 -i 2 -l 4 -n $lv1 $vg
 
 	if $deactivate; then
 		lvchange -an $vg/$lv1
@@ -43,38 +43,4 @@ for deactivate in true false; do
 	#check raid_images_contiguous $vg $lv1
 
 	lvremove -ff $vg
-done
-
-# Extend 3-striped RAID 4/5/6
-for i in 4 5 6 ; do
-	for deactivate in true false; do
-		lvcreate --type raid$i -i 3 -l 3 -n $lv1 $vg
-
-		if $deactivate; then
-			lvchange -an $vg/$lv1
-		fi
-
-		lvresize -l +3 $vg/$lv1
-
-		#check raid_images_contiguous $vg $lv1
-
-		lvremove -ff $vg
-	done
-done
-
-# Reduce 3-striped RAID 4/5/6
-for i in 4 5 6 ; do
-	for deactivate in true false; do
-		lvcreate --type raid$i -i 3 -l 6 -n $lv1 $vg
-
-		if $deactivate; then
-			lvchange -an $vg/$lv1
-		fi
-
-		should lvresize -y -l -3 $vg/$lv1
-
-		#check raid_images_contiguous $vg $lv1
-
-		lvremove -ff $vg
-	done
 done

@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (C) 2011 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2011-2012 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -47,26 +47,3 @@ for i in raid4 \
 	aux wait_for_sync $vg $lv1
 	lvremove -ff $vg
 done
-
-#
-# Create RAID10:
-#
-
-aux target_at_least dm-raid 1 3 0 || skip
-
-# Should not allow more than 2-way mirror
-not lvcreate --type raid10 -m 2 -i 2 -l 2 -n $lv1 $vg
-
-# 2-way mirror, 2-stripes
-lvcreate --type raid10 -m 1 -i 2 -l 2 -n $lv1 $vg
-aux wait_for_sync $vg $lv1
-lvremove -ff $vg
-
-# 2-way mirror, 3-stripes
-lvcreate --type raid10 -m 1 -i 3 -l 3 -n $lv1 $vg
-aux wait_for_sync $vg $lv1
-lvremove -ff $vg
-
-#
-# FIXME: Add tests that specify particular PVs to use for creation
-#
