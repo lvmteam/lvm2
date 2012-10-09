@@ -13,7 +13,7 @@
 
 . lib/test
 
-aux target_at_least dm-thin-pool 1 0 0 || skip
+aux have_thin 1 0 0 || skip
 
 # disable thin_check if not present in system
 which thin_check || aux lvmconf 'global/thin_check_executable = ""'

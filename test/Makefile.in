@@ -98,6 +98,7 @@ lib/paths: $(srcdir)/Makefile.in .lib-dir-stamp
 	echo 'abs_srcdir=$(abs_srcdir)' >> $@-t
 	echo 'abs_builddir=$(abs_builddir)' >> $@-t
 	echo 'export DM_UDEV_SYNCHRONISATION=$(dm_udev_synchronisation)' >> $@-t
+	echo 'export THIN=@THIN@' >> $@-t
 	mv $@-t $@
 
 LIB = lib/not lib/should lib/harness \

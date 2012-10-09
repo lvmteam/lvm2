@@ -530,6 +530,12 @@ target_at_least()
 	test "$revision" -ge "$3" 2>/dev/null || return 1
 }
 
+have_thin()
+{
+    target_at_least dm-thin-pool "$@" || exit 1
+    test "$THIN" = shared || test "$THIN" = internal || exit 1
+}
+
 test -f DEVICES && devs=$(cat DEVICES)
 
 #unset LVM_VALGRIND

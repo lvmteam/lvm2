@@ -26,7 +26,7 @@ check_lv_field_modules_()
 #
 # Main
 #
-aux target_at_least dm-thin-pool 1 0 0 || skip
+aux have_thin 1 0 0 || skip
 
 aux prepare_pvs 2 64
 

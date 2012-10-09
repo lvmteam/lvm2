@@ -18,7 +18,7 @@
 #
 # Main
 #
-aux target_at_least dm-thin-pool 1 1 0 || skip
+aux have_thin 1 1 0 || skip
 
 aux prepare_pvs 2 64
 
