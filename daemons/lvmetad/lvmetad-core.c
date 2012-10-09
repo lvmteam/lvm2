@@ -1060,6 +1060,7 @@ int main(int argc, char *argv[])
 	daemon_state s = { .private = NULL };
 	lvmetad_state ls;
 	int _restart = 0;
+	int _socket_override = 1;
 
 	s.name = "lvmetad";
 	s.private = &ls;
@@ -1067,8 +1068,10 @@ int main(int argc, char *argv[])
 	s.daemon_fini = fini;
 	s.handler = handler;
 	s.socket_path = getenv("LVM_LVMETAD_SOCKET");
-	if (!s.socket_path)
+	if (!s.socket_path) {
+		_socket_override = 0;
 		s.socket_path = DEFAULT_RUN_DIR "/lvmetad.socket";
+	}
 	s.pidfile = LVMETAD_PIDFILE;
 	s.protocol = "lvmetad";
 	s.protocol_version = 1;
@@ -1094,11 +1097,19 @@ int main(int argc, char *argv[])
 			break;
 		case 's': // --socket
 			s.socket_path = optarg;
+			_socket_override = 1;
 			break;
 		case 'V':
 			printf("lvmetad version 0\n");
 			exit(1);
 		}
+	}
+
+	if (s.foreground && !_socket_override) {
+		fprintf(stderr, "A socket path (-s) is required in foreground mode.");
+		exit(2);
+	} else {
+		s.pidfile = NULL;
 	}
 
 	daemon_start(s);
