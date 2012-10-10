@@ -17,5 +17,6 @@ pvcreate --metadatatype 1 $dev1
 vgscan --cache
 pvs | grep $dev1
 vgcreate --metadatatype 1 $vg1 $dev1
+vgscan --cache
 vgs | grep $vg1
 pvs | grep $dev1

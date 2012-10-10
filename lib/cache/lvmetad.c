@@ -823,6 +823,12 @@ int lvmetad_pvscan_single(struct cmd_context *cmd, struct device *dev,
 		goto_bad;
 
 	lvmcache_foreach_mda(info, _lvmetad_pvscan_single, &baton);
+
+	/* LVM1 VGs have no MDAs. */
+	if (!baton.vg && lvmcache_fmt(info) == get_format_by_name(cmd, "lvm1"))
+		baton.vg = ((struct metadata_area *) dm_list_first(&baton.fid->metadata_areas_in_use))->
+			ops->vg_read(baton.fid, lvmcache_vgname_from_info(info), NULL, 0);
+
 	if (!baton.vg)
 		lvmcache_fmt(info)->ops->destroy_instance(baton.fid);
 
