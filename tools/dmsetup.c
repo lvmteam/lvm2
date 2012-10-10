@@ -2943,8 +2943,8 @@ static int _ls(CMD_ARGS)
 
 static int _mangle(CMD_ARGS)
 {
-	char *name;
-	char *new_name = NULL;
+	const char *name, *uuid;
+	char *new_name = NULL, *new_uuid = NULL;
 	struct dm_task *dmt;
 	struct dm_info info;
 	int r = 0;
@@ -2973,25 +2973,49 @@ static int _mangle(CMD_ARGS)
 	if (!dm_task_get_info(dmt, &info) || !info.exists)
 		goto out;
 
+	uuid = dm_task_get_uuid(dmt);
+
 	target_format = _switches[MANGLENAME_ARG] ? _int_args[MANGLENAME_ARG]
 						  : DEFAULT_DM_NAME_MANGLING;
 
-	if (target_format == DM_STRING_MANGLING_AUTO && strstr(name, "\\x5cx")) {
-		log_error("The name \"%s\" seems to be mangled more than once. "
-			  "Manual intervention required to rename the device.", name);
-		goto out;
+	if (target_format == DM_STRING_MANGLING_AUTO) {
+		if (strstr(name, "\\x5cx")) {
+			log_error("The name \"%s\" seems to be mangled more than once. "
+				  "Manual intervention required to rename the device.", name);
+			goto out;
+		}
+		if (strstr(uuid, "\\x5cx")) {
+			log_error("The UUID \"%s\" seems to be mangled more than once. "
+				  "Manual intervention required to correct the device UUID.", uuid);
+			goto out;
+		}
 	}
 
 	if (target_format == DM_STRING_MANGLING_NONE) {
 		if (!(new_name = dm_task_get_name_unmangled(dmt)))
 			goto out;
+		if (!(new_uuid = dm_task_get_uuid_unmangled(dmt)))
+			goto out;
 	}
-	else if (!(new_name = dm_task_get_name_mangled(dmt)))
+	else {
+		if (!(new_name = dm_task_get_name_mangled(dmt)))
+			goto out;
+		if (!(new_uuid = dm_task_get_uuid_mangled(dmt)))
+			goto out;
+	}
+
+	/* We can't rename the UUID, the device must be reactivated manually. */
+	if (strcmp(uuid, new_uuid)) {
+		log_error("%s: %s: UUID in incorrect form. ", name, uuid);
+		log_error("Unable to change device UUID. The device must be deactivated first.");
+		r = 0;
 		goto out;
+	}
 
 	/* Nothing to do if the name is in correct form already. */
 	if (!strcmp(name, new_name)) {
-		log_print("%s: name already in correct form", name);
+		log_print("%s: %s: name %salready in correct form", name,
+			  *uuid ? uuid : "[no UUID]", *uuid ? "and UUID " : "");
 		r = 1;
 		goto out;
 	}
@@ -3003,6 +3027,7 @@ static int _mangle(CMD_ARGS)
 
 out:
 	dm_free(new_name);
+	dm_free(new_uuid);
 	dm_task_destroy(dmt);
 	return r;
 }
