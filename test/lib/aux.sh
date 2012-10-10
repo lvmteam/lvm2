@@ -534,6 +534,9 @@ have_thin()
 {
     target_at_least dm-thin-pool "$@" || exit 1
     test "$THIN" = shared || test "$THIN" = internal || exit 1
+
+# disable thin_check if not present in system
+    which thin_check || lvmconf 'global/thin_check_executable = ""'
 }
 
 test -f DEVICES && devs=$(cat DEVICES)

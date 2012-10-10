@@ -33,9 +33,6 @@ aux have_thin 1 0 0 || skip
 
 aux prepare_pvs 2 64
 
-# disable thin_check if not present in system
-which thin_check || aux lvmconf 'global/thin_check_executable = ""'
-
 clustered=
 test -e LOCAL_CLVMD && clustered="--clustered y"
 
