@@ -582,18 +582,51 @@ const char *dm_task_get_name(const struct dm_task *dmt)
 	return (dmt->dmi.v4->name);
 }
 
+static char *_task_get_string_mangled(const char *str, const char *str_name,
+				      char *buf, size_t buf_size,
+				      dm_string_mangling_t mode)
+{
+	char *rs;
+	int r;
+
+	if ((r = mangle_string(str, str_name, strlen(str), buf, buf_size, mode)) < 0)
+		return NULL;
+
+	if (!(rs = r ? dm_strdup(buf) : dm_strdup(str)))
+		log_error("_task_get_string_mangled: dm_strdup failed");
+
+	return rs;
+}
+
+static char *_task_get_string_unmangled(const char *str, const char *str_name,
+					char *buf, size_t buf_size,
+					dm_string_mangling_t mode)
+{
+	char *rs;
+	int r = 0;
+
+	/*
+	 * Unless the mode used is 'none', the string
+	 * is *already* unmangled on ioctl return!
+	 */
+	if (mode == DM_STRING_MANGLING_NONE &&
+	    (r = unmangle_string(str, str_name, strlen(str), buf, buf_size, mode)) < 0)
+		return NULL;
+
+	if (!(rs = r ? dm_strdup(buf) : dm_strdup(str)))
+		log_error("_task_get_string_unmangled: dm_strdup failed");
+
+	return rs;
+}
+
 char *dm_task_get_name_mangled(const struct dm_task *dmt)
 {
 	const char *s = dm_task_get_name(dmt);
 	char buf[DM_NAME_LEN];
-	char *rs = NULL;
-	int r;
+	char *rs;
 
-	if ((r = mangle_string(s, "name", strlen(s), buf, sizeof(buf),
-			       dm_get_name_mangling_mode())) < 0)
+	if (!(rs = _task_get_string_mangled(s, "name", buf, sizeof(buf), dm_get_name_mangling_mode())))
 		log_error("Failed to mangle device name \"%s\".", s);
-	else if (!(rs = r ? dm_strdup(buf) : dm_strdup(s)))
-		log_error("dm_task_get_name_mangled: dm_strdup failed");
 
 	return rs;
 }
@@ -602,19 +635,39 @@ char *dm_task_get_name_unmangled(const struct dm_task *dmt)
 {
 	const char *s = dm_task_get_name(dmt);
 	char buf[DM_NAME_LEN];
-	char *rs = NULL;
-	int r = 0;
+	char *rs;
 
-	/*
-	 * Unless the mode used is 'none', the name
-	 * is *already* unmangled on ioctl return!
-	 */
-	if (dm_get_name_mangling_mode() == DM_STRING_MANGLING_NONE &&
-	    (r = unmangle_string(s, "name", strlen(s), buf, sizeof(buf),
-				 dm_get_name_mangling_mode())) < 0)
+	if (!(rs = _task_get_string_unmangled(s, "name", buf, sizeof(buf), dm_get_name_mangling_mode())))
 		log_error("Failed to unmangle device name \"%s\".", s);
-	else if (!(rs = r ? dm_strdup(buf) : dm_strdup(s)))
-		log_error("dm_task_get_name_unmangled: dm_strdup failed");
+
+	return rs;
+}
+
+const char *dm_task_get_uuid(const struct dm_task *dmt)
+{
+	return (dmt->dmi.v4->uuid);
+}
+
+char *dm_task_get_uuid_mangled(const struct dm_task *dmt)
+{
+	const char *s = dm_task_get_uuid(dmt);
+	char buf[DM_UUID_LEN];
+	char *rs;
+
+	if (!(rs = _task_get_string_mangled(s, "UUID", buf, sizeof(buf), dm_get_name_mangling_mode())))
+		log_error("Failed to mangle device uuid \"%s\".", s);
+
+	return rs;
+}
+
+char *dm_task_get_uuid_unmangled(const struct dm_task *dmt)
+{
+	const char *s = dm_task_get_uuid(dmt);
+	char buf[DM_UUID_LEN];
+	char *rs;
+
+	if (!(rs = _task_get_string_unmangled(s, "UUID", buf, sizeof(buf), dm_get_name_mangling_mode())))
+		log_error("Failed to unmangle device uuid \"%s\".", s);
 
 	return rs;
 }

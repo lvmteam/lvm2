@@ -681,11 +681,6 @@ uint32_t dm_task_get_read_ahead(const struct dm_task *dmt, uint32_t *read_ahead)
 				       MINOR(dmt->dmi.v4->dev), read_ahead);
 }
 
-const char *dm_task_get_uuid(const struct dm_task *dmt)
-{
-	return (dmt->dmi.v4->uuid);
-}
-
 struct dm_deps *dm_task_get_deps(struct dm_task *dmt)
 {
 	return (struct dm_deps *) (((char *) dmt->dmi.v4) +

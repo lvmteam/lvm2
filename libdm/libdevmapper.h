@@ -164,6 +164,16 @@ struct dm_versions {
 int dm_get_library_version(char *version, size_t size);
 int dm_task_get_driver_version(struct dm_task *dmt, char *version, size_t size);
 int dm_task_get_info(struct dm_task *dmt, struct dm_info *dmi);
+
+/*
+ * This function returns dm device's UUID based on the value
+ * of the mangling mode set during preceding dm_task_run call:
+ *   - unmangled name for DM_STRING_MANGLING_{AUTO, HEX},
+ *   - name without any changes for DM_STRING_MANGLING_NONE.
+ *
+ * To get mangled or unmangled form of the name directly, use
+ * dm_task_get_uuid_mangled or dm_task_get_uuid_unmangled function.
+ */
 const char *dm_task_get_uuid(const struct dm_task *dmt);
 
 struct dm_deps *dm_task_get_deps(struct dm_task *dmt);
@@ -297,18 +307,20 @@ typedef enum {
 } dm_string_mangling_t;
 
 /*
- * Set/get mangling mode used for device-mapper names.
+ * Set/get mangling mode used for device-mapper names and uuids.
  */
 int dm_set_name_mangling_mode(dm_string_mangling_t name_mangling);
 dm_string_mangling_t dm_get_name_mangling_mode(void);
 
 /*
- * Get mangled/unmangled form of the device-mapper name
+ * Get mangled/unmangled form of the device-mapper name or uuid
  * irrespective of the global setting (set by dm_set_name_mangling_mode).
- * The name returned needs to be freed after use by calling dm_free!
+ * The name or uuid returned needs to be freed after use by calling dm_free!
  */
 char *dm_task_get_name_mangled(const struct dm_task *dmt);
 char *dm_task_get_name_unmangled(const struct dm_task *dmt);
+char *dm_task_get_uuid_mangled(const struct dm_task *dmt);
+char *dm_task_get_uuid_unmangled(const struct dm_task *dmt);
 
 /*
  * Configure the device-mapper directory
