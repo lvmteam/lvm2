@@ -736,9 +736,30 @@ int dm_task_set_add_node(struct dm_task *dmt, dm_add_node_t add_node)
 
 int dm_task_set_newuuid(struct dm_task *dmt, const char *newuuid)
 {
+	dm_string_mangling_t mangling_mode = dm_get_name_mangling_mode();
+	char mangled_uuid[DM_UUID_LEN];
+	int r = 0;
+
 	if (strlen(newuuid) >= DM_UUID_LEN) {
 		log_error("Uuid \"%s\" too long", newuuid);
 		return 0;
+	}
+
+	if (!check_multiple_mangled_string_allowed(newuuid, "new UUID", mangling_mode))
+		return_0;
+
+	if (mangling_mode != DM_STRING_MANGLING_NONE &&
+	    (r = mangle_string(newuuid, "new UUID", strlen(newuuid), mangled_uuid,
+			       sizeof(mangled_uuid), mangling_mode)) < 0) {
+		log_error("Failed to mangle new device UUID \"%s\"", newuuid);
+		return 0;
+	}
+
+	if (r) {
+		log_debug("New device uuid mangled [%s]: %s --> %s",
+			  mangling_mode == DM_STRING_MANGLING_AUTO ? "auto" : "hex",
+			  newuuid, mangled_uuid);
+		newuuid = mangled_uuid;
 	}
 
 	if (!(dmt->newname = dm_strdup(newuuid))) {
