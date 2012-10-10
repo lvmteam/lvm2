@@ -33,10 +33,7 @@ aux have_thin 1 0 0 || skip
 
 aux prepare_pvs 2 64
 
-clustered=
-test -e LOCAL_CLVMD && clustered="--clustered y"
-
-vgcreate $clustered $vg -s 64K $(cat DEVICES)
+vgcreate $vg -s 64K $(cat DEVICES)
 
 # Create named pool only
 lvcreate -l1 -T $vg/pool1

@@ -19,10 +19,7 @@ aux have_thin 1 0 0 || skip
 
 aux prepare_pvs 4 64
 
-clustered=
-test -e LOCAL_CLVMD && clustered="--clustered y"
-
-vgcreate $clustered $vg -s 64K $(cat DEVICES)
+vgcreate $vg -s 64K $(cat DEVICES)
 
 # create mirrored LVs for data and metadata volumes
 lvcreate -l8 -m1 --mirrorlog core -n $lv1 $vg
