@@ -455,6 +455,7 @@ void dm_task_destroy(struct dm_task *dmt)
 	dm_free(dmt->message);
 	dm_free(dmt->geometry);
 	dm_free(dmt->uuid);
+	dm_free(dmt->mangled_uuid);
 	dm_free(dmt);
 }
 
@@ -1317,6 +1318,8 @@ static int _create_and_load_v4(struct dm_task *dmt)
 	dmt->type = DM_DEVICE_RESUME;
 	dm_free(dmt->uuid);
 	dmt->uuid = NULL;
+	dm_free(dmt->mangled_uuid);
+	dmt->mangled_uuid = NULL;
 
 	if (dm_task_run(dmt))
 		return 1;
@@ -1325,6 +1328,8 @@ static int _create_and_load_v4(struct dm_task *dmt)
 	dmt->type = DM_DEVICE_REMOVE;
 	dm_free(dmt->uuid);
 	dmt->uuid = NULL;
+	dm_free(dmt->mangled_uuid);
+	dmt->mangled_uuid = NULL;
 
 	/*
 	 * Also udev-synchronize "remove" dm task that is a part of this revert!

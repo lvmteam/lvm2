@@ -69,6 +69,7 @@ struct dm_task {
 	int expected_errno;
 
 	char *uuid;
+	char *mangled_uuid;
 };
 
 struct cmd_data {

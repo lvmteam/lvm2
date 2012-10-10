@@ -717,7 +717,35 @@ int dm_task_set_newname(struct dm_task *dmt, const char *newname)
 
 int dm_task_set_uuid(struct dm_task *dmt, const char *uuid)
 {
+	char mangled_uuid[DM_UUID_LEN];
+	dm_string_mangling_t mangling_mode = dm_get_name_mangling_mode();
+	int r = 0;
+
 	dm_free(dmt->uuid);
+	dmt->uuid = NULL;
+	dm_free(dmt->mangled_uuid);
+	dmt->mangled_uuid = NULL;
+
+	if (!check_multiple_mangled_string_allowed(uuid, "UUID", mangling_mode))
+		return_0;
+
+	if (mangling_mode != DM_STRING_MANGLING_NONE &&
+	    (r = mangle_string(uuid, "UUID", strlen(uuid), mangled_uuid,
+			       sizeof(mangled_uuid), mangling_mode)) < 0) {
+		log_error("Failed to mangle device uuid \"%s\".", uuid);
+		return 0;
+	}
+
+	if (r) {
+		log_debug("Device uuid mangled [%s]: %s --> %s",
+			  mangling_mode == DM_STRING_MANGLING_AUTO ? "auto" : "hex",
+			  uuid, mangled_uuid);
+
+		if (!(dmt->mangled_uuid = dm_strdup(mangled_uuid))) {
+			log_error("dm_task_set_uuid: dm_strdup(%s) failed", mangled_uuid);
+			return 0;
+		}
+	}
 
 	if (!(dmt->uuid = dm_strdup(uuid))) {
 		log_error("dm_task_set_uuid: strdup(%s) failed", uuid);
