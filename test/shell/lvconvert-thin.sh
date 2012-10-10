@@ -22,8 +22,8 @@ aux prepare_pvs 4 64
 vgcreate $vg -s 64K $(cat DEVICES)
 
 # create mirrored LVs for data and metadata volumes
-lvcreate -l8 -m1 --mirrorlog core -n $lv1 $vg
-lvcreate -l4 -m1 --mirrorlog core -n $lv2 $vg
+lvcreate -aey -l8 -m1 --mirrorlog core -n $lv1 $vg
+lvcreate -aey -l4 -m1 --mirrorlog core -n $lv2 $vg
 
 lvconvert -c 64K --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
 
