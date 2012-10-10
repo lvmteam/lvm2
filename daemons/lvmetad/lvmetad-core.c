@@ -1046,11 +1046,11 @@ static int fini(daemon_state *s)
 static void usage(char *prog, FILE *file)
 {
 	fprintf(file, "Usage:\n"
-		"%s [-V] [-h] [-d] [-d] [-d] [-f]\n\n"
+		"%s [-V] [-h] [-d [info[,debug[,wire]]]] [-f] [-s path]\n\n"
 		"   -V       Show version of lvmetad\n"
 		"   -h       Show this help information\n"
-		"   -d       Log debug messages to syslog (-d, -dd, -ddd)\n"
-		"   -R       Replace a running lvmetad instance, loading its data\n"
+		"   -s       Set path to the socket to listen on\n"
+		"   -d       Log messages to stderr (-d info,wire,debug)\n"
 		"   -f       Don't fork, run in the foreground\n\n", prog);
 }
 
@@ -1078,7 +1078,7 @@ int main(int argc, char *argv[])
 	ls.debug_config = "";
 
 	// use getopt_long
-	while ((opt = getopt(argc, argv, "?fhVd:Rs:")) != EOF) {
+	while ((opt = getopt(argc, argv, "?fhVd:s:")) != EOF) {
 		switch (opt) {
 		case 'h':
 			usage(argv[0], stdout);
@@ -1086,9 +1086,6 @@ int main(int argc, char *argv[])
 		case '?':
 			usage(argv[0], stderr);
 			exit(0);
-		case 'R':
-			_restart++;
-			break;
 		case 'f':
 			s.foreground = 1;
 			break;
