@@ -539,17 +539,19 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 int vgchange(struct cmd_context *cmd, int argc, char **argv)
 {
 	/* Update commands that can be combined */
-	int update = 
+	int update_partial_safe =
+		arg_count(cmd, deltag_ARG) ||
+		arg_count(cmd, addtag_ARG);
+	int update_partial_unsafe =
 		arg_count(cmd, logicalvolume_ARG) ||
 		arg_count(cmd, maxphysicalvolumes_ARG) ||
 		arg_count(cmd, resizeable_ARG) ||
-		arg_count(cmd, deltag_ARG) ||
-		arg_count(cmd, addtag_ARG) ||
 		arg_count(cmd, uuid_ARG) ||
 		arg_count(cmd, physicalextentsize_ARG) ||
 		arg_count(cmd, clustered_ARG) ||
 		arg_count(cmd, alloc_ARG) ||
 		arg_count(cmd, vgmetadatacopies_ARG);
+	int update = update_partial_safe || update_partial_unsafe;
 
 	if (!update &&
 	    !arg_count(cmd, activate_ARG) &&
@@ -612,6 +614,9 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 			 "skipping manual activation");
 		return ECMD_PROCESSED;
 	}
+
+	if (!update || !update_partial_unsafe)
+		cmd->handles_missing_pvs = 1;
 
 	return process_each_vg(cmd, argc, argv, update ? READ_FOR_UPDATE : 0,
 			       NULL, &vgchange_single);

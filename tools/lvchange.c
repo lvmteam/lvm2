@@ -927,12 +927,24 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 int lvchange(struct cmd_context *cmd, int argc, char **argv)
 {
-	int update = /* options other than -a, --refresh, --monitor or --poll */
-		arg_count(cmd, contiguous_ARG) || arg_count(cmd, permission_ARG) ||
-		arg_count(cmd, readahead_ARG) || arg_count(cmd, persistent_ARG) ||
-		arg_count(cmd, addtag_ARG) || arg_count(cmd, deltag_ARG) ||
-		arg_count(cmd, resync_ARG) || arg_count(cmd, alloc_ARG) ||
-		arg_count(cmd, discards_ARG) || arg_count(cmd, zero_ARG);
+	/*
+	 * Options that update metadata should be listed in one of
+	 * the two lists below (i.e. options other than -a, --refresh,
+	 * --monitor or --poll).
+	 */
+	int update_partial_safe = /* options safe to update if partial */
+		arg_count(cmd, contiguous_ARG) ||
+		arg_count(cmd, permission_ARG) ||
+		arg_count(cmd, readahead_ARG) ||
+		arg_count(cmd, persistent_ARG) ||
+		arg_count(cmd, addtag_ARG) ||
+		arg_count(cmd, deltag_ARG);
+	int update_partial_unsafe =
+		arg_count(cmd, resync_ARG) ||
+		arg_count(cmd, alloc_ARG) ||
+		arg_count(cmd, discards_ARG) ||
+		arg_count(cmd, zero_ARG);
+	int update = update_partial_safe || update_partial_unsafe;
 
 	if (!update &&
             !arg_count(cmd, activate_ARG) && !arg_count(cmd, refresh_ARG) &&
@@ -954,7 +966,7 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (!update)
+	if (!update || !update_partial_unsafe)
 		cmd->handles_missing_pvs = 1;
 
 	if (!argc) {
