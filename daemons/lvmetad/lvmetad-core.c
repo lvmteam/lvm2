@@ -1105,11 +1105,13 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (s.foreground && !_socket_override) {
-		fprintf(stderr, "A socket path (-s) is required in foreground mode.");
-		exit(2);
-	} else {
-		s.pidfile = NULL;
+	if (s.foreground) {
+		if (!_socket_override) {
+			fprintf(stderr, "A socket path (-s) is required in foreground mode.");
+			exit(2);
+		} else {
+			s.pidfile = NULL;
+		}
 	}
 
 	daemon_start(s);
