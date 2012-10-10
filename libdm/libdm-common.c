@@ -326,11 +326,12 @@ static int _is_whitelisted_char(char c)
         return 0;
 }
 
-int check_multiple_mangled_name_allowed(dm_string_mangling_t mode, const char *name)
+int check_multiple_mangled_string_allowed(const char *str, const char *str_name,
+					 dm_string_mangling_t mode)
 {
-	if (mode == DM_STRING_MANGLING_AUTO && strstr(name, "\\x5cx")) {
-		log_error("The name \"%s\" seems to be mangled more than once. "
-			  "This is not allowed in auto mode.", name);
+	if (mode == DM_STRING_MANGLING_AUTO && strstr(str, "\\x5cx")) {
+		log_error("The %s \"%s\" seems to be mangled more than once. "
+			  "This is not allowed in auto mode.", str_name, str);
 		return 0;
 	}
 
@@ -341,8 +342,8 @@ int check_multiple_mangled_name_allowed(dm_string_mangling_t mode, const char *n
  * Mangle all characters in the input string which are not on a whitelist
  * with '\xNN' format where NN is the hex value of the character.
  */
-int mangle_name(const char *str, size_t len, char *buf,
-		size_t buf_len, dm_string_mangling_t mode)
+int mangle_string(const char *str, const char *str_name, size_t len,
+		  char *buf, size_t buf_len, dm_string_mangling_t mode)
 {
 	int need_mangling = -1; /* -1 don't know yet, 0 no, 1 yes */
 	size_t i, j;
@@ -355,7 +356,7 @@ int mangle_name(const char *str, size_t len, char *buf,
 		return 0;
 
 	if (buf_len < DM_NAME_LEN) {
-		log_error(INTERNAL_ERROR "mangle_name: supplied buffer too small");
+		log_error(INTERNAL_ERROR "mangle_string: supplied buffer too small");
 		return -1;
 	}
 
@@ -417,11 +418,11 @@ int mangle_name(const char *str, size_t len, char *buf,
 	return need_mangling;
 
 bad1:
-	log_error("The name \"%s\" contains mixed mangled and unmangled "
-		  "characters or it's already mangled improperly.", str);
+	log_error("The %s \"%s\" contains mixed mangled and unmangled "
+		  "characters or it's already mangled improperly.", str_name, str);
 	return -1;
 bad2:
-	log_error("Mangled form of the name too long for \"%s\".", str);
+	log_error("Mangled form of the %s too long for \"%s\".", str_name, str);
 	return -1;
 }
 
@@ -429,8 +430,8 @@ bad2:
  * Try to unmangle supplied string.
  * Return value: -1 on error, 0 when no unmangling needed, 1 when unmangling applied
  */
-int unmangle_name(const char *str, size_t len, char *buf,
-		  size_t buf_len, dm_string_mangling_t mode)
+int unmangle_string(const char *str, const char *str_name, size_t len,
+		    char *buf, size_t buf_len, dm_string_mangling_t mode)
 {
 	int strict = mode != DM_STRING_MANGLING_NONE;
 	char str_rest[DM_NAME_LEN];
@@ -446,22 +447,22 @@ int unmangle_name(const char *str, size_t len, char *buf,
 		return 0;
 
 	if (buf_len < DM_NAME_LEN) {
-		log_error(INTERNAL_ERROR "unmangle_name: supplied buffer too small");
+		log_error(INTERNAL_ERROR "unmangle_string: supplied buffer too small");
 		return -1;
 	}
 
 	for (i = 0, j = 0; str[i]; i++, j++) {
 		if (strict && !(_is_whitelisted_char(str[i]) || str[i]=='\\')) {
-			log_error("The name \"%s\" should be mangled but "
-				  "it contains blacklisted characters.", str);
+			log_error("The %s \"%s\" should be mangled but "
+				  "it contains blacklisted characters.", str_name, str);
 			j=0; r=-1;
 			goto out;
 		}
 
 		if (str[i] == '\\' && str[i+1] == 'x') {
 			if (!sscanf(&str[i+2], "%2x%s", &code, str_rest)) {
-				log_debug("Hex encoding mismatch detected in \"%s\" "
-					  "while trying to unmangle it.", str);
+				log_debug("Hex encoding mismatch detected in %s \"%s\" "
+					  "while trying to unmangle it.", str_name, str);
 				goto out;
 			}
 			buf[j] = (unsigned char) code;
@@ -496,12 +497,12 @@ static int _dm_task_set_name(struct dm_task *dmt, const char *name,
 		return 0;
 	}
 
-	if (!check_multiple_mangled_name_allowed(mangling_mode, name))
+	if (!check_multiple_mangled_string_allowed(name, "name", mangling_mode))
 		return_0;
 
 	if (mangling_mode != DM_STRING_MANGLING_NONE &&
-	    (r = mangle_name(name, strlen(name), mangled_name,
-			     sizeof(mangled_name), mangling_mode)) < 0) {
+	    (r = mangle_string(name, "name", strlen(name), mangled_name,
+			       sizeof(mangled_name), mangling_mode)) < 0) {
 		log_error("Failed to mangle device name \"%s\".", name);
 		return 0;
 	}
@@ -588,8 +589,8 @@ char *dm_task_get_name_mangled(const struct dm_task *dmt)
 	char *rs = NULL;
 	int r;
 
-	if ((r = mangle_name(s, strlen(s), buf, sizeof(buf),
-			     dm_get_name_mangling_mode())) < 0)
+	if ((r = mangle_string(s, "name", strlen(s), buf, sizeof(buf),
+			       dm_get_name_mangling_mode())) < 0)
 		log_error("Failed to mangle device name \"%s\".", s);
 	else if (!(rs = r ? dm_strdup(buf) : dm_strdup(s)))
 		log_error("dm_task_get_name_mangled: dm_strdup failed");
@@ -609,8 +610,8 @@ char *dm_task_get_name_unmangled(const struct dm_task *dmt)
 	 * is *already* unmangled on ioctl return!
 	 */
 	if (dm_get_name_mangling_mode() == DM_STRING_MANGLING_NONE &&
-	    (r = unmangle_name(s, strlen(s), buf, sizeof(buf),
-			       dm_get_name_mangling_mode())) < 0)
+	    (r = unmangle_string(s, "name", strlen(s), buf, sizeof(buf),
+				 dm_get_name_mangling_mode())) < 0)
 		log_error("Failed to unmangle device name \"%s\".", s);
 	else if (!(rs = r ? dm_strdup(buf) : dm_strdup(s)))
 		log_error("dm_task_get_name_unmangled: dm_strdup failed");
@@ -634,12 +635,12 @@ int dm_task_set_newname(struct dm_task *dmt, const char *newname)
 		return 0;
 	}
 
-	if (!check_multiple_mangled_name_allowed(mangling_mode, newname))
+	if (!check_multiple_mangled_string_allowed(newname, "new name", mangling_mode))
 		return_0;
 
 	if (mangling_mode != DM_STRING_MANGLING_NONE &&
-	    (r = mangle_name(newname, strlen(newname), mangled_name,
-			     sizeof(mangled_name), mangling_mode)) < 0) {
+	    (r = mangle_string(newname, "new name", strlen(newname), mangled_name,
+			       sizeof(mangled_name), mangling_mode)) < 0) {
 		log_error("Failed to mangle new device name \"%s\"", newname);
 		return 0;
 	}

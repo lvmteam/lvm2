@@ -1559,10 +1559,10 @@ static int _do_dm_ioctl_unmangle_name(char *name)
 	if (mode == DM_STRING_MANGLING_NONE)
 		return 1;
 
-	if (!check_multiple_mangled_name_allowed(mode, name))
+	if (!check_multiple_mangled_string_allowed(name, "name", mode))
 		return_0;
 
-	if ((r = unmangle_name(name, DM_NAME_LEN, buf, sizeof(buf), mode)) < 0) {
+	if ((r = unmangle_string(name, "name", DM_NAME_LEN, buf, sizeof(buf), mode)) < 0) {
 		log_debug("_do_dm_ioctl_unmangle_name: failed to "
 			  "unmangle \"%s\"", name);
 		return 0;
