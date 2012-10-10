@@ -1083,7 +1083,7 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 	}
 
 	/* Does driver support device number referencing? */
-	if (_dm_version_minor < 3 && !DEV_NAME(dmt) && !dmt->uuid && dmi->dev) {
+	if (_dm_version_minor < 3 && !DEV_NAME(dmt) && !DEV_UUID(dmt) && dmi->dev) {
 		if (!_lookup_dev_name(dmi->dev, dmi->name, sizeof(dmi->name))) {
 			log_error("Unable to find name for device (%" PRIu32
 				  ":%" PRIu32 ")", dmt->major, dmt->minor);
@@ -1099,8 +1099,8 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 			      dmt->major < 0))
 		strncpy(dmi->name, DEV_NAME(dmt), sizeof(dmi->name));
 
-	if (dmt->uuid)
-		strncpy(dmi->uuid, dmt->uuid, sizeof(dmi->uuid));
+	if (DEV_UUID(dmt))
+		strncpy(dmi->uuid, DEV_UUID(dmt), sizeof(dmi->uuid));
 
 	if (dmt->type == DM_DEVICE_SUSPEND)
 		dmi->flags |= DM_SUSPEND_FLAG;
@@ -1510,7 +1510,7 @@ static int _check_children_not_suspended_v4(struct dm_task *dmt, uint64_t device
 		else
 			log_error(INTERNAL_ERROR "Attempt to suspend device %s%s%s%.0d%s%.0d%s%s"
 				  "that uses already-suspended device (%u:%u)", 
-				  DEV_NAME(dmt) ? : "", dmt->uuid ? : "",
+				  DEV_NAME(dmt) ? : "", DEV_UUID(dmt) ? : "",
 				  dmt->major > 0 ? "(" : "",
 				  dmt->major > 0 ? dmt->major : 0,
 				  dmt->major > 0 ? ":" : "",
@@ -1792,6 +1792,7 @@ int dm_task_run(struct dm_task *dmt)
 	unsigned ioctl_retry = 1;
 	int retryable = 0;
 	const char *dev_name = DEV_NAME(dmt);
+	const char *dev_uuid = DEV_UUID(dmt);
 
 	if ((unsigned) dmt->type >=
 	    (sizeof(_cmd_data_v4) / sizeof(*_cmd_data_v4))) {
@@ -1807,7 +1808,7 @@ int dm_task_run(struct dm_task *dmt)
 		return _create_and_load_v4(dmt);
 
 	if (dmt->type == DM_DEVICE_MKNODES && !dev_name &&
-	    !dmt->uuid && dmt->major <= 0)
+	    !dev_uuid && dmt->major <= 0)
 		return _mknodes_v4(dmt);
 
 	if ((dmt->type == DM_DEVICE_RELOAD) && dmt->suppress_identical_reload)
@@ -1828,8 +1829,8 @@ int dm_task_run(struct dm_task *dmt)
 			  "%s%s%s %s%.0d%s%.0d%s%s",
 			  suspended_counter,
 			  dev_name ? : "",
-			  dmt->uuid ? " UUID " : "",
-			  dmt->uuid ? : "",
+			  dev_uuid ? " UUID " : "",
+			  dev_uuid ? : "",
 			  dmt->major > 0 ? "(" : "",
 			  dmt->major > 0 ? dmt->major : 0,
 			  dmt->major > 0 ? ":" : "",
