@@ -126,3 +126,8 @@ const char *lvm_vgname_from_device(lvm_t libh, const char *device)
 	struct cmd_context *cmd = (struct cmd_context *)libh;
 	return find_vgname_from_pvname(cmd, device);
 }
+
+float lvm_percent_to_float(percent_t v)
+{
+	return percent_to_float(v);
+}
