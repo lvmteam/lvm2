@@ -23,6 +23,7 @@ get_image_pvs() {
 # MAIN
 ########################################################
 aux target_at_least dm-raid 1 1 0 || skip
+aux kernel_at_least 3 2 0 || skip
 
 # 9 PVs needed for RAID10 testing (3-stripes/2-mirror - replacing 3 devs)
 aux prepare_pvs 9 80
