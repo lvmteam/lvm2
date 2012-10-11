@@ -16,6 +16,7 @@
 #define _LVM_DAEMON_IO_H
 
 #include "configure.h"
+#include "config-util.h"
 #include "libdevmapper.h"
 
 #define _REENTRANT
@@ -24,7 +25,7 @@
 
 /* TODO function names */
 
-int read_buffer(int fd, char **buffer);
-int write_buffer(int fd, const char *buffer, int length);
+int buffer_read(int fd, struct buffer *buffer);
+int buffer_write(int fd, struct buffer *buffer);
 
 #endif /* _LVM_DAEMON_SHARED_H */

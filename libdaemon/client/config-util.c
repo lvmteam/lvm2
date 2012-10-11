@@ -21,17 +21,13 @@
 #include "config-util.h"
 #include "libdevmapper.h"
 
-char *format_buffer_v(const char *head, va_list ap)
+int buffer_append_vf(struct buffer *buf, va_list ap)
 {
-	char *buffer, *old;
+	char *append, *old;
 	char *next;
 	int keylen;
 
-	dm_asprintf(&buffer, "%s", head);
-	if (!buffer) goto fail;
-
 	while ((next = va_arg(ap, char *))) {
-		old = buffer;
 		if (!strchr(next, '=')) {
 			log_error(INTERNAL_ERROR "Bad format string at '%s'", next);
 			goto fail;
@@ -39,36 +35,34 @@ char *format_buffer_v(const char *head, va_list ap)
 		keylen = strchr(next, '=') - next;
 		if (strstr(next, "%d") || strstr(next, "%" PRId64)) {
 			int64_t value = va_arg(ap, int64_t);
-			dm_asprintf(&buffer, "%s%.*s= %" PRId64 "\n", buffer, keylen, next, value);
-			dm_free(old);
+			dm_asprintf(&append, "%.*s= %" PRId64 "\n", keylen, next, value);
 		} else if (strstr(next, "%s")) {
 			char *value = va_arg(ap, char *);
-			dm_asprintf(&buffer, "%s%.*s= \"%s\"\n", buffer, keylen, next, value);
-			dm_free(old);
+			dm_asprintf(&append, "%.*s= \"%s\"\n", keylen, next, value);
 		} else if (strstr(next, "%b")) {
 			char *block = va_arg(ap, char *);
 			if (!block)
 				continue;
-			dm_asprintf(&buffer, "%s%.*s%s", buffer, keylen, next, block);
-			dm_free(old);
+			dm_asprintf(&append, "%.*s%s", keylen, next, block);
 		} else {
-			dm_asprintf(&buffer, "%s%s", buffer, next);
-			dm_free(old);
+			dm_asprintf(&append, "%s", next);
 		}
-		if (!buffer) goto fail;
+		if (!append) goto fail;
+		buffer_append(buf, append);
+		dm_free(append);
 	}
 
-	return buffer;
+	return 1;
 fail:
-	dm_free(buffer);
-	return NULL;
+	dm_free(append);
+	return 0;
 }
 
-char *format_buffer(const char *head, ...)
+int buffer_append_f(struct buffer *buf, ...)
 {
 	va_list ap;
-	va_start(ap, head);
-	char *res = format_buffer_v(head, ap);
+	va_start(ap, buf);
+	int res = buffer_append_vf(buf, ap);
 	va_end(ap);
 	return res;
 }
@@ -263,26 +257,57 @@ struct dm_config_node *config_make_nodes(struct dm_config_tree *cft,
 	return res;
 }
 
-int buffer_rewrite(char **buf, const char *format, const char *string)
+int buffer_realloc(struct buffer *buf, int needed)
 {
-	char *old = *buf;
-	int r = dm_asprintf(buf, format, *buf, string);
+	char *new;
+	int alloc = buf->allocated;
+	if (alloc < needed)
+		alloc = needed;
 
-	dm_free(old);
+	buf->allocated += alloc;
+	new = realloc(buf->mem, buf->allocated);
+	if (new)
+		buf->mem = new;
+	else { /* utter failure */
+		dm_free(buf->mem);
+		buf->mem = 0;
+		buf->allocated = buf->used = 0;
+		return 0;
+	}
+	return 1;
+}
 
-	return (r < 0) ? 0 : 1;
+int buffer_append(struct buffer *buf, const char *string)
+{
+	int len = strlen(string);
+	char *new;
+
+	if (buf->allocated - buf->used <= len)
+		buffer_realloc(buf, len + 1);
+
+	strcpy(buf->mem + buf->used, string);
+	buf->used += len;
+	return 1;
 }
 
 int buffer_line(const char *line, void *baton)
 {
-	char **buffer = baton;
-
-	if (*buffer) {
-		if (!buffer_rewrite(buffer, "%s\n%s", line))
-			return 0;
-	} else if (dm_asprintf(buffer, "%s\n", line) < 0)
+	struct buffer *buf = baton;
+	if (!buffer_append(buf, line))
 		return 0;
-
+	if (!buffer_append(buf, "\n"))
+		return 0;
 	return 1;
 }
 
+void buffer_destroy(struct buffer *buf)
+{
+	dm_free(buf->mem);
+	buffer_init(buf);
+}
+
+void buffer_init(struct buffer *buf)
+{
+	buf->allocated = buf->used = 0;
+	buf->mem = 0;
+}

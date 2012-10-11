@@ -26,13 +26,13 @@ typedef struct {
 
 typedef struct {
 	struct dm_config_tree *cft;
-	char *buffer;
+	struct buffer buffer;
 } request;
 
 typedef struct {
 	int error;
 	struct dm_config_tree *cft;
-	char *buffer;
+	struct buffer buffer;
 } response;
 
 struct daemon_state;

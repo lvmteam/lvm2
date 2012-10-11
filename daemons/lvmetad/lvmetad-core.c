@@ -287,7 +287,9 @@ static response pv_list(lvmetad_state *s, request r)
 	struct dm_config_node *cn = NULL, *cn_pvs;
 	struct dm_hash_node *n;
 	const char *id;
-	response res = { .buffer = NULL };
+	response res;
+
+	buffer_init( &res.buffer );
 
 	if (!(res.cft = dm_config_create()))
 		return res; /* FIXME error reporting */
@@ -313,8 +315,10 @@ static response pv_lookup(lvmetad_state *s, request r)
 {
 	const char *pvid = daemon_request_str(r, "uuid", NULL);
 	int64_t devt = daemon_request_int(r, "device", 0);
-	response res = { .buffer = NULL };
+	response res;
 	struct dm_config_node *pv;
+
+	buffer_init( &res.buffer );
 
 	if (!pvid && !devt)
 		return reply_fail("need PVID or device");
@@ -355,7 +359,10 @@ static response vg_list(lvmetad_state *s, request r)
 	struct dm_hash_node *n;
 	const char *id;
 	const char *name;
-	response res = { .buffer = NULL };
+	response res;
+
+	buffer_init( &res.buffer );
+
 	if (!(res.cft = dm_config_create()))
                 goto bad; /* FIXME: better error reporting */
 
@@ -422,10 +429,12 @@ static response vg_lookup(lvmetad_state *s, request r)
 {
 	struct dm_config_tree *cft;
 	struct dm_config_node *metadata, *n;
-	response res = { .buffer = NULL };
+	response res;
 
 	const char *uuid = daemon_request_str(r, "uuid", NULL);
 	const char *name = daemon_request_str(r, "name", NULL);
+
+	buffer_init( &res.buffer );
 
 	DEBUG(s, "vg_lookup: uuid = %s, name = %s", uuid, name);
 

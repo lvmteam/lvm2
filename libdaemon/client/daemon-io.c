@@ -29,26 +29,22 @@
  *
  * See also write_buffer about blocking (read_buffer has identical behaviour).
  */
-int read_buffer(int fd, char **buffer) {
-	int bytes = 0;
-	int buffersize = 32;
-	char *new;
-	*buffer = dm_malloc(buffersize + 1);
+int buffer_read(int fd, struct buffer *buffer) {
+	if (!buffer_realloc(buffer, 32)) /* ensure we have some space */
+		goto fail;
 
 	while (1) {
-		int result = read(fd, (*buffer) + bytes, buffersize - bytes);
+		int result = read(fd, buffer->mem + buffer->used, buffer->allocated - buffer->used);
 		if (result > 0) {
-			bytes += result;
-			if (!strncmp((*buffer) + bytes - 4, "\n##\n", 4)) {
-				*(*buffer + bytes - 4) = 0;
+			buffer->used += result;
+			if (!strncmp((buffer->mem) + buffer->used - 4, "\n##\n", 4)) {
+				*(buffer->mem + buffer->used - 4) = 0;
+				buffer->used -= 4;
 				break; /* success, we have the full message now */
 			}
-			if (bytes == buffersize) {
-				buffersize += 1024;
-				if (!(new = realloc(*buffer, buffersize + 1)))
+			if (buffer->used - buffer->allocated < 32)
+				if (!buffer_realloc(buffer, 1024))
 					goto fail;
-				*buffer = new;
-			}
 			continue;
 		}
 		if (result == 0) {
@@ -61,8 +57,6 @@ int read_buffer(int fd, char **buffer) {
 	}
 	return 1;
 fail:
-	dm_free(*buffer);
-	*buffer = NULL;
 	return 0;
 }
 
@@ -72,18 +66,19 @@ fail:
  *
  * TODO use select on EWOULDBLOCK/EAGAIN/EINTR to avoid useless spinning
  */
-int write_buffer(int fd, const char *buffer, int length) {
-	static const char terminate[] = "\n##\n";
+int buffer_write(int fd, struct buffer *buffer) {
+	struct buffer terminate = { .mem = (char *) "\n##\n", .used = 4 };
 	int done = 0;
 	int written = 0;
+	struct buffer *use = buffer;
 write:
 	while (1) {
-		int result = write(fd, buffer + written, length - written);
+		int result = write(fd, use->mem + written, use->used - written);
 		if (result > 0)
 			written += result;
 		if (result < 0 && errno != EWOULDBLOCK && errno != EAGAIN && errno != EINTR)
 			return 0; /* too bad */
-		if (written == length) {
+		if (written == use->used) {
 			if (done)
 				return 1;
 			else
@@ -91,8 +86,7 @@ write:
 		}
 	}
 
-	buffer = terminate;
-	length = 4;
+	use = &terminate;
 	written = 0;
 	done = 1;
 	goto write;

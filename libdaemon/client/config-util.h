@@ -20,11 +20,20 @@
 
 #include <stdarg.h>
 
-char *format_buffer_v(const char *head, va_list ap);
-char *format_buffer(const char *head, ...);
+struct buffer {
+	int allocated;
+	int used;
+	char *mem;
+};
+
+int buffer_append_vf(struct buffer *buf, va_list ap);
+int buffer_append_f(struct buffer *buf, ...);
+int buffer_append(struct buffer *buf, const char *string);
+void buffer_init(struct buffer *buf);
+void buffer_destroy(struct buffer *buf);
+int buffer_realloc(struct buffer *buf, int required);
 
 int buffer_line(const char *line, void *baton);
-int buffer_rewrite(char **buf, const char *format, const char *string);
 
 int set_flag(struct dm_config_tree *cft, struct dm_config_node *parent,
 	     const char *field, const char *flag, int want);

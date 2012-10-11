@@ -16,6 +16,7 @@
 #define _LVM_DAEMON_COMMON_CLIENT_H
 
 #include "libdevmapper.h"
+#include "config-util.h"
 
 typedef struct {
 	int socket_fd; /* the fd we use to talk to the daemon */
@@ -38,7 +39,7 @@ typedef struct {
 } daemon_info;
 
 typedef struct {
-	char *buffer;
+	struct buffer buffer;
 	/*
 	 * The request looks like this:
 	 *    request = "id"
@@ -55,7 +56,7 @@ typedef struct {
 
 typedef struct {
 	int error; /* 0 for success */
-	char *buffer; /* textual reply */
+	struct buffer buffer;
 	struct dm_config_tree *cft; /* parsed reply, if available */
 } daemon_reply;
 

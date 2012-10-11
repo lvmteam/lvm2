@@ -73,24 +73,24 @@ daemon_reply daemon_send(daemon_handle h, daemon_request rq)
 {
 	daemon_reply reply = { .cft = NULL, .error = 0 };
 	assert(h.socket_fd >= 0);
-	char *buffer = rq.buffer;
+	struct buffer buffer = rq.buffer;
 
-	if (!buffer)
+	if (!buffer.mem)
 		dm_config_write_node(rq.cft->root, buffer_line, &buffer);
 
-	assert(buffer);
-	if (!write_buffer(h.socket_fd, buffer, strlen(buffer)))
+	assert(buffer.mem);
+	if (!buffer_write(h.socket_fd, &buffer))
 		reply.error = errno;
 
-	if (read_buffer(h.socket_fd, &reply.buffer)) {
-		reply.cft = dm_config_from_string(reply.buffer);
+	if (buffer_read(h.socket_fd, &reply.buffer)) {
+		reply.cft = dm_config_from_string(reply.buffer.mem);
 		if (!reply.cft)
 			reply.error = EPROTO;
 	} else
 		reply.error = errno;
 
-	if (buffer != rq.buffer)
-		dm_free(buffer);
+	if (buffer.mem != rq.buffer.mem)
+		buffer_destroy(&buffer);
 
 	return reply;
 }
@@ -98,28 +98,22 @@ daemon_reply daemon_send(daemon_handle h, daemon_request rq)
 void daemon_reply_destroy(daemon_reply r) {
 	if (r.cft)
 		dm_config_destroy(r.cft);
-	dm_free(r.buffer);
+	buffer_destroy(&r.buffer);
 }
 
 daemon_reply daemon_send_simple_v(daemon_handle h, const char *id, va_list ap)
 {
-	static const daemon_reply err = { .error = ENOMEM, .buffer = NULL, .cft = NULL };
+	static const daemon_reply err = { .error = ENOMEM, .buffer = { 0, 0, NULL }, .cft = NULL };
 	daemon_request rq = { .cft = NULL };
 	daemon_reply repl;
-	char *rq_line;
 
-	rq_line = format_buffer("", "request = %s", id, NULL);
-	if (!rq_line)
+	if (!buffer_append_f(&rq.buffer, "request = %s", id, NULL))
 		return err;
-
-	rq.buffer = format_buffer_v(rq_line, ap);
-	dm_free(rq_line);
-
-	if (!rq.buffer)
+	if (!buffer_append_vf(&rq.buffer, ap))
 		return err;
 
 	repl = daemon_send(h, rq);
-	dm_free(rq.buffer);
+	buffer_destroy(&rq.buffer);
 
 	return repl;
 }
@@ -142,7 +136,7 @@ daemon_request daemon_request_make(const char *id)
 {
 	daemon_request r;
 	r.cft = NULL;
-	r.buffer = NULL;
+	buffer_init(&r.buffer);
 
 	if (!(r.cft = dm_config_create()))
 		goto bad;
@@ -181,6 +175,6 @@ int daemon_request_extend(daemon_request r, ...)
 void daemon_request_destroy(daemon_request r) {
 	if (r.cft)
 		dm_config_destroy(r.cft);
-	dm_free(r.buffer);
+	buffer_destroy(&r.buffer);
 }
 

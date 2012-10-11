@@ -330,22 +330,20 @@ response daemon_reply_simple(const char *id, ...)
 {
 	va_list ap;
 	response res = { .cft = NULL };
-	char *res_line = NULL;
 
 	va_start(ap, id);
 
-	if (!(res_line = format_buffer("", "response = %s", id, NULL))) {
+	buffer_init(&res.buffer);
+	if (!buffer_append_f(&res.buffer, "response = %s", id, NULL)) {
 		res.error = ENOMEM;
 		goto end;
 	}
-
-	if (!(res.buffer = format_buffer_v(res_line, ap))) {
+	if (!buffer_append_vf(&res.buffer, ap)) {
 		res.error = ENOMEM;
 		goto end;
 	}
 
 end:
-	dm_free(res_line);
 	va_end(ap);
 	return res;
 }
@@ -364,24 +362,27 @@ static response builtin_handler(daemon_state s, client_handle h, request r)
 					   "version = %" PRId64, (int64_t) s.protocol_version, NULL);
 	}
 
-	response res = { .buffer = NULL, .error = EPROTO };
+	response res = { .error = EPROTO };
+	buffer_init(&res.buffer);
 	return res;
 }
 
 static void *client_thread(void *baton)
 {
 	struct thread_baton *b = baton;
-	request req = { .buffer = NULL };
+	request req;
 	response res;
 
+	buffer_init(&req.buffer);
+
 	while (1) {
-		if (!read_buffer(b->client.socket_fd, &req.buffer))
+		if (!buffer_read(b->client.socket_fd, &req.buffer))
 			goto fail;
 
-		req.cft = dm_config_from_string(req.buffer);
+		req.cft = dm_config_from_string(req.buffer.mem);
 
 		if (!req.cft)
-			fprintf(stderr, "error parsing request:\n %s\n", req.buffer);
+			fprintf(stderr, "error parsing request:\n %s\n", req.buffer.mem);
 		else
 			daemon_log_cft(b->s.log, DAEMON_LOG_WIRE, "<- ", req.cft->root);
 
@@ -390,27 +391,27 @@ static void *client_thread(void *baton)
 		if (res.error == EPROTO) /* Not a builtin, delegate to the custom handler. */
 			res = b->s.handler(b->s, b->client, req);
 
-		if (!res.buffer) {
+		if (!res.buffer.mem) {
 			dm_config_write_node(res.cft->root, buffer_line, &res.buffer);
-			if (!buffer_rewrite(&res.buffer, "%s\n\n", NULL))
+			if (!buffer_append(&res.buffer, "\n\n"))
 				goto fail;
 			dm_config_destroy(res.cft);
 		}
 
 		if (req.cft)
 			dm_config_destroy(req.cft);
-		dm_free(req.buffer);
+		buffer_destroy(&req.buffer);
 
-		daemon_log_multi(b->s.log, DAEMON_LOG_WIRE, "-> ", res.buffer);
-		write_buffer(b->client.socket_fd, res.buffer, strlen(res.buffer));
+		daemon_log_multi(b->s.log, DAEMON_LOG_WIRE, "-> ", res.buffer.mem);
+		buffer_write(b->client.socket_fd, &res.buffer);
 
-		free(res.buffer);
+		buffer_destroy(&res.buffer);
 	}
 fail:
 	/* TODO what should we really do here? */
 	if (close(b->client.socket_fd))
 		perror("close");
-	dm_free(req.buffer);
+	buffer_destroy(&req.buffer);
 	dm_free(baton);
 	return NULL;
 }
