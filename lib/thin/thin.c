@@ -244,7 +244,7 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 	if (!(attr & THIN_FEATURE_BLOCK_SIZE) &&
 	    (seg->chunk_size & (seg->chunk_size - 1))) {
 		log_error("Thin pool target does not support %uKiB chunk size "
-			  "(needs kernel >= 3.5).", seg->chunk_size / 2);
+			  "(needs kernel >= 3.6).", seg->chunk_size / 2);
 		return 0;
 	}
 
@@ -559,7 +559,7 @@ static int _thin_target_present(struct cmd_context *cmd,
 		/* FIXME Log this as WARNING later only if the user asked for the feature to be used but it's not present */
 			log_debug("Target " THIN_MODULE " does not support external origins.");
 
-		if (maj >=1 && min >= 2)
+		if (maj >=1 && min >= 4)
 			_attrs |= THIN_FEATURE_BLOCK_SIZE;
 		else
 		/* FIXME Log this as WARNING later only if the user asked for the feature to be used but it's not present */

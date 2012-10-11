@@ -18,7 +18,7 @@
 #
 # Main
 #
-aux have_thin 1 2 0 || skip
+aux have_thin 1 4 0 || skip
 
 aux prepare_pvs 2 64
 
