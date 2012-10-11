@@ -53,7 +53,8 @@ PER_DEV_SIZE=34
 DEV_SIZE=$(($NUM_DEVS*$PER_DEV_SIZE))
 
 # Test that kernel supports topology
-aux prepare_scsi_debug_dev $DEV_SIZE
+aux prepare_scsi_debug_dev $DEV_SIZE || skip
+
 if [ ! -e /sys/block/$(basename $(cat SCSI_DEBUG_DEV))/alignment_offset ] ; then
 	aux cleanup_scsi_debug_dev
 	skip
