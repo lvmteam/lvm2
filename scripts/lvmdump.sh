@@ -32,6 +32,7 @@ DATE=date
 BASENAME=basename
 UDEVADM=udevadm
 UNAME=uname
+TR=tr
 
 # user may override lvm and dmsetup location by setting LVM_BINARY
 # and DMSETUP_BINARY respectively
@@ -80,7 +81,7 @@ while getopts :acd:hmu opt; do
 	esac
 done
 
-NOW=`$DATE -u +%G%m%d%k%M%S | /usr/bin/tr -d ' '`
+NOW=`$DATE -u +%G%m%d%k%M%S | $TR -d ' '`
 if test -n "$userdir"; then
 	dir="$userdir"
 else
