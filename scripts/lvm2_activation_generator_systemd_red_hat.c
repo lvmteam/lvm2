@@ -115,9 +115,10 @@ static int generate_unit(const char *dir, int early)
 	      "SourcePath=/etc/lvm/lvm.conf\n"
 	      "DefaultDependencies=no\n", f);
 
-	if (early)
+	if (early) {
 		fputs("After=systemd-udev-settle.service\n", f);
-	else
+		fputs("Before=cryptsetup.target\n", f);
+	} else
 		fputs("After=lvm2-activation-early.service cryptsetup.target\n", f);
 
 	fputs("Before=local-fs.target shutdown.target\n"
