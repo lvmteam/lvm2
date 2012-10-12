@@ -160,6 +160,10 @@ char *lv_origin_dup(struct dm_pool *mem, const struct logical_volume *lv)
 {
 	if (lv_is_cow(lv))
 		return lv_name_dup(mem, origin_from_cow(lv));
+
+	if (lv_is_thin_volume(lv) && first_seg(lv)->origin)
+		return lv_name_dup(mem, first_seg(lv)->origin);
+
 	return NULL;
 }
 

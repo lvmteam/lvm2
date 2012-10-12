@@ -57,6 +57,10 @@ int main(int argc, char *argv[])
 	assert(v.is_valid);
 	assert(v.value.integer == PERCENT_INVALID);
 
+	v = lvm_lv_get_property(lv, "origin");
+	assert(v.is_valid);
+	assert(strcmp(v.value.string, "thin") == 0);
+
 	lvm_vg_close(vg);
 	lvm_quit(handle);
 
