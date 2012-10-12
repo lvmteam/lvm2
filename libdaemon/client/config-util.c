@@ -38,18 +38,18 @@ int buffer_append_vf(struct buffer *buf, va_list ap)
 		keylen = strchr(next, '=') - next;
 		if (strstr(next, "%d") || strstr(next, "%" PRId64)) {
 			value = va_arg(ap, int64_t);
-			if (!dm_asprintf(&append, "%.*s= %" PRId64 "\n", keylen, next, value) < 0)
+			if (dm_asprintf(&append, "%.*s= %" PRId64 "\n", keylen, next, value) < 0)
 				goto fail;
 		} else if (strstr(next, "%s")) {
 			string = va_arg(ap, char *);
-			if (!dm_asprintf(&append, "%.*s= \"%s\"\n", keylen, next, string) < 0)
+			if (dm_asprintf(&append, "%.*s= \"%s\"\n", keylen, next, string) < 0)
 				goto fail;
 		} else if (strstr(next, "%b")) {
 			if (!(block = va_arg(ap, char *)))
 				continue;
-			if (!dm_asprintf(&append, "%.*s%s", keylen, next, block) < 0)
+			if (dm_asprintf(&append, "%.*s%s", keylen, next, block) < 0)
 				goto fail;
-		} else if (!dm_asprintf(&append, "%s", next) < 0)
+		} else if (dm_asprintf(&append, "%s", next) < 0)
 			goto fail;
 
 		if (!append ||
