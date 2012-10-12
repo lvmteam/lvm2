@@ -23,9 +23,12 @@
 
 int buffer_append_vf(struct buffer *buf, va_list ap)
 {
-	char *append;
+	char *append = NULL;
 	char *next;
 	int keylen;
+	int64_t value;
+	char *string;
+	char *block;
 
 	while ((next = va_arg(ap, char *))) {
 		if (!strchr(next, '=')) {
@@ -34,21 +37,25 @@ int buffer_append_vf(struct buffer *buf, va_list ap)
 		}
 		keylen = strchr(next, '=') - next;
 		if (strstr(next, "%d") || strstr(next, "%" PRId64)) {
-			int64_t value = va_arg(ap, int64_t);
-			dm_asprintf(&append, "%.*s= %" PRId64 "\n", keylen, next, value);
+			value = va_arg(ap, int64_t);
+			if (!dm_asprintf(&append, "%.*s= %" PRId64 "\n", keylen, next, value) < 0)
+				goto fail;
 		} else if (strstr(next, "%s")) {
-			char *value = va_arg(ap, char *);
-			dm_asprintf(&append, "%.*s= \"%s\"\n", keylen, next, value);
+			string = va_arg(ap, char *);
+			if (!dm_asprintf(&append, "%.*s= \"%s\"\n", keylen, next, string) < 0)
+				goto fail;
 		} else if (strstr(next, "%b")) {
-			char *block = va_arg(ap, char *);
-			if (!block)
+			if (!(block = va_arg(ap, char *)))
 				continue;
-			dm_asprintf(&append, "%.*s%s", keylen, next, block);
-		} else {
-			dm_asprintf(&append, "%s", next);
-		}
-		if (!append) goto fail;
-		buffer_append(buf, append);
+			if (!dm_asprintf(&append, "%.*s%s", keylen, next, block) < 0)
+				goto fail;
+		} else if (!dm_asprintf(&append, "%s", next) < 0)
+			goto fail;
+
+		if (!append ||
+		    !buffer_append(buf, append))
+			return 0;
+
 		dm_free(append);
 	}
 
