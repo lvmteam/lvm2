@@ -432,9 +432,6 @@
 /* Define to 1 if you have the <utmpx.h> header file. */
 #undef HAVE_UTMPX_H
 
-/* Define to 1 if you have the <valgrind/memcheck.h> header file. */
-#undef HAVE_VALGRIND_MEMCHECK_H
-
 /* Define to 1 if you have the `vfork' function. */
 #undef HAVE_VFORK
 

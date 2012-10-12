@@ -28,6 +28,7 @@ LN_S = @LN_S@
 SED = @SED@
 CFLOW_CMD = @CFLOW_CMD@
 AWK = @AWK@
+PYTHON = @PYTHON@
 
 LIBS = @LIBS@
 # Extra libraries always linked with static binaries
@@ -52,6 +53,7 @@ prefix = @prefix@
 exec_prefix = @exec_prefix@
 udev_prefix = @udev_prefix@
 sysconfdir = @sysconfdir@
+rootdir = $(DESTDIR)/
 bindir = $(DESTDIR)@bindir@
 confdir = $(DESTDIR)@CONFDIR@/lvm
 includedir = $(DESTDIR)@includedir@
@@ -196,6 +198,7 @@ POTFILES = $(SOURCES:%.c=%.pot)
 .PHONY: install install_cluster install_device-mapper install_lvm2
 .PHONY: install_lib_shared install_dm_plugin install_lvm2_plugin
 .PHONY: install_ocf help
+.PHONY: python_bindings install_python_bindings
 .PHONY: $(SUBDIRS) $(SUBDIRS.install) $(SUBDIRS.clean) $(SUBDIRS.distclean)
 .PHONY: $(SUBDIRS.pofile) $(SUBDIRS.install_cluster) $(SUBDIRS.cflow)
 .PHONY: $(SUBDIRS.device-mapper) $(SUBDIRS.install-device-mapper)

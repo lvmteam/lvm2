@@ -1027,6 +1027,40 @@ test x$CMDLIB = xyes \
   || LVM2CMD_LIB=
 
 ################################################################################
+dnl -- Enable Python liblvm2app bindings
+AC_MSG_CHECKING(whether to build Python wrapper for liblvm2app.so)
+AC_ARG_ENABLE(python_bindings,
+	      AC_HELP_STRING([--enable-python_bindings], [build Python applib bindings]),
+	      PYTHON_BINDINGS=$enableval, PYTHON_BINDINGS=no)
+AC_MSG_RESULT($PYTHON_BINDINGS)
+
+if test x$PYTHON_BINDINGS = xyes; then
+	if test x$APPLIB != xyes; then
+		AC_MSG_ERROR(
+			--enable-python_bindings requires --enable-applib
+		)
+	fi
+
+	AC_PATH_PROG(PYTHON, python, notfound)
+	if test x$PYTHON == xnotfound; then
+		AC_MSG_ERROR(
+[python is required for --enable-python_bindings but cannot be found]
+		)
+	fi
+
+	AC_PATH_PROG(PYTHON_CONFIG, python-config, notfound)
+	if test x$PYTHON_CONFIG == xnotfound; then
+		AC_MSG_ERROR(
+[python headers are required for --enable-python_bindings but cannot be found]
+		)
+	fi
+
+	PYTHON_INCDIRS=`$PYTHON_CONFIG --includes`
+	PYTHON_LIBDIRS=`$PYTHON_CONFIG --libs`
+
+fi
+
+################################################################################
 dnl -- Enable pkg-config
 AC_ARG_ENABLE(pkgconfig,
 	      AC_HELP_STRING([--enable-pkgconfig], [install pkgconfig support]),
@@ -1523,6 +1557,10 @@ AC_SUBST(OCFDIR)
 AC_SUBST(PKGCONFIG)
 AC_SUBST(POOL)
 AC_SUBST(PTHREAD_LIBS)
+AC_SUBST(PYTHON)
+AC_SUBST(PYTHON_BINDINGS)
+AC_SUBST(PYTHON_INCDIRS)
+AC_SUBST(PYTHON_LIBDIRS)
 AC_SUBST(QUORUM_CFLAGS)
 AC_SUBST(QUORUM_LIBS)
 AC_SUBST(RAID)
@@ -1605,6 +1643,8 @@ liblvm/Makefile
 liblvm/liblvm2app.pc
 man/Makefile
 po/Makefile
+python/Makefile
+python/setup.py
 scripts/clvmd_init_red_hat
 scripts/cmirrord_init_red_hat
 scripts/lvm2_lvmetad_init_red_hat

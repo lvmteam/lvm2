@@ -32,13 +32,17 @@ ifeq ("@APPLIB@", "yes")
   SUBDIRS += liblvm
 endif
 
+ifeq ("@PYTHON_BINDINGS@", "yes")
+  SUBDIRS += python
+endif
+
 SUBDIRS += scripts
 
 # FIXME Should use intermediate Makefiles here!
 ifeq ($(MAKECMDGOALS),distclean)
   SUBDIRS = doc include man test scripts \
     libdaemon lib tools daemons libdm \
-    udev po liblvm \
+    udev po liblvm python \
     unit-tests/datastruct unit-tests/mm unit-tests/regex
 endif
 DISTCLEAN_DIRS += lcov_reports*
@@ -67,6 +71,10 @@ tools.pofile: lib.pofile
 daemons.pofile: lib.pofile
 po.pofile: tools.pofile daemons.pofile
 pofile: po.pofile
+endif
+
+ifeq ("@PYTHON_BINDINGS@", "yes")
+python: liblvm
 endif
 
 ifneq ("$(CFLOW_CMD)", "")
@@ -102,6 +110,11 @@ install_systemd_generators:
 
 install_systemd_units:
 	$(MAKE) -C scripts install_systemd_units
+
+ifeq ("@PYTHON_BINDINGS@", "yes")
+install_python_bindings:
+	$(MAKE) -C liblvm/python install_python_bindings
+endif
 
 install_tmpfiles_configuration:
 	$(MAKE) -C scripts install_tmpfiles_configuration
@@ -148,7 +161,7 @@ ifeq ("$(TESTING)", "yes")
 # testing and report generation
 RUBY=ruby1.9 -Ireport-generators/lib -Ireport-generators/test
 
-.PHONEY: unit-test ruby-test test-programs
+.PHONY: unit-test ruby-test test-programs
 
 # FIXME: put dependencies on libdm and liblvm
 # FIXME: Should be handled by Makefiles in subdirs, not here at top level.

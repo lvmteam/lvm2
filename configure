@@ -624,6 +624,9 @@ SELINUX_LIBS
 REPLICATORS
 READLINE_LIBS
 RAID
+PYTHON_LIBDIRS
+PYTHON_INCDIRS
+PYTHON_BINDINGS
 PTHREAD_LIBS
 POOL
 PKGCONFIG
@@ -686,10 +689,15 @@ BUILD_CMIRRORD
 APPLIB
 MODPROBE_CMD
 MSGFMT
+PYTHON_CONFIG
+PYTHON
 LVM2CMD_LIB
 LVM2APP_LIB
 UDEV_LIBS
 UDEV_CFLAGS
+VALGRIND_POOL
+VALGRIND_LIBS
+VALGRIND_CFLAGS
 CUNIT_LIBS
 CUNIT_CFLAGS
 GENPNG
@@ -842,6 +850,7 @@ enable_ioctl
 enable_o_direct
 enable_applib
 enable_cmdlib
+enable_python_bindings
 enable_pkgconfig
 enable_write_install
 enable_fsadm
@@ -901,6 +910,8 @@ SACKPT_CFLAGS
 SACKPT_LIBS
 CUNIT_CFLAGS
 CUNIT_LIBS
+VALGRIND_CFLAGS
+VALGRIND_LIBS
 UDEV_CFLAGS
 UDEV_LIBS'
 
@@ -1542,6 +1553,8 @@ Optional Features:
   --disable-o_direct      disable O_DIRECT
   --enable-applib         build application library
   --enable-cmdlib         build shared command library
+  --enable-python_bindings
+                          build Python applib bindings
   --enable-pkgconfig      install pkgconfig support
   --enable-write_install  install user writable files
   --disable-fsadm         disable fsadm
@@ -1678,6 +1691,10 @@ Some influential environment variables:
   CUNIT_CFLAGS
               C compiler flags for CUNIT, overriding pkg-config
   CUNIT_LIBS  linker flags for CUNIT, overriding pkg-config
+  VALGRIND_CFLAGS
+              C compiler flags for VALGRIND, overriding pkg-config
+  VALGRIND_LIBS
+              linker flags for VALGRIND, overriding pkg-config
   UDEV_CFLAGS C compiler flags for UDEV, overriding pkg-config
   UDEV_LIBS   linker flags for UDEV, overriding pkg-config
 
@@ -8814,22 +8831,79 @@ fi
 $as_echo "$VALGRIND_POOL" >&6; }
 
 if test "$VALGRIND_POOL" = yes; then
-    for ac_header in valgrind/memcheck.h
-do :
-  ac_fn_c_check_header_mongrel "$LINENO" "valgrind/memcheck.h" "ac_cv_header_valgrind_memcheck_h" "$ac_includes_default"
-if test "x$ac_cv_header_valgrind_memcheck_h" = x""yes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_VALGRIND_MEMCHECK_H 1
-_ACEOF
 
+pkg_failed=no
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for VALGRIND" >&5
+$as_echo_n "checking for VALGRIND... " >&6; }
+
+if test -n "$VALGRIND_CFLAGS"; then
+    pkg_cv_VALGRIND_CFLAGS="$VALGRIND_CFLAGS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"valgrind\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "valgrind") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_VALGRIND_CFLAGS=`$PKG_CONFIG --cflags "valgrind" 2>/dev/null`
 else
-  as_fn_error $? "bailing out" "$LINENO" 5
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+if test -n "$VALGRIND_LIBS"; then
+    pkg_cv_VALGRIND_LIBS="$VALGRIND_LIBS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"valgrind\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "valgrind") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_VALGRIND_LIBS=`$PKG_CONFIG --libs "valgrind" 2>/dev/null`
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
 fi
 
-done
 
+
+if test $pkg_failed = yes; then
+   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        VALGRIND_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors "valgrind" 2>&1`
+        else
+	        VALGRIND_PKG_ERRORS=`$PKG_CONFIG --print-errors "valgrind" 2>&1`
+        fi
+	# Put the nasty error message in config.log where it belongs
+	echo "$VALGRIND_PKG_ERRORS" >&5
+
+	as_fn_error $? "bailing out" "$LINENO" 5
+elif test $pkg_failed = untried; then
+     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+	as_fn_error $? "bailing out" "$LINENO" 5
+else
+	VALGRIND_CFLAGS=$pkg_cv_VALGRIND_CFLAGS
+	VALGRIND_LIBS=$pkg_cv_VALGRIND_LIBS
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+
+fi
 
 $as_echo "#define VALGRIND_POOL 1" >>confdefs.h
+
+
 
 fi
 
@@ -9119,6 +9193,122 @@ $as_echo "$CMDLIB" >&6; }
 test x$CMDLIB = xyes \
   && LVM2CMD_LIB=-llvm2cmd \
   || LVM2CMD_LIB=
+
+################################################################################
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to build Python wrapper for liblvm2app.so" >&5
+$as_echo_n "checking whether to build Python wrapper for liblvm2app.so... " >&6; }
+# Check whether --enable-python_bindings was given.
+if test "${enable_python_bindings+set}" = set; then :
+  enableval=$enable_python_bindings; PYTHON_BINDINGS=$enableval
+else
+  PYTHON_BINDINGS=no
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $PYTHON_BINDINGS" >&5
+$as_echo "$PYTHON_BINDINGS" >&6; }
+
+if test x$PYTHON_BINDINGS = xyes; then
+	if test x$APPLIB != xyes; then
+		as_fn_error $? "--enable-python_bindings requires --enable-applib
+		" "$LINENO" 5
+	fi
+
+	# Extract the first word of "python", so it can be a program name with args.
+set dummy python; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if test "${ac_cv_path_PYTHON+set}" = set; then :
+  $as_echo_n "(cached) " >&6
+else
+  case $PYTHON in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_PYTHON="$PYTHON" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_path_PYTHON="$as_dir/$ac_word$ac_exec_ext"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+  test -z "$ac_cv_path_PYTHON" && ac_cv_path_PYTHON="notfound"
+  ;;
+esac
+fi
+PYTHON=$ac_cv_path_PYTHON
+if test -n "$PYTHON"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $PYTHON" >&5
+$as_echo "$PYTHON" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+
+	if test x$PYTHON == xnotfound; then
+		as_fn_error $? "python is required for --enable-python_bindings but cannot be found
+		" "$LINENO" 5
+	fi
+
+	# Extract the first word of "python-config", so it can be a program name with args.
+set dummy python-config; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if test "${ac_cv_path_PYTHON_CONFIG+set}" = set; then :
+  $as_echo_n "(cached) " >&6
+else
+  case $PYTHON_CONFIG in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_PYTHON_CONFIG="$PYTHON_CONFIG" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_path_PYTHON_CONFIG="$as_dir/$ac_word$ac_exec_ext"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+  test -z "$ac_cv_path_PYTHON_CONFIG" && ac_cv_path_PYTHON_CONFIG="notfound"
+  ;;
+esac
+fi
+PYTHON_CONFIG=$ac_cv_path_PYTHON_CONFIG
+if test -n "$PYTHON_CONFIG"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $PYTHON_CONFIG" >&5
+$as_echo "$PYTHON_CONFIG" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+
+	if test x$PYTHON_CONFIG == xnotfound; then
+		as_fn_error $? "python headers are required for --enable-python_bindings but cannot be found
+		" "$LINENO" 5
+	fi
+
+	PYTHON_INCDIRS=`$PYTHON_CONFIG --includes`
+	PYTHON_LIBDIRS=`$PYTHON_CONFIG --libs`
+
+fi
 
 ################################################################################
 # Check whether --enable-pkgconfig was given.
@@ -10576,8 +10766,12 @@ LVM_LIBAPI=`echo "$VER" | $AWK -F '[()]' '{print $2}'`
 
 
 
+
+
+
+
 ################################################################################
-ac_config_files="$ac_config_files Makefile make.tmpl daemons/Makefile daemons/clvmd/Makefile daemons/cmirrord/Makefile daemons/dmeventd/Makefile daemons/dmeventd/libdevmapper-event.pc daemons/dmeventd/plugins/Makefile daemons/dmeventd/plugins/lvm2/Makefile daemons/dmeventd/plugins/raid/Makefile daemons/dmeventd/plugins/mirror/Makefile daemons/dmeventd/plugins/snapshot/Makefile daemons/dmeventd/plugins/thin/Makefile daemons/lvmetad/Makefile doc/Makefile doc/example.conf include/.symlinks include/Makefile lib/Makefile lib/format1/Makefile lib/format_pool/Makefile lib/locking/Makefile lib/mirror/Makefile lib/replicator/Makefile lib/misc/lvm-version.h lib/raid/Makefile lib/snapshot/Makefile lib/thin/Makefile libdaemon/Makefile libdaemon/client/Makefile libdaemon/server/Makefile libdm/Makefile libdm/libdevmapper.pc liblvm/Makefile liblvm/liblvm2app.pc man/Makefile po/Makefile scripts/clvmd_init_red_hat scripts/cmirrord_init_red_hat scripts/lvm2_lvmetad_init_red_hat scripts/lvm2_lvmetad_systemd_red_hat.socket scripts/lvm2_lvmetad_systemd_red_hat.service scripts/lvm2_monitoring_init_red_hat scripts/dm_event_systemd_red_hat.socket scripts/dm_event_systemd_red_hat.service scripts/lvm2_monitoring_systemd_red_hat.service scripts/lvm2_tmpfiles_red_hat.conf scripts/Makefile test/Makefile test/api/Makefile test/unit/Makefile tools/Makefile udev/Makefile unit-tests/datastruct/Makefile unit-tests/regex/Makefile unit-tests/mm/Makefile"
+ac_config_files="$ac_config_files Makefile make.tmpl daemons/Makefile daemons/clvmd/Makefile daemons/cmirrord/Makefile daemons/dmeventd/Makefile daemons/dmeventd/libdevmapper-event.pc daemons/dmeventd/plugins/Makefile daemons/dmeventd/plugins/lvm2/Makefile daemons/dmeventd/plugins/raid/Makefile daemons/dmeventd/plugins/mirror/Makefile daemons/dmeventd/plugins/snapshot/Makefile daemons/dmeventd/plugins/thin/Makefile daemons/lvmetad/Makefile doc/Makefile doc/example.conf include/.symlinks include/Makefile lib/Makefile lib/format1/Makefile lib/format_pool/Makefile lib/locking/Makefile lib/mirror/Makefile lib/replicator/Makefile lib/misc/lvm-version.h lib/raid/Makefile lib/snapshot/Makefile lib/thin/Makefile libdaemon/Makefile libdaemon/client/Makefile libdaemon/server/Makefile libdm/Makefile libdm/libdevmapper.pc liblvm/Makefile liblvm/liblvm2app.pc man/Makefile po/Makefile python/Makefile python/setup.py scripts/clvmd_init_red_hat scripts/cmirrord_init_red_hat scripts/lvm2_lvmetad_init_red_hat scripts/lvm2_lvmetad_systemd_red_hat.socket scripts/lvm2_lvmetad_systemd_red_hat.service scripts/lvm2_monitoring_init_red_hat scripts/dm_event_systemd_red_hat.socket scripts/dm_event_systemd_red_hat.service scripts/lvm2_monitoring_systemd_red_hat.service scripts/lvm2_tmpfiles_red_hat.conf scripts/Makefile test/Makefile test/api/Makefile test/unit/Makefile tools/Makefile udev/Makefile unit-tests/datastruct/Makefile unit-tests/regex/Makefile unit-tests/mm/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -11303,6 +11497,8 @@ do
     "liblvm/liblvm2app.pc") CONFIG_FILES="$CONFIG_FILES liblvm/liblvm2app.pc" ;;
     "man/Makefile") CONFIG_FILES="$CONFIG_FILES man/Makefile" ;;
     "po/Makefile") CONFIG_FILES="$CONFIG_FILES po/Makefile" ;;
+    "python/Makefile") CONFIG_FILES="$CONFIG_FILES python/Makefile" ;;
+    "python/setup.py") CONFIG_FILES="$CONFIG_FILES python/setup.py" ;;
     "scripts/clvmd_init_red_hat") CONFIG_FILES="$CONFIG_FILES scripts/clvmd_init_red_hat" ;;
     "scripts/cmirrord_init_red_hat") CONFIG_FILES="$CONFIG_FILES scripts/cmirrord_init_red_hat" ;;
     "scripts/lvm2_lvmetad_init_red_hat") CONFIG_FILES="$CONFIG_FILES scripts/lvm2_lvmetad_init_red_hat" ;;
