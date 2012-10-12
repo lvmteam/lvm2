@@ -1292,6 +1292,7 @@ static void _close_descriptor(int fd, unsigned suppress_warnings,
 
 static int _close_stray_fds(const char *command)
 {
+#ifndef VALGRIND_POOL
 	struct rlimit rlim;
 	int fd;
 	unsigned suppress_warnings = 0;
@@ -1331,6 +1332,7 @@ static int _close_stray_fds(const char *command)
 
 	if (closedir(d))
 		log_sys_error("closedir", _fd_dir);
+#endif
 
 	return 1;
 }

@@ -42,7 +42,7 @@ prepare_clvmd() {
 	local local_clvmd=$!
 	sleep .3
 	# extra sleep for slow valgrind
-	test -z "$LVM_VALGRIND_CLVMD" || sleep 5
+	test -z "$LVM_VALGRIND_CLVMD" || sleep 7
 	# check that it is really running now
 	ps $local_clvmd || die
 	echo $local_clvmd > LOCAL_CLVMD
