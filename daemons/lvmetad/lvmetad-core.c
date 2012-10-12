@@ -663,7 +663,7 @@ static int vg_remove_if_missing(lvmetad_state *s, const char *vgid)
 static int update_metadata(lvmetad_state *s, const char *name, const char *_vgid,
 			   struct dm_config_node *metadata, int64_t *oldseq)
 {
-	struct dm_config_tree *cft;
+	struct dm_config_tree *cft = NULL;
 	struct dm_config_tree *old;
 	int retval = 0;
 	int seq;
