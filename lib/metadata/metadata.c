@@ -2943,7 +2943,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	struct pv_list *pvl, *pvl2;
 	struct dm_list all_pvs;
 	char uuid[64] __attribute__((aligned(8)));
-	int seqno = 0;
+	unsigned seqno = 0;
 
 	if (is_orphan_vg(vgname)) {
 		if (use_precommitted) {

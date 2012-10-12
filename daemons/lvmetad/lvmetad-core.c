@@ -1147,7 +1147,6 @@ int main(int argc, char *argv[])
 	signed char opt;
 	daemon_state s = { .private = NULL };
 	lvmetad_state ls;
-	int _restart = 0;
 	int _socket_override = 1;
 
 	s.name = "lvmetad";

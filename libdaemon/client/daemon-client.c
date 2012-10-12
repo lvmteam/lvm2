@@ -71,9 +71,10 @@ error:
 
 daemon_reply daemon_send(daemon_handle h, daemon_request rq)
 {
+	struct buffer buffer;
 	daemon_reply reply = { .cft = NULL, .error = 0 };
 	assert(h.socket_fd >= 0);
-	struct buffer buffer = rq.buffer;
+	buffer = rq.buffer;
 
 	if (!buffer.mem)
 		dm_config_write_node(rq.cft->root, buffer_line, &buffer);
@@ -120,10 +121,13 @@ daemon_reply daemon_send_simple_v(daemon_handle h, const char *id, va_list ap)
 
 daemon_reply daemon_send_simple(daemon_handle h, const char *id, ...)
 {
+	daemon_reply r;
 	va_list ap;
+
 	va_start(ap, id);
-	daemon_reply r = daemon_send_simple_v(h, id, ap);
+	r = daemon_send_simple_v(h, id, ap);
 	va_end(ap);
+
 	return r;
 }
 
@@ -165,10 +169,13 @@ int daemon_request_extend_v(daemon_request r, va_list ap)
 
 int daemon_request_extend(daemon_request r, ...)
 {
+	int res;
 	va_list ap;
+
 	va_start(ap, r);
-	int res = daemon_request_extend_v(r, ap);
+	res = daemon_request_extend_v(r, ap);
 	va_end(ap);
+
 	return res;
 }
 

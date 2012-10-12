@@ -236,6 +236,7 @@ static int _process_config(struct cmd_context *cmd)
 	const struct dm_config_node *cn;
 	const struct dm_config_value *cv;
 	int64_t pv_min_kb;
+	const char *lvmetad_socket;
 
 	/* umask */
 	cmd->default_settings.umask = find_config_tree_int(cmd,
@@ -400,7 +401,8 @@ static int _process_config(struct cmd_context *cmd)
 				      DEFAULT_DETECT_INTERNAL_VG_CACHE_CORRUPTION));
 
 	lvmetad_disconnect();
-	const char *lvmetad_socket = getenv("LVM_LVMETAD_SOCKET");
+
+	lvmetad_socket = getenv("LVM_LVMETAD_SOCKET");
 	if (!lvmetad_socket)
 		lvmetad_socket = DEFAULT_RUN_DIR "/lvmetad.socket";
 

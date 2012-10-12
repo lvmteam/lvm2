@@ -356,13 +356,13 @@ struct thread_baton {
 static response builtin_handler(daemon_state s, client_handle h, request r)
 {
 	const char *rq = daemon_request_str(r, "request", "NONE");
+	response res = { .error = EPROTO };
 
 	if (!strcmp(rq, "hello")) {
 		return daemon_reply_simple("OK", "protocol = %s", s.protocol ?: "default",
 					   "version = %" PRId64, (int64_t) s.protocol_version, NULL);
 	}
 
-	response res = { .error = EPROTO };
 	buffer_init(&res.buffer);
 	return res;
 }
@@ -444,6 +444,8 @@ static int handle_connect(daemon_state s)
 void daemon_start(daemon_state s)
 {
 	int failed = 0;
+	log_state _log = { { 0 } };
+
 	/*
 	 * Switch to C locale to avoid reading large locale-archive file used by
 	 * some glibc (on some distributions it takes over 100MB). Some daemons
@@ -459,7 +461,6 @@ void daemon_start(daemon_state s)
 	if (!s.foreground)
 		_daemonise();
 
-	log_state _log = { { 0 } };
 	s.log = &_log;
 	s.log->name = s.name;
 

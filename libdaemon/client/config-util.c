@@ -23,7 +23,7 @@
 
 int buffer_append_vf(struct buffer *buf, va_list ap)
 {
-	char *append, *old;
+	char *append;
 	char *next;
 	int keylen;
 
@@ -60,10 +60,13 @@ fail:
 
 int buffer_append_f(struct buffer *buf, ...)
 {
+	int res;
 	va_list ap;
+
 	va_start(ap, buf);
-	int res = buffer_append_vf(buf, ap);
+	res = buffer_append_vf(buf, ap);
 	va_end(ap);
+
 	return res;
 }
 
@@ -203,10 +206,12 @@ struct dm_config_node *config_make_nodes_v(struct dm_config_tree *cft,
 {
 	const char *next;
 	struct dm_config_node *first = NULL;
+	struct dm_config_node *cn;
+	const char *fmt, *key;
 
 	while ((next = va_arg(ap, char *))) {
-		struct dm_config_node *cn = NULL;
-		const char *fmt = strchr(next, '=');
+		cn = NULL;
+		fmt = strchr(next, '=');
 
 		if (!fmt) {
 			log_error(INTERNAL_ERROR "Bad format string '%s'", fmt);
@@ -214,7 +219,7 @@ struct dm_config_node *config_make_nodes_v(struct dm_config_tree *cft,
 		}
 		fmt += 2;
 
-		char *key = dm_pool_strdup(cft->mem, next);
+		key = dm_pool_strdup(cft->mem, next);
 		*strchr(key, '=') = 0;
 
 		if (!strcmp(fmt, "%d") || !strcmp(fmt, "%" PRId64)) {
@@ -250,10 +255,13 @@ struct dm_config_node *config_make_nodes(struct dm_config_tree *cft,
 					 struct dm_config_node *pre_sib,
 					 ...)
 {
+	struct dm_config_node *res;
 	va_list ap;
+
 	va_start(ap, pre_sib);
-	struct dm_config_node *res = config_make_nodes_v(cft, parent, pre_sib, ap);
+	res = config_make_nodes_v(cft, parent, pre_sib, ap);
 	va_end(ap);
+
 	return res;
 }
 
@@ -280,7 +288,6 @@ int buffer_realloc(struct buffer *buf, int needed)
 int buffer_append(struct buffer *buf, const char *string)
 {
 	int len = strlen(string);
-	char *new;
 
 	if (buf->allocated - buf->used <= len)
 		buffer_realloc(buf, len + 1);

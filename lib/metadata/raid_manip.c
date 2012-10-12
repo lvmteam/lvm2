@@ -1136,7 +1136,6 @@ int lv_raid_change_image_count(struct logical_volume *lv,
 int lv_raid_split(struct logical_volume *lv, const char *split_name,
 		  uint32_t new_count, struct dm_list *splittable_pvs)
 {
-	const char *old_name;
 	struct lv_list *lvl;
 	struct dm_list removal_list, data_list;
 	struct cmd_context *cmd = lv->vg->cmd;
@@ -1207,7 +1206,6 @@ int lv_raid_split(struct logical_volume *lv, const char *split_name,
 	dm_list_iterate_items(lvl, &data_list)
 		break;
 
-	old_name = lvl->lv->name;
 	lvl->lv->name = split_name;
 
 	if (!vg_write(lv->vg)) {
@@ -1317,7 +1315,7 @@ int lv_raid_split_and_track(struct logical_volume *lv,
 		break;
 	}
 
-	if (s >= seg->area_count) {
+	if (s >= (int) seg->area_count) {
 		log_error("Unable to find image to satisfy request");
 		return 0;
 	}

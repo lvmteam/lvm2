@@ -10,15 +10,18 @@ struct backend {
 
 static void log_syslog(log_state *s, void **state, int type, const char *message)
 {
+	int prio;
+
 	if (!*state) { /* initialize */
 		*state = (void *)1;
 		openlog(s->name, LOG_PID, LOG_DAEMON);
 	}
-	int prio = LOG_DEBUG;
+
 	switch (type) {
 	case DAEMON_LOG_INFO: prio = LOG_INFO; break;
 	case DAEMON_LOG_WARN: prio = LOG_WARNING; break;
 	case DAEMON_LOG_FATAL: prio = LOG_CRIT; break;
+	default: prio = LOG_DEBUG; break;
 	}
 
 	syslog(prio, "%s", message);
@@ -26,12 +29,14 @@ static void log_syslog(log_state *s, void **state, int type, const char *message
 
 static void log_stderr(log_state *s, void **state, int type, const char *message)
 {
-	const char *prefix = "";
+	const char *prefix;
+
 	switch (type) {
 	case DAEMON_LOG_INFO: prefix = "I: "; break;
 	case DAEMON_LOG_WARN: prefix = "W: " ; break;
-	case DAEMON_LOG_ERROR:
+	case DAEMON_LOG_ERROR: /* fall through */
 	case DAEMON_LOG_FATAL: prefix = "E: " ; break;
+	default: prefix = ""; break;
 	}
 
 	fprintf(stderr, "%s%s\n", prefix, message);
@@ -88,21 +93,25 @@ static int _log_line(const char *line, void *baton) {
 
 void daemon_log_cft(log_state *s, int type, const char *prefix, const struct dm_config_node *n)
 {
+	struct log_line_baton b = { .s = s, .type = type, .prefix = prefix };
+
 	if (!_type_interesting(s, type))
 		return;
 
-	struct log_line_baton b = { .s = s, .type = type, .prefix = prefix };
 	dm_config_write_node(n, &_log_line, &b);
 }
 
 void daemon_log_multi(log_state *s, int type, const char *prefix, const char *msg)
 {
+	struct log_line_baton b = { .s = s, .type = type, .prefix = prefix };
+	char *buf;
+	char *pos;
+
 	if (!_type_interesting(s, type))
 		return;
 
-	struct log_line_baton b = { .s = s, .type = type, .prefix = prefix };
-	char *buf = dm_strdup(msg);
-	char *pos = buf;
+	buf = dm_strdup(msg);
+	pos = buf;
 
 	if (!buf)
 		return; /* _0 */

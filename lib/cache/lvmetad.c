@@ -66,13 +66,16 @@ void lvmetad_set_active(int active)
 
 void lvmetad_set_token(const struct dm_config_value *filter)
 {
+	int ft = 0;
+
 	if (_lvmetad_token)
 		dm_free(_lvmetad_token);
-	int ft = 0;
+
 	while (filter && filter->type == DM_CFG_STRING) {
 		ft = calc_crc(ft, (const uint8_t *) filter->v.str, strlen(filter->v.str));
 		filter = filter->next;
 	}
+
 	if (!dm_asprintf(&_lvmetad_token, "filter:%u", ft))
 		log_warn("WARNING: Failed to set lvmetad token. Out of memory?");
 }
@@ -84,7 +87,7 @@ void lvmetad_set_socket(const char *sock)
 
 static daemon_reply _lvmetad_send(const char *id, ...);
 
-static int _token_update()
+static int _token_update(void)
 {
 	daemon_reply repl = _lvmetad_send("token_update", NULL);
 
@@ -101,7 +104,7 @@ static int _token_update()
 static daemon_reply _lvmetad_send(const char *id, ...)
 {
 	va_list ap;
-	daemon_reply repl, token_set;
+	daemon_reply repl;
 	daemon_request req;
 	int try = 0;
 
@@ -128,7 +131,6 @@ retry:
 		}
 	}
 
-out:
 	return repl;
 }
 
@@ -589,7 +591,6 @@ static int _extract_mda(struct metadata_area *mda, void *baton)
 {
 	struct _extract_mda_baton *b = baton;
 	struct dm_config_node *cn;
-	int result = 0;
 	char id[32];
 
 	if (!mda->ops->mda_export_text) /* do nothing */
@@ -651,7 +652,6 @@ int lvmetad_pv_found(struct id pvid, struct device *device, const struct format_
 	char uuid[64];
 	daemon_reply reply;
 	struct lvmcache_info *info;
-	const char *mdas = NULL;
 	struct dm_config_tree *pvmeta, *vgmeta;
 	const char *status;
 	int result;
