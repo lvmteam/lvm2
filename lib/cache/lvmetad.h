@@ -64,6 +64,11 @@ void lvmetad_disconnect(void);
 void lvmetad_set_token(const struct dm_config_value *filter);
 
 /*
+ * Release allocated token.
+ */
+void lvmetad_release_token(void);
+
+/*
  * Send a new version of VG metadata to lvmetad. This is normally called after
  * vg_write but before vg_commit. After vg_commit, lvmetad_vg_commit is called
  * to seal the transaction. The result of lvmetad_vg_update is that the new

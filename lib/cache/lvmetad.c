@@ -86,6 +86,12 @@ void lvmetad_set_token(const struct dm_config_value *filter)
 		log_warn("WARNING: Failed to set lvmetad token. Out of memory?");
 }
 
+void lvmetad_release_token(void)
+{
+	dm_free(_lvmetad_token);
+	_lvmetad_token = NULL;
+}
+
 void lvmetad_set_socket(const char *sock)
 {
 	_lvmetad_socket = sock;

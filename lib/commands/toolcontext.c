@@ -1672,6 +1672,9 @@ void destroy_toolcontext(struct cmd_context *cmd)
 
 	dm_free(cmd);
 
+	lvmetad_release_token();
+	lvmetad_disconnect();
+
 	release_log_memory();
 	activation_exit();
 	reset_log_duplicated();
