@@ -694,8 +694,9 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 	 * Check selected options are compatible and determine segtype
 	 */
 // FIXME -m0 implies *striped*
-	if (arg_count(cmd, thin_ARG) && arg_count(cmd,mirrors_ARG)) {
-		log_error("--thin and --mirrors are incompatible.");
+	if ((arg_count(cmd, thin_ARG) || arg_count(cmd, thinpool_ARG)) &&
+	    arg_count(cmd,mirrors_ARG)) {
+		log_error("--thin,--thinpool  and --mirrors are incompatible.");
 		return 0;
 	}
 

@@ -1,5 +1,6 @@
 Version 2.02.98 -
 =================================
+  Prohibit usage of lvcreate --thinpool with --mirrors.
   Fix lvm2api origin reporting for thin snapshot volume.
   Add configure --enable-python_bindings for liblvm2app to new python subdir.
   Add implementation of lvm2api function lvm_percent_to_float.

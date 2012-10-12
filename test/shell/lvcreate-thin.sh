@@ -174,14 +174,18 @@ not lvcreate -L4M --chunksize 2G -T $vg/pool1
 lvcreate -L4M -V2G --name lv1 -T $vg/pool1
 # Origin name is not accepted
 not lvcreate -s $vg/lv1 -L4M -V2G --name $vg/lv4
-vgremove -ff $vg
 
+# Check we cannot create mirror and thin or thinpool together
+not lvcreate -T mirpool -L4M --alloc anywhere -m1 $vg
+not lvcreate --thinpool mirpool -L4M --alloc anywhere -m1 $vg
+
+vgremove -ff $vg
 
 # Test --poolmetadatasize range
 # allocating large devices for testing
 aux teardown_devs
 aux prepare_pvs 10 16500
-vgcreate $clustered $vg -s 64K $(cat DEVICES)
+vgcreate $vg -s 64K $(cat DEVICES)
 
 lvcreate -L4M --chunksize 128 --poolmetadatasize 0 -T $vg/pool1 2>out
 grep "WARNING: Minimum" out
