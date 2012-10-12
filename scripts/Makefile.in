@@ -38,6 +38,10 @@ ifeq ("@FSADM@", "yes")
 	SCRIPTS += fsadm.sh
 endif
 
+ifeq ("@BLKDEACTIVATE@", "yes")
+	SCRIPTS += blkdeactivate.sh
+endif
+
 OCF_SCRIPTS =
 ifeq ("@OCF@", "yes")
         OCF_SCRIPTS += VolumeGroup.ocf
@@ -74,6 +78,9 @@ endif
 ifeq ("@BUILD_CMIRRORD@", "yes")
 	$(INSTALL_SCRIPT) cmirrord_init_red_hat $(initdir)/cmirrord
 endif
+ifeq ("@BLKDEACTIVATE@", "yes")
+	$(INSTALL_SCRIPT) blk_availability_init_red_hat $(initdir)/blk-availability
+endif
 
 lvm2_activation_generator_systemd_red_hat: $(OBJECTS) $(DEPLIBS)
 	$(CC) -o $@ $(OBJECTS) $(LDFLAGS) $(LVMLIBS)
@@ -93,6 +100,9 @@ ifeq ("@BUILD_DMEVENTD@", "yes")
 	$(INSTALL_DATA) dm_event_systemd_red_hat.socket $(systemd_unit_dir)/dm-event.socket
 	$(INSTALL_DATA) dm_event_systemd_red_hat.service $(systemd_unit_dir)/dm-event.service
 	$(INSTALL_DATA) lvm2_monitoring_systemd_red_hat.service $(systemd_unit_dir)/lvm2-monitor.service
+endif
+ifeq ("@BLKDEACTIVATE@", "yes")
+	$(INSTALL_DATA) blk_availability_systemd_red_hat.service $(systemd_unit_dir)/blk-availability.service
 endif
 ifeq ("@BUILD_LVMETAD@", "yes")
 	$(INSTALL_DATA) lvm2_lvmetad_systemd_red_hat.socket $(systemd_unit_dir)/lvm2-lvmetad.socket

@@ -1,0 +1,14 @@
+[Unit]
+Description=Availability of block devices
+After=lvm2-activation.service lvm2-lvmetad.service iscsi.service iscsid.service
+DefaultDependencies=no
+Conflicts=shutdown.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/true
+ExecStop=@sbindir@/blkdeactivate -u -l wholevg
+RemainAfterExit=yes
+
+[Install]
+WantedBy=sysinit.target

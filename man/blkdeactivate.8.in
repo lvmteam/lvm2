@@ -1,0 +1,72 @@
+.TH "BLKDEACTIVATE" "8" "LVM TOOLS #VERSION#" "Red Hat, Inc" "\""
+.SH "NAME"
+blkdeactivate \- utility to deactivate block devices
+.SH SYNOPSIS
+.B blkdeactivate
+.RI [ options ]
+.RI [ device... ]
+.sp
+.SH DESCRIPTION
+blkdeactivate utility deactivates block devices. If a device
+is mounted, the utility can unmount it automatically before
+trying to deactivate. The utility currently supports
+\fIdevice-mapper\fP devices, including \fILVM\fP volumes.
+LVM volumes are handled directly using the \fIlvm\fP command.
+Other device-mapper based devices are handled using the
+\fIdmsetup\fP command.
+.SH OPTIONS
+.IP "\fB\-h, \-\-help\fP"
+Display the help text.
+.IP "\fB\-u, \-\-umount\fP"
+Unmount a mounted device before trying to deactivate it.
+Without this option used, a device that is mounted is not deactivated.
+.IP "\fB\-d, \-\-dmoption\fP \fIdm_options\fP"
+Comma separated list of device-mapper specific options.
+.IP "\fB\-l, \-\-lvmoption\fP \fIlvm_options\fP"
+Comma separated list of LVM specific options.
+.SH DM_OPTIONS
+.IP "\fBretry\fP"
+Retry removal several times in case of failure.
+.IP "\fBforce\fP"
+Force device removal. See \fBdmsetup\fP(8) for more information.
+.SH LVM_OPTIONS
+.IP "\fBretry\fP"
+Retry removal several times in case of failure.
+.IP "\fBwholevg\fP"
+Deactivate the whole LVM Volume Group when processing a Logical Volume.
+Deactivating Volume Group as a whole takes less time than deactivating
+each Logical Volume separately.
+
+.SH EXAMPLES
+.sp
+Deactivate all supported block devices found in the system. If a device
+is mounted, skip its deactivation.
+.sp
+.B blkdeactivate
+
+Deactivate all supported block devices found in the system. If a device
+is mounted, unmount it first if possible.
+.sp
+.B blkdeactivate \-u
+
+Deactivate supplied device together with all its holders. If any of the
+devices processed is mounted, unmount it first if possible.
+.sp
+.B blkdeactivate \-u /dev/vg/lvol0
+
+Deactivate all supported block devices found in the system. Retry deactivation
+of device-mapper devices in case the deactivation fails. Deactivate the whole
+Volume Group at once when processing an LVM Logical Volume.
+.sp
+.B blkdeactivate \-u -d retry -l wholevg
+
+Deactivate all supported block devices found in the system. Retry deactivation
+of device-mapper devices in case the deactivation fails and force removal.
+.sp
+.B blkdeactivate -d force,retry
+
+.SH SEE ALSO
+.BR lsblk (8)
+.BR umount (8)
+.BR dmsetup (8)
+.BR lvm (8)
