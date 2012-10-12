@@ -48,6 +48,9 @@ void lvmetad_set_socket(const char *);
  */
 int lvmetad_active(void);
 
+/* Print a warning if lvmetad is enabled but we failed to connect. */
+void lvmetad_warning(void);
+
 /*
  * Drop connection to lvmetad. A subsequent lvmetad_init() will re-establish
  * the connection (possibly at a different socket path).
@@ -137,6 +140,7 @@ int lvmetad_pvscan_all_devs(struct cmd_context *cmd, activation_handler handler)
 #    define lvmetad_set_active(a)	do { } while (0)
 #    define lvmetad_set_socket(a)	do { } while (0)
 #    define lvmetad_active()	(0)
+#    define lvmetad_warning()	do { } while (0)
 #    define lvmetad_set_token(a)	do { } while (0)
 #    define lvmetad_vg_update(vg)	(1)
 #    define lvmetad_vg_remove(vg)	(1)

@@ -49,9 +49,14 @@ void lvmetad_init(struct cmd_context *cmd)
 		if (_lvmetad.socket_fd >= 0 && !_lvmetad.error) {
 			_lvmetad_connected = 1;
 			_lvmetad_cmd = cmd;
-		} else
-			log_warn("WARNING: Failed to connect to lvmetad: %s. Falling back to internal scanning.", strerror(_lvmetad.error));
+		}
 	}
+}
+
+void lvmetad_warning()
+{
+	log_warn("WARNING: Failed to connect to lvmetad: %s. Falling back to internal scanning.",
+		 strerror(_lvmetad.error));
 }
 
 int lvmetad_active(void)
