@@ -1762,7 +1762,8 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 	if (!_dm_ioctl_unmangle_names(dmt->type, dmi))
 		goto error;
 
-	if (!_dm_ioctl_unmangle_uuids(dmt->type, dmi))
+	if (dmt->type != DM_DEVICE_REMOVE &&
+	    !_dm_ioctl_unmangle_uuids(dmt->type, dmi))
 		goto error;
 
 #else /* Userspace alternative for testing */
