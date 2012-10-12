@@ -302,8 +302,8 @@ while test $# -ne 0; do
 	case "$1" in
 		"") ;;
 		"-h"|"--help") usage ;;
-		"-d"|"--dmopts") get_dmopts "$2" ; shift ;;
-		"-l"|"--lvmopts") get_lvmopts "$2" ; shift ;;
+		"-d"|"--dmoption ") get_dmopts "$2" ; shift ;;
+		"-l"|"--lvmoption ") get_lvmopts "$2" ; shift ;;
 		"-u"|"--umount") DO_UMOUNT=1 ;;
 		*) break ;;
 	esac
