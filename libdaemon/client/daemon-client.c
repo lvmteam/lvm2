@@ -108,10 +108,11 @@ daemon_reply daemon_send_simple_v(daemon_handle h, const char *id, va_list ap)
 	daemon_request rq = { .cft = NULL };
 	daemon_reply repl;
 
-	if (!buffer_append_f(&rq.buffer, "request = %s", id, NULL))
+	if (!buffer_append_f(&rq.buffer, "request = %s", id, NULL) ||
+	    !buffer_append_vf(&rq.buffer, ap)) {
+		buffer_destroy(&rq.buffer);
 		return err;
-	if (!buffer_append_vf(&rq.buffer, ap))
-		return err;
+	}
 
 	repl = daemon_send(h, rq);
 	buffer_destroy(&rq.buffer);

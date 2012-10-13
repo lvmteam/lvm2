@@ -880,6 +880,7 @@ int lvmetad_pvscan_all_devs(struct cmd_context *cmd, activation_handler handler)
 	future_token = _lvmetad_token;
 	_lvmetad_token = (char *) "update in progress";
 	if (!_token_update()) {
+		dev_iter_destroy(iter);
 		_lvmetad_token = future_token;
 		return 0;
 	}
