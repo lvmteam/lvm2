@@ -52,7 +52,7 @@ void lvmetad_init(struct cmd_context *cmd)
 	}
 }
 
-void lvmetad_warning()
+void lvmetad_warning(void)
 {
 	if (_lvmetad_use && (_lvmetad.socket_fd < 0 || _lvmetad.error))
 		log_warn("WARNING: Failed to connect to lvmetad: %s. Falling back to internal scanning.",
