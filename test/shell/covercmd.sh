@@ -28,15 +28,23 @@ vgcreate -c n $vg $(cat DEVICES)
 lvcreate -l 5 -i5 -I256 -n $lv $vg
 
 # test *scan and *display tools
+cat <<EOF | lvm
 pvscan
 vgscan
 lvscan
 lvmdiskscan
-vgdisplay --units k
-lvdisplay --units g
+vgdisplay --units k $vg
+lvdisplay --units g $vg
+pvdisplay -c "$dev1"
+pvdisplay -s "$dev1"
+vgdisplay -c $vg
+vgdisplay -s $vg
+lvdisplay -c $vg
+EOF
+
 for i in h b s k m g t p e H B S K M G T P E; do
-	pvdisplay --units $i "$dev1"
-done
+	echo pvdisplay --units $i "$dev1"
+done | lvm
 
 # test vgexport vgimport tools
 vgchange -an $vg
@@ -53,8 +61,8 @@ done
 
 for i in pr "p rw" an ay "-monitor y" "-monitor n" \
         -resync -refresh "-addtag MYTAG" "-deltag MYETAG"; do
-	lvchange -$i $vg/$lv
-done
+	echo lvchange -$i $vg/$lv
+done | lvm
 
 pvck "$dev1"
 vgck $vg

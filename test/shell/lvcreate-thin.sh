@@ -162,6 +162,7 @@ check vg_field $vg lv_count 6
 lvremove -ff $vg
 check vg_field $vg lv_count 0
 
+lvdisplay $vg
 
 # Fail cases
 # Too small pool size (1 extent 64KB) for given chunk size
