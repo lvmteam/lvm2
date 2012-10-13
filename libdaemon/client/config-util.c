@@ -23,7 +23,7 @@
 
 int buffer_append_vf(struct buffer *buf, va_list ap)
 {
-	char *append = NULL;
+	char *append;
 	char *next;
 	int keylen;
 	int64_t value;
@@ -31,6 +31,7 @@ int buffer_append_vf(struct buffer *buf, va_list ap)
 	char *block;
 
 	while ((next = va_arg(ap, char *))) {
+		append = NULL;
 		if (!strchr(next, '=')) {
 			log_error(INTERNAL_ERROR "Bad format string at '%s'", next);
 			goto fail;
