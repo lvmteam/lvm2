@@ -34,6 +34,7 @@ static char target_path[PATH_MAX];
 static char message[PATH_MAX];
 static int kmsg_fd = -1;
 
+__attribute__ ((format(printf, 1, 2)))
 static void kmsg(const char *format, ...)
 {
 	va_list ap;
