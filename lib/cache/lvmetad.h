@@ -93,7 +93,7 @@ int lvmetad_vg_remove(struct volume_group *vg);
  * number on the cached and on the discovered PV match but the metadata content
  * does not.
  */
-int lvmetad_pv_found(struct id pvid, struct device *device,
+int lvmetad_pv_found(const struct id *pvid, struct device *device,
 		     const struct format_type *fmt, uint64_t label_sector,
 		     struct volume_group *vg, activation_handler handler);
 

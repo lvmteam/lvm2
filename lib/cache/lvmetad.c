@@ -444,7 +444,7 @@ int lvmetad_vg_update(struct volume_group *vg)
 
 	dm_list_iterate_items(pvl, &vg->pvs) {
 		/* NB. the PV fmt pointer is sometimes wrong during vgconvert */
-		if (pvl->pv->dev && !lvmetad_pv_found(pvl->pv->id, pvl->pv->dev,
+		if (pvl->pv->dev && !lvmetad_pv_found(&pvl->pv->id, pvl->pv->dev,
 						      vg->fid ? vg->fid->fmt : pvl->pv->fmt,
 						      pvl->pv->label_sector, NULL, NULL))
 			return 0;
@@ -657,7 +657,7 @@ static int _extract_mdas(struct lvmcache_info *info, struct dm_config_tree *cft,
 	return 1;
 }
 
-int lvmetad_pv_found(struct id pvid, struct device *device, const struct format_type *fmt,
+int lvmetad_pv_found(const struct id *pvid, struct device *device, const struct format_type *fmt,
 		     uint64_t label_sector, struct volume_group *vg, activation_handler handler)
 {
 	char uuid[64];
@@ -670,7 +670,7 @@ int lvmetad_pv_found(struct id pvid, struct device *device, const struct format_
 	if (!lvmetad_active() || test_mode())
 		return 1;
 
-	if (!id_write_format(&pvid, uuid, sizeof(uuid)))
+	if (!id_write_format(pvid, uuid, sizeof(uuid)))
                 return_0;
 
 	pvmeta = dm_config_create();
@@ -848,7 +848,7 @@ int lvmetad_pvscan_single(struct cmd_context *cmd, struct device *dev,
 	 * *exact* image of the system, the lvmetad instance that went out of
 	 * sync needs to be killed.
 	 */
-	if (!lvmetad_pv_found(*(struct id *)dev->pvid, dev, lvmcache_fmt(info),
+	if (!lvmetad_pv_found((const struct id *) &dev->pvid, dev, lvmcache_fmt(info),
 			      label->sector, baton.vg, handler)) {
 		release_vg(baton.vg);
 		goto_bad;
