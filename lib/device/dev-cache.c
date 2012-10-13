@@ -18,7 +18,6 @@
 #include "lvm-types.h"
 #include "btree.h"
 #include "filter.h"
-#include "filter-persistent.h"
 #include "toolcontext.h"
 
 #include <unistd.h>

@@ -18,7 +18,6 @@
 #include <unistd.h>
 
 #include "daemon-io.h"
-#include "dm-logging.h"
 #include "libdevmapper.h"
 
 /*
