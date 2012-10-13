@@ -1113,7 +1113,7 @@ static int init(daemon_state *s)
 static int fini(daemon_state *s)
 {
 	lvmetad_state *ls = s->private;
-	struct dm_hash_node *n = dm_hash_get_first(ls->vgid_to_metadata);
+	struct dm_hash_node *n;
 
 	DEBUG(s, "fini");
 
