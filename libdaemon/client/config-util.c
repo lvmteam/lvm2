@@ -55,7 +55,7 @@ int buffer_append_vf(struct buffer *buf, va_list ap)
 
 		if (!append ||
 		    !buffer_append(buf, append))
-			return 0;
+			goto fail;
 
 		dm_free(append);
 	}
