@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) 2010 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2010-2012 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -32,10 +32,13 @@ mkdir "$mntdir"
 mount "$DM_DEV_DIR/mapper/$vg-snap" "$mntdir"
 mount
 cat /proc/mounts | grep "$mntdir"
-
-dd if=/dev/zero of="$mntdir/file$1" bs=1M count=17
+dd if=/dev/zero of="$mntdir/file$1" bs=1M count=16
 sync
-sleep 10 # dmeventd only checks every 10 seconds :(
+#dmeventd only checks every 10 seconds :(
+for i in {1..10}; do
+	cat /proc/mounts | grep "$mntdir" || break
+	sleep 1
+done
 
 cat /proc/mounts | not grep "$mntdir"
 
