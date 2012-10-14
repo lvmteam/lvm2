@@ -293,6 +293,8 @@ static int _adjust_policy_params(struct cmd_context *cmd,
 		policy_amount =
 			find_config_tree_int(cmd, "activation/thin_pool_autoextend_percent",
 					     DEFAULT_THIN_POOL_AUTOEXTEND_PERCENT);
+		if (!policy_amount && policy_threshold < PERCENT_100)
+                        return 0;
 	} else {
 		policy_threshold =
 			find_config_tree_int(cmd, "activation/snapshot_autoextend_threshold",

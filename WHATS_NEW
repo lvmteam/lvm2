@@ -1,5 +1,6 @@
 Version 2.02.98 -
 =================================
+  Using autoextend percent 0 for thin pool fails 'lvextend --use-policies'.
   Introduce blkdeactivate script.
   Implement devices/global_filter (affects lvmetad).
   Make vgscan --cache an alias to pvscan --cache.
