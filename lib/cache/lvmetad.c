@@ -677,7 +677,7 @@ int lvmetad_pv_found(const struct id *pvid, struct device *device, const struct 
 	if (!pvmeta)
 		return_0;
 
-	info = lvmcache_info_from_pvid((const char *)&pvid, 0);
+	info = lvmcache_info_from_pvid((const char *)pvid, 0);
 
 	if (!(pvmeta->root = make_config_node(pvmeta, "pv", NULL, NULL))) {
 		dm_config_destroy(pvmeta);
