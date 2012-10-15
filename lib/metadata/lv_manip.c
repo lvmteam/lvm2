@@ -2668,8 +2668,9 @@ static int _lv_extend_layered_lv(struct alloc_handle *ah,
 	 */
 	while (seg_is_raid(seg) && (seg->region_size < (lv->size / (1 << 21)))) {
 		seg->region_size *= 2;
-		log_very_verbose("Forced to adjust RAID region_size to %uS",
-				 seg->region_size);
+		log_very_verbose("Adjusting RAID region_size from %uS to %uS"
+				 " to support large LV size",
+				 seg->region_size/2, seg->region_size);
 	}
 
 	return 1;
