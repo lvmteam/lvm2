@@ -35,7 +35,7 @@ sbindir=@sbindir@
 script=blkdeactivate
 options="-u -l wholevg"
 
-LOCK_FILE="/var/lock/subsys/$script"
+LOCK_FILE="/var/lock/subsys/blk-availability"
 
 
 rtrn=1
