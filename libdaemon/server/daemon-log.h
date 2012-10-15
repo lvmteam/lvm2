@@ -23,13 +23,8 @@ enum { DAEMON_LOG_FATAL = 0 /* usually preceding daemon death */
      , DAEMON_LOG_DEBUG = 5 /* unsorted debug stuff */
 };
 
-/*
- * FIXME: We are currently compiling with -DDEBUG
- * so this define DEBUG collision needs fixing
- */
-#undef DEBUG
-#define DEBUG(s, x...) daemon_logf((s)->log, DAEMON_LOG_DEBUG, x)
-#define DEBUG_cft(s, i, n) daemon_log_cft((s)->log, DAEMON_LOG_DEBUG, i, n)
+#define DEBUGLOG(s, x...) daemon_logf((s)->log, DAEMON_LOG_DEBUG, x)
+#define DEBUGLOG_cft(s, i, n) daemon_log_cft((s)->log, DAEMON_LOG_DEBUG, i, n)
 #define WARN(s, x...) daemon_logf((s)->log, DAEMON_LOG_WARN, x)
 #define INFO(s, x...) daemon_logf((s)->log, DAEMON_LOG_INFO, x)
 #define ERROR(s, x...) daemon_logf((s)->log, DAEMON_LOG_ERROR, x)
