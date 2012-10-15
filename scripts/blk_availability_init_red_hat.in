@@ -15,7 +15,7 @@
 # devices that were created using the -m option of lvcreate.
 #
 #
-# chkconfig: 12345 10 80
+# chkconfig: 12345 25 75
 # description: Controls availability of block devices
 #
 # For Red-Hat-based distributions such as Fedora, RHEL, CentOS.
