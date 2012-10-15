@@ -22,8 +22,7 @@ get_image_pvs() {
 ########################################################
 # MAIN
 ########################################################
-aux target_at_least dm-raid 1 1 0 || skip
-aux kernel_at_least 3 2 0 || skip
+aux target_at_least dm-raid 1 2 0 || skip
 
 # 9 PVs needed for RAID10 testing (3-stripes/2-mirror - replacing 3 devs)
 aux prepare_pvs 9 80
@@ -33,8 +32,8 @@ vgcreate -c n -s 256k $vg $(cat DEVICES)
 # RAID1 convert tests
 ###########################################
 for under_snap in false true; do
-for i in 1 2 3 4; do
-	for j in 1 2 3 4; do
+for i in 1 2 3; do
+	for j in 1 2 3; do
 		if [ $i -eq 1 ]; then
 			from="linear"
 		else
@@ -118,17 +117,6 @@ aux wait_for_sync $vg $lv1
 lvconvert --splitmirrors 1 -n $lv2 $vg/$lv1
 check linear $vg $lv1
 check linear $vg $lv2
-# FIXME: ensure no residual devices
-lvremove -ff $vg
-
-# 3-way to linear/2-way
-lvcreate --type raid1 -m 2 -l 2 -n $lv1 $vg
-aux wait_for_sync $vg $lv1
-# FIXME: Can't split off a RAID1 from a RAID1 yet
-# 'should' results in "warnings"
-should lvconvert --splitmirrors 2 -n $lv2 $vg/$lv1
-#check linear $vg $lv1
-#check lv_exists $vg $lv2
 # FIXME: ensure no residual devices
 lvremove -ff $vg
 
