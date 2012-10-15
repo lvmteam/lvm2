@@ -38,11 +38,8 @@ DAEMON=lvmetad
 exec_prefix=@exec_prefix@
 sbindir=@sbindir@
 
-lvm_pvscan="${sbindir}/lvm pvscan --cache"
-
 LOCK_FILE="/var/lock/subsys/$DAEMON"
 PID_FILE="@LVMETAD_PIDFILE@"
-
 
 rh_status() {
 	status -p $PID_FILE $DAEMON
@@ -55,7 +52,7 @@ rh_status_q() {
 start()
 {
 	ret=0
-	action "Starting LVM metadata daemon:" $DAEMON && ${lvm_pvscan} > /dev/null || ret=$?
+	action "Starting LVM metadata daemon:" $DAEMON || ret=$?
 	return $ret
 }
 
