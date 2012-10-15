@@ -151,7 +151,7 @@ void daemon_log_enable(log_state *s, int outlet, int type, int enable);
 /*
  * Set up logging on a given outlet using a list of message types (comma
  * separated) to log using that outlet. The list is expected to look like this,
- * "info,wire,debug". Returns 0 upon encountering an unknown message type.
+ * "all,wire,debug". Returns 0 upon encountering an unknown message type.
  */
 int daemon_log_parse(log_state *s, int outlet, const char *types, int enable);
 

@@ -28,7 +28,7 @@
 
 typedef struct {
 	log_state *log; /* convenience */
-	const char *debug_config;
+	const char *log_config;
 
 	struct dm_hash_table *pvid_to_pvmeta;
 	struct dm_hash_table *device_to_pvid; /* shares locks with above */
@@ -1097,8 +1097,8 @@ static int init(daemon_state *s)
 	ls->lock.vg = dm_hash_create(32);
 	ls->token[0] = 0;
 
-	/* Set up stderr logging depending on the -d option. */
-	if (!daemon_log_parse(ls->log, DAEMON_LOG_OUTLET_STDERR, ls->debug_config, 1))
+	/* Set up stderr logging depending on the -l option. */
+	if (!daemon_log_parse(ls->log, DAEMON_LOG_OUTLET_STDERR, ls->log_config, 1))
 		return 0;
 
 	DEBUG(s, "initialised state: vgid_to_metadata = %p", ls->vgid_to_metadata);
@@ -1135,11 +1135,11 @@ static int fini(daemon_state *s)
 static void usage(char *prog, FILE *file)
 {
 	fprintf(file, "Usage:\n"
-		"%s [-V] [-h] [-d {all|wire|debug}] [-f] [-s path]\n\n"
+		"%s [-V] [-h] [-f] [-l {all|wire|debug}] [-s path]\n\n"
 		"   -V       Show version of lvmetad\n"
 		"   -h       Show this help information\n"
-		"   -d       Log messages to stderr (-d {all|wire|debug})\n"
 		"   -f       Don't fork, run in the foreground\n"
+		"   -l       Logging message level (-l {all|wire|debug})\n"
 		"   -s       Set path to the socket to listen on\n\n", prog);
 }
 
@@ -1163,10 +1163,10 @@ int main(int argc, char *argv[])
 	s.pidfile = LVMETAD_PIDFILE;
 	s.protocol = "lvmetad";
 	s.protocol_version = 1;
-	ls.debug_config = "";
+	ls.log_config = "";
 
 	// use getopt_long
-	while ((opt = getopt(argc, argv, "?fhVd:s:")) != EOF) {
+	while ((opt = getopt(argc, argv, "?fhVl:s:")) != EOF) {
 		switch (opt) {
 		case 'h':
 			usage(argv[0], stdout);
@@ -1177,8 +1177,8 @@ int main(int argc, char *argv[])
 		case 'f':
 			s.foreground = 1;
 			break;
-		case 'd':
-			ls.debug_config = optarg;
+		case 'l':
+			ls.log_config = optarg;
 			break;
 		case 's': // --socket
 			s.socket_path = optarg;

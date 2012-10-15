@@ -65,7 +65,7 @@ Version 2.02.98 -
   Use proper condition to check for unsupported discards settings.
   Update lvs manpage with discards (2.02.97).
   Add support for lvcreate --discards.
-  Change lvmetad logging syntax from -ddd to -d {all|wire|debug}.
+  Change lvmetad logging syntax from -ddd to -l {all|wire|debug}.
   Add new libdaemon logging infrastructure.
 
 Version 2.02.97 - 7th August 2012
