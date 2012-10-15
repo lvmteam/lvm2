@@ -19,6 +19,7 @@
 #include "config-util.h"
 #include "daemon-server.h"
 #include "daemon-log.h"
+#include "lvm-version.h"
 
 #include <assert.h>
 #include <pthread.h>
@@ -1066,9 +1067,8 @@ static response handler(daemon_state s, client_handle h, request r)
 	if (!strcmp(rq, "vg_lookup"))
 		return vg_lookup(state, r);
 
-	if (!strcmp(rq, "pv_list")) {
+	if (!strcmp(rq, "pv_list"))
 		return pv_list(state, r);
-	}
 
 	if (!strcmp(rq, "vg_list"))
 		return vg_list(state, r);
@@ -1098,7 +1098,8 @@ static int init(daemon_state *s)
 	ls->token[0] = 0;
 
 	/* Set up stderr logging depending on the -d option. */
-	daemon_log_parse(ls->log, DAEMON_LOG_OUTLET_STDERR, ls->debug_config, 1);
+	if (!daemon_log_parse(ls->log, DAEMON_LOG_OUTLET_STDERR, ls->debug_config, 1))
+		return 0;
 
 	DEBUG(s, "initialised state: vgid_to_metadata = %p", ls->vgid_to_metadata);
 	if (!ls->pvid_to_vgid || !ls->vgid_to_metadata)
@@ -1134,12 +1135,12 @@ static int fini(daemon_state *s)
 static void usage(char *prog, FILE *file)
 {
 	fprintf(file, "Usage:\n"
-		"%s [-V] [-h] [-d [info[,debug[,wire]]]] [-f] [-s path]\n\n"
+		"%s [-V] [-h] [-d {all|wire|debug}] [-f] [-s path]\n\n"
 		"   -V       Show version of lvmetad\n"
 		"   -h       Show this help information\n"
-		"   -s       Set path to the socket to listen on\n"
-		"   -d       Log messages to stderr (-d info,wire,debug)\n"
-		"   -f       Don't fork, run in the foreground\n\n", prog);
+		"   -d       Log messages to stderr (-d {all|wire|debug})\n"
+		"   -f       Don't fork, run in the foreground\n"
+		"   -s       Set path to the socket to listen on\n\n", prog);
 }
 
 int main(int argc, char *argv[])
@@ -1184,7 +1185,7 @@ int main(int argc, char *argv[])
 			_socket_override = 1;
 			break;
 		case 'V':
-			printf("lvmetad version 0\n");
+			printf("lvmetad version: " LVM_VERSION "\n");
 			exit(1);
 		}
 	}

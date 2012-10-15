@@ -506,7 +506,8 @@ void daemon_start(daemon_state s)
 		kill(getppid(), SIGTERM);
 
 	if (s.daemon_init)
-		s.daemon_init(&s);
+		if (!s.daemon_init(&s))
+			failed = 1;
 
 	while (!_shutdown_requested && !failed) {
 		fd_set in;
@@ -525,7 +526,8 @@ void daemon_start(daemon_state s)
 			perror("unlink error");
 
 	if (s.daemon_fini)
-		s.daemon_fini(&s);
+		if (!s.daemon_fini(&s))
+			failed = 1;
 
 	INFO(&s, "%s shutting down", s.name);
 
