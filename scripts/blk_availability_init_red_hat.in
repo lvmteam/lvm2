@@ -46,7 +46,7 @@ case "$1" in
 	;;
 
   stop)
-	action "Stopping blk-availability" $sbindir/$script $options
+	action "Stopping block device availability:" $sbindir/$script $options
 	rm -f $LOCK_FILE
 	;;
 
