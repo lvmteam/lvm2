@@ -1,5 +1,6 @@
 Version 2.02.98 -
 =================================
+  Prohibit not yet supported change of thin-pool to read-only.
   Support creation of read-only thin volumes (lvcreate -p r).
   Using autoextend percent 0 for thin pool fails 'lvextend --use-policies'.
   Introduce blkdeactivate script.

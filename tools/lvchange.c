@@ -51,6 +51,12 @@ static int lvchange_permission(struct cmd_context *cmd,
 		return 0;
 	}
 
+	if (!(lv_access & LVM_WRITE) && lv_is_thin_pool(lv)) {
+		log_error("Change permissions of thin pool \"%s\" not "
+			  "yes supported.", lv->name);
+		return 0;
+	}
+
 	if (lv_access & LVM_WRITE) {
 		lv->status |= LVM_WRITE;
 		log_verbose("Setting logical volume \"%s\" read/write",
