@@ -871,6 +871,7 @@ int lvmetad_pvscan_all_devs(struct cmd_context *cmd, activation_handler handler)
 	daemon_reply reply;
 	int r = 1;
 	char *future_token;
+	int was_silent;
 
 	if (!(iter = dev_iter_create(cmd->lvmetad_filter, 1))) {
 		log_error("dev_iter creation failed");
@@ -890,6 +891,9 @@ int lvmetad_pvscan_all_devs(struct cmd_context *cmd, activation_handler handler)
 		r = 0;
 	daemon_reply_destroy(reply);
 
+	was_silent = silent_mode();
+	init_silent(1);
+
 	while ((dev = dev_iter_get(iter))) {
 		if (!lvmetad_pvscan_single(cmd, dev, handler))
 			r = 0;
@@ -897,6 +901,8 @@ int lvmetad_pvscan_all_devs(struct cmd_context *cmd, activation_handler handler)
 		if (sigint_caught())
 			break;
 	}
+
+	init_silent(was_silent);
 
 	dev_iter_destroy(iter);
 
