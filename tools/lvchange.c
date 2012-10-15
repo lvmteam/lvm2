@@ -343,7 +343,7 @@ static int lvchange_resync(struct cmd_context *cmd,
 	if (!(lv->status & MIRRORED) && !seg_is_raid(seg)) {
 		log_error("Unable to resync %s.  It is not RAID or mirrored.",
 			  lv->name);
-		return 1;
+		return 0;
 	}
 
 	if (lv->status & PVMOVE) {
