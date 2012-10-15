@@ -532,11 +532,17 @@ target_at_least()
 
 have_thin()
 {
-    target_at_least dm-thin-pool "$@" || exit 1
-    test "$THIN" = shared || test "$THIN" = internal || exit 1
+	target_at_least dm-thin-pool "$@" || exit 1
+	test "$THIN" = shared || test "$THIN" = internal || exit 1
 
-# disable thin_check if not present in system
-    which thin_check || lvmconf 'global/thin_check_executable = ""'
+	# disable thin_check if not present in system
+	which thin_check || lvmconf 'global/thin_check_executable = ""'
+}
+
+# check if lvm shell is build-in  (needs readline)
+have_readline()
+{
+	echo version | lvm &>/dev/null
 }
 
 test -f DEVICES && devs=$(cat DEVICES)
