@@ -44,6 +44,7 @@ ifeq ($(MAKECMDGOALS),distclean)
     libdaemon lib tools daemons libdm \
     udev po liblvm python \
     unit-tests/datastruct unit-tests/mm unit-tests/regex
+tools.distclean: test.distclean
 endif
 DISTCLEAN_DIRS += lcov_reports*
 DISTCLEAN_TARGETS += config.cache config.log config.status make.tmpl
