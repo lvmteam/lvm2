@@ -79,7 +79,7 @@ for i in dumpconfig formats segtypes; do
 done
 
 for i in pr "p rw" an ay "-monitor y" "-monitor n" \
-        -resync -refresh "-addtag MYTAG" "-deltag MYETAG"; do
+        -refresh "-addtag MYTAG" "-deltag MYETAG"; do
 	lvchange -$i $vg/$lv
 done
 
