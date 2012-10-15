@@ -153,12 +153,16 @@ static int _parse_one(log_state *s, int outlet, const char *type, int enable)
 
 int daemon_log_parse(log_state *s, int outlet, const char *types, int enable)
 {
-	char *buf = dm_strdup(types);
-	char *pos = buf;
+	char *buf;
+	char *pos;
 
-	if (!buf)
+	if (!types || !types[0])
+		return 1;
+
+	if (!(buf = dm_strdup(types)))
 		return 0;
 
+	pos = buf;
 	while (pos) {
 		char *next = strchr(pos, ',');
 		if (next)
