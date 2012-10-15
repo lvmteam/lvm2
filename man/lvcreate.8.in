@@ -298,7 +298,7 @@ commandline switch alias that will enable their use
 However, this argument must be used when no existing
 commandline switch alias is available for the desired type,
 as is the case with
-.IR error ", " zero ", " raid1 ", " raid4 ", " raid5 " or " raid6 .
+.IR error ", " zero ", " raid1 ", " raid10 ", " raid4 ", " raid5 " or " raid6 .
 .TP
 .BR \-V ", " \-\-virtualsize " " \fIVirtualSize [ \fIbBsSkKmMgGtTpPeE ]
 Create a sparse device of the given size (in MB by default) using a snapshot
@@ -362,6 +362,14 @@ Creates a 5GiB RAID5 logical volume "vg00/my_lv", with 3 stripes (plus
 a parity drive for a total of 4 devices) and a stripesize of 64KiB:
 .sp
 .B lvcreate \-\-type raid5 \-L 5G \-i 3 \-I 64 \-n my_lv vg00
+
+Creates a 5GiB RAID10 logical volume "vg00/my_lv", with 2 stripes on
+2 2-way mirrors.  Note that the '-i' and '-m' arguments behave differently.
+The '-i' specifies the number of stripes.  The '-m' specifies the number of
+.B additional 
+copies.
+.sp
+.B lvcreate \-\-type raid10 \-L 5G \-i 2 \-m 1 \-n my_lv vg00
 
 Creates 100MiB pool logical volume for thin provisioning
 build with 2 stripes 64KiB and chunk size 128KiB together with
