@@ -168,10 +168,10 @@ int dm_task_get_info(struct dm_task *dmt, struct dm_info *dmi);
 /*
  * This function returns dm device's UUID based on the value
  * of the mangling mode set during preceding dm_task_run call:
- *   - unmangled name for DM_STRING_MANGLING_{AUTO, HEX},
- *   - name without any changes for DM_STRING_MANGLING_NONE.
+ *   - unmangled UUID for DM_STRING_MANGLING_{AUTO, HEX},
+ *   - UUID without any changes for DM_STRING_MANGLING_NONE.
  *
- * To get mangled or unmangled form of the name directly, use
+ * To get mangled or unmangled form of the UUID directly, use
  * dm_task_get_uuid_mangled or dm_task_get_uuid_unmangled function.
  */
 const char *dm_task_get_uuid(const struct dm_task *dmt);
