@@ -800,13 +800,13 @@ int dev_cache_add_dir(const char *path)
 	struct stat st;
 
 	if (stat(path, &st)) {
-		log_error("Ignoring %s: %s", path, strerror(errno));
+		log_warn("Ignoring %s: %s.", path, strerror(errno));
 		/* But don't fail */
 		return 1;
 	}
 
 	if (!S_ISDIR(st.st_mode)) {
-		log_error("Ignoring %s: Not a directory", path);
+		log_warn("Ignoring %s: Not a directory.", path);
 		return 1;
 	}
 
@@ -826,13 +826,13 @@ int dev_cache_add_loopfile(const char *path)
 	struct stat st;
 
 	if (stat(path, &st)) {
-		log_error("Ignoring %s: %s", path, strerror(errno));
+		log_warn("Ignoring %s: %s.", path, strerror(errno));
 		/* But don't fail */
 		return 1;
 	}
 
 	if (!S_ISREG(st.st_mode)) {
-		log_error("Ignoring %s: Not a regular file", path);
+		log_warn("Ignoring %s: Not a regular file.", path);
 		return 1;
 	}
 
@@ -873,9 +873,9 @@ const char *dev_name_confirmed(struct device *dev, int quiet)
 				  name, (int) MAJOR(dev->dev),
 				  (int) MINOR(dev->dev));
 		else
-			log_error("Path %s no longer valid for device(%d,%d)",
-				  name, (int) MAJOR(dev->dev),
-				  (int) MINOR(dev->dev));
+			log_warn("Path %s no longer valid for device(%d,%d)",
+				 name, (int) MAJOR(dev->dev),
+				 (int) MINOR(dev->dev));
 
 		/* Remove the incorrect hash entry */
 		dm_hash_remove(_cache.names, name);

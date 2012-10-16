@@ -73,14 +73,14 @@ static int _pvchange_single(struct cmd_context *cmd, struct volume_group *vg,
 
 		/* change allocatability for a PV */
 		if (allocatable && (pv_status(pv) & ALLOCATABLE_PV)) {
-			log_error("Physical volume \"%s\" is already "
-				  "allocatable", pv_name);
+			log_warn("Physical volume \"%s\" is already "
+				 "allocatable.", pv_name);
 			return 1;
 		}
 
 		if (!allocatable && !(pv_status(pv) & ALLOCATABLE_PV)) {
-			log_error("Physical volume \"%s\" is already "
-				  "unallocatable", pv_name);
+			log_warn("Physical volume \"%s\" is already "
+				 "unallocatable.", pv_name);
 			return 1;
 		}
 

@@ -1,3 +1,7 @@
+Version 2.02.99 - 
+===================================
+  Cleanup some log_error message and use log_warn instead.
+  
 Version 2.02.98 - 15th October 2012
 ===================================
   Switch from DEBUG() to DEBUGLOG() in lvmetad as -DDEBUG is already used.

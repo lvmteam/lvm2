@@ -1171,8 +1171,8 @@ static int _lvconvert_mirrors_aux(struct cmd_context *cmd,
 	uint32_t old_log_count = _get_log_count(lv);
 
 	if ((lp->mirrors == 1) && !(lv->status & MIRRORED)) {
-		log_error("Logical volume %s is already not mirrored.",
-			  lv->name);
+		log_warn("Logical volume %s is already not mirrored.",
+			 lv->name);
 		return 1;
 	}
 
@@ -1403,7 +1403,7 @@ static int _lvconvert_mirrors_repair(struct cmd_context *cmd,
 	lv_check_transient(lv); /* TODO check this in lib for all commands? */
 
 	if (!(lv->status & PARTIAL_LV)) {
-		log_error("%s is consistent. Nothing to repair.", lv->name);
+		log_warn("%s is consistent. Nothing to repair.", lv->name);
 		return 1;
 	}
 
@@ -1663,9 +1663,8 @@ static int lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *lp
 
 		/* "warn" if policy not set to replace */
 		if (arg_count(cmd, use_policies_ARG))
-			log_error("Use 'lvconvert --repair %s/%s' to "
-				  "replace failed device",
-				  lv->vg->name, lv->name);
+			log_warn("Use 'lvconvert --repair %s/%s' to replace "
+				 "failed device.", lv->vg->name, lv->name);
 		return 1;
 	}
 

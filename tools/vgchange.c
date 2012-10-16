@@ -368,16 +368,16 @@ static int _vgchange_pesize(struct cmd_context *cmd, struct volume_group *vg)
 	uint32_t extent_size;
 
 	if (arg_uint64_value(cmd, physicalextentsize_ARG, 0) > MAX_EXTENT_SIZE) {
-		log_error("Physical extent size cannot be larger than %s",
-				  display_size(cmd, (uint64_t) MAX_EXTENT_SIZE));
+		log_warn("Physical extent size cannot be larger than %s.",
+			 display_size(cmd, (uint64_t) MAX_EXTENT_SIZE));
 		return 1;
 	}
 
 	extent_size = arg_uint_value(cmd, physicalextentsize_ARG, 0);
 	/* FIXME: remove check - redundant with vg_change_pesize */
 	if (extent_size == vg->extent_size) {
-		log_error("Physical extent size of VG %s is already %s",
-			  vg->name, display_size(cmd, (uint64_t) extent_size));
+		log_warn("Physical extent size of VG %s is already %s.",
+			 vg->name, display_size(cmd, (uint64_t) extent_size));
 		return 1;
 	}
 
@@ -427,11 +427,11 @@ static int _vgchange_metadata_copies(struct cmd_context *cmd,
 
 	if (mda_copies == vg_mda_copies(vg)) {
 		if (vg_mda_copies(vg) == VGMETADATACOPIES_UNMANAGED)
-			log_error("Number of metadata copies for VG %s is already unmanaged.",
-				  vg->name);
+			log_warn("Number of metadata copies for VG %s is already unmanaged.",
+				 vg->name);
 		else
-			log_error("Number of metadata copies for VG %s is already %" PRIu32,
-				  vg->name, mda_copies);
+			log_warn("Number of metadata copies for VG %s is already %u.",
+				 vg->name, mda_copies);
 		return 1;
 	}
 

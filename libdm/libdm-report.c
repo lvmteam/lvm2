@@ -461,8 +461,8 @@ static int _add_sort_key(struct dm_report *rh, uint32_t field_num,
 		return 1;
 
 	if (found->flags & FLD_SORT_KEY) {
-		log_error("dm_report: Ignoring duplicate sort field: %s",
-			  rh->fields[field_num].id);
+		log_warn("dm_report: Ignoring duplicate sort field: %s.",
+			 rh->fields[field_num].id);
 		return 1;
 	}
 

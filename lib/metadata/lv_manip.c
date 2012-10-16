@@ -1104,7 +1104,7 @@ static int _alloc_parallel_area(struct alloc_handle *ah, uint32_t max_to_allocat
 	total_area_count = ah->area_count + alloc_state->log_area_count_still_needed;
 	total_area_count += ah->parity_count;
 	if (!total_area_count) {
-		log_error(INTERNAL_ERROR "_alloc_parallel_area called without any allocation to do.");
+		log_warn(INTERNAL_ERROR "_alloc_parallel_area called without any allocation to do.");
 		return 1;
 	}
 
@@ -2024,7 +2024,7 @@ static int _allocate(struct alloc_handle *ah,
 	alloc_state.allocated = lv ? lv->le_count : 0;
 
 	if (alloc_state.allocated >= ah->new_extents && !ah->log_area_count) {
-		log_error("_allocate called with no work to do!");
+		log_warn("_allocate called with no work to do!");
 		return 1;
 	}
 
