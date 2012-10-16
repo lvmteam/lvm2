@@ -450,8 +450,11 @@ static int validate_new_vg_name(struct cmd_context *cmd, const char *vg_name)
 {
 	static char vg_path[PATH_MAX];
 
-	if (!validate_name(vg_name))
-		return_0;
+	if (!validate_name(vg_name)) {
+		log_error("New volume group name \"%s\" is invalid.",
+			  vg_name);
+		return 0;
+	}
 
 	snprintf(vg_path, sizeof(vg_path), "%s%s", cmd->dev_dir, vg_name);
 	if (path_exists(vg_path)) {
@@ -479,11 +482,8 @@ int validate_vg_rename_params(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (!validate_new_vg_name(cmd, vg_name_new)) {
-		log_error("New volume group name \"%s\" is invalid",
-			  vg_name_new);
-		return 0;
-	}
+	if (!validate_new_vg_name(cmd, vg_name_new))
+		return_0;
 
 	if (!strcmp(vg_name_old, vg_name_new)) {
 		log_error("Old and new volume group names must differ");
@@ -819,11 +819,8 @@ const char *strip_dir(const char *vg_name, const char *dev_dir)
 int vgcreate_params_validate(struct cmd_context *cmd,
 			     struct vgcreate_params *vp)
 {
-	if (!validate_new_vg_name(cmd, vp->vg_name)) {
-		log_error("New volume group name \"%s\" is invalid",
-			  vp->vg_name);
-		return 0;
-	}
+	if (!validate_new_vg_name(cmd, vp->vg_name))
+		return_0;
 
 	if (vp->alloc == ALLOC_INHERIT) {
 		log_error("Volume Group allocation policy cannot inherit "
