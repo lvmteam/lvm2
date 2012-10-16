@@ -177,12 +177,12 @@ int override_config_tree_from_string(struct cmd_context *cmd,
 
 	if (!(cft_new = dm_config_from_string(config_settings))) {
 		log_error("Failed to set overridden configuration entries.");
-		return 1;
+		return 0;
 	}
 
 	cmd->cft = dm_config_insert_cascaded_tree(cft_new, cmd->cft);
 
-	return 0;
+	return 1;
 }
 
 int config_file_read_fd(struct dm_config_tree *cft, struct device *dev,

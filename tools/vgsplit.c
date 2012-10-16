@@ -383,12 +383,12 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	} else {
 		vgcreate_params_set_defaults(&vp_def, vg_from);
 		vp_def.vg_name = vg_name_to;
-		if (vgcreate_params_set_from_args(cmd, &vp_new, &vp_def)) {
+		if (!vgcreate_params_set_from_args(cmd, &vp_new, &vp_def)) {
 			r = EINVALID_CMD_LINE;
 			goto_bad;
 		}
 
-		if (vgcreate_params_validate(cmd, &vp_new)) {
+		if (!vgcreate_params_validate(cmd, &vp_new)) {
 			r = EINVALID_CMD_LINE;
 			goto_bad;
 		}

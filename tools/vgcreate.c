@@ -43,10 +43,10 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 
 	vgcreate_params_set_defaults(&vp_def, NULL);
 	vp_def.vg_name = vg_name;
-	if (vgcreate_params_set_from_args(cmd, &vp_new, &vp_def))
+	if (!vgcreate_params_set_from_args(cmd, &vp_new, &vp_def))
 		return EINVALID_CMD_LINE;
 
-	if (vgcreate_params_validate(cmd, &vp_new))
+	if (!vgcreate_params_validate(cmd, &vp_new))
 	    return EINVALID_CMD_LINE;
 
 	lvmcache_seed_infos_from_lvmetad(cmd);

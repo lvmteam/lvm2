@@ -1264,23 +1264,23 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 
 	if (arg_sign_value(cmd, physicalextentsize_ARG, SIGN_NONE) == SIGN_MINUS) {
 		log_error("Physical extent size may not be negative");
-		return 1;
+		return 0;
 	}
 
 	if (arg_uint64_value(cmd, physicalextentsize_ARG, 0) > MAX_EXTENT_SIZE) {
 		log_error("Physical extent size cannot be larger than %s",
 				  display_size(cmd, (uint64_t) MAX_EXTENT_SIZE));
-		return 1;
+		return 0;
 	}
 
 	if (arg_sign_value(cmd, maxlogicalvolumes_ARG, SIGN_NONE) == SIGN_MINUS) {
 		log_error("Max Logical Volumes may not be negative");
-		return 1;
+		return 0;
 	}
 
 	if (arg_sign_value(cmd, maxphysicalvolumes_ARG, SIGN_NONE) == SIGN_MINUS) {
 		log_error("Max Physical Volumes may not be negative");
-		return 1;
+		return 0;
 	}
 
 	if (arg_count(cmd, metadatacopies_ARG)) {
@@ -1295,7 +1295,7 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 						   DEFAULT_VGMETADATACOPIES);
 	}
 
-	return 0;
+	return 1;
 }
 
 int lv_refresh(struct cmd_context *cmd, struct logical_volume *lv)

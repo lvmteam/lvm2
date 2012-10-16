@@ -822,18 +822,18 @@ int vgcreate_params_validate(struct cmd_context *cmd,
 	if (!validate_new_vg_name(cmd, vp->vg_name)) {
 		log_error("New volume group name \"%s\" is invalid",
 			  vp->vg_name);
-		return 1;
+		return 0;
 	}
 
 	if (vp->alloc == ALLOC_INHERIT) {
 		log_error("Volume Group allocation policy cannot inherit "
 			  "from anything");
-		return 1;
+		return 0;
 	}
 
 	if (!vp->extent_size) {
 		log_error("Physical extent size may not be zero");
-		return 1;
+		return 0;
 	}
 
 	if (!(cmd->fmt->features & FMT_UNLIMITED_VOLS)) {
@@ -843,11 +843,11 @@ int vgcreate_params_validate(struct cmd_context *cmd,
 			vp->max_pv = 255;
 		if (vp->max_lv > 255 || vp->max_pv > 255) {
 			log_error("Number of volumes may not exceed 255");
-			return 1;
+			return 0;
 		}
 	}
 
-	return 0;
+	return 1;
 }
 
 /*
