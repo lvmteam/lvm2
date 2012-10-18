@@ -1,4 +1,4 @@
-# Copyright (C) 2008 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2008-2012 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -120,6 +120,15 @@ vgcfgbackup -f $backupfile
 vgcfgrestore -f $backupfile $vg1
 vgremove -f $vg1
 pvremove -f $dev1
+
+# pvcreate rejects non-existent uuid given with restorefile
+not pvcreate --uuid $uuid1 --restorefile $backupfile "$dev1"
+
+# pvcreate rejects restorefile without uuid
+not pvcreate --restorefile $backupfile "$dev1"
+
+# pvcreate rejects uuid restore with multiple volumes specified
+not pvcreate --uuid $uuid1 --restorefile $backupfile "$dev1" "$dev2"
 
 # pvcreate wipes swap signature when forced
 dd if=/dev/zero of="$dev1" bs=1024 count=64

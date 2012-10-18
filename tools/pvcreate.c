@@ -68,6 +68,7 @@ static int pvcreate_restore_params_validate(struct cmd_context *cmd,
 			return 0;
 		}
 		if (!(existing_pvl = find_pv_in_vg_by_uuid(vg, pp->idp))) {
+			release_vg(vg);
 			log_error("Can't find uuid %s in backup file %s",
 				  uuid, pp->restorefile);
 			return 0;

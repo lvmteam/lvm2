@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Fix memory leak on error path for pvcreate with invalid uuid.
   Use lv_is_active() instead of lv_info() call.
   Cleanup some log_error message and use log_warn instead.
   
