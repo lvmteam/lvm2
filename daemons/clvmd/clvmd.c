@@ -362,7 +362,7 @@ int main(int argc, char *argv[])
 	/* Deal with command-line arguments */
 	opterr = 0;
 	optind = 0;
-	while ((opt = getopt_long(argc, argv, "vVhfd::t:RST:CI:E:",
+	while ((opt = getopt_long(argc, argv, "vVhfd:t:RST:CI:E:",
 				  longopts, NULL)) != -1) {
 		switch (opt) {
 		case 'h':
@@ -449,7 +449,7 @@ int main(int argc, char *argv[])
 		return debug_clvmd(debug_arg, clusterwide_opt)==1?0:1;
 	}
 
-	clvmd_set_debug(debug_opt);
+	clvmd_set_debug(debug_arg);
 
 	/* Fork into the background (unless requested not to) */
 	if (!foreground_mode)
