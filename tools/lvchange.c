@@ -660,6 +660,7 @@ static int lvchange_persistent(struct cmd_context *cmd,
 			return 0;
 
 		if (active && !arg_count(cmd, force_ARG) &&
+		    !arg_count(cmd, yes_ARG) &&
 		    yes_no_prompt("Logical volume %s will be "
 				  "deactivated temporarily. "
 				  "Continue? [y/n]: ", lv->name) == 'n') {
