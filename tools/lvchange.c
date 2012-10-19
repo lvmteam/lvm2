@@ -53,7 +53,7 @@ static int lvchange_permission(struct cmd_context *cmd,
 
 	if (!(lv_access & LVM_WRITE) && lv_is_thin_pool(lv)) {
 		log_error("Change permissions of thin pool \"%s\" not "
-			  "yes supported.", lv->name);
+			  "yet supported.", lv->name);
 		return 0;
 	}
 
