@@ -1838,6 +1838,7 @@ int dm_task_set_cookie(struct dm_task *dmt, uint32_t *cookie, uint16_t flags)
 	if (dm_cookie_supported())
 		dmt->event_nr = flags << DM_UDEV_FLAGS_SHIFT;
 	*cookie = 0;
+	dmt->cookie_set = 1;
 
 	return 1;
 }
@@ -2207,6 +2208,7 @@ int dm_task_set_cookie(struct dm_task *dmt, uint32_t *cookie, uint16_t flags)
 
 	if (!dm_udev_get_sync_support()) {
 		*cookie = 0;
+		dmt->cookie_set = 1;
 		return 1;
 	}
 
