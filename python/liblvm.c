@@ -153,7 +153,7 @@ liblvm_lvm_list_vg_uuids(void)
 }
 
 static PyObject *
-liblvm_lvm_percent_to_float(PyObject *arg)
+liblvm_lvm_percent_to_float(PyObject *self, PyObject *arg)
 {
 	double converted;
 	int percent;
