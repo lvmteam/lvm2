@@ -113,6 +113,7 @@ seg_tags,
 snap_percent,
 stripes,
 stripe_size,
+sync_percent,
 thin_count,
 transaction_id,
 zero.

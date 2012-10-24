@@ -898,13 +898,14 @@ static int _copypercent_disp(struct dm_report *rh __attribute__((unused)),
 		return 0;
 	}
 
-	if ((!(lv->status & PVMOVE) && !(lv->status & MIRRORED)) ||
-	    !lv_mirror_percent(lv->vg->cmd, lv, 0, &percent,
-			       NULL) || (percent == PERCENT_INVALID)) {
-		*sortval = UINT64_C(0);
-		dm_report_field_set_value(field, "", sortval);
-		return 1;
-	}
+	if (lv->status & RAID) {
+		if (!lv_raid_percent(lv, &percent) ||
+		    (percent == PERCENT_INVALID))
+			goto no_copypercent;
+	} else if ((!(lv->status & PVMOVE) && !(lv->status & MIRRORED)) ||
+		   !lv_mirror_percent(lv->vg->cmd, lv, 0, &percent, NULL) ||
+		   (percent == PERCENT_INVALID))
+		goto no_copypercent;
 
 	percent = copy_percent(lv);
 
@@ -921,6 +922,11 @@ static int _copypercent_disp(struct dm_report *rh __attribute__((unused)),
 	*sortval = (uint64_t)(percent * 1000.f);
 	dm_report_field_set_value(field, repstr, sortval);
 
+	return 1;
+
+no_copypercent:
+	*sortval = UINT64_C(0);
+	dm_report_field_set_value(field, "", sortval);
 	return 1;
 }
 
