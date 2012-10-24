@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Change lvs heading Copy% to Cpy%Sync and print RAID4/5/6 sync% there too.
   Fix clvmd support for option -d and properly use its argument.
   Support use of option --yes for lvchange --persistent.
   Fix memory leak on error path for pvcreate with invalid uuid.
