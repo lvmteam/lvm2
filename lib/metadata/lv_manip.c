@@ -199,6 +199,24 @@ uint32_t find_free_lvnum(struct logical_volume *lv)
 	return i;
 }
 
+percent_t copy_percent(const struct logical_volume *lv)
+{
+	uint32_t numerator = 0u, denominator = 0u;
+	struct lv_segment *seg;
+
+	dm_list_iterate_items(seg, &lv->segments) {
+		denominator += seg->area_len;
+
+		if ((seg_is_raid(seg) || seg_is_mirrored(seg))
+		    && (seg->area_count > 1))
+			numerator += seg->extents_copied;
+		else
+			numerator += seg->area_len;
+	}
+
+	return denominator ? make_percent( numerator, denominator ) : 100.0;
+}
+
 /*
  * All lv_segments get created here.
  */

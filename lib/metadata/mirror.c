@@ -1623,23 +1623,6 @@ struct dm_list *lvs_using_lv(struct cmd_context *cmd, struct volume_group *vg,
 	return lvs;
 }
 
-percent_t copy_percent(const struct logical_volume *lv_mirr)
-{
-	uint32_t numerator = 0u, denominator = 0u;
-	struct lv_segment *seg;
-
-	dm_list_iterate_items(seg, &lv_mirr->segments) {
-		denominator += seg->area_len;
-
-		if (seg_is_mirrored(seg) && seg->area_count > 1)
-			numerator += seg->extents_copied;
-		else
-			numerator += seg->area_len;
-	}
-
-	return denominator ? make_percent( numerator, denominator ) : 100.0;
-}
-
 /*
  * Fixup mirror pointers after single-pass segment import
  */
