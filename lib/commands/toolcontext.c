@@ -413,7 +413,12 @@ static int _process_config(struct cmd_context *cmd)
 	lvmetad_set_socket(lvmetad_socket);
 	cn = find_config_tree_node(cmd, "devices/global_filter");
 	lvmetad_set_token(cn ? cn->v : NULL);
-	lvmetad_set_active(find_config_tree_int(cmd, "global/use_lvmetad", 0));
+	if (find_config_tree_int(cmd, "global/locking_type", 1) != 3)
+		lvmetad_set_active(find_config_tree_int(cmd, "global/use_lvmetad", 0));
+	else {
+		log_warn("WARNING: use_lvmetad overriden to 0 due to locking_type 3");
+		lvmetad_set_active(0);
+	}
 	lvmetad_init(cmd);
 
 	return 1;
