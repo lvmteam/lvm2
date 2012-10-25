@@ -139,6 +139,7 @@ static int _info_run(const char *name, const char *dlid, struct dm_info *info,
  * _parse_mirror_status
  * @mirror_status_string
  * @image_health:  return for allocated copy of image health characters
+ * @log_device: return for 'dev_t' of log device
  * @log_health: NULL if corelog, otherwise alloc'ed log health char
  *
  * This function takes the mirror status string, breaks it up and returns
@@ -149,8 +150,10 @@ static int _info_run(const char *name, const char *dlid, struct dm_info *info,
  * Returns: 1 on success, 0 on failure
  */
 static int _parse_mirror_status(char *mirror_status_str,
-				char **images_health, char **log_health)
+				char **images_health,
+				dev_t *log_dev, char **log_health)
 {
+	int major, minor;
 	char *p = NULL;
 	char **args, **log_args;
 	unsigned num_devs, log_argc;
@@ -174,10 +177,14 @@ static int _parse_mirror_status(char *mirror_status_str,
 		return_0;
 
 	*log_health = NULL;
-	if (!strcmp(log_args[0], "disk") &&
-	    !(*log_health = dm_strdup(log_args[2])))
-		return_0;
-
+	*log_dev = 0;
+	if (!strcmp(log_args[0], "disk")) {
+		if (!(*log_health = dm_strdup(log_args[2])))
+			return_0;
+		if (sscanf(log_args[1], "%d:%d", &major, &minor) != 2)
+			return_0;
+		*log_dev = MKDEV((dev_t)major, minor);
+	}
 	if (!(*images_health = dm_strdup(args[2 + num_devs])))
 		return_0;
 
@@ -199,9 +206,7 @@ static int _parse_mirror_status(char *mirror_status_str,
  * attempting to read a mirror, a circular dependency would be created.)
  *
  * This function is a slimmed-down version of lib/mirror/mirrored.c:
- * _mirrored_transient_status().  FIXME: It is unable to handle mirrors
- * with mirrored logs because it does not have a way to get the status of
- * the mirror that forms the log, which could be blocked.
+ * _mirrored_transient_status().
  *
  * If a failed device is detected in the status string, then it must be
  * determined if 'block_on_error' or 'handle_errors' was used when
@@ -217,22 +222,16 @@ static int _ignore_blocked_mirror_devices(struct device *dev,
 					  char *mirror_status_str)
 {
 	unsigned i, check_for_blocking = 0;
+	dev_t log_dev;
 	char *images_health, *log_health;
-
 	uint64_t s,l;
 	char *params, *target_type = NULL;
 	void *next = NULL;
 	struct dm_task *dmt;
 
 	if (!_parse_mirror_status(mirror_status_str,
-				  &images_health, &log_health))
+				  &images_health, &log_dev, &log_health))
 		goto_out;
-
-	if (log_health && (log_health[0] != 'A')) {
-		log_debug("%s: Mirror log device marked as failed",
-			  dev_name(dev));
-		check_for_blocking = 1;
-	}
 
 	for (i = 0; images_health[i]; i++)
 		if (images_health[i] != 'A') {
@@ -240,6 +239,29 @@ static int _ignore_blocked_mirror_devices(struct device *dev,
 				  dev_name(dev), i);
 			check_for_blocking = 1;
 		}
+
+	if (!check_for_blocking && log_dev) {
+		if (log_health[0] != 'A') {
+			log_debug("%s: Mirror log device marked as failed",
+				  dev_name(dev));
+			check_for_blocking = 1;
+		} else {
+			struct device *tmp_dev;
+			char buf[16];
+
+			if (dm_snprintf(buf, sizeof(buf), "%d:%d",
+					(int)MAJOR(log_dev),
+					(int)MINOR(log_dev)) < 0)
+				goto_out;
+
+			if (!(tmp_dev = dev_create_file(buf, NULL, NULL, 1)))
+				goto_out;
+
+			tmp_dev->dev = log_dev;
+			if (!device_is_usable(tmp_dev))
+				goto_out;
+		}
+	}
 
 	if (!check_for_blocking)
 		return 0;

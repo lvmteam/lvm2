@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Avoid reading mirrors with failed devices in its mirrored log.
   Avoid reading from mirrors that have failed devices if they block I/O.
   Change lvs heading Copy% to Cpy%Sync and print RAID4/5/6 sync% there too.
   Fix clvmd support for option -d and properly use its argument.
