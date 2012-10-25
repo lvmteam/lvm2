@@ -309,6 +309,7 @@ liblvm_lvm_vg_open(PyObject *self, PyObject *args)
 
 	if ((vgobj->vg = lvm_vg_open(libh, vgname, mode, 0))== NULL) {
 		PyErr_SetObject(LibLVMError, liblvm_get_last_error());
+		Py_DECREF(vgobj);
 		return NULL;
 	}
 
@@ -332,6 +333,7 @@ liblvm_lvm_vg_create(PyObject *self, PyObject *args)
 
 	if ((vgobj->vg = lvm_vg_create(libh, vgname))== NULL) {
 		PyErr_SetObject(LibLVMError, liblvm_get_last_error());
+		Py_DECREF(vgobj);
 		return NULL;
 	}
 
@@ -399,6 +401,10 @@ liblvm_lvm_vg_remove(vgobject *self)
 		goto error;
 
 	if (lvm_vg_write(self->vg) == -1)
+		goto error;
+
+	/* Not much you can do with a vg that is removed so close it */
+	if (lvm_vg_close(self->vg) == -1)
 		goto error;
 
 	self->vg = NULL;
@@ -872,6 +878,9 @@ liblvm_lvm_vg_create_lv_linear(vgobject *self, PyObject *args)
 	if ((lvobj = PyObject_New(lvobject, &LibLVMlvType)) == NULL)
 		return NULL;
 
+	/* Initialize the parent ptr in case lv create fails and we dealloc lvobj */
+	lvobj->parent_vgobj = NULL;
+
 	if ((lvobj->lv = lvm_vg_create_lv_linear(self->vg, vgname, size)) == NULL) {
 		PyErr_SetObject(LibLVMError, liblvm_get_last_error());
 		Py_DECREF(lvobj);
@@ -887,7 +896,9 @@ liblvm_lvm_vg_create_lv_linear(vgobject *self, PyObject *args)
 static void
 liblvm_lv_dealloc(lvobject *self)
 {
-	Py_DECREF(self->parent_vgobj);
+	/* We can dealloc an object that didn't get fully created */
+	if (self->parent_vgobj)	
+		Py_DECREF(self->parent_vgobj);
 	PyObject_Del(self);
 }
 
