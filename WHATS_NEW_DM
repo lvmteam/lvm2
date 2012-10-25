@@ -1,6 +1,9 @@
-Version 1.02.77 - 15th October 2012
+Version 1.02.78 - 
 ===================================
   Fix dm_task_set_cookie to properly process udev flags if udev_sync disabled.
+
+Version 1.02.77 - 15th October 2012
+===================================
   Support unmount of thin volumes from pool above thin pool threshold.
   Update man page to reflect that dm UUIDs are being mangled as well.
   Apply 'dmsetup mangle' for dm UUIDs besides dm names.
