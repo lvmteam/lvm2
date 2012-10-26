@@ -204,11 +204,11 @@ test -n "${abs_top_builddir+varset}" || . lib/paths || die "you must run make fi
 case "$PATH" in
 *"$abs_top_builddir/test/lib"*) ;;
 *)
-        PATH="$abs_top_builddir/test/lib":$PATH
-        for d in daemons/dmeventd/plugins/mirror daemons/dmeventd/plugins/snapshot \
-                daemons/dmeventd/plugins/lvm2 daemons/dmeventd liblvm tools libdm; do
-                LD_LIBRARY_PATH="$abs_top_builddir/$d":$LD_LIBRARY_PATH
-        done
+	PATH="$abs_top_builddir/test/lib":"$abs_top_builddir/test/api":$PATH
+	for i in `find $abs_top_builddir -name \*.so`; do
+		p=`dirname $i`
+		LD_LIBRARY_PATH="$p":$LD_LIBRARY_PATH
+	done
         export PATH LD_LIBRARY_PATH ;;
 esac
 
