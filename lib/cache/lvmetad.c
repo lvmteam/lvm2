@@ -33,7 +33,8 @@ static struct cmd_context *_lvmetad_cmd = NULL;
 
 void lvmetad_disconnect(void)
 {
-	daemon_close(_lvmetad);
+	if (_lvmetad_connected)
+		daemon_close(_lvmetad);
 	_lvmetad_connected = 0;
 	_lvmetad_cmd = NULL;
 }
@@ -41,19 +42,25 @@ void lvmetad_disconnect(void)
 void lvmetad_init(struct cmd_context *cmd)
 {
 	if (!_lvmetad_use && !access(LVMETAD_PIDFILE, F_OK))
-		log_warn("WARNING: lvmetad is running but disabled. Restart lvmetad before enabling it!");
+		log_warn("WARNING: lvmetad is running but disabled."
+			 " Restart lvmetad before enabling it!");
+	_lvmetad_cmd = cmd;
+}
+
+static void _lvmetad_connect()
+{
 	if (_lvmetad_use && _lvmetad_socket && !_lvmetad_connected) {
 		assert(_lvmetad_socket);
 		_lvmetad = lvmetad_open(_lvmetad_socket);
-		if (_lvmetad.socket_fd >= 0 && !_lvmetad.error) {
+		if (_lvmetad.socket_fd >= 0 && !_lvmetad.error)
 			_lvmetad_connected = 1;
-			_lvmetad_cmd = cmd;
-		}
 	}
 }
 
 void lvmetad_warning(void)
 {
+	if (!_lvmetad_connected)
+		_lvmetad_connect();
 	if (_lvmetad_use && (_lvmetad.socket_fd < 0 || _lvmetad.error))
 		log_warn("WARNING: Failed to connect to lvmetad: %s. Falling back to internal scanning.",
 			 strerror(_lvmetad.error));
@@ -61,7 +68,11 @@ void lvmetad_warning(void)
 
 int lvmetad_active(void)
 {
-	return _lvmetad_use && _lvmetad_connected;
+	if (!_lvmetad_use)
+		return 0;
+	if (!_lvmetad_connected)
+		_lvmetad_connect();
+	return _lvmetad_connected;
 }
 
 void lvmetad_set_active(int active)
@@ -872,6 +883,11 @@ int lvmetad_pvscan_all_devs(struct cmd_context *cmd, activation_handler handler)
 	int r = 1;
 	char *future_token;
 	int was_silent;
+
+	if (!lvmetad_active()) {
+		log_error("Cannot proceed since lvmetad is not active.");
+		return 0;
+	}
 
 	if (!(iter = dev_iter_create(cmd->lvmetad_filter, 1))) {
 		log_error("dev_iter creation failed");
