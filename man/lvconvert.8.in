@@ -40,7 +40,7 @@ lvconvert \- convert a logical volume from linear to mirror or snapshot
 .B lvconvert
 .BR \-s | \-\-snapshot
 .RB [ \-c | \-\-chunksize
-.IR ChunkSize ]
+.IR ChunkSize [ bBsSkK ]]
 .RB [ \-h | \-? | \-\-help ]
 .RB [ \-\-noudevsync ]
 .RB [ \-v | \-\-verbose ]
@@ -59,17 +59,6 @@ lvconvert \- convert a logical volume from linear to mirror or snapshot
 .RB [ \-\-version ]
 .IR LogicalVolume [ Path ]...
 .sp
-.B lvconvert \-\-thinpool
-.IR ThinPoolLogicalVolume { Name | Path }
-.RB [ \-c | \-\-chunksize
-.IR ChunkSize ]
-.RB [ \-h | \-? | \-\-help ]
-.RB [ \-v | \-\-verbose ]
-.RB [ \-\-version ]
-.RB [ \-Z | \-\-zero
-.RI { y | n }]
-.IR ThinMetadataLogicalVolume { Name | Path }
-.sp
 .B lvconvert \-\-repair
 .RB [ \-h | \-? | \-\-help ]
 .RB [ \-v | \-\-verbose ]
@@ -83,6 +72,31 @@ lvconvert \- convert a logical volume from linear to mirror or snapshot
 .RB [ \-\-version ]
 .IR LogicalVolume [ Path ]
 .RI [ PhysicalVolume [ Path ]...]
+.sp
+.B lvconvert \-\-thinpool
+.IR ThinPoolLogicalVolume { Name | Path }
+.RB [ \-c | \-\-chunksize
+.IR ChunkSize [ bBsSkKmMgG ]]
+.RB [ \-\-discards
+.RI { ignore | nopassdown | passdown }]
+.RB [[ \-\-poolmetadata
+.IR ThinPoolMetadataLogicalVolume { Name | Path }]
+|
+.RB [ \-\-poolmetadatasize
+.IR ThinPoolMetadataSize [ bBsSkKmMgG ]]
+.RB [ \-r | \-\-readahead
+.RI { ReadAheadSectors | auto | none }]
+.RB [ \-\-stripes
+.I Stripes
+.RB [ \-I | \-\-stripesize
+.IR StripeSize ]]]
+.RB [ \-Z | \-\-zero
+.RI { y | n }]
+.RB [ \-h | \-? | \-\-help ]
+.RB [ \-v | \-\-verbose ]
+.RB [ \-\-version ]
+.RI [ PhysicalVolume [ Path ][ :PE [ -PE ]]...]
+.sp
 
 .SH DESCRIPTION
 lvconvert is used to change the segment type (i.e. linear, mirror, etc) or
@@ -102,8 +116,9 @@ the freed extents come first from the specified PhysicalVolumes.
 See \fBlvm\fP(8) for common options.
 .br
 Exactly one of 
-.BR \-\-splitmirrors ", " \-\-mirrors ", " \-\-repair ", " \-\-snapshot
-or \fB\-\-merge\fP arguments is required.
+.BR \-\-merge ", " \-\-mirrors ", " \-\-repair ", " \-\-replace
+.RB ", " \-\-snapshot ", " \-\-splitmirrors " or " \-\-thinpool
+arguments is required.
 .TP
 .BR \-m ", " \-\-mirrors " " \fIMirrors
 Specifies the degree of the mirror you wish to create.
@@ -170,12 +185,28 @@ implementation and not with the original device-mapper mirror implementation.
 Create a snapshot from existing logical volume using another
 existing logical volume as its origin.
 .TP
-.BR \-c ", " \-\-chunksize " " \fIChunkSize
-Power of 2 chunk size for the snapshot logical volume between 4KiB and 512KiB.
+.BR \-c ", " \-\-chunksize " " \fIChunkSize [ \fIbBsSkKmMgG ]
+Gives the size of chunk for snapshot and thin pool logical volumes.
+For snapshots the value must be power of 2 between 4KiB and 512KiB
+and the default value is 4.
+For thin pools the value must be between 64KiB and
+1GiB and the default value starts with 64 and scales
+up to fit the pool metadata size within 128MB,
+if the pool metadata size is not specified.
+Older dm thin pool target version (<1.4) requires the value to be power of 2.
+The newer version requires to be the multiple of 64KiB, however discard is
+not supported for non power of 2 values.
+Default unit is in kilobytes.
+.TP
+.BR \-\-discards " {" \fIignore | \fInopassdown | \fIpassdown }
+Sets discards behavior for thin pool.
+Default is \fIpassdown\fP.
 .TP
 .BR \-Z ", " \-\-zero " {" \fIy | \fIn }
 Controls zeroing of the first KB of data in the snapshot.
 If the volume is read-only the snapshot will not be zeroed.
+For thin pool volumes it controls zeroing of provisioned blocks.
+Note: Provisioning of large zeroed chunks impacts performance.
 .TP
 .B \-\-merge
 Merges a snapshot into its origin volume or merges a raid1 image that has
@@ -195,6 +226,28 @@ merge finishes, the merged snapshot is removed.  Multiple snapshots may
 be specified on the commandline or a @tag may be used to specify
 multiple snapshots be merged to their respective origin.
 .TP
+.BR \-\-poolmetadata " " \fIThinPoolMetadataLogicalVolume { \fIName | \fIPath }
+Specifies thin pool metadata logical volume.
+The size should be in between 2MiB and 16GiB.
+Thin pool is specified with the option
+\fB\-\-thinpool\fP.
+.TP
+.BR \-\-poolmetadatasize " " \fIThinPoolMetadataSize [ \fIbBsSkKmMgG ]
+Sets the size of thin pool's metadata logical volume,
+if the pool metadata volume is undefined.
+Thin pool is specified with the option
+\fB\-\-thinpool\fP.
+Supported value is in the range between 2MiB and 16GiB.
+The default value is estimated with this formula
+(Pool_LV_size / Pool_LV_chunk_size * 64b).
+Default unit is megabytes.
+.TP
+.IR \fB\-r ", " \fB\-\-readahead " {" ReadAheadSectors | auto | none }
+Sets read ahead sector count of thin pool metadata logical volume.
+The default value is "auto" which allows the kernel to choose
+a suitable value automatically.
+"None" is equivalent to specifying zero.
+.TP
 .B \-\-repair
 Repair a mirror after suffering a disk failure. The mirror will be brought back
 into a consistent state.  By default, the original number of mirrors will be
@@ -210,6 +263,24 @@ Remove the specified device (\fIPhysicalVolume\fP) and replace it with one
 that is available in the volume group or from the specific list provided.
 This option is only available to RAID segment types
 (e.g. "raid1", "raid5", etc).
+.TP
+.BR \-\-stripes " " \fIStripes
+Gives the number of stripes.
+This is equal to the number of physical volumes to scatter
+the logical volume.
+.TP
+.BR \-I ", " \-\-stripesize " " \fIStripeSize
+Gives the number of kilobytes for the granularity of the stripes.
+.br
+StripeSize must be 2^n (n = 2 to 9) for metadata in LVM1 format.
+For metadata in LVM2 format, the stripe size may be a larger
+power of 2 but must not exceed the physical extent size.
+.TP
+.IR \fB\-\-thinpool " " ThinPoolLogicalVolume { Name | Path }
+Changes logical volume into a thin pool volume. The volume
+will store the pool's data.
+Thin pool metadata logical volume can be specified with the option
+\fB\-\-poolmetadata\fP or allocated with \fB\-\-poolmetadatasize\fP.
 
 .SH Examples
 Converts the linear logical volume "vg00/lvol1" to a two-way mirror

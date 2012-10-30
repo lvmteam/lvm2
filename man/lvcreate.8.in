@@ -53,11 +53,11 @@ lvcreate \- create a logical volume in an existing volume group
 .RB [ \-t | \-\-test ]
 .RB [ \-T | \-\-thin
 .RB [ \-c | \-\-chunksize
-.IR ChunkSize ]
+.IR ChunkSize [ bBsSkKmMgG ]]
 .RB [ \-\-discards
 .RI { ignore | nopassdown | passdown }]
 .RB [ \-\-poolmetadatasize
-.IR MetadataSize [ bBsSkKmMgG ]]]
+.IR ThinPoolMetadataSize [ bBsSkKmMgG ]]]
 .RB [ \-\-thinpool
 .IR ThinPoolLogicalVolume { Name | Path }]
 .RB [ \-\-type
@@ -76,7 +76,7 @@ lvcreate \- create a logical volume in an existing volume group
 .BR \-L | \-\-size
 .IR LogicalVolumeSize [ bBsSkKmMgGtTpPeE ]]
 .RB [ \-c | \-\-chunksize
-.IR ChunkSize ]
+.IR ChunkSize [ bBsSkK ]]
 .RB [ \-\-noudevsync ]
 .RB [ \-\-ignoremonitoring ]
 .RB [ \-\-monitor " {" \fIy | \fIn }]
@@ -125,14 +125,14 @@ always assumed and it can't be overridden. If clustered locking is enabled,
 \fB\-a\fIey\fR will activate exclusively on one node and \fB\-a\fIly\fR will
 activate only on the local node.
 .TP
-.BR \-c ", " \-\-chunksize " " \fIChunkSize
+.BR \-c ", " \-\-chunksize " " \fIChunkSize [ \fIbBsSkKmMgG ]
 Gives the size of chunk for snapshot and thin pool logical volumes.
 For snapshots the value must be power of 2 between 4KiB and 512KiB
 and the default value is 4.
 For thin pools the value must be between 64KiB and
-1048576KiB and the default value starts with 64 and scales
+1GiB and the default value starts with 64 and scales
 up to fit the pool metadata size within 128MB,
-if the poolmetadata size is not specified.
+if the pool metadata size is not specified.
 Older dm thin pool target version (<1.4) requires the value to be power of 2.
 The newer version requires to be the multiple of 64KiB, however discard is
 not supported for non power of 2 values.
@@ -144,7 +144,7 @@ logical volumes. Default is no contiguous allocation based
 on a next free principle.
 .TP
 .BR \-\-discards " {" \fIignore | \fInopassdown | \fIpassdown }
-Set discards behavior.
+Set discards behavior for thin pool.
 Default is \fIpassdown\fP.
 .TP
 .BR \-i ", " \-\-stripes " " \fIStripes
@@ -236,7 +236,7 @@ Set access permissions to read only or read and write.
 .br
 Default is read and write.
 .TP
-.IR \fB\-\-poolmetadatasize " " MetadataSize [ bBsSkKmMgG ]
+.IR \fB\-\-poolmetadatasize " " ThinPoolMetadataSize [ bBsSkKmMgG ]
 Set the size of thin pool's metadata logical volume.
 Supported value is in range between 2MiB and 16GiB.
 Default value is  (Pool_LV_size / Pool_LV_chunk_size * 64b).
@@ -372,7 +372,7 @@ copies.
 .B lvcreate \-\-type raid10 \-L 5G \-i 2 \-m 1 \-n my_lv vg00
 
 Creates 100MiB pool logical volume for thin provisioning
-build with 2 stripes 64KiB and chunk size 128KiB together with
+build with 2 stripes 64KiB and chunk size 256KiB together with
 1TiB thin provisioned logical volume "vg00/thin_lv":
 .sp
 .B lvcreate \-i 2 \-I 64 \-c 256 \-L100M \-T vg00/pool \-V 1T \-\-name thin_lv
