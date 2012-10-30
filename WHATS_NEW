@@ -1,5 +1,8 @@
 Version 2.02.99 - 
 ===================================
+  Don't use lvmetad in lvm2-monitor.service ExecStop to avoid a systemd issue.
+  Remove dependency on fedora-storage-init.service in lvm2 systemd units.
+  Depend on lvm2-lvmetad.socket in lvm2-monitor.service systemd unit.
   Hardcode use_lvmetad=0 if cluster locking used and issue a warning msg.
   Avoid reading mirrors with failed devices in its mirrored log.
   Avoid reading from mirrors that have failed devices if they block I/O.
