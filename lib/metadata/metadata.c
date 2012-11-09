@@ -987,7 +987,7 @@ uint64_t extents_from_size(struct cmd_context *cmd, uint64_t size,
 		return 0;
 	}
 
-	return (uint64_t) size / extent_size;
+	return size / extent_size;
 }
 
 /*
