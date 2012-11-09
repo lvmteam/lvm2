@@ -119,6 +119,21 @@ static int _pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
 	char *buf;
 	activation_handler handler = NULL;
 
+	/*
+	 * Return here immediately if lvmetad is not used.
+	 * Also return if locking_type=3 (clustered) as we
+	 * dont't support cluster + lvmetad yet.
+	 *
+	 * This is to avoid taking the global lock uselessly
+	 * and to prevent hangs in clustered environment.
+	 */
+	/* TODO: Remove this once lvmetad + cluster supported! */
+	if (find_config_tree_int(cmd, "global/locking_type", 1) == 3 ||
+	    !find_config_tree_int(cmd, "global/use_lvmetad", 0)) {
+		log_debug("_pvscan_lvmetad: immediate return");
+		return ret;
+	}
+
 	if (arg_count(cmd, activate_ARG)) {
 		if (arg_uint_value(cmd, activate_ARG, CHANGE_AAY) != CHANGE_AAY) {
 			log_error("Only --activate ay allowed with pvscan.");
