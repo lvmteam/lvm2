@@ -4714,8 +4714,8 @@ revert_new_lv:
 	return NULL;
 }
 
-int lv_create_single(struct volume_group *vg,
-		     struct lvcreate_params *lp)
+struct logical_volume *lv_create_single(struct volume_group *vg,
+					struct lvcreate_params *lp)
 {
 	struct logical_volume *lv;
 
@@ -4743,5 +4743,5 @@ int lv_create_single(struct volume_group *vg,
 out:
 	log_print_unless_silent("Logical volume \"%s\" created", lv->name);
 
-	return 1;
+	return lv;
 }

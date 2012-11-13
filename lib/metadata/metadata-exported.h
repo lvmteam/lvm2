@@ -626,8 +626,8 @@ struct lvcreate_params {
 	struct dm_list tags;	/* all */
 };
 
-int lv_create_single(struct volume_group *vg,
-		     struct lvcreate_params *lp);
+struct logical_volume *lv_create_single(struct volume_group *vg,
+					struct lvcreate_params *lp);
 
 /*
  * Functions for layer manipulation

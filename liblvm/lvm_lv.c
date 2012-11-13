@@ -146,7 +146,7 @@ lv_t lvm_vg_create_lv_linear(vg_t vg, const char *name, uint64_t size)
 {
 	struct lvcreate_params lp = { 0 };
 	uint64_t extents;
-	struct lv_list *lvl;
+	struct logival_volume *lv;
 
 	if (vg_read_error(vg))
 		return NULL;
@@ -162,11 +162,9 @@ lv_t lvm_vg_create_lv_linear(vg_t vg, const char *name, uint64_t size)
 	_lv_set_default_params(&lp, vg, name, extents);
 	if (!_lv_set_default_linear_params(vg->cmd, &lp))
 		return_NULL;
-	if (!lv_create_single(vg, &lp))
+	if (!(lv = lv_create_single(vg, &lp)))
 		return_NULL;
-	if (!(lvl = find_lv_in_vg(vg, name)))
-		return NULL;
-	return (lv_t) lvl->lv;
+	return (lv_t) lv;
 }
 
 /*
