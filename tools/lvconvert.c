@@ -1341,10 +1341,6 @@ int mirror_remove_missing(struct cmd_context *cmd,
 	if (!(failed_pvs = _failed_pv_list(lv->vg)))
 		return_0;
 
-	/* No point in keeping a log if the result is not a mirror */
-	if (_failed_mirrors_count(lv) + 1 >= lv_mirror_count(lv))
-		log_count = 0;
-
         if (force && _failed_mirrors_count(lv) == lv_mirror_count(lv)) {
 		log_error("No usable images left in %s.", lv->name);
 		return lv_remove_with_dependencies(cmd, lv, DONT_PROMPT, 0);
@@ -1363,8 +1359,8 @@ int mirror_remove_missing(struct cmd_context *cmd,
 			       _is_partial_lv, NULL, 0))
 		return 0;
 
-	if (!_lv_update_log_type(cmd, NULL, lv, failed_pvs,
-				 log_count))
+	if (lv_is_mirrored(lv) &&
+	    !_lv_update_log_type(cmd, NULL, lv, failed_pvs, log_count))
 		return 0;
 
 	if (!_reload_lv(cmd, lv->vg, lv))
