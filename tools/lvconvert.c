@@ -41,6 +41,7 @@ struct lvconvert_params {
 	uint32_t stripe_size;
 
 	const struct segment_type *segtype;
+	unsigned target_attr;
 
 	alloc_policy_t alloc;
 
@@ -460,7 +461,7 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 	}
 
 	if (activation() && lp->segtype && lp->segtype->ops->target_present &&
-	    !lp->segtype->ops->target_present(cmd, NULL, NULL)) {
+	    !lp->segtype->ops->target_present(cmd, NULL, &lp->target_attr)) {
 		log_error("%s: Required device-mapper target(s) not "
 			  "detected in your kernel", lp->segtype->name);
 		return 0;

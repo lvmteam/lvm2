@@ -609,6 +609,7 @@ struct lvcreate_params {
 	uint32_t mirrors; /* mirror */
 
 	const struct segment_type *segtype; /* all */
+	unsigned target_attr; /* all */
 
 	/* size */
 	uint32_t extents; /* all */
