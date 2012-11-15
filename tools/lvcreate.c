@@ -812,6 +812,12 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 		}
 	}
 
+	/*
+	 * Should we zero the lv.
+	 */
+	lp->zero = strcmp(arg_str_value(cmd, zero_ARG,
+		(lp->segtype->flags & SEG_CANNOT_BE_ZEROED) ? "n" : "y"), "n");
+
 	if (!_lvcreate_name_params(lp, cmd, &argc, &argv) ||
 	    !_read_size_params(lp, lcp, cmd) ||
 	    !get_stripe_params(cmd, &lp->stripes, &lp->stripe_size) ||
@@ -876,12 +882,6 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 		log_error("-c is only available with snapshots and thin pools");
 		return 0;
 	}
-
-	/*
-	 * Should we zero the lv.
-	 */
-	lp->zero = strcmp(arg_str_value(cmd, zero_ARG,
-		(lp->segtype->flags & SEG_CANNOT_BE_ZEROED) ? "n" : "y"), "n");
 
 	if (lp->mirrors > DEFAULT_MIRROR_MAX_IMAGES) {
 		log_error("Only up to %d images in mirror supported currently.",
