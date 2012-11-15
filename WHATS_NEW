@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Move common functionality for thin lvcreate and lvconvert to toollib.
   Mirrored log is now fixed before its mirror when double-fault occurs.
   Add python-lvm unit test case
   Exit pvscan --cache immediately if cluster locking used or lvmetad not used.

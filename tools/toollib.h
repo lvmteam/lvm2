@@ -111,6 +111,15 @@ int pvcreate_params_validate(struct cmd_context *cmd,
 
 int get_activation_monitoring_mode(struct cmd_context *cmd,
 				   int *monitoring_mode);
+int get_pool_params(struct cmd_context *cmd,
+		    uint32_t *chunk_size,
+		    thin_discards_t *discards,
+		    uint64_t *pool_metadata_size,
+		    int *zero);
+int update_pool_params(struct cmd_context *cmd, unsigned attr,
+		       uint32_t data_extents, uint32_t extent_size,
+		       uint32_t *chunk_size, thin_discards_t *discards,
+		       uint64_t *pool_metadata_size);
 int get_stripe_params(struct cmd_context *cmd, uint32_t *stripes,
 		      uint32_t *stripe_size);
 
