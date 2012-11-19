@@ -447,6 +447,8 @@ metadata for a match.
 \fBtags\fP above).
 Logical volume and volume groups can also be included in the list
 by name e.g. vg00, vg00/lvol1.
+If this setting is not present but at least one host tag is defined
+then a default single-entry list containing @* is assumed.
 .IP
 \fBauto_activation_volume_list\fP \(em This acts as a filter through
 which all requests to autoactivate a logical volume on this machine

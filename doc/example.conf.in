@@ -569,15 +569,21 @@ activation {
 
     # If volume_list is defined, each LV is only activated if there is a
     # match against the list.
+    #
     #   "vgname" and "vgname/lvname" are matched exactly.
     #   "@tag" matches any tag set in the LV or VG.
     #   "@*" matches if any tag defined on the host is also set in the LV or VG
     #
+    # If any host tags exist but volume_list is not defined, a default
+    # single-entry list containing "@*" is assumed.
+    #
     # volume_list = [ "vg1", "vg2/lvol1", "@tag1", "@*" ]
 
     # If auto_activation_volume_list is defined, each LV that is to be
-    # activated is checked against the list while using the autoactivation
-    # option (--activate ay/-a ay), and if it matches, it is activated.
+    # activated with the autoactivation option (--activate ay/-a ay)
+    # is first checked against the list.  If it does not match, the LV
+    # is not activated.  This list is checked as well as volume_list.
+    #
     #   "vgname" and "vgname/lvname" are matched exactly.
     #   "@tag" matches any tag set in the LV or VG.
     #   "@*" matches if any tag defined on the host is also set in the LV or VG
@@ -588,6 +594,7 @@ activation {
     # is checked against the list, and if it matches, it as activated
     # in read-only mode.  (This overrides '--permission rw' stored in the
     # metadata.)
+    #
     #   "vgname" and "vgname/lvname" are matched exactly.
     #   "@tag" matches any tag set in the LV or VG.
     #   "@*" matches if any tag defined on the host is also set in the LV or VG
