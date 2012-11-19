@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Support allocation of pool metadata with lvconvert command.
   Move common functionality for thin lvcreate and lvconvert to toollib.
   Mirrored log is now fixed before its mirror when double-fault occurs.
   Add python-lvm unit test case
