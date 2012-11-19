@@ -120,6 +120,11 @@ int update_pool_params(struct cmd_context *cmd, unsigned attr,
 		       uint32_t data_extents, uint32_t extent_size,
 		       uint32_t *chunk_size, thin_discards_t *discards,
 		       uint64_t *pool_metadata_size);
+struct logical_volume *alloc_pool_metadata(struct logical_volume *pool_lv,
+					   alloc_policy_t alloc, const char *name,
+					   struct dm_list *pvh, uint32_t read_ahead,
+					   uint32_t stripes, uint32_t stripe_size,
+					   uint64_t size);
 int get_stripe_params(struct cmd_context *cmd, uint32_t *stripes,
 		      uint32_t *stripe_size);
 
