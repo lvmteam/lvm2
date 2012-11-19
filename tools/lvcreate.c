@@ -785,8 +785,9 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 	if (!_lvcreate_name_params(lp, cmd, &argc, &argv) ||
 	    !_read_size_params(lp, lcp, cmd) ||
 	    !get_stripe_params(cmd, &lp->stripes, &lp->stripe_size) ||
-	    !get_pool_params(cmd, &lp->chunk_size, &lp->discards,
-			     &lp->poolmetadatasize, &lp->zero) ||
+	    (lp->create_thin_pool &&
+	     !get_pool_params(cmd, &lp->chunk_size, &lp->discards,
+			      &lp->poolmetadatasize, &lp->zero)) ||
 	    !_read_mirror_params(lp, cmd) ||
 	    !_read_raid_params(lp, cmd))
 		return_0;
