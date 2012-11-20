@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Skip mlocking [vectors] on arm architecture.
   Support allocation of pool metadata with lvconvert command.
   Move common functionality for thin lvcreate and lvconvert to toollib.
   Mirrored log is now fixed before its mirror when double-fault occurs.

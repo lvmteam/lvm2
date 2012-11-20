@@ -84,6 +84,7 @@ static int _default_priority;
 static const char * const _ignore_maps[] = {
     "[vdso]",
     "[vsyscall]",
+    "[vectors]",
 };
 
 /* default blacklist for maps */
