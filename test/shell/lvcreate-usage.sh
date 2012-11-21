@@ -64,6 +64,8 @@ lvcreate -l1 -n $lv3 $vg
 not lvcreate -l1 -n $lv4 $vg
 
 lvremove -ff $vg/$lv3
+# check snapshot of inactive origin
+lvchange -an $vg/$lv1
 lvcreate -l1 -s -n $lv3 $vg/$lv1
 not lvcreate -l1 -n $lv4 $vg
 not lvcreate -l1 -m1 -n $lv4 $vg
