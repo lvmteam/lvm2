@@ -1152,7 +1152,8 @@ int lv_raid_split(struct logical_volume *lv, const char *split_name,
 		return 0;
 	}
 
-	if (!seg_is_mirrored(first_seg(lv))) {
+	if (!seg_is_mirrored(first_seg(lv)) ||
+	    !strcmp(first_seg(lv)->segtype->name, "raid10")) {
 		log_error("Unable to split logical volume of segment type, %s",
 			  first_seg(lv)->segtype->ops->name(first_seg(lv)));
 		return 0;

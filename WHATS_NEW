@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Do not allow --splitmirrors on RAID10 logical volumes.
   Skip mlocking [vectors] on arm architecture.
   Support allocation of pool metadata with lvconvert command.
   Move common functionality for thin lvcreate and lvconvert to toollib.
