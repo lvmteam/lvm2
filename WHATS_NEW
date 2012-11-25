@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Automatically restore MISSING PVs with no MDAs.
   When no '-i' argument is given for RAID10, default to 2 stripes.
   Do not allow --splitmirrors on RAID10 logical volumes.
   Skip mlocking [vectors] on arm architecture.

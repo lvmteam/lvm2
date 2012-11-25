@@ -221,6 +221,12 @@ static int _read_pv(struct format_instance *fid,
 	if (!pv->dev && !lvmetad_active())
 		pv->status |= MISSING_PV;
 
+	if ((pv->status & MISSING_PV) && pv->dev && pv_mda_used_count(pv) == 0) {
+		pv->status &= ~MISSING_PV;
+		log_info("Recovering a previously MISSING PV %s with no MDAs.",
+			 pv_dev_name(pv));
+	}
+
 	/* Late addition */
 	if (dm_config_has_node(pvn, "dev_size") &&
 	    !_read_uint64(pvn, "dev_size", &pv->size)) {
