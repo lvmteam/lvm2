@@ -270,6 +270,8 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 	if (lp->merge) {	/* Snapshot merge */
 		if (arg_count(cmd, regionsize_ARG) || arg_count(cmd, chunksize_ARG) ||
 		    arg_count(cmd, zero_ARG) || arg_count(cmd, regionsize_ARG) ||
+		    arg_count(cmd, poolmetadata_ARG) || arg_count(cmd, poolmetadatasize_ARG) ||
+		    arg_count(cmd, readahead_ARG) ||
 		    arg_count(cmd, stripes_long_ARG) || arg_count(cmd, stripesize_ARG)) {
 			log_error("Only --background and --interval are valid "
 				  "arguments for snapshot merge");
