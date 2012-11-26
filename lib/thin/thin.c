@@ -565,6 +565,12 @@ static int _thin_target_present(struct cmd_context *cmd,
 		/* FIXME Log this as WARNING later only if the user asked for the feature to be used but it's not present */
 			log_debug("Target " THIN_MODULE " does not support non power of 2 block sizes.");
 
+		if (maj >=1 && min >= 5)
+			_attrs |= THIN_FEATURE_DISCARDS_NON_POWER_2;
+		else
+		/* FIXME Log this as WARNING later only if the user asked for the feature to be used but it's not present */
+			log_debug("Target " THIN_MODULE " does not support discards for non power of 2 block sizes.");
+
 		_checked = 1;
 	}
 

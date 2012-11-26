@@ -51,6 +51,7 @@ enum {
 	THIN_FEATURE_EXTERNAL_ORIGIN		= (1 << 1),
 	THIN_FEATURE_HELD_ROOT			= (1 << 2),
 	THIN_FEATURE_BLOCK_SIZE			= (1 << 3),
+	THIN_FEATURE_DISCARDS_NON_POWER_2	= (1 << 4),
 };
 
 void set_activation(int activation);
