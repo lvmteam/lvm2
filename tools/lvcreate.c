@@ -659,6 +659,7 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 	memset(lp, 0, sizeof(*lp));
 	memset(lcp, 0, sizeof(*lcp));
 	dm_list_init(&lp->tags);
+	lp->target_attr = ~0;
 
 	/*
 	 * Check selected options are compatible and determine segtype

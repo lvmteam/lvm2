@@ -157,6 +157,7 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 	int pagesize = lvm_getpagesize();
 
 	memset(lp, 0, sizeof(*lp));
+	lp->target_attr = ~0;
 
 	if ((arg_count(cmd, snapshot_ARG) || arg_count(cmd, merge_ARG)) &&
 	    (arg_count(cmd, mirrorlog_ARG) || arg_count(cmd, mirrors_ARG) ||
