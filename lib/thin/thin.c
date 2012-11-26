@@ -282,10 +282,15 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 		return_0;
 
 	if (attr & THIN_FEATURE_DISCARDS) {
+		/* Use ignore for discards ignore or non-power-of-2 chunk_size and <1.5 target */
 		/* FIXME: Check whether underlying dev supports discards */
-		if (!dm_tree_node_set_thin_pool_discard(node,
-							seg->discards == THIN_DISCARDS_IGNORE,
-							seg->discards == THIN_DISCARDS_NO_PASSDOWN))
+		if (((!(attr & THIN_FEATURE_DISCARDS_NON_POWER_2) &&
+		      (seg->chunk_size & (seg->chunk_size - 1))) ||
+		     (seg->discards == THIN_DISCARDS_IGNORE)) &&
+		    !dm_tree_node_set_thin_pool_discard(node, 1, 0))
+			return_0;
+		else if (!dm_tree_node_set_thin_pool_discard(node, 0,
+							     (seg->discards == THIN_DISCARDS_NO_PASSDOWN)))
 			return_0;
 	} else if (seg->discards != THIN_DISCARDS_IGNORE)
 		log_warn_suppress(_no_discards++, "WARNING: Thin pool target does "

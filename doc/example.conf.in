@@ -232,6 +232,23 @@ allocation {
     # Set to 1 to guarantee that thin pool metadata will always
     # be placed on different PVs from the pool data.
     thin_pool_metadata_require_separate_pvs = 0
+
+    # Specify the minimal chunk size (in KB) for thin pool volumes.
+    # Use of the larger chunk size may improve perfomance for plain
+    # thin volumes, however using them for snapshot volumes is less efficient,
+    # as it consumes more space and takes extra time for copying.
+    # When unset, lvm tries to estimate chunk size starting from 64KB
+    # Supported values are in range from 64 to 1048576.
+    # thin_pool_chunk_size = 64
+
+    # Specify discards behavior of the thin pool volume.
+    # Select one of  "ignore", "nopassdown", "passdown"
+    # thin_pool_discards = "passdown"
+
+    # Set to 0, to disable zeroing of thin pool data chunks before their
+    # first use.
+    # N.B. zeroing larger thin pool chunk size degrades performance.
+    # thin_pool_zero = 1
 }
 
 # This section that allows you to configure the nature of the

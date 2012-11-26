@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Add lvm.conf thin pool defs thin_pool_{chunk_size|discards|zero}.
   Support discards for non-power-of-2 thin pool chunks.
   Automatically restore MISSING PVs with no MDAs.
   When no '-i' argument is given for RAID10, default to 2 stripes.

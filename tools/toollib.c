@@ -1528,20 +1528,41 @@ int get_pool_params(struct cmd_context *cmd,
 		    uint64_t *pool_metadata_size,
 		    int *zero)
 {
-	if (arg_count(cmd, zero_ARG))
+	const char *dstr;
+
+	if (arg_count(cmd, zero_ARG)) {
 		*zero = strcmp(arg_str_value(cmd, zero_ARG, "y"), "n");
-	else
-		*zero = 1; /* TODO: Make default configurable */
+		log_very_verbose("Setting pool zeroing: %u", *zero);
+	} else
+		*zero = find_config_tree_int(cmd,
+					     "allocation/thin_pool_zero",
+					     DEFAULT_THIN_POOL_ZERO);
 
-	*discards = (thin_discards_t) arg_uint_value(cmd, discards_ARG,
-						     THIN_DISCARDS_PASSDOWN);
-
-	if (arg_sign_value(cmd, chunksize_ARG, SIGN_NONE) == SIGN_MINUS) {
-		log_error("Negative chunk size is invalid.");
-		return 0;
+	if (arg_count(cmd, discards_ARG)) {
+		*discards = (thin_discards_t) arg_uint_value(cmd, discards_ARG, 0);
+		log_very_verbose("Setting pool discards: %s",
+				 get_pool_discards_name(*discards));
+	} else {
+		dstr = find_config_tree_str(cmd,
+					    "allocation/thin_pool_discards",
+					    DEFAULT_THIN_POOL_DISCARDS);
+		if (!get_pool_discards(dstr, discards))
+			return_0;
 	}
-	*chunk_size = arg_uint_value(cmd, chunksize_ARG,
-				     DM_THIN_MIN_DATA_BLOCK_SIZE);
+
+	if (arg_count(cmd, chunksize_ARG)) {
+		if (arg_sign_value(cmd, chunksize_ARG, SIGN_NONE) == SIGN_MINUS) {
+			log_error("Negative chunk size is invalid.");
+			return 0;
+		}
+		*chunk_size = arg_uint_value(cmd, chunksize_ARG,
+					     DM_THIN_MIN_DATA_BLOCK_SIZE);
+		log_very_verbose("Setting pool chunk size: %s",
+				 display_size(cmd, *chunk_size));
+	} else
+		*chunk_size = find_config_tree_int(cmd,
+						   "allocation/thin_pool_chunk_size",
+						   DEFAULT_THIN_POOL_CHUNK_SIZE) * 2;
 
 	if ((*chunk_size < DM_THIN_MIN_DATA_BLOCK_SIZE) ||
 	    (*chunk_size > DM_THIN_MAX_DATA_BLOCK_SIZE)) {
@@ -1619,7 +1640,8 @@ int update_pool_params(struct cmd_context *cmd, unsigned attr,
 			else if (*chunk_size > DM_THIN_MAX_DATA_BLOCK_SIZE)
 				*chunk_size = DM_THIN_MAX_DATA_BLOCK_SIZE;
 
-			log_verbose("Setting chunk size %uKiB.", *chunk_size / 2);
+			log_verbose("Setting chunk size %s.",
+				    display_size(cmd, *chunk_size));
 		} else if (*chunk_size < estimate_chunk_size) {
 			/* Suggest bigger chunk size */
 			log_warn("WARNING: Chunk size is smaller then suggested minimum size %s.",
