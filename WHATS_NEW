@@ -1,5 +1,7 @@
 Version 2.02.99 - 
 ===================================
+  Recognise STEC skd devices in filter.
+  Recognise Violin Memory vtms devices in filter.
   Add lvm.conf thin pool defs thin_pool_{chunk_size|discards|zero}.
   Support discards for non-power-of-2 thin pool chunks.
   Automatically restore MISSING PVs with no MDAs.
