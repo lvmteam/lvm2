@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Allow forced vgcfgrestore of lvm2 metadata with thin volumes.
   Recognise STEC skd devices in filter.
   Recognise Violin Memory vtms devices in filter.
   Add lvm.conf thin pool defs thin_pool_{chunk_size|discards|zero}.

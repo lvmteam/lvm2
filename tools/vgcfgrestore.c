@@ -62,8 +62,9 @@ int vgcfgrestore(struct cmd_context *cmd, int argc, char **argv)
 
 	if (!(arg_count(cmd, file_ARG) ?
 	      backup_restore_from_file(cmd, vg_name,
-				       arg_str_value(cmd, file_ARG, "")) :
-	      backup_restore(cmd, vg_name))) {
+				       arg_str_value(cmd, file_ARG, ""),
+				       arg_count(cmd, force_long_ARG)) :
+	      backup_restore(cmd, vg_name, arg_count(cmd, force_long_ARG)))) {
 		unlock_vg(cmd, VG_ORPHANS);
 		unlock_vg(cmd, vg_name);
 		log_error("Restore failed.");

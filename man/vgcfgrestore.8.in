@@ -6,6 +6,7 @@ vgcfgrestore \- restore volume group descriptor area
 .RB [ \-d | \-\-debug ]
 .RB [ \-f | \-\-file
 .RI < filename >]
+.RB [ \-\-force ]
 .RB [ \-l [ l ]| \-\-list ]
 .RB [ \-h | \-\-help ]
 .RB [ \-M | \-\-metadatatype
@@ -32,6 +33,14 @@ May be used with the \fB\-f\fP option.  Does not restore \fIVolumeGroupName\fP.
 Name of LVM metadata backup file
 Specifies a metadata backup or archive file to be used for restoring 
 VolumeGroupName.  Often this file has been created with \fBvgcfgbackup\fP.
+.TP
+.B \-\-force
+To restore metadata with thin pool volumes, user currently
+needs to use this flag. The tool DOES NOT make any validation.
+.br
+WARNING: Restoring lvm2 metadata that are not matching thin pool
+kernel metadata may lead to the destruction of the pool content.
+Use with extreme caution.
 .SH REPLACING PHYSICAL VOLUMES
 \fBvgdisplay \-\-partial \-\-verbose\fP will show you the UUIDs and sizes of
 any PVs that are no longer present.

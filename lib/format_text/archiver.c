@@ -347,7 +347,7 @@ int backup_restore_vg(struct cmd_context *cmd, struct volume_group *vg)
 
 /* ORPHAN and VG locks held before calling this */
 int backup_restore_from_file(struct cmd_context *cmd, const char *vg_name,
-			     const char *file)
+			     const char *file, int force)
 {
 	struct volume_group *vg;
 	int missing_pvs, r = 0;
@@ -360,14 +360,20 @@ int backup_restore_from_file(struct cmd_context *cmd, const char *vg_name,
 		return_0;
 
 	/* FIXME: Restore support is missing for now */
-	dm_list_iterate_items(lvl, &vg->lvs)
+	dm_list_iterate_items(lvl, &vg->lvs) {
 		if (lv_is_thin_type(lvl->lv)) {
-			log_error("Cannot restore Volume Group %s with "
-				  "thin logical volumes. "
-				  "(not yet supported).", vg->name);
-			r = 0;
-			goto out;
+			if (!force) {
+				log_error("Consider using option --force to restore "
+					  "Volume Group %s with thin volumes.",
+					  vg->name);
+				goto out;
+			} else {
+				log_warn("WARNING: Forced restore of Volume Group "
+					 "%s with thin volumes.", vg->name);
+				break;
+			}
 		}
+	}
 
 	missing_pvs = vg_missing_pv_count(vg);
 	if (missing_pvs == 0)
@@ -381,7 +387,7 @@ out:
 	return r;
 }
 
-int backup_restore(struct cmd_context *cmd, const char *vg_name)
+int backup_restore(struct cmd_context *cmd, const char *vg_name, int force)
 {
 	char path[PATH_MAX];
 
@@ -391,7 +397,7 @@ int backup_restore(struct cmd_context *cmd, const char *vg_name)
 		return 0;
 	}
 
-	return backup_restore_from_file(cmd, vg_name, path);
+	return backup_restore_from_file(cmd, vg_name, path, force);
 }
 
 int backup_to_file(const char *file, const char *desc, struct volume_group *vg)

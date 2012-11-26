@@ -725,6 +725,7 @@ xx(vgcfgrestore,
    "vgcfgrestore " "\n"
    "\t[-d|--debug] " "\n"
    "\t[-f|--file filename] " "\n"
+   "\t[--force]\n"
    "\t[-l[l]|--list [--list]]" "\n"
    "\t[-M|--metadatatype 1|2]" "\n"
    "\t[-h|--help]" "\n"
@@ -733,7 +734,7 @@ xx(vgcfgrestore,
    "\t[--version] " "\n"
    "\tVolumeGroupName",
 
-   file_ARG, list_ARG, metadatatype_ARG, test_ARG)
+   file_ARG, force_long_ARG, list_ARG, metadatatype_ARG, test_ARG)
 
 xx(vgchange,
    "Change volume group attributes",
