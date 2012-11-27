@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Fix lvm2api and return lvseg discards property as string.
   Allow forced vgcfgrestore of lvm2 metadata with thin volumes.
   Recognise STEC skd devices in filter.
   Recognise Violin Memory vtms devices in filter.

@@ -123,6 +123,11 @@ char *lvseg_segtype_dup(struct dm_pool *mem, const struct lv_segment *seg)
 	return dm_pool_strdup(mem, seg->segtype->ops->name(seg));
 }
 
+char *lvseg_discards_dup(struct dm_pool *mem, const struct lv_segment *seg)
+{
+	return  dm_pool_strdup(mem, get_pool_discards_name(seg->discards));
+}
+
 uint64_t lvseg_chunksize(const struct lv_segment *seg)
 {
 	uint64_t size;

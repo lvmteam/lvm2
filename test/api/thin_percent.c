@@ -23,6 +23,8 @@ int main(int argc, char *argv[])
 	vg_t vg;
 	lv_t lv;
 	struct lvm_property_value v;
+	struct dm_list *lvsegs;
+	struct lvm_lvseg_list *lvl;
 
 	handle = lvm_init(NULL);
 	assert(handle);
@@ -32,6 +34,14 @@ int main(int argc, char *argv[])
 
 	lv = lvm_lv_from_name(vg, "pool");
 	assert(lv);
+
+	lvsegs = lvm_lv_list_lvsegs(lv);
+	assert(lvsegs && (dm_list_size(lvsegs) == 1));
+	dm_list_iterate_items(lvl, lvsegs) {
+		v = lvm_lvseg_get_property(lvl->lvseg, "discards");
+		assert(v.is_valid && v.is_string);
+		assert(strcmp(v.value.string, "passdown") == 0);
+	}
 
 	v = lvm_lv_get_property(lv, "data_percent");
 	assert(v.is_valid);
