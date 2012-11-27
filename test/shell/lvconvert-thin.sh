@@ -24,9 +24,15 @@ prepare_lvs()
 #
 aux have_thin 1 0 0 || skip
 
-aux prepare_pvs 4 6400000
+aux prepare_pvs 4 64
 
-vgcreate $vg -s 64K $(cat DEVICES)
+# build one large PV
+vgcreate $vg1 $(cut -d ' ' -f -3 DEVICES)
+lvcreate -s -l 100%FREE -n $lv $vg1 --virtualsize 64T
+aux lvmconf 'devices/filter = [ "a/dev\/mapper\/.*$/", "a/dev\/LVMTEST/", "r/.*/" ]'
+
+pvcreate "$DM_DEV_DIR/$vg1/$lv"
+vgcreate $vg -s 64K $(cut -d ' ' -f 4 DEVICES) "$DM_DEV_DIR/$vg1/$lv"
 
 # create mirrored LVs for data and metadata volumes
 lvcreate -aey -L10M -m1 --mirrorlog core -n $lv1 $vg
