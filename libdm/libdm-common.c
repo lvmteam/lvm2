@@ -1933,8 +1933,13 @@ static void _check_udev_sync_requirements_once(void)
 	if (_semaphore_supported < 0)
 		_semaphore_supported = _check_semaphore_is_supported();
 
-	if (_udev_running < 0)
+	if (_udev_running < 0) {
 		_udev_running = _check_udev_is_running();
+		if (_udev_disabled && _udev_running)
+			log_warn("Udev is running and DM_DISABLE_UDEV environment variable is set. "
+				 "Bypassing udev, device-mapper library will manage device "
+				 "nodes in device directory.");
+	}
 }
 
 void dm_udev_set_sync_support(int sync_with_udev)
@@ -1945,13 +1950,10 @@ void dm_udev_set_sync_support(int sync_with_udev)
 
 int dm_udev_get_sync_support(void)
 {
-	if (_udev_disabled)
-		return 0;
-
 	_check_udev_sync_requirements_once();
 
-	return _semaphore_supported && dm_cookie_supported() &&
-		_udev_running && _sync_with_udev;
+	return !_udev_disabled && _semaphore_supported &&
+		dm_cookie_supported() &&_udev_running && _sync_with_udev;
 }
 
 void dm_udev_set_checking(int checking)

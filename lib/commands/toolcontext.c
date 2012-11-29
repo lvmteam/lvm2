@@ -211,6 +211,21 @@ static void _init_logging(struct cmd_context *cmd)
 	reset_lvm_errno(1);
 }
 
+static int _check_disable_udev(const char *msg) {
+	if (getenv("DM_DISABLE_UDEV")) {
+		log_very_verbose("DM_DISABLE_UDEV environment variable set. "
+				 "Overriding configuration to use "
+				 "udev_rules=0, udev_sync=0, verify_udev_operations=1.");
+		if (udev_is_running())
+			log_warn("Udev is running and DM_DISABLE_UDEV environment variable is set. "
+				 "Bypassing udev, LVM will %s.", msg);
+
+		return 1;
+	}
+
+	return 0;
+}
+
 #ifdef UDEV_SYNC_SUPPORT
 /*
  * Until the DM_UEVENT_GENERATED_FLAG was introduced in kernel patch 
@@ -318,12 +333,7 @@ static int _process_config(struct cmd_context *cmd)
 	 *   - udev_sync = 0
 	 *   - udev_fallback = 1
 	 */
-	if (getenv("DM_DISABLE_UDEV")) {
-		log_very_verbose("DM_DISABLE_UDEV environment variable set. "
-				 "Overriding configuration to use "
-				 "udev_rules=0, udev_sync=0, verify_udev_operations=1.");
-		udev_disabled = 1;
-	}
+	udev_disabled = _check_disable_udev("manage logical volume symlinks in device directory");
 
 	cmd->default_settings.udev_rules = udev_disabled ? 0 :
 		find_config_tree_int(cmd, "activation/udev_rules", DEFAULT_UDEV_RULES);
@@ -709,12 +719,9 @@ static int _init_dev_cache(struct cmd_context *cmd)
 	 *   - udev is not running
 	 *   - udev is disabled using DM_DISABLE_UDEV environment variable
 	 */
-	if (getenv("DM_DISABLE_UDEV")) {
-		log_very_verbose("DM_DISABLE_UDEV environment variable set. "
-				 "Overriding configuration to use "
-				 "device_list_from_udev=0");
+	if (_check_disable_udev("obtain device list by scanning device directory"))
 		device_list_from_udev = 0;
-	} else
+	else
 		device_list_from_udev = udev_is_running() ?
 			find_config_tree_bool(cmd, "devices/obtain_device_list_from_udev",
 					      DEFAULT_OBTAIN_DEVICE_LIST_FROM_UDEV) : 0;
