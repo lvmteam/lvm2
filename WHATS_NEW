@@ -1,8 +1,9 @@
 Version 2.02.99 - 
 ===================================
+  Fix lvm2app to return all property sizes in bytes.
   Recognize DM_DISABLE_UDEV environment variable for a complete fallback.
   Do not verify udev operations if --noudevsync command option is used.
-  Fix lvm2api and return lvseg discards property as string.
+  Fix lvm2app and return lvseg discards property as string.
   Allow forced vgcfgrestore of lvm2 metadata with thin volumes.
   Recognise STEC skd devices in filter.
   Recognise Violin Memory vtms devices in filter.
