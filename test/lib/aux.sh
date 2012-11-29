@@ -98,8 +98,10 @@ teardown_devs_prefixed() {
 	# Resume suspended devices first
 	for dm in $(dm_info suspended,name | grep "^Suspended:.*$prefix"); do
 		echo "dmsetup resume \"${dm#Suspended:}\""
-		dmsetup resume "${dm#Suspended:}" || true
+		dmsetup resume "${dm#Suspended:}" &
 	done
+
+	wait
 
 	local mounts=( $(grep "$prefix" /proc/mounts | cut -d' ' -f1) )
 	if test ${#mounts[@]} -gt 0; then
