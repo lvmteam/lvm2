@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Do not verify udev operations if --noudevsync command option is used.
   Fix lvm2api and return lvseg discards property as string.
   Allow forced vgcfgrestore of lvm2 metadata with thin volumes.
   Recognise STEC skd devices in filter.
