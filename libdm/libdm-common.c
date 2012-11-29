@@ -74,8 +74,9 @@ static dm_string_mangling_t _name_mangling_mode = DEFAULT_DM_NAME_MANGLING;
 static struct selabel_handle *_selabel_handle = NULL;
 #endif
 
-#ifdef UDEV_SYNC_SUPPORT
 static int _udev_disabled = 0;
+
+#ifdef UDEV_SYNC_SUPPORT
 static int _semaphore_supported = -1;
 static int _udev_running = -1;
 static int _sync_with_udev = 1;
