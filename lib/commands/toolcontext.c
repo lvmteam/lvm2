@@ -237,6 +237,7 @@ static int _process_config(struct cmd_context *cmd)
 	const struct dm_config_value *cv;
 	int64_t pv_min_kb;
 	const char *lvmetad_socket;
+	int udev_disabled = 0;
 
 	/* umask */
 	cmd->default_settings.umask = find_config_tree_int(cmd,
@@ -310,13 +311,25 @@ static int _process_config(struct cmd_context *cmd)
 		return 0;
 	}
 
-	cmd->default_settings.udev_rules = find_config_tree_int(cmd,
-								"activation/udev_rules",
-								DEFAULT_UDEV_RULES);
+	/*
+	 * If udev is disabled using DM_DISABLE_UDEV environment
+	 * variable, override existing config and hardcode these:
+	 *   - udev_rules = 0
+	 *   - udev_sync = 0
+	 *   - udev_fallback = 1
+	 */
+	if (getenv("DM_DISABLE_UDEV")) {
+		log_very_verbose("DM_DISABLE_UDEV environment variable set. "
+				 "Overriding configuration to use "
+				 "udev_rules=0, udev_sync=0, verify_udev_operations=1.");
+		udev_disabled = 1;
+	}
 
-	cmd->default_settings.udev_sync = find_config_tree_int(cmd,
-								"activation/udev_sync",
-								DEFAULT_UDEV_SYNC);
+	cmd->default_settings.udev_rules = udev_disabled ? 0 :
+		find_config_tree_int(cmd, "activation/udev_rules", DEFAULT_UDEV_RULES);
+
+	cmd->default_settings.udev_sync = udev_disabled ? 0 :
+		find_config_tree_int(cmd, "activation/udev_sync", DEFAULT_UDEV_SYNC);
 
 	init_retry_deactivation(find_config_tree_int(cmd, "activation/retry_deactivation",
 							DEFAULT_RETRY_DEACTIVATION));
@@ -326,14 +339,12 @@ static int _process_config(struct cmd_context *cmd)
 
 #ifdef UDEV_SYNC_SUPPORT
 	/*
-	 * We need udev rules to be applied, otherwise we would end up with no
-	 * nodes and symlinks! However, we can disable the synchronization itself
-	 * in runtime and still have only udev to create the nodes and symlinks
-	 * without any fallback.
+	 * Use udev fallback automatically in case udev
+	 * is disabled via DM_DISABLE_UDEV environment
+	 * variable or udev rules are switched off.
 	 */
-	cmd->default_settings.udev_fallback = cmd->default_settings.udev_rules ?
-		find_config_tree_int(cmd, "activation/verify_udev_operations",
-				     DEFAULT_VERIFY_UDEV_OPERATIONS) : 1;
+	cmd->default_settings.udev_fallback = !cmd->default_settings.udev_rules || udev_disabled ? 1 :
+		find_config_tree_int(cmd, "activation/verify_udev_operations", DEFAULT_VERIFY_UDEV_OPERATIONS);
 
 	/* Do not rely fully on udev if the udev support is known to be incomplete. */
 	if (!cmd->default_settings.udev_fallback && !_dm_driver_has_stable_udev_support()) {
@@ -693,9 +704,21 @@ static int _init_dev_cache(struct cmd_context *cmd)
 	if (!dev_cache_init(cmd))
 		return_0;
 
-	device_list_from_udev = udev_is_running() ?
-		find_config_tree_bool(cmd, "devices/obtain_device_list_from_udev",
-				      DEFAULT_OBTAIN_DEVICE_LIST_FROM_UDEV) : 0;
+	/*
+	 * Override existing config and hardcode device_list_from_udev = 0 if:
+	 *   - udev is not running
+	 *   - udev is disabled using DM_DISABLE_UDEV environment variable
+	 */
+	if (getenv("DM_DISABLE_UDEV")) {
+		log_very_verbose("DM_DISABLE_UDEV environment variable set. "
+				 "Overriding configuration to use "
+				 "device_list_from_udev=0");
+		device_list_from_udev = 0;
+	} else
+		device_list_from_udev = udev_is_running() ?
+			find_config_tree_bool(cmd, "devices/obtain_device_list_from_udev",
+					      DEFAULT_OBTAIN_DEVICE_LIST_FROM_UDEV) : 0;
+
 	init_obtain_device_list_from_udev(device_list_from_udev);
 
 	if (!(cn = find_config_tree_node(cmd, "devices/scan"))) {
