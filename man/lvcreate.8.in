@@ -150,7 +150,11 @@ Default is \fIpassdown\fP.
 .BR \-i ", " \-\-stripes " " \fIStripes
 Gives the number of stripes.
 This is equal to the number of physical volumes to scatter
-the logical volume.
+the logical volume.  When creating a RAID 4/5/6 logical volume,
+the extra devices which are necessary for parity are
+internally accounted for.  Specifying '\-i 3' would use 3 devices
+for striped logical volumes, 4 devices for RAID 4/5, and 5 devices
+for RAID 6.
 .TP
 .BR \-I ", " \-\-stripesize " " \fIStripeSize
 Gives the number of kilobytes for the granularity of the stripes.
