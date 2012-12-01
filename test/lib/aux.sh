@@ -371,6 +371,53 @@ enable_dev() {
 	finish_udev_transaction
 }
 
+#
+# Convert device to device with errors
+# Takes the list of pairs of error segment from:len
+# Original device table is replace with multiple lines
+# i.e.  error_dev "$dev1" 8:32 96:8
+error_dev() {
+	local dev=$1
+	local name=$(echo "$dev" | sed -e 's,.*/,,')
+	local fromlen
+	local pos
+	local size
+	local type
+	local pvdev
+	local offset
+
+	read pos size type pvdev offset < $name.table
+
+	shift
+	rm -f $name.errtable
+	for fromlen in "$@"; do
+		from=${fromlen%%:*}
+		len=${fromlen##*:}
+		diff=$(($from - $pos))
+		if test $diff -gt 0 ; then
+			echo "$pos $diff $type $pvdev $(($pos + $offset))" >>$name.errtable
+			pos=$(($pos + $diff))
+		elif test $diff -lt 0 ; then
+			die "Position error"
+		fi
+		echo "$from $len error" >>$name.errtable
+		pos=$(($pos + $len))
+	done
+	diff=$(($size - $pos))
+	test $diff -gt 0 && echo "$pos $diff $type $pvdev $(($pos + $offset))" >>$name.errtable
+
+	init_udev_transaction
+	if dmsetup table $name ; then
+		dmsetup load "$name" "$name.errtable"
+	else
+		dmsetup create -u "TEST-$name" "$name" "$name.errtable"
+	fi
+	# using device name (since device path does not exists yet with udev)
+	notify_lvmetad "$dev"
+	dmsetup resume "$name"
+	finish_udev_transaction
+}
+
 backup_dev() {
 	local dev
 
