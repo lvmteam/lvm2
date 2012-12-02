@@ -1917,12 +1917,6 @@ static int _lvconvert_thinpool(struct cmd_context *cmd,
 		return 0;
 	}
 
-	/* Rename deactivated metadata LV to have _tmeta suffix */
-	/* Implicit checks if metadata_lv is visible */
-	if (strcmp(metadata_lv->name, name) &&
-	    !lv_rename_update(cmd, metadata_lv, name, 0))
-		return_0;
-
 	/*
 	 * Since we wish to have underlaying dev, to match _tdata
 	 * rename data LV first, also checks for visible LV
@@ -1940,18 +1934,24 @@ static int _lvconvert_thinpool(struct cmd_context *cmd,
 	seg->segtype = lp->segtype;
 	seg->lv->status |= THIN_POOL;
 
-	seg->chunk_size = lp->chunk_size;
-	seg->zero_new_blocks = lp->zero ? 1 : 0;
-	seg->discards = lp->discards;
-	seg->low_water_mark = 0;
-	seg->transaction_id = 0;
-
-	if (!attach_pool_metadata_lv(seg, metadata_lv))
-		return_0;
-
 	/* Drop reference as attach_pool_data_lv() takes it again */
 	remove_seg_from_segs_using_this_lv(data_lv, seg);
 	if (!attach_pool_data_lv(seg, data_lv))
+		return_0;
+
+	seg->low_water_mark = 0;
+	seg->transaction_id = 0;
+	seg->chunk_size = lp->chunk_size;
+	seg->discards = lp->discards;
+	seg->zero_new_blocks = lp->zero ? 1 : 0;
+
+	/* Rename deactivated metadata LV to have _tmeta suffix */
+	/* Implicit checks if metadata_lv is visible */
+	if (strcmp(metadata_lv->name, name) &&
+	    !lv_rename_update(cmd, metadata_lv, name, 0))
+		return_0;
+
+	if (!attach_pool_metadata_lv(seg, metadata_lv))
 		return_0;
 
 	if (!vg_write(pool_lv->vg) || !vg_commit(pool_lv->vg))
