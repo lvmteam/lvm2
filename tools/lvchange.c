@@ -111,13 +111,7 @@ static int lvchange_pool_update(struct cmd_context *cmd,
 	if (arg_count(cmd, discards_ARG)) {
 		discards = (thin_discards_t) arg_uint_value(cmd, discards_ARG, THIN_DISCARDS_IGNORE);
 		if (discards != first_seg(lv)->discards) {
-			if ((discards != THIN_DISCARDS_IGNORE) &&
-				 (first_seg(lv)->chunk_size &
-				  (first_seg(lv)->chunk_size - 1)))
-				log_error("Cannot change discards state for "
-					  "logical volume \"%s\" "
-					  "with non power of 2 chunk size.", lv->name);
-			else if (((discards == THIN_DISCARDS_IGNORE) ||
+			if (((discards == THIN_DISCARDS_IGNORE) ||
 			     (first_seg(lv)->discards == THIN_DISCARDS_IGNORE)) &&
 			    lv_is_active(lv))
 				log_error("Cannot change discards state for active "
