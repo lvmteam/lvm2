@@ -231,6 +231,13 @@ Specifies thin pool metadata logical volume.
 The size should be in between 2MiB and 16GiB.
 Thin pool is specified with the option
 \fB\-\-thinpool\fP.
+When the specified thin pool already exists,
+the thin pool's metadata volume will be swapped with the given LV.
+Properties of the thin pool like chunk size, discards or zero
+are preserved by default in this case.
+It can be useful for thin pool metadata repair or its offline resize,
+since the content of metadata becomes accessible for
+thin provisioning tools \fBthin_dump\fP(8) and \fBthin_restore\fP(8).
 .TP
 .BR \-\-poolmetadatasize " " \fIThinPoolMetadataSize [ \fIbBsSkKmMgG ]
 Sets the size of thin pool's metadata logical volume,
@@ -375,4 +382,6 @@ available in the volume group.
 .BR lvextend (8),
 .BR lvreduce (8),
 .BR lvdisplay (8),
-.BR lvscan (8)
+.BR lvscan (8),
+.BR thin_dump(8),
+.BR thin_restore(8)

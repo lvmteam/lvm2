@@ -1794,10 +1794,12 @@ static int _lvconvert_thinpool(struct cmd_context *cmd,
 {
 	int r = 0;
 	char *name;
+	const char *old_name;
 	int len;
 	struct lv_segment *seg;
 	struct logical_volume *data_lv;
 	struct logical_volume *metadata_lv;
+	struct logical_volume *pool_metadata_lv;
 
 	if (!lv_is_visible(pool_lv)) {
 		log_error("Can't convert internal LV %s/%s.",
@@ -1805,7 +1807,7 @@ static int _lvconvert_thinpool(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (lv_is_thin_type(pool_lv)) {
+	if (lv_is_thin_type(pool_lv) && !lp->pool_metadata_lv_name) {
 		log_error("Can't use thin logical volume %s/%s for thin pool data.",
 			  pool_lv->vg->name, pool_lv->name);
 		return 0;
@@ -1864,6 +1866,50 @@ static int _lvconvert_thinpool(struct cmd_context *cmd,
 				  metadata_lv->vg->name, metadata_lv->name);
 			return 0;
 		}
+
+		/* Swap normal LV with pool's metadata LV ? */
+		if (lv_is_thin_pool(pool_lv)) {
+			if (!deactivate_lv(cmd, metadata_lv)) {
+				log_error("Aborting. Failed to deactivate thin metadata lv.");
+				return 0;
+			}
+			if (!arg_count(cmd, yes_ARG) &&
+			    yes_no_prompt("Do you want to swap metadata of %s/%s pool with "
+					  "volume %s/%s? [y/n]: ",
+					  pool_lv->vg->name, pool_lv->name,
+					  pool_lv->vg->name, metadata_lv->name) == 'n') {
+				log_error("Conversion aborted.");
+				return 0;
+			}
+			seg = first_seg(pool_lv);
+			/* Swap names between old and new metadata LV */
+			if (!detach_pool_metadata_lv(seg, &pool_metadata_lv))
+				return_0;
+			old_name = metadata_lv->name;
+			if (!lv_rename_update(cmd, metadata_lv, "pvmove_tmeta", 0))
+				return_0;
+			if (!lv_rename_update(cmd, pool_metadata_lv, old_name, 0))
+				return_0;
+
+			if (!arg_count(cmd, chunksize_ARG))
+				lp->chunk_size = seg->chunk_size;
+			else if ((lp->chunk_size != seg->chunk_size) &&
+				 !arg_count(cmd, force_ARG) &&
+				 yes_no_prompt("Do you really want to change chunk size %s to %s for %s/%s "
+					       "pool volume? [y/n]: ", display_size(cmd, seg->chunk_size),
+					       display_size(cmd, lp->chunk_size),
+					       pool_lv->vg->name, pool_lv->name) == 'n') {
+				log_error("Conversion aborted.");
+				return 0;
+			}
+			if (!arg_count(cmd, discards_ARG))
+				lp->discards = seg->discards;
+			if (!arg_count(cmd, zero_ARG))
+				lp->zero = seg->zero_new_blocks;
+
+			goto mda_write;
+		}
+
 		if (!lv_is_active(metadata_lv) &&
 		    !activate_lv_local(cmd, metadata_lv)) {
 			log_error("Aborting. Failed to activate thin metadata lv.");
@@ -1941,6 +1987,8 @@ static int _lvconvert_thinpool(struct cmd_context *cmd,
 
 	seg->low_water_mark = 0;
 	seg->transaction_id = 0;
+
+mda_write:
 	seg->chunk_size = lp->chunk_size;
 	seg->discards = lp->discards;
 	seg->zero_new_blocks = lp->zero ? 1 : 0;
