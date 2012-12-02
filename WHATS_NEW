@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Implement internal function detach_pool_metadata_lv().
   Fix lvm2app to return all property sizes in bytes.
   Recognize DM_DISABLE_UDEV environment variable for a complete fallback.
   Do not verify udev operations if --noudevsync command option is used.

@@ -460,6 +460,8 @@ int fixup_imported_mirrors(struct volume_group *vg);
  */
 int attach_pool_metadata_lv(struct lv_segment *pool_seg,
 			    struct logical_volume *pool_metadata_lv);
+int detach_pool_metadata_lv(struct lv_segment *pool_seg,
+			    struct logical_volume **pool_metadata_lv);
 int attach_pool_data_lv(struct lv_segment *pool_seg,
 			struct logical_volume *pool_data_lv);
 int attach_pool_lv(struct lv_segment *seg, struct logical_volume *pool_lv,

@@ -30,6 +30,24 @@ int attach_pool_metadata_lv(struct lv_segment *pool_seg, struct logical_volume *
 	return add_seg_to_segs_using_this_lv(metadata_lv, pool_seg);
 }
 
+int detach_pool_metadata_lv(struct lv_segment *pool_seg, struct logical_volume **metadata_lv)
+{
+	struct logical_volume *lv = pool_seg->metadata_lv;
+
+	if (!lv || !lv_is_thin_pool_metadata(lv) ||
+	    !remove_seg_from_segs_using_this_lv(lv, pool_seg)) {
+		log_error(INTERNAL_ERROR "LV %s is invalid thin pool.", pool_seg->lv->name);
+		return 0;
+	}
+
+	lv_set_visible(lv);
+	lv->status &= ~THIN_POOL_METADATA;
+	*metadata_lv = lv;
+	pool_seg->metadata_lv = NULL;
+
+	return 1;
+}
+
 int attach_pool_data_lv(struct lv_segment *pool_seg, struct logical_volume *pool_data_lv)
 {
 	if (!set_lv_segment_area_lv(pool_seg, 0, pool_data_lv, 0, THIN_POOL_DATA))
