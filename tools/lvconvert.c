@@ -1813,7 +1813,7 @@ static int _lvconvert_thinpool(struct cmd_context *cmd,
 
 	/* We are changing target type, so deactivate first */
 	if (!deactivate_lv(cmd, pool_lv)) {
-		log_error("Can't deactivate logical volume %s/%s.",
+		log_error("Aborting. Failed to deactivate logical volume %s/%s.",
 			  pool_lv->vg->name, pool_lv->name);
 		return 0;
 	}
@@ -1824,8 +1824,10 @@ static int _lvconvert_thinpool(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (dm_snprintf(name, len, "%s_tmeta", pool_lv->name) < 0)
-		return_0;
+	if (dm_snprintf(name, len, "%s_tmeta", pool_lv->name) < 0) {
+		log_error("Failed to create layer name.");
+		return 0;
+	}
 
 	if (lp->pool_metadata_lv_name) {
 		if (arg_count(cmd, stripesize_ARG) || arg_count(cmd, stripes_long_ARG)) {
@@ -1864,8 +1866,8 @@ static int _lvconvert_thinpool(struct cmd_context *cmd,
 		}
 		if (!lv_is_active(metadata_lv) &&
 		    !activate_lv_local(cmd, metadata_lv)) {
-		    log_error("Aborting. Failed to activate thin metadata lv.");
-		    return 0;
+			log_error("Aborting. Failed to activate thin metadata lv.");
+			return 0;
 		}
 		if (!set_lv(cmd, metadata_lv, UINT64_C(0), 0)) {
 			log_error("Aborting. Failed to wipe thin metadata lv.");
