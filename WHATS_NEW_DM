@@ -1,5 +1,6 @@
 Version 1.02.78 - 
 ===================================
+  Automatically deactivate failed preloaded dm tree node.
   Add DM_DISABLE_UDEV environment variable to manage dev nodes by libdm only.
   Fix dm_task_set_cookie to properly process udev flags if udev_sync disabled.
 

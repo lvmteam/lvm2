@@ -2496,6 +2496,11 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 			log_error("Unable to resume %s (%" PRIu32
 				  ":%" PRIu32 ")", child->name, child->info.major,
 				  child->info.minor);
+			if (!_deactivate_node(child->name, child->info.major, child->info.minor,
+					      &child->dtree->cookie, child->udev_flags, 0))
+				log_error("Unable to deactivate %s (%" PRIu32
+					  ":%" PRIu32 ")", child->name, child->info.major,
+					  child->info.minor);
 			r = 0;
 			continue;
 		}
