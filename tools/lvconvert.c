@@ -1960,6 +1960,11 @@ static int _lvconvert_thinpool(struct cmd_context *cmd,
 	if (!activate_lv_excl(cmd, pool_lv)) {
 		log_error("Failed to activate pool logical volume %s/%s.",
 			  pool_lv->vg->name, pool_lv->name);
+		/* Deactivate subvolumes */
+		if (!deactivate_lv(cmd, seg_lv(seg, 0)))
+			log_error("Failed to deactivate pool data logical volume.");
+		if (!deactivate_lv(cmd, seg->metadata_lv))
+			log_error("Failed to deactivate pool metadata logical volume.");
 		goto out;
 	}
 
