@@ -524,6 +524,16 @@ global {
     # String with options passed with thin_check command. By default,
     # option '-q' is for quiet output.
     thin_check_options = [ "-q" ]
+
+    # If set, given features are not used by thin driver.
+    # This can be helpful not just for testing, but i.e. allows to avoid
+    # using problematic implementation of some thin feature.
+    # Features:
+    #   block_size
+    #   discards
+    #   discards_non_power_2
+    #
+    # thin_disabled_features = [ "discards", "block_size" ]
 }
 
 activation {
