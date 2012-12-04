@@ -341,7 +341,7 @@ static int _lv_passes_volumes_filter(struct cmd_context *cmd, struct logical_vol
 
 	for (cv = cn->v; cv; cv = cv->next) {
 		if (cv->type == DM_CFG_EMPTY_ARRAY)
-			return 0;
+			goto out;
 		if (cv->type != DM_CFG_STRING) {
 			log_error("Ignoring invalid string in config file %s",
 				  config_path);
@@ -397,6 +397,7 @@ static int _lv_passes_volumes_filter(struct cmd_context *cmd, struct logical_vol
 			return 1;
 	}
 
+out:
 	log_verbose("No item supplied in %s configuration setting "
 		    "matches %s/%s", config_path, lv->vg->name, lv->name);
 
