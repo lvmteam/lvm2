@@ -340,6 +340,8 @@ static int _lv_passes_volumes_filter(struct cmd_context *cmd, struct logical_vol
 		    config_path, lv->vg->name, lv->name);
 
 	for (cv = cn->v; cv; cv = cv->next) {
+		if (cv->type == DM_CFG_EMPTY_ARRAY)
+			return 0;
 		if (cv->type != DM_CFG_STRING) {
 			log_error("Ignoring invalid string in config file %s",
 				  config_path);
