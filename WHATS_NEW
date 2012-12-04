@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Disallow pvmove on RAID LVs until they are addressed properly
   Allow empty activation/{auto_activation|read_only|}_volume_list config option.
   Add lvm.conf option global/thin_disabled_features.
   Add lvconvert support to swap thin pool metadata volume.

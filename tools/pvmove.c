@@ -179,6 +179,7 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 						unsigned *exclusive)
 {
 	struct logical_volume *lv_mirr, *lv;
+	struct lv_segment *seg;
 	struct lv_list *lvl;
 	uint32_t log_count = 0;
 	int lv_found = 0;
@@ -206,6 +207,7 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 	/* Find segments to be moved and set up mirrors */
 	dm_list_iterate_items(lvl, &vg->lvs) {
 		lv = lvl->lv;
+		seg = first_seg(lv);
 		if (lv == lv_mirr)
 			continue;
 		if (lv_name) {
@@ -216,6 +218,19 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 		if (lv_is_origin(lv) || lv_is_cow(lv)) {
 			lv_skipped = 1;
 			log_print_unless_silent("Skipping snapshot-related LV %s", lv->name);
+			continue;
+		}
+		if (seg_is_raid(seg)) {
+			lv_skipped = 1;
+			log_print_unless_silent("Skipping %s LV %s",
+						seg->segtype->ops->name(seg),
+						lv->name);
+			continue;
+		}
+		if (lv_is_raid_type(lv)) {
+			lv_skipped = 1;
+			log_print_unless_silent("Skipping RAID sub-LV %s",
+						lv->name);
 			continue;
 		}
 		if (lv->status & MIRRORED) {
