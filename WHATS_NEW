@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Fix memleak in device_is_usable mirror testing function.
   Do not ignore -f in lvconvert --repair -y -f for mirror and raid volumes.
   Disallow pvmove on RAID LVs until they are addressed properly
   Allow empty activation/{auto_activation|read_only|}_volume_list config option.
