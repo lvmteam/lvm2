@@ -1596,10 +1596,6 @@ int update_pool_params(struct cmd_context *cmd, unsigned attr,
 		log_error("Chunk size must be multiple of %s.",
 			  display_size(cmd, DM_THIN_MIN_DATA_BLOCK_SIZE));
 		return 0;
-	} else if ((*discards != THIN_DISCARDS_IGNORE) &&
-		   (*chunk_size & (*chunk_size - 1))) {
-		log_warn("WARNING: Using discards ignore for chunk size non power of 2.");
-		*discards = THIN_DISCARDS_IGNORE;
 	}
 
 	if (!*pool_metadata_size) {
