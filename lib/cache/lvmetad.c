@@ -726,7 +726,7 @@ int lvmetad_pv_found(const struct id *pvid, struct device *device, const struct 
 	} else {
 		if (handler) {
 			log_error(INTERNAL_ERROR "Handler needs existing VG.");
-			dm_free(pvmeta);
+			dm_config_destroy(pvmeta);
 			return 0;
 		}
 		/* There are no MDAs on this PV. */
