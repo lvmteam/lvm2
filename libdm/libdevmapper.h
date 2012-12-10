@@ -279,6 +279,12 @@ int dm_get_status_raid(struct dm_pool *mem, const char *params,
 /*
  * Parse params from STATUS call for thin_pool target
  */
+typedef enum {
+	DM_THIN_DISCARDS_IGNORE,
+	DM_THIN_DISCARDS_NO_PASSDOWN,
+	DM_THIN_DISCARDS_PASSDOWN
+} dm_thin_discards_t;
+
 struct dm_status_thin_pool {
 	uint64_t transaction_id;
 	uint64_t used_metadata_blocks;
@@ -286,6 +292,8 @@ struct dm_status_thin_pool {
 	uint64_t used_data_blocks;
 	uint64_t total_data_blocks;
 	uint64_t held_metadata_root;
+	uint32_t read_only;
+	dm_thin_discards_t discards;
 };
 
 int dm_get_status_thin_pool(struct dm_pool *mem, const char *params,

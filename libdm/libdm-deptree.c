@@ -3295,6 +3295,7 @@ int dm_get_status_thin_pool(struct dm_pool *mem, const char *params,
 			    struct dm_status_thin_pool **status)
 {
 	struct dm_status_thin_pool *s;
+	int pos;
 
 	if (!(s = dm_pool_zalloc(mem, sizeof(struct dm_status_thin_pool)))) {
 		log_error("Failed to allocate thin_pool status structure.");
@@ -3302,15 +3303,25 @@ int dm_get_status_thin_pool(struct dm_pool *mem, const char *params,
 	}
 
 	/* FIXME: add support for held metadata root */
-	if (sscanf(params, "%" PRIu64 " %" PRIu64 "/%" PRIu64 " %" PRIu64 "/%" PRIu64,
+	if (sscanf(params, "%" PRIu64 " %" PRIu64 "/%" PRIu64 " %" PRIu64 "/%" PRIu64 "%n",
 		   &s->transaction_id,
 		   &s->used_metadata_blocks,
 		   &s->total_metadata_blocks,
 		   &s->used_data_blocks,
-		   &s->total_data_blocks) != 5) {
+		   &s->total_data_blocks, &pos) < 5) {
 		log_error("Failed to parse thin pool params: %s.", params);
 		return 0;
 	}
+
+	/* New status flags */
+	if (strstr(params + pos, "no_discard_passdown"))
+		s->discards = DM_THIN_DISCARDS_NO_PASSDOWN;
+	else if (strstr(params + pos, "ignore_discard"))
+		s->discards = DM_THIN_DISCARDS_IGNORE;
+	else /* default discard_passdown */
+		s->discards = DM_THIN_DISCARDS_PASSDOWN;
+
+	s->read_only = (strstr(params + pos, "ro ")) ? 1 : 0;
 
 	*status = s;
 
