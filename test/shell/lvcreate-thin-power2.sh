@@ -27,11 +27,12 @@ vgcreate $vg -s 64K $(cat DEVICES)
 # create non-power-of-2 pool
 lvcreate -l100 -c 192 -T $vg/pool
 
-check lv_field $vg/pool discards "ignore"
+check lv_field $vg/pool discards "passdown"
 
 # check we cannot change discards settings
-not lvchange --discard passdown $vg/pool
-not lvchange --discard nopassdown $vg/pool
+not lvchange --discard ignore $vg/pool
+lvchange --discard nopassdown $vg/pool
+check lv_field $vg/pool discards "nopassdown"
 
 # must be multiple of 64KB
 not lvcreate -l100 -c 168 -T $vg/pool1
