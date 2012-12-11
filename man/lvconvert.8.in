@@ -61,6 +61,10 @@ lvconvert \- convert a logical volume from linear to mirror or snapshot
 .sp
 .B lvconvert \-\-repair
 .RB [ \-h | \-? | \-\-help ]
+.RB [ \-\-stripes
+.I Stripes
+.RB [ \-I | \-\-stripesize
+.IR StripeSize ]]
 .RB [ \-v | \-\-verbose ]
 .RB [ \-\-version ]
 .IR LogicalVolume [ Path ]
@@ -274,7 +278,8 @@ This option is only available to RAID segment types
 .BR \-\-stripes " " \fIStripes
 Gives the number of stripes.
 This is equal to the number of physical volumes to scatter
-the logical volume.
+the logical volume. This does not apply to existing allocated
+space, only newly allocated space can be striped.
 .TP
 .BR \-I ", " \-\-stripesize " " \fIStripeSize
 Gives the number of kilobytes for the granularity of the stripes.
