@@ -806,13 +806,13 @@ static void _lvconvert_mirrors_repair_ask(struct cmd_context *cmd,
 		return;
 	}
 
-	if (yes)
-		return;
-
 	if (force != PROMPT) {
 		*replace_log = *replace_mirrors = 0;
 		return;
 	}
+
+	if (yes)
+		return;
 
 	if (failed_log &&
 	    yes_no_prompt("Attempt to replace failed mirror log? [y/n]: ") == 'n') {
@@ -1523,29 +1523,31 @@ static void _lvconvert_raid_repair_ask(struct cmd_context *cmd, int *replace_dev
 	int force = arg_count(cmd, force_ARG);
 	int yes = arg_count(cmd, yes_ARG);
 
-	*replace_dev = 0;
+	*replace_dev = 1;
 
 	if (arg_count(cmd, use_policies_ARG)) {
 		dev_policy = find_config_tree_str(cmd, "activation/raid_fault_policy", DEFAULT_RAID_FAULT_POLICY);
 
 		if (!strcmp(dev_policy, "allocate") ||
 		    !strcmp(dev_policy, "replace"))
-			*replace_dev = 1;
-		/* else if (!strcmp(dev_policy, "anything_else")) -- ignore */
+			return;
+
+		/* else if (!strcmp(dev_policy, "anything_else")) -- no replace */
+		*replace_dev = 0;
 		return;
 	}
 
-	if (yes) {
-		*replace_dev = 1;
+	if (force != PROMPT) {
+		*replace_dev = 0;
 		return;
 	}
 
-	if (force != PROMPT)
+	if (yes)
 		return;
 
 	if (yes_no_prompt("Attempt to replace failed RAID images "
-			  "(requires full device resync)? [y/n]: ") == 'y') {
-		*replace_dev = 1;
+			  "(requires full device resync)? [y/n]: ") == 'n') {
+		*replace_dev = 0;
 	}
 }
 
