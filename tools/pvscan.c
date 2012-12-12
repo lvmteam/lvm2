@@ -106,7 +106,7 @@ static int _auto_activation_handler(struct cmd_context *cmd,
 	id_read_format(&vgid_raw, vgid);
 	/* NB. This is safe because we know lvmetad is running and we won't hit
 	 * disk. */
-	if (!(vg = vg_read_internal(cmd, NULL, &vgid_raw, 0, &consistent)))
+	if (!(vg = vg_read_internal(cmd, NULL, (const char *) &vgid_raw, 0, &consistent)))
 	    return 1;
 
 	if (vg_is_clustered(vg)) {

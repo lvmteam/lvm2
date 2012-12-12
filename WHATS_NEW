@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Fix crash in pvscan --cache -aay triggered by non-mda PV.
   Allow lvconvert --stripes/stripesize only with --mirrors/--repair/--thinpool.
   Fix memleak in device_is_usable mirror testing function.
   Do not ignore -f in lvconvert --repair -y -f for mirror and raid volumes.
