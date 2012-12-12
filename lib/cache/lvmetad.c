@@ -675,7 +675,7 @@ int lvmetad_pv_found(const struct id *pvid, struct device *device, const struct 
 	daemon_reply reply;
 	struct lvmcache_info *info;
 	struct dm_config_tree *pvmeta, *vgmeta;
-	const char *status;
+	const char *status, *vgid;
 	int result;
 
 	if (!lvmetad_active() || test_mode())
@@ -724,11 +724,6 @@ int lvmetad_pv_found(const struct id *pvid, struct device *device, const struct 
 				      NULL);
 		dm_config_destroy(vgmeta);
 	} else {
-		if (handler) {
-			log_error(INTERNAL_ERROR "Handler needs existing VG.");
-			dm_config_destroy(pvmeta);
-			return 0;
-		}
 		/* There are no MDAs on this PV. */
 		reply = _lvmetad_send("pv_found", "pvmeta = %t", pvmeta, NULL);
 	}
@@ -744,10 +739,11 @@ int lvmetad_pv_found(const struct id *pvid, struct device *device, const struct 
 
 	if (result && handler) {
 		status = daemon_reply_str(reply, "status", "<missing>");
+		vgid = daemon_reply_str(reply, "vgid", "<missing>");
 		if (!strcmp(status, "partial"))
-			handler(vg, 1, CHANGE_AAY);
+			handler(_lvmetad_cmd, vgid, 1, CHANGE_AAY);
 		else if (!strcmp(status, "complete"))
-			handler(vg, 0, CHANGE_AAY);
+			handler(_lvmetad_cmd, vgid, 0, CHANGE_AAY);
 		else if (!strcmp(status, "orphan"))
 			;
 		else
