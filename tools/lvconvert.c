@@ -169,9 +169,9 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 
 	if ((arg_count(cmd, stripes_long_ARG) || arg_count(cmd, stripesize_ARG)) &&
 	    !(arg_count(cmd, mirrors_ARG) || arg_count(cmd, repair_ARG) ||
-	      arg_count(cmd, thinpool_ARG))) {
+	      arg_count(cmd, thinpool_ARG) || arg_count(cmd, type_ARG))) {
 		log_error("--stripes or --stripesize argument is only valid "
-			  "with --mirrors, --repair or --thinpool");
+			  "with --mirrors, --repair, --thinpool or --type");
 		return 0;
 	}
 
