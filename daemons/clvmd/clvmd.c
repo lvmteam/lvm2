@@ -385,7 +385,7 @@ int main(int argc, char *argv[])
 
 		case 'd':
 			debug_opt = DEBUG_STDERR;
-			debug_arg = optarg ? (debug_t) atoi(optarg) : DEBUG_STDERR;
+			debug_arg = (debug_t) atoi(optarg);
 			if (debug_arg == DEBUG_STDERR)
 				foreground_mode = 1;
 			break;
