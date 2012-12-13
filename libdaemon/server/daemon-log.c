@@ -98,7 +98,7 @@ void daemon_log_cft(log_state *s, int type, const char *prefix, const struct dm_
 	if (!_type_interesting(s, type))
 		return;
 
-	dm_config_write_node(n, &_log_line, &b);
+	(void) dm_config_write_node(n, &_log_line, &b);
 }
 
 void daemon_log_multi(log_state *s, int type, const char *prefix, const char *msg)

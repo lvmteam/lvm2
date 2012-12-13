@@ -950,7 +950,7 @@ static void _dump_cft(struct buffer *buf, struct dm_hash_table *ht, const char *
 		struct dm_config_tree *cft = dm_hash_get_data(ht, n);
 		const char *key_backup = cft->root->key;
 		cft->root->key = dm_config_find_str(cft->root, key_addr, "unknown");
-		dm_config_write_node(cft->root, buffer_line, buf);
+		(void) dm_config_write_node(cft->root, buffer_line, buf);
 		cft->root->key = key_backup;
 		n = dm_hash_get_next(ht, n);
 	}
@@ -969,9 +969,9 @@ static void _dump_pairs(struct buffer *buf, struct dm_hash_table *ht, const char
 			   *val = dm_hash_get_data(ht, n);
 		buffer_append(buf, "    ");
 		if (int_key)
-			dm_asprintf(&append, "%d = \"%s\"", *(int*)key, val);
+			(void) dm_asprintf(&append, "%d = \"%s\"", *(int*)key, val);
 		else
-			dm_asprintf(&append, "%s = \"%s\"", key, val);
+			(void) dm_asprintf(&append, "%s = \"%s\"", key, val);
 		if (append)
 			buffer_append(buf, append);
 		buffer_append(buf, "\n");
