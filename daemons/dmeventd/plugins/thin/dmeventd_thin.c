@@ -291,8 +291,9 @@ static void _umount(struct dm_task *dmt, const char *device)
 	if (fclose(minfo))
 		syslog(LOG_ERR, "Failed to close %s\n", mountinfo);
 
-	dm_bitset_destroy(minors);
 out:
+	if (minors)
+		dm_bitset_destroy(minors);
 	dmeventd_lvm2_lock();
 }
 
