@@ -15,7 +15,6 @@
 
 #include "tools.h"
 #include <sys/stat.h>
-#include <strings.h>
 
 const char *command_name(struct cmd_context *cmd)
 {
