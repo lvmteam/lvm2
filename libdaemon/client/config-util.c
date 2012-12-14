@@ -215,7 +215,8 @@ struct dm_config_node *config_make_nodes_v(struct dm_config_tree *cft,
 	const char *next;
 	struct dm_config_node *first = NULL;
 	struct dm_config_node *cn;
-	const char *fmt, *key;
+	const char *fmt;
+	char *key;
 
 	while ((next = va_arg(ap, char *))) {
 		cn = NULL;
@@ -223,12 +224,16 @@ struct dm_config_node *config_make_nodes_v(struct dm_config_tree *cft,
 
 		if (!fmt) {
 			log_error(INTERNAL_ERROR "Bad format string '%s'", fmt);
-			return_NULL;
+			return NULL;
 		}
-		fmt += 2;
 
-		key = dm_pool_strdup(cft->mem, next);
-		*strchr(key, '=') = 0;
+		if (!(key = dm_pool_strdup(cft->mem, next))) {
+			log_error("Failed to duplicate node key.");
+			return NULL;
+		}
+
+		key[fmt - next] = '\0';
+		fmt += 2;
 
 		if (!strcmp(fmt, "%d") || !strcmp(fmt, "%" PRId64)) {
 			int64_t value = va_arg(ap, int64_t);
@@ -247,7 +252,7 @@ struct dm_config_node *config_make_nodes_v(struct dm_config_tree *cft,
 			chain_node(cn, parent, pre_sib);
 		} else {
 			log_error(INTERNAL_ERROR "Bad format string '%s'", fmt);
-			return_NULL;
+			return NULL;
 		}
 		if (!first)
 			first = cn;

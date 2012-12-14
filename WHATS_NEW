@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Add check for key string duplication in config_make_nodes_v.
   Add check for created fid in _scan_file.
   Log output also to syslog when abort_on_internal_error is set.
   Add LV snapshot support to liblvm and python-lvm.
