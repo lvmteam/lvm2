@@ -618,7 +618,7 @@ static int _extract_mda(struct metadata_area *mda, void *baton)
 	if (!mda->ops->mda_export_text) /* do nothing */
 		return 1;
 
-	dm_snprintf(id, 32, "mda%d", b->i);
+	(void) dm_snprintf(id, 32, "mda%d", b->i);
 	if (!(cn = make_config_node(b->cft, id, b->cft->root, b->pre_sib)))
 		return 0;
 	if (!mda->ops->mda_export_text(mda, b->cft, cn))
@@ -639,7 +639,7 @@ static int _extract_da(struct disk_locn *da, void *baton)
 	if (!da)
 		return 1;
 
-	dm_snprintf(id, 32, "da%d", b->i);
+	(void) dm_snprintf(id, 32, "da%d", b->i);
 	if (!(cn = make_config_node(b->cft, id, b->cft->root, b->pre_sib)))
 		return 0;
 	if (!config_make_nodes(b->cft, cn, NULL,
