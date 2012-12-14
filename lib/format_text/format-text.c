@@ -2226,11 +2226,12 @@ static struct format_instance *_text_create_text_instance(const struct format_ty
 	if (!(fid = alloc_fid(fmt, fic)))
 		return_NULL;
 
-	if (_create_vg_text_instance(fid, fic))
-		return fid;
+	if (!_create_vg_text_instance(fid, fic)) {
+		dm_pool_destroy(fid->mem);
+		return_NULL;
+	}
 
-	dm_pool_destroy(fid->mem);
-	return NULL;
+	return fid;
 }
 
 static struct format_handler _text_handler = {
