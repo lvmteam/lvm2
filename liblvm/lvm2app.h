@@ -1379,6 +1379,27 @@ int lvm_lv_rename(lv_t lv, const char *new_name);
  */
 int lvm_lv_resize(const lv_t lv, uint64_t new_size);
 
+/**
+ * Create a snapshot of a logical volume
+ *
+ * \memberof lv_t
+ *
+ * \param   lv
+ * Logical volume handle.
+ *
+ * \param   snap_name
+ * Name of the snapshot.
+ *
+ * \param   max_snap_size
+ * Max snapshot space to use. If you pass zero the same amount of space as
+ * the origin will be used.
+ *
+ * \return
+ * Valid lv pointer on success, else NULL on error.
+ *
+ */
+lv_t lvm_lv_snapshot(const lv_t lv, const char *snap_name, uint64_t max_snap_size);
+
 /************************** physical volume handling ************************/
 
 /**

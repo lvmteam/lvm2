@@ -122,12 +122,19 @@ static void _lv_set_default_params(struct lvcreate_params *lp,
 	dm_list_init(&lp->tags);
 }
 
+static struct segment_type * _get_segtype(struct cmd_context *cmd) {
+	struct segment_type *rc = get_segtype_from_string(cmd, "striped");
+	if (!rc) {
+		log_error(INTERNAL_ERROR "Segtype striped not found.");
+	}
+	return rc;
+}
+
 /* Set default for linear segment specific LV parameters */
 static int _lv_set_default_linear_params(struct cmd_context *cmd,
 					  struct lvcreate_params *lp)
 {
-	if (!(lp->segtype = get_segtype_from_string(cmd, "striped"))) {
-		log_error(INTERNAL_ERROR "Segtype striped not found.");
+	if (!(lp->segtype = _get_segtype(cmd))) {
 		return 0;
 	}
 
@@ -305,4 +312,50 @@ int lvm_lv_resize(const lv_t lv, uint64_t new_size)
 	/* FIXME: add lv resize code here */
 	log_error("NOT IMPLEMENTED YET");
 	return -1;
+}
+
+lv_t lvm_lv_snapshot(const lv_t lv, const char *snap_name, uint64_t max_snap_size)
+{
+	struct lvcreate_params lp = { 0 };
+	uint64_t extents = 0;
+	uint64_t size = 0;
+	struct lv_list *lvl = NULL;
+
+	if (vg_read_error(lv->vg))
+		return NULL;
+	if (!vg_check_write_mode(lv->vg))
+		return NULL;
+
+	/* Determine the correct size */
+	if (0 == max_snap_size){
+		size = lv->size;
+	} else {
+		size = max_snap_size >> SECTOR_SHIFT;
+
+		if (size > lv->size) {
+			size = lv->size;
+		}
+	}
+
+	if (!(extents = extents_from_size(lv->vg->cmd, size,
+					  lv->vg->extent_size))) {
+		log_error("Unable to create LV snapshot without size.");
+		return NULL;
+	}
+
+	_lv_set_default_params(&lp, lv->vg, snap_name, extents);
+
+	/* Fill out required default input values */
+	lp.snapshot = 1;
+	lp.segtype = _get_segtype(lv->vg->cmd);
+	lp.stripes = 1;
+	lp.origin = lv->name;
+
+	if (!lp.segtype)
+		return_NULL;
+	if (!lv_create_single(lv->vg, &lp))
+		return_NULL;
+	if (!(lvl = find_lv_in_vg(lv->vg, snap_name)))
+		return NULL;
+	return (lv_t) lvl->lv;
 }
