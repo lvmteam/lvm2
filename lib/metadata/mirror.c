@@ -864,8 +864,13 @@ static int _remove_mirror_images(struct logical_volume *lv,
 	     s >= 0 && old_area_count - new_area_count < orig_removed;
 	     s--) {
 		sub_lv = seg_lv(mirrored_seg, s);
-		if (!(is_temporary_mirror_layer(sub_lv) && lv_mirror_count(sub_lv) != 1) &&
-		    is_removable(sub_lv, removable_baton)) {
+		if (!(is_temporary_mirror_layer(sub_lv) && lv_mirror_count(sub_lv) != 1)) {
+			if (!is_removable) {
+				log_error(INTERNAL_ERROR "Test is_removable undefined.");
+				return 0;
+			}
+			if (!is_removable(sub_lv, removable_baton))
+				continue;
 			/*
 			 * Check if the user is trying to pull the
 			 * primary mirror image when the mirror is
