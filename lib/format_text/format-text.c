@@ -1089,7 +1089,10 @@ static int _scan_file(const struct format_type *fmt, const char *vgname)
 				/* FIXME: Check this fid is OK! */
 				fic.type = FMT_INSTANCE_PRIVATE_MDAS;
 				fic.context.private = NULL;
-				fid = _text_create_text_instance(fmt, &fic);
+				if (!(fid = _text_create_text_instance(fmt, &fic))) {
+					stack;
+					break;
+				}
 				if ((vg = _vg_read_file_name(fid, scanned_vgname,
 							     path))) {
 					/* FIXME Store creation host in vg */
