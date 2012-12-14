@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Check for memory failure of dm_config_write_node() in lvmetad.
   Fix socket leak on error path in lvmetad's handle_connect.
   Check for failing id_read_format() in _pv_populate_lvmcache.
   Fix memleak on error path for lvmetad's pv_found.

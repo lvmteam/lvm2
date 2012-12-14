@@ -392,7 +392,8 @@ static void *client_thread(void *baton)
 			res = b->s.handler(b->s, b->client, req);
 
 		if (!res.buffer.mem) {
-			dm_config_write_node(res.cft->root, buffer_line, &res.buffer);
+			if (!dm_config_write_node(res.cft->root, buffer_line, &res.buffer))
+				goto fail;
 			if (!buffer_append(&res.buffer, "\n\n"))
 				goto fail;
 			dm_config_destroy(res.cft);

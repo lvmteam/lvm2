@@ -77,7 +77,10 @@ daemon_reply daemon_send(daemon_handle h, daemon_request rq)
 	buffer = rq.buffer;
 
 	if (!buffer.mem)
-		dm_config_write_node(rq.cft->root, buffer_line, &buffer);
+		if (!dm_config_write_node(rq.cft->root, buffer_line, &buffer)) {
+			reply.error = ENOMEM;
+			return reply;
+		}
 
 	assert(buffer.mem);
 	if (!buffer_write(h.socket_fd, &buffer))
