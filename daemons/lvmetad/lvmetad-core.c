@@ -121,19 +121,18 @@ static response reply_unknown(const char *reason)
 static struct dm_config_tree *lock_vg(lvmetad_state *s, const char *id) {
 	pthread_mutex_t *vg;
 	struct dm_config_tree *cft;
+	pthread_mutexattr_t rec;
 
 	pthread_mutex_lock(&s->lock.vg_lock_map);
-	vg = dm_hash_lookup(s->lock.vg, id);
-	if (!vg) {
-		pthread_mutexattr_t rec;
-		pthread_mutexattr_init(&rec);
-		pthread_mutexattr_settype(&rec, PTHREAD_MUTEX_RECURSIVE_NP);
-		if (!(vg = malloc(sizeof(pthread_mutex_t))))
-                        return NULL;
-		pthread_mutex_init(vg, &rec);
+	if (!(vg = dm_hash_lookup(s->lock.vg, id))) {
+		if (!(vg = malloc(sizeof(pthread_mutex_t))) ||
+		    pthread_mutexattr_init(&rec) ||
+		    pthread_mutexattr_settype(&rec, PTHREAD_MUTEX_RECURSIVE_NP) ||
+		    pthread_mutex_init(vg, &rec))
+			goto bad;
 		if (!dm_hash_insert(s->lock.vg, id, vg)) {
-			free(vg);
-			return NULL;
+			pthread_mutex_destroy(vg);
+			goto bad;
 		}
 	}
 	/* We never remove items from s->lock.vg => the pointer remains valid. */
@@ -147,6 +146,11 @@ static struct dm_config_tree *lock_vg(lvmetad_state *s, const char *id) {
 	cft = dm_hash_lookup(s->vgid_to_metadata, id);
 	unlock_vgid_to_metadata(s);
 	return cft;
+bad:
+	pthread_mutex_unlock(&s->lock.vg_lock_map);
+	free(vg);
+	ERROR(s, "Out of memory");
+	return NULL;
 }
 
 static void unlock_vg(lvmetad_state *s, const char *id) {
