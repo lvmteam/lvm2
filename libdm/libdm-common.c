@@ -87,7 +87,7 @@ void dm_lib_init(void)
 {
 	const char *env;
 
-	if ((env = getenv("DM_DISABLE_UDEV")))
+	if (getenv("DM_DISABLE_UDEV"))
 		_udev_disabled = 1;
 
 	env = getenv(DM_DEFAULT_NAME_MANGLING_MODE_ENV_VAR_NAME);
