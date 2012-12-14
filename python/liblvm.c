@@ -1317,12 +1317,12 @@ static PyObject *
 liblvm_lvm_lv_snapshot(lvobject *self, PyObject *args)
 {
 	const char *vgname;
-	uint64_t size;
+	uint64_t size = 0;
 	lvobject *lvobj;
 
 	LV_VALID(self);
 
-	if (!PyArg_ParseTuple(args, "sl", &vgname, &size)) {
+	if (!PyArg_ParseTuple(args, "s|l", &vgname, &size)) {
 		return NULL;
 	}
 
