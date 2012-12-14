@@ -136,7 +136,7 @@ static int _csid_from_name(char *csid, const char *name)
 
 static int _name_from_csid(const char *csid, char *name)
 {
-	sprintf(name, "SINGLENODE");
+	strcpy(name, "SINGLENODE");
 	return 0;
 }
 
@@ -284,9 +284,8 @@ static int _cluster_send_message(const void *buf, int msglen,
 
 static int _get_cluster_name(char *buf, int buflen)
 {
-	strncpy(buf, "localcluster", buflen);
-	buf[buflen - 1] = 0;
-	return 0;
+	/* FIXME - cluster_ops API is broken - swap 1/0 */
+	return dm_strncpy(buf, "localcluster", buflen) ? 0 : 1;
 }
 
 static struct cluster_ops _cluster_singlenode_ops = {
