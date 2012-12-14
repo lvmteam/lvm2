@@ -344,9 +344,6 @@ void print_log(int level, const char *file, int line, int dm_errno,
 		va_end(ap);
 	}
 
-	if (fatal_internal_error)
-		abort();
-
 	if (level > debug_level())
 		return;
 
@@ -367,6 +364,9 @@ void print_log(int level, const char *file, int line, int dm_errno,
 		vsyslog(level, trformat, ap);
 		va_end(ap);
 	}
+
+	if (fatal_internal_error)
+		abort();
 
 	/* FIXME This code is unfinished - pre-extend & condense. */
 	if (!_already_logging && _log_direct && critical_section()) {

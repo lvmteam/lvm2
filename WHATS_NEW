@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Log output also to syslog when abort_on_internal_error is set.
   Add LV snapshot support to liblvm and python-lvm.
   Avoid a global lock in pvs when lvmetad is in use.
   Fix crash in pvscan --cache -aay triggered by non-mda PV.
