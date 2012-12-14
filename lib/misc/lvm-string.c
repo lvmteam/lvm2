@@ -81,7 +81,7 @@ int validate_name(const char *n)
 	if (*n == '-')
 		return 0;
 
-	if (!strcmp(n, ".") || !strcmp(n, ".."))
+	if ((*n == '.') && (!n[1] || (n[1] == '.' && !n[2]))) /* ".", ".." */
 		return 0;
 
 	while ((len++, c = *n++))
@@ -96,13 +96,13 @@ int validate_name(const char *n)
 
 int apply_lvname_restrictions(const char *name)
 {
-	const char *reserved_prefixes[] = {
+	static const char * const _reserved_prefixes[] = {
 		"snapshot",
 		"pvmove",
 		NULL
 	};
 
-	const char *reserved_strings[] = {
+	static const char * const _reserved_strings[] = {
 		"_mlog",
 		"_mimage",
 		"_rimage",
@@ -116,7 +116,7 @@ int apply_lvname_restrictions(const char *name)
 	unsigned i;
 	const char *s;
 
-	for (i = 0; (s = reserved_prefixes[i]); i++) {
+	for (i = 0; (s = _reserved_prefixes[i]); i++) {
 		if (!strncmp(name, s, strlen(s))) {
 			log_error("Names starting \"%s\" are reserved. "
 				  "Please choose a different LV name.", s);
@@ -124,7 +124,7 @@ int apply_lvname_restrictions(const char *name)
 		}
 	}
 
-	for (i = 0; (s = reserved_strings[i]); i++) {
+	for (i = 0; (s = _reserved_strings[i]); i++) {
 		if (strstr(name, s)) {
 			log_error("Names including \"%s\" are reserved. "
 				  "Please choose a different LV name.", s);
