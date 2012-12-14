@@ -249,9 +249,10 @@ static struct lvmcache_info *_pv_populate_lvmcache(
 		return NULL;
 	}
 
-	if (vgid_txt)
-		id_read_format(&vgid, vgid_txt);
-	else
+	if (vgid_txt) {
+		if (!id_read_format(&vgid, vgid_txt))
+			return_NULL;
+	} else
 		strcpy((char*)&vgid, fmt->orphan_vg_name);
 
 	if (!vgname)

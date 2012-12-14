@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Check for failing id_read_format() in _pv_populate_lvmcache.
   Fix memleak on error path for lvmetad's pv_found.
   Unlock vg mutex in error path when lvmetad tries to lock_vg.
   Add check for key string duplication in config_make_nodes_v.
