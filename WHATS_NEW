@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Check lvmcache_info_from_pvid and recall only when needed in _pv_read.
   Check for memory failure of dm_config_write_node() in lvmetad.
   Fix socket leak on error path in lvmetad's handle_connect.
   Check for failing id_read_format() in _pv_populate_lvmcache.

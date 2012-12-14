@@ -3633,8 +3633,13 @@ static struct physical_volume *_pv_read(struct cmd_context *cmd,
 						  pv_name);
 				return NULL;
 			}
+			if (!(info = lvmcache_info_from_pvid(dev->pvid, 0))) {
+				if (warnings)
+					log_error("No cache info in lvmetad cache for %s.",
+						  pv_name);
+				return NULL;
+			}
 		}
-		info = lvmcache_info_from_pvid(dev->pvid, 0);
 		label = lvmcache_get_label(info);
 	} else {
 		if (!(label_read(dev, &label, UINT64_C(0)))) {
