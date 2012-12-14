@@ -292,7 +292,7 @@ static response pv_list(lvmetad_state *s, request r)
 	struct dm_config_node *cn = NULL, *cn_pvs;
 	struct dm_hash_node *n;
 	const char *id;
-	response res;
+	response res = { 0 };
 
 	buffer_init( &res.buffer );
 
@@ -320,7 +320,7 @@ static response pv_lookup(lvmetad_state *s, request r)
 {
 	const char *pvid = daemon_request_str(r, "uuid", NULL);
 	int64_t devt = daemon_request_int(r, "device", 0);
-	response res;
+	response res = { 0 };
 	struct dm_config_node *pv;
 
 	buffer_init( &res.buffer );
@@ -364,7 +364,7 @@ static response vg_list(lvmetad_state *s, request r)
 	struct dm_hash_node *n;
 	const char *id;
 	const char *name;
-	response res;
+	response res = { 0 };
 
 	buffer_init( &res.buffer );
 
@@ -434,7 +434,7 @@ static response vg_lookup(lvmetad_state *s, request r)
 {
 	struct dm_config_tree *cft;
 	struct dm_config_node *metadata, *n;
-	response res;
+	response res = { 0 };
 
 	const char *uuid = daemon_request_str(r, "uuid", NULL);
 	const char *name = daemon_request_str(r, "name", NULL);
@@ -492,7 +492,6 @@ static response vg_lookup(lvmetad_state *s, request r)
 	if (!(n = n->sib = dm_config_clone_node(res.cft, metadata, 1)))
 		goto bad;
 	n->parent = res.cft->root;
-	res.error = 0;
 	unlock_vg(s, uuid);
 
 	update_pv_status(s, res.cft, n, 1); /* FIXME report errors */
@@ -987,7 +986,7 @@ static void _dump_pairs(struct buffer *buf, struct dm_hash_table *ht, const char
 
 static response dump(lvmetad_state *s)
 {
-	response res;
+	response res = { 0 };
 	struct buffer *b = &res.buffer;
 
 	buffer_init(b);

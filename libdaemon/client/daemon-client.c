@@ -27,7 +27,7 @@
 
 daemon_handle daemon_open(daemon_info i) {
 	daemon_handle h = { .protocol_version = 0, .error = 0 };
-	daemon_reply r = { .cft = NULL };
+	daemon_reply r = { 0 };
 	struct sockaddr_un sockaddr = { .sun_family = AF_UNIX };
 
 	if ((h.socket_fd = socket(PF_UNIX, SOCK_STREAM /* | SOCK_NONBLOCK */, 0)) < 0)
@@ -72,7 +72,7 @@ error:
 daemon_reply daemon_send(daemon_handle h, daemon_request rq)
 {
 	struct buffer buffer;
-	daemon_reply reply = { .cft = NULL, .error = 0 };
+	daemon_reply reply = { 0 };
 	assert(h.socket_fd >= 0);
 	buffer = rq.buffer;
 
@@ -104,7 +104,7 @@ void daemon_reply_destroy(daemon_reply r) {
 
 daemon_reply daemon_send_simple_v(daemon_handle h, const char *id, va_list ap)
 {
-	static const daemon_reply err = { .error = ENOMEM, .buffer = { 0, 0, NULL }, .cft = NULL };
+	static const daemon_reply err = { .error = ENOMEM };
 	daemon_request rq = { .cft = NULL };
 	daemon_reply repl;
 
