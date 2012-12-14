@@ -827,7 +827,7 @@ static response pv_found(lvmetad_state *s, request r)
 	uint64_t device;
 	struct dm_config_tree *cft, *pvmeta_old_dev = NULL, *pvmeta_old_pvid = NULL;
 	char *old;
-	const char *pvid_dup;
+	char *pvid_dup;
 	int complete = 0, orphan = 0;
 	int64_t seqno = -1, seqno_old = -1;
 
@@ -854,13 +854,23 @@ static response pv_found(lvmetad_state *s, request r)
 	if (!(cft = dm_config_create()) ||
 	    !(cft->root = dm_config_clone_node(cft, pvmeta, 0))) {
 		unlock_pvid_to_pvmeta(s);
+		if (cft)
+			dm_config_destroy(cft);
 		return reply_fail("out of memory");
 	}
 
-	pvid_dup = dm_strdup(pvid);
+	if (!(pvid_dup = dm_strdup(pvid))) {
+		unlock_pvid_to_pvmeta(s);
+		dm_config_destroy(cft);
+		return reply_fail("out of memory");
+	}
+
 	if (!dm_hash_insert(s->pvid_to_pvmeta, pvid, cft) ||
 	    !dm_hash_insert_binary(s->device_to_pvid, &device, sizeof(device), (void*)pvid_dup)) {
 		unlock_pvid_to_pvmeta(s);
+		dm_hash_remove(s->pvid_to_pvmeta, pvid);
+		dm_config_destroy(cft);
+		dm_free(pvid_dup);
 		return reply_fail("out of memory");
 	}
 	if (pvmeta_old_pvid)
