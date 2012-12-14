@@ -1312,6 +1312,44 @@ liblvm_lvm_lv_list_lvsegs(lvobject *self)
 	return pytuple;
 }
 
+static PyObject *
+liblvm_lvm_vg_create_lv_snapshot(lvobject *self, PyObject *args)
+{
+	const char *vgname;
+	uint64_t size;
+	unsigned long asize;
+	lvobject *lvobj;
+	vgobject *vgobj;
+        const char *selfname = NULL;
+
+	LV_VALID(self);
+
+	if (!PyArg_ParseTuple(args, "sl", &vgname, &asize)) {
+		return NULL;
+	}
+        size = asize;
+
+	if ((lvobj = PyObject_New(lvobject, &LibLVMlvType)) == NULL)
+		return NULL;
+
+	/* Initialize the parent ptr in case lv create fails and we dealloc lvobj */
+	lvobj->parent_vgobj = NULL;
+
+        selfname = lvm_lv_get_name(self->lv);
+        vgobj = self->parent_vgobj;
+	if ((lvobj->lv = lvm_vg_create_lv_snapshot(vgobj->vg, selfname,
+                                                   vgname, size)) == NULL) {
+		PyErr_SetObject(LibLVMError, liblvm_get_last_error());
+		Py_DECREF(lvobj);
+		return NULL;
+	}
+
+	lvobj->parent_vgobj = vgobj;
+	Py_INCREF(lvobj->parent_vgobj);
+
+	return (PyObject *)lvobj;
+}
+
 /* PV Methods */
 
 #define PV_VALID(pvobject)						\
@@ -1580,6 +1618,7 @@ static PyMethodDef liblvm_lv_methods[] = {
 	{ "rename",		(PyCFunction)liblvm_lvm_lv_rename, METH_VARARGS },
 	{ "resize",		(PyCFunction)liblvm_lvm_lv_resize, METH_VARARGS },
 	{ "listLVsegs",		(PyCFunction)liblvm_lvm_lv_list_lvsegs, METH_NOARGS },
+	{ "snapshot",	(PyCFunction)liblvm_lvm_vg_create_lv_snapshot, METH_VARARGS },
 	{ NULL,	     NULL}   /* sentinel */
 };
 
