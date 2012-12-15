@@ -67,13 +67,6 @@ static void destroy_metadata_hashes(lvmetad_state *s)
 	dm_hash_destroy(s->vgid_to_metadata);
 	dm_hash_destroy(s->vgid_to_vgname);
 	dm_hash_destroy(s->vgname_to_vgid);
-
-	n = dm_hash_get_first(s->device_to_pvid);
-	while (n) {
-		dm_free(dm_hash_get_data(s->device_to_pvid, n));
-		n = dm_hash_get_next(s->device_to_pvid, n);
-	}
-
 	dm_hash_destroy(s->device_to_pvid);
 	dm_hash_destroy(s->pvid_to_vgid);
 }
@@ -768,7 +761,6 @@ static response pv_gone(lvmetad_state *s, request r)
 	const char *pvid = daemon_request_str(r, "uuid", NULL);
 	int64_t device = daemon_request_int(r, "device", 0);
 	struct dm_config_tree *pvmeta;
-	char *pvid_old;
 
 	DEBUGLOG(s, "pv_gone: %s / %" PRIu64, pvid, device);
 
@@ -783,14 +775,10 @@ static response pv_gone(lvmetad_state *s, request r)
 	DEBUGLOG(s, "pv_gone (updated): %s / %" PRIu64, pvid, device);
 
 	pvmeta = dm_hash_lookup(s->pvid_to_pvmeta, pvid);
-	pvid_old = dm_hash_lookup_binary(s->device_to_pvid, &device, sizeof(device));
 	dm_hash_remove_binary(s->device_to_pvid, &device, sizeof(device));
 	dm_hash_remove(s->pvid_to_pvmeta, pvid);
 	vg_remove_if_missing(s, dm_hash_lookup(s->pvid_to_vgid, pvid));
 	unlock_pvid_to_pvmeta(s);
-
-	if (pvid_old)
-		dm_free(pvid_old);
 
 	if (pvmeta) {
 		dm_config_destroy(pvmeta);
@@ -826,8 +814,8 @@ static response pv_found(lvmetad_state *s, request r)
 	struct dm_config_node *pvmeta = dm_config_find_node(r.cft->root, "pvmeta");
 	uint64_t device;
 	struct dm_config_tree *cft, *pvmeta_old_dev = NULL, *pvmeta_old_pvid = NULL;
-	char *old;
-	char *pvid_dup;
+	const char *old;
+	const char *pvid_dup;
 	int complete = 0, orphan = 0;
 	int64_t seqno = -1, seqno_old = -1;
 
@@ -849,8 +837,6 @@ static response pv_found(lvmetad_state *s, request r)
 
 	DEBUGLOG(s, "pv_found %s, vgid = %s, device = %" PRIu64 ", old = %s", pvid, vgid, device, old);
 
-	dm_free(old);
-
 	if (!(cft = dm_config_create()) ||
 	    !(cft->root = dm_config_clone_node(cft, pvmeta, 0))) {
 		unlock_pvid_to_pvmeta(s);
@@ -859,7 +845,7 @@ static response pv_found(lvmetad_state *s, request r)
 		return reply_fail("out of memory");
 	}
 
-	if (!(pvid_dup = dm_strdup(pvid))) {
+	if (!(pvid_dup = dm_pool_strdup(dm_config_memory(cft), pvid))) {
 		unlock_pvid_to_pvmeta(s);
 		dm_config_destroy(cft);
 		return reply_fail("out of memory");
@@ -870,7 +856,6 @@ static response pv_found(lvmetad_state *s, request r)
 		unlock_pvid_to_pvmeta(s);
 		dm_hash_remove(s->pvid_to_pvmeta, pvid);
 		dm_config_destroy(cft);
-		dm_free(pvid_dup);
 		return reply_fail("out of memory");
 	}
 	if (pvmeta_old_pvid)
