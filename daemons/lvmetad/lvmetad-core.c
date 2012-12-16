@@ -601,19 +601,23 @@ static int remove_metadata(lvmetad_state *s, const char *vgid, int update_pvids)
 	lock_vgid_to_metadata(s);
 	old = dm_hash_lookup(s->vgid_to_metadata, vgid);
 	oldname = dm_hash_lookup(s->vgid_to_vgname, vgid);
-	unlock_vgid_to_metadata(s);
 
-	if (!old)
+	if (!old) {
+		unlock_vgid_to_metadata(s);
 		return 0;
+	}
+
 	assert(oldname);
 
-	if (update_pvids)
-		/* FIXME: What should happen when update fails */
-		update_pvid_to_vgid(s, old, "#orphan", 0);
 	/* need to update what we have since we found a newer version */
 	dm_hash_remove(s->vgid_to_metadata, vgid);
 	dm_hash_remove(s->vgid_to_vgname, vgid);
 	dm_hash_remove(s->vgname_to_vgid, oldname);
+	unlock_vgid_to_metadata(s);
+
+	if (update_pvids)
+		/* FIXME: What should happen when update fails */
+		update_pvid_to_vgid(s, old, "#orphan", 0);
 	dm_config_destroy(old);
 	return 1;
 }
