@@ -326,16 +326,7 @@ lv_t lvm_lv_snapshot(const lv_t lv, const char *snap_name, uint64_t max_snap_siz
 	if (!vg_check_write_mode(lv->vg))
 		return NULL;
 
-	/* Determine the correct size */
-	if (0 == max_snap_size){
-		size = lv->size;
-	} else {
-		size = max_snap_size >> SECTOR_SHIFT;
-
-		if (size > lv->size) {
-			size = lv->size;
-		}
-	}
+	size = max_snap_size >> SECTOR_SHIFT;
 
 	if (!(extents = extents_from_size(lv->vg->cmd, size,
 					  lv->vg->extent_size))) {
