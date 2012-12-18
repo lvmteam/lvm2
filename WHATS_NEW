@@ -1,5 +1,7 @@
 Version 2.02.99 - 
 ===================================
+  Fix possible race while removing metadata from lvmetad.
+  Fix possible deadlock when querying and updating lvmetad at the same time.
   Check lvmcache_info_from_pvid and recall only when needed in _pv_read.
   Check for memory failure of dm_config_write_node() in lvmetad.
   Fix socket leak on error path in lvmetad's handle_connect.
