@@ -1,5 +1,7 @@
 Version 2.02.99 - 
 ===================================
+  Limit RAID device replacement to repair only if LV is not in-sync.
+  Disallow RAID device replacement or repair on inactive LVs.
   Fix possible race while removing metadata from lvmetad.
   Fix possible deadlock when querying and updating lvmetad at the same time.
   Check lvmcache_info_from_pvid and recall only when needed in _pv_read.

@@ -1617,6 +1617,18 @@ int lv_raid_replace(struct logical_volume *lv,
 	dm_list_init(&new_meta_lvs);
 	dm_list_init(&new_data_lvs);
 
+	if (!lv_is_active(lv)) {
+		log_error("%s/%s must be active to perform this operation.",
+			  lv->vg->name, lv->name);
+		return 0;
+	}
+
+	if (!mirror_in_sync() && !_raid_in_sync(lv)) {
+		log_error("Unable to replace devices in %s/%s while it is"
+			  " not in-sync.", lv->vg->name, lv->name);
+		return 0;
+	}
+
 	/*
 	 * How many sub-LVs are being removed?
 	 */

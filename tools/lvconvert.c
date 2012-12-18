@@ -1566,6 +1566,7 @@ static int lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *lp
 	struct dm_list *failed_pvs;
 	struct cmd_context *cmd = lv->vg->cmd;
 	struct lv_segment *seg = first_seg(lv);
+	percent_t sync_percent;
 
 	if (!arg_count(cmd, type_ARG))
 		lp->segtype = seg->segtype;
@@ -1623,6 +1624,32 @@ static int lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *lp
 		return lv_raid_replace(lv, lp->replace_pvh, lp->pvh);
 
 	if (arg_count(cmd, repair_ARG)) {
+		if (!lv_is_active(lv)) {
+			log_error("%s/%s must be active to perform"
+				  "this operation.", lv->vg->name, lv->name);
+			return 0;
+		}
+
+		if (!lv_raid_percent(lv, &sync_percent)) {
+			log_error("Unable to determine sync status of %s/%s.",
+				  lv->vg->name, lv->name);
+			return 0;
+		}
+
+		if (sync_percent != PERCENT_100) {
+			log_error("WARNING: %s/%s is not in-sync.",
+				  lv->vg->name, lv->name);
+			log_error("WARNING: Portions of the array may"
+				  " be unrecoverable.");
+
+			/*
+			 * The kernel will not allow a device to be replaced
+			 * in an array that is not in-sync unless we override
+			 * by forcing the array to be considered "in-sync".
+			 */
+			init_mirror_in_sync(1);
+		}
+
 		_lvconvert_raid_repair_ask(cmd, &replace);
 
 		if (replace) {
