@@ -241,6 +241,7 @@ static int _pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 out:
+	sync_local_dev_names(cmd);
 	unlock_vg(cmd, VG_GLOBAL);
 
 	return ret;
