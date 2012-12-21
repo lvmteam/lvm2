@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Fix autoactivation to not autoactivate VG/LV on each change of the PVs used.
   Limit RAID device replacement to repair only if LV is not in-sync.
   Disallow RAID device replacement or repair on inactive LVs.
   Fix possible race while removing metadata from lvmetad.

@@ -17,10 +17,18 @@
 SUBSYSTEM!="block", GOTO="lvm_end"
 (LVM_EXEC_RULE)
 
-# Device-mapper devices are processed only on change event or on supported synthesized event.
-KERNEL=="dm-[0-9]*", ENV{DM_UDEV_RULES_VSN}!="?*", GOTO="lvm_end"
-
 # Only process devices already marked as a PV - this requires blkid to be called before.
-ENV{ID_FS_TYPE}=="LVM2_member|LVM1_member", RUN+="(LVM_EXEC)/lvm pvscan --cache --activate ay --major $major --minor $minor"
+ENV{ID_FS_TYPE}!="LVM2_member|LVM1_member", GOTO="lvm_end"
+
+ACTION=="remove", GOTO="lvm_scan"
+
+# If the PV is not a dm device, scan only after device addition (ADD event)
+KERNEL!="dm-[0-9]*", ACTION!="add", GOTO="lvm_end"
+
+# If the PV is a dm device, scan only after proper mapping activation (CHANGE event + DM_ACTIVATION=1)
+KERNEL=="dm-[0-9]*", ENV{DM_ACTIVATION}!="1", GOTO="lvm_end"
+
+LABEL="lvm_scan"
+RUN+="(LVM_EXEC)/lvm pvscan --cache --activate ay --major $major --minor $minor"
 
 LABEL="lvm_end"
