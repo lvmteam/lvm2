@@ -118,22 +118,6 @@ void lvmetad_set_socket(const char *sock)
 	_lvmetad_socket = sock;
 }
 
-static daemon_reply _lvmetad_send(const char *id, ...);
-
-static int _token_update(void)
-{
-	daemon_reply repl = _lvmetad_send("token_update", NULL);
-
-	if (repl.error || strcmp(daemon_reply_str(repl, "response", ""), "OK")) {
-		daemon_reply_destroy(repl);
-		return 0;
-	}
-
-	daemon_reply_destroy(repl);
-	return 1;
-}
-
-
 static daemon_reply _lvmetad_send(const char *id, ...)
 {
 	va_list ap;
@@ -165,6 +149,19 @@ retry:
 	}
 
 	return repl;
+}
+
+static int _token_update(void)
+{
+	daemon_reply repl = _lvmetad_send("token_update", NULL);
+
+	if (repl.error || strcmp(daemon_reply_str(repl, "response", ""), "OK")) {
+		daemon_reply_destroy(repl);
+		return 0;
+	}
+
+	daemon_reply_destroy(repl);
+	return 1;
 }
 
 /*
@@ -222,7 +219,7 @@ static int _read_mda(struct lvmcache_info *info,
 static struct lvmcache_info *_pv_populate_lvmcache(
 	struct cmd_context *cmd, struct dm_config_node *cn, dev_t fallback)
 {
-	struct device *device;
+	struct device *dev;
 	struct id pvid, vgid;
 	char mda_id[32];
 	char da_id[32];
@@ -246,11 +243,11 @@ static struct lvmcache_info *_pv_populate_lvmcache(
 		return NULL;
 	}
 
-	device = dev_cache_get_by_devt(devt, cmd->filter);
-	if (!device && fallback)
-		device = dev_cache_get_by_devt(fallback, cmd->filter);
+	dev = dev_cache_get_by_devt(devt, cmd->filter);
+	if (!dev && fallback)
+		dev = dev_cache_get_by_devt(fallback, cmd->filter);
 
-	if (!device) {
+	if (!dev) {
 		log_error("No device found for PV %s.", pvid_txt);
 		return NULL;
 	}
@@ -269,7 +266,7 @@ static struct lvmcache_info *_pv_populate_lvmcache(
 	if (!vgname)
 		vgname = fmt->orphan_vg_name;
 
-	if (!(info = lvmcache_add(fmt->labeller, (const char *)&pvid, device,
+	if (!(info = lvmcache_add(fmt->labeller, (const char *)&pvid, dev,
 				  vgname, (const char *)&vgid, 0)))
 		return_NULL;
 
@@ -680,7 +677,7 @@ static int _extract_mdas(struct lvmcache_info *info, struct dm_config_tree *cft,
 	return 1;
 }
 
-int lvmetad_pv_found(const struct id *pvid, struct device *device, const struct format_type *fmt,
+int lvmetad_pv_found(const struct id *pvid, struct device *dev, const struct format_type *fmt,
 		     uint64_t label_sector, struct volume_group *vg, activation_handler handler)
 {
 	char uuid[64];
@@ -708,7 +705,7 @@ int lvmetad_pv_found(const struct id *pvid, struct device *device, const struct 
 	}
 
 	if (!config_make_nodes(pvmeta, pvmeta->root, NULL,
-			       "device = %"PRId64, (int64_t) device->dev,
+			       "device = %"PRId64, (int64_t) dev->dev,
 			       "dev_size = %"PRId64, (int64_t) (info ? lvmcache_device_size(info) : 0),
 			       "format = %s", fmt->name,
 			       "label_sector = %"PRId64, (int64_t) label_sector,
@@ -768,7 +765,7 @@ int lvmetad_pv_found(const struct id *pvid, struct device *device, const struct 
 	return result;
 }
 
-int lvmetad_pv_gone(dev_t device, const char *pv_name, activation_handler handler)
+int lvmetad_pv_gone(dev_t devno, const char *pv_name, activation_handler handler)
 {
 	daemon_reply reply;
 	int result;
@@ -784,7 +781,7 @@ int lvmetad_pv_gone(dev_t device, const char *pv_name, activation_handler handle
          *        the whole stack from top to bottom (not yet upstream).
          */
 
-	reply = _lvmetad_send("pv_gone", "device = %" PRId64, (int64_t) device, NULL);
+	reply = _lvmetad_send("pv_gone", "device = %" PRId64, (int64_t) devno, NULL);
 
 	result = _lvmetad_handle_reply(reply, "drop PV", pv_name, &found);
 	/* We don't care whether or not the daemon had the PV cached. */

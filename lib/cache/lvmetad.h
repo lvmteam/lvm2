@@ -97,7 +97,7 @@ int lvmetad_vg_remove(struct volume_group *vg);
  * number on the cached and on the discovered PV match but the metadata content
  * does not.
  */
-int lvmetad_pv_found(const struct id *pvid, struct device *device,
+int lvmetad_pv_found(const struct id *pvid, struct device *dev,
 		     const struct format_type *fmt, uint64_t label_sector,
 		     struct volume_group *vg, activation_handler handler);
 
@@ -154,7 +154,7 @@ int lvmetad_pvscan_all_devs(struct cmd_context *cmd, activation_handler handler)
 #    define lvmetad_release_token()	do { } while (0)
 #    define lvmetad_vg_update(vg)	(1)
 #    define lvmetad_vg_remove(vg)	(1)
-#    define lvmetad_pv_found(pvid, device, fmt, label_sector, vg, handler)	(1)
+#    define lvmetad_pv_found(pvid, dev, fmt, label_sector, vg, handler)	(1)
 #    define lvmetad_pv_gone(devno, pv_name, handler)	(1)
 #    define lvmetad_pv_gone_by_dev(dev, handler)	(1)
 #    define lvmetad_pv_list_to_lvmcache(cmd)	(1)
