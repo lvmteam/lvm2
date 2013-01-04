@@ -877,7 +877,7 @@ static int _get_settings(struct cmd_context *cmd)
 		init_ignorelockingfailure(0);
 
 	if (!arg_count(cmd, sysinit_ARG))
-		lvmetad_warning();
+		lvmetad_connect_or_warn();
 
 	if (arg_count(cmd, nosuffix_ARG))
 		cmd->current_settings.suffix = 0;

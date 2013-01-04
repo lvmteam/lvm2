@@ -20,7 +20,6 @@
 #include "lvmcache.h"
 #include "lvmetad-client.h"
 #include "format-text.h" // TODO for disk_locn, used as a DA representation
-#include "assert.h"
 #include "crc.h"
 
 static daemon_handle _lvmetad;
@@ -49,19 +48,26 @@ void lvmetad_init(struct cmd_context *cmd)
 
 static void _lvmetad_connect()
 {
-	if (_lvmetad_use && _lvmetad_socket && !_lvmetad_connected) {
-		assert(_lvmetad_socket);
-		_lvmetad = lvmetad_open(_lvmetad_socket);
-		if (_lvmetad.socket_fd >= 0 && !_lvmetad.error)
-			_lvmetad_connected = 1;
+	if (!_lvmetad_use || !_lvmetad_socket || _lvmetad_connected)
+		return;
+
+	_lvmetad = lvmetad_open(_lvmetad_socket);
+	if (_lvmetad.socket_fd >= 0 && !_lvmetad.error) {
+		log_debug("Successfully connected to lvmetad on fd %d.",
+			  _lvmetad.socket_fd);
+		_lvmetad_connected = 1;
 	}
 }
 
-void lvmetad_warning(void)
+void lvmetad_connect_or_warn(void)
 {
+	if (!_lvmetad_use)
+		return;
+
 	if (!_lvmetad_connected)
 		_lvmetad_connect();
-	if (_lvmetad_use && (_lvmetad.socket_fd < 0 || _lvmetad.error))
+
+	if ((_lvmetad.socket_fd < 0 || _lvmetad.error))
 		log_warn("WARNING: Failed to connect to lvmetad: %s. Falling back to internal scanning.",
 			 strerror(_lvmetad.error));
 }
@@ -70,8 +76,13 @@ int lvmetad_active(void)
 {
 	if (!_lvmetad_use)
 		return 0;
+
 	if (!_lvmetad_connected)
 		_lvmetad_connect();
+
+	if ((_lvmetad.socket_fd < 0 || _lvmetad.error))
+		log_debug("Failed to connect to lvmetad: %s.", strerror(_lvmetad.error));
+
 	return _lvmetad_connected;
 }
 
