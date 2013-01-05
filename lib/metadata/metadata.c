@@ -2659,6 +2659,13 @@ int vg_write(struct volume_group *vg)
 		}
 	}
 
+	/*
+	 * If precommit is not supported, changes take effect immediately.
+	 * FIXME Replace with a more-accurate FMT_COMMIT flag.
+	 */
+	if (!(vg->fid->fmt->features & FMT_PRECOMMIT) && !lvmetad_vg_update(vg))
+		return_0;
+
 	return 1;
 }
 
@@ -2707,8 +2714,9 @@ int vg_commit(struct volume_group *vg)
 		return cache_updated;
 	}
 
-	if (!lvmetad_vg_update(vg))
-		return 0;
+	/* Skip if we already did this in vg_write */
+	if ((vg->fid->fmt->features & FMT_PRECOMMIT) && !lvmetad_vg_update(vg))
+		return_0;
 
 	cache_updated = _vg_commit_mdas(vg);
 
@@ -3511,7 +3519,7 @@ struct logical_volume *lv_from_lvid(struct cmd_context *cmd, const char *lvid_s,
 
 	lvid = (const union lvid *) lvid_s;
 
-	log_very_verbose("Finding volume group for uuid %s", lvid_s);
+	log_very_verbose("Finding %svolume group for uuid %s", precommitted ? "precommitted " : "", lvid_s);
 	if (!(vg = _vg_read_by_vgid(cmd, (const char *)lvid->id[0].uuid, precommitted))) {
 		log_error("Volume group for uuid not found: %s", lvid_s);
 		return NULL;
@@ -3532,7 +3540,6 @@ out:
 	release_vg(vg);
 	return NULL;
 }
-
 
 const char *find_vgname_from_pvid(struct cmd_context *cmd,
 				  const char *pvid)

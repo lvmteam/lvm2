@@ -72,6 +72,7 @@ void lvmetad_set_token(const struct dm_config_value *filter);
  */
 void lvmetad_release_token(void);
 
+// FIXME What's described here doesn't appear to be implemented yet.
 /*
  * Send a new version of VG metadata to lvmetad. This is normally called after
  * vg_write but before vg_commit. After vg_commit, lvmetad_vg_commit is called
