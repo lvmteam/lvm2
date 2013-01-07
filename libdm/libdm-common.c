@@ -110,7 +110,7 @@ void dm_lib_init(void)
 __attribute__((format(printf, 5, 0)))
 static void _default_log_line(int level,
 	    const char *file __attribute__((unused)),
-	    int line __attribute__((unused)), int dm_errno, 
+	    int line __attribute__((unused)), int dm_errno_or_class, 
 	    const char *f, va_list ap)
 {
 	int use_stderr = level & _LOG_STDERR;
@@ -134,13 +134,13 @@ static void _default_log_line(int level,
 __attribute__((format(printf, 5, 6)))
 static void _default_log_with_errno(int level,
 	    const char *file __attribute__((unused)),
-	    int line __attribute__((unused)), int dm_errno, 
+	    int line __attribute__((unused)), int dm_errno_or_class, 
 	    const char *f, ...)
 {
 	va_list ap;
 
 	va_start(ap, f);
-	_default_log_line(level, file, line, dm_errno, f, ap);
+	_default_log_line(level, file, line, dm_errno_or_class, f, ap);
 	va_end(ap);
 }
 

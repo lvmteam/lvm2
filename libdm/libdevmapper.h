@@ -49,10 +49,12 @@ extern "C" {
  * The library user may wish to register their own
  * logging function.  By default errors go to stderr.
  * Use dm_log_with_errno_init(NULL) to restore the default log fn.
+ * Error messages may have a non-zero errno.
+ * Debug messages may have a non-zero class.
  */
 
 typedef void (*dm_log_with_errno_fn) (int level, const char *file, int line,
-				      int dm_errno, const char *f, ...)
+				      int dm_errno_or_class, const char *f, ...)
     __attribute__ ((format(printf, 5, 6)));
 
 void dm_log_with_errno_init(dm_log_with_errno_fn fn);

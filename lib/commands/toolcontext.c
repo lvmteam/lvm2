@@ -122,6 +122,48 @@ static void _get_sysfs_dir(struct cmd_context *cmd)
 	strncpy(cmd->sysfs_dir, sys_mnt, sizeof(cmd->sysfs_dir));
 }
 
+static int _parse_debug_classes(struct cmd_context *cmd)
+{
+	const struct dm_config_node *cn;
+	const struct dm_config_value *cv;
+	int debug_classes = 0;
+
+	if (!(cn = find_config_tree_node(cmd, "log/debug_classes")))
+		return DEFAULT_LOGGED_DEBUG_CLASSES;
+
+	for (cv = cn->v; cv; cv = cv->next) {
+		if (cv->type != DM_CFG_STRING) {
+			log_verbose("log/debug_classes contains a value "
+				    "which is not a string.  Ignoring.");
+			continue;
+		}
+
+		if (!strcasecmp(cv->v.str, "all"))
+			return -1;
+
+		if (!strcasecmp(cv->v.str, "memory"))
+			debug_classes |= LOG_CLASS_MEM;
+		else if (!strcasecmp(cv->v.str, "devices"))
+			debug_classes |= LOG_CLASS_DEVS;
+		else if (!strcasecmp(cv->v.str, "activation"))
+			debug_classes |= LOG_CLASS_ACTIVATION;
+		else if (!strcasecmp(cv->v.str, "allocation"))
+			debug_classes |= LOG_CLASS_ALLOC;
+		else if (!strcasecmp(cv->v.str, "lvmetad"))
+			debug_classes |= LOG_CLASS_LVMETAD;
+		else if (!strcasecmp(cv->v.str, "metadata"))
+			debug_classes |= LOG_CLASS_METADATA;
+		else if (!strcasecmp(cv->v.str, "cache"))
+			debug_classes |= LOG_CLASS_CACHE;
+		else if (!strcasecmp(cv->v.str, "locking"))
+			debug_classes |= LOG_CLASS_LOCKING;
+		else
+			log_verbose("Unrecognised value for log/debug_classes: %s", cv->v.str);
+	}
+
+	return debug_classes;
+}
+
 static void _init_logging(struct cmd_context *cmd)
 {
 	int append = 1;
@@ -197,6 +239,10 @@ static void _init_logging(struct cmd_context *cmd)
 
 	init_log_while_suspended(find_config_tree_int(cmd,
 						 "log/activation", 0));
+
+	cmd->default_settings.debug_classes = _parse_debug_classes(cmd);
+	log_debug("Setting log debug classes to %d", cmd->default_settings.debug_classes);
+	init_debug_classes_logged(cmd->default_settings.debug_classes);
 
 	t = time(NULL);
 	ctime_r(&t, &timebuf[0]);

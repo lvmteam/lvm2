@@ -16,7 +16,7 @@
 #ifndef _LVM_LOGGING_H
 #define _LVM_LOGGING_H
 
-void print_log(int level, const char *file, int line, int dm_errno,
+void print_log(int level, const char *file, int line, int dm_errno_or_class,
 	       const char *format, ...)
     __attribute__ ((format(printf, 5, 6)));
 
@@ -26,10 +26,13 @@ void print_log(int level, const char *file, int line, int dm_errno,
 #define LOG_LINE_WITH_ERRNO(l, e, x...) \
     print_log(l, __FILE__, __LINE__ , e, ## x)
 
+#define LOG_LINE_WITH_CLASS(l, c, x...) \
+    print_log(l, __FILE__, __LINE__ , c, ## x)
+
 #include "log.h"
 
 typedef void (*lvm2_log_fn_t) (int level, const char *file, int line,
-			       int dm_errno, const char *message);
+			       int dm_errno_or_class, const char *message);
 
 void init_log_fn(lvm2_log_fn_t log_fn);
 

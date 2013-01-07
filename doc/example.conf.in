@@ -307,6 +307,15 @@ log {
     # Set this if you want log messages during activation.
     # Don't use this in low memory situations (can deadlock).
     # activation = 0
+
+    # Some debugging messages are assigned to a class and only appear
+    # in debug output if the class is listed here.
+    # Classes currently available:
+    #   memory, devices, activation, allocation, lvmetad, metadata, cache,
+    #   locking
+    # Use "all" to see everything.
+    debug_classes = [ "memory", "devices", "activation", "allocation",
+		      "lvmetad", "metadata", "cache", "locking" ]
 }
 
 # Configuration of metadata backups and archiving.  In LVM2 when we

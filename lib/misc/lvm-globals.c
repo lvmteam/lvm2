@@ -31,6 +31,7 @@ static int _full_scan_done = 0;	/* Restrict to one full scan during each cmd */
 static int _obtain_device_list_from_udev = DEFAULT_OBTAIN_DEVICE_LIST_FROM_UDEV;
 static int _trust_cache = 0; /* Don't scan when incomplete VGs encountered */
 static int _debug_level = 0;
+static int _debug_classes_logged = DEFAULT_LOGGED_DEBUG_CLASSES;
 static int _log_cmd_name = 0;
 static int _ignorelockingfailure = 0;
 static int _security_level = SECURITY_LEVEL;
@@ -261,6 +262,20 @@ int ignore_suspended_devices(void)
 void init_debug(int level)
 {
 	_debug_level = level;
+}
+
+void init_debug_classes_logged(int classes)
+{
+	_debug_classes_logged = classes;
+}
+
+int debug_class_is_logged(int class)
+{
+	/* If no class given, log it */
+	if (!class)
+		return 1;
+
+	return (_debug_classes_logged & class) ? 1 : 0;
 }
 
 int verbose_level(void)

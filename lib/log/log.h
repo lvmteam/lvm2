@@ -54,7 +54,30 @@
 #define _LOG_FATAL 2
 #define INTERNAL_ERROR "Internal error: "
 
+/*
+ * Classes available for debug log messages.
+ * These are also listed in doc/example.conf
+ * and lib/commands/toolcontext.c:_parse_debug_classes()
+ */
+#define LOG_CLASS_MEM		0x0001	/* "memory" */
+#define LOG_CLASS_DEVS		0x0002	/* "devices" */
+#define LOG_CLASS_ACTIVATION	0x0004	/* "activation" */
+#define LOG_CLASS_ALLOC		0x0008	/* "allocation" */
+#define LOG_CLASS_LVMETAD	0x0010	/* "lvmetad" */
+#define LOG_CLASS_METADATA	0x0020	/* "metadata" */
+#define LOG_CLASS_CACHE		0x0040	/* "cache" */
+#define LOG_CLASS_LOCKING	0x0080	/* "locking" */
+
 #define log_debug(x...) LOG_LINE(_LOG_DEBUG, x)
+#define log_debug_mem(x...) LOG_LINE_WITH_CLASS(_LOG_DEBUG, LOG_CLASS_MEM, x)
+#define log_debug_devs(x...) LOG_LINE_WITH_CLASS(_LOG_DEBUG, LOG_CLASS_DEVS, x)
+#define log_debug_activation(x...) LOG_LINE_WITH_CLASS(_LOG_DEBUG, LOG_CLASS_ACTIVATION, x)
+#define log_debug_alloc(x...) LOG_LINE_WITH_CLASS(_LOG_DEBUG, LOG_CLASS_ALLOC, x)
+#define log_debug_lvmetad(x...) LOG_LINE_WITH_CLASS(_LOG_DEBUG, LOG_CLASS_LVMETAD, x)
+#define log_debug_metadata(x...) LOG_LINE_WITH_CLASS(_LOG_DEBUG, LOG_CLASS_METADATA, x)
+#define log_debug_cache(x...) LOG_LINE_WITH_CLASS(_LOG_DEBUG, LOG_CLASS_CACHE, x)
+#define log_debug_locking(x...) LOG_LINE_WITH_CLASS(_LOG_DEBUG, LOG_CLASS_LOCKING, x)
+
 #define log_info(x...) LOG_LINE(_LOG_INFO, x)
 #define log_notice(x...) LOG_LINE(_LOG_NOTICE, x)
 #define log_warn(x...) LOG_LINE(_LOG_WARN | _LOG_STDERR, x)

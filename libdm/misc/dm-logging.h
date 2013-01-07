@@ -32,6 +32,9 @@ extern dm_log_with_errno_fn dm_log_with_errno;
 #define LOG_LINE(l, x...) LOG_MESG(l, __FILE__, __LINE__, 0, ## x)
 #define LOG_LINE_WITH_ERRNO(l, e, x...) LOG_MESG(l, __FILE__, __LINE__, e, ## x)
 
+/* Debug messages may have a type instead of an errno */
+#define LOG_LINE_WITH_CLASS(l, c, x...) LOG_MESG(l, __FILE__, __LINE__, c, ## x)
+
 #include "log.h"
 
 #endif
