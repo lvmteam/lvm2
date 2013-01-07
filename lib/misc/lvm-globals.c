@@ -136,9 +136,9 @@ void init_is_static(unsigned value)
 void init_udev_checking(int checking)
 {
 	if ((_udev_checking = checking))
-		log_debug("LVM udev checking enabled");
+		log_debug_activation("LVM udev checking enabled");
 	else
-		log_debug("LVM udev checking disabled");
+		log_debug_activation("LVM udev checking disabled");
 }
 
 void init_retry_deactivation(int retry)
@@ -149,9 +149,9 @@ void init_retry_deactivation(int retry)
 void init_activation_checks(int checks)
 {
 	if ((_activation_checks = checks))
-		log_debug("LVM activation checks enabled");
+		log_debug_activation("LVM activation checks enabled");
 	else
-		log_debug("LVM activation checks disabled");
+		log_debug_activation("LVM activation checks disabled");
 }
 
 void init_dev_disable_after_error_count(int value)

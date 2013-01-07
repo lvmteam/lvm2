@@ -971,6 +971,7 @@ int help(struct cmd_context *cmd __attribute__((unused)), int argc, char **argv)
 static void _apply_settings(struct cmd_context *cmd)
 {
 	init_debug(cmd->current_settings.debug);
+	init_debug_classes_logged(cmd->default_settings.debug_classes);
 	init_verbose(cmd->current_settings.verbose + VERBOSE_BASE_LEVEL);
 	init_silent(cmd->current_settings.silent);
 	init_test(cmd->current_settings.test);

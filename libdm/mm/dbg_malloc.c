@@ -117,7 +117,7 @@ void *dm_malloc_aux_debug(size_t s, const char *file, int line)
 	if (_mem_stats.bytes > _mem_stats.mbytes)
 		_mem_stats.mbytes = _mem_stats.bytes;
 
-	/* log_debug("Allocated: %u %u %u", nb->id, _mem_stats.blocks_allocated,
+	/* log_debug_mem("Allocated: %u %u %u", nb->id, _mem_stats.blocks_allocated,
 		  _mem_stats.bytes); */
 #ifdef VALGRIND_POOL
 	VALGRIND_MAKE_MEM_UNDEFINED(nb + 1, s);

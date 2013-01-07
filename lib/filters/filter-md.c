@@ -29,13 +29,13 @@ static int _ignore_md(struct dev_filter *f __attribute__((unused)),
 	ret = dev_is_md(dev, NULL);
 
 	if (ret == 1) {
-		log_debug("%s: Skipping md component device", dev_name(dev));
+		log_debug_devs("%s: Skipping md component device", dev_name(dev));
 		return 0;
 	}
 
 	if (ret < 0) {
-		log_debug("%s: Skipping: error in md component detection",
-			  dev_name(dev));
+		log_debug_devs("%s: Skipping: error in md component detection",
+			       dev_name(dev));
 		return 0;
 	}
 

@@ -541,10 +541,10 @@ void dm_tree_node_set_udev_flags(struct dm_tree_node *dnode, uint16_t udev_flags
 	struct dm_info *dinfo = &dnode->info;
 
 	if (udev_flags != dnode->udev_flags)
-		log_debug("Resetting %s (%" PRIu32 ":%" PRIu32
-			  ") udev_flags from 0x%x to 0x%x",
-			  dnode->name, dinfo->major, dinfo->minor,
-			  dnode->udev_flags, udev_flags);
+		log_debug_activation("Resetting %s (%" PRIu32 ":%" PRIu32
+				     ") udev_flags from 0x%x to 0x%x",
+				     dnode->name, dinfo->major, dinfo->minor,
+				     dnode->udev_flags, udev_flags);
 	dnode->udev_flags = udev_flags;
 }
 
@@ -927,8 +927,8 @@ static int _node_has_closed_parents(struct dm_tree_node *node,
 			continue;
 
 		if (info.open_count) {
-			log_debug("Node %s %d:%d has open_count %d", uuid_prefix,
-				  dinfo->major, dinfo->minor, info.open_count);
+			log_debug_activation("Node %s %d:%d has open_count %d", uuid_prefix,
+					     dinfo->major, dinfo->minor, info.open_count);
 			return 0;
 		}
 	}
@@ -1263,13 +1263,13 @@ static int _resume_node(const char *name, uint32_t major, uint32_t minor,
 	log_verbose("Resuming %s (%" PRIu32 ":%" PRIu32 ")", name, major, minor);
 
 	if (!(dmt = dm_task_create(DM_DEVICE_RESUME))) {
-		log_debug("Suspend dm_task creation failed for %s.", name);
+		log_debug_activation("Suspend dm_task creation failed for %s.", name);
 		return 0;
 	}
 
 	/* FIXME Kernel should fill in name on return instead */
 	if (!dm_task_set_name(dmt, name)) {
-		log_debug("Failed to set device name for %s resumption.", name);
+		log_debug_activation("Failed to set device name for %s resumption.", name);
 		goto out;
 	}
 
@@ -1376,7 +1376,7 @@ static int _thin_pool_status_transaction_id(struct dm_tree_node *dnode, uint64_t
 		goto out;
 	}
 
-	log_debug("Thin pool transaction id: %" PRIu64 " status: %s.", *transaction_id, params);
+	log_debug_activation("Thin pool transaction id: %" PRIu64 " status: %s.", *transaction_id, params);
 
 	r = 1;
 out:
@@ -1474,7 +1474,7 @@ static int _node_send_messages(struct dm_tree_node *dnode,
 		return_0;
 
 	if (!_uuid_prefix_matches(uuid, uuid_prefix, uuid_prefix_len)) {
-		log_debug("UUID \"%s\" does not match.", uuid);
+		log_debug_activation("UUID \"%s\" does not match.", uuid);
 		return 1;
 	}
 
@@ -2321,10 +2321,10 @@ static int _emit_segment_line(struct dm_task *dmt, uint32_t major,
 		break;
 	}
 
-	log_debug("Adding target to (%" PRIu32 ":%" PRIu32 "): %" PRIu64
-		  " %" PRIu64 " %s %s", major, minor,
-		  *seg_start, seg->size, target_type_is_raid ? "raid" :
-		  dm_segtypes[seg->type].target, params);
+	log_debug_activation("Adding target to (%" PRIu32 ":%" PRIu32 "): %" PRIu64
+			     " %" PRIu64 " %s %s", major, minor,
+			     *seg_start, seg->size, target_type_is_raid ? "raid" :
+			     dm_segtypes[seg->type].target, params);
 
 	if (!dm_task_add_target(dmt, *seg_start, seg->size,
 				target_type_is_raid ? "raid" :
@@ -2362,8 +2362,8 @@ static int _emit_segment(struct dm_task *dmt, uint32_t major, uint32_t minor,
 		if (ret >= 0)
 			return ret;
 
-		log_debug("Insufficient space in params[%" PRIsize_t
-			  "] for target parameters.", paramsize);
+		log_debug_activation("Insufficient space in params[%" PRIsize_t
+				     "] for target parameters.", paramsize);
 
 		paramsize *= 2;
 	} while (paramsize < MAX_TARGET_PARAMSIZE);
@@ -2428,11 +2428,11 @@ static int _load_node(struct dm_tree_node *dnode)
 			if (!existing_table_size && dnode->props.delay_resume_if_new)
 				dnode->props.size_changed = 0;
 
-			log_debug("Table size changed from %" PRIu64 " to %"
-				  PRIu64 " for %s (%" PRIu32 ":%" PRIu32 ").%s",
-				  existing_table_size, seg_start, dnode->name,
-				  dnode->info.major, dnode->info.minor,
-				  dnode->props.size_changed ? "" : " (Ignoring.)");
+			log_debug_activation("Table size changed from %" PRIu64 " to %"
+					     PRIu64 " for %s (%" PRIu32 ":%" PRIu32 ").%s",
+					     existing_table_size, seg_start, dnode->name,
+					     dnode->info.major, dnode->info.minor,
+					     dnode->props.size_changed ? "" : " (Ignoring.)");
 		}
 	}
 
@@ -3096,8 +3096,8 @@ int dm_tree_node_add_thin_pool_target(struct dm_tree_node *node,
 	dm_list_iterate_items(mseg, &seg->metadata->props.segs) {
 		devsize += mseg->size;
 		if (devsize > max_metadata_size) {
-			log_debug("Ignoring %" PRIu64 " of device.",
-				  devsize - max_metadata_size);
+			log_debug_activation("Ignoring %" PRIu64 " of device.",
+					     devsize - max_metadata_size);
 			mseg->size -= (devsize - max_metadata_size);
 			devsize = max_metadata_size;
 			/* FIXME: drop remaining segs */

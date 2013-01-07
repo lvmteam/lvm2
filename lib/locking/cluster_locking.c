@@ -560,8 +560,8 @@ int query_resource(const char *resource, int *mode)
 		if (decode_lock_type(response[i].response) > *mode)
 			*mode = decode_lock_type(response[i].response);
 
-		log_debug("Lock held for %s, node %s : %s", resource,
-			  response[i].node, response[i].response);
+		log_debug_locking("Lock held for %s, node %s : %s", resource,
+				  response[i].node, response[i].response);
 	}
 
 	_cluster_free_request(response, num_responses);

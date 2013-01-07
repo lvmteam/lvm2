@@ -89,8 +89,8 @@ int detach_pool_lv(struct lv_segment *seg)
 		case DM_THIN_MESSAGE_CREATE_SNAP:
 		case DM_THIN_MESSAGE_CREATE_THIN:
 			if (tmsg->u.lv == seg->lv) {
-				log_debug("Discarding message for LV %s.",
-					  tmsg->u.lv->name);
+				log_debug_metadata("Discarding message for LV %s.",
+						   tmsg->u.lv->name);
 				dm_list_del(&tmsg->list);
 				no_update = 1; /* Replacing existing */
 			}
@@ -186,10 +186,10 @@ int attach_pool_message(struct lv_segment *pool_seg, dm_thin_message_t type,
 
 	dm_list_add(&pool_seg->thin_messages, &tmsg->list);
 
-	log_debug("Added %s message",
-		  (type == DM_THIN_MESSAGE_CREATE_SNAP ||
-		   type == DM_THIN_MESSAGE_CREATE_THIN) ? "create" :
-		  (type == DM_THIN_MESSAGE_DELETE) ? "delete" : "unknown");
+	log_debug_metadata("Added %s message",
+			   (type == DM_THIN_MESSAGE_CREATE_SNAP ||
+			   type == DM_THIN_MESSAGE_CREATE_THIN) ? "create" :
+			   (type == DM_THIN_MESSAGE_DELETE) ? "delete" : "unknown");
 
 	return 1;
 }
@@ -306,7 +306,7 @@ uint32_t get_free_pool_device_id(struct lv_segment *thin_pool_seg)
 		return 0;
 	}
 
-	log_debug("Found free pool device_id %u.", max_id);
+	log_debug_metadata("Found free pool device_id %u.", max_id);
 
 	return max_id;
 }

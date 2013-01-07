@@ -134,7 +134,7 @@ static int _get_block_size(struct device *dev, unsigned int *size)
 			log_sys_error("ioctl BLKBSZGET", name);
 			return 0;
 		}
-		log_debug("%s: block size is %u bytes", name, dev->block_size);
+		log_debug_devs("%s: block size is %u bytes", name, dev->block_size);
 	}
 
 	*size = (unsigned int) dev->block_size;
@@ -314,8 +314,8 @@ static int _dev_discard_blocks(struct device *dev, uint64_t offset_bytes, uint64
 	discard_range[0] = offset_bytes;
 	discard_range[1] = size_bytes;
 
-	log_debug("Discarding %" PRIu64 " bytes offset %" PRIu64 " bytes on %s.",
-		  size_bytes, offset_bytes, dev_name(dev));
+	log_debug_devs("Discarding %" PRIu64 " bytes offset %" PRIu64 " bytes on %s.",
+		       size_bytes, offset_bytes, dev_name(dev));
 	if (ioctl(dev->fd, BLKDISCARD, &discard_range) < 0) {
 		log_error("%s: BLKDISCARD ioctl at offset %" PRIu64 " size %" PRIu64 " failed: %s.",
 			  dev_name(dev), offset_bytes, size_bytes, strerror(errno));
@@ -431,8 +431,8 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 		}
 
 		if (dev->open_count && !need_excl) {
-			log_debug("%s already opened read-only. Upgrading "
-				  "to read-write.", dev_name(dev));
+			log_debug_devs("%s already opened read-only. Upgrading "
+				       "to read-write.", dev_name(dev));
 			dev->open_count++;
 		}
 
@@ -442,7 +442,7 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 	if (critical_section())
 		/* FIXME Make this log_error */
 		log_verbose("dev_open(%s) called while suspended",
-			 dev_name(dev));
+			    dev_name(dev));
 
 	if (dev->flags & DEV_REGULAR)
 		name = dev_name(dev);
@@ -471,7 +471,7 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 			flags &= ~O_DIRECT;
 			if ((dev->fd = open(name, flags, 0777)) >= 0) {
 				dev->flags &= ~DEV_O_DIRECT;
-				log_debug("%s: Not using O_DIRECT", name);
+				log_debug_devs("%s: Not using O_DIRECT", name);
 				goto opened;
 			}
 		}
@@ -518,10 +518,10 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 
 	dm_list_add(&_open_devices, &dev->open_list);
 
-	log_debug("Opened %s %s%s%s", dev_name(dev),
-		  dev->flags & DEV_OPENED_RW ? "RW" : "RO",
-		  dev->flags & DEV_OPENED_EXCL ? " O_EXCL" : "",
-		  dev->flags & DEV_O_DIRECT ? " O_DIRECT" : "");
+	log_debug_devs("Opened %s %s%s%s", dev_name(dev),
+		       dev->flags & DEV_OPENED_RW ? "RW" : "RO",
+		       dev->flags & DEV_OPENED_EXCL ? " O_EXCL" : "",
+		       dev->flags & DEV_O_DIRECT ? " O_DIRECT" : "");
 
 	return 1;
 }
@@ -574,7 +574,7 @@ static void _close(struct device *dev)
 	dev->block_size = -1;
 	dm_list_del(&dev->open_list);
 
-	log_debug("Closed %s", dev_name(dev));
+	log_debug_devs("Closed %s", dev_name(dev));
 
 	if (dev->flags & DEV_ALLOCED) {
 		dm_free((void *) dm_list_item(dev->aliases.n, struct str_list)->
@@ -602,8 +602,8 @@ static int _dev_close(struct device *dev, int immediate)
 		dev->open_count--;
 
 	if (immediate && dev->open_count)
-		log_debug("%s: Immediate close attempt while still referenced",
-			  dev_name(dev));
+		log_debug_devs("%s: Immediate close attempt while still referenced",
+			       dev_name(dev));
 
 	/* Close unless device is known to belong to a locked VG */
 	if (immediate ||
@@ -756,12 +756,12 @@ int dev_set(struct device *dev, uint64_t offset, size_t len, int value)
 		return_0;
 
 	if ((offset % SECTOR_SIZE) || (len % SECTOR_SIZE))
-		log_debug("Wiping %s at %" PRIu64 " length %" PRIsize_t,
-			  dev_name(dev), offset, len);
+		log_debug_devs("Wiping %s at %" PRIu64 " length %" PRIsize_t,
+			       dev_name(dev), offset, len);
 	else
-		log_debug("Wiping %s at sector %" PRIu64 " length %" PRIsize_t
-			  " sectors", dev_name(dev), offset >> SECTOR_SHIFT,
-			  len >> SECTOR_SHIFT);
+		log_debug_devs("Wiping %s at sector %" PRIu64 " length %" PRIsize_t
+			       " sectors", dev_name(dev), offset >> SECTOR_SHIFT,
+			       len >> SECTOR_SHIFT);
 
 	memset(buffer, value, sizeof(buffer));
 	while (1) {

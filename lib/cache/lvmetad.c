@@ -53,8 +53,8 @@ static void _lvmetad_connect()
 
 	_lvmetad = lvmetad_open(_lvmetad_socket);
 	if (_lvmetad.socket_fd >= 0 && !_lvmetad.error) {
-		log_debug("Successfully connected to lvmetad on fd %d.",
-			  _lvmetad.socket_fd);
+		log_debug_lvmetad("Successfully connected to lvmetad on fd %d.",
+				  _lvmetad.socket_fd);
 		_lvmetad_connected = 1;
 	}
 }
@@ -81,7 +81,7 @@ int lvmetad_active(void)
 		_lvmetad_connect();
 
 	if ((_lvmetad.socket_fd < 0 || _lvmetad.error))
-		log_debug("Failed to connect to lvmetad: %s.", strerror(_lvmetad.error));
+		log_debug_lvmetad("Failed to connect to lvmetad: %s.", strerror(_lvmetad.error));
 
 	return _lvmetad_connected;
 }
@@ -156,7 +156,7 @@ retry:
 
 static int _token_update(void)
 {
-	log_debug("Sending updated token to lvmetad: %s", _lvmetad_token ? : "<NONE>");
+	log_debug_lvmetad("Sending updated token to lvmetad: %s", _lvmetad_token ? : "<NONE>");
 	daemon_reply repl = _lvmetad_send("token_update", NULL);
 
 	if (repl.error || strcmp(daemon_reply_str(repl, "response", ""), "OK")) {
@@ -323,12 +323,12 @@ struct volume_group *lvmetad_vg_lookup(struct cmd_context *cmd, const char *vgna
 	if (vgid) {
 		if (!id_write_format((const struct id*)vgid, uuid, sizeof(uuid)))
 			return_NULL;
-		log_debug("Asking lvmetad for VG %s (%s)", uuid, vgname ? : "name unknown");
+		log_debug_lvmetad("Asking lvmetad for VG %s (%s)", uuid, vgname ? : "name unknown");
 		reply = _lvmetad_send("vg_lookup", "uuid = %s", uuid, NULL);
 	} else {
 		if (!vgname)
 			log_error(INTERNAL_ERROR "VG name required (VGID not available)");
-		log_debug("Asking lvmetad for VG %s", vgname);
+		log_debug_lvmetad("Asking lvmetad for VG %s", vgname);
 		reply = _lvmetad_send("vg_lookup", "name = %s", vgname, NULL);
 	}
 
@@ -439,7 +439,7 @@ int lvmetad_vg_update(struct volume_group *vg)
 	if (!(vgmeta = _export_vg_to_config_tree(vg)))
 		return_0;
 
-	log_debug("Sending lvmetad updated metadata for VG %s (seqno %" PRIu32 ")", vg->name, vg->seqno);
+	log_debug_lvmetad("Sending lvmetad updated metadata for VG %s (seqno %" PRIu32 ")", vg->name, vg->seqno);
 	reply = _lvmetad_send("vg_update", "vgname = %s", vg->name,
 			      "metadata = %t", vgmeta, NULL);
 	dm_config_destroy(vgmeta);
@@ -492,7 +492,7 @@ int lvmetad_vg_remove(struct volume_group *vg)
 	if (!id_write_format(&vg->id, uuid, sizeof(uuid)))
 		return_0;
 
-	log_debug("Telling lvmetad to remove VGID %s (%s)", uuid, vg->name);
+	log_debug_lvmetad("Telling lvmetad to remove VGID %s (%s)", uuid, vg->name);
 	reply = _lvmetad_send("vg_remove", "uuid = %s", uuid, NULL);
 	result = _lvmetad_handle_reply(reply, "remove VG", vg->name, NULL);
 
@@ -514,7 +514,7 @@ int lvmetad_pv_lookup(struct cmd_context *cmd, struct id pvid, int *found)
 	if (!id_write_format(&pvid, uuid, sizeof(uuid)))
 		return_0;
 
-	log_debug("Asking lvmetad for PV %s", uuid);
+	log_debug_lvmetad("Asking lvmetad for PV %s", uuid);
 	reply = _lvmetad_send("pv_lookup", "uuid = %s", uuid, NULL);
 	if (!_lvmetad_handle_reply(reply, "lookup PV", "", found))
 		goto_out;
@@ -545,7 +545,7 @@ int lvmetad_pv_lookup_by_dev(struct cmd_context *cmd, struct device *dev, int *f
 	if (!lvmetad_active())
 		return_0;
 
-	log_debug("Asking lvmetad for PV on %s", dev_name(dev));
+	log_debug_lvmetad("Asking lvmetad for PV on %s", dev_name(dev));
 	reply = _lvmetad_send("pv_lookup", "device = %" PRId64, (int64_t) dev->dev, NULL);
 	if (!_lvmetad_handle_reply(reply, "lookup PV", dev_name(dev), found))
 		goto_out;
@@ -573,7 +573,7 @@ int lvmetad_pv_list_to_lvmcache(struct cmd_context *cmd)
 	if (!lvmetad_active())
 		return 1;
 
-	log_debug("Asking lvmetad for complete list of known PVs");
+	log_debug_lvmetad("Asking lvmetad for complete list of known PVs");
 	reply = _lvmetad_send("pv_list", NULL);
 	if (!_lvmetad_handle_reply(reply, "list PVs", "", NULL)) {
 		daemon_reply_destroy(reply);
@@ -600,7 +600,7 @@ int lvmetad_vg_list_to_lvmcache(struct cmd_context *cmd)
 	if (!lvmetad_active())
 		return 1;
 
-	log_debug("Asking lvmetad for complete list of known VGs");
+	log_debug_lvmetad("Asking lvmetad for complete list of known VGs");
 	reply = _lvmetad_send("vg_list", NULL);
 	if (!_lvmetad_handle_reply(reply, "list VGs", "", NULL)) {
 		daemon_reply_destroy(reply);
@@ -738,7 +738,7 @@ int lvmetad_pv_found(const struct id *pvid, struct device *dev, const struct for
 			return_0;
 		}
 
-		log_debug("Telling lvmetad to store PV %s (%s) in VG %s", dev_name(dev), uuid, vg->name);
+		log_debug_lvmetad("Telling lvmetad to store PV %s (%s) in VG %s", dev_name(dev), uuid, vg->name);
 		reply = _lvmetad_send("pv_found",
 				      "pvmeta = %t", pvmeta,
 				      "vgname = %s", vg->name,
@@ -750,7 +750,7 @@ int lvmetad_pv_found(const struct id *pvid, struct device *dev, const struct for
 		 * There is no VG metadata stored on this PV.
 		 * It might or might not be an orphan.
 		 */
-		log_debug("Telling lvmetad to store PV %s (%s)", dev_name(dev), uuid);
+		log_debug_lvmetad("Telling lvmetad to store PV %s (%s)", dev_name(dev), uuid);
 		reply = _lvmetad_send("pv_found", "pvmeta = %t", pvmeta, NULL);
 	}
 
@@ -798,7 +798,7 @@ int lvmetad_pv_gone(dev_t devno, const char *pv_name, activation_handler handler
          *        the whole stack from top to bottom (not yet upstream).
          */
 
-	log_debug("Telling lvmetad to forget any PV on %s", pv_name);
+	log_debug_lvmetad("Telling lvmetad to forget any PV on %s", pv_name);
 	reply = _lvmetad_send("pv_gone", "device = %" PRId64, (int64_t) devno, NULL);
 
 	result = _lvmetad_handle_reply(reply, "drop PV", pv_name, &found);
@@ -925,7 +925,7 @@ int lvmetad_pvscan_all_devs(struct cmd_context *cmd, activation_handler handler)
 		return 0;
 	}
 
-	log_debug("Telling lvmetad to clear its cache");
+	log_debug_lvmetad("Telling lvmetad to clear its cache");
 	reply = _lvmetad_send("pv_clear_all", NULL);
 	if (!_lvmetad_handle_reply(reply, "clear info about all PVs", "", NULL))
 		r = 0;

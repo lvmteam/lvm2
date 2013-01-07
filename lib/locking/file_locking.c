@@ -48,7 +48,7 @@ static void _undo_flock(const char *file, int fd)
 {
 	struct stat buf1, buf2;
 
-	log_debug("_undo_flock %s", file);
+	log_debug_locking("_undo_flock %s", file);
 	if (!flock(fd, LOCK_NB | LOCK_EX) &&
 	    !stat(file, &buf1) &&
 	    !fstat(fd, &buf2) &&
@@ -137,8 +137,8 @@ static int _do_flock(const char *file, int *fd, int operation, uint32_t nonblock
 	int old_errno;
 	struct stat buf1, buf2;
 
-	log_debug("_do_flock %s %c%c",
-		  file, operation == LOCK_EX ? 'W' : 'R', nonblock ? ' ' : 'B');
+	log_debug_locking("_do_flock %s %c%c", file,
+			  operation == LOCK_EX ? 'W' : 'R', nonblock ? ' ' : 'B');
 	do {
 		if ((*fd > -1) && close(*fd))
 			log_sys_error("close", file);

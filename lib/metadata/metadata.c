@@ -1078,7 +1078,7 @@ static dm_bitset_t _bitset_with_random_bits(struct dm_pool *mem, uint32_t num_bi
 		return NULL;
 	}
 
-	log_debug("Selected %" PRIu32 " random bits from %" PRIu32 ": %s", num_set_bits, num_bits, (char *) dm_pool_end_object(mem));
+	log_debug_metadata("Selected %" PRIu32 " random bits from %" PRIu32 ": %s", num_set_bits, num_bits, (char *) dm_pool_end_object(mem));
 
 	return bs;
 }
@@ -1090,9 +1090,9 @@ static int _vg_ignore_mdas(struct volume_group *vg, uint32_t num_to_ignore)
 	dm_bitset_t mda_to_ignore_bs;
 	int r = 1;
 
-	log_debug("Adjusting ignored mdas for %s: %" PRIu32 " of %" PRIu32 " mdas in use "
-		  "but %" PRIu32 " required.  Changing %" PRIu32 " mda.",
-		  vg->name, mda_used_count, vg_mda_count(vg), vg_mda_copies(vg), num_to_ignore);
+	log_debug_metadata("Adjusting ignored mdas for %s: %" PRIu32 " of %" PRIu32 " mdas in use "
+			   "but %" PRIu32 " required.  Changing %" PRIu32 " mda.",
+			   vg->name, mda_used_count, vg_mda_count(vg), vg_mda_copies(vg), num_to_ignore);
 
 	if (!num_to_ignore)
 		return 1;
@@ -1131,9 +1131,9 @@ static int _vg_unignore_mdas(struct volume_group *vg, uint32_t num_to_unignore)
 	if (!num_to_unignore)
 		return 1;
 
-	log_debug("Adjusting ignored mdas for %s: %" PRIu32 " of %" PRIu32 " mdas in use "
-		  "but %" PRIu32 " required.  Changing %" PRIu32 " mda.",
-		  vg->name, mda_used_count, mda_count, vg_mda_copies(vg), num_to_unignore);
+	log_debug_metadata("Adjusting ignored mdas for %s: %" PRIu32 " of %" PRIu32 " mdas in use "
+			   "but %" PRIu32 " required.  Changing %" PRIu32 " mda.",
+			   vg->name, mda_used_count, mda_count, vg_mda_copies(vg), num_to_unignore);
 
 	if (!(mda_to_unignore_bs = _bitset_with_random_bits(vg->vgmem, mda_free_count,
 							    num_to_unignore, &vg->cmd->rand_seed)))
@@ -2247,7 +2247,7 @@ void lv_calculate_readahead(const struct logical_volume *lv, uint32_t *read_ahea
 		_lv_postorder((struct logical_volume *)lv, _lv_read_ahead_single, &_read_ahead);
 
 	if (read_ahead) {
-		log_debug("Calculated readahead of LV %s is %u", lv->name, _read_ahead);
+		log_debug_metadata("Calculated readahead of LV %s is %u", lv->name, _read_ahead);
 		*read_ahead = _read_ahead;
 	}
 }
@@ -3104,7 +3104,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 						return_NULL;
 					}
 
-					log_debug("Empty mda found for VG %s.", vgname);
+					log_debug_metadata("Empty mda found for VG %s.", vgname);
 
 					if (inconsistent_mdas)
 						continue;
@@ -3120,8 +3120,8 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 
 			/* If the check passed, let's update VG and recalculate pvids */
 			if (!inconsistent_pvs) {
-				log_debug("Updating cache for PVs without mdas "
-					  "in VG %s.", vgname);
+				log_debug_metadata("Updating cache for PVs without mdas "
+						   "in VG %s.", vgname);
 				/*
 				 * If there is no precommitted metadata, committed metadata
 				 * is read and stored in the cache even if use_precommitted is set
@@ -3138,8 +3138,8 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		fid->ref_count++;
 		if (dm_list_size(&correct_vg->pvs) !=
 		    dm_list_size(pvids) + vg_missing_pv_count(correct_vg)) {
-			log_debug("Cached VG %s had incorrect PV list",
-				  vgname);
+			log_debug_metadata("Cached VG %s had incorrect PV list",
+					   vgname);
 
 			if (critical_section())
 				inconsistent = 1;
@@ -3151,8 +3151,8 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 			if (is_missing_pv(pvl->pv))
 				continue;
 			if (!str_list_match_item(pvids, pvl->pv->dev->pvid)) {
-				log_debug("Cached VG %s had incorrect PV list",
-					  vgname);
+				log_debug_metadata("Cached VG %s had incorrect PV list",
+						   vgname);
 				release_vg(correct_vg);
 				correct_vg = NULL;
 				break;
@@ -3287,7 +3287,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 			 */
 			dm_list_iterate_items(mda, &fid->metadata_areas_in_use) {
 				if (mda->status & MDA_INCONSISTENT) {
-					log_debug("Checking inconsistent MDA: %s", dev_name(mda_get_device(mda)));
+					log_debug_metadata("Checking inconsistent MDA: %s", dev_name(mda_get_device(mda)));
 					dm_list_iterate_items(pvl, &correct_vg->pvs) {
 						if (mda_get_device(mda) == pvl->pv->dev &&
 						    (pvl->pv->status & MISSING_PV))
@@ -4471,10 +4471,10 @@ void mda_set_ignored(struct metadata_area *mda, unsigned mda_ignored)
 	else
 		return;	/* No change */
 
-	log_debug("%s ignored flag for mda %s at offset %" PRIu64 ".", 
-		  mda_ignored ? "Setting" : "Clearing",
-		  mda->ops->mda_metadata_locn_name ? mda->ops->mda_metadata_locn_name(locn) : "",
-		  mda->ops->mda_metadata_locn_offset ? mda->ops->mda_metadata_locn_offset(locn) : UINT64_C(0));
+	log_debug_metadata("%s ignored flag for mda %s at offset %" PRIu64 ".", 
+			   mda_ignored ? "Setting" : "Clearing",
+			   mda->ops->mda_metadata_locn_name ? mda->ops->mda_metadata_locn_name(locn) : "",
+			   mda->ops->mda_metadata_locn_offset ? mda->ops->mda_metadata_locn_offset(locn) : UINT64_C(0));
 }
 
 int mdas_empty_or_ignored(struct dm_list *mdas)

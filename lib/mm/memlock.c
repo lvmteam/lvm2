@@ -171,15 +171,15 @@ static int _maps_line(const struct dm_config_node *cn, lvmlock_t lock,
 
 	/* Select readable maps */
 	if (fr != 'r') {
-		log_debug("%s area unreadable %s : Skipping.", lock_str, line);
+		log_debug_mem("%s area unreadable %s : Skipping.", lock_str, line);
 		return 1;
 	}
 
 	/* always ignored areas */
 	for (i = 0; i < sizeof(_ignore_maps) / sizeof(_ignore_maps[0]); ++i)
 		if (strstr(line + pos, _ignore_maps[i])) {
-			log_debug("%s ignore filter '%s' matches '%s': Skipping.",
-				  lock_str, _ignore_maps[i], line);
+			log_debug_mem("%s ignore filter '%s' matches '%s': Skipping.",
+				      lock_str, _ignore_maps[i], line);
 			return 1;
 		}
 
@@ -188,8 +188,8 @@ static int _maps_line(const struct dm_config_node *cn, lvmlock_t lock,
 		/* If no blacklist configured, use an internal set */
 		for (i = 0; i < sizeof(_blacklist_maps) / sizeof(_blacklist_maps[0]); ++i)
 			if (strstr(line + pos, _blacklist_maps[i])) {
-				log_debug("%s default filter '%s' matches '%s': Skipping.",
-					  lock_str, _blacklist_maps[i], line);
+				log_debug_mem("%s default filter '%s' matches '%s': Skipping.",
+					      lock_str, _blacklist_maps[i], line);
 				return 1;
 			}
 	} else {
@@ -197,8 +197,8 @@ static int _maps_line(const struct dm_config_node *cn, lvmlock_t lock,
 			if ((cv->type != DM_CFG_STRING) || !cv->v.str[0])
 				continue;
 			if (strstr(line + pos, cv->v.str)) {
-				log_debug("%s_filter '%s' matches '%s': Skipping.",
-					  lock_str, cv->v.str, line);
+				log_debug_mem("%s_filter '%s' matches '%s': Skipping.",
+					      lock_str, cv->v.str, line);
 				return 1;
 			}
 		}
@@ -213,8 +213,8 @@ static int _maps_line(const struct dm_config_node *cn, lvmlock_t lock,
 
 #endif
 	*mstats += sz;
-	log_debug("%s %10ldKiB %12lx - %12lx %c%c%c%c%s", lock_str,
-		  ((long)sz + 1023) / 1024, from, to, fr, fw, fx, fp, line + pos);
+	log_debug_mem("%s %10ldKiB %12lx - %12lx %c%c%c%c%s", lock_str,
+		      ((long)sz + 1023) / 1024, from, to, fr, fw, fx, fp, line + pos);
 
 	if (lock == LVM_MLOCK) {
 		if (mlock((const void*)from, sz) < 0) {
@@ -299,8 +299,8 @@ static int _memlock_maps(struct cmd_context *cmd, lvmlock_t lock, size_t *mstats
 		line = line_end + 1;
 	}
 
-	log_debug("%socked %ld bytes",
-		  (lock == LVM_MLOCK) ? "L" : "Unl", (long)*mstats);
+	log_debug_mem("%socked %ld bytes",
+		      (lock == LVM_MLOCK) ? "L" : "Unl", (long)*mstats);
 
 	return ret;
 }
@@ -367,8 +367,8 @@ static void _unlock_mem(struct cmd_context *cmd)
 					  (long)_mstats, (long)unlock_mstats);
 			else
 				/* FIXME Believed due to incorrect use of yes_no_prompt while locks held */
-				log_debug("Suppressed internal error: Maps lock %ld < unlock %ld, a one-page difference.",
-					  (long)_mstats, (long)unlock_mstats);
+				log_debug_mem("Suppressed internal error: Maps lock %ld < unlock %ld, a one-page difference.",
+					      (long)_mstats, (long)unlock_mstats);
 		}
 	}
 
@@ -380,8 +380,8 @@ static void _unlock_mem(struct cmd_context *cmd)
 
 static void _lock_mem_if_needed(struct cmd_context *cmd)
 {
-	log_debug("Lock:   Memlock counters: locked:%d critical:%d daemon:%d suspended:%d",
-		  _mem_locked, _critical_section, _memlock_count_daemon, dm_get_suspended_counter());
+	log_debug_mem("Lock:   Memlock counters: locked:%d critical:%d daemon:%d suspended:%d",
+		      _mem_locked, _critical_section, _memlock_count_daemon, dm_get_suspended_counter());
 	if (!_mem_locked &&
 	    ((_critical_section + _memlock_count_daemon) == 1)) {
 		_mem_locked = 1;
@@ -391,8 +391,8 @@ static void _lock_mem_if_needed(struct cmd_context *cmd)
 
 static void _unlock_mem_if_possible(struct cmd_context *cmd)
 {
-	log_debug("Unlock: Memlock counters: locked:%d critical:%d daemon:%d suspended:%d",
-		  _mem_locked, _critical_section, _memlock_count_daemon, dm_get_suspended_counter());
+	log_debug_mem("Unlock: Memlock counters: locked:%d critical:%d daemon:%d suspended:%d",
+		      _mem_locked, _critical_section, _memlock_count_daemon, dm_get_suspended_counter());
 	if (_mem_locked &&
 	    !_critical_section &&
 	    !_memlock_count_daemon) {
@@ -405,7 +405,7 @@ void critical_section_inc(struct cmd_context *cmd, const char *reason)
 {
 	if (!_critical_section) {
 		_critical_section = 1;
-		log_debug("Entering critical section (%s).", reason);
+		log_debug_mem("Entering critical section (%s).", reason);
 	}
 
 	_lock_mem_if_needed(cmd);
@@ -415,7 +415,7 @@ void critical_section_dec(struct cmd_context *cmd, const char *reason)
 {
 	if (_critical_section && !dm_get_suspended_counter()) {
 		_critical_section = 0;
-		log_debug("Leaving critical section (%s).", reason);
+		log_debug_mem("Leaving critical section (%s).", reason);
 	}
 }
 
@@ -436,7 +436,7 @@ void memlock_inc_daemon(struct cmd_context *cmd)
 	++_memlock_count_daemon;
 	if (_memlock_count_daemon == 1 && _critical_section > 0)
                 log_error(INTERNAL_ERROR "_memlock_inc_daemon used in critical section.");
-	log_debug("memlock_count_daemon inc to %d", _memlock_count_daemon);
+	log_debug_mem("memlock_count_daemon inc to %d", _memlock_count_daemon);
 	_lock_mem_if_needed(cmd);
 }
 
@@ -445,7 +445,7 @@ void memlock_dec_daemon(struct cmd_context *cmd)
 	if (!_memlock_count_daemon)
 		log_error(INTERNAL_ERROR "_memlock_count_daemon has dropped below 0.");
 	--_memlock_count_daemon;
-	log_debug("memlock_count_daemon dec to %d", _memlock_count_daemon);
+	log_debug_mem("memlock_count_daemon dec to %d", _memlock_count_daemon);
 	_unlock_mem_if_possible(cmd);
 }
 
@@ -465,7 +465,7 @@ void memlock_init(struct cmd_context *cmd)
 
 void memlock_reset(void)
 {
-	log_debug("memlock reset.");
+	log_debug_mem("memlock reset.");
 	_mem_locked = 0;
 	_critical_section = 0;
 	_memlock_count_daemon = 0;

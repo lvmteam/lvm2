@@ -105,31 +105,31 @@ static int _passes_lvm_type_device_filter(struct dev_filter *f __attribute__((un
 
 	/* Is this a recognised device type? */
 	if (!_partitions[MAJOR(dev->dev)].max_partitions) {
-		log_debug("%s: Skipping: Unrecognised LVM device type %"
-			  PRIu64, name, (uint64_t) MAJOR(dev->dev));
+		log_debug_devs("%s: Skipping: Unrecognised LVM device type %"
+			       PRIu64, name, (uint64_t) MAJOR(dev->dev));
 		return 0;
 	}
 
 	/* Check it's accessible */
 	if (!dev_open_readonly_quiet(dev)) {
-		log_debug("%s: Skipping: open failed", name);
+		log_debug_devs("%s: Skipping: open failed", name);
 		return 0;
 	}
 
 	/* Check it's not too small */
 	if (!dev_get_size(dev, &size)) {
-		log_debug("%s: Skipping: dev_get_size failed", name);
+		log_debug_devs("%s: Skipping: dev_get_size failed", name);
 		goto out;
 	}
 
 	if (size < pv_min_size()) {
-		log_debug("%s: Skipping: Too small to hold a PV", name);
+		log_debug_devs("%s: Skipping: Too small to hold a PV", name);
 		goto out;
 	}
 
 	if (is_partitioned_dev(dev)) {
-		log_debug("%s: Skipping: Partition table signature found",
-			  name);
+		log_debug_devs("%s: Skipping: Partition table signature found",
+			       name);
 		goto out;
 	}
 

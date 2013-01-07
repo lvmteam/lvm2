@@ -141,7 +141,7 @@ static void _free_cached_vgmetadata(struct lvmcache_vginfo *vginfo)
 		vginfo->cft = NULL;
 	}
 
-	log_debug("Metadata cache: VG %s wiped.", vginfo->vgname);
+	log_debug_cache("Metadata cache: VG %s wiped.", vginfo->vgname);
 
 	release_vg(vginfo->cached_vg);
 }
@@ -184,9 +184,9 @@ static void _store_metadata(struct volume_group *vg, unsigned precommitted)
 		return;
 	}
 
-	log_debug("Metadata cache: VG %s (%s) stored (%" PRIsize_t " bytes%s).",
-		  vginfo->vgname, uuid, size,
-		  precommitted ? ", precommitted" : "");
+	log_debug_cache("Metadata cache: VG %s (%s) stored (%" PRIsize_t " bytes%s).",
+			vginfo->vgname, uuid, size,
+			precommitted ? ", precommitted" : "");
 }
 
 static void _update_cache_info_lock_state(struct lvmcache_info *info,
@@ -276,8 +276,8 @@ void lvmcache_commit_metadata(const char *vgname)
 		return;
 
 	if (vginfo->precommitted) {
-		log_debug("Precommitted metadata cache: VG %s upgraded to committed.",
-			  vginfo->vgname);
+		log_debug_cache("Precommitted metadata cache: VG %s upgraded to committed.",
+				vginfo->vgname);
 		vginfo->precommitted = 0;
 	}
 }
@@ -792,9 +792,9 @@ struct volume_group *lvmcache_get_vg(struct cmd_context *cmd, const char *vgname
 out:
 	vginfo->holders++;
 	vginfo->vg_use_count++;
-	log_debug("Using cached %smetadata for VG %s with %u holder(s).",
-		  vginfo->precommitted ? "pre-committed " : "",
-		  vginfo->vgname, vginfo->holders);
+	log_debug_cache("Using cached %smetadata for VG %s with %u holder(s).",
+			vginfo->precommitted ? "pre-committed " : "",
+			vginfo->vgname, vginfo->holders);
 
 	return vg;
 
@@ -806,15 +806,15 @@ bad:
 // #if 0
 int lvmcache_vginfo_holders_dec_and_test_for_zero(struct lvmcache_vginfo *vginfo)
 {
-	log_debug("VG %s decrementing %d holder(s) at %p.",
-		  vginfo->cached_vg->name, vginfo->holders, vginfo->cached_vg);
+	log_debug_cache("VG %s decrementing %d holder(s) at %p.",
+			vginfo->cached_vg->name, vginfo->holders, vginfo->cached_vg);
 
 	if (--vginfo->holders)
 		return 0;
 
 	if (vginfo->vg_use_count > 1)
-		log_debug("VG %s reused %d times.",
-			  vginfo->cached_vg->name, vginfo->vg_use_count);
+		log_debug_cache("VG %s reused %d times.",
+				vginfo->cached_vg->name, vginfo->vg_use_count);
 
 	/* Debug perform crc check only when it's been used more then once */
 	if (!dm_pool_unlock(vginfo->cached_vg->vgmem,
@@ -1095,7 +1095,7 @@ static int _lvmcache_update_vgid(struct lvmcache_info *info,
 		dm_hash_remove(_vgid_hash, vginfo->vgid);
 	if (!vgid) {
 		/* FIXME: unreachable code path */
-		log_debug("lvmcache: %s: clearing VGID", info ? dev_name(info->dev) : vginfo->vgname);
+		log_debug_cache("lvmcache: %s: clearing VGID", info ? dev_name(info->dev) : vginfo->vgname);
 		return 1;
 	}
 
@@ -1108,9 +1108,9 @@ static int _lvmcache_update_vgid(struct lvmcache_info *info,
 	}
 
 	if (!is_orphan_vg(vginfo->vgname))
-		log_debug("lvmcache: %s: setting %s VGID to %s",
-			  (info) ? dev_name(info->dev) : "",
-			  vginfo->vgname, vginfo->vgid);
+		log_debug_cache("lvmcache: %s: setting %s VGID to %s",
+				(info) ? dev_name(info->dev) : "",
+				vginfo->vgname, vginfo->vgid);
 
 	return 1;
 }
@@ -1287,11 +1287,11 @@ static int _lvmcache_update_vgname(struct lvmcache_info *info,
 						dm_list_size(&info2->mdas));
 				else
 					mdabuf[0] = '\0';
-				log_debug("lvmcache: %s: now in VG %s%s%s%s%s",
-					  dev_name(info2->dev),
-					  vgname, orphan_vginfo->vgid[0] ? " (" : "",
-					  orphan_vginfo->vgid[0] ? orphan_vginfo->vgid : "",
-					  orphan_vginfo->vgid[0] ? ")" : "", mdabuf);
+				log_debug_cache("lvmcache: %s: now in VG %s%s%s%s%s",
+						dev_name(info2->dev),
+						vgname, orphan_vginfo->vgid[0] ? " (" : "",
+						orphan_vginfo->vgid[0] ? orphan_vginfo->vgid : "",
+						orphan_vginfo->vgid[0] ? ")" : "", mdabuf);
 			}
 
 			if (!_drop_vginfo(NULL, primary_vginfo))
@@ -1329,13 +1329,13 @@ static int _lvmcache_update_vgname(struct lvmcache_info *info,
 			sprintf(mdabuf, " with %u mdas", dm_list_size(&info->mdas));
 		else
 			mdabuf[0] = '\0';
-		log_debug("lvmcache: %s: now in VG %s%s%s%s%s",
-			  dev_name(info->dev),
-			  vgname, vginfo->vgid[0] ? " (" : "",
-			  vginfo->vgid[0] ? vginfo->vgid : "",
-			  vginfo->vgid[0] ? ")" : "", mdabuf);
+		log_debug_cache("lvmcache: %s: now in VG %s%s%s%s%s",
+				dev_name(info->dev),
+				vgname, vginfo->vgid[0] ? " (" : "",
+				vginfo->vgid[0] ? vginfo->vgid : "",
+				vginfo->vgid[0] ? ")" : "", mdabuf);
 	} else
-		log_debug("lvmcache: initialised VG %s", vgname);
+		log_debug_cache("lvmcache: initialised VG %s", vgname);
 
 	return 1;
 }
@@ -1347,9 +1347,9 @@ static int _lvmcache_update_vgstatus(struct lvmcache_info *info, uint32_t vgstat
 		return 1;
 
 	if ((info->vginfo->status & EXPORTED_VG) != (vgstatus & EXPORTED_VG))
-		log_debug("lvmcache: %s: VG %s %s exported",
-			  dev_name(info->dev), info->vginfo->vgname,
-			  vgstatus & EXPORTED_VG ? "now" : "no longer");
+		log_debug_cache("lvmcache: %s: VG %s %s exported",
+				dev_name(info->dev), info->vginfo->vgname,
+				vgstatus & EXPORTED_VG ? "now" : "no longer");
 
 	info->vginfo->status = vgstatus;
 
@@ -1369,8 +1369,8 @@ static int _lvmcache_update_vgstatus(struct lvmcache_info *info, uint32_t vgstat
 		return 0;
 	}
 
-	log_debug("lvmcache: %s: VG %s: Set creation host to %s.",
-		  dev_name(info->dev), info->vginfo->vgname, creation_host);
+	log_debug_cache("lvmcache: %s: VG %s: Set creation host to %s.",
+			dev_name(info->dev), info->vginfo->vgname, creation_host);
 
 	return 1;
 }
@@ -1519,9 +1519,9 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 					  dev_name(existing->dev));
 		}
 		if (strcmp(pvid_s, existing->dev->pvid)) 
-			log_debug("Updating pvid cache to %s (%s) from %s (%s)",
-				  pvid_s, dev_name(dev),
-				  existing->dev->pvid, dev_name(existing->dev));
+			log_debug_cache("Updating pvid cache to %s (%s) from %s (%s)",
+					pvid_s, dev_name(dev),
+					existing->dev->pvid, dev_name(existing->dev));
 		/* Switch over to new preferred device */
 		existing->dev = dev;
 		info = existing;

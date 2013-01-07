@@ -474,9 +474,9 @@ static int _lv_split_segment(struct logical_volume *lv, struct lv_segment *seg,
 			if (!set_lv_segment_area_lv(split_seg, s, seg_lv(seg, s),
 						    seg_le(seg, s) + seg->area_len, 0))
 				return_0;
-			log_debug("Split %s:%u[%u] at %u: %s LE %u", lv->name,
-				  seg->le, s, le, seg_lv(seg, s)->name,
-				  seg_le(split_seg, s));
+			log_debug_alloc("Split %s:%u[%u] at %u: %s LE %u", lv->name,
+					seg->le, s, le, seg_lv(seg, s)->name,
+					seg_le(split_seg, s));
 			break;
 
 		case AREA_PV:
@@ -488,10 +488,10 @@ static int _lv_split_segment(struct logical_volume *lv, struct lv_segment *seg,
 						     seg->area_len,
 						 split_seg, s)))
 				return_0;
-			log_debug("Split %s:%u[%u] at %u: %s PE %u", lv->name,
-				  seg->le, s, le,
-				  dev_name(seg_dev(seg, s)),
-				  seg_pe(split_seg, s));
+			log_debug_alloc("Split %s:%u[%u] at %u: %s PE %u", lv->name,
+					seg->le, s, le,
+					dev_name(seg_dev(seg, s)),
+					seg_pe(split_seg, s));
 			break;
 
 		case AREA_UNASSIGNED:

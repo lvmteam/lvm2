@@ -568,7 +568,7 @@ int cmd_vg_read(struct cmd_context *cmd, struct dm_list *cmd_vgs)
 	dm_list_iterate_items(cvl, cmd_vgs) {
 		cvl->vg = vg_read(cmd, cvl->vg_name, cvl->vgid, cvl->flags);
 		if (vg_read_error(cvl->vg)) {
-			log_debug("Failed to vg_read %s", cvl->vg_name);
+			log_debug_metadata("Failed to vg_read %s", cvl->vg_name);
 			return 0;
 		}
 		cvl->vg->cmd_vgs = cmd_vgs;	/* Make it usable in VG */
@@ -621,7 +621,7 @@ int find_replicator_vgs(struct logical_volume *lv)
 			break;
 		}
 
-		log_debug("VG: %s added as missing.", rsite->vg_name);
+		log_debug_metadata("VG: %s added as missing.", rsite->vg_name);
 		lv->vg->cmd_missing_vgs++;
 	}
 

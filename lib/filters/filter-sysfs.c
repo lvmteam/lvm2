@@ -274,7 +274,7 @@ static int _accept_p(struct dev_filter *f, struct device *dev)
 		return 1;
 
 	if (!_set_lookup(ds, dev->dev)) {
-		log_debug("%s: Skipping (sysfs)", dev_name(dev));
+		log_debug_devs("%s: Skipping (sysfs)", dev_name(dev));
 		return 0;
 	} else
 		return 1;

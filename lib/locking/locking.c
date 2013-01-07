@@ -426,7 +426,7 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags)
 
 
 	if (flags == LCK_NONE) {
-		log_debug(INTERNAL_ERROR "%s: LCK_NONE lock requested", vol);
+		log_debug_locking(INTERNAL_ERROR "%s: LCK_NONE lock requested", vol);
 		return 1;
 	}
 

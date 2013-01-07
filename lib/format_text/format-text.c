@@ -427,8 +427,8 @@ static struct raw_locn *_find_vg_rlocn(struct device_area *dev_area,
 	    (isspace(vgnamebuf[len]) || vgnamebuf[len] == '{'))
 		return rlocn;
 	else
-		log_debug("Volume group name found in metadata does "
-			  "not match expected name %s.", vgname);
+		log_debug_metadata("Volume group name found in metadata does "
+				   "not match expected name %s.", vgname);
 
       bad:
 	if ((info = lvmcache_info_from_pvid(dev_area->dev->pvid, 0)))
@@ -495,7 +495,7 @@ static struct volume_group *_vg_read_raw_area(struct format_instance *fid,
 		goto_out;
 
 	if (!(rlocn = _find_vg_rlocn(area, mdah, vgname, &precommitted))) {
-		log_debug("VG %s not found on %s", vgname, dev_name(area->dev));
+		log_debug_metadata("VG %s not found on %s", vgname, dev_name(area->dev));
 		goto out;
 	}
 
@@ -516,10 +516,10 @@ static struct volume_group *_vg_read_raw_area(struct format_instance *fid,
 				     wrap, calc_crc, rlocn->checksum, &when,
 				     &desc)))
 		goto_out;
-	log_debug("Read %s %smetadata (%u) from %s at %" PRIu64 " size %"
-		  PRIu64, vg->name, precommitted ? "pre-commit " : "",
-		  vg->seqno, dev_name(area->dev),
-		  area->start + rlocn->offset, rlocn->size);
+	log_debug_metadata("Read %s %smetadata (%u) from %s at %" PRIu64 " size %"
+			   PRIu64, vg->name, precommitted ? "pre-commit " : "",
+			   vg->seqno, dev_name(area->dev),
+			   area->start + rlocn->offset, rlocn->size);
 
 	if (precommitted)
 		vg->status |= PRECOMMITTED;
@@ -625,9 +625,9 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 		goto out;
 	}
 
-	log_debug("Writing %s metadata to %s at %" PRIu64 " len %" PRIu64,
-		  vg->name, dev_name(mdac->area.dev), mdac->area.start +
-		  mdac->rlocn.offset, mdac->rlocn.size - new_wrap);
+	log_debug_metadata("Writing %s metadata to %s at %" PRIu64 " len %" PRIu64,
+			    vg->name, dev_name(mdac->area.dev), mdac->area.start +
+			    mdac->rlocn.offset, mdac->rlocn.size - new_wrap);
 
 	/* Write text out, circularly */
 	if (!dev_write(mdac->area.dev, mdac->area.start + mdac->rlocn.offset,
@@ -636,9 +636,9 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 		goto_out;
 
 	if (new_wrap) {
-               log_debug("Writing metadata to %s at %" PRIu64 " len %" PRIu64,
-			  dev_name(mdac->area.dev), mdac->area.start +
-			  MDA_HEADER_SIZE, new_wrap);
+		log_debug_metadata("Writing metadata to %s at %" PRIu64 " len %" PRIu64,
+				  dev_name(mdac->area.dev), mdac->area.start +
+				  MDA_HEADER_SIZE, new_wrap);
 
 		if (!dev_write(mdac->area.dev,
 			       mdac->area.start + MDA_HEADER_SIZE,
@@ -730,13 +730,13 @@ static int _vg_commit_raw_rlocn(struct format_instance *fid,
 		rlocn->offset = mdac->rlocn.offset;
 		rlocn->size = mdac->rlocn.size;
 		rlocn->checksum = mdac->rlocn.checksum;
-		log_debug("%sCommitting %s metadata (%u) to %s header at %"
+		log_debug_metadata("%sCommitting %s metadata (%u) to %s header at %"
 			  PRIu64, precommit ? "Pre-" : "", vg->name, vg->seqno,
 			  dev_name(mdac->area.dev), mdac->area.start);
 	} else
-		log_debug("Wiping pre-committed %s metadata from %s "
-			  "header at %" PRIu64, vg->name,
-			  dev_name(mdac->area.dev), mdac->area.start);
+		log_debug_metadata("Wiping pre-committed %s metadata from %s "
+				   "header at %" PRIu64, vg->name,
+				   dev_name(mdac->area.dev), mdac->area.start);
 
 	rlocn_set_ignored(mdah->raw_locns, mda_is_ignored(mda));
 
@@ -862,7 +862,7 @@ static struct volume_group *_vg_read_file_name(struct format_instance *fid,
 			  read_path, vgname);
 		return NULL;
 	} else
-		log_debug("Read volume group %s from %s", vg->name, read_path);
+		log_debug_metadata("Read volume group %s from %s", vg->name, read_path);
 
 	return vg;
 }
@@ -929,7 +929,7 @@ static int _vg_write_file(struct format_instance *fid __attribute__((unused)),
 		return 0;
 	}
 
-	log_debug("Writing %s metadata to %s", vg->name, temp_file);
+	log_debug_metadata("Writing %s metadata to %s", vg->name, temp_file);
 
 	if (!text_vg_export_file(vg, tc->desc, fp)) {
 		log_error("Failed to write metadata to %s.", temp_file);
@@ -949,7 +949,7 @@ static int _vg_write_file(struct format_instance *fid __attribute__((unused)),
 		return_0;
 
 	if (rename(temp_file, tc->path_edit)) {
-		log_debug("Renaming %s to %s", temp_file, tc->path_edit);
+		log_debug_metadata("Renaming %s to %s", temp_file, tc->path_edit);
 		log_error("%s: rename to %s failed: %s", temp_file,
 			  tc->path_edit, strerror(errno));
 		return 0;
@@ -968,13 +968,13 @@ static int _vg_commit_file_backup(struct format_instance *fid __attribute__((unu
 		log_verbose("Test mode: Skipping committing %s metadata (%u)",
 			    vg->name, vg->seqno);
 		if (unlink(tc->path_edit)) {
-			log_debug("Unlinking %s", tc->path_edit);
+			log_debug_metadata("Unlinking %s", tc->path_edit);
 			log_sys_error("unlink", tc->path_edit);
 			return 0;
 		}
 	} else {
-		log_debug("Committing %s metadata (%u)", vg->name, vg->seqno);
-		log_debug("Renaming %s to %s", tc->path_edit, tc->path_live);
+		log_debug_metadata("Committing %s metadata (%u)", vg->name, vg->seqno);
+		log_debug_metadata("Renaming %s to %s", tc->path_edit, tc->path_live);
 		if (rename(tc->path_edit, tc->path_live)) {
 			log_error("%s: rename to %s failed: %s", tc->path_edit,
 				  tc->path_live, strerror(errno));
@@ -1008,7 +1008,7 @@ static int _vg_commit_file(struct format_instance *fid, struct volume_group *vg,
 		len = slash - tc->path_live;
 		strncpy(new_name, tc->path_live, len);
 		strcpy(new_name + len, vg->name);
-		log_debug("Renaming %s to %s", tc->path_live, new_name);
+		log_debug_metadata("Renaming %s to %s", tc->path_live, new_name);
 		if (test_mode())
 			log_verbose("Test mode: Skipping rename");
 		else {
@@ -1186,11 +1186,11 @@ const char *vgname_from_mda(const struct format_type *fmt,
 		goto_out;
 	}
 
-	log_debug("%s: Found metadata at %" PRIu64 " size %" PRIu64
-		  " (in area at %" PRIu64 " size %" PRIu64
-		  ") for %s (%s)",
-		  dev_name(dev_area->dev), dev_area->start + rlocn->offset,
-		  rlocn->size, dev_area->start, dev_area->size, vgname, uuid);
+	log_debug_metadata("%s: Found metadata at %" PRIu64 " size %" PRIu64
+			   " (in area at %" PRIu64 " size %" PRIu64
+			   ") for %s (%s)",
+			   dev_name(dev_area->dev), dev_area->start + rlocn->offset,
+			   rlocn->size, dev_area->start, dev_area->size, vgname, uuid);
 
 	if (mda_free_sectors) {
 		current_usage = (rlocn->size + SECTOR_SIZE - UINT64_C(1)) -
@@ -1320,11 +1320,11 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 			continue;
 
 		mdac = (struct mda_context *) mda->metadata_locn;
-		log_debug("Creating metadata area on %s at sector %"
-			  PRIu64 " size %" PRIu64 " sectors",
-			  dev_name(mdac->area.dev),
-			  mdac->area.start >> SECTOR_SHIFT,
-			  mdac->area.size >> SECTOR_SHIFT);
+		log_debug_metadata("Creating metadata area on %s at sector %"
+				   PRIu64 " size %" PRIu64 " sectors",
+				   dev_name(mdac->area.dev),
+				   mdac->area.start >> SECTOR_SHIFT,
+				   mdac->area.size >> SECTOR_SHIFT);
 
 		// if fmt is not the same as info->fmt we are in trouble
 		lvmcache_add_mda(info, mdac->area.dev,

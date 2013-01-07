@@ -119,8 +119,8 @@ static int _extend_buffer(struct formatter *f)
 {
 	char *newbuf;
 
-	log_debug("Doubling metadata output buffer to %" PRIu32,
-		  f->data.buf.size * 2);
+	log_debug_metadata("Doubling metadata output buffer to %" PRIu32,
+			   f->data.buf.size * 2);
 	if (!(newbuf = dm_realloc(f->data.buf.start,
 				   f->data.buf.size * 2))) {
 		log_error("Buffer reallocation failed.");

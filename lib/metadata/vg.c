@@ -56,7 +56,7 @@ struct volume_group *alloc_vg(const char *pool_name, struct cmd_context *cmd,
 	dm_list_init(&vg->tags);
 	dm_list_init(&vg->removed_pvs);
 
-	log_debug("Allocated VG %s at %p.", vg->name, vg);
+	log_debug_mem("Allocated VG %s at %p.", vg->name, vg);
 
 	return vg;
 }
@@ -71,7 +71,7 @@ static void _free_vg(struct volume_group *vg)
 		return;
 	}
 
-	log_debug("Freeing VG %s at %p.", vg->name, vg);
+	log_debug_mem("Freeing VG %s at %p.", vg->name, vg);
 
 	dm_hash_destroy(vg->hostnames);
 	dm_pool_destroy(vg->vgmem);
@@ -260,8 +260,8 @@ int vg_set_mda_copies(struct volume_group *vg, uint32_t mda_copies)
 	vg->mda_copies = mda_copies;
 
 	/* FIXME Use log_verbose when this is due to specific cmdline request. */
-	log_debug("Setting mda_copies to %"PRIu32" for VG %s",
-		    mda_copies, vg->name);
+	log_debug_metadata("Setting mda_copies to %"PRIu32" for VG %s",
+			   mda_copies, vg->name);
 
 	return 1;
 }

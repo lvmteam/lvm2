@@ -91,11 +91,11 @@ int read_pool_label(struct pool_list *pl, struct labeller *l,
 
 	get_pool_pv_uuid(&pvid, pd);
 	id_write_format(&pvid, uuid, ID_LEN + 7);
-	log_debug("Calculated uuid %s for %s", uuid, dev_name(dev));
+	log_debug_metadata("Calculated uuid %s for %s", uuid, dev_name(dev));
 
 	get_pool_vg_uuid(&vgid, pd);
 	id_write_format(&vgid, uuid, ID_LEN + 7);
-	log_debug("Calculated uuid %s for %s", uuid, pd->pl_pool_name);
+	log_debug_metadata("Calculated uuid %s for %s", uuid, pd->pl_pool_name);
 
 	if (!(info = lvmcache_add(l, (char *) &pvid, dev, pd->pl_pool_name,
 				  (char *) &vgid, 0)))
@@ -369,8 +369,8 @@ int read_pool_pds(const struct format_type *fmt, const char *vg_name,
 
 		full_scan++;
 		if (full_scan > 1) {
-			log_debug("No devices for vg %s found in cache",
-				  vg_name);
+			log_debug_metadata("No devices for vg %s found in cache",
+					   vg_name);
 			return 0;
 		}
 		lvmcache_label_scan(fmt->cmd, full_scan);

@@ -491,7 +491,7 @@ int target_version(const char *target_name, uint32_t *maj,
                 goto_out;
 
 	if (!dm_task_run(dmt)) {
-		log_debug("Failed to get %s target version", target_name);
+		log_debug_activation("Failed to get %s target version", target_name);
 		/* Assume this was because LIST_VERSIONS isn't supported */
 		*maj = 0;
 		*min = 0;
@@ -698,7 +698,7 @@ int lv_check_transient(struct logical_volume *lv)
 	if (!activation())
 		return 0;
 
-	log_debug("Checking transient status for LV %s/%s", lv->vg->name, lv->name);
+	log_debug_activation("Checking transient status for LV %s/%s", lv->vg->name, lv->name);
 
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
 		return_0;
@@ -722,7 +722,7 @@ int lv_snapshot_percent(const struct logical_volume *lv, percent_t *percent)
 	if (!activation())
 		return 0;
 
-	log_debug("Checking snapshot percent for LV %s/%s", lv->vg->name, lv->name);
+	log_debug_activation("Checking snapshot percent for LV %s/%s", lv->vg->name, lv->name);
 
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
 		return_0;
@@ -753,7 +753,7 @@ int lv_mirror_percent(struct cmd_context *cmd, const struct logical_volume *lv,
 	if (!activation())
 		return 0;
 
-	log_debug("Checking mirror percent for LV %s/%s", lv->vg->name, lv->name);
+	log_debug_activation("Checking mirror percent for LV %s/%s", lv->vg->name, lv->name);
 
 	if (!lv_info(cmd, lv, 0, &info, 0, 0))
 		return_0;
@@ -790,8 +790,8 @@ int lv_thin_pool_percent(const struct logical_volume *lv, int metadata,
 	if (!activation())
 		return 0;
 
-	log_debug("Checking thin %sdata percent for LV %s/%s",
-		  (metadata) ? "meta" : "", lv->vg->name, lv->name);
+	log_debug_activation("Checking thin %sdata percent for LV %s/%s",
+			     (metadata) ? "meta" : "", lv->vg->name, lv->name);
 
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
 		return_0;
@@ -816,8 +816,8 @@ int lv_thin_percent(const struct logical_volume *lv,
 	if (!activation())
 		return 0;
 
-	log_debug("Checking thin percent for LV %s/%s",
-		  lv->vg->name, lv->name);
+	log_debug_activation("Checking thin percent for LV %s/%s",
+			     lv->vg->name, lv->name);
 
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
 		return_0;
@@ -843,8 +843,8 @@ int lv_thin_pool_transaction_id(const struct logical_volume *lv,
 	if (!activation())
 		return 0;
 
-	log_debug("Checking thin percent for LV %s/%s",
-		  lv->vg->name, lv->name);
+	log_debug_activation("Checking thin percent for LV %s/%s",
+			     lv->vg->name, lv->name);
 
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
 		return_0;
@@ -973,7 +973,7 @@ int lvs_in_vg_activated(const struct volume_group *vg)
 		if (lv_is_visible(lvl->lv))
 			count += (_lv_active(vg->cmd, lvl->lv) == 1);
 
-	log_debug("Counted %d active LVs in VG %s", count, vg->name);
+	log_debug_activation("Counted %d active LVs in VG %s", count, vg->name);
 
 	return count;
 }
@@ -990,7 +990,7 @@ int lvs_in_vg_opened(const struct volume_group *vg)
 		if (lv_is_visible(lvl->lv))
 			count += (_lv_open_count(vg->cmd, lvl->lv) > 0);
 
-	log_debug("Counted %d open LVs in VG %s", count, vg->name);
+	log_debug_activation("Counted %d open LVs in VG %s", count, vg->name);
 
 	return count;
 }
@@ -1265,8 +1265,8 @@ int monitor_dev_for_events(struct cmd_context *cmd, struct logical_volume *lv,
 	 */
 	if (laopts->skip_in_use && lv_info(lv->vg->cmd, lv, 1, &info, 1, 0) &&
 	    (info.open_count != 1)) {
-		log_debug("Skipping unmonitor of opened %s (open:%d)",
-			  lv->name, info.open_count);
+		log_debug_activation("Skipping unmonitor of opened %s (open:%d)",
+				     lv->name, info.open_count);
 		return 1;
 	}
 
@@ -1633,10 +1633,10 @@ static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
 		goto out;
 	}
 
-	log_debug("Resuming LV %s/%s%s%s%s.", lv->vg->name, lv->name,
-		  error_if_not_active ? "" : " if active",
-		  laopts->origin_only ? " without snapshots" : "",
-		  laopts->revert ? " (reverting)" : "");
+	log_debug_activation("Resuming LV %s/%s%s%s%s.", lv->vg->name, lv->name,
+			     error_if_not_active ? "" : " if active",
+			     laopts->origin_only ? " without snapshots" : "",
+			     laopts->revert ? " (reverting)" : "");
 
 	if (!lv_info(cmd, lv, laopts->origin_only, &info, 0, 0))
 		goto_out;
@@ -1739,7 +1739,7 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s)
 		goto out;
 	}
 
-	log_debug("Deactivating %s/%s.", lv->vg->name, lv->name);
+	log_debug_activation("Deactivating %s/%s.", lv->vg->name, lv->name);
 
 	if (!lv_info(cmd, lv, 0, &info, 1, 0))
 		goto_out;
@@ -1849,9 +1849,9 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 	if (filter)
 		laopts->read_only = _passes_readonly_filter(cmd, lv);
 
-	log_debug("Activating %s/%s%s%s.", lv->vg->name, lv->name,
-		  laopts->exclusive ? " exclusively" : "",
-		  laopts->read_only ? " read-only" : "");
+	log_debug_activation("Activating %s/%s%s%s.", lv->vg->name, lv->name,
+			     laopts->exclusive ? " exclusively" : "",
+			     laopts->read_only ? " read-only" : "");
 
 	if (!lv_info(cmd, lv, 0, &info, 0, 0))
 		goto_out;

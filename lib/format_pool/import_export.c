@@ -77,8 +77,8 @@ int import_pool_lvs(struct volume_group *vg, struct dm_pool *mem, struct dm_list
 			return_0;
 
 		get_pool_lv_uuid(lv->lvid.id, &pl->pd);
-		log_debug("Calculated lv uuid for lv %s: %s", lv->name,
-			  lv->lvid.s);
+		log_debug_metadata("Calculated lv uuid for lv %s: %s", lv->name,
+				   lv->lvid.s);
 
 		lv->status |= VISIBLE_LV | LVM_READ | LVM_WRITE;
 		lv->major = POOL_MAJOR;
@@ -167,8 +167,8 @@ static const char *_cvt_sptype(uint32_t sptype)
 			break;
 		}
 	}
-	log_debug("Found sptype %X and converted it to %s",
-		  sptype, sptype_names[i].name);
+	log_debug_metadata("Found sptype %X and converted it to %s",
+			   sptype, sptype_names[i].name);
 	return sptype_names[i].name;
 }
 

@@ -161,12 +161,12 @@ static int _lv_is_on_pvs(struct logical_volume *lv, struct dm_list *pvs)
 
 	dm_list_iterate_items(pvl, pvs)
 		if (_lv_is_on_pv(lv, pvl->pv)) {
-			log_debug("%s is on %s", lv->name,
-				  pv_dev_name(pvl->pv));
+			log_debug_metadata("%s is on %s", lv->name,
+					   pv_dev_name(pvl->pv));
 			return 1;
 		} else
-			log_debug("%s is not on %s", lv->name,
-				  pv_dev_name(pvl->pv));
+			log_debug_metadata("%s is not on %s", lv->name,
+					   pv_dev_name(pvl->pv));
 	return 0;
 }
 
@@ -182,8 +182,8 @@ static int _get_pv_list_for_lv(struct logical_volume *lv, struct dm_list *pvs)
 		return 0;
 	}
 
-	log_debug("Getting list of PVs that %s/%s is on:",
-		  lv->vg->name, lv->name);
+	log_debug_metadata("Getting list of PVs that %s/%s is on:",
+			   lv->vg->name, lv->name);
 
 	dm_list_iterate_items(seg, &lv->segments) {
 		for (s = 0; s < seg->area_count; s++) {
@@ -200,8 +200,8 @@ static int _get_pv_list_for_lv(struct logical_volume *lv, struct dm_list *pvs)
 			}
 
 			pvl->pv = seg_pv(seg, s);
-			log_debug("  %s/%s is on %s", lv->vg->name, lv->name,
-				  pv_dev_name(pvl->pv));
+			log_debug_metadata("  %s/%s is on %s", lv->vg->name, lv->name,
+					   pv_dev_name(pvl->pv));
 			dm_list_add(pvs, &pvl->list);
 		}
 	}
@@ -340,7 +340,7 @@ static int _clear_lvs(struct dm_list *lv_list)
 	struct volume_group *vg = NULL;
 
 	if (dm_list_empty(lv_list)) {
-		log_debug(INTERNAL_ERROR "Empty list of LVs given for clearing");
+		log_debug_metadata(INTERNAL_ERROR "Empty list of LVs given for clearing");
 		return 1;
 	}
 
@@ -774,8 +774,8 @@ to be left for these sub-lvs.
 
 	/* Set segment areas for metadata sub_lvs */
 	dm_list_iterate_items(lvl, &meta_lvs) {
-		log_debug("Adding %s to %s",
-			  lvl->lv->name, lv->name);
+		log_debug_metadata("Adding %s to %s",
+				   lvl->lv->name, lv->name);
 		lvl->lv->status &= status_mask;
 		first_seg(lvl->lv)->status &= status_mask;
 		if (!set_lv_segment_area_lv(seg, s, lvl->lv, 0,
@@ -791,8 +791,8 @@ to be left for these sub-lvs.
 
 	/* Set segment areas for data sub_lvs */
 	dm_list_iterate_items(lvl, &data_lvs) {
-		log_debug("Adding %s to %s",
-			  lvl->lv->name, lv->name);
+		log_debug_metadata("Adding %s to %s",
+				   lvl->lv->name, lv->name);
 		lvl->lv->status &= status_mask;
 		first_seg(lvl->lv)->status &= status_mask;
 		if (!set_lv_segment_area_lv(seg, s, lvl->lv, 0,
@@ -1468,8 +1468,8 @@ static int _convert_mirror_to_raid1(struct logical_volume *lv,
 	}
 
 	for (s = 0; s < seg->area_count; s++) {
-		log_debug("Allocating new metadata LV for %s",
-			  seg_lv(seg, s)->name);
+		log_debug_metadata("Allocating new metadata LV for %s",
+				   seg_lv(seg, s)->name);
 		if (!_alloc_rmeta_for_lv(seg_lv(seg, s), &(lvl_array[s].lv))) {
 			log_error("Failed to allocate metadata LV for %s in %s",
 				  seg_lv(seg, s)->name, lv->name);
@@ -1478,14 +1478,14 @@ static int _convert_mirror_to_raid1(struct logical_volume *lv,
 		dm_list_add(&meta_lvs, &(lvl_array[s].list));
 	}
 
-	log_debug("Clearing newly allocated metadata LVs");
+	log_debug_metadata("Clearing newly allocated metadata LVs");
 	if (!_clear_lvs(&meta_lvs)) {
 		log_error("Failed to initialize metadata LVs");
 		return 0;
 	}
 
 	if (seg->log_lv) {
-		log_debug("Removing mirror log, %s", seg->log_lv->name);
+		log_debug_metadata("Removing mirror log, %s", seg->log_lv->name);
 		if (!remove_mirror_log(lv->vg->cmd, lv, NULL, 0)) {
 			log_error("Failed to remove mirror log");
 			return 0;
@@ -1496,7 +1496,7 @@ static int _convert_mirror_to_raid1(struct logical_volume *lv,
 	s = 0;
 
 	dm_list_iterate_items(lvl, &meta_lvs) {
-		log_debug("Adding %s to %s", lvl->lv->name, lv->name);
+		log_debug_metadata("Adding %s to %s", lvl->lv->name, lv->name);
 
 		/* Images are known to be in-sync */
 		lvl->lv->status &= ~LV_REBUILD;
@@ -1524,14 +1524,14 @@ static int _convert_mirror_to_raid1(struct logical_volume *lv,
 		}
 
 		sprintf(new_name, "%s_rimage_%u", lv->name, s);
-		log_debug("Renaming %s to %s", seg_lv(seg, s)->name, new_name);
+		log_debug_metadata("Renaming %s to %s", seg_lv(seg, s)->name, new_name);
 		seg_lv(seg, s)->name = new_name;
 		seg_lv(seg, s)->status &= ~MIRROR_IMAGE;
 		seg_lv(seg, s)->status |= RAID_IMAGE;
 	}
 	init_mirror_in_sync(1);
 
-	log_debug("Setting new segtype for %s", lv->name);
+	log_debug_metadata("Setting new segtype for %s", lv->name);
 	seg->segtype = new_segtype;
 	lv->status &= ~MIRRORED;
 	lv->status |= RAID;

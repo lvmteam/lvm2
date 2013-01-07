@@ -123,32 +123,32 @@ static int _text_write(struct label *label, void *buf)
 		 !xlate64(pvhdr->disk_areas_xl[mda2].size))
 		mda2 = 0;
 
-	log_debug("%s: Preparing PV label header %s size %" PRIu64 " with"
-		  "%s%.*" PRIu64 "%s%.*" PRIu64 "%s"
-		  "%s%.*" PRIu64 "%s%.*" PRIu64 "%s"
-		  "%s%.*" PRIu64 "%s%.*" PRIu64 "%s",
-		  dev_name(lvmcache_device(info)), buffer, lvmcache_device_size(info),
-		  (da1 > -1) ? " da1 (" : "",
-		  (da1 > -1) ? 1 : 0,
-		  (da1 > -1) ? xlate64(pvhdr->disk_areas_xl[da1].offset) >> SECTOR_SHIFT : 0,
-		  (da1 > -1) ? "s, " : "",
-		  (da1 > -1) ? 1 : 0,
-		  (da1 > -1) ? xlate64(pvhdr->disk_areas_xl[da1].size) >> SECTOR_SHIFT : 0,
-		  (da1 > -1) ? "s)" : "",
-		  mda1 ? " mda1 (" : "",
-		  mda1 ? 1 : 0,
-		  mda1 ? xlate64(pvhdr->disk_areas_xl[mda1].offset) >> SECTOR_SHIFT : 0,
-		  mda1 ? "s, " : "",
-		  mda1 ? 1 : 0,
-		  mda1 ? xlate64(pvhdr->disk_areas_xl[mda1].size) >> SECTOR_SHIFT : 0,
-		  mda1 ? "s)" : "",
-		  mda2 ? " mda2 (" : "",
-		  mda2 ? 1 : 0,
-		  mda2 ? xlate64(pvhdr->disk_areas_xl[mda2].offset) >> SECTOR_SHIFT : 0,
-		  mda2 ? "s, " : "",
-		  mda2 ? 1 : 0,
-		  mda2 ? xlate64(pvhdr->disk_areas_xl[mda2].size) >> SECTOR_SHIFT : 0,
-		  mda2 ? "s)" : "");
+	log_debug_metadata("%s: Preparing PV label header %s size %" PRIu64 " with"
+			   "%s%.*" PRIu64 "%s%.*" PRIu64 "%s"
+			   "%s%.*" PRIu64 "%s%.*" PRIu64 "%s"
+			   "%s%.*" PRIu64 "%s%.*" PRIu64 "%s",
+			   dev_name(lvmcache_device(info)), buffer, lvmcache_device_size(info),
+			   (da1 > -1) ? " da1 (" : "",
+			   (da1 > -1) ? 1 : 0,
+			   (da1 > -1) ? xlate64(pvhdr->disk_areas_xl[da1].offset) >> SECTOR_SHIFT : 0,
+			   (da1 > -1) ? "s, " : "",
+			   (da1 > -1) ? 1 : 0,
+			   (da1 > -1) ? xlate64(pvhdr->disk_areas_xl[da1].size) >> SECTOR_SHIFT : 0,
+			   (da1 > -1) ? "s)" : "",
+			   mda1 ? " mda1 (" : "",
+			   mda1 ? 1 : 0,
+			   mda1 ? xlate64(pvhdr->disk_areas_xl[mda1].offset) >> SECTOR_SHIFT : 0,
+			   mda1 ? "s, " : "",
+			   mda1 ? 1 : 0,
+			   mda1 ? xlate64(pvhdr->disk_areas_xl[mda1].size) >> SECTOR_SHIFT : 0,
+			   mda1 ? "s)" : "",
+			   mda2 ? " mda2 (" : "",
+			   mda2 ? 1 : 0,
+			   mda2 ? xlate64(pvhdr->disk_areas_xl[mda2].offset) >> SECTOR_SHIFT : 0,
+			   mda2 ? "s, " : "",
+			   mda2 ? 1 : 0,
+			   mda2 ? xlate64(pvhdr->disk_areas_xl[mda2].size) >> SECTOR_SHIFT : 0,
+			   mda2 ? "s)" : "");
 
 	if (da1 < 0) {
 		log_error(INTERNAL_ERROR "%s label header currently requires "
@@ -294,9 +294,9 @@ static int _update_mda(struct metadata_area *mda, void *baton)
 	mda_set_ignored(mda, rlocn_is_ignored(mdah->raw_locns));
 
 	if (mda_is_ignored(mda)) {
-		log_debug("Ignoring mda on device %s at offset %"PRIu64,
-			  dev_name(mdac->area.dev),
-			  mdac->area.start);
+		log_debug_metadata("Ignoring mda on device %s at offset %"PRIu64,
+				   dev_name(mdac->area.dev),
+				   mdac->area.start);
 		if (!dev_close(mdac->area.dev))
 			stack;
 		return 1;

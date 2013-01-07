@@ -252,15 +252,15 @@ static int _ignore_blocked_mirror_devices(struct device *dev,
 
 	for (i = 0; images_health[i]; i++)
 		if (images_health[i] != 'A') {
-			log_debug("%s: Mirror image %d marked as failed",
-				  dev_name(dev), i);
+			log_debug_activation("%s: Mirror image %d marked as failed",
+					     dev_name(dev), i);
 			check_for_blocking = 1;
 		}
 
 	if (!check_for_blocking && log_dev) {
 		if (log_health[0] != 'A') {
-			log_debug("%s: Mirror log device marked as failed",
-				  dev_name(dev));
+			log_debug_activation("%s: Mirror log device marked as failed",
+					     dev_name(dev));
 			check_for_blocking = 1;
 		} else {
 			struct device *tmp_dev;
@@ -310,8 +310,8 @@ static int _ignore_blocked_mirror_devices(struct device *dev,
 
 			if (strstr(params, "block_on_error") ||
 			    strstr(params, "handle_errors")) {
-				log_debug("%s: I/O blocked to mirror device",
-					  dev_name(dev));
+				log_debug_activation("%s: I/O blocked to mirror device",
+						     dev_name(dev));
 				goto out;
 			}
 		}
@@ -363,12 +363,12 @@ int device_is_usable(struct device *dev)
 	uuid = dm_task_get_uuid(dmt);
 
 	if (!info.target_count) {
-		log_debug("%s: Empty device %s not usable.", dev_name(dev), name);
+		log_debug_activation("%s: Empty device %s not usable.", dev_name(dev), name);
 		goto out;
 	}
 
 	if (info.suspended && ignore_suspended_devices()) {
-		log_debug("%s: Suspended device %s not usable.", dev_name(dev), name);
+		log_debug_activation("%s: Suspended device %s not usable.", dev_name(dev), name);
 		goto out;
 	}
 
@@ -379,8 +379,8 @@ int device_is_usable(struct device *dev)
 
 		if (target_type && !strcmp(target_type, "mirror") &&
 		    !_ignore_blocked_mirror_devices(dev, start, length, params)) {
-			log_debug("%s: Mirror device %s not usable.",
-				  dev_name(dev), name);
+			log_debug_activation("%s: Mirror device %s not usable.",
+					     dev_name(dev), name);
 			goto out;
 		}
 
@@ -394,8 +394,8 @@ int device_is_usable(struct device *dev)
 		 */
 		if (target_type && !strcmp(target_type, "snapshot-origin") &&
 		    ignore_suspended_devices()) {
-			log_debug("%s: Snapshot-origin device %s not usable.",
-				  dev_name(dev), name);
+			log_debug_activation("%s: Snapshot-origin device %s not usable.",
+					     dev_name(dev), name);
 			goto out;
 		}
 
@@ -406,8 +406,8 @@ int device_is_usable(struct device *dev)
 	/* Skip devices consisting entirely of error targets. */
 	/* FIXME Deal with device stacked above error targets? */
 	if (only_error_target) {
-		log_debug("%s: Error device %s not usable.",
-			  dev_name(dev), name);
+		log_debug_activation("%s: Error device %s not usable.",
+				     dev_name(dev), name);
 		goto out;
 	}
 
@@ -420,8 +420,8 @@ int device_is_usable(struct device *dev)
 			goto_out;
 
 		if (lvname && (is_reserved_lvname(lvname) || *layer)) {
-			log_debug("%s: Reserved internal LV device %s/%s%s%s not usable.",
-				  dev_name(dev), vgname, lvname, *layer ? "-" : "", layer);
+			log_debug_activation("%s: Reserved internal LV device %s/%s%s%s not usable.",
+					     dev_name(dev), vgname, lvname, *layer ? "-" : "", layer);
 			goto out;
 		}
 	}
@@ -473,7 +473,7 @@ int dev_manager_info(struct dm_pool *mem, const struct logical_volume *lv,
 		return 0;
 	}
 
-	log_debug("Getting device info for %s [%s]", name, dlid);
+	log_debug_activation("Getting device info for %s [%s]", name, dlid);
 	r = _info(dlid, with_open_count, with_read_ahead, info, read_ahead);
 
 	dm_pool_free(mem, name);
@@ -786,7 +786,7 @@ static int _percent_run(struct dev_manager *dm, const char *name,
 			goto_out;
 	}
 
-	log_debug("LV percent: %f", percent_to_float(*overall_percent));
+	log_debug_activation("LV percent: %f", percent_to_float(*overall_percent));
 	r = 1;
 
       out:
@@ -980,7 +980,7 @@ int dev_manager_snapshot_percent(struct dev_manager *dm,
 	/*
 	 * Try and get some info on this device.
 	 */
-	log_debug("Getting device status percentage for %s", name);
+	log_debug_activation("Getting device status percentage for %s", name);
 	if (!(_percent(dm, name, dlid, "snapshot", 0, NULL, percent,
 		       NULL, fail_if_percent_unsupported)))
 		return_0;
@@ -1011,8 +1011,8 @@ int dev_manager_mirror_percent(struct dev_manager *dm,
 		return 0;
 	}
 
-	log_debug("Getting device %s status percentage for %s",
-		  target_type, name);
+	log_debug_activation("Getting device %s status percentage for %s",
+			     target_type, name);
 	if (!(_percent(dm, name, dlid, target_type, wait, lv, percent,
 		       event_nr, 0)))
 		return_0;
@@ -1033,13 +1033,13 @@ int dev_manager_mirror_percent(struct dev_manager *dm,
 	else
 		log_very_verbose("Removing %s", dl->name);
 
-	log_debug("Adding target: %" PRIu64 " %" PRIu64 " %s %s",
+	log_debug_activation("Adding target: %" PRIu64 " %" PRIu64 " %s %s",
 		  extent_size * seg->le, extent_size * seg->len, target, params);
 
-	log_debug("Adding target: 0 %" PRIu64 " snapshot-origin %s",
+	log_debug_activation("Adding target: 0 %" PRIu64 " snapshot-origin %s",
 		  dl->lv->size, params);
-	log_debug("Adding target: 0 %" PRIu64 " snapshot %s", size, params);
-	log_debug("Getting device info for %s", dl->name);
+	log_debug_activation("Adding target: 0 %" PRIu64 " snapshot %s", size, params);
+	log_debug_activation("Getting device info for %s", dl->name);
 
 	/* Rename? */
 		if ((suffix = strrchr(dl->dlid + sizeof(UUID_PREFIX) - 1, '-')))
@@ -1095,7 +1095,7 @@ int dev_manager_thin_pool_status(struct dev_manager *dm,
 	if (!(dlid = build_dm_uuid(dm->mem, lv->lvid.s, _thin_layer)))
 		return_0;
 
-	log_debug("Getting thin pool device status for %s.", lv->name);
+	log_debug_activation("Getting thin pool device status for %s.", lv->name);
 
 	if (!(dmt = _setup_task(NULL, dlid, 0, DM_DEVICE_STATUS, 0, 0)))
 		return_0;
@@ -1136,7 +1136,7 @@ int dev_manager_thin_pool_percent(struct dev_manager *dm,
 	if (!(dlid = build_dm_uuid(dm->mem, lv->lvid.s, _thin_layer)))
 		return_0;
 
-	log_debug("Getting device status percentage for %s", name);
+	log_debug_activation("Getting device status percentage for %s", name);
 	if (!(_percent(dm, name, dlid, "thin-pool", 0,
 		       (metadata) ? lv : NULL, percent, NULL, 1)))
 		return_0;
@@ -1159,7 +1159,7 @@ int dev_manager_thin_percent(struct dev_manager *dm,
 	if (!(dlid = build_dm_uuid(dm->mem, lv->lvid.s, layer)))
 		return_0;
 
-	log_debug("Getting device status percentage for %s", name);
+	log_debug_activation("Getting device status percentage for %s", name);
 	if (!(_percent(dm, name, dlid, "thin", 0,
 		       (mapped) ? NULL : lv, percent, NULL, 1)))
 		return_0;
@@ -1272,7 +1272,7 @@ static int _add_dev_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	if (!(dlid = build_dm_uuid(dm->mem, lv->lvid.s, layer)))
 		return_0;
 
-	log_debug("Getting device info for %s [%s]", name, dlid);
+	log_debug_activation("Getting device info for %s [%s]", name, dlid);
 	if (!_info(dlid, 1, 0, &info, NULL)) {
 		log_error("Failed to get info for %s [%s].", name, dlid);
 		return 0;
@@ -1588,7 +1588,7 @@ static struct dm_tree *_create_partial_dtree(struct dev_manager *dm, struct logi
 	uint32_t s;
 
 	if (!(dtree = dm_tree_create())) {
-		log_debug("Partial dtree creation failed for %s.", lv->name);
+		log_debug_activation("Partial dtree creation failed for %s.", lv->name);
 		return NULL;
 	}
 
@@ -1647,7 +1647,7 @@ static char *_add_error_device(struct dev_manager *dm, struct dm_tree *dtree,
 				   seg->lv->name, errid)))
 		return_NULL;
 
-	log_debug("Getting device info for %s [%s]", name, dlid);
+	log_debug_activation("Getting device info for %s [%s]", name, dlid);
 	if (!_info(dlid, 1, 0, &info, NULL)) {
 		log_error("Failed to get info for %s [%s].", name, dlid);
 		return 0;
@@ -1958,9 +1958,9 @@ static int _add_segment_to_dtree(struct dev_manager *dm,
 		       seg_present->segtype->ops->target_name(seg_present, laopts) :
 		       seg_present->segtype->name);
 
-	log_debug("Checking kernel supports %s segment type for %s%s%s",
-		  target_name, seg->lv->name,
-		  layer ? "-" : "", layer ? : "");
+	log_debug_activation("Checking kernel supports %s segment type for %s%s%s",
+			     target_name, seg->lv->name,
+			     layer ? "-" : "", layer ? : "");
 
 	if (seg_present->segtype->ops->target_present &&
 	    !seg_present->segtype->ops->target_present(seg_present->lv->vg->cmd,

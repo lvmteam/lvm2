@@ -170,7 +170,7 @@ static int _accept_p(struct dev_filter *f, struct device *dev)
 	}
 
 	if (rejected)
-		log_debug("%s: Skipping (regex)", dev_name(dev));
+		log_debug_devs("%s: Skipping (regex)", dev_name(dev));
 
 	/*
 	 * pass everything that doesn't match

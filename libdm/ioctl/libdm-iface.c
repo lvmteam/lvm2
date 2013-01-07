@@ -756,9 +756,9 @@ int dm_task_set_newuuid(struct dm_task *dmt, const char *newuuid)
 	}
 
 	if (r) {
-		log_debug("New device uuid mangled [%s]: %s --> %s",
-			  mangling_mode == DM_STRING_MANGLING_AUTO ? "auto" : "hex",
-			  newuuid, mangled_uuid);
+		log_debug_activation("New device uuid mangled [%s]: %s --> %s",
+				     mangling_mode == DM_STRING_MANGLING_AUTO ? "auto" : "hex",
+				     newuuid, mangled_uuid);
 		newuuid = mangled_uuid;
 	}
 
@@ -1505,8 +1505,8 @@ static int _check_children_not_suspended_v4(struct dm_task *dmt, uint64_t device
 	 */
 	if (info.suspended) {
 		if (!device)
-			log_debug("Attempting to suspend a device that is already suspended "
-				  "(%u:%u)", info.major, info.minor);
+			log_debug_activation("Attempting to suspend a device that is already suspended "
+					     "(%u:%u)", info.major, info.minor);
 		else
 			log_error(INTERNAL_ERROR "Attempt to suspend device %s%s%s%.0d%s%.0d%s%s"
 				  "that uses already-suspended device (%u:%u)", 
@@ -1584,8 +1584,8 @@ static int _do_dm_ioctl_unmangle_string(char *str, const char *str_name,
 		return_0;
 
 	if ((r = unmangle_string(str, str_name, strlen(str), buf, buf_size, mode)) < 0) {
-		log_debug("_do_dm_ioctl_unmangle_string: failed to "
-			  "unmangle %s \"%s\"", str_name, str);
+		log_debug_activation("_do_dm_ioctl_unmangle_string: failed to "
+				     "unmangle %s \"%s\"", str_name, str);
 		return 0;
 	} else if (r)
 		memcpy(str, buf, strlen(buf) + 1);
@@ -1680,15 +1680,15 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 		 * libdevmapper's node and symlink creation code.
 		 */
 		if (!dmt->cookie_set && dm_udev_get_sync_support()) {
-			log_debug("Cookie value is not set while trying to call %s "
-				  "ioctl. Please, consider using libdevmapper's udev "
-				  "synchronisation interface or disable it explicitly "
-				  "by calling dm_udev_set_sync_support(0).",
-				  dmt->type == DM_DEVICE_RESUME ? "DM_DEVICE_RESUME" :
-				  dmt->type == DM_DEVICE_REMOVE ? "DM_DEVICE_REMOVE" :
-								  "DM_DEVICE_RENAME");
-			log_debug("Switching off device-mapper and all subsystem related "
-				  "udev rules. Falling back to libdevmapper node creation.");
+			log_debug_activation("Cookie value is not set while trying to call %s "
+					     "ioctl. Please, consider using libdevmapper's udev "
+					     "synchronisation interface or disable it explicitly "
+					     "by calling dm_udev_set_sync_support(0).",
+					     dmt->type == DM_DEVICE_RESUME ? "DM_DEVICE_RESUME" :
+					     dmt->type == DM_DEVICE_REMOVE ? "DM_DEVICE_REMOVE" :
+									     "DM_DEVICE_RENAME");
+			log_debug_activation("Switching off device-mapper and all subsystem related "
+					     "udev rules. Falling back to libdevmapper node creation.");
 			/*
 			 * Disable general dm and subsystem rules but keep
 			 * dm disk rules if not flagged out explicitly before.
@@ -1700,28 +1700,28 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 		}
 	}
 
-	log_debug("dm %s %s%s %s%s%s %s%.0d%s%.0d%s"
-		  "%s%c%c%s%s%s%s%s%s %.0" PRIu64 " %s [%u] (*%u)",
-		  _cmd_data_v4[dmt->type].name,
-		  dmt->new_uuid ? "UUID " : "",
-		  dmi->name, dmi->uuid, dmt->newname ? " " : "",
-		  dmt->newname ? dmt->newname : "",
-		  dmt->major > 0 ? "(" : "",
-		  dmt->major > 0 ? dmt->major : 0,
-		  dmt->major > 0 ? ":" : "",
-		  dmt->minor > 0 ? dmt->minor : 0,
-		  dmt->major > 0 && dmt->minor == 0 ? "0" : "",
-		  dmt->major > 0 ? ") " : "",
-		  dmt->no_open_count ? 'N' : 'O',
-		  dmt->no_flush ? 'N' : 'F',
-		  dmt->read_only ? "R" : "",
-		  dmt->skip_lockfs ? "S " : "",
-		  dmt->retry_remove ? "T " : "",
-		  dmt->secure_data ? "W " : "",
-		  dmt->query_inactive_table ? "I " : "",
-		  dmt->enable_checks ? "C" : "",
-		  dmt->sector, _sanitise_message(dmt->message),
-		  dmi->data_size, retry_repeat_count);
+	log_debug_activation("dm %s %s%s %s%s%s %s%.0d%s%.0d%s"
+			     "%s%c%c%s%s%s%s%s%s %.0" PRIu64 " %s [%u] (*%u)",
+			     _cmd_data_v4[dmt->type].name,
+			     dmt->new_uuid ? "UUID " : "",
+			     dmi->name, dmi->uuid, dmt->newname ? " " : "",
+			     dmt->newname ? dmt->newname : "",
+			     dmt->major > 0 ? "(" : "",
+			     dmt->major > 0 ? dmt->major : 0,
+			     dmt->major > 0 ? ":" : "",
+			     dmt->minor > 0 ? dmt->minor : 0,
+			     dmt->major > 0 && dmt->minor == 0 ? "0" : "",
+			     dmt->major > 0 ? ") " : "",
+			     dmt->no_open_count ? 'N' : 'O',
+			     dmt->no_flush ? 'N' : 'F',
+			     dmt->read_only ? "R" : "",
+			     dmt->skip_lockfs ? "S " : "",
+			     dmt->retry_remove ? "T " : "",
+			     dmt->secure_data ? "W " : "",
+			     dmt->query_inactive_table ? "I " : "",
+			     dmt->enable_checks ? "C" : "",
+			     dmt->sector, _sanitise_message(dmt->message),
+			     dmi->data_size, retry_repeat_count);
 #ifdef DM_IOCTLS
 	if (ioctl(_control_fd, command, dmi) < 0 &&
 	    dmt->expected_errno != errno) {
@@ -1754,8 +1754,8 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 
 	if (ioctl_with_uevent && dm_udev_get_sync_support() &&
 	    !_check_uevent_generated(dmi)) {
-		log_debug("Uevent not generated! Calling udev_complete "
-			  "internally to avoid process lock-up.");
+		log_debug_activation("Uevent not generated! Calling udev_complete "
+				     "internally to avoid process lock-up.");
 		_udev_complete(dmt);
 	}
 

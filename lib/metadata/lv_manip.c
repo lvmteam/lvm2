@@ -1039,8 +1039,8 @@ static int _log_parallel_areas(struct dm_pool *mem, struct dm_list *parallel_are
 		}
 
 		pvnames = dm_pool_end_object(mem);
-		log_debug("Parallel PVs at LE %" PRIu32 " length %" PRIu32 ": %s",
-			  spvs->le, spvs->len, pvnames);
+		log_debug_alloc("Parallel PVs at LE %" PRIu32 " length %" PRIu32 ": %s",
+				spvs->le, spvs->len, pvnames);
 		dm_pool_free(mem, pvnames);
 	}
 
@@ -1168,12 +1168,12 @@ static int _alloc_parallel_area(struct alloc_handle *ah, uint32_t max_to_allocat
 			aa[s].pe = pva->start;
 			aa[s].len = ah->log_len;
 
-			log_debug("Allocating parallel metadata area %" PRIu32
-				  " on %s start PE %" PRIu32
-				  " length %" PRIu32 ".",
-				  (s - (ah->area_count + ah->parity_count)),
-				  pv_dev_name(aa[s].pv), aa[s].pe,
-				  ah->log_len);
+			log_debug_alloc("Allocating parallel metadata area %" PRIu32
+					" on %s start PE %" PRIu32
+					" length %" PRIu32 ".",
+					(s - (ah->area_count + ah->parity_count)),
+					pv_dev_name(aa[s].pv), aa[s].pe,
+					ah->log_len);
 
 			consume_pv_area(pva, ah->log_len);
 			dm_list_add(&ah->alloced_areas[s], &aa[s].list);
@@ -1187,9 +1187,9 @@ static int _alloc_parallel_area(struct alloc_handle *ah, uint32_t max_to_allocat
 		aa[s].pv = pva->map->pv;
 		aa[s].pe = pva->start;
 
-		log_debug("Allocating parallel area %" PRIu32
-			  " on %s start PE %" PRIu32 " length %" PRIu32 ".",
-			  s, pv_dev_name(aa[s].pv), aa[s].pe, aa[s].len);
+		log_debug_alloc("Allocating parallel area %" PRIu32
+				" on %s start PE %" PRIu32 " length %" PRIu32 ".",
+				s, pv_dev_name(aa[s].pv), aa[s].pe, aa[s].len);
 
 		consume_pv_area(pva, aa[s].len);
 
@@ -1366,8 +1366,8 @@ static int _pvs_have_matching_tag(const struct dm_config_node *cling_tag_list_cn
 			if (!str_list_match_list(&pv1->tags, &pv2->tags, &tag_matched))
 				continue;
 			else {
-				log_debug("Matched allocation PV tag %s on existing %s with free space on %s.",
-					  tag_matched, pv_dev_name(pv1), pv_dev_name(pv2));
+				log_debug_alloc("Matched allocation PV tag %s on existing %s with free space on %s.",
+						tag_matched, pv_dev_name(pv1), pv_dev_name(pv2));
 				return 1;
 			}
 		}
@@ -1376,8 +1376,8 @@ static int _pvs_have_matching_tag(const struct dm_config_node *cling_tag_list_cn
 		    !str_list_match_item(&pv2->tags, str))
 			continue;
 		else {
-			log_debug("Matched allocation PV tag %s on existing %s with free space on %s.",
-				  str, pv_dev_name(pv1), pv_dev_name(pv2));
+			log_debug_alloc("Matched allocation PV tag %s on existing %s with free space on %s.",
+					str, pv_dev_name(pv1), pv_dev_name(pv2));
 			return 1;
 		}
 	}
@@ -1407,11 +1407,11 @@ static int _is_contiguous(struct pv_match *pvmatch __attribute((unused)), struct
 static void _reserve_area(struct pv_area_used *area_used, struct pv_area *pva, uint32_t required,
 			  uint32_t ix_pva, uint32_t unreserved)
 {
-	log_debug("%s allocation area %" PRIu32 " %s %s start PE %" PRIu32
-		  " length %" PRIu32 " leaving %" PRIu32 ".",
-		  area_used->pva ? "Changing   " : "Considering", 
-		  ix_pva - 1, area_used->pva ? "to" : "as", 
-		  dev_name(pva->map->pv->dev), pva->start, required, unreserved);
+	log_debug_alloc("%s allocation area %" PRIu32 " %s %s start PE %" PRIu32
+			" length %" PRIu32 " leaving %" PRIu32 ".",
+			area_used->pva ? "Changing   " : "Considering", 
+			ix_pva - 1, area_used->pva ? "to" : "as", 
+			dev_name(pva->map->pv->dev), pva->start, required, unreserved);
 
 	area_used->pva = pva;
 	area_used->used = required;
@@ -1717,13 +1717,13 @@ static void _report_needed_allocation_space(struct alloc_handle *ah,
 		metadata_count = alloc_state->log_area_count_still_needed;
 	}
 
-	log_debug("Still need %" PRIu32 " total extents:",
-		parallel_area_size * parallel_areas_count + metadata_size * metadata_count);
-	log_debug("  %" PRIu32 " (%" PRIu32 " data/%" PRIu32
-		  " parity) parallel areas of %" PRIu32 " extents each",
-		  parallel_areas_count, ah->area_count, ah->parity_count, parallel_area_size);
-	log_debug("  %" PRIu32 " %ss of %" PRIu32 " extents each",
-		  metadata_count, metadata_type, metadata_size);
+	log_debug_alloc("Still need %" PRIu32 " total extents:",
+			parallel_area_size * parallel_areas_count + metadata_size * metadata_count);
+	log_debug_alloc("  %" PRIu32 " (%" PRIu32 " data/%" PRIu32
+			" parity) parallel areas of %" PRIu32 " extents each",
+			parallel_areas_count, ah->area_count, ah->parity_count, parallel_area_size);
+	log_debug_alloc("  %" PRIu32 " %ss of %" PRIu32 " extents each",
+			metadata_count, metadata_type, metadata_size);
 }
 /*
  * Returns 1 regardless of whether any space was found, except on error.
@@ -1756,8 +1756,8 @@ static int _find_some_parallel_space(struct alloc_handle *ah, const struct alloc
 		ix_offset = ah->area_count;
 
 	if (alloc_parms->alloc == ALLOC_NORMAL || (alloc_parms->flags & A_CLING_TO_ALLOCED))
-		log_debug("Cling_to_allocated is %sset",
-			  alloc_parms->flags & A_CLING_TO_ALLOCED ? "" : "not ");
+		log_debug_alloc("Cling_to_allocated is %sset",
+				alloc_parms->flags & A_CLING_TO_ALLOCED ? "" : "not ");
 
 	_clear_areas(alloc_state);
 	_reset_unreserved(pvms);
@@ -1767,9 +1767,9 @@ static int _find_some_parallel_space(struct alloc_handle *ah, const struct alloc
 	/* ix holds the number of areas found on other PVs */
 	do {
 		if (log_iteration_count) {
-			log_debug("Found %u areas for %" PRIu32 " parallel areas and %" PRIu32 " log areas so far.", ix, devices_needed, alloc_state->log_area_count_still_needed);
+			log_debug_alloc("Found %u areas for %" PRIu32 " parallel areas and %" PRIu32 " log areas so far.", ix, devices_needed, alloc_state->log_area_count_still_needed);
 		} else if (iteration_count)
-			log_debug("Filled %u out of %u preferred areas so far.", preferred_count, ix_offset);
+			log_debug_alloc("Filled %u out of %u preferred areas so far.", preferred_count, ix_offset);
 
 		/*
 		 * Provide for escape from the loop if no progress is made.
@@ -1889,12 +1889,12 @@ static int _find_some_parallel_space(struct alloc_handle *ah, const struct alloc
 	/* Sort the areas so we allocate from the biggest */
 	if (log_iteration_count) {
 		if (ix > devices_needed + 1) {
-			log_debug("Sorting %u log areas", ix - devices_needed);
+			log_debug_alloc("Sorting %u log areas", ix - devices_needed);
 			qsort(alloc_state->areas + devices_needed, ix - devices_needed, sizeof(*alloc_state->areas),
 			      _comp_area);
 		}
 	} else if (ix > 1) {
-		log_debug("Sorting %u areas", ix);
+		log_debug_alloc("Sorting %u areas", ix);
 		qsort(alloc_state->areas + ix_offset, ix, sizeof(*alloc_state->areas),
 		      _comp_area);
 	}
@@ -2107,7 +2107,7 @@ static int _allocate(struct alloc_handle *ah,
 		if (alloc == ALLOC_CLING_BY_TAGS && !ah->cling_tag_list_cn)
 			continue;
 		old_allocated = alloc_state.allocated;
-		log_debug("Trying allocation using %s policy.", get_alloc_string(alloc));
+		log_debug_alloc("Trying allocation using %s policy.", get_alloc_string(alloc));
 
 		if (!_sufficient_pes_free(ah, pvms, alloc_state.allocated, ah->new_extents))
 			goto_out;
@@ -3273,7 +3273,7 @@ void lv_set_visible(struct logical_volume *lv)
 
 	lv->status |= VISIBLE_LV;
 
-	log_debug("LV %s in VG %s is now visible.",  lv->name, lv->vg->name);
+	log_debug_metadata("LV %s in VG %s is now visible.",  lv->name, lv->vg->name);
 }
 
 void lv_set_hidden(struct logical_volume *lv)
@@ -3283,7 +3283,7 @@ void lv_set_hidden(struct logical_volume *lv)
 
 	lv->status &= ~VISIBLE_LV;
 
-	log_debug("LV %s in VG %s is now hidden.",  lv->name, lv->vg->name);
+	log_debug_metadata("LV %s in VG %s is now hidden.",  lv->name, lv->vg->name);
 }
 
 int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
@@ -3999,10 +3999,10 @@ static int _match_seg_area_to_pe_range(struct lv_segment *seg, uint32_t s,
 			continue;
 
 		/* FIXME Missing context in this message - add LV/seg details */
-		log_debug("Matched PE range %s:%" PRIu32 "-%" PRIu32 " against "
-			  "%s %" PRIu32 " len %" PRIu32, dev_name(pvl->pv->dev),
-			  per->start, per_end, dev_name(seg_dev(seg, s)),
-			  seg_pe(seg, s), seg->area_len);
+		log_debug_alloc("Matched PE range %s:%" PRIu32 "-%" PRIu32 " against "
+				"%s %" PRIu32 " len %" PRIu32, dev_name(pvl->pv->dev),
+				per->start, per_end, dev_name(seg_dev(seg, s)),
+				seg_pe(seg, s), seg->area_len);
 
 		return 1;
 	}

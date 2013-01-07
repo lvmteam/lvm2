@@ -535,8 +535,8 @@ static int _write_vgd(struct disk_list *data)
 	struct vg_disk *vgd = &data->vgd;
 	uint64_t pos = data->pvd.vg_on_disk.base;
 
-	log_debug("Writing %s VG metadata to %s at %" PRIu64 " len %" PRIsize_t,
-		  data->pvd.vg_name, dev_name(data->dev), pos, sizeof(*vgd));
+	log_debug_metadata("Writing %s VG metadata to %s at %" PRIu64 " len %" PRIsize_t,
+			   data->pvd.vg_name, dev_name(data->dev), pos, sizeof(*vgd));
 
 	_xlate_vgd(vgd);
 	if (!dev_write(data->dev, pos, sizeof(*vgd), vgd))
@@ -560,9 +560,9 @@ static int _write_uuids(struct disk_list *data)
 			return 0;
 		}
 
-		log_debug("Writing %s uuidlist to %s at %" PRIu64 " len %d",
-			  data->pvd.vg_name, dev_name(data->dev),
-			  pos, NAME_LEN);
+		log_debug_metadata("Writing %s uuidlist to %s at %" PRIu64 " len %d",
+				   data->pvd.vg_name, dev_name(data->dev),
+				   pos, NAME_LEN);
 
 		if (!dev_write(data->dev, pos, NAME_LEN, ul->uuid))
 			return_0;
@@ -575,9 +575,9 @@ static int _write_uuids(struct disk_list *data)
 
 static int _write_lvd(struct device *dev, uint64_t pos, struct lv_disk *disk)
 {
-	log_debug("Writing %s LV %s metadata to %s at %" PRIu64 " len %"
-		  PRIsize_t, disk->vg_name, disk->lv_name, dev_name(dev),
-		  pos, sizeof(*disk));
+	log_debug_metadata("Writing %s LV %s metadata to %s at %" PRIu64 " len %"
+			   PRIsize_t, disk->vg_name, disk->lv_name, dev_name(dev),
+			   pos, sizeof(*disk));
 
 	_xlate_lvd(disk);
 	if (!dev_write(dev, pos, sizeof(*disk), disk))
@@ -621,9 +621,9 @@ static int _write_extents(struct disk_list *data)
 	struct pe_disk *extents = data->extents;
 	uint64_t pos = data->pvd.pe_on_disk.base;
 
-	log_debug("Writing %s extents metadata to %s at %" PRIu64 " len %"
-		  PRIsize_t, data->pvd.vg_name, dev_name(data->dev),
-		  pos, len);
+	log_debug_metadata("Writing %s extents metadata to %s at %" PRIu64 " len %"
+			   PRIsize_t, data->pvd.vg_name, dev_name(data->dev),
+			   pos, len);
 
 	_xlate_extents(extents, data->pvd.pe_total);
 	if (!dev_write(data->dev, pos, len, extents))
@@ -656,9 +656,9 @@ static int _write_pvd(struct disk_list *data)
 
 	memcpy(buf, &data->pvd, sizeof(struct pv_disk));
 
-	log_debug("Writing %s PV metadata to %s at %" PRIu64 " len %"
-		  PRIsize_t, data->pvd.vg_name, dev_name(data->dev),
-		  pos, size);
+	log_debug_metadata("Writing %s PV metadata to %s at %" PRIu64 " len %"
+			   PRIsize_t, data->pvd.vg_name, dev_name(data->dev),
+			   pos, size);
 
 	_xlate_pvd((struct pv_disk *) buf);
 	if (!dev_write(data->dev, pos, size, buf)) {

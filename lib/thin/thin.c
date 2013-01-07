@@ -328,7 +328,7 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 					return 0;
 				}
 			}
-			log_debug("Thin pool create_%s %s.", (!origin) ? "thin" : "snap", lmsg->u.lv->name);
+			log_debug_activation("Thin pool create_%s %s.", (!origin) ? "thin" : "snap", lmsg->u.lv->name);
 			if (!dm_tree_node_add_thin_pool_message(node,
 								(!origin) ? lmsg->type : DM_THIN_MESSAGE_CREATE_SNAP,
 								first_seg(lmsg->u.lv)->device_id,
@@ -336,7 +336,7 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 				return_0;
 			break;
 		case DM_THIN_MESSAGE_DELETE:
-			log_debug("Thin pool delete %u.", lmsg->u.delete_id);
+			log_debug_activation("Thin pool delete %u.", lmsg->u.delete_id);
 			if (!dm_tree_node_add_thin_pool_message(node,
 								lmsg->type,
 								lmsg->u.delete_id, 0))
@@ -350,7 +350,7 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 
 	if (!dm_list_empty(&seg->thin_messages)) {
 		/* Messages were passed, modify transaction_id as the last one */
-		log_debug("Thin pool set transaction id %" PRIu64 ".", seg->transaction_id);
+		log_debug_activation("Thin pool set transaction id %" PRIu64 ".", seg->transaction_id);
 		if (!dm_tree_node_add_thin_pool_message(node,
 							DM_THIN_MESSAGE_SET_TRANSACTION_ID,
 							seg->transaction_id - 1,

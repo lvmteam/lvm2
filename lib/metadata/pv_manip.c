@@ -232,8 +232,8 @@ int discard_pv_segment(struct pv_segment *peg, uint32_t discard_area_reduction)
 		discard_area_reduction--;
 	}
 
-	log_debug("Discarding %" PRIu32 " extents offset %" PRIu64 " sectors on %s.",
-		  discard_area_reduction, discard_offset_sectors, dev_name(peg->pv->dev));
+	log_debug_alloc("Discarding %" PRIu32 " extents offset %" PRIu64 " sectors on %s.",
+			discard_area_reduction, discard_offset_sectors, dev_name(peg->pv->dev));
 	if (discard_area_reduction &&
 	    !dev_discard_blocks(peg->pv->dev, discard_offset_sectors << SECTOR_SHIFT,
 				discard_area_reduction * (uint64_t) peg->pv->vg->extent_size * SECTOR_SIZE))
@@ -344,10 +344,10 @@ int check_pv_segments(struct volume_group *vg)
 			s = peg->lv_area;
 
 			/* FIXME Remove this next line eventually */
-			log_debug("%s %u: %6u %6u: %s(%u:%u)",
-				  pv_dev_name(pv), segno++, peg->pe, peg->len,
-				  peg->lvseg ? peg->lvseg->lv->name : "NULL",
-				  peg->lvseg ? peg->lvseg->le : 0, s);
+			log_debug_alloc("%s %u: %6u %6u: %s(%u:%u)",
+					pv_dev_name(pv), segno++, peg->pe, peg->len,
+					peg->lvseg ? peg->lvseg->lv->name : "NULL",
+					peg->lvseg ? peg->lvseg->le : 0, s);
 			/* FIXME Add details here on failure instead */
 			if (start_pe != peg->pe) {
 				log_error("Gap in pvsegs: %u, %u",

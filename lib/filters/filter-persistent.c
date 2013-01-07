@@ -282,7 +282,7 @@ static int _lookup_p(struct dev_filter *f, struct device *dev)
 
 	/* Cached BAD? */
 	if (l == PF_BAD_DEVICE) {
-		log_debug("%s: Skipping (cached)", dev_name(dev));
+		log_debug_devs("%s: Skipping (cached)", dev_name(dev));
 		return 0;
 	}
 
@@ -295,7 +295,7 @@ static int _lookup_p(struct dev_filter *f, struct device *dev)
 					return 0;
 				}
 		if (!device_is_usable(dev)) {
-			log_debug("%s: Skipping unusable device", dev_name(dev));
+			log_debug_devs("%s: Skipping unusable device", dev_name(dev));
 			return 0;
 		}
 		return pf->real->passes_filter(pf->real, dev);

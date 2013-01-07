@@ -46,12 +46,12 @@ int udev_is_running(void)
 	int r;
 
 	if (!_udev) {
-		log_debug(_no_context_msg);
+		log_debug_activation(_no_context_msg);
 		goto bad;
 	}
 
 	if (!(udev_queue = udev_queue_new(_udev))) {
-		log_debug("Could not get udev state.");
+		log_debug_activation("Could not get udev state.");
 		goto bad;
 	}
 
@@ -61,7 +61,7 @@ int udev_is_running(void)
 	return r;
 
 bad:
-	log_debug("Assuming udev is not running.");
+	log_debug_activation("Assuming udev is not running.");
 	return 0;
 }
 

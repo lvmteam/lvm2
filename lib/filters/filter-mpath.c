@@ -160,7 +160,7 @@ static int dev_is_mpath(struct dev_filter *f, struct device *dev)
 static int _ignore_mpath(struct dev_filter *f, struct device *dev)
 {
 	if (dev_is_mpath(f, dev) == 1) {
-		log_debug("%s: Skipping mpath component device", dev_name(dev));
+		log_debug_devs("%s: Skipping mpath component device", dev_name(dev));
 		return 0;
 	}
 
