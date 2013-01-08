@@ -31,6 +31,21 @@
 typedef int32_t percent_t;
 
 typedef enum {
+	SIGN_NONE = 0,
+	SIGN_PLUS = 1,
+	SIGN_MINUS = 2
+} sign_t;
+
+typedef enum {
+	PERCENT_NONE = 0,
+	PERCENT_VG,
+	PERCENT_FREE,
+	PERCENT_LV,
+	PERCENT_PVS,
+	PERCENT_ORIGIN
+} percent_type_t;
+
+typedef enum {
 	PERCENT_0 = 0,
 	PERCENT_1 = 1000000,
 	PERCENT_100 = 100 * PERCENT_1,
@@ -40,5 +55,7 @@ typedef enum {
 
 float percent_to_float(percent_t v);
 percent_t make_percent(uint64_t numerator, uint64_t denominator);
+
+uint32_t percent_of_extents(uint32_t percents, uint32_t count, int roundup);
 
 #endif

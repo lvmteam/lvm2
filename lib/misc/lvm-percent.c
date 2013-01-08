@@ -38,3 +38,8 @@ percent_t make_percent(uint64_t numerator, uint64_t denominator)
     }
 }
 
+uint32_t percent_of_extents(uint32_t percents, uint32_t count, int roundup)
+{
+	return (uint32_t)(((uint64_t)percents * (uint64_t)count +
+			   ((roundup) ? 99 : 0)) / 100);
+}
