@@ -58,5 +58,6 @@ static const device_info_t _device_info[] = {
 	{"mtip32xx", 16},	/* Micron PCIe SSDs */
 	{"vtms", 16},		/* Violin Memory */
 	{"skd", 16},		/* STEC */
+	{"scm", 8},		/* Storage Class Memory (IBM S/390) */
 	{"", 0}
 };
