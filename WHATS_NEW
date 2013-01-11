@@ -32,6 +32,7 @@ Version 2.02.99 -
   Do not verify udev operations if --noudevsync command option is used.
   Fix lvm2app and return lvseg discards property as string.
   Allow forced vgcfgrestore of lvm2 metadata with thin volumes.
+  Recognise Storage Class Memory (IBM S/390) devices in filter.
   Recognise STEC skd devices in filter.
   Recognise Violin Memory vtms devices in filter.
   Add lvm.conf thin pool defs thin_pool_{chunk_size|discards|zero}.
