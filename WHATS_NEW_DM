@@ -1,5 +1,6 @@
 Version 1.02.78 - 
 ===================================
+  Close open dmeventd FIFO file descriptors on exec (FD_CLOEXEC).
   Fix resource leak in error path of dmeventd's umount of thin volume.
   Automatically deactivate failed preloaded dm tree node.
   Add DM_DISABLE_UDEV environment variable to manage dev nodes by libdm only.
