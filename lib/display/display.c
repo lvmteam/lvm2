@@ -594,6 +594,9 @@ int lvdisplay_full(struct cmd_context *cmd,
 		if (seg->origin)
 			log_print("LV Thin origin name    %s",
 				  seg->origin->name);
+		if (seg->external_lv)
+			log_print("LV External origin name %s",
+				  seg->origin->name);
 		if (inkernel)
 			thin_active = lv_thin_percent(lv, 0, &thin_percent);
 	} else if (lv_is_thin_pool(lv)) {

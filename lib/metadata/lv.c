@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2012 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2013 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -169,6 +169,9 @@ char *lv_origin_dup(struct dm_pool *mem, const struct logical_volume *lv)
 	if (lv_is_thin_volume(lv) && first_seg(lv)->origin)
 		return lv_name_dup(mem, first_seg(lv)->origin);
 
+	if (lv_is_thin_volume(lv) && first_seg(lv)->external_lv)
+		return lv_name_dup(mem, first_seg(lv)->external_lv);
+
 	return NULL;
 }
 
@@ -282,6 +285,8 @@ uint64_t lv_origin_size(const struct logical_volume *lv)
 {
 	if (lv_is_cow(lv))
 		return (uint64_t) find_cow(lv)->len * lv->vg->extent_size;
+	if (lv_is_thin_volume(lv) && first_seg(lv)->external_lv)
+		return first_seg(lv)->external_lv->size;
 	if (lv_is_origin(lv))
 		return lv->size;
 	return 0;
