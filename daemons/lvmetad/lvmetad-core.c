@@ -454,7 +454,8 @@ static response vg_lookup(lvmetad_state *s, request r)
 
 	DEBUGLOG(s, "vg_lookup: updated uuid = %s, name = %s", uuid, name);
 
-	if (!uuid)
+	/* Check the name here. */
+	if (!uuid || !name)
 		return reply_unknown("VG not found");
 
 	cft = lock_vg(s, uuid);
@@ -682,16 +683,14 @@ static int update_metadata(lvmetad_state *s, const char *name, const char *_vgid
 
 	lock_vgid_to_metadata(s);
 	old = dm_hash_lookup(s->vgid_to_metadata, _vgid);
+	oldname = dm_hash_lookup(s->vgid_to_vgname, _vgid);
 	unlock_vgid_to_metadata(s);
 	lock_vg(s, _vgid);
 
 	seq = dm_config_find_int(metadata, "metadata/seqno", -1);
 
-	if (old) {
+	if (old)
 		haveseq = dm_config_find_int(old->root, "metadata/seqno", -1);
-		oldname = dm_hash_lookup(s->vgid_to_vgname, _vgid);
-		assert(oldname);
-	}
 
 	if (seq < 0)
 		goto out;
@@ -743,7 +742,7 @@ static int update_metadata(lvmetad_state *s, const char *name, const char *_vgid
 	if (haveseq >= 0 && haveseq < seq) {
 		INFO(s, "Updating metadata for %s at %d to %d", _vgid, haveseq, seq);
 		/* temporarily orphan all of our PVs */
-		remove_metadata(s, vgid, 1);
+		update_pvid_to_vgid(s, old, "#orphan", 0);
 	}
 
 	lock_vgid_to_metadata(s);
@@ -753,14 +752,17 @@ static int update_metadata(lvmetad_state *s, const char *name, const char *_vgid
 		  dm_hash_insert(s->vgid_to_metadata, vgid, cft) &&
 		  dm_hash_insert(s->vgid_to_vgname, vgid, cfgname) &&
 		  dm_hash_insert(s->vgname_to_vgid, name, (void*) vgid)) ? 1 : 0;
+
+	if (retval && oldname && strcmp(name, oldname))
+		dm_hash_remove(s->vgname_to_vgid, oldname);
+
 	unlock_vgid_to_metadata(s);
 
 	if (retval)
-		/* FIXME: What should happen when update fails */
 		retval = update_pvid_to_vgid(s, cft, vgid, 1);
 
 	unlock_pvid_to_vgid(s);
-out:
+out: /* FIXME: We should probably abort() on partial failures. */
 	if (!retval && cft)
 		dm_config_destroy(cft);
 	unlock_vg(s, _vgid);
