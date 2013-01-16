@@ -306,11 +306,12 @@ struct volume_group *lvmetad_vg_lookup(struct cmd_context *cmd, const char *vgna
 {
 	struct volume_group *vg = NULL;
 	daemon_reply reply;
+	int found;
 	char uuid[64];
 	struct format_instance *fid;
 	struct format_instance_ctx fic;
 	struct dm_config_node *top;
-	const char *name;
+	const char *name, *diag_name;
 	const char *fmt_name;
 	struct format_type *fmt;
 	struct dm_config_node *pvcn;
@@ -325,14 +326,16 @@ struct volume_group *lvmetad_vg_lookup(struct cmd_context *cmd, const char *vgna
 			return_NULL;
 		log_debug_lvmetad("Asking lvmetad for VG %s (%s)", uuid, vgname ? : "name unknown");
 		reply = _lvmetad_send("vg_lookup", "uuid = %s", uuid, NULL);
+		diag_name = uuid;
 	} else {
 		if (!vgname)
 			log_error(INTERNAL_ERROR "VG name required (VGID not available)");
 		log_debug_lvmetad("Asking lvmetad for VG %s", vgname);
 		reply = _lvmetad_send("vg_lookup", "name = %s", vgname, NULL);
+		diag_name = vgname;
 	}
 
-	if (!reply.error && !strcmp(daemon_reply_str(reply, "response", ""), "OK")) {
+	if (_lvmetad_handle_reply(reply, "lookup VG", diag_name, &found) && found) {
 
 		if (!(top = dm_config_find_node(reply.cft->root, "metadata"))) {
 			log_error(INTERNAL_ERROR "metadata config node not found.");
