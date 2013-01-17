@@ -888,7 +888,7 @@ int lv_thin_pool_transaction_id(const struct logical_volume *lv,
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
 		return_0;
 
-	if (!(r = dev_manager_thin_pool_status(dm, lv, &status)))
+	if (!(r = dev_manager_thin_pool_status(dm, lv, &status, 1)))
 		stack;
 	else
 		*transaction_id = status->transaction_id;

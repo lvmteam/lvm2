@@ -1124,7 +1124,8 @@ static int _belong_to_vg(const char *vgname, const char *name)
 
 int dev_manager_thin_pool_status(struct dev_manager *dm,
 				 const struct logical_volume *lv,
-				 struct dm_status_thin_pool **status)
+				 struct dm_status_thin_pool **status,
+				 int noflush)
 {
 	const char *dlid;
 	struct dm_task *dmt;
@@ -1145,6 +1146,9 @@ int dev_manager_thin_pool_status(struct dev_manager *dm,
 
 	if (!dm_task_no_open_count(dmt))
 		log_error("Failed to disable open_count.");
+
+	if (noflush && !dm_task_no_flush(dmt))
+		log_warn("Can't set no_flush.");
 
 	if (!dm_task_run(dmt))
 		goto_out;
