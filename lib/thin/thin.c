@@ -305,7 +305,7 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 	 * Also transation_id is checked only when snapshot origin is active.
 	 * (This might change later)
 	 */
-	if (!laopts->is_activate)
+	if (!laopts->send_messages)
 		return 1;
 
 	dm_list_iterate_items(lmsg, &seg->thin_messages) {

@@ -2388,8 +2388,6 @@ static int _tree_action(struct dev_manager *dm, struct logical_volume *lv,
 	char *dlid;
 	int r = 0;
 
-	laopts->is_activate = (action == ACTIVATE);
-
 	if (!(dtree = _create_partial_dtree(dm, lv, laopts->origin_only)))
 		return_0;
 
@@ -2471,6 +2469,7 @@ out_no_root:
 int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv,
 			 struct lv_activate_opts *laopts)
 {
+	laopts->send_messages = 1;
 	if (!_tree_action(dm, lv, laopts, ACTIVATE))
 		return_0;
 
