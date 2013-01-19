@@ -31,7 +31,7 @@ struct dm_config_tree *config_file_open(const char *filename, int keep_open);
 int config_file_read_fd(struct dm_config_tree *cft, struct device *dev,
 			off_t offset, size_t size, off_t offset2, size_t size2,
 			checksum_fn_t checksum_fn, uint32_t checksum);
-	int config_file_read(struct dm_config_tree *cft);
+int config_file_read(struct dm_config_tree *cft);
 int config_write(struct dm_config_tree *cft, const char *file,
 		 int argc, char **argv);
 void config_file_destroy(struct dm_config_tree *cft);
