@@ -456,8 +456,8 @@ void daemon_start(daemon_state s)
 	 * some glibc (on some distributions it takes over 100MB). Some daemons
 	 * need to use mlockall().
 	 */
-	if (setenv("LANG", "C", 1))
-		perror("Cannot set LANG to C");
+	if (setenv("LC_ALL", "C", 1))
+		perror("Cannot set LC_ALL to C");
 
 #ifdef linux
 	_systemd_activation = _systemd_handover(&s);

@@ -213,8 +213,8 @@ detect_mounted()  {
 
 	# for systems with different device names - check also mount output
 	if test -z "$MOUNTED" ; then
-		MOUNTED=$(LANG=C "$MOUNT" | "$GREP" "^$VOLUME[ \t]")
-		test -z "$MOUNTED" && MOUNTED=$(LANG=C "$MOUNT" | "$GREP" "^$RVOLUME[ \t]")
+		MOUNTED=$(LC_ALL=C "$MOUNT" | "$GREP" "^$VOLUME[ \t]")
+		test -z "$MOUNTED" && MOUNTED=$(LC_ALL=C "$MOUNT" | "$GREP" "^$RVOLUME[ \t]")
 		MOUNTED=${MOUNTED##* on }
 		MOUNTED=${MOUNTED% type *} # allow type in the mount name
 	fi
@@ -283,7 +283,7 @@ validate_parsing() {
 ####################################
 resize_ext() {
 	verbose "Parsing $TUNE_EXT -l \"$VOLUME\""
-	for i in $(LANG=C "$TUNE_EXT" -l "$VOLUME"); do
+	for i in $(LC_ALL=C "$TUNE_EXT" -l "$VOLUME"); do
 		case "$i" in
 		  "Block size"*) BLOCKSIZE=${i##*  } ;;
 		  "Block count"*) BLOCKCOUNT=${i##*  } ;;
@@ -318,7 +318,7 @@ resize_reiser() {
 	detect_mounted && verbose "ReiserFS resizes only unmounted filesystem" && try_umount
 	REMOUNT=$MOUNTED
 	verbose "Parsing $TUNE_REISER \"$VOLUME\""
-	for i in $(LANG=C "$TUNE_REISER" "$VOLUME"); do
+	for i in $(LC_ALL=C "$TUNE_REISER" "$VOLUME"); do
 		case "$i" in
 		  "Blocksize"*) BLOCKSIZE=${i##*: } ;;
 		  "Count of blocks"*) BLOCKCOUNT=${i##*: } ;;
@@ -347,7 +347,7 @@ resize_xfs() {
 		temp_mount || error "Cannot mount Xfs filesystem"
 	fi
 	verbose "Parsing $TUNE_XFS \"$MOUNTPOINT\""
-	for i in $(LANG=C "$TUNE_XFS" "$MOUNTPOINT"); do
+	for i in $(LC_ALL=C "$TUNE_XFS" "$MOUNTPOINT"); do
 		case "$i" in
 		  "data"*) BLOCKSIZE=${i##*bsize=} ; BLOCKCOUNT=${i##*blocks=} ;;
 		esac
@@ -389,7 +389,7 @@ resize() {
 
 ####################################
 # Calclulate diff between two dates
-#  LANG=C input is expected the
+#  LC_ALL=C input is expected the
 #  only one supported
 ####################################
 diff_dates() {
@@ -410,7 +410,7 @@ check() {
 	  "ext2"|"ext3"|"ext4")
 		IFS_CHECK=$IFS
 		IFS=$NL
-		for i in $(LANG=C "$TUNE_EXT" -l "$VOLUME"); do
+		for i in $(LC_ALL=C "$TUNE_EXT" -l "$VOLUME"); do
 			case "$i" in
 			  "Last mount"*) LASTMOUNT=${i##*: } ;;
 			  "Last checked"*) LASTCHECKED=${i##*: } ;;
