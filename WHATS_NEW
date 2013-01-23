@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Fix blkdeactivate to handle nested mountpoints and mangled mount paths.
   Set locales with LC_ALL instead of lower priority LANG variable.
   Fix a crash-inducing race condition in lvmetad.
   Add log/debug_classes to lvm.conf to control debug log messages.
