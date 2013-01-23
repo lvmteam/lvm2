@@ -39,7 +39,7 @@ LVM="@sbindir@/lvm"
 LSBLK="/bin/lsblk -r --noheadings -o TYPE,KNAME,NAME,MOUNTPOINT"
 LSBLK_VARS="local devtype local kname local name local mnt"
 LSBLK_READ="read -r devtype kname name mnt"
-SORT_MNT="/bin/sort -r -k 4"
+SORT_MNT="/bin/sort -r -u -k 4"
 
 # Do not unmount mounted devices by default.
 DO_UMOUNT=0
