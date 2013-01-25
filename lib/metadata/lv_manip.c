@@ -273,7 +273,7 @@ struct lv_segment *alloc_lv_segment(const struct segment_type *segtype,
 	dm_list_init(&seg->thin_messages);
 
 	if (thin_pool_lv) {
-		/* If this thin volume, thin snapshot is being created */
+		/* If this is thin volume, thin snapshot is being created */
 		if (lv_is_thin_volume(thin_pool_lv)) {
 			seg->transaction_id = first_seg(first_seg(thin_pool_lv)->pool_lv)->transaction_id;
 			if (!attach_pool_lv(seg, first_seg(thin_pool_lv)->pool_lv, thin_pool_lv))
@@ -565,10 +565,8 @@ static int _lv_reduce(struct logical_volume *lv, uint32_t extents, int delete)
 			if (seg->metadata_lv && !lv_remove(seg->metadata_lv))
 				return_0;
 
-			if (seg->pool_lv) {
-				if (!detach_pool_lv(seg))
-					return_0;
-			}
+			if (seg->pool_lv && !detach_pool_lv(seg))
+				return_0;
 
 			dm_list_del(&seg->list);
 			reduction = seg->len;
