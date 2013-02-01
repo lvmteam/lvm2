@@ -225,6 +225,16 @@ char *lv_metadata_lv_dup(struct dm_pool *mem, const struct logical_volume *lv)
 		dm_pool_strdup(mem, first_seg(lv)->metadata_lv->name) : NULL;
 }
 
+const char *lv_layer(const struct logical_volume *lv)
+{
+	if (lv_is_thin_pool(lv))
+		return "tpool";
+	else if (lv_is_origin(lv))
+		return "real";
+
+	return NULL;
+}
+
 int lv_kernel_minor(const struct logical_volume *lv)
 {
 	struct lvinfo info;

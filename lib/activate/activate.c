@@ -604,7 +604,6 @@ int lv_info(struct cmd_context *cmd, const struct logical_volume *lv, int use_la
 	    struct lvinfo *info, int with_open_count, int with_read_ahead)
 {
 	struct dm_info dminfo;
-	const char *layer;
 
 	if (!activation())
 		return 0;
@@ -621,15 +620,10 @@ int lv_info(struct cmd_context *cmd, const struct logical_volume *lv, int use_la
 			fs_unlock(); /* For non clustered - wait if there are non-delete ops */
 	}
 
-	if (use_layer && lv_is_thin_pool(lv))
-		layer = "tpool";
-	else if (use_layer && lv_is_origin(lv))
-		layer = "real";
-	else
-		layer = NULL;
-
-	if (!dev_manager_info(lv->vg->cmd->mem, lv, layer, with_open_count,
-			      with_read_ahead, &dminfo, &info->read_ahead))
+	if (!dev_manager_info(lv->vg->cmd->mem, lv,
+			      (use_layer) ? lv_layer(lv) : NULL,
+			      with_open_count, with_read_ahead,
+			      &dminfo, &info->read_ahead))
 		return_0;
 
 	info->exists = dminfo.exists;
