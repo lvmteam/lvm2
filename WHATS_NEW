@@ -1,6 +1,6 @@
 Version 2.02.99 - 
 ===================================
-  Improve 'lvs' attribute reporting of RAID LVs and sub-LVs
+  Report partial and in-sync RAID attribute based on kernel status
   Fix blkdeactivate to handle nested mountpoints and mangled mount paths.
   Set locales with LC_ALL instead of lower priority LANG variable.
   Fix a crash-inducing race condition in lvmetad.
