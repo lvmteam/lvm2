@@ -2852,6 +2852,41 @@ int dm_tree_node_add_raid_target(struct dm_tree_node *node,
 	return 1;
 }
 
+int dm_get_status_raid(struct dm_pool *mem, const char *params,
+		       struct dm_status_raid **status)
+{
+	int dev_count;
+	const char *p = params;
+	struct dm_status_raid *s;
+
+	if (!(p = strchr(p, ' ')))
+		return_0;
+	p++;
+
+	if (sscanf(p, "%d", &dev_count) != 1)
+		return_0;
+
+	s = dm_pool_zalloc(mem, sizeof(struct dm_status_raid) + dev_count + 1);
+	if (!s) {
+		log_error("Failed to allocate raid status structure.");
+		return 0;
+	}
+
+	if (sscanf(params, "%s %d %s %" PRIu64 "/%" PRIu64,
+		   s->raid_type,
+		   &s->dev_count,
+		   s->dev_health,
+		   &s->insync_regions,
+		   &s->total_regions) != 5) {
+		log_error("Failed to parse raid params: %s", params);
+		return 0;
+	}
+
+	*status = s;
+
+	return 1;
+}
+
 int dm_tree_node_add_replicator_target(struct dm_tree_node *node,
 				       uint64_t size,
 				       const char *rlog_uuid,

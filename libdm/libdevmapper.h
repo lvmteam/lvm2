@@ -260,9 +260,25 @@ void *dm_get_next_target(struct dm_task *dmt,
 			 void *next, uint64_t *start, uint64_t *length,
 			 char **target_type, char **params);
 
-/* Parse params from STATUS call for thin_pool target */
+/*
+ * Parse params from STATUS call for raid target
+ */
 struct dm_pool;
 
+struct dm_status_raid {
+	uint64_t total_regions;
+	uint64_t insync_regions;
+	int dev_count;
+	char raid_type[16];
+	char dev_health[0];
+};
+
+int dm_get_status_raid(struct dm_pool *mem, const char *params,
+		       struct dm_status_raid **status);
+
+/*
+ * Parse params from STATUS call for thin_pool target
+ */
 struct dm_status_thin_pool {
 	uint64_t transaction_id;
 	uint64_t used_metadata_blocks;
@@ -275,7 +291,9 @@ struct dm_status_thin_pool {
 int dm_get_status_thin_pool(struct dm_pool *mem, const char *params,
 			    struct dm_status_thin_pool **status);
 
-/* Parse params from STATUS call for thin target */
+/*
+ * Parse params from STATUS call for thin target
+ */
 struct dm_status_thin {
 	uint64_t mapped_sectors;
 	uint64_t highest_mapped_sector;

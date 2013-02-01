@@ -179,6 +179,10 @@ int lv_raid_percent(const struct logical_volume *lv, percent_t *percent)
 {
 	return 0;
 }
+int lv_raid_dev_health(const struct logical_volume *lv, char **dev_health)
+{
+	return 0;
+}
 int lv_thin_pool_percent(const struct logical_volume *lv, int metadata,
 			 percent_t *percent)
 {
@@ -775,6 +779,36 @@ int lv_mirror_percent(struct cmd_context *cmd, const struct logical_volume *lv,
 int lv_raid_percent(const struct logical_volume *lv, percent_t *percent)
 {
 	return lv_mirror_percent(lv->vg->cmd, lv, 0, percent, NULL);
+}
+
+int lv_raid_dev_health(const struct logical_volume *lv, char **dev_health)
+{
+	int r;
+	struct dev_manager *dm;
+	struct dm_status_raid *status;
+
+	*dev_health = NULL;
+
+	if (!activation())
+		return 0;
+
+	log_debug_activation("Checking raid device health for LV %s/%s",
+			     lv->vg->name, lv->name);
+
+	if (!lv_is_active(lv))
+		return 0;
+
+	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
+		return_0;
+
+	if (!(r = dev_manager_raid_status(dm, lv, &status)) ||
+	    !(*dev_health = dm_pool_strdup(lv->vg->cmd->mem,
+					   status->dev_health)))
+		stack;
+
+	dev_manager_destroy(dm);
+
+	return r;
 }
 
 /*
