@@ -360,6 +360,27 @@ int dm_config_write_node(const struct dm_config_node *cn, dm_putline_fn putline,
 /*
  * parser
  */
+static char *_dup_string_tok(struct parser *p)
+{
+	char *str;
+
+	p->tb++, p->te--;	/* strip "'s */
+
+	if (p->te < p->tb) {
+		log_error("Parse error at byte %" PRIptrdiff_t " (line %d): "
+			  "expected a string token.",
+			  p->tb - p->fb + 1, p->line);
+		return NULL;
+	}
+
+	if (!(str = _dup_tok(p)))
+		return_NULL;
+
+	p->te++;
+
+	return str;
+}
+
 static struct dm_config_node *_file(struct parser *p)
 {
 	struct dm_config_node *root = NULL, *n, *l = NULL;
@@ -480,22 +501,19 @@ static struct dm_config_value *_type(struct parser *p)
 	case TOK_STRING:
 		v->type = DM_CFG_STRING;
 
-		p->tb++, p->te--;	/* strip "'s */
-		if (!(v->v.str = _dup_tok(p)))
+		if (!(v->v.str = _dup_string_tok(p)))
 			return_NULL;
-		p->te++;
+
 		match(TOK_STRING);
 		break;
 
 	case TOK_STRING_ESCAPED:
 		v->type = DM_CFG_STRING;
 
-		p->tb++, p->te--;	/* strip "'s */
-		if (!(str = _dup_tok(p)))
+		if (!(str = _dup_string_tok(p)))
 			return_NULL;
 		dm_unescape_double_quotes(str);
 		v->v.str = str;
-		p->te++;
 		match(TOK_STRING_ESCAPED);
 		break;
 
