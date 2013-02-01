@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2002-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2012 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2013 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -827,7 +827,7 @@ int dev_manager_transient(struct dev_manager *dm, struct logical_volume *lv)
 	char *type = NULL;
 	char *params = NULL;
 	char *dlid = NULL;
-	const char *layer = lv_is_origin(lv) ? "real" : NULL;
+	const char *layer = lv_layer(lv);
 	const struct dm_list *segh = &lv->segments;
 	struct lv_segment *seg = NULL;
 
@@ -998,7 +998,7 @@ int dev_manager_mirror_percent(struct dev_manager *dm,
 	char *name;
 	const char *dlid;
 	const char *target_type = first_seg(lv)->segtype->name;
-	const char *layer = (lv_is_origin(lv)) ? "real" : NULL;
+	const char *layer = lv_layer(lv);
 
 	/*
 	 * Build a name for the top layer.
@@ -1193,7 +1193,7 @@ int dev_manager_thin_percent(struct dev_manager *dm,
 {
 	char *name;
 	const char *dlid;
-	const char *layer = lv_is_origin(lv) ? "real" : NULL;
+	const char *layer = lv_layer(lv);
 
 	/* Build a name for the top layer */
 	if (!(name = dm_build_dm_name(dm->mem, lv->vg->name, lv->name, layer)))
