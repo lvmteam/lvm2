@@ -339,8 +339,14 @@ static int _lv_mimage_in_sync(const struct logical_volume *lv)
 
 static int _lv_raid_image_in_sync(const struct logical_volume *lv)
 {
+	unsigned s;
 	percent_t percent;
+	char *raid_health;
 	struct lv_segment *raid_seg;
+
+	/* If the LV is not active, it doesn't make sense to check status */
+	if (!lv_is_active(lv))
+		return 0;  /* Assume not in-sync */
 
 	if (!(lv->status & RAID_IMAGE)) {
 		log_error(INTERNAL_ERROR "%s is not a RAID image", lv->name);
@@ -365,20 +371,91 @@ static int _lv_raid_image_in_sync(const struct logical_volume *lv)
 	if (percent == PERCENT_100)
 		return 1;
 
-	/*
-	 * FIXME:  Get individual RAID image status.
-	 * The status health characters reported from a RAID target
-	 * indicate whether the whole array or just individual devices
-	 * are in-sync.  If the corresponding character for this image
-	 * was 'A', we could report a more accurate status.  This is
-	 * especially so in the case of failures or rebuildings.
-	 *
-	 * We need to test the health characters anyway to report
-	 * the correct 4th attr character.  Just need to figure out
-	 * where to put this functionality.
-	 */
+	/* Find out which sub-LV this is. */
+	for (s = 0; s < raid_seg->area_count; s++)
+		if (seg_lv(raid_seg, s) == lv)
+			break;
+	if (s == raid_seg->area_count) {
+		log_error(INTERNAL_ERROR
+			  "sub-LV %s was not found in raid segment",
+			  lv->name);
+		return 0;
+	}
+
+	if (!lv_raid_dev_health(raid_seg->lv, &raid_health))
+		return_0;
+
+	if (raid_health[s] == 'A')
+		return 1;
+
 	return 0;
 }
+
+/*
+ * _lv_raid_healthy
+ * @lv: A RAID_IMAGE, RAID_META, or RAID logical volume.
+ *
+ * Returns: 1 if healthy, 0 if device is not health
+ */
+static int _lv_raid_healthy(const struct logical_volume *lv)
+{
+	unsigned s;
+	char *raid_health;
+	struct lv_segment *raid_seg;
+
+	/* If the LV is not active, it doesn't make sense to check status */
+	if (!lv_is_active(lv))
+		return 1;  /* assume healthy */
+
+	if (!lv_is_raid_type(lv)) {
+		log_error(INTERNAL_ERROR "%s is not of RAID type", lv->name);
+		return 0;
+	}
+
+	if (lv->status & RAID)
+		raid_seg = first_seg(lv);
+	else
+		raid_seg = get_only_segment_using_this_lv(first_seg(lv)->lv);
+
+	if (!raid_seg) {
+		log_error("Failed to find RAID segment for %s", lv->name);
+		return 0;
+	}
+
+	if (!seg_is_raid(raid_seg)) {
+		log_error("%s on %s is not a RAID segment",
+			  raid_seg->lv->name, lv->name);
+		return 0;
+	}
+
+	if (!lv_raid_dev_health(raid_seg->lv, &raid_health))
+		return_0;
+
+	if (lv->status & RAID) {
+		if (strchr(raid_health, 'D'))
+			return 0;
+		else
+			return 1;
+	}
+
+	/* Find out which sub-LV this is. */
+	for (s = 0; s < raid_seg->area_count; s++)
+		if (((lv->status & RAID_IMAGE) && (seg_lv(raid_seg, s) == lv)) ||
+		    ((lv->status & RAID_META) && (seg_metalv(raid_seg,s) == lv)))
+			break;
+	if (s == raid_seg->area_count) {
+		log_error(INTERNAL_ERROR
+			  "sub-LV %s was not found in raid segment",
+			  lv->name);
+		return 0;
+	}
+
+	if (raid_health[s] == 'D')
+		return 0;
+
+	return 1;
+}
+
 char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 {
 	percent_t snap_percent;
@@ -505,7 +582,8 @@ char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 	else
 		repstr[7] = '-';
 
-	if (lv->status & PARTIAL_LV)
+	if (lv->status & PARTIAL_LV ||
+	    (lv_is_raid_type(lv) && !_lv_raid_healthy(lv)))
 		repstr[8] = 'p';
 	else
 		repstr[8] = '-';
