@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright (C) 2012 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2012-2013 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -34,16 +34,30 @@ check lv_field $vg/pool2 discards "passdown"
 
 lvchange --discards nopassdown $vg/pool2
 
-# cannot convert active  ignore -> passdown
+lvcreate -V1M -n origin -T $vg/pool
+lvcreate -s $vg/origin -n snap
+
+# Cannot convert active  nopassdown -> ignore
+not lvchange --discards nopassdown $vg/pool
+
+# Cannot convert active  ignore -> passdown
 not lvchange --discards passdown $vg/pool
 
-# cannot convert active  nopassdown -> ignore
+# Cannot convert active  nopassdown -> ignore
 not lvchange --discards ignore $vg/pool1
 
-# deactivate
+# Deactivate pool only
 lvchange -an $vg/pool $vg/pool1
+
+# Cannot convert, since thin volumes are still active
+not lvchange --discards passdown $vg/pool
+
+# Deactive thin volumes
+lvchange -an $vg/origin $vg/snap
+
 lvchange --discards passdown $vg/pool
 check lv_field $vg/pool discards "passdown"
+
 lvchange --discards ignore $vg/pool1
 check lv_field $vg/pool1 discards "ignore"
 
