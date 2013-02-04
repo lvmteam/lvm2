@@ -770,15 +770,15 @@ uint32_t dm_tree_get_cookie(struct dm_tree_node *node);
  *******************/
 
 void *dm_malloc_aux(size_t s, const char *file, int line)
-	__attribute__((malloc)) __attribute__((__warn_unused_result__));
+	__attribute__((__malloc__)) __attribute__((__warn_unused_result__));
 void *dm_malloc_aux_debug(size_t s, const char *file, int line)
 	__attribute__((__warn_unused_result__));
 void *dm_zalloc_aux(size_t s, const char *file, int line)
-	__attribute__((malloc)) __attribute__((__warn_unused_result__));
+	__attribute__((__malloc__)) __attribute__((__warn_unused_result__));
 void *dm_zalloc_aux_debug(size_t s, const char *file, int line)
 	__attribute__((__warn_unused_result__));
 char *dm_strdup_aux(const char *str, const char *file, int line)
-	__attribute__((malloc)) __attribute__((__warn_unused_result__));
+	__attribute__((__malloc__)) __attribute__((__warn_unused_result__));
 void dm_free_aux(void *p);
 void *dm_realloc_aux(void *p, unsigned int s, const char *file, int line)
 	__attribute__((__warn_unused_result__));
