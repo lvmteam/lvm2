@@ -1031,7 +1031,7 @@ int dev_manager_raid_status(struct dev_manager *dm,
 	uint64_t start, length;
 	char *type = NULL;
 	char *params = NULL;
-	const char *layer = (lv_is_origin(lv)) ? "real" : NULL;
+	const char *layer = lv_layer(lv);
 
 	/* Build dlid for the thin pool layer */
 	if (!(dlid = build_dm_uuid(dm->mem, lv->lvid.s, layer)))
