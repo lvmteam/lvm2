@@ -1617,7 +1617,7 @@ int update_pool_params(struct cmd_context *cmd, unsigned attr,
 				(2 * DEFAULT_THIN_POOL_MAX_METADATA_SIZE *
 				 (SECTOR_SIZE / UINT64_C(64)));
 			log_warn("WARNING: Chunk size is too small for pool, suggested minimum is %s.",
-				 display_size(cmd, 1 << (int)(ffs(estimate_chunk_size) + 1)));
+				 display_size(cmd, UINT64_C(1) << (ffs(estimate_chunk_size) + 1)));
 		}
 
 		/* Round up to extent size */
