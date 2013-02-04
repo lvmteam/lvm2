@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Do not take a free lv name argument for lvconvert --thinpool option.
   Avoid flushing thin pool when quering for transaction_id.
   Add internal function lv_layer() to obtain layer name for LV.
   Report partial and in-sync RAID attribute based on kernel status

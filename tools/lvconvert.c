@@ -92,7 +92,12 @@ static int _lvconvert_name_params(struct lvconvert_params *lp,
 			lp->origin = ptr + 1;
 	}
 
-	if (!*pargc && lp->pool_data_lv_name) {
+	if (lp->pool_data_lv_name) {
+		if (*pargc) {
+			log_error("More then one logical volume name name specified.");
+			return 0;
+		}
+
 		if (!lp->vg_name || !validate_name(lp->vg_name)) {
 			log_error("Please provide a valid volume group name.");
 			return 0;
