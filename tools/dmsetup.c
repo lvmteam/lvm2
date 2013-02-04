@@ -3672,7 +3672,7 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 		}
 		if (ind == INACTIVE_ARG)
 		       _switches[INACTIVE_ARG]++;
-		if ((ind == MANGLENAME_ARG)) {
+		if (ind == MANGLENAME_ARG) {
 			_switches[MANGLENAME_ARG]++;
 			if (!strcasecmp(optarg, "none"))
 				_int_args[MANGLENAME_ARG] = DM_STRING_MANGLING_NONE;
