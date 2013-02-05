@@ -234,13 +234,12 @@ int pool_has_message(const struct lv_segment *seg,
 	return 0;
 }
 
-int pool_is_active(const struct lv_segment *pool_seg)
+int pool_is_active(const struct logical_volume *lv)
 {
 	struct lvinfo info;
 	const struct seg_list *sl;
-	const struct logical_volume *lv = pool_seg->lv;
 
-	if (!seg_is_thin_pool(pool_seg)) {
+	if (!lv_is_thin_pool(lv)) {
 		log_error(INTERNAL_ERROR "LV %s is not pool.", lv->name);
 		return 0;
 	}
