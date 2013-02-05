@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011-2012 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2011-2013 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -135,6 +135,10 @@ int detach_pool_lv(struct lv_segment *seg)
 		/* Thin snapshot is now regular thin volume */
 		sl->seg->origin = NULL;
 	}
+
+	seg->lv->status &= ~THIN_VOLUME;
+	seg->pool_lv = NULL;
+	seg->origin = NULL;
 
 	return 1;
 }
