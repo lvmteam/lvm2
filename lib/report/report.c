@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2002-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2012 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2013 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -590,7 +590,10 @@ static int _originsize_disp(struct dm_report *rh, struct dm_pool *mem,
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 	uint64_t size;
 
-	size = lv_origin_size(lv);
+	if (!(size = lv_origin_size(lv))) {
+		dm_report_field_set_value(field, "", NULL);
+		return 1;
+	}
 
 	return _size64_disp(rh, mem, field, &size, private);
 }
