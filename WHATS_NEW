@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Add pool_is_active() to check for any pool related active LV.
   Report blank field if the LV doesn't have an origin instead of 0.
   Do not take a free lv name argument for lvconvert --thinpool option.
   Avoid flushing thin pool when quering for transaction_id.

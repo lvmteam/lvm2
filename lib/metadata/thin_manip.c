@@ -230,6 +230,33 @@ int pool_has_message(const struct lv_segment *seg,
 	return 0;
 }
 
+int pool_is_active(const struct lv_segment *pool_seg)
+{
+	struct lvinfo info;
+	const struct seg_list *sl;
+	const struct logical_volume *lv = pool_seg->lv;
+
+	if (!seg_is_thin_pool(pool_seg)) {
+		log_error(INTERNAL_ERROR "LV %s is not pool.", lv->name);
+		return 0;
+	}
+
+	/* On clustered VG, query every related thin pool volume */
+	if (vg_is_clustered(lv->vg)) {
+		if (lv_is_active(lv))
+			return 1;
+
+		dm_list_iterate_items(sl, &lv->segs_using_this_lv)
+			if (lv_is_active(sl->seg->lv)) {
+				log_debug("Thin volume \"%s\" is active.", sl->seg->lv->name);
+				return 1;
+			}
+	} else if (lv_info(lv->vg->cmd, lv, 1, &info, 0, 0) && info.exists)
+		return 1; /* Non clustered VG - just checks for '-tpool' */
+
+	return 0;
+}
+
 int pool_below_threshold(const struct lv_segment *pool_seg)
 {
 	percent_t percent;
