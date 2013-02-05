@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2005-2013 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -503,10 +503,13 @@ static int _reload_lv(struct cmd_context *cmd,
 	if (!suspend_lv(cmd, lv)) {
 		log_error("Failed to lock %s", lv->name);
 		vg_revert(vg);
+		if (!resume_lv(cmd, lv))
+			stack;
 		goto out;
 	}
 
 	if (!vg_commit(vg)) {
+		vg_revert(vg);
 		if (!resume_lv(cmd, lv))
 			stack;
 		goto_out;
@@ -520,8 +523,8 @@ static int _reload_lv(struct cmd_context *cmd,
 	}
 
 	r = 1;
-out:
 	backup(vg);
+out:
 	return r;
 }
 
