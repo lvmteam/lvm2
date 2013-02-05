@@ -390,6 +390,15 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 		return ECMD_FAILED;
 	}
 
+	if (lv_is_external_origin(lvl->lv)) {
+		/*
+		 * Since external-origin can be activated read-only,
+		 * there is no way to use extended areas.
+		 */
+		log_error("Cannot resize external origin \"%s\".", lvl->lv->name);
+		return EINVALID_CMD_LINE;
+	}
+
 	if (lvl->lv->status & (RAID_IMAGE | RAID_META)) {
 		log_error("Cannot resize a RAID %s directly",
 			  (lvl->lv->status & RAID_IMAGE) ? "image" :

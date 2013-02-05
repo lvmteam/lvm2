@@ -36,6 +36,12 @@ static int lvchange_permission(struct cmd_context *cmd,
 		return 0;
 	}
 
+	if (lv_is_external_origin(lv)) {
+		log_error("Cannot change permissions of external origin "
+			  "\"%s\".", lv->name);
+		return 0;
+	}
+
 	if ((lv->status & MIRRORED) && (vg_is_clustered(lv->vg)) &&
 	    lv_info(cmd, lv, 0, &info, 0, 0) && info.exists) {
 		log_error("Cannot change permissions of mirror \"%s\" "

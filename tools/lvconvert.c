@@ -2109,6 +2109,12 @@ static int _lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 				  lv->name);
 			return ECMD_FAILED;
 		}
+		if (lv_is_external_origin(origin_from_cow(lv))) {
+			log_error("Cannot merge snapshot \"%s\" into "
+				  "the read-only external origin \"%s\".",
+				  lv->name, origin_from_cow(lv)->name);
+			return ECMD_FAILED;
+		}
 	        if (lv_info(lv->vg->cmd, lv, 0, &info, 1, 0)
 		    && info.exists && info.live_table &&
 		    (!lv_snapshot_percent(lv, &snap_percent) ||
