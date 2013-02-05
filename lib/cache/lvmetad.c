@@ -46,7 +46,7 @@ void lvmetad_init(struct cmd_context *cmd)
 	_lvmetad_cmd = cmd;
 }
 
-static void _lvmetad_connect()
+static void _lvmetad_connect(void)
 {
 	if (!_lvmetad_use || !_lvmetad_socket || _lvmetad_connected)
 		return;
@@ -156,8 +156,10 @@ retry:
 
 static int _token_update(void)
 {
+	daemon_reply repl;
+
 	log_debug_lvmetad("Sending updated token to lvmetad: %s", _lvmetad_token ? : "<NONE>");
-	daemon_reply repl = _lvmetad_send("token_update", NULL);
+	repl = _lvmetad_send("token_update", NULL);
 
 	if (repl.error || strcmp(daemon_reply_str(repl, "response", ""), "OK")) {
 		daemon_reply_destroy(repl);
