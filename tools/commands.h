@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2012 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2013 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -151,6 +151,8 @@ xx(lvconvert,
    "\t [--poolmetadatasize size]\n"
    "\t [-r|--readahead ReadAheadSectors|auto|none]\n"
    "\t [--stripes Stripes [-I|--stripesize StripeSize]]]\n"
+   "\t[-T|--thin ExternalLogicalVolume[Path]\n"
+   "\t [--originname NewExternalOriginVolumeName]]\n"
    "\t[-Z|--zero {y|n}]\n"
    "\t[-d|--debug] [-h|-?|--help] [-v|--verbose]\n",
 
@@ -158,7 +160,8 @@ xx(lvconvert,
    merge_ARG, mirrorlog_ARG, mirrors_ARG, name_ARG, noudevsync_ARG,
    readahead_ARG, regionsize_ARG, repair_ARG, replace_ARG, snapshot_ARG, splitmirrors_ARG,
    trackchanges_ARG, type_ARG, stripes_long_ARG, stripesize_ARG, test_ARG,
-   chunksize_ARG, discards_ARG, poolmetadata_ARG, poolmetadatasize_ARG, thinpool_ARG,
+   chunksize_ARG, discards_ARG, poolmetadata_ARG, poolmetadatasize_ARG,
+   originname_ARG, thin_ARG, thinpool_ARG,
    use_policies_ARG, yes_ARG, force_ARG, zero_ARG)
 
 xx(lvcreate,

@@ -99,6 +99,10 @@ lvconvert \- convert a logical volume from linear to mirror or snapshot
 .RB [ \-h | \-? | \-\-help ]
 .RB [ \-v | \-\-verbose ]
 .RB [ \-\-version ]
+.RB [ \-T | \-\-thin
+.IR ExternalOriginLogicalVolume { Name | Path }
+.RB [ \-\-originname
+.IR NewExternalOriginVolumeName ]]
 .RI [ PhysicalVolume [ Path ][ :PE [ -PE ]]...]
 .sp
 
@@ -230,6 +234,13 @@ merge finishes, the merged snapshot is removed.  Multiple snapshots may
 be specified on the commandline or a @tag may be used to specify
 multiple snapshots be merged to their respective origin.
 .TP
+.B \-\-originname \fINewExternalOriginVolumeName\fP
+The name for converted external origin volume.
+.br
+Without this option a default names of "lvol#" will be generated where
+# is the LVM internal number of the logical volume.
+Converted volume will be read-only.
+.TP
 .BR \-\-poolmetadata " " \fIThinPoolMetadataLogicalVolume { \fIName | \fIPath }
 Specifies thin pool metadata logical volume.
 The size should be in between 2MiB and 16GiB.
@@ -287,6 +298,13 @@ Gives the number of kilobytes for the granularity of the stripes.
 StripeSize must be 2^n (n = 2 to 9) for metadata in LVM1 format.
 For metadata in LVM2 format, the stripe size may be a larger
 power of 2 but must not exceed the physical extent size.
+.TP
+.IR \fB\-T ", " \fB\-\-thin " " ExternalOriginLogicalVolume { Name | Path }
+Changes the logical volume into a thin volume for the thin pool
+specified with the option \fB\-\-thinpool\fP. \fIExternalOriginLogicalVolume\fP
+is converted into a new read-only logical volume which will be used as an
+external origin volume for unprovisioned areas.
+The non-default name for this new volume can be specified with \fB\-\-originname\fP.
 .TP
 .IR \fB\-\-thinpool " " ThinPoolLogicalVolume { Name | Path }
 Changes logical volume into a thin pool volume. The volume
@@ -378,6 +396,20 @@ been left out, lvconvert would attempt to find a suitable device from those
 available in the volume group.
 .sp
 .B lvconvert \-\-replace /dev/sdb1 vg00/my_raid1 /dev/sdf1
+
+Convert the logical volume "vg00/lvpool" into a thin pool with chunk size 128KiB
+and convert "vg00/lv1" into a thin volume using this pool. Original "vg00/lv1"
+is used as an external read-only origin, where all writes to such volume
+are stored in the "vg00/lvpool".
+.sp
+.B lvconvert \-\-thinpool vg00/lvpool -c 128 -T lv1
+
+Convert the logical volume "vg00/origin" into a thin volume from the thin pool
+"vg00/lvpool". This thin volume will use "vg00/origin" as an external origin
+volume for unprovisioned areas in this volume.
+For the read-only external origin use the new name "vg00/external".
+.sp
+.B lvconvert \-\-thinpool vg00/lvpool \-\-originname external -T vg00/origin
 
 .SH SEE ALSO
 .BR lvm (8),

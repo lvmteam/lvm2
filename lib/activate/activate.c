@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2012 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2013 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -1579,6 +1579,10 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 	if (!laopts->origin_only &&
 	    (lv_is_origin(lv_pre) || lv_is_cow(lv_pre)))
 		lockfs = 1;
+
+	/* Converting non-thin LV to thin external origin ? */
+	if (!lv_is_thin_volume(lv) && lv_is_thin_volume(lv_pre))
+		lockfs = 1; /* Sync before conversion */
 
 	if (laopts->origin_only && lv_is_thin_volume(lv) && lv_is_thin_volume(lv_pre))
 		lockfs = 1;

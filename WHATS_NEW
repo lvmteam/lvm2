@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Initial support for lvconvert of thin external origin.
   Add _lv_remove_segs_using_this_lv() for removal of dependent lvs.
   Improve activation code for better support of stacked devices.
   Add _add_layer_target_to_dtree() for adding linear layer into dtree.

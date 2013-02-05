@@ -57,6 +57,7 @@ struct lvconvert_params {
 	struct logical_volume *lv_to_poll;
 
 	uint64_t poolmetadata_size;
+	const char *origin_lv_name;
 	const char *pool_data_lv_name;
 	const char *pool_metadata_lv_name;
 	thin_discards_t discards;
@@ -68,6 +69,7 @@ static int _lvconvert_name_params(struct lvconvert_params *lp,
 {
 	char *ptr;
 	const char *vg_name = NULL;
+	const char *tmp_str;
 
 	if (lp->merge)
 		return 1;
@@ -94,16 +96,35 @@ static int _lvconvert_name_params(struct lvconvert_params *lp,
 
 	if (lp->pool_data_lv_name) {
 		if (*pargc) {
-			log_error("More then one logical volume name name specified.");
-			return 0;
-		}
+			if (!arg_count(cmd, thin_ARG)) {
+				log_error("More then one logical volume name specified.");
+				return 0;
+			}
+		} else {
+			if (arg_count(cmd, thin_ARG)) {
+				log_error("External thin volume name is missing.");
+				return 0;
+			}
 
-		if (!lp->vg_name || !validate_name(lp->vg_name)) {
-			log_error("Please provide a valid volume group name.");
-			return 0;
+			if (!lp->vg_name || !validate_name(lp->vg_name)) {
+				log_error("Please provide a valid volume group name.");
+				return 0;
+			}
+
+			lp->lv_name = lp->pool_data_lv_name;
+			return 1;
 		}
-		lp->lv_name = lp->pool_data_lv_name;
-		return 1; /* Create metadata LV on it's own */
+	}
+
+	if (lp->origin_lv_name) {
+		/* FIXME: Using generic routine */
+		if (strchr(lp->origin_lv_name, '/')) {
+			if (!(lp->vg_name = extract_vgname(cmd, lp->origin_lv_name)))
+				return_0;
+			/* Strip VG from origin_lv_name */
+			if ((tmp_str = strrchr(lp->origin_lv_name, '/')))
+				lp->origin_lv_name = tmp_str + 1;
+		}
 	}
 
 	if (!*pargc) {
@@ -219,6 +240,9 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 			return 0;
 		}
 		lp->discards = (thin_discards_t) arg_uint_value(cmd, discards_ARG, THIN_DISCARDS_PASSDOWN);
+	} else if (arg_count(cmd, thin_ARG)) {
+		log_error("--thin is only valid with --thinpool.");
+		return 0;
 	} else if (arg_count(cmd, discards_ARG)) {
 		log_error("--discards is only valid with --thinpool.");
 		return 0;
@@ -374,6 +398,13 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 				return 0;
 			/* Strip VG from pool */
 			lp->pool_data_lv_name = tmp_str + 1;
+		}
+
+		if (arg_count(cmd, originname_ARG)) {
+			if (!(lp->origin_lv_name = arg_str_value(cmd, originname_ARG, NULL))) {
+				log_error("--originname is invalid.");
+				return 0;
+			}
 		}
 
 		lp->segtype = get_segtype_from_string(cmd, arg_str_value(cmd, type_ARG, "thin-pool"));
@@ -1825,6 +1856,116 @@ out:
 	return r;
 }
 
+/* Swap lvid and LV names */
+static int _swap_lv(struct cmd_context *cmd,
+		    struct logical_volume *a, struct logical_volume *b)
+{
+	union lvid lvid;
+	const char *name;
+
+	lvid = a->lvid;
+	a->lvid = b->lvid;
+	b->lvid = lvid;
+
+	name = a->name;
+	a->name = b->name;
+	if (!lv_rename_update(cmd, b, name, 0))
+		return_0;
+
+	return 1;
+}
+
+static int _lvconvert_thinpool_external(struct cmd_context *cmd,
+					struct logical_volume *pool_lv,
+					struct logical_volume *external_lv,
+					struct lvconvert_params *lp)
+{
+	struct logical_volume *torigin_lv;
+	struct volume_group *vg = pool_lv->vg;
+	struct lvcreate_params lvc = { 0 };
+
+	dm_list_init(&lvc.tags);
+
+	if (!(lvc.segtype = get_segtype_from_string(cmd, "thin")))
+		return_0;
+
+	lvc.activate = CHANGE_AE;
+	lvc.alloc = ALLOC_INHERIT;
+	lvc.lv_name = lp->origin_lv_name;
+	lvc.major = -1;
+	lvc.minor = -1;
+	lvc.permission = LVM_READ;
+	lvc.pool = pool_lv->name;
+	lvc.pvh = &vg->pvs;
+	lvc.read_ahead = DM_READ_AHEAD_AUTO;
+	lvc.stripes = 1;
+	lvc.vg_name = vg->name;
+	lvc.voriginextents = external_lv->le_count;
+	lvc.voriginsize = external_lv->size;
+
+	/* New thin LV needs to be created (all messages sent to pool) */
+	if (!(torigin_lv = lv_create_single(vg, &lvc)))
+		return_0;
+
+	/* Activate again via -torigin, so this active LV is not needed */
+	if (!deactivate_lv(cmd, torigin_lv)) {
+		log_error("Aborting. Unable to deactivate new LV. "
+			  "Manual intervention required.");
+		return 0;
+	}
+
+	/*
+	 * Crashing till this point will leave plain thin volume
+	 * which could be easily removed by the user after i.e. power-off
+	 */
+
+	if (!_swap_lv(cmd, torigin_lv, external_lv)) {
+		stack;
+		goto revert_new_lv;
+	}
+
+	/* Preserve read-write status of original LV here */
+	torigin_lv->status |= (external_lv->status & LVM_WRITE);
+
+	if (!attach_thin_external_origin(first_seg(torigin_lv), external_lv)) {
+		stack;
+		goto revert_new_lv;
+	}
+
+	if (!_reload_lv(cmd, vg, torigin_lv)) {
+		stack;
+		goto deactivate_and_revert_new_lv;
+	}
+
+	log_print_unless_silent("Converted %s/%s to thin external origin.",
+				vg->name, external_lv->name);
+
+	return 1;
+
+deactivate_and_revert_new_lv:
+	if (!_swap_lv(cmd, torigin_lv, external_lv))
+		stack;
+
+	if (!deactivate_lv(cmd, torigin_lv)) {
+		log_error("Unable to deactivate failed new LV. "
+			  "Manual intervention required.");
+		return 0;
+	}
+
+	if (!detach_thin_external_origin(first_seg(torigin_lv)))
+		return_0;
+
+revert_new_lv:
+	/* FIXME Better to revert to backup of metadata? */
+	if (!lv_remove(torigin_lv) || !vg_write(vg) || !vg_commit(vg))
+		log_error("Manual intervention may be required to remove "
+			  "abandoned LV(s) before retrying.");
+	else
+		backup(vg);
+
+	return 0;
+}
+
 /*
  * Thin lvconvert version which
  *  rename metadata
@@ -1843,11 +1984,25 @@ static int _lvconvert_thinpool(struct cmd_context *cmd,
 	struct logical_volume *data_lv;
 	struct logical_volume *metadata_lv;
 	struct logical_volume *pool_metadata_lv;
+	struct logical_volume *external_lv = NULL;
 
 	if (!lv_is_visible(pool_lv)) {
 		log_error("Can't convert internal LV %s/%s.",
 			  pool_lv->vg->name, pool_lv->name);
 		return 0;
+	}
+
+	if (arg_count(cmd, thin_ARG)) {
+		external_lv = pool_lv;
+		if (!(pool_lv = find_lv(external_lv->vg, lp->pool_data_lv_name))) {
+			log_error("Can't find pool LV %s/%s.",
+				  external_lv->vg->name, lp->pool_data_lv_name);
+			return 0;
+		}
+		if (lv_is_thin_pool(pool_lv)) {
+			r = 1; /* Already existing thin pool */
+			goto out;
+		}
 	}
 
 	if (lv_is_thin_type(pool_lv) && !lp->pool_metadata_lv_name) {
@@ -2064,7 +2219,12 @@ mda_write:
 
 	r = 1;
 out:
+	if (r && external_lv &&
+	    !(r = _lvconvert_thinpool_external(cmd, pool_lv, external_lv, lp)))
+		stack;
+
 	backup(pool_lv->vg);
+
 	return r;
 }
 
