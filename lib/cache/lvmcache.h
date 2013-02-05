@@ -145,8 +145,8 @@ struct device *lvmcache_device(struct lvmcache_info *info);
 void lvmcache_make_valid(struct lvmcache_info *info);
 int lvmcache_is_orphan(struct lvmcache_info *info);
 int lvmcache_uncertain_ownership(struct lvmcache_info *info);
-int lvmcache_mda_count(struct lvmcache_info *info);
+unsigned lvmcache_mda_count(struct lvmcache_info *info);
 int lvmcache_vgid_is_cached(const char *vgid);
-int lvmcache_smallest_mda_size(struct lvmcache_info *info);
+uint64_t lvmcache_smallest_mda_size(struct lvmcache_info *info);
 
 #endif

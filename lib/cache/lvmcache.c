@@ -1814,7 +1814,7 @@ int lvmcache_foreach_mda(struct lvmcache_info *info,
 	return 1;
 }
 
-int lvmcache_mda_count(struct lvmcache_info *info)
+unsigned lvmcache_mda_count(struct lvmcache_info *info)
 {
 	return dm_list_size(&info->mdas);
 }
@@ -1887,7 +1887,7 @@ int lvmcache_uncertain_ownership(struct lvmcache_info *info) {
 	return mdas_empty_or_ignored(&info->mdas);
 }
 
-int lvmcache_smallest_mda_size(struct lvmcache_info *info)
+uint64_t lvmcache_smallest_mda_size(struct lvmcache_info *info)
 {
 	return find_min_mda_size(&info->mdas);
 }
