@@ -19,7 +19,7 @@ aux prepare_devs 2
 vgcreate --metadatatype 1 $vg $(cat DEVICES)
 
 # Make origin volume
-lvcreate -l5 $vg -n origin
+lvcreate -ae -l5 $vg -n origin
 
 # Create a snap of origin
 lvcreate -s $vg/origin -n snap_with_lvm1_meta -l4
