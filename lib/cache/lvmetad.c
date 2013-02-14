@@ -280,6 +280,7 @@ static struct lvmcache_info *_pv_populate_lvmcache(
 	lvmcache_set_device_size(info, devsize);
 	lvmcache_del_das(info);
 	lvmcache_del_mdas(info);
+	lvmcache_del_eas(info);
 
 	do {
 		sprintf(mda_id, "mda%d", i);
@@ -299,6 +300,15 @@ static struct lvmcache_info *_pv_populate_lvmcache(
 			lvmcache_add_da(info, offset, size);
 		}
 		++i;
+	} while (da);
+
+	i = 0;
+	do {
+		sprintf(da_id, "ea%d", i);
+		da = dm_config_find_node(cn->child, da_id);
+		if (!dm_config_get_uint64(da->child, "offset", &offset)) return_0;
+		if (!dm_config_get_uint64(da->child, "size", &size)) return_0;
+		lvmcache_add_ea(info, offset, size);
 	} while (da);
 
 	return info;
@@ -629,7 +639,7 @@ int lvmetad_vg_list_to_lvmcache(struct cmd_context *cmd)
 	return 1;
 }
 
-struct _extract_mda_baton {
+struct _extract_dl_baton {
 	int i;
 	struct dm_config_tree *cft;
 	struct dm_config_node *pre_sib;
@@ -637,7 +647,7 @@ struct _extract_mda_baton {
 
 static int _extract_mda(struct metadata_area *mda, void *baton)
 {
-	struct _extract_mda_baton *b = baton;
+	struct _extract_dl_baton *b = baton;
 	struct dm_config_node *cn;
 	char id[32];
 
@@ -656,21 +666,21 @@ static int _extract_mda(struct metadata_area *mda, void *baton)
 	return 1;
 }
 
-static int _extract_da(struct disk_locn *da, void *baton)
+static int _extract_disk_location(const char *name, struct disk_locn *dl, void *baton)
 {
-	struct _extract_mda_baton *b = baton;
+	struct _extract_dl_baton *b = baton;
 	struct dm_config_node *cn;
 	char id[32];
 
-	if (!da)
+	if (!dl)
 		return 1;
 
-	(void) dm_snprintf(id, 32, "da%d", b->i);
+	(void) dm_snprintf(id, 32, "name%d", b->i);
 	if (!(cn = make_config_node(b->cft, id, b->cft->root, b->pre_sib)))
 		return 0;
 	if (!config_make_nodes(b->cft, cn, NULL,
-			       "offset = %"PRId64, (int64_t) da->offset,
-			       "size = %"PRId64, (int64_t) da->size,
+			       "offset = %"PRId64, (int64_t) dl->offset,
+			       "size = %"PRId64, (int64_t) dl->size,
 			       NULL))
 		return 0;
 
@@ -680,15 +690,27 @@ static int _extract_da(struct disk_locn *da, void *baton)
 	return 1;
 }
 
+static int _extract_da(struct disk_locn *da, void *baton)
+{
+	return _extract_disk_location("da", da, baton);
+}
+
+static int _extract_ea(struct disk_locn *ea, void *baton)
+{
+	return _extract_disk_location("ea", ea, baton);
+}
+
 static int _extract_mdas(struct lvmcache_info *info, struct dm_config_tree *cft,
 			 struct dm_config_node *pre_sib)
 {
-	struct _extract_mda_baton baton = { .i = 0, .cft = cft, .pre_sib = NULL };
+	struct _extract_dl_baton baton = { .i = 0, .cft = cft, .pre_sib = NULL };
 
 	if (!lvmcache_foreach_mda(info, &_extract_mda, &baton))
 		return 0;
 	baton.i = 0;
 	if (!lvmcache_foreach_da(info, &_extract_da, &baton))
+		return 0;
+	if (!lvmcache_foreach_ea(info, &_extract_ea, &baton))
 		return 0;
 
 	return 1;

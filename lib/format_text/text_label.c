@@ -336,11 +336,16 @@ static int _text_read(struct labeller *l, struct device *dev, void *buf,
 {
 	struct label_header *lh = (struct label_header *) buf;
 	struct pv_header *pvhdr;
+	struct pv_header_extension *pvhdr_ext;
 	struct lvmcache_info *info;
 	struct disk_locn *dlocn_xl;
 	uint64_t offset;
+	uint32_t ext_version;
 	struct _update_mda_baton baton;
 
+	/*
+	 * PV header base
+	 */
 	pvhdr = (struct pv_header *) ((char *) buf + xlate32(lh->offset_xl));
 
 	if (!(info = lvmcache_add(l, (char *)pvhdr->pv_uuid, dev,
@@ -354,6 +359,7 @@ static int _text_read(struct labeller *l, struct device *dev, void *buf,
 
 	lvmcache_del_das(info);
 	lvmcache_del_mdas(info);
+	lvmcache_del_eas(info);
 
 	/* Data areas holding the PEs */
 	dlocn_xl = pvhdr->disk_areas_xl;
@@ -369,6 +375,25 @@ static int _text_read(struct labeller *l, struct device *dev, void *buf,
 		dlocn_xl++;
 	}
 
+	dlocn_xl++;
+
+	/*
+	 * PV header extension
+	 */
+	pvhdr_ext = (struct pv_header_extension *) ((char *) dlocn_xl);
+	if (!(ext_version = xlate32(pvhdr_ext->version)))
+		goto out;
+
+	log_debug("%s: PV header extension version %" PRIu32 " found",
+		  dev_name(dev), ext_version);
+
+	/* Embedding areas */
+	dlocn_xl = pvhdr_ext->embedding_areas_xl;
+	while ((offset = xlate64(dlocn_xl->offset))) {
+		lvmcache_add_ea(info, offset, xlate64(dlocn_xl->size));
+		dlocn_xl++;
+	}
+out:
 	baton.info = info;
 	baton.label = *label;
 
@@ -385,6 +410,7 @@ static void _text_destroy_label(struct labeller *l __attribute__((unused)),
 
 	lvmcache_del_mdas(info);
 	lvmcache_del_das(info);
+	lvmcache_del_eas(info);
 }
 
 static void _fmt_text_destroy(struct labeller *l)

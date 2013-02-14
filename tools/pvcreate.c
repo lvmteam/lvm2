@@ -76,6 +76,7 @@ static int pvcreate_restore_params_validate(struct cmd_context *cmd,
 		pp->rp.pe_start = pv_pe_start(existing_pvl->pv);
 		pp->rp.extent_size = pv_pe_size(existing_pvl->pv);
 		pp->rp.extent_count = pv_pe_count(existing_pvl->pv);
+
 		release_vg(vg);
 	}
 

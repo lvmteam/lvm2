@@ -1479,6 +1479,7 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 
 		lvmcache_del_mdas(info);
 		lvmcache_del_das(info);
+		lvmcache_del_eas(info);
 	} else {
 		if (existing->dev != dev) {
 			/* Is the existing entry a duplicate pvid e.g. md ? */
@@ -1723,8 +1724,20 @@ int lvmcache_populate_pv_fields(struct lvmcache_info *info,
 		return 0;
 	}
 
+	/* Currently only support one embedding area at most */
+	if (dm_list_size(&info->eas) > 1) {
+		log_error("Must be at most one embedding area (found %d) on PV %s",
+			  dm_list_size(&info->eas), dev_name(info->dev));
+		return 0;
+	}
+
 	dm_list_iterate_items(da, &info->das)
 		pv->pe_start = da->disk_locn.offset >> SECTOR_SHIFT;
+
+	dm_list_iterate_items(da, &info->eas) {
+		pv->ea_start = da->disk_locn.offset >> SECTOR_SHIFT;
+		pv->ea_size = da->disk_locn.size >> SECTOR_SHIFT;
+	}
 
 	return 1;
 }

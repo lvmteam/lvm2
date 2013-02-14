@@ -80,6 +80,8 @@ uint64_t pv_free(const struct physical_volume *pv);
 uint64_t pv_status(const struct physical_volume *pv);
 uint32_t pv_pe_size(const struct physical_volume *pv);
 uint64_t pv_pe_start(const struct physical_volume *pv);
+uint64_t pv_ea_start(const struct physical_volume *pv);
+uint64_t pv_ea_size(const struct physical_volume *pv);
 uint32_t pv_pe_count(const struct physical_volume *pv);
 uint32_t pv_pe_alloc_count(const struct physical_volume *pv);
 uint64_t pv_mda_size(const struct physical_volume *pv);

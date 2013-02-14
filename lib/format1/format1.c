@@ -423,6 +423,7 @@ static int _format1_pv_write(const struct format_type *fmt, struct physical_volu
 	lvmcache_update_pv(info, pv, fmt);
 	lvmcache_del_mdas(info);
 	lvmcache_del_das(info);
+	lvmcache_del_eas(info);
 
 	dm_list_init(&pvs);
 
