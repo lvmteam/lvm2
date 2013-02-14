@@ -43,6 +43,10 @@ struct physical_volume {
 	uint64_t status;
 	uint64_t size;
 
+	/* embedding area */
+	uint64_t ea_start;
+	uint64_t ea_size;
+
 	/* physical extents */
 	uint32_t pe_size;
 	uint64_t pe_start;

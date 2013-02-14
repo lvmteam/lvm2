@@ -38,6 +38,7 @@ struct lvmcache_info {
 	struct dm_list list;	/* Join VG members together */
 	struct dm_list mdas;	/* list head for metadata areas */
 	struct dm_list das;	/* list head for data areas */
+	struct dm_list eas;	/* list head for embedding areas */
 	struct lvmcache_vginfo *vginfo;	/* NULL == unknown */
 	struct label *label;
 	const struct format_type *fmt;
@@ -1752,6 +1753,13 @@ void lvmcache_del_das(struct lvmcache_info *info)
 	dm_list_init(&info->das);
 }
 
+void lvmcache_del_eas(struct lvmcache_info *info)
+{
+	if (info->eas.n)
+		del_eas(&info->eas);
+	dm_list_init(&info->eas);
+}
+
 int lvmcache_add_mda(struct lvmcache_info *info, struct device *dev,
 		     uint64_t start, uint64_t size, unsigned ignored)
 {
@@ -1763,6 +1771,10 @@ int lvmcache_add_da(struct lvmcache_info *info, uint64_t start, uint64_t size)
 	return add_da(NULL, &info->das, start, size);
 }
 
+int lvmcache_add_ea(struct lvmcache_info *info, uint64_t start, uint64_t size)
+{
+	return add_ea(NULL, &info->eas, start, size);
+}
 
 void lvmcache_update_pv(struct lvmcache_info *info, struct physical_volume *pv,
 			const struct format_type *fmt)
@@ -1783,6 +1795,25 @@ int lvmcache_update_das(struct lvmcache_info *info, struct physical_volume *pv)
 		dm_list_init(&info->das);
 
 	if (!add_da(NULL, &info->das, pv->pe_start << SECTOR_SHIFT, 0 /*pv->size << SECTOR_SHIFT*/))
+		return_0;
+
+	return 1;
+}
+
+int lvmcache_update_eas(struct lvmcache_info *info, struct physical_volume *pv)
+{
+	struct data_area_list *ea;
+	if (info->eas.n) {
+		if (!pv->ea_start && !pv->ea_size)
+			dm_list_iterate_items(ea, &info->eas) {
+				pv->ea_start = ea->disk_locn.offset >> SECTOR_SHIFT;
+				pv->ea_size = ea->disk_locn.size >> SECTOR_SHIFT;
+			}
+		del_das(&info->eas);
+	} else
+		dm_list_init(&info->eas);
+
+	if (!add_ea(NULL, &info->eas, pv->ea_start << SECTOR_SHIFT, pv->ea_size << SECTOR_SHIFT))
 		return_0;
 
 	return 1;
@@ -1826,6 +1857,19 @@ int lvmcache_foreach_da(struct lvmcache_info *info,
 	struct data_area_list *da;
 	dm_list_iterate_items(da, &info->das) {
 		if (!fun(&da->disk_locn, baton))
+			return_0;
+	}
+
+	return 1;
+}
+
+int lvmcache_foreach_ea(struct lvmcache_info *info,
+			 int (*fun)(struct disk_locn *, void *),
+			 void *baton)
+{
+	struct data_area_list *ea;
+	dm_list_iterate_items(ea, &info->eas) {
+		if (!fun(&ea->disk_locn, baton))
 			return_0;
 	}
 

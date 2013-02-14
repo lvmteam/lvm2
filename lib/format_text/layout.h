@@ -23,6 +23,15 @@
 
 /* disk_locn and data_area_list are defined in format-text.h */
 
+#define PV_HEADER_EXTENSION_VSN 1
+
+struct pv_header_extension {
+	uint32_t version;
+	uint32_t flags;
+	/* NULL-terminated list of embedding areas */
+	struct disk_locn embedding_area_xl[0];
+} __attribute__ ((packed));
+
 /* Fields with the suffix _xl should be xlate'd wherever they appear */
 /* On disk */
 struct pv_header {
@@ -34,6 +43,9 @@ struct pv_header {
 	/* NULL-terminated list of data areas followed by */
 	/* NULL-terminated list of metadata area headers */
 	struct disk_locn disk_areas_xl[0];	/* Two lists */
+
+	/* PV header extension */
+	struct pv_header_extension ext;
 } __attribute__ ((packed));
 
 /*
