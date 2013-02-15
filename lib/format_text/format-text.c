@@ -1331,6 +1331,9 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 				 mdac->area.start, mdac->area.size, mda_is_ignored(mda));
 	}
 
+	if (!lvmcache_update_eas(info, pv))
+		return_0;
+
 	/*
 	 * FIXME: Allow writing zero offset/size data area to disk.
 	 *        This requires defining a special value since we can't
@@ -1471,12 +1474,7 @@ static int _text_pv_initialise(const struct format_type *fmt,
 			       struct pvcreate_restorable_params *rp,
 			       struct physical_volume *pv)
 {
-	/*
-	 * Try to keep the value of PE start set to a firm value if requested.
-	 * This is usefull when restoring existing PE start value (backups etc.).
-	 */
-	if (rp->pe_start != PV_PE_START_CALC)
-		pv->pe_start = rp->pe_start;
+	unsigned long adjustment, final_alignment = 0;
 
 	if (!data_alignment)
 		data_alignment = find_config_tree_int(pv->fmt->cmd,
@@ -1506,14 +1504,65 @@ static int _text_pv_initialise(const struct format_type *fmt,
 		return 0;
 	}
 
-	if (pv->size < pv->pe_align + pv->pe_align_offset) {
+	final_alignment = pv->pe_align + pv->pe_align_offset;
+
+	if (pv->size < final_alignment) {
 		log_error("%s: Data alignment must not exceed device size.",
 			  pv_dev_name(pv));
 		return 0;
 	}
 
-	if (rp->pe_start == PV_PE_START_CALC)
-		pv->pe_start = pv->pe_align + pv->pe_align_offset;
+	if (pv->size < final_alignment + rp->ea_size) {
+		log_error("%s: Embedding area with data-aligned start must "
+			  "not exceed device size.", pv_dev_name(pv));
+		return 0;
+	}
+
+	if (rp->pe_start == PV_PE_START_CALC) {
+		/*
+		 * Calculate new PE start and embedding area start value.
+		 * Make sure both are properly aligned!
+		 * If PE start can't be aligned because EA is taking
+		 * the whole space, make PE start equal to the PV size
+		 * which effectively disables DA - it will have zero size.
+		 * This needs to be done as we can't have a PV without any DA.
+		 * But we still want to support a PV with EA only!
+		 */
+		if (rp->ea_size) {
+			pv->ea_start = final_alignment;
+			pv->ea_size = rp->ea_size;
+			if ((adjustment = rp->ea_size % pv->pe_align))
+				pv->ea_size += pv->pe_align - adjustment;
+			if (pv->size < pv->ea_start + pv->ea_size)
+				pv->ea_size = pv->size - pv->ea_start;
+			pv->pe_start = pv->ea_start + pv->ea_size;
+		} else
+			pv->pe_start = final_alignment;
+	} else {
+		/*
+		 * Try to keep the value of PE start set to a firm value if
+		 * requested. This is useful when restoring existing PE start
+		 * value (e.g. backups). Also, if creating an EA, try to place
+		 * it in between the final alignment and existing PE start
+		 * if possible.
+		 * TODO: Support restoring existing EA from MDA instead like
+		 *       we do for PE start? This would require adding EA info
+		 *       in MDA then!
+		 */
+		pv->pe_start = rp->pe_start;
+		if (rp->ea_size) {
+			if ((rp->ea_start && rp->ea_start + rp->ea_size > rp->pe_start) ||
+			    (rp->pe_start <= final_alignment) ||
+			    (rp->pe_start - final_alignment < rp->ea_size)) {
+				log_error("%s: Embedding area would overlap "
+					  "data area.", pv_dev_name(pv));
+				return 0;
+			} else {
+				pv->ea_start = rp->ea_start ? : final_alignment;
+				pv->ea_size = rp->ea_size;
+			}
+		}
+	}
 
 	if (rp->extent_size)
 		pv->pe_size = rp->extent_size;
@@ -1938,7 +1987,7 @@ static int _text_pv_add_metadata_area(const struct format_type *fmt,
 {
 	struct format_instance *fid = pv->fid;
 	const char *pvid = (const char *) (*pv->old_id.uuid ? &pv->old_id : &pv->id);
-	uint64_t pe_start, pe_end;
+	uint64_t ea_size, pe_start, pe_end;
 	uint64_t alignment, alignment_offset;
 	uint64_t disk_size;
 	uint64_t mda_start;
@@ -1959,6 +2008,7 @@ static int _text_pv_add_metadata_area(const struct format_type *fmt,
 	}
 
 	pe_start = pv->pe_start << SECTOR_SHIFT;
+	ea_size = pv->ea_size << SECTOR_SHIFT;
 	alignment = pv->pe_align << SECTOR_SHIFT;
 	alignment_offset = pv->pe_align_offset << SECTOR_SHIFT;
 	disk_size = pv->size << SECTOR_SHIFT;
@@ -1992,6 +2042,12 @@ static int _text_pv_add_metadata_area(const struct format_type *fmt,
 		else {
 			limit = disk_size;
 			limit_name = "disk size";
+		}
+
+		/* Adjust limits for embedding area if present. */
+		if (ea_size) {
+			limit -= ea_size;
+			limit_name = "ea_start";
 		}
 
 		if (limit > disk_size)
@@ -2053,8 +2109,11 @@ static int _text_pv_add_metadata_area(const struct format_type *fmt,
 		 * start of the area that follows the MDA0 we've just calculated.
 		 */
 		if (!pe_start_locked) {
-			pe_start = mda_start + mda_size;
-			pv->pe_start = pe_start >> SECTOR_SHIFT;
+			if (ea_size) {
+				pv->ea_start = (mda_start + mda_size) >> SECTOR_SHIFT;
+				pv->pe_start = pv->ea_start + pv->ea_size;
+			} else
+				pv->pe_start = (mda_start + mda_size) >> SECTOR_SHIFT;
 		}
 	}
 	/* Second metadata area at the end of the device. */
@@ -2072,15 +2131,22 @@ static int _text_pv_add_metadata_area(const struct format_type *fmt,
 		if (pe_start || pe_start_locked) {
 			limit = pe_end ? pe_end : pe_start;
 			limit_name = pe_end ? "pe_end" : "pe_start";
-		}
-		else if ((mda = fid_get_mda_indexed(fid, pvid, ID_LEN, 0)) &&
-			 (mdac = mda->metadata_locn)) {
-			limit = mdac->area.start + mdac->area.size;
-			limit_name = "MDA0 end";
-		}
-		else {
-			limit = LABEL_SCAN_SIZE;
-			limit_name = "label scan size";
+		} else {
+			if ((mda = fid_get_mda_indexed(fid, pvid, ID_LEN, 0)) &&
+				 (mdac = mda->metadata_locn)) {
+				limit = mdac->area.start + mdac->area.size;
+				limit_name = "MDA0 end";
+			}
+			else {
+				limit = LABEL_SCAN_SIZE;
+				limit_name = "label scan size";
+			}
+
+			/* Adjust limits for embedding area if present. */
+			if (ea_size) {
+				limit += ea_size;
+				limit_name = "ea_end";
+			}
 		}
 
 		if (limit > disk_size)

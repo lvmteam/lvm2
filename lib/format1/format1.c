@@ -379,6 +379,8 @@ static int _format1_pv_setup(const struct format_type *fmt,
 	struct pvcreate_restorable_params rp = {.restorefile = NULL,
 						.id = {{0}},
 						.idp = NULL,
+						.ea_start = 0,
+						.ea_size = 0,
 						.pe_start = 0,
 						.extent_count = 0,
 						.extent_size = vg->extent_size};

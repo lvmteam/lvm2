@@ -35,23 +35,28 @@ static int _text_can_handle(struct labeller *l __attribute__((unused)),
 	return 0;
 }
 
-struct _da_setup_baton {
+struct _dl_setup_baton {
 	struct disk_locn *pvh_dlocn_xl;
 	struct device *dev;
 };
 
 static int _da_setup(struct disk_locn *da, void *baton)
 {
-	struct _da_setup_baton *p = baton;
+	struct _dl_setup_baton *p = baton;
 	p->pvh_dlocn_xl->offset = xlate64(da->offset);
 	p->pvh_dlocn_xl->size = xlate64(da->size);
 	p->pvh_dlocn_xl++;
 	return 1;
 }
 
+static int _ea_setup(struct disk_locn *ea, void *baton)
+{
+	return _da_setup(ea, baton);
+}
+
 static int _mda_setup(struct metadata_area *mda, void *baton)
 {
-	struct _da_setup_baton *p = baton;
+	struct _dl_setup_baton *p = baton;
 	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
 
 	if (mdac->area.dev != p->dev)
@@ -64,15 +69,30 @@ static int _mda_setup(struct metadata_area *mda, void *baton)
 	return 1;
 }
 
+static int _dl_null_termination(void *baton)
+{
+	struct _dl_setup_baton *p = baton;
+
+	p->pvh_dlocn_xl->offset = xlate64(UINT64_C(0));
+	p->pvh_dlocn_xl->size = xlate64(UINT64_C(0));
+	p->pvh_dlocn_xl++;
+
+	return 1;
+}
+
 static int _text_write(struct label *label, void *buf)
 {
 	struct label_header *lh = (struct label_header *) buf;
 	struct pv_header *pvhdr;
+	struct pv_header_extension *pvhdr_ext;
 	struct lvmcache_info *info;
-	struct _da_setup_baton baton;
+	struct _dl_setup_baton baton;
 	char buffer[64] __attribute__((aligned(8)));
-	int da1, mda1, mda2;
+	int ea1, da1, mda1, mda2;
 
+	/*
+	 * PV header base
+	 */
 	/* FIXME Move to where label is created */
 	strncpy(label->type, LVM2_LABEL, sizeof(label->type));
 
@@ -89,29 +109,34 @@ static int _text_write(struct label *label, void *buf)
 	}
 
 	baton.dev = lvmcache_device(info);
+	baton.pvh_dlocn_xl = &pvhdr->disk_areas_xl[0];
 
 	/* List of data areas (holding PEs) */
-	baton.pvh_dlocn_xl = &pvhdr->disk_areas_xl[0];
 	lvmcache_foreach_da(info, _da_setup, &baton);
-
-	/* NULL-termination */
-	baton.pvh_dlocn_xl->offset = xlate64(UINT64_C(0));
-	baton.pvh_dlocn_xl->size = xlate64(UINT64_C(0));
-	baton.pvh_dlocn_xl++;
+	_dl_null_termination(&baton);
 
 	/* List of metadata area header locations */
 	lvmcache_foreach_mda(info, _mda_setup, &baton);
+	_dl_null_termination(&baton);
 
-	/* NULL-termination */
-	baton.pvh_dlocn_xl->offset = xlate64(UINT64_C(0));
-	baton.pvh_dlocn_xl->size = xlate64(UINT64_C(0));
+	/*
+	 * PV header extension
+	 */
+	pvhdr_ext = (struct pv_header_extension *) ((char *) baton.pvh_dlocn_xl);
+	pvhdr_ext->version = xlate32(PV_HEADER_EXTENSION_VSN);
+	pvhdr_ext->flags = 0; /* no flags yet */
 
-	/* Create debug message with da and mda locations */
-	if (xlate64(pvhdr->disk_areas_xl[0].offset) ||
-	    xlate64(pvhdr->disk_areas_xl[0].size))
-		da1 = 0;
-	else
-		da1 = -1;
+	/* List of embedding area locations */
+	baton.pvh_dlocn_xl = &pvhdr_ext->embedding_areas_xl[0];
+	lvmcache_foreach_ea(info, _ea_setup, &baton);
+	_dl_null_termination(&baton);
+
+	/* Create debug message with ea, da and mda locations */
+	ea1 = (xlate64(pvhdr_ext->embedding_areas_xl[0].offset) ||
+	       xlate64(pvhdr_ext->embedding_areas_xl[0].size)) ? 0 : -1;
+
+	da1 = (xlate64(pvhdr->disk_areas_xl[0].offset) ||
+	       xlate64(pvhdr->disk_areas_xl[0].size)) ? 0 : -1;
 
 	mda1 = da1 + 2;
 	mda2 = mda1 + 1;
@@ -126,8 +151,16 @@ static int _text_write(struct label *label, void *buf)
 	log_debug_metadata("%s: Preparing PV label header %s size %" PRIu64 " with"
 			   "%s%.*" PRIu64 "%s%.*" PRIu64 "%s"
 			   "%s%.*" PRIu64 "%s%.*" PRIu64 "%s"
+			   "%s%.*" PRIu64 "%s%.*" PRIu64 "%s"
 			   "%s%.*" PRIu64 "%s%.*" PRIu64 "%s",
 			   dev_name(lvmcache_device(info)), buffer, lvmcache_device_size(info),
+			   (ea1 > -1) ? " ea1 (" : "",
+			   (ea1 > -1) ? 1 : 0,
+			   (ea1 > -1) ? xlate64(pvhdr_ext->embedding_areas_xl[ea1].offset) >> SECTOR_SHIFT : 0,
+			   (ea1 > -1) ? "s, " : "",
+			   (ea1 > -1) ? 1 : 0,
+			   (ea1 > -1) ? xlate64(pvhdr_ext->embedding_areas_xl[ea1].size) >> SECTOR_SHIFT : 0,
+			   (ea1 > -1) ? "s)" : "",
 			   (da1 > -1) ? " da1 (" : "",
 			   (da1 > -1) ? 1 : 0,
 			   (da1 > -1) ? xlate64(pvhdr->disk_areas_xl[da1].offset) >> SECTOR_SHIFT : 0,

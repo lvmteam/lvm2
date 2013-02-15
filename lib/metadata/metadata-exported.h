@@ -398,6 +398,8 @@ struct pvcreate_restorable_params {
 	const char *restorefile; /* 0 if no --restorefile option */
 	struct id id; /* FIXME: redundant */
 	struct id *idp; /* 0 if no --uuid option */
+	uint64_t ea_start;
+	uint64_t ea_size;
 	uint64_t pe_start;
 	uint32_t extent_count;
 	uint32_t extent_size;
