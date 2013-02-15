@@ -63,6 +63,15 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 					     DEFAULT_PVMETADATACOPIES);
 	}
 
+	if (cmd->fmt->features & FMT_EAS) {
+		if (arg_sign_value(cmd, embeddingareasize_ARG, SIGN_NONE) == SIGN_MINUS) {
+			log_error("Embedding area size may not be negative");
+			return EINVALID_CMD_LINE;
+		}
+
+		rp.ea_size = arg_uint64_value(cmd, embeddingareasize_ARG, UINT64_C(0));
+	}
+
 	if (!archive(vg)) {
 		log_error("Archive of \"%s\" metadata failed.", vg_name);
 		return ECMD_FAILED;
@@ -224,6 +233,12 @@ int vgconvert(struct cmd_context *cmd, int argc, char **argv)
 	if (arg_count(cmd, pvmetadatacopies_ARG) &&
 	    arg_int_value(cmd, pvmetadatacopies_ARG, -1) > 2) {
 		log_error("Metadatacopies may only be 0, 1 or 2");
+		return EINVALID_CMD_LINE;
+	}
+
+	if (!(cmd->fmt->features & FMT_EAS) &&
+		arg_count(cmd, embeddingareasize_ARG)) {
+		log_error("Embedding area parameters only apply to text format");
 		return EINVALID_CMD_LINE;
 	}
 

@@ -540,6 +540,7 @@ xx(pvcreate,
    "\t[-M|--metadatatype 1|2]" "\n"
    "\t[--pvmetadatacopies #copies]" "\n"
    "\t[--metadatasize MetadataSize[bBsSkKmMgGtTpPeE]]" "\n"
+   "\t[--embeddingareasize EmbeddingAreaSize[bBsSkKmMgGtTpPeE]]" "\n"
    "\t[--dataalignment Alignment[bBsSkKmMgGtTpPeE]]" "\n"
    "\t[--dataalignmentoffset AlignmentOffset[bBsSkKmMgGtTpPeE]]" "\n"
    "\t[--setphysicalvolumesize PhysicalVolumeSize[bBsSkKmMgGtTpPeE]" "\n"
@@ -551,10 +552,10 @@ xx(pvcreate,
    "\t[--version] " "\n"
    "\tPhysicalVolume [PhysicalVolume...]\n",
 
-   dataalignment_ARG, dataalignmentoffset_ARG, force_ARG, test_ARG,
-   labelsector_ARG, metadatatype_ARG, metadatacopies_ARG,
-   metadatasize_ARG, metadataignore_ARG, norestorefile_ARG,
-   physicalvolumesize_ARG, pvmetadatacopies_ARG,
+   dataalignment_ARG, dataalignmentoffset_ARG, embeddingareasize_ARG,
+   force_ARG, test_ARG, labelsector_ARG, metadatatype_ARG,
+   metadatacopies_ARG, metadatasize_ARG, metadataignore_ARG,
+   norestorefile_ARG, physicalvolumesize_ARG, pvmetadatacopies_ARG,
    restorefile_ARG, uuidstr_ARG, yes_ARG, zero_ARG)
 
 xx(pvdata,
@@ -797,13 +798,15 @@ xx(vgconvert,
    "\t[-M|--metadatatype 1|2]" "\n"
    "\t[--pvmetadatacopies #copies]" "\n"
    "\t[--metadatasize MetadataSize[bBsSkKmMgGtTpPeE]]" "\n"
+   "\t[--embeddingareasize EmbeddingAreaSize[bBsSkKmMgGtTpPeE]]" "\n"
    "\t[-t|--test] " "\n"
    "\t[-v|--verbose] " "\n"
    "\t[--version] " "\n"
    "\tVolumeGroupName [VolumeGroupName...]\n",
 
-   force_ARG, test_ARG, labelsector_ARG, metadatatype_ARG, metadatacopies_ARG,
-   pvmetadatacopies_ARG, metadatasize_ARG )
+   force_ARG, test_ARG, labelsector_ARG, embeddingareasize_ARG,
+   metadatatype_ARG, metadatacopies_ARG, pvmetadatacopies_ARG,
+   metadatasize_ARG )
 
 xx(vgcreate,
    "Create a volume group",

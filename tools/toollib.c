@@ -1413,6 +1413,13 @@ int pvcreate_params_validate(struct cmd_context *cmd,
 		return 0;
 	}
 
+	if (!(cmd->fmt->features & FMT_EAS) &&
+	    arg_count(cmd, embeddingareasize_ARG)) {
+		log_error("Embedding area parameters only "
+			  "apply to text format.");
+		return 0;
+	}
+
 	if (arg_count(cmd, pvmetadatacopies_ARG) &&
 	    arg_int_value(cmd, pvmetadatacopies_ARG, -1) > 2) {
 		log_error("Metadatacopies may only be 0, 1 or 2");
@@ -1482,6 +1489,11 @@ int pvcreate_params_validate(struct cmd_context *cmd,
 		return 0;
 	}
 
+	if (arg_sign_value(cmd, embeddingareasize_ARG, SIGN_NONE) == SIGN_MINUS) {
+		log_error("Embedding area size may not be negative");
+		return 0;
+	}
+
 	pp->pvmetadatasize = arg_uint64_value(cmd, metadatasize_ARG, UINT64_C(0));
 	if (!pp->pvmetadatasize)
 		pp->pvmetadatasize = find_config_tree_int(cmd,
@@ -1493,6 +1505,8 @@ int pvcreate_params_validate(struct cmd_context *cmd,
 		pp->pvmetadatacopies = find_config_tree_int(cmd,
 						   "metadata/pvmetadatacopies",
 						   DEFAULT_PVMETADATACOPIES);
+
+	pp->rp.ea_size = arg_uint64_value(cmd, embeddingareasize_ARG, pp->rp.ea_size);
 
 	return 1;
 }
