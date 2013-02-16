@@ -155,6 +155,10 @@ GET_PV_NUM_PROPERTY_FN(pv_mda_count, pv_mda_count(pv))
 #define _pv_mda_count_set _not_implemented_set
 GET_PV_NUM_PROPERTY_FN(pv_mda_used_count, pv_mda_used_count(pv))
 #define _pv_mda_used_count_set _not_implemented_set
+GET_PV_NUM_PROPERTY_FN(ea_start, SECTOR_SIZE * pv->ea_start)
+#define _ea_start_set _not_implemented_set
+GET_PV_NUM_PROPERTY_FN(ea_size, SECTOR_SIZE * pv->ea_size)
+#define _ea_size_set _not_implemented_set
 
 /* LV */
 GET_LV_STR_PROPERTY_FN(lv_uuid, lv_uuid_dup(lv))
