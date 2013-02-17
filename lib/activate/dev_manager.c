@@ -481,14 +481,15 @@ int dev_manager_info(struct dm_pool *mem, const struct logical_volume *lv,
 }
 
 static const struct dm_info *_cached_info(struct dm_pool *mem,
+					  struct dm_tree *dtree,
 					  const struct logical_volume *lv,
-					  struct dm_tree *dtree)
+					  const char *layer)
 {
 	const char *dlid;
 	struct dm_tree_node *dnode;
 	const struct dm_info *dinfo;
 
-	if (!(dlid = build_dm_uuid(mem, lv->lvid.s, NULL))) {
+	if (!(dlid = build_dm_uuid(mem, lv->lvid.s, layer))) {
 		log_error("dlid build failed for %s", lv->name);
 		return NULL;
 	}
@@ -2169,10 +2170,11 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		 * - open_count is always retrieved (as of dm-ioctl 4.7.0)
 		 *   so just use the tree's existing nodes' info
 		 */
-		if (((dinfo = _cached_info(dm->mem, lv,
-					   dtree)) && dinfo->open_count) ||
-		    ((dinfo = _cached_info(dm->mem, find_merging_cow(lv)->cow,
-					   dtree)) && dinfo->open_count)) {
+		if (((dinfo = _cached_info(dm->mem, dtree, lv, NULL)) &&
+		     dinfo->open_count) ||
+		    ((dinfo = _cached_info(dm->mem, dtree,
+					   find_merging_cow(lv)->cow, NULL)) &&
+		     dinfo->open_count)) {
 			/* FIXME Is there anything simpler to check for instead? */
 			if (!lv_has_target_type(dm->mem, lv, NULL, "snapshot-merge"))
 				laopts->no_merging = 1;
