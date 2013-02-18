@@ -1425,14 +1425,14 @@ void pvcreate_params_set_defaults(struct pvcreate_params *pp)
 	pp->pvmetadatacopies = DEFAULT_PVMETADATACOPIES;
 	pp->pvmetadatasize = DEFAULT_PVMETADATASIZE;
 	pp->labelsector = DEFAULT_LABELSECTOR;
-	pp->idp = 0;
-	pp->pe_start = 0;
-	pp->extent_count = 0;
-	pp->extent_size = 0;
-	pp->restorefile = 0;
 	pp->force = PROMPT;
 	pp->yes = 0;
 	pp->metadataignore = DEFAULT_PVMETADATAIGNORE;
+	pp->rp.restorefile = 0;
+	pp->rp.idp = 0;
+	pp->rp.pe_start = 0;
+	pp->rp.extent_count = 0;
+	pp->rp.extent_size = 0;
 }
 
 
@@ -1504,10 +1504,10 @@ struct physical_volume * pvcreate_single(struct cmd_context *cmd,
 	if (!pp)
 		pp = &default_pp;
 
-	if (pp->idp) {
-		if ((dev = lvmcache_device_from_pvid(cmd, pp->idp, NULL, NULL)) &&
+	if (pp->rp.idp) {
+		if ((dev = lvmcache_device_from_pvid(cmd, pp->rp.idp, NULL, NULL)) &&
 		    (dev != dev_cache_get(pv_name, cmd->filter))) {
-			if (!id_write_format((const struct id*)&pp->idp->uuid,
+			if (!id_write_format((const struct id*)&pp->rp.idp->uuid,
 			    buffer, sizeof(buffer)))
 				goto_bad;
 			log_error("uuid %s already in use on \"%s\"", buffer,
@@ -1530,10 +1530,10 @@ struct physical_volume * pvcreate_single(struct cmd_context *cmd,
 
 	dm_list_init(&mdas);
 
-	if (!(pv = pv_create(cmd, dev, pp->idp, pp->size,
+	if (!(pv = pv_create(cmd, dev, pp->rp.idp, pp->size,
 			     pp->data_alignment, pp->data_alignment_offset,
-			     pp->pe_start ? pp->pe_start : PV_PE_START_CALC,
-			     pp->extent_count, pp->extent_size,
+			     pp->rp.pe_start ? pp->rp.pe_start : PV_PE_START_CALC,
+			     pp->rp.extent_count, pp->rp.extent_size,
 			     pp->labelsector, pp->pvmetadatacopies,
 			     pp->pvmetadatasize, pp->metadataignore))) {
 		log_error("Failed to setup physical volume \"%s\"", pv_name);

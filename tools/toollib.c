@@ -1451,11 +1451,11 @@ int pvcreate_params_validate(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (pp->data_alignment && pp->pe_start) {
-		if (pp->pe_start % pp->data_alignment)
+	if (pp->data_alignment && pp->rp.pe_start) {
+		if (pp->rp.pe_start % pp->data_alignment)
 			log_warn("WARNING: Ignoring data alignment %" PRIu64
 				 " incompatible with --restorefile value (%"
-				 PRIu64").", pp->data_alignment, pp->pe_start);
+				 PRIu64").", pp->data_alignment, pp->rp.pe_start);
 		pp->data_alignment = 0;
 	}
 
@@ -1470,10 +1470,10 @@ int pvcreate_params_validate(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (pp->data_alignment_offset && pp->pe_start) {
+	if (pp->data_alignment_offset && pp->rp.pe_start) {
 		log_warn("WARNING: Ignoring data alignment offset %" PRIu64
 			 " incompatible with --restorefile value (%"
-			 PRIu64").", pp->data_alignment_offset, pp->pe_start);
+			 PRIu64").", pp->data_alignment_offset, pp->rp.pe_start);
 		pp->data_alignment_offset = 0;
 	}
 

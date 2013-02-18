@@ -53,29 +53,29 @@ static int pvcreate_restore_params_validate(struct cmd_context *cmd,
 
  	if (arg_count(cmd, uuidstr_ARG)) {
 		uuid = arg_str_value(cmd, uuidstr_ARG, "");
-		if (!id_read_format(&pp->id, uuid))
+		if (!id_read_format(&pp->rp.id, uuid))
 			return 0;
-		pp->idp = &pp->id;
+		pp->rp.idp = &pp->rp.id;
 		lvmcache_seed_infos_from_lvmetad(cmd); /* need to check for UUID dups */
 	}
 
 	if (arg_count(cmd, restorefile_ARG)) {
-		pp->restorefile = arg_str_value(cmd, restorefile_ARG, "");
+		pp->rp.restorefile = arg_str_value(cmd, restorefile_ARG, "");
 		/* The uuid won't already exist */
-		if (!(vg = backup_read_vg(cmd, NULL, pp->restorefile))) {
+		if (!(vg = backup_read_vg(cmd, NULL, pp->rp.restorefile))) {
 			log_error("Unable to read volume group from %s",
-				  pp->restorefile);
+				  pp->rp.restorefile);
 			return 0;
 		}
-		if (!(existing_pvl = find_pv_in_vg_by_uuid(vg, pp->idp))) {
+		if (!(existing_pvl = find_pv_in_vg_by_uuid(vg, pp->rp.idp))) {
 			release_vg(vg);
 			log_error("Can't find uuid %s in backup file %s",
-				  uuid, pp->restorefile);
+				  uuid, pp->rp.restorefile);
 			return 0;
 		}
-		pp->pe_start = pv_pe_start(existing_pvl->pv);
-		pp->extent_size = pv_pe_size(existing_pvl->pv);
-		pp->extent_count = pv_pe_count(existing_pvl->pv);
+		pp->rp.pe_start = pv_pe_start(existing_pvl->pv);
+		pp->rp.extent_size = pv_pe_size(existing_pvl->pv);
+		pp->rp.extent_count = pv_pe_count(existing_pvl->pv);
 		release_vg(vg);
 	}
 

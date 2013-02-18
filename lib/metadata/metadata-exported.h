@@ -391,6 +391,15 @@ struct lv_list {
 	struct logical_volume *lv;
 };
 
+struct pvcreate_restorable_params {
+	const char *restorefile; /* 0 if no --restorefile option */
+	struct id id; /* FIXME: redundant */
+	struct id *idp; /* 0 if no --uuid option */
+	uint64_t pe_start;
+	uint32_t extent_count;
+	uint32_t extent_size;
+};
+
 struct pvcreate_params {
 	int zero;
 	uint64_t size;
@@ -399,15 +408,10 @@ struct pvcreate_params {
 	int pvmetadatacopies;
 	uint64_t pvmetadatasize;
 	int64_t labelsector;
-	struct id id; /* FIXME: redundant */
-	struct id *idp; /* 0 if no --uuid option */
-	uint64_t pe_start;
-	uint32_t extent_count;
-	uint32_t extent_size;
-	const char *restorefile; /* 0 if no --restorefile option */
 	force_t force;
 	unsigned yes;
 	unsigned metadataignore;
+	struct pvcreate_restorable_params rp;
 };
 
 struct physical_volume *pvcreate_single(struct cmd_context *cmd,
