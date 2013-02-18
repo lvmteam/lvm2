@@ -496,7 +496,7 @@ static int _thin_add_target_line(struct dev_manager *dm,
 	char *pool_dlid;
 	uint32_t device_id = seg->device_id;
 
-	if (!(pool_dlid = build_dm_uuid(mem, seg->pool_lv->lvid.s, "tpool"))) {
+	if (!(pool_dlid = build_dm_uuid(mem, seg->pool_lv->lvid.s, lv_layer(seg->pool_lv)))) {
 		log_error("Failed to build uuid for pool LV %s.",
 			  seg->pool_lv->name);
 		return 0;
