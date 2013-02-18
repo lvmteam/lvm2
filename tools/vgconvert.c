@@ -20,11 +20,11 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 			    void *handle __attribute__((unused)))
 {
 	struct physical_volume *pv, *existing_pv;
+	struct pvcreate_restorable_params rp;
 	struct logical_volume *lv;
 	struct lv_list *lvl;
 	int pvmetadatacopies = 0;
 	uint64_t pvmetadatasize = 0;
-	uint64_t pe_start = 0;
 	struct pv_list *pvl;
 	int change_made = 0;
 	struct lvinfo info;
@@ -116,16 +116,19 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 	dm_list_iterate_items(pvl, &vg->pvs) {
 		existing_pv = pvl->pv;
 
-		pe_start = pv_pe_start(existing_pv);
+		rp.id = existing_pv->id;
+		rp.idp = &rp.id;
+		rp.pe_start = pv_pe_start(existing_pv);
+		rp.extent_count = pv_pe_count(existing_pv);
+		rp.extent_size = pv_pe_size(existing_pv);
+
 		/* pe_end = pv_pe_count(existing_pv) * pv_pe_size(existing_pv) + pe_start - 1; */
 
 		if (!(pv = pv_create(cmd, pv_dev(existing_pv),
-				     &existing_pv->id, 0, 0, 0,
-				     pe_start, pv_pe_count(existing_pv),
-				     pv_pe_size(existing_pv),
+				     0, 0, 0,
 				     arg_int64_value(cmd, labelsector_ARG,
 						     DEFAULT_LABELSECTOR),
-				     pvmetadatacopies, pvmetadatasize, 0))) {
+				     pvmetadatacopies, pvmetadatasize, 0, &rp))) {
 			log_error("Failed to setup physical volume \"%s\"",
 				  pv_dev_name(existing_pv));
 			if (change_made)

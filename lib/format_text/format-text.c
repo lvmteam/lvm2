@@ -1466,19 +1466,17 @@ static int _text_pv_read(const struct format_type *fmt, const char *pv_name,
 
 static int _text_pv_initialise(const struct format_type *fmt,
 			       const int64_t label_sector,
-			       uint64_t pe_start,
-			       uint32_t extent_count,
-			       uint32_t extent_size,
 			       unsigned long data_alignment,
 			       unsigned long data_alignment_offset,
+			       struct pvcreate_restorable_params *rp,
 			       struct physical_volume *pv)
 {
 	/*
 	 * Try to keep the value of PE start set to a firm value if requested.
 	 * This is usefull when restoring existing PE start value (backups etc.).
 	 */
-	if (pe_start != PV_PE_START_CALC)
-		pv->pe_start = pe_start;
+	if (rp->pe_start != PV_PE_START_CALC)
+		pv->pe_start = rp->pe_start;
 
 	if (!data_alignment)
 		data_alignment = find_config_tree_int(pv->fmt->cmd,
@@ -1514,14 +1512,14 @@ static int _text_pv_initialise(const struct format_type *fmt,
 		return 0;
 	}
 
-	if (pe_start == PV_PE_START_CALC)
+	if (rp->pe_start == PV_PE_START_CALC)
 		pv->pe_start = pv->pe_align + pv->pe_align_offset;
 
-	if (extent_size)
-		pv->pe_size = extent_size;
+	if (rp->extent_size)
+		pv->pe_size = rp->extent_size;
 
-	if (extent_count)
-		pv->pe_count = extent_count;
+	if (rp->extent_count)
+		pv->pe_count = rp->extent_count;
 
 	if ((pv->pe_start + pv->pe_count * pv->pe_size - 1) > (pv->size << SECTOR_SHIFT)) {
 		log_error("Physical extents end beyond end of device %s.",

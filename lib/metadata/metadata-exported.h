@@ -391,6 +391,8 @@ struct lv_list {
 	struct logical_volume *lv;
 };
 
+#define PV_PE_START_CALC ((uint64_t) -1) /* Calculate pe_start value */
+
 struct pvcreate_restorable_params {
 	const char *restorefile; /* 0 if no --restorefile option */
 	struct id id; /* FIXME: redundant */
@@ -477,17 +479,14 @@ uint32_t vg_read_error(struct volume_group *vg_handle);
 * areas can avoid overlap */
 struct physical_volume *pv_create(const struct cmd_context *cmd,
 				  struct device *dev,
-				  struct id *id,
 				  uint64_t size,
 				  unsigned long data_alignment,
 				  unsigned long data_alignment_offset,
-				  uint64_t pe_start,
-				  uint32_t existing_extent_count,
-				  uint32_t existing_extent_size,
 				  uint64_t label_sector,
 				  unsigned pvmetadatacopies,
 				  uint64_t pvmetadatasize,
-				  unsigned metadataignore);
+				  unsigned metadataignore,
+				  struct pvcreate_restorable_params *rp);
 int pv_resize(struct physical_volume *pv, struct volume_group *vg,
 	      uint64_t size);
 int pv_analyze(struct cmd_context *cmd, const char *pv_name,

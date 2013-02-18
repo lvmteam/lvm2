@@ -1430,7 +1430,7 @@ void pvcreate_params_set_defaults(struct pvcreate_params *pp)
 	pp->metadataignore = DEFAULT_PVMETADATAIGNORE;
 	pp->rp.restorefile = 0;
 	pp->rp.idp = 0;
-	pp->rp.pe_start = 0;
+	pp->rp.pe_start = PV_PE_START_CALC;
 	pp->rp.extent_count = 0;
 	pp->rp.extent_size = 0;
 }
@@ -1530,12 +1530,10 @@ struct physical_volume * pvcreate_single(struct cmd_context *cmd,
 
 	dm_list_init(&mdas);
 
-	if (!(pv = pv_create(cmd, dev, pp->rp.idp, pp->size,
-			     pp->data_alignment, pp->data_alignment_offset,
-			     pp->rp.pe_start ? pp->rp.pe_start : PV_PE_START_CALC,
-			     pp->rp.extent_count, pp->rp.extent_size,
-			     pp->labelsector, pp->pvmetadatacopies,
-			     pp->pvmetadatasize, pp->metadataignore))) {
+	if (!(pv = pv_create(cmd, dev, pp->size, pp->data_alignment,
+			     pp->data_alignment_offset, pp->labelsector,
+			     pp->pvmetadatacopies, pp->pvmetadatasize,
+			     pp->metadataignore, &pp->rp))) {
 		log_error("Failed to setup physical volume \"%s\"", pv_name);
 		goto bad;
 	}
@@ -1602,16 +1600,14 @@ static struct physical_volume *_alloc_pv(struct dm_pool *mem, struct device *dev
  */
 struct physical_volume *pv_create(const struct cmd_context *cmd,
 				  struct device *dev,
-				  struct id *id, uint64_t size,
+				  uint64_t size,
 				  unsigned long data_alignment,
 				  unsigned long data_alignment_offset,
-				  uint64_t pe_start,
-				  uint32_t existing_extent_count,
-				  uint32_t existing_extent_size,
 				  uint64_t label_sector,
 				  unsigned pvmetadatacopies,
 				  uint64_t pvmetadatasize,
-				  unsigned metadataignore)
+				  unsigned metadataignore,
+				  struct pvcreate_restorable_params *rp)
 {
 	const struct format_type *fmt = cmd->fmt;
 	struct dm_pool *mem = fmt->orphan_vg->vgmem;
@@ -1622,8 +1618,8 @@ struct physical_volume *pv_create(const struct cmd_context *cmd,
 	if (!pv)
 		return_NULL;
 
-	if (id)
-		memcpy(&pv->id, id, sizeof(*id));
+	if (rp->idp)
+		memcpy(&pv->id, rp->idp, sizeof(*rp->idp));
 	else if (!id_create(&pv->id)) {
 		log_error("Failed to create random uuid for %s.",
 			  dev_name(dev));
@@ -1669,9 +1665,8 @@ struct physical_volume *pv_create(const struct cmd_context *cmd,
 	pv->fmt = fmt;
 	pv->vg_name = fmt->orphan_vg_name;
 
-	if (!fmt->ops->pv_initialise(fmt, label_sector, pe_start,
-				     existing_extent_count, existing_extent_size,
-				     data_alignment, data_alignment_offset, pv)) {
+	if (!fmt->ops->pv_initialise(fmt, label_sector, data_alignment,
+				     data_alignment_offset, rp, pv)) {
 		log_error("Format-specific initialisation of physical "
 			  "volume %s failed.", pv_dev_name(pv));
 		goto bad;
@@ -1680,7 +1675,7 @@ struct physical_volume *pv_create(const struct cmd_context *cmd,
 	for (mda_index = 0; mda_index < pvmetadatacopies; mda_index++) {
 		if (pv->fmt->ops->pv_add_metadata_area &&
 		    !pv->fmt->ops->pv_add_metadata_area(pv->fmt, pv,
-					pe_start != PV_PE_START_CALC,
+					rp->pe_start != PV_PE_START_CALC,
 					mda_index, pvmetadatasize,
 					metadataignore)) {
 			log_error("Failed to add metadata area for "

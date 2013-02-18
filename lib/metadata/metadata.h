@@ -35,7 +35,6 @@
 //#define MAX_RESTRICTED_LVS 255	/* Used by FMT_RESTRICTED_LVIDS */
 #define MIRROR_LOG_OFFSET	2	/* sectors */
 #define VG_MEMPOOL_CHUNK	10240	/* in bytes, hint only */
-#define PV_PE_START_CALC	((uint64_t) -1) /* Calculate pe_start value */
 
 /*
  * Ceiling(n / sz)
@@ -251,11 +250,9 @@ struct format_handler {
 	 */
 	int (*pv_initialise) (const struct format_type * fmt,
 			      int64_t label_sector,
-			      uint64_t pe_start,
-			      uint32_t extent_count,
-			      uint32_t extent_size,
 			      unsigned long data_alignment,
 			      unsigned long data_alignment_offset,
+			      struct pvcreate_restorable_params *rp,
 			      struct physical_volume * pv);
 
 	/*

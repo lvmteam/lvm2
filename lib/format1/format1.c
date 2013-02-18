@@ -339,11 +339,9 @@ static int _format1_pv_read(const struct format_type *fmt, const char *pv_name,
 
 static int _format1_pv_initialise(const struct format_type * fmt,
 				  int64_t label_sector __attribute__((unused)),
-				  uint64_t pe_start,
-				  uint32_t extent_count,
-				  uint32_t extent_size,
 				  unsigned long data_alignment __attribute__((unused)),
 				  unsigned long data_alignment_offset __attribute__((unused)),
+				  struct pvcreate_restorable_params *rp,
 				  struct physical_volume * pv)
 {
 	if (pv->size > MAX_PV_SIZE)
@@ -355,18 +353,18 @@ static int _format1_pv_initialise(const struct format_type * fmt,
 	}
 
 	/* Nothing more to do if extent size isn't provided */
-	if (!extent_size)
+	if (!rp->extent_size)
 		return 1;
 
 	/*
 	 * This works out pe_start and pe_count.
 	 */
-	if (!calculate_extent_count(pv, extent_size, extent_count, pe_start))
+	if (!calculate_extent_count(pv, rp->extent_size, rp->extent_count, rp->pe_start))
 		return_0;
 
 	/* Retain existing extent locations exactly */
-	if (((pe_start || extent_count) && (pe_start != pv->pe_start)) ||
-	    (extent_count && (extent_count != pv->pe_count))) {
+	if (((rp->pe_start || rp->extent_count) && (rp->pe_start != pv->pe_start)) ||
+	    (rp->extent_count && (rp->extent_count != pv->pe_count))) {
 		log_error("Metadata would overwrite physical extents");
 		return 0;
 	}
@@ -378,7 +376,14 @@ static int _format1_pv_setup(const struct format_type *fmt,
 			     struct physical_volume *pv,
 			     struct volume_group *vg)
 {
-	return _format1_pv_initialise(fmt, -1, 0, 0, vg->extent_size, 0, 0, pv);
+	struct pvcreate_restorable_params rp = {.restorefile = NULL,
+						.id = {{0}},
+						.idp = NULL,
+						.pe_start = 0,
+						.extent_count = 0,
+						.extent_size = vg->extent_size};
+
+	return _format1_pv_initialise(fmt, -1, 0, 0, &rp, pv);
 }
 
 static int _format1_lv_setup(struct format_instance *fid, struct logical_volume *lv)
