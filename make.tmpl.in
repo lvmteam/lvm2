@@ -34,7 +34,7 @@ LIBS = @LIBS@
 # Extra libraries always linked with static binaries
 STATIC_LIBS = $(SELINUX_LIBS) $(UDEV_LIBS)
 DEFS += @DEFS@
-CFLAGS += @CFLAGS@
+CFLAGS += @CFLAGS@ @UDEV_CFLAGS@
 CLDFLAGS += @CLDFLAGS@
 ELDFLAGS += @ELDFLAGS@
 LDDEPS += @LDDEPS@
