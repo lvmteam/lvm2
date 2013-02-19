@@ -21,5 +21,5 @@ vgcreate --metadatasize 128k $vg1 "$dev1"
 dd if="$dev1" of="$dev2" bs=256K count=1
 dd if="$dev1" of="$dev3" bs=256K count=1
 
-pvs "$dev1"
+pvs "$dev3"
 vgs $vg1
