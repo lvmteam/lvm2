@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Allow remove/replace of RAID sub-LVs that are composed of error targets.
   Make 'vgreduce --removemissing' able to handle RAID LVs with missing PVs.
   Rename lvm.conf setting 'mirror_region_size' to 'raid_region_size'.
   Fix pvs -o pv_free reporting for PVs with zero PE count.
