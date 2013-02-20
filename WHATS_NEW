@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Make 'vgreduce --removemissing' able to handle RAID LVs with missing PVs.
   Rename lvm.conf setting 'mirror_region_size' to 'raid_region_size'.
   Fix pvs -o pv_free reporting for PVs with zero PE count.
   Fix missing cleanup of flags when the LV is detached from pool.

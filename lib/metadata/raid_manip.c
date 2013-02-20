@@ -1853,3 +1853,67 @@ try_again:
 
 	return 1;
 }
+
+int lv_raid_remove_missing(struct logical_volume *lv)
+{
+	uint32_t s, lvl_idx;
+	struct lv_segment *seg = first_seg(lv);
+	struct cmd_context *cmd = lv->vg->cmd;
+
+	if (!(lv->status & PARTIAL_LV)) {
+		log_error(INTERNAL_ERROR "%s/%s is not a partial LV",
+			  lv->vg->name, lv->name);
+		return 0;
+	}
+
+	log_debug("Attempting to remove missing devices from %s LV, %s",
+		  seg->segtype->ops->name(seg), lv->name);
+
+	/*
+	 * FIXME: Make sure # of compromised components will not affect RAID
+	 */
+
+	for (s = 0, lvl_idx = 0; s < seg->area_count; s++) {
+		if (!(seg_lv(seg, s)->status & PARTIAL_LV) &&
+		    !(seg_metalv(seg, s)->status & PARTIAL_LV))
+			continue;
+
+		log_debug("Replacing %s and %s segments with error target",
+			  seg_lv(seg, s)->name, seg_metalv(seg, s)->name);
+		if (!replace_lv_with_error_segment(seg_lv(seg, s))) {
+			log_error("Failed to replace %s/%s's extents"
+				  " with error target", lv->vg->name,
+				  seg_lv(seg, s)->name);
+			return 0;
+		}
+		if (!replace_lv_with_error_segment(seg_metalv(seg, s))) {
+			log_error("Failed to replace %s/%s's extents"
+				  " with error target", lv->vg->name,
+				  seg_metalv(seg, s)->name);
+			return 0;
+		}
+	}
+
+	if (!vg_write(lv->vg)) {
+		log_error("Failed to write changes to %s in %s",
+			  lv->name, lv->vg->name);
+		return 0;
+	}
+
+	if (!suspend_lv(cmd, lv)) {
+		log_error("Failed to suspend %s/%s before committing changes",
+			  lv->vg->name, lv->name);
+		return 0;
+	}
+
+	if (!vg_commit(lv->vg)) {
+		log_error("Failed to commit changes to %s in %s",
+			  lv->name, lv->vg->name);
+		return 0;
+	}
+
+	if (!resume_lv(cmd, lv))
+		return_0;
+
+	return 1;
+}
