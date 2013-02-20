@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  vgimport '--force' now allows users to import VGs with missing PVs.
   Fix PV alignment to incorporate alignment offset if the PV has zero MDAs.
   Allow remove/replace of RAID sub-LVs that are composed of error targets.
   Make 'vgreduce --removemissing' able to handle RAID LVs with missing PVs.

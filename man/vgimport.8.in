@@ -20,6 +20,11 @@ See \fBlvm\fP(8) for common options.
 .TP
 .BR \-a ", " \-\-all
 Import all exported Volume Groups.
+.TP
+.BR \-\-force
+Import exported Volume Groups even if there are missing Physical Volumes.
+This option should only be used if the missing devices are known to have
+failed and they cannot be restored.
 .SH SEE ALSO
 .BR lvm (8),
 .BR pvscan (8),
