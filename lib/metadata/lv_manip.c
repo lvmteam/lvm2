@@ -3352,6 +3352,12 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return 0;
 	}
 
+	if (lv_is_external_origin(lv)) {
+		log_error("Can't remove external origin logical volume \"%s\".",
+			  lv->name);
+		return 0;
+	}
+
 	if (lv->status & MIRROR_IMAGE) {
 		log_error("Can't remove logical volume %s used by a mirror",
 			  lv->name);
@@ -3577,6 +3583,10 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 							 force, level + 1))
 				return_0;
 	}
+
+	if (lv_is_external_origin(lv) &&
+	    !_lv_remove_segs_using_this_lv(cmd, lv, force, level, "external origin"))
+		return_0;
 
 	if (lv_is_used_thin_pool(lv) &&
 	    !_lv_remove_segs_using_this_lv(cmd, lv, force, level, "pool"))
