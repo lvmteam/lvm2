@@ -3488,6 +3488,35 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	return 1;
 }
 
+static int _lv_remove_segs_using_this_lv(struct cmd_context *cmd, struct logical_volume *lv,
+					 const force_t force, unsigned level,
+					 const char *lv_type)
+{
+	struct seg_list *sl;
+
+	if ((force == PROMPT) &&
+	    yes_no_prompt("Removing %s \"%s\" will remove %u dependent volume(s). "
+			  "Proceed? [y/n]: ", lv_type, lv->name,
+			  dm_list_size(&lv->segs_using_this_lv)) == 'n') {
+			log_error("Logical volume \"%s\" not removed.", lv->name);
+			return 0;
+		}
+	/*
+	 * Not using _safe iterator here - since we may delete whole subtree
+	 * (similar as process_each_lv_in_vg())
+	 * the code is roughly equivalent to this:
+	 *
+	 * while (!dm_list_empty(&lv->segs_using_this_lv))
+	 * 	dm_list_iterate_items(sl, &lv->segs_using_this_lv)
+	 * 		break;
+	 */
+	dm_list_iterate_items(sl, &lv->segs_using_this_lv)
+		if (!lv_remove_with_dependencies(cmd, sl->seg->lv,
+						 force, level + 1))
+			return_0;
+
+	return 1;
+}
 /*
  * remove LVs with its dependencies - LV leaf nodes should be removed first
  */
@@ -3496,7 +3525,6 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 {
 	percent_t snap_percent;
 	struct dm_list *snh, *snht;
-	struct seg_list *sl, *tsl;
 	struct lvinfo info;
 
 	if (lv_is_cow(lv)) {
@@ -3547,22 +3575,9 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 				return_0;
 	}
 
-	if (lv_is_used_thin_pool(lv)) {
-		/* Remove thin LVs first */
-		if ((force == PROMPT) &&
-		    yes_no_prompt("Removing pool %s will also remove %u "
-				  "thin volume(s). OK? [y/n]: ", lv->name,
-				  /* Note: Snaphosts not included */
-				  dm_list_size(&lv->segs_using_this_lv)) == 'n') {
-			log_error("Logical volume %s not removed.", lv->name);
-			return 0;
-		}
-
-		dm_list_iterate_items_safe(sl, tsl, &lv->segs_using_this_lv)
-			if (!lv_remove_with_dependencies(cmd, sl->seg->lv,
-							 force, level + 1))
-				return_0;
-	}
+	if (lv_is_used_thin_pool(lv) &&
+	    !_lv_remove_segs_using_this_lv(cmd, lv, force, level, "pool"))
+		return_0;
 
 	return lv_remove_single(cmd, lv, force);
 }
