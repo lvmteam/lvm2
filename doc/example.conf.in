@@ -498,6 +498,23 @@ global {
     # setting.
     mirror_segtype_default = "mirror"
 
+    # 'raid10_segtype_default' determines the segment types used by default
+    # when the '--stripes/-i' and '--mirrors/-m' arguments are both specified
+    # during the creation of a logical volume.
+    # Possible settings include:
+    #
+    # "raid10" - This implementation leverages MD's RAID10 personality through
+    #            device-mapper.
+    #
+    # "mirror" - LVM will layer the 'mirror' and 'stripe' segment types.  It
+    #            will do this by creating a mirror on top of striped sub-LVs;
+    #            effectively creating a RAID 0+1 array.  This is suboptimal
+    #            in terms of providing redunancy and performance.  Changing to
+    #            this setting is not advised.
+    # Specify the '--type <raid10|mirror>' option to override this default
+    # setting.
+    raid10_segtype_default "mirror"
+
     # The default format for displaying LV names in lvdisplay was changed 
     # in version 2.02.89 to show the LV name and path separately.
     # Previously this was always shown as /dev/vgname/lvname even when that

@@ -673,11 +673,12 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 
 	/* Set default segtype */
 	if (arg_count(cmd, mirrors_ARG))
-		/*
-		 * FIXME: Add default setting for when -i and -m arguments
-		 *        are both given.  We should default to "raid10".
-		 */
-		segtype_str = find_config_tree_str(cmd, "global/mirror_segtype_default", DEFAULT_MIRROR_SEGTYPE);
+		if (arg_uint_value(cmd, arg_count(cmd, stripes_long_ARG) ?
+				   stripes_long_ARG : stripes_ARG, 1) > 1) {
+			segtype_str = find_config_tree_str(cmd, "global/raid10_segtype_default", DEFAULT_RAID10_SEGTYPE);
+		} else {
+			segtype_str = find_config_tree_str(cmd, "global/mirror_segtype_default", DEFAULT_MIRROR_SEGTYPE);
+		}
 	else if (arg_count(cmd, thin_ARG) || arg_count(cmd, thinpool_ARG))
 		segtype_str = "thin";
 	else
