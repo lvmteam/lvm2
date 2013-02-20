@@ -1675,7 +1675,6 @@ int lv_raid_replace(struct logical_volume *lv,
 			return 0;
 		}
 
-		// FIXME: safe to use 'virtual' as a substitute for 'error'?
 		if (lv_is_virtual(seg_lv(raid_seg, s)) ||
 		    lv_is_virtual(seg_metalv(raid_seg, s)) ||
 		    _lv_is_on_pvs(seg_lv(raid_seg, s), remove_pvs) ||
