@@ -457,9 +457,7 @@ static int _read_mirror_params(struct lvcreate_params *lp,
 		}
 		lp->region_size = arg_uint_value(cmd, regionsize_ARG, 0);
 	} else {
-		region_size = 2 * find_config_tree_int(cmd,
-					"activation/mirror_region_size",
-					DEFAULT_MIRROR_REGION_SIZE);
+		region_size = get_default_region_size(cmd);
 		if (region_size < 0) {
 			log_error("Negative regionsize in configuration file "
 				  "is invalid");

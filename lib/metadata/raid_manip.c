@@ -21,8 +21,6 @@
 #include "lv_alloc.h"
 #include "lvm-string.h"
 
-#define RAID_REGION_SIZE 1024
-
 static int _lv_is_raid_with_tracking(const struct logical_volume *lv,
 				     struct logical_volume **tracking)
 {
@@ -528,7 +526,7 @@ static int _alloc_image_components(struct logical_volume *lv,
 		return_0;
 
 	if (seg_is_linear(seg))
-		region_size = RAID_REGION_SIZE;
+		region_size = get_default_region_size(lv->vg->cmd);
 	else
 		region_size = seg->region_size;
 
@@ -730,7 +728,8 @@ static int _raid_add_images(struct logical_volume *lv,
 		lv->status |= RAID;
 		seg = first_seg(lv);
 		seg_lv(seg, 0)->status |= RAID_IMAGE | LVM_READ | LVM_WRITE;
-		seg->region_size = RAID_REGION_SIZE;
+		seg->region_size = get_default_region_size(lv->vg->cmd);
+
 		/* MD's bitmap is limited to tracking 2^21 regions */
 		while (seg->region_size < (lv->size / (1 << 21))) {
 			seg->region_size *= 2;

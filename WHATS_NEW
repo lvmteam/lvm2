@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Rename lvm.conf setting 'mirror_region_size' to 'raid_region_size'.
   Fix pvs -o pv_free reporting for PVs with zero PE count.
   Fix missing cleanup of flags when the LV is detached from pool.
   Fix check for some forbidden discards conversion of thin pools.

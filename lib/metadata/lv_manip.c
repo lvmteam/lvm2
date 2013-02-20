@@ -72,6 +72,49 @@ struct lv_names {
 	const char *new;
 };
 
+/*
+ * get_default_region_size
+ * @cmd
+ *
+ * 'mirror_region_size' and 'raid_region_size' are effectively the same thing.
+ * However, "raid" is more inclusive than "mirror", so the name has been
+ * changed.  This function checks for the old setting and warns the user if
+ * it is being overridden by the new setting (i.e. warn if both settings are
+ * present).
+ *
+ * Note that the config files give defaults in kiB terms, but we
+ * return the value in terms of sectors.
+ *
+ * Returns: default region_size in sectors
+ */
+int get_default_region_size(struct cmd_context *cmd)
+{
+	int mrs, rrs;
+
+	/*
+	 * 'mirror_region_size' is the old setting.  It is overridden
+	 * by the new setting, 'raid_region_size'.
+	 */
+	mrs = 2 * find_config_tree_int(cmd, "activation/mirror_region_size", 0);
+	rrs = 2 * find_config_tree_int(cmd, "activation/raid_region_size", 0);
+
+	if (!mrs && !rrs)
+		return DEFAULT_RAID_REGION_SIZE * 2;
+
+	if (!mrs)
+		return rrs;
+
+	if (!rrs)
+		return mrs;
+
+	if (mrs != rrs)
+		log_verbose("Overriding default 'mirror_region_size' setting"
+			    " with 'raid_region_size' setting of %u kiB",
+			    rrs / 2);
+
+	return rrs;
+}
+
 int add_seg_to_segs_using_this_lv(struct logical_volume *lv,
 				  struct lv_segment *seg)
 {

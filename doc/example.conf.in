@@ -637,8 +637,12 @@ activation {
     #
     # read_only_volume_list = [ "vg1", "vg2/lvol1", "@tag1", "@*" ]
 
-    # Size (in KB) of each copy operation when mirroring
-    mirror_region_size = 512
+    # For RAID or 'mirror' segment types, 'raid_region_size' is the
+    # size (in kiB) of each:
+    # - synchronization operation when initializing
+    # - each copy operation when performing a 'pvmove' (using 'mirror' segtype)
+    # This setting has replaced 'mirror_region_size' since version 2.02.99
+    raid_region_size = 512
 
     # Setting to use when there is no readahead value stored in the metadata.
     #

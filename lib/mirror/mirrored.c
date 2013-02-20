@@ -162,10 +162,7 @@ static struct mirror_state *_mirrored_init_target(struct dm_pool *mem,
 		return NULL;
 	}
 
-	mirr_state->default_region_size = 2 *
-	    find_config_tree_int(cmd,
-			    "activation/mirror_region_size",
-			    DEFAULT_MIRROR_REGION_SIZE);
+	mirr_state->default_region_size = get_default_region_size(cmd);
 
 	return mirr_state;
 }
