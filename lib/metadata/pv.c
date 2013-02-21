@@ -106,7 +106,7 @@ uint64_t pv_free(const struct physical_volume *pv)
 {
 	uint64_t freespace;
 
-	if (!pv->pe_count)
+	if (!pv->vg || is_orphan_vg(pv->vg->name))
 		freespace = pv->size;
 	else
 		freespace = (uint64_t)
