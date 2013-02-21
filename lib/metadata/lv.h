@@ -37,6 +37,7 @@ struct logical_volume {
 	uint32_t le_count;
 
 	uint32_t origin_count;
+	uint32_t external_count;
 	struct dm_list snapshot_segs;
 	struct lv_segment *snapshot;
 

@@ -1565,6 +1565,7 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		return_0;
 
 	/* FIXME Can we avoid doing this every time? */
+	/* Reused also for lv_is_external_origin(lv) */
 	if (!_add_dev_to_dtree(dm, dtree, lv, "real"))
 		return_0;
 
@@ -1596,7 +1597,7 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	}
 
 	/* Add any snapshots of this LV */
-	if (lv_is_origin(lv) && !origin_only)
+	if (lv_is_origin(lv) && (lv_is_external_origin(lv) || !origin_only))
 		dm_list_iterate(snh, &lv->snapshot_segs)
 			if (!_add_lv_to_dtree(dm, dtree, dm_list_struct_base(snh, struct lv_segment, origin_list)->cow, 0))
 				return_0;
@@ -1614,6 +1615,9 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 
 	/* Add any LVs used by segments in this LV */
 	dm_list_iterate_items(seg, &lv->segments) {
+		if (seg->external_lv &&
+		    !_add_lv_to_dtree(dm, dtree, seg->external_lv, 1)) /* stack */
+			return_0;
 		if (seg->log_lv &&
 		    !_add_lv_to_dtree(dm, dtree, seg->log_lv, origin_only))
 			return_0;
@@ -2001,6 +2005,45 @@ static int _add_replicator_dev_target_to_dtree(struct dev_manager *dm,
 	return 1;
 }
 
+static int _add_active_externals_to_dtree(struct dev_manager *dm,
+					  struct dm_tree *dtree,
+					  struct lv_segment *seg,
+					  struct lv_activate_opts *laopts)
+{
+	struct seg_list *sl;
+
+	/* Add any ACTIVE LVs using this external origin LV */
+	log_debug_activation("Adding active users of external lv %s",
+			     seg->external_lv->name);
+	dm_list_iterate_items(sl, &seg->external_lv->segs_using_this_lv) {
+		if (sl->seg->external_lv != seg->external_lv ||
+		    sl->seg == seg)
+			continue;
+
+		/*
+		 * Find if the LV is active
+		 * These LVs are not scanned the generic partial dtree
+		 * since in most cases we do not want to work with them.
+		 * However when new EO user is added all users must be known.
+		 *
+		 * As EO could have been chained and passed to a new
+		 * volume, whole device needs to be tested, so the
+		 * removal of layered EO (-real) happens.
+		 */
+		if (!_add_lv_to_dtree(dm, dtree, sl->seg->lv, 0))
+			return_0;
+
+		/* Only layer check is needed here (also avoids loop) */
+		if (_cached_info(dm->mem, dtree, sl->seg->lv,
+				 lv_layer(sl->seg->lv)) &&
+		    !_add_new_lv_to_dtree(dm, dtree, sl->seg->lv,
+					  laopts, lv_layer(sl->seg->lv)))
+			return_0;
+	}
+
+	return 1;
+}
+
 static int _add_segment_to_dtree(struct dev_manager *dm,
 				 struct dm_tree *dtree,
 				 struct dm_tree_node *dnode,
@@ -2009,7 +2052,6 @@ static int _add_segment_to_dtree(struct dev_manager *dm,
 				 const char *layer)
 {
 	uint32_t s;
-	struct seg_list *sl;
 	struct lv_segment *seg_present;
 	const char *target_name;
 
@@ -2029,6 +2071,17 @@ static int _add_segment_to_dtree(struct dev_manager *dm,
 		log_error("Can't process LV %s: %s target support missing "
 			  "from kernel?", seg->lv->name, target_name);
 		return 0;
+	}
+
+	/* Add external origin layer */
+	if (seg->external_lv) {
+		if (!_add_new_lv_to_dtree(dm, dtree, seg->external_lv, laopts,
+					  lv_layer(seg->external_lv)))
+			return_0;
+
+		if (!layer &&
+		    !_add_active_externals_to_dtree(dm, dtree, seg, laopts))
+			return_0;
 	}
 
 	/* Add mirror log */
@@ -2200,6 +2253,7 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 
 	/* If this is a snapshot origin, add real LV */
 	/* If this is a snapshot origin + merging snapshot, add cow + real LV */
+	/* Snapshot origin could be also external origin */
 	if (lv_is_origin(lv) && !layer) {
 		if (!_add_new_lv_to_dtree(dm, dtree, lv, laopts, "real"))
 			return_0;
@@ -2228,7 +2282,7 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 			return_0;
 		if (!_add_snapshot_target_to_dtree(dm, dnode, lv, laopts))
 			return_0;
-	} else if (lv_is_thin_pool(lv) && !layer) {
+	} else if ((lv_is_external_origin(lv) || lv_is_thin_pool(lv)) && !layer) {
 		/* External origin or Thin pool is using layer */
 		if (!_add_new_lv_to_dtree(dm, dtree, lv, laopts, lv_layer(lv)))
 			return_0;

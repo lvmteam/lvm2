@@ -243,6 +243,11 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 						  lv->name, seg_count, seg->device_id);
 					inc_error_count;
 				}
+				if (seg->external_lv && (seg->external_lv->status & LVM_WRITE)) {
+					log_error("LV %s: external origin %s is writable.",
+						  lv->name, seg->external_lv->name);
+					inc_error_count;
+				}
 			} else {
 				if (seg->pool_lv) {
 					log_error("LV %s: segment %u must not have thin pool LV set",
@@ -372,7 +377,7 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 			seg_found++;
 		if (seg->metadata_lv == lv || seg->pool_lv == lv)
 			seg_found++;
-		if (seg_is_thin_volume(seg) && seg->origin == lv)
+		if (seg_is_thin_volume(seg) && (seg->origin == lv || seg->external_lv == lv))
 			seg_found++;
 		if (!seg_found) {
 			log_error("LV %s is used by LV %s:%" PRIu32 "-%" PRIu32

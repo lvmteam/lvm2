@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011-2012 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2011-2013 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -424,7 +424,7 @@ static int _thin_text_import(struct lv_segment *seg,
 			     struct dm_hash_table *pv_hash __attribute__((unused)))
 {
 	const char *lv_name;
-	struct logical_volume *pool_lv, *origin = NULL;
+	struct logical_volume *pool_lv, *origin = NULL, *external_lv = NULL;
 
 	if (!dm_config_get_str(sn, "thin_pool", &lv_name))
 		return SEG_LOG_ERROR("Thin pool must be a string in");
@@ -450,7 +450,18 @@ static int _thin_text_import(struct lv_segment *seg,
 		return SEG_LOG_ERROR("Unsupported value %u for device_id",
 				     seg->device_id);
 
+	if (dm_config_has_node(sn, "external_origin")) {
+		if (!dm_config_get_str(sn, "external_origin", &lv_name))
+			return SEG_LOG_ERROR("External origin must be a string in");
+
+		if (!(external_lv = find_lv(seg->lv->vg, lv_name)))
+			return SEG_LOG_ERROR("Unknown external origin %s in", lv_name);
+	}
+
 	if (!attach_pool_lv(seg, pool_lv, origin))
+		return_0;
+
+	if (!attach_thin_external_origin(seg, external_lv))
 		return_0;
 
 	return 1;
@@ -462,6 +473,8 @@ static int _thin_text_export(const struct lv_segment *seg, struct formatter *f)
 	outf(f, "transaction_id = %" PRIu64, seg->transaction_id);
 	outf(f, "device_id = %d", seg->device_id);
 
+	if (seg->external_lv)
+		outf(f, "external_origin = \"%s\"", seg->external_lv->name);
 	if (seg->origin)
 		outf(f, "origin = \"%s\"", seg->origin->name);
 
@@ -478,7 +491,7 @@ static int _thin_add_target_line(struct dev_manager *dm,
 				 struct dm_tree_node *node, uint64_t len,
 				 uint32_t *pvmove_mirror_count __attribute__((unused)))
 {
-	char *pool_dlid;
+	char *pool_dlid, *external_dlid;
 	uint32_t device_id = seg->device_id;
 
 	if (!(pool_dlid = build_dm_uuid(mem, seg->pool_lv->lvid.s, lv_layer(seg->pool_lv)))) {
@@ -489,6 +502,18 @@ static int _thin_add_target_line(struct dev_manager *dm,
 
 	if (!dm_tree_node_add_thin_target(node, len, pool_dlid, device_id))
 		return_0;
+
+	/* Add external origin LV */
+	if (seg->external_lv) {
+		if (!(external_dlid = build_dm_uuid(mem, seg->external_lv->lvid.s,
+						    lv_layer(seg->external_lv)))) {
+			log_error("Failed to build uuid for external origin LV %s.",
+				  seg->external_lv->name);
+			return 0;
+		}
+		if (!dm_tree_node_set_thin_external_origin(node, external_dlid))
+			return_0;
+	}
 
 	return 1;
 }

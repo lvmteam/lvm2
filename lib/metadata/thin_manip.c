@@ -108,6 +108,9 @@ int detach_pool_lv(struct lv_segment *seg)
 		}
 	}
 
+	if (!detach_thin_external_origin(seg))
+		return_0;
+
 	if (!attach_pool_message(first_seg(seg->pool_lv),
 				 DM_THIN_MESSAGE_DELETE,
 				 NULL, seg->device_id, no_update))
@@ -194,6 +197,51 @@ int attach_pool_message(struct lv_segment *pool_seg, dm_thin_message_t type,
 			   (type == DM_THIN_MESSAGE_CREATE_SNAP ||
 			   type == DM_THIN_MESSAGE_CREATE_THIN) ? "create" :
 			   (type == DM_THIN_MESSAGE_DELETE) ? "delete" : "unknown");
+
+	return 1;
+}
+
+int attach_thin_external_origin(struct lv_segment *seg,
+				struct logical_volume *external_lv)
+{
+	if (seg->external_lv) {
+		log_error(INTERNAL_ERROR "LV \"%s\" already has external origin.",
+			  seg->lv->name);
+		return 0;
+	}
+
+	seg->external_lv = external_lv;
+
+	if (external_lv) {
+		if (!add_seg_to_segs_using_this_lv(external_lv, seg))
+			return_0;
+
+		external_lv->external_count++;
+
+		if (external_lv->status & LVM_WRITE) {
+			log_verbose("Setting logical volume \"%s\" read-only.",
+				    external_lv->name);
+			external_lv->status &= ~LVM_WRITE;
+		}
+	}
+
+	return 1;
+}
+
+int detach_thin_external_origin(struct lv_segment *seg)
+{
+	if (seg->external_lv) {
+		if (!lv_is_external_origin(seg->external_lv)) {
+			log_error(INTERNAL_ERROR "Inconsitent external origin.");
+			return 0;
+		}
+
+		if (!remove_seg_from_segs_using_this_lv(seg->external_lv, seg))
+			return_0;
+
+		seg->external_lv->external_count--;
+		seg->external_lv = NULL;
+	}
 
 	return 1;
 }
