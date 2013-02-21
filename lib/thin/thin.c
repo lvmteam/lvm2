@@ -251,21 +251,6 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 		return 0;
 	}
 
-	if (!laopts->real_pool) {
-		if (!(pool_dlid = build_dm_uuid(mem, seg->lv->lvid.s, "tpool"))) {
-			log_error("Failed to build uuid for thin pool LV %s.", seg->pool_lv->name);
-			return 0;
-		}
-
-		if (!add_linear_area_to_dtree(node, len, seg->lv->vg->extent_size,
-					      cmd->use_linear_target,
-					      seg->lv->vg->name, seg->lv->name) ||
-		    !dm_tree_node_add_target_area(node, NULL, pool_dlid, 0))
-			return_0;
-
-		return 1;
-	}
-
 	if (!(metadata_dlid = build_dm_uuid(mem, seg->metadata_lv->lvid.s, NULL))) {
 		log_error("Failed to build uuid for metadata LV %s.",
 			  seg->metadata_lv->name);

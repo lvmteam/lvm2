@@ -34,7 +34,6 @@ struct lv_activate_opts {
 	int exclusive;
 	int origin_only;
 	int no_merging;
-	int real_pool;
 	int send_messages;
 	int skip_in_use;
 	unsigned revert;
