@@ -1508,8 +1508,14 @@ static int _text_pv_initialise(const struct format_type *fmt,
 		return 0;
 	}
 
-	if (pe_start == PV_PE_START_CALC && pv->pe_start < pv->pe_align)
-		pv->pe_start = pv->pe_align;
+	if (pv->size < pv->pe_align + pv->pe_align_offset) {
+		log_error("%s: Data alignment must not exceed device size.",
+			  pv_dev_name(pv));
+		return 0;
+	}
+
+	if (pe_start == PV_PE_START_CALC)
+		pv->pe_start = pv->pe_align + pv->pe_align_offset;
 
 	if (extent_size)
 		pv->pe_size = extent_size;

@@ -1650,7 +1650,7 @@ struct physical_volume *pv_create(const struct cmd_context *cmd,
 		goto bad;
 	}
 
-	if (pv->size < data_alignment) {
+	if (pv->size < data_alignment + data_alignment_offset) {
 		log_error("%s: Data alignment must not exceed device size.",
 			  pv_dev_name(pv));
 		goto bad;
