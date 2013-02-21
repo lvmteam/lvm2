@@ -1831,6 +1831,25 @@ int add_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 	return 1;
 }
 
+static int _add_layer_target_to_dtree(struct dev_manager *dm,
+				      struct dm_tree_node *dnode,
+				      struct logical_volume *lv)
+{
+	const char *layer_dlid;
+
+	if (!(layer_dlid = build_dm_uuid(dm->mem, lv->lvid.s, lv_layer(lv))))
+		return_0;
+
+	/* Add linear mapping over layered LV */
+	if (!add_linear_area_to_dtree(dnode, lv->size, lv->vg->extent_size,
+				      lv->vg->cmd->use_linear_target,
+				      lv->vg->name, lv->name) ||
+	    !dm_tree_node_add_target_area(dnode, NULL, layer_dlid, 0))
+		return_0;
+
+	return 1;
+}
+
 static int _add_origin_target_to_dtree(struct dev_manager *dm,
 					 struct dm_tree_node *dnode,
 					 struct logical_volume *lv)

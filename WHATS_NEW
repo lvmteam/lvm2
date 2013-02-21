@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Add _add_layer_target_to_dtree() for adding linear layer into dtree.
   Extend _cached_info() to accept layer string.
   Allow identical table reload for RAID to restore transiently failed PVs.
   vgimport '--force' now allows users to import VGs with missing PVs.
