@@ -235,7 +235,8 @@ static int _read_pv(struct format_instance *fid,
 	}
 
 	if (!_read_uint64(pvn, "pe_start", &pv->pe_start)) {
-		log_error("Couldn't read extent size for physical volume.");
+		log_error("Couldn't read extent start value (pe_start) "
+			  "for physical volume.");
 		return 0;
 	}
 
