@@ -1605,7 +1605,8 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	/* Add any LVs referencing a PVMOVE LV unless told not to. */
 	if (dm->track_pvmove_deps && lv->status & PVMOVE)
 		dm_list_iterate_items(sl, &lv->segs_using_this_lv)
-			if (!_add_lv_to_dtree(dm, dtree, sl->seg->lv, origin_only))
+			if (!_cached_info(dm->mem, dtree, sl->seg->lv, 0) &&
+			    !_add_lv_to_dtree(dm, dtree, sl->seg->lv, origin_only))
 				return_0;
 
 	/* Adding LV head of replicator adds all other related devs */
