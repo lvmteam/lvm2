@@ -1307,7 +1307,7 @@ static uint16_t _get_udev_flags(struct dev_manager *dm, struct logical_volume *l
 }
 
 static int _add_dev_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
-			       struct logical_volume *lv, const char *layer)
+			     struct logical_volume *lv, const char *layer)
 {
 	char *dlid, *name;
 	struct dm_info info, info2;
