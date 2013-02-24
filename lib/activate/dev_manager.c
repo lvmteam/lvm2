@@ -492,7 +492,6 @@ static const struct dm_info *_cached_info(struct dm_pool *mem,
 		return NULL;
 	}
 
-	/* An activating merging origin won't have a node in the tree yet */
 	if (!(dnode = dm_tree_find_node_by_uuid(dtree, dlid)))
 		return NULL;
 
@@ -2196,6 +2195,7 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		 * - open_count is always retrieved (as of dm-ioctl 4.7.0)
 		 *   so just use the tree's existing nodes' info
 		 */
+		/* An activating merging origin won't have a node in the tree yet */
 		if (((dinfo = _cached_info(dm->mem, dtree, lv, NULL)) &&
 		     dinfo->open_count) ||
 		    ((dinfo = _cached_info(dm->mem, dtree,
