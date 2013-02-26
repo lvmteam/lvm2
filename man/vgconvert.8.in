@@ -8,6 +8,8 @@ vgconvert \- convert volume group metadata format
 .RB [ \-t | \-\-test ]
 .RB [ \-v | \-\-verbose ]
 .RB [ \-\-labelsector ]
+.RB [ \-\-embeddingareasize
+.IR size ]
 .RB [ \-M | \-\-metadatatype
 .IR type ]
 .RB [ \-\-pvmetadatacopies
