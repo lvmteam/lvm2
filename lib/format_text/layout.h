@@ -43,9 +43,6 @@ struct pv_header {
 	/* NULL-terminated list of data areas followed by */
 	/* NULL-terminated list of metadata area headers */
 	struct disk_locn disk_areas_xl[0];	/* Two lists */
-
-	/* PV header extension */
-	struct pv_header_extension ext;
 } __attribute__ ((packed));
 
 /*
