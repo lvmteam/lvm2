@@ -752,12 +752,12 @@ static const struct dm_config_node *_find_config_node(const void *start,
 		if (cn_found && *e)
 			cn = cn_found->child;
 		else
-			break;	/* don't move into the last node */
+			return cn_found;
 
 		path = e;
 	}
 
-	return cn_found;
+	return NULL;
 }
 
 static const struct dm_config_node *_find_first_config_node(const void *start, const char *path)

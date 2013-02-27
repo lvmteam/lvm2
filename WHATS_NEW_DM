@@ -1,5 +1,6 @@
 Version 1.02.78 - 
 ===================================
+  Fix config node lookup inside empty sections to not return the section itself.
   Extend support for status info of thin pool target.
   Fix segfault for truncated string token in config file after the first '"'.
   Close open dmeventd FIFO file descriptors on exec (FD_CLOEXEC).
