@@ -306,9 +306,12 @@ static struct lvmcache_info *_pv_populate_lvmcache(
 	do {
 		sprintf(da_id, "ea%d", i);
 		da = dm_config_find_node(cn->child, da_id);
-		if (!dm_config_get_uint64(da->child, "offset", &offset)) return_0;
-		if (!dm_config_get_uint64(da->child, "size", &size)) return_0;
-		lvmcache_add_ea(info, offset, size);
+		if (da) {
+			if (!dm_config_get_uint64(da->child, "offset", &offset)) return_0;
+			if (!dm_config_get_uint64(da->child, "size", &size)) return_0;
+			lvmcache_add_ea(info, offset, size);
+		}
+		++i;
 	} while (da);
 
 	return info;
@@ -675,7 +678,7 @@ static int _extract_disk_location(const char *name, struct disk_locn *dl, void *
 	if (!dl)
 		return 1;
 
-	(void) dm_snprintf(id, 32, "name%d", b->i);
+	(void) dm_snprintf(id, 32, "%s%d", name, b->i);
 	if (!(cn = make_config_node(b->cft, id, b->cft->root, b->pre_sib)))
 		return 0;
 	if (!config_make_nodes(b->cft, cn, NULL,
@@ -710,6 +713,7 @@ static int _extract_mdas(struct lvmcache_info *info, struct dm_config_tree *cft,
 	baton.i = 0;
 	if (!lvmcache_foreach_da(info, &_extract_da, &baton))
 		return 0;
+	baton.i = 0;
 	if (!lvmcache_foreach_ea(info, &_extract_ea, &baton))
 		return 0;
 
