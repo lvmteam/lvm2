@@ -17,6 +17,7 @@
 #define _LVM_CONFIG_H
 
 #include "lvm-types.h"
+#include "defaults.h"
 
 /* 16 bits: 3 bits for major, 4 bits for minor, 9 bits for patchlevel */
 /* Max LVM version supported: 7.15.511. Just extend bits if ever needed. */
@@ -24,6 +25,67 @@
 
 struct device;
 struct cmd_context;
+
+#define CFG_PATH_MAX_LEN 64
+
+/*
+ * Structures used for definition of a configuration tree.
+ */
+
+/* configuration definition item type (for item's accepted types) */
+typedef enum {
+	CFG_TYPE_SECTION = 0,		/* section */
+	CFG_TYPE_ARRAY = 1,		/* setting */
+	CFG_TYPE_BOOL = 2,		/* setting */
+	CFG_TYPE_INT = 4,		/* setting */
+	CFG_TYPE_FLOAT = 8,		/* setting */
+	CFG_TYPE_STRING = 16		/* setting */
+} cfg_def_type_t;
+
+/* configuration definition item value (for item's default value) */
+typedef union {
+	const int v_CFG_TYPE_BOOL, v_CFG_TYPE_INT;
+	const float v_CFG_TYPE_FLOAT;
+	const char *v_CFG_TYPE_STRING, *v_CFG_TYPE_ARRAY;
+} cfg_def_value_t;
+
+/* configuration definition item flags: */
+
+/* whether the configuration item name is variable */
+#define CFG_NAME_VARIABLE	0x01
+/* whether empty value is allowed */
+#define CFG_ALLOW_EMPTY		0x02
+/* whether the configuration item is for advanced use only */
+#define CFG_ADVANCED		0x04
+/* whether the configuraton item is not officially supported */
+#define CFG_UNSUPPORTED		0x08
+
+/* configuration definition item structure */
+typedef struct cfg_def_item {
+	int id;				/* ID of this item */
+	int parent;			/* ID of parent item */
+	const char *name;		/* name of the item in configuration tree */
+	cfg_def_type_t type;		/* configuration item type */
+	cfg_def_value_t default_value;	/* default value (only for settings) */
+	uint16_t flags;			/* configuration item definition flags */
+	uint16_t since_version;		/* version this item appeared in */
+	const char *comment;		/* brief comment */
+} cfg_def_item_t;
+
+/*
+ * Register ID for each possible item in the configuration tree.
+ */
+enum {
+#define cfg_section(id, name, parent, flags, since_version, comment) id,
+#define cfg(id, name, parent, flags, type, default_value, since_version, comment) id,
+#define cfg_array(id, name, parent, flags, types, default_value, since_version, comment) id,
+#include "config_settings.h"
+#undef cfg_section
+#undef cfg
+#undef cfg_array
+};
+
+int config_def_get_path(char *buf, size_t buf_size, int id);
 
 int override_config_tree_from_string(struct cmd_context *cmd,
 				     const char *config_settings);

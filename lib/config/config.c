@@ -38,6 +38,21 @@ struct config_file {
 	struct device *dev;
 };
 
+static char _cfg_path[CFG_PATH_MAX_LEN];
+
+/*
+ * Map each ID to respective definition of the configuration item.
+ */
+static struct cfg_def_item _cfg_def_items[CFG_COUNT + 1] = {
+#define cfg_section(id, name, parent, flags, since_version, comment) {id, parent, name, CFG_TYPE_SECTION, {0}, flags, since_version, comment},
+#define cfg(id, name, parent, flags, type, default_value, since_version, comment) {id, parent, name, type, {.v_##type = default_value}, flags, since_version, comment},
+#define cfg_array(id, name, parent, flags, types, default_value, since_version, comment) {id, parent, name, CFG_TYPE_ARRAY | types, {.v_CFG_TYPE_STRING = default_value}, flags, since_version, comment},
+#include "config_settings.h"
+#undef cfg_section
+#undef cfg
+#undef cfg_array
+};
+
 /*
  * public interface
  */
@@ -287,6 +302,36 @@ time_t config_file_timestamp(struct dm_config_tree *cft)
 	struct config_file *cf = dm_config_get_custom(cft);
 	assert(cf);
 	return cf->timestamp;
+}
+
+#define cfg_def_get_item_p(id) (&_cfg_def_items[id])
+#define cfg_def_get_default_value(item,type) item->default_value.v_##type
+#define cfg_def_get_path(item) (_cfg_def_make_path(_cfg_path,CFG_PATH_MAX_LEN,item->id,item),_cfg_path)
+
+static int _cfg_def_make_path(char *buf, size_t buf_size, int id, cfg_def_item_t *item)
+{
+	int parent_id = item->parent;
+	int count, n;
+
+	if (id == parent_id)
+		return 0;
+
+	count = _cfg_def_make_path(buf, buf_size, parent_id, cfg_def_get_item_p(parent_id));
+	if ((n = dm_snprintf(buf + count, buf_size - count, "%s%s",
+			     count ? "/" : "",
+			     item->flags & CFG_NAME_VARIABLE ? "#" : item->name)) < 0) {
+		log_error(INTERNAL_ERROR "_cfg_def_make_path: supplied buffer too small for %s/%s",
+					  cfg_def_get_item_p(parent_id)->name, item->name);
+		buf[0] = '\0';
+		return 0;
+	}
+
+	return count + n;
+}
+
+int config_def_get_path(char *buf, size_t buf_size, int id)
+{
+	return _cfg_def_make_path(buf, buf_size, id, cfg_def_get_item_p(id));
 }
 
 const struct dm_config_node *find_config_tree_node(struct cmd_context *cmd,
