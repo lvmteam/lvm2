@@ -290,6 +290,11 @@ static int _process_config(struct cmd_context *cmd)
 	const char *lvmetad_socket;
 	int udev_disabled = 0;
 
+	if (!config_def_check(cmd, 0, 0, 0) && find_config_tree_bool(cmd, config_abort_on_errors_CFG)) {
+		log_error("LVM configuration invalid.");
+		return 0;
+	}
+
 	/* umask */
 	cmd->default_settings.umask = find_config_tree_int(cmd, global_umask_CFG);
 

@@ -28,6 +28,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <assert.h>
+#include <ctype.h>
 
 struct config_file {
 	time_t timestamp;
@@ -851,3 +852,237 @@ int config_write(struct dm_config_tree *cft, const char *file,
 	return r;
 }
 
+static struct dm_config_value *_get_def_array_values(struct dm_config_tree *cft,
+						     cfg_def_item_t *def)
+{
+	char *enc_value, *token, *p, *r;
+	struct dm_config_value *array = NULL, *v = NULL, *oldv = NULL;
+
+	if (!def->default_value.v_CFG_TYPE_STRING) {
+		if (!(array = dm_config_create_value(cft))) {
+			log_error("Failed to create default empty array for %s.", def->name);
+			return NULL;
+		}
+		array->type = DM_CFG_EMPTY_ARRAY;
+		return array;
+	}
+
+	if (!(p = token = enc_value = dm_strdup(def->default_value.v_CFG_TYPE_STRING))) {
+		log_error("_get_def_array_values: dm_strdup failed");
+		return NULL;
+	}
+	/* Proper value always starts with '#'. */
+	if (token[0] != '#')
+		goto bad;
+
+	while (token) {
+		/* Move to type identifier. Error on no char. */
+		token++;
+		if (!token[0])
+			goto bad;
+
+		/* Move to the actual value and decode any "##" into "#". */
+		p = token + 1;
+		while ((p = strchr(p, '#')) && p[1] == '#') {
+			memmove(p, p + 1, strlen(p));
+			p++;
+		}
+		/* Separate the value out of the whole string. */
+		if (p)
+			p[0] = '\0';
+
+		if (!(v = dm_config_create_value(cft))) {
+			log_error("Failed to create default config array value for %s.", def->name);
+			dm_free(enc_value);
+		}
+		if (oldv)
+			oldv->next = v;
+		if (!array)
+			array = v;
+
+		switch (toupper(token[0])) {
+			case 'I':
+			case 'B':
+				v->v.i = strtoll(token + 1, &r, 10);
+				if (*r)
+					goto bad;
+				v->type = DM_CFG_INT;
+				break;
+			case 'F':
+				v->v.f = strtod(token + 1, &r);
+				if (*r)
+					goto bad;
+				v->type = DM_CFG_FLOAT;
+				break;
+			case 'S':
+				if (!(r = dm_pool_alloc(cft->mem, strlen(token + 1)))) {
+					dm_free(enc_value);
+					log_error("Failed to duplicate token for default "
+						  "array value of %s.", def->name);
+					return NULL;
+				}
+				memcpy(r, token + 1, strlen(token + 1));
+				v->v.str = r;
+				v->type = DM_CFG_STRING;
+				break;
+			default:
+				goto bad;
+		}
+
+		oldv = v;
+		token = p;
+	}
+
+	dm_free(enc_value);
+	return array;
+bad:
+	log_error(INTERNAL_ERROR "Default array value malformed for \"%s\", "
+		  "value: \"%s\", token: \"%s\".", def->name,
+		  def->default_value.v_CFG_TYPE_STRING, token);
+	dm_free(enc_value);
+	return NULL;
+}
+
+static struct dm_config_node *_add_def_node(struct dm_config_tree *cft,
+					    struct config_def_tree_spec *spec,
+					    struct dm_config_node *parent,
+					    struct dm_config_node *relay,
+					    cfg_def_item_t *def)
+{
+	struct dm_config_node *cn;
+	const char *str;
+
+	if (!(cn = dm_config_create_node(cft, def->name))) {
+		log_error("Failed to create default config setting node.");
+		return NULL;
+	}
+
+	if (!(def->type & CFG_TYPE_SECTION) && (!(cn->v = dm_config_create_value(cft)))) {
+		log_error("Failed to create default config setting node value.");
+		return NULL;
+	}
+
+	if (!(def->type & CFG_TYPE_ARRAY)) {
+		switch (def->type) {
+			case CFG_TYPE_SECTION:
+				cn->v = NULL;
+				break;
+			case CFG_TYPE_BOOL:
+				cn->v->type = DM_CFG_INT;
+				cn->v->v.i = cfg_def_get_default_value(def, CFG_TYPE_BOOL);
+				break;
+			case CFG_TYPE_INT:
+				cn->v->type = DM_CFG_INT;
+				cn->v->v.i = cfg_def_get_default_value(def, CFG_TYPE_INT);
+				break;
+			case CFG_TYPE_FLOAT:
+				cn->v->type = DM_CFG_FLOAT;
+				cn->v->v.f = cfg_def_get_default_value(def, CFG_TYPE_FLOAT);
+				break;
+			case CFG_TYPE_STRING:
+				cn->v->type = DM_CFG_STRING;
+				if (!(str = cfg_def_get_default_value(def, CFG_TYPE_STRING)))
+					str = "";
+				cn->v->v.str = str;
+				break;
+			default:
+				log_error(INTERNAL_ERROR "_add_def_node: unknown type");
+				return NULL;
+				break;
+		}
+	} else
+		cn->v = _get_def_array_values(cft, def);
+
+	cn->child = NULL;
+	if (parent) {
+		cn->parent = parent;
+		if (!parent->child)
+			parent->child = cn;
+	} else
+		cn->parent = cn;
+
+	if (relay)
+		relay->sib = cn;
+
+	return cn;
+}
+
+static int _should_skip_def_node(struct config_def_tree_spec *spec, int section_id, cfg_def_item_t *def)
+{
+	if (def->parent != section_id)
+		return 1;
+
+	switch (spec->type) {
+		case CFG_DEF_TREE_MISSING:
+			if ((def->flags & CFG_USED) ||
+			    (def->flags & CFG_NAME_VARIABLE) ||
+			    (def->since_version > spec->version))
+				return 1;
+			break;
+		case CFG_DEF_TREE_NEW:
+			if (def->since_version != spec->version)
+				return 1;
+			break;
+		default:
+			if (def->since_version > spec->version)
+				return 1;
+			break;
+	}
+
+	return 0;
+}
+
+static struct dm_config_node *_add_def_section_subtree(struct dm_config_tree *cft,
+						       struct config_def_tree_spec *spec,
+						       struct dm_config_node *parent,
+						       struct dm_config_node *relay,
+						       int section_id)
+{
+	struct dm_config_node *cn = NULL, *relay_sub = NULL, *tmp;
+	cfg_def_item_t *def;
+	int id;
+
+	for (id = 0; id < CFG_COUNT; id++) {
+		def = cfg_def_get_item_p(id);
+		if (_should_skip_def_node(spec, section_id, def))
+			continue;
+
+		if (!cn && !(cn = _add_def_node(cft, spec, parent, relay, cfg_def_get_item_p(section_id))))
+				goto bad;
+
+		if ((tmp = def->type == CFG_TYPE_SECTION ? _add_def_section_subtree(cft, spec, cn, relay_sub, id)
+							 : _add_def_node(cft, spec, cn, relay_sub, def)))
+			relay_sub = tmp;
+	}
+
+	return cn;
+bad:
+	log_error("Failed to create default config section node.");
+	return NULL;
+}
+
+struct dm_config_tree *config_def_create_tree(struct config_def_tree_spec *spec)
+{
+	struct dm_config_tree *cft;
+	struct dm_config_node *root = NULL, *relay = NULL, *tmp;
+	int id;
+
+	if (!(cft = dm_config_create())) {
+		log_error("Failed to create default config tree.");
+		return NULL;
+	}
+
+	for (id = root_CFG_SECTION + 1; id < CFG_COUNT; id++) {
+		if (cfg_def_get_item_p(id)->parent != root_CFG_SECTION)
+			continue;
+
+		if ((tmp = _add_def_section_subtree(cft, spec, root, relay, id))) {
+			relay = tmp;
+			if (!root)
+				root = relay;
+		}
+	}
+
+	cft->root = root;
+	return cft;
+}

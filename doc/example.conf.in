@@ -10,6 +10,20 @@
 # N.B. Take care that each setting only appears once if uncommenting
 # example settings in this file.
 
+# This section allows you to set the way the configuration settings are handled.
+config {
+
+    # If enabled, any LVM2 configuration mismatch is reported.
+    # This implies checking that the configuration key is understood
+    # by LVM2 and that the value of the key is of a proper type.
+    # If disabled, any configuration mismatch is ignored and default
+    # value is used instead without any warning (a message about the
+    # configuration key not being found is issued in verbose mode only).
+    checks = 1
+
+    # If enabled, any configuration mismatch aborts the LVM2 process.
+    abort_on_errors = 0
+}
 
 # This section allows you to configure which block devices should
 # be used by the LVM system.
@@ -359,7 +373,6 @@ shell {
 
 # Miscellaneous global LVM2 settings
 global {
-
     # The file creation mask for any files and directories created.
     # Interpreted as octal if the first digit is zero.
     umask = 077

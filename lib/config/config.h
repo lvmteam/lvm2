@@ -76,6 +76,23 @@ typedef struct cfg_def_item {
 	const char *comment;		/* brief comment */
 } cfg_def_item_t;
 
+/* configuration definition tree types */
+typedef enum {
+	CFG_DEF_TREE_CURRENT,		/* tree of nodes with values currently set in the config */
+	CFG_DEF_TREE_MISSING,		/* tree of nodes missing in current config using default values */
+	CFG_DEF_TREE_COMPLETE,		/* CURRENT + MISSING, the tree actually used within execution, not implemented yet */
+	CFG_DEF_TREE_DEFAULT,		/* tree of all possible config nodes with default values */
+	CFG_DEF_TREE_NEW		/* tree of all new nodes that appeared in given version */
+} cfg_def_tree_t;
+
+/* configuration definition tree specification */
+struct config_def_tree_spec {
+	cfg_def_tree_t type;		/* tree type */
+	uint16_t version;		/* tree at this LVM2 version */
+	int ignoreadvanced;		/* do not include advanced configs */
+	int ignoreunsupported;		/* do not include unsupported configs */
+};
+
 /*
  * Register ID for each possible item in the configuration tree.
  */
@@ -103,8 +120,8 @@ int config_file_read_fd(struct dm_config_tree *cft, struct device *dev,
 			off_t offset, size_t size, off_t offset2, size_t size2,
 			checksum_fn_t checksum_fn, uint32_t checksum);
 int config_file_read(struct dm_config_tree *cft);
-int config_write(struct dm_config_tree *cft, const char *file,
-		 int argc, char **argv);
+int config_write(struct dm_config_tree *cft, const char *file, int argc, char **argv);
+struct dm_config_tree *config_def_create_tree(struct config_def_tree_spec *spec);
 void config_file_destroy(struct dm_config_tree *cft);
 
 time_t config_file_timestamp(struct dm_config_tree *cft);
