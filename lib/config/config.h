@@ -59,6 +59,10 @@ typedef union {
 #define CFG_ADVANCED		0x04
 /* whether the configuraton item is not officially supported */
 #define CFG_UNSUPPORTED		0x08
+/* helper flag to mark the item as used in a config tree instance */
+#define CFG_USED		0x10
+/* helper flag to mark the item as valid in a config tree instance */
+#define CFG_VALID		0x20
 
 /* configuration definition item structure */
 typedef struct cfg_def_item {
@@ -86,6 +90,7 @@ enum {
 };
 
 int config_def_get_path(char *buf, size_t buf_size, int id);
+int config_def_check(struct cmd_context *cmd, int force, int skip, int suppress_messages);
 
 int override_config_tree_from_string(struct cmd_context *cmd,
 				     const char *config_settings);
