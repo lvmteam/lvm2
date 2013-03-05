@@ -1555,6 +1555,7 @@ int dm_config_tree_find_bool(const struct dm_config_tree *cft, const char *path,
  * off), (true, false).
  */
 int dm_config_find_bool(const struct dm_config_node *cn, const char *path, int fail);
+int dm_config_value_is_bool(const struct dm_config_value *v);
 
 int dm_config_get_uint32(const struct dm_config_node *cn, const char *path, uint32_t *result);
 int dm_config_get_uint64(const struct dm_config_node *cn, const char *path, uint64_t *result);

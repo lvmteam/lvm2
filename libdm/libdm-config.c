@@ -928,6 +928,20 @@ int dm_config_find_bool(const struct dm_config_node *cn, const char *path, int f
 	return _find_config_bool(cn, _find_config_node, path, fail);
 }
 
+int dm_config_value_is_bool(const struct dm_config_value *v) {
+	if (!v)
+		return 0;
+
+	switch(v->type) {
+		case DM_CFG_INT:
+			return 1;
+		case DM_CFG_STRING:
+			return _str_to_bool(v->v.str, -1) != -1;
+		default:
+			return 0;
+	}
+}
+
 /***********************************
  * tree-based lookup
  **/
