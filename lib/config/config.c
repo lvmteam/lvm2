@@ -488,7 +488,7 @@ static int _config_def_check_node(const char *vp, char *pvp, char *rp, char *prp
 
 	def->flags |= CFG_USED;
 	if (!_config_def_check_node_value(rp, cn->v, def, suppress_messages))
-		return 0;
+	return 0;
 
 	def->flags |= CFG_VALID;
 	return 1;

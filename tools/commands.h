@@ -29,12 +29,15 @@ xx(e2fsadm,
 *********/
 
 xx(dumpconfig,
-   "Dump active configuration",
+   "Dump configuration",
    PERMITTED_READ_ONLY,
-   "dumpconfig "
-   "\t[-f|--file filename] " "\n"
-   "[ConfigurationVariable...]\n",
-   file_ARG)
+   "dumpconfig\n"
+   "\t[-f|--file filename] \n"
+   "\t[--type {current|default|missing|new} \n"
+   "\t[--atversion version]] \n"
+   "\t[--validate]\n"
+   "\t[ConfigurationNode...]\n",
+   file_ARG, configtype_ARG, atversion_ARG, validate_ARG)
 
 xx(formats,
    "List available metadata formats",
