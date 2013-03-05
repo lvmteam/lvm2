@@ -472,6 +472,7 @@ static int _config_def_check_node(const char *vp, char *pvp, char *rp, char *prp
 		if (cn->v) {
 			log_warn_suppress(suppress_messages,
 				"Configuration setting \"%s\" unknown.", rp);
+			cn->id = -1;
 			return 0;
 		}
 
@@ -482,11 +483,14 @@ static int _config_def_check_node(const char *vp, char *pvp, char *rp, char *prp
 		if (!(def = (cfg_def_item_t *) dm_hash_lookup(ht, vp))) {
 			log_warn_suppress(suppress_messages,
 				"Configuration section \"%s\" unknown.", rp);
+			cn->id = -1;
 			return 0;
 		}
 	}
 
 	def->flags |= CFG_USED;
+	cn->id = def->id;
+
 	if (!_config_def_check_node_value(rp, cn->v, def, suppress_messages))
 	return 0;
 
@@ -961,6 +965,8 @@ static struct dm_config_node *_add_def_node(struct dm_config_tree *cft,
 		log_error("Failed to create default config setting node value.");
 		return NULL;
 	}
+
+	cn->id = def->id;
 
 	if (!(def->type & CFG_TYPE_ARRAY)) {
 		switch (def->type) {

@@ -50,10 +50,11 @@ struct parser {
 	struct dm_pool *mem;
 };
 
-struct output_line {
+struct config_output {
 	struct dm_pool *mem;
 	dm_putline_fn putline;
-	void *putline_baton;
+	const struct dm_config_node_out_spec *spec;
+	void *baton;
 };
 
 static void _get_token(struct parser *p, int tok_prev);
@@ -189,9 +190,9 @@ struct dm_config_tree *dm_config_from_string(const char *config_settings)
 	return cft;
 }
 
-static int _line_start(struct output_line *outline)
+static int _line_start(struct config_output *out)
 {
-	if (!dm_pool_begin_object(outline->mem, 128)) {
+	if (!dm_pool_begin_object(out->mem, 128)) {
 		log_error("dm_pool_begin_object failed for config line");
 		return 0;
 	}
@@ -200,7 +201,7 @@ static int _line_start(struct output_line *outline)
 }
 
 __attribute__ ((format(printf, 2, 3)))
-static int _line_append(struct output_line *outline, const char *fmt, ...)
+static int _line_append(struct config_output *out, const char *fmt, ...)
 {
 	char buf[4096];
 	va_list ap;
@@ -215,7 +216,7 @@ static int _line_append(struct output_line *outline, const char *fmt, ...)
 		return 0;
 	}
 
-	if (!dm_pool_grow_object(outline->mem, &buf[0], strlen(buf))) {
+	if (!dm_pool_grow_object(out->mem, &buf[0], strlen(buf))) {
 		log_error("dm_pool_grow_object failed for config line");
 		return 0;
 	}
@@ -223,28 +224,32 @@ static int _line_append(struct output_line *outline, const char *fmt, ...)
 	return 1;
 }
 
-#define line_append(args...) do {if (!_line_append(outline, args)) {return_0;}} while (0)
+#define line_append(args...) do {if (!_line_append(out, args)) {return_0;}} while (0)
 
-static int _line_end(struct output_line *outline)
+static int _line_end(const struct dm_config_node *cn, struct config_output *out)
 {
 	const char *line;
 
-	if (!dm_pool_grow_object(outline->mem, "\0", 1)) {
+	if (!dm_pool_grow_object(out->mem, "\0", 1)) {
 		log_error("dm_pool_grow_object failed for config line");
 		return 0;
 	}
 
-	line = dm_pool_end_object(outline->mem);
+	line = dm_pool_end_object(out->mem);
 
-	if (!outline->putline)
+	if (!out->putline && !out->spec)
 		return 0;
 
-	outline->putline(line, outline->putline_baton);
+	if (out->putline)
+		out->putline(line, out->baton);
+
+	if (out->spec && out->spec->line_fn)
+		out->spec->line_fn(cn, line, out->baton);
 
 	return 1;
 }
 
-static int _write_value(struct output_line *outline, const struct dm_config_value *v)
+static int _write_value(struct config_output *out, const struct dm_config_value *v)
 {
 	char *buf;
 
@@ -279,7 +284,7 @@ static int _write_value(struct output_line *outline, const struct dm_config_valu
 }
 
 static int _write_config(const struct dm_config_node *n, int only_one,
-			 struct output_line *outline, int level)
+			 struct config_output *out, int level)
 {
 	char space[MAX_INDENT + 1];
 	int l = (level < MAX_INDENT) ? level : MAX_INDENT;
@@ -293,16 +298,19 @@ static int _write_config(const struct dm_config_node *n, int only_one,
 	space[i] = '\0';
 
 	do {
-		if (!_line_start(outline))
+		if (out->spec && out->spec->prefix_fn)
+			out->spec->prefix_fn(n, space, out->baton);
+
+		if (!_line_start(out))
 			return_0;
 		line_append("%s%s", space, n->key);
 		if (!n->v) {
 			/* it's a sub section */
 			line_append(" {");
-			if (!_line_end(outline))
+			if (!_line_end(n, out))
 				return_0;
-			_write_config(n->child, 0, outline, level + 1);
-			if (!_line_start(outline))
+			_write_config(n->child, 0, out, level + 1);
+			if (!_line_start(out))
 				return_0;
 			line_append("%s}", space);
 		} else {
@@ -312,7 +320,7 @@ static int _write_config(const struct dm_config_node *n, int only_one,
 			if (v->next) {
 				line_append("[");
 				while (v && v->type != DM_CFG_EMPTY_ARRAY) {
-					if (!_write_value(outline, v))
+					if (!_write_value(out, v))
 						return_0;
 					v = v->next;
 					if (v && v->type != DM_CFG_EMPTY_ARRAY)
@@ -320,11 +328,15 @@ static int _write_config(const struct dm_config_node *n, int only_one,
 				}
 				line_append("]");
 			} else
-				if (!_write_value(outline, v))
+				if (!_write_value(out, v))
 					return_0;
 		}
-		if (!_line_end(outline))
+		if (!_line_end(n, out))
 			return_0;
+
+		if (out->spec && out->spec->suffix_fn)
+			out->spec->suffix_fn(n, space, out->baton);
+
 		n = n->sib;
 	} while (n && !only_one);
 	/* FIXME: add error checking */
@@ -332,29 +344,46 @@ static int _write_config(const struct dm_config_node *n, int only_one,
 }
 
 static int _write_node(const struct dm_config_node *cn, int only_one,
-		       dm_putline_fn putline, void *baton)
+		       dm_putline_fn putline,
+		       const struct dm_config_node_out_spec *out_spec,
+		       void *baton)
 {
-	struct output_line outline;
-	if (!(outline.mem = dm_pool_create("config_line", 1024)))
+	struct config_output out;
+	if (!(out.mem = dm_pool_create("config_output", 1024)))
 		return_0;
-	outline.putline = putline;
-	outline.putline_baton = baton;
-	if (!_write_config(cn, only_one, &outline, 0)) {
-		dm_pool_destroy(outline.mem);
+	out.putline = putline;
+	out.spec = out_spec;
+	out.baton = baton;
+	if (!_write_config(cn, only_one, &out, 0)) {
+		dm_pool_destroy(out.mem);
 		return_0;
 	}
-	dm_pool_destroy(outline.mem);
+	dm_pool_destroy(out.mem);
 	return 1;
 }
 
 int dm_config_write_one_node(const struct dm_config_node *cn, dm_putline_fn putline, void *baton)
 {
-	return _write_node(cn, 1, putline, baton);
+	return _write_node(cn, 1, putline, NULL, baton);
 }
 
 int dm_config_write_node(const struct dm_config_node *cn, dm_putline_fn putline, void *baton)
 {
-	return _write_node(cn, 0, putline, baton);
+	return _write_node(cn, 0, putline, NULL, baton);
+}
+
+int dm_config_write_one_node_out(const struct dm_config_node *cn,
+				 const struct dm_config_node_out_spec *out_spec,
+				 void *baton)
+{
+	return _write_node(cn, 1, NULL, out_spec, baton);
+}
+
+int dm_config_write_node_out(const struct dm_config_node *cn,
+			     const struct dm_config_node_out_spec *out_spec,
+			     void *baton)
+{
+	return _write_node(cn, 0, NULL, out_spec, baton);
 }
 
 /*
