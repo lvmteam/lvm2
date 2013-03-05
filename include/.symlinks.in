@@ -9,6 +9,7 @@
 @top_srcdir@/lib/commands/errors.h
 @top_srcdir@/lib/commands/toolcontext.h
 @top_srcdir@/lib/config/config.h
+@top_srcdir@/lib/config/config_settings.h
 @top_srcdir@/lib/config/defaults.h
 @top_srcdir@/lib/datastruct/btree.h
 @top_srcdir@/lib/datastruct/lvm-types.h
