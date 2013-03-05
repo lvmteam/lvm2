@@ -100,6 +100,7 @@ struct cmd_context {
 	struct dm_config_tree *cft;
 	struct config_info default_settings;
 	struct config_info current_settings;
+	struct dm_hash_table *cft_def_hash; /* cft definition hash used for validity check */
 
 	struct archive_params *archive_params;
 	struct backup_params *backup_params;

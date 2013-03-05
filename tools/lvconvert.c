@@ -837,15 +837,10 @@ static void _lvconvert_mirrors_repair_ask(struct cmd_context *cmd,
 	*replace_log = *replace_mirrors = 1;
 
 	if (arg_count(cmd, use_policies_ARG)) {
-		leg_policy = find_config_tree_str(cmd,
-					"activation/mirror_image_fault_policy", NULL);
+		leg_policy = find_config_tree_str(cmd, activation_mirror_image_fault_policy_CFG);
 		if (!leg_policy)
-			leg_policy = find_config_tree_str(cmd,
-					"activation/mirror_device_fault_policy",
-					DEFAULT_MIRROR_DEVICE_FAULT_POLICY);
-		log_policy = find_config_tree_str(cmd,
-					"activation/mirror_log_fault_policy",
-					DEFAULT_MIRROR_LOG_FAULT_POLICY);
+			leg_policy = find_config_tree_str(cmd, activation_mirror_device_fault_policy_CFG);
+		log_policy = find_config_tree_str(cmd, activation_mirror_log_fault_policy_CFG);
 		*replace_mirrors = strcmp(leg_policy, "remove");
 		*replace_log = strcmp(log_policy, "remove");
 		return;
@@ -1571,7 +1566,7 @@ static void _lvconvert_raid_repair_ask(struct cmd_context *cmd, int *replace_dev
 	*replace_dev = 1;
 
 	if (arg_count(cmd, use_policies_ARG)) {
-		dev_policy = find_config_tree_str(cmd, "activation/raid_fault_policy", DEFAULT_RAID_FAULT_POLICY);
+		dev_policy = find_config_tree_str(cmd, activation_raid_fault_policy_CFG);
 
 		if (!strcmp(dev_policy, "allocate") ||
 		    !strcmp(dev_policy, "replace"))

@@ -808,7 +808,7 @@ static void check_config(void)
 {
 	int locking_type;
 
-	locking_type = find_config_tree_int(cmd, "global/locking_type", 1);
+	locking_type = find_config_tree_int(cmd, global_locking_type_CFG);
 
 	if (locking_type == 3) /* compiled-in cluster support */
 		return;
@@ -816,9 +816,8 @@ static void check_config(void)
 	if (locking_type == 2) { /* External library, check name */
 		const char *libname;
 
-		libname = find_config_tree_str(cmd, "global/locking_library",
-					  "");
-		if (strstr(libname, "liblvm2clusterlock.so"))
+		libname = find_config_tree_str(cmd, global_locking_library_CFG);
+		if (libname && strstr(libname, "liblvm2clusterlock.so"))
 			return;
 
 		log_error("Incorrect LVM locking library specified in lvm.conf, cluster operations may not work.");

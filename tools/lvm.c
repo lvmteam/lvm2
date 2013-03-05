@@ -158,8 +158,7 @@ static void _read_history(struct cmd_context *cmd)
 	if (read_history(hist_file))
 		log_very_verbose("Couldn't read history from %s.", hist_file);
 
-	stifle_history(find_config_tree_int(cmd, "shell/history_size",
-				       DEFAULT_MAX_HISTORY));
+	stifle_history(find_config_tree_int(cmd, shell_history_size_CFG));
 }
 
 static void _write_history(void)

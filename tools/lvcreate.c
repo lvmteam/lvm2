@@ -506,9 +506,7 @@ static int _read_raid_params(struct lvcreate_params *lp,
 		}
 		/* No stripe argument was given - default to 2 */
 		lp->stripes = 2;
-		lp->stripe_size = find_config_tree_int(cmd,
-						       "metadata/stripesize",
-						       DEFAULT_STRIPESIZE) * 2;
+		lp->stripe_size = find_config_tree_int(cmd, metadata_stripesize_CFG) * 2;
 	}
 
 	/*
@@ -675,9 +673,9 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 	if (arg_count(cmd, mirrors_ARG))
 		if (arg_uint_value(cmd, arg_count(cmd, stripes_long_ARG) ?
 				   stripes_long_ARG : stripes_ARG, 1) > 1) {
-			segtype_str = find_config_tree_str(cmd, "global/raid10_segtype_default", DEFAULT_RAID10_SEGTYPE);
+			segtype_str = find_config_tree_str(cmd, global_raid10_segtype_default_CFG);;
 		} else {
-			segtype_str = find_config_tree_str(cmd, "global/mirror_segtype_default", DEFAULT_MIRROR_SEGTYPE);
+			segtype_str = find_config_tree_str(cmd, global_mirror_segtype_default_CFG);
 		}
 	else if (arg_count(cmd, thin_ARG) || arg_count(cmd, thinpool_ARG))
 		segtype_str = "thin";

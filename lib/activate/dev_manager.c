@@ -1450,9 +1450,7 @@ static int _thin_pool_callback(struct dm_tree_node *node,
 	const struct dm_config_node *cn;
 	const struct dm_config_value *cv;
 	const char *thin_check =
-		find_config_tree_str_allow_empty(data->pool_lv->vg->cmd,
-						 "global/thin_check_executable",
-						 THIN_CHECK_CMD);
+		find_config_tree_str_allow_empty(data->pool_lv->vg->cmd, global_thin_check_executable_CFG);
 	const struct logical_volume *mlv = first_seg(data->pool_lv)->metadata_lv;
 	size_t len = strlen(dmdir) + 2 * (strlen(mlv->vg->name) + strlen(mlv->name)) + 3;
 	char meta_path[len];
@@ -1470,7 +1468,7 @@ static int _thin_pool_callback(struct dm_tree_node *node,
 		return 0;
 	}
 
-	if ((cn = find_config_tree_node(mlv->vg->cmd, "global/thin_check_options"))) {
+	if ((cn = find_config_tree_node(mlv->vg->cmd, global_thin_check_options_CFG))) {
 		for (cv = cn->v; cv && args < 16; cv = cv->next) {
 			if (cv->type != DM_CFG_STRING) {
 				log_error("Invalid string in config file: "

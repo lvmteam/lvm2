@@ -540,8 +540,7 @@ static int _mirrored_target_present(struct cmd_context *cmd,
 #ifdef DMEVENTD
 static const char *_get_mirror_dso_path(struct cmd_context *cmd)
 {
-	return get_monitor_dso_path(cmd, find_config_tree_str(cmd, "dmeventd/mirror_library",
-							      DEFAULT_DMEVENTD_MIRROR_LIB));
+	return get_monitor_dso_path(cmd, find_config_tree_str(cmd, dmeventd_mirror_library_CFG));
 }
 
 /* FIXME Cache this */

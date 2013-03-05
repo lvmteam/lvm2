@@ -346,8 +346,7 @@ int init_file_locking(struct locking_type *locking, struct cmd_context *cmd,
 	locking->flags = 0;
 
 	/* Get lockfile directory from config file */
-	locking_dir = find_config_tree_str(cmd, "global/locking_dir",
-					   DEFAULT_LOCK_DIR);
+	locking_dir = find_config_tree_str(cmd, global_locking_dir_CFG);
 	if (strlen(locking_dir) >= sizeof(_lock_dir)) {
 		log_error("Path for locking_dir %s is invalid.", locking_dir);
 		return 0;
@@ -356,8 +355,7 @@ int init_file_locking(struct locking_type *locking, struct cmd_context *cmd,
 	strcpy(_lock_dir, locking_dir);
 
 	_prioritise_write_locks =
-	    find_config_tree_bool(cmd, "global/prioritise_write_locks",
-				  DEFAULT_PRIORITISE_WRITE_LOCKS);
+	    find_config_tree_bool(cmd, global_prioritise_write_locks_CFG);
 
 	(void) dm_prepare_selinux_context(_lock_dir, S_IFDIR);
 	r = dm_create_dir(_lock_dir);

@@ -1230,19 +1230,16 @@ int collapse_mirrored_lv(struct logical_volume *lv)
 static int _get_mirror_fault_policy(struct cmd_context *cmd __attribute__((unused)),
 				   int log_policy)
 {
-	const char *policy;
-
+	const char *policy = NULL;
+/*
 	if (log_policy)
-		policy = dm_config_find_str(NULL, "activation/mirror_log_fault_policy",
-					 DEFAULT_MIRROR_LOG_FAULT_POLICY);
+		policy = find_config_tree_str(cmd, activation_mirror_log_fault_policy_CFG);
 	else {
-		policy = dm_config_find_str(NULL, "activation/mirror_image_fault_policy",
-					 NULL);
+		policy = find_config_tree_str(cmd, activation_mirror_image_fault_policy_CFG);
 		if (!policy)
-			policy = dm_config_find_str(NULL, "activation/mirror_device_fault_policy",
-						 DEFAULT_MIRROR_IMAGE_FAULT_POLICY);
+			policy = find_config_tree_str(cmd, activation_mirror_device_fault_policy_CFG);
 	}
-
+*/
 	if (!strcmp(policy, "remove"))
 		return MIRROR_REMOVE;
 	else if (!strcmp(policy, "allocate"))

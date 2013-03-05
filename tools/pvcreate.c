@@ -38,9 +38,7 @@ static int pvcreate_restore_params_validate(struct cmd_context *cmd,
 
 	if (!arg_count(cmd, restorefile_ARG) && arg_count(cmd, uuidstr_ARG)) {
 		if (!arg_count(cmd, norestorefile_ARG) &&
-		    find_config_tree_bool(cmd,
-					  "devices/require_restorefile_with_uuid",
-					  DEFAULT_REQUIRE_RESTOREFILE_WITH_UUID)) {
+		    find_config_tree_bool(cmd, devices_require_restorefile_with_uuid_CFG)) {
 			log_error("--restorefile is required with --uuid");
 			return 0;
 		}

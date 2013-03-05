@@ -1290,9 +1290,7 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 		vp_new->vgmetadatacopies = arg_int_value(cmd, vgmetadatacopies_ARG,
 							DEFAULT_VGMETADATACOPIES);
 	} else {
-		vp_new->vgmetadatacopies = find_config_tree_int(cmd,
-						   "metadata/vgmetadatacopies",
-						   DEFAULT_VGMETADATACOPIES);
+		vp_new->vgmetadatacopies = find_config_tree_int(cmd, metadata_vgmetadatacopies_CFG);
 	}
 
 	return 1;
@@ -1426,17 +1424,12 @@ int pvcreate_params_validate(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (arg_count(cmd, metadataignore_ARG)) {
-		pp->metadataignore = !strcmp(arg_str_value(cmd,
-						metadataignore_ARG,
-						DEFAULT_PVMETADATAIGNORE_STR),
-					 "y");
-	} else {
-		pp->metadataignore = !strcmp(find_config_tree_str(cmd,
-					"metadata/pvmetadataignore",
-					DEFAULT_PVMETADATAIGNORE_STR),
-					"y");
-	}
+	if (arg_count(cmd, metadataignore_ARG))
+		pp->metadataignore = arg_int_value(cmd, metadataignore_ARG,
+						   DEFAULT_PVMETADATAIGNORE);
+	else
+		pp->metadataignore = find_config_tree_bool(cmd, metadata_pvmetadataignore_CFG);
+
 	if (arg_count(cmd, pvmetadatacopies_ARG) &&
 	    !arg_int_value(cmd, pvmetadatacopies_ARG, -1) &&
 	    pp->metadataignore) {
@@ -1496,15 +1489,11 @@ int pvcreate_params_validate(struct cmd_context *cmd,
 
 	pp->pvmetadatasize = arg_uint64_value(cmd, metadatasize_ARG, UINT64_C(0));
 	if (!pp->pvmetadatasize)
-		pp->pvmetadatasize = find_config_tree_int(cmd,
-						 "metadata/pvmetadatasize",
-						 DEFAULT_PVMETADATASIZE);
+		pp->pvmetadatasize = find_config_tree_int(cmd, metadata_pvmetadatasize_CFG);
 
 	pp->pvmetadatacopies = arg_int_value(cmd, pvmetadatacopies_ARG, -1);
 	if (pp->pvmetadatacopies < 0)
-		pp->pvmetadatacopies = find_config_tree_int(cmd,
-						   "metadata/pvmetadatacopies",
-						   DEFAULT_PVMETADATACOPIES);
+		pp->pvmetadatacopies = find_config_tree_int(cmd, metadata_pvmetadatacopies_CFG);
 
 	pp->rp.ea_size = arg_uint64_value(cmd, embeddingareasize_ARG, pp->rp.ea_size);
 
@@ -1528,8 +1517,7 @@ int get_activation_monitoring_mode(struct cmd_context *cmd,
 						 DEFAULT_DMEVENTD_MONITOR);
 	else if (is_static() || arg_count(cmd, ignoremonitoring_ARG) ||
 		 arg_count(cmd, sysinit_ARG) ||
-		 !find_config_tree_bool(cmd, "activation/monitoring",
-					DEFAULT_DMEVENTD_MONITOR))
+		 !find_config_tree_bool(cmd, activation_monitoring_CFG))
 		*monitoring_mode = DMEVENTD_MONITOR_IGNORE;
 
 	return 1;
@@ -1547,18 +1535,14 @@ int get_pool_params(struct cmd_context *cmd,
 		*zero = strcmp(arg_str_value(cmd, zero_ARG, "y"), "n");
 		log_very_verbose("Setting pool zeroing: %u", *zero);
 	} else
-		*zero = find_config_tree_int(cmd,
-					     "allocation/thin_pool_zero",
-					     DEFAULT_THIN_POOL_ZERO);
+		*zero = find_config_tree_bool(cmd, allocation_thin_pool_zero_CFG);
 
 	if (arg_count(cmd, discards_ARG)) {
 		*discards = (thin_discards_t) arg_uint_value(cmd, discards_ARG, 0);
 		log_very_verbose("Setting pool discards: %s",
 				 get_pool_discards_name(*discards));
 	} else {
-		dstr = find_config_tree_str(cmd,
-					    "allocation/thin_pool_discards",
-					    DEFAULT_THIN_POOL_DISCARDS);
+		dstr = find_config_tree_str(cmd, allocation_thin_pool_discards_CFG);
 		if (!get_pool_discards(dstr, discards))
 			return_0;
 	}
@@ -1573,9 +1557,7 @@ int get_pool_params(struct cmd_context *cmd,
 		log_very_verbose("Setting pool chunk size: %s",
 				 display_size(cmd, *chunk_size));
 	} else
-		*chunk_size = find_config_tree_int(cmd,
-						   "allocation/thin_pool_chunk_size",
-						   DEFAULT_THIN_POOL_CHUNK_SIZE) * 2;
+		*chunk_size = find_config_tree_int(cmd, allocation_thin_pool_chunk_size_CFG) * 2;
 
 	if ((*chunk_size < DM_THIN_MIN_DATA_BLOCK_SIZE) ||
 	    (*chunk_size > DM_THIN_MAX_DATA_BLOCK_SIZE)) {
@@ -1737,7 +1719,7 @@ static int _validate_stripe_params(struct cmd_context *cmd, uint32_t *stripes,
 	}
 
 	if (*stripes > 1 && !*stripe_size) {
-		*stripe_size = find_config_tree_int(cmd, "metadata/stripesize", DEFAULT_STRIPESIZE) * 2;
+		*stripe_size = find_config_tree_int(cmd, metadata_stripesize_CFG) * 2;
 		log_print_unless_silent("Using default stripesize %s",
 			  display_size(cmd, (uint64_t) *stripe_size));
 	}

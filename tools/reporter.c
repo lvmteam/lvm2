@@ -234,20 +234,13 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 	int columns_as_rows;
 	unsigned args_are_pvs;
 
-	aligned = find_config_tree_int(cmd, "report/aligned",
-				  DEFAULT_REP_ALIGNED);
-	buffered = find_config_tree_int(cmd, "report/buffered",
-				   DEFAULT_REP_BUFFERED);
-	headings = find_config_tree_int(cmd, "report/headings",
-				   DEFAULT_REP_HEADINGS);
-	separator = find_config_tree_str(cmd, "report/separator",
-				    DEFAULT_REP_SEPARATOR);
-	field_prefixes = find_config_tree_int(cmd, "report/prefixes",
-					      DEFAULT_REP_PREFIXES);
-	quoted = find_config_tree_int(cmd, "report/quoted",
-				     DEFAULT_REP_QUOTED);
-	columns_as_rows = find_config_tree_int(cmd, "report/columns_as_rows",
-					       DEFAULT_REP_COLUMNS_AS_ROWS);
+	aligned = find_config_tree_bool(cmd, report_aligned_CFG);
+	buffered = find_config_tree_bool(cmd, report_buffered_CFG);
+	headings = find_config_tree_bool(cmd, report_headings_CFG);
+	separator = find_config_tree_str(cmd, report_separator_CFG);
+	field_prefixes = find_config_tree_bool(cmd, report_prefixes_CFG);
+	quoted = find_config_tree_bool(cmd, report_quoted_CFG);
+	columns_as_rows = find_config_tree_bool(cmd, report_colums_as_rows_CFG);
 
 	args_are_pvs = (report_type == PVS ||
 			report_type == LABEL ||
@@ -255,65 +248,40 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 
 	switch (report_type) {
 	case LVS:
-		keys = find_config_tree_str(cmd, "report/lvs_sort",
-				       DEFAULT_LVS_SORT);
+		keys = find_config_tree_str(cmd, report_lvs_sort_CFG);
 		if (!arg_count(cmd, verbose_ARG))
-			options = find_config_tree_str(cmd,
-						  "report/lvs_cols",
-						  DEFAULT_LVS_COLS);
+			options = find_config_tree_str(cmd, report_lvs_cols_CFG);
 		else
-			options = find_config_tree_str(cmd,
-						  "report/lvs_cols_verbose",
-						  DEFAULT_LVS_COLS_VERB);
+			options = find_config_tree_str(cmd, report_lvs_cols_verbose_CFG);
 		break;
 	case VGS:
-		keys = find_config_tree_str(cmd, "report/vgs_sort",
-				       DEFAULT_VGS_SORT);
+		keys = find_config_tree_str(cmd, report_vgs_sort_CFG);
 		if (!arg_count(cmd, verbose_ARG))
-			options = find_config_tree_str(cmd,
-						  "report/vgs_cols",
-						  DEFAULT_VGS_COLS);
+			options = find_config_tree_str(cmd, report_vgs_cols_CFG);
 		else
-			options = find_config_tree_str(cmd,
-						  "report/vgs_cols_verbose",
-						  DEFAULT_VGS_COLS_VERB);
+			options = find_config_tree_str(cmd, report_vgs_cols_verbose_CFG);
 		break;
 	case LABEL:
 	case PVS:
-		keys = find_config_tree_str(cmd, "report/pvs_sort",
-				       DEFAULT_PVS_SORT);
+		keys = find_config_tree_str(cmd, report_pvs_sort_CFG);
 		if (!arg_count(cmd, verbose_ARG))
-			options = find_config_tree_str(cmd,
-						  "report/pvs_cols",
-						  DEFAULT_PVS_COLS);
+			options = find_config_tree_str(cmd, report_pvs_cols_CFG);
 		else
-			options = find_config_tree_str(cmd,
-						  "report/pvs_cols_verbose",
-						  DEFAULT_PVS_COLS_VERB);
+			options = find_config_tree_str(cmd, report_pvs_cols_verbose_CFG);
 		break;
 	case SEGS:
-		keys = find_config_tree_str(cmd, "report/segs_sort",
-				       DEFAULT_SEGS_SORT);
+		keys = find_config_tree_str(cmd, report_segs_sort_CFG);
 		if (!arg_count(cmd, verbose_ARG))
-			options = find_config_tree_str(cmd,
-						  "report/segs_cols",
-						  DEFAULT_SEGS_COLS);
+			options = find_config_tree_str(cmd, report_segs_cols_CFG);
 		else
-			options = find_config_tree_str(cmd,
-						  "report/segs_cols_verbose",
-						  DEFAULT_SEGS_COLS_VERB);
+			options = find_config_tree_str(cmd, report_segs_cols_verbose_CFG);
 		break;
 	case PVSEGS:
-		keys = find_config_tree_str(cmd, "report/pvsegs_sort",
-				       DEFAULT_PVSEGS_SORT);
+		keys = find_config_tree_str(cmd, report_pvsegs_sort_CFG);
 		if (!arg_count(cmd, verbose_ARG))
-			options = find_config_tree_str(cmd,
-						  "report/pvsegs_cols",
-						  DEFAULT_PVSEGS_COLS);
+			options = find_config_tree_str(cmd, report_pvsegs_cols_CFG);
 		else
-			options = find_config_tree_str(cmd,
-						  "report/pvsegs_cols_verbose",
-						  DEFAULT_PVSEGS_COLS_VERB);
+			options = find_config_tree_str(cmd, report_pvsegs_cols_verbose_CFG);
 		break;
 	default:
 		log_error(INTERNAL_ERROR "Unknown report type.");

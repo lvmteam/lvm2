@@ -288,20 +288,16 @@ static int _adjust_policy_params(struct cmd_context *cmd,
 
 	if (lv_is_thin_pool(lv)) {
 		policy_threshold =
-			find_config_tree_int(cmd, "activation/thin_pool_autoextend_threshold",
-					     DEFAULT_THIN_POOL_AUTOEXTEND_THRESHOLD) * PERCENT_1;
+			find_config_tree_int(cmd, activation_thin_pool_autoextend_threshold_CFG) * PERCENT_1;
 		policy_amount =
-			find_config_tree_int(cmd, "activation/thin_pool_autoextend_percent",
-					     DEFAULT_THIN_POOL_AUTOEXTEND_PERCENT);
+			find_config_tree_int(cmd, activation_thin_pool_autoextend_percent_CFG);
 		if (!policy_amount && policy_threshold < PERCENT_100)
                         return 0;
 	} else {
 		policy_threshold =
-			find_config_tree_int(cmd, "activation/snapshot_autoextend_threshold",
-					     DEFAULT_SNAPSHOT_AUTOEXTEND_THRESHOLD) * PERCENT_1;
+			find_config_tree_int(cmd, activation_snapshot_autoextend_threshold_CFG) * PERCENT_1;
 		policy_amount =
-			find_config_tree_int(cmd, "activation/snapshot_autoextend_percent",
-					     DEFAULT_SNAPSHOT_AUTOEXTEND_PERCENT);
+			find_config_tree_int(cmd, activation_snapshot_autoextend_percent_CFG);
 	}
 
 	if (policy_threshold >= PERCENT_100)
@@ -652,9 +648,7 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 				lp->stripe_size = seg_stripesize;
 			} else {
 				lp->stripe_size =
-					find_config_tree_int(cmd,
-							"metadata/stripesize",
-							DEFAULT_STRIPESIZE) * 2;
+					find_config_tree_int(cmd, metadata_stripesize_CFG) * 2;
 				log_print_unless_silent("Using default stripesize %s",
 							display_size(cmd, (uint64_t) lp->stripe_size));
 			}

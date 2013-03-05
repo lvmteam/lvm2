@@ -526,8 +526,7 @@ int lvdisplay_full(struct cmd_context *cmd,
 
 	log_print("--- Logical volume ---");
 
-	lvm1compat = find_config_tree_int(cmd, "global/lvdisplay_shows_full_device_path",
-					  DEFAULT_LVDISPLAY_SHOWS_FULL_DEVICE_PATH);
+	lvm1compat = find_config_tree_bool(cmd, global_lvdisplay_shows_full_device_path_CFG);
 
 	if (lvm1compat)
 		/* /dev/vgname/lvname doen't actually exist for internal devices */

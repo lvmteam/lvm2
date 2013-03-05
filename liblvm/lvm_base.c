@@ -96,7 +96,9 @@ int lvm_config_override(lvm_t libh, const char *config_settings)
 
 int lvm_config_find_bool(lvm_t libh, const char *config_path, int fail)
 {
-	return find_config_tree_bool((struct cmd_context *)libh, config_path, fail);
+	struct cmd_context *cmd = (struct cmd_context *)libh;
+
+	return dm_config_tree_find_bool(cmd->cft, config_path, fail);
 }
 
 int lvm_errno(lvm_t libh)

@@ -282,8 +282,7 @@ static void _raid_destroy(struct segment_type *segtype)
 #ifdef DMEVENTD
 static const char *_get_raid_dso_path(struct cmd_context *cmd)
 {
-	const char *config_str = find_config_tree_str(cmd, "dmeventd/raid_library",
-						      DEFAULT_DMEVENTD_RAID_LIB);
+	const char *config_str = find_config_tree_str(cmd, dmeventd_raid_library_CFG);
 	return get_monitor_dso_path(cmd, config_str);
 }
 

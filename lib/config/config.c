@@ -334,44 +334,77 @@ int config_def_get_path(char *buf, size_t buf_size, int id)
 	return _cfg_def_make_path(buf, buf_size, id, cfg_def_get_item_p(id));
 }
 
-const struct dm_config_node *find_config_tree_node(struct cmd_context *cmd,
-						   const char *path)
+const struct dm_config_node *find_config_tree_node(struct cmd_context *cmd, int id)
 {
-	return dm_config_tree_find_node(cmd->cft, path);
+	return dm_config_tree_find_node(cmd->cft, cfg_def_get_path(cfg_def_get_item_p(id)));
 }
 
-const char *find_config_tree_str(struct cmd_context *cmd,
-				 const char *path, const char *fail)
+const char *find_config_tree_str(struct cmd_context *cmd, int id)
 {
-	return dm_config_tree_find_str(cmd->cft, path, fail);
+	cfg_def_item_t *item = cfg_def_get_item_p(id);
+	const char *path = cfg_def_get_path(item);
+
+	if (item->type != CFG_TYPE_STRING)
+		log_error(INTERNAL_ERROR "%s cfg tree element not declared as string.", path);
+
+	return dm_config_tree_find_str(cmd->cft, path, cfg_def_get_default_value(item, CFG_TYPE_STRING));
 }
 
-const char *find_config_tree_str_allow_empty(struct cmd_context *cmd,
-					     const char *path, const char *fail)
+const char *find_config_tree_str_allow_empty(struct cmd_context *cmd, int id)
 {
-	return dm_config_tree_find_str_allow_empty(cmd->cft, path, fail);
+	cfg_def_item_t *item = cfg_def_get_item_p(id);
+	const char *path = cfg_def_get_path(item);
+
+	if (item->type != CFG_TYPE_STRING)
+		log_error(INTERNAL_ERROR "%s cfg tree element not declared as string.", path);
+	if (!(item->flags & CFG_ALLOW_EMPTY))
+		log_error(INTERNAL_ERROR "%s cfg tree element not declared to allow empty values.", path);
+
+	return dm_config_tree_find_str_allow_empty(cmd->cft, path, cfg_def_get_default_value(item, CFG_TYPE_STRING));
 }
 
-int find_config_tree_int(struct cmd_context *cmd, const char *path,
-			 int fail)
+int find_config_tree_int(struct cmd_context *cmd, int id)
 {
-	return dm_config_tree_find_int(cmd->cft, path, fail);
+	cfg_def_item_t *item = cfg_def_get_item_p(id);
+	const char *path = cfg_def_get_path(item);
+
+	if (item->type != CFG_TYPE_INT)
+		log_error(INTERNAL_ERROR "%s cfg tree element not declared as integer.", path);
+
+	return dm_config_tree_find_int(cmd->cft, path, cfg_def_get_default_value(item, CFG_TYPE_INT));
 }
 
-int64_t find_config_tree_int64(struct cmd_context *cmd, const char *path, int64_t fail)
+int64_t find_config_tree_int64(struct cmd_context *cmd, int id)
 {
-	return dm_config_tree_find_int64(cmd->cft, path, fail);
+	cfg_def_item_t *item = cfg_def_get_item_p(id);
+	const char *path = cfg_def_get_path(item);
+
+	if (item->type != CFG_TYPE_INT)
+		log_error(INTERNAL_ERROR "%s cfg tree element not declared as integer.", path);
+
+	return dm_config_tree_find_int64(cmd->cft, path, cfg_def_get_default_value(item, CFG_TYPE_INT));
 }
 
-float find_config_tree_float(struct cmd_context *cmd, const char *path,
-			     float fail)
+float find_config_tree_float(struct cmd_context *cmd, int id)
 {
-	return dm_config_tree_find_float(cmd->cft, path, fail);
+	cfg_def_item_t *item = cfg_def_get_item_p(id);
+	const char *path = cfg_def_get_path(item);
+
+	if (item->type != CFG_TYPE_FLOAT)
+		log_error(INTERNAL_ERROR "%s cfg tree element not declared as float.", path);
+
+	return dm_config_tree_find_float(cmd->cft, path, cfg_def_get_default_value(item, CFG_TYPE_FLOAT));
 }
 
-int find_config_tree_bool(struct cmd_context *cmd, const char *path, int fail)
+int find_config_tree_bool(struct cmd_context *cmd, int id)
 {
-	return dm_config_tree_find_bool(cmd->cft, path, fail);
+	cfg_def_item_t *item = cfg_def_get_item_p(id);
+	const char *path = cfg_def_get_path(item);
+
+	if (item->type != CFG_TYPE_BOOL)
+		log_error(INTERNAL_ERROR "%s cfg tree element not declared as boolean.", path);
+
+	return dm_config_tree_find_bool(cmd->cft, path, cfg_def_get_default_value(item, CFG_TYPE_BOOL));
 }
 
 /* Insert cn2 after cn1 */

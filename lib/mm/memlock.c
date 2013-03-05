@@ -290,7 +290,7 @@ static int _memlock_maps(struct cmd_context *cmd, lvmlock_t lock, size_t *mstats
 	}
 
 	line = _maps_buffer;
-	cn = find_config_tree_node(cmd, "activation/mlock_filter");
+	cn = find_config_tree_node(cmd, activation_mlock_filter_CFG);
 
 	while ((line_end = strchr(line, '\n'))) {
 		*line_end = '\0'; /* remove \n */
@@ -317,7 +317,7 @@ static void _lock_mem(struct cmd_context *cmd)
 	 * Note: assuming _memlock_count_daemon is updated before _memlock_count
          */
 	_use_mlockall = _memlock_count_daemon ? 1 :
-		find_config_tree_bool(cmd, "activation/use_mlockall", DEFAULT_USE_MLOCKALL);
+		find_config_tree_bool(cmd, activation_use_mlockall_CFG);
 
 	if (!_use_mlockall) {
 		if (!*_procselfmaps &&
@@ -453,14 +453,9 @@ void memlock_init(struct cmd_context *cmd)
 {
 	/* When threaded, caller already limited stack size so just use the default. */
 	_size_stack = 1024ULL * (cmd->threaded ? DEFAULT_RESERVED_STACK :
-				 find_config_tree_int(cmd, "activation/reserved_stack",
-						      DEFAULT_RESERVED_STACK));
-	_size_malloc_tmp = find_config_tree_int(cmd,
-					   "activation/reserved_memory",
-					   DEFAULT_RESERVED_MEMORY) * 1024ULL;
-	_default_priority = find_config_tree_int(cmd,
-					    "activation/process_priority",
-					    DEFAULT_PROCESS_PRIORITY);
+				 find_config_tree_int(cmd, activation_reserved_stack_CFG));
+	_size_malloc_tmp = find_config_tree_int(cmd, activation_reserved_memory_CFG) * 1024ULL;
+	_default_priority = find_config_tree_int(cmd, activation_process_priority_CFG);
 }
 
 void memlock_reset(void)

@@ -203,8 +203,7 @@ int discard_pv_segment(struct pv_segment *peg, uint32_t discard_area_reduction)
 	 * Only issue discards if enabled in lvm.conf and both
 	 * the device and kernel (>= 2.6.35) supports discards.
 	 */
-	if (!find_config_tree_bool(peg->pv->fmt->cmd,
-				   "devices/issue_discards", DEFAULT_ISSUE_DISCARDS))
+	if (!find_config_tree_bool(peg->pv->fmt->cmd, devices_issue_discards_CFG))
 		return 1;
  
 	/* Missing PV? */
