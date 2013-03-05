@@ -808,36 +808,95 @@ int merge_config_tree(struct cmd_context *cmd, struct dm_config_tree *cft,
 	return 1;
 }
 
-static int _putline_fn(const char *line, void *baton) {
-	FILE *fp = baton;
-	fprintf(fp, "%s\n", line);
-	return 1;
+struct out_baton {
+	FILE *fp;
+	int withcomment;
+	int withversion;
 };
 
-int config_write(struct dm_config_tree *cft, const char *file,
-		 int argc, char **argv)
+static int _out_prefix_fn(const struct dm_config_node *cn, const char *line, void *baton)
 {
+	struct out_baton *out = baton;
+	struct cfg_def_item *cfg_def;
+	char version[9]; /* 8+1 chars for max version of 7.15.511 */
+	const char *path;
+	const char *node_type_name = cn->v ? "option" : "section";
+
+	if (cn->id < 0)
+		return 1;
+
+	if (!cn->id) {
+		log_error(INTERNAL_ERROR "Configuration node %s has invalid id.", cn->key);
+		return 0;
+	}
+
+	cfg_def = cfg_def_get_item_p(cn->id);
+
+	if (out->withcomment) {
+		path = cfg_def_get_path(cfg_def);
+		fprintf(out->fp, "%s# Configuration %s %s.\n", line, node_type_name, path);
+
+		if (cfg_def->comment)
+			fprintf(out->fp, "%s# %s\n", line, cfg_def->comment);
+	}
+
+	if (out->withversion) {
+		if (dm_snprintf(version, 9, "%u.%u.%u",
+				(cfg_def->since_version & 0xE000) >> 13,
+				(cfg_def->since_version & 0x1E00) >> 9,
+				(cfg_def->since_version & 0x1FF)) == -1) {
+			log_error("_out_prefix_fn: couldn't create version string");
+			return 0;
+		}
+		fprintf(out->fp, "%s# Since version %s.\n", line, version);
+	}
+
+	return 1;
+}
+
+static int _out_line_fn(const struct dm_config_node *cn, const char *line, void *baton)
+{
+	struct out_baton *out = baton;
+	fprintf(out->fp, "%s\n", line);
+	return 1;
+}
+
+static int _out_suffix_fn(const struct dm_config_node *cn, const char *line, void *baton)
+{
+	return 1;
+}
+
+int config_write(struct dm_config_tree *cft,
+		 int withcomment, int withversion,
+		 const char *file, int argc, char **argv)
+{
+	struct out_baton baton = {0, 0, 0};
 	const struct dm_config_node *cn;
+	const struct dm_config_node_out_spec out_spec = {.prefix_fn = _out_prefix_fn,
+							 .line_fn = _out_line_fn,
+							 .suffix_fn = _out_suffix_fn};
 	int r = 1;
-	FILE *fp = NULL;
+
+	baton.withcomment = withcomment;
+	baton.withversion = withversion;
 
 	if (!file) {
-		fp = stdout;
+		baton.fp = stdout;
 		file = "stdout";
-	} else if (!(fp = fopen(file, "w"))) {
+	} else if (!(baton.fp = fopen(file, "w"))) {
 		log_sys_error("open", file);
 		return 0;
 	}
 
 	log_verbose("Dumping configuration to %s", file);
 	if (!argc) {
-		if (!dm_config_write_node(cft->root, _putline_fn, fp)) {
+		if (!dm_config_write_node_out(cft->root, &out_spec, &baton)) {
 			log_error("Failure while writing to %s", file);
 			r = 0;
 		}
 	} else while (argc--) {
 		if ((cn = dm_config_find_node(cft->root, *argv))) {
-			if (!dm_config_write_one_node(cn, _putline_fn, fp)) {
+			if (!dm_config_write_one_node_out(cn, &out_spec, &baton)) {
 				log_error("Failure while writing to %s", file);
 				r = 0;
 			}
@@ -848,7 +907,7 @@ int config_write(struct dm_config_tree *cft, const char *file,
 		argv++;
 	}
 
-	if (fp && dm_fclose(fp)) {
+	if (baton.fp && dm_fclose(baton.fp)) {
 		stack;
 		r = 0;
 	}

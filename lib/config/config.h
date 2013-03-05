@@ -120,7 +120,9 @@ int config_file_read_fd(struct dm_config_tree *cft, struct device *dev,
 			off_t offset, size_t size, off_t offset2, size_t size2,
 			checksum_fn_t checksum_fn, uint32_t checksum);
 int config_file_read(struct dm_config_tree *cft);
-int config_write(struct dm_config_tree *cft, const char *file, int argc, char **argv);
+int config_write(struct dm_config_tree *cft,
+		 int withcomment, int withversion,
+		 const char *file, int argc, char **argv);
 struct dm_config_tree *config_def_create_tree(struct config_def_tree_spec *spec);
 void config_file_destroy(struct dm_config_tree *cft);
 

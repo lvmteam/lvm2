@@ -34,10 +34,13 @@ xx(dumpconfig,
    "dumpconfig\n"
    "\t[-f|--file filename] \n"
    "\t[--type {current|default|missing|new} \n"
+   "\t[--withcomments] \n"
+   "\t[--withversions] \n"
    "\t[--atversion version]] \n"
    "\t[--validate]\n"
    "\t[ConfigurationNode...]\n",
-   file_ARG, configtype_ARG, atversion_ARG, validate_ARG)
+   file_ARG, configtype_ARG, withcomments_ARG, atversion_ARG,
+   withversions_ARG, validate_ARG)
 
 xx(formats,
    "List available metadata formats",

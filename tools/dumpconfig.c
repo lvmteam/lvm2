@@ -89,7 +89,9 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 		cft = config_def_create_tree(&tree_spec);
 	}
 
-	if (!config_write(cft, file, argc, argv)) {
+	if (!config_write(cft, arg_count(cmd, withcomments_ARG),
+			  arg_count(cmd, withversions_ARG),
+			  file, argc, argv)) {
 		stack;
 		r = ECMD_FAILED;
 	}
