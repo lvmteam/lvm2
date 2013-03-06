@@ -56,6 +56,7 @@ struct lvconvert_params {
 
 	struct logical_volume *lv_to_poll;
 
+	int passed_args;
 	uint64_t poolmetadata_size;
 	const char *origin_lv_name;
 	const char *pool_data_lv_name;
@@ -377,7 +378,7 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 			return 0;
 		}
 
-		if (!get_pool_params(cmd,
+		if (!get_pool_params(cmd, &lp->passed_args,
 				     &lp->chunk_size,
 				     &lp->discards,
 				     &lp->poolmetadata_size,
@@ -2125,13 +2126,13 @@ static int _lvconvert_thinpool(struct cmd_context *cmd,
 				  display_size(cmd, 2 * DEFAULT_THIN_POOL_MIN_METADATA_SIZE));
 			return 0;
 		}
-		if (!update_pool_params(cmd, lp->target_attr,
+		if (!update_pool_params(cmd, lp->target_attr, lp->passed_args,
 					pool_lv->le_count, pool_lv->vg->extent_size,
 					&lp->chunk_size, &lp->discards,
 					&lp->poolmetadata_size))
 			return_0;
 	} else {
-		if (!update_pool_params(cmd, lp->target_attr,
+		if (!update_pool_params(cmd, lp->target_attr, lp->passed_args,
 					pool_lv->le_count, pool_lv->vg->extent_size,
 					&lp->chunk_size, &lp->discards,
 					&lp->poolmetadata_size))

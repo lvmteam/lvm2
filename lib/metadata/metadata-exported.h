@@ -610,6 +610,14 @@ struct lvcreate_params {
 	const char *vg_name; /* all */
 	const char *lv_name; /* all */
 
+	/* Keep args given by the user on command line */
+	/* FIXME: create some more universal solution here */
+#define PASS_ARG_CHUNK_SIZE		0x01
+#define PASS_ARG_DISCARDS		0x02
+#define PASS_ARG_POOL_METADATA_SIZE	0x04
+#define PASS_ARG_ZERO			0x08
+	int passed_args;
+
 	uint32_t stripes; /* striped */
 	uint32_t stripe_size; /* striped */
 	uint32_t chunk_size; /* snapshot */

@@ -1523,7 +1523,7 @@ int get_activation_monitoring_mode(struct cmd_context *cmd,
 	return 1;
 }
 
-int get_pool_params(struct cmd_context *cmd,
+int get_pool_params(struct cmd_context *cmd, int *passed_args,
 		    uint32_t *chunk_size,
 		    thin_discards_t *discards,
 		    uint64_t *pool_metadata_size,
@@ -1531,13 +1531,16 @@ int get_pool_params(struct cmd_context *cmd,
 {
 	const char *dstr;
 
+	*passed_args = 0;
 	if (arg_count(cmd, zero_ARG)) {
+		*passed_args |= PASS_ARG_ZERO;
 		*zero = strcmp(arg_str_value(cmd, zero_ARG, "y"), "n");
 		log_very_verbose("Setting pool zeroing: %u", *zero);
 	} else
 		*zero = find_config_tree_bool(cmd, allocation_thin_pool_zero_CFG);
 
 	if (arg_count(cmd, discards_ARG)) {
+		*passed_args |= PASS_ARG_DISCARDS;
 		*discards = (thin_discards_t) arg_uint_value(cmd, discards_ARG, 0);
 		log_very_verbose("Setting pool discards: %s",
 				 get_pool_discards_name(*discards));
@@ -1552,6 +1555,7 @@ int get_pool_params(struct cmd_context *cmd,
 			log_error("Negative chunk size is invalid.");
 			return 0;
 		}
+		*passed_args |= PASS_ARG_CHUNK_SIZE;
 		*chunk_size = arg_uint_value(cmd, chunksize_ARG,
 					     DM_THIN_MIN_DATA_BLOCK_SIZE);
 		log_very_verbose("Setting pool chunk size: %s",
@@ -1567,16 +1571,19 @@ int get_pool_params(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (arg_sign_value(cmd, poolmetadatasize_ARG, SIGN_NONE) == SIGN_MINUS) {
-		log_error("Negative pool metadata size is invalid.");
-		return 0;
+	if (arg_count(cmd, poolmetadatasize_ARG)) {
+		if (arg_sign_value(cmd, poolmetadatasize_ARG, SIGN_NONE) == SIGN_MINUS) {
+			log_error("Negative pool metadata size is invalid.");
+			return 0;
+		}
+		*passed_args |= PASS_ARG_POOL_METADATA_SIZE;
 	}
 	*pool_metadata_size = arg_uint64_value(cmd, poolmetadatasize_ARG, UINT64_C(0));
 
 	return 1;
 }
 
-int update_pool_params(struct cmd_context *cmd, unsigned attr,
+int update_pool_params(struct cmd_context *cmd, unsigned attr, int passed_args,
 		       uint32_t data_extents, uint32_t extent_size,
 		       uint32_t *chunk_size, thin_discards_t *discards,
 		       uint64_t *pool_metadata_size)
