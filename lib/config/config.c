@@ -838,6 +838,12 @@ static int _out_prefix_fn(const struct dm_config_node *cn, const char *line, voi
 
 		if (cfg_def->comment)
 			fprintf(out->fp, "%s# %s\n", line, cfg_def->comment);
+
+		if (cfg_def->flags & CFG_ADVANCED)
+			fprintf(out->fp, "%s# This configuration %s is advanced.\n", line, node_type_name);
+
+		if (cfg_def->flags & CFG_UNSUPPORTED)
+			fprintf(out->fp, "%s# This configuration %s is not officially supported.\n", line, node_type_name);
 	}
 
 	if (out->withversion) {
