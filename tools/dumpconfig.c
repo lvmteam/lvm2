@@ -37,7 +37,7 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 	const char *type = arg_str_value(cmd, configtype_ARG, "current");
 	unsigned int major, minor, patchlevel;
 	struct config_def_tree_spec tree_spec = {0};
-	struct dm_config_tree *cft;
+	struct dm_config_tree *cft = cmd->cft;
 	int r = ECMD_PROCESSED;
 
 	if (arg_count(cmd, configtype_ARG) && arg_count(cmd, validate_ARG)) {
@@ -71,7 +71,6 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 			log_error("--atversion has no effect with --type current");
 			return EINVALID_CMD_LINE;
 		}
-		cft = cmd->cft;
 		tree_spec.type = CFG_DEF_TREE_CURRENT;
 		config_def_check(cmd, 1, 1, 1);
 	}
