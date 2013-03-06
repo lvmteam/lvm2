@@ -161,6 +161,7 @@ static int _raid_add_target_line(struct dev_manager *dm __attribute__((unused)),
 	uint32_t s;
 	uint64_t flags = 0;
 	uint64_t rebuilds = 0;
+	char *raid_health = NULL;
 
 	if (!seg->area_count) {
 		log_error(INTERNAL_ERROR "_raid_add_target_line called "
@@ -189,6 +190,20 @@ static int _raid_add_target_line(struct dev_manager *dm __attribute__((unused)),
 
 	if (mirror_in_sync())
 		flags = DM_NOSYNC;
+
+	/*
+	 * If the RAID LV is not 'PARTIAL' and the status indicates
+	 * that the array has failed devices, it means that the
+	 * failed devices have returned and can be reintegrated.
+	 *
+	 * We reload the (potentially identical) table to force the
+	 * kernel to re-read the RAID superblocks - possibly restoring
+	 * transiently failed devices.
+	 */
+	if (!(seg->lv->status & PARTIAL_LV) &&
+	    lv_raid_dev_health(seg->lv, &raid_health) &&
+	    strchr(raid_health, 'D'))
+		dm_tree_node_force_identical_table_reload(node);
 
 	if (!dm_tree_node_add_raid_target(node, len, _raid_name(seg),
 					  seg->region_size, seg->stripe_size,

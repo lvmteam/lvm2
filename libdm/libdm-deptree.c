@@ -232,6 +232,16 @@ struct load_properties {
 
 	/* Send messages for this node in preload */
 	unsigned send_messages;
+
+	/*
+	 * If a mapping table is replacing an existing identical table,
+	 * the load is suppressed by default - avoiding the construction
+	 * of an unnecessary in-kernel table.  Sometimes we want to avoid
+	 * this optimization and load the identical table anyway.  This
+	 * field is used to indicate that we desire identical tables to be
+	 * loaded and not suppressed.
+	 */
+	unsigned force_identical_table_reload;
 };
 
 /* Two of these used to join two nodes with uses and used_by. */
@@ -586,6 +596,13 @@ int dm_tree_node_size_changed(const struct dm_tree_node *dnode)
 {
 	return dnode->props.size_changed;
 }
+
+int dm_tree_node_force_identical_table_reload(struct dm_tree_node *dnode)
+{
+	dnode->props.force_identical_table_reload = 1;
+	return 1;
+}
+
 
 int dm_tree_node_num_children(const struct dm_tree_node *node, uint32_t inverted)
 {
@@ -2409,7 +2426,8 @@ static int _load_node(struct dm_tree_node *dnode)
 				   seg, &seg_start))
 			goto_out;
 
-	if (!dm_task_suppress_identical_reload(dmt))
+	if (!dnode->props.force_identical_table_reload &&
+	    !dm_task_suppress_identical_reload(dmt))
 		log_error("Failed to suppress reload of identical tables.");
 
 	if ((r = dm_task_run(dmt))) {
