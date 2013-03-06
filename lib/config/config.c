@@ -1080,7 +1080,9 @@ static struct dm_config_node *_add_def_node(struct dm_config_tree *cft,
 
 static int _should_skip_def_node(struct config_def_tree_spec *spec, int section_id, cfg_def_item_t *def)
 {
-	if (def->parent != section_id)
+	if ((def->parent != section_id) ||
+	    (spec->ignoreadvanced && def->flags & CFG_ADVANCED) ||
+	    (spec->ignoreunsupported && def->flags & CFG_UNSUPPORTED))
 		return 1;
 
 	switch (spec->type) {

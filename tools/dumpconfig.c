@@ -50,6 +50,12 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
+	if (arg_count(cmd, ignoreadvanced_ARG))
+		tree_spec.ignoreadvanced = 1;
+
+	if (arg_count(cmd, ignoreunsupported_ARG))
+		tree_spec.ignoreunsupported = 1;
+
 	if (arg_count(cmd, validate_ARG)) {
 		if (config_def_check(cmd, 1, 1, 0)) {
 			log_print("LVM configuration valid.");
@@ -79,6 +85,12 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 	else {
 		log_error("Incorrect type of configuration specified. "
 			  "Expected one of: current, default, missing, new.");
+		return EINVALID_CMD_LINE;
+	}
+
+	if ((tree_spec.ignoreadvanced || tree_spec.ignoreunsupported) &&
+	    (tree_spec.type == CFG_DEF_TREE_CURRENT)) {
+		log_error("--ignoreadvanced and --ignoreunsupported has no effect with --type current");
 		return EINVALID_CMD_LINE;
 	}
 

@@ -82,6 +82,8 @@ arg(thinpool_ARG, '\0', "thinpool", string_arg, 0)
 arg(configtype_ARG, '\0', "type", string_arg, 0)
 arg(withcomments_ARG, '\0', "withcomments", NULL, 0)
 arg(withversions_ARG, '\0', "withversions", NULL, 0)
+arg(ignoreadvanced_ARG, '\0', "ignoreadvanced", NULL, 0)
+arg(ignoreunsupported_ARG, '\0', "ignoreunsupported", NULL, 0)
 arg(atversion_ARG, '\0', "atversion", string_arg, 0)
 arg(validate_ARG, '\0', "validate", NULL, 0)
 
