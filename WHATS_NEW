@@ -1,5 +1,10 @@
 Version 2.02.99 - 
 ===================================
+  Add --validate option to lvm dumpconfig to validate current config on demand.
+  Add --ignoreadvanced and --ignoreunsupported switch to lvm dumpconfig.
+  Add --withcomments and --withversions switch to lvm dumpconfig.
+  Add --type {current|default|missing|new} and --atversion to lvm dumpconfig.
+  Support automatic config validation and add 'config' section to lvm.conf.
   Add pvs -o ea_start,ea_size to report embedding area start and size.
   Add --embeddingareasize to pvcreate and vgconvert to create an embedding area.
   Add PV header extension: extension version, flags and embedding areas.
