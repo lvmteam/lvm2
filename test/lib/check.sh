@@ -170,8 +170,8 @@ in_sync() {
 	fi
 
 	if [ ${a[2]} = "raid" ]; then
-		# Last argument is the sync ratio for RAID
-		idx=$((${#a[@]} - 1))
+		# 6th argument is the sync ratio for RAID
+		idx=6
 		type=${a[3]}
 	elif [ ${a[2]} = "mirror" ]; then
 		# 4th Arg tells us how far to the sync ratio
