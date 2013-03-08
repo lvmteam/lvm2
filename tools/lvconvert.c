@@ -1900,32 +1900,32 @@ static int _lvconvert_thinpool_external(struct cmd_context *cmd,
 {
 	struct logical_volume *torigin_lv;
 	struct volume_group *vg = pool_lv->vg;
-	struct lvcreate_params lvc = { 0 };
+	struct lvcreate_params lvc = {
+		.activate = CHANGE_AE,
+		.alloc = ALLOC_INHERIT,
+		.lv_name = lp->origin_lv_name,
+		.major = -1,
+		.minor = -1,
+		.permission = LVM_READ,
+		.pool = pool_lv->name,
+		.pvh = &vg->pvs,
+		.read_ahead = DM_READ_AHEAD_AUTO,
+		.stripes = 1,
+		.vg_name = vg->name,
+		.voriginextents = external_lv->le_count,
+		.voriginsize = external_lv->size,
+	};
 
 	dm_list_init(&lvc.tags);
 
 	if (!(lvc.segtype = get_segtype_from_string(cmd, "thin")))
 		return_0;
 
-	lvc.activate = CHANGE_AE;
-	lvc.alloc = ALLOC_INHERIT;
-	lvc.lv_name = lp->origin_lv_name;
-	lvc.major = -1;
-	lvc.minor = -1;
-	lvc.permission = LVM_READ;
-	lvc.pool = pool_lv->name;
-	lvc.pvh = &vg->pvs;
-	lvc.read_ahead = DM_READ_AHEAD_AUTO;
-	lvc.stripes = 1;
-	lvc.vg_name = vg->name;
-	lvc.voriginextents = external_lv->le_count;
-	lvc.voriginsize = external_lv->size;
-
 	/* New thin LV needs to be created (all messages sent to pool) */
 	if (!(torigin_lv = lv_create_single(vg, &lvc)))
 		return_0;
 
-	/* Activate again via -torigin, so this active LV is not needed */
+	/* Deactivate prepared Thin LV */
 	if (!deactivate_lv(cmd, torigin_lv)) {
 		log_error("Aborting. Unable to deactivate new LV. "
 			  "Manual intervention required.");
