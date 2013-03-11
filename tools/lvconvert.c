@@ -191,9 +191,10 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 
 	if ((arg_count(cmd, snapshot_ARG) || arg_count(cmd, merge_ARG)) &&
 	    (arg_count(cmd, mirrorlog_ARG) || arg_count(cmd, mirrors_ARG) ||
-	     arg_count(cmd, repair_ARG))) {
+	     arg_count(cmd, repair_ARG) || arg_count(cmd, thinpool_ARG))) {
 		log_error("--snapshot or --merge argument cannot be mixed "
-			  "with --mirrors, --repair or --mirrorlog");
+			  "with --mirrors, --mirrorlog, --repair "
+			  "or --thinpool.");
 		return 0;
 	}
 
