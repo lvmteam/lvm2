@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Give precedence to EMC power2 devices with duplicate PVIDs.
   Add --validate option to lvm dumpconfig to validate current config on demand.
   Add --ignoreadvanced and --ignoreunsupported switch to lvm dumpconfig.
   Add --withcomments and --withversions switch to lvm dumpconfig.
