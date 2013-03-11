@@ -390,8 +390,21 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 				log_error("--poolmetadatasize is invalid with --poolmetadata.");
 				return 0;
 			}
+			if (arg_count(cmd, stripesize_ARG) || arg_count(cmd, stripes_long_ARG)) {
+				log_error("Can't use --stripes and --stripesize with --poolmetadata.");
+				return 0;
+			}
+
+			if (arg_count(cmd, readahead_ARG)) {
+				log_error("Can't use --readahead with --poolmetadata.");
+				return 0;
+			}
 			lp->pool_metadata_lv_name = arg_str_value(cmd, poolmetadata_ARG, "");
 		}
+
+		/* Hmm _read_activation_params */
+		lp->read_ahead = arg_uint_value(cmd, readahead_ARG,
+						cmd->default_settings.read_ahead);
 
 		/* If --thinpool contains VG name, extract it. */
 		if ((tmp_str = strchr(lp->pool_data_lv_name, (int) '/'))) {
@@ -2026,14 +2039,6 @@ static int _lvconvert_thinpool(struct cmd_context *cmd,
 	}
 
 	if (lp->pool_metadata_lv_name) {
-		if (arg_count(cmd, stripesize_ARG) || arg_count(cmd, stripes_long_ARG)) {
-			log_error("Can't use --stripes and --stripesize with --poolmetadata.");
-			return 0;
-		}
-		if (arg_count(cmd, readahead_ARG)) {
-			log_error("Can't use --readahead with --poolmetadata.");
-			return 0;
-		}
 		metadata_lv = find_lv(pool_lv->vg, lp->pool_metadata_lv_name);
 		if (!metadata_lv) {
 			log_error("Unknown metadata LV %s.", lp->pool_metadata_lv_name);
@@ -2140,9 +2145,6 @@ static int _lvconvert_thinpool(struct cmd_context *cmd,
 
 		if (!get_stripe_params(cmd, &lp->stripes, &lp->stripe_size))
 			return_0;
-		/* Hmm _read_activation_params */
-		lp->read_ahead = arg_uint_value(cmd, readahead_ARG,
-						cmd->default_settings.read_ahead);
 
 		if (!(metadata_lv = alloc_pool_metadata(pool_lv, lp->alloc, name,
 							lp->pvh, lp->read_ahead,
