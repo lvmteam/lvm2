@@ -117,10 +117,7 @@ int get_pool_params(struct cmd_context *cmd, int *passed_args,
 		    thin_discards_t *discards,
 		    uint64_t *pool_metadata_size,
 		    int *zero);
-int update_pool_params(struct cmd_context *cmd, unsigned attr, int passed_args,
-		       uint32_t data_extents, uint32_t extent_size,
-		       uint32_t *chunk_size, thin_discards_t *discards,
-		       uint64_t *pool_metadata_size);
+
 struct logical_volume *alloc_pool_metadata(struct logical_volume *pool_lv,
 					   alloc_policy_t alloc, const char *name,
 					   struct dm_list *pvh, uint32_t read_ahead,

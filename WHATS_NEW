@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Move update_pool_params() from /tools to /lib for better reuse.
   Give precedence to EMC power2 devices with duplicate PVIDs.
   Add --validate option to lvm dumpconfig to validate current config on demand.
   Add --ignoreadvanced and --ignoreunsupported switch to lvm dumpconfig.
