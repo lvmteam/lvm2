@@ -3749,9 +3749,6 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 		return 0;
 	}
 
-	if (!_process_options(_string_args[OPTIONS_ARG]))
-		return 0;
-
 	if (_switches[TABLE_ARG] && _switches[NOTABLE_ARG]) {
 		fprintf(stderr, "--table and --notable are incompatible.\n");
 		return 0;
@@ -3823,6 +3820,11 @@ int main(int argc, char **argv)
 
 	if (!strcmp(cmd->name, "mangle"))
 		dm_set_name_mangling_mode(DM_STRING_MANGLING_NONE);
+
+	if (!_process_options(_string_args[OPTIONS_ARG])) {
+		fprintf(stderr, "Couldn't process command line.\n");
+		goto out;
+	}
 
 	if (_switches[COLS_ARG]) {
 		if (!_report_init(cmd))
