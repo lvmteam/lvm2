@@ -123,7 +123,21 @@ pv_t lvm_pv_from_uuid(vg_t vg, const char *uuid)
 
 int lvm_pv_resize(const pv_t pv, uint64_t new_size)
 {
-	/* FIXME: add pv resize code here */
-	log_error("NOT IMPLEMENTED YET");
-	return -1;
+	uint64_t size = new_size >> SECTOR_SHIFT;
+
+	if (new_size % SECTOR_SIZE) {
+		log_errno(EINVAL, "Size not a multiple of 512");
+		return -1;
+	}
+
+	if (!vg_check_write_mode(pv->vg)) {
+		return -1;
+	}
+
+	if (!pv_resize(pv, pv->vg, size)) {
+		log_error("PV re-size failed!");
+		return -1;
+	} else {
+		return 0;
+	}
 }

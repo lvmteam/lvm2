@@ -1759,8 +1759,6 @@ pv_t lvm_pv_from_uuid(vg_t vg, const char *uuid);
  *
  * \memberof pv_t
  *
- * NOTE: This function is currently not implemented.
- *
  * \param   pv
  * Physical volume handle.
  *
