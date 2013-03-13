@@ -429,6 +429,52 @@ struct pvcreate_params {
 	struct pvcreate_restorable_params rp;
 };
 
+struct lvresize_params {
+	const char *vg_name;
+	const char *lv_name;
+
+	uint32_t stripes;
+	uint32_t stripe_size;
+	uint32_t mirrors;
+
+	const struct segment_type *segtype;
+
+	/* size */
+	uint32_t extents;
+	uint64_t size;
+	int sizeargs;
+	sign_t sign;
+	uint64_t poolmetadatasize;
+	sign_t poolmetadatasign;
+	percent_type_t percent;
+
+	enum {
+		LV_ANY = 0,
+		LV_REDUCE = 1,
+		LV_EXTEND = 2
+	} resize;
+
+	int resizefs;
+	int nofsck;
+
+	int argc;
+	char **argv;
+
+	/* Arg counts & values */
+	unsigned ac_policy;
+	unsigned ac_stripes;
+	uint32_t ac_stripes_value;
+	unsigned ac_mirrors;
+	uint32_t ac_mirrors_value;
+	unsigned ac_stripesize;
+	uint64_t ac_stripesize_value;
+	unsigned ac_alloc;
+	unsigned ac_no_sync;
+	unsigned ac_force;
+
+	const char *ac_type;
+};
+
 struct physical_volume *pvcreate_single(struct cmd_context *cmd,
 					const char *pv_name,
 					struct pvcreate_params *pp,
@@ -474,6 +520,9 @@ int vgs_are_compatible(struct cmd_context *cmd,
 		       struct volume_group *vg_from,
 		       struct volume_group *vg_to);
 uint32_t vg_lock_newname(struct cmd_context *cmd, const char *vgname);
+
+int lv_resize(struct cmd_context *cmd, struct volume_group *vg,
+		     struct lvresize_params *lp, struct dm_list *pvh);
 
 /*
  * Return a handle to VG metadata.
