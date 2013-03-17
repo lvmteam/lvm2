@@ -425,26 +425,6 @@ static int _fixup_ignored(struct metadata_area *mda, void *baton) {
 	return 1;
 }
 
-static struct dm_config_tree *_export_vg_to_config_tree(struct volume_group *vg)
-{
-	char *buf = NULL;
-	struct dm_config_tree *vgmeta;
-
-	if (!export_vg_to_buffer(vg, &buf)) {
-		log_error("Could not format VG metadata.");
-		return 0;
-	}
-
-	if (!(vgmeta = dm_config_from_string(buf))) {
-		log_error("Error parsing VG metadata.");
-		dm_free(buf);
-		return 0;
-	}
-
-	dm_free(buf);
-	return vgmeta;
-}
-
 int lvmetad_vg_update(struct volume_group *vg)
 {
 	daemon_reply reply;
@@ -462,7 +442,7 @@ int lvmetad_vg_update(struct volume_group *vg)
 	if (!lvmetad_active() || test_mode())
 		return 1; /* fake it */
 
-	if (!(vgmeta = _export_vg_to_config_tree(vg)))
+	if (!(vgmeta = export_vg_to_config_tree(vg)))
 		return_0;
 
 	log_debug_lvmetad("Sending lvmetad updated metadata for VG %s (seqno %" PRIu32 ")", vg->name, vg->seqno);
@@ -772,7 +752,7 @@ int lvmetad_pv_found(const struct id *pvid, struct device *dev, const struct for
 		_extract_mdas(info, pvmeta, pvmeta->root);
 
 	if (vg) {
-		if (!(vgmeta = _export_vg_to_config_tree(vg))) {
+		if (!(vgmeta = export_vg_to_config_tree(vg))) {
 			dm_config_destroy(pvmeta);
 			return_0;
 		}
