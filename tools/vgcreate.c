@@ -70,7 +70,7 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	    !vg_set_mda_copies(vg, vp_new.vgmetadatacopies))
 		goto bad_orphan;
 
-	if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE)) {
+	if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE, NULL)) {
 		log_error("Can't get lock for orphan PVs");
 		goto bad_orphan;
 	}

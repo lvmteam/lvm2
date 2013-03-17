@@ -101,7 +101,7 @@ static int pvremove_single(struct cmd_context *cmd, const char *pv_name,
 	struct device *dev;
 	int ret = ECMD_FAILED;
 
-	if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE)) {
+	if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE, NULL)) {
 		log_error("Can't get lock for orphan PVs");
 		return ECMD_FAILED;
 	}

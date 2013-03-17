@@ -254,7 +254,7 @@ static int _lock_file(const char *file, uint32_t flags)
 }
 
 static int _file_lock_resource(struct cmd_context *cmd, const char *resource,
-			       uint32_t flags)
+			       uint32_t flags, struct logical_volume *lv)
 {
 	char lockfile[PATH_MAX];
 	unsigned origin_only = (flags & LCK_ORIGIN_ONLY) ? 1 : 0;
@@ -295,17 +295,17 @@ static int _file_lock_resource(struct cmd_context *cmd, const char *resource,
 		switch (flags & LCK_TYPE_MASK) {
 		case LCK_UNLOCK:
 			log_very_verbose("Unlocking LV %s%s%s", resource, origin_only ? " without snapshots" : "", revert ? " (reverting)" : "");
-			if (!lv_resume_if_active(cmd, resource, origin_only, 0, revert))
+			if (!lv_resume_if_active(cmd, resource, origin_only, 0, revert, NULL))
 				return 0;
 			break;
 		case LCK_NULL:
 			log_very_verbose("Locking LV %s (NL)", resource);
-			if (!lv_deactivate(cmd, resource))
+			if (!lv_deactivate(cmd, resource, NULL))
 				return 0;
 			break;
 		case LCK_READ:
 			log_very_verbose("Locking LV %s (R)", resource);
-			if (!lv_activate_with_filter(cmd, resource, 0))
+			if (!lv_activate_with_filter(cmd, resource, 0, NULL))
 				return 0;
 			break;
 		case LCK_PREAD:
@@ -313,12 +313,12 @@ static int _file_lock_resource(struct cmd_context *cmd, const char *resource,
 			break;
 		case LCK_WRITE:
 			log_very_verbose("Locking LV %s (W)%s", resource, origin_only ? " without snapshots" : "");
-			if (!lv_suspend_if_active(cmd, resource, origin_only, 0))
+			if (!lv_suspend_if_active(cmd, resource, origin_only, 0, NULL))
 				return 0;
 			break;
 		case LCK_EXCL:
 			log_very_verbose("Locking LV %s (EX)", resource);
-			if (!lv_activate_with_filter(cmd, resource, 1))
+			if (!lv_activate_with_filter(cmd, resource, 1, NULL))
 				return 0;
 			break;
 		default:

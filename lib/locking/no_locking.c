@@ -34,7 +34,7 @@ static void _no_reset_locking(void)
 }
 
 static int _no_lock_resource(struct cmd_context *cmd, const char *resource,
-			     uint32_t flags)
+			     uint32_t flags, struct logical_volume *lv)
 {
 	switch (flags & LCK_SCOPE_MASK) {
 	case LCK_VG:
@@ -44,15 +44,15 @@ static int _no_lock_resource(struct cmd_context *cmd, const char *resource,
 	case LCK_LV:
 		switch (flags & LCK_TYPE_MASK) {
 		case LCK_NULL:
-			return lv_deactivate(cmd, resource);
+			return lv_deactivate(cmd, resource, lv);
 		case LCK_UNLOCK:
-			return lv_resume_if_active(cmd, resource, (flags & LCK_ORIGIN_ONLY) ? 1: 0, 0, (flags & LCK_REVERT) ? 1 : 0);
+			return lv_resume_if_active(cmd, resource, (flags & LCK_ORIGIN_ONLY) ? 1: 0, 0, (flags & LCK_REVERT) ? 1 : 0, NULL);
 		case LCK_READ:
-			return lv_activate_with_filter(cmd, resource, 0);
+			return lv_activate_with_filter(cmd, resource, 0, NULL);
 		case LCK_WRITE:
-			return lv_suspend_if_active(cmd, resource, (flags & LCK_ORIGIN_ONLY) ? 1 : 0, 0);
+			return lv_suspend_if_active(cmd, resource, (flags & LCK_ORIGIN_ONLY) ? 1 : 0, 0, lv);
 		case LCK_EXCL:
-			return lv_activate_with_filter(cmd, resource, 1);
+			return lv_activate_with_filter(cmd, resource, 1, NULL);
 		default:
 			break;
 		}
@@ -68,7 +68,7 @@ static int _no_lock_resource(struct cmd_context *cmd, const char *resource,
 
 static int _readonly_lock_resource(struct cmd_context *cmd,
 				   const char *resource,
-				   uint32_t flags)
+				   uint32_t flags, struct logical_volume *lv)
 {
 	if ((flags & LCK_TYPE_MASK) == LCK_WRITE &&
 	    (flags & LCK_SCOPE_MASK) == LCK_VG &&
@@ -79,7 +79,7 @@ static int _readonly_lock_resource(struct cmd_context *cmd,
 		return 0;
 	}
 
-	return _no_lock_resource(cmd, resource, flags);
+	return _no_lock_resource(cmd, resource, flags, lv);
 }
 
 int init_no_locking(struct locking_type *locking, struct cmd_context *cmd __attribute__((unused)),

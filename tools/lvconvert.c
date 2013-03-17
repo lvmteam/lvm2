@@ -2503,7 +2503,7 @@ static int lvconvert_merge_single(struct cmd_context *cmd, struct logical_volume
 					  lp->wait_completion);
 
 		/* use LCK_VG_WRITE to match lvconvert()'s READ_FOR_UPDATE */
-		if (!lock_vol(cmd, vg_name, LCK_VG_WRITE)) {
+		if (!lock_vol(cmd, vg_name, LCK_VG_WRITE, NULL)) {
 			log_error("ABORTING: Can't relock VG for %s "
 				  "after polling finished", vg_name);
 			ret = ECMD_FAILED;

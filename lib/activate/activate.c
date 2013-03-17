@@ -1615,9 +1615,10 @@ static int _preload_detached_lv(struct cmd_context *cmd, struct logical_volume *
 }
 
 static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
-		       struct lv_activate_opts *laopts, int error_if_not_suspended)
+		       struct lv_activate_opts *laopts, int error_if_not_suspended,
+	               struct logical_volume *lv)
 {
-	struct logical_volume *lv = NULL, *lv_pre = NULL, *pvmove_lv = NULL;
+	struct logical_volume *lv_pre = NULL, *pvmove_lv = NULL, *lv_to_free = NULL;
 	struct lv_list *lvl_pre;
 	struct seg_list *sl;
         struct lv_segment *snap_seg;
@@ -1628,7 +1629,7 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 	if (!activation())
 		return 1;
 
-	if (!(lv = lv_from_lvid(cmd, lvid_s, 0)))
+	if (!lv && !(lv_to_free = lv = lv_from_lvid(cmd, lvid_s, 0)))
 		goto_out;
 
 	/* Use precommitted metadata if present */
@@ -1769,9 +1770,9 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 out:
 	if (lv_pre)
 		release_vg(lv_pre->vg);
-	if (lv) {
-		lv_release_replicator_vgs(lv);
-		release_vg(lv->vg);
+	if (lv_to_free) {
+		lv_release_replicator_vgs(lv_to_free);
+		release_vg(lv_to_free->vg);
 	}
 
 	return r;
@@ -1783,14 +1784,14 @@ out:
  *
  * Returns success if the device is not active
  */
-int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only, unsigned exclusive)
+int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only, unsigned exclusive, struct logical_volume *lv)
 {
 	struct lv_activate_opts laopts = {
 		.origin_only = origin_only,
 		.exclusive = exclusive
 	};
 
-	return _lv_suspend(cmd, lvid_s, &laopts, 0);
+	return _lv_suspend(cmd, lvid_s, &laopts, 0, lv);
 }
 
 /* No longer used */
@@ -1802,9 +1803,10 @@ int lv_suspend(struct cmd_context *cmd, const char *lvid_s)
 ***********/
 
 static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
-		      struct lv_activate_opts *laopts, int error_if_not_active)
+		      struct lv_activate_opts *laopts, int error_if_not_active,
+	              struct logical_volume *lv)
 {
-	struct logical_volume *lv;
+	struct logical_volume *lv_to_free = NULL;
 	struct lvinfo info;
 	int r = 0;
 	int messages_only = 0;
@@ -1812,7 +1814,7 @@ static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
 	if (!activation())
 		return 1;
 
-	if (!(lv = lv_from_lvid(cmd, lvid_s, 0)))
+	if (!lv && !(lv_to_free = lv = lv_from_lvid(cmd, lvid_s, 0)))
 		goto_out;
 
 	if (lv_is_thin_pool(lv) && laopts->origin_only)
@@ -1857,8 +1859,8 @@ static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
 
 	r = 1;
 out:
-	if (lv)
-		release_vg(lv->vg);
+	if (lv_to_free)
+		release_vg(lv_to_free->vg);
 
 	return r;
 }
@@ -1875,7 +1877,7 @@ out:
  */
 int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s,
 			unsigned origin_only, unsigned exclusive,
-			unsigned revert)
+			unsigned revert, struct logical_volume *lv)
 {
 	struct lv_activate_opts laopts = {
 		.origin_only = origin_only,
@@ -1883,14 +1885,14 @@ int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s,
 		.revert = revert
 	};
 
-	return _lv_resume(cmd, lvid_s, &laopts, 0);
+	return _lv_resume(cmd, lvid_s, &laopts, 0, lv);
 }
 
-int lv_resume(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only)
+int lv_resume(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only, struct logical_volume *lv)
 {
 	struct lv_activate_opts laopts = { .origin_only = origin_only, };
 
-	return _lv_resume(cmd, lvid_s, &laopts, 1);
+	return _lv_resume(cmd, lvid_s, &laopts, 1, lv);
 }
 
 static int _lv_has_open_snapshots(struct logical_volume *lv)
@@ -1916,16 +1918,16 @@ static int _lv_has_open_snapshots(struct logical_volume *lv)
 	return r;
 }
 
-int lv_deactivate(struct cmd_context *cmd, const char *lvid_s)
+int lv_deactivate(struct cmd_context *cmd, const char *lvid_s, struct logical_volume *lv)
 {
-	struct logical_volume *lv;
+	struct logical_volume *lv_to_free = NULL;
 	struct lvinfo info;
 	int r = 0;
 
 	if (!activation())
 		return 1;
 
-	if (!(lv = lv_from_lvid(cmd, lvid_s, 0)))
+	if (!lv && !(lv_to_free = lv = lv_from_lvid(cmd, lvid_s, 0)))
 		goto out;
 
 	if (test_mode()) {
@@ -1967,9 +1969,9 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s)
 	if (!lv_info(cmd, lv, 0, &info, 0, 0) || info.exists)
 		r = 0;
 out:
-	if (lv) {
-		lv_release_replicator_vgs(lv);
-		release_vg(lv->vg);
+	if (lv_to_free) {
+		lv_release_replicator_vgs(lv_to_free);
+		release_vg(lv_to_free->vg);
 	}
 
 	return r;
@@ -1977,9 +1979,9 @@ out:
 
 /* Test if LV passes filter */
 int lv_activation_filter(struct cmd_context *cmd, const char *lvid_s,
-			 int *activate_lv)
+			 int *activate_lv, struct logical_volume *lv)
 {
-	struct logical_volume *lv;
+	struct logical_volume *lv_to_free = NULL;
 	int r = 0;
 
 	if (!activation()) {
@@ -1987,7 +1989,7 @@ int lv_activation_filter(struct cmd_context *cmd, const char *lvid_s,
 		return 1;
 	}
 
-	if (!(lv = lv_from_lvid(cmd, lvid_s, 0)))
+	if (!lv && !(lv_to_free = lv = lv_from_lvid(cmd, lvid_s, 0)))
 		goto out;
 
 	if (!_passes_activation_filter(cmd, lv)) {
@@ -1998,23 +2000,24 @@ int lv_activation_filter(struct cmd_context *cmd, const char *lvid_s,
 		*activate_lv = 1;
 	r = 1;
 out:
-	if (lv)
-		release_vg(lv->vg);
+	if (lv_to_free)
+		release_vg(lv_to_free->vg);
 
 	return r;
 }
 
 static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
-			struct lv_activate_opts *laopts, int filter)
+			struct lv_activate_opts *laopts, int filter,
+	                struct logical_volume *lv)
 {
-	struct logical_volume *lv;
+	struct logical_volume *lv_to_free = NULL;
 	struct lvinfo info;
 	int r = 0;
 
 	if (!activation())
 		return 1;
 
-	if (!(lv = lv_from_lvid(cmd, lvid_s, 0)))
+	if (!lv && !(lv_to_free = lv = lv_from_lvid(cmd, lvid_s, 0)))
 		goto out;
 
 	if (filter && !_passes_activation_filter(cmd, lv)) {
@@ -2074,31 +2077,31 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 		stack;
 
 out:
-	if (lv) {
-		lv_release_replicator_vgs(lv);
-		release_vg(lv->vg);
+	if (lv_to_free) {
+		lv_release_replicator_vgs(lv_to_free);
+		release_vg(lv_to_free->vg);
 	}
 
 	return r;
 }
 
 /* Activate LV */
-int lv_activate(struct cmd_context *cmd, const char *lvid_s, int exclusive)
+int lv_activate(struct cmd_context *cmd, const char *lvid_s, int exclusive, struct logical_volume *lv)
 {
 	struct lv_activate_opts laopts = { .exclusive = exclusive };
 
-	if (!_lv_activate(cmd, lvid_s, &laopts, 0))
+	if (!_lv_activate(cmd, lvid_s, &laopts, 0, lv))
 		return_0;
 
 	return 1;
 }
 
 /* Activate LV only if it passes filter */
-int lv_activate_with_filter(struct cmd_context *cmd, const char *lvid_s, int exclusive)
+int lv_activate_with_filter(struct cmd_context *cmd, const char *lvid_s, int exclusive, struct logical_volume *lv)
 {
 	struct lv_activate_opts laopts = { .exclusive = exclusive };
 
-	if (!_lv_activate(cmd, lvid_s, &laopts, 1))
+	if (!_lv_activate(cmd, lvid_s, &laopts, 1, lv))
 		return_0;
 
 	return 1;

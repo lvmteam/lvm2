@@ -47,12 +47,12 @@ int vgcfgrestore(struct cmd_context *cmd, int argc, char **argv)
 
 	lvmcache_seed_infos_from_lvmetad(cmd);
 
-	if (!lock_vol(cmd, vg_name, LCK_VG_WRITE)) {
+	if (!lock_vol(cmd, vg_name, LCK_VG_WRITE, NULL)) {
 		log_error("Unable to lock volume group %s", vg_name);
 		return ECMD_FAILED;
 	}
 
-	if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE)) {
+	if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE, NULL)) {
 		log_error("Unable to lock orphans");
 		unlock_vg(cmd, vg_name);
 		return ECMD_FAILED;

@@ -562,7 +562,7 @@ int vg_remove(struct volume_group *vg)
 	struct pv_list *pvl;
 	int ret = 1;
 
-	if (!lock_vol(vg->cmd, VG_ORPHANS, LCK_VG_WRITE)) {
+	if (!lock_vol(vg->cmd, VG_ORPHANS, LCK_VG_WRITE, NULL)) {
 		log_error("Can't get lock for orphan PVs");
 		return 0;
 	}
@@ -3971,7 +3971,7 @@ static struct volume_group *_recover_vg(struct cmd_context *cmd,
 
 	dev_close_all();
 
-	if (!lock_vol(cmd, vg_name, LCK_VG_WRITE))
+	if (!lock_vol(cmd, vg_name, LCK_VG_WRITE, NULL))
 		return_NULL;
 
 	if (!(vg = vg_read_internal(cmd, vg_name, vgid, 1, &consistent)))
@@ -4018,7 +4018,7 @@ static struct volume_group *_vg_lock_and_read(struct cmd_context *cmd, const cha
 	already_locked = lvmcache_vgname_is_locked(vg_name);
 
 	if (!already_locked && !(misc_flags & READ_WITHOUT_LOCK) &&
-	    !lock_vol(cmd, vg_name, lock_flags)) {
+	    !lock_vol(cmd, vg_name, lock_flags, NULL)) {
 		log_error("Can't get lock for %s", vg_name);
 		return _vg_make_handle(cmd, vg, FAILED_LOCKING);
 	}
@@ -4173,7 +4173,7 @@ uint32_t vg_read_error(struct volume_group *vg_handle)
  */
 uint32_t vg_lock_newname(struct cmd_context *cmd, const char *vgname)
 {
-	if (!lock_vol(cmd, vgname, LCK_VG_WRITE)) {
+	if (!lock_vol(cmd, vgname, LCK_VG_WRITE, NULL)) {
 		return FAILED_LOCKING;
 	}
 

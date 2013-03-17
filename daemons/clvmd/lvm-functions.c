@@ -356,7 +356,7 @@ static int do_activate_lv(char *resource, unsigned char command, unsigned char l
 	}
 
 	/* Does the config file want us to activate this LV ? */
-	if (!lv_activation_filter(cmd, resource, &activate_lv))
+	if (!lv_activation_filter(cmd, resource, &activate_lv, NULL))
 		return EIO;
 
 	if (!activate_lv)
@@ -394,14 +394,14 @@ static int do_activate_lv(char *resource, unsigned char command, unsigned char l
 
 	if (lvi.suspended) {
 		critical_section_inc(cmd, "resuming");
-		if (!lv_resume(cmd, resource, 0)) {
+		if (!lv_resume(cmd, resource, 0, NULL)) {
 			critical_section_dec(cmd, "resumed");
 			goto error;
 		}
 	}
 
 	/* Now activate it */
-	if (!lv_activate(cmd, resource, exclusive))
+	if (!lv_activate(cmd, resource, exclusive, NULL))
 		goto error;
 
 	return 0;
@@ -427,7 +427,7 @@ static int do_resume_lv(char *resource, unsigned char command, unsigned char loc
 	exclusive = (oldmode == LCK_EXCL) ? 1 : 0;
 	revert = (lock_flags & LCK_REVERT_MODE) ? 1 : 0;
 
-	if (!lv_resume_if_active(cmd, resource, origin_only, exclusive, revert))
+	if (!lv_resume_if_active(cmd, resource, origin_only, exclusive, revert, NULL))
 		return EIO;
 
 	return 0;
@@ -450,7 +450,7 @@ static int do_suspend_lv(char *resource, unsigned char command, unsigned char lo
 	exclusive = (oldmode == LCK_EXCL) ? 1 : 0;
 
 	/* Always call lv_suspend to read commited and precommited data */
-	if (!lv_suspend_if_active(cmd, resource, origin_only, exclusive))
+	if (!lv_suspend_if_active(cmd, resource, origin_only, exclusive, NULL))
 		return EIO;
 
 	return 0;
@@ -468,7 +468,7 @@ static int do_deactivate_lv(char *resource, unsigned char command, unsigned char
 		return 0;	/* We don't need to do anything */
 	}
 
-	if (!lv_deactivate(cmd, resource))
+	if (!lv_deactivate(cmd, resource, NULL))
 		return EIO;
 
 	if (command & LCK_CLUSTER_VG) {

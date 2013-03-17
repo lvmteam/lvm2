@@ -75,14 +75,14 @@ void activation_release(void);
 void activation_exit(void);
 
 /* int lv_suspend(struct cmd_context *cmd, const char *lvid_s); */
-int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only, unsigned exclusive);
-int lv_resume(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only);
+int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only, unsigned exclusive, struct logical_volume *lv);
+int lv_resume(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only, struct logical_volume *lv);
 int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s,
-			unsigned origin_only, unsigned exclusive, unsigned revert);
-int lv_activate(struct cmd_context *cmd, const char *lvid_s, int exclusive);
+			unsigned origin_only, unsigned exclusive, unsigned revert, struct logical_volume *lv);
+int lv_activate(struct cmd_context *cmd, const char *lvid_s, int exclusive, struct logical_volume *lv);
 int lv_activate_with_filter(struct cmd_context *cmd, const char *lvid_s,
-			    int exclusive);
-int lv_deactivate(struct cmd_context *cmd, const char *lvid_s);
+			    int exclusive, struct logical_volume *lv);
+int lv_deactivate(struct cmd_context *cmd, const char *lvid_s, struct logical_volume *lv);
 
 int lv_mknodes(struct cmd_context *cmd, const struct logical_volume *lv);
 
@@ -101,7 +101,7 @@ int lv_check_not_in_use(struct cmd_context *cmd, struct logical_volume *lv,
  * Returns 1 if activate_lv has been set: 1 = activate; 0 = don't.
  */
 int lv_activation_filter(struct cmd_context *cmd, const char *lvid_s,
-			 int *activate_lv);
+			 int *activate_lv, struct logical_volume *lv);
 /*
  * Checks against the auto_activation_volume_list and
  * returns 1 if the LV should be activated, 0 otherwise.

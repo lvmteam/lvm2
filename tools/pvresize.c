@@ -38,7 +38,7 @@ static int _pv_resize_single(struct cmd_context *cmd,
 	int vg_needs_pv_write = 0;
 
 	if (is_orphan_vg(vg_name)) {
-		if (!lock_vol(cmd, vg_name, LCK_VG_WRITE)) {
+		if (!lock_vol(cmd, vg_name, LCK_VG_WRITE, NULL)) {
 			log_error("Can't get lock for orphans");
 			return 0;
 		}

@@ -73,7 +73,7 @@ int lvm_vg_extend(vg_t vg, const char *device)
 	if (!vg_check_write_mode(vg))
 		return -1;
 
-	if (!lock_vol(vg->cmd, VG_ORPHANS, LCK_VG_WRITE)) {
+	if (!lock_vol(vg->cmd, VG_ORPHANS, LCK_VG_WRITE, NULL)) {
 		log_error("Can't get lock for orphan PVs");
 		return -1;
 	}
@@ -131,7 +131,7 @@ int lvm_vg_write(vg_t vg)
 	}
 
 	if (! dm_list_empty(&vg->removed_pvs)) {
-		if (!lock_vol(vg->cmd, VG_ORPHANS, LCK_VG_WRITE)) {
+		if (!lock_vol(vg->cmd, VG_ORPHANS, LCK_VG_WRITE, NULL)) {
 			log_error("Can't get lock for orphan PVs");
 			return 0;
 		}

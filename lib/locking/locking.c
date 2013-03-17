@@ -352,7 +352,7 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname)
  * FIXME This should become VG uuid.
  */
 static int _lock_vol(struct cmd_context *cmd, const char *resource,
-		     uint32_t flags, lv_operation_t lv_op)
+		     uint32_t flags, lv_operation_t lv_op, struct logical_volume *lv)
 {
 	uint32_t lck_type = flags & LCK_TYPE_MASK;
 	uint32_t lck_scope = flags & LCK_SCOPE_MASK;
@@ -379,7 +379,7 @@ static int _lock_vol(struct cmd_context *cmd, const char *resource,
 		return 0;
 	}
 
-	if ((ret = _locking.lock_resource(cmd, resource, flags))) {
+	if ((ret = _locking.lock_resource(cmd, resource, flags, lv))) {
 		if (lck_scope == LCK_VG && !(flags & LCK_CACHE)) {
 			if (lck_type != LCK_UNLOCK)
 				lvmcache_lock_vgname(resource, lck_type == LCK_READ);
@@ -403,7 +403,7 @@ static int _lock_vol(struct cmd_context *cmd, const char *resource,
 	return ret;
 }
 
-int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags)
+int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags, struct logical_volume *lv)
 {
 	char resource[258] __attribute__((aligned(8)));
 	lv_operation_t lv_op;
@@ -457,7 +457,7 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags)
 	strncpy(resource, vol, sizeof(resource) - 1);
 	resource[sizeof(resource) - 1] = '\0';
 
-	if (!_lock_vol(cmd, resource, flags, lv_op))
+	if (!_lock_vol(cmd, resource, flags, lv_op, lv))
 		return_0;
 
 	/*
@@ -468,7 +468,7 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags)
 	    (flags & (LCK_CACHE | LCK_HOLD)))
 		return 1;
 
-	if (!_lock_vol(cmd, resource, (flags & ~LCK_TYPE_MASK) | LCK_UNLOCK, lv_op))
+	if (!_lock_vol(cmd, resource, (flags & ~LCK_TYPE_MASK) | LCK_UNLOCK, lv_op, lv))
 		return_0;
 
 	return 1;
@@ -626,12 +626,12 @@ int sync_local_dev_names(struct cmd_context* cmd)
 {
 	memlock_unlock(cmd);
 
-	return lock_vol(cmd, VG_SYNC_NAMES, LCK_VG_SYNC_LOCAL);
+	return lock_vol(cmd, VG_SYNC_NAMES, LCK_VG_SYNC_LOCAL, NULL);
 }
 
 int sync_dev_names(struct cmd_context* cmd)
 {
 	memlock_unlock(cmd);
 
-	return lock_vol(cmd, VG_SYNC_NAMES, LCK_VG_SYNC);
+	return lock_vol(cmd, VG_SYNC_NAMES, LCK_VG_SYNC, NULL);
 }

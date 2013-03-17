@@ -19,6 +19,8 @@
 #include "uuid.h"
 #include "config.h"
 
+struct logical_volume;
+
 int init_locking(int type, struct cmd_context *cmd, int suppress_messages);
 void fin_locking(void);
 void reset_locking(void);
@@ -46,7 +48,7 @@ int remote_lock_held(const char *vol, int *exclusive);
  *   Lock/unlock an individual logical volume
  *   char *vol holds lvid
  */
-int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags);
+int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags, struct logical_volume *lv);
 
 /*
  * Internal locking representation.
@@ -156,14 +158,14 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 
 #define lock_lv_vol(cmd, lv, flags)	\
 	(find_replicator_vgs((lv)) ? \
-		lock_vol(cmd, (lv)->lvid.s, flags | LCK_LV_CLUSTERED(lv)) : \
+		 lock_vol(cmd, (lv)->lvid.s, flags | LCK_LV_CLUSTERED(lv), lv) :	\
 		0)
 
 #define unlock_vg(cmd, vol)	\
 	do { \
 		if (is_real_vg(vol)) \
 			sync_dev_names(cmd); \
-		(void) lock_vol(cmd, vol, LCK_VG_UNLOCK); \
+		(void) lock_vol(cmd, vol, LCK_VG_UNLOCK, NULL);	\
 	} while (0)
 #define unlock_and_release_vg(cmd, vg, vol) \
 	do { \
@@ -192,13 +194,13 @@ int activate_lv_excl(struct cmd_context *cmd, struct logical_volume *lv);
 #define deactivate_lv_local(cmd, lv)	\
 	lock_lv_vol(cmd, lv, LCK_LV_DEACTIVATE | LCK_LOCAL)
 #define drop_cached_metadata(vg)	\
-	lock_vol((vg)->cmd, (vg)->name, LCK_VG_DROP_CACHE)
+	lock_vol((vg)->cmd, (vg)->name, LCK_VG_DROP_CACHE, NULL)
 #define remote_commit_cached_metadata(vg)	\
-	lock_vol((vg)->cmd, (vg)->name, LCK_VG_COMMIT)
+	lock_vol((vg)->cmd, (vg)->name, LCK_VG_COMMIT, NULL)
 #define remote_revert_cached_metadata(vg)	\
-	lock_vol((vg)->cmd, (vg)->name, LCK_VG_REVERT)
+	lock_vol((vg)->cmd, (vg)->name, LCK_VG_REVERT, NULL)
 #define remote_backup_metadata(vg)	\
-	lock_vol((vg)->cmd, (vg)->name, LCK_VG_BACKUP)
+	lock_vol((vg)->cmd, (vg)->name, LCK_VG_BACKUP, NULL)
 
 int sync_local_dev_names(struct cmd_context* cmd);
 int sync_dev_names(struct cmd_context* cmd);
