@@ -87,6 +87,7 @@ void release_vg(struct volume_group *vg)
 	    !lvmcache_vginfo_holders_dec_and_test_for_zero(vg->vginfo))
 		return;
 
+	release_vg(vg->vg_ondisk);
 	_free_vg(vg);
 }
 

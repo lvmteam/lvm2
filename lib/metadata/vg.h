@@ -48,6 +48,15 @@ struct volume_group {
 	uint32_t cmd_missing_vgs;/* Flag marks missing VG */
 	uint32_t seqno;		/* Metadata sequence number */
 
+	/*
+	 * The parsed on-disk copy of this VG; is NULL if this is the on-disk
+	 * version (i.e. vg_ondisk == NULL *implies* this is the on-disk copy,
+	 * there is no guarantee that if this VG is the same as the on-disk one
+	 * this will be NULL). The pointer is maintained by calls to
+	 * _vg_update_vg_ondisk.
+	 */
+	struct volume_group *vg_ondisk;
+
 	alloc_policy_t alloc;
 	uint64_t status;
 
