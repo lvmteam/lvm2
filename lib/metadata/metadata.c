@@ -4524,19 +4524,3 @@ char *tags_format_and_copy(struct dm_pool *mem, const struct dm_list *tags)
 	}
 	return dm_pool_end_object(mem);
 }
-
-/**
- * pv_by_path - Given a device path return a PV handle if it is a PV
- * @cmd - handle to the LVM command instance
- * @pv_name - device path to read for the PV
- *
- * Returns:
- *  NULL - device path does not contain a valid PV
- *  non-NULL - PV handle corresponding to device path
- *
- * FIXME: merge with find_pv_by_name ?
- */
-struct physical_volume *pv_by_path(struct cmd_context *cmd, const char *pv_name)
-{
-	return _pv_read(cmd, cmd->mem, pv_name, NULL, 1, 0);
-}

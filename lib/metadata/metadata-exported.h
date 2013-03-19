@@ -522,8 +522,7 @@ int remove_lvs_in_vg(struct cmd_context *cmd,
 
 /*
  * free_pv_fid() must be called on every struct physical_volume allocated
- * by pv_create, pv_read, find_pv_by_name or pv_by_path to free it when
- * no longer required.
+ * by pv_create, pv_read, find_pv_by_name or to free it when no longer required.
  */
 void free_pv_fid(struct physical_volume *pv);
 
