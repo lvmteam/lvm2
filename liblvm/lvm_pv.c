@@ -12,11 +12,14 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <stddef.h>
 #include "lib.h"
 #include "metadata.h"
 #include "lvm-string.h"
 #include "lvm_misc.h"
 #include "lvm2app.h"
+#include "locking.h"
+#include "toolcontext.h"
 
 const char *lvm_pv_get_uuid(const pv_t pv)
 {
@@ -58,6 +61,82 @@ struct lvm_property_value lvm_pvseg_get_property(const pvseg_t pvseg,
 						 const char *name)
 {
 	return get_property(NULL, NULL, NULL, NULL, pvseg, NULL, name);
+}
+
+
+#define address_of(p, t, m) ({                  \
+	const typeof( ((t *)0)->m ) *__mptr = (p);    \
+	(t *)( (char *)__mptr - offsetof(t,m) );})
+
+struct lvm_list_wrapper
+{
+	unsigned long magic;
+	struct dm_list pvslist;
+	struct dm_list vgslist;
+};
+
+
+struct dm_list *lvm_list_pvs(lvm_t libh)
+{
+	struct lvm_list_wrapper *rc = NULL;
+	struct cmd_context *cmd = (struct cmd_context *)libh;
+
+
+	rc = dm_pool_zalloc(cmd->mem, sizeof(*rc));
+	if (!rc) {
+		log_errno(ENOMEM, "Memory allocation fail for pv list.");
+		return NULL;
+	}
+
+	if (!lock_vol(cmd, VG_GLOBAL, LCK_VG_WRITE, NULL)) {
+		log_errno(ENOLCK, "Unable to obtain global lock.");
+	} else {
+		dm_list_init(&rc->pvslist);
+		dm_list_init(&rc->vgslist);
+		if( !get_pvs_perserve_vg(cmd, &rc->pvslist, &rc->vgslist) ) {
+			dm_pool_free(cmd->mem, rc);
+			return NULL;
+		}
+		rc->magic = 0xF005BA11;
+	}
+
+	return &rc->pvslist;
+}
+
+int lvm_list_pvs_free(struct dm_list *pvlist)
+{
+	int rc = 0;
+	struct lvm_list_wrapper *to_delete = NULL;
+	struct vg_list *vgl = NULL;
+	struct vg_list *tmp_vgl = NULL;
+	struct pv_list *pvl = NULL;
+	struct pv_list *tmp_pvl = NULL;
+	struct cmd_context *cmd = NULL;
+
+	if (pvlist ) {
+		to_delete = address_of(pvlist, struct lvm_list_wrapper, pvslist);
+		if (to_delete->magic == 0xF005BA11) {
+
+			dm_list_iterate_items(vgl, &to_delete->vgslist) {
+				cmd = vgl->vg->cmd;
+				release_vg(vgl->vg);
+			}
+
+			dm_list_iterate_items(pvl, &to_delete->pvslist) {
+				free_pv_fid(pvl->pv);
+			}
+
+			unlock_vg(cmd, VG_GLOBAL);
+		} else {
+			log_errno(EINVAL, "Not a correct pvlist structure");
+			rc = -1;
+		}
+
+		to_delete->magic = 0xA5A5A5A5;
+		dm_pool_free(cmd->mem, to_delete);
+
+	}
+	return rc;
 }
 
 struct dm_list *lvm_pv_list_pvsegs(pv_t pv)

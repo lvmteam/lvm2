@@ -403,6 +403,11 @@ struct lv_list {
 	struct logical_volume *lv;
 };
 
+struct vg_list {
+	struct dm_list list;
+	struct volume_group *vg;
+};
+
 #define PV_PE_START_CALC ((uint64_t) -1) /* Calculate pe_start value */
 
 struct pvcreate_restorable_params {
@@ -493,7 +498,12 @@ struct volume_group *vg_read_internal(struct cmd_context *cmd, const char *vg_na
 struct physical_volume *pv_read(struct cmd_context *cmd, const char *pv_name,
 				int warnings,
 				int scan_label_only);
-struct dm_list *get_pvs(struct cmd_context *cmd);
+
+#define get_pvs( cmd ) get_pvs_internal((cmd), NULL, NULL)
+#define get_pvs_perserve_vg( cmd, pv_list, vg_list ) get_pvs_internal((cmd), (pv_list), (vg_list))
+
+struct dm_list *get_pvs_internal(struct cmd_context *cmd,
+		struct dm_list *pvslist, struct dm_list *vgslist);
 
 /*
  * Add/remove LV to/from volume group

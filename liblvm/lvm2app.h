@@ -543,6 +543,34 @@ vg_t lvm_vg_create(lvm_t libh, const char *vg_name);
 struct dm_list *lvm_vg_list_lvs(vg_t vg);
 
 /**
+ * Return a list of PV handles for all.
+ *
+ * \memberof lvm_t
+ *
+ * \param   libh
+ * Library handle retrieved from lvm_init
+ *
+ * \return
+ * A list of lvm_pv_list structures containing pv handles for all physical
+ * volumes. If no PVs exist or a global lock was unable to be obtained a
+ * NULL is returned.
+ */
+struct dm_list *lvm_list_pvs(lvm_t libh);
+
+/**
+ * Free the resources used by acquiring the pvlist.  This should be called as
+ * soon as possible after processing the needed information from the pv list as
+ * a global locks are held.
+ *
+ * \param	pvlist
+ * PV list to be freed
+ *
+ * \return
+ * 0 on success, else -1 with library errno and text set.
+ */
+int lvm_list_pvs_free(struct dm_list *pvlist);
+
+/**
  * Return a list of PV handles for a given VG handle.
  *
  * \memberof vg_t

@@ -3692,7 +3692,8 @@ struct dm_list *get_vgids(struct cmd_context *cmd, int include_internal)
 	return lvmcache_get_vgids(cmd, include_internal);
 }
 
-static int _get_pvs(struct cmd_context *cmd, int warnings, struct dm_list **pvslist)
+static int _get_pvs(struct cmd_context *cmd, int warnings,
+		struct dm_list *pvslist, struct dm_list *vgslist)
 {
 	struct str_list *strl;
 	struct dm_list * uninitialized_var(results);
@@ -3702,17 +3703,10 @@ static int _get_pvs(struct cmd_context *cmd, int warnings, struct dm_list **pvsl
 	struct volume_group *vg;
 	int consistent = 0;
 	int old_pvmove;
+	struct vg_list *vgl_item = NULL;
+	int have_pv = 0;
 
 	lvmcache_label_scan(cmd, 0);
-
-	if (pvslist) {
-		if (!(results = dm_pool_alloc(cmd->mem, sizeof(*results)))) {
-			log_error("PV list allocation failed");
-			return 0;
-		}
-
-		dm_list_init(results);
-	}
 
 	/* Get list of VGs */
 	if (!(vgids = get_vgids(cmd, 1))) {
@@ -3733,7 +3727,15 @@ static int _get_pvs(struct cmd_context *cmd, int warnings, struct dm_list **pvsl
 			stack;
 			continue;
 		}
-		if (!(vg = vg_read_internal(cmd, vgname, vgid, warnings, &consistent))) {
+
+		/* When we are retrieving a list to return toliblvm we need
+		 * that list to contain VGs that are modifiable as we are using
+		 * the vgmem pool in the vg to provide allocation for liblvm.
+		 * This is a hack to prevent the vg from getting cached as the
+		 * vgid will be NULL.  There is most definitely a better way
+		 * to do this.
+		 */
+		if (!(vg = vg_read_internal(cmd, vgname, (!vgslist) ? vgid : NULL, warnings, &consistent))) {
 			stack;
 			continue;
 		}
@@ -3749,33 +3751,78 @@ static int _get_pvs(struct cmd_context *cmd, int warnings, struct dm_list **pvsl
 					release_vg(vg);
 					return 0;
 				}
-				dm_list_add(results, &pvl_copy->list);
+				/* If we are going to release the vg, don't store a pointer to
+				 * it in the pv structure.
+				 */
+				if (!vgslist) {
+					pvl_copy->pv->vg = NULL;
+				}
+				have_pv = 1;
+				dm_list_add(pvslist, &pvl_copy->list);
 			}
-		release_vg(vg);
+
+		/* In the case of the library we want to preserve the embedded volume
+		 * group as subsequent calls to retrieve data about the pv require it.
+		 */
+		if (!vgslist || have_pv == 0) {
+			release_vg(vg);
+		} else {
+			/* Add vg to list of vg objects that will be returned
+			 */
+			vgl_item = dm_pool_alloc(cmd->mem, sizeof(*vgl_item));
+			if (!vgl_item) {
+				log_error("VG list element allocation failed");
+				return 0;
+			}
+			vgl_item->vg = vg;
+			vg = NULL;
+			dm_list_add(vgslist, &vgl_item->list);
+		}
+		have_pv = 0;
 	}
 	init_pvmove(old_pvmove);
 
-	if (pvslist)
-		*pvslist = results;
-	else
+	if (!pvslist) {
 		dm_pool_free(cmd->mem, vgids);
-
+	}
 	return 1;
 }
 
-struct dm_list *get_pvs(struct cmd_context *cmd)
+/* Retrieve a list of all physical volumes.
+ * @param 	cmd			Command context
+ * @param	pvslist		Set to NULL if you want memory for list created,
+ * 						else valid memory
+ * @param	vgslist		Set to NULL if you need the pv structures to contain
+ * 						valid vg pointer.  This is the list of VGs
+ * @returns NULL on errors, else pvslist which will equal passes in value if
+ * 	supplied.
+ */
+struct dm_list *get_pvs_internal(struct cmd_context *cmd,
+					struct dm_list *pvslist, struct dm_list *vgslist)
 {
-	struct dm_list *results;
+	struct dm_list *results = pvslist;
 
-	if (!_get_pvs(cmd, 1, &results))
+	if (NULL == results) {
+		if (!(results = dm_pool_alloc(cmd->mem, sizeof(*results)))) {
+			log_error("PV list allocation failed");
+			return 0;
+		}
+
+		dm_list_init(results);
+	}
+
+	if (!_get_pvs(cmd, 1, results, vgslist)) {
+		if (NULL == pvslist) {
+			dm_pool_free(cmd->mem, results);
+		}
 		return NULL;
-
+	}
 	return results;
 }
 
 int scan_vgs_for_pvs(struct cmd_context *cmd, int warnings)
 {
-	return _get_pvs(cmd, warnings, NULL);
+	return _get_pvs(cmd, warnings, NULL, NULL);
 }
 
 int pv_write(struct cmd_context *cmd __attribute__((unused)),
