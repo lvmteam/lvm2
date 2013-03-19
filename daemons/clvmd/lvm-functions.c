@@ -450,7 +450,7 @@ static int do_suspend_lv(char *resource, unsigned char command, unsigned char lo
 	exclusive = (oldmode == LCK_EXCL) ? 1 : 0;
 
 	/* Always call lv_suspend to read commited and precommited data */
-	if (!lv_suspend_if_active(cmd, resource, origin_only, exclusive, NULL))
+	if (!lv_suspend_if_active(cmd, resource, origin_only, exclusive, NULL, NULL))
 		return EIO;
 
 	return 0;
