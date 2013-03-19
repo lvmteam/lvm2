@@ -629,7 +629,7 @@ static int vg_extend_single_pv(struct volume_group *vg, char *pv_name,
 {
 	struct physical_volume *pv;
 
-	if (!(pv = pv_by_path(vg->fid->fmt->cmd, pv_name)))
+	if (!(pv = find_pv_by_name(vg->cmd, pv_name, 1)))
 		stack;
 	if (!pv && !pp) {
 		log_error("%s not identified as an existing "
