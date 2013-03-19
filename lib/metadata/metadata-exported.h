@@ -690,7 +690,8 @@ struct lv_list *find_lv_in_vg(const struct volume_group *vg,
 struct logical_volume *find_lv(const struct volume_group *vg,
 			       const char *lv_name);
 struct physical_volume *find_pv_by_name(struct cmd_context *cmd,
-					const char *pv_name);
+					const char *pv_name,
+					int allow_orphan);
 
 const char *find_vgname_from_pvname(struct cmd_context *cmd,
 				    const char *pvname);

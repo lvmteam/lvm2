@@ -1802,7 +1802,8 @@ struct physical_volume *find_pv(struct volume_group *vg, struct device *dev)
 
 /* FIXME: liblvm todo - make into function that returns handle */
 struct physical_volume *find_pv_by_name(struct cmd_context *cmd,
-					const char *pv_name)
+					const char *pv_name,
+					int allow_orphan)
 {
 	struct physical_volume *pv;
 
@@ -1822,7 +1823,7 @@ struct physical_volume *find_pv_by_name(struct cmd_context *cmd,
 		}
 	}
 
-	if (is_orphan_vg(pv->vg_name)) {
+	if (!allow_orphan && is_orphan_vg(pv->vg_name)) {
 		log_error("Physical volume %s not in a volume group", pv_name);
 		goto bad;
 	}
