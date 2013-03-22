@@ -73,6 +73,11 @@ unsigned grouped_arg_is_set(const struct arg_values *av, int a)
 	return grouped_arg_count(av, a) ? 1 : 0;
 }
 
+const char *arg_long_option_name(int a)
+{
+	return _cmdline.arg_props[a].long_arg;
+}
+
 const char *arg_value(struct cmd_context *cmd, int a)
 {
 	return cmd->arg_values[a].value;
