@@ -1527,14 +1527,13 @@ struct physical_volume * pvcreate_single(struct cmd_context *cmd,
 	log_verbose("Set up physical volume for \"%s\" with %" PRIu64
 		    " available sectors", pv_name, pv_size(pv));
 
+	pv->status |= UNLABELLED_PV;
 	if (write_now) {
 		struct pv_to_create pvc;
 		pvc.pp = pp;
 		pvc.pv = pv;
 		if (!_pvcreate_write(cmd, &pvc))
 			goto bad;
-	} else {
-		pv->status |= UNLABELLED_PV;
 	}
 
 	return pv;
@@ -2572,7 +2571,6 @@ int vg_write(struct volume_group *vg)
         dm_list_iterate_items(pv_to_create, &vg->pvs_to_create) {
 		if (!_pvcreate_write(vg->cmd, pv_to_create))
 			return 0;
-		pv_to_create->pv->status &= ~UNLABELLED_PV;
         }
 
 	/* Write to each copy of the metadata area */
@@ -3778,6 +3776,8 @@ int pv_write(struct cmd_context *cmd __attribute__((unused)),
 
 	if (!pv->fmt->ops->pv_write(pv->fmt, pv))
 		return_0;
+
+	pv->status &= ~UNLABELLED_PV;
 
 	if (!lvmetad_pv_found(&pv->id, pv->dev, pv->fmt, pv->label_sector,
 			      NULL, NULL))
