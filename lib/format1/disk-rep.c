@@ -674,7 +674,7 @@ static int _write_pvd(struct disk_list *data)
  * assumes the device has been opened.
  */
 static int __write_all_pvd(const struct format_type *fmt __attribute__((unused)),
-			   struct disk_list *data)
+			   struct disk_list *data, int write_vg_metadata)
 {
 	const char *pv_name = dev_name(data->dev);
 
@@ -685,9 +685,9 @@ static int __write_all_pvd(const struct format_type *fmt __attribute__((unused))
 
 	/* vgcache_add(data->pvd.vg_name, data->vgd.vg_uuid, data->dev, fmt); */
 	/*
-	 * Stop here for orphan pv's.
+	 * Stop here for orphan PVs or if VG metadata write not requested.
 	 */
-	if (data->pvd.vg_name[0] == '\0') {
+	if ((data->pvd.vg_name[0] == '\0') || !write_vg_metadata) {
 		/* if (!test_mode())
 		   vgcache_add(data->pvd.vg_name, NULL, data->dev, fmt); */
 		return 1;
@@ -723,14 +723,14 @@ static int __write_all_pvd(const struct format_type *fmt __attribute__((unused))
 /*
  * opens the device and hands to the above fn.
  */
-static int _write_all_pvd(const struct format_type *fmt, struct disk_list *data)
+static int _write_all_pvd(const struct format_type *fmt, struct disk_list *data, int write_vg_metadata)
 {
 	int r;
 
 	if (!dev_open(data->dev))
 		return_0;
 
-	r = __write_all_pvd(fmt, data);
+	r = __write_all_pvd(fmt, data, write_vg_metadata);
 
 	if (!dev_close(data->dev))
 		stack;
@@ -743,12 +743,12 @@ static int _write_all_pvd(const struct format_type *fmt, struct disk_list *data)
  * little sanity checking, so make sure correct
  * data is passed to here.
  */
-int write_disks(const struct format_type *fmt, struct dm_list *pvs)
+int write_disks(const struct format_type *fmt, struct dm_list *pvs, int write_vg_metadata)
 {
 	struct disk_list *dl;
 
 	dm_list_iterate_items(dl, pvs) {
-		if (!(_write_all_pvd(fmt, dl)))
+		if (!(_write_all_pvd(fmt, dl, write_vg_metadata)))
 			return_0;
 
 		log_very_verbose("Successfully wrote data to %s",

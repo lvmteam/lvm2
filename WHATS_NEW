@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Clean up format1 PV write to remove a need for an orphan VG for it to pass.
   Fix vgextend to not allow a PV with 0 MDAs to be used while already in a VG.
   Move update_pool_params() from /tools to /lib for better reuse.
   Give precedence to EMC power2 devices with duplicate PVIDs.

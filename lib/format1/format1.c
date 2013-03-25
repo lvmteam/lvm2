@@ -299,7 +299,7 @@ static int _format1_vg_write(struct format_instance *fid, struct volume_group *v
 
 	r = (_flatten_vg(fid, mem, vg, &pvds, fid->fmt->cmd->dev_dir,
 			 fid->fmt->cmd->filter) &&
-	     write_disks(fid->fmt, &pvds));
+	     write_disks(fid->fmt, &pvds, 1));
 
 	lvmcache_update_vg(vg, 0);
 	dm_pool_destroy(mem);
@@ -458,7 +458,7 @@ static int _format1_pv_write(const struct format_type *fmt, struct physical_volu
 	dl->pvd.pe_on_disk.base = LVM1_PE_ALIGN << SECTOR_SHIFT;
 
 	dm_list_add(&pvs, &dl->list);
-	if (!write_disks(fmt, &pvs))
+	if (!write_disks(fmt, &pvs, 0))
 		goto_bad;
 
 	goto out;
