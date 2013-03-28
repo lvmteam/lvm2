@@ -346,11 +346,12 @@ void print_log(int level, const char *file, int line, int dm_errno_or_class,
 		va_end(ap);
 	}
 
-	if (level > debug_level())
+	if ((level > debug_level()) ||
+	    (level >= _LOG_DEBUG && !debug_class_is_logged(dm_errno_or_class))) {
+		if (fatal_internal_error)
+			abort();
 		return;
-
-	if (level >= _LOG_DEBUG && !debug_class_is_logged(dm_errno_or_class))
-		return;
+	}
 
 	if (_log_to_file && (_log_while_suspended || !critical_section())) {
 		fprintf(_log_file, "%s:%d %s%s", file, line, log_command_name(),
