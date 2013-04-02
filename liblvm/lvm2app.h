@@ -553,14 +553,15 @@ struct dm_list *lvm_vg_list_lvs(vg_t vg);
  * \return
  * A list of lvm_pv_list structures containing pv handles for all physical
  * volumes. If no PVs exist or a global lock was unable to be obtained a
- * NULL is returned.
+ * NULL is returned.  Do not attempt to remove one of the PVs until after the
+ * call to lvm_list_pvs_free has been made.
  */
 struct dm_list *lvm_list_pvs(lvm_t libh);
 
 /**
  * Free the resources used by acquiring the pvlist.  This should be called as
  * soon as possible after processing the needed information from the pv list as
- * a global locks are held.
+ * a global lock is held.
  *
  * \param	pvlist
  * PV list to be freed
@@ -569,6 +570,17 @@ struct dm_list *lvm_list_pvs(lvm_t libh);
  * 0 on success, else -1 with library errno and text set.
  */
 int lvm_list_pvs_free(struct dm_list *pvlist);
+
+/**
+ *  Remove a physical volume.
+ *  Note: You cannot remove a PV while iterating through the list of PVs as
+ *  locks are held for the PV list.
+ *  \param	libh	Library handle
+ *  \param	pv_name	The physical volume name
+ *  \return
+ *  0 on success, else -1 with library errno and text set.
+ */
+int lvm_pv_remove(lvm_t libh, const char *pv_name);
 
 /**
  * Return a list of PV handles for a given VG handle.

@@ -341,6 +341,10 @@ int vg_validate(struct volume_group *vg);
 
 int pv_write_orphan(struct cmd_context *cmd, struct physical_volume *pv);
 
+int pvremove_single(struct cmd_context *cmd, const char *pv_name,
+			   void *handle __attribute__((unused)), unsigned force_count,
+			   unsigned prompt);
+
 /* Manipulate PV structures */
 int pv_add(struct volume_group *vg, struct physical_volume *pv);
 int pv_remove(struct volume_group *vg, struct physical_volume *pv);

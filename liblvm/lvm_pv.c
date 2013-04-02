@@ -75,6 +75,14 @@ struct lvm_list_wrapper
 	struct dm_list vgslist;
 };
 
+int lvm_pv_remove(lvm_t libh, const char *pv_name)
+{
+	struct cmd_context *cmd = (struct cmd_context *)libh;
+	if ( 1 != pvremove_single(cmd, pv_name, NULL, 0, 0)) {
+		return -1;
+	}
+	return 0;
+}
 
 struct dm_list *lvm_list_pvs(lvm_t libh)
 {
