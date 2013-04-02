@@ -244,6 +244,25 @@ liblvm_lvm_list_pvs(void)
 }
 
 static PyObject *
+liblvm_lvm_pv_remove(PyObject *self, PyObject *arg)
+{
+	const char *pv_name;
+	LVM_VALID();
+
+	if (!PyArg_ParseTuple(arg, "s", &pv_name))
+			return NULL;
+
+	int rc = lvm_pv_remove(libh, pv_name);
+	if (0 != rc) {
+		PyErr_SetObject(LibLVMError, liblvm_get_last_error());
+		return NULL;
+	}
+
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+static PyObject *
 liblvm_lvm_percent_to_float(PyObject *self, PyObject *arg)
 {
 	double converted;
@@ -1664,6 +1683,7 @@ static PyMethodDef Liblvm_methods[] = {
 	{ "listVgNames",	(PyCFunction)liblvm_lvm_list_vg_names, METH_NOARGS },
 	{ "listVgUuids",	(PyCFunction)liblvm_lvm_list_vg_uuids, METH_NOARGS },
 	{ "listPvs",		(PyCFunction)liblvm_lvm_list_pvs, METH_NOARGS },
+	{ "pvRemove",		(PyCFunction)liblvm_lvm_pv_remove, METH_VARARGS },
 	{ "percentToFloat",	(PyCFunction)liblvm_lvm_percent_to_float, METH_VARARGS },
 	{ "vgNameFromPvid",	(PyCFunction)liblvm_lvm_vgname_from_pvid, METH_VARARGS },
 	{ "vgNameFromDevice",	(PyCFunction)liblvm_lvm_vgname_from_device, METH_VARARGS },
