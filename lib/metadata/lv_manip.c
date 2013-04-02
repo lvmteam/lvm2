@@ -324,10 +324,14 @@ struct lv_segment *alloc_lv_segment(const struct segment_type *segtype,
 			/* Use the same external origin */
 			if (!attach_thin_external_origin(seg, first_seg(thin_pool_lv)->external_lv))
 				return_NULL;
-		} else {
+		} else if (lv_is_thin_pool(thin_pool_lv)) {
 			seg->transaction_id = first_seg(thin_pool_lv)->transaction_id;
 			if (!attach_pool_lv(seg, thin_pool_lv, NULL))
 				return_NULL;
+		} else {
+			log_error(INTERNAL_ERROR "Volume %s is not thin volume or thin pool",
+				  thin_pool_lv->name);
+			return NULL;
 		}
 	}
 
@@ -4302,6 +4306,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 	struct logical_volume *pool_lv;
 	struct lv_list *lvl;
 	int origin_active = 0;
+	const char *thin_name = NULL;
 
 	if (new_lv_name && find_lv_in_vg(vg, new_lv_name)) {
 		log_error("Logical volume \"%s\" already exists in "
@@ -4364,7 +4369,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 
 	status |= lp->permission | VISIBLE_LV;
 
-	if (lp->snapshot && lp->thin) {
+	if (seg_is_thin(lp) && lp->snapshot) {
 		if (!(org = find_lv(vg, lp->origin))) {
 			log_error("Couldn't find origin volume '%s'.",
 				  lp->origin);
@@ -4454,7 +4459,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 		return NULL;
 	}
 
-	if (lp->snapshot && !lp->thin && ((uint64_t)lp->extents * vg->extent_size < 2 * lp->chunk_size)) {
+	if (lp->snapshot && !seg_is_thin(lp) && ((uint64_t)lp->extents * vg->extent_size < 2 * lp->chunk_size)) {
 		log_error("Unable to create a snapshot smaller than 2 chunks.");
 		return NULL;
 	}
@@ -4493,7 +4498,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 	}
 
 	/* The snapshot segment gets created later */
-	if (lp->snapshot && !lp->thin &&
+	if (lp->snapshot && !seg_is_thin(lp) &&
 	    !(lp->segtype = get_segtype_from_string(cmd, "striped")))
 		return_NULL;
 
@@ -4571,12 +4576,21 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 
 	dm_list_splice(&lv->tags, &lp->tags);
 
+	if (seg_is_thin_volume(lp)) {
+		/* For thin snapshot we must have matching pool */
+		if (org && lv_is_thin_volume(org) && (!lp->pool ||
+		    (strcmp(first_seg(org)->pool_lv->name, lp->pool) == 0)))
+			thin_name = org->name;
+		else
+			thin_name = lp->pool;
+	}
+
 	if (!lv_extend(lv, lp->segtype,
 		       lp->stripes, lp->stripe_size,
 		       lp->mirrors,
 		       seg_is_thin_pool(lp) ? lp->poolmetadataextents : lp->region_size,
 		       seg_is_thin_volume(lp) ? lp->voriginextents : lp->extents,
-		       seg_is_thin_volume(lp) ? (org ? org->name : lp->pool) : NULL, lp->pvh, lp->alloc))
+		       thin_name, lp->pvh, lp->alloc))
 		return_NULL;
 
 	if (seg_is_thin_pool(lp)) {
@@ -4587,11 +4601,28 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 		first_seg(lv)->low_water_mark = 0;
 	} else if (seg_is_thin_volume(lp)) {
 		pool_lv = first_seg(lv)->pool_lv;
-
 		if (!(first_seg(lv)->device_id =
 		      get_free_pool_device_id(first_seg(pool_lv)))) {
 			stack;
 			goto revert_new_lv;
+		}
+		/*
+		 * Check if using 'external origin' or the 'normal' snapshot
+		 * within the same thin pool
+		 */
+		if (lp->snapshot && (first_seg(org)->pool_lv != pool_lv)) {
+			if (org->status & LVM_WRITE) {
+				log_error("Cannot use writable LV as the external origin.");
+				return 0; // TODO conversion for inactive
+			}
+			if (lv_is_active(org) && !lv_is_external_origin(org)) {
+				log_error("Cannot use active LV for the external origin.");
+				return 0; // We can't be sure device it is read-only
+			}
+			if (!attach_thin_external_origin(first_seg(lv), org)) {
+				stack;
+				goto revert_new_lv;
+			}
 		}
 
 		if (!attach_pool_message(first_seg(pool_lv),
@@ -4634,7 +4665,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 
 	if (seg_is_thin(lp)) {
 		/* For snapshot, suspend active thin origin first */
-		if (org && lv_is_active(org)) {
+		if (org && lv_is_active(org) && lv_is_thin_volume(org)) {
 			if (!pool_below_threshold(first_seg(first_seg(org)->pool_lv))) {
 				log_error("Cannot create thin snapshot. Pool %s/%s is filled "
 					  "over the autoextend threshold.",
@@ -4699,7 +4730,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 		goto deactivate_and_revert_new_lv;
 	}
 
-	if (lp->snapshot && !lp->thin) {
+	if (lp->snapshot && !seg_is_thin(lp)) {
 		/* Reset permission after zeroing */
 		if (!(lp->permission & LVM_WRITE))
 			lv->status &= ~LVM_WRITE;
@@ -4788,7 +4819,7 @@ struct logical_volume *lv_create_single(struct volume_group *vg,
 		if (!(lv = _lv_create_an_lv(vg, lp, lp->pool)))
 			return_0;
 
-		if (!lp->thin)
+		if (!lp->thin && !lp->snapshot)
 			goto out;
 
 		lp->pool = lv->name;

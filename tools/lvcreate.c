@@ -207,12 +207,17 @@ static int _determine_snapshot_type(struct volume_group *vg,
 	}
 
 	if (!arg_count(vg->cmd, extents_ARG) && !arg_count(vg->cmd, size_ARG)) {
+		if (seg_is_thin(lp)) {
+			if (!(lp->segtype = get_segtype_from_string(vg->cmd, "thin")))
+				return_0;
+			return 1;
+		}
+
 		if (!lv_is_thin_volume(lvl->lv)) {
 			log_error("Please specify either size or extents with snapshots.");
 			return 0;
 		}
 
-		lp->thin = 1;
 		if (!(lp->segtype = get_segtype_from_string(vg->cmd, "thin")))
 			return_0;
 
@@ -355,7 +360,7 @@ static int _read_size_params(struct lvcreate_params *lp,
 	}
 
 	/* If size/extents given with thin, then we are creating a thin pool */
-	if (lp->thin && (arg_count(cmd, size_ARG) || arg_count(cmd, extents_ARG)))
+	if (seg_is_thin(lp) && (arg_count(cmd, size_ARG) || arg_count(cmd, extents_ARG)))
 		lp->create_thin_pool = 1;
 
 	if (arg_count(cmd, poolmetadatasize_ARG) && !seg_is_thin(lp)) {
@@ -380,8 +385,9 @@ static int _read_size_params(struct lvcreate_params *lp,
 			return 0;
 		}
 	} else {
-		/* No virtual size given, so no thin LV to create. */
-		if (seg_is_thin_volume(lp) && !(lp->segtype = get_segtype_from_string(cmd, "thin-pool")))
+		/* No virtual size given and no snapshot, so no thin LV to create. */
+		if (seg_is_thin_volume(lp) && !lp->snapshot &&
+		    !(lp->segtype = get_segtype_from_string(cmd, "thin-pool")))
 			return_0;
 
 		lp->thin = 0;
@@ -651,6 +657,7 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 	struct arg_value_group_list *current_group;
 	const char *segtype_str;
 	const char *tag;
+	unsigned i;
 
 	memset(lp, 0, sizeof(*lp));
 	memset(lcp, 0, sizeof(*lcp));
@@ -660,7 +667,6 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 	/*
 	 * Check selected options are compatible and determine segtype
 	 */
-// FIXME -m0 implies *striped*
 	if ((arg_count(cmd, thin_ARG) || arg_count(cmd, thinpool_ARG)) &&
 	    arg_count(cmd,mirrors_ARG)) {
 		log_error("--thin,--thinpool  and --mirrors are incompatible.");
@@ -689,6 +695,12 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 
 	if (seg_unknown(lp)) {
 		log_error("Unable to create LV with unknown segment type %s.", segtype_str);
+		return 0;
+	}
+
+	if ((arg_count(cmd, snapshot_ARG) || seg_is_snapshot(lp)) &&
+	     arg_count(cmd, thin_ARG)) {
+		log_error("--thin and --snapshot are incompatible.");
 		return 0;
 	}
 
@@ -802,37 +814,43 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 	    !_read_raid_params(lp, cmd))
 		return_0;
 
-	if (!lp->create_thin_pool && arg_count(cmd, discards_ARG)) {
-		log_error("--discards is only available for thin pool creation.");
-		return 0;
-	}
+	if (!lp->create_thin_pool) {
+		if (seg_is_thin(lp)) {
+			static const int _argname[] = {
+				chunksize_ARG, discards_ARG, poolmetadatasize_ARG, zero_ARG
+			};
+			for (i = 0; i < sizeof(_argname)/sizeof(_argname[0]); ++i) {
+				if (arg_count(cmd, _argname[i])) {
+					log_error("%s is only available for thin pool creation.",
+						  arg_long_option_name(_argname[i]));
+					return 0;
+				}
+			}
+		} else if (lp->snapshot) {
+			if (arg_count(cmd, zero_ARG)) {
+				log_error("-Z is incompatible with snapshots.");
+				return 0;
+			}
+			if (arg_sign_value(cmd, chunksize_ARG, SIGN_NONE) == SIGN_MINUS) {
+				log_error("Negative chunk size is invalid.");
+				return 0;
+			}
+			lp->chunk_size = arg_uint_value(cmd, chunksize_ARG, 8);
+			if (lp->chunk_size < 8 || lp->chunk_size > 1024 ||
+			    (lp->chunk_size & (lp->chunk_size - 1))) {
+				log_error("Chunk size must be a power of 2 in the "
+					  "range 4K to 512K.");
+				return 0;
+			}
+			log_verbose("Setting chunksize to %s.", display_size(cmd, lp->chunk_size));
 
-	if (lp->snapshot && lp->thin && arg_count(cmd, chunksize_ARG))
-		log_warn("WARNING: Ignoring --chunksize with thin snapshots.");
-	else if (lp->thin && !lp->create_thin_pool) {
-		if (arg_count(cmd, chunksize_ARG))
-			log_warn("WARNING: Ignoring --chunksize when using an existing pool.");
-	} else if (lp->snapshot) {
-		if (arg_sign_value(cmd, chunksize_ARG, SIGN_NONE) == SIGN_MINUS) {
-			log_error("Negative chunk size is invalid");
+			if (!(lp->segtype = get_segtype_from_string(cmd, "snapshot")))
+				return_0;
+		} else if (arg_count(cmd, chunksize_ARG)) {
+			log_error("--chunksize is only available with snapshots and thin pools.");
 			return 0;
 		}
-		lp->chunk_size = arg_uint_value(cmd, chunksize_ARG, 8);
-		if (lp->chunk_size < 8 || lp->chunk_size > 1024 ||
-		    (lp->chunk_size & (lp->chunk_size - 1))) {
-			log_error("Chunk size must be a power of 2 in the "
-				  "range 4K to 512K");
-			return 0;
-		}
-		log_verbose("Setting chunksize to %s.", display_size(cmd, lp->chunk_size));
-
-		if (!lp->thin && lp->snapshot && !(lp->segtype = get_segtype_from_string(cmd, "snapshot")))
-			return_0;
-	} else if (arg_count(cmd, chunksize_ARG) && !lp->create_thin_pool) {
-		log_error("-c is only available with snapshots and thin pools");
-		return 0;
 	}
-
 	if (lp->mirrors > DEFAULT_MIRROR_MAX_IMAGES) {
 		log_error("Only up to %d images in mirror supported currently.",
 			  DEFAULT_MIRROR_MAX_IMAGES);
@@ -879,8 +897,13 @@ static int _check_thin_parameters(struct volume_group *vg, struct lvcreate_param
 {
 	struct lv_list *lvl;
 
-	if (!lp->thin && !lp->create_thin_pool) {
+	if (!lp->thin && !lp->create_thin_pool && !lp->snapshot) {
 		log_error("Please specify device size(s).");
+		return 0;
+	}
+
+	if (lp->thin && lp->snapshot) {
+		log_error("Please either creater snapshot or thin volume.");
 		return 0;
 	}
 
@@ -945,12 +968,11 @@ static int _check_thin_parameters(struct volume_group *vg, struct lvcreate_param
 		return 0;
 	}
 
-	if (!lp->thin && lp->lv_name) {
-		log_error("--name may only be given when creating a new thin Logical volume or snapshot.");
-		return 0;
-	}
-
-	if (!lp->thin) {
+	if (!lp->thin && !lp->snapshot) {
+		if (lp->lv_name) {
+			log_error("--name may only be given when creating a new thin Logical volume or snapshot.");
+			return 0;
+		}
 		if (arg_count(vg->cmd, readahead_ARG)) {
 			log_error("--readhead may only be given when creating a new thin Logical volume or snapshot.");
 			return 0;
@@ -994,12 +1016,7 @@ static int _validate_internal_thin_processing(const struct lvcreate_params *lp)
 		r = 0;
 	}
 
-	if (lp->snapshot && (lp->create_thin_pool || !lp->thin)) {
-		log_error(INTERNAL_ERROR "Inconsistent thin and snapshot parameters identified.");
-		r = 0;
-	}
-
-	if (!lp->thin && !lp->create_thin_pool) {
+	if (!lp->thin && !lp->create_thin_pool && !lp->snapshot) {
 		log_error(INTERNAL_ERROR "Failed to identify what type of thin target to use.");
 		r = 0;
 	}
