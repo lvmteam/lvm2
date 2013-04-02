@@ -2877,11 +2877,14 @@ int dm_get_status_raid(struct dm_pool *mem, const char *params,
 		       struct dm_status_raid **status)
 {
 	int dev_count;
-	const char *p = params;
+	const char *p;
 	struct dm_status_raid *s;
 
-	if (!(p = strchr(p, ' ')))
-		return_0;
+	if (!params || !(p = strchr(params, ' '))) {
+		log_error("Failed to parse invalid raid params.");
+		return 0;
+	}
+
 	p++;
 
 	if (sscanf(p, "%d", &dev_count) != 1)
@@ -3318,6 +3321,11 @@ int dm_get_status_thin_pool(struct dm_pool *mem, const char *params,
 	struct dm_status_thin_pool *s;
 	int pos;
 
+	if (!params) {
+		log_error("Failed to parse invalid thin pool params.");
+		return 0;
+	}
+
 	if (!(s = dm_pool_zalloc(mem, sizeof(struct dm_status_thin_pool)))) {
 		log_error("Failed to allocate thin_pool status structure.");
 		return 0;
@@ -3353,6 +3361,11 @@ int dm_get_status_thin(struct dm_pool *mem, const char *params,
 		       struct dm_status_thin **status)
 {
 	struct dm_status_thin *s;
+
+	if (!params) {
+		log_error("Failed to parse invalid thin params.");
+		return 0;
+	}
 
 	if (!(s = dm_pool_zalloc(mem, sizeof(struct dm_status_thin)))) {
 		log_error("Failed to allocate thin status structure.");
