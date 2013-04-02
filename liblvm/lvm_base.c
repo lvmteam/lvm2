@@ -66,6 +66,12 @@ lvm_t lvm_init(const char *system_dir)
 	 */
 	cmd->cmd_line = "liblvm";
 
+	/*
+	 * Turn off writing to stderr etc., not sure if there is a better way
+	 * to do this?
+	 */
+	log_suppress(1);
+
 	return (lvm_t) cmd;
 }
 
