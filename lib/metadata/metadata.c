@@ -3696,7 +3696,6 @@ static int _get_pvs(struct cmd_context *cmd, int warnings,
 		struct dm_list *pvslist, struct dm_list *vgslist)
 {
 	struct str_list *strl;
-	struct dm_list * uninitialized_var(results);
 	const char *vgname, *vgid;
 	struct pv_list *pvl, *pvl_copy;
 	struct dm_list *vgids;
