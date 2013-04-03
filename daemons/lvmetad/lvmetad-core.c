@@ -756,6 +756,9 @@ static int update_metadata(lvmetad_state *s, const char *name, const char *_vgid
 	if (retval && oldname && strcmp(name, oldname))
 		dm_hash_remove(s->vgname_to_vgid, oldname);
 
+	if (haveseq >= 0 && haveseq < seq)
+		dm_config_destroy(old);
+
 	unlock_vgid_to_metadata(s);
 
 	if (retval)
