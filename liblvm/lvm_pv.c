@@ -116,9 +116,7 @@ int lvm_list_pvs_free(struct dm_list *pvlist)
 	int rc = 0;
 	struct lvm_list_wrapper *to_delete = NULL;
 	struct vg_list *vgl = NULL;
-	struct vg_list *tmp_vgl = NULL;
 	struct pv_list *pvl = NULL;
-	struct pv_list *tmp_pvl = NULL;
 	struct cmd_context *cmd = NULL;
 
 	if (pvlist ) {
