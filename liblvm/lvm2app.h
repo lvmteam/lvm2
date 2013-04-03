@@ -572,6 +572,16 @@ struct dm_list *lvm_list_pvs(lvm_t libh);
 int lvm_list_pvs_free(struct dm_list *pvlist);
 
 /**
+ *  Create a physical volume.
+ *  \param	libh	Library handle
+ *  \param	pv_name	The physical volume name
+ *  \param	size	Size of physical volume, 0 = use all available.
+ *  \return
+ *  0 on success, else -1 with library errno and text set.
+ */
+int lvm_pv_create(lvm_t libh, const char *pv_name, uint64_t size);
+
+/**
  *  Remove a physical volume.
  *  Note: You cannot remove a PV while iterating through the list of PVs as
  *  locks are held for the PV list.

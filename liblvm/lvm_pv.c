@@ -226,3 +226,29 @@ int lvm_pv_resize(const pv_t pv, uint64_t new_size)
 		return 0;
 	}
 }
+
+int lvm_pv_create(lvm_t libh, const char *pv_name, uint64_t size)
+{
+	int rc = -1;
+	struct pvcreate_params pp;
+	struct cmd_context *cmd = (struct cmd_context *)libh;
+	uint64_t size_sectors = size;
+
+	pvcreate_params_set_defaults(&pp);
+
+	if (size_sectors != 0 ) {
+		if( size_sectors % SECTOR_SIZE ) {
+			log_errno(EINVAL, "Size not a multiple of 512");
+					return -1;
+		}
+		size_sectors = size_sectors >> SECTOR_SHIFT;
+	}
+
+	pp.size = size_sectors;
+
+	if (ECMD_PROCESSED == pvcreate_locked(cmd, pv_name, &pp)) {
+		rc = 0;
+	}
+
+	return rc;
+}

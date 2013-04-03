@@ -20,6 +20,8 @@
 #include "locking.h"
 #include "defaults.h"
 #include "lvmetad.h"
+#include "display.h"
+#include "label.h"
 
 static struct pv_segment *_alloc_pv_segment(struct dm_pool *mem,
 					    struct physical_volume *pv,
@@ -668,6 +670,26 @@ int pvremove_single(struct cmd_context *cmd, const char *pv_name,
 	ret = ECMD_PROCESSED;
 
 out:
+	unlock_vg(cmd, VG_ORPHANS);
+
+	return ret;
+}
+
+int pvcreate_locked(struct cmd_context *cmd, const char *pv_name,
+		struct pvcreate_params *pp)
+{
+	int ret = ECMD_PROCESSED;
+
+	if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE, NULL)) {
+		log_error("Can't get lock for orphan PVs");
+		return ECMD_FAILED;
+	}
+
+	if (!(pvcreate_single(cmd, pv_name, pp, 1))) {
+		stack;
+		ret = ECMD_FAILED;
+	}
+
 	unlock_vg(cmd, VG_ORPHANS);
 
 	return ret;

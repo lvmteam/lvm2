@@ -345,6 +345,9 @@ int pvremove_single(struct cmd_context *cmd, const char *pv_name,
 			   void *handle __attribute__((unused)), unsigned force_count,
 			   unsigned prompt);
 
+int pvcreate_locked(struct cmd_context *cmd, const char *pv_name,
+					struct pvcreate_params *pp);
+
 /* Manipulate PV structures */
 int pv_add(struct volume_group *vg, struct physical_volume *pv);
 int pv_remove(struct volume_group *vg, struct physical_volume *pv);

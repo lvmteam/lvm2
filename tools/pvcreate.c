@@ -15,6 +15,7 @@
 
 #include "tools.h"
 #include "metadata-exported.h"
+#include "metadata.h"
 
 /*
  * Intial sanity checking of recovery-related command-line arguments.
@@ -96,7 +97,6 @@ int pvcreate(struct cmd_context *cmd, int argc, char **argv)
 	int i;
 	int ret = ECMD_PROCESSED;
 	struct pvcreate_params pp;
-	struct physical_volume *pv;
 
 	pvcreate_params_set_defaults(&pp);
 
@@ -108,19 +108,12 @@ int pvcreate(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	for (i = 0; i < argc; i++) {
-		if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE, NULL)) {
-			log_error("Can't get lock for orphan PVs");
-			return ECMD_FAILED;
-		}
-
 		dm_unescape_colons_and_at_signs(argv[i], NULL, NULL);
 
-		if (!(pv = pvcreate_single(cmd, argv[i], &pp, 1))) {
-			stack;
+		if (ECMD_PROCESSED != pvcreate_locked(cmd, argv[i], &pp)) {
 			ret = ECMD_FAILED;
 		}
 
-		unlock_vg(cmd, VG_ORPHANS);
 		if (sigint_caught())
 			return ret;
 	}
