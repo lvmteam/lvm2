@@ -387,14 +387,18 @@ struct volume_group *lvmetad_vg_lookup(struct cmd_context *cmd, const char *vgna
 			if ((info = lvmcache_info_from_pvid((const char *)&pvl->pv->id, 0))) {
 				pvl->pv->label_sector = lvmcache_get_label(info)->sector;
 				pvl->pv->dev = lvmcache_device(info);
+				if (!pvl->pv->dev)
+					pvl->pv->status |= MISSING_PV;
 				if (!lvmcache_fid_add_mdas_pv(info, fid)) {
 					vg = NULL;
 					goto_out;	/* FIXME error path */
 				}
-			} /* else probably missing */
+			} else
+				pvl->pv->status |= MISSING_PV; /* probably missing */
 		}
 
 		lvmcache_update_vg(vg, 0);
+		vg_mark_partial_lvs(vg, 1);
 	}
 
 out:
