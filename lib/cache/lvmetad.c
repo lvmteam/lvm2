@@ -389,6 +389,8 @@ struct volume_group *lvmetad_vg_lookup(struct cmd_context *cmd, const char *vgna
 				pvl->pv->dev = lvmcache_device(info);
 				if (!pvl->pv->dev)
 					pvl->pv->status |= MISSING_PV;
+				else
+					check_reappeared_pv(vg, pvl->pv);
 				if (!lvmcache_fid_add_mdas_pv(info, fid)) {
 					vg = NULL;
 					goto_out;	/* FIXME error path */

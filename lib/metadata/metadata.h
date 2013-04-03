@@ -491,4 +491,7 @@ int is_mirror_image_removable(struct logical_volume *mimage_lv, void *baton);
 uint64_t find_min_mda_size(struct dm_list *mdas);
 char *tags_format_and_copy(struct dm_pool *mem, const struct dm_list *tags);
 
+void check_reappeared_pv(struct volume_group *correct_vg,
+			 struct physical_volume *pv);
+
 #endif

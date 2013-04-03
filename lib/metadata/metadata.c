@@ -2836,8 +2836,8 @@ int vg_missing_pv_count(const struct volume_group *vg)
 	return ret;
 }
 
-static void check_reappeared_pv(struct volume_group *correct_vg,
-				struct physical_volume *pv)
+void check_reappeared_pv(struct volume_group *correct_vg,
+			 struct physical_volume *pv)
 {
 	struct pv_list *pvl;
 
