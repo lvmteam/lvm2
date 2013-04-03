@@ -263,6 +263,26 @@ liblvm_lvm_pv_remove(PyObject *self, PyObject *arg)
 }
 
 static PyObject *
+liblvm_lvm_pv_create(PyObject *self, PyObject *arg)
+{
+	const char *pv_name;
+	uint64_t size;
+	LVM_VALID();
+
+	if (!PyArg_ParseTuple(arg, "sl", &pv_name, &size))
+			return NULL;
+
+	int rc = lvm_pv_create(libh, pv_name, size);
+	if (0 != rc) {
+		PyErr_SetObject(LibLVMError, liblvm_get_last_error());
+		return NULL;
+	}
+
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+static PyObject *
 liblvm_lvm_percent_to_float(PyObject *self, PyObject *arg)
 {
 	double converted;
@@ -1683,6 +1703,7 @@ static PyMethodDef Liblvm_methods[] = {
 	{ "listVgNames",	(PyCFunction)liblvm_lvm_list_vg_names, METH_NOARGS },
 	{ "listVgUuids",	(PyCFunction)liblvm_lvm_list_vg_uuids, METH_NOARGS },
 	{ "listPvs",		(PyCFunction)liblvm_lvm_list_pvs, METH_NOARGS },
+	{ "pvCreate",		(PyCFunction)liblvm_lvm_pv_create, METH_VARARGS },
 	{ "pvRemove",		(PyCFunction)liblvm_lvm_pv_remove, METH_VARARGS },
 	{ "percentToFloat",	(PyCFunction)liblvm_lvm_percent_to_float, METH_VARARGS },
 	{ "vgNameFromPvid",	(PyCFunction)liblvm_lvm_vgname_from_pvid, METH_VARARGS },
