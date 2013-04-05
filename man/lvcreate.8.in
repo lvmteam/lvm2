@@ -59,7 +59,10 @@ lvcreate \- create a logical volume in an existing volume group
 .RB [ \-\-poolmetadatasize
 .IR ThinPoolMetadataSize [ bBsSkKmMgG ]]]
 .RB [ \-\-thinpool
-.IR ThinPoolLogicalVolume { Name | Path }]
+.IR ThinPoolLogicalVolume { Name | Path }
+.RB [ \-s | \-\-snapshot
+.RI [ VolumeGroup { Name | Path }/]
+.IR ExternalOriginLogicalVolumeName ]]
 .RB [ \-\-type
 .IR SegmentType ]
 .RB [ \-v | \-\-verbose ]
@@ -291,6 +294,15 @@ used to track the locations of the chunks of data, so you should
 allocate slightly more space than you actually need and monitor
 (\fB\-\-monitor\fP) the rate at which the snapshot data is growing
 so you can \fBavoid\fP running out of space.
+If \fB\-\-thinpool\fP is specified, thin volume is created that will
+use given original logical volume as an external origin that
+serves unprovisioned blocks.
+Only read-only volumes can be used as external origins.
+To make the volume external origin, lvm expects the volume to be inactive.
+External origin volume can be used/shared for many thin volumes
+even from different thin pools. See
+.BR lvconvert (8)
+for online conversion to thin volumes with external origin.
 .TP
 .IR \fB\-T ", " \fB\-\-thin ", " \fB\-\-thinpool " " ThinPoolLogicalVolume { Name | Path }
 Creates thin pool or thin logical volume or both.
@@ -407,9 +419,15 @@ build with 2 stripes 64KiB and chunk size 256KiB together with
 .sp
 .B lvcreate \-i 2 \-I 64 \-c 256 \-L100M \-T vg00/pool \-V 1T \-\-name thin_lv
 
+Creates thin volume snapshot of read only inactive volume "vg00/origin"
+that will use an existing thin pool "vg00/pool":
+.sp
+.B lvcreate -s --thinpool "vg00/pool"  origin
+
 .SH SEE ALSO
 .BR lvm (8),
 .BR lvm.conf (5),
+.BR lvconvert (8),
 .BR lvchange (8),
 .BR lvextend (8),
 .BR lvreduce (8),

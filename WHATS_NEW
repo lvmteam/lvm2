@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Add external origin support for lvcreate.
   Improve lvcreate, lvconvert and lvm man pages.
   Clean up format1 PV write to remove a need for an orphan VG for it to pass.
   Fix vgextend to not allow a PV with 0 MDAs to be used while already in a VG.
