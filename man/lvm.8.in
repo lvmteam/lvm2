@@ -21,6 +21,8 @@ that command.
 On invocation, \fBlvm\fP requires that only the standard file descriptors
 stdin, stdout and stderr are available.  If others are found, they
 get closed and messages are issued warning about the leak.
+This warning can be suppressed by setting enviromental variable
+.B LVM_SUPPRESS_FD_WARNINGS\fP.
 .LP
 Where commands take VG or LV names as arguments, the full path name is
 optional.  An LV called "lvol0" in a VG called "vg0" can be specified
@@ -150,7 +152,7 @@ The following options are available for many of the commands.
 They are implemented generically and documented here rather
 than repeated on individual manual pages.
 .TP
-.BR \-h ", " \-\-help
+.BR \-h ", " \-? ", " \-\-help
 Display the help text.
 .TP
 .B \-\-version
@@ -235,15 +237,9 @@ and as of version 2.02.78 the following characters are also accepted:
 Delete the tag \fITag\fP from a PV, VG or LV, if it's present.
 Supply this argument multiple times to remove more than one tag at once.
 .TP
-.B \-\-alloc \fIAllocationPolicy
-The allocation policy to use:
-.IR contiguous ,
-.IR cling ,
-.IR normal ,
-.IR anywhere " or"
-.IR inherit .
-When a command needs to allocate Physical Extents from the Volume Group,
-the allocation policy controls how they are chosen.
+.IR \fB\-\-alloc \ { anywhere | contiguous | cling | inherit | normal }
+Selects the allocation policy when a command needs to allocate
+Physical Extents from the Volume Group.
 Each Volume Group and Logical Volume has an allocation policy defined.
 The default for a Volume Group is \fInormal\fP which applies
 common-sense rules such as not placing parallel stripes on the same
@@ -268,6 +264,10 @@ shell is invoked.
 .B LVM_SYSTEM_DIR
 Directory containing \fBlvm.conf\fP(5) and other LVM system files.
 Defaults to "#DEFAULT_SYS_DIR#".
+.TP
+.B LVM_SUPPRESS_FD_WARNINGS
+Suppress warnings about openned file descriptors, when lvm command
+is executed.
 .TP
 .B LVM_VG_NAME
 The Volume Group name that is assumed for
@@ -351,7 +351,7 @@ restrictions described above applied to each step leave the tools no
 discretion over the layout.
 
 To view the way the allocation process currently works in any specific
-case, read the debug logging output, for example by adding \-vvvv to
+case, read the debug logging output, for example by adding \fB\-vvvv\fP to
 a command.
 .SH DIAGNOSTICS
 All tools return a status code of zero on success or non-zero on failure.
@@ -360,6 +360,7 @@ All tools return a status code of zero on success or non-zero on failure.
 .br
 .I $HOME/.lvm_history
 .SH SEE ALSO
+.BR lvm.conf (5),
 .BR clvmd (8),
 .BR lvchange (8),
 .BR lvcreate (8),
@@ -398,5 +399,4 @@ All tools return a status code of zero on success or non-zero on failure.
 .BR vgs (8),
 .BR vgscan (8),
 .BR vgsplit (8),
-.BR readline (3),
-.BR lvm.conf (5)
+.BR readline (3)
