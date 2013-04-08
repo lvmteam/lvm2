@@ -809,8 +809,10 @@ int lv_raid_dev_health(const struct logical_volume *lv, char **dev_health)
 
 	if (!(r = dev_manager_raid_status(dm, lv, &status)) ||
 	    !(*dev_health = dm_pool_strdup(lv->vg->cmd->mem,
-					   status->dev_health)))
-		stack;
+					   status->dev_health))) {
+		dev_manager_destroy(dm);
+		return_0;
+	}
 
 	cached_dev_health = *dev_health;
 	dev_manager_destroy(dm);

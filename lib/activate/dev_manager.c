@@ -1031,7 +1031,6 @@ int dev_manager_raid_status(struct dev_manager *dm,
 	char *params = NULL;
 	const char *layer = lv_layer(lv);
 
-	/* Build dlid for the thin pool layer */
 	if (!(dlid = build_dm_uuid(dm->mem, lv->lvid.s, layer)))
 		return_0;
 
@@ -1050,6 +1049,12 @@ int dev_manager_raid_status(struct dev_manager *dm,
 		goto_out;
 
 	dm_get_next_target(dmt, NULL, &start, &length, &type, &params);
+
+	if (!type || strcmp(type, "raid")) {
+		log_debug("Expected raid segment type but got %s instead",
+			  type ? type : "NULL");
+		goto out;
+	}
 
 	if (!dm_get_status_raid(dm->mem, params, status))
 		goto_out;

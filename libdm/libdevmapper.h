@@ -265,12 +265,22 @@ void *dm_get_next_target(struct dm_task *dmt,
  */
 struct dm_pool;
 
+/*
+ * dm_get_status_raid will allocate the dm_status_raid structure and
+ * the necessary character arrays from the mempool provided to the
+ * function.  If the mempool is from a dev_manager struct (dm->mem),
+ * then the caller does not need to free the memory - simply calling
+ * dev_manager_destroy will do.
+ */
 struct dm_status_raid {
+	uint64_t reserved;
 	uint64_t total_regions;
 	uint64_t insync_regions;
+	uint64_t mismatch_count;
 	int dev_count;
-	char raid_type[16];
-	char dev_health[0];
+	char *raid_type;
+	char *dev_health;
+	char *sync_action;
 };
 
 int dm_get_status_raid(struct dm_pool *mem, const char *params,

@@ -2873,28 +2873,39 @@ int dm_tree_node_add_raid_target(struct dm_tree_node *node,
 	return 1;
 }
 
+
+/*
+ * Various RAID status versions include:
+ * Versions < 1.5.0 (4 fields):
+ *   <raid_type> <#devs> <health_str> <sync_ratio>
+ * Versions 1.5.0+  (6 fields):
+ *   <raid_type> <#devs> <health_str> <sync_ratio> <sync_action> <mismatch_cnt>
+ */
 int dm_get_status_raid(struct dm_pool *mem, const char *params,
 		       struct dm_status_raid **status)
 {
-	int dev_count;
-	const char *p;
+	int i;
+	const char *pp, *p;
 	struct dm_status_raid *s;
 
 	if (!params || !(p = strchr(params, ' '))) {
 		log_error("Failed to parse invalid raid params.");
 		return 0;
 	}
-
 	p++;
 
-	if (sscanf(p, "%d", &dev_count) != 1)
+	/* second field holds the device count */
+	if (sscanf(p, "%d", &i) != 1)
 		return_0;
 
-	s = dm_pool_zalloc(mem, sizeof(struct dm_status_raid) + dev_count + 1);
-	if (!s) {
-		log_error("Failed to allocate raid status structure.");
-		return 0;
-	}
+	if (!(s = dm_pool_zalloc(mem, sizeof(struct dm_status_raid))))
+		return_0;
+
+	if (!(s->raid_type = dm_pool_zalloc(mem, p - params)))
+		return_0; /* memory is freed went pool is destroyed */
+
+	if (!(s->dev_health = dm_pool_zalloc(mem, i + 1)))
+		return_0;
 
 	if (sscanf(params, "%s %d %s %" PRIu64 "/%" PRIu64,
 		   s->raid_type,
@@ -2907,6 +2918,32 @@ int dm_get_status_raid(struct dm_pool *mem, const char *params,
 	}
 
 	*status = s;
+
+	/*
+	 * All pre-1.5.0 version parameters are read.  Now we check
+	 * for additional 1.5.0+ parameters.
+	 *
+	 * Note that 'sync_action' will be NULL (and mismatch_count
+	 * will be 0) if the kernel returns a pre-1.5.0 status.
+	 */
+	for (p = params, i = 0; i < 4; i++, p++)
+		if (!(p = strchr(p, ' ')))
+			return 1;  /* return pre-1.5.0 status */
+
+	pp = p;
+	if (!(p = strchr(p, ' '))) {
+		log_error(INTERNAL_ERROR "Bad RAID status received.");
+		return 0;
+	}
+	p++;
+
+	if (!(s->sync_action = dm_pool_zalloc(mem, p - pp)))
+		return_0;
+
+	if (sscanf(pp, "%s %" PRIu64, s->sync_action, &s->mismatch_count) != 2) {
+		log_error("Failed to parse raid params: %s", params);
+		return 0;
+	}
 
 	return 1;
 }
