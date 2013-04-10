@@ -1216,6 +1216,22 @@ const char *lvm_lv_get_uuid(const lv_t lv);
 const char *lvm_lv_get_name(const lv_t lv);
 
 /**
+ * Get the attributes of a logical volume.
+ *
+ * \memberof lv_t
+ *
+ * The memory allocated for the name is tied to the vg_t handle and will be
+ * released when lvm_vg_close() is called.
+ *
+ * \param   lv
+ * Logical volume handle.
+ *
+ * \return
+ * Copy of the attributes for the logical volume
+ */
+const char *lvm_lv_get_attr(const lv_t lv);
+
+/**
  * Get the current size in bytes of a logical volume.
  *
  * \memberof lv_t
