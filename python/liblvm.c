@@ -1193,6 +1193,13 @@ liblvm_pv_dealloc(pvobject *self)
 		}							\
 	} while (0)
 
+static PyObject *
+liblvm_lvm_lv_get_attr(lvobject *self)
+{
+	LV_VALID(self);
+
+	return Py_BuildValue("s", lvm_lv_get_attr(self->lv));
+}
 
 static PyObject *
 liblvm_lvm_lv_get_name(lvobject *self)
@@ -1749,6 +1756,7 @@ static PyMethodDef liblvm_vg_methods[] = {
 
 static PyMethodDef liblvm_lv_methods[] = {
 	/* lv methods */
+	{ "getAttr",		(PyCFunction)liblvm_lvm_lv_get_attr, METH_NOARGS },
 	{ "getName",		(PyCFunction)liblvm_lvm_lv_get_name, METH_NOARGS },
 	{ "getUuid",		(PyCFunction)liblvm_lvm_lv_get_uuid, METH_NOARGS },
 	{ "activate",		(PyCFunction)liblvm_lvm_lv_activate, METH_NOARGS },
