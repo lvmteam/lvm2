@@ -242,7 +242,7 @@ struct _read_pool_pv_baton {
 	struct dm_list *head;
 	const char *vgname;
 	uint32_t *sp_devs;
-	int sp_count;
+	uint32_t sp_count;
 	int failed;
 	int empty;
 };
