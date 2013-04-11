@@ -932,7 +932,7 @@ static int _init_filters(struct cmd_context *cmd, unsigned load_persistent_cache
 	}
 
 	/* Should we ever dump persistent filter state? */
-	if (find_config_tree_bool(cmd, devices_write_cache_state_CFG));
+	if (find_config_tree_bool(cmd, devices_write_cache_state_CFG))
 		cmd->dump_filter = 1;
 
 	if (!*cmd->system_dir)
