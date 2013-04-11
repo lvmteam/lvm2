@@ -1232,6 +1232,22 @@ const char *lvm_lv_get_name(const lv_t lv);
 const char *lvm_lv_get_attr(const lv_t lv);
 
 /**
+ * Get the origin of a snapshot.
+ *
+ * \memberof lv_t
+ *
+ * The memory allocated for the name is tied to the vg_t handle and will be
+ * released when lvm_vg_close() is called.
+ *
+ * \param   lv
+ * Logical volume handle.
+ *
+ * \return
+ * Null if the logical volume is not a snapshot, else origin name.
+ */
+const char *lvm_lv_get_origin(const lv_t lv);
+
+/**
  * Get the current size in bytes of a logical volume.
  *
  * \memberof lv_t
