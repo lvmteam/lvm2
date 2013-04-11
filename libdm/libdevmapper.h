@@ -501,14 +501,13 @@ struct dm_tree_node *dm_tree_next_child(void **handle,
 					uint32_t inverted);
 
 /*
- * Get and set properties of a node.
+ * Get properties of a node.
  */
 const char *dm_tree_node_get_name(const struct dm_tree_node *node);
 const char *dm_tree_node_get_uuid(const struct dm_tree_node *node);
 const struct dm_info *dm_tree_node_get_info(const struct dm_tree_node *node);
 void *dm_tree_node_get_context(const struct dm_tree_node *node);
 int dm_tree_node_size_changed(const struct dm_tree_node *dnode);
-int dm_tree_node_force_identical_table_reload(struct dm_tree_node *dnode);
 
 /*
  * Returns the number of children of the given node (excluding the root node).
