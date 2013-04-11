@@ -936,6 +936,42 @@ no_copypercent:
 	return 1;
 }
 
+static int _sync_action_disp(struct dm_report *rh __attribute__((unused)),
+			     struct dm_pool *mem,
+			     struct dm_report_field *field,
+			     const void *data,
+			     void *private __attribute__((unused)))
+{
+	const struct logical_volume *lv = (const struct logical_volume *) data;
+	char *sync_action;
+
+	if (!(lv->status & RAID) ||
+	    !lv_raid_sync_action(lv, &sync_action)) {
+		dm_report_field_set_value(field, "", NULL);
+		return 1;
+	}
+
+	return _string_disp(rh, mem, field, &sync_action, private);
+}
+
+static int _mismatch_count_disp(struct dm_report *rh __attribute__((unused)),
+				struct dm_pool *mem,
+				struct dm_report_field *field,
+				const void *data,
+				void *private __attribute__((unused)))
+{
+	const struct logical_volume *lv = (const struct logical_volume *) data;
+	uint64_t mismatch_count;
+
+	if (!(lv->status & RAID) ||
+	    !lv_raid_mismatch_count(lv, &mismatch_count)) {
+		dm_report_field_set_value(field, "", NULL);
+		return 1;
+	}
+
+	return  dm_report_field_uint64(rh, field, &mismatch_count);
+}
+
 static int _dtpercent_disp(int metadata, struct dm_report *rh,
 			   struct dm_pool *mem,
 			   struct dm_report_field *field,

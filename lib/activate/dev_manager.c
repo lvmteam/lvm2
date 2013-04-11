@@ -1066,6 +1066,55 @@ out:
 	return r;
 }
 
+int dev_manager_raid_message(struct dev_manager *dm,
+			     const struct logical_volume *lv,
+			     const char *msg)
+{
+	int r = 0;
+	const char *dlid;
+	struct dm_task *dmt;
+	const char *layer = lv_layer(lv);
+
+	if (!(lv->status & RAID)) {
+		log_error(INTERNAL_ERROR "%s/%s is not a RAID logical volume",
+			  lv->vg->name, lv->name);
+		return 0;
+	}
+
+	/* These are the supported RAID messages for dm-raid v1.5.0 */
+	if (!strcmp(msg, "idle") &&
+	    !strcmp(msg, "frozen") &&
+	    !strcmp(msg, "resync") &&
+	    !strcmp(msg, "recover") &&
+	    !strcmp(msg, "check") &&
+	    !strcmp(msg, "repair") &&
+	    !strcmp(msg, "reshape")) {
+		log_error("Unknown RAID message: %s", msg);
+		return 0;
+	}
+
+	if (!(dlid = build_dm_uuid(dm->mem, lv->lvid.s, layer)))
+		return_0;
+
+	if (!(dmt = _setup_task(NULL, dlid, 0, DM_DEVICE_TARGET_MSG, 0, 0)))
+		return_0;
+
+	if (!dm_task_no_open_count(dmt))
+		log_error("Failed to disable open_count.");
+
+	if (!dm_task_set_message(dmt, msg))
+		goto_out;
+
+	if (!dm_task_run(dmt))
+		goto_out;
+
+	r = 1;
+out:
+	dm_task_destroy(dmt);
+
+	return r;
+}
+
 #if 0
 	log_very_verbose("%s %s", sus ? "Suspending" : "Resuming", name);
 

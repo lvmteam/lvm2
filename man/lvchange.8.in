@@ -26,6 +26,8 @@ lvchange \- change attributes of a logical volume
 .RI { y | n }]
 .RB [ \-\-poll
 .RI { y | n }]
+.RB [ \-\-syncaction
+.RI { check | repair }]
 .RB [ \-\-sysinit ]
 .RB [ \-\-noudevsync ]
 .RB [ \-M | \-\-persistent
@@ -106,6 +108,18 @@ example, on rebooting after a crash), use \fB\-\-poll y\fP to restart the
 process from its last checkpoint.  However, it may not be appropriate to
 immediately poll a logical volume when it is activated, use
 \fB\-\-poll n\fP to defer and then \fB\-\-poll y\fP to restart the process.
+.TP
+.BR \-\-syncaction " {" \fIcheck | \fIrepair }
+This argument is used to initiate various RAID synchronization operations.
+The \fIcheck\fP and \fIrepair\fP options provide a way to check the
+integrity of a RAID logical volume (often referred to as "scrubbing").
+These options cause the RAID logical volume to
+read all of the data and parity blocks in the array and check for any
+discrepancies (e.g. mismatches between mirrors or incorrect parity values).
+If \fIcheck\fP is used, the discrepancies will be counted but not repaired.
+If \fIrepair\fP is used, the discrepancies will be corrected as they are
+encountered.  The 'lvs' command can be used to show the number of
+discrepancies found or repaired.
 .TP
 .B \-\-sysinit
 Indicates that \fBlvchange\fP(8) is being invoked from early system

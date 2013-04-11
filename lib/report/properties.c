@@ -93,6 +93,22 @@ static percent_t _copy_percent(const struct logical_volume *lv) {
 	return perc;
 }
 
+static uint64_t _mismatches(const struct logical_volume *lv) {
+	uint64_t cnt;
+
+	if (!lv_raid_mismatch_count(lv, &cnt))
+		return 0;
+	return cnt;
+}
+
+static char *_sync_action(const struct logical_volume *lv) {
+	char *action;
+
+	if (!lv_raid_sync_action(lv, &action))
+		return 0;
+	return action;
+}
+
 static percent_t _snap_percent(const struct logical_volume *lv) {
 	percent_t perc;
 
@@ -195,6 +211,10 @@ GET_LV_NUM_PROPERTY_FN(copy_percent, _copy_percent(lv))
 #define _copy_percent_set _not_implemented_set
 GET_LV_NUM_PROPERTY_FN(sync_percent, _copy_percent(lv))
 #define _sync_percent_set _not_implemented_set
+GET_LV_NUM_PROPERTY_FN(mismatches, _mismatches(lv))
+#define _mismatches_set _not_implemented_set
+GET_LV_STR_PROPERTY_FN(syncaction, _sync_action(lv))
+#define _syncaction_set _not_implemented_set
 GET_LV_STR_PROPERTY_FN(move_pv, lv_move_pv_dup(lv->vg->vgmem, lv))
 #define _move_pv_set _not_implemented_set
 GET_LV_STR_PROPERTY_FN(convert_lv, lv_convert_lv_dup(lv->vg->vgmem, lv))

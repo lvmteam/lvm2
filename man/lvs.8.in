@@ -97,6 +97,7 @@ lv_time,
 lv_uuid,
 metadata_lv,
 mirror_log,
+mismatches,
 modules,
 move_pv,
 origin,
@@ -113,6 +114,7 @@ seg_tags,
 snap_percent,
 stripes,
 stripe_size,
+sync_action,
 sync_percent,
 thin_count,
 transaction_id,
@@ -159,8 +161,18 @@ snapshots of thin volumes using the new thin provisioning driver appear as (t).
 .IP 8 3
 Newly-allocated data blocks are overwritten with blocks of (z)eroes before use.
 .IP 9 3
-(p)artial: One or more of the Physical Volumes this Logical Volume uses is
-missing from the system.
+Volume Health: (p)artial, (r)efresh needed, (m)ismatches exist.
+(p)artial signifies that one or more of the Physical Volumes this Logical
+Volume uses is missing from the system.  (r)efresh signifies that one or
+more of the Physical Volumes this RAID Logical Volume uses had suffered a
+write error.  The write error could be due to a temporary failure of that
+Physical Volume or an indication that it is failing.  The device should be
+refreshed or replaced.  (m)ismatches signifies that the RAID logical volume
+has portions of the array that are not coherent or that the array has
+recently repaired inconsistencies.  An additional "check" after a "repair"
+of a RAID logical volume will clear this flag if no additional discrepancies
+are found.  ("check" and "repair" of a RAID Logical Volume can be done via
+the 'lvchange' command.)
 .RE
 .TP
 .BR \-O ", " \-\-sort

@@ -183,6 +183,18 @@ int lv_raid_dev_health(const struct logical_volume *lv, char **dev_health)
 {
 	return 0;
 }
+int lv_raid_mismatch_count(const struct logical_volume *lv, uint64_t *cnt)
+{
+	return 0;
+}
+int lv_raid_sync_action(const struct logical_volume *lv, char **sync_action)
+{
+	return 0;
+}
+int lv_raid_message(const struct logical_volume *lv, const char *msg)
+{
+	return 0;
+}
 int lv_thin_pool_percent(const struct logical_volume *lv, int metadata,
 			 percent_t *percent)
 {
@@ -796,7 +808,7 @@ int lv_raid_dev_health(const struct logical_volume *lv, char **dev_health)
 	*dev_health = NULL;
 
 	if (!activation())
-		return 0;
+		return_0;
 
 	log_debug_activation("Checking raid device health for LV %s/%s",
 			     lv->vg->name, lv->name);
@@ -815,6 +827,125 @@ int lv_raid_dev_health(const struct logical_volume *lv, char **dev_health)
 	}
 
 	cached_dev_health = *dev_health;
+	dev_manager_destroy(dm);
+
+	return r;
+}
+
+int lv_raid_mismatch_count(const struct logical_volume *lv, uint64_t *cnt)
+{
+	struct dev_manager *dm;
+	struct dm_status_raid *status;
+
+	*cnt = 0;
+
+	if (!activation())
+		return 0;
+
+	log_debug_activation("Checking raid mismatch count for LV %s/%s",
+			     lv->vg->name, lv->name);
+
+	if (!lv_is_active(lv))
+		return_0;
+
+	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
+		return_0;
+
+	if (!dev_manager_raid_status(dm, lv, &status)) {
+		dev_manager_destroy(dm);
+		return_0;
+	}
+	*cnt = status->mismatch_count;
+
+	dev_manager_destroy(dm);
+
+	return 1;
+}
+
+int lv_raid_sync_action(const struct logical_volume *lv, char **sync_action)
+{
+	struct dev_manager *dm;
+	struct dm_status_raid *status;
+	char *action;
+
+	*sync_action = NULL;
+
+	if (!activation())
+		return 0;
+
+	log_debug_activation("Checking raid sync_action for LV %s/%s",
+			     lv->vg->name, lv->name);
+
+	if (!lv_is_active(lv))
+		return_0;
+
+	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
+		return_0;
+
+	if (!dev_manager_raid_status(dm, lv, &status) ||
+	    !(action = dm_pool_strdup(lv->vg->cmd->mem,
+				      status->sync_action))) {
+		dev_manager_destroy(dm);
+		return_0;
+	}
+
+	*sync_action = action;
+
+	dev_manager_destroy(dm);
+
+	return 1;
+}
+
+int lv_raid_message(const struct logical_volume *lv, const char *msg)
+{
+	int r = 0;
+	struct dev_manager *dm;
+	struct dm_status_raid *status;
+
+	if (!lv_is_active(lv)) {
+		log_error("Unable to send message to an inactive logical volume.");
+		return 0;
+	}
+
+	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
+		return_0;
+
+	if (!(r = dev_manager_raid_status(dm, lv, &status))) {
+		log_error("Failed to retrieve status of %s/%s",
+			  lv->vg->name, lv->name);
+		goto out;
+	}
+
+	if (!status->sync_action) {
+		log_error("Kernel driver does not support this action: %s", msg);
+		goto out;
+	}
+
+	/*
+	 * Note that 'dev_manager_raid_message' allows us to pass down any
+	 * currently valid message.  However, this function restricts the
+	 * number of user available combinations to a minimum.  Specifically,
+	 *     "idle" -> "check"
+	 *     "idle" -> "repair"
+	 * (The state automatically switches to "idle" when a sync process is
+	 * complete.)
+	 */
+	if (strcmp(msg, "check") && strcmp(msg, "repair")) {
+		/*
+		 * MD allows "frozen" to operate in a toggling fashion.
+		 * We could allow this if we like...
+		 */
+		log_error("\"%s\" is not a supported sync operation.", msg);
+		goto out;
+	}
+	if (strcmp(status->sync_action, "idle")) {
+		log_error("%s/%s state is currently \"%s\".  Unable to switch to \"%s\".",
+			  lv->vg->name, lv->name, status->sync_action, msg);
+		goto out;
+	}
+
+	r = dev_manager_raid_message(dm, lv, msg);
+out:
 	dev_manager_destroy(dm);
 
 	return r;

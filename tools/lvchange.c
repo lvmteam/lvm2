@@ -261,13 +261,6 @@ static int _lvchange_activate(struct cmd_context *cmd, struct logical_volume *lv
 	return 1;
 }
 
-static int lvchange_refresh(struct cmd_context *cmd, struct logical_volume *lv)
-{
-	log_verbose("Refreshing logical volume \"%s\" (if active)", lv->name);
-
-	return lv_refresh(cmd, lv);
-}
-
 static int detach_metadata_devices(struct lv_segment *seg, struct dm_list *list)
 {
 	uint32_t s;
@@ -328,8 +321,28 @@ static int attach_metadata_devices(struct lv_segment *seg, struct dm_list *list)
 	return 1;
 }
 
-static int lvchange_resync(struct cmd_context *cmd,
-			      struct logical_volume *lv)
+/*
+ * lvchange_refresh
+ * @cmd
+ * @lv
+ *
+ * Suspend and resume a logical volume.
+ */
+static int lvchange_refresh(struct cmd_context *cmd, struct logical_volume *lv)
+{
+	log_verbose("Refreshing logical volume \"%s\" (if active)", lv->name);
+
+	return lv_refresh(cmd, lv);
+}
+
+/*
+ * lvchange_resync
+ * @cmd
+ * @lv
+ *
+ * Force a mirror or RAID array to undergo a complete initializing resync.
+ */
+static int lvchange_resync(struct cmd_context *cmd, struct logical_volume *lv)
 {
 	int active = 0;
 	int monitored;
@@ -898,6 +911,13 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 			return ECMD_FAILED;
 		}
 
+	if (arg_count(cmd, syncaction_ARG)) {
+		if (!lv_raid_message(lv, arg_str_value(cmd, syncaction_ARG, NULL))) {
+			stack;
+			return ECMD_FAILED;
+		}
+	}
+
 	/* activation change */
 	if (arg_count(cmd, activate_ARG)) {
 		if (!_lvchange_activate(cmd, lv)) {
@@ -956,6 +976,7 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 		arg_count(cmd, resync_ARG) ||
 		arg_count(cmd, alloc_ARG) ||
 		arg_count(cmd, discards_ARG) ||
+		arg_count(cmd, syncaction_ARG) ||
 		arg_count(cmd, zero_ARG);
 	int update = update_partial_safe || update_partial_unsafe;
 
