@@ -28,5 +28,5 @@ if test -n "$LVM_VALGRIND"; then
 	esac
 fi
 
-$RUN_VALGRIND "$abs_top_builddir/tools/lvm" $CMD "$@" && \
-	rm -f debug.log # Remove log for successful command
+# the exec is important, because otherwise fatal signals inside "not" go unnoticed
+exec $RUN_VALGRIND "$abs_top_builddir/tools/lvm" $CMD "$@"
