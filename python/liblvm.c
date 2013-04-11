@@ -1202,6 +1202,14 @@ liblvm_lvm_lv_get_attr(lvobject *self)
 }
 
 static PyObject *
+liblvm_lvm_lv_get_origin(lvobject *self)
+{
+	LV_VALID(self);
+
+	return Py_BuildValue("s", lvm_lv_get_origin(self->lv));
+}
+
+static PyObject *
 liblvm_lvm_lv_get_name(lvobject *self)
 {
 	LV_VALID(self);
@@ -1758,6 +1766,7 @@ static PyMethodDef liblvm_lv_methods[] = {
 	/* lv methods */
 	{ "getAttr",		(PyCFunction)liblvm_lvm_lv_get_attr, METH_NOARGS },
 	{ "getName",		(PyCFunction)liblvm_lvm_lv_get_name, METH_NOARGS },
+	{ "getOrigin",		(PyCFunction)liblvm_lvm_lv_get_origin, METH_NOARGS },
 	{ "getUuid",		(PyCFunction)liblvm_lvm_lv_get_uuid, METH_NOARGS },
 	{ "activate",		(PyCFunction)liblvm_lvm_lv_activate, METH_NOARGS },
 	{ "deactivate",		(PyCFunction)liblvm_lvm_lv_deactivate, METH_NOARGS },
