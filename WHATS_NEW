@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Revert change that allowed identical table reload for RAID.
   New lvchange arg, '--syncaction' allows scrubbing of RAID LVs.
   Improve RAID kernel status retrieval to include sync_action/mismatch_cnt.
   Add external origin support for lvcreate.
