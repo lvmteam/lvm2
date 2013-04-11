@@ -1896,7 +1896,7 @@ try_again:
 
 int lv_raid_remove_missing(struct logical_volume *lv)
 {
-	uint32_t s, lvl_idx;
+	uint32_t s;
 	struct lv_segment *seg = first_seg(lv);
 	struct cmd_context *cmd = lv->vg->cmd;
 
@@ -1913,7 +1913,7 @@ int lv_raid_remove_missing(struct logical_volume *lv)
 	 * FIXME: Make sure # of compromised components will not affect RAID
 	 */
 
-	for (s = 0, lvl_idx = 0; s < seg->area_count; s++) {
+	for (s = 0; s < seg->area_count; s++) {
 		if (!(seg_lv(seg, s)->status & PARTIAL_LV) &&
 		    !(seg_metalv(seg, s)->status & PARTIAL_LV))
 			continue;
