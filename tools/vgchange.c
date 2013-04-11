@@ -131,43 +131,16 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 			continue;
 		}
 
-		if (activate == CHANGE_AAY && !lv_passes_auto_activation_filter(cmd, lv))
+		if ((activate == CHANGE_AAY) &&
+		    !lv_passes_auto_activation_filter(cmd, lv))
 			continue;
 
 		expected_count++;
 
-		if (activate == CHANGE_AN) {
-			if (!deactivate_lv(cmd, lv)) {
-				stack;
-				continue;
-			}
-		} else if (activate == CHANGE_ALN) {
-			if (!deactivate_lv_local(cmd, lv)) {
-				stack;
-				continue;
-			}
-		} else if ((activate == CHANGE_AE) ||
-			   lv_is_origin(lv) ||
-			   lv_is_thin_type(lv)) {
-			/* FIXME: duplicated test code with lvchange */
-			if (!activate_lv_excl(cmd, lv)) {
-				stack;
-				continue;
-			}
-		} else if (activate == CHANGE_AAY || activate == CHANGE_ALY) {
-			if (!activate_lv_local(cmd, lv)) {
-				stack;
-				continue;
-			}
-		} else if (!activate_lv(cmd, lv)) {
+		if (!lv_change_activate(cmd, lv, activate)) {
 			stack;
 			continue;
 		}
-
-		if (background_polling() &&
-		    activate != CHANGE_AN && activate != CHANGE_ALN &&
-		    (lv->status & (PVMOVE|CONVERTING|MERGING)))
-			lv_spawn_background_polling(cmd, lv);
 
 		count++;
 	}

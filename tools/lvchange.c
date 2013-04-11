@@ -219,44 +219,12 @@ static int _lvchange_activate(struct cmd_context *cmd, struct logical_volume *lv
 	if (lv_is_cow(lv) && !lv_is_virtual_origin(origin_from_cow(lv)))
 		lv = origin_from_cow(lv);
 
-	if (activate == CHANGE_AAY) {
-		if (!lv_passes_auto_activation_filter(cmd, lv))
-			return 1;
-		activate = CHANGE_ALY;
-	}
+	if ((activate == CHANGE_AAY) &&
+	    !lv_passes_auto_activation_filter(cmd, lv))
+		return 1;
 
-	if (activate == CHANGE_ALN) {
-		log_verbose("Deactivating logical volume \"%s\" locally",
-			    lv->name);
-		if (!deactivate_lv_local(cmd, lv))
-			return_0;
-	} else if (activate == CHANGE_AN) {
-		log_verbose("Deactivating logical volume \"%s\"", lv->name);
-		if (!deactivate_lv(cmd, lv))
-			return_0;
-	} else {
-		if ((activate == CHANGE_AE) ||
-		    lv_is_origin(lv) ||
-		    lv_is_thin_type(lv)) {
-			log_verbose("Activating logical volume \"%s\" "
-				    "exclusively", lv->name);
-			if (!activate_lv_excl(cmd, lv))
-				return_0;
-		} else if (activate == CHANGE_ALY) {
-			log_verbose("Activating logical volume \"%s\" locally",
-				    lv->name);
-			if (!activate_lv_local(cmd, lv))
-				return_0;
-		} else {
-			log_verbose("Activating logical volume \"%s\"",
-				    lv->name);
-			if (!activate_lv(cmd, lv))
-				return_0;
-		}
-
-		if (background_polling())
-			lv_spawn_background_polling(cmd, lv);
-	}
+	if (!lv_change_activate(cmd, lv, activate))
+		return_0;
 
 	return 1;
 }

@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Add lv_change_activate() for common activation code in vg/lvchange.
   Revert change that allowed identical table reload for RAID.
   New lvchange arg, '--syncaction' allows scrubbing of RAID LVs.
   Improve RAID kernel status retrieval to include sync_action/mismatch_cnt.
