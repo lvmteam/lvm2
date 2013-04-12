@@ -239,7 +239,7 @@ static int _ignore_blocked_mirror_devices(struct device *dev,
 	dev_t log_dev;
 	char *images_health, *log_health;
 	uint64_t s,l;
-	char *params, *target_type = NULL;
+	char *p, *params, *target_type = NULL;
 	void *next = NULL;
 	struct dm_task *dmt = NULL;
 	int r = 0;
@@ -306,8 +306,10 @@ static int _ignore_blocked_mirror_devices(struct device *dev,
 			if (strcmp(target_type, "mirror"))
 				goto_out;
 
-			if (strstr(params, "block_on_error") ||
-			    strstr(params, "handle_errors")) {
+			if (((p = strstr(params, " block_on_error")) &&
+			     (p[15] == '\0' || p[15] == ' ')) ||
+			    ((p = strstr(params, " handle_errors")) &&
+			     (p[14] == '\0' || p[14] == ' '))) {
 				log_debug_activation("%s: I/O blocked to mirror device",
 						     dev_name(dev));
 				goto out;
