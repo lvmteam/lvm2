@@ -4773,9 +4773,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 				goto deactivate_and_revert_new_lv;
 			}
 		}
-		if (((lp->activate == CHANGE_AY) ||
-		     (lp->activate == CHANGE_AE) ||
-		     (lp->activate == CHANGE_ALY))) {
+		if ((lp->activate != CHANGE_AN) && (lp->activate != CHANGE_ALN)) {
 			/* At this point send message to kernel thin mda */
 			pool_lv = lv_is_thin_pool(lv) ? lv : first_seg(lv)->pool_lv;
 			if (!update_pool_lv(pool_lv, 1)) {
