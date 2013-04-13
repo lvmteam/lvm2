@@ -91,11 +91,18 @@ static char *_list_args(const char *text, int state)
 		return NULL;
 
 	/* Short form arguments */
-	if (len == 2 && text[0] == '-') {
-		while (match_no < com->num_args)
-			if (text[1] == (_cmdline->arg_props +
-					com->valid_args[match_no++])->short_arg)
-				return strdup(text);
+	if (len < 3) {
+		while (match_no < com->num_args) {
+			char s[3];
+			char c;
+			if (!(c = (_cmdline->arg_props +
+				   com->valid_args[match_no++])->short_arg))
+				continue;
+
+			sprintf(s, "-%c", c);
+			if (!strncmp(text, s, len))
+				return strdup(s);
+		}
 	}
 
 	/* Long form arguments */
