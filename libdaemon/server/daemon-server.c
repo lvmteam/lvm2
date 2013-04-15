@@ -52,6 +52,8 @@ static void _exit_handler(int sig __attribute__((unused)))
 	_shutdown_requested = 1;
 }
 
+#define EXIT_ALREADYRUNNING 13
+
 #ifdef linux
 
 #include <stddef.h>
@@ -261,7 +263,7 @@ static void remove_lockfile(const char *file)
 		perror("unlink failed");
 }
 
-static void _daemonise(void)
+static void _daemonise(daemon_state s)
 {
 	int child_status;
 	int fd;
@@ -296,8 +298,14 @@ static void _daemonise(void)
 		if (_shutdown_requested) /* Child has signaled it is ok - we can exit now */
 			exit(0);
 
-		/* Problem with child.  Determine what it is by exit code */
-		fprintf(stderr, "Child exited with code %d\n", WEXITSTATUS(child_status));
+		switch (WEXITSTATUS(child_status)) {
+		case EXIT_ALREADYRUNNING:
+			fprintf(stderr, "Failed to acquire lock on %s. Already running?\n", s.pidfile);
+			break;
+		default:
+			/* Problem with child.  Determine what it is by exit code */
+			fprintf(stderr, "Child exited with code %d\n", WEXITSTATUS(child_status));
+		}
 		exit(WEXITSTATUS(child_status));
 	}
 
@@ -464,7 +472,7 @@ void daemon_start(daemon_state s)
 #endif
 
 	if (!s.foreground)
-		_daemonise();
+		_daemonise(s);
 
 	s.log = &_log;
 	s.log->name = s.name;
@@ -481,7 +489,7 @@ void daemon_start(daemon_state s)
 		 * after this point.
 		 */
 		if (dm_create_lockfile(s.pidfile) == 0)
-			exit(1);
+			exit(EXIT_ALREADYRUNNING);
 
 		(void) dm_prepare_selinux_context(NULL, 0);
 	}
