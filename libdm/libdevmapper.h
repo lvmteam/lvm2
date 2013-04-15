@@ -643,6 +643,36 @@ int dm_tree_node_add_raid_target(struct dm_tree_node *node,
 				 uint64_t rebuilds,
 				 uint64_t flags);
 
+struct dm_tree_node_raid_params {
+	const char *raid_type;
+
+	uint32_t stripes;
+	uint32_t mirrors;
+	uint32_t region_size;
+	uint32_t stripe_size;
+
+	/*
+	 * 'rebuilds' and 'writemostly' are bitfields that signify
+	 * which devices in the array are to be rebuilt or marked
+	 * writemostly.  By choosing a 'uint64_t', we limit ourself
+	 * to RAID arrays with 64 devices.
+	 */
+	uint64_t rebuilds;
+	uint64_t writemostly;
+	uint32_t writebehind;       /* I/Os (kernel default COUNTER_MAX / 2) */
+	uint32_t sync_daemon_sleep; /* ms (kernel default = 5sec) */
+	uint32_t max_recovery_rate; /* kB/sec/disk */
+	uint32_t min_recovery_rate; /* kB/sec/disk */
+	uint32_t stripe_cache;      /* sectors */
+
+	uint64_t flags;             /* [no]sync */
+	uint64_t reserved2;
+};
+
+int dm_tree_node_add_raid_target_with_params(struct dm_tree_node *node,
+					     uint64_t size,
+					     struct dm_tree_node_raid_params *p);
+
 /*
  * Replicator operation mode
  * Note: API for Replicator is not yet stable

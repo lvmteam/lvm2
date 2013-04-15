@@ -184,6 +184,8 @@ struct load_segment {
 	uint64_t rdevice_index;		/* Replicator-dev */
 
 	uint64_t rebuilds;	      /* raid */
+	uint64_t writemostly;	      /* raid */
+	uint32_t writebehind;	      /* raid */
 
 	struct dm_tree_node *metadata;	/* Thin_pool */
 	struct dm_tree_node *pool;	/* Thin_pool, Thin */
@@ -2128,9 +2130,16 @@ static int _raid_emit_segment_line(struct dm_task *dmt, uint32_t major,
 	if (seg->region_size)
 		param_count += 2;
 
+	if (seg->writebehind)
+		param_count += 2;
+
 	/* rebuilds is 64-bit */
 	param_count += 2 * hweight32(seg->rebuilds & 0xFFFFFFFF);
 	param_count += 2 * hweight32(seg->rebuilds >> 32);
+
+	/* rebuilds is 64-bit */
+	param_count += 2 * hweight32(seg->writemostly & 0xFFFFFFFF);
+	param_count += 2 * hweight32(seg->writemostly >> 32);
 
 	if ((seg->type == SEG_RAID1) && seg->stripe_size)
 		log_error("WARNING: Ignoring RAID1 stripe size");
@@ -2149,6 +2158,13 @@ static int _raid_emit_segment_line(struct dm_task *dmt, uint32_t major,
 	for (i = 0; i < (seg->area_count / 2); i++)
 		if (seg->rebuilds & (1 << i))
 			EMIT_PARAMS(pos, " rebuild %u", i);
+
+	for (i = 0; i < (seg->area_count / 2); i++)
+		if (seg->writemostly & (1 << i))
+			EMIT_PARAMS(pos, " write_mostly %u", i);
+
+	if (seg->writebehind)
+		EMIT_PARAMS(pos, " writebehind %u", seg->writebehind);
 
 	/* Print number of metadata/data device pairs */
 	EMIT_PARAMS(pos, " %u", seg->area_count/2);
@@ -2826,6 +2842,33 @@ int dm_tree_node_add_mirror_target(struct dm_tree_node *node,
 	return 1;
 }
 
+int dm_tree_node_add_raid_target_with_params(struct dm_tree_node *node,
+					     uint64_t size,
+					     struct dm_tree_node_raid_params *p)
+{
+	int i;
+	struct load_segment *seg = NULL;
+
+	for (i = 0; dm_segtypes[i].target && !seg; i++)
+		if (!strcmp(p->raid_type, dm_segtypes[i].target))
+			if (!(seg = _add_segment(node,
+						 dm_segtypes[i].type, size)))
+				return_0;
+
+	if (!seg)
+		return_0;
+
+	seg->region_size = p->region_size;
+	seg->stripe_size = p->stripe_size;
+	seg->area_count = 0;
+	seg->rebuilds = p->rebuilds;
+	seg->writemostly = p->writemostly;
+	seg->writebehind = p->writebehind;
+	seg->flags = p->flags;
+
+	return 1;
+}
+
 int dm_tree_node_add_raid_target(struct dm_tree_node *node,
 				 uint64_t size,
 				 const char *raid_type,
@@ -2834,25 +2877,16 @@ int dm_tree_node_add_raid_target(struct dm_tree_node *node,
 				 uint64_t rebuilds,
 				 uint64_t flags)
 {
-	int i;
-	struct load_segment *seg = NULL;
+	struct dm_tree_node_raid_params params;
 
-	for (i = 0; dm_segtypes[i].target && !seg; i++)
-		if (!strcmp(raid_type, dm_segtypes[i].target))
-			if (!(seg = _add_segment(node,
-						 dm_segtypes[i].type, size)))
-				return_0;
+	memset(&params, 0, sizeof(params));
+	params.raid_type = raid_type;
+	params.region_size = region_size;
+	params.stripe_size = stripe_size;
+	params.rebuilds = rebuilds;
+	params.flags = flags;
 
-	if (!seg)
-		return_0;
-
-	seg->region_size = region_size;
-	seg->stripe_size = stripe_size;
-	seg->area_count = 0;
-	seg->rebuilds = rebuilds;
-	seg->flags = flags;
-
-	return 1;
+	return dm_tree_node_add_raid_target_with_params(node, size, &params);
 }
 
 

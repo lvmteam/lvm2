@@ -699,6 +699,125 @@ static int lvchange_tag(struct cmd_context *cmd, struct logical_volume *lv, int 
 	return 1;
 }
 
+static int lvchange_writemostly(struct logical_volume *lv)
+{
+	int s, pv_count, i = 0;
+	char **pv_names;
+	const char *tmp_str;
+	struct pv_list *pvl;
+	struct arg_value_group_list *group;
+	struct cmd_context *cmd = lv->vg->cmd;
+	struct lv_segment *raid_seg = first_seg(lv);
+
+	if (strcmp(raid_seg->segtype->name, "raid1")) {
+		log_error("--write%s can only be used with 'raid1' segment type",
+			  arg_count(cmd, writemostly_ARG) ? "mostly" : "behind");
+		return 0;
+	}
+
+	if (arg_count(cmd, writebehind_ARG))
+		raid_seg->writebehind = arg_uint_value(cmd, writebehind_ARG, 0);
+
+	if (arg_count(cmd, writemostly_ARG)) {
+		/* writemostly can be specified more than once */
+		pv_count = arg_count(cmd, writemostly_ARG);
+		pv_names = dm_pool_alloc(cmd->mem, sizeof(char *) * pv_count);
+		if (!pv_names)
+			return_0;
+
+		dm_list_iterate_items(group, &cmd->arg_value_groups) {
+			if (!grouped_arg_is_set(group->arg_values,
+						writemostly_ARG))
+				continue;
+
+			if (!(tmp_str = grouped_arg_str_value(group->arg_values,
+							      writemostly_ARG,
+							      NULL)))
+				return_0;
+
+			/*
+			 * Writemostly PV specifications can be:
+			 *   <PV>   - Turn on writemostly
+			 *   <PV>:t - Toggle writemostly
+			 *   <PV>:n - Turn off writemostly
+			 *   <PV>:y - Turn on writemostly
+			 *
+			 * We allocate strlen + 3 to add our own ':{t|n|y}' if
+			 * not present plus the trailing '\0'.
+			 */
+			if (!(pv_names[i] = dm_pool_zalloc(cmd->mem,
+							   strlen(tmp_str) + 3)))
+				return_0;
+
+			if ((tmp_str[strlen(tmp_str) - 2] != ':') &&
+			    ((tmp_str[strlen(tmp_str) - 1] != 't') ||
+			     (tmp_str[strlen(tmp_str) - 1] != 'y') ||
+			     (tmp_str[strlen(tmp_str) - 1] != 'n')))
+				/* Default to 'y' if no mode specified */
+				sprintf(pv_names[i], "%s:y", tmp_str);
+			else
+				sprintf(pv_names[i], "%s", tmp_str);
+			i++;
+		}
+
+		for (i = 0; i < pv_count; i++)
+			pv_names[i][strlen(pv_names[i]) - 2] = '\0';
+
+		for (i = 0; i < pv_count; i++) {
+			if (!(pvl = find_pv_in_vg(lv->vg, pv_names[i]))) {
+				log_error("%s not found in volume group, %s",
+					  pv_names[i], lv->vg->name);
+				return 0;
+			}
+
+			for (s = 0; s < raid_seg->area_count; s++) {
+				/*
+				 * We don't bother checking the metadata area,
+				 * since writemostly only affects the data areas.
+				 */
+				if ((seg_type(raid_seg, s) == AREA_UNASSIGNED))
+					continue;
+
+				if (lv_is_on_pv(seg_lv(raid_seg, s), pvl->pv)) {
+					if (pv_names[i][strlen(pv_names[i]) + 1] == 'y')
+						seg_lv(raid_seg, s)->status |=
+							LV_WRITEMOSTLY;
+					else if (pv_names[i][strlen(pv_names[i]) + 1] == 'n')
+						seg_lv(raid_seg, s)->status &=
+							~LV_WRITEMOSTLY;
+					else if (pv_names[i][strlen(pv_names[i]) + 1] == 't')
+						seg_lv(raid_seg, s)->status ^=
+							LV_WRITEMOSTLY;
+					else
+						return_0;
+				}
+			}
+		}
+	}
+
+	if (!vg_write(lv->vg))
+		return_0;
+
+	if (!suspend_lv(cmd, lv)) {
+		vg_revert(lv->vg);
+		return_0;
+	}
+
+	if (!vg_commit(lv->vg)) {
+		if (!resume_lv(cmd, lv))
+			stack;
+		return_0;
+	}
+
+	log_very_verbose("Updating writemostly for \"%s\" in kernel", lv->name);
+	if (!resume_lv(cmd, lv)) {
+		log_error("Problem reactivating %s", lv->name);
+		return 0;
+	}
+
+	return 1;
+}
+
 static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 			   void *handle __attribute__((unused)))
 {
@@ -870,6 +989,17 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 		docmds++;
 	}
 
+	/* change writemostly/writebehind */
+	if (arg_count(cmd, writemostly_ARG) || arg_count(cmd, writebehind_ARG)) {
+		if (!archived && !archive(lv->vg)) {
+			stack;
+			return ECMD_FAILED;
+		}
+		archived = 1;
+		doit += lvchange_writemostly(lv);
+		docmds++;
+	}
+
 	if (doit)
 		log_print_unless_silent("Logical volume \"%s\" changed", lv->name);
 
@@ -945,6 +1075,8 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 		arg_count(cmd, alloc_ARG) ||
 		arg_count(cmd, discards_ARG) ||
 		arg_count(cmd, syncaction_ARG) ||
+		arg_count(cmd, writebehind_ARG) ||
+		arg_count(cmd, writemostly_ARG) ||
 		arg_count(cmd, zero_ARG);
 	int update = update_partial_safe || update_partial_unsafe;
 

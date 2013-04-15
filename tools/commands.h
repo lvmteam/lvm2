@@ -96,6 +96,8 @@ xx(lvchange,
    "\t[-v|--verbose]\n"
    "\t[-y|--yes]\n"
    "\t[--version]\n"
+   "\t[--writebehind BehindCount\n"
+   "\t[--writemostly PhysicalVolume]\n"
    "\t[-Z|--zero {y|n}]\n"
    "\tLogicalVolume[Path] [LogicalVolume[Path]...]\n",
 
@@ -104,7 +106,7 @@ xx(lvchange,
    major_ARG, minor_ARG, monitor_ARG, noudevsync_ARG, partial_ARG,
    permission_ARG, persistent_ARG, poll_ARG, readahead_ARG, resync_ARG,
    refresh_ARG, addtag_ARG, deltag_ARG, syncaction_ARG, sysinit_ARG, test_ARG,
-   yes_ARG, zero_ARG)
+   yes_ARG, writebehind_ARG, writemostly_ARG, zero_ARG)
 
 xx(lvconvert,
    "Change logical volume layout",

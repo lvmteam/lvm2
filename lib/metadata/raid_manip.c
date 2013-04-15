@@ -93,81 +93,6 @@ static int _activate_sublv_preserving_excl(struct logical_volume *top_lv,
 	return 1;
 }
 
-/*
- * _lv_is_on_pv
- * @lv:
- * @pv:
- *
- * If any of the component devices of the LV are on the given PV, 1
- * is returned; otherwise 0.  For example if one of the images of a RAID
- * (or its metadata device) is on the PV, 1 would be returned for the
- * top-level LV.
- * If you wish to check the images themselves, you should pass them.
- *
- * FIXME:  This should be made more generic, possibly use 'for_each_sub_lv',
- * and be put in lv_manip.c.  'for_each_sub_lv' does not yet allow us to
- * short-circuit execution or pass back the values we need yet though...
- */
-static int _lv_is_on_pv(struct logical_volume *lv, struct physical_volume *pv)
-{
-	uint32_t s;
-	struct physical_volume *pv2;
-	struct lv_segment *seg;
-
-	if (!lv)
-		return 0;
-
-	seg = first_seg(lv);
-	if (!seg)
-		return 0;
-
-	/* Check mirror log */
-	if (_lv_is_on_pv(seg->log_lv, pv))
-		return 1;
-
-	/* Check stack of LVs */
-	dm_list_iterate_items(seg, &lv->segments) {
-		for (s = 0; s < seg->area_count; s++) {
-			if (seg_type(seg, s) == AREA_PV) {
-				pv2 = seg_pv(seg, s);
-				if (id_equal(&pv->id, &pv2->id))
-					return 1;
-				if (pv->dev && pv2->dev &&
-				    (pv->dev->dev == pv2->dev->dev))
-					return 1;
-			}
-
-			if ((seg_type(seg, s) == AREA_LV) &&
-			    _lv_is_on_pv(seg_lv(seg, s), pv))
-				return 1;
-
-			if (!seg_is_raid(seg))
-				continue;
-
-			/* This is RAID, so we know the meta_area is AREA_LV */
-			if (_lv_is_on_pv(seg_metalv(seg, s), pv))
-				return 1;
-		}
-	}
-
-	return 0;
-}
-
-static int _lv_is_on_pvs(struct logical_volume *lv, struct dm_list *pvs)
-{
-	struct pv_list *pvl;
-
-	dm_list_iterate_items(pvl, pvs)
-		if (_lv_is_on_pv(lv, pvl->pv)) {
-			log_debug_metadata("%s is on %s", lv->name,
-					   pv_dev_name(pvl->pv));
-			return 1;
-		} else
-			log_debug_metadata("%s is not on %s", lv->name,
-					   pv_dev_name(pvl->pv));
-	return 0;
-}
-
 static int _get_pv_list_for_lv(struct logical_volume *lv, struct dm_list *pvs)
 {
 	uint32_t s;
@@ -1009,8 +934,8 @@ static int _raid_extract_images(struct logical_volume *lv, uint32_t new_count,
 				  seg_metalv(seg, s)->name, seg_lv(seg, s)->name);
 		} else {
 			/* Conditions for second pass */
-			if (!_lv_is_on_pvs(seg_lv(seg, s), target_pvs) ||
-			    !_lv_is_on_pvs(seg_metalv(seg, s), target_pvs))
+			if (!lv_is_on_pvs(seg_lv(seg, s), target_pvs) ||
+			    !lv_is_on_pvs(seg_metalv(seg, s), target_pvs))
 				continue;
 
 			if (!_raid_in_sync(lv) &&
@@ -1069,7 +994,8 @@ static int _raid_remove_images(struct logical_volume *lv,
 				  " after linear conversion");
 			return 0;
 		}
-		lv->status &= ~LV_NOTSYNCED;
+		lv->status &= ~(LV_NOTSYNCED | LV_WRITEMOSTLY);
+		first_seg(lv)->writebehind = 0;
 	}
 
 	if (!vg_write(lv->vg)) {
@@ -1211,7 +1137,7 @@ int lv_raid_split(struct logical_volume *lv, const char *split_name,
 	 * complete the split of the tracking sub-LV
 	 */
 	if (_lv_is_raid_with_tracking(lv, &tracking)) {
-		if (!_lv_is_on_pvs(tracking, splittable_pvs)) {
+		if (!lv_is_on_pvs(tracking, splittable_pvs)) {
 			log_error("Unable to split additional image from %s "
 				  "while tracking changes for %s",
 				  lv->name, tracking->name);
@@ -1344,7 +1270,7 @@ int lv_raid_split_and_track(struct logical_volume *lv,
 	}
 
 	for (s = seg->area_count - 1; s >= 0; s--) {
-		if (!_lv_is_on_pvs(seg_lv(seg, s), splittable_pvs))
+		if (!lv_is_on_pvs(seg_lv(seg, s), splittable_pvs))
 			continue;
 		lv_set_visible(seg_lv(seg, s));
 		seg_lv(seg, s)->status &= ~LVM_WRITE;
@@ -1677,8 +1603,8 @@ int lv_raid_replace(struct logical_volume *lv,
 
 		if (lv_is_virtual(seg_lv(raid_seg, s)) ||
 		    lv_is_virtual(seg_metalv(raid_seg, s)) ||
-		    _lv_is_on_pvs(seg_lv(raid_seg, s), remove_pvs) ||
-		    _lv_is_on_pvs(seg_metalv(raid_seg, s), remove_pvs))
+		    lv_is_on_pvs(seg_lv(raid_seg, s), remove_pvs) ||
+		    lv_is_on_pvs(seg_metalv(raid_seg, s), remove_pvs))
 			match_count++;
 	}
 
@@ -1706,8 +1632,8 @@ int lv_raid_replace(struct logical_volume *lv,
 			s = i % raid_seg->area_count;
 			if (!(i % copies))
 				rebuilds_per_group = 0;
-			if (_lv_is_on_pvs(seg_lv(raid_seg, s), remove_pvs) ||
-			    _lv_is_on_pvs(seg_metalv(raid_seg, s), remove_pvs) ||
+			if (lv_is_on_pvs(seg_lv(raid_seg, s), remove_pvs) ||
+			    lv_is_on_pvs(seg_metalv(raid_seg, s), remove_pvs) ||
 			    lv_is_virtual(seg_lv(raid_seg, s)) ||
 			    lv_is_virtual(seg_metalv(raid_seg, s)))
 				rebuilds_per_group++;

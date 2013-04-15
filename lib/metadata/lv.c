@@ -604,9 +604,11 @@ char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 		uint64_t n;
 		if (!_lv_raid_healthy(lv))
 			repstr[8] = 'r';  /* RAID needs 'r'efresh */
-		else if ((lv->status & RAID) &&
-			 lv_raid_mismatch_count(lv, &n) && n)
-			repstr[8] = 'm';  /* RAID contains 'm'ismatches */
+		else if (lv->status & RAID) {
+			if (lv_raid_mismatch_count(lv, &n) && n)
+				repstr[8] = 'm';  /* RAID has 'm'ismatches */
+		} else if (lv->status & LV_WRITEMOSTLY)
+			repstr[8] = 'w';  /* sub-LV has 'w'ritemostly */
 	}
 
 out:

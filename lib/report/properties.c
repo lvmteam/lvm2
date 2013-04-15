@@ -109,6 +109,10 @@ static char *_sync_action(const struct logical_volume *lv) {
 	return action;
 }
 
+static uint32_t _writebehind(const struct logical_volume *lv) {
+	return first_seg(lv)->writebehind;
+}
+
 static percent_t _snap_percent(const struct logical_volume *lv) {
 	percent_t perc;
 
@@ -213,6 +217,8 @@ GET_LV_NUM_PROPERTY_FN(sync_percent, _copy_percent(lv))
 #define _sync_percent_set _not_implemented_set
 GET_LV_NUM_PROPERTY_FN(mismatches, _mismatches(lv))
 #define _mismatches_set _not_implemented_set
+GET_LV_NUM_PROPERTY_FN(writebehind, _writebehind(lv))
+#define _writebehind_set _not_implemented_set
 GET_LV_STR_PROPERTY_FN(syncaction, _sync_action(lv))
 #define _syncaction_set _not_implemented_set
 GET_LV_STR_PROPERTY_FN(move_pv, lv_move_pv_dup(lv->vg->vgmem, lv))

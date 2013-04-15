@@ -118,6 +118,7 @@ sync_action,
 sync_percent,
 thin_count,
 transaction_id,
+writebehind,
 zero.
 .IP
 With \fB\-\-segments\fP, any "seg_" prefixes are optional;
@@ -161,7 +162,7 @@ snapshots of thin volumes using the new thin provisioning driver appear as (t).
 .IP 8 3
 Newly-allocated data blocks are overwritten with blocks of (z)eroes before use.
 .IP 9 3
-Volume Health: (p)artial, (r)efresh needed, (m)ismatches exist.
+Volume Health: (p)artial, (r)efresh needed, (m)ismatches exist, (w)ritemostly.
 (p)artial signifies that one or more of the Physical Volumes this Logical
 Volume uses is missing from the system.  (r)efresh signifies that one or
 more of the Physical Volumes this RAID Logical Volume uses had suffered a
@@ -172,7 +173,8 @@ has portions of the array that are not coherent or that the array has
 recently repaired inconsistencies.  An additional "check" after a "repair"
 of a RAID logical volume will clear this flag if no additional discrepancies
 are found.  ("check" and "repair" of a RAID Logical Volume can be done via
-the 'lvchange' command.)
+the 'lvchange' command.)  (w)ritemostly signifies the devices in a RAID 1
+logical volume that have been marked write-mostly.
 .RE
 .TP
 .BR \-O ", " \-\-sort

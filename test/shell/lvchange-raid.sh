@@ -14,10 +14,101 @@
 
 . lib/test
 
-# dm-raid v1.5.0+ contains RAID scrubbing support
-aux target_at_least dm-raid 1 5 0 || skip
+# dm-raid v1.4.1+ contains RAID10 support
+aux target_at_least dm-raid 1 4 1 || skip
 
 aux prepare_vg 5
+
+# run_writemostly_check <VG> <LV>
+run_writemostly_check() {
+	d0=`lvs -a --noheadings -o devices $1/${2}_rimage_0 | sed s/\(.\)//`
+	d0=$(sed s/^[[:space:]]*// <<< "$d0")
+	d1=`lvs -a --noheadings -o devices $1/${2}_rimage_1 | sed s/\(.\)//`
+	d1=$(sed s/^[[:space:]]*// <<< "$d1")
+
+	# No writemostly flag should be there yet.
+	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*-$'
+	lvs -a --noheadings -o lv_attr $1/${2}_rimage_1 | grep '.*-$'
+
+	if [ `lvs --noheadings -o segtype $1/$2` != "raid1" ]; then
+		not lvchange --writemostly $d0 $1/$2
+		return
+	fi
+
+	# Set the flag
+	lvchange --writemostly $d0 $1/$2
+	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*w$'
+
+	# Running again should leave it set (not toggle)
+	lvchange --writemostly $d0 $1/$2
+	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*w$'
+
+	# Running again with ':y' should leave it set
+	lvchange --writemostly $d0:y $1/$2
+	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*w$'
+
+	# ':n' should unset it
+	lvchange --writemostly $d0:n $1/$2
+	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*-$'
+
+	# ':n' again should leave it unset
+	lvchange --writemostly $d0:n $1/$2
+	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*-$'
+
+	# ':t' toggle to set
+	lvchange --writemostly $d0:t $1/$2
+	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*w$'
+
+	# ':t' toggle to unset
+	lvchange --writemostly $d0:t $1/$2
+	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*-$'
+
+	# ':y' to set
+	lvchange --writemostly $d0:y $1/$2
+	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*w$'
+
+	# Toggle both at once
+	lvchange --writemostly $d0:t --writemostly $d1:t $1/$2
+	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*-$'
+	lvs -a --noheadings -o lv_attr $1/${2}_rimage_1 | grep '.*w$'
+
+	# Toggle both at once again
+	lvchange --writemostly $d0:t --writemostly $d1:t $1/$2
+	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*w$'
+	lvs -a --noheadings -o lv_attr $1/${2}_rimage_1 | grep '.*-$'
+
+	# Toggle one, unset the other
+	lvchange --writemostly $d0:n --writemostly $d1:t $1/$2
+	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*-$'
+	lvs -a --noheadings -o lv_attr $1/${2}_rimage_1 | grep '.*w$'
+
+	# Toggle one, set the other
+	lvchange --writemostly $d0:y --writemostly $d1:t $1/$2
+	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*w$'
+	lvs -a --noheadings -o lv_attr $1/${2}_rimage_1 | grep '.*-$'
+
+	# Partial flag supercedes writemostly flag
+	aux disable_dev $d0
+	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*p$'
+	aux enable_dev $d0
+	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*w$'
+
+	# Catch Bad writebehind values
+	not lvchange --writebehind "invalid" $1/$2
+	not lvchange --writebehind -256 $1/$2
+
+	# Set writebehind
+	[ ! `lvs --noheadings -o writebehind $1/$2` ]
+	lvchange --writebehind 512 $1/$2
+	[ `lvs --noheadings -o writebehind $1/$2` -eq 512 ]
+
+	# Converting to linear should clear flags and writebehind
+	lvconvert -m 0 $1/$2 $d1
+	lvconvert --type raid1 -m 1 $1/$2 $d1
+	[ ! `lvs --noheadings -o writebehind $1/$2` ]
+	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*-$'
+	lvs -a --noheadings -o lv_attr $1/${2}_rimage_1 | grep '.*-$'
+}
 
 # run_syncaction_check <VG> <LV>
 run_syncaction_check() {
@@ -109,6 +200,10 @@ run_refresh_check() {
 }
 
 run_checks() {
+	if aux target_at_least dm-raid 1 1 0; then
+		run_writemostly_check $1 $2
+	fi
+
 	if aux target_at_least dm-raid 1 5 0; then
 		run_syncaction_check $1 $2
 	fi

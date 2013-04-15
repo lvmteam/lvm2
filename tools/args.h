@@ -87,6 +87,8 @@ arg(ignoreunsupported_ARG, '\0', "ignoreunsupported", NULL, 0)
 arg(atversion_ARG, '\0', "atversion", string_arg, 0)
 arg(validate_ARG, '\0', "validate", NULL, 0)
 arg(syncaction_ARG, '\0', "syncaction", string_arg, 0)
+arg(writemostly_ARG, '\0', "writemostly", string_arg, ARG_GROUPABLE)
+arg(writebehind_ARG, '\0', "writebehind", int_arg, 0)
 
 /* Allow some variations */
 arg(resizable_ARG, '\0', "resizable", yes_no_arg, 0)

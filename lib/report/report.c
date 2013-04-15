@@ -969,7 +969,23 @@ static int _mismatch_count_disp(struct dm_report *rh __attribute__((unused)),
 		return 1;
 	}
 
-	return  dm_report_field_uint64(rh, field, &mismatch_count);
+	return dm_report_field_uint64(rh, field, &mismatch_count);
+}
+
+static int _write_behind_disp(struct dm_report *rh __attribute__((unused)),
+			      struct dm_pool *mem,
+			      struct dm_report_field *field,
+			      const void *data,
+			      void *private __attribute__((unused)))
+{
+	const struct logical_volume *lv = (const struct logical_volume *) data;
+
+	if (!lv_is_raid_type(lv) || !first_seg(lv)->writebehind) {
+		dm_report_field_set_value(field, "", NULL);
+		return 1;
+	}
+
+	return dm_report_field_uint32(rh, field, &first_seg(lv)->writebehind);
 }
 
 static int _dtpercent_disp(int metadata, struct dm_report *rh,

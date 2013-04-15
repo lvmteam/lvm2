@@ -73,6 +73,91 @@ struct lv_names {
 };
 
 /*
+ * lv_is_on_pv
+ * @lv:
+ * @pv:
+ *
+ * If any of the component devices of the LV are on the given PV, 1
+ * is returned; otherwise 0.  For example if one of the images of a RAID
+ * (or its metadata device) is on the PV, 1 would be returned for the
+ * top-level LV.
+ * If you wish to check the images themselves, you should pass them.
+ *
+ * FIXME:  This should be made more generic, possibly use 'for_each_sub_lv'.
+ * 'for_each_sub_lv' does not yet allow us to short-circuit execution or
+ * pass back the values we need yet though...
+ *
+ * Returns: 1 if LV (or part of LV) is on PV, 0 otherwise
+ */
+int lv_is_on_pv(struct logical_volume *lv, struct physical_volume *pv)
+{
+	uint32_t s;
+	struct physical_volume *pv2;
+	struct lv_segment *seg;
+
+	if (!lv)
+		return 0;
+
+	seg = first_seg(lv);
+	if (!seg)
+		return 0;
+
+	/* Check mirror log */
+	if (lv_is_on_pv(seg->log_lv, pv))
+		return 1;
+
+	/* Check stack of LVs */
+	dm_list_iterate_items(seg, &lv->segments) {
+		for (s = 0; s < seg->area_count; s++) {
+			if (seg_type(seg, s) == AREA_PV) {
+				pv2 = seg_pv(seg, s);
+				if (id_equal(&pv->id, &pv2->id))
+					return 1;
+				if (pv->dev && pv2->dev &&
+				    (pv->dev->dev == pv2->dev->dev))
+					return 1;
+			}
+
+			if ((seg_type(seg, s) == AREA_LV) &&
+			    lv_is_on_pv(seg_lv(seg, s), pv))
+				return 1;
+
+			if (!seg_is_raid(seg))
+				continue;
+
+			/* This is RAID, so we know the meta_area is AREA_LV */
+			if (lv_is_on_pv(seg_metalv(seg, s), pv))
+				return 1;
+		}
+	}
+
+	return 0;
+}
+
+/*
+ * lv_is_on_pvs
+ * @lv
+ * @pvs
+ *
+ * Returns 1 if the LV (or part of the LV) is on any of the pvs
+ * in the list, 0 otherwise.
+ */
+int lv_is_on_pvs(struct logical_volume *lv, struct dm_list *pvs)
+{
+	struct pv_list *pvl;
+
+	dm_list_iterate_items(pvl, pvs)
+		if (lv_is_on_pv(lv, pvl->pv)) {
+			log_debug_metadata("%s is on %s", lv->name,
+					   pv_dev_name(pvl->pv));
+			return 1;
+		} else
+			log_debug_metadata("%s is not on %s", lv->name,
+					   pv_dev_name(pvl->pv));
+	return 0;
+}
+
+/*
  * get_default_region_size
  * @cmd
  *

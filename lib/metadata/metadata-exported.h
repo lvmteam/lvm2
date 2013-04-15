@@ -90,6 +90,8 @@
 #define THIN_POOL_DATA		UINT64_C(0x0000004000000000)	/* LV */
 #define THIN_POOL_METADATA	UINT64_C(0x0000008000000000)	/* LV */
 
+#define LV_WRITEMOSTLY		UINT64_C(0x0000010000000000)	/* LV (RAID1) */
+
 #define LVM_READ		UINT64_C(0x00000100)	/* LV, VG */
 #define LVM_WRITE		UINT64_C(0x00000200)	/* LV, VG */
 
@@ -334,6 +336,7 @@ struct lv_segment {
 
 	/* FIXME Fields depend on segment type */
 	uint32_t stripe_size;	/* For stripe and RAID - in sectors */
+	uint32_t writebehind;   /* For RAID (RAID1 only) */
 	uint32_t area_count;
 	uint32_t area_len;
 	uint32_t chunk_size;	/* For snapshots/thin_pool.  In sectors. */
@@ -696,6 +699,11 @@ const char *find_vgname_from_pvname(struct cmd_context *cmd,
 				    const char *pvname);
 const char *find_vgname_from_pvid(struct cmd_context *cmd,
 				  const char *pvid);
+
+int lv_is_on_pv(struct logical_volume *lv, struct physical_volume *pv);
+int lv_is_on_pvs(struct logical_volume *lv, struct dm_list *pvs);
+
+
 /* Find LV segment containing given LE */
 struct lv_segment *first_seg(const struct logical_volume *lv);
 struct lv_segment *last_seg(const struct logical_volume *lv);

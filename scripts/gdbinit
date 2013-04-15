@@ -324,6 +324,11 @@ define __status
 		set $_s_status = $_s_status & ~0x10000000U
 		printf " MERGING"
 	end
+#	if ($_s_status & LV_WRITEMOSTLY)
+	if ($_s_status & 0x10000000000U)
+		set $_s_status = $_s_status & ~0x10000000000U
+		printf " LV_WRITEMOSTLY"
+	end
 
 	if ($_s_status)
 		printf " 0x%x", $_s_status
