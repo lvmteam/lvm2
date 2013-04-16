@@ -577,7 +577,7 @@ int config_def_check(struct cmd_context *cmd, int force, int skip, int suppress_
 				cmd->cft_def_hash = NULL;
 				r = 0; goto out;
 			}
-			dm_hash_insert(cmd->cft_def_hash, dm_strdup(vp), def);
+			dm_hash_insert(cmd->cft_def_hash, vp, def);
 		}
 	}
 
