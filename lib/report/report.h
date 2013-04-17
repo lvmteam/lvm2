@@ -24,7 +24,8 @@ typedef enum {
 	VGS	= 4,
 	SEGS	= 8,
 	PVSEGS	= 16,
-	LABEL	= 32
+	LABEL	= 32,
+	LV_CREATE_PARAMS = 64
 } report_type_t;
 
 struct field;

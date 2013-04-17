@@ -97,6 +97,7 @@ struct volume_group;
 struct logical_volume;
 struct lv_segment;
 struct pv_segment;
+struct lvm_lv_create_params;
 
 /**
  * \class lvm_t
@@ -151,6 +152,14 @@ typedef struct lv_segment *lvseg_t;
  * This pv segment object is bound to a pv_t.
  */
 typedef struct pv_segment *pvseg_t;
+
+/**
+ * \class lv_create_params
+ *
+ * This lv_create_params represents the plethora of available options when
+ * creating a logical volume
+ */
+typedef struct lvm_lv_create_params *lv_create_params_t;
 
 /**
  * Logical Volume object list.
@@ -1399,6 +1408,130 @@ int lvm_lv_resize(const lv_t lv, uint64_t new_size);
  *
  */
 lv_t lvm_lv_snapshot(const lv_t lv, const char *snap_name, uint64_t max_snap_size);
+
+/**
+ * Thin provisioning discard policies
+ */
+typedef enum {
+	LVM_THIN_DISCARDS_IGNORE,
+	LVM_THIN_DISCARDS_NO_PASSDOWN,
+	LVM_THIN_DISCARDS_PASSDOWN,
+} lvm_thin_discards_t;
+
+/**
+ * Create a thinpool parameter passing object for the specified VG
+ *
+ * \param   vg
+ * Volume Group handle.
+ *
+ * \param   pool_name
+ * Name of the pool.
+ *
+ * \param   size
+ * size of the pool
+ *
+ * \param   chunk_size
+ * data block size of the pool
+ * Default value is DEFAULT_THIN_POOL_CHUNK_SIZE * 2 when 0 passed as chunk_size
+ * DM_THIN_MIN_DATA_BLOCK_SIZE < chunk_size < DM_THIN_MAX_DATA_BLOCK_SIZE
+ *
+ * \param meta_size
+ * Size of thin pool's metadata logical volume. Allowed range is 2MB-16GB.
+ * Default value (ie if 0) pool size / pool chunk size * 64
+ *
+ * \param discard
+ * Thin discard policy
+ * Note: THIN_DISCARDS_PASSDOWN is the default.
+ *
+ * \return
+ * Valid lv_create_params pointer on success, else NULL on error.
+ * Note: Memory is associated with the vg, it will get reclaimed when vg is
+ * closed.
+ *
+ */
+lv_create_params_t lvm_lv_params_create_thin_pool(vg_t vg,
+		const char *pool_name, uint64_t size, uint32_t chunk_size,
+		uint64_t meta_size, lvm_thin_discards_t discard);
+
+#define lvm_lv_params_create_thin_pool_default(vg, pool_name, size) \
+			lvm_lv_params_create_thin_pool((vg), (pool_name), (size), 0, 0, \
+			LVM_THIN_DISCARDS_PASSDOWN)
+
+
+
+/**
+ * Get the specific value of a lv create parameter by name
+ *
+ * \param	params		lv create parameters
+ *
+ * \param	name		name of parameter
+ *
+ * \return
+ * lvm_property_value structure that will contain the current
+ * value of the property.  Caller should check 'is_valid' flag before using
+ * the value.  If 'is_valid' is not set, caller should check lvm_errno()
+ * for specific error.
+ */
+struct lvm_property_value lvm_lv_params_get_property(
+											const lv_create_params_t params,
+											const char *name);
+
+
+/**
+ * Set the specific value of a lv create parameter by name
+ *
+ * Note that the property must be a 'settable' property, as evidenced '
+ * by the 'is_settable' flag when querying the property.
+ *
+ * The memory allocated for a string property value is tied to the vg_t
+ * handle associated with the lv_create_params_t and will be released when
+ * lvm_vg_close() is called.
+ *
+ * \param	params		lv create parameters
+ *
+ * \param	name		name of parameter
+ *
+ * \param	prop		Property value to use for setting
+ *
+ * \return
+ * 0 on success, -1 on error.
+ */
+int lvm_lv_params_set_property(lv_create_params_t params,
+								const char *name,
+								struct lvm_property_value *prop);
+
+/**
+ * Create a thin LV creation parameters in a given VG & thin pool
+ *
+ * \param   vg
+ * Volume Group handle.
+ *
+ * \param   pool_name
+ * Name of the pool.
+ *
+ * \param lvname
+ * Name of the LV to create
+ *
+ * \param   size
+ * Size of logical volume
+ *
+ * \return
+ * Valid lv_create_params pointer on success, else NULL on error.
+ * Note: Memory is associated with the vg, it will get reclaimed when vg is
+ * closed.
+ *
+ */
+lv_create_params_t lvm_lv_params_create_thin(const vg_t vg, const char *pool_name,
+									const char *lvname, uint64_t size);
+/**
+ * Create the actual logical volume.
+ *
+ * \param	params		The parameters object for lv creation
+ *
+ * \return
+ * Valid lv pointer on success, else NULL on error.
+ */
+lv_t lvm_lv_create(lv_create_params_t params);
 
 /************************** physical volume handling ************************/
 

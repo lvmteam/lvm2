@@ -271,6 +271,7 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 		else
 			options = find_config_tree_str(cmd, report_pvsegs_cols_verbose_CFG, NULL);
 		break;
+	case LV_CREATE_PARAMS:
 	default:
 		log_error(INTERNAL_ERROR "Unknown report type.");
 		return ECMD_FAILED;
@@ -382,6 +383,9 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 			r = process_each_vg(cmd, argc, argv, 0,
 					    report_handle, &_pvsegs_in_vg);
 		break;
+
+	case LV_CREATE_PARAMS:
+			break;
 	}
 
 	dm_report_output(report_handle);

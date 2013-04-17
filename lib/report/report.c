@@ -1295,6 +1295,7 @@ typedef struct logical_volume type_lv;
 typedef struct volume_group type_vg;
 typedef struct lv_segment type_seg;
 typedef struct pv_segment type_pvseg;
+typedef struct lvcreate_params type_lvcreate_params;
 
 static const struct dm_report_field_type _fields[] = {
 #include "columns.h"

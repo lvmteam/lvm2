@@ -39,6 +39,9 @@ static int _ ## NAME ## _get (const void *obj, struct lvm_property_type *prop) \
 	GET_NUM_PROPERTY_FN(NAME, VALUE, lv_segment, lvseg)
 #define GET_PVSEG_NUM_PROPERTY_FN(NAME, VALUE) \
 	GET_NUM_PROPERTY_FN(NAME, VALUE, pv_segment, pvseg)
+#define GET_LVCREATEPARAMS_NUM_PROPERTY_FN(NAME, VALUE)\
+	GET_NUM_PROPERTY_FN(NAME, VALUE, lvcreate_params, lvcp)
+
 
 #define SET_NUM_PROPERTY_FN(NAME, SETFN, TYPE, VAR)			\
 static int _ ## NAME ## _set (void *obj, struct lvm_property_type *prop) \
@@ -48,12 +51,24 @@ static int _ ## NAME ## _set (void *obj, struct lvm_property_type *prop) \
 	SETFN(VAR, prop->value.integer);		\
 	return 1; \
 }
+
+#define SET_NUM_PROPERTY(NAME, VALUE, TYPE, VAR)			\
+static int _ ## NAME ## _set (void *obj, struct lvm_property_type *prop) \
+{ \
+	struct TYPE *VAR = (struct TYPE *)obj; \
+\
+	VALUE = prop->value.integer;		\
+	return 1; \
+}
 #define SET_VG_NUM_PROPERTY_FN(NAME, SETFN) \
 	SET_NUM_PROPERTY_FN(NAME, SETFN, volume_group, vg)
 #define SET_PV_NUM_PROPERTY_FN(NAME, SETFN) \
 	SET_NUM_PROPERTY_FN(NAME, SETFN, physical_volume, pv)
 #define SET_LV_NUM_PROPERTY_FN(NAME, SETFN) \
 	SET_NUM_PROPERTY_FN(NAME, SETFN, logical_volume, lv)
+
+#define SET_LVCREATEPARAMS_NUM_PROPERTY_FN(NAME, VALUE) \
+	SET_NUM_PROPERTY(NAME, VALUE, lvcreate_params, lvcp)
 
 #define GET_STR_PROPERTY_FN(NAME, VALUE, TYPE, VAR)			\
 static int _ ## NAME ## _get (const void *obj, struct lvm_property_type *prop) \
@@ -360,6 +375,9 @@ GET_PVSEG_NUM_PROPERTY_FN(pvseg_start, pvseg->pe)
 GET_PVSEG_NUM_PROPERTY_FN(pvseg_size, (SECTOR_SIZE * pvseg->len))
 #define _pvseg_size_set _not_implemented_set
 
+/* lv create parameters */
+GET_LVCREATEPARAMS_NUM_PROPERTY_FN(skip_zero, lvcp->zero)
+SET_LVCREATEPARAMS_NUM_PROPERTY_FN(skip_zero, lvcp->zero)
 
 #define STR DM_REPORT_FIELD_TYPE_STRING
 #define NUM DM_REPORT_FIELD_TYPE_NUMBER
@@ -462,6 +480,18 @@ int pvseg_get_property(const struct pv_segment *pvseg,
 		       struct lvm_property_type *prop)
 {
 	return _get_property(pvseg, prop, PVSEGS);
+}
+
+int lv_create_param_get_property(const struct lvcreate_params *lvcp,
+		struct lvm_property_type *prop)
+{
+	return _get_property(lvcp, prop, LV_CREATE_PARAMS);
+}
+
+int lv_create_param_set_property(struct lvcreate_params *lvcp,
+		    struct lvm_property_type *prop)
+{
+	return _set_property(lvcp, prop, LV_CREATE_PARAMS);
 }
 
 int pv_get_property(const struct physical_volume *pv,
