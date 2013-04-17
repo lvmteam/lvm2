@@ -874,6 +874,7 @@ static void main_loop(int local_sock, int cmd_timeout)
 			int saved_errno = errno;
 
 			reread_config = 0;
+			DEBUGLOG("got SIGHUP\n");
 			if (clops->reread_config)
 				clops->reread_config();
 			errno = saved_errno;
@@ -982,6 +983,8 @@ static void main_loop(int local_sock, int cmd_timeout)
 
       closedown:
 	clops->cluster_closedown();
+	if (quit)
+		DEBUGLOG("SIGTERM received\n");
 }
 
 static __attribute__ ((noreturn)) void wait_for_child(int c_pipe, int timeout)
@@ -2253,14 +2256,12 @@ static void sigusr2_handler(int sig)
 
 static void sigterm_handler(int sig)
 {
-	DEBUGLOG("SIGTERM received\n");
 	quit = 1;
 	return;
 }
 
 static void sighup_handler(int sig)
 {
-        DEBUGLOG("got SIGHUP\n");
 	reread_config = 1;
 }
 
