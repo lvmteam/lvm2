@@ -218,8 +218,8 @@ maybe_retry:
 		goto retry;
 	}
 bad:
-	DEBUGLOG("Failed to lock resource %s\n", resource);
 	pthread_mutex_unlock(&_lock_mutex);
+	DEBUGLOG("Failed to lock resource %s\n", resource);
 
 	return 1; /* fail */
 }
@@ -251,9 +251,9 @@ static int _unlock_resource(const char *resource, int lockid)
 	}
 
 	dm_hash_remove(_locks, resource);
-	dm_free(lck);
 	pthread_cond_broadcast(&_lock_cond); /* wakeup waiters */
 	pthread_mutex_unlock(&_lock_mutex);
+	dm_free(lck);
 
 	return 0;
 }
@@ -312,6 +312,6 @@ struct cluster_ops *init_singlenode_cluster(void)
 {
 	if (!_init_cluster())
 		return &_cluster_singlenode_ops;
-	else
-		return NULL;
+
+	return NULL;
 }
