@@ -1499,7 +1499,7 @@ int lvm2_main(int argc, char **argv)
 		return -1;
 
 	if (is_static() && strcmp(base, "lvm.static") &&
-	    path_exists(LVM_SHARED_PATH) &&
+	    path_exists(LVM_SHARED_PATH) && argv &&
 	    !getenv("LVM_DID_EXEC")) {
 		if (setenv("LVM_DID_EXEC", base, 1))
 			log_sys_error("setenv", "LVM_DID_EXEC");
