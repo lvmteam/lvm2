@@ -411,6 +411,8 @@ static int _fill_device_data(struct thread_status *ts)
       fail:
 	dm_task_destroy(dmt);
 	dm_free(ts->device.name);
+	ts->device.name = NULL;
+
 	return 0;
 }
 

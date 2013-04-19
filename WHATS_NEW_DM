@@ -1,5 +1,6 @@
 Version 1.02.78 - 
 ===================================
+  Prevent double free error after dmeventd call of _fill_device_data().
   Update dmevent structure message_data to simplify/fix error path handling.
   Validate passed params to dm_get_status_raid/thin/thin_pool(). 
   Fix 'dmsetup splitname -o' to not fail if used without '-c' switch (1.02.68).
