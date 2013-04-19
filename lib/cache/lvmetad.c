@@ -343,8 +343,10 @@ struct volume_group *lvmetad_vg_lookup(struct cmd_context *cmd, const char *vgna
 		reply = _lvmetad_send("vg_lookup", "uuid = %s", uuid, NULL);
 		diag_name = uuid;
 	} else {
-		if (!vgname)
+		if (!vgname) {
 			log_error(INTERNAL_ERROR "VG name required (VGID not available)");
+			goto out;
+		}
 		log_debug_lvmetad("Asking lvmetad for VG %s", vgname);
 		reply = _lvmetad_send("vg_lookup", "name = %s", vgname, NULL);
 		diag_name = vgname;

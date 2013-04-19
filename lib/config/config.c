@@ -967,6 +967,7 @@ static struct dm_config_value *_get_def_array_values(struct dm_config_tree *cft,
 		if (!(v = dm_config_create_value(cft))) {
 			log_error("Failed to create default config array value for %s.", def->name);
 			dm_free(enc_value);
+			return NULL;
 		}
 		if (oldv)
 			oldv->next = v;
