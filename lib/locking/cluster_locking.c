@@ -241,14 +241,12 @@ static int _cluster_request(char clvmd_cmd, const char *node, void *data, int le
 	 * With an extra pair of INTs on the front to sanity
 	 * check the pointer when we are given it back to free
 	 */
-	*response = dm_malloc(sizeof(lvm_response_t) * num_responses);
-	if (!*response) {
+	*response = NULL;
+	if (!(rarray = dm_malloc(sizeof(lvm_response_t) * num_responses))) {
 		errno = ENOMEM;
 		status = 0;
 		goto out;
 	}
-
-	rarray = *response;
 
 	/* Unpack the response into an lvm_response_t array */
 	inptr = head->args;
@@ -266,9 +264,9 @@ static int _cluster_request(char clvmd_cmd, const char *node, void *data, int le
 			int j;
 			for (j = 0; j < i; j++)
 				dm_free(rarray[i].response);
-			free(*response);
+			dm_free(rarray);
 			errno = ENOMEM;
-			status = -1;
+			status = 0;
 			goto out;
 		}
 
