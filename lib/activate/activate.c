@@ -794,6 +794,7 @@ int lv_raid_dev_health(const struct logical_volume *lv, char **dev_health)
 	int r;
 	struct dev_manager *dm;
 	struct dm_status_raid *status;
+	/* FIXME: find a better way for this, it is fragile */
 	static char *cached_dev_health = NULL;
 	static const struct logical_volume *cached_lv = NULL;
 

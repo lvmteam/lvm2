@@ -437,6 +437,8 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 		}
 
 		dev_close_immediate(dev);
+		// FIXME: dev with DEV_ALLOCED is released
+		// but code is referencing it
 	}
 
 	if (critical_section())
