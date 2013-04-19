@@ -167,14 +167,10 @@ struct message_data {
 	char *id;
 	char *dso_name;		/* Name of DSO. */
 	char *device_uuid;	/* Mapped device path. */
-	union {
-		char *str;	/* Events string as fetched from message. */
-		enum dm_event_mask field;	/* Events bitfield. */
-	} events;
-	union {
-		char *str;
-		uint32_t secs;
-	} timeout;
+	char *events_str;	/* Events string as fetched from message. */
+	enum dm_event_mask events_field;	/* Events bitfield. */
+	char *timeout_str;
+	uint32_t timeout_secs;
 	struct dm_event_daemon_message *msg;	/* Pointer to message buffer. */
 };
 
@@ -235,8 +231,8 @@ static struct thread_status *_alloc_thread_status(struct message_data *data,
 	ret->device.name = NULL;
 	ret->device.major = ret->device.minor = 0;
 	ret->dso_data = dso_data;
-	ret->events = data->events.field;
-	ret->timeout = data->timeout.secs;
+	ret->events = data->events_field;
+	ret->timeout = data->timeout_secs;
 	dm_list_init(&ret->timeout_list);
 
 	return ret;
@@ -325,9 +321,9 @@ static void _free_message(struct message_data *message_data)
 {
 	dm_free(message_data->id);
 	dm_free(message_data->dso_name);
-
 	dm_free(message_data->device_uuid);
-
+	dm_free(message_data->events_str);
+	dm_free(message_data->timeout_str);
 }
 
 /* Parse a register message from the client. */
@@ -347,25 +343,15 @@ static int _parse_message(struct message_data *message_data)
 	if (_fetch_string(&message_data->id, &p, ' ') &&
 	    _fetch_string(&message_data->dso_name, &p, ' ') &&
 	    _fetch_string(&message_data->device_uuid, &p, ' ') &&
-	    _fetch_string(&message_data->events.str, &p, ' ') &&
-	    _fetch_string(&message_data->timeout.str, &p, ' ')) {
-		if (message_data->events.str) {
-			enum dm_event_mask i = atoi(message_data->events.str);
-
-			/*
-			 * Free string representaion of events.
-			 * Not needed an more.
-			 */
-			dm_free(message_data->events.str);
-			message_data->events.field = i;
-		}
-		if (message_data->timeout.str) {
-			uint32_t secs = atoi(message_data->timeout.str);
-			dm_free(message_data->timeout.str);
-			message_data->timeout.secs = secs ? secs :
-			    DM_EVENT_DEFAULT_TIMEOUT;
-		}
-
+	    _fetch_string(&message_data->events_str, &p, ' ') &&
+	    _fetch_string(&message_data->timeout_str, &p, ' ')) {
+		if (message_data->events_str)
+			message_data->events_field =
+				atoi(message_data->events_str);
+		if (message_data->timeout_str)
+			message_data->timeout_secs =
+				atoi(message_data->timeout_str)
+				? : DM_EVENT_DEFAULT_TIMEOUT;
 		ret = 1;
 	}
 
@@ -1025,7 +1011,7 @@ static int _register_for_event(struct message_data *message_data)
 	}
 
 	/* Or event # into events bitfield. */
-	thread->events |= message_data->events.field;
+	thread->events |= message_data->events_field;
 
     outth:
 	_unlock_mutex();
@@ -1070,7 +1056,7 @@ static int _unregister_for_event(struct message_data *message_data)
 		return 0;
 	}
 
-	thread->events &= ~message_data->events.field;
+	thread->events &= ~message_data->events_field;
 
 	if (!(thread->events & DM_EVENT_TIMEOUT))
 		_unregister_for_timeout(thread);
@@ -1208,7 +1194,7 @@ static int _set_timeout(struct message_data *message_data)
 
 	_lock_mutex();
 	if ((thread = _lookup_thread_status(message_data)))
-		thread->timeout = message_data->timeout.secs;
+		thread->timeout = message_data->timeout_secs;
 	_unlock_mutex();
 
 	return thread ? 0 : -ENODEV;

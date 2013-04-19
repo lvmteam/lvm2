@@ -1,5 +1,6 @@
 Version 1.02.78 - 
 ===================================
+  Update dmevent structure message_data to simplify/fix error path handling.
   Validate passed params to dm_get_status_raid/thin/thin_pool(). 
   Fix 'dmsetup splitname -o' to not fail if used without '-c' switch (1.02.68).
   Add dm_config_write_{node_out/one_node_out} for enhanced config output.
