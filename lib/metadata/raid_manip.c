@@ -403,7 +403,6 @@ static int _alloc_image_component(struct logical_volume *lv,
 	}
 
 	if (!ah) {
-		first_area = 0;
 		log_error(INTERNAL_ERROR
 			  "Stand-alone %s area allocation not implemented",
 			  (type == RAID_META) ? "metadata" : "data");

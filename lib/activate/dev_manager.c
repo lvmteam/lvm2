@@ -1610,7 +1610,7 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	uint32_t s;
 	struct seg_list *sl;
 	struct dm_list *snh;
-	struct lv_segment *seg = first_seg(lv);
+	struct lv_segment *seg;
 	struct dm_tree_node *thin_node;
 	const char *uuid;
 
