@@ -26,6 +26,7 @@ ACTION=="remove", GOTO="lvm_scan"
 KERNEL!="dm-[0-9]*", ACTION!="add", GOTO="lvm_end"
 
 # If the PV is a dm device, scan only after proper mapping activation (CHANGE event + DM_ACTIVATION=1)
+# or after a coldplug (event retrigger) with "add" event (ADD event + DM_ACTIVATION=1)
 KERNEL=="dm-[0-9]*", ENV{DM_ACTIVATION}!="1", GOTO="lvm_end"
 
 LABEL="lvm_scan"

@@ -77,7 +77,10 @@ LABEL="dm_flags_done"
 # before (e.g. in initrd). If udev is used in initrd, we require the udev init
 # script to not remove the existing udev database so we can reuse the information
 # stored at the time of device activation in the initrd.
-ACTION=="add", ENV{DM_UDEV_RULES_VSN}!="1", ENV{DM_UDEV_PRIMARY_SOURCE_FLAG}!="1", GOTO="dm_disable"
+ACTION!="add", GOTO="dm_no_coldplug"
+ENV{DM_UDEV_RULES_VSN}!="1", ENV{DM_UDEV_PRIMARY_SOURCE_FLAG}!="1", GOTO="dm_disable"
+ENV{DM_ACTIVATION}="1"
+LABEL="dm_no_coldplug"
 
 # "dm" sysfs subdirectory is available in newer versions of DM
 # only (kernels >= 2.6.29). We have to check for its existence
