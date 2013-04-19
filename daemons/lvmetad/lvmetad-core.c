@@ -1168,23 +1168,24 @@ static void usage(char *prog, FILE *file)
 int main(int argc, char *argv[])
 {
 	signed char opt;
-	daemon_state s = { .private = NULL };
 	lvmetad_state ls;
 	int _socket_override = 1;
+	daemon_state s = {
+		.daemon_fini = fini,
+		.daemon_init = init,
+		.handler = handler,
+		.name = "lvmetad",
+		.pidfile = LVMETAD_PIDFILE,
+		.private = &ls,
+		.protocol = "lvmetad",
+		.protocol_version = 1,
+		.socket_path = getenv("LVM_LVMETAD_SOCKET"),
+	};
 
-	s.name = "lvmetad";
-	s.private = &ls;
-	s.daemon_init = init;
-	s.daemon_fini = fini;
-	s.handler = handler;
-	s.socket_path = getenv("LVM_LVMETAD_SOCKET");
 	if (!s.socket_path) {
 		_socket_override = 0;
 		s.socket_path = DEFAULT_RUN_DIR "/lvmetad.socket";
 	}
-	s.pidfile = LVMETAD_PIDFILE;
-	s.protocol = "lvmetad";
-	s.protocol_version = 1;
 	ls.log_config = "";
 
 	// use getopt_long
@@ -1216,9 +1217,9 @@ int main(int argc, char *argv[])
 		if (!_socket_override) {
 			fprintf(stderr, "A socket path (-s) is required in foreground mode.");
 			exit(2);
-		} else {
-			s.pidfile = NULL;
 		}
+
+		s.pidfile = NULL;
 	}
 
 	daemon_start(s);
