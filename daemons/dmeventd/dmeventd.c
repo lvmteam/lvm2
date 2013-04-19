@@ -1454,10 +1454,8 @@ static int _do_process_request(struct dm_event_daemon_message *msg)
 						msg->cmd == DM_EVENT_CMD_DIE ? "DYING" : "HELLO",
                                                 DM_EVENT_PROTOCOL_VERSION);
 			dm_free(answer);
-		} else {
+		} else
 			msg->size = 0;
-			msg->data = NULL;
-		}
 	} else if (msg->cmd != DM_EVENT_CMD_ACTIVE && !_parse_message(&message_data)) {
 		stack;
 		ret = -EINVAL;
