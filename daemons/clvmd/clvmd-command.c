@@ -383,7 +383,7 @@ static int restart_clvmd(void)
 	} while (hn);
 
 	/* clvmd + locks (-E uuid) + debug (-d X) + NULL */
-	if (!(argv = malloc((max_locks * 2 + 5) * sizeof(*argv))))
+	if (!(argv = malloc((max_locks * 2 + 6) * sizeof(*argv))))
 		goto_out;
 
 	/*
@@ -391,12 +391,16 @@ static int restart_clvmd(void)
 	 */
 	argv[argc++] = "clvmd";
 
-	/* Propogate debug options */
+	/* Propagate debug options */
 	if (clvmd_get_debug()) {
 		if (dm_snprintf(debug_arg, sizeof(debug_arg), "-d%u", clvmd_get_debug()) < 0)
 			goto_out;
 		argv[argc++] = debug_arg;
 	}
+
+	/* Propagate foreground options */
+	if (clvmd_get_foreground())
+		argv[argc++] = "-f";
 
 	argv[argc++] = "-I";
 	argv[argc++] = clops->name;

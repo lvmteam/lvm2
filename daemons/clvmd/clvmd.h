@@ -119,6 +119,7 @@ extern void debuglog(const char *fmt, ... )
 
 void clvmd_set_debug(debug_t new_de);
 debug_t clvmd_get_debug(void);
+int clvmd_get_foreground(void);
 
 int sync_lock(const char *resource, int mode, int flags, int *lockid);
 int sync_unlock(const char *resource, int lockid);

@@ -249,6 +249,11 @@ debug_t clvmd_get_debug(void)
 	return debug;
 }
 
+int clvmd_get_foreground(void)
+{
+	return foreground_mode;
+}
+
 static const char *decode_cmd(unsigned char cmdl)
 {
 	static char buf[128];
