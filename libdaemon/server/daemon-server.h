@@ -140,7 +140,8 @@ void daemon_log_cft(log_state *s, int type, const char *prefix,
 void daemon_log_multi(log_state *s, int type, const char *prefix, const char *message);
 
 /* Log a formatted message as "type". See also daemon-log.h. */
-void daemon_logf(log_state *s, int type, const char *format, ...);
+void daemon_logf(log_state *s, int type, const char *format, ...)
+	__attribute__ ((format(printf, 3, 4)));
 
 /*
  * Configure log_state to send messages of type "type" to the log outlet
