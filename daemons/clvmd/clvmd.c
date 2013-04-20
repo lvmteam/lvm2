@@ -1217,7 +1217,7 @@ static int read_from_local_sock(struct local_client *thisfd)
 			missing_len = 0;
 
 		/* We need at least sizeof(struct clvm_header) bytes in buffer */
-		if (len < sizeof(struct clvm_header) || argslen < 0 ||
+		if (len < (int)sizeof(struct clvm_header) || argslen < 0 ||
 		    missing_len > MAX_MISSING_LEN) {
 			struct clvm_header reply = {
 				.cmd = CLVMD_CMD_REPLY,
