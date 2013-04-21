@@ -437,7 +437,6 @@ static int do_resume_lv(char *resource, unsigned char command, unsigned char loc
 static int do_suspend_lv(char *resource, unsigned char command, unsigned char lock_flags)
 {
 	int oldmode;
-	struct lvinfo lvi;
 	unsigned origin_only = (lock_flags & LCK_ORIGIN_ONLY_MODE) ? 1 : 0;
 	unsigned exclusive;
 
@@ -450,12 +449,8 @@ static int do_suspend_lv(char *resource, unsigned char command, unsigned char lo
 
 	exclusive = (oldmode == LCK_EXCL) ? 1 : 0;
 
-	/* Only suspend it if it exists */
-	if (!lv_info_by_lvid(cmd, resource, origin_only, &lvi, 0, 0))
-		return EIO;
-
-	if (lvi.exists &&
-	    !lv_suspend_if_active(cmd, resource, origin_only, exclusive))
+	/* Always call lv_suspend to read commited and precommited data */
+	if (!lv_suspend_if_active(cmd, resource, origin_only, exclusive))
 		return EIO;
 
 	return 0;

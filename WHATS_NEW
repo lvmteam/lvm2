@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Fix clvmd caching of metadata when suspending inactive volumes.
   Find newest timestamp of merged config files.
   Fix assignment order for vg fid for lvm1 and pool format.
   Fix memleak in dmeventd thin plugin in device list obtaining err path.
