@@ -212,9 +212,9 @@ static int lvchange_background_polling(struct cmd_context *cmd,
 
 static int _lvchange_activate(struct cmd_context *cmd, struct logical_volume *lv)
 {
-	int activate;
+	activation_change_t activate;
 
-	activate = arg_uint_value(cmd, activate_ARG, 0);
+	activate = (activation_change_t) arg_uint_value(cmd, activate_ARG, CHANGE_AY);
 
 	if (lv_is_cow(lv) && !lv_is_virtual_origin(origin_from_cow(lv)))
 		lv = origin_from_cow(lv);
