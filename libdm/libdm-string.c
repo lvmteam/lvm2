@@ -92,7 +92,10 @@ static char *_unquote(char *component)
 int dm_split_lvm_name(struct dm_pool *mem, const char *dmname,
 		      char **vgname, char **lvname, char **layer)
 {
-	if (mem && !(*vgname = dm_pool_strdup(mem, dmname)))
+	if (mem)
+		*vgname = dm_pool_strdup(mem, dmname);
+
+	if (!*vgname)
 		return 0;
 
 	_unquote(*layer = _unquote(*lvname = _unquote(*vgname)));
