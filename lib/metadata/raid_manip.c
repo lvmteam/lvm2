@@ -195,7 +195,8 @@ static int _raid_remove_top_layer(struct logical_volume *lv,
 	/* Add last metadata area to removal_list */
 	lvl_array[0].lv = seg_metalv(seg, 0);
 	lv_set_visible(seg_metalv(seg, 0));
-	remove_seg_from_segs_using_this_lv(seg_metalv(seg, 0), seg);
+	if (!remove_seg_from_segs_using_this_lv(seg_metalv(seg, 0), seg))
+		return_0;
 	seg_metatype(seg, 0) = AREA_UNASSIGNED;
 	dm_list_add(removal_list, &(lvl_array[0].list));
 
@@ -835,8 +836,9 @@ static int _extract_image_components(struct lv_segment *seg, uint32_t idx,
 	lv_set_visible(meta_lv);
 
 	/* release removes data and meta areas */
-	remove_seg_from_segs_using_this_lv(data_lv, seg);
-	remove_seg_from_segs_using_this_lv(meta_lv, seg);
+	if (!remove_seg_from_segs_using_this_lv(data_lv, seg) ||
+	    !remove_seg_from_segs_using_this_lv(meta_lv, seg))
+		return_0;
 
 	seg_type(seg, idx) = AREA_UNASSIGNED;
 	seg_metatype(seg, idx) = AREA_UNASSIGNED;

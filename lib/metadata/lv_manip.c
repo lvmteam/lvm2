@@ -246,6 +246,8 @@ int remove_seg_from_segs_using_this_lv(struct logical_volume *lv,
 		return 1;
 	}
 
+	log_error(INTERNAL_ERROR "Segment %s:%u is not a user of %s.",
+                  seg->lv->name, seg->le, lv->name);
 	return 0;
 }
 
@@ -514,7 +516,8 @@ static int _release_and_discard_lv_segment_area(struct lv_segment *seg, uint32_t
 				 seg->lv->name, seg->le, s,
 				 seg_lv(seg, s)->name, seg_le(seg, s));
 
-		remove_seg_from_segs_using_this_lv(seg_lv(seg, s), seg);
+		if (!remove_seg_from_segs_using_this_lv(seg_lv(seg, s), seg))
+			return_0;
 		seg_lv(seg, s) = NULL;
 		seg_le(seg, s) = 0;
 		seg_type(seg, s) = AREA_UNASSIGNED;

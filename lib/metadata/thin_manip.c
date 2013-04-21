@@ -474,7 +474,8 @@ int extend_pool(struct logical_volume *pool_lv, const struct segment_type *segty
 		return_0;
 
 	/* Drop reference as attach_pool_data_lv() takes it again */
-	remove_seg_from_segs_using_this_lv(data_lv, seg);
+	if (!remove_seg_from_segs_using_this_lv(data_lv, seg))
+		return_0;
 	if (!attach_pool_data_lv(seg, data_lv))
 		return_0;
 
