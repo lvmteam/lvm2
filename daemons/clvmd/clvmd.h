@@ -95,7 +95,7 @@ struct local_client {
 	} bits;
 };
 
-#define DEBUGLOG(fmt, args...) debuglog(fmt, ## args);
+#define DEBUGLOG(fmt, args...) debuglog(fmt, ## args)
 
 #ifndef max
 #define max(a,b) ((a)>(b)?(a):(b))
