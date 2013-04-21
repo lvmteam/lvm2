@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Fix creation and removal of clustered snapshot.
   Fix clvmd caching of metadata when suspending inactive volumes.
   Find newest timestamp of merged config files.
   Fix assignment order for vg fid for lvm1 and pool format.

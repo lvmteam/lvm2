@@ -176,6 +176,7 @@ int vg_remove_snapshot(struct logical_volume *cow)
 {
 	int merging_snapshot = 0;
 	struct logical_volume *origin = origin_from_cow(cow);
+	int is_origin_active = lv_is_active(origin);
 
 	dm_list_del(&cow->snapshot->origin_list);
 	origin->origin_count--;
@@ -209,25 +210,43 @@ int vg_remove_snapshot(struct logical_volume *cow)
 	lv_set_visible(cow);
 
 	/* format1 must do the change in one step, with the commit last. */
-	if (!(origin->vg->fid->fmt->features & FMT_MDAS))
+	if (!(origin->vg->fid->fmt->features & FMT_MDAS)) {
+		/* Get the lock for COW volume */
+		if (is_origin_active && !activate_lv(cow->vg->cmd, cow)) {
+			log_error("Unable to activate logical volume \"%s\"",
+				  cow->name);
+			return 0;
+		}
 		return 1;
+	}
 
 	if (!vg_write(origin->vg))
 		return_0;
-	if (!suspend_lv(origin->vg->cmd, origin)) {
+
+	/* Skip call suspend, if device is not active */
+	if (is_origin_active && !suspend_lv(origin->vg->cmd, origin)) {
 		log_error("Failed to refresh %s without snapshot.",
 			  origin->name);
 		return 0;
 	}
 	if (!vg_commit(origin->vg))
 		return_0;
-	if (!merging_snapshot && !resume_lv(origin->vg->cmd, cow)) {
-		log_error("Failed to resume %s.", cow->name);
-		return 0;
-	}
-	if (!resume_lv(origin->vg->cmd, origin)) {
-		log_error("Failed to resume %s.", origin->name);
-		return 0;
+
+	if (is_origin_active) {
+		/*
+		 * If the snapshot was active and the COW LV is taken away
+		 * the LV lock on cluster has to be grabbed, so use
+		 * activate_lv() which resumes suspend cow device.
+		 */
+		if (!merging_snapshot && !activate_lv(cow->vg->cmd, cow)) {
+			log_error("Failed to activate %s.", cow->name);
+			return 0;
+		}
+
+		if (!resume_lv(origin->vg->cmd, origin)) {
+			log_error("Failed to resume %s.", origin->name);
+			return 0;
+		}
 	}
 
 	return 1;

@@ -4393,7 +4393,6 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 	struct logical_volume *lv, *org = NULL;
 	struct logical_volume *pool_lv;
 	struct lv_list *lvl;
-	int origin_active = 0;
 	const char *thin_name = NULL;
 
 	if (new_lv_name && find_lv_in_vg(vg, new_lv_name)) {
@@ -4480,9 +4479,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 		/* Must zero cow */
 		status |= LVM_WRITE;
 
-		if (lp->voriginsize)
-			origin_active = 1;
-		else {
+		if (!lp->voriginsize) {
 
 			if (!(org = find_lv(vg, lp->origin))) {
 				log_error("Couldn't find origin volume '%s'.",
@@ -4526,8 +4523,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 				log_warn("WARNING: See global/mirror_segtype_default in lvm.conf.");
 			}
 
-			if ((origin_active = lv_is_active(org)) &&
-			    vg_is_clustered(vg) &&
+			if (vg_is_clustered(vg) && lv_is_active(org) &&
 			    !lv_is_active_exclusive_locally(org)) {
 				log_error("%s must be active exclusively to"
 					  " create snapshot", org->name);
@@ -4821,8 +4817,14 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 		if (!(lp->permission & LVM_WRITE))
 			lv->status &= ~LVM_WRITE;
 
-		/* COW area must be deactivated if origin is not active */
-		if (!origin_active && !deactivate_lv(cmd, lv)) {
+		/*
+		 * For clustered VG deactivate zeroed COW to not keep
+		 * the LV lock. For non-clustered VG, deactivate
+		 * if origin is real (not virtual) inactive device.
+		 */
+		if ((vg_is_clustered(vg) ||
+		     (!lp->voriginsize && !lv_is_active(org))) &&
+		    !deactivate_lv(cmd, lv)) {
 			log_error("Aborting. Couldn't deactivate snapshot "
 				  "COW area. Manual intervention required.");
 			return NULL;
@@ -4841,8 +4843,10 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 			goto deactivate_and_revert_new_lv;
 		}
 
-		/* cow LV remains active and becomes snapshot LV */
-
+		/*
+		 * COW LV is activated via implicit activation of origin LV
+		 * Only the snapshot origin holds the LV lock in cluster
+		 */
 		if (!vg_add_snapshot(org, lv, NULL,
 				     org->le_count, lp->chunk_size)) {
 			log_error("Couldn't create snapshot.");
