@@ -122,8 +122,6 @@ static struct volume_group *_pool_vg_read(struct format_instance *fid,
 	if (!read_pool_pds(fid->fmt, vg_name, vg->vgmem, &pds))
 		goto_bad;
 
-	vg_set_fid(vg, fid);
-
 	/* Setting pool seqno to 1 because the code always did this,
 	 * although we don't think it's needed. */
 	vg->seqno = 1;
@@ -154,6 +152,8 @@ static struct volume_group *_pool_vg_read(struct format_instance *fid,
 
 	if (!import_pool_segments(&vg->lvs, vg->vgmem, usp, sp_count))
 		goto_bad;
+
+	vg_set_fid(vg, fid);
 
 	return vg;
 

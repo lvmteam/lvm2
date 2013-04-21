@@ -200,8 +200,6 @@ static struct volume_group *_format1_vg_read(struct format_instance *fid,
 	if (dm_list_empty(&pvs))
 		goto_bad;
 
-	vg_set_fid(vg, fid);
-
 	if (!_check_vgs(&pvs, vg))
 		goto_bad;
 
@@ -225,6 +223,8 @@ static struct volume_group *_format1_vg_read(struct format_instance *fid,
 	/* Fix extents counts by adding missing PV if partial VG */
 	if ((vg->status & PARTIAL_VG) && !_fix_partial_vg(vg, &pvs))
 		goto_bad;
+
+	vg_set_fid(vg, fid);
 
 	return vg;
 
