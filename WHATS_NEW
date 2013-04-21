@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Add explicit message about unsupported pvmove for thin/thinpool volumes.
   Fix lvmetad error path in lvmetad_vg_lookup() for null vgname.
   Fix clvmd _cluster_request() return code in memory fail path.
   Add writemostly/writebehind support for RAID1

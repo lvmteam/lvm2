@@ -248,6 +248,13 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 			log_print_unless_silent("Skipping mirror image LV %s", lv->name);
 			continue;
 		}
+		if (lv_is_thin_volume(lv) || lv_is_thin_pool(lv)) {
+			lv_skipped = 1;
+			log_print_unless_silent("Skipping thin%s LV %s",
+						lv_is_thin_pool(lv) ? "-pool" : "",
+						lv->name);
+			continue;
+		}
 		if (lv->status & LOCKED) {
 			lv_skipped = 1;
 			log_print_unless_silent("Skipping locked LV %s", lv->name);
