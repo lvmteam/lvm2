@@ -217,8 +217,13 @@ static struct volume_group *_format1_vg_read(struct format_instance *fid,
 	if (!import_extents(fid->fmt->cmd, vg, &pvs))
 		goto_bad;
 
-	if (!import_snapshots(vg->vgmem, vg, &pvs))
+	/* FIXME: workaround - temporary assignment of fid */
+	vg->fid = fid;
+	if (!import_snapshots(vg->vgmem, vg, &pvs)) {
+		vg->fid = NULL;
 		goto_bad;
+	}
+	vg->fid = NULL;
 
 	/* Fix extents counts by adding missing PV if partial VG */
 	if ((vg->status & PARTIAL_VG) && !_fix_partial_vg(vg, &pvs))
