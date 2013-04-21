@@ -246,7 +246,7 @@ static void _umount(struct dm_task *dmt, const char *device)
 {
 	static const char mountinfo[] = "/proc/self/mountinfo";
 	static const size_t MINORS = 4096;
-	FILE *minfo;
+	FILE *minfo = NULL;
 	char buffer[4096];
 	char target[PATH_MAX];
 	struct dm_info info;
@@ -288,10 +288,10 @@ static void _umount(struct dm_task *dmt, const char *device)
 		}
 	}
 
-	if (fclose(minfo))
+out:
+	if (minfo && fclose(minfo))
 		syslog(LOG_ERR, "Failed to close %s\n", mountinfo);
 
-out:
 	if (minors)
 		dm_bitset_destroy(minors);
 	dmeventd_lvm2_lock();
