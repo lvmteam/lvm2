@@ -772,8 +772,8 @@ static int get_initial_state(struct dm_hash_table *excl_uuid)
 			}
 		}
 	}
-	if (fclose(lvs))
-		DEBUGLOG("lvs fclose failed: %s\n", strerror(errno));
+	if (pclose(lvs))
+		DEBUGLOG("lvs pclose failed: %s\n", strerror(errno));
 
 	dm_free(lvs_cmd);
 
