@@ -103,8 +103,8 @@ int persistent_filter_load(struct dev_filter *f, struct dm_config_tree **cft_out
 
 	if (obtain_device_list_from_udev()) {
 		if (!stat(pf->file, &info)) {
-			log_very_verbose("Obtaining device list from "
-					 "udev. Removing obolete %s.",
+			log_very_verbose("Obtaining device list from udev. "
+					 "Removing obsolete %s.",
 					 pf->file);
 			if (unlink(pf->file) < 0 && errno != EROFS)
 				log_sys_error("unlink", pf->file);

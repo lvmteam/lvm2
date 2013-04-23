@@ -64,8 +64,10 @@ struct dm_config_tree *config_file_open(const char *filename, int keep_open)
 	if (!cft)
 		return NULL;
 
-	cf = dm_pool_zalloc(cft->mem, sizeof(struct config_file));
-	if (!cf) goto fail;
+	if (!(cf = dm_pool_zalloc(cft->mem, sizeof(struct config_file)))) {
+		log_error("Failed to allocate condig tree.");
+		goto fail;
+	}
 
 	cf->keep_open = keep_open;
 	dm_config_set_custom(cft, cf);

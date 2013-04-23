@@ -777,6 +777,9 @@ static int _init_dev_cache(struct cmd_context *cmd)
 					udev_dir_len != len;
 
 			if (len_diff || strncmp(DM_UDEV_DEV_DIR, cv->v.str, len)) {
+				log_very_verbose("Non standard udev dir %s, resetting "
+						 "devices/obtain_device_list_from_udev.",
+						 cv->v.str);
 				device_list_from_udev = 0;
 				init_obtain_device_list_from_udev(0);
 			}
