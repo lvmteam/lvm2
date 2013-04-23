@@ -65,7 +65,7 @@ struct dm_config_tree *config_file_open(const char *filename, int keep_open)
 		return NULL;
 
 	if (!(cf = dm_pool_zalloc(cft->mem, sizeof(struct config_file)))) {
-		log_error("Failed to allocate condig tree.");
+		log_error("Failed to allocate config tree.");
 		goto fail;
 	}
 
