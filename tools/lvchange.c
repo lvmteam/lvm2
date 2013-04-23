@@ -266,25 +266,19 @@ static int detach_metadata_devices(struct lv_segment *seg, struct dm_list *list)
 static int attach_metadata_devices(struct lv_segment *seg, struct dm_list *list)
 {
 	struct cmd_context *cmd = seg->lv->vg->cmd;
-	struct lv_list *lvl, *tmp;
+	struct lv_list *lvl;
 
 	if (seg_is_raid(seg)) {
-		dm_list_iterate_items_safe(lvl, tmp, list) {
+		dm_list_iterate_items(lvl, list)
 			lv_set_hidden(lvl->lv);
-			dm_pool_free(cmd->mem, lvl);
-		}
 		return 1;
 	}
 
 	dm_list_iterate_items(lvl, list)
 		break;  /* get first item */
 
-	if (!attach_mirror_log(seg, lvl->lv)) {
-		dm_pool_free(cmd->mem, lvl);
+	if (!attach_mirror_log(seg, lvl->lv))
 		return_0;
-	}
-
-	dm_pool_free(cmd->mem, lvl);
 
 	return 1;
 }
