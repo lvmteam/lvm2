@@ -768,6 +768,7 @@ int merge_config_tree(struct cmd_context *cmd, struct dm_config_tree *cft,
 	struct dm_config_node *root = cft->root;
 	struct dm_config_node *cn, *nextn, *oldn, *cn2;
 	const struct dm_config_node *tn;
+	struct config_file *cf, *cfn;
 
 	for (cn = newdata->root; cn; cn = nextn) {
 		nextn = cn->sib;
@@ -796,6 +797,16 @@ int merge_config_tree(struct cmd_context *cmd, struct dm_config_tree *cft,
 		}
 		_merge_section(oldn, cn);
 	}
+
+	/*
+	 * Persistent filter loading is based on timestamp,
+	 * so we need to know the newest timestamp to make right decision
+	 * whether the .cache isn't older then any of configs
+	 */
+	if ((cf = dm_config_get_custom(cft)) &&
+	    (cfn = dm_config_get_custom(newdata)) &&
+	    cf->timestamp < cfn->timestamp)
+		cf->timestamp = cfn->timestamp;
 
 	return 1;
 }
