@@ -413,8 +413,8 @@ error_dev() {
 		dmsetup create -u "TEST-$name" "$name" "$name.errtable"
 	fi
 	# using device name (since device path does not exists yet with udev)
-	notify_lvmetad "$dev"
 	dmsetup resume "$name"
+	notify_lvmetad "$dev"
 	finish_udev_transaction
 }
 
