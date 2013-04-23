@@ -105,10 +105,8 @@ struct dm_config_tree *dm_config_create(void)
 		dm_pool_destroy(mem);
 		return 0;
 	}
-	cft->root = NULL;
-	cft->cascade = NULL;
-	cft->custom = NULL;
 	cft->mem = mem;
+
 	return cft;
 }
 

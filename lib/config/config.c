@@ -67,8 +67,6 @@ struct dm_config_tree *config_file_open(const char *filename, int keep_open)
 	cf = dm_pool_zalloc(cft->mem, sizeof(struct config_file));
 	if (!cf) goto fail;
 
-	cf->timestamp = 0;
-	cf->exists = 0;
 	cf->keep_open = keep_open;
 	dm_config_set_custom(cft, cf);
 
