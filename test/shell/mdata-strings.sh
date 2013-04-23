@@ -14,7 +14,7 @@
 . lib/test
 
 aux prepare_devs 2
-aux lvmconf 'devices/global_filter = [ "a|.*LVMTEST.*dev/mapper/.*pv[0-9_]*$|", "r|.*|" ]'
+aux lvmconf 'devices/global_filter = [ "a|.*dev/mapper/.*LVMTEST.*pv[0-9_]*$|", "r|.*|" ]'
 
 # for udev impossible to create
 pv_ugly="__\"!@#\$%^&*,()|@||'\\\"__pv1"
