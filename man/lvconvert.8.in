@@ -284,7 +284,7 @@ Repair a mirror after suffering a disk failure. The mirror will be brought back
 into a consistent state.  By default, the original number of mirrors will be
 restored if possible.  Specify \fB\-y\fP on the command line to skip
 the prompts. Use \fB\-f\fP if you do not want any replacement.
-Additionally, you may use \fB\-\-use-policies\fP to use the device
+Additionally, you may use \fB\-\-use\-policies\fP to use the device
 replacement policy specified in \fBlvm.conf\fP(5),
 viz. activation/mirror_log_fault_policy or
 activation/mirror_device_fault_policy.

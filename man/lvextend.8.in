@@ -9,7 +9,7 @@ lvextend \- extend the size of a logical volume
 .RI { y | n }]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-? | \-\-help ]
-.RB [ \-\-noudevsync]
+.RB [ \-f | \-\-force ]
 .RB [ \-i | \-\-stripes
 .I Stripes
 .RB [ \-I | \-\-stripesize
@@ -19,9 +19,10 @@ lvextend \- extend the size of a logical volume
 |
 .BR \-L | \-\-size
 .RI [ + ] LogicalVolumeSize [ bBsSkKmMgGtTpPeE ]}
-.RB [ \-f | \-\-force ]
 .RB [ \-n | \-\-nofsck ]
+.RB [ \-\-noudevsync]
 .RB [ \-r | \-\-resizefs ]
+.RB [ \-\-use\-policies ]
 .RB [ \-t | \-\-test ]
 .RB [ \-v | \-\-verbose ]
 .I LogicalVolumePath
@@ -37,12 +38,8 @@ volume use
 .SH OPTIONS
 See \fBlvm\fP(8) for common options.
 .TP
-.B \-\-noudevsync
-Disable udev synchronisation. The
-process will not wait for notification from udev.
-It will continue irrespective of any possible udev processing
-in the background.  You should only use this if udev is not running
-or has rules that ignore the devices LVM2 creates.
+.BR \-f ", " \-\-force
+Proceed with size extension without prompting.
 .TP
 .IR \fB\-l ", " \fB\-\-extents " [" + ] LogicalExtentsNumber [ % { VG | LV | PVS | FREE | ORIGIN }]
 Extend or set the logical volume size in units of logical extents.
@@ -77,17 +74,26 @@ use a single value throughout.
 .br
 StripeSize must be 2^n (n = 2 to 9)
 .TP
-.BR \-f ", " \-\-force
-Proceed with size extension without prompting.
-.TP
 .BR \-n ", " \-\-nofsck
 Do not perform fsck before extending filesystem when filesystem
 requires it. You may need to use \fB\-\-force\fR to proceed with
 this option.
 .TP
+.B \-\-noudevsync
+Disable udev synchronisation. The
+process will not wait for notification from udev.
+It will continue irrespective of any possible udev processing
+in the background.  You should only use this if udev is not running
+or has rules that ignore the devices LVM2 creates.
+.TP
 .BR \-r ", " \-\-resizefs
 Resize underlying filesystem together with the logical volume using
 \fBfsadm\fR(8).
+.TP
+.B \-\-use\-policies
+Resizes the logical volume according to configured policy. See
+\fBlvm.conf\fR(5) for some details.
+
 .SH Examples
 Extends the size of the logical volume "vg01/lvol10" by 54MiB on physical
 volume /dev/sdk3. This is only possible if /dev/sdk3 is a member of
@@ -109,6 +115,7 @@ Extends a logical volume "vg01/lvol01" by 16MiB using physical extents
 .SH SEE ALSO
 .BR fsadm (8),
 .BR lvm (8),
+.BR lvm.conf (5),
 .BR lvcreate (8),
 .BR lvconvert (8),
 .BR lvreduce (8),

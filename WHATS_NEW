@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Document lvextend --use-policies option in man.
   Fix creation and removal of clustered snapshot.
   Fix clvmd caching of metadata when suspending inactive volumes.
   Find newest timestamp of merged config files.
