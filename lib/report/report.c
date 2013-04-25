@@ -489,6 +489,20 @@ static int _vgsize_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _size64_disp(rh, mem, field, &size, private);
 }
 
+static int _segmonitor_disp(struct dm_report *rh, struct dm_pool *mem,
+			    struct dm_report_field *field,
+			    const void *data, void *private)
+{
+	char *str;
+
+	if (!(str = lvseg_monitor_dup(mem, (const struct lv_segment *)data)))
+		return_0;
+
+	dm_report_field_set_value(field, str, NULL);
+
+	return 1;
+}
+
 static int _segstart_disp(struct dm_report *rh, struct dm_pool *mem,
 			  struct dm_report_field *field,
 			  const void *data, void *private)

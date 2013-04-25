@@ -128,6 +128,40 @@ char *lvseg_discards_dup(struct dm_pool *mem, const struct lv_segment *seg)
 	return  dm_pool_strdup(mem, get_pool_discards_name(seg->discards));
 }
 
+#ifdef DMEVENTD
+#  include "libdevmapper-event.h"
+#endif
+char *lvseg_monitor_dup(struct dm_pool *mem, const struct lv_segment *seg)
+{
+	const char *s = "";
+
+#ifdef DMEVENTD
+	struct lvinfo info;
+	int pending = 0, monitored;
+	struct lv_segment *segm = (struct lv_segment *) seg;
+
+	if (lv_is_cow(seg->lv) && !lv_is_merging_cow(seg->lv))
+		segm = first_seg(seg->lv->snapshot->lv);
+	else if (seg->log_lv)
+		segm = first_seg(seg->log_lv);
+
+	// log_debug("Query LV:%s mon:%s segm:%s tgtm:%p  segmon:%d statusm:%d", seg->lv->name, segm->lv->name, segm->segtype->name, segm->segtype->ops->target_monitored, seg_monitored(segm), (int)(segm->status & PVMOVE));
+	if (!segm->segtype->ops->target_monitored)
+		/* Nothing to do, monitoring not supported */;
+	else if (!seg_monitored(segm) || (segm->status & PVMOVE))
+		s = "not monitored";
+	else if (lv_info(seg->lv->vg->cmd, seg->lv, 1, &info, 0, 0) && info.exists) {
+		monitored = segm->segtype->ops->
+			target_monitored((struct lv_segment*)segm, &pending);
+		if (pending)
+			s = "pending";
+		else
+			s = (monitored) ? "monitored" : "not monitored";
+	} // else log_debug("Not active");
+#endif
+	return dm_pool_strdup(mem, s);
+}
+
 uint64_t lvseg_chunksize(const struct lv_segment *seg)
 {
 	uint64_t size;

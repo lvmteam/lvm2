@@ -332,6 +332,8 @@ GET_LVSEG_STR_PROPERTY_FN(seg_pe_ranges,
 #define _seg_pe_ranges_set _not_implemented_set
 GET_LVSEG_STR_PROPERTY_FN(devices, lvseg_devices(lvseg->lv->vg->vgmem, lvseg))
 #define _devices_set _not_implemented_set
+GET_LVSEG_STR_PROPERTY_FN(monitor, lvseg_monitor_dup(lvseg->lv->vg->vgmem, lvseg))
+#define _monitor_set _not_implemented_set
 
 
 /* PVSEG */

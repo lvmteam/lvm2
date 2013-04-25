@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Add "monitor" segment reporting field to show dmevent monitoring status.
   Document lvextend --use-policies option in man.
   Fix creation and removal of clustered snapshot.
   Fix clvmd caching of metadata when suspending inactive volumes.
