@@ -714,12 +714,15 @@ int dm_event_get_registered_device(struct dm_event_handler *dmevh, int next)
 	char *reply_dso = NULL, *reply_uuid = NULL;
 	enum dm_event_mask reply_mask = 0;
 	struct dm_task *dmt = NULL;
-	struct dm_event_daemon_message msg = { 0, 0, NULL };
+	struct dm_event_daemon_message msg = { 0 };
 	struct dm_info info;
 
 	if (!(dmt = _get_device_info(dmevh))) {
-		stack;
-		return 0;
+		log_debug("Device does not exists (uuid=%s, name=%s, %d:%d).",
+			  dmevh->uuid, dmevh->dev_name,
+			  dmevh->major, dmevh->minor);
+		ret = -ENODEV;
+		goto fail;
 	}
 
 	uuid = dm_task_get_uuid(dmt);
