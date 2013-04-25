@@ -1410,7 +1410,7 @@ int monitor_dev_for_events(struct cmd_context *cmd, struct logical_volume *lv,
 #ifdef DMEVENTD
 	int i, pending = 0, monitored;
 	int r = 1;
-	struct dm_list *tmp, *snh, *snht;
+	struct dm_list *snh, *snht;
 	struct lv_segment *seg;
 	struct lv_segment *log_seg;
 	int (*monitor_fn) (struct lv_segment *s, int e);
@@ -1473,9 +1473,7 @@ int monitor_dev_for_events(struct cmd_context *cmd, struct logical_volume *lv,
 		if (!monitor_dev_for_events(cmd, seg->log_lv, NULL, monitor))
 			r = 0;
 
-	dm_list_iterate(tmp, &lv->segments) {
-		seg = dm_list_item(tmp, struct lv_segment);
-
+	dm_list_iterate_items(seg, &lv->segments) {
 		/* Recurse for AREA_LV */
 		for (s = 0; s < seg->area_count; s++) {
 			if (seg_type(seg, s) != AREA_LV)
