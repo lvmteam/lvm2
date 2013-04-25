@@ -85,4 +85,5 @@ char *lv_host_dup(struct dm_pool *mem, const struct logical_volume *lv);
 int lv_set_creation(struct logical_volume *lv,
 		    const char *hostname, uint64_t timestamp);
 const char *lv_layer(const struct logical_volume *lv);
+char *lv_active_dup(struct dm_pool *mem, const struct logical_volume *lv);
 #endif /* _LVM_LV_H */

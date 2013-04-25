@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Add "active" LV reporting field to show activation state.
   Add "monitor" segment reporting field to show dmevent monitoring status.
   Document lvextend --use-policies option in man.
   Fix creation and removal of clustered snapshot.

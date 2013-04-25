@@ -1151,6 +1151,20 @@ static int _lvhost_disp(struct dm_report *rh, struct dm_pool *mem,
 	return 1;
 }
 
+static int _lvactive_disp(struct dm_report *rh, struct dm_pool *mem,
+			     struct dm_report_field *field,
+			     const void *data, void *private)
+{
+	char *repstr;
+
+	if (!(repstr = lv_active_dup(mem, (const struct logical_volume *) data)))
+		return_0;
+
+	dm_report_field_set_value(field, repstr, NULL);
+
+	return 1;
+}
+
 /* Report object types */
 
 /* necessary for displaying something for PVs not belonging to VG */

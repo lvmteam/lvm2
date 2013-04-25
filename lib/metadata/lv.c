@@ -703,3 +703,22 @@ char *lv_host_dup(struct dm_pool *mem, const struct logical_volume *lv)
 {
 	return dm_pool_strdup(mem, lv->hostname ? : "");
 }
+
+char *lv_active_dup(struct dm_pool *mem, const struct logical_volume *lv)
+{
+	const char *s;
+
+	if (!lv_is_active(lv))
+		s = ""; /* not active */
+	else if (!vg_is_clustered(lv->vg))
+		s = "active";
+	else if (lv_is_active_exclusive(lv))
+		/* exclusive cluster activation */
+		s = lv_is_active_exclusive_locally(lv) ?
+			"local exclusive" : "remote exclusive";
+	else /* locally active */
+		s = lv_is_active_but_not_locally(lv) ?
+		     "remotely" : "locally";
+
+	return dm_pool_strdup(mem, s);
+}
