@@ -448,6 +448,22 @@ prepare_vg() {
 	vgcreate -c n $vg $devs
 }
 
+hide_dev() {
+	filter=$(grep ^devices/global_filter CONFIG_VALUES | tail -n 1)
+	for dev in $@; do
+		filter=$(echo $filter | sed -e "s:\[:[ \"r|$dev|\", :")
+	done
+	lvmconf "$filter"
+}
+
+unhide_dev() {
+	filter=$(grep ^devices/global_filter CONFIG_VALUES | tail -n 1)
+	for dev in $@; do
+		filter=$(echo $filter | sed -e "s:\"r|$dev|\", ::")
+	done
+	lvmconf "$filter"
+}
+
 lvmconf() {
 	LVM_TEST_LOCKING=${LVM_TEST_LOCKING:-1}
 	if test "$DM_DEV_DIR" = "/dev"; then
