@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2010 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2012 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -20,6 +20,8 @@ struct volume_group;
 struct dm_list;
 struct lv_segment;
 struct replicator_device;
+enum activation_change;
+typedef enum activation_change activation_change_t;
 
 struct logical_volume {
 	union lvid lvid;
@@ -85,5 +87,7 @@ char *lv_host_dup(struct dm_pool *mem, const struct logical_volume *lv);
 int lv_set_creation(struct logical_volume *lv,
 		    const char *hostname, uint64_t timestamp);
 const char *lv_layer(const struct logical_volume *lv);
+int lv_active_change(struct cmd_context *cmd, struct logical_volume *lv,
+		     activation_change_t activate);
 char *lv_active_dup(struct dm_pool *mem, const struct logical_volume *lv);
 #endif /* _LVM_LV_H */

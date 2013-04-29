@@ -1300,41 +1300,12 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 int lv_change_activate(struct cmd_context *cmd, struct logical_volume *lv,
 		       activation_change_t activate)
 {
-	if (activate == CHANGE_AN) {
-		log_verbose("Deactivating logical volume \"%s\"", lv->name);
-		if (!deactivate_lv(cmd, lv))
-			return_0;
-		return 1;
-	} else if ((activate == CHANGE_AE) ||
-		   lv_is_origin(lv) ||
-		   lv_is_thin_type(lv)) {
-		if (activate == CHANGE_ALN) {
-			/* origin or thin, all others have _AE */
-			/* other types of activation are implicitly exclusive */
-			/* Note: the order of tests is mandatory */
-			log_error("Cannot deactivate \"%s\" locally.", lv->name);
-			return 0;
-		}
-		log_verbose("Activating logical volume \"%s\" exclusively.", lv->name);
-		if (!activate_lv_excl(cmd, lv))
-			return_0;
-	} else if (activate == CHANGE_ALN) {
-		log_verbose("Deactivating logical volume \"%s\" locally.", lv->name);
-		if (!deactivate_lv_local(cmd, lv))
-			return_0;
-		return 1;
-	} else if ((activate == CHANGE_ALY) || (activate == CHANGE_AAY)) {
-		log_verbose("Activating logical volume \"%s\" locally.", lv->name);
-		if (!activate_lv_local(cmd, lv))
-			return_0;
-	} else { /* CHANGE_AY */
-		log_verbose("Activating logical volume \"%s\".", lv->name);
-		if (!activate_lv(cmd, lv))
-			return_0;
-	}
+	if (!lv_active_change(cmd, lv, activate))
+		return_0;
 
-	/* CHANGE_AN/ALN is not getting here */
 	if (background_polling() &&
+	    (activate != CHANGE_AN) &&
+	    (activate != CHANGE_ALN) &&
 	    (lv->status & (PVMOVE|CONVERTING|MERGING)))
 		lv_spawn_background_polling(cmd, lv);
 
