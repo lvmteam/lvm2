@@ -34,12 +34,12 @@ struct cmd_context;
 
 /* configuration definition item type (for item's accepted types) */
 typedef enum {
-	CFG_TYPE_SECTION = 0,		/* section */
-	CFG_TYPE_ARRAY = 1,		/* setting */
-	CFG_TYPE_BOOL = 2,		/* setting */
-	CFG_TYPE_INT = 4,		/* setting */
-	CFG_TYPE_FLOAT = 8,		/* setting */
-	CFG_TYPE_STRING = 16		/* setting */
+	CFG_TYPE_SECTION =	1 << 0,	/* section */
+	CFG_TYPE_ARRAY =	1 << 1,	/* setting */
+	CFG_TYPE_BOOL =		1 << 2,	/* setting */
+	CFG_TYPE_INT =		1 << 3,	/* setting */
+	CFG_TYPE_FLOAT =	1 << 4,	/* setting */
+	CFG_TYPE_STRING =	1 << 5,	/* setting */
 } cfg_def_type_t;
 
 /* configuration definition item value (for item's default value) */
