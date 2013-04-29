@@ -103,7 +103,9 @@ static int _auto_activation_handler(struct cmd_context *cmd,
 	if (partial)
 		return 1;
 
-	id_read_format(&vgid_raw, vgid);
+	if (!id_read_format(&vgid_raw, vgid))
+		return_0;
+
 	/* NB. This is safe because we know lvmetad is running and we won't hit
 	 * disk. */
 	if (!(vg = vg_read_internal(cmd, NULL, (const char *) &vgid_raw, 0, &consistent)))
