@@ -301,9 +301,7 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 				log_error("options string allocation failed");
 				return ECMD_FAILED;
 			}
-			strcpy(str, options);
-			strcat(str, ",");
-			strcat(str, opts + 1);
+			(void) sprintf(str, "%s,%s", options, opts + 1);
 			options = str;
 		} else
 			options = opts;
