@@ -90,4 +90,5 @@ const char *lv_layer(const struct logical_volume *lv);
 int lv_active_change(struct cmd_context *cmd, struct logical_volume *lv,
 		     activation_change_t activate);
 char *lv_active_dup(struct dm_pool *mem, const struct logical_volume *lv);
+const struct logical_volume *lv_lock_holder(const struct logical_volume *lv);
 #endif /* _LVM_LV_H */
