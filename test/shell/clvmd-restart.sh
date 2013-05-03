@@ -55,6 +55,7 @@ vgchange -an $vg
 
 # Test what happens after 'reboot'
 kill "$LOCAL_CLVMD"
+while test -e "/var/run/clvmd.pid"; do echo -n .; sleep .1; done # wait for the pid removal
 aux prepare_clvmd
 
 vgchange -ay $vg
