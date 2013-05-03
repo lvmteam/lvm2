@@ -21,7 +21,6 @@ struct dm_list;
 struct lv_segment;
 struct replicator_device;
 enum activation_change;
-typedef enum activation_change activation_change_t;
 
 struct logical_volume {
 	union lvid lvid;
@@ -88,7 +87,7 @@ int lv_set_creation(struct logical_volume *lv,
 		    const char *hostname, uint64_t timestamp);
 const char *lv_layer(const struct logical_volume *lv);
 int lv_active_change(struct cmd_context *cmd, struct logical_volume *lv,
-		     activation_change_t activate);
+		     enum activation_change activate);
 char *lv_active_dup(struct dm_pool *mem, const struct logical_volume *lv);
 const struct logical_volume *lv_lock_holder(const struct logical_volume *lv);
 #endif /* _LVM_LV_H */

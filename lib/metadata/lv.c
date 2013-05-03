@@ -705,7 +705,7 @@ char *lv_host_dup(struct dm_pool *mem, const struct logical_volume *lv)
 }
 
 int lv_active_change(struct cmd_context *cmd, struct logical_volume *lv,
-		     activation_change_t activate)
+		     enum activation_change activate)
 {
 	if (activate == CHANGE_AN) {
 		log_verbose("Deactivating logical volume \"%s\"", lv->name);
