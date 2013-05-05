@@ -41,10 +41,14 @@ Show help information.
 .B \-s \fIpath
 Path to the socket file to use. The option overrides both the built-in default
 (#DEFAULT_RUN_DIR#/lvmetad.socket) and the environment variable
-LVM_LVMETAD_SOCKET.
+\fBLVM_LVMETAD_SOCKET\fP.
 .TP
 .B \-V
-Show version of dmeventd.
+Display the version of lvmetad daemon.
+.SH ENVIRONMENT VARIABLES
+.TP
+.B LVM_LVMETAD_SOCKET 
+override path for socket file to use.
 
 .SH SEE ALSO
 .BR lvm (8),

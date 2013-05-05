@@ -54,6 +54,7 @@ dmsetup \- low level logical volume management
 .RB [ \-\-exec
 .IR command ]
 .RB [ \-\-tree ]
+.RS
 .RB [ \-o
 .IR options ]
 .RE
@@ -279,7 +280,7 @@ Destroys the table in the inactive table slot for device_name.
 .br
 Creates a device with the given name.
 If table_file or <table> is supplied, the table is loaded and made live.
-Otherwise a table is read from standard input unless \-\-notable is used.
+Otherwise a table is read from standard input unless \fB\-\-notable\fP is used.
 The optional uuid can be used in place of
 device_name in subsequent dmsetup commands.
 If successful a device will appear as
@@ -357,7 +358,7 @@ each device.  The device name is appended to the supplied command.
 Device names on output can be customised by following options: devno (major
 and minor pair, used by default), blkdevname (block device name),
 devname (map name for device-mapper devices, equal to blkdevname otherwise).
---tree displays dependencies between devices as a tree.
+\fB\-\-tree\fP displays dependencies between devices as a tree.
 It accepts a comma-separate list of options.
 Some specify the information displayed against each node:
 device/nodevice; blkdevname; active, open, rw, uuid.
@@ -404,11 +405,11 @@ driver, adding, changing or removing nodes as necessary.
 Ensure existing device-mapper device name and UUID is in the correct mangled
 form containing only whitelisted characters (supported by udev) and do
 a rename if necessary. Any character not on the whitelist will be mangled
-based on the --manglename setting. Automatic rename works only for device
+based on the \fB\-\-manglename\fP setting. Automatic rename works only for device
 names and not for device UUIDs because the kernel does not allow changing
 the UUID of active devices. Any incorrect UUIDs are reported only and they
 must be manually corrected by deactivating the device first and then
-reactivating it with proper mangling mode used (see also --manglename).
+reactivating it with proper mangling mode used (see also \fB\-\-manglename\fP).
 .br
 .HP
 .B remove
@@ -483,12 +484,12 @@ Default subsystem is LVM.
 .B status
 .RB [ \-\-target
 .IR target_type ]
-.RB [ \-\-noflush ]
+.RB [ \-\-\noflush ]
 .RI [ device_name ]
 .br
 Outputs status information for each of the device's targets.
 With \-\-target, only information relating to the specified target type
-any is displayed.  With \-\-noflush, the thin target (from version 1.3.0)
+any is displayed.  With \fB\-\-noflush\fP, the thin target (from version 1.3.0)
 doesn't commit any outstanding changes to disk before reporting its statistics.
 .br
 .HP
@@ -501,9 +502,9 @@ Suspends a device.  Any I/O that has already been mapped by the device
 but has not yet completed will be flushed.  Any further I/O to that
 device will be postponed for as long as the device is suspended.
 If there's a filesystem on the device which supports the operation,
-an attempt will be made to sync it first unless \-\-nolockfs is specified.
+an attempt will be made to sync it first unless \fB\-\-nolockfs\fP is specified.
 Some targets such as recent (October 2006) versions of multipath may support
-the \-\-noflush option.  This lets outstanding I/O that has not yet reached the
+the \fB\-\-noflush\fP option.  This lets outstanding I/O that has not yet reached the
 device to remain unflushed.
 .br
 .TP
@@ -515,10 +516,10 @@ device to remain unflushed.
 .br
 Outputs the current table for the device in a format that can be fed
 back in using the create or load commands.
-With \-\-target, only information relating to the specified target type
+With \fB\-\-target\fP, only information relating to the specified target type
 is displayed.
 Encryption keys are suppressed in the table output for the crypt
-target unless the \-\-showkeys parameter is supplied.
+target unless the \fB\-\-showkeys\fP parameter is supplied.
 .br
 .TP
 .B targets
@@ -552,8 +553,8 @@ The output is a cookie value. Normally we don't need to create cookies since
 dmsetup creates and destroys them for each action automatically. However, we can
 generate one explicitly to group several actions together and use only one
 cookie instead. We can define a cookie to use for each relevant command by using
-\-\-udevcookie option. Alternatively, we can export this value into the environment
-of the dmsetup process as DM_UDEV_COOKIE variable and it will be used automatically
+\fB\-\-udevcookie\fP option. Alternatively, we can export this value into the environment
+of the dmsetup process as \fBDM_UDEV_COOKIE\fP variable and it will be used automatically
 with all subsequent commands until it is unset.
 Invoking this command will create system-wide semaphore that needs to be cleaned
 up explicitly by calling udevreleasecookie command.
@@ -576,7 +577,7 @@ always reported as DM_SUBSYSTEM_UDEV_FLAG<flag_position>='1'. There are
 .br
 Waits for all pending udev processing bound to given cookie value and clean up
 the cookie with underlying semaphore. If the cookie is not given directly,
-the command will try to use a value defined by DM_UDEV_COOKIE environment variable.
+the command will try to use a value defined by \fBDM_UDEV_COOKIE\fP environment variable.
 .br
 .TP
 .B version
@@ -590,10 +591,10 @@ Outputs version information.
 .RI [ event_nr ]
 .br
 Sleeps until the event counter for device_name exceeds event_nr.
-Use \-v to see the event number returned.
+Use \fB\-v\fP to see the event number returned.
 To wait until the next event is triggered, use \fBinfo\fP to find
 the last event number.
-With \-\-noflush, the thin target (from version 1.3.0) doesn't commit
+With \fB\-\-noflush\fP, the thin target (from version 1.3.0) doesn't commit
 any outstanding changes to disk before reporting its statistics.
 .SH TABLE FORMAT
 Each line of the table specifies a single target and is of the form:
@@ -637,7 +638,7 @@ for creating devices with holes in them.
 .br
 Returns blocks of zeroes on reads.  Any data written is discarded silently.
 This is a block-device equivalent of the /dev/zero character-device data sink
-described in \fBnull(4)\fP.
+described in \fBnull\fP(4).
 .P
 More complex targets include:
 .TP
@@ -708,7 +709,7 @@ A cookie to use for all relevant commands to synchronize with udev processing.
 It is an alternative to using \-\-udevcookie option.
 
 .SH AUTHORS
-Original version: Joe Thornber (thornber@sistina.com)
+Original version: Joe Thornber (thornber@redhat.com)
 
 .SH SEE ALSO
 Device-mapper resource page: http://sources.redhat.com/dm/

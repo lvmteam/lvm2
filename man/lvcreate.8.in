@@ -128,8 +128,9 @@ activated only if it matches an item in the
 set in \fBlvm.conf\fP(5).
 For autoactivated logical volumes, \fB\-\-zero\fP \fIn\fP is always assumed
 and it can't be overridden. If the clustered locking is enabled,
-\fB\-a\fIey\fR will activate exclusively on one node and \fB\-a\fIly\fR will
-activate only on the local node.
+\fB\-a\fIey\fR will activate exclusively on one node and
+.IR \fB\-a { a | l } y
+will activate only on the local node.
 .TP
 .BR \-c ", " \-\-chunksize " " \fIChunkSize [ \fIbBsSkKmMgG ]
 Gives the size of chunk for snapshot and thin pool logical volumes.
@@ -189,7 +190,8 @@ suffix \fI%ORIGIN\fR.
 .TP
 .IR \fB\-L ", " \fB\-\-size " " LogicalVolumeSize [ bBsSkKmMgGtTpPeE ]
 Gives the size to allocate for the new logical volume.
-A size suffix of \fIK\fR for kilobytes, \fIM\fR for megabytes,
+A size suffix of \fIB\fR for bytes, \fIS\fR for sectors as 512 bytes,
+\fIK\fR for kilobytes, \fIM\fR for megabytes,
 \fIG\fR for gigabytes, \fIT\fR for terabytes, \fIP\fR for petabytes
 or \fIE\fR for exabytes is optional.
 .br

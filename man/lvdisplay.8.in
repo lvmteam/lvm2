@@ -112,5 +112,6 @@ original logical volume it is associated with:
 .SH SEE ALSO
 .BR lvm (8),
 .BR lvcreate (8),
+.BR lvs (8),
 .BR lvscan (8),
 .BR pvs (8)
