@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Fix alignment of PV data area if detected alignment less than 1 MB (2.02.74).
   Fix memory resource leak in memlocking error path.
   Fix premature DM version checking which caused useless mapper/control access.
   Add "active" LV reporting field to show activation state.

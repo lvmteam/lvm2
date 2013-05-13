@@ -86,7 +86,7 @@ unsigned long set_pe_align(struct physical_volume *pv, unsigned long data_alignm
 	if (find_config_tree_bool(pv->fmt->cmd, devices_md_chunk_alignment_CFG)) {
 		temp_pe_align = dev_md_stripe_width(pv->fmt->cmd->sysfs_dir, pv->dev);
 		if (_alignment_overrides_default(temp_pe_align, default_pe_align))
-			pv->pe_align = MAX(pv->pe_align, temp_pe_align);
+			pv->pe_align = temp_pe_align;
 	}
 
 	/*
@@ -99,11 +99,11 @@ unsigned long set_pe_align(struct physical_volume *pv, unsigned long data_alignm
 	if (find_config_tree_bool(pv->fmt->cmd, devices_data_alignment_detection_CFG)) {
 		temp_pe_align = dev_minimum_io_size(pv->fmt->cmd->sysfs_dir, pv->dev);
 		if (_alignment_overrides_default(temp_pe_align, default_pe_align))
-			pv->pe_align = MAX(pv->pe_align, temp_pe_align);
+			pv->pe_align = temp_pe_align;
 
 		temp_pe_align = dev_optimal_io_size(pv->fmt->cmd->sysfs_dir, pv->dev);
 		if (_alignment_overrides_default(temp_pe_align, default_pe_align))
-			pv->pe_align = MAX(pv->pe_align, temp_pe_align);
+			pv->pe_align = temp_pe_align;
 	}
 
 out:
