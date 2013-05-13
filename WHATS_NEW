@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Fix memory resource leak in memlocking error path.
   Fix premature DM version checking which caused useless mapper/control access.
   Add "active" LV reporting field to show activation state.
   Add "monitor" segment reporting field to show dmevent monitoring status.

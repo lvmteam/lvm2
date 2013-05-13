@@ -270,23 +270,26 @@ static int _memlock_maps(struct cmd_context *cmd, lvmlock_t lock, size_t *mstats
 		if (!_maps_buffer || len >= _maps_len) {
 			if (_maps_buffer)
 				_maps_len *= 2;
-			if (!(_maps_buffer = dm_realloc(_maps_buffer, _maps_len))) {
-				log_error("Allocation of maps buffer failed");
+			if (!(line = dm_realloc(_maps_buffer, _maps_len))) {
+				log_error("Allocation of maps buffer failed.");
 				return 0;
 			}
+			_maps_buffer = line;
 		}
 		if (lseek(_maps_fd, 0, SEEK_SET))
 			log_sys_error("lseek", _procselfmaps);
 		for (len = 0 ; len < _maps_len; len += n) {
-			if (!(n = read(_maps_fd, _maps_buffer + len, _maps_len - len))) {
-				_maps_buffer[len] = '\0';
+			if (!(n = read(_maps_fd, _maps_buffer + len, _maps_len - len)))
 				break; /* EOF */
+			if (n == -1) {
+				log_sys_error("read", _procselfmaps);
+				return 0;
 			}
-			if (n == -1)
-				return_0;
 		}
-		if (len < _maps_len)  /* fits in buffer */
+		if (len < _maps_len) { /* fits in buffer */
+			_maps_buffer[len] = '\0';
 			break;
+		}
 	}
 
 	line = _maps_buffer;
@@ -315,7 +318,7 @@ static void _lock_mem(struct cmd_context *cmd)
 	 * so even future adition of thread which may not even use lvm lib
 	 * will not block memory locked thread
 	 * Note: assuming _memlock_count_daemon is updated before _memlock_count
-         */
+	 */
 	_use_mlockall = _memlock_count_daemon ? 1 :
 		find_config_tree_bool(cmd, activation_use_mlockall_CFG);
 
