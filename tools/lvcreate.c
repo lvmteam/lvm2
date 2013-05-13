@@ -321,6 +321,14 @@ static int _update_extents_params(struct volume_group *vg,
 		if (!(lp->poolmetadataextents =
 		      extents_from_size(vg->cmd, lp->poolmetadatasize, vg->extent_size)))
 			return_0;
+		if (lcp->percent == PERCENT_FREE) {
+			if (lp->extents <= (2 * lp->poolmetadataextents)) {
+				log_error("Not enough space for thin pool creation.");
+				return 0;
+			}
+			/* FIXME: persistent hidden space in VG wanted */
+			lp->extents -= (2 * lp->poolmetadataextents);
+		}
 	}
 
 	return 1;
