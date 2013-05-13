@@ -262,23 +262,6 @@ static int _check_disable_udev(const char *msg) {
 	return 0;
 }
 
-#ifdef UDEV_SYNC_SUPPORT
-/*
- * Until the DM_UEVENT_GENERATED_FLAG was introduced in kernel patch 
- * 856a6f1dbd8940e72755af145ebcd806408ecedd
- * some operations could not be performed by udev, requiring our fallback code.
- */
-static int _dm_driver_has_stable_udev_support(void)
-{
-	char vsn[80];
-	unsigned maj, min, patchlevel;
-
-	return driver_version(vsn, sizeof(vsn)) &&
-	       (sscanf(vsn, "%u.%u.%u", &maj, &min, &patchlevel) == 3) &&
-	       (maj == 4 ? min >= 18 : maj > 4);
-}
-#endif
-
 static int _process_config(struct cmd_context *cmd)
 {
 	mode_t old_umask;
@@ -372,30 +355,17 @@ static int _process_config(struct cmd_context *cmd)
 	cmd->default_settings.udev_sync = udev_disabled ? 0 :
 		find_config_tree_bool(cmd, activation_udev_sync_CFG);
 
+	/*
+	 * Set udev_fallback lazily on first use since it requires
+	 * checking DM driver version which is an extra ioctl!
+	 * This also prevents unnecessary use of mapper/control.
+	 * If udev is disabled globally, set fallback mode immediately.
+	 */
+	cmd->default_settings.udev_fallback = udev_disabled ? 1 : -1;
+
 	init_retry_deactivation(find_config_tree_bool(cmd, activation_retry_deactivation_CFG));
 
 	init_activation_checks(find_config_tree_bool(cmd, activation_checks_CFG));
-
-#ifdef UDEV_SYNC_SUPPORT
-	/*
-	 * Use udev fallback automatically in case udev
-	 * is disabled via DM_DISABLE_UDEV environment
-	 * variable or udev rules are switched off.
-	 */
-	cmd->default_settings.udev_fallback = !cmd->default_settings.udev_rules || udev_disabled ? 1 :
-		find_config_tree_bool(cmd, activation_verify_udev_operations_CFG);
-
-	/* Do not rely fully on udev if the udev support is known to be incomplete. */
-	if (!cmd->default_settings.udev_fallback && !_dm_driver_has_stable_udev_support()) {
-		log_very_verbose("Kernel driver has incomplete udev support so "
-				 "LVM will check and perform some operations itself.");
-		cmd->default_settings.udev_fallback = 1;
-	}
-
-#else
-	/* We must use old node/symlink creation code if not compiled with udev support at all! */
-	cmd->default_settings.udev_fallback = 1;
-#endif
 
 	cmd->use_linear_target = find_config_tree_bool(cmd, activation_use_linear_target_CFG);
 
