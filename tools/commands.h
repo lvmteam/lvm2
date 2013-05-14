@@ -94,10 +94,10 @@ xx(lvchange,
    "\t[--sysinit]\n"
    "\t[-t|--test]\n"
    "\t[-v|--verbose]\n"
-   "\t[-y|--yes]\n"
    "\t[--version]\n"
    "\t[--writebehind BehindCount\n"
    "\t[--writemostly PhysicalVolume]\n"
+   "\t[-y|--yes]\n"
    "\t[-Z|--zero {y|n}]\n"
    "\tLogicalVolume[Path] [LogicalVolume[Path]...]\n",
 
@@ -106,7 +106,7 @@ xx(lvchange,
    major_ARG, minor_ARG, monitor_ARG, noudevsync_ARG, partial_ARG,
    permission_ARG, persistent_ARG, poll_ARG, readahead_ARG, resync_ARG,
    refresh_ARG, addtag_ARG, deltag_ARG, syncaction_ARG, sysinit_ARG, test_ARG,
-   yes_ARG, writebehind_ARG, writemostly_ARG, zero_ARG)
+   writebehind_ARG, writemostly_ARG, zero_ARG)
 
 xx(lvconvert,
    "Change logical volume layout",
@@ -174,7 +174,7 @@ xx(lvconvert,
    trackchanges_ARG, type_ARG, stripes_long_ARG, stripesize_ARG, test_ARG,
    chunksize_ARG, discards_ARG, poolmetadata_ARG, poolmetadatasize_ARG,
    originname_ARG, thin_ARG, thinpool_ARG,
-   use_policies_ARG, yes_ARG, force_ARG, zero_ARG)
+   use_policies_ARG, force_ARG, zero_ARG)
 
 xx(lvcreate,
    "Create a logical volume",
@@ -380,12 +380,12 @@ xx(lvreduce,
    "\t[-r|--resizefs]\n"
    "\t[-t|--test]\n"
    "\t[-v|--verbose]\n"
-   "\t[-y|--yes]\n"
    "\t[--version]" "\n"
+   "\t[-y|--yes]\n"
    "\tLogicalVolume[Path]\n",
 
    autobackup_ARG, force_ARG,  extents_ARG, nofsck_ARG, noudevsync_ARG,
-   resizefs_ARG, size_ARG, test_ARG, yes_ARG)
+   resizefs_ARG, size_ARG, test_ARG)
 
 xx(lvremove,
    "Remove logical volume(s) from the system",
@@ -568,7 +568,7 @@ xx(pvcreate,
    force_ARG, test_ARG, labelsector_ARG, metadatatype_ARG,
    metadatacopies_ARG, metadatasize_ARG, metadataignore_ARG,
    norestorefile_ARG, physicalvolumesize_ARG, pvmetadatacopies_ARG,
-   restorefile_ARG, uuidstr_ARG, yes_ARG, zero_ARG)
+   restorefile_ARG, uuidstr_ARG, zero_ARG)
 
 xx(pvdata,
    "Display the on-disk metadata for physical volume(s)",
@@ -658,11 +658,11 @@ xx(pvremove,
    "\t[-h|-?|--help] " "\n"
    "\t[-t|--test] " "\n"
    "\t[-v|--verbose] " "\n"
-   "\t[-y|--yes]" "\n"
    "\t[--version] " "\n"
+   "\t[-y|--yes]" "\n"
    "\tPhysicalVolume [PhysicalVolume...]\n",
 
-   force_ARG, test_ARG, yes_ARG)
+   force_ARG, test_ARG)
 
 xx(pvs,
    "Display information about physical volumes",
@@ -838,12 +838,13 @@ xx(vgcreate,
    "\t[-t|--test] " "\n"
    "\t[-v|--verbose]" "\n"
    "\t[--version] " "\n"
+   "\t[-y|--yes]" "\n"
    "\t[ PHYSICAL DEVICE OPTIONS ] " "\n"
    "\tVolumeGroupName PhysicalDevicePath [PhysicalDevicePath...]\n",
 
    addtag_ARG, alloc_ARG, autobackup_ARG, clustered_ARG, maxlogicalvolumes_ARG,
    maxphysicalvolumes_ARG, metadatatype_ARG, physicalextentsize_ARG, test_ARG,
-   force_ARG, yes_ARG, zero_ARG, labelsector_ARG, metadatasize_ARG,
+   force_ARG, zero_ARG, labelsector_ARG, metadatasize_ARG,
    pvmetadatacopies_ARG, metadatacopies_ARG, vgmetadatacopies_ARG,
    dataalignment_ARG, dataalignmentoffset_ARG)
 
@@ -908,11 +909,12 @@ xx(vgextend,
    "\t[-t|--test]\n"
    "\t[-v|--verbose]\n"
    "\t[--version]" "\n"
+   "\t[-y|--yes]\n"
    "\t[ PHYSICAL DEVICE OPTIONS ] " "\n"
    "\tVolumeGroupName PhysicalDevicePath [PhysicalDevicePath...]\n",
 
    autobackup_ARG, test_ARG,
-   force_ARG, yes_ARG, zero_ARG, labelsector_ARG, metadatatype_ARG,
+   force_ARG, zero_ARG, labelsector_ARG, metadatatype_ARG,
    metadatasize_ARG, pvmetadatacopies_ARG, metadatacopies_ARG,
    metadataignore_ARG, dataalignment_ARG, dataalignmentoffset_ARG,
    restoremissing_ARG)

@@ -615,6 +615,7 @@ void lvm_register_commands(void)
 					    driverloaded_ARG, \
 					    debug_ARG, help_ARG, help2_ARG, \
 					    version_ARG, verbose_ARG, \
+					    yes_ARG, \
 					    quiet_ARG, config_ARG, -1);
 #include "commands.h"
 #undef xx

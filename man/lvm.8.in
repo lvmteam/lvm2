@@ -171,6 +171,10 @@ Overrides config file setting.
 Suppress output and log messages.
 Overrides \fB\-d\fP and \fB\-v\fP.
 .TP
+.BR \-\-yes
+Don't prompt for confirmation interactively but instead always assume the
+answer is 'yes'.  Take great care if you use this!
+.TP
 .BR \-t ", " \-\-test
 Run in test mode. Commands will not update metadata.
 This is implemented by disabling all metadata writing but nevertheless
