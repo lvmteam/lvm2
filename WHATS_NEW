@@ -71,8 +71,8 @@ Version 2.02.99 -
   Check for failing id_read_format() in _pv_populate_lvmcache.
   Fix memleak on error path for lvmetad's pv_found.
   Unlock vg mutex in error path when lvmetad tries to lock_vg.
-  Add check for key string duplication in config_make_nodes_v.
-  Add check for created fid in _scan_file.
+  Detect key string duplication failure in config_make_nodes_v in libdaemon.
+  Detect fid creation failure in _scan_file in format_text.
   Log output also to syslog when abort_on_internal_error is set.
   Add LV snapshot support to liblvm and python-lvm.
   Avoid a global lock in pvs when lvmetad is in use.
@@ -85,37 +85,39 @@ Version 2.02.99 -
   Add lvm.conf option global/thin_disabled_features.
   Add lvconvert support to swap thin pool metadata volume.
   Implement internal function detach_pool_metadata_lv().
-  Fix lvm2app to return all property sizes in bytes.
+  Fix lvm2app to return all property sizes in bytes (not sectors).
   Recognize DM_DISABLE_UDEV environment variable for a complete fallback.
   Do not verify udev operations if --noudevsync command option is used.
   Fix lvm2app and return lvseg discards property as string.
-  Allow forced vgcfgrestore of lvm2 metadata with thin volumes.
+  Allow vgcfgrestore of lvm2 metadata with thin volumes if --force is used.
   Recognise Storage Class Memory (IBM S/390) devices in filter.
   Recognise STEC skd devices in filter.
   Recognise Violin Memory vtms devices in filter.
-  Add lvm.conf thin pool defs thin_pool_{chunk_size|discards|zero}.
+  Add lvm.conf thin pool allocation settings thin_pool_{chunk_size|discards|zero}.
   Support discards for non-power-of-2 thin pool chunks.
   Automatically restore MISSING PVs with no MDAs.
-  When no '-i' argument is given for RAID10, default to 2 stripes.
-  Do not allow --splitmirrors on RAID10 logical volumes.
+  When no --stripes argument is given when creating a RAID10 volume, default to 2 stripes.
+  Do not allow lvconvert --splitmirrors on RAID10 logical volumes.
   Skip mlocking [vectors] on arm architecture.
   Support allocation of pool metadata with lvconvert command.
   Move common functionality for thin lvcreate and lvconvert to toollib.
-  Mirrored log is now fixed before its mirror when double-fault occurs.
+  Repair a mirrored log before the mirror itself when both fail.
   Add python-lvm unit test case
   Exit pvscan --cache immediately if cluster locking used or lvmetad not used.
   Don't use lvmetad in lvm2-monitor.service ExecStop to avoid a systemd issue.
   Remove dependency on fedora-storage-init.service in lvm2 systemd units.
   Depend on lvm2-lvmetad.socket in lvm2-monitor.service systemd unit.
   Hardcode use_lvmetad=0 if cluster locking used and issue a warning msg.
-  Avoid reading mirrors with failed devices in its mirrored log.
-  Avoid reading from mirrors that have failed devices if they block I/O.
+  Avoid LVM from trying to read a mirror that has a failed device in its mirrored log.
+  Relax ignore_suspended_devices to read from mirrors that don't have a device marked failed.
   Change lvs heading Copy% to Cpy%Sync and print RAID4/5/6 sync% there too.
   Fix clvmd support for option -d and properly use its argument.
   Support use of option --yes for lvchange --persistent.
   Fix memory leak on error path for pvcreate with invalid uuid.
+  Implement ref-counting for parents in python lib.
   Use lv_is_active() instead of lv_info() call.
-  Cleanup some log_error message and use log_warn instead.
+  Reduce some log_error messages to log_warn where we don't fail.
+  Remove python liblvm object. systemdir can only be changed using env var now.
   
 Version 2.02.98 - 15th October 2012
 ===================================

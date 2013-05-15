@@ -428,7 +428,7 @@ static int _process_config(struct cmd_context *cmd)
 
 	if (find_config_tree_int(cmd, global_locking_type_CFG) == 3 &&
 	    find_config_tree_bool(cmd, global_use_lvmetad_CFG)) {
-		log_warn("WARNING: configuration setting use_lvmetad overriden to 0 due to locking_type 3. "
+		log_warn("WARNING: configuration setting use_lvmetad overridden to 0 due to locking_type 3. "
 			 "Clustered environment not supported by lvmetad yet.");
 		lvmetad_set_active(0);
 	} else

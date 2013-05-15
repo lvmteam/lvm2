@@ -138,7 +138,8 @@ static int _info_run(const char *name, const char *dlid, struct dm_info *info,
  * @mirror_status_string
  * @image_health:  return for allocated copy of image health characters
  * @log_device: return for 'dev_t' of log device
- * @log_health: NULL if corelog, otherwise alloc'ed log health char
+ * @log_health: NULL if corelog, otherwise dm_malloc'ed log health char which
+ *              the caller must free
  *
  * This function takes the mirror status string, breaks it up and returns
  * its components.  For now, we only return the health characters.  This
@@ -184,7 +185,7 @@ static int _parse_mirror_status(char *mirror_status_str,
 			return 0;
 		}
 		if (sscanf(log_args[1], "%d:%d", &major, &minor) != 2) {
-			log_error("Parsing of log's major minor failed.");
+			log_error("Failed to parse log's device number from %s.", log_args[1]);
 			goto out;
 		}
 		*log_dev = MKDEV((dev_t)major, minor);

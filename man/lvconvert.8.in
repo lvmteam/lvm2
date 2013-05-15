@@ -210,12 +210,15 @@ For thin pools the value must be between 64KiB and
 1GiB and the default value starts with 64 and scales
 up to fit the pool metadata size within 128MiB,
 if the pool metadata size is not specified.
-Thin pool target version <1.4 requires the value to be a power of 2.
-The newer target version relaxes limitation to be a multiple of 64KiB.
-For target version <1.5 discard is not supported for non power of 2 values.
+The value must be a multiple of 64KiB. 
+(Early kernel support until thin target version 1.4 required the value
+to be a power of 2.  Discards weren't supported for non-power of 2 values
+until thin target version 1.5.)
+Default unit is in kilobytes.
 .TP
 .BR \-\-discards " {" \fIignore | \fInopassdown | \fIpassdown }
-Sets discards behavior for thin pool.
+Specifies whether or not discards will be processed by the thin layer in the
+kernel and passed down to the Physical Volume.
 Default is \fIpassdown\fP.
 .TP
 .BR \-Z ", " \-\-zero " {" \fIy | \fIn }

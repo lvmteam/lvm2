@@ -104,7 +104,7 @@ otherwise it is accepted.  As an example, to ignore /dev/cdrom you could use:
 .br
 \fBdevices { filter=["r|cdrom|"] }\fP
 .IP
-\fBglobal_filter\fP \(em Since "filter" is often overriden from command line, it
+\fBglobal_filter\fP \(em Since "filter" might get overridden from the command line, it
 is not suitable for system-wide device filtering (udev rules, lvmetad). To hide
 devices from LVM-specific udev processing and/or from lvmetad, you need to set
 global_filter. The syntax is the same as for normal "filter" above. Devices that

@@ -284,7 +284,6 @@ static int _cluster_send_message(const void *buf, int msglen,
 
 static int _get_cluster_name(char *buf, int buflen)
 {
-	/* FIXME - cluster_ops API is broken - swap 1/0 */
 	return dm_strncpy(buf, "localcluster", buflen) ? 0 : 1;
 }
 
