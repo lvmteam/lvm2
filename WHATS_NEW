@@ -115,7 +115,7 @@ Version 2.02.99 -
   Support use of option --yes for lvchange --persistent.
   Fix memory leak on error path for pvcreate with invalid uuid.
   Implement ref-counting for parents in python lib.
-  Use lv_is_active() instead of lv_info() call.
+  Add lv_is_active_locally and use instead of most local lv_info calls.
   Reduce some log_error messages to log_warn where we don't fail.
   Remove python liblvm object. systemdir can only be changed using env var now.
   

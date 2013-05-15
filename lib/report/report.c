@@ -866,7 +866,7 @@ static int _snpercent_disp(struct dm_report *rh __attribute__((unused)), struct 
 	}
 
 	if ((!lv_is_cow(lv) && !lv_is_merging_origin(lv)) ||
-	    !lv_is_active(lv)) {
+	    !lv_is_active_locally(lv)) {
 		*sortval = UINT64_C(0);
 		dm_report_field_set_value(field, "", sortval);
 		return 1;
