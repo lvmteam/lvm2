@@ -19,6 +19,7 @@
 #include "toolcontext.h"
 #include "lv_alloc.h"
 #include "activate.h"
+#include "segtype.h"
 
 int lv_is_origin(const struct logical_volume *lv)
 {
@@ -110,8 +111,8 @@ void init_snapshot_seg(struct lv_segment *seg, struct logical_volume *origin,
 	dm_list_add(&origin->snapshot_segs, &seg->origin_list);
 }
 
-void init_snapshot_merge(struct lv_segment *cow_seg,
-			 struct logical_volume *origin)
+int init_snapshot_merge(struct lv_segment *cow_seg,
+			struct logical_volume *origin)
 {
 	/*
 	 * Even though lv_is_visible(cow_seg->lv) returns 0,
@@ -127,6 +128,13 @@ void init_snapshot_merge(struct lv_segment *cow_seg,
 	cow_seg->status |= MERGING;
 	origin->snapshot = cow_seg;
 	origin->status |= MERGING;
+
+	if (cow_seg->segtype->ops->target_present &&
+	    !cow_seg->segtype->ops->target_present(cow_seg->lv->vg->cmd,
+				cow_seg, NULL))
+		return 0;
+
+	return 1;
 }
 
 void clear_snapshot_merge(struct logical_volume *origin)

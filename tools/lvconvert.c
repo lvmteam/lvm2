@@ -1832,7 +1832,11 @@ static int lvconvert_merge(struct cmd_context *cmd,
 		}
 	}
 
-	init_snapshot_merge(cow_seg, origin);
+	if (!init_snapshot_merge(cow_seg, origin)) {
+		log_error("Can't initialize snapshot merge. "
+			  "Missing support in kernel?");
+		return_0;
+	}
 
 	/* store vg on disk(s) */
 	if (!vg_write(lv->vg))

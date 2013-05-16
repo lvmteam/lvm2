@@ -734,7 +734,7 @@ struct logical_volume *origin_from_cow(const struct logical_volume *lv);
 void init_snapshot_seg(struct lv_segment *seg, struct logical_volume *origin,
 		       struct logical_volume *cow, uint32_t chunk_size, int merge);
 
-void init_snapshot_merge(struct lv_segment *cow_seg, struct logical_volume *origin);
+int init_snapshot_merge(struct lv_segment *cow_seg, struct logical_volume *origin);
 
 void clear_snapshot_merge(struct logical_volume *origin);
 
