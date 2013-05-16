@@ -1,5 +1,6 @@
 Version 1.02.78 - 
 ===================================
+  Detecte mounted fs also via reading /proc/self/mountinfo.
   Add dm_mountinfo_read() for parsing /proc/self/mountinfo.
   Report error for nonexisting devices in dmeventd communication.
   Prevent double free error after dmeventd call of _fill_device_data().

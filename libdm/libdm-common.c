@@ -1842,10 +1842,48 @@ static int _mounted_fs_on_device(const char *kernel_dev_name)
 	return r;
 }
 
+struct mountinfo_s {
+	unsigned maj;
+	unsigned min;
+	int mounted;
+};
+
+static int _device_has_mounted_fs(char *buffer, unsigned major, unsigned minor,
+				  char *target, void *cb_data)
+{
+	struct mountinfo_s *data = cb_data;
+	char kernel_dev_name[PATH_MAX];
+
+	if ((major == data->maj) && (minor == data->min)) {
+		if (!dm_device_get_name(major, minor, 1, kernel_dev_name, PATH_MAX)) {
+			stack;
+			*kernel_dev_name = '\0';
+		}
+		log_verbose("Device %s (%u:%u) appears to be mounted on %s.",
+			    kernel_dev_name, major, minor, target);
+		data->mounted = 1;
+	}
+
+	return 1;
+}
+
 int dm_device_has_mounted_fs(uint32_t major, uint32_t minor)
 {
 	char kernel_dev_name[PATH_MAX];
+	struct mountinfo_s data = {
+		.maj = major,
+		.min = minor,
+	};
 
+	if (!dm_mountinfo_read(_device_has_mounted_fs, &data))
+		stack;
+
+	if (data.mounted)
+		return 1;
+	/*
+	 * TODO: Verify dm_mountinfo_read() is superset
+	 * and remove sysfs check (namespaces)
+	 */
 	/* Get kernel device name first */
 	if (!dm_device_get_name(major, minor, 1, kernel_dev_name, PATH_MAX))
 		return 0;
