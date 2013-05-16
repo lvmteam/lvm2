@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Refuse to init a snapshot merge in lvconvert if there's no kernel support.
   Fix exported symbols regex for non-GNU busybox sed.
   Accept --yes in all commands so test scripts can be simpler.
   Fix alignment of PV data area if detected alignment less than 1 MB (2.02.74).
@@ -1368,7 +1369,6 @@ Version 2.02.58 - 14th January 2010
 
 Version 2.02.57 - 12th January 2010
 ===================================
-  Refuse to init a snapshot merge in lvconvert if there's no kernel support.
   Ensure exactly one process returns from poll_daemon(), never two.
   Reset _vgs_locked in lvmcache_init() in child after forking.
   Define {DM, LVM}_UDEV_DISABLE_CHECKING=1 environment variables during tests.
