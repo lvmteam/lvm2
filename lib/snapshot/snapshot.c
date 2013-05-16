@@ -162,9 +162,11 @@ static int _snap_target_present(struct cmd_context *cmd,
 		_snap_checked = 1;
 	}
 
-	if (!_snap_merge_checked && seg && (seg->status & MERGING)) {
-		_snap_merge_present = target_present(cmd, "snapshot-merge", 0);
-		_snap_merge_checked = 1;
+	if (seg && (seg->status & MERGING)) {
+		if (!_snap_merge_checked) {
+			_snap_merge_present = target_present(cmd, "snapshot-merge", 0);
+			_snap_merge_checked = 1;
+		}
 		return _snap_present && _snap_merge_present;
 	}
 
