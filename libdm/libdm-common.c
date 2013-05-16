@@ -62,6 +62,7 @@ union semun
 static char _dm_dir[PATH_MAX] = DEV_DIR DM_DIR;
 static char _sysfs_dir[PATH_MAX] = "/sys/";
 static char _path0[PATH_MAX];           /* path buffer, safe 4kB on stack */
+static const char _mountinfo[] = "/proc/self/mountinfo";
 
 #define DM_MAX_UUID_PREFIX_LEN	15
 static char _default_uuid_prefix[DM_MAX_UUID_PREFIX_LEN + 1] = "LVM-";
@@ -1569,6 +1570,82 @@ int dm_set_uuid_prefix(const char *uuid_prefix)
 const char *dm_uuid_prefix(void)
 {
 	return _default_uuid_prefix;
+}
+
+static int _is_octal(int a)
+{
+	return (((a) & ~7) == '0');
+}
+
+/* Convert mangled mountinfo into normal ASCII string */
+static void _unmangle_mountinfo_string(const char *src, char *buf)
+{
+	while (*src) {
+		if ((*src == '\\') &&
+		    _is_octal(src[1]) && _is_octal(src[2]) && _is_octal(src[3])) {
+			*buf++ = 64 * (src[1] & 7) + 8 * (src[2] & 7) + (src[3] & 7);
+			src += 4;
+		} else
+			*buf++ = *src++;
+	}
+	*buf = '\0';
+}
+
+/* Macros to make string defines */
+#define TO_STRING_EXP(A) #A
+#define TO_STRING(A) TO_STRING_EXP(A)
+
+/* Parse one line of mountinfo and unmangled target line */
+static int _mountinfo_parse_line(const char *line, unsigned *maj, unsigned *min, char *buf)
+{
+	char root[PATH_MAX + 1];
+	char target[PATH_MAX + 1];
+
+	/* TODO: maybe detect availability of  %ms  glib support ? */
+	if (sscanf(line, "%*u %*u %u:%u %" TO_STRING(PATH_MAX)
+		   "s %" TO_STRING(PATH_MAX) "s",
+		   maj, min, root, target) < 4) {
+		log_error("Failed to parse mountinfo line.");
+		return 0;
+	}
+
+	_unmangle_mountinfo_string(target, buf);
+
+	return 1;
+}
+
+/*
+ * Function to operate on individal mountinfo line,
+ * minor, major and mount target are parsed and unmangled
+ */
+int dm_mountinfo_read(dm_mountinfo_line_callback_fn read_fn, void *cb_data)
+{
+	FILE *minfo;
+	char buffer[2 * PATH_MAX];
+	char target[PATH_MAX];
+	unsigned maj, min;
+	int r = 1;
+
+	if (!(minfo = fopen(_mountinfo, "r"))) {
+		if (errno != ENOENT)
+			log_sys_error("fopen", _mountinfo);
+		else
+			log_sys_debug("fopen", _mountinfo);
+		return 0;
+	}
+
+	while (!feof(minfo) && fgets(buffer, sizeof(buffer), minfo))
+		if (!_mountinfo_parse_line(buffer, &maj, &min, target) ||
+		    !read_fn(buffer, maj, min, target, cb_data)) {
+			stack;
+			r = 0;
+			break;
+		}
+
+	if (fclose(minfo))
+		log_sys_error("fclose", _mountinfo);
+
+	return r;
 }
 
 static int _sysfs_get_dm_name(uint32_t major, uint32_t minor, char *buf, size_t buf_size)

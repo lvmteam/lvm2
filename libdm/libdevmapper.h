@@ -417,6 +417,19 @@ int dm_device_has_mounted_fs(uint32_t major, uint32_t minor);
 
 
 /*
+ * Callback is invoked for individal mountinfo lines,
+ * minor, major and mount target are parsed and unmangled.
+ */
+typedef int (*dm_mountinfo_line_callback_fn) (char *line, unsigned maj, unsigned min,
+					      char *target, void *cb_data);
+
+/*
+ * Read all lines from /proc/self/mountinfo,
+ * for each line calls read_fn callback.
+ */
+int dm_mountinfo_read(dm_mountinfo_line_callback_fn read_fn, void *cb_data);
+
+/*
  * Initialise library
  */
 void dm_lib_init(void) __attribute__((constructor));
