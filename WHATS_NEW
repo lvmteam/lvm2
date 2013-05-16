@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Replace 'lv_is_active' with more correct/specific variants (e.g. *_locally).
   Refuse to init a snapshot merge in lvconvert if there's no kernel support.
   Fix exported symbols regex for non-GNU busybox sed.
   Accept --yes in all commands so test scripts can be simpler.

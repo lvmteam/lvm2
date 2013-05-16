@@ -1714,6 +1714,10 @@ int remove_mirror_log(struct cmd_context *cmd,
 			log_error("Unable to determine mirror sync status.");
 			return 0;
 		}
+	} else if (lv_is_active(lv)) {
+		log_error("Unable to determine sync status of"
+			  " remotely active mirror, %s", lv->name);
+		return 0;
 	} else if (vg_is_clustered(vg)) {
 		log_error("Unable to convert the log of an inactive "
 			  "cluster mirror, %s", lv->name);

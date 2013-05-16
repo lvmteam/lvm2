@@ -84,7 +84,7 @@ static int _activate_sublv_preserving_excl(struct logical_volume *top_lv,
 
 	/* If top RAID was EX, use EX */
 	if (lv_is_active_exclusive_locally(top_lv)) {
-		if (!activate_lv_excl(cmd, sub_lv))
+		if (!activate_lv_excl_local(cmd, sub_lv))
 			return_0;
 	} else {
 		if (!activate_lv(cmd, sub_lv))
@@ -226,7 +226,7 @@ static int _raid_remove_top_layer(struct logical_volume *lv,
  */
 static int _clear_lv(struct logical_volume *lv)
 {
-	int was_active = lv_is_active(lv);
+	int was_active = lv_is_active_locally(lv);
 
 	if (test_mode())
 		return 1;
@@ -1579,9 +1579,10 @@ int lv_raid_replace(struct logical_volume *lv,
 	dm_list_init(&new_meta_lvs);
 	dm_list_init(&new_data_lvs);
 
-	if (!lv_is_active(lv)) {
-		log_error("%s/%s must be active to perform this operation.",
-			  lv->vg->name, lv->name);
+	if (!lv_is_active_locally(lv)) {
+		log_error("%s/%s must be active %sto perform this operation.",
+			  lv->vg->name, lv->name,
+			  vg_is_clustered(lv->vg) ? "locally " : "");
 		return 0;
 	}
 

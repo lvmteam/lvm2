@@ -2906,8 +2906,8 @@ int lv_extend(struct logical_volume *lv,
 		    (lv->status & LV_NOTSYNCED)) {
 			percent_t sync_percent = PERCENT_INVALID;
 
-			if (!lv_is_active(lv)) {
-				log_error("%s/%s is not active."
+			if (!lv_is_active_locally(lv)) {
+				log_error("%s/%s is not active locally."
 					  "  Unable to get sync percent.",
 					  lv->vg->name, lv->name);
 				/* FIXME Support --force */

@@ -393,8 +393,11 @@ static int _lv_raid_image_in_sync(const struct logical_volume *lv)
 	char *raid_health;
 	struct lv_segment *raid_seg;
 
-	/* If the LV is not active, it doesn't make sense to check status */
-	if (!lv_is_active(lv))
+	/*
+	 * If the LV is not active locally,
+	 * it doesn't make sense to check status
+	 */
+	if (!lv_is_active_locally(lv))
 		return 0;  /* Assume not in-sync */
 
 	if (!(lv->status & RAID_IMAGE)) {
@@ -452,8 +455,11 @@ static int _lv_raid_healthy(const struct logical_volume *lv)
 	char *raid_health;
 	struct lv_segment *raid_seg;
 
-	/* If the LV is not active, it doesn't make sense to check status */
-	if (!lv_is_active(lv))
+	/*
+	 * If the LV is not active locally,
+	 * it doesn't make sense to check status
+	 */
+	if (!lv_is_active_locally(lv))
 		return 1;  /* assume healthy */
 
 	if (!lv_is_raid_type(lv)) {

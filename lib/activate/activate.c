@@ -818,7 +818,7 @@ int lv_raid_dev_health(const struct logical_volume *lv, char **dev_health)
 	log_debug_activation("Checking raid device health for LV %s/%s",
 			     lv->vg->name, lv->name);
 
-	if (!lv_is_active(lv))
+	if (!lv_is_active_locally(lv))
 		return 0;
 
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
@@ -850,7 +850,7 @@ int lv_raid_mismatch_count(const struct logical_volume *lv, uint64_t *cnt)
 	log_debug_activation("Checking raid mismatch count for LV %s/%s",
 			     lv->vg->name, lv->name);
 
-	if (!lv_is_active(lv))
+	if (!lv_is_active_locally(lv))
 		return_0;
 
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
@@ -881,7 +881,7 @@ int lv_raid_sync_action(const struct logical_volume *lv, char **sync_action)
 	log_debug_activation("Checking raid sync_action for LV %s/%s",
 			     lv->vg->name, lv->name);
 
-	if (!lv_is_active(lv))
+	if (!lv_is_active_locally(lv))
 		return_0;
 
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
@@ -907,7 +907,7 @@ int lv_raid_message(const struct logical_volume *lv, const char *msg)
 	struct dev_manager *dm;
 	struct dm_status_raid *status;
 
-	if (!lv_is_active(lv)) {
+	if (!lv_is_active_locally(lv)) {
 		log_error("Unable to send message to an inactive logical volume.");
 		return 0;
 	}
