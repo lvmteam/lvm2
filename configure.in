@@ -364,7 +364,7 @@ dnl -- raid inclusion type
 AC_MSG_CHECKING(whether to include raid)
 AC_ARG_WITH(raid,
 	    AC_HELP_STRING([--with-raid=TYPE],
-			   [mirror support: internal/shared/none
+			   [raid support: internal/shared/none
 			    [[TYPE=internal]]]),
 	    RAID=$withval, RAID=internal)
 AC_MSG_RESULT($RAID)

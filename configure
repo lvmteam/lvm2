@@ -1588,7 +1588,7 @@ Optional Packages:
                           [[TYPE=internal]]
   --with-mirrors=TYPE     mirror support: internal/shared/none
                           [[TYPE=internal]]
-  --with-raid=TYPE        mirror support: internal/shared/none
+  --with-raid=TYPE        raid support: internal/shared/none
                           [[TYPE=internal]]
   --with-replicators=TYPE replicator support: internal/shared/none
                           [[TYPE=none]]
