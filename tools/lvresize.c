@@ -558,9 +558,7 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 	seg_size = lp->extents - lv->le_count;
 
 	/* Use segment type of last segment */
-	dm_list_iterate_items(seg, &lv->segments) {
-		lp->segtype = seg->segtype;
-	}
+	lp->segtype = last_seg(lv)->segtype;
 
 	/* FIXME Support LVs with mixed segment types */
 	if (lp->segtype != get_segtype_from_string(cmd, arg_str_value(cmd, type_ARG,
