@@ -749,6 +749,13 @@ int dm_tree_node_add_replicator_dev_target(struct dm_tree_node *node,
  */
 #define DM_THIN_MIN_DATA_BLOCK_SIZE (UINT32_C(128))
 #define DM_THIN_MAX_DATA_BLOCK_SIZE (UINT32_C(2097152))
+/*
+ * Max supported size for thin pool  metadata device (17112760320 bytes)
+ * Limitation is hardcoded into the kernel and bigger device size
+ * is not accepted.
+ * drivers/md/dm-thin-metadata.h THIN_METADATA_MAX_SECTORS
+ */
+#define DM_THIN_MAX_METADATA_SIZE   (UINT64_C(255) * (1 << 14) * (4096 / (1 << 9)) - 256 * 1024)
 
 int dm_tree_node_add_thin_pool_target(struct dm_tree_node *node,
 				      uint64_t size,
