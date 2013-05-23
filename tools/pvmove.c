@@ -464,7 +464,7 @@ static int _update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 			 * FIXME Run --abort internally here.
 			 */
 			log_error("ABORTING: Temporary pvmove mirror activation failed. Run pvmove --abort.");
-			goto_out;
+			goto out;
 		}
 	}
 

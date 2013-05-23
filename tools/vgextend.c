@@ -92,7 +92,7 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 		}
 		if (!fixed) {
 			log_error("No PV has been restored.");
-			goto_bad;
+			goto bad;
 		}
 	} else { /* no --restore, normal vgextend */
 		if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE)) {
@@ -108,7 +108,7 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 			  "of VG %s metadata? [y/n]: ",
 				  vg_name) == 'n') {
 			log_error("Volume group %s not changed", vg_name);
-			goto_bad;
+			goto bad;
 		}
 
 		/* extend vg */

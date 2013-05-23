@@ -2019,13 +2019,13 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 	if ((!lv->vg->cmd->partial_activation) && (lv->status & PARTIAL_LV)) {
 		log_error("Refusing activation of partial LV %s. Use --partial to override.",
 			  lv->name);
-		goto_out;
+		goto out;
 	}
 
 	if (lv_has_unknown_segments(lv)) {
 		log_error("Refusing activation of LV %s containing "
 			  "an unrecognised segment.", lv->name);
-		goto_out;
+		goto out;
 	}
 
 	if (test_mode()) {

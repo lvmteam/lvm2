@@ -851,13 +851,13 @@ static int _info_by_dev(uint32_t major, uint32_t minor, int with_open_count,
 	if (name && !(*name = dm_pool_strdup(mem, dm_task_get_name(dmt)))) {
 		log_error("name pool_strdup failed");
 		r = 0;
-		goto_out;
+		goto out;
 	}
 
 	if (uuid && !(*uuid = dm_pool_strdup(mem, dm_task_get_uuid(dmt)))) {
 		log_error("uuid pool_strdup failed");
 		r = 0;
-		goto_out;
+		goto out;
 	}
 
 out:
@@ -1016,13 +1016,13 @@ static int _node_clear_table(struct dm_tree_node *dnode, uint16_t udev_flags)
 
 	if (!(dmt = dm_task_create(DM_DEVICE_CLEAR))) {
 		log_error("Table clear dm_task creation failed for %s", name);
-		goto_out;
+		goto out;
 	}
 
 	if (!dm_task_set_major(dmt, info->major) ||
 	    !dm_task_set_minor(dmt, info->minor)) {
 		log_error("Failed to set device number for %s table clear", name);
-		goto_out;
+		goto out;
 	}
 
 	r = dm_task_run(dmt);

@@ -4009,7 +4009,7 @@ static struct volume_group *_vg_lock_and_read(struct cmd_context *cmd, const cha
 		if (consistent_in && !consistent) {
 			log_error("Volume group \"%s\" inconsistent.", vg_name);
 			failure |= FAILED_INCONSISTENT;
-			goto_bad;
+			goto bad;
 		}
 
 		log_error("Volume group \"%s\" not found", vg_name);
@@ -4031,7 +4031,7 @@ static struct volume_group *_vg_lock_and_read(struct cmd_context *cmd, const cha
 			log_error("Recovery of volume group \"%s\" failed.",
 				  vg_name);
 			failure |= FAILED_INCONSISTENT;
-			goto_bad;
+			goto bad;
 		}
 	}
 
@@ -4045,7 +4045,7 @@ static struct volume_group *_vg_lock_and_read(struct cmd_context *cmd, const cha
 		log_error("Cannot change VG %s while PVs are missing.", vg->name);
 		log_error("Consider vgreduce --removemissing.");
 		failure |= FAILED_INCONSISTENT; /* FIXME new failure code here? */
-		goto_bad;
+		goto bad;
 	}
 
 	if (!cmd->handles_unknown_segments && vg_has_unknown_segments(vg) &&
@@ -4053,7 +4053,7 @@ static struct volume_group *_vg_lock_and_read(struct cmd_context *cmd, const cha
 		log_error("Cannot change VG %s with unknown segments in it!",
 			  vg->name);
 		failure |= FAILED_INCONSISTENT; /* FIXME new failure code here? */
-		goto_bad;
+		goto bad;
 	}
 
 	failure |= _vg_bad_status_bits(vg, status_flags);
