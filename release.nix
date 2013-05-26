@@ -1,4 +1,4 @@
-{ nixpkgs ? <nixpkgs>, lvm2Src, release ? false, rawhide32 ? "" , rawhide64 ? "" , fc19_32 ? "" , fc19_64 ? "" }:
+{ nixpkgs ? <nixpkgs>, lvm2Src, release ? false, rawhide32 ? "" , rawhide64 ? "" , fc19_32 ? "" , fc19_64 ? "", lvm2Nix ? lvm2Src }:
 
 let
   pkgs = import nixpkgs {};
@@ -138,7 +138,7 @@ let
         version=`cat VERSION | cut "-d(" -f1`${versionSuffix}
         version_dm=`cat VERSION_DM | cut "-d-" -f1`${versionSuffix}
         sed -e s,-git,${versionSuffix}, -i VERSION VERSION_DM
-        mv spec/* . && rmdir spec
+        rm -rf spec; cp -R ${lvm2Nix}/spec/* .
         chmod u+w *
         (echo "%define enable_profiling 1";
          echo "%define check_commands \\";
