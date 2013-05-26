@@ -1,5 +1,6 @@
 Version 1.02.78 - 
 ===================================
+  Fix parsing of 64bit snapshot status in dmeventd snapshot plugin.
   Add dm_get_status_snapshot() for parsing snapshot status.
   Detecte mounted fs also via reading /proc/self/mountinfo.
   Add dm_mountinfo_read() for parsing /proc/self/mountinfo.
