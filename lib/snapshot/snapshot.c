@@ -117,32 +117,26 @@ static int _snap_target_percent(void **target_state __attribute__((unused)),
 				char *params, uint64_t *total_numerator,
 				uint64_t *total_denominator)
 {
-	uint64_t total_sectors, sectors_allocated, metadata_sectors;
-	int r;
+	struct dm_status_snapshot *s;
 
-	/*
-	 * snapshot target's percent format:
-	 * <= 1.7.0: <sectors_allocated>/<total_sectors>
-	 * >= 1.8.0: <sectors_allocated>/<total_sectors> <metadata_sectors>
-	 */
-	r = sscanf(params, "%" PRIu64 "/%" PRIu64 " %" PRIu64,
-		   &sectors_allocated, &total_sectors, &metadata_sectors);
-	if (r == 2 || r == 3) {
-		*total_numerator += sectors_allocated;
-		*total_denominator += total_sectors;
-		if (r == 3 && sectors_allocated == metadata_sectors)
+	if (!dm_get_status_snapshot(mem, params, &s))
+		return_0;
+
+	if (s->invalid)
+		*percent = PERCENT_INVALID;
+	else if (s->merge_failed)
+		*percent = PERCENT_MERGE_FAILED;
+	else {
+		*total_numerator += s->used_sectors;
+		*total_denominator += s->total_sectors;
+		if (s->has_metadata_sectors &&
+		    s->used_sectors == s->metadata_sectors)
 			*percent = PERCENT_0;
-		else if (sectors_allocated == total_sectors)
+		else if (s->used_sectors == s->total_sectors)
 			*percent = PERCENT_100;
 		else
 			*percent = make_percent(*total_numerator, *total_denominator);
 	}
-	else if (!strcmp(params, "Invalid"))
-		*percent = PERCENT_INVALID;
-	else if (!strcmp(params, "Merge failed"))
-		*percent = PERCENT_MERGE_FAILED;
-	else
-		return 0;
 
 	return 1;
 }
