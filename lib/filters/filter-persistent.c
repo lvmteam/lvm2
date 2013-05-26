@@ -274,6 +274,11 @@ out:
 	return r;
 }
 
+static void _dump(struct dev_filter *f)
+{
+	persistent_filter_dump(f, 1);
+}
+
 static int _lookup_p(struct dev_filter *f, struct device *dev)
 {
 	struct pfilter *pf = (struct pfilter *) f->private;
@@ -367,6 +372,7 @@ struct dev_filter *persistent_filter_create(struct dev_filter *real,
 	f->use_count = 0;
 	f->private = pf;
 	f->wipe = _persistent_filter_wipe;
+	f->dump = _dump;
 
 	return f;
 
