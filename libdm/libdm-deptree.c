@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2012 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2005-2013 Red Hat, Inc. All rights reserved.
  *
  * This file is part of the device-mapper userspace tools.
  *
@@ -2716,6 +2716,43 @@ int dm_tree_node_add_snapshot_merge_target(struct dm_tree_node *node,
 {
 	return _add_snapshot_target(node, size, origin_uuid, cow_uuid,
 				    merge_uuid, 1, chunk_size);
+}
+
+int dm_get_status_snapshot(struct dm_pool *mem, const char *params,
+			   struct dm_status_snapshot **status)
+{
+	struct dm_status_snapshot *s;
+	int r;
+
+	if (!params) {
+		log_error("Failed to parse invalid snapshot params.");
+		return 0;
+	}
+
+	if (!(s = dm_pool_zalloc(mem, sizeof(*s)))) {
+		log_error("Failed to allocate snapshot status structure.");
+		return 0;
+	}
+
+	r = sscanf(params, "%" PRIu64 "/%" PRIu64 " %" PRIu64,
+		   &s->used_sectors, &s->total_sectors,
+		   &s->metadata_sectors);
+
+	if (r == 3 || r == 2)
+		s->has_metadata_sectors = (r == 3);
+	else if (!strcmp(params, "Invalid"))
+		s->invalid = 1;
+	else if (!strcmp(params, "Merge failed"))
+		s->merge_failed = 1;
+	else {
+		dm_pool_free(mem, s);
+		log_error("Failed to parse snapshot params: %s.", params);
+		return 0;
+	}
+
+	*status = s;
+
+	return 1;
 }
 
 int dm_tree_node_add_error_target(struct dm_tree_node *node,

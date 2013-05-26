@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2011 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2013 Red Hat, Inc. All rights reserved.
  *
  * This file is part of the device-mapper userspace tools.
  *
@@ -285,6 +285,24 @@ struct dm_status_raid {
 
 int dm_get_status_raid(struct dm_pool *mem, const char *params,
 		       struct dm_status_raid **status);
+
+
+/*
+ * Snapshot target's format:
+ * <= 1.7.0: <used_sectors>/<total_sectors>
+ * >= 1.8.0: <used_sectors>/<total_sectors> <metadata_sectors>
+ */
+struct dm_status_snapshot {
+	uint64_t used_sectors;          /* in 512b units */
+	uint64_t total_sectors;
+	uint64_t metadata_sectors;
+	unsigned has_metadata_sectors : 1; /* set when metadata_sectors is present */
+	unsigned invalid : 1;		/* set when snapshot is invalidated */
+	unsigned merge_failed : 1;	/* set when snapshot merge failed */
+};
+
+int dm_get_status_snapshot(struct dm_pool *mem, const char *params,
+			   struct dm_status_snapshot **status);
 
 /*
  * Parse params from STATUS call for thin_pool target
