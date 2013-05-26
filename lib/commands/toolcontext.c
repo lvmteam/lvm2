@@ -913,9 +913,11 @@ static int _init_filters(struct cmd_context *cmd, unsigned load_persistent_cache
 
 	/*
 	 * Only load persistent filter device cache on startup if it is newer
-	 * than the config file and this is not a long-lived process.
+	 * than the config file and this is not a long-lived process. Also avoid
+	 * it when lvmetad is enabled.
 	 */
-	if (load_persistent_cache && !cmd->is_long_lived &&
+	if (!find_config_tree_bool(cmd, global_use_lvmetad_CFG) &&
+	    load_persistent_cache && !cmd->is_long_lived &&
 	    !stat(dev_cache, &st) &&
 	    (st.st_ctime > config_file_timestamp(cmd->cft)) &&
 	    !persistent_filter_load(f4, NULL))
