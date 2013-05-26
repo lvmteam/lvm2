@@ -2955,10 +2955,10 @@ int dm_get_status_raid(struct dm_pool *mem, const char *params,
 		return_0;
 
 	if (!(s->raid_type = dm_pool_zalloc(mem, p - params)))
-		return_0; /* memory is freed went pool is destroyed */
+		goto_bad; /* memory is freed went pool is destroyed */
 
 	if (!(s->dev_health = dm_pool_zalloc(mem, i + 1)))
-		return_0;
+		goto_bad;
 
 	if (sscanf(params, "%s %d %s %" PRIu64 "/%" PRIu64,
 		   s->raid_type,
@@ -2967,7 +2967,7 @@ int dm_get_status_raid(struct dm_pool *mem, const char *params,
 		   &s->insync_regions,
 		   &s->total_regions) != 5) {
 		log_error("Failed to parse raid params: %s", params);
-		return 0;
+		goto bad;
 	}
 
 	*status = s;
@@ -2986,19 +2986,23 @@ int dm_get_status_raid(struct dm_pool *mem, const char *params,
 	pp = p;
 	if (!(p = strchr(p, ' '))) {
 		log_error(INTERNAL_ERROR "Bad RAID status received.");
-		return 0;
+		goto bad;
 	}
 	p++;
 
 	if (!(s->sync_action = dm_pool_zalloc(mem, p - pp)))
-		return_0;
+		goto_bad;
 
 	if (sscanf(pp, "%s %" PRIu64, s->sync_action, &s->mismatch_count) != 2) {
 		log_error("Failed to parse raid params: %s", params);
-		return 0;
+		goto bad;
 	}
 
 	return 1;
+bad:
+	dm_pool_free(mem, s);
+
+	return 0;
 }
 
 int dm_tree_node_add_replicator_target(struct dm_tree_node *node,
@@ -3428,6 +3432,7 @@ int dm_get_status_thin_pool(struct dm_pool *mem, const char *params,
 		   &s->total_metadata_blocks,
 		   &s->used_data_blocks,
 		   &s->total_data_blocks, &pos) < 5) {
+		dm_pool_free(mem, s);
 		log_error("Failed to parse thin pool params: %s.", params);
 		return 0;
 	}
@@ -3468,6 +3473,7 @@ int dm_get_status_thin(struct dm_pool *mem, const char *params,
 	} else if (sscanf(params, "%" PRIu64 " %" PRIu64,
 		   &s->mapped_sectors,
 		   &s->highest_mapped_sector) != 2) {
+		dm_pool_free(mem, s);
 		log_error("Failed to parse thin params: %s.", params);
 		return 0;
 	}
