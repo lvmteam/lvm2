@@ -21,8 +21,13 @@ dd if="$dev1" of="$dev2" bs=256K count=1
 aux notify_lvmetad "$dev2"
 
 # Verify pvs works on each device to give us vgname
+aux hide_dev $dev2
 check pv_field "$dev1" vg_name $vg1
+aux unhide_dev $dev2
+
+aux hide_dev $dev1
 check pv_field "$dev2" vg_name $vg1
+aux unhide_dev $dev1
 
 # Import the cloned PV to a new VG
 vgimportclone --basevgname $vg2 "$dev2"
