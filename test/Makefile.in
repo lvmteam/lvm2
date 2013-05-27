@@ -122,6 +122,7 @@ CMDS = lvm $(shell cat $(top_builddir)/tools/.commands)
 			ln -sf $(abs_top_srcdir)/test/$$f $$f; \
 		done; \
 	fi
+	mkdir -p results
 	touch $@
 
 .lib-dir-stamp:

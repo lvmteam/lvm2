@@ -46,6 +46,8 @@ static int die = 0;
 static int verbose = 0; /* >1 with timestamps */
 static int interactive = 0; /* disable all redirections */
 
+static FILE *outfile = NULL;
+
 struct subst {
 	const char *key;
 	char *value;
@@ -65,7 +67,7 @@ static void handler( int sig ) {
 	die = sig;
 }
 
-static int outline(char *buf, int start, int force) {
+static int outline(FILE *out, char *buf, int start, int force) {
 	char *from = buf + start;
 	char *next = strchr(buf + start, '\n');
 
@@ -100,11 +102,11 @@ static int outline(char *buf, int start, int force) {
 					}
 				}
 			}
-			fwrite(a, 1, b - a, stdout);
+			fwrite(a, 1, b - a, out);
 			a = b;
 
 			if ( idx >= 0 ) {
-				fprintf(stdout, "%s", subst[idx].key);
+				fprintf(out, "%s", subst[idx].key);
 				a += strlen(subst[idx].value);
 			}
 		} while (b < line + strlen(line));
@@ -119,20 +121,18 @@ static void dump(void) {
 
 	while ( counter < readbuf_used && counter != counter_last ) {
 		counter_last = counter;
-		counter = outline( readbuf, counter, 1 );
+		counter = outline( stdout, readbuf, counter, 1 );
 	}
 }
 
-static void trickle(void) {
-	static int counter_last = -1, counter = 0;
-
-	if (counter_last > readbuf_used) {
-		counter_last = -1;
-		counter = 0;
+static void trickle(FILE *out, int *last, int *counter) {
+	if (*last > readbuf_used) {
+		*last = -1;
+		*counter = 0;
 	}
-	while ( counter < readbuf_used && counter != counter_last ) {
-		counter_last = counter;
-		counter = outline( readbuf, counter, 1 );
+	while ( *counter < readbuf_used && *counter != *last ) {
+		*last = *counter;
+		*counter = outline( out, readbuf, *counter, 1 );
 	}
 }
 
@@ -203,6 +203,9 @@ static void drain(void) {
 	int stamp = 0;
 	int sz;
 
+	static int stdout_last = -1, stdout_counter = 0;
+	static int outfile_last = -1, outfile_counter = 0;
+
 	while ((sz = read(fds[1], buf, sizeof(buf) - 1)) > 0) {
 		buf[sz] = '\0';
 		bp = (verbose < 2) ? buf : _append_with_stamp(buf, stamp);
@@ -216,7 +219,9 @@ static void drain(void) {
 		readbuf[readbuf_used] = 0;
 
 		if (verbose)
-			trickle();
+			trickle(stdout, &stdout_last, &stdout_counter);
+		if (outfile)
+			trickle(outfile, &outfile_last, &outfile_counter);
 	}
 }
 
@@ -307,6 +312,11 @@ static void run(int i, char *f) {
 		buf[127] = 0;
 		printf("Running %-50s ", buf);
 		fflush(stdout);
+		char outpath[512];
+		sprintf(outpath, "results/%s.txt", f);
+		while (strchr(outpath + 8, '/'))
+			*strchr(outpath + 8, '/') = '_';
+		outfile = fopen(outpath, "w");
 		while ((w = waitpid(pid, &st, WNOHANG)) == 0) {
 			drain();
 			usleep(20000);
@@ -328,6 +338,7 @@ static void run(int i, char *f) {
 			failed(i, f, st);
 		}
 		clear();
+		fclose(outfile);
 	}
 }
 
@@ -376,6 +387,20 @@ int main(int argc, char **argv) {
 	       s.nwarned + s.npassed + s.nfailed + s.nskipped,
 	       duration(start),
 	       s.npassed, s.nwarned, s.nfailed, s.nknownfail, s.nskipped);
+
+	/* dump a list to results */
+	FILE *list = fopen("results/list", "w");
+	for (i = 1; i < argc; ++ i) {
+		const char *result = "unknown";
+		switch (s.status[i]) {
+		case PASSED: result = "passed"; break;
+		case FAILED: result = "failed"; break;
+		case SKIPPED: result = "skipped"; break;
+		case WARNED: result = "warnings"; break;
+		}
+		fprintf(list, "%s %s\n", argv[i], result);
+	}
+	fclose(list);
 
 	/* print out a summary */
 	if (s.nfailed || s.nskipped || s.nknownfail) {
