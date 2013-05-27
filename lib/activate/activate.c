@@ -1456,6 +1456,13 @@ int monitor_dev_for_events(struct cmd_context *cmd, struct logical_volume *lv,
 		return 1;
 	}
 
+	/* Do not monitor snapshot that already covers origin */
+	if (monitor && lv_is_cow_covering_origin(lv)) {
+		log_debug_activation("Skipping monitor of snapshot larger "
+				     "then origin %s.", lv->name);
+		return 1;
+	}
+
 	/*
 	 * In case of a snapshot device, we monitor lv->snapshot->lv,
 	 * not the actual LV itself.

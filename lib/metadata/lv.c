@@ -148,6 +148,8 @@ char *lvseg_monitor_dup(struct dm_pool *mem, const struct lv_segment *seg)
 	// log_debug("Query LV:%s mon:%s segm:%s tgtm:%p  segmon:%d statusm:%d", seg->lv->name, segm->lv->name, segm->segtype->name, segm->segtype->ops->target_monitored, seg_monitored(segm), (int)(segm->status & PVMOVE));
 	if (!segm->segtype->ops->target_monitored)
 		/* Nothing to do, monitoring not supported */;
+	else if (lv_is_cow_covering_origin(seg->lv))
+		/* Nothing to do, snapshot already covers origin */;
 	else if (!seg_monitored(segm) || (segm->status & PVMOVE))
 		s = "not monitored";
 	else if (lv_info(seg->lv->vg->cmd, seg->lv, 1, &info, 0, 0) && info.exists) {
