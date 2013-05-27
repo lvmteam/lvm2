@@ -286,7 +286,16 @@ static void run(int i, char *f) {
 			close(fds[0]);
 			close(fds[1]);
 		}
-		execlp("bash", "bash", f, NULL);
+		char flavour[512], script[512];
+		if (strchr(f, ':')) {
+			strcpy(flavour, f);
+			*strchr(flavour, ':') = 0;
+			setenv("LVM_TEST_FLAVOUR", flavour, 1);
+			strcpy(script, strchr(f, ':') + 1);
+		} else {
+			strcpy(script, f);
+		}
+		execlp("bash", "bash", script, NULL);
 		perror("execlp");
 		fflush(stderr);
 		_exit(202);

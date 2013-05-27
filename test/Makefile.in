@@ -66,7 +66,13 @@ help:
 	@echo "  T			Run given test (regex)."
 	@echo "  VERBOSE		Verbose output (1), timing (2)."
 
-check: check_local check_cluster check_lvmetad
+check: .tests-stamp
+	VERBOSE=$(VEROSE) \
+	cluster_LVM_TEST_LOCKING=3 \
+	lvmetad_LVM_TEST_LVMETAD=1 \
+	./lib/harness $(patsubst %,normal:%,$(RUN_BASE)) \
+		      $(patsubst %,cluster:%,$(RUN_BASE)) \
+		      $(patsubst %,lvmetad:%,$(RUN_BASE))
 
 check_cluster: .tests-stamp
 	@echo Testing with locking_type 3
