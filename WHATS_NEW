@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Add lv_is_cow_covering_origin() to check if cow covers origin size.
   Use libdm dm_get_status_snapshot() to parse snapshot status.
   Add detection of mounted fs also for vgchange deactivation.
   Replace 'lv_is_active' with more correct/specific variants (e.g. *_locally).

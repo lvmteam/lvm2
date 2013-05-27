@@ -31,6 +31,13 @@ int lv_is_cow(const struct logical_volume *lv)
 	return (!lv_is_origin(lv) && lv->snapshot) ? 1 : 0;
 }
 
+int lv_is_cow_covering_origin(const struct logical_volume *lv)
+{
+	/* TODO: we need less then 1% of origin size, depends on chunk size */
+	return lv_is_cow(lv) ?
+		(origin_from_cow(lv)->size * UINT64_C(101) <= lv->size * UINT64_C(100)) : 0;
+}
+
 int lv_is_visible(const struct logical_volume *lv)
 {
 	if (lv->status & SNAPSHOT)
