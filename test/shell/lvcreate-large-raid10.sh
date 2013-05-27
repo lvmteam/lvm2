@@ -24,7 +24,7 @@ lvcreate -s -l 20%FREE -n $lv3 $vg --virtualsize 256T
 lvcreate -s -l 20%FREE -n $lv4 $vg --virtualsize 256T
 lvcreate -s -l 20%FREE -n $lv5 $vg --virtualsize 256T
 
-aux lvmconf 'devices/filter = [ "a/dev\/mapper\/.*$/", "a/dev\/LVMTEST/", "r/.*/" ]'
+aux extend_filter_LVMTEST
 
 pvcreate $DM_DEV_DIR/$vg/$lv[12345]
 vgcreate $vg1 $DM_DEV_DIR/$vg/$lv[12345]

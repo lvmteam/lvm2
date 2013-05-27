@@ -11,7 +11,7 @@
 
 . lib/test
 
-aux lvmconf 'devices/filter = [ "a/dev\/mirror/", "a/dev\/mapper\/.*$/", "a/dev\/LVMTEST/", "r/.*/" ]'
+aux extend_filter_LVMTEST
 aux prepare_pvs 3
 
 vgcreate $vg1 "$dev1" "$dev2"

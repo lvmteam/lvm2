@@ -448,6 +448,18 @@ prepare_vg() {
 	vgcreate -c n $vg $devs
 }
 
+extend_filter() {
+	filter=$(grep ^devices/global_filter CONFIG_VALUES | tail -n 1)
+	for rx in "$@"; do
+		filter=$(echo $filter | sed -e "s:\[:[ \"$rx\", :")
+	done
+	lvmconf "$filter"
+}
+
+extend_filter_LVMTEST() {
+	extend_filter "a|$DM_DEV_DIR/LVMTEST|"
+}
+
 hide_dev() {
 	filter=$(grep ^devices/global_filter CONFIG_VALUES | tail -n 1)
 	for dev in $@; do

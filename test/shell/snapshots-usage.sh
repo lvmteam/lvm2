@@ -21,10 +21,9 @@ aux prepare_vg
 
 lvcreate -s -l 100%FREE -n $lv $vg --virtualsize 15P
 
+aux extend_filter_LVMTEST
 aux lvmconf "activation/snapshot_autoextend_percent = 20" \
             "activation/snapshot_autoextend_threshold = 50"
-aux lvmconf 'devices/filter = [ "a|dev/mapper/.*$|", "a|dev/LVMTEST|", "r|.*|" ]'
-aux lvmconf 'devices/global_filter = [ "a|dev/mapper/.*$|", "a|dev/LVMTEST|", "r|.*|" ]'
 
 # Check usability with smallest extent size
 pvcreate --setphysicalvolumesize 4T $DM_DEV_DIR/$vg/$lv

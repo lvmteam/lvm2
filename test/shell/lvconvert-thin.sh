@@ -29,7 +29,7 @@ aux prepare_pvs 4 64
 # build one large PV
 vgcreate $vg1 $(cut -d ' ' -f -3 DEVICES)
 lvcreate -s -l 100%FREE -n $lv $vg1 --virtualsize 64T
-aux lvmconf 'devices/filter = [ "a/dev\/mapper\/.*$/", "a/dev\/LVMTEST/", "r/.*/" ]'
+aux extend_filter_LVMTEST
 
 pvcreate "$DM_DEV_DIR/$vg1/$lv"
 vgcreate $vg -s 64K $(cut -d ' ' -f 4 DEVICES) "$DM_DEV_DIR/$vg1/$lv"

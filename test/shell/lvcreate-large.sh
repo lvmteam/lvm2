@@ -20,7 +20,7 @@ lvcreate -s -l 100%FREE -n $lv $vg --virtualsize 1024T
 #FIXME this should be 1024T
 #check lv_field $vg/$lv size "128.00m"
 
-aux lvmconf 'devices/filter = [ "a/dev\/mapper\/.*$/", "a/dev\/LVMTEST/", "r/.*/" ]'
+aux extend_filter_LVMTEST
 
 pvcreate $DM_DEV_DIR/$vg/$lv
 vgcreate $vg1 $DM_DEV_DIR/$vg/$lv

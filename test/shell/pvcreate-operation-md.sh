@@ -22,7 +22,9 @@ test -f /proc/mdstat && grep -q raid0 /proc/mdstat || \
 	modprobe raid0 || skip
 
 aux lvmconf 'devices/md_component_detection = 1'
-aux lvmconf 'devices/filter = [ "a|/dev/md.*|", "a/dev\/mapper\/.*$/", "r/.*/" ]'
+aux extend_filter_LVMTEST
+aux extend_filter "a|/dev/md.*|"
+
 aux prepare_devs 2
 
 # Have MD use a non-standard name to avoid colliding with an existing MD device
