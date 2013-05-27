@@ -18,7 +18,7 @@ let
      '';
      postBuild = ''
       cp -R /tmp/test-results $out/test-results && \
-      echo "report tests $out/test-results " >> $out/nix-support/hydra-build-products || \
+      echo "report tests $out/test-results" >> $out/nix-support/hydra-build-products || \
       true
       cp -R /tmp/lcov $out/coverage && \
       echo "report coverage $out/coverage" >> $out/nix-support/hydra-build-products || \
@@ -148,7 +148,7 @@ let
          echo "make lcov-reset \\";
          echo "dmsetup targets\\";
          echo "make check || touch \$out/nix-support/failed \\"
-	 echo "cp -R test/results /tmp/test-results"
+	 echo "cp -R test/results /tmp/test-results \\"
          echo "make lcov && cp -R lcov_reports /tmp/lcov") >> source.inc
         sed -e "s,\(device_mapper_version\) [0-9.]*$,\1 $version_dm," \
             -e "s,^\(Version:[^0-9%]*\)[0-9.]*$,\1 $version," \
