@@ -49,9 +49,9 @@ static int _da_setup(struct disk_locn *da, void *baton)
 	return 1;
 }
 
-static int _ea_setup(struct disk_locn *ea, void *baton)
+static int _ba_setup(struct disk_locn *ba, void *baton)
 {
-	return _da_setup(ea, baton);
+	return _da_setup(ba, baton);
 }
 
 static int _mda_setup(struct metadata_area *mda, void *baton)
@@ -88,7 +88,7 @@ static int _text_write(struct label *label, void *buf)
 	struct lvmcache_info *info;
 	struct _dl_setup_baton baton;
 	char buffer[64] __attribute__((aligned(8)));
-	int ea1, da1, mda1, mda2;
+	int ba1, da1, mda1, mda2;
 
 	/*
 	 * PV header base
@@ -126,14 +126,14 @@ static int _text_write(struct label *label, void *buf)
 	pvhdr_ext->version = xlate32(PV_HEADER_EXTENSION_VSN);
 	pvhdr_ext->flags = 0; /* no flags yet */
 
-	/* List of embedding area locations */
-	baton.pvh_dlocn_xl = &pvhdr_ext->embedding_areas_xl[0];
-	lvmcache_foreach_ea(info, _ea_setup, &baton);
+	/* List of bootloader area locations */
+	baton.pvh_dlocn_xl = &pvhdr_ext->bootloader_areas_xl[0];
+	lvmcache_foreach_ba(info, _ba_setup, &baton);
 	_dl_null_termination(&baton);
 
-	/* Create debug message with ea, da and mda locations */
-	ea1 = (xlate64(pvhdr_ext->embedding_areas_xl[0].offset) ||
-	       xlate64(pvhdr_ext->embedding_areas_xl[0].size)) ? 0 : -1;
+	/* Create debug message with ba, da and mda locations */
+	ba1 = (xlate64(pvhdr_ext->bootloader_areas_xl[0].offset) ||
+	       xlate64(pvhdr_ext->bootloader_areas_xl[0].size)) ? 0 : -1;
 
 	da1 = (xlate64(pvhdr->disk_areas_xl[0].offset) ||
 	       xlate64(pvhdr->disk_areas_xl[0].size)) ? 0 : -1;
@@ -154,13 +154,13 @@ static int _text_write(struct label *label, void *buf)
 			   "%s%.*" PRIu64 "%s%.*" PRIu64 "%s"
 			   "%s%.*" PRIu64 "%s%.*" PRIu64 "%s",
 			   dev_name(lvmcache_device(info)), buffer, lvmcache_device_size(info),
-			   (ea1 > -1) ? " ea1 (" : "",
-			   (ea1 > -1) ? 1 : 0,
-			   (ea1 > -1) ? xlate64(pvhdr_ext->embedding_areas_xl[ea1].offset) >> SECTOR_SHIFT : 0,
-			   (ea1 > -1) ? "s, " : "",
-			   (ea1 > -1) ? 1 : 0,
-			   (ea1 > -1) ? xlate64(pvhdr_ext->embedding_areas_xl[ea1].size) >> SECTOR_SHIFT : 0,
-			   (ea1 > -1) ? "s)" : "",
+			   (ba1 > -1) ? " ba1 (" : "",
+			   (ba1 > -1) ? 1 : 0,
+			   (ba1 > -1) ? xlate64(pvhdr_ext->bootloader_areas_xl[ba1].offset) >> SECTOR_SHIFT : 0,
+			   (ba1 > -1) ? "s, " : "",
+			   (ba1 > -1) ? 1 : 0,
+			   (ba1 > -1) ? xlate64(pvhdr_ext->bootloader_areas_xl[ba1].size) >> SECTOR_SHIFT : 0,
+			   (ba1 > -1) ? "s)" : "",
 			   (da1 > -1) ? " da1 (" : "",
 			   (da1 > -1) ? 1 : 0,
 			   (da1 > -1) ? xlate64(pvhdr->disk_areas_xl[da1].offset) >> SECTOR_SHIFT : 0,
@@ -229,15 +229,15 @@ void del_das(struct dm_list *das)
 	}
 }
 
-int add_ea(struct dm_pool *mem, struct dm_list *eas,
+int add_ba(struct dm_pool *mem, struct dm_list *eas,
 	   uint64_t start, uint64_t size)
 {
 	return add_da(mem, eas, start, size);
 }
 
-void del_eas(struct dm_list *eas)
+void del_bas(struct dm_list *bas)
 {
-	del_das(eas);
+	del_das(bas);
 }
 
 /* FIXME: refactor this function with other mda constructor code */
@@ -392,7 +392,7 @@ static int _text_read(struct labeller *l, struct device *dev, void *buf,
 
 	lvmcache_del_das(info);
 	lvmcache_del_mdas(info);
-	lvmcache_del_eas(info);
+	lvmcache_del_bas(info);
 
 	/* Data areas holding the PEs */
 	dlocn_xl = pvhdr->disk_areas_xl;
@@ -420,10 +420,10 @@ static int _text_read(struct labeller *l, struct device *dev, void *buf,
 	log_debug("%s: PV header extension version %" PRIu32 " found",
 		  dev_name(dev), ext_version);
 
-	/* Embedding areas */
-	dlocn_xl = pvhdr_ext->embedding_areas_xl;
+	/* Bootloader areas */
+	dlocn_xl = pvhdr_ext->bootloader_areas_xl;
 	while ((offset = xlate64(dlocn_xl->offset))) {
-		lvmcache_add_ea(info, offset, xlate64(dlocn_xl->size));
+		lvmcache_add_ba(info, offset, xlate64(dlocn_xl->size));
 		dlocn_xl++;
 	}
 out:
@@ -443,7 +443,7 @@ static void _text_destroy_label(struct labeller *l __attribute__((unused)),
 
 	lvmcache_del_mdas(info);
 	lvmcache_del_das(info);
-	lvmcache_del_eas(info);
+	lvmcache_del_bas(info);
 }
 
 static void _fmt_text_destroy(struct labeller *l)

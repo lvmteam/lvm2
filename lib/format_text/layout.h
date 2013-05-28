@@ -28,8 +28,8 @@
 struct pv_header_extension {
 	uint32_t version;
 	uint32_t flags;
-	/* NULL-terminated list of embedding areas */
-	struct disk_locn embedding_areas_xl[0];
+	/* NULL-terminated list of bootloader areas */
+	struct disk_locn bootloader_areas_xl[0];
 } __attribute__ ((packed));
 
 /* Fields with the suffix _xl should be xlate'd wherever they appear */

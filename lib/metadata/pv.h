@@ -43,9 +43,9 @@ struct physical_volume {
 	uint64_t status;
 	uint64_t size;
 
-	/* embedding area */
-	uint64_t ea_start;
-	uint64_t ea_size;
+	/* bootloader area */
+	uint64_t ba_start;
+	uint64_t ba_size;
 
 	/* physical extents */
 	uint32_t pe_size;
@@ -80,8 +80,8 @@ uint64_t pv_free(const struct physical_volume *pv);
 uint64_t pv_status(const struct physical_volume *pv);
 uint32_t pv_pe_size(const struct physical_volume *pv);
 uint64_t pv_pe_start(const struct physical_volume *pv);
-uint64_t pv_ea_start(const struct physical_volume *pv);
-uint64_t pv_ea_size(const struct physical_volume *pv);
+uint64_t pv_ba_start(const struct physical_volume *pv);
+uint64_t pv_ba_size(const struct physical_volume *pv);
 uint32_t pv_pe_count(const struct physical_volume *pv);
 uint32_t pv_pe_alloc_count(const struct physical_volume *pv);
 uint64_t pv_mda_size(const struct physical_volume *pv);

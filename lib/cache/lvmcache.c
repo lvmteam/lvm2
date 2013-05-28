@@ -38,7 +38,7 @@ struct lvmcache_info {
 	struct dm_list list;	/* Join VG members together */
 	struct dm_list mdas;	/* list head for metadata areas */
 	struct dm_list das;	/* list head for data areas */
-	struct dm_list eas;	/* list head for embedding areas */
+	struct dm_list bas;	/* list head for bootloader areas */
 	struct lvmcache_vginfo *vginfo;	/* NULL == unknown */
 	struct label *label;
 	const struct format_type *fmt;
@@ -1479,7 +1479,7 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 
 		lvmcache_del_mdas(info);
 		lvmcache_del_das(info);
-		lvmcache_del_eas(info);
+		lvmcache_del_bas(info);
 	} else {
 		if (existing->dev != dev) {
 			/* Is the existing entry a duplicate pvid e.g. md ? */
@@ -1724,19 +1724,19 @@ int lvmcache_populate_pv_fields(struct lvmcache_info *info,
 		return 0;
 	}
 
-	/* Currently only support one embedding area at most */
-	if (dm_list_size(&info->eas) > 1) {
-		log_error("Must be at most one embedding area (found %d) on PV %s",
-			  dm_list_size(&info->eas), dev_name(info->dev));
+	/* Currently only support one bootloader area at most */
+	if (dm_list_size(&info->bas) > 1) {
+		log_error("Must be at most one bootloader area (found %d) on PV %s",
+			  dm_list_size(&info->bas), dev_name(info->dev));
 		return 0;
 	}
 
 	dm_list_iterate_items(da, &info->das)
 		pv->pe_start = da->disk_locn.offset >> SECTOR_SHIFT;
 
-	dm_list_iterate_items(da, &info->eas) {
-		pv->ea_start = da->disk_locn.offset >> SECTOR_SHIFT;
-		pv->ea_size = da->disk_locn.size >> SECTOR_SHIFT;
+	dm_list_iterate_items(da, &info->bas) {
+		pv->ba_start = da->disk_locn.offset >> SECTOR_SHIFT;
+		pv->ba_size = da->disk_locn.size >> SECTOR_SHIFT;
 	}
 
 	return 1;
@@ -1766,11 +1766,11 @@ void lvmcache_del_das(struct lvmcache_info *info)
 	dm_list_init(&info->das);
 }
 
-void lvmcache_del_eas(struct lvmcache_info *info)
+void lvmcache_del_bas(struct lvmcache_info *info)
 {
-	if (info->eas.n)
-		del_eas(&info->eas);
-	dm_list_init(&info->eas);
+	if (info->bas.n)
+		del_bas(&info->bas);
+	dm_list_init(&info->bas);
 }
 
 int lvmcache_add_mda(struct lvmcache_info *info, struct device *dev,
@@ -1784,9 +1784,9 @@ int lvmcache_add_da(struct lvmcache_info *info, uint64_t start, uint64_t size)
 	return add_da(NULL, &info->das, start, size);
 }
 
-int lvmcache_add_ea(struct lvmcache_info *info, uint64_t start, uint64_t size)
+int lvmcache_add_ba(struct lvmcache_info *info, uint64_t start, uint64_t size)
 {
-	return add_ea(NULL, &info->eas, start, size);
+	return add_ba(NULL, &info->bas, start, size);
 }
 
 void lvmcache_update_pv(struct lvmcache_info *info, struct physical_volume *pv,
@@ -1813,20 +1813,20 @@ int lvmcache_update_das(struct lvmcache_info *info, struct physical_volume *pv)
 	return 1;
 }
 
-int lvmcache_update_eas(struct lvmcache_info *info, struct physical_volume *pv)
+int lvmcache_update_bas(struct lvmcache_info *info, struct physical_volume *pv)
 {
-	struct data_area_list *ea;
-	if (info->eas.n) {
-		if (!pv->ea_start && !pv->ea_size)
-			dm_list_iterate_items(ea, &info->eas) {
-				pv->ea_start = ea->disk_locn.offset >> SECTOR_SHIFT;
-				pv->ea_size = ea->disk_locn.size >> SECTOR_SHIFT;
+	struct data_area_list *ba;
+	if (info->bas.n) {
+		if (!pv->ba_start && !pv->ba_size)
+			dm_list_iterate_items(ba, &info->bas) {
+				pv->ba_start = ba->disk_locn.offset >> SECTOR_SHIFT;
+				pv->ba_size = ba->disk_locn.size >> SECTOR_SHIFT;
 			}
-		del_das(&info->eas);
+		del_das(&info->bas);
 	} else
-		dm_list_init(&info->eas);
+		dm_list_init(&info->bas);
 
-	if (!add_ea(NULL, &info->eas, pv->ea_start << SECTOR_SHIFT, pv->ea_size << SECTOR_SHIFT))
+	if (!add_ba(NULL, &info->bas, pv->ba_start << SECTOR_SHIFT, pv->ba_size << SECTOR_SHIFT))
 		return_0;
 
 	return 1;
@@ -1876,13 +1876,13 @@ int lvmcache_foreach_da(struct lvmcache_info *info,
 	return 1;
 }
 
-int lvmcache_foreach_ea(struct lvmcache_info *info,
+int lvmcache_foreach_ba(struct lvmcache_info *info,
 			 int (*fun)(struct disk_locn *, void *),
 			 void *baton)
 {
-	struct data_area_list *ea;
-	dm_list_iterate_items(ea, &info->eas) {
-		if (!fun(&ea->disk_locn, baton))
+	struct data_area_list *ba;
+	dm_list_iterate_items(ba, &info->bas) {
+		if (!fun(&ba->disk_locn, baton))
 			return_0;
 	}
 

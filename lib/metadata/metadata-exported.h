@@ -109,7 +109,7 @@
 #define FMT_RESIZE_PV		0x00000080U	/* Supports pvresize? */
 #define FMT_UNLIMITED_STRIPESIZE 0x00000100U	/* Unlimited stripe size? */
 #define FMT_RESTRICTED_READAHEAD 0x00000200U	/* Readahead restricted to 2-120? */
-#define FMT_EAS			0x000000400U	/* Supports embedding areas? */
+#define FMT_BAS			0x000000400U	/* Supports bootloader areas? */
 
 /* Mirror conversion type flags */
 #define MIRROR_BY_SEG		0x00000001U	/* segment-by-segment mirror */
@@ -401,8 +401,8 @@ struct pvcreate_restorable_params {
 	const char *restorefile; /* 0 if no --restorefile option */
 	struct id id; /* FIXME: redundant */
 	struct id *idp; /* 0 if no --uuid option */
-	uint64_t ea_start;
-	uint64_t ea_size;
+	uint64_t ba_start;
+	uint64_t ba_size;
 	uint64_t pe_start;
 	uint32_t extent_count;
 	uint32_t extent_size;

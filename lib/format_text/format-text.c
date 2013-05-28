@@ -1331,7 +1331,7 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 				 mdac->area.start, mdac->area.size, mda_is_ignored(mda));
 	}
 
-	if (!lvmcache_update_eas(info, pv))
+	if (!lvmcache_update_bas(info, pv))
 		return_0;
 
 	/*
@@ -1510,15 +1510,15 @@ static int _text_pv_initialise(const struct format_type *fmt,
 		return 0;
 	}
 
-	if (pv->size < final_alignment + rp->ea_size) {
-		log_error("%s: Embedding area with data-aligned start must "
+	if (pv->size < final_alignment + rp->ba_size) {
+		log_error("%s: Bootloader area with data-aligned start must "
 			  "not exceed device size.", pv_dev_name(pv));
 		return 0;
 	}
 
 	if (rp->pe_start == PV_PE_START_CALC) {
 		/*
-		 * Calculate new PE start and embedding area start value.
+		 * Calculate new PE start and bootloader area start value.
 		 * Make sure both are properly aligned!
 		 * If PE start can't be aligned because EA is taking
 		 * the whole space, make PE start equal to the PV size
@@ -1526,14 +1526,14 @@ static int _text_pv_initialise(const struct format_type *fmt,
 		 * This needs to be done as we can't have a PV without any DA.
 		 * But we still want to support a PV with EA only!
 		 */
-		if (rp->ea_size) {
-			pv->ea_start = final_alignment;
-			pv->ea_size = rp->ea_size;
-			if ((adjustment = rp->ea_size % pv->pe_align))
-				pv->ea_size += pv->pe_align - adjustment;
-			if (pv->size < pv->ea_start + pv->ea_size)
-				pv->ea_size = pv->size - pv->ea_start;
-			pv->pe_start = pv->ea_start + pv->ea_size;
+		if (rp->ba_size) {
+			pv->ba_start = final_alignment;
+			pv->ba_size = rp->ba_size;
+			if ((adjustment = rp->ba_size % pv->pe_align))
+				pv->ba_size += pv->pe_align - adjustment;
+			if (pv->size < pv->ba_start + pv->ba_size)
+				pv->ba_size = pv->size - pv->ba_start;
+			pv->pe_start = pv->ba_start + pv->ba_size;
 		} else
 			pv->pe_start = final_alignment;
 	} else {
@@ -1548,16 +1548,16 @@ static int _text_pv_initialise(const struct format_type *fmt,
 		 *       in MDA then!
 		 */
 		pv->pe_start = rp->pe_start;
-		if (rp->ea_size) {
-			if ((rp->ea_start && rp->ea_start + rp->ea_size > rp->pe_start) ||
+		if (rp->ba_size) {
+			if ((rp->ba_start && rp->ba_start + rp->ba_size > rp->pe_start) ||
 			    (rp->pe_start <= final_alignment) ||
-			    (rp->pe_start - final_alignment < rp->ea_size)) {
-				log_error("%s: Embedding area would overlap "
+			    (rp->pe_start - final_alignment < rp->ba_size)) {
+				log_error("%s: Bootloader area would overlap "
 					  "data area.", pv_dev_name(pv));
 				return 0;
 			} else {
-				pv->ea_start = rp->ea_start ? : final_alignment;
-				pv->ea_size = rp->ea_size;
+				pv->ba_start = rp->ba_start ? : final_alignment;
+				pv->ba_size = rp->ba_size;
 			}
 		}
 	}
@@ -1985,7 +1985,7 @@ static int _text_pv_add_metadata_area(const struct format_type *fmt,
 {
 	struct format_instance *fid = pv->fid;
 	const char *pvid = (const char *) (*pv->old_id.uuid ? &pv->old_id : &pv->id);
-	uint64_t ea_size, pe_start, pe_end;
+	uint64_t ba_size, pe_start, pe_end;
 	uint64_t alignment, alignment_offset;
 	uint64_t disk_size;
 	uint64_t mda_start;
@@ -2006,7 +2006,7 @@ static int _text_pv_add_metadata_area(const struct format_type *fmt,
 	}
 
 	pe_start = pv->pe_start << SECTOR_SHIFT;
-	ea_size = pv->ea_size << SECTOR_SHIFT;
+	ba_size = pv->ba_size << SECTOR_SHIFT;
 	alignment = pv->pe_align << SECTOR_SHIFT;
 	alignment_offset = pv->pe_align_offset << SECTOR_SHIFT;
 	disk_size = pv->size << SECTOR_SHIFT;
@@ -2042,10 +2042,10 @@ static int _text_pv_add_metadata_area(const struct format_type *fmt,
 			limit_name = "disk size";
 		}
 
-		/* Adjust limits for embedding area if present. */
-		if (ea_size) {
-			limit -= ea_size;
-			limit_name = "ea_start";
+		/* Adjust limits for bootloader area if present. */
+		if (ba_size) {
+			limit -= ba_size;
+			limit_name = "ba_start";
 		}
 
 		if (limit > disk_size)
@@ -2107,9 +2107,9 @@ static int _text_pv_add_metadata_area(const struct format_type *fmt,
 		 * start of the area that follows the MDA0 we've just calculated.
 		 */
 		if (!pe_start_locked) {
-			if (ea_size) {
-				pv->ea_start = (mda_start + mda_size) >> SECTOR_SHIFT;
-				pv->pe_start = pv->ea_start + pv->ea_size;
+			if (ba_size) {
+				pv->ba_start = (mda_start + mda_size) >> SECTOR_SHIFT;
+				pv->pe_start = pv->ba_start + pv->ba_size;
 			} else
 				pv->pe_start = (mda_start + mda_size) >> SECTOR_SHIFT;
 		}
@@ -2140,10 +2140,10 @@ static int _text_pv_add_metadata_area(const struct format_type *fmt,
 				limit_name = "label scan size";
 			}
 
-			/* Adjust limits for embedding area if present. */
-			if (ea_size) {
-				limit += ea_size;
-				limit_name = "ea_end";
+			/* Adjust limits for bootloader area if present. */
+			if (ba_size) {
+				limit += ba_size;
+				limit_name = "ba_end";
 			}
 		}
 
@@ -2413,7 +2413,7 @@ struct format_type *create_text_format(struct cmd_context *cmd)
 	fmt->orphan_vg_name = ORPHAN_VG_NAME(FMT_TEXT_NAME);
 	fmt->features = FMT_SEGMENTS | FMT_MDAS | FMT_TAGS | FMT_PRECOMMIT |
 			FMT_UNLIMITED_VOLS | FMT_RESIZE_PV |
-			FMT_UNLIMITED_STRIPESIZE | FMT_EAS;
+			FMT_UNLIMITED_STRIPESIZE | FMT_BAS;
 
 	if (!(mda_lists = dm_malloc(sizeof(struct mda_lists)))) {
 		log_error("Failed to allocate dir_list");

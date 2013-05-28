@@ -490,9 +490,9 @@ static int _print_pvs(struct formatter *f, struct volume_group *vg)
 		outsize(f, vg->extent_size * (uint64_t) pv->pe_count,
 			"pe_count = %u", pv->pe_count);
 
-		if (pv->ea_start && pv->ea_size) {
-			outf(f, "ea_start = %" PRIu64, pv->ea_start);
-			outsize(f, pv->ea_size, "ea_size = %" PRIu64, pv->ea_size);
+		if (pv->ba_start && pv->ba_size) {
+			outf(f, "ba_start = %" PRIu64, pv->ba_start);
+			outsize(f, pv->ba_size, "ba_size = %" PRIu64, pv->ba_size);
 		}
 
 		_dec_indent(f);

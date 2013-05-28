@@ -384,8 +384,8 @@ static int _format1_pv_setup(const struct format_type *fmt,
 	struct pvcreate_restorable_params rp = {.restorefile = NULL,
 						.id = {{0}},
 						.idp = NULL,
-						.ea_start = 0,
-						.ea_size = 0,
+						.ba_start = 0,
+						.ba_size = 0,
 						.pe_start = 0,
 						.extent_count = 0,
 						.extent_size = vg->extent_size};
@@ -430,7 +430,7 @@ static int _format1_pv_write(const struct format_type *fmt, struct physical_volu
 	lvmcache_update_pv(info, pv, fmt);
 	lvmcache_del_mdas(info);
 	lvmcache_del_das(info);
-	lvmcache_del_eas(info);
+	lvmcache_del_bas(info);
 
 	dm_list_init(&pvs);
 

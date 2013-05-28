@@ -59,13 +59,13 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 			    find_config_tree_int(cmd, metadata_pvmetadatacopies_CFG);
 	}
 
-	if (cmd->fmt->features & FMT_EAS) {
-		if (arg_sign_value(cmd, embeddingareasize_ARG, SIGN_NONE) == SIGN_MINUS) {
-			log_error("Embedding area size may not be negative");
+	if (cmd->fmt->features & FMT_BAS) {
+		if (arg_sign_value(cmd, bootloaderareasize_ARG, SIGN_NONE) == SIGN_MINUS) {
+			log_error("Bootloader area size may not be negative");
 			return EINVALID_CMD_LINE;
 		}
 
-		rp.ea_size = arg_uint64_value(cmd, embeddingareasize_ARG, UINT64_C(0));
+		rp.ba_size = arg_uint64_value(cmd, bootloaderareasize_ARG, UINT64_C(0));
 	}
 
 	if (!archive(vg)) {
@@ -232,9 +232,9 @@ int vgconvert(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (!(cmd->fmt->features & FMT_EAS) &&
-		arg_count(cmd, embeddingareasize_ARG)) {
-		log_error("Embedding area parameters only apply to text format");
+	if (!(cmd->fmt->features & FMT_BAS) &&
+		arg_count(cmd, bootloaderareasize_ARG)) {
+		log_error("Bootloader area parameters only apply to text format");
 		return EINVALID_CMD_LINE;
 	}
 

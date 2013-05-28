@@ -165,7 +165,7 @@ static int _read_pv(struct format_instance *fid,
 	struct physical_volume *pv;
 	struct pv_list *pvl;
 	const struct dm_config_value *cv;
-	uint64_t size, ea_start;
+	uint64_t size, ba_start;
 
 	if (!(pvl = dm_pool_zalloc(mem, sizeof(*pvl))) ||
 	    !(pvl->pv = dm_pool_zalloc(mem, sizeof(*pvl->pv))))
@@ -246,19 +246,19 @@ static int _read_pv(struct format_instance *fid,
 		return 0;
 	}
 
-	/* Embedding area is not compulsory - just log_debug if not found. */
-	ea_start = size = 0;
-	if (!_read_uint64(pvn, "ea_start", &ea_start))
-		log_debug("PV Embedding Area start value (ea_start) not found.");
-	if (!_read_uint64(pvn, "ea_size", &size))
-		log_debug("PV Embedding Area size (ea_size) not found.");
-	if ((!ea_start && size) || (ea_start && !size)) {
-		log_error("Incomplete embedding area specification for "
+	/* Bootloader area is not compulsory - just log_debug if not found. */
+	ba_start = size = 0;
+	if (!_read_uint64(pvn, "ba_start", &ba_start))
+		log_debug("PV Bootloader Area start value (ba_start) not found.");
+	if (!_read_uint64(pvn, "ba_size", &size))
+		log_debug("PV Bootloader Area size (ba_size) not found.");
+	if ((!ba_start && size) || (ba_start && !size)) {
+		log_error("Incomplete bootloader area specification for "
 			  "physical volume.");
 		return 0;
 	} else {
-		pv->ea_start = ea_start;
-		pv->ea_size = size;
+		pv->ba_start = ba_start;
+		pv->ba_size = size;
 	}
 
 	dm_list_init(&pv->tags);

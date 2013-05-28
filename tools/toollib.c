@@ -1427,9 +1427,9 @@ int pvcreate_params_validate(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (!(cmd->fmt->features & FMT_EAS) &&
-	    arg_count(cmd, embeddingareasize_ARG)) {
-		log_error("Embedding area parameters only "
+	if (!(cmd->fmt->features & FMT_BAS) &&
+	    arg_count(cmd, bootloaderareasize_ARG)) {
+		log_error("Bootloader area parameters only "
 			  "apply to text format.");
 		return 0;
 	}
@@ -1498,8 +1498,8 @@ int pvcreate_params_validate(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (arg_sign_value(cmd, embeddingareasize_ARG, SIGN_NONE) == SIGN_MINUS) {
-		log_error("Embedding area size may not be negative");
+	if (arg_sign_value(cmd, bootloaderareasize_ARG, SIGN_NONE) == SIGN_MINUS) {
+		log_error("Bootloader area size may not be negative");
 		return 0;
 	}
 
@@ -1511,7 +1511,7 @@ int pvcreate_params_validate(struct cmd_context *cmd,
 	if (pp->pvmetadatacopies < 0)
 		pp->pvmetadatacopies = find_config_tree_int(cmd, metadata_pvmetadatacopies_CFG);
 
-	pp->rp.ea_size = arg_uint64_value(cmd, embeddingareasize_ARG, pp->rp.ea_size);
+	pp->rp.ba_size = arg_uint64_value(cmd, bootloaderareasize_ARG, pp->rp.ba_size);
 
 	return 1;
 }

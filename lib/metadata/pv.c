@@ -124,14 +124,14 @@ uint32_t pv_pe_size(const struct physical_volume *pv)
 	return pv_field(pv, pe_size);
 }
 
-uint64_t pv_ea_start(const struct physical_volume *pv)
+uint64_t pv_ba_start(const struct physical_volume *pv)
 {
-	return pv_field(pv, ea_start);
+	return pv_field(pv, ba_start);
 }
 
-uint64_t pv_ea_size(const struct physical_volume *pv)
+uint64_t pv_ba_size(const struct physical_volume *pv)
 {
-	return pv_field(pv, ea_size);
+	return pv_field(pv, ba_size);
 }
 
 uint64_t pv_pe_start(const struct physical_volume *pv)

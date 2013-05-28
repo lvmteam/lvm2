@@ -71,8 +71,8 @@ static int pvcreate_restore_params_validate(struct cmd_context *cmd,
 				  uuid, pp->rp.restorefile);
 			return 0;
 		}
-		pp->rp.ea_start = pv_ea_start(existing_pvl->pv);
-		pp->rp.ea_size = pv_ea_size(existing_pvl->pv);
+		pp->rp.ba_start = pv_ba_start(existing_pvl->pv);
+		pp->rp.ba_size = pv_ba_size(existing_pvl->pv);
 		pp->rp.pe_start = pv_pe_start(existing_pvl->pv);
 		pp->rp.extent_size = pv_pe_size(existing_pvl->pv);
 		pp->rp.extent_count = pv_pe_count(existing_pvl->pv);

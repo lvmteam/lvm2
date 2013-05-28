@@ -280,7 +280,7 @@ static struct lvmcache_info *_pv_populate_lvmcache(
 	lvmcache_set_device_size(info, devsize);
 	lvmcache_del_das(info);
 	lvmcache_del_mdas(info);
-	lvmcache_del_eas(info);
+	lvmcache_del_bas(info);
 
 	do {
 		sprintf(mda_id, "mda%d", i);
@@ -309,7 +309,7 @@ static struct lvmcache_info *_pv_populate_lvmcache(
 		if (da) {
 			if (!dm_config_get_uint64(da->child, "offset", &offset)) return_0;
 			if (!dm_config_get_uint64(da->child, "size", &size)) return_0;
-			lvmcache_add_ea(info, offset, size);
+			lvmcache_add_ba(info, offset, size);
 		}
 		++i;
 	} while (da);
@@ -706,9 +706,9 @@ static int _extract_da(struct disk_locn *da, void *baton)
 	return _extract_disk_location("da", da, baton);
 }
 
-static int _extract_ea(struct disk_locn *ea, void *baton)
+static int _extract_ba(struct disk_locn *ba, void *baton)
 {
-	return _extract_disk_location("ea", ea, baton);
+	return _extract_disk_location("ba", ba, baton);
 }
 
 static int _extract_mdas(struct lvmcache_info *info, struct dm_config_tree *cft,
@@ -722,7 +722,7 @@ static int _extract_mdas(struct lvmcache_info *info, struct dm_config_tree *cft,
 	if (!lvmcache_foreach_da(info, &_extract_da, &baton))
 		return 0;
 	baton.i = 0;
-	if (!lvmcache_foreach_ea(info, &_extract_ea, &baton))
+	if (!lvmcache_foreach_ba(info, &_extract_ba, &baton))
 		return 0;
 
 	return 1;
