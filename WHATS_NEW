@@ -38,7 +38,7 @@ Version 2.02.99 -
   Add --withcomments and --withversions switch to lvm dumpconfig.
   Add --type {current|default|missing|new} and --atversion to lvm dumpconfig.
   Support automatic config validation and add 'config' section to lvm.conf.
-  Add pvs -o ea_start,ea_size to report bootloader area start and size.
+  Add pvs -o ba_start,ba_size to report bootloader area start and size.
   Add --bootloaderareasize to pvcreate and vgconvert to create a bootloader area.
   Add PV header extension: extension version, flags and bootloader areas.
   Initial support for lvconvert of thin external origin.
