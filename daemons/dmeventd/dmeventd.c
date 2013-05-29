@@ -1928,10 +1928,10 @@ int main(int argc, char *argv[])
 		switch (opt) {
 		case 'h':
 			usage(argv[0], stdout);
-			exit(0);
+			exit(EXIT_SUCCESS);
 		case '?':
 			usage(argv[0], stderr);
-			exit(0);
+			exit(EXIT_SUCCESS);
 		case 'R':
 			_restart++;
 			break;
@@ -1943,7 +1943,7 @@ int main(int argc, char *argv[])
 			break;
 		case 'V':
 			printf("dmeventd version: %s\n", DM_LIB_VERSION);
-			exit(1);
+			exit(EXIT_SUCCESS);
 		}
 	}
 
