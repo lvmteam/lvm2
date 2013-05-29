@@ -83,7 +83,7 @@ static int _io(struct device_area *where, char *buffer, int should_write)
 		return 0;
 	}
 
-	if (lseek(fd, (off_t) where->start, SEEK_SET) < 0) {
+	if (lseek(fd, (off_t) where->start, SEEK_SET) == (off_t) -1) {
 		log_error("%s: lseek %" PRIu64 " failed: %s",
 			  dev_name(where->dev), (uint64_t) where->start,
 			  strerror(errno));
