@@ -31,11 +31,45 @@ int lv_is_cow(const struct logical_volume *lv)
 	return (!lv_is_origin(lv) && lv->snapshot) ? 1 : 0;
 }
 
+static uint64_t _cow_max_size(uint64_t origin_size, uint32_t chunk_size)
+{
+	/* Snapshot disk layout:
+	 *    COW is divided into chunks
+	 *        1st. chunk is reserved for header
+	 *        2nd. chunk is the 1st. metadata chunk
+	 *        3rd. chunk is the 1st. data chunk
+	 */
+
+	/* Size of metadata for snapshot in sectors */
+	uint64_t mdata_size = ((origin_size + chunk_size - 1) / chunk_size * 16 + 511) >> SECTOR_SHIFT;
+
+	/* Sum all chunks - header + metadata size + origin size (aligned on chunk boundary) */
+	uint64_t size = chunk_size +
+		((mdata_size + chunk_size - 1) & ~(uint64_t)(chunk_size - 1)) +
+		((origin_size + chunk_size - 1) & ~(uint64_t)(chunk_size - 1));
+
+	/* Does not overflow since size is in sectors (9 bits) */
+	return size;
+}
+
+uint32_t cow_max_extents(const struct logical_volume *origin, uint32_t chunk_size)
+{
+	uint64_t size = _cow_max_size(origin->size, chunk_size);
+	uint32_t extent_size = origin->vg->extent_size;
+
+	if (size % extent_size)
+		size += extent_size - size % extent_size;
+
+	if (size > UINT32_MAX)
+		size = UINT32_MAX; /* Origin is too big for 100% snapshot anyway */
+
+	return (uint32_t) (size / extent_size);
+}
+
 int lv_is_cow_covering_origin(const struct logical_volume *lv)
 {
-	/* TODO: we need less then 1% of origin size, depends on chunk size */
-	return lv_is_cow(lv) ?
-		(origin_from_cow(lv)->size * UINT64_C(101) <= lv->size * UINT64_C(100)) : 0;
+	return lv_is_cow(lv) &&
+		(lv->size >= _cow_max_size(origin_from_cow(lv)->size, find_cow(lv)->chunk_size));
 }
 
 int lv_is_visible(const struct logical_volume *lv)

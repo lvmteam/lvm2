@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Add cow_max_extents() to calc extents for 100% origin coverage.
   For creation of snapshot require size for at least 3 chunks.
   Fix lvresize --use-policies of VALID but 100% full snapshot.
   Do not accept size parameters bigger then 16EiB.
