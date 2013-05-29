@@ -134,7 +134,7 @@ void process_event(struct dm_task *dmt,
 	char *params;
 	struct dm_status_snapshot *status = NULL;
 	const char *device = dm_task_get_name(dmt);
-	uint64_t percent;
+	int percent;
 	struct dso_state *state = *private;
 
 	/* No longer monitoring, waiting for remove */
@@ -175,7 +175,7 @@ void process_event(struct dm_task *dmt,
 		goto out;
 	}
 
-	percent = 100 * status->used_sectors / status->total_sectors;
+	percent = (int) (100 * status->used_sectors / status->total_sectors);
 	if (percent >= state->percent_check) {
 		/* Usage has raised more than CHECK_STEP since the last
 		   time. Run actions. */
