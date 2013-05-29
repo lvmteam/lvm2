@@ -868,6 +868,10 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 		return ECMD_FAILED;
 	}
 
+	if (lv_is_cow_covering_origin(lv))
+		if (!monitor_dev_for_events(cmd, lv, 0, 0))
+			stack;
+
 	backup(vg);
 
 	/*
