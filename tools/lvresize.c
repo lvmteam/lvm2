@@ -321,7 +321,7 @@ static int _adjust_policy_params(struct cmd_context *cmd,
 	} else {
 		if (!lv_snapshot_percent(lv, &percent))
 			return_0;
-		if (!(PERCENT_0 < percent && percent < PERCENT_100) || percent <= policy_threshold)
+		if (!(PERCENT_0 < percent && percent <= PERCENT_100) || percent <= policy_threshold)
 			return 1; /* nothing to do */
 	}
 
