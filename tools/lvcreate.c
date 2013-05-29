@@ -241,6 +241,7 @@ static int _update_extents_params(struct volume_group *vg,
 	struct logical_volume *origin = NULL;
 	uint32_t size_rest;
 	uint32_t stripesize_extents;
+	uint32_t extents;
 
 	if (lcp->size &&
 	    !(lp->extents = extents_from_size(vg->cmd, lcp->size,
@@ -297,6 +298,23 @@ static int _update_extents_params(struct volume_group *vg,
 			break;
 		case PERCENT_NONE:
 			break;
+	}
+
+	if (lp->snapshot && lp->origin) {
+		if (!origin && !(origin = find_lv(vg, lp->origin))) {
+			log_error("Couldn't find origin volume '%s'.",
+				  lp->origin);
+			return 0;
+		}
+
+		extents = cow_max_extents(origin, lp->chunk_size);
+
+		if (extents < lp->extents) {
+				log_print_unless_silent("Reducing COW size %s down to maximum usable size %s.",
+						display_size(vg->cmd, (uint64_t) vg->extent_size * lp->extents),
+						display_size(vg->cmd, (uint64_t) vg->extent_size * extents));
+			lp->extents = extents;
+		}
 	}
 
 	if (!(stripesize_extents = lp->stripe_size / vg->extent_size))
