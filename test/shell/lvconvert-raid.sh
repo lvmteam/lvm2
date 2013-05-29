@@ -11,6 +11,8 @@
 
 . lib/test
 
+test -e LOCAL_CLVMD && skip
+
 get_image_pvs() {
 	local d
 	local images
@@ -26,7 +28,7 @@ aux target_at_least dm-raid 1 2 0 || skip
 
 # 9 PVs needed for RAID10 testing (3-stripes/2-mirror - replacing 3 devs)
 aux prepare_pvs 9 80
-vgcreate -c n -s 256k $vg $(cat DEVICES)
+vgcreate -s 256k $vg $(cat DEVICES)
 
 ###########################################
 # RAID1 convert tests
