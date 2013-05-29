@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Detect maximum usable size for snapshot for lvresize.
   Creation of snapshot takes at most 100% origin coverage.
   Add cow_max_extents() to calc extents for 100% origin coverage.
   For creation of snapshot require size for at least 3 chunks.
