@@ -3402,8 +3402,7 @@ void free_pv_fid(struct physical_volume *pv)
 	if (!pv)
 		return;
 
-	if (pv->fid)
-		pv->fid->fmt->ops->destroy_instance(pv->fid);
+	pv_set_fid(pv, NULL);
 }
 
 /* This is only called by lv_from_lvid, which is only called from
