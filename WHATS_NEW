@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Do not accept size parameters bigger then 16EiB.
   Fix release of PV's fid in free_pv_fid().
   Skip monitoring of snapshots that are already bigger then origin.
   Add lv_is_cow_covering_origin() to check if cow covers origin size.

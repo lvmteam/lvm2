@@ -340,6 +340,10 @@ static int _size_arg(struct cmd_context *cmd __attribute__((unused)), struct arg
 	} else
 		v *= factor;
 
+	if ((uint64_t) v >= (UINT64_MAX >> SECTOR_SHIFT)) {
+		log_error("Size is too big (>=16EiB).");
+		return 0;
+	}
 	av->i_value = (int32_t) v;
 	av->ui_value = (uint32_t) v;
 	av->i64_value = (int64_t) v;
