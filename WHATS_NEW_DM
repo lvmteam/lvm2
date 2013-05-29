@@ -1,5 +1,6 @@
 Version 1.02.78 - 
 ===================================
+  Add DM_TO_STRING public macro.
   Always return success on dmeventd -V command call.
   Fix parsing of 64bit snapshot status in dmeventd snapshot plugin.
   Add dm_get_status_snapshot() for parsing snapshot status.

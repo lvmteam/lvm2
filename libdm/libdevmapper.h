@@ -34,6 +34,10 @@
 # define __typeof__ typeof
 #endif
 
+/* Macros to make string defines */
+#define DM_TO_STRING_EXP(A) #A
+#define DM_TO_STRING(A) DM_TO_STRING_EXP(A)
+
 #ifdef __cplusplus
 extern "C" {
 #endif

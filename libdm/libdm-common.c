@@ -1591,10 +1591,6 @@ static void _unmangle_mountinfo_string(const char *src, char *buf)
 	*buf = '\0';
 }
 
-/* Macros to make string defines */
-#define TO_STRING_EXP(A) #A
-#define TO_STRING(A) TO_STRING_EXP(A)
-
 /* Parse one line of mountinfo and unmangled target line */
 static int _mountinfo_parse_line(const char *line, unsigned *maj, unsigned *min, char *buf)
 {
@@ -1602,8 +1598,8 @@ static int _mountinfo_parse_line(const char *line, unsigned *maj, unsigned *min,
 	char target[PATH_MAX + 1];
 
 	/* TODO: maybe detect availability of  %ms  glib support ? */
-	if (sscanf(line, "%*u %*u %u:%u %" TO_STRING(PATH_MAX)
-		   "s %" TO_STRING(PATH_MAX) "s",
+	if (sscanf(line, "%*u %*u %u:%u %" DM_TO_STRING(PATH_MAX)
+		   "s %" DM_TO_STRING(PATH_MAX) "s",
 		   maj, min, root, target) < 4) {
 		log_error("Failed to parse mountinfo line.");
 		return 0;
