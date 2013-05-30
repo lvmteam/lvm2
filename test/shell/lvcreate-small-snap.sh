@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (C) 2010 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2010-2013 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -11,14 +11,15 @@
 
 . lib/test
 
-aux prepare_pvs 3
+aux prepare_pvs
 
-vgcreate -c n -s 1k $vg $(cat DEVICES)
+vgcreate -s 1k $vg $(cat DEVICES)
 
-lvcreate -n one -l 10 $vg
-lvcreate -s -l 8 -n snapA $vg/one
-lvcreate -s -c 4k -l 8 -n snapX1 $vg/one
-lvcreate -s -c 8k -l 16 -n snapX2 $vg/one
+# 3 Chunks
+lvcreate -aey -n one -l 10 $vg
+lvcreate -s -l 12 -n snapA $vg/one
+lvcreate -s -c 4k -l 12 -n snapX1 $vg/one
+lvcreate -s -c 8k -l 24 -n snapX2 $vg/one
 
 # Check that snapshots that are too small are caught with correct error.
 not lvcreate -s -c 8k -l 8 -n snapX3 $vg/one 2>&1 | tee lvcreate.out
