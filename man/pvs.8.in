@@ -63,7 +63,7 @@ and \fB-o pvseg_all\fP to select all Physical Volume segment columns.
 Use \fB-o help\fP to view the full list of columns available.
 .IP
 Column names include: pv_fmt, pv_uuid, dev_size, pv_name, pv_mda_free,
-pv_mda_size, ea_start, ea_size, pe_start, pv_size, pv_free, pv_used,
+pv_mda_size, ba_start, ba_size, pe_start, pv_size, pv_free, pv_used,
 pv_attr, pv_pe_count, pv_pe_alloc_count, pv_tags, pv_mda_count,
 pv_mda_used_count, pvseg_start, and pvseg_size
 .IP
