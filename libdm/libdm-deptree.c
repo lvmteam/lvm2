@@ -1598,7 +1598,7 @@ static int _dm_tree_deactivate_children(struct dm_tree_node *dnode,
 				  info.minor);
 			r = 0;
 			continue;
-		} else if (info.suspended)
+		} else if (info.suspended && info.live_table)
 			dec_suspended();
 
 		if (child->callback &&
