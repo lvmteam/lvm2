@@ -310,7 +310,7 @@ static int _update_extents_params(struct volume_group *vg,
 		extents = cow_max_extents(origin, lp->chunk_size);
 
 		if (extents < lp->extents) {
-				log_print_unless_silent("Reducing COW size %s down to maximum usable size %s.",
+			log_print_unless_silent("Reducing COW size %s down to maximum usable size %s.",
 						display_size(vg->cmd, (uint64_t) vg->extent_size * lp->extents),
 						display_size(vg->cmd, (uint64_t) vg->extent_size * extents));
 			lp->extents = extents;
