@@ -300,7 +300,12 @@ static int _update_extents_params(struct volume_group *vg,
 			break;
 	}
 
-	if (lp->snapshot && lp->origin) {
+	if (lp->snapshot && lp->origin && lp->extents) {
+		if (!lp->chunk_size) {
+			log_error(INTERNAL_ERROR "Missing snapshot chunk size.");
+			return 0;
+		}
+
 		if (!origin && !(origin = find_lv(vg, lp->origin))) {
 			log_error("Couldn't find origin volume '%s'.",
 				  lp->origin);
