@@ -14,14 +14,14 @@
 aux prepare_dmeventd
 aux prepare_pvs 3
 
-vgcreate -c n -l 2 $vg $(cat DEVICES)
-lvcreate -n one -l 1 $vg
+vgcreate -l 2 $vg $(cat DEVICES)
+lvcreate -aey -n one -l 1 $vg
 lvcreate -n two -l 1 $vg
 not lvcreate -n three -l 1 $vg
 vgremove -ff $vg
 
-vgcreate -c n -l 3 $vg $(cat DEVICES)
-lvcreate -n one -l 1 $vg
+vgcreate -l 3 $vg $(cat DEVICES)
+lvcreate -aey -n one -l 1 $vg
 lvcreate -n snap -s -l 1 $vg/one
 lvcreate -n two -l 1 $vg
 not lvcreate -n three -l 1 $vg

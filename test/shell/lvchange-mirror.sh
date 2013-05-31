@@ -17,7 +17,7 @@ aux prepare_vg 3
 # force resync 2-way active mirror
 lvcreate -l2 -m1 -n $lv1 $vg "$dev1" "$dev2" "$dev3":0-1
 check mirror $vg $lv1 "$dev3"
-echo y | lvchange --resync $vg/$lv1
+lvchange -y --resync $vg/$lv1
 check mirror $vg $lv1 "$dev3"
 lvremove -ff $vg
 

@@ -19,7 +19,7 @@ pvcreate --metadatacopies 0 "$dev3"
 pvcreate "$dev4"
 pvcreate --metadatacopies 0 "$dev5"
 
-vgcreate -c n $vg $(cat DEVICES)
+vgcreate $vg $(cat DEVICES)
 lvcreate -n $lv -l 1 -i5 -I256 $vg
 
 pvchange -x n "$dev1"
@@ -33,11 +33,11 @@ vgremove -f $vg
 for mdacp in 1 0; do
 	pvcreate --metadatacopies $mdacp $(cat DEVICES)
 	pvcreate "$dev1"
-	vgcreate -c n $vg $(cat DEVICES)
+	vgcreate $vg $(cat DEVICES)
 	lvcreate -n $lv1 -l 2 -i5 -I256 $vg
-	lvcreate -n $lv2 -m2 -l 2  $vg
+	lvcreate -aey -n $lv2 -m2 -l 2  $vg
 	lvchange -an $vg/$lv1 $vg/$lv2
-	vgchange -ay $vg
+	vgchange -aey $vg
 	lvchange -an $vg/$lv1 $vg/$lv2
 	vgremove -f $vg
 done
@@ -46,7 +46,7 @@ not grep "Cached VG .* incorrect PV list" out0
 # some M1 metadata tests
 pvcreate -M1 "$dev1" "$dev2" "$dev3"
 pv3_uuid=$(get pv_field "$dev3" pv_uuid)
-vgcreate -M1 -c n $vg "$dev1" "$dev2" "$dev3"
+vgcreate -M1 $vg "$dev1" "$dev2" "$dev3"
 pvchange --uuid "$dev1"
 
 # verify pe_start of all M1 PVs

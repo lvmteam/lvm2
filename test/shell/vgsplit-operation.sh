@@ -18,7 +18,7 @@ COMM() {
 }
 
 create_vg_() {
-	vgcreate -c n -s 64k "$@"
+	vgcreate -s 64k "$@"
 }
 
 aux prepare_pvs 5 10
@@ -79,7 +79,7 @@ COMM "vgsplit correctly splits mirror LV into $i VG ($j args)"
 		create_vg_ $vg1 "$dev1" "$dev2" "$dev3"
 		test $i = existing && create_vg_ $vg2 "$dev4"
 
-		lvcreate -l 64 -m1 -n $lv1 $vg1 "$dev1" "$dev2" "$dev3"
+		lvcreate -aey -l 64 -m1 -n $lv1 $vg1 "$dev1" "$dev2" "$dev3"
 		vgchange -an $vg1
 		if [ $j = PV ]; then
 		  vgsplit $vg1 $vg2 "$dev1" "$dev2" "$dev3"
@@ -96,10 +96,10 @@ COMM "vgsplit correctly splits mirror LV into $i VG ($j args)"
 # FIXME: ensure split /doesn't/ work when not all devs of mirror specified
 
 COMM "vgsplit correctly splits mirror LV with mirrored log into $i VG ($j args)"
-		create_vg_ $vg1 "$dev1" "$dev2" "$dev3" "$dev4"
-		test $i = existing && create_vg_ $vg2 "$dev5"
+		create_vg_ -c n $vg1 "$dev1" "$dev2" "$dev3" "$dev4"
+		test $i = existing && create_vg_ -c n $vg2 "$dev5"
 
-		lvcreate -l 64 --mirrorlog mirrored -m1 -n $lv1 $vg1 \
+		lvcreate -aey -l 64 --mirrorlog mirrored -m1 -n $lv1 $vg1 \
 		    "$dev1" "$dev2" "$dev3" "$dev4"
 
 		vgchange -an $vg1
@@ -121,7 +121,7 @@ COMM "vgsplit correctly splits origin and snapshot LV into $i VG ($j args)"
 		create_vg_ $vg1 "$dev1" "$dev2"
 		test $i = existing && create_vg_ $vg2 "$dev3" "$dev4"
 
-		lvcreate -l 64 -i 2 -n $lv1 $vg1 "$dev1" "$dev2"
+		lvcreate -aey -l 64 -i 2 -n $lv1 $vg1 "$dev1" "$dev2"
 		lvcreate -l 4 -i 2 -s -n $lv2 $vg1/$lv1
 		vgchange -an $vg1
 		if [ $j = PV ]; then
@@ -142,7 +142,7 @@ COMM "vgsplit correctly splits linear LV but not snap+origin LV into $i VG ($j a
 		create_vg_ $vg1 "$dev1" "$dev2"
 		test $i = existing && create_vg_ $vg2 "$dev3"
 
-		lvcreate -l 64 -i 2 -n $lv1 $vg1
+		lvcreate -aey -l 64 -i 2 -n $lv1 $vg1
 		lvcreate -l 4 -i 2 -s -n $lv2 $vg1/$lv1
 		vgextend $vg1 "$dev4"
 		lvcreate -l 64 -n $lv3 $vg1 "$dev4"
@@ -167,7 +167,7 @@ COMM "vgsplit correctly splits linear LV but not mirror LV into $i VG ($j args)"
 		create_vg_ $vg1 "$dev1" "$dev2" "$dev3"
 		test $i = existing && create_vg_ $vg2 "$dev5"
 
-		lvcreate -l 64 -m1 -n $lv1 $vg1 "$dev1" "$dev2" "$dev3"
+		lvcreate -aey -l 64 -m1 -n $lv1 $vg1 "$dev1" "$dev2" "$dev3"
 		vgextend $vg1 "$dev4"
 		lvcreate -l 64 -n $lv2 $vg1 "$dev4"
 		vgchange -an $vg1
@@ -203,7 +203,7 @@ vgremove -f $vg1
 
 COMM "vgsplit fails splitting one LV with 2 snapshots, only origin LV specified"
 create_vg_ $vg1 "$dev1" "$dev2" "$dev3" "$dev4"
-lvcreate -l 16 -n $lv1 $vg1 "$dev1" "$dev2"
+lvcreate -aey -l 16 -n $lv1 $vg1 "$dev1" "$dev2"
 lvcreate -l 4 -n $lv2 -s $vg1/$lv1 "$dev3"
 lvcreate -l 4 -n $lv3 -s $vg1/$lv1 "$dev4"
 check pvlv_counts $vg1 4 3 2
@@ -215,7 +215,7 @@ vgremove -f $vg1
 
 COMM "vgsplit fails splitting one LV with 2 snapshots, only snapshot LV specified"
 create_vg_ $vg1 "$dev1" "$dev2" "$dev3" "$dev4"
-lvcreate -l 16 -n $lv1 $vg1 "$dev1" "$dev2"
+lvcreate -aey -l 16 -n $lv1 $vg1 "$dev1" "$dev2"
 lvcreate -l 4 -n $lv2 -s $vg1/$lv1 "$dev3"
 lvcreate -l 4 -n $lv3 -s $vg1/$lv1 "$dev4"
 check pvlv_counts $vg1 4 3 2
@@ -227,7 +227,7 @@ vgremove -f $vg1
 
 COMM "vgsplit fails splitting one mirror LV, only one PV specified"
 create_vg_ $vg1 "$dev1" "$dev2" "$dev3" "$dev4"
-lvcreate -l 16 -n $lv1 -m1 $vg1 "$dev1" "$dev2" "$dev3"
+lvcreate -aey -l 16 -n $lv1 -m1 $vg1 "$dev1" "$dev2" "$dev3"
 check pvlv_counts $vg1 4 1 0
 vgchange -an $vg1
 not vgsplit $vg1 $vg2 "$dev2"
@@ -235,7 +235,7 @@ vgremove -ff $vg1
 
 COMM "vgsplit fails splitting 1 mirror + 1 striped LV, only striped LV specified"
 create_vg_ $vg1 "$dev1" "$dev2" "$dev3" "$dev4"
-lvcreate -l 16 -n $lv1 -m1 $vg1 "$dev1" "$dev2" "$dev3"
+lvcreate -aey -l 16 -n $lv1 -m1 $vg1 "$dev1" "$dev2" "$dev3"
 lvcreate -l 16 -n $lv2 -i 2 $vg1 "$dev3" "$dev4"
 check pvlv_counts $vg1 4 2 0
 vgchange -an $vg1
@@ -247,7 +247,7 @@ vgremove -f $vg1
 #
 COMM "vgsplit fails, active mirror involved in split"
 create_vg_ $vg1 "$dev1" "$dev2" "$dev3" "$dev4"
-lvcreate -l 16 -n $lv1 -m1 $vg1 "$dev1" "$dev2" "$dev3"
+lvcreate -aey -l 16 -n $lv1 -m1 $vg1 "$dev1" "$dev2" "$dev3"
 lvcreate -l 16 -n $lv2 $vg1 "$dev4"
 lvchange -an $vg1/$lv2
 check pvlv_counts $vg1 4 2 0
@@ -257,7 +257,7 @@ vgremove -f $vg1
 
 COMM "vgsplit succeeds, active mirror not involved in split"
 create_vg_ $vg1 "$dev1" "$dev2" "$dev3" "$dev4"
-lvcreate -l 16 -n $lv1 -m1 $vg1 "$dev1" "$dev2" "$dev3"
+lvcreate -aey -l 16 -n $lv1 -m1 $vg1 "$dev1" "$dev2" "$dev3"
 lvcreate -l 16 -n $lv2 $vg1 "$dev4"
 lvchange -an $vg1/$lv2
 check pvlv_counts $vg1 4 2 0
@@ -268,7 +268,7 @@ vgremove -f $vg1 $vg2
 
 COMM "vgsplit fails, active snapshot involved in split"
 create_vg_ $vg1 "$dev1" "$dev2" "$dev3" "$dev4"
-lvcreate -l 64 -i 2 -n $lv1 $vg1 "$dev1" "$dev2"
+lvcreate -aey -l 64 -i 2 -n $lv1 $vg1 "$dev1" "$dev2"
 lvcreate -l 4 -i 2 -s -n $lv2 $vg1/$lv1
 lvcreate -l 64 -i 2 -n $lv3 $vg1 "$dev3" "$dev4"
 lvchange -an $vg1/$lv3
@@ -280,7 +280,7 @@ vgremove -f $vg1
 
 COMM "vgsplit succeeds, active snapshot not involved in split"
 create_vg_ $vg1 "$dev1" "$dev2" "$dev3"
-lvcreate -l 64 -i 2 -n $lv1 $vg1 "$dev1" "$dev2"
+lvcreate -aey -l 64 -i 2 -n $lv1 $vg1 "$dev1" "$dev2"
 lvcreate -l 4 -s -n $lv2 $vg1/$lv1
 vgextend $vg1 "$dev4"
 lvcreate -l 64 -n $lv3 $vg1 "$dev4"

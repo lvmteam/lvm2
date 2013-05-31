@@ -11,10 +11,11 @@
 
 . lib/test
 
+test -e LOCAL_CLVMD && skip
+
 which mkfs.ext3 || skip
 
 aux prepare_pvs 2 8
-test -e LOCAL_CLVMD && skip
 
 var_lock="$DM_DEV_DIR/$vg1/$lv1"
 # keep in sync with aux configured lockingdir
@@ -26,8 +27,8 @@ cleanup_mounted_and_teardown()
 	aux teardown
 }
 
-vgcreate -c n $vg1 "$dev1"
-vgcreate -c n $vg2 "$dev2"
+vgcreate $vg1 "$dev1"
+vgcreate $vg2 "$dev2"
 
 lvcreate -l 1 -n $lv2 $vg2
 vgchange -an $vg2

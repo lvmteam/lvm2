@@ -173,7 +173,7 @@ for ignore in y n; do
 	fi
 	echo "vgcreate has proper vg_mda_count and vg_mda_used_count"
 	if [ $pv_in_vg = 1 ]; then
-		vgcreate -c n $vg "$dev1" "$dev2"
+		vgcreate $vg "$dev1" "$dev2"
 		check vg_field $vg vg_mda_count "$(($mdacp * 2))"
 		if [ $ignore = y ]; then
 			check vg_field $vg vg_mda_used_count "1"

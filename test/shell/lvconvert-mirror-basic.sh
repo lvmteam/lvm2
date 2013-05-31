@@ -76,12 +76,12 @@ test_lvconvert() {
 			alloc="--alloc anywhere"
 		fi
 
-		lvcreate -l2 -m $start_count --mirrorlog $start_log_type \
+		lvcreate -aey -l2 -m $start_count --mirrorlog $start_log_type \
 			-n $lv1 $vg $alloc
 		check mirror_legs $vg $lv1 $start_count_p1
 		# FIXME: check mirror log
 	else
-		lvcreate -l2 -n $lv1 $vg
+		lvcreate -aey -l2 -n $lv1 $vg
 	fi
 
 	lvs -a -o name,copy_percent,devices $vg
@@ -95,7 +95,7 @@ test_lvconvert() {
 	lvconvert -m $finish_count --mirrorlog $finish_log_type \
 		$vg/$lv1 $alloc
 
-	test $active || lvchange -ay $vg/$lv1
+	test $active || lvchange -aey $vg/$lv1
 
 	check mirror_no_temporaries $vg $lv1
 	if [ "$finish_count_p1" -eq 1 ]; then
@@ -110,14 +110,19 @@ test_lvconvert() {
 	fi
 }
 
+
 aux prepare_pvs 5 5
-vgcreate -c n -s 128k $vg $(cat DEVICES)
+vgcreate -s 32k $vg $(cat DEVICES)
+
+MIRRORED="mirrored"
+# FIXME: Cluster is not supporting exlusive activation of mirrored log
+test -e LOCAL_CLVMD && MIRRORED=
 
 test_many() {
 	i=$1
 	for j in $(seq 0 3); do
-		for k in core disk mirrored; do
-			for l in core disk mirrored; do
+		for k in core disk $MIRRORED; do
+			for l in core disk $MIRRORED; do
 				if test "$i" -eq "$j" && test "$k" = "$l"; then continue; fi
 				: ----------------------------------------------------
 				: "Testing mirror conversion -m$i/$k -> -m$j/$l"

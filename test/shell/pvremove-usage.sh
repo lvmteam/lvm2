@@ -23,7 +23,7 @@ pvs | not grep "$dev2"
 pvcreate  --metadatacopies 0 "$dev2"
 
 # check pvremove refuses to remove pv in a vg
-vgcreate -c n $vg "$dev1" "$dev2"
+vgcreate $vg "$dev1" "$dev2"
 not pvremove "$dev2" "$dev3"
 
 for mdacp in 0 1 2; do

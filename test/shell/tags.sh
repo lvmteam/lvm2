@@ -14,15 +14,15 @@
 aux prepare_pvs 4
 
 # vgcreate with --addtag
-vgcreate -c n --addtag firstvg $vg1 "$dev1" "$dev2"
-vgcreate -c n --addtag secondvg $vg2 "$dev3" "$dev4"
+vgcreate --addtag firstvg $vg1 "$dev1" "$dev2"
+vgcreate --addtag secondvg $vg2 "$dev3" "$dev4"
 check vg_field $vg1 tags "firstvg"
 check vg_field $vg2 tags "secondvg"
 vgremove -f $vg1 $vg2
 
 # vgchange with --addtag and --deltag
-vgcreate -c n $vg1 "$dev1" "$dev2"
-vgcreate -c n $vg2 "$dev3" "$dev4"
+vgcreate $vg1 "$dev1" "$dev2"
+vgcreate $vg2 "$dev3" "$dev4"
 vgchange --addtag firstvgtag1 $vg1
 # adding a tag multiple times is not an error
 vgchange --addtag firstvgtag2 $vg1
@@ -41,7 +41,7 @@ vgchange --deltag firstvgtag1 $vg2
 vgremove -f $vg1 $vg2
 
 # lvcreate with --addtag
-vgcreate -c n $vg1 "$dev1" "$dev2"
+vgcreate $vg1 "$dev1" "$dev2"
 lvcreate --addtag firstlvtag1 -l 4 -n $lv1 $vg1
 lvcreate --addtag secondlvtag1 -l 4 -n $lv2 $vg1
 check lv_field @firstlvtag1 tags "firstlvtag1"
@@ -51,7 +51,7 @@ not check lv_field $vg1/$lv1 tags "secondlvtag1"
 vgremove -f $vg1
 
 # lvchange with --addtag and --deltag
-vgcreate -c n $vg1 "$dev1" "$dev2"
+vgcreate $vg1 "$dev1" "$dev2"
 lvcreate -l 4 -n $lv1 $vg1
 lvcreate -l 4 -n $lv2 $vg1
 lvchange --addtag firstlvtag1 $vg1/$lv1

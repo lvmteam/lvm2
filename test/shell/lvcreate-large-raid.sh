@@ -13,6 +13,7 @@
 
 . lib/test
 
+test -e LOCAL_CLVMD && skip
 aux target_at_least dm-raid 1 1 0 || skip
 
 aux prepare_vg 5
@@ -29,7 +30,7 @@ lvcreate -s -l 20%FREE -n $lv5 $vg --virtualsize 256T
 aux lvmconf 'devices/filter = [ "a/dev\/mapper\/.*$/", "a/dev\/LVMTEST/", "r/.*/" ]'
 
 pvcreate $DM_DEV_DIR/$vg/$lv[12345]
-vgcreate -c n $vg1 $DM_DEV_DIR/$vg/$lv[12345]
+vgcreate $vg1 $DM_DEV_DIR/$vg/$lv[12345]
 
 # bz837927 START
 

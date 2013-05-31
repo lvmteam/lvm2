@@ -38,11 +38,11 @@ lvdev_() {
 }
 
 test_snapshot_mount() {
-    lvcreate -L 16M -n $lv1 $vg "$dev1"
+    lvcreate -aey -L4M -n $lv1 $vg "$dev1"
     mkfs.ext3 $(lvdev_ $vg $lv1)
     mkdir test_mnt
     mount "$(lvdev_ $vg $lv1)" test_mnt
-    lvcreate -L 16M -n $lv2 -s $vg/$lv1
+    lvcreate -L4M -n $lv2 -s $vg/$lv1
     umount test_mnt
     # mount the origin
     mount "$(lvdev_ $vg $lv1)" test_mnt
@@ -52,7 +52,6 @@ test_snapshot_mount() {
     umount test_mnt
     rm -r test_mnt
     vgchange -an $vg
-    lvremove -f $vg/$lv2
     lvremove -f $vg/$lv1
 }
 
@@ -80,7 +79,7 @@ aux prepare_scsi_debug_dev $DEV_SIZE \
 check_logical_block_size $LOGICAL_BLOCK_SIZE
 
 aux prepare_pvs $NUM_DEVS $PER_DEV_SIZE
-vgcreate -c n $vg $(cat DEVICES)
+vgcreate $vg $(cat DEVICES)
 test_snapshot_mount
 vgremove $vg
 
@@ -95,7 +94,7 @@ aux prepare_scsi_debug_dev $DEV_SIZE \
 check_logical_block_size $LOGICAL_BLOCK_SIZE
 
 aux prepare_pvs $NUM_DEVS $PER_DEV_SIZE
-vgcreate -c n $vg $(cat DEVICES)
+vgcreate $vg $(cat DEVICES)
 test_snapshot_mount
 vgremove $vg
 
@@ -110,7 +109,7 @@ aux prepare_scsi_debug_dev $DEV_SIZE \
 check_logical_block_size $LOGICAL_BLOCK_SIZE
 
 aux prepare_pvs $NUM_DEVS $PER_DEV_SIZE
-vgcreate -c n $vg $(cat DEVICES)
+vgcreate $vg $(cat DEVICES)
 test_snapshot_mount
 vgremove $vg
 

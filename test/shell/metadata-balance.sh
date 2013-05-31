@@ -19,7 +19,7 @@ for mdacp in 1 2; do
 	pvcreate --metadatacopies $mdacp "$dev1" "$dev2"
         pvcreate --metadatacopies 0 "$dev3"
 	if [ $pv_in_vg = 1 ]; then
-		vgcreate -c n $vg "$dev1" "$dev2" "$dev3"
+		vgcreate $vg "$dev1" "$dev2" "$dev3"
 	fi
 	pvchange --metadataignore y "$dev1"
 	check pv_field "$dev1" pv_mda_count $mdacp
@@ -68,7 +68,7 @@ for mdacp in 1 2; do
 	check pv_field "$dev4" pv_mda_used_count $mdacp
 	check pv_field "$dev5" pv_mda_used_count $mdacp
 	pvcreate --metadatacopies 0 "$dev3"
-	vgcreate -c n $vg "$dev1" "$dev2" "$dev3"
+	vgcreate $vg "$dev1" "$dev2" "$dev3"
 	check vg_field $vg vg_mda_copies unmanaged
 	echo ensure both --vgmetadatacopies and --metadatacopies accepted
 	vgchange --metadatacopies $(($mdacp * 1)) $vg
@@ -91,22 +91,22 @@ for mdacp in 1 2; do
 	pvchange --metadataignore y "$dev1" "$dev2"
 	check pv_field "$dev1" pv_mda_count $mdacp
 	check pv_field "$dev2" pv_mda_used_count 0
-	vgcreate -c n $vg "$dev1" "$dev2"
+	vgcreate $vg "$dev1" "$dev2"
 	check vg_field $vg vg_mda_copies unmanaged
 	vgremove -f $vg
 	echo vgcreate succeeds with a specific number of metadata copies
-	vgcreate -c n --vgmetadatacopies $(($mdacp * 2)) $vg "$dev1" "$dev2"
+	vgcreate --vgmetadatacopies $(($mdacp * 2)) $vg "$dev1" "$dev2"
 	check vg_field $vg vg_mda_copies $(($mdacp * 2))
 	vgremove -f $vg
-	vgcreate -c n --vgmetadatacopies $(($mdacp * 1)) $vg "$dev1" "$dev2"
+	vgcreate --vgmetadatacopies $(($mdacp * 1)) $vg "$dev1" "$dev2"
 	check vg_field $vg vg_mda_copies $(($mdacp * 1))
 	vgremove -f $vg
 	echo vgcreate succeeds with a larger value than total metadatacopies
-	vgcreate -c n --vgmetadatacopies $(($mdacp * 5)) $vg "$dev1" "$dev2"
+	vgcreate --vgmetadatacopies $(($mdacp * 5)) $vg "$dev1" "$dev2"
 	check vg_field $vg vg_mda_copies $(($mdacp * 5))
 	vgremove -f $vg
 	echo vgcreate succeeds with --vgmetadatacopies unmanaged
-	vgcreate -c n --vgmetadatacopies unmanaged $vg "$dev1" "$dev2"
+	vgcreate --vgmetadatacopies unmanaged $vg "$dev1" "$dev2"
 	check vg_field $vg vg_mda_copies unmanaged
 	vgremove -f $vg
 	pvunignore_ "$dev1"
@@ -114,7 +114,7 @@ for mdacp in 1 2; do
 	pvunignore_ "$dev4"
 	pvunignore_ "$dev5"
 	echo vgcreate succeds with small value of --metadatacopies, ignores mdas
-	vgcreate -c n --vgmetadatacopies 1 $vg "$dev1" "$dev2" "$dev4" "$dev5"
+	vgcreate --vgmetadatacopies 1 $vg "$dev1" "$dev2" "$dev4" "$dev5"
 	check vg_field $vg vg_mda_copies 1
 	check vg_field $vg vg_mda_count $(($mdacp * 4))
 	check vg_field $vg vg_mda_used_count 1
@@ -131,7 +131,7 @@ for mdacp in 1 2; do
 	vgchange --vgmetadatacopies 0 $vg
 	check vg_field $vg vg_mda_copies unmanaged
 	vgremove -f $vg
-	vgcreate -c n --vgmetadatacopies 0 $vg "$dev1" "$dev2" "$dev4" "$dev5"
+	vgcreate --vgmetadatacopies 0 $vg "$dev1" "$dev2" "$dev4" "$dev5"
 	check vg_field $vg vg_mda_copies unmanaged
 	vgremove -f $vg
 done
@@ -141,7 +141,7 @@ for mdacp in 1 2; do
 	pvcreate --metadatacopies $mdacp "$dev1" "$dev2" "$dev4" "$dev5"
 	pvcreate --metadatacopies 0 "$dev3"
 	echo Set a large value of vgmetadatacopies
-	vgcreate -c n --vgmetadatacopies $(($mdacp * 5)) $vg "$dev1" "$dev2" "$dev3"
+	vgcreate --vgmetadatacopies $(($mdacp * 5)) $vg "$dev1" "$dev2" "$dev3"
 	check vg_field $vg vg_mda_copies $(($mdacp * 5))
 	echo Ignore mdas on devices to be used for vgextend
 	echo Large value of vgetadatacopies should automatically un-ignore mdas
@@ -152,7 +152,7 @@ for mdacp in 1 2; do
 	check pv_field "$dev5" pv_mda_used_count $mdacp
 	vgremove -f $vg
 	echo Set a small value of vgmetadatacopies
-	vgcreate -c n --vgmetadatacopies $(($mdacp * 1)) $vg "$dev1" "$dev2" "$dev3"
+	vgcreate --vgmetadatacopies $(($mdacp * 1)) $vg "$dev1" "$dev2" "$dev3"
 	check vg_field $vg vg_mda_copies $(($mdacp * 1))
 	echo Ignore mdas on devices to be used for vgextend
 	echo Small value of vgetadatacopies should leave mdas as ignored
@@ -185,8 +185,8 @@ done
 echo Test special situations, vgsplit, vgmerge, etc
 for mdacp in 1 2; do
 	pvcreate --metadatacopies $mdacp "$dev1" "$dev2" "$dev3" "$dev4" "$dev5"
-	vgcreate -c n --vgmetadatacopies 2 $vg1 "$dev1" "$dev2" "$dev3"
-	vgcreate -c n --vgmetadatacopies $(($mdacp * 1)) $vg2 "$dev4" "$dev5"
+	vgcreate --vgmetadatacopies 2 $vg1 "$dev1" "$dev2" "$dev3"
+	vgcreate --vgmetadatacopies $(($mdacp * 1)) $vg2 "$dev4" "$dev5"
 	echo vgsplit/vgmerge preserves value of metadata copies
 	check vg_field $vg1 vg_mda_copies 2
 	check vg_field $vg2 vg_mda_copies $(($mdacp * 1))
@@ -206,7 +206,7 @@ done
 echo Test combination of --vgmetadatacopies and pvchange --metadataignore
 for mdacp in 1 2; do
 	pvcreate --metadatacopies $mdacp "$dev1" "$dev2" "$dev3" "$dev4" "$dev5"
-	vgcreate -c n --vgmetadatacopies $(($mdacp * 1)) $vg1 "$dev1" "$dev2"
+	vgcreate --vgmetadatacopies $(($mdacp * 1)) $vg1 "$dev1" "$dev2"
 	check vg_field $vg1 vg_mda_copies $(($mdacp * 1))
 	check vg_field $vg1 vg_mda_used_count $(($mdacp * 1))
 	pvignore_ "$dev3"

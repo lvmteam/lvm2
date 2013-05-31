@@ -11,13 +11,15 @@
 
 . lib/test
 
+test -e LOCAL_CLVMD && skip
+
 ########################################################
 # MAIN
 ########################################################
 aux target_at_least dm-raid 1 3 0 || skip
 
 aux prepare_pvs 6 20  # 6 devices for RAID10 (2-mirror,3-stripe) test
-vgcreate -c n -s 512k $vg $(cat DEVICES)
+vgcreate -s 512k $vg $(cat DEVICES)
 
 #
 # Create RAID10:

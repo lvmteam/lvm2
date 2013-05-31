@@ -21,8 +21,8 @@ vgcreate  $vg1 "$dev1" "$dev2"
 vgcreate  $vg2 "$dev3" "$dev4"
 vgmerge $vg1 $vg2
 vgremove $vg1
-vgcreate -c n $vg2 "$dev1" "$dev2"
-vgcreate -c n $vg1 "$dev3" "$dev4"
+vgcreate $vg2 "$dev1" "$dev2"
+vgcreate $vg1 "$dev3" "$dev4"
 vgmerge $vg2 $vg1
 vgremove $vg2
 

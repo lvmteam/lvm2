@@ -13,7 +13,7 @@
 
 aux prepare_devs 2
 
-vgcreate -c n --metadatasize 128k $vg1 "$dev1"
+vgcreate --metadatasize 128k $vg1 "$dev1"
 lvcreate -l100%FREE -n $lv1 $vg1
 
 # Clone the LUN

@@ -18,7 +18,7 @@ aux lvmconf 'allocation/mirror_logs_require_separate_pvs = 1'
 # not required, just testing
 aux pvcreate --metadatacopies 0 "$dev1"
 
-vgcreate -c n $vg $(cat DEVICES)
+vgcreate $vg $(cat DEVICES)
 pvchange --addtag fast $(cat DEVICES)
 
 # 3 stripes with 3 PVs (selected by tag, @fast) is fine
@@ -31,18 +31,18 @@ not lvcreate -l4 -i4 $vg @fast
 not lvcreate -l2 -i2 $vg $DM_DEV_DIR/mapper/pv1
 
 # lvcreate mirror
-lvcreate -l1 -m1 $vg @fast
+lvcreate -aey -l1 -m1 $vg @fast
 
 # lvcreate mirror w/corelog
-lvcreate -l1 -m2 --corelog $vg @fast
+lvcreate -aey -l1 -m2 --corelog $vg @fast
 
 # lvcreate mirror w/no free PVs
-not lvcreate -l1 -m2 $vg @fast
+not lvcreate -aey -l1 -m2 $vg @fast
 
 # lvcreate mirror (corelog, w/no free PVs)
-not lvcreate -l1 -m3 --corelog $vg @fast
+not lvcreate -aey -l1 -m3 --corelog $vg @fast
 
 # lvcreate mirror with a single PV arg
-not lvcreate -l1 -m1 --corelog $vg "$dev1"
+not lvcreate -aey -l1 -m1 --corelog $vg "$dev1"
 
 vgremove -ff $vg

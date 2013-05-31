@@ -29,7 +29,7 @@ test $(pvs --noheadings $(cat DEVICES) | wc -l) -eq 5
 #COMM pvs with segment attributes works even for orphans
 test $(pvs --noheadings -o seg_all,pv_all,lv_all,vg_all $(cat DEVICES) | wc -l) -eq 5
 
-vgcreate -c n $vg $(cat DEVICES)
+vgcreate $vg $(cat DEVICES)
 
 #COMM pvs and vgs report mda_count, mda_free (bz202886, bz247444)
 pvs -o +pv_mda_count,pv_mda_free $(cat DEVICES)
@@ -45,7 +45,7 @@ pvdisplay "$dev2"|grep "VG Name.*$vg"
 check pv_field "$dev2" vg_name $vg
 
 #COMM lvs displays snapshots (bz171215)
-lvcreate -l4 -n $lv1 $vg
+lvcreate -aey -l4 -n $lv1 $vg
 lvcreate -l4 -s -n $lv2 $vg/$lv1
 test $(lvs --noheadings $vg | wc -l) -eq 2
 # should lvs -a display cow && real devices? (it doesn't)
@@ -54,7 +54,7 @@ dmsetup ls|grep $PREFIX|grep -v "LVMTEST.*pv."
 lvremove -f $vg/$lv2
 
 #COMM lvs -a displays mirror legs and log
-lvcreate -l4 -m2 -n $lv3 $vg
+lvcreate -aey -l4 -m2 -n $lv3 $vg
 test $(lvs --noheadings $vg | wc -l) -eq 2
 test $(lvs -a --noheadings $vg | wc -l) -eq 6
 dmsetup ls|grep $PREFIX|grep -v "LVMTEST.*pv."
