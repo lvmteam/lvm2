@@ -183,9 +183,11 @@ struct load_segment {
 	struct dm_tree_node *replicator;/* Replicator-dev */
 	uint64_t rdevice_index;		/* Replicator-dev */
 
-	uint64_t rebuilds;	      /* raid */
-	uint64_t writemostly;	      /* raid */
-	uint32_t writebehind;	      /* raid */
+	uint64_t rebuilds;		/* raid */
+	uint64_t writemostly;		/* raid */
+	uint32_t writebehind;		/* raid */
+	uint32_t max_recovery_rate;	/* raid kB/sec/disk */
+	uint32_t min_recovery_rate;	/* raid kB/sec/disk */
 
 	struct dm_tree_node *metadata;	/* Thin_pool */
 	struct dm_tree_node *pool;	/* Thin_pool, Thin */
@@ -2133,6 +2135,12 @@ static int _raid_emit_segment_line(struct dm_task *dmt, uint32_t major,
 	if (seg->writebehind)
 		param_count += 2;
 
+	if (seg->min_recovery_rate)
+		param_count += 2;
+
+	if (seg->max_recovery_rate)
+		param_count += 2;
+
 	/* rebuilds is 64-bit */
 	param_count += 2 * hweight32(seg->rebuilds & 0xFFFFFFFF);
 	param_count += 2 * hweight32(seg->rebuilds >> 32);
@@ -2165,6 +2173,14 @@ static int _raid_emit_segment_line(struct dm_task *dmt, uint32_t major,
 
 	if (seg->writebehind)
 		EMIT_PARAMS(pos, " writebehind %u", seg->writebehind);
+
+	if (seg->min_recovery_rate)
+		EMIT_PARAMS(pos, " min_recovery_rate %u",
+			    seg->min_recovery_rate);
+
+	if (seg->max_recovery_rate)
+		EMIT_PARAMS(pos, " max_recovery_rate %u",
+			    seg->max_recovery_rate);
 
 	/* Print number of metadata/data device pairs */
 	EMIT_PARAMS(pos, " %u", seg->area_count/2);
@@ -2901,6 +2917,8 @@ int dm_tree_node_add_raid_target_with_params(struct dm_tree_node *node,
 	seg->rebuilds = p->rebuilds;
 	seg->writemostly = p->writemostly;
 	seg->writebehind = p->writebehind;
+	seg->min_recovery_rate = p->min_recovery_rate;
+	seg->max_recovery_rate = p->max_recovery_rate;
 	seg->flags = p->flags;
 
 	return 1;

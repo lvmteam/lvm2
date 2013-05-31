@@ -337,6 +337,8 @@ struct lv_segment {
 	/* FIXME Fields depend on segment type */
 	uint32_t stripe_size;	/* For stripe and RAID - in sectors */
 	uint32_t writebehind;   /* For RAID (RAID1 only) */
+	uint32_t min_recovery_rate; /* For RAID */
+	uint32_t max_recovery_rate; /* For RAID */
 	uint32_t area_count;
 	uint32_t area_len;
 	uint32_t chunk_size;	/* For snapshots/thin_pool.  In sectors. */
@@ -630,6 +632,9 @@ struct lvcreate_params {
 	uint32_t region_size; /* mirror */
 
 	uint32_t mirrors; /* mirror */
+
+	uint32_t min_recovery_rate; /* RAID */
+	uint32_t max_recovery_rate; /* RAID */
 
 	const struct segment_type *segtype; /* all */
 	unsigned target_attr; /* all */

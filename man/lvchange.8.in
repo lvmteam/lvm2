@@ -26,6 +26,10 @@ lvchange \- change attributes of a logical volume
 .RI { y | n }]
 .RB [ \-\-poll
 .RI { y | n }]
+.RB [ \-\-maxrecoveryrate
+.IR Rate ]
+.RB [ \-\-minrecoveryrate
+.IR Rate ]
 .RB [ \-\-syncaction
 .RI { check | repair }]
 .RB [ \-\-sysinit ]
@@ -110,6 +114,18 @@ example, on rebooting after a crash), use \fB\-\-poll y\fP to restart the
 process from its last checkpoint.  However, it may not be appropriate to
 immediately poll a logical volume when it is activated, use
 \fB\-\-poll n\fP to defer and then \fB\-\-poll y\fP to restart the process.
+.TP
+.IR \fB\-\-maxrecoveryrate " " \fIRate [ bBsSkKmMgG ]
+Sets the maximum recovery rate for a RAID logical volume.  \fIRate\fP
+is specified as a size/sec/device.  If no suffix is given, then
+kiB/sec/device is assumed.  Setting the recovery rate to 0 means
+it will be unbounded.
+.TP
+.IR \fB\-\-minrecoveryrate " " \fIRate [ bBsSkKmMgG ]
+Sets the minimum recovery rate for a RAID logical volume.  \fIRate\fP
+is specified as a size/sec/device.  If no suffix is given, then
+kiB/sec/device is assumed.  Setting the recovery rate to 0 means
+it will be unbounded.
 .TP
 .BR \-\-syncaction " {" \fIcheck | \fIrepair }
 This argument is used to initiate various RAID synchronization operations.

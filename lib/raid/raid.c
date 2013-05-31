@@ -129,6 +129,24 @@ static int _raid_text_import(struct lv_segment *seg,
 			return 0;
 		}
 	}
+	if (dm_config_has_node(sn, "min_recovery_rate")) {
+		if (!dm_config_get_uint32(sn, "min_recovery_rate",
+					  &seg->min_recovery_rate)) {
+			log_error("Couldn't read 'min_recovery_rate' for "
+				  "segment %s of logical volume %s.",
+				  dm_config_parent_name(sn), seg->lv->name);
+			return 0;
+		}
+	}
+	if (dm_config_has_node(sn, "max_recovery_rate")) {
+		if (!dm_config_get_uint32(sn, "max_recovery_rate",
+					  &seg->max_recovery_rate)) {
+			log_error("Couldn't read 'max_recovery_rate' for "
+				  "segment %s of logical volume %s.",
+				  dm_config_parent_name(sn), seg->lv->name);
+			return 0;
+		}
+	}
 	if (!dm_config_get_list(sn, "raids", &cv)) {
 		log_error("Couldn't find RAID array for "
 			  "segment %s of logical volume %s.",
@@ -155,6 +173,10 @@ static int _raid_text_export(const struct lv_segment *seg, struct formatter *f)
 		outf(f, "stripe_size = %" PRIu32, seg->stripe_size);
 	if (seg->writebehind)
 		outf(f, "writebehind = %" PRIu32, seg->writebehind);
+	if (seg->min_recovery_rate)
+		outf(f, "min_recovery_rate = %" PRIu32, seg->min_recovery_rate);
+	if (seg->max_recovery_rate)
+		outf(f, "max_recovery_rate = %" PRIu32, seg->max_recovery_rate);
 
 	return out_areas(f, seg, "raid");
 }
@@ -227,6 +249,8 @@ static int _raid_add_target_line(struct dev_manager *dm __attribute__((unused)),
 	params.stripe_size = seg->stripe_size;
 	params.rebuilds = rebuilds;
 	params.writemostly = writemostly;
+	params.min_recovery_rate = seg->min_recovery_rate;
+	params.max_recovery_rate = seg->max_recovery_rate;
 	params.flags = flags;
 
 	if (!dm_tree_node_add_raid_target_with_params(node, len, &params))

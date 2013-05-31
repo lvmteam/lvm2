@@ -810,6 +810,55 @@ static int lvchange_writemostly(struct logical_volume *lv)
 	return 1;
 }
 
+static int lvchange_recovery_rate(struct logical_volume *lv)
+{
+	struct cmd_context *cmd = lv->vg->cmd;
+	struct lv_segment *raid_seg = first_seg(lv);
+
+	if (strcmp(raid_seg->segtype->name, "raid1")) {
+		log_error("Unable to change the recovery rate of non-RAID"
+			  " logical volume.");
+		return 0;
+	}
+
+	if (arg_count(cmd, minrecoveryrate_ARG))
+		raid_seg->min_recovery_rate =
+			arg_uint_value(cmd, minrecoveryrate_ARG, 0);
+	if (arg_count(cmd, maxrecoveryrate_ARG))
+		raid_seg->max_recovery_rate =
+			arg_uint_value(cmd, maxrecoveryrate_ARG, 0);
+
+	if (raid_seg->max_recovery_rate &&
+	    (raid_seg->max_recovery_rate < raid_seg->min_recovery_rate)) {
+		log_error("Minumum recovery rate cannot"
+			  " be higher than maximum.");
+		return 0;
+	}
+
+	if (!vg_write(lv->vg))
+		return_0;
+
+	if (!suspend_lv(cmd, lv)) {
+		vg_revert(lv->vg);
+		return_0;
+	}
+
+	if (!vg_commit(lv->vg)) {
+		if (!resume_lv(cmd, lv))
+			stack;
+		return_0;
+	}
+
+	log_very_verbose("Updating recovery rate for \"%s\" in kernel",
+			 lv->name);
+	if (!resume_lv(cmd, lv)) {
+		log_error("Problem reactivating %s", lv->name);
+		return 0;
+	}
+
+	return 1;
+}
+
 static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 			   void *handle __attribute__((unused)))
 {
@@ -989,6 +1038,18 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 		}
 		archived = 1;
 		doit += lvchange_writemostly(lv);
+		docmds++;
+	}
+
+	/* change [min|max]_recovery_rate */
+	if (arg_count(cmd, minrecoveryrate_ARG) ||
+	    arg_count(cmd, maxrecoveryrate_ARG)) {
+		if (!archived && !archive(lv->vg)) {
+			stack;
+			return ECMD_FAILED;
+		}
+		archived = 1;
+		doit += lvchange_recovery_rate(lv);
 		docmds++;
 	}
 

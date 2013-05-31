@@ -576,6 +576,25 @@ static int _read_raid_params(struct lvcreate_params *lp,
 		return 0;
 	}
 
+	if (arg_count(cmd, minrecoveryrate_ARG))
+		lp->min_recovery_rate = arg_uint_value(cmd,
+						       minrecoveryrate_ARG, 0);
+	if (arg_count(cmd, maxrecoveryrate_ARG))
+		lp->max_recovery_rate = arg_uint_value(cmd,
+						       maxrecoveryrate_ARG, 0);
+
+	/* Rates are recorded in kiB/sec/disk, not sectors/sec/disk */
+	lp->min_recovery_rate /= 2;
+	lp->max_recovery_rate /= 2;
+	log_error("min = %u, max = %u",
+		  lp->min_recovery_rate,
+		  lp->max_recovery_rate);
+
+	if (lp->max_recovery_rate &&
+	    (lp->max_recovery_rate < lp->min_recovery_rate)) {
+		log_error("Minumum recovery rate cannot be higher than maximum.");
+		return 0;
+	}
 	return 1;
 }
 

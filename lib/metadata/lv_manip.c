@@ -4721,6 +4721,9 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 			stack;
 			goto revert_new_lv;
 		}
+	} else if (seg_is_raid(lp)) {
+		first_seg(lv)->min_recovery_rate = lp->min_recovery_rate;
+		first_seg(lv)->max_recovery_rate = lp->max_recovery_rate;
 	}
 
 	/* FIXME Log allocation and attachment should have happened inside lv_extend. */

@@ -113,6 +113,14 @@ static uint32_t _writebehind(const struct logical_volume *lv) {
 	return first_seg(lv)->writebehind;
 }
 
+static uint32_t _minrecoveryrate(const struct logical_volume *lv) {
+	return first_seg(lv)->min_recovery_rate;
+}
+
+static uint32_t _maxrecoveryrate(const struct logical_volume *lv) {
+	return first_seg(lv)->max_recovery_rate;
+}
+
 static percent_t _snap_percent(const struct logical_volume *lv) {
 	percent_t perc;
 
@@ -219,6 +227,10 @@ GET_LV_NUM_PROPERTY_FN(mismatches, _mismatches(lv))
 #define _mismatches_set _not_implemented_set
 GET_LV_NUM_PROPERTY_FN(writebehind, _writebehind(lv))
 #define _writebehind_set _not_implemented_set
+GET_LV_NUM_PROPERTY_FN(minrecoveryrate, _minrecoveryrate(lv))
+#define _minrecoveryrate_set _not_implemented_set
+GET_LV_NUM_PROPERTY_FN(maxrecoveryrate, _maxrecoveryrate(lv))
+#define _maxrecoveryrate_set _not_implemented_set
 GET_LV_STR_PROPERTY_FN(syncaction, _sync_action(lv))
 #define _syncaction_set _not_implemented_set
 GET_LV_STR_PROPERTY_FN(move_pv, lv_move_pv_dup(lv->vg->vgmem, lv))

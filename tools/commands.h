@@ -84,6 +84,8 @@ xx(lvchange,
    "\t[--monitor {y|n}]\n"
    "\t[--poll {y|n}]\n"
    "\t[--noudevsync]\n"
+   "\t[--minrecoveryrate Rate]\n"
+   "\t[--maxrecoveryrate Rate]\n"
    "\t[-M|--persistent y|n] [--major major] [--minor minor]\n"
    "\t[-P|--partial] " "\n"
    "\t[-p|--permission r|rw]\n"
@@ -95,7 +97,7 @@ xx(lvchange,
    "\t[-t|--test]\n"
    "\t[-v|--verbose]\n"
    "\t[--version]\n"
-   "\t[--writebehind BehindCount\n"
+   "\t[--writebehind BehindCount]\n"
    "\t[--writemostly PhysicalVolume]\n"
    "\t[-y|--yes]\n"
    "\t[-Z|--zero {y|n}]\n"
@@ -103,7 +105,8 @@ xx(lvchange,
 
    alloc_ARG, autobackup_ARG, activate_ARG, available_ARG, contiguous_ARG,
    discards_ARG, force_ARG, ignorelockingfailure_ARG, ignoremonitoring_ARG,
-   major_ARG, minor_ARG, monitor_ARG, noudevsync_ARG, partial_ARG,
+   major_ARG, minor_ARG, monitor_ARG, minrecoveryrate_ARG, maxrecoveryrate_ARG,
+   noudevsync_ARG, partial_ARG,
    permission_ARG, persistent_ARG, poll_ARG, readahead_ARG, resync_ARG,
    refresh_ARG, addtag_ARG, deltag_ARG, syncaction_ARG, sysinit_ARG, test_ARG,
    writebehind_ARG, writemostly_ARG, zero_ARG)
@@ -194,6 +197,8 @@ xx(lvcreate,
    "\t -L|--size LogicalVolumeSize[bBsSkKmMgGtTpPeE]}\n"
    "\t[-M|--persistent {y|n}] [--major major] [--minor minor]\n"
    "\t[-m|--mirrors Mirrors [--nosync] [{--mirrorlog {disk|core|mirrored}|--corelog}]]\n"
+   "\t[--minrecoveryrate Rate]\n"
+   "\t[--maxrecoveryrate Rate]\n"
    "\t[-n|--name LogicalVolumeName]\n"
    "\t[--noudevsync]\n"
    "\t[-p|--permission {r|rw}]\n"
@@ -244,7 +249,8 @@ xx(lvcreate,
    addtag_ARG, alloc_ARG, autobackup_ARG, activate_ARG, available_ARG,
    chunksize_ARG, contiguous_ARG, corelog_ARG, discards_ARG, extents_ARG,
    ignoremonitoring_ARG, major_ARG, minor_ARG, mirrorlog_ARG, mirrors_ARG,
-   monitor_ARG, name_ARG, nosync_ARG, noudevsync_ARG, permission_ARG,
+   monitor_ARG, minrecoveryrate_ARG, maxrecoveryrate_ARG, name_ARG, nosync_ARG,
+   noudevsync_ARG, permission_ARG,
    persistent_ARG, readahead_ARG, regionsize_ARG, size_ARG, snapshot_ARG,
    stripes_ARG, stripesize_ARG, test_ARG, thin_ARG, thinpool_ARG, type_ARG,
    virtualoriginsize_ARG, poolmetadatasize_ARG, virtualsize_ARG, zero_ARG)
