@@ -12,12 +12,12 @@
 . lib/test
 
 test -e LOCAL_CLVMD && skip
+aux target_at_least dm-raid 1 1 0 || skip
 
 aux lvmconf 'allocation/maximise_cling = 0'
 aux lvmconf 'allocation/mirror_logs_require_separate_pvs = 1'
 
 aux prepare_vg 8
-aux target_at_least dm-raid 1 1 0
 
 # RAID5 single replace
 lvcreate --type raid5 -i 2 -l 2 -n $lv1 $vg "$dev1" "$dev2" "$dev3"
