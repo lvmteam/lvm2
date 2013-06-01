@@ -28,10 +28,6 @@ lvresize -l+64 -i3 -I64 $vg/$lv1
 lvresize -l+64 -i3 -I128 $vg/$lv1
 
 #lvcreate -l100%FREE -i3 -I64 --alloc anywhere $vg
-
-dmsetup table
-
-vgcfgbackup -f /tmp/vg $vg
 vgremove -f $vg
 
 # 15 extents
@@ -51,7 +47,6 @@ check vg_field $vg vg_free_count 2
 
 lvreduce -f -l50%LV $vg/$lv1
 vgremove -f $vg
-
 
 vgcreate -s 4M $vg "$dev1" "$dev2" "$dev3"
 
