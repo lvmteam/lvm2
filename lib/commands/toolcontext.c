@@ -1653,7 +1653,7 @@ void destroy_toolcontext(struct cmd_context *cmd)
 	FILE *new_stream;
 
 	if (cmd->dump_filter && cmd->filter && cmd->filter->dump)
-		cmd->filter->dump(cmd->filter);
+		cmd->filter->dump(cmd->filter, 1);
 
 	archive_exit(cmd);
 	backup_exit(cmd);

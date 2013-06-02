@@ -1,7 +1,7 @@
 Version 2.02.99 - 
 ===================================
   Do not use persistent filter with lvmetad.
-  Update persistent filter functinality for global filter.
+  Composable persistent filter functionality for global filter.
   Override system's global_filter settings for vgimportclone.
   Detect maximum usable size for snapshot for lvresize.
   Creation of snapshot takes at most 100% origin coverage.

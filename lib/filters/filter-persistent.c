@@ -179,7 +179,7 @@ static void _write_array(struct pfilter *pf, FILE *fp, const char *path,
 		fprintf(fp, "\n\t]\n");
 }
 
-int persistent_filter_dump(struct dev_filter *f, int merge_existing)
+static int _persistent_filter_dump(struct dev_filter *f, int merge_existing)
 {
 	struct pfilter *pf;
 	char *tmp_file;
@@ -272,11 +272,6 @@ out:
 		config_file_destroy(cft);
 
 	return r;
-}
-
-static void _dump(struct dev_filter *f)
-{
-	persistent_filter_dump(f, 1);
 }
 
 static int _lookup_p(struct dev_filter *f, struct device *dev)
@@ -372,7 +367,7 @@ struct dev_filter *persistent_filter_create(struct dev_filter *real,
 	f->use_count = 0;
 	f->private = pf;
 	f->wipe = _persistent_filter_wipe;
-	f->dump = _dump;
+	f->dump = _persistent_filter_dump;
 
 	return f;
 

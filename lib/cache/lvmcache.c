@@ -707,8 +707,9 @@ int lvmcache_label_scan(struct cmd_context *cmd, int full_scan)
 	 * If we are a long-lived process, write out the updated persistent
 	 * device cache for the benefit of short-lived processes.
 	 */
-	if (full_scan == 2 && cmd->is_long_lived && cmd->dump_filter)
-		persistent_filter_dump(cmd->filter, 0);
+	if (full_scan == 2 && cmd->is_long_lived &&
+	    cmd->dump_filter && cmd->filter && cmd->filter->dump)
+		cmd->filter->dump(cmd->filter, 0);
 
 	r = 1;
 

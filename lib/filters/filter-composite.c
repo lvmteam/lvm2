@@ -49,15 +49,24 @@ static void _composite_destroy(struct dev_filter *f)
 	dm_free(f);
 }
 
-static void _dump(struct dev_filter *f)
+static void _dump(struct dev_filter *f, int merge_existing)
 {
 	struct dev_filter **filters = (struct dev_filter **) f->private;
 
 	while (*filters) {
 		if ((*filters)->dump)
-			(*filters)->dump(*filters);
+			(*filters)->dump(*filters, merge_existing);
 		filters++;
 	}
+}
+
+static void _wipe(struct dev_filter *f)
+{
+	struct dev_filter **filters;
+
+	for (filters = f->private; *filters; filters++)
+		if ((*filters)->wipe)
+			(*filters)->wipe(*filters);
 }
 
 struct dev_filter *composite_filter_create(int n, struct dev_filter **filters)
@@ -84,6 +93,7 @@ struct dev_filter *composite_filter_create(int n, struct dev_filter **filters)
 	cft->passes_filter = _and_p;
 	cft->destroy = _composite_destroy;
 	cft->dump = _dump;
+	cft->wipe = _wipe;
 	cft->use_count = 0;
 	cft->private = filters_copy;
 
