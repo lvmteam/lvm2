@@ -310,7 +310,7 @@ static void run(int i, char *f) {
 		char buf[128];
 		snprintf(buf, 128, "%s ...", f);
 		buf[127] = 0;
-		printf("Running %-50s ", buf);
+		printf("Running %-60s ", buf);
 		fflush(stdout);
 		char outpath[512];
 		sprintf(outpath, "results/%s.txt", f);
