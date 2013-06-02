@@ -26,7 +26,7 @@ struct dev_filter {
 	int (*passes_filter) (struct dev_filter * f, struct device * dev);
 	void (*destroy) (struct dev_filter * f);
 	void (*wipe) (struct dev_filter * f);
-	void (*dump) (struct dev_filter * f, int merge_existing);
+	int (*dump) (struct dev_filter * f, int merge_existing);
 	void *private;
 	unsigned use_count;
 };

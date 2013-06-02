@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2006 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2013 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -49,15 +49,16 @@ static void _composite_destroy(struct dev_filter *f)
 	dm_free(f);
 }
 
-static void _dump(struct dev_filter *f, int merge_existing)
+static int _dump(struct dev_filter *f, int merge_existing)
 {
-	struct dev_filter **filters = (struct dev_filter **) f->private;
+	struct dev_filter **filters;
 
-	while (*filters) {
-		if ((*filters)->dump)
-			(*filters)->dump(*filters, merge_existing);
-		filters++;
-	}
+	for (filters = (struct dev_filter **) f->private; *filters; ++filters)
+		if ((*filters)->dump &&
+		    !(*filters)->dump(*filters, merge_existing))
+			return_0;
+
+	return 1;
 }
 
 static void _wipe(struct dev_filter *f)

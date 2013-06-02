@@ -708,8 +708,9 @@ int lvmcache_label_scan(struct cmd_context *cmd, int full_scan)
 	 * device cache for the benefit of short-lived processes.
 	 */
 	if (full_scan == 2 && cmd->is_long_lived &&
-	    cmd->dump_filter && cmd->filter && cmd->filter->dump)
-		cmd->filter->dump(cmd->filter, 0);
+	    cmd->dump_filter && cmd->filter && cmd->filter->dump &&
+	    !cmd->filter->dump(cmd->filter, 0))
+		stack;
 
 	r = 1;
 

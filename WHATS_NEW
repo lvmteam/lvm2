@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Report backtrace from dump filter error path.
   Do not use persistent filter with lvmetad.
   Composable persistent filter functionality for global filter.
   Override system's global_filter settings for vgimportclone.
