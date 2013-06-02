@@ -64,7 +64,7 @@ static void _wipe(struct dev_filter *f)
 {
 	struct dev_filter **filters;
 
-	for (filters = f->private; *filters; filters++)
+	for (filters = (struct dev_filter **) f->private; *filters; filters++)
 		if ((*filters)->wipe)
 			(*filters)->wipe(*filters);
 }
