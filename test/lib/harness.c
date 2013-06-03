@@ -41,7 +41,7 @@ struct stats {
 static struct stats s;
 
 static char *readbuf = NULL;
-static int readbuf_sz = 0, readbuf_used = 0;
+static size_t readbuf_sz = 0, readbuf_used = 0;
 
 static int die = 0;
 static int verbose = 0; /* >1 with timestamps */
@@ -57,11 +57,14 @@ struct subst {
 
 static struct subst subst[2];
 
-#define PASSED 0
-#define SKIPPED 1
-#define FAILED 2
-#define WARNED 3
-#define KNOWNFAIL 4
+enum {
+	UNKNOWN,
+	PASSED,
+	SKIPPED,
+	FAILED,
+	WARNED,
+	KNOWNFAIL,
+};
 
 static void handler( int sig ) {
 	signal( sig, SIG_DFL );
@@ -121,18 +124,18 @@ static int outline(FILE *out, char *buf, int start, int force) {
 static void dump(void) {
 	int counter_last = -1, counter = 0;
 
-	while ( counter < readbuf_used && counter != counter_last ) {
+	while ((counter < (int) readbuf_used) && (counter != counter_last)) {
 		counter_last = counter;
 		counter = outline( stdout, readbuf, counter, 1 );
 	}
 }
 
 static void trickle(FILE *out, int *last, int *counter) {
-	if (*last > readbuf_used) {
+	if (*last > (int) readbuf_used) {
 		*last = -1;
 		*counter = 0;
 	}
-	while ( *counter < readbuf_used && *counter != *last ) {
+	while ((*counter < (int) readbuf_used) && (*counter != *last)) {
 		*last = *counter;
 		*counter = outline( out, readbuf, *counter, 1 );
 	}
@@ -281,6 +284,8 @@ static void failed(int i, char *f, int st) {
 }
 
 static void run(int i, char *f) {
+	char flavour[512], script[512];
+
 	pid = fork();
 	if (pid < 0) {
 		perror("Fork failed.");
@@ -293,7 +298,6 @@ static void run(int i, char *f) {
 			close(fds[0]);
 			close(fds[1]);
 		}
-		char flavour[512], script[512];
 		if (strchr(f, ':')) {
 			strcpy(flavour, f);
 			*strchr(flavour, ':') = 0;
@@ -426,6 +430,7 @@ int main(int argc, char **argv) {
 			case SKIPPED:
 				printf("skipped: %s\n", argv[i]);
 				break;
+			default: /* do nothing */ ;
 			}
 		}
 		printf("\n");
