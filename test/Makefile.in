@@ -1,4 +1,4 @@
-# Copyright (C) 2007-2012 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2007-2013 Red Hat, Inc. All rights reserved.
 #
 # This file is part of LVM2.
 #
@@ -24,6 +24,7 @@ abs_builddir = "@abs_builddir@"
 abs_top_builddir = "@abs_top_builddir@"
 abs_top_srcdir = "@abs_top_srcdir@"
 
+LVM_TEST_RESULTS ?= results
 SUBDIRS = api unit
 SOURCES = lib/not.c lib/harness.c
 
@@ -61,6 +62,7 @@ help:
 	@echo "  LVM_TEST_LVMETAD	Start lvmetad (1)."
 	@echo "  LVM_TEST_NODEBUG	Do not debug lvm commands."
 	@echo "  LVM_TEST_PARALLEL	May skip agresive wipe of LVMTEST resources."
+	@echo "  LVM_TEST_RESULTS	Where to create result files [results]."
 	@echo "  LVM_VERIFY_UDEV	Default verify state for lvm.conf."
 	@echo "  S			Skip given test (regex)."
 	@echo "  T			Run given test (regex)."
@@ -122,7 +124,7 @@ CMDS = lvm $(shell cat $(top_builddir)/tools/.commands)
 			ln -sf $(abs_top_srcdir)/test/$$f $$f; \
 		done; \
 	fi
-	mkdir -p results
+	$(MKDIR_P) -m a=rwx $(LVM_TEST_RESULTS)
 	touch $@
 
 .lib-dir-stamp:
@@ -138,6 +140,7 @@ CMDS = lvm $(shell cat $(top_builddir)/tools/.commands)
 
 clean:
 	test "$(srcdir)" = . || $(RM) $(RUN_BASE)
+	$(RM) -r $(LVM_TEST_RESULTS)
 
 CLEAN_TARGETS += .lib-dir-stamp .tests-stamp $(LIB) $(addprefix lib/,$(CMDS)) \
 	lib/clvmd lib/dmeventd lib/dmsetup lib/lvmetad lib/fsadm lib/vgimportclone

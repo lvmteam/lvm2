@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <sys/time.h>
+#include <limits.h>
 
 static pid_t pid;
 static int fds[2];
@@ -45,6 +46,7 @@ static int readbuf_sz = 0, readbuf_used = 0;
 static int die = 0;
 static int verbose = 0; /* >1 with timestamps */
 static int interactive = 0; /* disable all redirections */
+static const char *results;
 
 static FILE *outfile = NULL;
 
@@ -308,45 +310,48 @@ static void run(int i, char *f) {
 		int st, w;
 		time_t start = time(NULL);
 		char buf[128];
-		snprintf(buf, 128, "%s ...", f);
-		buf[127] = 0;
+		char outpath[PATH_MAX];
+		char *c = outpath + strlen(results) + 1;
+		snprintf(buf, sizeof(buf), "%s ...", f);
 		printf("Running %-60s ", buf);
 		fflush(stdout);
-		char outpath[512];
-		sprintf(outpath, "results/%s.txt", f);
-		while (strchr(outpath + 8, '/'))
-			*strchr(outpath + 8, '/') = '_';
-		outfile = fopen(outpath, "w");
-		while ((w = waitpid(pid, &st, WNOHANG)) == 0) {
-			drain();
-			usleep(20000);
-		}
-		if (w != pid) {
-			perror("waitpid");
-			exit(206);
-		}
-		drain();
-		if (WIFEXITED(st)) {
-			if (WEXITSTATUS(st) == 0) {
-				passed(i, f, start);
-			} else if (WEXITSTATUS(st) == 200) {
-				skipped(i, f);
-			} else {
-				failed(i, f, st);
+		snprintf(outpath, sizeof(outpath), "%s/%s.txt", results, f);
+		while ((c = strchr(c, '/')))
+			*c = '_';
+		if ((outfile = fopen(outpath, "w"))) {
+			while ((w = waitpid(pid, &st, WNOHANG)) == 0) {
+				drain();
+				usleep(20000);
 			}
-		} else {
-			failed(i, f, st);
+			if (w != pid) {
+				perror("waitpid");
+				exit(206);
+			}
+			drain();
+			if (WIFEXITED(st)) {
+				if (WEXITSTATUS(st) == 0)
+					passed(i, f, start);
+				else if (WEXITSTATUS(st) == 200)
+					skipped(i, f);
+				else
+					failed(i, f, st);
+			} else
+				failed(i, f, st);
+
+			clear();
+			fclose(outfile);
 		}
-		clear();
-		fclose(outfile);
 	}
 }
 
 int main(int argc, char **argv) {
+	char results_list[PATH_MAX];
+	const char *result;
 	const char *be_verbose = getenv("VERBOSE"),
 		   *be_interactive = getenv("INTERACTIVE");
 	time_t start = time(NULL);
 	int i;
+	FILE *list;
 
 	if (argc >= MAX) {
 		fprintf(stderr, "Sorry, my head exploded. Please increase MAX.\n");
@@ -358,6 +363,10 @@ int main(int argc, char **argv) {
 
 	if (be_interactive)
 		interactive = atoi(be_interactive);
+
+	if (!(results = getenv("LVM_TEST_RESULTS")))
+		results = "results";
+	snprintf(results_list, sizeof(results_list), "%s/list", results);
 
 	if (socketpair(PF_UNIX, SOCK_STREAM, 0, fds)) {
 		perror("socketpair");
@@ -389,18 +398,20 @@ int main(int argc, char **argv) {
 	       s.npassed, s.nwarned, s.nfailed, s.nknownfail, s.nskipped);
 
 	/* dump a list to results */
-	FILE *list = fopen("results/list", "w");
-	for (i = 1; i < argc; ++ i) {
-		const char *result = "unknown";
-		switch (s.status[i]) {
-		case PASSED: result = "passed"; break;
-		case FAILED: result = "failed"; break;
-		case SKIPPED: result = "skipped"; break;
-		case WARNED: result = "warnings"; break;
+	if ((list = fopen(results_list, "w"))) {
+		for (i = 1; i < argc; ++ i) {
+			switch (s.status[i]) {
+			case PASSED: result = "passed"; break;
+			case FAILED: result = "failed"; break;
+			case SKIPPED: result = "skipped"; break;
+			case WARNED: result = "warnings"; break;
+			default: result = "unknown"; break;
+			}
+			fprintf(list, "%s %s\n", argv[i], result);
 		}
-		fprintf(list, "%s %s\n", argv[i], result);
-	}
-	fclose(list);
+		fclose(list);
+	} else
+		perror("fopen result");
 
 	/* print out a summary */
 	if (s.nfailed || s.nskipped || s.nknownfail) {
