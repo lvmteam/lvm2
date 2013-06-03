@@ -20,13 +20,11 @@
 
 static int _and_p(struct dev_filter *f, struct device *dev)
 {
-	struct dev_filter **filters = (struct dev_filter **) f->private;
+	struct dev_filter **filters;
 
-	while (*filters) {
+	for (filters = (struct dev_filter **) f->private; *filters; ++filters)
 		if (!(*filters)->passes_filter(*filters, dev))
-			return 0;
-		filters++;
-	}
+			return_0;
 
 	log_debug_devs("Using %s", dev_name(dev));
 
@@ -35,15 +33,13 @@ static int _and_p(struct dev_filter *f, struct device *dev)
 
 static void _composite_destroy(struct dev_filter *f)
 {
-	struct dev_filter **filters = (struct dev_filter **) f->private;
+	struct dev_filter **filters;
 
 	if (f->use_count)
 		log_error(INTERNAL_ERROR "Destroying composite filter while in use %u times.", f->use_count);
 
-	while (*filters) {
+	for (filters = (struct dev_filter **) f->private; *filters; ++filters)
 		(*filters)->destroy(*filters);
-		filters++;
-	}
 
 	dm_free(f->private);
 	dm_free(f);
@@ -65,7 +61,7 @@ static void _wipe(struct dev_filter *f)
 {
 	struct dev_filter **filters;
 
-	for (filters = (struct dev_filter **) f->private; *filters; filters++)
+	for (filters = (struct dev_filter **) f->private; *filters; ++filters)
 		if ((*filters)->wipe)
 			(*filters)->wipe(*filters);
 }
@@ -78,7 +74,7 @@ struct dev_filter *composite_filter_create(int n, struct dev_filter **filters)
 		return_NULL;
 
 	if (!(filters_copy = dm_malloc(sizeof(*filters) * (n + 1)))) {
-		log_error("composite filters allocation failed");
+		log_error("Composite filters allocation failed.");
 		return NULL;
 	}
 
@@ -86,7 +82,7 @@ struct dev_filter *composite_filter_create(int n, struct dev_filter **filters)
 	filters_copy[n] = NULL;
 
 	if (!(cft = dm_zalloc(sizeof(*cft)))) {
-		log_error("compsoite filters allocation failed");
+		log_error("Composite filters allocation failed.");
 		dm_free(filters_copy);
 		return NULL;
 	}
