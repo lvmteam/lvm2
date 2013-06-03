@@ -38,6 +38,9 @@ endif
 
 SUBDIRS += scripts
 
+ifeq ($(MAKECMDGOALS),clean)
+  SUBDIRS += test
+endif
 # FIXME Should use intermediate Makefiles here!
 ifeq ($(MAKECMDGOALS),distclean)
   SUBDIRS = doc include man test scripts \
