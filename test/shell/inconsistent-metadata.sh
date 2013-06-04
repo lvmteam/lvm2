@@ -43,7 +43,7 @@ not grep "Inconsistent metadata found for VG $vg" cmd.out
 check
 
 # only vgscan would have noticed metadata inconsistencies when lvmetad is active
-if !test -e LOCAL_LVMETAD; then
+if test ! -e LOCAL_LVMETAD; then
 	# vgdisplay fixes
 	init
 	vgdisplay $vg 2>&1 | tee cmd.out
@@ -77,4 +77,5 @@ aux backup_dev "$dev2"
 vgcreate $vg "$dev1"
 vgextend $vg "$dev2"
 aux restore_dev "$dev2"
+vgscan $cache
 should check compare_fields vgs $vg vg_mda_count pvs "$dev2" vg_mda_count
