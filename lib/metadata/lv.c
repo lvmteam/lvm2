@@ -617,7 +617,7 @@ char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 		repstr[5] = '-';
 	}
 
-	if (lv_is_thin_type(lv))
+	if (lv_is_thin_pool(lv) || lv_is_thin_volume(lv))
 		repstr[6] = 't';
 	else if (lv_is_raid_type(lv))
 		repstr[6] = 'r';
