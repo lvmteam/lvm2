@@ -386,25 +386,27 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 		return ECMD_FAILED;
 	}
 
-	if (lv_is_external_origin(lvl->lv)) {
+	lv = lvl->lv;
+
+	if (lv_is_external_origin(lv)) {
 		/*
 		 * Since external-origin can be activated read-only,
 		 * there is no way to use extended areas.
 		 */
-		log_error("Cannot resize external origin \"%s\".", lvl->lv->name);
+		log_error("Cannot resize external origin \"%s\".", lv->name);
 		return EINVALID_CMD_LINE;
 	}
 
-	if (lvl->lv->status & (RAID_IMAGE | RAID_META)) {
+	if (lv->status & (RAID_IMAGE | RAID_META)) {
 		log_error("Cannot resize a RAID %s directly",
-			  (lvl->lv->status & RAID_IMAGE) ? "image" :
+			  (lv->status & RAID_IMAGE) ? "image" :
 			  "metadata area");
 		return ECMD_FAILED;
 	}
 
-	if (lv_is_raid_with_tracking(lvl->lv)) {
+	if (lv_is_raid_with_tracking(lv)) {
 		log_error("Cannot resize %s while it is tracking a split image",
-			  lvl->lv->name);
+			  lv->name);
 		return ECMD_FAILED;
 	}
 
@@ -429,8 +431,6 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 	if (arg_count(cmd, stripesize_ARG) &&
 	    !_validate_stripesize(cmd, vg, lp))
 		return EINVALID_CMD_LINE;
-
-	lv = lvl->lv;
 
 	if (use_policy) {
 		if (!lv_is_cow(lv) &&
@@ -817,7 +817,7 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 
 	log_print_unless_silent("%sing logical volume %s to %s",
 				(lp->resize == LV_REDUCE) ? "Reduc" : "Extend",
-				lp->lv_name,
+				lv->name,
 				display_size(cmd, (uint64_t) lp->extents * vg->extent_size));
 
 	if (lp->resize == LV_REDUCE) {
@@ -848,7 +848,7 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 		lock_lv = lv;
 
 	if (!suspend_lv(cmd, lock_lv)) {
-		log_error("Failed to suspend %s", lp->lv_name);
+		log_error("Failed to suspend %s", lock_lv->name);
 		vg_revert(vg);
 		backup(vg);
 		return ECMD_FAILED;
@@ -863,7 +863,7 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 	}
 
 	if (!resume_lv(cmd, lock_lv)) {
-		log_error("Problem reactivating %s", lp->lv_name);
+		log_error("Problem reactivating %s", lock_lv->name);
 		backup(vg);
 		return ECMD_FAILED;
 	}
