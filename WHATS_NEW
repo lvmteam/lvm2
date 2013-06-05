@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Report lvs volume type 'o' also for external origin volumes.
   Report lvs target type 't' only for thin pools and thin volumes.
   Fix test for active snapshot in cluster before resizing it.
   Report backtrace from dump filter error path.

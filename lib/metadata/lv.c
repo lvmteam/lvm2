@@ -534,7 +534,7 @@ char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 	else if (lv->status & CONVERTING)
 		repstr[0] = 'c';
 	/* Origin takes precedence over mirror and thin volume */
-	else if (lv_is_origin(lv))
+	else if (lv_is_origin(lv) || lv_is_external_origin(lv))
 		repstr[0] = (lv_is_merging_origin(lv)) ? 'O' : 'o';
 	else if (lv->status & RAID)
 		repstr[0] = (lv->status & LV_NOTSYNCED) ? 'R' : 'r';
