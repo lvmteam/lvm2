@@ -1538,7 +1538,26 @@ lv_create_params_t lvm_lv_params_create_thin_pool(vg_t vg,
 			LVM_THIN_DISCARDS_PASSDOWN)
 
 
-
+/**
+ * Creates the snapshot parameter passing object for the specified lv.
+ *
+ * \param	lv
+ * The logical volume to snapshot
+ *
+ * \param	snap_name
+ * Name of snapshot
+ *
+ * \param	max_snap_size
+ * Used for old snap shots max size, set to zero for thinp
+ *
+ * \return
+ * Valid lv_create_params pointer on success, else NULL on error.
+ * Note: Memory is associated with the vg, it will get reclaimed when vg is
+ * closed.
+ */
+lv_create_params_t lvm_lv_params_create_snapshot(const lv_t lv,
+													const char *snap_name,
+													uint64_t max_snap_size);
 /**
  * Get the specific value of a lv create parameter by name
  *

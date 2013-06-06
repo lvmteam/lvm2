@@ -347,41 +347,16 @@ int lvm_lv_resize(const lv_t lv, uint64_t new_size)
 	return 0;
 }
 
-lv_t lvm_lv_snapshot(const lv_t lv, const char *snap_name, uint64_t max_snap_size)
+lv_t lvm_lv_snapshot(const lv_t lv, const char *snap_name,
+						uint64_t max_snap_size)
 {
-	struct lvcreate_params lp = { 0 };
-	uint64_t extents = 0;
-	uint64_t size = 0;
-	struct lv_list *lvl = NULL;
+	struct lvm_lv_create_params *lvcp = NULL;
 
-	if (vg_read_error(lv->vg))
-		return NULL;
-	if (!vg_check_write_mode(lv->vg))
-		return NULL;
-
-	size = max_snap_size >> SECTOR_SHIFT;
-
-	if (!(extents = extents_from_size(lv->vg->cmd, size,
-					  lv->vg->extent_size))) {
-		log_error("Unable to create LV snapshot without size.");
-		return NULL;
+	lvcp = lvm_lv_params_create_snapshot(lv, snap_name, max_snap_size);
+	if (lvcp) {
+		return lvm_lv_create(lvcp);
 	}
-
-	_lv_set_default_params(&lp, lv->vg, snap_name, extents);
-
-	/* Fill out required default input values */
-	lp.snapshot = 1;
-	lp.segtype = _get_segtype(lv->vg->cmd);
-	lp.stripes = 1;
-	lp.origin = lv->name;
-
-	if (!lp.segtype)
-		return_NULL;
-	if (!lv_create_single(lv->vg, &lp))
-		return_NULL;
-	if (!(lvl = find_lv_in_vg(lv->vg, snap_name)))
-		return NULL;
-	return (lv_t) lvl->lv;
+	return NULL;
 }
 
 /* Set defaults for thin pool specific LV parameters */
@@ -495,6 +470,67 @@ static void _lv_set_thin_params(struct lvcreate_params *lp,
 
 	lp->stripes = 1;
 }
+
+lv_create_params_t lvm_lv_params_create_snapshot(const lv_t lv,
+													const char *snap_name,
+													uint64_t max_snap_size)
+{
+	uint64_t size = 0;
+	uint64_t extents = 0;
+	struct lvm_lv_create_params *lvcp = NULL;
+
+	if (vg_read_error(lv->vg)) {
+		return NULL;
+	}
+
+	if (!vg_check_write_mode(lv->vg))
+			return NULL;
+
+	if (snap_name == NULL || !strlen(snap_name)) {
+		log_error("snap_name invalid");
+		return NULL;
+	}
+
+	if (max_snap_size) {
+		size = max_snap_size >> SECTOR_SHIFT;
+		extents = extents_from_size(lv->vg->cmd, size, lv->vg->extent_size);
+	}
+
+	if (!size && !lv_is_thin_volume(lv) ) {
+		log_error("Origin is not thin, specify size of snapshot");
+					return NULL;
+	}
+
+	lvcp = dm_pool_zalloc(lv->vg->vgmem, sizeof (struct lvm_lv_create_params));
+	if (lvcp) {
+		lvcp->vg = lv->vg;
+		_lv_set_default_params(&lvcp->lvp, lv->vg, snap_name, extents);
+		lvcp->lvp.snapshot = 1;
+
+
+		if (size) {
+			lvcp->lvp.segtype = _get_segtype(lvcp->vg->cmd);
+			lvcp->lvp.chunk_size = 8;
+		} else {
+			lvcp->lvp.segtype = get_segtype_from_string(lv->vg->cmd, "thin");
+
+			if (!lvcp->lvp.segtype) {
+				log_error(INTERNAL_ERROR "Segtype thin not found.");
+				return NULL;
+			}
+
+			lvcp->lvp.pool = first_seg(lv)->pool_lv->name;
+		}
+
+		lvcp->lvp.stripes = 1;
+		lvcp->lvp.origin = lv->name;
+
+		lvcp->magic = LV_CREATE_PARAMS_MAGIC;
+	}
+
+	return lvcp;
+}
+
 
 lv_create_params_t lvm_lv_params_create_thin(const vg_t vg, const char *pool_name,
 									const char *lvname, uint64_t size)
