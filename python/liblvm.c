@@ -1582,23 +1582,33 @@ liblvm_lvm_lv_list_lvsegs(lvobject *self)
 static PyObject *
 liblvm_lvm_lv_snapshot(lvobject *self, PyObject *args)
 {
-	const char *vgname;
-	uint64_t size;
+	const char *snap_name;
+	uint64_t size = 0;
 	lvobject *lvobj;
+	lv_create_params_t lvp = NULL;
 
 	LV_VALID(self);
 
-	if (!PyArg_ParseTuple(args, "sl", &vgname, &size)) {
+	if (!PyArg_ParseTuple(args, "s|K", &snap_name, &size)) {
 		return NULL;
 	}
 
 	if ((lvobj = PyObject_New(lvobject, &LibLVMlvType)) == NULL)
 		return NULL;
 
-	if ((lvobj->lv = lvm_lv_snapshot(self->lv, vgname, size)) == NULL) {
+	lvobj->parent_vgobj = NULL;
+
+	lvp = lvm_lv_params_create_snapshot(self->lv, snap_name, size);
+	if (lvp) {
+		if ((lvobj->lv = lvm_lv_create(lvp)) == NULL) {
+			PyErr_SetObject(LibLVMError, liblvm_get_last_error());
+			Py_DECREF(lvobj);
+			return NULL;
+		}
+	} else {
 		PyErr_SetObject(LibLVMError, liblvm_get_last_error());
-		Py_DECREF(lvobj);
-		return NULL;
+						Py_DECREF(lvobj);
+						return NULL;
 	}
 
 	lvobj->parent_vgobj = self->parent_vgobj;
