@@ -2,6 +2,7 @@
 #
 # chkconfig: - 22 78
 # description: Starts and stops cmirrord
+# pidfile: @CMIRRORD_PIDFILE@
 #
 # For Red-Hat-based distributions such as Fedora, RHEL, CentOS.
 #

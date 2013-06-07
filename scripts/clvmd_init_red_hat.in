@@ -4,6 +4,7 @@
 #
 # chkconfig: - 24 76
 # description: Cluster daemon for userland logical volume management tools.
+# pidfile: @CLVMD_PIDFILE@
 #
 # For Red-Hat-based distributions such as Fedora, RHEL, CentOS.
 #
