@@ -3557,20 +3557,18 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	/* store it on disks */
-	if (!vg_write(vg))
+	if (!vg_write(vg) || !vg_commit(vg))
 		return_0;
 
 	/* format1 */
-	if (format1_reload_required && !suspend_lv(cmd, format1_origin))
-		log_error("Failed to refresh %s without snapshot.", format1_origin->name);
+	if (format1_reload_required) {
+		if (!suspend_lv(cmd, format1_origin))
+			log_error("Failed to refresh %s without snapshot.", format1_origin->name);
 
-	if (!vg_commit(vg))
-		return_0;
- 
-	/* format1 */
-	if (format1_reload_required && !resume_lv(cmd, format1_origin)) {
-		log_error("Failed to resume %s.", format1_origin->name);
-		return 0;
+		if (!resume_lv(cmd, format1_origin)) {
+			log_error("Failed to resume %s.", format1_origin->name);
+			return 0;
+		}
 	}
 
 	/* Release unneeded blocks in thin pool */
