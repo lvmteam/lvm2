@@ -214,12 +214,15 @@ static int _lvresize_params(struct cmd_context *cmd, int argc, char **argv,
 		 * Allow omission of extents and size if the user has given us
 		 * one or more PVs.  Most likely, the intent was "resize this
 		 * LV the best you can with these PVs"
+		 * If only --poolmetadatasize is specified with list of PVs,
+		 * then metadata will be extended there.
 		 */
 		lp->sizeargs = arg_count(cmd, extents_ARG) + arg_count(cmd, size_ARG);
 		if ((lp->sizeargs == 0) && (argc >= 2)) {
 			lp->extents = 100;
 			lp->percent = PERCENT_PVS;
 			lp->sign = SIGN_PLUS;
+			lp->sizeargs = !lp->poolmetadatasize ? 1 : 0;
 		} else if ((lp->sizeargs != 1) &&
 			   ((lp->sizeargs == 2) ||
 			    !arg_count(cmd, poolmetadatasize_ARG))) {
@@ -429,8 +432,11 @@ static int _lvresize_poolmetadata(struct cmd_context *cmd, struct volume_group *
 		return 2;
 	}
 
+	if (!lp->sizeargs && !archive(vg))
+		return_0;
+
 	log_print_unless_silent("Extending logical volume %s to %s.",
-                                lv->name,
+				lv->name,
 				display_size(cmd, (uint64_t) extents * vg->extent_size));
 	mseg = last_seg(lv);
 	seg_mirrors = lv_mirror_count(lv);
@@ -575,7 +581,7 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 		return ECMD_FAILED;
 	}
 
-	if (lp->sizeargs || (pvh != &vg->pvs)) { /* TODO: reindent or move to function */
+	if (lp->sizeargs) { /* TODO: reindent or move to function */
 
 	switch(lp->percent) {
 		case PERCENT_VG:
@@ -953,6 +959,9 @@ metadata_resize:
 			return ECMD_PROCESSED;
 		lock_lv = lv;
 	}
+
+	if (!lock_lv)
+		return ECMD_PROCESSED; /* Nothing to do */
 
 	/* store vg on disk(s) */
 	if (!vg_write(vg)) {
