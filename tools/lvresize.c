@@ -530,7 +530,8 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 			return ECMD_FAILED;
 	}
 
-	if (!lv_is_visible(lv)) {
+	if (!lv_is_visible(lv) &&
+	    !lv_is_thin_pool_metadata(lv)) {
 		log_error("Can't resize internal logical volume %s", lv->name);
 		return ECMD_FAILED;
 	}
