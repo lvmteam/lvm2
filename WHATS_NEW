@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Add detection for thin pool metadata resize kernel support.
   Report lvs volume type 'e' with higher priority.
   Report lvs volume type 'o' also for external origin volumes.
   Report lvs target type 't' only for thin pools and thin volumes.

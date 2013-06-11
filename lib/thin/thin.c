@@ -562,6 +562,7 @@ static int _thin_target_present(struct cmd_context *cmd,
 		{ 1, 1, THIN_FEATURE_EXTERNAL_ORIGIN, "external_origin" },
 		{ 1, 4, THIN_FEATURE_BLOCK_SIZE, "block_size" },
 		{ 1, 5, THIN_FEATURE_DISCARDS_NON_POWER_2, "discards_non_power_2" },
+		{ 1, 8, THIN_FEATURE_METADATA_RESIZE, "metadata_resize" },
 	};
 
 	static const char _lvmconf[] = "global/thin_disabled_features";
