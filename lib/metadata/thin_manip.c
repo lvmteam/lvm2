@@ -309,6 +309,28 @@ int pool_is_active(const struct logical_volume *lv)
 	return 0;
 }
 
+int pool_can_resize_metadata(const struct logical_volume *lv)
+{
+	static unsigned attr = 0U;
+	struct lv_segment *seg;
+
+	if (!lv_is_thin_pool(lv)) {
+		log_error(INTERNAL_ERROR "LV %s is not thin pool.", lv->name);
+		return 0;
+	}
+
+	seg = first_seg(lv);
+	if ((attr == 0U) && activation() && seg->segtype &&
+	    seg->segtype->ops->target_present &&
+	    !seg->segtype->ops->target_present(lv->vg->cmd, NULL, &attr)) {
+		log_error("%s: Required device-mapper target(s) not "
+			  "detected in your kernel", seg->segtype->name);
+		return 0;
+	}
+
+	return (attr & THIN_FEATURE_METADATA_RESIZE) ? 1 : 0;
+}
+
 int pool_below_threshold(const struct lv_segment *pool_seg)
 {
 	percent_t percent;
@@ -350,6 +372,16 @@ struct lv_segment *find_pool_seg(const struct lv_segment *seg)
 	}
 
 	return pool_seg;
+}
+
+struct logical_volume *find_pool_lv(struct logical_volume *lv)
+{
+	struct lv_segment *seg;
+
+	if (!(seg = find_pool_seg(first_seg(lv))))
+		return_NULL;
+
+	return seg->lv;
 }
 
 /*

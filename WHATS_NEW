@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Add helper functions find_pool_lv() and pool_can_resize_metadata().
   Add detection for thin pool metadata resize kernel support.
   Report lvs volume type 'e' with higher priority.
   Report lvs volume type 'o' also for external origin volumes.
