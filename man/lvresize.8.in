@@ -11,6 +11,8 @@ lvresize \- resize a logical volume
 .RI [ + | \- ] LogicalExtentsNumber [ % { VG | LV | PVS | FREE | ORIGIN "}] |"
 .RB [ \-L | \-\-size
 .RI [ + | \- ] LogicalVolumeSize [ bBsSkKmMgGtTpPeE ]}
+.RB [ \-\-poolmetadatasize
+.RI [ + ] MetadataVolumeSize [ bBsSkKmMgG ]
 .RB [ \-f | \-\-force ]
 .RB [ \-n | \-\-nofsck ]
 .RB [ \-r | \-\-resizefs ]
@@ -72,6 +74,13 @@ Gives the number of stripes to use when extending a Logical Volume.
 Defaults to whatever the last segment of the Logical Volume uses.
 Not applicable to LVs using the original metadata LVM format, which must
 use a single value throughout.
+.TP
+.IR \fB\-\-poolmetadatasize " [" + ] MetadataVolumeSize [ bBsSkKmMgG ]
+Change or set the thin pool metadata logical volume size.
+With the \fI+\fP sign the value is added to the actual size
+of the metadata volume and rounded to the full extent size
+and without it, the value is taken as an absolute one.
+Maximal size is 16GiB. Default unit is megabytes.
 .TP
 .BR \-I ", " \-\-stripesize " " \fIStripeSize
 Gives the number of kilobytes for the granularity of the stripes.

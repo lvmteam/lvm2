@@ -61,7 +61,7 @@ lvcreate \- create a logical volume in an existing volume group
 .RB [ \-\-discards
 .RI { ignore | nopassdown | passdown }]
 .RB [ \-\-poolmetadatasize
-.IR ThinPoolMetadataSize [ bBsSkKmMgG ]]]
+.IR MetadataVolumeSize [ bBsSkKmMgG ]]]
 .RB [ \-\-thinpool
 .IR ThinPoolLogicalVolume { Name | Path }
 .RB [ \-s | \-\-snapshot
@@ -271,7 +271,7 @@ Sets access permissions to read only (\fIr\fP) or read and write (\fIrw\fP).
 .br
 Default is read and write.
 .TP
-.IR \fB\-\-poolmetadatasize " " ThinPoolMetadataSize [ bBsSkKmMgG ]
+.IR \fB\-\-poolmetadatasize " " MetadataVolumeSize [ bBsSkKmMgG ]
 Sets the size of thin pool's metadata logical volume.
 Supported values are in range between 2MiB and 16GiB.
 Default value is  (Pool_LV_size / Pool_LV_chunk_size * 64b).
