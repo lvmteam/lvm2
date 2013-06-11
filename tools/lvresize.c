@@ -362,7 +362,6 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 		     struct lvresize_params *lp)
 {
 	struct logical_volume *lv;
-	struct lvinfo info;
 	uint32_t stripesize_extents;
 	uint32_t seg_stripes = 0, seg_stripesize = 0, seg_size;
 	uint32_t seg_mirrors = 0;
@@ -762,7 +761,7 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 			return ECMD_FAILED;
 		}
 
-		if (lv_info(cmd, lv, 0, &info, 0, 0) && info.exists) {
+		if (lv_is_active(lv)) {
 			log_error("Snapshot origin volumes can be resized "
 				  "only while inactive: try lvchange -an");
 			return ECMD_FAILED;
