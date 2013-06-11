@@ -537,9 +537,7 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 					return ECMD_PROCESSED;
 			}
 		}
-	}
-
-	if (lp->sign == SIGN_MINUS) {
+	} else if (lp->sign == SIGN_MINUS) {
 		if (lp->extents >= lv->le_count) {
 			log_error("Unable to reduce %s below 1 extent",
 				  lp->lv_name);
