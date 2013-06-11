@@ -458,7 +458,7 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 	uint32_t size_rest;
 	uint32_t pv_extent_count;
 	alloc_policy_t alloc;
-	struct logical_volume *lock_lv;
+	struct logical_volume *lock_lv = NULL;
 	struct lv_list *lvl;
 	struct lv_segment *seg, *uninitialized_var(mirr_seg);
 	uint32_t seg_extents;
@@ -575,7 +575,7 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 		return ECMD_FAILED;
 	}
 
-	if (lp->sizeargs) { /* TODO: reindent or move to function */
+	if (lp->sizeargs || (pvh != &vg->pvs)) { /* TODO: reindent or move to function */
 
 	switch(lp->percent) {
 		case PERCENT_VG:
