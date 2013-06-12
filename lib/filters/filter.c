@@ -27,7 +27,7 @@
 #include <fcntl.h>
 #include <limits.h>
 
-#include "device-types.h"
+#include "device/device-types.h"
 
 #define NUMBER_OF_MAJORS 4096
 
