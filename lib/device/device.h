@@ -99,20 +99,4 @@ struct device *dev_create_file(const char *filename, struct device *dev,
 /* Return a valid device name from the alias list; NULL otherwise */
 const char *dev_name_confirmed(struct device *dev, int quiet);
 
-/* Does device contain md superblock?  If so, where? */
-int dev_is_md(struct device *dev, uint64_t *sb);
-int dev_is_swap(struct device *dev, uint64_t *signature);
-int dev_is_luks(struct device *dev, uint64_t *signature);
-unsigned long dev_md_stripe_width(struct device *dev);
-
-int is_partitioned_dev(struct device *dev);
-
-int get_primary_dev(const struct device *dev, dev_t *result);
-
-unsigned long dev_alignment_offset(struct device *dev);
-unsigned long dev_minimum_io_size(struct device *dev);
-unsigned long dev_optimal_io_size(struct device *dev);
-unsigned long dev_discard_max_bytes(struct device *dev);
-unsigned long dev_discard_granularity(struct device *dev);
-
 #endif

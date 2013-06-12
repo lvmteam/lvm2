@@ -17,8 +17,10 @@
 #define _LVM_FILTER_PERSISTENT_H
 
 #include "dev-cache.h"
+#include "dev-type.h"
 
-struct dev_filter *persistent_filter_create(struct dev_filter *f,
+struct dev_filter *persistent_filter_create(struct dev_types *dt,
+					    struct dev_filter *f,
 					    const char *file);
 
 int persistent_filter_load(struct dev_filter *f, struct dm_config_tree **cft_out);

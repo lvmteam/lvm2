@@ -820,8 +820,7 @@ static struct dev_filter *_init_filter_components(struct cmd_context *cmd)
 		nr_filt++;
 
 	/* device type filter. Required. */
-	cn = find_config_tree_node(cmd, devices_types_CFG);
-	if (!(filters[nr_filt] = lvm_type_filter_create(cmd->proc_dir, cn))) {
+	if (!(filters[nr_filt] = lvm_type_filter_create(cmd->dev_types))) {
 		log_error("Failed to create lvm type filter");
 		goto bad;
 	}
@@ -830,13 +829,13 @@ static struct dev_filter *_init_filter_components(struct cmd_context *cmd)
 	/* md component filter. Optional, non-critical. */
 	if (find_config_tree_bool(cmd, devices_md_component_detection_CFG)) {
 		init_md_filtering(1);
-		if ((filters[nr_filt] = md_filter_create()))
+		if ((filters[nr_filt] = md_filter_create(cmd->dev_types)))
 			nr_filt++;
 	}
 
 	/* mpath component filter. Optional, non-critical. */
 	if (find_config_tree_bool(cmd, devices_multipath_component_detection_CFG)) {
-		if ((filters[nr_filt] = mpath_filter_create()))
+		if ((filters[nr_filt] = mpath_filter_create(cmd->dev_types)))
 			nr_filt++;
 	}
 
@@ -898,7 +897,7 @@ static int _init_filters(struct cmd_context *cmd, unsigned load_persistent_cache
 	if (!dev_cache)
 		dev_cache = cache_file;
 
-	if (!(f4 = persistent_filter_create(f3, dev_cache))) {
+	if (!(f4 = persistent_filter_create(cmd->dev_types, f3, dev_cache))) {
 		log_verbose("Failed to create persistent device filter.");
 		f3->destroy(f3);
 		return_0;
@@ -1451,6 +1450,10 @@ struct cmd_context *create_toolcontext(unsigned is_long_lived,
 	if (!_process_config(cmd))
 		goto_out;
 
+	if (!(cmd->dev_types = create_dev_types(cmd->proc_dir,
+						find_config_tree_node(cmd, devices_types_CFG))))
+		goto_out;
+
 	if (!_init_dev_cache(cmd))
 		goto_out;
 
@@ -1541,6 +1544,15 @@ skip_dlclose:
 	}
 }
 
+static void _destroy_dev_types(struct cmd_context *cmd)
+{
+	if (!cmd->dev_types)
+		return;
+
+	dm_free(cmd->dev_types);
+	cmd->dev_types = NULL;
+}
+
 int refresh_filters(struct cmd_context *cmd)
 {
 	int r, saved_ignore_suspended_devices = ignore_suspended_devices();
@@ -1584,6 +1596,7 @@ int refresh_toolcontext(struct cmd_context *cmd)
 		cmd->filter = NULL;
 	}
 	dev_cache_exit();
+	_destroy_dev_types(cmd);
 	_destroy_tags(cmd);
 
 	cft_cmdline = _destroy_tag_configs(cmd);
@@ -1621,6 +1634,10 @@ int refresh_toolcontext(struct cmd_context *cmd)
 		cmd->cft = dm_config_insert_cascaded_tree(cft_cmdline, cmd->cft);
 
 	if (!_process_config(cmd))
+		return 0;
+
+	if (!(cmd->dev_types = create_dev_types(cmd->proc_dir,
+						find_config_tree_node(cmd, devices_types_CFG))))
 		return 0;
 
 	if (!_init_dev_cache(cmd))
@@ -1667,6 +1684,7 @@ void destroy_toolcontext(struct cmd_context *cmd)
 	if (cmd->mem)
 		dm_pool_destroy(cmd->mem);
 	dev_cache_exit();
+	_destroy_dev_types(cmd);
 	_destroy_tags(cmd);
 
 	if ((cft_cmdline = _destroy_tag_configs(cmd)))

@@ -216,8 +216,8 @@ int discard_pv_segment(struct pv_segment *peg, uint32_t discard_area_reduction)
 		return 1;
 	}
 
-	if (!dev_discard_max_bytes(peg->pv->dev) ||
-	    !dev_discard_granularity(peg->pv->dev))
+	if (!dev_discard_max_bytes(peg->pv->fmt->cmd->dev_types, peg->pv->dev) ||
+	    !dev_discard_granularity(peg->pv->fmt->cmd->dev_types, peg->pv->dev))
 		return 1;
 
 	discard_offset_sectors = (peg->pe + peg->lvseg->area_len - discard_area_reduction) *

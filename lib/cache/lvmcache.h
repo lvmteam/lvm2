@@ -17,6 +17,7 @@
 #define _LVM_CACHE_H
 
 #include "dev-cache.h"
+#include "dev-type.h"
 #include "uuid.h"
 #include "label.h"
 #include "locking.h"

@@ -50,7 +50,7 @@ static void _destroy(struct dev_filter *f)
 	dm_free(f);
 }
 
-struct dev_filter *md_filter_create(void)
+struct dev_filter *md_filter_create(struct dev_types *dt)
 {
 	struct dev_filter *f;
 
@@ -62,14 +62,14 @@ struct dev_filter *md_filter_create(void)
 	f->passes_filter = _ignore_md;
 	f->destroy = _destroy;
 	f->use_count = 0;
-	f->private = NULL;
+	f->private = dt;
 
 	return f;
 }
 
 #else
 
-struct dev_filter *md_filter_create(void)
+struct dev_filter *md_filter_create(struct dev_types *dt)
 {
 	return NULL;
 }

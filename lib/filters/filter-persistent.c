@@ -14,23 +14,17 @@
  */
 
 #include "lib.h"
-#include "config.h"
-#include "dev-cache.h"
-#include "filter.h"
 #include "filter-persistent.h"
+#include "config.h"
 #include "lvm-file.h"
-#include "lvm-string.h"
 #include "activate.h"
-
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
 
 struct pfilter {
 	char *file;
 	struct dm_hash_table *devices;
 	struct dev_filter *real;
 	time_t ctime;
+	struct dev_types *dt;
 };
 
 /*
@@ -287,7 +281,7 @@ static int _lookup_p(struct dev_filter *f, struct device *dev)
 	}
 
 	/* Test dm devices every time, so cache them as GOOD. */
-	if (MAJOR(dev->dev) == dm_major()) {
+	if (MAJOR(dev->dev) == pf->dt->device_mapper_major) {
 		if (!l)
 			dm_list_iterate_items(sl, &dev->aliases)
 				if (!dm_hash_insert(pf->devices, sl->str, PF_GOOD_DEVICE)) {
@@ -329,7 +323,8 @@ static void _persistent_destroy(struct dev_filter *f)
 	dm_free(f);
 }
 
-struct dev_filter *persistent_filter_create(struct dev_filter *real,
+struct dev_filter *persistent_filter_create(struct dev_types *dt,
+					    struct dev_filter *real,
 					    const char *file)
 {
 	struct pfilter *pf;
@@ -340,6 +335,8 @@ struct dev_filter *persistent_filter_create(struct dev_filter *real,
 		log_error("Allocation of persistent filter failed.");
 		return NULL;
 	}
+
+	pf->dt = dt;
 
 	if (!(pf->file = dm_strdup(file))) {
 		log_error("Filename duplication for persistent filter failed.");

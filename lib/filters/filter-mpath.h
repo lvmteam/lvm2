@@ -16,8 +16,9 @@
 #define _LVM_FILTER_MPATH_H
 
 #include "dev-cache.h"
+#include "dev-type.h"
 
-struct dev_filter *mpath_filter_create(void);
+struct dev_filter *mpath_filter_create(struct dev_types *dt);
 
 #endif
 

@@ -20,6 +20,7 @@
 #include "filter.h"
 #include "xlate.h"
 #include "disk_rep.h"
+#include "toolcontext.h"
 
 #include <assert.h>
 
@@ -52,7 +53,7 @@ static int __read_pool_disk(const struct format_type *fmt, struct device *dev,
 	return 1;
 }
 
-static void _add_pl_to_list(struct dm_list *head, struct pool_list *data)
+static void _add_pl_to_list(struct cmd_context *cmd, struct dm_list *head, struct pool_list *data)
 {
 	struct pool_list *pl;
 
@@ -62,14 +63,14 @@ static void _add_pl_to_list(struct dm_list *head, struct pool_list *data)
 
 			id_write_format(&pl->pv_uuid, uuid, ID_LEN + 7);
 
-			if (!dev_subsystem_part_major(data->dev)) {
+			if (!dev_subsystem_part_major(cmd->dev_types, data->dev)) {
 				log_very_verbose("Ignoring duplicate PV %s on "
 						 "%s", uuid,
 						 dev_name(data->dev));
 				return;
 			}
 			log_very_verbose("Duplicate PV %s - using %s %s",
-					 uuid, dev_subsystem_name(data->dev),
+					 uuid, dev_subsystem_name(cmd->dev_types, data->dev),
 					 dev_name(data->dev));
 			dm_list_del(&pl->list);
 			break;
@@ -288,7 +289,7 @@ static int _read_pool_pv(struct lvmcache_info *info, void *baton)
 	if (b->sp_count != b->pl->pd.pl_subpools)
 		return 0;
 
-	_add_pl_to_list(b->head, b->pl);
+	_add_pl_to_list(lvmcache_fmt(info)->cmd, b->head, b->pl);
 
 	if (b->sp_count > b->pl->pd.pl_sp_id && b->sp_devs[b->pl->pd.pl_sp_id] == 0)
 		b->sp_devs[b->pl->pd.pl_sp_id] = b->pl->pd.pl_sp_devs;

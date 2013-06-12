@@ -16,8 +16,6 @@
 #include "lib.h"
 #include "filter-composite.h"
 
-#include <stdarg.h>
-
 static int _and_p(struct dev_filter *f, struct device *dev)
 {
 	struct dev_filter **filters;

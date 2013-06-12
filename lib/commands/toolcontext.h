@@ -17,6 +17,7 @@
 #define _LVM_TOOLCONTEXT_H
 
 #include "dev-cache.h"
+#include "dev-type.h"
 
 #include <stdio.h>
 #include <limits.h>
@@ -91,6 +92,7 @@ struct cmd_context {
 
 	unsigned independent_metadata_areas:1;	/* Active formats have MDAs outside PVs */
 
+	struct dev_types *dev_types;
 	struct dev_filter *filter;
 	struct dev_filter *lvmetad_filter;
 	int dump_filter;	/* Dump filter when exiting? */

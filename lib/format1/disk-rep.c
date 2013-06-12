@@ -18,6 +18,7 @@
 #include "xlate.h"
 #include "filter.h"
 #include "lvmcache.h"
+#include "metadata-exported.h"
 
 #include <fcntl.h>
 
@@ -426,7 +427,7 @@ struct disk_list *read_disk(const struct format_type *fmt, struct device *dev,
 	return dl;
 }
 
-static void _add_pv_to_list(struct dm_list *head, struct disk_list *data)
+static void _add_pv_to_list(struct cmd_context *cmd, struct dm_list *head, struct disk_list *data)
 {
 	struct pv_disk *pvd;
 	struct disk_list *diskl;
@@ -435,14 +436,14 @@ static void _add_pv_to_list(struct dm_list *head, struct disk_list *data)
 		pvd = &diskl->pvd;
 		if (!strncmp((char *)data->pvd.pv_uuid, (char *)pvd->pv_uuid,
 			     sizeof(pvd->pv_uuid))) {
-			if (!dev_subsystem_part_major(data->dev)) {
+			if (!dev_subsystem_part_major(cmd->dev_types, data->dev)) {
 				log_very_verbose("Ignoring duplicate PV %s on "
 						 "%s", pvd->pv_uuid,
 						 dev_name(data->dev));
 				return;
 			}
 			log_very_verbose("Duplicate PV %s - using %s %s",
-					 pvd->pv_uuid, dev_subsystem_name(data->dev),
+					 pvd->pv_uuid, dev_subsystem_name(cmd->dev_types, data->dev),
 					 dev_name(data->dev));
 			dm_list_del(&diskl->list);
 			break;
@@ -469,7 +470,7 @@ static int _read_pv_in_vg(struct lvmcache_info *info, void *baton)
 	    !(b->data = read_disk(lvmcache_fmt(info), lvmcache_device(info), b->mem, b->vg_name)))
 		return 0; /* stop here */
 
-	_add_pv_to_list(b->head, b->data);
+	_add_pv_to_list(lvmcache_fmt(info)->cmd, b->head, b->data);
 	return 1;
 }
 
@@ -519,7 +520,7 @@ int read_pvs_in_vg(const struct format_type *fmt, const char *vg_name,
 	/* Otherwise do a complete scan */
 	for (dev = dev_iter_get(iter); dev; dev = dev_iter_get(iter)) {
 		if ((baton.data = read_disk(fmt, dev, mem, vg_name))) {
-			_add_pv_to_list(head, baton.data);
+			_add_pv_to_list(fmt->cmd, head, baton.data);
 		}
 	}
 	dev_iter_destroy(iter);

@@ -15,7 +15,6 @@
 
 #include "lib.h"
 #include "filter-regex.h"
-#include "device.h"
 
 struct rfilter {
 	struct dm_pool *mem;

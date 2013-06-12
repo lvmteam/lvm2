@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2013 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -14,16 +13,240 @@
  */
 
 #include "lib.h"
-#include "lvm-types.h"
-#include "device.h"
-#include "metadata.h"
-#include "filter.h"
+#include "dev-type.h"
 #include "xlate.h"
+#include "config.h"
+#include "metadata.h"
 
-#include <libgen.h> /* dirname, basename */
+#include <libgen.h>
+#include <ctype.h>
+
+#include "device-types.h"
+
+struct dev_types *create_dev_types(const char *proc_dir,
+				   const struct dm_config_node *cn)
+{
+	struct dev_types *dt;
+	char line[80];
+	char proc_devices[PATH_MAX];
+	FILE *pd = NULL;
+	int i, j = 0;
+	int line_maj = 0;
+	int blocksection = 0;
+	size_t dev_len = 0;
+	const struct dm_config_value *cv;
+	const char *name;
+	char *nl;
+
+	if (!(dt = dm_zalloc(sizeof(struct dev_types)))) {
+		log_error("Failed to allocate device type register.");
+		return NULL;
+	}
+
+	if (!*proc_dir) {
+		log_verbose("No proc filesystem found: using all block device types");
+		for (i = 0; i < NUMBER_OF_MAJORS; i++)
+			dt->dev_type_array[i].max_partitions = 1;
+		return dt;
+	}
+
+	if (dm_snprintf(proc_devices, sizeof(proc_devices),
+			 "%s/devices", proc_dir) < 0) {
+		log_error("Failed to create /proc/devices string");
+		goto bad;
+	}
+
+	if (!(pd = fopen(proc_devices, "r"))) {
+		log_sys_error("fopen", proc_devices);
+		goto bad;
+	}
+
+	while (fgets(line, sizeof(line), pd) != NULL) {
+		i = 0;
+		while (line[i] == ' ')
+			i++;
+
+		/* If it's not a number it may be name of section */
+		line_maj = atoi(((char *) (line + i)));
+
+		if (line_maj < 0 || line_maj >= NUMBER_OF_MAJORS) {
+			/*
+			 * Device numbers shown in /proc/devices are actually direct
+			 * numbers passed to registering function, however the kernel
+			 * uses only 12 bits, so use just 12 bits for major.
+			 */
+			if ((nl = strchr(line, '\n'))) *nl = '\0';
+			log_warn("WARNING: /proc/devices line: %s, replacing major with %d.",
+				 line, line_maj & (NUMBER_OF_MAJORS - 1));
+			line_maj &= (NUMBER_OF_MAJORS - 1);
+		}
+
+		if (!line_maj) {
+			blocksection = (line[i] == 'B') ? 1 : 0;
+			continue;
+		}
+
+		/* We only want block devices ... */
+		if (!blocksection)
+			continue;
+
+		/* Find the start of the device major name */
+		while (line[i] != ' ' && line[i] != '\0')
+			i++;
+		while (line[i] == ' ')
+			i++;
+
+		/* Look for md device */
+		if (!strncmp("md", line + i, 2) && isspace(*(line + i + 2)))
+			dt->md_major = line_maj;
+
+		/* Look for blkext device */
+		if (!strncmp("blkext", line + i, 6) && isspace(*(line + i + 6)))
+			dt->blkext_major = line_maj;
+
+		/* Look for drbd device */
+		if (!strncmp("drbd", line + i, 4) && isspace(*(line + i + 4)))
+			dt->drbd_major = line_maj;
+
+		/* Look for EMC powerpath */
+		if (!strncmp("emcpower", line + i, 8) && isspace(*(line + i + 8)))
+			dt->emcpower_major = line_maj;
+
+		if (!strncmp("power2", line + i, 6) && isspace(*(line + i + 6)))
+			dt->power2_major = line_maj;
+
+		/* Look for device-mapper device */
+		/* FIXME Cope with multiple majors */
+		if (!strncmp("device-mapper", line + i, 13) && isspace(*(line + i + 13)))
+			dt->device_mapper_major = line_maj;
+
+		/* Major is SCSI device */
+		if (!strncmp("sd", line + i, 2) && isspace(*(line + i + 2)))
+			dt->dev_type_array[line_maj].flags |= PARTITION_SCSI_DEVICE;
+
+		/* Go through the valid device names and if there is a
+		   match store max number of partitions */
+		for (j = 0; _dev_known_types[j].name[0]; j++) {
+			dev_len = strlen(_dev_known_types[j].name);
+			if (dev_len <= strlen(line + i) &&
+			    !strncmp(_dev_known_types[j].name, line + i, dev_len) &&
+			    (line_maj < NUMBER_OF_MAJORS)) {
+				dt->dev_type_array[line_maj].max_partitions =
+					_dev_known_types[j].max_partitions;
+				break;
+			}
+		}
+
+		if (!cn)
+			continue;
+
+		/* Check devices/types for local variations */
+		for (cv = cn->v; cv; cv = cv->next) {
+			if (cv->type != DM_CFG_STRING) {
+				log_error("Expecting string in devices/types "
+					  "in config file");
+				if (fclose(pd))
+					log_sys_error("fclose", proc_devices);
+				goto bad;
+			}
+			dev_len = strlen(cv->v.str);
+			name = cv->v.str;
+			cv = cv->next;
+			if (!cv || cv->type != DM_CFG_INT) {
+				log_error("Max partition count missing for %s "
+					  "in devices/types in config file",
+					  name);
+				if (fclose(pd))
+					log_sys_error("fclose", proc_devices);
+				goto bad;
+			}
+			if (!cv->v.i) {
+				log_error("Zero partition count invalid for "
+					  "%s in devices/types in config file",
+					  name);
+				if (fclose(pd))
+					log_sys_error("fclose", proc_devices);
+				goto bad;
+			}
+			if (dev_len <= strlen(line + i) &&
+			    !strncmp(name, line + i, dev_len) &&
+			    (line_maj < NUMBER_OF_MAJORS)) {
+				dt->dev_type_array[line_maj].max_partitions = cv->v.i;
+				break;
+			}
+		}
+	}
+
+	if (fclose(pd))
+		log_sys_error("fclose", proc_devices);
+
+	return dt;
+bad:
+	dm_free(dt);
+	return NULL;
+}
+
+int dev_subsystem_part_major(struct dev_types *dt, struct device *dev)
+{
+	dev_t primary_dev;
+
+	if (MAJOR(dev->dev) == dt->device_mapper_major)
+		return 1;
+
+	if (MAJOR(dev->dev) == dt->drbd_major)
+		return 1;
+
+	if (MAJOR(dev->dev) == dt->emcpower_major)
+		return 1;
+
+	if (MAJOR(dev->dev) == dt->power2_major)
+		return 1;
+
+	if ((MAJOR(dev->dev) == dt->blkext_major) &&
+	    (dev_get_primary_dev(dt, dev, &primary_dev)) &&
+	    (MAJOR(primary_dev) == dt->md_major))
+		return 1;
+
+	return 0;
+}
+
+const char *dev_subsystem_name(struct dev_types *dt, struct device *dev)
+{
+	if (MAJOR(dev->dev) == dt->md_major)
+		return "MD";
+
+	if (MAJOR(dev->dev) == dt->drbd_major)
+		return "DRBD";
+
+	if (MAJOR(dev->dev) == dt->emcpower_major)
+		return "EMCPOWER";
+
+	if (MAJOR(dev->dev) == dt->power2_major)
+		return "POWER2";
+
+	if (MAJOR(dev->dev) == dt->blkext_major)
+		return "BLKEXT";
+
+	return "";
+}
+
+int major_max_partitions(struct dev_types *dt, int major)
+{
+	if (major >= NUMBER_OF_MAJORS)
+		return 0;
+
+	return dt->dev_type_array[major].max_partitions;
+}
+
+int major_is_scsi_device(struct dev_types *dt, int major)
+{
+	if (major >= NUMBER_OF_MAJORS)
+		return 0;
+
+	return (dt->dev_type_array[major].flags & PARTITION_SCSI_DEVICE) ? 1 : 0;
+}
 
 /* See linux/genhd.h and fs/partitions/msdos */
-
 #define PART_MAGIC 0xAA55
 #define PART_MAGIC_OFFSET UINT64_C(0x1FE)
 #define PART_OFFSET UINT64_C(0x1BE)
@@ -41,12 +264,12 @@ struct partition {
 	uint32_t nr_sects;
 } __attribute__((packed));
 
-static int _is_partitionable(struct device *dev)
+static int _is_partitionable(struct dev_types *dt, struct device *dev)
 {
-	int parts = max_partitions(MAJOR(dev->dev));
+	int parts = major_max_partitions(dt, MAJOR(dev->dev));
 
 	/* All MD devices are partitionable via blkext (as of 2.6.28) */
-	if (MAJOR(dev->dev) == md_major())
+	if (MAJOR(dev->dev) == dt->md_major)
 		return 1;
 
 	if ((parts <= 1) || (MINOR(dev->dev) % parts))
@@ -87,12 +310,91 @@ static int _has_partition_table(struct device *dev)
 	return ret;
 }
 
-int is_partitioned_dev(struct device *dev)
+int dev_is_partitioned(struct dev_types *dt, struct device *dev)
 {
-	if (!_is_partitionable(dev))
+	if (!_is_partitionable(dt, dev))
 		return 0;
 
 	return _has_partition_table(dev);
+}
+
+int dev_get_primary_dev(struct dev_types *dt, struct device *dev, dev_t *result)
+{
+	const char *sysfs_dir = dm_sysfs_dir();
+	char path[PATH_MAX+1];
+	char temp_path[PATH_MAX+1];
+	char buffer[64];
+	struct stat info;
+	FILE *fp;
+	uint32_t pri_maj, pri_min;
+	int size, ret = 0;
+
+	/* check if dev is a partition */
+	if (dm_snprintf(path, PATH_MAX, "%s/dev/block/%d:%d/partition",
+			sysfs_dir, (int)MAJOR(dev->dev), (int)MINOR(dev->dev)) < 0) {
+		log_error("dm_snprintf partition failed");
+		return ret;
+	}
+
+	if (stat(path, &info) == -1) {
+		if (errno != ENOENT)
+			log_sys_error("stat", path);
+		return ret;
+	}
+
+	/*
+	 * extract parent's path from the partition's symlink, e.g.:
+	 * - readlink /sys/dev/block/259:0 = ../../block/md0/md0p1
+	 * - dirname ../../block/md0/md0p1 = ../../block/md0
+	 * - basename ../../block/md0/md0  = md0
+	 * Parent's 'dev' sysfs attribute  = /sys/block/md0/dev
+	 */
+	if ((size = readlink(dirname(path), temp_path, PATH_MAX)) < 0) {
+		log_sys_error("readlink", path);
+		return ret;
+	}
+
+	temp_path[size] = '\0';
+
+	if (dm_snprintf(path, PATH_MAX, "%s/block/%s/dev",
+			sysfs_dir, basename(dirname(temp_path))) < 0) {
+		log_error("dm_snprintf dev failed");
+		return ret;
+	}
+
+	/* finally, parse 'dev' attribute and create corresponding dev_t */
+	if (stat(path, &info) == -1) {
+		if (errno == ENOENT)
+			log_error("sysfs file %s does not exist", path);
+		else
+			log_sys_error("stat", path);
+		return ret;
+	}
+
+	fp = fopen(path, "r");
+	if (!fp) {
+		log_sys_error("fopen", path);
+		return ret;
+	}
+
+	if (!fgets(buffer, sizeof(buffer), fp)) {
+		log_sys_error("fgets", path);
+		goto out;
+	}
+
+	if (sscanf(buffer, "%d:%d", &pri_maj, &pri_min) != 2) {
+		log_error("sysfs file %s not in expected MAJ:MIN format: %s",
+			  path, buffer);
+		goto out;
+	}
+	*result = MKDEV((dev_t)pri_maj, pri_min);
+	ret = 1;
+
+out:
+	if (fclose(fp))
+		log_sys_error("fclose", path);
+
+	return ret;
 }
 
 #if 0
@@ -278,86 +580,9 @@ int _get_partition_type(struct dev_mgr *dm, struct device *d)
 
 #ifdef linux
 
-int get_primary_dev(const struct device *dev, dev_t *result)
-{
-	const char *sysfs_dir = dm_sysfs_dir();
-	char path[PATH_MAX+1];
-	char temp_path[PATH_MAX+1];
-	char buffer[64];
-	struct stat info;
-	FILE *fp;
-	uint32_t pri_maj, pri_min;
-	int size, ret = 0;
-
-	/* check if dev is a partition */
-	if (dm_snprintf(path, PATH_MAX, "%s/dev/block/%d:%d/partition",
-			sysfs_dir, (int)MAJOR(dev->dev), (int)MINOR(dev->dev)) < 0) {
-		log_error("dm_snprintf partition failed");
-		return ret;
-	}
-
-	if (stat(path, &info) == -1) {
-		if (errno != ENOENT)
-			log_sys_error("stat", path);
-		return ret;
-	}
-
-	/*
-	 * extract parent's path from the partition's symlink, e.g.:
-	 * - readlink /sys/dev/block/259:0 = ../../block/md0/md0p1
-	 * - dirname ../../block/md0/md0p1 = ../../block/md0
-	 * - basename ../../block/md0/md0  = md0
-	 * Parent's 'dev' sysfs attribute  = /sys/block/md0/dev
-	 */
-	if ((size = readlink(dirname(path), temp_path, PATH_MAX)) < 0) {
-		log_sys_error("readlink", path);
-		return ret;
-	}
-
-	temp_path[size] = '\0';
-
-	if (dm_snprintf(path, PATH_MAX, "%s/block/%s/dev",
-			sysfs_dir, basename(dirname(temp_path))) < 0) {
-		log_error("dm_snprintf dev failed");
-		return ret;
-	}
-
-	/* finally, parse 'dev' attribute and create corresponding dev_t */
-	if (stat(path, &info) == -1) {
-		if (errno == ENOENT)
-			log_error("sysfs file %s does not exist", path);
-		else
-			log_sys_error("stat", path);
-		return ret;
-	}
-
-	fp = fopen(path, "r");
-	if (!fp) {
-		log_sys_error("fopen", path);
-		return ret;
-	}
-
-	if (!fgets(buffer, sizeof(buffer), fp)) {
-		log_sys_error("fgets", path);
-		goto out;
-	}
-
-	if (sscanf(buffer, "%d:%d", &pri_maj, &pri_min) != 2) {
-		log_error("sysfs file %s not in expected MAJ:MIN format: %s",
-			  path, buffer);
-		goto out;
-	}
-	*result = MKDEV((dev_t)pri_maj, pri_min);
-	ret = 1;
-
-out:
-	if (fclose(fp))
-		log_sys_error("fclose", path);
-
-	return ret;
-}
-
-static unsigned long _dev_topology_attribute(const char *attribute, struct device *dev)
+static unsigned long _dev_topology_attribute(struct dev_types *dt,
+					     const char *attribute,
+					     struct device *dev)
 {
 	const char *sysfs_dir = dm_sysfs_dir();
 	static const char sysfs_fmt_str[] = "%s/dev/block/%d:%d/%s";
@@ -390,7 +615,7 @@ static unsigned long _dev_topology_attribute(const char *attribute, struct devic
 			log_sys_error("stat", path);
 			return 0;
 		}
-		if (!get_primary_dev(dev, &primary))
+		if (!dev_get_primary_dev(dt, dev, &primary))
 			return 0;
 
 		/* get attribute from partition's primary device */
@@ -433,29 +658,29 @@ out:
 	return result >> SECTOR_SHIFT;
 }
 
-unsigned long dev_alignment_offset(struct device *dev)
+unsigned long dev_alignment_offset(struct dev_types *dt, struct device *dev)
 {
-	return _dev_topology_attribute("alignment_offset", dev);
+	return _dev_topology_attribute(dt, "alignment_offset", dev);
 }
 
-unsigned long dev_minimum_io_size(struct device *dev)
+unsigned long dev_minimum_io_size(struct dev_types *dt, struct device *dev)
 {
-	return _dev_topology_attribute("queue/minimum_io_size", dev);
+	return _dev_topology_attribute(dt, "queue/minimum_io_size", dev);
 }
 
-unsigned long dev_optimal_io_size(struct device *dev)
+unsigned long dev_optimal_io_size(struct dev_types *dt, struct device *dev)
 {
-	return _dev_topology_attribute("queue/optimal_io_size", dev);
+	return _dev_topology_attribute(dt, "queue/optimal_io_size", dev);
 }
 
-unsigned long dev_discard_max_bytes(struct device *dev)
+unsigned long dev_discard_max_bytes(struct dev_types *dt, struct device *dev)
 {
-	return _dev_topology_attribute("queue/discard_max_bytes", dev);
+	return _dev_topology_attribute(dt, "queue/discard_max_bytes", dev);
 }
 
-unsigned long dev_discard_granularity(struct device *dev)
+unsigned long dev_discard_granularity(struct dev_types *dt, struct device *dev)
 {
-	return _dev_topology_attribute("queue/discard_granularity", dev);
+	return _dev_topology_attribute(dt, "queue/discard_granularity", dev);
 }
 
 #else
@@ -465,27 +690,27 @@ int get_primary_dev(struct device *dev, dev_t *result)
 	return 0;
 }
 
-unsigned long dev_alignment_offset(struct device *dev)
+unsigned long dev_alignment_offset(struct dev_types *dt, struct device *dev)
 {
 	return 0UL;
 }
 
-unsigned long dev_minimum_io_size(struct device *dev)
+unsigned long dev_minimum_io_size(struct dev_types *dt, struct device *dev)
 {
 	return 0UL;
 }
 
-unsigned long dev_optimal_io_size(struct device *dev)
+unsigned long dev_optimal_io_size(struct dev_types *dt, struct device *dev)
 {
 	return 0UL;
 }
 
-unsigned long dev_discard_max_bytes(struct device *dev)
+unsigned long dev_discard_max_bytes(struct dev_types *dt, struct device *dev)
 {
 	return 0UL;
 }
 
-unsigned long dev_discard_granularity(struct device *dev)
+unsigned long dev_discard_granularity(struct dev_types *dt, struct device *dev)
 {
 	return 0UL;
 }

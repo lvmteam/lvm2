@@ -16,30 +16,9 @@
 #ifndef _LVM_FILTER_H
 #define _LVM_FILTER_H
 
-#include "config.h"
+#include "dev-cache.h"
+#include "dev-type.h"
 
-#include <sys/stat.h>
-
-#ifdef linux
-#  define MAJOR(dev)	((dev & 0xfff00) >> 8)
-#  define MINOR(dev)	((dev & 0xff) | ((dev >> 12) & 0xfff00))
-#  define MKDEV(ma,mi)	((mi & 0xff) | (ma << 8) | ((mi & ~0xff) << 12))
-#else
-#  define MAJOR(x) major((x))
-#  define MINOR(x) minor((x))
-#  define MKDEV(x,y) makedev((x),(y))
-#endif
-
-struct dev_filter *lvm_type_filter_create(const char *proc,
-					  const struct dm_config_node *cn);
-
-int dm_major(void);
-int md_major(void);
-int blkext_major(void);
-int max_partitions(int major);
-int major_is_scsi_device(int major);
-
-int dev_subsystem_part_major(const struct device *dev);
-const char *dev_subsystem_name(const struct device *dev);
+struct dev_filter *lvm_type_filter_create(struct dev_types *dt);
 
 #endif

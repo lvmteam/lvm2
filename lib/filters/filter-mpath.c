@@ -13,11 +13,11 @@
  */
 
 #include "lib.h"
-#include "filter.h"
 #include "filter-mpath.h"
 #include "activate.h"
 
 #ifdef linux
+
 #include <dirent.h>
 
 #define MPATH_PREFIX "mpath-"
@@ -115,15 +115,17 @@ static int get_parent_mpath(const char *dir, char *name, int max_size)
 
 static int dev_is_mpath(struct dev_filter *f, struct device *dev)
 {
+	struct dev_types *dt = (struct dev_types *) f->private;
 	const char *name;
 	char path[PATH_MAX+1];
 	char parent_name[PATH_MAX+1];
 	struct stat info;
 	const char *sysfs_dir = dm_sysfs_dir();
-	int major, minor;
+	int major = MAJOR(dev->dev);
+	int minor = MINOR(dev->dev);
 
 	/* Limit this filter only to SCSI devices */
-	if (!major_is_scsi_device(MAJOR(dev->dev)))
+	if (!major_is_scsi_device(dt, MAJOR(dev->dev)))
 		return 0;
 
 	if (!(name = get_sysfs_name(dev)))
@@ -149,8 +151,9 @@ static int dev_is_mpath(struct dev_filter *f, struct device *dev)
 	if (!get_sysfs_get_major_minor(sysfs_dir, parent_name, &major, &minor))
 		return_0;
 
-	if (major != dm_major()) {
-		log_error("mpath major %d is not dm major %d.", major, dm_major());
+	if (major != dt->device_mapper_major) {
+		log_error("mpath major %d is not dm major %d.", major,
+			  dt->device_mapper_major);
 		return 0;
 	}
 
@@ -172,11 +175,10 @@ static void _destroy(struct dev_filter *f)
 	if (f->use_count)
 		log_error(INTERNAL_ERROR "Destroying mpath filter while in use %u times.", f->use_count);
 
-	dm_free(f->private);
 	dm_free(f);
 }
 
-struct dev_filter *mpath_filter_create(void)
+struct dev_filter *mpath_filter_create(struct dev_types *dt)
 {
 	const char *sysfs_dir = dm_sysfs_dir();
 	struct dev_filter *f;
@@ -194,19 +196,14 @@ struct dev_filter *mpath_filter_create(void)
 	f->passes_filter = _ignore_mpath;
 	f->destroy = _destroy;
 	f->use_count = 0;
-
-	if (!(f->private = dm_strdup(sysfs_dir))) {
-		log_error("Cannot duplicate sysfs dir.");
-		dm_free(f);
-		return NULL;
-	}
+	f->private = dt;
 
 	return f;
 }
 
 #else
 
-struct dev_filter *mpath_filter_create(const char *sysfs_dir __attribute__((unused)))
+struct dev_filter *mpath_filter_create(struct device_types *dt)
 {
 	return NULL;
 }

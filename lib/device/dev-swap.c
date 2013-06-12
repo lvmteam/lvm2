@@ -13,6 +13,7 @@
  */
 
 #include "lib.h"
+#include "dev-type.h"
 #include "metadata.h"
 
 #ifdef linux

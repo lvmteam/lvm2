@@ -16,7 +16,6 @@
 #ifndef _LVM_FILTER_REGEX_H
 #define _LVM_FILTER_REGEX_H
 
-#include "config.h"
 #include "dev-cache.h"
 
 /*
