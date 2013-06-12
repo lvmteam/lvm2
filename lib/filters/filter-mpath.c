@@ -130,14 +130,14 @@ static int dev_is_mpath(struct dev_filter *f, struct device *dev)
 		return 0;
 
 	switch (dev_get_primary_dev(dt, dev, &primary_dev)) {
-		case -1:
+		case 0:
 			/* Error. */
 			log_error("Failed to get primary device for %d:%d.", major, minor);
 			return 0;
-		case 0:
+		case 1:
 			/* The dev is already a primary dev. Just continue with the dev. */
 			break;
-		case 1:
+		case 2:
 			/* The dev is partition. */
 			name = dev_name(dev); /* name of original dev for log_debug msg */
 

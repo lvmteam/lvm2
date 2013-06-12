@@ -203,7 +203,7 @@ int dev_subsystem_part_major(struct dev_types *dt, struct device *dev)
 		return 1;
 
 	if ((MAJOR(dev->dev) == dt->blkext_major) &&
-	    (dev_get_primary_dev(dt, dev, &primary_dev) > 0) &&
+	    dev_get_primary_dev(dt, dev, &primary_dev) &&
 	    (MAJOR(primary_dev) == dt->md_major))
 		return 1;
 
@@ -320,10 +320,24 @@ int dev_is_partitioned(struct dev_types *dt, struct device *dev)
 
 /*
  * Get primary dev for the dev supplied.
+ *
+ * We can get a primary device for a partition either by:
+ *   A: knowing the number of partitions allowed for the dev and also
+ *      which major:minor number represents the primary and partition device
+ *      (by using the dev_types->dev_type_array)
+ *   B: by the existence of the 'partition' sysfs attribute
+ *      (/dev/block/<major>:<minor>/partition)
+ *
+ * Method A is tried first, then method B as a fallback if A fails.
+ *
+ * N.B. Method B can only do the decision based on the pure existence of
+ *      the 'partition' sysfs item. There's no direct scan for partition
+ *      tables whatsoever!
+ *
  * Returns:
- *   0 if the dev is already a primary dev
- *   1 if the dev is a partition, primary dev in result
- *   -1 on error
+ *   0 on error
+ *   1 if the dev is already a primary dev, primary dev in 'result'
+ *   2 if the dev is a partition, primary dev in 'result'
  */
 int dev_get_primary_dev(struct dev_types *dt, struct device *dev, dev_t *result)
 {
@@ -344,10 +358,10 @@ int dev_get_primary_dev(struct dev_types *dt, struct device *dev, dev_t *result)
 	if ((parts = dt->dev_type_array[major].max_partitions) > 1) {
 		if ((residue = minor % parts)) {
 			*result = MKDEV((dev_t)major, (minor - residue));
-			ret = 1;
+			ret = 2;
 		} else {
 			*result = dev->dev;
-			ret = 0; /* dev is not a partition! */
+			ret = 1; /* dev is not a partition! */
 		}
 		goto out;
 	}
@@ -370,7 +384,7 @@ int dev_get_primary_dev(struct dev_types *dt, struct device *dev, dev_t *result)
 		if (errno != ENOENT)
 			log_sys_error("stat", path);
 		*result = dev->dev;
-		ret = 0; goto out; /* dev is not a partition! */
+		ret = 1; goto out; /* dev is not a partition! */
 
 	}
 
@@ -465,7 +479,7 @@ static unsigned long _dev_topology_attribute(struct dev_types *dt,
 			log_sys_error("stat", path);
 			return 0;
 		}
-		if (dev_get_primary_dev(dt, dev, &primary) < 0)
+		if (!dev_get_primary_dev(dt, dev, &primary))
 			return 0;
 
 		/* get attribute from partition's primary device */
