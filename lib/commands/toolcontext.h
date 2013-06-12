@@ -113,7 +113,6 @@ struct cmd_context {
 	char system_dir[PATH_MAX];
 	char dev_dir[PATH_MAX];
 	char proc_dir[PATH_MAX];
-	char sysfs_dir[PATH_MAX]; /* FIXME Use global value instead. */
 };
 
 /*

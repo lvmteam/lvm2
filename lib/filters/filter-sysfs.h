@@ -18,6 +18,6 @@
 #include "config.h"
 #include "dev-cache.h"
 
-struct dev_filter *sysfs_filter_create(const char *sysfs_dir);
+struct dev_filter *sysfs_filter_create(void);
 
 #endif

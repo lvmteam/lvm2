@@ -76,7 +76,7 @@ int dev_subsystem_part_major(const struct device *dev)
 		return 1;
 
 	if ((MAJOR(dev->dev) == _blkext_major) &&
-	    (get_primary_dev(sysfs_dir_path(), dev, &primary_dev)) &&
+	    (get_primary_dev(dev, &primary_dev)) &&
 	    (MAJOR(primary_dev) == _md_major))
 		return 1;
 

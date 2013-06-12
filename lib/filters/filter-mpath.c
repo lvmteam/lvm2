@@ -119,7 +119,7 @@ static int dev_is_mpath(struct dev_filter *f, struct device *dev)
 	char path[PATH_MAX+1];
 	char parent_name[PATH_MAX+1];
 	struct stat info;
-	const char *sysfs_dir = f->private;
+	const char *sysfs_dir = dm_sysfs_dir();
 	int major, minor;
 
 	/* Limit this filter only to SCSI devices */
@@ -176,8 +176,9 @@ static void _destroy(struct dev_filter *f)
 	dm_free(f);
 }
 
-struct dev_filter *mpath_filter_create(const char *sysfs_dir)
+struct dev_filter *mpath_filter_create(void)
 {
+	const char *sysfs_dir = dm_sysfs_dir();
 	struct dev_filter *f;
 
 	if (!*sysfs_dir) {

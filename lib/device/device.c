@@ -278,9 +278,9 @@ int _get_partition_type(struct dev_mgr *dm, struct device *d)
 
 #ifdef linux
 
-int get_primary_dev(const char *sysfs_dir,
-		    const struct device *dev, dev_t *result)
+int get_primary_dev(const struct device *dev, dev_t *result)
 {
+	const char *sysfs_dir = dm_sysfs_dir();
 	char path[PATH_MAX+1];
 	char temp_path[PATH_MAX+1];
 	char buffer[64];
@@ -357,10 +357,9 @@ out:
 	return ret;
 }
 
-static unsigned long _dev_topology_attribute(const char *attribute,
-					     const char *sysfs_dir,
-					     struct device *dev)
+static unsigned long _dev_topology_attribute(const char *attribute, struct device *dev)
 {
+	const char *sysfs_dir = dm_sysfs_dir();
 	static const char sysfs_fmt_str[] = "%s/dev/block/%d:%d/%s";
 	char path[PATH_MAX+1], buffer[64];
 	FILE *fp;
@@ -391,7 +390,7 @@ static unsigned long _dev_topology_attribute(const char *attribute,
 			log_sys_error("stat", path);
 			return 0;
 		}
-		if (!get_primary_dev(sysfs_dir, dev, &primary))
+		if (!get_primary_dev(dev, &primary))
 			return 0;
 
 		/* get attribute from partition's primary device */
@@ -434,75 +433,59 @@ out:
 	return result >> SECTOR_SHIFT;
 }
 
-unsigned long dev_alignment_offset(const char *sysfs_dir,
-				   struct device *dev)
+unsigned long dev_alignment_offset(struct device *dev)
 {
-	return _dev_topology_attribute("alignment_offset",
-				       sysfs_dir, dev);
+	return _dev_topology_attribute("alignment_offset", dev);
 }
 
-unsigned long dev_minimum_io_size(const char *sysfs_dir,
-				  struct device *dev)
+unsigned long dev_minimum_io_size(struct device *dev)
 {
-	return _dev_topology_attribute("queue/minimum_io_size",
-				       sysfs_dir, dev);
+	return _dev_topology_attribute("queue/minimum_io_size", dev);
 }
 
-unsigned long dev_optimal_io_size(const char *sysfs_dir,
-				  struct device *dev)
+unsigned long dev_optimal_io_size(struct device *dev)
 {
-	return _dev_topology_attribute("queue/optimal_io_size",
-				       sysfs_dir, dev);
+	return _dev_topology_attribute("queue/optimal_io_size", dev);
 }
 
-unsigned long dev_discard_max_bytes(const char *sysfs_dir,
-				    struct device *dev)
+unsigned long dev_discard_max_bytes(struct device *dev)
 {
-	return _dev_topology_attribute("queue/discard_max_bytes",
-				       sysfs_dir, dev);
+	return _dev_topology_attribute("queue/discard_max_bytes", dev);
 }
 
-unsigned long dev_discard_granularity(const char *sysfs_dir,
-				      struct device *dev)
+unsigned long dev_discard_granularity(struct device *dev)
 {
-	return _dev_topology_attribute("queue/discard_granularity",
-				       sysfs_dir, dev);
+	return _dev_topology_attribute("queue/discard_granularity", dev);
 }
 
 #else
 
-int get_primary_dev(const char *sysfs_dir,
-		    struct device *dev, dev_t *result)
+int get_primary_dev(struct device *dev, dev_t *result)
 {
 	return 0;
 }
 
-unsigned long dev_alignment_offset(const char *sysfs_dir,
-				   struct device *dev)
+unsigned long dev_alignment_offset(struct device *dev)
 {
 	return 0UL;
 }
 
-unsigned long dev_minimum_io_size(const char *sysfs_dir,
-				  struct device *dev)
+unsigned long dev_minimum_io_size(struct device *dev)
 {
 	return 0UL;
 }
 
-unsigned long dev_optimal_io_size(const char *sysfs_dir,
-				  struct device *dev)
+unsigned long dev_optimal_io_size(struct device *dev)
 {
 	return 0UL;
 }
 
-unsigned long dev_discard_max_bytes(const char *sysfs_dir,
-				    struct device *dev)
+unsigned long dev_discard_max_bytes(struct device *dev)
 {
 	return 0UL;
 }
 
-unsigned long dev_discard_granularity(const char *sysfs_dir,
-				      struct device *dev)
+unsigned long dev_discard_granularity(struct device *dev)
 {
 	return 0UL;
 }

@@ -127,10 +127,10 @@ out:
 }
 
 static int _md_sysfs_attribute_snprintf(char *path, size_t size,
-					const char *sysfs_dir,
 					struct device *blkdev,
 					const char *attribute)
 {
+	const char *sysfs_dir = dm_sysfs_dir();
 	struct stat info;
 	dev_t dev = blkdev->dev;
 	int ret = -1;
@@ -140,7 +140,7 @@ static int _md_sysfs_attribute_snprintf(char *path, size_t size,
 
 	if (MAJOR(dev) == blkext_major()) {
 		/* lookup parent MD device from blkext partition */
-		if (!get_primary_dev(sysfs_dir, blkdev, &dev))
+		if (!get_primary_dev(blkdev, &dev))
 			return ret;
 	}
 
@@ -181,8 +181,8 @@ static int _md_sysfs_attribute_scanf(const char *sysfs_dir,
 	FILE *fp;
 	int ret = 0;
 
-	if (_md_sysfs_attribute_snprintf(path, PATH_MAX, sysfs_dir,
-					 dev, attribute_name) < 0)
+	if (_md_sysfs_attribute_snprintf(path, PATH_MAX, dev,
+					 attribute_name) < 0)
 		return ret;
 
 	if (!(fp = fopen(path, "r"))) {
@@ -271,8 +271,9 @@ static int dev_md_raid_disks(const char *sysfs_dir, struct device *dev)
 /*
  * Calculate stripe width of md device using its sysfs files.
  */
-unsigned long dev_md_stripe_width(const char *sysfs_dir, struct device *dev)
+unsigned long dev_md_stripe_width(struct device *dev)
 {
+	const char *sysfs_dir = dm_sysfs_dir();
 	unsigned long chunk_size_sectors = 0UL;
 	unsigned long stripe_width_sectors = 0UL;
 	int level, raid_disks, data_disks;
@@ -332,8 +333,7 @@ int dev_is_md(struct device *dev __attribute__((unused)),
 	return 0;
 }
 
-unsigned long dev_md_stripe_width(const char *sysfs_dir __attribute__((unused)),
-				  struct device *dev  __attribute__((unused)))
+unsigned long dev_md_stripe_width(struct device *dev  __attribute__((unused)))
 {
 	return 0UL;
 }

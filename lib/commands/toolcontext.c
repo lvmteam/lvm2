@@ -79,14 +79,15 @@ static int _get_env_vars(struct cmd_context *cmd)
 	return 1;
 }
 
-static void _get_sysfs_dir(struct cmd_context *cmd)
+static void _get_sysfs_dir(struct cmd_context *cmd, char *buf, size_t buf_size)
 {
 	static char proc_mounts[PATH_MAX];
 	static char *split[4], buffer[PATH_MAX + 16];
 	FILE *fp;
 	char *sys_mnt = NULL;
 
-	cmd->sysfs_dir[0] = '\0';
+	*buf = '\0';
+
 	if (!*cmd->proc_dir) {
 		log_debug("No proc filesystem found: skipping sysfs detection");
 		return;
@@ -119,7 +120,7 @@ static void _get_sysfs_dir(struct cmd_context *cmd)
 		return;
 	}
 
-	strncpy(cmd->sysfs_dir, sys_mnt, sizeof(cmd->sysfs_dir));
+	strncpy(buf, sys_mnt, buf_size);
 }
 
 static int _parse_debug_classes(struct cmd_context *cmd)
@@ -272,6 +273,7 @@ static int _process_config(struct cmd_context *cmd)
 	int64_t pv_min_kb;
 	const char *lvmetad_socket;
 	int udev_disabled = 0;
+	char sysfs_dir[PATH_MAX];
 
 	if (!config_def_check(cmd, 0, 0, 0) && find_config_tree_bool(cmd, config_abort_on_errors_CFG)) {
 		log_error("LVM configuration invalid.");
@@ -312,10 +314,8 @@ static int _process_config(struct cmd_context *cmd)
 		cmd->proc_dir[0] = '\0';
 	}
 
-	/* FIXME Use global value of sysfs_dir everywhere instead cmd->sysfs_dir. */
-	_get_sysfs_dir(cmd);
-	set_sysfs_dir_path(cmd->sysfs_dir);
-	dm_set_sysfs_dir(cmd->sysfs_dir);
+	_get_sysfs_dir(cmd, sysfs_dir, sizeof(sysfs_dir));
+	dm_set_sysfs_dir(sysfs_dir);
 
 	/* activation? */
 	cmd->default_settings.activation = find_config_tree_bool(cmd, global_activation_CFG);
@@ -804,7 +804,7 @@ static struct dev_filter *_init_filter_components(struct cmd_context *cmd)
 	 * unavailable devices.
 	 */
 	if (find_config_tree_bool(cmd, devices_sysfs_scan_CFG)) {
-		if ((filters[nr_filt] = sysfs_filter_create(cmd->sysfs_dir)))
+		if ((filters[nr_filt] = sysfs_filter_create()))
 			nr_filt++;
 	}
 
@@ -836,7 +836,7 @@ static struct dev_filter *_init_filter_components(struct cmd_context *cmd)
 
 	/* mpath component filter. Optional, non-critical. */
 	if (find_config_tree_bool(cmd, devices_multipath_component_detection_CFG)) {
-		if ((filters[nr_filt] = mpath_filter_create(cmd->sysfs_dir)))
+		if ((filters[nr_filt] = mpath_filter_create()))
 			nr_filt++;
 	}
 

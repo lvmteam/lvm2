@@ -17,7 +17,7 @@
 
 #include "dev-cache.h"
 
-struct dev_filter *mpath_filter_create(const char *sysfs_dir);
+struct dev_filter *mpath_filter_create(void);
 
 #endif
 

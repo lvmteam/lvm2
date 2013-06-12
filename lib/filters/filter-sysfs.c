@@ -290,8 +290,9 @@ static void _destroy(struct dev_filter *f)
 	dm_pool_destroy(ds->mem);
 }
 
-struct dev_filter *sysfs_filter_create(const char *sysfs_dir)
+struct dev_filter *sysfs_filter_create(void)
 {
+	const char *sysfs_dir = dm_sysfs_dir();
 	char sys_block[PATH_MAX];
 	unsigned sysfs_depth;
 	struct dm_pool *mem;
