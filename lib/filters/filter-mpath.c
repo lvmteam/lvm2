@@ -123,10 +123,40 @@ static int dev_is_mpath(struct dev_filter *f, struct device *dev)
 	const char *sysfs_dir = dm_sysfs_dir();
 	int major = MAJOR(dev->dev);
 	int minor = MINOR(dev->dev);
+	dev_t primary_dev;
 
 	/* Limit this filter only to SCSI devices */
 	if (!major_is_scsi_device(dt, MAJOR(dev->dev)))
 		return 0;
+
+	switch (dev_get_primary_dev(dt, dev, &primary_dev)) {
+		case -1:
+			/* Error. */
+			log_error("Failed to get primary device for %d:%d.", major, minor);
+			return 0;
+		case 0:
+			/* The dev is already a primary dev. Just continue with the dev. */
+			break;
+		case 1:
+			/* The dev is partition. */
+			name = dev_name(dev); /* name of original dev for log_debug msg */
+
+			/* Get primary dev from cache. */
+			if (!(dev = dev_cache_get_by_devt(primary_dev, NULL))) {
+				log_error("dev_is_mpath: failed to get device for %d:%d",
+					  major, minor);
+				return 0;
+			}
+
+			major = (int) MAJOR(primary_dev);
+			minor = (int) MINOR(primary_dev);
+
+			log_debug_devs("%s: Device is a partition, using primary "
+				       "device %s for mpath component detection",
+					name, dev_name(dev));
+
+			break;
+	}
 
 	if (!(name = get_sysfs_name(dev)))
 		return_0;
