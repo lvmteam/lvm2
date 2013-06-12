@@ -141,7 +141,7 @@ static int _md_sysfs_attribute_snprintf(char *path, size_t size,
 
 	if (MAJOR(dev) == dt->blkext_major) {
 		/* lookup parent MD device from blkext partition */
-		if (!dev_get_primary_dev(dt, blkdev, &dev))
+		if (dev_get_primary_dev(dt, blkdev, &dev) < 1)
 			return ret;
 	}
 
