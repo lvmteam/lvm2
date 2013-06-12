@@ -93,9 +93,11 @@ static int outline(FILE *out, char *buf, int start, int force) {
 
 	if (!strncmp(from, "@TESTDIR=", 9)) {
 		subst[0].key = "@TESTDIR@";
+		free(subst[0].value);
 		subst[0].value = strndup(from + 9, next - from - 9 - 1);
 	} else if (!strncmp(from, "@PREFIX=", 8)) {
 		subst[1].key = "@PREFIX@";
+		free(subst[1].value);
 		subst[1].value = strndup(from + 8, next - from - 8 - 1);
 	} else {
 		char *line = strndup(from, next - from);
@@ -150,6 +152,7 @@ static void trickle(FILE *out, int *last, int *counter) {
 
 static void clear(void) {
 	readbuf_used = 0;
+	fullbuffer = 0;
 }
 
 static int64_t _get_time_us(void)
@@ -389,13 +392,14 @@ static void run(int i, char *f) {
 				failed(i, f, st);
 		} else
 			failed(i, f, st);
-		clear();
+
 		if (outfile)
 			fclose(outfile);
 		if (fullbuffer)
 			printf("\nTest was interrupted, output has got too large (>%u) (loop:%u)\n"
 			       "Set LVM_TEST_UNLIMITED=1 for unlimited log.\n",
 			       (unsigned) readbuf_sz, fullbuffer);
+		clear();
 	}
 }
 
@@ -433,15 +437,20 @@ int main(int argc, char **argv) {
 	}
 
 	/* set up signal handlers */
-	for (i = 0; i <= 32; ++i) {
-		if (i == SIGCHLD || i == SIGWINCH || i == SIGURG)
-			continue;
-		signal(i, handler);
-	}
+	for (i = 0; i <= 32; ++i)
+		switch (i) {
+		case SIGCHLD: case SIGWINCH: case SIGURG:
+		case SIGKILL: case SIGSTOP: break;
+		default: signal(i, handler);
+		}
 
 	/* run the tests */
 	for (i = 1; !die && i < argc; ++i)
 		run(i, argv[i]);
+
+	free(subst[0].value);
+	free(subst[1].value);
+	free(readbuf);
 
 	printf("\n## %d tests %s : %d OK, %d warnings, %d failures, %d known failures; "
 	       "%d skipped, %d interrupted\n",
@@ -489,8 +498,6 @@ int main(int argc, char **argv) {
 		printf("\n");
 		return (s.nfailed > 0) || (s.ninterrupted > 0) || die;
 	}
-
-	free(readbuf);
 
 	return die;
 }
