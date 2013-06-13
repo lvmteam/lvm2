@@ -181,7 +181,7 @@ static int _move_mirrors(struct volume_group *vg_from,
 		seg_in = 0;
 		for (s = 0; s < seg->area_count; s++)
 			if (_lv_is_in_vg(vg_to, seg_lv(seg, s)))
-			    seg_in++;
+				seg_in++;
 
 		log_in = !seg->log_lv;
 		if (seg->log_lv) {
