@@ -62,6 +62,10 @@ static int _move_lvs(struct volume_group *vg_from, struct volume_group *vg_to)
 		if ((lv->status & MIRRORED))
 			continue;
 
+		if (lv_is_thin_pool(lv) ||
+		    lv_is_thin_volume(lv))
+			continue;
+
 		/* Ensure all the PVs used by this LV remain in the same */
 		/* VG as each other */
 		vg_with = NULL;
@@ -205,6 +209,53 @@ static int _move_mirrors(struct volume_group *vg_from,
 		if (seg_in == seg->area_count && log_in) {
 			if (!_move_one_lv(vg_from, vg_to, lvh))
 				return_0;
+		}
+	}
+
+	return 1;
+}
+
+static int _move_thins(struct volume_group *vg_from,
+		       struct volume_group *vg_to)
+{
+	struct dm_list *lvh, *lvht;
+	struct logical_volume *lv, *data_lv;
+	struct lv_segment *seg;
+
+	dm_list_iterate_safe(lvh, lvht, &vg_from->lvs) {
+		lv = dm_list_item(lvh, struct lv_list)->lv;
+
+		if (lv_is_thin_volume(lv)) {
+			seg = first_seg(lv);
+			data_lv = seg_lv(first_seg(seg->pool_lv), 0);
+			if ((_lv_is_in_vg(vg_to, data_lv) ||
+			     _lv_is_in_vg(vg_to, seg->external_lv))) {
+				if (_lv_is_in_vg(vg_from, seg->external_lv) ||
+				    _lv_is_in_vg(vg_from, data_lv)) {
+					log_error("Can't split external origin %s "
+						  "and pool %s between two Volume Groups.",
+						  seg->external_lv->name,
+						  seg->pool_lv->name);
+					return 0;
+				}
+				if (!_move_one_lv(vg_from, vg_to, lvh))
+					return_0;
+			}
+		} else if (lv_is_thin_pool(lv)) {
+			seg = first_seg(lv);
+			data_lv = seg_lv(seg, 0);
+			if (_lv_is_in_vg(vg_to, data_lv) ||
+			    _lv_is_in_vg(vg_to, seg->metadata_lv)) {
+				if (_lv_is_in_vg(vg_from, seg->metadata_lv) ||
+				    _lv_is_in_vg(vg_from, data_lv)) {
+					log_error("Can't split pool data and metadata %s "
+						  "between two Volume Groups.",
+						  lv->name);
+					return 0;
+				}
+				if (!_move_one_lv(vg_from, vg_to, lvh))
+					return_0;
+			}
 		}
 	}
 
@@ -428,6 +479,10 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 
 	/* Move required snapshots across */
 	if (!(_move_snapshots(vg_from, vg_to)))
+		goto_bad;
+
+	/* Move required pools across */
+	if (!(_move_thins(vg_from, vg_to)))
 		goto_bad;
 
 	/* Split metadata areas and check if both vgs have at least one area */

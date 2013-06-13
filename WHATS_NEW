@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Add support for thin volumes in vgsplit.
   Also filter partitions on mpath components if multipath_component_detection=1.
   Add lvresize support for online thin pool metadata volume resize.
   Add helper functions find_pool_lv() and pool_can_resize_metadata().
