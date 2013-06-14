@@ -655,7 +655,7 @@ activation {
     #     is triggered. This requires lvmetad (global/use_lvmetad=1) and udev
     #     to be running. In this case, "pvscan --cache -aay" is called
     #     automatically without any user intervention while processing
-    #     udev events. Please, make sure you define auto_activation_list
+    #     udev events. Please, make sure you define auto_activation_volume_list
     #     properly so only the volumes you want and expect are autoactivated.
     #
     #   - direct activation on command line with the autoactivation option.
