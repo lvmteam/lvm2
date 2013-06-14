@@ -916,7 +916,7 @@ int config_write(struct dm_config_tree *cft,
 		argv++;
 	}
 
-	if (baton.fp && dm_fclose(baton.fp)) {
+	if (baton.fp && baton.fp != stdout && dm_fclose(baton.fp)) {
 		stack;
 		r = 0;
 	}
