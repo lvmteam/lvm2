@@ -346,12 +346,16 @@ static int _write_node(const struct dm_config_node *cn, int only_one,
 		       const struct dm_config_node_out_spec *out_spec,
 		       void *baton)
 {
-	struct config_output out;
-	if (!(out.mem = dm_pool_create("config_output", 1024)))
+	struct config_output out = {
+		.mem = dm_pool_create("config_output", 1024),
+		.putline = putline,
+		.spec = out_spec,
+		.baton = baton
+	};
+
+	if (!out.mem)
 		return_0;
-	out.putline = putline;
-	out.spec = out_spec;
-	out.baton = baton;
+
 	if (!_write_config(cn, only_one, &out, 0)) {
 		dm_pool_destroy(out.mem);
 		return_0;

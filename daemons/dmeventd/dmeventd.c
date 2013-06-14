@@ -1830,8 +1830,8 @@ static void _daemonize(void)
 
 static void restart(void)
 {
-	struct dm_event_fifos fifos;
-	struct dm_event_daemon_message msg = { 0, 0, NULL };
+	struct dm_event_fifos fifos = { 0 };
+	struct dm_event_daemon_message msg = { 0 };
 	int i, count = 0;
 	char *message;
 	int length;

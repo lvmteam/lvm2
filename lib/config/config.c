@@ -879,15 +879,17 @@ int config_write(struct dm_config_tree *cft,
 		 int withcomment, int withversion,
 		 const char *file, int argc, char **argv)
 {
-	struct out_baton baton = {0, 0, 0};
+	static const struct dm_config_node_out_spec _out_spec = {
+		.prefix_fn = _out_prefix_fn,
+		.line_fn = _out_line_fn,
+		.suffix_fn = _out_suffix_fn
+	};
 	const struct dm_config_node *cn;
-	const struct dm_config_node_out_spec out_spec = {.prefix_fn = _out_prefix_fn,
-							 .line_fn = _out_line_fn,
-							 .suffix_fn = _out_suffix_fn};
+	struct out_baton baton = {
+		.withcomment = withcomment,
+		.withversion = withversion
+	};
 	int r = 1;
-
-	baton.withcomment = withcomment;
-	baton.withversion = withversion;
 
 	if (!file) {
 		baton.fp = stdout;
@@ -899,13 +901,13 @@ int config_write(struct dm_config_tree *cft,
 
 	log_verbose("Dumping configuration to %s", file);
 	if (!argc) {
-		if (!dm_config_write_node_out(cft->root, &out_spec, &baton)) {
+		if (!dm_config_write_node_out(cft->root, &_out_spec, &baton)) {
 			log_error("Failure while writing to %s", file);
 			r = 0;
 		}
 	} else while (argc--) {
 		if ((cn = dm_config_find_node(cft->root, *argv))) {
-			if (!dm_config_write_one_node_out(cn, &out_spec, &baton)) {
+			if (!dm_config_write_one_node_out(cn, &_out_spec, &baton)) {
 				log_error("Failure while writing to %s", file);
 				r = 0;
 			}
