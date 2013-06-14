@@ -493,6 +493,11 @@ static int _thin_add_target_line(struct dev_manager *dm,
 	char *pool_dlid, *external_dlid;
 	uint32_t device_id = seg->device_id;
 
+	if (!seg->pool_lv) {
+		log_error(INTERNAL_ERROR "Segment %s has no pool.",
+			  seg->lv->name);
+		return 0;
+	}
 	if (!(pool_dlid = build_dm_uuid(mem, seg->pool_lv->lvid.s, lv_layer(seg->pool_lv)))) {
 		log_error("Failed to build uuid for pool LV %s.",
 			  seg->pool_lv->name);
