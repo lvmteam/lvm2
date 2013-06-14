@@ -1020,7 +1020,7 @@ static void cpg_message_callback(cpg_handle_t handle, const struct cpg_name *gna
 	int i_am_server;
 	int response = 0;
 	struct clog_request *rq = msg;
-	struct clog_request *tmp_rq;
+	struct clog_request *tmp_rq, *tmp_rq2;
 	struct clog_cpg *match;
 
 	match = find_clog_cpg(handle);
@@ -1151,18 +1151,17 @@ static void cpg_message_callback(cpg_handle_t handle, const struct cpg_name *gna
 
 		if (match->state == INVALID) {
 			LOG_DBG("Log not valid yet, storing request");
-			tmp_rq = malloc(DM_ULOG_REQUEST_SIZE);
-			if (!tmp_rq) {
+			if (!(tmp_rq2 = malloc(DM_ULOG_REQUEST_SIZE))) {
 				LOG_ERROR("cpg_message_callback:  Unable to"
 					  " allocate transfer structs");
 				r = -ENOMEM; /* FIXME: Better error #? */
 				goto out;
 			}
 
-			memcpy(tmp_rq, rq, sizeof(*rq) + rq->u_rq.data_size);
-			tmp_rq->pit_server = match->lowest_id;
-			dm_list_init(&tmp_rq->u.list);
-			dm_list_add(&match->startup_list, &tmp_rq->u.list);
+			memcpy(tmp_rq2, rq, sizeof(*rq) + rq->u_rq.data_size);
+			tmp_rq2->pit_server = match->lowest_id;
+			dm_list_init(&tmp_rq2->u.list);
+			dm_list_add(&match->startup_list, &tmp_rq2->u.list);
 			goto out;
 		}
 
