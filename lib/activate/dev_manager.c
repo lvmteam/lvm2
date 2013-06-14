@@ -23,7 +23,6 @@
 #include "toolcontext.h"
 #include "targets.h"
 #include "config.h"
-#include "filter.h"
 #include "activate.h"
 #include "lvm-exec.h"
 

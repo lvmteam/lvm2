@@ -17,7 +17,6 @@
 #include "label.h"
 #include "metadata.h"
 #include "lvmcache.h"
-#include "filter.h"
 #include "xlate.h"
 #include "disk_rep.h"
 #include "toolcontext.h"

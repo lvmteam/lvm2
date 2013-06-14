@@ -15,10 +15,6 @@
 
 #include "lib.h"
 #include "filter.h"
-#include "lvm-string.h"
-#include "config.h"
-#include "metadata.h"
-#include "activate.h"
 
 static int _passes_lvm_type_device_filter(struct dev_filter *f, struct device *dev)
 {

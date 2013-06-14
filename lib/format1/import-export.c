@@ -20,7 +20,6 @@
 #include "lib.h"
 #include "disk-rep.h"
 #include "lvm-string.h"
-#include "filter.h"
 #include "toolcontext.h"
 #include "segtype.h"
 #include "pv_alloc.h"

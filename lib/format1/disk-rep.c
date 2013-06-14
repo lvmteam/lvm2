@@ -16,7 +16,6 @@
 #include "lib.h"
 #include "disk-rep.h"
 #include "xlate.h"
-#include "filter.h"
 #include "lvmcache.h"
 #include "metadata-exported.h"
 

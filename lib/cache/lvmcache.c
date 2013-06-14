@@ -19,8 +19,6 @@
 #include "dev-cache.h"
 #include "locking.h"
 #include "metadata.h"
-#include "filter.h"
-#include "filter-persistent.h"
 #include "memlock.h"
 #include "str_list.h"
 #include "format-text.h"
