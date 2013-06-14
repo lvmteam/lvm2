@@ -15,9 +15,6 @@
 
 #include "tools.h"
 
-const char _really_wipe[] =
-    "Really WIPE LABELS from physical volume \"%s\" of volume group \"%s\" [y/n]? ";
-
 /*
  * Decide whether it is "safe" to wipe the labels on this device.
  * 0 indicates we may not.
@@ -74,7 +71,9 @@ static int pvremove_check(struct cmd_context *cmd, const char *name)
 
 	/* prompt */
 	if (!arg_count(cmd, yes_ARG) &&
-	    yes_no_prompt(_really_wipe, name, pv_vg_name(pv)) == 'n') {
+	    yes_no_prompt("Really WIPE LABELS from physical volume \"%s\" "
+			  "of volume group \"%s\" [y/n]? ",
+			  name, pv_vg_name(pv)) == 'n') {
 		log_error("%s: physical volume label not removed", name);
 		goto bad;
 	}
