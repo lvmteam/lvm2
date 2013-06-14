@@ -662,13 +662,20 @@ activation {
     #     In this case, the user calls "vgchange --activate ay/-a ay" or
     #     "lvchange --activate ay/-a ay" directly.
     #
-    # If the VG/LV being processed does not match the list, the VG/LV is not
-    # activated. If auto_activation_volume_list is not set, then all volumes
-    # are activated by default.
+    # By default, the auto_activation_volume_list is not defined and all
+    # volumes will be activated either automatically or by using --activate ay/-a ay.
     #
     # N.B. The "activation/volume_list" is still honoured in all cases so even
     # if the VG/LV passes the auto_activation_volume_list, it still needs to
     # pass the volume_list for it to be activated in the end.
+
+    # If auto_activation_volume_list is defined but empty, no volumes will be
+    # activated automatically and --activate ay/-a ay will do nothing.
+    #
+    # auto_activation_volume_list = []
+
+    # If auto_activation_volume_list is defined and it's not empty, only matching
+    # volumes will be activated either automatically or by using --activate ay/-a ay.
     #
     #   "vgname" and "vgname/lvname" are matched exactly.
     #   "@tag" matches any tag set in the LV or VG.
