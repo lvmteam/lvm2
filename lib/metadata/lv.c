@@ -170,7 +170,7 @@ uint64_t lvseg_chunksize(const struct lv_segment *seg)
 
 	if (lv_is_cow(seg->lv))
 		size = (uint64_t) find_cow(seg->lv)->chunk_size;
-	else if (lv_is_thin_pool(seg->lv))
+	else if (seg_is_thin_pool(seg))
 		size = (uint64_t) seg->chunk_size;
 	else
 		size = UINT64_C(0);
@@ -254,14 +254,16 @@ char *lv_pool_lv_dup(struct dm_pool *mem, const struct logical_volume *lv)
 
 char *lv_data_lv_dup(struct dm_pool *mem, const struct logical_volume *lv)
 {
-	return lv_is_thin_pool(lv) ?
-		dm_pool_strdup(mem, seg_lv(first_seg(lv), 0)->name) : NULL;
+	struct lv_segment *seg = lv_is_thin_pool(lv) ? first_seg(lv) : NULL;
+
+	return seg ? dm_pool_strdup(mem, seg_lv(seg, 0)->name) : NULL;
 }
 
 char *lv_metadata_lv_dup(struct dm_pool *mem, const struct logical_volume *lv)
 {
-	return lv_is_thin_pool(lv) ?
-		dm_pool_strdup(mem, first_seg(lv)->metadata_lv->name) : NULL;
+	struct lv_segment *seg = lv_is_thin_pool(lv) ? first_seg(lv) : NULL;
+
+	return seg ? dm_pool_strdup(mem, seg->metadata_lv->name) : NULL;
 }
 
 const char *lv_layer(const struct logical_volume *lv)
@@ -310,27 +312,35 @@ char *lv_move_pv_dup(struct dm_pool *mem, const struct logical_volume *lv)
 {
 	struct lv_segment *seg;
 
-	dm_list_iterate_items(seg, &lv->segments) {
+	dm_list_iterate_items(seg, &lv->segments)
 		if (seg->status & PVMOVE)
 			return dm_pool_strdup(mem, dev_name(seg_dev(seg, 0)));
-	}
+
 	return NULL;
 }
 
 uint64_t lv_origin_size(const struct logical_volume *lv)
 {
+	struct lv_segment *seg;
+
 	if (lv_is_cow(lv))
 		return (uint64_t) find_cow(lv)->len * lv->vg->extent_size;
-	if (lv_is_thin_volume(lv) && first_seg(lv)->external_lv)
-		return first_seg(lv)->external_lv->size;
+
+	if (lv_is_thin_volume(lv) && (seg = first_seg(lv)) &&
+	    seg->external_lv)
+		return seg->external_lv->size;
+
 	if (lv_is_origin(lv))
 		return lv->size;
+
 	return 0;
 }
 
 uint64_t lv_metadata_size(const struct logical_volume *lv)
 {
-	return lv_is_thin_pool(lv) ? first_seg(lv)->metadata_lv->size : 0;
+	struct lv_segment *seg = lv_is_thin_pool(lv) ? first_seg(lv) : NULL;
+
+	return seg ? seg->metadata_lv->size : 0;
 }
 
 char *lv_path_dup(struct dm_pool *mem, const struct logical_volume *lv)

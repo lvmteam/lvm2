@@ -378,7 +378,12 @@ struct logical_volume *find_pool_lv(struct logical_volume *lv)
 {
 	struct lv_segment *seg;
 
-	if (!(seg = find_pool_seg(first_seg(lv))))
+	if (!(seg = first_seg(lv))) {
+		log_error("LV %s has no segment", lv->name);
+		return NULL;
+	}
+
+	if (!(seg = find_pool_seg(seg)))
 		return_NULL;
 
 	return seg->lv;
