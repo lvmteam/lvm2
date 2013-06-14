@@ -646,9 +646,29 @@ activation {
     # volume_list = [ "vg1", "vg2/lvol1", "@tag1", "@*" ]
 
     # If auto_activation_volume_list is defined, each LV that is to be
-    # activated with the autoactivation option (--activate ay/-a ay)
-    # is first checked against the list.  If it does not match, the LV
-    # is not activated.  This list is checked as well as volume_list.
+    # activated with the autoactivation option (--activate ay/-a ay) is
+    # first checked against the list. There are two scenarios in which
+    # the autoactivation option is used:
+    #
+    #   - automatic activation of volumes based on incoming PVs. If all the
+    #     PVs making up a VG are present in the system, the autoactivation
+    #     is triggered. This requires lvmetad (global/use_lvmetad=1) and udev
+    #     to be running. In this case, "pvscan --cache -aay" is called
+    #     automatically without any user intervention while processing
+    #     udev events. Please, make sure you define auto_activation_list
+    #     properly so only the volumes you want and expect are autoactivated.
+    #
+    #   - direct activation on command line with the autoactivation option.
+    #     In this case, the user calls "vgchange --activate ay/-a ay" or
+    #     "lvchange --activate ay/-a ay" directly.
+    #
+    # If the VG/LV being processed does not match the list, the VG/LV is not
+    # activated. If auto_activation_volume_list is not set, then all volumes
+    # are activated by default.
+    #
+    # N.B. The "activation/volume_list" is still honoured in all cases so even
+    # if the VG/LV passes the auto_activation_volume_list, it still needs to
+    # pass the volume_list for it to be activated in the end.
     #
     #   "vgname" and "vgname/lvname" are matched exactly.
     #   "@tag" matches any tag set in the LV or VG.

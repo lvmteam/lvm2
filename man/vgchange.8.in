@@ -70,8 +70,9 @@ group for input/output.
 In other words, makes the logical volumes known/unknown to the kernel.
 If autoactivation option is used (\-aay), each logical volume in
 the volume group is activated only if it matches an item in the
-activation/auto_activation_volume_list set in lvm.conf.
-Autoactivation is not yet supported for partial or clustered
+activation/auto_activation_volume_list set in lvm.conf. If this
+list is not set, then all volumes are considered for autoactivation.
+The autoactivation is not yet supported for partial or clustered
 volume groups.
 .IP
 If clustered locking is enabled, add 'e' to activate/deactivate

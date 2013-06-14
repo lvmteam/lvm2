@@ -47,8 +47,9 @@ Show UUIDs (Uniform Unique Identifiers) in addition to device special names.
 Together with the information already cached in lvmetad, automatically activate
 any logical volumes that become activatable after the scan done on one or more devices.
 The logical volume to autoactivate is matched against the
-activation/auto_activation_volume_list set in lvm.conf. Autoactivation is not yet
-supported on logical volumes that are part of partial or clustered volume groups.
+activation/auto_activation_volume_list set in lvm.conf. If this list is not set, then
+all volumes are considered for autoactivation. The autoactivation is not yet
+supported for logical volumes that are part of partial or clustered volume groups.
 .TP
 .BR \-\-cache " [" \-\-major " " \fImajor " " \-\-minor " " \fIminor " | " \fIDevicePath " ]..."
 Scan one or more devices and instruct the lvmetad daemon to update its cached

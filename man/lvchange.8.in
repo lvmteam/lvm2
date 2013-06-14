@@ -65,8 +65,9 @@ libdevmapper to activate (\-ay) or deactivate (\-an) the
 logical volumes. If autoactivation option is used (\-aay),
 the logical volume is activated only if it matches an item in
 the activation/auto_activation_volume_list set in lvm.conf.
-Autoactivation is not yet supported for logical volumes that
-are part of partial or clustered volume groups.
+If this list is not set, then all volumes are considered for
+autoactivation. The autoactivation is not yet supported for
+logical volumes that are part of partial or clustered volume groups.
 .IP
 If clustered locking is enabled, -aey will activate exclusively
 on one node and -aly will activate only on the local node.

@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Refine lvm.conf and man page documentation for autoactivation feature.
   Add support for thin volumes in vgsplit.
   Also filter partitions on mpath components if multipath_component_detection=1.
   Add lvresize support for online thin pool metadata volume resize.
