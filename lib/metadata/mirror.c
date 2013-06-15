@@ -1726,8 +1726,10 @@ int remove_mirror_log(struct cmd_context *cmd,
 				 "inactive mirror %s to core log. "
 				 "Proceed? [y/n]: ", lv->name) == 'y')
 		sync_percent = 0;
-	else
+	else {
+		log_error("Logical volume %s NOT converted.", lv->name);
 		return 0;
+	}
 
 	if (sync_percent == PERCENT_100)
 		init_mirror_in_sync(1);
