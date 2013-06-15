@@ -868,7 +868,7 @@ static int _remove_mirror_images(struct logical_volume *lv,
 		sub_lv = seg_lv(mirrored_seg, s);
 		if (!(is_temporary_mirror_layer(sub_lv) && lv_mirror_count(sub_lv) != 1)) {
 			if (!is_removable) {
-				log_error(INTERNAL_ERROR "Test is_removable undefined.");
+				log_error(INTERNAL_ERROR "_remove_mirror_images called incorrectly with is_removable undefined.");
 				return 0;
 			}
 			if (!is_removable(sub_lv, removable_baton))

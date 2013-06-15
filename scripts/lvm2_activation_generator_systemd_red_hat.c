@@ -19,7 +19,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <limits.h>		/* for PATH_MAX */
+#include <limits.h>		/* For PATH_MAX for musl libc */
 #include "lvm2app.h"
 
 #define KMSG_DEV_PATH        "/dev/kmsg"

@@ -93,7 +93,7 @@ devices {
     # Use anchors if you want to be really specific
     # filter = [ "a|^/dev/hda8$|", "r/.*/" ]
 
-    # Since "filter" is often overriden from command line, it is not suitable
+    # Since "filter" is often overridden from command line, it is not suitable
     # for system-wide device filtering (udev rules, lvmetad). To hide devices
     # from LVM-specific udev processing and/or from lvmetad, you need to set
     # global_filter. The syntax is the same as for normal "filter"

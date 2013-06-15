@@ -35,12 +35,12 @@ Specifies a metadata backup or archive file to be used for restoring
 VolumeGroupName.  Often this file has been created with \fBvgcfgbackup\fP.
 .TP
 .B \-\-force
-To restore metadata with thin pool volumes, user currently
-needs to use this flag. The tool DOES NOT perform any validation.
+Necessary to restore metadata with thin pool volumes.
 .br
-WARNING: Restoring lvm2 metadata that does not exactly match the 
-thin pool kernel metadata may lead to the destruction of the pool content.
-Use with extreme caution.
+\fBWARNING: Use with extreme caution.
+Most changes to thin metadata cannot be reverted.
+You may lose data if you restore metadata that does not match the thin pool
+kernel metadata precisely.\fP
 .SH REPLACING PHYSICAL VOLUMES
 \fBvgdisplay \-\-partial \-\-verbose\fP will show you the UUIDs and sizes of
 any PVs that are no longer present.

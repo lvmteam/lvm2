@@ -77,14 +77,14 @@ Version 2.02.99 -
   Fix missing cleanup of flags when the LV is detached from pool.
   Fix check for some forbidden discards conversion of thin pools.
   Add pool_is_active() to check for any pool related active LV.
-  Report blank field if the LV doesn't have an origin instead of 0.
+  Report blank origin_size field if the LV doesn't have an origin instead of 0.
   Do not take a free lv name argument for lvconvert --thinpool option.
-  Avoid flushing thin pool when quering for transaction_id.
+  Avoid flushing thin pool when just requesting transaction_id.
   Add internal function lv_layer() to obtain layer name for LV.
   Report partial and in-sync RAID attribute based on kernel status
   Fix blkdeactivate to handle nested mountpoints and mangled mount paths.
-  Set locales with LC_ALL instead of lower priority LANG variable.
-  Fix a crash-inducing race condition in lvmetad.
+  Use LC_ALL to set locale in daemons and fsadm instead of lower priority LANG.
+  Avoid crash-inducing race in lvmetad when VG disappears during rename.
   Add log/debug_classes to lvm.conf to control debug log messages.
   Synchronize with udev in pvscan --cache and fix dangling udev_sync cookies.
   Fix autoactivation to not autoactivate VG/LV on each change of the PVs used.
@@ -135,7 +135,7 @@ Version 2.02.99 -
   Remove dependency on fedora-storage-init.service in lvm2 systemd units.
   Depend on lvm2-lvmetad.socket in lvm2-monitor.service systemd unit.
   Hardcode use_lvmetad=0 if cluster locking used and issue a warning msg.
-  Avoid LVM from trying to read a mirror that has a failed device in its mirrored log.
+  Avoid trying to read a mirror that has a failed device in its mirrored log.
   Relax ignore_suspended_devices to read from mirrors that don't have a device marked failed.
   Change lvs heading Copy% to Cpy%Sync and print RAID4/5/6 sync% there too.
   Fix clvmd support for option -d and properly use its argument.

@@ -18,7 +18,7 @@
 #endif
 
 #include "dmlib.h"
-#include <stddef.h>
+#include <stddef.h>	/* For musl libc */
 #include <malloc.h>
 
 struct chunk {

@@ -14,7 +14,7 @@ Version 1.02.78 -
   Add dm_config_write_{node_out/one_node_out} for enhanced config output.
   Add dm_config_value_is_bool to check for boolean value in supported formats.
   Fix config node lookup inside empty sections to not return the section itself.
-  Extend support for status info of thin pool target.
+  Append discards and read-only fields to exported struct dm_status_thin_pool.
   Fix segfault for truncated string token in config file after the first '"'.
   Close open dmeventd FIFO file descriptors on exec (FD_CLOEXEC).
   Fix resource leak in error path of dmeventd's umount of thin volume.

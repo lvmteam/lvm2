@@ -1059,6 +1059,8 @@ int dev_manager_raid_status(struct dev_manager *dm,
 		goto out;
 	}
 
+	/* FIXME Check there's only one target */
+
 	if (!dm_get_status_raid(dm->mem, params, status))
 		goto_out;
 
@@ -1212,6 +1214,8 @@ int dev_manager_thin_pool_status(struct dev_manager *dm,
 		goto_out;
 
 	dm_get_next_target(dmt, NULL, &start, &length, &type, &params);
+
+	/* FIXME Check for thin and check there's exactly one target */
 
 	if (!dm_get_status_thin_pool(dm->mem, params, status))
 		goto_out;

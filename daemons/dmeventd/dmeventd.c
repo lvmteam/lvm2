@@ -37,7 +37,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <arpa/inet.h>		/* for htonl, ntohl */
-#include <fcntl.h>
+#include <fcntl.h>		/* for musl libc */
 
 #ifdef linux
 /*
