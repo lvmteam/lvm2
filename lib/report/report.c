@@ -35,6 +35,7 @@ struct lvm_report_object {
 
 static const uint64_t _minusone64 = UINT64_C(-1);
 static const int32_t _minusone32 = INT32_C(-1);
+static const uint64_t _zero64 = UINT64_C(0);
 
 /*
  * Data-munging functions to prepare each data type for display and sorting
@@ -608,7 +609,7 @@ static int _originsize_disp(struct dm_report *rh, struct dm_pool *mem,
 	uint64_t size;
 
 	if (!(size = lv_origin_size(lv))) {
-		dm_report_field_set_value(field, "", NULL);
+		dm_report_field_set_value(field, "", &_zero64);
 		return 1;
 	}
 
