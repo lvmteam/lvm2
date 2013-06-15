@@ -13,15 +13,15 @@
 
 aux prepare_vg 4
 
-lvcreate -l 1 -n $lv1 $vg
-lvcreate -l 2 -m 1 -n $lv2 $vg
+lvcreate -an -Zn -l 1 -n $lv1 $vg
+lvcreate -an -Zn -l 2 -m 1 -n $lv2 $vg
 
 vgcfgbackup -f bak0 $vg
 sed -e 's,striped,unstriped,;s,mirror,unmirror,' -i.orig bak0
 vgcfgrestore -f bak0 $vg
 
 # we have on-disk metadata with unknown segments now
-not lvchange -a y $vg/$lv1 # check that activation is refused
+not lvchange -aey $vg/$lv1 # check that activation is refused
 
 vgcfgbackup -f bak1 $vg
 cat bak1

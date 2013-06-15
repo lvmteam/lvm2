@@ -13,7 +13,7 @@
 
 aux prepare_vg 4
 
-lvcreate -m 1 --mirrorlog disk --ig -L 1 -n mirror $vg
+lvcreate -aey -m 1 --mirrorlog disk --ig -L 1 -n mirror $vg
 not lvconvert -m 2 --mirrorlog core $vg/mirror "$dev3" 2>&1 | tee errs
 grep "two steps" errs
 
@@ -22,5 +22,7 @@ lvconvert --mirrorlog core $vg/mirror
 not lvconvert -m 1 --mirrorlog disk $vg/mirror "$dev3" 2>&1 | tee errs
 grep "two steps" errs
 
+test -e LOCAL_CLVMD && exit 0
+# FIXME  mirrored unsupported in cluster
 not lvconvert -m 1 --mirrorlog mirrored $vg/mirror "$dev3" "$dev4" 2>&1 | tee errs
 grep "two steps" errs

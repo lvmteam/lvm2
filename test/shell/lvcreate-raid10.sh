@@ -11,8 +11,6 @@
 
 . lib/test
 
-test -e LOCAL_CLVMD && skip
-
 ########################################################
 # MAIN
 ########################################################
@@ -32,11 +30,12 @@ not lvcreate --type raid10 -m 2 -i 2 -l 2 -n $lv1 $vg
 # 2-way mirror, 2-stripes
 lvcreate --type raid10 -m 1 -i 2 -l 2 -n $lv1 $vg
 aux wait_for_sync $vg $lv1
-lvremove -ff $vg
 
 # 2-way mirror, 3-stripes
-lvcreate --type raid10 -m 1 -i 3 -l 3 -n $lv1 $vg
-aux wait_for_sync $vg $lv1
+lvcreate --type raid10 -m 1 -i 3 -l 3 -n $lv2 $vg
+aux wait_for_sync $vg $lv2
+
+
 lvremove -ff $vg
 
 #

@@ -13,9 +13,10 @@
 
 . lib/test
 
-aux prepare_vg 2 128
+aux prepare_pvs 2 128
+vgcreate $vg $(cat DEVICES)
 
-lvcreate -L 64m -n $lv $vg
+lvcreate -L64 -n $lv $vg
 
 # 'lvextend rejects both size and extents without PVs'
 not lvextend -l 10 -L 64m $vg/$lv 2>err

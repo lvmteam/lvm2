@@ -63,7 +63,7 @@ check_and_cleanup_lvs_
 #COMM "init: lvcreate"
 
 #COMM "mirror images are ${lv1}_mimage_x"
-lvcreate -l2 -m1 -n $lv1 $vg
+lvcreate -an -Zn -l2 -m1 -n $lv1 $vg
 lv_devices_ $vg/$lv1 ${lv1}_mimage_0 ${lv1}_mimage_1
 
 #COMM "mirror log is ${lv1}_mlog"
@@ -74,7 +74,7 @@ check_and_cleanup_lvs_
 
 #COMM "mirror with name longer than 22 characters (bz221322)"
 name="LVwithanamelogerthan22characters_butidontwonttocounthem"
-lvcreate -m1 -l2 -n $name $vg
+lvcreate -an -Zn -m1 -l2 -n $name $vg
 lvs $vg/$name
 check_and_cleanup_lvs_
 
@@ -84,7 +84,7 @@ check_and_cleanup_lvs_
 #COMM "init: lvrename"
 
 #COMM "renamed mirror names: $lv1 to $lv2"
-lvcreate -l2 -m1 -n $lv1 $vg
+lvcreate -an -Zn -l2 -m1 -n $lv1 $vg
 lvrename $vg/$lv1 $vg/$lv2
 lv_devices_ $vg/$lv2 ${lv2}_mimage_0 ${lv2}_mimage_1
 lv_mirror_log_ $vg/$lv2 ${lv2}_mlog
@@ -98,7 +98,7 @@ check_and_cleanup_lvs_
 #COMM "init: lvconvert"
 
 #COMM "converting mirror names is ${lv1}_mimagetmp_2"
-lvcreate -l2 -m1 -n $lv1 $vg
+lvcreate -aey -l2 -m1 -n $lv1 $vg
 lvconvert -m+1 -i+40 -b $vg/$lv1
 convlv=$(lv_convert_lv_ $vg/$lv1)
 test $convlv = ${lv1}_mimagetmp_2
@@ -107,7 +107,7 @@ lv_devices_ $vg/$convlv ${lv1}_mimage_0 ${lv1}_mimage_1
 lv_mirror_log_ $vg/$convlv ${lv1}_mlog
 
 #COMM "mirror log name after re-adding is ${lv1}_mlog" \
-lvconvert --mirrorlog core $vg/$lv1
+lvconvert -f --mirrorlog core $vg/$lv1
 lvconvert --mirrorlog disk $vg/$lv1
 convlv=$(lv_convert_lv_ $vg/$lv1)
 lv_devices_ $vg/$lv1 $convlv ${lv1}_mimage_2

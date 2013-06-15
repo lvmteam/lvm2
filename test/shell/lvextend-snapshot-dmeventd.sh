@@ -36,7 +36,7 @@ wait_for_change_() {
 aux prepare_dmeventd
 aux prepare_vg 2
 
-lvcreate -L16M -n base $vg
+lvcreate -aey -L16M -n base $vg
 lvcreate -s -L4M -n snap $vg/base
 
 write_ 0 1000

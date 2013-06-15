@@ -13,30 +13,19 @@
 
 aux target_at_least dm-raid 1 3 0 || skip
 
-aux prepare_vg 5 80
+aux prepare_vg 5
 
-# Extend RAID10 (2-stripes, 2-mirror)
 for deactivate in true false; do
+# Extend RAID10 (2-stripes, 2-mirror)
 	lvcreate --type raid10 -m 1 -i 2 -l 2 -n $lv1 $vg
 
-	if $deactivate; then
-		lvchange -an $vg/$lv1
-	fi
+	test $deactivate && lvchange -an $vg/$lv1
 
 	lvresize -l +2 $vg/$lv1
 
 	#check raid_images_contiguous $vg $lv1
 
-	lvremove -ff $vg
-done
-
 # Reduce RAID10 (2-stripes, 2-mirror)
-for deactivate in true false; do
-	lvcreate --type raid10 -m 1 -i 2 -l 4 -n $lv1 $vg
-
-	if $deactivate; then
-		lvchange -an $vg/$lv1
-	fi
 
 	should lvresize -y -l -2 $vg/$lv1
 

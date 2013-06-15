@@ -13,7 +13,7 @@
 
 aux prepare_vg 3 12
 
-lvcreate -m 1 -l 1 -n mirror $vg
+lvcreate -aye -m 1 -l 1 -n mirror $vg
 lvcreate -l 1 -n resized $vg
 lvchange -a n $vg/mirror
 
@@ -21,15 +21,9 @@ aux backup_dev $(cat DEVICES)
 
 init() {
 	aux restore_dev $(cat DEVICES)
-	lvs -o lv_name,lv_size --units k $vg | tee lvs.out
-	grep resized lvs.out | not grep 8192
+	not check lv_field $vg/resized lv_size "8.00m"
 	lvresize -L 8192K $vg/resized
 	aux restore_dev "$dev1"
-}
-
-check() {
-	lvs -o lv_name,lv_size --units k $vg | tee lvs.out
-	grep resized lvs.out | grep 8192
 }
 
 # vgscan fixes up metadata (needs --cache option for direct scan if lvmetad is used)
@@ -40,7 +34,7 @@ grep "Inconsistent metadata found for VG $vg" cmd.out
 test -e LOCAL_LVMETAD && vgrename $vg foo && vgrename foo $vg # trigger a write
 vgscan $cache 2>&1 | tee cmd.out
 not grep "Inconsistent metadata found for VG $vg" cmd.out
-check
+check lv_field $vg/resized lv_size "8.00m"
 
 # only vgscan would have noticed metadata inconsistencies when lvmetad is active
 if test ! -e LOCAL_LVMETAD; then
@@ -50,7 +44,7 @@ if test ! -e LOCAL_LVMETAD; then
 	grep "Inconsistent metadata found for VG $vg" cmd.out
 	vgdisplay $vg 2>&1 | tee cmd.out
 	not grep "Inconsistent metadata found for VG $vg" cmd.out
-	check
+	check lv_field $vg/resized lv_size "8.00m"
 
 	# lvs fixes up
 	init
@@ -58,7 +52,7 @@ if test ! -e LOCAL_LVMETAD; then
 	grep "Inconsistent metadata found for VG $vg" cmd.out
 	vgdisplay $vg 2>&1 | tee cmd.out
 	not grep "Inconsistent metadata found for VG $vg" cmd.out
-	check
+	check lv_field $vg/resized lv_size "8.00m"
 
 	# vgs fixes up as well
 	init
@@ -66,7 +60,7 @@ if test ! -e LOCAL_LVMETAD; then
 	grep "Inconsistent metadata found for VG $vg" cmd.out
 	vgs $vg 2>&1 | tee cmd.out
 	not grep "Inconsistent metadata found for VG $vg" cmd.out
-	check
+	check lv_field $vg/resized lv_size "8.00m"
 fi
 
 echo Check auto-repair of failed vgextend - metadata written to original pv but not new pv

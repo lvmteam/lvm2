@@ -23,19 +23,19 @@ cleanup() {
 	for d in "$@"; do aux enable_dev "$d"; done
 	for d in "$@"; do vgextend $vg "$d"; done
 	lvremove -ff $vg/mirror
-	lvcreate -m 1 --ig -l 2 -n mirror $vg "$dev1" "$dev2" "$dev3":0
+	lvcreate -aey -m 1 --ig -l 2 -n mirror $vg "$dev1" "$dev2" "$dev3":0
 }
 
 repair() {
 	lvconvert --repair --use-policies --config "$1" $vg/mirror
 }
 
-lvcreate -m 1 -L 1 -n mirror $vg
+lvcreate -aey -m 1 -L 1 -n mirror $vg
 lvchange -a n $vg/mirror
 
 # Fail a leg of a mirror.
 aux disable_dev "$dev1"
-lvchange --partial -a y $vg/mirror
+lvchange --partial -aey $vg/mirror
 repair 'activation { mirror_image_fault_policy = "remove" }'
 check linear $vg mirror
 cleanup "$dev1"
@@ -83,7 +83,7 @@ cleanup "$dev3" "$dev4"
 
 # Fail the log device with a remove policy
 # Expected result: mirror w/ corelog
-lvchange -a y $vg/mirror
+lvchange -aey $vg/mirror
 aux disable_dev "$dev3" "$dev4"
 repair 'activation { mirror_log_fault_policy = "remove" }'
 check mirror $vg mirror core

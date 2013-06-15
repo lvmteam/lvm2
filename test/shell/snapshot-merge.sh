@@ -27,12 +27,12 @@ setup_merge_() {
     local NUM_EXTRA_SNAPS=${3:-0}
     local BASE_SNAP_LV_NAME=$(snap_lv_name_ $LV_NAME)
 
-    lvcreate -n $LV_NAME -l 50%FREE $VG_NAME
+    lvcreate -aey -n $LV_NAME -l 50%FREE $VG_NAME
     lvcreate -s -n $BASE_SNAP_LV_NAME -l 20%FREE ${VG_NAME}/${LV_NAME}
     mkfs.ext3 "$(lvdev_ $VG_NAME $LV_NAME)"
 
     if [ $NUM_EXTRA_SNAPS -gt 0 ]; then
-	for i in `seq 1 $NUM_EXTRA_SNAPS`; do
+	for i in $(seq 1 $NUM_EXTRA_SNAPS); do
 	    lvcreate -s -n ${BASE_SNAP_LV_NAME}_${i} -l 20%FREE ${VG_NAME}/${LV_NAME}
 	done
     fi
@@ -47,7 +47,7 @@ setup_merge_ $vg $lv1
 aux target_at_least snapshot-merge 1 0 0 || skip
 
 # make sure lvconvert --merge requires explicit LV listing
-not lvconvert --merge 2>err
+not lvconvert --merge
 lvconvert --merge $vg/$(snap_lv_name_ $lv1)
 lvremove -f $vg/$lv1
 
@@ -105,7 +105,7 @@ setup_merge_ $vg $lv2
 lvchange --addtag this_is_a_test $vg/$(snap_lv_name_ $lv1)
 lvchange --addtag this_is_a_test $vg/$(snap_lv_name_ $lv2)
 lvconvert --merge @this_is_a_test
-lvs $vg >out
+lvs $vg | tee out
 not grep $(snap_lv_name_ $lv1) out
 not grep $(snap_lv_name_ $lv2) out
 lvremove -f $vg/$lv1 $vg/$lv2

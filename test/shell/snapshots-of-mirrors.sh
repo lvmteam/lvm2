@@ -14,7 +14,7 @@
 aux prepare_vg 4
 
 # Attempt to create snapshot of a mirror origin - should fail
-lvcreate -m 1 -L 10M -n lv $vg
+lvcreate -aey -m 1 -L 10M -n lv $vg
 
 lvcreate -s $vg/lv -L 10M -n snap
 
@@ -34,7 +34,9 @@ not lvconvert -m2 $vg/lv
 lvconvert --mirrorlog core $vg/lv
 
 # Log conversion (core -> mirrored)
-lvconvert --mirrorlog mirrored $vg/lv
+# FIXME on cluster
+test -e LOCAL_CLVMD && SHOULD=should
+$SHOULD lvconvert --mirrorlog mirrored $vg/lv
 
 # Log conversion (mirrored -> core)
 lvconvert --mirrorlog core $vg/lv

@@ -139,7 +139,10 @@ run_syncaction_check() {
 
 		# Run "check" should turn up clean
 		lvchange --syncaction check $1/$2
+		aux wait_for_sync $1 $2
+		sync
 	fi
+
 	lvs --noheadings -o lv_attr $1/$2 | grep '.*-$'
 	[ `lvs --noheadings -o mismatches $1/$2` == 0 ]
 

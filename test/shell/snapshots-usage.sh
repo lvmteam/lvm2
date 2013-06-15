@@ -17,7 +17,8 @@ fill() {
 	dd if=/dev/zero of=$DM_DEV_DIR/$vg1/lvol0 bs=$1 count=1
 }
 
-aux prepare_vg
+aux prepare_pvs 1
+vgcreate -s 4M $vg $(cat DEVICES)
 
 lvcreate -s -l 100%FREE -n $lv $vg --virtualsize 15P
 

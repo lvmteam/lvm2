@@ -11,7 +11,6 @@
 
 . lib/test
 
-test -e LOCAL_CLVMD && skip
 aux target_at_least dm-raid 1 1 0 || skip
 
 aux lvmconf 'allocation/maximise_cling = 0'

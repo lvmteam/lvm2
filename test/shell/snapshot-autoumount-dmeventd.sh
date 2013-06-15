@@ -22,17 +22,17 @@ aux prepare_dmeventd
 aux prepare_vg 2
 mntdir="${PREFIX}mnt"
 
-lvcreate -l 8 -n base $vg
+lvcreate -aey -L8 -n base $vg
 mkfs.ext2 "$DM_DEV_DIR/$vg/base"
 
-lvcreate -s -l 4 -n snap $vg/base
+lvcreate -s -L4 -n snap $vg/base
 lvchange --monitor y $vg/snap
 
 mkdir "$mntdir"
 mount "$DM_DEV_DIR/mapper/$vg-snap" "$mntdir"
 mount
 cat /proc/mounts | grep "$mntdir"
-dd if=/dev/zero of="$mntdir/file$1" bs=1M count=16
+dd if=/dev/zero of="$mntdir/file$1" bs=1M count=5
 sync
 #dmeventd only checks every 10 seconds :(
 for i in {1..10}; do

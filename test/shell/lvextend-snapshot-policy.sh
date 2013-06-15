@@ -30,10 +30,10 @@ percent() {
 aux prepare_dmeventd
 aux prepare_vg 2
 
-lvcreate -l 8 -n base $vg
+lvcreate -aey -L24 -n base $vg
 mkfs.ext2 "$DM_DEV_DIR/$vg/base"
 
-lvcreate -s -l 4 -n snap $vg/base
+lvcreate -s -L16 -n snap $vg/base
 mkdir mnt
 
 write 1 4096

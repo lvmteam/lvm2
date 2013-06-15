@@ -20,8 +20,8 @@ check_() {
 
 aux prepare_vg 3
 
-lvcreate -m 1 -l 1 -n mirror $vg
-lvchange -a n $vg
+lvcreate -an -Zn -m 1 -l 1 -n mirror $vg
+#lvchange -a n $vg
 
 # try orphaning a missing PV (bz45867)
 aux disable_dev "$dev1"

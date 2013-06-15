@@ -14,16 +14,19 @@
 aux prepare_vg 5
 aux prepare_dmeventd
 
-lvcreate -m 3 --ig -L 1 -n 4way $vg
+lvcreate -aey -m 3 --ig -L 1 -n 4way $vg
 lvchange --monitor y $vg/4way
 aux disable_dev "$dev2" "$dev4"
 mkfs.ext3 $DM_DEV_DIR/$vg/4way
 aux enable_dev "$dev2" "$dev4"
 sleep 3
-lvs -a -o +devices $vg | not grep unknown
+lvs -a -o +devices $vg | tee out
+not grep unknown out
 check mirror $vg 4way
 check mirror_legs $vg 4way 2
-lvs -a -o +devices $vg | not grep mimage_1
-lvs -a -o +devices $vg | not grep mimage_3
+lvs -a -o +devices $vg | tee out
+not grep mimage_1 out
+lvs -a -o +devices $vg | tee out
+not grep mimage_3 out
 
 vgremove -f $vg

@@ -17,19 +17,22 @@ aux prepare_pvs 3
 
 vgcreate -s 1M $vg $(cat DEVICES)
 
-lvcreate -l1 -T $vg/pool
+for deactivate in true false; do
+	lvcreate -l1 -T $vg/pool
+
+	test $deactivate && lvchange -an $vg
 
 # Confirm we have basic 2M metadata
-check lv_field $vg/pool_tmeta size "2.00m"
+	check lv_field $vg/pool_tmeta size "2.00m"
 
-lvresize --poolmetadata +2 $vg/pool
+	lvresize --poolmetadata +2 $vg/pool
 
 # Test it's been resized to 4M
-check lv_field $vg/pool_tmeta size "4.00m"
+	check lv_field $vg/pool_tmeta size "4.00m"
 
 # TODO: Add more tests when kernel is fixed
 
 
 # TODO: Make a full metadata device and test dmeventd support
-
-vgremove -ff $vg
+	lvremove -ff $vg
+done

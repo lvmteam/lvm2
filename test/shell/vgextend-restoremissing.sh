@@ -13,8 +13,7 @@
 
 aux prepare_vg 3
 
-lvcreate -m 1 -l 1 -n mirror $vg
-lvchange -a n $vg/mirror
+lvcreate -an -Zn -m 1 -l 1 -n mirror $vg
 lvcreate -l 1 -n lv1 $vg "$dev1"
 
 # try to just change metadata; we expect the new version (with MISSING_PV set
@@ -24,7 +23,7 @@ lvremove $vg/mirror
 aux enable_dev "$dev1"
 not vgck $vg 2>&1 | tee log
 grep "missing 1 physical volume" log
-not lvcreate -m 1 -l 1 -n mirror $vg # write operations fail
+not lvcreate -aey -m 1 -l 1 -n mirror $vg # write operations fail
 vgextend --restore $vg "$dev1" # restore the missing device
 vgck $vg
-lvcreate -m 1 -l 1 -n mirror $vg
+lvcreate -an -Zn -m 1 -l 1 -n mirror $vg
