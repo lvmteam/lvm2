@@ -22,16 +22,15 @@ struct segment_type *get_segtype_from_string(struct cmd_context *cmd,
 {
 	struct segment_type *segtype;
 
-	dm_list_iterate_items(segtype, &cmd->segtypes) {
+	dm_list_iterate_items(segtype, &cmd->segtypes)
 		if (!strcmp(segtype->name, str))
 			return segtype;
-	}
 
 	if (!(segtype = init_unknown_segtype(cmd, str)))
 		return_NULL;
 
-	segtype->library = NULL;
 	dm_list_add(&cmd->segtypes, &segtype->list);
 	log_warn("WARNING: Unrecognised segment type %s", str);
+
 	return segtype;
 }
