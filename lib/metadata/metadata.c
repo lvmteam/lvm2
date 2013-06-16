@@ -913,7 +913,10 @@ int vg_has_unknown_segments(const struct volume_group *vg)
 struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name)
 {
 	struct volume_group *vg;
-	struct format_instance_ctx fic;
+	struct format_instance_ctx fic = {
+		.type = FMT_INSTANCE_MDAS | FMT_INSTANCE_AUX_MDAS,
+		.context.vg_ref.vg_name = vg_name
+	};
 	struct format_instance *fid;
 	int consistent = 0;
 	uint32_t rc;
@@ -955,22 +958,12 @@ struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name)
 		goto_bad;
 
 	*vg->system_id = '\0';
-
 	vg->extent_size = DEFAULT_EXTENT_SIZE * 2;
-	vg->extent_count = 0;
-	vg->free_count = 0;
-
 	vg->max_lv = DEFAULT_MAX_LV;
 	vg->max_pv = DEFAULT_MAX_PV;
-
 	vg->alloc = DEFAULT_ALLOC_POLICY;
 	vg->mda_copies = DEFAULT_VGMETADATACOPIES;
 
-	vg->pv_count = 0;
-
-	fic.type = FMT_INSTANCE_MDAS | FMT_INSTANCE_AUX_MDAS;
-	fic.context.vg_ref.vg_name = vg_name;
-	fic.context.vg_ref.vg_id = NULL;
 	if (!(fid = cmd->fmt->ops->create_instance(cmd->fmt, &fic))) {
 		log_error("Failed to create format instance");
 		goto bad;
