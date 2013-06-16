@@ -56,12 +56,13 @@ uint32_t cow_max_extents(const struct logical_volume *origin, uint32_t chunk_siz
 {
 	uint64_t size = _cow_max_size(origin->size, chunk_size);
 	uint32_t extent_size = origin->vg->extent_size;
+	uint64_t max_size = (uint64_t) MAX_EXTENT_COUNT * extent_size;
 
 	if (size % extent_size)
 		size += extent_size - size % extent_size;
 
-	if (size > UINT32_MAX)
-		size = UINT32_MAX; /* Origin is too big for 100% snapshot anyway */
+	if (size > max_size)
+		size = max_size; /* Origin is too big for 100% snapshot anyway */
 
 	return (uint32_t) (size / extent_size);
 }

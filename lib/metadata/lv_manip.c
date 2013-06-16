@@ -4544,7 +4544,8 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 	}
 
 	if (lp->snapshot && !seg_is_thin(lp) &&
-	    ((uint64_t)(lp->extents * vg->extent_size) < (SNAPSHOT_MIN_CHUNKS * lp->chunk_size))) {
+	    (((uint64_t)lp->extents * vg->extent_size) <
+	     (SNAPSHOT_MIN_CHUNKS * lp->chunk_size))) {
 		log_error("Unable to create a snapshot smaller than "
 			  DM_TO_STRING(SNAPSHOT_MIN_CHUNKS) " chunks (%u extents, %s).",
 			  (unsigned) (((uint64_t) SNAPSHOT_MIN_CHUNKS * lp->chunk_size +

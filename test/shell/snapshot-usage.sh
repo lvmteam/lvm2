@@ -37,18 +37,17 @@ fill 1K
 check lv_field $vg1/lvol1 data_percent "12.00"
 lvremove -ff $vg1
 
-# Create 1KB snapshot
-lvcreate -aey -l1 $vg1
-not lvcreate -s -l1 $vg1/lvol0
-not lvcreate -s -l3 $vg1/lvol0
-lvcreate -s -l30 $vg1/lvol0
-check lv_field $vg1/lvol1 size "12.00k"
+# Create 1KB snapshot, no need to be active active here
+lvcreate -an -Zn -l1 -n $lv1 $vg1
+not lvcreate -s -l1 $vg1/$lv1
+not lvcreate -s -l3 $vg1/$lv1
+lvcreate -s -l30 -n $lv2 $vg1/$lv1
+check lv_field $vg1/$lv2 size "12.00k"
 
-not lvcreate -s -c512 -l512 $vg1/lvol0
-lvcreate -aey -s -c128 -l1700 $vg1/lvol0
+not lvcreate -s -c512 -l512 $vg1/$lv1
+lvcreate -s -c128 -l1700 -n $lv3 $vg1/$lv1
 # 3 * 128
-check lv_field $vg1/lvol2 size "384.00k"
-
+check lv_field $vg1/$lv3 size "384.00k"
 lvremove -ff $vg1
 
 lvcreate -aey -l20 $vg1
@@ -72,16 +71,17 @@ check lv_field $vg1/lvol1 size "28.00k"
 fill 20K
 vgremove -ff $vg1
 
-# Check usability with large extent size
+# Check usability with largest extent size
 pvcreate $DM_DEV_DIR/$vg/$lv
 vgcreate -s 4G $vg1 $DM_DEV_DIR/$vg/$lv
 
-lvcreate -aey -l1 $vg1
-lvcreate -s -l1 $vg1/lvol0
-check lv_field $vg1/lvol1 size "4.00g"
-
-lvcreate -aey -V15E -l1 -s $vg1
-check lv_field $vg1/lvol2 origin_size "15.00e"
+lvcreate -an -Zn -l50%FREE -n $lv1 $vg1
+lvcreate -s -l100%FREE -n $lv2 $vg1/$lv1
+check lv_field $vg1/$lv2 size "7.50p"
+lvremove -ff $vg1
+ 
+lvcreate -aey -V15E -l1 -n $lv1 -s $vg1
+check lv_field $vg1/$lv1 origin_size "15.00e"
 
 vgremove -ff $vg1
 vgremove -ff $vg
