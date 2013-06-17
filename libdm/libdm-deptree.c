@@ -2978,7 +2978,7 @@ int dm_get_status_raid(struct dm_pool *mem, const char *params,
 	if (!(s->dev_health = dm_pool_zalloc(mem, i + 1)))
 		goto_bad;
 
-	if (sscanf(params, "%s %d %s %" PRIu64 "/%" PRIu64,
+	if (sscanf(params, "%s %u %s %" PRIu64 "/%" PRIu64,
 		   s->raid_type,
 		   &s->dev_count,
 		   s->dev_health,

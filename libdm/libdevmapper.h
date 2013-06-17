@@ -281,7 +281,7 @@ struct dm_status_raid {
 	uint64_t total_regions;
 	uint64_t insync_regions;
 	uint64_t mismatch_count;
-	int dev_count;
+	uint32_t dev_count;
 	char *raid_type;
 	char *dev_health;
 	char *sync_action;
