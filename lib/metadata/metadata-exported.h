@@ -150,9 +150,9 @@
 
 #define lv_is_thin_type(lv)	((lv)->status & (THIN_POOL | THIN_VOLUME | THIN_POOL_DATA | THIN_POOL_METADATA) ? 1 : 0)
 #define lv_is_mirror_type(lv)	((lv)->status & (MIRROR_LOG | MIRROR_IMAGE | MIRRORED | PVMOVE) ? 1 : 0)
-#define lv_is_raid_type(lv)	((lv)->status & (RAID | RAID_IMAGE | RAID_META))
+#define lv_is_raid_type(lv)	(((lv)->status & (RAID | RAID_IMAGE | RAID_META)) ? 1 : 0)
 
-#define lv_is_virtual(lv)	((lv)->status & VIRTUAL)
+#define lv_is_virtual(lv)	(((lv)->status & VIRTUAL) ? 1 : 0)
 
 /* Ordered list - see lv_manip.c */
 typedef enum {
