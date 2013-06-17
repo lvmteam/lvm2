@@ -177,11 +177,16 @@ run_syncaction_check() {
 # run_refresh_check <VG> <LV>
 #   Assumes "$dev2" is in the array
 run_refresh_check() {
+	local size
+
 	aux wait_for_sync $1 $2
+
+	size=`lvs -a --noheadings -o size --units 1k $1/$2 | sed s/\.00k//`
+	size=$(sed s/^[[:space:]]*// <<< "$size")
 
 	# Disable dev2 and do some I/O to make the kernel notice
 	aux disable_dev "$dev2"
-	dd if=/dev/urandom of=/dev/$1/$2 bs=4M count=1
+	dd if=/dev/urandom of=/dev/$1/$2 bs=1k count=$size
 
 	# Check for 'p'artial flag
 	lvs --noheadings -o lv_attr $1/$2 | grep '.*p$'
