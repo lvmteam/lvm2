@@ -4525,7 +4525,9 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 {
 	percent_t snap_percent;
 	struct dm_list *snh, *snht;
+	struct lv_list *lvl;
 	struct lvinfo info;
+	int is_last_pool;
 
 	if (lv_is_cow(lv)) {
 		/*
@@ -4582,6 +4584,30 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 	if (lv_is_used_thin_pool(lv) &&
 	    !_lv_remove_segs_using_this_lv(cmd, lv, force, level, "pool"))
 		return_0;
+
+	if (lv_is_thin_pool(lv) && lv->vg->pool_metadata_spare_lv) {
+		/* When removing last thin pool, remove also spare */
+		is_last_pool = 1;
+		dm_list_iterate_items(lvl, &lv->vg->lvs)
+			if (lv_is_thin_pool(lvl->lv) && lvl->lv != lv) {
+				is_last_pool = 0;
+				break;
+			}
+
+		if (is_last_pool &&
+		    !lv_remove_with_dependencies(cmd, lv->vg->pool_metadata_spare_lv,
+						 DONT_PROMPT, level + 1))
+			return_0;
+	}
+
+	if (lv_is_pool_metadata_spare(lv) &&
+	    (force == PROMPT) &&
+	    (yes_no_prompt("Removal of pool metadata spare logical volume \"%s\" "
+			   "disables automatic recovery attempts after damage "
+			   "to a thin pool. Proceed? [y/n]: ", lv->name) == 'n')) {
+		log_error("Logical volume \"%s\" not removed.", lv->name);
+		return 0;
+	}
 
 	return lv_remove_single(cmd, lv, force);
 }
