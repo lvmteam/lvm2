@@ -549,7 +549,7 @@ unsigned long dev_discard_granularity(struct dev_types *dt, struct device *dev)
 
 #else
 
-int get_primary_dev(struct device *dev, dev_t *result)
+int dev_get_primary_dev(struct dev_types *dt, struct device *dev, dev_t *result)
 {
 	return 0;
 }

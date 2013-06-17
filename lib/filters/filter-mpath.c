@@ -233,7 +233,7 @@ struct dev_filter *mpath_filter_create(struct dev_types *dt)
 
 #else
 
-struct dev_filter *mpath_filter_create(struct device_types *dt)
+struct dev_filter *mpath_filter_create(struct dev_types *dt)
 {
 	return NULL;
 }
