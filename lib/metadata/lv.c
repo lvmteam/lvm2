@@ -547,6 +547,7 @@ char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 	else if (lv_is_origin(lv) || lv_is_external_origin(lv))
 		repstr[0] = (lv_is_merging_origin(lv)) ? 'O' : 'o';
 	else if (lv_is_thin_pool_metadata(lv) ||
+		 lv_is_pool_metadata_spare(lv) ||
 		 (lv->status & RAID_META))
 		repstr[0] = 'e';
 	else if (lv->status & RAID)
