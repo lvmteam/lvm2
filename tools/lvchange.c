@@ -596,7 +596,7 @@ static int lvchange_persistent(struct cmd_context *cmd,
 	int active = 0;
 	int32_t major, minor;
 
-	if (!strcmp(arg_str_value(cmd, persistent_ARG, "n"), "n")) {
+	if (!arg_uint_value(cmd, persistent_ARG, 0)) {
 		if (!(lv->status & FIXED_MINOR)) {
 			log_error("Minor number is already not persistent "
 				  "for \"%s\"", lv->name);
