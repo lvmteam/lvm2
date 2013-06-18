@@ -286,7 +286,7 @@ int buffer_realloc(struct buffer *buf, int needed)
 		alloc = needed;
 
 	buf->allocated += alloc;
-	new = realloc(buf->mem, buf->allocated);
+	new = dm_realloc(buf->mem, buf->allocated);
 	if (new)
 		buf->mem = new;
 	else { /* utter failure */

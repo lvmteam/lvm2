@@ -436,7 +436,7 @@ static int handle_connect(daemon_state s)
 	if (client.socket_fd < 0)
 		return 0;
 
-	if (!(baton = malloc(sizeof(struct thread_baton)))) {
+	if (!(baton = dm_malloc(sizeof(struct thread_baton)))) {
 		if (close(client.socket_fd))
 			perror("close");
 		ERROR(&s, "Failed to allocate thread baton");
