@@ -41,7 +41,7 @@ int buffer_read(int fd, struct buffer *buffer) {
 				buffer->used -= 4;
 				break; /* success, we have the full message now */
 			}
-			if (buffer->used - buffer->allocated < 32)
+			if (buffer->allocated - buffer->used < 32)
 				if (!buffer_realloc(buffer, 1024))
 					goto fail;
 			continue;
