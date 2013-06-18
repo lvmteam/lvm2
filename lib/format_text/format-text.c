@@ -857,6 +857,7 @@ static struct volume_group *_vg_read_file_name(struct format_instance *fid,
 	 * check that it contains the correct volume group.
 	 */
 	if (vgname && strcmp(vgname, vg->name)) {
+		fid->ref_count++; /* Preserve FID after vg release */
 		release_vg(vg);
 		log_error("'%s' does not contain volume group '%s'.",
 			  read_path, vgname);

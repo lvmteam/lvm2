@@ -38,6 +38,9 @@ vgcfgbackup -f "$(pwd)/backup.$$" $vg
 sed 's/flags = \[\"MISSING\"\]/flags = \[\]/' "$(pwd)/backup.$$" > "$(pwd)/backup.$$1"
 pvcreate -ff -y --norestorefile -u $pv1_uuid "$dev1"
 pvcreate -ff -y --norestorefile -u $pv2_uuid "$dev2"
+
+# Try to recover nonexisting vgname
+not vgcfgrestore -f "$(pwd)/backup.$$1" ${vg}_nonexistent
 vgcfgrestore -f "$(pwd)/backup.$$1" $vg
 vgremove -ff $vg
 
