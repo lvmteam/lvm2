@@ -26,6 +26,6 @@
 /* TODO function names */
 
 int buffer_read(int fd, struct buffer *buffer);
-int buffer_write(int fd, struct buffer *buffer);
+int buffer_write(int fd, const struct buffer *buffer);
 
 #endif /* _LVM_DAEMON_SHARED_H */

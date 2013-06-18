@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011-2012 Red Hat, Inc.
+ * Copyright (C) 2011-2013 Red Hat, Inc.
  *
  * This file is part of LVM2.
  *
@@ -29,34 +29,32 @@
  * See also write_buffer about blocking (read_buffer has identical behaviour).
  */
 int buffer_read(int fd, struct buffer *buffer) {
+	int result;
+
 	if (!buffer_realloc(buffer, 32)) /* ensure we have some space */
-		goto fail;
+		return 0;
 
 	while (1) {
-		int result = read(fd, buffer->mem + buffer->used, buffer->allocated - buffer->used);
+		result = read(fd, buffer->mem + buffer->used, buffer->allocated - buffer->used);
 		if (result > 0) {
 			buffer->used += result;
 			if (!strncmp((buffer->mem) + buffer->used - 4, "\n##\n", 4)) {
-				*(buffer->mem + buffer->used - 4) = 0;
 				buffer->used -= 4;
+				buffer->mem[buffer->used] = 0;
 				break; /* success, we have the full message now */
 			}
-			if (buffer->allocated - buffer->used < 32)
-				if (!buffer_realloc(buffer, 1024))
-					goto fail;
-			continue;
-		}
-		if (result == 0) {
+			if ((buffer->allocated - buffer->used < 32) &&
+			    !buffer_realloc(buffer, 1024))
+				return 0;
+		} else if (result == 0) {
 			errno = ECONNRESET;
-			goto fail; /* we should never encounter EOF here */
-		}
-		if (result < 0 && errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)
-			goto fail;
+			return 0; /* we should never encounter EOF here */
+		} else if (result < 0 && errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)
+			return 0;
 		/* TODO call select here if we encountered EAGAIN/EWOULDBLOCK/EINTR */
 	}
+
 	return 1;
-fail:
-	return 0;
 }
 
 /*
@@ -65,28 +63,21 @@ fail:
  *
  * TODO use select on EWOULDBLOCK/EAGAIN/EINTR to avoid useless spinning
  */
-int buffer_write(int fd, struct buffer *buffer) {
-	struct buffer terminate = { .mem = (char *) "\n##\n", .used = 4 };
-	int done = 0;
-	int written = 0;
-	struct buffer *use = buffer;
-write:
-	while (1) {
-		int result = write(fd, use->mem + written, use->used - written);
-		if (result > 0)
-			written += result;
-		if (result < 0 && errno != EWOULDBLOCK && errno != EAGAIN && errno != EINTR)
-			return 0; /* too bad */
-		if (written == use->used) {
-			if (done)
-				return 1;
-			else
-				break; /* done */
+int buffer_write(int fd, const struct buffer *buffer) {
+	static const struct buffer _terminate = { .mem = (char *) "\n##\n", .used = 4 };
+	const struct buffer *use;
+	int done, written, result;
+
+	for (done = 0; done < 2; ++done) {
+		use = (done == 0) ? buffer : &_terminate;
+		for (written = 0; written < use->used;) {
+			result = write(fd, use->mem + written, use->used - written);
+			if (result > 0)
+				written += result;
+			else if (result < 0 && errno != EWOULDBLOCK && errno != EAGAIN && errno != EINTR)
+				return 0; /* too bad */
 		}
 	}
 
-	use = &terminate;
-	written = 0;
-	done = 1;
-	goto write;
+	return 1;
 }
