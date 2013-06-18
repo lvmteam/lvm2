@@ -76,14 +76,13 @@ class TestLvm(unittest.TestCase):
 		self.assertEqual(type(pv.getUuid()), str)
 		self.assertTrue(len(pv.getUuid()) > 0)
 
-		self.assertEqual(type(pv.getMdaCount()), int)
-		self.assertEqual(type(pv.getMdaCount()), int)
+		self.assertTrue(type(pv.getMdaCount()) == int or type(pv.getMdaCount()) == long )
 
-		self.assertEqual(type(pv.getSize()), int)
+		self.assertTrue(type(pv.getSize()) == int or type(pv.getSize()) == long)
 
-		self.assertEqual(type(pv.getDevSize()), int)
+		self.assertTrue(type(pv.getDevSize()) == int or type(pv.getSize()) == long)
 
-		self.assertEqual(type(pv.getFree()), int)
+		self.assertTrue(type(pv.getFree()) == int or type(pv.getFree()) == long)
 
 	def _test_prop(self, prop_obj, prop, var_type, settable):
 		result = prop_obj.getProperty(prop)
@@ -327,7 +326,7 @@ class TestLvm(unittest.TestCase):
 			for method_name in TestLvm.RETURN_NUMERIC:
 				method = getattr(vg, method_name)
 				result = method()
-				self.assertTrue(type(result) == int)
+				self.assertTrue(type(result) == int or type(result)== long)
 
 			vg.close()
 

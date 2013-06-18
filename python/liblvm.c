@@ -1,7 +1,7 @@
 /*
  * Liblvm -- Python interface to LVM2 API.
  *
- * Copyright (C) 2010, 2012 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2010, 2013 Red Hat, Inc. All rights reserved.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -78,6 +78,31 @@ static PyObject *LibLVMError;
 			return NULL;					\
 		}							\
 	} while (0)
+
+/**
+ * Ensure that we initialize all the bits to a sane state.
+ */
+static pvobject
+*create_py_pv(void)
+{
+	pvobject * pvobj = PyObject_New(pvobject, &LibLVMpvType);
+	if (pvobj) {
+		pvobj->pv = NULL;
+		pvobj->parent_vgobj = NULL;
+		pvobj->parent_pvslistobj = NULL;
+	}
+	return pvobj;
+}
+
+static vgobject
+*create_py_vg(void)
+{
+	vgobject *vgobj = PyObject_New(vgobject, &LibLVMvgType);
+	if (vgobj) {
+		vgobj->vg = NULL;
+	}
+	return vgobj;
+}
 
 static PyObject *
 liblvm_get_last_error(void)
@@ -179,7 +204,7 @@ liblvm_lvm_pvlist_get(pvslistobject *pvsobj)
 
 	dm_list_iterate_items(pvl, pvsobj->pvslist) {
 		/* Create and initialize the object */
-		pvobj = PyObject_New(pvobject, &LibLVMpvType);
+		pvobj = create_py_pv();
 		if (!pvobj) {
 			Py_DECREF(pytuple);
 			return NULL;
@@ -434,7 +459,7 @@ liblvm_lvm_vg_open(PyObject *self, PyObject *args)
 	if (mode == NULL)
 		mode = "r";
 
-	if ((vgobj = PyObject_New(vgobject, &LibLVMvgType)) == NULL)
+	if ((vgobj = create_py_vg()) == NULL)
 		return NULL;
 
 	if ((vgobj->vg = lvm_vg_open(libh, vgname, mode, 0))== NULL) {
@@ -458,7 +483,7 @@ liblvm_lvm_vg_create(PyObject *self, PyObject *args)
 		return NULL;
 	}
 
-	if ((vgobj = PyObject_New(vgobject, &LibLVMvgType)) == NULL)
+	if ((vgobj = create_py_vg()) == NULL)
 		return NULL;
 
 	if ((vgobj->vg = lvm_vg_create(libh, vgname))== NULL) {
@@ -474,8 +499,10 @@ static void
 liblvm_vg_dealloc(vgobject *self)
 {
 	/* if already closed, don't reclose it */
-	if (self->vg != NULL)
+	if (self->vg != NULL) {
 		lvm_vg_close(self->vg);
+		self->vg = NULL;
+	}
 	PyObject_Del(self);
 }
 
@@ -822,9 +849,8 @@ liblvm_lvm_vg_set_property(vgobject *self, PyObject *args)
 			goto bail;
 		}
 
-		/* Based on cursory code inspection this path may cause a memory
-		   leak when calling into set_property, need to verify*/
-		string_value = strdup(PyString_AsString(variant_type_arg));
+		string_value = PyString_AsString(variant_type_arg);
+
 		lvm_property.value.string = string_value;
 		if (!lvm_property.value.string) {
 			PyErr_NoMemory();
@@ -853,7 +879,9 @@ liblvm_lvm_vg_set_property(vgobject *self, PyObject *args)
 
 			lvm_property.value.integer = temp_py_int;
 		} else if (PyObject_IsInstance(variant_type_arg, (PyObject*)&PyLong_Type)){
-			/* This will fail on negative numbers */
+			/* If PyLong_AsUnsignedLongLong function fails an OverflowError is
+			 * raised and (unsigned long long)-1 is returned
+			 */
 			unsigned long long temp_py_long = PyLong_AsUnsignedLongLong(variant_type_arg);
 			if (temp_py_long == (unsigned long long)-1) {
 				goto bail;
@@ -874,18 +902,12 @@ liblvm_lvm_vg_set_property(vgobject *self, PyObject *args)
 		goto lvmerror;
 	}
 
-	Py_DECREF(variant_type_arg);
 	Py_INCREF(Py_None);
 	return Py_None;
 
 lvmerror:
 	PyErr_SetObject(LibLVMError, liblvm_get_last_error());
 bail:
-	free(string_value);
-	if (variant_type_arg) {
-		Py_DECREF(variant_type_arg);
-		variant_type_arg = NULL;
-	}
 	return NULL;
 }
 
@@ -1167,7 +1189,7 @@ liblvm_lvm_vg_list_pvs(vgobject *self)
 
 	dm_list_iterate_items(pvl, pvs) {
 		/* Create and initialize the object */
-		pvobj = PyObject_New(pvobject, &LibLVMpvType);
+		pvobj = create_py_pv();
 		if (!pvobj) {
 			Py_DECREF(pytuple);
 			return NULL;
@@ -1247,7 +1269,7 @@ liblvm_lvm_pv_from_N(vgobject *self, PyObject *arg, pv_fetch_by_N method)
 		return NULL;
 	}
 
-	rc = PyObject_New(pvobject, &LibLVMpvType);
+	rc = create_py_pv();
 	if (!rc) {
 		return NULL;
 	}

@@ -611,7 +611,12 @@ lv_t lvm_lv_create(lv_create_params_t params)
 		}
 		if (!lv_create_single(params->vg, &params->lvp))
 				return_NULL;
-		if (!(lvl = find_lv_in_vg(params->vg, params->lvp.lv_name)))
+
+		/* In some case we are making a thin pool so lv_name is not valid, but
+		 * pool is.
+		 */
+		if (!(lvl = find_lv_in_vg(params->vg,
+				(params->lvp.lv_name) ? params->lvp.lv_name : params->lvp.pool)))
 			return_NULL;
 		return (lv_t) lvl->lv;
 	}

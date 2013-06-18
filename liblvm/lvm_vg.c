@@ -345,6 +345,17 @@ struct lvm_property_value lvm_vg_get_property(const vg_t vg, const char *name)
 int lvm_vg_set_property(const vg_t vg, const char *name,
 			struct lvm_property_value *value)
 {
+	/* At this point it is unknown if all property set paths make the
+	 * appropriate copy of the string.  We will allocate a copy on the vg so
+	 * that worst case we have two copies which will get freed when the vg gets
+	 * released.
+	 */
+
+	if (value->is_valid && value->is_string && value->value.string) {
+		value->value.string = dm_pool_strndup(vg->vgmem, value->value.string,
+				strlen(value->value.string) + 1);
+	}
+
 	return set_property(NULL, vg, NULL, NULL, name, value);
 }
 
