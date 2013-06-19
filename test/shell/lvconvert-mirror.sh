@@ -16,9 +16,17 @@ aux prepare_pvs 5 10
 DEVRANGE="0-32"
 vgcreate -s 32k $vg $(cat DEVICES)
 
-# convert from linear to 2-way mirror
+# convert from linear to 2-way mirror ("mirror" default type)
 lvcreate -aey -l2 -n $lv1 $vg "$dev1"
-lvconvert -i1 -m+1 $vg/$lv1 "$dev2" "$dev3:0-1"
+lvconvert -i1 -m+1 $vg/$lv1 "$dev2" "$dev3:0-1" \
+	--config 'global { mirror_segtype_default = "mirror" }'
+check mirror $vg $lv1 "$dev3"
+lvremove -ff $vg
+
+# convert from linear to 2-way mirror (override "raid1" default type)
+lvcreate -aey -l2 -n $lv1 $vg "$dev1"
+lvconvert --type mirror -i1 -m+1 $vg/$lv1 "$dev2" "$dev3:0-1" \
+	--config 'global { mirror_segtype_default = "raid1" }'
 check mirror $vg $lv1 "$dev3"
 lvremove -ff $vg
 

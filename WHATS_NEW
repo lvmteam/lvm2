@@ -1,5 +1,7 @@
 Version 2.02.99 - 
 ===================================
+  Use mirror_segtype_default if type not specified for linear->mirror upconvert.
+  Make upconvert from linear use mirror_segtype_default to determine segtype.
   Fix use of too big chunks of memory when communication with lvmetad.
   Fix vgcfgrestore crash when specified incorrect vg name.
   Refine lvm.conf and man page documentation for autoactivation feature.

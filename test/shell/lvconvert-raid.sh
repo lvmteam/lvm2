@@ -136,6 +136,24 @@ lvconvert --merge $vg/${lv1}_rimage_2
 lvremove -ff $vg
 
 ###########################################
+# Linear to RAID1 conversion ("raid1" default segtype)
+###########################################
+lvcreate -l 2 -n $lv1 $vg
+lvconvert -m 1 $vg/$lv1 \
+	--config 'global { mirror_segtype_default = "raid1" }'
+lvs --noheadings -o attr $vg/$lv1 | grep '^r*'
+lvremove -ff $vg
+
+###########################################
+# Linear to RAID1 conversion (override "mirror" default segtype)
+###########################################
+lvcreate -l 2 -n $lv1 $vg
+lvconvert --type raid1 -m 1 $vg/$lv1 \
+	--config 'global { mirror_segtype_default = "mirror" }'
+lvs --noheadings -o attr $vg/$lv1 | grep '^r*'
+lvremove -ff $vg
+
+###########################################
 # Mirror to RAID1 conversion
 ###########################################
 for i in 1 2 3 ; do
