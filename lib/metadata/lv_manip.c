@@ -4424,10 +4424,10 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 	}
 
 	if (lp->stripe_size > vg->extent_size) {
-		log_error("Reducing requested stripe size %s to maximum, "
-			  "physical extent size %s",
-			  display_size(cmd, (uint64_t) lp->stripe_size),
-			  display_size(cmd, (uint64_t) vg->extent_size));
+		log_print_unless_silent("Reducing requested stripe size %s to maximum, "
+					"physical extent size %s.",
+					display_size(cmd, (uint64_t) lp->stripe_size),
+					display_size(cmd, (uint64_t) vg->extent_size));
 		lp->stripe_size = vg->extent_size;
 	}
 
@@ -4442,8 +4442,8 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 
 	if ((size_rest = lp->extents % lp->stripes)) {
 		log_print_unless_silent("Rounding size (%d extents) up to stripe boundary "
-					"size (%d extents)", lp->extents,
-			  lp->extents - size_rest + lp->stripes);
+					"size (%d extents).", lp->extents,
+					lp->extents - size_rest + lp->stripes);
 		lp->extents = lp->extents - size_rest + lp->stripes;
 	}
 
