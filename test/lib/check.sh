@@ -158,6 +158,7 @@ in_sync() {
 	local b
 	local idx
 	local type
+	local snap=""
 	local lvm_name="$1/$2"
 	local dm_name=$(echo $lvm_name | sed s:-:--: | sed s:/:-:)
 
@@ -167,6 +168,7 @@ in_sync() {
 		if ! a=(`dmsetup status ${dm_name}-real`); then
 			die "Unable to get sync status of $1"
 		fi
+		snap=": under snapshot"
 	fi
 
 	if [ ${a[2]} = "raid" ]; then
@@ -184,15 +186,15 @@ in_sync() {
 	b=( $(echo ${a[$idx]} | sed s:/:' ':) )
 
 	if [ ${b[0]} != ${b[1]} ]; then
-		echo "$lvm_name ($type) is not in-sync"
+		echo "$lvm_name ($type$snap) is not in-sync"
 		return 1
 	fi
 
 	if [[ ${a[$(($idx - 1))]} =~ a ]]; then
-		die "$lvm_name in-sync, but 'a' characters in health status"
+		die "$lvm_name ($type$snap) in-sync, but 'a' characters in health status"
 	fi
 
-	echo "$lvm_name ($type) is in-sync"
+	echo "$lvm_name ($type$snap) is in-sync"
 	return 0
 }
 
