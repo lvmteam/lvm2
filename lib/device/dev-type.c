@@ -434,7 +434,7 @@ int dev_get_primary_dev(struct dev_types *dt, struct device *dev, dev_t *result)
 		goto out;
 	}
 	*result = MKDEV((dev_t)major, minor);
-	ret = 1;
+	ret = 2;
 out:
 	if (fp && fclose(fp))
 		log_sys_error("fclose", path);
