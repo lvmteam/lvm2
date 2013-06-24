@@ -591,9 +591,6 @@ static int _read_raid_params(struct lvcreate_params *lp,
 	/* Rates are recorded in kiB/sec/disk, not sectors/sec/disk */
 	lp->min_recovery_rate /= 2;
 	lp->max_recovery_rate /= 2;
-	log_error("min = %u, max = %u",
-		  lp->min_recovery_rate,
-		  lp->max_recovery_rate);
 
 	if (lp->max_recovery_rate &&
 	    (lp->max_recovery_rate < lp->min_recovery_rate)) {
