@@ -658,7 +658,7 @@ int get_pool_discards(const char *str, thin_discards_t *discards)
 	else if (!strcasecmp(str, "ignore"))
 		*discards = THIN_DISCARDS_IGNORE;
 	else {
-		log_error("Thin pool discards type %s is unknown.", str);
+		log_error("Thin pool discards type \"%s\" is unknown.", str);
 		return 0;
 	}
 
