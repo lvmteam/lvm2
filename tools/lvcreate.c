@@ -771,7 +771,19 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 		lp->mirrors = 2;
 
 	if (arg_count(cmd, mirrors_ARG)) {
+		if (arg_sign_value(cmd, mirrors_ARG, SIGN_NONE) == SIGN_MINUS) {
+			log_error("Mirrors argument may not be negative");
+			return 0;
+		}
+
 		lp->mirrors = arg_uint_value(cmd, mirrors_ARG, 0) + 1;
+
+		if (lp->mirrors > DEFAULT_MIRROR_MAX_IMAGES) {
+			log_error("Only up to " DM_TO_STRING(DEFAULT_MIRROR_MAX_IMAGES)
+				  " images in mirror supported currently.");
+			return 0;
+		}
+
 		if (lp->mirrors == 1) {
 			if (segtype_is_mirrored(lp->segtype)) {
 				log_error("--mirrors must be at least 1 with segment type %s.", lp->segtype->name);
@@ -788,11 +800,6 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 			 */
 			log_error("RAID10 currently supports "
 				  "only 2-way mirroring (i.e. '-m 1')");
-			return 0;
-		}
-
-		if (arg_sign_value(cmd, mirrors_ARG, SIGN_NONE) == SIGN_MINUS) {
-			log_error("Mirrors argument may not be negative");
 			return 0;
 		}
 	}
@@ -877,12 +884,6 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 			return_0;
 	} else if (!lp->create_thin_pool && arg_count(cmd, chunksize_ARG)) {
 		log_error("--chunksize is only available with snapshots and thin pools.");
-		return 0;
-	}
-
-	if (lp->mirrors > DEFAULT_MIRROR_MAX_IMAGES) {
-		log_error("Only up to " DM_TO_STRING(DEFAULT_MIRROR_MAX_IMAGES)
-			  " images in mirror supported currently.");
 		return 0;
 	}
 
