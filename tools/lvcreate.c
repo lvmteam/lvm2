@@ -393,12 +393,11 @@ static int _read_size_params(struct lvcreate_params *lp,
 	if (seg_is_thin(lp) && (arg_count(cmd, size_ARG) || arg_count(cmd, extents_ARG)))
 		lp->create_thin_pool = 1;
 
-	if (arg_count(cmd, poolmetadatasize_ARG) && !seg_is_thin(lp)) {
+	if (!lp->create_thin_pool && arg_count(cmd, poolmetadatasize_ARG)) {
 		log_error("--poolmetadatasize may only be specified when allocating the thin pool.");
 		return 0;
 	}
 
-	/* Size returned in kilobyte units; held in sectors */
 	if (arg_count(cmd, virtualsize_ARG)) {
 		if (seg_is_thin_pool(lp)) {
 			log_error("Virtual size in incompatible with thin_pool segment type.");
@@ -408,6 +407,7 @@ static int _read_size_params(struct lvcreate_params *lp,
 			log_error("Negative virtual origin size is invalid");
 			return 0;
 		}
+		/* Size returned in kilobyte units; held in sectors */
 		lp->voriginsize = arg_uint64_value(cmd, virtualsize_ARG,
 						   UINT64_C(0));
 		if (!lp->voriginsize) {
