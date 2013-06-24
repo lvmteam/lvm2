@@ -259,7 +259,7 @@ static int _update_extents_params(struct volume_group *vg,
 	 */
 	if (lcp->pv_count) {
 		if (!(lp->pvh = create_pv_list(vg->cmd->mem, vg,
-					   lcp->pv_count, lcp->pvs, 1)))
+					       lcp->pv_count, lcp->pvs, 1)))
 			return_0;
 	} else
 		lp->pvh = &vg->pvs;
@@ -272,12 +272,11 @@ static int _update_extents_params(struct volume_group *vg,
 			lp->extents = percent_of_extents(lp->extents, vg->free_count, 0);
 			break;
 		case PERCENT_PVS:
-			if (!lcp->pv_count)
-				lp->extents = percent_of_extents(lp->extents, vg->extent_count, 0);
-			else {
+			if (lcp->pv_count) {
 				pv_extent_count = pv_list_extents_free(lp->pvh);
 				lp->extents = percent_of_extents(lp->extents, pv_extent_count, 0);
-			}
+			} else
+				lp->extents = percent_of_extents(lp->extents, vg->extent_count, 0);
 			break;
 		case PERCENT_LV:
 			log_error("Please express size as %%VG, %%PVS, or "
