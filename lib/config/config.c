@@ -301,7 +301,7 @@ int override_config_tree_from_string(struct cmd_context *cmd,
 
 	/*
 	 * Follow this sequence:
-	 * CONFIG_STRING -> CONFIG_FILE/CONFIG_MERGED_FILES
+	 * CONFIG_STRING -> CONFIG_PROFILE -> CONFIG_FILE/CONFIG_MERGED_FILES
 	 */
 
 	if (cs->type == CONFIG_STRING) {
@@ -325,6 +325,39 @@ int override_config_tree_from_string(struct cmd_context *cmd,
 	dm_config_set_custom(cft_new, cs);
 
 	cmd->cft = dm_config_insert_cascaded_tree(cft_new, cmd->cft);
+
+	return 1;
+}
+
+int override_config_tree_from_profile(struct cmd_context *cmd,
+				      struct profile *profile)
+{
+	struct dm_config_tree *cft = cmd->cft, *cft_string = NULL;
+	struct config_source *cs = dm_config_get_custom(cft);
+
+	/*
+	 * Follow this sequence:
+	 * CONFIG_STRING -> CONFIG_PROFILE -> CONFIG_FILE/CONFIG_MERGED_FILES
+	 */
+
+	if (!profile->cft && !load_profile(cmd, profile))
+		return_0;
+
+	if (cs->type == CONFIG_STRING) {
+		cft_string = cft;
+		cft = cft->cascade;
+		cs = dm_config_get_custom(cft);
+		if (cs->type == CONFIG_PROFILE) {
+			log_error(INTERNAL_ERROR "override_config_tree_from_profile: "
+				  "config cascade already contains a profile config.");
+			return 0;
+		}
+		dm_config_insert_cascaded_tree(cft_string, profile->cft);
+	}
+
+	cmd->cft = dm_config_insert_cascaded_tree(profile->cft, cft);
+
+	cmd->cft = cft_string ? : profile->cft;
 
 	return 1;
 }

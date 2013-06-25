@@ -135,6 +135,7 @@ int config_def_get_path(char *buf, size_t buf_size, int id);
 int config_def_check(struct cmd_context *cmd, int force, int skip, int suppress_messages);
 
 int override_config_tree_from_string(struct cmd_context *cmd, const char *config_settings);
+int override_config_tree_from_profile(struct cmd_context *cmd, struct profile *profile);
 struct dm_config_tree *remove_config_tree_by_source(struct cmd_context *cmd, config_source_t source);
 config_source_t config_get_source_type(struct dm_config_tree *cft);
 

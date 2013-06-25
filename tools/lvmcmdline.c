@@ -1099,6 +1099,10 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 		log_debug("Setting global configuration profile \"%s\".", profile->name);
 		/* This profile will override any VG/LV-based profile if present */
 		cmd->profile_params->global_profile = profile;
+		if (!override_config_tree_from_profile(cmd, profile)) {
+			log_error("Failed to apply configuration profile.");
+			return ECMD_FAILED;
+		}
 	}
 
 	if ((ret = _get_settings(cmd)))
