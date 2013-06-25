@@ -22,6 +22,7 @@
 #include "str_list.h"
 #include "toolcontext.h"
 #include "lvm-file.h"
+#include "memlock.h"
 
 #include <sys/stat.h>
 #include <sys/mman.h>
@@ -1301,4 +1302,78 @@ struct dm_config_tree *config_def_create_tree(struct config_def_tree_spec *spec)
 
 	cft->root = root;
 	return cft;
+}
+
+struct profile *add_profile(struct cmd_context *cmd, const char *profile_name)
+{
+	struct profile *profile;
+
+	/* Do some sanity checks first. */
+	if (!profile_name || !*profile_name) {
+		log_error("Undefined profile name.");
+		return NULL;
+	}
+
+	if (strchr(profile_name, '/')) {
+		log_error("%s: bad profile name, it contains '/'.", profile_name);
+		return NULL;
+	}
+
+	/* Check if the profile is added already... */
+	dm_list_iterate_items(profile, &cmd->profile_params->profiles_to_load) {
+		if (!strcmp(profile->name, profile_name))
+			return profile;
+	}
+	dm_list_iterate_items(profile, &cmd->profile_params->profiles) {
+		if (!strcmp(profile->name, profile_name))
+			return profile;
+	}
+
+	if (!(profile = dm_pool_zalloc(cmd->libmem, sizeof(*profile)))) {
+		log_error("profile allocation failed");
+		return NULL;
+	}
+
+	profile->name = dm_pool_strdup(cmd->libmem, profile_name);
+	dm_list_add(&cmd->profile_params->profiles_to_load, &profile->list);
+
+	return profile;
+}
+
+int load_profile(struct cmd_context *cmd, struct profile *profile) {
+	static char profile_path[PATH_MAX];
+
+	if (critical_section()) {
+		log_error(INTERNAL_ERROR "trying to load profile %s "
+			  "in critical section.", profile->name);
+		return 0;
+	}
+
+	if (profile->cft)
+		return 1;
+
+	if (dm_snprintf(profile_path, sizeof(profile_path), "%s/%s.profile",
+		cmd->profile_params->dir, profile->name) < 0) {
+		log_error("LVM_SYSTEM_DIR or profile name too long");
+		return 0;
+	}
+
+	if (!(profile->cft = config_file_open_and_read(profile_path, CONFIG_PROFILE)))
+		return 0;
+
+	dm_list_move(&cmd->profile_params->profiles, &profile->list);
+
+	return 1;
+}
+
+int load_pending_profiles(struct cmd_context *cmd)
+{
+	struct profile *profile, *temp_profile;
+
+	dm_list_iterate_items_safe(profile, temp_profile, &cmd->profile_params->profiles_to_load) {
+		if (!load_profile(cmd, profile))
+			return 0;
+	}
+
+	return 1;
 }

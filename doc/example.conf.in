@@ -23,6 +23,9 @@ config {
 
     # If enabled, any configuration mismatch aborts the LVM2 process.
     abort_on_errors = 0
+
+    # Directory where LVM looks for configuration profiles.
+    profile_dir = "@DEFAULT_SYS_DIR@/@DEFAULT_PROFILE_SUBDIR"
 }
 
 # This section allows you to configure which block devices should

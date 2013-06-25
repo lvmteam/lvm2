@@ -620,7 +620,8 @@ void lvm_register_commands(void)
 					    debug_ARG, help_ARG, help2_ARG, \
 					    version_ARG, verbose_ARG, \
 					    yes_ARG, \
-					    quiet_ARG, config_ARG, -1);
+					    quiet_ARG, config_ARG, \
+					    profile_ARG, -1);
 #include "commands.h"
 #undef xx
 }
@@ -1051,6 +1052,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	int locking_type;
 	int monitoring;
 	struct dm_config_tree *old_cft;
+	struct profile *profile;
 
 	init_error_message_produced(0);
 
@@ -1087,6 +1089,16 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 			log_error("Updated config file invalid. Aborting.");
 			return ECMD_FAILED;
 		}
+	}
+
+	if (arg_count(cmd, profile_ARG)) {
+		if (!(profile = add_profile(cmd, arg_str_value(cmd, profile_ARG, NULL)))) {
+			log_error("Failed to add configuration profile.");
+			return ECMD_FAILED;
+		}
+		log_debug("Setting global configuration profile \"%s\".", profile->name);
+		/* This profile will override any VG/LV-based profile if present */
+		cmd->profile_params->global_profile = profile;
 	}
 
 	if ((ret = _get_settings(cmd)))

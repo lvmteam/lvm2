@@ -595,6 +595,35 @@ static int _init_tag_configs(struct cmd_context *cmd)
 	return 1;
 }
 
+static int _init_profiles(struct cmd_context *cmd)
+{
+	static char default_dir[PATH_MAX];
+	const char *dir;
+	struct profile_params *pp;
+
+	if (!(pp = dm_pool_zalloc(cmd->libmem, sizeof(*pp)))) {
+		log_error("profile_params alloc failed");
+		return 0;
+	}
+
+	if (!(dir = find_config_tree_str(cmd, config_profile_dir_CFG))) {
+		if (dm_snprintf(default_dir, sizeof(default_dir), "%s/%s",
+				cmd->system_dir, DEFAULT_PROFILE_SUBDIR) == -1) {
+			log_error("Couldn't create default profile path '%s/%s'.",
+				  cmd->system_dir, DEFAULT_PROFILE_SUBDIR);
+			return 0;
+		}
+		dir = default_dir;
+	}
+
+	pp->dir = dm_pool_strdup(cmd->libmem, dir);
+	dm_list_init(&pp->profiles_to_load);
+	dm_list_init(&pp->profiles);
+
+	cmd->profile_params = pp;
+	return 1;
+}
+
 static struct dm_config_tree *_merge_config_files(struct cmd_context *cmd, struct dm_config_tree *cft)
 {
 	struct config_tree_list *cfl;
@@ -641,10 +670,11 @@ static void _destroy_config(struct cmd_context *cmd)
 {
 	struct config_tree_list *cfl;
 	struct dm_config_tree *cft;
+	struct profile *profile;
 
 	/*
 	 * Configuration cascade:
-	 * CONFIG_STRING -> CONFIG_FILE/CONFIG_MERGED_FILES
+	 * CONFIG_STRING -> CONFIG_PROFILE -> CONFIG_FILE/CONFIG_MERGED_FILES
 	 */
 
 	/* CONFIG_FILE/CONFIG_MERGED_FILES */
@@ -656,6 +686,17 @@ static void _destroy_config(struct cmd_context *cmd)
 	dm_list_iterate_items(cfl, &cmd->config_files)
 		config_destroy(cfl->cft);
 	dm_list_init(&cmd->config_files);
+
+	/* CONFIG_PROFILE */
+	if (cmd->profile_params) {
+		remove_config_tree_by_source(cmd, CONFIG_PROFILE);
+		dm_list_iterate_items(profile, &cmd->profile_params->profiles_to_load)
+			config_destroy(profile->cft);
+		dm_list_iterate_items(profile, &cmd->profile_params->profiles)
+			config_destroy(profile->cft);
+		dm_list_init(&cmd->profile_params->profiles_to_load);
+		dm_list_init(&cmd->profile_params->profiles);
+	}
 
 	/* CONFIG_STRING */
 	if ((cft = remove_config_tree_by_source(cmd, CONFIG_STRING)))
@@ -1427,6 +1468,9 @@ struct cmd_context *create_toolcontext(unsigned is_long_lived,
 	if (!_process_config(cmd))
 		goto_out;
 
+	if (!_init_profiles(cmd))
+		goto_out;
+
 	if (!(cmd->dev_types = create_dev_types(cmd->proc_dir,
 						find_config_tree_node(cmd, devices_types_CFG))))
 		goto_out;
@@ -1469,6 +1513,7 @@ out:
 		destroy_toolcontext(cmd);
 		cmd = NULL;
 	}
+
 
 	return cmd;
 }

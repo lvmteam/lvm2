@@ -406,6 +406,13 @@ static void _unlock_mem_if_possible(struct cmd_context *cmd)
 
 void critical_section_inc(struct cmd_context *cmd, const char *reason)
 {
+	/*
+	 * Profiles are loaded on-demand so make sure that before
+	 * entering the critical section all needed profiles are
+	 * loaded to avoid the disk access later.
+	 */
+	load_pending_profiles(cmd);
+
 	if (!_critical_section) {
 		_critical_section = 1;
 		log_debug_mem("Entering critical section (%s).", reason);

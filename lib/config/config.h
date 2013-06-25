@@ -34,6 +34,19 @@ typedef enum {
 	CONFIG_PROFILE		/* profile config */
 } config_source_t;
 
+struct profile {
+	struct dm_list list;
+	const char *name;
+	struct dm_config_tree *cft;
+};
+
+struct profile_params {
+	const char *dir;                /* subdir in LVM_SYSTEM_DIR where LVM looks for profiles */
+	struct profile *global_profile; /* profile that overrides any other VG/LV-based profile ('--profile' cmd line arg) */
+	struct dm_list profiles_to_load;/* list of profiles which are only added, but still need to be loaded for any use */
+	struct dm_list profiles;	/* list of profiles which are loaded already and which are ready for use */
+};
+
 #define CFG_PATH_MAX_LEN 64
 
 /*
@@ -113,6 +126,10 @@ enum {
 #undef cfg
 #undef cfg_array
 };
+
+struct profile *add_profile(struct cmd_context *cmd, const char *profile_name);
+int load_profile(struct cmd_context *cmd, struct profile *profile);
+int load_pending_profiles(struct cmd_context *cmd);
 
 int config_def_get_path(char *buf, size_t buf_size, int id);
 int config_def_check(struct cmd_context *cmd, int force, int skip, int suppress_messages);

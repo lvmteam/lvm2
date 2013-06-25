@@ -51,6 +51,7 @@ struct config_info {
 };
 
 struct dm_config_tree;
+struct profile_params;
 struct archive_params;
 struct backup_params;
 struct arg_values;
@@ -103,6 +104,8 @@ struct cmd_context {
 	struct config_info default_settings;
 	struct config_info current_settings;
 	struct dm_hash_table *cft_def_hash; /* cft definition hash used for validity check */
+
+	struct profile_params *profile_params;
 
 	struct archive_params *archive_params;
 	struct backup_params *backup_params;
