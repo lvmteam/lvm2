@@ -419,6 +419,30 @@ static int _vgchange_metadata_copies(struct cmd_context *cmd,
 	return 1;
 }
 
+static int _vgchange_profile(struct cmd_context *cmd,
+			     struct volume_group *vg)
+{
+	const char *old_profile_name, *new_profile_name;
+	struct profile *new_profile;
+
+	old_profile_name = vg->profile ? vg->profile->name : "(no profile)";
+
+	if (arg_count(cmd, detachprofile_ARG)) {
+		new_profile_name = "(no profile)";
+		vg->profile = NULL;
+	} else {
+		new_profile_name = arg_str_value(cmd, profile_ARG, NULL);
+		if (!(new_profile = add_profile(cmd, new_profile_name)))
+			return_0;
+		vg->profile = new_profile;
+	}
+
+	log_verbose("Changing configuration profile for VG %s: %s -> %s.",
+		    vg->name, old_profile_name, new_profile_name);
+
+	return 1;
+}
+
 static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 			   struct volume_group *vg,
 			   void *handle __attribute__((unused)))
@@ -439,6 +463,8 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 		{ alloc_ARG, &_vgchange_alloc },
 		{ clustered_ARG, &_vgchange_clustered },
 		{ vgmetadatacopies_ARG, &_vgchange_metadata_copies },
+		{ profile_ARG, &_vgchange_profile},
+		{ detachprofile_ARG, &_vgchange_profile},
 		{ -1, NULL },
 	};
 
@@ -511,7 +537,9 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 	/* Update commands that can be combined */
 	int update_partial_safe =
 		arg_count(cmd, deltag_ARG) ||
-		arg_count(cmd, addtag_ARG);
+		arg_count(cmd, addtag_ARG) ||
+		arg_count(cmd, profile_ARG) ||
+		arg_count(cmd, detachprofile_ARG);
 	int update_partial_unsafe =
 		arg_count(cmd, logicalvolume_ARG) ||
 		arg_count(cmd, maxphysicalvolumes_ARG) ||
@@ -532,6 +560,11 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 			  "--refresh, --uuid, --alloc, --addtag, --deltag, "
 			  "--monitor, --poll, --vgmetadatacopies or "
 			  "--metadatacopies");
+		return EINVALID_CMD_LINE;
+	}
+
+	if (arg_count(cmd, profile_ARG) && arg_count(cmd, detachprofile_ARG)) {
+		log_error("Only one of --profile and --detachprofile permitted.");
 		return EINVALID_CMD_LINE;
 	}
 

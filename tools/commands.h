@@ -76,6 +76,7 @@ xx(lvchange,
    "\t[-C|--contiguous y|n]\n"
    "\t[-d|--debug]\n"
    "\t[--deltag Tag]\n"
+   "\t[--detachprofile]\n"
    "\t[-f|--force]\n"
    "\t[-h|--help]\n"
    "\t[--discards {ignore|nopassdown|passdown}]\n"
@@ -104,12 +105,12 @@ xx(lvchange,
    "\tLogicalVolume[Path] [LogicalVolume[Path]...]\n",
 
    alloc_ARG, autobackup_ARG, activate_ARG, available_ARG, contiguous_ARG,
-   discards_ARG, force_ARG, ignorelockingfailure_ARG, ignoremonitoring_ARG,
-   major_ARG, minor_ARG, monitor_ARG, minrecoveryrate_ARG, maxrecoveryrate_ARG,
-   noudevsync_ARG, partial_ARG,
-   permission_ARG, persistent_ARG, poll_ARG, readahead_ARG, resync_ARG,
-   refresh_ARG, addtag_ARG, deltag_ARG, syncaction_ARG, sysinit_ARG, test_ARG,
-   writebehind_ARG, writemostly_ARG, zero_ARG)
+   discards_ARG, detachprofile_ARG, force_ARG, ignorelockingfailure_ARG,
+   ignoremonitoring_ARG, major_ARG, minor_ARG, monitor_ARG, minrecoveryrate_ARG,
+   maxrecoveryrate_ARG, noudevsync_ARG, partial_ARG, permission_ARG,
+   persistent_ARG, poll_ARG, readahead_ARG, resync_ARG, refresh_ARG, addtag_ARG,
+   deltag_ARG, syncaction_ARG, sysinit_ARG, test_ARG, writebehind_ARG,
+   writemostly_ARG, zero_ARG)
 
 xx(lvconvert,
    "Change logical volume layout",
@@ -770,6 +771,7 @@ xx(vgchange,
    "\t[--alloc AllocationPolicy] " "\n"
    "\t[-P|--partial] " "\n"
    "\t[-d|--debug] " "\n"
+   "\t[--detachprofile] " "\n"
    "\t[-h|--help] " "\n"
    "\t[--ignorelockingfailure]\n"
    "\t[--ignoremonitoring]\n"
@@ -794,11 +796,11 @@ xx(vgchange,
    "\t[VolumeGroupName...]\n",
 
    addtag_ARG, alloc_ARG, allocation_ARG, autobackup_ARG, activate_ARG,
-   available_ARG, clustered_ARG, deltag_ARG, ignorelockingfailure_ARG,
-   ignoremonitoring_ARG, logicalvolume_ARG, maxphysicalvolumes_ARG,
-   monitor_ARG, noudevsync_ARG, metadatacopies_ARG, vgmetadatacopies_ARG,
-   partial_ARG, physicalextentsize_ARG, poll_ARG, refresh_ARG, resizeable_ARG,
-   resizable_ARG, sysinit_ARG, test_ARG, uuid_ARG)
+   available_ARG, clustered_ARG, deltag_ARG, detachprofile_ARG,
+   ignorelockingfailure_ARG, ignoremonitoring_ARG, logicalvolume_ARG,
+   maxphysicalvolumes_ARG, monitor_ARG, noudevsync_ARG, metadatacopies_ARG,
+   vgmetadatacopies_ARG, partial_ARG, physicalextentsize_ARG, poll_ARG,
+   refresh_ARG, resizeable_ARG, resizable_ARG, sysinit_ARG, test_ARG, uuid_ARG)
 
 xx(vgck,
    "Check the consistency of volume group(s)",

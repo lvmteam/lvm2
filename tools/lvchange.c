@@ -859,6 +859,33 @@ static int lvchange_recovery_rate(struct logical_volume *lv)
 	return 1;
 }
 
+static int lvchange_profile(struct logical_volume *lv)
+{
+	const char *old_profile_name, *new_profile_name;
+	struct profile *new_profile;
+
+	old_profile_name = lv->profile ? lv->profile->name : "(inherited)";
+
+	if (arg_count(lv->vg->cmd, detachprofile_ARG)) {
+		new_profile_name = "(inherited)";
+		lv->profile = NULL;
+	} else {
+		new_profile_name = arg_str_value(lv->vg->cmd, profile_ARG, NULL);
+		if (!(new_profile = add_profile(lv->vg->cmd, new_profile_name)))
+			return_0;
+		lv->profile = new_profile;
+	}
+
+	log_verbose("Changing configuration profile for LV %s: %s -> %s.",
+		    lv->name, old_profile_name, new_profile_name);
+
+	if (!vg_write(lv->vg) || !vg_commit(lv->vg))
+		return_0;
+
+	return 1;
+}
+
+
 static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 			   void *handle __attribute__((unused)))
 {
@@ -869,9 +896,8 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 	if (!(lv->vg->status & LVM_WRITE) &&
 	    (arg_count(cmd, contiguous_ARG) || arg_count(cmd, permission_ARG) ||
 	     arg_count(cmd, readahead_ARG) || arg_count(cmd, persistent_ARG) ||
-	     arg_count(cmd, discards_ARG) ||
-	     arg_count(cmd, zero_ARG) ||
-	     arg_count(cmd, alloc_ARG))) {
+	     arg_count(cmd, discards_ARG) || arg_count(cmd, zero_ARG) ||
+	     arg_count(cmd, alloc_ARG) || arg_count(cmd, profile_ARG))) {
 		log_error("Only -a permitted with read-only volume "
 			  "group \"%s\"", lv->vg->name);
 		return EINVALID_CMD_LINE;
@@ -880,7 +906,7 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 	if (lv_is_origin(lv) && !lv_is_thin_volume(lv) &&
 	    (arg_count(cmd, contiguous_ARG) || arg_count(cmd, permission_ARG) ||
 	     arg_count(cmd, readahead_ARG) || arg_count(cmd, persistent_ARG) ||
-	     arg_count(cmd, alloc_ARG))) {
+	     arg_count(cmd, alloc_ARG) || arg_count(cmd, profile_ARG))) {
 		log_error("Can't change logical volume \"%s\" under snapshot",
 			  lv->name);
 		return ECMD_FAILED;
@@ -1023,6 +1049,14 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 		docmds++;
 	}
 
+	/* change configuration profile */
+	if (arg_count(cmd, profile_ARG) || arg_count(cmd, detachprofile_ARG)) {
+		if (!archive(lv->vg))
+			return_ECMD_FAILED;
+		doit += lvchange_profile(lv);
+		docmds++;
+	}
+
 	if (doit)
 		log_print_unless_silent("Logical volume \"%s\" changed.", lv->name);
 
@@ -1070,7 +1104,9 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 		arg_count(cmd, readahead_ARG) ||
 		arg_count(cmd, persistent_ARG) ||
 		arg_count(cmd, addtag_ARG) ||
-		arg_count(cmd, deltag_ARG);
+		arg_count(cmd, deltag_ARG) ||
+		arg_count(cmd, profile_ARG) ||
+		arg_count(cmd, detachprofile_ARG);
 	int update_partial_unsafe =
 		arg_count(cmd, resync_ARG) ||
 		arg_count(cmd, alloc_ARG) ||
@@ -1087,6 +1123,11 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 		log_error("Need 1 or more of -a, -C, -M, -p, -r, -Z, "
 			  "--resync, --refresh, --alloc, --addtag, --deltag, "
 			  "--monitor, --poll or --discards");
+		return EINVALID_CMD_LINE;
+	}
+
+	if (arg_count(cmd, profile_ARG) && arg_count(cmd, detachprofile_ARG)) {
+		log_error("Only one of --profile and --detachprofile permitted.");
 		return EINVALID_CMD_LINE;
 	}
 
