@@ -1015,7 +1015,7 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 	 * a correct area_multiple.
 	 */
 	ah->area_multiple = _calc_area_multiple(segtype, area_count + parity_count, stripes);
-	ah->mirror_logs_separate = find_config_tree_bool(cmd, allocation_mirror_logs_require_separate_pvs_CFG);
+	ah->mirror_logs_separate = find_config_tree_bool(cmd, allocation_mirror_logs_require_separate_pvs_CFG, NULL);
 
 	if (segtype_is_raid(segtype)) {
 		if (metadata_area_count) {
@@ -1042,7 +1042,7 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 		ah->log_len = ah->region_size;
 		ah->region_size = 0;
 		ah->mirror_logs_separate =
-			find_config_tree_bool(cmd, allocation_thin_pool_metadata_require_separate_pvs_CFG);
+			find_config_tree_bool(cmd, allocation_thin_pool_metadata_require_separate_pvs_CFG, NULL);
 	} else {
 		ah->log_area_count = metadata_area_count;
 		ah->log_len = !metadata_area_count ? 0 :
@@ -1057,7 +1057,7 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 
 	ah->cling_tag_list_cn = find_config_tree_node(cmd, allocation_cling_tag_list_CFG, NULL);
 
-	ah->maximise_cling = find_config_tree_bool(cmd, allocation_maximise_cling_CFG);
+	ah->maximise_cling = find_config_tree_bool(cmd, allocation_maximise_cling_CFG, NULL);
 
 	return ah;
 }
@@ -3481,7 +3481,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	/* FIXME Ensure not referred to by another existing LVs */
-	ask_discard = find_config_tree_bool(cmd, devices_issue_discards_CFG);
+	ask_discard = find_config_tree_bool(cmd, devices_issue_discards_CFG, NULL);
 
 	if (lv_info(cmd, lv, 0, &info, 1, 0)) {
 		if (!lv_check_not_in_use(cmd, lv, &info))

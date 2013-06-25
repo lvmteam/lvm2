@@ -174,7 +174,7 @@ static void _init_logging(struct cmd_context *cmd)
 	char timebuf[26];
 
 	/* Syslog */
-	cmd->default_settings.syslog = find_config_tree_bool(cmd, log_syslog_CFG);
+	cmd->default_settings.syslog = find_config_tree_bool(cmd, log_syslog_CFG, NULL);
 	if (cmd->default_settings.syslog != 1)
 		fin_syslog();
 
@@ -191,30 +191,30 @@ static void _init_logging(struct cmd_context *cmd)
 	 * Once set to 1, there is no facility to change it back to 0.
 	 */
 	cmd->default_settings.silent = silent_mode() ? :
-	    find_config_tree_bool(cmd, log_silent_CFG);
+	    find_config_tree_bool(cmd, log_silent_CFG, NULL);
 	init_silent(cmd->default_settings.silent);
 
 	/* Verbose level for tty output */
-	cmd->default_settings.verbose = find_config_tree_bool(cmd, log_verbose_CFG);
+	cmd->default_settings.verbose = find_config_tree_bool(cmd, log_verbose_CFG, NULL);
 	init_verbose(cmd->default_settings.verbose + VERBOSE_BASE_LEVEL);
 
 	/* Log message formatting */
-	init_indent(find_config_tree_bool(cmd, log_indent_CFG));
-	init_abort_on_internal_errors(find_config_tree_bool(cmd, global_abort_on_internal_errors_CFG));
+	init_indent(find_config_tree_bool(cmd, log_indent_CFG, NULL));
+	init_abort_on_internal_errors(find_config_tree_bool(cmd, global_abort_on_internal_errors_CFG, NULL));
 
 	cmd->default_settings.msg_prefix = find_config_tree_str_allow_empty(cmd, log_prefix_CFG, NULL);
 	init_msg_prefix(cmd->default_settings.msg_prefix);
 
-	cmd->default_settings.cmd_name = find_config_tree_bool(cmd, log_command_names_CFG);
+	cmd->default_settings.cmd_name = find_config_tree_bool(cmd, log_command_names_CFG, NULL);
 	init_cmd_name(cmd->default_settings.cmd_name);
 
 	/* Test mode */
 	cmd->default_settings.test =
-	    find_config_tree_bool(cmd, global_test_CFG);
+	    find_config_tree_bool(cmd, global_test_CFG, NULL);
 	init_test(cmd->default_settings.test);
 
 	/* Settings for logging to file */
-	if (find_config_tree_bool(cmd, log_overwrite_CFG))
+	if (find_config_tree_bool(cmd, log_overwrite_CFG, NULL))
 		append = 0;
 
 	log_file = find_config_tree_str(cmd, log_file_CFG, NULL);
@@ -229,7 +229,7 @@ static void _init_logging(struct cmd_context *cmd)
 	if (log_file)
 		init_log_direct(log_file, append);
 
-	init_log_while_suspended(find_config_tree_bool(cmd, log_activation_CFG));
+	init_log_while_suspended(find_config_tree_bool(cmd, log_activation_CFG, NULL));
 
 	cmd->default_settings.debug_classes = _parse_debug_classes(cmd);
 	log_debug("Setting log debug classes to %d", cmd->default_settings.debug_classes);
@@ -275,7 +275,7 @@ static int _process_config(struct cmd_context *cmd)
 	int udev_disabled = 0;
 	char sysfs_dir[PATH_MAX];
 
-	if (!config_def_check(cmd, 0, 0, 0) && find_config_tree_bool(cmd, config_abort_on_errors_CFG)) {
+	if (!config_def_check(cmd, 0, 0, 0) && find_config_tree_bool(cmd, config_abort_on_errors_CFG, NULL)) {
 		log_error("LVM configuration invalid.");
 		return 0;
 	}
@@ -318,10 +318,10 @@ static int _process_config(struct cmd_context *cmd)
 	dm_set_sysfs_dir(sysfs_dir);
 
 	/* activation? */
-	cmd->default_settings.activation = find_config_tree_bool(cmd, global_activation_CFG);
+	cmd->default_settings.activation = find_config_tree_bool(cmd, global_activation_CFG, NULL);
 	set_activation(cmd->default_settings.activation);
 
-	cmd->default_settings.suffix = find_config_tree_bool(cmd, global_suffix_CFG);
+	cmd->default_settings.suffix = find_config_tree_bool(cmd, global_suffix_CFG, NULL);
 
 	if (!(cmd->default_settings.unit_factor =
 	      units_to_bytes(find_config_tree_str(cmd, global_units_CFG, NULL),
@@ -350,10 +350,10 @@ static int _process_config(struct cmd_context *cmd)
 	udev_disabled = _check_disable_udev("manage logical volume symlinks in device directory");
 
 	cmd->default_settings.udev_rules = udev_disabled ? 0 :
-		find_config_tree_bool(cmd, activation_udev_rules_CFG);
+		find_config_tree_bool(cmd, activation_udev_rules_CFG, NULL);
 
 	cmd->default_settings.udev_sync = udev_disabled ? 0 :
-		find_config_tree_bool(cmd, activation_udev_sync_CFG);
+		find_config_tree_bool(cmd, activation_udev_sync_CFG, NULL);
 
 	/*
 	 * Set udev_fallback lazily on first use since it requires
@@ -363,11 +363,11 @@ static int _process_config(struct cmd_context *cmd)
 	 */
 	cmd->default_settings.udev_fallback = udev_disabled ? 1 : -1;
 
-	init_retry_deactivation(find_config_tree_bool(cmd, activation_retry_deactivation_CFG));
+	init_retry_deactivation(find_config_tree_bool(cmd, activation_retry_deactivation_CFG, NULL));
 
-	init_activation_checks(find_config_tree_bool(cmd, activation_checks_CFG));
+	init_activation_checks(find_config_tree_bool(cmd, activation_checks_CFG, NULL));
 
-	cmd->use_linear_target = find_config_tree_bool(cmd, activation_use_linear_target_CFG);
+	cmd->use_linear_target = find_config_tree_bool(cmd, activation_use_linear_target_CFG, NULL);
 
 	cmd->stripe_filler = find_config_tree_str(cmd, activation_missing_stripe_filler_CFG, NULL);
 
@@ -391,14 +391,14 @@ static int _process_config(struct cmd_context *cmd)
 		}
 	}
 
-	cmd->si_unit_consistency = find_config_tree_bool(cmd, global_si_unit_consistency_CFG);
+	cmd->si_unit_consistency = find_config_tree_bool(cmd, global_si_unit_consistency_CFG, NULL);
 
 	if ((cn = find_config_tree_node(cmd, activation_mlock_filter_CFG, NULL)))
 		for (cv = cn->v; cv; cv = cv->next) 
 			if ((cv->type != DM_CFG_STRING) || !cv->v.str[0]) 
 				log_error("Ignoring invalid activation/mlock_filter entry in config file");
 
-	cmd->metadata_read_only = find_config_tree_bool(cmd, global_metadata_read_only_CFG);
+	cmd->metadata_read_only = find_config_tree_bool(cmd, global_metadata_read_only_CFG, NULL);
 
 	pv_min_kb = find_config_tree_int64(cmd, devices_pv_min_size_CFG, NULL);
 	if (pv_min_kb < PV_MIN_SIZE_KB) {
@@ -410,7 +410,7 @@ static int _process_config(struct cmd_context *cmd)
 	init_pv_min_size((uint64_t)pv_min_kb * (1024 >> SECTOR_SHIFT));
 
 	init_detect_internal_vg_cache_corruption
-		(find_config_tree_bool(cmd, global_detect_internal_vg_cache_corruption_CFG));
+		(find_config_tree_bool(cmd, global_detect_internal_vg_cache_corruption_CFG, NULL));
 
 	lvmetad_disconnect();
 
@@ -427,12 +427,12 @@ static int _process_config(struct cmd_context *cmd)
 	lvmetad_set_token(cn ? cn->v : NULL);
 
 	if (find_config_tree_int(cmd, global_locking_type_CFG, NULL) == 3 &&
-	    find_config_tree_bool(cmd, global_use_lvmetad_CFG)) {
+	    find_config_tree_bool(cmd, global_use_lvmetad_CFG, NULL)) {
 		log_warn("WARNING: configuration setting use_lvmetad overridden to 0 due to locking_type 3. "
 			 "Clustered environment not supported by lvmetad yet.");
 		lvmetad_set_active(0);
 	} else
-		lvmetad_set_active(find_config_tree_bool(cmd, global_use_lvmetad_CFG));
+		lvmetad_set_active(find_config_tree_bool(cmd, global_use_lvmetad_CFG, NULL));
 
 	lvmetad_init(cmd);
 
@@ -497,7 +497,7 @@ static int _init_tags(struct cmd_context *cmd, struct dm_config_tree *cft)
 		return 1;
 
 	/* NB hosttags 0 when already 1 intentionally does not delete the tag */
-	if (!cmd->hosttags && find_config_tree_bool(cmd, tags_hosttags_CFG)) {
+	if (!cmd->hosttags && find_config_tree_bool(cmd, tags_hosttags_CFG, NULL)) {
 		/* FIXME Strip out invalid chars: only A-Za-z0-9_+.- */
 		if (!_set_tag(cmd, cmd->hostname))
 			return_0;
@@ -730,7 +730,7 @@ static int _init_dev_cache(struct cmd_context *cmd)
 		device_list_from_udev = 0;
 	else
 		device_list_from_udev = udev_is_running() ?
-			find_config_tree_bool(cmd, devices_obtain_device_list_from_udev_CFG) : 0;
+			find_config_tree_bool(cmd, devices_obtain_device_list_from_udev_CFG, NULL) : 0;
 
 	init_obtain_device_list_from_udev(device_list_from_udev);
 
@@ -821,7 +821,7 @@ static struct dev_filter *_init_filter_components(struct cmd_context *cmd)
 	 * Listed first because it's very efficient at eliminating
 	 * unavailable devices.
 	 */
-	if (find_config_tree_bool(cmd, devices_sysfs_scan_CFG)) {
+	if (find_config_tree_bool(cmd, devices_sysfs_scan_CFG, NULL)) {
 		if ((filters[nr_filt] = sysfs_filter_create()))
 			nr_filt++;
 	}
@@ -845,14 +845,14 @@ static struct dev_filter *_init_filter_components(struct cmd_context *cmd)
 	nr_filt++;
 
 	/* md component filter. Optional, non-critical. */
-	if (find_config_tree_bool(cmd, devices_md_component_detection_CFG)) {
+	if (find_config_tree_bool(cmd, devices_md_component_detection_CFG, NULL)) {
 		init_md_filtering(1);
 		if ((filters[nr_filt] = md_filter_create(cmd->dev_types)))
 			nr_filt++;
 	}
 
 	/* mpath component filter. Optional, non-critical. */
-	if (find_config_tree_bool(cmd, devices_multipath_component_detection_CFG)) {
+	if (find_config_tree_bool(cmd, devices_multipath_component_detection_CFG, NULL)) {
 		if ((filters[nr_filt] = mpath_filter_create(cmd->dev_types)))
 			nr_filt++;
 	}
@@ -885,7 +885,7 @@ static int _init_filters(struct cmd_context *cmd, unsigned load_persistent_cache
 	if (!(f3 = _init_filter_components(cmd)))
 		goto_bad;
 
-	init_ignore_suspended_devices(find_config_tree_bool(cmd, devices_ignore_suspended_devices_CFG));
+	init_ignore_suspended_devices(find_config_tree_bool(cmd, devices_ignore_suspended_devices_CFG, NULL));
 
 	/*
 	 * If 'cache_dir' or 'cache_file_prefix' is set, ignore 'cache'.
@@ -922,7 +922,7 @@ static int _init_filters(struct cmd_context *cmd, unsigned load_persistent_cache
 	}
 
 	/* Should we ever dump persistent filter state? */
-	if (find_config_tree_bool(cmd, devices_write_cache_state_CFG))
+	if (find_config_tree_bool(cmd, devices_write_cache_state_CFG, NULL))
 		cmd->dump_filter = 1;
 
 	if (!*cmd->system_dir)
@@ -933,7 +933,7 @@ static int _init_filters(struct cmd_context *cmd, unsigned load_persistent_cache
 	 * than the config file and this is not a long-lived process. Also avoid
 	 * it when lvmetad is enabled.
 	 */
-	if (!find_config_tree_bool(cmd, global_use_lvmetad_CFG) &&
+	if (!find_config_tree_bool(cmd, global_use_lvmetad_CFG, NULL) &&
 	    load_persistent_cache && !cmd->is_long_lived &&
 	    !stat(dev_cache, &st) &&
 	    (st.st_ctime > config_file_timestamp(cmd->cft)) &&
@@ -1253,7 +1253,7 @@ static int _init_backup(struct cmd_context *cmd)
 
 	/* set up archiving */
 	cmd->default_settings.archive =
-	    find_config_tree_bool(cmd, backup_archive_CFG);
+	    find_config_tree_bool(cmd, backup_archive_CFG, NULL);
 
 	days = (uint32_t) find_config_tree_int(cmd, backup_retain_days_CFG, NULL);
 
@@ -1277,7 +1277,7 @@ static int _init_backup(struct cmd_context *cmd)
 	}
 
 	/* set up the backup */
-	cmd->default_settings.backup = find_config_tree_bool(cmd, backup_backup_CFG);
+	cmd->default_settings.backup = find_config_tree_bool(cmd, backup_backup_CFG, NULL);
 
 	if (dm_snprintf
 	    (default_dir, sizeof(default_dir), "%s/%s", cmd->system_dir,

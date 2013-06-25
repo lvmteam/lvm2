@@ -1442,7 +1442,7 @@ int pvcreate_params_validate(struct cmd_context *cmd,
 		pp->metadataignore = arg_int_value(cmd, metadataignore_ARG,
 						   DEFAULT_PVMETADATAIGNORE);
 	else
-		pp->metadataignore = find_config_tree_bool(cmd, metadata_pvmetadataignore_CFG);
+		pp->metadataignore = find_config_tree_bool(cmd, metadata_pvmetadataignore_CFG, NULL);
 
 	if (arg_count(cmd, pvmetadatacopies_ARG) &&
 	    !arg_int_value(cmd, pvmetadatacopies_ARG, -1) &&
@@ -1531,7 +1531,7 @@ int get_activation_monitoring_mode(struct cmd_context *cmd,
 						 DEFAULT_DMEVENTD_MONITOR);
 	else if (is_static() || arg_count(cmd, ignoremonitoring_ARG) ||
 		 arg_count(cmd, sysinit_ARG) ||
-		 !find_config_tree_bool(cmd, activation_monitoring_CFG))
+		 !find_config_tree_bool(cmd, activation_monitoring_CFG, NULL))
 		*monitoring_mode = DMEVENTD_MONITOR_IGNORE;
 
 	return 1;
@@ -1551,7 +1551,7 @@ int get_pool_params(struct cmd_context *cmd, int *passed_args,
 		*zero = strcmp(arg_str_value(cmd, zero_ARG, "y"), "n");
 		log_very_verbose("Setting pool zeroing: %u", *zero);
 	} else
-		*zero = find_config_tree_bool(cmd, allocation_thin_pool_zero_CFG);
+		*zero = find_config_tree_bool(cmd, allocation_thin_pool_zero_CFG, NULL);
 
 	if (arg_count(cmd, discards_ARG)) {
 		*passed_args |= PASS_ARG_DISCARDS;

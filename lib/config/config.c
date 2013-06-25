@@ -710,7 +710,7 @@ int config_def_check(struct cmd_context *cmd, int force, int skip, int suppress_
 		def->flags &= ~(CFG_USED | CFG_VALID);
 	}
 
-	if (!force && !find_config_tree_bool(cmd, config_checks_CFG)) {
+	if (!force && !find_config_tree_bool(cmd, config_checks_CFG, NULL)) {
 		if (cmd->cft_def_hash) {
 			dm_hash_destroy(cmd->cft_def_hash);
 			cmd->cft_def_hash = NULL;
@@ -907,15 +907,25 @@ float find_config_tree_float(struct cmd_context *cmd, int id, struct profile *pr
 	return f;
 }
 
-int find_config_tree_bool(struct cmd_context *cmd, int id)
+int find_config_tree_bool(struct cmd_context *cmd, int id, struct profile *profile)
 {
 	cfg_def_item_t *item = cfg_def_get_item_p(id);
 	const char *path = cfg_def_get_path(item);
+	int profile_applied = 0;
+	int b;
 
 	if (item->type != CFG_TYPE_BOOL)
 		log_error(INTERNAL_ERROR "%s cfg tree element not declared as boolean.", path);
 
-	return dm_config_tree_find_bool(cmd->cft, path, cfg_def_get_default_value(item, CFG_TYPE_BOOL));
+	if (profile && !cmd->profile_params->global_profile)
+		profile_applied = override_config_tree_from_profile(cmd, profile);
+
+	b = dm_config_tree_find_bool(cmd->cft, path, cfg_def_get_default_value(item, CFG_TYPE_BOOL));
+
+	if (profile_applied)
+		remove_config_tree_by_source(cmd, CONFIG_PROFILE);
+
+	return b;
 }
 
 /* Insert cn2 after cn1 */

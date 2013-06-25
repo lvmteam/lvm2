@@ -355,7 +355,7 @@ int init_file_locking(struct locking_type *locking, struct cmd_context *cmd,
 	strcpy(_lock_dir, locking_dir);
 
 	_prioritise_write_locks =
-	    find_config_tree_bool(cmd, global_prioritise_write_locks_CFG);
+	    find_config_tree_bool(cmd, global_prioritise_write_locks_CFG, NULL);
 
 	(void) dm_prepare_selinux_context(_lock_dir, S_IFDIR);
 	r = dm_create_dir(_lock_dir);

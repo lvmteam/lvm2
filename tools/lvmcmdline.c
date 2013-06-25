@@ -1467,7 +1467,7 @@ static int _lvm1_fallback(struct cmd_context *cmd)
 	char vsn[80];
 	int dm_present;
 
-	if (!find_config_tree_bool(cmd, global_fallback_to_lvm1_CFG) ||
+	if (!find_config_tree_bool(cmd, global_fallback_to_lvm1_CFG, NULL) ||
 	    strncmp(cmd->kernel_vsn, "2.4.", 4))
 		return 0;
 

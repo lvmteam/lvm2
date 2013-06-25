@@ -1342,7 +1342,7 @@ static int _check_udev_fallback(struct cmd_context *cmd)
 	 * variable or udev rules are switched off.
 	 */
 	settings->udev_fallback = !settings->udev_rules ? 1 :
-		find_config_tree_bool(cmd, activation_verify_udev_operations_CFG);
+		find_config_tree_bool(cmd, activation_verify_udev_operations_CFG, NULL);
 
 	/* Do not rely fully on udev if the udev support is known to be incomplete. */
 	if (!settings->udev_fallback && !_dm_driver_has_stable_udev_support()) {

@@ -222,13 +222,13 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 	int columns_as_rows;
 	unsigned args_are_pvs;
 
-	aligned = find_config_tree_bool(cmd, report_aligned_CFG);
-	buffered = find_config_tree_bool(cmd, report_buffered_CFG);
-	headings = find_config_tree_bool(cmd, report_headings_CFG);
+	aligned = find_config_tree_bool(cmd, report_aligned_CFG, NULL);
+	buffered = find_config_tree_bool(cmd, report_buffered_CFG, NULL);
+	headings = find_config_tree_bool(cmd, report_headings_CFG, NULL);
 	separator = find_config_tree_str(cmd, report_separator_CFG, NULL);
-	field_prefixes = find_config_tree_bool(cmd, report_prefixes_CFG);
-	quoted = find_config_tree_bool(cmd, report_quoted_CFG);
-	columns_as_rows = find_config_tree_bool(cmd, report_colums_as_rows_CFG);
+	field_prefixes = find_config_tree_bool(cmd, report_prefixes_CFG, NULL);
+	quoted = find_config_tree_bool(cmd, report_quoted_CFG, NULL);
+	columns_as_rows = find_config_tree_bool(cmd, report_colums_as_rows_CFG, NULL);
 
 	args_are_pvs = (report_type == PVS ||
 			report_type == LABEL ||

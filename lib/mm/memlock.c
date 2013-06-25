@@ -320,7 +320,7 @@ static void _lock_mem(struct cmd_context *cmd)
 	 * Note: assuming _memlock_count_daemon is updated before _memlock_count
 	 */
 	_use_mlockall = _memlock_count_daemon ? 1 :
-		find_config_tree_bool(cmd, activation_use_mlockall_CFG);
+		find_config_tree_bool(cmd, activation_use_mlockall_CFG, NULL);
 
 	if (!_use_mlockall) {
 		if (!*_procselfmaps &&

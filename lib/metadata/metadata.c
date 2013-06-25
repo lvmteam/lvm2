@@ -83,7 +83,7 @@ unsigned long set_pe_align(struct physical_volume *pv, unsigned long data_alignm
 	/*
 	 * Align to stripe-width of underlying md device if present
 	 */
-	if (find_config_tree_bool(pv->fmt->cmd, devices_md_chunk_alignment_CFG)) {
+	if (find_config_tree_bool(pv->fmt->cmd, devices_md_chunk_alignment_CFG, NULL)) {
 		temp_pe_align = dev_md_stripe_width(pv->fmt->cmd->dev_types, pv->dev);
 		if (_alignment_overrides_default(temp_pe_align, default_pe_align))
 			pv->pe_align = temp_pe_align;
@@ -96,7 +96,7 @@ unsigned long set_pe_align(struct physical_volume *pv, unsigned long data_alignm
 	 * - optimal_io_size - the device's preferred unit of receiving I/O
 	 *   (e.g. MD's stripe width)
 	 */
-	if (find_config_tree_bool(pv->fmt->cmd, devices_data_alignment_detection_CFG)) {
+	if (find_config_tree_bool(pv->fmt->cmd, devices_data_alignment_detection_CFG, NULL)) {
 		temp_pe_align = dev_minimum_io_size(pv->fmt->cmd->dev_types, pv->dev);
 		if (_alignment_overrides_default(temp_pe_align, default_pe_align))
 			pv->pe_align = temp_pe_align;
@@ -128,7 +128,7 @@ unsigned long set_pe_align_offset(struct physical_volume *pv,
 	if (!pv->dev)
 		goto out;
 
-	if (find_config_tree_bool(pv->fmt->cmd, devices_data_alignment_offset_detection_CFG)) {
+	if (find_config_tree_bool(pv->fmt->cmd, devices_data_alignment_offset_detection_CFG, NULL)) {
 		int align_offset = dev_alignment_offset(pv->fmt->cmd->dev_types, pv->dev);
 		/* must handle a -1 alignment_offset; means dev is misaligned */
 		if (align_offset < 0)

@@ -227,7 +227,7 @@ int init_locking(int type, struct cmd_context *cmd, int suppress_messages)
 	if (type < 0)
 		type = find_config_tree_int(cmd, global_locking_type_CFG, NULL);
 
-	_blocking_supported = find_config_tree_bool(cmd, global_wait_for_locks_CFG);
+	_blocking_supported = find_config_tree_bool(cmd, global_wait_for_locks_CFG, NULL);
 
 	switch (type) {
 	case 0:
@@ -254,7 +254,7 @@ int init_locking(int type, struct cmd_context *cmd, int suppress_messages)
 			if (init_external_locking(&_locking, cmd, suppress_messages))
 				return 1;
 		}
-		if (!find_config_tree_bool(cmd, global_fallback_to_clustered_locking_CFG)) {
+		if (!find_config_tree_bool(cmd, global_fallback_to_clustered_locking_CFG, NULL)) {
 			log_error_suppress(suppress_messages, "External locking initialisation failed.");
 			break;
 		}
@@ -287,7 +287,7 @@ int init_locking(int type, struct cmd_context *cmd, int suppress_messages)
 	}
 
 	if ((type == 2 || type == 3) &&
-	    find_config_tree_bool(cmd, global_fallback_to_local_locking_CFG)) {
+	    find_config_tree_bool(cmd, global_fallback_to_local_locking_CFG, NULL)) {
 		log_warn_suppress(suppress_messages, "WARNING: Falling back to local file-based locking.");
 		log_warn_suppress(suppress_messages,
 				  "Volume Groups with the clustered attribute will "
