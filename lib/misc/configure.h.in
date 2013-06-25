@@ -53,6 +53,9 @@
 /* Default directory to keep PID files in. */
 #undef DEFAULT_PID_DIR
 
+/* Name of default configuration profile subdirectory. */
+#undef DEFAULT_PROFILE_SUBDIR
+
 /* Default LVM run directory. */
 #undef DEFAULT_RUN_DIR
 

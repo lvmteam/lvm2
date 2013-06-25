@@ -671,6 +671,7 @@ DEFAULT_RUN_DIR
 DEFAULT_DM_RUN_DIR
 DEFAULT_LOCK_DIR
 DEFAULT_DATA_ALIGNMENT
+DEFAULT_PROFILE_SUBDIR
 DEFAULT_CACHE_SUBDIR
 DEFAULT_BACKUP_SUBDIR
 DEFAULT_ARCHIVE_SUBDIR
@@ -873,6 +874,7 @@ with_tmpfilesdir
 with_dmeventd_pidfile
 with_dmeventd_path
 with_default_system_dir
+with_default_profile_subdir
 with_default_archive_subdir
 with_default_backup_subdir
 with_default_cache_subdir
@@ -1638,6 +1640,8 @@ Optional Packages:
                           dmeventd path [[EPREFIX/sbin/dmeventd]]
   --with-default-system-dir=DIR
                           default LVM system directory [[/etc/lvm]]
+  --with-default-profile-subdir=SUBDIR
+                          default configuration profile subdir [[profile]]
   --with-default-archive-subdir=SUBDIR
                           default metadata archive subdir [[archive]]
   --with-default-backup-subdir=SUBDIR
@@ -10555,6 +10559,20 @@ _ACEOF
 
 
 
+# Check whether --with-default-profile-subdir was given.
+if test "${with_default_profile_subdir+set}" = set; then :
+  withval=$with_default_profile_subdir; DEFAULT_PROFILE_SUBDIR=$withval
+else
+  DEFAULT_PROFILE_SUBDIR=profile
+fi
+
+
+cat >>confdefs.h <<_ACEOF
+#define DEFAULT_PROFILE_SUBDIR "$DEFAULT_PROFILE_SUBDIR"
+_ACEOF
+
+
+
 # Check whether --with-default-archive-subdir was given.
 if test "${with_default_archive_subdir+set}" = set; then :
   withval=$with_default_archive_subdir; DEFAULT_ARCHIVE_SUBDIR=$withval
@@ -10666,6 +10684,7 @@ LVM_PATCHLEVEL=`echo "$VER" | $AWK -F '[(.]' '{print $3}'`
 LVM_LIBAPI=`echo "$VER" | $AWK -F '[()]' '{print $2}'`
 
 ################################################################################
+
 
 
 

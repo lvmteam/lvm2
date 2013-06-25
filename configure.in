@@ -1421,6 +1421,13 @@ AC_ARG_WITH(default-system-dir,
 AC_DEFINE_UNQUOTED(DEFAULT_SYS_DIR, ["$DEFAULT_SYS_DIR"],
 		   [Path to LVM system directory.])
 
+AC_ARG_WITH(default-profile-subdir,
+	    AC_HELP_STRING([--with-default-profile-subdir=SUBDIR],
+			   [default configuration profile subdir [[profile]]]),
+	    DEFAULT_PROFILE_SUBDIR=$withval, DEFAULT_PROFILE_SUBDIR=profile)
+AC_DEFINE_UNQUOTED(DEFAULT_PROFILE_SUBDIR, ["$DEFAULT_PROFILE_SUBDIR"],
+		   [Name of default configuration profile subdirectory.])
+
 AC_ARG_WITH(default-archive-subdir,
 	    AC_HELP_STRING([--with-default-archive-subdir=SUBDIR],
 			   [default metadata archive subdir [[archive]]]),
@@ -1521,6 +1528,7 @@ AC_SUBST(DEFAULT_SYS_DIR)
 AC_SUBST(DEFAULT_ARCHIVE_SUBDIR)
 AC_SUBST(DEFAULT_BACKUP_SUBDIR)
 AC_SUBST(DEFAULT_CACHE_SUBDIR)
+AC_SUBST(DEFAULT_PROFILE_SUBDIR)
 AC_SUBST(DEFAULT_DATA_ALIGNMENT)
 AC_SUBST(DEFAULT_LOCK_DIR)
 AC_SUBST(DEFAULT_DM_RUN_DIR)
