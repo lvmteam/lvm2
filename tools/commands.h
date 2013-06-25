@@ -214,6 +214,7 @@ xx(lvcreate,
    "\t[-T|--thin  [-c|--chunksize  ChunkSize]\n"
    "\t  [--discards {ignore|nopassdown|passdown}]\n"
    "\t  [--poolmetadatasize MetadataSize[bBsSkKmMgG]]]\n"
+   "\t  [--poolmetadataspare {y|n}]\n"
    "\t[--thinpool ThinPoolLogicalVolume{Name|Path}]\n"
    "\t[-t|--test]\n"
    "\t[--type VolumeType]\n"
@@ -260,9 +261,10 @@ xx(lvcreate,
    ignoremonitoring_ARG, major_ARG, minor_ARG, mirrorlog_ARG, mirrors_ARG,
    monitor_ARG, minrecoveryrate_ARG, maxrecoveryrate_ARG, name_ARG, nosync_ARG,
    noudevsync_ARG, ignoreactivationskip_ARG, setactivationskip_ARG,
+   poolmetadatasize_ARG, poolmetadataspare_ARG,
    permission_ARG, persistent_ARG, readahead_ARG, regionsize_ARG, size_ARG,
    snapshot_ARG, stripes_ARG, stripesize_ARG, test_ARG, thin_ARG, thinpool_ARG,
-   type_ARG, virtualoriginsize_ARG, poolmetadatasize_ARG, virtualsize_ARG,
+   type_ARG, virtualoriginsize_ARG, virtualsize_ARG,
    zero_ARG)
 
 xx(lvdisplay,

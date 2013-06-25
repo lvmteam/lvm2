@@ -728,6 +728,102 @@ struct logical_volume *alloc_pool_metadata(struct logical_volume *pool_lv,
 	return metadata_lv;
 }
 
+static struct logical_volume *_alloc_pool_metadata_spare(struct volume_group *vg,
+							 uint32_t extents,
+							 struct dm_list *pvh)
+{
+	struct logical_volume *lv;
+
+	/* FIXME: Make lvm2api usable */
+	struct lvcreate_params lp = {
+		.activate = CHANGE_ALY,
+		.alloc = ALLOC_INHERIT,
+		.extents = extents,
+		.major = -1,
+		.minor = -1,
+		.permission = LVM_READ | LVM_WRITE,
+		.pvh = pvh ? : &vg->pvs,
+		.read_ahead = DM_READ_AHEAD_AUTO,
+		.stripes = 1,
+		.vg_name = vg->name,
+		.zero = 1,
+	};
+
+	dm_list_init(&lp.tags);
+
+	if (!(lp.segtype = get_segtype_from_string(vg->cmd, "striped")))
+		return_0;
+
+	/* FIXME: Maybe using silent mode ? */
+	if (!(lv = lv_create_single(vg, &lp)))
+		return_0;
+
+	/* Spare LV should not be active */
+	if (!deactivate_lv_local(vg->cmd, lv)) {
+		log_error("Unable to deactivate pool metadata spare LV. "
+			  "Manual intervention required.");
+		return 0;
+	}
+
+	if (!vg_set_pool_metadata_spare(lv))
+		return_0;
+
+	return lv;
+}
+
+/*
+ * Create/resize pool metadata spare LV
+ * Caller does vg_write(), vg_commit() with pool creation
+ * extents is 0, max size is determined
+ */
+int handle_pool_metadata_spare(struct volume_group *vg, uint32_t extents,
+			       struct dm_list *pvh, int poolmetadataspare)
+{
+	struct logical_volume *lv = vg->pool_metadata_spare_lv;
+	uint32_t seg_mirrors;
+	struct lv_segment *seg;
+	const struct lv_list *lvl;
+
+	if (!extents)
+		/* Find maximal size of metadata LV */
+		dm_list_iterate_items(lvl, &vg->lvs)
+			if (lv_is_thin_pool_metadata(lvl->lv) &&
+			    (lvl->lv->le_count > extents))
+				extents = lvl->lv->le_count;
+
+	if (!poolmetadataspare) {
+		/* TODO: Not showing when lvm.conf would define 'n' ? */
+		if (DEFAULT_POOL_METADATA_SPARE && extents)
+			/* Warn if there would be any user */
+			log_warn("WARNING: recovery of pools without pool "
+				 "metadata spare LV is not automated.");
+		return 1;
+	}
+
+	if (!lv) {
+		if (!_alloc_pool_metadata_spare(vg, extents, pvh))
+			return_0;
+
+		return 1;
+	}
+
+	seg = last_seg(lv);
+	seg_mirrors = lv_mirror_count(lv);
+
+	/* Check spare LV is big enough and preserve segtype */
+	if ((lv->le_count < extents) && seg &&
+	    !lv_extend(lv, seg->segtype,
+		       seg->area_count / seg_mirrors,
+		       seg->stripe_size,
+		       seg_mirrors,
+		       seg->region_size,
+		       extents - lv->le_count, NULL,
+		       pvh, lv->alloc))
+		return_0;
+
+	return 1;
+}
+
 int vg_set_pool_metadata_spare(struct logical_volume *lv)
 {
 	char new_name[NAME_LEN];
@@ -796,6 +892,9 @@ int vg_remove_pool_metadata_spare(struct volume_group *vg)
 
 	if (!lv_rename_update(vg->cmd, lv, new_name, 0))
 		return_0;
+
+	/* To display default warning */
+	(void) handle_pool_metadata_spare(vg, 0, 0, 0);
 
 	return 1;
 }

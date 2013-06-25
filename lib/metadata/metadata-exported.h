@@ -667,6 +667,8 @@ struct logical_volume *alloc_pool_metadata(struct logical_volume *pool_lv,
 					   uint32_t stripes, uint32_t stripe_size,
 					   uint64_t size, alloc_policy_t alloc,
 					   struct dm_list *pvh);
+int handle_pool_metadata_spare(struct volume_group *vg, uint32_t extents,
+			       struct dm_list *pvh, int poolmetadataspare);
 int vg_set_pool_metadata_spare(struct logical_volume *lv);
 int vg_remove_pool_metadata_spare(struct volume_group *vg);
 
@@ -710,6 +712,7 @@ struct lvcreate_params {
 	int minor; /* all */
 	int log_count; /* mirror */
 	int nosync; /* mirror */
+	int poolmetadataspare; /* thin pool */
 #define ACTIVATION_SKIP_SET		0x01 /* request to set LV activation skip flag state */
 #define ACTIVATION_SKIP_SET_ENABLED	0x02 /* set the LV activation skip flag state to 'enabled' */
 #define ACTIVATION_SKIP_IGNORE		0x04 /* request to ignore LV activation skip flag (if any) */

@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2012 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2013 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -904,6 +904,14 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 		return 0;
 	}
 
+	if (lp->create_thin_pool) {
+		/* TODO: add lvm.conf default y|n */
+		lp->poolmetadataspare = arg_int_value(cmd, poolmetadataspare_ARG,
+						      DEFAULT_POOL_METADATA_SPARE);
+	} else if (arg_count(cmd, poolmetadataspare_ARG)) {
+		log_error("--poolmetadataspare is only available with thin pool creation.");
+		return 0;
+	}
 	/*
 	 * Allocation parameters
 	 */
@@ -962,6 +970,7 @@ static int _check_thin_parameters(struct volume_group *vg, struct lvcreate_param
 			contiguous_ARG,
 			discards_ARG,
 			poolmetadatasize_ARG,
+			poolmetadataspare_ARG,
 			stripes_ARG,
 			stripesize_ARG,
 			zero_ARG
@@ -1096,9 +1105,14 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 	if (seg_is_thin(&lp) && !_validate_internal_thin_processing(&lp))
 		goto_out;
 
-	if (lp.create_thin_pool)
+	if (lp.create_thin_pool) {
+		if (!handle_pool_metadata_spare(vg, lp.poolmetadataextents,
+						lp.pvh, lp.poolmetadataspare))
+			goto_out;
+
 		log_verbose("Making thin pool %s in VG %s using segtype %s",
 			    lp.pool ? : "with generated name", lp.vg_name, lp.segtype->name);
+	}
 
 	if (lp.thin)
 		log_verbose("Making thin LV %s in pool %s in VG %s%s%s using segtype %s",
