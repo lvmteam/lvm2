@@ -46,7 +46,7 @@ const char *text_vgname_import(const struct format_type *fmt,
 
 	_init_text_import();
 
-	if (!(cft = config_file_open(NULL, 0)))
+	if (!(cft = config_open(CONFIG_FILE, NULL, 0)))
 		return_NULL;
 
 	if ((!dev && !config_file_read(cft)) ||
@@ -69,7 +69,7 @@ const char *text_vgname_import(const struct format_type *fmt,
 	}
 
       out:
-	config_file_destroy(cft);
+	config_destroy(cft);
 	return vgname;
 }
 
@@ -92,7 +92,7 @@ struct volume_group *text_vg_import_fd(struct format_instance *fid,
 	*desc = NULL;
 	*when = 0;
 
-	if (!(cft = config_file_open(file, 0)))
+	if (!(cft = config_open(CONFIG_FILE, file, 0)))
 		return_NULL;
 
 	if ((!dev && !config_file_read(cft)) ||
@@ -117,7 +117,7 @@ struct volume_group *text_vg_import_fd(struct format_instance *fid,
 	}
 
       out:
-	config_file_destroy(cft);
+	config_destroy(cft);
 	return vg;
 }
 

@@ -1081,7 +1081,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	if (arg_count(cmd, config_ARG) || !cmd->config_valid || config_files_changed(cmd)) {
 		/* Reinitialise various settings inc. logging, filters */
 		if (!refresh_toolcontext(cmd)) {
-			old_cft = remove_overridden_config_tree(cmd);
+			old_cft = remove_config_tree_by_source(cmd, CONFIG_STRING);
 			if (old_cft)
 				dm_config_destroy(old_cft);
 			log_error("Updated config file invalid. Aborting.");
@@ -1136,7 +1136,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 		lvmcache_destroy(cmd, 1);
 	}
 
-	if ((old_cft = remove_overridden_config_tree(cmd))) {
+	if ((old_cft = remove_config_tree_by_source(cmd, CONFIG_STRING))) {
 		dm_config_destroy(old_cft);
 		/* Move this? */
 		if (!refresh_toolcontext(cmd))

@@ -30,13 +30,29 @@
 #include <assert.h>
 #include <ctype.h>
 
+static const char *_config_source_names[] = {
+	[CONFIG_UNDEFINED] = "undefined",
+	[CONFIG_FILE] = "file",
+	[CONFIG_MERGED_FILES] = "merged files",
+	[CONFIG_STRING] = "string",
+	[CONFIG_PROFILE] = "profile"
+};
+
 struct config_file {
-	time_t timestamp;
 	off_t st_size;
 	char *filename;
 	int exists;
 	int keep_open;
 	struct device *dev;
+};
+
+struct config_source {
+	config_source_t type;
+	time_t timestamp;
+	union {
+		struct config_file *file;
+		struct config_file *profile;
+	} source;
 };
 
 static char _cfg_path[CFG_PATH_MAX_LEN];
@@ -54,30 +70,49 @@ static struct cfg_def_item _cfg_def_items[CFG_COUNT + 1] = {
 #undef cfg_array
 };
 
+config_source_t config_get_source_type(struct dm_config_tree *cft)
+{
+	struct config_source *cs = dm_config_get_custom(cft);
+	return cs ? cs->type : CONFIG_UNDEFINED;
+}
+
 /*
  * public interface
  */
-struct dm_config_tree *config_file_open(const char *filename, int keep_open)
+struct dm_config_tree *config_open(config_source_t source,
+				   const char *filename,
+				   int keep_open)
 {
 	struct dm_config_tree *cft = dm_config_create();
+	struct config_source *cs;
 	struct config_file *cf;
+
 	if (!cft)
 		return NULL;
 
-	if (!(cf = dm_pool_zalloc(cft->mem, sizeof(struct config_file)))) {
-		log_error("Failed to allocate config tree.");
+	if (!(cs = dm_pool_zalloc(cft->mem, sizeof(struct config_source)))) {
+		log_error("Failed to allocate config source.");
 		goto fail;
 	}
 
-	cf->keep_open = keep_open;
-	dm_config_set_custom(cft, cf);
+	if ((source == CONFIG_FILE) || (source == CONFIG_PROFILE)) {
+		if (!(cf = dm_pool_zalloc(cft->mem, sizeof(struct config_file)))) {
+			log_error("Failed to allocate config file.");
+			goto fail;
+		}
 
-	if (filename &&
-	    !(cf->filename = dm_pool_strdup(cft->mem, filename))) {
-		log_error("Failed to duplicate filename.");
-		goto fail;
+		cf->keep_open = keep_open;
+		if (filename &&
+		    !(cf->filename = dm_pool_strdup(cft->mem, filename))) {
+			log_error("Failed to duplicate filename.");
+			goto fail;
+		}
+
+		cs->source.file = cf;
 	}
 
+	cs->type = source;
+	dm_config_set_custom(cft, cs);
 	return cft;
 fail:
 	dm_config_destroy(cft);
@@ -89,11 +124,20 @@ fail:
  */
 int config_file_check(struct dm_config_tree *cft, const char **filename, struct stat *info)
 {
-	struct config_file *cf = dm_config_get_custom(cft);
+	struct config_source *cs = dm_config_get_custom(cft);
+	struct config_file *cf;
 	struct stat _info;
+
+	if ((cs->type != CONFIG_FILE) && (cs->type != CONFIG_PROFILE)) {
+		log_error(INTERNAL_ERROR "config_file_check: expected file or profile config source, "
+					 "found %s config source.", _config_source_names[cs->type]);
+		return 0;
+	}
 
 	if (!info)
 		info = &_info;
+
+	cf = cs->source.file;
 
 	if (stat(cf->filename, info)) {
 		log_sys_error("stat", cf->filename);
@@ -107,8 +151,8 @@ int config_file_check(struct dm_config_tree *cft, const char **filename, struct 
 		return 0;
 	}
 
+	cs->timestamp = info->st_ctime;
 	cf->exists = 1;
-	cf->timestamp = info->st_ctime;
 	cf->st_size = info->st_size;
 
 	if (info->st_size == 0)
@@ -124,8 +168,17 @@ int config_file_check(struct dm_config_tree *cft, const char **filename, struct 
  */
 int config_file_changed(struct dm_config_tree *cft)
 {
-	struct config_file *cf = dm_config_get_custom(cft);
+	struct config_source *cs = dm_config_get_custom(cft);
+	struct config_file *cf;
 	struct stat info;
+
+	if (cs->type != CONFIG_FILE) {
+		log_error(INTERNAL_ERROR "config_file_changed: expected file config source, "
+					 "found %s config source.", _config_source_names[cs->type]);
+		return 0;
+	}
+
+	cf = cs->source.file;
 
 	if (!cf->filename)
 		return 0;
@@ -151,7 +204,7 @@ int config_file_changed(struct dm_config_tree *cft)
 	}
 
 	/* Unchanged? */
-	if (cf->timestamp == info.st_ctime && cf->st_size == info.st_size)
+	if (cs->timestamp == info.st_ctime && cf->st_size == info.st_size)
 		return 0;
 
       reload:
@@ -159,30 +212,41 @@ int config_file_changed(struct dm_config_tree *cft)
 	return 1;
 }
 
-void config_file_destroy(struct dm_config_tree *cft)
+void config_destroy(struct dm_config_tree *cft)
 {
-	struct config_file *cf = dm_config_get_custom(cft);
+	struct config_source *cs;
+	struct config_file *cf;
 
-	if (cf && cf->dev)
-		if (!dev_close(cf->dev))
-			stack;
+	if (!cft)
+		return;
+
+	cs = dm_config_get_custom(cft);
+
+	if ((cs->type == CONFIG_FILE) || (cs->type == CONFIG_PROFILE)) {
+		cf = cs->source.file;
+		if (cf && cf->dev)
+			if (!dev_close(cf->dev))
+				stack;
+	}
 
 	dm_config_destroy(cft);
 }
 
-struct dm_config_tree *config_file_open_and_read(const char *config_file)
+struct dm_config_tree *config_file_open_and_read(const char *config_file,
+						 config_source_t source)
 {
 	struct dm_config_tree *cft;
 	struct stat info;
 
-	if (!(cft = config_file_open(config_file, 0))) {
+	if (!(cft = config_open(source, config_file, 0))) {
 		log_error("config_tree allocation failed");
 		return NULL;
 	}
 
 	/* Is there a config file? */
 	if (stat(config_file, &info) == -1) {
-		if (errno == ENOENT)
+		/* Profile file must be present! */
+		if (errno == ENOENT && (source != CONFIG_PROFILE))
 			return cft;
 		log_sys_error("stat", config_file);
 		goto bad;
@@ -196,35 +260,68 @@ struct dm_config_tree *config_file_open_and_read(const char *config_file)
 
 	return cft;
 bad:
-	config_file_destroy(cft);
+	config_destroy(cft);
 	return NULL;
 }
 
 /*
  * Returns config tree if it was removed.
  */
-struct dm_config_tree *remove_overridden_config_tree(struct cmd_context *cmd)
+struct dm_config_tree *remove_config_tree_by_source(struct cmd_context *cmd,
+						    config_source_t source)
 {
-	struct dm_config_tree *old_cft = cmd->cft;
-	struct dm_config_tree *cft = dm_config_remove_cascaded_tree(cmd->cft);
+	struct dm_config_tree *previous_cft = NULL;
+	struct dm_config_tree *cft = cmd->cft;
+	struct config_source *cs;
 
-	if (!cft)
-		return NULL;
+	while (cft) {
+		cs = dm_config_get_custom(cft);
+		if (cs && (cs->type == source)) {
+			if (previous_cft) {
+				previous_cft->cascade = cft->cascade;
+				cmd->cft = previous_cft;
+			} else
+				cmd->cft = cft->cascade;
+			cft->cascade = NULL;
+			break;
+		}
+		previous_cft = cft;
+		cft = cft->cascade;
+	}
 
-	cmd->cft = cft;
-
-	return old_cft;
+	return cft;
 }
 
 int override_config_tree_from_string(struct cmd_context *cmd,
 				     const char *config_settings)
 {
 	struct dm_config_tree *cft_new;
+	struct config_source *cs = dm_config_get_custom(cmd->cft);
+
+	/*
+	 * Follow this sequence:
+	 * CONFIG_STRING -> CONFIG_FILE/CONFIG_MERGED_FILES
+	 */
+
+	if (cs->type == CONFIG_STRING) {
+		log_error(INTERNAL_ERROR "override_config_tree_from_string: "
+			  "config cascade already contains a string config.");
+		return 0;
+	}
 
 	if (!(cft_new = dm_config_from_string(config_settings))) {
 		log_error("Failed to set overridden configuration entries.");
 		return 0;
 	}
+
+	if (!(cs = dm_pool_zalloc(cft_new->mem, sizeof(struct config_source)))) {
+		log_error("Failed to allocate config source.");
+		dm_config_destroy(cft_new);
+		return 0;
+	}
+
+	cs->type = CONFIG_STRING;
+	dm_config_set_custom(cft_new, cs);
 
 	cmd->cft = dm_config_insert_cascaded_tree(cft_new, cmd->cft);
 
@@ -240,6 +337,13 @@ int config_file_read_fd(struct dm_config_tree *cft, struct device *dev,
 	int use_mmap = 1;
 	off_t mmap_offset = 0;
 	char *buf = NULL;
+	struct config_source *cs = dm_config_get_custom(cft);
+
+	if ((cs->type != CONFIG_FILE) && (cs->type != CONFIG_PROFILE)) {
+		log_error(INTERNAL_ERROR "config_file_read_fd: expected file or profile config source, "
+					 "found %s config source.", _config_source_names[cs->type]);
+		return 0;
+	}
 
 	/* Only use mmap with regular files */
 	if (!(dev->flags & DEV_REGULAR) || size2)
@@ -297,7 +401,8 @@ int config_file_read_fd(struct dm_config_tree *cft, struct device *dev,
 int config_file_read(struct dm_config_tree *cft)
 {
 	const char *filename = NULL;
-	struct config_file *cf = dm_config_get_custom(cft);
+	struct config_source *cs = dm_config_get_custom(cft);
+	struct config_file *cf;
 	struct stat info;
 	int r;
 
@@ -307,6 +412,8 @@ int config_file_read(struct dm_config_tree *cft)
 	/* Nothing to do.  E.g. empty file. */
 	if (!filename)
 		return 1;
+
+	cf = cs->source.file;
 
 	if (!cf->dev) {
 		if (!(cf->dev = dev_create_file(filename, NULL, NULL, 1)))
@@ -330,9 +437,8 @@ int config_file_read(struct dm_config_tree *cft)
 
 time_t config_file_timestamp(struct dm_config_tree *cft)
 {
-	struct config_file *cf = dm_config_get_custom(cft);
-	assert(cf);
-	return cf->timestamp;
+	struct config_source *cs = dm_config_get_custom(cft);
+	return cs->timestamp;
 }
 
 #define cfg_def_get_item_p(id) (&_cfg_def_items[id])
@@ -798,7 +904,7 @@ int merge_config_tree(struct cmd_context *cmd, struct dm_config_tree *cft,
 	struct dm_config_node *root = cft->root;
 	struct dm_config_node *cn, *nextn, *oldn, *cn2;
 	const struct dm_config_node *tn;
-	struct config_file *cf, *cfn;
+	struct config_source *cs, *csn;
 
 	for (cn = newdata->root; cn; cn = nextn) {
 		nextn = cn->sib;
@@ -833,10 +939,11 @@ int merge_config_tree(struct cmd_context *cmd, struct dm_config_tree *cft,
 	 * so we need to know the newest timestamp to make right decision
 	 * whether the .cache isn't older then any of configs
 	 */
-	if ((cf = dm_config_get_custom(cft)) &&
-	    (cfn = dm_config_get_custom(newdata)) &&
-	    cf->timestamp < cfn->timestamp)
-		cf->timestamp = cfn->timestamp;
+	cs = dm_config_get_custom(cft);
+	csn = dm_config_get_custom(cft);
+
+	if (cs && csn && (cs->timestamp < csn->timestamp))
+		cs->timestamp = csn->timestamp;
 
 	return 1;
 }

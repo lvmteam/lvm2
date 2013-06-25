@@ -1,4 +1,4 @@
-/*
+		/*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
  * Copyright (C) 2004-2012 Red Hat, Inc. All rights reserved.
  *
@@ -548,7 +548,7 @@ static int _load_config_file(struct cmd_context *cmd, const char *tag)
 		return 0;
 	}
 
-	if (!(cfl->cft = config_file_open_and_read(config_file)))
+	if (!(cfl->cft = config_file_open_and_read(config_file, CONFIG_FILE)))
 		return_0;
 
 	dm_list_add(&cmd->config_files, &cfl->list);
@@ -568,7 +568,7 @@ static int _init_lvm_conf(struct cmd_context *cmd)
 {
 	/* No config file if LVM_SYSTEM_DIR is empty */
 	if (!*cmd->system_dir) {
-		if (!(cmd->cft = config_file_open(NULL, 0))) {
+		if (!(cmd->cft = config_open(CONFIG_FILE, NULL, 0))) {
 			log_error("Failed to create config tree");
 			return 0;
 		}
@@ -601,7 +601,7 @@ static struct dm_config_tree *_merge_config_files(struct cmd_context *cmd, struc
 
 	/* Replace temporary duplicate copy of lvm.conf */
 	if (cft->root) {
-		if (!(cft = config_file_open(NULL, 0))) {
+		if (!(cft = config_open(CONFIG_MERGED_FILES, NULL, 0))) {
 			log_error("Failed to create config tree");
 			return 0;
 		}
@@ -637,34 +637,33 @@ int config_files_changed(struct cmd_context *cmd)
 	return 0;
 }
 
-/*
- * Returns cmdline config_tree that overrides all others, if present.
- */
-static struct dm_config_tree *_destroy_tag_configs(struct cmd_context *cmd)
+static void _destroy_config(struct cmd_context *cmd)
 {
 	struct config_tree_list *cfl;
-	struct dm_config_tree *cft_cmdline = NULL, *cft;
+	struct dm_config_tree *cft;
 
-	cft = dm_config_remove_cascaded_tree(cmd->cft);
-	if (cft) {
-		cft_cmdline = cmd->cft;
-		cmd->cft = cft;
-	}
+	/*
+	 * Configuration cascade:
+	 * CONFIG_STRING -> CONFIG_FILE/CONFIG_MERGED_FILES
+	 */
 
-	dm_list_iterate_items(cfl, &cmd->config_files) {
-		if (cfl->cft == cmd->cft)
-			cmd->cft = NULL;
-		config_file_destroy(cfl->cft);
-	}
+	/* CONFIG_FILE/CONFIG_MERGED_FILES */
+	if ((cft = remove_config_tree_by_source(cmd, CONFIG_MERGED_FILES)))
+		config_destroy(cft);
+	else
+		remove_config_tree_by_source(cmd, CONFIG_FILE);
 
-	if (cmd->cft) {
-		config_file_destroy(cmd->cft);
-		cmd->cft = NULL;
-	}
-
+	dm_list_iterate_items(cfl, &cmd->config_files)
+		config_destroy(cfl->cft);
 	dm_list_init(&cmd->config_files);
 
-	return cft_cmdline;
+	/* CONFIG_STRING */
+	if ((cft = remove_config_tree_by_source(cmd, CONFIG_STRING)))
+		config_destroy(cft);
+
+	if (cmd->cft)
+		log_error(INTERNAL_ERROR "_destroy_config: "
+			  "cmd config tree not destroyed fully");
 }
 
 static int _init_dev_cache(struct cmd_context *cmd)
@@ -1577,7 +1576,8 @@ int refresh_toolcontext(struct cmd_context *cmd)
 	_destroy_dev_types(cmd);
 	_destroy_tags(cmd);
 
-	cft_cmdline = _destroy_tag_configs(cmd);
+	cft_cmdline = remove_config_tree_by_source(cmd, CONFIG_STRING);
+	_destroy_config(cmd);
 
 	cmd->config_valid = 0;
 
@@ -1665,8 +1665,13 @@ void destroy_toolcontext(struct cmd_context *cmd)
 	_destroy_dev_types(cmd);
 	_destroy_tags(cmd);
 
-	if ((cft_cmdline = _destroy_tag_configs(cmd)))
-		dm_config_destroy(cft_cmdline);
+	if ((cft_cmdline = remove_config_tree_by_source(cmd, CONFIG_STRING)))
+		config_destroy(cft_cmdline);
+	_destroy_config(cmd);
+
+	if (cmd->cft_def_hash)
+		dm_hash_destroy(cmd->cft_def_hash);
+
 	if (cmd->libmem)
 		dm_pool_destroy(cmd->libmem);
 
@@ -1692,10 +1697,6 @@ void destroy_toolcontext(struct cmd_context *cmd)
 		dm_free(cmd->linebuffer);
 	}
 #endif
-
-	if (cmd->cft_def_hash)
-		dm_hash_destroy(cmd->cft_def_hash);
-
 	dm_free(cmd);
 
 	lvmetad_release_token();

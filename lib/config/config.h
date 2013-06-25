@@ -26,6 +26,14 @@
 struct device;
 struct cmd_context;
 
+typedef enum {
+	CONFIG_UNDEFINED,	/* undefined/uninitialized config */
+	CONFIG_FILE,		/* one file config */
+	CONFIG_MERGED_FILES,	/* config that is a result of merging more config files */
+	CONFIG_STRING,		/* config string typed on cmdline using '--config' arg */
+	CONFIG_PROFILE		/* profile config */
+} config_source_t;
+
 #define CFG_PATH_MAX_LEN 64
 
 /*
@@ -109,23 +117,23 @@ enum {
 int config_def_get_path(char *buf, size_t buf_size, int id);
 int config_def_check(struct cmd_context *cmd, int force, int skip, int suppress_messages);
 
-int override_config_tree_from_string(struct cmd_context *cmd,
-				     const char *config_settings);
-struct dm_config_tree *remove_overridden_config_tree(struct cmd_context *cmd);
+int override_config_tree_from_string(struct cmd_context *cmd, const char *config_settings);
+struct dm_config_tree *remove_config_tree_by_source(struct cmd_context *cmd, config_source_t source);
+config_source_t config_get_source_type(struct dm_config_tree *cft);
 
 typedef uint32_t (*checksum_fn_t) (uint32_t initial, const uint8_t *buf, uint32_t size);
 
-struct dm_config_tree *config_file_open(const char *filename, int keep_open);
+struct dm_config_tree *config_open(config_source_t source, const char *filename, int keep_open);
 int config_file_read_fd(struct dm_config_tree *cft, struct device *dev,
 			off_t offset, size_t size, off_t offset2, size_t size2,
 			checksum_fn_t checksum_fn, uint32_t checksum);
 int config_file_read(struct dm_config_tree *cft);
-struct dm_config_tree *config_file_open_and_read(const char *config_file);
+struct dm_config_tree *config_file_open_and_read(const char *config_file, config_source_t source);
 int config_write(struct dm_config_tree *cft,
 		 int withcomment, int withversion,
 		 const char *file, int argc, char **argv);
 struct dm_config_tree *config_def_create_tree(struct config_def_tree_spec *spec);
-void config_file_destroy(struct dm_config_tree *cft);
+void config_destroy(struct dm_config_tree *cft);
 
 time_t config_file_timestamp(struct dm_config_tree *cft);
 int config_file_changed(struct dm_config_tree *cft);
