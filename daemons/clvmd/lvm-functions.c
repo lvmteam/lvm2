@@ -803,7 +803,7 @@ static void check_config(void)
 {
 	int locking_type;
 
-	locking_type = find_config_tree_int(cmd, global_locking_type_CFG);
+	locking_type = find_config_tree_int(cmd, global_locking_type_CFG, NULL);
 
 	if (locking_type == 3) /* compiled-in cluster support */
 		return;

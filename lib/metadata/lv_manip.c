@@ -182,8 +182,8 @@ int get_default_region_size(struct cmd_context *cmd)
 	 * 'mirror_region_size' is the old setting.  It is overridden
 	 * by the new setting, 'raid_region_size'.
 	 */
-	mrs = 2 * find_config_tree_int(cmd, activation_mirror_region_size_CFG);
-	rrs = 2 * find_config_tree_int(cmd, activation_raid_region_size_CFG);
+	mrs = 2 * find_config_tree_int(cmd, activation_mirror_region_size_CFG, NULL);
+	rrs = 2 * find_config_tree_int(cmd, activation_raid_region_size_CFG, NULL);
 
 	if (!mrs && !rrs)
 		return DEFAULT_RAID_REGION_SIZE * 2;

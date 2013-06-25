@@ -65,7 +65,7 @@ unsigned long set_pe_align(struct physical_volume *pv, unsigned long data_alignm
 		goto out;
 	}
 
-	default_pe_align = find_config_tree_int(pv->fmt->cmd, devices_default_data_alignment_CFG);
+	default_pe_align = find_config_tree_int(pv->fmt->cmd, devices_default_data_alignment_CFG, NULL);
 
 	if (default_pe_align)
 		/* align on 1 MiB multiple */

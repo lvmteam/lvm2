@@ -542,7 +542,7 @@ static int _read_raid_params(struct lvcreate_params *lp,
 		}
 		/* No stripe argument was given - default to 2 */
 		lp->stripes = 2;
-		lp->stripe_size = find_config_tree_int(cmd, metadata_stripesize_CFG) * 2;
+		lp->stripe_size = find_config_tree_int(cmd, metadata_stripesize_CFG, NULL) * 2;
 	}
 
 	/*

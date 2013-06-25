@@ -49,12 +49,12 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 						  UINT64_C(0));
 		if (!pvmetadatasize)
 			pvmetadatasize =
-			    find_config_tree_int(cmd, metadata_pvmetadatasize_CFG);
+			    find_config_tree_int(cmd, metadata_pvmetadatasize_CFG, NULL);
 
 		pvmetadatacopies = arg_int_value(cmd, pvmetadatacopies_ARG, -1);
 		if (pvmetadatacopies < 0)
 			pvmetadatacopies =
-			    find_config_tree_int(cmd, metadata_pvmetadatacopies_CFG);
+			    find_config_tree_int(cmd, metadata_pvmetadatacopies_CFG, NULL);
 	}
 
 	if (cmd->fmt->features & FMT_BAS) {

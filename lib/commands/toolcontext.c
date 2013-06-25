@@ -182,7 +182,7 @@ static void _init_logging(struct cmd_context *cmd)
 		init_syslog(cmd->default_settings.syslog);
 
 	/* Debug level for log file output */
-	cmd->default_settings.debug = find_config_tree_int(cmd, log_level_CFG);
+	cmd->default_settings.debug = find_config_tree_int(cmd, log_level_CFG, NULL);
 	init_debug(cmd->default_settings.debug);
 
 	/*
@@ -281,7 +281,7 @@ static int _process_config(struct cmd_context *cmd)
 	}
 
 	/* umask */
-	cmd->default_settings.umask = find_config_tree_int(cmd, global_umask_CFG);
+	cmd->default_settings.umask = find_config_tree_int(cmd, global_umask_CFG, NULL);
 
 	if ((old_umask = umask((mode_t) cmd->default_settings.umask)) !=
 	    (mode_t) cmd->default_settings.umask)
@@ -426,7 +426,7 @@ static int _process_config(struct cmd_context *cmd)
 	cn = find_config_tree_node(cmd, devices_global_filter_CFG, NULL);
 	lvmetad_set_token(cn ? cn->v : NULL);
 
-	if (find_config_tree_int(cmd, global_locking_type_CFG) == 3 &&
+	if (find_config_tree_int(cmd, global_locking_type_CFG, NULL) == 3 &&
 	    find_config_tree_bool(cmd, global_use_lvmetad_CFG)) {
 		log_warn("WARNING: configuration setting use_lvmetad overridden to 0 due to locking_type 3. "
 			 "Clustered environment not supported by lvmetad yet.");
@@ -716,7 +716,7 @@ static int _init_dev_cache(struct cmd_context *cmd)
 	int device_list_from_udev;
 
 	init_dev_disable_after_error_count(
-		find_config_tree_int(cmd, devices_disable_after_error_count_CFG));
+		find_config_tree_int(cmd, devices_disable_after_error_count_CFG, NULL));
 
 	if (!dev_cache_init(cmd))
 		return_0;
@@ -1255,9 +1255,9 @@ static int _init_backup(struct cmd_context *cmd)
 	cmd->default_settings.archive =
 	    find_config_tree_bool(cmd, backup_archive_CFG);
 
-	days = (uint32_t) find_config_tree_int(cmd, backup_retain_days_CFG);
+	days = (uint32_t) find_config_tree_int(cmd, backup_retain_days_CFG, NULL);
 
-	min = (uint32_t) find_config_tree_int(cmd, backup_retain_min_CFG);
+	min = (uint32_t) find_config_tree_int(cmd, backup_retain_min_CFG, NULL);
 
 	if (dm_snprintf
 	    (default_dir, sizeof(default_dir), "%s/%s", cmd->system_dir,

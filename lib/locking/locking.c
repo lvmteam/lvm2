@@ -225,7 +225,7 @@ int init_locking(int type, struct cmd_context *cmd, int suppress_messages)
 		suppress_messages = 1;
 
 	if (type < 0)
-		type = find_config_tree_int(cmd, global_locking_type_CFG);
+		type = find_config_tree_int(cmd, global_locking_type_CFG, NULL);
 
 	_blocking_supported = find_config_tree_bool(cmd, global_wait_for_locks_CFG);
 

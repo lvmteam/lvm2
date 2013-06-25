@@ -335,7 +335,7 @@ int pool_below_threshold(const struct lv_segment *pool_seg)
 {
 	percent_t percent;
 	int threshold = PERCENT_1 *
-		find_config_tree_int(pool_seg->lv->vg->cmd, activation_thin_pool_autoextend_threshold_CFG);
+		find_config_tree_int(pool_seg->lv->vg->cmd, activation_thin_pool_autoextend_threshold_CFG, NULL);
 
 	/* Data */
 	if (!lv_thin_pool_percent(pool_seg->lv, 0, &percent))

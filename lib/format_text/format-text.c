@@ -1478,7 +1478,7 @@ static int _text_pv_initialise(const struct format_type *fmt,
 	unsigned long adjustment, final_alignment = 0;
 
 	if (!data_alignment)
-		data_alignment = find_config_tree_int(pv->fmt->cmd, devices_data_alignment_CFG) * 2;
+		data_alignment = find_config_tree_int(pv->fmt->cmd, devices_data_alignment_CFG, NULL) * 2;
 
 	if (set_pe_align(pv, data_alignment) != data_alignment &&
 	    data_alignment) {

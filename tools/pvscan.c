@@ -148,7 +148,7 @@ static int _pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
 	 * and to prevent hangs in clustered environment.
 	 */
 	/* TODO: Remove this once lvmetad + cluster supported! */
-	if (find_config_tree_int(cmd, global_locking_type_CFG) == 3 ||
+	if (find_config_tree_int(cmd, global_locking_type_CFG, NULL) == 3 ||
 	    !find_config_tree_bool(cmd, global_use_lvmetad_CFG)) {
 		log_debug_lvmetad("_pvscan_lvmetad: immediate return");
 		return ret;

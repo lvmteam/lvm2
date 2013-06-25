@@ -463,9 +463,9 @@ void memlock_init(struct cmd_context *cmd)
 {
 	/* When threaded, caller already limited stack size so just use the default. */
 	_size_stack = 1024ULL * (cmd->threaded ? DEFAULT_RESERVED_STACK :
-				 find_config_tree_int(cmd, activation_reserved_stack_CFG));
-	_size_malloc_tmp = find_config_tree_int(cmd, activation_reserved_memory_CFG) * 1024ULL;
-	_default_priority = find_config_tree_int(cmd, activation_process_priority_CFG);
+				 find_config_tree_int(cmd, activation_reserved_stack_CFG, NULL));
+	_size_malloc_tmp = find_config_tree_int(cmd, activation_reserved_memory_CFG, NULL) * 1024ULL;
+	_default_priority = find_config_tree_int(cmd, activation_process_priority_CFG, NULL);
 }
 
 void memlock_reset(void)
