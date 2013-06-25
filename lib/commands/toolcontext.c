@@ -202,7 +202,7 @@ static void _init_logging(struct cmd_context *cmd)
 	init_indent(find_config_tree_bool(cmd, log_indent_CFG));
 	init_abort_on_internal_errors(find_config_tree_bool(cmd, global_abort_on_internal_errors_CFG));
 
-	cmd->default_settings.msg_prefix = find_config_tree_str_allow_empty(cmd, log_prefix_CFG);
+	cmd->default_settings.msg_prefix = find_config_tree_str_allow_empty(cmd, log_prefix_CFG, NULL);
 	init_msg_prefix(cmd->default_settings.msg_prefix);
 
 	cmd->default_settings.cmd_name = find_config_tree_bool(cmd, log_command_names_CFG);
