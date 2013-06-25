@@ -170,6 +170,7 @@ xx(lvconvert,
    "\t[--poolmetadata ThinMetadataLogicalVolume[Path] |\n"
    "\t [--poolmetadatasize size]\n"
    "\t [-r|--readahead ReadAheadSectors|auto|none]\n"
+   "\t [--poolmetadataspare {y|n}]\n"
    "\t [--stripes Stripes [-I|--stripesize StripeSize]]]\n"
    "\t[-T|--thin ExternalLogicalVolume[Path]\n"
    "\t [--originname NewExternalOriginVolumeName]]\n"
@@ -180,8 +181,9 @@ xx(lvconvert,
    merge_ARG, mirrorlog_ARG, mirrors_ARG, name_ARG, noudevsync_ARG,
    readahead_ARG, regionsize_ARG, repair_ARG, replace_ARG, snapshot_ARG, splitmirrors_ARG,
    trackchanges_ARG, type_ARG, stripes_long_ARG, stripesize_ARG, test_ARG,
-   chunksize_ARG, discards_ARG, poolmetadata_ARG, poolmetadatasize_ARG,
-   originname_ARG, thin_ARG, thinpool_ARG,
+   chunksize_ARG, discards_ARG, originname_ARG,
+   poolmetadata_ARG, poolmetadatasize_ARG, poolmetadataspare_ARG,
+   thin_ARG, thinpool_ARG,
    use_policies_ARG, force_ARG, zero_ARG)
 
 xx(lvcreate,

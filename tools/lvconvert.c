@@ -21,6 +21,7 @@ struct lvconvert_params {
 	int snapshot;
 	int merge;
 	int merge_mirror;
+	int poolmetadataspare;
 	int thin;
 	int yes;
 	int zero;
@@ -252,6 +253,9 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 		return 0;
 	} else if (arg_count(cmd, discards_ARG)) {
 		log_error("--discards is only valid with --thinpool.");
+		return 0;
+	} else if (arg_count(cmd, poolmetadataspare_ARG)) {
+		log_error("--poolmetadataspare is only valid with --thinpool.");
 		return 0;
 	}
 
@@ -486,6 +490,9 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 			return_0;
 	}
 
+	/* TODO: default in lvm.conf ? */
+	lp->poolmetadataspare = arg_int_value(cmd, poolmetadataspare_ARG,
+					      DEFAULT_POOL_METADATA_SPARE);
 	lp->force = arg_count(cmd, force_ARG);
 	lp->yes = arg_count(cmd, yes_ARG);
 
@@ -2157,6 +2164,10 @@ static int _lvconvert_thinpool(struct cmd_context *cmd,
 			  "Manual intervention required.");
 		return 0;
 	}
+
+	if (!handle_pool_metadata_spare(pool_lv->vg, metadata_lv->le_count,
+					lp->pvh, lp->poolmetadataspare))
+		return_0;
 
 	old_name = data_lv->name; /* Use for pool name */
 	/*
