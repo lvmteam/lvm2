@@ -418,6 +418,10 @@ static int _print_vg(struct formatter *f, struct volume_group *vg)
 		outf(f, "allocation_policy = \"%s\"",
 		     get_alloc_string(vg->alloc));
 	}
+
+	if (vg->profile)
+		outf(f, "profile = \"%s\"", vg->profile->name);
+
 	outf(f, "metadata_copies = %u", vg->mda_copies);
 
 	return 1;
@@ -622,6 +626,9 @@ static int _print_lv(struct formatter *f, struct logical_volume *lv)
 	if (lv->alloc != ALLOC_INHERIT)
 		outf(f, "allocation_policy = \"%s\"",
 		     get_alloc_string(lv->alloc));
+
+	if (lv->profile)
+		outf(f, "profile = \"%s\"", lv->profile->name);
 
 	switch (lv->read_ahead) {
 	case DM_READ_AHEAD_NONE:

@@ -4651,6 +4651,9 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 				   status, lp->alloc, vg)))
 		return_NULL;
 
+	if (vg->fid->fmt->features & FMT_CONFIG_PROFILE)
+		lv->profile = vg->cmd->profile_params->global_profile;
+
 	if (lp->read_ahead != lv->read_ahead) {
 		log_verbose("Setting read ahead sectors");
 		lv->read_ahead = lp->read_ahead;

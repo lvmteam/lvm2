@@ -62,6 +62,9 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
+	if (vg->fid->fmt->features & FMT_CONFIG_PROFILE)
+		vg->profile = vg->cmd->profile_params->global_profile;
+
 	if (!vg_set_extent_size(vg, vp_new.extent_size) ||
 	    !vg_set_max_lv(vg, vp_new.max_lv) ||
 	    !vg_set_max_pv(vg, vp_new.max_pv) ||
