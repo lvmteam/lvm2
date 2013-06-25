@@ -58,6 +58,7 @@ struct volume_group {
 	struct volume_group *vg_ondisk;
 
 	alloc_policy_t alloc;
+	struct profile *profile;
 	uint64_t status;
 
 	struct id id;

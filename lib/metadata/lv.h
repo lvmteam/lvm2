@@ -30,6 +30,7 @@ struct logical_volume {
 
 	uint64_t status;
 	alloc_policy_t alloc;
+	struct profile *profile;
 	uint32_t read_ahead;
 	int32_t major;
 	int32_t minor;
