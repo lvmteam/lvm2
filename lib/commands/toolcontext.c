@@ -129,7 +129,7 @@ static int _parse_debug_classes(struct cmd_context *cmd)
 	const struct dm_config_value *cv;
 	int debug_classes = 0;
 
-	if (!(cn = find_config_tree_node(cmd, log_debug_classes_CFG)))
+	if (!(cn = find_config_tree_node(cmd, log_debug_classes_CFG, NULL)))
 		return DEFAULT_LOGGED_DEBUG_CLASSES;
 
 	for (cv = cn->v; cv; cv = cv->next) {
@@ -393,7 +393,7 @@ static int _process_config(struct cmd_context *cmd)
 
 	cmd->si_unit_consistency = find_config_tree_bool(cmd, global_si_unit_consistency_CFG);
 
-	if ((cn = find_config_tree_node(cmd, activation_mlock_filter_CFG)))
+	if ((cn = find_config_tree_node(cmd, activation_mlock_filter_CFG, NULL)))
 		for (cv = cn->v; cv; cv = cv->next) 
 			if ((cv->type != DM_CFG_STRING) || !cv->v.str[0]) 
 				log_error("Ignoring invalid activation/mlock_filter entry in config file");
@@ -423,7 +423,7 @@ static int _process_config(struct cmd_context *cmd)
 						      DEFAULT_RUN_DIR "/lvmetad.socket");
 	*/
 	lvmetad_set_socket(lvmetad_socket);
-	cn = find_config_tree_node(cmd, devices_global_filter_CFG);
+	cn = find_config_tree_node(cmd, devices_global_filter_CFG, NULL);
 	lvmetad_set_token(cn ? cn->v : NULL);
 
 	if (find_config_tree_int(cmd, global_locking_type_CFG) == 3 &&
@@ -493,7 +493,7 @@ static int _init_tags(struct cmd_context *cmd, struct dm_config_tree *cft)
 	const char *tag;
 	int passes;
 
-	if (!(tn = find_config_tree_node(cmd, tags_CFG_SECTION)) || !tn->child)
+	if (!(tn = find_config_tree_node(cmd, tags_CFG_SECTION, NULL)) || !tn->child)
 		return 1;
 
 	/* NB hosttags 0 when already 1 intentionally does not delete the tag */
@@ -734,7 +734,7 @@ static int _init_dev_cache(struct cmd_context *cmd)
 
 	init_obtain_device_list_from_udev(device_list_from_udev);
 
-	if (!(cn = find_config_tree_node(cmd, devices_scan_CFG))) {
+	if (!(cn = find_config_tree_node(cmd, devices_scan_CFG, NULL))) {
 		if (!dev_cache_add_dir("/dev")) {
 			log_error("Failed to add /dev to internal "
 				  "device cache");
@@ -780,7 +780,7 @@ static int _init_dev_cache(struct cmd_context *cmd)
 		}
 	}
 
-	if (!(cn = find_config_tree_node(cmd, devices_loopfiles_CFG)))
+	if (!(cn = find_config_tree_node(cmd, devices_loopfiles_CFG, NULL)))
 		return 1;
 
 	for (cv = cn->v; cv; cv = cv->next) {
@@ -827,7 +827,7 @@ static struct dev_filter *_init_filter_components(struct cmd_context *cmd)
 	}
 
 	/* regex filter. Optional. */
-	if (!(cn = find_config_tree_node(cmd, devices_filter_CFG)))
+	if (!(cn = find_config_tree_node(cmd, devices_filter_CFG, NULL)))
 		log_very_verbose("devices/filter not found in config file: "
 				 "no regex filter installed");
 
@@ -941,7 +941,7 @@ static int _init_filters(struct cmd_context *cmd, unsigned load_persistent_cache
 		log_verbose("Failed to load existing device cache from %s",
 			    dev_cache);
 
-	if (!(cn = find_config_tree_node(cmd, devices_global_filter_CFG))) {
+	if (!(cn = find_config_tree_node(cmd, devices_global_filter_CFG, NULL))) {
 		cmd->filter = f4;
 	} else if (!(cmd->lvmetad_filter = regex_filter_create(cn->v)))
 		goto_bad;
@@ -1003,7 +1003,7 @@ static int _init_formats(struct cmd_context *cmd)
 #ifdef HAVE_LIBDL
 	/* Load any formats in shared libs if not static */
 	if (!is_static() &&
-	    (cn = find_config_tree_node(cmd, global_format_libraries_CFG))) {
+	    (cn = find_config_tree_node(cmd, global_format_libraries_CFG, NULL))) {
 
 		const struct dm_config_value *cv;
 		struct format_type *(*init_format_fn) (struct cmd_context *);
@@ -1165,7 +1165,7 @@ static int _init_segtypes(struct cmd_context *cmd)
 #ifdef HAVE_LIBDL
 	/* Load any formats in shared libs unless static */
 	if (!is_static() &&
-	    (cn = find_config_tree_node(cmd, global_segment_libraries_CFG))) {
+	    (cn = find_config_tree_node(cmd, global_segment_libraries_CFG, NULL))) {
 
 		const struct dm_config_value *cv;
 		int (*init_multiple_segtypes_fn) (struct cmd_context *,
@@ -1472,7 +1472,7 @@ struct cmd_context *create_toolcontext(unsigned is_long_lived,
 		goto_out;
 
 	if (!(cmd->dev_types = create_dev_types(cmd->proc_dir,
-						find_config_tree_node(cmd, devices_types_CFG))))
+						find_config_tree_node(cmd, devices_types_CFG, NULL))))
 		goto_out;
 
 	if (!_init_dev_cache(cmd))
@@ -1660,7 +1660,7 @@ int refresh_toolcontext(struct cmd_context *cmd)
 		return 0;
 
 	if (!(cmd->dev_types = create_dev_types(cmd->proc_dir,
-						find_config_tree_node(cmd, devices_types_CFG))))
+						find_config_tree_node(cmd, devices_types_CFG, NULL))))
 		return 0;
 
 	if (!_init_dev_cache(cmd))

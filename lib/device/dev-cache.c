@@ -676,7 +676,7 @@ static int _init_preferred_names(struct cmd_context *cmd)
 
 	_cache.preferred_names_matcher = NULL;
 
-	if (!(cn = find_config_tree_node(cmd, devices_preferred_names_CFG)) ||
+	if (!(cn = find_config_tree_node(cmd, devices_preferred_names_CFG, NULL)) ||
 	    cn->v->type == DM_CFG_EMPTY_ARRAY) {
 		log_very_verbose("devices/preferred_names not found in config file: "
 				 "using built-in preferences");

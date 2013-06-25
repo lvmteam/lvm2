@@ -601,7 +601,7 @@ static int _thin_target_present(struct cmd_context *cmd,
 	if (attributes) {
 		if (!_feature_mask) {
 			/* Support runtime lvm.conf changes, N.B. avoid 32 feature */
-			if ((cn = find_config_tree_node(cmd, global_thin_disabled_features_CFG))) {
+			if ((cn = find_config_tree_node(cmd, global_thin_disabled_features_CFG, NULL))) {
 				for (cv = cn->v; cv; cv = cv->next) {
 					if (cv->type != DM_CFG_STRING) {
 						log_error("Ignoring invalid string in config file %s.",

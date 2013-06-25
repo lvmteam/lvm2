@@ -1578,7 +1578,7 @@ static int _thin_pool_callback(struct dm_tree_node *node,
 		return 0;
 	}
 
-	if ((cn = find_config_tree_node(mlv->vg->cmd, global_thin_check_options_CFG))) {
+	if ((cn = find_config_tree_node(mlv->vg->cmd, global_thin_check_options_CFG, NULL))) {
 		for (cv = cn->v; cv && args < 16; cv = cv->next) {
 			if (cv->type != DM_CFG_STRING) {
 				log_error("Invalid string in config file: "

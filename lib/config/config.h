@@ -164,7 +164,7 @@ int merge_config_tree(struct cmd_context *cmd, struct dm_config_tree *cft,
 /*
  * These versions check an override tree, if present, first.
  */
-const struct dm_config_node *find_config_tree_node(struct cmd_context *cmd, int id);
+const struct dm_config_node *find_config_tree_node(struct cmd_context *cmd, int id, struct profile *profile);
 const char *find_config_tree_str(struct cmd_context *cmd, int id);
 const char *find_config_tree_str_allow_empty(struct cmd_context *cmd, int id);
 int find_config_tree_int(struct cmd_context *cmd, int id);

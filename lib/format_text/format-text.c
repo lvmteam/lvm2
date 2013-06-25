@@ -2439,7 +2439,7 @@ struct format_type *create_text_format(struct cmd_context *cmd)
 		goto bad;
 	}
 
-	if ((cn = find_config_tree_node(cmd, metadata_dirs_CFG))) {
+	if ((cn = find_config_tree_node(cmd, metadata_dirs_CFG, NULL))) {
 		for (cv = cn->v; cv; cv = cv->next) {
 			if (cv->type != DM_CFG_STRING) {
 				log_error("Invalid string in config file: "
@@ -2456,7 +2456,7 @@ struct format_type *create_text_format(struct cmd_context *cmd)
 		}
 	}
 
-	if ((cn = find_config_tree_node(cmd, metadata_disk_areas_CFG))) {
+	if ((cn = find_config_tree_node(cmd, metadata_disk_areas_CFG, NULL))) {
 		for (cn = cn->child; cn; cn = cn->sib) {
 			if (!_get_config_disk_area(cmd, cn, &mda_lists->raws))
 				goto_bad;

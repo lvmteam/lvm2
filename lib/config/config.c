@@ -784,9 +784,20 @@ out:
 	return r;
 }
 
-const struct dm_config_node *find_config_tree_node(struct cmd_context *cmd, int id)
+const struct dm_config_node *find_config_tree_node(struct cmd_context *cmd, int id, struct profile *profile)
 {
-	return dm_config_tree_find_node(cmd->cft, cfg_def_get_path(cfg_def_get_item_p(id)));
+	int profile_applied = 0;
+	const struct dm_config_node *cn;
+
+	if (profile && !cmd->profile_params->global_profile)
+		profile_applied = override_config_tree_from_profile(cmd, profile);
+
+	cn = dm_config_tree_find_node(cmd->cft, cfg_def_get_path(cfg_def_get_item_p(id)));
+
+	if (profile_applied)
+		remove_config_tree_by_source(cmd, CONFIG_PROFILE);
+
+	return cn;
 }
 
 const char *find_config_tree_str(struct cmd_context *cmd, int id)

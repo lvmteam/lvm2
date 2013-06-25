@@ -430,7 +430,7 @@ static int _passes_activation_filter(struct cmd_context *cmd,
 {
 	const struct dm_config_node *cn;
 
-	if (!(cn = find_config_tree_node(cmd, activation_volume_list_CFG))) {
+	if (!(cn = find_config_tree_node(cmd, activation_volume_list_CFG, NULL))) {
 		log_verbose("activation/volume_list configuration setting "
 			    "not defined: Checking only host tags for %s/%s",
 			    lv->vg->name, lv->name);
@@ -459,7 +459,7 @@ static int _passes_readonly_filter(struct cmd_context *cmd,
 {
 	const struct dm_config_node *cn;
 
-	if (!(cn = find_config_tree_node(cmd, activation_read_only_volume_list_CFG)))
+	if (!(cn = find_config_tree_node(cmd, activation_read_only_volume_list_CFG, NULL)))
 		return 0;
 
 	return _lv_passes_volumes_filter(cmd, lv, cn, activation_read_only_volume_list_CFG);
@@ -470,7 +470,7 @@ int lv_passes_auto_activation_filter(struct cmd_context *cmd, struct logical_vol
 {
 	const struct dm_config_node *cn;
 
-	if (!(cn = find_config_tree_node(cmd, activation_auto_activation_volume_list_CFG))) {
+	if (!(cn = find_config_tree_node(cmd, activation_auto_activation_volume_list_CFG, NULL))) {
 		log_verbose("activation/auto_activation_volume_list configuration setting "
 			    "not defined: All logical volumes will be auto-activated.");
 		return 1;
