@@ -400,7 +400,7 @@ static int _process_config(struct cmd_context *cmd)
 
 	cmd->metadata_read_only = find_config_tree_bool(cmd, global_metadata_read_only_CFG);
 
-	pv_min_kb = find_config_tree_int64(cmd, devices_pv_min_size_CFG);
+	pv_min_kb = find_config_tree_int64(cmd, devices_pv_min_size_CFG, NULL);
 	if (pv_min_kb < PV_MIN_SIZE_KB) {
 		log_warn("Ignoring too small pv_min_size %" PRId64 "KB, using default %dKB.",
 			 pv_min_kb, PV_MIN_SIZE_KB);

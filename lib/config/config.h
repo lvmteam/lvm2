@@ -168,7 +168,7 @@ const struct dm_config_node *find_config_tree_node(struct cmd_context *cmd, int 
 const char *find_config_tree_str(struct cmd_context *cmd, int id, struct profile *profile);
 const char *find_config_tree_str_allow_empty(struct cmd_context *cmd, int id, struct profile *profile);
 int find_config_tree_int(struct cmd_context *cmd, int id, struct profile *profile);
-int64_t find_config_tree_int64(struct cmd_context *cmd, int id);
+int64_t find_config_tree_int64(struct cmd_context *cmd, int id, struct profile *profile);
 float find_config_tree_float(struct cmd_context *cmd, int id);
 int find_config_tree_bool(struct cmd_context *cmd, int id);
 
