@@ -1286,7 +1286,7 @@ static struct dm_event_handler *_create_dm_event_handler(struct cmd_context *cmd
 	if (!(dmevh = dm_event_handler_create()))
 		return_NULL;
 
-	if (dm_event_handler_set_dmeventd_path(dmevh, find_config_tree_str(cmd, dmeventd_executable_CFG)))
+	if (dm_event_handler_set_dmeventd_path(dmevh, find_config_tree_str(cmd, dmeventd_executable_CFG, NULL)))
 		goto_bad;
 
 	if (dm_event_handler_set_dso(dmevh, dso))

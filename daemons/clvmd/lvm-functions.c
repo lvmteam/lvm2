@@ -811,7 +811,7 @@ static void check_config(void)
 	if (locking_type == 2) { /* External library, check name */
 		const char *libname;
 
-		libname = find_config_tree_str(cmd, global_locking_library_CFG);
+		libname = find_config_tree_str(cmd, global_locking_library_CFG, NULL);
 		if (libname && strstr(libname, "liblvm2clusterlock.so"))
 			return;
 

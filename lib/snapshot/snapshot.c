@@ -171,7 +171,7 @@ static int _snap_target_present(struct cmd_context *cmd,
 
 static const char *_get_snapshot_dso_path(struct cmd_context *cmd)
 {
-	return get_monitor_dso_path(cmd, find_config_tree_str(cmd, dmeventd_snapshot_library_CFG));
+	return get_monitor_dso_path(cmd, find_config_tree_str(cmd, dmeventd_snapshot_library_CFG, NULL));
 }
 
 /* FIXME Cache this */

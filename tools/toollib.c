@@ -1559,7 +1559,7 @@ int get_pool_params(struct cmd_context *cmd, int *passed_args,
 		log_very_verbose("Setting pool discards: %s",
 				 get_pool_discards_name(*discards));
 	} else {
-		dstr = find_config_tree_str(cmd, allocation_thin_pool_discards_CFG);
+		dstr = find_config_tree_str(cmd, allocation_thin_pool_discards_CFG, NULL);
 		if (!get_pool_discards(dstr, discards))
 			return_0;
 	}

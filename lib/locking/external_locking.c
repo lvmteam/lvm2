@@ -80,7 +80,7 @@ int init_external_locking(struct locking_type *locking, struct cmd_context *cmd,
 	locking->reset_locking = _reset_external_locking;
 	locking->flags = 0;
 
-	if (!(libname = find_config_tree_str(cmd, global_locking_library_CFG)))
+	if (!(libname = find_config_tree_str(cmd, global_locking_library_CFG, NULL)))
 		libname = DEFAULT_LOCKING_LIB;
 
 	if (!(_locking_lib = load_shared_library(cmd, libname, "locking", 1)))

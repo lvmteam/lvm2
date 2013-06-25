@@ -724,9 +724,9 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 	if (arg_count(cmd, mirrors_ARG))
 		if (arg_uint_value(cmd, arg_count(cmd, stripes_long_ARG) ?
 				   stripes_long_ARG : stripes_ARG, 1) > 1) {
-			segtype_str = find_config_tree_str(cmd, global_raid10_segtype_default_CFG);;
+			segtype_str = find_config_tree_str(cmd, global_raid10_segtype_default_CFG, NULL);;
 		} else {
-			segtype_str = find_config_tree_str(cmd, global_mirror_segtype_default_CFG);
+			segtype_str = find_config_tree_str(cmd, global_mirror_segtype_default_CFG, NULL);
 		}
 	else if (arg_count(cmd, thin_ARG) || arg_count(cmd, thinpool_ARG))
 		segtype_str = "thin";

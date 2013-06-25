@@ -225,7 +225,7 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 	aligned = find_config_tree_bool(cmd, report_aligned_CFG);
 	buffered = find_config_tree_bool(cmd, report_buffered_CFG);
 	headings = find_config_tree_bool(cmd, report_headings_CFG);
-	separator = find_config_tree_str(cmd, report_separator_CFG);
+	separator = find_config_tree_str(cmd, report_separator_CFG, NULL);
 	field_prefixes = find_config_tree_bool(cmd, report_prefixes_CFG);
 	quoted = find_config_tree_bool(cmd, report_quoted_CFG);
 	columns_as_rows = find_config_tree_bool(cmd, report_colums_as_rows_CFG);
@@ -236,40 +236,40 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 
 	switch (report_type) {
 	case LVS:
-		keys = find_config_tree_str(cmd, report_lvs_sort_CFG);
+		keys = find_config_tree_str(cmd, report_lvs_sort_CFG, NULL);
 		if (!arg_count(cmd, verbose_ARG))
-			options = find_config_tree_str(cmd, report_lvs_cols_CFG);
+			options = find_config_tree_str(cmd, report_lvs_cols_CFG, NULL);
 		else
-			options = find_config_tree_str(cmd, report_lvs_cols_verbose_CFG);
+			options = find_config_tree_str(cmd, report_lvs_cols_verbose_CFG, NULL);
 		break;
 	case VGS:
-		keys = find_config_tree_str(cmd, report_vgs_sort_CFG);
+		keys = find_config_tree_str(cmd, report_vgs_sort_CFG, NULL);
 		if (!arg_count(cmd, verbose_ARG))
-			options = find_config_tree_str(cmd, report_vgs_cols_CFG);
+			options = find_config_tree_str(cmd, report_vgs_cols_CFG, NULL);
 		else
-			options = find_config_tree_str(cmd, report_vgs_cols_verbose_CFG);
+			options = find_config_tree_str(cmd, report_vgs_cols_verbose_CFG, NULL);
 		break;
 	case LABEL:
 	case PVS:
-		keys = find_config_tree_str(cmd, report_pvs_sort_CFG);
+		keys = find_config_tree_str(cmd, report_pvs_sort_CFG, NULL);
 		if (!arg_count(cmd, verbose_ARG))
-			options = find_config_tree_str(cmd, report_pvs_cols_CFG);
+			options = find_config_tree_str(cmd, report_pvs_cols_CFG, NULL);
 		else
-			options = find_config_tree_str(cmd, report_pvs_cols_verbose_CFG);
+			options = find_config_tree_str(cmd, report_pvs_cols_verbose_CFG, NULL);
 		break;
 	case SEGS:
-		keys = find_config_tree_str(cmd, report_segs_sort_CFG);
+		keys = find_config_tree_str(cmd, report_segs_sort_CFG, NULL);
 		if (!arg_count(cmd, verbose_ARG))
-			options = find_config_tree_str(cmd, report_segs_cols_CFG);
+			options = find_config_tree_str(cmd, report_segs_cols_CFG, NULL);
 		else
-			options = find_config_tree_str(cmd, report_segs_cols_verbose_CFG);
+			options = find_config_tree_str(cmd, report_segs_cols_verbose_CFG, NULL);
 		break;
 	case PVSEGS:
-		keys = find_config_tree_str(cmd, report_pvsegs_sort_CFG);
+		keys = find_config_tree_str(cmd, report_pvsegs_sort_CFG, NULL);
 		if (!arg_count(cmd, verbose_ARG))
-			options = find_config_tree_str(cmd, report_pvsegs_cols_CFG);
+			options = find_config_tree_str(cmd, report_pvsegs_cols_CFG, NULL);
 		else
-			options = find_config_tree_str(cmd, report_pvsegs_cols_verbose_CFG);
+			options = find_config_tree_str(cmd, report_pvsegs_cols_verbose_CFG, NULL);
 		break;
 	default:
 		log_error(INTERNAL_ERROR "Unknown report type.");

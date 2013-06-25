@@ -379,7 +379,7 @@ static int _thin_pool_target_percent(void **target_state __attribute__((unused))
 #  ifdef DMEVENTD
 static const char *_get_thin_dso_path(struct cmd_context *cmd)
 {
-	return get_monitor_dso_path(cmd, find_config_tree_str(cmd, dmeventd_thin_library_CFG));
+	return get_monitor_dso_path(cmd, find_config_tree_str(cmd, dmeventd_thin_library_CFG, NULL));
 }
 
 /* FIXME Cache this */

@@ -217,7 +217,7 @@ static void _init_logging(struct cmd_context *cmd)
 	if (find_config_tree_bool(cmd, log_overwrite_CFG))
 		append = 0;
 
-	log_file = find_config_tree_str(cmd, log_file_CFG);
+	log_file = find_config_tree_str(cmd, log_file_CFG, NULL);
 
 	if (log_file) {
 		release_log_memory();
@@ -225,7 +225,7 @@ static void _init_logging(struct cmd_context *cmd)
 		init_log_file(log_file, append);
 	}
 
-	log_file = find_config_tree_str(cmd, log_activate_file_CFG);
+	log_file = find_config_tree_str(cmd, log_activate_file_CFG, NULL);
 	if (log_file)
 		init_log_direct(log_file, append);
 
@@ -290,7 +290,7 @@ static int _process_config(struct cmd_context *cmd)
 
 	/* dev dir */
 	if (dm_snprintf(cmd->dev_dir, sizeof(cmd->dev_dir), "%s/",
-			 find_config_tree_str(cmd, devices_dir_CFG)) < 0) {
+			 find_config_tree_str(cmd, devices_dir_CFG, NULL)) < 0) {
 		log_error("Device directory given in config file too long");
 		return 0;
 	}
@@ -303,7 +303,7 @@ static int _process_config(struct cmd_context *cmd)
 
 	/* proc dir */
 	if (dm_snprintf(cmd->proc_dir, sizeof(cmd->proc_dir), "%s",
-			 find_config_tree_str(cmd, global_proc_CFG)) < 0) {
+			 find_config_tree_str(cmd, global_proc_CFG, NULL)) < 0) {
 		log_error("Device directory given in config file too long");
 		return 0;
 	}
@@ -324,13 +324,13 @@ static int _process_config(struct cmd_context *cmd)
 	cmd->default_settings.suffix = find_config_tree_bool(cmd, global_suffix_CFG);
 
 	if (!(cmd->default_settings.unit_factor =
-	      units_to_bytes(find_config_tree_str(cmd, global_units_CFG),
+	      units_to_bytes(find_config_tree_str(cmd, global_units_CFG, NULL),
 			     &cmd->default_settings.unit_type))) {
 		log_error("Invalid units specification");
 		return 0;
 	}
 
-	read_ahead = find_config_tree_str(cmd, activation_readahead_CFG);
+	read_ahead = find_config_tree_str(cmd, activation_readahead_CFG, NULL);
 	if (!strcasecmp(read_ahead, "auto"))
 		cmd->default_settings.read_ahead = DM_READ_AHEAD_AUTO;
 	else if (!strcasecmp(read_ahead, "none"))
@@ -369,7 +369,7 @@ static int _process_config(struct cmd_context *cmd)
 
 	cmd->use_linear_target = find_config_tree_bool(cmd, activation_use_linear_target_CFG);
 
-	cmd->stripe_filler = find_config_tree_str(cmd, activation_missing_stripe_filler_CFG);
+	cmd->stripe_filler = find_config_tree_str(cmd, activation_missing_stripe_filler_CFG, NULL);
 
 	/* FIXME Missing error code checks from the stats, not log_warn?, notify if setting overridden, delay message/check till it is actually used (eg consider if lvm shell - file could appear later after this check)? */
 	if (!strcmp(cmd->stripe_filler, "/dev/ioerror") &&
@@ -606,7 +606,7 @@ static int _init_profiles(struct cmd_context *cmd)
 		return 0;
 	}
 
-	if (!(dir = find_config_tree_str(cmd, config_profile_dir_CFG))) {
+	if (!(dir = find_config_tree_str(cmd, config_profile_dir_CFG, NULL))) {
 		if (dm_snprintf(default_dir, sizeof(default_dir), "%s/%s",
 				cmd->system_dir, DEFAULT_PROFILE_SUBDIR) == -1) {
 			log_error("Couldn't create default profile path '%s/%s'.",
@@ -890,8 +890,8 @@ static int _init_filters(struct cmd_context *cmd, unsigned load_persistent_cache
 	/*
 	 * If 'cache_dir' or 'cache_file_prefix' is set, ignore 'cache'.
 	 */
-	cache_dir = find_config_tree_str(cmd, devices_cache_dir_CFG);
-	cache_file_prefix = find_config_tree_str(cmd, devices_cache_file_prefix_CFG);
+	cache_dir = find_config_tree_str(cmd, devices_cache_dir_CFG, NULL);
+	cache_file_prefix = find_config_tree_str(cmd, devices_cache_file_prefix_CFG, NULL);
 
 	if (cache_dir || cache_file_prefix) {
 		if (dm_snprintf(cache_file, sizeof(cache_file),
@@ -903,7 +903,7 @@ static int _init_filters(struct cmd_context *cmd, unsigned load_persistent_cache
 			log_error("Persistent cache filename too long.");
 			goto bad;
 		}
-	} else if (!(dev_cache = find_config_tree_str(cmd, devices_cache_CFG)) &&
+	} else if (!(dev_cache = find_config_tree_str(cmd, devices_cache_CFG, NULL)) &&
 		   (dm_snprintf(cache_file, sizeof(cache_file),
 				"%s/%s/%s.cache",
 				cmd->system_dir, DEFAULT_CACHE_SUBDIR,
@@ -1044,7 +1044,7 @@ static int _init_formats(struct cmd_context *cmd)
 
 	cmd->fmt_backup = fmt;
 
-	format = find_config_tree_str(cmd, global_format_CFG);
+	format = find_config_tree_str(cmd, global_format_CFG, NULL);
 
 	dm_list_iterate_items(fmt, &cmd->formats) {
 		if (!strcasecmp(fmt->name, format) ||
@@ -1267,7 +1267,7 @@ static int _init_backup(struct cmd_context *cmd)
 		return 0;
 	}
 
-	if (!(dir = find_config_tree_str(cmd, backup_archive_dir_CFG)))
+	if (!(dir = find_config_tree_str(cmd, backup_archive_dir_CFG, NULL)))
 		dir = default_dir;
 
 	if (!archive_init(cmd, dir, days, min,
@@ -1287,7 +1287,7 @@ static int _init_backup(struct cmd_context *cmd)
 		return 0;
 	}
 
-	if (!(dir = find_config_tree_str(cmd, backup_backup_dir_CFG)))
+	if (!(dir = find_config_tree_str(cmd, backup_backup_dir_CFG, NULL)))
 		dir = default_dir;
 
 	if (!backup_init(cmd, dir, cmd->default_settings.backup)) {
