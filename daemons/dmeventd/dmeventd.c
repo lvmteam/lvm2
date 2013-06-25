@@ -988,7 +988,7 @@ static int _register_for_event(struct message_data *message_data)
 	   almost as good as dead already... */
 	if ((thread_new->events & DM_EVENT_TIMEOUT) &&
 	    (ret = -_register_for_timeout(thread_new)))
-		goto out;
+		goto outth;
 
 	if (!(thread = _lookup_thread_status(message_data))) {
 		_unlock_mutex();
