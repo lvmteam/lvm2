@@ -532,7 +532,6 @@ static int _load_config_file(struct cmd_context *cmd, const char *tag)
 {
 	static char config_file[PATH_MAX] = "";
 	const char *filler = "";
-	struct stat info;
 	struct config_tree_list *cfl;
 
 	if (*tag)
@@ -549,32 +548,11 @@ static int _load_config_file(struct cmd_context *cmd, const char *tag)
 		return 0;
 	}
 
-	if (!(cfl->cft = config_file_open(config_file, 0))) {
-		log_error("config_tree allocation failed");
-		return 0;
-	}
-
-	/* Is there a config file? */
-	if (stat(config_file, &info) == -1) {
-		if (errno == ENOENT) {
-			dm_list_add(&cmd->config_files, &cfl->list);
-			goto out;
-		}
-		log_sys_error("stat", config_file);
-		config_file_destroy(cfl->cft);
-		return 0;
-	}
-
-	log_very_verbose("Loading config file: %s", config_file);
-	if (!config_file_read(cfl->cft)) {
-		log_error("Failed to load config file %s", config_file);
-		config_file_destroy(cfl->cft);
-		return 0;
-	}
+	if (!(cfl->cft = config_file_open_and_read(config_file)))
+		return_0;
 
 	dm_list_add(&cmd->config_files, &cfl->list);
 
-      out:
 	if (*tag) {
 		if (!_init_tags(cmd, cfl->cft))
 			return_0;

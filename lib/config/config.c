@@ -170,6 +170,36 @@ void config_file_destroy(struct dm_config_tree *cft)
 	dm_config_destroy(cft);
 }
 
+struct dm_config_tree *config_file_open_and_read(const char *config_file)
+{
+	struct dm_config_tree *cft;
+	struct stat info;
+
+	if (!(cft = config_file_open(config_file, 0))) {
+		log_error("config_tree allocation failed");
+		return NULL;
+	}
+
+	/* Is there a config file? */
+	if (stat(config_file, &info) == -1) {
+		if (errno == ENOENT)
+			return cft;
+		log_sys_error("stat", config_file);
+		goto bad;
+	}
+
+	log_very_verbose("Loading config file: %s", config_file);
+	if (!config_file_read(cft)) {
+		log_error("Failed to load config file %s", config_file);
+		goto bad;
+	}
+
+	return cft;
+bad:
+	config_file_destroy(cft);
+	return NULL;
+}
+
 /*
  * Returns config tree if it was removed.
  */
