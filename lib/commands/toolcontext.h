@@ -98,14 +98,16 @@ struct cmd_context {
 	struct dev_filter *lvmetad_filter;
 	int dump_filter;	/* Dump filter when exiting? */
 
-	struct dm_list config_files;
-	int config_valid;
-	struct dm_config_tree *cft;
-	struct config_info default_settings;
-	struct config_info current_settings;
-	struct dm_hash_table *cft_def_hash; /* cft definition hash used for validity check */
+	struct dm_list config_files; /* master lvm config + any existing tag configs */
+	struct profile_params *profile_params; /* profile handling params including loaded profile configs */
+	struct dm_config_tree *cft; /* the whole cascade: CONFIG_STRING -> CONFIG_PROFILE -> CONFIG_FILE/CONFIG_MERGED_FILES */
+	int config_initialized; /* used to reinitialize config if previous init was not successful */
+	struct dm_hash_table *cft_def_hash; /* config definition hash used for validity check (item type + item recognized) */
 
-	struct profile_params *profile_params;
+	/* selected settings with original default/configured value which can be changed during cmd processing */
+	struct config_info default_settings;
+	/* may contain changed values compared to default_settings */
+	struct config_info current_settings;
 
 	struct archive_params *archive_params;
 	struct backup_params *backup_params;

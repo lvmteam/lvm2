@@ -1080,7 +1080,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 			goto_out;
 		}
 
-	if (arg_count(cmd, config_ARG) || !cmd->config_valid || config_files_changed(cmd)) {
+	if (arg_count(cmd, config_ARG) || !cmd->config_initialized || config_files_changed(cmd)) {
 		/* Reinitialise various settings inc. logging, filters */
 		if (!refresh_toolcontext(cmd)) {
 			old_cft = remove_config_tree_by_source(cmd, CONFIG_STRING);
