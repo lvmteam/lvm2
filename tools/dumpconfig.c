@@ -31,6 +31,22 @@ static int _get_vsn(struct cmd_context *cmd, unsigned int *major,
 	return 1;
 }
 
+static struct cft_check_handle *_get_cft_check_handle(struct cmd_context *cmd)
+{
+	struct cft_check_handle *handle = cmd->cft_check_handle;
+
+	if (!handle) {
+		if (!(handle = dm_pool_zalloc(cmd->libmem, sizeof(*cmd->cft_check_handle)))) {
+			log_error("Configuration check handle allocation failed.");
+			return NULL;
+		}
+		handle->cft = cmd->cft;
+		cmd->cft_check_handle = handle;
+	}
+
+	return handle;
+}
+
 int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 {
 	const char *file = arg_str_value(cmd, file_ARG, NULL);
@@ -38,6 +54,7 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 	unsigned int major, minor, patchlevel;
 	struct config_def_tree_spec tree_spec = {0};
 	struct dm_config_tree *cft = cmd->cft;
+	struct cft_check_handle *cft_check_handle;
 	int r = ECMD_PROCESSED;
 
 	if (arg_count(cmd, configtype_ARG) && arg_count(cmd, validate_ARG)) {
@@ -57,7 +74,14 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 		tree_spec.ignoreunsupported = 1;
 
 	if (arg_count(cmd, validate_ARG)) {
-		if (config_def_check(cmd, 1, 1, 0)) {
+		if (!(cft_check_handle = _get_cft_check_handle(cmd)))
+			return ECMD_FAILED;
+
+		cft_check_handle->force_check = 1;
+		cft_check_handle->skip_if_checked = 1;
+		cft_check_handle->suppress_messages = 0;
+
+		if (config_def_check(cmd, cft_check_handle)) {
 			log_print("LVM configuration valid.");
 			return ECMD_PROCESSED;
 		} else {
@@ -72,7 +96,15 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 			return EINVALID_CMD_LINE;
 		}
 		tree_spec.type = CFG_DEF_TREE_CURRENT;
-		config_def_check(cmd, 1, 1, 1);
+
+		if (!(cft_check_handle = _get_cft_check_handle(cmd)))
+			return ECMD_FAILED;
+
+		cft_check_handle->force_check = 1;
+		cft_check_handle->skip_if_checked = 1;
+		cft_check_handle->suppress_messages = 1;
+
+		config_def_check(cmd, cft_check_handle);
 	}
 
 	else if (!strcmp(type, "default"))

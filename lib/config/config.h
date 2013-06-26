@@ -80,10 +80,6 @@ typedef union {
 #define CFG_ADVANCED		0x04
 /* whether the configuraton item is not officially supported */
 #define CFG_UNSUPPORTED		0x08
-/* helper flag to mark the item as used in a config tree instance */
-#define CFG_USED		0x10
-/* helper flag to mark the item as valid in a config tree instance */
-#define CFG_VALID		0x20
 
 /* configuration definition item structure */
 typedef struct cfg_def_item {
@@ -114,6 +110,12 @@ struct config_def_tree_spec {
 	int ignoreunsupported;		/* do not include unsupported configs */
 };
 
+
+/* flag to mark the item as used in a config tree instance during validation */
+#define CFG_USED		0x01
+/* flag to mark the item as valid in a config tree instance during validation */
+#define CFG_VALID		0x02
+
 /*
  * Register ID for each possible item in the configuration tree.
  */
@@ -131,8 +133,17 @@ struct profile *add_profile(struct cmd_context *cmd, const char *profile_name);
 int load_profile(struct cmd_context *cmd, struct profile *profile);
 int load_pending_profiles(struct cmd_context *cmd);
 
+/* configuration check handle for each instance of the validation check */
+struct cft_check_handle {
+	struct dm_config_tree *cft;	/* the tree for which the check is done */
+	unsigned force_check:1;		/* force check even if disabled by config/checks setting */
+	unsigned skip_if_checked:1;	/* skip the check if already done before - return last state */
+	unsigned suppress_messages:1;	/* suppress messages during the check if config item is found invalid */
+	uint8_t status[CFG_COUNT];	/* flags for each configuration item - the result of the check */
+};
+
 int config_def_get_path(char *buf, size_t buf_size, int id);
-int config_def_check(struct cmd_context *cmd, int force, int skip, int suppress_messages);
+int config_def_check(struct cmd_context *cmd, struct cft_check_handle *handle);
 
 int override_config_tree_from_string(struct cmd_context *cmd, const char *config_settings);
 int override_config_tree_from_profile(struct cmd_context *cmd, struct profile *profile);

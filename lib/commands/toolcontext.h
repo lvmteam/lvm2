@@ -102,7 +102,9 @@ struct cmd_context {
 	struct profile_params *profile_params; /* profile handling params including loaded profile configs */
 	struct dm_config_tree *cft; /* the whole cascade: CONFIG_STRING -> CONFIG_PROFILE -> CONFIG_FILE/CONFIG_MERGED_FILES */
 	int config_initialized; /* used to reinitialize config if previous init was not successful */
+
 	struct dm_hash_table *cft_def_hash; /* config definition hash used for validity check (item type + item recognized) */
+	struct cft_check_handle *cft_check_handle;
 
 	/* selected settings with original default/configured value which can be changed during cmd processing */
 	struct config_info default_settings;

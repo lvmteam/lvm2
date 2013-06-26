@@ -584,12 +584,13 @@ static int _config_def_check_node_single_value(const char *rp, const struct dm_c
 	return 1;
 }
 
-static int _config_def_check_node_value(const char *rp, const struct dm_config_value *v,
-					const cfg_def_item_t *def, int suppress_messages)
+static int _config_def_check_node_value(struct cft_check_handle *handle,
+					const char *rp, const struct dm_config_value *v,
+					const cfg_def_item_t *def)
 {
 	if (!v) {
 		if (def->type != CFG_TYPE_SECTION) {
-			_log_type_error(rp, CFG_TYPE_SECTION, def->type, suppress_messages);
+			_log_type_error(rp, CFG_TYPE_SECTION, def->type, handle->suppress_messages);
 			return 0;
 		}
 		return 1;
@@ -597,13 +598,13 @@ static int _config_def_check_node_value(const char *rp, const struct dm_config_v
 
 	if (v->next) {
 		if (!(def->type & CFG_TYPE_ARRAY)) {
-			_log_type_error(rp, CFG_TYPE_ARRAY, def->type, suppress_messages);
+			_log_type_error(rp, CFG_TYPE_ARRAY, def->type, handle->suppress_messages);
 			return 0;
 		}
 	}
 
 	do {
-		if (!_config_def_check_node_single_value(rp, v, def, suppress_messages))
+		if (!_config_def_check_node_single_value(rp, v, def, handle->suppress_messages))
 			return 0;
 		v = v->next;
 	} while (v);
@@ -611,9 +612,10 @@ static int _config_def_check_node_value(const char *rp, const struct dm_config_v
 	return 1;
 }
 
-static int _config_def_check_node(const char *vp, char *pvp, char *rp, char *prp,
+static int _config_def_check_node(struct cft_check_handle *handle,
+				  const char *vp, char *pvp, char *rp, char *prp,
 				  size_t buf_size, struct dm_config_node *cn,
-				  struct dm_hash_table *ht, int suppress_messages)
+				  struct dm_hash_table *ht)
 {
 	cfg_def_item_t *def;
 	int sep = vp != pvp; /* don't use '/' separator for top-level node */
@@ -628,7 +630,7 @@ static int _config_def_check_node(const char *vp, char *pvp, char *rp, char *prp
 	if (!(def = (cfg_def_item_t *) dm_hash_lookup(ht, vp))) {
 		/* If the node is not a section but a setting, fail now. */
 		if (cn->v) {
-			log_warn_suppress(suppress_messages,
+			log_warn_suppress(handle->suppress_messages,
 				"Configuration setting \"%s\" unknown.", rp);
 			cn->id = -1;
 			return 0;
@@ -639,38 +641,38 @@ static int _config_def_check_node(const char *vp, char *pvp, char *rp, char *prp
 		/* The real path without '#' is still stored in rp variable. */
 		pvp[sep] = '#', pvp[sep + 1] = '\0';
 		if (!(def = (cfg_def_item_t *) dm_hash_lookup(ht, vp))) {
-			log_warn_suppress(suppress_messages,
+			log_warn_suppress(handle->suppress_messages,
 				"Configuration section \"%s\" unknown.", rp);
 			cn->id = -1;
 			return 0;
 		}
 	}
 
-	def->flags |= CFG_USED;
+	handle->status[def->id] |= CFG_USED;
 	cn->id = def->id;
 
-	if (!_config_def_check_node_value(rp, cn->v, def, suppress_messages))
-	return 0;
+	if (!_config_def_check_node_value(handle, rp, cn->v, def))
+		return 0;
 
-	def->flags |= CFG_VALID;
+	handle->status[def->id] |= CFG_VALID;
 	return 1;
 }
 
-static int _config_def_check_tree(const char *vp, char *pvp, char *rp, char *prp,
+static int _config_def_check_tree(struct cft_check_handle *handle,
+				  const char *vp, char *pvp, char *rp, char *prp,
 				  size_t buf_size, struct dm_config_node *root,
-				  struct dm_hash_table *ht, int suppress_messages)
+				  struct dm_hash_table *ht)
 {
 	struct dm_config_node *cn;
 	int valid, r = 1;
 	size_t len;
 
 	for (cn = root->child; cn; cn = cn->sib) {
-		if ((valid = _config_def_check_node(vp, pvp, rp, prp, buf_size,
-					cn, ht, suppress_messages)) && !cn->v) {
+		if ((valid = _config_def_check_node(handle, vp, pvp, rp, prp,
+					buf_size, cn, ht)) && !cn->v) {
 			len = strlen(rp);
-			valid = _config_def_check_tree(vp, pvp + strlen(pvp),
-					rp, prp + len, buf_size - len, cn, ht,
-					suppress_messages);
+			valid = _config_def_check_tree(handle, vp, pvp + strlen(pvp),
+					rp, prp + len, buf_size - len, cn, ht);
 		}
 		if (!valid)
 			r = 0;
@@ -679,7 +681,7 @@ static int _config_def_check_tree(const char *vp, char *pvp, char *rp, char *prp
 	return r;
 }
 
-int config_def_check(struct cmd_context *cmd, int force, int skip, int suppress_messages)
+int config_def_check(struct cmd_context *cmd, struct cft_check_handle *handle)
 {
 	cfg_def_item_t *def;
 	struct dm_config_node *cn;
@@ -695,28 +697,21 @@ int config_def_check(struct cmd_context *cmd, int force, int skip, int suppress_
 	 */
 
 	/*
-	 * If the check has already been done and 'skip' is set,
+	 * If the check has already been done and 'skip_if_checked' is set,
 	 * skip the actual check and use last result if available.
 	 * If not available, we must do the check. The global status
 	 * is stored in root node.
 	 */
-	def = cfg_def_get_item_p(root_CFG_SECTION);
-	if (skip && (def->flags & CFG_USED))
-		return def->flags & CFG_VALID;
+	if (handle->skip_if_checked && (handle->status[root_CFG_SECTION] & CFG_USED))
+		return handle->status[root_CFG_SECTION] & CFG_VALID;
+
+	/* Nothing to do if checks are disabled and also not forced. */
+	if (!handle->force_check && !find_config_tree_bool(cmd, config_checks_CFG, NULL))
+		return 1;
 
 	/* Clear 'used' and 'valid' status flags. */
-	for (id = 0; id < CFG_COUNT; id++) {
-		def = cfg_def_get_item_p(id);
-		def->flags &= ~(CFG_USED | CFG_VALID);
-	}
-
-	if (!force && !find_config_tree_bool(cmd, config_checks_CFG, NULL)) {
-		if (cmd->cft_def_hash) {
-			dm_hash_destroy(cmd->cft_def_hash);
-			cmd->cft_def_hash = NULL;
-		}
-		return 1;
-	}
+	for (id = 0; id < CFG_COUNT; id++)
+		handle->status[id] &= ~(CFG_USED | CFG_VALID);
 
 	/*
 	 * Create a hash of all possible configuration
@@ -743,44 +738,46 @@ int config_def_check(struct cmd_context *cmd, int force, int skip, int suppress_
 		}
 	}
 
-	cfg_def_get_item_p(root_CFG_SECTION)->flags |= CFG_USED;
+	/*
+	 * Mark this handle as used so next time we know that the check
+	 * has already been done and so we can just reuse the previous
+	 * status instead of running this whole check again.
+	 */
+	handle->status[root_CFG_SECTION] |= CFG_USED;
 
 	/*
 	 * Allow only sections as top-level elements.
 	 * Iterate top-level sections and dive deeper.
 	 * If any of subsequent checks fails, the whole check fails.
 	 */
-	for (cn = cmd->cft->root; cn; cn = cn->sib) {
+	for (cn = handle->cft->root; cn; cn = cn->sib) {
 		if (!cn->v) {
 			/* top level node: vp=vp, rp=rp */
-			if (!_config_def_check_node(vp, vp, rp, rp,
+			if (!_config_def_check_node(handle, vp, vp, rp, rp,
 						    CFG_PATH_MAX_LEN,
-						    cn, cmd->cft_def_hash,
-						    suppress_messages)) {
+						    cn, cmd->cft_def_hash)) {
 				r = 0; continue;
 			}
 			rplen = strlen(rp);
-			if (!_config_def_check_tree(vp, vp + strlen(vp),
+			if (!_config_def_check_tree(handle,
+						    vp, vp + strlen(vp),
 						    rp, rp + rplen,
 						    CFG_PATH_MAX_LEN - rplen,
-						    cn, cmd->cft_def_hash,
-						    suppress_messages))
+						    cn, cmd->cft_def_hash))
 				r = 0;
 		} else {
-			log_error_suppress(suppress_messages,
+			log_error_suppress(handle->suppress_messages,
 				"Configuration setting \"%s\" invalid. "
 				"It's not part of any section.", cn->key);
 			r = 0;
 		}
 	}
 out:
-	if (r) {
-		cfg_def_get_item_p(root_CFG_SECTION)->flags |= CFG_VALID;
-		def->flags |= CFG_VALID;
-	} else {
-		cfg_def_get_item_p(root_CFG_SECTION)->flags &= ~CFG_VALID;
-		def->flags &= ~CFG_VALID;
-	}
+	if (r)
+		handle->status[root_CFG_SECTION] |= CFG_VALID;
+	else
+		handle->status[root_CFG_SECTION] &= ~CFG_VALID;
+
 	return r;
 }
 

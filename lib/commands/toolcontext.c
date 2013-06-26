@@ -263,6 +263,29 @@ static int _check_disable_udev(const char *msg) {
 	return 0;
 }
 
+static int _check_config(struct cmd_context *cmd)
+{
+	if (!find_config_tree_bool(cmd, config_checks_CFG, NULL))
+		return 1;
+
+	if (!cmd->cft_check_handle) {
+		if (!(cmd->cft_check_handle = dm_pool_zalloc(cmd->libmem, sizeof(*cmd->cft_check_handle)))) {
+			log_error("Configuration check handle allocation failed.");
+			return 0;
+		}
+	}
+
+	cmd->cft_check_handle->cft = cmd->cft;
+
+	if (!config_def_check(cmd, cmd->cft_check_handle) &&
+	    find_config_tree_bool(cmd, config_abort_on_errors_CFG, NULL)) {
+		log_error("LVM configuration invalid.");
+		return 0;
+	}
+
+	return 1;
+}
+
 static int _process_config(struct cmd_context *cmd)
 {
 	mode_t old_umask;
@@ -275,10 +298,8 @@ static int _process_config(struct cmd_context *cmd)
 	int udev_disabled = 0;
 	char sysfs_dir[PATH_MAX];
 
-	if (!config_def_check(cmd, 0, 0, 0) && find_config_tree_bool(cmd, config_abort_on_errors_CFG, NULL)) {
-		log_error("LVM configuration invalid.");
-		return 0;
-	}
+	if (!_check_config(cmd))
+		return_0;
 
 	/* umask */
 	cmd->default_settings.umask = find_config_tree_int(cmd, global_umask_CFG, NULL);
