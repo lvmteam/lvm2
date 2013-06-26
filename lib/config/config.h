@@ -78,8 +78,10 @@ typedef union {
 #define CFG_ALLOW_EMPTY		0x02
 /* whether the configuration item is for advanced use only */
 #define CFG_ADVANCED		0x04
-/* whether the configuraton item is not officially supported */
+/* whether the configuration item is not officially supported */
 #define CFG_UNSUPPORTED		0x08
+/* whether the configuration item is customizable by a profile */
+#define CFG_PROFILABLE		0x10
 
 /* configuration definition item structure */
 typedef struct cfg_def_item {
@@ -136,6 +138,7 @@ int load_pending_profiles(struct cmd_context *cmd);
 /* configuration check handle for each instance of the validation check */
 struct cft_check_handle {
 	struct dm_config_tree *cft;	/* the tree for which the check is done */
+	config_source_t source;		/* configuration source */
 	unsigned force_check:1;		/* force check even if disabled by config/checks setting */
 	unsigned skip_if_checked:1;	/* skip the check if already done before - return last state */
 	unsigned suppress_messages:1;	/* suppress messages during the check if config item is found invalid */

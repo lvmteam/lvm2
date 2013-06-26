@@ -31,6 +31,7 @@
  * 				CFG_ALLOW_EMPTY - node value can be emtpy
  * 				CFG_ADVANCED - this node belongs to advanced config set
  * 				CFG_UNSUPPORTED - this node belongs to unsupported config set
+ * 				CFG_PROFILABLE - this node is customizable by a profile
  * type:		allowed type for the value of simple configuation setting
  * types:		allowed types for the values of array configuration setting
  * 			(use logical "OR" to define more than one allowed type,

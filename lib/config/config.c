@@ -654,6 +654,19 @@ static int _config_def_check_node(struct cft_check_handle *handle,
 	if (!_config_def_check_node_value(handle, rp, cn->v, def))
 		return 0;
 
+	/*
+	 * Also check whether this configuration item is allowed
+	 * in certain types of configuration trees as in some
+	 * the use of configuration is restricted, e.g. profiles...
+	 */
+	if (handle->source == CONFIG_PROFILE &&
+	    !(def->flags & CFG_PROFILABLE)) {
+		log_warn_suppress(handle->suppress_messages,
+			"Configuration %s \"%s\" is not customizable by "
+			"a profile.", cn->v ? "option" : "section", rp);
+		return 0;
+	}
+
 	handle->status[def->id] |= CFG_VALID;
 	return 1;
 }
@@ -1405,6 +1418,29 @@ struct dm_config_tree *config_def_create_tree(struct config_def_tree_spec *spec)
 	return cft;
 }
 
+static int _check_profile(struct cmd_context *cmd, struct profile *profile)
+{
+	struct cft_check_handle *handle;
+	int r;
+
+	if (!(handle = dm_pool_zalloc(cmd->libmem, sizeof(*handle)))) {
+		log_debug("_check_profile: profile check handle allocation failed");
+		return 0;
+	}
+
+	handle->cft = profile->cft;
+	handle->source = CONFIG_PROFILE;
+	/* the check is compulsory - allow only profilable items in a profile config! */
+	handle->force_check = 1;
+	/* provide warning messages only if config/checks=1 */
+	handle->suppress_messages = !find_config_tree_bool(cmd, config_checks_CFG, NULL);
+
+	r = config_def_check(cmd, handle);
+
+	dm_pool_free(cmd->libmem, handle);
+	return r;
+}
+
 struct profile *add_profile(struct cmd_context *cmd, const char *profile_name)
 {
 	struct profile *profile;
@@ -1463,6 +1499,8 @@ int load_profile(struct cmd_context *cmd, struct profile *profile) {
 		return 0;
 
 	dm_list_move(&cmd->profile_params->profiles, &profile->list);
+
+	(void) _check_profile(cmd, profile);
 
 	return 1;
 }
