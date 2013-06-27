@@ -816,3 +816,8 @@ const struct logical_volume *lv_lock_holder(const struct logical_volume *lv)
 
 	return lv;
 }
+
+struct profile *lv_config_profile(const struct logical_volume *lv)
+{
+	return lv->profile ? : lv->vg->profile;
+}
