@@ -1544,9 +1544,6 @@ static int _text_pv_initialise(const struct format_type *fmt,
 		 * value (e.g. backups). Also, if creating an EA, try to place
 		 * it in between the final alignment and existing PE start
 		 * if possible.
-		 * TODO: Support restoring existing EA from MDA instead like
-		 *       we do for PE start? This would require adding EA info
-		 *       in MDA then!
 		 */
 		pv->pe_start = rp->pe_start;
 		if (rp->ba_size) {
