@@ -1500,7 +1500,21 @@ int load_profile(struct cmd_context *cmd, struct profile *profile) {
 
 	dm_list_move(&cmd->profile_params->profiles, &profile->list);
 
-	(void) _check_profile(cmd, profile);
+	/*
+	 * *Profile must be valid* otherwise we'd end up with incorrect config!
+	 * If there were config items present that are not supposed to be
+	 * customized by a profile, we could end up with non-deterministic
+	 * behaviour. Therefore, this check is *strictly forced* even if
+	 * config/checks=0. The config/checks=0 will only cause the warning
+	 * messages to be suppressed, but the check itself is always done
+	 * for profiles!
+	 */
+	if (!_check_profile(cmd, profile)) {
+		log_error("Ignoring invalid configuration profile %s.", profile->name);
+		/* if invalid, cut the whole tree and leave it empty */
+		dm_pool_free(profile->cft->mem, profile->cft->root);
+		profile->cft->root = NULL;
+	}
 
 	return 1;
 }
