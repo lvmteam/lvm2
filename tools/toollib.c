@@ -1537,7 +1537,9 @@ int get_activation_monitoring_mode(struct cmd_context *cmd,
 	return 1;
 }
 
-int get_pool_params(struct cmd_context *cmd, int *passed_args,
+int get_pool_params(struct cmd_context *cmd,
+		    struct profile *profile,
+		    int *passed_args,
 		    uint32_t *chunk_size,
 		    thin_discards_t *discards,
 		    uint64_t *pool_metadata_size,
@@ -1551,7 +1553,7 @@ int get_pool_params(struct cmd_context *cmd, int *passed_args,
 		*zero = strcmp(arg_str_value(cmd, zero_ARG, "y"), "n");
 		log_very_verbose("Setting pool zeroing: %u", *zero);
 	} else
-		*zero = find_config_tree_bool(cmd, allocation_thin_pool_zero_CFG, NULL);
+		*zero = find_config_tree_bool(cmd, allocation_thin_pool_zero_CFG, profile);
 
 	if (arg_count(cmd, discards_ARG)) {
 		*passed_args |= PASS_ARG_DISCARDS;
@@ -1559,7 +1561,7 @@ int get_pool_params(struct cmd_context *cmd, int *passed_args,
 		log_very_verbose("Setting pool discards: %s",
 				 get_pool_discards_name(*discards));
 	} else {
-		dstr = find_config_tree_str(cmd, allocation_thin_pool_discards_CFG, NULL);
+		dstr = find_config_tree_str(cmd, allocation_thin_pool_discards_CFG, profile);
 		if (!get_pool_discards(dstr, discards))
 			return_0;
 	}
@@ -1575,7 +1577,7 @@ int get_pool_params(struct cmd_context *cmd, int *passed_args,
 		log_very_verbose("Setting pool chunk size: %s",
 				 display_size(cmd, *chunk_size));
 	} else
-		*chunk_size = find_config_tree_int(cmd, allocation_thin_pool_chunk_size_CFG, NULL) * 2;
+		*chunk_size = find_config_tree_int(cmd, allocation_thin_pool_chunk_size_CFG, profile) * 2;
 
 	if ((*chunk_size < DM_THIN_MIN_DATA_BLOCK_SIZE) ||
 	    (*chunk_size > DM_THIN_MAX_DATA_BLOCK_SIZE)) {

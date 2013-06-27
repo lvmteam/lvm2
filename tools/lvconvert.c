@@ -385,13 +385,6 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 			return 0;
 		}
 
-		if (!get_pool_params(cmd, &lp->passed_args,
-				     &lp->chunk_size,
-				     &lp->discards,
-				     &lp->poolmetadata_size,
-				     &lp->zero))
-			return_0;
-
 		if (arg_count(cmd, poolmetadata_ARG)) {
 			if (arg_count(cmd, poolmetadatasize_ARG)) {
 				log_error("--poolmetadatasize is invalid with --poolmetadata.");
@@ -2413,6 +2406,13 @@ static int lvconvert_single(struct cmd_context *cmd, struct lvconvert_params *lp
 
 	lv = get_vg_lock_and_logical_volume(cmd, lp->vg_name, lp->lv_name);
 	if (!lv)
+		goto_out;
+
+	if (arg_count(cmd, thinpool_ARG) &&
+	    !get_pool_params(cmd, lv_config_profile(lv),
+			     &lp->passed_args, &lp->chunk_size,
+			     &lp->discards, &lp->poolmetadata_size,
+			     &lp->zero))
 		goto_out;
 
 	/*

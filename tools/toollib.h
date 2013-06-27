@@ -114,7 +114,9 @@ int pvcreate_params_validate(struct cmd_context *cmd,
 int get_activation_monitoring_mode(struct cmd_context *cmd,
 				   int *monitoring_mode);
 
-int get_pool_params(struct cmd_context *cmd, int *passed_args,
+int get_pool_params(struct cmd_context *cmd,
+		    struct profile *profile,
+		    int *passed_args,
 		    uint32_t *chunk_size,
 		    thin_discards_t *discards,
 		    uint64_t *pool_metadata_size,

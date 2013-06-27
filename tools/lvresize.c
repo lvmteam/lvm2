@@ -306,9 +306,11 @@ static int _adjust_policy_params(struct cmd_context *cmd,
 
 	if (lv_is_thin_pool(lv)) {
 		policy_threshold =
-			find_config_tree_int(cmd, activation_thin_pool_autoextend_threshold_CFG, NULL) * PERCENT_1;
+			find_config_tree_int(cmd, activation_thin_pool_autoextend_threshold_CFG,
+					     lv_config_profile(lv)) * PERCENT_1;
 		policy_amount =
-			find_config_tree_int(cmd, activation_thin_pool_autoextend_percent_CFG, NULL);
+			find_config_tree_int(cmd, activation_thin_pool_autoextend_percent_CFG,
+					     lv_config_profile(lv));
 		if (!policy_amount && policy_threshold < PERCENT_100)
                         return 0;
 	} else {
