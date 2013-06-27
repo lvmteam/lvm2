@@ -246,19 +246,20 @@ static int _read_pv(struct format_instance *fid,
 		return 0;
 	}
 
-	/* Bootloader area is not compulsory - just log_debug if not found. */
+	/* Bootloader area is not compulsory - just log_debug for the record if found. */
 	ba_start = size = 0;
-	if (!_read_uint64(pvn, "ba_start", &ba_start))
-		log_debug("PV Bootloader Area start value (ba_start) not found.");
-	if (!_read_uint64(pvn, "ba_size", &size))
-		log_debug("PV Bootloader Area size (ba_size) not found.");
-	if ((!ba_start && size) || (ba_start && !size)) {
-		log_error("Incomplete bootloader area specification for "
-			  "physical volume.");
-		return 0;
-	} else {
+	_read_uint64(pvn, "ba_start", &ba_start);
+	_read_uint64(pvn, "ba_size", &size);
+	if (ba_start && size) {
+		log_debug("Found bootloader area specification for PV %s "
+			  "in metadata: ba_start=%" PRIu64 ", ba_size=%" PRIu64 ".",
+			  pv_dev_name(pv), ba_start, size);
 		pv->ba_start = ba_start;
 		pv->ba_size = size;
+	} else if ((!ba_start && size) || (ba_start && !size)) {
+		log_error("Found incomplete bootloader area specification "
+			  "for PV %s in metadata.", pv_dev_name(pv));
+		return 0;
 	}
 
 	dm_list_init(&pv->tags);
