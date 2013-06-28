@@ -3755,6 +3755,11 @@ static int _get_pvs(struct cmd_context *cmd, int warnings,
 				 */
 				if (!vgslist) {
 					pvl_copy->pv->vg = NULL;
+				} else {
+					/* Make sure the vg mode indicates writeable */
+					/* We should rework this function to take a parameter */
+					/* so that we could control this ... */
+					pvl_copy->pv->vg->open_mode = 'w';
 				}
 				have_pv = 1;
 				dm_list_add(pvslist, &pvl_copy->list);

@@ -219,7 +219,7 @@ int lvm_pv_resize(const pv_t pv, uint64_t new_size)
 		return -1;
 	}
 
-	if (!pv_resize(pv, pv->vg, size)) {
+	if (!pv_resize_single(pv->vg->cmd, pv->vg, pv, size)) {
 		log_error("PV re-size failed!");
 		return -1;
 	} else {

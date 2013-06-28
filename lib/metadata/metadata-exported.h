@@ -560,8 +560,12 @@ struct physical_volume *pv_create(const struct cmd_context *cmd,
 				  uint64_t pvmetadatasize,
 				  unsigned metadataignore,
 				  struct pvcreate_restorable_params *rp);
-int pv_resize(struct physical_volume *pv, struct volume_group *vg,
-	      uint64_t size);
+
+int pv_resize_single(struct cmd_context *cmd,
+			     struct volume_group *vg,
+			     struct physical_volume *pv,
+			     const uint64_t new_size);
+
 int pv_analyze(struct cmd_context *cmd, const char *pv_name,
 	       uint64_t label_sector);
 

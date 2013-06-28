@@ -22,6 +22,7 @@
 #include "lvmetad.h"
 #include "display.h"
 #include "label.h"
+#include "../../tools/tools.h"
 
 static struct pv_segment *_alloc_pv_segment(struct dm_pool *mem,
 					    struct physical_volume *pv,
@@ -487,7 +488,7 @@ static int _extend_pv(struct physical_volume *pv, struct volume_group *vg,
  * Resize a PV in a VG, adding or removing segments as needed.
  * New size must fit within pv->size.
  */
-int pv_resize(struct physical_volume *pv,
+static int pv_resize(struct physical_volume *pv,
 	      struct volume_group *vg,
 	      uint64_t size)
 {
@@ -516,7 +517,8 @@ int pv_resize(struct physical_volume *pv,
 	/* pv->pe_count is 0 now! We need to recalculate! */
 
 	/* If there's a VG, calculate new PE count value. */
-	if (vg) {
+	/* Don't do for orphan VG */
+	if (vg && !is_orphan_vg(vg->name)) {
 		/* FIXME: Maybe PE calculation should go into pv->fmt->resize?
 		          (like it is for pv->fmt->setup) */
 		if (!(new_pe_count = pv_size(pv) / vg->extent_size)) {
@@ -544,6 +546,115 @@ int pv_resize(struct physical_volume *pv,
 	}
 
 	return 1;
+}
+
+int pv_resize_single(struct cmd_context *cmd,
+			     struct volume_group *vg,
+			     struct physical_volume *pv,
+			     const uint64_t new_size)
+{
+	struct pv_list *pvl;
+	uint64_t size = 0;
+	int r = 0;
+	const char *pv_name = pv_dev_name(pv);
+	const char *vg_name = pv_vg_name(pv);
+	struct volume_group *old_vg = vg;
+	int vg_needs_pv_write = 0;
+
+	if (is_orphan_vg(vg_name)) {
+		if (!lock_vol(cmd, vg_name, LCK_VG_WRITE, NULL)) {
+			log_error("Can't get lock for orphans");
+			return 0;
+		}
+
+		if (!(pv = pv_read(cmd, pv_name, 1, 0))) {
+			unlock_vg(cmd, vg_name);
+			log_error("Unable to read PV \"%s\"", pv_name);
+			return 0;
+		}
+	} else {
+		vg = vg_read_for_update(cmd, vg_name, NULL, 0);
+
+		if (vg_read_error(vg)) {
+			release_vg(vg);
+			log_error("Unable to read volume group \"%s\".",
+				  vg_name);
+			return 0;
+		}
+
+		if (!(pvl = find_pv_in_vg(vg, pv_name))) {
+			log_error("Unable to find \"%s\" in volume group \"%s\"",
+				  pv_name, vg->name);
+			goto out;
+		}
+
+		pv = pvl->pv;
+
+		if (!archive(vg))
+			goto out;
+	}
+
+	if (!(pv->fmt->features & FMT_RESIZE_PV)) {
+		log_error("Physical volume %s format does not support resizing.",
+			  pv_name);
+		goto out;
+	}
+
+	/* Get new size */
+	if (!dev_get_size(pv_dev(pv), &size)) {
+		log_error("%s: Couldn't get size.", pv_name);
+		goto out;
+	}
+
+	if (new_size) {
+		if (new_size > size)
+			log_warn("WARNING: %s: Overriding real size. "
+				  "You could lose data.", pv_name);
+		log_verbose("%s: Pretending size is %" PRIu64 " not %" PRIu64
+			    " sectors.", pv_name, new_size, pv_size(pv));
+		size = new_size;
+	}
+
+	log_verbose("Resizing volume \"%s\" to %" PRIu64 " sectors.",
+		    pv_name, pv_size(pv));
+
+	if (!pv_resize(pv, vg, size))
+		goto_out;
+
+	log_verbose("Updating physical volume \"%s\"", pv_name);
+
+	/* Write PV label only if this an orphan PV or it has 2nd mda. */
+	if ((is_orphan_vg(vg_name) ||
+	     (vg_needs_pv_write = (fid_get_mda_indexed(vg->fid,
+			(const char *) &pv->id, ID_LEN, 1) != NULL))) &&
+	    !pv_write(cmd, pv, 1)) {
+		log_error("Failed to store physical volume \"%s\"",
+			  pv_name);
+		goto out;
+	}
+
+	if (!is_orphan_vg(vg_name)) {
+		if (!vg_write(vg) || !vg_commit(vg)) {
+			log_error("Failed to store physical volume \"%s\" in "
+				  "volume group \"%s\"", pv_name, vg_name);
+			goto out;
+		}
+		backup(vg);
+	}
+
+	log_print_unless_silent("Physical volume \"%s\" changed", pv_name);
+	r = 1;
+
+out:
+	if (!r && vg_needs_pv_write)
+		log_error("Use pvcreate and vgcfgrestore "
+			  "to repair from archived metadata.");
+	unlock_vg(cmd, vg_name);
+	if (is_orphan_vg(vg_name))
+		free_pv_fid(pv);
+	if (!old_vg)
+		release_vg(vg);
+	return r;
 }
 
 const char _really_wipe[] =
