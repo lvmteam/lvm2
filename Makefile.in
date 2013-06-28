@@ -16,7 +16,7 @@ srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 top_builddir = @top_builddir@
 
-SUBDIRS = doc include man
+SUBDIRS = conf include man
 
 ifeq ("@UDEV_RULES@", "yes")
   SUBDIRS += udev
@@ -43,7 +43,7 @@ ifeq ($(MAKECMDGOALS),clean)
 endif
 # FIXME Should use intermediate Makefiles here!
 ifeq ($(MAKECMDGOALS),distclean)
-  SUBDIRS = doc include man test scripts \
+  SUBDIRS = conf include man test scripts \
     libdaemon lib tools daemons libdm \
     udev po liblvm python \
     unit-tests/datastruct unit-tests/mm unit-tests/regex

@@ -1640,8 +1640,8 @@ daemons/dmeventd/plugins/mirror/Makefile
 daemons/dmeventd/plugins/snapshot/Makefile
 daemons/dmeventd/plugins/thin/Makefile
 daemons/lvmetad/Makefile
-doc/Makefile
-doc/example.conf
+conf/Makefile
+conf/example.conf
 include/.symlinks
 include/Makefile
 lib/Makefile
