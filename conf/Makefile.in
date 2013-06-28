@@ -18,14 +18,23 @@ top_builddir = @top_builddir@
 CONFSRC=example.conf
 CONFDEST=lvm.conf
 
+DEFAULT_PROFILE=default.profile
+PROFILES=$(DEFAULT_PROFILE)
+
 include $(top_builddir)/make.tmpl
 
-install_lvm2: $(CONFSRC)
+install_conf: $(CONFSRC)
 	@if [ ! -e $(confdir)/$(CONFDEST) ]; then \
 		echo "$(INSTALL_WDATA) -D $< $(confdir)/$(CONFDEST)"; \
 		$(INSTALL_WDATA) -D $< $(confdir)/$(CONFDEST); \
 	fi
 
+install_profiles: $(PROFILES)
+	$(INSTALL) -d $(DEFAULT_PROFILE_DIR)
+	$(INSTALL_DATA) $(PROFILES) $(DEFAULT_PROFILE_DIR)/
+
+install_lvm2: install_conf install_profiles
+
 install: install_lvm2
 
-DISTCLEAN_TARGETS += $(CONFSRC)
+DISTCLEAN_TARGETS += $(CONFSRC) $(DEFAULT_PROFILE)

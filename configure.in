@@ -1642,6 +1642,7 @@ daemons/dmeventd/plugins/thin/Makefile
 daemons/lvmetad/Makefile
 conf/Makefile
 conf/example.conf
+conf/default.profile
 include/.symlinks
 include/Makefile
 lib/Makefile
