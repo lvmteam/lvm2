@@ -31,24 +31,18 @@
 int create_temp_name(const char *dir, char *buffer, size_t len, int *fd,
 		     unsigned *seed)
 {
+	const struct flock lock = { .l_type = F_WRLCK };
 	int i, num;
 	pid_t pid;
 	char hostname[255];
 	char *p;
-	struct flock lock = {
-		.l_type = F_WRLCK,
-		.l_whence = 0,
-		.l_start = 0,
-		.l_len = 0
-	};
 
 	num = rand_r(seed);
 	pid = getpid();
 	if (gethostname(hostname, sizeof(hostname)) < 0) {
 		log_sys_error("gethostname", "");
 		strcpy(hostname, "nohostname");
-	}
-	else {
+	} else {
 		/* Replace any '/' with '?' found in the hostname. */
 		p = hostname;
 		while ((p = strchr(p, '/')))
@@ -161,9 +155,8 @@ int is_empty_dir(const char *dir)
 		if (strcmp(dirent->d_name, ".") && strcmp(dirent->d_name, ".."))
 			break;
 
-	if (closedir(d)) {
+	if (closedir(d))
 		log_sys_error("closedir", dir);
-	}
 
 	return dirent ? 0 : 1;
 }
@@ -212,15 +205,10 @@ void sync_dir(const char *file)
  */
 int fcntl_lock_file(const char *file, short lock_type, int warn_if_read_only)
 {
+	const struct flock lock = { .l_type = lock_type };
 	int lockfd;
 	char *dir;
 	char *c;
-	struct flock lock = {
-		.l_type = lock_type,
-		.l_whence = 0,
-		.l_start = 0,
-		.l_len = 0
-	};
 
 	if (!(dir = dm_strdup(file))) {
 		log_error("fcntl_lock_file failed in strdup.");
@@ -253,7 +241,7 @@ int fcntl_lock_file(const char *file, short lock_type, int warn_if_read_only)
 	if (fcntl(lockfd, F_SETLKW, &lock)) {
 		log_sys_error("fcntl", file);
 		if (close(lockfd))
-                        log_sys_error("close", file);
+			log_sys_error("close", file);
 		return -1;
 	}
 
@@ -262,31 +250,26 @@ int fcntl_lock_file(const char *file, short lock_type, int warn_if_read_only)
 
 void fcntl_unlock_file(int lockfd)
 {
-	struct flock lock = {
-		.l_type = F_UNLCK,
-		.l_whence = 0,
-		.l_start = 0,
-		.l_len = 0
-	};
+	const struct flock lock = { .l_type = F_UNLCK };
 
 	log_very_verbose("Unlocking fd %d", lockfd);
 
 	if (fcntl(lockfd, F_SETLK, &lock) == -1)
-		log_error("fcntl unlock failed on fd %d: %s", lockfd,
-			  strerror(errno));
+		log_sys_error("fcntl", "");
 
 	if (close(lockfd))
-		log_error("lock file close failed on fd %d: %s", lockfd,
-			  strerror(errno));
+		log_sys_error("close","");
 }
 
 int lvm_fclose(FILE *fp, const char *filename)
 {
 	if (!dm_fclose(fp))
 		return 0;
+
 	if (errno == 0)
 		log_error("%s: write error", filename);
 	else
 		log_sys_error("write error", filename);
+
 	return EOF;
 }
