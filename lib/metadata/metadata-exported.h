@@ -48,6 +48,7 @@
 
 /* May any free extents on this PV be used or must they be left free? */
 #define ALLOCATABLE_PV		UINT64_C(0x00000008)	/* PV */
+#define ARCHIVED_VG		ALLOCATABLE_PV		/* VG, reuse same bit */
 
 //#define SPINDOWN_LV		UINT64_C(0x00000010)	/* LV */
 //#define BADBLOCK_ON		UINT64_C(0x00000020)	/* LV */
@@ -139,6 +140,8 @@
 
 #define VGMETADATACOPIES_ALL UINT32_MAX
 #define VGMETADATACOPIES_UNMANAGED 0
+
+#define vg_is_archived(vg)	(((vg)->status & ARCHIVED_VG) ? 1 : 0)
 
 #define lv_is_external_origin(lv)	(((lv)->external_count > 0) ? 1 : 0)
 #define lv_is_thin_volume(lv)	((lv)->status & THIN_VOLUME ? 1 : 0)

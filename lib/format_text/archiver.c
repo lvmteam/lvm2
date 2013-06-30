@@ -110,6 +110,9 @@ static int __archive(struct volume_group *vg)
 
 int archive(struct volume_group *vg)
 {
+	if (vg_is_archived(vg))
+		return 1; /* VG has been already archived */
+
 	if (!vg->cmd->archive_params->enabled || !vg->cmd->archive_params->dir)
 		return 1;
 
@@ -133,6 +136,8 @@ int archive(struct volume_group *vg)
 			  vg->name);
 		return 0;
 	}
+
+	vg->status |= ARCHIVED_VG;
 
 	return 1;
 }

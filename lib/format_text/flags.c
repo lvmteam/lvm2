@@ -38,6 +38,7 @@ static const struct flag _vg_flags[] = {
 	{SHARED, "SHARED", STATUS_FLAG},
 	{PARTIAL_VG, NULL, 0},
 	{PRECOMMITTED, NULL, 0},
+	{ARCHIVED_VG, NULL, 0},
 	{0, NULL, 0}
 };
 

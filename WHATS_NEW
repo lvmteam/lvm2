@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Avoid creation of multiple archives for one command.
   Use mirror_segtype_default if type not specified for linear->mirror upconvert.
   Fix use of too big chunks of memory when communication with lvmetad.
   Fix vgcfgrestore crash when specified incorrect vg name.
