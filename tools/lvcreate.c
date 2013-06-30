@@ -1045,7 +1045,7 @@ static int _validate_internal_thin_processing(const struct lvcreate_params *lp)
 
 int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 {
-	int r = ECMD_PROCESSED;
+	int r = ECMD_FAILED;
 	struct lvcreate_params lp;
 	struct lvcreate_cmdline_params lcp;
 	struct volume_group *vg;
@@ -1060,34 +1060,24 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 		return_ECMD_FAILED;
 	}
 
-	if (lp.snapshot && lp.origin && !_determine_snapshot_type(vg, &lp)) {
-		r = ECMD_FAILED;
+	if (lp.snapshot && lp.origin && !_determine_snapshot_type(vg, &lp))
 		goto_out;
-	}
 
-	if (seg_is_thin(&lp) && !_check_thin_parameters(vg, &lp, &lcp)) {
-		r = ECMD_FAILED;
+	if (seg_is_thin(&lp) && !_check_thin_parameters(vg, &lp, &lcp))
 		goto_out;
-	}
 
 	/*
 	 * Check activation parameters to support inactive thin snapshot creation
 	 * FIXME: anything else needs to be moved past _determine_snapshot_type()?
 	 */
-	if (!_read_activation_params(&lp, cmd, vg)) {
-		r = ECMD_FAILED;
+	if (!_read_activation_params(&lp, cmd, vg))
 		goto_out;
-	}
 
-	if (!_update_extents_params(vg, &lp, &lcp)) {
-		r = ECMD_FAILED;
+	if (!_update_extents_params(vg, &lp, &lcp))
 		goto_out;
-	}
 
-	if (seg_is_thin(&lp) && !_validate_internal_thin_processing(&lp)) {
-		r = ECMD_FAILED;
+	if (seg_is_thin(&lp) && !_validate_internal_thin_processing(&lp))
 		goto_out;
-	}
 
 	if (lp.create_thin_pool)
 		log_verbose("Making thin pool %s in VG %s using segtype %s",
@@ -1100,10 +1090,10 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 			    lp.snapshot ? " as snapshot of " : "",
 			    lp.snapshot ? lp.origin : "", lp.segtype->name);
 
-	if (!lv_create_single(vg, &lp)) {
-		stack;
-		r = ECMD_FAILED;
-	}
+	if (!lv_create_single(vg, &lp))
+		goto_out;
+
+	r = ECMD_PROCESSED;
 out:
 	unlock_and_release_vg(cmd, vg, lp.vg_name);
 	return r;
