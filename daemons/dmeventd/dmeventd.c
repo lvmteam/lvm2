@@ -832,10 +832,8 @@ static void *_monitor_thread(void *arg)
 			_unlock_mutex();
 			break;
 		}
-		_unlock_mutex();
 
 		if (thread->events & thread->current_events) {
-			_lock_mutex();
 			thread->processing = 1;
 			_unlock_mutex();
 
@@ -847,6 +845,7 @@ static void *_monitor_thread(void *arg)
 			thread->processing = 0;
 			_unlock_mutex();
 		} else {
+			_unlock_mutex();
 			dm_task_destroy(task);
 			thread->current_task = NULL;
 		}
@@ -1000,8 +999,6 @@ static int _register_for_event(struct message_data *message_data)
 		goto out;
 	}
 
-	_lock_mutex();
-
 	/* If creation of timeout thread fails (as it may), we fail
 	   here completely. The client is responsible for either
 	   retrying later or trying to register without timeout
@@ -1010,8 +1007,9 @@ static int _register_for_event(struct message_data *message_data)
 	   almost as good as dead already... */
 	if ((thread_new->events & DM_EVENT_TIMEOUT) &&
 	    (ret = -_register_for_timeout(thread_new)))
-		goto outth;
+		goto out;
 
+	_lock_mutex();
 	if (!(thread = _lookup_thread_status(message_data))) {
 		_unlock_mutex();
 
@@ -1035,8 +1033,6 @@ static int _register_for_event(struct message_data *message_data)
 
 	/* Or event # into events bitfield. */
 	thread->events |= message_data->events_field;
-
-    outth:
 	_unlock_mutex();
 
       out:
@@ -1569,8 +1565,10 @@ static void _cleanup_unused_threads(void)
 
 		if (thread->status == DM_THREAD_DONE) {
 			dm_list_del(l);
+			_unlock_mutex();
 			join_ret = pthread_join(thread->thread, NULL);
 			_free_thread_status(thread);
+			_lock_mutex();
 		}
 	}
 
