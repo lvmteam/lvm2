@@ -53,6 +53,13 @@
 //#define BADBLOCK_ON		UINT64_C(0x00000020)	/* LV */
 #define VISIBLE_LV		UINT64_C(0x00000040)	/* LV */
 #define FIXED_MINOR		UINT64_C(0x00000080)	/* LV */
+
+#define LVM_READ		UINT64_C(0x00000100)	/* LV, VG */
+#define LVM_WRITE		UINT64_C(0x00000200)	/* LV, VG */
+
+#define CLUSTERED		UINT64_C(0x00000400)	/* VG */
+//#define SHARED		UINT64_C(0x00000800)	/* VG */
+
 /* FIXME Remove when metadata restructuring is completed */
 #define SNAPSHOT		UINT64_C(0x00001000)	/* LV - internal use only */
 #define PVMOVE			UINT64_C(0x00002000)	/* VG LV SEG */
@@ -91,12 +98,6 @@
 #define THIN_POOL_METADATA	UINT64_C(0x0000008000000000)	/* LV */
 
 #define LV_WRITEMOSTLY		UINT64_C(0x0000010000000000)	/* LV (RAID1) */
-
-#define LVM_READ		UINT64_C(0x00000100)	/* LV, VG */
-#define LVM_WRITE		UINT64_C(0x00000200)	/* LV, VG */
-
-#define CLUSTERED		UINT64_C(0x00000400)	/* VG */
-//#define SHARED		UINT64_C(0x00000800)	/* VG */
 
 /* Format features flags */
 #define FMT_SEGMENTS		0x00000001U	/* Arbitrary segment params? */
