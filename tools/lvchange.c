@@ -863,7 +863,6 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 			   void *handle __attribute__((unused)))
 {
 	int doit = 0, docmds = 0;
-	int archived = 0;
 	struct logical_volume *origin;
 	char snaps_msg[128];
 
@@ -955,40 +954,36 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 			stack;
 			return ECMD_FAILED;
 		}
-		archived = 1;
 		doit += lvchange_permission(cmd, lv);
 		docmds++;
 	}
 
 	/* allocation policy change */
 	if (arg_count(cmd, contiguous_ARG) || arg_count(cmd, alloc_ARG)) {
-		if (!archived && !archive(lv->vg)) {
+		if (!archive(lv->vg)) {
 			stack;
 			return ECMD_FAILED;
 		}
-		archived = 1;
 		doit += lvchange_alloc(cmd, lv);
 		docmds++;
 	}
 
 	/* read ahead sector change */
 	if (arg_count(cmd, readahead_ARG)) {
-		if (!archived && !archive(lv->vg)) {
+		if (!archive(lv->vg)) {
 			stack;
 			return ECMD_FAILED;
 		}
-		archived = 1;
 		doit += lvchange_readahead(cmd, lv);
 		docmds++;
 	}
 
 	/* persistent device number change */
 	if (arg_count(cmd, persistent_ARG)) {
-		if (!archived && !archive(lv->vg)) {
+		if (!archive(lv->vg)) {
 			stack;
 			return ECMD_FAILED;
 		}
-		archived = 1;
 		doit += lvchange_persistent(cmd, lv);
 		docmds++;
 		if (sigint_caught()) {
@@ -999,44 +994,40 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 	if (arg_count(cmd, discards_ARG) ||
 	    arg_count(cmd, zero_ARG)) {
-		if (!archived && !archive(lv->vg)) {
+		if (!archive(lv->vg)) {
 			stack;
 			return ECMD_FAILED;
 		}
-		archived = 1;
 		doit += lvchange_pool_update(cmd, lv);
 		docmds++;
 	}
 
 	/* add tag */
 	if (arg_count(cmd, addtag_ARG)) {
-		if (!archived && !archive(lv->vg)) {
+		if (!archive(lv->vg)) {
 			stack;
 			return ECMD_FAILED;
 		}
-		archived = 1;
 		doit += lvchange_tag(cmd, lv, addtag_ARG);
 		docmds++;
 	}
 
 	/* del tag */
 	if (arg_count(cmd, deltag_ARG)) {
-		if (!archived && !archive(lv->vg)) {
+		if (!archive(lv->vg)) {
 			stack;
 			return ECMD_FAILED;
 		}
-		archived = 1;
 		doit += lvchange_tag(cmd, lv, deltag_ARG);
 		docmds++;
 	}
 
 	/* change writemostly/writebehind */
 	if (arg_count(cmd, writemostly_ARG) || arg_count(cmd, writebehind_ARG)) {
-		if (!archived && !archive(lv->vg)) {
+		if (!archive(lv->vg)) {
 			stack;
 			return ECMD_FAILED;
 		}
-		archived = 1;
 		doit += lvchange_writemostly(lv);
 		docmds++;
 	}
@@ -1044,11 +1035,10 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 	/* change [min|max]_recovery_rate */
 	if (arg_count(cmd, minrecoveryrate_ARG) ||
 	    arg_count(cmd, maxrecoveryrate_ARG)) {
-		if (!archived && !archive(lv->vg)) {
+		if (!archive(lv->vg)) {
 			stack;
 			return ECMD_FAILED;
 		}
-		archived = 1;
 		doit += lvchange_recovery_rate(lv);
 		docmds++;
 	}

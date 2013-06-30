@@ -425,7 +425,6 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 			   struct volume_group *vg,
 			   void *handle __attribute__((unused)))
 {
-	int archived = 0;
 	int i;
 
 	static struct {
@@ -465,11 +464,10 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 
 	for (i = 0; _vgchange_args[i].arg >= 0; i++) {
 		if (arg_count(cmd, _vgchange_args[i].arg)) {
-			if (!archived && !archive(vg)) {
+			if (!archive(vg)) {
 				stack;
 				return ECMD_FAILED;
 			}
-			archived = 1;
 			if (!_vgchange_args[i].fn(cmd, vg)) {
 				stack;
 				return ECMD_FAILED;
@@ -477,7 +475,7 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 		}
 	}
 
-	if (archived) {
+	if (vg_is_archived(vg)) {
 		if (!vg_write(vg) || !vg_commit(vg)) {
 			stack;
 			return ECMD_FAILED;
