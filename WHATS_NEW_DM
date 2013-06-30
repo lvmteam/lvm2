@@ -1,5 +1,6 @@
 Version 1.02.78 - 
 ===================================
+  Move syslog code out of signal handle in dmeventd.
   Add DM_TO_STRING public macro.
   Always return success on dmeventd -V command call.
   Fix parsing of 64bit snapshot status in dmeventd snapshot plugin.
