@@ -161,6 +161,9 @@ int process_each_lv_in_vg(struct cmd_context *cmd,
 		if (!process_lv)
 			continue;
 
+		if (sigint_caught())
+			return_ECMD_FAILED;
+
 		lvl->lv->vg->cmd_missing_vgs = 0;
 		ret = process_single_lv(cmd, lvl->lv, handle);
 		if (ret != ECMD_PROCESSED && failed_lvnames) {
@@ -175,10 +178,6 @@ int process_each_lv_in_vg(struct cmd_context *cmd,
 		}
 		if (ret > ret_max)
 			ret_max = ret;
-		if (sigint_caught()) {
-			stack;
-			return ret_max;
-		}
 	}
 
 	if (lvargs_supplied && lvargs_matched != dm_list_size(arg_lvnames)) {
@@ -357,7 +356,10 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 			}
 		}
 
-		while (!sigint_caught()) {
+		for (;;) {
+			if (sigint_caught())
+				return_ECMD_FAILED;
+
 			ret = process_each_lv_in_vg(cmd, cvl_vg->vg, &lvnames,
 						    tags_arg, &failed_lvnames,
 						    handle, process_single_lv);
@@ -384,11 +386,6 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 			ret_max = ret;
 
 		free_cmd_vgs(&cmd_vgs);
-		/* FIXME: logic for breaking command is not consistent */
-		if (sigint_caught()) {
-			stack;
-			return ECMD_FAILED;
-		}
 	}
 
 	return ret_max;
@@ -438,11 +435,14 @@ int process_each_segment_in_pv(struct cmd_context *cmd,
 			ret_max = ret;
 	} else
 		dm_list_iterate_items(pvseg, &pv->segments) {
+			if (sigint_caught()) {
+				ret_max = ECMD_FAILED;
+				stack;
+				break;
+			}
 			ret = process_single_pvseg(cmd, vg, pvseg, handle);
 			if (ret > ret_max)
 				ret_max = ret;
-			if (sigint_caught())
-				break;
 		}
 
 	if (vg_name)
@@ -463,12 +463,11 @@ int process_each_segment_in_lv(struct cmd_context *cmd,
 	int ret;
 
 	dm_list_iterate_items(seg, &lv->segments) {
+		if (sigint_caught())
+			return_ECMD_FAILED;
 		ret = process_single_seg(cmd, seg, handle);
 		if (ret > ret_max)
 			ret_max = ret;
-		/* FIXME: logic for breaking command is not consistent */
-		if (sigint_caught())
-			return ECMD_FAILED;
 	}
 
 	return ret_max;
@@ -491,9 +490,9 @@ static int _process_one_vg(struct cmd_context *cmd, const char *vg_name,
 		return_0;
 
 	for (;;) {
-		/* FIXME: consistent handling of command break */
 		if (sigint_caught()) {
 			ret = ECMD_FAILED;
+			stack;
 			break;
 		}
 		if (!cmd_vg_read(cmd, &cmd_vgs))
@@ -502,6 +501,7 @@ static int _process_one_vg(struct cmd_context *cmd, const char *vg_name,
 			    (!((flags & READ_ALLOW_INCONSISTENT) &&
 			       (vg_read_error(cvl_vg->vg) == FAILED_INCONSISTENT)))) {
 				ret = ECMD_FAILED;
+				stack;
 				break;
 			}
 
@@ -592,6 +592,8 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 			return ret_max;
 		}
 		dm_list_iterate_items(sl, vgids) {
+			if (sigint_caught())
+				return_ECMD_FAILED;
 			vgid = sl->str;
 			if (!(vgid) || !(vg_name = lvmcache_vgname_from_vgid(cmd->mem, vgid)))
 				continue;
@@ -599,11 +601,11 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 						  &arg_vgnames,
 						  flags, handle,
 					  	  ret_max, process_single_vg);
-			if (sigint_caught())
-				return ret_max;
 		}
 	} else {
 		dm_list_iterate_items(sl, vgnames) {
+			if (sigint_caught())
+				return_ECMD_FAILED;
 			vg_name = sl->str;
 			if (is_orphan_vg(vg_name))
 				continue;	/* FIXME Unnecessary? */
@@ -611,8 +613,6 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 						  &arg_vgnames,
 						  flags, handle,
 					  	  ret_max, process_single_vg);
-			if (sigint_caught())
-				return ret_max;
 		}
 	}
 
@@ -628,14 +628,14 @@ int process_each_pv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 	struct pv_list *pvl;
 
 	dm_list_iterate_items(pvl, &vg->pvs) {
+		if (sigint_caught())
+			return_ECMD_FAILED;
 		if (tags && !dm_list_empty(tags) &&
 		    !str_list_match_list(tags, &pvl->pv->tags, NULL)) {
 			continue;
 		}
 		if ((ret = process_single_pv(cmd, vg, pvl->pv, handle)) > ret_max)
 			ret_max = ret;
-		if (sigint_caught())
-			return ret_max;
 	}
 
 	return ret_max;
@@ -650,12 +650,10 @@ static int _process_all_devs(struct cmd_context *cmd, void *handle,
 	struct device *dev;
 
 	int ret_max = ECMD_PROCESSED;
-	int ret = 0;
+	int ret;
 
-	if (!scan_vgs_for_pvs(cmd, 1)) {
-		stack;
-		return ECMD_FAILED;
-	}
+	if (!scan_vgs_for_pvs(cmd, 1))
+		return_ECMD_FAILED;
 
 	if (!(iter = dev_iter_create(cmd->filter, 1))) {
 		log_error("dev_iter creation failed");
@@ -663,6 +661,12 @@ static int _process_all_devs(struct cmd_context *cmd, void *handle,
 	}
 
 	while ((dev = dev_iter_get(iter))) {
+		if (sigint_caught()) {
+			ret_max = ECMD_FAILED;
+			stack;
+			break;
+		}
+
 		if (!(pv = pv_read(cmd, dev_name(dev), 0, 0))) {
 			memset(&pv_dummy, 0, sizeof(pv_dummy));
 			dm_list_init(&pv_dummy.tags);
@@ -670,14 +674,12 @@ static int _process_all_devs(struct cmd_context *cmd, void *handle,
 			pv_dummy.dev = dev;
 			pv = &pv_dummy;
 		}
+
 		ret = process_single_pv(cmd, NULL, pv, handle);
-
-		free_pv_fid(pv);
-
 		if (ret > ret_max)
 			ret_max = ret;
-		if (sigint_caught())
-			break;
+
+		free_pv_fid(pv);
 	}
 
 	dev_iter_destroy(iter);
@@ -718,6 +720,10 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 	if (argc) {
 		log_verbose("Using physical volume(s) on command line");
 		for (; opt < argc; opt++) {
+			if (sigint_caught()) {
+				ret_max = ECMD_FAILED;
+				goto_out;
+			}
 			dm_unescape_colons_and_at_signs(argv[opt], NULL, &at_sign);
 			if (at_sign && (at_sign == argv[opt])) {
 				tagname = at_sign + 1;
@@ -786,22 +792,22 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 			}
 
 			ret = process_single_pv(cmd, vg, pv, handle);
-
+			if (ret > ret_max)
+				ret_max = ret;
 			/*
 			 * Free PV only if we called pv_read before,
 			 * otherwise the PV structure is part of the VG.
 			 */
 			if (!vg)
 				free_pv_fid(pv);
-
-			if (ret > ret_max)
-				ret_max = ret;
-			if (sigint_caught())
-				goto out;
 		}
 		if (!dm_list_empty(&tags) && (vgnames = get_vgnames(cmd, 1)) &&
 			   !dm_list_empty(vgnames)) {
 			dm_list_iterate_items(sll, vgnames) {
+				if (sigint_caught()) {
+					ret_max = ECMD_FAILED;
+					goto_out;
+				}
 				vg = vg_read(cmd, sll->str, NULL, flags);
 				if (vg_read_error(vg)) {
 					ret_max = ECMD_FAILED;
@@ -813,31 +819,20 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 				ret = process_each_pv_in_vg(cmd, vg, &tags,
 							    handle,
 							    process_single_pv);
-
-				unlock_and_release_vg(cmd, vg, sll->str);
-
 				if (ret > ret_max)
 					ret_max = ret;
-				if (sigint_caught())
-					goto out;
+
+				unlock_and_release_vg(cmd, vg, sll->str);
 			}
 		}
 	} else {
 		if (vg) {
 			log_verbose("Using all physical volume(s) in "
 				    "volume group");
-			ret = process_each_pv_in_vg(cmd, vg, NULL, handle,
-						    process_single_pv);
-			if (ret > ret_max)
-				ret_max = ret;
-			if (sigint_caught())
-				goto out;
+			ret_max = process_each_pv_in_vg(cmd, vg, NULL, handle,
+							process_single_pv);
 		} else if (arg_count(cmd, all_ARG)) {
-			ret = _process_all_devs(cmd, handle, process_single_pv);
-			if (ret > ret_max)
-				ret_max = ret;
-			if (sigint_caught())
-				goto out;
+			ret_max = _process_all_devs(cmd, handle, process_single_pv);
 		} else {
 			log_verbose("Scanning for physical volume names");
 
@@ -846,13 +841,16 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 				goto bad;
 
 			dm_list_iterate_items(pvl, pvslist) {
+				if (sigint_caught()) {
+					ret_max = ECMD_FAILED;
+					goto_out;
+				}
 				ret = process_single_pv(cmd, NULL, pvl->pv,
 						     handle);
-				free_pv_fid(pvl->pv);
 				if (ret > ret_max)
 					ret_max = ret;
-				if (sigint_caught())
-					goto out;
+
+				free_pv_fid(pvl->pv);
 			}
 		}
 	}
@@ -1351,12 +1349,16 @@ int vg_refresh_visible(struct cmd_context *cmd, struct volume_group *vg)
 
 	sigint_allow();
 	dm_list_iterate_items(lvl, &vg->lvs) {
-		if (sigint_caught())
-			return_0;
+		if (sigint_caught()) {
+			r = 0;
+			stack;
+			break;
+		}
 
-		if (lv_is_visible(lvl->lv))
-			if (!lv_refresh(cmd, lvl->lv))
-				r = 0;
+		if (lv_is_visible(lvl->lv) && !lv_refresh(cmd, lvl->lv)) {
+			r = 0;
+			stack;
+		}
 	}
 
 	sigint_restore();

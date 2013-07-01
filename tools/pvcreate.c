@@ -108,14 +108,14 @@ int pvcreate(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	for (i = 0; i < argc; i++) {
+		if (sigint_caught())
+			return_ECMD_FAILED;
+
 		dm_unescape_colons_and_at_signs(argv[i], NULL, NULL);
 
 		if (ECMD_PROCESSED != pvcreate_locked(cmd, argv[i], &pp)) {
 			ret = ECMD_FAILED;
 		}
-
-		if (sigint_caught())
-			return ret;
 	}
 
 	return ret;

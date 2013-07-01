@@ -193,13 +193,16 @@ static int _pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
 			ret = ECMD_FAILED;
 			continue;
 		}
-
-		if (!lvmetad_pvscan_single(cmd, dev, handler)) {
+		if (sigint_caught()) {
 			ret = ECMD_FAILED;
+			stack;
 			break;
 		}
-		if (sigint_caught())
+		if (!lvmetad_pvscan_single(cmd, dev, handler)) {
+			ret = ECMD_FAILED;
+			stack;
 			break;
+		}
 	}
 
 	if (!devno_args)
@@ -232,14 +235,17 @@ static int _pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
 				dm_free(buf);
 			continue;
 		}
-
+		if (sigint_caught()) {
+			ret = ECMD_FAILED;
+			stack;
+			break;
+		}
 		if (!lvmetad_pvscan_single(cmd, dev, handler)) {
 			ret = ECMD_FAILED;
+			stack;
 			break;
 		}
 
-		if (sigint_caught())
-			break;
 	}
 
 out:

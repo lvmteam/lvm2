@@ -54,6 +54,9 @@ static void _catch_sigint(int unused __attribute__((unused)))
 }
 
 int sigint_caught(void) {
+	if (_sigint_caught)
+		log_error("Interrupted...");
+
 	return _sigint_caught;
 }
 

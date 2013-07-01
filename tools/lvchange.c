@@ -347,7 +347,7 @@ static int lvchange_resync(struct cmd_context *cmd, struct logical_volume *lv)
 			}
 
 			if (sigint_caught())
-				return 0;
+				return_0;
 
 			active = 1;
 		}
@@ -643,7 +643,7 @@ static int lvchange_persistent(struct cmd_context *cmd,
 		}
 
 		if (sigint_caught())
-			return 0;
+			return_0;
 
 		log_verbose("Ensuring %s is inactive.", lv->name);
 		if (!deactivate_lv(cmd, lv)) {

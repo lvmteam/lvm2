@@ -955,11 +955,13 @@ int lvmetad_pvscan_all_devs(struct cmd_context *cmd, activation_handler handler)
 	init_silent(1);
 
 	while ((dev = dev_iter_get(iter))) {
+		if (sigint_caught()) {
+			r = 0;
+			stack;
+			break;
+		}
 		if (!lvmetad_pvscan_single(cmd, dev, handler))
 			r = 0;
-
-		if (sigint_caught())
-			break;
 	}
 
 	init_silent(was_silent);

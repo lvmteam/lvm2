@@ -3252,7 +3252,7 @@ static int _request_confirmation(struct cmd_context *cmd,
 			return 0;
 		}
 		if (sigint_caught())
-			return 0;
+			return_0;
 	}
 
 	return 1;
