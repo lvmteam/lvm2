@@ -1,5 +1,7 @@
 Version 2.02.99 - 
 ===================================
+  liblvm/python API: Additions: PV create/removal/resize/listing
+  liblvm/python API: Additions: LV attr/origin/Thin pool/Thin LV creation
   Add vgs/lvs -o vg_profile/lv_profile to report profiles attached to VG/LV.
   Add default.profile configuration profile and install it on make install.
   Create a new 'conf' subdir for configuration files including profiles.
