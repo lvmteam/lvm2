@@ -13,15 +13,16 @@
 
 . lib/test
 
-aux prepare_vg 1
-lvcreate -n test -l 5 $vg
+#If you change this change the unit test case too.
+aux prepare_pvs 6
 
 #Locate the python binding library to use.
 python_lib=`find $abs_top_builddir -name lvm.so`
 if [ "$python_lib" != "" ]
 then
 	export PYTHONPATH=`dirname $python_lib`:$PYTHONPATH
-	python_lvm_unit.py
+	python_lvm_unit.py -v
+	#nemiver python ../api/python_lvm_unit.py -v -f
 else
 	echo "Unable to test python bindings as library not available"
 fi
