@@ -516,8 +516,7 @@ static int decode_lock_type(const char *response)
 	else if (!strcmp(response, "PR"))
 		return LCK_PREAD;
 
-	stack;
-	return 0;
+	return_0;
 }
 
 #ifdef CLUSTER_LOCKING_INTERNAL

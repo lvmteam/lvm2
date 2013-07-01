@@ -672,10 +672,8 @@ static int _children_suspended(struct dm_tree_node *node,
 		if (dlink->node->presuspend_node == node)
 			continue;
 
-		if (!(dinfo = dm_tree_node_get_info(dlink->node))) {
-			stack;	/* FIXME Is this normal? */
-			return 0;
-		}
+		if (!(dinfo = dm_tree_node_get_info(dlink->node)))
+			return_0;	/* FIXME Is this normal? */
 
 		if (!dinfo->suspended)
 			return 0;
@@ -920,10 +918,8 @@ static int _node_has_closed_parents(struct dm_tree_node *node,
 		if (!_uuid_prefix_matches(uuid, uuid_prefix, uuid_prefix_len))
 			continue;
 
-		if (!(dinfo = dm_tree_node_get_info(dlink->node))) {
-			stack;	/* FIXME Is this normal? */
-			return 0;
-		}
+		if (!(dinfo = dm_tree_node_get_info(dlink->node)))
+			return_0;	/* FIXME Is this normal? */
 
 		/* Refresh open_count */
 		if (!_info_by_dev(dinfo->major, dinfo->minor, 1, &info, NULL, NULL, NULL) ||

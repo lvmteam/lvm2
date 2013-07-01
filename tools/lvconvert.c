@@ -485,10 +485,8 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 		}
 
 		/* Default is never striped, regardless of existing LV configuration. */
-		if (!get_stripe_params(cmd, &lp->stripes, &lp->stripe_size)) {
-			stack;
-			return 0;
-		}
+		if (!get_stripe_params(cmd, &lp->stripes, &lp->stripe_size))
+			return_0;
 
 		lp->segtype = get_segtype_from_string(cmd, arg_str_value(cmd, type_ARG, find_config_tree_str(cmd, global_mirror_segtype_default_CFG)));
 		if (!lp->segtype)
@@ -1283,10 +1281,8 @@ static int _lvconvert_mirrors_aux(struct cmd_context *cmd,
 		 * linear-to-mirror conversion.
 		 */
 		if (!_lv_update_log_type(cmd, lp, lv,
-					 operable_pvs, new_log_count)) {
-			stack;
-			return 0;
-		}
+					 operable_pvs, new_log_count))
+			return_0;
 
 		/* Insert a temporary layer for syncing,
 		 * only if the original lv is using disk log. */
@@ -1314,8 +1310,8 @@ static int _lvconvert_mirrors_aux(struct cmd_context *cmd,
 					  "and dmsetup may be required.");
 				return 0;
 			}
-			stack;
-			return 0;
+
+			return_0;
 		}
 		if (seg->log_lv)
 			lv->status |= CONVERTING;
@@ -1356,10 +1352,8 @@ out:
 	 */
 	if ((lv->status & MIRRORED) && (old_log_count != new_log_count)) {
 		if (!_lv_update_log_type(cmd, lp, lv,
-					 operable_pvs, new_log_count)) {
-			stack;
-			return 0;
-		}
+					 operable_pvs, new_log_count))
+			return_0;
 	}
 
 out_skip_log_convert:

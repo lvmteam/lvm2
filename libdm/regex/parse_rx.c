@@ -303,10 +303,8 @@ static struct rx_node *_term(struct parse_sp *ps)
 
 	switch (ps->type) {
 	case 0:
-		if (!(n = _node(ps->mem, CHARSET, NULL, NULL))) {
-			stack;
-			return NULL;
-		}
+		if (!(n = _node(ps->mem, CHARSET, NULL, NULL)))
+			return_NULL;
 
 		dm_bit_copy(n->charset, ps->charset);
 		_rx_get_token(ps);	/* match charset */
@@ -354,10 +352,8 @@ static struct rx_node *_closure_term(struct parse_sp *ps)
 			return l;
 		}
 
-		if (!n) {
-			stack;
-			return NULL;
-		}
+		if (!n)
+			return_NULL;
 
 		_rx_get_token(ps);
 		l = n;

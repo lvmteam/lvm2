@@ -614,10 +614,8 @@ int dm_event_register_handler(const struct dm_event_handler *dmevh)
 	struct dm_task *dmt;
 	struct dm_event_daemon_message msg = { 0, 0, NULL };
 
-	if (!(dmt = _get_device_info(dmevh))) {
-		stack;
-		return 0;
-	}
+	if (!(dmt = _get_device_info(dmevh)))
+		return_0;
 
 	uuid = dm_task_get_uuid(dmt);
 
@@ -643,10 +641,8 @@ int dm_event_unregister_handler(const struct dm_event_handler *dmevh)
 	struct dm_task *dmt;
 	struct dm_event_daemon_message msg = { 0, 0, NULL };
 
-	if (!(dmt = _get_device_info(dmevh))) {
-		stack;
-		return 0;
-	}
+	if (!(dmt = _get_device_info(dmevh)))
+		return_0;
 
 	uuid = dm_task_get_uuid(dmt);
 

@@ -98,7 +98,7 @@ static int _pvsegs_sub_single(struct cmd_context *cmd,
 	if (!report_object(handle, vg, seg ? seg->lv : &_free_logical_volume, pvseg->pv,
 			   seg ? : &_free_lv_segment, pvseg)) {
 		ret = ECMD_FAILED;
-                goto_out;
+		goto_out;
 	}
 
  out:

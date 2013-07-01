@@ -87,10 +87,8 @@ int ttree_insert(struct ttree *tt, unsigned int *key, void *data)
 		count++;
 
 		while (count--) {
-			if (!(*c = _tree_node(tt->mem, k))) {
-				stack;
-				return 0;
-			}
+			if (!(*c = _tree_node(tt->mem, k)))
+				return_0;
 
 			if (count) {
 				k = *key++;
@@ -107,10 +105,8 @@ struct ttree *ttree_create(struct dm_pool *mem, unsigned int klen)
 {
 	struct ttree *tt;
 
-	if (!(tt = dm_pool_zalloc(mem, sizeof(*tt)))) {
-		stack;
-		return NULL;
-	}
+	if (!(tt = dm_pool_zalloc(mem, sizeof(*tt))))
+		return_NULL;
 
 	tt->klen = klen;
 	tt->mem = mem;

@@ -298,8 +298,7 @@ static struct volume_group *_vgsplit_to(struct cmd_context *cmd,
 
 		if (vg_read_error(vg_to)) {
 			release_vg(vg_to);
-			stack;
-			return NULL;
+			return_NULL;
 		}
 
 	} else if (vg_read_error(vg_to) == SUCCESS) {

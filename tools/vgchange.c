@@ -246,10 +246,8 @@ static int _vgchange_refresh(struct cmd_context *cmd, struct volume_group *vg)
 {
 	log_verbose("Refreshing volume group \"%s\"", vg->name);
 
-	if (!vg_refresh_visible(cmd, vg)) {
-		stack;
-		return 0;
-	}
+	if (!vg_refresh_visible(cmd, vg))
+		return_0;
 
 	return 1;
 }

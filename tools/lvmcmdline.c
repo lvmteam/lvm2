@@ -1123,7 +1123,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 
 	if (!init_locking(locking_type, cmd, arg_count(cmd, sysinit_ARG))) {
 		ret = ECMD_FAILED;
-		goto out;
+		goto_out;
 	}
 
 	ret = cmd->command->fn(cmd, argc, argv);
@@ -1539,7 +1539,7 @@ int lvm2_main(int argc, char **argv)
 		}
 		_exec_lvm1_command(argv);
 		ret = ECMD_FAILED;
-		goto out;
+		goto_out;
 	}
 #ifdef READLINE_SUPPORT
 	if (!alias && argc == 1) {

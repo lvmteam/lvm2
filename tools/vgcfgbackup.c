@@ -65,7 +65,6 @@ static int vg_backup_single(struct cmd_context *cmd, const char *vg_name,
 		if (vg_read_error(vg) == FAILED_INCONSISTENT) {
 			log_error("No backup taken: specify filename with -f "
 				  "to backup an inconsistent VG");
-			stack;
 			return ECMD_FAILED;
 		}
 
@@ -76,6 +75,7 @@ static int vg_backup_single(struct cmd_context *cmd, const char *vg_name,
 	}
 
 	log_print_unless_silent("Volume group \"%s\" successfully backed up.", vg_name);
+
 	return ECMD_PROCESSED;
 }
 
