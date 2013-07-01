@@ -950,84 +950,66 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 	/* access permission change */
 	if (arg_count(cmd, permission_ARG)) {
-		if (!archive(lv->vg)) {
-			stack;
-			return ECMD_FAILED;
-		}
+		if (!archive(lv->vg))
+			return_ECMD_FAILED;
 		doit += lvchange_permission(cmd, lv);
 		docmds++;
 	}
 
 	/* allocation policy change */
 	if (arg_count(cmd, contiguous_ARG) || arg_count(cmd, alloc_ARG)) {
-		if (!archive(lv->vg)) {
-			stack;
-			return ECMD_FAILED;
-		}
+		if (!archive(lv->vg))
+			return_ECMD_FAILED;
 		doit += lvchange_alloc(cmd, lv);
 		docmds++;
 	}
 
 	/* read ahead sector change */
 	if (arg_count(cmd, readahead_ARG)) {
-		if (!archive(lv->vg)) {
-			stack;
-			return ECMD_FAILED;
-		}
+		if (!archive(lv->vg))
+			return_ECMD_FAILED;
 		doit += lvchange_readahead(cmd, lv);
 		docmds++;
 	}
 
 	/* persistent device number change */
 	if (arg_count(cmd, persistent_ARG)) {
-		if (!archive(lv->vg)) {
-			stack;
-			return ECMD_FAILED;
-		}
+		if (!archive(lv->vg))
+			return_ECMD_FAILED;
 		doit += lvchange_persistent(cmd, lv);
 		docmds++;
-		if (sigint_caught()) {
-			stack;
-			return ECMD_FAILED;
-		}
+		if (sigint_caught())
+			return_ECMD_FAILED;
 	}
 
 	if (arg_count(cmd, discards_ARG) ||
 	    arg_count(cmd, zero_ARG)) {
-		if (!archive(lv->vg)) {
-			stack;
-			return ECMD_FAILED;
-		}
+		if (!archive(lv->vg))
+			return_ECMD_FAILED;
 		doit += lvchange_pool_update(cmd, lv);
 		docmds++;
 	}
 
 	/* add tag */
 	if (arg_count(cmd, addtag_ARG)) {
-		if (!archive(lv->vg)) {
-			stack;
-			return ECMD_FAILED;
-		}
+		if (!archive(lv->vg))
+			return_ECMD_FAILED;
 		doit += lvchange_tag(cmd, lv, addtag_ARG);
 		docmds++;
 	}
 
 	/* del tag */
 	if (arg_count(cmd, deltag_ARG)) {
-		if (!archive(lv->vg)) {
-			stack;
-			return ECMD_FAILED;
-		}
+		if (!archive(lv->vg))
+			return_ECMD_FAILED;
 		doit += lvchange_tag(cmd, lv, deltag_ARG);
 		docmds++;
 	}
 
 	/* change writemostly/writebehind */
 	if (arg_count(cmd, writemostly_ARG) || arg_count(cmd, writebehind_ARG)) {
-		if (!archive(lv->vg)) {
-			stack;
-			return ECMD_FAILED;
-		}
+		if (!archive(lv->vg))
+			return_ECMD_FAILED;
 		doit += lvchange_writemostly(lv);
 		docmds++;
 	}
@@ -1035,10 +1017,8 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 	/* change [min|max]_recovery_rate */
 	if (arg_count(cmd, minrecoveryrate_ARG) ||
 	    arg_count(cmd, maxrecoveryrate_ARG)) {
-		if (!archive(lv->vg)) {
-			stack;
-			return ECMD_FAILED;
-		}
+		if (!archive(lv->vg))
+			return_ECMD_FAILED;
 		doit += lvchange_recovery_rate(lv);
 		docmds++;
 	}
@@ -1046,55 +1026,33 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 	if (doit)
 		log_print_unless_silent("Logical volume \"%s\" changed.", lv->name);
 
-	if (arg_count(cmd, resync_ARG))
-		if (!lvchange_resync(cmd, lv)) {
-			stack;
-			return ECMD_FAILED;
-		}
+	if (arg_count(cmd, resync_ARG) &&
+	    !lvchange_resync(cmd, lv))
+		return_ECMD_FAILED;
 
-	if (arg_count(cmd, syncaction_ARG)) {
-		if (!lv_raid_message(lv, arg_str_value(cmd, syncaction_ARG, NULL))) {
-			stack;
-			return ECMD_FAILED;
-		}
-	}
+	if (arg_count(cmd, syncaction_ARG) &&
+	    !lv_raid_message(lv, arg_str_value(cmd, syncaction_ARG, NULL)))
+		return_ECMD_FAILED;
 
 	/* activation change */
 	if (arg_count(cmd, activate_ARG)) {
-		if (!_lvchange_activate(cmd, lv)) {
-			stack;
-			return ECMD_FAILED;
-		}
+		if (!_lvchange_activate(cmd, lv))
+			return_ECMD_FAILED;
+	} else if (arg_count(cmd, refresh_ARG)) {
+		if (!lvchange_refresh(cmd, lv))
+			return_ECMD_FAILED;
+	} else {
+		if (arg_count(cmd, monitor_ARG) &&
+		    !lvchange_monitoring(cmd, lv))
+			return_ECMD_FAILED;
+
+		if (arg_count(cmd, poll_ARG) &&
+		    !lvchange_background_polling(cmd, lv))
+			return_ECMD_FAILED;
 	}
 
-	if (arg_count(cmd, refresh_ARG))
-		if (!lvchange_refresh(cmd, lv)) {
-			stack;
-			return ECMD_FAILED;
-		}
-
-	if (!arg_count(cmd, activate_ARG) &&
-	    !arg_count(cmd, refresh_ARG) &&
-	    arg_count(cmd, monitor_ARG)) {
-		if (!lvchange_monitoring(cmd, lv)) {
-			stack;
-			return ECMD_FAILED;
-		}
-	}
-
-	if (!arg_count(cmd, activate_ARG) &&
-	    !arg_count(cmd, refresh_ARG) &&
-	    arg_count(cmd, poll_ARG)) {
-		if (!lvchange_background_polling(cmd, lv)) {
-			stack;
-			return ECMD_FAILED;
-		}
-	}
-
-	if (doit != docmds) {
-		stack;
-		return ECMD_FAILED;
-	}
+	if (doit != docmds)
+		return_ECMD_FAILED;
 
 	return ECMD_PROCESSED;
 }

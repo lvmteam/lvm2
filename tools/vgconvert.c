@@ -30,10 +30,8 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 	struct lvinfo info;
 	int active = 0;
 
-	if (!vg_check_status(vg, LVM_WRITE | EXPORTED_VG)) {
-		stack;
-		return ECMD_FAILED;
-	}
+	if (!vg_check_status(vg, LVM_WRITE | EXPORTED_VG))
+		return_ECMD_FAILED;
 
 	if (vg->fid->fmt == cmd->fmt) {
 		log_error("Volume group \"%s\" already uses format %s",
@@ -113,10 +111,8 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 		}
 	}
 
-	if (active) {
-		stack;
-		return ECMD_FAILED;
-	}
+	if (active)
+		return_ECMD_FAILED;
 
 	dm_list_iterate_items(pvl, &vg->pvs) {
 		existing_pv = pvl->pv;

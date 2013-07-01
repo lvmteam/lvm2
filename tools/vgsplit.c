@@ -384,11 +384,8 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		lock_vg_from_first = 0;
 
 	if (lock_vg_from_first) {
-		vg_from = _vgsplit_from(cmd, vg_name_from);
-		if (!vg_from) {
-			stack;
-			return ECMD_FAILED;
-		}
+		if (!(vg_from = _vgsplit_from(cmd, vg_name_from)))
+			return_ECMD_FAILED;
 		/*
 		 * Set metadata format of original VG.
 		 * NOTE: We must set the format before calling vg_create()
@@ -396,23 +393,17 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		 */
 		cmd->fmt = vg_from->fid->fmt;
 
-		vg_to = _vgsplit_to(cmd, vg_name_to, &existing_vg);
-		if (!vg_to) {
+		if (!(vg_to = _vgsplit_to(cmd, vg_name_to, &existing_vg))) {
 			unlock_and_release_vg(cmd, vg_from, vg_name_from);
-			stack;
-			return ECMD_FAILED;
+			return_ECMD_FAILED;
 		}
 	} else {
-		vg_to = _vgsplit_to(cmd, vg_name_to, &existing_vg);
-		if (!vg_to) {
-			stack;
-			return ECMD_FAILED;
-		}
-		vg_from = _vgsplit_from(cmd, vg_name_from);
-		if (!vg_from) {
+		if (!(vg_to = _vgsplit_to(cmd, vg_name_to, &existing_vg)))
+			return_ECMD_FAILED;
+
+		if (!(vg_from = _vgsplit_from(cmd, vg_name_from))) {
 			unlock_and_release_vg(cmd, vg_to, vg_name_to);
-			stack;
-			return ECMD_FAILED;
+			return_ECMD_FAILED;
 		}
 
 		if (cmd->fmt != vg_from->fid->fmt) {

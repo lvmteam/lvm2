@@ -321,10 +321,8 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 		vgname = strl->str;
 		dm_list_init(&cmd_vgs);
 		if (!(cvl_vg = cmd_vg_add(cmd->mem, &cmd_vgs,
-					  vgname, NULL, flags))) {
-			stack;
-			return ECMD_FAILED;
-		}
+					  vgname, NULL, flags)))
+			return_ECMD_FAILED;
 
 		if (!cmd_vg_read(cmd, &cmd_vgs)) {
 			free_cmd_vgs(&cmd_vgs);

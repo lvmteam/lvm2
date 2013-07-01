@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2013 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -464,22 +464,16 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 
 	for (i = 0; _vgchange_args[i].arg >= 0; i++) {
 		if (arg_count(cmd, _vgchange_args[i].arg)) {
-			if (!archive(vg)) {
-				stack;
-				return ECMD_FAILED;
-			}
-			if (!_vgchange_args[i].fn(cmd, vg)) {
-				stack;
-				return ECMD_FAILED;
-			}
+			if (!archive(vg))
+				return_ECMD_FAILED;
+			if (!_vgchange_args[i].fn(cmd, vg))
+				return_ECMD_FAILED;
 		}
 	}
 
 	if (vg_is_archived(vg)) {
-		if (!vg_write(vg) || !vg_commit(vg)) {
-			stack;
-			return ECMD_FAILED;
-		}
+		if (!vg_write(vg) || !vg_commit(vg))
+			return_ECMD_FAILED;
 
 		backup(vg);
 
@@ -489,13 +483,13 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 	if (arg_count(cmd, activate_ARG)) {
 		if (!vgchange_activate(cmd, vg, (activation_change_t)
 				       arg_uint_value(cmd, activate_ARG, CHANGE_AY)))
-			return ECMD_FAILED;
+			return_ECMD_FAILED;
 	}
 
 	if (arg_count(cmd, refresh_ARG)) {
 		/* refreshes the visible LVs (which starts polling) */
 		if (!_vgchange_refresh(cmd, vg))
-			return ECMD_FAILED;
+			return_ECMD_FAILED;
 	}
 
 	if (!arg_count(cmd, activate_ARG) &&
@@ -503,13 +497,13 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 	    arg_count(cmd, monitor_ARG)) {
 		/* -ay* will have already done monitoring changes */
 		if (!_vgchange_monitoring(cmd, vg))
-			return ECMD_FAILED;
+			return_ECMD_FAILED;
 	}
 
 	if (!arg_count(cmd, refresh_ARG) &&
 	    background_polling())
 		if (!_vgchange_background_polling(cmd, vg))
-			return ECMD_FAILED;
+			return_ECMD_FAILED;
 
         return ECMD_PROCESSED;
 }

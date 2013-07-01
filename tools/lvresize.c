@@ -533,7 +533,7 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 			return ECMD_FAILED;
 		}
 		if (!_adjust_policy_params(cmd, lv, lp))
-			return ECMD_FAILED;
+			return_ECMD_FAILED;
 	}
 
 	if (!lv_is_visible(lv) &&
@@ -576,10 +576,8 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 	}
 
 	if (!(pvh = lp->argc ? create_pv_list(cmd->mem, vg, lp->argc,
-						     lp->argv, 1) : &vg->pvs)) {
-		stack;
-		return ECMD_FAILED;
-	}
+						     lp->argv, 1) : &vg->pvs))
+		return_ECMD_FAILED;
 
 	if (lp->sizeargs) { /* TODO: reindent or move to function */
 
@@ -891,10 +889,8 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 
 	/* Request confirmation before operations that are often mistakes. */
 	if ((lp->resizefs || (lp->resize == LV_REDUCE)) &&
-	    !_request_confirmation(cmd, vg, lv, lp)) {
-		stack;
-		return ECMD_FAILED;
-	}
+	    !_request_confirmation(cmd, vg, lv, lp))
+		return_ECMD_FAILED;
 
 	if (lp->resizefs) {
 		if (!lp->nofsck &&
@@ -913,10 +909,8 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 		}
 	}
 
-	if (!archive(vg)) {
-		stack;
-		return ECMD_FAILED;
-	}
+	if (!archive(vg))
+		return_ECMD_FAILED;
 
 	log_print_unless_silent("%sing logical volume %s to %s",
 				(lp->resize == LV_REDUCE) ? "Reduc" : "Extend",
@@ -924,19 +918,15 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 				display_size(cmd, (uint64_t) lp->extents * vg->extent_size));
 
 	if (lp->resize == LV_REDUCE) {
-		if (!lv_reduce(lv, lv->le_count - lp->extents)) {
-			stack;
+		if (!lv_reduce(lv, lv->le_count - lp->extents))
 			return ECMD_FAILED;
-		}
 	} else if ((lp->extents > lv->le_count) && /* Ensure we extend */
 		   !lv_extend(lv, lp->segtype,
 			      lp->stripes, lp->stripe_size,
 			      lp->mirrors, first_seg(lv)->region_size,
 			      lp->extents - lv->le_count, NULL,
-			      pvh, alloc)) {
-		stack;
-		return ECMD_FAILED;
-	}
+			      pvh, alloc))
+		return_ECMD_FAILED;
 
 	/* If thin metadata, must suspend thin pool */
 	if (lv_is_thin_pool_metadata(lv)) {
@@ -952,10 +942,9 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 
 	if (lp->poolmetadatasize) {
 metadata_resize:
-		if (!(status = _lvresize_poolmetadata(cmd, vg, lp, lv, pvh, alloc))) {
-			stack;
-			return ECMD_FAILED;
-		} else if ((status == 2) && !lp->sizeargs)
+		if (!(status = _lvresize_poolmetadata(cmd, vg, lp, lv, pvh, alloc)))
+			return_ECMD_FAILED;
+		else if ((status == 2) && !lp->sizeargs)
 			return ECMD_PROCESSED;
 		lock_lv = lv;
 	}
@@ -964,10 +953,8 @@ metadata_resize:
 		return ECMD_PROCESSED; /* Nothing to do */
 
 	/* store vg on disk(s) */
-	if (!vg_write(vg)) {
-		stack;
-		return ECMD_FAILED;
-	}
+	if (!vg_write(vg))
+		return_ECMD_FAILED;
 
 	if (!suspend_lv(cmd, lock_lv)) {
 		log_error("Failed to suspend %s", lock_lv->name);
@@ -1005,18 +992,14 @@ metadata_resize:
 	 * FIXME: Activate only when thin volume is active
 	 */
 	if (lv_is_thin_pool(lv) &&
-	    !update_pool_lv(lv, !lv_is_active(lv))) {
-		stack;
-		return ECMD_FAILED;
-	}
+	    !update_pool_lv(lv, !lv_is_active(lv)))
+		return_ECMD_FAILED;
 
 	log_print_unless_silent("Logical volume %s successfully resized", lp->lv_name);
 
 	if (lp->resizefs && (lp->resize == LV_EXTEND) &&
-	    !_fsadm_cmd(cmd, vg, lp, FSADM_CMD_RESIZE, NULL)) {
-		stack;
-		return ECMD_FAILED;
-	}
+	    !_fsadm_cmd(cmd, vg, lp, FSADM_CMD_RESIZE, NULL))
+		return_ECMD_FAILED;
 
 	return ECMD_PROCESSED;
 }
@@ -1034,8 +1017,7 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 	vg = vg_read_for_update(cmd, lp.vg_name, NULL, 0);
 	if (vg_read_error(vg)) {
 		release_vg(vg);
-		stack;
-		return ECMD_FAILED;
+		return_ECMD_FAILED;
 	}
 
 	if (!(r = _lvresize(cmd, vg, &lp)))

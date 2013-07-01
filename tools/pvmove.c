@@ -527,8 +527,7 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 	vg = _get_vg(cmd, pv_vg_name(pv));
 	if (vg_read_error(vg)) {
 		release_vg(vg);
-		stack;
-		return ECMD_FAILED;
+		return_ECMD_FAILED;
 	}
 
 	exclusive = _pvmove_is_exclusive(cmd, vg);

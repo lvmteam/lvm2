@@ -85,10 +85,8 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	if (!apply_lvname_restrictions(lv_name_new)) {
-		stack;
-		return ECMD_FAILED;
-	}
+	if (!apply_lvname_restrictions(lv_name_new))
+		return_ECMD_FAILED;
 
 	if (!validate_name(lv_name_new)) {
 		log_error("New logical volume name \"%s\" is invalid",
@@ -105,8 +103,7 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 	vg = vg_read_for_update(cmd, vg_name, NULL, 0);
 	if (vg_read_error(vg)) {
 		release_vg(vg);
-		stack;
-		return ECMD_FAILED;
+		return_ECMD_FAILED;
 	}
 
 	if (!(lvl = find_lv_in_vg(vg, lv_name_old))) {

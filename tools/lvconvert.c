@@ -2303,10 +2303,9 @@ static int _lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 			log_error("Unable to merge invalidated snapshot LV \"%s\"", lv->name);
 			return ECMD_FAILED;
 		}
-		if (!archive(lv->vg)) {
-			stack;
-			return ECMD_FAILED;
-		}
+		if (!archive(lv->vg))
+			return_ECMD_FAILED;
+
 		if (!lvconvert_merge(cmd, lv, lp)) {
 			log_error("Unable to merge LV \"%s\" into its origin.", lv->name);
 			return ECMD_FAILED;
@@ -2316,38 +2315,29 @@ static int _lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 			log_error("Unable to convert mirrored LV \"%s\" into a snapshot.", lv->name);
 			return ECMD_FAILED;
 		}
-		if (!archive(lv->vg)) {
-			stack;
-			return ECMD_FAILED;
-		}
-		if (!lvconvert_snapshot(cmd, lv, lp)) {
-			stack;
-			return ECMD_FAILED;
-		}
+		if (!archive(lv->vg))
+			return_ECMD_FAILED;
+
+		if (!lvconvert_snapshot(cmd, lv, lp))
+			return_ECMD_FAILED;
+
 	} else if (arg_count(cmd, thinpool_ARG)) {
-		if (!archive(lv->vg)) {
-			stack;
-			return ECMD_FAILED;
-		}
-		if (!_lvconvert_thinpool(cmd, lv, lp)) {
-			stack;
-			return ECMD_FAILED;
-		}
+		if (!archive(lv->vg))
+			return_ECMD_FAILED;
+
+		if (!_lvconvert_thinpool(cmd, lv, lp))
+			return_ECMD_FAILED;
+
 	} else if (segtype_is_raid(lp->segtype) ||
 		   (lv->status & RAID) || lp->merge_mirror) {
-		if (!archive(lv->vg)) {
-			stack;
-			return ECMD_FAILED;
-		}
-		if (!lvconvert_raid(lv, lp)) {
-			stack;
-			return ECMD_FAILED;
-		}
+		if (!archive(lv->vg))
+			return_ECMD_FAILED;
 
-		if (!(failed_pvs = _failed_pv_list(lv->vg))) {
-			stack;
-			return ECMD_FAILED;
-		}
+		if (!lvconvert_raid(lv, lp))
+			return_ECMD_FAILED;
+
+		if (!(failed_pvs = _failed_pv_list(lv->vg)))
+			return_ECMD_FAILED;
 
 		/* If repairing and using policies, remove missing PVs from VG */
 		if (arg_count(cmd, repair_ARG) && arg_count(cmd, use_policies_ARG))
@@ -2355,19 +2345,14 @@ static int _lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 	} else if (arg_count(cmd, mirrors_ARG) ||
 		   arg_count(cmd, splitmirrors_ARG) ||
 		   (lv->status & MIRRORED)) {
-		if (!archive(lv->vg)) {
-			stack;
-			return ECMD_FAILED;
-		}
-		if (!_lvconvert_mirrors(cmd, lv, lp)) {
-			stack;
-			return ECMD_FAILED;
-		}
+		if (!archive(lv->vg))
+			return_ECMD_FAILED;
 
-		if (!(failed_pvs = _failed_pv_list(lv->vg))) {
-			stack;
-			return ECMD_FAILED;
-		}
+		if (!_lvconvert_mirrors(cmd, lv, lp))
+			return_ECMD_FAILED;
+
+		if (!(failed_pvs = _failed_pv_list(lv->vg)))
+			return_ECMD_FAILED;
 
 		/* If repairing and using policies, remove missing PVs from VG */
 		if (arg_count(cmd, repair_ARG) && arg_count(cmd, use_policies_ARG))
