@@ -7,6 +7,7 @@ Version 2.02.99 -
   Support changing VG/LV profiles: vgchange/lvchange --profile/--detachprofile.
   Support storing profile name in metadata for both VGs and LVs.
   Add new --profile command line arg to select a configuration profile for use.
+  Add config/profile_dir to set working directory to load profiles from.
   Add configure --with-default-profile-subdir to select dir to keep profiles in.
   Add support for configuration profiles.
   Introduce config_source wrapper for identification of configuration sources.
