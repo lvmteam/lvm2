@@ -111,6 +111,19 @@ static int _modules_disp(struct dm_report *rh, struct dm_pool *mem,
 	return 1;
 }
 
+static int _lvprofile_disp(struct dm_report *rh, struct dm_pool *mem,
+			   struct dm_report_field *field,
+			   const void *data, void *private)
+{
+	const struct logical_volume *lv = (const struct logical_volume *) data;
+
+	if (lv->profile)
+		return dm_report_field_string(rh, field, &lv->profile->name);
+
+	dm_report_field_set_value(field, "", NULL);
+	return 1;
+}
+
 static int _vgfmt_disp(struct dm_report *rh, struct dm_pool *mem,
 		       struct dm_report_field *field,
 		       const void *data, void *private)
@@ -758,6 +771,19 @@ static int _vgmdacopies_disp(struct dm_report *rh, struct dm_pool *mem,
 	}
 
 	return _uint32_disp(rh, mem, field, &count, private);
+}
+
+static int _vgprofile_disp(struct dm_report *rh, struct dm_pool *mem,
+			   struct dm_report_field *field,
+			   const void *data, void *private)
+{
+	const struct volume_group *vg = (const struct volume_group *) data;
+
+	if (vg->profile)
+		return dm_report_field_string(rh, field, &vg->profile->name);
+
+	dm_report_field_set_value(field, "", NULL);
+	return 1;
 }
 
 static int _pvmdafree_disp(struct dm_report *rh, struct dm_pool *mem,

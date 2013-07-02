@@ -155,6 +155,7 @@ uint32_t vg_mda_count(const struct volume_group *vg);
 uint32_t vg_mda_used_count(const struct volume_group *vg);
 uint32_t vg_mda_copies(const struct volume_group *vg);
 int vg_set_mda_copies(struct volume_group *vg, uint32_t mda_copies);
+char *vg_profile_dup(const struct volume_group *vg);
 
 /*
  * Returns visible LV count - number of LVs from user perspective

@@ -785,6 +785,12 @@ char *lv_active_dup(struct dm_pool *mem, const struct logical_volume *lv)
 	return dm_pool_strdup(mem, s);
 }
 
+char *lv_profile_dup(struct dm_pool *mem, const struct logical_volume *lv)
+{
+	const char *profile_name = lv->profile ? lv->profile->name : "";
+	return dm_pool_strdup(mem, profile_name);
+}
+
 /* For given LV find recursively the LV which holds lock for it */
 const struct logical_volume *lv_lock_holder(const struct logical_volume *lv)
 {

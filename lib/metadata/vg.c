@@ -267,6 +267,12 @@ int vg_set_mda_copies(struct volume_group *vg, uint32_t mda_copies)
 	return 1;
 }
 
+char *vg_profile_dup(const struct volume_group *vg)
+{
+	const char *profile_name = vg->profile ? vg->profile->name : "";
+	return dm_pool_strdup(vg->vgmem, profile_name);
+}
+
 static int _recalc_extents(uint32_t *extents, const char *desc1,
 			   const char *desc2, uint32_t old_size,
 			   uint32_t new_size)
