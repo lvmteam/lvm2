@@ -1,5 +1,15 @@
 Version 2.02.99 - 
 ===================================
+  Add vgs/lvs -o vg_profile/lv_profile to report profiles attached to VG/LV.
+  Add default.profile configuration profile and install it on make install.
+  Create a new 'conf' subdir for configuration files including profiles.
+  Make selected thinp settings customizable by a profile.
+  Support changing VG/LV profiles: vgchange/lvchange --profile/--detachprofile.
+  Support storing profile name in metadata for both VGs and LVs.
+  Add new --profile command line arg to select a configuration profile for use.
+  Add configure --with-default-profile-subdir to select dir to keep profiles in.
+  Add support for configuration profiles.
+  Introduce config_source wrapper for identification of configuration sources.
   Avoid creation of multiple archives for one command.
   Use mirror_segtype_default if type not specified for linear->mirror upconvert.
   Fix use of too big chunks of memory when communication with lvmetad.
