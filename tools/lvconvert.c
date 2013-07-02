@@ -2413,7 +2413,7 @@ static int lvconvert_single(struct cmd_context *cmd, struct lvconvert_params *lp
 			     &lp->passed_args, &lp->chunk_size,
 			     &lp->discards, &lp->poolmetadata_size,
 			     &lp->zero))
-		goto_out;
+		goto_bad;
 
 	/*
 	 * lp->pvh holds the list of PVs available for allocation or removal
