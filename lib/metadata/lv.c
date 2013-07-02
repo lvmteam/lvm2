@@ -169,7 +169,7 @@ uint64_t lvseg_chunksize(const struct lv_segment *seg)
 	uint64_t size;
 
 	if (lv_is_cow(seg->lv))
-		size = (uint64_t) find_cow(seg->lv)->chunk_size;
+		size = (uint64_t) find_snapshot(seg->lv)->chunk_size;
 	else if (seg_is_thin_pool(seg))
 		size = (uint64_t) seg->chunk_size;
 	else
@@ -324,7 +324,7 @@ uint64_t lv_origin_size(const struct logical_volume *lv)
 	struct lv_segment *seg;
 
 	if (lv_is_cow(lv))
-		return (uint64_t) find_cow(lv)->len * lv->vg->extent_size;
+		return (uint64_t) find_snapshot(lv)->len * lv->vg->extent_size;
 
 	if (lv_is_thin_volume(lv) && (seg = first_seg(lv)) &&
 	    seg->external_lv)

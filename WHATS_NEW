@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Rename snapshot segment returning methods from find_*_cow to find_*_snapshot.
   liblvm/python API: Additions: PV create/removal/resize/listing
   liblvm/python API: Additions: LV attr/origin/Thin pool/Thin LV creation
   Add vgs/lvs -o vg_profile/lv_profile to report profiles attached to VG/LV.

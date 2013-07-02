@@ -603,7 +603,7 @@ static int _finish_lvconvert_merge(struct cmd_context *cmd,
 				   struct logical_volume *lv,
 				   struct dm_list *lvs_changed __attribute__((unused)))
 {
-	struct lv_segment *snap_seg = find_merging_cow(lv);
+	struct lv_segment *snap_seg = find_merging_snapshot(lv);
 	if (!snap_seg) {
 		log_error("Logical volume %s has no merging snapshot.", lv->name);
 		return 0;
@@ -1784,7 +1784,7 @@ static int lvconvert_merge(struct cmd_context *cmd,
 	int r = 0;
 	int merge_on_activate = 0;
 	struct logical_volume *origin = origin_from_cow(lv);
-	struct lv_segment *cow_seg = find_cow(lv);
+	struct lv_segment *snap_seg = find_snapshot(lv);
 	struct lvinfo info;
 
 	/* Check if merge is possible */
@@ -1794,7 +1794,7 @@ static int lvconvert_merge(struct cmd_context *cmd,
 	}
 	if (lv_is_merging_origin(origin)) {
 		log_error("Snapshot %s is already merging into the origin",
-			  find_merging_cow(origin)->cow->name);
+			  find_merging_snapshot(origin)->cow->name);
 		return 0;
 	}
 
@@ -1821,7 +1821,7 @@ static int lvconvert_merge(struct cmd_context *cmd,
 		}
 	}
 
-	if (!init_snapshot_merge(cow_seg, origin)) {
+	if (!init_snapshot_merge(snap_seg, origin)) {
 		log_error("Can't initialize snapshot merge. "
 			  "Missing support in kernel?");
 		return_0;

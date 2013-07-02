@@ -74,7 +74,7 @@ int list_segment_modules(struct dm_pool *mem, const struct lv_segment *seg,
 				return_0;
 
 	if (lv_is_cow(seg->lv)) {
-		snap_seg = find_cow(seg->lv);
+		snap_seg = find_snapshot(seg->lv);
 		if (snap_seg->segtype->ops->modules_needed &&
 		    !snap_seg->segtype->ops->modules_needed(mem, snap_seg,
 							    modules)) {

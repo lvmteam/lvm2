@@ -801,10 +801,10 @@ int lv_is_visible(const struct logical_volume *lv);
 
 int pv_is_in_vg(struct volume_group *vg, struct physical_volume *pv);
 
-struct lv_segment *find_merging_cow(const struct logical_volume *origin);
+struct lv_segment *find_merging_snapshot(const struct logical_volume *origin);
 
 /* Given a cow LV, return return the snapshot lv_segment that uses it */
-struct lv_segment *find_cow(const struct logical_volume *lv);
+struct lv_segment *find_snapshot(const struct logical_volume *lv);
 
 /* Given a cow LV, return its origin */
 struct logical_volume *origin_from_cow(const struct logical_volume *lv);
@@ -812,7 +812,7 @@ struct logical_volume *origin_from_cow(const struct logical_volume *lv);
 void init_snapshot_seg(struct lv_segment *seg, struct logical_volume *origin,
 		       struct logical_volume *cow, uint32_t chunk_size, int merge);
 
-int init_snapshot_merge(struct lv_segment *cow_seg, struct logical_volume *origin);
+int init_snapshot_merge(struct lv_segment *snap_seg, struct logical_volume *origin);
 
 void clear_snapshot_merge(struct logical_volume *origin);
 

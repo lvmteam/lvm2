@@ -70,7 +70,7 @@ uint32_t cow_max_extents(const struct logical_volume *origin, uint32_t chunk_siz
 int lv_is_cow_covering_origin(const struct logical_volume *lv)
 {
 	return lv_is_cow(lv) &&
-		(lv->size >= _cow_max_size(origin_from_cow(lv)->size, find_cow(lv)->chunk_size));
+		(lv->size >= _cow_max_size(origin_from_cow(lv)->size, find_snapshot(lv)->chunk_size));
 }
 
 int lv_is_visible(const struct logical_volume *lv)
@@ -101,22 +101,21 @@ int lv_is_merging_origin(const struct logical_volume *origin)
 	return (origin->status & MERGING) ? 1 : 0;
 }
 
-struct lv_segment *find_merging_cow(const struct logical_volume *origin)
+struct lv_segment *find_merging_snapshot(const struct logical_volume *origin)
 {
 	if (!lv_is_merging_origin(origin))
 		return NULL;
 
-	return find_cow(origin);
+	return find_snapshot(origin);
 }
 
 int lv_is_merging_cow(const struct logical_volume *snapshot)
 {
 	/* checks lv_segment's status to see if cow is merging */
-	return (find_cow(snapshot)->status & MERGING) ? 1 : 0;
+	return (find_snapshot(snapshot)->status & MERGING) ? 1 : 0;
 }
 
-/* Given a cow LV, return the snapshot lv_segment that uses it */
-struct lv_segment *find_cow(const struct logical_volume *lv)
+struct lv_segment *find_snapshot(const struct logical_volume *lv)
 {
 	return lv->snapshot;
 }
@@ -153,27 +152,27 @@ void init_snapshot_seg(struct lv_segment *seg, struct logical_volume *origin,
 	dm_list_add(&origin->snapshot_segs, &seg->origin_list);
 }
 
-int init_snapshot_merge(struct lv_segment *cow_seg,
+int init_snapshot_merge(struct lv_segment *snap_seg,
 			struct logical_volume *origin)
 {
 	/*
-	 * Even though lv_is_visible(cow_seg->lv) returns 0,
-	 * the cow_seg->lv (name: snapshotX) is _not_ hidden;
+	 * Even though lv_is_visible(snap_seg->lv) returns 0,
+	 * the snap_seg->lv (name: snapshotX) is _not_ hidden;
 	 * this is part of the lvm2 snapshot fiction.  Must
 	 * clear VISIBLE_LV directly (lv_set_visible can't)
-	 * - cow_seg->lv->status is used to control whether 'lv'
+	 * - snap_seg->lv->status is used to control whether 'lv'
 	 *   (with user provided snapshot LV name) is visible
 	 * - this also enables vg_validate() to succeed with
-	 *   merge metadata (cow_seg->lv is now "internal")
+	 *   merge metadata (snap_seg->lv is now "internal")
 	 */
-	cow_seg->lv->status &= ~VISIBLE_LV;
-	cow_seg->status |= MERGING;
-	origin->snapshot = cow_seg;
+	snap_seg->lv->status &= ~VISIBLE_LV;
+	snap_seg->status |= MERGING;
+	origin->snapshot = snap_seg;
 	origin->status |= MERGING;
 
-	if (cow_seg->segtype->ops->target_present &&
-	    !cow_seg->segtype->ops->target_present(cow_seg->lv->vg->cmd,
-				cow_seg, NULL))
+	if (snap_seg->segtype->ops->target_present &&
+	    !snap_seg->segtype->ops->target_present(snap_seg->lv->vg->cmd,
+						    snap_seg, NULL))
 		return 0;
 
 	return 1;
@@ -231,7 +230,7 @@ int vg_remove_snapshot(struct logical_volume *cow)
 	dm_list_del(&cow->snapshot->origin_list);
 	origin->origin_count--;
 
-	if (find_merging_cow(origin) == find_cow(cow)) {
+	if (find_merging_snapshot(origin) == find_snapshot(cow)) {
 		clear_snapshot_merge(origin);
 		/*
 		 * preload origin IFF "snapshot-merge" target is active

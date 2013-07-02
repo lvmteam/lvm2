@@ -1162,7 +1162,7 @@ static int _belong_to_vg(const char *vgname, const char *name)
 		return 0;
 }
 
-	if (!(snap_seg = find_cow(lv)))
+	if (!(snap_seg = find_snapshot(lv)))
 		return 1;
 
 	old_origin = snap_seg->origin;
@@ -1170,7 +1170,7 @@ static int _belong_to_vg(const char *vgname, const char *name)
 	/* Was this the last active snapshot with this origin? */
 	dm_list_iterate_items(lvl, active_head) {
 		active = lvl->lv;
-		if ((snap_seg = find_cow(active)) &&
+		if ((snap_seg = find_snapshot(active)) &&
 		    snap_seg->origin == old_origin) {
 			return 1;
 		}
@@ -1977,20 +1977,20 @@ static int _add_snapshot_merge_target_to_dtree(struct dev_manager *dm,
 					       struct logical_volume *lv)
 {
 	const char *origin_dlid, *cow_dlid, *merge_dlid;
-	struct lv_segment *merging_cow_seg = find_merging_cow(lv);
+	struct lv_segment *merging_snap_seg = find_merging_snapshot(lv);
 
 	if (!(origin_dlid = build_dm_uuid(dm->mem, lv->lvid.s, "real")))
 		return_0;
 
-	if (!(cow_dlid = build_dm_uuid(dm->mem, merging_cow_seg->cow->lvid.s, "cow")))
+	if (!(cow_dlid = build_dm_uuid(dm->mem, merging_snap_seg->cow->lvid.s, "cow")))
 		return_0;
 
-	if (!(merge_dlid = build_dm_uuid(dm->mem, merging_cow_seg->cow->lvid.s, NULL)))
+	if (!(merge_dlid = build_dm_uuid(dm->mem, merging_snap_seg->cow->lvid.s, NULL)))
 		return_0;
 
 	if (!dm_tree_node_add_snapshot_merge_target(dnode, lv->size, origin_dlid,
 						    cow_dlid, merge_dlid,
-						    merging_cow_seg->chunk_size))
+						    merging_snap_seg->chunk_size))
 		return_0;
 
 	return 1;
@@ -2006,7 +2006,7 @@ static int _add_snapshot_target_to_dtree(struct dev_manager *dm,
 	struct lv_segment *snap_seg;
 	uint64_t size;
 
-	if (!(snap_seg = find_cow(lv))) {
+	if (!(snap_seg = find_snapshot(lv))) {
 		log_error("Couldn't find snapshot for '%s'.", lv->name);
 		return 0;
 	}
@@ -2165,7 +2165,7 @@ static int _add_segment_to_dtree(struct dev_manager *dm,
 	const char *target_name;
 
 	/* Ensure required device-mapper targets are loaded */
-	seg_present = find_cow(seg->lv) ? : seg;
+	seg_present = find_snapshot(seg->lv) ? : seg;
 	target_name = (seg_present->segtype->ops->target_name ?
 		       seg_present->segtype->ops->target_name(seg_present, laopts) :
 		       seg_present->segtype->name);
@@ -2310,7 +2310,7 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		if (((dinfo = _cached_info(dm->mem, dtree, lv, NULL)) &&
 		     dinfo->open_count) ||
 		    ((dinfo = _cached_info(dm->mem, dtree,
-					   find_merging_cow(lv)->cow, NULL)) &&
+					   find_merging_snapshot(lv)->cow, NULL)) &&
 		     dinfo->open_count)) {
 			/* FIXME Is there anything simpler to check for instead? */
 			if (!lv_has_target_type(dm->mem, lv, NULL, "snapshot-merge"))
@@ -2369,7 +2369,7 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 			return_0;
 		if (!laopts->no_merging && lv_is_merging_origin(lv)) {
 			if (!_add_new_lv_to_dtree(dm, dtree,
-			     find_merging_cow(lv)->cow, laopts, "cow"))
+			     find_merging_snapshot(lv)->cow, laopts, "cow"))
 				return_0;
 			/*
 			 * Must also add "real" LV for use when

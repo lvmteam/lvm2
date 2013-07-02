@@ -3634,7 +3634,7 @@ int lv_resize(struct cmd_context *cmd, struct volume_group *vg,
 		}
 		lp->extents += lv->le_count;
 		if (lv_is_cow(lv)) {
-			extents_used = cow_max_extents(origin_from_cow(lv), find_cow(lv)->chunk_size);
+			extents_used = cow_max_extents(origin_from_cow(lv), find_snapshot(lv)->chunk_size);
 			if (extents_used < lp->extents) {
 				log_print_unless_silent("Reached maximum COW size %s.",
 							display_size(vg->cmd, (uint64_t) vg->extent_size * extents_used));
