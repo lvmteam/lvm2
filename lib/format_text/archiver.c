@@ -113,10 +113,13 @@ int archive(struct volume_group *vg)
 	if (vg_is_archived(vg))
 		return 1; /* VG has been already archived */
 
-	if (!vg->cmd->archive_params->enabled || !vg->cmd->archive_params->dir)
+	if (!vg->cmd->archive_params->enabled || !vg->cmd->archive_params->dir) {
+		vg->status |= ARCHIVED_VG;
 		return 1;
+	}
 
 	if (test_mode()) {
+		vg->status |= ARCHIVED_VG;
 		log_verbose("Test mode: Skipping archiving of volume group.");
 		return 1;
 	}
