@@ -650,6 +650,25 @@ static progress_t _poll_merge_progress(struct cmd_context *cmd,
 	return PROGRESS_UNFINISHED;
 }
 
+/* Swap lvid and LV names */
+static int _swap_lv_identifiers(struct cmd_context *cmd,
+				struct logical_volume *a, struct logical_volume *b)
+{
+	union lvid lvid;
+	const char *name;
+
+	lvid = a->lvid;
+	a->lvid = b->lvid;
+	b->lvid = lvid;
+
+	name = a->name;
+	a->name = b->name;
+	if (!lv_rename_update(cmd, b, name, 0))
+		return_0;
+
+	return 1;
+}
+
 static struct poll_functions _lvconvert_mirror_fns = {
 	.get_copy_vg = _get_lvconvert_vg,
 	.get_copy_lv = _get_lvconvert_lv,
@@ -1869,25 +1888,6 @@ out:
 	return r;
 }
 
-/* Swap lvid and LV names */
-static int _swap_lv(struct cmd_context *cmd,
-		    struct logical_volume *a, struct logical_volume *b)
-{
-	union lvid lvid;
-	const char *name;
-
-	lvid = a->lvid;
-	a->lvid = b->lvid;
-	b->lvid = lvid;
-
-	name = a->name;
-	a->name = b->name;
-	if (!lv_rename_update(cmd, b, name, 0))
-		return_0;
-
-	return 1;
-}
-
 static int _lvconvert_thinpool_external(struct cmd_context *cmd,
 					struct logical_volume *pool_lv,
 					struct logical_volume *external_lv,
@@ -1932,7 +1932,7 @@ static int _lvconvert_thinpool_external(struct cmd_context *cmd,
 	 * which could be easily removed by the user after i.e. power-off
 	 */
 
-	if (!_swap_lv(cmd, torigin_lv, external_lv)) {
+	if (!_swap_lv_identifiers(cmd, torigin_lv, external_lv)) {
 		stack;
 		goto revert_new_lv;
 	}
@@ -1956,7 +1956,7 @@ static int _lvconvert_thinpool_external(struct cmd_context *cmd,
 	return 1;
 
 deactivate_and_revert_new_lv:
-	if (!_swap_lv(cmd, torigin_lv, external_lv))
+	if (!_swap_lv_identifiers(cmd, torigin_lv, external_lv))
 		stack;
 
 	if (!deactivate_lv(cmd, torigin_lv)) {
