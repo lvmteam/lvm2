@@ -22,6 +22,9 @@ vgchange \- change attributes of a volume group
 .RB [ \-d | \-\-debug ]
 .RB [ \-\-deltag
 .IR Tag ]
+.RB [ \-\-profile
+.IR ProfileName ]
+.RB [ \-\-detachprofile ]
 .RB [ \-h | \-\-help ]
 .RB [ \-\-ignorelockingfailure ]
 .RB [ \-\-ignoremonitoring ]
@@ -88,6 +91,11 @@ it contains only local disks that are not visible on the other nodes.
 If the cluster infrastructure is unavailable on a particular node at a
 particular time, you may still be able to use Volume Groups that
 are not marked as clustered.
+.TP
+.BR \-\-detachprofile
+Detach any configuration profiles attached to given Volume Groups.
+See also \fBlvm\fP(8) and \fBlvm.conf\fP(5) for more
+information about configuration profiles.
 .TP
 .BR \-u ", " \-\-uuid
 Generate new random UUID for specified Volume Groups.

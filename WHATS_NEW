@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Add man page entries for profile configuration and related options.
   Improve error loging when user tries to interrupt commands.
   Rename _swap_lv to _swap_lv_identifiers and move to allow an additional user.
   Rename snapshot segment returning methods from find_*_cow to find_*_snapshot.

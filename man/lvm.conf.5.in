@@ -4,13 +4,65 @@ lvm.conf \- Configuration file for LVM2
 .SH SYNOPSIS
 .B #DEFAULT_SYS_DIR#/lvm.conf
 .SH DESCRIPTION
-lvm.conf is loaded during the initialisation phase of
+\fBlvm.conf\fP is loaded during the initialisation phase of
 \fBlvm\fP(8).  This file can in turn lead to other files
 being loaded - settings read in later override earlier
 settings.  File timestamps are checked between commands and if
 any have changed, all the files are reloaded.
+
+The settings defined in lvm.conf can be overridden by any
+of these extended configuration methods:
+.TP
+.B tag config
+.br
+See \fBtags\fP configuration setting description below.
+
+.TP
+.B profile config
+.br
+A profile is a set of selected customizable configuration settings
+that are aimed to achieve a certain characteristics in various
+environments or uses. Normally, the name of the profile should
+reflect that environment or use. LVM itself provides a few predefined
+configuration profiles. Users are allowed to add more profiles
+with different values if needed. For this purpose, there's the \fBdefault.profile\fP
+which contains all settings that are customizable by profiles
+and users are encouraged to copy this profile, then to change the values
+as needed and to remove the settings that are not customized by the new profile.
+The profiles are stored in #DEFAULT_PROFILE_DIR# by default.
+This location can be changed using the \fBconfig/profile_dir\fP setting.
+Each profile configuration is stored in \fBProfileName.profile\fP file
+in the profile directory. When referencing the profile, the \fB.profile\fP
+suffix is left out.
+
+The profile to use can be defined for each LVM command using the \fB\-\-profile ProfileName\fP
+command line option. When using a profile while creating Volume
+Groups or Logical Volumes, the ProfileName is stored in Volume Group
+metadata. When using such volumes later on, the profile is automatically
+loaded and used. If Volume Group and any of its Logical Volumes has different
+profiles defined, the profile defined for the Logical Volume is used. Profiles
+attached to Volume Groups or Logical Volumes can be changed or detached
+by using \fBvgchange\fP(8) and \fBlvchange\fP(8) with \fB\-\-profile ProfileName\fP
+or \fB\-\-detachprofile\fP options. The \fBvgs\fP and \fBlvs\fP reporting commands
+provide \fB-o vg_profile\fP and \fB-o lv_profile\fP output options
+to show the profile attached to a Volume Group or a Logical Volume.
+
+.TP
+.B direct config override on command line
+The \fB\-\-config ConfigurationString\fP command line option takes the
+ConfigurationString as direct string representation of the configuration
+to override the existing configuration. The ConfigurationString is of
+exactly the same format as used in any LVM configuration file.
+
 .LP
-Use \fBlvm dumpconfig\fP to check what settings are in use.
+When several configuration methods are used at the same time
+and when LVM looks for the value of a particular setting, it traverses
+this cascade from left to right:
+\fBdirect config override on command line\fP -> \fBprofile config\fP -> \fBtag config\fP -> \fBlvm.conf\fP.
+No part of this cascade is compulsory. If there's no setting value found at
+the end of the cascade, a default value is used for that setting.
+Use \fBlvm dumpconfig\fP to check what settings are in use and what
+the default values are.
 .SH SYNTAX
 .LP
 This section describes the configuration file syntax.
@@ -389,8 +441,9 @@ otherwise it doesn't.
 After lvm.conf has been processed, LVM2 works through each host
 tag that has been defined in turn, and if there is a configuration
 file called lvm_\fB<host_tag>\fP.conf it attempts to load it.
-Any settings read in override settings found in earlier files.
-Any additional host tags defined get appended to the search list,
+The activation/volume_list, devices/filter and devices/types settings are merged
+(these all are lists), otherwise any settings read in override settings found in
+earlier files. Any additional host tags defined get appended to the search list,
 so in turn they can lead to further configuration files being processed.
 Use \fBlvm dumpconfig\fP to check the result of config
 file processing.

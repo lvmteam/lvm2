@@ -60,9 +60,9 @@ Use \fB\-o vg_all\fP to select all volume group columns.
 Use \fB\-o help\fP to view the full list of columns available.
 .IP
 Column names include: vg_fmt, vg_uuid, vg_name, vg_attr, vg_size, vg_free,
-vg_sysid, vg_extent_size, vg_extent_count, vg_free_count, max_lv, max_pv,
-pv_count, lv_count, snap_count, vg_seqno, vg_tags, vg_mda_count, vg_mda_free,
-and vg_mda_size, vg_mda_used_count.
+vg_sysid, vg_extent_size, vg_extent_count, vg_free_count, vg_profile, max_lv,
+max_pv, pv_count, lv_count, snap_count, vg_seqno, vg_tags, vg_mda_count,
+vg_mda_free, and vg_mda_size, vg_mda_used_count.
 .IP
 Any "vg_" prefixes are optional.  Columns mentioned in either \fBpvs\fP(8)
 or \fBlvs\fP(8) can also be chosen, but columns cannot be taken from both
