@@ -30,8 +30,8 @@ install_conf: $(CONFSRC)
 	fi
 
 install_profiles: $(PROFILES)
-	$(INSTALL) -d $(DEFAULT_PROFILE_DIR)
-	$(INSTALL_DATA) $(PROFILES) $(DEFAULT_PROFILE_DIR)/
+	$(INSTALL_DIR) $(DESTDIR)$(DEFAULT_PROFILE_DIR)
+	$(INSTALL_DATA) $(PROFILES) $(DESTDIR)$(DEFAULT_PROFILE_DIR)/
 
 install_lvm2: install_conf install_profiles
 

@@ -10066,7 +10066,7 @@ fi
 if test "${with_confdir+set}" = set; then :
   withval=$with_confdir; CONFDIR=$withval
 else
-  CONFDIR="/etc"
+  CONFDIR='${exec_prefix}/etc'
 fi
 
 
@@ -10549,7 +10549,7 @@ fi
 if test "${with_default_system_dir+set}" = set; then :
   withval=$with_default_system_dir; DEFAULT_SYS_DIR=$withval
 else
-  DEFAULT_SYS_DIR="/etc/lvm"
+  DEFAULT_SYS_DIR='${exec_prefix}/etc/lvm'
 fi
 
 

@@ -1279,7 +1279,7 @@ fi
 AC_ARG_WITH(confdir,
 	    AC_HELP_STRING([--with-confdir=DIR],
 			   [configuration files in DIR [[/etc]]]),
-	    CONFDIR=$withval, CONFDIR="/etc")
+	    CONFDIR=$withval, CONFDIR='${exec_prefix}/etc')
 
 AC_ARG_WITH(staticdir,
 	    AC_HELP_STRING([--with-staticdir=DIR],
@@ -1416,8 +1416,8 @@ fi
 dnl -- various defaults
 AC_ARG_WITH(default-system-dir,
 	    AC_HELP_STRING([--with-default-system-dir=DIR],
-			   [default LVM system directory [[/etc/lvm]]]),
-	    DEFAULT_SYS_DIR=$withval, DEFAULT_SYS_DIR="/etc/lvm")
+			   [default LVM system directory [[EPREFIX/etc/lvm]]]),
+	    DEFAULT_SYS_DIR=$withval, DEFAULT_SYS_DIR='${exec_prefix}/etc/lvm')
 AC_DEFINE_UNQUOTED(DEFAULT_SYS_DIR, ["$DEFAULT_SYS_DIR"],
 		   [Path to LVM system directory.])
 
