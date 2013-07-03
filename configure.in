@@ -1417,7 +1417,7 @@ dnl -- various defaults
 AC_ARG_WITH(default-system-dir,
 	    AC_HELP_STRING([--with-default-system-dir=DIR],
 			   [default LVM system directory [[EPREFIX/etc/lvm]]]),
-	    DEFAULT_SYS_DIR=$withval, DEFAULT_SYS_DIR='${exec_prefix}/etc/lvm')
+	    DEFAULT_SYS_DIR=$withval, DEFAULT_SYS_DIR="$lvm_exec_prefix/etc/lvm")
 AC_DEFINE_UNQUOTED(DEFAULT_SYS_DIR, ["$DEFAULT_SYS_DIR"],
 		   [Path to LVM system directory.])
 
