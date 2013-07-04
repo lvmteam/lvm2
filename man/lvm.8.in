@@ -266,13 +266,16 @@ In addition to that, when creating a Volume Group or a Logical Volume,
 it causes the ProfileName to be stored in metadata for each Volume Group
 or Logical Volume. If the profile is stored in metadata, it is automatically
 applied next time the Volume Group or the Logical Volume is processed and the
-use of --profile is not necessary when running LVM commands further. If different
-profiles are defined for the Volume Group and its Logical Volumes, the profile
-defined for the Logical Volumes are used during command processing. The profile can
-be changed or detached using the \fBvgchange\fP(8) and \fBlvchange\fP(8) command
-and their \fB\-\-profile ProfileName\fP and \fB--detachprofile\fP options.
-See also \fBlvm.conf\fP(5) for more information about configuration profiles
-and the way they fit with other LVM configuration methods.
+use of --profile is not necessary when running LVM commands further. See also
+\fBlvm.conf\fP(5) for more information about \fBprofile config\fP and the
+way it fits with other LVM configuration methods.
+.TP
+.IR \fB\-\-config \ ConfigurationString
+Uses the ConfigurationString as direct string representation of the configuration
+to override the existing configuration. The ConfigurationString is of exactly
+the same format as used in any LVM configuration file. See \fBlvm.conf\fP(5)
+for more information about \fBdirect config override on command line\fP and the
+way it fits with other LVM configuration methods.
 .SH ENVIRONMENT VARIABLES
 .TP
 .B HOME

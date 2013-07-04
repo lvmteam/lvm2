@@ -29,7 +29,7 @@ with different values if needed. For this purpose, there's the \fBdefault.profil
 which contains all settings that are customizable by profiles
 and users are encouraged to copy this profile, then to change the values
 as needed and to remove the settings that are not customized by the new profile.
-The profiles are stored in #DEFAULT_PROFILE_DIR# by default.
+The profiles are stored in #DEFAULT_PROFILE_DIR# directory by default.
 This location can be changed using the \fBconfig/profile_dir\fP setting.
 Each profile configuration is stored in \fBProfileName.profile\fP file
 in the profile directory. When referencing the profile, the \fB.profile\fP
@@ -39,13 +39,17 @@ The profile to use can be defined for each LVM command using the \fB\-\-profile 
 command line option. When using a profile while creating Volume
 Groups or Logical Volumes, the ProfileName is stored in Volume Group
 metadata. When using such volumes later on, the profile is automatically
-loaded and used. If Volume Group and any of its Logical Volumes has different
+loaded and applied. If Volume Group and any of its Logical Volumes have different
 profiles defined, the profile defined for the Logical Volume is used. Profiles
 attached to Volume Groups or Logical Volumes can be changed or detached
-by using \fBvgchange\fP(8) and \fBlvchange\fP(8) with \fB\-\-profile ProfileName\fP
-or \fB\-\-detachprofile\fP options. The \fBvgs\fP and \fBlvs\fP reporting commands
-provide \fB-o vg_profile\fP and \fB-o lv_profile\fP output options
-to show the profile attached to a Volume Group or a Logical Volume.
+using the \fBvgchange\fP(8) and \fBlvchange\fP(8) commands with \fB\-\-profile ProfileName\fP
+or \fB\-\-detachprofile\fP options. For any other LVM command, the \fB\-\-profile ProfileName\fP
+option causes the profile to be applied only temporarily during the command
+execution for any existing Volume Group or Logical Volume.
+
+The \fBvgs\fP and \fBlvs\fP reporting commands provide \fB-o vg_profile\fP and
+\fB-o lv_profile\fP output options to show the profile currently attached to a
+Volume Group or a Logical Volume.
 
 .TP
 .B direct config override on command line
