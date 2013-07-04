@@ -2203,7 +2203,7 @@ mda_write:
 
 	/* Rename deactivated metadata LV to have _tmeta suffix */
 	/* Implicit checks if metadata_lv is visible */
-	if (!lp->pool_metadata_lv_name &&
+	if (lp->pool_metadata_lv_name &&
 	    !lv_rename_update(cmd, metadata_lv, metadata_name, 0))
 		return_0;
 
