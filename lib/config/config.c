@@ -1055,7 +1055,7 @@ int merge_config_tree(struct cmd_context *cmd, struct dm_config_tree *cft,
 	 * whether the .cache isn't older then any of configs
 	 */
 	cs = dm_config_get_custom(cft);
-	csn = dm_config_get_custom(cft);
+	csn = dm_config_get_custom(newdata);
 
 	if (cs && csn && (cs->timestamp < csn->timestamp))
 		cs->timestamp = csn->timestamp;
