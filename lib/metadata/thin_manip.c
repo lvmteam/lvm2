@@ -681,3 +681,43 @@ const char *get_pool_discards_name(thin_discards_t discards)
 
 	return "unknown";
 }
+
+struct logical_volume *alloc_pool_metadata(struct logical_volume *pool_lv,
+					   const char *name, uint32_t read_ahead,
+					   uint32_t stripes, uint32_t stripe_size,
+					   uint64_t size, alloc_policy_t alloc,
+					   struct dm_list *pvh)
+{
+	struct logical_volume *metadata_lv;
+	/* FIXME: Make lvm2api usable */
+	struct lvcreate_params lvc = {
+		.activate = CHANGE_ALY,
+		.alloc = alloc,
+		.lv_name = name,
+		.major = -1,
+		.minor = -1,
+		.permission = LVM_READ | LVM_WRITE,
+		.pvh = pvh,
+		.read_ahead = read_ahead,
+		.stripe_size = stripe_size,
+		.stripes = stripes,
+		.vg_name = pool_lv->vg->name,
+		.zero = 1,
+	};
+
+	dm_list_init(&lvc.tags);
+
+	if (!(lvc.extents = extents_from_size(pool_lv->vg->cmd, size,
+					      pool_lv->vg->extent_size)))
+		return_0;
+
+	if (!(lvc.segtype = get_segtype_from_string(pool_lv->vg->cmd, "striped")))
+		return_0;
+
+	/* FIXME: allocate properly space for metadata_lv */
+
+	if (!(metadata_lv = lv_create_single(pool_lv->vg, &lvc)))
+		return_0;
+
+	return metadata_lv;
+}

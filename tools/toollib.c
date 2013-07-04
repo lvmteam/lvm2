@@ -1601,50 +1601,6 @@ int get_pool_params(struct cmd_context *cmd,
 	return 1;
 }
 
-struct logical_volume *alloc_pool_metadata(struct logical_volume *pool_lv,
-					   alloc_policy_t alloc,
-					   const char *name,
-					   struct dm_list *pvh,
-					   uint32_t read_ahead,
-					   uint32_t stripes,
-					   uint32_t stripe_size,
-					   uint64_t size)
-{
-	struct logical_volume *metadata_lv;
-	struct lvcreate_params lvc;
-
-	/* FIXME: Make lvm2api usable */
-	memset(&lvc, 0, sizeof(lvc));
-
-	if (!(lvc.extents = extents_from_size(pool_lv->vg->cmd, size,
-					      pool_lv->vg->extent_size)))
-		return_0;
-
-	if (!(lvc.segtype = get_segtype_from_string(pool_lv->vg->cmd, "striped")))
-		return_0;
-
-	dm_list_init(&lvc.tags);
-
-	/* FIXME: allocate properly space for metadata_lv */
-	lvc.activate = CHANGE_ALY;
-	lvc.alloc = alloc;
-	lvc.lv_name = name;
-	lvc.major = -1;
-	lvc.minor = -1;
-	lvc.permission = LVM_READ | LVM_WRITE;
-	lvc.pvh = pvh;
-	lvc.read_ahead = read_ahead;
-	lvc.stripe_size = stripe_size;
-	lvc.stripes = stripes;
-	lvc.vg_name = pool_lv->vg->name;
-	lvc.zero = 1;
-
-	if (!(metadata_lv = lv_create_single(pool_lv->vg, &lvc)))
-		return_0;
-
-	return metadata_lv;
-}
-
 /*
  * Generic stripe parameter checks.
  */

@@ -122,11 +122,6 @@ int get_pool_params(struct cmd_context *cmd,
 		    uint64_t *pool_metadata_size,
 		    int *zero);
 
-struct logical_volume *alloc_pool_metadata(struct logical_volume *pool_lv,
-					   alloc_policy_t alloc, const char *name,
-					   struct dm_list *pvh, uint32_t read_ahead,
-					   uint32_t stripes, uint32_t stripe_size,
-					   uint64_t size);
 int get_stripe_params(struct cmd_context *cmd, uint32_t *stripes,
 		      uint32_t *stripe_size);
 

@@ -2145,10 +2145,11 @@ static int _lvconvert_thinpool(struct cmd_context *cmd,
 		if (!get_stripe_params(cmd, &lp->stripes, &lp->stripe_size))
 			return_0;
 
-		if (!(metadata_lv = alloc_pool_metadata(pool_lv, lp->alloc, metadata_name,
-							lp->pvh, lp->read_ahead,
-							lp->stripes, lp->stripe_size,
-							lp->poolmetadata_size)))
+		if (!(metadata_lv = alloc_pool_metadata(pool_lv, metadata_name,
+							lp->read_ahead,	lp->stripes,
+							lp->stripe_size,
+							lp->poolmetadata_size,
+							lp->alloc, lp->pvh)))
 			return_0;
 	}
 

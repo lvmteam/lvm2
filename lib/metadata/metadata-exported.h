@@ -657,6 +657,11 @@ int update_pool_params(struct cmd_context *cmd, unsigned attr, int passed_args,
 		       uint64_t *pool_metadata_size);
 int get_pool_discards(const char *str, thin_discards_t *discards);
 const char *get_pool_discards_name(thin_discards_t discards);
+struct logical_volume *alloc_pool_metadata(struct logical_volume *pool_lv,
+					   const char *name, uint32_t read_ahead,
+					   uint32_t stripes, uint32_t stripe_size,
+					   uint64_t size, alloc_policy_t alloc,
+					   struct dm_list *pvh);
 
 /*
  * Activation options
