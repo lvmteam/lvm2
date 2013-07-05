@@ -833,10 +833,12 @@ int vgcreate_params_validate(struct cmd_context *cmd,
 static int _vg_update_vg_ondisk(struct volume_group *vg)
 {
 	struct dm_config_tree *cft;
+	int pool_locked;
+
 	if (vg->vg_ondisk) /* we already have it */
 		return 1;
 
-	int pool_locked = dm_pool_locked(vg->vgmem);
+	pool_locked = dm_pool_locked(vg->vgmem);
 	if (pool_locked && !dm_pool_unlock(vg->vgmem, 0))
 		return_0;
 
