@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008,2009 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2008-2013 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -28,8 +28,7 @@ const char *lvm_pv_get_uuid(const pv_t pv)
 
 const char *lvm_pv_get_name(const pv_t pv)
 {
-	return dm_pool_strndup(pv->vg->vgmem,
-			       (const char *)pv_dev_name(pv), NAME_LEN + 1);
+	return dm_pool_strndup(pv->vg->vgmem, pv_dev_name(pv), NAME_LEN);
 }
 
 uint64_t lvm_pv_get_mda_count(const pv_t pv)
@@ -39,17 +38,17 @@ uint64_t lvm_pv_get_mda_count(const pv_t pv)
 
 uint64_t lvm_pv_get_dev_size(const pv_t pv)
 {
-	return (uint64_t) SECTOR_SIZE * pv_dev_size(pv);
+	return SECTOR_SIZE * pv_dev_size(pv);
 }
 
 uint64_t lvm_pv_get_size(const pv_t pv)
 {
-	return (uint64_t) SECTOR_SIZE * pv_size_field(pv);
+	return SECTOR_SIZE * pv_size_field(pv);
 }
 
 uint64_t lvm_pv_get_free(const pv_t pv)
 {
-	return (uint64_t) SECTOR_SIZE * pv_free(pv);
+	return SECTOR_SIZE * pv_free(pv);
 }
 
 struct lvm_property_value lvm_pv_get_property(const pv_t pv, const char *name)
@@ -63,11 +62,6 @@ struct lvm_property_value lvm_pvseg_get_property(const pvseg_t pvseg,
 	return get_property(NULL, NULL, NULL, NULL, pvseg, NULL, name);
 }
 
-
-#define address_of(p, t, m) ({                  \
-	const typeof( ((t *)0)->m ) *__mptr = (p);    \
-	(t *)( (char *)__mptr - offsetof(t,m) );})
-
 struct lvm_list_wrapper
 {
 	unsigned long magic;
@@ -78,9 +72,10 @@ struct lvm_list_wrapper
 int lvm_pv_remove(lvm_t libh, const char *pv_name)
 {
 	struct cmd_context *cmd = (struct cmd_context *)libh;
-	if ( 1 != pvremove_single(cmd, pv_name, NULL, 0, 0)) {
+
+	if (pvremove_single(cmd, pv_name, NULL, 0, 0) != 1)
 		return -1;
-	}
+
 	return 0;
 }
 
@@ -89,9 +84,7 @@ struct dm_list *lvm_list_pvs(lvm_t libh)
 	struct lvm_list_wrapper *rc = NULL;
 	struct cmd_context *cmd = (struct cmd_context *)libh;
 
-
-	rc = dm_pool_zalloc(cmd->mem, sizeof(*rc));
-	if (!rc) {
+	if (!(rc = dm_pool_zalloc(cmd->mem, sizeof(*rc)))) {
 		log_errno(ENOMEM, "Memory allocation fail for pv list.");
 		return NULL;
 	}
@@ -113,36 +106,33 @@ struct dm_list *lvm_list_pvs(lvm_t libh)
 
 int lvm_list_pvs_free(struct dm_list *pvlist)
 {
-	int rc = 0;
-	struct lvm_list_wrapper *to_delete = NULL;
-	struct vg_list *vgl = NULL;
-	struct pv_list *pvl = NULL;
+	struct lvm_list_wrapper *to_delete;
+	struct vg_list *vgl;
+	struct pv_list *pvl;
 	struct cmd_context *cmd = NULL;
 
-	if (pvlist ) {
-		to_delete = address_of(pvlist, struct lvm_list_wrapper, pvslist);
-		if (to_delete->magic == 0xF005BA11) {
-
-			dm_list_iterate_items(vgl, &to_delete->vgslist) {
-				cmd = vgl->vg->cmd;
-				release_vg(vgl->vg);
-			}
-
-			dm_list_iterate_items(pvl, &to_delete->pvslist) {
-				free_pv_fid(pvl->pv);
-			}
-
-			unlock_vg(cmd, VG_GLOBAL);
-		} else {
+	if (pvlist) {
+		to_delete = dm_list_struct_base(pvlist, struct lvm_list_wrapper, pvslist);
+		if (to_delete->magic != 0xF005BA11) {
 			log_errno(EINVAL, "Not a correct pvlist structure");
-			rc = -1;
+			return -1;
 		}
+
+		dm_list_iterate_items(vgl, &to_delete->vgslist) {
+			cmd = vgl->vg->cmd;
+			release_vg(vgl->vg);
+		}
+
+		dm_list_iterate_items(pvl, &to_delete->pvslist)
+			free_pv_fid(pvl->pv);
+
+		unlock_vg(cmd, VG_GLOBAL);
 
 		to_delete->magic = 0xA5A5A5A5;
 		dm_pool_free(cmd->mem, to_delete);
-
 	}
-	return rc;
+
+	return 0;
 }
 
 struct dm_list *lvm_pv_list_pvsegs(pv_t pv)
@@ -158,6 +148,7 @@ struct dm_list *lvm_pv_list_pvsegs(pv_t pv)
 		log_errno(ENOMEM, "Memory allocation fail for dm_list.");
 		return NULL;
 	}
+
 	dm_list_init(list);
 
 	dm_list_iterate_items(pvl, &pv->segments) {
@@ -169,6 +160,7 @@ struct dm_list *lvm_pv_list_pvsegs(pv_t pv)
 		pvseg->pvseg = pvl;
 		dm_list_add(list, &pvseg->list);
 	}
+
 	return list;
 }
 
@@ -176,10 +168,10 @@ pv_t lvm_pv_from_name(vg_t vg, const char *name)
 {
 	struct pv_list *pvl;
 
-	dm_list_iterate_items(pvl, &vg->pvs) {
+	dm_list_iterate_items(pvl, &vg->pvs)
 		if (!strcmp(name, pv_dev_name(pvl->pv)))
 			return pvl->pv;
-	}
+
 	return NULL;
 }
 
@@ -198,13 +190,12 @@ pv_t lvm_pv_from_uuid(vg_t vg, const char *uuid)
 		return NULL;
 	}
 
-	dm_list_iterate_items(pvl, &vg->pvs) {
+	dm_list_iterate_items(pvl, &vg->pvs)
 		if (id_equal(&id, &pvl->pv->id))
 			return pvl->pv;
-	}
+
 	return NULL;
 }
-
 
 int lvm_pv_resize(const pv_t pv, uint64_t new_size)
 {
@@ -215,40 +206,37 @@ int lvm_pv_resize(const pv_t pv, uint64_t new_size)
 		return -1;
 	}
 
-	if (!vg_check_write_mode(pv->vg)) {
+	if (!vg_check_write_mode(pv->vg))
 		return -1;
-	}
 
 	if (!pv_resize_single(pv->vg->cmd, pv->vg, pv, size)) {
 		log_error("PV re-size failed!");
 		return -1;
-	} else {
-		return 0;
 	}
+
+	return 0;
 }
 
 int lvm_pv_create(lvm_t libh, const char *pv_name, uint64_t size)
 {
-	int rc = -1;
 	struct pvcreate_params pp;
 	struct cmd_context *cmd = (struct cmd_context *)libh;
 	uint64_t size_sectors = size;
 
 	pvcreate_params_set_defaults(&pp);
 
-	if (size_sectors != 0 ) {
-		if( size_sectors % SECTOR_SIZE ) {
+	if (size_sectors != 0) {
+		if (size_sectors % SECTOR_SIZE) {
 			log_errno(EINVAL, "Size not a multiple of 512");
-					return -1;
+			return -1;
 		}
 		size_sectors = size_sectors >> SECTOR_SHIFT;
 	}
 
 	pp.size = size_sectors;
 
-	if (ECMD_PROCESSED == pvcreate_locked(cmd, pv_name, &pp)) {
-		rc = 0;
-	}
+	if (pvcreate_locked(cmd, pv_name, &pp) != ECMD_PROCESSED)
+		return -1;
 
-	return rc;
+	return 0;
 }

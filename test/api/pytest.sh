@@ -18,11 +18,16 @@ aux prepare_pvs 6
 
 #Locate the python binding library to use.
 python_lib=`find $abs_top_builddir -name lvm.so`
-if [ "$python_lib" != "" ]
-then
-	export PYTHONPATH=`dirname $python_lib`:$PYTHONPATH
-	python_lvm_unit.py -v
-	#nemiver python ../api/python_lvm_unit.py -v -f
-else
-	echo "Unable to test python bindings as library not available"
-fi
+
+# Unable to test python bindings if library not available
+test -z "$python_lib" && skip
+
+export PYTHONPATH=`dirname $python_lib`:$PYTHONPATH
+
+skip
+
+# skiped until fixed
+# FIXME - script must ONLY use  $(cat DEVICES) as PVs
+# it must NOT create/modify/remove volumes from other places
+python_lvm_unit.py -v
+# nemiver python ../api/python_lvm_unit.py -v -f
