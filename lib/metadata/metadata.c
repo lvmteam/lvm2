@@ -2292,9 +2292,9 @@ int vg_validate(struct volume_group *vg)
 	struct str_list *sl;
 	char uuid[64] __attribute__((aligned(8)));
 	int r = 1;
-	uint32_t hidden_lv_count = 0, lv_count = 0, lv_visible_count = 0;
-	uint32_t pv_count = 0;
-	uint32_t num_snapshots = 0;
+	unsigned hidden_lv_count = 0, lv_count = 0, lv_visible_count = 0;
+	unsigned pv_count = 0;
+	unsigned num_snapshots = 0;
 	struct validate_hash vhash = { NULL };
 
 	if (vg->alloc == ALLOC_CLING_BY_TAGS) {
@@ -2432,10 +2432,10 @@ int vg_validate(struct volume_group *vg)
 	 * all volumes = visible LVs + snapshot_cows + invisible LVs
 	 */
 	if (lv_count != lv_visible_count + num_snapshots + hidden_lv_count) {
-		log_error(INTERNAL_ERROR "#internal LVs (%u) != #LVs (%"
-			  PRIu32 ") + #snapshots (%" PRIu32 ") + #internal LVs (%u) in VG %s",
-			  lv_count, lv_visible_count,
-			  num_snapshots, hidden_lv_count, vg->name);
+		log_error(INTERNAL_ERROR "#LVs (%u) != #visible LVs (%u) "
+			  "+ #snapshots (%u) + #internal LVs (%u) in VG %s",
+			  lv_count, lv_visible_count, num_snapshots,
+			  hidden_lv_count, vg->name);
 		r = 0;
 	}
 
