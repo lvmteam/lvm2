@@ -727,3 +727,75 @@ struct logical_volume *alloc_pool_metadata(struct logical_volume *pool_lv,
 
 	return metadata_lv;
 }
+
+int vg_set_pool_metadata_spare(struct logical_volume *lv)
+{
+	char new_name[NAME_LEN];
+	struct volume_group *vg = lv->vg;
+
+	if (vg->pool_metadata_spare_lv) {
+		if (vg->pool_metadata_spare_lv == lv)
+			return 1;
+		if (!vg_remove_pool_metadata_spare(vg))
+			return_0;
+	}
+
+	if (dm_snprintf(new_name, sizeof(new_name), "%s_pmspare", lv->name) < 0) {
+		log_error("Can't create pool metadata spare. Name of pool LV "
+			  "%s is too long.", lv->name);
+		return 0;
+	}
+
+	if (!lv_rename_update(vg->cmd, lv, new_name, 0))
+		return_0;
+
+	lv_set_hidden(lv);
+	lv->status |= POOL_METADATA_SPARE;
+	vg->pool_metadata_spare_lv = lv;
+
+	return 1;
+}
+
+int vg_remove_pool_metadata_spare(struct volume_group *vg)
+{
+	char new_name[NAME_LEN];
+	char *c;
+
+	struct logical_volume *lv = vg->pool_metadata_spare_lv;
+
+	if (!(lv->status & POOL_METADATA_SPARE)) {
+		log_error(INTERNAL_ERROR "LV %s is not pool metadata spare.",
+			  lv->name);
+		return 0;
+	}
+
+	vg->pool_metadata_spare_lv = NULL;
+	lv->status &= ~POOL_METADATA_SPARE;
+	lv_set_visible(lv);
+
+	/* Cut off suffix _pmspare */
+	(void) dm_strncpy(new_name, lv->name, sizeof(new_name));
+	if (!(c = strchr(new_name, '_'))) {
+		log_error(INTERNAL_ERROR "LV %s has no suffix for pool metadata spare.",
+			  new_name);
+		return 0;
+	}
+	*c = 0;
+
+	/* If the name is in use, generate new lvol%d */
+	if (find_lv_in_vg(vg, new_name) &&
+	    !generate_lv_name(vg, "lvol%d", new_name, sizeof(new_name))) {
+		log_error("Failed to generate unique name for "
+			  "pool metadata spare logical volume.");
+		return 0;
+	}
+
+	log_print_unless_silent("Renaming existing pool metadata spare "
+				"logical volume \"%s/%s\" to \"%s/%s\".",
+                                vg->name, lv->name, vg->name, new_name);
+
+	if (!lv_rename_update(vg->cmd, lv, new_name, 0))
+		return_0;
+
+	return 1;
+}

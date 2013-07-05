@@ -2293,6 +2293,7 @@ int vg_validate(struct volume_group *vg)
 	unsigned hidden_lv_count = 0, lv_count = 0, lv_visible_count = 0;
 	unsigned pv_count = 0;
 	unsigned num_snapshots = 0;
+	unsigned spare_count = 0;
 	struct validate_hash vhash = { NULL };
 
 	if (vg->alloc == ALLOC_CLING_BY_TAGS) {
@@ -2472,6 +2473,19 @@ int vg_validate(struct volume_group *vg)
 			r = 0;
 		}
 
+		if (lv_is_pool_metadata_spare(lvl->lv)) {
+			if (++spare_count > 1) {
+				log_error(INTERNAL_ERROR "LV %s is %u. pool metadata spare (>1).",
+					  lvl->lv->name, spare_count);
+				r = 0;
+			}
+			if (vg->pool_metadata_spare_lv != lvl->lv) {
+				log_error(INTERNAL_ERROR "LV %s is not vg pool metadata spare.",
+					  lvl->lv->name);
+				r = 0;
+			}
+		}
+
 		if (!check_lv_segments(lvl->lv, 1)) {
 			log_error(INTERNAL_ERROR "LV segments corrupted in %s.",
 				  lvl->lv->name);
@@ -2521,6 +2535,13 @@ int vg_validate(struct volume_group *vg)
 	    (!vg->max_lv || !vg->max_pv)) {
 		log_error(INTERNAL_ERROR "Volume group %s has limited PV/LV count"
 			  " but limit is not set.", vg->name);
+		r = 0;
+	}
+
+	if (vg->pool_metadata_spare_lv &&
+	    !lv_is_pool_metadata_spare(vg->pool_metadata_spare_lv)) {
+		log_error(INTERNAL_ERROR "VG references non pool metadata spare LV %s.",
+			  vg->pool_metadata_spare_lv->name);
 		r = 0;
 	}
 

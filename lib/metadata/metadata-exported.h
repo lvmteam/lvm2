@@ -97,10 +97,11 @@
 #define THIN_POOL		UINT64_C(0x0000002000000000)	/* LV */
 #define THIN_POOL_DATA		UINT64_C(0x0000004000000000)	/* LV */
 #define THIN_POOL_METADATA	UINT64_C(0x0000008000000000)	/* LV */
+#define POOL_METADATA_SPARE	UINT64_C(0x0000010000000000)	/* LV internal */
 
-#define LV_WRITEMOSTLY		UINT64_C(0x0000010000000000)	/* LV (RAID1) */
+#define LV_WRITEMOSTLY		UINT64_C(0x0000020000000000)	/* LV (RAID1) */
 
-#define LV_ACTIVATION_SKIP	UINT64_C(0x0000020000000000)	/* LV */
+#define LV_ACTIVATION_SKIP	UINT64_C(0x0000040000000000)	/* LV */
 
 /* Format features flags */
 #define FMT_SEGMENTS		0x00000001U	/* Arbitrary segment params? */
@@ -160,6 +161,7 @@
 #define lv_is_raid_type(lv)	(((lv)->status & (RAID | RAID_IMAGE | RAID_META)) ? 1 : 0)
 
 #define lv_is_virtual(lv)	(((lv)->status & VIRTUAL) ? 1 : 0)
+#define lv_is_pool_metadata_spare(lv)	(((lv)->status & POOL_METADATA_SPARE) ? 1 : 0)
 
 /* Ordered list - see lv_manip.c */
 typedef enum {
@@ -665,6 +667,8 @@ struct logical_volume *alloc_pool_metadata(struct logical_volume *pool_lv,
 					   uint32_t stripes, uint32_t stripe_size,
 					   uint64_t size, alloc_policy_t alloc,
 					   struct dm_list *pvh);
+int vg_set_pool_metadata_spare(struct logical_volume *lv);
+int vg_remove_pool_metadata_spare(struct volume_group *vg);
 
 int attach_thin_external_origin(struct lv_segment *seg,
 				struct logical_volume *external_lv);
