@@ -5655,7 +5655,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 			}
 			if (lv_is_active(org) && !lv_is_external_origin(org)) {
 				log_error("Cannot use active LV for the external origin.");
-				return 0; // We can't be sure device it is read-only
+				return 0; // We can't be sure device is read-only
 			}
 			if (!attach_thin_external_origin(first_seg(lv), org)) {
 				stack;

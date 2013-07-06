@@ -928,7 +928,7 @@ char yes_no_prompt(const char *prompt, ...)
 		}
 
 		if ((c = getchar()) == EOF) {
-			ret = 'n';
+			ret = 'n'; /* SIGINT */
 			break;
 		}
 

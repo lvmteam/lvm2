@@ -634,7 +634,7 @@ static int _read_activation_params(struct lvcreate_params *lp, struct cmd_contex
 		else
 			lp->read_ahead = (lp->read_ahead / pagesize) * pagesize;
 		log_warn("WARNING: Overriding readahead to %u sectors, a multiple "
-			    "of %uK page size.", lp->read_ahead, pagesize >> 1);
+			 "of %uK page size.", lp->read_ahead, pagesize >> 1);
 	}
 
 	/*
