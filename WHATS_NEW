@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Relase memory and unblock signals in lock_vol error path.
   Define LVM2_* command errors in lvm2cmd.h and use in dmeventd plugins.
   Move errors.h to tools dir.
   Add man page entries for profile configuration and related options.

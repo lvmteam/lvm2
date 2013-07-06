@@ -368,18 +368,18 @@ static int _lock_vol(struct cmd_context *cmd, const char *resource,
 
 	if (!*resource) {
 		log_error(INTERNAL_ERROR "Use of P_orphans is deprecated.");
-		return 0;
+		goto out;
 	}
 
 	if ((is_orphan_vg(resource) || is_global_vg(resource)) && (flags & LCK_CACHE)) {
 		log_error(INTERNAL_ERROR "P_%s referenced", resource);
-		return 0;
+		goto out;
 	}
 
 	if (cmd->metadata_read_only && lck_type == LCK_WRITE &&
 	    strcmp(resource, VG_GLOBAL)) {
 		log_error("Operation prohibited while global/metadata_read_only is set.");
-		return 0;
+		goto out;
 	}
 
 	if ((ret = _locking.lock_resource(cmd, resource, flags, lv))) {
@@ -399,7 +399,7 @@ static int _lock_vol(struct cmd_context *cmd, const char *resource,
 		if (!ret)
 			_update_vg_lock_count(resource, flags);
 	}
-
+out:
 	_unlock_memory(cmd, lv_op);
 	_unblock_signals();
 
