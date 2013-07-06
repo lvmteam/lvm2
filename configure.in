@@ -134,7 +134,6 @@ AC_CHECK_FUNCS([ftruncate gethostname getpagesize \
   gettimeofday memset mkdir mkfifo rmdir munmap nl_langinfo setenv setlocale \
   strcasecmp strchr strcspn strspn strdup strncasecmp strerror strrchr \
   strstr strtol strtoul uname], , [AC_MSG_ERROR(bailing out)])
-AC_CHECK_FUNCS(siginterrupt)
 AC_FUNC_ALLOCA
 AC_FUNC_CLOSEDIR_VOID
 AC_FUNC_CHOWN

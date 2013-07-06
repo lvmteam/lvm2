@@ -5563,17 +5563,6 @@ else
 fi
 done
 
-for ac_func in siginterrupt
-do :
-  ac_fn_c_check_func "$LINENO" "siginterrupt" "ac_cv_func_siginterrupt"
-if test "x$ac_cv_func_siginterrupt" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_SIGINTERRUPT 1
-_ACEOF
-
-fi
-done
-
 # The Ultrix 4.2 mips builtin alloca declared by alloca.h only works
 # for constant arguments.  Useless!
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for working alloca.h" >&5

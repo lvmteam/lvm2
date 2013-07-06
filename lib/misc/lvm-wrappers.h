@@ -37,19 +37,4 @@ int read_urandom(void *buf, size_t len);
  */
 unsigned lvm_even_rand(unsigned *seed, unsigned max);
 
-#  ifndef HAVE_SIGINTERRUPT
-#    define siginterrupt(sig, flag) \
-	do { \
-		int ret; \
-		struct sigaction act; \
-		(void) sigaction(sig, NULL, &act); \
-		if (flag) \
-			act.sa_flags &= SA_RESTART; \
-		else \
-			act.sa_flags |= SA_RESTART; \
-		ret = sigaction(sig, &act, NULL); \
-		return ret; \
-	while (0)
-#  endif
-
 #endif
