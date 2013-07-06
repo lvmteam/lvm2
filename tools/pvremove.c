@@ -16,7 +16,6 @@
 #include "tools.h"
 #include "metadata.h"
 
-
 int pvremove(struct cmd_context *cmd, int argc, char **argv)
 {
 	int i, r;
@@ -34,9 +33,8 @@ int pvremove(struct cmd_context *cmd, int argc, char **argv)
 
 	for (i = 0; i < argc; i++) {
 		dm_unescape_colons_and_at_signs(argv[i], NULL, NULL);
-		r = pvremove_single(cmd, argv[i], NULL, force_count, prompt);
-		if (r > ret)
-			ret = r;
+		if (!pvremove_single(cmd, argv[i], NULL, force_count, prompt))
+			ret = ECMD_FAILED;
 	}
 
 	return ret;

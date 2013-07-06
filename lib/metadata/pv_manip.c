@@ -22,7 +22,7 @@
 #include "lvmetad.h"
 #include "display.h"
 #include "label.h"
-#include "../../tools/tools.h"
+#include "archiver.h"
 
 static struct pv_segment *_alloc_pv_segment(struct dm_pool *mem,
 					    struct physical_volume *pv,
@@ -739,15 +739,15 @@ bad:
 }
 
 int pvremove_single(struct cmd_context *cmd, const char *pv_name,
-			   void *handle __attribute__((unused)), unsigned force_count,
-			   unsigned prompt)
+		    void *handle __attribute__((unused)), unsigned force_count,
+		    unsigned prompt)
 {
 	struct device *dev;
-	int ret = ECMD_FAILED;
+	int r = 0;
 
 	if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE, NULL)) {
 		log_error("Can't get lock for orphan PVs");
-		return ECMD_FAILED;
+		return 0;
 	}
 
 	if (!pvremove_check(cmd, pv_name, force_count, prompt))
@@ -778,30 +778,31 @@ int pvremove_single(struct cmd_context *cmd, const char *pv_name,
 	log_print_unless_silent("Labels on physical volume \"%s\" successfully wiped",
 				pv_name);
 
-	ret = ECMD_PROCESSED;
+	r = 1;
 
 out:
 	unlock_vg(cmd, VG_ORPHANS);
 
-	return ret;
+	return r;
 }
 
 int pvcreate_locked(struct cmd_context *cmd, const char *pv_name,
 		struct pvcreate_params *pp)
 {
-	int ret = ECMD_PROCESSED;
+	int r = 0;
 
 	if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE, NULL)) {
 		log_error("Can't get lock for orphan PVs");
-		return ECMD_FAILED;
+		return 0;
 	}
 
-	if (!(pvcreate_single(cmd, pv_name, pp, 1))) {
-		stack;
-		ret = ECMD_FAILED;
-	}
+	if (!(pvcreate_single(cmd, pv_name, pp, 1)))
+		goto_out;
 
+	r = 1;
+
+out:
 	unlock_vg(cmd, VG_ORPHANS);
 
-	return ret;
+	return r;
 }

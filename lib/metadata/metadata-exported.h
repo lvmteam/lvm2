@@ -26,7 +26,6 @@
 #include "vg.h"
 #include "lv.h"
 #include "lvm-percent.h"
-#include "errors.h"
 
 #define MAX_STRIPES 128U
 #define SECTOR_SHIFT 9L
@@ -466,6 +465,7 @@ struct lvresize_params {
 	int argc;
 	char **argv;
 
+	/* FIXME Deal with meaningless 'ac' */
 	/* Arg counts & values */
 	unsigned ac_policy;
 	unsigned ac_stripes;
@@ -474,7 +474,7 @@ struct lvresize_params {
 	uint32_t ac_mirrors_value;
 	unsigned ac_stripesize;
 	uint64_t ac_stripesize_value;
-	unsigned ac_alloc;
+	alloc_policy_t ac_alloc;
 	unsigned ac_no_sync;
 	unsigned ac_force;
 
@@ -532,8 +532,10 @@ int vgs_are_compatible(struct cmd_context *cmd,
 		       struct volume_group *vg_to);
 uint32_t vg_lock_newname(struct cmd_context *cmd, const char *vgname);
 
-int lv_resize(struct cmd_context *cmd, struct volume_group *vg,
-		     struct lvresize_params *lp, struct dm_list *pvh);
+int lv_resize_prepare(struct cmd_context *cmd, struct logical_volume *lv,
+		      struct lvresize_params *lp, struct dm_list *pvh);
+int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
+	      struct lvresize_params *lp, struct dm_list *pvh);
 
 /*
  * Return a handle to VG metadata.

@@ -36,6 +36,12 @@ typedef void (*lvm2_log_fn_t) (int level, const char *file, int line,
 #define LVM2_LOG_VERY_VERBOSE	6
 #define LVM2_LOG_DEBUG		7
 
+/* Return values */
+#define LVM2_COMMAND_SUCCEEDED	1	/* ECMD_PROCESSED */
+#define LVM2_NO_SUCH_COMMAND	2	/* ENO_SUCH_CMD */
+#define LVM2_INVALID_PARAMETERS	3	/* EINVALID_CMD_LINE */
+#define LVM2_PROCESSING_FAILED	5	/* ECMD_FAILED */
+
 /*
  * Define external function to replace the built-in logging function.
  * It receives output line-by-line.

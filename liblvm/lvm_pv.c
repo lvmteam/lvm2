@@ -73,7 +73,7 @@ int lvm_pv_remove(lvm_t libh, const char *pv_name)
 {
 	struct cmd_context *cmd = (struct cmd_context *)libh;
 
-	if (pvremove_single(cmd, pv_name, NULL, 0, 0) != 1)
+	if (!pvremove_single(cmd, pv_name, NULL, 0, 0))
 		return -1;
 
 	return 0;
@@ -235,7 +235,7 @@ int lvm_pv_create(lvm_t libh, const char *pv_name, uint64_t size)
 
 	pp.size = size_sectors;
 
-	if (pvcreate_locked(cmd, pv_name, &pp) != ECMD_PROCESSED)
+	if (!pvcreate_locked(cmd, pv_name, &pp))
 		return -1;
 
 	return 0;

@@ -15,7 +15,6 @@
 #include "lib.h"
 
 #include "lvm2cmd.h"
-#include "errors.h"
 #include "libdevmapper-event.h"
 #include "dmeventd_lvm.h"
 
@@ -147,7 +146,7 @@ static int _extend(struct dso_state *state)
 #if THIN_DEBUG
 	syslog(LOG_INFO, "dmeventd executes: %s.\n", state->cmd_str);
 #endif
-	return (dmeventd_lvm2_run(state->cmd_str) == ECMD_PROCESSED);
+	return (dmeventd_lvm2_run(state->cmd_str) == LVM2_COMMAND_SUCCEEDED);
 }
 
 static int _run(const char *cmd, ...)

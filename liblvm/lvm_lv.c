@@ -22,6 +22,8 @@
 #include "lvm_misc.h"
 #include "lvm2app.h"
 
+/* FIXME Improve all the log messages to include context. Which VG/LV as a minimum? */
+
 struct lvm_lv_create_params
 {
 	uint32_t magic;
@@ -229,6 +231,7 @@ int lvm_lv_activate(lv_t lv)
 		log_verbose("Activating logical volume \"%s\" "
 			    "exclusively", lv->name);
 		if (!activate_lv_excl(lv->vg->cmd, lv)) {
+			/* FIXME Improve msg */
 			log_error("Activate exclusive failed.");
 			return -1;
 		}
@@ -236,6 +239,7 @@ int lvm_lv_activate(lv_t lv)
 		log_verbose("Activating logical volume \"%s\"",
 			    lv->name);
 		if (!activate_lv(lv->vg->cmd, lv)) {
+			/* FIXME Improve msg */
 			log_error("Activate failed.");
 			return -1;
 		}
@@ -320,7 +324,8 @@ lv_t lvm_lv_from_uuid(vg_t vg, const char *uuid)
 int lvm_lv_rename(lv_t lv, const char *new_name)
 {
 	if (!lv_rename(lv->vg->cmd, lv, new_name)) {
-		log_verbose("LV Rename failed.");
+		/* FIXME Improve msg */
+		log_error("LV rename failed.");
 		return -1;
 	}
 	return 0;
@@ -339,8 +344,11 @@ int lvm_lv_resize(const lv_t lv, uint64_t new_size)
 	lp.ac_force = 1;	/* Assume the user has a good backup? */
 	lp.sizeargs = 1;
 
-	if (ECMD_PROCESSED != lv_resize(lv->vg->cmd, lv->vg, &lp, &lv->vg->pvs)) {
-		log_verbose("LV Re-size failed.");
+	if (!lv_resize_prepare(lv->vg->cmd, lv, &lp, &lv->vg->pvs) ||
+	    !lv_resize(lv->vg->cmd, lv, &lp, &lv->vg->pvs)) {
+		/* FIXME Improve msg */
+		log_error("LV resize failed.");
+		/* FIXME Define consistent symbolic return codes */
 		return -1;
 	}
 

@@ -1,5 +1,7 @@
 Version 2.02.99 - 
 ===================================
+  Define LVM2_* command errors in lvm2cmd.h and use in dmeventd plugins.
+  Move errors.h to tools dir.
   Add man page entries for profile configuration and related options.
   Improve error loging when user tries to interrupt commands.
   Rename _swap_lv to _swap_lv_identifiers and move to allow an additional user.

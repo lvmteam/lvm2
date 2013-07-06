@@ -156,7 +156,7 @@ static int _lvresize_params(struct cmd_context *cmd, int argc, char **argv,
 	}
 
 	lp->ac_no_sync = arg_count(cmd, nosync_ARG);
-	lp->ac_alloc = arg_uint_value(cmd, alloc_ARG, 0);
+	lp->ac_alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG, 0);
 
 	lp->ac_type = arg_str_value(cmd, type_ARG, NULL);
 	lp->ac_force = arg_count(cmd, force_ARG);
@@ -168,8 +168,9 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 {
 	struct lvresize_params lp = { 0 };
 	struct volume_group *vg;
-	int r;
 	struct dm_list *pvh = NULL;
+	struct lv_list *lvl;
+	int r = ECMD_FAILED;
 
 	if (!_lvresize_params(cmd, argc, argv, &lp))
 		return EINVALID_CMD_LINE;
@@ -181,15 +182,28 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 		return_ECMD_FAILED;
 	}
 
-	/* How does this list get cleaned up? */
+        /* Does LV exist? */
+        if (!(lvl = find_lv_in_vg(vg, lp.lv_name))) {
+                log_error("Logical volume %s not found in volume group %s",
+                          lp.lv_name, lp.vg_name);
+		goto out;
+        }
+
 	if (!(pvh = lp.argc ? create_pv_list(cmd->mem, vg, lp.argc,
-						     lp.argv, 1) : &vg->pvs)) {
-		return_ECMD_FAILED;
+					     lp.argv, 1) : &vg->pvs))
+		goto_out;
+
+	if (!lv_resize_prepare(cmd, lvl->lv, &lp, pvh)) {
+		r = EINVALID_CMD_LINE;
+		goto_out;
 	}
 
-	if (!(r = lv_resize(cmd, vg, &lp, pvh)))
-		stack;
+	if (!lv_resize(cmd, lvl->lv, &lp, pvh))
+		goto_out;
 
+	r = ECMD_PROCESSED;
+
+out:
 	unlock_and_release_vg(cmd, vg, lp.vg_name);
 
 	return r;

@@ -15,7 +15,6 @@
 #include "lib.h"
 
 #include "lvm2cmd.h"
-#include "errors.h"
 #include "libdevmapper-event.h"
 #include "dmeventd_lvm.h"
 
@@ -41,10 +40,10 @@ static int run_repair(const char *device)
 
 	r = dmeventd_lvm2_run(cmd_str);
 
-	if (r != ECMD_PROCESSED)
+	if (r != LVM2_COMMAND_SUCCEEDED)
 		syslog(LOG_INFO, "Repair of RAID device %s failed.", device);
 
-	return (r == ECMD_PROCESSED) ? 0 : -1;
+	return (r == LVM2_COMMAND_SUCCEEDED) ? 0 : -1;
 }
 
 static int _process_raid_event(char *params, const char *device)
