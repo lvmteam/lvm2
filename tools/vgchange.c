@@ -447,9 +447,9 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 			   struct volume_group *vg,
 			   void *handle __attribute__((unused)))
 {
-	int i;
+	unsigned i;
 
-	static struct {
+	static const struct {
 		int arg;
 		int (*fn)(struct cmd_context *cmd, struct volume_group *vg);
 	} _vgchange_args[] = {
@@ -465,7 +465,6 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 		{ vgmetadatacopies_ARG, &_vgchange_metadata_copies },
 		{ profile_ARG, &_vgchange_profile},
 		{ detachprofile_ARG, &_vgchange_profile},
-		{ -1, NULL },
 	};
 
 	if (vg_is_exported(vg)) {
@@ -486,7 +485,7 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 						arg_int_value(cmd, poll_ARG,
 						DEFAULT_BACKGROUND_POLLING));
 
-	for (i = 0; _vgchange_args[i].arg >= 0; i++) {
+	for (i = 0; i < DM_ARRAY_SIZE(_vgchange_args); ++i) {
 		if (arg_count(cmd, _vgchange_args[i].arg)) {
 			if (!archive(vg))
 				return_ECMD_FAILED;
