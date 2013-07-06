@@ -38,6 +38,8 @@
 #define DM_TO_STRING_EXP(A) #A
 #define DM_TO_STRING(A) DM_TO_STRING_EXP(A)
 
+#define DM_ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
+
 #ifdef __cplusplus
 extern "C" {
 #endif
