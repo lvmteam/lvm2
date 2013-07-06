@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2002-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2013 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -18,7 +18,7 @@
 
 int pvremove(struct cmd_context *cmd, int argc, char **argv)
 {
-	int i, r;
+	int i;
 	int ret = ECMD_PROCESSED;
 	unsigned force_count;
 	unsigned prompt;
@@ -33,8 +33,10 @@ int pvremove(struct cmd_context *cmd, int argc, char **argv)
 
 	for (i = 0; i < argc; i++) {
 		dm_unescape_colons_and_at_signs(argv[i], NULL, NULL);
-		if (!pvremove_single(cmd, argv[i], NULL, force_count, prompt))
+		if (!pvremove_single(cmd, argv[i], NULL, force_count, prompt)) {
+			stack;
 			ret = ECMD_FAILED;
+		}
 	}
 
 	return ret;
