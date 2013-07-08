@@ -110,6 +110,7 @@ struct config_def_tree_spec {
 	uint16_t version;		/* tree at this LVM2 version */
 	int ignoreadvanced;		/* do not include advanced configs */
 	int ignoreunsupported;		/* do not include unsupported configs */
+	uint8_t *check_status;		/* status of last tree check (currently needed for CFG_DEF_TREE_MISSING only) */
 };
 
 

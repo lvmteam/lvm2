@@ -1336,8 +1336,10 @@ static struct dm_config_node *_add_def_node(struct dm_config_tree *cft,
 	return cn;
 }
 
-static int _should_skip_def_node(struct config_def_tree_spec *spec, int section_id, cfg_def_item_t *def)
+static int _should_skip_def_node(struct config_def_tree_spec *spec, int section_id, int id)
 {
+	cfg_def_item_t *def = cfg_def_get_item_p(id);
+
 	if ((def->parent != section_id) ||
 	    (spec->ignoreadvanced && def->flags & CFG_ADVANCED) ||
 	    (spec->ignoreunsupported && def->flags & CFG_UNSUPPORTED))
@@ -1345,7 +1347,12 @@ static int _should_skip_def_node(struct config_def_tree_spec *spec, int section_
 
 	switch (spec->type) {
 		case CFG_DEF_TREE_MISSING:
-			if ((def->flags & CFG_USED) ||
+			if (!spec->check_status) {
+				log_error_once(INTERNAL_ERROR "couldn't determine missing "
+				       "config nodes - unknown status of last config check.");
+				return 1;
+			}
+			if ((spec->check_status[id] & CFG_USED) ||
 			    (def->flags & CFG_NAME_VARIABLE) ||
 			    (def->since_version > spec->version))
 				return 1;
@@ -1374,13 +1381,13 @@ static struct dm_config_node *_add_def_section_subtree(struct dm_config_tree *cf
 	int id;
 
 	for (id = 0; id < CFG_COUNT; id++) {
-		def = cfg_def_get_item_p(id);
-		if (_should_skip_def_node(spec, section_id, def))
+		if (_should_skip_def_node(spec, section_id, id))
 			continue;
 
 		if (!cn && !(cn = _add_def_node(cft, spec, parent, relay, cfg_def_get_item_p(section_id))))
 				goto bad;
 
+		def = cfg_def_get_item_p(id);
 		if ((tmp = def->type == CFG_TYPE_SECTION ? _add_def_section_subtree(cft, spec, cn, relay_sub, id)
 							 : _add_def_node(cft, spec, cn, relay_sub, def)))
 			relay_sub = tmp;
