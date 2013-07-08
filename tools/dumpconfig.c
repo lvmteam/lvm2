@@ -15,7 +15,7 @@
 
 #include "tools.h"
 
-static int _get_vsn(struct cmd_context *cmd, uint16_t *version)
+static int _get_vsn(struct cmd_context *cmd, uint16_t *version_int)
 {
 	const char *atversion = arg_str_value(cmd, atversion_ARG, LVM_VERSION);
 	unsigned int major, minor, patchlevel;
@@ -25,31 +25,42 @@ static int _get_vsn(struct cmd_context *cmd, uint16_t *version)
 		return 0;
 	}
 
-	*version = vsn(major, minor, patchlevel);
+	*version_int = vsn(major, minor, patchlevel);
 	return 1;
 }
 
-static struct cft_check_handle *_get_cft_check_handle(struct cmd_context *cmd)
+static struct cft_check_handle *_get_cft_check_handle(struct cmd_context *cmd, struct dm_config_tree *cft)
 {
-	struct cft_check_handle *handle = cmd->cft_check_handle;
+	struct cft_check_handle *handle;
+	struct dm_pool *mem;
+
+	if (cft == cmd->cft) {
+		mem = cmd->libmem;
+		handle = cmd->cft_check_handle;
+	} else {
+		mem = cft->mem;
+		handle = NULL;
+	}
 
 	if (!handle) {
-		if (!(handle = dm_pool_zalloc(cmd->libmem, sizeof(*cmd->cft_check_handle)))) {
+		if (!(handle = dm_pool_zalloc(mem, sizeof(struct cft_check_handle)))) {
 			log_error("Configuration check handle allocation failed.");
 			return NULL;
 		}
-		handle->cft = cmd->cft;
-		cmd->cft_check_handle = handle;
+		handle->cft = cft;
+		if (cft == cmd->cft)
+			cmd->cft_check_handle = handle;
 	}
 
 	return handle;
 }
 
-static int _do_def_check(struct cmd_context *cmd, struct cft_check_handle **cft_check_handle)
+static int _do_def_check(struct cmd_context *cmd, struct dm_config_tree *cft,
+			 struct cft_check_handle **cft_check_handle)
 {
 	struct cft_check_handle *handle;
 
-	if (!(handle = _get_cft_check_handle(cmd)))
+	if (!(handle = _get_cft_check_handle(cmd, cft)))
 		return 0;
 
 	handle->force_check = 1;
@@ -60,6 +71,21 @@ static int _do_def_check(struct cmd_context *cmd, struct cft_check_handle **cft_
 	*cft_check_handle = handle;
 
 	return 1;
+}
+
+static int _merge_config_cascade(struct cmd_context *cmd, struct dm_config_tree *cft_cascaded,
+				 struct dm_config_tree **cft_merged)
+{
+	if (!cft_cascaded)
+		return 1;
+
+	if (!*cft_merged && !(*cft_merged = config_open(CONFIG_MERGED_FILES, NULL, 0)))
+		return_0;
+
+	if (!_merge_config_cascade(cmd, cft_cascaded->cascade, cft_merged))
+		return_0;
+
+	return merge_config_tree(cmd, *cft_merged, cft_cascaded, CONFIG_MERGE_TYPE_RAW);
 }
 
 int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
@@ -103,8 +129,21 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 	if (!_get_vsn(cmd, &tree_spec.version))
 		return EINVALID_CMD_LINE;
 
+	/*
+	 * Set the 'cft' to work with based on whether we need the plain
+	 * config tree or merged config tree cascade if --mergedconfig is used.
+	 */
+	if (arg_count(cmd, mergedconfig_ARG) && cmd->cft->cascade) {
+		if (!_merge_config_cascade(cmd, cmd->cft, &cft)) {
+			log_error("Failed to merge configuration.");
+			r = ECMD_FAILED;
+			goto out;
+		}
+	} else
+		cft = cmd->cft;
+
 	if (arg_count(cmd, validate_ARG)) {
-		if (!(cft_check_handle = _get_cft_check_handle(cmd)))
+		if (!(cft_check_handle = _get_cft_check_handle(cmd, cft)))
 			return ECMD_FAILED;
 
 		cft_check_handle->force_check = 1;
@@ -113,22 +152,27 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 
 		if (config_def_check(cmd, cft_check_handle)) {
 			log_print("LVM configuration valid.");
-			return ECMD_PROCESSED;
+			goto out;
 		} else {
 			log_error("LVM configuration invalid.");
-			return ECMD_FAILED;
+			r = ECMD_FAILED;
+			goto out;
 		}
 	}
 
 	if (!strcmp(type, "current")) {
 		tree_spec.type = CFG_DEF_TREE_CURRENT;
-		if (!_do_def_check(cmd, &cft_check_handle))
-			return ECMD_FAILED;
+		if (!_do_def_check(cmd, cft, &cft_check_handle)) {
+			r = ECMD_FAILED;
+			goto_out;
+		}
 	}
 	else if (!strcmp(type, "missing")) {
 		tree_spec.type = CFG_DEF_TREE_MISSING;
-		if (!_do_def_check(cmd, &cft_check_handle))
-			return ECMD_FAILED;
+		if (!_do_def_check(cmd, cft, &cft_check_handle)) {
+			r = ECMD_FAILED;
+			goto_out;
+		}
 	}
 	else if (!strcmp(type, "default")) {
 		tree_spec.type = CFG_DEF_TREE_DEFAULT;
@@ -141,15 +185,14 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 	else {
 		log_error("Incorrect type of configuration specified. "
 			  "Expected one of: current, default, missing, new.");
-		return EINVALID_CMD_LINE;
+		r = EINVALID_CMD_LINE;
+		goto out;
 	}
 
 	if (cft_check_handle)
 		tree_spec.check_status = cft_check_handle->status;
 
-	if (tree_spec.type == CFG_DEF_TREE_CURRENT)
-		cft = cmd->cft;
-	else
+	if (tree_spec.type != CFG_DEF_TREE_CURRENT)
 		cft = config_def_create_tree(&tree_spec);
 
 	if (!config_write(cft, arg_count(cmd, withcomments_ARG),
@@ -158,8 +201,8 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 		stack;
 		r = ECMD_FAILED;
 	}
-
-	if (cft != cmd->cft)
+out:
+	if (cft && (cft != cmd->cft))
 		dm_pool_destroy(cft->mem);
 
 	/*

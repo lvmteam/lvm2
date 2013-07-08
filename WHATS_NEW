@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Add --mergedconfig to lvm dumpconfig for merged --config/--profile/lvm.conf.
   Relase memory and unblock signals in lock_vol error path.
   Define LVM2_* command errors in lvm2cmd.h and use in dmeventd plugins.
   Move errors.h to tools dir.

@@ -38,12 +38,13 @@ xx(dumpconfig,
    "\t[--withversions] \n"
    "\t[--ignoreadvanced] \n"
    "\t[--ignoreunsupported] \n"
+   "\t[--mergedconfig] \n"
    "\t[--atversion version]] \n"
    "\t[--validate]\n"
    "\t[ConfigurationNode...]\n",
    file_ARG, configtype_ARG, withcomments_ARG, atversion_ARG,
    withversions_ARG, ignoreadvanced_ARG, ignoreunsupported_ARG,
-   validate_ARG)
+   mergedconfig_ARG, validate_ARG)
 
 xx(formats,
    "List available metadata formats",
