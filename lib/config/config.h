@@ -173,8 +173,19 @@ int config_file_changed(struct dm_config_tree *cft);
 int config_file_check(struct dm_config_tree *cft, const char **filename, struct stat *info);
 
 
+typedef enum {
+	CONFIG_MERGE_TYPE_RAW,	/* always replace old config values with new config values when merging */
+	CONFIG_MERGE_TYPE_TAGS	/* apply some exceptions when merging tag configs:
+				     - skip tags section
+				     - do not replace, but merge values of these settings:
+					activation/volume_list
+					devices/filter
+					devices/types
+				 */
+} config_merge_t;
+
 int merge_config_tree(struct cmd_context *cmd, struct dm_config_tree *cft,
-		      struct dm_config_tree *newdata);
+		      struct dm_config_tree *newdata, config_merge_t);
 
 /*
  * These versions check an override tree, if present, first.

@@ -659,7 +659,7 @@ static struct dm_config_tree *_merge_config_files(struct cmd_context *cmd, struc
 
 	dm_list_iterate_items(cfl, &cmd->config_files) {
 		/* Merge all config trees into cmd->cft using merge/tag rules */
-		if (!merge_config_tree(cmd, cft, cfl->cft))
+		if (!merge_config_tree(cmd, cft, cfl->cft, CONFIG_MERGE_TYPE_TAGS))
 			return_0;
 	}
 
