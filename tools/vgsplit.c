@@ -41,6 +41,12 @@ static int _move_one_lv(struct volume_group *vg_from,
 		return 0;
 	}
 
+	/* Moved pool metadata spare LV */
+	if (vg_from->pool_metadata_spare_lv == lv) {
+		vg_to->pool_metadata_spare_lv = lv;
+		vg_from->pool_metadata_spare_lv = NULL;
+	}
+
 	return 1;
 }
 

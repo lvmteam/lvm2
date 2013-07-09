@@ -28,6 +28,29 @@ static struct volume_group *_vgmerge_vg_read(struct cmd_context *cmd,
 	return vg;
 }
 
+/* Select bigger pool metadata spare volume */
+static int _vgmerge_select_pool_metadata_spare(struct cmd_context *cmd,
+					       struct volume_group *vg_to,
+					       struct volume_group *vg_from)
+{
+	struct volume_group *svg;
+
+	if (!vg_to->pool_metadata_spare_lv ||
+	    !vg_from->pool_metadata_spare_lv)
+		return 1; /* no problem */
+
+	/* Drop smaller pool metadata spare */
+	svg = (vg_to->pool_metadata_spare_lv->le_count <
+	       vg_from->pool_metadata_spare_lv->le_count) ? vg_to : vg_from;
+	vg_remove_pool_metadata_spare(svg);
+
+	/* Re-test lv name compatibility */
+	if (!vgs_are_compatible(cmd, vg_from, vg_to))
+		return_0;
+
+	return 1;
+}
+
 static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 			   const char *vg_name_from)
 {
@@ -72,6 +95,9 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 
 	if (!drop_cached_metadata(vg_from))
 		stack;
+
+	if (!_vgmerge_select_pool_metadata_spare(cmd, vg_to, vg_from))
+		goto_bad;
 
 	/* Merge volume groups */
 	dm_list_iterate_items_safe(pvl, tpvl, &vg_from->pvs) {
@@ -126,6 +152,10 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 
 		dm_list_move(&vg_to->fid->metadata_areas_ignored, mdah);
 	}
+
+	if (!vg_to->pool_metadata_spare_lv)
+		vg_to->pool_metadata_spare_lv =
+			vg_from->pool_metadata_spare_lv;
 
 	vg_to->extent_count += vg_from->extent_count;
 	vg_to->free_count += vg_from->free_count;
