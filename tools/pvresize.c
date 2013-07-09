@@ -15,7 +15,6 @@
  */
 
 #include "tools.h"
-#include "metadata.h"
 #include "metadata-exported.h"
 
 struct pvresize_params {
