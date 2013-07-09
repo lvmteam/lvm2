@@ -1371,7 +1371,8 @@ static int _should_skip_def_node(struct config_def_tree_spec *spec, int section_
 				return 1;
 			break;
 		case CFG_DEF_TREE_PROFILABLE:
-			if (!(def->flags & CFG_PROFILABLE))
+			if (!(def->flags & CFG_PROFILABLE) ||
+			    (def->since_version > spec->version))
 				return 1;
 			break;
 		default:
