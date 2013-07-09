@@ -33,7 +33,7 @@ xx(dumpconfig,
    PERMITTED_READ_ONLY,
    "dumpconfig\n"
    "\t[-f|--file filename] \n"
-   "\t[--type {current|default|missing|new} \n"
+   "\t[--type {current|default|missing|new|profilable} \n"
    "\t[--withcomments] \n"
    "\t[--withversions] \n"
    "\t[--ignoreadvanced] \n"

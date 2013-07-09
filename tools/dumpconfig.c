@@ -182,6 +182,10 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 		tree_spec.type = CFG_DEF_TREE_NEW;
 		/* new type does not require check status */
 	}
+	else if (!strcmp(type, "profilable")) {
+		tree_spec.type = CFG_DEF_TREE_PROFILABLE;
+		/* profilable type does not require check status */
+	}
 	else {
 		log_error("Incorrect type of configuration specified. "
 			  "Expected one of: current, default, missing, new.");
