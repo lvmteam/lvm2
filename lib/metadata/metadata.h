@@ -337,7 +337,6 @@ struct format_handler {
 unsigned long set_pe_align(struct physical_volume *pv, unsigned long data_alignment);
 unsigned long set_pe_align_offset(struct physical_volume *pv,
 				  unsigned long data_alignment_offset);
-int vg_validate(struct volume_group *vg);
 
 int pv_write_orphan(struct cmd_context *cmd, struct physical_volume *pv);
 

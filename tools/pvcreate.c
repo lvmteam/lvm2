@@ -14,7 +14,6 @@
  */
 
 #include "tools.h"
-#include "metadata-exported.h"
 
 /*
  * Intial sanity checking of recovery-related command-line arguments.
