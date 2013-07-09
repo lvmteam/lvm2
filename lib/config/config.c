@@ -1251,13 +1251,12 @@ static struct dm_config_value *_get_def_array_values(struct dm_config_tree *cft,
 				v->type = DM_CFG_FLOAT;
 				break;
 			case 'S':
-				if (!(r = dm_pool_alloc(cft->mem, strlen(token + 1)))) {
+				if (!(r = dm_pool_strdup(cft->mem, token + 1))) {
 					dm_free(enc_value);
 					log_error("Failed to duplicate token for default "
 						  "array value of %s.", def->name);
 					return NULL;
 				}
-				memcpy(r, token + 1, strlen(token + 1));
 				v->v.str = r;
 				v->type = DM_CFG_STRING;
 				break;
