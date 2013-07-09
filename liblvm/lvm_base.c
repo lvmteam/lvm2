@@ -67,8 +67,8 @@ lvm_t lvm_init(const char *system_dir)
 	cmd->cmd_line = "liblvm";
 
 	/*
-	 * Turn off writing to stderr etc., not sure if there is a better way
-	 * to do this?
+	 * Turn off writing to stdout/stderr.
+	 * FIXME Fix lib/ to support a non-interactive mode instead.
 	 */
 	log_suppress(1);
 

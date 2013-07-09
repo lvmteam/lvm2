@@ -79,7 +79,7 @@ int detach_pool_lv(struct lv_segment *seg)
 	int no_update = 0;
 
 	if (!seg->pool_lv || !lv_is_thin_pool(seg->pool_lv)) {
-		log_error(INTERNAL_ERROR "LV %s is not a thin volume",
+		log_error(INTERNAL_ERROR "Cannot detach pool from non-thin LV %s",
 			  seg->lv->name);
 		return 0;
 	}
@@ -154,7 +154,7 @@ int attach_pool_message(struct lv_segment *pool_seg, dm_thin_message_t type,
 	struct lv_thin_message *tmsg;
 
 	if (!seg_is_thin_pool(pool_seg)) {
-		log_error(INTERNAL_ERROR "LV %s is not pool.", pool_seg->lv->name);
+		log_error(INTERNAL_ERROR "Cannot attach message to non-pool LV %s.", pool_seg->lv->name);
 		return 0;
 	}
 
@@ -289,7 +289,7 @@ int pool_is_active(const struct logical_volume *lv)
 	const struct seg_list *sl;
 
 	if (!lv_is_thin_pool(lv)) {
-		log_error(INTERNAL_ERROR "LV %s is not pool.", lv->name);
+		log_error(INTERNAL_ERROR "pool_is_active called with non-pool LV %s.", lv->name);
 		return 0;
 	}
 

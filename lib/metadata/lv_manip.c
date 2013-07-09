@@ -340,8 +340,9 @@ percent_t copy_percent(const struct logical_volume *lv)
 	dm_list_iterate_items(seg, &lv->segments) {
 		denominator += seg->area_len;
 
-		if ((seg_is_raid(seg) || seg_is_mirrored(seg))
-		    && (seg->area_count > 1))
+	/* FIXME Generalise name of 'extents_copied' field */
+		if ((seg_is_raid(seg) || seg_is_mirrored(seg)) &&
+		    (seg->area_count > 1))
 			numerator += seg->extents_copied;
 		else
 			numerator += seg->area_len;

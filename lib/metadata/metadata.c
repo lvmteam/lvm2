@@ -3727,12 +3727,13 @@ static int _get_pvs(struct cmd_context *cmd, int warnings,
 			continue;
 		}
 
-		/* When we are retrieving a list to return toliblvm we need
+		/*
+		 * When we are retrieving a list to return toliblvm we need
 		 * that list to contain VGs that are modifiable as we are using
 		 * the vgmem pool in the vg to provide allocation for liblvm.
 		 * This is a hack to prevent the vg from getting cached as the
-		 * vgid will be NULL.  There is most definitely a better way
-		 * to do this.
+		 * vgid will be NULL.
+		 * FIXME Remove this hack.
 		 */
 		if (!(vg = vg_read_internal(cmd, vgname, (!vgslist) ? vgid : NULL, warnings, &consistent))) {
 			stack;
@@ -3750,28 +3751,33 @@ static int _get_pvs(struct cmd_context *cmd, int warnings,
 					release_vg(vg);
 					return 0;
 				}
-				/* If we are going to release the vg, don't store a pointer to
-				 * it in the pv structure.
+				/* If we are going to release the VG, don't
+				 * store a pointer to it in the PV structure.
 				 */
-				if (!vgslist) {
+				if (!vgslist)
 					pvl_copy->pv->vg = NULL;
-				} else {
-					/* Make sure the vg mode indicates writeable */
-					/* We should rework this function to take a parameter */
-					/* so that we could control this ... */
+				else
+					/*
+					 * Make sure the vg mode indicates
+					 * writeable.
+					 * FIXME Rework function to take a
+					 * parameter to control this
+					 */
 					pvl_copy->pv->vg->open_mode = 'w';
-				}
 				have_pv = 1;
 				dm_list_add(pvslist, &pvl_copy->list);
 			}
 
-		/* In the case of the library we want to preserve the embedded volume
-		 * group as subsequent calls to retrieve data about the pv require it.
+		/*
+		 * In the case of the library we want to preserve the embedded
+		 * volume group as subsequent calls to retrieve data about the
+		 * PV require it.
 		 */
-		if (!vgslist || have_pv == 0) {
+		if (!vgslist || !have_pv)
 			release_vg(vg);
-		} else {
-			/* Add vg to list of vg objects that will be returned
+		else {
+			/*
+			 * Add VG to list of VG objects that will be returned
 			 */
 			vgl_item = dm_pool_alloc(cmd->mem, sizeof(*vgl_item));
 			if (!vgl_item) {
@@ -3786,23 +3792,25 @@ static int _get_pvs(struct cmd_context *cmd, int warnings,
 	}
 	init_pvmove(old_pvmove);
 
-	if (!pvslist) {
+	if (!pvslist)
 		dm_pool_free(cmd->mem, vgids);
-	}
+
 	return 1;
 }
 
-/* Retrieve a list of all physical volumes.
- * @param 	cmd			Command context
- * @param	pvslist		Set to NULL if you want memory for list created,
- * 						else valid memory
- * @param	vgslist		Set to NULL if you need the pv structures to contain
- * 						valid vg pointer.  This is the list of VGs
- * @returns NULL on errors, else pvslist which will equal passes in value if
- * 	supplied.
+/*
+ * Retrieve a list of all physical volumes.
+ * @param 	cmd	Command context
+ * @param	pvslist	Set to NULL if you want memory for list created,
+ * 			else valid memory
+ * @param	vgslist	Set to NULL if you need the pv structures to contain
+ * 			valid vg pointer.  This is the list of VGs
+ * @returns NULL on errors, else pvslist which will equal passed-in value if
+ * supplied.
  */
 struct dm_list *get_pvs_internal(struct cmd_context *cmd,
-					struct dm_list *pvslist, struct dm_list *vgslist)
+				 struct dm_list *pvslist,
+				 struct dm_list *vgslist)
 {
 	struct dm_list *results = pvslist;
 
@@ -3816,9 +3824,8 @@ struct dm_list *get_pvs_internal(struct cmd_context *cmd,
 	}
 
 	if (!_get_pvs(cmd, 1, results, vgslist)) {
-		if (NULL == pvslist) {
+		if (!pvslist)
 			dm_pool_free(cmd->mem, results);
-		}
 		return NULL;
 	}
 	return results;
