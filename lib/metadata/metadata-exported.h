@@ -663,6 +663,17 @@ struct logical_volume *alloc_pool_metadata(struct logical_volume *pool_lv,
 					   uint64_t size, alloc_policy_t alloc,
 					   struct dm_list *pvh);
 
+int attach_thin_external_origin(struct lv_segment *seg,
+				struct logical_volume *external_lv);
+int detach_thin_external_origin(struct lv_segment *seg);
+int attach_pool_metadata_lv(struct lv_segment *pool_seg,
+                            struct logical_volume *pool_metadata_lv);
+int detach_pool_metadata_lv(struct lv_segment *pool_seg,
+                            struct logical_volume **pool_metadata_lv);
+int attach_pool_data_lv(struct lv_segment *pool_seg,
+                        struct logical_volume *pool_data_lv);
+int is_mirror_image_removable(struct logical_volume *mimage_lv, void *baton);
+
 /*
  * Activation options
  */

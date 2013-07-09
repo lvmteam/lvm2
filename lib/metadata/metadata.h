@@ -462,12 +462,6 @@ int fixup_imported_mirrors(struct volume_group *vg);
 /*
  * From thin_manip.c
  */
-int attach_pool_metadata_lv(struct lv_segment *pool_seg,
-			    struct logical_volume *pool_metadata_lv);
-int detach_pool_metadata_lv(struct lv_segment *pool_seg,
-			    struct logical_volume **pool_metadata_lv);
-int attach_pool_data_lv(struct lv_segment *pool_seg,
-			struct logical_volume *pool_data_lv);
 int attach_pool_lv(struct lv_segment *seg, struct logical_volume *pool_lv,
 		   struct logical_volume *origin_lv);
 int detach_pool_lv(struct lv_segment *seg);
@@ -479,9 +473,6 @@ int pool_has_message(const struct lv_segment *seg,
 int pool_below_threshold(const struct lv_segment *pool_seg);
 int extend_pool(struct logical_volume *lv, const struct segment_type *segtype,
 		struct alloc_handle *ah, uint32_t stripes, uint32_t stripe_size);
-int attach_thin_external_origin(struct lv_segment *seg,
-				struct logical_volume *external_lv);
-int detach_thin_external_origin(struct lv_segment *seg);
 
 /*
  * Begin skeleton for external LVM library
@@ -492,8 +483,6 @@ struct id pv_vgid(const struct physical_volume *pv);
 
 int add_pv_to_vg(struct volume_group *vg, const char *pv_name,
 		 struct physical_volume *pv, struct pvcreate_params *pp);
-
-int is_mirror_image_removable(struct logical_volume *mimage_lv, void *baton);
 
 uint64_t find_min_mda_size(struct dm_list *mdas);
 char *tags_format_and_copy(struct dm_pool *mem, const struct dm_list *tags);
