@@ -235,7 +235,7 @@ int lvm_pv_create(lvm_t libh, const char *pv_name, uint64_t size)
 
 	pp.size = size_sectors;
 
-	if (!pvcreate_locked(cmd, pv_name, &pp))
+	if (!pvcreate_single(cmd, pv_name, &pp))
 		return -1;
 
 	return 0;

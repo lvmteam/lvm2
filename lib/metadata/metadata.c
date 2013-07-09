@@ -635,7 +635,7 @@ static int vg_extend_single_pv(struct volume_group *vg, char *pv_name,
 			  "physical volume", pv_name);
 		return 0;
 	} else if (!pv && pp) {
-		if (!(pv = pvcreate_single(vg->cmd, pv_name, pp, 0)))
+		if (!(pv = pvcreate_vol(vg->cmd, pv_name, pp, 0)))
 			return_0;
 	}
 	if (!add_pv_to_vg(vg, pv_name, pv, pp)) {
@@ -1487,7 +1487,7 @@ static int _pvcreate_write(struct cmd_context *cmd, struct pv_to_create *pvc)
 }
 
 /*
- * pvcreate_single() - initialize a device with PV label and metadata area
+ * pvcreate_vol() - initialize a device with PV label and metadata area
  *
  * Parameters:
  * - pv_name: device path to initialize
@@ -1497,10 +1497,8 @@ static int _pvcreate_write(struct cmd_context *cmd, struct pv_to_create *pvc)
  * NULL: error
  * struct physical_volume * (non-NULL): handle to physical volume created
  */
-struct physical_volume * pvcreate_single(struct cmd_context *cmd,
-					 const char *pv_name,
-					 struct pvcreate_params *pp,
-					 int write_now)
+struct physical_volume *pvcreate_vol(struct cmd_context *cmd, const char *pv_name,
+				     struct pvcreate_params *pp, int write_now)
 {
 	struct physical_volume *pv = NULL;
 	struct device *dev;

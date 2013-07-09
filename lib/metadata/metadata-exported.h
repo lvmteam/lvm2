@@ -481,10 +481,8 @@ struct lvresize_params {
 	const char *ac_type;
 };
 
-struct physical_volume *pvcreate_single(struct cmd_context *cmd,
-					const char *pv_name,
-					struct pvcreate_params *pp,
-					int write_now);
+int pvcreate_single(struct cmd_context *cmd, const char *pv_name,
+		    struct pvcreate_params *pp);
 void pvcreate_params_set_defaults(struct pvcreate_params *pp);
 
 /*

@@ -786,8 +786,8 @@ out:
 	return r;
 }
 
-int pvcreate_locked(struct cmd_context *cmd, const char *pv_name,
-		struct pvcreate_params *pp)
+int pvcreate_single(struct cmd_context *cmd, const char *pv_name,
+		    struct pvcreate_params *pp)
 {
 	int r = 0;
 
@@ -796,7 +796,7 @@ int pvcreate_locked(struct cmd_context *cmd, const char *pv_name,
 		return 0;
 	}
 
-	if (!(pvcreate_single(cmd, pv_name, pp, 1)))
+	if (!(pvcreate_vol(cmd, pv_name, pp, 1)))
 		goto_out;
 
 	r = 1;
