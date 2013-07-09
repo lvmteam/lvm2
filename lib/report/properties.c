@@ -39,9 +39,6 @@ static int _ ## NAME ## _get (const void *obj, struct lvm_property_type *prop) \
 	GET_NUM_PROPERTY_FN(NAME, VALUE, lv_segment, lvseg)
 #define GET_PVSEG_NUM_PROPERTY_FN(NAME, VALUE) \
 	GET_NUM_PROPERTY_FN(NAME, VALUE, pv_segment, pvseg)
-#define GET_LVCREATEPARAMS_NUM_PROPERTY_FN(NAME, VALUE)\
-	GET_NUM_PROPERTY_FN(NAME, VALUE, lvcreate_params, lvcp)
-
 
 #define SET_NUM_PROPERTY_FN(NAME, SETFN, TYPE, VAR)			\
 static int _ ## NAME ## _set (void *obj, struct lvm_property_type *prop) \
@@ -51,24 +48,12 @@ static int _ ## NAME ## _set (void *obj, struct lvm_property_type *prop) \
 	SETFN(VAR, prop->value.integer);		\
 	return 1; \
 }
-
-#define SET_NUM_PROPERTY(NAME, VALUE, TYPE, VAR)			\
-static int _ ## NAME ## _set (void *obj, struct lvm_property_type *prop) \
-{ \
-	struct TYPE *VAR = (struct TYPE *)obj; \
-\
-	VALUE = prop->value.integer;		\
-	return 1; \
-}
 #define SET_VG_NUM_PROPERTY_FN(NAME, SETFN) \
 	SET_NUM_PROPERTY_FN(NAME, SETFN, volume_group, vg)
 #define SET_PV_NUM_PROPERTY_FN(NAME, SETFN) \
 	SET_NUM_PROPERTY_FN(NAME, SETFN, physical_volume, pv)
 #define SET_LV_NUM_PROPERTY_FN(NAME, SETFN) \
 	SET_NUM_PROPERTY_FN(NAME, SETFN, logical_volume, lv)
-
-#define SET_LVCREATEPARAMS_NUM_PROPERTY_FN(NAME, VALUE) \
-	SET_NUM_PROPERTY(NAME, VALUE, lvcreate_params, lvcp)
 
 #define GET_STR_PROPERTY_FN(NAME, VALUE, TYPE, VAR)			\
 static int _ ## NAME ## _get (const void *obj, struct lvm_property_type *prop) \
@@ -92,23 +77,29 @@ static int _ ## NAME ## _get (const void *obj, struct lvm_property_type *prop) \
 static int _not_implemented_get(const void *obj, struct lvm_property_type *prop)
 {
 	log_errno(ENOSYS, "Function not implemented");
+
 	return 0;
 }
 
 static int _not_implemented_set(void *obj, struct lvm_property_type *prop)
 {
 	log_errno(ENOSYS, "Function not implemented");
+
 	return 0;
 }
 
-static percent_t _copy_percent(const struct logical_volume *lv) {
-	percent_t perc;
-	if (!lv_mirror_percent(lv->vg->cmd, lv, 0, &perc, NULL))
-		perc = PERCENT_INVALID;
-	return perc;
+static percent_t _copy_percent(const struct logical_volume *lv)
+{
+	percent_t percent;
+
+	if (!lv_mirror_percent(lv->vg->cmd, lv, 0, &percent, NULL))
+		percent = PERCENT_INVALID;
+
+	return percent;
 }
 
-static uint64_t _mismatches(const struct logical_volume *lv) {
+static uint64_t _mismatches(const struct logical_volume *lv)
+{
 	uint64_t cnt;
 
 	if (!lv_raid_mismatch_count(lv, &cnt))
@@ -116,53 +107,59 @@ static uint64_t _mismatches(const struct logical_volume *lv) {
 	return cnt;
 }
 
-static char *_sync_action(const struct logical_volume *lv) {
+static char *_sync_action(const struct logical_volume *lv)
+{
 	char *action;
 
 	if (!lv_raid_sync_action(lv, &action))
 		return 0;
+
 	return action;
 }
 
-static uint32_t _writebehind(const struct logical_volume *lv) {
+static uint32_t _writebehind(const struct logical_volume *lv)
+{
 	return first_seg(lv)->writebehind;
 }
 
-static uint32_t _minrecoveryrate(const struct logical_volume *lv) {
+static uint32_t _minrecoveryrate(const struct logical_volume *lv)
+{
 	return first_seg(lv)->min_recovery_rate;
 }
 
-static uint32_t _maxrecoveryrate(const struct logical_volume *lv) {
+static uint32_t _maxrecoveryrate(const struct logical_volume *lv)
+{
 	return first_seg(lv)->max_recovery_rate;
 }
 
-static percent_t _snap_percent(const struct logical_volume *lv) {
-	percent_t perc;
+static percent_t _snap_percent(const struct logical_volume *lv)
+{
+	percent_t percent;
 
-	if (!lv_is_cow(lv) || !lv_snapshot_percent(lv, &perc))
-		perc = PERCENT_INVALID;
+	if (!lv_is_cow(lv) || !lv_snapshot_percent(lv, &percent))
+		percent = PERCENT_INVALID;
 
-	return perc;
+	return percent;
 }
 
 static percent_t _data_percent(const struct logical_volume *lv)
 {
-	percent_t perc;
+	percent_t percent;
 
 	if (lv_is_cow(lv))
 		return _snap_percent(lv);
 
 	if (lv_is_thin_volume(lv))
-		return lv_thin_percent(lv, 0, &perc) ? perc : PERCENT_INVALID;
+		return lv_thin_percent(lv, 0, &percent) ? percent : PERCENT_INVALID;
 
-	return lv_thin_pool_percent(lv, 0, &perc) ? perc : PERCENT_INVALID;
+	return lv_thin_pool_percent(lv, 0, &percent) ? percent : PERCENT_INVALID;
 }
 
 static percent_t _metadata_percent(const struct logical_volume *lv)
 {
-	percent_t perc;
+	percent_t percent;
 
-	return lv_thin_pool_percent(lv, 1, &perc) ? perc : PERCENT_INVALID;
+	return lv_thin_pool_percent(lv, 1, &percent) ? percent : PERCENT_INVALID;
 }
 
 /* PV */
@@ -368,16 +365,12 @@ GET_LVSEG_STR_PROPERTY_FN(devices, lvseg_devices(lvseg->lv->vg->vgmem, lvseg))
 GET_LVSEG_STR_PROPERTY_FN(monitor, lvseg_monitor_dup(lvseg->lv->vg->vgmem, lvseg))
 #define _monitor_set _not_implemented_set
 
-
 /* PVSEG */
 GET_PVSEG_NUM_PROPERTY_FN(pvseg_start, pvseg->pe)
 #define _pvseg_start_set _not_implemented_set
 GET_PVSEG_NUM_PROPERTY_FN(pvseg_size, (SECTOR_SIZE * pvseg->len))
 #define _pvseg_size_set _not_implemented_set
 
-/* lv create parameters */
-GET_LVCREATEPARAMS_NUM_PROPERTY_FN(skip_zero, lvcp->zero)
-SET_LVCREATEPARAMS_NUM_PROPERTY_FN(skip_zero, lvcp->zero)
 
 #define STR DM_REPORT_FIELD_TYPE_STRING
 #define NUM DM_REPORT_FIELD_TYPE_NUMBER
@@ -392,7 +385,6 @@ struct lvm_property_type _properties[] = {
 #undef STR
 #undef NUM
 #undef FIELD
-
 
 static int _get_property(const void *obj, struct lvm_property_type *prop,
 			 unsigned type)
@@ -419,6 +411,7 @@ static int _get_property(const void *obj, struct lvm_property_type *prop,
 	if (!p->get(obj, prop)) {
 		return 0;
 	}
+
 	return 1;
 }
 
@@ -455,6 +448,7 @@ static int _set_property(void *obj, struct lvm_property_type *prop,
 	if (!p->set(obj, p)) {
 		return 0;
 	}
+
 	return 1;
 }
 
@@ -480,18 +474,6 @@ int pvseg_get_property(const struct pv_segment *pvseg,
 		       struct lvm_property_type *prop)
 {
 	return _get_property(pvseg, prop, PVSEGS);
-}
-
-int lv_create_param_get_property(const struct lvcreate_params *lvcp,
-		struct lvm_property_type *prop)
-{
-	return _get_property(lvcp, prop, LV_CREATE_PARAMS);
-}
-
-int lv_create_param_set_property(struct lvcreate_params *lvcp,
-		    struct lvm_property_type *prop)
-{
-	return _set_property(lvcp, prop, LV_CREATE_PARAMS);
 }
 
 int pv_get_property(const struct physical_volume *pv,

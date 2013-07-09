@@ -50,10 +50,4 @@ int vg_set_property(struct volume_group *vg,
 int pv_set_property(struct physical_volume *pv,
 		    struct lvm_property_type *prop);
 
-int lv_create_param_get_property(const struct lvcreate_params *lvcp,
-		struct lvm_property_type *prop);
-
-int lv_create_param_set_property(struct lvcreate_params *lvcp,
-		    struct lvm_property_type *prop);
-
 #endif

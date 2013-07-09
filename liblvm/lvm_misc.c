@@ -47,8 +47,7 @@ struct dm_list *tag_list_copy(struct dm_pool *p, struct dm_list *tag_list)
 
 struct lvm_property_value get_property(const pv_t pv, const vg_t vg,
 				       const lv_t lv, const lvseg_t lvseg,
-				       const pvseg_t pvseg, const struct lvcreate_params *lvcp,
-				       const char *name)
+				       const pvseg_t pvseg, const char *name)
 {
 	struct lvm_property_type prop;
 	struct lvm_property_value v = { 0 };
@@ -70,9 +69,6 @@ struct lvm_property_value get_property(const pv_t pv, const vg_t vg,
 	} else if (pvseg) {
 		if (!pvseg_get_property(pvseg, &prop))
 			return v;
-	} else if (lvcp) {
-		if (!lv_create_param_get_property(lvcp, &prop))
-					return v;
 	} else {
 		log_errno(EINVAL, "Invalid NULL handle passed to library function.");
 		return v;
@@ -91,8 +87,7 @@ struct lvm_property_value get_property(const pv_t pv, const vg_t vg,
 
 
 int set_property(const pv_t pv, const vg_t vg, const lv_t lv,
-			struct lvcreate_params *lvcp, const char *name,
-			struct lvm_property_value *v)
+		 const char *name, struct lvm_property_value *v)
 {
 	struct lvm_property_type prop;
 
@@ -116,13 +111,6 @@ int set_property(const pv_t pv, const vg_t vg, const lv_t lv,
 			v->is_valid = 0;
 			return -1;
 		}
-	} else if (lvcp) {
-		if (!lv_create_param_set_property(lvcp, &prop)) {
-			v->is_valid = 0;
-			return -1;
-		}
-	} else {
-		return -1;
 	}
 	return 0;
 }

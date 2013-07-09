@@ -53,13 +53,13 @@ uint64_t lvm_pv_get_free(const pv_t pv)
 
 struct lvm_property_value lvm_pv_get_property(const pv_t pv, const char *name)
 {
-	return get_property(pv, NULL, NULL, NULL, NULL, NULL, name);
+	return get_property(pv, NULL, NULL, NULL, NULL, name);
 }
 
 struct lvm_property_value lvm_pvseg_get_property(const pvseg_t pvseg,
 						 const char *name)
 {
-	return get_property(NULL, NULL, NULL, NULL, pvseg, NULL, name);
+	return get_property(NULL, NULL, NULL, NULL, pvseg, name);
 }
 
 struct lvm_list_wrapper
