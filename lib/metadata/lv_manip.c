@@ -5277,6 +5277,51 @@ static struct logical_volume *_create_virtual_origin(struct cmd_context *cmd,
 	return lv;
 }
 
+/*
+ * Automatically set ACTIVATION_SKIP flag for the LV supplied - this
+ * is default behaviour. If override_default is set, then override
+ * the default behaviour and add/clear the flag based on 'add_skip' arg
+ * supplied instead.
+ */
+void lv_set_activation_skip(struct logical_volume *lv, int override_default,
+			    int add_skip)
+{
+	int skip;
+
+	/* override default behaviour */
+	if (override_default)
+		skip = add_skip;
+	/* default behaviour */
+	else if (lv_is_thin_volume(lv) && first_seg(lv)->origin)
+		skip = 1; /* skip activation for thin snapshots by default */
+	else
+		skip = 0;
+
+	if (skip)
+		lv->status |= LV_ACTIVATION_SKIP;
+	else
+		lv->status &= ~LV_ACTIVATION_SKIP;
+}
+
+/*
+ * Get indication whether the LV should be skipped during activation
+ * based on the ACTIVATION_SKIP flag (deactivation is never skipped!).
+ * If 'override_lv_skip_flag' is set, then override it based on the value
+ * of the 'skip' arg supplied instead.
+ */
+int lv_activation_skip(struct logical_volume *lv, activation_change_t activate,
+		      int override_lv_skip_flag, int skip)
+{
+	/* Do not skip deactivation! */
+	if ((activate == CHANGE_AN) || (activate == CHANGE_ALN))
+		return 0;
+
+	if (override_lv_skip_flag)
+		return skip;
+
+	return (lv->status & LV_ACTIVATION_SKIP) ? 1 : 0;
+}
+
 /* Thin notes:
  * If lp->thin OR lp->activate is AY*, activate the pool if not already active.
  * If lp->thin, create thin LV within the pool - as a snapshot if lp->snapshot.
@@ -5638,6 +5683,9 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 		}
 	}
 
+	lv_set_activation_skip(lv, lp->activation_skip & ACTIVATION_SKIP_SET,
+			       lp->activation_skip & ACTIVATION_SKIP_SET_ENABLED);
+
 	/* store vg on disk(s) */
 	if (!vg_write(vg) || !vg_commit(vg))
 		return_NULL;
@@ -5656,6 +5704,12 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 	if (test_mode()) {
 		log_verbose("Test mode: Skipping activation and zeroing.");
 		goto out;
+	}
+
+	if (lv_activation_skip(lv, lp->activate, lp->activation_skip & ACTIVATION_SKIP_IGNORE, 0)) {
+		log_verbose("ACTIVATION_SKIP flag set for LV %s/%s, skipping activation.",
+			    lv->vg->name, lv->name);
+		lp->activate = CHANGE_AN;
 	}
 
 	if (seg_is_thin(lp)) {

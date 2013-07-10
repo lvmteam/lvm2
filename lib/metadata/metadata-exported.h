@@ -100,6 +100,8 @@
 
 #define LV_WRITEMOSTLY		UINT64_C(0x0000010000000000)	/* LV (RAID1) */
 
+#define LV_ACTIVATION_SKIP	UINT64_C(0x0000020000000000)	/* LV */
+
 /* Format features flags */
 #define FMT_SEGMENTS		0x00000001U	/* Arbitrary segment params? */
 #define FMT_MDAS		0x00000002U	/* Proper metadata areas? */
@@ -698,6 +700,10 @@ struct lvcreate_params {
 	int minor; /* all */
 	int log_count; /* mirror */
 	int nosync; /* mirror */
+#define ACTIVATION_SKIP_SET		0x01 /* request to set LV activation skip flag state */
+#define ACTIVATION_SKIP_SET_ENABLED	0x02 /* set the LV activation skip flag state to 'enabled' */
+#define ACTIVATION_SKIP_IGNORE		0x04 /* request to ignore LV activation skip flag (if any) */
+	int activation_skip; /* activation skip flags */
 	activation_change_t activate; /* non-snapshot, non-mirror */
 	thin_discards_t discards;     /* thin */
 
@@ -744,6 +750,17 @@ struct lvcreate_params {
 
 struct logical_volume *lv_create_single(struct volume_group *vg,
 					struct lvcreate_params *lp);
+
+/*
+ * The activation can be skipped for selected LVs. Some LVs are skipped
+ * by default (e.g. thin snapshots), others can be skipped on demand by
+ * overriding the default behaviour. The flag that causes the activation
+ * skip on next activations is stored directly in metadata for each LV
+ * as ACTIVATION_SKIP flag.
+ */
+void lv_set_activation_skip(struct logical_volume *lv, int override_default, int add_skip_flag);
+int lv_activation_skip(struct logical_volume *lv, activation_change_t activate,
+		       int override_lv_skip_flag, int skip);
 
 /*
  * Functions for layer manipulation

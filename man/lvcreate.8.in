@@ -9,6 +9,9 @@ lvcreate \- create a logical volume in an existing volume group
 .IR AllocationPolicy ]
 .RB [ \-a | \-\-activate
 .RI [ a | e | l ]{ y | n }]
+.RB [ \-k | \-\-setactivationskip
+.RI { y | n }]
+.RB [ \-K | \-\-ignoreactivationskip ]
 .RB [ \-A | \-\-autobackup
 .RI { y | n }]
 .RB [ \-C | \-\-contiguous
@@ -135,6 +138,19 @@ and it can't be overridden. If the clustered locking is enabled,
 \fB\-a\fIey\fR will activate exclusively on one node and
 .IR \fB\-a { a | l } y
 will activate only on the local node.
+.TP
+.IR \fB\-k ", " \fB\-\-setactivationskip " " { y | n }
+Controls whether Logical Volumes are persistently flagged to be skipped during
+activation. By default, thin snapshot volumes are flagged for activation skip.
+To activate such volumes, an extra \fB\-K/\-\-ignoreactivationskip\fP option must
+be used. The flag is not applied during deactivation.
+Use \fBlvchange \-k/\-\-setactivationskip {y | n}\fP command to attach or
+detach the flag for existing volumes. To see whether the flag is attached,
+use \fBlvs\fP command where the state of the flag is reported within
+\fBlv_attr\fP bits.
+.TP
+.IR \fB\-K ", " \fB\-\-ignoreactivationskip
+Ignore the flag to skip Logical Volumes during activation.
 .TP
 .BR \-c ", " \-\-chunksize " " \fIChunkSize [ \fIbBsSkKmMgG ]
 Gives the size of chunk for snapshot and thin pool logical volumes.

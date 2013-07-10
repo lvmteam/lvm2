@@ -195,6 +195,8 @@ xx(lvcreate,
    "\t[--ignoremonitoring]\n"
    "\t[--monitor {y|n}]\n"
    "\t[-i|--stripes Stripes [-I|--stripesize StripeSize]]\n"
+   "\t[-k|--setactivationskip {y|n}]\n"
+   "\t[-K|--ignoreactivationskip] \n"
    "\t{-l|--extents LogicalExtentsNumber[%{VG|PVS|FREE}] |\n"
    "\t -L|--size LogicalVolumeSize[bBsSkKmMgGtTpPeE]}\n"
    "\t[-M|--persistent {y|n}] [--major major] [--minor minor]\n"
@@ -233,6 +235,8 @@ xx(lvcreate,
    "\t[--ignoremonitoring]\n"
    "\t[--monitor {y|n}]\n"
    "\t[-i|--stripes Stripes [-I|--stripesize StripeSize]]\n"
+   "\t[-k|--activationskip {y|n}]\n"
+   "\t[-K|--ignoreactivationskip] \n"
    "\t{-l|--extents LogicalExtentsNumber[%{VG|FREE|ORIGIN}] |\n"
    "\t -L|--size LogicalVolumeSize[bBsSkKmMgGtTpPeE]}\n"
    "\t[--poolmetadatasize MetadataVolumeSize[bBsSkKmMgG]]\n"
@@ -252,10 +256,11 @@ xx(lvcreate,
    chunksize_ARG, contiguous_ARG, corelog_ARG, discards_ARG, extents_ARG,
    ignoremonitoring_ARG, major_ARG, minor_ARG, mirrorlog_ARG, mirrors_ARG,
    monitor_ARG, minrecoveryrate_ARG, maxrecoveryrate_ARG, name_ARG, nosync_ARG,
-   noudevsync_ARG, permission_ARG,
-   persistent_ARG, readahead_ARG, regionsize_ARG, size_ARG, snapshot_ARG,
-   stripes_ARG, stripesize_ARG, test_ARG, thin_ARG, thinpool_ARG, type_ARG,
-   virtualoriginsize_ARG, poolmetadatasize_ARG, virtualsize_ARG, zero_ARG)
+   noudevsync_ARG, ignoreactivationskip_ARG, setactivationskip_ARG,
+   permission_ARG, persistent_ARG, readahead_ARG, regionsize_ARG, size_ARG,
+   snapshot_ARG, stripes_ARG, stripesize_ARG, test_ARG, thin_ARG, thinpool_ARG,
+   type_ARG, virtualoriginsize_ARG, poolmetadatasize_ARG, virtualsize_ARG,
+   zero_ARG)
 
 xx(lvdisplay,
    "Display information about a logical volume",
