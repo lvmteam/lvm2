@@ -176,6 +176,8 @@ of a RAID logical volume will clear this flag if no additional discrepancies
 are found.  ("check" and "repair" of a RAID Logical Volume can be done via
 the 'lvchange' command.)  (w)ritemostly signifies the devices in a RAID 1
 logical volume that have been marked write-mostly.
+.IP 10 3
+(n)o activation: this volume is flagged to be skipped during activation.
 .RE
 .TP
 .BR \-O ", " \-\-sort

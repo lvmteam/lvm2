@@ -530,7 +530,7 @@ char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 	struct lv_segment *seg;
 	char *repstr;
 
-	if (!(repstr = dm_pool_zalloc(mem, 10))) {
+	if (!(repstr = dm_pool_zalloc(mem, 11))) {
 		log_error("dm_pool_alloc failed");
 		return 0;
 	}
@@ -663,6 +663,11 @@ char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 		} else if (lv->status & LV_WRITEMOSTLY)
 			repstr[8] = 'w';  /* sub-LV has 'w'ritemostly */
 	}
+
+	if (lv->status & LV_ACTIVATION_SKIP)
+		repstr[9] = 'k';
+	else
+		repstr[9] = '-';
 
 out:
 	return repstr;
