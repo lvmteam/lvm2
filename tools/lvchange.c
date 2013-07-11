@@ -882,6 +882,8 @@ static int lvchange_profile(struct logical_volume *lv)
 	if (!vg_write(lv->vg) || !vg_commit(lv->vg))
 		return_0;
 
+	backup(lv->vg);
+
 	return 1;
 }
 
