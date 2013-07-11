@@ -22,6 +22,7 @@ SOURCES = test.c
 
 TARGETS += \
 	lvtest.t \
+	vglist.t \
 	percent.t \
 	pe_start.t \
 	thin_percent.t \
@@ -29,6 +30,7 @@ TARGETS += \
 
 SOURCES2 = \
 	lvtest.c \
+	vglist.c \
 	percent.c \
 	pe_start.c \
 	thin_percent.c \
