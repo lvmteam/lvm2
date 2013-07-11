@@ -216,6 +216,12 @@ static int _lvchange_activate(struct cmd_context *cmd, struct logical_volume *lv
 
 	activate = (activation_change_t) arg_uint_value(cmd, activate_ARG, CHANGE_AY);
 
+	if (lv_activation_skip(lv, activate, arg_count(cmd, ignoreactivationskip_ARG), 0)) {
+		log_verbose("ACTIVATON_SKIP flag set for LV %s/%s, skipping activation.",
+			    lv->vg->name, lv->name);
+		return 1;
+	}
+
 	if (lv_is_cow(lv) && !lv_is_virtual_origin(origin_from_cow(lv)))
 		lv = origin_from_cow(lv);
 
@@ -887,6 +893,23 @@ static int lvchange_profile(struct logical_volume *lv)
 	return 1;
 }
 
+static int lvchange_activation_skip(struct logical_volume *lv)
+{
+	int skip = arg_int_value(lv->vg->cmd, setactivationskip_ARG, 0);
+
+	lv_set_activation_skip(lv, 1, skip);
+
+	log_verbose("Changing activation skip flag to %s for LV %s.",
+		    lv->name, skip ? "enabled" : "disabled");
+
+	if (!vg_write(lv->vg) || !vg_commit(lv->vg))
+		return_0;
+
+	backup(lv->vg);
+
+	return 1;
+}
+
 
 static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 			   void *handle __attribute__((unused)))
@@ -1059,6 +1082,13 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 		docmds++;
 	}
 
+	if (arg_count(cmd, setactivationskip_ARG)) {
+		if (!archive(lv->vg))
+			return_ECMD_FAILED;
+		doit += lvchange_activation_skip(lv);
+		docmds++;
+	}
+
 	if (doit)
 		log_print_unless_silent("Logical volume \"%s\" changed.", lv->name);
 
@@ -1108,7 +1138,8 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 		arg_count(cmd, addtag_ARG) ||
 		arg_count(cmd, deltag_ARG) ||
 		arg_count(cmd, profile_ARG) ||
-		arg_count(cmd, detachprofile_ARG);
+		arg_count(cmd, detachprofile_ARG) ||
+		arg_count(cmd, setactivationskip_ARG);
 	int update_partial_unsafe =
 		arg_count(cmd, resync_ARG) ||
 		arg_count(cmd, alloc_ARG) ||

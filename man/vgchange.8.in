@@ -12,6 +12,7 @@ vgchange \- change attributes of a volume group
 .RB [ \-a | \-\-activate
 .RI [ a | e | l ]
 .RI { y | n }]
+.RB [ \-K | \-\-ignoreactivationskip ]
 .RB [ \-\-monitor
 .RI { y | n }]
 .RB [ \-\-poll
@@ -83,6 +84,9 @@ exclusively on one node or 'l' to activate/deactivate only
 on the local node.
 Logical volumes with single-host snapshots are always activated
 exclusively because they can only be used on one node at once.
+.TP
+.BR \-K ", " \-\-ignoreactivationskip
+Ignore the flag to skip Logical Volumes during activation.
 .TP
 .BR \-c ", " \-\-clustered " {" \fIy | \fIn }
 If clustered locking is enabled, this indicates whether this
