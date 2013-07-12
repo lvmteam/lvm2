@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2010-2013 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -18,20 +18,7 @@
 #include "lvm-types.h"
 #include "metadata.h"
 #include "report.h"
-
-struct lvm_property_type {
-	unsigned type;
-	const char *id;
-	unsigned is_settable:1;
-	unsigned is_string:1;
-	unsigned is_integer:1;
-	union {
-		const char *string;
-		uint64_t integer;
-	} value;
-	int (*get) (const void *obj, struct lvm_property_type *prop);
-	int (*set) (void *obj, struct lvm_property_type *prop);
-};
+#include "prop_common.h"
 
 int lvseg_get_property(const struct lv_segment *lvseg,
 		       struct lvm_property_type *prop);

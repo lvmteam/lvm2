@@ -58,6 +58,7 @@
 @top_srcdir@/lib/misc/lvm-wrappers.h
 @top_srcdir@/lib/misc/lvm-percent.h
 @top_srcdir@/lib/misc/sharedlib.h
+@top_srcdir@/lib/properties/prop_common.h
 @top_srcdir@/lib/report/properties.h
 @top_srcdir@/lib/report/report.h
 @top_srcdir@/lib/uuid/uuid.h
