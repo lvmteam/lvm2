@@ -697,6 +697,13 @@ activation {
     #
     # read_only_volume_list = [ "vg1", "vg2/lvol1", "@tag1", "@*" ]
 
+    # Each LV can have an 'activation skip' flag stored persistently against it.
+    # During activation, this flag is used to decide whether such an LV is skipped.
+    # The 'activation skip' flag can be set during LV creation and by default it
+    # is automatically set for thin snapshot LVs. The 'auto_set_activation_skip'
+    # enables or disables this automatic setting of the flag while LVs are created.
+    # auto_set_activation_skip = 1
+
     # For RAID or 'mirror' segment types, 'raid_region_size' is the
     # size (in kiB) of each:
     # - synchronization operation when initializing

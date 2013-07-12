@@ -87,6 +87,7 @@ struct cmd_context {
 	unsigned handles_unknown_segments:1;
 	unsigned use_linear_target:1;
 	unsigned partial_activation:1;
+	unsigned auto_set_activation_skip:1;
 	unsigned si_unit_consistency:1;
 	unsigned metadata_read_only:1;
 	unsigned threaded:1;		/* Set if running within a thread e.g. clvmd */

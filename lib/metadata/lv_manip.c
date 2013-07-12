@@ -5286,16 +5286,17 @@ static struct logical_volume *_create_virtual_origin(struct cmd_context *cmd,
 void lv_set_activation_skip(struct logical_volume *lv, int override_default,
 			    int add_skip)
 {
-	int skip;
+	int skip = 0;
 
 	/* override default behaviour */
 	if (override_default)
 		skip = add_skip;
 	/* default behaviour */
-	else if (lv_is_thin_volume(lv) && first_seg(lv)->origin)
-		skip = 1; /* skip activation for thin snapshots by default */
-	else
-		skip = 0;
+	else if (lv->vg->cmd->auto_set_activation_skip) {
+		 /* skip activation for thin snapshots by default */
+		if (lv_is_thin_volume(lv) && first_seg(lv)->origin)
+			skip = 1;
+	}
 
 	if (skip)
 		lv->status |= LV_ACTIVATION_SKIP;
