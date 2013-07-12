@@ -1,5 +1,11 @@
 Version 2.02.99 - 
 ===================================
+  Add activation/auto_set_activation_skip to control activation skip flagging.
+  Add 's(k)ip activation' bit to lvs -o lv_attr to indicate skip flag attached.
+  Add --ignoreactivationskip to lvcreate/vgchange/lvchange to ignore skip flag.
+  Add --setactivationskip to lvcreate/lvchange to set activation skip flag.
+  Automatically flag thin snapshots to be skipped during activation.
+  Add support for persistent flagging of LVs to be skipped during activation.
   Add --type profilable to lvm dumpconfig to show profilable config settings.
   Add --mergedconfig to lvm dumpconfig for merged --config/--profile/lvm.conf.
   Relase memory and unblock signals in lock_vol error path.
