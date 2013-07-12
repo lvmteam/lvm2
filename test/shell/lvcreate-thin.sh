@@ -136,13 +136,13 @@ check vg_field $vg lv_count 0
 # Create thin snapshot of thinLV
 lvcreate -L10M -V10M -T $vg/pool --name lv1
 mkfs.ext4 $DM_DEV_DIR/$vg/lv1
-lvcreate -s $vg/lv1
+lvcreate -s -K $vg/lv1
 fsck -p $DM_DEV_DIR/$vg/lvol0
-lvcreate -s $vg/lv1 --name lv2
-lvcreate -s $vg/lv1 --name $vg/lv3
-lvcreate --type snapshot $vg/lv1
-lvcreate --type snapshot $vg/lv1 --name lv4
-lvcreate --type snapshot $vg/lv1 --name $vg/lv5
+lvcreate -s -K $vg/lv1 --name lv2
+lvcreate -s -K $vg/lv1 --name $vg/lv3
+lvcreate --type snapshot -K $vg/lv1
+lvcreate --type snapshot -K $vg/lv1 --name lv4
+lvcreate --type snapshot -K $vg/lv1 --name $vg/lv5
 
 check_lv_field_modules_ thin-pool lv1 lvol0 lv2 lv3 lvol1 lv4 lv5
 check vg_field $vg lv_count 8
@@ -151,10 +151,10 @@ lvremove -ff $vg
 
 # Normal Snapshots of thinLV
 lvcreate -L4M -V2G -T $vg/pool --name lv1
-lvcreate -s $vg/lv1 -l1
-lvcreate -s $vg/lv1 -l1 --name lv2
-lvcreate -s $vg/lv1 -l1 --name $vg/lv3
-lvcreate -s lv1 -L4M --name $vg/lv4
+lvcreate -s -K $vg/lv1 -l1
+lvcreate -s -K $vg/lv1 -l1 --name lv2
+lvcreate -s -K $vg/lv1 -l1 --name $vg/lv3
+lvcreate -s -K lv1 -L4M --name $vg/lv4
 
 check_lv_field_modules_ snapshot lvol0 lv2 lv3 lv4
 check vg_field $vg lv_count 6
@@ -174,7 +174,7 @@ not lvcreate -L4M --chunksize 2G -T $vg/pool1
 
 lvcreate -L4M -V2G --name lv1 -T $vg/pool1
 # Origin name is not accepted
-not lvcreate -s $vg/lv1 -L4M -V2G --name $vg/lv4
+not lvcreate -s -K $vg/lv1 -L4M -V2G --name $vg/lv4
 
 # Check we cannot create mirror and thin or thinpool together
 not lvcreate -T mirpool -L4M --alloc anywhere -m1 $vg
