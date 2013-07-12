@@ -29,8 +29,8 @@ run_writemostly_check() {
 	d1=$(sed s/^[[:space:]]*// <<< "$d1")
 
 	# No writemostly flag should be there yet.
-	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*-$'
-	lvs -a --noheadings -o lv_attr $1/${2}_rimage_1 | grep '.*-$'
+	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*-.$'
+	lvs -a --noheadings -o lv_attr $1/${2}_rimage_1 | grep '.*-.$'
 
 	if [ `lvs --noheadings -o segtype $1/$2` != "raid1" ]; then
 		not lvchange --writemostly $d0 $1/$2
@@ -39,61 +39,61 @@ run_writemostly_check() {
 
 	# Set the flag
 	lvchange --writemostly $d0 $1/$2
-	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*w$'
+	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*w.$'
 
 	# Running again should leave it set (not toggle)
 	lvchange --writemostly $d0 $1/$2
-	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*w$'
+	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*w.$'
 
 	# Running again with ':y' should leave it set
 	lvchange --writemostly $d0:y $1/$2
-	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*w$'
+	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*w.$'
 
 	# ':n' should unset it
 	lvchange --writemostly $d0:n $1/$2
-	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*-$'
+	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*-.$'
 
 	# ':n' again should leave it unset
 	lvchange --writemostly $d0:n $1/$2
-	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*-$'
+	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*-.$'
 
 	# ':t' toggle to set
 	lvchange --writemostly $d0:t $1/$2
-	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*w$'
+	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*w.$'
 
 	# ':t' toggle to unset
 	lvchange --writemostly $d0:t $1/$2
-	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*-$'
+	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*-.$'
 
 	# ':y' to set
 	lvchange --writemostly $d0:y $1/$2
-	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*w$'
+	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*w.$'
 
 	# Toggle both at once
 	lvchange --writemostly $d0:t --writemostly $d1:t $1/$2
-	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*-$'
-	lvs -a --noheadings -o lv_attr $1/${2}_rimage_1 | grep '.*w$'
+	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*-.$'
+	lvs -a --noheadings -o lv_attr $1/${2}_rimage_1 | grep '.*w.$'
 
 	# Toggle both at once again
 	lvchange --writemostly $d0:t --writemostly $d1:t $1/$2
-	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*w$'
-	lvs -a --noheadings -o lv_attr $1/${2}_rimage_1 | grep '.*-$'
+	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*w.$'
+	lvs -a --noheadings -o lv_attr $1/${2}_rimage_1 | grep '.*-.$'
 
 	# Toggle one, unset the other
 	lvchange --writemostly $d0:n --writemostly $d1:t $1/$2
-	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*-$'
-	lvs -a --noheadings -o lv_attr $1/${2}_rimage_1 | grep '.*w$'
+	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*-.$'
+	lvs -a --noheadings -o lv_attr $1/${2}_rimage_1 | grep '.*w.$'
 
 	# Toggle one, set the other
 	lvchange --writemostly $d0:y --writemostly $d1:t $1/$2
-	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*w$'
-	lvs -a --noheadings -o lv_attr $1/${2}_rimage_1 | grep '.*-$'
+	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*w.$'
+	lvs -a --noheadings -o lv_attr $1/${2}_rimage_1 | grep '.*-.$'
 
 	# Partial flag supercedes writemostly flag
 	aux disable_dev $d0
-	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*p$'
+	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*p.$'
 	aux enable_dev $d0
-	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*w$'
+	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*w.$'
 
 	# Catch Bad writebehind values
 	not lvchange --writebehind "invalid" $1/$2
@@ -108,8 +108,8 @@ run_writemostly_check() {
 	lvconvert -m 0 $1/$2 $d1
 	lvconvert --type raid1 -m 1 $1/$2 $d1
 	[ ! `lvs --noheadings -o writebehind $1/$2` ]
-	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*-$'
-	lvs -a --noheadings -o lv_attr $1/${2}_rimage_1 | grep '.*-$'
+	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*-.$'
+	lvs -a --noheadings -o lv_attr $1/${2}_rimage_1 | grep '.*-.$'
 }
 
 # run_syncaction_check <VG> <LV>
@@ -141,7 +141,7 @@ run_syncaction_check() {
 	seek=$(($seek + $size)) # Jump halfway through the RAID image
 
 	# Check all is normal
-	if ! lvs --noheadings -o lv_attr $1/$2 | grep '.*-$' ||
+	if ! lvs --noheadings -o lv_attr $1/$2 | grep '.*-.$' ||
 		[ `lvs --noheadings -o mismatches $1/$2` != 0 ]; then
 
 		# I think this is a kernel bug.  It happens randomly after
@@ -159,7 +159,7 @@ run_syncaction_check() {
 		sync
 	fi
 
-	lvs --noheadings -o lv_attr $1/$2 | grep '.*-$'
+	lvs --noheadings -o lv_attr $1/$2 | grep '.*-.$'
 	[ `lvs --noheadings -o mismatches $1/$2` == 0 ]
 
 	# Overwrite the last half of one of the PVs with crap
@@ -173,20 +173,20 @@ run_syncaction_check() {
 	# 'lvs' should show results
 	lvchange --syncaction check $1/$2
 	aux wait_for_sync $1 $2
-	lvs --noheadings -o lv_attr $1/$2 | grep '.*m$'
+	lvs --noheadings -o lv_attr $1/$2 | grep '.*m.$'
 	[ `lvs --noheadings -o mismatches $1/$2` != 0 ]
 
 	# "repair" will fix discrepancies and record number fixed
 	lvchange --syncaction repair $1/$2
 	aux wait_for_sync $1 $2
-	lvs --noheadings -o lv_attr $1/$2 | grep '.*m$'
+	lvs --noheadings -o lv_attr $1/$2 | grep '.*m.$'
 	[ `lvs --noheadings -o mismatches $1/$2` != 0 ]
 
 	# Final "check" should show no mismatches
 	# 'lvs' should show results
 	lvchange --syncaction check $1/$2
 	aux wait_for_sync $1 $2
-	lvs --noheadings -o lv_attr $1/$2 | grep '.*-$'
+	lvs --noheadings -o lv_attr $1/$2 | grep '.*-.$'
 	[ `lvs --noheadings -o mismatches $1/$2` == 0 ]
 }
 
@@ -208,16 +208,16 @@ run_refresh_check() {
 	dd if=/dev/urandom of=/dev/$1/$2 bs=1k count=$size
 
 	# Check for 'p'artial flag
-	lvs --noheadings -o lv_attr $1/$2 | grep '.*p$'
+	lvs --noheadings -o lv_attr $1/$2 | grep '.*p.$'
 
 	aux enable_dev "$dev2"
 
 	# Check for 'r'efresh flag
-	lvs --noheadings -o lv_attr $1/$2 | grep '.*r$'
+	lvs --noheadings -o lv_attr $1/$2 | grep '.*r.$'
 
 	lvchange --refresh $1/$2
 	aux wait_for_sync $1 $2
-	lvs --noheadings -o lv_attr $1/$2 | grep '.*-$'
+	lvs --noheadings -o lv_attr $1/$2 | grep '.*-.$'
 
 	# Writing random data above should mean that the devices
 	# were out-of-sync.  The refresh should have taken care
@@ -225,7 +225,7 @@ run_refresh_check() {
 	# are repaired, it will show up in the 'lvs' output.
 	lvchange --syncaction repair $1/$2
 	aux wait_for_sync $1 $2
-	lvs --noheadings -o lv_attr $1/$2 | grep '.*-$'
+	lvs --noheadings -o lv_attr $1/$2 | grep '.*-.$'
 }
 
 # run_checks <VG> <LV> [snapshot_dev]

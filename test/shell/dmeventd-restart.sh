@@ -15,9 +15,9 @@ aux prepare_dmeventd
 
 aux prepare_vg 5
 
-lvcreate -aey -m 3 --nosync --ig -l1 -n 4way $vg
+lvcreate -aey -m 3 --nosync --ignoremonitoring -l1 -n 4way $vg
 lvchange --monitor y $vg/4way
-lvcreate -aey -m 2 --nosync --ig -l1 -n 3way $vg
+lvcreate -aey -m 2 --nosync --ignoremonitoring -l1 -n 3way $vg
 lvchange --monitor y $vg/3way
 
 dmeventd -R -f &

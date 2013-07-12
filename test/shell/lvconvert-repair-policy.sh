@@ -23,7 +23,7 @@ cleanup() {
 	for d in "$@"; do aux enable_dev "$d"; done
 	for d in "$@"; do vgextend $vg "$d"; done
 	lvremove -ff $vg/mirror
-	lvcreate -aey -m 1 --ig -l 2 -n mirror $vg "$dev1" "$dev2" "$dev3":0
+	lvcreate -aey -m 1 --ignoremonitoring -l 2 -n mirror $vg "$dev1" "$dev2" "$dev3":0
 }
 
 repair() {

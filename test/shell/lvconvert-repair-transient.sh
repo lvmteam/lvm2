@@ -13,7 +13,7 @@
 
 aux prepare_vg 5
 
-lvcreate -aey -m 3 --ig -L 1 -n 4way $vg
+lvcreate -aey -m 3 --ignoremonitoring -L 1 -n 4way $vg
 aux disable_dev "$dev2" "$dev4"
 mkfs.ext3 $DM_DEV_DIR/$vg/4way &
 sleep 1
