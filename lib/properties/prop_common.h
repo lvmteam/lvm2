@@ -62,6 +62,15 @@ static int _ ## NAME ## _set (void *obj, struct lvm_property_type *prop) \
 	return 1; \
 }
 
+#define SET_NUM_PROPERTY(NAME, VALUE, TYPE, VAR)			\
+static int _ ## NAME ## _set (void *obj, struct lvm_property_type *prop) \
+{ \
+	struct TYPE *VAR = (struct TYPE *)obj; \
+\
+	VALUE = prop->value.integer;		\
+	return 1; \
+}
+
 #define GET_STR_PROPERTY_FN(NAME, VALUE, TYPE, VAR)			\
 static int _ ## NAME ## _get (const void *obj, struct lvm_property_type *prop) \
 { \

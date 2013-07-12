@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008,2010 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2008-2013 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -20,8 +20,10 @@
 struct dm_list *tag_list_copy(struct dm_pool *p, struct dm_list *tag_list);
 struct lvm_property_value get_property(const pv_t pv, const vg_t vg,
 				       const lv_t lv, const lvseg_t lvseg,
-				       const pvseg_t pvseg, const char *name);
+				       const pvseg_t pvseg, const struct lvcreate_params *lvcp,
+				       const char *name);
 int set_property(const pv_t pv, const vg_t vg, const lv_t lv,
-		 const char *name, struct lvm_property_value *value);
+			struct lvcreate_params *lvcp, const char *name,
+			struct lvm_property_value *value);
 
 #endif

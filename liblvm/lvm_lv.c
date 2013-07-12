@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008,2009 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2008-2013 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -21,8 +21,18 @@
 #include "activate.h"
 #include "lvm_misc.h"
 #include "lvm2app.h"
+#include "lvm_prop.h"
 
 /* FIXME Improve all the log messages to include context. Which VG/LV as a minimum? */
+
+struct lvm_lv_create_params
+{
+	uint32_t magic;
+	vg_t vg;
+	struct lvcreate_params lvp;
+};
+
+#define LV_CREATE_PARAMS_MAGIC 0xFEED0001
 
 static int _lv_check_handle(const lv_t lv, const int vg_writeable)
 {
@@ -62,13 +72,13 @@ const char *lvm_lv_get_origin(const lv_t lv)
 
 struct lvm_property_value lvm_lv_get_property(const lv_t lv, const char *name)
 {
-	return get_property(NULL, NULL, lv, NULL, NULL, name);
+	return get_property(NULL, NULL, lv, NULL, NULL, NULL, name);
 }
 
 struct lvm_property_value lvm_lvseg_get_property(const lvseg_t lvseg,
 						 const char *name)
 {
-	return get_property(NULL, NULL, NULL, lvseg, NULL, name);
+	return get_property(NULL, NULL, NULL, lvseg, NULL, NULL, name);
 }
 
 uint64_t lvm_lv_is_active(const lv_t lv)
@@ -346,3 +356,280 @@ int lvm_lv_resize(const lv_t lv, uint64_t new_size)
 	return 0;
 }
 
+lv_t lvm_lv_snapshot(const lv_t lv, const char *snap_name,
+						uint64_t max_snap_size)
+{
+	struct lvm_lv_create_params *lvcp = NULL;
+
+	lvcp = lvm_lv_params_create_snapshot(lv, snap_name, max_snap_size);
+	if (lvcp) {
+		return lvm_lv_create(lvcp);
+	}
+	return NULL;
+}
+
+/* Set defaults for thin pool specific LV parameters */
+static void _lv_set_pool_params(struct lvcreate_params *lp,
+				vg_t vg, const char *pool,
+				uint64_t extents, uint64_t meta_size)
+{
+	_lv_set_default_params(lp, vg, NULL, extents);
+
+	lp->pool = pool;
+
+	lp->create_thin_pool = 1;
+	lp->segtype = get_segtype_from_string(vg->cmd, "thin-pool");
+	lp->stripes = 1;
+
+	if (!meta_size) {
+		lp->poolmetadatasize = extents * vg->extent_size /
+			(lp->chunk_size * (SECTOR_SIZE / 64));
+		while ((lp->poolmetadatasize >
+			(2 * DEFAULT_THIN_POOL_OPTIMAL_SIZE / SECTOR_SIZE)) &&
+		       lp->chunk_size < DM_THIN_MAX_DATA_BLOCK_SIZE) {
+			lp->chunk_size <<= 1;
+			lp->poolmetadatasize >>= 1;
+	         }
+	} else
+		lp->poolmetadatasize = meta_size;
+
+	if (lp->poolmetadatasize % vg->extent_size)
+		lp->poolmetadatasize +=
+			vg->extent_size - lp->poolmetadatasize % vg->extent_size;
+
+	lp->poolmetadataextents =
+		extents_from_size(vg->cmd, lp->poolmetadatasize / SECTOR_SIZE,
+						   vg->extent_size);
+}
+
+lv_create_params_t lvm_lv_params_create_thin_pool(vg_t vg,
+		const char *pool_name, uint64_t size, uint32_t chunk_size,
+		uint64_t meta_size, lvm_thin_discards_t discard)
+{
+	uint64_t extents = 0;
+	struct lvm_lv_create_params *lvcp = NULL;
+
+	if (meta_size > (2 * DEFAULT_THIN_POOL_MAX_METADATA_SIZE)) {
+		log_error("Invalid metadata size");
+		return NULL;
+	}
+
+	if (meta_size &&
+		meta_size < (2 * DEFAULT_THIN_POOL_MIN_METADATA_SIZE)) {
+		log_error("Invalid metadata size");
+		return NULL;
+	}
+
+	if (vg_read_error(vg))
+		return NULL;
+
+	if (!vg_check_write_mode(vg))
+		return NULL;
+
+	if (pool_name == NULL || !strlen(pool_name)) {
+		log_error("pool_name invalid");
+		return NULL;
+	}
+
+	if (!(extents = extents_from_size(vg->cmd, size / SECTOR_SIZE,
+					  vg->extent_size))) {
+		log_error("Unable to create LV thin pool without size.");
+		return NULL;
+	}
+
+	lvcp = dm_pool_zalloc(vg->vgmem, sizeof (struct lvm_lv_create_params));
+
+	if (lvcp) {
+		lvcp->vg = vg;
+		lvcp->lvp.discards = discard;
+
+		if (chunk_size)
+			lvcp->lvp.chunk_size = chunk_size;
+		else
+			lvcp->lvp.chunk_size = DEFAULT_THIN_POOL_CHUNK_SIZE * 2;
+
+		if (lvcp->lvp.chunk_size < DM_THIN_MIN_DATA_BLOCK_SIZE ||
+				lvcp->lvp.chunk_size > DM_THIN_MAX_DATA_BLOCK_SIZE) {
+			log_error("Invalid chunk_size");
+			return NULL;
+		}
+
+		_lv_set_pool_params(&lvcp->lvp, vg, pool_name, extents, meta_size);
+
+		lvcp->magic = LV_CREATE_PARAMS_MAGIC;
+	}
+	return lvcp;
+}
+
+/* Set defaults for thin LV specific parameters */
+static void _lv_set_thin_params(struct lvcreate_params *lp,
+				vg_t vg, const char *pool,
+				const char *lvname,
+				uint64_t extents)
+{
+	_lv_set_default_params(lp, vg, lvname, extents);
+
+	lp->thin = 1;
+	lp->pool = pool;
+	lp->segtype = get_segtype_from_string(vg->cmd, "thin");
+
+	lp->voriginsize = extents * vg->extent_size;
+	lp->voriginextents = extents_from_size(vg->cmd, lp->voriginsize,
+						   vg->extent_size);
+
+	lp->stripes = 1;
+}
+
+lv_create_params_t lvm_lv_params_create_snapshot(const lv_t lv,
+													const char *snap_name,
+													uint64_t max_snap_size)
+{
+	uint64_t size = 0;
+	uint64_t extents = 0;
+	struct lvm_lv_create_params *lvcp = NULL;
+
+	if (vg_read_error(lv->vg)) {
+		return NULL;
+	}
+
+	if (!vg_check_write_mode(lv->vg))
+			return NULL;
+
+	if (snap_name == NULL || !strlen(snap_name)) {
+		log_error("snap_name invalid");
+		return NULL;
+	}
+
+	if (max_snap_size) {
+		size = max_snap_size >> SECTOR_SHIFT;
+		extents = extents_from_size(lv->vg->cmd, size, lv->vg->extent_size);
+	}
+
+	if (!size && !lv_is_thin_volume(lv) ) {
+		log_error("Origin is not thin, specify size of snapshot");
+					return NULL;
+	}
+
+	lvcp = dm_pool_zalloc(lv->vg->vgmem, sizeof (struct lvm_lv_create_params));
+	if (lvcp) {
+		lvcp->vg = lv->vg;
+		_lv_set_default_params(&lvcp->lvp, lv->vg, snap_name, extents);
+		lvcp->lvp.snapshot = 1;
+
+
+		if (size) {
+			lvcp->lvp.segtype = _get_segtype(lvcp->vg->cmd);
+			lvcp->lvp.chunk_size = 8;
+		} else {
+			lvcp->lvp.segtype = get_segtype_from_string(lv->vg->cmd, "thin");
+
+			if (!lvcp->lvp.segtype) {
+				log_error(INTERNAL_ERROR "Segtype thin not found.");
+				return NULL;
+			}
+
+			lvcp->lvp.pool = first_seg(lv)->pool_lv->name;
+		}
+
+		lvcp->lvp.stripes = 1;
+		lvcp->lvp.origin = lv->name;
+
+		lvcp->magic = LV_CREATE_PARAMS_MAGIC;
+	}
+
+	return lvcp;
+}
+
+
+lv_create_params_t lvm_lv_params_create_thin(const vg_t vg, const char *pool_name,
+									const char *lvname, uint64_t size)
+{
+	struct lvm_lv_create_params *lvcp = NULL;
+	uint64_t extents = 0;
+
+	/* precondition checks */
+	if (vg_read_error(vg))
+		return NULL;
+
+	if (!vg_check_write_mode(vg))
+		return NULL;
+
+	if (pool_name == NULL || !strlen(pool_name)) {
+		log_error("pool_name invalid");
+		return NULL;
+	}
+
+	if (lvname == NULL || !strlen(lvname)) {
+		log_error("lvname invalid");
+		return NULL;
+	}
+
+	if (!(extents = extents_from_size(vg->cmd, size / SECTOR_SIZE,
+			vg->extent_size))) {
+		log_error("Unable to create thin LV without size.");
+		return NULL;
+	}
+
+	lvcp = dm_pool_zalloc(vg->vgmem, sizeof (struct lvm_lv_create_params));
+	if (lvcp) {
+		lvcp->vg = vg;
+		_lv_set_thin_params(&lvcp->lvp, vg, pool_name, lvname, extents);
+		lvcp->magic = LV_CREATE_PARAMS_MAGIC;
+	}
+
+	return lvcp;
+}
+
+struct lvm_property_value lvm_lv_params_get_property(
+						const lv_create_params_t params,
+						const char *name)
+{
+	struct lvm_property_value rc;
+
+	rc.is_valid = 0;
+
+	if (params && params->magic == LV_CREATE_PARAMS_MAGIC) {
+		rc = get_property(NULL, NULL, NULL, NULL, NULL, &params->lvp, name);
+	} else {
+		log_error("Invalid lv_create_params parameter");
+	}
+	return rc;
+}
+
+int lvm_lv_params_set_property(lv_create_params_t params, const char *name,
+								struct lvm_property_value *prop)
+{
+	int rc = -1;
+
+	if (params && params->magic == LV_CREATE_PARAMS_MAGIC) {
+		rc = set_property(NULL, NULL, NULL, &params->lvp, name, prop);
+	} else {
+		log_error("Invalid lv_create_params parameter");
+	}
+	return rc;
+}
+
+lv_t lvm_lv_create(lv_create_params_t params)
+{
+	struct lv_list *lvl = NULL;
+
+	if (params && params->magic == LV_CREATE_PARAMS_MAGIC) {
+		if (!params->lvp.segtype) {
+			log_error("segtype parameter is NULL");
+			return_NULL;
+		}
+		if (!lv_create_single(params->vg, &params->lvp))
+				return_NULL;
+
+		/*
+		 * In some case we are making a thin pool so lv_name is not valid, but
+		 * pool is.
+		 */
+		if (!(lvl = find_lv_in_vg(params->vg,
+				(params->lvp.lv_name) ? params->lvp.lv_name : params->lvp.pool)))
+			return_NULL;
+		return (lv_t) lvl->lv;
+	}
+	log_error("Invalid lv_create_params parameter");
+	return NULL;
+}
