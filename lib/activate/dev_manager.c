@@ -485,25 +485,27 @@ static const struct dm_info *_cached_info(struct dm_pool *mem,
 					  const struct logical_volume *lv,
 					  const char *layer)
 {
-	const char *dlid;
-	struct dm_tree_node *dnode;
-	const struct dm_info *dinfo;
+	char *dlid;
+	const struct dm_tree_node *dnode;
+	const struct dm_info *dinfo = NULL;
 
 	if (!(dlid = build_dm_uuid(mem, lv->lvid.s, layer))) {
-		log_error("dlid build failed for %s", lv->name);
+		log_error("Failed to build dlid for %s.", lv->name);
 		return NULL;
 	}
 
 	if (!(dnode = dm_tree_find_node_by_uuid(dtree, dlid)))
-		return NULL;
+		goto out;
 
 	if (!(dinfo = dm_tree_node_get_info(dnode))) {
-		log_error("failed to get info from tree node for %s", lv->name);
-		return NULL;
+		log_error("Failed to get info from tree node for %s.", lv->name);
+		goto out;
 	}
 
 	if (!dinfo->exists)
-		return NULL;
+		dinfo = NULL;
+out:
+	dm_pool_free(mem, dlid);
 
 	return dinfo;
 }

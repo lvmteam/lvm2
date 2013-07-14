@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Release memory allocated with _cached_info().
   Add whole log_lv and metadata_lv sub volumes when creating partial tree.
   Properly use snapshot layer for origin which is also thin volume.
   Avoid generating metadata backup when calling update_pool_lv().
