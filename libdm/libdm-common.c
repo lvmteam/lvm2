@@ -1221,7 +1221,7 @@ static int _set_dev_node_read_ahead(const char *dev_name,
 		if (!get_dev_node_read_ahead(dev_name, major, minor, &current_read_ahead))
 			return_0;
 
-		if (current_read_ahead > read_ahead) {
+		if (current_read_ahead >= read_ahead) {
 			log_debug_activation("%s: retaining kernel read ahead of %" PRIu32
 				  " (requested %" PRIu32 ")",           
 				  dev_name, current_read_ahead, read_ahead);

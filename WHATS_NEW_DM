@@ -1,5 +1,6 @@
 Version 1.02.78 - 
 ===================================
+  Optimize out setting the same value or read_ahead.
   Add DM_ARRAY_SIZE public macro.
   Move syslog code out of signal handle in dmeventd.
   Add DM_TO_STRING public macro.
