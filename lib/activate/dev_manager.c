@@ -1728,22 +1728,19 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		    !_add_lv_to_dtree(dm, dtree, seg->external_lv, 1)) /* stack */
 			return_0;
 		if (seg->log_lv &&
-		    !_add_lv_to_dtree(dm, dtree, seg->log_lv, origin_only))
+		    !_add_lv_to_dtree(dm, dtree, seg->log_lv, 0))
 			return_0;
 		if (seg->metadata_lv &&
-		    !_add_lv_to_dtree(dm, dtree, seg->metadata_lv, origin_only))
+		    !_add_lv_to_dtree(dm, dtree, seg->metadata_lv, 0))
 			return_0;
 		if (seg->pool_lv &&
 		    !_add_lv_to_dtree(dm, dtree, seg->pool_lv, 1)) /* stack */
 			return_0;
 
 		for (s = 0; s < seg->area_count; s++) {
-			/* FIXME: raid requires to use  '0' instead of preserving
-			 * origin_only value for stacking */
 			if (seg_type(seg, s) == AREA_LV && seg_lv(seg, s) &&
 			    !_add_lv_to_dtree(dm, dtree, seg_lv(seg, s), 0))
 				return_0;
-			/* FIXME: raid tests fails with origin_only */
 			if (seg_is_raid(seg) &&
 			    !_add_lv_to_dtree(dm, dtree, seg_metalv(seg, s), 0))
 				return_0;

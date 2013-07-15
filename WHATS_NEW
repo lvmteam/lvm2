@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Add whole log_lv and metadata_lv sub volumes when creating partial tree.
   Properly use snapshot layer for origin which is also thin volume.
   Avoid generating metadata backup when calling update_pool_lv().
   Send thin messages also for active thin pool and inactive thin volume.
