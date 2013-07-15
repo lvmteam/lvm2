@@ -813,15 +813,17 @@ const struct dm_config_node *find_config_tree_node(struct cmd_context *cmd, int 
 const char *find_config_tree_str(struct cmd_context *cmd, int id, struct profile *profile)
 {
 	cfg_def_item_t *item = cfg_def_get_item_p(id);
-	const char *path = cfg_def_get_path(item);
+	const char *path;
 	int profile_applied = 0;
 	const char *str;
 
-	if (item->type != CFG_TYPE_STRING)
-		log_error(INTERNAL_ERROR "%s cfg tree element not declared as string.", path);
-
 	if (profile && !cmd->profile_params->global_profile)
 		profile_applied = override_config_tree_from_profile(cmd, profile);
+
+	path = cfg_def_get_path(item);
+
+	if (item->type != CFG_TYPE_STRING)
+		log_error(INTERNAL_ERROR "%s cfg tree element not declared as string.", path);
 
 	str = dm_config_tree_find_str(cmd->cft, path, cfg_def_get_default_value(item, CFG_TYPE_STRING));
 
@@ -834,17 +836,19 @@ const char *find_config_tree_str(struct cmd_context *cmd, int id, struct profile
 const char *find_config_tree_str_allow_empty(struct cmd_context *cmd, int id, struct profile *profile)
 {
 	cfg_def_item_t *item = cfg_def_get_item_p(id);
-	const char *path = cfg_def_get_path(item);
+	const char *path;
 	int profile_applied = 0;
 	const char *str;
+
+	if (profile && !cmd->profile_params->global_profile)
+		profile_applied = override_config_tree_from_profile(cmd, profile);
+
+	path = cfg_def_get_path(item);
 
 	if (item->type != CFG_TYPE_STRING)
 		log_error(INTERNAL_ERROR "%s cfg tree element not declared as string.", path);
 	if (!(item->flags & CFG_ALLOW_EMPTY))
 		log_error(INTERNAL_ERROR "%s cfg tree element not declared to allow empty values.", path);
-
-	if (profile && !cmd->profile_params->global_profile)
-		profile_applied = override_config_tree_from_profile(cmd, profile);
 
 	str = dm_config_tree_find_str_allow_empty(cmd->cft, path, cfg_def_get_default_value(item, CFG_TYPE_STRING));
 
@@ -857,15 +861,17 @@ const char *find_config_tree_str_allow_empty(struct cmd_context *cmd, int id, st
 int find_config_tree_int(struct cmd_context *cmd, int id, struct profile *profile)
 {
 	cfg_def_item_t *item = cfg_def_get_item_p(id);
-	const char *path = cfg_def_get_path(item);
+	const char *path;
 	int profile_applied = 0;
 	int i;
 
-	if (item->type != CFG_TYPE_INT)
-		log_error(INTERNAL_ERROR "%s cfg tree element not declared as integer.", path);
-
 	if (profile && !cmd->profile_params->global_profile)
 		profile_applied = override_config_tree_from_profile(cmd, profile);
+
+	path = cfg_def_get_path(item);
+
+	if (item->type != CFG_TYPE_INT)
+		log_error(INTERNAL_ERROR "%s cfg tree element not declared as integer.", path);
 
 	i = dm_config_tree_find_int(cmd->cft, path, cfg_def_get_default_value(item, CFG_TYPE_INT));
 
@@ -878,15 +884,17 @@ int find_config_tree_int(struct cmd_context *cmd, int id, struct profile *profil
 int64_t find_config_tree_int64(struct cmd_context *cmd, int id, struct profile *profile)
 {
 	cfg_def_item_t *item = cfg_def_get_item_p(id);
-	const char *path = cfg_def_get_path(item);
+	const char *path;
 	int profile_applied = 0;
 	int i64;
 
-	if (item->type != CFG_TYPE_INT)
-		log_error(INTERNAL_ERROR "%s cfg tree element not declared as integer.", path);
-
 	if (profile && !cmd->profile_params->global_profile)
 		profile_applied = override_config_tree_from_profile(cmd, profile);
+
+	path = cfg_def_get_path(item);
+
+	if (item->type != CFG_TYPE_INT)
+		log_error(INTERNAL_ERROR "%s cfg tree element not declared as integer.", path);
 
 	i64 = dm_config_tree_find_int64(cmd->cft, path, cfg_def_get_default_value(item, CFG_TYPE_INT));
 
@@ -899,15 +907,17 @@ int64_t find_config_tree_int64(struct cmd_context *cmd, int id, struct profile *
 float find_config_tree_float(struct cmd_context *cmd, int id, struct profile *profile)
 {
 	cfg_def_item_t *item = cfg_def_get_item_p(id);
-	const char *path = cfg_def_get_path(item);
+	const char *path;
 	int profile_applied = 0;
 	float f;
 
-	if (item->type != CFG_TYPE_FLOAT)
-		log_error(INTERNAL_ERROR "%s cfg tree element not declared as float.", path);
-
 	if (profile && !cmd->profile_params->global_profile)
 		profile_applied = override_config_tree_from_profile(cmd, profile);
+
+	path = cfg_def_get_path(item);
+
+	if (item->type != CFG_TYPE_FLOAT)
+		log_error(INTERNAL_ERROR "%s cfg tree element not declared as float.", path);
 
 	f = dm_config_tree_find_float(cmd->cft, path, cfg_def_get_default_value(item, CFG_TYPE_FLOAT));
 
@@ -924,11 +934,13 @@ int find_config_tree_bool(struct cmd_context *cmd, int id, struct profile *profi
 	int profile_applied = 0;
 	int b;
 
-	if (item->type != CFG_TYPE_BOOL)
-		log_error(INTERNAL_ERROR "%s cfg tree element not declared as boolean.", path);
-
 	if (profile && !cmd->profile_params->global_profile)
 		profile_applied = override_config_tree_from_profile(cmd, profile);
+
+	path = cfg_def_get_path(item);
+
+	if (item->type != CFG_TYPE_BOOL)
+		log_error(INTERNAL_ERROR "%s cfg tree element not declared as boolean.", path);
 
 	b = dm_config_tree_find_bool(cmd->cft, path, cfg_def_get_default_value(item, CFG_TYPE_BOOL));
 
