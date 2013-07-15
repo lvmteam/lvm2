@@ -298,7 +298,7 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 		case DM_THIN_MESSAGE_CREATE_THIN:
 			origin = first_seg(lmsg->u.lv)->origin;
 			/* Check if the origin is suspended */
-			if (origin && lv_info(cmd, origin, 0, &info, 0, 0) &&
+			if (origin && lv_info(cmd, origin, 1, &info, 0, 0) &&
 			    info.exists && !info.suspended) {
 				/* Origin is not suspended, but the transaction may have been
 				 * already transfered, so test for transaction_id and

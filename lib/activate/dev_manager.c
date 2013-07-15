@@ -1681,7 +1681,7 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		return_0;
 
 	if (origin_only && lv_is_thin_volume(lv)) {
-		if (!_add_dev_to_dtree(dm, dtree, lv, NULL))
+		if (!_add_dev_to_dtree(dm, dtree, lv, lv_layer(lv)))
 			return_0;
 #if 0
 		/* ? Use origin_only to avoid 'deep' thin pool suspend ? */

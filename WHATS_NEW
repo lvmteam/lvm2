@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Properly use snapshot layer for origin which is also thin volume.
   Avoid generating metadata backup when calling update_pool_lv().
   Send thin messages also for active thin pool and inactive thin volume.
   Add activation/auto_set_activation_skip to control activation skip flagging.
