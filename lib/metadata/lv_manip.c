@@ -4053,8 +4053,6 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 		if (!monitor_dev_for_events(cmd, lv, 0, 0))
 			stack;
 
-	backup(vg);
-
 	/*
 	 * Update lvm pool metadata (drop messages) if the pool has been
 	 * resumed and do a pool active/deactivate in other case.
@@ -4066,6 +4064,8 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 	if (lv_is_thin_pool(lv) &&
 	    !update_pool_lv(lv, !lv_is_active(lv)))
 		return_0;
+
+	backup(vg);
 
 	log_print_unless_silent("Logical volume %s successfully resized", lp->lv_name);
 
