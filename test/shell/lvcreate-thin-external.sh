@@ -32,32 +32,32 @@ mkfs.ext2 $DM_DEV_DIR/$vg/$lv1
 lvcreate -L4M -n $lv2 $vg
 mkfs.ext2 $DM_DEV_DIR/$vg/$lv2
 
-# Fail to create snapshot of rw LV
-not lvcreate -s -K $vg/$lv2 --thinpool $vg/pool
+# Fail to create external origin snapshot of rw LV
+not lvcreate -s $vg/$lv2 --thinpool $vg/pool
 
 lvchange -p r $vg/$lv2
 
 # Fail to create snapshot of active r LV
 # FIXME: kernel update needed
-not lvcreate -s -K $vg/$lv2 --thinpool $vg/pool
+not lvcreate -s $vg/$lv2 --thinpool $vg/pool
 
 # Deactivate LV we want to use as external origin
 # once kernel will ensure read-only this condition may go away
 lvchange -an $vg/$lv2
 
-lvcreate -s -K $vg/$lv2 --thinpool $vg/pool
+lvcreate -s $vg/$lv2 --thinpool $vg/pool
 
 # Fail with --thin and --snapshot
-not lvcreate -s -K $vg/$lv5 --name $vg/$lv7 -T $vg/newpool
+not lvcreate -s $vg/$lv5 --name $vg/$lv7 -T $vg/newpool
 
 # Fail to create already existing pool
-not lvcreate -s -K $vg/$lv2 -L10 --thinpool $vg/pool
-not lvcreate -s -K $vg/$lv2 --chunksize 64 --thinpool $vg/pool
-not lvcreate -s -K $vg/$lv2 --zero y --thinpool $vg/pool
-not lvcreate -s -K $vg/$lv2 --poolmetadata $vg/$lv1 --thinpool $vg/pool
+not lvcreate -s $vg/$lv2 -L10 --thinpool $vg/pool
+not lvcreate -s $vg/$lv2 --chunksize 64 --thinpool $vg/pool
+not lvcreate -s $vg/$lv2 --zero y --thinpool $vg/pool
+not lvcreate -s $vg/$lv2 --poolmetadata $vg/$lv1 --thinpool $vg/pool
 
 # Fail with nonexistent pool
-not lvcreate -s -K $vg/$lv2 --thinpool $vg/newpool
+not lvcreate -s $vg/$lv2 --thinpool $vg/newpool
 
 # Create pool and snap
 lvcreate -s -K $vg/$lv2 --name $vg/$lv3 -L20 --chunksize 128 --thinpool $vg/newpool
