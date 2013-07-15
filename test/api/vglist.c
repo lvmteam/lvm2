@@ -43,8 +43,6 @@ static void done(int ok) {
 
 int main(int argc, char *argv[])
 {
-	int status;
-
 	if (argc != 3)
 		abort();
 
