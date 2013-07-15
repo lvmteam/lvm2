@@ -1685,11 +1685,11 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 			return_0;
 #if 0
 		/* ? Use origin_only to avoid 'deep' thin pool suspend ? */
-		/* FIXME Implement dm_tree_node_skip_children optimisation */
-		if (!(uuid = build_dm_uuid(dm->mem, lv->lvid.s, lv_lauer(lv))))
+		/* FIXME Implement dm_tree_node_skip_childrens optimisation */
+		if (!(uuid = build_dm_uuid(dm->mem, lv->lvid.s, lv_layer(lv))))
 			return_0;
 		if ((thin_node = dm_tree_find_node_by_uuid(dtree, uuid)))
-			dm_tree_node_skip_children(thin_node, 1);
+			dm_tree_node_skip_childrens(thin_node, 1);
 #endif
 	}
 
