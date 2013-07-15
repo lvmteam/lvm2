@@ -35,9 +35,9 @@ vgcreate $vg -s 64K $(cat DEVICES)
 lvcreate -L10M -V10M -T $vg/pool --name $lv1
 mkfs.ext4 $DM_DEV_DIR/$vg/$lv1
 # create thin snapshot of thin LV
-lvcreate -K -s $vg/$lv1
+lvcreate -K -s $vg/$lv1 --name snap
 # check snapshot filesystem was properly frozen before snapping
-fsck -p $DM_DEV_DIR/$vg/lvol0
+fsck -p $DM_DEV_DIR/$vg/snap
 lvcreate -K -s $vg/$lv1 --name $lv2
 lvcreate -K -s $vg/$lv1 --name $vg/$lv3
 lvcreate --type snapshot $vg/$lv1
