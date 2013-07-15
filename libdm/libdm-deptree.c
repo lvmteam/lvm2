@@ -1484,8 +1484,12 @@ static int _node_send_messages(struct dm_tree_node *dnode,
 	if (!_thin_pool_status_transaction_id(dnode, &trans_id))
 		goto_bad;
 
-	if (trans_id == seg->transaction_id)
+	if (trans_id == seg->transaction_id) {
+		if (!dm_list_empty(&seg->thin_messages))
+			log_debug_activation("Thin pool transaction_id matches %" PRIu64
+					     ", skipping messages.", trans_id);
 		return 1; /* In sync - skip messages */
+	}
 
 	if (trans_id != (seg->transaction_id - 1)) {
 		log_error("Thin pool transaction_id=%" PRIu64 ", while expected: %" PRIu64 ".",
@@ -1784,9 +1788,12 @@ int dm_tree_activate_children(struct dm_tree_node *dnode,
 	 * resume should continue further, just whole command
 	 * has to report failure.
 	 */
-	if (r && dnode->props.send_messages &&
-	    !(r = _node_send_messages(dnode, uuid_prefix, uuid_prefix_len)))
-		stack;
+	if (r && dnode->props.send_messages) {
+		if (!(r = _node_send_messages(dnode, uuid_prefix, uuid_prefix_len)))
+			stack;
+		else
+			dnode->props.send_messages = 0; /* messages posted */
+	}
 
 	handle = NULL;
 
