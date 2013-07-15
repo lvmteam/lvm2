@@ -140,11 +140,11 @@ lvcreate -K -s $vg/lv1 --name snap_lv1
 fsck -p $DM_DEV_DIR/$vg/snap_lv1
 lvcreate -s $vg/lv1 --name lv2
 lvcreate -s $vg/lv1 --name $vg/lv3
-lvcreate --type snapshot $vg/lv1
+lvcreate --type snapshot $vg/lv1 --name lv6
 lvcreate --type snapshot $vg/lv1 --name lv4
 lvcreate --type snapshot $vg/lv1 --name $vg/lv5
 
-check_lv_field_modules_ thin-pool lv1 snap_lv1 lv2 lv3 lvol1 lv4 lv5
+check_lv_field_modules_ thin-pool lv1 snap_lv1 lv2 lv3 lv4 lv5 lv6
 check vg_field $vg lv_count 8
 lvremove -ff $vg
 
