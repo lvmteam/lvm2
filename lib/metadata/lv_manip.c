@@ -5548,18 +5548,17 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 		}
 	}
 
-	if (seg_is_thin_volume(lp) &&
-	    ((lp->activate == CHANGE_AY) ||
-	     (lp->activate == CHANGE_AE) ||
-	     (lp->activate == CHANGE_ALY))) {
+	if (seg_is_thin_volume(lp)) {
 		/* Ensure all stacked messages are submitted */
 		if (!(lvl = find_lv_in_vg(vg, lp->pool))) {
 			log_error("Unable to find existing pool LV %s in VG %s.",
 				  lp->pool, vg->name);
 			return NULL;
 		}
-		if (!update_pool_lv(lvl->lv, 1))
-			return_NULL;
+		if (lv_is_active(lvl->lv) ||
+		    ((lp->activate != CHANGE_AN) && (lp->activate != CHANGE_ALN)))
+			if (!update_pool_lv(lvl->lv, 1))
+				return_NULL;
 	}
 
 	if (vg_is_clustered(vg) && segtype_is_raid(lp->segtype)) {

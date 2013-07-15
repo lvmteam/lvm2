@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Send thin messages also for active thin pool and inactive thin volume.
   Add activation/auto_set_activation_skip to control activation skip flagging.
   Add 's(k)ip activation' bit to lvs -o lv_attr to indicate skip flag attached.
   Add --ignoreactivationskip to lvcreate/vgchange/lvchange to ignore skip flag.
