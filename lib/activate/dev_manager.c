@@ -817,7 +817,7 @@ static int _percent(struct dev_manager *dm, const char *name, const char *dlid,
 				 event_nr, fail_if_percent_unsupported))
 		return 1;
 
-	return 0;
+	return_0;
 }
 
 /* FIXME Merge with the percent function */
@@ -985,8 +985,8 @@ int dev_manager_snapshot_percent(struct dev_manager *dm,
 	 * Try and get some info on this device.
 	 */
 	log_debug_activation("Getting device status percentage for %s", name);
-	if (!(_percent(dm, name, dlid, "snapshot", 0, NULL, percent,
-		       NULL, fail_if_percent_unsupported)))
+	if (!_percent(dm, name, dlid, "snapshot", 0, NULL, percent,
+		      NULL, fail_if_percent_unsupported))
 		return_0;
 
 	/* If the snapshot isn't available, percent will be -1 */
@@ -1017,8 +1017,8 @@ int dev_manager_mirror_percent(struct dev_manager *dm,
 
 	log_debug_activation("Getting device %s status percentage for %s",
 			     target_type, name);
-	if (!(_percent(dm, name, dlid, target_type, wait, lv, percent,
-		       event_nr, 0)))
+	if (!_percent(dm, name, dlid, target_type, wait, lv, percent,
+		      event_nr, 0))
 		return_0;
 
 	return 1;
