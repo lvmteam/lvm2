@@ -3136,15 +3136,15 @@ int lv_rename_update(struct cmd_context *cmd, struct logical_volume *lv,
 		return 0;
 	}
 
+	if (!update_mda)
+		return 1;
+
 	lvl.lv = lv;
 	dm_list_add(&lvs_changed, &lvl.list);
 
 	/* rename active virtual origin too */
 	if (lv_is_cow(lv) && lv_is_virtual_origin(lvl2.lv = origin_from_cow(lv)))
 		dm_list_add_h(&lvs_changed, &lvl2.list);
-
-	if (!update_mda)
-		return 1;
 
 	log_verbose("Writing out updated volume group");
 	if (!vg_write(vg))
