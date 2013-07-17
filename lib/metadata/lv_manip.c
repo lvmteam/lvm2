@@ -2411,7 +2411,7 @@ int lv_add_segment(struct alloc_handle *ah,
 		return 0;
 	}
 
-	if ((status & MIRROR_LOG) && dm_list_size(&lv->segments)) {
+	if ((status & MIRROR_LOG) && !dm_list_empty(&lv->segments)) {
 		log_error("Log segments can only be added to an empty LV");
 		return 0;
 	}

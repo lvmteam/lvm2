@@ -687,8 +687,8 @@ static int pvremove_check(struct cmd_context *cmd, const char *name,
 	 * means checking every VG by scanning every
 	 * PV on the system.
 	 */
-	if (is_orphan(pv) && !dm_list_size(&pv->fid->metadata_areas_in_use) &&
-	    !dm_list_size(&pv->fid->metadata_areas_ignored)) {
+	if (is_orphan(pv) && dm_list_empty(&pv->fid->metadata_areas_in_use) &&
+	    dm_list_empty(&pv->fid->metadata_areas_ignored)) {
 		if (!scan_vgs_for_pvs(cmd, 0)) {
 			log_error("Rescan for PVs without metadata areas "
 				  "failed.");

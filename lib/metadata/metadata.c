@@ -1339,7 +1339,7 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name,
 	 * this means checking every VG by scanning every PV on the
 	 * system.
 	 */
-	if (pv && is_orphan(pv) && !dm_list_size(&pv->fid->metadata_areas_in_use)) {
+	if (pv && is_orphan(pv) && dm_list_empty(&pv->fid->metadata_areas_in_use)) {
 		free_pv_fid(pv);
 		if (!scan_vgs_for_pvs(cmd, 0))
 			return_0;
@@ -1831,7 +1831,7 @@ struct physical_volume *find_pv_by_name(struct cmd_context *cmd,
 		goto bad;
 	}
 
-	if (is_orphan_vg(pv->vg_name) && !dm_list_size(&pv->fid->metadata_areas_in_use)) {
+	if (is_orphan_vg(pv->vg_name) && dm_list_empty(&pv->fid->metadata_areas_in_use)) {
 		/* If a PV has no MDAs - need to search all VGs for it */
 		if (!scan_vgs_for_pvs(cmd, 1))
 			goto_bad;
@@ -4527,7 +4527,7 @@ int mdas_empty_or_ignored(struct dm_list *mdas)
 {
 	struct metadata_area *mda;
 
-	if (!dm_list_size(mdas))
+	if (dm_list_empty(mdas))
 		return 1;
 	dm_list_iterate_items(mda, mdas) {
 		if (mda_is_ignored(mda))

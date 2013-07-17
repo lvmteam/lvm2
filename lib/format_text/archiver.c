@@ -430,7 +430,7 @@ int backup_to_file(const char *file, const char *desc, struct volume_group *vg)
 		return 0;
 	}
 
-	if (!dm_list_size(&tf->metadata_areas_in_use)) {
+	if (dm_list_empty(&tf->metadata_areas_in_use)) {
 		log_error(INTERNAL_ERROR "No in use metadata areas to write.");
 		tf->fmt->ops->destroy_instance(tf);
 		return 0;
