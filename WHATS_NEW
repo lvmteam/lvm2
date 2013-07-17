@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Correct thin creation error paths.
   Use local activation for clearing snapshot COW device.
   Add lvm2-activation-net systemd unit to activate LVs on net-attached storage.
   Release memory allocated with _cached_info().

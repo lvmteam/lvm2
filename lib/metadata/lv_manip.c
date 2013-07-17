@@ -5646,10 +5646,8 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 	} else if (seg_is_thin_volume(lp)) {
 		pool_lv = first_seg(lv)->pool_lv;
 		if (!(first_seg(lv)->device_id =
-		      get_free_pool_device_id(first_seg(pool_lv)))) {
-			stack;
-			goto revert_new_lv;
-		}
+		      get_free_pool_device_id(first_seg(pool_lv))))
+			return_NULL;
 		/*
 		 * Check if using 'external origin' or the 'normal' snapshot
 		 * within the same thin pool
@@ -5663,17 +5661,13 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 				log_error("Cannot use active LV for the external origin.");
 				return 0; // We can't be sure device is read-only
 			}
-			if (!attach_thin_external_origin(first_seg(lv), org)) {
-				stack;
-				goto revert_new_lv;
-			}
+			if (!attach_thin_external_origin(first_seg(lv), org))
+				return_NULL;
 		}
 
 		if (!attach_pool_message(first_seg(pool_lv),
-					 DM_THIN_MESSAGE_CREATE_THIN, lv, 0, 0)) {
-			stack;
-			goto revert_new_lv;
-		}
+					 DM_THIN_MESSAGE_CREATE_THIN, lv, 0, 0))
+			return_NULL;
 	} else if (seg_is_raid(lp)) {
 		first_seg(lv)->min_recovery_rate = lp->min_recovery_rate;
 		first_seg(lv)->max_recovery_rate = lp->max_recovery_rate;
@@ -5734,7 +5728,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 			/* At this point remove pool messages, snapshot is active */
 			if (!update_pool_lv(first_seg(org)->pool_lv, 0)) {
 				stack;
-				goto deactivate_and_revert_new_lv;
+				goto revert_new_lv;
 			}
 		}
 		if ((lp->activate != CHANGE_AN) && (lp->activate != CHANGE_ALN)) {
