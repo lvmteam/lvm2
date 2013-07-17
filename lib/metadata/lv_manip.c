@@ -4183,6 +4183,9 @@ struct logical_volume *lv_create_empty(const char *name,
  
 	if (fi->fmt->ops->lv_setup && !fi->fmt->ops->lv_setup(fi, lv))
 		goto_bad;
+
+	if (vg->fid->fmt->features & FMT_CONFIG_PROFILE)
+		lv->profile = vg->cmd->profile_params->global_profile;
  
 	return lv;
 bad:
@@ -5594,9 +5597,6 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 	if (!(lv = lv_create_empty(new_lv_name ? : "lvol%d", NULL,
 				   status, lp->alloc, vg)))
 		return_NULL;
-
-	if (vg->fid->fmt->features & FMT_CONFIG_PROFILE)
-		lv->profile = vg->cmd->profile_params->global_profile;
 
 	if (lp->read_ahead != lv->read_ahead) {
 		log_verbose("Setting read ahead sectors");
