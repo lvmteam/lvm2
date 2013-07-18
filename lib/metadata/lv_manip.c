@@ -5750,7 +5750,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 			}
 		}
 	} else if (lp->snapshot) {
-		if (!activate_lv_excl(cmd, lv)) {
+		if (!activate_lv_local(cmd, lv)) {
 			log_error("Aborting. Failed to activate snapshot "
 				  "exception store.");
 			goto revert_new_lv;
