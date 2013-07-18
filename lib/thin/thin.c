@@ -27,7 +27,8 @@
 #endif
 
 /* Dm kernel module name for thin provisiong */
-#define THIN_MODULE "thin-pool"
+static const char _thin_pool_module[] = "thin-pool";
+static const char _thin_module[] = "thin";
 
 /*
  * Macro used as return argument - returns 0.
@@ -376,6 +377,18 @@ static int _thin_pool_target_percent(void **target_state __attribute__((unused))
 	return 1;
 }
 
+static int _thin_pool_modules_needed(struct dm_pool *mem,
+				     const struct lv_segment *seg __attribute__((unused)),
+				     struct dm_list *modules)
+{
+	if (!str_list_add(mem, modules, _thin_pool_module)) {
+		log_error("String list allocation failed for thin_pool.");
+		return 0;
+	}
+
+	return 1;
+}
+
 #  ifdef DMEVENTD
 static const char *_get_thin_dso_path(struct cmd_context *cmd)
 {
@@ -581,10 +594,10 @@ static int _thin_target_present(struct cmd_context *cmd,
 	const char *str;
 
 	if (!_checked) {
-		_present = target_present(cmd, THIN_MODULE, 1);
+		_present = target_present(cmd, _thin_pool_module, 1);
 
-		if (!target_version(THIN_MODULE, &maj, &min, &patchlevel)) {
-			log_error("Cannot read " THIN_MODULE " target version.");
+		if (!target_version(_thin_pool_module, &maj, &min, &patchlevel)) {
+			log_error("Cannot read %s target version.", _thin_pool_module);
 			return 0;
 		}
 
@@ -592,7 +605,8 @@ static int _thin_target_present(struct cmd_context *cmd,
 			if (maj >= _features[i].maj && min >= _features[i].min)
 				_attrs |= _features[i].thin_feature;
 			else
-				log_very_verbose("Target " THIN_MODULE " does not support %s.",
+				log_very_verbose("Target %s does not support %s.",
+						 _thin_pool_module,
 						 _features[i].feature);
 
 		_checked = 1;
@@ -623,7 +637,8 @@ static int _thin_target_present(struct cmd_context *cmd,
 			for (i = 0; i < sizeof(_features)/sizeof(*_features); i++)
 				if ((_attrs & _features[i].thin_feature) &&
 				    !(_feature_mask & _features[i].thin_feature))
-					log_very_verbose("Target "THIN_MODULE " %s support disabled by %s",
+					log_very_verbose("Target %s %s support disabled by %s",
+							 _thin_pool_module,
 							 _features[i].feature, _lvmconf);
 		}
 		*attributes = _attrs & _feature_mask;
@@ -634,11 +649,14 @@ static int _thin_target_present(struct cmd_context *cmd,
 #endif
 
 static int _thin_modules_needed(struct dm_pool *mem,
-				const struct lv_segment *seg __attribute__((unused)),
+				const struct lv_segment *seg,
 				struct dm_list *modules)
 {
-	if (!str_list_add(mem, modules, THIN_MODULE)) {
-		log_error("thin string list allocation failed");
+	if (!_thin_pool_modules_needed(mem, seg, modules))
+		return_0;
+
+	if (!str_list_add(mem, modules, _thin_module)) {
+		log_error("String list allocation failed for thin.");
 		return 0;
 	}
 
@@ -665,7 +683,7 @@ static struct segtype_handler _thin_pool_ops = {
 	.target_unmonitor_events = _target_unregister_events,
 #  endif /* DMEVENTD */
 #endif
-	.modules_needed = _thin_modules_needed,
+	.modules_needed = _thin_pool_modules_needed,
 	.destroy = _thin_destroy,
 };
 
