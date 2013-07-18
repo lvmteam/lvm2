@@ -689,6 +689,12 @@ typedef enum activation_change {
 	CHANGE_AAY = 5  /* automatic activation */
 } activation_change_t;
 
+/* Returns true, when change activates device */
+static inline int is_change_activating(activation_change_t change)
+{
+        return ((change != CHANGE_AN) && (change != CHANGE_ALN));
+}
+
 /* FIXME: refactor and reduce the size of this struct! */
 struct lvcreate_params {
 	/* flags */
