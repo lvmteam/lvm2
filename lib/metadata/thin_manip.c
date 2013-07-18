@@ -433,8 +433,7 @@ int extend_pool(struct logical_volume *pool_lv, const struct segment_type *segty
 	const struct segment_type *striped;
 	struct logical_volume *meta_lv, *data_lv;
 	struct lv_segment *seg;
-	const size_t len = strlen(pool_lv->name) + 16;
-	char name[len];
+	char name[NAME_LEN];
 
 	if (pool_lv->le_count) {
 		/* FIXME move code for manipulation from lv_manip.c */
@@ -486,38 +485,53 @@ int extend_pool(struct logical_volume *pool_lv, const struct segment_type *segty
 		log_warn("WARNING: Pool %s is created without initialization.", pool_lv->name);
 	}
 
-	if (dm_snprintf(name, len, "%s_tmeta", pool_lv->name) < 0)
-		return_0;
+	if (dm_snprintf(name, sizeof(name), "%s_tmeta", pool_lv->name) < 0) {
+		log_error("Name is too long to be a pool name.");
+		goto bad;
+	}
 
 	if (!(meta_lv = lv_create_empty(name, NULL, LVM_READ | LVM_WRITE,
 					ALLOC_INHERIT, pool_lv->vg)))
-		return_0;
+		goto_bad;
 
 	if (!move_lv_segments(meta_lv, pool_lv, 0, 0))
-		return_0;
+		goto_bad;
 
 	/* Pool data segment */
 	if (!lv_add_segment(ah, 0, stripes, pool_lv, striped, stripe_size, 0, 0))
-		return_0;
+		goto_bad;
 
 	if (!(data_lv = insert_layer_for_lv(pool_lv->vg->cmd, pool_lv,
 					    pool_lv->status, "_tdata")))
-		return_0;
+		goto_bad;
 
 	seg = first_seg(pool_lv);
 	seg->segtype = segtype; /* Set as thin_pool segment */
 	seg->lv->status |= THIN_POOL;
 
 	if (!attach_pool_metadata_lv(seg, meta_lv))
-		return_0;
+		goto_bad;
 
 	/* Drop reference as attach_pool_data_lv() takes it again */
 	if (!remove_seg_from_segs_using_this_lv(data_lv, seg))
-		return_0;
+		goto_bad;
 	if (!attach_pool_data_lv(seg, data_lv))
-		return_0;
+		goto_bad;
 
 	return 1;
+bad:
+	if (activation()) {
+		if (deactivate_lv_local(pool_lv->vg->cmd, pool_lv)) {
+			log_error("Aborting. Could not deactivate pool %s.",
+				  pool_lv->name);
+			return 0;
+		}
+		if (!lv_remove(pool_lv) || !vg_write(pool_lv->vg) || !vg_commit(pool_lv->vg))
+			log_error("Manual intervention may be required to remove "
+				  "abandoned LV(s) before retrying.");
+	}
+
+	return 0;
 }
 
 int update_pool_lv(struct logical_volume *lv, int activate)
