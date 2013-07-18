@@ -473,13 +473,7 @@ int extend_pool(struct logical_volume *pool_lv, const struct segment_type *segty
 		    !set_lv(pool_lv->vg->cmd, pool_lv, UINT64_C(0), 0)) {
 			log_error("Aborting. Failed to wipe pool metadata %s.",
 				  pool_lv->name);
-			return 0;
-		}
-
-		if (!deactivate_lv_local(pool_lv->vg->cmd, pool_lv)) {
-			log_error("Aborting. Could not deactivate pool metadata %s.",
-				  pool_lv->name);
-			return 0;
+			goto bad;
 		}
 	} else {
 		log_warn("WARNING: Pool %s is created without initialization.", pool_lv->name);

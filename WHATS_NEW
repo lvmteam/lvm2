@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Improve activation order when creating thin pools in non-clustered VG.
   List thin-pool and thin modules for thin volumes.
   Correct thin creation error paths.
   Use local activation for clearing snapshot COW device.

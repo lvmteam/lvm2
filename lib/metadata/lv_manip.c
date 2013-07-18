@@ -5701,6 +5701,19 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 		lp->activate = CHANGE_AN;
 	}
 
+	/*
+	 * For thin pools - deactivate when inactive pool is requested or
+	 * for cluster give-up local lock and take proper exlusive lock
+	 */
+	if (lv_is_thin_pool(lv) &&
+	    (!is_change_activating(lp->activate) ||
+	     vg_is_clustered(lv->vg)) &&
+	    /* Deactivates cleared metadata LV */
+	    !deactivate_lv(lv->vg->cmd, lv)) {
+		stack;
+		goto deactivate_failed;
+	}
+
 	/* store vg on disk(s) */
 	if (!vg_write(vg) || !vg_commit(vg))
 		return_NULL;
@@ -5712,7 +5725,32 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 		goto out;
 	}
 
-	if (seg_is_thin(lp)) {
+	if (lv_is_thin_pool(lv)) {
+		if (is_change_activating(lp->activate)) {
+			if (vg_is_clustered(lv->vg)) {
+				if (!activate_lv_excl(cmd, lv)) {
+					log_error("Failed to activate pool %s.", lv->name);
+					goto deactivate_and_revert_new_lv;
+				}
+			} else {
+				/*
+				 * Suspend cleared plain metadata LV
+				 * but now already commited as pool LV
+				 * and resume it as a pool LV.
+				 *
+				 * This trick avoids collision with udev watch rule.
+				 */
+				if (!suspend_lv(cmd, lv)) {
+					log_error("Failed to suspend pool %s.", lv->name);
+					goto deactivate_and_revert_new_lv;
+				}
+				if (!resume_lv(cmd, lv)) {
+					log_error("Failed to resume pool %s.", lv->name);
+					goto deactivate_and_revert_new_lv;
+				}
+			}
+		}
+	} else if (lv_is_thin_volume(lv)) {
 		/* For snapshot, suspend active thin origin first */
 		if (org && lv_is_active(org) && lv_is_thin_volume(org)) {
 			if (!suspend_lv_origin(cmd, org)) {
@@ -5731,16 +5769,14 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 				goto revert_new_lv;
 			}
 		}
-		if ((lp->activate != CHANGE_AN) && (lp->activate != CHANGE_ALN)) {
-			/* At this point send message to kernel thin mda */
-			pool_lv = lv_is_thin_pool(lv) ? lv : first_seg(lv)->pool_lv;
-			if (!update_pool_lv(pool_lv, 1)) {
+		if (is_change_activating(lp->activate)) {
+			/* Send message so that table preload knows new thin */
+			if (!update_pool_lv(first_seg(lv)->pool_lv, 1)) {
 				stack;
-				goto deactivate_and_revert_new_lv;
+				goto revert_new_lv;
 			}
 			if (!activate_lv_excl(cmd, lv)) {
-				log_error("Aborting. Failed to activate thin %s.",
-					  lv->name);
+				log_error("Failed to activate thin %s.", lv->name);
 				goto deactivate_and_revert_new_lv;
 			}
 		}
@@ -5838,8 +5874,9 @@ out:
 
 deactivate_and_revert_new_lv:
 	if (!deactivate_lv(cmd, lv)) {
-		log_error("Unable to deactivate failed new LV. "
-			  "Manual intervention required.");
+deactivate_failed:
+		log_error("Unable to deactivate failed new LV \"%s/%s\". "
+			  "Manual intervention required.", lv->vg->name, lv->name);
 		return NULL;
 	}
 
