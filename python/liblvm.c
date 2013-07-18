@@ -128,6 +128,24 @@ liblvm_library_get_version(void)
 	return Py_BuildValue("s", lvm_library_get_version());
 }
 
+const static char gc_doc[] = "Garbage collect the C library";
+
+static PyObject *
+liblvm_lvm_gc(void)
+{
+	LVM_VALID();
+
+	lvm_quit(libh);
+	libh = lvm_init(NULL);
+
+	if (!libh) {
+		PyErr_SetObject(LibLVMError, liblvm_get_last_error());
+				return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
 static PyObject *
 liblvm_lvm_list_vg_names(void)
 {
@@ -1844,6 +1862,7 @@ liblvm_lvm_pvseg_get_property(pvsegobject *self, PyObject *args)
 static PyMethodDef Liblvm_methods[] = {
 	/* LVM methods */
 	{ "getVersion",		(PyCFunction)liblvm_library_get_version, METH_NOARGS },
+	{ "gc",				(PyCFunction)liblvm_lvm_gc, METH_NOARGS, gc_doc },
 	{ "vgOpen",		(PyCFunction)liblvm_lvm_vg_open, METH_VARARGS },
 	{ "vgCreate",		(PyCFunction)liblvm_lvm_vg_create, METH_VARARGS },
 	{ "configFindBool",	(PyCFunction)liblvm_lvm_config_find_bool, METH_VARARGS },
@@ -2024,8 +2043,10 @@ static PyTypeObject LibLVMpvsegType = {
 static void
 liblvm_cleanup(void)
 {
-	lvm_quit(libh);
-	libh = NULL;
+	if (libh) {
+		lvm_quit(libh);
+		libh = NULL;
+	}
 }
 
 PyMODINIT_FUNC
