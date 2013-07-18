@@ -5685,13 +5685,6 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 
 	lv_set_activation_skip(lv, lp->activation_skip & ACTIVATION_SKIP_SET,
 			       lp->activation_skip & ACTIVATION_SKIP_SET_ENABLED);
-
-	/* store vg on disk(s) */
-	if (!vg_write(vg) || !vg_commit(vg))
-		return_NULL;
-
-	backup(vg);
-
 	/*
 	 * Check for autoactivation.
 	 * If the LV passes the auto activation filter, activate
@@ -5701,15 +5694,21 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 		lp->activate = lv_passes_auto_activation_filter(cmd, lv) ?
 				CHANGE_ALY : CHANGE_ALN;
 
-	if (test_mode()) {
-		log_verbose("Test mode: Skipping activation and zeroing.");
-		goto out;
-	}
-
 	if (lv_activation_skip(lv, lp->activate, lp->activation_skip & ACTIVATION_SKIP_IGNORE, 0)) {
 		log_verbose("ACTIVATION_SKIP flag set for LV %s/%s, skipping activation.",
 			    lv->vg->name, lv->name);
 		lp->activate = CHANGE_AN;
+	}
+
+	/* store vg on disk(s) */
+	if (!vg_write(vg) || !vg_commit(vg))
+		return_NULL;
+
+	backup(vg);
+
+	if (test_mode()) {
+		log_verbose("Test mode: Skipping activation and zeroing.");
+		goto out;
 	}
 
 	if (seg_is_thin(lp)) {
