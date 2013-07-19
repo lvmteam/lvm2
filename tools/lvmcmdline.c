@@ -920,7 +920,12 @@ static int _get_settings(struct cmd_context *cmd)
 	    !_merge_synonym(cmd, allocation_ARG, allocatable_ARG) ||
 	    !_merge_synonym(cmd, allocation_ARG, resizeable_ARG) ||
 	    !_merge_synonym(cmd, virtualoriginsize_ARG, virtualsize_ARG) ||
-	    !_merge_synonym(cmd, available_ARG, activate_ARG))
+	    !_merge_synonym(cmd, available_ARG, activate_ARG) ||
+	    !_merge_synonym(cmd, raidsyncaction_ARG, syncaction_ARG) ||
+	    !_merge_synonym(cmd, raidwritemostly_ARG, writemostly_ARG) ||
+	    !_merge_synonym(cmd, raidminrecoveryrate_ARG, minrecoveryrate_ARG) ||
+	    !_merge_synonym(cmd, raidmaxrecoveryrate_ARG, maxrecoveryrate_ARG) ||
+	    !_merge_synonym(cmd, raidwritebehind_ARG, writebehind_ARG))
 		return EINVALID_CMD_LINE;
 
 	if ((!strncmp(cmd->command->name, "pv", 2) &&

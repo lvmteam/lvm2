@@ -92,10 +92,11 @@ Version 2.02.99 -
   Add explicit message about unsupported pvmove for thin/thinpool volumes.
   Fix lvmetad error path in lvmetad_vg_lookup() for null vgname.
   Fix clvmd _cluster_request() return code in memory fail path.
-  Add writemostly/writebehind support for RAID1
+  Add lvcreate/lvchange --[raid]{min|max}recoveryrate for raid LVs.
+  Add lvchange --[raid]writemostly/writebehind support for RAID1
   Add lv_change_activate() for common activation code in vg/lvchange.
   Revert change that allowed identical table reload for RAID.
-  New lvchange arg, '--syncaction' allows scrubbing of RAID LVs.
+  Add lvchange --[raid]syncaction for scrubbing of RAID LVs.
   Improve RAID kernel status retrieval to include sync_action/mismatch_cnt.
   Add external origin support for lvcreate.
   Improve lvcreate, lvconvert and lvm man pages.

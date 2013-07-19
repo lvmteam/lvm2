@@ -34,17 +34,17 @@ xx(dumpconfig,
    "dumpconfig\n"
    "\t[-f|--file filename] \n"
    "\t[--type {current|default|missing|new|profilable} \n"
-   "\t[--withcomments] \n"
-   "\t[--withversions] \n"
+   "\t[--atversion version]] \n"
    "\t[--ignoreadvanced] \n"
    "\t[--ignoreunsupported] \n"
    "\t[--mergedconfig] \n"
-   "\t[--atversion version]] \n"
    "\t[--validate]\n"
+   "\t[--withcomments] \n"
+   "\t[--withversions] \n"
    "\t[ConfigurationNode...]\n",
-   file_ARG, configtype_ARG, withcomments_ARG, atversion_ARG,
-   withversions_ARG, ignoreadvanced_ARG, ignoreunsupported_ARG,
-   mergedconfig_ARG, validate_ARG)
+   atversion_ARG, configtype_ARG, file_ARG, ignoreadvanced_ARG,
+   ignoreunsupported_ARG, mergedconfig_ARG, validate_ARG,
+   withcomments_ARG, withversions_ARG)
 
 xx(formats,
    "List available metadata formats",
@@ -88,33 +88,35 @@ xx(lvchange,
    "\t[--monitor {y|n}]\n"
    "\t[--poll {y|n}]\n"
    "\t[--noudevsync]\n"
-   "\t[--minrecoveryrate Rate]\n"
-   "\t[--maxrecoveryrate Rate]\n"
    "\t[-M|--persistent y|n] [--major major] [--minor minor]\n"
    "\t[-P|--partial] " "\n"
    "\t[-p|--permission r|rw]\n"
+   "\t[--profile ProfileName\n"
+   "\t[--[raid]minrecoveryrate Rate]\n"
+   "\t[--[raid]maxrecoveryrate Rate]\n"
+   "\t[--[raid]syncaction {check|repair}\n"
+   "\t[--[raid]writebehind IOCount]\n"
+   "\t[--[raid]writemostly PhysicalVolume]\n"
    "\t[-r|--readahead ReadAheadSectors|auto|none]\n"
    "\t[--refresh]\n"
    "\t[--resync]\n"
-   "\t[--syncaction {check|repair}\n"
    "\t[--sysinit]\n"
    "\t[-t|--test]\n"
    "\t[-v|--verbose]\n"
    "\t[--version]\n"
-   "\t[--writebehind BehindCount]\n"
-   "\t[--writemostly PhysicalVolume]\n"
    "\t[-y|--yes]\n"
    "\t[-Z|--zero {y|n}]\n"
    "\tLogicalVolume[Path] [LogicalVolume[Path]...]\n",
 
-   alloc_ARG, autobackup_ARG, activate_ARG, available_ARG, contiguous_ARG,
-   discards_ARG, detachprofile_ARG, force_ARG, ignorelockingfailure_ARG,
-   ignoremonitoring_ARG, major_ARG, minor_ARG, monitor_ARG, minrecoveryrate_ARG,
-   maxrecoveryrate_ARG, noudevsync_ARG, partial_ARG, permission_ARG,
-   persistent_ARG, poll_ARG, readahead_ARG, resync_ARG, refresh_ARG,
-   setactivationskip_ARG, ignoreactivationskip_ARG, addtag_ARG,
-   deltag_ARG, syncaction_ARG, sysinit_ARG, test_ARG, writebehind_ARG,
-   writemostly_ARG, zero_ARG)
+   addtag_ARG, alloc_ARG, autobackup_ARG, activate_ARG, available_ARG,
+   contiguous_ARG, deltag_ARG, discards_ARG, detachprofile_ARG, force_ARG,
+   ignorelockingfailure_ARG, ignoremonitoring_ARG, ignoreactivationskip_ARG,
+   major_ARG, minor_ARG, monitor_ARG, minrecoveryrate_ARG, maxrecoveryrate_ARG,
+   noudevsync_ARG, partial_ARG, permission_ARG, persistent_ARG, poll_ARG,
+   profile_ARG, raidminrecoveryrate_ARG, raidmaxrecoveryrate_ARG,
+   raidsyncaction_ARG, raidwritebehind_ARG, raidwritemostly_ARG, readahead_ARG,
+   resync_ARG, refresh_ARG, setactivationskip_ARG, syncaction_ARG, sysinit_ARG,
+   test_ARG, writebehind_ARG, writemostly_ARG, zero_ARG)
 
 xx(lvconvert,
    "Change logical volume layout",
@@ -169,22 +171,21 @@ xx(lvconvert,
    "\t[--discards {ignore|nopassdown|passdown}]\n"
    "\t[--poolmetadata ThinMetadataLogicalVolume[Path] |\n"
    "\t [--poolmetadatasize size]\n"
-   "\t [-r|--readahead ReadAheadSectors|auto|none]\n"
    "\t [--poolmetadataspare {y|n}]\n"
+   "\t [-r|--readahead ReadAheadSectors|auto|none]\n"
    "\t [--stripes Stripes [-I|--stripesize StripeSize]]]\n"
    "\t[-T|--thin ExternalLogicalVolume[Path]\n"
    "\t [--originname NewExternalOriginVolumeName]]\n"
    "\t[-Z|--zero {y|n}]\n"
    "\t[-d|--debug] [-h|-?|--help] [-v|--verbose]\n",
 
-   alloc_ARG, background_ARG, chunksize_ARG, corelog_ARG, interval_ARG,
-   merge_ARG, mirrorlog_ARG, mirrors_ARG, name_ARG, noudevsync_ARG,
-   readahead_ARG, regionsize_ARG, repair_ARG, replace_ARG, snapshot_ARG, splitmirrors_ARG,
-   trackchanges_ARG, type_ARG, stripes_long_ARG, stripesize_ARG, test_ARG,
-   chunksize_ARG, discards_ARG, originname_ARG,
-   poolmetadata_ARG, poolmetadatasize_ARG, poolmetadataspare_ARG,
-   thin_ARG, thinpool_ARG,
-   use_policies_ARG, force_ARG, zero_ARG)
+   alloc_ARG, background_ARG, chunksize_ARG, corelog_ARG, discards_ARG,
+   force_ARG, interval_ARG, merge_ARG, mirrorlog_ARG, mirrors_ARG, name_ARG,
+   noudevsync_ARG, originname_ARG, poolmetadata_ARG, poolmetadatasize_ARG,
+   poolmetadataspare_ARG, readahead_ARG, regionsize_ARG, repair_ARG,
+   replace_ARG, snapshot_ARG, splitmirrors_ARG, stripes_long_ARG,
+   stripesize_ARG, test_ARG, thin_ARG, thinpool_ARG, trackchanges_ARG,
+   type_ARG, use_policies_ARG, zero_ARG)
 
 xx(lvcreate,
    "Create a logical volume",
@@ -206,11 +207,11 @@ xx(lvcreate,
    "\t -L|--size LogicalVolumeSize[bBsSkKmMgGtTpPeE]}\n"
    "\t[-M|--persistent {y|n}] [--major major] [--minor minor]\n"
    "\t[-m|--mirrors Mirrors [--nosync] [{--mirrorlog {disk|core|mirrored}|--corelog}]]\n"
-   "\t[--minrecoveryrate Rate]\n"
-   "\t[--maxrecoveryrate Rate]\n"
    "\t[-n|--name LogicalVolumeName]\n"
    "\t[--noudevsync]\n"
    "\t[-p|--permission {r|rw}]\n"
+   "\t[--[raid]minrecoveryrate Rate]\n"
+   "\t[--[raid]maxrecoveryrate Rate]\n"
    "\t[-r|--readahead ReadAheadSectors|auto|none]\n"
    "\t[-R|--regionsize MirrorLogRegionSize]\n"
    "\t[-T|--thin  [-c|--chunksize  ChunkSize]\n"
@@ -241,7 +242,7 @@ xx(lvcreate,
    "\t[--ignoremonitoring]\n"
    "\t[--monitor {y|n}]\n"
    "\t[-i|--stripes Stripes [-I|--stripesize StripeSize]]\n"
-   "\t[-k|--activationskip {y|n}]\n"
+   "\t[-k|--setactivationskip {y|n}]\n"
    "\t[-K|--ignoreactivationskip] \n"
    "\t{-l|--extents LogicalExtentsNumber[%{VG|FREE|ORIGIN}] |\n"
    "\t -L|--size LogicalVolumeSize[bBsSkKmMgGtTpPeE]}\n"
@@ -260,14 +261,14 @@ xx(lvcreate,
 
    addtag_ARG, alloc_ARG, autobackup_ARG, activate_ARG, available_ARG,
    chunksize_ARG, contiguous_ARG, corelog_ARG, discards_ARG, extents_ARG,
-   ignoremonitoring_ARG, major_ARG, minor_ARG, mirrorlog_ARG, mirrors_ARG,
-   monitor_ARG, minrecoveryrate_ARG, maxrecoveryrate_ARG, name_ARG, nosync_ARG,
-   noudevsync_ARG, ignoreactivationskip_ARG, setactivationskip_ARG,
-   poolmetadatasize_ARG, poolmetadataspare_ARG,
-   permission_ARG, persistent_ARG, readahead_ARG, regionsize_ARG, size_ARG,
-   snapshot_ARG, stripes_ARG, stripesize_ARG, test_ARG, thin_ARG, thinpool_ARG,
-   type_ARG, virtualoriginsize_ARG, virtualsize_ARG,
-   zero_ARG)
+   ignoreactivationskip_ARG, ignoremonitoring_ARG, major_ARG, minor_ARG,
+   mirrorlog_ARG, mirrors_ARG, monitor_ARG, minrecoveryrate_ARG,
+   maxrecoveryrate_ARG, name_ARG, nosync_ARG, noudevsync_ARG,
+   permission_ARG, persistent_ARG, poolmetadatasize_ARG, poolmetadataspare_ARG,
+   raidminrecoveryrate_ARG, raidmaxrecoveryrate_ARG, readahead_ARG,
+   regionsize_ARG, setactivationskip_ARG, size_ARG, snapshot_ARG, stripes_ARG,
+   stripesize_ARG, test_ARG, thin_ARG, thinpool_ARG,
+   type_ARG, virtualoriginsize_ARG, virtualsize_ARG, zero_ARG)
 
 xx(lvdisplay,
    "Display information about a logical volume",
@@ -495,7 +496,7 @@ xx(lvs,
    "\t[LogicalVolume[Path] [LogicalVolume[Path]...]]\n",
 
    aligned_ARG, all_ARG, ignorelockingfailure_ARG, nameprefixes_ARG,
-   noheadings_ARG, nolocking_ARG, nosuffix_ARG, options_ARG, partial_ARG, 
+   noheadings_ARG, nolocking_ARG, nosuffix_ARG, options_ARG, partial_ARG,
    rows_ARG, segments_ARG, separator_ARG, sort_ARG, trustcache_ARG,
    unbuffered_ARG, units_ARG, unquoted_ARG)
 
@@ -575,8 +576,8 @@ xx(pvcreate,
    "\t[--labelsector sector] " "\n"
    "\t[-M|--metadatatype 1|2]" "\n"
    "\t[--pvmetadatacopies #copies]" "\n"
-   "\t[--metadatasize MetadataSize[bBsSkKmMgGtTpPeE]]" "\n"
    "\t[--bootloaderareasize BootLoaderAreaSize[bBsSkKmMgGtTpPeE]]" "\n"
+   "\t[--metadatasize MetadataSize[bBsSkKmMgGtTpPeE]]" "\n"
    "\t[--dataalignment Alignment[bBsSkKmMgGtTpPeE]]" "\n"
    "\t[--dataalignmentoffset AlignmentOffset[bBsSkKmMgGtTpPeE]]" "\n"
    "\t[--setphysicalvolumesize PhysicalVolumeSize[bBsSkKmMgGtTpPeE]" "\n"
@@ -805,6 +806,7 @@ xx(vgchange,
    "\t -l|--logicalvolume MaxLogicalVolumes |" "\n"
    "\t -p|--maxphysicalvolumes MaxPhysicalVolumes |" "\n"
    "\t -s|--physicalextentsize PhysicalExtentSize[bBsSkKmMgGtTpPeE] |" "\n"
+   "\t[--profile ProfileName\n"
    "\t --addtag Tag |\n"
    "\t --deltag Tag}\n"
    "\t[VolumeGroupName...]\n",
@@ -813,7 +815,7 @@ xx(vgchange,
    available_ARG, clustered_ARG, deltag_ARG, detachprofile_ARG,
    ignoreactivationskip_ARG, ignorelockingfailure_ARG, ignoremonitoring_ARG,
    logicalvolume_ARG, maxphysicalvolumes_ARG, monitor_ARG, noudevsync_ARG,
-   metadatacopies_ARG, vgmetadatacopies_ARG, partial_ARG,
+   metadatacopies_ARG, vgmetadatacopies_ARG, partial_ARG, profile_ARG,
    physicalextentsize_ARG, poll_ARG, refresh_ARG, resizeable_ARG,
    resizable_ARG, sysinit_ARG, test_ARG, uuid_ARG)
 
@@ -1066,7 +1068,7 @@ xx(vgs,
    "\t[VolumeGroupName [VolumeGroupName...]]\n",
 
    aligned_ARG, all_ARG, ignorelockingfailure_ARG, nameprefixes_ARG,
-   noheadings_ARG, nolocking_ARG, nosuffix_ARG, options_ARG, partial_ARG, 
+   noheadings_ARG, nolocking_ARG, nosuffix_ARG, options_ARG, partial_ARG,
    rows_ARG, separator_ARG, sort_ARG, trustcache_ARG, unbuffered_ARG, units_ARG,
    unquoted_ARG)
 
