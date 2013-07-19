@@ -100,14 +100,14 @@ run_writemostly_check() {
 	not lvchange --writebehind -256 $1/$2
 
 	# Set writebehind
-	[ ! `lvs --noheadings -o writebehind $1/$2` ]
+	[ ! `lvs --noheadings -o raid_write_behind $1/$2` ]
 	lvchange --writebehind 512 $1/$2
-	[ `lvs --noheadings -o writebehind $1/$2` -eq 512 ]
+	[ `lvs --noheadings -o raid_write_behind $1/$2` -eq 512 ]
 
 	# Converting to linear should clear flags and writebehind
 	lvconvert -m 0 $1/$2 $d1
 	lvconvert --type raid1 -m 1 $1/$2 $d1
-	[ ! `lvs --noheadings -o writebehind $1/$2` ]
+	[ ! `lvs --noheadings -o raid_write_behind $1/$2` ]
 	lvs -a --noheadings -o lv_attr $1/${2}_rimage_0 | grep '.*-.$'
 	lvs -a --noheadings -o lv_attr $1/${2}_rimage_1 | grep '.*-.$'
 }
@@ -142,7 +142,7 @@ run_syncaction_check() {
 
 	# Check all is normal
 	if ! lvs --noheadings -o lv_attr $1/$2 | grep '.*-.$' ||
-		[ `lvs --noheadings -o mismatches $1/$2` != 0 ]; then
+		[ `lvs --noheadings -o raid_mismatch_count $1/$2` != 0 ]; then
 
 		# I think this is a kernel bug.  It happens randomly after
 		# a RAID device creation.  I think the mismatch count
@@ -160,7 +160,7 @@ run_syncaction_check() {
 	fi
 
 	lvs --noheadings -o lv_attr $1/$2 | grep '.*-.$'
-	[ `lvs --noheadings -o mismatches $1/$2` == 0 ]
+	[ `lvs --noheadings -o raid_mismatch_count $1/$2` == 0 ]
 
 	# Overwrite the last half of one of the PVs with crap
 	dd if=/dev/urandom of=$device bs=1k count=$size seek=$seek
@@ -174,20 +174,20 @@ run_syncaction_check() {
 	lvchange --syncaction check $1/$2
 	aux wait_for_sync $1 $2
 	lvs --noheadings -o lv_attr $1/$2 | grep '.*m.$'
-	[ `lvs --noheadings -o mismatches $1/$2` != 0 ]
+	[ `lvs --noheadings -o raid_mismatch_count $1/$2` != 0 ]
 
 	# "repair" will fix discrepancies and record number fixed
 	lvchange --syncaction repair $1/$2
 	aux wait_for_sync $1 $2
 	lvs --noheadings -o lv_attr $1/$2 | grep '.*m.$'
-	[ `lvs --noheadings -o mismatches $1/$2` != 0 ]
+	[ `lvs --noheadings -o raid_mismatch_count $1/$2` != 0 ]
 
 	# Final "check" should show no mismatches
 	# 'lvs' should show results
 	lvchange --syncaction check $1/$2
 	aux wait_for_sync $1 $2
 	lvs --noheadings -o lv_attr $1/$2 | grep '.*-.$'
-	[ `lvs --noheadings -o mismatches $1/$2` == 0 ]
+	[ `lvs --noheadings -o raid_mismatch_count $1/$2` == 0 ]
 }
 
 # run_refresh_check <VG> <LV>

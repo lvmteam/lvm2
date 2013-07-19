@@ -977,7 +977,7 @@ no_copypercent:
 	return 1;
 }
 
-static int _sync_action_disp(struct dm_report *rh __attribute__((unused)),
+static int _raidsyncaction_disp(struct dm_report *rh __attribute__((unused)),
 			     struct dm_pool *mem,
 			     struct dm_report_field *field,
 			     const void *data,
@@ -995,7 +995,7 @@ static int _sync_action_disp(struct dm_report *rh __attribute__((unused)),
 	return _string_disp(rh, mem, field, &sync_action, private);
 }
 
-static int _mismatch_count_disp(struct dm_report *rh __attribute__((unused)),
+static int _raidmismatchcount_disp(struct dm_report *rh __attribute__((unused)),
 				struct dm_pool *mem,
 				struct dm_report_field *field,
 				const void *data,
@@ -1013,7 +1013,7 @@ static int _mismatch_count_disp(struct dm_report *rh __attribute__((unused)),
 	return dm_report_field_uint64(rh, field, &mismatch_count);
 }
 
-static int _write_behind_disp(struct dm_report *rh __attribute__((unused)),
+static int _raidwritebehind_disp(struct dm_report *rh __attribute__((unused)),
 			      struct dm_pool *mem,
 			      struct dm_report_field *field,
 			      const void *data,
@@ -1029,7 +1029,7 @@ static int _write_behind_disp(struct dm_report *rh __attribute__((unused)),
 	return dm_report_field_uint32(rh, field, &first_seg(lv)->writebehind);
 }
 
-static int _min_recovery_rate_disp(struct dm_report *rh __attribute__((unused)),
+static int _raidminrecoveryrate_disp(struct dm_report *rh __attribute__((unused)),
 				   struct dm_pool *mem,
 				   struct dm_report_field *field,
 				   const void *data,
@@ -1046,7 +1046,7 @@ static int _min_recovery_rate_disp(struct dm_report *rh __attribute__((unused)),
 				      &first_seg(lv)->min_recovery_rate);
 }
 
-static int _max_recovery_rate_disp(struct dm_report *rh __attribute__((unused)),
+static int _raidmaxrecoveryrate_disp(struct dm_report *rh __attribute__((unused)),
 				   struct dm_pool *mem,
 				   struct dm_report_field *field,
 				   const void *data,

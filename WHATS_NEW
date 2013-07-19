@@ -1,5 +1,9 @@
 Version 2.02.99 - 
 ===================================
+  Add LV reporting fields raid_mismatch_count, raid_sync_action, raid_write_behind.
+  Add LV reporting fields raid_min_recovery_rate, raid_max_recovery_rate.
+  Add sync_percent as alias for copy_percent LV reporting field.
+  Add lv_ prefix to modules reporting field.
   Use units B or b (never E) with no decimal places when displaying sizes < 1k.
   Add support for poolmetadataspare LV, that will be used for pool recovery.
   Improve activation order when creating thin pools in non-clustered VG.

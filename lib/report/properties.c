@@ -58,7 +58,7 @@ static percent_t _copy_percent(const struct logical_volume *lv)
 	return percent;
 }
 
-static uint64_t _mismatches(const struct logical_volume *lv)
+static uint64_t _raidmismatchcount(const struct logical_volume *lv)
 {
 	uint64_t cnt;
 
@@ -67,7 +67,7 @@ static uint64_t _mismatches(const struct logical_volume *lv)
 	return cnt;
 }
 
-static char *_sync_action(const struct logical_volume *lv)
+static char *_raidsyncaction(const struct logical_volume *lv)
 {
 	char *action;
 
@@ -77,17 +77,17 @@ static char *_sync_action(const struct logical_volume *lv)
 	return action;
 }
 
-static uint32_t _writebehind(const struct logical_volume *lv)
+static uint32_t _raidwritebehind(const struct logical_volume *lv)
 {
 	return first_seg(lv)->writebehind;
 }
 
-static uint32_t _minrecoveryrate(const struct logical_volume *lv)
+static uint32_t _raidminrecoveryrate(const struct logical_volume *lv)
 {
 	return first_seg(lv)->min_recovery_rate;
 }
 
-static uint32_t _maxrecoveryrate(const struct logical_volume *lv)
+static uint32_t _raidmaxrecoveryrate(const struct logical_volume *lv)
 {
 	return first_seg(lv)->max_recovery_rate;
 }
@@ -155,10 +155,10 @@ GET_PV_NUM_PROPERTY_FN(pv_mda_count, pv_mda_count(pv))
 #define _pv_mda_count_set prop_not_implemented_set
 GET_PV_NUM_PROPERTY_FN(pv_mda_used_count, pv_mda_used_count(pv))
 #define _pv_mda_used_count_set prop_not_implemented_set
-GET_PV_NUM_PROPERTY_FN(ba_start, SECTOR_SIZE * pv->ba_start)
-#define _ba_start_set prop_not_implemented_set
-GET_PV_NUM_PROPERTY_FN(ba_size, SECTOR_SIZE * pv->ba_size)
-#define _ba_size_set prop_not_implemented_set
+GET_PV_NUM_PROPERTY_FN(pv_ba_start, SECTOR_SIZE * pv->ba_start)
+#define _pv_ba_start_set prop_not_implemented_set
+GET_PV_NUM_PROPERTY_FN(pv_ba_size, SECTOR_SIZE * pv->ba_size)
+#define _pv_ba_size_set prop_not_implemented_set
 
 /* LV */
 GET_LV_STR_PROPERTY_FN(lv_uuid, lv_uuid_dup(lv))
@@ -195,16 +195,16 @@ GET_LV_NUM_PROPERTY_FN(copy_percent, _copy_percent(lv))
 #define _copy_percent_set prop_not_implemented_set
 GET_LV_NUM_PROPERTY_FN(sync_percent, _copy_percent(lv))
 #define _sync_percent_set prop_not_implemented_set
-GET_LV_NUM_PROPERTY_FN(mismatches, _mismatches(lv))
-#define _mismatches_set prop_not_implemented_set
-GET_LV_NUM_PROPERTY_FN(writebehind, _writebehind(lv))
-#define _writebehind_set prop_not_implemented_set
-GET_LV_NUM_PROPERTY_FN(minrecoveryrate, _minrecoveryrate(lv))
-#define _minrecoveryrate_set prop_not_implemented_set
-GET_LV_NUM_PROPERTY_FN(maxrecoveryrate, _maxrecoveryrate(lv))
-#define _maxrecoveryrate_set prop_not_implemented_set
-GET_LV_STR_PROPERTY_FN(syncaction, _sync_action(lv))
-#define _syncaction_set prop_not_implemented_set
+GET_LV_NUM_PROPERTY_FN(raid_mismatch_count, _raidmismatchcount(lv))
+#define _raid_mismatch_count_set prop_not_implemented_set
+GET_LV_NUM_PROPERTY_FN(raid_write_behind, _raidwritebehind(lv))
+#define _raid_write_behind_set prop_not_implemented_set
+GET_LV_NUM_PROPERTY_FN(raid_min_recovery_rate, _raidminrecoveryrate(lv))
+#define _raid_min_recovery_rate_set prop_not_implemented_set
+GET_LV_NUM_PROPERTY_FN(raid_max_recovery_rate, _raidmaxrecoveryrate(lv))
+#define _raid_max_recovery_rate_set prop_not_implemented_set
+GET_LV_STR_PROPERTY_FN(raid_sync_action, _raidsyncaction(lv))
+#define _raid_sync_action_set prop_not_implemented_set
 GET_LV_STR_PROPERTY_FN(move_pv, lv_move_pv_dup(lv->vg->vgmem, lv))
 #define _move_pv_set prop_not_implemented_set
 GET_LV_STR_PROPERTY_FN(convert_lv, lv_convert_lv_dup(lv->vg->vgmem, lv))
@@ -213,8 +213,8 @@ GET_LV_STR_PROPERTY_FN(lv_tags, lv_tags_dup(lv))
 #define _lv_tags_set prop_not_implemented_set
 GET_LV_STR_PROPERTY_FN(mirror_log, lv_mirror_log_dup(lv->vg->vgmem, lv))
 #define _mirror_log_set prop_not_implemented_set
-GET_LV_STR_PROPERTY_FN(modules, lv_modules_dup(lv->vg->vgmem, lv))
-#define _modules_set prop_not_implemented_set
+GET_LV_STR_PROPERTY_FN(lv_modules, lv_modules_dup(lv->vg->vgmem, lv))
+#define _lv_modules_set prop_not_implemented_set
 GET_LV_STR_PROPERTY_FN(data_lv, lv_data_lv_dup(lv->vg->vgmem, lv))
 #define _data_lv_set prop_not_implemented_set
 GET_LV_STR_PROPERTY_FN(metadata_lv, lv_metadata_lv_dup(lv->vg->vgmem, lv))
@@ -322,8 +322,8 @@ GET_LVSEG_STR_PROPERTY_FN(seg_pe_ranges,
 #define _seg_pe_ranges_set prop_not_implemented_set
 GET_LVSEG_STR_PROPERTY_FN(devices, lvseg_devices(lvseg->lv->vg->vgmem, lvseg))
 #define _devices_set prop_not_implemented_set
-GET_LVSEG_STR_PROPERTY_FN(monitor, lvseg_monitor_dup(lvseg->lv->vg->vgmem, lvseg))
-#define _monitor_set prop_not_implemented_set
+GET_LVSEG_STR_PROPERTY_FN(seg_monitor, lvseg_monitor_dup(lvseg->lv->vg->vgmem, lvseg))
+#define _seg_monitor_set prop_not_implemented_set
 
 /* PVSEG */
 GET_PVSEG_NUM_PROPERTY_FN(pvseg_start, pvseg->pe)
