@@ -1998,7 +1998,12 @@ static int _add_snapshot_merge_target_to_dtree(struct dev_manager *dm,
 					       struct logical_volume *lv)
 {
 	const char *origin_dlid, *cow_dlid, *merge_dlid;
-	struct lv_segment *merging_snap_seg = find_merging_snapshot(lv);
+	struct lv_segment *merging_snap_seg;
+
+	if (!(merging_snap_seg = find_merging_snapshot(lv))) {
+		log_error(INTERNAL_ERROR "LV %s is not merging snapshot.", lv->name);
+		return 0;
+	}
 
 	if (!(origin_dlid = build_dm_uuid(dm->mem, lv->lvid.s, "real")))
 		return_0;

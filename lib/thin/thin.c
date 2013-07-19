@@ -245,6 +245,11 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 	if (!_thin_target_present(cmd, seg, &attr))
 		return_0;
 
+	if (!seg->metadata_lv) {
+		log_error(INTERNAL_ERROR "Thin pool is missing metadata device.");
+		return 0;
+	}
+
 	if (!(attr & THIN_FEATURE_BLOCK_SIZE) &&
 	    (seg->chunk_size & (seg->chunk_size - 1))) {
 		log_error("Thin pool target does not support %uKiB chunk size "
