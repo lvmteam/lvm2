@@ -141,17 +141,16 @@ run_syncaction_check() {
 	seek=$(($seek + $size)) # Jump halfway through the RAID image
 
 	# Check all is normal
-	if ! lvs --noheadings -o lv_attr $1/$2 | grep '.*-.$' ||
-		[ `lvs --noheadings -o raid_mismatch_count $1/$2` != 0 ]; then
-
-		# I think this is a kernel bug.  It happens randomly after
-		# a RAID device creation.  I think the mismatch count
-		# should not be set unless a check or repair is run.
+	if ! aux target_at_least dm-raid 1 5 2; then
+		# As of version 1.5.2, the mismatch_cnt is non-zero only
+		# after a 'check' sync action has been performed and only
+		# if discrepancies have been found.
 		#
-		# Neil Brown disagrees that it is a bug.  Says mismatch
-		# count can be anything until a 'check' or 'repair' is
-		# run.
-		echo "Strange... RAID has mismatch count after creation."
+		# Previous to this version, mismatch_cnt was basically
+		# undefined unless it was queried after a 'check' was
+		# performed.  This meant that unless a 'check' was done,
+		# the 'm' character in the 'lvs' output could show up
+		# randomly.
 
 		# Run "check" should turn up clean
 		lvchange --syncaction check $1/$2
@@ -176,11 +175,9 @@ run_syncaction_check() {
 	lvs --noheadings -o lv_attr $1/$2 | grep '.*m.$'
 	[ `lvs --noheadings -o raid_mismatch_count $1/$2` != 0 ]
 
-	# "repair" will fix discrepancies and record number fixed
+	# "repair" will fix discrepancies
 	lvchange --syncaction repair $1/$2
 	aux wait_for_sync $1 $2
-	lvs --noheadings -o lv_attr $1/$2 | grep '.*m.$'
-	[ `lvs --noheadings -o raid_mismatch_count $1/$2` != 0 ]
 
 	# Final "check" should show no mismatches
 	# 'lvs' should show results
