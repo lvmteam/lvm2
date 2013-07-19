@@ -196,8 +196,11 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 	if (cft_check_handle)
 		tree_spec.check_status = cft_check_handle->status;
 
-	if (tree_spec.type != CFG_DEF_TREE_CURRENT)
-		cft = config_def_create_tree(&tree_spec);
+	if ((tree_spec.type != CFG_DEF_TREE_CURRENT) &&
+	    !(cft = config_def_create_tree(&tree_spec))) {
+		r = ECMD_FAILED;
+		goto_out;
+	}
 
 	if (!config_write(cft, arg_count(cmd, withcomments_ARG),
 			  arg_count(cmd, withversions_ARG),
