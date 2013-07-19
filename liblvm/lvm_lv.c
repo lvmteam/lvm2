@@ -593,15 +593,16 @@ struct lvm_property_value lvm_lv_params_get_property(
 						const lv_create_params_t params,
 						const char *name)
 {
-	struct lvm_property_value rc;
-
-	rc.is_valid = 0;
+	struct lvm_property_value rc = {
+		.is_valid = 0
+	};
 
 	if (params && params->magic == LV_CREATE_PARAMS_MAGIC) {
 		rc = get_property(NULL, NULL, NULL, NULL, NULL, &params->lvp, name);
 	} else {
 		log_error("Invalid lv_create_params parameter");
 	}
+
 	return rc;
 }
 
