@@ -362,13 +362,17 @@ int lvm_vg_set_property(const vg_t vg, const char *name,
 
 struct dm_list *lvm_list_vg_names(lvm_t libh)
 {
-	lvmetad_vg_list_to_lvmcache((struct cmd_context *)libh);
+	if (!lvmetad_vg_list_to_lvmcache((struct cmd_context *)libh))
+		return NULL;
+
 	return get_vgnames((struct cmd_context *)libh, 0);
 }
 
 struct dm_list *lvm_list_vg_uuids(lvm_t libh)
 {
-	lvmetad_vg_list_to_lvmcache((struct cmd_context *)libh);
+	if (!lvmetad_vg_list_to_lvmcache((struct cmd_context *)libh))
+		return NULL;
+
 	return get_vgids((struct cmd_context *)libh, 0);
 }
 
