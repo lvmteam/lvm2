@@ -874,7 +874,9 @@ int lv_raid_sync_action(const struct logical_volume *lv, char **sync_action)
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
 		return_0;
 
+	/* status->sync_action can be NULL if dm-raid version < 1.5.0 */
 	if (!dev_manager_raid_status(dm, lv, &status) ||
+	    !status->sync_action ||
 	    !(action = dm_pool_strdup(lv->vg->cmd->mem,
 				      status->sync_action))) {
 		dev_manager_destroy(dm);
