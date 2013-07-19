@@ -1567,7 +1567,7 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 static void _lvmcache_destroy_entry(struct lvmcache_info *info)
 {
 	_vginfo_detach_info(info);
-	strcpy(info->dev->pvid, "");
+	info->dev->pvid[0] = 0;
 	label_destroy(info->label);
 	dm_free(info);
 }
