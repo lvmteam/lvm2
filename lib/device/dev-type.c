@@ -349,7 +349,7 @@ int dev_get_primary_dev(struct dev_types *dt, struct device *dev, dev_t *result)
 	char buffer[64];
 	struct stat info;
 	FILE *fp = NULL;
-	int parts, residue, size, ret = -1;
+	int parts, residue, size, ret = 0;
 
 	/*
 	 * Try to get the primary dev out of the
@@ -384,7 +384,8 @@ int dev_get_primary_dev(struct dev_types *dt, struct device *dev, dev_t *result)
 		if (errno != ENOENT)
 			log_sys_error("stat", path);
 		*result = dev->dev;
-		ret = 1; goto out; /* dev is not a partition! */
+		ret = 1;
+		goto out; /* dev is not a partition! */
 
 	}
 
