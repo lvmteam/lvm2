@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Support ARG_GROUPABLE with merge_synonym (for --raidwritemostly).
   Fix segfault when reporting raid_syncaction for older kernels.
   Add LV reporting fields raid_mismatch_count, raid_sync_action, raid_write_behind.
   Add LV reporting fields raid_min_recovery_rate, raid_max_recovery_rate.

@@ -801,22 +801,10 @@ static int _process_command_line(struct cmd_context *cmd, int *argc,
 	return 1;
 }
 
-static int _merge_synonym(struct cmd_context *cmd, int oldarg, int newarg)
+static void _copy_arg_values(struct arg_values *av, int oldarg, int newarg)
 {
-	const struct arg_values *old;
-	struct arg_values *new;
-
-	if (arg_count(cmd, oldarg) && arg_count(cmd, newarg)) {
-		log_error("%s and %s are synonyms.  Please only supply one.",
-			  _cmdline.arg_props[oldarg].long_arg, _cmdline.arg_props[newarg].long_arg);
-		return 0;
-	}
-
-	if (!arg_count(cmd, oldarg))
-		return 1;
-
-	old = cmd->arg_values + oldarg;
-	new = cmd->arg_values + newarg;
+	const struct arg_values *old = av + oldarg;
+	struct arg_values *new = av + newarg;
 
 	new->count = old->count;
 	new->value = old->value;
@@ -825,6 +813,36 @@ static int _merge_synonym(struct cmd_context *cmd, int oldarg, int newarg)
 	new->i64_value = old->i64_value;
 	new->ui64_value = old->ui64_value;
 	new->sign = old->sign;
+}
+
+static int _merge_synonym(struct cmd_context *cmd, int oldarg, int newarg)
+{
+	struct arg_values *av;
+	struct arg_value_group_list *current_group;
+
+	if (arg_count(cmd, oldarg) && arg_count(cmd, newarg)) {
+		log_error("%s and %s are synonyms.  Please only supply one.",
+			  _cmdline.arg_props[oldarg].long_arg, _cmdline.arg_props[newarg].long_arg);
+		return 0;
+	}
+
+	/* Not groupable? */
+	if (!(_cmdline.arg_props[oldarg].flags & ARG_GROUPABLE)) {
+		if (arg_count(cmd, oldarg))
+			_copy_arg_values(cmd->arg_values, oldarg, newarg);
+		return 1;
+	}
+
+	if (arg_count(cmd, oldarg))
+		cmd->arg_values[newarg].count = cmd->arg_values[oldarg].count;
+
+	/* Groupable */
+	dm_list_iterate_items(current_group, &cmd->arg_value_groups) {
+		av = current_group->arg_values;
+		if (!grouped_arg_count(av, oldarg))
+			continue;
+		_copy_arg_values(av, oldarg, newarg);
+	}
 
 	return 1;
 }

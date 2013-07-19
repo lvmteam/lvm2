@@ -96,7 +96,7 @@ xx(lvchange,
    "\t[--[raid]maxrecoveryrate Rate]\n"
    "\t[--[raid]syncaction {check|repair}\n"
    "\t[--[raid]writebehind IOCount]\n"
-   "\t[--[raid]writemostly PhysicalVolume]\n"
+   "\t[--[raid]writemostly PhysicalVolume[:{t|n|y}]]\n"
    "\t[-r|--readahead ReadAheadSectors|auto|none]\n"
    "\t[--refresh]\n"
    "\t[--resync]\n"

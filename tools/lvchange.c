@@ -702,6 +702,7 @@ static int lvchange_writemostly(struct logical_volume *lv)
 	int s, pv_count, i = 0;
 	char **pv_names;
 	const char *tmp_str;
+	size_t tmp_str_len;
 	struct pv_list *pvl;
 	struct arg_value_group_list *group;
 	struct cmd_context *cmd = lv->vg->cmd;
@@ -743,14 +744,15 @@ static int lvchange_writemostly(struct logical_volume *lv)
 			 * We allocate strlen + 3 to add our own ':{t|n|y}' if
 			 * not present plus the trailing '\0'.
 			 */
-			if (!(pv_names[i] = dm_pool_zalloc(lv->vg->vgmem,
-							   strlen(tmp_str) + 3)))
+			tmp_str_len = strlen(tmp_str);
+			if (!(pv_names[i] = dm_pool_zalloc(lv->vg->vgmem, tmp_str_len + 3)))
 				return_0;
 
-			if ((tmp_str[strlen(tmp_str) - 2] != ':') &&
-			    ((tmp_str[strlen(tmp_str) - 1] != 't') ||
-			     (tmp_str[strlen(tmp_str) - 1] != 'y') ||
-			     (tmp_str[strlen(tmp_str) - 1] != 'n')))
+			if (tmp_str_len < 3 ||
+			    (tmp_str[tmp_str_len - 2] != ':') &&
+			    ((tmp_str[tmp_str_len - 1] != 't') ||
+			     (tmp_str[tmp_str_len - 1] != 'y') ||
+			     (tmp_str[tmp_str_len - 1] != 'n')))
 				/* Default to 'y' if no mode specified */
 				sprintf(pv_names[i], "%s:y", tmp_str);
 			else
