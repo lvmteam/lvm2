@@ -18,7 +18,6 @@
 #include "metadata.h"
 #include "segtype.h"
 #include "lv_alloc.h"
-#include "archiver.h"
 #include "defaults.h"
 #include "display.h"
 

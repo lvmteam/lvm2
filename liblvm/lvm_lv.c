@@ -21,7 +21,6 @@
 #include "activate.h"
 #include "lvm_misc.h"
 #include "lvm2app.h"
-#include "lvm_prop.h"
 
 /* FIXME Improve all the log messages to include context. Which VG/LV as a minimum? */
 
