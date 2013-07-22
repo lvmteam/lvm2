@@ -60,7 +60,7 @@ let
         urlPrefix = fedora_url version arch;
         archs = ["noarch" arch] ++ (if eqStrings arch "i386" then ["i586" "i686"] else []);
         packages = pkgs.vmTools.commonFedoraPackages;
-        mergeUsr = true;
+        unifiedSystemDir = true;
       };
       rawhide = version: arch: repodata: import (pkgs.runCommand "rawhide-${version}-${arch}.nix" {} ''
         sha=$(grep primary.xml ${repodata} | sed -re 's:.* ([0-9a-f]+)-primary.*:\1:')
