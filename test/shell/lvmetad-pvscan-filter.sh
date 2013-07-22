@@ -20,7 +20,12 @@ min=$(($(stat --printf=0x%T "$dev2")))
 
 aux hide_dev $dev2
 not pvscan --cache $dev2 2>&1 | grep "not found"
-# pvscan with --major/--minor does not fail (for udev's sake?)
+# pvscan with --major/--minor does not fail: lvmetad needs to
+# be notified about device removal on REMOVE uevent, hence
+# this should not fail so udev does not grab a "failed" state
+# incorrectly. We notify device addition and removal with
+# exactly the same command "pvscan --cache" - in case of removal,
+# this is detected by nonexistence of the device itself.
 pvscan --cache --major $maj --minor $min 2>&1 | grep "not found"
 aux unhide_dev $dev2
 
