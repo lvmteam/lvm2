@@ -187,7 +187,7 @@ static int _pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
 	/* Process any command line PVs first. */
 	while (argc--) {
 		pv_name = *argv++;
-		dev = dev_cache_get(pv_name, NULL);
+		dev = dev_cache_get(pv_name, cmd->lvmetad_filter);
 		if (!dev) {
 			log_error("Physical Volume %s not found.", pv_name);
 			ret = ECMD_FAILED;
@@ -218,10 +218,9 @@ static int _pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
 
 		devno = MKDEV((dev_t)major, minor);
 
-		if (!(dev = dev_cache_get_by_devt(devno, NULL))) {
+		if (!(dev = dev_cache_get_by_devt(devno, cmd->lvmetad_filter))) {
 			if (!dm_asprintf(&buf, "%" PRIi32 ":%" PRIi32, major, minor))
 				stack;
-			/* FIXME Filters? */
 			if (!lvmetad_pv_gone(devno, buf ? : "", handler)) {
 				ret = ECMD_FAILED;
 				if (buf)
