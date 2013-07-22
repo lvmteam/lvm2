@@ -842,12 +842,14 @@ static int _vg_update_vg_ondisk(struct volume_group *vg)
 	if (pool_locked && !dm_pool_unlock(vg->vgmem, 0))
 		return_0;
 
-	cft = export_vg_to_config_tree(vg);
-	if (!cft)
-		return 0;
+	if (!is_orphan_vg(vg->name)) {
+		cft = export_vg_to_config_tree(vg);
+		if (!cft)
+			return 0;
 
-	vg->vg_ondisk = import_vg_from_config_tree(cft, vg->fid);
-	dm_config_destroy(cft);
+		vg->vg_ondisk = import_vg_from_config_tree(cft, vg->fid);
+		dm_config_destroy(cft);
+	}
 
 	/* recompute the pool crc */
 	if (pool_locked && !dm_pool_lock(vg->vgmem, detect_internal_vg_cache_corruption()))
