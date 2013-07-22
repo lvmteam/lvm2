@@ -22,9 +22,9 @@ lvcreate \- create a logical volume in an existing volume group
 .RB [ \-\-ignoremonitoring ]
 .RB [ \-\-monitor
 .RI { y | n }]
-.RB [ \-\-maxrecoveryrate
+.RB [ \-\-[raid]maxrecoveryrate
 .IR Rate ]
-.RB [ \-\-minrecoveryrate
+.RB [ \-\-[raid]minrecoveryrate
 .IR Rate ]
 .RB [ \-i | \-\-stripes
 .IR Stripes
@@ -265,17 +265,17 @@ Sets the name for the new logical volume.
 Without this option a default name of "lvol#" will be generated where
 # is the LVM internal number of the logical volume.
 .TP
-.IR \fB\-\-maxrecoveryrate " " \fIRate [ bBsSkKmMgG ]
+.IR \fB\-\-[raid]maxrecoveryrate " " \fIRate [ bBsSkKmMgG ]
 Sets the maximum recovery rate for a RAID logical volume.  \fIRate\fP
-is specified as a size/sec/device.  If no suffix is given, then
-kiB/sec/device is assumed.  Setting the recovery rate to 0 means
-it will be unbounded.
+is specified as an amount per second for each device in the array.
+If no suffix is given, then kiB/sec/device is assumed.  Setting the
+recovery rate to 0 means it will be unbounded.
 .TP
-.IR \fB\-\-minrecoveryrate " " \fIRate [ bBsSkKmMgG ]
+.IR \fB\-\-[raid]minrecoveryrate " " \fIRate [ bBsSkKmMgG ]
 Sets the minimum recovery rate for a RAID logical volume.  \fIRate\fP
-is specified as a size/sec/device.  If no suffix is given, then
-kiB/sec/device is assumed.  Setting the recovery rate to 0 means
-it will be unbounded.
+is specified as an amount per second for each device in the array.
+If no suffix is given, then kiB/sec/device is assumed.  Setting the
+recovery rate to 0 means it will be unbounded.
 .TP
 .B \-\-noudevsync
 Disables udev synchronisation. The
