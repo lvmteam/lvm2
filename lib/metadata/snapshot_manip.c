@@ -296,6 +296,15 @@ int vg_remove_snapshot(struct logical_volume *cow)
 			log_error("Failed to resume %s.", origin->name);
 			return 0;
 		}
+
+		/*
+		 * For merged snapshot we activate cow so it can clean
+		 * left table entries and deactivate_lv() follows shortly.
+		 */
+		if (merging_snapshot && !activate_lv(cow->vg->cmd, cow)) {
+			log_error("Failed to activate %s.", cow->name);
+			return 0;
+		}
 	}
 
 	return 1;
