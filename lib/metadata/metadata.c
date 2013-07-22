@@ -874,11 +874,11 @@ static struct volume_group *_vg_make_handle(struct cmd_context *cmd,
 	if (!vg && !(vg = alloc_vg("vg_make_handle", cmd, NULL)))
 		return_NULL;
 
-	if (vg->fid && !_vg_update_vg_ondisk(vg))
-		vg->read_status |= FAILED_ALLOCATION;
-
 	if (vg->read_status != failure)
 		vg->read_status = failure;
+
+	if (vg->fid && !_vg_update_vg_ondisk(vg))
+		vg->read_status |= FAILED_ALLOCATION;
 
 	return vg;
 }
