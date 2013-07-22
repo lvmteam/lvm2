@@ -11,8 +11,15 @@
 
 . lib/test
 
-# dm-raid v1.4.1+ contains RAID10 support
-aux target_at_least dm-raid 1 4 1 || skip
+# Writemostly has been in every version since the begining
+# Device refresh in 1.5.1 upstream and 1.3.4 < x < 1.4.0 in RHEL6
+# Sync action    in 1.5.0 upstream and 1.3.3 < x < 1.4.0 in RHEL6
+# Proper mismatch count 1.5.2 upstream,1.3.5 < x < 1.4.0 in RHEL6
+#
+# We will simplify and simple test for 1.5.2 and 1.3.5 < x < 1.4.0
+aux target_at_least dm-raid 1 3 5 && 
+  ! aux target_at_least dm-raid 1 4 0 ||
+  aux target_at_least dm-raid 1 5 2 || skip
 
 aux prepare_vg 6
 
@@ -140,24 +147,6 @@ run_syncaction_check() {
 
 	seek=$(($seek + $size)) # Jump halfway through the RAID image
 
-	# Check all is normal
-	if ! aux target_at_least dm-raid 1 5 2; then
-		# As of version 1.5.2, the mismatch_cnt is non-zero only
-		# after a 'check' sync action has been performed and only
-		# if discrepancies have been found.
-		#
-		# Previous to this version, mismatch_cnt was basically
-		# undefined unless it was queried after a 'check' was
-		# performed.  This meant that unless a 'check' was done,
-		# the 'm' character in the 'lvs' output could show up
-		# randomly.
-
-		# Run "check" should turn up clean
-		lvchange --syncaction check $1/$2
-		aux wait_for_sync $1 $2
-		sync
-	fi
-
 	lvs --noheadings -o lv_attr $1/$2 | grep '.*-.$'
 	[ `lvs --noheadings -o raid_mismatch_count $1/$2` == 0 ]
 
@@ -228,32 +217,22 @@ run_refresh_check() {
 # run_checks <VG> <LV> [snapshot_dev]
 run_checks() {
 	# Without snapshots
-	if aux target_at_least dm-raid 1 1 0; then
-		run_writemostly_check $1 $2
-	fi
+	run_writemostly_check $1 $2
 
-	if aux target_at_least dm-raid 1 5 0; then
-		run_syncaction_check $1 $2
-	fi
+	run_syncaction_check $1 $2
 
-	if aux target_at_least dm-raid 1 5 1; then
-		run_refresh_check $1 $2
-	fi
+	run_refresh_check $1 $2
 
 	# With snapshots
 	if [ ! -z $3 ]; then
 		lvcreate -s $1/$2 -l 4 -n snap $3
-		if aux target_at_least dm-raid 1 1 0; then
-			run_writemostly_check $1 $2
-		fi
 
-		if aux target_at_least dm-raid 1 5 0; then
-			run_syncaction_check $1 $2
-		fi
+		run_writemostly_check $1 $2
 
-		if aux target_at_least dm-raid 1 5 1; then
-			run_refresh_check $1 $2
-		fi
+		run_syncaction_check $1 $2
+
+		run_refresh_check $1 $2
+
 		lvremove -ff $1/snap
 	fi
 }
