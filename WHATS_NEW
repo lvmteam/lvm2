@@ -1,5 +1,6 @@
 Version 2.02.99 - 
 ===================================
+  Do not zero init 4KB of thin snapshot for non-zeroing thin pool (2.02.94).
   Issue an error msg if lvconvert --type used incorrectly with other options.
   Use LOG_DEBUG/ERR msg severity instead default for lvm2-activation-generator.
   Support ARG_GROUPABLE with merge_synonym (for --raidwritemostly).

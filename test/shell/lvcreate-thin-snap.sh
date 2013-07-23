@@ -54,4 +54,11 @@ lvcreate -K -s --name sn2 $vg/sn1
 lvcreate -K -s --name sn3 $vg/sn2
 lvcreate -K -s --name sn4 $vg/sn3
 
+lvremove -ff $vg
+
+lvcreate -L10M --zero n -T $vg/pool -V10M --name $lv1
+mkfs.ext4 $DM_DEV_DIR/$vg/$lv1
+lvcreate -K -s $vg/$lv1 --name snap
+fsck -p $DM_DEV_DIR/$vg/snap
+
 vgremove -ff $vg
