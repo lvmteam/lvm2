@@ -174,7 +174,7 @@ The start of the bootloader area is always aligned, see also \fB--dataalignment\
 and \fB--dataalignmentoffset\fP. The bootloader area size may eventually
 end up increased due to the alignment, but it's never less than the
 size that is requested. To see the bootloader area start and size of
-an existing Physical Volume use \fBpvs -o +ba_start,ba_size\fP.
+an existing Physical Volume use \fBpvs -o +pv_ba_start,pv_ba_size\fP.
 .TP
 .B \-\-setphysicalvolumesize \fIsize
 Overrides the automatically-detected size of the PV.  Use with care.
