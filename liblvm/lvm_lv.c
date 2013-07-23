@@ -443,7 +443,7 @@ lv_create_params_t lvm_lv_params_create_thin_pool(vg_t vg,
 
 	if (lvcp) {
 		lvcp->vg = vg;
-		lvcp->lvp.discards = discard;
+		lvcp->lvp.discards = (thin_discards_t) discard;
 
 		if (chunk_size)
 			lvcp->lvp.chunk_size = chunk_size;
