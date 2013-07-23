@@ -3440,7 +3440,7 @@ static int _lvresize_poolmetadata(struct cmd_context *cmd, struct volume_group *
 		extents += lv->le_count;
 	}
 
-	if (extents * vg->extent_size > DM_THIN_MAX_METADATA_SIZE) {
+	if ((uint64_t)extents * vg->extent_size > DM_THIN_MAX_METADATA_SIZE) {
 		log_print_unless_silent("Rounding size to maximum supported size 16GiB "
 					"for metadata volume %s.", lv->name);
 		extents = (DM_THIN_MAX_METADATA_SIZE + vg->extent_size - 1) /
