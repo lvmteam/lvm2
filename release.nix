@@ -68,14 +68,14 @@ let
       '') { inherit fedora; };
       update = version: arch: repodata: orig: orig // (import (pkgs.runCommand "updates-fedora.nix" {} ''
           sha=$(grep primary.xml ${repodata} | sed -re 's:.* ([0-9a-f]+)-primary.*:\1:')
-          (echo 'fetchurl: { packagesLists = [ "${orig.packagesList}" ('
+          (echo 'fetchurl: orig: { packagesLists = [ orig.packagesList ('
            echo "fetchurl { "
            echo "  url = \"${fedora_update_url version arch}/repodata/$sha-primary.xml.gz\";"
            echo "  sha256 = \"$sha\";"
-           echo '} ) ]; urlPrefixes = [ "${orig.urlPrefix}" "${fedora_update_url version arch}" ]; }'
+           echo '} ) ]; urlPrefixes = [ orig.urlPrefix "${fedora_update_url version arch}" ]; }'
           ) > $out
           echo built $out 1>&2
-        '')) pkgs.fetchurl;
+        '')) pkgs.fetchurl orig;
     in {
       rawhidex86_64 = rawhide "rawhide" "x86_64" rawhide64;
       rawhidei386 = rawhide "rawhide" "i386" rawhide32;
