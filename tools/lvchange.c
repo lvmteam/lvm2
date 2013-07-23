@@ -749,10 +749,10 @@ static int lvchange_writemostly(struct logical_volume *lv)
 				return_0;
 
 			if (tmp_str_len < 3 ||
-			    (tmp_str[tmp_str_len - 2] != ':') &&
-			    ((tmp_str[tmp_str_len - 1] != 't') ||
-			     (tmp_str[tmp_str_len - 1] != 'y') ||
-			     (tmp_str[tmp_str_len - 1] != 'n')))
+			    ((tmp_str[tmp_str_len - 2] != ':') &&
+			     ((tmp_str[tmp_str_len - 1] != 't') ||
+			      (tmp_str[tmp_str_len - 1] != 'y') ||
+			      (tmp_str[tmp_str_len - 1] != 'n'))))
 				/* Default to 'y' if no mode specified */
 				sprintf(pv_names[i], "%s:y", tmp_str);
 			else
