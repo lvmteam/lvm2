@@ -250,13 +250,15 @@ struct dm_list *lvm_vg_list_lvs(vg_t vg)
 	dm_list_init(list);
 
 	dm_list_iterate_items(lvl, &vg->lvs) {
-		if (!(lvs = dm_pool_zalloc(vg->vgmem, sizeof(*lvs)))) {
-			log_errno(ENOMEM,
-				"Memory allocation fail for lvm_lv_list.");
-			return NULL;
+		if (lv_is_visible(lvl->lv)) {
+			if (!(lvs = dm_pool_zalloc(vg->vgmem, sizeof(*lvs)))) {
+				log_errno(ENOMEM,
+					"Memory allocation fail for lvm_lv_list.");
+				return NULL;
+			}
+			lvs->lv = lvl->lv;
+			dm_list_add(list, &lvs->list);
 		}
-		lvs->lv = lvl->lv;
-		dm_list_add(list, &lvs->list);
 	}
 	return list;
 }
