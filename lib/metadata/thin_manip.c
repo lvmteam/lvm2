@@ -425,8 +425,7 @@ uint32_t get_free_pool_device_id(struct lv_segment *thin_pool_seg)
 	return max_id;
 }
 
-// FIXME Rename this fn: it doesn't extend an already-existing pool AFAICT
-int extend_pool(struct logical_volume *pool_lv, const struct segment_type *segtype,
+int create_pool(struct logical_volume *pool_lv, const struct segment_type *segtype,
 		struct alloc_handle *ah, uint32_t stripes, uint32_t stripe_size)
 {
 	const struct segment_type *striped;
@@ -455,7 +454,9 @@ int extend_pool(struct logical_volume *pool_lv, const struct segment_type *segty
 	if (!lv_add_segment(ah, stripes, 1, pool_lv, striped, 1, 0, 0))
 		return_0;
 
-	if (activation()) {
+	if (!activation())
+		log_warn("WARNING: Pool %s is created without initialization.", pool_lv->name);
+	else {
 		if (!vg_write(pool_lv->vg) || !vg_commit(pool_lv->vg))
 			return_0;
 
@@ -474,8 +475,6 @@ int extend_pool(struct logical_volume *pool_lv, const struct segment_type *segty
 				  pool_lv->name);
 			goto bad;
 		}
-	} else {
-		log_warn("WARNING: Pool %s is created without initialization.", pool_lv->name);
 	}
 
 	if (dm_snprintf(name, sizeof(name), "%s_tmeta", pool_lv->name) < 0) {
@@ -512,6 +511,7 @@ int extend_pool(struct logical_volume *pool_lv, const struct segment_type *segty
 		goto_bad;
 
 	return 1;
+
 bad:
 	if (activation()) {
 		if (deactivate_lv_local(pool_lv->vg->cmd, pool_lv)) {

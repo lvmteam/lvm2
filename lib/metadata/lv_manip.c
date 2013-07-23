@@ -2868,7 +2868,7 @@ int lv_extend(struct logical_volume *lv,
 
 	if (segtype_is_thin_pool(segtype)) {
 		if (!lv->le_count) {
-			if (!(r = extend_pool(lv, segtype, ah, stripes, stripe_size)))
+			if (!(r = create_pool(lv, segtype, ah, stripes, stripe_size)))
 				stack;
 		} else if (!(r = _lv_extend_layered_lv(ah, lv, extents, 0,
 						       stripes, stripe_size)))
