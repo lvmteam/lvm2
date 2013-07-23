@@ -434,8 +434,7 @@ static int _delete_lv(struct logical_volume *mirror_lv, struct logical_volume *l
 		}
 	}
 
-	// FIXME: shouldn't the activation type be based on mirror_lv, not lv?
-	if (!_activate_lv_like_model(lv, lv))
+	if (!_activate_lv_like_model(mirror_lv, lv))
 		return_0;
 
 	/* FIXME Is this superfluous now? */

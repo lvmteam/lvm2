@@ -846,7 +846,8 @@ struct alloc_handle {
 };
 
 static uint32_t _calc_area_multiple(const struct segment_type *segtype,
-				    const uint32_t area_count, const uint32_t stripes)
+				    const uint32_t area_count,
+				    const uint32_t stripes)
 {
 	if (!area_count)
 		return 1;
@@ -868,9 +869,13 @@ static uint32_t _calc_area_multiple(const struct segment_type *segtype,
 		return area_count - segtype->parity_devs;
 	}
 
-	/* RAID10 - only has 2-way mirror right now */
+	/*
+	 * RAID10 - only has 2-way mirror right now.
+	 *          If we are to move beyond 2-way RAID10, then
+	 *          the 'stripes' argument will always need to
+	 *          be given.
+	 */
 	if (!strcmp(segtype->name, "raid10")) {
-		// FIXME: I'd like the 'stripes' arg always given
 		if (!stripes)
 			return area_count / 2;
 		return stripes;

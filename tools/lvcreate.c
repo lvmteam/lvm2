@@ -735,10 +735,9 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 		return 0;
 	}
 
-// FIXME -m0 implies *striped*
-
-	/* Set default segtype */
-	if (arg_count(cmd, mirrors_ARG))
+	/* Set default segtype - remember, '-m 0' implies stripe. */
+	if (arg_count(cmd, mirrors_ARG) &&
+	    arg_uint_value(cmd, mirrors_ARG, 0))
 		if (arg_uint_value(cmd, arg_count(cmd, stripes_long_ARG) ?
 				   stripes_long_ARG : stripes_ARG, 1) > 1) {
 			segtype_str = find_config_tree_str(cmd, global_raid10_segtype_default_CFG, NULL);;
