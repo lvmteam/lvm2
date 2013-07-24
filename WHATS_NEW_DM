@@ -1,5 +1,5 @@
-Version 1.02.78 - 
-===================================
+Version 1.02.78 - 24th July 2013
+================================
   Process thin messages once to active thin pool target for dm_tree.
   Optimize out setting the same value or read_ahead.
   Add DM_ARRAY_SIZE public macro.
