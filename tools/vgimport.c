@@ -80,8 +80,7 @@ int vgimport(struct cmd_context *cmd, int argc, char **argv)
 		 * where the user simply forgot to move one or more disks in
 		 * the VG before running 'vgimport'.
 		 */
-		log_print("'--force' supplied.  Volume groups with missing PVs"
-			  " will be imported.");
+		log_warn("WARNING: Volume groups with missing PVs will be imported with --force.");
 		cmd->handles_missing_pvs = 1;
 	}
 

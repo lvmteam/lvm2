@@ -20,7 +20,7 @@
 #include "defaults.h"
 
 /* 16 bits: 3 bits for major, 4 bits for minor, 9 bits for patchlevel */
-/* Max LVM version supported: 7.15.511. Just extend bits if ever needed. */
+/* FIXME Max LVM version supported: 7.15.511. Extend bits when needed. */
 #define vsn(major, minor, patchlevel) (major << 13 | minor << 9 | patchlevel)
 
 struct device;

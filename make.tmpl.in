@@ -34,6 +34,7 @@ LIBS = @LIBS@
 # Extra libraries always linked with static binaries
 STATIC_LIBS = $(SELINUX_LIBS) $(UDEV_LIBS)
 DEFS += @DEFS@
+# FIXME set this only where it's needed, not globally?
 CFLAGS += @CFLAGS@ @UDEV_CFLAGS@
 CLDFLAGS += @CLDFLAGS@
 ELDFLAGS += @ELDFLAGS@

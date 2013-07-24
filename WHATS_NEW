@@ -5,7 +5,7 @@ Version 2.02.99 -
   Use LOG_DEBUG/ERR msg severity instead default for lvm2-activation-generator.
   Support ARG_GROUPABLE with merge_synonym (for --raidwritemostly).
   Fix segfault when reporting raid_syncaction for older kernels.
-  Add LV reporting fields raid_mismatch_count, raid_sync_action, raid_write_behind.
+  Add LV report fields: raid_mismatch_count/raid_sync_action/raid_write_behind.
   Add LV reporting fields raid_min_recovery_rate, raid_max_recovery_rate.
   Add sync_percent as alias for copy_percent LV reporting field.
   Add lv_ prefix to modules reporting field.
@@ -63,6 +63,8 @@ Version 2.02.99 -
   Report lvs volume type 'o' also for external origin volumes.
   Report lvs target type 't' only for thin pools and thin volumes.
   Fix test for active snapshot in cluster before resizing it.
+  Allow local activation to receive a locally-supplied LV struct.
+  Add vg->vg_ondisk / lv_ondisk() holding committed metadata.
   Report backtrace from dump filter error path.
   Do not use persistent filter with lvmetad.
   Composable persistent filter functionality for global filter.
@@ -99,7 +101,6 @@ Version 2.02.99 -
   Add lvcreate/lvchange --[raid]{min|max}recoveryrate for raid LVs.
   Add lvchange --[raid]writemostly/writebehind support for RAID1
   Add lv_change_activate() for common activation code in vg/lvchange.
-  Revert change that allowed identical table reload for RAID.
   Add lvchange --[raid]syncaction for scrubbing of RAID LVs.
   Improve RAID kernel status retrieval to include sync_action/mismatch_cnt.
   Add external origin support for lvcreate.
@@ -114,19 +115,19 @@ Version 2.02.99 -
   Add --type {current|default|missing|new} and --atversion to lvm dumpconfig.
   Support automatic config validation and add 'config' section to lvm.conf.
   Add pvs -o pv_ba_start,pv_ba_size to report bootloader area start and size.
-  Add --bootloaderareasize to pvcreate and vgconvert to create a bootloader area.
+  Add --bootloaderareasize to pvcreate and vgconvert to create bootloader area.
   Add PV header extension: extension version, flags and bootloader areas.
   Initial support for lvconvert of thin external origin.
   Add _lv_remove_segs_using_this_lv() for removal of dependent lvs.
   Improve activation code for better support of stacked devices.
   Add _add_layer_target_to_dtree() for adding linear layer into dtree.
   Extend _cached_info() to accept layer string.
-  Allow identical table reload for RAID to restore transiently failed PVs.
-  vgimport '--force' now allows users to import VGs with missing PVs.
+  vgimport '--force' now allows import of VGs with missing PVs.
   Fix PV alignment to incorporate alignment offset if the PV has zero MDAs.
-  Allow remove/replace of RAID sub-LVs that are composed of error targets.
+  Add global/raid10_segtype_default to lvm.conf.
+  Allow removal or replacement of RAID LV components that are error segments.
   Make 'vgreduce --removemissing' able to handle RAID LVs with missing PVs.
-  Rename lvm.conf setting 'mirror_region_size' to 'raid_region_size'.
+  Accept activation/raid_region_size in preference to mirror_region_size config.
   Fix pvs -o pv_free reporting for PVs with zero PE count.
   Fix missing cleanup of flags when the LV is detached from pool.
   Fix check for some forbidden discards conversion of thin pools.
