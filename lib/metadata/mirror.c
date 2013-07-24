@@ -434,7 +434,8 @@ static int _delete_lv(struct logical_volume *mirror_lv, struct logical_volume *l
 		}
 	}
 
-	if (!_activate_lv_like_model(mirror_lv, lv))
+	/* FIXME: the 'model' should be 'mirror_lv' not 'lv', I think. */
+	if (!_activate_lv_like_model(lv, lv))
 		return_0;
 
 	/* FIXME Is this superfluous now? */
