@@ -1581,10 +1581,10 @@ struct dm_config_value {
 };
 
 struct dm_config_node {
-	int id;
 	const char *key;
 	struct dm_config_node *parent, *sib, *child;
 	struct dm_config_value *v;
+	int id;
 };
 
 struct dm_config_tree {
