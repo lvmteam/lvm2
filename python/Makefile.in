@@ -33,7 +33,9 @@ install_lvm2: install_python_bindings
 
 install: install_lvm2
 
+clean:
+	$(RM) -r build
+
 CLEAN_TARGETS += .liblvm_built liblvm_python.c
 
-DISTCLEAN_DIRS += build
 DISTCLEAN_TARGETS += setup.py
