@@ -135,20 +135,22 @@ static int generate_unit(const char *dir, int unit)
 
 	if (unit == UNIT_NET) {
 		fputs("After=iscsi.service fcoe.service\n"
-		      "Before=remote-fs.target shutdown.target\n", f);
+		      "Before=remote-fs.target shutdown.target\n\n"
+		      "[Service]\n"
+		      "ExecStartPre=/usr/bin/udevadm settle\n", f);
 	} else {
 		if (unit == UNIT_EARLY) {
-			fputs("After=systemd-udev-settle.service\n", f);
-			fputs("Before=cryptsetup.target\n", f);
+			fputs("After=systemd-udev-settle.service\n"
+			      "Before=cryptsetup.target\n", f);
 		} else
 			fputs("After=lvm2-activation-early.service cryptsetup.target\n", f);
 
 		fputs("Before=local-fs.target shutdown.target\n"
-		      "Wants=systemd-udev-settle.service\n\n", f);
+		      "Wants=systemd-udev-settle.service\n\n"
+		      "[Service]\n", f);
 	}
 
-	fputs("[Service]\n"
-	      "ExecStart=/usr/sbin/lvm vgchange -aay --sysinit\n"
+	fputs("ExecStart=/usr/sbin/lvm vgchange -aay --sysinit\n"
 	      "Type=oneshot\n", f);
 
 	if (fclose(f) < 0) {
