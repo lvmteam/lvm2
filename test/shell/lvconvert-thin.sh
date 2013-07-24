@@ -95,4 +95,7 @@ grep "WARNING: Chunk size is too small" err
 
 #lvs -a -o+chunk_size,stripe_size,seg_pe_ranges
 
+# Convertions of pool to mirror is unsupported
+not lvconvert -m1 $vg/$lv1
+
 vgremove -ff $vg

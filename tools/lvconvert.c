@@ -1553,6 +1553,27 @@ static int _lvconvert_mirrors_repair(struct cmd_context *cmd,
 	return 1;
 }
 
+static int _lvconvert_validate_thin(struct logical_volume *lv,
+				    struct lvconvert_params *lp)
+{
+	if (!lv_is_thin_pool(lv) && !lv_is_thin_volume(lv))
+		return 1;
+
+	log_error("Converting thin%s segment type for \"%s/%s\" to %s is not supported.",
+		  lv_is_thin_pool(lv) ? " pool" : "",
+		  lv->vg->name, lv->name, lp->segtype->name);
+
+	if (lv_is_thin_volume(lv))
+		return 0;
+
+	/* Give advice for thin pool conversion */
+	log_error("For pool data volume conversion use \"%s/%s\".",
+		  lv->vg->name, seg_lv(first_seg(lv), 0)->name);
+	log_error("For pool metadata volume conversion use \"%s/%s\".",
+		  lv->vg->name, first_seg(lv)->metadata_lv->name);
+	return 0;
+}
+
 /*
  * _lvconvert_mirrors
  *
@@ -1574,6 +1595,9 @@ static int _lvconvert_mirrors(struct cmd_context *cmd,
 			  "of segment type 'mirror'");
 		return 0;
 	}
+
+	if (!_lvconvert_validate_thin(lv, lp))
+		return_0;
 
 	/* Adjust mimage and/or log count */
 	if (!_lvconvert_mirrors_parse_params(cmd, lv, lp,
@@ -1675,6 +1699,9 @@ static int lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *lp
 			  seg->segtype->ops->name(seg));
 		return 0;
 	}
+
+	if (!_lvconvert_validate_thin(lv, lp))
+		return_0;
 
 	if (!is_valid_raid_conversion(seg->segtype, lp->segtype)) {
 		log_error("Unable to convert %s/%s from %s to %s",
