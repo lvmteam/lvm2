@@ -1,3 +1,6 @@
+Version 2.02.100 -
+================================
+
 Version 2.02.99 - 24th July 2013
 ================================
   Do not zero init 4KB of thin snapshot for non-zeroing thin pool (2.02.94).
