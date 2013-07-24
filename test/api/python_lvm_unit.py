@@ -46,9 +46,9 @@ class TestLvm(unittest.TestCase):
 		for d in device_list:
 			vg.extend(d)
 
-		new_extent = 1024 * 1024 * 2
-		vg.setExtentSize(new_extent)
-		self.assertEqual(vg.getExtentSize(), new_extent)
+		#new_extent = 1024 * 1024 * 2
+		#vg.setExtentSize(new_extent)
+		#self.assertEqual(vg.getExtentSize(), new_extent)
 
 		vg.createLvLinear('thick_lv', vg.getSize()/2)
 		vg.close()

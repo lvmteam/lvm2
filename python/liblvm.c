@@ -1957,7 +1957,7 @@ PyMODINIT_FUNC initlvm(void)
 		Py_INCREF(_LibLVMError);
 		Py_INCREF(_LibLVMError);
 		PyModule_AddObject(m, "error", _LibLVMError);
-		PyModule_AddObject(m, "_LibLVMError", _LibLVMError);
+		PyModule_AddObject(m, "LibLVMError", _LibLVMError);
 	}
 
 	Py_AtExit(_liblvm_cleanup);
