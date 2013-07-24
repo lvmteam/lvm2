@@ -27,7 +27,7 @@ liblvm_python.c:
 include $(top_builddir)/make.tmpl
 
 install_python_bindings: python_bindings
-	$(PYTHON) setup.py install --skip-build --root $(DESTDIR)$(prefix)
+	$(PYTHON) setup.py install --skip-build --prefix $(prefix)
 
 install_lvm2: install_python_bindings
 
