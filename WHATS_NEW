@@ -1,5 +1,6 @@
 Version 2.02.100 -
 ================================
+  Require 1.9 thin pool target version for online thin pool metadata resize.
   Ignore previous LV seg with alloc contiguous & cling when num stripes varies.
   Fix segfault if devices/global_filter is not specified correctly.
 

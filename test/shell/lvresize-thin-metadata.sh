@@ -11,7 +11,7 @@
 
 . lib/test
 
-aux have_thin 1 8 0 || skip
+aux have_thin 1 9 0 || skip
 
 aux prepare_pvs 3
 
