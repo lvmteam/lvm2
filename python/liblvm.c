@@ -295,11 +295,11 @@ static PyObject *_liblvm_lvm_pv_remove(PyObject *self, PyObject *arg)
 static PyObject *_liblvm_lvm_pv_create(PyObject *self, PyObject *arg)
 {
 	const char *pv_name;
-	uint64_t size;
+	unsigned long long size;
 
 	LVM_VALID();
 
-	if (!PyArg_ParseTuple(arg, "sl", &pv_name, &size))
+	if (!PyArg_ParseTuple(arg, "sK", &pv_name, &size))
 		return NULL;
 
 	if (lvm_pv_create(_libh, pv_name, size) == -1) {
@@ -905,11 +905,11 @@ static PyObject *_liblvm_lvm_vg_get_max_lv(vgobject *self)
 
 static PyObject *_liblvm_lvm_vg_set_extent_size(vgobject *self, PyObject *args)
 {
-	uint32_t new_size;
+	unsigned int new_size;
 
 	VG_VALID(self);
 
-	if (!PyArg_ParseTuple(args, "l", &new_size))
+	if (!PyArg_ParseTuple(args, "I", &new_size))
 		return NULL;
 
 	if (lvm_vg_set_extent_size(self->vg, new_size) == -1) {
@@ -985,12 +985,12 @@ static PyObject *_liblvm_lvm_vg_get_tags(vgobject *self)
 static PyObject *_liblvm_lvm_vg_create_lv_linear(vgobject *self, PyObject *args)
 {
 	const char *vgname;
-	uint64_t size;
+	unsigned long long size;
 	lvobject *lvobj;
 
 	VG_VALID(self);
 
-	if (!PyArg_ParseTuple(args, "sl", &vgname, &size))
+	if (!PyArg_ParseTuple(args, "sK", &vgname, &size))
 		return NULL;
 
 	if (!(lvobj = PyObject_New(lvobject, &_LibLVMlvType)))
@@ -1013,10 +1013,10 @@ static PyObject *_liblvm_lvm_vg_create_lv_linear(vgobject *self, PyObject *args)
 
 static PyObject *_liblvm_lvm_vg_create_lv_thinpool(vgobject *self, PyObject *args)
 {
+	unsigned long long size = 0;
+	unsigned long long meta_size = 0;
 	const char *pool_name;
-	uint64_t size = 0;
-	uint32_t chunk_size = 0;
-	uint64_t meta_size = 0;
+	unsigned long chunk_size = 0;
 	int skip_zero = 0;
 	lvm_thin_discards_t discard = LVM_THIN_DISCARDS_PASSDOWN;
 	lvobject *lvobj;
@@ -1074,7 +1074,7 @@ static PyObject *_liblvm_lvm_vg_create_lv_thin(vgobject *self, PyObject *args)
 {
 	const char *pool_name;
 	const char *lv_name;
-	uint64_t size = 0;
+	unsigned long long size = 0;
 	lvobject *lvobj;
 	lv_create_params_t lvp = NULL;
 
@@ -1455,11 +1455,11 @@ static PyObject *_liblvm_lvm_lv_rename(lvobject *self, PyObject *args)
 
 static PyObject *_liblvm_lvm_lv_resize(lvobject *self, PyObject *args)
 {
-	uint64_t new_size;
+	unsigned long long new_size;
 
 	LV_VALID(self);
 
-	if (!PyArg_ParseTuple(args, "l", &new_size))
+	if (!PyArg_ParseTuple(args, "K", &new_size))
 		return NULL;
 
 	if (lvm_lv_resize(self->lv, new_size) == -1) {
@@ -1509,7 +1509,7 @@ static PyObject *_liblvm_lvm_lv_list_lvsegs(lvobject *self)
 static PyObject *_liblvm_lvm_lv_snapshot(lvobject *self, PyObject *args)
 {
 	const char *snap_name;
-	uint64_t size = 0;
+	unsigned long long size = 0;
 	lvobject *lvobj;
 	lv_create_params_t lvp = NULL;
 
@@ -1616,11 +1616,11 @@ static PyObject *_liblvm_lvm_pv_get_free(pvobject *self)
 
 static PyObject *_liblvm_lvm_pv_resize(pvobject *self, PyObject *args)
 {
-	uint64_t new_size;
+	unsigned long long new_size;
 
 	PV_VALID(self);
 
-	if (!PyArg_ParseTuple(args, "l", &new_size))
+	if (!PyArg_ParseTuple(args, "K", &new_size))
 		return NULL;
 
 	if (lvm_pv_resize(self->pv, new_size) == -1) {
