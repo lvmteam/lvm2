@@ -50,7 +50,10 @@ else
 	mkdir "$DM_DEV_DIR/mapper"
 fi
 
-export DM_DEV_DIR LVM_SYSTEM_DIR
+# abort on the internal dm errors in the tests (allowing test user override)
+DM_ABORT_ON_INTERNAL_ERRORS=${DM_ABORT_ON_INTERNAL_ERRORS:-1}
+
+export DM_DEV_DIR LVM_SYSTEM_DIR DM_ABORT_ON_INTERNAL_ERRORS
 
 cd "$TESTDIR"
 

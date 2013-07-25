@@ -57,6 +57,7 @@ extern "C" {
  * Use dm_log_with_errno_init(NULL) to restore the default log fn.
  * Error messages may have a non-zero errno.
  * Debug messages may have a non-zero class.
+ * Aborts on internal error when env DM_ABORT_ON_INTERNAL_ERRORS is 1
  */
 
 typedef void (*dm_log_with_errno_fn) (int level, const char *file, int line,

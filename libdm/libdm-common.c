@@ -114,22 +114,26 @@ static void _default_log_line(int level,
 	    int line __attribute__((unused)), int dm_errno_or_class, 
 	    const char *f, va_list ap)
 {
-	int use_stderr = level & _LOG_STDERR;
+	static int _abort_on_internal_errors = -1;
+	FILE *out = (level & _LOG_STDERR) ? stderr : stdout;
 
 	level &= ~_LOG_STDERR;
 
-	if (level > _LOG_WARN && !_verbose)
-		return;
+	if (level <= _LOG_WARN || _verbose) {
+		if (level < _LOG_WARN)
+			out = stderr;
+		vfprintf(out, f, ap);
+		fputc('\n', out);
+	}
 
-	if (level < _LOG_WARN)
-		vfprintf(stderr, f, ap);
-	else
-		vfprintf(use_stderr ? stderr : stdout, f, ap);
+	if (_abort_on_internal_errors < 0)
+		/* Set when env DM_ABORT_ON_INTERNAL_ERRORS is 1 */
+		_abort_on_internal_errors =
+			!strcmp(getenv("DM_ABORT_ON_INTERNAL_ERRORS") ? : "0", "1");
 
-	if (level < _LOG_WARN)
-		fprintf(stderr, "\n");
-	else
-		fprintf(use_stderr ? stderr : stdout, "\n");
+	if (_abort_on_internal_errors &&
+	    !strncmp(f, INTERNAL_ERROR, sizeof(INTERNAL_ERROR) - 1))
+		abort();
 }
 
 __attribute__((format(printf, 5, 6)))

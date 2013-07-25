@@ -1,5 +1,6 @@
 Version 1.02.79 -
 ================================
+  Add DM_ABORT_ON_INTERNAL_ERRORS env var support to abort on internal errors.
 
 Version 1.02.78 - 24th July 2013
 ================================
