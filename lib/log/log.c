@@ -196,8 +196,7 @@ void print_log(int level, const char *file, int line, int dm_errno_or_class,
 	level &= ~(_LOG_STDERR|_LOG_ONCE);
 
 	if (_abort_on_internal_errors &&
-	    !strncmp(format, INTERNAL_ERROR,
-		     strlen(INTERNAL_ERROR))) {
+	    !strncmp(format, INTERNAL_ERROR, sizeof(INTERNAL_ERROR) - 1)) {
 		fatal_internal_error = 1;
 		/* Internal errors triggering abort cannot be suppressed. */
 		_log_suppress = 0;
