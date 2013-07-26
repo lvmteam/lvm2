@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (C) 2012 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2012-2013 Red Hat, Inc. All rights reserved.
 #
 # This file is part of LVM2.
 #
@@ -24,10 +24,11 @@ test -z "$python_lib" && skip
 
 export PYTHONPATH=`dirname $python_lib`:$PYTHONPATH
 
+#Setup which devices the unit test can use.
+export PY_UNIT_PVS=$(cat DEVICES)
+
+
+#We will skip until we can ensure it is correct.
 skip
 
-# skiped until fixed
-# FIXME - script must ONLY use  $(cat DEVICES) as PVs
-# it must NOT create/modify/remove volumes from other places
-python_lvm_unit.py -v
-# nemiver python ../api/python_lvm_unit.py -v -f
+python_lvm_unit.py -v -f
