@@ -940,8 +940,7 @@ static int _init_filters(struct cmd_context *cmd, unsigned load_persistent_cache
 
 	if (!(f4 = persistent_filter_create(cmd->dev_types, f3, dev_cache))) {
 		log_verbose("Failed to create persistent device filter.");
-		f3->destroy(f3);
-		return_0;
+		goto bad;
 	}
 
 	/* Should we ever dump persistent filter state? */
@@ -977,10 +976,10 @@ static int _init_filters(struct cmd_context *cmd, unsigned load_persistent_cache
 
 	return 1;
 bad:
-	if (f3)
-		f3->destroy(f3);
 	if (f4)
 		f4->destroy(f4);
+	else if (f3)
+		f3->destroy(f3);
 	if (toplevel_components[0])
 		toplevel_components[0]->destroy(toplevel_components[0]);
 	return 0;

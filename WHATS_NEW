@@ -1,5 +1,6 @@
 Version 2.02.100 -
 ================================
+  Fix segfault if devices/global_filter is not specified correctly.
 
 Version 2.02.99 - 24th July 2013
 ================================
