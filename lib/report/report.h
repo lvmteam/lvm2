@@ -17,6 +17,7 @@
 #define _LVM_REPORT_H
 
 #include "metadata-exported.h"
+#include "label.h"
 
 typedef enum {
 	LVS		= 1,
@@ -41,7 +42,8 @@ void *report_init(struct cmd_context *cmd, const char *format, const char *keys,
 void report_free(void *handle);
 int report_object(void *handle, struct volume_group *vg,
 		  struct logical_volume *lv, struct physical_volume *pv,
-		  struct lv_segment *seg, struct pv_segment *pvseg);
+		  struct lv_segment *seg, struct pv_segment *pvseg,
+		  struct label *label);
 int report_devtypes(void *handle);
 int report_output(void *handle);
 
