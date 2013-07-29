@@ -38,6 +38,9 @@ typedef int (*process_single_pv_fn_t) (struct cmd_context *cmd,
 				  struct volume_group *vg,
 				  struct physical_volume *pv,
 				  void *handle);
+typedef int (*process_single_label_fn_t) (struct cmd_context *cmd,
+					  struct label *label,
+					  void *handle);
 typedef int (*process_single_lv_fn_t) (struct cmd_context *cmd,
 				  struct logical_volume *lv,
 				  void *handle);
@@ -57,6 +60,9 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 		    struct volume_group *vg, uint32_t lock_type,
 		    int scan_label_only, void *handle,
 		    process_single_pv_fn_t process_single_pv);
+
+int process_each_label(struct cmd_context *cmd, int argc, char **argv,
+		       void *handle, process_single_label_fn_t process_single_label);
 
 int process_each_segment_in_pv(struct cmd_context *cmd,
 			       struct volume_group *vg,

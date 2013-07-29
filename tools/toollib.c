@@ -1801,3 +1801,61 @@ int change_tag(struct cmd_context *cmd, struct volume_group *vg,
 	return 1;
 }
 
+int process_each_label(struct cmd_context *cmd, int argc, char **argv, void *handle,
+		       process_single_label_fn_t process_single_label)
+{
+	struct label *label;
+	struct dev_iter *iter;
+	struct device *dev;
+
+	int ret_max = ECMD_PROCESSED;
+	int ret = 0;
+	int opt = 0;
+
+	if (argc) {
+		for (; opt < argc; opt++) {
+			if (!(dev = dev_cache_get(argv[opt], cmd->filter))) {
+				log_error("Failed to find device "
+					  "\"%s\"", argv[opt]);
+				ret_max = ECMD_FAILED;
+				continue;
+			}
+
+			if (!label_read(dev, &label, 0))
+				continue;
+
+			ret = process_single_label(cmd, label, handle);
+
+			if (ret > ret_max)
+				ret_max = ret;
+
+			if (sigint_caught())
+				break;
+		}
+
+		return ret_max;
+	}
+
+	if (!(iter = dev_iter_create(cmd->filter, 1))) {
+		log_error("dev_iter creation failed");
+		return ECMD_FAILED;
+	}
+
+	while ((dev = dev_iter_get(iter)))
+	{
+		if (!label_read(dev, &label, 0))
+			continue;
+
+		ret = process_single_label(cmd, label, handle);
+
+		if (ret > ret_max)
+			ret_max = ret;
+
+		if (sigint_caught())
+			break;
+	}
+
+	dev_iter_destroy(iter);
+
+	return ret_max;
+}
