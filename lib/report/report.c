@@ -690,10 +690,8 @@ static int _devsize_disp(struct dm_report *rh, struct dm_pool *mem,
 			 struct dm_report_field *field,
 			 const void *data, void *private)
 {
-	const struct physical_volume *pv =
-	    (const struct physical_volume *) data;
-	uint64_t size = pv_dev_size(pv);
-
+	uint64_t size = 0;
+	dev_get_size(*(const struct device **) data, &size);
 	return _size64_disp(rh, mem, field, &size, private);
 }
 
