@@ -181,13 +181,15 @@ static int _pvfmt_disp(struct dm_report *rh, struct dm_pool *mem,
 		       struct dm_report_field *field,
 		       const void *data, void *private)
 {
-	const struct physical_volume *pv =
-	    (const struct physical_volume *) data;
+	const struct label *l =
+	    (const struct label *) data;
 
-	if (pv->fmt)
-		return _string_disp(rh, mem, field, &pv->fmt->name, private);
+	if (!l->labeller->fmt) {
+		dm_report_field_set_value(field, "", NULL);
+		return 1;
+	}
 
-	return _field_set_value(field, "", NULL);
+	return _string_disp(rh, mem, field, &l->labeller->fmt->name, private);
 }
 
 static int _lvkmaj_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
