@@ -350,3 +350,13 @@ unsigned pv_mda_set_ignored(const struct physical_volume *pv, unsigned mda_ignor
 	return 1;
 }
 
+struct label *pv_label(const struct physical_volume *pv)
+{
+	struct lvmcache_info *info =
+		lvmcache_info_from_pvid((const char *)&pv->id.uuid, 0);
+	if (!info) {
+		log_error(INTERNAL_ERROR "PV %s unexpectedly not in cache.", dev_name(pv->dev));
+		return NULL;
+	}
+	return lvmcache_get_label(info);
+}
