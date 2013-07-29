@@ -42,6 +42,7 @@ struct label {
 	char type[8];
 	uint64_t sector;
 	struct labeller *labeller;
+	struct device *dev;
 	void *info;
 };
 
