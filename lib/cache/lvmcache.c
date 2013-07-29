@@ -1450,7 +1450,7 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 				   const char *vgname, const char *vgid,
 				   uint32_t vgstatus)
 {
-	const struct format_type *fmt = (const struct format_type *) labeller->private;
+	const struct format_type *fmt = labeller->fmt;
 	struct dev_types *dt = fmt->cmd->dev_types;
 	struct label *label;
 	struct lvmcache_info *existing, *info;
@@ -1540,7 +1540,7 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 		label = info->label;
 	}
 
-	info->fmt = (const struct format_type *) labeller->private;
+	info->fmt = labeller->fmt;
 	info->status |= CACHE_INVALID;
 
 	if (!_lvmcache_update_pvid(info, pvid_s)) {

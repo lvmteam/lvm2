@@ -122,7 +122,7 @@ struct labeller *lvm1_labeller_create(struct format_type *fmt)
 	}
 
 	l->ops = &_lvm1_ops;
-	l->private = (const void *) fmt;
+	l->fmt = fmt;
 
 	return l;
 }

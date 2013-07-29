@@ -316,7 +316,7 @@ struct _update_mda_baton {
 static int _update_mda(struct metadata_area *mda, void *baton)
 {
 	struct _update_mda_baton *p = baton;
-	const struct format_type *fmt = p->label->labeller->private; // Oh dear.
+	const struct format_type *fmt = p->label->labeller->fmt;
 	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
 	struct mda_header *mdah;
 	const char *vgname = NULL;
@@ -471,7 +471,7 @@ struct labeller *text_labeller_create(const struct format_type *fmt)
 	}
 
 	l->ops = &_text_ops;
-	l->private = (const void *) fmt;
+	l->fmt = fmt;
 
 	return l;
 }

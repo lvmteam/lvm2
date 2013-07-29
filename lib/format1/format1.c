@@ -614,7 +614,7 @@ struct format_type *init_format(struct cmd_context *cmd)
 		return NULL;
 	}
 
-	if (!(label_register_handler(FMT_LVM1_NAME, fmt->labeller))) {
+	if (!(label_register_handler(fmt->labeller))) {
 		log_error("Couldn't register lvm1 label handler.");
 		fmt->labeller->ops->destroy(fmt->labeller);
 		dm_free(fmt);

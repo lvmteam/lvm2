@@ -2433,7 +2433,7 @@ struct format_type *create_text_format(struct cmd_context *cmd)
 		goto bad;
 	}
 
-	if (!(label_register_handler(FMT_TEXT_NAME, fmt->labeller))) {
+	if (!(label_register_handler(fmt->labeller))) {
 		log_error("Couldn't register text label handler.");
 		fmt->labeller->ops->destroy(fmt->labeller);
 		goto bad;

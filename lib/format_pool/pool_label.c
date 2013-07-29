@@ -99,7 +99,7 @@ struct labeller *pool_labeller_create(struct format_type *fmt)
 	}
 
 	l->ops = &_pool_ops;
-	l->private = (const void *) fmt;
+	l->fmt = fmt;
 
 	return l;
 }
