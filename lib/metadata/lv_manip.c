@@ -47,6 +47,7 @@ typedef enum {
 
 #define A_CLING_BY_TAGS		0x08	/* Must match tags against existing segment */
 #define A_CAN_SPLIT		0x10
+#define A_AREA_COUNT_MATCHES	0x20	/* Existing lvseg has same number of areas as new segment */
 
 #define SNAPSHOT_MIN_CHUNKS	3       /* Minimum number of chunks in snapshot */
 
@@ -1118,8 +1119,12 @@ static void _init_alloc_parms(struct alloc_handle *ah, struct alloc_parms *alloc
 	alloc_parms->flags = 0;
 	alloc_parms->extents_still_needed = extents_still_needed;
 
+	/* Only attempt contiguous/cling allocation to previous segment areas if the number of areas matches. */
+	if (alloc_parms->prev_lvseg && (ah->area_count == prev_lvseg->area_count))
+		alloc_parms->flags |= A_AREA_COUNT_MATCHES;
+
 	/* Are there any preceding segments we must follow on from? */
-	if (alloc_parms->prev_lvseg) {
+	if (alloc_parms->prev_lvseg && (alloc_parms->flags & A_AREA_COUNT_MATCHES)) {
 		if (alloc_parms->alloc == ALLOC_CONTIGUOUS)
 			alloc_parms->flags |= A_CONTIGUOUS_TO_LVSEG;
 		else if ((alloc_parms->alloc == ALLOC_CLING) || (alloc_parms->alloc == ALLOC_CLING_BY_TAGS))
@@ -1721,7 +1726,8 @@ static area_use_t _check_pva(struct alloc_handle *ah, struct pv_area *pva, uint3
 	/* If maximise_cling is set, perform several checks, otherwise perform exactly one. */
 	if (!iteration_count && !log_iteration_count && alloc_parms->flags & (A_CONTIGUOUS_TO_LVSEG | A_CLING_TO_LVSEG | A_CLING_TO_ALLOCED)) {
 		/* Contiguous? */
-		if (((alloc_parms->flags & A_CONTIGUOUS_TO_LVSEG) || (ah->maximise_cling && alloc_parms->prev_lvseg)) &&
+		if (((alloc_parms->flags & A_CONTIGUOUS_TO_LVSEG) ||
+		     (ah->maximise_cling && alloc_parms->prev_lvseg && (alloc_parms->flags & A_AREA_COUNT_MATCHES))) &&
 		    _check_contiguous(ah->cmd, alloc_parms->prev_lvseg, pva, alloc_state))
 			return PREFERRED;
 
@@ -1730,7 +1736,8 @@ static area_use_t _check_pva(struct alloc_handle *ah, struct pv_area *pva, uint3
 			return NEXT_AREA;
 
 		/* Cling to prev_lvseg? */
-		if (((alloc_parms->flags & A_CLING_TO_LVSEG) || (ah->maximise_cling && alloc_parms->prev_lvseg)) &&
+		if (((alloc_parms->flags & A_CLING_TO_LVSEG) ||
+		     (ah->maximise_cling && alloc_parms->prev_lvseg && (alloc_parms->flags & A_AREA_COUNT_MATCHES))) &&
 		    _check_cling(ah, NULL, alloc_parms->prev_lvseg, pva, alloc_state))
 			/* If this PV is suitable, use this first area */
 			return PREFERRED;
@@ -1744,7 +1751,7 @@ static area_use_t _check_pva(struct alloc_handle *ah, struct pv_area *pva, uint3
 		if (!(alloc_parms->flags & A_CLING_BY_TAGS) || !ah->cling_tag_list_cn)
 			return NEXT_PV;
 
-		if (alloc_parms->prev_lvseg) {
+		if (alloc_parms->prev_lvseg && (alloc_parms->flags & A_AREA_COUNT_MATCHES)) {
 			if (_check_cling(ah, ah->cling_tag_list_cn, alloc_parms->prev_lvseg, pva, alloc_state))
 				return PREFERRED;
 		} else if (_check_cling_to_alloced(ah, ah->cling_tag_list_cn, pva, alloc_state))
@@ -1967,8 +1974,12 @@ static int _find_some_parallel_space(struct alloc_handle *ah, const struct alloc
 			/* First area in each list is the largest */
 			dm_list_iterate_items(pva, &pvm->areas) {
 				/*
-				 * There are two types of allocations, which can't be mixed at present.
+				 * There are two types of allocations, which can't be mixed at present:
+				 *
 				 * PREFERRED are stored immediately in a specific parallel slot.
+				 *   This requires the number of slots to match, so if comparing with
+				 *   prev_lvseg then A_AREA_COUNT_MATCHES must be set.
+				 *
 				 * USE_AREA are stored for later, then sorted and chosen from.
 				 */
 				switch(_check_pva(ah, pva, max_to_allocate, alloc_parms,
