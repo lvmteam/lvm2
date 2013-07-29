@@ -17,7 +17,7 @@
 
 aux prepare_devs 5
 
-pvcreate "$dev1"
+pvcreate --uuid BADBEE-BAAD-BAAD-BAAD-BAAD-BAAD-BADBEE --norestorefile "$dev1"
 pvcreate --metadatacopies 0 "$dev2"
 pvcreate --metadatacopies 0 "$dev3"
 pvcreate "$dev4"
@@ -30,6 +30,8 @@ test $(pvs --noheadings $(cat DEVICES) | wc -l) -eq 5
 test $(pvs --noheadings -o seg_all,pv_all,lv_all,vg_all $(cat DEVICES) | wc -l) -eq 5
 
 vgcreate $vg $(cat DEVICES)
+
+check pv_field $dev1 pv_uuid BADBEE-BAAD-BAAD-BAAD-BAAD-BAAD-BADBEE
 
 #COMM pvs and vgs report mda_count, mda_free (bz202886, bz247444)
 pvs -o +pv_mda_count,pv_mda_free $(cat DEVICES)

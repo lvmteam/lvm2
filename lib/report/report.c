@@ -720,6 +720,20 @@ static int _uuid_disp(struct dm_report *rh __attribute__((unused)), struct dm_po
 	return _field_set_value(field, repstr, NULL);
 }
 
+static int _pvuuid_disp(struct dm_report *rh __attribute__((unused)), struct dm_pool *mem,
+		        struct dm_report_field *field,
+		        const void *data, void *private __attribute__((unused)))
+{
+	const struct label *label = (const struct label *) data;
+	char *repstr = NULL;
+
+	if (!(repstr = id_format_and_copy(mem, label->dev->pvid)))
+		return_0;
+
+	dm_report_field_set_value(field, repstr, NULL);
+	return 1;
+}
+
 static int _pvmdas_disp(struct dm_report *rh, struct dm_pool *mem,
 			struct dm_report_field *field,
 			const void *data, void *private)
