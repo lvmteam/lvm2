@@ -241,19 +241,25 @@ static int _pv_mda_free(struct metadata_area *mda, void *baton) {
 	return 1;
 }
 
-uint64_t pv_mda_free(const struct physical_volume *pv)
+uint64_t lvmcache_info_mda_free(struct lvmcache_info *info)
 {
-	struct lvmcache_info *info;
 	uint64_t freespace = UINT64_MAX;
-	const char *pvid = (const char *)&pv->id.uuid;
 
-	if ((info = lvmcache_info_from_pvid(pvid, 0)))
-		lvmcache_foreach_mda(info, _pv_mda_free, &freespace);
+	lvmcache_foreach_mda(info, _pv_mda_free, &freespace);
 
 	if (freespace == UINT64_MAX)
 		freespace = UINT64_C(0);
 
 	return freespace;
+}
+
+uint64_t pv_mda_free(const struct physical_volume *pv)
+{
+	const char *pvid = (const char *)&pv->id.uuid;
+	struct lvmcache_info *info;
+	if ((info = lvmcache_info_from_pvid(pvid, 0)))
+		return lvmcache_info_mda_free(info);
+	return 0;
 }
 
 uint64_t pv_used(const struct physical_volume *pv)
