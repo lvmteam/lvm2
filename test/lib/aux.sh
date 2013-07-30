@@ -476,15 +476,24 @@ unhide_dev() {
 	lvmconf "$filter"
 }
 
-lvmconf() {
+generate_config() {
+	if test -n "$profile_name"; then
+		config_values=PROFILE_VALUES_$profile_name
+		config=PROFILE_$profile_name
+		touch $config_values
+	else
+		config_values=CONFIG_VALUES
+		config=CONFIG
+	fi
+
 	LVM_TEST_LOCKING=${LVM_TEST_LOCKING:-1}
 	if test "$DM_DEV_DIR" = "/dev"; then
 	    LVM_VERIFY_UDEV=${LVM_VERIFY_UDEV:-0}
 	else
 	    LVM_VERIFY_UDEV=${LVM_VERIFY_UDEV:-1}
 	fi
-	test -f CONFIG_VALUES || {
-            cat > CONFIG_VALUES <<-EOF
+	test -f $config_values || {
+            cat > $config_values <<-EOF
 devices/dir = "$DM_DEV_DIR"
 devices/scan = "$DM_DEV_DIR"
 devices/filter = "a|.*|"
@@ -523,21 +532,34 @@ EOF
 
 	local v
 	for v in "$@"; do
-	    echo "$v" >> CONFIG_VALUES
+	    echo "$v" >> $config_values
 	done
 
-	rm -f CONFIG
+	rm -f $config
 	local s
-	for s in $(cat CONFIG_VALUES | cut -f1 -d/ | sort | uniq); do
-		echo "$s {" >> CONFIG
+	for s in $(cat $config_values | cut -f1 -d/ | sort | uniq); do
+		echo "$s {" >> $config
 		local k
-		for k in $(grep ^"$s"/ CONFIG_VALUES | cut -f1 -d= | sed -e 's, *$,,' | sort | uniq); do
-			grep "^$k" CONFIG_VALUES | tail -n 1 | sed -e "s,^$s/,	  ," >> CONFIG
+		for k in $(grep ^"$s"/ $config_values | cut -f1 -d= | sed -e 's, *$,,' | sort | uniq); do
+			grep "^$k" $config_values | tail -n 1 | sed -e "s,^$s/,	  ," >> $config
 		done
-		echo "}" >> CONFIG
-		echo >> CONFIG
+		echo "}" >> $config
+		echo >> $config
 	done
+}
+
+lvmconf() {
+	unset profile_name
+	generate_config "$@"
 	mv -f CONFIG etc/lvm.conf
+}
+
+profileconf() {
+	profile_name="$1"
+	shift
+	generate_config "$@"
+	test -d etc/profile || mkdir etc/profile
+	mv -f PROFILE_$profile_name etc/profile/$profile_name.profile
 }
 
 apitest() {
