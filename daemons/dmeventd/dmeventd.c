@@ -264,16 +264,44 @@ static struct dso_data *_alloc_dso_data(struct message_data *data)
 	return ret;
 }
 
-/* Create a device monitoring thread. */
+/*
+ * Create a device monitoring thread.
+ * N.B.  Error codes returned are positive.
+ */
 static int _pthread_create_smallstack(pthread_t *t, void *(*fun)(void *), void *arg)
 {
+	int r;
+	pthread_t tmp;
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
+
+	/*
+	 * From pthread_attr_init man page:
+	 * POSIX.1-2001 documents an ENOMEM error for pthread_attr_init(); on
+	 * Linux these functions always succeed (but portable and future-proof
+	 * applications should nevertheless handle a possible error return).
+	 */
+	if ((r = pthread_attr_init(&attr)) != 0)
+		return r;
+
 	/*
 	 * We use a smaller stack since it gets preallocated in its entirety
 	 */
 	pthread_attr_setstacksize(&attr, THREAD_STACK_SIZE);
-	return pthread_create(t, &attr, fun, arg);
+
+	/*
+	 * If no-one will be waiting, we need to detach.
+	 */
+	if (!t) {
+		pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+		t = &tmp;
+	}
+
+	r = pthread_create(t, &attr, fun, arg);
+
+	pthread_attr_destroy(&attr);
+
+	return r;
 }
 
 static void _free_dso_data(struct dso_data *data)
@@ -548,12 +576,9 @@ static int _register_for_timeout(struct thread_status *thread)
 			pthread_cond_signal(&_timeout_cond);
 	}
 
-	if (!_timeout_running) {
-		pthread_t timeout_id;
-
-		if (!(ret = _pthread_create_smallstack(&timeout_id, _timeout_thread, NULL)))
-			_timeout_running = 1;
-	}
+	if (!_timeout_running &&
+	    !(ret = _pthread_create_smallstack(NULL, _timeout_thread, NULL)))
+		_timeout_running = 1;
 
 	pthread_mutex_unlock(&_timeout_mutex);
 
