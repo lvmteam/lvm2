@@ -53,6 +53,7 @@ int attach_pool_data_lv(struct lv_segment *pool_seg, struct logical_volume *pool
 	if (!set_lv_segment_area_lv(pool_seg, 0, pool_data_lv, 0, THIN_POOL_DATA))
 		return_0;
 
+	pool_seg->lv->status |= THIN_POOL;
 	lv_set_hidden(pool_data_lv);
 
 	return 1;
@@ -498,17 +499,17 @@ int create_pool(struct logical_volume *pool_lv, const struct segment_type *segty
 		goto_bad;
 
 	seg = first_seg(pool_lv);
-	seg->segtype = segtype; /* Set as thin_pool segment */
-	seg->lv->status |= THIN_POOL;
+	/* Drop reference as attach_pool_data_lv() takes it again */
+	if (!remove_seg_from_segs_using_this_lv(data_lv, seg))
+		goto_bad;
+
+	if (!attach_pool_data_lv(seg, data_lv))
+		goto_bad;
 
 	if (!attach_pool_metadata_lv(seg, meta_lv))
 		goto_bad;
 
-	/* Drop reference as attach_pool_data_lv() takes it again */
-	if (!remove_seg_from_segs_using_this_lv(data_lv, seg))
-		goto_bad;
-	if (!attach_pool_data_lv(seg, data_lv))
-		goto_bad;
+	seg->segtype = segtype; /* Set as thin_pool segment */
 
 	return 1;
 

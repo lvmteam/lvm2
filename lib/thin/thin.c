@@ -103,11 +103,10 @@ static int _thin_pool_text_import(struct lv_segment *seg,
 	if (!(pool_data_lv = find_lv(seg->lv->vg, lv_name)))
 		return SEG_LOG_ERROR("Unknown pool %s in", lv_name);
 
-	seg->lv->status |= THIN_POOL;
-	if (!attach_pool_metadata_lv(seg, pool_metadata_lv))
+	if (!attach_pool_data_lv(seg, pool_data_lv))
 		return_0;
 
-	if (!attach_pool_data_lv(seg, pool_data_lv))
+	if (!attach_pool_metadata_lv(seg, pool_metadata_lv))
 		return_0;
 
 	if (!dm_config_get_uint64(sn, "transaction_id", &seg->transaction_id))
