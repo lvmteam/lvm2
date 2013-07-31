@@ -424,11 +424,35 @@ case "$THIN" in
 		AC_PATH_PROG(THIN_CHECK_CMD, thin_check)
 		test -z "$THIN_CHECK_CMD" && AC_MSG_ERROR(thin_check not found in path $PATH)
 	fi
+	AC_ARG_WITH(thin-dump,
+		AC_HELP_STRING([--with-thin-dump=PATH],
+			       [thin_dump tool: [[autodetect]]]),
+			       THIN_DUMP_CMD=$withval, THIN_DUMP_CMD="autodetect")
+	# Empty means a config way to ignore thin checking
+	if test "$THIN_DUMP_CMD" = "autodetect"; then
+		AC_PATH_PROG(THIN_DUMP_CMD, thin_dump)
+		test -z "$THIN_DUMP_CMD" && AC_MSG_ERROR(thin_dump not found in path $PATH)
+	fi
+	AC_ARG_WITH(thin-repair,
+		AC_HELP_STRING([--with-thin-repair=PATH],
+			       [thin_repair tool: [[autodetect]]]),
+			       THIN_REPAIR_CMD=$withval, THIN_REPAIR_CMD="autodetect")
+	# Empty means a config way to ignore thin checking
+	if test "$THIN_REPAIR_CMD" = "autodetect"; then
+		AC_PATH_PROG(THIN_REPAIR_CMD, thin_repair)
+		test -z "$THIN_REPAIR_CMD" && AC_MSG_ERROR(thin_repair not found in path $PATH)
+	fi
 	;;
 esac
 
 AC_DEFINE_UNQUOTED([THIN_CHECK_CMD], ["$THIN_CHECK_CMD"],
 		   [The path to 'thin_check', if available.])
+
+AC_DEFINE_UNQUOTED([THIN_DUMP_CMD], ["$THIN_DUMP_CMD"],
+		   [The path to 'thin_dump', if available.])
+
+AC_DEFINE_UNQUOTED([THIN_REPAIR_CMD], ["$THIN_REPAIR_CMD"],
+		   [The path to 'thin_repair', if available.])
 
 
 ################################################################################
@@ -1598,6 +1622,8 @@ AC_SUBST(STATIC_LINK)
 AC_SUBST(TESTING)
 AC_SUBST(THIN)
 AC_SUBST(THIN_CHECK_CMD)
+AC_SUBST(THIN_DUMP_CMD)
+AC_SUBST(THIN_REPAIR_CMD)
 AC_SUBST(UDEV_LIBS)
 AC_SUBST(UDEV_PC)
 AC_SUBST(UDEV_RULES)

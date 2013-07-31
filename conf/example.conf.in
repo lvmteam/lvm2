@@ -561,11 +561,29 @@ global {
     # The thin tools are available as part of the device-mapper-persistent-data
     # package from https://github.com/jthornber/thin-provisioning-tools.
     #
-    thin_check_executable = "@THIN_CHECK_CMD@"
+    # thin_check_executable = "@THIN_CHECK_CMD@"
 
-    # String with options passed with thin_check command. By default,
-    # option '-q' is for quiet output.
-    thin_check_options = [ "-q" ]
+    # Array of string options passed with thin_check command. By default,
+    # option "-q" is for quiet output.
+    # With thin_check version 2.1 or newer you can add "--ignore-non-fatal-errors"
+    # to let it pass through ignoreable errors and fix them later.
+    #
+    # thin_check_options = [ "-q" ]
+
+    # Full path of the utility called to repair a thin metadata device
+    # is in a state that allows it to be used.
+    # Each time a thin pool needs repair this utility is executed.
+    # See thin_check_executable how to obtain binaries.
+    #
+    # thin_repair_executable = "@THIN_REPAIR_CMD@"
+
+    # Array of extra string options passed with thin_repair command.
+    # thin_repair_options = [ "" ]
+
+    # Full path of the utility called to dump thin metadata content.
+    # See thin_check_executable how to obtain binaries.
+    #
+    # thin_dump_executable = "@THIN_DUMP_CMD@"
 
     # If set, given features are not used by thin driver.
     # This can be helpful not just for testing, but i.e. allows to avoid
@@ -574,6 +592,8 @@ global {
     #   block_size
     #   discards
     #   discards_non_power_2
+    #   external_origin
+    #   metadata_resize
     #
     # thin_disabled_features = [ "discards", "block_size" ]
 }

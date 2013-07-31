@@ -546,8 +546,14 @@
 /* The path to 'thin_check', if available. */
 #undef THIN_CHECK_CMD
 
+/* The path to 'thin_dump', if available. */
+#undef THIN_DUMP_CMD
+
 /* Define to 1 to include built-in support for thin provisioning. */
 #undef THIN_INTERNAL
+
+/* The path to 'thin_repair', if available. */
+#undef THIN_REPAIR_CMD
 
 /* Define to 1 if you can safely include both <sys/time.h> and <time.h>. */
 #undef TIME_WITH_SYS_TIME

@@ -730,6 +730,8 @@ PKGCONFIGINIT_CFLAGS
 PKG_CONFIG_LIBDIR
 PKG_CONFIG_PATH
 PKG_CONFIG
+THIN_REPAIR_CMD
+THIN_DUMP_CMD
 THIN_CHECK_CMD
 POW_LIB
 LIBOBJS
@@ -826,6 +828,8 @@ with_raid
 with_replicators
 with_thin
 with_thin_check
+with_thin_dump
+with_thin_repair
 enable_readline
 enable_realtime
 enable_ocf
@@ -1598,6 +1602,8 @@ Optional Packages:
   --with-thin=TYPE        thin provisioning support: internal/shared/none
                           [[TYPE=none]]
   --with-thin-check=PATH  thin_check tool: [[autodetect]]
+  --with-thin-dump=PATH   thin_dump tool: [[autodetect]]
+  --with-thin-repair=PATH thin_repair tool: [[autodetect]]
   --with-ocfdir=DIR       install OCF files in DIR
                           [[PREFIX/lib/ocf/resource.d/lvm2]]
   --with-default-pid-dir=PID_DIR
@@ -7108,12 +7114,128 @@ fi
 
 		test -z "$THIN_CHECK_CMD" && as_fn_error $? "thin_check not found in path $PATH" "$LINENO" 5
 	fi
+
+# Check whether --with-thin-dump was given.
+if test "${with_thin_dump+set}" = set; then :
+  withval=$with_thin_dump; THIN_DUMP_CMD=$withval
+else
+  THIN_DUMP_CMD="autodetect"
+fi
+
+	# Empty means a config way to ignore thin checking
+	if test "$THIN_DUMP_CMD" = "autodetect"; then
+		# Extract the first word of "thin_dump", so it can be a program name with args.
+set dummy thin_dump; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if ${ac_cv_path_THIN_DUMP_CMD+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  case $THIN_DUMP_CMD in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_THIN_DUMP_CMD="$THIN_DUMP_CMD" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_path_THIN_DUMP_CMD="$as_dir/$ac_word$ac_exec_ext"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+  ;;
+esac
+fi
+THIN_DUMP_CMD=$ac_cv_path_THIN_DUMP_CMD
+if test -n "$THIN_DUMP_CMD"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $THIN_DUMP_CMD" >&5
+$as_echo "$THIN_DUMP_CMD" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+
+		test -z "$THIN_DUMP_CMD" && as_fn_error $? "thin_dump not found in path $PATH" "$LINENO" 5
+	fi
+
+# Check whether --with-thin-repair was given.
+if test "${with_thin_repair+set}" = set; then :
+  withval=$with_thin_repair; THIN_REPAIR_CMD=$withval
+else
+  THIN_REPAIR_CMD="autodetect"
+fi
+
+	# Empty means a config way to ignore thin checking
+	if test "$THIN_REPAIR_CMD" = "autodetect"; then
+		# Extract the first word of "thin_repair", so it can be a program name with args.
+set dummy thin_repair; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if ${ac_cv_path_THIN_REPAIR_CMD+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  case $THIN_REPAIR_CMD in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_THIN_REPAIR_CMD="$THIN_REPAIR_CMD" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_path_THIN_REPAIR_CMD="$as_dir/$ac_word$ac_exec_ext"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+  ;;
+esac
+fi
+THIN_REPAIR_CMD=$ac_cv_path_THIN_REPAIR_CMD
+if test -n "$THIN_REPAIR_CMD"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $THIN_REPAIR_CMD" >&5
+$as_echo "$THIN_REPAIR_CMD" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+
+		test -z "$THIN_REPAIR_CMD" && as_fn_error $? "thin_repair not found in path $PATH" "$LINENO" 5
+	fi
 	;;
 esac
 
 
 cat >>confdefs.h <<_ACEOF
 #define THIN_CHECK_CMD "$THIN_CHECK_CMD"
+_ACEOF
+
+
+
+cat >>confdefs.h <<_ACEOF
+#define THIN_DUMP_CMD "$THIN_DUMP_CMD"
+_ACEOF
+
+
+
+cat >>confdefs.h <<_ACEOF
+#define THIN_REPAIR_CMD "$THIN_REPAIR_CMD"
 _ACEOF
 
 
@@ -10684,6 +10806,8 @@ LVM_PATCHLEVEL=`echo "$VER" | $AWK -F '[(.]' '{print $3}'`
 LVM_LIBAPI=`echo "$VER" | $AWK -F '[()]' '{print $2}'`
 
 ################################################################################
+
+
 
 
 
