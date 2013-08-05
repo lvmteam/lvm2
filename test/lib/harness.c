@@ -390,7 +390,6 @@ static void run(int i, char *f) {
 					kill(-pid, SIGKILL);
 					w = pid; // waitpid(pid, &st, NULL);
 				}
-				drain();
 				runaway = 1;
 				break;
 			}
