@@ -381,13 +381,14 @@ static void run(int i, char *f) {
 		FD_SET(fds[1], &master_set);
 		while ((w = wait4(pid, &st, WNOHANG, &usage)) == 0) {
 			if ((fullbuffer && fullbuffer++ == 8000) ||
-			    time(NULL) - start > 120) // a 2 minute timeout
+			    time(NULL) - start > 5) // a 2 minute timeout
 			{
-				kill(-pid, SIGINT);
+				system("echo t > /proc/sysrq-trigger");
+				kill(pid, SIGINT);
 				sleep(5); /* wait a bit for a reaction */
 				if ((w = waitpid(pid, &st, WNOHANG)) == 0) {
 					kill(-pid, SIGKILL);
-					w = waitpid(pid, &st, NULL);
+					w = pid; // waitpid(pid, &st, NULL);
 				}
 				drain();
 				runaway = 1;
