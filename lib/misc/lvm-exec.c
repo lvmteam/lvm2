@@ -64,7 +64,7 @@ int exec_cmd(struct cmd_context *cmd, const char *const argv[],
 	log_verbose("Executing:%s", _verbose_args(argv, buf, sizeof(buf)));
 
 	if ((pid = fork()) == -1) {
-		log_error("fork failed: %s", strerror(errno));
+		log_sys_error("fork", "");
 		return 0;
 	}
 

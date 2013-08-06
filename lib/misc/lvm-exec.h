@@ -32,7 +32,7 @@ struct cmd_context;
  * Note: You cannot synchronize devices within activation context.
  *
  * \return
- * 0 (success) or -1 (failure).
+ * 1 (success) or 0 (failure).
  */
 int exec_cmd(struct cmd_context *cmd, const char *const argv[],
 	     int *rstatus, int sync_needed);
