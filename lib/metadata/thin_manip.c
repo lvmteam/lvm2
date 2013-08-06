@@ -575,15 +575,15 @@ int update_profilable_pool_params(struct cmd_context *cmd, struct profile *profi
 {
 	const char *dstr;
 
-	if (!(passed_args & PASS_ARG_CHUNK_SIZE)) {
+	if (!(passed_args & PASS_ARG_CHUNK_SIZE))
 		*chunk_size = find_config_tree_int(cmd, allocation_thin_pool_chunk_size_CFG, profile) * 2;
-		if ((*chunk_size < DM_THIN_MIN_DATA_BLOCK_SIZE) ||
-		    (*chunk_size > DM_THIN_MAX_DATA_BLOCK_SIZE)) {
-			log_error("Chunk size must be in the range %s to %s.",
-				  display_size(cmd, DM_THIN_MIN_DATA_BLOCK_SIZE),
-				  display_size(cmd, DM_THIN_MAX_DATA_BLOCK_SIZE));
-			return 0;
-		}
+
+	if ((*chunk_size < DM_THIN_MIN_DATA_BLOCK_SIZE) ||
+	    (*chunk_size > DM_THIN_MAX_DATA_BLOCK_SIZE)) {
+		log_error("Chunk size must be in the range %s to %s.",
+			  display_size(cmd, DM_THIN_MIN_DATA_BLOCK_SIZE),
+			  display_size(cmd, DM_THIN_MAX_DATA_BLOCK_SIZE));
+		return 0;
 	}
 
 	if (!(passed_args & PASS_ARG_DISCARDS)) {
