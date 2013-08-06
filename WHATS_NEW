@@ -1,5 +1,6 @@
 Version 2.02.100 -
 ================================
+  Fix clogd descriptor leak when daemonizing.
   Fix clvmd descriptor leak on restart.
   Add pipe_open/close() to replace less secure popen() glibc call.
   Fix metadata area offset/size overflow if it's >= 4g and while using lvmetad.

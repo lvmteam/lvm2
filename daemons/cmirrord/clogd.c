@@ -202,6 +202,12 @@ static void daemonize(void)
 	    (dup2(devnull, 2) < 0))   /* reopen stderr */
 		exit(EXIT_FAILURE);
 
+	if ((devnull > STDERR_FILENO) && close(devnull)) {
+		LOG_ERROR("Failed to close descriptor %d: %s",
+			  devnull, strerror(errno));
+		exit(EXIT_FAILURE);
+	}
+
 	LOG_OPEN("cmirrord", LOG_PID, LOG_DAEMON);
 
 	(void) dm_prepare_selinux_context(CMIRRORD_PIDFILE, S_IFREG);
