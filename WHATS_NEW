@@ -1,5 +1,6 @@
 Version 2.02.100 -
 ================================
+  Inherit and apply any profile attached to a VG if creating new thin pool.
   Add initial support thin pool lvconvert --repair.
   Add --with-thin-repair and --with-thin-dump configure options.
   Add lvm.conf thin_repair/dump_executable and thin_repair_options.

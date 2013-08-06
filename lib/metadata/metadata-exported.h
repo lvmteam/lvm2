@@ -656,10 +656,13 @@ struct logical_volume *find_pool_lv(struct logical_volume *lv);
 int pool_is_active(const struct logical_volume *pool_lv);
 int pool_can_resize_metadata(const struct logical_volume *pool_lv);
 int update_pool_lv(struct logical_volume *lv, int activate);
-int update_pool_params(struct cmd_context *cmd, unsigned attr, int passed_args,
+int update_profilable_pool_params(struct cmd_context *cmd, struct profile *profile,
+				  int passed_args, uint32_t *chunk_size,
+				  thin_discards_t *discards, int *zero);
+int update_pool_params(struct volume_group *vg, unsigned attr, int passed_args,
 		       uint32_t data_extents, uint32_t extent_size,
 		       uint32_t *chunk_size, thin_discards_t *discards,
-		       uint64_t *pool_metadata_size);
+		       uint64_t *pool_metadata_size, int *zero);
 int get_pool_discards(const char *str, thin_discards_t *discards);
 const char *get_pool_discards_name(thin_discards_t discards);
 struct logical_volume *alloc_pool_metadata(struct logical_volume *pool_lv,

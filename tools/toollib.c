@@ -1547,25 +1547,18 @@ int get_pool_params(struct cmd_context *cmd,
 		    uint64_t *pool_metadata_size,
 		    int *zero)
 {
-	const char *dstr;
-
 	*passed_args = 0;
 	if (arg_count(cmd, zero_ARG)) {
 		*passed_args |= PASS_ARG_ZERO;
 		*zero = strcmp(arg_str_value(cmd, zero_ARG, "y"), "n");
 		log_very_verbose("Setting pool zeroing: %u", *zero);
-	} else
-		*zero = find_config_tree_bool(cmd, allocation_thin_pool_zero_CFG, profile);
+	}
 
 	if (arg_count(cmd, discards_ARG)) {
 		*passed_args |= PASS_ARG_DISCARDS;
 		*discards = (thin_discards_t) arg_uint_value(cmd, discards_ARG, 0);
 		log_very_verbose("Setting pool discards: %s",
 				 get_pool_discards_name(*discards));
-	} else {
-		dstr = find_config_tree_str(cmd, allocation_thin_pool_discards_CFG, profile);
-		if (!get_pool_discards(dstr, discards))
-			return_0;
 	}
 
 	if (arg_count(cmd, chunksize_ARG)) {
@@ -1578,8 +1571,11 @@ int get_pool_params(struct cmd_context *cmd,
 					     DM_THIN_MIN_DATA_BLOCK_SIZE);
 		log_very_verbose("Setting pool chunk size: %s",
 				 display_size(cmd, *chunk_size));
-	} else
-		*chunk_size = find_config_tree_int(cmd, allocation_thin_pool_chunk_size_CFG, profile) * 2;
+	}
+
+	if (!update_profilable_pool_params(cmd, profile, *passed_args,
+					   chunk_size, discards, zero))
+		return_0;
 
 	if ((*chunk_size < DM_THIN_MIN_DATA_BLOCK_SIZE) ||
 	    (*chunk_size > DM_THIN_MAX_DATA_BLOCK_SIZE)) {

@@ -334,10 +334,10 @@ static int _update_extents_params(struct volume_group *vg,
 	}
 
 	if (lp->create_thin_pool) {
-		if (!update_pool_params(vg->cmd, lp->target_attr, lp->passed_args,
+		if (!update_pool_params(vg, lp->target_attr, lp->passed_args,
 					lp->extents, vg->extent_size,
 					&lp->chunk_size, &lp->discards,
-					&lp->poolmetadatasize))
+					&lp->poolmetadatasize, &lp->zero))
 			return_0;
 
 		if (!(lp->poolmetadataextents =

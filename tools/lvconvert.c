@@ -2293,10 +2293,10 @@ static int _lvconvert_thinpool(struct cmd_context *cmd,
 	}
 
 	if (!lp->pool_metadata_lv_name) {
-		if (!update_pool_params(cmd, lp->target_attr, lp->passed_args,
+		if (!update_pool_params(pool_lv->vg, lp->target_attr, lp->passed_args,
 					pool_lv->le_count, pool_lv->vg->extent_size,
 					&lp->chunk_size, &lp->discards,
-					&lp->poolmetadata_size))
+					&lp->poolmetadata_size, &lp->zero))
 			return_0;
 
 		if (!get_stripe_params(cmd, &lp->stripes, &lp->stripe_size))
@@ -2399,10 +2399,10 @@ static int _lvconvert_thinpool(struct cmd_context *cmd,
 				  display_size(cmd, 2 * DEFAULT_THIN_POOL_MIN_METADATA_SIZE));
 			return 0;
 		}
-		if (!update_pool_params(cmd, lp->target_attr, lp->passed_args,
+		if (!update_pool_params(pool_lv->vg, lp->target_attr, lp->passed_args,
 					pool_lv->le_count, pool_lv->vg->extent_size,
 					&lp->chunk_size, &lp->discards,
-					&lp->poolmetadata_size))
+					&lp->poolmetadata_size, &lp->zero))
 			return_0;
 	}
 

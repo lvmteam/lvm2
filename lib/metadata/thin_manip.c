@@ -569,12 +569,46 @@ int update_pool_lv(struct logical_volume *lv, int activate)
 	return 1;
 }
 
-int update_pool_params(struct cmd_context *cmd, unsigned attr, int passed_args,
+int update_profilable_pool_params(struct cmd_context *cmd, struct profile *profile,
+				  int passed_args, uint32_t *chunk_size,
+				  thin_discards_t *discards, int *zero)
+{
+	const char *dstr;
+
+	if (!(passed_args & PASS_ARG_CHUNK_SIZE)) {
+		*chunk_size = find_config_tree_int(cmd, allocation_thin_pool_chunk_size_CFG, profile) * 2;
+		if ((*chunk_size < DM_THIN_MIN_DATA_BLOCK_SIZE) ||
+		    (*chunk_size > DM_THIN_MAX_DATA_BLOCK_SIZE)) {
+			log_error("Chunk size must be in the range %s to %s.",
+				  display_size(cmd, DM_THIN_MIN_DATA_BLOCK_SIZE),
+				  display_size(cmd, DM_THIN_MAX_DATA_BLOCK_SIZE));
+			return 0;
+		}
+	}
+
+	if (!(passed_args & PASS_ARG_DISCARDS)) {
+		dstr = find_config_tree_str(cmd, allocation_thin_pool_discards_CFG, profile);
+		if (!get_pool_discards(dstr, discards))
+			return_0;
+	}
+
+	if (!(passed_args & PASS_ARG_ZERO))
+		*zero = find_config_tree_bool(cmd, allocation_thin_pool_zero_CFG, profile);
+
+	return 1;
+}
+
+int update_pool_params(struct volume_group *vg, unsigned attr, int passed_args,
 		       uint32_t data_extents, uint32_t extent_size,
 		       uint32_t *chunk_size, thin_discards_t *discards,
-		       uint64_t *pool_metadata_size)
+		       uint64_t *pool_metadata_size, int *zero)
 {
 	size_t estimate_chunk_size;
+	struct cmd_context *cmd = vg->cmd;
+
+	if (!update_profilable_pool_params(cmd, vg->profile, passed_args,
+					   chunk_size, discards, zero))
+		return_0;
 
 	if (!(attr & THIN_FEATURE_BLOCK_SIZE) &&
 	    (*chunk_size & (*chunk_size - 1))) {
