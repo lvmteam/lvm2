@@ -512,7 +512,7 @@ global {
     #
     # Specify the '--type <mirror|raid1>' option to override this default
     # setting.
-    mirror_segtype_default = "mirror"
+    mirror_segtype_default = "raid1"
 
     # 'raid10_segtype_default' determines the segment types used by default
     # when the '--stripes/-i' and '--mirrors/-m' arguments are both specified

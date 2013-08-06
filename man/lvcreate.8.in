@@ -232,16 +232,23 @@ afterwards will be mirrored, but the original contents will not be
 copied.  This is useful for skipping a potentially long and resource
 intensive initial sync of an empty device.
 
-The optional argument \fB\-\-mirrorlog\fP specifies the type of log to be used.
+There are two implementations of mirroring which can be used and correspond
+to the "raid1" and "mirror" segment types.  The default is "raid1".  See the
+\fB\-\-type\fP option for more information if you would like to use the
+legacy "mirror" segment type.  The \fB\-\-mirrorlog\fP and \fB\-\-corelog\fP
+options apply to the "mirror" segment type only.
+
+The optional argument \fB\-\-mirrorlog\fP specifies the type of log to be
+used for logical volumes utilizing the legacy "mirror" segment type.
 The default is \fIdisk\fP, which is persistent and requires
 a small amount of storage space, usually on a separate device from the
 data being mirrored.  Using \fIcore\fP means the mirror is regenerated
-by copying the data from the first device again each time the
-device is activated, for example, after every reboot.  Using \fImirrored\fP
+by copying the data from the first device each time the logical
+volume is activated, like after every reboot.  Using \fImirrored\fP
 will create a persistent log that is itself mirrored.
 
-The optional argument \fB\-\-corelog\fP is equivalent
-to \fB\-\-mirrorlog\fP \fIcore\fP.
+When the legacy "mirror" segment type is used, the optional argument
+\fB\-\-corelog\fP is equivalent to \fB\-\-mirrorlog\fP \fIcore\fP.
 .TP
 .IR \fB\-M ", " \fB\-\-persistent " {" y | n }
 Set to \fIy\fP to make the minor number specified persistent.

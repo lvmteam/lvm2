@@ -141,7 +141,12 @@ Run the daemon in the background.
 Specifies the degree of the mirror you wish to create.
 For example, "\fB-m 1\fP" would convert the original logical
 volume to a mirror volume with 2-sides; that is, a
-linear volume plus one copy.
+linear volume plus one copy.  There are two implementations of mirroring
+which correspond to the "raid1" and "mirror" segment types.  The default
+mirroring segment type is "raid1".  If the legacy "mirror" segment type
+is desired, the \fB\-\-type\fP argument must be used to explicitly
+select the desired type.  The \fB\-\-mirrorlog\fP and \fB\-\-corelog\fP
+options below are only relevant to the legacy "mirror" segment type.
 .TP
 .IR \fB\-\-mirrorlog " {" disk | core | mirrored }
 Specifies the type of log to use.
