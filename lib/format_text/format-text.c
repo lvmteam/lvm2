@@ -1688,12 +1688,12 @@ static int _mda_import_text_raw(struct lvmcache_info *info, const struct dm_conf
 
 	cn = cn->child;
 	device = lvmcache_device(info);
-	size = dm_config_find_int(cn, "size", 0);
+	size = dm_config_find_int64(cn, "size", 0);
 
 	if (!device || !size)
 		return 0;
 
-	offset = dm_config_find_int(cn, "start", 0);
+	offset = dm_config_find_int64(cn, "start", 0);
 	ignore = dm_config_find_int(cn, "ignore", 0);
 
 	lvmcache_add_mda(info, device, offset, size, ignore);
