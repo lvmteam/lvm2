@@ -107,3 +107,102 @@ int exec_cmd(struct cmd_context *cmd, const char *const argv[],
 
 	return 1;
 }
+
+static int _reopen_fd_to_null(int fd)
+{
+	int null_fd;
+
+	if ((null_fd = open("/dev/null", O_RDWR)) == -1) {
+		log_sys_error("open", "/dev/null");
+		return 0;
+	}
+
+	if (close(fd)) {
+		log_sys_error("close", "");
+		return 0;
+	}
+
+	if (dup2(null_fd, fd) == -1) {
+		log_sys_error("dup2", "");
+		return 0;
+	}
+
+	if (close(null_fd)) {
+		log_sys_error("dup2", "");
+		return 0;
+	}
+
+	return 1;
+}
+
+FILE *pipe_open(struct cmd_context *cmd, const char *const argv[],
+		int sync_needed, struct pipe_data *pdata)
+{
+	int pipefd[2];
+	char buf[PATH_MAX * 2];
+
+	if (sync_needed)
+		if (!sync_local_dev_names(cmd)) /* Flush ops and reset dm cookie */
+			return_0;
+
+	if (pipe(pipefd)) {
+		log_sys_error("pipe", "");
+		return 0;
+	}
+
+	log_verbose("Piping:%s", _verbose_args(argv, buf, sizeof(buf)));
+
+	if ((pdata->pid = fork()) == -1) {
+		log_sys_error("pipe", "");
+		return 0;
+	}
+
+	if (pdata->pid == 0) {
+		/* Child -> writer, convert pipe[0] to STDOUT */
+		if (!_reopen_fd_to_null(STDIN_FILENO))
+			stack;
+		else if (close(pipefd[0 /*read*/]))
+			log_sys_error("close", "pipe[0]");
+		else if (close(STDOUT_FILENO))
+			log_sys_error("close", "STDOUT");
+		else if (dup2(pipefd[1 /*write*/], STDOUT_FILENO) == -1)
+			log_sys_error("dup2", "STDOUT");
+		else if (close(pipefd[1]))
+			log_sys_error("close", "pipe[1]");
+		else if (argv[0]) {
+			execvp(argv[0], (char **) argv);
+			log_sys_error("execvp", argv[0]);
+		}
+		_exit(errno);
+	}
+
+	/* Parent -> reader */
+	if (close(pipefd[1 /*write*/])) {
+		log_sys_error("close", "STDOUT");
+		return NULL;
+	}
+
+	if (!(pdata->fp = fdopen(pipefd[0 /*read*/],  "r"))) {
+		log_sys_error("fdopen", "STDIN");
+		if (close(pipefd[0]))
+			log_sys_error("close", "STDIN");
+		return NULL; /* FIXME: kill */
+	}
+
+	return pdata->fp;
+}
+
+int pipe_close(struct pipe_data *pdata)
+{
+	int status;
+
+	if (fclose(pdata->fp))
+		log_sys_error("fclose", "STDIN");
+
+	if (waitpid(pdata->pid, &status, 0) != pdata->pid) {
+		log_sys_error("waitpid", "");
+		return 0;
+	}
+
+	return (status == 0) ? 1 : 0;
+}

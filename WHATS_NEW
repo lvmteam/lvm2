@@ -1,5 +1,6 @@
 Version 2.02.100 -
 ================================
+  Add pipe_open/close() to replace less secure popen() glibc call.
   Fix metadata area offset/size overflow if it's >= 4g and while using lvmetad.
   Inherit and apply any profile attached to a VG if creating new thin pool.
   Add initial support thin pool lvconvert --repair.

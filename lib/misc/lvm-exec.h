@@ -37,4 +37,34 @@ struct cmd_context;
 int exec_cmd(struct cmd_context *cmd, const char *const argv[],
 	     int *rstatus, int sync_needed);
 
+
+struct FILE;
+struct pipe_data {
+	FILE *fp;
+	pid_t pid;
+};
+
+/**
+ * popen() like function to read-only output from executed command
+ * without running shell.
+ *
+ * \param argv
+ * Arguments for execvp.
+ *
+ * \param sync_needed
+ * Bool specifying whether local devices needs to be synchronized
+ * before executing command.
+ * Note: You cannot synchronize devices within activation context.
+ *
+ * \param pdata
+ * Arguments to store data needed for pclose_exec().
+ *
+ * \return
+ * 1 (success) or 0 (failure).
+ */
+FILE *pipe_open(struct cmd_context *cmd, const char *const argv[],
+		int sync_needed, struct pipe_data *pdata);
+
+int pipe_close(struct pipe_data *pdata);
+
 #endif
