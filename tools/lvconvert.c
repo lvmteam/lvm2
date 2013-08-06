@@ -1968,6 +1968,7 @@ static int _lvconvert_thinpool_repair(struct cmd_context *cmd,
 	uint64_t trans_id;
 	struct logical_volume *pmslv;
 	struct logical_volume *mlv = first_seg(pool_lv)->metadata_lv;
+	struct pipe_data pdata;
 	FILE *f;
 
 	if (!thin_repair[0]) {
@@ -1975,11 +1976,17 @@ static int _lvconvert_thinpool_repair(struct cmd_context *cmd,
 		return 0; /* Checking disabled */
 	}
 
+	pmslv = pool_lv->vg->pool_metadata_spare_lv;
+
 	/* Check we have pool metadata spare LV */
 	if (!handle_pool_metadata_spare(pool_lv->vg, 0, NULL, 1))
 		return_0;
 
-	pmslv = pool_lv->vg->pool_metadata_spare_lv;
+	if (pmslv != pool_lv->vg->pool_metadata_spare_lv) {
+		if (!vg_write(pool_lv->vg) || !vg_commit(pool_lv->vg))
+			return_0;
+		pmslv = pool_lv->vg->pool_metadata_spare_lv;
+	}
 
 	if (!(dm_name = dm_build_dm_name(cmd->mem, mlv->vg->name,
 					 mlv->name, NULL)) ||
@@ -2050,13 +2057,12 @@ static int _lvconvert_thinpool_repair(struct cmd_context *cmd,
 	}
 
 	if (thin_dump[0]) {
-		if (dm_snprintf(meta_path, sizeof(meta_path), "%s %s", thin_dump, pms_path) < 0) {
-			log_error("Command cannot fit into buffer.");
-			goto deactivate_mlv;
-		}
+		argv[0] = thin_dump;
+		argv[1] = pms_path;
+		argv[2] = NULL;
 
-		if (!(f = popen(meta_path, "r")))
-			log_warn("WARNING: Cannot read output from %s.", meta_path);
+		if (!(f = pipe_open(cmd, argv, 0, &pdata)))
+			log_warn("WARNING: Cannot read output from %s %s.", thin_dump, pms_path);
 		else {
 			/*
 			 * Scan only the 1st. line for transation id.
@@ -2073,8 +2079,8 @@ static int _lvconvert_thinpool_repair(struct cmd_context *cmd,
 					  first_seg(pool_lv)->transaction_id,
 					  pool_lv->vg->name, pool_lv->name, trans_id,
 					  pms_path);
-			if (pclose(f))
-				log_sys_error("popen", thin_dump);
+
+			(void) pipe_close(&pdata); /* killing pipe */
 		}
 	}
 
