@@ -127,9 +127,9 @@ static void _default_log_line(int level,
 	}
 
 	if (_abort_on_internal_errors < 0)
-		/* Set when env DM_ABORT_ON_INTERNAL_ERRORS is 1 */
+		/* Set when env DM_ABORT_ON_INTERNAL_ERRORS is not "0" */
 		_abort_on_internal_errors =
-			!strcmp(getenv("DM_ABORT_ON_INTERNAL_ERRORS") ? : "0", "1");
+			strcmp(getenv("DM_ABORT_ON_INTERNAL_ERRORS") ? : "0", "0");
 
 	if (_abort_on_internal_errors &&
 	    !strncmp(f, INTERNAL_ERROR, sizeof(INTERNAL_ERROR) - 1))
