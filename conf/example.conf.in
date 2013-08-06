@@ -529,7 +529,7 @@ global {
     #            this setting is not advised.
     # Specify the '--type <raid10|mirror>' option to override this default
     # setting.
-    raid10_segtype_default = "mirror"
+    raid10_segtype_default = "raid10"
 
     # The default format for displaying LV names in lvdisplay was changed 
     # in version 2.02.89 to show the LV name and path separately.
