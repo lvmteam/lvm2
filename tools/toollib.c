@@ -1577,14 +1577,6 @@ int get_pool_params(struct cmd_context *cmd,
 					   chunk_size, discards, zero))
 		return_0;
 
-	if ((*chunk_size < DM_THIN_MIN_DATA_BLOCK_SIZE) ||
-	    (*chunk_size > DM_THIN_MAX_DATA_BLOCK_SIZE)) {
-		log_error("Chunk size must be in the range %s to %s.",
-			  display_size(cmd, DM_THIN_MIN_DATA_BLOCK_SIZE),
-			  display_size(cmd, DM_THIN_MAX_DATA_BLOCK_SIZE));
-		return 0;
-	}
-
 	if (arg_count(cmd, poolmetadatasize_ARG)) {
 		if (arg_sign_value(cmd, poolmetadatasize_ARG, SIGN_NONE) == SIGN_MINUS) {
 			log_error("Negative pool metadata size is invalid.");
