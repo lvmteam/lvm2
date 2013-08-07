@@ -1,5 +1,6 @@
 Version 2.02.100 -
 ================================
+  When converting mirrors, default segtype should be the same unless specified.
   Make "raid1" the default mirror segment type.
   Fix clogd descriptor leak when daemonizing.
   Fix clvmd descriptor leak on restart.

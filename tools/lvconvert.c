@@ -518,10 +518,16 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 		if (!get_stripe_params(cmd, &lp->stripes, &lp->stripe_size))
 			return_0;
 
-		lp->segtype = get_segtype_from_string(cmd, arg_str_value(cmd, type_ARG,
-			find_config_tree_str(cmd, global_mirror_segtype_default_CFG, NULL)));
-		if (!lp->segtype)
-			return_0;
+		if (arg_count(cmd, mirrors_ARG) && !lp->mirrors) {
+			/* down-converting to linear/stripe? */
+			if (!(lp->segtype =
+			      get_segtype_from_string(cmd, "striped")))
+				return_0;
+		} else if (arg_count(cmd, type_ARG)) {
+			/* changing mirror type? */
+			if (!(lp->segtype = get_segtype_from_string(cmd, arg_str_value(cmd, type_ARG, find_config_tree_str(cmd, global_mirror_segtype_default_CFG, NULL)))))
+				return_0;
+		} /* else segtype will default to current type */
 	}
 
 	/* TODO: default in lvm.conf ? */
