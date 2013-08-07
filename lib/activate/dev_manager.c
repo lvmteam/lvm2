@@ -275,7 +275,7 @@ static int _ignore_blocked_mirror_devices(struct device *dev,
 				goto_out;
 
 			tmp_dev->dev = log_dev;
-			if (!device_is_usable(tmp_dev))
+			if (device_is_suspended_or_blocking(tmp_dev))
 				goto_out;
 		}
 	}
@@ -329,7 +329,24 @@ out:
 	return r;
 }
 
-int device_is_usable(struct device *dev)
+/*
+ * _device_is_usable
+ * @dev
+ * @check_lv_names
+ *
+ * A device is considered not usable if it is:
+ *     1) An empty device (no targets)
+ *     2) A blocked mirror (i.e. a mirror with a failure and block_on_error set)
+ *     3) ignore_suspended_devices is set and
+ *        a) the device is suspended
+ *        b) it is a snapshot origin
+ *     4) an error target
+ * And optionally, if 'check_lv_names' is set
+ *     5) the LV name is a reserved name.
+ *
+ * Returns: 1 if usable, 0 otherwise
+ */
+static int _device_is_usable(struct device *dev, int check_lv_names)
 {
 	struct dm_task *dmt;
 	struct dm_info info;
@@ -416,7 +433,8 @@ int device_is_usable(struct device *dev)
 	/* FIXME Also check dependencies? */
 
 	/* Check internal lvm devices */
-	if (uuid && !strncmp(uuid, UUID_PREFIX, sizeof(UUID_PREFIX) - 1)) {
+	if (check_lv_names &&
+	    uuid && !strncmp(uuid, UUID_PREFIX, sizeof(UUID_PREFIX) - 1)) {
 		if (!(vgname = dm_strdup(name)) ||
 		    !dm_split_lvm_name(NULL, NULL, &vgname, &lvname, &layer))
 			goto_out;
@@ -434,6 +452,16 @@ int device_is_usable(struct device *dev)
 	dm_free(vgname);
 	dm_task_destroy(dmt);
 	return r;
+}
+
+int device_is_usable(struct device *dev)
+{
+	return _device_is_usable(dev, 1);
+}
+
+int device_is_suspended_or_blocking(struct device *dev)
+{
+	return !_device_is_usable(dev, 0);
 }
 
 static int _info(const char *dlid, int with_open_count, int with_read_ahead,

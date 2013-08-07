@@ -167,9 +167,17 @@ int pv_uses_vg(struct physical_volume *pv,
 	       struct volume_group *vg);
 
 /*
- * Returns 1 if mapped device is not suspended.
+ * Returns 1 if mapped device is not suspended, blocked or
+ * is using a reserved name.
  */
 int device_is_usable(struct device *dev);
+
+/*
+ * Returns 1 if the device is suspended or blocking.
+ * (Does not perform check on the LV name of the device.)
+ * N.B.  This is !device_is_usable() without the name check.
+ */
+int device_is_suspended_or_blocking(struct device *dev);
 
 /*
  * Declaration moved here from fs.h to keep header fs.h hidden
