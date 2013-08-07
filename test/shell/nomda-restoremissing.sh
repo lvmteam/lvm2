@@ -15,7 +15,7 @@ aux prepare_vg 3
 
 pvchange --metadataignore y $dev1
 
-lvcreate -aey -m 1 -l 1 -n mirror $vg
+lvcreate -aey --type mirror -m 1 -l 1 -n mirror $vg
 lvchange -a n $vg/mirror
 lvcreate -l 1 -n lv1 $vg "$dev1"
 
@@ -25,7 +25,7 @@ aux disable_dev "$dev1"
 lvremove $vg/mirror
 not vgck $vg 2>&1 | tee log
 grep "missing 1 physical volume" log
-not lvcreate -aey -m 1 -l 1 -n mirror $vg # write operations fail
+not lvcreate -aey --type mirror -m 1 -l 1 -n mirror $vg # write operations fail
 aux enable_dev "$dev1"
-lvcreate -aey -m 1 -l 1 -n mirror $vg # no MDA => automatically restored
+lvcreate -aey --type mirror -m 1 -l 1 -n mirror $vg # no MDA => automatically restored
 vgck $vg

@@ -13,7 +13,7 @@
 
 aux prepare_vg 3 12
 
-lvcreate -aye -m 1 -l 1 -n mirror $vg
+lvcreate -aye --type mirror -m 1 -l 1 -n mirror $vg
 lvcreate -l 1 -n resized $vg
 lvchange -a n $vg/mirror
 

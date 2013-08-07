@@ -14,7 +14,7 @@
 aux prepare_vg 4
 
 # Attempt to create snapshot of a mirror origin - should fail
-lvcreate -aey -m 1 -L 10M -n lv $vg
+lvcreate -aey --type mirror -m 1 -L 10M -n lv $vg
 
 lvcreate -s $vg/lv -L 10M -n snap
 
@@ -22,10 +22,10 @@ lvcreate -s $vg/lv -L 10M -n snap
 lvconvert -m0 $vg/lv
 
 # Up-convert (linear -> mirror)
-lvconvert -m2 $vg/lv
+lvconvert --type mirror -m2 $vg/lv
 
 # Down-convert (mirror -> mirror)
-lvconvert -m1 $vg/lv
+lvconvert -m 1 $vg/lv
 
 # Up-convert (mirror -> mirror) -- Not supported!
 not lvconvert -m2 $vg/lv

@@ -22,7 +22,7 @@ lvcreate -aey -l 5 -n foo $vg
 lvcreate -s -n snap $vg/foo -l 3 -c 4k
 lvcreate -s -n snap2 $vg/foo -l 6 -c 4k
 dd if=/dev/urandom of="$DM_DEV_DIR/$vg/snap2" count=1 bs=1024
-lvcreate -aey -m 1 -n mirr $vg -l 1 --mirrorlog core
+lvcreate -aey --type mirror -m 1 -n mirr $vg -l 1 --mirrorlog core
 lvs $vg
 aux apitest percent $vg
 

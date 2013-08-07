@@ -176,7 +176,7 @@ lvcreate -L4M -V2G --name lv1 -T $vg/pool1
 # Origin name is not accepted
 not lvcreate -s $vg/lv1 -L4M -V2G --name $vg/lv4
 
-# Check we cannot create mirror and thin or thinpool together
+# Check we cannot create mirror/raid1 and thin or thinpool together
 not lvcreate -T mirpool -L4M --alloc anywhere -m1 $vg
 not lvcreate --thinpool mirpool -L4M --alloc anywhere -m1 $vg
 

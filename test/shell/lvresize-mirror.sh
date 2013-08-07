@@ -16,7 +16,7 @@ aux prepare_vg 5
 for deactivate in true false; do
 
 # extend 2-way mirror
-	lvcreate -aye -l2 -m1 -n $lv1 $vg "$dev1" "$dev2" "$dev3":0-1
+	lvcreate -aye -l2 --type mirror -m1 -n $lv1 $vg "$dev1" "$dev2" "$dev3":0-1
 
 	test $deactivate && lvchange -an $vg/$lv1
 
@@ -29,7 +29,7 @@ for deactivate in true false; do
 	check mirror $vg $lv1 "$dev3"
 
 # extend 2-way mirror (cling if not contiguous)
-	lvcreate -aye -l2 -m1 -n $lv2 $vg "$dev1" "$dev2" "$dev3":0-1
+	lvcreate -aye -l2 --type mirror -m1 -n $lv2 $vg "$dev1" "$dev2" "$dev3":0-1
 	lvcreate -l1 -n $lv3 $vg "$dev1"
 	lvcreate -l1 -n $lv4 $vg "$dev2"
 

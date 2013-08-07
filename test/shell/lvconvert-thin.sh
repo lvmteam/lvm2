@@ -35,8 +35,8 @@ pvcreate "$DM_DEV_DIR/$vg1/$lv"
 vgcreate $vg -s 64K $(cut -d ' ' -f 4 DEVICES) "$DM_DEV_DIR/$vg1/$lv"
 
 # create mirrored LVs for data and metadata volumes
-lvcreate -aey -L10M -m1 --mirrorlog core -n $lv1 $vg
-lvcreate -aey -L8M -m1 --mirrorlog core -n $lv2 $vg
+lvcreate -aey -L10M --type mirror -m1 --mirrorlog core -n $lv1 $vg
+lvcreate -aey -L8M --type mirror -m1 --mirrorlog core -n $lv2 $vg
 lvchange -an $vg/$lv1
 
 

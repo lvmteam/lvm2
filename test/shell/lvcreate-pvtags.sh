@@ -31,18 +31,18 @@ not lvcreate -l4 -i4 $vg @fast
 not lvcreate -l2 -i2 $vg $DM_DEV_DIR/mapper/pv1
 
 # lvcreate mirror
-lvcreate -aey -l1 -m1 $vg @fast
+lvcreate -aey -l1 --type mirror -m1 $vg @fast
 
 # lvcreate mirror w/corelog
-lvcreate -aey -l1 -m2 --corelog $vg @fast
+lvcreate -aey -l1 --type mirror -m2 --corelog $vg @fast
 
 # lvcreate mirror w/no free PVs
-not lvcreate -aey -l1 -m2 $vg @fast
+not lvcreate -aey -l1 --type mirror -m2 $vg @fast
 
 # lvcreate mirror (corelog, w/no free PVs)
-not lvcreate -aey -l1 -m3 --corelog $vg @fast
+not lvcreate -aey -l1 --type mirror -m3 --corelog $vg @fast
 
 # lvcreate mirror with a single PV arg
-not lvcreate -aey -l1 -m1 --corelog $vg "$dev1"
+not lvcreate -aey -l1 --type mirror -m1 --corelog $vg "$dev1"
 
 vgremove -ff $vg

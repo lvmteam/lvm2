@@ -51,7 +51,7 @@ vgremove -f $vg1
 #COMM "(lvm$mdatype) vgreduce --removemissing --force repares to linear (bz221921)"
 # (lvm$mdatype) setup: create mirror & damage one pv
 vgcreate -M$mdatype $vg1 "$dev1" "$dev2" "$dev3"
-lvcreate -aey -n $lv1 -m1 -l 4 $vg1
+lvcreate -aey -n $lv1 --type mirror -m1 -l 4 $vg1
 lvcreate -n $lv2  -l 4 $vg1 "$dev2"
 lvcreate -n $lv3 -l 4 $vg1 "$dev3"
 vgchange -an $vg1
@@ -70,7 +70,7 @@ not vgs $vg1 # just double-check it's really gone
 # (lvm$mdatype) setup: create mirror + linear lvs
 vgcreate -M$mdatype $vg1 $(cat DEVICES)
 lvcreate -n $lv2 -l 4 $vg1
-lvcreate -aey -m1 -n $lv1 -l 4 $vg1 "$dev1" "$dev2" "$dev3"
+lvcreate -aey --type mirror -m1 -n $lv1 -l 4 $vg1 "$dev1" "$dev2" "$dev3"
 lvcreate -n $lv3 -l 4 $vg1 "$dev3"
 pvs --segments -o +lv_name $(cat DEVICES) # for record only
 # (lvm$mdatype) setup: damage one pv

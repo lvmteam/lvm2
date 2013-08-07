@@ -68,13 +68,13 @@ lvremove -ff $vg/$lv3
 lvchange -an $vg/$lv1
 lvcreate -l1 -s -n $lv3 $vg/$lv1
 not lvcreate -l1 -n $lv4 $vg
-not lvcreate -l1 -m1 -n $lv4 $vg
+not lvcreate -l1 --type mirror -m1 -n $lv4 $vg
 
 lvremove -ff $vg/$lv3
-lvcreate -l1 -m1 -n $lv3 $vg
+lvcreate -l1 --type mirror -m1 -n $lv3 $vg
 vgs -o +max_lv $vg
 not lvcreate -l1 -n $lv4 $vg
-not lvcreate -l1 -m1 -n $lv4 $vg
+not lvcreate -l1 --type mirror -m1 -n $lv4 $vg
 
 lvconvert -m0 $vg/$lv3
 lvconvert -m2 -i 1 $vg/$lv3
@@ -111,10 +111,10 @@ not lvcreate -L 32m -n $lv -R0 $vg 2>err
 grep "Non-zero region size must be supplied." err
 not lvcreate -L 32m -n $lv -R 11k $vg
 not lvcreate -L 32m -n $lv -R 1k $vg
-lvcreate -L 32m -n $lv --regionsize 128m  -m 1 $vg
+lvcreate -L 32m -n $lv --regionsize 128m  --type mirror -m 1 $vg
 check lv_field $vg/$lv regionsize "32.00m"
 lvremove -ff $vg
-lvcreate -L 32m -n $lv --regionsize 4m -m 1 $vg
+lvcreate -L 32m -n $lv --regionsize 4m --type mirror -m 1 $vg
 check lv_field $vg/$lv regionsize "4.00m"
 lvremove -ff $vg
 

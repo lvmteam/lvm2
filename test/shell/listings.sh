@@ -54,7 +54,7 @@ dmsetup ls|grep $PREFIX|grep -v "LVMTEST.*pv."
 lvremove -f $vg/$lv2
 
 #COMM lvs -a displays mirror legs and log
-lvcreate -aey -l4 -m2 -n $lv3 $vg
+lvcreate -aey -l4 --type mirror -m2 -n $lv3 $vg
 test $(lvs --noheadings $vg | wc -l) -eq 2
 test $(lvs -a --noheadings $vg | wc -l) -eq 6
 dmsetup ls|grep $PREFIX|grep -v "LVMTEST.*pv."

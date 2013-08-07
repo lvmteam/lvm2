@@ -13,7 +13,7 @@
 
 aux prepare_vg 4
 
-lvcreate -aey -m 1 --mirrorlog disk --ignoremonitoring -L 1 -n mirror $vg
+lvcreate -aey --type mirror -m 1 --mirrorlog disk --ignoremonitoring -L 1 -n mirror $vg
 not lvconvert -m 2 --mirrorlog core $vg/mirror "$dev3" 2>&1 | tee errs
 grep "two steps" errs
 

@@ -14,7 +14,7 @@
 aux prepare_vg 4
 
 lvcreate -an -Zn -l 1 -n $lv1 $vg
-lvcreate -an -Zn -l 2 -m 1 -n $lv2 $vg
+lvcreate -an -Zn -l 2 --type mirror -m 1 -n $lv2 $vg
 
 vgcfgbackup -f bak0 $vg
 sed -e 's,striped,unstriped,;s,mirror,unmirror,' -i.orig bak0

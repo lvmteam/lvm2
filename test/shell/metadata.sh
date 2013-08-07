@@ -35,7 +35,7 @@ for mdacp in 1 0; do
 	pvcreate "$dev1"
 	vgcreate $vg $(cat DEVICES)
 	lvcreate -n $lv1 -l 2 -i5 -I256 $vg
-	lvcreate -aey -n $lv2 -m2 -l 2  $vg
+	lvcreate -aey -n $lv2 --type mirror -m2 -l 2  $vg
 	lvchange -an $vg/$lv1 $vg/$lv2
 	vgchange -aey $vg
 	lvchange -an $vg/$lv1 $vg/$lv2

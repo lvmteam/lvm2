@@ -76,7 +76,7 @@ test_lvconvert() {
 			alloc="--alloc anywhere"
 		fi
 
-		lvcreate -aey -l2 -m $start_count --mirrorlog $start_log_type \
+		lvcreate -aey -l2 --type mirror -m $start_count --mirrorlog $start_log_type \
 			-n $lv1 $vg $alloc
 		check mirror_legs $vg $lv1 $start_count_p1
 		# FIXME: check mirror log

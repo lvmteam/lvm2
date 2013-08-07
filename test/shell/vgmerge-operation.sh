@@ -55,7 +55,7 @@ vgremove -f $vg2
 # 'vgmerge succeeds with mirrored LV in source VG'
 vgcreate $vg1 "$dev1" "$dev2" "$dev3"
 vgcreate $vg2 "$dev4"
-lvcreate -aey -l 4 -n $lv1 -m1 $vg1
+lvcreate -aey -l 4 -n $lv1 --type mirror -m1 $vg1
 vgchange -an $vg1
 check pvlv_counts $vg1 3 1 0
 check pvlv_counts $vg2 1 0 0

@@ -13,7 +13,7 @@
 
 aux prepare_vg 3
 
-lvcreate -aey -m 1 -l 1 --nosync -n mirror $vg
+lvcreate -aey --type mirror -m 1 -l 1 --nosync -n mirror $vg
 lvchange -a n $vg/mirror
 aux disable_dev "$dev1"
 

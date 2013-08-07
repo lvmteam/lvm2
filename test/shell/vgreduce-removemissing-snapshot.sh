@@ -21,7 +21,7 @@ exit 0
 
 aux prepare_vg 5
 
-lvcreate -m 3 --ig -L 2M -n 4way $vg "$dev1" "$dev2" "$dev3" "$dev4" "$dev5":0
+lvcreate --type mirror -m 3 --ig -L 2M -n 4way $vg "$dev1" "$dev2" "$dev3" "$dev4" "$dev5":0
 lvcreate -s $vg/4way -L 2M -n snap
 lvcreate -i 2 -L 2M $vg "$dev1" "$dev2" -n stripe
 

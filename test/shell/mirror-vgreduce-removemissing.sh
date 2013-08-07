@@ -125,7 +125,7 @@ check_and_cleanup_lvs_
 
 #COMM "basic: fail the 2nd mirror image of 2-way mirrored LV"
 prepare_lvs_
-lvcreate -an -Zn -l2 -m1 --nosync -n $lv1 $vg "$dev1" "$dev2" "$dev3":$BLOCKS
+lvcreate -an -Zn -l2 --type mirror -m1 --nosync -n $lv1 $vg "$dev1" "$dev2" "$dev3":$BLOCKS
 mimages_are_on_ $lv1 $dev1 $dev2
 mirrorlog_is_on_ $lv1 $dev3
 aux disable_dev "$dev2"
@@ -145,7 +145,7 @@ test_3way_mirror_fail_1_()
 {
 	local index=$1
 
-	lvcreate -an -Zn -l2 -m2 --nosync -n $lv1 $vg "$dev1" "$dev2" "$dev3" "$dev4":$BLOCKS
+	lvcreate -an -Zn -l2 --type mirror -m2 --nosync -n $lv1 $vg "$dev1" "$dev2" "$dev3" "$dev4":$BLOCKS
 	mimages_are_on_ $lv1 "$dev1" "$dev2" "$dev3"
 	mirrorlog_is_on_ $lv1 "$dev4"
 	eval aux disable_dev \$dev$index
@@ -170,7 +170,7 @@ test_3way_mirror_fail_2_()
 {
 	local index=$1
 
-	lvcreate -an -Zn -l2 -m2 --nosync -n $lv1 $vg "$dev1" "$dev2" "$dev3" "$dev4":$BLOCKS
+	lvcreate -an -Zn -l2 --type mirror -m2 --nosync -n $lv1 $vg "$dev1" "$dev2" "$dev3" "$dev4":$BLOCKS
 	mimages_are_on_ $lv1 "$dev1" "$dev2" "$dev3"
 	mirrorlog_is_on_ $lv1 "$dev4"
 	rest_pvs_ $index 3
@@ -196,7 +196,7 @@ test_3way_mirror_plus_1_fail_1_()
 {
 	local index=$1
 
-	lvcreate -an -Zn -l2 -m2 -n $lv1 $vg "$dev1" "$dev2" "$dev3" "$dev5":$BLOCKS
+	lvcreate -an -Zn -l2 --type mirror -m2 -n $lv1 $vg "$dev1" "$dev2" "$dev3" "$dev5":$BLOCKS
 	lvconvert -m+1 $vg/$lv1 "$dev4"
 	check mirror_images_on $vg $lv1 "$dev1" "$dev2" "$dev3" "$dev4"
 	check mirror_log_on $vg $lv1 "$dev5"
@@ -224,7 +224,7 @@ test_3way_mirror_plus_1_fail_3_()
 {
 	local index=$1
 
-	lvcreate -an -Zn -l2 -m2 -n $lv1 $vg "$dev1" "$dev2" "$dev3" "$dev5":$BLOCKS
+	lvcreate -an -Zn -l2 --type mirror -m2 -n $lv1 $vg "$dev1" "$dev2" "$dev3" "$dev5":$BLOCKS
 	lvconvert -m+1 $vg/$lv1 "$dev4"
 	check mirror_images_on $vg $lv1 "$dev1" "$dev2" "$dev3" "$dev4"
 	check mirror_log_on $vg $lv1 "$dev5"
@@ -253,7 +253,7 @@ test_2way_mirror_plus_2_fail_1_()
 {
 	local index=$1
 
-	lvcreate -an -Zn -l2 -m1 -n $lv1 $vg "$dev1" "$dev2" "$dev5":$BLOCKS
+	lvcreate -an -Zn -l2 --type mirror -m1 -n $lv1 $vg "$dev1" "$dev2" "$dev5":$BLOCKS
 	lvconvert -m+2 $vg/$lv1 "$dev3" "$dev4"
 	mimages_are_on_ $lv1 "$dev1" "$dev2" "$dev3" "$dev4"
 	mirrorlog_is_on_ $lv1 "$dev5"
@@ -279,7 +279,7 @@ test_2way_mirror_plus_2_fail_3_()
 {
 	local index=$1
 
-	lvcreate -an -Zn -l2 -m1 -n $lv1 $vg "$dev1" "$dev2" "$dev5":$BLOCKS
+	lvcreate -an -Zn -l2 --type mirror -m1 -n $lv1 $vg "$dev1" "$dev2" "$dev5":$BLOCKS
 	lvconvert -m+2 $vg/$lv1 "$dev3" "$dev4"
 	mimages_are_on_ $lv1 "$dev1" "$dev2" "$dev3" "$dev4"
 	mirrorlog_is_on_ $lv1 "$dev5"
@@ -303,7 +303,7 @@ done
 
 #COMM "fail mirror log of 2-way mirrored LV"
 prepare_lvs_
-lvcreate -aey -l2 -m1 -n $lv1 $vg "$dev1" "$dev2" "$dev5":$BLOCKS
+lvcreate -aey -l2 --type mirror -m1 -n $lv1 $vg "$dev1" "$dev2" "$dev5":$BLOCKS
 mimages_are_on_ $lv1 "$dev1" "$dev2"
 mirrorlog_is_on_ $lv1 "$dev5"
 aux disable_dev "$dev5"
@@ -314,7 +314,7 @@ recover_vg_ "$dev5"
 
 #COMM "fail mirror log of 3-way (1 converting) mirrored LV"
 prepare_lvs_
-lvcreate -aey -l2 -m1 -n $lv1 $vg "$dev1" "$dev2" "$dev5":$BLOCKS
+lvcreate -aey -l2 --type mirror -m1 -n $lv1 $vg "$dev1" "$dev2" "$dev5":$BLOCKS
 lvconvert -m+1 $vg/$lv1 "$dev3"
 mimages_are_on_ $lv1 "$dev1" "$dev2" "$dev3"
 mirrorlog_is_on_ $lv1 "$dev5"
@@ -329,7 +329,7 @@ recover_vg_ "$dev5"
 
 #COMM "fail all mirror images of 2-way mirrored LV"
 prepare_lvs_
-lvcreate -an -Zn -l2 -m1 --nosync -n $lv1 $vg "$dev1" "$dev2" "$dev5":$BLOCKS
+lvcreate -an -Zn -l2 --type mirror -m1 --nosync -n $lv1 $vg "$dev1" "$dev2" "$dev5":$BLOCKS
 mimages_are_on_ $lv1 "$dev1" "$dev2"
 mirrorlog_is_on_ $lv1 "$dev5"
 aux disable_dev "$dev1" "$dev2"
@@ -339,7 +339,7 @@ recover_vg_ "$dev1" "$dev2"
 
 #COMM "fail all mirror images of 3-way (1 converting) mirrored LV"
 prepare_lvs_
-lvcreate -an -Zn -l2 -m1 -n $lv1 $vg "$dev1" "$dev2" "$dev5":$BLOCKS
+lvcreate -an -Zn -l2 --type mirror -m1 -n $lv1 $vg "$dev1" "$dev2" "$dev5":$BLOCKS
 lvconvert -m+1 $vg/$lv1 "$dev3"
 mimages_are_on_ $lv1 "$dev1" "$dev2" "$dev3"
 mirrorlog_is_on_ $lv1 "$dev5"
@@ -353,8 +353,8 @@ recover_vg_ "$dev1" "$dev2" "$dev3"
 
 #COMM "fail a mirror image of one of mirrored LV"
 prepare_lvs_
-lvcreate -an -Zn -l2 -m1 --nosync -n $lv1 $vg "$dev1" "$dev2" "$dev5":$BLOCKS
-lvcreate -an -Zn -l2 -m1 --nosync -n $lv2 $vg "$dev3" "$dev4" "$dev5":$BLOCKS1
+lvcreate -an -Zn -l2 --type mirror -m1 --nosync -n $lv1 $vg "$dev1" "$dev2" "$dev5":$BLOCKS
+lvcreate -an -Zn -l2 --type mirror -m1 --nosync -n $lv2 $vg "$dev3" "$dev4" "$dev5":$BLOCKS1
 mimages_are_on_ $lv1 "$dev1" "$dev2"
 mimages_are_on_ $lv2 "$dev3" "$dev4"
 mirrorlog_is_on_ $lv1 "$dev5"
@@ -369,8 +369,8 @@ recover_vg_ "$dev2"
 
 #COMM "fail mirror images, one for each mirrored LV"
 prepare_lvs_
-lvcreate -an -Zn -l2 -m1 --nosync -n $lv1 $vg "$dev1" "$dev2" "$dev5":$BLOCKS
-lvcreate -an -Zn -l2 -m1 --nosync -n $lv2 $vg "$dev3" "$dev4" "$dev5":$BLOCKS1
+lvcreate -an -Zn -l2 --type mirror -m1 --nosync -n $lv1 $vg "$dev1" "$dev2" "$dev5":$BLOCKS
+lvcreate -an -Zn -l2 --type mirror -m1 --nosync -n $lv2 $vg "$dev3" "$dev4" "$dev5":$BLOCKS1
 mimages_are_on_ $lv1 "$dev1" "$dev2"
 mimages_are_on_ $lv2 "$dev3" "$dev4"
 mirrorlog_is_on_ $lv1 "$dev5"
@@ -389,7 +389,7 @@ recover_vg_ "$dev2" "$dev4"
 
 #COMM "no failures"
 prepare_lvs_
-lvcreate -an -Zn -l2 -m1 --nosync -n $lv1 $vg "$dev1" "$dev2" "$dev5":$BLOCKS
+lvcreate -an -Zn -l2 --type mirror -m1 --nosync -n $lv1 $vg "$dev1" "$dev2" "$dev5":$BLOCKS
 mimages_are_on_ $lv1 "$dev1" "$dev2"
 mirrorlog_is_on_ $lv1 "$dev5"
 vgreduce --removemissing --force $vg
