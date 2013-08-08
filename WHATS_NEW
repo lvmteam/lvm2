@@ -1,5 +1,6 @@
 Version 2.02.100 -
 ================================
+  Verify clvmd message validity before processing and log error if incorrect.
   Fix issue preventing PV creation on mirror LVs
   When converting mirrors, default segtype should be the same unless specified.
   Make "raid1" the default mirror segment type.
