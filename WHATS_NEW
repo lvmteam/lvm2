@@ -1,5 +1,6 @@
 Version 2.02.101 - 
 ===================================
+  Support most of lvchange operations on stacked thin pool meta/data LVs.
   Add ability to pvmove RAID, mirror, and thin volumes.
   Make lvm2-activation-generator silent unless it's in error state.
   Remove "mpath major is not dm major" msg for mpath component scan (2.02.94).
