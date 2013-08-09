@@ -2276,6 +2276,13 @@ static int _lvconvert_thinpool(struct cmd_context *cmd,
 				  external_lv->vg->name, lp->pool_data_lv_name);
 			return 0;
 		}
+
+		if (lv_is_thin_pool(external_lv)) {
+			log_error("Can't convert pool \"%s/%s\" to external origin.",
+				  external_lv->vg->name, lp->pool_data_lv_name);
+			return 0;
+		}
+
 		if (lv_is_thin_pool(pool_lv)) {
 			r = 1; /* Already existing thin pool */
 			goto out;
