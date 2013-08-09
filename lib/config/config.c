@@ -56,7 +56,7 @@ struct config_source {
 	} source;
 };
 
-static char _cfg_path[CFG_PATH_MAX_LEN];
+char _cfg_path[CFG_PATH_MAX_LEN];
 
 /*
  * Map each ID to respective definition of the configuration item.
