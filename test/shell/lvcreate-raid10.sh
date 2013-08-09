@@ -30,6 +30,15 @@ not lvcreate --type raid10 -m 2 -i 2 -l 2 -n $lv1 $vg
 # 2-way mirror, 2-stripes
 lvcreate --type raid10 -m 1 -i 2 -l 2 -n $lv1 $vg
 aux wait_for_sync $vg $lv1
+lvremove -ff $vg/$lv1
+
+# 2-way mirror, 2-stripes - Set min/max recovery rate
+lvcreate --type raid10 -m 1 -i 2 -l 2 \
+	--minrecoveryrate 50 --maxrecoveryrate 100 \
+	-n $lv1 $vg
+[ `lvs --noheadings -o raid_min_recovery_rate $vg/$lv1` -eq 50 ]
+[ `lvs --noheadings -o raid_max_recovery_rate $vg/$lv1` -eq 100 ]
+aux wait_for_sync $vg $lv1
 
 # 2-way mirror, 3-stripes
 lvcreate --type raid10 -m 1 -i 3 -l 3 -n $lv2 $vg

@@ -1143,9 +1143,11 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 		arg_count(cmd, detachprofile_ARG) ||
 		arg_count(cmd, setactivationskip_ARG);
 	int update_partial_unsafe =
-		arg_count(cmd, resync_ARG) ||
 		arg_count(cmd, alloc_ARG) ||
 		arg_count(cmd, discards_ARG) ||
+		arg_count(cmd, resync_ARG) ||
+		arg_count(cmd, raidminrecoveryrate_ARG) ||
+		arg_count(cmd, raidmaxrecoveryrate_ARG) ||
 		arg_count(cmd, syncaction_ARG) ||
 		arg_count(cmd, writebehind_ARG) ||
 		arg_count(cmd, writemostly_ARG) ||

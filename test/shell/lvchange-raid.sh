@@ -214,6 +214,19 @@ run_refresh_check() {
 	lvs --noheadings -o lv_attr $1/$2 | grep '.*-.$'
 }
 
+# run_recovery_rate_check <VG> <LV>
+#   Assumes "$dev2" is in the array
+run_recovery_rate_check() {
+	printf "#\n#\n#\n# %s/%s (%s): run_recovery_rate_check\n#\n#\n#\n" \
+		$1 $2 `lvs --noheadings -o segtype $1/$2`
+
+	lvchange --minrecoveryrate 50 $1/$2
+	lvchange --maxrecoveryrate 100 $1/$2
+
+	[ `lvs --noheadings -o raid_min_recovery_rate $1/$2` == "50" ]
+	[ `lvs --noheadings -o raid_max_recovery_rate $1/$2` == "100" ]
+}
+
 # run_checks <VG> <LV> [snapshot_dev]
 run_checks() {
 	# Without snapshots
@@ -222,6 +235,8 @@ run_checks() {
 	run_syncaction_check $1 $2
 
 	run_refresh_check $1 $2
+
+	run_recovery_rate_check $1 $2
 
 	# With snapshots
 	if [ ! -z $3 ]; then
@@ -232,6 +247,8 @@ run_checks() {
 		run_syncaction_check $1 $2
 
 		run_refresh_check $1 $2
+
+		run_recovery_rate_check $1 $2
 
 		lvremove -ff $1/snap
 	fi

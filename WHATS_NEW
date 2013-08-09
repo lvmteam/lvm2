@@ -1,5 +1,6 @@
 Version 2.02.100 -
 ================================
+  Fix bug making lvchange unable to change recovery rate for RAID.
   Prohibit convertion of thin pool to external origin.
   Workaround gcc v4.8 -O2 bug causing failures if config/checks=1 (32bit arch).
   Verify clvmd message validity before processing and log error if incorrect.
