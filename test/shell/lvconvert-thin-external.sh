@@ -48,6 +48,10 @@ fi
 #exit 0
 
 lvcreate -l10 -T $vg/pool
+# Can't convert pool to external origin
+lvcreate -l10 -T $vg/pool1
+not lvconvert -T --thinpool $vg/pool1 $vg/pool --originname origin
+lvremove -f $vg/pool1
 
 # create plain LV (will be used for external origin)
 lvcreate -L8M -n $lv1 $vg
