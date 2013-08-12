@@ -1,5 +1,6 @@
 Version 2.02.100 -
 ================================
+  Fix inability to remove a VG's cluster flag if it contains a mirror.
   Suppress arg: prefix in log_sys_error macro when arg is empty string.
   Fix bug making lvchange unable to change recovery rate for RAID.
   Prohibit conversion of thin pool to external origin.

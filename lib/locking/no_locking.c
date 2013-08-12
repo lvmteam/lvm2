@@ -66,6 +66,13 @@ static int _no_lock_resource(struct cmd_context *cmd, const char *resource,
 	return 1;
 }
 
+static int _no_query_resource(const char *resource, int *mode)
+{
+	log_very_verbose("Locking is disabled: Treating lock %s as not held.",
+			 resource);
+	return 1;
+}
+
 static int _readonly_lock_resource(struct cmd_context *cmd,
 				   const char *resource,
 				   uint32_t flags, struct logical_volume *lv)
@@ -86,6 +93,7 @@ int init_no_locking(struct locking_type *locking, struct cmd_context *cmd __attr
 		    int suppress_messages)
 {
 	locking->lock_resource = _no_lock_resource;
+	locking->query_resource = _no_query_resource;
 	locking->reset_locking = _no_reset_locking;
 	locking->fin_locking = _no_fin_locking;
 	locking->flags = LCK_CLUSTERED;
@@ -97,6 +105,7 @@ int init_readonly_locking(struct locking_type *locking, struct cmd_context *cmd 
 			  int suppress_messages)
 {
 	locking->lock_resource = _readonly_lock_resource;
+	locking->query_resource = _no_query_resource;
 	locking->reset_locking = _no_reset_locking;
 	locking->fin_locking = _no_fin_locking;
 	locking->flags = 0;
