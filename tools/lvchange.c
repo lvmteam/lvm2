@@ -823,7 +823,7 @@ static int lvchange_recovery_rate(struct logical_volume *lv)
 	struct cmd_context *cmd = lv->vg->cmd;
 	struct lv_segment *raid_seg = first_seg(lv);
 
-	if (strcmp(raid_seg->segtype->name, "raid1")) {
+	if (!seg_is_raid(raid_seg)) {
 		log_error("Unable to change the recovery rate of non-RAID"
 			  " logical volume.");
 		return 0;
@@ -831,10 +831,10 @@ static int lvchange_recovery_rate(struct logical_volume *lv)
 
 	if (arg_count(cmd, minrecoveryrate_ARG))
 		raid_seg->min_recovery_rate =
-			arg_uint_value(cmd, minrecoveryrate_ARG, 0);
+			arg_uint_value(cmd, minrecoveryrate_ARG, 0) / 2;
 	if (arg_count(cmd, maxrecoveryrate_ARG))
 		raid_seg->max_recovery_rate =
-			arg_uint_value(cmd, maxrecoveryrate_ARG, 0);
+			arg_uint_value(cmd, maxrecoveryrate_ARG, 0) / 2;
 
 	if (raid_seg->max_recovery_rate &&
 	    (raid_seg->max_recovery_rate < raid_seg->min_recovery_rate)) {
@@ -1145,9 +1145,9 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 	int update_partial_unsafe =
 		arg_count(cmd, alloc_ARG) ||
 		arg_count(cmd, discards_ARG) ||
+		arg_count(cmd, minrecoveryrate_ARG) ||
+		arg_count(cmd, maxrecoveryrate_ARG) ||
 		arg_count(cmd, resync_ARG) ||
-		arg_count(cmd, raidminrecoveryrate_ARG) ||
-		arg_count(cmd, raidmaxrecoveryrate_ARG) ||
 		arg_count(cmd, syncaction_ARG) ||
 		arg_count(cmd, writebehind_ARG) ||
 		arg_count(cmd, writemostly_ARG) ||
