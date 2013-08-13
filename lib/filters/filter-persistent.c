@@ -14,7 +14,7 @@
  */
 
 #include "lib.h"
-#include "filter-persistent.h"
+#include "filter.h"
 #include "config.h"
 #include "lvm-file.h"
 #include "activate.h"
@@ -365,6 +365,8 @@ struct dev_filter *persistent_filter_create(struct dev_types *dt,
 	f->private = pf;
 	f->wipe = _persistent_filter_wipe;
 	f->dump = _persistent_filter_dump;
+
+	log_debug_devs("Persistent filter initialised.");
 
 	return f;
 

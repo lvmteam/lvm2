@@ -13,7 +13,7 @@
  */
 
 #include "lib.h"
-#include "filter-sysfs.h"
+#include "filter.h"
 
 #ifdef linux
 
@@ -324,6 +324,9 @@ struct dev_filter *sysfs_filter_create(void)
 	f->destroy = _destroy;
 	f->use_count = 0;
 	f->private = ds;
+
+	log_debug_devs("Sysfs filter initialised.");
+
 	return f;
 
  bad:

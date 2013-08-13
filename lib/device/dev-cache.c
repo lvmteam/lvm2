@@ -14,10 +14,8 @@
  */
 
 #include "lib.h"
-#include "dev-cache.h"
 #include "lvm-types.h"
 #include "btree.h"
-#include "filter.h"
 #include "config.h"
 #include "toolcontext.h"
 
@@ -923,8 +921,11 @@ struct device *dev_cache_get(const char *name, struct dev_filter *f)
 		}
 	}
 
-	return (d && (!f || (d->flags & DEV_REGULAR) ||
-		      f->passes_filter(f, d))) ? d : NULL;
+	if (!d || (f && !(d->flags & DEV_REGULAR) && !(f->passes_filter(f, d))))
+		return NULL;
+
+	log_debug_devs("Using %s", dev_name(d));
+	return d;
 }
 
 static struct device *_dev_cache_seek_devt(dev_t dev)
@@ -1007,8 +1008,10 @@ struct device *dev_iter_get(struct dev_iter *iter)
 	while (iter->current) {
 		struct device *d = _iter_next(iter);
 		if (!iter->filter || (d->flags & DEV_REGULAR) ||
-		    iter->filter->passes_filter(iter->filter, d))
+		    iter->filter->passes_filter(iter->filter, d)) {
+			log_debug_devs("Using %s", dev_name(d));
 			return d;
+		}
 	}
 
 	return NULL;

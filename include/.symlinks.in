@@ -17,12 +17,6 @@
 @top_srcdir@/lib/device/dev-type.h
 @top_srcdir@/lib/device/device.h
 @top_srcdir@/lib/display/display.h
-@top_srcdir@/lib/filters/filter-composite.h
-@top_srcdir@/lib/filters/filter-md.h
-@top_srcdir@/lib/filters/filter-mpath.h
-@top_srcdir@/lib/filters/filter-persistent.h
-@top_srcdir@/lib/filters/filter-regex.h
-@top_srcdir@/lib/filters/filter-sysfs.h
 @top_srcdir@/lib/filters/filter.h
 @top_srcdir@/lib/format1/format1.h
 @top_srcdir@/lib/format_pool/format_pool.h

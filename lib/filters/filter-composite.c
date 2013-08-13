@@ -14,7 +14,7 @@
  */
 
 #include "lib.h"
-#include "filter-composite.h"
+#include "filter.h"
 
 static int _and_p(struct dev_filter *f, struct device *dev)
 {
@@ -22,9 +22,7 @@ static int _and_p(struct dev_filter *f, struct device *dev)
 
 	for (filters = (struct dev_filter **) f->private; *filters; ++filters)
 		if (!(*filters)->passes_filter(*filters, dev))
-			return_0;
-
-	log_debug_devs("Using %s", dev_name(dev));
+			return 0;	/* No 'stack': a filter, not an error. */
 
 	return 1;
 }
@@ -91,6 +89,8 @@ struct dev_filter *composite_filter_create(int n, struct dev_filter **filters)
 	cft->wipe = _wipe;
 	cft->use_count = 0;
 	cft->private = filters_copy;
+
+	log_debug_devs("Composite filter initialised.");
 
 	return cft;
 }

@@ -14,7 +14,7 @@
  */
 
 #include "lib.h"
-#include "filter-regex.h"
+#include "filter.h"
 
 struct rfilter {
 	struct dm_pool *mem;
@@ -212,6 +212,9 @@ struct dev_filter *regex_filter_create(const struct dm_config_value *patterns)
 	f->destroy = _regex_destroy;
 	f->use_count = 0;
 	f->private = rf;
+
+	log_debug_devs("Regex filter initialised.");
+
 	return f;
 
       bad:

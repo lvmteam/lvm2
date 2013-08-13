@@ -20,12 +20,6 @@
 #include "lvm-string.h"
 #include "activate.h"
 #include "filter.h"
-#include "filter-composite.h"
-#include "filter-md.h"
-#include "filter-mpath.h"
-#include "filter-persistent.h"
-#include "filter-regex.h"
-#include "filter-sysfs.h"
 #include "label.h"
 #include "lvm-file.h"
 #include "format-text.h"
@@ -35,7 +29,6 @@
 #include "segtype.h"
 #include "lvmcache.h"
 #include "lvmetad.h"
-#include "dev-cache.h"
 #include "archiver.h"
 
 #ifdef HAVE_LIBDL
@@ -824,7 +817,7 @@ static int _init_dev_cache(struct cmd_context *cmd)
 	return 1;
 }
 
-#define MAX_FILTERS 5
+#define MAX_FILTERS 6
 
 static struct dev_filter *_init_filter_components(struct cmd_context *cmd)
 {
@@ -853,7 +846,6 @@ static struct dev_filter *_init_filter_components(struct cmd_context *cmd)
 	if (!(cn = find_config_tree_node(cmd, devices_filter_CFG, NULL)))
 		log_very_verbose("devices/filter not found in config file: "
 				 "no regex filter installed");
-
 	else if (!(filters[nr_filt] = regex_filter_create(cn->v))) {
 		log_error("Failed to create regex device filter");
 		goto bad;
@@ -867,16 +859,23 @@ static struct dev_filter *_init_filter_components(struct cmd_context *cmd)
 	}
 	nr_filt++;
 
+	/* mpath component filter. Optional, non-critical. */
+	if (find_config_tree_bool(cmd, devices_multipath_component_detection_CFG, NULL)) {
+		if ((filters[nr_filt] = mpath_filter_create(cmd->dev_types)))
+			nr_filt++;
+	}
+
+	/* partitioned device filter. Required. */
+	if (!(filters[nr_filt] = partitioned_filter_create(cmd->dev_types))) {
+		log_error("Failed to create partitioned device filter");
+		goto bad;
+	}
+	nr_filt++;
+
 	/* md component filter. Optional, non-critical. */
 	if (find_config_tree_bool(cmd, devices_md_component_detection_CFG, NULL)) {
 		init_md_filtering(1);
 		if ((filters[nr_filt] = md_filter_create(cmd->dev_types)))
-			nr_filt++;
-	}
-
-	/* mpath component filter. Optional, non-critical. */
-	if (find_config_tree_bool(cmd, devices_multipath_component_detection_CFG, NULL)) {
-		if ((filters[nr_filt] = mpath_filter_create(cmd->dev_types)))
 			nr_filt++;
 	}
 
@@ -888,6 +887,7 @@ static struct dev_filter *_init_filter_components(struct cmd_context *cmd)
 		goto_bad;
 
 	return composite;
+
 bad:
 	while (--nr_filt >= 0)
 		 filters[nr_filt]->destroy(filters[nr_filt]);

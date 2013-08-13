@@ -66,7 +66,8 @@ SOURCES =\
 	filters/filter-sysfs.c \
 	filters/filter-md.c \
 	filters/filter-mpath.c \
-	filters/filter.c \
+	filters/filter-partitioned.c \
+	filters/filter-type.c \
 	format_text/archive.c \
 	format_text/archiver.c \
 	format_text/export.c \

@@ -14,7 +14,7 @@
  */
 
 #include "lib.h"
-#include "filter-md.h"
+#include "filter.h"
 
 #ifdef linux
 
@@ -63,6 +63,8 @@ struct dev_filter *md_filter_create(struct dev_types *dt)
 	f->destroy = _destroy;
 	f->use_count = 0;
 	f->private = dt;
+
+	log_debug_devs("MD filter initialised.");
 
 	return f;
 }

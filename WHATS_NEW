@@ -1,5 +1,8 @@
 Version 2.02.101 - 
 ===================================
+  Move mpath device filter before partitioned filter (which opens devices).
+  Split partitioned filter out of lvm_type filter.
+  Merge filter*.h into a single filter.h.
   Require confirmation for vgchange -c when no VGs listed explicitly.
   Also skip /var and /var/log by default in blkdeactivate when unmounting.
   Add support for bind mounts in blkdeactivate.

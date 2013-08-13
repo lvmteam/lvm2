@@ -13,7 +13,7 @@
  */
 
 #include "lib.h"
-#include "filter-mpath.h"
+#include "filter.h"
 #include "activate.h"
 
 #ifdef linux
@@ -227,6 +227,8 @@ struct dev_filter *mpath_filter_create(struct dev_types *dt)
 	f->destroy = _destroy;
 	f->use_count = 0;
 	f->private = dt;
+
+	log_debug_devs("mpath filter initialised.");
 
 	return f;
 }
