@@ -1,5 +1,5 @@
-Version 1.02.79 -
-================================
+Version 1.02.79 - 13th August 2013
+==================================
   Create dmeventd timeout threads as "detached" so exit status is freed.
   Add DM_ABORT_ON_INTERNAL_ERRORS env var support to abort on internal errors.
 

@@ -1,17 +1,18 @@
-Version 2.02.100 -
-================================
+Version 2.02.100 - 13th August 2013
+===================================
   Fix inability to remove a VG's cluster flag if it contains a mirror.
   Suppress arg: prefix in log_sys_error macro when arg is empty string.
   Fix bug making lvchange unable to change recovery rate for RAID.
   Prohibit conversion of thin pool to external origin.
   Workaround gcc v4.8 -O2 bug causing failures if config/checks=1 (32bit arch).
   Verify clvmd message validity before processing and log error if incorrect.
-  Fix issue preventing PV creation on mirror LVs
+  When creating PV on existing LV don't forbid reserved LV names on LVs below.
+  Split out device_is_suspended_or_blocking from device_is_usable.
   When converting mirrors, default segtype should be the same unless specified.
   Make "raid1" the default mirror segment type.
   Fix clogd descriptor leak when daemonizing.
   Fix clvmd descriptor leak on restart.
-  Add pipe_open/close() to replace less secure popen() glibc call.
+  Add pipe_open/close() to use instead of less efficient/secure popen().
   Fix metadata area offset/size overflow if it's >= 4g and while using lvmetad.
   Inherit and apply any profile attached to a VG if creating new thin pool.
   Add initial support thin pool lvconvert --repair.
