@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (C) 2012 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2012-2013 Red Hat, Inc. All rights reserved.
 #
 # This file is part of LVM2.
 #
@@ -36,10 +36,19 @@ UMOUNT="/bin/umount"
 DMSETUP="@sbindir@/dmsetup"
 LVM="@sbindir@/lvm"
 
+UMOUNT_OPTS=""
+DMSETUP_OPTS=""
+LVM_OPTS=""
+
 LSBLK="/bin/lsblk -r --noheadings -o TYPE,KNAME,NAME,MOUNTPOINT"
 LSBLK_VARS="local devtype local kname local name local mnt"
 LSBLK_READ="read -r devtype kname name mnt"
 SORT_MNT="/bin/sort -r -u -k 4"
+
+# Do not show tool errors by default (only done/skipping summary
+# message provided by this script) and no verbose mode by default.
+ERRORS=0
+VERBOSE=0
 
 # Do not unmount mounted devices by default.
 DO_UMOUNT=0
@@ -72,6 +81,7 @@ declare -A SKIP_VG_LIST=()
 declare -A SKIP_UMOUNT_LIST=(["/"]=1 ["/boot"]=1 \
                              ["/lib"]=1 ["/lib64"]=1 \
                              ["/bin"]=1 ["/sbin"]=1 \
+                             ["/var"]=1 ["/var/log"]=1 \
                              ["/usr"]=1 \
                              ["/usr/lib"]=1 ["/usr/lib64"]=1 \
                              ["/usr/sbin"]=1 ["/usr/bin"]=1)
@@ -87,10 +97,12 @@ usage() {
 	echo "      If devices are specified, deactivate only supplied devices and their holders."
 	echo
 	echo "  Options:"
+	echo "    -e | --errors                Show errors reported from tools"
 	echo "    -h | --help                  Show this help message"
 	echo "    -d | --dmoption  DM_OPTIONS  Comma separated DM specific options"
 	echo "    -l | --lvmoption LVM_OPTIONS Comma separated LVM specific options"
 	echo "    -u | --umount                Unmount the device if mounted"
+	echo "    -v | --verbose               Verbose mode (also implies -e)"
 	echo
 	echo "  Device specific options:"
 	echo "    DM_OPTIONS:"
@@ -126,8 +138,13 @@ device_umount () {
 	test "$devtype" != "lvm" && test "${kname:0:3}" != "dm-" && return 0
 
 	if test -z "${SKIP_UMOUNT_LIST["$mnt"]}" -a "$DO_UMOUNT" -eq "1"; then
-		echo "  UMOUNT: unmounting $name ($kname) mounted on $mnt"
-		$UMOUNT "$(printf $mnt)" || add_device_to_skip_list
+		echo -n "  [UMOUNT]: unmounting $name ($kname) mounted on $mnt... "
+		if eval $UMOUNT $UMOUNT_OPTS "$(printf $mnt)" $OUT $ERR; then
+			echo "done"
+		else
+			echo "skipping"
+			add_device_to_skip_list
+		fi
 	else
 		echo "  [SKIP]: unmount of $name ($kname) mounted on $mnt"
 		add_device_to_skip_list
@@ -158,44 +175,56 @@ deactivate_dm () {
 
 	deactivate_holders "$DEV_DIR/mapper/$name" || return 1
 
-	echo "  DM: deactivating $devtype device $name ($kname)"
-	$DMSETUP $DMSETUP_OPTS remove "$name" || add_device_to_skip_list
+	echo -n "  [DM]: deactivating $devtype device $name ($kname)... "
+	if eval $DMSETUP $DMSETUP_OPTS remove "$name" $OUT $ERR; then
+		echo "done"
+	else
+		echo "skipping"
+		add_device_to_skip_list
+	fi
 }
 
 deactivate_lvm () {
 	local DM_VG_NAME; local DM_LV_NAME; local DM_LV_LAYER
 
-	eval $($DMSETUP splitname --nameprefixes --noheadings --rows "$name" LVM)
+	eval $(eval $DMSETUP splitname --nameprefixes --noheadings --rows "$name" LVM $ERR)
 	test -b "$DEV_DIR/$DM_VG_NAME/$DM_LV_NAME" || return 0
 	test -z ${SKIP_VG_LIST["$DM_VG_NAME"]} || return 1
 
-	# Deactivating only the LV specified
-	test $LVM_DO_WHOLE_VG -eq 0 && {
+	if test $LVM_DO_WHOLE_VG -eq 0; then
+		# Deactivating only the LV specified
 		deactivate_holders "$DEV_DIR/$DM_VG_NAME/$DM_LV_NAME" || {
 			add_device_to_skip_list
 			return 1
 		}
 
-		echo "  LVM: deactivating Logical Volume $DM_VG_NAME/$DM_LV_NAME"
-		$LVM lvchange --config "log{prefix=\"\"} $LVM_CONFIG" -aln $DM_VG_NAME/$DM_LV_NAME || {
+		echo -n "  [LVM]: deactivating Logical Volume $DM_VG_NAME/$DM_LV_NAME... "
+		if eval $LVM lvchange $LVM_OPTS --config \'log{prefix=\"\"} $LVM_CONFIG\' -aln $DM_VG_NAME/$DM_LV_NAME $OUT $ERR; then
+			echo "done"
+		else
+			echo "skipping"
 			add_device_to_skip_list
-			return 1
-		}
-		return 0
-	}
+		fi
 
-	# Deactivating the whole VG the LV is part of
-	lv_list=$($LVM vgs --config "$LVM_CONFIG" --noheadings --rows -o lv_name $DM_VG_NAME)
-	for lv in $lv_list; do
-		test -b "$DEV_DIR/$DM_VG_NAME/$lv" || continue
-		deactivate_holders "$DEV_DIR/$DM_VG_NAME/$lv" || {
+	else
+		# Deactivating the whole VG the LV is part of
+		lv_list=$(eval $LVM vgs --config "$LVM_CONFIG" --noheadings --rows -o lv_name $DM_VG_NAME $ERR)
+		for lv in $lv_list; do
+			test -b "$DEV_DIR/$DM_VG_NAME/$lv" || continue
+			deactivate_holders "$DEV_DIR/$DM_VG_NAME/$lv" || {
+				add_vg_to_skip_list
+				return 1
+			}
+		done
+
+		echo -n "  [LVM]: deactivating Volume Group $DM_VG_NAME... "
+		if eval $LVM vgchange $LVM_OPTS --config \'log{prefix=\"    \"} $LVM_CONFIG\' -aln $DM_VG_NAME $OUT $ERR; then
+			echo "done"
+		else
+			echo "skipping"
 			add_vg_to_skip_list
-			return 1
-		}
-	done
-
-	echo "  LVM: deactivating Volume Group $DM_VG_NAME"
-	$LVM vgchange --config "log{prefix=\"    \"} $LVM_CONFIG" -aln $DM_VG_NAME || add_vg_to_skip_list
+		fi
+	fi
 }
 
 deactivate () {
@@ -316,16 +345,37 @@ get_lvmopts() {
 	IFS=$ORIG_IFS
 }
 
+set_env() {
+	if test "$ERRORS" -eq "1"; then
+		unset ERR
+	else
+		ERR="2>$DEV_DIR/null"
+	fi
+
+	if test "$VERBOSE" -eq "1"; then
+		unset OUT
+		UMOUNT_OPTS+="-v"
+		DMSETUP_OPTS+="-vvvv"
+		LVM_OPTS+="-vvvv"
+	else
+		OUT="1>$DEV_DIR/null"
+	fi
+}
+
 while test $# -ne 0; do
 	case "$1" in
 		"") ;;
+		"-e"|"--errors") ERRORS=1 ;;
 		"-h"|"--help") usage ;;
 		"-d"|"--dmoption ") get_dmopts "$2" ; shift ;;
 		"-l"|"--lvmoption ") get_lvmopts "$2" ; shift ;;
 		"-u"|"--umount") DO_UMOUNT=1 ;;
+		"-v"|"--verbose") VERBOSE=1 ; ERRORS=1 ;;
+		"-vv") VERBOSE=1 ; ERRORS=1 ; set -x ;;
 		*) break ;;
 	esac
 	shift
 done
 
+set_env
 deactivate_all "$@"

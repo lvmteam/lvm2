@@ -15,11 +15,18 @@ LVM volumes are handled directly using the \fIlvm\fP command.
 Other device-mapper based devices are handled using the
 \fIdmsetup\fP command.
 .SH OPTIONS
+.IP "\fB\-e, \-\-errors\fP"
+Show errors reported from tools called by blkdeactivate.
+Without this option, any error messages from these external tools
+are suppressed and the blkdeactivate itself provides only a summary
+message about device being skipped or not.
 .IP "\fB\-h, \-\-help\fP"
 Display the help text.
 .IP "\fB\-u, \-\-umount\fP"
 Unmount a mounted device before trying to deactivate it.
 Without this option used, a device that is mounted is not deactivated.
+.IP "\fB\-v, \-\-verbose\fP"
+Run in verbose mode.
 .IP "\fB\-d, \-\-dmoption\fP \fIdm_options\fP"
 Comma separated list of device-mapper specific options.
 .IP "\fB\-l, \-\-lvmoption\fP \fIlvm_options\fP"
