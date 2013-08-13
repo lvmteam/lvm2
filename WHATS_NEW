@@ -1,5 +1,6 @@
 Version 2.02.101 - 
 ===================================
+  Require confirmation for vgchange -c when no VGs listed explicitly.
   Also skip /var and /var/log by default in blkdeactivate when unmounting.
   Add support for bind mounts in blkdeactivate.
   Add blkdeactivate -v/--verbose for debug output from external tools used.

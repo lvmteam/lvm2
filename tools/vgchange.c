@@ -623,6 +623,12 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_PROCESSED;
 	}
 
+	if (arg_count(cmd, clustered_ARG) && !argc && !arg_count(cmd, yes_ARG) &&
+	    (yes_no_prompt("Change clustered property of all volumes groups? [y/n]: ") == 'n')) {
+		log_error("No volume groups changed.");
+		return ECMD_FAILED;
+	}
+
 	if (!update || !update_partial_unsafe)
 		cmd->handles_missing_pvs = 1;
 
