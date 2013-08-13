@@ -1,5 +1,6 @@
 Version 2.02.101 - 
 ===================================
+  Add support for bind mounts in blkdeactivate.
   Add blkdeactivate -v/--verbose for debug output from external tools used.
   Add blkdeactivate -e/--errors for error messages from external tools used.
   Suppress messages from external tools called in blkdeactivate by default.

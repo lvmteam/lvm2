@@ -36,7 +36,13 @@ UMOUNT="/bin/umount"
 DMSETUP="@sbindir@/dmsetup"
 LVM="@sbindir@/lvm"
 
-UMOUNT_OPTS=""
+if $UMOUNT --help | grep -- "--all-targets" >$DEV_DIR/null; then
+	UMOUNT_OPTS="--all-targets "
+else
+	UMOUNT_OPTS=""
+	FINDMNT="/bin/findmnt -r --noheadings -u -o TARGET"
+	FINDMNT_READ="read -r mnt"
+fi
 DMSETUP_OPTS=""
 LVM_OPTS=""
 
@@ -132,10 +138,8 @@ is_top_level_device() {
 	test -z "$files"
 }
 
-device_umount () {
-	test -z "$mnt" && return 0;
-
-	test "$devtype" != "lvm" && test "${kname:0:3}" != "dm-" && return 0
+device_umount_one() {
+	test -z "$mnt" && return 0
 
 	if test -z "${SKIP_UMOUNT_LIST["$mnt"]}" -a "$DO_UMOUNT" -eq "1"; then
 		echo -n "  [UMOUNT]: unmounting $name ($kname) mounted on $mnt... "
@@ -149,6 +153,22 @@ device_umount () {
 		echo "  [SKIP]: unmount of $name ($kname) mounted on $mnt"
 		add_device_to_skip_list
 	fi
+}
+
+device_umount() {
+	test "$devtype" != "lvm" && test "${kname:0:3}" != "dm-" && return 0
+
+	# FINDMNT is defined only if umount --all-targets is not available.
+	# In that case, read the list of multiple mount points of one device
+	# using FINDMNT and unmount it one by one manually.
+	if test -z "$FINDMNT"; then
+		device_umount_one
+	else
+		while $FINDMNT_READ; do
+			device_umount_one || return 1
+		done <<< "`$FINDMNT $DEV_DIR/$kname`"
+	fi
+
 }
 
 deactivate_holders () {
