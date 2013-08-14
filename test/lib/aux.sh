@@ -345,6 +345,7 @@ prepare_devs() {
 disable_dev() {
 	local dev
 
+	udev_wait
 	init_udev_transaction
 	for dev in "$@"; do
 		maj=$(($(stat --printf=0x%t "$dev")))
