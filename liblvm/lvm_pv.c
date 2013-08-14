@@ -65,6 +65,7 @@ struct lvm_property_value lvm_pvseg_get_property(const pvseg_t pvseg,
 struct lvm_list_wrapper
 {
 	unsigned long magic;
+	struct cmd_context *cmd;
 	struct dm_list pvslist;
 	struct dm_list vgslist;
 };
@@ -84,6 +85,11 @@ struct dm_list *lvm_list_pvs(lvm_t libh)
 	struct lvm_list_wrapper *rc = NULL;
 	struct cmd_context *cmd = (struct cmd_context *)libh;
 
+	/*
+	 * This memory will get cleared when the library handle
+	 * gets closed, don't try to free is as it doesn't work
+	 * like malloc/free do.
+	 */
 	if (!(rc = dm_pool_zalloc(cmd->mem, sizeof(*rc)))) {
 		log_errno(ENOMEM, "Memory allocation fail for pv list.");
 		return NULL;
@@ -95,9 +101,14 @@ struct dm_list *lvm_list_pvs(lvm_t libh)
 		dm_list_init(&rc->pvslist);
 		dm_list_init(&rc->vgslist);
 		if( !get_pvs_perserve_vg(cmd, &rc->pvslist, &rc->vgslist) ) {
-			dm_pool_free(cmd->mem, rc);
 			return NULL;
 		}
+
+		/*
+		 * If we have no PVs we still need to have access to cmd
+		 * pointer in the free call.
+		 */
+		rc->cmd = cmd;
 		rc->magic = 0xF005BA11;
 	}
 
@@ -109,7 +120,6 @@ int lvm_list_pvs_free(struct dm_list *pvlist)
 	struct lvm_list_wrapper *to_delete;
 	struct vg_list *vgl;
 	struct pv_list *pvl;
-	struct cmd_context *cmd = NULL;
 
 	if (pvlist) {
 		to_delete = dm_list_struct_base(pvlist, struct lvm_list_wrapper, pvslist);
@@ -119,17 +129,14 @@ int lvm_list_pvs_free(struct dm_list *pvlist)
 		}
 
 		dm_list_iterate_items(vgl, &to_delete->vgslist) {
-			cmd = vgl->vg->cmd;
 			release_vg(vgl->vg);
 		}
 
 		dm_list_iterate_items(pvl, &to_delete->pvslist)
 			free_pv_fid(pvl->pv);
 
-		unlock_vg(cmd, VG_GLOBAL);
-
+		unlock_vg(to_delete->cmd, VG_GLOBAL);
 		to_delete->magic = 0xA5A5A5A5;
-		dm_pool_free(cmd->mem, to_delete);
 	}
 
 	return 0;
