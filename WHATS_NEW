@@ -1,5 +1,6 @@
 Version 2.02.101 - 
 ===================================
+  Fix vgck to notice on-disk corruption even if lvmetad is used.
   Move mpath device filter before partitioned filter (which opens devices).
   Split partitioned filter out of lvm_type filter.
   Merge filter*.h into a single filter.h.
