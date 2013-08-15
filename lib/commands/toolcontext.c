@@ -879,10 +879,6 @@ static struct dev_filter *_init_filter_components(struct cmd_context *cmd)
 			nr_filt++;
 	}
 
-	/* Only build a composite filter if we really need it. */
-	if (nr_filt == 1)
-		return filters[0];
-
 	if (!(composite = composite_filter_create(nr_filt, filters)))
 		goto_bad;
 

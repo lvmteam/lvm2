@@ -111,6 +111,7 @@ int exec_cmd(struct cmd_context *cmd, const char *const argv[],
 static int _reopen_fd_to_null(int fd)
 {
 	int null_fd;
+	int r = 0;
 
 	if ((null_fd = open("/dev/null", O_RDWR)) == -1) {
 		log_sys_error("open", "/dev/null");
@@ -119,20 +120,22 @@ static int _reopen_fd_to_null(int fd)
 
 	if (close(fd)) {
 		log_sys_error("close", "");
-		return 0;
+		goto out;
 	}
 
 	if (dup2(null_fd, fd) == -1) {
 		log_sys_error("dup2", "");
-		return 0;
+		goto out;
 	}
 
+	r = 1;
+out:
 	if (close(null_fd)) {
 		log_sys_error("dup2", "");
 		return 0;
 	}
 
-	return 1;
+	return r;
 }
 
 FILE *pipe_open(struct cmd_context *cmd, const char *const argv[],

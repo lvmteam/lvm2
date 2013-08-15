@@ -1133,11 +1133,6 @@ static int verify_message(char *buf, int len)
 		return -1;
 	}
 
-	if (h->clientid < 0) {
-		log_error("verify_message bad clientid %x", h->clientid);
-		return -1;
-	}
-
 	if (h->arglen > max_cluster_message) {
 		log_error("verify_message bad arglen %x max %d", h->arglen, max_cluster_message);
 		return -1;
