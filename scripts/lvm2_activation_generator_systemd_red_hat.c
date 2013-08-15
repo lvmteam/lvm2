@@ -22,6 +22,7 @@
 #include <fcntl.h>
 #include <limits.h>		/* For PATH_MAX for musl libc */
 #include "lvm2app.h"
+#include "configure.h"		/* for LVM_PATH */
 
 #define KMSG_DEV_PATH        "/dev/kmsg"
 #define LVM_CONF_USE_LVMETAD "global/use_lvmetad"
@@ -150,7 +151,7 @@ static int generate_unit(const char *dir, int unit)
 		      "[Service]\n", f);
 	}
 
-	fputs("ExecStart=/usr/sbin/lvm vgchange -aay --sysinit\n"
+	fputs("ExecStart=" LVM_PATH " vgchange -aay --sysinit\n"
 	      "Type=oneshot\n", f);
 
 	if (fclose(f) < 0) {

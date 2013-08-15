@@ -1,5 +1,6 @@
 Version 2.02.101 - 
 ===================================
+  Use LVM_PATH instead of hardcoded value in lvm2 activation systemd generator.
   Refresh existing VG before autoactivation (event retrigger/device reappeared).
   Fix vgck to notice on-disk corruption even if lvmetad is used.
   Move mpath device filter before partitioned filter (which opens devices).
