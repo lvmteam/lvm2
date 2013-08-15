@@ -880,7 +880,7 @@ int dm_prepare_selinux_context(const char *path, mode_t mode)
 		log_debug_activation("Resetting SELinux context to default value.");
 
 	if (setfscreatecon(scontext) < 0) {
-		log_sys_error("setfscreatecon", path ? : "SELinux context reset");
+		log_sys_error("setfscreatecon", (path ? : "SELinux context reset"));
 		freecon(scontext);
 		return 0;
 	}
