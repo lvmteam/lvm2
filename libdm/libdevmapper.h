@@ -187,6 +187,7 @@ const char *dm_task_get_uuid(const struct dm_task *dmt);
 
 struct dm_deps *dm_task_get_deps(struct dm_task *dmt);
 struct dm_versions *dm_task_get_versions(struct dm_task *dmt);
+const char *dm_task_get_message_response(struct dm_task *dmt);
 
 /*
  * These functions return device-mapper names based on the value

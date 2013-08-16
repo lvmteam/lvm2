@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2012 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2013 Red Hat, Inc. All rights reserved.
  *
  * This file is part of the device-mapper userspace tools.
  *
@@ -698,6 +698,29 @@ struct dm_versions *dm_task_get_versions(struct dm_task *dmt)
 {
 	return (struct dm_versions *) (((char *) dmt->dmi.v4) +
 				       dmt->dmi.v4->data_start);
+}
+
+const char *dm_task_get_message_response(struct dm_task *dmt)
+{
+	const char *start, *end;
+
+	if (!(dmt->dmi.v4->flags & DM_DATA_OUT_FLAG))
+		return NULL;
+
+	start = (const char *) dmt->dmi.v4 + dmt->dmi.v4->data_start;
+	end = (const char *) dmt->dmi.v4 + dmt->dmi.v4->data_size;
+
+	if (end < start) {
+		log_error(INTERNAL_ERROR "Corrupted message structure returned: start %d > end %d", (int)dmt->dmi.v4->data_start, (int)dmt->dmi.v4->data_size);
+		return NULL;
+	}
+
+	if (!memchr(start, 0, end - start)) {
+		log_error(INTERNAL_ERROR "Message response doesn't contain terminating NUL character");
+		return NULL;
+	}
+
+	return start;
 }
 
 int dm_task_set_ro(struct dm_task *dmt)
@@ -1867,6 +1890,7 @@ repeat_ioctl:
 		case DM_DEVICE_STATUS:
 		case DM_DEVICE_TABLE:
 		case DM_DEVICE_WAITEVENT:
+		case DM_DEVICE_TARGET_MSG:
 			_ioctl_buffer_double_factor++;
 			_dm_zfree_dmi(dmi);
 			goto repeat_ioctl;

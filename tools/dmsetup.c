@@ -770,6 +770,7 @@ static int _message(CMD_ARGS)
 	size_t sz = 1;
 	struct dm_task *dmt;
 	char *str;
+	const char *response;
 
 	if (!(dmt = dm_task_create(DM_DEVICE_TARGET_MSG)))
 		return 0;
@@ -825,6 +826,13 @@ static int _message(CMD_ARGS)
 
 	if (!dm_task_run(dmt))
 		goto out;
+
+	if ((response = dm_task_get_message_response(dmt))) {
+		if (!*response || response[strlen(response) - 1] == '\n')
+			fputs(response, stdout);
+		else
+			puts(response);
+	}
 
 	r = 1;
 

@@ -1,5 +1,7 @@
 Version 1.02.80 - 
 ==================================
+  Display any output returned by 'dmsetup message'.
+  Add dm_task_get_message_response to libdevmapper.
 
 Version 1.02.79 - 13th August 2013
 ==================================
