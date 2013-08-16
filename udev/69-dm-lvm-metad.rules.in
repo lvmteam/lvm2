@@ -21,7 +21,7 @@ SUBSYSTEM!="block", GOTO="lvm_end"
 ENV{ID_FS_TYPE}!="LVM2_member|LVM1_member", GOTO="lvm_end"
 
 ACTION=="remove", GOTO="lvm_scan"
-ACTION=="change", KERNEL=="md[0-9]*", GOTO="lvm_scan"
+ACTION=="change", KERNEL=="md[0-9]*|loop[0-9]*", GOTO="lvm_scan"
 
 # If the PV is not a dm device, scan only after device addition (ADD event)
 KERNEL!="dm-[0-9]*", ACTION!="add", GOTO="lvm_end"
