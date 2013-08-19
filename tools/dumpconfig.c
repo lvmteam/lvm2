@@ -188,7 +188,7 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 	}
 	else {
 		log_error("Incorrect type of configuration specified. "
-			  "Expected one of: current, default, missing, new.");
+			  "Expected one of: current, default, missing, new, profilable.");
 		r = EINVALID_CMD_LINE;
 		goto out;
 	}
