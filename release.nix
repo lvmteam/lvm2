@@ -164,6 +164,7 @@ let
          echo "%define check_commands \\";
          echo "make lcov-reset \\";
          echo "dmsetup targets\\";
+         echo "dmesg --console-level debug\\";
          echo "/usr/lib/systemd/systemd-udevd & \\";
          echo "LVM_TEST_DEVDIR=/dev make check T=${T} || touch \$out/nix-support/failed \\"
 	 echo "cp -R test/results /tmp/test-results \\"
