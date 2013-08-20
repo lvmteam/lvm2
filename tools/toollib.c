@@ -1821,8 +1821,12 @@ int process_each_label(struct cmd_context *cmd, int argc, char **argv, void *han
 				continue;
 			}
 
-			if (!label_read(dev, &label, 0))
+			if (!label_read(dev, &label, 0)) {
+				log_error("No physical volume label read from %s",
+					  argv[opt]);
+				ret_max = ECMD_FAILED;
 				continue;
+			}
 
 			ret = process_single_label(cmd, label, handle);
 
