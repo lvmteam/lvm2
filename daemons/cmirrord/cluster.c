@@ -25,7 +25,6 @@
 #if CMIRROR_HAS_CHECKPOINT
 #include <openais/saAis.h>
 #include <openais/saCkpt.h>
-#endif
 
 /* Open AIS error codes */
 #define str_ais_error(x)						\
@@ -57,6 +56,40 @@
 	((x) == SA_AIS_ERR_TOO_BIG) ? "SA_AIS_ERR_TOO_BIG" :		\
 	((x) == SA_AIS_ERR_NO_SECTIONS) ? "SA_AIS_ERR_NO_SECTIONS" :	\
 	"ais_error_unknown"
+#else
+#define str_ais_error(x)						\
+	((x) == CS_OK) ? "CS_OK" :				\
+	((x) == CS_ERR_LIBRARY) ? "CS_ERR_LIBRARY" :		\
+	((x) == CS_ERR_VERSION) ? "CS_ERR_VERSION" :		\
+	((x) == CS_ERR_INIT) ? "CS_ERR_INIT" :			\
+	((x) == CS_ERR_TIMEOUT) ? "CS_ERR_TIMEOUT" :		\
+	((x) == CS_ERR_TRY_AGAIN) ? "CS_ERR_TRY_AGAIN" :	\
+	((x) == CS_ERR_INVALID_PARAM) ? "CS_ERR_INVALID_PARAM" : \
+	((x) == CS_ERR_NO_MEMORY) ? "CS_ERR_NO_MEMORY" :	\
+	((x) == CS_ERR_BAD_HANDLE) ? "CS_ERR_BAD_HANDLE" :	\
+	((x) == CS_ERR_BUSY) ? "CS_ERR_BUSY" :			\
+	((x) == CS_ERR_ACCESS) ? "CS_ERR_ACCESS" :		\
+	((x) == CS_ERR_NOT_EXIST) ? "CS_ERR_NOT_EXIST" :	\
+	((x) == CS_ERR_NAME_TOO_LONG) ? "CS_ERR_NAME_TOO_LONG" : \
+	((x) == CS_ERR_EXIST) ? "CS_ERR_EXIST" :		\
+	((x) == CS_ERR_NO_SPACE) ? "CS_ERR_NO_SPACE" :		\
+	((x) == CS_ERR_INTERRUPT) ? "CS_ERR_INTERRUPT" :	\
+	((x) == CS_ERR_NAME_NOT_FOUND) ? "CS_ERR_NAME_NOT_FOUND" : \
+	((x) == CS_ERR_NO_RESOURCES) ? "CS_ERR_NO_RESOURCES" :	\
+	((x) == CS_ERR_NOT_SUPPORTED) ? "CS_ERR_NOT_SUPPORTED" : \
+	((x) == CS_ERR_BAD_OPERATION) ? "CS_ERR_BAD_OPERATION" : \
+	((x) == CS_ERR_FAILED_OPERATION) ? "CS_ERR_FAILED_OPERATION" : \
+	((x) == CS_ERR_MESSAGE_ERROR) ? "CS_ERR_MESSAGE_ERROR" : \
+	((x) == CS_ERR_QUEUE_FULL) ? "CS_ERR_QUEUE_FULL" :	\
+	((x) == CS_ERR_QUEUE_NOT_AVAILABLE) ? "CS_ERR_QUEUE_NOT_AVAILABLE" : \
+	((x) == CS_ERR_BAD_FLAGS) ? "CS_ERR_BAD_FLAGS" :	\
+	((x) == CS_ERR_TOO_BIG) ? "CS_ERR_TOO_BIG" :		\
+	((x) == CS_ERR_NO_SECTIONS) ? "CS_ERR_NO_SECTIONS" :	\
+	((x) == CS_ERR_CONTEXT_NOT_FOUND) ? "CS_ERR_CONTEXT_NOT_FOUND" : \
+	((x) == CS_ERR_TOO_MANY_GROUPS) ? "CS_ERR_TOO_MANY_GROUPS" : \
+	((x) == CS_ERR_SECURITY) ? "CS_ERR_SECURITY" : \
+	"cs_error_unknown"
+#endif
 
 #define _RQ_TYPE(x)							\
 	((x) == DM_ULOG_CHECKPOINT_READY) ? "DM_ULOG_CHECKPOINT_READY": \
@@ -803,6 +836,11 @@ static int import_checkpoint(struct clog_cpg *entry, int no_read,
 {
 	int bitmap_size;
 
+	if (no_read) {
+		LOG_DBG("Checkpoint for this log already received");
+		return 0;
+	}
+
 	bitmap_size = (rq->u_rq.data_size - RECOVERING_REGION_SECTION_SIZE) / 2;
 	if (bitmap_size < 0) {
 		LOG_ERROR("Checkpoint has invalid payload size.");
@@ -947,7 +985,8 @@ static int do_cluster_work(void *data __attribute__((unused)))
 	dm_list_iterate_items_safe(entry, tmp, &clog_cpg_list) {
 		r = cpg_dispatch(entry->handle, CS_DISPATCH_ALL);
 		if (r != CS_OK)
-			LOG_ERROR("cpg_dispatch failed: %d", r);
+			LOG_ERROR("cpg_dispatch failed: %s",
+				  str_ais_error(r));
 
 		if (entry->free_me) {
 			free(entry);
