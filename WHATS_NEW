@@ -1,5 +1,6 @@
 Version 2.02.101 - 
 ===================================
+  Remove "mpath major is not dm major" msg for mpath component scan (2.02.94).
   Prevent cluster mirror logs from being corrupted by redundant checkpoints.
   Fix ignored lvmetad update on loop device configuration (2.02.99).
   Use LVM_PATH instead of hardcoded value in lvm2 activation systemd generator.

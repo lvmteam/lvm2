@@ -181,11 +181,8 @@ static int dev_is_mpath(struct dev_filter *f, struct device *dev)
 	if (!get_sysfs_get_major_minor(sysfs_dir, parent_name, &major, &minor))
 		return_0;
 
-	if (major != dt->device_mapper_major) {
-		log_error("mpath major %d is not dm major %d.", major,
-			  dt->device_mapper_major);
+	if (major != dt->device_mapper_major)
 		return 0;
-	}
 
 	return lvm_dm_prefix_check(major, minor, MPATH_PREFIX);
 }
