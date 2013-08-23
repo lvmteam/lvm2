@@ -38,6 +38,16 @@ export TESTOLDPWD TESTDIR COMMON_PREFIX PREFIX RUNNING_DMEVENTD
 test -n "$BASH" && trap 'set +vx; STACKTRACE; set -vx' ERR
 trap 'aux teardown' EXIT # don't forget to clean up
 
+cd "$TESTDIR"
+
+if test -n "$LVM_TEST_FLAVOUR"; then
+	touch flavour_overrides
+	env | grep ^$LVM_TEST_FLAVOUR | while read var; do
+		(echo -n "export "; echo $var | sed -e s,^${LVM_TEST_FLAVOUR}_,,) >> flavour_overrides
+	done
+	. flavour_overrides
+fi
+
 DM_DEV_DIR="$TESTDIR/dev"
 LVM_SYSTEM_DIR="$TESTDIR/etc"
 mkdir "$LVM_SYSTEM_DIR" "$TESTDIR/lib" "$DM_DEV_DIR"
@@ -55,17 +65,7 @@ DM_ABORT_ON_INTERNAL_ERRORS=${DM_ABORT_ON_INTERNAL_ERRORS:-1}
 
 export DM_DEV_DIR LVM_SYSTEM_DIR DM_ABORT_ON_INTERNAL_ERRORS
 
-cd "$TESTDIR"
-
 echo "$TESTNAME" >TESTNAME
-
-if test -n "$LVM_TEST_FLAVOUR"; then
-	touch flavour_overrides
-	env | grep ^$LVM_TEST_FLAVOUR | while read var; do
-		(echo -n "export "; echo $var | sed -e s,^${LVM_TEST_FLAVOUR}_,,) >> flavour_overrides
-	done
-	. flavour_overrides
-fi
 
 # Setting up symlink from $i to $TESTDIR/lib
 find "$abs_top_builddir/daemons/dmeventd/plugins/" -name '*.so' \
