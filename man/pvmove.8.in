@@ -75,7 +75,8 @@ is updated so that the Logical Volumes reflect the new data locations.
 Note that this new process cannot support the original LVM1
 type of on-disk metadata.  Metadata can be converted using \fBvgconvert\fP(8).
 
-N.B. The moving of mirrors, snapshots and their origins is not yet supported.
+N.B. The moving of non-thinly provisioned snapshots and their
+origins is not supported.
 
 .SH OPTIONS
 See \fBlvm\fP(8) for common options.
@@ -109,7 +110,7 @@ To move all Physical Extents that are used by simple Logical Volumes on
 .sp
 .B pvmove /dev/sdb1
 .P
-Any mirrors, snapshots and their origins are left unchanged.
+Any non-thinly provisioned snapshots and their origins are left unchanged.
 .P
 Additionally, a specific destination device /dev/sdc1
 can be specified like this:

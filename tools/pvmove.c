@@ -135,6 +135,47 @@ static struct dm_list *_get_allocatable_pvs(struct cmd_context *cmd, int argc,
 }
 
 /*
+ * _trim_allocatable_pvs
+ * @alloc_list
+ * @trim_list
+ *
+ * Remove PVs in 'trim_list' from 'alloc_list'.
+ *
+ * Returns: 1 on success, 0 on error
+ */
+static int _trim_allocatable_pvs(struct dm_list *alloc_list,
+				 struct dm_list *trim_list,
+				 alloc_policy_t alloc)
+{
+	struct dm_list *pvht, *pvh, *trim_pvh;
+	struct pv_list *pvl, *trim_pvl;
+
+	if (!alloc_list) {
+		log_error(INTERNAL_ERROR "alloc_list is NULL");
+		return 0;
+	}
+
+	if (!trim_list || dm_list_empty(trim_list))
+		return 1; /* alloc_list stays the same */
+
+	dm_list_iterate_safe(pvh, pvht, alloc_list) {
+		pvl = dm_list_item(pvh, struct pv_list);
+
+		dm_list_iterate(trim_pvh, trim_list) {
+			trim_pvl = dm_list_item(trim_pvh, struct pv_list);
+
+			/* Don't allocate onto a trim PV */
+			if ((alloc != ALLOC_ANYWHERE) &&
+			    (pvl->pv == trim_pvl->pv)) {
+				dm_list_del(&pvl->list);
+				break;  /* goto next in alloc_list */
+			}
+		}
+	}
+	return 1;
+}
+
+/*
  * Replace any LV segments on given PV with temporary mirror.
  * Returns list of LVs changed.
  */
@@ -181,6 +222,7 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 	struct logical_volume *lv_mirr, *lv;
 	struct lv_segment *seg;
 	struct lv_list *lvl;
+	struct dm_list trim_list;
 	uint32_t log_count = 0;
 	int lv_found = 0;
 	int lv_skipped = 0;
@@ -204,7 +246,50 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 
 	dm_list_init(*lvs_changed);
 
-	/* Find segments to be moved and set up mirrors */
+	/*
+	 * First,
+	 * use top-level RAID and mirror LVs to build a list of PVs
+	 * that must be avoided during allocation.  This is necessary
+	 * to maintain redundancy of those targets, but it is also
+	 * sub-optimal.  Avoiding entire PVs in this way limits our
+	 * ability to find space for other segment types.  In the
+	 * majority of cases, however, this method will suffice and
+	 * in the cases where it does not, the user can issue the
+	 * pvmove on a per-LV basis.
+	 *
+	 * FIXME: Eliminating entire PVs places too many restrictions
+	 *        on allocation.
+	 */
+	dm_list_iterate_items(lvl, &vg->lvs) {
+		lv = lvl->lv;
+		if (lv == lv_mirr)
+			continue;
+
+		if (lv_name && strcmp(lv->name, lv_name))
+			continue;
+
+		if (!lv_is_on_pvs(lv, source_pvl))
+			continue;
+
+		if (seg_is_raid(first_seg(lv)) ||
+		    seg_is_mirrored(first_seg(lv))) {
+			dm_list_init(&trim_list);
+
+			if (!get_pv_list_for_lv(lv->vg->cmd->mem,
+						lv, &trim_list))
+				return_NULL;
+
+			if (!_trim_allocatable_pvs(allocatable_pvs,
+						   &trim_list, alloc))
+				return_NULL;
+		}
+	}
+
+	/*
+	 * Second,
+	 * use bottom-level LVs (like *_mimage_*, *_mlog, *_rmeta_*, etc)
+	 * to find segments to be moved and then set up mirrors.
+	 */
 	dm_list_iterate_items(lvl, &vg->lvs) {
 		lv = lvl->lv;
 		if (lv == lv_mirr)
@@ -214,38 +299,21 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 				continue;
 			lv_found = 1;
 		}
+
+		if (!lv_is_on_pvs(lv, source_pvl))
+			continue;
+
 		if (lv_is_origin(lv) || lv_is_cow(lv)) {
 			lv_skipped = 1;
 			log_print_unless_silent("Skipping snapshot-related LV %s", lv->name);
 			continue;
 		}
-		if (lv_is_raid_type(lv)) {
-			seg = first_seg(lv);
-			if (seg_is_raid(seg)) {
-				lv_skipped = 1;
-				log_print_unless_silent("Skipping %s LV %s",
-							seg->segtype->ops->name(seg),
-							lv->name);
-				continue;
-			}
-			lv_skipped = 1;
-			log_print_unless_silent("Skipping RAID sub-LV %s",
-						lv->name);
-			continue;
-		}
-		if (lv->status & MIRRORED) {
-			lv_skipped = 1;
-			log_print_unless_silent("Skipping mirror LV %s", lv->name);
-			continue;
-		}
-		if (lv->status & MIRROR_LOG) {
-			lv_skipped = 1;
-			log_print_unless_silent("Skipping mirror log LV %s", lv->name);
-			continue;
-		}
-		if (lv->status & MIRROR_IMAGE) {
-			lv_skipped = 1;
-			log_print_unless_silent("Skipping mirror image LV %s", lv->name);
+		seg = first_seg(lv);
+		if (seg_is_raid(seg) || seg_is_mirrored(seg)) {
+			/*
+			 * Pass over top-level LVs - they were handled.
+			 * Allow sub-LVs to proceed.
+			 */
 			continue;
 		}
 		if (lv_is_thin_volume(lv) || lv_is_thin_pool(lv)) {
