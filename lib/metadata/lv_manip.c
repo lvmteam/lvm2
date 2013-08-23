@@ -161,6 +161,80 @@ int lv_is_on_pvs(struct logical_volume *lv, struct dm_list *pvs)
 	return 0;
 }
 
+struct dm_list_and_mempool {
+	struct dm_list *list;
+	struct dm_pool *mem;
+};
+static int _get_pv_list_for_lv(struct cmd_context *cmd,
+			       struct logical_volume *lv, void *data)
+{
+	int dup_found;
+	uint32_t s;
+	struct pv_list *pvl;
+	struct lv_segment *seg;
+	struct dm_list *pvs = ((struct dm_list_and_mempool *)data)->list;
+	struct dm_pool *mem = ((struct dm_list_and_mempool *)data)->mem;
+
+	dm_list_iterate_items(seg, &lv->segments) {
+		for (s = 0; s < seg->area_count; s++) {
+			dup_found = 0;
+
+			if (seg_type(seg, s) != AREA_PV)
+				continue;
+
+			/* do not add duplicates */
+			dm_list_iterate_items(pvl, pvs)
+				if (pvl->pv == seg_pv(seg, s))
+					dup_found = 1;
+
+			if (dup_found)
+				continue;
+
+			if (!(pvl = dm_pool_zalloc(mem, sizeof(*pvl)))) {
+				log_error("Failed to allocate memory");
+				return 0;
+			}
+
+			pvl->pv = seg_pv(seg, s);
+			log_debug_metadata("  %s/%s uses %s", lv->vg->name,
+					   lv->name, pv_dev_name(pvl->pv));
+
+			dm_list_add(pvs, &pvl->list);
+		}
+	}
+
+	return 1;
+}
+
+/*
+ * get_pv_list_for_lv
+ * @mem - mempool to allocate the list from.
+ * @lv
+ * @pvs - The list to add pv_list items to.
+ *
+ * 'pvs' is filled with 'pv_list' items for PVs that compose the LV.
+ * If the 'pvs' list already has items in it, duplicates will not be
+ * added.  So, it is safe to repeatedly call this function for different
+ * LVs and build up a list of PVs for them all.
+ *
+ * Memory to create the list is obtained from the mempool provided.
+ *
+ * Returns: 1 on success, 0 on error
+ */
+int get_pv_list_for_lv(struct dm_pool *mem,
+		       struct logical_volume *lv, struct dm_list *pvs)
+{
+	struct dm_list_and_mempool context = { pvs, mem };
+
+	log_debug_metadata("Generating list of PVs that %s/%s uses:",
+			   lv->vg->name, lv->name);
+
+	if (!_get_pv_list_for_lv(lv->vg->cmd, lv, &context))
+		return_0;
+
+	return for_each_sub_lv(lv->vg->cmd, lv, &_get_pv_list_for_lv, &context);
+}
+
 /*
  * get_default_region_size
  * @cmd

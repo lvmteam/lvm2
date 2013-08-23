@@ -93,45 +93,6 @@ static int _activate_sublv_preserving_excl(struct logical_volume *top_lv,
 	return 1;
 }
 
-static int _get_pv_list_for_lv(struct logical_volume *lv, struct dm_list *pvs)
-{
-	uint32_t s;
-	struct pv_list *pvl;
-	struct lv_segment *seg = first_seg(lv);
-
-	if (!seg_is_linear(seg)) {
-		log_error(INTERNAL_ERROR
-			  "_get_pv_list_for_lv only handles linear volumes");
-		return 0;
-	}
-
-	log_debug_metadata("Getting list of PVs that %s/%s is on:",
-			   lv->vg->name, lv->name);
-
-	dm_list_iterate_items(seg, &lv->segments) {
-		for (s = 0; s < seg->area_count; s++) {
-			if (seg_type(seg, s) != AREA_PV) {
-				log_error(INTERNAL_ERROR
-					  "Linear seg_type should be AREA_PV");
-				return 0;
-			}
-
-			if (!(pvl = dm_pool_zalloc(lv->vg->cmd->mem,
-						   sizeof(*pvl)))) {
-				log_error("Failed to allocate memory");
-				return 0;
-			}
-
-			pvl->pv = seg_pv(seg, s);
-			log_debug_metadata("  %s/%s is on %s", lv->vg->name, lv->name,
-					   pv_dev_name(pvl->pv));
-			dm_list_add(pvs, &pvl->list);
-		}
-	}
-
-	return 1;
-}
-
 /*
  * _raid_in_sync
  * @lv
@@ -528,7 +489,8 @@ static int _alloc_rmeta_for_lv(struct logical_volume *data_lv,
 	if ((p = strstr(base_name, "_mimage_")))
 		*p = '\0';
 
-	if (!_get_pv_list_for_lv(data_lv, &allocatable_pvs)) {
+	if (!get_pv_list_for_lv(data_lv->vg->cmd->mem,
+				data_lv, &allocatable_pvs)) {
 		log_error("Failed to build list of PVs for %s/%s",
 			  data_lv->vg->name, data_lv->name);
 		return 0;
@@ -1147,7 +1109,8 @@ int lv_raid_split(struct logical_volume *lv, const char *split_name,
 			/* Ensure we only split the tracking image */
 			dm_list_init(&tracking_pvs);
 			splittable_pvs = &tracking_pvs;
-			if (!_get_pv_list_for_lv(tracking, splittable_pvs))
+			if (!get_pv_list_for_lv(tracking->vg->cmd->mem,
+						tracking, splittable_pvs))
 				return_0;
 		}
 	}

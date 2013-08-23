@@ -828,6 +828,8 @@ const char *find_vgname_from_pvid(struct cmd_context *cmd,
 
 int lv_is_on_pv(struct logical_volume *lv, struct physical_volume *pv);
 int lv_is_on_pvs(struct logical_volume *lv, struct dm_list *pvs);
+int get_pv_list_for_lv(struct dm_pool *mem,
+		       struct logical_volume *lv, struct dm_list *pvs);
 
 
 /* Find LV segment containing given LE */
