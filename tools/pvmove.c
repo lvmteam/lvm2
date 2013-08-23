@@ -309,20 +309,15 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 			continue;
 		}
 		seg = first_seg(lv);
-		if (seg_is_raid(seg) || seg_is_mirrored(seg)) {
+		if (seg_is_raid(seg) || seg_is_mirrored(seg) ||
+		    lv_is_thin_volume(lv) || lv_is_thin_pool(lv)) {
 			/*
 			 * Pass over top-level LVs - they were handled.
 			 * Allow sub-LVs to proceed.
 			 */
 			continue;
 		}
-		if (lv_is_thin_volume(lv) || lv_is_thin_pool(lv)) {
-			lv_skipped = 1;
-			log_print_unless_silent("Skipping thin%s LV %s",
-						lv_is_thin_pool(lv) ? "-pool" : "",
-						lv->name);
-			continue;
-		}
+
 		if (lv->status & LOCKED) {
 			lv_skipped = 1;
 			log_print_unless_silent("Skipping locked LV %s", lv->name);
