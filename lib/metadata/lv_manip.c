@@ -86,10 +86,18 @@ struct lv_names {
  * (or its metadata device) is on the PV, 1 would be returned for the
  * top-level LV.
  * If you wish to check the images themselves, you should pass them.
+ * Currently handles:
+ *  - linear
+ *  - stripe
+ *  - RAID
+ *  - mirror
+ *  - thin-pool
+ *  - thin
  *
  * FIXME:  This should be made more generic, possibly use 'for_each_sub_lv'.
  * 'for_each_sub_lv' does not yet allow us to short-circuit execution or
- * pass back the values we need yet though...
+ * pass back the values we need yet though (i.e. it only allows success or
+ * error - not true or false).
  *
  * Returns: 1 if LV (or part of LV) is on PV, 0 otherwise
  */
@@ -109,6 +117,20 @@ int lv_is_on_pv(struct logical_volume *lv, struct physical_volume *pv)
 	/* Check mirror log */
 	if (lv_is_on_pv(seg->log_lv, pv))
 		return 1;
+
+	/* Check thin-pool metadata area */
+	if (lv_is_on_pv(seg->metadata_lv, pv))
+		return 1;
+
+	/* Check thin volume's pool LV */
+	if (lv_is_on_pv(seg->pool_lv, pv))
+		return 1;
+
+	/*
+	 * Do _not_ check 'external_lv.  We wouldn't count an origin's
+	 * PVs as part of a snapshot, so we don't count external_origin's
+	 * PVs as part of a thin-snap/LV
+	 */
 
 	/* Check stack of LVs */
 	dm_list_iterate_items(seg, &lv->segments) {
