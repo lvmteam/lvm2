@@ -381,7 +381,7 @@ static void run(int i, char *f) {
 		FD_SET(fds[1], &master_set);
 		while ((w = wait4(pid, &st, WNOHANG, &usage)) == 0) {
 			if ((fullbuffer && fullbuffer++ == 8000) ||
-			    time(NULL) - start > 5) // a 2 minute timeout
+			    time(NULL) - start > 180) // a 3 minute timeout
 			{
 				system("echo t > /proc/sysrq-trigger");
 				kill(pid, SIGINT);
