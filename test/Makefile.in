@@ -77,6 +77,22 @@ check: .tests-stamp
 		      $(patsubst %,cluster:%,$(RUN_BASE)) \
 		      $(patsubst %,lvmetad:%,$(RUN_BASE))
 
+check_full: .tests-stamp
+	VERBOSE=$(VEROSE) \
+	cluster_LVM_TEST_LOCKING=3 \
+	scluster_LVM_TEST_LOCKING=3 \
+	lvmetad_LVM_TEST_LVMETAD=1 \
+	slvmetad_LVM_TEST_LVMETAD=1 \
+	snormal_LVM_TEST_DEVDIR=/dev \
+	scluster_LVM_TEST_DEVDIR=/dev \
+	slvmetad_LVM_TEST_DEVDIR=/dev \
+	./lib/harness $(patsubst %,normal:%,$(RUN_BASE)) \
+		      $(patsubst %,cluster:%,$(RUN_BASE)) \
+		      $(patsubst %,lvmetad:%,$(RUN_BASE)) \
+		      $(patsubst %,snormal:%,$(RUN_BASE)) \
+		      $(patsubst %,scluster:%,$(RUN_BASE)) \
+		      $(patsubst %,slvmetad:%,$(RUN_BASE))
+
 check_cluster: .tests-stamp
 	@echo Testing with locking_type 3
 	VERBOSE=$(VERBOSE) LVM_TEST_LOCKING=3 ./lib/harness $(RUN_BASE)
