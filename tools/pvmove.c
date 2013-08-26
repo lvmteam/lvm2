@@ -16,6 +16,7 @@
 #include "tools.h"
 #include "polldaemon.h"
 #include "display.h"
+#include "metadata.h"  /* for 'get_only_segment_using_this_lv' */
 
 #define PVMOVE_FIRST_TIME   0x00000001      /* Called for first time */
 #define PVMOVE_EXCLUSIVE    0x00000002      /* Require exclusive LV */
@@ -209,6 +210,29 @@ static int _insert_pvmove_mirrors(struct cmd_context *cmd,
 	return 1;
 }
 
+/*
+ * Is 'lv' a sub_lv of the LV by the name of 'lv_name'?
+ *
+ * Returns: 1 if true, 0 otherwise
+ */
+static int sub_lv_of(struct logical_volume *lv, const char *lv_name)
+{
+	struct lv_segment *seg;
+
+	/* Sub-LVs only ever have one segment using them */
+	if (dm_list_size(&lv->segs_using_this_lv) != 1)
+		return 0;
+
+	if (!(seg = get_only_segment_using_this_lv(lv)))
+		return_0;
+
+	if (!strcmp(seg->lv->name, lv_name))
+		return 1;
+
+	/* Continue up the tree */
+	return sub_lv_of(seg->lv, lv_name);
+}
+
 /* Create new LV with mirror segments for the required copies */
 static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 						struct volume_group *vg,
@@ -295,7 +319,7 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 		if (lv == lv_mirr)
 			continue;
 		if (lv_name) {
-			if (strcmp(lv->name, lv_name))
+			if (strcmp(lv->name, lv_name) && !sub_lv_of(lv, lv_name))
 				continue;
 			lv_found = 1;
 		}

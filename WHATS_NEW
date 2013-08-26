@@ -1,5 +1,6 @@
 Version 2.02.101 - 
 ===================================
+  Fix inability to specify LV name when pvmove'ing a RAID, mirror, or thin-LV.
   Inform lvmetad about any lost PV label to make it in sync with system state.
   Support most of lvchange operations on stacked thin pool meta/data LVs.
   Add ability to pvmove RAID, mirror, and thin volumes.
