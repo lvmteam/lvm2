@@ -295,6 +295,13 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 		if (!lv_is_on_pvs(lv, source_pvl))
 			continue;
 
+		if (lv->status & (CONVERTING | MERGING)) {
+			log_error("Unable to pvmove when %s volumes are present",
+				  (lv->status & CONVERTING) ?
+				  "converting" : "merging");
+			return NULL;
+		}
+
 		if (seg_is_raid(first_seg(lv)) ||
 		    seg_is_mirrored(first_seg(lv))) {
 			dm_list_init(&trim_list);
@@ -327,11 +334,6 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 		if (!lv_is_on_pvs(lv, source_pvl))
 			continue;
 
-		if (lv_is_origin(lv) || lv_is_cow(lv)) {
-			lv_skipped = 1;
-			log_print_unless_silent("Skipping snapshot-related LV %s", lv->name);
-			continue;
-		}
 		seg = first_seg(lv);
 		if (seg_is_raid(seg) || seg_is_mirrored(seg) ||
 		    lv_is_thin_volume(lv) || lv_is_thin_pool(lv)) {

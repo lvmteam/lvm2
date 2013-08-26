@@ -1,5 +1,7 @@
 Version 2.02.101 - 
 ===================================
+  Disable pvmove of merging or converting logical volumes.
+  Enable pvmove of snapshots and snapshot origins.
   Fix inability to specify LV name when pvmove'ing a RAID, mirror, or thin-LV.
   Inform lvmetad about any lost PV label to make it in sync with system state.
   Support most of lvchange operations on stacked thin pool meta/data LVs.
