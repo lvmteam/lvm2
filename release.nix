@@ -1,6 +1,6 @@
 { nixpkgs ? <nixpkgs>, lvm2Src, release ? false,
   rawhide32 ? "" , rawhide64 ? "" ,
-  fc19_32 ? "" , fc19_64 ? "",
+  fc19_32_updates ? "", fc19_64_updates ? "",
   fc18_32_updates ? "", fc18_64_updates ? "",
   lvm2Nix ? lvm2Src, T ? "" }:
 
@@ -68,6 +68,7 @@ let
       '') { inherit fedora; };
       update = version: arch: repodata: orig: orig // (import (pkgs.runCommand "updates-fedora.nix" {} ''
           sha=$(grep primary.xml ${repodata} | sed -re 's:.* ([0-9a-f]+)-primary.*:\1:')
+          echo fedora ${version} updates sha: $sha
           (echo 'fetchurl: orig: { packagesLists = [ orig.packagesList ('
            echo "fetchurl { "
            echo "  url = \"${fedora_update_url version arch}/repodata/$sha-primary.xml.gz\";"
@@ -79,8 +80,8 @@ let
     in {
       rawhidex86_64 = rawhide "rawhide" "x86_64" rawhide64;
       rawhidei386 = rawhide "rawhide" "i386" rawhide32;
-      fedora19x86_64 = rawhide "19" "x86_64" fc19_64;
-      fedora19i386 = rawhide "19" "i386" fc19_32;
+      fedora19ux86_64 = update "19" "x86_64" fc19_64_updates pkgs.vmTools.rpmDistros.fedora19x86_64;
+      fedora19ui386 = update "19" "i386" fc19_32_updates pkgs.vmTools.rpmDistros.fedora19i386;
       fedora18ux86_64 = update "18" "x86_64" fc18_64_updates pkgs.vmTools.rpmDistros.fedora18x86_64;
       fedora18ui386 = update "18" "i386" fc18_32_updates pkgs.vmTools.rpmDistros.fedora18i386;
 
@@ -133,6 +134,7 @@ let
                    "dlm" "systemd-devel" "perl-Digest-MD5" ];
       fedora18u = fedora18;
       fedora19 = [ "dlm-devel" "dlm" "corosynclib-devel" "perl-Digest-MD5" "systemd-devel" "procps-ng" ];
+      fedora19u = fedora19;
       rawhide = fedora19;
     };
 
@@ -197,7 +199,9 @@ let
     fc16_i386   = mkRPM { arch = "i386"  ; image = "fedora16"; };
 
     fc18u_x86_64 = mkRPM { arch = "x86_64"; image = "fedora18u"; };
-    fc18u_i386   = mkRPM { arch = "x86_64"; image = "fedora18u"; };
+    fc18u_i386   = mkRPM { arch = "i386"; image = "fedora18u"; };
+    fc19u_x86_64 = mkRPM { arch = "x86_64"; image = "fedora19u"; };
+    fc19u_i386   = mkRPM { arch = "i386"; image = "fedora19u"; };
 
     centos63_i386 = mkRPM { arch = "i386"  ; image = "centos63"; };
     centos63_x86_64 = mkRPM { arch = "x86_64" ; image = "centos63"; };
