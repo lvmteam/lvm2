@@ -1,6 +1,7 @@
 Version 2.02.101 - 
 ===================================
-  Require exactly 3 arguments for lvm2-activation-generator, remove defaults.
+  Avoid unlimited recursion when creating dtree containing inactive pvmove LV.
+  Require exactly 3 arguments for lvm2-activation-generator. Remove defaults.
   Disable pvmove of merging or converting logical volumes.
   Enable pvmove of snapshots and snapshot origins.
   Fix inability to specify LV name when pvmove'ing a RAID, mirror, or thin-LV.
