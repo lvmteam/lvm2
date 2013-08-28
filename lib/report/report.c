@@ -184,7 +184,7 @@ static int _pvfmt_disp(struct dm_report *rh, struct dm_pool *mem,
 	const struct label *l =
 	    (const struct label *) data;
 
-	if (!l->labeller->fmt) {
+	if (!l->labeller || !l->labeller->fmt) {
 		dm_report_field_set_value(field, "", NULL);
 		return 1;
 	}
