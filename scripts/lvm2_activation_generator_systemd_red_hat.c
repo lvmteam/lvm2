@@ -27,7 +27,6 @@
 #define KMSG_DEV_PATH        "/dev/kmsg"
 #define LVM_CONF_USE_LVMETAD "global/use_lvmetad"
 
-#define DEFAULT_UNIT_DIR      "/tmp"
 #define UNIT_TARGET_LOCAL_FS  "local-fs.target"
 #define UNIT_TARGET_REMOTE_FS "remote-fs.target"
 
@@ -174,8 +173,8 @@ int main(int argc, char *argv[])
 
 	kmsg_fd = open(KMSG_DEV_PATH, O_WRONLY|O_NOCTTY);
 
-	if (argc > 1 && argc != 4) {
-		kmsg(LOG_ERR, "LVM: Activation generator takes three or no arguments.\n");
+	if (argc != 4) {
+		kmsg(LOG_ERR, "LVM: Incorrect number of arguments for activation generator.\n");
 		r = EXIT_FAILURE; goto out;
 	}
 
@@ -183,7 +182,7 @@ int main(int argc, char *argv[])
 	if (lvm_uses_lvmetad())
 		goto out;
 
-	dir = argc > 1 ? argv[1] : DEFAULT_UNIT_DIR;
+	dir = argv[1];
 
 	if (!generate_unit(dir, UNIT_EARLY) ||
 	    !generate_unit(dir, UNIT_MAIN) ||
