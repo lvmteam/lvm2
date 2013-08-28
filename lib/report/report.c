@@ -727,10 +727,15 @@ static int _pvuuid_disp(struct dm_report *rh __attribute__((unused)), struct dm_
 	const struct label *label = (const struct label *) data;
 	char *repstr = NULL;
 
-	if (!(repstr = id_format_and_copy(mem, label->dev->pvid)))
-		return_0;
+	if (!label->dev)
+		dm_report_field_set_value(field, "", NULL);
+	else {
+		if (!(repstr = id_format_and_copy(mem, label->dev->pvid)))
+			return_0;
 
-	dm_report_field_set_value(field, repstr, NULL);
+		dm_report_field_set_value(field, repstr, NULL);
+	}
+
 	return 1;
 }
 
