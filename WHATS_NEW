@@ -1,5 +1,6 @@
 Version 2.02.101 - 
 ===================================
+  Don't assume stdin file descriptor is readable.
   Avoid unlimited recursion when creating dtree containing inactive pvmove LV.
   Require exactly 3 arguments for lvm2-activation-generator. Remove defaults.
   Disable pvmove of merging or converting logical volumes.
