@@ -35,6 +35,10 @@ The content of the tarball is as follows:
 - if enabled with \-a, debug output of vgscan, pvscan and list of all available volume groups, physical volumes and logical volumes will be included
 .br
 - if enabled with \-c, cluster status info
+.br
+- if enabled with \-l, lvmetad state if running
+.br
+- if enabled with \-u, udev info and context
 .SH OPTIONS
 .TP
 .B \-a
@@ -54,11 +58,24 @@ produce the raw dump tree, rooted in \fIdirectory\fP.
 .B \-h
 Print help message
 .TP
+.B \-l
+Include \fBlvmetad\fP(8) daemon dump if it is running. The dump contains
+cached information that is currently stored in lvmetad: VG metadata,
+PV metadata and various mappings in between these metadata for quick
+access.
+.TP
 .B \-m
 Gather LVM metadata from the PVs
 This option generates a 1:1 dump of the metadata area from all PVs visible
 to the system, which can cause the dump to increase in size considerably.
 However, the metadata dump may represent a valuable diagnostic resource.
+.TP
+.B \-u
+Gather udev info and context: /etc/udev/udev.conf file, udev daemon version
+(output of 'udevadm info --version' command), udev rules currently used in the system
+(content of /lib/udev/rules.d and /etc/udev/rules.d directory),
+list of files in /lib/udev directory and dump of current udev
+database content (the output of 'udevadm info --export-db' command).
 .SH ENVIRONMENT VARIABLES
 .TP
 \fBLVM_BINARY\fP
