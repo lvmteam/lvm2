@@ -8,7 +8,9 @@ lvmdump - create lvm2 information dumps for diagnostic purposes
 .RB [ \-d
 .IR directory ]
 .RB [ \-h ]
+.RB [ \-l ]
 .RB [ \-m ]
+.RB [ \-u ]
 .SH DESCRIPTION
 lvmdump is a tool to dump various information concerning LVM2.
 By default, it creates a tarball suitable for submission along
