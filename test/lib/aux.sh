@@ -342,6 +342,35 @@ prepare_devs() {
 	echo "ok"
 }
 
+# Replace linear PV device with its 'delayed' version
+# Could be used to more deterministicaly hit some problems.
+# Parameters: {device path} [read delay ms] [write delay ms]
+# Original device is restored when both delay params are 0 (or missing).
+# i.e.  delay_dev "$dev1" 0 200
+delay_dev() {
+	target_at_least dm-delay 1 2 0 || skip
+	local name=$(echo "$1" | sed -e 's,.*/,,')
+	local read_ms=${2:-0}
+	local write_ms=${3:-0}
+	local pos
+	local size
+	local type
+	local pvdev
+	local offset
+
+	read pos size type pvdev offset < "$name.table"
+
+	init_udev_transaction
+	if test $read_ms -ne 0 -o $write_ms -ne 0 ; then
+		echo "0 $size delay $pvdev $offset $read_ms $pvdev $offset $write_ms" | \
+			dmsetup load "$name"
+	else
+		dmsetup load "$name" "$name.table"
+	fi
+	dmsetup resume "$name"
+	finish_udev_transaction
+}
+
 disable_dev() {
 	local dev
 
