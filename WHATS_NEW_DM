@@ -1,5 +1,6 @@
 Version 1.02.80 - 
 ==================================
+  Do not allow passing empty new name for dmsetup rename.
   Display any output returned by 'dmsetup message'.
   Add dm_task_get_message_response to libdevmapper.
 

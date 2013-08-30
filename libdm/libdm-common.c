@@ -698,6 +698,11 @@ int dm_task_set_newname(struct dm_task *dmt, const char *newname)
 		return 0;
 	}
 
+	if (!*newname) {
+		log_error("Non empty new name is required.");
+		return 0;
+	}
+
 	if (!check_multiple_mangled_string_allowed(newname, "new name", mangling_mode))
 		return_0;
 
