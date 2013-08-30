@@ -15,6 +15,7 @@
 # TODO %global req_dm_persistent device-mapper-persistent-data >= 0.1.4
 %with thin internal
 %with thin_check %{_sbindir}/thin_check
+%with thin_repair %{_sbindir}/thin_repair
 
 %global buildreq_udev systemd-devel
 %global req_udev udev >= 181-1
@@ -33,6 +34,7 @@
 %global req_cluster openais >= 1.1.1-1, cman >= 3.0.6-1, corosync >= 1.2.0-1
 %with thin
 %with thin_check
+%with thin_repair
 %endif
 
 ##############################################################
