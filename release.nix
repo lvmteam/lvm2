@@ -30,7 +30,7 @@ let
      '';
    };
 
-  rootmods = [ "virtio_pci" "virtio_blk" "virtio_balloon" "ext4" "unix" "9p" "9pnet_virtio"
+  rootmods = [ "virtio_pci" "virtio_blk" "virtio_balloon" "ext4" "unix"
                "cifs" "virtio_net" "unix" "hmac" "md4" "ecb" "des_generic" "sha256" ];
 
   centos_url = ver: arch: "http://ftp.fi.muni.cz/pub/linux/centos/${ver}/os/${arch}/";
@@ -107,9 +107,9 @@ let
       };
     };
 
-  vm = pkgs: with pkgs.lib; rec {
+  vm = pkgs: xmods: with pkgs.lib; rec {
     tools = import "${nixpkgs}/pkgs/build-support/vm/default.nix" {
-      inherit pkgs; rootModules = rootmods ++
+      inherit pkgs; rootModules = rootmods ++ xmods ++
         [ "loop" "dm_mod" "dm_snapshot" "dm_mirror" "dm_zero" "dm_raid" "dm_thin_pool" ]; };
     release = import "${nixpkgs}/pkgs/build-support/release/default.nix" {
       pkgs = pkgs // { vmTools = tools; }; };
@@ -140,7 +140,8 @@ let
     };
 
   mkRPM = { arch, image }: with pkgs.lib;
-    let use = if eqStrings arch "i386" then vm pkgs.pkgsi686Linux else vm pkgs;
+    let use = vm (if eqStrings arch "i386" then pkgs.pkgsi686Linux else pkgs)
+                 (if eqStrings image "centos64" then [] else [ "9p" "9pnet_virtio" ]);
      in mkVM {
            VM = use.rpmbuild;
            diskFun = builtins.getAttr "${image}${arch}" use.imgs;
