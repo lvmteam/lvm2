@@ -13,7 +13,7 @@ let
      fullName = "LVM2";
      src = jobs.tarball;
      diskImage = diskFun { extraPackages = extras; };
-     memSize = 512;
+     memSize = 768;
      # fc16 lcov is broken and el6 has none... be creative
      prepareImagePhase = ''
       rpm -Uv ${pkgs.fetchurl {
