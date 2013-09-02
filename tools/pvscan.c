@@ -98,7 +98,6 @@ static int _auto_activation_handler(struct cmd_context *cmd,
 	struct volume_group *vg;
 	int consistent = 0;
 	struct id vgid_raw;
-	int r = 0;
 
 	/* TODO: add support for partial and clustered VGs */
 	if (partial)
@@ -107,29 +106,24 @@ static int _auto_activation_handler(struct cmd_context *cmd,
 	if (!id_read_format(&vgid_raw, vgid))
 		return_0;
 
-	/* NB. This is safe because we know lvmetad is running and we won't hit disk. */
+	/* NB. This is safe because we know lvmetad is running and we won't hit
+	 * disk. */
 	if (!(vg = vg_read_internal(cmd, NULL, (const char *) &vgid_raw, 0, &consistent)))
 	    return 1;
 
 	if (vg_is_clustered(vg)) {
-		r = 1; goto out;
-	}
-
-	if (!vg_refresh_visible(vg->cmd, vg)) {
-		log_error("%s: refresh before autoactivation failed.", vg->name);
-		goto out;
+		release_vg(vg);
+		return 1;
 	}
 
 	if (!vgchange_activate(vg->cmd, vg, activate)) {
 		log_error("%s: autoactivation failed.", vg->name);
-		goto out;
+		release_vg(vg);
+		return 0;
 	}
 
-	r = 1;
-
-out:
 	release_vg(vg);
-	return r;
+	return 1;
 }
 
 static int _pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
