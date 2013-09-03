@@ -691,50 +691,27 @@ int vg_extend(struct volume_group *vg, int pv_count, const char *const *pv_names
 	return 1;
 }
 
-/* FIXME: use this inside vgreduce_single? */
 int vg_reduce(struct volume_group *vg, const char *pv_name)
 {
 	struct physical_volume *pv;
 	struct pv_list *pvl;
 
-	if (_vg_bad_status_bits(vg, RESIZEABLE_VG))
-		return 0;
-
-	if (!archive(vg))
-		goto bad;
-
-	/* remove each pv */
 	if (!(pvl = find_pv_in_vg(vg, pv_name))) {
 		log_error("Physical volume %s not in volume group %s.",
 			  pv_name, vg->name);
-		goto bad;
+		return 0;
 	}
 
 	pv = pvl->pv;
 
-	if (pv_pe_alloc_count(pv)) {
-		log_error("Physical volume %s still in use.",
-			  pv_name);
-		goto bad;
+	if (vgreduce_single(vg->cmd, vg, pv, 0)) {
+		dm_list_add(&vg->removed_pvs, &pvl->list);
+		return 1;
 	}
 
-	if (!dev_get_size(pv_dev(pv), &pv->size)) {
-		log_error("%s: Couldn't get size.", pv_name);
-		goto bad;
-	}
-
-	vg->free_count -= pv_pe_count(pv) - pv_pe_alloc_count(pv);
-	vg->extent_count -= pv_pe_count(pv);
-	del_pvl_from_vgs(vg, pvl);
-
-	/* add pv to the remove_pvs list */
-	dm_list_add(&vg->removed_pvs, &pvl->list);
-
-	return 1;
-
-      bad:
 	log_error("Unable to remove physical volume '%s' from "
-		  "volume group '%s'.", pv_name, vg->name);
+				"volume group '%s'.", pv_name, vg->name);
+
 	return 0;
 }
 

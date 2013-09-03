@@ -576,7 +576,7 @@ char *vg_attr_dup(struct dm_pool *mem, const struct volume_group *vg)
 }
 
 int vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
-			    struct physical_volume *pv)
+			    struct physical_volume *pv, int commit)
 {
 	struct pv_list *pvl;
 	struct volume_group *orphan_vg = NULL;
@@ -637,25 +637,32 @@ int vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 		goto bad;
 	}
 
-	if (!vg_write(vg) || !vg_commit(vg)) {
-		log_error("Removal of physical volume \"%s\" from "
-			  "\"%s\" failed", name, vg->name);
-		goto bad;
+	/*
+	 * Only write out the needed changes if so requested by caller.
+	 */
+	if (commit) {
+		if (!vg_write(vg) || !vg_commit(vg)) {
+			log_error("Removal of physical volume \"%s\" from "
+				  "\"%s\" failed", name, vg->name);
+			goto bad;
+		}
+
+		if (!pv_write(cmd, pv, 0)) {
+			log_error("Failed to clear metadata from physical "
+				  "volume \"%s\" "
+				  "after removal from \"%s\"", name, vg->name);
+			goto bad;
+		}
+
+		backup(vg);
+
+		log_print_unless_silent("Removed \"%s\" from volume group \"%s\"",
+				name, vg->name);
 	}
-
-	if (!pv_write(cmd, pv, 0)) {
-		log_error("Failed to clear metadata from physical "
-			  "volume \"%s\" "
-			  "after removal from \"%s\"", name, vg->name);
-		goto bad;
-	}
-
-	backup(vg);
-
-	log_print_unless_silent("Removed \"%s\" from volume group \"%s\"", name, vg->name);
 	r = 1;
 bad:
-	if (pvl)
+	/* If we are committing here or we had an error then we will free fid */
+	if (pvl && (commit || r != 1))
 		free_pv_fid(pvl->pv);
 	unlock_and_release_vg(cmd, orphan_vg, VG_ORPHANS);
 	return r;

@@ -594,7 +594,7 @@ int vg_extend(struct volume_group *vg, int pv_count, const char *const *pv_names
 int vg_reduce(struct volume_group *vg, const char *pv_name);
 
 int vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
-			    struct physical_volume *pv);
+			    struct physical_volume *pv, int commit);
 
 int vg_change_tag(struct volume_group *vg, const char *tag, int add_tag);
 int vg_split_mdas(struct cmd_context *cmd, struct volume_group *vg_from,

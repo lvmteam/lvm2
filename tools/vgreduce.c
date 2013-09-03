@@ -125,7 +125,7 @@ static int _vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 			    struct physical_volume *pv,
 			    void *handle __attribute__((unused)))
 {
-	int r = vgreduce_single(cmd, vg, pv);
+	int r = vgreduce_single(cmd, vg, pv, 1);
 
 	if (!r)
 		return ECMD_FAILED;
