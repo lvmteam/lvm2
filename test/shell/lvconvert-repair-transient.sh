@@ -11,6 +11,7 @@
 
 . lib/test
 
+aux skip_if_mirror_recovery_broken
 aux prepare_vg 5
 
 lvcreate -aey --type mirror -m 3 --ignoremonitoring -L 1 -n 4way $vg

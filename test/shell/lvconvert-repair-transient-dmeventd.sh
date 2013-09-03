@@ -11,6 +11,7 @@
 
 . lib/test
 
+aux skip_if_mirror_recovery_broken
 aux prepare_vg 5
 aux prepare_dmeventd
 

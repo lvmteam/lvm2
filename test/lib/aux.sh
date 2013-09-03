@@ -604,6 +604,10 @@ api() {
 	"$abs_top_builddir/test/api/wrapper" "$@" && rm -f debug.log
 }
 
+skip_if_mirror_recovery_broken() {
+        test `uname -r` = 3.3.4-5.fc17.i686 && skip
+}
+
 udev_wait() {
 	pgrep udev >/dev/null || return 0
 	which udevadm >/dev/null || return 0
