@@ -15,6 +15,7 @@ test_description="ensure pvmove works with all segment types"
 
 which mkfs.ext2 || skip
 which md5sum || skip
+test -e LOCAL_CLVMD && skip
 
 # ---------------------------------------------------------------------
 # Utilities
