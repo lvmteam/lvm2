@@ -605,7 +605,7 @@ api() {
 }
 
 skip_if_mirror_recovery_broken() {
-        test `uname -r` = 3.3.4-5.fc17.i686 && skip
+        if test `uname -r` = 3.3.4-5.fc17.i686; then skip; fi
 }
 
 udev_wait() {
