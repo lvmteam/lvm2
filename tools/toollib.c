@@ -15,10 +15,87 @@
 
 #include "tools.h"
 #include <sys/stat.h>
+#include <signal.h>
+#include <sys/wait.h>
 
 const char *command_name(struct cmd_context *cmd)
 {
 	return cmd->command->name;
+}
+
+static void _sigchld_handler(int sig __attribute__((unused)))
+{
+	while (wait4(-1, NULL, WNOHANG | WUNTRACED, NULL) > 0) ;
+}
+
+/*
+ * returns:
+ * -1 if the fork failed
+ *  0 if the parent
+ *  1 if the child
+ */
+int become_daemon(struct cmd_context *cmd, int skip_lvm)
+{
+	static const char devnull[] = "/dev/null";
+	int null_fd;
+	pid_t pid;
+	struct sigaction act = {
+		{_sigchld_handler},
+		.sa_flags = SA_NOCLDSTOP,
+	};
+
+	log_verbose("Forking background process");
+
+	sigaction(SIGCHLD, &act, NULL);
+
+	if (!skip_lvm)
+		sync_local_dev_names(cmd); /* Flush ops and reset dm cookie */
+
+	if ((pid = fork()) == -1) {
+		log_error("fork failed: %s", strerror(errno));
+		return -1;
+	}
+
+	/* Parent */
+	if (pid > 0)
+		return 0;
+
+	/* Child */
+	if (setsid() == -1)
+		log_error("Background process failed to setsid: %s",
+			  strerror(errno));
+
+	/* For poll debugging it's best to disable for compilation */
+#if 1
+	if ((null_fd = open(devnull, O_RDWR)) == -1) {
+		log_sys_error("open", devnull);
+		_exit(ECMD_FAILED);
+	}
+
+	if ((dup2(null_fd, STDIN_FILENO) < 0)  || /* reopen stdin */
+	    (dup2(null_fd, STDOUT_FILENO) < 0) || /* reopen stdout */
+	    (dup2(null_fd, STDERR_FILENO) < 0)) { /* reopen stderr */
+		log_sys_error("dup2", "redirect");
+		(void) close(null_fd);
+		_exit(ECMD_FAILED);
+	}
+
+	if (null_fd > STDERR_FILENO)
+		(void) close(null_fd);
+
+	init_verbose(VERBOSE_BASE_LEVEL);
+#endif
+	strncpy(*cmd->argv, "(lvm2)", strlen(*cmd->argv));
+
+	if (!skip_lvm) {
+		reset_locking();
+		if (!lvmcache_init())
+			/* FIXME Clean up properly here */
+			_exit(ECMD_FAILED);
+	}
+	dev_close_all();
+
+	return 1;
 }
 
 /*

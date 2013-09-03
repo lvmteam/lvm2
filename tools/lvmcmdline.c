@@ -1097,6 +1097,14 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 
 	set_cmd_name(cmd->command->name);
 
+	if (arg_count(cmd, background_ARG)) {
+		if (!become_daemon(cmd, 1)) {
+			/* parent - quit immediately */
+			ret = ECMD_PROCESSED;
+			goto out;
+		}
+	}
+
 	if (arg_count(cmd, config_ARG))
 		if (!override_config_tree_from_string(cmd, arg_str_value(cmd, config_ARG, ""))) {
 			ret = EINVALID_CMD_LINE;

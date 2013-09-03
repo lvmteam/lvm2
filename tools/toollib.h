@@ -18,6 +18,8 @@
 
 #include "metadata-exported.h"
 
+int become_daemon(struct cmd_context *cmd, int skip_lvm);
+
 int autobackup_set(void);
 int autobackup_init(const char *backup_dir, int keep_days, int keep_number,
 		    int autobackup);

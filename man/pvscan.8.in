@@ -19,6 +19,7 @@ pvscan \- scan all disks for physical volumes
 .RB [ \-h | \-\-help ]
 .B \-\-cache
 .RB [ \-a | \-\-activate " " \fIay ]
+.RB [ \-b | \-\-background ]
 .RB [ \-\-major
 .I major
 .B \-\-minor
@@ -50,6 +51,9 @@ The logical volume to autoactivate is matched against the
 activation/auto_activation_volume_list set in lvm.conf. If this list is not set, then
 all volumes are considered for autoactivation. The autoactivation is not yet
 supported for logical volumes that are part of partial or clustered volume groups.
+.TP
+.BR \-b ", " \-\-background
+Run the command in the background.
 .TP
 .BR \-\-cache " [" \-\-major " " \fImajor " " \-\-minor " " \fIminor " | " \fIDevicePath " ]..."
 Scan one or more devices and instruct the lvmetad daemon to update its cached

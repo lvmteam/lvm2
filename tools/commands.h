@@ -724,6 +724,7 @@ xx(pvscan,
    "List all physical volumes",
    PERMITTED_READ_ONLY,
    "pvscan " "\n"
+   "\t[-b|--background]\n"
    "\t[--cache [-a|--activate ay] [ DevicePath | --major major --minor minor]...]\n"
    "\t[-d|--debug] " "\n"
    "\t{-e|--exported | -n|--novolumegroup} " "\n"
@@ -735,8 +736,8 @@ xx(pvscan,
    "\t[-v|--verbose] " "\n"
    "\t[--version]\n",
 
-   activate_ARG, available_ARG, cache_ARG, exported_ARG,
-   ignorelockingfailure_ARG, major_ARG, minor_ARG,
+   activate_ARG, available_ARG, background_ARG, cache_ARG,
+   exported_ARG, ignorelockingfailure_ARG, major_ARG, minor_ARG,
    novolumegroup_ARG, partial_ARG, short_ARG, uuid_ARG)
 
 xx(segtypes,

@@ -34,6 +34,6 @@ KERNEL!="dm-[0-9]*", ACTION!="add", GOTO="lvm_end"
 KERNEL=="dm-[0-9]*", ENV{DM_ACTIVATION}!="1", GOTO="lvm_end"
 
 LABEL="lvm_scan"
-RUN+="(LVM_EXEC)/lvm pvscan --cache --activate ay --major $major --minor $minor"
+RUN+="(LVM_EXEC)/lvm pvscan --background --cache --activate ay --major $major --minor $minor"
 
 LABEL="lvm_end"

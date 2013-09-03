@@ -1,5 +1,7 @@
 Version 2.02.101 - 
 ===================================
+  Use pvscan -b in udev rules to avoid a deadlock on udev process count limit.
+  Add pvscan -b/--background for the command to be processed in the background.
   Don't assume stdin file descriptor is readable.
   Avoid unlimited recursion when creating dtree containing inactive pvmove LV.
   Require exactly 3 arguments for lvm2-activation-generator. Remove defaults.
