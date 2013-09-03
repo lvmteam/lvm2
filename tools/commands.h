@@ -724,8 +724,7 @@ xx(pvscan,
    "List all physical volumes",
    PERMITTED_READ_ONLY,
    "pvscan " "\n"
-   "\t[-a|--activate ay]\n"
-   "\t[--cache [ DevicePath | --major major --minor minor]...]\n"
+   "\t[--cache [-a|--activate ay] [ DevicePath | --major major --minor minor]...]\n"
    "\t[-d|--debug] " "\n"
    "\t{-e|--exported | -n|--novolumegroup} " "\n"
    "\t[-h|-?|--help]" "\n"
