@@ -520,6 +520,9 @@ int main(int argc, char **argv) {
 			case INTERRUPTED:
 				printf("interrupted: %s\n", argv[i]);
 				break;
+			case TIMEOUT:
+				printf("timeout: %s\n", argv[i]);
+				break;
 			default: /* do nothing */ ;
 			}
 		}
