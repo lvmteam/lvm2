@@ -1247,16 +1247,6 @@ static int _get_timeout(struct message_data *message_data)
 	return thread ? 0 : -ENODEV;
 }
 
-/* Initialize a fifos structure with path names. */
-static void _init_fifos(struct dm_event_fifos *fifos)
-{
-	fifos->client = -1;
-	fifos->server = -1;
-
-	fifos->client_path = DM_EVENT_FIFO_CLIENT;
-	fifos->server_path = DM_EVENT_FIFO_SERVER;
-}
-
 /* Open fifos used for client communication. */
 static int _open_fifos(struct dm_event_fifos *fifos)
 {
@@ -1706,8 +1696,6 @@ static int _systemd_handover(struct dm_event_fifos *fifos)
 	unsigned long env_pid, env_listen_fds;
 	int r = 0;
 
-	memset(fifos, 0, sizeof(*fifos));
-
 	/* SD_ACTIVATION must be set! */
 	if (!(e = getenv(SD_ACTIVATION_ENV_VAR_NAME)) || strcmp(e, "1"))
 		goto out;
@@ -1929,7 +1917,12 @@ static void usage(char *prog, FILE *file)
 int main(int argc, char *argv[])
 {
 	signed char opt;
-	struct dm_event_fifos fifos;
+	struct dm_event_fifos fifos = {
+		.client = -1,
+		.server = -1,
+		.client_path = DM_EVENT_FIFO_CLIENT,
+		.server_path = DM_EVENT_FIFO_SERVER
+	};
 	int nothreads;
 	//struct sys_log logdata = {DAEMON_NAME, LOG_DAEMON};
 
@@ -2004,9 +1997,6 @@ int main(int argc, char *argv[])
 	//multilog_add_type(std_syslog, &logdata);
 	//multilog_init_verbose(std_syslog, _LOG_DEBUG);
 	//multilog_async(1);
-
-	if (!_systemd_activation)
-		_init_fifos(&fifos);
 
 	pthread_mutex_init(&_global_mutex, NULL);
 
