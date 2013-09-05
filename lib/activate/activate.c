@@ -1514,21 +1514,17 @@ int monitor_dev_for_events(struct cmd_context *cmd, struct logical_volume *lv,
 		    !monitor_dev_for_events(cmd, seg->metadata_lv, NULL, monitor))
 			r = 0;
 
-		if (!seg_monitored(seg) || (seg->status & PVMOVE))
+		if (!seg_monitored(seg) ||
+		    (seg->status & PVMOVE) ||
+		    !seg->segtype->ops->target_monitored) /* doesn't support registration */
 			continue;
 
-		monitor_fn = NULL;
+		monitored = seg->segtype->ops->target_monitored(seg, &pending);
 
-		/* Check monitoring status */
-		if (seg->segtype->ops->target_monitored)
-			monitored = seg->segtype->ops->target_monitored(seg, &pending);
-		else
-			continue;  /* segtype doesn't support registration */
-
-		/*
-		 * FIXME: We should really try again if pending
-		 */
+		/* FIXME: We should really try again if pending */
 		monitored = (pending) ? 0 : monitored;
+
+		monitor_fn = NULL;
 
 		if (monitor) {
 			if (monitored)
