@@ -76,18 +76,28 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 
 	/* Check LV flags match first segment type */
 	if (complete_vg) {
-		if (lv_is_thin_volume(lv) &&
-		    (!(seg2 = first_seg(lv)) || !seg_is_thin_volume(seg2))) {
-			log_error("LV %s is thin volume without first thin volume segment",
-				  lv->name);
-			inc_error_count;
+		if (lv_is_thin_volume(lv)) {
+			if (dm_list_size(&lv->segments) != 1) {
+				log_error("LV %s is thin volume without exactly one segment.",
+					  lv->name);
+				inc_error_count;
+			} else if (!seg_is_thin_volume(first_seg(lv))) {
+				log_error("LV %s is thin volume without first thin volume segment.",
+					  lv->name);
+				inc_error_count;
+			}
 		}
 
-		if (lv_is_thin_pool(lv) &&
-		    (!(seg2 = first_seg(lv)) || !seg_is_thin_pool(seg2))) {
-			log_error("LV %s is thin pool without first thin pool segment",
-				  lv->name);
-			inc_error_count;
+		if (lv_is_thin_pool(lv)) {
+			if (dm_list_size(&lv->segments) != 1) {
+				log_error("LV %s is thin pool volume without exactly one segment.",
+					  lv->name);
+				inc_error_count;
+			} else if (!seg_is_thin_pool(first_seg(lv))) {
+				log_error("LV %s is thin pool without first thin pool segment.",
+					  lv->name);
+				inc_error_count;
+			}
 		}
 
 		if (lv_is_thin_pool_data(lv) &&
