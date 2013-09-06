@@ -736,7 +736,7 @@ xx(pvscan,
    "\t[-v|--verbose] " "\n"
    "\t[--version]\n",
 
-   activate_ARG, available_ARG, background_ARG, cache_ARG,
+   activate_ARG, available_ARG, backgroundfork_ARG, cache_ARG,
    exported_ARG, ignorelockingfailure_ARG, major_ARG, minor_ARG,
    novolumegroup_ARG, partial_ARG, short_ARG, uuid_ARG)
 
