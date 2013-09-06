@@ -44,7 +44,7 @@ int become_daemon(struct cmd_context *cmd, int skip_lvm)
 		.sa_flags = SA_NOCLDSTOP,
 	};
 
-	log_verbose("Forking background process");
+	log_verbose("Forking background process: %s", cmd->cmd_line);
 
 	sigaction(SIGCHLD, &act, NULL);
 
@@ -65,8 +65,10 @@ int become_daemon(struct cmd_context *cmd, int skip_lvm)
 		log_error("Background process failed to setsid: %s",
 			  strerror(errno));
 
-	/* For poll debugging it's best to disable for compilation */
-#if 1
+/* Set this to avoid discarding output from background process */
+/* #define DEBUG_CHILD /* */
+
+#ifndef DEBUG_CHILD
 	if ((null_fd = open(devnull, O_RDWR)) == -1) {
 		log_sys_error("open", devnull);
 		_exit(ECMD_FAILED);
@@ -84,7 +86,8 @@ int become_daemon(struct cmd_context *cmd, int skip_lvm)
 		(void) close(null_fd);
 
 	init_verbose(VERBOSE_BASE_LEVEL);
-#endif
+#endif	/* DEBUG_CHILD */
+
 	strncpy(*cmd->argv, "(lvm2)", strlen(*cmd->argv));
 
 	if (!skip_lvm) {
