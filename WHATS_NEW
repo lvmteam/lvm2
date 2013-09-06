@@ -1,5 +1,6 @@
 Version 2.02.101 - 
 ===================================
+  Write Completed debug message before reinstating log defaults after command.
   Skip pvmove of RAID, thin, snapshot, origin, or mirror LVs in a cluster.
   Refresh existing VG before autoactivation (event retrigger/device reappeared).
   Use pvscan -b in udev rules to avoid a deadlock on udev process count limit.

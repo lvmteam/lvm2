@@ -1190,14 +1190,13 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 			stack;
 	}
 
-	/* FIXME Move this? */
-	cmd->current_settings = cmd->default_settings;
-	_apply_settings(cmd);
-
 	if (ret == EINVALID_CMD_LINE && !_cmdline.interactive)
 		_short_usage(cmd->command->name);
 
 	log_debug("Completed: %s", cmd->cmd_line);
+
+	cmd->current_settings = cmd->default_settings;
+	_apply_settings(cmd);
 
 	/*
 	 * free off any memory the command used.
