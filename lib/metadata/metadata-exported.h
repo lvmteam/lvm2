@@ -455,6 +455,7 @@ struct lvresize_params {
 	sign_t sign;
 	uint64_t poolmetadatasize;
 	sign_t poolmetadatasign;
+	uint32_t poolmetadataextents;
 	percent_type_t percent;
 
 	enum {
