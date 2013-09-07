@@ -1416,7 +1416,6 @@ int monitor_dev_for_events(struct cmd_context *cmd, struct logical_volume *lv,
 	int (*monitor_fn) (struct lv_segment *s, int e);
 	uint32_t s;
 	static const struct lv_activate_opts zlaopts = { 0 };
-	static const struct lv_activate_opts thinopts = { .skip_in_use = 1 };
 	struct lvinfo info;
 
 	if (!laopts)
@@ -1435,11 +1434,12 @@ int monitor_dev_for_events(struct cmd_context *cmd, struct logical_volume *lv,
 	/*
 	 * Allow to unmonitor thin pool via explicit pool unmonitor
 	 * or unmonitor before the last thin pool user deactivation
-	 * Skip unmonitor, if invoked via unmonitor of thin volume
+	 * Skip unmonitor, if invoked via deactivation of thin volume
 	 * and there is another thin pool user (open_count > 1)
+	 * FIXME  think about watch ruler influence.
 	 */
-	if (laopts->skip_in_use && lv_info(lv->vg->cmd, lv, 1, &info, 1, 0) &&
-	    (info.open_count != 1)) {
+	if (laopts->skip_in_use && lv_is_thin_pool(lv) &&
+	    lv_info(lv->vg->cmd, lv, 1, &info, 1, 0) && (info.open_count > 1)) {
 		log_debug_activation("Skipping unmonitor of opened %s (open:%d)",
 				     lv->name, info.open_count);
 		return 1;
@@ -1495,14 +1495,13 @@ int monitor_dev_for_events(struct cmd_context *cmd, struct logical_volume *lv,
 		}
 
 		/*
-		 * If requested unmonitoring of thin volume, request test
-		 * if there is no other thin pool user
+		 * If requested unmonitoring of thin volume, preserve skip_in_use flag.
 		 *
 		 * FIXME: code here looks like _lv_postorder()
 		 */
 		if (seg->pool_lv &&
 		    !monitor_dev_for_events(cmd, seg->pool_lv,
-					    (!monitor) ? &thinopts : NULL, monitor))
+					    (!monitor) ? laopts : NULL, monitor))
 			r = 0;
 
 		if (seg->metadata_lv &&
@@ -1912,6 +1911,7 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s, struct logical_vo
 {
 	struct logical_volume *lv_to_free = NULL;
 	struct lvinfo info;
+	static const struct lv_activate_opts laopts = { .skip_in_use = 1 };
 	int r = 0;
 
 	if (!activation())
@@ -1949,7 +1949,7 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s, struct logical_vo
 
 	lv_calculate_readahead(lv, NULL);
 
-	if (!monitor_dev_for_events(cmd, lv, NULL, 0))
+	if (!monitor_dev_for_events(cmd, lv, &laopts, 0))
 		stack;
 
 	critical_section_inc(cmd, "deactivating");
