@@ -1947,8 +1947,6 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s, struct logical_vo
 	if (!lv_read_replicator_vgs(lv))
 		goto_out;
 
-	lv_calculate_readahead(lv, NULL);
-
 	if (!monitor_dev_for_events(cmd, lv, &laopts, 0))
 		stack;
 
