@@ -53,6 +53,7 @@ struct localsock_bits {
 	int finished;		/* Flag to tell subthread to exit */
 	int all_success;	/* Set to 0 if any node (or the pre_command)
 				   failed */
+	int cleanup_needed;     /* helper for cleanup_zombie */
 	struct local_client *pipe_client;
 	pthread_t threadid;
 	enum { PRE_COMMAND, POST_COMMAND, QUIT } state;
