@@ -4016,7 +4016,7 @@ static struct logical_volume *_lvresize_volume(struct cmd_context *cmd,
 {
 	struct volume_group *vg = lv->vg;
 	struct logical_volume *lock_lv = NULL;
-	struct lv_segment *seg;
+	struct lv_segment *seg = NULL;
 	int status;
 	alloc_policy_t alloc;
 
