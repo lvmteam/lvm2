@@ -1702,11 +1702,58 @@ int dm_tree_suspend_children(struct dm_tree_node *dnode,
 	return r;
 }
 
+/*
+ * _rename_conflict_exists
+ * @dnode
+ * @node
+ * @resolvable
+ *
+ * Check if there is a rename conflict with existing peers in
+ * this tree.  'resolvable' is set if the conflicting node will
+ * also be undergoing a rename.  (Allowing that node to rename
+ * first would clear the conflict.)
+ *
+ * Returns: 1 if conflict, 0 otherwise
+ */
+static int _rename_conflict_exists(struct dm_tree_node *parent,
+				 struct dm_tree_node *node,
+				 int *resolvable)
+{
+	void *handle = NULL;
+	const char *name = dm_tree_node_get_name(node);
+	const char *sibling_name;
+	struct dm_tree_node *sibling;
+
+	*resolvable = 0;
+
+	if (!name)
+		return_0;
+
+	while ((sibling = dm_tree_next_child(&handle, parent, 0))) {
+		if (sibling == node)
+			continue;
+
+		if (!(sibling_name = dm_tree_node_get_name(sibling))) {
+			stack;
+			continue;
+		}
+
+		if (!strcmp(node->props.new_name, sibling_name)) {
+			if (sibling->props.new_name)
+				*resolvable = 1;
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
 int dm_tree_activate_children(struct dm_tree_node *dnode,
 				 const char *uuid_prefix,
 				 size_t uuid_prefix_len)
 {
 	int r = 1;
+	int resolvable_name_conflict, awaiting_peer_rename = 0;
 	void *handle = NULL;
 	struct dm_tree_node *child = dnode;
 	struct dm_info newinfo;
@@ -1732,6 +1779,7 @@ int dm_tree_activate_children(struct dm_tree_node *dnode,
 	handle = NULL;
 
 	for (priority = 0; priority < 3; priority++) {
+		awaiting_peer_rename = 0;
 		while ((child = dm_tree_next_child(&handle, dnode, 0))) {
 			if (priority != child->activation_priority)
 				continue;
@@ -1751,6 +1799,11 @@ int dm_tree_activate_children(struct dm_tree_node *dnode,
 
 			/* Rename? */
 			if (child->props.new_name) {
+				if (_rename_conflict_exists(dnode, child, &resolvable_name_conflict) &&
+				    resolvable_name_conflict) {
+					awaiting_peer_rename++;
+					continue;
+				}
 				if (!_rename_node(name, child->props.new_name, child->info.major,
 						  child->info.minor, &child->dtree->cookie,
 						  child->udev_flags)) {
@@ -1779,6 +1832,8 @@ int dm_tree_activate_children(struct dm_tree_node *dnode,
 			/* Update cached info */
 			child->info = newinfo;
 		}
+		if (awaiting_peer_rename)
+			priority--; /* redo priority level */
 	}
 
 	/*
