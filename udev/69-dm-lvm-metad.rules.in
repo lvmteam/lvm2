@@ -18,7 +18,7 @@ SUBSYSTEM!="block", GOTO="lvm_end"
 (LVM_EXEC_RULE)
 
 # If the PV label got lost, inform lvmetad about it.
-ENV{DM_ID_FS_TYPE_OLD}=="LVM2_member", ENV{DM_ID_FS_TYPE}!="LVM2_member", GOTO="lvm_scan"
+ENV{DM_ID_FS_TYPE_OLD}=="LVM2_member|LVM1_member", ENV{DM_ID_FS_TYPE}!="LVM2_member|LVM1_member", GOTO="lvm_scan"
 
 # Only process devices already marked as a PV - this requires blkid to be called before.
 ENV{ID_FS_TYPE}!="LVM2_member|LVM1_member", GOTO="lvm_end"
