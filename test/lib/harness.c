@@ -365,8 +365,9 @@ static void run(int i, char *f) {
 		char outpath[PATH_MAX];
 		char *c = outpath + strlen(results) + 1;
 		struct timeval selectwait;
-		fd_set master_set, copy_set;
+		fd_set set;
 		int runaway = 0;
+		int no_write = 0;
 
 		snprintf(buf, sizeof(buf), "%s ...", f);
 		printf("Running %-60s ", buf);
@@ -377,11 +378,9 @@ static void run(int i, char *f) {
 		if (!(outfile = fopen(outpath, "w")))
 			perror("fopen");
 
-		FD_ZERO(&master_set);
-		FD_SET(fds[1], &master_set);
 		while ((w = wait4(pid, &st, WNOHANG, &usage)) == 0) {
 			if ((fullbuffer && fullbuffer++ == 8000) ||
-			    time(NULL) - start > 180) // a 3 minute timeout
+			    (no_write > 180 * 2)) /* a 3 minute timeout */
 			{
 				system("echo t > /proc/sysrq-trigger");
 				kill(pid, SIGINT);
@@ -394,12 +393,16 @@ static void run(int i, char *f) {
 				break;
 			}
 
-			memcpy(&copy_set, &master_set, sizeof(master_set));
+			FD_ZERO(&set);
+			FD_SET(fds[1], &set);
 			selectwait.tv_sec = 0;
-			selectwait.tv_usec = 500000;
-			if (select(fds[1] + 1, &copy_set, NULL, NULL, &selectwait) <= 0)
+			selectwait.tv_usec = 500000; /* timeout 0.5s */
+			if (select(fds[1] + 1, &set, NULL, NULL, &selectwait) <= 0) {
+				no_write++;
 				continue;
+			}
 			drain();
+			no_write = 0;
 		}
 		if (w != pid) {
 			perror("waitpid");
