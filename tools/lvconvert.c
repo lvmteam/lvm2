@@ -1754,10 +1754,11 @@ static int lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *lp
 		return lv_raid_replace(lv, lp->replace_pvh, lp->pvh);
 
 	if (arg_count(cmd, repair_ARG)) {
-		if (!lv_is_active_locally(lv)) {
-			log_error("%s/%s must be active %sto perform"
-				  "this operation.", lv->vg->name, lv->name,
-				  vg_is_clustered(lv->vg) ? "locally " : "");
+		if (!lv_is_active_exclusive_locally(lv)) {
+			log_error("%s/%s must be active %sto perform this"
+				  " operation.", lv->vg->name, lv->name,
+				  vg_is_clustered(lv->vg) ?
+				  "exclusive locally " : "");
 			return 0;
 		}
 

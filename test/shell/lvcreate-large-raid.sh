@@ -13,7 +13,6 @@
 
 . lib/test
 
-test -e LOCAL_CLVMD && skip
 aux target_at_least dm-raid 1 1 0 || skip
 
 aux prepare_vg 5
@@ -51,7 +50,7 @@ done
 #
 # Convert large linear to RAID1 (belong in different test script?)
 #
-lvcreate -L 200T -n $lv1 $vg1
+lvcreate -aey -L 200T -n $lv1 $vg1
 # Need to deactivate or the up-convert will start sync'ing
 lvchange -an $vg1/$lv1
 lvconvert --type raid1 -m 1 $vg1/$lv1

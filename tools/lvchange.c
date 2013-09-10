@@ -301,6 +301,20 @@ static int lvchange_refresh(struct cmd_context *cmd, struct logical_volume *lv)
 	return lv_refresh(cmd, lv);
 }
 
+static int _reactivate_lv(struct logical_volume *lv,
+			  int active, int exclusive)
+{
+	struct cmd_context *cmd = lv->vg->cmd;
+
+	if (!active)
+		return 1;
+
+	if (exclusive)
+		return activate_lv_excl_local(cmd, lv);
+
+	return activate_lv(cmd, lv);
+}
+
 /*
  * lvchange_resync
  * @cmd
@@ -311,6 +325,7 @@ static int lvchange_refresh(struct cmd_context *cmd, struct logical_volume *lv)
 static int lvchange_resync(struct cmd_context *cmd, struct logical_volume *lv)
 {
 	int active = 0;
+	int exclusive = 0;
 	int monitored;
 	struct lvinfo info;
 	struct lv_segment *seg = first_seg(lv);
@@ -356,7 +371,15 @@ static int lvchange_resync(struct cmd_context *cmd, struct logical_volume *lv)
 				return_0;
 
 			active = 1;
+			if (lv_is_active_exclusive_locally(lv))
+				exclusive = 1;
 		}
+	}
+
+	if (seg_is_raid(seg) && active && !exclusive) {
+		log_error("RAID logical volume %s/%s cannot be active remotely.",
+			  lv->vg->name, lv->name);
+		return 0;
 	}
 
 	/* Activate exclusively to ensure no nodes still have LV active */
@@ -403,7 +426,7 @@ static int lvchange_resync(struct cmd_context *cmd, struct logical_volume *lv)
 			}
 		}
 
-		if (active && !activate_lv(cmd, lv)) {
+		if (!_reactivate_lv(lv, active, exclusive)) {
 			log_error("Failed to reactivate %s to resynchronize "
 				  "mirror", lv->name);
 			return 0;
@@ -429,7 +452,7 @@ static int lvchange_resync(struct cmd_context *cmd, struct logical_volume *lv)
 		log_error("Failed to write intermediate VG metadata.");
 		if (!attach_metadata_devices(seg, &device_list))
 			stack;
-		if (active && !activate_lv(cmd, lv))
+		if (!_reactivate_lv(lv, active, exclusive))
 			stack;
 		return 0;
 	}
@@ -438,7 +461,7 @@ static int lvchange_resync(struct cmd_context *cmd, struct logical_volume *lv)
 		log_error("Failed to commit intermediate VG metadata.");
 		if (!attach_metadata_devices(seg, &device_list))
 			stack;
-		if (active && !activate_lv(cmd, lv))
+		if (!_reactivate_lv(lv, active, exclusive))
 			stack;
 		return 0;
 	}
@@ -446,9 +469,10 @@ static int lvchange_resync(struct cmd_context *cmd, struct logical_volume *lv)
 	backup(lv->vg);
 
 	dm_list_iterate_items(lvl, &device_list) {
-		if (!activate_lv(cmd, lvl->lv)) {
-			log_error("Unable to activate %s for mirror log resync",
-				  lvl->lv->name);
+		if (!activate_lv_excl_local(cmd, lvl->lv)) {
+			log_error("Unable to activate %s for %s clearing",
+				  lvl->lv->name, (seg_is_raid(seg)) ?
+				  "metadata area" : "mirror log");
 			return 0;
 		}
 
@@ -486,8 +510,9 @@ static int lvchange_resync(struct cmd_context *cmd, struct logical_volume *lv)
 		return 0;
 	}
 
-	if (active && !activate_lv(cmd, lv)) {
-		log_error("Failed to reactivate %s after resync", lv->name);
+	if (!_reactivate_lv(lv, active, exclusive)) {
+		log_error("Failed to reactivate %s after resync",
+			  lv->name);
 		return 0;
 	}
 

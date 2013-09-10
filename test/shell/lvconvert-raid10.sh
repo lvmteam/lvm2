@@ -11,8 +11,6 @@
 
 . lib/test
 
-test -e LOCAL_CLVMD && skip
-
 get_image_pvs() {
 	local d
 	local images
@@ -56,3 +54,5 @@ for i in 0 1; do
 		 $vg/$lv1
 	aux wait_for_sync $vg $lv1
 done
+
+lvremove -ff $vg

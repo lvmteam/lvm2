@@ -1,5 +1,6 @@
 Version 2.02.101 - 
 ===================================
+  Make RAID capable of single-machine exclusive operations in a cluster.
   Drop calculation of read ahead for deactivated volume.
   Check for exactly one lv segment in validation of thin pools and volumes.
   Fix dmeventd unmonitoring of thin pools.

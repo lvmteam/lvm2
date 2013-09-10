@@ -289,7 +289,7 @@ run_checks() {
 
 # Hey, specifying devices for thin allocation doesn't work
 #		lvconvert --thinpool $1/$2 "$dev6"
-		lvcreate -L 2M -n ${2}_meta $1 "$dev6"
+		lvcreate -aey -L 2M -n ${2}_meta $1 "$dev6"
 		lvconvert --thinpool $1/$2 --poolmetadata ${2}_meta
 		lvcreate -T $1/$2 -V 1 -n thinlv
 		THIN_POSTFIX="_tdata"
@@ -303,7 +303,7 @@ run_checks() {
 		printf "#\n#\n# run_checks: RAID as thinpool metadata\n#\n#\n"
 
 		lvrename $1/$2 ${2}_meta
-		lvcreate -L 2M -n $2 $1 "$dev6"
+		lvcreate -aey -L 2M -n $2 $1 "$dev6"
 		lvconvert --thinpool $1/$2 --poolmetadata ${2}_meta
 		lvcreate -T $1/$2 -V 1 -n thinlv
 		THIN_POSTFIX="_tmeta"
@@ -314,7 +314,7 @@ run_checks() {
 		run_recovery_rate_check $1 $2
 	elif [ 'snapshot' == $3 ]; then
 		printf "#\n#\n# run_checks: RAID under snapshot\n#\n#\n"
-		lvcreate -s $1/$2 -l 4 -n snap "$dev6"
+		lvcreate -aey -s $1/$2 -l 4 -n snap "$dev6"
 
 		run_writemostly_check $1 $2
 		run_syncaction_check $1 $2

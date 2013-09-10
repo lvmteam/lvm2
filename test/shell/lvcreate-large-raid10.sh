@@ -13,7 +13,6 @@
 
 . lib/test
 
-test -e LOCAL_CLVMD && skip
 aux target_at_least dm-raid 1 3 0 || skip
 
 aux prepare_vg 5

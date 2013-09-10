@@ -174,7 +174,7 @@ static int _clear_lv(struct logical_volume *lv)
 	if (test_mode())
 		return 1;
 
-	if (!was_active && !activate_lv(lv->vg->cmd, lv)) {
+	if (!was_active && !activate_lv_excl_local(lv->vg->cmd, lv)) {
 		log_error("Failed to activate %s for clearing",
 			  lv->name);
 		return 0;
@@ -962,12 +962,12 @@ static int _raid_remove_images(struct logical_volume *lv,
 	}
 
 	/*
-	 * We resume the extracted sub-LVs first so they are renamed
+	 * We activate the extracted sub-LVs first so they are renamed
 	 * and won't conflict with the remaining (possibly shifted)
 	 * sub-LVs.
 	 */
 	dm_list_iterate_items(lvl, &removal_list) {
-		if (!resume_lv(lv->vg->cmd, lvl->lv)) {
+		if (!activate_lv_excl_local(lv->vg->cmd, lvl->lv)) {
 			log_error("Failed to resume extracted LVs");
 			return 0;
 		}
@@ -1021,6 +1021,16 @@ int lv_raid_change_image_count(struct logical_volume *lv,
 		log_warn("%s/%s already has image count of %d.",
 			 lv->vg->name, lv->name, new_count);
 		return 1;
+	}
+
+	/*
+	 * LV must be either in-active or exclusively active
+	 */
+	if (lv_is_active(lv) && vg_is_clustered(lv->vg) &&
+	    !lv_is_active_exclusive_locally(lv)) {
+		log_error("%s/%s must be active exclusive locally to"
+			  " perform this operation.", lv->vg->name, lv->name);
+		return 0;
 	}
 
 	if (old_count > new_count)
@@ -1125,15 +1135,15 @@ int lv_raid_split(struct logical_volume *lv, const char *split_name,
 	}
 
 	/*
-	 * First resume the newly split LV and LVs on the removal list.
+	 * First activate the newly split LV and LVs on the removal list.
 	 * This is necessary so that there are no name collisions due to
 	 * the original RAID LV having possibly had sub-LVs that have been
 	 * shifted and renamed.
 	 */
-	if (!resume_lv(cmd, lvl->lv))
+	if (!activate_lv_excl_local(cmd, lvl->lv))
 		return_0;
 	dm_list_iterate_items(lvl, &removal_list)
-		if (!resume_lv(cmd, lvl->lv))
+		if (!activate_lv_excl_local(cmd, lvl->lv))
 			return_0;
 
 	if (!resume_lv(lv->vg->cmd, lv)) {
@@ -1470,6 +1480,12 @@ int lv_raid_reshape(struct logical_volume *lv,
 		return 0;
 	}
 
+	if (vg_is_clustered(lv->vg) && !lv_is_active_exclusive_locally(lv)) {
+		log_error("%s/%s must be active exclusive locally to"
+			  " perform this operation.", lv->vg->name, lv->name);
+		return 0;
+	}
+
 	if (!strcmp(seg->segtype->name, "mirror") &&
 	    (!strcmp(new_segtype->name, "raid1")))
 	    return _convert_mirror_to_raid1(lv, new_segtype);
@@ -1493,21 +1509,23 @@ int lv_raid_replace(struct logical_volume *lv,
 		    struct dm_list *allocate_pvs)
 {
 	uint32_t s, sd, match_count = 0;
-	struct dm_list old_meta_lvs, old_data_lvs;
+	struct dm_list old_lvs;
 	struct dm_list new_meta_lvs, new_data_lvs;
 	struct lv_segment *raid_seg = first_seg(lv);
 	struct lv_list *lvl;
 	char *tmp_names[raid_seg->area_count * 2];
 
-	dm_list_init(&old_meta_lvs);
-	dm_list_init(&old_data_lvs);
+	dm_list_init(&old_lvs);
 	dm_list_init(&new_meta_lvs);
 	dm_list_init(&new_data_lvs);
 
-	if (!lv_is_active_locally(lv)) {
+	if (lv->status & PARTIAL_LV)
+		lv->vg->cmd->partial_activation = 1;
+
+	if (!lv_is_active_exclusive_locally(lv)) {
 		log_error("%s/%s must be active %sto perform this operation.",
 			  lv->vg->name, lv->name,
-			  vg_is_clustered(lv->vg) ? "locally " : "");
+			  vg_is_clustered(lv->vg) ? "exclusive locally " : "");
 		return 0;
 	}
 
@@ -1612,11 +1630,19 @@ try_again:
 	 */
 	if (!_raid_extract_images(lv, raid_seg->area_count - match_count,
 				  remove_pvs, 0,
-				  &old_meta_lvs, &old_data_lvs)) {
+				  &old_lvs, &old_lvs)) {
 		log_error("Failed to remove the specified images from %s/%s",
 			  lv->vg->name, lv->name);
 		return 0;
 	}
+
+	/*
+	 * Now that they are extracted and visible, make the system aware
+	 * of their new names.
+	 */
+	dm_list_iterate_items(lvl, &old_lvs)
+		if (!activate_lv_excl_local(lv->vg->cmd, lvl->lv))
+			return_0;
 
 	/*
 	 * Skip metadata operation normally done to clear the metadata sub-LVs.
@@ -1696,13 +1722,7 @@ try_again:
 		return 0;
 	}
 
-	dm_list_iterate_items(lvl, &old_meta_lvs) {
-		if (!deactivate_lv(lv->vg->cmd, lvl->lv))
-			return_0;
-		if (!lv_remove(lvl->lv))
-			return_0;
-	}
-	dm_list_iterate_items(lvl, &old_data_lvs) {
+	dm_list_iterate_items(lvl, &old_lvs) {
 		if (!deactivate_lv(lv->vg->cmd, lvl->lv))
 			return_0;
 		if (!lv_remove(lvl->lv))

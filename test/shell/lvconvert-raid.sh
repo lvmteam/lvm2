@@ -11,8 +11,6 @@
 
 . lib/test
 
-test -e LOCAL_CLVMD && skip
-
 get_image_pvs() {
 	local d
 	local images
@@ -24,7 +22,10 @@ get_image_pvs() {
 ########################################################
 # MAIN
 ########################################################
-aux target_at_least dm-raid 1 2 0 || skip
+if ! aux target_at_least dm-raid 1 2 0; then
+	dmsetup targets | grep raid
+	skip
+fi
 
 # 9 PVs needed for RAID10 testing (3-stripes/2-mirror - replacing 3 devs)
 aux prepare_pvs 9 80
@@ -57,17 +58,17 @@ for i in 1 2 3; do
 			# Shouldn't be able to create with just 1 image
 			not lvcreate --type raid1 -m 0 -l 2 -n $lv1 $vg
 
-			lvcreate -l 2 -n $lv1 $vg
+			lvcreate -aey -l 2 -n $lv1 $vg
 		else
 			lvcreate --type raid1 -m $(($i - 1)) -l 2 -n $lv1 $vg
 			aux wait_for_sync $vg $lv1
 		fi
 
 		if $under_snap; then
-			lvcreate -s $vg/$lv1 -n snap -l 2
+			lvcreate -aey -s $vg/$lv1 -n snap -l 2
 		fi
 
-		lvconvert -m $((j - 1))  $vg/$lv1
+		lvconvert -m $((j - 1)) $vg/$lv1
 
 		# FIXME: ensure no residual devices
 
@@ -138,7 +139,7 @@ lvremove -ff $vg
 ###########################################
 # Linear to RAID1 conversion ("raid1" default segtype)
 ###########################################
-lvcreate -l 2 -n $lv1 $vg
+lvcreate -aey -l 2 -n $lv1 $vg
 lvconvert -m 1 $vg/$lv1 \
 	--config 'global { mirror_segtype_default = "raid1" }'
 lvs --noheadings -o attr $vg/$lv1 | grep '^r*'
@@ -147,17 +148,27 @@ lvremove -ff $vg
 ###########################################
 # Linear to RAID1 conversion (override "mirror" default segtype)
 ###########################################
-lvcreate -l 2 -n $lv1 $vg
+lvcreate -aey -l 2 -n $lv1 $vg
 lvconvert --type raid1 -m 1 $vg/$lv1 \
 	--config 'global { mirror_segtype_default = "mirror" }'
 lvs --noheadings -o attr $vg/$lv1 | grep '^r*'
 lvremove -ff $vg
 
 ###########################################
+# Must not be able to convert non-EX LVs in a cluster
+###########################################
+if [ -e LOCAL_CLVMD ]; then
+	lvcreate -l 2 -n $lv1 $vg
+	not lvconvert --type raid1 -m 1 $vg/$lv1 \
+		--config 'global { mirror_segtype_default = "mirror" }'
+	lvremove -ff $vg
+fi
+
+###########################################
 # Mirror to RAID1 conversion
 ###########################################
 for i in 1 2 3 ; do
-	lvcreate --type mirror -m $i -l 2 -n $lv1 $vg
+	lvcreate -aey --type mirror -m $i -l 2 -n $lv1 $vg
 	aux wait_for_sync $vg $lv1
 	lvconvert --type raid1 $vg/$lv1
 	lvremove -ff $vg

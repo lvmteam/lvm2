@@ -2881,7 +2881,8 @@ static int _lv_extend_layered_lv(struct alloc_handle *ah,
 				continue;
 			}
 
-			if (!activate_lv(meta_lv->vg->cmd, meta_lv)) {
+			/* For clearing, simply activate exclusive locally */
+			if (!activate_lv_excl_local(meta_lv->vg->cmd, meta_lv)) {
 				log_error("Failed to activate %s/%s for clearing",
 					  meta_lv->vg->name, meta_lv->name);
 				return 0;
@@ -5504,7 +5505,8 @@ int lv_activation_skip(struct logical_volume *lv, activation_change_t activate,
  *   If lp->activate is AY*, activate it.
  *   If lp->activate was AN* and the pool was originally inactive, deactivate it.
  */
-static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct lvcreate_params *lp,
+static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
+					       struct lvcreate_params *lp,
 					       const char *new_lv_name)
 {
 	struct cmd_context *cmd = vg->cmd;
@@ -5524,21 +5526,6 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 	if (vg_max_lv_reached(vg)) {
 		log_error("Maximum number of logical volumes (%u) reached "
 			  "in volume group %s", vg->max_lv, vg->name);
-		return NULL;
-	}
-
-	if (vg_is_clustered(vg) && segtype_is_raid(lp->segtype)) {
-		/*
-		 * FIXME:
-		 * We could allow a RAID LV to be created as long as it
-		 * is activated exclusively.  Any subsequent activations
-		 * would have to be enforced as exclusive also.
-		 *
-		 * For now, we disallow the existence of RAID LVs in a
-		 * cluster VG
-		 */
-		log_error("Unable to create a %s logical volume in a cluster.",
-			  lp->segtype->name);
 		return NULL;
 	}
 
@@ -5843,6 +5830,14 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg, struct l
 	} else if (seg_is_raid(lp)) {
 		first_seg(lv)->min_recovery_rate = lp->min_recovery_rate;
 		first_seg(lv)->max_recovery_rate = lp->max_recovery_rate;
+		if (vg_is_clustered(lv->vg) &&
+		    is_change_activating(lp->activate) &&
+		    (lp->activate != CHANGE_AE)) {
+			log_debug_activation("Creating RAID logical volume in a"
+					     " cluster: setting activation"
+					     " mode to EX");
+			lp->activate = CHANGE_AE;
+		}
 	}
 
 	/* FIXME Log allocation and attachment should have happened inside lv_extend. */

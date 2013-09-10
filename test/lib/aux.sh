@@ -640,9 +640,6 @@ wait_for_sync() {
 # i.e.   dm_target_at_least  dm-thin-pool  1 0
 target_at_least()
 {
-	# Raid target does not work in cluster
-	test -e LOCAL_CLVMD -a "$1" = "dm-raid" && return 1
-
 	case "$1" in
 	  dm-*) modprobe "$1" || true ;;
 	esac
