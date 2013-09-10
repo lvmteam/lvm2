@@ -17,10 +17,6 @@ ENV{DM_UDEV_DISABLE_DISK_RULES_FLAG}=="1", GOTO="dm_end"
 SYMLINK+="disk/by-id/dm-name-$env{DM_NAME}"
 ENV{DM_UUID}=="?*", SYMLINK+="disk/by-id/dm-uuid-$env{DM_UUID}"
 
-# Save previously detected dev type.
-IMPORT{db}="ID_FS_TYPE"
-ENV{ID_FS_TYPE}=="?*", ENV{DM_ID_FS_TYPE_OLD}="$env{ID_FS_TYPE}", ENV{ID_FS_TYPE}=""
-
 ENV{DM_SUSPENDED}=="1", GOTO="dm_end"
 
 (BLKID_RULE)

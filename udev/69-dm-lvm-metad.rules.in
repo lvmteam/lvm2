@@ -17,23 +17,71 @@
 SUBSYSTEM!="block", GOTO="lvm_end"
 (LVM_EXEC_RULE)
 
-# If the PV label got lost, inform lvmetad about it.
-ENV{DM_ID_FS_TYPE_OLD}=="LVM2_member|LVM1_member", ENV{ID_FS_TYPE}!="LVM2_member|LVM1_member", GOTO="lvm_scan"
+# If the PV label got lost, inform lvmetad immediately.
+# Detect the lost PV label by comparing previous ID_FS_TYPE value with current one.
+ENV{.ID_FS_TYPE_NEW}="$env{ID_FS_TYPE}"
+IMPORT{db}="ID_FS_TYPE"
+ENV{ID_FS_TYPE}=="LVM2_member|LVM1_member", ENV{.ID_FS_TYPE_NEW}!="LVM2_member|LVM1_member", ENV{LVM_PV_GONE}="1"
+ENV{ID_FS_TYPE}="$env{.ID_FS_TYPE_NEW}"
+ENV{LVM_PV_GONE}=="1", GOTO="lvm_scan"
 
 # Only process devices already marked as a PV - this requires blkid to be called before.
 ENV{ID_FS_TYPE}!="LVM2_member|LVM1_member", GOTO="lvm_end"
 
+# Inform lvmetad about any PV that is gone.
 ACTION=="remove", GOTO="lvm_scan"
-ACTION=="change", KERNEL=="md[0-9]*|loop[0-9]*", GOTO="lvm_scan"
 
-# If the PV is not a dm device, scan only after device addition (ADD event)
-KERNEL!="dm-[0-9]*", ACTION!="add", GOTO="lvm_end"
+# If the PV is a special device listed below, scan only if the device is
+# properly activated. These devices are not usable after an ADD event,
+# but they require an extra setup and they are ready after a CHANGE event.
+# Also support coldplugging with ADD event but only if the device is already
+# properly activated.
 
-# If the PV is a dm device, scan only after proper mapping activation (CHANGE event + DM_ACTIVATION=1)
-# or after a coldplug (event retrigger) with "add" event (ADD event + DM_ACTIVATION=1)
-KERNEL=="dm-[0-9]*", ENV{DM_ACTIVATION}!="1", GOTO="lvm_end"
+# DM device:
+KERNEL!="dm-[0-9]*", GOTO="next"
+ACTION=="add", ENV{DM_ACTIVATED}=="1", GOTO="lvm_scan"
+ACTION=="change", ENV{DM_UDEV_PRIMARY_SOURCE_FLAG}=="1", GOTO="lvm_scan"
+GOTO="lvm_end"
+
+# MD device:
+LABEL="next"
+KERNEL!="md[0-9]*", GOTO="next"
+IMPORT{db}="LVM_MD_PV_ACTIVATED"
+ACTION=="add", ENV{LVM_MD_PV_ACTIVATED}=="1", GOTO="lvm_scan"
+ACTION=="change", ENV{LVM_MD_PV_ACTIVATED}!="1", TEST=="md/array_state", ENV{LVM_MD_PV_ACTIVATED}="1", GOTO="lvm_scan"
+GOTO="lvm_end"
+
+# Loop device:
+LABEL="next"
+KERNEL!="loop[0-9]*", GOTO="next"
+ACTION=="add", ENV{LVM_LOOP_PV_ACTIVATED}=="1", GOTO="lvm_scan"
+ACTION=="change", ENV{LVM_LOOP_PV_ACTIVATED}!="1", TEST=="loop/backing_file", ENV{LVM_LOOP_PV_ACTIVATED}="1", GOTO="lvm_scan"
+GOTO="lvm_end"
+
+# If the PV is not a special device listed above, scan only after device addition (ADD event)
+LABEL="next"
+ACTION!="add", GOTO="lvm_end"
 
 LABEL="lvm_scan"
-RUN+="(LVM_EXEC)/lvm pvscan --background --cache --activate ay --major $major --minor $minor"
+
+# The table below summarises the situations in which we reach the LABEL="lvm_scan".
+# Marked by X, X* means only if the special dev is properly set up.
+# The artificial ADD is supported for coldplugging. We avoid running the pvscan
+# on artificial CHANGE so there's no unexpected autoactivation when WATCH rule fires.
+# N.B. MD and loop never actually  reaches lvm_scan on REMOVE as the PV label is gone
+# within a CHANGE event (these are caught by the "LVM_PV_GONE" rule at the beginning).
+#
+#        | real ADD | real CHANGE | artificial ADD | artificial CHANGE | REMOVE
+# =============================================================================
+#  DM    |          |      X      |       X*       |                   |   X
+#  MD    |          |      X      |       X*       |                   |
+#  loop  |          |      X      |       X*       |                   |
+#  other |    X     |             |       X        |                   |   X
+
+# Skip device that is a multipath or RAID component
+ENV{DM_MULTIPATH_DEVICE_PATH}=="1", GOTO="lvm_end"
+ENV{ID_FS_TYPE}=="*_raid_member", GOTO="lvm_end"
+
+RUN+="(LVM_EXEC)/lvm pvscan --background --cache --activate ay --major $major --minor $minor", ENV{LVM_SCANNED}="1"
 
 LABEL="lvm_end"
