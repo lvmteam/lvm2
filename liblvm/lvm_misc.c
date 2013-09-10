@@ -51,6 +51,7 @@ struct lvm_property_value get_property(const pv_t pv, const vg_t vg,
 				       const lvseg_t lvseg,
 				       const pvseg_t pvseg,
 				       const struct lvcreate_params *lvcp,
+				       const struct pvcreate_params *pvcp,
 				       const char *name)
 {
 	struct lvm_property_type prop;
@@ -76,6 +77,9 @@ struct lvm_property_value get_property(const pv_t pv, const vg_t vg,
 	} else if (lvcp) {
 		if (!lv_create_param_get_property(lvcp, &prop))
 			return v;
+	} else if (pvcp) {
+		if (!pv_create_param_get_property(pvcp, &prop))
+			return v;
 	} else {
 		log_errno(EINVAL, "Invalid NULL handle passed to library function.");
 		return v;
@@ -95,6 +99,7 @@ struct lvm_property_value get_property(const pv_t pv, const vg_t vg,
 
 int set_property(const pv_t pv, const vg_t vg, const lv_t lv,
 		struct lvcreate_params *lvcp,
+		struct pvcreate_params *pvcp,
 		const char *name,
 		struct lvm_property_value *v)
 {
@@ -122,6 +127,11 @@ int set_property(const pv_t pv, const vg_t vg, const lv_t lv,
 		}
 	} else if (lvcp) {
 		if (!lv_create_param_set_property(lvcp, &prop)) {
+			v->is_valid = 0;
+			return -1;
+		}
+	} else if (pvcp) {
+		if (!pv_create_param_set_property(pvcp, &prop)) {
 			v->is_valid = 0;
 			return -1;
 		}

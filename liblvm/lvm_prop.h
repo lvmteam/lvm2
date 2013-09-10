@@ -17,8 +17,10 @@
 #define _LIB_LVM_PROP_H
 
 typedef struct lvcreate_params type_lvcreate_params;
+typedef struct pvcreate_params type_pvcreate_params;
 
 #define LV_CREATE_PARAMS 1
+#define PV_CREATE_PARAMS 2
 
 #define GET_LVCREATEPARAMS_NUM_PROPERTY_FN(NAME, VALUE)\
 	GET_NUM_PROPERTY_FN(NAME, VALUE, lvcreate_params, lvcp)
@@ -26,10 +28,22 @@ typedef struct lvcreate_params type_lvcreate_params;
 #define SET_LVCREATEPARAMS_NUM_PROPERTY_FN(NAME, VALUE) \
 	SET_NUM_PROPERTY(NAME, VALUE, lvcreate_params, lvcp)
 
+#define GET_PVCREATEPARAMS_NUM_PROPERTY_FN(NAME, VALUE)\
+	GET_NUM_PROPERTY_FN(NAME, VALUE, pvcreate_params, pvcp)
+
+#define SET_PVCREATEPARAMS_NUM_PROPERTY_FN(NAME, VALUE) \
+	SET_NUM_PROPERTY(NAME, VALUE, pvcreate_params, pvcp)
+
 int lv_create_param_get_property(const struct lvcreate_params *lvcp,
 		struct lvm_property_type *prop);
 
 int lv_create_param_set_property(struct lvcreate_params *lvcp,
+		    struct lvm_property_type *prop);
+
+int pv_create_param_get_property(const struct pvcreate_params *pvcp,
+		struct lvm_property_type *prop);
+
+int pv_create_param_set_property(struct pvcreate_params *pvcp,
 		    struct lvm_property_type *prop);
 
 #endif

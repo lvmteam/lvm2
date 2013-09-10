@@ -71,13 +71,13 @@ const char *lvm_lv_get_origin(const lv_t lv)
 
 struct lvm_property_value lvm_lv_get_property(const lv_t lv, const char *name)
 {
-	return get_property(NULL, NULL, lv, NULL, NULL, NULL, name);
+	return get_property(NULL, NULL, lv, NULL, NULL, NULL, NULL, name);
 }
 
 struct lvm_property_value lvm_lvseg_get_property(const lvseg_t lvseg,
 						 const char *name)
 {
-	return get_property(NULL, NULL, NULL, lvseg, NULL, NULL, name);
+	return get_property(NULL, NULL, NULL, lvseg, NULL, NULL, NULL, name);
 }
 
 uint64_t lvm_lv_is_active(const lv_t lv)
@@ -598,7 +598,7 @@ struct lvm_property_value lvm_lv_params_get_property(
 	};
 
 	if (params && params->magic == LV_CREATE_PARAMS_MAGIC) {
-		rc = get_property(NULL, NULL, NULL, NULL, NULL, &params->lvp, name);
+		rc = get_property(NULL, NULL, NULL, NULL, NULL, &params->lvp, NULL, name);
 	} else {
 		log_error("Invalid lv_create_params parameter");
 	}
@@ -612,7 +612,7 @@ int lvm_lv_params_set_property(lv_create_params_t params, const char *name,
 	int rc = -1;
 
 	if (params && params->magic == LV_CREATE_PARAMS_MAGIC) {
-		rc = set_property(NULL, NULL, NULL, &params->lvp, name, prop);
+		rc = set_property(NULL, NULL, NULL, &params->lvp, NULL, name, prop);
 	} else {
 		log_error("Invalid lv_create_params parameter");
 	}

@@ -13,3 +13,10 @@
  */
 
 FIELD(LV_CREATE_PARAMS, lvcreate_params, NUM, "skip_zero", zero, 2, uint32, skip_zero, "Skip zeroing on lv creation", 1)
+
+FIELD(PV_CREATE_PARAMS, pvcreate_params, NUM, "size",      size, 2, uint64_t, size, "PV size", 1)
+FIELD(PV_CREATE_PARAMS, pvcreate_params, NUM, "pvmetadatacopies", pvmetadatacopies, 2, uint64_t, pvmetadatacopies, "PV Metadata copies", 1)
+FIELD(PV_CREATE_PARAMS, pvcreate_params, NUM, "pvmetadatasize", pvmetadatasize, 2, uint64_t, pvmetadatasize, "PV Metadata size", 1)
+FIELD(PV_CREATE_PARAMS, pvcreate_params, NUM, "data_alignment", data_alignment, 2, uint64_t, data_alignment, "Start data to a multiple of value", 1)
+FIELD(PV_CREATE_PARAMS, pvcreate_params, NUM, "data_alignment_offset", data_alignment_offset, 2, uint64_t, data_alignment_offset, "Shift the start of the data area", 1)
+FIELD(PV_CREATE_PARAMS, pvcreate_params, NUM, "zero", zero, 2, uint64_t, zero, "Zero first 2048 bytes of device", 1)

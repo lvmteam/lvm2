@@ -1455,6 +1455,30 @@ static int _pvcreate_write(struct cmd_context *cmd, struct pv_to_create *pvc)
 	return 1;
 }
 
+static int _verify_pv_create_params(struct pvcreate_params *pp)
+{
+	/*
+	 * FIXME: Some of these checks are duplicates in pvcreate_params_validate.
+	 */
+	if (pp->pvmetadatacopies > 2) {
+		log_error("Metadatacopies may only be 0, 1 or 2");
+		return 0;
+	}
+
+	if (pp->data_alignment > UINT32_MAX) {
+		log_error("Physical volume data alignment is too big.");
+		return 0;
+	}
+
+	if (pp->data_alignment_offset > UINT32_MAX) {
+		log_error("Physical volume data alignment offset is too big.");
+		return 0;
+	}
+
+	return 1;
+}
+
+
 /*
  * pvcreate_vol() - initialize a device with PV label and metadata area
  *
@@ -1478,6 +1502,10 @@ struct physical_volume *pvcreate_vol(struct cmd_context *cmd, const char *pv_nam
 	pvcreate_params_set_defaults(&default_pp);
 	if (!pp)
 		pp = &default_pp;
+
+	if (!_verify_pv_create_params(pp)) {
+		goto bad;
+	}
 
 	if (pp->rp.idp) {
 		if ((dev = lvmcache_device_from_pvid(cmd, pp->rp.idp, NULL, NULL)) &&

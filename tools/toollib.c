@@ -1541,12 +1541,6 @@ int pvcreate_params_validate(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (arg_count(cmd, pvmetadatacopies_ARG) &&
-	    arg_int_value(cmd, pvmetadatacopies_ARG, -1) > 2) {
-		log_error("Metadatacopies may only be 0, 1 or 2");
-		return 0;
-	}
-
 	if (arg_count(cmd, metadataignore_ARG))
 		pp->metadataignore = arg_int_value(cmd, metadataignore_ARG,
 						   DEFAULT_PVMETADATAIGNORE);

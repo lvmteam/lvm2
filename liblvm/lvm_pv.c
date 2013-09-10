@@ -21,6 +21,16 @@
 #include "locking.h"
 #include "toolcontext.h"
 
+struct lvm_pv_create_params
+{
+	uint32_t magic;
+	lvm_t libh;
+	const char *pv_name;
+	struct pvcreate_params pv_p;
+};
+
+#define PV_CREATE_PARAMS_MAGIC 0xFEED0002
+
 const char *lvm_pv_get_uuid(const pv_t pv)
 {
 	return pv_uuid_dup(pv);
@@ -53,13 +63,13 @@ uint64_t lvm_pv_get_free(const pv_t pv)
 
 struct lvm_property_value lvm_pv_get_property(const pv_t pv, const char *name)
 {
-	return get_property(pv, NULL, NULL, NULL, NULL, NULL, name);
+	return get_property(pv, NULL, NULL, NULL, NULL, NULL, NULL, name);
 }
 
 struct lvm_property_value lvm_pvseg_get_property(const pvseg_t pvseg,
 						 const char *name)
 {
-	return get_property(NULL, NULL, NULL, NULL, pvseg, NULL, name);
+	return get_property(NULL, NULL, NULL, NULL, pvseg, NULL, NULL, name);
 }
 
 struct lvm_list_wrapper
@@ -79,6 +89,8 @@ int lvm_pv_remove(lvm_t libh, const char *pv_name)
 
 	return 0;
 }
+
+#define PV_LIST_MAGIC 0xF005BA11
 
 struct dm_list *lvm_list_pvs(lvm_t libh)
 {
@@ -109,7 +121,7 @@ struct dm_list *lvm_list_pvs(lvm_t libh)
 		 * pointer in the free call.
 		 */
 		rc->cmd = cmd;
-		rc->magic = 0xF005BA11;
+		rc->magic = PV_LIST_MAGIC;
 	}
 
 	return &rc->pvslist;
@@ -123,7 +135,7 @@ int lvm_list_pvs_free(struct dm_list *pvlist)
 
 	if (pvlist) {
 		to_delete = dm_list_struct_base(pvlist, struct lvm_list_wrapper, pvslist);
-		if (to_delete->magic != 0xF005BA11) {
+		if (to_delete->magic != PV_LIST_MAGIC) {
 			log_errno(EINVAL, "Not a correct pvlist structure");
 			return -1;
 		}
@@ -224,26 +236,122 @@ int lvm_pv_resize(const pv_t pv, uint64_t new_size)
 	return 0;
 }
 
-int lvm_pv_create(lvm_t libh, const char *pv_name, uint64_t size)
+/*
+ * Common internal code to create a parameter passing object
+ */
+static struct lvm_pv_create_params *_lvm_pv_params_create(
+		lvm_t libh,
+		const char *pv_name,
+		struct lvm_pv_create_params *pvcp_in)
 {
-	struct pvcreate_params pp;
+	struct lvm_pv_create_params *pvcp = NULL;
+	const char *dev = NULL;
 	struct cmd_context *cmd = (struct cmd_context *)libh;
-	uint64_t size_sectors = size;
 
-	pvcreate_params_set_defaults(&pp);
+	if (!pv_name || strlen(pv_name) == 0) {
+		log_error("Invalid pv_name");
+		return NULL;
+	}
 
-	if (size_sectors != 0) {
-		if (size_sectors % SECTOR_SIZE) {
+	if (!pvcp_in) {
+		pvcp = dm_pool_zalloc(cmd->libmem, sizeof(struct lvm_pv_create_params));
+	} else {
+		pvcp = pvcp_in;
+	}
+
+	if (!pvcp) {
+		return NULL;
+	}
+
+	dev = dm_pool_strdup(cmd->libmem, pv_name);
+	if (!dev) {
+		return NULL;
+	}
+
+	pvcreate_params_set_defaults(&pvcp->pv_p);
+	pvcp->pv_p.yes = 1;
+	pvcp->pv_p.force = DONT_PROMPT;
+	pvcp->pv_name = dev;
+	pvcp->libh = libh;
+	pvcp->magic = PV_CREATE_PARAMS_MAGIC;
+
+	return pvcp;
+}
+
+pv_create_params_t lvm_pv_params_create(lvm_t libh, const char *pv_name)
+{
+	return _lvm_pv_params_create(libh, pv_name, NULL);
+}
+
+struct lvm_property_value lvm_pv_params_get_property(
+						const pv_create_params_t params,
+						const char *name)
+{
+	struct lvm_property_value rc = {
+		.is_valid = 0
+	};
+
+	if (params && params->magic == PV_CREATE_PARAMS_MAGIC) {
+		rc = get_property(NULL, NULL, NULL, NULL, NULL, NULL, &params->pv_p,
+							name);
+	} else {
+		log_error("Invalid pv_create_params parameter");
+	}
+
+	return rc;
+}
+
+int lvm_pv_params_set_property(pv_create_params_t params, const char *name,
+								struct lvm_property_value *prop)
+{
+	int rc = -1;
+
+	if (params && params->magic == PV_CREATE_PARAMS_MAGIC) {
+		rc = set_property(NULL, NULL, NULL, NULL, &params->pv_p, name, prop);
+	} else {
+		log_error("Invalid pv_create_params parameter");
+	}
+	return rc;
+}
+
+static int _pv_create(pv_create_params_t params)
+{
+	struct cmd_context *cmd = (struct cmd_context *)params->libh;
+
+	if (params->pv_p.size) {
+		if (params->pv_p.size % SECTOR_SIZE) {
 			log_errno(EINVAL, "Size not a multiple of 512");
 			return -1;
 		}
-		size_sectors = size_sectors >> SECTOR_SHIFT;
+		params->pv_p.size = params->pv_p.size >> SECTOR_SHIFT;
 	}
 
-	pp.size = size_sectors;
+	if (!pvcreate_single(cmd, params->pv_name, &params->pv_p))
+		return -1;
+	return 0;
+}
 
-	if (!pvcreate_single(cmd, pv_name, &pp))
+int lvm_pv_create(lvm_t libh, const char *pv_name, uint64_t size)
+{
+	struct lvm_pv_create_params pp;
+
+	if (!_lvm_pv_params_create(libh, pv_name, &pp))
 		return -1;
 
-	return 0;
+	pp.pv_p.size = size;
+
+	return _pv_create(&pp);
+}
+
+int lvm_pv_create_adv(pv_create_params_t params)
+{
+	int rc = -1;
+
+	if (params && params->magic == PV_CREATE_PARAMS_MAGIC) {
+		rc = _pv_create(params);
+	} else {
+		log_error("Invalid pv_create_params parameter");
+	}
+
+	return rc;
 }

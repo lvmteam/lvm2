@@ -162,6 +162,14 @@ typedef struct pv_segment *pvseg_t;
 typedef struct lvm_lv_create_params *lv_create_params_t;
 
 /**
+ * \class pv_create_params
+ *
+ * This pv_create_params represents the plethora of available options when
+ * creating a physical volume
+ */
+typedef struct lvm_pv_create_params *pv_create_params_t;
+
+/**
  * Logical Volume object list.
  *
  * Lists of these structures are returned by lvm_vg_list_lvs().
@@ -580,6 +588,62 @@ int lvm_list_pvs_free(struct dm_list *pvlist);
  *  0 on success, else -1 with library errno and text set.
  */
 int lvm_pv_create(lvm_t libh, const char *pv_name, uint64_t size);
+
+/**
+ * Create a physical volume parameter object for PV creation.
+ *
+ * \param	libh	Library handle
+ * \param	pv_name	Device name
+ *
+ * \return
+ * NULL on error, else valid parameter object to use.
+ */
+pv_create_params_t lvm_pv_params_create(lvm_t libh, const char *pv_name);
+
+/**
+ * Create a parameter object to use in function lvm_pv_create_adv
+ *
+ * 	\param 	params	The params object to get property value from
+ * 	\param	name	The name of the property to retrieve
+ *
+ * 	Available properties:
+ *
+ * 	size					zero indicates use detected size of device
+ * 							(recommended and default)
+ *	pvmetadatacopies		Number of metadata copies (0,1,2)
+ *	pvmetadatasize			The approx. size to be to be set aside for metadata
+ *	data_alignment			Align the start of the data to a multiple of
+ *							this number
+ *	data_alignment_offset	Shift the start of the data area by this addl.
+ *							offset
+ *	zero					Set to 1 to zero out first 2048 bytes of
+ *							device, 0 to not (default is 1)
+ *
+ * 	\return
+ * 	lvm_property_value
+ */
+struct lvm_property_value lvm_pv_params_get_property(
+						const pv_create_params_t params,
+						const char *name);
+
+/**
+ * Sets a property of a PV parameter create object.
+ *
+ * \param	params		The parameter object
+ * \param	name		The name of the property to set (see get prop list)
+ * \param	prop		The property to set the value on.
+ */
+int lvm_pv_params_set_property(pv_create_params_t params, const char *name,
+								struct lvm_property_value *prop);
+/**
+ * Creates a physical volume using the supplied params object.
+ *
+ * \param	params		The parameters to use for physical volume creation
+ *
+ * \return
+ * -1 on error, 0 on success.
+ */
+int lvm_pv_create_adv(pv_create_params_t params);
 
 /**
  *  Remove a physical volume.
