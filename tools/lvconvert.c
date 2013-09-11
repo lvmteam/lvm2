@@ -1605,6 +1605,13 @@ static int _lvconvert_mirrors(struct cmd_context *cmd,
 	if (!_lvconvert_validate_thin(lv, lp))
 		return_0;
 
+	if (lv_is_thin_type(lv)) {
+		log_error("Mirror segment type cannot be used for thinpool%s.\n"
+			  "Try \"raid1\" segment type instead.",
+			  lv_is_thin_pool_data(lv) ? "s" : " metadata");
+		return 0;
+	}
+
 	/* Adjust mimage and/or log count */
 	if (!_lvconvert_mirrors_parse_params(cmd, lv, lp,
 					     &old_mimage_count, &old_log_count,
@@ -2270,6 +2277,12 @@ static int _lvconvert_thinpool(struct cmd_context *cmd,
 		return 0;
 	}
 
+	if (lv_is_mirrored(pool_lv) && !lv_is_raid_type(pool_lv)) {
+		log_error("Mirror logical volumes cannot be used as thinpools.\n"
+			  "Try \"raid1\" segment type instead.");
+		return 0;
+	}
+
 	if (lp->thin) {
 		external_lv = pool_lv;
 		if (!(pool_lv = find_lv(external_lv->vg, lp->pool_data_lv_name))) {
@@ -2336,6 +2349,12 @@ static int _lvconvert_thinpool(struct cmd_context *cmd,
 		if (!lv_is_visible(metadata_lv)) {
 			log_error("Can't convert internal LV %s/%s.",
 				  metadata_lv->vg->name, metadata_lv->name);
+			return 0;
+		}
+		if (lv_is_mirrored(pool_lv) && !lv_is_raid_type(pool_lv)) {
+			log_error("Mirror logical volumes cannot be used"
+				  " for thinpool metadata.\n"
+				  "Try \"raid1\" segment type instead.");
 			return 0;
 		}
 		if (metadata_lv->status & LOCKED) {

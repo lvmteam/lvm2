@@ -36,13 +36,22 @@ vgcreate $vg -s 64K $(cut -d ' ' -f 4 DEVICES) "$DM_DEV_DIR/$vg1/$lv"
 
 # create mirrored LVs for data and metadata volumes
 lvcreate -aey -L10M --type mirror -m1 --mirrorlog core -n $lv1 $vg
-lvcreate -aey -L8M --type mirror -m1 --mirrorlog core -n $lv2 $vg
+lvcreate -aey -L10M -n $lv2 $vg
 lvchange -an $vg/$lv1
 
+# conversion fails for mirror segment type
+not lvconvert --thinpool $vg/$lv1
+not lvconvert --thinpool $vg/$lv2 --poolmetadata $vg/$lv2
+lvremove -f $vg
+
+# create RAID LVs for data and metadata volumes
+lvcreate -aey -L10M --type raid1 -m1 -n $lv1 $vg
+lvcreate -aey -L10M --type raid1 -m1 -n $lv2 $vg
+lvchange -an $vg/$lv1
 
 # conversion fails for internal volumes
-not lvconvert --thinpool $vg/${lv1}_mimage_0
-not lvconvert --thinpool $vg/$lv1 --poolmetadata $vg/${lv2}_mimage_0
+not lvconvert --thinpool $vg/${lv1}_rimage_0
+not lvconvert --thinpool $vg/$lv1 --poolmetadata $vg/${lv2}_rimage_0
 # can't use --readahead with --poolmetadata
 not lvconvert --thinpool $vg/$lv1 --poolmetadata $vg/$lv2 --readahead 512
 
@@ -95,7 +104,8 @@ grep "WARNING: Chunk size is too small" err
 
 #lvs -a -o+chunk_size,stripe_size,seg_pe_ranges
 
-# Convertions of pool to mirror is unsupported
-not lvconvert -m1 $vg/$lv1
+# Convertions of pool to mirror or RAID is unsupported
+not lvconvert --type mirror -m1 $vg/$lv1
+not lvconvert --type raid1 -m1 $vg/$lv1
 
 vgremove -ff $vg

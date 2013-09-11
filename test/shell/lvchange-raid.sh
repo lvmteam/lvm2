@@ -285,6 +285,12 @@ run_checks() {
 		run_recovery_rate_check $1 $2
 	elif [ 'thinpool_data' == $3 ]; then
 		aux target_at_least dm-thin-pool 1 8 0 || return 0
+
+		# RAID works EX in cluster
+		# thinpool works EX in cluster
+		# but they don't work together in a cluster yet
+		#  (nor does thinpool+mirror work in a cluster yet)
+		test -e LOCAL_CLVMD && return 0
 		printf "#\n#\n# run_checks: RAID as thinpool data\n#\n#\n"
 
 # Hey, specifying devices for thin allocation doesn't work
@@ -300,6 +306,7 @@ run_checks() {
 		run_recovery_rate_check $1 $2
 	elif [ 'thinpool_meta' == $3 ]; then
 		aux target_at_least dm-thin-pool 1 8 0 || return 0
+		test -e LOCAL_CLVMD && return 0
 		printf "#\n#\n# run_checks: RAID as thinpool metadata\n#\n#\n"
 
 		lvrename $1/$2 ${2}_meta
