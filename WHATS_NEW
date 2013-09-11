@@ -1,5 +1,7 @@
 Version 2.02.101 - 
 ===================================
+  Direct udev to use 3min timeout for LVM devices. Recent udev has default 30s.
+  Fix MD/loop udev handling to fire autoactivation after setup or coldplug only.
   Make RAID capable of single-machine exclusive operations in a cluster.
   Drop calculation of read ahead for deactivated volume.
   Check for exactly one lv segment in validation of thin pools and volumes.
