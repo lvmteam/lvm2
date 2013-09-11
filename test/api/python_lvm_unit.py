@@ -27,6 +27,17 @@ import os
 # production system.  Therefore it is strongly advised that this unit test
 # not be run on a system that contains data of value.
 
+fh = None
+
+
+def l(txt):
+	if os.environ.get('PY_UNIT_LOG') is not None:
+		global fh
+		if fh is None:
+			fh = open('/tmp/lvm_py_unit_test_' + rs(10), "a")
+		fh.write(txt + "\n")
+		fh.flush()
+
 
 def rs(l=10):
 	"""
@@ -692,6 +703,94 @@ class TestLvm(unittest.TestCase):
 			vg = lvm.vgOpen(vg_name, 'w')
 			self._testTags(vg)
 			vg.close()
+
+	def testListing(self):
+
+		env = os.environ
+
+		for k, v in env.items():
+			l("%s:%s" % (k, v))
+
+		with lvm.listPvs() as pvs:
+			for p in pvs:
+				l('pv= %s' % p.getName())
+
+		l('Checking for VG')
+		for v in lvm.listVgNames():
+			l('vg= %s' % v)
+
+	def testPVemptylisting(self):
+		#We had a bug where we would seg. fault if we had no PVs.
+
+		l('testPVemptylisting entry')
+
+		device_names = self._get_pv_device_names()
+
+		for d in device_names:
+			l("Removing %s" % d)
+			lvm.pvRemove(d)
+
+		count = 0
+
+		with lvm.listPvs() as pvs:
+			for p in pvs:
+				count += 1
+				l('pv= %s' % p.getName())
+
+		self.assertTrue(count == 0)
+
+		for d in device_names:
+			lvm.pvCreate(d)
+
+	def testPVCreate(self):
+		size = [0, 1024*1024*4]
+		pvmeta_copies = [0, 1, 2]
+		pvmeta_size = [0, 255, 512, 1024]
+		data_alignment = [0, 2048, 4096]
+		data_alignment_offset = [1, 1, 1]
+		zero = [0, 1]
+
+		device_names = self._get_pv_device_names()
+
+		for d in device_names:
+			lvm.pvRemove(d)
+
+		d = device_names[0]
+
+		#Test some error cases
+		self.assertRaises(TypeError, lvm.pvCreate, None)
+		self.assertRaises(lvm.LibLVMError, lvm.pvCreate, '')
+		self.assertRaises(lvm.LibLVMError, lvm.pvCreate, d, 4)
+		self.assertRaises(lvm.LibLVMError, lvm.pvCreate, d, 0, 4)
+		self.assertRaises(lvm.LibLVMError, lvm.pvCreate, d, 0, 0, 0, 2**34)
+		self.assertRaises(lvm.LibLVMError, lvm.pvCreate, d, 0, 0, 0, 4096,
+						  2**34)
+
+		#Try a number of combinations and permutations
+		for s in size:
+			lvm.pvCreate(d, s)
+			lvm.pvRemove(d)
+			for copies in pvmeta_copies:
+				lvm.pvCreate(d, s, copies)
+				lvm.pvRemove(d)
+				for pv_size in pvmeta_size:
+					lvm.pvCreate(d, s, copies, pv_size)
+					lvm.pvRemove(d)
+					for align in data_alignment:
+						lvm.pvCreate(d, s, copies, pv_size, align)
+						lvm.pvRemove(d)
+						for align_offset in data_alignment_offset:
+							lvm.pvCreate(d, s, copies, pv_size, align,
+										 align * align_offset)
+							lvm.pvRemove(d)
+							for z in zero:
+								lvm.pvCreate(d, s, copies, pv_size, align,
+											 align * align_offset, z)
+								lvm.pvRemove(d)
+
+		#Restore
+		for d in device_names:
+			lvm.pvCreate(d)
 
 if __name__ == "__main__":
 	unittest.main()

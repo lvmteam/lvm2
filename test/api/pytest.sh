@@ -27,8 +27,4 @@ export PYTHONPATH=`dirname $python_lib`:$PYTHONPATH
 #Setup which devices the unit test can use.
 export PY_UNIT_PVS=$(cat DEVICES)
 
-
-#We will skip until we can ensure it is correct.
-skip
-
 python_lvm_unit.py -v -f
