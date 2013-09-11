@@ -1,6 +1,7 @@
 Version 2.02.101 - 
 ===================================
   Direct udev to use 3min timeout for LVM devices. Recent udev has default 30s.
+  Do not scan multipath or RAID components and avoid incorrect autoactivation.
   Fix MD/loop udev handling to fire autoactivation after setup or coldplug only.
   Make RAID capable of single-machine exclusive operations in a cluster.
   Drop calculation of read ahead for deactivated volume.
