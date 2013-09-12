@@ -219,7 +219,8 @@ static const char *_append_with_stamp(const char *buf, int stamp)
 	return bb;
 }
 
-static void drain(void) {
+static void drain(int fd)
+{
 	char buf[4096];
 	const char *bp;
 	int stamp = 0;
@@ -228,7 +229,7 @@ static void drain(void) {
 	static int stdout_last = -1, stdout_counter = 0;
 	static int outfile_last = -1, outfile_counter = 0;
 
-	while ((sz = read(fds[1], buf, sizeof(buf) - 1)) > 0) {
+	while ((sz = read(fd, buf, sizeof(buf) - 1)) > 0) {
 		if (fullbuffer)
 			continue;
 		buf[sz] = '\0';
@@ -368,6 +369,8 @@ static void run(int i, char *f) {
 		fd_set set;
 		int runaway = 0;
 		int no_write = 0;
+		FILE *varlogmsg;
+		int fd_vlm = -1;
 
 		snprintf(buf, sizeof(buf), "%s ...", f);
 		printf("Running %-60s ", buf);
@@ -377,6 +380,13 @@ static void run(int i, char *f) {
 			*c = '_';
 		if (!(outfile = fopen(outpath, "w")))
 			perror("fopen");
+
+		/* Mix in kernel log message */
+		if (!(varlogmsg = fopen("/var/log/messages", "r")))
+			perror("fopen");
+		else if (((fd_vlm = fileno(varlogmsg)) >= 0) &&
+			 fseek(varlogmsg, 0L, SEEK_END))
+			perror("fseek");
 
 		while ((w = wait4(pid, &st, WNOHANG, &usage)) == 0) {
 			if ((fullbuffer && fullbuffer++ == 8000) ||
@@ -401,14 +411,18 @@ static void run(int i, char *f) {
 				no_write++;
 				continue;
 			}
-			drain();
+			drain(fds[1]);
 			no_write = 0;
+			if (fd_vlm >= 0)
+				drain(fd_vlm);
 		}
 		if (w != pid) {
 			perror("waitpid");
 			exit(206);
 		}
-		drain();
+		drain(fds[1]);
+		if (fd_vlm >= 0)
+			drain(fd_vlm);
 		if (die == 2)
 			interrupted(i, f);
 		else if (runaway) {
@@ -423,6 +437,8 @@ static void run(int i, char *f) {
 		} else
 			failed(i, f, st);
 
+		if (varlogmsg)
+			fclose(varlogmsg);
 		if (outfile)
 			fclose(outfile);
 		if (fullbuffer)
