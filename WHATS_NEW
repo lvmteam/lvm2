@@ -1,5 +1,7 @@
 Version 2.02.101 - 
 ===================================
+  Add man page entries for lvmdump's -u and -l options.
+  Fix lvm2app segfault while using lvm_list_pvs_free fn if there are no PVs.
   Improve of clvmd singlenode locking simulation.
   Disallow thinpools on mirror logical volumes.
   Direct udev to use 3min timeout for LVM devices. Recent udev has default 30s.
