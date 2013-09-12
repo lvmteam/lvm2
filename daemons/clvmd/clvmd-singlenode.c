@@ -195,7 +195,7 @@ static int _lock_resource(const char *resource, int mode, int flags, int *lockid
 	/* EX */ { 1,	 0,	 0,	 0,	 0,	 0}
 	};
 
-	struct lock *lck, *lckt;
+	struct lock *lck = NULL, *lckt;
 	struct dm_list *head;
 
 	DEBUGLOG("Locking resource %s, flags=0x%02x (%s%s%s), mode=%s (%d)\n",
@@ -213,6 +213,11 @@ retry:
 	pthread_cond_broadcast(&_lock_cond); /* to wakeup waiters */
 
 	if (!(head = dm_hash_lookup(_locks, resource))) {
+		if (flags & LCKF_CONVERT) {
+			/* In real DLM, lock is identified only by lockid, resource is not used */
+			DEBUGLOG("Unlocked resource %s cannot be converted\n", resource);
+			goto_bad;
+		}
 		/* Add new locked resource */
 		if (!(head = dm_malloc(sizeof(struct dm_list))) ||
 		    !dm_hash_insert(_locks, resource, head)) {
@@ -223,14 +228,13 @@ retry:
 		dm_list_init(head);
 	} else	/* Update/convert locked resource */
 		dm_list_iterate_items(lck, head) {
-			/* FIXME Unsure what is LCKF_CONVERT about....*/
+			/* Check is all locks are compatible with requested lock */
 			if (flags & LCKF_CONVERT) {
 				if (lck->lockid != *lockid)
 					continue;
 
 				DEBUGLOG("Converting resource %s lockid=%d mode:%s -> %s...\n",
 					 resource, lck->lockid, _get_mode(lck->mode), _get_mode(mode));
-				/* Check if converted lock is compatible with locks we already have */
 				dm_list_iterate_items(lckt, head) {
 					if ((lckt->lockid != *lockid) &&
 					    !_dlm_table[mode][lckt->mode]) {
@@ -297,7 +301,7 @@ static int _unlock_resource(const char *resource, int lockid)
 
 	if (!(head = dm_hash_lookup(_locks, resource))) {
 		pthread_mutex_unlock(&_lock_mutex);
-		DEBUGLOG("Resource %s is not locked.\n", resource, lockid);
+		DEBUGLOG("Resource %s is not locked.\n", resource);
 		return 1;
 	}
 
