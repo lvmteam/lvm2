@@ -105,7 +105,15 @@ run_writemostly_check() {
 	# Partial flag supercedes writemostly flag
 	aux disable_dev $d0
 	lvs -a --noheadings -o lv_attr $vg/${lv}_rimage_0 | grep '.*p.$'
+
+	# It is possible for the kernel to detect the failed device before
+	# we re-enable it.  If so, the field will be set to 'r'efresh since
+	# that also takes precedence over 'w'ritemostly.  If this has happened,
+	# we refresh the LV and then check for 'w'.
 	aux enable_dev $d0
+	if lvs -a --noheadings -o lv_attr $vg/${lv}_rimage_0 | grep '.*r.$'; then
+		lvchange --refresh $vg/$lv
+	fi
 	lvs -a --noheadings -o lv_attr $vg/${lv}_rimage_0 | grep '.*w.$'
 
 	# Catch Bad writebehind values
