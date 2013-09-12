@@ -256,7 +256,7 @@ static int hold_lock(char *resource, int mode, int flags)
 		}
 		if ((lvi->lock_mode == LCK_EXCL) && (mode == LCK_WRITE)) {
 			DEBUGLOG("hold_lock, lock already held LCK_EXCL, "
-				 "ignoring LCK_WRITE request");
+				 "ignoring LCK_WRITE request\n");
 			return 0;
 		}
 	}
