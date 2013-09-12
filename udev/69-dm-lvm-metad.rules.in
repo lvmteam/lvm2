@@ -39,8 +39,7 @@ ACTION=="remove", GOTO="lvm_scan"
 
 # DM device:
 KERNEL!="dm-[0-9]*", GOTO="next"
-ACTION=="add", ENV{DM_ACTIVATED}=="1", GOTO="lvm_scan"
-ACTION=="change", ENV{DM_UDEV_PRIMARY_SOURCE_FLAG}=="1", GOTO="lvm_scan"
+ENV{DM_UDEV_PRIMARY_SOURCE_FLAG}=="1", ENV{DM_ACTIVATION}=="1", GOTO="lvm_scan"
 GOTO="lvm_end"
 
 # MD device:
