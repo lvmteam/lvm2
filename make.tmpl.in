@@ -17,7 +17,18 @@ SHELL = /bin/sh
 
 @SET_MAKE@
 
+# Allow environment to override any built-in default value for CC.
+# If there is a built-in default, CC is NOT set to @CC@ here.
 CC ?= @CC@
+
+# If $(CC) holds the usual built-in default value of 'cc' then replace it with
+# the configured value.
+# (To avoid this and force the use of 'cc' from the environment, supply its
+# full path.)
+ifeq ($(CC), cc)
+  CC = @CC@
+endif
+
 RANLIB = @RANLIB@
 INSTALL = @INSTALL@
 MKDIR_P = @MKDIR_P@
