@@ -134,16 +134,16 @@ static int generate_unit(const char *dir, int unit)
 	      "DefaultDependencies=no\n", f);
 
 	if (unit == UNIT_NET) {
-		fputs("After=iscsi.service fcoe.service\n"
-		      "Before=remote-fs.target shutdown.target\n\n"
-		      "[Service]\n"
-		      "ExecStartPre=/usr/bin/udevadm settle\n", f);
+		fprintf(f, "After=%s iscsi.service fcoe.service\n"
+			"Before=remote-fs.target shutdown.target\n\n"
+			"[Service]\n"
+			"ExecStartPre=/usr/bin/udevadm settle\n", unit_names[UNIT_MAIN]);
 	} else {
 		if (unit == UNIT_EARLY) {
 			fputs("After=systemd-udev-settle.service\n"
 			      "Before=cryptsetup.target\n", f);
 		} else
-			fputs("After=lvm2-activation-early.service cryptsetup.target\n", f);
+			fprintf(f, "After= %s cryptsetup.target\n", unit_names[UNIT_EARLY]);
 
 		fputs("Before=local-fs.target shutdown.target\n"
 		      "Wants=systemd-udev-settle.service\n\n"

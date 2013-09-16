@@ -1,5 +1,6 @@
 Version 2.02.101 - 
 ===================================
+  Run lvm2-activation-net after lvm2-activation service to prevent parallel run.
   Add man page entries for lvmdump's -u and -l options.
   Fix lvm2app segfault while using lvm_list_pvs_free fn if there are no PVs.
   Improve of clvmd singlenode locking simulation.
