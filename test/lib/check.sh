@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Copyright (C) 2010-2012 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2010-2013 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -54,14 +54,38 @@ mirror_images_redundant() {
 			$(cat check.tmp.all)
 }
 
+lv_err_list_() {
+	(echo "$2" | not grep -m 1 -q "$1") || \
+		echo "$3 on [ $(echo "$2" | grep "$1" | cut -b3- | tr '\n' ' ')] "
+}
+
+lv_on_diff_() {
+	declare -a devs=("${!1}") # pass in shell array
+	local expect=( "${@:4}" ) # make an array starting from 4th args...
+	local diff_e
+
+	# Find diff between 2 shell arrays, print them as stdin files
+	diff_e=$(diff <(printf "%s\n" "${expect[@]}" | sort | uniq ) <(printf "%s\n" "${devs[@]}") ) ||
+		die "LV $2/$3 $(lv_err_list_ "^>" "${diff_e}" found)$(lv_err_list_ "^<" "${diff_e}" "not found")."
+}
+
+# list devices for given LV
 lv_on() {
-	local lv=$1/$2
-	(lvdevices $lv | grep -F "$3") || \
-		die "LV $lv expected on $3 but is not:" \
-			$(lvdevices $lv)
-	test $(lvdevices $lv | grep -vF "$3" | wc -l) -eq 0 || \
-		die "LV $lv contains unexpected devices:" \
-			$(lvdevices $lv)
+	local devs
+
+	devs=( $(lvdevices "$1/$2" | sort | uniq ) )
+
+	lv_on_diff_ devs[@] "${@}"
+}
+
+# list devices for given LV and all its subdevices
+lv_tree_on() {
+	local devs
+
+	# Get sorted list of devices
+	devs=( $(get lv_tree_devices "$1" "$2") )
+
+	lv_on_diff_ devs[@] "${@}"
 }
 
 mirror_images_on() {

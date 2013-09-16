@@ -43,6 +43,40 @@ lv_devices() {
 	lv_field "$1" devices -a "${@:2}" | sed 's/([^)]*)//g; s/,/\n/g'
 }
 
+lv_field_lv_() {
+	lv_field "$1" "$2" -a --unbuffered | sed 's/\[//; s/]//'
+}
+
+lv_tree_devices_() {
+	local lv="$1/$2"
+	local type=$(lv_field "$lv" segtype -a --unbuffered | head -n 1)
+	local orig=$(lv_field_lv_ "$lv" origin)
+	# FIXME: should we count in also origins ?
+	#test -z "$orig" || lv_tree_devices_ $1 $orig
+	case "$type" in
+	linear|striped)
+		lv_devices "$lv"
+		;;
+	mirror|raid*)
+		local log=$(lv_field_lv_ "$lv" mirror_log)
+		test -z "$log" || lv_tree_devices_ "$1" "$log"
+		for i in $(lv_devices "$lv")
+			do lv_tree_devices_ "$1" "$i"; done
+		;;
+	thin)
+		lv_tree_devices_ "$1" "$(lv_field_lv_ $lv pool_lv)"
+		;;
+	thin-pool)
+		lv_tree_devices_ "$1" "$(lv_field_lv_ $lv data_lv)"
+		lv_tree_devices_ "$1" "$(lv_field_lv_ $lv metadata_lv)"
+		;;
+	esac
+}
+
+lv_tree_devices() {
+	lv_tree_devices_ "$@" | sort | uniq
+}
+
 #set -x
 unset LVM_VALGRIND
 "$@"
