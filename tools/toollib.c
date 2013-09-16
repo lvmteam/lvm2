@@ -66,7 +66,7 @@ int become_daemon(struct cmd_context *cmd, int skip_lvm)
 			  strerror(errno));
 
 /* Set this to avoid discarding output from background process */
-/* #define DEBUG_CHILD */
+// #define DEBUG_CHILD
 
 #ifndef DEBUG_CHILD
 	if ((null_fd = open(devnull, O_RDWR)) == -1) {
