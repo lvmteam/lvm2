@@ -6,7 +6,8 @@ Version 2.02.101 -
   Add man page entries for lvmdump's -u and -l options.
   Fix lvm2app segfault while using lvm_list_pvs_free fn if there are no PVs.
   Improve of clvmd singlenode locking simulation.
-  Disallow thinpools on mirror logical volumes.
+  lvconvert no longer converts LVs of "mirror" segment type to thinpool.
+  lvconvert no longer converts thinpool sub-LVs to "mirror" segment type.
   Direct udev to use 3min timeout for LVM devices. Recent udev has default 30s.
   Do not scan multipath or RAID components and avoid incorrect autoactivation.
   Fix MD/loop udev handling to fire autoactivation after setup or coldplug only.
