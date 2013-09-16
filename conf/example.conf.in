@@ -80,6 +80,8 @@ devices {
     # the cache file gets regenerated (see below).
     # If it doesn't do what you expect, check the output of 'vgscan -vvvv'.
 
+    # If lvmetad is used, then see "A note about device filtering while
+    # lvmetad is used" comment that is attached to global/use_lvmetad setting.
 
     # By default we accept every block device:
     filter = [ "a/.*/" ]
@@ -559,6 +561,16 @@ global {
     # that appear in the system. Once the VG is complete (all the PVs are
     # present), it is auto-activated. The activation/auto_activation_volume_list
     # setting controls which volumes are auto-activated (all by default).
+    #
+    # A note about device filtering while lvmetad is used:
+    # When lvmetad is updated (either automatically based on udev events
+    # or directly by pvscan --cache <device> call), the devices/filter
+    # is ignored and all devices are scanned by default. The lvmetad always
+    # keeps unfiltered information which is then provided to LVM commands
+    # and then each LVM command does the filtering based on devices/filter
+    # setting itself.
+    # To prevent scanning devices completely, even when using lvmetad,
+    # the devices/global_filter must be used.
     use_lvmetad = 0
 
     # Full path of the utility called to check that a thin metadata device
