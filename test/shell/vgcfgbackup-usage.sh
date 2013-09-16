@@ -22,7 +22,7 @@ vgcfgbackup -f bak-%s >out
 grep "Volume group \"$vg1\" successfully backed up." out
 grep "Volume group \"$vg2\" successfully backed up." out
 # increase seqno
-lvcreate -l1 $vg1
+lvcreate -an -Zn -l1 $vg1
 vgcfgrestore -f bak-$vg1 $vg1
 vgremove -ff $vg1 $vg2
 
