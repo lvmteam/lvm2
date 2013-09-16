@@ -506,6 +506,12 @@ unhide_dev() {
 	lvmconf "$filter"
 }
 
+mkdev_md5sum() {
+	rm -f debug.log
+	mkfs.ext2 "$DM_DEV_DIR/$1/$2" || return 1
+	md5sum "$DM_DEV_DIR/$1/$2" > "md5.$1-$2"
+}
+
 generate_config() {
 	if test -n "$profile_name"; then
 		config_values=PROFILE_VALUES_$profile_name

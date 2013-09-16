@@ -280,5 +280,13 @@ pvlv_counts() {
 	vg_field $local_vg snap_count $num_snaps
 }
 
+# Compare md5 check generated from get dev_md5sum
+dev_md5sum() {
+	md5sum -c "md5.$1-$2" || \
+		(get lv_field $1/$2 "name,size,seg_pe_ranges"
+		 die "LV $1/$2 has different MD5 check sum!")
+}
+
+#set -x
 unset LVM_VALGRIND
 "$@"
