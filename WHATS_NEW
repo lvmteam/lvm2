@@ -1,5 +1,6 @@
 Version 2.02.101 - 
 ===================================
+  Recognise bcache block devices in filter (experimental).
   Run lvm2-activation-net after lvm2-activation service to prevent parallel run.
   Add man page entries for lvmdump's -u and -l options.
   Fix lvm2app segfault while using lvm_list_pvs_free fn if there are no PVs.
@@ -14,19 +15,16 @@ Version 2.02.101 -
   Fix dmeventd unmonitoring of thin pools.
   Fix lvresize for stacked thin pool volumes (i.e. mirrors).
   Write Completed debug message before reinstating log defaults after command.
-  Skip pvmove of RAID, thin, snapshot, origin, or mirror LVs in a cluster.
   Refresh existing VG before autoactivation (event retrigger/device reappeared).
   Use pvscan -b in udev rules to avoid a deadlock on udev process count limit.
   Add pvscan -b/--background for the command to be processed in the background.
   Don't assume stdin file descriptor is readable.
   Avoid unlimited recursion when creating dtree containing inactive pvmove LV.
   Require exactly 3 arguments for lvm2-activation-generator. Remove defaults.
-  Disable pvmove of merging or converting logical volumes.
-  Enable pvmove of snapshots and snapshot origins.
-  Fix inability to specify LV name when pvmove'ing a RAID, mirror, or thin-LV.
   Inform lvmetad about any lost PV label to make it in sync with system state.
   Support most of lvchange operations on stacked thin pool meta/data LVs.
-  Add ability to pvmove RAID, mirror, and thin volumes.
+  Enable non-clustered pvmove of snapshots and snapshot origins.
+  Add ability to pvmove non-clustered RAID, mirror, and thin volumes.
   Make lvm2-activation-generator silent unless it's in error state.
   Remove "mpath major is not dm major" msg for mpath component scan (2.02.94).
   Prevent cluster mirror logs from being corrupted by redundant checkpoints.
