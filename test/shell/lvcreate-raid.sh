@@ -42,8 +42,8 @@ lvremove -ff $vg
 lvcreate --type raid1 -m 2 -l 2 \
 	--minrecoveryrate 50 --maxrecoveryrate 100 \
 	-n $lv1 $vg
-[ `lvs --noheadings -o raid_min_recovery_rate $vg/$lv1` -eq 50 ]
-[ `lvs --noheadings -o raid_max_recovery_rate $vg/$lv1` -eq 100 ]
+check lv_field $vg/$lv1 raid_min_recovery_rate 50
+check lv_field $vg/$lv1 raid_max_recovery_rate 100
 aux wait_for_sync $vg $lv1
 lvremove -ff $vg
 
@@ -65,8 +65,8 @@ for i in raid4 \
 	lvcreate --type $i -l 3 -i 3 \
 		--minrecoveryrate 50 --maxrecoveryrate 100 \
 		-n $lv1 $vg
-	[ `lvs --noheadings -o raid_min_recovery_rate $vg/$lv1` -eq 50 ]
-	[ `lvs --noheadings -o raid_max_recovery_rate $vg/$lv1` -eq 100 ]
+	check lv_field $vg/$lv1 raid_min_recovery_rate 50
+	check lv_field $vg/$lv1 raid_max_recovery_rate 100
 	aux wait_for_sync $vg $lv1
 	lvremove -ff $vg
 done
