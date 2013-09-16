@@ -15,7 +15,8 @@ IFS_NL='
 '
 
 die() {
-	echo "$@" >&2
+	rm -f debug.log
+	echo -e "$@" >&2
 	return 1
 }
 
