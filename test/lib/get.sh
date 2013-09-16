@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (C) 2011-2012 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2011-2013 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -18,28 +18,31 @@
 #
 #  get lv_devices LV     [lvs params]
 
+test -z "$BASH" || set -e -o pipefail
 
-# trims only leading prefix, we should not need trim trailing spaces
+# trims only leading prefix and suffix
 trim_() {
-	#local var=${var%"${var##*[! ]}"}  # remove trailing space characters
-	echo ${1#"${1%%[! ]*}"} # remove leading space characters
+	rm -f debug.log             # drop log, command was ok
+	local var=${1%${1##*[! ]}}  # remove trailing space characters
+	echo "${var#${var%%[! ]*}}" # remove leading space characters
 }
 
 pv_field() {
-	trim_ "$(pvs --noheadings -o $2 ${@:3} $1)"
+	trim_ "$(pvs --config 'log{prefix=""}' --noheadings -o $2 ${@:3} $1)"
 }
 
 vg_field() {
-	trim_ "$(vgs --noheadings -o $2 ${@:3} $1)"
+	trim_ "$(vgs --config 'log{prefix=""}' --noheadings -o $2 ${@:3} $1)"
 }
 
 lv_field() {
-	trim_ "$(lvs --noheadings -o $2 ${@:3} $1)"
+	trim_ "$(lvs --config 'log{prefix=""}' --noheadings -o $2 ${@:3} $1)"
 }
 
 lv_devices() {
-	lv_field $1 devices -a "${@:2}" | sed 's/([^)]*)//g; s/,/ /g'
+	lv_field "$1" devices -a "${@:2}" | sed 's/([^)]*)//g; s/,/\n/g'
 }
 
+#set -x
 unset LVM_VALGRIND
 "$@"

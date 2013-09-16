@@ -236,13 +236,13 @@ pv_field() {
 }
 
 vg_field() {
-	local actual=$(get vg_field $1 "$2" "${@:4}")
+	local actual=$(get vg_field "$1" "$2" "${@:4}")
 	test "$actual" = "$3" || \
 		die "vg_field: vg=$1, field=\"$2\", actual=\"$actual\", expected=\"$3\""
 }
 
 lv_field() {
-	local actual=$(get lv_field $1 "$2" "${@:4}")
+	local actual=$(get lv_field "$1" "$2" "${@:4}")
 	test "$actual" = "$3" || \
 		die "lv_field: lv=$lv, field=\"$2\", actual=\"$actual\", expected=\"$3\""
 }
