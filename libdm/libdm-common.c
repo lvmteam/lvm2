@@ -966,7 +966,9 @@ static int _add_dev_node(const char *dev_name, uint32_t major, uint32_t minor,
 
 	(void) dm_prepare_selinux_context(path, S_IFBLK);
 	old_mask = umask(0);
-	if (mknod(path, S_IFBLK | mode, dev) < 0) {
+
+	/* The node may already have been created by udev. So ignore EEXIST. */
+	if (mknod(path, S_IFBLK | mode, dev) < 0 && errno != EEXIST) {
 		log_error("%s: mknod for %s failed: %s", path, dev_name, strerror(errno));
 		umask(old_mask);
 		(void) dm_prepare_selinux_context(NULL, 0);
@@ -998,7 +1000,8 @@ static int _rm_dev_node(const char *dev_name, int warn_if_udev_failed)
 		log_warn("Node %s was not removed by udev. "
 			 "Falling back to direct node removal.", path);
 
-	if (unlink(path) < 0) {
+	/* udev may already have deleted the node. Ignore ENOENT. */
+	if (unlink(path) < 0 && errno != ENOENT) {
 		log_error("Unable to unlink device node for '%s'", dev_name);
 		return 0;
 	}
@@ -1054,7 +1057,8 @@ static int _rename_dev_node(const char *old_name, const char *new_name,
 			 "Falling back to direct node rename.",
 			 oldpath, newpath);
 
-	if (rename(oldpath, newpath) < 0) {
+	/* udev may already have renamed the node. Ignore ENOENT. */
+	if (rename(oldpath, newpath) < 0 && errno != ENOENT) {
 		log_error("Unable to rename device node from '%s' to '%s'",
 			  old_name, new_name);
 		return 0;
