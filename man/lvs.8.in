@@ -173,12 +173,11 @@ more of the Physical Volumes this RAID Logical Volume uses had suffered a
 write error.  The write error could be due to a temporary failure of that
 Physical Volume or an indication that it is failing.  The device should be
 refreshed or replaced.  (m)ismatches signifies that the RAID logical volume
-has portions of the array that are not coherent or that the array has
-recently repaired inconsistencies.  An additional "check" after a "repair"
-of a RAID logical volume will clear this flag if no additional discrepancies
-are found.  ("check" and "repair" of a RAID Logical Volume can be done via
-the 'lvchange' command.)  (w)ritemostly signifies the devices in a RAID 1
-logical volume that have been marked write-mostly.
+has portions of the array that are not coherent.  Inconsistencies are
+detected by initiating a "check" on a RAID logical volume.  (The scrubbing
+operations, "check" and "repair", can be performed on a RAID logical
+volume via the 'lvchange' command.)  (w)ritemostly signifies the devices in
+a RAID 1 logical volume that have been marked write-mostly.
 .IP 10 3
 s(k)ip activation: this volume is flagged to be skipped during activation.
 .RE
