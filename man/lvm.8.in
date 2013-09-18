@@ -46,6 +46,8 @@ being created in the filesystem for them.
 \fBdumpconfig\fP \(em Display the configuration information after
 loading \fBlvm.conf\fP(5) and any other configuration files.
 .TP
+\fBdevtypes\fP \(dm Display the recognised built-in block device types.
+.TP
 \fBformats\fP \(em Display recognised metadata formats.
 .TP
 \fBhelp\fP \(em Display the help text.

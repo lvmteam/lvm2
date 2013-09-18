@@ -22,6 +22,7 @@
 #include "activate.h"
 #include "segtype.h"
 #include "lvmcache.h"
+#include "device-types.h"
 
 #include <stddef.h> /* offsetof() */
 
@@ -45,6 +46,13 @@ static int _string_disp(struct dm_report *rh, struct dm_pool *mem __attribute__(
 			const void *data, void *private __attribute__((unused)))
 {
 	return dm_report_field_string(rh, field, (const char * const *) data);
+}
+
+static int _chars_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
+		       struct dm_report_field *field,
+		       const void *data, void *private __attribute__((unused)))
+{
+	return dm_report_field_string(rh, field, (const char * const *) &data);
 }
 
 static int _dev_name_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
@@ -454,6 +462,15 @@ static int _uint32_disp(struct dm_report *rh, struct dm_pool *mem __attribute__(
 			const void *data, void *private __attribute__((unused)))
 {
 	return dm_report_field_uint32(rh, field, data);
+}
+
+static int _int8_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
+		       struct dm_report_field *field,
+		       const void *data, void *private __attribute__((unused)))
+{
+	const int32_t val = *(const int8_t *)data;
+
+	return dm_report_field_int32(rh, field, &val);
 }
 
 static int _int32_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
@@ -1270,6 +1287,11 @@ static void *_obj_get_pvseg(void *obj)
 	return ((struct lvm_report_object *)obj)->pvseg;
 }
 
+static void *_obj_get_devtypes(void *obj)
+{
+	return obj;
+}
+
 static const struct dm_report_object_type _report_types[] = {
 	{ VGS, "Volume Group", "vg_", _obj_get_vg },
 	{ LVS, "Logical Volume", "lv_", _obj_get_lv },
@@ -1277,6 +1299,11 @@ static const struct dm_report_object_type _report_types[] = {
 	{ LABEL, "Physical Volume Label", "pv_", _obj_get_pv },
 	{ SEGS, "Logical Volume Segment", "seg_", _obj_get_seg },
 	{ PVSEGS, "Physical Volume Segment", "pvseg_", _obj_get_pvseg },
+	{ 0, "", "", NULL },
+};
+
+static const struct dm_report_object_type _devtypes_report_types[] = {
+	{ DEVTYPES, "Device Types", "devtype_", _obj_get_devtypes },
 	{ 0, "", "", NULL },
 };
 
@@ -1296,8 +1323,15 @@ typedef struct volume_group type_vg;
 typedef struct lv_segment type_seg;
 typedef struct pv_segment type_pvseg;
 
+typedef dev_known_type_t type_devtype;
+
 static const struct dm_report_field_type _fields[] = {
 #include "columns.h"
+{0, 0, 0, 0, "", "", NULL, NULL},
+};
+
+static const struct dm_report_field_type _devtypes_fields[] = {
+#include "columns-devtypes.h"
 {0, 0, 0, 0, "", "", NULL, NULL},
 };
 
@@ -1311,6 +1345,7 @@ void *report_init(struct cmd_context *cmd, const char *format, const char *keys,
 		  int quoted, int columns_as_rows)
 {
 	uint32_t report_flags = 0;
+	int devtypes_report = *report_type & DEVTYPES ? 1 : 0;
 	void *rh;
 
 	if (aligned)
@@ -1331,7 +1366,8 @@ void *report_init(struct cmd_context *cmd, const char *format, const char *keys,
 	if (columns_as_rows)
 		report_flags |= DM_REPORT_OUTPUT_COLUMNS_AS_ROWS;
 
-	rh = dm_report_init(report_type, _report_types, _fields, format,
+	rh = dm_report_init(report_type, devtypes_report ? _devtypes_report_types : _report_types,
+			    devtypes_report ? _devtypes_fields : _fields, format,
 			    separator, report_flags, keys, cmd);
 
 	if (rh && field_prefixes)
@@ -1360,4 +1396,20 @@ int report_object(void *handle, struct volume_group *vg,
 	obj.pvseg = pvseg;
 
 	return dm_report_object(handle, &obj);
+}
+
+static int _report_devtype_single(void *handle, const dev_known_type_t *devtype)
+{
+	return dm_report_object(handle, (void *)devtype);
+}
+
+int report_devtypes(void *handle)
+{
+	int devtypeind = 0;
+
+	while (_dev_known_types[devtypeind].name[0])
+		if (!_report_devtype_single(handle, &_dev_known_types[devtypeind++]))
+			return 0;
+
+	return 1;
 }

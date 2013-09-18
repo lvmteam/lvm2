@@ -16,6 +16,17 @@
 #include "tools.h"
 #include "report.h"
 
+static int _process_each_devtype(struct cmd_context *cmd, int argc, void *handle)
+{
+	if (argc)
+		log_warn("WARNING: devtypes currently ignores command line arguments.");
+
+	if (!report_devtypes(handle))
+		return_ECMD_FAILED;
+
+	return ECMD_PROCESSED;
+}
+
 static int _vgs_single(struct cmd_context *cmd __attribute__((unused)),
 		       const char *vg_name, struct volume_group *vg,
 		       void *handle)
@@ -235,6 +246,13 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 			report_type == PVSEGS) ? 1 : 0;
 
 	switch (report_type) {
+	case DEVTYPES:
+		keys = find_config_tree_str(cmd, report_devtypes_sort_CFG, NULL);
+		if (!arg_count(cmd, verbose_ARG))
+			options = find_config_tree_str(cmd, report_devtypes_cols_CFG, NULL);
+		else
+			options = find_config_tree_str(cmd, report_devtypes_cols_verbose_CFG, NULL);
+		break;
 	case LVS:
 		keys = find_config_tree_str(cmd, report_lvs_sort_CFG, NULL);
 		if (!arg_count(cmd, verbose_ARG))
@@ -350,6 +368,9 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 		report_type = LVS;
 
 	switch (report_type) {
+	case DEVTYPES:
+		r = _process_each_devtype(cmd, argc, report_handle);
+		break;
 	case LVS:
 		r = process_each_lv(cmd, argc, argv, 0, report_handle,
 				    &_lvs_single);
@@ -417,4 +438,9 @@ int pvs(struct cmd_context *cmd, int argc, char **argv)
 		type = LABEL;
 
 	return _report(cmd, argc, argv, type);
+}
+
+int devtypes(struct cmd_context *cmd, int argc, char **argv)
+{
+	return _report(cmd, argc, argv, DEVTYPES);
 }

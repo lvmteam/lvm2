@@ -19,12 +19,13 @@
 #include "metadata-exported.h"
 
 typedef enum {
-	LVS	= 1,
-	PVS	= 2,
-	VGS	= 4,
-	SEGS	= 8,
-	PVSEGS	= 16,
-	LABEL	= 32
+	LVS		= 1,
+	PVS		= 2,
+	VGS		= 4,
+	SEGS		= 8,
+	PVSEGS		= 16,
+	LABEL		= 32,
+	DEVTYPES	= 64
 } report_type_t;
 
 struct field;
@@ -41,6 +42,7 @@ void report_free(void *handle);
 int report_object(void *handle, struct volume_group *vg,
 		  struct logical_volume *lv, struct physical_volume *pv,
 		  struct lv_segment *seg, struct pv_segment *pvseg);
+int report_devtypes(void *handle);
 int report_output(void *handle);
 
 #endif

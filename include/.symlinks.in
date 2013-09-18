@@ -16,6 +16,7 @@
 @top_srcdir@/lib/device/dev-cache.h
 @top_srcdir@/lib/device/dev-type.h
 @top_srcdir@/lib/device/device.h
+@top_srcdir@/lib/device/device-types.h
 @top_srcdir@/lib/display/display.h
 @top_srcdir@/lib/filters/filter.h
 @top_srcdir@/lib/format1/format1.h

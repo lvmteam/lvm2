@@ -28,6 +28,30 @@ xx(e2fsadm,
     extents_ARG, size_ARG, nofsck_ARG, test_ARG)
 *********/
 
+xx(devtypes,
+   "Display recognised built-in block device types",
+   PERMITTED_READ_ONLY,
+   "devtypes" "\n"
+   "\t[--aligned]\n"
+   "\t[-d|--debug]\n"
+   "\t[-h|--help]\n"
+   "\t[--nameprefixes]\n"
+   "\t[--noheadings]\n"
+   "\t[--nosuffix]\n"
+   "\t[-o|--options [+]Field[,Field]]\n"
+   "\t[-O|--sort [+|-]key1[,[+|-]key2[,...]]]\n"
+   "\t[--rows]\n"
+   "\t[--separator Separator]\n"
+   "\t[--unbuffered]\n"
+   "\t[--unquoted]\n"
+   "\t[-v|--verbose]\n"
+   "\t[--version]" "\n",
+
+   aligned_ARG, nameprefixes_ARG,
+   noheadings_ARG, nosuffix_ARG, options_ARG,
+   rows_ARG, separator_ARG, sort_ARG,
+   unbuffered_ARG, unquoted_ARG)
+
 xx(dumpconfig,
    "Dump configuration",
    PERMITTED_READ_ONLY,
