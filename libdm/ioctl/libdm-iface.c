@@ -785,6 +785,7 @@ int dm_task_set_newuuid(struct dm_task *dmt, const char *newuuid)
 		newuuid = mangled_uuid;
 	}
 
+	dm_free(dmt->newname);
 	if (!(dmt->newname = dm_strdup(newuuid))) {
 		log_error("dm_task_set_newuuid: strdup(%s) failed", newuuid);
 		return 0;
@@ -796,6 +797,7 @@ int dm_task_set_newuuid(struct dm_task *dmt, const char *newuuid)
 
 int dm_task_set_message(struct dm_task *dmt, const char *message)
 {
+	dm_free(dmt->message);
 	if (!(dmt->message = dm_strdup(message))) {
 		log_error("dm_task_set_message: strdup failed");
 		return 0;
@@ -814,6 +816,7 @@ int dm_task_set_sector(struct dm_task *dmt, uint64_t sector)
 int dm_task_set_geometry(struct dm_task *dmt, const char *cylinders, const char *heads,
 			 const char *sectors, const char *start)
 {
+	dm_free(dmt->geometry);
 	if (dm_asprintf(&(dmt->geometry), "%s %s %s %s",
 			cylinders, heads, sectors, start) < 0) {
 		log_error("dm_task_set_geometry: sprintf failed");

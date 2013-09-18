@@ -720,6 +720,7 @@ int dm_task_set_newname(struct dm_task *dmt, const char *newname)
 		newname = mangled_name;
 	}
 
+	dm_free(dmt->newname);
 	if (!(dmt->newname = dm_strdup(newname))) {
 		log_error("dm_task_set_newname: strdup(%s) failed", newname);
 		return 0;

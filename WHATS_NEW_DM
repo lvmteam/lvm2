@@ -1,5 +1,6 @@
 Version 1.02.80 - 
 ==================================
+  Free any previously-set string if a dm_task_set_* function is called again.
   Do not allow passing empty new name for dmsetup rename.
   Display any output returned by 'dmsetup message'.
   Add dm_task_get_message_response to libdevmapper.
