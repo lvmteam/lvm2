@@ -18,6 +18,7 @@
 #include "format-text.h"
 #include "lvm-string.h"
 #include "lvmcache.h"
+#include "lvmetad.h"
 #include "toolcontext.h"
 #include "locking.h"
 
@@ -347,7 +348,18 @@ int backup_restore_vg(struct cmd_context *cmd, struct volume_group *vg)
 		vg->extent_size = tmp;
 	}
 
-	if (!vg_write(vg) || !vg_commit(vg))
+	if (!vg_write(vg))
+		return_0;
+
+	if (lvmetad_active()) {
+		struct volume_group *vg_lvmetad = lvmetad_vg_lookup(cmd, vg->name, NULL);
+		if (vg_lvmetad) {
+			lvmetad_vg_remove(vg_lvmetad);
+			release_vg(vg_lvmetad);
+		}
+	}
+
+	if (!vg_commit(vg))
 		return_0;
 
 	return 1;

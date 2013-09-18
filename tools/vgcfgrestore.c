@@ -57,14 +57,6 @@ int vgcfgrestore(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	if (lvmetad_active()) {
-		struct volume_group *vg = lvmetad_vg_lookup(cmd, vg_name, NULL);
-		if (vg) {
-			lvmetad_vg_remove(vg);
-			release_vg(vg);
-		}
-	}
-
 	cmd->handles_unknown_segments = 1;
 
 	if (!(arg_count(cmd, file_ARG) ?
