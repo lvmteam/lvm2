@@ -1,5 +1,6 @@
 Version 2.02.101 - 
 ===================================
+  Use strtoull instead of strtol in _get_int_arg.
   Add devtypes report command to display built-in recognised block device types.
   Fix CC Makefile override which had reverted to using built-in value. (2.02.75)
   Recognise bcache block devices in filter (experimental).

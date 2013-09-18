@@ -241,7 +241,7 @@ int metadatatype_arg(struct cmd_context *cmd, struct arg_values *av)
 static int _get_int_arg(struct arg_values *av, char **ptr)
 {
 	char *val;
-	long v;
+	unsigned long long v;
 
 	av->percent = PERCENT_NONE;
 
@@ -262,9 +262,10 @@ static int _get_int_arg(struct arg_values *av, char **ptr)
 	if (!isdigit(*val))
 		return 0;
 
-	v = strtol(val, ptr, 10);
+	errno = 0;
+	v = strtoull(val, ptr, 10);
 
-	if (*ptr == val)
+	if (*ptr == val || errno)
 		return 0;
 
 	av->i_value = (int32_t) v;
