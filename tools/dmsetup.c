@@ -771,6 +771,8 @@ static int _message(CMD_ARGS)
 	struct dm_task *dmt;
 	char *str;
 	const char *response;
+	uint64_t sector;
+	char *endptr;
 
 	if (!(dmt = dm_task_create(DM_DEVICE_TARGET_MSG)))
 		return 0;
@@ -785,7 +787,12 @@ static int _message(CMD_ARGS)
 		argv++;
 	}
 
-	if (!dm_task_set_sector(dmt, (uint64_t) atoll(argv[1])))
+	sector = strtoull(argv[1], &endptr, 10);
+	if (*endptr || endptr == argv[1]) {
+		err("invalid sector");
+		goto out;
+	}
+	if (!dm_task_set_sector(dmt, sector))
 		goto out;
 
 	argc -= 2;
