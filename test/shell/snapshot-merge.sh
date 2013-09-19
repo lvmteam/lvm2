@@ -78,13 +78,6 @@ dm_table $vg-$lv1 | grep " snapshot-merge " || dm_table $vg-$lv1 | grep " linear
 #    may test stopping an active merge
 lvremove -f $vg/$lv1
 
-# wait a while if the merge and remove is still not finished
-# since it may still keep  $lv1  in vg being present
-for i in 1 2 3 4 ; do
-	lvs $vg/$lv1 2>/dev/null || break;
-	sleep .2
-done
-
 # "onactivate merge" test
 # -- deactivate/remove after disallowed merge attempt, tests
 #    to make sure preload of origin's metadata is _not_ performed
