@@ -500,13 +500,15 @@ int dev_manager_info(struct dm_pool *mem, const struct logical_volume *lv,
 
 	if (!(dlid = build_dm_uuid(mem, lv->lvid.s, layer))) {
 		log_error("dlid build failed for %s", name);
-		return 0;
+		r = 0;
+		goto out;
 	}
 
 	log_debug_activation("Getting device info for %s [%s]", name, dlid);
 	r = _info(dlid, with_open_count, with_read_ahead, info, read_ahead);
-
+out:
 	dm_pool_free(mem, name);
+
 	return r;
 }
 
