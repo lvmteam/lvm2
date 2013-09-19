@@ -1,3 +1,7 @@
+Version 2.02.102
+======================================
+  Extend lv_info() for more efficient lv_is_active_locally() check.
+
 Version 2.02.101 - 20th September 2013
 ======================================
   Fix 3-thread clvmd deadlock triggered by cleanup on EOF from client.

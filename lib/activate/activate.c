@@ -616,6 +616,7 @@ int target_present(struct cmd_context *cmd, const char *target_name,
 
 /*
  * Returns 1 if info structure populated, else 0 on failure.
+ * When lvinfo* is NULL, it returns 1 if the device is locally active, 0 otherwise.
  */
 int lv_info(struct cmd_context *cmd, const struct logical_volume *lv, int use_layer,
 	    struct lvinfo *info, int with_open_count, int with_read_ahead)
@@ -640,8 +641,11 @@ int lv_info(struct cmd_context *cmd, const struct logical_volume *lv, int use_la
 	if (!dev_manager_info(lv->vg->cmd->mem, lv,
 			      (use_layer) ? lv_layer(lv) : NULL,
 			      with_open_count, with_read_ahead,
-			      &dminfo, &info->read_ahead))
+			      &dminfo, (info) ? &info->read_ahead : NULL))
 		return_0;
+
+	if (!info)
+		return dminfo.exists;
 
 	info->exists = dminfo.exists;
 	info->suspended = dminfo.suspended;
