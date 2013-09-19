@@ -30,22 +30,6 @@ vgcreate -c n -s 128k $vg $(cat DEVICES)
 # 3) Move only the second LV by name
 
 
-# Testing pvmove of thin-pool LV
-lvcreate -l 2 -n ${lv1}_foo $vg "$dev1"
-lvcreate -T $vg/$lv1 -l 4 "$dev1"
-check lv_tree_on $vg ${lv1}_foo "$dev1"
-check lv_tree_on $vg $lv1 "$dev1"
-aux mkdev_md5sum $vg $lv1
-pvmove "$dev1" "$dev5"
-check lv_tree_on $vg ${lv1}_foo "$dev5"
-check lv_tree_on $vg $lv1 "$dev5"
-check dev_md5sum $vg $lv1
-pvmove -n $lv1 "$dev5" "$dev4"
-check lv_tree_on $vg $lv1 "$dev4"
-check lv_tree_on $vg ${lv1}_foo "$dev5"
-check dev_md5sum $vg $lv1
-lvremove -ff $vg
-
 # Testing pvmove of thin LV
 lvcreate -l 2 -n ${lv1}_foo $vg "$dev1"
 lvcreate -T $vg/${lv1}_pool -l 4 -V 8 -n $lv1 "$dev1"
