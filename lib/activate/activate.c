@@ -738,7 +738,7 @@ int lv_snapshot_percent(const struct logical_volume *lv, percent_t *percent)
 	int r;
 	struct dev_manager *dm;
 
-	if (!activation())
+	if (!lv_info(lv->vg->cmd, lv, 0, NULL, 0, 0))
 		return 0;
 
 	log_debug_activation("Checking snapshot percent for LV %s/%s", lv->vg->name, lv->name);
@@ -760,7 +760,6 @@ int lv_mirror_percent(struct cmd_context *cmd, const struct logical_volume *lv,
 {
 	int r;
 	struct dev_manager *dm;
-	struct lvinfo info;
 
 	/* If mirrored LV is temporarily shrinked to 1 area (= linear),
 	 * it should be considered in-sync. */
@@ -769,16 +768,11 @@ int lv_mirror_percent(struct cmd_context *cmd, const struct logical_volume *lv,
 		return 1;
 	}
 
-	if (!activation())
+	if (!lv_info(cmd, lv, 0, NULL, 0, 0))
 		return 0;
 
 	log_debug_activation("Checking mirror percent for LV %s/%s", lv->vg->name, lv->name);
 
-	if (!lv_info(cmd, lv, 0, &info, 0, 0))
-		return_0;
-
-	if (!info.exists)
-		return 0;
 
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
 		return_0;
@@ -804,14 +798,11 @@ int lv_raid_dev_health(const struct logical_volume *lv, char **dev_health)
 
 	*dev_health = NULL;
 
-	if (!activation())
-		return_0;
+	if (!lv_info(lv->vg->cmd, lv, 0, NULL, 0, 0))
+		return 0;
 
 	log_debug_activation("Checking raid device health for LV %s/%s",
 			     lv->vg->name, lv->name);
-
-	if (!lv_is_active_locally(lv))
-		return 0;
 
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
 		return_0;
@@ -835,14 +826,11 @@ int lv_raid_mismatch_count(const struct logical_volume *lv, uint64_t *cnt)
 
 	*cnt = 0;
 
-	if (!activation())
+	if (!lv_info(lv->vg->cmd, lv, 0, NULL, 0, 0))
 		return 0;
 
 	log_debug_activation("Checking raid mismatch count for LV %s/%s",
 			     lv->vg->name, lv->name);
-
-	if (!lv_is_active_locally(lv))
-		return_0;
 
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
 		return_0;
@@ -866,14 +854,11 @@ int lv_raid_sync_action(const struct logical_volume *lv, char **sync_action)
 
 	*sync_action = NULL;
 
-	if (!activation())
+	if (!lv_info(lv->vg->cmd, lv, 0, NULL, 0, 0))
 		return 0;
 
 	log_debug_activation("Checking raid sync_action for LV %s/%s",
 			     lv->vg->name, lv->name);
-
-	if (!lv_is_active_locally(lv))
-		return_0;
 
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
 		return_0;
@@ -906,7 +891,7 @@ int lv_raid_message(const struct logical_volume *lv, const char *msg)
 		return 0;
 	}
 
-	if (!lv_is_active_locally(lv)) {
+	if (!lv_info(lv->vg->cmd, lv, 0, NULL, 0, 0)) {
 		log_error("Unable to send message to an inactive logical volume.");
 		return 0;
 	}
