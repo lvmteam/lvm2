@@ -850,7 +850,7 @@ static int _vg_update_vg_ondisk(struct volume_group *vg)
 	dm_config_destroy(cft);
 
 	/* recompute the pool crc */
-	if (pool_locked && !dm_pool_lock(vg->vgmem, detect_internal_vg_cache_corruption()))
+	if (pool_locked && !dm_pool_lock(vg->vgmem, 1))
 		return_0;
 
 	return vg->vg_ondisk ? 1 : 0;
