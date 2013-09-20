@@ -206,6 +206,8 @@ for i in {1..3}; do
 	lvremove -ff $vg
 done
 
+aux skip_if_raid456_replace_broken
+
 # RAID 4/5/6 (can replace up to 'parity' devices)
 for i in 4 5 6; do
 	lvcreate --type raid$i -i 3 -l 3 -n $lv1 $vg

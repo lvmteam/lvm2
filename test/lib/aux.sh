@@ -615,6 +615,39 @@ skip_if_mirror_recovery_broken() {
         if test `uname -r` = 3.3.4-5.fc17.x86_64; then skip; fi
 }
 
+skip_if_raid456_replace_broken() {
+# The way kmem_cache aliasing is done in the kernel is broken.
+# It causes RAID 4/5/6 tests to fail.
+#
+# The problem with kmem_cache* is this:
+# *) Assume CONFIG_SLUB is set
+# 1) kmem_cache_create(name="foo-a")
+# - creates new kmem_cache structure
+# 2) kmem_cache_create(name="foo-b")
+# - If identical cache characteristics, it will be merged with the previously
+#   created cache associated with "foo-a".  The cache's refcount will be
+#   incremented and an alias will be created via sysfs_slab_alias().
+# 3) kmem_cache_destroy(<ptr>)
+# - Attempting to destroy cache associated with "foo-a", but instead the
+#   refcount is simply decremented.  I don't even think the sysfs aliases are
+#   ever removed...
+# 4) kmem_cache_create(name="foo-a")
+# - This FAILS because kmem_cache_sanity_check colides with the existing
+#   name ("foo-a") associated with the non-removed cache.
+#
+# This is a problem for RAID (specifically dm-raid) because the name used
+# for the kmem_cache_create is ("raid%d-%p", level, mddev).  If the cache
+# persists for long enough, the memory address of an old mddev will be
+# reused for a new mddev - causing an identical formulation of the cache
+# name.  Even though kmem_cache_destory had long ago been used to delete
+# the old cache, the merging of caches has cause the name and cache of that
+# old instance to be preserved and causes a colision (and thus failure) in
+# kmem_cache_create().  I see this regularly in testing the following
+# kernels:
+        if test `uname -r` = 3.10.11-200.fc19.i686; then skip; fi
+        if test `uname -r` = 3.10.11-200.fc19.x86_64; then skip; fi
+}
+
 udev_wait() {
 	pgrep udev >/dev/null || return 0
 	which udevadm >/dev/null || return 0
