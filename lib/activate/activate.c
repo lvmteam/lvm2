@@ -896,6 +896,12 @@ int lv_raid_message(const struct logical_volume *lv, const char *msg)
 	struct dev_manager *dm;
 	struct dm_status_raid *status;
 
+	if (!seg_is_raid(first_seg(lv))) {
+		log_error("%s/%s must be a RAID logical volume to"
+			  " perform this action.", lv->vg->name, lv->name);
+		return 0;
+	}
+
 	if (!lv_is_active_locally(lv)) {
 		log_error("Unable to send message to an inactive logical volume.");
 		return 0;
