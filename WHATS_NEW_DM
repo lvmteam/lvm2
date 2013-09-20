@@ -1,5 +1,5 @@
-Version 1.02.80 - 
-==================================
+Version 1.02.80 - 20th September 2013
+=====================================
   Detect invalid sector supplied to 'dmsetup message'.
   Free any previously-set string if a dm_task_set_* function is called again.
   Do not allow passing empty new name for dmsetup rename.

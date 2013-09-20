@@ -1,5 +1,7 @@
-Version 2.02.101 - 
-===================================
+Version 2.02.101 - 20th September 2013
+======================================
+  Fix 3-thread clvmd deadlock triggered by cleanup on EOF from client.
+  Remove VG from lvmetad before restoring it with vgcfgrestore.
   Use strtoull instead of strtol in _get_int_arg.
   Add devtypes report command to display built-in recognised block device types.
   Fix CC Makefile override which had reverted to using built-in value. (2.02.75)
