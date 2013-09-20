@@ -27,6 +27,7 @@ ENV{LVM_PV_GONE}=="1", GOTO="lvm_scan"
 
 # Only process devices already marked as a PV - this requires blkid to be called before.
 ENV{ID_FS_TYPE}!="LVM2_member|LVM1_member", GOTO="lvm_end"
+ENV{DM_MULTIPATH_DEVICE_PATH}=="1", GOTO="lvm_end"
 
 # Inform lvmetad about any PV that is gone.
 ACTION=="remove", GOTO="lvm_scan"
@@ -76,11 +77,6 @@ LABEL="lvm_scan"
 #  MD    |          |      X      |       X*       |                   |
 #  loop  |          |      X      |       X*       |                   |
 #  other |    X     |             |       X        |                   |   X
-
-# Skip device that is a multipath or RAID component
-ENV{DM_MULTIPATH_DEVICE_PATH}=="1", GOTO="lvm_end"
-ENV{ID_FS_TYPE}=="*_raid_member", GOTO="lvm_end"
-
 RUN+="(LVM_EXEC)/lvm pvscan --background --cache --activate ay --major $major --minor $minor", ENV{LVM_SCANNED}="1"
 
 LABEL="lvm_end"
