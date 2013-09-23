@@ -1155,14 +1155,13 @@ static int _lvtime_disp(struct dm_report *rh, struct dm_pool *mem,
 	char *repstr;
 	uint64_t *sortval;
 
-	if (!(sortval = dm_pool_zalloc(mem, sizeof(uint64_t)))) {
-		log_error("Failed to allocate sortval.");
+	if (!(repstr = lv_time_dup(mem, lv)) ||
+	    !(sortval = dm_pool_alloc(mem, sizeof(uint64_t)))) {
+		log_error("Failed to allocate buffer for time.");
 		return 0;
 	}
 
 	*sortval = lv->timestamp;
-	if (!(repstr = lv_time_dup(mem, lv)))
-		return_0;
 
 	dm_report_field_set_value(field, repstr, sortval);
 
@@ -1176,8 +1175,10 @@ static int _lvhost_disp(struct dm_report *rh, struct dm_pool *mem,
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 	char *repstr;
 
-	if (!(repstr = lv_host_dup(mem, lv)))
-		return_0;
+	if (!(repstr = lv_host_dup(mem, lv))) {
+		log_error("Failed to allocate buffer for host.");
+		return 0;
+	}
 
 	dm_report_field_set_value(field, repstr, repstr);
 
@@ -1190,8 +1191,10 @@ static int _lvactive_disp(struct dm_report *rh, struct dm_pool *mem,
 {
 	char *repstr;
 
-	if (!(repstr = lv_active_dup(mem, (const struct logical_volume *) data)))
-		return_0;
+	if (!(repstr = lv_active_dup(mem, (const struct logical_volume *) data))) {
+		log_error("Failed to allocate buffer for active.");
+		return 0;
+	}
 
 	dm_report_field_set_value(field, repstr, NULL);
 
