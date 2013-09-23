@@ -354,7 +354,9 @@ int backup_restore_vg(struct cmd_context *cmd, struct volume_group *vg, int drop
 	if (drop_lvmetad && lvmetad_active()) {
 		struct volume_group *vg_lvmetad = lvmetad_vg_lookup(cmd, vg->name, NULL);
 		if (vg_lvmetad) {
-			lvmetad_vg_remove(vg_lvmetad);
+			/* FIXME Cope with failure to update lvmetad */
+			if (!lvmetad_vg_remove(vg_lvmetad))
+				stack;
 			release_vg(vg_lvmetad);
 		}
 	}

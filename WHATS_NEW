@@ -1,4 +1,4 @@
-Version 2.02.102
+Version 2.02.102 - 23rd September 2013
 ======================================
   Fix missing build dependency for scripts subdir in Makefile.
   Extend lv_info() for more efficient lv_is_active_locally() check.
