@@ -560,6 +560,17 @@ static int _segsize_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _size64_disp(rh, mem, field, &size, private);
 }
 
+static int _segsizepe_disp(struct dm_report *rh,
+			   struct dm_pool *mem __attribute__((unused)),
+			   struct dm_report_field *field,
+			   const void *data,
+			   void *private __attribute__((unused)))
+{
+	const struct lv_segment *seg = (const struct lv_segment *) data;
+
+	return dm_report_field_uint32(rh, field, &seg->len);
+}
+
 static int _chunksize_disp(struct dm_report *rh, struct dm_pool *mem,
 			   struct dm_report_field *field,
 			   const void *data, void *private)
