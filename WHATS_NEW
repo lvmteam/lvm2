@@ -1,5 +1,6 @@
 Version 2.02.103 - 
 ======================================
+  Exit cleanly with message when pvmove cannot restart because LV is inactive.
 
 Version 2.02.102 - 23rd September 2013
 ======================================

@@ -201,7 +201,12 @@ static int _poll_vg(struct cmd_context *cmd, const char *vgname,
 			continue;
 
 		/* FIXME Need to do the activation from _set_up_pvmove here
-		 *       if it's not running and we're not aborting */
+		 *       if it's not running and we're not aborting. */
+		if (!lv_is_active(lv)) {
+			log_print_unless_silent("%s: Skipping inactive LV. Try lvchange or vgchange.", name);
+			continue;
+		}
+
 		if (_check_lv_status(cmd, vg, lv, name, parms, &finished) &&
 		    !finished)
 			parms->outstanding_count++;
