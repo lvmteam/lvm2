@@ -123,6 +123,13 @@ inclusive on /dev/sdb1 - like this:
 .sp
 .B pvmove /dev/sdb1:1000-1999
 .P
+A range can also be specified as start+length, so
+.sp
+.B pvmove /dev/sdb1:1000+1000
+.P
+also refers to 1000 Physical Extents starting from Physical Extent number 1000.
+(Counting starts from 0, so this refers to the 1001st to the 2000th inclusive.)
+.P
 To move a range of Physical Extents to a specific location (which must have
 sufficent free extents) use the form:
 .sp
