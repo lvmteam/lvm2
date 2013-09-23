@@ -1035,8 +1035,8 @@ static int _raidmaxrecoveryrate_disp(struct dm_report *rh __attribute__((unused)
 				      &first_seg(lv)->max_recovery_rate);
 }
 
-static int _dtpercent_disp(int metadata, struct dm_report *rh,
-			   struct dm_pool *mem,
+/* Called only with lv_is_thin_pool/volume */
+static int _dtpercent_disp(int metadata, struct dm_pool *mem,
 			   struct dm_report_field *field,
 			   const void *data, void *private)
 {
@@ -1091,7 +1091,7 @@ static int _datapercent_disp(struct dm_report *rh, struct dm_pool *mem,
 		return _snpercent_disp(rh, mem, field, data, private);
 
 	if (lv_is_thin_pool(lv) || lv_is_thin_volume(lv))
-		return _dtpercent_disp(0, rh, mem, field, data, private);
+		return _dtpercent_disp(0, mem, field, data, private);
 
 	dm_report_field_set_value(field, "", NULL);
 
@@ -1105,7 +1105,7 @@ static int _metadatapercent_disp(struct dm_report *rh, struct dm_pool *mem,
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 
 	if (lv_is_thin_pool(lv))
-		return _dtpercent_disp(1, rh, mem, field, data, private);
+		return _dtpercent_disp(1, mem, field, data, private);
 
 	dm_report_field_set_value(field, "", NULL);
 
