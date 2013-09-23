@@ -1,3 +1,6 @@
+Version 2.02.103 - 
+======================================
+
 Version 2.02.102 - 23rd September 2013
 ======================================
   Fix missing build dependency for scripts subdir in Makefile.
