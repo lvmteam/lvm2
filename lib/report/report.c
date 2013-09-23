@@ -38,6 +38,43 @@ static const uint64_t _minusone64 = UINT64_C(-1);
 static const int32_t _minusone32 = INT32_C(-1);
 static const uint64_t _zero64 = UINT64_C(0);
 
+static int _field_set_value(struct dm_report_field *field, const void *data, const void *sort)
+{
+	dm_report_field_set_value(field, data, sort);
+
+	return 1;
+}
+
+static int _field_set_percent(struct dm_report_field *field,
+			      struct dm_pool *mem,
+			      percent_t percent)
+{
+	char *repstr;
+	uint64_t *sortval;
+
+	if (percent == PERCENT_INVALID)
+		// FIXME  maybe use here '--'?
+		return _field_set_value(field, "", &_minusone64);
+
+	if (!(repstr = dm_pool_alloc(mem, 8)) ||
+	    !(sortval = dm_pool_alloc(mem, sizeof(uint64_t)))) {
+		if (repstr)
+			dm_pool_free(mem, repstr);
+		log_error("dm_pool_alloc failed.");
+		return 0;
+	}
+
+	if (dm_snprintf(repstr, 7, "%.2f", percent_to_float(percent)) < 0) {
+		dm_pool_free(mem, repstr);
+		log_error("Percentage too large.");
+		return 0;
+	}
+
+	*sortval = (uint64_t)(percent * 1000.f);
+
+	return _field_set_value(field, repstr, sortval);
+}
+
 /*
  * Data-munging functions to prepare each data type for display and sorting
  */
