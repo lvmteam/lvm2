@@ -899,7 +899,7 @@ int dm_prepare_selinux_context(const char *path, mode_t mode)
 int dm_set_selinux_context(const char *path, mode_t mode)
 {
 #ifdef HAVE_SELINUX
-	security_context_t scontext;
+	security_context_t scontext = NULL;
 
 	if (is_selinux_enabled() <= 0)
 		return 1;
