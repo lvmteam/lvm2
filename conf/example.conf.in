@@ -432,6 +432,10 @@ global {
     # Type 3 uses built-in clustered locking.
     # Type 4 uses read-only locking which forbids any operations that might 
     # change metadata.
+    # N.B. Don't use lvmetad with locking type 3 as lvmetad is not yet
+    # supported in clustered environment. If use_lvmetad=1 and locking_type=3
+    # is set at the same time, LVM always issues a warning message about this
+    # and then it automatically disables lvmetad use.
     locking_type = 1
 
     # Set to 0 to fail when a lock request cannot be satisfied immediately.
@@ -571,6 +575,10 @@ global {
     # setting itself.
     # To prevent scanning devices completely, even when using lvmetad,
     # the devices/global_filter must be used.
+    # N.B. Don't use lvmetad with locking type 3 as lvmetad is not yet
+    # supported in clustered environment. If use_lvmetad=1 and locking_type=3
+    # is set at the same time, LVM always issues a warning message about this
+    # and then it automatically disables lvmetad use.
     use_lvmetad = 0
 
     # Full path of the utility called to check that a thin metadata device

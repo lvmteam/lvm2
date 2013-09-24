@@ -16,6 +16,8 @@
 # Edit an lvm.conf file to adjust various properties
 #
 
+DEFAULT_USE_LVMETAD=0
+
 function usage
 {
     echo "usage: $0 <command>"
@@ -37,10 +39,12 @@ function parse_args
         case $1 in
             --enable-cluster)
                 LOCKING_TYPE=3
+                USE_LVMETAD=0
                 shift
                 ;;
             --disable-cluster)
                 LOCKING_TYPE=1
+                USE_LVMETAD=$DEFAULT_USE_LVMETAD
                 shift
                 ;;
             --lockinglibdir)
@@ -129,6 +133,7 @@ TMPFILE=/etc/lvm/.lvmconf-tmp.tmp
 have_type=1
 have_dir=1
 have_library=1
+have_use_lvmetad=1
 have_global=1
 
 grep -q '^[[:blank:]]*locking_type[[:blank:]]*=' $CONFIGFILE
@@ -140,8 +145,11 @@ have_dir=$?
 grep -q '^[[:blank:]]*locking_library[[:blank:]]*=' $CONFIGFILE
 have_library=$?
 
+grep -q '^[[:blank:]]*use_lvmetad[[:blank:]]*=' $CONFIGFILE
+have_use_lvmetad=$?
+
 # Those options are in section "global {" so we must have one if any are present.
-if [ "$have_type" = "0" -o "$have_dir" = "0" -o "$have_library" = "0" ]
+if [ "$have_type" = "0" -o "$have_dir" = "0" -o "$have_library" = "0" -o "$have_use_lvmetad" = "0" ]
 then
 
     # See if we can find it...
@@ -174,6 +182,8 @@ global {
     # Enable locking for cluster LVM
     locking_type = $LOCKING_TYPE
     library_dir = "$LOCKINGLIBDIR"
+    # Disable lvmetad in cluster
+    use_lvmetad = 0
 EOF
         if [ $? != 0 ]
         then
@@ -231,6 +241,13 @@ else
         else
             SEDCMD="${SEDCMD}\n/global[[:blank:]]*{/a\ \ \ \ locking_library = \"$LOCKINGLIB\""
         fi
+    fi
+
+    if [ "$have_use_lvmetad" = "0" ]
+    then
+        SEDCMD="${SEDCMD}\ns'^[[:blank:]]*use_lvmetad[[:blank:]]*=.*'\ \ \ \ use_lvmetad = $USE_LVMETAD'g"
+    else
+        SEDCMD="${SEDCMD}\n/global[[:blank:]]*{/a\ \ \ \ use_lvmetad = $USE_LVMETAD"
     fi
 
     echo -e $SEDCMD > $SCRIPTFILE

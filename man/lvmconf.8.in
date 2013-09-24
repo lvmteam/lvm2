@@ -22,10 +22,12 @@ an lvm configuration file. See \fBlvm.conf\fP(5).
 .SH "OPTIONS"
 .TP
 .BR \-\-disable-cluster
-Set \fBlocking_type\fR to the default non-clustered type.
+Set \fBlocking_type\fR to the default non-clustered type. Also reset
+lvmetad use to its default.
 .TP
 .BR \-\-enable-cluster
 Set \fBlocking_type\fR to the default clustered type on this system.
+Also disable lvmetad use as it is not yet supported in clustered environment.
 .TP
 .BR \-\-file " <" \fIconfigfile >
 Apply the changes to \fIconfigfile\fP instead of the default
