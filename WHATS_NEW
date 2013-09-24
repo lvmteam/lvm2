@@ -1,5 +1,6 @@
 Version 2.02.103 - 
 ======================================
+  Don't install separate command symlink in binary directory for 'lvm devtypes'.
   Add seg_size_pe field to reports.
   Support start+length notation with command line PE ranges.
   Exit cleanly with message when pvmove cannot restart because LV is inactive.
