@@ -252,6 +252,21 @@ allocation {
     # be placed on different PVs from the pool data.
     thin_pool_metadata_require_separate_pvs = 0
 
+    # Specify chunk size calculation method for thin pool volumes.
+    # Possible options are:
+    # "default"        - if thin_pool_chunk_size is defined, use it.
+    #                    Otherwise, calcucate the chunk size based on
+    #                    estimation and device hints exposed in sysfs:
+    #                    the minimum_io_size. The chunk size is always
+    #                    at least 64KiB.
+    #
+    # "performance"    - if thin_pool_chunk_size is defined, use it.
+    # 			 Otherwise, calculate the chunk size for
+    # 			 performance based on device hints exposed in
+    # 			 sysfs: the optimal_io_size. The chunk size is
+    # 			 always at least 512KiB.
+    # thin_pool_chunk_size_calculation = "default"
+
     # Specify the minimal chunk size (in KB) for thin pool volumes.
     # Use of the larger chunk size may improve perfomance for plain
     # thin volumes, however using them for snapshot volumes is less efficient,

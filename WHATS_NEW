@@ -1,5 +1,6 @@
 Version 2.02.103 - 
 ======================================
+  Add lvm.conf allocation/thin_pool_chunk_size_calculation option.
   Fix contiguous & cling allocation policies for parity RAID.  (2.02.100)
   Set use_lvmetad=0 on lvmconf --enable-cluster, reset to default on --disable-cluster.
   Don't install separate command symlink in binary directory for 'lvm devtypes'.
