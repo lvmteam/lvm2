@@ -1200,7 +1200,8 @@ static void _init_alloc_parms(struct alloc_handle *ah, struct alloc_parms *alloc
 	alloc_parms->extents_still_needed = extents_still_needed;
 
 	/* Only attempt contiguous/cling allocation to previous segment areas if the number of areas matches. */
-	if (alloc_parms->prev_lvseg && (ah->area_count == prev_lvseg->area_count))
+	if (alloc_parms->prev_lvseg &&
+	    ((ah->area_count + ah->parity_count) == prev_lvseg->area_count))
 		alloc_parms->flags |= A_AREA_COUNT_MATCHES;
 
 	/* Are there any preceding segments we must follow on from? */

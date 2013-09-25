@@ -1,5 +1,6 @@
 Version 2.02.103 - 
 ======================================
+  Fix contiguous & cling allocation policies for parity RAID.  (2.02.100)
   Set use_lvmetad=0 on lvmconf --enable-cluster, reset to default on --disable-cluster.
   Don't install separate command symlink in binary directory for 'lvm devtypes'.
   Add seg_size_pe field to reports.
