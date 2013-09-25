@@ -1190,7 +1190,9 @@ static uint32_t _stripes_per_mimage(struct lv_segment *seg)
 	return 1;
 }
 
-static void _init_alloc_parms(struct alloc_handle *ah, struct alloc_parms *alloc_parms, alloc_policy_t alloc,
+static void _init_alloc_parms(struct alloc_handle *ah,
+			      struct alloc_parms *alloc_parms,
+			      alloc_policy_t alloc,
 			      struct lv_segment *prev_lvseg, unsigned can_split,
 			      uint32_t allocated, uint32_t extents_still_needed)
 {
@@ -1199,23 +1201,29 @@ static void _init_alloc_parms(struct alloc_handle *ah, struct alloc_parms *alloc
 	alloc_parms->flags = 0;
 	alloc_parms->extents_still_needed = extents_still_needed;
 
-	/* Only attempt contiguous/cling allocation to previous segment areas if the number of areas matches. */
+	/*
+	 * Only attempt contiguous/cling allocation to previous segment
+	 * areas if the number of areas matches.
+	 */
 	if (alloc_parms->prev_lvseg &&
 	    ((ah->area_count + ah->parity_count) == prev_lvseg->area_count))
 		alloc_parms->flags |= A_AREA_COUNT_MATCHES;
 
 	/* Are there any preceding segments we must follow on from? */
-	if (alloc_parms->prev_lvseg && (alloc_parms->flags & A_AREA_COUNT_MATCHES)) {
+	if (alloc_parms->prev_lvseg &&
+	    (alloc_parms->flags & A_AREA_COUNT_MATCHES)) {
 		if (alloc_parms->alloc == ALLOC_CONTIGUOUS)
 			alloc_parms->flags |= A_CONTIGUOUS_TO_LVSEG;
-		else if ((alloc_parms->alloc == ALLOC_CLING) || (alloc_parms->alloc == ALLOC_CLING_BY_TAGS))
+		else if ((alloc_parms->alloc == ALLOC_CLING) ||
+			 (alloc_parms->alloc == ALLOC_CLING_BY_TAGS))
 			alloc_parms->flags |= A_CLING_TO_LVSEG;
 	} else
 		/*
-		 * A cling allocation that follows a successful contiguous allocation
-		 * must use the same PVs (or else fail).
+		 * A cling allocation that follows a successful contiguous
+		 * allocation must use the same PVs (or else fail).
 		 */
-		if ((alloc_parms->alloc == ALLOC_CLING) || (alloc_parms->alloc == ALLOC_CLING_BY_TAGS))
+		if ((alloc_parms->alloc == ALLOC_CLING) ||
+		    (alloc_parms->alloc == ALLOC_CLING_BY_TAGS))
 			alloc_parms->flags |= A_CLING_TO_ALLOCED;
 
 	if (alloc_parms->alloc == ALLOC_CLING_BY_TAGS)
@@ -1226,7 +1234,9 @@ static void _init_alloc_parms(struct alloc_handle *ah, struct alloc_parms *alloc
 	 * for allocation, prefer to place further extents on the same disks as
 	 * have already been used.
 	 */
-	if (ah->maximise_cling && alloc_parms->alloc == ALLOC_NORMAL && allocated != alloc_parms->extents_still_needed)
+	if (ah->maximise_cling &&
+	    (alloc_parms->alloc == ALLOC_NORMAL) &&
+	    (allocated != alloc_parms->extents_still_needed))
 		alloc_parms->flags |= A_CLING_TO_ALLOCED;
 
 	if (can_split)

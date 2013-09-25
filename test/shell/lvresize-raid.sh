@@ -13,7 +13,7 @@
 
 aux target_at_least dm-raid 1 1 0 || skip
 
-aux prepare_vg 5 80
+aux prepare_vg 6 80
 
 for deactivate in true false; do
 
@@ -45,3 +45,11 @@ for deactivate in true false; do
 		lvremove -ff $vg
 	done
 done
+
+# Bug 1005434
+# Ensure extend is contiguous
+lvcreate --type raid4 -l 2 -i 2 -n $lv1 $vg $dev4 $dev5 $dev6
+lvextend -l +2 --alloc contiguous $vg/$lv1
+not $(lvs -a -o devices $vg | egrep "$dev1|$dev2|$dev3")
+lvremove -ff $vg
+
