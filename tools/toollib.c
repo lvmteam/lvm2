@@ -1631,6 +1631,7 @@ int get_activation_monitoring_mode(struct cmd_context *cmd,
 int get_pool_params(struct cmd_context *cmd,
 		    struct profile *profile,
 		    int *passed_args,
+		    int *chunk_size_calc_method,
 		    uint32_t *chunk_size,
 		    thin_discards_t *discards,
 		    uint64_t *pool_metadata_size,
@@ -1663,7 +1664,8 @@ int get_pool_params(struct cmd_context *cmd,
 	}
 
 	if (!update_profilable_pool_params(cmd, profile, *passed_args,
-					   chunk_size, discards, zero))
+					   chunk_size_calc_method, chunk_size,
+					   discards, zero))
 		return_0;
 
 	if (arg_count(cmd, poolmetadatasize_ARG)) {

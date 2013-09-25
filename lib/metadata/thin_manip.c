@@ -569,14 +569,40 @@ int update_pool_lv(struct logical_volume *lv, int activate)
 	return 1;
 }
 
-int update_profilable_pool_params(struct cmd_context *cmd, struct profile *profile,
-				  int passed_args, uint32_t *chunk_size,
-				  thin_discards_t *discards, int *zero)
+static int _get_pool_chunk_size_calc(const char *str,
+				     int *chunk_size_calc_method,
+				     uint32_t *chunk_size)
 {
-	const char *dstr;
+	if (!strcasecmp(str, "default")) {
+		*chunk_size_calc_method = THIN_CHUNK_SIZE_CALC_METHOD_DEFAULT;
+		*chunk_size = DEFAULT_THIN_POOL_CHUNK_SIZE * 2;
+	}
+	else if (!strcasecmp(str, "performance")) {
+		*chunk_size_calc_method = THIN_CHUNK_SIZE_CALC_METHOD_PERFORMANCE;
+		*chunk_size = DEFAULT_THIN_POOL_CHUNK_SIZE_PERFORMANCE * 2;
+	}
+	else {
+		log_error("Thin pool chunk size calculation method \"%s\" is unknown.", str);
+		return 0;
+	}
 
-	if (!(passed_args & PASS_ARG_CHUNK_SIZE))
-		*chunk_size = find_config_tree_int(cmd, allocation_thin_pool_chunk_size_CFG, profile) * 2;
+	return 1;
+}
+
+int update_profilable_pool_params(struct cmd_context *cmd, struct profile *profile,
+				  int passed_args, int *chunk_size_calc_method,
+				  uint32_t *chunk_size, thin_discards_t *discards,
+				  int *zero)
+{
+	const char *str;
+
+	if (!(passed_args & PASS_ARG_CHUNK_SIZE)) {
+		if (!(*chunk_size = find_config_tree_int(cmd, allocation_thin_pool_chunk_size_CFG, profile) * 2)) {
+			str = find_config_tree_str(cmd, allocation_thin_pool_chunk_size_calculation_CFG, profile);
+			if (!_get_pool_chunk_size_calc(str, chunk_size_calc_method, chunk_size))
+				return_0;
+		}
+	}
 
 	if ((*chunk_size < DM_THIN_MIN_DATA_BLOCK_SIZE) ||
 	    (*chunk_size > DM_THIN_MAX_DATA_BLOCK_SIZE)) {
@@ -587,8 +613,8 @@ int update_profilable_pool_params(struct cmd_context *cmd, struct profile *profi
 	}
 
 	if (!(passed_args & PASS_ARG_DISCARDS)) {
-		dstr = find_config_tree_str(cmd, allocation_thin_pool_discards_CFG, profile);
-		if (!get_pool_discards(dstr, discards))
+		str = find_config_tree_str(cmd, allocation_thin_pool_discards_CFG, profile);
+		if (!get_pool_discards(str, discards))
 			return_0;
 	}
 
@@ -600,14 +626,16 @@ int update_profilable_pool_params(struct cmd_context *cmd, struct profile *profi
 
 int update_pool_params(struct volume_group *vg, unsigned attr, int passed_args,
 		       uint32_t data_extents, uint32_t extent_size,
-		       uint32_t *chunk_size, thin_discards_t *discards,
-		       uint64_t *pool_metadata_size, int *zero)
+		       int *chunk_size_calc_method, uint32_t *chunk_size,
+		       thin_discards_t *discards, uint64_t *pool_metadata_size,
+		       int *zero)
 {
 	size_t estimate_chunk_size;
 	struct cmd_context *cmd = vg->cmd;
 
 	if (!update_profilable_pool_params(cmd, vg->profile, passed_args,
-					   chunk_size, discards, zero))
+					   chunk_size_calc_method, chunk_size,
+					   discards, zero))
 		return_0;
 
 	if (!(attr & THIN_FEATURE_BLOCK_SIZE) &&

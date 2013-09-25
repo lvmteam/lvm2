@@ -336,6 +336,7 @@ static int _update_extents_params(struct volume_group *vg,
 	if (lp->create_thin_pool) {
 		if (!update_pool_params(vg, lp->target_attr, lp->passed_args,
 					lp->extents, vg->extent_size,
+					&lp->thin_chunk_size_calc_method,
 					&lp->chunk_size, &lp->discards,
 					&lp->poolmetadatasize, &lp->zero))
 			return_0;
@@ -876,6 +877,7 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 	    !get_stripe_params(cmd, &lp->stripes, &lp->stripe_size) ||
 	    (lp->create_thin_pool &&
 	     !get_pool_params(cmd, NULL, &lp->passed_args,
+			      &lp->thin_chunk_size_calc_method,
 			      &lp->chunk_size, &lp->discards,
 			      &lp->poolmetadatasize, &lp->zero)) ||
 	    !_read_mirror_params(lp, cmd) ||

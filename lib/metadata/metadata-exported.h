@@ -659,11 +659,13 @@ int pool_is_active(const struct logical_volume *pool_lv);
 int pool_can_resize_metadata(const struct logical_volume *pool_lv);
 int update_pool_lv(struct logical_volume *lv, int activate);
 int update_profilable_pool_params(struct cmd_context *cmd, struct profile *profile,
-				  int passed_args, uint32_t *chunk_size,
-				  thin_discards_t *discards, int *zero);
+				  int passed_args, int *chunk_size_calc_method,
+				  uint32_t *chunk_size, thin_discards_t *discards,
+				  int *zero);
 int update_pool_params(struct volume_group *vg, unsigned attr, int passed_args,
 		       uint32_t data_extents, uint32_t extent_size,
-		       uint32_t *chunk_size, thin_discards_t *discards,
+		       int *chunk_size_calc_method, uint32_t *chunk_size,
+		       thin_discards_t *discards,
 		       uint64_t *pool_metadata_size, int *zero);
 int get_pool_discards(const char *str, thin_discards_t *discards);
 const char *get_pool_discards_name(thin_discards_t discards);
@@ -724,6 +726,9 @@ struct lvcreate_params {
 	int activation_skip; /* activation skip flags */
 	activation_change_t activate; /* non-snapshot, non-mirror */
 	thin_discards_t discards;     /* thin */
+#define THIN_CHUNK_SIZE_CALC_METHOD_DEFAULT 0x01
+#define THIN_CHUNK_SIZE_CALC_METHOD_PERFORMANCE 0x02
+	int thin_chunk_size_calc_method;
 
 	const char *origin; /* snap */
 	const char *pool;   /* thin */
