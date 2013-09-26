@@ -55,6 +55,7 @@ int error_message_produced(void);
 void reset_lvm_errno(int store_errmsg);
 int stored_errno(void);
 const char *stored_errmsg(void);
+const char *stored_errmsg_with_clear(void);
 
 /* Suppress messages to stdout/stderr (1) or everywhere (2) */
 /* Returns previous setting */

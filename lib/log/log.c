@@ -170,6 +170,13 @@ const char *stored_errmsg(void)
 	return _lvm_errmsg ? : "";
 }
 
+const char *stored_errmsg_with_clear(void)
+{
+	const char *rc = strdup(stored_errmsg());
+	reset_lvm_errno(1);
+	return rc;
+}
+
 static struct dm_hash_table *_duplicated = NULL;
 
 void reset_log_duplicated(void) {

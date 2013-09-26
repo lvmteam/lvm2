@@ -115,7 +115,14 @@ int lvm_errno(lvm_t libh)
 
 const char *lvm_errmsg(lvm_t libh)
 {
-	return stored_errmsg();
+	const char *rc = NULL;
+	struct cmd_context *cmd = (struct cmd_context *)libh;
+	const char *msg = stored_errmsg_with_clear();
+	if (msg) {
+		rc = dm_pool_strdup(cmd->mem, msg);
+		free((void *)msg);
+	}
+	return rc;
 }
 
 const char *lvm_vgname_from_pvid(lvm_t libh, const char *pvid)

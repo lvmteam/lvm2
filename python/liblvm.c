@@ -141,6 +141,7 @@ static lvobject *_create_py_lv(vgobject *parent, lv_t lv)
 static PyObject *_liblvm_get_last_error(void)
 {
 	PyObject *info;
+	const char *msg = NULL;
 
 	LVM_VALID(NULL);
 
@@ -148,7 +149,9 @@ static PyObject *_liblvm_get_last_error(void)
 		return NULL;
 
 	PyTuple_SetItem(info, 0, PyInt_FromLong((long) lvm_errno(_libh)));
-	PyTuple_SetItem(info, 1, PyString_FromString(lvm_errmsg(_libh)));
+	msg = lvm_errmsg(_libh);
+	PyTuple_SetItem(info, 1, ((msg) ? PyString_FromString(msg) :
+			PyString_FromString("Memory error while retrieving error message")));
 
 	return info;
 }
