@@ -92,7 +92,7 @@ test_lvconvert() {
 		alloc="--alloc anywhere"
 	fi
 
-	lvconvert -m $finish_count --mirrorlog $finish_log_type \
+	lvconvert --type mirror -m $finish_count --mirrorlog $finish_log_type \
 		$vg/$lv1 $alloc
 
 	test $active || lvchange -aey $vg/$lv1

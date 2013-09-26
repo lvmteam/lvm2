@@ -20,14 +20,14 @@ vgcreate -s 32k $vg $(cat DEVICES)
 lvcreate -aey -l2 -n $lv1 $vg "$dev1"
 lvconvert -i1 -m+1 $vg/$lv1 "$dev2" "$dev3:0-1" \
 	--config 'global { mirror_segtype_default = "mirror" }'
-check mirror $vg $lv1 "$dev3"
+lvs --noheadings -o attr $vg/$lv1 | grep '^[[:space:]]*m'
 lvremove -ff $vg
 
 # convert from linear to 2-way mirror (override "raid1" default type)
 lvcreate -aey -l2 -n $lv1 $vg "$dev1"
 lvconvert -i1 --type mirror -m+1 $vg/$lv1 "$dev2" "$dev3:0-1" \
 	--config 'global { mirror_segtype_default = "raid1" }'
-check mirror $vg $lv1 "$dev3"
+lvs --noheadings -o attr $vg/$lv1 | grep '^[[:space:]]*m'
 lvremove -ff $vg
 
 # convert from linear to 2-way mirror - with tags and volume_list (bz683270)
@@ -204,16 +204,17 @@ lvconvert -m0 $vg/$lv1 "$dev1"
 check linear $vg $lv1
 lvremove -ff $vg
 
-# "rhbz264241: lvm mirror doesn't lose it's "M" --nosync attribute after being down and the up converted"
+# "rhbz264241: lvm mirror doesn't lose it's "M" --nosync attribute
+# after being down and the up converted"
 lvcreate -aey -l2 --type mirror -m1 -n $lv1 --nosync $vg
 lvconvert -m0 $vg/$lv1
-lvconvert -m1 $vg/$lv1
-lvs --noheadings -o attr $vg/$lv1 | grep '^ *m'
+lvconvert --type mirror -m1 $vg/$lv1
+lvs --noheadings -o attr $vg/$lv1 | grep '^[[:space:]]*m'
 lvremove -ff $vg
 
 # lvconvert from linear (on multiple PVs) to mirror
 lvcreate -aey -l 8 -n $lv1 $vg "$dev1:0-3" "$dev2:0-3"
-lvconvert -m1 $vg/$lv1
+lvconvert --type mirror -m1 $vg/$lv1
 
 should check mirror $vg $lv1
 check mirror_legs $vg $lv1 2
@@ -222,7 +223,7 @@ lvremove -ff $vg
 # BZ 463272: disk log mirror convert option is lost if downconvert option is also given
 lvcreate -aey -l1 --type mirror -m2 --corelog -n $lv1 $vg "$dev1" "$dev2" "$dev3"
 aux wait_for_sync $vg $lv1
-lvconvert -m1 --mirrorlog disk $vg/$lv1
+lvconvert --type mirror -m1 --mirrorlog disk $vg/$lv1
 check mirror $vg $lv1
 not check mirror $vg $lv1 core
 lvremove -ff $vg
@@ -243,14 +244,14 @@ lvremove -ff $vg
 
 # simple mirrored stripe
 lvcreate -aey -i2 -l10 -n $lv1 $vg
-lvconvert -m1 -i1 $vg/$lv1
+lvconvert --type mirror -m1 -i1 $vg/$lv1
 lvreduce -f -l1 $vg/$lv1
 lvextend -f -l10 $vg/$lv1
 lvremove -ff $vg/$lv1
 
 # extents must be divisible
 lvcreate -aey -l15 -n $lv1 $vg
-not lvconvert -m1 --corelog --stripes 2 $vg/$lv1
+not lvconvert --type mirror -m1 --corelog --stripes 2 $vg/$lv1
 lvremove -ff $vg
 
 test -e LOCAL_CLVMD && exit 0
@@ -258,7 +259,7 @@ test -e LOCAL_CLVMD && exit 0
 # FIXME - cases which needs to be fixed to work in cluster
 # Linear to mirror with mirrored log using --alloc anywhere
 lvcreate -aey -l2 -n $lv1 $vg "$dev1"
-lvconvert -m +1 --mirrorlog mirrored --alloc anywhere $vg/$lv1 "$dev1" "$dev2"
+lvconvert --type mirror -m +1 --mirrorlog mirrored --alloc anywhere $vg/$lv1 "$dev1" "$dev2"
 should check mirror $vg $lv1
 lvremove -ff $vg
 

@@ -2570,9 +2570,21 @@ static int _lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return ECMD_FAILED;
 	}
 
-	if (!lp->segtype)
+	if (!lp->segtype) {
+		/* segtype not explicitly set in _read_params */
 		lp->segtype = first_seg(lv)->segtype;
 
+		/*
+		 * If we are converting to mirror/raid1 and
+		 * the segtype was not specified, then we need
+		 * to consult the default.
+		 */
+		if (arg_count(cmd, mirrors_ARG) && !lv_is_mirrored(lv)) {
+			lp->segtype = get_segtype_from_string(cmd, find_config_tree_str(cmd, global_mirror_segtype_default_CFG, NULL));
+			if (!lp->segtype)
+				return_0;
+		}
+	}
 	if (lp->merge) {
 		if (!lv_is_cow(lv)) {
 			log_error("\"%s\" is not a mergeable logical volume",

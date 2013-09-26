@@ -142,7 +142,7 @@ lvremove -ff $vg
 lvcreate -aey -l 2 -n $lv1 $vg
 lvconvert -m 1 $vg/$lv1 \
 	--config 'global { mirror_segtype_default = "raid1" }'
-lvs --noheadings -o attr $vg/$lv1 | grep '^r*'
+lvs --noheadings -o attr $vg/$lv1 | grep '^[[:space:]]*r'
 lvremove -ff $vg
 
 ###########################################
@@ -151,7 +151,7 @@ lvremove -ff $vg
 lvcreate -aey -l 2 -n $lv1 $vg
 lvconvert --type raid1 -m 1 $vg/$lv1 \
 	--config 'global { mirror_segtype_default = "mirror" }'
-lvs --noheadings -o attr $vg/$lv1 | grep '^r*'
+lvs --noheadings -o attr $vg/$lv1 | grep '^[[:space:]]*r'
 lvremove -ff $vg
 
 ###########################################
