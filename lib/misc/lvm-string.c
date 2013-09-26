@@ -63,6 +63,31 @@ int validate_tag(const char *n)
 	return 1;
 }
 
+static int _validate_name(const char *n)
+{
+	register char c;
+	register int len = 0;
+
+	if (!n || !*n)
+		return -1;
+
+	/* Hyphen used as VG-LV separator - ambiguity if LV starts with it */
+	if (*n == '-')
+		return -2;
+
+	if ((*n == '.') && (!n[1] || (n[1] == '.' && !n[2]))) /* ".", ".." */
+		return -3;
+
+	while ((len++, c = *n++))
+		if (!isalnum(c) && c != '.' && c != '_' && c != '-' && c != '+')
+			return -4;
+
+	if (len > NAME_LEN)
+		return -5;
+
+	return 0;
+}
+
 /*
  * Device layer names are all of the form <vg>-<lv>-<layer>, any
  * other hyphens that appear in these names are quoted with yet
@@ -71,27 +96,7 @@ int validate_tag(const char *n)
  */
 int validate_name(const char *n)
 {
-	register char c;
-	register int len = 0;
-
-	if (!n || !*n)
-		return 0;
-
-	/* Hyphen used as VG-LV separator - ambiguity if LV starts with it */
-	if (*n == '-')
-		return 0;
-
-	if ((*n == '.') && (!n[1] || (n[1] == '.' && !n[2]))) /* ".", ".." */
-		return 0;
-
-	while ((len++, c = *n++))
-		if (!isalnum(c) && c != '.' && c != '_' && c != '-' && c != '+')
-			return 0;
-
-	if (len > NAME_LEN)
-		return 0;
-
-	return 1;
+	return (_validate_name(n) < 0 ? 0 : 1);
 }
 
 int apply_lvname_restrictions(const char *name)
@@ -134,6 +139,14 @@ int apply_lvname_restrictions(const char *name)
 	}
 
 	return 1;
+}
+
+/*
+ * Validates name and returns an emunerated reason for name validataion failure.
+ */
+name_error_t validate_name_detailed(const char *name)
+{
+	return _validate_name(name);
 }
 
 int is_reserved_lvname(const char *name)

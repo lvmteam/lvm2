@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.  
+ * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
  * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
@@ -24,6 +24,11 @@
 
 struct pool;
 
+typedef enum name_error { NAME_VALID = 0, NAME_INVALID_EMPTY = -1,
+					NAME_INVALID_HYPEN = -2, NAME_INVALID_DOTS = -3,
+					NAME_INVALID_CHARSET = -4, NAME_INVALID_LENGTH = -5}
+					name_error_t;
+
 int emit_to_buffer(char **buffer, size_t *size, const char *fmt, ...)
   __attribute__ ((format(printf, 3, 4)));
 
@@ -31,6 +36,7 @@ char *build_dm_uuid(struct dm_pool *mem, const char *lvid,
 		    const char *layer);
 
 int validate_name(const char *n);
+name_error_t validate_name_detailed(const char *n);
 int validate_tag(const char *n);
 
 int apply_lvname_restrictions(const char *name);

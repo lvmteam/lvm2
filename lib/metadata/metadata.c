@@ -435,13 +435,15 @@ int move_pvs_used_by_lv(struct volume_group *vg_from,
 	return 1;
 }
 
-static int validate_new_vg_name(struct cmd_context *cmd, const char *vg_name)
+int validate_new_vg_name(struct cmd_context *cmd, const char *vg_name)
 {
 	static char vg_path[PATH_MAX];
+	name_error_t name_error;
 
-	if (!validate_name(vg_name)) {
-		log_error("New volume group name \"%s\" is invalid.",
-			  vg_name);
+	name_error = validate_name_detailed(vg_name);
+	if (NAME_VALID != name_error) {
+		display_name_error(name_error);
+		log_error("New volume group name \"%s\" is invalid.", vg_name);
 		return 0;
 	}
 
@@ -4574,7 +4576,7 @@ void mda_set_ignored(struct metadata_area *mda, unsigned mda_ignored)
 	else
 		return;	/* No change */
 
-	log_debug_metadata("%s ignored flag for mda %s at offset %" PRIu64 ".", 
+	log_debug_metadata("%s ignored flag for mda %s at offset %" PRIu64 ".",
 			   mda_ignored ? "Setting" : "Clearing",
 			   mda->ops->mda_metadata_locn_name ? mda->ops->mda_metadata_locn_name(locn) : "",
 			   mda->ops->mda_metadata_locn_offset ? mda->ops->mda_metadata_locn_offset(locn) : UINT64_C(0));

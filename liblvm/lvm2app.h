@@ -510,6 +510,21 @@ vg_t lvm_vg_open(lvm_t libh, const char *vgname, const char *mode,
 		  uint32_t flags);
 
 /**
+ * Validate a name to be used for new VG construction.
+ *
+ * This function checks that the name has no invalid characters,
+ * the length doesn't exceed maximum and that the VG name isn't already in use
+ * and that the name adheres to any other limitations.
+ *
+ * \param libh
+ * Valid library handle
+ *
+ * \param name
+ * Name to validate for new VG create.
+ */
+int lvm_vg_name_validate(lvm_t libh, const char *vg_name);
+
+/**
  * Create a VG with default parameters.
  *
  * \memberof lvm_t
@@ -1552,6 +1567,23 @@ int lvm_lv_resize(const lv_t lv, uint64_t new_size);
  *
  */
 lv_t lvm_lv_snapshot(const lv_t lv, const char *snap_name, uint64_t max_snap_size);
+
+/**
+ * Validate a name to be used for LV creation.
+ *
+ * Validates that the name does not contain any invalid characters, max length
+ * and that the LV name doesn't already exist for this VG.
+ *
+ * Note: You can have the same LV name in different VGs, thus the reason this
+ * function requires that you specify a VG to check against.
+ *
+ * \param lv
+ * Volume group handle.
+ *
+ * \param name
+ * Name to validate
+ */
+int lvm_lv_name_validate(const vg_t vg, const char *lv_name);
 
 /**
  * Thin provisioning discard policies

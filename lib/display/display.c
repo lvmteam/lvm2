@@ -915,6 +915,35 @@ void display_segtypes(const struct cmd_context *cmd)
 	}
 }
 
+void display_name_error(name_error_t name_error)
+{
+	if (name_error != NAME_VALID) {
+		switch(name_error) {
+		case NAME_INVALID_EMPTY:
+			log_error("Name is zero length");
+			break;
+		case NAME_INVALID_HYPEN:
+			log_error("Name cannot start with hyphen");
+			break;
+		case NAME_INVALID_DOTS:
+			log_error("Name starts with . or .. and has no "
+						"following character(s)");
+			break;
+		case NAME_INVALID_CHARSET:
+			log_error("Name contains invalid character, valid set includes: "
+					"[a-zA-Z0-9.-_+]");
+			break;
+		case NAME_INVALID_LENGTH:
+			/* Report that name length -1 to accommodate nul*/
+			log_error("Name length exceeds maximum limit of %d", (NAME_LEN -1));
+			break;
+		default:
+			log_error("Unknown error %d on name validation", name_error);
+			break;
+		}
+	}
+}
+
 /*
  * Prompt for y or n from stdin.
  * Defaults to 'no' in silent mode.

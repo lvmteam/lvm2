@@ -21,6 +21,7 @@
 #include "lvmetad.h"
 #include "lvm_misc.h"
 #include "lvm2app.h"
+#include "display.h"
 
 int lvm_vg_add_tag(vg_t vg, const char *tag)
 {
@@ -384,4 +385,33 @@ int lvm_scan(lvm_t libh)
 	if (!lvmcache_label_scan((struct cmd_context *)libh, 2))
 		return -1;
 	return 0;
+}
+
+int lvm_lv_name_validate(const vg_t vg, const char *name)
+{
+	name_error_t name_error;
+
+	name_error = validate_name_detailed(name);
+
+	if (NAME_VALID == name_error) {
+		if (apply_lvname_restrictions(name)) {
+			if (!find_lv_in_vg(vg, name)) {
+				return 0;
+			} else {
+				log_errno(EINVAL, "LV name exists in VG");
+			}
+		}
+	} else {
+		display_name_error(name_error);
+	}
+	return -1;
+}
+
+int lvm_vg_name_validate(lvm_t libh, const char *name)
+{
+	struct cmd_context *cmd = (struct cmd_context *)libh;
+
+	if (validate_new_vg_name(cmd, name))
+		return 0;
+	return -1;
 }
