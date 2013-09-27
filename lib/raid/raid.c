@@ -264,6 +264,46 @@ static int _raid_target_status_compatible(const char *type)
 	return (strstr(type, "raid") != NULL);
 }
 
+static int _raid_modules_needed(struct dm_pool *mem,
+				const struct lv_segment *seg __attribute__((unused)),
+				struct dm_list *modules)
+{
+	if (!str_list_add(mem, modules, "raid")) {
+		log_error("raid module string list allocation failed");
+		return 0;
+	}
+
+	return 1;
+}
+
+static void _raid_destroy(struct segment_type *segtype)
+{
+	dm_free((void *) segtype);
+}
+
+#ifdef DEVMAPPER_SUPPORT
+#ifdef DMEVENTD
+static const char *_get_raid_dso_path(struct cmd_context *cmd)
+{
+	const char *config_str = find_config_tree_str(cmd, dmeventd_raid_library_CFG, NULL);
+	return get_monitor_dso_path(cmd, config_str);
+}
+
+static int _raid_target_present(struct cmd_context *cmd,
+				const struct lv_segment *seg __attribute__((unused)),
+				unsigned *attributes __attribute__((unused)))
+{
+	static int _raid_checked = 0;
+	static int _raid_present = 0;
+
+	if (!_raid_checked)
+		_raid_present = target_present(cmd, "raid", 1);
+
+	_raid_checked = 1;
+
+	return _raid_present;
+}
+
 static int _raid_target_percent(void **target_state,
 				percent_t *percent,
 				struct dm_pool *mem,
@@ -304,47 +344,6 @@ static int _raid_target_percent(void **target_state,
 	*percent = make_percent(numerator, denominator);
 
 	return 1;
-}
-
-
-static int _raid_target_present(struct cmd_context *cmd,
-				const struct lv_segment *seg __attribute__((unused)),
-				unsigned *attributes __attribute__((unused)))
-{
-	static int _raid_checked = 0;
-	static int _raid_present = 0;
-
-	if (!_raid_checked)
-		_raid_present = target_present(cmd, "raid", 1);
-
-	_raid_checked = 1;
-
-	return _raid_present;
-}
-
-static int _raid_modules_needed(struct dm_pool *mem,
-				const struct lv_segment *seg __attribute__((unused)),
-				struct dm_list *modules)
-{
-	if (!str_list_add(mem, modules, "raid")) {
-		log_error("raid module string list allocation failed");
-		return 0;
-	}
-
-	return 1;
-}
-
-static void _raid_destroy(struct segment_type *segtype)
-{
-	dm_free((void *) segtype);
-}
-
-#ifdef DEVMAPPER_SUPPORT
-#ifdef DMEVENTD
-static const char *_get_raid_dso_path(struct cmd_context *cmd)
-{
-	const char *config_str = find_config_tree_str(cmd, dmeventd_raid_library_CFG, NULL);
-	return get_monitor_dso_path(cmd, config_str);
 }
 
 static int _raid_target_monitored(struct lv_segment *seg, int *pending)

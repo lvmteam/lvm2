@@ -111,6 +111,97 @@ int list_lv_modules(struct dm_pool *mem, const struct logical_volume *lv,
 	return 1;
 }
 
+static int _lv_passes_volumes_filter(struct cmd_context *cmd, struct logical_volume *lv,
+				     const struct dm_config_node *cn, const int cfg_id)
+{
+	const struct dm_config_value *cv;
+	const char *str;
+	static char config_path[PATH_MAX];
+	static char path[PATH_MAX];
+
+	config_def_get_path(config_path, sizeof(config_path), cfg_id);
+	log_verbose("%s configuration setting defined: "
+		    "Checking the list to match %s/%s",
+		    config_path, lv->vg->name, lv->name);
+
+	for (cv = cn->v; cv; cv = cv->next) {
+		if (cv->type == DM_CFG_EMPTY_ARRAY)
+			goto out;
+		if (cv->type != DM_CFG_STRING) {
+			log_error("Ignoring invalid string in config file %s",
+				  config_path);
+			continue;
+		}
+		str = cv->v.str;
+		if (!*str) {
+			log_error("Ignoring empty string in config file %s",
+				  config_path);
+			continue;
+		}
+
+
+		/* Tag? */
+		if (*str == '@') {
+			str++;
+			if (!*str) {
+				log_error("Ignoring empty tag in config file "
+					  "%s", config_path);
+				continue;
+			}
+			/* If any host tag matches any LV or VG tag, activate */
+			if (!strcmp(str, "*")) {
+				if (str_list_match_list(&cmd->tags, &lv->tags, NULL)
+				    || str_list_match_list(&cmd->tags,
+							   &lv->vg->tags, NULL))
+					    return 1;
+				else
+					continue;
+			}
+			/* If supplied tag matches LV or VG tag, activate */
+			if (str_list_match_item(&lv->tags, str) ||
+			    str_list_match_item(&lv->vg->tags, str))
+				return 1;
+			else
+				continue;
+		}
+		if (!strchr(str, '/')) {
+			/* vgname supplied */
+			if (!strcmp(str, lv->vg->name))
+				return 1;
+			else
+				continue;
+		}
+		/* vgname/lvname */
+		if (dm_snprintf(path, sizeof(path), "%s/%s", lv->vg->name,
+				 lv->name) < 0) {
+			log_error("dm_snprintf error from %s/%s", lv->vg->name,
+				  lv->name);
+			continue;
+		}
+		if (!strcmp(path, str))
+			return 1;
+	}
+
+out:
+	log_verbose("No item supplied in %s configuration setting "
+		    "matches %s/%s", config_path, lv->vg->name, lv->name);
+
+	return 0;
+}
+
+int lv_passes_auto_activation_filter(struct cmd_context *cmd, struct logical_volume *lv)
+{
+	const struct dm_config_node *cn;
+
+	if (!(cn = find_config_tree_node(cmd, activation_auto_activation_volume_list_CFG, NULL))) {
+		log_verbose("activation/auto_activation_volume_list configuration setting "
+			    "not defined: All logical volumes will be auto-activated.");
+		return 1;
+	}
+
+	return _lv_passes_volumes_filter(cmd, lv, cn, activation_auto_activation_volume_list_CFG);
+}
+
 #ifndef DEVMAPPER_SUPPORT
 void set_activation(int act)
 {
@@ -223,33 +314,35 @@ int lv_suspend(struct cmd_context *cmd, const char *lvid_s)
 	return 1;
 }
 *******/
-int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only, unsigned exclusive)
+int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only, unsigned exclusive,
+			 struct logical_volume *ondisk_lv, struct logical_volume *incore_lv)
 {
 	return 1;
 }
-int lv_resume(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only)
+int lv_resume(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only, struct logical_volume *lv)
 {
 	return 1;
 }
-int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s,
-			unsigned origin_only, unsigned exclusive, unsigned revert)
+int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only,
+			unsigned exclusive, unsigned revert, struct logical_volume *lv)
 {
 	return 1;
 }
-int lv_deactivate(struct cmd_context *cmd, const char *lvid_s)
+int lv_deactivate(struct cmd_context *cmd, const char *lvid_s, struct logical_volume *lv)
 {
 	return 1;
 }
 int lv_activation_filter(struct cmd_context *cmd, const char *lvid_s,
-			 int *activate_lv)
+			 int *activate_lv, struct logical_volume *lv)
 {
 	return 1;
 }
-int lv_activate(struct cmd_context *cmd, const char *lvid_s, int exclusive)
+int lv_activate(struct cmd_context *cmd, const char *lvid_s, int exclusive, struct logical_volume *lv)
 {
 	return 1;
 }
-int lv_activate_with_filter(struct cmd_context *cmd, const char *lvid_s, int exclusive)
+int lv_activate_with_filter(struct cmd_context *cmd, const char *lvid_s, int exclusive,
+			    struct logical_volume *lv)
 {
 	return 1;
 }
@@ -347,84 +440,6 @@ int activation(void)
 	return _activation;
 }
 
-static int _lv_passes_volumes_filter(struct cmd_context *cmd, struct logical_volume *lv,
-				     const struct dm_config_node *cn, const int cfg_id)
-{
-	const struct dm_config_value *cv;
-	const char *str;
-	static char config_path[PATH_MAX];
-	static char path[PATH_MAX];
-
-	config_def_get_path(config_path, sizeof(config_path), cfg_id);
-	log_verbose("%s configuration setting defined: "
-		    "Checking the list to match %s/%s",
-		    config_path, lv->vg->name, lv->name);
-
-	for (cv = cn->v; cv; cv = cv->next) {
-		if (cv->type == DM_CFG_EMPTY_ARRAY)
-			goto out;
-		if (cv->type != DM_CFG_STRING) {
-			log_error("Ignoring invalid string in config file %s",
-				  config_path);
-			continue;
-		}
-		str = cv->v.str;
-		if (!*str) {
-			log_error("Ignoring empty string in config file %s",
-				  config_path);
-			continue;
-		}
-
-
-		/* Tag? */
-		if (*str == '@') {
-			str++;
-			if (!*str) {
-				log_error("Ignoring empty tag in config file "
-					  "%s", config_path);
-				continue;
-			}
-			/* If any host tag matches any LV or VG tag, activate */
-			if (!strcmp(str, "*")) {
-				if (str_list_match_list(&cmd->tags, &lv->tags, NULL)
-				    || str_list_match_list(&cmd->tags,
-							   &lv->vg->tags, NULL))
-					    return 1;
-				else
-					continue;
-			}
-			/* If supplied tag matches LV or VG tag, activate */
-			if (str_list_match_item(&lv->tags, str) ||
-			    str_list_match_item(&lv->vg->tags, str))
-				return 1;
-			else
-				continue;
-		}
-		if (!strchr(str, '/')) {
-			/* vgname supplied */
-			if (!strcmp(str, lv->vg->name))
-				return 1;
-			else
-				continue;
-		}
-		/* vgname/lvname */
-		if (dm_snprintf(path, sizeof(path), "%s/%s", lv->vg->name,
-				 lv->name) < 0) {
-			log_error("dm_snprintf error from %s/%s", lv->vg->name,
-				  lv->name);
-			continue;
-		}
-		if (!strcmp(path, str))
-			return 1;
-	}
-
-out:
-	log_verbose("No item supplied in %s configuration setting "
-		    "matches %s/%s", config_path, lv->vg->name, lv->name);
-
-	return 0;
-}
-
 static int _passes_activation_filter(struct cmd_context *cmd,
 				     struct logical_volume *lv)
 {
@@ -463,20 +478,6 @@ static int _passes_readonly_filter(struct cmd_context *cmd,
 		return 0;
 
 	return _lv_passes_volumes_filter(cmd, lv, cn, activation_read_only_volume_list_CFG);
-}
-
-
-int lv_passes_auto_activation_filter(struct cmd_context *cmd, struct logical_volume *lv)
-{
-	const struct dm_config_node *cn;
-
-	if (!(cn = find_config_tree_node(cmd, activation_auto_activation_volume_list_CFG, NULL))) {
-		log_verbose("activation/auto_activation_volume_list configuration setting "
-			    "not defined: All logical volumes will be auto-activated.");
-		return 1;
-	}
-
-	return _lv_passes_volumes_filter(cmd, lv, cn, activation_auto_activation_volume_list_CFG);
 }
 
 int library_version(char *version, size_t size)

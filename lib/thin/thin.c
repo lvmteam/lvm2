@@ -41,10 +41,6 @@ static const char _thin_module[] = "thin";
 /* TODO: using static field here, maybe should be a part of segment_type */
 static unsigned _feature_mask;
 
-static int _thin_target_present(struct cmd_context *cmd,
-				const struct lv_segment *seg,
-				unsigned *attributes);
-
 static const char *_thin_pool_name(const struct lv_segment *seg)
 {
 	return seg->segtype->name;
@@ -224,6 +220,10 @@ static int _thin_pool_text_export(const struct lv_segment *seg, struct formatter
 }
 
 #ifdef DEVMAPPER_SUPPORT
+static int _thin_target_present(struct cmd_context *cmd,
+				const struct lv_segment *seg,
+				unsigned *attributes);
+
 static int _thin_pool_add_target_line(struct dev_manager *dm,
 				      struct dm_pool *mem,
 				      struct cmd_context *cmd,
@@ -381,18 +381,6 @@ static int _thin_pool_target_percent(void **target_state __attribute__((unused))
 	return 1;
 }
 
-static int _thin_pool_modules_needed(struct dm_pool *mem,
-				     const struct lv_segment *seg __attribute__((unused)),
-				     struct dm_list *modules)
-{
-	if (!str_list_add(mem, modules, _thin_pool_module)) {
-		log_error("String list allocation failed for thin_pool.");
-		return 0;
-	}
-
-	return 1;
-}
-
 #  ifdef DMEVENTD
 static const char *_get_thin_dso_path(struct cmd_context *cmd)
 {
@@ -426,6 +414,33 @@ static int _target_unregister_events(struct lv_segment *seg,
 				     int events)
 {
 	return _target_set_events(seg, events, 0);
+}
+
+static int _thin_pool_modules_needed(struct dm_pool *mem,
+				     const struct lv_segment *seg __attribute__((unused)),
+				     struct dm_list *modules)
+{
+	if (!str_list_add(mem, modules, _thin_pool_module)) {
+		log_error("String list allocation failed for thin_pool.");
+		return 0;
+	}
+
+	return 1;
+}
+
+static int _thin_modules_needed(struct dm_pool *mem,
+				const struct lv_segment *seg,
+				struct dm_list *modules)
+{
+	if (!_thin_pool_modules_needed(mem, seg, modules))
+		return_0;
+
+	if (!str_list_add(mem, modules, _thin_module)) {
+		log_error("String list allocation failed for thin.");
+		return 0;
+	}
+
+	return 1;
 }
 #  endif /* DMEVENTD */
 #endif /* DEVMAPPER_SUPPORT */
@@ -652,21 +667,6 @@ static int _thin_target_present(struct cmd_context *cmd,
 }
 #endif
 
-static int _thin_modules_needed(struct dm_pool *mem,
-				const struct lv_segment *seg,
-				struct dm_list *modules)
-{
-	if (!_thin_pool_modules_needed(mem, seg, modules))
-		return_0;
-
-	if (!str_list_add(mem, modules, _thin_module)) {
-		log_error("String list allocation failed for thin.");
-		return 0;
-	}
-
-	return 1;
-}
-
 static void _thin_destroy(struct segment_type *segtype)
 {
 	dm_free(segtype);
@@ -687,7 +687,9 @@ static struct segtype_handler _thin_pool_ops = {
 	.target_unmonitor_events = _target_unregister_events,
 #  endif /* DMEVENTD */
 #endif
+#ifdef DEVMAPPER_SUPPORT
 	.modules_needed = _thin_pool_modules_needed,
+#endif
 	.destroy = _thin_destroy,
 };
 
@@ -699,8 +701,8 @@ static struct segtype_handler _thin_ops = {
 	.add_target_line = _thin_add_target_line,
 	.target_percent = _thin_target_percent,
 	.target_present = _thin_target_present,
-#endif
 	.modules_needed = _thin_modules_needed,
+#endif
 	.destroy = _thin_destroy,
 };
 
