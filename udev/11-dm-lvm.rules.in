@@ -22,14 +22,14 @@ IMPORT{program}="(DM_EXEC)/dmsetup splitname --nameprefixes --noheadings --rows 
 
 ENV{DM_UDEV_DISABLE_SUBSYSTEM_RULES_FLAG}=="1", GOTO="lvm_end"
 
+OPTIONS+="event_timeout=180"
+
 # Do not create symlinks for inappropriate subdevices.
 ENV{DM_LV_NAME}=="pvmove?*|?*_vorigin", GOTO="lvm_disable"
 ENV{DM_LV_LAYER}=="?*", GOTO="lvm_disable"
 
 # Create symlinks for top-level devices only.
 ENV{DM_VG_NAME}=="?*", ENV{DM_LV_NAME}=="?*", SYMLINK+="$env{DM_VG_NAME}/$env{DM_LV_NAME}", GOTO="lvm_end"
-
-OPTIONS+="event_timeout=180"
 
 LABEL="lvm_disable"
 ENV{DM_UDEV_DISABLE_DISK_RULES_FLAG}="1"

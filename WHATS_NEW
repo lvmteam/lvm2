@@ -1,5 +1,6 @@
 Version 2.02.103 - 
 ======================================
+  Fix 3min udev timeout so that it is applied for all LVM volumes.
   Fix RAID calculation for sufficient allocatable space.
   Conversion from linear to mirror or RAID1 now honors mirror_segtype_default.
   Add thin-performance configuration profile.
