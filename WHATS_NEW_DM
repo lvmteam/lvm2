@@ -1,5 +1,6 @@
 Version 1.02.82 - 
 =====================================
+  Define symbolic names for subsystem udev flags in libdevmapper for easier use.
   Make subsystem udev rules responsible for importing DM_SUBSYSTEM_UDEV_FLAG*.
 
 Version 1.02.81 - 23rd September 2013

@@ -1753,6 +1753,18 @@ struct dm_pool *dm_config_memory(struct dm_config_tree *cft);
  */
 #define DM_UDEV_PRIMARY_SOURCE_FLAG 0x0040
 
+/*
+ * Udev flags reserved for use by any device-mapper subsystem.
+ */
+#define DM_SUBSYSTEM_UDEV_FLAG0 0x0100
+#define DM_SUBSYSTEM_UDEV_FLAG1 0x0200
+#define DM_SUBSYSTEM_UDEV_FLAG2 0x0400
+#define DM_SUBSYSTEM_UDEV_FLAG3 0x0800
+#define DM_SUBSYSTEM_UDEV_FLAG4 0x1000
+#define DM_SUBSYSTEM_UDEV_FLAG5 0x2000
+#define DM_SUBSYSTEM_UDEV_FLAG6 0x4000
+#define DM_SUBSSYTEM_UDEV_FLAG7 0x8000
+
 int dm_cookie_supported(void);
 
 /*
