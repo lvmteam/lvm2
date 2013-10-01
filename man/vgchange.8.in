@@ -29,6 +29,7 @@ vgchange \- change attributes of a volume group
 .RB [ \-h | \-\-help ]
 .RB [ \-\-ignorelockingfailure ]
 .RB [ \-\-ignoremonitoring ]
+.RB [ \-\-ignoreskippedcluster ]
 .RB [ \-\-sysinit ]
 .RB [ \-\-noudevsync ]
 .RB [ \-l | \-\-logicalvolume

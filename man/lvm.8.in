@@ -216,6 +216,11 @@ This lets you proceed with read-only metadata operations such as
 One use for this is in a system init script if the lock directory
 is mounted read-only when the script runs.
 .TP
+.B \-\-ignoreskippedcluster
+Use to avoid exiting with an non-zero status code if the command is run
+without clustered locking and some clustered Volume Groups have to be
+skipped over.
+.TP
 .B \-\-addtag \fITag
 Add the tag \fITag\fP to a PV, VG or LV.
 Supply this argument multiple times to add more than one tag at once.

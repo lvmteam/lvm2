@@ -25,6 +25,8 @@ int autobackup_init(const char *backup_dir, int keep_days, int keep_number,
 		    int autobackup);
 int autobackup(struct volume_group *vg);
 
+int ignore_vg(struct volume_group *vg, const char *vg_name, int allow_inconsistent, int *ret);
+
 struct volume_group *recover_vg(struct cmd_context *cmd, const char *vgname,
 				uint32_t lock_type);
 

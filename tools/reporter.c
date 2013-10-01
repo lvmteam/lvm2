@@ -145,10 +145,10 @@ static int _pvs_single(struct cmd_context *cmd, struct volume_group *vg,
 		vg_name = pv_vg_name(pv);
 
 		vg = vg_read(cmd, vg_name, (char *)&pv->vgid, 0);
-		if (vg_read_error(vg)) {
-			log_error("Skipping volume group %s", vg_name);
+		if (ignore_vg(vg, vg_name, 0, &ret)) {
 			release_vg(vg);
-			return ECMD_FAILED;
+			stack;
+			return ret;
 		}
 
 		/*
@@ -205,8 +205,12 @@ static int _pvs_in_vg(struct cmd_context *cmd, const char *vg_name,
 		      struct volume_group *vg,
 		      void *handle)
 {
-	if (vg_read_error(vg))
-		return_ECMD_FAILED;
+	int ret = ECMD_PROCESSED;
+
+	if (ignore_vg(vg, vg_name, 0, &ret)) {
+		stack;
+		return ret;
+	}
 
 	return process_each_pv_in_vg(cmd, vg, NULL, handle, &_pvs_single);
 }
@@ -215,8 +219,12 @@ static int _pvsegs_in_vg(struct cmd_context *cmd, const char *vg_name,
 			 struct volume_group *vg,
 			 void *handle)
 {
-	if (vg_read_error(vg))
-		return_ECMD_FAILED;
+	int ret = ECMD_PROCESSED;
+
+	if (ignore_vg(vg, vg_name, 0, &ret)) {
+		stack;
+		return ret;
+	}
 
 	return process_each_pv_in_vg(cmd, vg, NULL, handle, &_pvsegs_single);
 }

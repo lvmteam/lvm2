@@ -7,6 +7,7 @@ pvdisplay \- display attributes of a physical volume
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-? | \-\-help ]
 .RB [ \-\-ignorelockingfailure ]
+.RB [ \-\-ignoreskippedcluster ]
 .RB [ \-\-maps ]
 .RB [ \-\-nosuffix ]
 .RB [ \-s | \-\-short ]

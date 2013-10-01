@@ -10,6 +10,7 @@ vgdisplay \- display attributes of volume groups
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-\-help ]
 .RB [ \-\-ignorelockingfailure ]
+.RB [ \-\-ignoreskippedcluster ]
 .RB [ \-\-nosuffix ]
 .RB [ \-P | \-\-partial ]
 .RB [ \-\-units
@@ -26,6 +27,7 @@ vgdisplay \- display attributes of volume groups
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-? | \-\-help ]
 .RB [ \-\-ignorelockingfailure ]
+.RB [ \-\-ignoreskippedcluster ]
 .RB [ \-\-noheadings ]
 .RB [ \-\-nosuffix ]
 .RB [ \-o|\-\-options

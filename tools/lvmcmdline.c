@@ -906,6 +906,8 @@ static int _get_settings(struct cmd_context *cmd)
 	else
 		init_ignorelockingfailure(0);
 
+	cmd->ignore_clustered_vgs = arg_count(cmd, ignoreskippedcluster_ARG) ? 1 : 0;
+
 	if (!arg_count(cmd, sysinit_ARG))
 		lvmetad_connect_or_warn();
 

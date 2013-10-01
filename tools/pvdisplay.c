@@ -30,11 +30,10 @@ static int _pvdisplay_single(struct cmd_context *cmd,
 	if (!is_orphan(pv) && !vg) {
 		vg_name = pv_vg_name(pv);
 		vg = vg_read(cmd, vg_name, (char *)&pv->vgid, 0);
-		if (vg_read_error(vg)) {
-			log_error("Skipping volume group %s", vg_name);
+		if (ignore_vg(vg, vg_name, 0, &ret)) {
 			release_vg(vg);
-			/* FIXME If CLUSTERED should return ECMD_PROCESSED here */
-			return ECMD_FAILED;
+			stack;
+			return ret;
 		}
 
 	 	/*

@@ -27,6 +27,7 @@ lvchange \- change attributes of a logical volume
 .RB [ \-h | \-? | \-\-help ]
 .RB [ \-\-ignorelockingfailure ]
 .RB [ \-\-ignoremonitoring ]
+.RB [ \-\-ignoreskippedcluster ]
 .RB [ \-\-monitor
 .RI { y | n }]
 .RB [ \-\-poll

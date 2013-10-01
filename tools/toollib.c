@@ -156,6 +156,29 @@ const char *skip_dev_dir(struct cmd_context *cmd, const char *vg_name,
 }
 
 /*
+ * Returns 1 if VG should be ignored.
+ */
+int ignore_vg(struct volume_group *vg, const char *vg_name, int allow_inconsistent, int *ret)
+{
+	uint32_t read_error = vg_read_error(vg);
+
+	if (!read_error)
+		return 0;
+
+	if ((read_error == FAILED_INCONSISTENT) && allow_inconsistent)
+		return 0;
+
+	if (read_error == FAILED_CLUSTERED && vg->cmd->ignore_clustered_vgs)
+		log_verbose("Skipping volume group %s", vg_name);
+	else {
+		log_error("Skipping volume group %s", vg_name);
+		*ret = ECMD_FAILED;
+	}
+
+	return 1;
+}
+
+/*
  * Metadata iteration functions
  */
 int process_each_lv_in_vg(struct cmd_context *cmd,
@@ -404,12 +427,10 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 			return_ECMD_FAILED;
 
 		if (!cmd_vg_read(cmd, &cmd_vgs)) {
-			free_cmd_vgs(&cmd_vgs);
-			if (ret_max < ECMD_FAILED) {
-				log_error("Skipping volume group %s", vgname);
-				ret_max = ECMD_FAILED;
-			} else
+			if (ignore_vg(cvl_vg->vg, vgname, 0, &ret_max))
 				stack;
+
+			free_cmd_vgs(&cmd_vgs);
 			continue;
 		}
 
@@ -489,10 +510,10 @@ int process_each_segment_in_pv(struct cmd_context *cmd,
 		vg_name = pv_vg_name(pv);
 
 		vg = vg_read(cmd, vg_name, NULL, 0);
-		if (vg_read_error(vg)) {
+		if (ignore_vg(vg, vg_name, 0, &ret)) {
 			release_vg(vg);
-			log_error("Skipping volume group %s", vg_name);
-			return ECMD_FAILED;
+			stack;
+			return ret;
 		}
 
 		/*
@@ -561,13 +582,13 @@ static int _process_one_vg(struct cmd_context *cmd, const char *vg_name,
 {
 	struct dm_list cmd_vgs;
 	struct cmd_vg *cvl_vg;
-	int ret = 0;
+	int ret = ECMD_PROCESSED;
 
 	log_verbose("Finding volume group \"%s\"", vg_name);
 
 	dm_list_init(&cmd_vgs);
 	if (!(cvl_vg = cmd_vg_add(cmd->mem, &cmd_vgs, vg_name, vgid, flags)))
-		return_0;
+		return_ECMD_FAILED;
 
 	for (;;) {
 		if (sigint_caught()) {
@@ -575,15 +596,14 @@ static int _process_one_vg(struct cmd_context *cmd, const char *vg_name,
 			stack;
 			break;
 		}
-		if (!cmd_vg_read(cmd, &cmd_vgs))
+
+		if (!cmd_vg_read(cmd, &cmd_vgs)) {
 			/* Allow FAILED_INCONSISTENT through only for vgcfgrestore */
-			if (vg_read_error(cvl_vg->vg) &&
-			    (!((flags & READ_ALLOW_INCONSISTENT) &&
-			       (vg_read_error(cvl_vg->vg) == FAILED_INCONSISTENT)))) {
-				ret = ECMD_FAILED;
+			if (ignore_vg(cvl_vg->vg, vg_name, flags & READ_ALLOW_INCONSISTENT, &ret)) {
 				stack;
 				break;
 			}
+		}
 
 		if (!dm_list_empty(tags) &&
 		    /* Only process if a tag matches or it's on arg_vgnames */
@@ -889,8 +909,7 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 					goto_out;
 				}
 				vg = vg_read(cmd, sll->str, NULL, flags);
-				if (vg_read_error(vg)) {
-					ret_max = ECMD_FAILED;
+				if (ignore_vg(vg, sll->str, 0, &ret_max)) {
 					release_vg(vg);
 					stack;
 					continue;

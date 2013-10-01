@@ -1396,6 +1396,7 @@ struct cmd_context *create_toolcontext(unsigned is_long_lived,
 	cmd->handles_missing_pvs = 0;
 	cmd->handles_unknown_segments = 0;
 	cmd->independent_metadata_areas = 0;
+	cmd->ignore_clustered_vgs = 0;
 	cmd->hosttags = 0;
 	dm_list_init(&cmd->arg_value_groups);
 	dm_list_init(&cmd->formats);

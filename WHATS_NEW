@@ -1,12 +1,13 @@
 Version 2.02.103 - 
 ======================================
+  Add --ignoreskippedcluster for exit status success when clustered VGs skipped.
   Fix 3min udev timeout so that it is applied for all LVM volumes.
   Fix RAID calculation for sufficient allocatable space.
   Conversion from linear to mirror or RAID1 now honors mirror_segtype_default.
   Add thin-performance configuration profile.
   Add lvm.conf allocation/thin_pool_chunk_size_calculation option.
   Fix contiguous & cling allocation policies for parity RAID.  (2.02.100)
-  Set use_lvmetad=0 on lvmconf --enable-cluster, reset to default on --disable-cluster.
+  Have lvmconf --enable/disable-cluster reset/set use_lvmetad.
   Don't install separate command symlink in binary directory for 'lvm devtypes'.
   Add seg_size_pe field to reports.
   Support start+length notation with command line PE ranges.
