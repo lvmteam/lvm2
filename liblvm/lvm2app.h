@@ -84,20 +84,13 @@ const char *lvm_library_get_version(void);
 /******************************** structures ********************************/
 
 /**
- * Opaque structures - do not use directly.  Internal structures may change
- * without notice between releases, whereas this API will be changed much less
- * frequently.  Backwards compatibility will normally be preserved in future
- * releases.  On any occasion when the developers do decide to break backwards
- * compatibility in any significant way, the LVM_LIBAPI number (included in
- * the library's soname) will be incremented.
+ * Opaque C pointers - Internal structures may change without notice between
+ * releases, whereas this API will be changed much less frequently.  Backwards
+ * compatibility will normally be preserved in future releases.  On any occasion
+ * when the developers do decide to break backwards compatibility in any
+ * significant way, the LVM_LIBAPI number (included in the library's soname)
+ * will be incremented.
  */
-struct lvm;
-struct physical_volume;
-struct volume_group;
-struct logical_volume;
-struct lv_segment;
-struct pv_segment;
-struct lvm_lv_create_params;
 
 /**
  * \class lvm_t
