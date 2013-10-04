@@ -753,8 +753,11 @@ static int update_metadata(lvmetad_state *s, const char *name, const char *_vgid
 		  dm_hash_insert(s->vgid_to_vgname, vgid, cfgname) &&
 		  dm_hash_insert(s->vgname_to_vgid, name, (void*) vgid)) ? 1 : 0;
 
-	if (retval && oldname && strcmp(name, oldname))
-		dm_hash_remove(s->vgname_to_vgid, oldname);
+	if (retval && oldname && strcmp(name, oldname)) {
+		const char *vgid_prev = dm_hash_lookup(s->vgname_to_vgid, oldname);
+		if (vgid_prev && !strcmp(vgid_prev, vgid))
+			dm_hash_remove(s->vgname_to_vgid, oldname);
+	}
 
 	if (haveseq >= 0 && haveseq < seq)
 		dm_config_destroy(old);
