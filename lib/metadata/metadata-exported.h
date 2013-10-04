@@ -728,7 +728,7 @@ struct lvcreate_params {
 	thin_discards_t discards;     /* thin */
 #define THIN_CHUNK_SIZE_CALC_METHOD_GENERIC 0x01
 #define THIN_CHUNK_SIZE_CALC_METHOD_PERFORMANCE 0x02
-	int thin_chunk_size_calc_method;
+	int thin_chunk_size_calc_policy;
 
 	const char *origin; /* snap */
 	const char *pool;   /* thin */

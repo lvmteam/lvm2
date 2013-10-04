@@ -34,7 +34,7 @@ struct lvconvert_params {
 	int wait_completion;
 	int need_polling;
 
-	int thin_chunk_size_calc_method;
+	int thin_chunk_size_calc_policy;
 	uint32_t chunk_size;
 	uint32_t region_size;
 
@@ -2329,7 +2329,7 @@ static int _lvconvert_thinpool(struct cmd_context *cmd,
 	if (!lp->pool_metadata_lv_name) {
 		if (!update_pool_params(pool_lv->vg, lp->target_attr, lp->passed_args,
 					pool_lv->le_count, pool_lv->vg->extent_size,
-					&lp->thin_chunk_size_calc_method, &lp->chunk_size,
+					&lp->thin_chunk_size_calc_policy, &lp->chunk_size,
 					&lp->discards, &lp->poolmetadata_size, &lp->zero))
 			return_0;
 
@@ -2441,7 +2441,7 @@ static int _lvconvert_thinpool(struct cmd_context *cmd,
 		}
 		if (!update_pool_params(pool_lv->vg, lp->target_attr, lp->passed_args,
 					pool_lv->le_count, pool_lv->vg->extent_size,
-					&lp->thin_chunk_size_calc_method, &lp->chunk_size,
+					&lp->thin_chunk_size_calc_policy, &lp->chunk_size,
 					&lp->discards, &lp->poolmetadata_size, &lp->zero))
 			return_0;
 	}
@@ -2723,7 +2723,7 @@ static int lvconvert_single(struct cmd_context *cmd, struct lvconvert_params *lp
 
 	if (arg_count(cmd, thinpool_ARG) &&
 	    !get_pool_params(cmd, lv_config_profile(lv),
-			     &lp->passed_args, &lp->thin_chunk_size_calc_method,
+			     &lp->passed_args, &lp->thin_chunk_size_calc_policy,
 			     &lp->chunk_size, &lp->discards,
 			     &lp->poolmetadata_size, &lp->zero))
 		goto_bad;

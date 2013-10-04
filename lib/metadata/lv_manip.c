@@ -5541,7 +5541,7 @@ static int _recalculate_thin_pool_chunk_size_with_dev_hints(struct lvcreate_para
 	struct cmd_context *cmd = pool_lv->vg->cmd;
 	unsigned long previous_hint = 0, hint = 0;
 	uint32_t chunk_size = lp->chunk_size;
-	uint32_t default_chunk_size = lp->thin_chunk_size_calc_method == THIN_CHUNK_SIZE_CALC_METHOD_PERFORMANCE ?
+	uint32_t default_chunk_size = lp->thin_chunk_size_calc_policy == THIN_CHUNK_SIZE_CALC_METHOD_PERFORMANCE ?
 					DEFAULT_THIN_POOL_CHUNK_SIZE_PERFORMANCE*2 : DEFAULT_THIN_POOL_CHUNK_SIZE*2;
 
 	if (lp->passed_args & PASS_ARG_CHUNK_SIZE ||
@@ -5552,7 +5552,7 @@ static int _recalculate_thin_pool_chunk_size_with_dev_hints(struct lvcreate_para
 
 	dm_list_iterate_items(seg, &pool_data_lv->segments) {
 		pv = seg_pv(seg, 0);
-		if (lp->thin_chunk_size_calc_method == THIN_CHUNK_SIZE_CALC_METHOD_PERFORMANCE)
+		if (lp->thin_chunk_size_calc_policy == THIN_CHUNK_SIZE_CALC_METHOD_PERFORMANCE)
 			hint = dev_optimal_io_size(cmd->dev_types, pv_dev(pv));
 		else
 			hint = dev_minimum_io_size(cmd->dev_types, pv_dev(pv));

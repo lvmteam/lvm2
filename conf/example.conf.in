@@ -255,7 +255,7 @@ allocation {
     # Specify chunk size calculation policy for thin pool volumes.
     # Possible options are:
     # "generic"        - if thin_pool_chunk_size is defined, use it.
-    #                    Otherwise, calcucate the chunk size based on
+    #                    Otherwise, calculate the chunk size based on
     #                    estimation and device hints exposed in sysfs:
     #                    the minimum_io_size. The chunk size is always
     #                    at least 64KiB.

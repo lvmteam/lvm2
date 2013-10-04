@@ -582,7 +582,7 @@ static int _get_pool_chunk_size_calc(const char *str,
 		*chunk_size = DEFAULT_THIN_POOL_CHUNK_SIZE_PERFORMANCE * 2;
 	}
 	else {
-		log_error("Thin pool chunk size calculation method \"%s\" is unknown.", str);
+		log_error("Thin pool chunk size calculation policy \"%s\" is unrecognised.", str);
 		return 0;
 	}
 
