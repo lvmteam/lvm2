@@ -1,3 +1,6 @@
+Version 1.02.83
+==================================
+
 Version 1.02.82 - 4th October 2013
 ==================================
   Define symbolic names for subsystem udev flags in libdevmapper for easier use.
