@@ -726,7 +726,7 @@ struct lvcreate_params {
 	int activation_skip; /* activation skip flags */
 	activation_change_t activate; /* non-snapshot, non-mirror */
 	thin_discards_t discards;     /* thin */
-#define THIN_CHUNK_SIZE_CALC_METHOD_DEFAULT 0x01
+#define THIN_CHUNK_SIZE_CALC_METHOD_GENERIC 0x01
 #define THIN_CHUNK_SIZE_CALC_METHOD_PERFORMANCE 0x02
 	int thin_chunk_size_calc_method;
 

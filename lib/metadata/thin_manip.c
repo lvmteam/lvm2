@@ -573,8 +573,8 @@ static int _get_pool_chunk_size_calc(const char *str,
 				     int *chunk_size_calc_method,
 				     uint32_t *chunk_size)
 {
-	if (!strcasecmp(str, "default")) {
-		*chunk_size_calc_method = THIN_CHUNK_SIZE_CALC_METHOD_DEFAULT;
+	if (!strcasecmp(str, "generic")) {
+		*chunk_size_calc_method = THIN_CHUNK_SIZE_CALC_METHOD_GENERIC;
 		*chunk_size = DEFAULT_THIN_POOL_CHUNK_SIZE * 2;
 	}
 	else if (!strcasecmp(str, "performance")) {
@@ -598,7 +598,7 @@ int update_profilable_pool_params(struct cmd_context *cmd, struct profile *profi
 
 	if (!(passed_args & PASS_ARG_CHUNK_SIZE)) {
 		if (!(*chunk_size = find_config_tree_int(cmd, allocation_thin_pool_chunk_size_CFG, profile) * 2)) {
-			str = find_config_tree_str(cmd, allocation_thin_pool_chunk_size_calculation_CFG, profile);
+			str = find_config_tree_str(cmd, allocation_thin_pool_chunk_size_policy_CFG, profile);
 			if (!_get_pool_chunk_size_calc(str, chunk_size_calc_method, chunk_size))
 				return_0;
 		}
