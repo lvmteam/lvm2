@@ -120,8 +120,7 @@ static int lvchange_pool_update(struct cmd_context *cmd,
 			if (((discards == THIN_DISCARDS_IGNORE) ||
 			     (first_seg(lv)->discards == THIN_DISCARDS_IGNORE)) &&
 			    pool_is_active(lv))
-				log_error("Cannot change discards state for active "
-					  "pool volume \"%s\".", lv->name);
+				log_error("Cannot change support for discards while pool volume \"%s\" is active.", lv->name);
 			else {
 				first_seg(lv)->discards = discards;
 				update++;
