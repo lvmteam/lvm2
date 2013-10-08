@@ -796,10 +796,22 @@ static response pv_gone(lvmetad_state *s, request r)
 
 	pvmeta = dm_hash_lookup(s->pvid_to_pvmeta, pvid);
 	pvid_old = dm_hash_lookup_binary(s->device_to_pvid, &device, sizeof(device));
+	const char *vgid = dm_strdup(dm_hash_lookup(s->pvid_to_vgid, pvid));
+
+	if (!vgid) {
+		unlock_pvid_to_pvmeta(s);
+		return reply_fail("out of memory");
+	}
+
 	dm_hash_remove_binary(s->device_to_pvid, &device, sizeof(device));
 	dm_hash_remove(s->pvid_to_pvmeta, pvid);
-	vg_remove_if_missing(s, dm_hash_lookup(s->pvid_to_vgid, pvid), 1);
 	unlock_pvid_to_pvmeta(s);
+
+	lock_vg(s, vgid);
+	vg_remove_if_missing(s, vgid, 1);
+	unlock_vg(s, vgid);
+
+	dm_free(vgid);
 
 	if (pvid_old)
 		dm_free(pvid_old);
