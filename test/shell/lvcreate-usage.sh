@@ -77,7 +77,7 @@ not lvcreate -l1 -n $lv4 $vg
 not lvcreate -l1 --type mirror -m1 -n $lv4 $vg
 
 lvconvert -m0 $vg/$lv3
-lvconvert -m2 -i 1 $vg/$lv3
+lvconvert -m2 --type mirror -i 1 $vg/$lv3
 lvconvert -m1 $vg/$lv3
 
 not vgchange -l 2
