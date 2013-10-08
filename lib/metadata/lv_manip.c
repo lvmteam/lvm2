@@ -5421,6 +5421,8 @@ int set_lv(struct cmd_context *cmd, struct logical_volume *lv,
 	if (!dev_close_immediate(dev))
 		stack;
 
+	lv->status &= ~LV_NOSCAN;
+
 	return 1;
 }
 
@@ -5976,6 +5978,10 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		log_verbose("Test mode: Skipping activation and zeroing.");
 		goto out;
 	}
+
+	/* Do not scan this LV until properly zeroed. */
+	if (lp->zero)
+		lv->status |= LV_NOSCAN;
 
 	if (lv_is_thin_pool(lv)) {
 		if (is_change_activating(lp->activate)) {

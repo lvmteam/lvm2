@@ -401,7 +401,7 @@ static int do_activate_lv(char *resource, unsigned char command, unsigned char l
 	}
 
 	/* Now activate it */
-	if (!lv_activate(cmd, resource, exclusive, NULL))
+	if (!lv_activate(cmd, resource, exclusive, 0, NULL))
 		goto error;
 
 	return 0;

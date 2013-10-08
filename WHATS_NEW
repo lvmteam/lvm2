@@ -1,5 +1,6 @@
 Version 2.02.104
 ===================================
+  Add support for flagging an LV to skip udev scanning during activation.
   Improve message when unable to change discards setting on active thin pool.
   Run full scan before vgrename operation to avoid any cache name collision.
   Fix lvconvert when converting to a thin pool and thin LV at once.

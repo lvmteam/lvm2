@@ -38,6 +38,7 @@ struct lv_activate_opts {
 	int skip_in_use;
 	unsigned revert;
 	unsigned read_only;
+	unsigned noscan;
 };
 
 /* target attribute flags */
@@ -80,9 +81,9 @@ int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s, unsigned o
 int lv_resume(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only, struct logical_volume *lv);
 int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s,
 			unsigned origin_only, unsigned exclusive, unsigned revert, struct logical_volume *lv);
-int lv_activate(struct cmd_context *cmd, const char *lvid_s, int exclusive, struct logical_volume *lv);
+int lv_activate(struct cmd_context *cmd, const char *lvid_s, int exclusive, int noscan, struct logical_volume *lv);
 int lv_activate_with_filter(struct cmd_context *cmd, const char *lvid_s,
-			    int exclusive, struct logical_volume *lv);
+			    int exclusive, int noscan, struct logical_volume *lv);
 int lv_deactivate(struct cmd_context *cmd, const char *lvid_s, struct logical_volume *lv);
 
 int lv_mknodes(struct cmd_context *cmd, const struct logical_volume *lv);
