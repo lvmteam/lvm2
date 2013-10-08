@@ -20,6 +20,21 @@ ENV{DM_UUID}!="LVM-?*", GOTO="lvm_end"
 # Use DM name and split it up into its VG/LV/layer constituents.
 IMPORT{program}="(DM_EXEC)/dmsetup splitname --nameprefixes --noheadings --rows $env{DM_NAME}"
 
+# DM_SUBSYSTEM_UDEV_FLAG0 is the 'NOSCAN' flag for LVM subsystem.
+# This flag is used to temporarily disable selected rules to prevent any
+# processing or scanning done on the LVM volume before LVM has any chance
+# to zero any stale metadata found within the LV data area. Such stale
+# metadata could cause false claim of the LV device, keeping it open etc.
+#
+# If the NOSCAN flag is present, backup selected existing flags used to
+# disable rules, then set them firmly so those selected rules are surely skipped.
+# Restore these flags once the NOSCAN flag is dropped (which is normally any
+# uevent that follows for this LV, even an artificially generated one).
+ENV{DM_SUBSYSTEM_UDEV_FLAG0}=="1", ENV{DM_NOSCAN}="1", ENV{DM_DISABLE_OTHER_RULES_FLAG_OLD}="$env{DM_UDEV_DISABLE_OTHER_RULES_FLAG}", ENV{DM_UDEV_DISABLE_OTHER_RULES_FLAG}="1"
+ENV{DM_SUBSYSTEM_UDEV_FLAG0}!="1", IMPORT{db}="DM_NOSCAN", IMPORT{db}="DM_DISABLE_OTHER_RULES_FLAG_OLD"
+ENV{DM_SUBSYSTEM_UDEV_FLAG0}!="1", ENV{DM_UDEV_DISABLE_OTHER_RULES_FLAG}="$env{DM_DISABLE_OTHER_RULES_FLAG_OLD}", \
+				   ENV{DM_UDEV_DISABLE_OTHER_RULES_FLAG_OLD}="", ENV{DM_NOSCAN}=""
+
 ENV{DM_UDEV_DISABLE_SUBSYSTEM_RULES_FLAG}=="1", GOTO="lvm_end"
 
 OPTIONS+="event_timeout=180"

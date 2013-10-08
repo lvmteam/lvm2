@@ -1,5 +1,6 @@
 Version 2.02.104
 ===================================
+  Recognize new flag to skip udev scanning in udev rules and act appropriately.
   Add support for flagging an LV to skip udev scanning during activation.
   Improve message when unable to change discards setting on active thin pool.
   Run full scan before vgrename operation to avoid any cache name collision.

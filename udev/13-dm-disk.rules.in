@@ -18,6 +18,7 @@ SYMLINK+="disk/by-id/dm-name-$env{DM_NAME}"
 ENV{DM_UUID}=="?*", SYMLINK+="disk/by-id/dm-uuid-$env{DM_UUID}"
 
 ENV{DM_SUSPENDED}=="1", GOTO="dm_end"
+ENV{DM_NOSCAN}=="1", GOTO="dm_watch"
 
 (BLKID_RULE)
 ENV{DM_UDEV_LOW_PRIORITY_FLAG}=="1", OPTIONS="link_priority=-100"
@@ -32,7 +33,7 @@ ENV{ID_FS_USAGE}=="filesystem|other", ENV{ID_FS_LABEL_ENC}=="?*", SYMLINK+="disk
 # (like creating a filesystem, changing filesystem label etc.).
 #
 # But let's use this until we have something better...
-
+LABEL="dm_watch"
 OPTIONS+="watch"
 
 LABEL="dm_end"
