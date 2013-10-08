@@ -2266,7 +2266,7 @@ static int _lvconvert_thinpool(struct cmd_context *cmd,
 	int r = 0;
 	const char *old_name;
 	struct lv_segment *seg;
-	struct logical_volume *data_lv = pool_lv;
+	struct logical_volume *data_lv;
 	struct logical_volume *metadata_lv;
 	struct logical_volume *pool_metadata_lv;
 	struct logical_volume *external_lv = NULL;
@@ -2304,6 +2304,7 @@ static int _lvconvert_thinpool(struct cmd_context *cmd,
 		}
 	}
 
+	data_lv = pool_lv;
 	if (lv_is_thin_type(pool_lv) && !lp->pool_metadata_lv_name) {
 		log_error("Can't use thin logical volume %s/%s for thin pool data.",
 			  pool_lv->vg->name, pool_lv->name);
