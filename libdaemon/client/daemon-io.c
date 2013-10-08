@@ -38,7 +38,7 @@ int buffer_read(int fd, struct buffer *buffer) {
 		result = read(fd, buffer->mem + buffer->used, buffer->allocated - buffer->used);
 		if (result > 0) {
 			buffer->used += result;
-			if (!strncmp((buffer->mem) + buffer->used - 4, "\n##\n", 4)) {
+			if (buffer->used >= 4 && !strncmp((buffer->mem) + buffer->used - 4, "\n##\n", 4)) {
 				buffer->used -= 4;
 				buffer->mem[buffer->used] = 0;
 				break; /* success, we have the full message now */
