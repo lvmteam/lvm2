@@ -38,3 +38,18 @@ vgcreate $vg1 "$dev1"
 vgcreate $vg2 "$dev2"
 not vgrename $vg1 $vg2
 vgremove $vg1 $vg2
+
+# vgrename duplicate name
+vgcreate $vg1 "$dev1"
+aux disable_dev "$dev1"
+vgcreate $vg1 "$dev2"
+UUID=$(vgs --noheading -o vg_uuid $vg1)
+aux enable_dev "$dev1"
+
+not vgrename $vg1 $vg2
+vgrename $UUID $vg2
+not vgrename $UUID $vg1
+
+vgs
+
+vgremove $vg1 $vg2
