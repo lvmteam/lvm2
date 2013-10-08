@@ -1,6 +1,7 @@
 Version 2.02.104
 ===================================
   Improve message when unable to change discards setting on active thin pool.
+  Run full scan before vgrename operation to avoid any cache name collision.
 
 Version 2.02.103 - 4th October 2013
 ===================================

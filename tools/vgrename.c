@@ -83,6 +83,8 @@ static int vg_rename_path(struct cmd_context *cmd, const char *old_vg_path,
 	if (!lvmetad_vg_list_to_lvmcache(cmd))
 		stack;
 
+	lvmcache_label_scan(cmd, 2);
+
 	/* Avoid duplicates */
 	if (!(vgids = get_vgids(cmd, 0)) || dm_list_empty(vgids)) {
 		log_error("No complete volume groups found");
