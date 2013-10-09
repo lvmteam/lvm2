@@ -2883,10 +2883,11 @@ int vg_missing_pv_count(const struct volume_group *vg)
 	return ret;
 }
 
-void check_reappeared_pv(struct volume_group *correct_vg,
-			 struct physical_volume *pv)
+static int _check_reappeared_pv(struct volume_group *correct_vg,
+				struct physical_volume *pv, int act)
 {
 	struct pv_list *pvl;
+	int rv = 0;
 
         /*
          * Skip these checks in case the tool is going to deal with missing
@@ -2894,21 +2895,47 @@ void check_reappeared_pv(struct volume_group *correct_vg,
          * confusing.
          */
         if (correct_vg->cmd->handles_missing_pvs)
-            return;
+            return rv;
 
 	dm_list_iterate_items(pvl, &correct_vg->pvs)
 		if (pv->dev == pvl->pv->dev && is_missing_pv(pvl->pv)) {
-			log_warn("Missing device %s reappeared, updating "
-				 "metadata for VG %s to version %u.",
-				 pv_dev_name(pvl->pv),  pv_vg_name(pvl->pv), 
-				 correct_vg->seqno);
+			if (act)
+				log_warn("Missing device %s reappeared, updating "
+					 "metadata for VG %s to version %u.",
+					 pv_dev_name(pvl->pv),  pv_vg_name(pvl->pv), 
+					 correct_vg->seqno);
 			if (pvl->pv->pe_alloc_count == 0) {
-				pv->status &= ~MISSING_PV;
-				pvl->pv->status &= ~MISSING_PV;
-			} else
+				if (act) {
+					pv->status &= ~MISSING_PV;
+					pvl->pv->status &= ~MISSING_PV;
+				}
+				++ rv;
+			} else if (act)
 				log_warn("Device still marked missing because of allocated data "
 					 "on it, remove volumes and consider vgreduce --removemissing.");
 		}
+	return rv;
+}
+
+static int _repair_inconsistent_vg(struct volume_group *vg)
+{
+	unsigned saved_handles_missing_pvs = vg->cmd->handles_missing_pvs;
+
+	vg->cmd->handles_missing_pvs = 1;
+	if (!vg_write(vg)) {
+		log_error("Automatic metadata correction failed");
+		vg->cmd->handles_missing_pvs = saved_handles_missing_pvs;
+		return 0;
+	}
+
+	vg->cmd->handles_missing_pvs = saved_handles_missing_pvs;
+
+	if (!vg_commit(vg)) {
+		log_error("Automatic metadata correction commit failed");
+		return 0;
+	}
+
+	return 1;
 }
 
 static int _check_mda_in_use(struct metadata_area *mda, void *_in_use)
@@ -2951,12 +2978,12 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	int inconsistent_mdas = 0;
 	int inconsistent_mda_count = 0;
 	unsigned use_precommitted = precommitted;
-	unsigned saved_handles_missing_pvs = cmd->handles_missing_pvs;
 	struct dm_list *pvids;
 	struct pv_list *pvl, *pvl2;
 	struct dm_list all_pvs;
 	char uuid[64] __attribute__((aligned(8)));
 	unsigned seqno = 0;
+	int reappeared = 0;
 
 	if (is_orphan_vg(vgname)) {
 		if (use_precommitted) {
@@ -2969,8 +2996,16 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	}
 
 	if (lvmetad_active() && !use_precommitted) {
-		*consistent = 1;
-		return lvmcache_get_vg(cmd, vgname, vgid, precommitted);
+		if ((correct_vg = lvmcache_get_vg(cmd, vgname, vgid, precommitted))) {
+			dm_list_iterate_items(pvl, &correct_vg->pvs)
+				if (pvl->pv->dev)
+					reappeared += _check_reappeared_pv(correct_vg, pvl->pv, *consistent);
+			if (reappeared && *consistent)
+				*consistent = _repair_inconsistent_vg(correct_vg);
+			else
+				*consistent = !reappeared;
+		}
+		return correct_vg;
 	}
 
 	/*
@@ -3339,21 +3374,10 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		 * update metadata and remove MISSING flag
 		 */
 		dm_list_iterate_items(pvl, &all_pvs)
-			check_reappeared_pv(correct_vg, pvl->pv);
+			_check_reappeared_pv(correct_vg, pvl->pv, 1);
 
-		cmd->handles_missing_pvs = 1;
-		if (!vg_write(correct_vg)) {
-			log_error("Automatic metadata correction failed");
+		if (!_repair_inconsistent_vg(correct_vg)) {
 			_free_pv_list(&all_pvs);
-			release_vg(correct_vg);
-			cmd->handles_missing_pvs = saved_handles_missing_pvs;
-			return NULL;
-		}
-		cmd->handles_missing_pvs = saved_handles_missing_pvs;
-
-		if (!vg_commit(correct_vg)) {
-			log_error("Automatic metadata correction commit "
-				  "failed");
 			release_vg(correct_vg);
 			return NULL;
 		}
