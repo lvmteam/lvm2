@@ -829,8 +829,8 @@ static response pv_clear_all(lvmetad_state *s, request r)
 	DEBUGLOG(s, "pv_clear_all");
 
 	lock_pvid_to_pvmeta(s);
-	lock_vgid_to_metadata(s);
 	lock_pvid_to_vgid(s);
+	lock_vgid_to_metadata(s);
 
 	destroy_metadata_hashes(s);
 	create_metadata_hashes(s);
