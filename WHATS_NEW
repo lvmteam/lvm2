@@ -1,5 +1,6 @@
 Version 2.02.104
 ===================================
+  Improve parsing of snapshot lv segment.
   Add workaround for deactivation problem of opened virtual snapshot.
   Disable unsupported merge for virtual snapshot.
   Move code to remove virtual snapshot from tools to lib for lvm2app.

@@ -23,6 +23,10 @@
 #include "str_list.h"
 #include "defaults.h"
 
+#define SEG_LOG_ERROR(t, p...) \
+	log_error(t " segment %s of logical volume %s.", ## p, \
+		  dm_config_parent_name(sn), seg->lv->name), 0;
+
 static const char *_snap_name(const struct lv_segment *seg)
 {
 	return seg->segtype->name;
@@ -41,50 +45,45 @@ static int _snap_text_import(struct lv_segment *seg, const struct dm_config_node
 			struct dm_hash_table *pv_hash __attribute__((unused)))
 {
 	uint32_t chunk_size;
-	const char *org_name, *cow_name;
 	struct logical_volume *org, *cow;
-	int old_suppress, merge = 0;
+	const char *org_name = NULL, *cow_name = NULL;
+	int merge = 0;
 
 	if (!dm_config_get_uint32(sn, "chunk_size", &chunk_size)) {
 		log_error("Couldn't read chunk size for snapshot.");
 		return 0;
 	}
 
-	old_suppress = log_suppress(1);
-
-	if ((cow_name = dm_config_find_str(sn, "merging_store", NULL))) {
-		if (dm_config_find_str(sn, "cow_store", NULL)) {
-			log_suppress(old_suppress);
-			log_error("Both snapshot cow and merging storage were specified.");
-			return 0;
-		}
+	if (dm_config_has_node(sn, "merging_store")) {
+		if (!(cow_name = dm_config_find_str(sn, "merging_store", NULL)))
+			return SEG_LOG_ERROR("Merging store must be a string in");
 		merge = 1;
 	}
-	else if (!(cow_name = dm_config_find_str(sn, "cow_store", NULL))) {
-		log_suppress(old_suppress);
-		log_error("Snapshot cow storage not specified.");
-		return 0;
+
+	if (dm_config_has_node(sn, "cow_store")) {
+		if (cow_name)
+			return SEG_LOG_ERROR("Both snapshot cow and merging storage were specified in");
+
+		if (!(cow_name = dm_config_find_str(sn, "cow_store", NULL)))
+			return SEG_LOG_ERROR("Cow store must be a string in");
 	}
 
-	if (!(org_name = dm_config_find_str(sn, "origin", NULL))) {
-		log_suppress(old_suppress);
-		log_error("Snapshot origin not specified.");
-		return 0;
-	}
+	if (!cow_name)
+		return SEG_LOG_ERROR("Snapshot cow storage not specified in");
 
-	log_suppress(old_suppress);
+	if (!dm_config_has_node(sn, "origin"))
+		return SEG_LOG_ERROR("Snapshot origin not specified in");
 
-	if (!(cow = find_lv(seg->lv->vg, cow_name))) {
-		log_error("Unknown logical volume specified for "
-			  "snapshot cow store.");
-		return 0;
-	}
+	if (!(org_name = dm_config_find_str(sn, "origin", NULL)))
+		return SEG_LOG_ERROR("Snapshot origin must be a string in");
 
-	if (!(org = find_lv(seg->lv->vg, org_name))) {
-		log_error("Unknown logical volume specified for "
-			  "snapshot origin.");
-		return 0;
-	}
+	if (!(cow = find_lv(seg->lv->vg, cow_name)))
+		return SEG_LOG_ERROR("Unknown logical volume %s specified for "
+				     "snapshot cow store in", cow_name);
+
+	if (!(org = find_lv(seg->lv->vg, org_name)))
+		return SEG_LOG_ERROR("Unknown logical volume %s specified for "
+			  "snapshot origin in", org_name);
 
 	init_snapshot_seg(seg, org, cow, chunk_size, merge);
 
