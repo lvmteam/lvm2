@@ -1,5 +1,6 @@
 Version 2.02.104
 ===================================
+  Recognise NVM Express devices in filter.
   Fix failing metadata repair when lvmetad is used.
   Fix incorrect memory handling when reading messages from lvmetad.
   Fix locking in lvmetad when handling the PV which is gone.

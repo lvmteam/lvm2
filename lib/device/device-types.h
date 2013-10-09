@@ -61,5 +61,6 @@ static const dev_known_type_t _dev_known_types[] = {
 	{"skd", 16, "STEC"},
 	{"scm", 8, "Storage Class Memory (IBM S/390)"},
 	{"bcache", 1, "bcache block device cache"},
+	{"nvme", 64, "NVM Express"},
 	{"", 0, ""}
 };
