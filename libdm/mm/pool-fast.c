@@ -62,7 +62,9 @@ struct dm_pool *dm_pool_create(const char *name, size_t chunk_hint)
 	while (new_size < p->chunk_size)
 		new_size <<= 1;
 	p->chunk_size = new_size;
+	pthread_mutex_lock(&_dm_pools_mutex);
 	dm_list_add(&_dm_pools, &p->list);
+	pthread_mutex_unlock(&_dm_pools_mutex);
 	return p;
 }
 
@@ -77,7 +79,9 @@ void dm_pool_destroy(struct dm_pool *p)
 		c = pr;
 	}
 
+	pthread_mutex_lock(&_dm_pools_mutex);
 	dm_list_del(&p->list);
+	pthread_mutex_unlock(&_dm_pools_mutex);
 	dm_free(p);
 }
 

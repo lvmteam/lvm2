@@ -15,9 +15,10 @@
 
 #include "dmlib.h"
 #include <sys/mman.h>
+#include <pthread.h>
 
-/* FIXME: thread unsafe */
 static DM_LIST_INIT(_dm_pools);
+static pthread_mutex_t _dm_pools_mutex = PTHREAD_MUTEX_INITIALIZER;
 void dm_pools_check_leaks(void);
 
 #ifdef DEBUG_ENFORCE_POOL_LOCKING
@@ -81,8 +82,11 @@ void dm_pools_check_leaks(void)
 {
 	struct dm_pool *p;
 
-	if (dm_list_empty(&_dm_pools))
+	pthread_mutex_lock(&_dm_pools_mutex);
+	if (dm_list_empty(&_dm_pools)) {
+		pthread_mutex_unlock(&_dm_pools_mutex);
 		return;
+	}
 
 	log_error("You have a memory leak (not released memory pool):");
 	dm_list_iterate_items(p, &_dm_pools) {
@@ -94,6 +98,7 @@ void dm_pools_check_leaks(void)
 		log_error(" [%p] %s", p, p->name);
 #endif
 	}
+	pthread_mutex_unlock(&_dm_pools_mutex);
 	log_error(INTERNAL_ERROR "Unreleased memory pool(s) found.");
 }
 
