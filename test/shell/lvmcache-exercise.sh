@@ -30,7 +30,7 @@ lvconvert --yes --repair $vg2/$lv1
 aux enable_dev "$dev3"
 
 # here it should fix any reappeared devices
-lvconvert --yes --repair $vg2/$lv1
+lvs
 
 lvs -a $vg2 -o+devices 2>&1 | tee out
 not grep reappeared out
