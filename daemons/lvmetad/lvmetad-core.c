@@ -796,7 +796,7 @@ static response pv_gone(lvmetad_state *s, request r)
 
 	pvmeta = dm_hash_lookup(s->pvid_to_pvmeta, pvid);
 	pvid_old = dm_hash_lookup_binary(s->device_to_pvid, &device, sizeof(device));
-	const char *vgid = dm_strdup(dm_hash_lookup(s->pvid_to_vgid, pvid));
+	char *vgid = dm_strdup(dm_hash_lookup(s->pvid_to_vgid, pvid));
 
 	if (!vgid) {
 		unlock_pvid_to_pvmeta(s);
