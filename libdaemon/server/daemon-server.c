@@ -381,6 +381,7 @@ static void *client_thread(void *baton)
 	request req;
 	response res;
 
+	b->client.thread_id = pthread_self();
 	buffer_init(&req.buffer);
 
 	while (1) {
@@ -431,6 +432,7 @@ static int handle_connect(daemon_state s)
 	struct sockaddr_un sockaddr;
 	client_handle client = { .thread_id = 0 };
 	socklen_t sl = sizeof(sockaddr);
+	pthread_t tid;
 
 	client.socket_fd = accept(s.socket_fd, (struct sockaddr *) &sockaddr, &sl);
 	if (client.socket_fd < 0)
@@ -446,10 +448,10 @@ static int handle_connect(daemon_state s)
 	baton->s = s;
 	baton->client = client;
 
-	if (pthread_create(&baton->client.thread_id, NULL, client_thread, baton))
+	if (pthread_create(&tid, NULL, client_thread, baton))
 		return 0;
 
-	pthread_detach(baton->client.thread_id);
+	pthread_detach(tid);
 
 	return 1;
 }
