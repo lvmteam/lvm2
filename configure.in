@@ -1181,10 +1181,8 @@ Features cannot be 'shared' when building statically
 fi
 
 ################################################################################
-if [[ "$DMEVENTD" = yes -o "$CLVMD" != none ]] ; then
-	AC_CHECK_LIB([pthread], [pthread_mutex_lock],
-		[PTHREAD_LIBS="-lpthread"], hard_bailout)
-fi
+AC_CHECK_LIB([pthread], [pthread_mutex_lock],
+	[PTHREAD_LIBS="-lpthread"], hard_bailout)
 
 ################################################################################
 dnl -- Disable selinux
