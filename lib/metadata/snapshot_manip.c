@@ -227,6 +227,16 @@ int vg_remove_snapshot(struct logical_volume *cow)
 	struct logical_volume *origin = origin_from_cow(cow);
 	int is_origin_active = lv_is_active(origin);
 
+	if (is_origin_active &&
+	    lv_is_virtual_origin(origin)) {
+		if (!deactivate_lv(origin->vg->cmd, origin)) {
+			log_error("Failed to deactivate logical volume \"%s\"",
+				  origin->name);
+			return 0;
+		}
+		is_origin_active = 0;
+	}
+
 	dm_list_del(&cow->snapshot->origin_list);
 	origin->origin_count--;
 

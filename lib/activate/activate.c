@@ -1929,7 +1929,7 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s, struct logical_vo
 		goto out;
 	}
 
-	if (lv_is_visible(lv)) {
+	if (lv_is_visible(lv) || lv_is_virtual_origin(lv)) {
 		if (!lv_check_not_in_use(cmd, lv, &info))
 			goto_out;
 
