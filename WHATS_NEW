@@ -1,5 +1,6 @@
 Version 2.02.104
 ===================================
+  Move code to remove virtual snapshot from tools to lib for lvm2app.
   Fix possible race during daemon worker thread creation (lvmetad).
   Fix possible deadlock while clearing lvmetad cache for full rescan.
   Fix possible race while creating/destroying memory pools.

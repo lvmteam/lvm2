@@ -4685,6 +4685,7 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 	struct dm_list *snh, *snht;
 	struct lv_list *lvl;
 	struct lvinfo info;
+	struct logical_volume *origin;
 	int is_last_pool;
 
 	if (lv_is_cow(lv)) {
@@ -4713,7 +4714,10 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 					return 0;
 				}
 			}
-		}
+		} else if (!level && lv_is_virtual_origin(origin = origin_from_cow(lv)))
+			/* If this is a sparse device, remove its origin too. */
+			/* Stacking is not supported */
+			lv = origin;
 	}
 
 	if (lv_is_origin(lv)) {
