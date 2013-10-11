@@ -17,6 +17,12 @@ fill() {
 	dd if=/dev/zero of=$DM_DEV_DIR/$vg1/lvol0 bs=$1 count=1
 }
 
+cleanup_tail()
+{
+	test -z "$SLEEP_PID" || kill $SLEEP_PID
+	aux teardown
+}
+
 aux prepare_pvs 1
 vgcreate -s 4M $vg $(cat DEVICES)
 
@@ -29,6 +35,32 @@ aux lvmconf "activation/snapshot_autoextend_percent = 20" \
 # Check usability with smallest extent size
 pvcreate --setphysicalvolumesize 4T $DM_DEV_DIR/$vg/$lv
 vgcreate -s 1K $vg1 $DM_DEV_DIR/$vg/$lv
+
+# Test removal of opened snapshot
+lvcreate -V50 -L10 -n $lv1 -s $vg1
+
+lvs -a -o+lv_active $vg1
+lvchange -an $vg1
+
+# Snapshot get exclusive activation
+lvchange -ay $vg1
+lvs -a -o+lv_active $vg1
+
+trap 'cleanup_tail' EXIT
+# Keep device busy (but not mounted) for a while
+sleep 30 < $DM_DEV_DIR/$vg1/$lv1 &
+SLEEP_PID=$!
+
+# Opened virtual snapshot device is not removable
+# it should retry device removal for a few seconds
+not lvremove -f $vg1/$lv1
+
+kill $SLEEP_PID
+SLEEP_PID=
+
+lvremove -f $vg1/$lv1
+not dmsetup info $vg1-$lv1 >/dev/null || \
+	die "$vg1/$lv1 expected to be removed, but there are mappings!"
 
 # Check border size
 lvcreate -aey -L4095G $vg1
@@ -79,7 +111,7 @@ lvcreate -an -Zn -l50%FREE -n $lv1 $vg1
 lvcreate -s -l100%FREE -n $lv2 $vg1/$lv1
 check lv_field $vg1/$lv2 size "7.50p"
 lvremove -ff $vg1
- 
+
 lvcreate -aey -V15E -l1 -n $lv1 -s $vg1
 check lv_field $vg1/$lv1 origin_size "15.00e"
 
