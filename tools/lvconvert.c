@@ -1891,6 +1891,10 @@ static int lvconvert_merge(struct cmd_context *cmd,
 			  find_merging_snapshot(origin)->cow->name);
 		return 0;
 	}
+	if (lv_is_virtual_origin(origin)) {
+		log_error("Snapshot %s has virtual origin.", lv->name);
+		return 0;
+	}
 
 	/*
 	 * Prevent merge with open device(s) as it would likely lead
