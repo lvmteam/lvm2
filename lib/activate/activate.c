@@ -888,6 +888,18 @@ int lv_raid_message(const struct logical_volume *lv, const char *msg)
 	struct dm_status_raid *status;
 
 	if (!seg_is_raid(first_seg(lv))) {
+		/*
+		 * Make it easier for user to know what to do when
+		 * they are using thinpool.
+		 */
+		if (lv_is_thin_pool(lv) &&
+		    (lv_is_raid(seg_lv(first_seg(lv), 0)) ||
+		     lv_is_raid(first_seg(lv)->metadata_lv))) {
+			log_error("Thinpool data or metadata volume"
+				  " must be specified. (e.g. \"%s/%s_tdata\")",
+				  lv->vg->name, lv->name);
+			return 0;
+		}
 		log_error("%s/%s must be a RAID logical volume to"
 			  " perform this action.", lv->vg->name, lv->name);
 		return 0;
