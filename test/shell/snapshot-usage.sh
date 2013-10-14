@@ -20,6 +20,7 @@ fill() {
 cleanup_tail()
 {
 	test -z "$SLEEP_PID" || kill $SLEEP_PID
+	wait
 	aux teardown
 }
 
@@ -57,6 +58,8 @@ not lvremove -f $vg1/$lv1
 
 kill $SLEEP_PID
 SLEEP_PID=
+# Wait for killed task, so there is no device holder
+wait
 
 lvremove -f $vg1/$lv1
 not dmsetup info $vg1-$lv1 >/dev/null || \
