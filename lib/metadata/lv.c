@@ -565,7 +565,13 @@ char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 	else if (lv->status & MIRROR_IMAGE)
 		repstr[0] = (_lv_mimage_in_sync(lv)) ? 'i' : 'I';
 	else if (lv->status & RAID_IMAGE)
-		repstr[0] = (_lv_raid_image_in_sync(lv)) ? 'i' : 'I';
+		/*
+		 * Visible RAID_IMAGES are sub-LVs that have been exposed for
+		 * top-level use by being split from the RAID array with
+		 * '--splitmirrors 1 --trackchanges'.  They always report 'I'.
+		 */
+		repstr[0] = (!lv_is_visible(lv) && _lv_raid_image_in_sync(lv)) ?
+			'i' : 'I';
 	else if (lv->status & MIRROR_LOG)
 		repstr[0] = 'l';
 	else if (lv_is_cow(lv))
