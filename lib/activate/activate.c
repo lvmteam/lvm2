@@ -251,8 +251,8 @@ int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s, int use_layer,
 {
 	return 0;
 }
-int lv_check_not_in_use(struct cmd_context *cmd __attribute__((unused)),
-			struct logical_volume *lv, struct lvinfo *info)
+int lv_check_not_in_use(struct cmd_context *cmd, struct logical_volume *lv,
+			struct lvinfo *info)
 {
         return 0;
 }
@@ -676,33 +676,48 @@ int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s, int use_layer,
 	return r;
 }
 
-int lv_check_not_in_use(struct cmd_context *cmd __attribute__((unused)),
-			struct logical_volume *lv, struct lvinfo *info)
+#define OPEN_COUNT_CHECK_RETRIES 25
+#define OPEN_COUNT_CHECK_USLEEP_DELAY 200000
+
+int lv_check_not_in_use(struct cmd_context *cmd, struct logical_volume *lv,
+			struct lvinfo *info)
 {
+	unsigned int open_count_check_retries;
+
 	if (!info->exists)
 		return 1;
 
 	/* If sysfs is not used, use open_count information only. */
-	if (!*dm_sysfs_dir()) {
-		if (info->open_count) {
-			log_error("Logical volume %s/%s in use.",
+	if (dm_sysfs_dir()) {
+		if (dm_device_has_holders(info->major, info->minor)) {
+			log_error("Logical volume %s/%s is used by another device.",
 				  lv->vg->name, lv->name);
 			return 0;
 		}
 
-		return 1;
+		if (dm_device_has_mounted_fs(info->major, info->minor)) {
+			log_error("Logical volume %s/%s contains a filesystem in use.",
+				  lv->vg->name, lv->name);
+			return 0;
+		}
 	}
 
-	if (dm_device_has_holders(info->major, info->minor)) {
-		log_error("Logical volume %s/%s is used by another device.",
-			  lv->vg->name, lv->name);
-		return 0;
-	}
-
-	if (dm_device_has_mounted_fs(info->major, info->minor)) {
-		log_error("Logical volume %s/%s contains a filesystem in use.",
-			  lv->vg->name, lv->name);
-		return 0;
+	open_count_check_retries = retry_deactivation() ? OPEN_COUNT_CHECK_RETRIES : 1;
+	while (open_count_check_retries--) {
+		if (info->open_count > 0) {
+			if (open_count_check_retries) {
+				usleep(OPEN_COUNT_CHECK_USLEEP_DELAY);
+				log_debug_activation("Retrying open_count check for %s/%s.",
+						     lv->vg->name, lv->name);
+				if (!lv_info(cmd, lv, 0, info, 1, 0))
+					return -1;
+				continue;
+			}
+			log_error("Logical volume %s/%s in use.",
+				  lv->vg->name, lv->name);
+			return 0;
+		} else
+			break;
 	}
 
 	return 1;

@@ -1,5 +1,6 @@
 Version 2.02.104
 ===================================
+  Check for open count with a timeout before removal/deactivation of an LV.
   Report RAID images split with tracking as out-of-sync ("I").
   Improve parsing of snapshot lv segment.
   Add workaround for deactivation problem of opened virtual snapshot.
