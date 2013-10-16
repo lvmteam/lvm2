@@ -89,7 +89,7 @@ static int _lv_is_on_pv(struct cmd_context *cmd,
 	struct physical_volume *pv2;
 	struct lv_segment *seg;
 
-	if (!lv || !(seg = first_seg(lv)))
+	if (!lv || !(first_seg(lv)))
 		return_0;
 
 	/*
