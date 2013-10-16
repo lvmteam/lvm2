@@ -2327,7 +2327,7 @@ static int _lvconvert_thinpool(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (pool_is_active(pool_lv)) {
+	if (lv_is_thin_pool(pool_lv) && pool_is_active(pool_lv)) {
 		/* If any thin volume is also active - abort here */
 		log_error("Cannot convert pool %s/%s with active thin volumes.",
 			  pool_lv->vg->name, pool_lv->name);
