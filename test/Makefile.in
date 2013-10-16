@@ -25,6 +25,9 @@ abs_top_builddir = "@abs_top_builddir@"
 abs_top_srcdir = "@abs_top_srcdir@"
 
 LVM_TEST_RESULTS ?= results
+LVM_TEST_THIN_DUMP_CMD ?= "@THIN_DUMP_CMD@"
+LVM_TEST_THIN_CHECK_CMD ?= "@THIN_CHECK_CMD@"
+LVM_TEST_THIN_REPAIR_CMD ?= "@THIN_REPAIR_CMD@"
 SUBDIRS = api unit
 SOURCES = lib/not.c lib/harness.c
 
@@ -58,12 +61,15 @@ help:
 	@echo "  help			Display callable targets."
 	@echo -e "\nSupported variables:"
 	@echo "  LVM_TEST_DEVDIR	Set to '/dev' to run on real /dev."
-	@echo "  LVM_TEST_DIR		Where to create test files [TMPDIR]."
+	@echo "  LVM_TEST_DIR		Where to create test files [$(LVM_TEST_DIR)]."
 	@echo "  LVM_TEST_LOCKING	Normal (1), Cluster (3)."
 	@echo "  LVM_TEST_LVMETAD	Start lvmetad (1)."
 	@echo "  LVM_TEST_NODEBUG	Do not debug lvm commands."
 	@echo "  LVM_TEST_PARALLEL	May skip agresive wipe of LVMTEST resources."
 	@echo "  LVM_TEST_RESULTS	Where to create result files [results]."
+	@echo "  LVM_TEST_THIN_CHECK_CMD  Command for thin_check  [$(LVM_TEST_THIN_CHECK_CMD)]."
+	@echo "  LVM_TEST_THIN_DUMP_CMD   Command for thin_dump   [$(LVM_TEST_THIN_DUMP_CMD)]."
+	@echo "  LVM_TEST_THIN_REPAIR_CMD Command for thin_repair [$(LVM_TEST_THIN_REPAIR_CMD)]."
 	@echo "  LVM_TEST_UNLIMITED	Set to get unlimited test log (>32MB)"
 	@echo "  LVM_VERIFY_UDEV	Default verify state for lvm.conf."
 	@echo "  S			Skip given test (regex)."
