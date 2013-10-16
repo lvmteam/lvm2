@@ -2275,6 +2275,7 @@ static int _lvconvert_thinpool(struct cmd_context *cmd,
 	struct logical_volume *pool_metadata_lv;
 	struct logical_volume *external_lv = NULL;
 	char metadata_name[NAME_LEN], data_name[NAME_LEN];
+	int activate_pool;
 
 	if (!lv_is_visible(pool_lv)) {
 		log_error("Can't convert internal LV %s/%s.",
@@ -2303,6 +2304,7 @@ static int _lvconvert_thinpool(struct cmd_context *cmd,
 		}
 
 		if (lv_is_thin_pool(pool_lv)) {
+			activate_pool = lv_is_active(pool_lv);
 			r = 1; /* Already existing thin pool */
 			goto out;
 		}
@@ -2315,9 +2317,19 @@ static int _lvconvert_thinpool(struct cmd_context *cmd,
 		return 0;
 	}
 
+	/* Allow to have only thinpool active and restore it's active state */
+	activate_pool = lv_is_active(pool_lv);
+
 	/* We are changing target type, so deactivate first */
 	if (!deactivate_lv(cmd, pool_lv)) {
 		log_error("Aborting. Failed to deactivate logical volume %s/%s.",
+			  pool_lv->vg->name, pool_lv->name);
+		return 0;
+	}
+
+	if (pool_is_active(pool_lv)) {
+		/* If any thin volume is also active - abort here */
+		log_error("Cannot convert pool %s/%s with active thin volumes.",
 			  pool_lv->vg->name, pool_lv->name);
 		return 0;
 	}
@@ -2423,6 +2435,7 @@ static int _lvconvert_thinpool(struct cmd_context *cmd,
 			goto mda_write;
 		}
 
+		metadata_lv->status |= LV_NOSCAN;
 		if (!lv_is_active(metadata_lv) &&
 		    !activate_lv_local(cmd, metadata_lv)) {
 			log_error("Aborting. Failed to activate thin metadata lv.");
@@ -2515,7 +2528,8 @@ mda_write:
 	if (!vg_write(pool_lv->vg) || !vg_commit(pool_lv->vg))
 		return_0;
 
-	if (!activate_lv_excl(cmd, pool_lv)) {
+	if (activate_pool &&
+	    !activate_lv_excl(cmd, pool_lv)) {
 		log_error("Failed to activate pool logical volume %s/%s.",
 			  pool_lv->vg->name, pool_lv->name);
 		/* Deactivate subvolumes */
