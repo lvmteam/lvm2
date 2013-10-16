@@ -76,7 +76,7 @@ should not $LVM_TEST_THIN_DUMP_CMD $DM_DEV_DIR/$vg/repair | tee dump
 
 should $LVM_TEST_THIN_REPAIR_CMD -i $DM_DEV_DIR/$vg/repair -o $DM_DEV_DIR/$vg/fixed
 
-should $THIN_CHECK $DM_DEV_DIR/$vg/fixed
+should $LVM_TEST_THIN_CHECK_CMD $DM_DEV_DIR/$vg/fixed
 
 # Swap repaired metadata back
 lvconvert -y -f --poolmetadata $vg/fixed --thinpool $vg/pool
