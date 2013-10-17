@@ -162,7 +162,7 @@ teardown_devs() {
 		local stray_loops=( $(losetup -a | grep "$COMMON_PREFIX" | cut -d: -f1) )
 		test ${#stray_loops[@]} -eq 0 || {
 			echo "Removing stray loop devices containing $COMMON_PREFIX: ${stray_loops[@]}"
-			losetup -d "${stray_loops[@]}"
+			for i in "${stray_loops[@]}" ; do losetup -d $i ; done
 		}
 	}
 }
