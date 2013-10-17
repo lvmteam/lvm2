@@ -21,7 +21,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#ifdef linux
+#ifdef __linux__
 #  include <linux/types.h>
 #endif
 

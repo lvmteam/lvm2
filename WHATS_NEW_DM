@@ -1,5 +1,6 @@
 Version 1.02.83
 ==================================
+  Use __linux__ instead of linux define to make libdevmapper.h C compliant.
 
 Version 1.02.82 - 4th October 2013
 ==================================
