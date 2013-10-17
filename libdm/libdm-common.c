@@ -1795,7 +1795,8 @@ int dm_device_has_holders(uint32_t major, uint32_t minor)
 	}
 
 	if (stat(sysfs_path, &st)) {
-		log_sys_error("stat", sysfs_path);
+		if (errno != ENOENT)
+			log_sys_error("stat", sysfs_path);
 		return 0;
 	}
 

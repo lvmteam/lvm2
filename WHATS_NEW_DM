@@ -1,5 +1,6 @@
 Version 1.02.83
 ==================================
+  Skip error message when holders are not present in sysfs.
   Use __linux__ instead of linux define to make libdevmapper.h C compliant.
 
 Version 1.02.82 - 4th October 2013
