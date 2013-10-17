@@ -215,4 +215,4 @@ esac
 
 test -z "$PREFIX" || prepare_test_vars
 
-test -e /sbin/udevsettle && pidof udevd >/dev/null && /sbin/udevsettle
+test ! -e /sbin/udevsettle || if pidof udevd >/dev/null; then /sbin/udevsettle ; fi
