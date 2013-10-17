@@ -14,18 +14,14 @@
 
 . lib/test
 
-# Set tools from configuration (set by Makefile)
-# Allow user override to take tools from unusual places
-LVM_TEST_THIN_CHECK_CMD=${LVM_TEST_THIN_CHECK_CMD:-thin_check}
-LVM_TEST_THIN_DUMP_CMD=${LVM_TEST_THIN_DUMP_CMD:-thin_dump}
-LVM_TEST_THIN_REPAIR_CMD=${LVM_TEST_THIN_REPAIR_CMD:-thin_repair}
-
 which mkfs.ext2 || skip
 
-# Maybe check also version of the tools here??
-which $LVM_TEST_THIN_CHECK_CMD || skip
-which $LVM_TEST_THIN_DUMP_CMD || skip
-which $LVM_TEST_THIN_REPAIR_CMD || skip
+# By default use tools from configuration (exported through Makefile)
+# Allow user to override location of binaries to take tools from different laces
+# Maybe check also version of the tools here?
+test -n "$LVM_TEST_THIN_CHECK_CMD" || LVM_TEST_THIN_CHECK_CMD=$(which thin_check) || skip
+test -n "$LVM_TEST_THIN_DUMP_CMD" || LVM_TEST_THIN_DUMP_CMD=$(which thin_dump) || skip
+test -n "$LVM_TEST_THIN_REPAIR_CMD" || LVM_TEST_THIN_REPAIR_CMD=$(which thin_repair) || skip
 
 #
 # Main
@@ -76,6 +72,8 @@ should not $LVM_TEST_THIN_DUMP_CMD $DM_DEV_DIR/$vg/repair | tee dump
 
 should $LVM_TEST_THIN_REPAIR_CMD -i $DM_DEV_DIR/$vg/repair -o $DM_DEV_DIR/$vg/fixed
 
+should $LVM_TEST_THIN_DUMP_CMD --repair $DM_DEV_DIR/$vg/repair | tee repaired_xml
+
 should $LVM_TEST_THIN_CHECK_CMD $DM_DEV_DIR/$vg/fixed
 
 # Swap repaired metadata back
@@ -90,13 +88,14 @@ dmsetup table
 dmsetup info -c
 dmsetup ls --tree
 
-# Currently in troubles - we can't remove thin volume from broken pool
-lvchange -an $vg/repair
-lvchange -an $vg/fixed
-lvchange -an $vg/pool_tmeta0
-dmsetup remove $vg-pool_tdata
-dmsetup remove $vg-pool_tmeta
+lvchange -an $vg
 
+# FIXME: Currently in deep troubles - we can't remove thin volume from broken pool
+should lvremove -ff $vg
+
+# let's not block PVs with openned _tdata/_tmeta devices
+dmsetup remove $vg-pool_tdata || true
+dmsetup remove $vg-pool_tmeta || true
 
 dmsetup table
 

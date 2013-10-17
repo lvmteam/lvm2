@@ -25,9 +25,10 @@ abs_top_builddir = "@abs_top_builddir@"
 abs_top_srcdir = "@abs_top_srcdir@"
 
 LVM_TEST_RESULTS ?= results
-LVM_TEST_THIN_DUMP_CMD ?= "@THIN_DUMP_CMD@"
-LVM_TEST_THIN_CHECK_CMD ?= "@THIN_CHECK_CMD@"
-LVM_TEST_THIN_REPAIR_CMD ?= "@THIN_REPAIR_CMD@"
+export LVM_TEST_THIN_CHECK_CMD?=@THIN_CHECK_CMD@
+export LVM_TEST_THIN_DUMP_CMD?=@THIN_DUMP_CMD@
+export LVM_TEST_THIN_REPAIR_CMD?=@THIN_REPAIR_CMD@
+
 SUBDIRS = api unit
 SOURCES = lib/not.c lib/harness.c
 
