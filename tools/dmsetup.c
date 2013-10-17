@@ -1147,7 +1147,7 @@ static int _udevcomplete_all(CMD_ARGS)
 	unsigned age = 0;
 	time_t t;
 
-	if (argc == 2 && (sscanf(argv[1], "%i", &age) != 1)) {
+	if (argc == 2 && (sscanf(argv[1], "%u", &age) != 1)) {
 		log_error("Failed to read age_in_minutes parameter.");
 		return 0;
 	}
