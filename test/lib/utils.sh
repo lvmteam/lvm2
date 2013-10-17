@@ -214,5 +214,3 @@ case "$PATH" in
 esac
 
 test -z "$PREFIX" || prepare_test_vars
-
-test ! -e /sbin/udevsettle || if pidof udevd >/dev/null; then /sbin/udevsettle ; fi
