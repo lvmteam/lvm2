@@ -29,7 +29,7 @@ vgextend $vg "$dev3"
 lvremove -ff $vg
 
 # RAID6 double replace
-lvcreate --type raid5 -i 3 -l 2 -n $lv1 $vg \
+lvcreate --type raid6 -i 3 -l 2 -n $lv1 $vg \
     "$dev1" "$dev2" "$dev3" "$dev4" "$dev5"
 aux wait_for_sync $vg $lv1
 aux disable_dev "$dev4" "$dev5"
