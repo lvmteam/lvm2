@@ -940,6 +940,15 @@ if test x$BUILD_LVMETAD = xyes; then
 fi
 
 ################################################################################
+dnl -- Enable udev-systemd protocol to instantiate a service for background jobs
+AC_MSG_CHECKING(whether to use udev-systemd protocol for jobs in background)
+AC_ARG_ENABLE(udev-systemd-background-jobs,
+	      AC_HELP_STRING([--enable-udev-systemd-background-jobs],
+			     [enable udev-systemd protocol to instantiate a service for background job]),
+	      UDEV_SYSTEMD_BACKGROUND_JOBS=$enableval, UDEV_SYSTEMD_BACKGROUND_JOBS=no)
+AC_MSG_RESULT($UDEV_SYSTEMD_BACKGROUND_JOBS)
+
+################################################################################
 dnl -- Enable udev synchronisation
 AC_MSG_CHECKING(whether to enable synchronisation with udev processing)
 AC_ARG_ENABLE(udev_sync,
@@ -1626,6 +1635,7 @@ AC_SUBST(UDEV_LIBS)
 AC_SUBST(UDEV_PC)
 AC_SUBST(UDEV_RULES)
 AC_SUBST(UDEV_SYNC)
+AC_SUBST(UDEV_SYSTEMD_BACKGROUND_JOBS)
 AC_SUBST(UDEV_RULE_EXEC_DETECTION)
 AC_SUBST(UDEV_HAS_BUILTIN_BLKID)
 AC_SUBST(CUNIT_LIBS)
@@ -1700,6 +1710,7 @@ scripts/cmirrord_init_red_hat
 scripts/lvm2_lvmetad_init_red_hat
 scripts/lvm2_lvmetad_systemd_red_hat.socket
 scripts/lvm2_lvmetad_systemd_red_hat.service
+scripts/lvm2_pvscan_systemd_red_hat@.service
 scripts/lvm2_monitoring_init_red_hat
 scripts/dm_event_systemd_red_hat.socket
 scripts/dm_event_systemd_red_hat.service
