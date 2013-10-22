@@ -47,7 +47,9 @@ BLKID_RULE=IMPORT{program}=\"${SBIN}\/blkid -o udev -p \$$tempnode\"
 endif
 
 ifeq ("@UDEV_SYSTEMD_BACKGROUND_JOBS@", "yes")
-PVSCAN_RULE=ENV{SYSTEMD_WANTS}=\"lvm2-pvscan@\$$devnode.service\"
+PVSCAN_RULE="ENV{SYSTEMD_ALIAS}=\"/dev/block/$$major:$$minor\" \
+	     ENV{ID_MODEL}=\"LVM PV $$env{ID_FS_UUID_ENC} on /dev/$$name\" \
+	     ENV{SYSTEMD_WANTS}=\"lvm2-pvscan@\$$devnode.service\""
 else
 PVSCAN_RULE=RUN\+\=\"$(LVM_EXEC)/lvm pvscan --background --cache --activate ay --major \$$major --minor \$$minor\", ENV{LVM_SCANNED}=\"1\"
 endif
