@@ -25,7 +25,9 @@ pvscan \- scan all disks for physical volumes
 .B \-\-minor
 .I minor
 |
-.IR DevicePath ]...
+.IR DevicePath
+|
+.IR major:minor ]...
 .SH DESCRIPTION
 pvscan scans all supported LVM block devices in the system for
 physical volumes.
