@@ -323,7 +323,10 @@ deactivate_all() {
 				$LSBLK_READ <<< "`$LSBLK --nodeps $1`"
 
 				# check if the device is not on the skip list already
-				test -z ${SKIP_DEVICE_LIST["$kname"]} || continue
+				test -z ${SKIP_DEVICE_LIST["$kname"]} || {
+					shift
+					continue
+				}
 
 				deactivate
 			else
