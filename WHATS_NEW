@@ -1,6 +1,6 @@
 Version 2.02.104
 ===================================
-  Fix endless loop for blkdeactivte <device>... if unable to umount/deactivate.
+  Fix endless loop in blkdeactivate <device>... if unable to umount/deactivate.
   Add dev-block-<major>:<minor>.device systemd alias for complete PV tracking.
   Use major:minor as short form of --major and --minor arg for pvscan --cache.
   Remove 2>/dev/null from three lvm commands executed by vgimportclone.
