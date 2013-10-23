@@ -397,11 +397,17 @@ static int _device_is_usable(struct device *dev, int check_lv_names)
 		next = dm_get_next_target(dmt, next, &start, &length,
 					  &target_type, &params);
 
-		if (target_type && !strcmp(target_type, "mirror") &&
-		    !_ignore_blocked_mirror_devices(dev, start, length, params)) {
-			log_debug_activation("%s: Mirror device %s not usable.",
-					     dev_name(dev), name);
-			goto out;
+		if (target_type && !strcmp(target_type, "mirror")) {
+			if (ignore_lvm_mirrors()) {
+				log_debug_activation("%s: Scanning mirror devices is disabled.", dev_name(dev));
+				goto out;
+			}
+			if (!_ignore_blocked_mirror_devices(dev, start,
+							    length, params)) {
+				log_debug_activation("%s: Mirror device %s not usable.",
+						     dev_name(dev), name);
+				goto out;
+			}
 		}
 
 		/*

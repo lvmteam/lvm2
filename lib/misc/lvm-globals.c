@@ -40,6 +40,7 @@ static int _mirror_in_sync = 0;
 static int _dmeventd_monitor = DEFAULT_DMEVENTD_MONITOR;
 static int _background_polling = DEFAULT_BACKGROUND_POLLING;
 static int _ignore_suspended_devices = 0;
+static int _ignore_lvm_mirrors = DEFAULT_IGNORE_LVM_MIRRORS;
 static int _error_message_produced = 0;
 static unsigned _is_static = 0;
 static int _udev_checking = 1;
@@ -121,6 +122,11 @@ void init_background_polling(int polling)
 void init_ignore_suspended_devices(int ignore)
 {
 	_ignore_suspended_devices = ignore;
+}
+
+void init_ignore_lvm_mirrors(int scan)
+{
+	_ignore_lvm_mirrors = scan;
 }
 
 void init_cmd_name(int status)
@@ -257,6 +263,11 @@ int dmeventd_monitor_mode(void)
 int ignore_suspended_devices(void)
 {
 	return _ignore_suspended_devices;
+}
+
+int ignore_lvm_mirrors(void)
+{
+	return _ignore_lvm_mirrors;
 }
 
 void init_debug(int level)

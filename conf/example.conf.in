@@ -186,6 +186,35 @@ devices {
     # in recovery situations.
     ignore_suspended_devices = 0
 
+    # ignore_lvm_mirrors:  Introduced in version 2.02.104
+    # This setting determines whether logical volumes of "mirror" segment
+    # type are scanned for LVM labels.  This affects the ability of
+    # mirrors to be used as physical volumes.  If 'ignore_lvm_mirrors'
+    # is set to '1', it becomes impossible to create volume groups on top
+    # of mirror logical volumes - i.e. to stack volume groups on mirrors.
+    #
+    # Allowing mirror logical volumes to be scanned (setting the value to '0')
+    # can potentially cause LVM processes and I/O to the mirror to become
+    # blocked.  This is due to the way that the "mirror" segment type handles
+    # failures.  In order for the hang to manifest itself, an LVM command must
+    # be run just after a failure and before the automatic LVM repair process
+    # takes place OR there must be failures in multiple mirrors in the same
+    # volume group at the same time with write failures occurring moments
+    # before a scan of the mirror's labels.
+    #
+    # Note that these scanning limitations do not apply to the LVM RAID
+    # types, like "raid1".  The RAID segment types handle failures in a
+    # different way and are not subject to possible process or I/O blocking.
+    #
+    # It is encouraged that users set 'ignore_lvm_mirrors' to 1 if they
+    # are using the "mirror" segment type.  Users that require volume group
+    # stacking on mirrored logical volumes should consider using the "raid1"
+    # segment type.  The "raid1" segment type is not available for
+    # active/active clustered volume groups.
+    #
+    # Set to 1 to disallow stacking and thereby avoid a possible deadlock.
+    ignore_lvm_mirrors = 1
+
     # During each LVM operation errors received from each device are counted.
     # If the counter of a particular device exceeds the limit set here, no
     # further I/O is sent to that device for the remainder of the respective
