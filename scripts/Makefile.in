@@ -119,7 +119,7 @@ DISTCLEAN_TARGETS += clvmd_init_red_hat cmirrord_init_red_hat \
 		     dm_event_systemd_red_hat.socket dm_event_systemd_red_hat.service \
 		     lvm2_monitoring_systemd_red_hat.service \
 		     lvm2_lvmetad_systemd_red_hat.socket lvm2_lvmetad_systemd_red_hat.service \
-		     lvm2_lvmetad_systemd_red_hat@.service \
+		     lvm2_pvscan_systemd_red_hat@.service \
 		     lvm2_tmpfiles_red_hat.conf blk_availability_init_red_hat \
 		     blk_availability_systemd_red_hat.service \
 		     blkdeactivate.sh

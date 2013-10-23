@@ -11,4 +11,4 @@ Conflicts=shutdown.target
 Type=oneshot
 RemainAfterExit=yes
 ExecStart=@sbindir@/pvscan --cache --activate ay /dev/block/%i
-ExecStop=/usr/sbin/pvscan --cache %i
+ExecStop=@sbindir@/pvscan --cache %i
