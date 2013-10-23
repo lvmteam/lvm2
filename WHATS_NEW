@@ -1,5 +1,6 @@
 Version 2.02.104
 ===================================
+  Add internal flag for temporary LVs to properly direct udev to not interfere.
   Fix endless loop in blkdeactivate <device>... if unable to umount/deactivate.
   Add dev-block-<major>:<minor>.device systemd alias for complete PV tracking.
   Use major:minor as short form of --major and --minor arg for pvscan --cache.

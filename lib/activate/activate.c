@@ -338,12 +338,12 @@ int lv_activation_filter(struct cmd_context *cmd, const char *lvid_s,
 	return 1;
 }
 int lv_activate(struct cmd_context *cmd, const char *lvid_s, int exclusive, int noscan,
-		struct logical_volume *lv)
+		int temporary, struct logical_volume *lv)
 {
 	return 1;
 }
 int lv_activate_with_filter(struct cmd_context *cmd, const char *lvid_s, int exclusive,
-			    int noscan, struct logical_volume *lv)
+			    int noscan, int temporary, struct logical_volume *lv)
 {
 	return 1;
 }
@@ -2055,10 +2055,11 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 	if (filter)
 		laopts->read_only = _passes_readonly_filter(cmd, lv);
 
-	log_debug_activation("Activating %s/%s%s%s%s.", lv->vg->name, lv->name,
+	log_debug_activation("Activating %s/%s%s%s%s%s.", lv->vg->name, lv->name,
 			     laopts->exclusive ? " exclusively" : "",
 			     laopts->read_only ? " read-only" : "",
-			     laopts->noscan ? " noscan" : "");
+			     laopts->noscan ? " noscan" : "",
+			     laopts->temporary ? " temporary" : "");
 
 	if (!lv_info(cmd, lv, 0, &info, 0, 0))
 		goto_out;
@@ -2096,9 +2097,11 @@ out:
 
 /* Activate LV */
 int lv_activate(struct cmd_context *cmd, const char *lvid_s, int exclusive,
-		int noscan, struct logical_volume *lv)
+		int noscan, int temporary, struct logical_volume *lv)
 {
-	struct lv_activate_opts laopts = { .exclusive = exclusive, .noscan = noscan };
+	struct lv_activate_opts laopts = { .exclusive = exclusive,
+					   .noscan = noscan,
+					   .temporary = temporary };
 
 	if (!_lv_activate(cmd, lvid_s, &laopts, 0, lv))
 		return_0;
@@ -2108,9 +2111,11 @@ int lv_activate(struct cmd_context *cmd, const char *lvid_s, int exclusive,
 
 /* Activate LV only if it passes filter */
 int lv_activate_with_filter(struct cmd_context *cmd, const char *lvid_s, int exclusive,
-			    int noscan, struct logical_volume *lv)
+			    int noscan, int temporary, struct logical_volume *lv)
 {
-	struct lv_activate_opts laopts = { .exclusive = exclusive, .noscan = noscan  };
+	struct lv_activate_opts laopts = { .exclusive = exclusive,
+					   .noscan = noscan,
+					   .temporary = temporary };
 
 	if (!_lv_activate(cmd, lvid_s, &laopts, 1, lv))
 		return_0;

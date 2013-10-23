@@ -1400,7 +1400,7 @@ static int _check_udev_fallback(struct cmd_context *cmd)
 #endif /* UDEV_SYNC_SUPPORT */
 
 static uint16_t _get_udev_flags(struct dev_manager *dm, struct logical_volume *lv,
-				const char *layer, uint16_t flags)
+				const char *layer, int noscan, int temporary)
 {
 	uint16_t udev_flags = 0;
 
@@ -1449,9 +1449,14 @@ static uint16_t _get_udev_flags(struct dev_manager *dm, struct logical_volume *l
 			      DM_UDEV_DISABLE_SUBSYSTEM_RULES_FLAG;
 
 	/*
-	 * Firmly set requested flags.
+	 * LVM subsystem specific flags.
 	 */
-	udev_flags |= flags;
+	if (noscan)
+		udev_flags |= DM_SUBSYSTEM_UDEV_FLAG0;
+
+	if (temporary)
+		udev_flags |= DM_UDEV_DISABLE_DISK_RULES_FLAG |
+			      DM_UDEV_DISABLE_OTHER_RULES_FLAG;
 
 	return udev_flags;
 }
@@ -1499,7 +1504,7 @@ static int _add_dev_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	}
 
 	if (info.exists && !dm_tree_add_dev_with_udev_flags(dtree, info.major, info.minor,
-							_get_udev_flags(dm, lv, layer, 0))) {
+							_get_udev_flags(dm, lv, layer, 0, 0))) {
 		log_error("Failed to add device (%" PRIu32 ":%" PRIu32") to dtree",
 			  info.major, info.minor);
 		return 0;
@@ -2340,7 +2345,7 @@ static int _set_udev_flags_for_children(struct dev_manager *dm,
 		}
 
 		dm_tree_node_set_udev_flags(child,
-					    _get_udev_flags(dm, lvl->lv, NULL, 0));
+					    _get_udev_flags(dm, lvl->lv, NULL, 0, 0));
 	}
 
 	return 1;
@@ -2417,8 +2422,7 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 					     read_only_lv(lv, laopts),
 					     ((lv->vg->status & PRECOMMITTED) | laopts->revert) ? 1 : 0,
 					     lvlayer,
-					     _get_udev_flags(dm, lv, layer,
-						laopts->noscan ? LVM_UDEV_NOSCAN_FLAG : 0))))
+					     _get_udev_flags(dm, lv, layer, laopts->noscan, laopts->temporary))))
 		return_0;
 
 	/* Store existing name so we can do rename later */

@@ -809,6 +809,7 @@ static struct logical_volume *_alloc_pool_metadata_spare(struct volume_group *vg
 		.stripes = 1,
 		.vg_name = vg->name,
 		.zero = 1,
+		.temporary = 1,
 	};
 
 	dm_list_init(&lp.tags);

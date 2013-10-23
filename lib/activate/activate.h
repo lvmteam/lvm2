@@ -38,7 +38,18 @@ struct lv_activate_opts {
 	int skip_in_use;
 	unsigned revert;
 	unsigned read_only;
-	unsigned noscan;
+	unsigned noscan;	/* Mark this LV to avoid its scanning. This also
+				   directs udev to use proper udev flag to avoid
+				   any scanning in udev. This udev flag is automatically
+				   dropped in udev db on any spurious event that follows. */
+	unsigned temporary;	/* Mark this LV as temporary. It means, the LV
+				 * is created, used and deactivated within single
+				 * LVM command execution. Such LVs are mostly helper
+				 * LVs to do some action or cleanup before the proper
+				 * LV is created. This also directs udev to use proper
+				 * set of flags to avoid any scanning in udev. These udev
+				 * flags are persistent in udev db for any spurious event
+				 * that follows. */
 };
 
 /* target attribute flags */
@@ -81,9 +92,10 @@ int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s, unsigned o
 int lv_resume(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only, struct logical_volume *lv);
 int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s,
 			unsigned origin_only, unsigned exclusive, unsigned revert, struct logical_volume *lv);
-int lv_activate(struct cmd_context *cmd, const char *lvid_s, int exclusive, int noscan, struct logical_volume *lv);
-int lv_activate_with_filter(struct cmd_context *cmd, const char *lvid_s,
-			    int exclusive, int noscan, struct logical_volume *lv);
+int lv_activate(struct cmd_context *cmd, const char *lvid_s, int exclusive,
+		int noscan, int temporary, struct logical_volume *lv);
+int lv_activate_with_filter(struct cmd_context *cmd, const char *lvid_s, int exclusive,
+			    int noscan, int temporary, struct logical_volume *lv);
 int lv_deactivate(struct cmd_context *cmd, const char *lvid_s, struct logical_volume *lv);
 
 int lv_mknodes(struct cmd_context *cmd, const struct logical_volume *lv);

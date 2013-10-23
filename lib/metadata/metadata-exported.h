@@ -102,7 +102,12 @@
 #define LV_WRITEMOSTLY		UINT64_C(0x0000020000000000)	/* LV (RAID1) */
 
 #define LV_ACTIVATION_SKIP	UINT64_C(0x0000040000000000)	/* LV */
-#define LV_NOSCAN		UINT64_C(0x0000080000000000)	/* LV */
+#define LV_NOSCAN		UINT64_C(0x0000080000000000)	/* LV - internal use only - the LV
+									should not be scanned */
+#define LV_TEMPORARY		UINT64_C(0x0000100000000000)	/* LV - internal use only - the LV
+								        is supposed to be created and
+									removed during single LVM
+									command execution. */
 
 /* Format features flags */
 #define FMT_SEGMENTS		0x00000001U	/* Arbitrary segment params? */
@@ -721,6 +726,7 @@ struct lvcreate_params {
 	int log_count; /* mirror */
 	int nosync; /* mirror */
 	int poolmetadataspare; /* thin pool */
+	int temporary; /* temporary LV */
 #define ACTIVATION_SKIP_SET		0x01 /* request to set LV activation skip flag state */
 #define ACTIVATION_SKIP_SET_ENABLED	0x02 /* set the LV activation skip flag state to 'enabled' */
 #define ACTIVATION_SKIP_IGNORE		0x04 /* request to ignore LV activation skip flag (if any) */
