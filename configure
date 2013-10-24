@@ -708,6 +708,7 @@ CUNIT_CFLAGS
 GENPNG
 GENHTML
 LCOV
+HAVE_WCLOBBERED
 HAVE_WJUMP
 SACKPT_LIBS
 SACKPT_CFLAGS
@@ -8682,8 +8683,6 @@ fi
 
     ac_save_CFLAGS=$CFLAGS
     CFLAGS=-Wjump-misses-init
-    { $as_echo "$as_me:${as_lineno-$LINENO}: result: KOUKEJ $name" >&5
-$as_echo "KOUKEJ $name" >&6; }
     { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $CC accepts -Wjump-misses-init flag" >&5
 $as_echo_n "checking whether $CC accepts -Wjump-misses-init flag... " >&6; }
 if test "${ac_cv_flag_HAVE_WJUMP+set}" = set; then :
@@ -8712,6 +8711,44 @@ $as_echo "$ac_cv_flag_HAVE_WJUMP" >&6; }
     CFLAGS=$ac_save_CFLAGS
     HAVE_WJUMP=$ac_cv_flag_HAVE_WJUMP
     if test "HAVE_WJUMP" = yes; then
+        :
+    else
+        :
+    fi
+
+
+
+
+    ac_save_CFLAGS=$CFLAGS
+    CFLAGS=-Wclobbered
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $CC accepts -Wclobbered flag" >&5
+$as_echo_n "checking whether $CC accepts -Wclobbered flag... " >&6; }
+if test "${ac_cv_flag_HAVE_WCLOBBERED+set}" = set; then :
+  $as_echo_n "(cached) " >&6
+else
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+  ac_cv_flag_HAVE_WCLOBBERED=yes
+else
+  ac_cv_flag_HAVE_WCLOBBERED=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_flag_HAVE_WCLOBBERED" >&5
+$as_echo "$ac_cv_flag_HAVE_WCLOBBERED" >&6; }
+    CFLAGS=$ac_save_CFLAGS
+    HAVE_WCLOBBERED=$ac_cv_flag_HAVE_WCLOBBERED
+    if test "HAVE_WCLOBBERED" = yes; then
         :
     else
         :

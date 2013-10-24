@@ -135,14 +135,18 @@ INSTALL_SCRIPT = $(INSTALL) -p $(M_INSTALL_PROGRAM)
 WFLAGS += -Wall -Wundef -Wshadow -Wcast-align -Wwrite-strings \
  -Wmissing-prototypes -Wmissing-declarations -Wnested-externs \
  -Winline -Wmissing-noreturn -Wformat-security -Wredundant-decls \
- -Wpointer-arith -Wclobbered -Wempty-body -Wignored-qualifiers \
- -Wmissing-parameter-type -Wold-style-declaration -Woverride-init \
- -Wtype-limits -Wuninitialized -Wmissing-include-dirs -Wsync-nand \
- -Wfloat-equal -Wlogical-op -Wstrict-prototypes \
+ -Wpointer-arith -Wuninitialized -Wmissing-include-dirs \
+ -Wfloat-equal -Wstrict-prototypes \
  -Wold-style-definition -Wmissing-format-attribute
 
 ifeq ("@HAVE_WJUMP@", "yes")
 WFLAGS += -Wjump-misses-init
+endif
+
+ifeq ("@HAVE_WCLOBBERED@", "yes")
+WFLAGS += -Wclobbered -Wempty-body -Wignored-qualifiers \
+ -Wmissing-parameter-type -Wold-style-declaration -Woverride-init \
+ -Wtype-limits -Wsync-nand -Wlogical-op
 endif
 
 #WFLAGS += -W -Wno-sign-compare -Wno-unused-parameter -Wno-missing-field-initializers

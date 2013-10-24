@@ -838,6 +838,8 @@ fi
 dnl -- Check if compiler supports -Wjump-misses-init
 AC_TRY_CCFLAG([-Wjump-misses-init], [HAVE_WJUMP], [], [])
 AC_SUBST(HAVE_WJUMP)
+AC_TRY_CCFLAG([-Wclobbered], [HAVE_WCLOBBERED], [], [])
+AC_SUBST(HAVE_WCLOBBERED)
 
 ################################################################################
 dnl -- Override optimisation

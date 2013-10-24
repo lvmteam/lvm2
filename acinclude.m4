@@ -24,7 +24,6 @@ AC_DEFUN([AC_TRY_CCFLAG],
     AC_REQUIRE([AC_PROG_CC])
     ac_save_CFLAGS=$CFLAGS
     CFLAGS=$1
-    AC_MSG_RESULT([KOUKEJ $name])
     AC_CACHE_CHECK([whether $CC accepts $1 flag], [ac_cv_flag_$2],
 	[AC_COMPILE_IFELSE([AC_LANG_PROGRAM()],
 			   [AS_VAR_SET([ac_cv_flag_$2], [yes])],
