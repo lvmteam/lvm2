@@ -1124,7 +1124,7 @@ static int verify_message(char *buf, int len)
 
 	/* TODO: we may be able to narrow len/flags/clientid/arglen checks based on cmd */
 
-	if (h->flags & ~(CLVMD_FLAG_LOCAL | CLVMD_FLAG_SYSTEMLV | CLVMD_FLAG_NODEERRS)) {
+	if (h->flags & ~(CLVMD_FLAG_LOCAL | CLVMD_FLAG_SYSTEMLV | CLVMD_FLAG_NODEERRS | CLVMD_FLAG_REMOTE)) {
 		log_error("verify_message bad flags %x", h->flags);
 		return -1;
 	}
