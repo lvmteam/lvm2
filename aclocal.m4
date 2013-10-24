@@ -169,3 +169,4 @@ else
 fi[]dnl
 ])# PKG_CHECK_MODULES
 
+m4_include([acinclude.m4])

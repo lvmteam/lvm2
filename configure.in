@@ -835,6 +835,10 @@ else
 	CSCOPE_CMD=
 fi
 
+dnl -- Check if compiler supports -Wjump-misses-init
+AC_TRY_CCFLAG([-Wjump-misses-init], [HAVE_WJUMP], [], [])
+AC_SUBST(HAVE_WJUMP)
+
 ################################################################################
 dnl -- Override optimisation
 AC_MSG_CHECKING(for C optimisation flag)
