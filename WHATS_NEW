@@ -1,5 +1,6 @@
 Version 2.02.104 -
 ===================================
+  Compare equality of double values with DBL_EPSILON predefined constant.
   Use additional gcc warning flags by default.
   Add ignore_lvm_mirrors to config file to read/ignore labels on mirrors.
   Add internal flag for temporary LVs to properly direct udev to not interfere.
