@@ -22,7 +22,7 @@
 lvm_t handle;
 vg_t vg;
 
-static void start() {
+static void start(void) {
 	handle = lvm_init(NULL);
 	if (!handle) {
 		fprintf(stderr, "Unable to lvm_init\n");
@@ -43,15 +43,16 @@ static void done(int ok) {
 
 int main(int argc, char *argv[])
 {
+	lvm_str_list_t *str;
+	int i = 0;
+	struct dm_list *vgnames;
+        struct dm_list *vgids;
+
 	if (argc != 3)
 		abort();
 
-	lvm_str_list_t *str;
-
-	int i = 0;
-
 	start();
-	struct dm_list *vgnames = lvm_list_vg_names(handle);
+	vgnames = lvm_list_vg_names(handle);
 	dm_list_iterate_items(str, vgnames) {
 		assert(++i <= 1);
 		assert(!strcmp(str->str, argv[1]));
@@ -61,7 +62,7 @@ int main(int argc, char *argv[])
 
 	i = 0;
 	start();
-	struct dm_list *vgids = lvm_list_vg_uuids(handle);
+	vgids = lvm_list_vg_uuids(handle);
 	dm_list_iterate_items(str, vgids) {
 		assert(++i <= 1);
 		assert(!strcmp(str->str, argv[2]));
