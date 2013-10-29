@@ -2435,14 +2435,8 @@ static int _lvconvert_thinpool(struct cmd_context *cmd,
 			goto mda_write;
 		}
 
-		metadata_lv->status |= LV_NOSCAN;
-		if (!lv_is_active(metadata_lv) &&
-		    !activate_lv_local(cmd, metadata_lv)) {
-			log_error("Aborting. Failed to activate thin metadata lv.");
-			return 0;
-		}
-		if (!set_lv(cmd, metadata_lv, UINT64_C(0), 0)) {
-			log_error("Aborting. Failed to wipe thin metadata lv.");
+		if (!deactivate_lv(cmd, metadata_lv)) {
+			log_error("Aborting. Failed to deactivate thin metadata lv.");
 			return 0;
 		}
 
@@ -2462,6 +2456,16 @@ static int _lvconvert_thinpool(struct cmd_context *cmd,
 					&lp->thin_chunk_size_calc_policy, &lp->chunk_size,
 					&lp->discards, &lp->poolmetadata_size, &lp->zero))
 			return_0;
+
+		metadata_lv->status |= LV_TEMPORARY;
+		if (!activate_lv_local(cmd, metadata_lv)) {
+			log_error("Aborting. Failed to activate thin metadata lv.");
+			return 0;
+		}
+		if (!set_lv(cmd, metadata_lv, UINT64_C(0), 0)) {
+			log_error("Aborting. Failed to wipe thin metadata lv.");
+			return 0;
+		}
 	}
 
 	if (!deactivate_lv(cmd, metadata_lv)) {
