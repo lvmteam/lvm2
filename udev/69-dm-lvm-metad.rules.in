@@ -17,7 +17,6 @@
 SUBSYSTEM!="block", GOTO="lvm_end"
 (LVM_EXEC_RULE)
 
-ENV{DM_NOSCAN}=="1", GOTO="lvm_end"
 ENV{DM_UDEV_DISABLE_OTHER_RULES_FLAG}=="1", GOTO="lvm_end"
 
 # If the PV label got lost, inform lvmetad immediately.
