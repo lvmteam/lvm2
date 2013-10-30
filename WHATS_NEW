@@ -1,5 +1,6 @@
 Version 2.02.104 -
 ===================================
+  Fix missing lvmetad scan for PVs found on MD partitions.
   Respect DM_UDEV_DISABLE_OTHER_RULES_FLAG in lvmetad udev rules.
   Fix clvmd message verification to not reject REMOTE flag. (2.02.100)
   Compare equality of double values with DBL_EPSILON predefined constant.
