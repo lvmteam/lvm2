@@ -51,6 +51,7 @@ KERNEL!="md[0-9]*", GOTO="next"
 IMPORT{db}="LVM_MD_PV_ACTIVATED"
 ACTION=="add", ENV{LVM_MD_PV_ACTIVATED}=="1", GOTO="lvm_scan"
 ACTION=="change", ENV{LVM_MD_PV_ACTIVATED}!="1", TEST=="md/array_state", ENV{LVM_MD_PV_ACTIVATED}="1", GOTO="lvm_scan"
+ACTION=="add", KERNEL=="md[0-9]*p[0-9]*", GOTO="lvm_scan"
 GOTO="lvm_end"
 
 # Loop device:
@@ -58,7 +59,6 @@ LABEL="next"
 KERNEL!="loop[0-9]*", GOTO="next"
 ACTION=="add", ENV{LVM_LOOP_PV_ACTIVATED}=="1", GOTO="lvm_scan"
 ACTION=="change", ENV{LVM_LOOP_PV_ACTIVATED}!="1", TEST=="loop/backing_file", ENV{LVM_LOOP_PV_ACTIVATED}="1", GOTO="lvm_scan"
-ACTION=="add", KERNEL=="md[0-9]*p[0-9]*", GOTO="lvm_scan"
 GOTO="lvm_end"
 
 # If the PV is not a special device listed above, scan only after device addition (ADD event)
