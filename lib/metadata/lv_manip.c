@@ -5381,6 +5381,12 @@ int set_lv(struct cmd_context *cmd, struct logical_volume *lv,
 	struct device *dev;
 	char *name;
 
+	if (!lv_is_active_locally(lv)) {
+		log_error("Volume \"%s/%s\" is not active locally.",
+			  lv->vg->name, lv->name);
+		return 0;
+	}
+
 	/*
 	 * FIXME:
 	 * <clausen> also, more than 4k

@@ -2029,8 +2029,9 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 		goto out;
 
 	if (filter && !_passes_activation_filter(cmd, lv)) {
-		log_error("Not activating %s/%s since it does not pass "
-			  "activation filter.", lv->vg->name, lv->name);
+		log_verbose("Not activating %s/%s since it does not pass "
+			    "activation filter.", lv->vg->name, lv->name);
+		r = 1;
 		goto out;
 	}
 
