@@ -559,10 +559,10 @@ int activate_lv_excl(struct cmd_context *cmd, struct logical_volume *lv)
 		return 1;
 
 	/* FIXME Deal with error return codes. */
-	if (activate_lv_excl_remote(cmd, lv))
-		stack;
+	if (!activate_lv_excl_remote(cmd, lv))
+		return_0;
 
-	return lv_is_active_exclusive(lv);
+	return 1;
 }
 
 /* Lock a list of LVs */
