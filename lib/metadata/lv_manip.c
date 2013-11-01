@@ -2892,8 +2892,8 @@ static int _lv_extend_layered_lv(struct alloc_handle *ah,
 				continue;
 			}
 
-			/* For clearing, simply activate exclusive locally */
-			if (!activate_lv_excl_local(meta_lv->vg->cmd, meta_lv)) {
+			/* For clearing, simply activate locally */
+			if (!activate_lv_local(meta_lv->vg->cmd, meta_lv)) {
 				log_error("Failed to activate %s/%s for clearing",
 					  meta_lv->vg->name, meta_lv->name);
 				return 0;
@@ -6046,7 +6046,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 				stack;
 				goto revert_new_lv;
 			}
-			if (!activate_lv_excl(cmd, lv)) {
+			if (!lv_active_change(cmd, lv, lp->activate)) {
 				log_error("Failed to activate thin %s.", lv->name);
 				goto deactivate_and_revert_new_lv;
 			}
@@ -6057,9 +6057,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 				  "exception store.");
 			goto revert_new_lv;
 		}
-	} else if ((lp->activate == CHANGE_AY && !activate_lv(cmd, lv)) ||
-		   (lp->activate == CHANGE_AE && !activate_lv_excl(cmd, lv)) ||
-		   (lp->activate == CHANGE_ALY && !activate_lv_local(cmd, lv))) {
+	} else if (!lv_active_change(cmd, lv, lp->activate)) {
 		log_error("Failed to activate new LV.");
 		if (lp->zero)
 			goto deactivate_and_revert_new_lv;

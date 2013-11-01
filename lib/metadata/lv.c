@@ -735,39 +735,62 @@ char *lv_host_dup(struct dm_pool *mem, const struct logical_volume *lv)
 	return dm_pool_strdup(mem, lv->hostname ? : "");
 }
 
+static int _lv_is_exclusive(struct logical_volume *lv)
+{
+	/* Some devices require exlusivness */
+	return seg_is_raid(first_seg(lv)) ||
+		lv_is_origin(lv) ||
+		lv_is_thin_type(lv);
+}
+
 int lv_active_change(struct cmd_context *cmd, struct logical_volume *lv,
 		     enum activation_change activate)
 {
-	if (activate == CHANGE_AN) {
+	switch (activate) {
+	case CHANGE_AN:
+deactivate:
 		log_verbose("Deactivating logical volume \"%s\"", lv->name);
 		if (!deactivate_lv(cmd, lv))
 			return_0;
-	} else if ((activate == CHANGE_AE) ||
-		   seg_is_raid(first_seg(lv)) ||
-		   lv_is_origin(lv) ||
-		   lv_is_thin_type(lv)) {
-		if (activate == CHANGE_ALN) {
-			/* origin, thin or RAID - all others have _AE */
-			/* other types of activation are implicitly exclusive */
-			/* Note: the order of tests is mandatory */
-			log_error("Cannot deactivate \"%s\" locally.", lv->name);
-			return 0;
+		break;
+	case CHANGE_ALN:
+		if (_lv_is_exclusive(lv)) {
+			if (!lv_is_active_locally(lv)) {
+				log_error("Cannot deactivate remotely exclusive device locally.");
+				return 0;
+			}
+			/* Unlock whole exclusive activation */
+			goto deactivate;
 		}
-		log_verbose("Activating logical volume \"%s\" exclusively.",
-			    lv->name);
-		if (!activate_lv_excl(cmd, lv))
-			return_0;
-	} else if (activate == CHANGE_ALN) {
 		log_verbose("Deactivating logical volume \"%s\" locally.",
 			    lv->name);
 		if (!deactivate_lv_local(cmd, lv))
 			return_0;
-	} else if ((activate == CHANGE_ALY) || (activate == CHANGE_AAY)) {
-		log_verbose("Activating logical volume \"%s\" locally.",
+		break;
+	case CHANGE_ALY:
+	case CHANGE_AAY:
+		if (_lv_is_exclusive(lv)) {
+			log_verbose("Activating logical volume \"%s\" exclusively locally.",
+				    lv->name);
+			if (!activate_lv_excl_local(cmd, lv))
+				return_0;
+		} else {
+			log_verbose("Activating logical volume \"%s\" locally.",
+				    lv->name);
+			if (!activate_lv_local(cmd, lv))
+				return_0;
+		}
+		break;
+	case CHANGE_AE:
+exclusive:
+		log_verbose("Activating logical volume \"%s\" exclusively.",
 			    lv->name);
-		if (!activate_lv_local(cmd, lv))
+		if (!activate_lv_excl(cmd, lv))
 			return_0;
-	} else { /* CHANGE_AY */
+		break;
+	default: /* CHANGE_AY */
+		if (_lv_is_exclusive(lv))
+			goto exclusive;
 		log_verbose("Activating logical volume \"%s\".", lv->name);
 		if (!activate_lv(cmd, lv))
 			return_0;
