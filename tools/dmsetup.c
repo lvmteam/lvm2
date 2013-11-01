@@ -461,7 +461,7 @@ static void _display_info_long(struct dm_task *dmt, struct dm_info *info)
 	uint32_t read_ahead;
 
 	if (!info->exists) {
-		printf("Device does not exist.\n");
+		fprintf(stderr, "Device does not exist.\n");
 		return;
 	}
 
