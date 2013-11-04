@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
 	lvm_str_list_t *str;
 	int i = 0;
 	struct dm_list *vgnames;
-        struct dm_list *vgids;
+	struct dm_list *vgids;
 
 	if (argc != 3)
 		abort();
