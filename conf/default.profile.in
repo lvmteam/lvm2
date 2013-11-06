@@ -9,6 +9,7 @@
 # Refer to 'man lvm.conf' for further information about profiles and file layout.
 
 allocation {
+	thin_pool_chunk_size_policy = "generic"
 	thin_pool_chunk_size = 64
 	thin_pool_discards = "passdown"
 	thin_pool_zero = 1
