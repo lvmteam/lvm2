@@ -388,7 +388,7 @@ static int _name_from_csid(const char *csid, char *name)
 	return 0;
 }
 
-static int _get_num_nodes()
+static int _get_num_nodes(void)
 {
 	DEBUGLOG("num_nodes = %d\n", num_nodes);
 	return num_nodes;
@@ -505,7 +505,7 @@ static int _unlock_resource(const char *resource, int lockid)
 	return 0;
 }
 
-static int _is_quorate()
+static int _is_quorate(void)
 {
 	int quorate;
 	if (quorum_getquorate(quorum_handle, &quorate) == CS_OK)
