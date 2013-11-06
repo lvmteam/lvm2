@@ -248,6 +248,7 @@ xx(lvcreate,
    "\t[-t|--test]\n"
    "\t[--type VolumeType]\n"
    "\t[-v|--verbose]\n"
+   "\t[-W|--wipesignatures {y|n}]\n"
    "\t[-Z|--zero {y|n}]\n"
    "\t[--version]\n"
    "\tVolumeGroupName [PhysicalVolumePath...]\n\n"
@@ -294,7 +295,8 @@ xx(lvcreate,
    raidminrecoveryrate_ARG, raidmaxrecoveryrate_ARG, readahead_ARG,
    regionsize_ARG, setactivationskip_ARG, size_ARG, snapshot_ARG, stripes_ARG,
    stripesize_ARG, test_ARG, thin_ARG, thinpool_ARG,
-   type_ARG, virtualoriginsize_ARG, virtualsize_ARG, zero_ARG)
+   type_ARG, virtualoriginsize_ARG, virtualsize_ARG,
+   wipesignatures_ARG, zero_ARG)
 
 xx(lvdisplay,
    "Display information about a logical volume",

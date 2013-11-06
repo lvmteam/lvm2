@@ -614,8 +614,8 @@ static int _read_activation_params(struct lvcreate_params *lp, struct cmd_contex
 			return 0;
 		}
 	} else if (lp->activate == CHANGE_AAY) {
-		if (arg_count(cmd, zero_ARG)) {
-			log_error("-Z is incompatible with --activate a");
+		if (arg_count(cmd, zero_ARG) || arg_count(cmd, wipesignatures_ARG)) {
+			log_error("-Z and -W is incompatible with --activate a");
 			return 0;
 		}
 		lp->zero = 0;
@@ -644,9 +644,11 @@ static int _read_activation_params(struct lvcreate_params *lp, struct cmd_contex
 	lp->permission = arg_uint_value(cmd, permission_ARG,
 					LVM_READ | LVM_WRITE);
 
-	/* Must not zero read only volume */
-	if (!(lp->permission & LVM_WRITE))
+	/* Must not zero/wipe read only volume */
+	if (!(lp->permission & LVM_WRITE)) {
 		lp->zero = 0;
+		lp->wipe_signatures = 0;
+	}
 
 	if (arg_count(cmd, major_ARG) > 1) {
 		log_error("Option -j/--major may not be repeated.");
@@ -867,10 +869,26 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 	}
 
 	/*
-	 * Should we zero the lv.
+	 * Should we zero/wipe signatures on the lv.
 	 */
 	lp->zero = strcmp(arg_str_value(cmd, zero_ARG,
 		(lp->segtype->flags & SEG_CANNOT_BE_ZEROED) ? "n" : "y"), "n");
+
+	if (arg_count(cmd, wipesignatures_ARG)) {
+		/* If -W/--wipesignatures is given on command line directly, respect it. */
+		lp->wipe_signatures = strcmp(arg_str_value(cmd, wipesignatures_ARG,
+			(lp->segtype->flags & SEG_CANNOT_BE_ZEROED) ? "n" : "y"), "n");
+	} else {
+		/*
+		 * If -W/--wipesignatures is not given on command line,
+		 * look at the allocation/wipe_signatures_on_new_logical_volumes_when_zeroing
+		 * to decide what should be done exactly.
+		 */
+		if (find_config_tree_bool(cmd, allocation_wipe_signatures_on_new_logical_volumes_when_zeroing_CFG, NULL))
+			lp->wipe_signatures = lp->zero;
+		else
+			lp->wipe_signatures = 0;
+	}
 
 	if (!_lvcreate_name_params(lp, cmd, &argc, &argv) ||
 	    !_read_size_params(lp, lcp, cmd) ||

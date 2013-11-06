@@ -129,6 +129,7 @@ static void _lv_set_default_params(struct lvcreate_params *lp,
 				   uint64_t extents)
 {
 	lp->zero = 1;
+	lp->wipe_signatures = 0;
 	lp->major = -1;
 	lp->minor = -1;
 	lp->activate = CHANGE_AY;

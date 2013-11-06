@@ -723,6 +723,7 @@ struct lvcreate_params {
 	int thin; /* thin */
 	int create_thin_pool; /* thin */
 	int zero; /* all */
+	int wipe_signatures; /* all */
 	int major; /* all */
 	int minor; /* all */
 	int log_count; /* mirror */
