@@ -478,7 +478,18 @@ static int lvchange_resync(struct cmd_context *cmd, struct logical_volume *lv)
 		log_very_verbose("Clearing %s device %s",
 				 (seg_is_raid(seg)) ? "metadata" : "log",
 				 lvl->lv->name);
-		if (!set_lv(cmd, lvl->lv, lvl->lv->size, 0)) {
+
+		struct wipe_lv_params wp = {
+			.lv = lvl->lv,
+			.do_zero = 1,
+			.zero_sectors = lvl->lv->size,
+			.zero_value = 0,
+			.do_wipe_signatures = 0,
+			.yes = 0,
+			.force = PROMPT
+		};
+
+		if (!wipe_lv(cmd, &wp)) {
 			log_error("Unable to reset sync status for %s",
 				  lv->name);
 			if (!deactivate_lv(cmd, lvl->lv))

@@ -468,10 +468,20 @@ int create_pool(struct logical_volume *pool_lv, const struct segment_type *segty
 		 * FIXME: implement lazy clearing when activation is disabled
 		 */
 
+		struct wipe_lv_params wp = {
+			.lv = pool_lv,
+			.do_zero = 1,
+			.zero_sectors = 0,
+			.zero_value = 0,
+			.do_wipe_signatures = 0,
+			.yes = 0,
+			.force = PROMPT
+		};
+
 		/* pool_lv is a new LV so the VG lock protects us */
 		if (!activate_lv_local(pool_lv->vg->cmd, pool_lv) ||
 		    /* Clear 4KB of metadata device for new thin-pool. */
-		    !set_lv(pool_lv->vg->cmd, pool_lv, UINT64_C(0), 0)) {
+		    !wipe_lv(pool_lv->vg->cmd, &wp)) {
 			log_error("Aborting. Failed to wipe pool metadata %s.",
 				  pool_lv->name);
 			goto bad;

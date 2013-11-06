@@ -2906,7 +2906,17 @@ static int _lv_extend_layered_lv(struct alloc_handle *ah,
 			 * wipe '1' to remove the superblock of any previous
 			 * RAID devices.  It is much quicker.
 			 */
-			if (!set_lv(meta_lv->vg->cmd, meta_lv, 1, 0)) {
+			struct wipe_lv_params wp = {
+				.lv = meta_lv,
+				.do_zero = 1,
+				.zero_sectors = 1,
+				.zero_value = 0,
+				.do_wipe_signatures = 0,
+				.yes = 0,
+				.force = PROMPT
+			};
+
+			if (!wipe_lv(meta_lv->vg->cmd, &wp)) {
 				log_error("Failed to zero %s/%s",
 					  meta_lv->vg->name, meta_lv->name);
 				return 0;
@@ -5372,15 +5382,19 @@ int insert_layer_for_segments_on_pv(struct cmd_context *cmd,
 /*
  * Initialize the LV with 'value'.
  */
-int set_lv(struct cmd_context *cmd, struct logical_volume *lv,
-	   uint64_t sectors, int value)
+int wipe_lv(struct cmd_context *cmd, struct wipe_lv_params *wp)
 {
 	struct device *dev;
 	char *name;
+	uint64_t zero_sectors;
 
-	if (!lv_is_active_locally(lv)) {
+	if (!(wp->do_zero || wp->do_wipe_signatures))
+		/* nothing to do */
+		return 1;
+
+	if (!lv_is_active_locally(wp->lv)) {
 		log_error("Volume \"%s/%s\" is not active locally.",
-			  lv->vg->name, lv->name);
+			  wp->lv->vg->name, wp->lv->name);
 		return 0;
 	}
 
@@ -5397,14 +5411,12 @@ int set_lv(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	if (dm_snprintf(name, PATH_MAX, "%s%s/%s", cmd->dev_dir,
-			lv->vg->name, lv->name) < 0) {
-		log_error("Name too long - device not cleared (%s)", lv->name);
+			wp->lv->vg->name, wp->lv->name) < 0) {
+		log_error("Name too long - device not cleared (%s)", wp->lv->name);
 		return 0;
 	}
 
 	sync_local_dev_names(cmd);  /* Wait until devices are available */
-
-	log_verbose("Clearing start of logical volume \"%s\"", lv->name);
 
 	if (!(dev = dev_cache_get(name, NULL))) {
 		log_error("%s: not found: device not cleared", name);
@@ -5414,21 +5426,32 @@ int set_lv(struct cmd_context *cmd, struct logical_volume *lv,
 	if (!dev_open_quiet(dev))
 		return_0;
 
-	if (!sectors)
-		sectors = UINT64_C(4096) >> SECTOR_SHIFT;
+	if (wp->do_wipe_signatures) {
+		log_verbose("Wiping known signatures on logical volume \"%s/%s\"",
+			     wp->lv->vg->name, wp->lv->name);
+		if (!wipe_known_sbs(dev, name, wp->yes, wp->force))
+			stack;
+	}
 
-	if (sectors > lv->size)
-		sectors = lv->size;
+	if (wp->do_zero) {
+		zero_sectors = wp->zero_sectors ? : UINT64_C(4096) >> SECTOR_SHIFT;
 
-	if (!dev_set(dev, UINT64_C(0), (size_t) sectors << SECTOR_SHIFT, value))
-		stack;
+		if (zero_sectors > wp->lv->size)
+			zero_sectors = wp->lv->size;
+
+		log_verbose("Clearing start of logical volume \"%s/%s\"",
+			     wp->lv->vg->name, wp->lv->name);
+
+		if (!dev_set(dev, UINT64_C(0), (size_t) zero_sectors << SECTOR_SHIFT, wp->zero_value))
+			stack;
+	}
 
 	dev_flush(dev);
 
 	if (!dev_close_immediate(dev))
 		stack;
 
-	lv->status &= ~LV_NOSCAN;
+	wp->lv->status &= ~LV_NOSCAN;
 
 	return 1;
 }
@@ -5982,12 +6005,12 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 	backup(vg);
 
 	if (test_mode()) {
-		log_verbose("Test mode: Skipping activation and zeroing.");
+		log_verbose("Test mode: Skipping activation, zeroing and signature wiping.");
 		goto out;
 	}
 
-	/* Do not scan this LV until properly zeroed. */
-	if (lp->zero)
+	/* Do not scan this LV until properly zeroed/wiped. */
+	if (lp->zero | lp->wipe_signatures)
 		lv->status |= LV_NOSCAN;
 
 	if (lp->temporary)
@@ -6056,21 +6079,36 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		}
 	} else if (!lv_active_change(cmd, lv, lp->activate)) {
 		log_error("Failed to activate new LV.");
-		if (lp->zero)
+		if (lp->zero || lp->wipe_signatures)
 			goto deactivate_and_revert_new_lv;
 		return NULL;
 	}
 
-	if (!seg_is_thin(lp) && !lp->zero && !lp->snapshot)
-		log_warn("WARNING: \"%s\" not zeroed", lv->name);
-	else if ((!seg_is_thin(lp) ||
-		  (lv_is_thin_volume(lv) && !lp->snapshot &&
-		   !first_seg(first_seg(lv)->pool_lv)->zero_new_blocks)) &&
-		 !set_lv(cmd, lv, UINT64_C(0), 0)) {
-		log_error("Aborting. Failed to wipe %s.",
-			  lp->snapshot ? "snapshot exception store" :
-					 "start of new LV");
-		goto deactivate_and_revert_new_lv;
+	if (!seg_is_thin(lp) && !lp->snapshot) {
+		if (!lp->zero)
+			log_warn("WARNING: \"%s/%s\" not zeroed", lv->vg->name, lv->name);
+		if (!lp->wipe_signatures)
+			log_verbose("Signature wiping on \"%s/%s\" not requested", lv->vg->name, lv->name);
+	}
+
+	if ((!seg_is_thin(lp) ||
+	    (lv_is_thin_volume(lv) && !lp->snapshot &&
+	     !first_seg(first_seg(lv)->pool_lv)->zero_new_blocks))) {
+		struct wipe_lv_params wp = {
+			.lv = lv,
+			.do_zero = lp->zero,
+			.zero_sectors = 0,
+			.zero_value = 0,
+			.do_wipe_signatures = lp->wipe_signatures,
+			.yes = lp->yes,
+			.force = lp->force
+		};
+		if (!wipe_lv(cmd, &wp)) {
+			log_error("Aborting. Failed to wipe %s.",
+				  lp->snapshot ? "snapshot exception store" :
+						 "start of new LV");
+			goto deactivate_and_revert_new_lv;
+		}
 	}
 
 	if (lp->snapshot && !seg_is_thin(lp)) {

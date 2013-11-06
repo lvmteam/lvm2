@@ -622,9 +622,18 @@ struct logical_volume *lv_create_empty(const char *name,
 				       alloc_policy_t alloc,
 				       struct volume_group *vg);
 
-/* Write out LV contents */
-int set_lv(struct cmd_context *cmd, struct logical_volume *lv,
-	   uint64_t sectors, int value);
+struct wipe_lv_params {
+	struct logical_volume *lv;
+	int do_zero;		/* should we do zeroing of LV start? */
+	uint64_t zero_sectors;	/* sector count to zero */
+	int zero_value;		/* zero-out with this value */
+	int do_wipe_signatures;	/* should we wipe known signatures found on LV? */
+	int yes;		/* answer yes automatically to all questions */
+	force_t force;		/* force mode */
+};
+
+/* Zero out LV and/or wipe signatures */
+int wipe_lv(struct cmd_context *cmd, struct wipe_lv_params *params);
 
 int lv_change_tag(struct logical_volume *lv, const char *tag, int add_tag);
 
@@ -779,6 +788,9 @@ struct lvcreate_params {
 	alloc_policy_t alloc; /* all */
 
 	struct dm_list tags;	/* all */
+
+	int yes;
+	force_t force;
 };
 
 struct logical_volume *lv_create_single(struct volume_group *vg,

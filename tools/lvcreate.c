@@ -710,6 +710,8 @@ static int _read_activation_params(struct lvcreate_params *lp, struct cmd_contex
 		return 0;
 	}
 
+	lp->yes = arg_count(cmd, yes_ARG);
+	lp->force = (force_t) arg_count(cmd, force_ARG);
 
 	return 1;
 }
