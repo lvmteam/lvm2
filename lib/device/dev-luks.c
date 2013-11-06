@@ -18,7 +18,7 @@
 #define LUKS_SIGNATURE "LUKS\xba\xbe"
 #define LUKS_SIGNATURE_SIZE 6
 
-int dev_is_luks(struct device *dev, uint64_t *signature)
+int dev_is_luks(struct device *dev, uint64_t *offset_found)
 {
 	char buf[LUKS_SIGNATURE_SIZE];
 	int ret = -1;
@@ -28,7 +28,8 @@ int dev_is_luks(struct device *dev, uint64_t *signature)
 		return -1;
 	}
 
-	*signature = 0;
+	if (offset_found)
+		*offset_found = 0;
 
 	if (!dev_read(dev, 0, LUKS_SIGNATURE_SIZE, buf))
 		goto_out;

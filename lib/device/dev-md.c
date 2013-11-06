@@ -81,7 +81,7 @@ static uint64_t _v1_sb_offset(uint64_t size, md_minor_version_t minor_version)
 /*
  * Returns -1 on error
  */
-int dev_is_md(struct device *dev, uint64_t *sb)
+int dev_is_md(struct device *dev, uint64_t *offset_found)
 {
 	int ret = 1;
 	md_minor_version_t minor;
@@ -120,8 +120,8 @@ out:
 	if (!dev_close(dev))
 		stack;
 
-	if (ret && sb)
-		*sb = sb_offset;
+	if (ret && offset_found)
+		*offset_found = sb_offset;
 
 	return ret;
 }

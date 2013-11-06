@@ -36,7 +36,7 @@ _swap_detect_signature(const char *buf)
 	return 0;
 }
 
-int dev_is_swap(struct device *dev, uint64_t *signature)
+int dev_is_swap(struct device *dev, uint64_t *offset_found)
 {
 	char buf[10];
 	uint64_t size;
@@ -53,8 +53,6 @@ int dev_is_swap(struct device *dev, uint64_t *signature)
 		return -1;
 	}
 
-	*signature = 0;
-
 	for (page = 0x1000; page <= MAX_PAGESIZE; page <<= 1) {
 		/*
 		 * skip 32k pagesize since this does not seem to be supported
@@ -69,7 +67,8 @@ int dev_is_swap(struct device *dev, uint64_t *signature)
 			break;
 		}
 		if (_swap_detect_signature(buf)) {
-			*signature = page - SIGNATURE_SIZE;
+			if (offset_found)
+				*offset_found = page - SIGNATURE_SIZE;
 			ret = 1;
 			break;
 		}

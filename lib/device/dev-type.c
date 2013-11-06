@@ -443,6 +443,48 @@ out:
 	return ret;
 }
 
+static int _wipe_signature(struct device *dev, const char *type, const char *name,
+			   int wipe_len, int yes, force_t force,
+			   int (*signature_detection_fn)(struct device *dev, uint64_t *offset_found))
+{
+	int wipe;
+	uint64_t offset_found;
+
+	wipe = signature_detection_fn(dev, &offset_found);
+	if (wipe == -1) {
+		log_error("Fatal error while trying to detect %s on %s.",
+			  type, name);
+		return 0;
+	}
+
+	if (wipe == 0)
+		return 1;
+
+	/* Specifying --yes => do not ask. */
+	if (!yes && (force == PROMPT) &&
+	    yes_no_prompt("WARNING: %s detected on %s. Wipe it? [y/n] ",
+			  type, name) != 'y')
+		return_0;
+
+	log_print_unless_silent("Wiping %s on %s.", type, name);
+	if (!dev_set(dev, offset_found, wipe_len, 0)) {
+		log_error("Failed to wipe %s on %s.", type, name);
+		return 0;
+	}
+
+	return 1;
+}
+
+int wipe_known_signatures(struct device *dev, const char *name, int yes, force_t force)
+{
+	if (!_wipe_signature(dev, "software RAID md superblock", name, 4, yes, force, dev_is_md) ||
+	    !_wipe_signature(dev, "swap signature", name, 10, yes, force, dev_is_swap) ||
+	    !_wipe_signature(dev, "LUKS signature", name, 8, yes, force, dev_is_luks))
+		return 0;
+
+	return 1;
+}
+
 #ifdef __linux__
 
 static int _snprintf_attr(char *buf, size_t buf_size, const char *sysfs_dir,

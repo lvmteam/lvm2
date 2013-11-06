@@ -1268,40 +1268,6 @@ int vg_split_mdas(struct cmd_context *cmd __attribute__((unused)),
 	return 1;
 }
 
-static int _wipe_sb(struct device *dev, const char *type, const char *name,
-		    int wipe_len, struct pvcreate_params *pp,
-		    int (*func)(struct device *dev, uint64_t *signature))
-{
-	int wipe;
-	uint64_t superblock;
-
-	wipe = func(dev, &superblock);
-	if (wipe == -1) {
-		log_error("Fatal error while trying to detect %s on %s.",
-			  type, name);
-		return 0;
-	}
-
-	if (wipe == 0)
-		return 1;
-
-	/* Specifying --yes => do not ask. */
-	if (!pp->yes && (pp->force == PROMPT) &&
-	    yes_no_prompt("WARNING: %s detected on %s. Wipe it? [y/n] ",
-			  type, name) != 'y') {
-		log_error("Aborting pvcreate on %s.", name);
-		return 0;
-	}
-
-	log_print_unless_silent("Wiping %s on %s.", type, name);
-	if (!dev_set(dev, superblock, wipe_len, 0)) {
-		log_error("Failed to wipe %s on %s.", type, name);
-		return 0;
-	}
-
-	return 1;
-}
-
 /*
  * See if we may pvcreate on this device.
  * 0 indicates we may not.
@@ -1364,14 +1330,10 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name,
 		goto bad;
 	}
 
-	if (!_wipe_sb(dev, "software RAID md superblock", name, 4, pp, dev_is_md))
-		goto_bad;
-
-	if (!_wipe_sb(dev, "swap signature", name, 10, pp, dev_is_swap))
-		goto_bad;
-
-	if (!_wipe_sb(dev, "LUKS signature", name, 8, pp, dev_is_luks))
-		goto_bad;
+	if (!wipe_known_signatures(dev, name, pp->yes, pp->force)) {
+		log_error("Aborting pvcreate on %s.", name);
+		goto bad;
+	}
 
 	if (sigint_caught())
 		goto_bad;
