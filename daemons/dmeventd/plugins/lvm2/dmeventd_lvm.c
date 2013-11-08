@@ -159,8 +159,8 @@ int dmeventd_lvm2_command(struct dm_pool *mem, char *buffer, size_t size,
 	}
 
 	/* strip off the mirror component designations */
-	layer = strstr(lv, "_mlog");
-	if (layer)
+	if ((layer = strstr(lv, "_mimagetmp")) ||
+	    (layer = strstr(lv, "_mlog")))
 		*layer = '\0';
 
 	r = dm_snprintf(buffer, size, "%s %s/%s", cmd, vg, lv);

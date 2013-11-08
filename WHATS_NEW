@@ -1,5 +1,6 @@
 Version 2.02.104 -
 ===================================
+  Handle failures in temporary mirror used when adding images to mirrors.
   Fix and improve logic for implicitely exclusive activations.
   Return success when LV cannot be activated because of volume_list filter.
   Return proper error state for remote exclusive activation.
