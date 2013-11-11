@@ -138,7 +138,7 @@ check vg_field $vg lv_count 0
 lvcreate -L10M -V10M -T $vg/pool --name lv1
 mkfs.ext4 $DM_DEV_DIR/$vg/lv1
 lvcreate -K -s $vg/lv1 --name snap_lv1
-fsck -p $DM_DEV_DIR/$vg/snap_lv1
+fsck -n $DM_DEV_DIR/$vg/snap_lv1
 lvcreate -s $vg/lv1 --name lv2
 lvcreate -s $vg/lv1 --name $vg/lv3
 lvcreate --type snapshot $vg/lv1 --name lv6

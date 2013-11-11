@@ -37,7 +37,7 @@ mkfs.ext4 $DM_DEV_DIR/$vg/$lv1
 # create thin snapshot of thin LV
 lvcreate -K -s $vg/$lv1 --name snap
 # check snapshot filesystem was properly frozen before snapping
-fsck -p $DM_DEV_DIR/$vg/snap
+fsck -n $DM_DEV_DIR/$vg/snap
 lvcreate -K -s $vg/$lv1 --name $lv2
 lvcreate -K -s $vg/$lv1 --name $vg/$lv3
 lvcreate --type snapshot $vg/$lv1
@@ -59,6 +59,6 @@ lvremove -ff $vg
 lvcreate -L10M --zero n -T $vg/pool -V10M --name $lv1
 mkfs.ext4 $DM_DEV_DIR/$vg/$lv1
 lvcreate -K -s $vg/$lv1 --name snap
-fsck -p $DM_DEV_DIR/$vg/snap
+fsck -n $DM_DEV_DIR/$vg/snap
 
 vgremove -ff $vg
