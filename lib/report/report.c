@@ -610,6 +610,18 @@ static int _transactionid_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _field_set_value(field, "", &_minusone64);
 }
 
+static int _thinid_disp(struct dm_report *rh, struct dm_pool *mem,
+			struct dm_report_field *field,
+			const void *data, void *private)
+{
+	const struct lv_segment *seg = (const struct lv_segment *) data;
+
+	if (seg_is_thin_volume(seg))
+		return dm_report_field_uint32(rh, field, &seg->device_id);
+
+	return _field_set_value(field, "", &_minusone64);
+}
+
 static int _discards_disp(struct dm_report *rh, struct dm_pool *mem,
 			  struct dm_report_field *field,
 			  const void *data, void *private)

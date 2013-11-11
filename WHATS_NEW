@@ -1,5 +1,6 @@
 Version 2.02.105 -
 =====================================
+  Add reporting of thin_id device id for thin volumes.
   Fix reporting of empty numerical values.
   Simplify reporting code.
 

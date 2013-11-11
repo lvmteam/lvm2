@@ -600,6 +600,7 @@ int lvdisplay_full(struct cmd_context *cmd,
 	if (lv_is_thin_volume(lv)) {
 		seg = first_seg(lv);
 		log_print("LV Pool name           %s", seg->pool_lv->name);
+		log_print("LV Thin device ID      %u", seg->device_id);
 		if (seg->origin)
 			log_print("LV Thin origin name    %s",
 				  seg->origin->name);

@@ -129,6 +129,7 @@ lvcreate -V2G --type thin --thinpool pool --name $vg/lv12 $vg
 
 check lv_exists $vg lv1 lv2 lv3 lv4 lv5 lv6 lv7 lv8 lv9 lv10 lv11 lv12
 check vg_field $vg lv_count 19
+check lv_field $vg/lv1 thin_id 7
 
 lvremove -ff $vg
 check vg_field $vg lv_count 0
