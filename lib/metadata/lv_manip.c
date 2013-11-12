@@ -4709,10 +4709,8 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 				} else if ((snap_percent == PERCENT_MERGE_FAILED) &&
 					 (force == PROMPT) &&
 					 yes_no_prompt("Removing snapshot \"%s\" that failed to merge may leave origin \"%s\" inconsistent. "
-						       "Proceed? [y/n]: ", lv->name, origin_from_cow(lv)->name) == 'n') {
-					log_error("Logical volume %s not removed.", lv->name);
-					return 0;
-				}
+						       "Proceed? [y/n]: ", lv->name, origin_from_cow(lv)->name) == 'n')
+                                        goto no_remove;
 			}
 		} else if (!level && lv_is_virtual_origin(origin = origin_from_cow(lv)))
 			/* If this is a sparse device, remove its origin too. */
@@ -4727,10 +4725,8 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 		    !lv_is_active(lv) &&
 		    yes_no_prompt("Removing origin %s will also remove %u "
 				  "snapshots(s). Proceed? [y/n]: ",
-				  lv->name, lv->origin_count) == 'n') {
-			log_error("Logical volume %s not removed.", lv->name);
-			return 0;
-		}
+				  lv->name, lv->origin_count) == 'n')
+                        goto no_remove;
 
 		dm_list_iterate_safe(snh, snht, &lv->snapshot_segs)
 			if (!lv_remove_with_dependencies(cmd, dm_list_struct_base(snh, struct lv_segment,
@@ -4766,12 +4762,15 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 	    (force == PROMPT) &&
 	    (yes_no_prompt("Removal of pool metadata spare logical volume \"%s\" "
 			   "disables automatic recovery attempts after damage "
-			   "to a thin pool. Proceed? [y/n]: ", lv->name) == 'n')) {
-		log_error("Logical volume \"%s\" not removed.", lv->name);
-		return 0;
-	}
+			   "to a thin pool. Proceed? [y/n]: ", lv->name) == 'n'))
+                goto no_remove;
 
 	return lv_remove_single(cmd, lv, force);
+
+no_remove:
+	log_error("Logical volume \"%s\" not removed.", lv->name);
+
+	return 0;
 }
 
 /*
