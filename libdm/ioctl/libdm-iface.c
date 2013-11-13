@@ -23,7 +23,7 @@
 #include <sys/utsname.h>
 #include <limits.h>
 
-#ifdef linux
+#ifdef __linux__
 #  include "kdev_t.h"
 #  include <linux/limits.h>
 #else

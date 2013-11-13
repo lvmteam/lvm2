@@ -16,7 +16,7 @@
 #include "filter.h"
 #include "activate.h"
 
-#ifdef linux
+#ifdef __linux__
 
 #include <dirent.h>
 

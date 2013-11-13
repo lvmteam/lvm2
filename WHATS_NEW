@@ -18,6 +18,7 @@ Version 2.02.104 -
   Remove 2>/dev/null from three lvm commands executed by vgimportclone.
   Add configure --enable-udev-systemd-background-jobs.
   Add lvm2-pvscan@.service to run pvscan as a service for lvmetad/autoactivation.
+  Use #ifdef __linux__ instead of linux throughout.
   Fix lvconvert swap of poolmetadata volume for active thin pool.
   Check for open count with a timeout before removal/deactivation of an LV.
   Report RAID images split with tracking as out-of-sync ("I").

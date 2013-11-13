@@ -84,7 +84,7 @@ extern char *optarg;
        __result; }))
 #endif
 
-#ifdef linux
+#ifdef __linux__
 #  include "kdev_t.h"
 #else
 #  define MAJOR(x) major((x))

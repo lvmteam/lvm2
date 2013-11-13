@@ -15,7 +15,7 @@
 #include "lib.h"
 #include "filter.h"
 
-#ifdef linux
+#ifdef __linux__
 
 #include <dirent.h>
 

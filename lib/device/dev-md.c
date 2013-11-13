@@ -18,7 +18,7 @@
 #include "metadata.h"
 #include "xlate.h"
 
-#ifdef linux
+#ifdef __linux__
 
 /* Lifted from <linux/raid/md_p.h> because of difficulty including it */
 

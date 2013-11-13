@@ -39,7 +39,7 @@
 #include <arpa/inet.h>		/* for htonl, ntohl */
 #include <fcntl.h>		/* for musl libc */
 
-#ifdef linux
+#ifdef __linux__
 /*
  * Kernel version 2.6.36 and higher has
  * new OOM killer adjustment interface.
@@ -1619,7 +1619,7 @@ static void _exit_handler(int sig __attribute__((unused)))
 	_exit_now = 1;
 }
 
-#ifdef linux
+#ifdef __linux__
 static int _set_oom_adj(const char *oom_adj_path, int val)
 {
 	FILE *fp;
@@ -1810,7 +1810,7 @@ static void _daemonize(void)
 		fd = rlim.rlim_cur;
 
 	for (--fd; fd >= 0; fd--) {
-#ifdef linux
+#ifdef __linux__
 		/* Do not close fds preloaded by systemd! */
 		if (_systemd_activation &&
 		    (fd == SD_FD_FIFO_SERVER || fd == SD_FD_FIFO_CLIENT))
@@ -1963,7 +1963,7 @@ int main(int argc, char *argv[])
 	if (_restart)
 		restart();
 
-#ifdef linux
+#ifdef __linux__
 	_systemd_activation = _systemd_handover(&fifos);
 #endif
 
@@ -1985,7 +1985,7 @@ int main(int argc, char *argv[])
 	signal(SIGHUP, &_exit_handler);
 	signal(SIGQUIT, &_exit_handler);
 
-#ifdef linux
+#ifdef __linux__
 	/* Systemd has adjusted oom killer for us already */
 	if (!_systemd_activation && !_protect_against_oom_killer())
 		syslog(LOG_ERR, "Failed to protect against OOM killer");

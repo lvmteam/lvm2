@@ -54,7 +54,7 @@ static void _exit_handler(int sig __attribute__((unused)))
 
 #define EXIT_ALREADYRUNNING 13
 
-#ifdef linux
+#ifdef __linux__
 
 #include <stddef.h>
 
@@ -318,7 +318,7 @@ static void _daemonise(daemon_state s)
 		fd = rlim.rlim_cur;
 
 	for (--fd; fd >= 0; fd--) {
-#ifdef linux
+#ifdef __linux__
 		/* Do not close fds preloaded by systemd! */
 		if (_systemd_activation && fd == SD_FD_SOCKET_SERVER)
 			continue;
@@ -469,7 +469,7 @@ void daemon_start(daemon_state s)
 	if (setenv("LC_ALL", "C", 1))
 		perror("Cannot set LC_ALL to C");
 
-#ifdef linux
+#ifdef __linux__
 	_systemd_activation = _systemd_handover(&s);
 #endif
 
@@ -504,7 +504,7 @@ void daemon_start(daemon_state s)
 	signal(SIGALRM, &_exit_handler);
 	signal(SIGPIPE, SIG_IGN);
 
-#ifdef linux
+#ifdef __linux__
 	/* Systemd has adjusted oom killer for us already */
 	if (s.avoid_oom && !_systemd_activation && !_protect_against_oom_killer())
 		ERROR(&s, "Failed to protect against OOM killer");

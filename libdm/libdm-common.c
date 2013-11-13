@@ -32,7 +32,7 @@
 #  include <libudev.h>
 #endif
 
-#ifdef linux
+#ifdef __linux__
 #  include <linux/fs.h>
 #endif
 
@@ -1069,7 +1069,7 @@ static int _rename_dev_node(const char *old_name, const char *new_name,
 	return 1;
 }
 
-#ifdef linux
+#ifdef __linux__
 static int _open_dev_node(const char *dev_name)
 {
 	int fd = -1;

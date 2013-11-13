@@ -16,7 +16,7 @@
 #ifndef _LVM_XLATE_H
 #define _LVM_XLATE_H
 
-#ifdef linux
+#ifdef __linux__
 #  include <endian.h>
 #  include <byteswap.h>
 #else

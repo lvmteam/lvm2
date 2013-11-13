@@ -16,7 +16,7 @@
 #include "lib.h"
 #include "filter.h"
 
-#ifdef linux
+#ifdef __linux__
 
 static int _ignore_md(struct dev_filter *f __attribute__((unused)),
 		      struct device *dev)

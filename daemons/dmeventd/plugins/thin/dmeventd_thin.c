@@ -44,7 +44,7 @@ struct dso_state {
 
 
 /* TODO - move this mountinfo code into library to be reusable */
-#ifdef linux
+#ifdef __linux__
 #  include "kdev_t.h"
 #else
 #  define MAJOR(x) major((x))

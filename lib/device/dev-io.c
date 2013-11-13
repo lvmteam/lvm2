@@ -27,7 +27,7 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 
-#ifdef linux
+#ifdef __linux__
 #  define u64 uint64_t		/* Missing without __KERNEL__ */
 #  undef WNOHANG		/* Avoid redefinition */
 #  undef WUNTRACED		/* Avoid redefinition */

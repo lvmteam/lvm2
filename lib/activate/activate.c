@@ -910,8 +910,8 @@ int lv_raid_message(const struct logical_volume *lv, const char *msg)
 		if (lv_is_thin_pool(lv) &&
 		    (lv_is_raid(seg_lv(first_seg(lv), 0)) ||
 		     lv_is_raid(first_seg(lv)->metadata_lv))) {
-			log_error("Thinpool data or metadata volume"
-				  " must be specified. (e.g. \"%s/%s_tdata\")",
+			log_error("Thin pool data or metadata volume "
+				  "must be specified. (E.g. \"%s/%s_tdata\")",
 				  lv->vg->name, lv->name);
 			return 0;
 		}

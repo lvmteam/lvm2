@@ -15,7 +15,7 @@
 #include "lib.h"
 #include "dev-type.h"
 
-#ifdef linux
+#ifdef __linux__
 
 #define MAX_PAGESIZE	(64 * 1024)
 #define SIGNATURE_SIZE  10

@@ -443,7 +443,7 @@ out:
 	return ret;
 }
 
-#ifdef linux
+#ifdef __linux__
 
 static unsigned long _dev_topology_attribute(struct dev_types *dt,
 					     const char *attribute,

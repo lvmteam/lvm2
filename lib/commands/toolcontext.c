@@ -49,7 +49,7 @@
 #include <syslog.h>
 #include <time.h>
 
-#ifdef linux
+#ifdef __linux__
 #  include <malloc.h>
 #endif
 
