@@ -1,9 +1,11 @@
-Version 1.02.83
-==================================
+Version 1.02.83 - 13th November 2013
+====================================
   Consistently report on stderr when device is not found for dmsetup info.
   Skip race errors when non-udev dmsetup build runs on udev-enabled system.
   Skip error message when holders are not present in sysfs.
   Use __linux__ instead of linux define to make libdevmapper.h C compliant.
+  Use mutex to avoid possible race while creating/destroying memory pools.
+  Require libpthread to build now.
 
 Version 1.02.82 - 4th October 2013
 ==================================

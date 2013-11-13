@@ -1,5 +1,5 @@
-Version 2.02.104 -
-===================================
+Version 2.02.104 - 13th November 2013
+=====================================
   Workaround VG refresh race during autoactivation by retrying the refresh.
   Handle failures in temporary mirror used when adding images to mirrors.
   Fix and improve logic for implicitely exclusive activations.
@@ -28,7 +28,6 @@ Version 2.02.104 -
   Move code to remove virtual snapshot from tools to lib for lvm2app.
   Fix possible race during daemon worker thread creation (lvmetad).
   Fix possible deadlock while clearing lvmetad cache for full rescan.
-  Fix possible race while creating/destroying memory pools.
   Recognise NVM Express devices in filter.
   Fix failing metadata repair when lvmetad is used.
   Fix incorrect memory handling when reading messages from lvmetad.
@@ -37,7 +36,7 @@ Version 2.02.104 -
   Add support for flagging an LV to skip udev scanning during activation.
   Improve message when unable to change discards setting on active thin pool.
   Run full scan before vgrename operation to avoid any cache name collision.
-  Fix lvconvert when converting to a thin pool and thin LV at once.
+  Fix lvconvert when converting to a thin pool and thin LV at once. (2.02.99)
 
 Version 2.02.103 - 4th October 2013
 ===================================
