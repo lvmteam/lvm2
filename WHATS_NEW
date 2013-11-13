@@ -1,3 +1,6 @@
+Version 2.02.105 -
+=====================================
+
 Version 2.02.104 - 13th November 2013
 =====================================
   Workaround VG refresh race during autoactivation by retrying the refresh.

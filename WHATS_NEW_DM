@@ -1,3 +1,6 @@
+Version 1.02.84 -
+====================================
+
 Version 1.02.83 - 13th November 2013
 ====================================
   Consistently report on stderr when device is not found for dmsetup info.
