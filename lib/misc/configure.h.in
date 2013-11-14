@@ -1,5 +1,8 @@
 /* lib/misc/configure.h.in.  Generated from configure.in by autoheader.  */
 
+/* Define to 1 to use wiping functionality provided by libblkid. */
+#undef BLKID_WIPING_SUPPORT
+
 /* Define to 1 if the `closedir' function returns void instead of `int'. */
 #undef CLOSEDIR_VOID
 

@@ -946,6 +946,25 @@ if test x$BUILD_LVMETAD = xyes; then
 fi
 
 ################################################################################
+dnl -- Enable blkid wiping functionality
+AC_MSG_CHECKING(whether to use blkid wiping functionality)
+AC_ARG_ENABLE(blkid-wiping,
+	      AC_HELP_STRING([--enable-blkid_wiping],
+			     [use wiping functionality provided by libblkid]),
+	      BLKID_WIPING=$enableval, BLKID_WIPING=no)
+AC_MSG_RESULT($BLKID_WIPING)
+
+
+if test x$BLKID_WIPING = xyes; then
+	dnl -- init pkgconfig if required
+	if test x$PKGCONFIG_INIT != x1; then
+		pkg_config_init
+	fi
+	PKG_CHECK_MODULES(BLKID, blkid >= 2.22, [BLKID_PC="blkid"])
+	AC_DEFINE([BLKID_WIPING_SUPPORT], 1, [Define to 1 to use wiping functionality provided by libblkid.])
+fi
+
+################################################################################
 dnl -- Enable udev-systemd protocol to instantiate a service for background jobs
 AC_MSG_CHECKING(whether to use udev-systemd protocol for jobs in background)
 AC_ARG_ENABLE(udev-systemd-background-jobs,
@@ -1538,6 +1557,9 @@ LVM_LIBAPI=`echo "$VER" | $AWK -F '[[()]]' '{print $2}'`
 ################################################################################
 AC_SUBST(APPLIB)
 AC_SUBST(AWK)
+AC_SUBST(BLKID_LIBS)
+AC_SUBST(BLKID_PC)
+AC_SUBST(BLKID_WIPING)
 AC_SUBST(BUILD_CMIRRORD)
 AC_SUBST(BUILD_DMEVENTD)
 AC_SUBST(BUILD_LVMETAD)

@@ -117,7 +117,7 @@ CFLOW_TARGET = lvm
 
 include $(top_builddir)/make.tmpl
 
-LIBS += $(UDEV_LIBS)
+LIBS += $(UDEV_LIBS) $(BLKID_LIBS)
 
 device-mapper: $(TARGETS_DM)
 

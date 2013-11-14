@@ -691,6 +691,8 @@ CLDFLAGS
 BUILD_LVMETAD
 BUILD_DMEVENTD
 BUILD_CMIRRORD
+BLKID_WIPING
+BLKID_PC
 APPLIB
 MODPROBE_CMD
 MSGFMT
@@ -700,6 +702,8 @@ LVM2CMD_LIB
 LVM2APP_LIB
 UDEV_LIBS
 UDEV_CFLAGS
+BLKID_LIBS
+BLKID_CFLAGS
 VALGRIND_POOL
 VALGRIND_LIBS
 VALGRIND_CFLAGS
@@ -852,6 +856,7 @@ enable_valgrind_pool
 enable_devmapper
 enable_lvmetad
 with_lvmetad_pidfile
+enable_blkid_wiping
 enable_udev_systemd_background_jobs
 enable_udev_sync
 enable_udev_rules
@@ -926,6 +931,8 @@ CUNIT_CFLAGS
 CUNIT_LIBS
 VALGRIND_CFLAGS
 VALGRIND_LIBS
+BLKID_CFLAGS
+BLKID_LIBS
 UDEV_CFLAGS
 UDEV_LIBS'
 
@@ -1556,6 +1563,7 @@ Optional Features:
   --enable-valgrind-pool  enable valgrind awareness of pools
   --disable-devmapper     disable LVM2 device-mapper interaction
   --enable-lvmetad        enable the LVM Metadata Daemon
+  --enable-blkid_wiping   use wiping functionality provided by libblkid
   --enable-udev-systemd-background-jobs
                           enable udev-systemd protocol to instantiate a
                           service for background job
@@ -1716,6 +1724,9 @@ Some influential environment variables:
               C compiler flags for VALGRIND, overriding pkg-config
   VALGRIND_LIBS
               linker flags for VALGRIND, overriding pkg-config
+  BLKID_CFLAGS
+              C compiler flags for BLKID, overriding pkg-config
+  BLKID_LIBS  linker flags for BLKID, overriding pkg-config
   UDEV_CFLAGS C compiler flags for UDEV, overriding pkg-config
   UDEV_LIBS   linker flags for UDEV, overriding pkg-config
 
@@ -9174,6 +9185,120 @@ _ACEOF
 fi
 
 ################################################################################
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to use blkid wiping functionality" >&5
+$as_echo_n "checking whether to use blkid wiping functionality... " >&6; }
+# Check whether --enable-blkid-wiping was given.
+if test "${enable_blkid_wiping+set}" = set; then :
+  enableval=$enable_blkid_wiping; BLKID_WIPING=$enableval
+else
+  BLKID_WIPING=no
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $BLKID_WIPING" >&5
+$as_echo "$BLKID_WIPING" >&6; }
+
+
+if test x$BLKID_WIPING = xyes; then
+		if test x$PKGCONFIG_INIT != x1; then
+		pkg_config_init
+	fi
+
+pkg_failed=no
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for BLKID" >&5
+$as_echo_n "checking for BLKID... " >&6; }
+
+if test -n "$BLKID_CFLAGS"; then
+    pkg_cv_BLKID_CFLAGS="$BLKID_CFLAGS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"blkid >= 2.22\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "blkid >= 2.22") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_BLKID_CFLAGS=`$PKG_CONFIG --cflags "blkid >= 2.22" 2>/dev/null`
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+if test -n "$BLKID_LIBS"; then
+    pkg_cv_BLKID_LIBS="$BLKID_LIBS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"blkid >= 2.22\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "blkid >= 2.22") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_BLKID_LIBS=`$PKG_CONFIG --libs "blkid >= 2.22" 2>/dev/null`
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+
+
+
+if test $pkg_failed = yes; then
+   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        BLKID_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors "blkid >= 2.22" 2>&1`
+        else
+	        BLKID_PKG_ERRORS=`$PKG_CONFIG --print-errors "blkid >= 2.22" 2>&1`
+        fi
+	# Put the nasty error message in config.log where it belongs
+	echo "$BLKID_PKG_ERRORS" >&5
+
+	as_fn_error $? "Package requirements (blkid >= 2.22) were not met:
+
+$BLKID_PKG_ERRORS
+
+Consider adjusting the PKG_CONFIG_PATH environment variable if you
+installed software in a non-standard prefix.
+
+Alternatively, you may set the environment variables BLKID_CFLAGS
+and BLKID_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details." "$LINENO" 5
+
+elif test $pkg_failed = untried; then
+     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+	{ { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
+as_fn_error $? "The pkg-config script could not be found or is too old.  Make sure it
+is in your PATH or set the PKG_CONFIG environment variable to the full
+path to pkg-config.
+
+Alternatively, you may set the environment variables BLKID_CFLAGS
+and BLKID_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+
+To get pkg-config, see <http://pkg-config.freedesktop.org/>.
+See \`config.log' for more details" "$LINENO" 5; }
+
+else
+	BLKID_CFLAGS=$pkg_cv_BLKID_CFLAGS
+	BLKID_LIBS=$pkg_cv_BLKID_LIBS
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+	BLKID_PC="blkid"
+fi
+
+$as_echo "#define BLKID_WIPING_SUPPORT 1" >>confdefs.h
+
+fi
+
+################################################################################
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to use udev-systemd protocol for jobs in background" >&5
 $as_echo_n "checking whether to use udev-systemd protocol for jobs in background... " >&6; }
 # Check whether --enable-udev-systemd-background-jobs was given.
@@ -10901,6 +11026,9 @@ LVM_PATCHLEVEL=`echo "$VER" | $AWK -F '[(.]' '{print $3}'`
 LVM_LIBAPI=`echo "$VER" | $AWK -F '[()]' '{print $2}'`
 
 ################################################################################
+
+
+
 
 
 
