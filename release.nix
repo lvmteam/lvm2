@@ -156,6 +156,7 @@ let
                          then ".pre${toString lvm2Src.revCount}"
                          else "";
       src = lvm2Src;
+      autoconfPhase = ":";
       distPhase = ''
         set -x
         make distclean
