@@ -21,6 +21,10 @@
 #include <libgen.h>
 #include <ctype.h>
 
+#ifdef BLKID_WIPING_SUPPORT
+#include <blkid/blkid.h>
+#endif
+
 #include "device-types.h"
 
 struct dev_types *create_dev_types(const char *proc_dir,
@@ -443,6 +447,102 @@ out:
 	return ret;
 }
 
+#ifdef BLKID_WIPING_SUPPORT
+
+static int _blkid_wipe(blkid_probe probe, struct device *dev,
+		       const char *name, int yes, force_t force)
+{
+	const char *offset = NULL, *type = NULL, *magic = NULL,
+		   *usage = NULL, *label = NULL, *uuid = NULL;
+	loff_t offset_value;
+	size_t len;
+
+	if (!blkid_probe_lookup_value(probe, "TYPE", &type, NULL)) {
+		if (!blkid_probe_lookup_value(probe, "SBMAGIC_OFFSET", &offset, NULL) &&
+		     blkid_probe_lookup_value(probe, "SBMAGIC", &magic, &len))
+			return_0;
+	} else if (!blkid_probe_lookup_value(probe, "PTTYPE", &type, NULL)) {
+		if (!blkid_probe_lookup_value(probe, "PTMAGIC_OFFSET", &offset, NULL) &&
+		     blkid_probe_lookup_value(probe, "PTMAGIC", &magic, &len))
+			return_0;
+		usage = "partition table";
+	} else
+		return_0;
+
+	offset_value = strtoll(offset, NULL, 10);
+
+	if (!usage)
+		blkid_probe_lookup_value(probe, "USAGE", &usage, NULL);
+	blkid_probe_lookup_value(probe, "LABEL", &label, NULL);
+	blkid_probe_lookup_value(probe, "UUID", &uuid, NULL);
+
+	log_verbose("Found existing signature on %s at offset %s: LABEL=\"%s\" "
+		    "UUID=\"%s\" TYPE=\"%s\" USAGE=\"%s\"",
+		     name, offset, label, uuid, type, usage);
+
+	if (!yes && (force == PROMPT) &&
+	    yes_no_prompt("WARNING: %s signature detected on %s at offset %s. "
+			  "Wipe it? [y/n] ", type, name, offset) != 'y')
+		return_0;
+
+	log_print_unless_silent("Wiping %s signature on %s.", type, name);
+	if (!dev_set(dev, offset_value, len, 0)) {
+		log_error("Failed to wipe %s signature on %s.", type, name);
+		return 0;
+	}
+
+	return 1;
+}
+
+static int _wipe_known_signatures_with_blkid(struct device *dev, const char *name,
+					     int yes, force_t force)
+{
+	blkid_probe probe = NULL;
+	int found = 0, wiped = 0, left = 0;
+	int r = 0;
+
+	/* TODO: Should we check for valid dev - _dev_is_valid(dev)? */
+
+	if (!(probe = blkid_new_probe_from_filename(dev_name(dev)))) {
+		log_error("Failed to create a new blkid probe for device %s.", dev_name(dev));
+		goto out;
+	}
+
+	blkid_probe_enable_partitions(probe, 1);
+	blkid_probe_set_partitions_flags(probe, BLKID_PARTS_MAGIC);
+
+	blkid_probe_enable_superblocks(probe, 1);
+	blkid_probe_set_superblocks_flags(probe, BLKID_SUBLKS_LABEL |
+						 BLKID_SUBLKS_UUID |
+						 BLKID_SUBLKS_TYPE |
+						 BLKID_SUBLKS_USAGE |
+						 BLKID_SUBLKS_VERSION |
+						 BLKID_SUBLKS_MAGIC |
+						 BLKID_SUBLKS_BADCSUM);
+
+	while (!blkid_do_probe(probe)) {
+		found++;
+		if (_blkid_wipe(probe, dev, name, yes, force))
+			wiped++;
+	}
+
+	if (!found)
+		r = 1;
+
+	left = found - wiped;
+	if (!left)
+		r = 1;
+	else
+		log_warn("%d existing signature%s left on the device.",
+			  left, left > 1 ? "s" : "");
+out:
+	if (probe)
+		blkid_free_probe(probe);
+	return r;
+}
+
+#endif /* BLKID_WIPING_SUPPORT */
+
 static int _wipe_signature(struct device *dev, const char *type, const char *name,
 			   int wipe_len, int yes, force_t force,
 			   int (*signature_detection_fn)(struct device *dev, uint64_t *offset_found))
@@ -475,7 +575,8 @@ static int _wipe_signature(struct device *dev, const char *type, const char *nam
 	return 1;
 }
 
-int wipe_known_signatures(struct device *dev, const char *name, int yes, force_t force)
+static int _wipe_known_signatures_with_lvm(struct device *dev, const char *name,
+					   int yes, force_t force)
 {
 	if (!_wipe_signature(dev, "software RAID md superblock", name, 4, yes, force, dev_is_md) ||
 	    !_wipe_signature(dev, "swap signature", name, 10, yes, force, dev_is_swap) ||
@@ -483,6 +584,16 @@ int wipe_known_signatures(struct device *dev, const char *name, int yes, force_t
 		return 0;
 
 	return 1;
+}
+
+int wipe_known_signatures(struct cmd_context *cmd, struct device *dev,
+			  const char *name, int yes, force_t force)
+{
+#ifdef BLKID_WIPING_SUPPORT
+	if (find_config_tree_bool(cmd, allocation_use_blkid_wiping_CFG, NULL))
+		return _wipe_known_signatures_with_blkid(dev, name, yes, force);
+#endif
+	return _wipe_known_signatures_with_lvm(dev, name, yes, force);
 }
 
 #ifdef __linux__

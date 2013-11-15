@@ -5429,7 +5429,7 @@ int wipe_lv(struct cmd_context *cmd, struct wipe_lv_params *wp)
 	if (wp->do_wipe_signatures) {
 		log_verbose("Wiping known signatures on logical volume \"%s/%s\"",
 			     wp->lv->vg->name, wp->lv->name);
-		if (!wipe_known_sbs(dev, name, wp->yes, wp->force))
+		if (!wipe_known_signatures(cmd, dev, name, wp->yes, wp->force))
 			stack;
 	}
 
