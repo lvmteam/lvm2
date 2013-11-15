@@ -240,6 +240,10 @@ void dm_report_field_set_value(struct dm_report_field *field, const void *value,
 {
 	field->report_string = (const char *) value;
 	field->sort_value = sortvalue ? : value;
+
+	if ((field->sort_value == value) &&
+	    (field->props->flags & DM_REPORT_FIELD_TYPE_NUMBER))
+		log_warn(INTERNAL_ERROR "Using string as sort value for numerical field.");
 }
 
 /*

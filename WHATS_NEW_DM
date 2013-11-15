@@ -1,5 +1,6 @@
 Version 1.02.84 -
 ====================================
+  Catch invalid use of string sort values when reporting numerical fields.
 
 Version 1.02.83 - 13th November 2013
 ====================================
