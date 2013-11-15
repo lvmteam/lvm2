@@ -19,7 +19,7 @@ CONFSRC=example.conf
 CONFDEST=lvm.conf
 
 DEFAULT_PROFILE=default.profile
-PROFILES=$(DEFAULT_PROFILE) thin-performance.profile
+PROFILES=$(DEFAULT_PROFILE) $(srcdir)/thin-performance.profile
 
 include $(top_builddir)/make.tmpl
 

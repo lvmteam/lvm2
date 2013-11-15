@@ -1,5 +1,6 @@
 Version 2.02.105 -
 =====================================
+  Fix install of conf subdir when not building in srcdir.
   Add reporting of thin_id device id for thin volumes.
   Fix reporting of empty numerical values.
   Simplify reporting code.
