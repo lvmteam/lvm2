@@ -28,7 +28,11 @@ aux prepare_pvs 4 64
 
 # build one large PV
 vgcreate $vg1 $(cut -d ' ' -f -3 DEVICES)
-lvcreate -s -l 100%FREE -n $lv $vg1 --virtualsize 64T
+# 32bit linux kernels are fragille with device size >= 16T
+# maybe  uname -m    [ x86_64 | i686 ]
+TSIZE=64T
+aux can_use_16T || TSIZE=15T
+lvcreate -s -l 100%FREE -n $lv $vg1 --virtualsize $TSIZE
 aux extend_filter_LVMTEST
 
 pvcreate "$DM_DEV_DIR/$vg1/$lv"
@@ -97,10 +101,13 @@ lvconvert --thinpool $vg/$lv1 --poolmetadata $vg/$lv2 |& tee err
 grep "WARNING: Maximum size" err
 
 lvremove -f $vg
+
+if test "$TSIZE" -eq 64T; then
 lvcreate -L24T -n $lv1 $vg
 # Warning about bigger then needed (24T data and 16G -> 128K chunk)
 lvconvert -c 64 --thinpool $vg/$lv1 |& tee err
 grep "WARNING: Chunk size is too small" err
+fi
 
 #lvs -a -o+chunk_size,stripe_size,seg_pe_ranges
 

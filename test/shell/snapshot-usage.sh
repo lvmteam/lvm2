@@ -27,7 +27,10 @@ cleanup_tail()
 aux prepare_pvs 1
 vgcreate -s 4M $vg $(cat DEVICES)
 
-lvcreate -s -l 100%FREE -n $lv $vg --virtualsize 15P
+TSIZE=15P
+aux can_use_16T || TSIZE=15T
+
+lvcreate -s -l 100%FREE -n $lv $vg --virtualsize $TSIZE
 
 aux extend_filter_LVMTEST
 aux lvmconf "activation/snapshot_autoextend_percent = 20" \
@@ -106,6 +109,9 @@ check lv_field $vg1/lvol1 size "28.00k"
 fill 20K
 vgremove -ff $vg1
 
+# Can't test >= 16T devices on 32bit
+if test "$TSIZE" -eq 15P ; then
+
 # Check usability with largest extent size
 pvcreate $DM_DEV_DIR/$vg/$lv
 vgcreate -s 4G $vg1 $DM_DEV_DIR/$vg/$lv
@@ -119,4 +125,7 @@ lvcreate -aey -V15E -l1 -n $lv1 -s $vg1
 check lv_field $vg1/$lv1 origin_size "15.00e"
 
 vgremove -ff $vg1
+
+fi
+
 vgremove -ff $vg

@@ -670,6 +670,12 @@ wait_for_sync() {
 	return 1
 }
 
+# Check if tests are running on 64bit architecture
+can_use_16T()
+{
+	test "$(getconf LONG_BIT)" -eq 64
+}
+
 #
 # Check wheter kernel [dm module] target exist
 # at least in expected version

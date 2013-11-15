@@ -13,6 +13,9 @@
 
 . lib/test
 
+# FIXME  update test to make something useful on <16T
+aux can_use_16T || skip
+
 aux prepare_vg 4
 
 lvcreate -s -l 100%FREE -n $lv $vg --virtualsize 1024T
