@@ -142,6 +142,7 @@ static int _pvs_single(struct cmd_context *cmd, struct volume_group *vg,
 	char uuid[64] __attribute__((aligned(8)));
 	struct label *label;
 	struct label _dummy_label = { 0 };
+	struct device _dummy_device = { 0 };
 
 	if (is_pv(pv) && !is_orphan(pv) && !vg) {
 		vg_name = pv_vg_name(pv);
@@ -182,7 +183,12 @@ static int _pvs_single(struct cmd_context *cmd, struct volume_group *vg,
 	/* FIXME workaround for pv_label going through cache; remove once struct
 	 * physical_volume gains a proper "label" pointer */
 	if (!(label = pv_label(pv))) {
-		_dummy_label.dev = pv->dev;
+		if (pv->dev)
+			_dummy_label.dev = pv->dev;
+		else {
+			_dummy_label.dev = &_dummy_device;
+			memcpy(_dummy_device.pvid, &pv->id, ID_LEN);
+		}
 		label = &_dummy_label;
 	}
 
