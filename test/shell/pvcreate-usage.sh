@@ -34,6 +34,7 @@ pvremove "$dev1"
 pvcreate --metadatasize 512k "$dev1"
 pvcreate --metadatasize 96k "$dev2"
 vgcreate $vg "$dev1" "$dev2"
+pvs -o +pv_mda_size
 check compare_fields vgs $vg vg_mda_size pvs "$dev2" pv_mda_size
 vgremove $vg
 

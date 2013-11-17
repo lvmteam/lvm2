@@ -820,9 +820,8 @@ static int _pvmdasize_disp(struct dm_report *rh, struct dm_pool *mem,
 			   struct dm_report_field *field,
 			   const void *data, void *private)
 {
-	const struct physical_volume *pv =
-	    (const struct physical_volume *) data;
-	uint64_t min_mda_size = pv_mda_size(pv);
+	const struct label *label = (const struct label *) data;
+	uint64_t min_mda_size = lvmcache_smallest_mda_size(label->info);
 
 	return _size64_disp(rh, mem, field, &min_mda_size, private);
 }
