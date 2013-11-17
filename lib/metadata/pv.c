@@ -355,7 +355,7 @@ struct label *pv_label(const struct physical_volume *pv)
 	struct lvmcache_info *info =
 		lvmcache_info_from_pvid((const char *)&pv->id.uuid, 0);
 	if (!info) {
-		if (pv->vg) /* process_each_pv will create PVs that are dummy
+		if (pv->vg && pv->dev) /* process_each_pv will create PVs that are dummy
 			     * and that have no label associated */
 			log_error(INTERNAL_ERROR "PV %s unexpectedly not in cache.",
 				  dev_name(pv->dev));
