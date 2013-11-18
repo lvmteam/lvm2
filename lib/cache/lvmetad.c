@@ -277,6 +277,7 @@ static struct lvmcache_info *_pv_populate_lvmcache(
 		return_NULL;
 
 	lvmcache_get_label(info)->sector = label_sector;
+	lvmcache_get_label(info)->dev = dev;
 	lvmcache_set_device_size(info, devsize);
 	lvmcache_del_das(info);
 	lvmcache_del_mdas(info);
