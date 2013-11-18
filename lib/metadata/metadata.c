@@ -4400,6 +4400,9 @@ int fid_add_mda(struct format_instance *fid, struct metadata_area *mda,
 	if (!key)
 		return 1;
 
+	if (!fid->metadata_areas_index)
+		return_0;
+
 	/* Add metadata area to index. */
 	if (!_convert_key_to_string(key, key_len, sub_key,
 				    full_key, sizeof(full_key)))
@@ -4439,10 +4442,13 @@ struct metadata_area *fid_get_mda_indexed(struct format_instance *fid,
 	static char full_key[PATH_MAX];
 	struct metadata_area *mda = NULL;
 
+	if (!fid->metadata_areas_index)
+		return_NULL;
 
 	if (!_convert_key_to_string(key, key_len, sub_key,
 				    full_key, sizeof(full_key)))
 		return_NULL;
+
 	mda = (struct metadata_area *) dm_hash_lookup(fid->metadata_areas_index,
 						      full_key);
 
