@@ -154,6 +154,7 @@ fi
  %if %{have_service lvmetad}
   %{_unitdir}/lvm2-lvmetad.socket
   %{_unitdir}/lvm2-lvmetad.service
+  %{_unitdir}/lvm2-pvscan@.service
   %{_unitdir}/blk-availability.service
  %endif
 %else
