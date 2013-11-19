@@ -689,6 +689,12 @@ target_at_least()
 	  dm-*) modprobe "$1" || true ;;
 	esac
 
+	if test "$1" = dm-raid; then
+		case "$(uname -r)" in
+		  3.12.0*) return 1 ;;
+		esac
+	fi
+
 	local version=$(dmsetup targets 2>/dev/null | grep "${1##dm-} " 2>/dev/null)
 	version=${version##* v}
 	shift
