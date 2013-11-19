@@ -1,5 +1,8 @@
 Version 2.02.105 -
 =====================================
+  liblvm/python API Add ability to validate VG/LV names.
+  liblvm/python API Add ability to create PV with arguments.
+  liblvm/python API Fail VG reduce when insufficient metadata copies
   Fix install of conf subdir when not building in srcdir.
   Add reporting of thin_id device id for thin volumes.
   Fix reporting of empty numerical values.
