@@ -23,64 +23,61 @@ static int _locate_sysfs_blocks(const char *sysfs_dir, char *path, size_t len,
 				unsigned *sysfs_depth)
 {
 	struct stat info;
+	unsigned i;
+	static const struct dir_class {
+		const char path[32];
+		int depth;
+	} classes[] = {
+		/*
+		 * unified classification directory for all kernel subsystems
+		 *
+		 * /sys/subsystem/block/devices
+		 * |-- sda -> ../../../devices/pci0000:00/0000:00:1f.2/host0/target0:0:0/0:0:0:0/block/sda
+		 * |-- sda1 -> ../../../devices/pci0000:00/0000:00:1f.2/host0/target0:0:0/0:0:0:0/block/sda/sda1
+		 *  `-- sr0 -> ../../../devices/pci0000:00/0000:00:1f.2/host1/target1:0:0/1:0:0:0/block/sr0
+		 *
+		 */
+		{ "subsystem/block/devices", 0 },
 
-	/*
-	 * unified classification directory for all kernel subsystems
-	 *
-	 * /sys/subsystem/block/devices
-	 * |-- sda -> ../../../devices/pci0000:00/0000:00:1f.2/host0/target0:0:0/0:0:0:0/block/sda
-	 * |-- sda1 -> ../../../devices/pci0000:00/0000:00:1f.2/host0/target0:0:0/0:0:0:0/block/sda/sda1
-	 *  `-- sr0 -> ../../../devices/pci0000:00/0000:00:1f.2/host1/target1:0:0/1:0:0:0/block/sr0
-	 *
-	 */
-	if (dm_snprintf(path, len, "%s/%s", sysfs_dir,
-			"subsystem/block/devices") >= 0) {
-		if (!stat(path, &info)) {
-			*sysfs_depth = 0;
+		/*
+		 * block subsystem as a class
+		 *
+		 * /sys/class/block
+		 * |-- sda -> ../../devices/pci0000:00/0000:00:1f.2/host0/target0:0:0/0:0:0:0/block/sda
+		 * |-- sda1 -> ../../devices/pci0000:00/0000:00:1f.2/host0/target0:0:0/0:0:0:0/block/sda/sda1
+		 *  `-- sr0 -> ../../devices/pci0000:00/0000:00:1f.2/host1/target1:0:0/1:0:0:0/block/sr0
+		 *
+		 */
+		{ "class/block", 0 },
+
+		/*
+		 * old block subsystem layout with nested directories
+		 *
+		 * /sys/block/
+		 * |-- sda
+		 * |   |-- capability
+		 * |   |-- dev
+		 * ...
+		 * |   |-- sda1
+		 * |   |   |-- dev
+		 * ...
+		 * |
+		 * `-- sr0
+		 *     |-- capability
+		 *     |-- dev
+		 * ...
+		 *
+		 */
+
+		{ "block", 1 }
+	};
+
+	for (i = 0; i < DM_ARRAY_SIZE(classes); ++i)
+		if ((dm_snprintf(path, len, "%s%s", sysfs_dir, classes[i].path) >= 0) &&
+		    (stat(path, &info) == 0)) {
+			*sysfs_depth = classes[i].depth;
 			return 1;
 		}
-	}
-
-	/*
-	 * block subsystem as a class
-	 *
-	 * /sys/class/block
-	 * |-- sda -> ../../devices/pci0000:00/0000:00:1f.2/host0/target0:0:0/0:0:0:0/block/sda
-	 * |-- sda1 -> ../../devices/pci0000:00/0000:00:1f.2/host0/target0:0:0/0:0:0:0/block/sda/sda1
-	 *  `-- sr0 -> ../../devices/pci0000:00/0000:00:1f.2/host1/target1:0:0/1:0:0:0/block/sr0
-	 *
-	 */
-	if (dm_snprintf(path, len, "%s/%s", sysfs_dir, "class/block") >= 0) {
-		if (!stat(path, &info)) {
-			*sysfs_depth = 0;
-			return 1;
-		}
-	}
-
-	/*
-	 * old block subsystem layout with nested directories
-	 *
-	 * /sys/block/
-	 * |-- sda
-	 * |   |-- capability
-	 * |   |-- dev
-	 * ...
-	 * |   |-- sda1
-	 * |   |   |-- dev
-	 * ...
-	 * |
-	 * `-- sr0
-	 *     |-- capability
-	 *     |-- dev
-	 * ...
-	 *
-	 */
-	if (dm_snprintf(path, len, "%s/%s", sysfs_dir, "block") >= 0) {
-		if (!stat(path, &info)) {
-			*sysfs_depth = 1;
-			return 1;
-		}
-	}
 
 	return 0;
 }
