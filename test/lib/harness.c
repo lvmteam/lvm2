@@ -65,13 +65,13 @@ static struct subst subst[2];
 
 enum {
 	UNKNOWN,
+	FAILED,
+	INTERRUPTED,
+	KNOWNFAIL,
 	PASSED,
 	SKIPPED,
-	FAILED,
-	WARNED,
-	KNOWNFAIL,
-	INTERRUPTED,
 	TIMEOUT,
+	WARNED,
 };
 
 static void handler( int sig ) {
@@ -511,12 +511,12 @@ int main(int argc, char **argv) {
 	if ((list = fopen(results_list, "w"))) {
 		for (i = 1; i < argc; ++ i) {
 			switch (s.status[i]) {
-			case PASSED: result = "passed"; break;
 			case FAILED: result = "failed"; break;
-			case SKIPPED: result = "skipped"; break;
-			case WARNED: result = "warnings"; break;
-			case TIMEOUT: result = "timeout"; break;
 			case INTERRUPTED: result = "interrupted"; break;
+			case PASSED: result = "passed"; break;
+			case SKIPPED: result = "skipped"; break;
+			case TIMEOUT: result = "timeout"; break;
+			case WARNED: result = "warnings"; break;
 			default: result = "unknown"; break;
 			}
 			fprintf(list, "%s %s\n", argv[i], result);
@@ -526,11 +526,14 @@ int main(int argc, char **argv) {
 		perror("fopen result");
 
 	/* print out a summary */
-	if (s.nfailed || s.nskipped || s.nknownfail || s.ninterrupted) {
+	if (s.nfailed || s.nskipped || s.nknownfail || s.ninterrupted || s.nwarned) {
 		for (i = 1; i < argc; ++ i) {
 			switch (s.status[i]) {
 			case FAILED:
 				printf("FAILED: %s\n", argv[i]);
+				break;
+			case INTERRUPTED:
+				printf("INTERRUPTED: %s\n", argv[i]);
 				break;
 			case KNOWNFAIL:
 				printf("FAILED (expected): %s\n", argv[i]);
@@ -538,11 +541,11 @@ int main(int argc, char **argv) {
 			case SKIPPED:
 				printf("skipped: %s\n", argv[i]);
 				break;
-			case INTERRUPTED:
-				printf("INTERRUPTED: %s\n", argv[i]);
-				break;
 			case TIMEOUT:
 				printf("TIMEOUT: %s\n", argv[i]);
+				break;
+			case WARNED:
+				printf("WARNED: %s\n", argv[i]);
 				break;
 			default: /* do nothing */ ;
 			}
