@@ -2809,7 +2809,7 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd,
 	struct lvmcache_vginfo *vginfo;
 	struct volume_group *vg = NULL;
 	struct _vg_read_orphan_baton baton;
-	struct pv_list *pvl, *pvl_;
+	struct pv_list *pvl, *tpvl;
 	struct pv_list head;
 
 	dm_list_init(&head.list);
@@ -2823,15 +2823,13 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd,
 		return_NULL;
 
 	vg = fmt->orphan_vg;
-restart:
-	dm_list_iterate_items(pvl, &vg->pvs) {
-		if (pvl->pv->status & UNLABELLED_PV ) {
-			dm_list_del(&pvl->list);
-			dm_list_add(&head.list, &pvl->list);
-			goto restart;
-		} else
+
+	dm_list_iterate_items_safe(pvl, tpvl, &vg->pvs)
+		if (pvl->pv->status & UNLABELLED_PV )
+			dm_list_move(&head.list, &pvl->list);
+		else
 			pv_set_fid(pvl->pv, NULL);
-	}
+
 	dm_list_init(&vg->pvs);
 	vg->pv_count = 0;
 	vg->extent_count = 0;
