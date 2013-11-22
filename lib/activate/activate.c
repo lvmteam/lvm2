@@ -1097,10 +1097,10 @@ static int _lv_preload(struct logical_volume *lv, struct lv_activate_opts *laopt
 	struct dev_manager *dm;
 	int old_readonly = laopts->read_only;
 
-	laopts->read_only = _passes_readonly_filter(lv->vg->cmd, lv);
-
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, (lv->status & PVMOVE) ? 0 : 1)))
 		goto_out;
+
+	laopts->read_only = _passes_readonly_filter(lv->vg->cmd, lv);
 
 	if (!(r = dev_manager_preload(dm, lv, laopts, flush_required)))
 		stack;
