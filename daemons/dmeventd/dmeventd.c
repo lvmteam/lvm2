@@ -273,7 +273,6 @@ static int _pthread_create_smallstack(pthread_t *t, void *(*fun)(void *), void *
 	int r;
 	pthread_t tmp;
 	pthread_attr_t attr;
-	pthread_attr_init(&attr);
 
 	/*
 	 * From pthread_attr_init man page:
