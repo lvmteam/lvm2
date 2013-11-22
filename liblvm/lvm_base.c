@@ -18,7 +18,6 @@
 #include "lvm-version.h"
 #include "metadata-exported.h"
 #include "lvm2app.h"
-#include "lvm-string.h"
 
 const char *lvm_library_get_version(void)
 {
