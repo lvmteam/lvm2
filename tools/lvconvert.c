@@ -1906,17 +1906,14 @@ static int lvconvert_merge(struct cmd_context *cmd,
 	 * constructor and DM should prevent appropriate devices from
 	 * being open.
 	 */
-	if (lv_info(cmd, origin, 0, &info, 1, 0)) {
-		if (info.open_count) {
-			log_error("Can't merge over open origin volume");
-			merge_on_activate = 1;
-		}
-	}
-	if (lv_info(cmd, lv, 0, &info, 1, 0)) {
-		if (info.open_count) {
-			log_print_unless_silent("Can't merge when snapshot is open");
-			merge_on_activate = 1;
-		}
+	if (lv_info(cmd, origin, 0, &info, 1, 0) &&
+	    !lv_check_not_in_use(cmd, origin, &info)) {
+		log_print_unless_silent("Can't merge over open origin volume.");
+		merge_on_activate = 1;
+	} else if (lv_info(cmd, lv, 0, &info, 1, 0) &&
+		   !lv_check_not_in_use(cmd, lv, &info)) {
+		log_print_unless_silent("Can't merge when snapshot is open.");
+		merge_on_activate = 1;
 	}
 
 	init_snapshot_merge(snap_seg, origin);

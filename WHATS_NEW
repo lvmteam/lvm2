@@ -1,5 +1,6 @@
 Version 2.02.105 -
 =====================================
+  Use lv_check_not_in_use() when testing device in use before merging.
   Move test for target present from init_snapshot_merge() to lvconvert.
   Check for failure of lvmcache_add_mda() when writing pv.
   Check for failure of dev_get_size() when reporting device size.
