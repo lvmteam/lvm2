@@ -18,7 +18,6 @@
 #include <fcntl.h>
 
 #ifdef UDEV_SYNC_SUPPORT
-static const char _no_context_msg[] = "Udev library context not set.";
 struct udev *_udev;
 
 int udev_init_library_context(void)
@@ -46,7 +45,7 @@ int udev_is_running(void)
 	int r;
 
 	if (!_udev) {
-		log_debug_activation(_no_context_msg);
+		log_debug_activation("Udev library context not set.");
 		goto bad;
 	}
 
