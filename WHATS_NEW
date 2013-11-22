@@ -1,5 +1,6 @@
 Version 2.02.105 -
 =====================================
+  Fix undef value if skipped clustered VG ignored for toollib PV seg. (2.02.103)
   liblvm/python API Add ability to validate VG/LV names.
   liblvm/python API Add ability to create PV with arguments.
   liblvm/python API Fail VG reduce when insufficient metadata copies

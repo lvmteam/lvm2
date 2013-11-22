@@ -510,10 +510,10 @@ int process_each_segment_in_pv(struct cmd_context *cmd,
 		vg_name = pv_vg_name(pv);
 
 		vg = vg_read(cmd, vg_name, NULL, 0);
-		if (ignore_vg(vg, vg_name, 0, &ret)) {
+		if (ignore_vg(vg, vg_name, 0, &ret_max)) {
 			release_vg(vg);
 			stack;
-			return ret;
+			return ret_max;
 		}
 
 		/*
