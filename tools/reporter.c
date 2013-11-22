@@ -141,8 +141,8 @@ static int _pvs_single(struct cmd_context *cmd, struct volume_group *vg,
 	struct volume_group *old_vg = vg;
 	char uuid[64] __attribute__((aligned(8)));
 	struct label *label;
-	struct label _dummy_label = { 0 };
-	struct device _dummy_device = { 0 };
+	struct label _dummy_label = { .dev = 0 };
+	struct device _dummy_device = { .dev = 0 };
 
 	if (is_pv(pv) && !is_orphan(pv) && !vg) {
 		vg_name = pv_vg_name(pv);
