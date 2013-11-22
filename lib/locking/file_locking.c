@@ -163,6 +163,7 @@ static int _do_flock(const char *file, int *fd, int operation, uint32_t nonblock
 			log_sys_error("flock", file);
 			if (close(*fd))
 				log_sys_error("close", file);
+			*fd = -1;
 			return 0;
 		}
 
