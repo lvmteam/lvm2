@@ -334,13 +334,17 @@ int backup_restore_vg(struct cmd_context *cmd, struct volume_group *vg, int drop
 	 * Setting vg->old_name to a blank value will explicitly
 	 * disable any attempt to check VG name in existing metadata.
 	*/
-	vg->old_name = dm_pool_strdup(vg->vgmem, "");
+	if (!(vg->old_name = dm_pool_strdup(vg->vgmem, ""))) {
+		log_error("Failed to duplicate empty name.");
+		return 0;
+	}
 
 	/* Add any metadata areas on the PVs */
 	dm_list_iterate_items(pvl, &vg->pvs) {
 		tmp = vg->extent_size;
 		vg->extent_size = 0;
 		if (!vg->fid->fmt->ops->pv_setup(vg->fid->fmt, pvl->pv, vg)) {
+			vg->extent_size = tmp;
 			log_error("Format-specific setup for %s failed",
 				  pv_dev_name(pvl->pv));
 			return 0;
