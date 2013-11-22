@@ -1328,8 +1328,10 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 				   mdac->area.size >> SECTOR_SHIFT);
 
 		// if fmt is not the same as info->fmt we are in trouble
-		lvmcache_add_mda(info, mdac->area.dev,
-				 mdac->area.start, mdac->area.size, mda_is_ignored(mda));
+		if (!lvmcache_add_mda(info, mdac->area.dev,
+				      mdac->area.start, mdac->area.size,
+				      mda_is_ignored(mda)))
+			return_0;
 	}
 
 	if (!lvmcache_update_bas(info, pv))

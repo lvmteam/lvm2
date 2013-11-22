@@ -1,5 +1,6 @@
 Version 2.02.105 -
 =====================================
+  Check for failure of lvmcache_add_mda() when writing pv.
   Check for failure of dev_get_size() when reporting device size.
   Drop extra unneeded '/' when scanning sysfs directory.
   Fix undef value if skipped clustered VG ignored for toollib PV seg. (2.02.103)
