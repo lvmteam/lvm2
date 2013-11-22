@@ -445,13 +445,25 @@ out:
 
 #ifdef __linux__
 
+static int _snprintf_attr(char *buf, size_t buf_size, const char *sysfs_dir,
+			 const char *attribute, dev_t dev)
+{
+	if (dm_snprintf(buf, buf_size, "%s/dev/block/%d:%d/%s", sysfs_dir,
+			(int)MAJOR(dev), (int)MINOR(dev),
+			attribute) < 0) {
+		log_warn("dm_snprintf %s failed.", attribute);
+		return 0;
+	}
+
+	return 1;
+}
+
 static unsigned long _dev_topology_attribute(struct dev_types *dt,
 					     const char *attribute,
 					     struct device *dev)
 {
 	const char *sysfs_dir = dm_sysfs_dir();
-	static const char sysfs_fmt_str[] = "%s/dev/block/%d:%d/%s";
-	char path[PATH_MAX+1], buffer[64];
+	char path[PATH_MAX], buffer[64];
 	FILE *fp;
 	struct stat info;
 	dev_t uninitialized_var(primary);
@@ -463,12 +475,8 @@ static unsigned long _dev_topology_attribute(struct dev_types *dt,
 	if (!sysfs_dir || !*sysfs_dir)
 		return_0;
 
-	if (dm_snprintf(path, PATH_MAX, sysfs_fmt_str, sysfs_dir,
-			(int)MAJOR(dev->dev), (int)MINOR(dev->dev),
-			attribute) < 0) {
-		log_error("dm_snprintf %s failed", attribute);
-		return 0;
-	}
+	if (!_snprintf_attr(path, sizeof(path), sysfs_dir, attribute, dev->dev))
+                return_0;
 
 	/*
 	 * check if the desired sysfs attribute exists
@@ -484,12 +492,9 @@ static unsigned long _dev_topology_attribute(struct dev_types *dt,
 			return 0;
 
 		/* get attribute from partition's primary device */
-		if (dm_snprintf(path, PATH_MAX, sysfs_fmt_str, sysfs_dir,
-				(int)MAJOR(primary), (int)MINOR(primary),
-				attribute) < 0) {
-			log_error("primary dm_snprintf %s failed", attribute);
-			return 0;
-		}
+		if (!_snprintf_attr(path, sizeof(path), sysfs_dir, attribute, primary))
+			return_0;
+
 		if (stat(path, &info) == -1) {
 			if (errno != ENOENT)
 				log_sys_error("stat", path);
