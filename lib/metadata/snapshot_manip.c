@@ -154,6 +154,10 @@ void init_snapshot_seg(struct lv_segment *seg, struct logical_volume *origin,
 void init_snapshot_merge(struct lv_segment *snap_seg,
 			 struct logical_volume *origin)
 {
+	snap_seg->status |= MERGING;
+	origin->snapshot = snap_seg;
+	origin->status |= MERGING;
+
 	/*
 	 * Even though lv_is_visible(snap_seg->lv) returns 0,
 	 * the snap_seg->lv (name: snapshotX) is _not_ hidden;
@@ -165,9 +169,6 @@ void init_snapshot_merge(struct lv_segment *snap_seg,
 	 *   merge metadata (snap_seg->lv is now "internal")
 	 */
 	snap_seg->lv->status &= ~VISIBLE_LV;
-	snap_seg->status |= MERGING;
-	origin->snapshot = snap_seg;
-	origin->status |= MERGING;
 }
 
 void clear_snapshot_merge(struct logical_volume *origin)
