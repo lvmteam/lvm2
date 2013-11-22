@@ -19,6 +19,7 @@
 #include "toolcontext.h"
 #include "locking.h"
 #include "defaults.h"
+#include "lvmcache.h"
 #include "lvmetad.h"
 #include "display.h"
 #include "label.h"
