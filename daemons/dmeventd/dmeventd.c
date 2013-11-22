@@ -1110,20 +1110,18 @@ static int _unregister_for_event(struct message_data *message_data)
 static int _registered_device(struct message_data *message_data,
 			     struct thread_status *thread)
 {
-	struct dm_event_daemon_message *msg = message_data->msg;
-
-	const char *fmt = "%s %s %s %u";
-	const char *id = message_data->id;
-	const char *dso = thread->dso_data->dso_name;
-	const char *dev = thread->device.uuid;
 	int r;
+	struct dm_event_daemon_message *msg = message_data->msg;
 	unsigned events = ((thread->status == DM_THREAD_RUNNING) &&
 			   thread->events) ? thread->events :
 			    thread->events | DM_EVENT_REGISTRATION_PENDING;
 
 	dm_free(msg->data);
 
-	if ((r = dm_asprintf(&(msg->data), fmt, id, dso, dev, events)) < 0) {
+	if ((r = dm_asprintf(&(msg->data), "%s %s %s %u",
+			     message_data->id,
+			     thread->dso_data->dso_name,
+			     thread->device.uuid, events)) < 0) {
 		msg->size = 0;
 		return -ENOMEM;
 	}

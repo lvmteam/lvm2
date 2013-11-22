@@ -1,5 +1,6 @@
 Version 1.02.84 -
 ====================================
+  Move printf format string directly into dm_asprintf args list.
   Catch invalid use of string sort values when reporting numerical fields.
 
 Version 1.02.83 - 13th November 2013

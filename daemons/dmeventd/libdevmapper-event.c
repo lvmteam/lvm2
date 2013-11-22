@@ -345,9 +345,6 @@ int daemon_talk(struct dm_event_fifos *fifos,
 		const char *dso_name, const char *dev_name,
 		enum dm_event_mask evmask, uint32_t timeout)
 {
-	const char *dso = dso_name ? dso_name : "-";
-	const char *dev = dev_name ? dev_name : "-";
-	const char *fmt = "%d:%d %s %s %u %" PRIu32;
 	int msg_size;
 	memset(msg, 0, sizeof(*msg));
 
@@ -355,14 +352,17 @@ int daemon_talk(struct dm_event_fifos *fifos,
 	 * Set command and pack the arguments
 	 * into ASCII message string.
 	 */
-	msg->cmd = cmd;
-	if (cmd == DM_EVENT_CMD_HELLO)
-		fmt = "%d:%d HELLO";
-	if ((msg_size = dm_asprintf(&(msg->data), fmt, getpid(), _sequence_nr,
-				    dso, dev, evmask, timeout)) < 0) {
+	if ((msg_size =
+	     ((cmd == DM_EVENT_CMD_HELLO) ?
+	      dm_asprintf(&(msg->data), "%d:%d HELLO", getpid(), _sequence_nr) :
+	      dm_asprintf(&(msg->data), "%d:%d %s %s %u %" PRIu32,
+			  getpid(), _sequence_nr,
+			  dso_name ? : "-", dev_name ? : "-", evmask, timeout)))
+	    < 0) {
 		log_error("_daemon_talk: message allocation failed");
 		return -ENOMEM;
 	}
+	msg->cmd = cmd;
 	msg->size = msg_size;
 
 	/*
