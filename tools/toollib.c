@@ -190,7 +190,7 @@ int process_each_lv_in_vg(struct cmd_context *cmd,
 			  process_single_lv_fn_t process_single_lv)
 {
 	int ret_max = ECMD_PROCESSED;
-	int ret = 0;
+	int ret;
 	unsigned process_all = 0;
 	unsigned process_lv = 0;
 	unsigned tags_supplied = 0;
@@ -302,7 +302,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 {
 	int opt = 0;
 	int ret_max = ECMD_PROCESSED;
-	int ret = 0;
+	int ret;
 
 	struct dm_list *tags_arg;
 	struct dm_list *vgnames;	/* VGs to process */
@@ -724,7 +724,7 @@ int process_each_pv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 			  process_single_pv_fn_t process_single_pv)
 {
 	int ret_max = ECMD_PROCESSED;
-	int ret = 0;
+	int ret;
 	struct pv_list *pvl;
 
 	dm_list_iterate_items(pvl, &vg->pvs) {
@@ -810,7 +810,7 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 {
 	int opt = 0;
 	int ret_max = ECMD_PROCESSED;
-	int ret = 0;
+	int ret;
 	int lock_global = !(flags & READ_WITHOUT_LOCK) && !(flags & READ_FOR_UPDATE) && !lvmetad_active();
 
 	struct pv_list *pvl;
@@ -1803,7 +1803,7 @@ int process_each_label(struct cmd_context *cmd, int argc, char **argv, void *han
 	struct device *dev;
 
 	int ret_max = ECMD_PROCESSED;
-	int ret = 0;
+	int ret;
 	int opt = 0;
 
 	if (argc) {
