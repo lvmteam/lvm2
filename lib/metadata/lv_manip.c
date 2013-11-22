@@ -3822,10 +3822,8 @@ static int _lvresize_adjust_extents(struct cmd_context *cmd, struct logical_volu
 			lv->status |= LV_NOTSYNCED;
 
 		dm_list_iterate_back_items(mirr_seg, &lv->segments) {
-			if (seg_is_mirrored(mirr_seg))
-				seg_mirrors = lv_mirror_count(mirr_seg->lv);
-			else
-				seg_mirrors = 0;
+			seg_mirrors = seg_is_mirrored(mirr_seg) ?
+				lv_mirror_count(mirr_seg->lv) : 0;
 			break;
 		}
 
