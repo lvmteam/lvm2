@@ -43,9 +43,6 @@ static struct physical_volume *_pv_read(struct cmd_context *cmd,
 static uint32_t _vg_bad_status_bits(const struct volume_group *vg,
 				    uint64_t status);
 
-const char _really_init[] =
-    "Really INITIALIZE physical volume \"%s\" of volume group \"%s\" [y/n]? ";
-
 static int _alignment_overrides_default(unsigned long data_alignment,
 					unsigned long default_pe_align)
 {
@@ -1294,7 +1291,8 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name,
 
 	/* prompt */
 	if (pv && !is_orphan(pv) && !pp->yes &&
-	    yes_no_prompt(_really_init, name, pv_vg_name(pv)) == 'n') {
+	    yes_no_prompt("Really INITIALIZE physical volume \"%s\" of volume group \"%s\" [y/n]? ",
+			  name, pv_vg_name(pv)) == 'n') {
 		log_error("%s: physical volume not initialized", name);
 		goto bad;
 	}
