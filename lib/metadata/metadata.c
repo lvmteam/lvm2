@@ -2798,8 +2798,7 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd,
 	baton.warnings = warnings;
 	baton.vg = vg;
 
-	while (!dm_list_empty(&head.list)) {
-		pvl = (struct pv_list *) dm_list_first(&head.list);
+	while ((pvl = (struct pv_list *) dm_list_first(&head.list))) {
 		dm_list_del(&pvl->list);
 		add_pvl_to_vgs(vg, pvl);
 		vg->extent_count += pvl->pv->pe_count;
