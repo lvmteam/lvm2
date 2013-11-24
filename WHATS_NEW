@@ -1,5 +1,6 @@
 Version 2.02.105 -
 =====================================
+  Check for non-zero aligment in _text_pv_add_metadata_area() to not div by 0.
   Add allocation/use_blkid_wiping to lvm.conf to enable blkid wiping.
   Add configure --enable-blkid_wiping to use libblkid to detect signatures.
   Add -W/--wipesignatures lvcreate option to support wiping on new LVs.

@@ -2083,7 +2083,7 @@ static int _text_pv_add_metadata_area(const struct format_type *fmt,
 			 * alignment since it would be useless.
 			 * Check first whether we can apply that!
 			 */
-			if (!pe_start_locked &&
+			if (!pe_start_locked && alignment &&
 			    ((limit - mda_start) > alignment * 2)) {
 				mda_size = limit - mda_start - alignment * 2;
 
