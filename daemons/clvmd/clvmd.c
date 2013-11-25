@@ -1095,7 +1095,7 @@ static int verify_message(char *buf, int len)
 {
 	struct clvm_header *h = (struct clvm_header *)buf;
 
-	if (len < sizeof(struct clvm_header)) {
+	if (len < (int)sizeof(struct clvm_header)) {
 		log_error("verify_message short len %d", len);
 		return -1;
 	}

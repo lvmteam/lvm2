@@ -847,7 +847,7 @@ static int _remove_mirror_images(struct logical_volume *lv,
 	uint32_t new_area_count = mirrored_seg->area_count;
 	struct lv_list *lvl;
 	struct dm_list tmp_orphan_lvs;
-	int orig_removed = num_removed;
+	uint32_t orig_removed = num_removed;
 
 	if (removed)
 		*removed = 0;

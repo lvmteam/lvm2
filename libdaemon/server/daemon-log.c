@@ -51,7 +51,7 @@ struct backend backend[] = {
 void daemon_log(log_state *s, int type, const char *message) {
 	int i = 0;
 	while ( backend[i].id ) {
-		if ( (s->log_config[type] & backend[i].id) == backend[i].id )
+		if ((int)(s->log_config[type] & backend[i].id) == backend[i].id )
 			backend[i].log( s, &s->backend_state[i], type, message );
 		++ i;
 	}
@@ -60,7 +60,7 @@ void daemon_log(log_state *s, int type, const char *message) {
 static int _type_interesting(log_state *s, int type) {
 	int i = 0;
 	while ( backend[i].id ) {
-		if ( (s->log_config[type] & backend[i].id) == backend[i].id )
+		if ((int)(s->log_config[type] & backend[i].id) == backend[i].id )
 			return 1;
 		++ i;
 	}

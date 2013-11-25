@@ -958,7 +958,7 @@ static void _lvconvert_mirrors_repair_ask(struct cmd_context *cmd,
  *  1  = 'disk'
  *  2+ = 'mirrored'
  */
-static int _get_log_count(struct logical_volume *lv)
+static uint32_t _get_log_count(struct logical_volume *lv)
 {
 	struct logical_volume *log_lv;
 
@@ -1434,7 +1434,7 @@ int mirror_remove_missing(struct cmd_context *cmd,
 	if (!(failed_pvs = _failed_pv_list(lv->vg)))
 		return_0;
 
-        if (force && _failed_mirrors_count(lv) == lv_mirror_count(lv)) {
+	if (force && _failed_mirrors_count(lv) == (int)lv_mirror_count(lv)) {
 		log_error("No usable images left in %s.", lv->name);
 		return lv_remove_with_dependencies(cmd, lv, DONT_PROMPT, 0);
         }
