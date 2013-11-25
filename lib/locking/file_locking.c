@@ -54,10 +54,10 @@ static void _undo_flock(const char *file, int fd)
 	    !fstat(fd, &buf2) &&
 	    is_same_inode(buf1, buf2))
 		if (unlink(file))
-			log_sys_error("unlink", file);
+			log_sys_debug("unlink", file);
 
 	if (close(fd) < 0)
-		log_sys_error("close", file);
+		log_sys_debug("close", file);
 }
 
 static int _release_lock(const char *file, int unlock)
@@ -73,7 +73,7 @@ static int _release_lock(const char *file, int unlock)
 			if (unlock) {
 				log_very_verbose("Unlocking %s", ll->res);
 				if (flock(ll->lf, LOCK_NB | LOCK_UN))
-					log_sys_error("flock", ll->res);
+					log_sys_debug("flock", ll->res);
 			}
 
 			_undo_flock(ll->res, ll->lf);
@@ -141,7 +141,7 @@ static int _do_flock(const char *file, int *fd, int operation, uint32_t nonblock
 			  operation == LOCK_EX ? 'W' : 'R', nonblock ? ' ' : 'B');
 	do {
 		if ((*fd > -1) && close(*fd))
-			log_sys_error("close", file);
+			log_sys_debug("close", file);
 
 		if ((*fd = open(file, O_CREAT | O_APPEND | O_RDWR, 0777)) < 0) {
 			log_sys_error("open", file);
@@ -162,7 +162,7 @@ static int _do_flock(const char *file, int *fd, int operation, uint32_t nonblock
 			errno = old_errno;
 			log_sys_error("flock", file);
 			if (close(*fd))
-				log_sys_error("close", file);
+				log_sys_debug("close", file);
 			*fd = -1;
 			return 0;
 		}

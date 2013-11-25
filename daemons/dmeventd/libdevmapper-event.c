@@ -425,7 +425,7 @@ static int _start_daemon(char *dmeventd_path, struct dm_event_fifos *fifos)
 	if (fifos->client >= 0) {
 		/* server is running and listening */
 		if (close(fifos->client))
-			log_sys_error("close", fifos->client_path);
+			log_sys_debug("close", fifos->client_path);
 		return 1;
 	} else if (errno != ENXIO) {
 		/* problem */
@@ -507,14 +507,14 @@ static int _init_client(char *dmeventd_path, struct dm_event_fifos *fifos)
 void fini_fifos(struct dm_event_fifos *fifos)
 {
 	if (fifos->client >= 0 && close(fifos->client))
-		log_sys_error("close", fifos->client_path);
+		log_sys_debug("close", fifos->client_path);
 
 	if (fifos->server >= 0) {
 		if (flock(fifos->server, LOCK_UN))
-			log_sys_error("flock unlock", fifos->server_path);
+			log_sys_debug("flock unlock", fifos->server_path);
 
 		if (close(fifos->server))
-			log_sys_error("close", fifos->server_path);
+			log_sys_debug("close", fifos->server_path);
 	}
 }
 
