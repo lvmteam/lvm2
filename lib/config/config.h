@@ -88,7 +88,7 @@ typedef struct cfg_def_item {
 	int id;				/* ID of this item */
 	int parent;			/* ID of parent item */
 	const char *name;		/* name of the item in configuration tree */
-	cfg_def_type_t type;		/* configuration item type */
+	int type;			/* configuration item type (bits of cfg_def_type_t) */
 	cfg_def_value_t default_value;	/* default value (only for settings) */
 	uint16_t flags;			/* configuration item definition flags */
 	uint16_t since_version;		/* version this item appeared in */
