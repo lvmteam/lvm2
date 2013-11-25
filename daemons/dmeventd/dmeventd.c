@@ -1848,20 +1848,18 @@ static void restart(void)
 
 	if (!dm_event_get_version(&fifos, &version)) {
 		fprintf(stderr, "WARNING: Could not communicate with existing dmeventd.\n");
-		fini_fifos(&fifos);
-		exit(EXIT_FAILURE);
+		goto bad;
 	}
 
 	if (version < 1) {
 		fprintf(stderr, "WARNING: The running dmeventd instance is too old.\n"
 			        "Protocol version %d (required: 1). Action cancelled.\n",
 			        version);
-		exit(EXIT_FAILURE);
+		goto bad;
 	}
 
-	if (daemon_talk(&fifos, &msg, DM_EVENT_CMD_GET_STATUS, "-", "-", 0, 0)) {
-		exit(EXIT_FAILURE);
-	}
+	if (daemon_talk(&fifos, &msg, DM_EVENT_CMD_GET_STATUS, "-", "-", 0, 0))
+		goto bad;
 
 	message = msg.data;
 	message = strchr(message, ' ');
@@ -1876,13 +1874,13 @@ static void restart(void)
 
 	if (!(_initial_registrations = dm_malloc(sizeof(char*) * (count + 1)))) {
 		fprintf(stderr, "Memory allocation registration failed.\n");
-		exit(EXIT_FAILURE);
+		goto bad;
 	}
 
 	for (i = 0; i < count; ++i) {
 		if (!(_initial_registrations[i] = dm_strdup(message))) {
 			fprintf(stderr, "Memory allocation for message failed.\n");
-			exit(EXIT_FAILURE);
+			goto bad;
 		}
 		message += strlen(message) + 1;
 	}
@@ -1890,7 +1888,7 @@ static void restart(void)
 
 	if (daemon_talk(&fifos, &msg, DM_EVENT_CMD_DIE, "-", "-", 0, 0)) {
 		fprintf(stderr, "Old dmeventd refused to die.\n");
-		exit(EXIT_FAILURE);
+		goto bad;
 	}
 
 	/*
@@ -1904,6 +1902,11 @@ static void restart(void)
 	}
 
 	fini_fifos(&fifos);
+
+	return;
+bad:
+	fini_fifos(&fifos);
+	exit(EXIT_FAILURE);
 }
 
 static void usage(char *prog, FILE *file)
