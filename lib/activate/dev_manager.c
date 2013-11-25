@@ -112,9 +112,9 @@ static int _info_run(const char *name, const char *dlid, struct dm_info *info,
 	if (!(dmt = _setup_task(mknodes ? name : NULL, dlid, 0, dmtask, major, minor)))
 		return_0;
 
-	if (!with_open_count)
-		if (!dm_task_no_open_count(dmt))
-			log_error("Failed to disable open_count");
+	if (!with_open_count &&
+	    !dm_task_no_open_count(dmt))
+		log_warn("WARNING: Failed to disable open_count.");
 
 	if (!dm_task_run(dmt))
 		goto_out;
