@@ -44,6 +44,19 @@ void lvmetad_set_active(int);
 void lvmetad_set_socket(const char *);
 
 /*
+ * Check whether lvmetad is used.
+ */
+int lvmetad_used(void);
+
+/*
+ * Check if lvmetad socket is present (either the one set by lvmetad_set_socket
+ * or the default one if not set). For example, this may be used before calling
+ * lvmetad_active() check that does connect to the socket - this would produce
+ * various connection errors if the socket is not present.
+ */
+int lvmetad_socket_present(void);
+
+/*
  * Check whether lvmetad is active (where active means both that it is running
  * and that we have a working connection with it).
  */
@@ -149,6 +162,8 @@ int lvmetad_pvscan_all_devs(struct cmd_context *cmd, activation_handler handler)
 #    define lvmetad_disconnect()	do { } while (0)
 #    define lvmetad_set_active(a)	do { } while (0)
 #    define lvmetad_set_socket(a)	do { } while (0)
+#    define lvmetad_used()	(0)
+#    define lvmetad_socket_present()	(0)
 #    define lvmetad_active()	(0)
 #    define lvmetad_connect_or_warn()	do { } while (0)
 #    define lvmetad_set_token(a)	do { } while (0)

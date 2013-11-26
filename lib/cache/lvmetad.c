@@ -72,6 +72,22 @@ void lvmetad_connect_or_warn(void)
 			 strerror(_lvmetad.error));
 }
 
+int lvmetad_used(void)
+{
+	return _lvmetad_use;
+}
+
+int lvmetad_socket_present(void)
+{
+	const char *socket = _lvmetad_socket ?: LVMETAD_SOCKET;
+	int r;
+
+	if ((r = access(socket, F_OK)) && errno != ENOENT)
+		log_sys_error("lvmetad_socket_present", "");
+
+	return !r;
+}
+
 int lvmetad_active(void)
 {
 	if (!_lvmetad_use)

@@ -17,6 +17,8 @@
 
 #include "daemon-client.h"
 
+#define LVMETAD_SOCKET DEFAULT_RUN_DIR "/lvmetad.socket"
+
 struct volume_group;
 
 /* Different types of replies we may get from lvmetad. */
@@ -64,7 +66,7 @@ static inline daemon_handle lvmetad_open(const char *socket)
 {
 	daemon_info lvmetad_info = {
 		.path = "lvmetad",
-		.socket = socket ?: DEFAULT_RUN_DIR "/lvmetad.socket",
+		.socket = socket ?: LVMETAD_SOCKET,
 		.protocol = "lvmetad",
 		.protocol_version = 1,
 		.autostart = 0

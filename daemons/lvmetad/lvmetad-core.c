@@ -29,6 +29,8 @@
 #include <math.h>  /* fabs() */
 #include <float.h> /* DBL_EPSILON */
 
+#define LVMETAD_SOCKET DEFAULT_RUN_DIR "/lvmetad.socket"
+
 typedef struct {
 	log_state *log; /* convenience */
 	const char *log_config;
@@ -1209,7 +1211,7 @@ int main(int argc, char *argv[])
 
 	if (!s.socket_path) {
 		_socket_override = 0;
-		s.socket_path = DEFAULT_RUN_DIR "/lvmetad.socket";
+		s.socket_path = LVMETAD_SOCKET;
 	}
 	ls.log_config = "";
 
