@@ -272,6 +272,21 @@ allocation {
     # algorithm.
     maximise_cling = 1
 
+    # Whether to use blkid library instead of native LVM2 code to detect
+    # any existing signatures while creating new Physical Volumes and
+    # Logical Volumes. LVM2 needs to be compiled with blkid wiping support
+    # for this setting to take effect.
+    #
+    # LVM2 native detection code is currently able to recognize these signatures:
+    #   - MD device signature
+    #   - swap signature
+    #   - LUKS signature
+    # To see the list of signatures recognized by blkid, check the output
+    # of 'blkid -k' command. The blkid can recognize more signatures than
+    # LVM2 native detection code, but due to this higher number of signatures
+    # to be recognized, it can take more time to complete the signature scan.
+    use_blkid_wiping = 1
+
     # Whether do wipe any signatures found on newly created Logical Volumes
     # automatically in addition to zeroing of the first KB on the LV
     # (-Z/--zero y option) when running the LVM command without specifying
