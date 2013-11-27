@@ -272,6 +272,15 @@ allocation {
     # algorithm.
     maximise_cling = 1
 
+    # Whether do wipe any signatures found on newly created Logical Volumes
+    # automatically in addition to zeroing of the first KB on the LV
+    # (-Z/--zero y option) when running the LVM command without specifying
+    # the -W/--wipesignatures option. If -W/--wipesignatures command line
+    # option is specified, it always takes precedence over this setting.
+    # Default is to wipe signatures when zeroing.
+    #
+    wipe_signatures_on_new_logical_volumes_when_zeroing = 1
+
     # Set to 1 to guarantee that mirror logs will always be placed on 
     # different PVs from the mirror images.  This was the default
     # until version 2.02.85.
