@@ -148,7 +148,7 @@ static int _auto_activation_handler(struct cmd_context *cmd,
 	}
 
 	if (!refresh_done)
-		log_error("%s: refresh before autoactivation failed.", vg->name);
+		log_warn("%s: refresh before autoactivation failed.", vg->name);
 
 	if (!vgchange_activate(vg->cmd, vg, activate)) {
 		log_error("%s: autoactivation failed.", vg->name);
