@@ -147,10 +147,8 @@ static int _auto_activation_handler(struct cmd_context *cmd,
 		usleep(REFRESH_BEFORE_AUTOACTIVATION_RETRY_USLEEP_DELAY);
 	}
 
-	if (!refresh_done) {
+	if (!refresh_done)
 		log_error("%s: refresh before autoactivation failed.", vg->name);
-		goto out;
-	}
 
 	if (!vgchange_activate(vg->cmd, vg, activate)) {
 		log_error("%s: autoactivation failed.", vg->name);
