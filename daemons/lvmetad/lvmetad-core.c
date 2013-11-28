@@ -1242,7 +1242,7 @@ int main(int argc, char *argv[])
 
 	if (s.foreground) {
 		if (!_socket_override) {
-			fprintf(stderr, "A socket path (-s) is required in foreground mode.");
+			fprintf(stderr, "A socket path (-s) is required in foreground mode.\n");
 			exit(2);
 		}
 
