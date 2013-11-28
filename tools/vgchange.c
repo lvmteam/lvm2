@@ -121,16 +121,6 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 		    ((lv->status & PVMOVE) ))
 			continue;
 
-		/*
-		 * If the LV is active exclusive remotely,
-		 * then ignore it here
-		 */
-		if (lv_is_active_exclusive_remotely(lv)) {
-			log_verbose("%s/%s is exclusively active on"
-				    " a remote node", vg->name, lv->name);
-			continue;
-		}
-
 		if (lv_activation_skip(lv, activate, arg_count(cmd, ignoreactivationskip_ARG), 0)) {
 			log_verbose("ACTIVATION_SKIP flag set for LV %s/%s, skipping activation.",
 				    lv->vg->name, lv->name);
@@ -144,7 +134,17 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 		expected_count++;
 
 		if (!lv_change_activate(cmd, lv, activate)) {
-			stack;
+			if (!lv_is_active_exclusive_remotely(lv))
+				stack;
+			else {
+				/*
+				 * If the LV is active exclusive remotely,
+				 * then ignore it here
+				 */
+				log_verbose("%s/%s is exclusively active on"
+					    " a remote node", vg->name, lv->name);
+				expected_count--; /* not accounted */
+			}
 			continue;
 		}
 
