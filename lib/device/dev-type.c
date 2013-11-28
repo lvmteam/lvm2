@@ -449,8 +449,8 @@ out:
 
 #ifdef BLKID_WIPING_SUPPORT
 
-static int _blkid_wipe(blkid_probe probe, struct device *dev,
-		       const char *name, int yes, force_t force)
+static int _blkid_wipe(blkid_probe probe, struct device *dev, const char *name,
+		       int exclude_lvm_member, int yes, force_t force)
 {
 	const char *offset = NULL, *type = NULL, *magic = NULL,
 		   *usage = NULL, *label = NULL, *uuid = NULL;
@@ -458,6 +458,9 @@ static int _blkid_wipe(blkid_probe probe, struct device *dev,
 	size_t len;
 
 	if (!blkid_probe_lookup_value(probe, "TYPE", &type, NULL)) {
+		if (exclude_lvm_member &&
+		    (!strcmp(type, "LVM1_member") || !strcmp(type, "LVM2_member")))
+			return 1;
 		if (!blkid_probe_lookup_value(probe, "SBMAGIC_OFFSET", &offset, NULL) &&
 		     blkid_probe_lookup_value(probe, "SBMAGIC", &magic, &len))
 			return_0;
@@ -495,6 +498,7 @@ static int _blkid_wipe(blkid_probe probe, struct device *dev,
 }
 
 static int _wipe_known_signatures_with_blkid(struct device *dev, const char *name,
+					     int exclude_lvm_member,
 					     int yes, force_t force)
 {
 	blkid_probe probe = NULL;
@@ -522,7 +526,7 @@ static int _wipe_known_signatures_with_blkid(struct device *dev, const char *nam
 
 	while (!blkid_do_probe(probe)) {
 		found++;
-		if (_blkid_wipe(probe, dev, name, yes, force))
+		if (_blkid_wipe(probe, dev, name, exclude_lvm_member, yes, force))
 			wiped++;
 	}
 
@@ -576,6 +580,7 @@ static int _wipe_signature(struct device *dev, const char *type, const char *nam
 }
 
 static int _wipe_known_signatures_with_lvm(struct device *dev, const char *name,
+					   int exclude_lvm_member,
 					   int yes, force_t force)
 {
 	if (!_wipe_signature(dev, "software RAID md superblock", name, 4, yes, force, dev_is_md) ||
@@ -587,13 +592,16 @@ static int _wipe_known_signatures_with_lvm(struct device *dev, const char *name,
 }
 
 int wipe_known_signatures(struct cmd_context *cmd, struct device *dev,
-			  const char *name, int yes, force_t force)
+			  const char *name, int exclude_lvm_member,
+			  int yes, force_t force)
 {
 #ifdef BLKID_WIPING_SUPPORT
 	if (find_config_tree_bool(cmd, allocation_use_blkid_wiping_CFG, NULL))
-		return _wipe_known_signatures_with_blkid(dev, name, yes, force);
+		return _wipe_known_signatures_with_blkid(dev, name,
+				exclude_lvm_member, yes, force);
 #endif
-	return _wipe_known_signatures_with_lvm(dev, name, yes, force);
+	return _wipe_known_signatures_with_lvm(dev, name,
+			exclude_lvm_member, yes, force);
 }
 
 #ifdef __linux__
