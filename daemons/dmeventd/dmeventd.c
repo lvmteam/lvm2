@@ -1826,7 +1826,13 @@ static void _daemonize(void)
 
 static void restart(void)
 {
-	struct dm_event_fifos fifos = { 0 };
+	struct dm_event_fifos fifos = {
+		.server = -1,
+		.client = -1,
+		/* FIXME Make these either configurable or depend directly on dmeventd_path */
+		.client_path = DM_EVENT_FIFO_CLIENT,
+		.server_path = DM_EVENT_FIFO_SERVER
+	};
 	struct dm_event_daemon_message msg = { 0 };
 	int i, count = 0;
 	char *message;
