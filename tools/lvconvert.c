@@ -650,8 +650,9 @@ static int _finish_lvconvert_merge(struct cmd_context *cmd,
 				   struct logical_volume *lv,
 				   struct dm_list *lvs_changed __attribute__((unused)))
 {
-	struct lv_segment *snap_seg = find_merging_snapshot(lv);
-	if (!snap_seg) {
+	struct lv_segment *snap_seg = find_snapshot(lv);
+
+	if (!lv_is_merging_origin(lv)) {
 		log_error("Logical volume %s has no merging snapshot.", lv->name);
 		return 0;
 	}
@@ -1899,8 +1900,8 @@ static int lvconvert_merge(struct cmd_context *cmd,
 		return 0;
 	}
 	if (lv_is_merging_origin(origin)) {
-		log_error("Snapshot %s is already merging into the origin",
-			  find_merging_snapshot(origin)->cow->name);
+		log_error("Snapshot %s is already merging into the origin.",
+			  find_snapshot(origin)->cow->name);
 		return 0;
 	}
 	if (lv_is_virtual_origin(origin)) {

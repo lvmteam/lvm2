@@ -2047,9 +2047,9 @@ static int _add_snapshot_merge_target_to_dtree(struct dev_manager *dm,
 					       struct logical_volume *lv)
 {
 	const char *origin_dlid, *cow_dlid, *merge_dlid;
-	struct lv_segment *merging_snap_seg;
+	struct lv_segment *merging_snap_seg = find_snapshot(lv);
 
-	if (!(merging_snap_seg = find_merging_snapshot(lv))) {
+	if (!lv_is_merging_origin(lv)) {
 		log_error(INTERNAL_ERROR "LV %s is not merging snapshot.", lv->name);
 		return 0;
 	}
@@ -2374,7 +2374,8 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 
 	/* FIXME Seek a simpler way to lay out the snapshot-merge tree. */
 
-	if (lv_is_origin(lv) && lv_is_merging_origin(lv) && !layer) {
+	if (!layer && lv_is_merging_origin(lv)) {
+		seg = find_snapshot(lv);
 		/*
 		 * Clear merge attributes if merge isn't currently possible:
 		 * either origin or merging snapshot are open
@@ -2385,8 +2386,7 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		/* An activating merging origin won't have a node in the tree yet */
 		if (((dinfo = _cached_info(dm->mem, dtree, lv, NULL)) &&
 		     dinfo->open_count) ||
-		    ((dinfo = _cached_info(dm->mem, dtree,
-					   find_merging_snapshot(lv)->cow, NULL)) &&
+		    ((dinfo = _cached_info(dm->mem, dtree, seg->cow, NULL)) &&
 		     dinfo->open_count)) {
 			/* FIXME Is there anything simpler to check for instead? */
 			if (!lv_has_target_type(dm->mem, lv, NULL, "snapshot-merge"))
@@ -2445,7 +2445,7 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 			return_0;
 		if (!laopts->no_merging && lv_is_merging_origin(lv)) {
 			if (!_add_new_lv_to_dtree(dm, dtree,
-			     find_merging_snapshot(lv)->cow, laopts, "cow"))
+			     find_snapshot(lv)->cow, laopts, "cow"))
 				return_0;
 			/*
 			 * Must also add "real" LV for use when

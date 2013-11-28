@@ -100,14 +100,6 @@ int lv_is_merging_origin(const struct logical_volume *origin)
 	return (origin->status & MERGING) ? 1 : 0;
 }
 
-struct lv_segment *find_merging_snapshot(const struct logical_volume *origin)
-{
-	if (!lv_is_merging_origin(origin))
-		return NULL;
-
-	return find_snapshot(origin);
-}
-
 int lv_is_merging_cow(const struct logical_volume *snapshot)
 {
 	/* checks lv_segment's status to see if cow is merging */
@@ -233,7 +225,8 @@ int vg_remove_snapshot(struct logical_volume *cow)
 	dm_list_del(&cow->snapshot->origin_list);
 	origin->origin_count--;
 
-	if (find_merging_snapshot(origin) == find_snapshot(cow)) {
+	if (lv_is_merging_origin(origin) &&
+	    (find_snapshot(origin) == find_snapshot(cow))) {
 		clear_snapshot_merge(origin);
 		/*
 		 * preload origin IFF "snapshot-merge" target is active
