@@ -23,6 +23,9 @@ do
 		not pvcreate -M$mdatype "$dev1" 2>err
 		grep "Can't open "$dev1" exclusively.  Mounted filesystem?" err
 		umount "$dev1"
+		# wipe the filesystem signature for next
+		# pvcreate to not issue any prompts
+		dd if=/dev/zero of=$dev1 bs=1K count=2
 	fi
 
 # pvcreate (lvm$mdatype) succeeds when run repeatedly (pv not in a vg) (bz178216)
