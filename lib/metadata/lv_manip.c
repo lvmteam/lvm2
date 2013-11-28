@@ -4725,7 +4725,7 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 		    yes_no_prompt("Removing origin %s will also remove %u "
 				  "snapshots(s). Proceed? [y/n]: ",
 				  lv->name, lv->origin_count) == 'n')
-                        goto no_remove;
+			goto no_remove;
 
 		dm_list_iterate_safe(snh, snht, &lv->snapshot_segs)
 			if (!lv_remove_with_dependencies(cmd, dm_list_struct_base(snh, struct lv_segment,
@@ -4762,7 +4762,7 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 	    (yes_no_prompt("Removal of pool metadata spare logical volume \"%s\" "
 			   "disables automatic recovery attempts after damage "
 			   "to a thin pool. Proceed? [y/n]: ", lv->name) == 'n'))
-                goto no_remove;
+		goto no_remove;
 
 	return lv_remove_single(cmd, lv, force);
 
