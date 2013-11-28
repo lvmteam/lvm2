@@ -563,6 +563,7 @@ activation/polling_interval = 0
 activation/snapshot_autoextend_percent = 50
 activation/snapshot_autoextend_threshold = 50
 activation/monitoring = 0
+allocation/wipe_signatures_on_new_logical_volumes_when_zeroing = 0
 EOF
 	}
 
