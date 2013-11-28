@@ -170,15 +170,6 @@ static int _raid_remove_top_layer(struct logical_volume *lv,
 static int _clear_lv(struct logical_volume *lv)
 {
 	int was_active = lv_is_active_locally(lv);
-	struct wipe_lv_params wp = {
-		.lv = lv,
-		.do_zero = 1,
-		.zero_sectors = 1,
-		.zero_value = 0,
-		.do_wipe_signatures = 0,
-		.yes = 0,
-		.force = PROMPT
-	};
 
 	if (test_mode())
 		return 1;
@@ -196,7 +187,7 @@ static int _clear_lv(struct logical_volume *lv)
 	 * wipe the first sector to remove the superblock of any previous
 	 * RAID devices.  It is much quicker.
 	 */
-	if (!wipe_lv(lv->vg->cmd, &wp)) {
+	if (!wipe_lv(lv, (struct wipe_params) { .do_zero = 1, .zero_sectors = 1 })) {
 		log_error("Failed to zero %s", lv->name);
 		return 0;
 	}

@@ -1847,22 +1847,10 @@ static int lvconvert_snapshot(struct cmd_context *cmd,
 
 	if (!lp->zero || !(lv->status & LVM_WRITE))
 		log_warn("WARNING: \"%s\" not zeroed", lv->name);
-	else {
-		struct wipe_lv_params wp = {
-			.lv = lv,
-			.do_zero = 1,
-			.zero_sectors = 0,
-			.zero_value = 0,
-			.do_wipe_signatures = 0,
-			.yes = 0,
-			.force = PROMPT
-		};
-
-		if (!wipe_lv(cmd, &wp)) {
+	else if (!wipe_lv(lv, (struct wipe_params) { .do_zero = 1 })) {
 		log_error("Aborting. Failed to wipe snapshot "
 			  "exception store.");
 		return 0;
-		}
 	}
 
 	if (!deactivate_lv(cmd, lv)) {
@@ -2506,17 +2494,8 @@ static int _lvconvert_thinpool(struct cmd_context *cmd,
 			return 0;
 		}
 
-		struct wipe_lv_params wp = {
-			.lv = metadata_lv,
-			.do_zero = 1,
-			.zero_sectors = 0,
-			.zero_value = 0,
-			.do_wipe_signatures = 0,
-			.yes = 0,
-			.force = PROMPT
-		};
 
-		if (!wipe_lv(cmd, &wp)) {
+		if (!wipe_lv(metadata_lv, (struct wipe_params) { .do_zero = 1 })) {
 			log_error("Aborting. Failed to wipe thin metadata lv.");
 			return 0;
 		}

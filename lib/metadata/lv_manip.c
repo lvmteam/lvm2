@@ -2906,17 +2906,8 @@ static int _lv_extend_layered_lv(struct alloc_handle *ah,
 			 * wipe '1' to remove the superblock of any previous
 			 * RAID devices.  It is much quicker.
 			 */
-			struct wipe_lv_params wp = {
-				.lv = meta_lv,
-				.do_zero = 1,
-				.zero_sectors = 1,
-				.zero_value = 0,
-				.do_wipe_signatures = 0,
-				.yes = 0,
-				.force = PROMPT
-			};
-
-			if (!wipe_lv(meta_lv->vg->cmd, &wp)) {
+			if (!wipe_lv(meta_lv, (struct wipe_params)
+				     { .do_zero = 1, .zero_sectors = 1 })) {
 				log_error("Failed to zero %s/%s",
 					  meta_lv->vg->name, meta_lv->name);
 				return 0;
@@ -5382,19 +5373,19 @@ int insert_layer_for_segments_on_pv(struct cmd_context *cmd,
 /*
  * Initialize the LV with 'value'.
  */
-int wipe_lv(struct cmd_context *cmd, struct wipe_lv_params *wp)
+int wipe_lv(struct logical_volume *lv, struct wipe_params wp)
 {
 	struct device *dev;
-	char *name;
+	char name[PATH_MAX];
 	uint64_t zero_sectors;
 
-	if (!(wp->do_zero || wp->do_wipe_signatures))
+	if (!wp.do_zero && !wp.do_wipe_signatures)
 		/* nothing to do */
 		return 1;
 
-	if (!lv_is_active_locally(wp->lv)) {
+	if (!lv_is_active_locally(lv)) {
 		log_error("Volume \"%s/%s\" is not active locally.",
-			  wp->lv->vg->name, wp->lv->name);
+			  lv->vg->name, lv->name);
 		return 0;
 	}
 
@@ -5405,18 +5396,13 @@ int wipe_lv(struct cmd_context *cmd, struct wipe_lv_params *wp)
 	 * <ejt_> k, I'll drop a fixme to that effect
 	 *	   (I know the device is at least 4k, but not 32k)
 	 */
-	if (!(name = dm_pool_alloc(cmd->mem, PATH_MAX))) {
-		log_error("Name allocation failed - device not cleared");
+	if (dm_snprintf(name, sizeof(name), "%s%s/%s", lv->vg->cmd->dev_dir,
+			lv->vg->name, lv->name) < 0) {
+		log_error("Name too long - device not cleared (%s)", lv->name);
 		return 0;
 	}
 
-	if (dm_snprintf(name, PATH_MAX, "%s%s/%s", cmd->dev_dir,
-			wp->lv->vg->name, wp->lv->name) < 0) {
-		log_error("Name too long - device not cleared (%s)", wp->lv->name);
-		return 0;
-	}
-
-	sync_local_dev_names(cmd);  /* Wait until devices are available */
+	sync_local_dev_names(lv->vg->cmd);  /* Wait until devices are available */
 
 	if (!(dev = dev_cache_get(name, NULL))) {
 		log_error("%s: not found: device not cleared", name);
@@ -5426,23 +5412,23 @@ int wipe_lv(struct cmd_context *cmd, struct wipe_lv_params *wp)
 	if (!dev_open_quiet(dev))
 		return_0;
 
-	if (wp->do_wipe_signatures) {
+	if (wp.do_wipe_signatures) {
 		log_verbose("Wiping known signatures on logical volume \"%s/%s\"",
-			     wp->lv->vg->name, wp->lv->name);
-		if (!wipe_known_signatures(cmd, dev, name, wp->yes, wp->force))
+			     lv->vg->name, lv->name);
+		if (!wipe_known_signatures(lv->vg->cmd, dev, name, wp.yes, wp.force))
 			stack;
 	}
 
-	if (wp->do_zero) {
-		zero_sectors = wp->zero_sectors ? : UINT64_C(4096) >> SECTOR_SHIFT;
+	if (wp.do_zero) {
+		zero_sectors = wp.zero_sectors ? : UINT64_C(4096) >> SECTOR_SHIFT;
 
-		if (zero_sectors > wp->lv->size)
-			zero_sectors = wp->lv->size;
+		if (zero_sectors > lv->size)
+			zero_sectors = lv->size;
 
 		log_verbose("Clearing start of logical volume \"%s/%s\"",
-			     wp->lv->vg->name, wp->lv->name);
+			     lv->vg->name, lv->name);
 
-		if (!dev_set(dev, UINT64_C(0), (size_t) zero_sectors << SECTOR_SHIFT, wp->zero_value))
+		if (!dev_set(dev, UINT64_C(0), (size_t) zero_sectors << SECTOR_SHIFT, wp.zero_value))
 			stack;
 	}
 
@@ -5451,7 +5437,7 @@ int wipe_lv(struct cmd_context *cmd, struct wipe_lv_params *wp)
 	if (!dev_close_immediate(dev))
 		stack;
 
-	wp->lv->status &= ~LV_NOSCAN;
+	lv->status &= ~LV_NOSCAN;
 
 	return 1;
 }
@@ -6094,16 +6080,13 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 	if ((!seg_is_thin(lp) ||
 	    (lv_is_thin_volume(lv) && !lp->snapshot &&
 	     !first_seg(first_seg(lv)->pool_lv)->zero_new_blocks))) {
-		struct wipe_lv_params wp = {
-			.lv = lv,
-			.do_zero = lp->zero,
-			.zero_sectors = 0,
-			.zero_value = 0,
-			.do_wipe_signatures = lp->wipe_signatures,
-			.yes = lp->yes,
-			.force = lp->force
-		};
-		if (!wipe_lv(cmd, &wp)) {
+		if (!wipe_lv(lv, (struct wipe_params)
+			     {
+				     .do_zero = lp->zero,
+				     .do_wipe_signatures = lp->wipe_signatures,
+				     .yes = lp->yes,
+				     .force = lp->force
+			     })) {
 			log_error("Aborting. Failed to wipe %s.",
 				  lp->snapshot ? "snapshot exception store" :
 						 "start of new LV");

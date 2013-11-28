@@ -340,16 +340,9 @@ static int _init_mirror_log(struct cmd_context *cmd,
 		str_list_del(&log_lv->tags, sl->str);
 
 	if (activation()) {
-		struct wipe_lv_params wp = {
-			.lv = log_lv,
-			.do_zero = 1,
-			.zero_sectors = log_lv->size,
-			.zero_value = in_sync ? -1 : 0,
-			.do_wipe_signatures = 0,
-			.yes = 0,
-			.force = PROMPT
-		};
-		if (!wipe_lv(cmd, &wp)) {
+		if (!wipe_lv(log_lv, (struct wipe_params)
+			     { .do_zero = 1, .zero_sectors = log_lv->size,
+			       .zero_value = in_sync ? -1 : 0 })) {
 			log_error("Aborting. Failed to wipe mirror log.");
 			goto deactivate_and_revert_new_lv;
 		}

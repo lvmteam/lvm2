@@ -622,8 +622,7 @@ struct logical_volume *lv_create_empty(const char *name,
 				       alloc_policy_t alloc,
 				       struct volume_group *vg);
 
-struct wipe_lv_params {
-	struct logical_volume *lv;
+struct wipe_params {
 	int do_zero;		/* should we do zeroing of LV start? */
 	uint64_t zero_sectors;	/* sector count to zero */
 	int zero_value;		/* zero-out with this value */
@@ -633,7 +632,7 @@ struct wipe_lv_params {
 };
 
 /* Zero out LV and/or wipe signatures */
-int wipe_lv(struct cmd_context *cmd, struct wipe_lv_params *params);
+int wipe_lv(struct logical_volume *lv, struct wipe_params params);
 
 int lv_change_tag(struct logical_volume *lv, const char *tag, int add_tag);
 
