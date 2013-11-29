@@ -775,11 +775,23 @@ static int _lv_reduce(struct logical_volume *lv, uint32_t extents, int delete)
 	uint32_t count = extents;
 	uint32_t reduction;
 
+	if (lv_is_merging_origin(lv)) {
+		log_debug_metadata("Dropping snapshot merge of %s to removed origin %s.",
+				   find_snapshot(lv)->lv->name, lv->name);
+		clear_snapshot_merge(lv);
+	}
+
 	dm_list_iterate_back_items(seg, &lv->segments) {
 		if (!count)
 			break;
 
 		if (seg->len <= count) {
+			if (seg->merge_lv) {
+				log_debug_metadata("Dropping snapshot merge of removed %s to origin %s.",
+						   seg->lv->name, seg->merge_lv->name);
+				clear_snapshot_merge(seg->merge_lv);
+			}
+
 			/* remove this segment completely */
 			/* FIXME Check this is safe */
 			if (seg->log_lv && !lv_remove(seg->log_lv))
@@ -4732,6 +4744,27 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 										  origin_list)->cow,
 							 force, level + 1))
 				return_0;
+	}
+
+	if (lv_is_merging_origin(lv)) {
+		if (!deactivate_lv(cmd, lv)) {
+			log_error("Unable to fully deactivate merging origin \"%s\".",
+				  lv->name);
+			return 0;
+		}
+		if (!lv_remove_with_dependencies(cmd, find_snapshot(lv)->lv,
+						 force, level + 1)) {
+			log_error("Unable to remove merging origin \"%s\".",
+				  lv->name);
+			return 0;
+		}
+	}
+
+	if (!level && lv_is_merging_thin_snapshot(lv)) {
+		/* Merged snapshot LV is no longer available for the user */
+		log_error("Unable to remove \"%s\", volume is merged to \"%s\".",
+			  lv->name, first_seg(lv)->merge_lv->name);
+		return 0;
 	}
 
 	if (lv_is_external_origin(lv) &&
