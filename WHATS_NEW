@@ -1,5 +1,6 @@
 Version 2.02.105 -
 =====================================
+  Support lvconvert --merge for thin snapshots.
   Add support to read thin device id from table line entry.
   Drop extra test for origin when testing merging origin in lv_refresh().
   Extend lv_remove_single() to not print info about removed LV.
