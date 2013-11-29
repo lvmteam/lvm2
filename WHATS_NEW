@@ -1,5 +1,8 @@
 Version 2.02.105 -
 =====================================
+  Add -p and LVM_LVMETAD_PID env var to lvmetad to change pid file.
+  Allow lvmetad to reuse stale socket.
+  Only unlink lvmetad socket on error if created by the same process.
   Append missing newline to lvmetad missing socket path error message.
   Check for non-zero aligment in _text_pv_add_metadata_area() to not div by 0.
   Add allocation/use_blkid_wiping to lvm.conf to enable blkid wiping.

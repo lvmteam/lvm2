@@ -6,8 +6,11 @@ lvmetad \- LVM metadata cache daemon
 .RB [ \-l
 .RI {all|wire|debug}
 .RB ]
+.RB [ \-p
+.RI pidfile_path
+.RB ]
 .RB [ \-s
-.RI path
+.RI socket_path
 .RB ]
 .RB [ \-f ]
 .RB [ \-h ]
@@ -21,6 +24,15 @@ consistent image of the volume groups available in the system.
 
 By default, lvmetad, even if running, is not used by LVM. See \fBlvm.conf\fP(5).
 .SH OPTIONS
+
+To run the daemon in a test environment both the pidfile_path and the
+socket_path should be changed from the defaults.
+.TP
+.B \-f
+Don't fork, but run in the foreground.
+.TP
+.BR \-h ", " \-?
+Show help information.
 .TP
 .BR \-l " {" \fIall | \fIwire | \fIdebug }
 Select the type of log messages to generate.
@@ -32,23 +44,27 @@ Selecting 'all' supplies both and is equivalent to a comma-separated list
 Prior to release 2.02.98, repeating -d from 1 to 3 times, viz. -d, -dd, -ddd,
 increased the detail of messages.
 .TP
-.B \-f
-Don't fork, run in the foreground.
+.B \-p \fIpidfile_path
+Path to the pidfile. This overrides both the built-in default
+(#DEFAULT_PID_DIR#/lvmetad.pid) and the environment variable
+\fBLVM_LVMETAD_PIDFILE\fP.  This file is used to prevent more
+than one instance of the daemon running simultaneously.
 .TP
-.BR \-h ", " \-?
-Show help information.
-.TP
-.B \-s \fIpath
-Path to the socket file to use. The option overrides both the built-in default
+.B \-s \fIsocket_path
+Path to the socket file. This overrides both the built-in default
 (#DEFAULT_RUN_DIR#/lvmetad.socket) and the environment variable
-\fBLVM_LVMETAD_SOCKET\fP.
+\fBLVM_LVMETAD_SOCKET\fP.  To communicate successfully with lvmetad,
+all LVM2 processes should use the same socket path.
 .TP
 .B \-V
 Display the version of lvmetad daemon.
 .SH ENVIRONMENT VARIABLES
 .TP
+.B LVM_LVMETAD_PIDFILE
+Path for the pid file.
+.TP
 .B LVM_LVMETAD_SOCKET 
-override path for socket file to use.
+Path for the socket file.
 
 .SH SEE ALSO
 .BR lvm (8),

@@ -83,6 +83,7 @@ aux prepare_clvmd
 test -n "$LVM_TEST_LVMETAD" && {
 	aux prepare_lvmetad
 	export LVM_LVMETAD_SOCKET="$TESTDIR/lvmetad.socket"
+	export LVM_LVMETAD_PIDFILE="$TESTDIR/lvmetad.pid"
 }
 echo "@TESTDIR=$TESTDIR"
 echo "@PREFIX=$PREFIX"

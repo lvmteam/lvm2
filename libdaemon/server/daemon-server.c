@@ -207,7 +207,9 @@ out:
 static int _open_socket(daemon_state s)
 {
 	int fd = -1;
+	int file_created = 0;
 	struct sockaddr_un sockaddr = { .sun_family = AF_UNIX };
+	struct stat buf;
 	mode_t old_mask;
 
 	(void) dm_prepare_selinux_context(s.socket_path, S_IFSOCK);
@@ -233,9 +235,47 @@ static int _open_socket(daemon_state s)
 	}
 
 	if (bind(fd, (struct sockaddr *) &sockaddr, sizeof(sockaddr))) {
-		perror("can't bind local socket.");
-		goto error;
+		if (errno != EADDRINUSE) {
+			perror("can't bind local socket");
+			goto error;
+		}
+
+		/* Socket already exists. If it's stale, remove it. */
+		if (stat(sockaddr.sun_path, &buf)) {
+			perror("stat failed");
+			goto error;
+		}
+
+		if (S_ISSOCK(buf.st_mode)) {
+			fprintf(stderr, "%s: not a socket\n", sockaddr.sun_path);
+			goto error;
+		}
+
+		if (buf.st_uid || (buf.st_mode & (S_IRWXG | S_IRWXO))) {
+			fprintf(stderr, "%s: unrecognised permissions\n", sockaddr.sun_path);
+			goto error;
+		}
+
+		if (!connect(fd, (struct sockaddr *) &sockaddr, sizeof(sockaddr))) {
+			fprintf(stderr, "Socket %s already in use\n", sockaddr.sun_path);
+			goto error;
+		}
+
+		fprintf(stderr, "removing stale socket %s\n", sockaddr.sun_path);
+
+		if (unlink(sockaddr.sun_path) && (errno != ENOENT)) {
+			perror("unlink failed");
+			goto error;
+		}
+
+		if (bind(fd, (struct sockaddr *) &sockaddr, sizeof(sockaddr))) {
+			perror("local socket bind failed after unlink");
+			goto error;
+		}
 	}
+
+	file_created = 1;
+
 	if (listen(fd, 1) != 0) {
 		perror("listen local");
 		goto error;
@@ -250,7 +290,7 @@ error:
 	if (fd >= 0) {
 		if (close(fd))
 			perror("close failed");
-		if (unlink(s.socket_path))
+		if (file_created && unlink(s.socket_path))
 			perror("unlink failed");
 		fd = -1;
 	}

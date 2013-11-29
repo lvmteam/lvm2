@@ -1189,6 +1189,7 @@ static void usage(char *prog, FILE *file)
 		"   -h       Show this help information\n"
 		"   -f       Don't fork, run in the foreground\n"
 		"   -l       Logging message level (-l {all|wire|debug})\n"
+		"   -p       Set path to the pidfile\n"
 		"   -s       Set path to the socket to listen on\n\n", prog);
 }
 
@@ -1196,27 +1197,34 @@ int main(int argc, char *argv[])
 {
 	signed char opt;
 	lvmetad_state ls;
+	int _pidfile_override = 1;
 	int _socket_override = 1;
 	daemon_state s = {
 		.daemon_fini = fini,
 		.daemon_init = init,
 		.handler = handler,
 		.name = "lvmetad",
-		.pidfile = LVMETAD_PIDFILE,
+		.pidfile = getenv("LVM_LVMETAD_PIDFILE"),
 		.private = &ls,
 		.protocol = "lvmetad",
 		.protocol_version = 1,
 		.socket_path = getenv("LVM_LVMETAD_SOCKET"),
 	};
 
+	if (!s.pidfile) {
+		_pidfile_override = 0;
+		s.pidfile = LVMETAD_PIDFILE;
+	}
+
 	if (!s.socket_path) {
 		_socket_override = 0;
 		s.socket_path = LVMETAD_SOCKET;
 	}
+
 	ls.log_config = "";
 
 	// use getopt_long
-	while ((opt = getopt(argc, argv, "?fhVl:s:")) != EOF) {
+	while ((opt = getopt(argc, argv, "?fhVl:p:s:")) != EOF) {
 		switch (opt) {
 		case 'h':
 			usage(argv[0], stdout);
@@ -1230,6 +1238,10 @@ int main(int argc, char *argv[])
 		case 'l':
 			ls.log_config = optarg;
 			break;
+		case 'p':
+			s.pidfile = optarg;
+			_pidfile_override = 1;
+			break;
 		case 's': // --socket
 			s.socket_path = optarg;
 			_socket_override = 1;
@@ -1238,15 +1250,6 @@ int main(int argc, char *argv[])
 			printf("lvmetad version: " LVM_VERSION "\n");
 			exit(1);
 		}
-	}
-
-	if (s.foreground) {
-		if (!_socket_override) {
-			fprintf(stderr, "A socket path (-s) is required in foreground mode.\n");
-			exit(2);
-		}
-
-		s.pidfile = NULL;
 	}
 
 	daemon_start(s);
