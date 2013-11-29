@@ -4482,7 +4482,7 @@ void lv_set_hidden(struct logical_volume *lv)
 }
 
 int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
-		     const force_t force)
+		     force_t force, int silent)
 {
 	struct volume_group *vg;
 	struct lvinfo info;
@@ -4639,7 +4639,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 	backup(vg);
 
-	if (visible)
+	if (!silent && visible)
 		log_print_unless_silent("Logical volume \"%s\" successfully removed", lv->name);
 
 	return 1;
@@ -4764,7 +4764,7 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 			   "to a thin pool. Proceed? [y/n]: ", lv->name) == 'n'))
 		goto no_remove;
 
-	return lv_remove_single(cmd, lv, force);
+	return lv_remove_single(cmd, lv, force, 0);
 
 no_remove:
 	log_error("Logical volume \"%s\" not removed.", lv->name);

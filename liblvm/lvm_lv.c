@@ -206,7 +206,7 @@ int lvm_vg_remove_lv(lv_t lv)
 		return -1;
 	if (!vg_check_write_mode(lv->vg))
 		return -1;
-	if (!lv_remove_single(lv->vg->cmd, lv, DONT_PROMPT))
+	if (!lv_remove_single(lv->vg->cmd, lv, DONT_PROMPT, 0))
 		return -1;
 	return 0;
 }

@@ -657,7 +657,7 @@ int lv_extend(struct logical_volume *lv,
 int lv_remove(struct logical_volume *lv);
 
 int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
-		     force_t force);
+		     force_t force, int silent);
 
 int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *lv,
 				force_t force, unsigned level);

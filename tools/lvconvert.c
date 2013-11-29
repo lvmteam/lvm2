@@ -683,7 +683,7 @@ static int _finish_lvconvert_merge(struct cmd_context *cmd,
 	}
 
 	log_print_unless_silent("Merge of snapshot into logical volume %s has finished.", lv->name);
-	if (!lv_remove_single(cmd, snap_seg->cow, DONT_PROMPT)) {
+	if (!lv_remove_single(cmd, snap_seg->cow, DONT_PROMPT, 0)) {
 		log_error("Could not remove snapshot %s merged into %s.",
 			  snap_seg->cow->name, lv->name);
 		return 0;
