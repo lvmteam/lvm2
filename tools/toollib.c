@@ -1417,21 +1417,21 @@ int lv_change_activate(struct cmd_context *cmd, struct logical_volume *lv,
 
 int lv_refresh(struct cmd_context *cmd, struct logical_volume *lv)
 {
-	int r = 0;
-
 	if (!cmd->partial_activation && (lv->status & PARTIAL_LV)) {
 		log_error("Refusing refresh of partial LV %s. Use --partial to override.",
 			  lv->name);
-		goto out;
+		return 0;
 	}
 
-	r = suspend_lv(cmd, lv);
-	if (!r)
-		goto_out;
+	if (!suspend_lv(cmd, lv)) {
+		log_error("Failed to suspend %s.", lv->name);
+		return 0;
+	}
 
-	r = resume_lv(cmd, lv);
-	if (!r)
-		goto_out;
+	if (!resume_lv(cmd, lv)) {
+		log_error("Failed to reactivate %s.", lv->name);
+		return 0;
+	}
 
 	/*
 	 * check if snapshot merge should be polled
@@ -1445,8 +1445,7 @@ int lv_refresh(struct cmd_context *cmd, struct logical_volume *lv)
 	if (background_polling() && lv_is_origin(lv) && lv_is_merging_origin(lv))
 		lv_spawn_background_polling(cmd, lv);
 
-out:
-	return r;
+	return 1;
 }
 
 int vg_refresh_visible(struct cmd_context *cmd, struct volume_group *vg)
