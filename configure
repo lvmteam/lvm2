@@ -1563,7 +1563,8 @@ Optional Features:
   --enable-valgrind-pool  enable valgrind awareness of pools
   --disable-devmapper     disable LVM2 device-mapper interaction
   --enable-lvmetad        enable the LVM Metadata Daemon
-  --enable-blkid_wiping   use wiping functionality provided by libblkid
+  --disable-blkid_wiping  disable libblkid detection of signatures when wiping
+                          and use native code instead
   --enable-udev-systemd-background-jobs
                           enable udev-systemd protocol to instantiate a
                           service for background job
@@ -9185,20 +9186,19 @@ _ACEOF
 fi
 
 ################################################################################
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to use blkid wiping functionality" >&5
-$as_echo_n "checking whether to use blkid wiping functionality... " >&6; }
-# Check whether --enable-blkid-wiping was given.
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to enable libblkid detection of signatures when wiping" >&5
+$as_echo_n "checking whether to enable libblkid detection of signatures when wiping... " >&6; }
+# Check whether --enable-blkid_wiping was given.
 if test "${enable_blkid_wiping+set}" = set; then :
   enableval=$enable_blkid_wiping; BLKID_WIPING=$enableval
 else
-  BLKID_WIPING=no
+  BLKID_WIPING=maybe
 fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $BLKID_WIPING" >&5
 $as_echo "$BLKID_WIPING" >&6; }
 
-
-if test x$BLKID_WIPING = xyes; then
+if test x$BLKID_WIPING != xno; then
 		if test x$PKGCONFIG_INIT != x1; then
 		pkg_config_init
 	fi
@@ -9259,43 +9259,36 @@ fi
 	# Put the nasty error message in config.log where it belongs
 	echo "$BLKID_PKG_ERRORS" >&5
 
-	as_fn_error $? "Package requirements (blkid >= 2.22) were not met:
-
-$BLKID_PKG_ERRORS
-
-Consider adjusting the PKG_CONFIG_PATH environment variable if you
-installed software in a non-standard prefix.
-
-Alternatively, you may set the environment variables BLKID_CFLAGS
-and BLKID_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details." "$LINENO" 5
+	if test x$BLKID_WIPING = xmaybe; then
+					BLKID_WIPING=no
+				 else
+					as_fn_error $? "bailing out... blkid library >= 2.22 is required" "$LINENO" 5
+				 fi
 
 elif test $pkg_failed = untried; then
      	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
-	{ { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
-$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
-as_fn_error $? "The pkg-config script could not be found or is too old.  Make sure it
-is in your PATH or set the PKG_CONFIG environment variable to the full
-path to pkg-config.
-
-Alternatively, you may set the environment variables BLKID_CFLAGS
-and BLKID_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-
-To get pkg-config, see <http://pkg-config.freedesktop.org/>.
-See \`config.log' for more details" "$LINENO" 5; }
+	if test x$BLKID_WIPING = xmaybe; then
+					BLKID_WIPING=no
+				 else
+					as_fn_error $? "bailing out... blkid library >= 2.22 is required" "$LINENO" 5
+				 fi
 
 else
 	BLKID_CFLAGS=$pkg_cv_BLKID_CFLAGS
 	BLKID_LIBS=$pkg_cv_BLKID_LIBS
         { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
-	BLKID_PC="blkid"
+	if test x$BLKID_WIPING = xmaybe; then
+					BLKID_WIPING=yes
+				 fi
 fi
+	if test x$BLKID_WIPING = xyes; then
+		BLKID_PC="blkid"
 
 $as_echo "#define BLKID_WIPING_SUPPORT 1" >>confdefs.h
 
+	fi
 fi
 
 ################################################################################

@@ -947,21 +947,32 @@ fi
 
 ################################################################################
 dnl -- Enable blkid wiping functionality
-AC_MSG_CHECKING(whether to use blkid wiping functionality)
-AC_ARG_ENABLE(blkid-wiping,
-	      AC_HELP_STRING([--enable-blkid_wiping],
-			     [use wiping functionality provided by libblkid]),
-	      BLKID_WIPING=$enableval, BLKID_WIPING=no)
+AC_MSG_CHECKING(whether to enable libblkid detection of signatures when wiping)
+AC_ARG_ENABLE(blkid_wiping,
+	      AC_HELP_STRING([--disable-blkid_wiping],
+			     [disable libblkid detection of signatures when wiping and use native code instead]),
+	      BLKID_WIPING=$enableval, BLKID_WIPING=maybe)
 AC_MSG_RESULT($BLKID_WIPING)
 
-
-if test x$BLKID_WIPING = xyes; then
+if test x$BLKID_WIPING != xno; then
 	dnl -- init pkgconfig if required
 	if test x$PKGCONFIG_INIT != x1; then
 		pkg_config_init
 	fi
-	PKG_CHECK_MODULES(BLKID, blkid >= 2.22, [BLKID_PC="blkid"])
-	AC_DEFINE([BLKID_WIPING_SUPPORT], 1, [Define to 1 to use wiping functionality provided by libblkid.])
+	PKG_CHECK_MODULES(BLKID, blkid >= 2.22,
+				[if test x$BLKID_WIPING = xmaybe; then
+					BLKID_WIPING=yes
+				 fi],
+				[if test x$BLKID_WIPING = xmaybe; then
+					BLKID_WIPING=no
+				 else
+					AC_MSG_ERROR([bailing out... blkid library >= 2.22 is required])
+				 fi
+				])
+	if test x$BLKID_WIPING = xyes; then
+		BLKID_PC="blkid"
+		AC_DEFINE([BLKID_WIPING_SUPPORT], 1, [Define to 1 to use libblkid detection of signatures when wiping.])
+	fi
 fi
 
 ################################################################################
