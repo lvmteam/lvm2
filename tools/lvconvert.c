@@ -670,6 +670,25 @@ static int _finish_lvconvert_mirror(struct cmd_context *cmd,
 	return 1;
 }
 
+/* Swap lvid and LV names */
+static int _swap_lv_identifiers(struct cmd_context *cmd,
+				struct logical_volume *a, struct logical_volume *b)
+{
+	union lvid lvid;
+	const char *name;
+
+	lvid = a->lvid;
+	a->lvid = b->lvid;
+	b->lvid = lvid;
+
+	name = a->name;
+	a->name = b->name;
+	if (!lv_rename_update(cmd, b, name, 0))
+		return_0;
+
+	return 1;
+}
+
 static int _finish_lvconvert_merge(struct cmd_context *cmd,
 				   struct volume_group *vg,
 				   struct logical_volume *lv,
@@ -721,25 +740,6 @@ static progress_t _poll_merge_progress(struct cmd_context *cmd,
 		return PROGRESS_FINISHED_ALL;
 
 	return PROGRESS_UNFINISHED;
-}
-
-/* Swap lvid and LV names */
-static int _swap_lv_identifiers(struct cmd_context *cmd,
-				struct logical_volume *a, struct logical_volume *b)
-{
-	union lvid lvid;
-	const char *name;
-
-	lvid = a->lvid;
-	a->lvid = b->lvid;
-	b->lvid = lvid;
-
-	name = a->name;
-	a->name = b->name;
-	if (!lv_rename_update(cmd, b, name, 0))
-		return_0;
-
-	return 1;
 }
 
 static struct poll_functions _lvconvert_mirror_fns = {
