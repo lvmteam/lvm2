@@ -780,12 +780,12 @@ int lvconvert_poll(struct cmd_context *cmd, struct logical_volume *lv,
 
 	memcpy(uuid, &lv->lvid, sizeof(lv->lvid));
 
-	if (!lv_is_merging_origin(lv))
-		return poll_daemon(cmd, lv_full_name, uuid, background, 0,
-				   &_lvconvert_mirror_fns, "Converted");
-	else
+	if (lv_is_merging_origin(lv))
 		return poll_daemon(cmd, lv_full_name, uuid, background, 0,
 				   &_lvconvert_merge_fns, "Merged");
+
+	return poll_daemon(cmd, lv_full_name, uuid, background, 0,
+			   &_lvconvert_mirror_fns, "Converted");
 }
 
 static int _insert_lvconvert_layer(struct cmd_context *cmd,
