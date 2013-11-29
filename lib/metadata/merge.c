@@ -258,6 +258,19 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 						  lv->name, seg->external_lv->name);
 					inc_error_count;
 				}
+
+				if (seg->merge_lv) {
+					if (!lv_is_thin_volume(seg->merge_lv)) {
+						log_error("LV %s: thin volume segment %u merging LV %s is not flagged as a thin LV",
+							  lv->name, seg_count, seg->merge_lv->name);
+						inc_error_count;
+					}
+					if (!lv_is_merging_origin(seg->merge_lv)) {
+						log_error("LV %s: merging LV %s is not flagged as merging.",
+							  lv->name, seg->merge_lv->name);
+						inc_error_count;
+					}
+				}
 			} else {
 				if (seg->pool_lv) {
 					log_error("LV %s: segment %u must not have thin pool LV set",

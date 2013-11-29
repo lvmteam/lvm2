@@ -456,7 +456,7 @@ static int _thin_text_import(struct lv_segment *seg,
 			     struct dm_hash_table *pv_hash __attribute__((unused)))
 {
 	const char *lv_name;
-	struct logical_volume *pool_lv, *origin = NULL, *external_lv = NULL;
+	struct logical_volume *pool_lv, *origin = NULL, *external_lv = NULL, *merge_lv = NULL;
 
 	if (!dm_config_get_str(sn, "thin_pool", &lv_name))
 		return SEG_LOG_ERROR("Thin pool must be a string in");
@@ -475,6 +475,13 @@ static int _thin_text_import(struct lv_segment *seg,
 			return SEG_LOG_ERROR("Unknown origin %s in", lv_name);
 	}
 
+	if (dm_config_has_node(sn, "merge")) {
+		if (!dm_config_get_str(sn, "merge", &lv_name))
+			return SEG_LOG_ERROR("Merge lv must be a string in");
+		if (!(merge_lv = find_lv(seg->lv->vg, lv_name)))
+			return SEG_LOG_ERROR("Unknown merge lv %s in", lv_name);
+	}
+
 	if (!dm_config_get_uint32(sn, "device_id", &seg->device_id))
 		return SEG_LOG_ERROR("Could not read device_id for");
 
@@ -490,7 +497,7 @@ static int _thin_text_import(struct lv_segment *seg,
 			return SEG_LOG_ERROR("Unknown external origin %s in", lv_name);
 	}
 
-	if (!attach_pool_lv(seg, pool_lv, origin))
+	if (!attach_pool_lv(seg, pool_lv, origin, merge_lv))
 		return_0;
 
 	if (!attach_thin_external_origin(seg, external_lv))
@@ -509,6 +516,8 @@ static int _thin_text_export(const struct lv_segment *seg, struct formatter *f)
 		outf(f, "external_origin = \"%s\"", seg->external_lv->name);
 	if (seg->origin)
 		outf(f, "origin = \"%s\"", seg->origin->name);
+	if (seg->merge_lv)
+		outf(f, "merge = \"%s\"", seg->merge_lv->name);
 
 	return 1;
 }
@@ -519,7 +528,7 @@ static int _thin_add_target_line(struct dev_manager *dm,
 				 struct cmd_context *cmd __attribute__((unused)),
 				 void **target_state __attribute__((unused)),
 				 struct lv_segment *seg,
-				 const struct lv_activate_opts *laopts __attribute__((unused)),
+				 const struct lv_activate_opts *laopts,
 				 struct dm_tree_node *node, uint64_t len,
 				 uint32_t *pvmove_mirror_count __attribute__((unused)))
 {
@@ -535,6 +544,21 @@ static int _thin_add_target_line(struct dev_manager *dm,
 		log_error("Failed to build uuid for pool LV %s.",
 			  seg->pool_lv->name);
 		return 0;
+	}
+
+	if (!laopts->no_merging) {
+		/*
+		 * merge support for thinp snapshots is implemented by
+		 * simply swapping the thinp device_id of the snapshot
+		 * and origin.
+		 */
+		if (seg->merge_lv) {
+			/* snapshot, use merging lv's device_id */
+			device_id = first_seg(seg->merge_lv)->device_id;
+		} else if (lv_is_merging_origin(seg->lv)) {
+			/* origin, use merging snapshot's device_id */
+			device_id = find_snapshot(seg->lv)->device_id;
+		}
 	}
 
 	if (!dm_tree_node_add_thin_target(node, len, pool_dlid, device_id))

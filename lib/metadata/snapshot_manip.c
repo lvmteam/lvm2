@@ -27,7 +27,8 @@ int lv_is_origin(const struct logical_volume *lv)
 
 int lv_is_cow(const struct logical_volume *lv)
 {
-	return (!lv_is_origin(lv) && lv->snapshot) ? 1 : 0;
+	/* Make sure a merging thin origin isn't confused as a cow LV */
+	return (!lv_is_thin_volume(lv) && !lv_is_origin(lv) && lv->snapshot) ? 1 : 0;
 }
 
 static uint64_t _cow_max_size(uint64_t origin_size, uint32_t chunk_size)
@@ -150,6 +151,13 @@ void init_snapshot_merge(struct lv_segment *snap_seg,
 	origin->snapshot = snap_seg;
 	origin->status |= MERGING;
 
+	if (lv_is_thin_volume(origin)) {
+		snap_seg->merge_lv = origin;
+		/* Making thin LV inivisible with regular log */
+		lv_set_hidden(snap_seg->lv);
+		return;
+	}
+
 	/*
 	 * Even though lv_is_visible(snap_seg->lv) returns 0,
 	 * the snap_seg->lv (name: snapshotX) is _not_ hidden;
@@ -166,6 +174,11 @@ void init_snapshot_merge(struct lv_segment *snap_seg,
 void clear_snapshot_merge(struct logical_volume *origin)
 {
 	/* clear merge attributes */
+	if (origin->snapshot->merge_lv)
+		/* Removed thin volume has to be visible */
+		lv_set_visible(origin->snapshot->lv);
+
+	origin->snapshot->merge_lv = NULL;
 	origin->snapshot->status &= ~MERGING;
 	origin->snapshot = NULL;
 	origin->status &= ~MERGING;

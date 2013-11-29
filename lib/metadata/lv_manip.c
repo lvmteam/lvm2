@@ -491,14 +491,14 @@ struct lv_segment *alloc_lv_segment(const struct segment_type *segtype,
 		/* If this is thin volume, thin snapshot is being created */
 		if (lv_is_thin_volume(thin_pool_lv)) {
 			seg->transaction_id = first_seg(first_seg(thin_pool_lv)->pool_lv)->transaction_id;
-			if (!attach_pool_lv(seg, first_seg(thin_pool_lv)->pool_lv, thin_pool_lv))
+			if (!attach_pool_lv(seg, first_seg(thin_pool_lv)->pool_lv, thin_pool_lv, NULL))
 				return_NULL;
 			/* Use the same external origin */
 			if (!attach_thin_external_origin(seg, first_seg(thin_pool_lv)->external_lv))
 				return_NULL;
 		} else if (lv_is_thin_pool(thin_pool_lv)) {
 			seg->transaction_id = first_seg(thin_pool_lv)->transaction_id;
-			if (!attach_pool_lv(seg, thin_pool_lv, NULL))
+			if (!attach_pool_lv(seg, thin_pool_lv, NULL, NULL))
 				return_NULL;
 		} else {
 			log_error(INTERNAL_ERROR "Volume %s is not thin volume or thin pool",

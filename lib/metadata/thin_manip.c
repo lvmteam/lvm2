@@ -60,7 +60,7 @@ int attach_pool_data_lv(struct lv_segment *pool_seg, struct logical_volume *pool
 }
 
 int attach_pool_lv(struct lv_segment *seg, struct logical_volume *pool_lv,
-		   struct logical_volume *origin)
+		   struct logical_volume *origin, struct logical_volume *merge_lv)
 {
 	seg->pool_lv = pool_lv;
 	seg->lv->status |= THIN_VOLUME;
@@ -69,7 +69,19 @@ int attach_pool_lv(struct lv_segment *seg, struct logical_volume *pool_lv,
 	if (origin && !add_seg_to_segs_using_this_lv(origin, seg))
 		return_0;
 
-	return add_seg_to_segs_using_this_lv(pool_lv, seg);
+	if (!add_seg_to_segs_using_this_lv(pool_lv, seg))
+		return_0;
+
+	if (merge_lv) {
+		if (origin != merge_lv) {
+			if (!add_seg_to_segs_using_this_lv(merge_lv, seg))
+				return_0;
+		}
+
+		init_snapshot_merge(seg, merge_lv);
+	}
+
+	return 1;
 }
 
 int detach_pool_lv(struct lv_segment *seg)
@@ -245,6 +257,11 @@ int detach_thin_external_origin(struct lv_segment *seg)
 	}
 
 	return 1;
+}
+
+int lv_is_merging_thin_snapshot(const struct logical_volume *lv)
+{
+	return (first_seg(lv)->status & MERGING) ? 1 : 0;
 }
 
 /*
