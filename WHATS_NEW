@@ -1,5 +1,6 @@
 Version 2.02.105 -
 =====================================
+  Replace open_count check with lv_check_not_in_use() for snapshot open test.
   Add error messages with LV names for failing lv refresh.
   Compile/link daemons with RELRO and PIE options to harden daemon security.
   Support per-object compilation cflags via CFLAGS_object.o.

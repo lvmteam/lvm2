@@ -1910,19 +1910,14 @@ static int _lv_has_open_snapshots(struct logical_volume *lv)
 	struct lvinfo info;
 	int r = 0;
 
-	dm_list_iterate_items_gen(snap_seg, &lv->snapshot_segs, origin_list) {
-		if (!lv_info(lv->vg->cmd, snap_seg->cow, 0, &info, 1, 0)) {
-			r = 1;
-			continue;
-		}
+	dm_list_iterate_items_gen(snap_seg, &lv->snapshot_segs, origin_list)
+		if (!lv_info(lv->vg->cmd, snap_seg->cow, 0, &info, 1, 0) ||
+		    !lv_check_not_in_use(lv->vg->cmd, snap_seg->cow, &info))
+			r++;
 
-		if (info.exists && info.open_count) {
-			log_error("LV %s/%s has open snapshot %s: "
-				  "not deactivating", lv->vg->name, lv->name,
-				  snap_seg->cow->name);
-			r = 1;
-		}
-	}
+	if (r)
+		log_error("LV %s/%s has open %d snapshot(s), not deactivating.",
+			  lv->vg->name, lv->name, r);
 
 	return r;
 }
