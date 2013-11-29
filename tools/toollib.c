@@ -1403,6 +1403,34 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 int lv_change_activate(struct cmd_context *cmd, struct logical_volume *lv,
 		       activation_change_t activate)
 {
+	int r = 1;
+
+	if (lv_is_merging_origin(lv)) {
+		/*
+		 * For merging origin, its snapshot must be inactive.
+		 * If it's still active and cannot be deactivated
+		 * activation or deactivation of origin fails!
+		 *
+		 * When origin is deactivated and merging snapshot is thin
+		 * it allows to deactivate origin, but still report error,
+		 * since the thin snapshot remains active.
+		 *
+		 * User could retry to deactivate it with another
+		 * deactivation of origin, which is the only visible LV
+		 */
+		if (!deactivate_lv(cmd, find_snapshot(lv)->lv)) {
+			if ((activate != CHANGE_AN) && (activate != CHANGE_ALN)) {
+				log_error("Refusing to activate merging \"%s\" while snapshot \"%s\" is still active.",
+					  lv->name, find_snapshot(lv)->lv->name);
+				return 0;
+			}
+
+			log_error("Cannot fully deactivate merging origin \"%s\" while snapshot \"%s\" is still active.",
+				  lv->name, find_snapshot(lv)->lv->name);
+			r = 0; /* and continue to deactivate origin... */
+		}
+	}
+
 	if (!lv_active_change(cmd, lv, activate))
 		return_0;
 
@@ -1412,7 +1440,7 @@ int lv_change_activate(struct cmd_context *cmd, struct logical_volume *lv,
 	    (lv->status & (PVMOVE|CONVERTING|MERGING)))
 		lv_spawn_background_polling(cmd, lv);
 
-	return 1;
+	return r;
 }
 
 int lv_refresh(struct cmd_context *cmd, struct logical_volume *lv)
