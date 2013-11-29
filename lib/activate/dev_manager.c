@@ -1830,6 +1830,9 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		dm_list_iterate(snh, &lv->snapshot_segs)
 			if (!_add_lv_to_dtree(dm, dtree, dm_list_struct_base(snh, struct lv_segment, origin_list)->cow, 0))
 				return_0;
+	if (dm->activation && !origin_only && lv_is_merging_origin(lv) &&
+	    !_add_lv_to_dtree(dm, dtree, find_snapshot(lv)->lv, 1))
+		return_0;
 
 	/* Add any LVs referencing a PVMOVE LV unless told not to. */
 	if (dm->track_pvmove_deps && lv->status & PVMOVE) {
@@ -1868,6 +1871,11 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 			    !_add_lv_to_dtree(dm, dtree, seg_metalv(seg, s), 0))
 				return_0;
 		}
+
+		/* When activating, detect merging LV presence */
+		if (dm->activation && seg->merge_lv &&
+		    !_add_lv_to_dtree(dm, dtree, seg->merge_lv, 1))
+			return_0;
 	}
 
 	return 1;
@@ -2436,10 +2444,13 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		/* An activating merging origin won't have a node in the tree yet */
 		if (((dinfo = _cached_info(dm->mem, dtree, lv, NULL)) &&
 		     dinfo->open_count) ||
-		    ((dinfo = _cached_info(dm->mem, dtree, seg->cow, NULL)) &&
+		    ((dinfo = _cached_info(dm->mem, dtree,
+					   seg_is_thin_volume(seg) ?
+					   seg->lv : seg->cow, NULL)) &&
 		     dinfo->open_count)) {
-			/* FIXME Is there anything simpler to check for instead? */
-			if (!lv_has_target_type(dm->mem, lv, NULL, "snapshot-merge"))
+			if (seg_is_thin_volume(seg) ||
+			    /* FIXME Is there anything simpler to check for instead? */
+                            !lv_has_target_type(dm->mem, lv, NULL, "snapshot-merge"))
 				laopts->no_merging = 1;
 		}
 	}
