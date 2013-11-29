@@ -628,7 +628,7 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 	argv++;
 
 	/* Find PV (in VG) */
-	if (!(pv = find_pv_by_name(cmd, pv_name, 0))) {
+	if (!(pv = find_pv_by_name(cmd, pv_name, 0, 0))) {
 		stack;
 		return EINVALID_CMD_LINE;
 	}
@@ -809,7 +809,7 @@ static struct volume_group *_get_move_vg(struct cmd_context *cmd,
 	struct volume_group *vg;
 
 	/* Reread all metadata in case it got changed */
-	if (!(pv = find_pv_by_name(cmd, name, 0))) {
+	if (!(pv = find_pv_by_name(cmd, name, 0, 0))) {
 		log_error("ABORTING: Can't reread PV %s", name);
 		/* What more could we do here? */
 		return NULL;

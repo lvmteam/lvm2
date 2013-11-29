@@ -633,7 +633,7 @@ static int vg_extend_single_pv(struct volume_group *vg, char *pv_name,
 {
 	struct physical_volume *pv;
 
-	if (!(pv = find_pv_by_name(vg->cmd, pv_name, 1)))
+	if (!(pv = find_pv_by_name(vg->cmd, pv_name, 1, 1)))
 		stack;
 	if (!pv && !pp) {
 		log_error("%s not identified as an existing "
@@ -1278,7 +1278,7 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name,
 	/* FIXME Check partition type is LVM unless --force is given */
 
 	/* Is there a pv here already? */
-	if (!(pv = find_pv_by_name(cmd, name, 1)))
+	if (!(pv = find_pv_by_name(cmd, name, 1, 1)))
 		stack;
 
 	/* Allow partial & exported VGs to be destroyed. */
@@ -1781,7 +1781,7 @@ struct physical_volume *find_pv(struct volume_group *vg, struct device *dev)
 /* FIXME: liblvm todo - make into function that returns handle */
 struct physical_volume *find_pv_by_name(struct cmd_context *cmd,
 					const char *pv_name,
-					int allow_orphan)
+					int allow_orphan, int allow_unformatted)
 {
 	struct device *dev;
 	struct pv_list *pvl;
@@ -1804,7 +1804,7 @@ struct physical_volume *find_pv_by_name(struct cmd_context *cmd,
 		else
 			free_pv_fid(pvl->pv);
 
-	if (!pv)
+	if (!pv && !allow_unformatted)
 		log_error("Physical volume %s not found", pv_name);
 
 	if (pv && !allow_orphan && is_orphan_vg(pv->vg_name)) {
