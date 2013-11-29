@@ -555,7 +555,8 @@ char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 	else if (lv->status & MIRRORED)
 		repstr[0] = (lv->status & LV_NOTSYNCED) ? 'M' : 'm';
 	else if (lv_is_thin_volume(lv))
-		repstr[0] = 'V';
+		repstr[0] = lv_is_merging_origin(lv) ?
+			'O' : (lv_is_merging_thin_snapshot(lv) ? 'S' : 'V');
 	else if (lv->status & VIRTUAL)
 		repstr[0] = 'v';
 	else if (lv_is_thin_pool(lv))

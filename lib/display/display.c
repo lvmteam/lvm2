@@ -607,8 +607,14 @@ int lvdisplay_full(struct cmd_context *cmd,
 		if (seg->external_lv)
 			log_print("LV External origin name %s",
 				  seg->external_lv->name);
+		if (seg->merge_lv)
+			log_print("LV merging to          %s",
+				  seg->merge_lv->name);
 		if (inkernel)
 			thin_active = lv_thin_percent(lv, 0, &thin_percent);
+		if (lv_is_merging_origin(lv))
+			log_print("LV merged with         %s",
+				  find_snapshot(lv)->lv->name);
 	} else if (lv_is_thin_pool(lv)) {
 		if (inkernel) {
 			thin_data_active = lv_thin_pool_percent(lv, 0, &thin_data_percent);
