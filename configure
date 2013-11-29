@@ -9211,12 +9211,12 @@ if test -n "$BLKID_CFLAGS"; then
     pkg_cv_BLKID_CFLAGS="$BLKID_CFLAGS"
  elif test -n "$PKG_CONFIG"; then
     if test -n "$PKG_CONFIG" && \
-    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"blkid >= 2.22\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "blkid >= 2.22") 2>&5
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"blkid >= 2.24\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "blkid >= 2.24") 2>&5
   ac_status=$?
   $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
   test $ac_status = 0; }; then
-  pkg_cv_BLKID_CFLAGS=`$PKG_CONFIG --cflags "blkid >= 2.22" 2>/dev/null`
+  pkg_cv_BLKID_CFLAGS=`$PKG_CONFIG --cflags "blkid >= 2.24" 2>/dev/null`
 else
   pkg_failed=yes
 fi
@@ -9227,12 +9227,12 @@ if test -n "$BLKID_LIBS"; then
     pkg_cv_BLKID_LIBS="$BLKID_LIBS"
  elif test -n "$PKG_CONFIG"; then
     if test -n "$PKG_CONFIG" && \
-    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"blkid >= 2.22\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "blkid >= 2.22") 2>&5
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"blkid >= 2.24\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "blkid >= 2.24") 2>&5
   ac_status=$?
   $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
   test $ac_status = 0; }; then
-  pkg_cv_BLKID_LIBS=`$PKG_CONFIG --libs "blkid >= 2.22" 2>/dev/null`
+  pkg_cv_BLKID_LIBS=`$PKG_CONFIG --libs "blkid >= 2.24" 2>/dev/null`
 else
   pkg_failed=yes
 fi
@@ -9252,9 +9252,9 @@ else
         _pkg_short_errors_supported=no
 fi
         if test $_pkg_short_errors_supported = yes; then
-	        BLKID_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors "blkid >= 2.22" 2>&1`
+	        BLKID_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors "blkid >= 2.24" 2>&1`
         else
-	        BLKID_PKG_ERRORS=`$PKG_CONFIG --print-errors "blkid >= 2.22" 2>&1`
+	        BLKID_PKG_ERRORS=`$PKG_CONFIG --print-errors "blkid >= 2.24" 2>&1`
         fi
 	# Put the nasty error message in config.log where it belongs
 	echo "$BLKID_PKG_ERRORS" >&5
@@ -9262,7 +9262,7 @@ fi
 	if test x$BLKID_WIPING = xmaybe; then
 					BLKID_WIPING=no
 				 else
-					as_fn_error $? "bailing out... blkid library >= 2.22 is required" "$LINENO" 5
+					as_fn_error $? "bailing out... blkid library >= 2.24 is required" "$LINENO" 5
 				 fi
 
 elif test $pkg_failed = untried; then
@@ -9271,7 +9271,7 @@ $as_echo "no" >&6; }
 	if test x$BLKID_WIPING = xmaybe; then
 					BLKID_WIPING=no
 				 else
-					as_fn_error $? "bailing out... blkid library >= 2.22 is required" "$LINENO" 5
+					as_fn_error $? "bailing out... blkid library >= 2.24 is required" "$LINENO" 5
 				 fi
 
 else

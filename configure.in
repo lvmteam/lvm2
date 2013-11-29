@@ -959,14 +959,14 @@ if test x$BLKID_WIPING != xno; then
 	if test x$PKGCONFIG_INIT != x1; then
 		pkg_config_init
 	fi
-	PKG_CHECK_MODULES(BLKID, blkid >= 2.22,
+	PKG_CHECK_MODULES(BLKID, blkid >= 2.24,
 				[if test x$BLKID_WIPING = xmaybe; then
 					BLKID_WIPING=yes
 				 fi],
 				[if test x$BLKID_WIPING = xmaybe; then
 					BLKID_WIPING=no
 				 else
-					AC_MSG_ERROR([bailing out... blkid library >= 2.22 is required])
+					AC_MSG_ERROR([bailing out... blkid library >= 2.24 is required])
 				 fi
 				])
 	if test x$BLKID_WIPING = xyes; then
