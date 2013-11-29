@@ -1,5 +1,6 @@
 Version 2.02.105 -
 =====================================
+  Drop extra test for origin when testing merging origin in lv_refresh().
   Extend lv_remove_single() to not print info about removed LV.
   Replace open_count check with lv_check_not_in_use() for snapshot open test.
   Add error messages with LV names for failing lv refresh.
