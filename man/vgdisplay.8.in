@@ -57,7 +57,8 @@ See \fBlvm\fP(8) for common options and \fBvgs\fP(8) for options given with
 \fB\-\-columns\fP.
 .TP
 .BR \-A ", " \-\-activevolumegroups
-Only select the active volume groups.
+Only select the active volume groups. The volume group is considered active
+if at least one of its logical volumes is active.
 .TP
 .BR \-c ", " \-\-colon
 Generate colon separated output for easier parsing in scripts or programs.

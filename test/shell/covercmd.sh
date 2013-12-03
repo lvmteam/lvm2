@@ -100,3 +100,25 @@ not lvmchange
 not lvrename $vg
 not lvrename $vg-xxx
 not lvrename $vg  $vg/$lv-rename $vg/$lv
+
+#test vgdisplay -A to select only active VGs
+# all LVs active - VG considered active
+pvcreate -f $dev1 $dev2 $dev3
+
+vgcreate $vg1 $dev1
+lvcreate -l1 $vg1
+lvcreate -l1 $vg1
+
+# at least one LV active - VG considered active
+vgcreate $vg2 $dev2
+lvcreate -l1 $vg2
+lvcreate -l1 $vg2
+
+# no LVs active - VG considered inactive
+vgcreate $vg3 $dev3
+lvcreate -l1 -an -Zn $vg3
+lvcreate -l1 -an -Zn $vg3
+
+vgdisplay -s -A | grep $vg1
+vgdisplay -s -A | grep $vg2
+vgdisplay -s -A | not grep $vg3

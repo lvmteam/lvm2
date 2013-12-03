@@ -19,7 +19,9 @@ static int vgdisplay_single(struct cmd_context *cmd, const char *vg_name,
 			    struct volume_group *vg,
 			    void *handle __attribute__((unused)))
 {
-	/* FIXME Do the active check here if activevolumegroups_ARG ? */
+	if (arg_count(cmd, activevolumegroups_ARG) && !lvs_in_vg_activated(vg))
+		return ECMD_PROCESSED;
+
 	vg_check_status(vg, EXPORTED_VG);
 
 	if (arg_count(cmd, colon_ARG)) {

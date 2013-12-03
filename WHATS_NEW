@@ -1,5 +1,6 @@
 Version 2.02.105 -
 =====================================
+  Select only active volume groups if vgdisplay -A is used.
   Add -p and LVM_LVMETAD_PID env var to lvmetad to change pid file.
   Allow lvmetad to reuse stale socket.
   Only unlink lvmetad socket on error if created by the same process.
