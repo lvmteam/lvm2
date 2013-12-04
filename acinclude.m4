@@ -36,3 +36,24 @@ AC_DEFUN([AC_TRY_CCFLAG],
         ifelse([$4], [], [:], [$4])
     fi
 ])
+
+dnl AC_TRY_LDFLAGS([LDFLAGS], [VAR], [ACTION-IF-WORKS], [ACTION-IF-FAILS])
+dnl check if $CC supports given ld flags
+
+AC_DEFUN([AC_TRY_LDFLAGS],
+[
+    AC_REQUIRE([AC_PROG_CC])
+    ac_save_LDFLAGS=$LDFLAGS
+    LDFLAGS=$1
+	AC_CACHE_CHECK([whether $CC accepts $1 ld flags], [ac_cv_flag_$2],
+	[AC_LINK_IFELSE([AC_LANG_PROGRAM()],
+			[AS_VAR_SET([ac_cv_flag_$2], [yes])],
+			[AS_VAR_SET([ac_cv_flag_$2], [no])])])
+    LDLAGS=$ac_save_LDFLAGS
+    $2=AS_VAR_GET([ac_cv_flag_$2])
+    if test "$2" = yes; then
+        ifelse([$3], [], [:], [$3])
+    else
+        ifelse([$4], [], [:], [$4])
+    fi
+])

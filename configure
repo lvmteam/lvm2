@@ -740,6 +740,8 @@ PKG_CONFIG
 THIN_REPAIR_CMD
 THIN_DUMP_CMD
 THIN_CHECK_CMD
+HAVE_FULL_RELRO
+HAVE_PIE
 POW_LIB
 LIBOBJS
 ALLOCA
@@ -6740,6 +6742,85 @@ fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $STATIC_LINK" >&5
 $as_echo "$STATIC_LINK" >&6; }
+
+################################################################################
+
+
+    ac_save_CFLAGS=$CFLAGS
+    CFLAGS=-pie
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $CC accepts -pie flag" >&5
+$as_echo_n "checking whether $CC accepts -pie flag... " >&6; }
+if test "${ac_cv_flag_HAVE_PIE+set}" = set; then :
+  $as_echo_n "(cached) " >&6
+else
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+  ac_cv_flag_HAVE_PIE=yes
+else
+  ac_cv_flag_HAVE_PIE=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_flag_HAVE_PIE" >&5
+$as_echo "$ac_cv_flag_HAVE_PIE" >&6; }
+    CFLAGS=$ac_save_CFLAGS
+    HAVE_PIE=$ac_cv_flag_HAVE_PIE
+    if test "HAVE_PIE" = yes; then
+        :
+    else
+        :
+    fi
+
+
+
+
+    ac_save_LDFLAGS=$LDFLAGS
+    LDFLAGS=-Wl,-z,relro,-z,now
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $CC accepts -Wl,-z,relro,-z,now ld flags" >&5
+$as_echo_n "checking whether $CC accepts -Wl,-z,relro,-z,now ld flags... " >&6; }
+if test "${ac_cv_flag_HAVE_FULL_RELRO+set}" = set; then :
+  $as_echo_n "(cached) " >&6
+else
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_flag_HAVE_FULL_RELRO=yes
+else
+  ac_cv_flag_HAVE_FULL_RELRO=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_flag_HAVE_FULL_RELRO" >&5
+$as_echo "$ac_cv_flag_HAVE_FULL_RELRO" >&6; }
+    LDLAGS=$ac_save_LDFLAGS
+    HAVE_FULL_RELRO=$ac_cv_flag_HAVE_FULL_RELRO
+    if test "HAVE_FULL_RELRO" = yes; then
+        :
+    else
+        :
+    fi
+
+
 
 ################################################################################
 

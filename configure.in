@@ -159,6 +159,13 @@ AC_ARG_ENABLE(static_link,
 AC_MSG_RESULT($STATIC_LINK)
 
 ################################################################################
+dnl -- Check if compiler/linker supports PIE and RELRO
+AC_TRY_CCFLAG([-pie], [HAVE_PIE], [], [])
+AC_SUBST(HAVE_PIE)
+AC_TRY_LDFLAGS([-Wl,-z,relro,-z,now], [HAVE_FULL_RELRO], [], [])
+AC_SUBST(HAVE_FULL_RELRO)
+
+################################################################################
 dnl -- Prefix is /usr by default, the exec_prefix default is setup later
 AC_PREFIX_DEFAULT(/usr)
 
