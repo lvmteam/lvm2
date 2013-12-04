@@ -1864,7 +1864,7 @@ static int lvconvert_snapshot(struct cmd_context *cmd,
 	}
 
 	/* store vg on disk(s) */
-	if (!_reload_lv(cmd, lv->vg, lv))
+	if (!_reload_lv(cmd, lv->vg, org))
 		return_0;
 
 	log_print_unless_silent("Logical volume %s converted to snapshot.", lv->name);
