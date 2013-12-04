@@ -1,5 +1,6 @@
 Version 2.02.105 -
 =====================================
+  Compile/link daemons with RELRO and PIE options to harden daemon security.
   Support per-object compilation cflags via CFLAGS_object.o.
   Automatically detect support for compiler/linker options to use RELRO and PIE.
   Add --splitsnapshot to lvconvert to separate out cow LV.

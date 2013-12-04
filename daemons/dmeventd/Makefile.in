@@ -59,8 +59,10 @@ device-mapper: $(TARGETS)
 LIBS += -ldevmapper
 LVMLIBS += -ldevmapper-event $(PTHREAD_LIBS)
 
+CFLAGS_dmeventd.o += $(DAEMON_CFLAGS)
+
 dmeventd: $(LIB_SHARED) dmeventd.o
-	$(CC) $(CFLAGS) $(LDFLAGS) $(ELDFLAGS) -L. -o $@ dmeventd.o \
+	$(CC) $(CFLAGS) $(LDFLAGS) $(DAEMON_LDFLAGS) $(ELDFLAGS) -L. -o $@ dmeventd.o \
 	$(DL_LIBS) $(LVMLIBS) $(LIBS) -rdynamic
 
 dmeventd.static: $(LIB_STATIC) dmeventd.o $(interfacebuilddir)/libdevmapper.a

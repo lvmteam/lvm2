@@ -150,6 +150,15 @@ WFLAGS += -Wclobbered -Wempty-body -Wignored-qualifiers \
  -Wtype-limits -Wsync-nand -Wlogical-op
 endif
 
+ifneq ("@STATIC_LINK@", "yes")
+ifeq ("@HAVE_PIE@", "yes")
+ifeq ("@HAVE_FULL_RELRO@", "yes")
+  DAEMON_CFLAGS += -fPIE -DPIE
+  DAEMON_LDFLAGS += -Wl,-z,relro,-z,now -pie
+endif
+endif
+endif
+
 #WFLAGS += -W -Wno-sign-compare -Wno-unused-parameter -Wno-missing-field-initializers
 #WFLAGS += -Wsign-compare -Wunused-parameter -Wmissing-field-initializers 
 #WFLAGS += -Wconversion -Wbad-function-cast -Wcast-qual -Waggregate-return -Wpacked
