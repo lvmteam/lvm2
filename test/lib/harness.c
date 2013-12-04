@@ -21,6 +21,7 @@
 #include <sys/resource.h> /* rusage */
 #include <sys/select.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -55,6 +56,7 @@ static const char *results;
 static unsigned fullbuffer = 0;
 
 static FILE *outfile = NULL;
+char testdirdebug[PATH_MAX];
 
 struct subst {
 	const char *key;
@@ -100,6 +102,9 @@ static int outline(FILE *out, char *buf, int start, int force) {
 		subst[1].key = "@PREFIX@";
 		free(subst[1].value);
 		subst[1].value = strndup(from + 8, next - from - 8 - 1);
+	} else if (!testdirdebug[0] && !strncmp(from, "RUNTESTDIR=", 11)) {
+		from[strlen(from) - 1] = '\0'; /* Cut \n */
+		snprintf(testdirdebug, sizeof(testdirdebug), "%s/debug.log", from + 11);
 	} else {
 		char *line = strndup(from, next - from);
 		char *a = line, *b;
@@ -366,6 +371,7 @@ static void run(int i, char *f) {
 		char outpath[PATH_MAX];
 		char *c = outpath + strlen(results) + 1;
 		struct timeval selectwait;
+		struct stat statbuf;
 		fd_set set;
 		int runaway = 0;
 		int no_write = 0;
@@ -373,6 +379,7 @@ static void run(int i, char *f) {
 		int fd_vlm = -1;
 
 		//close(fds[1]);
+		testdirdebug[0] = '\0'; /* Capture RUNTESTDIR */
 		snprintf(buf, sizeof(buf), "%s ...", f);
 		printf("Running %-60s ", buf);
 		fflush(stdout);
@@ -409,6 +416,14 @@ static void run(int i, char *f) {
 			selectwait.tv_sec = 0;
 			selectwait.tv_usec = 500000; /* timeout 0.5s */
 			if (select(fds[0] + 1, &set, NULL, NULL, &selectwait) <= 0) {
+				/* Still checking debug log size if it's not growing too much */
+				if (testdirdebug[0] && (stat(testdirdebug, &statbuf) == 0) &&
+				    statbuf.st_size > 8 * 1024 * 1024) { /* 8MB command log size */
+					fprintf(stderr, "Killing test since debug.log has gone wild (size %ld)\n",
+						statbuf.st_size);
+					kill(-pid, SIGINT);
+				}
+
 				no_write++;
 				continue;
 			}

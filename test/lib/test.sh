@@ -39,6 +39,7 @@ test -n "$BASH" && trap 'set +vx; STACKTRACE; set -vx' ERR
 trap 'aux teardown' EXIT # don't forget to clean up
 
 cd "$TESTDIR"
+echo "RUNTESTDIR=$TESTDIR"
 
 if test -n "$LVM_TEST_FLAVOUR"; then
 	touch flavour_overrides
