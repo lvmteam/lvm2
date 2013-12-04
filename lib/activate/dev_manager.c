@@ -1313,6 +1313,56 @@ int dev_manager_thin_percent(struct dev_manager *dm,
 	return 1;
 }
 
+int dev_manager_thin_device_id(struct dev_manager *dm,
+			       const struct logical_volume *lv,
+			       uint32_t *device_id)
+{
+	const char *dlid;
+	struct dm_task *dmt;
+	struct dm_info info;
+	uint64_t start, length;
+	char *params, *target_type = NULL;
+	int r = 0;
+
+	/* Build dlid for the thin layer */
+	if (!(dlid = build_dm_uuid(dm->mem, lv->lvid.s, lv_layer(lv))))
+		return_0;
+
+	log_debug_activation("Getting device id for %s.", dlid);
+
+	if (!(dmt = _setup_task(NULL, dlid, 0, DM_DEVICE_TABLE, 0, 0)))
+		return_0;
+
+	if (!dm_task_run(dmt))
+		goto_out;
+
+	if (!dm_task_get_info(dmt, &info) || !info.exists)
+		goto_out;
+
+	if (dm_get_next_target(dmt, NULL, &start, &length,
+			       &target_type, &params)) {
+		log_error("More then one table line found for %s.", lv->name);
+		goto out;
+	}
+
+	if (strcmp(target_type, "thin")) {
+		log_error("Unexpected target type %s found for thin %s.", target_type, lv->name);
+		goto out;
+	}
+
+	if (sscanf(params, "%*u:%*u %u", device_id) != 1) {
+		log_error("Cannot parse table like parameters %s for %s.", params, lv->name);
+		goto out;
+	}
+
+	r = 1;
+out:
+	dm_task_destroy(dmt);
+
+	return r;
+}
+
+
 /*************************/
 /*  NEW CODE STARTS HERE */
 /*************************/

@@ -140,6 +140,7 @@ int lv_thin_percent(const struct logical_volume *lv, int mapped,
 		    percent_t *percent);
 int lv_thin_pool_transaction_id(const struct logical_volume *lv,
 				uint64_t *transaction_id);
+int lv_thin_device_id(const struct logical_volume *lv, uint32_t *device_id);
 
 /*
  * Return number of LVs in the VG that are active.

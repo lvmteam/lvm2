@@ -1051,6 +1051,28 @@ int lv_thin_pool_transaction_id(const struct logical_volume *lv,
 	return r;
 }
 
+int lv_thin_device_id(const struct logical_volume *lv, uint32_t *device_id)
+{
+	int r;
+	struct dev_manager *dm;
+
+	if (!activation())
+		return 0;
+
+	log_debug_activation("Checking device id for LV %s/%s",
+			     lv->vg->name, lv->name);
+
+	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
+		return_0;
+
+	if (!(r = dev_manager_thin_device_id(dm, lv, device_id)))
+		stack;
+
+	dev_manager_destroy(dm);
+
+	return r;
+}
+
 static int _lv_active(struct cmd_context *cmd, const struct logical_volume *lv)
 {
 	struct lvinfo info;
