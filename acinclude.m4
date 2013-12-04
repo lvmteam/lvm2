@@ -49,7 +49,7 @@ AC_DEFUN([AC_TRY_LDFLAGS],
 	[AC_LINK_IFELSE([AC_LANG_PROGRAM()],
 			[AS_VAR_SET([ac_cv_flag_$2], [yes])],
 			[AS_VAR_SET([ac_cv_flag_$2], [no])])])
-    LDLAGS=$ac_save_LDFLAGS
+    LDFLAGS=$ac_save_LDFLAGS
     $2=AS_VAR_GET([ac_cv_flag_$2])
     if test "$2" = yes; then
         ifelse([$3], [], [:], [$3])
