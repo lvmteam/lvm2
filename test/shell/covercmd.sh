@@ -112,7 +112,7 @@ lvcreate -l1 $vg1
 # at least one LV active - VG considered active
 vgcreate $vg2 $dev2
 lvcreate -l1 $vg2
-lvcreate -l1 $vg2
+lvcreate -l1 -an -Zn $vg2
 
 # no LVs active - VG considered inactive
 vgcreate $vg3 $dev3
