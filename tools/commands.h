@@ -172,6 +172,15 @@ xx(lvconvert,
    "\tLogicalVolume[Path] [SplittablePhysicalVolume[Path]...]\n\n"
 
    "lvconvert "
+   "--splitsnapshot\n"
+   "\t[-d|--debug]\n"
+   "\t[-h|-?|--help]\n"
+   "\t[--noudevsync]\n"
+   "\t[-v|--verbose]\n"
+   "\t[--version]" "\n"
+   "\tSnapshotLogicalVolume[Path]\n\n"
+   
+   "lvconvert "
    "[-s|--snapshot]\n"
    "\t[-c|--chunksize]\n"
    "\t[-d|--debug]\n"
@@ -209,9 +218,9 @@ xx(lvconvert,
    force_ARG, interval_ARG, merge_ARG, mirrorlog_ARG, mirrors_ARG, name_ARG,
    noudevsync_ARG, originname_ARG, poolmetadata_ARG, poolmetadatasize_ARG,
    poolmetadataspare_ARG, readahead_ARG, regionsize_ARG, repair_ARG,
-   replace_ARG, snapshot_ARG, splitmirrors_ARG, stripes_long_ARG,
-   stripesize_ARG, test_ARG, thin_ARG, thinpool_ARG, trackchanges_ARG,
-   type_ARG, use_policies_ARG, zero_ARG)
+   replace_ARG, snapshot_ARG, splitmirrors_ARG, splitsnapshot_ARG,
+   stripes_long_ARG, stripesize_ARG, test_ARG, thin_ARG, thinpool_ARG,
+   trackchanges_ARG, type_ARG, use_policies_ARG, zero_ARG)
 
 xx(lvcreate,
    "Create a logical volume",

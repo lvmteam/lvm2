@@ -38,6 +38,14 @@ lvconvert \- convert a logical volume from linear to mirror or snapshot
 .RI [ SplittablePhysicalVolume [ Path ][ :PE [ -PE ]]...]
 .sp
 .B lvconvert
+.BR \-\-splitsnapshot
+.RB [ \-h | \-? | \-\-help ]
+.RB [ \-\-noudevsync ]
+.RB [ \-v | \-\-verbose ]
+.RB [ \-\-version ]
+.IR SnapshotLogicalVolume [ Path ]
+.sp
+.B lvconvert
 .BR \-s | \-\-snapshot
 .RB [ \-c | \-\-chunksize
 .IR ChunkSize [ bBsSkK ]]
@@ -128,6 +136,7 @@ Exactly one of
 .BR \-\-mirrors ,
 .BR \-\-repair ,
 .BR \-\-replace ,
+.BR \-\-splitsnapshot ,
 .BR \-\-snapshot ,
 .BR \-\-splitmirrors
 or
@@ -200,9 +209,17 @@ the data changed get resynchronized.
 Please note that this feature is only supported with the new md-based mirror
 implementation and not with the original device-mapper mirror implementation.
 .TP
+.B \-\-splitsnapshot
+Separates SnapshotLogicalVolume from its origin.
+The volume that is split off contains the chunks that differ from the origin
+along with the metadata describing them.  This volume can be wiped and then
+destroyed with lvremove.
+The inverse of \-\-snapshot.
+.TP
 .B \-s, \-\-snapshot
-Creates a snapshot from existing logical volume using another
-existing logical volume as its origin.
+Recreates a snapshot from constituent logical volumes (or copies of them) after
+having been separated using \-\-splitsnapshot.  For this to work correctly, no
+changes may be made to the contents of either volume after the split.
 .TP
 .BR \-c ", " \-\-chunksize " " \fIChunkSize [ \fIbBsSkKmMgG ]
 Gives the size of chunk for snapshot and thin pool logical volumes.
