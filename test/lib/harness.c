@@ -98,13 +98,11 @@ static int outline(FILE *out, char *buf, int start, int force) {
 		subst[0].key = "@TESTDIR@";
 		free(subst[0].value);
 		subst[0].value = strndup(from + 9, next - from - 9 - 1);
+		snprintf(testdirdebug, sizeof(testdirdebug), "%s/debug.log", subst[0].value);
 	} else if (!strncmp(from, "@PREFIX=", 8)) {
 		subst[1].key = "@PREFIX@";
 		free(subst[1].value);
 		subst[1].value = strndup(from + 8, next - from - 8 - 1);
-	} else if (!testdirdebug[0] && !strncmp(from, "RUNTESTDIR=", 11)) {
-		from[strlen(from) - 1] = '\0'; /* Cut \n */
-		snprintf(testdirdebug, sizeof(testdirdebug), "%s/debug.log", from + 11);
 	} else {
 		char *line = strndup(from, next - from);
 		char *a = line, *b;
