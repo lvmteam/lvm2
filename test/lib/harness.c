@@ -401,6 +401,7 @@ static void run(int i, char *f) {
 			    (no_write > 180 * 2)) /* a 3 minute timeout */
 			{
 				system("echo t > /proc/sysrq-trigger");
+			timeout:
 				kill(pid, SIGINT);
 				sleep(5); /* wait a bit for a reaction */
 				if ((w = waitpid(pid, &st, WNOHANG)) == 0) {
@@ -418,10 +419,10 @@ static void run(int i, char *f) {
 			if (select(fds[0] + 1, &set, NULL, NULL, &selectwait) <= 0) {
 				/* Still checking debug log size if it's not growing too much */
 				if (testdirdebug[0] && (stat(testdirdebug, &statbuf) == 0) &&
-				    statbuf.st_size > 8 * 1024 * 1024) { /* 8MB command log size */
-					fprintf(stderr, "Killing test since debug.log has gone wild (size %ld)\n",
-						statbuf.st_size);
-					kill(-pid, SIGINT);
+				    statbuf.st_size > 32 * 1024 * 1024) { /* 32MB command log size */
+					printf("Killing test since debug.log has gone wild (size %ld)\n",
+					       statbuf.st_size);
+					goto timeout;
 				}
 
 				no_write++;
