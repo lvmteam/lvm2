@@ -33,16 +33,37 @@ PVMOVE=$!
 # Let's wait a bit till pvmove starts and kill it
 sleep 1
 kill -9 $PVMOVE
+wait
 
 # Simulate reboot - forcibly remove related devices
 dmsetup remove $vg-$lv1
 dmsetup remove $vg-pvmove0
 
+if test -e LOCAL_CLVMD ; then
+	# giveup all clvmd locks (faster then restarting clvmd)
+	# no deactivation happen, nodes are already removed
+	vgchange -an $vg
+	# Restart clvmd
+	#kill $(cat LOCAL_CLVMD)
+	#while test -e "/var/run/clvmd.pid"; do echo -n .; sleep .1; done # wait for the pid removal
+	#aux prepare_clvmd
+fi
+
+if test -e LOCAL_LVMETAD ; then
+	# Restart lvmetad
+	kill $(cat LOCAL_LVMETAD)
+	aux prepare_lvmetad
+fi
+
 # Only PVs should be left in table...
 dmsetup table
 
 # Restart pvmove
-vgchange -ay $vg
+# use exclusive activation to have usable pvmove without cmirrord
+#vgchange -vvvv -ay $vg
+vgchange -aey $vg
+dmsetup table
+#pvmove
 
 pvmove --abort
 
