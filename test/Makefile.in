@@ -42,6 +42,11 @@ comma = ,
 RUN = $(shell find $(srcdir) -regextype posix-egrep \( -path \*/shell/\*.sh -or -path \*/api/\*.sh \) -and -regex "$(srcdir)/.*($(subst $(comma),|,$(T))).*" -and -not -regex "$(srcdir)/.*($(subst $(comma),|,$(S))).*" | sort)
 RUN_BASE = $(subst $(srcdir)/,,$(RUN))
 
+ifeq ("@BUILD_LVMETAD@", "yes")
+LVMETAD_RUN_BASE = $(RUN_BASE)
+endif
+
+
 # Shell quote;
 SHELL_PATH_SQ = $(subst ','\'',$(SHELL_PATH))
 
@@ -83,7 +88,7 @@ check: .tests-stamp
 	lvmetad_LVM_TEST_LVMETAD=1 \
 	./lib/harness $(patsubst %,normal:%,$(RUN_BASE)) \
 		      $(patsubst %,cluster:%,$(RUN_BASE)) \
-		      $(patsubst %,lvmetad:%,$(RUN_BASE))
+		      $(patsubst %,lvmetad:%,$(LVMETAD_RUN_BASE))
 
 check_full: .tests-stamp
 	VERBOSE=$(VERBOSE) \
@@ -96,10 +101,10 @@ check_full: .tests-stamp
 	slvmetad_LVM_TEST_DEVDIR=/dev \
 	./lib/harness $(patsubst %,normal:%,$(RUN_BASE)) \
 		      $(patsubst %,cluster:%,$(RUN_BASE)) \
-		      $(patsubst %,lvmetad:%,$(RUN_BASE)) \
+		      $(patsubst %,lvmetad:%,$(LVMETAD_RUN_BASE)) \
 		      $(patsubst %,snormal:%,$(RUN_BASE)) \
 		      $(patsubst %,scluster:%,$(RUN_BASE)) \
-		      $(patsubst %,slvmetad:%,$(RUN_BASE))
+		      $(patsubst %,slvmetad:%,$(LVMETAD_RUN_BASE))
 
 check_cluster: .tests-stamp
 	@echo Testing with locking_type 3
@@ -109,9 +114,11 @@ check_local: .tests-stamp
 	@echo Testing with locking_type 1
 	VERBOSE=$(VERBOSE) LVM_TEST_LOCKING=1 ./lib/harness $(RUN_BASE)
 
+ifeq ("@BUILD_LVMETAD@", "yes")
 check_lvmetad: .tests-stamp
 	@echo Testing with lvmetad on
 	VERBOSE=$(VERBOSE) LVM_TEST_LVMETAD=1 ./lib/harness $(RUN_BASE)
+endif
 
 lib/should: lib/not
 	ln -sf not lib/should
