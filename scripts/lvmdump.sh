@@ -204,7 +204,8 @@ myecho "Gathering console messages..."
 log "$TAIL -n 75 /var/log/messages >> \"$dir/messages\" 2>> \"$log\""
 
 myecho "Gathering /etc/lvm info..."
-log "$CP -a /etc/lvm \"$dir/lvm\" 2>> \"$log\""
+log "$LS -laR /etc/lvm >> \"$dir/etc_lvm_listing\" 2>> \"$log\""
+log "$CP -RL --preserve=all /etc/lvm \"$dir/lvm\" 2>> \"$log\""
 
 myecho "Gathering /dev listing..."
 log "$LS -laR /dev >> \"$dir/dev_listing\" 2>> \"$log\""
@@ -241,8 +242,8 @@ if (( $udev )); then
 	log "$UDEVADM info --export-db >> \"$udev_dir/db\" 2>> \"$log\""
 	log "$CP -a /etc/udev/udev.conf \"$udev_dir/conf\" 2>> \"$log\""
 	log "$LS -la /lib/udev >> \"$udev_dir/lib_dir\" 2>> \"$log\""
-	log "$CP -aR /etc/udev/rules.d \"$udev_dir/rules_etc\" 2>> \"$log\""
-	log "$CP -aR /lib/udev/rules.d \"$udev_dir/rules_lib\" 2>> \"$log\""
+	log "$CP -RL --preserve=all /etc/udev/rules.d \"$udev_dir/rules_etc\" 2>> \"$log\""
+	log "$CP -RL --preserve=all /lib/udev/rules.d \"$udev_dir/rules_lib\" 2>> \"$log\""
 fi
 
 if (( $lvmetad )); then
