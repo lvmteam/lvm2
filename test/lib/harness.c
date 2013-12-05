@@ -406,11 +406,18 @@ static void run(int i, char *f) {
 			if ((fullbuffer && fullbuffer++ == 8000) ||
 			    (no_write > 180 * 2)) /* a 3 minute timeout */
 			{
-				system("echo t > /proc/sysrq-trigger");
 			timeout:
 				kill(pid, SIGINT);
 				sleep(5); /* wait a bit for a reaction */
 				if ((w = waitpid(pid, &st, WNOHANG)) == 0) {
+					if (no_write > 180 * 2)
+						/*
+						 * Kernel traces needed, when stuck for
+						 * too long in userspace without producing
+						 * any output, in other case it should be
+						 * user space problem
+						 */
+						system("echo t > /proc/sysrq-trigger");
 					collect_debug = 1;
 					kill(-pid, SIGKILL);
 					w = pid; // waitpid(pid, &st, NULL);
