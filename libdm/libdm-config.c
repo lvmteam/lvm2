@@ -253,11 +253,7 @@ static int _write_value(struct config_output *out, const struct dm_config_value 
 
 	switch (v->type) {
 	case DM_CFG_STRING:
-		if (!(buf = alloca(dm_escaped_len(v->v.str)))) {
-			log_error("temporary stack allocation for a config "
-				  "string failed");
-			return 0;
-		}
+		buf = alloca(dm_escaped_len(v->v.str));
 		line_append("\"%s\"", dm_escape_double_quotes(buf, v->v.str));
 		break;
 
@@ -440,24 +436,40 @@ static struct dm_config_node *_file(struct parser *p)
 static struct dm_config_node *_section(struct parser *p)
 {
 	/* IDENTIFIER SECTION_B_CHAR VALUE* SECTION_E_CHAR */
+
 	struct dm_config_node *root, *n, *l = NULL;
-	char *token;
+	char *str;
+
 	if (!(root = _create_node(p->mem))) {
 		log_error("Failed to allocate section node");
 		return NULL;
 	}
 
-	if (!(root->key = token = _dup_tok(p)))
-		return_NULL;
-
 	if (p->t == TOK_STRING_ESCAPED) {
-		token ++; /* OK as the token is pool-allocated */
-		token[strlen(token) - 1] = 0;
-		dm_unescape_double_quotes(token);
-		root->key = token;
+		if (!(str = _dup_string_tok(p)))
+			return_NULL;
+		dm_unescape_double_quotes(str);
+		root->key = str;
+
 		match(TOK_STRING_ESCAPED);
-	} else
+	} else if (p->t == TOK_STRING) {
+		if (!(str = _dup_string_tok(p)))
+			return_NULL;
+		root->key = str;
+
+		match(TOK_STRING);
+	} else {
+		if (!(root->key = _dup_tok(p)))
+			return_NULL;
+
 		match(TOK_IDENTIFIER);
+	}
+
+	if (!strlen(root->key)) {
+		log_error("Parse error at byte %" PRIptrdiff_t " (line %d): empty section identifier",
+			  p->tb - p->fb + 1, p->line);
+		return NULL;
+	}
 
 	if (p->t == TOK_SECTION_B) {
 		match(TOK_SECTION_B);

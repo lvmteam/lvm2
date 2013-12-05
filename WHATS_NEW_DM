@@ -1,5 +1,6 @@
 Version 1.02.84 -
 ====================================
+  Allow section names in config file data to be quoted strings.
   Close fifos before exiting in dmeventd restart() error path.
   Move printf format string directly into dm_asprintf args list.
   Catch invalid use of string sort values when reporting numerical fields.
