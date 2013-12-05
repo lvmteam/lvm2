@@ -1197,8 +1197,6 @@ int main(int argc, char *argv[])
 {
 	signed char opt;
 	lvmetad_state ls;
-	int _pidfile_override = 1;
-	int _socket_override = 1;
 	daemon_state s = {
 		.daemon_fini = fini,
 		.daemon_init = init,
@@ -1211,15 +1209,11 @@ int main(int argc, char *argv[])
 		.socket_path = getenv("LVM_LVMETAD_SOCKET"),
 	};
 
-	if (!s.pidfile) {
-		_pidfile_override = 0;
+	if (!s.pidfile)
 		s.pidfile = LVMETAD_PIDFILE;
-	}
 
-	if (!s.socket_path) {
-		_socket_override = 0;
+	if (!s.socket_path)
 		s.socket_path = LVMETAD_SOCKET;
-	}
 
 	ls.log_config = "";
 
@@ -1240,11 +1234,9 @@ int main(int argc, char *argv[])
 			break;
 		case 'p':
 			s.pidfile = optarg;
-			_pidfile_override = 1;
 			break;
 		case 's': // --socket
 			s.socket_path = optarg;
-			_socket_override = 1;
 			break;
 		case 'V':
 			printf("lvmetad version: " LVM_VERSION "\n");
