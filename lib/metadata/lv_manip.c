@@ -4494,7 +4494,7 @@ void lv_set_hidden(struct logical_volume *lv)
 }
 
 int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
-		     force_t force, int silent)
+		     force_t force, int suppress_remove_message)
 {
 	struct volume_group *vg;
 	struct lvinfo info;
@@ -4651,7 +4651,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 	backup(vg);
 
-	if (!silent && visible)
+	if (!suppress_remove_message && visible)
 		log_print_unless_silent("Logical volume \"%s\" successfully removed", lv->name);
 
 	return 1;
