@@ -592,7 +592,6 @@ static void _insert_dirs(struct dm_list *dirs)
 static int _insert(const char *path, int rec, int check_with_udev_db)
 {
 	struct stat info;
-	int r = 0;
 
 	if (stat(path, &info) < 0) {
 		log_sys_very_verbose("stat", path);
@@ -613,25 +612,22 @@ static int _insert(const char *path, int rec, int check_with_udev_db)
 
 		if (S_ISLNK(info.st_mode)) {
 			log_debug_devs("%s: Symbolic link to directory", path);
-			return 0;
+			return 1;
 		}
 
-		if (rec)
-			r = _insert_dir(path);
-
+		if (rec && !_insert_dir(path))
+			return_0;
 	} else {		/* add a device */
 		if (!S_ISBLK(info.st_mode)) {
 			log_debug_devs("%s: Not a block device", path);
-			return 0;
+			return 1;
 		}
 
 		if (!_insert_dev(path, info.st_rdev))
 			return_0;
-
-		r = 1;
 	}
 
-	return r;
+	return 1;
 }
 
 static void _full_scan(int dev_scan)

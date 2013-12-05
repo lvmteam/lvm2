@@ -1,5 +1,6 @@
 Version 2.02.105 -
 =====================================
+  Return success when inserting dirs and links into device cache.
   Test for remote exclusive activation after activation fails.
   Support lvconvert --merge for thin snapshots.
   Add support to read thin device id from table line entry.
