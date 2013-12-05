@@ -28,8 +28,8 @@ include $(top_builddir)/make.tmpl
 
 LIBS += -ldevmapper
 LMLIBS += $(CPG_LIBS) $(SACKPT_LIBS)
-CFLAGS += $(CPG_CFLAGS) $(SACKPT_CFLAGS) $(DAEMON_CFLAGS)
-LDFLAGS += $(DAEMON_LDFLAGS)
+CFLAGS += $(CPG_CFLAGS) $(SACKPT_CFLAGS) $(EXTRA_EXEC_CFLAGS)
+LDFLAGS += $(EXTRA_EXEC_LDFLAGS)
 
 cmirrord: $(OBJECTS) $(top_builddir)/lib/liblvm-internal.a
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJECTS) \

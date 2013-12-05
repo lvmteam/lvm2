@@ -153,8 +153,8 @@ endif
 ifneq ("@STATIC_LINK@", "yes")
 ifeq ("@HAVE_PIE@", "yes")
 ifeq ("@HAVE_FULL_RELRO@", "yes")
-  DAEMON_CFLAGS += -fPIE -DPIE
-  DAEMON_LDFLAGS += -Wl,-z,relro,-z,now -pie
+  EXTRA_EXEC_CFLAGS += -fPIE -DPIE
+  EXTRA_EXEC_LDFLAGS += -Wl,-z,relro,-z,now -pie
 endif
 endif
 endif
