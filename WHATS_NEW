@@ -1,5 +1,6 @@
 Version 2.02.105 -
 =====================================
+  Shortened code for initialization of raid segment types.
   Cache global library dir in command context.
   Return success when inserting dirs and links into device cache.
   Test for remote exclusive activation after activation fails.
