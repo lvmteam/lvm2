@@ -21,6 +21,8 @@
 # thus it needs dmeventd
 #
 aux prepare_dmeventd
+test ! -e LOCAL_CLVMD || skip
+test ! -e LOCAL_LVMETAD || skip
 
 #If you change this change the unit test case too.
 aux prepare_pvs 6
@@ -29,7 +31,7 @@ aux prepare_pvs 6
 python_lib=$(find $abs_top_builddir -name lvm.so)
 
 # Unable to test python bindings if library not available
-test -z "$python_lib" && skip
+test -n "$python_lib" || skip
 
 export PYTHONPATH=$(dirname $python_lib):$PYTHONPATH
 
