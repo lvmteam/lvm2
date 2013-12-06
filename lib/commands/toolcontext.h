@@ -121,6 +121,7 @@ struct cmd_context {
 	struct dm_list tags;
 	int hosttags;
 
+	const char *lib_dir;		/* Cache value global/library_dir */
 	char system_dir[PATH_MAX];
 	char dev_dir[PATH_MAX];
 	char proc_dir[PATH_MAX];

@@ -1654,6 +1654,8 @@ int refresh_toolcontext(struct cmd_context *cmd)
 
 	cmd->hosttags = 0;
 
+	cmd->lib_dir = NULL;
+
 	if (!_init_lvm_conf(cmd))
 		return 0;
 
