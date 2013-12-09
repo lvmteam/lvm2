@@ -883,10 +883,10 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 	} else {
 		/*
 		 * If -W/--wipesignatures is not given on command line,
-		 * look at the allocation/wipe_signatures_on_new_logical_volumes_when_zeroing
+		 * look at the allocation/wipe_signatures_when_zeroing_new_lvs
 		 * to decide what should be done exactly.
 		 */
-		if (find_config_tree_bool(cmd, allocation_wipe_signatures_on_new_logical_volumes_when_zeroing_CFG, NULL))
+		if (find_config_tree_bool(cmd, allocation_wipe_signatures_when_zeroing_new_lvs_CFG, NULL))
 			lp->wipe_signatures = lp->zero;
 		else
 			lp->wipe_signatures = 0;

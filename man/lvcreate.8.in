@@ -405,7 +405,7 @@ device sizes (GiB), thin provisioning should be used for this case.
 Controls wiping of detected signatures on newly created Logical Volume.
 If this option is not specified, then by default signature wiping is done
 each time the zeroing (\fB\-Z\fP/\fB\-\-zero\fP) is done. This default behaviour
-can be controlled by \fBallocation/wipe_signatures_on_new_logical_volumes_when_zeroing\fP
+can be controlled by \fBallocation/wipe_signatures_when_zeroing_new_lvs\fP
 setting found in \fBlvm.conf\fP(5).
 .br
 If blkid wiping is used (\fBallocation/use_blkid_wiping setting\fP in \fBlvm.conf\fP(5))

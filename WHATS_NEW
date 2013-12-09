@@ -23,7 +23,7 @@ Version 2.02.105 -
   Enable blkid_wiping by default if the blkid library is present.
   Add configure --disable-blkid_wiping to disable libblkid signature detection.
   Add -W/--wipesignatures lvcreate option to support wiping on new LVs.
-  Add allocation/wipe_signatures_on_new_logical_volumes_when_zeroing to lvm.conf.
+  Add allocation/wipe_signatures_when_zeroing_new_lvs to lvm.conf.
   Do not fail the whole autoactivation if the VG refresh done before fails.
   Do not connect to lvmetad on vg/lvchange --sysinit -aay and socket absent.
   Use lv_check_not_in_use() when testing device in use before merging.

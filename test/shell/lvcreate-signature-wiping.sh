@@ -27,7 +27,7 @@ lvremove -f $vg/$lv1
 
 wiping_msg="Wiping swap signature"
 
-aux lvmconf "allocation/wipe_signatures_on_new_logical_volumes_when_zeroing = 0"
+aux lvmconf "allocation/wipe_signatures_when_zeroing_new_lvs = 0"
 
 lvcreate -y -Zn -l1 -n $lv1 $vg | not grep "$wiping_msg"
 blkid -c /dev/null "$DM_DEV_DIR/$vg/$lv1" | grep "swap"
@@ -59,7 +59,7 @@ blkid -c /dev/null "$DM_DEV_DIR/$vg/$lv1" | grep "swap"
 lvremove -f $vg/$lv1
 
 
-aux lvmconf "allocation/wipe_signatures_on_new_logical_volumes_when_zeroing = 1"
+aux lvmconf "allocation/wipe_signatures_when_zeroing_new_lvs = 1"
 
 lvcreate -y -Zn -l1 -n $lv1 $vg | not grep "$wiping_msg"
 blkid -c /dev/null "$DM_DEV_DIR/$vg/$lv1" | grep "swap"
