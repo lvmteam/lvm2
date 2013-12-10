@@ -538,12 +538,12 @@ int main(int argc, char **argv) {
 	free(subst[1].value);
 	free(readbuf);
 
-	printf("\n## %d tests %s : %d OK, %d warnings, %d failures, %d known failures; "
-	       "%d skipped, %d interrupted\n",
+	printf("\n## %d tests %s : %d OK, %d warnings, %d failures (%d interrupted), %d known failures; "
+	       "%d skipped\n",
 	       s.nwarned + s.npassed + s.nfailed + s.nskipped + s.ninterrupted,
 	       duration(start, NULL),
-	       s.npassed, s.nwarned, s.nfailed, s.nknownfail,
-	       s.nskipped, s.ninterrupted);
+	       s.npassed, s.nwarned, s.nfailed + s.ninterrupted, s.ninterrupted,
+	       s.nknownfail, s.nskipped);
 
 	/* dump a list to results */
 	if ((list = fopen(results_list, "w"))) {
