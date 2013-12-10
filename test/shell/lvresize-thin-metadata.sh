@@ -11,9 +11,9 @@
 
 . lib/test
 
-aux have_thin 1 9 0 || skip
+aux have_thin 9 9 0 || skip
 
-aux prepare_pvs 3
+aux prepare_pvs 3 256
 
 vgcreate -s 1M $vg $(cat DEVICES)
 
@@ -31,7 +31,10 @@ for deactivate in true false; do
 	check lv_field $vg/pool_tmeta size "4.00m"
 
 # TODO: Add more tests when kernel is fixed
+	lvresize --alloc anywhere --poolmetadata +256 $vg/pool
 
+	vgchange -an $vg
+	vgchange -ay $vg
 
 # TODO: Make a full metadata device and test dmeventd support
 	lvremove -ff $vg

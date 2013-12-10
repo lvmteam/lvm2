@@ -1,5 +1,6 @@
 Version 2.02.105 -
 =====================================
+  Disable online thin pool metadata resize for 1.9 kernel thin target.
   Shortened code for initialization of raid segment types.
   Cache global library dir in command context.
   Return success when inserting dirs and links into device cache.
