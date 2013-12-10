@@ -280,7 +280,7 @@ int label_read(struct device *dev, struct label **result,
 	}
 
 	if (!(l = _find_labeller(dev, buf, &sector, scan_sector)))
-		goto out;
+		goto_out;
 
 	if ((r = (l->ops->read)(l, dev, buf, result)) && result && *result) {
 		(*result)->dev = dev;
