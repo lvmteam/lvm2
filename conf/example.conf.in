@@ -287,10 +287,10 @@ allocation {
     # to be recognized, it can take more time to complete the signature scan.
     use_blkid_wiping = 1
 
-    # Set to 1 when use_blkid_wiping is enabled to wipe any signatures found on
-    # newly-created Logical Volumes automatically in addition to zeroing of the
-    # first KB on the LV (controlled by the -Z/--zero y option).
-    # The command line option -W/--wipesignatures n takes precedence over this
+    # Set to 1 to wipe any signatures found on newly-created Logical Volumes
+    # automatically in addition to zeroing of the first KB on the LV
+    # (controlled by the -Z/--zero y option).
+    # The command line option -W/--wipesignatures takes precedence over this
     # setting.
     # The default is to wipe signatures when zeroing.
     #
