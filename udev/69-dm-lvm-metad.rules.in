@@ -39,6 +39,8 @@ ACTION=="remove", GOTO="lvm_scan"
 # but they require an extra setup and they are ready after a CHANGE event.
 # Also support coldplugging with ADD event but only if the device is already
 # properly activated.
+# This logic should be eventually moved to rules where those particular
+# devices are processed primarily (MD and loop).
 
 # DM device:
 KERNEL!="dm-[0-9]*", GOTO="next"
@@ -52,6 +54,7 @@ IMPORT{db}="LVM_MD_PV_ACTIVATED"
 ACTION=="add", ENV{LVM_MD_PV_ACTIVATED}=="1", GOTO="lvm_scan"
 ACTION=="change", ENV{LVM_MD_PV_ACTIVATED}!="1", TEST=="md/array_state", ENV{LVM_MD_PV_ACTIVATED}="1", GOTO="lvm_scan"
 ACTION=="add", KERNEL=="md[0-9]*p[0-9]*", GOTO="lvm_scan"
+ENV{SYSTEMD_READY}="0"
 GOTO="lvm_end"
 
 # Loop device:
@@ -59,6 +62,7 @@ LABEL="next"
 KERNEL!="loop[0-9]*", GOTO="next"
 ACTION=="add", ENV{LVM_LOOP_PV_ACTIVATED}=="1", GOTO="lvm_scan"
 ACTION=="change", ENV{LVM_LOOP_PV_ACTIVATED}!="1", TEST=="loop/backing_file", ENV{LVM_LOOP_PV_ACTIVATED}="1", GOTO="lvm_scan"
+ENV{SYSTEMD_READY}="0"
 GOTO="lvm_end"
 
 # If the PV is not a special device listed above, scan only after device addition (ADD event)
@@ -80,6 +84,7 @@ LABEL="lvm_scan"
 #  MD    |          |      X      |       X*       |                   |
 #  loop  |          |      X      |       X*       |                   |
 #  other |    X     |             |       X        |                   |   X
+ENV{SYSTEMD_READY}="1"
 (PVSCAN_RULE)
 
 LABEL="lvm_end"
