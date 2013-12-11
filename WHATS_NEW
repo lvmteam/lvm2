@@ -1,5 +1,6 @@
 Version 2.02.105 -
 =====================================
+  Fix SYSTEMD_READY assignment for foreign devices in lvmetad udev rules.
   Disable online thin pool metadata resize for 1.9 kernel thin target.
   Shortened code for initialization of raid segment types.
   Cache global library dir in command context.
