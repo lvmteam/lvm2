@@ -417,7 +417,7 @@ signatures are detected only in this case).
 Logical Volume is not wiped if the read only flag is set.
 .TP
 .BR \-Z ", " \-\-zero " {" \fIy | \fIn }
-Controls zeroing of the first KiB of data in the new logical volume.
+Controls zeroing of the first 4KiB of data in the new logical volume.
 .br
 Default is \fIy\fPes.
 .br

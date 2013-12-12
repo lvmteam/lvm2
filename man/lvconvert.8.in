@@ -244,7 +244,7 @@ kernel and passed down to the Physical Volume.
 Default is \fIpassdown\fP.
 .TP
 .BR \-Z ", " \-\-zero " {" \fIy | \fIn }
-Controls zeroing of the first KB of data in the snapshot.
+Controls zeroing of the first 4KiB of data in the snapshot.
 If the volume is read-only the snapshot will not be zeroed.
 For thin pool volumes it controls zeroing of provisioned blocks.
 Note: Provisioning of large zeroed chunks impacts performance.
