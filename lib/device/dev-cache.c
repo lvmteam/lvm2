@@ -594,7 +594,6 @@ static int _insert(const char *path, const struct stat *info,
 		   int rec, int check_with_udev_db)
 {
 	struct stat tinfo;
-	int r = 0;
 
 	if (!info) {
 		if (stat(path, &tinfo) < 0) {
