@@ -56,6 +56,7 @@ static int _insert(const char *path, const struct stat *info,
 /* Setup non-zero members of passed zeroed 'struct device' */
 static void _dev_init(struct device *dev, int max_error_count)
 {
+	dev->phys_block_size = -1;
 	dev->block_size = -1;
 	dev->fd = -1;
 	dev->read_ahead = -1;

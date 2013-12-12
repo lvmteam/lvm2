@@ -42,6 +42,7 @@ struct device {
 	int open_count;
 	int error_count;
 	int max_error_count;
+	int phys_block_size;
 	int block_size;
 	int read_ahead;
 	uint32_t flags;
@@ -66,8 +67,8 @@ struct device_area {
 /*
  * All io should use these routines.
  */
+int dev_get_block_size(struct device *dev, unsigned int *phys_block_size, unsigned int *block_size);
 int dev_get_size(const struct device *dev, uint64_t *size);
-int dev_get_sectsize(struct device *dev, uint32_t *size);
 int dev_get_read_ahead(struct device *dev, uint32_t *read_ahead);
 int dev_discard_blocks(struct device *dev, uint64_t offset_bytes, uint64_t size_bytes);
 

@@ -368,6 +368,12 @@ static int _vgchange_pesize(struct cmd_context *cmd, struct volume_group *vg)
 	if (!vg_set_extent_size(vg, extent_size))
 		return_0;
 
+	if (!vg_check_pv_dev_block_sizes(vg)) {
+		log_error("Failed to change physical extent size for VG %s.",
+			   vg->name);
+		return 0;
+	}
+
 	return 1;
 }
 

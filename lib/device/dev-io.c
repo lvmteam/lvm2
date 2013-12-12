@@ -123,23 +123,44 @@ static int _io(struct device_area *where, char *buffer, int should_write)
  *---------------------------------------------------------------*/
 
 /*
- * Get the sector size from an _open_ device.
+ * Get the physical and logical block size for a device.
  */
-static int _get_block_size(struct device *dev, unsigned int *size)
+int dev_get_block_size(struct device *dev, unsigned int *physical_block_size, unsigned int *block_size)
 {
 	const char *name = dev_name(dev);
+	int needs_open;
+	int r = 1;
+
+	needs_open = (!dev->open_count && (dev->phys_block_size == -1 || dev->block_size == -1));
+
+	if (needs_open && !dev_open_readonly(dev))
+		return_0;
+
+	if (dev->phys_block_size == -1) {
+		if (ioctl(dev_fd(dev), BLKPBSZGET, &dev->phys_block_size) < 0) {
+			log_sys_error("ioctl BLKPBSZGET", name);
+			r = 0;
+			goto out;
+		}
+		log_debug_devs("%s: physical block size is %u bytes", name, dev->phys_block_size);
+	}
 
 	if (dev->block_size == -1) {
 		if (ioctl(dev_fd(dev), BLKBSZGET, &dev->block_size) < 0) {
 			log_sys_error("ioctl BLKBSZGET", name);
-			return 0;
+			r = 0;
+			goto out;
 		}
 		log_debug_devs("%s: block size is %u bytes", name, dev->block_size);
 	}
 
-	*size = (unsigned int) dev->block_size;
+	*physical_block_size = (unsigned int) dev->phys_block_size;
+	*block_size = (unsigned int) dev->block_size;
+out:
+	if (needs_open)
+		dev_close(dev);
 
-	return 1;
+	return r;
 }
 
 /*
@@ -168,13 +189,14 @@ static int _aligned_io(struct device_area *where, char *buffer,
 		       int should_write)
 {
 	char *bounce, *bounce_buf;
+	unsigned int physical_block_size = 0;
 	unsigned int block_size = 0;
 	uintptr_t mask;
 	struct device_area widened;
 	int r = 0;
 
 	if (!(where->dev->flags & DEV_REGULAR) &&
-	    !_get_block_size(where->dev, &block_size))
+	    !dev_get_block_size(where->dev, &physical_block_size, &block_size))
 		return_0;
 
 	if (!block_size)
@@ -370,36 +392,6 @@ int dev_discard_blocks(struct device *dev, uint64_t offset_bytes, uint64_t size_
 	return _dev_discard_blocks(dev, offset_bytes, size_bytes);
 }
 
-/* FIXME Unused
-int dev_get_sectsize(struct device *dev, uint32_t *size)
-{
-	int fd;
-	int s;
-	const char *name = dev_name(dev);
-
-	if ((fd = open(name, O_RDONLY)) < 0) {
-		log_sys_error("open", name);
-		return 0;
-	}
-
-	if (ioctl(fd, BLKSSZGET, &s) < 0) {
-		log_sys_error("ioctl BLKSSZGET", name);
-		if (close(fd))
-			log_sys_error("close", name);
-		return 0;
-	}
-
-	if (close(fd))
-		log_sys_error("close", name);
-
-	*size = (uint32_t) s;
-
-	log_very_verbose("%s: sector size is %" PRIu32 " bytes", name, *size);
-
-	return 1;
-}
-*/
-
 void dev_flush(struct device *dev)
 {
 	if (!(dev->flags & DEV_REGULAR) && ioctl(dev->fd, BLKFLSBUF, 0) >= 0)
@@ -571,6 +563,7 @@ static void _close(struct device *dev)
 	if (close(dev->fd))
 		log_sys_error("close", dev_name(dev));
 	dev->fd = -1;
+	dev->phys_block_size = -1;
 	dev->block_size = -1;
 	dm_list_del(&dev->open_list);
 

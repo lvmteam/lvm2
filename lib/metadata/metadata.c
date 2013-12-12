@@ -619,6 +619,40 @@ int vg_remove(struct volume_group *vg)
 	return ret;
 }
 
+int check_dev_block_size_for_vg(struct device *dev, const struct volume_group *vg,
+				unsigned int *max_phys_block_size_found)
+{
+	unsigned int phys_block_size, block_size;
+
+	if (!(dev_get_block_size(dev, &phys_block_size, &block_size)))
+		return_0;
+
+	if (phys_block_size > *max_phys_block_size_found)
+		*max_phys_block_size_found = phys_block_size;
+
+	if (phys_block_size >> SECTOR_SHIFT > vg->extent_size) {
+		log_error("Physical extent size used for volume group %s "
+			  "is less than physical block size that %s uses.",
+			   vg->name, dev_name(dev));
+		return 0;
+	}
+
+	return 1;
+}
+
+int vg_check_pv_dev_block_sizes(const struct volume_group *vg)
+{
+	struct pv_list *pvl;
+	unsigned int max_phys_block_size_found = 0;
+
+	dm_list_iterate_items(pvl, &vg->pvs) {
+		if (!check_dev_block_size_for_vg(pvl->pv->dev, vg, &max_phys_block_size_found))
+			return 0;
+	}
+
+	return 1;
+}
+
 /*
  * Extend a VG by a single PV / device path
  *
@@ -626,10 +660,12 @@ int vg_remove(struct volume_group *vg)
  * - vg: handle of volume group to extend by 'pv_name'
  * - pv_name: device path of PV to add to VG
  * - pp: parameters to pass to implicit pvcreate; if NULL, do not pvcreate
+ * - max_phys_block_size: largest physical block size found amongst PVs in a VG
  *
  */
 static int vg_extend_single_pv(struct volume_group *vg, char *pv_name,
-			       struct pvcreate_params *pp)
+			       struct pvcreate_params *pp,
+			       unsigned int *max_phys_block_size)
 {
 	struct physical_volume *pv;
 
@@ -643,11 +679,18 @@ static int vg_extend_single_pv(struct volume_group *vg, char *pv_name,
 		if (!(pv = pvcreate_vol(vg->cmd, pv_name, pp, 0)))
 			return_0;
 	}
-	if (!add_pv_to_vg(vg, pv_name, pv, pp)) {
-		free_pv_fid(pv);
-		return_0;
-	}
+
+	if (!(check_dev_block_size_for_vg(pv->dev, (const struct volume_group *) vg,
+					  max_phys_block_size)))
+		goto_bad;
+
+	if (!add_pv_to_vg(vg, pv_name, pv, pp))
+		goto_bad;
+
 	return 1;
+bad:
+	free_pv_fid(pv);
+	return 0;
 }
 
 /*
@@ -665,6 +708,7 @@ int vg_extend(struct volume_group *vg, int pv_count, const char *const *pv_names
 {
 	int i;
 	char *pv_name;
+	unsigned int max_phys_block_size = 0;
 
 	if (_vg_bad_status_bits(vg, RESIZEABLE_VG))
 		return_0;
@@ -676,7 +720,7 @@ int vg_extend(struct volume_group *vg, int pv_count, const char *const *pv_names
 			return 0;
 		}
 		dm_unescape_colons_and_at_signs(pv_name, NULL, NULL);
-		if (!vg_extend_single_pv(vg, pv_name, pp)) {
+		if (!vg_extend_single_pv(vg, pv_name, pp, &max_phys_block_size)) {
 			log_error("Unable to add physical volume '%s' to "
 				  "volume group '%s'.", pv_name, vg->name);
 			dm_free(pv_name);
