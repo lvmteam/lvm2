@@ -2458,7 +2458,8 @@ struct format_type *create_text_format(struct cmd_context *cmd)
 		}
 	}
 
-	if ((cn = find_config_tree_node(cmd, metadata_disk_areas_CFG, NULL))) {
+	if ((cn = find_config_tree_node(cmd, metadata_disk_areas_CFG_SUBSECTION, NULL))) {
+		/* FIXME: disk_areas do not work with lvmetad - the "id" can't be found. */
 		for (cn = cn->child; cn; cn = cn->sib) {
 			if (!_get_config_disk_area(cmd, cn, &mda_lists->raws))
 				goto_bad;
