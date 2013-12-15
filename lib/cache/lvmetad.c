@@ -914,7 +914,7 @@ int lvmetad_pvscan_single(struct cmd_context *cmd, struct device *dev,
 	}
 
 	/* LVM1 VGs have no MDAs. */
-	if (!baton.vg && lvmcache_fmt(info) == get_format_by_name(cmd, "lvm1"))
+	if (!baton.vg && lvmcache_fmt(info) == get_format_by_name(cmd, FMT_LVM1_NAME))
 		baton.vg = ((struct metadata_area *) dm_list_first(&baton.fid->metadata_areas_in_use))->
 			ops->vg_read(baton.fid, lvmcache_vgname_from_info(info), NULL, 0);
 
