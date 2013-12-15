@@ -45,4 +45,5 @@ test -e %{_sourcedir}/source.inc || cp source.inc build.inc packages.inc macros.
 %{?check_commands}
 
 %clean
-rm -rf $RPM_BUILD_ROOT
+pwd
+test -n rpm-no-clean || rm -rf $RPM_BUILD_ROOT
