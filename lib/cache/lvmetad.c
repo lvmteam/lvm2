@@ -20,6 +20,8 @@
 #include "lvmcache.h"
 #include "lvmetad-client.h"
 #include "format-text.h" // TODO for disk_locn, used as a DA representation
+#include "format_pool.h" // for FMT_POOL_NAME
+#include "format1.h" // for FMT_LVM1_NAME
 #include "crc.h"
 
 static daemon_handle _lvmetad;
@@ -903,6 +905,13 @@ int lvmetad_pvscan_single(struct cmd_context *cmd, struct device *dev,
 		goto_bad;
 
 	lvmcache_foreach_mda(info, _lvmetad_pvscan_single, &baton);
+
+	if (lvmcache_fmt(info) == get_format_by_name(cmd, FMT_POOL_NAME)) {
+		log_error("WARNING: Ignoring old GFS pool metadata on device %s "
+			  "when using lvmetad", dev_name(dev));
+		lvmcache_fmt(info)->ops->destroy_instance(baton.fid);
+		return 0;
+	}
 
 	/* LVM1 VGs have no MDAs. */
 	if (!baton.vg && lvmcache_fmt(info) == get_format_by_name(cmd, "lvm1"))
