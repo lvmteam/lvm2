@@ -91,7 +91,7 @@ all: cscope.out
 endif
 DISTCLEAN_TARGETS += cscope.out
 
-check check_full check_cluster check_local check_lvmetad unit: all
+check check_system check_cluster check_local check_lvmetad unit: all
 	$(MAKE) -C test $(@)
 
 install_system_dirs:
