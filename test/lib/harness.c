@@ -25,6 +25,7 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/klog.h>
 #include <time.h>
 #include <unistd.h>
 #include <stdint.h>
@@ -260,6 +261,23 @@ static void drain(int fd, size_t size_limit)
 	}
 }
 
+#define SYSLOG_ACTION_READ_CLEAR     4
+#define SYSLOG_ACTION_CLEAR          5
+
+static void clear_dmesg(void)
+{
+	klogctl(SYSLOG_ACTION_CLEAR, 0, 0);
+}
+
+static void drain_dmesg(void)
+{
+	char buf[16392 + 1];
+	size_t sz = klogctl(SYSLOG_ACTION_READ_CLEAR, buf, sizeof(buf) - 1);
+	buf[sz] = 0;
+	_append_buf(buf, sz);
+}
+
+
 static const char *duration(time_t start, const struct rusage *usage)
 {
 	static char buf[100];
@@ -345,6 +363,7 @@ static void run(int i, char *f) {
 	struct rusage usage;
 	char flavour[512], script[512];
 
+	clear_dmesg();
 	pid = fork();
 	if (pid < 0) {
 		perror("Fork failed.");
@@ -382,8 +401,7 @@ static void run(int i, char *f) {
 		int runaway = 0;
 		int no_write = 0;
 		int collect_debug = 0;
-		FILE *varlogmsg;
-		int fd_vlm = -1;
+		int fd_debuglog = -1;
 
 		//close(fds[1]);
 		testdirdebug[0] = '\0'; /* Capture RUNTESTDIR */
@@ -395,13 +413,6 @@ static void run(int i, char *f) {
 			*c = '_';
 		if (!(outfile = fopen(outpath, "w")))
 			perror("fopen");
-
-		/* Mix in kernel log message */
-		if (!(varlogmsg = fopen("/var/log/messages", "r")))
-			perror("fopen");
-		else if (((fd_vlm = fileno(varlogmsg)) >= 0) &&
-			 fseek(varlogmsg, 0L, SEEK_END))
-			perror("fseek");
 
 		while ((w = wait4(pid, &st, WNOHANG, &usage)) == 0) {
 			if ((fullbuffer && fullbuffer++ == 8000) ||
@@ -446,24 +457,22 @@ static void run(int i, char *f) {
 			}
 			drain(fds[0], INT32_MAX);
 			no_write = 0;
-			if (fd_vlm >= 0)
-				drain(fd_vlm, INT32_MAX);
+			drain_dmesg();
 		}
 		if (w != pid) {
 			perror("waitpid");
 			exit(206);
 		}
 		drain(fds[0], INT32_MAX);
-		if (fd_vlm >= 0)
-			drain(fd_vlm, INT32_MAX);
+		drain_dmesg();
 		if (die == 2)
 			interrupted(i, f);
 		else if (runaway) {
 			if (collect_debug &&
-			    (fd_vlm = open(testdirdebug, O_RDONLY)) != -1) {
+			    (fd_debuglog = open(testdirdebug, O_RDONLY)) != -1) {
 				/* Normally read only first 4MB */
-				drain(fd_vlm, unlimited ? INT32_MAX : 4 * 1024 * 1024);
-				close(fd_vlm);
+				drain(fd_debuglog, unlimited ? INT32_MAX : 4 * 1024 * 1024);
+				close(fd_debuglog);
 			}
 			timeout(i, f);
 		} else if (WIFEXITED(st)) {
@@ -476,8 +485,8 @@ static void run(int i, char *f) {
 		} else
 			failed(i, f, st);
 
-		if (varlogmsg)
-			fclose(varlogmsg);
+		if (fd_debuglog >= 0)
+			close(fd_debuglog);
 		if (outfile)
 			fclose(outfile);
 		if (fullbuffer)
