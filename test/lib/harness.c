@@ -53,6 +53,7 @@ static size_t readbuf_sz = 0, readbuf_used = 0;
 static int die = 0;
 static int verbose = 0; /* >1 with timestamps */
 static int interactive = 0; /* disable all redirections */
+static int quiet = 0;
 static const char *results;
 static unsigned fullbuffer = 0;
 static int unlimited = 0;
@@ -298,7 +299,7 @@ static void interrupted(int i, char *f) {
 	++ s.ninterrupted;
 	s.status[i] = INTERRUPTED;
 	printf("\ninterrupted.\n");
-	if (!verbose && fullbuffer) {
+	if (!quiet && !verbose && fullbuffer) {
 		printf("-- Interrupted %s ------------------------------------\n", f);
 		dump();
 		printf("\n-- Interrupted %s (end) ------------------------------\n", f);
@@ -309,7 +310,7 @@ static void timeout(int i, char *f) {
 	++ s.ninterrupted;
 	s.status[i] = TIMEOUT;
 	printf("timeout.\n");
-	if (!verbose && readbuf) {
+	if (!quiet && !verbose && readbuf) {
 		printf("-- Timed out %s ------------------------------------\n", f);
 		dump();
 		printf("\n-- Timed out %s (end) ------------------------------\n", f);
@@ -333,7 +334,7 @@ static void failed(int i, char *f, int st) {
 	++ s.nfailed;
 	s.status[i] = FAILED;
 	printf("FAILED  (status %d).\n", WEXITSTATUS(st));
-	if (!verbose && readbuf) {
+	if (!quiet && !verbose && readbuf) {
 		printf("-- FAILED %s ------------------------------------\n", f);
 		dump();
 		printf("-- FAILED %s (end) ------------------------------\n", f);
@@ -491,7 +492,8 @@ int main(int argc, char **argv) {
 	char results_list[PATH_MAX];
 	const char *result;
 	const char *be_verbose = getenv("VERBOSE"),
-		   *be_interactive = getenv("INTERACTIVE");
+		   *be_interactive = getenv("INTERACTIVE"),
+		   *be_quiet = getenv("QUIET");;
 	time_t start = time(NULL);
 	int i;
 	FILE *list;
@@ -506,6 +508,9 @@ int main(int argc, char **argv) {
 
 	if (be_interactive)
 		interactive = atoi(be_interactive);
+
+	if (be_quiet)
+		quiet = atoi(be_quiet);
 
 	results = getenv("LVM_TEST_RESULTS") ? : "results";
 	unlimited = getenv("LVM_TEST_UNLIMITED") ? 1 : 0;
