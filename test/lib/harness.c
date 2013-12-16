@@ -550,9 +550,9 @@ int main(int argc, char **argv) {
 	/* run the tests */
 	for (i = 1; !die && i < argc; ++i) {
 		run(i, argv[i]);
-		if ( time(NULL) - harness_start > 3600 ) {
-			printf("an hour passed, giving up...\n");
-			break;
+		if ( time(NULL) - harness_start > 3 * 3600 ) {
+			printf("3 hours passed, giving up...\n");
+			die = 1;
 		}
 	}
 
