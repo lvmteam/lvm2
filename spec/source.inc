@@ -33,7 +33,7 @@
 
 %global req_udev udev >= 158-1
 %global req_cluster openais >= 1.1.1-1, cman >= 3.0.6-1, corosync >= 1.2.0-1
-%with thin
+%with thin none
 %with thin_check
 %with thin_repair
 %with thin_dump
