@@ -11,6 +11,9 @@
 
 . lib/test
 
+# lvmetad does not handle pool labels so skip test.
+test ! -e LOCAL_LVMETAD || skip
+
 env printf "" || skip # skip if printf is not available
 
 # create the old GFS pool labeled linear devices
