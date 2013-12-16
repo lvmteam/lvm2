@@ -59,6 +59,8 @@ static const char *results;
 static unsigned fullbuffer = 0;
 static int unlimited = 0;
 
+static time_t harness_start;
+
 static FILE *outfile = NULL;
 char testdirdebug[PATH_MAX];
 
@@ -544,9 +546,15 @@ int main(int argc, char **argv) {
 		default: signal(i, handler);
 		}
 
+	harness_start = time(NULL);
 	/* run the tests */
-	for (i = 1; !die && i < argc; ++i)
+	for (i = 1; !die && i < argc; ++i) {
 		run(i, argv[i]);
+		if ( time(NULL) - harness_start > 3600 ) {
+			printf("an hour passed, giving up...\n");
+			break;
+		}
+	}
 
 	free(subst[0].value);
 	free(subst[1].value);
