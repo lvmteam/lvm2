@@ -483,18 +483,19 @@ static int do_deactivate_lv(char *resource, unsigned char command, unsigned char
 const char *do_lock_query(char *resource)
 {
 	int mode;
-	const char *type = NULL;
+	const char *type;
 
 	mode = get_current_lock(resource);
 	switch (mode) {
-		case LCK_NULL: type = "NL"; break;
-		case LCK_READ: type = "CR"; break;
-		case LCK_PREAD:type = "PR"; break;
-		case LCK_WRITE:type = "PW"; break;
-		case LCK_EXCL: type = "EX"; break;
+	case LCK_NULL: type = "NL"; break;
+	case LCK_READ: type = "CR"; break;
+	case LCK_PREAD:type = "PR"; break;
+	case LCK_WRITE:type = "PW"; break;
+	case LCK_EXCL: type = "EX"; break;
+	default: type = NULL;
 	}
 
-	DEBUGLOG("do_lock_query: resource '%s', mode %i (%s)\n", resource, mode, type ?: "?");
+	DEBUGLOG("do_lock_query: resource '%s', mode %i (%s)\n", resource, mode, type ?: "--");
 
 	return type;
 }
