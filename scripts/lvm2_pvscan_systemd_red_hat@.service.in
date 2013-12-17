@@ -3,6 +3,7 @@ Description=LVM2 PV scan on device %i
 Documentation=man:pvscan(8)
 DefaultDependencies=no
 BindsTo=dev-block-%i.device
+Requires=lvm2-lvmetad.socket
 After=lvm2-lvmetad.socket
 Before=shutdown.target
 Conflicts=shutdown.target
