@@ -2019,6 +2019,7 @@ static int _lv_each_dependency(struct logical_volume *lv,
 {
 	unsigned i, s;
 	struct lv_segment *lvseg;
+	struct dm_list *snh;
 
 	struct logical_volume *deps[] = {
 		(lv->rdevice && lv != lv->rdevice->lv) ? lv->rdevice->lv : 0,
@@ -2031,6 +2032,8 @@ static int _lv_each_dependency(struct logical_volume *lv,
 	}
 
 	dm_list_iterate_items(lvseg, &lv->segments) {
+		if (lvseg->external_lv && !fn(lvseg->external_lv, data))
+			return_0;
 		if (lvseg->log_lv && !fn(lvseg->log_lv, data))
 			return_0;
 		if (lvseg->rlog_lv && !fn(lvseg->rlog_lv, data))
@@ -2044,6 +2047,12 @@ static int _lv_each_dependency(struct logical_volume *lv,
 				return_0;
 		}
 	}
+
+	if (lv_is_origin(lv))
+		dm_list_iterate(snh, &lv->snapshot_segs)
+			if (!fn(dm_list_struct_base(snh, struct lv_segment, origin_list)->cow, data))
+				return_0;
+
 	return 1;
 }
 
