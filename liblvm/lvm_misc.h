@@ -17,6 +17,18 @@
 #include "libdevmapper.h"
 #include "lvm2app.h"
 #include "metadata-exported.h"
+#include "toolcontext.h"
+
+#include <sys/types.h>
+#include <sys/stat.h>
+
+struct saved_env
+{
+	mode_t user_umask;
+};
+
+struct saved_env store_user_env(struct cmd_context *cmd);
+void restore_user_env(const struct saved_env *env);
 
 struct dm_list *tag_list_copy(struct dm_pool *p, struct dm_list *tag_list);
 struct lvm_property_value get_property(const pv_t pv, const vg_t vg,

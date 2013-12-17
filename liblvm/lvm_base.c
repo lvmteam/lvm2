@@ -18,13 +18,14 @@
 #include "lvm-version.h"
 #include "metadata-exported.h"
 #include "lvm2app.h"
+#include "lvm_misc.h"
 
 const char *lvm_library_get_version(void)
 {
 	return LVM_VERSION;
 }
 
-lvm_t lvm_init(const char *system_dir)
+static lvm_t _lvm_init(const char *system_dir)
 {
 	struct cmd_context *cmd;
 
@@ -75,18 +76,34 @@ lvm_t lvm_init(const char *system_dir)
 	return (lvm_t) cmd;
 }
 
+
+lvm_t lvm_init(const char *system_dir)
+{
+	lvm_t h = NULL;
+	struct saved_env e = store_user_env(NULL);
+	h = _lvm_init(system_dir);
+	restore_user_env(&e);
+	return h;
+}
+
 void lvm_quit(lvm_t libh)
 {
+	struct saved_env e = store_user_env((struct cmd_context *)libh);
 	destroy_toolcontext((struct cmd_context *)libh);
 	udev_fin_library_context();
+	restore_user_env(&e);
 }
 
 int lvm_config_reload(lvm_t libh)
 {
+	int rc = 0;
+
 	/* FIXME: re-init locking needed here? */
+	struct saved_env e = store_user_env((struct cmd_context *)libh);
 	if (!refresh_toolcontext((struct cmd_context *)libh))
-		return -1;
-	return 0;
+		rc = -1;
+	restore_user_env(&e);
+	return rc;
 }
 
 /*
@@ -94,54 +111,83 @@ int lvm_config_reload(lvm_t libh)
  */
 int lvm_config_override(lvm_t libh, const char *config_settings)
 {
+	int rc = 0;
 	struct cmd_context *cmd = (struct cmd_context *)libh;
+	struct saved_env e = store_user_env((struct cmd_context *)libh);
+
 	if (!override_config_tree_from_string(cmd, config_settings))
-		return -1;
-	return 0;
+		rc = -1;
+	restore_user_env(&e);
+	return rc;
 }
 
 int lvm_config_find_bool(lvm_t libh, const char *config_path, int fail)
 {
+	int rc = 0;
 	struct cmd_context *cmd = (struct cmd_context *)libh;
+	struct saved_env e = store_user_env((struct cmd_context *)libh);
 
-	return dm_config_tree_find_bool(cmd->cft, config_path, fail);
+	rc = dm_config_tree_find_bool(cmd->cft, config_path, fail);
+	restore_user_env(&e);
+	return rc;
 }
 
 int lvm_errno(lvm_t libh)
 {
-	return stored_errno();
+	int rc;
+	struct saved_env e = store_user_env((struct cmd_context *)libh);
+	rc = stored_errno();
+	restore_user_env(&e);
+	return rc;
 }
 
 const char *lvm_errmsg(lvm_t libh)
 {
 	const char *rc = NULL;
 	struct cmd_context *cmd = (struct cmd_context *)libh;
+	struct saved_env e = store_user_env((struct cmd_context *)libh);
+
 	const char *msg = stored_errmsg_with_clear();
 	if (msg) {
 		rc = dm_pool_strdup(cmd->mem, msg);
 		free((void *)msg);
 	}
+
+	restore_user_env(&e);
 	return rc;
 }
 
 const char *lvm_vgname_from_pvid(lvm_t libh, const char *pvid)
 {
+	const char *rc = NULL;
 	struct cmd_context *cmd = (struct cmd_context *)libh;
 	struct id id;
+	struct saved_env e = store_user_env((struct cmd_context *)libh);
 
-	if (!id_read_format(&id, pvid)) {
+	if (id_read_format(&id, pvid)) {
+		rc = find_vgname_from_pvid(cmd, (char *)id.uuid);
+	} else {
 		log_error(INTERNAL_ERROR "Unable to convert uuid");
-		return NULL;
 	}
-	return find_vgname_from_pvid(cmd, (char *)id.uuid);
+
+	restore_user_env(&e);
+	return rc;
 }
 
 const char *lvm_vgname_from_device(lvm_t libh, const char *device)
 {
+	const char *rc = NULL;
 	struct cmd_context *cmd = (struct cmd_context *)libh;
-	return find_vgname_from_pvname(cmd, device);
+	struct saved_env e = store_user_env(cmd);
+	rc = find_vgname_from_pvname(cmd, device);
+	restore_user_env(&e);
+	return rc;
 }
 
+/*
+ * No context to work with, so no ability to save off and restore env is not
+ * available and is not needed.
+ */
 float lvm_percent_to_float(percent_t v)
 {
 	return percent_to_float(v);

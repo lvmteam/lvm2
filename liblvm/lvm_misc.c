@@ -140,3 +140,28 @@ int set_property(const pv_t pv, const vg_t vg, const lv_t lv,
 	}
 	return 0;
 }
+
+/*
+ * Store anything that may need to be restored back to the user on library
+ * call exit.  Currently the only thing we are preserving is the users umask.
+ */
+struct saved_env store_user_env(struct cmd_context *cmd)
+{
+	struct saved_env env = {0};
+
+	if (cmd) {
+		env.user_umask = umask(cmd->default_settings.umask);
+	} else {
+		env.user_umask = umask(0);
+		umask(env.user_umask);
+	}
+
+	return env;
+}
+
+void restore_user_env(const struct saved_env *env)
+{
+	if (env) {
+		umask(env->user_umask);
+	}
+}

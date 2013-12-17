@@ -45,60 +45,99 @@ static int _lv_check_handle(const lv_t lv, const int vg_writeable)
 /* FIXME: have lib/report/report.c _disp function call lv_size()? */
 uint64_t lvm_lv_get_size(const lv_t lv)
 {
-	return SECTOR_SIZE * lv_size(lv);
+	uint64_t rc;
+	struct saved_env e = store_user_env(lv->vg->cmd);
+	rc = SECTOR_SIZE * lv_size(lv);
+	restore_user_env(&e);
+	return rc;
 }
 
 const char *lvm_lv_get_uuid(const lv_t lv)
 {
-	return lv_uuid_dup(lv);
+	const char *rc;
+	struct saved_env e = store_user_env(lv->vg->cmd);
+	rc = lv_uuid_dup(lv);
+	restore_user_env(&e);
+	return rc;
 }
 
 const char *lvm_lv_get_name(const lv_t lv)
 {
-	return dm_pool_strndup(lv->vg->vgmem, (const char *)lv->name,
+	const char *rc;
+	struct saved_env e = store_user_env(lv->vg->cmd);
+	rc = dm_pool_strndup(lv->vg->vgmem, (const char *)lv->name,
 			       NAME_LEN+1);
+	restore_user_env(&e);
+	return rc;
 }
 
 const char *lvm_lv_get_attr(const lv_t lv)
 {
-	return lv_attr_dup(lv->vg->vgmem, lv);
+	const char *rc;
+	struct saved_env e = store_user_env(lv->vg->cmd);
+	rc = lv_attr_dup(lv->vg->vgmem, lv);
+	restore_user_env(&e);
+	return rc;
 }
 
 const char *lvm_lv_get_origin(const lv_t lv)
 {
-	return lv_origin_dup(lv->vg->vgmem, lv);
+	const char *rc;
+	struct saved_env e = store_user_env(lv->vg->cmd);
+	rc = lv_origin_dup(lv->vg->vgmem, lv);
+	restore_user_env(&e);
+	return rc;
 }
 
 struct lvm_property_value lvm_lv_get_property(const lv_t lv, const char *name)
 {
-	return get_property(NULL, NULL, lv, NULL, NULL, NULL, NULL, name);
+	struct lvm_property_value rc;
+	struct saved_env e = store_user_env(lv->vg->cmd);
+	rc = get_property(NULL, NULL, lv, NULL, NULL, NULL, NULL, name);
+	restore_user_env(&e);
+	return rc;
 }
 
 struct lvm_property_value lvm_lvseg_get_property(const lvseg_t lvseg,
 						 const char *name)
 {
-	return get_property(NULL, NULL, NULL, lvseg, NULL, NULL, NULL, name);
+	struct lvm_property_value rc;
+	struct saved_env e = store_user_env(lvseg->lv->vg->cmd);
+	rc = get_property(NULL, NULL, NULL, lvseg, NULL, NULL, NULL, name);
+	restore_user_env(&e);
+	return rc;
 }
 
 uint64_t lvm_lv_is_active(const lv_t lv)
 {
+	uint64_t rc = 0;
 	struct lvinfo info;
+
+	struct saved_env e = store_user_env(lv->vg->cmd);
+
 	if (lv_info(lv->vg->cmd, lv, 0, &info, 0, 0) &&
 	    info.exists && info.live_table)
-		return 1;
-	return 0;
+		rc = 1;
+
+	restore_user_env(&e);
+	return rc;
 }
 
 uint64_t lvm_lv_is_suspended(const lv_t lv)
 {
+	uint64_t rc = 0;
 	struct lvinfo info;
+	struct saved_env e = store_user_env(lv->vg->cmd);
+
 	if (lv_info(lv->vg->cmd, lv, 0, &info, 0, 0) &&
 	    info.exists && info.suspended)
-		return 1;
-	return 0;
+		rc = 1;
+
+	restore_user_env(&e);
+	return rc;
 }
 
-int lvm_lv_add_tag(lv_t lv, const char *tag)
+static int _lvm_lv_add_tag(lv_t lv, const char *tag)
 {
 	if (_lv_check_handle(lv, 1))
 		return -1;
@@ -107,8 +146,17 @@ int lvm_lv_add_tag(lv_t lv, const char *tag)
 	return 0;
 }
 
+int lvm_lv_add_tag(lv_t lv, const char *tag)
+{
+	int rc;
+	struct saved_env e = store_user_env(lv->vg->cmd);
+	rc = _lvm_lv_add_tag(lv, tag);
+	restore_user_env(&e);
+	return rc;
+}
 
-int lvm_lv_remove_tag(lv_t lv, const char *tag)
+
+static int _lvm_lv_remove_tag(lv_t lv, const char *tag)
 {
 	if (_lv_check_handle(lv, 1))
 		return -1;
@@ -117,10 +165,23 @@ int lvm_lv_remove_tag(lv_t lv, const char *tag)
 	return 0;
 }
 
+int lvm_lv_remove_tag(lv_t lv, const char *tag)
+{
+	int rc;
+	struct saved_env e = store_user_env(lv->vg->cmd);
+	rc = _lvm_lv_remove_tag(lv, tag);
+	restore_user_env(&e);
+	return rc;
+}
+
 
 struct dm_list *lvm_lv_get_tags(const lv_t lv)
 {
-	return tag_list_copy(lv->vg->vgmem, &lv->tags);
+	struct dm_list *rc;
+	struct saved_env e = store_user_env(lv->vg->cmd);
+	rc = tag_list_copy(lv->vg->vgmem, &lv->tags);
+	restore_user_env(&e);
+	return rc;
 }
 
 /* Set defaults for non-segment specific LV parameters */
@@ -171,7 +232,7 @@ static int _lv_set_default_linear_params(struct cmd_context *cmd,
  * lvm_vg_write.  However, this appears to be non-trivial change until
  * lv_create_single is refactored by segtype.
  */
-lv_t lvm_vg_create_lv_linear(vg_t vg, const char *name, uint64_t size)
+static lv_t _lvm_vg_create_lv_linear(vg_t vg, const char *name, uint64_t size)
 {
 	struct lvcreate_params lp = { 0 };
 	uint64_t extents;
@@ -196,11 +257,20 @@ lv_t lvm_vg_create_lv_linear(vg_t vg, const char *name, uint64_t size)
 	return (lv_t) lv;
 }
 
+lv_t lvm_vg_create_lv_linear(vg_t vg, const char *name, uint64_t size)
+{
+	lv_t rc;
+	struct saved_env e = store_user_env(vg->cmd);
+	rc = _lvm_vg_create_lv_linear(vg, name, size);
+	restore_user_env(&e);
+	return rc;
+}
+
 /*
  * FIXME: This function should probably not commit to disk but require calling
  * lvm_vg_write.
  */
-int lvm_vg_remove_lv(lv_t lv)
+static int _lvm_vg_remove_lv(lv_t lv)
 {
 	if (!lv || !lv->vg || vg_read_error(lv->vg))
 		return -1;
@@ -211,7 +281,16 @@ int lvm_vg_remove_lv(lv_t lv)
 	return 0;
 }
 
-int lvm_lv_activate(lv_t lv)
+int lvm_vg_remove_lv(lv_t lv)
+{
+	int rc;
+	struct saved_env e = store_user_env(lv->vg->cmd);
+	rc = _lvm_vg_remove_lv(lv);
+	restore_user_env(&e);
+	return rc;
+}
+
+static int _lvm_lv_activate(lv_t lv)
 {
 	if (!lv || !lv->vg || vg_read_error(lv->vg) || !lv->vg->cmd)
 		return -1;
@@ -248,7 +327,16 @@ int lvm_lv_activate(lv_t lv)
 	return 0;
 }
 
-int lvm_lv_deactivate(lv_t lv)
+int lvm_lv_activate(lv_t lv)
+{
+	int rc;
+	struct saved_env e = store_user_env(lv->vg->cmd);
+	rc = _lvm_lv_activate(lv);
+	restore_user_env(&e);
+	return rc;
+}
+
+static int _lvm_lv_deactivate(lv_t lv)
 {
 	if (!lv || !lv->vg || vg_read_error(lv->vg) || !lv->vg->cmd)
 		return -1;
@@ -261,7 +349,16 @@ int lvm_lv_deactivate(lv_t lv)
 	return 0;
 }
 
-struct dm_list *lvm_lv_list_lvsegs(lv_t lv)
+int lvm_lv_deactivate(lv_t lv)
+{
+	int rc;
+	struct saved_env e = store_user_env(lv->vg->cmd);
+	rc = _lvm_lv_deactivate(lv);
+	restore_user_env(&e);
+	return rc;
+}
+
+static struct dm_list *_lvm_lv_list_lvsegs(lv_t lv)
 {
 	struct dm_list *list;
 	lvseg_list_t *lvseg;
@@ -288,18 +385,32 @@ struct dm_list *lvm_lv_list_lvsegs(lv_t lv)
 	return list;
 }
 
-lv_t lvm_lv_from_name(vg_t vg, const char *name)
+struct dm_list *lvm_lv_list_lvsegs(lv_t lv)
 {
-	struct lv_list *lvl;
-
-	dm_list_iterate_items(lvl, &vg->lvs) {
-		if (!strcmp(name, lvl->lv->name))
-			return lvl->lv;
-	}
-	return NULL;
+	struct dm_list *rc;
+	struct saved_env e = store_user_env(lv->vg->cmd);
+	rc = _lvm_lv_list_lvsegs(lv);
+	restore_user_env(&e);
+	return rc;
 }
 
-lv_t lvm_lv_from_uuid(vg_t vg, const char *uuid)
+lv_t lvm_lv_from_name(vg_t vg, const char *name)
+{
+	lv_t rc = NULL;
+	struct lv_list *lvl;
+
+	struct saved_env e = store_user_env(vg->cmd);
+	dm_list_iterate_items(lvl, &vg->lvs) {
+		if (!strcmp(name, lvl->lv->name)) {
+			rc = lvl->lv;
+			break;
+		}
+	}
+	restore_user_env(&e);
+	return rc;
+}
+
+static lv_t _lvm_lv_from_uuid(vg_t vg, const char *uuid)
 {
 	struct lv_list *lvl;
 	struct id id;
@@ -322,19 +433,33 @@ lv_t lvm_lv_from_uuid(vg_t vg, const char *uuid)
 	return NULL;
 }
 
+lv_t lvm_lv_from_uuid(vg_t vg, const char *uuid)
+{
+	lv_t rc;
+	struct saved_env e = store_user_env(vg->cmd);
+	rc = _lvm_lv_from_uuid(vg, uuid);
+	restore_user_env(&e);
+	return rc;
+}
+
 int lvm_lv_rename(lv_t lv, const char *new_name)
 {
+	int rc = 0;
+	struct saved_env e = store_user_env(lv->vg->cmd);
 	if (!lv_rename(lv->vg->cmd, lv, new_name)) {
 		/* FIXME Improve msg */
 		log_error("LV rename failed.");
-		return -1;
+		rc = -1;
 	}
-	return 0;
+	restore_user_env(&e);
+	return rc;
 }
 
 int lvm_lv_resize(const lv_t lv, uint64_t new_size)
 {
+	int rc = 0;
 	struct lvresize_params lp = { 0 };
+	struct saved_env e = { 0 };
 
 	lp.vg_name = lv->vg->name;
 	lp.lv_name = lv->name;
@@ -345,27 +470,32 @@ int lvm_lv_resize(const lv_t lv, uint64_t new_size)
 	lp.ac_force = 1;	/* Assume the user has a good backup? */
 	lp.sizeargs = 1;
 
+	e = store_user_env(lv->vg->cmd);
+
 	if (!lv_resize_prepare(lv->vg->cmd, lv, &lp, &lv->vg->pvs) ||
 	    !lv_resize(lv->vg->cmd, lv, &lp, &lv->vg->pvs)) {
 		/* FIXME Improve msg */
 		log_error("LV resize failed.");
 		/* FIXME Define consistent symbolic return codes */
-		return -1;
+		rc = -1;
 	}
-
-	return 0;
+	restore_user_env(&e);
+	return rc;
 }
 
 lv_t lvm_lv_snapshot(const lv_t lv, const char *snap_name,
 						uint64_t max_snap_size)
 {
+	lv_t rc = NULL;
 	struct lvm_lv_create_params *lvcp = NULL;
+	struct saved_env e = store_user_env(lv->vg->cmd);
 
 	lvcp = lvm_lv_params_create_snapshot(lv, snap_name, max_snap_size);
 	if (lvcp) {
-		return lvm_lv_create(lvcp);
+		rc = lvm_lv_create(lvcp);
 	}
-	return NULL;
+	restore_user_env(&e);
+	return rc;
 }
 
 /* Set defaults for thin pool specific LV parameters */
@@ -405,7 +535,7 @@ static int _lv_set_pool_params(struct lvcreate_params *lp,
 	return 1;
 }
 
-lv_create_params_t lvm_lv_params_create_thin_pool(vg_t vg,
+static lv_create_params_t _lvm_lv_params_create_thin_pool(vg_t vg,
 		const char *pool_name, uint64_t size, uint32_t chunk_size,
 		uint64_t meta_size, lvm_thin_discards_t discard)
 {
@@ -465,6 +595,18 @@ lv_create_params_t lvm_lv_params_create_thin_pool(vg_t vg,
 	return lvcp;
 }
 
+lv_create_params_t lvm_lv_params_create_thin_pool(vg_t vg,
+		const char *pool_name, uint64_t size, uint32_t chunk_size,
+		uint64_t meta_size, lvm_thin_discards_t discard)
+{
+	lv_create_params_t rc;
+	struct saved_env e = store_user_env(vg->cmd);
+	rc = _lvm_lv_params_create_thin_pool(vg, pool_name, size, chunk_size,
+										meta_size, discard);
+	restore_user_env(&e);
+	return rc;
+}
+
 /* Set defaults for thin LV specific parameters */
 static int _lv_set_thin_params(struct lvcreate_params *lp,
 				vg_t vg, const char *pool,
@@ -487,7 +629,7 @@ static int _lv_set_thin_params(struct lvcreate_params *lp,
 	return 1;
 }
 
-lv_create_params_t lvm_lv_params_create_snapshot(const lv_t lv,
+static lv_create_params_t _lvm_lv_params_create_snapshot(const lv_t lv,
 						 const char *snap_name,
 						 uint64_t max_snap_size)
 {
@@ -548,8 +690,19 @@ lv_create_params_t lvm_lv_params_create_snapshot(const lv_t lv,
 	return lvcp;
 }
 
+lv_create_params_t lvm_lv_params_create_snapshot(const lv_t lv,
+						 const char *snap_name,
+						 uint64_t max_snap_size)
+{
+	lv_create_params_t rc;
+	struct saved_env e = store_user_env(lv->vg->cmd);
+	rc = _lvm_lv_params_create_snapshot(lv, snap_name, max_snap_size);
+	restore_user_env(&e);
+	return rc;
+}
 
-lv_create_params_t lvm_lv_params_create_thin(const vg_t vg, const char *pool_name,
+static lv_create_params_t _lvm_lv_params_create_thin(const vg_t vg,
+									const char *pool_name,
 									const char *lvname, uint64_t size)
 {
 	struct lvm_lv_create_params *lvcp = NULL;
@@ -590,6 +743,16 @@ lv_create_params_t lvm_lv_params_create_thin(const vg_t vg, const char *pool_nam
 	return lvcp;
 }
 
+lv_create_params_t lvm_lv_params_create_thin(const vg_t vg, const char *pool_name,
+									const char *lvname, uint64_t size)
+{
+	lv_create_params_t rc;
+	struct saved_env e = store_user_env(vg->cmd);
+	rc = _lvm_lv_params_create_thin(vg, pool_name, lvname, size);
+	restore_user_env(&e);
+	return rc;
+}
+
 struct lvm_property_value lvm_lv_params_get_property(
 						const lv_create_params_t params,
 						const char *name)
@@ -597,13 +760,14 @@ struct lvm_property_value lvm_lv_params_get_property(
 	struct lvm_property_value rc = {
 		.is_valid = 0
 	};
+	struct saved_env e = store_user_env(params->vg->cmd);
 
 	if (params && params->magic == LV_CREATE_PARAMS_MAGIC) {
 		rc = get_property(NULL, NULL, NULL, NULL, NULL, &params->lvp, NULL, name);
 	} else {
 		log_error("Invalid lv_create_params parameter");
 	}
-
+	restore_user_env(&e);
 	return rc;
 }
 
@@ -611,16 +775,19 @@ int lvm_lv_params_set_property(lv_create_params_t params, const char *name,
 								struct lvm_property_value *prop)
 {
 	int rc = -1;
+	struct saved_env e = store_user_env(params->vg->cmd);
 
 	if (params && params->magic == LV_CREATE_PARAMS_MAGIC) {
 		rc = set_property(NULL, NULL, NULL, &params->lvp, NULL, name, prop);
 	} else {
 		log_error("Invalid lv_create_params parameter");
 	}
+
+	restore_user_env(&e);
 	return rc;
 }
 
-lv_t lvm_lv_create(lv_create_params_t params)
+static lv_t _lvm_lv_create(lv_create_params_t params)
 {
 	struct lv_list *lvl = NULL;
 
@@ -643,4 +810,13 @@ lv_t lvm_lv_create(lv_create_params_t params)
 	}
 	log_error("Invalid lv_create_params parameter");
 	return NULL;
+}
+
+lv_t lvm_lv_create(lv_create_params_t params)
+{
+	lv_t rc;
+	struct saved_env e = store_user_env(params->vg->cmd);
+	rc = _lvm_lv_create(params);
+	restore_user_env(&e);
+	return rc;
 }
