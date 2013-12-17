@@ -131,7 +131,7 @@ also refers to 1000 Physical Extents starting from Physical Extent number 1000.
 (Counting starts from 0, so this refers to the 1001st to the 2000th inclusive.)
 .P
 To move a range of Physical Extents to a specific location (which must have
-sufficent free extents) use the form:
+sufficient free extents) use the form:
 .sp
 .B pvmove /dev/sdb1:1000-1999 /dev/sdc1
 .sp

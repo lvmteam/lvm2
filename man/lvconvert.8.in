@@ -203,7 +203,7 @@ a mirror logical volume.
 .B \-\-trackchanges
 Used with \fB\-\-splitmirrors\fP on a raid1 device, this tracks changes so
 that the read-only detached image can be merged efficiently back into
-the mirror later. Only the regions of the detatched device where
+the mirror later. Only the regions of the detached device where
 the data changed get resynchronized.
 
 Please note that this feature is only supported with the new md-based mirror

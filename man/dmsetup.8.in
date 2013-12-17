@@ -484,7 +484,7 @@ Default subsystem is LVM.
 .B status
 .RB [ \-\-target
 .IR target_type ]
-.RB [ \-\-\noflush ]
+.RB [ \-\-noflush ]
 .RI [ device_name ]
 .br
 Outputs status information for each of the device's targets.

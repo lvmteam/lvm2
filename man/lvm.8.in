@@ -21,7 +21,7 @@ that command.
 On invocation, \fBlvm\fP requires that only the standard file descriptors
 stdin, stdout and stderr are available.  If others are found, they
 get closed and messages are issued warning about the leak.
-This warning can be suppressed by setting enviromental variable
+This warning can be suppressed by setting the environment variable
 .B LVM_SUPPRESS_FD_WARNINGS\fP.
 .LP
 Where commands take VG or LV names as arguments, the full path name is
@@ -46,7 +46,7 @@ being created in the filesystem for them.
 \fBdumpconfig\fP \(em Display the configuration information after
 loading \fBlvm.conf\fP(5) and any other configuration files.
 .TP
-\fBdevtypes\fP \(dm Display the recognised built-in block device types.
+\fBdevtypes\fP \(em Display the recognised built-in block device types.
 .TP
 \fBformats\fP \(em Display recognised metadata formats.
 .TP
