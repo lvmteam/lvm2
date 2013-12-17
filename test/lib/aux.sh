@@ -392,7 +392,7 @@ enable_dev() {
 	init_udev_transaction
 	for dev in "$@"; do
 		local name=$(echo "$dev" | sed -e 's,.*/,,')
-		dmsetup create -u "TEST-$name" "$name" "$name.table" || \
+		dmsetup create -u "TEST-$name" "$name" "$name.table" 2>/dev/null || \
 			dmsetup load "$name" "$name.table"
 		# using device name (since device path does not exists yes with udev)
 		dmsetup resume "$name"
