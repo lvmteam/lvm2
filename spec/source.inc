@@ -33,6 +33,9 @@
 
 %global req_udev udev >= 158-1
 %global req_cluster openais >= 1.1.1-1, cman >= 3.0.6-1, corosync >= 1.2.0-1
+%endif
+
+%if %{fedora} == 16
 %with thin none
 %with thin_check
 %with thin_repair
@@ -55,6 +58,7 @@
 
 %if %{rhel} == 6
 %define req_udev udev >= 147-2
+%global req_dm_persistent device-mapper-persistent-data >= 0.1.4
 %endif
 
 ##############################################################
