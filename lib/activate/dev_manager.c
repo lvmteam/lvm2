@@ -2754,21 +2754,15 @@ static int _tree_action(struct dev_manager *dm, struct logical_volume *lv,
 			goto_out;
 
 		/* Preload any devices required before any suspensions */
-		if (!dm_tree_preload_children(root, dlid, DLID_SIZE)) {
-		bad:
-			if (!dm_tree_deactivate_children(root, dlid, DLID_SIZE))
-				stack;
-			if (!_remove_lv_symlinks(dm, root))
-				log_warn("Failed to remove all device symlinks associated with %s.", lv->name);
+		if (!dm_tree_preload_children(root, dlid, DLID_SIZE))
 			goto_out;
-		}
 
 		if (dm_tree_node_size_changed(root))
 			dm->flush_required = 1;
 
 		if (action == ACTIVATE) {
 			if (!dm_tree_activate_children(root, dlid, DLID_SIZE))
-				goto_bad;
+				goto_out;
 			if (!_create_lv_symlinks(dm, root))
 				log_warn("Failed to create symlinks for %s.", lv->name);
 		}
