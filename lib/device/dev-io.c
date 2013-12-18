@@ -155,13 +155,26 @@ int dev_get_block_size(struct device *dev, unsigned int *physical_block_size, un
 		}
 		log_debug_devs("%s: physical block size is %u bytes", name, dev->phys_block_size);
 	}
-#else
+#elif BLKSSZGET
 	/* if we can't get physical block size, just use logical block size instead */
-	// FIXME block_size is typically 4096b while phys_block_size is 512b
-	dev->phys_block_size = 512;// dev->block_size;
-	log_debug_devs("%s: physical block size can't be determined, using logical "
-		       "block size of %u bytes instead", name, dev->phys_block_size);
+	if (dev->phys_block_size == -1) {
+		if (ioctl(dev_fd(dev), BLKSSZGET, &dev->phys_block_size) < 0) {
+			log_sys_error("ioctl BLKSSZGET", name);
+			r = 0;
+			goto out;
+		}
+		log_debug_devs("%s: physical block size can't be determined, using logical "
+			       "block size of %u bytes", name, dev->phys_block_size);
+	}
+#else
+	/* if even BLKSSZGET is not available, use default 512b */
+	if (dev->phys_block_size == -1) {
+		dev->phys_block_size = 512;
+		log_debug_devs("%s: physical block size can't be determined, using block "
+			       "size of %u bytes instead", name, dev->phys_block_size);
+	}
 #endif
+
 	*physical_block_size = (unsigned int) dev->phys_block_size;
 	*block_size = (unsigned int) dev->block_size;
 out:
