@@ -98,6 +98,7 @@ teardown_devs_prefixed() {
 	# Resume suspended devices first
 	for dm in $(dm_info suspended,name | grep "^Suspended:.*$prefix"); do
 		echo "dmsetup resume \"${dm#Suspended:}\""
+		dmsetup clear "${dm#Suspended:}"
 		dmsetup resume "${dm#Suspended:}" &
 	done
 
