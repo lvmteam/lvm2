@@ -157,7 +157,8 @@ int dev_get_block_size(struct device *dev, unsigned int *physical_block_size, un
 	}
 #else
 	/* if we can't get physical block size, just use logical block size instead */
-	dev->phys_block_size = dev->block_size;
+	// FIXME block_size is typically 4096b while phys_block_size is 512b
+	dev->phys_block_size = 512;// dev->block_size;
 	log_debug_devs("%s: physical block size can't be determined, using logical "
 		       "block size of %u bytes instead", name, dev->phys_block_size);
 #endif
