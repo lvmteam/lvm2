@@ -11,5 +11,5 @@ Conflicts=shutdown.target
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStart=@sbindir@/pvscan --cache --activate ay /dev/block/%i
+ExecStart=@sbindir@/pvscan --cache --activate ay %i
 ExecStop=@sbindir@/pvscan --cache %i

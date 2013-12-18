@@ -1,5 +1,6 @@
 Version 2.02.105 -
 =====================================
+  Use major:minor in lvm2-pvscan@.service for proper global_filter application.
   Syntax and spelling fixes in some man pages.
   Dependency scan counts with snapshots and external origins.
   Make sure VG extent size is always greater or equal to PV phys. block size.
