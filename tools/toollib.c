@@ -770,9 +770,6 @@ static int _process_all_devs(struct cmd_context *cmd, void *handle,
 
 		ret = process_single_pv(cmd, NULL, pv, handle);
 
-		free_pv_fid(pv);
-
-		ret = process_single_pv(cmd, NULL, pv, handle);
 		if (ret > ret_max)
 			ret_max = ret;
 
