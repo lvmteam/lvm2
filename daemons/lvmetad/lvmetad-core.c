@@ -903,8 +903,8 @@ static response pv_found(lvmetad_state *s, request r)
 
 	if (!dm_hash_insert(s->pvid_to_pvmeta, pvid, cft) ||
 	    !dm_hash_insert_binary(s->device_to_pvid, &device, sizeof(device), (void*)pvid_dup)) {
-		unlock_pvid_to_pvmeta(s);
 		dm_hash_remove(s->pvid_to_pvmeta, pvid);
+		unlock_pvid_to_pvmeta(s);
 		dm_config_destroy(cft);
 		dm_free(pvid_dup);
 		return reply_fail("out of memory");
