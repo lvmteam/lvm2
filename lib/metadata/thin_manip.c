@@ -392,7 +392,7 @@ struct lv_segment *find_pool_seg(const struct lv_segment *seg)
 	return pool_seg;
 }
 
-struct logical_volume *find_pool_lv(struct logical_volume *lv)
+struct logical_volume *find_pool_lv(const struct logical_volume *lv)
 {
 	struct lv_segment *seg;
 
