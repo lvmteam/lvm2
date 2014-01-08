@@ -240,8 +240,9 @@ static int _read_mda(struct lvmcache_info *info,
 	return 0;
 }
 
-static struct lvmcache_info *_pv_populate_lvmcache(
-	struct cmd_context *cmd, struct dm_config_node *cn, dev_t fallback)
+static struct lvmcache_info *_pv_populate_lvmcache(struct cmd_context *cmd,
+						   struct dm_config_node *cn,
+						   dev_t fallback)
 {
 	struct device *dev;
 	struct id pvid, vgid;
@@ -342,7 +343,7 @@ struct volume_group *lvmetad_vg_lookup(struct cmd_context *cmd, const char *vgna
 	daemon_reply reply;
 	int found;
 	char uuid[64];
-	struct format_instance *fid;
+	struct format_instance *fid = NULL;
 	struct format_instance_ctx fic;
 	struct dm_config_node *top;
 	const char *name, *diag_name;
@@ -424,6 +425,8 @@ struct volume_group *lvmetad_vg_lookup(struct cmd_context *cmd, const char *vgna
 	}
 
 out:
+	if (!vg && fid)
+		fid->fmt->ops->destroy_instance(fid);
 	daemon_reply_destroy(reply);
 
 	return vg;
