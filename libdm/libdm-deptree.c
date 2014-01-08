@@ -2619,7 +2619,7 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 		dm_tree_set_cookie(dnode, 0);
 
 		if (!dnode->info.exists && dnode->callback &&
-		    !dnode->callback(child, DM_NODE_CALLBACK_PRELOADED,
+		    !dnode->callback(dnode, DM_NODE_CALLBACK_PRELOADED,
 				     dnode->callback_data))
 			return_0;
 	}
