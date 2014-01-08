@@ -62,16 +62,10 @@ static int _thin_pool_add_message(struct lv_segment *seg,
 					     lv_name);
 		/* FIXME: switch to _SNAP later, if the created LV has an origin */
 		type = DM_THIN_MESSAGE_CREATE_THIN;
-	}
-
-	if (!dm_config_get_uint32(sn, "delete", &delete_id)) {
-		if (!lv)
-			return SEG_LOG_ERROR("Unknown message in");
-	} else {
-		if (lv)
-			return SEG_LOG_ERROR("Unsupported message format in");
+	} else if (dm_config_get_uint32(sn, "delete", &delete_id))
 		type = DM_THIN_MESSAGE_DELETE;
-	}
+	else
+		return SEG_LOG_ERROR("Unknown message in");
 
 	if (!attach_pool_message(seg, type, lv, delete_id, 1))
 		return_0;
