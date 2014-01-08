@@ -859,7 +859,7 @@ static response pv_found(lvmetad_state *s, request r)
 	const char *pvid = daemon_request_str(r, "pvmeta/id", NULL);
 	const char *vgname = daemon_request_str(r, "vgname", NULL);
 	const char *vgid = daemon_request_str(r, "metadata/id", NULL);
-	const char *vgid_old;
+	const char *vgid_old = NULL;
 	struct dm_config_node *pvmeta = dm_config_find_node(r.cft->root, "pvmeta");
 	uint64_t device;
 	struct dm_config_tree *cft, *pvmeta_old_dev = NULL, *pvmeta_old_pvid = NULL;
@@ -881,12 +881,7 @@ static response pv_found(lvmetad_state *s, request r)
 	if ((old = dm_hash_lookup_binary(s->device_to_pvid, &device, sizeof(device)))) {
 		pvmeta_old_dev = dm_hash_lookup(s->pvid_to_pvmeta, old);
 		dm_hash_remove(s->pvid_to_pvmeta, old);
-
-		if ((vgid_old = dm_hash_lookup(s->pvid_to_vgid, pvid))) {
-			lock_vg(s, vgid_old);
-			vg_remove_if_missing(s, vgid_old, 1);
-			unlock_vg(s, vgid_old);
-		}
+		vgid_old = dm_hash_lookup(s->pvid_to_vgid, old);
 	}
 	pvmeta_old_pvid = dm_hash_lookup(s->pvid_to_pvmeta, pvid);
 
@@ -951,6 +946,12 @@ static response pv_found(lvmetad_state *s, request r)
 			return reply_fail("non-orphan VG without metadata encountered");
 		}
 		unlock_vg(s, vgid);
+	}
+
+	if (vgid_old && (!vgid || strcmp(vgid, vgid_old))) {
+		lock_vg(s, vgid_old);
+		vg_remove_if_missing(s, vgid_old, 1);
+		unlock_vg(s, vgid_old);
 	}
 
 	return daemon_reply_simple("OK",
