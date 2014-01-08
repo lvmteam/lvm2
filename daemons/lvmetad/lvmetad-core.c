@@ -882,7 +882,7 @@ static response pv_found(lvmetad_state *s, request r)
 		pvmeta_old_dev = dm_hash_lookup(s->pvid_to_pvmeta, old);
 		dm_hash_remove(s->pvid_to_pvmeta, old);
 
-		if (vgid_old = dm_hash_lookup(s->pvid_to_vgid, pvid)) {
+		if ((vgid_old = dm_hash_lookup(s->pvid_to_vgid, pvid))) {
 			lock_vg(s, vgid_old);
 			vg_remove_if_missing(s, vgid_old, 1);
 			unlock_vg(s, vgid_old);
