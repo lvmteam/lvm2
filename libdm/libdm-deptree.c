@@ -1620,8 +1620,8 @@ static int _dm_tree_deactivate_children(struct dm_tree_node *dnode,
 }
 
 int dm_tree_deactivate_children(struct dm_tree_node *dnode,
-				   const char *uuid_prefix,
-				   size_t uuid_prefix_len)
+				const char *uuid_prefix,
+				size_t uuid_prefix_len)
 {
 	return _dm_tree_deactivate_children(dnode, uuid_prefix, uuid_prefix_len, 0);
 }
