@@ -31,6 +31,8 @@ prepare_clvmd() {
 
 	# skip if we don't have our own clvmd...
 	(which clvmd 2>/dev/null | grep "$abs_builddir") || skip
+	# lvs is executed from clvmd - use our version
+	export LVM_BINARY=$(which lvm)
 
 	# skip if we singlenode is not compiled in
 	(clvmd --help 2>&1 | grep "Available cluster managers" | grep "singlenode") || skip
