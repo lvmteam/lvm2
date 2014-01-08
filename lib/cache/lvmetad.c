@@ -20,8 +20,6 @@
 #include "lvmcache.h"
 #include "lvmetad-client.h"
 #include "format-text.h" // TODO for disk_locn, used as a DA representation
-#include "format_pool.h" // for FMT_POOL_NAME
-#include "format1.h" // for FMT_LVM1_NAME
 #include "crc.h"
 
 static daemon_handle _lvmetad;
@@ -901,25 +899,28 @@ int lvmetad_pvscan_single(struct cmd_context *cmd, struct device *dev,
 	info = (struct lvmcache_info *) label->info;
 
 	baton.vg = NULL;
-	baton.fid = lvmcache_fmt(info)->ops->create_instance(lvmcache_fmt(info),
-							     &fic);
+	baton.fid = lvmcache_fmt(info)->ops->create_instance(lvmcache_fmt(info), &fic);
 
 	if (!baton.fid)
 		goto_bad;
 
-	lvmcache_foreach_mda(info, _lvmetad_pvscan_single, &baton);
-
-	if (lvmcache_fmt(info) == get_format_by_name(cmd, FMT_POOL_NAME)) {
-		log_error("WARNING: Ignoring old GFS pool metadata on device %s "
-			  "when using lvmetad", dev_name(dev));
+	if (baton.fid->fmt->features & FMT_OBSOLETE) {
+		log_error("WARNING: Ignoring obsolete format of metadata (%s) on device %s when using lvmetad",
+			  baton.fid->fmt->name, dev_name(dev));
 		lvmcache_fmt(info)->ops->destroy_instance(baton.fid);
 		return 0;
 	}
 
-	/* LVM1 VGs have no MDAs. */
-	if (!baton.vg && lvmcache_fmt(info) == get_format_by_name(cmd, FMT_LVM1_NAME))
-		baton.vg = ((struct metadata_area *) dm_list_first(&baton.fid->metadata_areas_in_use))->
-			ops->vg_read(baton.fid, lvmcache_vgname_from_info(info), NULL, 0);
+	lvmcache_foreach_mda(info, _lvmetad_pvscan_single, &baton);
+
+	/*
+	 * LVM1 VGs have no MDAs and lvmcache_foreach_mda isn't worth fixing
+	 * to use pseudo-mdas for PVs.
+	 * Note that the single_device parameter also gets ignored and this code
+	 * can scan further devices.
+	 */
+	if (!baton.vg && !(baton.fid->fmt->features & FMT_MDAS))
+		baton.vg = ((struct metadata_area *) dm_list_first(&baton.fid->metadata_areas_in_use))->ops->vg_read(baton.fid, lvmcache_vgname_from_info(info), NULL, 1);
 
 	if (!baton.vg)
 		lvmcache_fmt(info)->ops->destroy_instance(baton.fid);

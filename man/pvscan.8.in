@@ -57,13 +57,20 @@ supported for logical volumes that are part of partial or clustered volume group
 .BR \-b ", " \-\-background
 Run the command in the background.
 .TP
-.BR \-\-cache " [" \-\-major " " \fImajor " " \-\-minor " " \fIminor " | " \fIDevicePath " ]..."
+.BR \-\-cache " [" \-\-major " " \fImajor " " \-\-minor " " \fIminor " | " \fIDevicePath " | " \fImajor:minor " ]..."
 Scan one or more devices and instruct the lvmetad daemon to update its cached
 state accordingly.  Called internally by udev rules.
 All devices listed explicitly are processed \fBregardless\fP of any device
 filters set using \fBdevices/filter\fP configuration setting. To filter
 devices even in this case, the \fBdevices/global_filter\fP must be used.
+If lvmetad has not yet cached any metadata or the filters have recently been
+changed, then all devices may be scanned, effectively ignoring the rest of
+the command line.  Otherwise, if all the devices referenced on the command line
+contain metadata in the default lvm2 format, other devices are not accessed.
+If metadata written using the obsolete GFS pool format is encountered, this is
+ignored and so lvmetad should not be used.
 .SH SEE ALSO
 .BR lvm (8),
+.BR lvmetad (8),
 .BR pvcreate (8),
 .BR pvdisplay (8)
