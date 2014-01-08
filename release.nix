@@ -95,15 +95,15 @@ let
       fedora18ux86_64 = update "18" "x86_64" fc18_64_updates pkgs.vmTools.rpmDistros.fedora18x86_64;
       fedora18ui386 = update "18" "i386" fc18_32_updates pkgs.vmTools.rpmDistros.fedora18i386;
 
-      centos63x86_64 = centos {
-        version="6.3"; arch="x86_64";
-        sha="4d3cddf382e81c20b167a8d13c7c92067040a1947dbb3c29cfafa01a74a26a2b";
-      };
+      #centos63x86_64 = centos {
+      #  version="6.3"; arch="x86_64";
+      #  sha="4d3cddf382e81c20b167a8d13c7c92067040a1947dbb3c29cfafa01a74a26a2b";
+      #};
 
-      centos63i386 = centos {
-        version="6.3"; arch="i386";
-        sha="5cee0e0c4d7e2dcb997f123ce9107dedbc424d80dd7f2b2471b3b348f3e1754c";
-      };
+      #centos63i386 = centos {
+      #  version="6.3"; arch="i386";
+      #  sha="5cee0e0c4d7e2dcb997f123ce9107dedbc424d80dd7f2b2471b3b348f3e1754c";
+      #};
 
       centos64x86_64 = centos {
         version="6.4"; arch="x86_64";
@@ -213,8 +213,8 @@ let
     fc19u_x86_64 = mkRPM { arch = "x86_64"; image = "fedora19u"; };
     fc19u_i386   = mkRPM { arch = "i386"; image = "fedora19u"; };
 
-    centos63_i386 = mkRPM { arch = "i386"  ; image = "centos63"; };
-    centos63_x86_64 = mkRPM { arch = "x86_64" ; image = "centos63"; };
+    #centos63_i386 = mkRPM { arch = "i386"  ; image = "centos63"; };
+    #centos63_x86_64 = mkRPM { arch = "x86_64" ; image = "centos63"; };
     centos64_i386 = mkRPM { arch = "i386"  ; image = "centos64"; };
     centos64_x86_64 = mkRPM { arch = "x86_64" ; image = "centos64"; };
 
