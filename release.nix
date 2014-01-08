@@ -42,7 +42,7 @@ let
   rootmods = [ "virtio_pci" "virtio_blk" "virtio_balloon" "ext4" "unix"
                "cifs" "virtio_net" "unix" "hmac" "md4" "ecb" "des_generic" "sha256" ];
 
-  centos_url = ver: arch: "http://ftp.fi.muni.cz/pub/linux/centos/${ver}/os/${arch}/";
+  centos_url = ver: arch: "http://vault.centos.org/${ver}/os/${arch}/";
   fedora_url = ver: arch: if pkgs.lib.eqStrings ver "rawhide" || pkgs.lib.eqStrings ver "19"
                        then "ftp://ftp.fi.muni.cz/pub/linux/fedora/linux/development/${ver}/${arch}/os/"
                        else "mirror://fedora/linux/releases/${ver}/Everything/${arch}/os/";
