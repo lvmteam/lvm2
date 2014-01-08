@@ -126,7 +126,7 @@ int lvm_pv_remove(lvm_t libh, const char *pv_name)
 	return rc;
 }
 
-#define PV_LIST_MAGIC 4026907153
+#define PV_LIST_MAGIC 4026907153U
 
 static struct dm_list *_lvm_list_pvs(lvm_t libh)
 {
