@@ -777,6 +777,8 @@ static int _process_all_devs(struct cmd_context *cmd, void *handle,
 	}
 
 	dev_iter_destroy(iter);
+	dm_list_iterate_items(pvl, pvslist)
+		free_pv_fid(pvl->pv);
 
 	return ret_max;
 }
