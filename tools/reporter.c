@@ -183,6 +183,7 @@ static int _pvs_single(struct cmd_context *cmd, struct volume_group *vg,
 	/* FIXME workaround for pv_label going through cache; remove once struct
 	 * physical_volume gains a proper "label" pointer */
 	if (!(label = pv_label(pv))) {
+		_dummy_label.labeller = pv->fmt->labeller;
 		if (pv->dev)
 			_dummy_label.dev = pv->dev;
 		else {
