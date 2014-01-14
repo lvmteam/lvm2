@@ -245,7 +245,8 @@ uint64_t lvmcache_info_mda_free(struct lvmcache_info *info)
 {
 	uint64_t freespace = UINT64_MAX;
 
-	lvmcache_foreach_mda(info, _pv_mda_free, &freespace);
+	if (info)
+		lvmcache_foreach_mda(info, _pv_mda_free, &freespace);
 
 	if (freespace == UINT64_MAX)
 		freespace = UINT64_C(0);

@@ -1958,6 +1958,9 @@ int lvmcache_uncertain_ownership(struct lvmcache_info *info) {
 
 uint64_t lvmcache_smallest_mda_size(struct lvmcache_info *info)
 {
+	if (!info)
+		return UINT64_C(0);
+
 	return find_min_mda_size(&info->mdas);
 }
 
