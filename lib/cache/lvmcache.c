@@ -64,6 +64,7 @@ struct lvmcache_vginfo {
 	unsigned holders;
 	unsigned vg_use_count;	/* Counter of vg reusage */
 	unsigned precommitted;	/* Is vgmetadata live or precommitted? */
+	unsigned cached_vg_invalidated;	/* Signal to regenerate cached_vg */
 };
 
 static struct dm_hash_table *_pvid_hash = NULL;
@@ -763,8 +764,10 @@ struct volume_group *lvmcache_get_vg(struct cmd_context *cmd, const char *vgname
 		return NULL;
 
 	/* Use already-cached VG struct when available */
-	if ((vg = vginfo->cached_vg))
+	if ((vg = vginfo->cached_vg) && !vginfo->cached_vg_invalidated)
 		goto out;
+
+	release_vg(vginfo->cached_vg);
 
 	fic.type = FMT_INSTANCE_MDAS | FMT_INSTANCE_AUX_MDAS;
 	fic.context.vg_ref.vg_name = vginfo->vgname;
@@ -785,6 +788,7 @@ struct volume_group *lvmcache_get_vg(struct cmd_context *cmd, const char *vgname
 	vginfo->cached_vg = vg;
 	vginfo->holders = 1;
 	vginfo->vg_use_count = 0;
+	vginfo->cached_vg_invalidated = 0;
 	vg->vginfo = vginfo;
 
 	if (!dm_pool_lock(vg->vgmem, detect_internal_vg_cache_corruption()))
@@ -1406,6 +1410,12 @@ int lvmcache_update_vgname_and_id(struct lvmcache_info *info,
 	    mdas_empty_or_ignored(&info->mdas) &&
 	    !is_orphan_vg(info->vginfo->vgname) && critical_section())
 		return 1;
+
+	/* If making a PV into an orphan, any cached VG metadata may become
+	 * invalid, incorrectly still referencing device structs.
+	 * (Example: pvcreate -ff) */
+	if (is_orphan_vg(vgname) && info->vginfo && !is_orphan_vg(info->vginfo->vgname))
+		info->vginfo->cached_vg_invalidated = 1;
 
 	/* If moving PV from orphan to real VG, always mark it valid */
 	if (!is_orphan_vg(vgname))
