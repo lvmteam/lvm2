@@ -1,5 +1,6 @@
 Version 2.02.105 -
 =====================================
+  Mark lvm1 format metadata as FMT_OBSOLETE. Do not use it with lvmetad.
   Invalidate cached VG struct after a PV in it gets orphaned. (2.02.87)
   Mark pool format metadata as FMT_OBSOLETE.
   Use major:minor in lvm2-pvscan@.service for proper global_filter application.

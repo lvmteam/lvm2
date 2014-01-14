@@ -603,7 +603,7 @@ struct format_type *init_format(struct cmd_context *cmd)
 	fmt->alias = NULL;
 	fmt->orphan_vg_name = FMT_LVM1_ORPHAN_VG_NAME;
 	fmt->features = FMT_RESTRICTED_LVIDS | FMT_ORPHAN_ALLOCATABLE |
-			FMT_RESTRICTED_READAHEAD;
+			FMT_RESTRICTED_READAHEAD | FMT_OBSOLETE;
 	fmt->private = NULL;
 
 	dm_list_init(&fmt->mda_ops);
