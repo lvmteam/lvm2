@@ -111,6 +111,10 @@ static int __archive(struct volume_group *vg)
 
 int archive(struct volume_group *vg)
 {
+	/* Don't archive orphan VGs. */
+	if (is_orphan_vg(vg->name))
+		return 1;
+
 	if (vg_is_archived(vg))
 		return 1; /* VG has been already archived */
 
@@ -251,6 +255,10 @@ int backup_locally(struct volume_group *vg)
 
 int backup(struct volume_group *vg)
 {
+	/* Don't back up orphan VGs. */
+	if (is_orphan_vg(vg->name))
+		return 1;
+
 	if (vg_is_clustered(vg))
 		if (!remote_backup_metadata(vg))
 			stack;
