@@ -2278,7 +2278,7 @@ static int _text_pv_resize(const struct format_type *fmt,
 	}
 
 	/* If there's a VG, reduce size by counting in pe_start and metadata areas. */
-	if (vg) {
+	if (vg && !is_orphan_vg(vg->name)) {
 		size_reduction = pv_pe_start(pv);
 		if ((mda = fid_get_mda_indexed(fid, pvid, ID_LEN, 1)) &&
 		    (mdac = mda->metadata_locn))
