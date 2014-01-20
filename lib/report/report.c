@@ -55,7 +55,6 @@ static int _field_set_percent(struct dm_report_field *field,
 	uint64_t *sortval;
 
 	if (percent == PERCENT_INVALID)
-		// FIXME  maybe use here '--'?
 		return _field_set_value(field, "", &_minusone64);
 
 	if (!(repstr = dm_pool_alloc(mem, 8)) ||

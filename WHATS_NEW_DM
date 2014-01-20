@@ -1,8 +1,8 @@
-Version 1.02.84 -
-====================================
-  Deactive already actived nodes when node's preload callback fails.
+Version 1.02.84 - 20th January 2014
+===================================
+  Revert activation of activated nodes if a node preload callback fails.
   Avoid busy looping on CPU when dmeventd reads event DM_WAIT_RETRY.
-  Ensure global mutex is being hold when working with dmeventd thread.
+  Ensure global mutex is held when working with dmeventd thread.
   Drop taking timeout mutex for un/registering dmeventd monitor.
   Allow section names in config file data to be quoted strings.
   Close fifos before exiting in dmeventd restart() error path.

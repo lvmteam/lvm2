@@ -1,7 +1,7 @@
-Version 2.02.105 -
-=====================================
-  Fix thin LV flagging for udev to skip scanning only if the LV is wiped
-  Replace use of xfs_check with xfs_reparir in fsadm. 
+Version 2.02.105 - 20th January 2014
+====================================
+  Fix thin LV flagging for udev to skip scanning only if the LV is wiped.
+  Replace use of xfs_check with xfs_repair in fsadm. 
   Mark lvm1 format metadata as FMT_OBSOLETE. Do not use it with lvmetad.
   Invalidate cached VG struct after a PV in it gets orphaned. (2.02.87)
   Mark pool format metadata as FMT_OBSOLETE.
@@ -12,7 +12,7 @@ Version 2.02.105 -
   Optimize double call of stat() for cached devices.
   Enable support for thin provisioning for default configuration.
   Improve process_each_lv_in_vg() tag processing.
-  Reodered and simplified logging code.
+  Reordered and simplified logging code.
   Fix SYSTEMD_READY assignment for foreign devices in lvmetad udev rules.
   Disable online thin pool metadata resize for 1.9 kernel thin target.
   Shortened code for initialization of raid segment types.
@@ -49,13 +49,19 @@ Version 2.02.105 -
   Check for failure of dev_get_size() when reporting device size.
   Drop extra unneeded '/' when scanning sysfs directory.
   Fix undef value if skipped clustered VG ignored for toollib PV seg. (2.02.103)
-  liblvm/python API Add ability to validate VG/LV names.
-  liblvm/python API Add ability to create PV with arguments.
-  liblvm/python API Fail VG reduce when insufficient metadata copies
-  Fix install of conf subdir when not building in srcdir.
+  Support validation of VG/LV names in liblvm/python.
+  Allow creation of PVs with arguments to liblvm/python.
+  Ensure sufficient metadata copies retained in liblvm/python vgreduce.
+  Fix installation of profiles from conf subdir when not building in srcdir.
+  Show UUIDs for missing PVs in reports.
+  Change dev_size/name, pv_fmt/mda_free/mda_size/uuid fields from pv to label.
+  Add struct device *dev to struct label.
+  Introduce process_each_label.
+  Change void *private to struct format_type *fmt in struct labeller.
+  Remove pv_read.
   Add reporting of thin_id device id for thin volumes.
-  Fix reporting of empty numerical values.
-  Simplify reporting code.
+  Fix reporting of empty numerical values for recently-added fields.
+  Use _field_set_percent/value in reporting code.
 
 Version 2.02.104 - 13th November 2013
 =====================================
