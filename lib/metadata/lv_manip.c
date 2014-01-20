@@ -5634,6 +5634,18 @@ out:
 	return 1;
 }
 
+static int _should_wipe_lv(struct lvcreate_params *lp, struct logical_volume *lv) {
+	int r = lp->zero | lp->wipe_signatures;
+
+	if (!seg_is_thin(lp))
+		return r;
+
+	if (lv_is_thin_volume(lv))
+		return r && !lp->snapshot && !first_seg(first_seg(lv)->pool_lv)->zero_new_blocks;
+
+	return 0;
+}
+
 /* Thin notes:
  * If lp->thin OR lp->activate is AY*, activate the pool if not already active.
  * If lp->thin, create thin LV within the pool - as a snapshot if lp->snapshot.
@@ -6029,7 +6041,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 	}
 
 	/* Do not scan this LV until properly zeroed/wiped. */
-	if (lp->zero | lp->wipe_signatures)
+	if (_should_wipe_lv(lp, lv))
 		lv->status |= LV_NOSCAN;
 
 	if (lp->temporary)
@@ -6110,9 +6122,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 			log_verbose("Signature wiping on \"%s/%s\" not requested", lv->vg->name, lv->name);
 	}
 
-	if ((!seg_is_thin(lp) ||
-	    (lv_is_thin_volume(lv) && !lp->snapshot &&
-	     !first_seg(first_seg(lv)->pool_lv)->zero_new_blocks))) {
+	if (_should_wipe_lv(lp, lv)) {
 		if (!wipe_lv(lv, (struct wipe_params)
 			     {
 				     .do_zero = lp->zero,

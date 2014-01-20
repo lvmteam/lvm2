@@ -1,5 +1,6 @@
 Version 2.02.105 -
 =====================================
+  Fix thin LV flagging for udev to skip scanning only if the LV is wiped
   Replace use of xfs_check with xfs_reparir in fsadm. 
   Mark lvm1 format metadata as FMT_OBSOLETE. Do not use it with lvmetad.
   Invalidate cached VG struct after a PV in it gets orphaned. (2.02.87)
