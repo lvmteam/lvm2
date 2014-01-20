@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (C) 2008-2012 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2008-2014 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -24,7 +24,9 @@ check_reiserfs=
 which mkfs.ext3 || check_ext3=${check_ext3:-mkfs.ext3}
 which fsck.ext3 || check_ext3=${check_ext3:-fsck.ext3}
 which mkfs.xfs || check_xfs=${check_xfs:-mkfs.xfs}
-which xfs_check || check_xfs=${check_xfs:-xfs_check}
+which xfs_check || {
+	which xfs_repair || check_xfs=${check_xfs:-xfs_repair}
+}
 which mkfs.reiserfs || check_reiserfs=${check_reiserfs:-mkfs.reiserfs}
 which reiserfsck || check_reiserfs=${check_reiserfs:-reiserfsck}
 
@@ -54,7 +56,11 @@ fscheck_ext3()
 
 fscheck_xfs()
 {
-	xfs_check "$dev_vg_lv"
+	if which xfs_repair ; then
+		xfs_repair -n "$dev_vg_lv"
+	else
+		xfs_check "$dev_vg_lv"
+	fi
 }
 
 fscheck_reiserfs()
@@ -67,8 +73,9 @@ check_missing()
 	eval local t=$\check_$1
 	test -z "$t" && return 0
 	test "$t" = skip && return 1
-	# trick for warning test
-	echo "WARNING: fsadm test skipped $1 tests, $t tool is missing"
+	# trick to get test listed with warning
+	echo "WARNING: fsadm test skipped $1 tests, $t tool is missing."
+	should false;
 	return 1
 }
 
