@@ -1,3 +1,6 @@
+Version 2.02.106 - 
+====================================
+
 Version 2.02.105 - 20th January 2014
 ====================================
   Fix thin LV flagging for udev to skip scanning only if the LV is wiped.
