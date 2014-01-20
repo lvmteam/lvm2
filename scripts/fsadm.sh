@@ -54,6 +54,8 @@ READLINK=readlink
 READLINK_E="-e"
 FSCK=fsck
 XFS_CHECK=xfs_check
+# XFS_REPAIR -n is used when XFS_CHECK is not found
+XFS_REPAIR=xfs_repair
 
 # user may override lvm location by setting LVM_BINARY
 LVM=${LVM_BINARY:-lvm}
@@ -430,7 +432,15 @@ check() {
 	esac
 
 	case "$FSTYPE" in
-	  "xfs") dry "$XFS_CHECK" "$VOLUME" ;;
+	  "xfs") if which "$XFS_CHECK" >"$NULL" 2>&1 ; then
+			dry "$XFS_CHECK" "$VOLUME"
+		 else
+			# Replacement for outdated xfs_check
+			# FIXME: for small devices we need to force_geometry,
+			# since we run in '-n' mode, it shouldn't be problem.
+			# Think about better way....
+			dry "$XFS_REPAIR" -n -o force_geometry "$VOLUME"
+		 fi ;;
 	  *)    # check if executed from interactive shell environment
 		case "$-" in
 		  *i*) dry "$FSCK" $YES $FORCE "$VOLUME" ;;
@@ -452,7 +462,8 @@ test -n "$FSADM_RUNNING" && exit 0
 test -n "$TUNE_EXT" -a -n "$RESIZE_EXT" -a -n "$TUNE_REISER" -a -n "$RESIZE_REISER" \
   -a -n "$TUNE_XFS" -a -n "$RESIZE_XFS" -a -n "$MOUNT" -a -n "$UMOUNT" -a -n "$MKDIR" \
   -a -n "$RMDIR" -a -n "$BLOCKDEV" -a -n "$BLKID" -a -n "$GREP" -a -n "$READLINK" \
-  -a -n "$DATE" -a -n "$FSCK" -a -n "$XFS_CHECK" -a -n "$LVM" \
+  -a -n "$DATE" -a -n "$FSCK" -a -n "$XFS_CHECK" -a -n "$XFS_REPAIR" \
+  -a -n "$LVM" \
   || error "Required command definitions in the script are missing!"
 
 "$LVM" version >"$NULL" 2>&1 || error "Could not run lvm binary \"$LVM\""
