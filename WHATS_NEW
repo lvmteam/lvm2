@@ -1,5 +1,6 @@
 Version 2.02.106 - 
 ====================================
+  Online thin pool metadata resize requires 1.10 kernel thin pool target.
 
 Version 2.02.105 - 20th January 2014
 ====================================
