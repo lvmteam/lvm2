@@ -88,6 +88,7 @@ SOURCES =\
 	metadata/merge.c \
 	metadata/metadata.c \
 	metadata/mirror.c \
+	metadata/pool_manip.c \
 	metadata/pv.c \
 	metadata/pv_manip.c \
 	metadata/pv_map.c \
