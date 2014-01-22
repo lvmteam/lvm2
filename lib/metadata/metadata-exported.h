@@ -731,7 +731,7 @@ struct lvcreate_params {
 	/* flags */
 	int snapshot; /* snap */
 	int thin; /* thin */
-	int create_thin_pool; /* thin */
+	int create_pool; /* thin */
 	int zero; /* all */
 	int wipe_signatures; /* all */
 	int major; /* all */

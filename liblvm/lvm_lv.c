@@ -507,7 +507,7 @@ static int _lv_set_pool_params(struct lvcreate_params *lp,
 
 	lp->pool = pool;
 
-	lp->create_thin_pool = 1;
+	lp->create_pool = 1;
 	lp->segtype = get_segtype_from_string(vg->cmd, "thin-pool");
 	lp->stripes = 1;
 
