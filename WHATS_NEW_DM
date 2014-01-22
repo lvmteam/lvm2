@@ -1,5 +1,6 @@
 Version 1.02.85 - 
 ===================================
+  Drop cryptsetup specific rules from 10-dm.rules - cryptsetup sets them.
 
 Version 1.02.84 - 20th January 2014
 ===================================
