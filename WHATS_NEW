@@ -1,5 +1,6 @@
 Version 2.02.106 - 
 ====================================
+  Issue error if libbblkid detects signature and fails to return offset/length.
   Update autoconf config.guess/sub to 2014-01-01.
   Online thin pool metadata resize requires 1.10 kernel thin pool target.
 

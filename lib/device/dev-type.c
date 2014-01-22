@@ -452,6 +452,8 @@ out:
 static int _blkid_wipe(blkid_probe probe, struct device *dev, const char *name,
 		       int exclude_lvm_member, int yes, force_t force)
 {
+	static const char* msg_failed_offset = "Failed to get offset of the %s signature on %s.";
+	static const char* msg_failed_length = "Failed to get length of the %s signature on %s.";
 	const char *offset = NULL, *type = NULL, *magic = NULL,
 		   *usage = NULL, *label = NULL, *uuid = NULL;
 	loff_t offset_value;
@@ -461,13 +463,23 @@ static int _blkid_wipe(blkid_probe probe, struct device *dev, const char *name,
 		if (exclude_lvm_member &&
 		    (!strcmp(type, "LVM1_member") || !strcmp(type, "LVM2_member")))
 			return 1;
-		if (!blkid_probe_lookup_value(probe, "SBMAGIC_OFFSET", &offset, NULL) &&
-		     blkid_probe_lookup_value(probe, "SBMAGIC", &magic, &len))
-			return_0;
+		if (blkid_probe_lookup_value(probe, "SBMAGIC_OFFSET", &offset, NULL)) {
+			log_error(msg_failed_offset, type, name);
+			return 0;
+		}
+		if (blkid_probe_lookup_value(probe, "SBMAGIC", &magic, &len)) {
+			log_error(msg_failed_length, type, name);
+			return 0;
+		}
 	} else if (!blkid_probe_lookup_value(probe, "PTTYPE", &type, NULL)) {
-		if (!blkid_probe_lookup_value(probe, "PTMAGIC_OFFSET", &offset, NULL) &&
-		     blkid_probe_lookup_value(probe, "PTMAGIC", &magic, &len))
-			return_0;
+		if (blkid_probe_lookup_value(probe, "PTMAGIC_OFFSET", &offset, NULL)) {
+			log_error(msg_failed_offset, type, name);
+			return 0;
+		}
+		if (blkid_probe_lookup_value(probe, "PTMAGIC", &magic, &len)) {
+			log_error(msg_failed_length, type, name);
+			return 0;
+		}
 		usage = "partition table";
 	} else
 		return_0;
