@@ -3469,7 +3469,7 @@ static int _adjust_policy_params(struct cmd_context *cmd,
 			return_0;
 		if ((PERCENT_0 < percent && percent <= PERCENT_100) &&
 		    (percent > policy_threshold)) {
-			if (!pool_can_resize_metadata(lv)) {
+			if (!thin_pool_feature_supported(lv, THIN_FEATURE_METADATA_RESIZE)) {
 				log_error_once("Online metadata resize for %s/%s is not supported.",
 					       lp->vg_name, lp->lv_name);
 				return 0;
@@ -3535,7 +3535,7 @@ static int _lvresize_poolmetadata_prepare(struct cmd_context *cmd,
 
 	lp->poolmetadataextents = 0;
 
-	if (!pool_can_resize_metadata(pool_lv)) {
+	if (!thin_pool_feature_supported(pool_lv, THIN_FEATURE_METADATA_RESIZE)) {
 		log_error("Support for online metadata resize not detected.");
 		return 0;
 	}

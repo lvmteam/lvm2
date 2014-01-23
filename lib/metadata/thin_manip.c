@@ -206,7 +206,7 @@ int pool_is_active(const struct logical_volume *lv)
 	return 0;
 }
 
-int pool_can_resize_metadata(const struct logical_volume *lv)
+int thin_pool_feature_supported(const struct logical_volume *lv, int feature)
 {
 	static unsigned attr = 0U;
 	struct lv_segment *seg;
@@ -225,7 +225,7 @@ int pool_can_resize_metadata(const struct logical_volume *lv)
 		return 0;
 	}
 
-	return (attr & THIN_FEATURE_METADATA_RESIZE) ? 1 : 0;
+	return (attr & feature) ? 1 : 0;
 }
 
 int pool_below_threshold(const struct lv_segment *pool_seg)
