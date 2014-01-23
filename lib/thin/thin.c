@@ -651,7 +651,8 @@ static int _thin_target_present(struct cmd_context *cmd,
 		}
 
 		for (i = 0; i < sizeof(_features)/sizeof(*_features); i++)
-			if (maj >= _features[i].maj && min >= _features[i].min)
+			if ((maj > _features[i].maj) ||
+			    (maj == _features[i].maj && min >= _features[i].min))
 				_attrs |= _features[i].thin_feature;
 			else
 				log_very_verbose("Target %s does not support %s.",
