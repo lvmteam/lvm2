@@ -64,6 +64,7 @@ enum {
 	THIN_FEATURE_BLOCK_SIZE			= (1 << 3),
 	THIN_FEATURE_DISCARDS_NON_POWER_2	= (1 << 4),
 	THIN_FEATURE_METADATA_RESIZE		= (1 << 5),
+	THIN_FEATURE_EXTERNAL_ORIGIN_EXTEND	= (1 << 6),
 };
 
 void set_activation(int activation);

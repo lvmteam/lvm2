@@ -1,5 +1,6 @@
 Version 2.02.106 - 
 ====================================
+  Detect thin feature external_origin_extend and limit extend when missing.
   Rename internal pool_can_resize_metadata() to thin_pool_feature_supported().
   Issue error if libbblkid detects signature and fails to return offset/length.
   Update autoconf config.guess/sub to 2014-01-01.

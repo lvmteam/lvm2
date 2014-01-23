@@ -2452,6 +2452,14 @@ int lv_add_virtual_segment(struct logical_volume *lv, uint64_t status,
 	lv->le_count += extents;
 	lv->size += (uint64_t) extents *lv->vg->extent_size;
 
+	/* Validate thin target supports bigger size of thin volume then external origin */
+	if (lv_is_thin_volume(lv) && first_seg(lv)->external_lv &&
+	    first_seg(lv)->external_lv->size < lv->size &&
+	    !thin_pool_feature_supported(first_seg(lv)->pool_lv, THIN_FEATURE_EXTERNAL_ORIGIN_EXTEND)) {
+		log_error("Thin target does not support external origin smaller then thin volume.");
+		return 0;
+	}
+
 	return 1;
 }
 

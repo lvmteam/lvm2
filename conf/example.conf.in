@@ -691,6 +691,7 @@ global {
     #   discards_non_power_2
     #   external_origin
     #   metadata_resize
+    #   external_origin_extend
     #
     # thin_disabled_features = [ "discards", "block_size" ]
 }

@@ -528,6 +528,7 @@ static int _thin_add_target_line(struct dev_manager *dm,
 {
 	char *pool_dlid, *external_dlid;
 	uint32_t device_id = seg->device_id;
+	unsigned attr;
 
 	if (!seg->pool_lv) {
 		log_error(INTERNAL_ERROR "Segment %s has no pool.",
@@ -560,6 +561,15 @@ static int _thin_add_target_line(struct dev_manager *dm,
 
 	/* Add external origin LV */
 	if (seg->external_lv) {
+		if (seg->external_lv->size < seg->lv->size) {
+			/* Validate target supports smaller external origin */
+			if (!_thin_target_present(cmd, first_seg(seg->pool_lv), &attr) ||
+			    !(attr & THIN_FEATURE_EXTERNAL_ORIGIN_EXTEND)) {
+				log_error("Thin target does not support smaller size of external origin LV %s.",
+					  seg->external_lv->name);
+				return 0;
+			}
+		}
 		if (!(external_dlid = build_dm_uuid(mem, seg->external_lv->lvid.s,
 						    lv_layer(seg->external_lv)))) {
 			log_error("Failed to build uuid for external origin LV %s.",
@@ -619,6 +629,7 @@ static int _thin_target_present(struct cmd_context *cmd,
 		{ 1, 4, THIN_FEATURE_BLOCK_SIZE, "block_size" },
 		{ 1, 5, THIN_FEATURE_DISCARDS_NON_POWER_2, "discards_non_power_2" },
 		{ 1, 10, THIN_FEATURE_METADATA_RESIZE, "metadata_resize" },
+		{ 9, 11, THIN_FEATURE_EXTERNAL_ORIGIN_EXTEND, "external_origin_extend" },
 	};
 
 	static const char _lvmconf[] = "global/thin_disabled_features";
