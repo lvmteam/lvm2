@@ -25,7 +25,7 @@ let
       cd `cat /tmp/build-location`
       mv test/results/list test/results/list-rpm
       rpm -Uvh /tmp/rpmout/RPMS/*/*.rpm # */
-      (/usr/lib/systemd/systemd-udevd || /usr/lib/udev/udevd || find / -name \*udevd) &
+      (/usr/lib/systemd/systemd-udevd || /usr/lib/udev/udevd || /sbin/udevd || find / -xdev -name \*udevd) &
       make check_system QUIET=1 T=${T} || touch $out/nix-support/failed
       mv test/results/list test/results/list-system
       cat test/results/list-* > test/results/list
