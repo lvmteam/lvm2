@@ -46,7 +46,7 @@ int attach_pool_data_lv(struct lv_segment *pool_seg,
 {
 	if (!seg_is_thin_pool(pool_seg)) {
 		log_error(INTERNAL_ERROR
-			  "Unale to attach pool data LV to %s segtype.",
+			  "Unable to attach pool data LV to %s segtype.",
 			  pool_seg->segtype->ops->name(pool_seg));
 		return 0;
 	}
