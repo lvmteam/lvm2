@@ -255,7 +255,7 @@ int create_pool(struct logical_volume *pool_lv,
 				  pool_lv->name);
 			goto bad;
 		}
-		pool_lv->status &= LV_TEMPORARY;
+		pool_lv->status &= ~LV_TEMPORARY;
 	}
 
 	if (dm_snprintf(name, sizeof(name), "%s_%s", pool_lv->name,
