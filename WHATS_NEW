@@ -1,5 +1,6 @@
 Version 2.02.106 - 
 ====================================
+  Respect LVM_LVMETAD_PIDFILE env var for lvm command.
   Avoid exposing temporary devices when initializing thin pool volume.
   Fix test when checking target version for available thin features.
   Detect thin feature external_origin_extend and limit extend when missing.
@@ -41,7 +42,7 @@ Version 2.02.105 - 20th January 2014
   Add --splitsnapshot to lvconvert to separate out cow LV.
   Reinstate origin reload to complete lvconvert -s with active LVs. (2.02.98)
   Select only active volume groups if vgdisplay -A is used.
-  Add -p and LVM_LVMETAD_PID env var to lvmetad to change pid file.
+  Add -p and LVM_LVMETAD_PIDFILE env var to lvmetad to change pid file.
   Allow lvmetad to reuse stale socket.
   Only unlink lvmetad socket on error if created by the same process.
   Append missing newline to lvmetad missing socket path error message.

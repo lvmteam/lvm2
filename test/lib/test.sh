@@ -81,9 +81,9 @@ test -n "$BASH" && set -eE -o pipefail
 aux lvmconf
 aux prepare_clvmd
 test -n "$LVM_TEST_LVMETAD" && {
-	aux prepare_lvmetad
 	export LVM_LVMETAD_SOCKET="$TESTDIR/lvmetad.socket"
 	export LVM_LVMETAD_PIDFILE="$TESTDIR/lvmetad.pid"
+	aux prepare_lvmetad
 }
 echo "@TESTDIR=$TESTDIR"
 echo "@PREFIX=$PREFIX"

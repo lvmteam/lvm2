@@ -40,7 +40,7 @@ void lvmetad_disconnect(void)
 
 void lvmetad_init(struct cmd_context *cmd)
 {
-	if (!_lvmetad_use && !access(LVMETAD_PIDFILE, F_OK))
+	if (!_lvmetad_use && !access(getenv("LVM_LVMETAD_PIDFILE") ? : LVMETAD_PIDFILE, F_OK))
 		log_warn("WARNING: lvmetad is running but disabled."
 			 " Restart lvmetad before enabling it!");
 	_lvmetad_cmd = cmd;

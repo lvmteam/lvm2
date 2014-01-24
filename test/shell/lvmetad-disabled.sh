@@ -13,14 +13,17 @@
 
 test -e LOCAL_LVMETAD || skip
 kill $(cat LOCAL_LVMETAD)
+while test -e "$TESTDIR/lvmetad.socket"; do echo -n .; sleep .1; done # wait for the socket close
+test ! -e "$LVM_LVMETAD_PIDFILE"
 
-test -e $LVMETAD_PIDFILE && skip
 lvmetad
-test -e $LVMETAD_PIDFILE
-cp $LVMETAD_PIDFILE LOCAL_LVMETAD
+while ! test -e "$TESTDIR/lvmetad.socket"; do echo -n .; sleep .1; done # wait for the socket
+test -e "$LVM_LVMETAD_PIDFILE"
+cp "$LVM_LVMETAD_PIDFILE" LOCAL_LVMETAD
+
 pvs 2>&1 | not grep "lvmetad is running"
 aux lvmconf "global/use_lvmetad = 0"
 pvs 2>&1 | grep "lvmetad is running"
 
-kill $(cat $LVMETAD_PIDFILE)
-not ls $LVMETAD_PIDFILE
+kill $(cat "$LVM_LVMETAD_PIDFILE")
+not ls "$LVM_LVMETAD_PIDFILE"

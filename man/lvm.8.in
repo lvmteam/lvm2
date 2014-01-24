@@ -301,6 +301,12 @@ is executed.
 The Volume Group name that is assumed for
 any reference to a Logical Volume that doesn't specify a path.
 Not set by default.
+.TP
+.B LVM_LVMETAD_PIDFILE
+Path for the lvmetad pid file.
+.TP
+.B LVM_LVMETAD_SOCKET
+Path for the lvmetad socket file.
 .SH VALID NAMES
 The following characters are valid for VG and LV names:
 .B a-z A-Z 0-9 + _ . -
