@@ -86,9 +86,9 @@ int attach_pool_message(struct lv_segment *pool_seg, dm_thin_message_t type,
 
 	dm_list_add(&pool_seg->thin_messages, &tmsg->list);
 
-	log_debug_metadata("Added %s message",
+	log_debug_metadata("Added %s message.",
 			   (type == DM_THIN_MESSAGE_CREATE_SNAP ||
-			   type == DM_THIN_MESSAGE_CREATE_THIN) ? "create" :
+			    type == DM_THIN_MESSAGE_CREATE_THIN) ? "create" :
 			   (type == DM_THIN_MESSAGE_DELETE) ? "delete" : "unknown");
 
 	return 1;
