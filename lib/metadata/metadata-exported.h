@@ -105,9 +105,10 @@
 #define LV_NOSCAN		UINT64_C(0x0000080000000000)	/* LV - internal use only - the LV
 									should not be scanned */
 #define LV_TEMPORARY		UINT64_C(0x0000100000000000)	/* LV - internal use only - the LV
-								        is supposed to be created and
-									removed during single LVM
-									command execution. */
+									is supposed to be created and
+									removed or reactivated with
+									this flag dropped during single
+									LVM command execution. */
 
 /* Format features flags */
 #define FMT_SEGMENTS		0x00000001U	/* Arbitrary segment params? */

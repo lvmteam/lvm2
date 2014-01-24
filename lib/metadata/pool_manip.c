@@ -241,7 +241,13 @@ int create_pool(struct logical_volume *pool_lv,
 		 *
 		 * FIXME: implement lazy clearing when activation is disabled
 		 */
-		/* pool_lv is a new LV so the VG lock protects us */
+		/*
+		 * pool_lv is a new LV so the VG lock protects us
+		 * Pass in LV_TEMPORARY flag, since device is activated purely for wipe
+		 * and later it is either deactivated (in cluster)
+		 * or directly converted to invisible device via suspend/resume
+		 */
+		pool_lv->status |= LV_TEMPORARY;
 		if (!activate_lv_local(pool_lv->vg->cmd, pool_lv) ||
 		    /* Clear 4KB of metadata device for new thin-pool. */
 		    !wipe_lv(pool_lv, (struct wipe_params) { .do_zero = 1 })) {
@@ -249,6 +255,7 @@ int create_pool(struct logical_volume *pool_lv,
 				  pool_lv->name);
 			goto bad;
 		}
+		pool_lv->status &= LV_TEMPORARY;
 	}
 
 	if (dm_snprintf(name, sizeof(name), "%s_%s", pool_lv->name,
