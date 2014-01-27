@@ -715,6 +715,28 @@ int dm_tree_node_add_raid_target_with_params(struct dm_tree_node *node,
 /* Cache feature_flags */
 #define DM_CACHE_FEATURE_WRITEBACK    0x00000001
 #define DM_CACHE_FEATURE_WRITETHROUGH 0x00000002
+struct dm_tree_node_cache_params {
+	uint32_t version;
+
+	uint32_t chunk_size;
+	uint32_t feature_flags; /* DM_CACHE_FEATURE_* */
+
+	int core_argc;
+	char **core_argv;
+
+	char *policy_name;
+	int   policy_argc;
+	char **policy_argv;
+
+	const char *data_uuid;
+	const char *metadata_uuid;
+	const char *origin_uuid;
+	/* 'version == 0' end */
+};
+
+int dm_tree_node_add_cache_target(struct dm_tree_node *node,
+				  uint64_t size,
+				  struct dm_tree_node_cache_params *p);
 
 /*
  * Replicator operation mode

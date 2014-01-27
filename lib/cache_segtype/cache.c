@@ -284,6 +284,116 @@ static struct segtype_handler _cache_pool_ops = {
 	.destroy = _destroy,
 };
 
+static int _cache_text_import(struct lv_segment *seg,
+			      const struct dm_config_node *sn,
+			      struct dm_hash_table *pv_hash __attribute__((unused)))
+{
+	struct logical_volume *pool_lv, *origin_lv;
+	const char *name = NULL;
+
+	if (!dm_config_has_node(sn, "cache_pool"))
+		return SEG_LOG_ERROR("cache_pool not specified in");
+	if (!(name = dm_config_find_str(sn, "cache_pool", NULL)))
+		return SEG_LOG_ERROR("cache_pool must be a string in");
+	if (!(pool_lv = find_lv(seg->lv->vg, name)))
+		return SEG_LOG_ERROR("Unknown logical volume %s specified for "
+			  "cache_pool in", name);
+
+	if (!dm_config_has_node(sn, "origin"))
+		return SEG_LOG_ERROR("Cache origin not specified in");
+	if (!(name = dm_config_find_str(sn, "origin", NULL)))
+		return SEG_LOG_ERROR("Cache origin must be a string in");
+	if (!(origin_lv = find_lv(seg->lv->vg, name)))
+		return SEG_LOG_ERROR("Unknown logical volume %s specified for "
+			  "cache origin in", name);
+
+	if (!set_lv_segment_area_lv(seg, 0, origin_lv, 0, 0))
+		return_0;
+	if (!attach_pool_lv(seg, pool_lv, NULL, NULL))
+		return_0;
+
+	return 1;
+}
+
+static int _cache_text_import_area_count(const struct dm_config_node *sn,
+					 uint32_t *area_count)
+{
+	*area_count = 1;
+
+	return 1;
+}
+
+static int _cache_text_export(const struct lv_segment *seg, struct formatter *f)
+{
+	if (!seg_lv(seg, 0))
+		return_0;
+
+	outf(f, "cache_pool = \"%s\"", seg->pool_lv->name);
+	outf(f, "origin = \"%s\"", seg_lv(seg, 0)->name);
+
+	return 1;
+}
+
+static int _cache_add_target_line(struct dev_manager *dm,
+				 struct dm_pool *mem,
+				 struct cmd_context *cmd __attribute__((unused)),
+				 void **target_state __attribute__((unused)),
+				 struct lv_segment *seg,
+				 const struct lv_activate_opts *laopts __attribute__((unused)),
+				 struct dm_tree_node *node, uint64_t len,
+				 uint32_t *pvmove_mirror_count __attribute__((unused)))
+{
+	struct lv_segment *cache_pool_seg;
+	struct logical_volume *data, *metadata, *origin;
+	struct dm_tree_node_cache_params params;
+
+	cache_pool_seg = first_seg(seg->pool_lv);
+	data = seg_lv(cache_pool_seg, 0);
+	metadata = cache_pool_seg->metadata_lv;
+	origin = seg_lv(seg, 0);
+
+	memset(&params, 0, sizeof(params));
+
+	params.chunk_size = cache_pool_seg->chunk_size;
+
+	if (!(params.data_uuid = build_dm_uuid(mem, data->lvid.s, NULL)))
+		return_0;
+
+	if (!(params.metadata_uuid = build_dm_uuid(mem, metadata->lvid.s, NULL)))
+		return_0;
+
+	if (!(params.origin_uuid = build_dm_uuid(mem, origin->lvid.s, NULL)))
+		return_0;
+
+	/* Cache features, core args, and policy are stored in the cache_pool */
+	params.feature_flags = cache_pool_seg->feature_flags;
+	params.policy_argc = cache_pool_seg->core_argc;
+	params.policy_argv = cache_pool_seg->core_argv;
+	params.policy_name = cache_pool_seg->policy_name;
+	params.policy_argc = cache_pool_seg->policy_argc;
+	params.policy_argv = cache_pool_seg->policy_argv;
+
+	if (!dm_tree_node_add_cache_target(node, len, &params))
+		return_0;
+
+	return add_areas_line(dm, seg, node, 0u, seg->area_count);
+}
+
+static struct segtype_handler _cache_ops = {
+	.name = _name,
+	.text_import = _cache_text_import,
+	.text_import_area_count = _cache_text_import_area_count,
+	.text_export = _cache_text_export,
+	.add_target_line = _cache_add_target_line,
+#ifdef DEVMAPPER_SUPPORT
+	.target_present = _target_present,
+#  ifdef DMEVENTD
+#  endif        /* DMEVENTD */
+#endif
+	.modules_needed = _modules_needed,
+	.destroy = _destroy,
+};
+
 #ifdef CACHE_INTERNAL /* Shared */
 int init_cache_segtypes(struct cmd_context *cmd,
 			struct segtype_library *seglib)
@@ -305,6 +415,22 @@ int init_cache_segtypes(struct cmd_context *cmd,
 	segtype->name = "cache_pool";
 	segtype->flags = SEG_CACHE_POOL;
 	segtype->ops = &_cache_pool_ops;
+	segtype->private = NULL;
+
+	if (!lvm_register_segtype(seglib, segtype))
+		return_0;
+	log_very_verbose("Initialised segtype: %s", segtype->name);
+
+	segtype = dm_zalloc(sizeof(*segtype));
+	if (!segtype) {
+		log_error("Failed to allocate memory for cache segtype");
+		return 0;
+	}
+	segtype->cmd = cmd;
+
+	segtype->name = "cache";
+	segtype->flags = SEG_CACHE;
+	segtype->ops = &_cache_ops;
 	segtype->private = NULL;
 
 	if (!lvm_register_segtype(seglib, segtype))

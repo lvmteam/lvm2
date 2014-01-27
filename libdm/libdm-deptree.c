@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2013 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2005-2014 Red Hat, Inc. All rights reserved.
  *
  * This file is part of the device-mapper userspace tools.
  *
@@ -27,6 +27,7 @@
 
 /* Supported segment types */
 enum {
+	SEG_CACHE,
 	SEG_CRYPT,
 	SEG_ERROR,
 	SEG_LINEAR,
@@ -59,6 +60,7 @@ struct {
 	unsigned type;
 	const char *target;
 } dm_segtypes[] = {
+	{ SEG_CACHE, "cache" },
 	{ SEG_CRYPT, "crypt" },
 	{ SEG_ERROR, "error" },
 	{ SEG_LINEAR, "linear" },
@@ -158,17 +160,23 @@ struct load_segment {
 	uint32_t stripe_size;		/* Striped + raid */
 
 	int persistent;			/* Snapshot */
-	uint32_t chunk_size;		/* Snapshot */
+	uint32_t chunk_size;		/* Snapshot + cache */
 	struct dm_tree_node *cow;	/* Snapshot */
-	struct dm_tree_node *origin;	/* Snapshot + Snapshot origin */
+	struct dm_tree_node *origin;	/* Snapshot + Snapshot origin + Cache */
 	struct dm_tree_node *merge;	/* Snapshot */
 
 	struct dm_tree_node *log;	/* Mirror + Replicator */
 	uint32_t region_size;		/* Mirror + raid */
 	unsigned clustered;		/* Mirror */
 	unsigned mirror_area_count;	/* Mirror */
-	uint32_t flags;			/* Mirror log */
+	uint32_t flags;			/* Mirror + raid + Cache */
 	char *uuid;			/* Clustered mirror log */
+
+	int   core_argc;		/* Cache */
+	char **core_argv;		/* Cache */
+	char *policy_name;		/* Cache */
+	int   policy_argc;		/* Cache */
+	char **policy_argv;		/* Cache */
 
 	const char *cipher;		/* Crypt */
 	const char *chainmode;		/* Crypt */
@@ -189,7 +197,7 @@ struct load_segment {
 	uint32_t max_recovery_rate;	/* raid kB/sec/disk */
 	uint32_t min_recovery_rate;	/* raid kB/sec/disk */
 
-	struct dm_tree_node *metadata;	/* Thin_pool */
+	struct dm_tree_node *metadata;	/* Thin_pool + Cache */
 	struct dm_tree_node *pool;	/* Thin_pool, Thin */
 	struct dm_tree_node *external;	/* Thin */
 	struct dm_list thin_messages;	/* Thin_pool */
@@ -2262,6 +2270,70 @@ static int _raid_emit_segment_line(struct dm_task *dmt, uint32_t major,
 	return 1;
 }
 
+static int _cache_emit_segment_line(struct dm_task *dmt,
+				    struct load_segment *seg,
+				    char *params, size_t paramsize)
+{
+	int i, pos = 0;
+	unsigned feature_count;
+	struct seg_area *area;
+	char data[DM_FORMAT_DEV_BUFSIZE];
+	char metadata[DM_FORMAT_DEV_BUFSIZE];
+	char origin[DM_FORMAT_DEV_BUFSIZE];
+
+	/* Metadata Dev */
+	if (!_build_dev_string(metadata, sizeof(metadata), seg->metadata))
+		return_0;
+	EMIT_PARAMS(pos, " %s", metadata);
+
+	/* Cache Dev */
+	if (!_build_dev_string(data, sizeof(origin), seg->pool))
+		return_0;
+	EMIT_PARAMS(pos, " %s", data);
+
+	/* Origin Dev */
+	dm_list_iterate_items(area, &seg->areas)
+		break; /* There is only ever 1 area */
+	if (!_build_dev_string(origin, sizeof(data), area->dev_node))
+		return_0;
+	EMIT_PARAMS(pos, " %s", origin);
+
+	/* Chunk size */
+	EMIT_PARAMS(pos, " %u", seg->chunk_size);
+
+	/* Features */
+	feature_count = hweight32(seg->flags);
+	EMIT_PARAMS(pos, " %d", feature_count);
+	if (seg->flags & DM_CACHE_FEATURE_WRITETHROUGH)
+		EMIT_PARAMS(pos, " writethrough");
+	else if (seg->flags & DM_CACHE_FEATURE_WRITEBACK)
+		EMIT_PARAMS(pos, " writeback");
+
+	/* Core Arguments (like 'migration_threshold') */
+	if (seg->core_argc) {
+		EMIT_PARAMS(pos, " %d", seg->core_argc);
+		for (i = 0; i < seg->core_argc; i++)
+			EMIT_PARAMS(pos, " %s", seg->core_argv[i]);
+	}
+
+	/* Cache Policy */
+	if (!seg->policy_name)
+		EMIT_PARAMS(pos, " default 0");
+	else {
+		EMIT_PARAMS(pos, " %s %d", seg->policy_name, seg->policy_argc);
+		if (seg->policy_argc % 2) {
+			log_error(INTERNAL_ERROR
+				  "Cache policy arguments must be in "
+				  "<key> <value> pairs");
+			return 0;
+		}
+		for (i = 0; i < seg->policy_argc; i++)
+			EMIT_PARAMS(pos, " %s", seg->policy_argv[i]);
+	}
+
+	return 1;
+}
+
 static int _thin_pool_emit_segment_line(struct dm_task *dmt,
 					struct load_segment *seg,
 					char *params, size_t paramsize)
@@ -2398,6 +2470,10 @@ static int _emit_segment_line(struct dm_task *dmt, uint32_t major,
 		if (!_thin_emit_segment_line(dmt, seg, params, paramsize))
 			return_0;
 		break;
+	case SEG_CACHE:
+		if (!_cache_emit_segment_line(dmt, seg, params, paramsize))
+			return_0;
+		break;
 	}
 
 	switch(seg->type) {
@@ -2409,6 +2485,7 @@ static int _emit_segment_line(struct dm_task *dmt, uint32_t major,
 	case SEG_ZERO:
 	case SEG_THIN_POOL:
 	case SEG_THIN:
+	case SEG_CACHE:
 		break;
 	case SEG_CRYPT:
 	case SEG_LINEAR:
@@ -3045,7 +3122,6 @@ int dm_tree_node_add_raid_target(struct dm_tree_node *node,
 	return dm_tree_node_add_raid_target_with_params(node, size, &params);
 }
 
-
 /*
  * Various RAID status versions include:
  * Versions < 1.5.0 (4 fields):
@@ -3122,6 +3198,55 @@ bad:
 	dm_pool_free(mem, s);
 
 	return 0;
+}
+
+int dm_tree_node_add_cache_target(struct dm_tree_node *node,
+				  uint64_t size,
+				  struct dm_tree_node_cache_params *p)
+{
+	int i;
+	struct load_segment *seg = NULL;
+
+	for (i = 0; dm_segtypes[i].target && !seg; i++) {
+		if (strcmp("cache", dm_segtypes[i].target))
+			continue;
+		if (!(seg = _add_segment(node, dm_segtypes[i].type, size)))
+			return_0;
+	}
+
+	if (!seg)
+		return_0;
+
+	if (!(seg->pool = dm_tree_find_node_by_uuid(node->dtree,
+						    p->data_uuid))) {
+		log_error("Missing cache's data uuid, %s",
+			  p->data_uuid);
+		return 0;
+	}
+	if (!_link_tree_nodes(node, seg->pool))
+		return_0;
+
+	if (!(seg->metadata = dm_tree_find_node_by_uuid(node->dtree,
+							p->metadata_uuid))) {
+		log_error("Missing cache's metadata uuid, %s",
+			  p->metadata_uuid);
+		return 0;
+	}
+	if (!_link_tree_nodes(node, seg->metadata))
+		return_0;
+
+	seg->chunk_size = p->chunk_size;
+
+	seg->flags = p->feature_flags;
+
+	seg->core_argc = p->core_argc;
+	seg->core_argv = p->core_argv;
+
+	seg->policy_name = p->policy_name;
+	seg->policy_argc = p->policy_argc;
+	seg->policy_argv = p->policy_argv;
+
+	return 1;
 }
 
 int dm_tree_node_add_replicator_target(struct dm_tree_node *node,
