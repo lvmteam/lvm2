@@ -1,6 +1,6 @@
-		/*
+/*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2012 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2014 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -1178,6 +1178,11 @@ static int _init_segtypes(struct cmd_context *cmd)
 
 #ifdef THIN_INTERNAL
 	if (!init_thin_segtypes(cmd, &seglib))
+		return 0;
+#endif
+
+#ifdef CACHE_INTERNAL
+	if (!init_cache_segtypes(cmd, &seglib))
 		return 0;
 #endif
 

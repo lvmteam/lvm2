@@ -712,6 +712,10 @@ int dm_tree_node_add_raid_target_with_params(struct dm_tree_node *node,
 					     uint64_t size,
 					     struct dm_tree_node_raid_params *p);
 
+/* Cache feature_flags */
+#define DM_CACHE_FEATURE_WRITEBACK    0x00000001
+#define DM_CACHE_FEATURE_WRITETHROUGH 0x00000002
+
 /*
  * Replicator operation mode
  * Note: API for Replicator is not yet stable

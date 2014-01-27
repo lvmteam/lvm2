@@ -476,6 +476,25 @@ AC_DEFINE_UNQUOTED([THIN_DUMP_CMD], ["$THIN_DUMP_CMD"],
 AC_DEFINE_UNQUOTED([THIN_REPAIR_CMD], ["$THIN_REPAIR_CMD"],
 		   [The path to 'thin_repair', if available.])
 
+################################################################################
+dnl -- cache inclusion type
+AC_MSG_CHECKING(whether to include cache)
+AC_ARG_WITH(cache,
+	    AC_HELP_STRING([--with-cache=TYPE],
+			   [cache support: internal/shared/none
+			    [[TYPE=internal]]]),
+	    CACHE=$withval, CACHE=internal)
+AC_MSG_RESULT($CACHE)
+
+if [[ "x$CACHE" != xnone -a "x$CACHE" != xinternal -a "x$CACHE" != xshared ]];
+ then  AC_MSG_ERROR(
+--with-cache parameter invalid
+)
+fi;
+
+if test x$CACHE = xinternal; then
+	AC_DEFINE([CACHE_INTERNAL], 1, [Define to 1 to include built-in support for cache.])
+fi
 
 ################################################################################
 dnl -- Disable readline
@@ -1241,6 +1260,7 @@ dnl -- Check for shared/static conflicts
 if [[ \( "x$LVM1" = xshared -o "x$POOL" = xshared -o "x$CLUSTER" = xshared \
       -o "x$SNAPSHOTS" = xshared -o "x$MIRRORS" = xshared \
       -o "x$RAID" = xshared \
+      -o "x$CACHE" = xshared \
       \) -a "x$STATIC_LINK" = xyes ]];
  then  AC_MSG_ERROR(
 Features cannot be 'shared' when building statically
@@ -1596,6 +1616,7 @@ AC_SUBST(BLKID_WIPING)
 AC_SUBST(BUILD_CMIRRORD)
 AC_SUBST(BUILD_DMEVENTD)
 AC_SUBST(BUILD_LVMETAD)
+AC_SUBST(CACHE)
 AC_SUBST(CFLAGS)
 AC_SUBST(CFLOW_CMD)
 AC_SUBST(CLDFLAGS)
@@ -1752,6 +1773,7 @@ lib/misc/lvm-version.h
 lib/raid/Makefile
 lib/snapshot/Makefile
 lib/thin/Makefile
+lib/cache_segtype/Makefile
 libdaemon/Makefile
 libdaemon/client/Makefile
 libdaemon/server/Makefile

@@ -385,6 +385,13 @@ struct lv_segment {
 	struct logical_volume *pool_lv;		/* For thin */
 	uint32_t device_id;			/* For thin, 24bit */
 
+	uint32_t feature_flags;			/* For cache */
+	int core_argc;				/* For cache */
+	char **core_argv;			/* For cache */
+	char *policy_name;			/* For cache */
+	int policy_argc;			/* For cache */
+	char **policy_argv;			/* For cache */
+
 	struct logical_volume *replicator;/* For replicator-devs - link to replicator LV */
 	struct logical_volume *rlog_lv;	/* For replicators */
 	const char *rlog_type;		/* For replicators */

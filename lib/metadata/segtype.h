@@ -41,8 +41,12 @@ struct dev_manager;
 #define SEG_RAID		0x00000400U
 #define SEG_THIN_POOL		0x00000800U
 #define SEG_THIN_VOLUME		0x00001000U
+#define SEG_CACHE		0x00002000U
+#define SEG_CACHE_POOL		0x00004000U
 #define SEG_UNKNOWN		0x80000000U
 
+#define segtype_is_cache(segtype)	((segtype)->flags & SEG_CACHE ? 1 : 0)
+#define segtype_is_cache_pool(segtype)	((segtype)->flags & SEG_CACHE_POOL ? 1 : 0)
 #define segtype_is_mirrored(segtype)	((segtype)->flags & SEG_AREAS_MIRRORED ? 1 : 0)
 #define segtype_is_raid(segtype)	((segtype)->flags & SEG_RAID ? 1 : 0)
 #define segtype_is_striped(segtype)	((segtype)->flags & SEG_AREAS_STRIPED ? 1 : 0)
@@ -51,6 +55,8 @@ struct dev_manager;
 #define segtype_is_thin_volume(segtype)	((segtype)->flags & SEG_THIN_VOLUME ? 1 : 0)
 #define segtype_is_virtual(segtype)	((segtype)->flags & SEG_VIRTUAL ? 1 : 0)
 
+#define seg_is_cache(seg)	segtype_is_cache((seg)->segtype)
+#define seg_is_cache_pool(seg)	segtype_is_cache_pool((seg)->segtype)
 #define seg_is_linear(seg)	(seg_is_striped(seg) && ((seg)->area_count == 1))
 #define seg_is_mirrored(seg)	segtype_is_mirrored((seg)->segtype)
 #define seg_is_raid(seg)	segtype_is_raid((seg)->segtype)
@@ -145,6 +151,10 @@ int init_replicator_segtype(struct cmd_context *cmd, struct segtype_library *seg
 
 #ifdef THIN_INTERNAL
 int init_thin_segtypes(struct cmd_context *cmd, struct segtype_library *seglib);
+#endif
+
+#ifdef CACHE_INTERNAL
+int init_cache_segtypes(struct cmd_context *cmd, struct segtype_library *seglib);
 #endif
 
 #ifdef SNAPSHOT_INTERNAL
