@@ -1,5 +1,6 @@
 Version 2.02.106 - 
 ====================================
+  Add support for partitions on ZFS zvol.
   Fix unwanted drop of hold flocks on forked children.
   Respect LVM_LVMETAD_PIDFILE env var for lvm command.
   Avoid exposing temporary devices when initializing thin pool volume.
