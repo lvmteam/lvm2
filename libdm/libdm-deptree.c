@@ -3249,6 +3249,143 @@ int dm_tree_node_add_cache_target(struct dm_tree_node *node,
 	return 1;
 }
 
+static const char *advance_to_next_word(const char *str, int count)
+{
+	int i;
+	const char *p;
+
+	for (p = str, i = 0; i < count; i++, p++)
+		if (!(p = strchr(p, ' ')))
+			return NULL;
+
+	return p;
+}
+
+/*
+ * <metadata block size> <#used metadata blocks>/<#total metadata blocks>
+ * <cache block size> <#used cache blocks>/<#total cache blocks>
+ * <#read hits> <#read misses> <#write hits> <#write misses>
+ * <#demotions> <#promotions> <#dirty> <#features> <features>*
+ * <#core args> <core args>* <policy name> <#policy args> <policy args>*
+ *
+ * metadata block size      : Fixed block size for each metadata block in
+ *                            sectors
+ * #used metadata blocks    : Number of metadata blocks used
+ * #total metadata blocks   : Total number of metadata blocks
+ * cache block size         : Configurable block size for the cache device
+ *                            in sectors
+ * #used cache blocks       : Number of blocks resident in the cache
+ * #total cache blocks      : Total number of cache blocks
+ * #read hits               : Number of times a READ bio has been mapped
+ *                            to the cache
+ * #read misses             : Number of times a READ bio has been mapped
+ *                            to the origin
+ * #write hits              : Number of times a WRITE bio has been mapped
+ *                            to the cache
+ * #write misses            : Number of times a WRITE bio has been
+ *                            mapped to the origin
+ * #demotions               : Number of times a block has been removed
+ *                            from the cache
+ * #promotions              : Number of times a block has been moved to
+ *                            the cache
+ * #dirty                   : Number of blocks in the cache that differ
+ *                            from the origin
+ * #feature args            : Number of feature args to follow
+ * feature args             : 'writethrough' (optional)
+ * #core args               : Number of core arguments (must be even)
+ * core args                : Key/value pairs for tuning the core
+ *                            e.g. migration_threshold
+ *			     *policy name              : Name of the policy
+ * #policy args             : Number of policy arguments to follow (must be even)
+ * policy args              : Key/value pairs
+ *                            e.g. sequential_threshold
+ */
+int dm_get_status_cache(struct dm_pool *mem, const char *params,
+			struct dm_status_cache **status)
+{
+	int i, feature_argc;
+	char *str;
+	const char *p, *pp;
+	struct dm_status_cache *s;
+
+	if (!(s = dm_pool_zalloc(mem, sizeof(struct dm_status_cache))))
+		return_0;
+
+	/* Read in args that have definitive placement */
+	if (sscanf(params,
+		   " %" PRIu32
+		   " %" PRIu64 "/%" PRIu64
+		   " %" PRIu32
+		   " %" PRIu64 "/%" PRIu64
+		   " %" PRIu64 " %" PRIu64
+		   " %" PRIu64 " %" PRIu64
+		   " %" PRIu64 " %" PRIu64
+		   " %" PRIu64
+		   " %d",
+		   &s->metadata_block_size,
+		   &s->metadata_used_blocks, &s->metadata_total_blocks,
+		   &s->block_size, /* AKA, chunk_size */
+		   &s->used_blocks, &s->total_blocks,
+		   &s->read_hits, &s->read_misses,
+		   &s->write_hits, &s->write_misses,
+		   &s->demotions, &s->promotions,
+		   &s->dirty_blocks,
+		   &feature_argc) != 14)
+		goto bad;
+
+	/* Now jump to "features" section */
+	if (!(p = advance_to_next_word(params, 12)))
+		goto bad;
+
+	/* Read in features */
+	for (i = 0; i < feature_argc; i++) {
+		if (!strncmp(p, "writethrough ", 13))
+			s->feature_flags |= DM_CACHE_FEATURE_WRITETHROUGH;
+		else if (!strncmp(p, "writeback ", 10))
+			s->feature_flags |= DM_CACHE_FEATURE_WRITEBACK;
+		else
+			log_error("Unknown feature in status: %s", params);
+
+		if (!(p = advance_to_next_word(p, 1)))
+			goto bad;
+	}
+
+	/* Read in core_args. */
+	if (sscanf(p, "%d ", &s->core_argc) != 1)
+		goto bad;
+	if (s->core_argc &&
+	    (!(s->core_argv = dm_pool_zalloc(mem, sizeof(char *) * s->core_argc)) ||
+	     !(p = advance_to_next_word(p, 1)) ||
+	     !(str = dm_pool_strdup(mem, p)) ||
+	     !(p = advance_to_next_word(p, s->core_argc)) ||
+	     (dm_split_words(str, s->core_argc, 0, s->core_argv) != s->core_argc)))
+		goto bad;
+
+	/* Read in policy args */
+	pp = p;
+	if (!(p = advance_to_next_word(p, 1)) ||
+	    !(s->policy_name = dm_pool_zalloc(mem, (p - pp))))
+		goto bad;
+	if (sscanf(pp, "%s %d", s->policy_name, &s->policy_argc) != 2)
+		goto bad;
+	if (s->policy_argc &&
+	    (!(s->policy_argv = dm_pool_zalloc(mem, sizeof(char *) * s->policy_argc)) ||
+	     !(p = advance_to_next_word(p, 1)) ||
+	     !(str = dm_pool_strdup(mem, p)) ||
+	     (dm_split_words(str, s->policy_argc, 0, s->policy_argv) != s->policy_argc)))
+		goto bad;
+
+	*status = s;
+	return 1;
+
+bad:
+	log_error("Failed to parse cache params: %s", params);
+	dm_pool_free(mem, s);
+	*status = NULL;
+
+	return 0;
+}
+
 int dm_tree_node_add_replicator_target(struct dm_tree_node *node,
 				       uint64_t size,
 				       const char *rlog_uuid,

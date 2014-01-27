@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2013 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2014 Red Hat, Inc. All rights reserved.
  *
  * This file is part of the device-mapper userspace tools.
  *
@@ -294,6 +294,39 @@ struct dm_status_raid {
 int dm_get_status_raid(struct dm_pool *mem, const char *params,
 		       struct dm_status_raid **status);
 
+struct dm_status_cache {
+	uint64_t version;  /* zero for now */
+
+	uint32_t metadata_block_size;   /* in 512B sectors */
+	uint32_t block_size;            /* AKA 'chunk_size' */
+
+	uint64_t metadata_used_blocks;
+	uint64_t metadata_total_blocks;
+
+	uint64_t used_blocks;
+	uint64_t dirty_blocks;
+	uint64_t total_blocks;
+
+	uint64_t read_hits;
+	uint64_t read_misses;
+	uint64_t write_hits;
+	uint64_t write_misses;
+
+	uint64_t demotions;
+	uint64_t promotions;
+
+	uint32_t feature_flags;
+
+	int core_argc;
+	char **core_argv;
+
+	char *policy_name;
+	int   policy_argc;
+	char **policy_argv;
+};
+
+int dm_get_status_cache(struct dm_pool *mem, const char *params,
+			struct dm_status_cache **status);
 
 /*
  * Snapshot target's format:
