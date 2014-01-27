@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2014 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -44,6 +44,15 @@ static sig_t _oldhandler;
 static sigset_t _fullsigset, _intsigset;
 static volatile sig_atomic_t _handler_installed;
 
+/* Drop lock known to be shared with another file descriptor. */
+static void _drop_shared_flock(const char *file, int fd)
+{
+	log_debug_locking("_drop_shared_flock %s.", file);
+
+	if (close(fd) < 0)
+		log_sys_debug("close", file);
+}
+
 static void _undo_flock(const char *file, int fd)
 {
 	struct stat buf1, buf2;
@@ -74,9 +83,9 @@ static int _release_lock(const char *file, int unlock)
 				log_very_verbose("Unlocking %s", ll->res);
 				if (flock(ll->lf, LOCK_NB | LOCK_UN))
 					log_sys_debug("flock", ll->res);
-			}
-
-			_undo_flock(ll->res, ll->lf);
+				_undo_flock(ll->res, ll->lf);
+			} else
+				_drop_shared_flock(ll->res, ll->lf);
 
 			dm_free(ll->res);
 			dm_free(llh);
