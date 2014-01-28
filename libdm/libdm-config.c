@@ -1047,20 +1047,6 @@ int dm_config_tree_find_bool(const struct dm_config_tree *cft, const char *path,
 
 /************************************/
 
-int dm_config_get_int(const struct dm_config_node *cn, const char *path,
-		      int *result)
-{
-	const struct dm_config_node *n;
-
-	n = _find_config_node(cn, path);
-
-	if (!n || !n->v || n->v->type != DM_CFG_INT)
-		return 0;
-
-	if (result)
-		*result = n->v->v.i;
-	return 1;
-}
 
 int dm_config_get_uint32(const struct dm_config_node *cn, const char *path,
 			 uint32_t *result)

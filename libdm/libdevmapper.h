@@ -1720,7 +1720,6 @@ int dm_config_tree_find_bool(const struct dm_config_tree *cft, const char *path,
 int dm_config_find_bool(const struct dm_config_node *cn, const char *path, int fail);
 int dm_config_value_is_bool(const struct dm_config_value *v);
 
-int dm_config_get_int(const struct dm_config_node *cn, const char *path, int *result);
 int dm_config_get_uint32(const struct dm_config_node *cn, const char *path, uint32_t *result);
 int dm_config_get_uint64(const struct dm_config_node *cn, const char *path, uint64_t *result);
 int dm_config_get_str(const struct dm_config_node *cn, const char *path, const char **result);

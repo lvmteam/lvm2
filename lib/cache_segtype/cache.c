@@ -97,7 +97,8 @@ static int _cache_pool_text_import(struct lv_segment *seg,
 		if (!dm_config_has_node(sn, "core_argv"))
 			return SEG_LOG_ERROR("not all core arguments defined in");
 
-		if (!dm_config_get_int(sn, "core_argc", &seg->core_argc))
+		if (!dm_config_get_uint32(sn, "core_argc",
+					  (uint32_t *)&seg->core_argc))
 			return SEG_LOG_ERROR("Unable to read core_argc in");
 
 		str = dm_config_find_str(sn, "core_argv", NULL);
@@ -135,7 +136,8 @@ static int _cache_pool_text_import(struct lv_segment *seg,
 			return SEG_LOG_ERROR("policy_name must be a string in");
 		seg->policy_name = dm_pool_strdup(mem, str);
 
-		if (!dm_config_get_int(sn, "policy_argc", &seg->policy_argc))
+		if (!dm_config_get_uint32(sn, "policy_argc",
+					  (uint32_t *)&seg->policy_argc))
 			return SEG_LOG_ERROR("Unable to read policy_argc in");
 
 		str = dm_config_find_str(sn, "policy_argv", NULL);
