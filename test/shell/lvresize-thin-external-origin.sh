@@ -37,6 +37,6 @@ not lvresize -L+10 $vg/$lv1
 # But reduction works
 lvresize -L-5 -f $vg/$lv1
 not lvresize -L+15 -y $vg/$lv1
-# We may size again back up to the size of external origin
-# TODO: hmm do we really want this???
-lvresize -L+5 -f $vg/$lv1
+# Try to resize again back up to the size of external origin
+# But for now we do not support zeroing for rexetended areas.
+not lvresize -L+5 -f $vg/$lv1
