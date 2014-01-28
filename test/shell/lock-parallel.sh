@@ -14,19 +14,20 @@
 
 . lib/test
 
+which mkfs.ext3 || skip
+
 aux prepare_vg
-test -e LOCAL_CLVMD && skip
 
 lvcreate -L10 -n $lv1 $vg
 lvcreate -l1 -n $lv2 $vg
-mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
+mkfs.ext3 "$DM_DEV_DIR/$vg/$lv1"
 
 # Slowdown PV for resized LV
-aux delay_dev "$dev1" 40 40
+aux delay_dev "$dev1" 20 20
 
 lvresize -L-5 -r $vg/$lv1 &
 
-# Let's wait till resize start
+# Let's wait till resize starts
 sleep 2
 
 lvremove -f $vg/$lv2
