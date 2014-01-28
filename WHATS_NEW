@@ -1,5 +1,6 @@
 Version 2.02.106 - 
 ====================================
+  Avoid trying to convert single to thin pool and volume at the same time.
   Add support for partitions on ZFS zvol.
   Fix unwanted drop of hold flocks on forked children.
   Respect LVM_LVMETAD_PIDFILE env var for lvm command.

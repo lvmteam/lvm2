@@ -56,6 +56,10 @@ lvremove -f $vg/pool1
 # create plain LV (will be used for external origin)
 lvcreate -L8M -n $lv1 $vg
 
+# Can't convert same LV to the thin pool and thin volume
+not lvconvert --thinpool $vg/$lv1 -T $vg/$lv1
+check lv_field $vg/$lv1 segtype linear
+
 mkfs.ext2 $DM_DEV_DIR/$vg/$lv1
 mkdir mnt
 mount $DM_DEV_DIR/$vg/$lv1 mnt

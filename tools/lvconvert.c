@@ -2582,6 +2582,12 @@ static int _lvconvert_thinpool(struct cmd_context *cmd,
 	}
 
 	if (lp->thin) {
+		if (strcmp(pool_lv->name, lp->pool_data_lv_name) == 0) {
+			log_error("Can't use same LV %s/%s for thin pool and thin volume.",
+				  pool_lv->vg->name, pool_lv->name);
+			return 0;
+		}
+
 		external_lv = pool_lv;
 		if (!(pool_lv = find_lv(external_lv->vg, lp->pool_data_lv_name))) {
 			log_error("Can't find pool LV %s/%s.",
