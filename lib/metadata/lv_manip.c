@@ -924,6 +924,9 @@ struct alloc_handle {
 	 * that is new_extents + log_len and then split that between two
 	 * allocated areas when found.  'alloc_and_split_meta' indicates
 	 * that this is the desired dynamic.
+	 *
+	 * This same idea is used by cache LVs to get the metadata device
+	 * and data device allocated together.
 	 */
 	unsigned alloc_and_split_meta;
 
@@ -1115,6 +1118,7 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 	 * a correct area_multiple.
 	 */
 	ah->area_multiple = _calc_area_multiple(segtype, area_count + parity_count, stripes);
+	//FIXME: s/mirror_logs_separate/metadata_separate/ so it can be used by otehrs?
 	ah->mirror_logs_separate = find_config_tree_bool(cmd, allocation_mirror_logs_require_separate_pvs_CFG, NULL);
 
 	if (segtype_is_raid(segtype)) {
@@ -1137,12 +1141,30 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 			ah->log_len = 0;
 		}
 	} else if (segtype_is_thin_pool(segtype)) {
-		ah->log_area_count = metadata_area_count;
-		/* thin_pool uses region_size to pass metadata size in extents */
+		/*
+		 * thin_pool uses ah->region_size to
+		 * pass metadata size in extents
+		 */
 		ah->log_len = ah->region_size;
+		ah->log_area_count = metadata_area_count;
 		ah->region_size = 0;
 		ah->mirror_logs_separate =
 			find_config_tree_bool(cmd, allocation_thin_pool_metadata_require_separate_pvs_CFG, NULL);
+	} else if (segtype_is_cache_pool(segtype)) {
+		/*
+		 * Like thin_pool, cache_pool uses ah->region_size to
+		 * pass metadata size in extents
+		 */
+		ah->log_len = ah->region_size;
+		/* use metadata_area_count, not log_area_count */
+		ah->metadata_area_count = metadata_area_count;
+		ah->region_size = 0;
+		ah->mirror_logs_separate =
+			find_config_tree_bool(cmd, allocation_cache_pool_metadata_require_separate_pvs_CFG, NULL);
+		if (!ah->mirror_logs_separate) {
+			ah->alloc_and_split_meta = 1;
+			ah->new_extents += ah->log_len;
+		}
 	} else {
 		ah->log_area_count = metadata_area_count;
 		ah->log_len = !metadata_area_count ? 0 :
@@ -1956,14 +1978,15 @@ static void _report_needed_allocation_space(struct alloc_handle *ah,
 	uint32_t parallel_areas_count, parallel_area_size;
 	uint32_t metadata_count, metadata_size;
 
-	parallel_area_size = (ah->new_extents - alloc_state->allocated) / ah->area_multiple -
-		      ((ah->alloc_and_split_meta) ? ah->log_len : 0);
+	parallel_area_size = ah->new_extents - alloc_state->allocated;
+	parallel_area_size /= ah->area_multiple;
+	parallel_area_size -= (ah->alloc_and_split_meta) ? ah->log_len : 0;
 
 	parallel_areas_count = ah->area_count + ah->parity_count;
 
 	metadata_size = ah->log_len;
 	if (ah->alloc_and_split_meta) {
-		metadata_type = "RAID metadata area";
+		metadata_type = "metadata area";
 		metadata_count = parallel_areas_count;
 	} else {
 		metadata_type = "mirror log";
@@ -1975,8 +1998,10 @@ static void _report_needed_allocation_space(struct alloc_handle *ah,
 	log_debug_alloc("  %" PRIu32 " (%" PRIu32 " data/%" PRIu32
 			" parity) parallel areas of %" PRIu32 " extents each",
 			parallel_areas_count, ah->area_count, ah->parity_count, parallel_area_size);
-	log_debug_alloc("  %" PRIu32 " %ss of %" PRIu32 " extents each",
-			metadata_count, metadata_type, metadata_size);
+	log_debug_alloc("  %" PRIu32 " %s%s of %" PRIu32 " extents each",
+			metadata_count, metadata_type,
+			(metadata_count == 1) ? "" : "s",
+			metadata_size);
 }
 /*
  * Returns 1 regardless of whether any space was found, except on error.
