@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2002-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2013 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2014 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -1160,6 +1160,55 @@ out:
 	return r;
 }
 
+int dev_manager_cache_status(struct dev_manager *dm,
+			     const struct logical_volume *lv,
+			     struct dm_status_cache **status)
+{
+	int r = 0;
+	const char *dlid;
+	struct dm_task *dmt;
+	struct dm_info info;
+	uint64_t start, length;
+	char *type = NULL;
+	char *params = NULL;
+	const char *layer = lv_layer(lv);
+
+	if (!(dlid = build_dm_uuid(dm->mem, lv->lvid.s, layer)))
+		return_0;
+
+	log_debug_activation("Getting cache device status for %s.", lv->name);
+
+	if (!(dmt = _setup_task(NULL, dlid, 0, DM_DEVICE_STATUS, 0, 0)))
+		return_0;
+
+	if (!dm_task_no_open_count(dmt))
+		log_error("Failed to disable open_count.");
+
+	if (!dm_task_run(dmt))
+		goto_out;
+
+	if (!dm_task_get_info(dmt, &info) || !info.exists)
+		goto_out;
+
+	dm_get_next_target(dmt, NULL, &start, &length, &type, &params);
+
+	if (!type || strcmp(type, "cache")) {
+		log_debug("Expected cache segment type but got %s instead",
+			  type ? type : "NULL");
+		goto out;
+	}
+
+	if (!dm_get_status_cache(dm->mem, params, status))
+		goto_out;
+
+	r = 1;
+out:
+	dm_task_destroy(dmt);
+
+	return r;
+}
+
+//FIXME: Can we get rid of this crap below?
 #if 0
 	log_very_verbose("%s %s", sus ? "Suspending" : "Resuming", name);
 

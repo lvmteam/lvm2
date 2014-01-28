@@ -110,6 +110,11 @@
 									this flag dropped during single
 									LVM command execution. */
 
+#define CACHE_POOL		UINT64_C(0x0000200000000000)    /* LV */
+#define CACHE_POOL_DATA		UINT64_C(0x0000400000000000)    /* LV */
+#define CACHE_POOL_METADATA	UINT64_C(0x0000800000000000)    /* LV */
+#define CACHE			UINT64_C(0x0001000000000000)    /* LV */
+
 /* Format features flags */
 #define FMT_SEGMENTS		0x00000001U	/* Arbitrary segment params? */
 #define FMT_MDAS		0x00000002U	/* Proper metadata areas? */
@@ -168,6 +173,12 @@
 #define lv_is_mirror_type(lv)	((lv)->status & (MIRROR_LOG | MIRROR_IMAGE | MIRRORED | PVMOVE) ? 1 : 0)
 #define lv_is_raid(lv)		(((lv)->status & (RAID)) ? 1 : 0)
 #define lv_is_raid_type(lv)	(((lv)->status & (RAID | RAID_IMAGE | RAID_META)) ? 1 : 0)
+
+#define lv_is_cache(lv)		(((lv)->status & (CACHE)) ? 1 : 0)
+#define lv_is_cache_pool(lv)	(((lv)->status & (CACHE_POOL)) ? 1 : 0)
+#define lv_is_cache_pool_data(lv)	(((lv)->status & (CACHE_POOL_DATA)) ? 1 : 0)
+#define lv_is_cache_pool_metadata(lv)	(((lv)->status & (CACHE_POOL_METADATA)) ? 1 : 0)
+#define lv_is_cache_type(lv)	(((lv)->status & (CACHE | CACHE_POOL | CACHE_POOL_DATA | CACHE_POOL_METADATA)) ? 1 : 0)
 
 #define lv_is_virtual(lv)	(((lv)->status & VIRTUAL) ? 1 : 0)
 #define lv_is_pool_metadata_spare(lv)	(((lv)->status & POOL_METADATA_SPARE) ? 1 : 0)
