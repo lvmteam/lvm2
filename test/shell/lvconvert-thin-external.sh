@@ -49,9 +49,13 @@ fi
 
 lvcreate -l10 -T $vg/pool
 # Can't convert pool to external origin
-lvcreate -l10 -T $vg/pool1
+lvcreate -l10 -T $vg/pool1 -c 192k
 not lvconvert -T --thinpool $vg/pool1 $vg/pool --originname origin
-lvremove -f $vg/pool1
+# Create pool1 chunk_size unaligned LV and check failing conversion
+lvcreate -l2 -n $lv1 $vg
+not lvconvert -T --thinpool $vg/pool1 $vg/$lv1
+
+lvremove -f $vg/pool1 $vg/$lv1
 
 # create plain LV (will be used for external origin)
 lvcreate -L8M -n $lv1 $vg
