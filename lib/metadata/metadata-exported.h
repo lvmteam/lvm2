@@ -682,6 +682,7 @@ uint64_t extents_from_size(struct cmd_context *cmd, uint64_t size,
 
 struct logical_volume *find_pool_lv(const struct logical_volume *lv);
 int pool_is_active(const struct logical_volume *pool_lv);
+int pool_supports_external_origin(const struct lv_segment *pool_seg, const struct logical_volume *external_lv);
 int thin_pool_feature_supported(const struct logical_volume *pool_lv, int feature);
 int update_pool_lv(struct logical_volume *lv, int activate);
 int update_profilable_pool_params(struct cmd_context *cmd, struct profile *profile,

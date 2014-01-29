@@ -2483,6 +2483,9 @@ static int _lvconvert_thinpool_external(struct cmd_context *cmd,
 
 	dm_list_init(&lvc.tags);
 
+	if (!pool_supports_external_origin(first_seg(pool_lv), external_lv))
+		return_0;
+
 	if (!(lvc.segtype = get_segtype_from_string(cmd, "thin")))
 		return_0;
 

@@ -252,6 +252,27 @@ int pool_below_threshold(const struct lv_segment *pool_seg)
 	return 1;
 }
 
+/*
+ * Validate given external origin could be used with thin pool
+ */
+int pool_supports_external_origin(const struct lv_segment *pool_seg, const struct logical_volume *external_lv)
+{
+	uint32_t csize = pool_seg->chunk_size;
+
+	if ((external_lv->size < csize) || (external_lv->size % csize)) {
+		/* TODO: Validate with thin feature flag once, it will be supported */
+		log_error("Can't use \"%s/%s\" as external origin with \"%s/%s\" pool. "
+			  "Size %s is not a multiple of pool's chunk size %s.",
+			  external_lv->vg->name, external_lv->name,
+			  pool_seg->lv->vg->name, pool_seg->lv->name,
+			  display_size(external_lv->vg->cmd, external_lv->size),
+			  display_size(external_lv->vg->cmd, csize));
+		return 0;
+	}
+
+	return 1;
+}
+
 struct logical_volume *find_pool_lv(const struct logical_volume *lv)
 {
 	struct lv_segment *seg;

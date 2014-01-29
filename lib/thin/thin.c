@@ -561,6 +561,8 @@ static int _thin_add_target_line(struct dev_manager *dm,
 
 	/* Add external origin LV */
 	if (seg->external_lv) {
+		if (!pool_supports_external_origin(first_seg(seg->pool_lv), seg->external_lv))
+			return_0;
 		if (seg->external_lv->size < seg->lv->size) {
 			/* Validate target supports smaller external origin */
 			if (!_thin_target_present(cmd, first_seg(seg->pool_lv), &attr) ||

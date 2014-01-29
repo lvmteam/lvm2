@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2013 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2014 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -5980,6 +5980,8 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		 * within the same thin pool
 		 */
 		if (lp->snapshot && (first_seg(org)->pool_lv != pool_lv)) {
+			if (!pool_supports_external_origin(first_seg(pool_lv), org))
+				return_0;
 			if (org->status & LVM_WRITE) {
 				log_error("Cannot use writable LV as the external origin.");
 				return 0; // TODO conversion for inactive
