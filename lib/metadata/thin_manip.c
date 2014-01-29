@@ -240,14 +240,14 @@ int pool_below_threshold(const struct lv_segment *pool_seg)
 		return_0;
 
 	if (percent >= threshold)
-		return_0;
+		return 0;
 
 	/* Metadata */
 	if (!lv_thin_pool_percent(pool_seg->lv, 1, &percent))
 		return_0;
 
 	if (percent >= threshold)
-		return_0;
+		return 0;
 
 	return 1;
 }
