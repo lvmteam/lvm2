@@ -184,7 +184,7 @@ int ignore_vg(struct volume_group *vg, const char *vg_name, int allow_inconsiste
 int process_each_lv_in_vg(struct cmd_context *cmd,
 			  struct volume_group *vg,
 			  const struct dm_list *arg_lvnames,
-			  const struct dm_list *tags,
+			  const struct dm_list *tagsl,
 			  struct dm_list *failed_lvnames,
 			  void *handle,
 			  process_single_lv_fn_t process_single_lv)
@@ -201,7 +201,7 @@ int process_each_lv_in_vg(struct cmd_context *cmd,
 	if (!vg_check_status(vg, EXPORTED_VG))
 		return ECMD_FAILED;
 
-	if (tags && !dm_list_empty(tags))
+	if (tagsl && !dm_list_empty(tagsl))
 		tags_supplied = 1;
 
 	if (arg_lvnames && !dm_list_empty(arg_lvnames))
@@ -212,7 +212,7 @@ int process_each_lv_in_vg(struct cmd_context *cmd,
 		process_all = 1;
 	/* Or if VG tags match */
 	else if (tags_supplied &&
-		 str_list_match_list(tags, &vg->tags, NULL))
+		 str_list_match_list(tagsl, &vg->tags, NULL))
 		process_all = 1;
 
 	/*
@@ -247,7 +247,7 @@ int process_each_lv_in_vg(struct cmd_context *cmd,
 		/* LV tag match?   skip test, when process_all */
 		else if (!process_all &&
 			 (!tags_supplied ||
-			  !str_list_match_list(tags, &lvl->lv->tags, NULL)))
+			  !str_list_match_list(tagsl, &lvl->lv->tags, NULL)))
 			continue;
 
 		if (sigint_caught())
@@ -296,7 +296,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 	struct cmd_vg *cvl_vg;
 	struct dm_list cmd_vgs;
 	struct dm_list failed_lvnames;
-	struct dm_list tags, lvnames;
+	struct dm_list tagsl, lvnames;
 	struct dm_list arg_lvnames;	/* Cmdline vgname or vgname/lvname */
 	struct dm_list arg_vgnames;
 	char *vglv;
@@ -304,7 +304,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 
 	const char *vgname;
 
-	dm_list_init(&tags);
+	dm_list_init(&tagsl);
 	dm_list_init(&arg_lvnames);
 	dm_list_init(&failed_lvnames);
 
@@ -327,7 +327,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 						  vgname);
 					continue;
 				}
-				if (!str_list_add(cmd->mem, &tags,
+				if (!str_list_add(cmd->mem, &tagsl,
 						  dm_pool_strdup(cmd->mem,
 							      vgname + 1))) {
 					log_error("strlist allocation failed");
@@ -395,7 +395,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 		vgnames = &arg_vgnames;
 	}
 
-	if (!argc || !dm_list_empty(&tags)) {
+	if (!argc || !dm_list_empty(&tagsl)) {
 		log_verbose("Finding all logical volumes");
 		if (!lvmetad_vg_list_to_lvmcache(cmd))
 			stack;
@@ -420,7 +420,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 			continue;
 		}
 
-		tags_arg = &tags;
+		tags_arg = &tagsl;
 		dm_list_init(&lvnames);	/* LVs to be processed in this VG */
 		dm_list_iterate_items(sll, &arg_lvnames) {
 			const char *vg_name = sll->str;
@@ -562,7 +562,7 @@ int process_each_segment_in_lv(struct cmd_context *cmd,
 
 static int _process_one_vg(struct cmd_context *cmd, const char *vg_name,
 			   const char *vgid,
-			   struct dm_list *tags, struct dm_list *arg_vgnames,
+			   struct dm_list *tagsl, struct dm_list *arg_vgnames,
 			   uint32_t flags, void *handle, int ret_max,
 			   process_single_vg_fn_t process_single_vg)
 {
@@ -591,10 +591,10 @@ static int _process_one_vg(struct cmd_context *cmd, const char *vg_name,
 			}
 		}
 
-		if (!dm_list_empty(tags) &&
+		if (!dm_list_empty(tagsl) &&
 		    /* Only process if a tag matches or it's on arg_vgnames */
 		    !str_list_match_item(arg_vgnames, vg_name) &&
-		    !str_list_match_list(tags, &cvl_vg->vg->tags, NULL))
+		    !str_list_match_list(tagsl, &cvl_vg->vg->tags, NULL))
 			break;
 
 		ret = process_single_vg(cmd, vg_name, cvl_vg->vg, handle);
@@ -622,11 +622,11 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 
 	struct str_list *sl;
 	struct dm_list *vgnames, *vgids;
-	struct dm_list arg_vgnames, tags;
+	struct dm_list arg_vgnames, tagsl;
 
 	const char *vg_name, *vgid;
 
-	dm_list_init(&tags);
+	dm_list_init(&tagsl);
 	dm_list_init(&arg_vgnames);
 
 	if (argc) {
@@ -642,7 +642,7 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 						ret_max = EINVALID_CMD_LINE;
 					continue;
 				}
-				if (!str_list_add(cmd->mem, &tags,
+				if (!str_list_add(cmd->mem, &tagsl,
 						  dm_pool_strdup(cmd->mem,
 							      vg_name + 1))) {
 					log_error("strlist allocation failed");
@@ -669,7 +669,7 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 		vgnames = &arg_vgnames;
 	}
 
-	if (!argc || !dm_list_empty(&tags)) {
+	if (!argc || !dm_list_empty(&tagsl)) {
 		log_verbose("Finding all volume groups");
 		if (!lvmetad_vg_list_to_lvmcache(cmd))
 			stack;
@@ -683,7 +683,7 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 			vgid = sl->str;
 			if (!(vgid) || !(vg_name = lvmcache_vgname_from_vgid(cmd->mem, vgid)))
 				continue;
-			ret_max = _process_one_vg(cmd, vg_name, vgid, &tags,
+			ret_max = _process_one_vg(cmd, vg_name, vgid, &tagsl,
 						  &arg_vgnames,
 						  flags, handle,
 					  	  ret_max, process_single_vg);
@@ -695,7 +695,7 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 			vg_name = sl->str;
 			if (is_orphan_vg(vg_name))
 				continue;	/* FIXME Unnecessary? */
-			ret_max = _process_one_vg(cmd, vg_name, NULL, &tags,
+			ret_max = _process_one_vg(cmd, vg_name, NULL, &tagsl,
 						  &arg_vgnames,
 						  flags, handle,
 					  	  ret_max, process_single_vg);
@@ -706,7 +706,7 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 }
 
 int process_each_pv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
-			  const struct dm_list *tags, void *handle,
+			  const struct dm_list *tagsl, void *handle,
 			  process_single_pv_fn_t process_single_pv)
 {
 	int ret_max = ECMD_PROCESSED;
@@ -716,8 +716,8 @@ int process_each_pv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 	dm_list_iterate_items(pvl, &vg->pvs) {
 		if (sigint_caught())
 			return_ECMD_FAILED;
-		if (tags && !dm_list_empty(tags) &&
-		    !str_list_match_list(tags, &pvl->pv->tags, NULL)) {
+		if (tagsl && !dm_list_empty(tagsl) &&
+		    !str_list_match_list(tagsl, &pvl->pv->tags, NULL)) {
 			continue;
 		}
 		if ((ret = process_single_pv(cmd, vg, pvl->pv, handle)) > ret_max)
@@ -801,12 +801,12 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 	struct pv_list *pvl;
 	struct physical_volume *pv;
 	struct dm_list *pvslist = NULL, *vgnames;
-	struct dm_list tags;
+	struct dm_list tagsl;
 	struct str_list *sll;
 	char *at_sign, *tagname;
 	struct device *dev;
 
-	dm_list_init(&tags);
+	dm_list_init(&tagsl);
 
 	if (lock_global && !lock_vol(cmd, VG_GLOBAL, LCK_VG_READ, NULL)) {
 		log_error("Unable to obtain global lock.");
@@ -831,7 +831,7 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 						ret_max = EINVALID_CMD_LINE;
 					continue;
 				}
-				if (!str_list_add(cmd->mem, &tags,
+				if (!str_list_add(cmd->mem, &tagsl,
 						  dm_pool_strdup(cmd->mem,
 							      tagname))) {
 					log_error("strlist allocation failed");
@@ -881,7 +881,7 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 			if (ret > ret_max)
 				ret_max = ret;
 		}
-		if (!dm_list_empty(&tags) && (vgnames = get_vgnames(cmd, 1)) &&
+		if (!dm_list_empty(&tagsl) && (vgnames = get_vgnames(cmd, 1)) &&
 			   !dm_list_empty(vgnames)) {
 			dm_list_iterate_items(sll, vgnames) {
 				if (sigint_caught()) {
@@ -895,7 +895,7 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 					continue;
 				}
 
-				ret = process_each_pv_in_vg(cmd, vg, &tags,
+				ret = process_each_pv_in_vg(cmd, vg, &tagsl,
 							    handle,
 							    process_single_pv);
 				if (ret > ret_max)
@@ -1215,7 +1215,7 @@ struct dm_list *create_pv_list(struct dm_pool *mem, struct volume_group *vg, int
 {
 	struct dm_list *r;
 	struct pv_list *pvl;
-	struct dm_list tags, arg_pvnames;
+	struct dm_list tagsl, arg_pvnames;
 	char *pvname = NULL;
 	char *colon, *at_sign, *tagname;
 	int i;
@@ -1227,7 +1227,7 @@ struct dm_list *create_pv_list(struct dm_pool *mem, struct volume_group *vg, int
 	}
 	dm_list_init(r);
 
-	dm_list_init(&tags);
+	dm_list_init(&tagsl);
 	dm_list_init(&arg_pvnames);
 
 	for (i = 0; i < argc; i++) {

@@ -367,12 +367,12 @@ static int _print_flag_config(struct formatter *f, uint64_t status, int type)
 }
 
 
-static int _out_tags(struct formatter *f, struct dm_list *tags)
+static int _out_tags(struct formatter *f, struct dm_list *tagsl)
 {
 	char *tag_buffer;
 
-	if (!dm_list_empty(tags)) {
-		if (!(tag_buffer = alloc_printed_tags(tags)))
+	if (!dm_list_empty(tagsl)) {
+		if (!(tag_buffer = alloc_printed_tags(tagsl)))
 			return_0;
 		if (!out_text(f, "tags = %s", tag_buffer)) {
 			dm_free(tag_buffer);

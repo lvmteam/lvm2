@@ -4653,7 +4653,7 @@ int pv_change_metadataignore(struct physical_volume *pv, uint32_t mda_ignored)
 	return 1;
 }
 
-char *tags_format_and_copy(struct dm_pool *mem, const struct dm_list *tags)
+char *tags_format_and_copy(struct dm_pool *mem, const struct dm_list *tagsl)
 {
 	struct str_list *sl;
 
@@ -4662,9 +4662,9 @@ char *tags_format_and_copy(struct dm_pool *mem, const struct dm_list *tags)
 		return NULL;
 	}
 
-	dm_list_iterate_items(sl, tags) {
+	dm_list_iterate_items(sl, tagsl) {
 		if (!dm_pool_grow_object(mem, sl->str, strlen(sl->str)) ||
-		    (sl->list.n != tags && !dm_pool_grow_object(mem, ",", 1))) {
+		    (sl->list.n != tagsl && !dm_pool_grow_object(mem, ",", 1))) {
 			log_error("dm_pool_grow_object failed");
 			return NULL;
 		}

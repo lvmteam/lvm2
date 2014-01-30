@@ -279,7 +279,7 @@ static int _write_log_header(struct cmd_context *cmd, struct logical_volume *lv)
  */
 static int _init_mirror_log(struct cmd_context *cmd,
 			    struct logical_volume *log_lv, int in_sync,
-			    struct dm_list *tags, int remove_on_failure)
+			    struct dm_list *tagsl, int remove_on_failure)
 {
 	struct str_list *sl;
 	uint64_t orig_status = log_lv->status;
@@ -315,7 +315,7 @@ static int _init_mirror_log(struct cmd_context *cmd,
 	lv_set_visible(log_lv);
 
 	/* Temporary tag mirror log for activation */
-	dm_list_iterate_items(sl, tags)
+	dm_list_iterate_items(sl, tagsl)
 		if (!str_list_add(cmd->mem, &log_lv->tags, sl->str)) {
 			log_error("Aborting. Unable to tag mirror log.");
 			goto activate_lv;
@@ -336,7 +336,7 @@ static int _init_mirror_log(struct cmd_context *cmd,
 	}
 
 	/* Remove the temporary tags */
-	dm_list_iterate_items(sl, tags)
+	dm_list_iterate_items(sl, tagsl)
 		str_list_del(&log_lv->tags, sl->str);
 
 	if (activation()) {
@@ -376,7 +376,7 @@ deactivate_and_revert_new_lv:
 revert_new_lv:
 	log_lv->status = orig_status;
 
-	dm_list_iterate_items(sl, tags)
+	dm_list_iterate_items(sl, tagsl)
 		str_list_del(&log_lv->tags, sl->str);
 
 	if (remove_on_failure && !lv_remove(log_lv)) {

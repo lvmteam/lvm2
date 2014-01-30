@@ -1043,22 +1043,22 @@ static PyObject *_liblvm_lvm_vg_list_lvs(vgobject *self)
 
 static PyObject *_liblvm_lvm_vg_get_tags(vgobject *self)
 {
-	struct dm_list *tags;
+	struct dm_list *tagsl;
 	struct lvm_str_list *strl;
 	PyObject * pytuple;
 	int i = 0;
 
 	VG_VALID(self);
 
-	if (!(tags = lvm_vg_get_tags(self->vg))) {
+	if (!(tagsl = lvm_vg_get_tags(self->vg))) {
 		PyErr_SetObject(_LibLVMError, _liblvm_get_last_error());
 		return NULL;
 	}
 
-	if (!(pytuple = PyTuple_New(dm_list_size(tags))))
+	if (!(pytuple = PyTuple_New(dm_list_size(tagsl))))
 		return NULL;
 
-	dm_list_iterate_items(strl, tags) {
+	dm_list_iterate_items(strl, tagsl) {
 		PyTuple_SET_ITEM(pytuple, i, PyString_FromString(strl->str));
 		i++;
 	}
@@ -1163,8 +1163,9 @@ static PyObject *_liblvm_lvm_vg_create_lv_thin(vgobject *self, PyObject *args)
 static void liblvm_lv_dealloc(lvobject *self)
 {
 	/* We can dealloc an object that didn't get fully created */
-	if (self->parent_vgobj)
+	if (self->parent_vgobj) {
 		Py_DECREF(self->parent_vgobj);
+	}
 
 	PyObject_Del(self);
 }
@@ -1291,11 +1292,13 @@ static PyObject *_liblvm_lvm_pv_from_uuid(vgobject *self, PyObject *arg)
 
 static void _liblvm_pv_dealloc(pvobject *self)
 {
-	if (self->parent_vgobj)
+	if (self->parent_vgobj) {
 		Py_DECREF(self->parent_vgobj);
+	}
 
-	if (self->parent_pvslistobj)
+	if (self->parent_pvslistobj) {
 		Py_DECREF(self->parent_pvslistobj);
+	}
 
 	self->parent_vgobj = NULL;
 	self->parent_pvslistobj = NULL;
@@ -1474,22 +1477,22 @@ static PyObject *_liblvm_lvm_lv_remove_tag(lvobject *self, PyObject *args)
 
 static PyObject *_liblvm_lvm_lv_get_tags(lvobject *self)
 {
-	struct dm_list *tags;
+	struct dm_list *tagsl;
 	struct lvm_str_list *strl;
 	PyObject * pytuple;
 	int i = 0;
 
 	LV_VALID(self);
 
-	if (!(tags = lvm_lv_get_tags(self->lv))) {
+	if (!(tagsl = lvm_lv_get_tags(self->lv))) {
 		PyErr_SetObject(_LibLVMError, _liblvm_get_last_error());
 		return NULL;
 	}
 
-	if (!(pytuple = PyTuple_New(dm_list_size(tags))))
+	if (!(pytuple = PyTuple_New(dm_list_size(tagsl))))
 		return NULL;
 
-	dm_list_iterate_items(strl, tags) {
+	dm_list_iterate_items(strl, tagsl) {
 		PyTuple_SET_ITEM(pytuple, i, PyString_FromString(strl->str));
 		i++;
 	}

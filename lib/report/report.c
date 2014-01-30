@@ -130,10 +130,10 @@ static int _tags_disp(struct dm_report *rh __attribute__((unused)), struct dm_po
 		      struct dm_report_field *field,
 		      const void *data, void *private __attribute__((unused)))
 {
-	const struct dm_list *tags = (const struct dm_list *) data;
+	const struct dm_list *tagsl = (const struct dm_list *) data;
 	char *tags_str;
 
-	if (!(tags_str = tags_format_and_copy(mem, tags)))
+	if (!(tags_str = tags_format_and_copy(mem, tagsl)))
 		return_0;
 
 	return _field_set_value(field, tags_str, NULL);

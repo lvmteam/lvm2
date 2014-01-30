@@ -19,14 +19,14 @@
 #include "str_list.h"
 #include "lvm-string.h"
 
-char *alloc_printed_tags(struct dm_list *tags)
+char *alloc_printed_tags(struct dm_list *tagsl)
 {
 	struct str_list *sl;
 	int first = 1;
 	size_t size = 0;
 	char *buffer, *buf;
 
-	dm_list_iterate_items(sl, tags)
+	dm_list_iterate_items(sl, tagsl)
 		/* '"' + tag + '"' + ',' + ' ' */
 		size += strlen(sl->str) + 4;
 	/* '[' + ']' + '\0' */
@@ -40,7 +40,7 @@ char *alloc_printed_tags(struct dm_list *tags)
 	if (!emit_to_buffer(&buf, &size, "["))
 		goto_bad;
 
-	dm_list_iterate_items(sl, tags) {
+	dm_list_iterate_items(sl, tagsl) {
 		if (!first) {
 			if (!emit_to_buffer(&buf, &size, ", "))
 				goto_bad;
@@ -61,7 +61,7 @@ bad:
 	return_NULL;
 }
 
-int read_tags(struct dm_pool *mem, struct dm_list *tags, const struct dm_config_value *cv)
+int read_tags(struct dm_pool *mem, struct dm_list *tagsl, const struct dm_config_value *cv)
 {
 	if (cv->type == DM_CFG_EMPTY_ARRAY)
 		return 1;
@@ -72,7 +72,7 @@ int read_tags(struct dm_pool *mem, struct dm_list *tags, const struct dm_config_
 			return 0;
 		}
 
-		if (!str_list_add(mem, tags, dm_pool_strdup(mem, cv->v.str)))
+		if (!str_list_add(mem, tagsl, dm_pool_strdup(mem, cv->v.str)))
 			return_0;
 
 		cv = cv->next;
