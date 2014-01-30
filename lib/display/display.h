@@ -53,6 +53,7 @@ void vgdisplay_short(const struct volume_group *vg);
 
 void display_formats(const struct cmd_context *cmd);
 void display_segtypes(const struct cmd_context *cmd);
+void display_tags(const struct cmd_context *cmd);
 
 void display_name_error(name_error_t name_error);
 

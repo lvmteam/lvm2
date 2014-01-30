@@ -789,6 +789,11 @@ xx(segtypes,
    PERMITTED_READ_ONLY,
    "segtypes\n")
 
+xx(tags,
+   "List tags defined on this host",
+   PERMITTED_READ_ONLY,
+   "tags\n")
+
 xx(vgcfgbackup,
    "Backup volume group configuration(s)",
    PERMITTED_READ_ONLY,

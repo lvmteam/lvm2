@@ -921,6 +921,15 @@ void display_segtypes(const struct cmd_context *cmd)
 	}
 }
 
+void display_tags(const struct cmd_context *cmd)
+{
+	const struct str_list *sl;
+
+	dm_list_iterate_items(sl, &cmd->tags) {
+		log_print("%s", sl->str);
+	}
+}
+
 void display_name_error(name_error_t name_error)
 {
 	if (name_error != NAME_VALID) {
