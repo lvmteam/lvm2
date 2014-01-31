@@ -240,7 +240,7 @@ inactive() {
 		die "$lv expected inactive, but lvs says it's not:" \
 			$(lvl $lv -o+devices)
 	not dmsetup info $1-$2 2>/dev/null || \
-		die "$lv expected inactive, lvs thinks it is but there are mappings!" 
+		die "$lv expected inactive, lvs thinks it is but there are mappings!"
 }
 
 # Check for list of LVs from given VG
@@ -251,8 +251,23 @@ lv_exists() {
 		shift
 		lv="$lv $vg/$1"
 	done
+	test -n "$lv" || lv=$vg
 	lvl $lv &>/dev/null || \
 		die "$lv expected to exist but does not"
+}
+
+lv_not_exists() {
+	local vg=$1
+	if test $# -le 1 ; then
+		lvl $vg &>/dev/null || return
+		die "$vg expected to not exist but it does!"
+	else
+		while [ $# -gt 1 ]; do
+			shift
+			lvl $vg/$1 &>/dev/null || continue
+			die "$vg/$1 expected to not exist but it does!"
+		done
+	fi
 }
 
 pv_field() {
