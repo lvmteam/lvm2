@@ -36,139 +36,88 @@ aux prepare_devs 10
 # test lvremove vg|lv names
 #
 
-# set up vgs/lvs that we will remove
-vgcreate $vg1 "$dev1" "$dev2"
-vgcreate $vg2 "$dev3" "$dev4"
-vgcreate $vg3 "$dev5" "$dev6"
-vgcreate $vg4 "$dev7" "$dev8"
-vgcreate $vg5 "$dev9" "$dev10"
-lvcreate -l 2 -n $lv1 $vg1
-lvcreate -l 2 -n $lv1 $vg2
-lvcreate -l 2 -n $lv2 $vg2
-lvcreate -l 2 -n $lv1 $vg3
-lvcreate -l 2 -n $lv2 $vg3
-lvcreate -l 2 -n $lv3 $vg3
-lvcreate -l 2 -n $lv1 $vg5
-lvcreate -l 2 -n $lv2 $vg5
-lvcreate -l 2 -n $lv3 $vg5
-lvcreate -l 2 -n $lv4 $vg5
-lvcreate -l 2 -n $lv5 $vg5
-vgchange -an $vg1
-vgchange -an $vg2
-vgchange -an $vg3
-vgchange -an $vg4
-vgchange -an $vg5
+prepare_vgs_() {
+	# set up vgs/lvs that we will remove
+	vgcreate $vg1 "$dev1" "$dev2"
+	vgcreate $vg2 "$dev3" "$dev4"
+	vgcreate $vg3 "$dev5" "$dev6"
+	vgcreate $vg4 "$dev7" "$dev8"
+	vgcreate $vg5 "$dev9" "$dev10"
+	lvcreate -Zn -an -l 2 -n $lv1 $vg1
+	lvcreate -Zn -an -l 2 -n $lv1 $vg2
+	lvcreate -Zn -an -l 2 -n $lv2 $vg2
+	lvcreate -Zn -an -l 2 -n $lv1 $vg3
+	lvcreate -Zn -an -l 2 -n $lv2 $vg3
+	lvcreate -Zn -an -l 2 -n $lv3 $vg3
+	lvcreate -Zn -an -l 2 -n $lv1 $vg5
+	lvcreate -Zn -an -l 2 -n $lv2 $vg5
+	lvcreate -Zn -an -l 2 -n $lv3 $vg5
+	lvcreate -Zn -an -l 2 -n $lv4 $vg5
+	lvcreate -Zn -an -l 2 -n $lv5 $vg5
+}
+
+#
+#
+#
+prepare_vgs_
 
 not lvremove
 not lvremove garbage
 not lvremove $vg1/garbage
 
 lvremove $vg1
-lvs $vg1
-not lvs $vg1/$lv1
+check lv_exists $vg1
+check lv_not_exists $vg1 $lv1
 vgremove $vg1
 
 lvremove $vg2
-lvs $vg2
-not lvs $vg2/$lv1
-not lvs $vg2/$lv2
+check lv_exists $vg2
+check lv_not_exists $vg2 $lv1 $lv2
 vgremove $vg2
 
 lvremove $vg3/$lv1
 lvremove $vg3/$lv2 $vg3/$lv3
-lvs $vg3
-not lvs $vg3/$lv1
-not lvs $vg3/$lv2
-not lvs $vg3/$lv3
+check lv_exists $vg3
+check lv_not_exists $vg3 $lv1 $lv2 $lv3
 vgremove $vg3
 
 lvremove $vg4
-lvs $vg4
+check lv_exists $vg4
 vgremove $vg4
 
 lvremove $vg5/$lv1 $vg5 $vg5/$lv3
-not lvs $vg5/$lv1
-not lvs $vg5/$lv2
-not lvs $vg5/$lv3
-not lvs $vg5/$lv4
-not lvs $vg5/$lv5
+check lv_not_exists $vg5 $lv1 $lv2 $lv3 $lv4 $lv5
 vgremove $vg5
 
 
 #
 # test lvremove vg|lv names from multiple vgs
 #
-
-# set up vgs/lvs that we will remove
-vgcreate $vg1 "$dev1" "$dev2"
-vgcreate $vg2 "$dev3" "$dev4"
-vgcreate $vg3 "$dev5" "$dev6"
-vgcreate $vg4 "$dev7" "$dev8"
-vgcreate $vg5 "$dev9" "$dev10"
-lvcreate -l 2 -n $lv1 $vg1
-lvcreate -l 2 -n $lv1 $vg2
-lvcreate -l 2 -n $lv2 $vg2
-lvcreate -l 2 -n $lv1 $vg3
-lvcreate -l 2 -n $lv2 $vg3
-lvcreate -l 2 -n $lv3 $vg3
-lvcreate -l 2 -n $lv1 $vg5
-lvcreate -l 2 -n $lv2 $vg5
-lvcreate -l 2 -n $lv3 $vg5
-lvcreate -l 2 -n $lv4 $vg5
-lvcreate -l 2 -n $lv5 $vg5
-vgchange -an $vg1
-vgchange -an $vg2
-vgchange -an $vg3
-vgchange -an $vg4
-vgchange -an $vg5
+prepare_vgs_
 
 lvremove $vg2 $vg3/$lv3 $vg5/$lv1
-not lvs $vg2/$lv1
-not lvs $vg2/$lv2
-not lvs $vg3/$lv3
-not lvs $vg5/$lv1
+check lv_not_exists $vg2 $lv1 $lv2
+check lv_not_exists $vg3 $lv3
+check lv_not_exists $vg5 $lv1
 
 lvremove $vg2 $vg1
-not lvs $vg1/$lv1
+check lv_not_exists $vg1 $lv1
 
 lvremove $vg3/$lv1 $vg3 $vg4 $vg5/$lv2
-not lvs $vg3/$lv1
-not lvs $vg3/$lv2
-not lvs $vg5/$lv2
+check lv_not_exists $vg3 $lv1 $lv2
+check lv_not_exists $vg5 $lv2
 
 lvremove $vg5 $vg1 $vg5/$lv3
-not lvs $vg5/$lv3
-not lvs $vg5/$lv4
-not lvs $vg5/$lv5
+check lv_not_exists $vg5 $lv3 $lv4 $lv5
 
-vgremove $vg1
-vgremove $vg2
-vgremove $vg3
-vgremove $vg4
-vgremove $vg5
+vgremove $vg1 $vg2 $vg3 $vg4 $vg5
 
 
 #
 # test lvremove @lvtags
 #
+prepare_vgs_
 
-# set up vgs/lvs that we will remove
-vgcreate $vg1 "$dev1" "$dev2"
-vgcreate $vg2 "$dev3" "$dev4"
-vgcreate $vg3 "$dev5" "$dev6"
-vgcreate $vg4 "$dev7" "$dev8"
-vgcreate $vg5 "$dev9" "$dev10"
-lvcreate -l 2 -n $lv1 $vg1
-lvcreate -l 2 -n $lv1 $vg2
-lvcreate -l 2 -n $lv2 $vg2
-lvcreate -l 2 -n $lv1 $vg3
-lvcreate -l 2 -n $lv2 $vg3
-lvcreate -l 2 -n $lv3 $vg3
-lvcreate -l 2 -n $lv1 $vg5
-lvcreate -l 2 -n $lv2 $vg5
-lvcreate -l 2 -n $lv3 $vg5
-lvcreate -l 2 -n $lv4 $vg5
-lvcreate -l 2 -n $lv5 $vg5
 lvchange --addtag V1L1 $vg1/$lv1
 lvchange --addtag V2L1 $vg2/$lv1
 lvchange --addtag V2L2 $vg2/$lv2
@@ -185,99 +134,52 @@ lvchange --addtag V5L234 $vg5/$lv2
 lvchange --addtag V5L234 $vg5/$lv3
 lvchange --addtag V5L234 $vg5/$lv4
 lvchange --addtag V5L5   $vg5/$lv5
-vgchange -an $vg1
-vgchange -an $vg2
-vgchange -an $vg3
-vgchange -an $vg4
-vgchange -an $vg5
+vgchange -an $vg1 $vg2 $vg3 $vg4 $vg5
 
 # verify all exist
-lvs $vg1/$lv1
-lvs $vg2/$lv1
-lvs $vg2/$lv2
-lvs $vg3/$lv1
-lvs $vg3/$lv2
-lvs $vg3/$lv3
-lvs $vg5/$lv1
-lvs $vg5/$lv2
-lvs $vg5/$lv3
-lvs $vg5/$lv4
-lvs $vg5/$lv5
+check lv_exists $vg1 $lv1
+check lv_exists $vg2 $lv1 $lv2
+check lv_exists $vg3 $lv1 $lv2 $lv3
+check lv_exists $vg5 $lv1 $lv2 $lv3 $lv4 $lv5
 
 lvremove @garbage
 
 lvremove @V3L3A
-not lvs $vg3/$lv3
+check lv_not_exists $vg3 $lv3
 # verify unremoved still exist
-lvs $vg1/$lv1
-lvs $vg2/$lv1
-lvs $vg2/$lv2
-lvs $vg3/$lv1
-lvs $vg3/$lv2
-lvs $vg5/$lv1
-lvs $vg5/$lv2
-lvs $vg5/$lv3
-lvs $vg5/$lv4
-lvs $vg5/$lv5
+check lv_exists $vg1 $lv1
+check lv_exists $vg2 $lv1 $lv2
+check lv_exists $vg3 $lv1 $lv2
+check lv_exists $vg5 $lv1 $lv2 $lv3 $lv4 $lv5
 
 lvremove @V5L234
-not lvs $vg5/$lv2
-not lvs $vg5/$lv3
-not lvs $vg5/$lv4
+check lv_not_exists $vg5 $lv2 $lv3 $lv4
 # verify unremoved still exist
-lvs $vg1/$lv1
-lvs $vg2/$lv1
-lvs $vg2/$lv2
-lvs $vg3/$lv1
-lvs $vg3/$lv2
-lvs $vg5/$lv1
-lvs $vg5/$lv5
+check lv_exists $vg1 $lv1
+check lv_exists $vg2 $lv1 $lv2
+check lv_exists $vg3 $lv1 $lv2
+check lv_exists $vg5 $lv1 $lv5
 
 lvremove @V5L1 @V5L5
-not lvs $vg5/$lv1
-not lvs $vg5/$lv5
+check lv_not_exists $vg5 $lv1 $lv5
 # verify unremoved still exist
-lvs $vg1/$lv1
-lvs $vg2/$lv1
-lvs $vg2/$lv2
-lvs $vg3/$lv1
-lvs $vg3/$lv2
+check lv_exists $vg1 $lv1
+check lv_exists $vg2 $lv1 $lv2
+check lv_exists $vg3 $lv1 $lv2
 
 lvremove @V23 @V1L1 @V3L2
-not lvs $vg1/$lv1
-not lvs $vg2/$lv1
-not lvs $vg2/$lv2
-not lvs $vg3/$lv1
-not lvs $vg3/$lv2
+check lv_not_exists $vg1 $lv1
+check lv_not_exists $vg2 $lv1 $lv2
+check lv_not_exists $vg3 $lv1 $lv2
 
-vgremove $vg1
-vgremove $vg2
-vgremove $vg3
-vgremove $vg4
-vgremove $vg5
+vgremove $vg1 $vg2 $vg3 $vg4 $vg5
 
 
 #
 # test lvremove @vgtags
 #
+prepare_vgs_
 
-# set up vgs/lvs that we will remove
-vgcreate $vg1 "$dev1" "$dev2"
-vgcreate $vg2 "$dev3" "$dev4"
-vgcreate $vg3 "$dev5" "$dev6"
-vgcreate $vg4 "$dev7" "$dev8"
-vgcreate $vg5 "$dev9" "$dev10"
-lvcreate -l 2 -n $lv1 $vg1
-lvcreate -l 2 -n $lv1 $vg2
-lvcreate -l 2 -n $lv2 $vg2
-lvcreate -l 2 -n $lv1 $vg3
-lvcreate -l 2 -n $lv2 $vg3
-lvcreate -l 2 -n $lv3 $vg3
-lvcreate -l 2 -n $lv1 $vg5
-lvcreate -l 2 -n $lv2 $vg5
-lvcreate -l 2 -n $lv3 $vg5
-lvcreate -l 2 -n $lv4 $vg5
-lvcreate -l 2 -n $lv5 $vg5
 vgchange --addtag V1  $vg1
 vgchange --addtag V23 $vg2
 vgchange --addtag V23 $vg3
@@ -285,71 +187,34 @@ vgchange --addtag V35 $vg3
 vgchange --addtag V4  $vg4
 vgchange --addtag V35 $vg5
 vgchange --addtag V5  $vg5
-vgchange -an $vg1
-vgchange -an $vg2
-vgchange -an $vg3
-vgchange -an $vg4
-vgchange -an $vg5
+vgchange -an $vg1 $vg2 $vg3 $vg4 $vg5
 
 lvremove @V4
 # verify unremoved exist
-lvs $vg1/$lv1
-lvs $vg2/$lv1
-lvs $vg2/$lv2
-lvs $vg3/$lv1
-lvs $vg3/$lv2
-lvs $vg3/$lv3
-lvs $vg5/$lv1
-lvs $vg5/$lv2
-lvs $vg5/$lv3
-lvs $vg5/$lv4
-lvs $vg5/$lv5
+check lv_exists $vg1 $lv1
+check lv_exists $vg2 $lv1 $lv2
+check lv_exists $vg3 $lv1 $lv2 $lv3
+check lv_exists $vg5 $lv1 $lv2 $lv3 $lv4 $lv5
 
 lvremove @V5
-not lvs $vg5/$lv1
-not lvs $vg5/$lv2
-not lvs $vg5/$lv3
-not lvs $vg5/$lv4
-not lvs $vg5/$lv5
+check lv_not_exists $vg5 $lv1 $lv2 $lv3 $lv4 $lv5
 # verify unremoved exist
-lvs $vg1/$lv1
-lvs $vg2/$lv1
-lvs $vg2/$lv2
-lvs $vg3/$lv1
-lvs $vg3/$lv2
-lvs $vg3/$lv3
+check lv_exists $vg1 $lv1
+check lv_exists $vg2 $lv1 $lv2
+check lv_exists $vg3 $lv1 $lv2 $lv3
 
 lvremove @V1 @V23
-not lvs $vg1/$lv1
-not lvs $vg2/$lv1
-not lvs $vg2/$lv2
-not lvs $vg3/$lv1
-not lvs $vg3/$lv2
-not lvs $vg3/$lv3
+check lv_not_exists $vg1 $lv1
+check lv_not_exists $vg2 $lv1 $lv2
+check lv_not_exists $vg3 $lv1 $lv2 $lv3
 
-vgremove $vg1
-vgremove $vg2
-vgremove $vg3
-vgremove $vg4
-vgremove $vg5
+vgremove $vg1 $vg2 $vg3 $vg4 $vg5
 
-# set up vgs/lvs that we will remove
-vgcreate $vg1 "$dev1" "$dev2"
-vgcreate $vg2 "$dev3" "$dev4"
-vgcreate $vg3 "$dev5" "$dev6"
-vgcreate $vg4 "$dev7" "$dev8"
-vgcreate $vg5 "$dev9" "$dev10"
-lvcreate -l 2 -n $lv1 $vg1
-lvcreate -l 2 -n $lv1 $vg2
-lvcreate -l 2 -n $lv2 $vg2
-lvcreate -l 2 -n $lv1 $vg3
-lvcreate -l 2 -n $lv2 $vg3
-lvcreate -l 2 -n $lv3 $vg3
-lvcreate -l 2 -n $lv1 $vg5
-lvcreate -l 2 -n $lv2 $vg5
-lvcreate -l 2 -n $lv3 $vg5
-lvcreate -l 2 -n $lv4 $vg5
-lvcreate -l 2 -n $lv5 $vg5
+#
+#
+#
+prepare_vgs_
+
 vgchange --addtag V1  $vg1
 vgchange --addtag V23 $vg2
 vgchange --addtag V23 $vg3
@@ -357,59 +222,26 @@ vgchange --addtag V35 $vg3
 vgchange --addtag V4  $vg4
 vgchange --addtag V35 $vg5
 vgchange --addtag V5  $vg5
-vgchange -an $vg1
-vgchange -an $vg2
-vgchange -an $vg3
-vgchange -an $vg4
-vgchange -an $vg5
 
 lvremove @V35 @V5
-not lvs $vg3/$lv1
-not lvs $vg3/$lv2
-not lvs $vg3/$lv3
-not lvs $vg5/$lv1
-not lvs $vg5/$lv2
-not lvs $vg5/$lv3
-not lvs $vg5/$lv4
-not lvs $vg5/$lv5
+check lv_not_exists $vg3 $lv1 $lv2 /$lv3
+check lv_not_exists $vg5 $lv1 $lv2 $lv3 $lv4 $lv5
 # verify unremoved exist
-lvs $vg1/$lv1
-lvs $vg2/$lv1
-lvs $vg2/$lv2
+check lv_exists $vg1 $lv1
+check lv_exists $vg2 $lv1 $lv2
 
 lvremove @V1 @V23
-not lvs $vg1/$lv1
-not lvs $vg2/$lv1
-not lvs $vg2/$lv2
+check lv_not_exists $vg1 $lv1
+check lv_not_exists $vg2 $lv1 $lv2
 
-vgremove $vg1
-vgremove $vg2
-vgremove $vg3
-vgremove $vg4
-vgremove $vg5
+vgremove $vg1 $vg2 $vg3 $vg4 $vg5
 
 
 #
 # test lvremove vg|lv names and @lvtags
 #
+prepare_vgs_
 
-# set up vgs/lvs that we will remove
-vgcreate $vg1 "$dev1" "$dev2"
-vgcreate $vg2 "$dev3" "$dev4"
-vgcreate $vg3 "$dev5" "$dev6"
-vgcreate $vg4 "$dev7" "$dev8"
-vgcreate $vg5 "$dev9" "$dev10"
-lvcreate -l 2 -n $lv1 $vg1
-lvcreate -l 2 -n $lv1 $vg2
-lvcreate -l 2 -n $lv2 $vg2
-lvcreate -l 2 -n $lv1 $vg3
-lvcreate -l 2 -n $lv2 $vg3
-lvcreate -l 2 -n $lv3 $vg3
-lvcreate -l 2 -n $lv1 $vg5
-lvcreate -l 2 -n $lv2 $vg5
-lvcreate -l 2 -n $lv3 $vg5
-lvcreate -l 2 -n $lv4 $vg5
-lvcreate -l 2 -n $lv5 $vg5
 lvchange --addtag V1L1 $vg1/$lv1
 lvchange --addtag V2L1 $vg2/$lv1
 lvchange --addtag V2L2 $vg2/$lv2
@@ -426,56 +258,27 @@ lvchange --addtag V5L234 $vg5/$lv2
 lvchange --addtag V5L234 $vg5/$lv3
 lvchange --addtag V5L234 $vg5/$lv4
 lvchange --addtag V5L5   $vg5/$lv5
-vgchange -an $vg1
-vgchange -an $vg2
-vgchange -an $vg3
-vgchange -an $vg4
-vgchange -an $vg5
+vgchange -an $vg1 $vg2 $vg3 $vg4 $vg5
 
 lvremove $vg1/$lv1 @V3L2 @V5L234
-not lvs $vg1/$lv1
-not lvs $vg3/$lv2
-not lvs $vg5/$lv2
-not lvs $vg5/$lv3
-not lvs $vg5/$lv4
+check lv_not_exists $vg1 $lv1
+check lv_not_exists $vg3 $lv2
+check lv_not_exists $vg5 $lv2 $lv3 $lv4
 # verify unremoved exist
-lvs $vg2/$lv1
-lvs $vg2/$lv2
-lvs $vg3/$lv1
-lvs $vg3/$lv3
-lvs $vg5/$lv1
-lvs $vg5/$lv5
+check lv_exists $vg2 $lv1 $lv2
+check lv_exists $vg3 $lv1 $lv3
+check lv_exists $vg5 $lv1 $lv5
 
 lvremove $vg2/$lv1 @V23 $vg5/$lv1 @V5L5
 
-vgremove $vg1
-vgremove $vg2
-vgremove $vg3
-vgremove $vg4
-vgremove $vg5
+vgremove $vg1 $vg2 $vg3 $vg4 $vg5
 
 
 #
 # test lvremove vg|lv names and @vgtags
 #
+prepare_vgs_
 
-# set up vgs/lvs that we will remove
-vgcreate $vg1 "$dev1" "$dev2"
-vgcreate $vg2 "$dev3" "$dev4"
-vgcreate $vg3 "$dev5" "$dev6"
-vgcreate $vg4 "$dev7" "$dev8"
-vgcreate $vg5 "$dev9" "$dev10"
-lvcreate -l 2 -n $lv1 $vg1
-lvcreate -l 2 -n $lv1 $vg2
-lvcreate -l 2 -n $lv2 $vg2
-lvcreate -l 2 -n $lv1 $vg3
-lvcreate -l 2 -n $lv2 $vg3
-lvcreate -l 2 -n $lv3 $vg3
-lvcreate -l 2 -n $lv1 $vg5
-lvcreate -l 2 -n $lv2 $vg5
-lvcreate -l 2 -n $lv3 $vg5
-lvcreate -l 2 -n $lv4 $vg5
-lvcreate -l 2 -n $lv5 $vg5
 vgchange --addtag V1  $vg1
 vgchange --addtag V23 $vg2
 vgchange --addtag V23 $vg3
@@ -483,56 +286,24 @@ vgchange --addtag V35 $vg3
 vgchange --addtag V4  $vg4
 vgchange --addtag V35 $vg5
 vgchange --addtag V5  $vg5
-vgchange -an $vg1
-vgchange -an $vg2
-vgchange -an $vg3
-vgchange -an $vg4
-vgchange -an $vg5
 
 lvremove $vg1/$lv1 @V35
-not lvs $vg1/$lv1
-not lvs $vg3/$lv1
-not lvs $vg3/$lv2
-not lvs $vg3/$lv3
-not lvs $vg5/$lv1
-not lvs $vg5/$lv2
-not lvs $vg5/$lv3
-not lvs $vg5/$lv4
-not lvs $vg5/$lv5
+check lv_not_exists $vg1 $lv1
+check lv_not_exists $vg3 $lv1 $lv2 $lv3
+check lv_not_exists $vg5 $lv1 $lv2 $lv3not $lv4 $lv5
 # verify unremoved exist
-lvs $vg2/$lv1
-lvs $vg2/$lv2
+check lv_exists $vg2 $lv1 $lv2
 
 lvremove $vg2/$lv1 @V23 $vg2/$lv2
 
-vgremove $vg1
-vgremove $vg2
-vgremove $vg3
-vgremove $vg4
-vgremove $vg5
+vgremove $vg1 $vg2 $vg3 $vg4 $vg5
 
 
 #
 # test lvremove @lvtags and @vgtags
 #
+prepare_vgs_
 
-# set up vgs/lvs that we will remove
-vgcreate $vg1 "$dev1" "$dev2"
-vgcreate $vg2 "$dev3" "$dev4"
-vgcreate $vg3 "$dev5" "$dev6"
-vgcreate $vg4 "$dev7" "$dev8"
-vgcreate $vg5 "$dev9" "$dev10"
-lvcreate -l 2 -n $lv1 $vg1
-lvcreate -l 2 -n $lv1 $vg2
-lvcreate -l 2 -n $lv2 $vg2
-lvcreate -l 2 -n $lv1 $vg3
-lvcreate -l 2 -n $lv2 $vg3
-lvcreate -l 2 -n $lv3 $vg3
-lvcreate -l 2 -n $lv1 $vg5
-lvcreate -l 2 -n $lv2 $vg5
-lvcreate -l 2 -n $lv3 $vg5
-lvcreate -l 2 -n $lv4 $vg5
-lvcreate -l 2 -n $lv5 $vg5
 lvchange --addtag V1L1 $vg1/$lv1
 lvchange --addtag V2L1 $vg2/$lv1
 lvchange --addtag V2L2 $vg2/$lv2
@@ -557,57 +328,25 @@ vgchange --addtag V35 $vg3
 vgchange --addtag V4  $vg4
 vgchange --addtag V35 $vg5
 vgchange --addtag V5  $vg5
-vgchange -an $vg1
-vgchange -an $vg2
-vgchange -an $vg3
-vgchange -an $vg4
-vgchange -an $vg5
 
 lvremove @V23 @V35
-not lvs $vg2/$lv1
-not lvs $vg2/$lv2
-not lvs $vg3/$lv1
-not lvs $vg3/$lv2
-not lvs $vg3/$lv3
-not lvs $vg5/$lv1
-not lvs $vg5/$lv2
-not lvs $vg5/$lv3
-not lvs $vg5/$lv4
-not lvs $vg5/$lv5
+check lv_not_exists $vg2 $lv1 $lv2
+check lv_not_exists $vg3 $lv1 $lv2 $lv3
+check lv_not_exists $vg5 $lv1 $lv2 $lv3 $lv4 $lv5
 # verify unremoved exist
-lvs $vg1/$lv1
+check lv_exists $vg1 $lv1
 
 lvremove @V1 @V1L1
-not lvs $vg1/$lv1
+check lv_not_exists $vg1 $lv1
 
-vgremove $vg1
-vgremove $vg2
-vgremove $vg3
-vgremove $vg4
-vgremove $vg5
+vgremove $vg1 $vg2 $vg3 $vg4 $vg5
 
 
 #
 # test lvremove vg|lv names and @lvtags and @vgtags
 #
+prepare_vgs_
 
-# set up vgs/lvs that we will remove
-vgcreate $vg1 "$dev1" "$dev2"
-vgcreate $vg2 "$dev3" "$dev4"
-vgcreate $vg3 "$dev5" "$dev6"
-vgcreate $vg4 "$dev7" "$dev8"
-vgcreate $vg5 "$dev9" "$dev10"
-lvcreate -l 2 -n $lv1 $vg1
-lvcreate -l 2 -n $lv1 $vg2
-lvcreate -l 2 -n $lv2 $vg2
-lvcreate -l 2 -n $lv1 $vg3
-lvcreate -l 2 -n $lv2 $vg3
-lvcreate -l 2 -n $lv3 $vg3
-lvcreate -l 2 -n $lv1 $vg5
-lvcreate -l 2 -n $lv2 $vg5
-lvcreate -l 2 -n $lv3 $vg5
-lvcreate -l 2 -n $lv4 $vg5
-lvcreate -l 2 -n $lv5 $vg5
 lvchange --addtag V1L1 $vg1/$lv1
 lvchange --addtag V2L1 $vg2/$lv1
 lvchange --addtag V2L2 $vg2/$lv2
@@ -632,60 +371,26 @@ vgchange --addtag V35 $vg3
 vgchange --addtag V4  $vg4
 vgchange --addtag V35 $vg5
 vgchange --addtag V5  $vg5
-vgchange -an $vg1
-vgchange -an $vg2
-vgchange -an $vg3
-vgchange -an $vg4
-vgchange -an $vg5
 
 lvremove $vg1/$lv1 @V23 @V5L5
-not lvs $vg1/$lv1
-not lvs $vg2/$lv1
-not lvs $vg2/$lv2
-not lvs $vg3/$lv1
-not lvs $vg3/$lv2
-not lvs $vg3/$lv3
-not lvs $vg5/$lv5
+check lv_not_exists $vg1 $lv1
+check lv_not_exists $vg2 $lv1 $lv2
+check lv_not_exists $vg3 $lv1 $lv2 $lv3
+check lv_not_exists $vg5 $lv5
 # verify unremoved exist
-lvs $vg5/$lv1
-lvs $vg5/$lv2
-lvs $vg5/$lv3
-lvs $vg5/$lv4
+check lv_exists $vg5 $lv1 $lv2 $lv3 $lv4
 
 lvremove $vg5/$lv2 @V5L234 @V5
-not lvs $vg5/$lv1
-not lvs $vg5/$lv2
-not lvs $vg5/$lv3
-not lvs $vg5/$lv4
+check lv_not_exists $vg5 $lv1 $lv2 $lv3 $lv4
 
-vgremove $vg1
-vgremove $vg2
-vgremove $vg3
-vgremove $vg4
-vgremove $vg5
+vgremove $vg1 $vg2 $vg3 $vg4 $vg5
 
 
 #
 # test lvs: empty, vg(s), lv(s), vgtag(s), lvtag(s), garbage, combinations
 #
+prepare_vgs_
 
-# set up vgs/lvs that we will remove
-vgcreate $vg1 "$dev1" "$dev2"
-vgcreate $vg2 "$dev3" "$dev4"
-vgcreate $vg3 "$dev5" "$dev6"
-vgcreate $vg4 "$dev7" "$dev8"
-vgcreate $vg5 "$dev9" "$dev10"
-lvcreate -l 2 -n $lv1 $vg1
-lvcreate -l 2 -n $lv1 $vg2
-lvcreate -l 2 -n $lv2 $vg2
-lvcreate -l 2 -n $lv1 $vg3
-lvcreate -l 2 -n $lv2 $vg3
-lvcreate -l 2 -n $lv3 $vg3
-lvcreate -l 2 -n $lv1 $vg5
-lvcreate -l 2 -n $lv2 $vg5
-lvcreate -l 2 -n $lv3 $vg5
-lvcreate -l 2 -n $lv4 $vg5
-lvcreate -l 2 -n $lv5 $vg5
 lvchange --addtag V1L1 $vg1/$lv1
 lvchange --addtag V2L1 $vg2/$lv1
 lvchange --addtag V2L2 $vg2/$lv2
@@ -709,11 +414,6 @@ vgchange --addtag V35 $vg3
 vgchange --addtag V4  $vg4
 vgchange --addtag V35 $vg5
 vgchange --addtag V5  $vg5
-vgchange -an $vg1
-vgchange -an $vg2
-vgchange -an $vg3
-vgchange -an $vg4
-vgchange -an $vg5
 
 # empty
 lvs -o vg_name,lv_name --separator '-' >err
@@ -951,4 +651,3 @@ not grep $vg5-$lv2 err
 not grep $vg5-$lv3 err
 not grep $vg5-$lv4 err
 not grep $vg5-$lv5 err
-

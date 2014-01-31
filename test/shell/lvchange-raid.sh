@@ -19,7 +19,7 @@ THIN_POSTFIX=""
 # Proper mismatch count 1.5.2 upstream,1.3.5 < x < 1.4.0 in RHEL6
 #
 # We will simplify and simple test for 1.5.2 and 1.3.5 < x < 1.4.0
-aux target_at_least dm-raid 1 3 5 && 
+aux target_at_least dm-raid 1 3 5 &&
   ! aux target_at_least dm-raid 1 4 0 ||
   aux target_at_least dm-raid 1 5 2 || skip
 
@@ -29,108 +29,103 @@ aux prepare_vg 6
 
 # run_writemostly_check <VG> <LV>
 run_writemostly_check() {
-	local d0
-	local d1
 	local vg=$1
 	local lv=${2}${THIN_POSTFIX}
+	local segtype=$(get lv_field $vg/$lv segtype -a)
+	local d0=$(get lv_devices $vg/${lv}_rimage_0)
+	local d1=$(get lv_devices $vg/${lv}_rimage_1)
 
 	printf "#\n#\n#\n# %s/%s (%s): run_writemostly_check\n#\n#\n#\n" \
-		$vg $lv `lvs -a --noheadings -o segtype $vg/$lv`
-	d0=`lvs -a --noheadings -o devices $vg/${lv}_rimage_0 | sed s/\(.\)//`
-	d0=$(sed s/^[[:space:]]*// <<< "$d0")
-	d1=`lvs -a --noheadings -o devices $vg/${lv}_rimage_1 | sed s/\(.\)//`
-	d1=$(sed s/^[[:space:]]*// <<< "$d1")
+		$vg $lv $segtype
 
 	# No writemostly flag should be there yet.
-	lvs -a --noheadings -o lv_attr $vg/${lv}_rimage_0 | grep '.*-.$'
-	lvs -a --noheadings -o lv_attr $vg/${lv}_rimage_1 | grep '.*-.$'
+	get lv_field $vg/${lv}_rimage_0 lv_attr -a | grep '.*-.$'
+	get lv_field $vg/${lv}_rimage_1 lv_attr -a | grep '.*-.$'
 
-	if [ `lvs -a --noheadings -o segtype $vg/$lv` != "raid1" ]; then
+	if [ "$segtype" != "raid1" ]; then
 		not lvchange --writemostly $d0 $vg/$lv
 		return
 	fi
 
 	# Set the flag
 	lvchange --writemostly $d0 $vg/$lv
-	lvs -a --noheadings -o lv_attr $vg/${lv}_rimage_0 | grep '.*w.$'
+	get lv_field $vg/${lv}_rimage_0 lv_attr -a | grep '.*w.$'
 
 	# Running again should leave it set (not toggle)
 	lvchange --writemostly $d0 $vg/$lv
-	lvs -a --noheadings -o lv_attr $vg/${lv}_rimage_0 | grep '.*w.$'
+	get lv_field $vg/${lv}_rimage_0 lv_attr -a | grep '.*w.$'
 
 	# Running again with ':y' should leave it set
 	lvchange --writemostly $d0:y $vg/$lv
-	lvs -a --noheadings -o lv_attr $vg/${lv}_rimage_0 | grep '.*w.$'
+	get lv_field $vg/${lv}_rimage_0 lv_attr -a | grep '.*w.$'
 
 	# ':n' should unset it
 	lvchange --writemostly $d0:n $vg/$lv
-	lvs -a --noheadings -o lv_attr $vg/${lv}_rimage_0 | grep '.*-.$'
+	get lv_field $vg/${lv}_rimage_0 lv_attr -a | grep '.*-.$'
 
 	# ':n' again should leave it unset
 	lvchange --writemostly $d0:n $vg/$lv
-	lvs -a --noheadings -o lv_attr $vg/${lv}_rimage_0 | grep '.*-.$'
+	get lv_field $vg/${lv}_rimage_0 lv_attr -a | grep '.*-.$'
 
 	# ':t' toggle to set
 	lvchange --writemostly $d0:t $vg/$lv
-	lvs -a --noheadings -o lv_attr $vg/${lv}_rimage_0 | grep '.*w.$'
+	get lv_field $vg/${lv}_rimage_0 lv_attr -a | grep '.*w.$'
 
 	# ':t' toggle to unset
 	lvchange --writemostly $d0:t $vg/$lv
-	lvs -a --noheadings -o lv_attr $vg/${lv}_rimage_0 | grep '.*-.$'
+	get lv_field $vg/${lv}_rimage_0 lv_attr -a | grep '.*-.$'
 
 	# ':y' to set
 	lvchange --writemostly $d0:y $vg/$lv
-	lvs -a --noheadings -o lv_attr $vg/${lv}_rimage_0 | grep '.*w.$'
+	get lv_field $vg/${lv}_rimage_0 lv_attr -a | grep '.*w.$'
 
 	# Toggle both at once
 	lvchange --writemostly $d0:t --writemostly $d1:t $vg/$lv
-	lvs -a --noheadings -o lv_attr $vg/${lv}_rimage_0 | grep '.*-.$'
-	lvs -a --noheadings -o lv_attr $vg/${lv}_rimage_1 | grep '.*w.$'
+	get lv_field $vg/${lv}_rimage_0 lv_attr -a | grep '.*-.$'
+	get lv_field $vg/${lv}_rimage_1 lv_attr -a | grep '.*w.$'
 
 	# Toggle both at once again
 	lvchange --writemostly $d0:t --writemostly $d1:t $vg/$lv
-	lvs -a --noheadings -o lv_attr $vg/${lv}_rimage_0 | grep '.*w.$'
-	lvs -a --noheadings -o lv_attr $vg/${lv}_rimage_1 | grep '.*-.$'
+	get lv_field $vg/${lv}_rimage_0 lv_attr -a | grep '.*w.$'
+	get lv_field $vg/${lv}_rimage_1 lv_attr -a | grep '.*-.$'
 
 	# Toggle one, unset the other
 	lvchange --writemostly $d0:n --writemostly $d1:t $vg/$lv
-	lvs -a --noheadings -o lv_attr $vg/${lv}_rimage_0 | grep '.*-.$'
-	lvs -a --noheadings -o lv_attr $vg/${lv}_rimage_1 | grep '.*w.$'
+	get lv_field $vg/${lv}_rimage_0 lv_attr -a | grep '.*-.$'
+	get lv_field $vg/${lv}_rimage_1 lv_attr -a | grep '.*w.$'
 
 	# Toggle one, set the other
 	lvchange --writemostly $d0:y --writemostly $d1:t $vg/$lv
-	lvs -a --noheadings -o lv_attr $vg/${lv}_rimage_0 | grep '.*w.$'
-	lvs -a --noheadings -o lv_attr $vg/${lv}_rimage_1 | grep '.*-.$'
+	get lv_field $vg/${lv}_rimage_0 lv_attr -a | grep '.*w.$'
+	get lv_field $vg/${lv}_rimage_1 lv_attr -a | grep '.*-.$'
 
 	# Partial flag supercedes writemostly flag
 	aux disable_dev $d0
-	lvs -a --noheadings -o lv_attr $vg/${lv}_rimage_0 | grep '.*p.$'
+	get lv_field $vg/${lv}_rimage_0 lv_attr -a | grep '.*p.$'
 
 	# It is possible for the kernel to detect the failed device before
 	# we re-enable it.  If so, the field will be set to 'r'efresh since
 	# that also takes precedence over 'w'ritemostly.  If this has happened,
 	# we refresh the LV and then check for 'w'.
 	aux enable_dev $d0
-	if lvs -a --noheadings -o lv_attr $vg/${lv}_rimage_0 | grep '.*r.$'; then
-		lvchange --refresh $vg/$lv
-	fi
-	lvs -a --noheadings -o lv_attr $vg/${lv}_rimage_0 | grep '.*w.$'
+	get lv_field $vg/${lv}_rimage_0 lv_attr -a | grep '.*r.$' && lvchange --refresh $vg/$lv
+	get lv_field $vg/${lv}_rimage_0 lv_attr -a | grep '.*w.$'
 
 	# Catch Bad writebehind values
 	not lvchange --writebehind "invalid" $vg/$lv
 	not lvchange --writebehind -256 $vg/$lv
 
 	# Set writebehind
-	[ ! `lvs --noheadings -o raid_write_behind $vg/$lv` ]
+	check lv_field $vg/$lv raid_write_behind ""
 	lvchange --writebehind 512 $vg/$lv
-	[ `lvs --noheadings -o raid_write_behind $vg/$lv` -eq 512 ]
+	check lv_field $vg/$lv raid_write_behind "512"
 
 	# Converting to linear should clear flags and writebehind
 	lvconvert -m 0 $vg/$lv $d1
 	lvconvert --type raid1 -m 1 $vg/$lv $d1
-	[ ! `lvs --noheadings -o raid_write_behind $vg/$lv` ]
-	lvs -a --noheadings -o lv_attr $vg/${lv}_rimage_0 | grep '.*-.$'
-	lvs -a --noheadings -o lv_attr $vg/${lv}_rimage_1 | grep '.*-.$'
+	check lv_field $vg/$lv raid_write_behind ""
+	get lv_field $vg/${lv}_rimage_0 lv_attr -a  | grep '.*-.$'
+	get lv_field $vg/${lv}_rimage_1 lv_attr -a  | grep '.*-.$'
 }
 
 # run_syncaction_check <VG> <LV>
@@ -143,33 +138,29 @@ run_syncaction_check() {
 	local lv=${2}${THIN_POSTFIX}
 
 	printf "#\n#\n#\n# %s/%s (%s): run_syncaction_check\n#\n#\n#\n" \
-		$vg $lv `lvs -a --noheadings -o segtype $vg/$lv`
+		$vg $lv $(get lv_field $vg/$lv segtype -a)
 	aux wait_for_sync $vg $lv
 
-	device=`lvs -a --noheadings -o devices $vg/${lv}_rimage_1 | sed s/\(.\)//`
-	device=$(sed s/^[[:space:]]*// <<< "$device")
+	device=$(get lv_devices $vg/${lv}_rimage_1)
 
-	size=`lvs -a --noheadings -o size --units 1k $vg/${lv}_rimage_1 | sed s/\.00k//`
-	size=$(sed s/^[[:space:]]*// <<< "$size")
-	size=$(($size / 2))
+	size=$(get lv_field $vg/${lv}_rimage_1 size -a --units 1k)
+	size=$((${size%\.00k} / 2))
 
-	tmp=`pvs --noheadings -o mda_size --units 1k $device | sed s/\.00k//`
-	tmp=$(sed s/^[[:space:]]*// <<< "$tmp")
-	seek=$tmp  # Jump over MDA
+	tmp=$(get pv_field $device mda_size --units 1k)
+	seek=${tmp%\.00k} # Jump over MDA
 
-	tmp=`lvs -a --noheadings -o size --units 1k $vg/${lv}_rmeta_1 | sed s/\.00k//`
-	tmp=$(sed s/^[[:space:]]*// <<< "$tmp")
-	seek=$(($seek + $tmp))  # Jump over RAID metadata image
+	tmp=$(get lv_field $vg/${lv}_rmeta_1 size -a --units 1k)
+	seek=$(($seek + ${tmp%\.00k}))  # Jump over RAID metadata image
 
 	seek=$(($seek + $size)) # Jump halfway through the RAID image
 
-	lvs --noheadings -o lv_attr $vg/$lv | grep '.*-.$'
-	[ `lvs --noheadings -o raid_mismatch_count $vg/$lv` == 0 ]
+	get lv_field $vg/$lv lv_attr | grep '.*-.$'
+	check lv_field $vg/$lv raid_mismatch_count "0"
 
 	# Overwrite the last half of one of the PVs with crap
 	dd if=/dev/urandom of=$device bs=1k count=$size seek=$seek
 
-	if [ ! -z $THIN_POSTFIX ]; then
+	if [ -n "$THIN_POSTFIX" ]; then
 		#
 		# Seems to work fine on real devices,
 		# but can't make the system notice the bad blocks
@@ -189,12 +180,11 @@ run_syncaction_check() {
 	# 'lvs' should show results
 	lvchange --syncaction check $vg/$lv
 	aux wait_for_sync $vg $lv
-	if ! lvs --noheadings -o lv_attr $vg/$lv | grep '.*m.$'; then
-		lvs --noheadings -o lv_attr $vg/$lv
+	if ! get lv_field $vg/$lv lv_attr -a | grep '.*m.$'; then
 		dmsetup status | grep $vg
 		false
 	fi
-	[ `lvs --noheadings -o raid_mismatch_count $vg/$lv` != 0 ]
+	not check lv_field $vg/$lv raid_mismatch_count "0"
 
 	# "repair" will fix discrepancies
 	lvchange --syncaction repair $vg/$lv
@@ -204,40 +194,35 @@ run_syncaction_check() {
 	# 'lvs' should show results
 	lvchange --syncaction check $vg/$lv
 	aux wait_for_sync $vg $lv
-	lvs --noheadings -o lv_attr $vg/$lv | grep '.*-.$'
-	[ `lvs --noheadings -o raid_mismatch_count $vg/$lv` == 0 ]
+	get lv_field $vg/$lv lv_attr | grep '.*-.$'
+	check lv_field $vg/$lv raid_mismatch_count "0"
 }
 
 # run_refresh_check <VG> <LV>
 #   Assumes "$dev2" is in the array
 run_refresh_check() {
 	local size
+	local sizelv
 	local vg=$1
 	local lv=${2}${THIN_POSTFIX}
 
 	printf "#\n#\n#\n# %s/%s (%s): run_refresh_check\n#\n#\n#\n" \
-		$vg $lv `lvs -a --noheadings -o segtype $vg/$lv`
+		$vg $lv $(get lv_field $vg/$lv segtype -a)
 
 	aux wait_for_sync $vg $lv
 
-	if [ -z $THIN_POSTFIX ]; then
-		size=`lvs -a --noheadings -o size --units 1k $vg/$lv | sed s/\.00k//`
-	else
-		size=`lvs -a --noheadings -o size --units 1k $vg/thinlv | sed s/\.00k//`
-	fi
-	size=$(sed s/^[[:space:]]*// <<< "$size")
+	sizelv=$vg/$lv
+	test -z "$THIN_POSTFIX" || sizelv=$vg/thinlv
+	size=$(get lv_field $sizelv size --units 1k)
+	size=${size%\.00k}
 
 	# Disable dev2 and do some I/O to make the kernel notice
 	aux disable_dev "$dev2"
-	if [ -z $THIN_POSTFIX ]; then
-		dd if=/dev/urandom of=/dev/$vg/$lv bs=1k count=$size
-	else
-		dd if=/dev/urandom of=/dev/$vg/thinlv bs=1k count=$size
-		sync; sync; sync
-	fi
+	dd if=/dev/urandom of=/dev/$sizelv bs=1k count=$size
+	sync
 
 	# Check for 'p'artial flag
-	lvs --noheadings -o lv_attr $vg/$lv | grep '.*p.$'
+	get lv_field $vg/$lv lv_attr | grep '.*p.$'
 	dmsetup status
 	lvs -a -o name,attr,devices $vg
 
@@ -247,18 +232,18 @@ run_refresh_check() {
 	lvs -a -o name,attr,devices $vg
 
 	# Check for 'r'efresh flag
-	lvs --noheadings -o lv_attr $vg/$lv | grep '.*r.$'
+	get lv_field $vg/$lv lv_attr | grep '.*r.$'
 
 	lvchange --refresh $vg/$lv
 	aux wait_for_sync $vg $lv
-	lvs --noheadings -o lv_attr $vg/$lv | grep '.*-.$'
+	get lv_field $vg/$lv lv_attr | grep '.*-.$'
 
 	# Writing random data above should mean that the devices
 	# were out-of-sync.  The refresh should have taken care
 	# of properly reintegrating the device.
 	lvchange --syncaction repair $vg/$lv
 	aux wait_for_sync $vg $lv
-	lvs --noheadings -o lv_attr $vg/$lv | grep '.*-.$'
+	get lv_field $vg/$lv lv_attr | grep '.*-.$'
 }
 
 # run_recovery_rate_check <VG> <LV>
@@ -267,14 +252,13 @@ run_recovery_rate_check() {
 	local vg=$1
 	local lv=${2}${THIN_POSTFIX}
 
-	printf "#\n#\n#\n# %s/%s (%s): run_recovery_rate_check\n#\n#\n#\n" \
-		$vg $lv `lvs -a --noheadings -o segtype $vg/$lv`
-
+	printf "#\n#\n#\n# %s/%s $(%s): run_recovery_rate_check\n#\n#\n#\n" \
+		 $vg $lv $(get lv_field $vg/$lv segtype -a)
 	lvchange --minrecoveryrate 50 $vg/$lv
 	lvchange --maxrecoveryrate 100 $vg/$lv
 
-	[ `lvs --noheadings -o raid_min_recovery_rate $vg/$lv` == "50" ]
-	[ `lvs --noheadings -o raid_max_recovery_rate $vg/$lv` == "100" ]
+	check lv_field $vg/$lv raid_min_recovery_rate "50"
+	check lv_field $vg/$lv raid_max_recovery_rate "100"
 }
 
 # run_checks <VG> <LV> <"-"|snapshot_dev|"thinpool_data"|"thinpool_meta">
@@ -292,7 +276,7 @@ run_checks() {
 		run_refresh_check $1 $2
 		run_recovery_rate_check $1 $2
 	elif [ 'thinpool_data' == $3 ]; then
-		aux target_at_least dm-thin-pool 1 8 0 || return 0
+		aux have_thin 1 8 0 || return 0
 
 		# RAID works EX in cluster
 		# thinpool works EX in cluster
@@ -313,7 +297,7 @@ run_checks() {
 		run_refresh_check $1 $2
 		run_recovery_rate_check $1 $2
 	elif [ 'thinpool_meta' == $3 ]; then
-		aux target_at_least dm-thin-pool 1 8 0 || return 0
+		aux have_thin 1 8 0 || return 0
 		test -e LOCAL_CLVMD && return 0
 		printf "#\n#\n# run_checks: RAID as thinpool metadata\n#\n#\n"
 
