@@ -14,8 +14,8 @@
 which mkfs.ext2 || skip
 aux skip_if_mirror_recovery_broken
 
-aux prepare_vg 5
 aux prepare_dmeventd
+aux prepare_vg 5
 
 lvcreate -aey --type mirror -m 3 --ignoremonitoring -L 1 -n 4way $vg
 lvchange --monitor y $vg/4way

@@ -52,6 +52,7 @@ prepare_clvmd() {
 
 prepare_dmeventd() {
 	if pgrep dmeventd ; then
+		rm -f debug.log
 		echo "Cannot test dmeventd with real dmeventd ($(pgrep dmeventd)) running."
 		skip
 	fi
@@ -654,7 +655,7 @@ skip_if_raid456_replace_broken() {
 
 udev_wait() {
 	pgrep udev >/dev/null || return 0
-	which udevadm >/dev/null || return 0
+	which udevadm &>/dev/null || return 0
 	if test -n "$1" ; then
 		udevadm settle --exit-if-exists="$1" || true
 	else
