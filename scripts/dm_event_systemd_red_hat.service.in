@@ -7,9 +7,8 @@ Before=local-fs.target
 DefaultDependencies=no
 
 [Service]
-Type=forking
-ExecStart=@sbindir@/dmeventd
-ExecReload=@sbindir@/dmeventd -R
+Type=simple
+ExecStart=@sbindir@/dmeventd -f
 Environment=SD_ACTIVATION=1
 PIDFile=@DMEVENTD_PIDFILE@
 OOMScoreAdjust=-1000
