@@ -5628,8 +5628,8 @@ static unsigned long _lcm(unsigned long n1, unsigned long n2)
 	return (n1 * n2) / _gcd(n1, n2);
 }
 
-static int _recalculate_thin_pool_chunk_size_with_dev_hints(struct lvcreate_params *lp,
-							    struct logical_volume *pool_lv)
+static int _recalculate_pool_chunk_size_with_dev_hints(struct lvcreate_params *lp,
+						       struct logical_volume *pool_lv)
 {
 	struct logical_volume *pool_data_lv;
 	struct lv_segment *seg;
@@ -5637,12 +5637,33 @@ static int _recalculate_thin_pool_chunk_size_with_dev_hints(struct lvcreate_para
 	struct cmd_context *cmd = pool_lv->vg->cmd;
 	unsigned long previous_hint = 0, hint = 0;
 	uint32_t chunk_size = lp->chunk_size;
-	uint32_t default_chunk_size = lp->thin_chunk_size_calc_policy == THIN_CHUNK_SIZE_CALC_METHOD_PERFORMANCE ?
-					DEFAULT_THIN_POOL_CHUNK_SIZE_PERFORMANCE*2 : DEFAULT_THIN_POOL_CHUNK_SIZE*2;
+	uint32_t default_chunk_size;
+	uint32_t min_chunk, max_chunk;
 
-	if (lp->passed_args & PASS_ARG_CHUNK_SIZE ||
-	    find_config_tree_int(cmd, allocation_thin_pool_chunk_size_CFG, NULL))
+	if (lp->passed_args & PASS_ARG_CHUNK_SIZE)
 		goto out;
+
+	if (seg_is_thin_pool(lp)) {
+		if (find_config_tree_int(cmd, allocation_thin_pool_chunk_size_CFG, NULL))
+			goto out;
+
+		min_chunk = DM_THIN_MIN_DATA_BLOCK_SIZE;
+		max_chunk = DM_THIN_MAX_DATA_BLOCK_SIZE;
+		if (lp->thin_chunk_size_calc_policy == THIN_CHUNK_SIZE_CALC_METHOD_PERFORMANCE)
+			default_chunk_size = DEFAULT_THIN_POOL_CHUNK_SIZE_PERFORMANCE*2;
+		else
+			default_chunk_size = DEFAULT_THIN_POOL_CHUNK_SIZE*2;
+	} else if (seg_is_cache_pool(lp)) {
+		if (find_config_tree_int(cmd, allocation_cache_pool_chunk_size_CFG, NULL))
+			goto out;
+		min_chunk = DM_CACHE_MIN_DATA_BLOCK_SIZE;
+		max_chunk = DM_CACHE_MAX_DATA_BLOCK_SIZE;
+		default_chunk_size = DEFAULT_CACHE_POOL_CHUNK_SIZE*2;
+	} else {
+		log_error(INTERNAL_ERROR "%s is not a thin pool or cache pool",
+			  pool_lv->name);
+		return 0;
+	}
 
 	pool_data_lv = seg_lv(first_seg(pool_lv), 0);
 
@@ -5661,19 +5682,18 @@ static int _recalculate_thin_pool_chunk_size_with_dev_hints(struct lvcreate_para
 	}
 
 	if (!hint) {
-		log_debug_alloc("No usable device hint found while recalculating "
-				"thin pool chunk size for %s.", pool_lv->name);
+		log_debug_alloc("No usable device hint found while recalculating"
+				" thin pool chunk size for %s.", pool_lv->name);
 		goto out;
 	}
 
-	if (hint < DM_THIN_MIN_DATA_BLOCK_SIZE ||
-	    hint > DM_THIN_MAX_DATA_BLOCK_SIZE) {
-		log_debug_alloc("Calculated chunk size value of %ld sectors "
-				"for thin pool %s is out of allowed range (%d-%d).",
-				hint, pool_lv->name, DM_THIN_MIN_DATA_BLOCK_SIZE,
-				DM_THIN_MAX_DATA_BLOCK_SIZE);
+	if ((hint < min_chunk) || (hint > max_chunk)) {
+		log_debug_alloc("Calculated chunk size value of %ld sectors for"
+				" thin pool %s is out of allowed range (%d-%d).",
+				hint, pool_lv->name, min_chunk, max_chunk);
 	} else
-		chunk_size = hint >= default_chunk_size ? hint : default_chunk_size;
+		chunk_size = (hint >= default_chunk_size) ?
+			hint : default_chunk_size;
 out:
 	first_seg(pool_lv)->chunk_size = chunk_size;
 	return 1;
@@ -5989,7 +6009,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		return_NULL;
 
 	if (seg_is_thin_pool(lp)) {
-		if (!_recalculate_thin_pool_chunk_size_with_dev_hints(lp, lv))
+		if (!_recalculate_pool_chunk_size_with_dev_hints(lp, lv))
 			return_NULL;
 		first_seg(lv)->zero_new_blocks = lp->zero ? 1 : 0;
 		first_seg(lv)->discards = lp->discards;

@@ -715,6 +715,22 @@ int dm_tree_node_add_raid_target(struct dm_tree_node *node,
 				 uint64_t rebuilds,
 				 uint64_t flags);
 
+/*
+ * Defines bellow are based on kernel's dm-cache.c defines
+ * DM_CACHE_MIN_DATA_BLOCK_SIZE (32 * 1024 >> SECTOR_SHIFT)
+ * DM_CACHE_MAX_DATA_BLOCK_SIZE (1024 * 1024 * 1024 >> SECTOR_SHIFT)
+ */
+#define DM_CACHE_MIN_DATA_BLOCK_SIZE (UINT32_C(64))
+#define DM_CACHE_MAX_DATA_BLOCK_SIZE (UINT32_C(2097152))
+/*
+ * Max supported size for cache pool metadata device.
+ * Limitation is hardcoded into the kernel and bigger device sizes
+ * are not accepted.
+ *
+ * Limit defined in drivers/md/dm-cache-metadata.h
+ */
+#define DM_CACHE_METADATA_MAX_SECTORS DM_THIN_METADATA_MAX_SECTORS
+
 struct dm_tree_node_raid_params {
 	const char *raid_type;
 

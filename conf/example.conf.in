@@ -305,6 +305,17 @@ allocation {
     # placed on  different PVs from the cache_pool data.
     cache_pool_metadata_require_separate_pvs = 0
 
+    # Specify the minimal chunk size (in kiB) for cache pool volumes.
+    # Using a chunk_size that is too large can result in wasteful use of
+    # the cache, where small reads and writes can cause large sections of
+    # an LV to be mapped into the cache.  However, choosing a chunk_size
+    # that is too small can result in more overhead trying to manage the
+    # numerous chunks that become mapped into the cache.  The former is
+    # more of a problem than the latter in most cases, so we default to
+    # a value that is on the smaller end of the spectrum.  Supported values
+    # range from 32(kiB) to 1048576 in multiples of 32.
+    # cache_pool_chunk_size = 64
+
     # Set to 1 to guarantee that thin pool metadata will always
     # be placed on different PVs from the pool data.
     thin_pool_metadata_require_separate_pvs = 0
