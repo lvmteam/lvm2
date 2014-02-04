@@ -73,8 +73,45 @@ static int _lvcreate_name_params(struct lvcreate_params *lp,
 			lp->lv_name = ptr + 1;
 	}
 
-	/* Need an origin? */
-	if (lp->snapshot && !arg_count(cmd, virtualsize_ARG)) {
+	if (seg_is_cache(lp)) {
+		/*
+		 * We are looking for the origin or cache_pool LV.
+		 * Could be in the form 'lv' or 'vg/lv'
+		 *
+		 * We store the lv name in 'lp->origin' for now, but
+		 * it must be accessed later (when we can look-up the
+		 * LV in the VG) whether it is truly the origin that
+		 * was specified, or whether it is the cache_pool.
+		 */
+		if (!argc) {
+			log_error("Please specify a logical volume to act as "
+				  "the origin or cache_pool.");
+			return 0;
+		}
+
+		lp->origin = skip_dev_dir(cmd, argv[0], NULL);
+		if (strrchr(lp->origin, '/')) {
+			if (!_set_vg_name(lp, extract_vgname(cmd, lp->origin)))
+				return_0;
+
+			/* Strip the volume group from the origin */
+			if ((ptr = strrchr(lp->origin, (int) '/')))
+				lp->origin = ptr + 1;
+		}
+
+		if (!lp->vg_name &&
+		    !_set_vg_name(lp, extract_vgname(cmd, NULL)))
+			return_0;
+
+		if (!lp->vg_name) {
+			log_error("The origin or cache_pool name should include"
+				  " the volume group.");
+			return 0;
+		}
+
+		lp->cache = 1;
+		(*pargv)++, (*pargc)--;
+	} else if (lp->snapshot && !arg_count(cmd, virtualsize_ARG)) {
 		/* argv[0] might be origin or vg/origin */
 		if (!argc) {
 			log_error("Please specify a logical volume to act as "
@@ -244,6 +281,49 @@ static int _lvcreate_update_pool_params(struct volume_group *vg,
 				       &lp->thin_chunk_size_calc_policy,
 				       &lp->chunk_size, &lp->discards,
 				       &lp->poolmetadatasize, &lp->zero);
+}
+
+/*
+ * _determine_cache_argument
+ * @vg
+ * @lp
+ *
+ * 'lp->origin' is set with an LV that could be either the origin
+ * or the cache_pool of the cached LV which is being created.  This
+ * function determines which it is and sets 'lp->origin' or
+ * 'lp->pool' appropriately.
+ */
+static int _determine_cache_argument(struct volume_group *vg,
+				     struct lvcreate_params *lp)
+{
+	struct lv_list *lvl;
+
+	if (!seg_is_cache(lp)) {
+		log_error(INTERNAL_ERROR
+			  "Unable to determine cache argument on %s segtype",
+			  lp->segtype->name);
+		return 0;
+	}
+
+	if (!(lvl = find_lv_in_vg(vg, lp->origin))) {
+		log_error("LV %s not found in Volume group %s.",
+			  lp->origin, vg->name);
+		return 0;
+	}
+
+	if (lv_is_cache_pool(lvl->lv)) {
+		lp->pool = lp->origin;
+		lp->origin = NULL;
+	} else {
+		lp->pool = NULL;
+		lp->create_pool = 1;
+		lp->poolmetadataspare = arg_int_value(vg->cmd,
+						      poolmetadataspare_ARG,
+						      DEFAULT_POOL_METADATA_SPARE);
+		lp->origin = lp->origin;
+	}
+
+	return 1;
 }
 
 /*
@@ -1162,6 +1242,9 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 		goto_out;
 
 	if (seg_is_thin(&lp) && !_check_thin_parameters(vg, &lp, &lcp))
+		goto_out;
+
+	if (seg_is_cache(&lp) && !_determine_cache_argument(vg, &lp))
 		goto_out;
 
 	/*

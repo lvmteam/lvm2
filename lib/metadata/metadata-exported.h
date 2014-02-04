@@ -750,6 +750,7 @@ static inline int is_change_activating(activation_change_t change)
 /* FIXME: refactor and reduce the size of this struct! */
 struct lvcreate_params {
 	/* flags */
+	int cache;
 	int snapshot; /* snap */
 	int thin; /* thin */
 	int create_pool; /* thin */

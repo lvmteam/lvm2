@@ -542,6 +542,8 @@ struct lv_segment *alloc_snapshot_seg(struct logical_volume *lv,
 static int _release_and_discard_lv_segment_area(struct lv_segment *seg, uint32_t s,
 						uint32_t area_reduction, int with_discard)
 {
+	struct lv_segment *cache_seg;
+
 	if (seg_type(seg, s) == AREA_UNASSIGNED)
 		return 1;
 
@@ -558,12 +560,22 @@ static int _release_and_discard_lv_segment_area(struct lv_segment *seg, uint32_t
 		return 1;
 	}
 
-	if ((seg_lv(seg, s)->status & MIRROR_IMAGE) ||
+	if (seg_is_cache(seg) ||
+	    (seg_lv(seg, s)->status & MIRROR_IMAGE) ||
 	    (seg_lv(seg, s)->status & THIN_POOL_DATA) ||
 	    (seg_lv(seg, s)->status & CACHE_POOL_DATA)) {
 		if (!lv_reduce(seg_lv(seg, s), area_reduction))
 			return_0; /* FIXME: any upper level reporting */
 		return 1;
+	}
+
+	if (seg_is_cache_pool(seg) &&
+	    !dm_list_empty(&seg->lv->segs_using_this_lv)) {
+		if (!(cache_seg = get_only_segment_using_this_lv(seg->lv)))
+			return_0;
+
+		if (!lv_cache_remove(cache_seg->lv))
+			return_0;
 	}
 
 	if (seg_lv(seg, s)->status & RAID_IMAGE) {
@@ -4598,6 +4610,21 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	} else if (lv_is_thin_volume(lv))
 		pool_lv = first_seg(lv)->pool_lv;
 
+	/*
+	 * If we are removing a cache_pool, we must first unlink
+	 * it from any origins (i.e. remove the cache layer).
+	 *
+	 * If the cache_pool is not linked, we can simply proceed
+	 * to remove it.
+	 */
+	if (lv_is_cache_pool(lv) && !dm_list_empty(&lv->segs_using_this_lv)) {
+		if (!(cache_seg = get_only_segment_using_this_lv(lv)))
+			return_0;
+
+		if (!lv_cache_remove(cache_seg->lv))
+			return_0;
+	}
+
 	if (lv_is_cache_pool_data(lv) || lv_is_cache_pool_metadata(lv)) {
 		log_error("Can't remove logical volume %s used by a cache_pool.",
 			  lv->name);
@@ -5122,6 +5149,8 @@ int remove_layer_from_lv(struct logical_volume *lv,
 	    parent->le_count != layer_lv->le_count)
 		return_0;
 
+	//FIXME: why do we empty the parent?  It removes everything below.
+	//This makes the function unusable for 'lv_cache_remove'
 	if (!lv_empty(parent))
 		return_0;
 
@@ -5758,9 +5787,11 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		return NULL;
 	}
 
-	if ((segtype_is_mirrored(lp->segtype) ||
-	     segtype_is_raid(lp->segtype) || segtype_is_thin(lp->segtype)) &&
-	    !(vg->fid->fmt->features & FMT_SEGMENTS)) {
+	if (!(vg->fid->fmt->features & FMT_SEGMENTS) &&
+	    (segtype_is_mirrored(lp->segtype) ||
+	     segtype_is_raid(lp->segtype) ||
+	     segtype_is_thin(lp->segtype) ||
+	     segtype_is_cache(lp->segtype))) {
 		log_error("Metadata does not support %s segments.",
 			  lp->segtype->name);
 		return NULL;
@@ -5807,7 +5838,58 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 
 	status |= lp->permission | VISIBLE_LV;
 
-	if (seg_is_thin(lp) && lp->snapshot) {
+	if (segtype_is_cache(lp->segtype) && lp->pool) {
+		/* We have the cache_pool, create the origin with cache */
+		if (!(pool_lv = find_lv(vg, lp->pool))) {
+			log_error("Couldn't find origin volume '%s'.",
+				  lp->pool);
+			return NULL;
+		}
+
+		if (pool_lv->status & LOCKED) {
+			log_error("Caching locked devices is not supported.");
+			return NULL;
+		}
+
+		if (!lp->extents) {
+			log_error("No size given for new cache origin LV");
+			return NULL;
+		}
+
+		if (lp->extents < pool_lv->le_count) {
+			log_error("Origin size cannot be smaller than"
+				  " the cache_pool");
+			return NULL;
+		}
+
+		if (!(lp->segtype = get_segtype_from_string(vg->cmd, "striped")))
+			return_0;
+	} else if (segtype_is_cache(lp->segtype) && lp->origin) {
+		/* We have the origin, create the cache_pool and cache */
+		if (!(org = find_lv(vg, lp->origin))) {
+			log_error("Couldn't find origin volume '%s'.",
+				  lp->origin);
+			return NULL;
+		}
+
+		if (org->status & LOCKED) {
+			log_error("Caching locked devices is not supported.");
+			return NULL;
+		}
+
+		if (!lp->extents) {
+			log_error("No size given for new cache_pool LV");
+			return NULL;
+		}
+
+		if (lp->extents > org->le_count) {
+			log_error("Cache_Pool size cannot be larger than"
+				  " the origin");
+			return NULL;
+		}
+		if (!(lp->segtype = get_segtype_from_string(vg->cmd, "cache_pool")))
+			return_0;
+	} else if (seg_is_thin(lp) && lp->snapshot) {
 		if (!(org = find_lv(vg, lp->origin))) {
 			log_error("Couldn't find origin volume '%s'.",
 				  lp->origin);
@@ -6079,6 +6161,42 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		}
 	}
 
+	if (lp->cache) {
+		struct logical_volume *tmp_lv;
+
+		if (lp->origin) {
+			/*
+			 * FIXME:  At this point, create_pool has created
+			 * the pool and added the data and metadata sub-LVs,
+			 * but only the metadata sub-LV is in the kernel -
+			 * a suspend/resume cycle is still necessary on the
+			 * cache_pool to actualize it in the kernel.
+			 *
+			 * Should the suspend/resume be added to create_pool?
+			 *    I say that would be cleaner, but I'm not sure
+			 *    about the effects on thinpool yet...
+			 */
+			if (!vg_write(vg) || !suspend_lv(cmd, lv) ||
+			    !vg_commit(vg) || !resume_lv(cmd, lv))
+				goto deactivate_and_revert_new_lv;
+
+			if (!(lvl = find_lv_in_vg(vg, lp->origin)))
+				goto deactivate_and_revert_new_lv;
+			org = lvl->lv;
+			pool_lv = lv;
+		} else {
+			if (!(lvl = find_lv_in_vg(vg, lp->pool)))
+				goto deactivate_and_revert_new_lv;
+			pool_lv = lvl->lv;
+			org = lv;
+		}
+
+		if (!(tmp_lv = lv_cache_create(pool_lv, org)))
+			goto deactivate_and_revert_new_lv;
+
+		lv = tmp_lv;
+	}
+
 	/* FIXME Log allocation and attachment should have happened inside lv_extend. */
 	if (lp->log_count &&
 	    !seg_is_raid(first_seg(lv)) && seg_is_mirrored(first_seg(lv))) {
@@ -6318,7 +6436,7 @@ struct logical_volume *lv_create_single(struct volume_group *vg,
 	struct logical_volume *lv;
 
 	/* Create thin pool first if necessary */
-	if (lp->create_pool && !seg_is_cache_pool(lp)) {
+	if (lp->create_pool && !seg_is_cache_pool(lp) && !seg_is_cache(lp)) {
 		if (!seg_is_thin_pool(lp) &&
 		    !(lp->segtype = get_segtype_from_string(vg->cmd, "thin-pool")))
 			return_0;

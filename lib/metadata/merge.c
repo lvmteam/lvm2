@@ -294,6 +294,17 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 						inc_error_count;
 					}
 				}
+			} else if (seg_is_cache(seg)) {
+				if (!lv_is_cache(lv)) {
+					log_error("LV %s is missing cache flag for segment %u",
+						  lv->name, seg_count);
+					inc_error_count;
+				}
+				if (!seg->pool_lv) {
+					log_error("LV %s: segment %u is missing cache_pool LV",
+						  lv->name, seg_count);
+					inc_error_count;
+				}
 			} else {
 				if (seg->pool_lv) {
 					log_error("LV %s: segment %u must not have thin pool LV set",

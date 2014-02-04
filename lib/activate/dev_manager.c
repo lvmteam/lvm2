@@ -1912,6 +1912,10 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		    !_add_lv_to_dtree(dm, dtree, seg->pool_lv, 1)) /* stack */
 			return_0;
 
+		if (seg->pool_lv && lv_is_cache_pool(seg->pool_lv) &&
+		    !_add_lv_to_dtree(dm, dtree, seg->pool_lv, 0))
+			return_0;
+
 		for (s = 0; s < seg->area_count; s++) {
 			if (seg_type(seg, s) == AREA_LV && seg_lv(seg, s) &&
 			    !_add_lv_to_dtree(dm, dtree, seg_lv(seg, s), 0))
@@ -2376,15 +2380,18 @@ static int _add_segment_to_dtree(struct dev_manager *dm,
 	if (seg->external_lv &&
 	    !_add_new_external_lv_to_dtree(dm, dtree, seg->external_lv, laopts))
 		return_0;
+
 	/* Add mirror log */
 	if (seg->log_lv &&
 	    !_add_new_lv_to_dtree(dm, dtree, seg->log_lv, laopts, NULL))
 		return_0;
-	/* Add thin pool metadata */
+
+	/* Add pool metadata */
 	if (seg->metadata_lv &&
 	    !_add_new_lv_to_dtree(dm, dtree, seg->metadata_lv, laopts, NULL))
 		return_0;
-	/* Add thin pool layer */
+
+	/* Add pool layer */
 	if (seg->pool_lv &&
 	    !_add_new_lv_to_dtree(dm, dtree, seg->pool_lv, laopts,
 				  lv_layer(seg->pool_lv)))
