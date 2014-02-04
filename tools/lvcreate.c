@@ -230,6 +230,15 @@ static int _determine_snapshot_type(struct volume_group *vg,
 static int _lvcreate_update_pool_params(struct volume_group *vg,
 					struct lvcreate_params *lp)
 {
+	if (seg_is_cache_pool(lp))
+		return update_cache_pool_params(vg, lp->target_attr,
+						lp->passed_args,
+						lp->extents, vg->extent_size,
+						&lp->thin_chunk_size_calc_policy,
+						&lp->chunk_size, &lp->discards,
+						&lp->poolmetadatasize,
+						&lp->zero);
+
 	return update_thin_pool_params(vg, lp->target_attr, lp->passed_args,
 				       lp->extents, vg->extent_size,
 				       &lp->thin_chunk_size_calc_policy,

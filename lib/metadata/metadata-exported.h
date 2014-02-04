@@ -1020,6 +1020,12 @@ int lv_raid_remove_missing(struct logical_volume *lv);
 /* --  metadata/raid_manip.c */
 
 /* ++  metadata/cache_manip.c */
+int update_cache_pool_params(struct volume_group *vg, unsigned attr,
+			     int passed_args,
+			     uint32_t data_extents, uint32_t extent_size,
+			     int *chunk_size_calc_method, uint32_t *chunk_size,
+			     thin_discards_t *discards,
+			     uint64_t *pool_metadata_size, int *zero);
 struct logical_volume *lv_cache_create(struct logical_volume *pool,
 				       struct logical_volume *origin);
 int lv_cache_remove(struct logical_volume *cache_lv);

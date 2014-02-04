@@ -28,6 +28,58 @@
 #include "defaults.h"
 #include "lvm-exec.h"
 
+int update_cache_pool_params(struct volume_group *vg, unsigned attr,
+			     int passed_args,
+			     uint32_t data_extents, uint32_t extent_size,
+			     int *chunk_size_calc_method, uint32_t *chunk_size,
+			     thin_discards_t *discards,
+			     uint64_t *pool_metadata_size, int *zero)
+{
+	uint64_t min_meta_size;
+
+	if ((*chunk_size < DM_CACHE_MIN_DATA_BLOCK_SIZE) ||
+	    (*chunk_size > DM_CACHE_MAX_DATA_BLOCK_SIZE)) {
+		log_error("Chunk size must be in the range %s to %s.",
+			  display_size(vg->cmd, DM_CACHE_MIN_DATA_BLOCK_SIZE),
+			  display_size(vg->cmd, DM_CACHE_MAX_DATA_BLOCK_SIZE));
+		return 0;
+	}
+
+	if (*chunk_size & (DM_CACHE_MIN_DATA_BLOCK_SIZE - 1)) {
+		log_error("Chunk size must be a multiple of %u sectors.",
+			  DM_CACHE_MIN_DATA_BLOCK_SIZE);
+		return 0;
+	}
+
+	/*
+	 * Default meta size is:
+	 * (4MiB + (16 Bytes for each chunk-sized block))
+	 * ... plus a good amount of padding (2x) to cover any
+	 * policy hint data that may be added in the future.
+	 */
+	min_meta_size = 16 * (data_extents * vg->extent_size);
+	min_meta_size /= *chunk_size; /* # of Bytes we need */
+	min_meta_size *= 2;              /* plus some padding */
+	min_meta_size /= 512;            /* in sectors */
+	min_meta_size += 4*1024*2;       /* plus 4MiB */
+
+	if (!*pool_metadata_size)
+		*pool_metadata_size = min_meta_size;
+
+	if (*pool_metadata_size < min_meta_size) {
+		*pool_metadata_size = min_meta_size;
+		log_print("Increasing metadata device size to %"
+			  PRIu64 " sectors", *pool_metadata_size);
+	}
+	if (*pool_metadata_size > (2 * DEFAULT_CACHE_POOL_MAX_METADATA_SIZE)) {
+		*pool_metadata_size = 2 * DEFAULT_CACHE_POOL_MAX_METADATA_SIZE;
+		log_print("Reducing metadata device size to %" PRIu64 " sectors",
+			  *pool_metadata_size);
+	}
+
+	return 1;
+}
+
 /*
  * lv_cache_create
  * @pool
