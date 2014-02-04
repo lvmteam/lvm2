@@ -1,5 +1,6 @@
 Version 2.02.106 - 
 ====================================
+  Avoid exposing temporary devices when initializing raid metadata volumes.
   Add internal tags command to display any tags defined on the host.
   Prohibit use of external origin with size incompatible with thin pool.
   Avoid trying to convert single to thin pool and volume at the same time.

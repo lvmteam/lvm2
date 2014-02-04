@@ -174,11 +174,13 @@ static int _clear_lv(struct logical_volume *lv)
 	if (test_mode())
 		return 1;
 
-	if (!was_active && !activate_lv_excl_local(lv->vg->cmd, lv)) {
-		log_error("Failed to activate %s for clearing",
+	lv->status |= LV_TEMPORARY;
+	if (!was_active && !activate_lv_local(lv->vg->cmd, lv)) {
+		log_error("Failed to activate localy %s for clearing",
 			  lv->name);
 		return 0;
 	}
+	lv->status &= ~LV_TEMPORARY;
 
 	log_verbose("Clearing metadata area of %s/%s",
 		    lv->vg->name, lv->name);
