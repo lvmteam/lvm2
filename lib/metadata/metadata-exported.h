@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2013 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2014 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -1016,8 +1016,13 @@ int lv_raid_reshape(struct logical_volume *lv,
 int lv_raid_replace(struct logical_volume *lv, struct dm_list *remove_pvs,
 		    struct dm_list *allocate_pvs);
 int lv_raid_remove_missing(struct logical_volume *lv);
-
 /* --  metadata/raid_manip.c */
+
+/* ++  metadata/cache_manip.c */
+struct logical_volume *lv_cache_create(struct logical_volume *pool,
+				       struct logical_volume *origin);
+int lv_cache_remove(struct logical_volume *cache_lv);
+/* --  metadata/cache_manip.c */
 
 struct cmd_vg *cmd_vg_add(struct dm_pool *mem, struct dm_list *cmd_vgs,
 			  const char *vg_name, const char *vgid,
