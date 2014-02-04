@@ -700,11 +700,12 @@ int update_profilable_pool_params(struct cmd_context *cmd, struct profile *profi
 				  int passed_args, int *chunk_size_calc_method,
 				  uint32_t *chunk_size, thin_discards_t *discards,
 				  int *zero);
-int update_pool_params(struct volume_group *vg, unsigned attr, int passed_args,
-		       uint32_t data_extents, uint32_t extent_size,
-		       int *chunk_size_calc_method, uint32_t *chunk_size,
-		       thin_discards_t *discards,
-		       uint64_t *pool_metadata_size, int *zero);
+int update_thin_pool_params(struct volume_group *vg, unsigned attr,
+			    int passed_args,
+			    uint32_t data_extents, uint32_t extent_size,
+			    int *chunk_size_calc_method, uint32_t *chunk_size,
+			    thin_discards_t *discards,
+			    uint64_t *pool_metadata_size, int *zero);
 int get_pool_discards(const char *str, thin_discards_t *discards);
 const char *get_pool_discards_name(thin_discards_t discards);
 struct logical_volume *alloc_pool_metadata(struct logical_volume *pool_lv,

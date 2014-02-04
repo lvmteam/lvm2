@@ -420,11 +420,12 @@ int update_profilable_pool_params(struct cmd_context *cmd, struct profile *profi
 	return 1;
 }
 
-int update_pool_params(struct volume_group *vg, unsigned attr, int passed_args,
-		       uint32_t data_extents, uint32_t extent_size,
-		       int *chunk_size_calc_method, uint32_t *chunk_size,
-		       thin_discards_t *discards, uint64_t *pool_metadata_size,
-		       int *zero)
+int update_thin_pool_params(struct volume_group *vg, unsigned attr,
+			    int passed_args,
+			    uint32_t data_extents, uint32_t extent_size,
+			    int *chunk_size_calc_method, uint32_t *chunk_size,
+			    thin_discards_t *discards,
+			    uint64_t *pool_metadata_size, int *zero)
 {
 	size_t estimate_chunk_size;
 	struct cmd_context *cmd = vg->cmd;
