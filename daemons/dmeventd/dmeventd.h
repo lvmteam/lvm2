@@ -34,6 +34,7 @@ enum dm_event_command {
 	DM_EVENT_CMD_HELLO,
 	DM_EVENT_CMD_DIE,
 	DM_EVENT_CMD_GET_STATUS,
+	DM_EVENT_CMD_GET_PARAMETERS,
 };
 
 /* Message passed between client and daemon. */
