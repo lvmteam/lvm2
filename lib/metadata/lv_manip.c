@@ -559,7 +559,8 @@ static int _release_and_discard_lv_segment_area(struct lv_segment *seg, uint32_t
 	}
 
 	if ((seg_lv(seg, s)->status & MIRROR_IMAGE) ||
-	    (seg_lv(seg, s)->status & THIN_POOL_DATA)) {
+	    (seg_lv(seg, s)->status & THIN_POOL_DATA) ||
+	    (seg_lv(seg, s)->status & CACHE_POOL_DATA)) {
 		if (!lv_reduce(seg_lv(seg, s), area_reduction))
 			return_0; /* FIXME: any upper level reporting */
 		return 1;
@@ -2998,8 +2999,13 @@ int lv_extend(struct logical_volume *lv,
 	if (segtype_is_virtual(segtype))
 		return lv_add_virtual_segment(lv, 0u, extents, segtype, thin_pool_name);
 
-	if (!lv->le_count && segtype_is_thin_pool(segtype)) {
-		/* Thin pool allocation treats its metadata device like a mirror log. */
+	if (!lv->le_count &&
+	    (segtype_is_thin_pool(segtype) ||
+	     segtype_is_cache_pool(segtype))) {
+		/*
+		 * Thinpool and cache_pool allocations treat the metadata
+		 * device like a mirror log.
+		 */
 		/* FIXME Allow pool and data on same device with NORMAL */
 		/* FIXME Support striped metadata pool */
 		log_count = 1;
@@ -3012,10 +3018,10 @@ int lv_extend(struct logical_volume *lv,
 				    allocatable_pvs, alloc, NULL)))
 		return_0;
 
-	if (segtype_is_thin_pool(segtype)) {
+	if (segtype_is_thin_pool(segtype) || segtype_is_cache_pool(segtype)) {
 		if (lv->le_count) {
 			/* lv_resize abstracts properly _tdata */
-			log_error(INTERNAL_ERROR "Cannot lv_extend() the existing thin pool segment.");
+			log_error(INTERNAL_ERROR "Cannot lv_extend() the existing %s segment.", segtype->name);
 			return 0;
 		}
 		if (!(r = create_pool(lv, segtype, ah, stripes, stripe_size)))
@@ -4547,6 +4553,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	int format1_reload_required = 0;
 	int visible;
 	struct logical_volume *pool_lv = NULL;
+	struct lv_segment *cache_seg = NULL;
 	int ask_discard;
 
 	vg = lv->vg;
@@ -4590,6 +4597,12 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return 0;
 	} else if (lv_is_thin_volume(lv))
 		pool_lv = first_seg(lv)->pool_lv;
+
+	if (lv_is_cache_pool_data(lv) || lv_is_cache_pool_metadata(lv)) {
+		log_error("Can't remove logical volume %s used by a cache_pool.",
+			  lv->name);
+		return 0;
+	}
 
 	if (lv->status & LOCKED) {
 		log_error("Can't remove locked LV %s", lv->name);
@@ -4819,12 +4832,14 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 	if (lv_is_used_thin_pool(lv) &&
 	    !_lv_remove_segs_using_this_lv(cmd, lv, force, level, "pool"))
 		return_0;
-
-	if (lv_is_thin_pool(lv) && lv->vg->pool_metadata_spare_lv) {
-		/* When removing last thin pool, remove also spare */
+	if ((lv_is_thin_pool(lv) || lv_is_cache_pool(lv)) &&
+	    lv->vg->pool_metadata_spare_lv) {
+		/* When removing last pool, also remove the spare */
 		is_last_pool = 1;
 		dm_list_iterate_items(lvl, &lv->vg->lvs)
-			if (lv_is_thin_pool(lvl->lv) && lvl->lv != lv) {
+			if ((lv_is_thin_pool(lvl->lv) ||
+			     lv_is_cache_pool(lvl->lv)) &&
+			    lvl->lv != lv) {
 				is_last_pool = 0;
 				break;
 			}
@@ -4837,9 +4852,10 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 
 	if (lv_is_pool_metadata_spare(lv) &&
 	    (force == PROMPT) &&
-	    (yes_no_prompt("Removal of pool metadata spare logical volume \"%s\" "
-			   "disables automatic recovery attempts after damage "
-			   "to a thin pool. Proceed? [y/n]: ", lv->name) == 'n'))
+	    (yes_no_prompt("Removal of pool metadata spare logical volume"
+			   " \"%s\" disables automatic recovery attempts"
+			   " after damage to a thin or cache pool."
+			   " Proceed? [y/n]: ", lv->name) == 'n'))
 		goto no_remove;
 
 	return lv_remove_single(cmd, lv, force, 0);
@@ -5703,7 +5719,7 @@ out:
 static int _should_wipe_lv(struct lvcreate_params *lp, struct logical_volume *lv) {
 	int r = lp->zero | lp->wipe_signatures;
 
-	if (!seg_is_thin(lp))
+	if (!seg_is_thin(lp) && !seg_is_cache_pool(lp))
 		return r;
 
 	if (lv_is_thin_volume(lv))
@@ -5872,10 +5888,12 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		return NULL;
 	}
 
-	if (seg_is_thin_pool(lp) &&
-	    ((uint64_t)lp->extents * vg->extent_size < lp->chunk_size)) {
-		log_error("Unable to create thin pool smaller than 1 chunk.");
-		return NULL;
+	if (seg_is_thin_pool(lp) || seg_is_cache_pool(lp)) {
+		if (((uint64_t)lp->extents * vg->extent_size < lp->chunk_size)) {
+			log_error("Unable to create %s smaller than 1 chunk.",
+				  lp->segtype->name);
+			return NULL;
+		}
 	}
 
 	if (lp->snapshot && !seg_is_thin(lp) &&
@@ -5907,7 +5925,8 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 	if (!activation() &&
 	    (seg_is_mirrored(lp) ||
 	     seg_is_raid(lp) ||
-	     seg_is_thin_pool(lp))) {
+	     seg_is_thin_pool(lp) ||
+	     seg_is_cache_pool(lp))) {
 		/*
 		 * FIXME: For thin pool add some code to allow delayed
 		 * initialization of empty thin pool volume.
@@ -5916,9 +5935,8 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		 */
 		log_error("Can't create %s without using "
 			  "device-mapper kernel driver.",
-			  segtype_is_raid(lp->segtype) ? lp->segtype->name :
-			  segtype_is_mirrored(lp->segtype) ?  "mirror" :
-			  "thin pool volume");
+			  seg_is_thin_pool(lp) ? "thin pool volume" :
+			  lp->segtype->name);
 		return NULL;
 	}
 
@@ -6004,12 +6022,17 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 	if (!lv_extend(lv, lp->segtype,
 		       lp->stripes, lp->stripe_size,
 		       lp->mirrors,
-		       seg_is_thin_pool(lp) ? lp->poolmetadataextents : lp->region_size,
+		       (seg_is_thin_pool(lp) || seg_is_cache_pool(lp)) ?
+		       lp->poolmetadataextents : lp->region_size,
 		       seg_is_thin_volume(lp) ? lp->voriginextents : lp->extents,
 		       thin_name, lp->pvh, lp->alloc))
 		return_NULL;
 
-	if (seg_is_thin_pool(lp)) {
+	if (seg_is_cache_pool(lp)) {
+		if (!_recalculate_pool_chunk_size_with_dev_hints(lp, lv))
+			return_NULL;
+		first_seg(lv)->feature_flags = lp->feature_flags;
+	} else if (seg_is_thin_pool(lp)) {
 		if (!_recalculate_pool_chunk_size_with_dev_hints(lp, lv))
 			return_NULL;
 		first_seg(lv)->zero_new_blocks = lp->zero ? 1 : 0;
@@ -6115,7 +6138,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 	if (lp->temporary)
 		lv->status |= LV_TEMPORARY;
 
-	if (lv_is_thin_pool(lv)) {
+	if (lv_is_thin_pool(lv) || lv_is_cache_pool(lv)) {
 		if (is_change_activating(lp->activate)) {
 			if (vg_is_clustered(lv->vg)) {
 				if (!activate_lv_excl(cmd, lv)) {
@@ -6295,7 +6318,7 @@ struct logical_volume *lv_create_single(struct volume_group *vg,
 	struct logical_volume *lv;
 
 	/* Create thin pool first if necessary */
-	if (lp->create_pool) {
+	if (lp->create_pool && !seg_is_cache_pool(lp)) {
 		if (!seg_is_thin_pool(lp) &&
 		    !(lp->segtype = get_segtype_from_string(vg->cmd, "thin-pool")))
 			return_0;

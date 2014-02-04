@@ -230,6 +230,7 @@ xx(lvcreate,
    "\t[-a|--activate [a|e|l]{y|n}]\n"
    "\t[--addtag Tag]\n"
    "\t[--alloc AllocationPolicy]\n"
+   "\t[--cachemode CacheMode]\n"
    "\t[-C|--contiguous {y|n}]\n"
    "\t[-d|--debug]\n"
    "\t[-h|-?|--help]\n"
@@ -296,9 +297,9 @@ xx(lvcreate,
    "\t[PhysicalVolumePath...]\n\n",
 
    addtag_ARG, alloc_ARG, autobackup_ARG, activate_ARG, available_ARG,
-   chunksize_ARG, contiguous_ARG, corelog_ARG, discards_ARG, extents_ARG,
-   ignoreactivationskip_ARG, ignoremonitoring_ARG, major_ARG, minor_ARG,
-   mirrorlog_ARG, mirrors_ARG, monitor_ARG, minrecoveryrate_ARG,
+   cachemode_ARG, chunksize_ARG, contiguous_ARG, corelog_ARG, discards_ARG,
+   extents_ARG, ignoreactivationskip_ARG, ignoremonitoring_ARG, major_ARG,
+   minor_ARG, mirrorlog_ARG, mirrors_ARG, monitor_ARG, minrecoveryrate_ARG,
    maxrecoveryrate_ARG, name_ARG, nosync_ARG, noudevsync_ARG,
    permission_ARG, persistent_ARG, poolmetadatasize_ARG, poolmetadataspare_ARG,
    raidminrecoveryrate_ARG, raidmaxrecoveryrate_ARG, readahead_ARG,

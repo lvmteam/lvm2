@@ -190,31 +190,54 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 					inc_error_count;
 				}
 
-				if (seg->area_count != 1 || seg_type(seg, 0) != AREA_LV) {
-					log_error("LV %s: thin pool segment %u is missing a pool data LV",
-						  lv->name, seg_count);
+			}
+			if (seg_is_thin_pool(seg) || seg_is_cache_pool(seg)) {
+				if (seg->area_count != 1 ||
+				    seg_type(seg, 0) != AREA_LV) {
+					log_error("LV %s: %spool segment %u is missing a pool data LV",
+						  lv->name,
+						  seg_is_thin_pool(seg) ?
+						  "thin " : "cache",
+						  seg_count);
 					inc_error_count;
 				} else if (!(seg2 = first_seg(seg_lv(seg, 0))) || find_pool_seg(seg2) != seg) {
-					log_error("LV %s: thin pool segment %u data LV does not refer back to pool LV",
-						  lv->name, seg_count);
+					log_error("LV %s: %spool segment %u data LV does not refer back to pool LV",
+						  lv->name,
+						  seg_is_thin_pool(seg) ?
+						  "thin " : "cache",
+						  seg_count);
 					inc_error_count;
 				}
 
 				if (!seg->metadata_lv) {
-					log_error("LV %s: thin pool segment %u is missing a pool metadata LV",
-						  lv->name, seg_count);
+					log_error("LV %s: %spool segment %u is missing a pool metadata LV",
+						  lv->name,
+						  seg_is_thin_pool(seg) ?
+						  "thin " : "cache",
+						  seg_count);
 					inc_error_count;
 				} else if (!(seg2 = first_seg(seg->metadata_lv)) ||
 					   find_pool_seg(seg2) != seg) {
-					log_error("LV %s: thin pool segment %u metadata LV does not refer back to pool LV",
-						  lv->name, seg_count);
+					log_error("LV %s: %spool segment %u metadata LV does not refer back to pool LV",
+						  lv->name,
+						  seg_is_thin_pool(seg) ?
+						  "thin " : "cache",
+						  seg_count);
 					inc_error_count;
 				}
 
-				if (seg->chunk_size < DM_THIN_MIN_DATA_BLOCK_SIZE ||
-				    seg->chunk_size > DM_THIN_MAX_DATA_BLOCK_SIZE) {
-					log_error("LV %s: thin pool segment %u has chunk size %u out of range.",
-						  lv->name, seg_count, seg->chunk_size);
+				if ((seg_is_thin_pool(seg) &&
+				     (seg->chunk_size < DM_THIN_MIN_DATA_BLOCK_SIZE) ||
+				     (seg->chunk_size > DM_THIN_MAX_DATA_BLOCK_SIZE)) ||
+				    (seg_is_cache_pool(seg) &&
+				     (seg->chunk_size < DM_CACHE_MIN_DATA_BLOCK_SIZE) ||
+				     (seg->chunk_size > DM_CACHE_MAX_DATA_BLOCK_SIZE)))
+{
+					log_error("LV %s: %spool segment %u has chunk size %u out of range.",
+						  lv->name,
+						  seg_is_thin_pool(seg) ?
+						  "thin " : "cache",
+						  seg_count, seg->chunk_size);
 					inc_error_count;
 				}
 			} else {

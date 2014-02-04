@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2013 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2014 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -615,7 +615,39 @@ static int _read_raid_params(struct lvcreate_params *lp,
 	return 1;
 }
 
-static int _read_activation_params(struct lvcreate_params *lp, struct cmd_context *cmd,
+static int _read_cache_pool_params(struct lvcreate_params *lp,
+				  struct cmd_context *cmd)
+{
+	const char *str_arg;
+
+	if (!segtype_is_cache_pool(lp->segtype))
+		return 1;
+
+	if (arg_sign_value(cmd, chunksize_ARG, SIGN_NONE) == SIGN_MINUS) {
+		log_error("Negative chunk size is invalid.");
+		return 0;
+	}
+
+	lp->chunk_size = arg_uint_value(cmd, chunksize_ARG,
+					DEFAULT_CACHE_POOL_CHUNK_SIZE * 2);
+
+	str_arg = arg_str_value(cmd, cachemode_ARG, NULL);
+	if (str_arg) {
+		if (!strcmp(str_arg, "writeback"))
+			lp->feature_flags |= DM_CACHE_FEATURE_WRITEBACK;
+		else if (!strcmp(str_arg, "writethrough"))
+			lp->feature_flags |= DM_CACHE_FEATURE_WRITETHROUGH;
+		else {
+			log_error("Unknown cachemode argument");
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
+static int _read_activation_params(struct lvcreate_params *lp,
+				   struct cmd_context *cmd,
 				   struct volume_group *vg)
 {
 	unsigned pagesize;
@@ -789,6 +821,9 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 	    (!seg_is_thin(lp) && arg_count(cmd, virtualsize_ARG)))
 		lp->snapshot = 1;
 
+	if (seg_is_cache_pool(lp))
+		lp->create_pool = 1;
+
 	if (seg_is_thin_pool(lp)) {
 		if (lp->snapshot) {
 			log_error("Snapshots are incompatible with thin_pool segment_type.");
@@ -916,7 +951,8 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 			      &lp->chunk_size, &lp->discards,
 			      &lp->poolmetadatasize, &lp->zero)) ||
 	    !_read_mirror_params(lp, cmd) ||
-	    !_read_raid_params(lp, cmd))
+	    !_read_raid_params(lp, cmd) ||
+	    !_read_cache_pool_params(lp, cmd))
 		return_0;
 
 	if (lp->snapshot && (lp->extents || lcp->size)) {
