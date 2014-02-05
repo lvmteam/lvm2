@@ -321,7 +321,7 @@ static int _datalv_disp(struct dm_report *rh, struct dm_pool *mem __attribute__(
 			const void *data, void *private __attribute__((unused)))
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
-	const struct lv_segment *seg = lv_is_thin_pool(lv) ? first_seg(lv) : NULL;
+	const struct lv_segment *seg = (lv_is_thin_pool(lv) || lv_is_cache_pool(lv)) ? first_seg(lv) : NULL;
 
 	if (seg)
 		return _lvname_disp(rh, mem, field, seg_lv(seg, 0), private);
@@ -334,7 +334,7 @@ static int _metadatalv_disp(struct dm_report *rh, struct dm_pool *mem __attribut
 			    const void *data, void *private __attribute__((unused)))
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
-	const struct lv_segment *seg = lv_is_thin_pool(lv) ? first_seg(lv) : NULL;
+	const struct lv_segment *seg = (lv_is_thin_pool(lv) || lv_is_cache_pool(lv)) ? first_seg(lv) : NULL;
 
 	if (seg)
 		return _lvname_disp(rh, mem, field, seg->metadata_lv, private);
@@ -347,7 +347,8 @@ static int _poollv_disp(struct dm_report *rh, struct dm_pool *mem __attribute__(
 			const void *data, void *private __attribute__((unused)))
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
-	struct lv_segment *seg = lv_is_thin_volume(lv) ? first_seg(lv) : NULL;
+	struct lv_segment *seg = (lv_is_thin_volume(lv) || lv_is_cache(lv)) ?
+				  first_seg(lv) : NULL;
 
 	if (seg)
 		return _lvname_disp(rh, mem, field, seg->pool_lv, private);
@@ -373,9 +374,13 @@ static int _origin_disp(struct dm_report *rh, struct dm_pool *mem,
 			const void *data, void *private)
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
+	const struct lv_segment *seg = first_seg(lv);
 
 	if (lv_is_cow(lv))
 		return _lvname_disp(rh, mem, field, origin_from_cow(lv), private);
+
+	if (lv_is_cache(lv))
+		return _lvname_disp(rh, mem, field, seg_lv(seg, 0), private);
 
 	if (lv_is_thin_volume(lv) && first_seg(lv)->origin)
 		return _lvname_disp(rh, mem, field, first_seg(lv)->origin, private);
@@ -1051,7 +1056,7 @@ static int _lvmetadatasize_disp(struct dm_report *rh, struct dm_pool *mem,
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 	uint64_t size;
 
-	if (lv_is_thin_pool(lv)) {
+	if (lv_is_thin_pool(lv) || lv_is_cache_pool(lv)) {
 		size = lv_metadata_size(lv);
 		return _size64_disp(rh, mem, field, &size, private);
 	}
