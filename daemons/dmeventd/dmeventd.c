@@ -1535,7 +1535,8 @@ static void _process_request(struct dm_event_fifos *fifos)
 
 	dm_free(msg.data);
 
-	if (die) raise(9);
+	if (die)
+		_exit(0);
 }
 
 static void _process_initial_registrations(void)
