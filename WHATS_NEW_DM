@@ -1,5 +1,8 @@
 Version 1.02.85 - 
 ===================================
+  Exit dmeventd with pidfile cleanup instead of raising SIGKILL on DIE request.
+  Add new DM_EVENT_GET_PARAMETERS request to dmeventd protocol.
+  Do not use systemd's reload for dmeventd restart, use dmeventd -R instead.
   Drop cryptsetup rules from 10-dm.rules - cryptsetup >= 1.1.3 sets them.
 
 Version 1.02.84 - 20th January 2014
