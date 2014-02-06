@@ -1535,8 +1535,11 @@ static void _process_request(struct dm_event_fifos *fifos)
 
 	dm_free(msg.data);
 
-	if (die)
+	if (die) {
+		if (unlink(DMEVENTD_PIDFILE))
+			perror(DMEVENTD_PIDFILE ": unlink failed");
 		_exit(0);
+	}
 }
 
 static void _process_initial_registrations(void)
@@ -2001,39 +2004,15 @@ static void restart(void)
 	    ((e = getenv(SD_ACTIVATION_ENV_VAR_NAME)) && strcmp(e, "1")))
 		_systemd_activation = 1;
 
-	/*
-	 * If we're under systemd management, just send the initial
-	 * registrations to the fifo - this will instantiate new dmeventd.
-	 * If not under systemd management, continue with this process
-	 * to take over the old dmeventd.
-	 */
-	if (!_systemd_activation) {
-		/*
-		 * Non-systemd environment.
-		 * Wait for daemon to die, detected by sending further DIE messages
-		 * until one fails. This is really silly, but since nobody cleans up
-		 * the pidfile after SIGKILL is received in old dmeventd, we have to
-		 * do it this way.
-		*/
-	        for (i = 0; i < 10; ++i) {
-			if (daemon_talk(&fifos, &msg, DM_EVENT_CMD_DIE, "-", "-", 0, 0))
-				break; /* yep, it's dead probably */
-	                usleep(10);
-		}
-		fini_fifos(&fifos);
-		return;
-	}
-
-	/*
-	 * Systemd environment.
-	 * Wait for daemon to die, detected by checking the pidfile.
-	 * We can do this - systemd cleans up the pidfile automatically
-	 * for us even if we don't do that when SIGKILL is received in old dmeventd.
-	 */
 	for (i = 0; i < 10; ++i) {
 		if ((access(DMEVENTD_PIDFILE, F_OK) == -1) && (errno == ENOENT))
 			break;
 		usleep(10);
+	}
+
+	if (!_systemd_activation) {
+		fini_fifos(&fifos);
+		return;
 	}
 
 	/* Reopen fifos. */
