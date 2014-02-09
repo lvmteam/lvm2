@@ -757,17 +757,15 @@ struct lvm_property_value lvm_lv_params_get_property(
 						const lv_create_params_t params,
 						const char *name)
 {
-	struct lvm_property_value rc = {
-		.is_valid = 0
-	};
-	struct saved_env e = store_user_env(params->vg->cmd);
+	struct lvm_property_value rc = { .is_valid = 0 };
 
 	if (params && params->magic == LV_CREATE_PARAMS_MAGIC) {
+		struct saved_env e = store_user_env(params->vg->cmd);
 		rc = get_property(NULL, NULL, NULL, NULL, NULL, &params->lvp, NULL, name);
-	} else {
+		restore_user_env(&e);
+	} else
 		log_error("Invalid lv_create_params parameter");
-	}
-	restore_user_env(&e);
+
 	return rc;
 }
 
@@ -775,15 +773,14 @@ int lvm_lv_params_set_property(lv_create_params_t params, const char *name,
 								struct lvm_property_value *prop)
 {
 	int rc = -1;
-	struct saved_env e = store_user_env(params->vg->cmd);
 
 	if (params && params->magic == LV_CREATE_PARAMS_MAGIC) {
+		struct saved_env e = store_user_env(params->vg->cmd);
 		rc = set_property(NULL, NULL, NULL, &params->lvp, NULL, name, prop);
-	} else {
+		restore_user_env(&e);
+	} else
 		log_error("Invalid lv_create_params parameter");
-	}
 
-	restore_user_env(&e);
 	return rc;
 }
 
