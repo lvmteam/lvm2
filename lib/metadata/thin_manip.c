@@ -17,7 +17,6 @@
 #include "locking.h"
 #include "metadata.h"
 #include "segtype.h"
-#include "lv_alloc.h"
 #include "defaults.h"
 #include "display.h"
 

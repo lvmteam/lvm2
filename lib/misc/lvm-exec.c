@@ -18,7 +18,6 @@
 #include "locking.h"
 #include "lvm-exec.h"
 #include "toolcontext.h"
-#include "activate.h"
 
 #include <unistd.h>
 #include <sys/wait.h>

@@ -23,7 +23,6 @@
 #include "segtype.h"
 #include "lv_alloc.h"
 #include "defaults.h"
-#include "display.h"
 
 int attach_pool_metadata_lv(struct lv_segment *pool_seg,
 			    struct logical_volume *metadata_lv)
