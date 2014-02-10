@@ -449,19 +449,27 @@ out:
 
 #ifdef BLKID_WIPING_SUPPORT
 
+static inline int _type_in_flag_list(const char *type, uint32_t flag_list)
+{
+	return (((flag_list & TYPE_LVM2_MEMBER) && !strcmp(type, "LVM2_member")) ||
+		((flag_list & TYPE_LVM1_MEMBER) && !strcmp(type, "LVM1_member")) ||
+		((flag_list & TYPE_DM_SNAPSHOT_COW) && !strcmp(type, "DM_snapshot_cow")));
+}
+
 static int _blkid_wipe(blkid_probe probe, struct device *dev, const char *name,
-		       int exclude_lvm_member, int yes, force_t force)
+		       uint32_t types_to_exclude, uint32_t types_no_prompt,
+		       int yes, force_t force)
 {
 	static const char* msg_failed_offset = "Failed to get offset of the %s signature on %s.";
 	static const char* msg_failed_length = "Failed to get length of the %s signature on %s.";
+	static const char* msg_wiping = "Wiping %s signature on %s.";
 	const char *offset = NULL, *type = NULL, *magic = NULL,
 		   *usage = NULL, *label = NULL, *uuid = NULL;
 	loff_t offset_value;
 	size_t len;
 
 	if (!blkid_probe_lookup_value(probe, "TYPE", &type, NULL)) {
-		if (exclude_lvm_member &&
-		    (!strcmp(type, "LVM1_member") || !strcmp(type, "LVM2_member")))
+		if (_type_in_flag_list(type, types_to_exclude))
 			return 1;
 		if (blkid_probe_lookup_value(probe, "SBMAGIC_OFFSET", &offset, NULL)) {
 			log_error(msg_failed_offset, type, name);
@@ -495,12 +503,15 @@ static int _blkid_wipe(blkid_probe probe, struct device *dev, const char *name,
 		    "UUID=\"%s\" TYPE=\"%s\" USAGE=\"%s\"",
 		     name, offset, label, uuid, type, usage);
 
-	if (!yes && (force == PROMPT) &&
-	    yes_no_prompt("WARNING: %s signature detected on %s at offset %s. "
-			  "Wipe it? [y/n] ", type, name, offset) != 'y')
-		return_0;
+	if (!_type_in_flag_list(type, types_no_prompt)) {
+		if (!yes && (force == PROMPT) &&
+		    yes_no_prompt("WARNING: %s signature detected on %s at offset %s. "
+				  "Wipe it? [y/n] ", type, name, offset) != 'y')
+			return_0;
+		log_print_unless_silent(msg_wiping, type, name);
+	} else
+		log_verbose(msg_wiping, type, name);
 
-	log_print_unless_silent("Wiping %s signature on %s.", type, name);
 	if (!dev_set(dev, offset_value, len, 0)) {
 		log_error("Failed to wipe %s signature on %s.", type, name);
 		return 0;
@@ -510,7 +521,8 @@ static int _blkid_wipe(blkid_probe probe, struct device *dev, const char *name,
 }
 
 static int _wipe_known_signatures_with_blkid(struct device *dev, const char *name,
-					     int exclude_lvm_member,
+					     uint32_t types_to_exclude,
+					     uint32_t types_no_prompt,
 					     int yes, force_t force)
 {
 	blkid_probe probe = NULL;
@@ -538,7 +550,7 @@ static int _wipe_known_signatures_with_blkid(struct device *dev, const char *nam
 
 	while (!blkid_do_probe(probe)) {
 		found++;
-		if (_blkid_wipe(probe, dev, name, exclude_lvm_member, yes, force))
+		if (_blkid_wipe(probe, dev, name, types_to_exclude, types_no_prompt, yes, force))
 			wiped++;
 	}
 
@@ -592,7 +604,8 @@ static int _wipe_signature(struct device *dev, const char *type, const char *nam
 }
 
 static int _wipe_known_signatures_with_lvm(struct device *dev, const char *name,
-					   int exclude_lvm_member,
+					   uint32_t types_to_exclude __attribute__((unused)),
+					   uint32_t types_no_prompt __attribute__((unused)),
 					   int yes, force_t force)
 {
 	if (!_wipe_signature(dev, "software RAID md superblock", name, 4, yes, force, dev_is_md) ||
@@ -604,16 +617,20 @@ static int _wipe_known_signatures_with_lvm(struct device *dev, const char *name,
 }
 
 int wipe_known_signatures(struct cmd_context *cmd, struct device *dev,
-			  const char *name, int exclude_lvm_member,
-			  int yes, force_t force)
+			  const char *name, uint32_t types_to_exclude,
+			  uint32_t types_no_prompt, int yes, force_t force)
 {
 #ifdef BLKID_WIPING_SUPPORT
 	if (find_config_tree_bool(cmd, allocation_use_blkid_wiping_CFG, NULL))
 		return _wipe_known_signatures_with_blkid(dev, name,
-				exclude_lvm_member, yes, force);
+							 types_to_exclude,
+							 types_no_prompt,
+							 yes, force);
 #endif
 	return _wipe_known_signatures_with_lvm(dev, name,
-			exclude_lvm_member, yes, force);
+					       types_to_exclude,
+					       types_no_prompt,
+					       yes, force);
 }
 
 #ifdef __linux__

@@ -1372,7 +1372,9 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name,
 		goto bad;
 	}
 
-	if (!wipe_known_signatures(cmd, dev, name, 1, pp->yes, pp->force)) {
+	if (!wipe_known_signatures(cmd, dev, name,
+				   TYPE_LVM1_MEMBER | TYPE_LVM2_MEMBER,
+				   0, pp->yes, pp->force)) {
 		log_error("Aborting pvcreate on %s.", name);
 		goto bad;
 	}
