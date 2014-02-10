@@ -84,6 +84,7 @@ pkgconfigdir = $(usrlibdir)/pkgconfig
 initdir = $(DESTDIR)$(sysconfdir)/rc.d/init.d
 systemd_unit_dir = $(DESTDIR)@systemdsystemunitdir@
 systemd_generator_dir = $(DESTDIR)@systemdutildir@/system-generators
+systemd_dir = $(DESTDIR)@systemdutildir@
 tmpfiles_dir = $(DESTDIR)@tmpfilesdir@
 ocf_scriptdir = $(DESTDIR)@OCFDIR@
 pyexecdir = $(DESTDIR)$(prefix)

@@ -111,6 +111,11 @@ ifeq ("@BUILD_LVMETAD@", "yes")
 	$(INSTALL_DATA) lvm2_lvmetad_systemd_red_hat.service $(systemd_unit_dir)/lvm2-lvmetad.service
 	$(INSTALL_DATA) lvm2_pvscan_systemd_red_hat@.service $(systemd_unit_dir)/lvm2-pvscan@.service
 endif
+ifneq ("@CLVMD@", "none")
+	$(INSTALL_DATA) lvm2_clvmd_red_hat.service $(systemd_unit_dir)/lvm2-clvmd.service
+	$(INSTALL_DATA) lvm2_cluster_activation_red_hat.service $(systemd_unit_dir)/lvm2-cluster-activation.service
+	$(INSTALL_DATA) lvm2_cluster_activation_red_hat.sh $(systemd_dir)/lvm2-cluster-activation
+endif
 
 install_tmpfiles_configuration:
 	$(INSTALL_DIR) $(tmpfiles_dir)
@@ -124,4 +129,5 @@ DISTCLEAN_TARGETS += clvmd_init_red_hat cmirrord_init_red_hat \
 		     lvm2_pvscan_systemd_red_hat@.service \
 		     lvm2_tmpfiles_red_hat.conf blk_availability_init_red_hat \
 		     blk_availability_systemd_red_hat.service \
-		     blkdeactivate.sh
+		     blkdeactivate.sh lvm2_clvmd_red_hat.service \
+		     lvm2_cluster_activation_red_hat.service lvm2_cluster_activation_red_hat.sh

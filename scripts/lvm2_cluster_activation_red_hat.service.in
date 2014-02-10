@@ -1,0 +1,16 @@
+[Unit]
+Description=Clustered LVM volumes activation service
+Requires=lvm2-clvmd.service
+After=lvm2-clvmd.service cmirrord.service
+OnFailure=lvm2-clvmd.service
+DefaultDependencies=false
+
+[Service]
+Type=simple
+RemainAfterExit=yes
+EnvironmentFile=-@sysconfdir@/sysconfig/clvmd
+ExecStart=@systemdutildir@/lvm2-cluster-activation activate
+ExecStop=@systemdutildir@/lvm2-cluster-activation deactivate
+
+[Install]
+WantedBy=sysinit.target
