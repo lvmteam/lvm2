@@ -3,6 +3,9 @@
 /* Define to 1 to use libblkid detection of signatures when wiping. */
 #undef BLKID_WIPING_SUPPORT
 
+/* Define to 1 to include built-in support for cache. */
+#undef CACHE_INTERNAL
+
 /* Define to 1 if the `closedir' function returns void instead of `int'. */
 #undef CLOSEDIR_VOID
 
@@ -557,9 +560,6 @@
 
 /* The path to 'thin_repair', if available. */
 #undef THIN_REPAIR_CMD
-
-/* Define to 1 to include built-in support for cache[pool] segment types. */
-#undef CACHE_INTERNAL
 
 /* Define to 1 if you can safely include both <sys/time.h> and <time.h>. */
 #undef TIME_WITH_SYS_TIME
