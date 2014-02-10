@@ -619,6 +619,13 @@ int dm_event_register_handler(const struct dm_event_handler *dmevh)
 
 	uuid = dm_task_get_uuid(dmt);
 
+	if (!strstr(dmevh->dso, "libdevmapper-event-lvm2thin.so") &&
+	    !strstr(dmevh->dso, "libdevmapper-event-lvm2snapshot.so") &&
+	    !strstr(dmevh->dso, "libdevmapper-event-lvm2mirror.so") &&
+	    !strstr(dmevh->dso, "libdevmapper-event-lvm2raid.so"))
+		log_warn("WARNING: %s: dmeventd plugins are deprecated", dmevh->dso);
+
+
 	if ((err = _do_event(DM_EVENT_CMD_REGISTER_FOR_EVENT, dmevh->dmeventd_path, &msg,
 			     dmevh->dso, uuid, dmevh->mask, dmevh->timeout)) < 0) {
 		log_error("%s: event registration failed: %s",
