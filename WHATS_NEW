@@ -1,5 +1,7 @@
 Version 2.02.106 - 
 ====================================
+  Remove ExecReload from lvmetad systemd unit: lvmetad -R undefined. (2.02.98)
+  Do not fork lvmetad if running under systemd.
   Wipe DM_snapshot_cow signature without prompt in new LVs with blkid wiping.
   Avoid exposing temporary devices when initializing raid metadata volumes.
   Add internal tags command to display any tags defined on the host.

@@ -7,10 +7,9 @@ DefaultDependencies=no
 Conflicts=shutdown.target
 
 [Service]
-Type=forking
+Type=simple
 NonBlocking=true
-ExecStart=@sbindir@/lvmetad
-ExecReload=@sbindir@/lvmetad -R
+ExecStart=@sbindir@/lvmetad -f
 Environment=SD_ACTIVATION=1
 Restart=on-abort
 PIDFile=@LVMETAD_PIDFILE@
