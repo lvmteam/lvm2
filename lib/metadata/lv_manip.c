@@ -5550,8 +5550,9 @@ int wipe_lv(struct logical_volume *lv, struct wipe_params wp)
 		if (zero_sectors > lv->size)
 			zero_sectors = lv->size;
 
-		log_verbose("Clearing start of logical volume \"%s/%s\"",
-			     lv->vg->name, lv->name);
+		log_verbose("Initializing %s of logical volume \"%s/%s\" with value %d.",
+			    display_size(lv->vg->cmd, zero_sectors),
+			    lv->vg->name, lv->name, wp.zero_value);
 
 		if (!dev_set(dev, UINT64_C(0), (size_t) zero_sectors << SECTOR_SHIFT, wp.zero_value))
 			stack;
