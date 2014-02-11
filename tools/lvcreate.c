@@ -1003,13 +1003,13 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 	/*
 	 * Should we zero/wipe signatures on the lv.
 	 */
-	lp->zero = strcmp(arg_str_value(cmd, zero_ARG,
-		(lp->segtype->flags & SEG_CANNOT_BE_ZEROED) ? "n" : "y"), "n");
+	lp->zero = (!(lp->segtype->flags & SEG_CANNOT_BE_ZEROED) &&
+		    (strcmp(arg_str_value(cmd, zero_ARG, "y"), "y") == 0)) ? 1 : 0;
 
 	if (arg_count(cmd, wipesignatures_ARG)) {
 		/* If -W/--wipesignatures is given on command line directly, respect it. */
-		lp->wipe_signatures = strcmp(arg_str_value(cmd, wipesignatures_ARG,
-			(lp->segtype->flags & SEG_CANNOT_BE_ZEROED) ? "n" : "y"), "n");
+		lp->wipe_signatures =(!(lp->segtype->flags & SEG_CANNOT_BE_ZEROED) &&
+				      (strcmp(arg_str_value(cmd, wipesignatures_ARG, "y"), "y") == 0)) ? 1 : 0;
 	} else {
 		/*
 		 * If -W/--wipesignatures is not given on command line,
