@@ -1,7 +1,7 @@
 [Unit]
 Description=Clustered LVM volumes activation service
 Requires=lvm2-clvmd.service
-After=lvm2-clvmd.service cmirrord.service
+After=lvm2-clvmd.service lvm2-cmirrord.service
 OnFailure=lvm2-clvmd.service
 DefaultDependencies=false
 
@@ -13,4 +13,4 @@ ExecStart=@systemdutildir@/lvm2-cluster-activation activate
 ExecStop=@systemdutildir@/lvm2-cluster-activation deactivate
 
 [Install]
-WantedBy=sysinit.target
+WantedBy=multi-user.target

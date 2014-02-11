@@ -1,5 +1,6 @@
 Version 2.02.106 - 
 ====================================
+  Add systemd native service for clvmd, cmirrord and cluster activation.
   Remove ExecReload from lvmetad systemd unit: lvmetad -R undefined. (2.02.98)
   Do not fork lvmetad if running under systemd.
   Wipe DM_snapshot_cow signature without prompt in new LVs with blkid wiping.
@@ -17,7 +18,6 @@ Version 2.02.106 -
   Issue error if libbblkid detects signature and fails to return offset/length.
   Update autoconf config.guess/sub to 2014-01-01.
   Online thin pool metadata resize requires 1.10 kernel thin pool target.
-  Add systemd native service for the clvmd and cluster activation.
 
 Version 2.02.105 - 20th January 2014
 ====================================
