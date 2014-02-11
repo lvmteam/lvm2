@@ -6153,14 +6153,6 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 	} else if (seg_is_raid(lp)) {
 		first_seg(lv)->min_recovery_rate = lp->min_recovery_rate;
 		first_seg(lv)->max_recovery_rate = lp->max_recovery_rate;
-		if (vg_is_clustered(lv->vg) &&
-		    is_change_activating(lp->activate) &&
-		    (lp->activate != CHANGE_AE)) {
-			log_debug_activation("Creating RAID logical volume in a"
-					     " cluster: setting activation"
-					     " mode to EX");
-			lp->activate = CHANGE_AE;
-		}
 	}
 
 	if (lp->cache) {

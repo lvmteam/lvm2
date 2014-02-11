@@ -1,5 +1,6 @@
 Version 2.02.106 - 
 ====================================
+  Use local exclusive activation for creation of raid in cluster.
   Use correctly signed 64b constant when selecting raid volumes.
   Add systemd native service for clvmd, cmirrord and clustered LV activation.
   Remove ExecReload from lvmetad systemd unit: lvmetad -R undefined. (2.02.98)
