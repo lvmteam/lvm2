@@ -1,0 +1,15 @@
+[Unit]
+Description=Clustered LVM mirror log daemon
+Documentation=man:cmirrord(8)
+Requires=corosync.service
+After=corosync.service
+Before=remote-fs.target
+
+[Service]
+Type=forking
+ExecStart=@sbindir@/cmirrord
+PIDFile=@CMIRRORD_PIDFILE@
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target

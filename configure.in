@@ -1793,6 +1793,7 @@ scripts/lvm2_cluster_activation_red_hat.service
 scripts/clvmd_init_red_hat
 scripts/lvm2_clvmd_red_hat.service
 scripts/cmirrord_init_red_hat
+scripts/lvm2_cmirrord_systemd_red_hat.service
 scripts/lvm2_lvmetad_init_red_hat
 scripts/lvm2_lvmetad_systemd_red_hat.socket
 scripts/lvm2_lvmetad_systemd_red_hat.service
