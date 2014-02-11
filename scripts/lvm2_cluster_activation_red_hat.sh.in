@@ -31,7 +31,9 @@ activate() {
 	fi
 
 	echo -n "Activating ${LVM_VGS:-"all VG(s)"}: "
-        ${lvm_vgchange} -ayl $LVM_VGS || return 1
+	# Respect activation/auto_activation_volume_list!
+	# Call "-aay" which is equal to "-aly" but respects this list.
+        ${lvm_vgchange} -aay $LVM_VGS || return 1
 
 	return 0
 }

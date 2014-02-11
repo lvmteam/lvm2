@@ -74,8 +74,9 @@ logical volumes. If autoactivation option is used (\-aay),
 the logical volume is activated only if it matches an item in
 the activation/auto_activation_volume_list set in lvm.conf.
 If this list is not set, then all volumes are considered for
-autoactivation. The autoactivation is not yet supported for
-logical volumes that are part of partial or clustered volume groups.
+activation. The \-aay option should be also used during system
+boot so it's possible to select which volumes to activate using
+the activation/auto_activation_volume_list setting.
 .IP
 If clustered locking is enabled, -aey will activate exclusively
 on one node and -aly will activate only on the local node.
