@@ -393,6 +393,7 @@ disable_dev() {
 enable_dev() {
 	local dev
 
+	rm -f debug.log
 	init_udev_transaction
 	for dev in "$@"; do
 		local name=$(echo "$dev" | sed -e 's,.*/,,')
