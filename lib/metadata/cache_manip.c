@@ -129,7 +129,7 @@ struct logical_volume *lv_cache_create(struct logical_volume *pool,
 	seg->segtype = segtype;
 
 	if (!attach_pool_lv(seg, pool, NULL, NULL))
-		return_0;
+		return_NULL;
 
 	return cache_lv;
 }
