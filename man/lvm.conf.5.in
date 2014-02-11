@@ -102,7 +102,7 @@ e.g.	backup {
 .br
 An assignment associates a type with an identifier.
 .br
-e.g.	max_archives = 42
+e.g.	level = 7
 .br
 .TP
 .BR array " =  '" [ "' ( " type " '" , "')* " type " '" ] "' | '" [ "' '" ] '
