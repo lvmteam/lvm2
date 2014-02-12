@@ -212,13 +212,22 @@ xx(lvconvert,
    "\t[-T|--thin ExternalLogicalVolume[Path]\n"
    "\t [--originname NewExternalOriginVolumeName]]\n"
    "\t[-Z|--zero {y|n}]\n"
-   "\t[-d|--debug] [-h|-?|--help] [-v|--verbose]\n",
+   "\t[-d|--debug] [-h|-?|--help] [-v|--verbose]\n\n"
 
-   alloc_ARG, background_ARG, chunksize_ARG, corelog_ARG, discards_ARG,
-   force_ARG, interval_ARG, merge_ARG, mirrorlog_ARG, mirrors_ARG, name_ARG,
-   noudevsync_ARG, originname_ARG, poolmetadata_ARG, poolmetadatasize_ARG,
-   poolmetadataspare_ARG, readahead_ARG, regionsize_ARG, repair_ARG,
-   replace_ARG, snapshot_ARG, splitmirrors_ARG, splitsnapshot_ARG,
+   "lvconvert "
+   "--type cache_pool\n"
+   "\t[--cachemode CacheMode]\n"
+   "\t[--chunksize size]\n"
+   "\t[--poolmetadata CacheMetadataLogicalVolume[Path] |\n"
+   "\t [--poolmetadatasize size]\n"
+   "\t [--poolmetadataspare {y|n}]]\n"
+   "\tCacheDataLogicalVolume[Path]\n\n",
+
+   alloc_ARG, background_ARG, cachemode_ARG, chunksize_ARG,
+   corelog_ARG, discards_ARG, force_ARG, interval_ARG, merge_ARG, mirrorlog_ARG,
+   mirrors_ARG, name_ARG, noudevsync_ARG, originname_ARG, poolmetadata_ARG,
+   poolmetadatasize_ARG, poolmetadataspare_ARG, readahead_ARG, regionsize_ARG,
+   repair_ARG, replace_ARG, snapshot_ARG, splitmirrors_ARG, splitsnapshot_ARG,
    stripes_long_ARG, stripesize_ARG, test_ARG, thin_ARG, thinpool_ARG,
    trackchanges_ARG, type_ARG, use_policies_ARG, zero_ARG)
 

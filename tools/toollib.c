@@ -1661,14 +1661,29 @@ int get_pool_params(struct cmd_context *cmd,
 		    uint64_t *pool_metadata_size,
 		    int *zero)
 {
+	int cache_pool = 0;
+
+	if (!strcmp("cache_pool", arg_str_value(cmd, type_ARG, "none")))
+		cache_pool = 1;
+
+	if (!cache_pool && !arg_count(cmd, thinpool_ARG)) {
+		/* Check for arguments that should only go with pools */
+		if (arg_count(cmd, poolmetadata_ARG)) {
+			log_error("'--poolmetadata' argument is only valid when"
+				  " converting to pool LVs.");
+			return_0;
+		}
+		return 1;
+	}
+
 	*passed_args = 0;
-	if (arg_count(cmd, zero_ARG)) {
+	if (!cache_pool && arg_count(cmd, zero_ARG)) {
 		*passed_args |= PASS_ARG_ZERO;
 		*zero = strcmp(arg_str_value(cmd, zero_ARG, "y"), "n");
 		log_very_verbose("Setting pool zeroing: %u", *zero);
 	}
 
-	if (arg_count(cmd, discards_ARG)) {
+	if (!cache_pool && arg_count(cmd, discards_ARG)) {
 		*passed_args |= PASS_ARG_DISCARDS;
 		*discards = (thin_discards_t) arg_uint_value(cmd, discards_ARG, 0);
 		log_very_verbose("Setting pool discards: %s",
@@ -1681,15 +1696,20 @@ int get_pool_params(struct cmd_context *cmd,
 			return 0;
 		}
 		*passed_args |= PASS_ARG_CHUNK_SIZE;
-		*chunk_size = arg_uint_value(cmd, chunksize_ARG,
+		*chunk_size = arg_uint_value(cmd, chunksize_ARG, cache_pool ?
+					     DM_CACHE_MIN_DATA_BLOCK_SIZE :
 					     DM_THIN_MIN_DATA_BLOCK_SIZE);
 		log_very_verbose("Setting pool chunk size: %s",
 				 display_size(cmd, *chunk_size));
 	}
 
-	if (!update_profilable_pool_params(cmd, profile, *passed_args,
-					   chunk_size_calc_method, chunk_size,
-					   discards, zero))
+	if (cache_pool) {
+		//FIXME: add cache_pool support to update_profilable_pool_params
+		if (!(*passed_args & PASS_ARG_CHUNK_SIZE))
+			*chunk_size = DEFAULT_CACHE_POOL_CHUNK_SIZE * 2;
+	} else if (!update_profilable_pool_params(cmd, profile, *passed_args,
+						  chunk_size_calc_method,
+						  chunk_size, discards, zero))
 		return_0;
 
 	if (arg_count(cmd, poolmetadatasize_ARG)) {
@@ -1699,7 +1719,8 @@ int get_pool_params(struct cmd_context *cmd,
 		}
 		*passed_args |= PASS_ARG_POOL_METADATA_SIZE;
 	}
-	*pool_metadata_size = arg_uint64_value(cmd, poolmetadatasize_ARG, UINT64_C(0));
+	*pool_metadata_size = arg_uint64_value(cmd, poolmetadatasize_ARG,
+					       UINT64_C(0));
 
 	return 1;
 }
