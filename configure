@@ -1625,7 +1625,7 @@ Optional Packages:
   --with-thin-dump=PATH   thin_dump tool: [[autodetect]]
   --with-thin-repair=PATH thin_repair tool: [[autodetect]]
   --with-cache=TYPE       cache support: internal/shared/none
-                          [[TYPE=internal]]
+                          [[TYPE=none]]
   --with-ocfdir=DIR       install OCF files in DIR
                           [[PREFIX/lib/ocf/resource.d/lvm2]]
   --with-default-pid-dir=PID_DIR
@@ -7543,7 +7543,7 @@ $as_echo_n "checking whether to include cache... " >&6; }
 if test "${with_cache+set}" = set; then :
   withval=$with_cache; CACHE=$withval
 else
-  CACHE=internal
+  CACHE=none
 fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $CACHE" >&5

@@ -482,8 +482,8 @@ AC_MSG_CHECKING(whether to include cache)
 AC_ARG_WITH(cache,
 	    AC_HELP_STRING([--with-cache=TYPE],
 			   [cache support: internal/shared/none
-			    [[TYPE=internal]]]),
-	    CACHE=$withval, CACHE=internal)
+			    [[TYPE=none]]]),
+	    CACHE=$withval, CACHE=none)
 AC_MSG_RESULT($CACHE)
 
 if [[ "x$CACHE" != xnone -a "x$CACHE" != xinternal -a "x$CACHE" != xshared ]];
