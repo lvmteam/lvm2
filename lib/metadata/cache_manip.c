@@ -104,6 +104,13 @@ struct logical_volume *lv_cache_create(struct logical_volume *pool,
 		return NULL;
 	}
 
+	if (!dm_list_empty(&pool->segs_using_this_lv)) {
+		seg = get_only_segment_using_this_lv(pool);
+		log_error("%s is already in use by %s",
+			  pool->name, seg ? seg->lv->name : "another LV");
+		return NULL;
+	}
+
 	if (lv_is_cache_type(origin)) {
 		/*
 		 * FIXME: We can layer caches, insert_layer_for_lv() would

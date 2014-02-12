@@ -221,9 +221,14 @@ xx(lvconvert,
    "\t[--poolmetadata CacheMetadataLogicalVolume[Path] |\n"
    "\t [--poolmetadatasize size]\n"
    "\t [--poolmetadataspare {y|n}]]\n"
-   "\tCacheDataLogicalVolume[Path]\n\n",
+   "\tCacheDataLogicalVolume[Path]\n\n"
 
-   alloc_ARG, background_ARG, cachemode_ARG, chunksize_ARG,
+   "lvconvert "
+   "--type cache\n"
+   "\t--cachepool CachePoolLogicalVolume[Path]\n"
+   "\tLogicalVolume[Path]\n\n",
+
+   alloc_ARG, background_ARG, cachemode_ARG, cachepool_ARG, chunksize_ARG,
    corelog_ARG, discards_ARG, force_ARG, interval_ARG, merge_ARG, mirrorlog_ARG,
    mirrors_ARG, name_ARG, noudevsync_ARG, originname_ARG, poolmetadata_ARG,
    poolmetadatasize_ARG, poolmetadataspare_ARG, readahead_ARG, regionsize_ARG,

@@ -28,6 +28,7 @@ struct lvconvert_params {
 	int zero;
 
 	const char *origin;
+	const char *cachepool;
 	const char *lv_name;
 	const char *lv_split_name;
 	const char *lv_name_full;
@@ -201,7 +202,7 @@ static int _check_conversion_type(struct cmd_context *cmd, const char *type_str)
 	/* FIXME: Check thin-pool and thin more thoroughly! */
 	if (!strcmp(type_str, "snapshot") ||
 	    !strncmp(type_str, "raid", 4) ||
-	    !strcmp(type_str, "cache_pool") ||
+	    !strcmp(type_str, "cache_pool") || !strcmp(type_str, "cache") ||
 	    !strcmp(type_str, "thin-pool") || !strcmp(type_str, "thin"))
 		return 1;
 
@@ -288,7 +289,14 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 	if (arg_count(cmd, thin_ARG))
 		lp->thin = 1;
 
-	if (arg_count(cmd, thinpool_ARG) || cache_pool) {
+	if (arg_count(cmd, cachepool_ARG)) {
+		if (strcmp(type_str, "cache")) {
+			log_error("--cachepool argument is only valid with "
+				  " the \"cache\" segment type");
+			return 0;
+		}
+		lp->cachepool = arg_str_value(cmd, cachepool_ARG, NULL);
+	} else if (arg_count(cmd, thinpool_ARG) || cache_pool) {
 		if (arg_count(cmd, merge_ARG)) {
 			log_error("--%spool and --merge are mutually exlusive.",
 				  cache_pool ? "type cache_" : "thin");
@@ -2926,6 +2934,41 @@ out:
 	return r;
 }
 
+static int _lvconvert_cache(struct logical_volume *origin,
+			    struct lvconvert_params *lp)
+{
+	struct cmd_context *cmd = origin->vg->cmd;
+	struct logical_volume *cache_lv;
+	struct logical_volume *cachepool;
+
+	if (!lp->cachepool) {
+		log_error("--cachepool argument is required.");
+		return 0;
+	}
+
+	if (!(cachepool = find_lv(origin->vg, lp->cachepool))) {
+		log_error("Unable to find cache pool LV, %s", lp->cachepool);
+		return 0;
+	}
+
+	if (!(cache_lv = lv_cache_create(cachepool, origin)))
+		return_0;
+
+	if (!vg_write(cache_lv->vg))
+		return_0;
+	if (!suspend_lv(cmd, cache_lv))
+		return_0;
+	if (!vg_commit(cache_lv->vg))
+		return_0;
+	if (!resume_lv(cmd, cache_lv))
+		return_0;
+
+	log_print_unless_silent("%s/%s is now cached.",
+				cache_lv->vg->name, cache_lv->name);
+
+	return 1;
+}
+
 static int _lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 			     void *handle)
 {
@@ -2994,6 +3037,13 @@ static int _lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 			return_ECMD_FAILED;
 
 		if (!_lvconvert_snapshot(cmd, lv, lp))
+			return_ECMD_FAILED;
+
+	} else if (segtype_is_cache(lp->segtype)) {
+		if (!archive(lv->vg))
+			return_ECMD_FAILED;
+
+		if (!_lvconvert_cache(lv, lp))
 			return_ECMD_FAILED;
 
 	} else if (segtype_is_cache_pool(lp->segtype)) {
