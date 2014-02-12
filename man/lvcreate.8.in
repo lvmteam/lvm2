@@ -59,6 +59,8 @@ lvcreate \- create a logical volume in an existing volume group
 .RI { ReadAheadSectors | auto | none }]
 .RB [ \-t | \-\-test ]
 .RB [ \-T | \-\-thin
+.RB [ \-\-cachemode
+.IR { writeback | writethrough }
 .RB [ \-c | \-\-chunksize
 .IR ChunkSize [ bBsSkKmMgG ]]
 .RB [ \-\-discards
@@ -155,13 +157,27 @@ use \fBlvs\fP command where the state of the flag is reported within
 .TP
 .IR \fB\-K ", " \fB\-\-ignoreactivationskip
 Ignore the flag to skip Logical Volumes during activation.
+
+.TP
+.BR \-\-cachemode " " { writeback | writethrough }
+Specifying a cache mode determines when the writes to a cached logical volume
+are considered complete.  When "writeback" is specified, a write is considered
+complete as soon as it is stored in the cache pool (i.e. the smaller faster
+device).  If "writethough" is specified, a write is considered complete only
+when it has been stored in the cache pool and on the origin (i.e. the larger
+slower device).  While "writethrough" may be slower for writes, it is more
+resilient if something should happen to the cache pool device.
+
 .TP
 .BR \-c ", " \-\-chunksize " " \fIChunkSize [ \fIbBsSkKmMgG ]
-Gives the size of chunk for snapshot and thin pool logical volumes.
+Gives the size of chunk for snapshot, cache pool and thin pool logical volumes.
 Default unit is in kilobytes.
 .br
 For snapshots the value must be power of 2 between 4KiB and 512KiB
 and the default value is 4.
+.br
+For cache pools the value must be between 32KiB and 1GiB.  The default
+is 64KiB.  Values must be a multiple of 32KiB.
 .br
 For thin pools the value must be between 64KiB and
 1GiB and the default value starts with 64 and scales
@@ -498,6 +514,23 @@ which then becomes the thin external origin for the thin snapshot volume
 in vg00 that will use an existing thin pool "vg00/pool":
 .sp
 .B lvcreate -s --thinpool vg00/pool  origin
+
+Create a cache pool logical volume that can later be used to cache one
+logical volume.
+.sp
+.B lvcreate --type cache_pool -L 1G -n my_lv_cachepool vg /dev/fast1
+
+If there is an existing cache pool logical volume, create the large slow
+device (i.e. the origin) and link it to the supplied cache pool LV,
+creating a cache logical volume.
+.sp
+.B lvcreate --type cache -L 100G -n my_lv vg/my_lv_cachepool /dev/slow1
+
+If there is an existing logical volume, create the fast and small
+cache pool logical volume and link it to the supplied existing logical
+volume (i.e. the origin), creating a cache logical volume.
+.sp
+.B lvcreate --type cache -L 1G -n my_lv_cachepool vg/my_lv /dev/fast1
 
 .SH SEE ALSO
 .BR lvm (8),
