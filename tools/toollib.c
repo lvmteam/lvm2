@@ -1673,7 +1673,6 @@ int get_pool_params(struct cmd_context *cmd,
 				  " converting to pool LVs.");
 			return_0;
 		}
-		return 1;
 	}
 
 	*passed_args = 0;
