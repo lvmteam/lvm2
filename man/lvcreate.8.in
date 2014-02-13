@@ -398,6 +398,7 @@ commandline switch alias that will enable their use
 However, this argument must be used when no existing
 commandline switch alias is available for the desired type,
 as is the case with
+.IR cache ,
 .IR error ,
 .IR raid1 ,
 .IR raid4 ,
@@ -406,6 +407,9 @@ as is the case with
 .IR raid10
 or
 .IR zero .
+Note that the cache segment type requires a dm-cache kernel module version
+1.3.0 or greater or a kernel version 3.14 or newer.
+
 .TP
 .BR \-V ", " \-\-virtualsize " " \fIVirtualSize [ \fIbBsSkKmMgGtTpPeE ]
 Creates a sparse device of the given size (in MiB by default) using a snapshot

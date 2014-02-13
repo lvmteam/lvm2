@@ -257,13 +257,28 @@ static int _target_present(struct cmd_context *cmd,
 				const struct lv_segment *seg __attribute__((unused)),
 				unsigned *attributes __attribute__((unused)))
 {
+	uint32_t maj, min, patchlevel;
 	static int _cache_checked = 0;
 	static int _cache_present = 0;
 
-	if (!_cache_checked)
+	if (!_cache_checked) {
 		_cache_present = target_present(cmd, "cache", 1);
 
-	_cache_checked = 1;
+		if (!target_version("cache", &maj, &min, &patchlevel)) {
+			log_error("Failed to determine version of cache kernel module");
+			return 0;
+		}
+
+		_cache_checked = 1;
+
+		if ((maj < 1) ||
+		    ((maj == 1) && (min < 3))) {
+			log_error("The cache kernel module is version %u.%u.%u."
+				  "  Version 1.3.0+ is required.",
+				  maj, min, patchlevel);
+			return 0;
+		}
+	}
 
 	return _cache_present;
 }
