@@ -63,7 +63,7 @@ struct lv_layer {
 
 int read_only_lv(struct logical_volume *lv, struct lv_activate_opts *laopts)
 {
-	return (laopts->read_only || !(lv->vg->status & LVM_WRITE) || !(lv->status & LVM_WRITE));
+	return (laopts->read_only || !(lv->status & LVM_WRITE));
 }
 
 /*

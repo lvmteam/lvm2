@@ -1,5 +1,6 @@
 Version 2.02.106 - 
 ====================================
+  Do not use VG read/write state for LV read/write state.
   Use --ignoreskippedcluster in activation systemd units if use_lvmetad=0.
   Allow approximate allocation when specifying size in percentage terms.
   Add basic LVM support for cache[pool] segment types.
