@@ -3110,14 +3110,13 @@ int dm_tree_node_add_raid_target(struct dm_tree_node *node,
 				 uint64_t rebuilds,
 				 uint64_t flags)
 {
-	struct dm_tree_node_raid_params params;
-
-	memset(&params, 0, sizeof(params));
-	params.raid_type = raid_type;
-	params.region_size = region_size;
-	params.stripe_size = stripe_size;
-	params.rebuilds = rebuilds;
-	params.flags = flags;
+	struct dm_tree_node_raid_params params = {
+		.raid_type = raid_type,
+		.region_size = region_size,
+		.stripe_size = stripe_size,
+		.rebuilds = rebuilds,
+		.flags = flags
+	};
 
 	return dm_tree_node_add_raid_target_with_params(node, size, &params);
 }
