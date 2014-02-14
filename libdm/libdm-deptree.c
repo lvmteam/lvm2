@@ -172,10 +172,10 @@ struct load_segment {
 	uint32_t flags;			/* Mirror + raid + Cache */
 	char *uuid;			/* Clustered mirror log */
 
-	int   core_argc;		/* Cache */
+	unsigned core_argc;		/* Cache */
 	char **core_argv;		/* Cache */
 	char *policy_name;		/* Cache */
-	int   policy_argc;		/* Cache */
+	unsigned policy_argc;		/* Cache */
 	char **policy_argv;		/* Cache */
 
 	const char *cipher;		/* Crypt */
@@ -2274,7 +2274,8 @@ static int _cache_emit_segment_line(struct dm_task *dmt,
 				    struct load_segment *seg,
 				    char *params, size_t paramsize)
 {
-	int i, pos = 0;
+	int pos = 0;
+	unsigned i = 0;
 	unsigned feature_count;
 	struct seg_area *area;
 	char data[DM_FORMAT_DEV_BUFSIZE];
@@ -2302,7 +2303,7 @@ static int _cache_emit_segment_line(struct dm_task *dmt,
 
 	/* Features */
 	feature_count = hweight32(seg->flags);
-	EMIT_PARAMS(pos, " %d", feature_count);
+	EMIT_PARAMS(pos, " %u", feature_count);
 	if (seg->flags & DM_CACHE_FEATURE_WRITETHROUGH)
 		EMIT_PARAMS(pos, " writethrough");
 	else if (seg->flags & DM_CACHE_FEATURE_WRITEBACK)
@@ -2310,7 +2311,7 @@ static int _cache_emit_segment_line(struct dm_task *dmt,
 
 	/* Core Arguments (like 'migration_threshold') */
 	if (seg->core_argc) {
-		EMIT_PARAMS(pos, " %d", seg->core_argc);
+		EMIT_PARAMS(pos, " %u", seg->core_argc);
 		for (i = 0; i < seg->core_argc; i++)
 			EMIT_PARAMS(pos, " %s", seg->core_argv[i]);
 	}
@@ -2319,7 +2320,7 @@ static int _cache_emit_segment_line(struct dm_task *dmt,
 	if (!seg->policy_name)
 		EMIT_PARAMS(pos, " default 0");
 	else {
-		EMIT_PARAMS(pos, " %s %d", seg->policy_name, seg->policy_argc);
+		EMIT_PARAMS(pos, " %s %u", seg->policy_name, seg->policy_argc);
 		if (seg->policy_argc % 2) {
 			log_error(INTERNAL_ERROR
 				  "Cache policy arguments must be in "
@@ -3206,10 +3207,10 @@ int dm_tree_node_add_cache_target(struct dm_tree_node *node,
 				  const char *origin_uuid,
 				  uint32_t chunk_size,
 				  uint32_t feature_flags, /* DM_CACHE_FEATURE_* */
-				  int core_argc,
+				  unsigned core_argc,
 				  char **core_argv,
 				  char *policy_name,
-				  int   policy_argc,
+				  unsigned policy_argc,
 				  char **policy_argv)
 {
 	int i;

@@ -96,8 +96,7 @@ static int _cache_pool_text_import(struct lv_segment *seg,
 		if (!dm_config_has_node(sn, "core_argv"))
 			return SEG_LOG_ERROR("not all core arguments defined in");
 
-		if (!dm_config_get_uint32(sn, "core_argc",
-					  (uint32_t *)&seg->core_argc))
+		if (!dm_config_get_uint32(sn, "core_argc", &seg->core_argc))
 			return SEG_LOG_ERROR("Unable to read core_argc in");
 
 		str = dm_config_find_str(sn, "core_argv", NULL);
@@ -110,8 +109,8 @@ static int _cache_pool_text_import(struct lv_segment *seg,
 			return_0;
 		if (str &&
 		    (!(argv_str = dm_pool_strdup(mem, str)) ||
-		     (seg->core_argc != dm_split_words(argv_str, seg->core_argc,
-						       0, seg->core_argv))))
+		     ((int)seg->core_argc != dm_split_words(argv_str, seg->core_argc,
+							    0, seg->core_argv))))
 			return SEG_LOG_ERROR("core_argc and core_argv do"
 					     " not match in");
 	}
@@ -135,8 +134,7 @@ static int _cache_pool_text_import(struct lv_segment *seg,
 			return SEG_LOG_ERROR("policy_name must be a string in");
 		seg->policy_name = dm_pool_strdup(mem, str);
 
-		if (!dm_config_get_uint32(sn, "policy_argc",
-					  (uint32_t *)&seg->policy_argc))
+		if (!dm_config_get_uint32(sn, "policy_argc", &seg->policy_argc))
 			return SEG_LOG_ERROR("Unable to read policy_argc in");
 
 		str = dm_config_find_str(sn, "policy_argv", NULL);
@@ -149,9 +147,9 @@ static int _cache_pool_text_import(struct lv_segment *seg,
 			return_0;
 		if (str &&
 		    (!(argv_str = dm_pool_strdup(mem, str)) ||
-		     (seg->policy_argc != dm_split_words(argv_str,
-							 seg->policy_argc,
-							 0, seg->policy_argv))))
+		     ((int)seg->policy_argc != dm_split_words(argv_str,
+							      seg->policy_argc,
+							      0, seg->policy_argv))))
 			return SEG_LOG_ERROR("policy_argc and policy_argv do"
 					     " not match in");
 	}
@@ -176,7 +174,7 @@ static int _cache_pool_text_import_area_count(const struct dm_config_node *sn,
 static int _cache_pool_text_export(const struct lv_segment *seg,
 				   struct formatter *f)
 {
-	int i;
+	unsigned i;
 	char buf[256]; //FIXME: IS THERE AN 'outf' THAT DOESN'T DO NEWLINE?!?
 	uint32_t feature_flags = seg->feature_flags;
 
@@ -199,7 +197,7 @@ static int _cache_pool_text_export(const struct lv_segment *seg,
 	}
 
 	if (seg->core_argc) {
-		outf(f, "core_argc = %d", seg->core_argc);
+		outf(f, "core_argc = %u", seg->core_argc);
 		outf(f, "core_argv = \"");
 		for (i = 0; i < seg->core_argc; i++)
 			outf(f, "%s%s", i ? " " : "", seg->core_argv[i]);
@@ -208,7 +206,7 @@ static int _cache_pool_text_export(const struct lv_segment *seg,
 
 	if (seg->policy_name) {
 		outf(f, "policy_name = \"%s\"", seg->policy_name);
-		outf(f, "policy_argc = %d", seg->policy_argc);
+		outf(f, "policy_argc = %u", seg->policy_argc);
 		buf[0] = '\0';
 		for (i = 0; i < seg->policy_argc; i++)
 			sprintf(buf, "%s%s", i ? " " : "", seg->policy_argv[i]);

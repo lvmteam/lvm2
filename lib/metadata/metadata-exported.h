@@ -397,10 +397,10 @@ struct lv_segment {
 	uint32_t device_id;			/* For thin, 24bit */
 
 	uint32_t feature_flags;			/* For cache */
-	int core_argc;				/* For cache */
+	unsigned core_argc;			/* For cache */
 	char **core_argv;			/* For cache */
 	char *policy_name;			/* For cache */
-	int policy_argc;			/* For cache */
+	unsigned policy_argc;			/* For cache */
 	char **policy_argv;			/* For cache */
 
 	struct logical_volume *replicator;/* For replicator-devs - link to replicator LV */

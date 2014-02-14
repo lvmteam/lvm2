@@ -772,10 +772,10 @@ int dm_tree_node_add_cache_target(struct dm_tree_node *node,
 				  const char *origin_uuid,
 				  uint32_t chunk_size,
 				  uint32_t feature_flags, /* DM_CACHE_FEATURE_* */
-				  int core_argc,
+				  unsigned core_argc,
 				  char **core_argv,
 				  char *policy_name,
-				  int   policy_argc,
+				  unsigned policy_argc,
 				  char **policy_argv);
 
 /*
