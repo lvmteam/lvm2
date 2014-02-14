@@ -359,34 +359,29 @@ static int _cache_add_target_line(struct dev_manager *dm,
 				 struct dm_tree_node *node, uint64_t len,
 				 uint32_t *pvmove_mirror_count __attribute__((unused)))
 {
-	struct logical_volume *data, *metadata, *origin;
 	struct lv_segment *cache_pool_seg = first_seg(seg->pool_lv);
-	struct dm_tree_node_cache_params params = {
-		.chunk_size = cache_pool_seg->chunk_size,
+	char *metadata_uuid, *data_uuid, *origin_uuid;
 
-		/* Cache features, core args, and policy are stored in the cache_pool */
-		.feature_flags = cache_pool_seg->feature_flags,
-		.core_argc = cache_pool_seg->core_argc,
-		.core_argv = cache_pool_seg->core_argv,
-		.policy_name = cache_pool_seg->policy_name,
-		.policy_argc = cache_pool_seg->policy_argc,
-		.policy_argv = cache_pool_seg->policy_argv
-	};
-
-	data = seg_lv(cache_pool_seg, 0);
-	metadata = cache_pool_seg->metadata_lv;
-	origin = seg_lv(seg, 0);
-
-	if (!(params.data_uuid = build_dm_uuid(mem, data->lvid.s, NULL)))
+	if (!(metadata_uuid = build_dm_uuid(mem, cache_pool_seg->metadata_lv->lvid.s, NULL)))
 		return_0;
 
-	if (!(params.metadata_uuid = build_dm_uuid(mem, metadata->lvid.s, NULL)))
+	if (!(data_uuid = build_dm_uuid(mem, seg_lv(cache_pool_seg, 0)->lvid.s, NULL)))
 		return_0;
 
-	if (!(params.origin_uuid = build_dm_uuid(mem, origin->lvid.s, NULL)))
+	if (!(origin_uuid = build_dm_uuid(mem, seg_lv(seg, 0)->lvid.s, NULL)))
 		return_0;
 
-	if (!dm_tree_node_add_cache_target(node, len, &params))
+	if (!dm_tree_node_add_cache_target(node, len,
+					   metadata_uuid,
+					   data_uuid,
+					   origin_uuid,
+					   cache_pool_seg->chunk_size,
+					   cache_pool_seg->feature_flags,
+					   cache_pool_seg->core_argc,
+					   cache_pool_seg->core_argv,
+					   cache_pool_seg->policy_name,
+					   cache_pool_seg->policy_argc,
+					   cache_pool_seg->policy_argv))
 		return_0;
 
 	return add_areas_line(dm, seg, node, 0u, seg->area_count);

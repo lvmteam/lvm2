@@ -2284,19 +2284,18 @@ static int _cache_emit_segment_line(struct dm_task *dmt,
 	/* Metadata Dev */
 	if (!_build_dev_string(metadata, sizeof(metadata), seg->metadata))
 		return_0;
-	EMIT_PARAMS(pos, " %s", metadata);
 
 	/* Cache Dev */
 	if (!_build_dev_string(data, sizeof(origin), seg->pool))
 		return_0;
-	EMIT_PARAMS(pos, " %s", data);
 
 	/* Origin Dev */
 	dm_list_iterate_items(area, &seg->areas)
 		break; /* There is only ever 1 area */
 	if (!_build_dev_string(origin, sizeof(data), area->dev_node))
 		return_0;
-	EMIT_PARAMS(pos, " %s", origin);
+
+	EMIT_PARAMS(pos, " %s %s %s", metadata, data, origin);
 
 	/* Chunk size */
 	EMIT_PARAMS(pos, " %u", seg->chunk_size);
@@ -3202,7 +3201,16 @@ bad:
 
 int dm_tree_node_add_cache_target(struct dm_tree_node *node,
 				  uint64_t size,
-				  struct dm_tree_node_cache_params *p)
+				  const char *metadata_uuid,
+				  const char *data_uuid,
+				  const char *origin_uuid,
+				  uint32_t chunk_size,
+				  uint32_t feature_flags, /* DM_CACHE_FEATURE_* */
+				  int core_argc,
+				  char **core_argv,
+				  char *policy_name,
+				  int   policy_argc,
+				  char **policy_argv)
 {
 	int i;
 	struct load_segment *seg = NULL;
@@ -3218,33 +3226,35 @@ int dm_tree_node_add_cache_target(struct dm_tree_node *node,
 		return_0;
 
 	if (!(seg->pool = dm_tree_find_node_by_uuid(node->dtree,
-						    p->data_uuid))) {
-		log_error("Missing cache's data uuid, %s",
-			  p->data_uuid);
+						    data_uuid))) {
+		log_error("Missing cache's data uuid %s.",
+			  data_uuid);
 		return 0;
 	}
 	if (!_link_tree_nodes(node, seg->pool))
 		return_0;
 
 	if (!(seg->metadata = dm_tree_find_node_by_uuid(node->dtree,
-							p->metadata_uuid))) {
-		log_error("Missing cache's metadata uuid, %s",
-			  p->metadata_uuid);
+							metadata_uuid))) {
+		log_error("Missing cache's metadata uuid %s.",
+			  metadata_uuid);
 		return 0;
 	}
 	if (!_link_tree_nodes(node, seg->metadata))
 		return_0;
 
-	seg->chunk_size = p->chunk_size;
+	seg->chunk_size = chunk_size;
 
-	seg->flags = p->feature_flags;
+	seg->flags = feature_flags;
 
-	seg->core_argc = p->core_argc;
-	seg->core_argv = p->core_argv;
+	/* FIXME: validation missing */
 
-	seg->policy_name = p->policy_name;
-	seg->policy_argc = p->policy_argc;
-	seg->policy_argv = p->policy_argv;
+	seg->core_argc = core_argc;
+	seg->core_argv = core_argv;
+
+	seg->policy_name = policy_name;
+	seg->policy_argc = policy_argc;
+	seg->policy_argv = policy_argv;
 
 	return 1;
 }
