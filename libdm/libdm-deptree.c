@@ -2243,11 +2243,11 @@ static int _raid_emit_segment_line(struct dm_task *dmt, uint32_t major,
 		EMIT_PARAMS(pos, " region_size %u", seg->region_size);
 
 	for (i = 0; i < (seg->area_count / 2); i++)
-		if (seg->rebuilds & (1 << i))
+		if (seg->rebuilds & (1ULL << i))
 			EMIT_PARAMS(pos, " rebuild %u", i);
 
 	for (i = 0; i < (seg->area_count / 2); i++)
-		if (seg->writemostly & (1 << i))
+		if (seg->writemostly & (1ULL << i))
 			EMIT_PARAMS(pos, " write_mostly %u", i);
 
 	if (seg->writebehind)
