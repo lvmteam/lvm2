@@ -363,6 +363,8 @@ static int _update_extents_params(struct volume_group *vg,
 	} else
 		lp->pvh = &vg->pvs;
 
+	if (lcp->percent)
+		lp->approx_alloc = 1;
 	switch(lcp->percent) {
 		case PERCENT_VG:
 			lp->extents = percent_of_extents(lp->extents, vg->extent_count, 0);

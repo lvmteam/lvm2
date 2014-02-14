@@ -419,7 +419,7 @@ static int _alloc_image_components(struct logical_volume *lv,
 
 	if (!(ah = allocate_extents(lv->vg, NULL, segtype, 0, count, count,
 				    region_size, extents, pvs,
-				    lv->alloc, parallel_areas)))
+				    lv->alloc, 0, parallel_areas)))
 		return_0;
 
 	for (s = 0; s < count; s++) {
@@ -483,7 +483,7 @@ static int _alloc_rmeta_for_lv(struct logical_volume *data_lv,
 	if (!(ah = allocate_extents(data_lv->vg, NULL, seg->segtype, 0, 1, 0,
 				    seg->region_size,
 				    1 /*RAID_METADATA_AREA_LEN*/,
-				    &allocatable_pvs, data_lv->alloc, NULL)))
+				    &allocatable_pvs, data_lv->alloc, 0, NULL)))
 		return_0;
 
 	if (!_alloc_image_component(data_lv, base_name, ah, 0,

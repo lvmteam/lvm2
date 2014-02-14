@@ -46,6 +46,14 @@ aux wait_for_sync $vg $lv2
 
 lvremove -ff $vg
 
+# Test 100%FREE option
+# 37 extents / device
+# 1 image = 36 extents (1 for meta)
+# 3 images = 108 extents = 54.00m
+lvcreate --type raid10 -i 3 -l 100%FREE -n raid10 $vg
+check lv_field $vg/raid10 size "54.00m"
+lvremove -ff $vg
+
 #
 # FIXME: Add tests that specify particular PVs to use for creation
 #

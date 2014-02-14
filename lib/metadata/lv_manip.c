@@ -918,6 +918,7 @@ struct alloc_handle {
 	struct dm_pool *mem;
 
 	alloc_policy_t alloc;		/* Overall policy */
+	int approx_alloc;                /* get as much as possible up to new_extents */
 	uint32_t new_extents;		/* Number of new extents required */
 	uint32_t area_count;		/* Number of parallel areas */
 	uint32_t parity_count;   /* Adds to area_count, but not area_multiple */
@@ -1041,7 +1042,7 @@ static uint32_t mirror_log_extents(uint32_t region_size, uint32_t pe_size, uint3
 static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 					struct dm_pool *mem,
 					const struct segment_type *segtype,
-					alloc_policy_t alloc,
+					alloc_policy_t alloc, int approx_alloc,
 					uint32_t new_extents,
 					uint32_t mirrors,
 					uint32_t stripes,
@@ -1194,6 +1195,7 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 
 	ah->maximise_cling = find_config_tree_bool(cmd, allocation_maximise_cling_CFG, NULL);
 
+	ah->approx_alloc = approx_alloc;
 	return ah;
 }
 
@@ -1214,10 +1216,18 @@ static int _sufficient_pes_free(struct alloc_handle *ah, struct dm_list *pvms,
 	uint32_t free_pes = pv_maps_size(pvms);
 
 	if (total_extents_needed > free_pes) {
-		log_error("Insufficient free space: %" PRIu32 " extents needed,"
-			  " but only %" PRIu32 " available",
-			  total_extents_needed, free_pes);
-		return 0;
+		if (!ah->approx_alloc) {
+			log_error("Insufficient free space: %" PRIu32
+				  " extents needed,"
+				  " but only %" PRIu32 " available",
+				  total_extents_needed, free_pes);
+
+			return 0;
+		}
+		log_verbose("Insufficient free space: %" PRIu32
+			    " extents needed, but only %" PRIu32
+			    " available: amount will be reduced",
+			    total_extents_needed, free_pes);
 	}
 
 	return 1;
@@ -2006,7 +2016,8 @@ static void _report_needed_allocation_space(struct alloc_handle *ah,
 		metadata_count = alloc_state->log_area_count_still_needed;
 	}
 
-	log_debug_alloc("Still need %" PRIu32 " total extents:",
+	log_debug_alloc("Still need %s%" PRIu32 " total extents:",
+			ah->approx_alloc ? "up to " : "",
 			parallel_area_size * parallel_areas_count + metadata_size * metadata_count);
 	log_debug_alloc("  %" PRIu32 " (%" PRIu32 " data/%" PRIu32
 			" parity) parallel areas of %" PRIu32 " extents each",
@@ -2414,19 +2425,29 @@ static int _allocate(struct alloc_handle *ah,
 		if (!_find_max_parallel_space_for_one_policy(ah, &alloc_parms, pvms, &alloc_state))
 			goto_out;
 
-		if ((alloc_state.allocated == ah->new_extents && !alloc_state.log_area_count_still_needed) ||
+		if ((alloc_state.allocated == ah->new_extents &&
+		     !alloc_state.log_area_count_still_needed) ||
 		    (!can_split && (alloc_state.allocated != old_allocated)))
 			break;
 	}
 
 	if (alloc_state.allocated != ah->new_extents) {
-		log_error("Insufficient suitable %sallocatable extents "
-			  "for logical volume %s: %u more required",
-			  can_split ? "" : "contiguous ",
-			  lv ? lv->name : "",
-			  (ah->new_extents - alloc_state.allocated) * ah->area_count
-			  / ah->area_multiple);
-		goto out;
+		if (!ah->approx_alloc) {
+			log_error("Insufficient suitable %sallocatable extents "
+				  "for logical volume %s: %u more required",
+				  can_split ? "" : "contiguous ",
+				  lv ? lv->name : "",
+				  (ah->new_extents - alloc_state.allocated) *
+				  ah->area_count / ah->area_multiple);
+			goto out;
+		}
+		log_verbose("Insufficient suitable %sallocatable extents "
+			    "for logical volume %s: size reduced by %u extents",
+			    can_split ? "" : "contiguous ",
+			    lv ? lv->name : "",
+			    (ah->new_extents - alloc_state.allocated) *
+			    ah->area_count / ah->area_multiple);
+		ah->new_extents = alloc_state.allocated;
 	}
 
 	if (alloc_state.log_area_count_still_needed) {
@@ -2503,7 +2524,7 @@ struct alloc_handle *allocate_extents(struct volume_group *vg,
 				      uint32_t mirrors, uint32_t log_count,
 				      uint32_t region_size, uint32_t extents,
 				      struct dm_list *allocatable_pvs,
-				      alloc_policy_t alloc,
+				      alloc_policy_t alloc, int approx_alloc,
 				      struct dm_list *parallel_areas)
 {
 	struct alloc_handle *ah;
@@ -2533,7 +2554,7 @@ struct alloc_handle *allocate_extents(struct volume_group *vg,
 		alloc = vg->alloc;
 
 	new_extents = (lv ? lv->le_count : 0) + extents;
-	if (!(ah = _alloc_init(vg->cmd, vg->cmd->mem, segtype, alloc,
+	if (!(ah = _alloc_init(vg->cmd, vg->cmd->mem, segtype, alloc, approx_alloc,
 			       new_extents, mirrors, stripes, log_count,
 			       vg->extent_size, region_size,
 			       parallel_areas)))
@@ -2999,7 +3020,8 @@ int lv_extend(struct logical_volume *lv,
 	      uint32_t stripes, uint32_t stripe_size,
 	      uint32_t mirrors, uint32_t region_size,
 	      uint32_t extents, const char *thin_pool_name,
-	      struct dm_list *allocatable_pvs, alloc_policy_t alloc)
+	      struct dm_list *allocatable_pvs, alloc_policy_t alloc,
+	      int approx_alloc)
 {
 	int r = 1;
 	int log_count = 0;
@@ -3027,8 +3049,17 @@ int lv_extend(struct logical_volume *lv,
 
 	if (!(ah = allocate_extents(lv->vg, lv, segtype, stripes, mirrors,
 				    log_count, region_size, extents,
-				    allocatable_pvs, alloc, NULL)))
+				    allocatable_pvs, alloc, approx_alloc, NULL)))
 		return_0;
+
+	if (ah->approx_alloc) {
+		extents = ah->new_extents;
+		if (segtype_is_raid(segtype)) {
+			log_error("Extents before: %u", extents);
+			extents -= ah->log_len * ah->area_multiple;
+			log_error("Extents after : %u", extents);
+		}
+	}
 
 	if (segtype_is_thin_pool(segtype) || segtype_is_cache_pool(segtype)) {
 		if (lv->le_count) {
@@ -3646,7 +3677,7 @@ static int _lvresize_poolmetadata(struct cmd_context *cmd, struct volume_group *
 		       seg_mirrors,
 		       mseg->region_size,
 		       lp->poolmetadataextents - lv->le_count, NULL,
-		       pvh, alloc))
+		       pvh, alloc, 0))
 		return_0;
 
 	return 1;
@@ -4159,7 +4190,7 @@ static struct logical_volume *_lvresize_volume(struct cmd_context *cmd,
 			      lp->stripes, lp->stripe_size,
 			      lp->mirrors, first_seg(lv)->region_size,
 			      lp->extents - lv->le_count, NULL,
-			      pvh, alloc))
+			      pvh, alloc, 0))
 		return_NULL;
 
 	if (lock_lv) {
@@ -5596,7 +5627,7 @@ static struct logical_volume *_create_virtual_origin(struct cmd_context *cmd,
 		return_NULL;
 
 	if (!lv_extend(lv, segtype, 1, 0, 1, 0, voriginextents,
-		       NULL, NULL, ALLOC_INHERIT))
+		       NULL, NULL, ALLOC_INHERIT, 0))
 		return_NULL;
 
 	/* store vg on disk(s) */
@@ -6110,7 +6141,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		       (seg_is_thin_pool(lp) || seg_is_cache_pool(lp)) ?
 		       lp->poolmetadataextents : lp->region_size,
 		       seg_is_thin_volume(lp) ? lp->voriginextents : lp->extents,
-		       thin_name, lp->pvh, lp->alloc))
+		       thin_name, lp->pvh, lp->alloc, lp->approx_alloc))
 		return_NULL;
 
 	if (seg_is_cache_pool(lp)) {

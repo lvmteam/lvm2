@@ -54,7 +54,7 @@ struct alloc_handle *allocate_extents(struct volume_group *vg,
                                       uint32_t mirrors, uint32_t log_count,
 				      uint32_t log_region_size, uint32_t extents,
                                       struct dm_list *allocatable_pvs,
-				      alloc_policy_t alloc,
+				      alloc_policy_t alloc, int approx_alloc,
 				      struct dm_list *parallel_areas);
 
 int lv_add_segment(struct alloc_handle *ah,

@@ -672,7 +672,8 @@ int lv_extend(struct logical_volume *lv,
 	      uint32_t stripes, uint32_t stripe_size,
 	      uint32_t mirrors, uint32_t region_size,
 	      uint32_t extents, const char *thin_pool_name,
-	      struct dm_list *allocatable_pvs, alloc_policy_t alloc);
+	      struct dm_list *allocatable_pvs, alloc_policy_t alloc,
+	      int approx_alloc);
 
 /* lv must be part of lv->vg->lvs */
 int lv_remove(struct logical_volume *lv);
@@ -810,6 +811,7 @@ struct lvcreate_params {
 
 	uint32_t permission; /* all */
 	uint32_t read_ahead; /* all */
+	int approx_alloc;     /* all */
 	alloc_policy_t alloc; /* all */
 
 	struct dm_list tags;	/* all */

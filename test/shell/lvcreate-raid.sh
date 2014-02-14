@@ -70,3 +70,87 @@ for i in raid4 \
 	aux wait_for_sync $vg $lv1
 	lvremove -ff $vg
 done
+
+# Create RAID using 100%FREE
+############################
+# 6 PVs with 18.5m in each PV.
+# 1 metadata LV = 1 extent   = .5m
+# 1 image = 36+37+37 extents = 55.00m = lv_size
+lvcreate --type raid1 -m 1 -l 100%FREE -n raid1 $vg
+check lv_field $vg/raid1 size "55.00m"
+lvremove -ff $vg
+
+# 1 metadata LV = 1 extent
+# 1 image = 36 extents
+# 5 images = 180 extents = 90.00m = lv_size
+lvcreate --type raid5 -i 5 -l 100%FREE -n raid5 $vg
+check lv_field $vg/raid5 size "90.00m"
+lvremove -ff $vg
+
+# 1 image = 36+37 extents
+# 2 images = 146 extents = 73.00m = lv_size
+lvcreate --type raid5 -i 2 -l 100%FREE -n raid5 $vg
+check lv_field $vg/raid5 size "73.00m"
+lvremove -ff $vg
+
+# 1 image = 36 extents
+# 4 images = 144 extents = 72.00m = lv_size
+lvcreate --type raid6 -i 4 -l 100%FREE -n raid6 $vg
+check lv_field $vg/raid6 size "72.00m"
+lvremove -ff $vg
+
+# Eat 18 of 37 extents from dev1, leaving 19
+lvcreate -l 18 -n lv $vg $dev1
+# Using 100% free should take the rest of dev1 and equal from dev2
+# 1 meta takes 1 extent
+# 1 image = 18 extents = 9.00m = lv_size
+lvcreate --type raid1 -m 1 -l 100%FREE -n raid1 $vg $dev1 $dev2
+check lv_field $vg/raid1 size "9.00m"
+# Ensure image size is the same as the RAID1 size
+check lv_field $vg/raid1 size `lvs --noheadings -o size $vg/raid1_rimage_0`
+# Amount remaining in dev2 should equal the amount taken by 'lv' in dev1
+check pv_field "$dev2" pv_free `lvs --noheadings -o size $vg/lv`
+lvremove -ff $vg
+
+# Eat 18 of 37 extents from dev1, leaving 19
+lvcreate -l 18 -n lv $vg $dev1
+# Using 100% free should take the rest of dev1 and equal amount from the rest
+# 1 meta takes 1 extent
+# 1 image = 18 extents = 9.00m
+# 5 images = 90 extents = 45.00m = lv_size
+lvcreate --type raid5 -i 5 -l 100%FREE -n raid5 $vg
+check lv_field $vg/raid5 size "45.00m"
+# Amount remaining in dev6 should equal the amount taken by 'lv' in dev1
+check pv_field "$dev6" pv_free `lvs --noheadings -o size $vg/lv`
+lvremove -ff $vg
+
+# Eat 18 of 37 extents from dev1, leaving 19
+lvcreate -l 18 -n lv $vg $dev1
+# Using 100% free should take the rest of dev1, an equal amount
+# from 2 more devs, and all extents from 3 additional devs
+# 1 meta takes 1 extent
+# 1 image = 18+37 extents
+# 2 images = 110 extents = 55.00m = lv_size
+lvcreate --type raid5 -i 2 -l 100%FREE -n raid5 $vg
+check lv_field $vg/raid5 size "55.00m"
+lvremove -ff $vg
+
+# Let's do some stripe tests too
+# Eat 18 of 37 extents from dev1, leaving 19
+lvcreate -l 18 -n lv $vg $dev1
+# Using 100% free should take the rest of dev1 and an equal amount from rest
+# 1 image = 19 extents
+# 6 images = 114 extents = 57.00m = lv_size
+lvcreate -i 6 -l 100%FREE -n stripe $vg
+check lv_field $vg/stripe size "57.00m"
+lvremove -ff $vg
+
+# Eat 18 of 37 extents from dev1, leaving 19
+lvcreate -l 18 -n lv $vg $dev1
+# Using 100% free should take the rest of dev1, an equal amount from
+#  one more dev, and all of the remaining 4
+# 1 image = 19+37+37 extents
+# 2 images = 186 extents = 93.00m = lv_size
+lvcreate -i 2 -l 100%FREE -n stripe $vg
+check lv_field $vg/stripe size "93.00m"
+lvremove -ff $vg
