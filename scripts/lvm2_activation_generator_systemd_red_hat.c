@@ -150,7 +150,7 @@ static int generate_unit(const char *dir, int unit)
 		      "[Service]\n", f);
 	}
 
-	fputs("ExecStart=" LVM_PATH " vgchange -aay --sysinit\n"
+	fputs("ExecStart=" LVM_PATH " vgchange -aay --sysinit --ignoreskippedcluster\n"
 	      "Type=oneshot\n", f);
 
 	if (fclose(f) < 0) {

@@ -1,5 +1,6 @@
 Version 2.02.106 - 
 ====================================
+  Use --ignoreskippedcluster in activation systemd units if use_lvmetad=0.
   Allow approximate allocation when specifying size in percentage terms.
   Add basic LVM support for cache[pool] segment types.
   Use local exclusive activation for creation of raid in cluster.
