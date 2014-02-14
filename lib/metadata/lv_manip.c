@@ -6282,7 +6282,25 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 	if (lp->temporary)
 		lv->status |= LV_TEMPORARY;
 
-	if (lv_is_thin_pool(lv) || lv_is_cache_pool(lv)) {
+	if (lv_is_cache_type(lv)) {
+		if (!lv_is_active(lv)) {
+			if (!activate_lv_excl(cmd, lv)) {
+				log_error("Failed to activate pool %s.",
+					  lv->name);
+				goto deactivate_and_revert_new_lv;
+			}
+		} else {
+			if (!suspend_lv(cmd, lv)) {
+				log_error("Failed to suspend pool %s.",
+					  lv->name);
+				goto deactivate_and_revert_new_lv;
+			}
+			if (!resume_lv(cmd, lv)) {
+				log_error("Failed to resume pool %s.", lv->name);
+				goto deactivate_and_revert_new_lv;
+			}
+		}
+	} else if (lv_is_thin_pool(lv)) {
 		if (is_change_activating(lp->activate)) {
 			if (vg_is_clustered(lv->vg)) {
 				if (!activate_lv_excl(cmd, lv)) {

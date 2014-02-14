@@ -48,6 +48,7 @@ lvremove -ff $vg
 # Create cache_pool, then origin with cache, then remove all
 lvcreate --type cache_pool -l 1 -n ${lv}_cache_pool $vg
 lvcreate --type cache -l 2 $vg/${lv}_cache_pool -n $lv1
+dmsetup table ${vg}-$lv1 | grep cache  # ensure it is loaded in kernel
 lvremove -ff $vg
 
 # Create cache_pool, then origin with cache, then remove cache_pool/cache
@@ -75,6 +76,7 @@ lvremove -ff $vg/${lv}_cache_pool
 # Create origin, then cache_pool and cache
 lvcreate -l 2 -n $lv1 $vg
 lvcreate --type cache -l 1 $vg/$lv1
+dmsetup table ${vg}-$lv1 | grep cache  # ensure it is loaded in kernel
 lvremove -ff $vg
 
 # Shorthand CLI (origin exists, create cache_pool and cache)
