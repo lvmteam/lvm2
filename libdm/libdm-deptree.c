@@ -538,7 +538,7 @@ static struct dm_tree_node *_find_dm_tree_node(struct dm_tree *dtree,
 	dev_t dev = MKDEV((dev_t)major, minor);
 
 	return dm_hash_lookup_binary(dtree->devs, (const char *) &dev,
-				  sizeof(dev));
+				     sizeof(dev));
 }
 
 static struct dm_tree_node *_find_dm_tree_node_by_uuid(struct dm_tree *dtree,
@@ -707,8 +707,8 @@ static int _children_suspended(struct dm_tree_node *node,
  * Set major and minor to zero for root of tree.
  */
 struct dm_tree_node *dm_tree_find_node(struct dm_tree *dtree,
-					  uint32_t major,
-					  uint32_t minor)
+				       uint32_t major,
+				       uint32_t minor)
 {
 	if (!major && !minor)
 		return &dtree->root;
@@ -720,7 +720,7 @@ struct dm_tree_node *dm_tree_find_node(struct dm_tree *dtree,
  * Set uuid to NULL for root of tree.
  */
 struct dm_tree_node *dm_tree_find_node_by_uuid(struct dm_tree *dtree,
-						  const char *uuid)
+					       const char *uuid)
 {
 	if (!uuid || !*uuid)
 		return &dtree->root;
@@ -2801,8 +2801,8 @@ static struct load_segment *_add_segment(struct dm_tree_node *dnode, unsigned ty
 }
 
 int dm_tree_node_add_snapshot_origin_target(struct dm_tree_node *dnode,
-					       uint64_t size,
-					       const char *origin_uuid)
+					    uint64_t size,
+					    const char *origin_uuid)
 {
 	struct load_segment *seg;
 	struct dm_tree_node *origin_node;
@@ -2832,12 +2832,12 @@ int dm_tree_node_add_snapshot_origin_target(struct dm_tree_node *dnode,
 }
 
 static int _add_snapshot_target(struct dm_tree_node *node,
-				   uint64_t size,
-				   const char *origin_uuid,
-				   const char *cow_uuid,
-				   const char *merge_uuid,
-				   int persistent,
-				   uint32_t chunk_size)
+				uint64_t size,
+				const char *origin_uuid,
+				const char *cow_uuid,
+				const char *merge_uuid,
+				int persistent,
+				uint32_t chunk_size)
 {
 	struct load_segment *seg;
 	struct dm_tree_node *origin_node, *cow_node, *merge_node;
@@ -2950,7 +2950,7 @@ int dm_get_status_snapshot(struct dm_pool *mem, const char *params,
 }
 
 int dm_tree_node_add_error_target(struct dm_tree_node *node,
-				     uint64_t size)
+				  uint64_t size)
 {
 	if (!_add_segment(node, SEG_ERROR, size))
 		return_0;
@@ -2959,7 +2959,7 @@ int dm_tree_node_add_error_target(struct dm_tree_node *node,
 }
 
 int dm_tree_node_add_zero_target(struct dm_tree_node *node,
-				    uint64_t size)
+				 uint64_t size)
 {
 	if (!_add_segment(node, SEG_ZERO, size))
 		return_0;
@@ -2968,7 +2968,7 @@ int dm_tree_node_add_zero_target(struct dm_tree_node *node,
 }
 
 int dm_tree_node_add_linear_target(struct dm_tree_node *node,
-				      uint64_t size)
+				   uint64_t size)
 {
 	if (!_add_segment(node, SEG_LINEAR, size))
 		return_0;
@@ -2977,8 +2977,8 @@ int dm_tree_node_add_linear_target(struct dm_tree_node *node,
 }
 
 int dm_tree_node_add_striped_target(struct dm_tree_node *node,
-				       uint64_t size,
-				       uint32_t stripe_size)
+				    uint64_t size,
+				    uint32_t stripe_size)
 {
 	struct load_segment *seg;
 
@@ -3013,11 +3013,11 @@ int dm_tree_node_add_crypt_target(struct dm_tree_node *node,
 }
 
 int dm_tree_node_add_mirror_target_log(struct dm_tree_node *node,
-					  uint32_t region_size,
-					  unsigned clustered,
-					  const char *log_uuid,
-					  unsigned area_count,
-					  uint32_t flags)
+				       uint32_t region_size,
+				       unsigned clustered,
+				       const char *log_uuid,
+				       unsigned area_count,
+				       uint32_t flags)
 {
 	struct dm_tree_node *log_node = NULL;
 	struct load_segment *seg;
@@ -3065,7 +3065,7 @@ int dm_tree_node_add_mirror_target_log(struct dm_tree_node *node,
 }
 
 int dm_tree_node_add_mirror_target(struct dm_tree_node *node,
-				      uint64_t size)
+				   uint64_t size)
 {
 	if (!_add_segment(node, SEG_MIRRORED, size))
 		return_0;
@@ -3887,9 +3887,9 @@ static int _add_area(struct dm_tree_node *node, struct load_segment *seg, struct
 }
 
 int dm_tree_node_add_target_area(struct dm_tree_node *node,
-				    const char *dev_name,
-				    const char *uuid,
-				    uint64_t offset)
+				 const char *dev_name,
+				 const char *uuid,
+				 uint64_t offset)
 {
 	struct load_segment *seg;
 	struct stat info;
