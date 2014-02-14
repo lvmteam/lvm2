@@ -7,6 +7,8 @@ Requires=network.target dlm.service corosync.service
 RefuseManualStart=true
 RefuseManualStop=true
 StopWhenUnneeded=true
+DefaultDependencies=no
+Conflicts=shutdown.target
 
 [Service]
 Type=forking

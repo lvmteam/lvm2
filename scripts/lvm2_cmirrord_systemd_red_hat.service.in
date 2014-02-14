@@ -4,6 +4,8 @@ Documentation=man:cmirrord(8)
 Requires=corosync.service
 After=corosync.service
 Before=remote-fs.target
+DefaultDependencies=no
+Conflicts=shutdown.target
 
 [Service]
 Type=forking

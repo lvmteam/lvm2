@@ -3,7 +3,8 @@ Description=Clustered LVM volumes activation service
 Requires=lvm2-clvmd.service
 After=lvm2-clvmd.service lvm2-cmirrord.service
 OnFailure=lvm2-clvmd.service
-DefaultDependencies=false
+DefaultDependencies=no
+Conflicts=shutdown.target
 
 [Service]
 Type=simple
