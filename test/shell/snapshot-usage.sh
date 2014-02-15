@@ -55,6 +55,9 @@ trap 'cleanup_tail' EXIT
 sleep 30 < $DM_DEV_DIR/$vg1/$lv1 &
 SLEEP_PID=$!
 
+# give some short time to lock file above
+sleep 0.1
+
 # Opened virtual snapshot device is not removable
 # it should retry device removal for a few seconds
 not lvremove -f $vg1/$lv1
