@@ -691,6 +691,7 @@ can_use_16T()
 # i.e.   dm_target_at_least  dm-thin-pool  1 0
 target_at_least()
 {
+	rm -f debug.log
 	case "$1" in
 	  dm-*) modprobe "$1" || true ;;
 	esac
