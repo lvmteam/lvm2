@@ -13,12 +13,11 @@ test_description="ensure pvmove works with all common segment types"
 
 . lib/test
 
-test -e LOCAL_CLVMD && skip
 which mkfs.ext2 || skip
 which md5sum || skip
 
 aux prepare_pvs 5 20
-vgcreate -c n -s 256k $vg $(cat DEVICES)
+vgcreate -s 256k $vg $(cat DEVICES)
 
 # Each of the following tests does:
 # 1) Create two LVs - one linear and one other segment type
@@ -27,8 +26,8 @@ vgcreate -c n -s 256k $vg $(cat DEVICES)
 # 3) Move only the second LV by name
 
 # Testing pvmove of linear LV
-lvcreate -l 2 -n ${lv1}_foo $vg "$dev1"
-lvcreate -l 2 -n $lv1 $vg "$dev1"
+lvcreate -aey -l 2 -n ${lv1}_foo $vg "$dev1"
+lvcreate -aey -l 2 -n $lv1 $vg "$dev1"
 check lv_tree_on $vg ${lv1}_foo "$dev1"
 check lv_tree_on $vg $lv1 "$dev1"
 aux mkdev_md5sum $vg $lv1
@@ -43,8 +42,8 @@ check dev_md5sum $vg $lv1
 lvremove -ff $vg
 
 # Testing pvmove of stripe LV
-lvcreate -l 2 -n ${lv1}_foo $vg "$dev1"
-lvcreate -l 4 -i 2 -n $lv1 $vg "$dev1" "$dev2"
+lvcreate -aey -l 2 -n ${lv1}_foo $vg "$dev1"
+lvcreate -aey -l 4 -i 2 -n $lv1 $vg "$dev1" "$dev2"
 check lv_tree_on $vg ${lv1}_foo "$dev1"
 check lv_tree_on $vg $lv1 "$dev1" "$dev2"
 aux mkdev_md5sum $vg $lv1
@@ -58,9 +57,14 @@ check lv_tree_on $vg ${lv1}_foo "$dev5"
 check dev_md5sum $vg $lv1
 lvremove -ff $vg
 
+if test -e LOCAL_CLVMD ; then
+#FIXME these tests currently fail end require cmirrord
+echo "TEST WARNING, FIXME!!! pvmove in clustered VG not fully supported!"
+else
+
 # Testing pvmove of mirror LV
-lvcreate -l 2 -n ${lv1}_foo $vg "$dev1"
-lvcreate -l 2 --type mirror -m 1 -n $lv1 $vg "$dev1" "$dev2"
+lvcreate -aey -l 2 -n ${lv1}_foo $vg "$dev1"
+lvcreate -aey -l 2 --type mirror -m 1 -n $lv1 $vg "$dev1" "$dev2"
 check lv_tree_on $vg ${lv1}_foo "$dev1"
 check lv_tree_on $vg $lv1 "$dev1" "$dev2"
 aux mkdev_md5sum $vg $lv1
@@ -76,8 +80,8 @@ lvremove -ff $vg
 
 # Dummy LV and snap share dev1, while origin is on dev2
 # Testing pvmove of snapshot LV
-lvcreate -l 2 -n ${lv1}_foo $vg "$dev1"
-lvcreate -l 2 -n $lv1 $vg "$dev2"
+lvcreate -aey -l 2 -n ${lv1}_foo $vg "$dev1"
+lvcreate -aey -l 2 -n $lv1 $vg "$dev2"
 lvcreate -s $vg/$lv1 -l 2 -n snap "$dev1"
 check lv_tree_on $vg ${lv1}_foo "$dev1"
 check lv_tree_on $vg snap "$dev1"
@@ -91,3 +95,4 @@ check lv_tree_on $vg snap "$dev4"
 check lv_tree_on $vg ${lv1}_foo "$dev5"
 check dev_md5sum $vg snap
 lvremove -ff $vg
+fi
