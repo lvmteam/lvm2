@@ -2506,7 +2506,7 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		     dinfo->open_count)) {
 			if (seg_is_thin_volume(seg) ||
 			    /* FIXME Is there anything simpler to check for instead? */
-                            !lv_has_target_type(dm->mem, lv, NULL, "snapshot-merge"))
+			    !lv_has_target_type(dm->mem, lv, NULL, "snapshot-merge"))
 				laopts->no_merging = 1;
 		}
 	}
@@ -2562,7 +2562,7 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 			return_0;
 		if (!laopts->no_merging && lv_is_merging_origin(lv)) {
 			if (!_add_new_lv_to_dtree(dm, dtree,
-			     find_snapshot(lv)->cow, laopts, "cow"))
+						  find_snapshot(lv)->cow, laopts, "cow"))
 				return_0;
 			/*
 			 * Must also add "real" LV for use when
