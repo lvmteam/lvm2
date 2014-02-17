@@ -897,7 +897,7 @@ int lvconvert_poll(struct cmd_context *cmd, struct logical_volume *lv,
 
 	if (lv_is_merging_origin(lv))
 		return poll_daemon(cmd, lv_full_name, uuid, background, 0,
-				   lv_is_thin_volume(lv) ?
+				   seg_is_thin_volume(find_snapshot(lv)) ?
 				   &_lvconvert_thin_merge_fns : &_lvconvert_merge_fns,
 				   "Merged");
 

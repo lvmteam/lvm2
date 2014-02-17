@@ -13,7 +13,8 @@
 
 . lib/test
 
-which mkfs.ext2 || skip
+MKFS=mkfs.ext2
+which $MKFS  || skip
 which fsck || skip
 
 #
@@ -27,13 +28,13 @@ lvcreate -T -L8M $vg/pool -V10M -n $lv1
 lvchange --addtag tagL $vg/$lv1
 
 mkdir mnt
-mkfs.ext2 $DM_DEV_DIR/$vg/$lv1
+$MKFS $DM_DEV_DIR/$vg/$lv1
 mount $DM_DEV_DIR/$vg/$lv1 mnt
 touch mnt/test
 
 lvcreate -K -s -n snap --addtag tagS $vg/$lv1
 mkdir mntsnap
-mkfs.ext2 $DM_DEV_DIR/$vg/snap
+$MKFS $DM_DEV_DIR/$vg/snap
 mount $DM_DEV_DIR/$vg/snap mntsnap
 touch mntsnap/test_snap
 
@@ -82,7 +83,7 @@ lvchange -ay $vg/$lv1
 check lv_exists $vg $lv1
 check lv_field  $vg/$lv1 thin_id "2"
 check lv_field $vg/$lv1 tags "tagL"
-not check lv_exists $vg snap
+check lv_not_exists $vg snap
 
 fsck -n $DM_DEV_DIR/$vg/$lv1
 mount $DM_DEV_DIR/$vg/$lv1 mnt
@@ -97,8 +98,10 @@ lvcreate -s -n snap $vg/$lv1
 # Also add old snapshot to thin origin
 lvcreate -s -L10 -n oldsnapof_${lv1} $vg/$lv1
 not lvconvert --merge $vg/snap
-lvremove -f $vg/oldsnapof_${lv1}
-
+$MKFS $DM_DEV_DIR/$vg/oldsnapof_${lv1}
+lvconvert --merge $vg/oldsnapof_${lv1}
+fsck -n $DM_DEV_DIR/$vg/$lv1
+check lv_not_exists $vg oldsnapof_${lv1}
 # Add old snapshot to thin snapshot
 lvcreate -s -L10 -n oldsnapof_snap $vg/snap
 lvconvert --merge $vg/snap

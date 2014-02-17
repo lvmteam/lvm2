@@ -1,5 +1,6 @@
 Version 2.02.106 - 
 ====================================
+  Fix merging of old snapshot into thin volume origin.
   Use --ignoreskippedcluster in lvm2-monitor initscript/systemd unit.
   Do not use VG read/write state for LV read/write state.
   Use --ignoreskippedcluster in activation systemd units if use_lvmetad=0.

@@ -15,6 +15,7 @@
 
 #include "lib.h"
 #include "metadata.h"
+#include "segtype.h"
 #include "locking.h"
 #include "toolcontext.h"
 #include "lv_alloc.h"
@@ -151,7 +152,7 @@ void init_snapshot_merge(struct lv_segment *snap_seg,
 	origin->snapshot = snap_seg;
 	origin->status |= MERGING;
 
-	if (lv_is_thin_volume(origin)) {
+	if (seg_is_thin_volume(snap_seg)) {
 		snap_seg->merge_lv = origin;
 		/* Making thin LV inivisible with regular log */
 		lv_set_hidden(snap_seg->lv);

@@ -542,18 +542,19 @@ static int _thin_add_target_line(struct dev_manager *dm,
 	}
 
 	if (!laopts->no_merging) {
+		if (seg->merge_lv) {
+			log_error(INTERNAL_ERROR "Failed to add merged segment of %s.",
+				  seg->lv->name);
+			return 0;
+		}
 		/*
 		 * merge support for thinp snapshots is implemented by
 		 * simply swapping the thinp device_id of the snapshot
 		 * and origin.
 		 */
-		if (seg->merge_lv) {
-			/* snapshot, use merging lv's device_id */
-			device_id = first_seg(seg->merge_lv)->device_id;
-		} else if (lv_is_merging_origin(seg->lv)) {
+		if (lv_is_merging_origin(seg->lv) && seg_is_thin_volume(find_snapshot(seg->lv)))
 			/* origin, use merging snapshot's device_id */
 			device_id = find_snapshot(seg->lv)->device_id;
-		}
 	}
 
 	if (!dm_tree_node_add_thin_target(node, len, pool_dlid, device_id))
