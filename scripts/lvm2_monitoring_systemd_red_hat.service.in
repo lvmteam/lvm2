@@ -10,9 +10,9 @@ Conflicts=shutdown.target
 [Service]
 Type=oneshot
 Environment=LVM_SUPPRESS_LOCKING_FAILURE_MESSAGES=1
-ExecStart=@sbindir@/lvm vgchange --monitor y
+ExecStart=@sbindir@/lvm vgchange --monitor y --ignoreskippedcluster
 # The lvmetad must be disabled here, it needs https://bugzilla.redhat.com/show_bug.cgi?id=843587 to be resolved first.
-ExecStop=@sbindir@/lvm vgchange --monitor n --config 'global{use_lvmetad=0}'
+ExecStop=@sbindir@/lvm vgchange --monitor n --config 'global{use_lvmetad=0}' --ignoreskippedcluster
 RemainAfterExit=yes
 
 [Install]

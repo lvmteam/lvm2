@@ -48,10 +48,10 @@ start()
 {
 	ret=0
 	# TODO do we want to separate out already active groups only?
-	VGSLIST=`$VGS --noheadings -o name --config 'log{command_names=0 prefix="  "}' 2> /dev/null`
+	VGSLIST=`$VGS --noheadings -o name --ignoreskippedcluster --config 'log{command_names=0 prefix="  "}' 2> /dev/null`
 	for vg in $VGSLIST
 	do
-	    action "Starting monitoring for VG $vg:" $VGCHANGE --monitor y --poll y --config 'log{command_names=0 prefix="  "}' $vg || ret=$?
+	    action "Starting monitoring for VG $vg:" $VGCHANGE --monitor y --poll y --ignoreskippedcluster --config 'log{command_names=0 prefix="  "}' $vg || ret=$?
 	done
 
 	return $ret
@@ -66,10 +66,10 @@ stop()
 	   echo "Not stopping monitoring, this is a dangerous operation. Please use force-stop to override."
 	   return 1
 	fi
-	VGSLIST=`$VGS --noheadings -o name --config 'log{command_names=0 prefix="  "}' 2> /dev/null`
+	VGSLIST=`$VGS --noheadings -o name --ignoreskippedcluster --config 'log{command_names=0 prefix="  "}' 2> /dev/null`
 	for vg in $VGSLIST
 	do
-	    action "Stopping monitoring for VG $vg:" $VGCHANGE --monitor n --config 'log{command_names=0 prefix="  "}' $vg || ret=$?
+	    action "Stopping monitoring for VG $vg:" $VGCHANGE --monitor n --ignoreskippedcluster --config 'log{command_names=0 prefix="  "}' $vg || ret=$?
 	done
 	return $ret
 }
