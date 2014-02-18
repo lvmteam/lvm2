@@ -6088,10 +6088,9 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 			return NULL;
 		}
 
-		if (lv_is_active(lvl->lv) ||
-		    ((lp->activate != CHANGE_AN) && (lp->activate != CHANGE_ALN)))
-			if (!update_pool_lv(lvl->lv, 1))
-				return_NULL;
+		if ((lv_is_active(lvl->lv) || is_change_activating(lp->activate)) &&
+		    !update_pool_lv(lvl->lv, 1))
+			return_NULL;
 
 		/* For thin snapshot we must have matching pool */
 		if (org && lv_is_thin_volume(org) && (!lp->pool ||

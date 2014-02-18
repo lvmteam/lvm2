@@ -1404,7 +1404,7 @@ int lv_change_activate(struct cmd_context *cmd, struct logical_volume *lv,
 		 * deactivation of origin, which is the only visible LV
 		 */
 		if (!deactivate_lv(cmd, find_snapshot(lv)->lv)) {
-			if ((activate != CHANGE_AN) && (activate != CHANGE_ALN)) {
+			if (is_change_activating(activate)) {
 				log_error("Refusing to activate merging \"%s\" while snapshot \"%s\" is still active.",
 					  lv->name, find_snapshot(lv)->lv->name);
 				return 0;
@@ -1420,8 +1420,7 @@ int lv_change_activate(struct cmd_context *cmd, struct logical_volume *lv,
 		return_0;
 
 	if (background_polling() &&
-	    (activate != CHANGE_AN) &&
-	    (activate != CHANGE_ALN) &&
+	    is_change_activating(activate) &&
 	    (lv->status & (PVMOVE|CONVERTING|MERGING)))
 		lv_spawn_background_polling(cmd, lv);
 

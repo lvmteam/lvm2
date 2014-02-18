@@ -724,7 +724,7 @@ static int _read_activation_params(struct lvcreate_params *lp,
 	lp->activate = (activation_change_t)
 		arg_uint_value(cmd, activate_ARG, CHANGE_AY);
 
-	if (lp->activate == CHANGE_AN || lp->activate == CHANGE_ALN) {
+	if (!is_change_activating(lp->activate)) {
 		if (lp->zero && !seg_is_thin(lp)) {
 			log_error("--activate n requires --zero n");
 			return 0;

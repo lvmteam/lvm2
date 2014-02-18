@@ -117,8 +117,7 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 
 		/* Can't deactivate a pvmove LV */
 		/* FIXME There needs to be a controlled way of doing this */
-		if (((activate == CHANGE_AN) || (activate == CHANGE_ALN)) &&
-		    ((lv->status & PVMOVE) ))
+		if ((lv->status & PVMOVE) && !is_change_activating(activate))
 			continue;
 
 		if (lv_activation_skip(lv, activate, arg_count(cmd, ignoreactivationskip_ARG), 0))
@@ -152,8 +151,8 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 
 	if (expected_count)
 		log_verbose("%s %d logical volumes in volume group %s",
-			    (activate == CHANGE_AN || activate == CHANGE_ALN)?
-			    "Deactivated" : "Activated", count, vg->name);
+			    is_change_activating(activate) ?
+			    "Activated" : "Deactivated", count, vg->name);
 
 	return (expected_count != count) ? 0 : 1;
 }
@@ -193,12 +192,10 @@ static int _vgchange_background_polling(struct cmd_context *cmd, struct volume_g
 int vgchange_activate(struct cmd_context *cmd, struct volume_group *vg,
 		      activation_change_t activate)
 {
-	int lv_open, active, monitored = 0, r = 1, do_activate = 1;
+	int lv_open, active, monitored = 0, r = 1;
 	const struct lv_list *lvl;
 	struct lvinfo info;
-
-	if ((activate == CHANGE_AN) || (activate == CHANGE_ALN))
-		do_activate = 0;
+	int do_activate = is_change_activating(activate);
 
 	/*
 	 * Safe, since we never write out new metadata here. Required for
@@ -589,8 +586,7 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 
 	if (arg_count(cmd, activate_ARG) &&
 	    (arg_count(cmd, monitor_ARG) || arg_count(cmd, poll_ARG))) {
-		int activate = arg_uint_value(cmd, activate_ARG, 0);
-		if (activate == CHANGE_AN || activate == CHANGE_ALN) {
+		if (!is_change_activating(arg_uint_value(cmd, activate_ARG, 0))) {
 			log_error("Only -ay* allowed with --monitor or --poll.");
 			return EINVALID_CMD_LINE;
 		}
