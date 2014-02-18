@@ -34,6 +34,9 @@ ENV{DM_MULTIPATH_DEVICE_PATH}=="1", GOTO="lvm_end"
 # Inform lvmetad about any PV that is gone.
 ACTION=="remove", GOTO="lvm_scan"
 
+# Create /dev/disk/by-id/lvm-pv-uuid-<PV_UUID> symlink for each PV
+ENV{ID_FS_UUID_ENC}=="?*", SYMLINK+="disk/by-id/lvm-pv-uuid-$env{ID_FS_UUID_ENC}"
+
 # If the PV is a special device listed below, scan only if the device is
 # properly activated. These devices are not usable after an ADD event,
 # but they require an extra setup and they are ready after a CHANGE event.
