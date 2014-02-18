@@ -597,8 +597,8 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(cmd, activate_ARG) == 1
-	    && arg_count(cmd, autobackup_ARG)) {
+	if ((arg_count(cmd, activate_ARG) == 1) &&
+	    arg_count(cmd, autobackup_ARG)) {
 		log_error("-A option not necessary with -a option");
 		return EINVALID_CMD_LINE;
 	}
