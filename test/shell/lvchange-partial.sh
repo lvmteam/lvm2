@@ -17,7 +17,7 @@ aux prepare_vg 4
 TYPE=raid1
 aux target_at_least dm-raid 1 1 0 || TYPE=mirror
 
-lvcreate --type $TYPE -m 1 -l 2 -n $lv1 $vg
+lvcreate -aey --type $TYPE -m 1 -l 2 -n $lv1 $vg
 lvchange -an $vg/$lv1
 aux disable_dev "$dev1"
 
