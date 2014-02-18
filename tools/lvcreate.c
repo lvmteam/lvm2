@@ -619,20 +619,7 @@ static int _read_raid_params(struct lvcreate_params *lp,
 		return 0;
 	}
 
-	/*
-	 * get_stripe_params is called before _read_raid_params
-	 * and already sets:
-	 *   lp->stripes
-	 *   lp->stripe_size
-	 *
-	 * For RAID 4/5/6/10, these values must be set.
-	 */
-	if (!segtype_is_mirrored(lp->segtype) &&
-	    (lp->stripes <= lp->segtype->parity_devs)) {
-		log_error("Number of stripes must be at least %d for %s",
-			  lp->segtype->parity_devs + 1, lp->segtype->name);
-		return 0;
-	} else if (!strcmp(lp->segtype->name, "raid10") && (lp->stripes < 2)) {
+	if (!strcmp(lp->segtype->name, "raid10") && (lp->stripes < 2)) {
 		if (arg_count(cmd, stripes_ARG)) {
 			/* User supplied the bad argument */
 			log_error("Segment type 'raid10' requires 2 or more stripes.");
@@ -1184,6 +1171,45 @@ static int _check_thin_parameters(struct volume_group *vg, struct lvcreate_param
 	return 1;
 }
 
+static int _check_raid_parameters(struct volume_group *vg,
+				  struct lvcreate_params *lp,
+				  struct lvcreate_cmdline_params *lcp)
+{
+	int devs = lcp->pv_count ? lcp->pv_count : dm_list_size(&vg->pvs);
+	struct cmd_context *cmd = vg->cmd;
+
+	/*
+	 * If number of devices was not supplied, we can infer from
+	 * the PVs given.
+	 */
+	if (!seg_is_mirrored(lp)) {
+		if (!arg_count(cmd, stripes_ARG) &&
+		    (devs > 2 * lp->segtype->parity_devs))
+			lp->stripes = devs - lp->segtype->parity_devs;
+
+		if (!lp->stripe_size)
+			lp->stripe_size = find_config_tree_int(cmd, metadata_stripesize_CFG, NULL) * 2;
+
+		if (lp->stripes <= lp->segtype->parity_devs) {
+			log_error("Number of stripes must be at least %d for %s",
+				  lp->segtype->parity_devs + 1,
+				  lp->segtype->name);
+			return 0;
+		}
+	} else if (!strcmp(lp->segtype->name, "raid10")) {
+		if (!arg_count(cmd, stripes_ARG))
+			lp->stripes = devs / lp->mirrors;
+		if (lp->stripes < 2) {
+			log_error("Unable to create RAID10 LV,"
+				  " insufficient number of devices.");
+			return 0;
+		}
+	}
+	/* 'mirrors' defaults to 2 - not the number of PVs supplied */
+
+	return 1;
+}
+
 /*
  * Ensure the set of thin parameters extracted from the command line is consistent.
  */
@@ -1247,6 +1273,9 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 		goto_out;
 
 	if (seg_is_cache(&lp) && !_determine_cache_argument(vg, &lp))
+		goto_out;
+
+	if (seg_is_raid(&lp) && !_check_raid_parameters(vg, &lp, &lcp))
 		goto_out;
 
 	/*

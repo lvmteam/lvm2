@@ -11,6 +11,14 @@
 
 . lib/test
 
+lv_devices() {
+	local local_vg=$1
+	local local_lv=$2
+	local count=$3
+
+	[ $count == `lvs --noheadings -o devices $local_vg/$local_lv | sed s/,/' '/g | wc -w` ]
+}
+
 ########################################################
 # MAIN
 ########################################################
@@ -153,4 +161,35 @@ lvcreate -l 18 -n lv $vg $dev1
 # 2 images = 186 extents = 93.00m = lv_size
 lvcreate -i 2 -l 100%FREE -n stripe $vg
 check lv_field $vg/stripe size "93.00m"
+lvremove -ff $vg
+
+# Create RAID (implicit stripe count based on PV count)
+#######################################################
+
+# Not enough drives
+not lvcreate --type raid1 -l1 $vg $dev1
+not lvcreate --type raid5 -l2 $vg $dev1 $dev2
+not lvcreate --type raid6 -l3 $vg $dev1 $dev2 $dev3 $dev4
+not lvcreate --type raid10 -l2 $vg $dev1 $dev2 $dev3
+
+# Implicit count comes from #PVs given (always 2 for mirror though)
+lvcreate --type raid1 -l1 -n raid1 $vg $dev1 $dev2
+lv_devices $vg raid1 2
+lvcreate --type raid5 -l2 -n raid5 $vg $dev1 $dev2 $dev3
+lv_devices $vg raid5 3
+lvcreate --type raid6 -l3 -n raid6 $vg $dev1 $dev2 $dev3 $dev4 $dev5
+lv_devices $vg raid6 5
+lvcreate --type raid10 -l2 -n raid10 $vg $dev1 $dev2 $dev3 $dev4
+lv_devices $vg raid10 4
+lvremove -ff $vg
+
+# Implicit count comes from total #PVs in VG (always 2 for mirror though)
+lvcreate --type raid1 -l1 -n raid1 $vg
+lv_devices $vg raid1 2
+lvcreate --type raid5 -l2 -n raid5 $vg
+lv_devices $vg raid5 6
+lvcreate --type raid6 -l3 -n raid6 $vg
+lv_devices $vg raid6 6
+lvcreate --type raid10 -l2 -n raid10 $vg
+lv_devices $vg raid10 6
 lvremove -ff $vg

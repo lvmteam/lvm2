@@ -1,5 +1,6 @@
 Version 2.02.106 - 
 ====================================
+  lvcreate computes RAID4/5/6 stripes if not given from # of allocatable PVs.
   Fix merging of old snapshot into thin volume origin.
   Use --ignoreskippedcluster in lvm2-monitor initscript/systemd unit.
   Do not use VG read/write state for LV read/write state.
