@@ -1322,8 +1322,7 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name,
 	/* FIXME Check partition type is LVM unless --force is given */
 
 	/* Is there a pv here already? */
-	if (!(pv = find_pv_by_name(cmd, name, 1, 1)))
-		stack;
+	pv = find_pv_by_name(cmd, name, 1, 1);
 
 	/* Allow partial & exported VGs to be destroyed. */
 	/* We must have -ff to overwrite a non orphan */
