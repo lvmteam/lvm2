@@ -1912,8 +1912,19 @@ static int _create_vg_text_instance(struct format_instance *fid,
 		}
 
 		if (type & FMT_INSTANCE_MDAS) {
-			/* Scan PVs in VG for any further MDAs */
-			lvmcache_label_scan(fid->fmt->cmd, 0);
+			/*
+			 * TODO in theory, this function should be never reached
+			 * while in critical_section(), because lvmcache's
+			 * cached_vg should be valid. However, this assumption
+			 * sometimes fails (possibly due to inconsistent
+			 * (precommit) metadata and/or missing devices), and
+			 * calling lvmcache_label_scan inside the critical
+			 * section may be fatal (i.e. deadlock).
+			 */
+			if (!critical_section())
+				/* Scan PVs in VG for any further MDAs */
+				lvmcache_label_scan(fid->fmt->cmd, 0);
+
 			if (!(vginfo = lvmcache_vginfo_from_vgname(vg_name, vg_id)))
 				goto_out;
 			if (!lvmcache_fid_add_mdas_vg(vginfo, fid))
