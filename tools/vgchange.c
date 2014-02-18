@@ -121,11 +121,8 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 		    ((lv->status & PVMOVE) ))
 			continue;
 
-		if (lv_activation_skip(lv, activate, arg_count(cmd, ignoreactivationskip_ARG), 0)) {
-			log_verbose("ACTIVATION_SKIP flag set for LV %s/%s, skipping activation.",
-				    lv->vg->name, lv->name);
+		if (lv_activation_skip(lv, activate, arg_count(cmd, ignoreactivationskip_ARG), 0))
 			continue;
-		}
 
 		if ((activate == CHANGE_AAY) &&
 		    !lv_passes_auto_activation_filter(cmd, lv))

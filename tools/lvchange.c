@@ -215,11 +215,8 @@ static int _lvchange_activate(struct cmd_context *cmd, struct logical_volume *lv
 
 	activate = (activation_change_t) arg_uint_value(cmd, activate_ARG, CHANGE_AY);
 
-	if (lv_activation_skip(lv, activate, arg_count(cmd, ignoreactivationskip_ARG), 0)) {
-		log_verbose("ACTIVATON_SKIP flag set for LV %s/%s, skipping activation.",
-			    lv->vg->name, lv->name);
+	if (lv_activation_skip(lv, activate, arg_count(cmd, ignoreactivationskip_ARG), 0))
 		return 1;
-	}
 
 	if (lv_is_cow(lv) && !lv_is_virtual_origin(origin_from_cow(lv)))
 		lv = origin_from_cow(lv);

@@ -5675,14 +5675,14 @@ void lv_set_activation_skip(struct logical_volume *lv, int override_default,
 int lv_activation_skip(struct logical_volume *lv, activation_change_t activate,
 		      int override_lv_skip_flag, int skip)
 {
-	/* Do not skip deactivation! */
-	if ((activate == CHANGE_AN) || (activate == CHANGE_ALN))
+	if (!(lv->status & LV_ACTIVATION_SKIP) ||
+	    !is_change_activating(activate) || /* Do not skip deactivation */
+	    (override_lv_skip_flag && !skip))
 		return 0;
 
-	if (override_lv_skip_flag)
-		return skip;
-
-	return (lv->status & LV_ACTIVATION_SKIP) ? 1 : 0;
+	log_verbose("ACTIVATON_SKIP flag set for LV %s/%s, skipping activation.",
+		    lv->vg->name, lv->name);
+	return 1;
 }
 
 /* Greatest common divisor */
