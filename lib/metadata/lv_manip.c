@@ -5917,11 +5917,12 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		}
 
 		if (lp->extents > org->le_count) {
-			log_error("Cache_Pool size cannot be larger than"
+			log_error("cache-pool size cannot be larger than"
 				  " the origin");
 			return NULL;
 		}
-		if (!(lp->segtype = get_segtype_from_string(vg->cmd, "cache_pool")))
+		if (!(lp->segtype = get_segtype_from_string(vg->cmd,
+							    "cache-pool")))
 			return_0;
 	} else if (seg_is_thin(lp) && lp->snapshot) {
 		if (!(org = find_lv(vg, lp->origin))) {

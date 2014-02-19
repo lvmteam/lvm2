@@ -113,7 +113,7 @@ lvconvert \- convert a logical volume from linear to mirror or snapshot
 .RB [ \-v | \-\-verbose ]
 .RB [ \-\-version ]
 .sp
-.B lvconvert \-\-type cache_pool
+.B lvconvert \-\-type cache-pool
 .RB [ \-c | \-\-chunksize
 .IR ChunkSize [ bBsSkKmMgG ]]
 .RB [ \-\-cachemode
@@ -207,7 +207,7 @@ A mirror is divided into regions of this size (in MB), and the mirror log
 uses this granularity to track which regions are in sync.
 .TP
 .B \-\-type \fISegmentType
-Used to convert a logical volume to another segment type, like cache_pool,
+Used to convert a logical volume to another segment type, like cache-pool,
 cache, raid1, mirror.  When converting a logical volume to a cached logical
 volume, the \-\-cachepool argument is required.
 .TP
@@ -481,7 +481,7 @@ For the read-only external origin use the new name "vg00/external".
 Convert an existing logical volume to a cache pool logical volume using the
 given pool metadata LV.
 .sp
-.B lvconvert --type cache_pool vg00/my_lv_data \-\-poolmetadata vg00/my_lv_meta
+.B lvconvert --type cache-pool vg00/my_lv_data \-\-poolmetadata vg00/my_lv_meta
 .B lvrename vg00/my_lv_data vg00/my_lv_cachepool
 
 Convert an existing logical volume to a cached logical volume using the given

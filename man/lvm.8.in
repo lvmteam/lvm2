@@ -465,7 +465,7 @@ Step-1> lvcreate -L 1G -n cachepool my_vg /dev/fast_dev
 Step-2> lvcreate -L 8M -n meta my_vg /dev/fast_dev
 
 # Combine cache pool sub-LVs into a cache pool.
-Step-3> lvconvert --type cache_pool vg/cachepool --poolmetadata vg/meta
+Step-3> lvconvert --type cache-pool vg/cachepool --poolmetadata vg/meta
 
 # Combine the cache pool and origin to create a cached LV
 Step-4> lvconvert --type cache my_vg/my_lv --cachepool vg/cachepool
@@ -490,7 +490,7 @@ Step-01> lvcreate --type raid1 -L 1G -n cachepool my_vg /dev/fast[12]
 Step-2> lvcreate --type raid1 -L 8M -n meta my_vg /dev/fast1 /dev/fast2
 
 # Combine cache pool sub-LVs into a cache pool.
-Step-3> lvconvert --type cache_pool vg/cachepool --poolmetadata vg/meta
+Step-3> lvconvert --type cache-pool vg/cachepool --poolmetadata vg/meta
 
 # Combine the cache pool and origin to create a cached LV
 Step-4> lvconvert --type cache my_vg/my_lv --cachepool vg/cachepool
@@ -517,7 +517,7 @@ Step-1> lvcreate -L 1G -n cachepool my_vg /dev/fast_dev
 Step-2> lvcreate -L 8M -n meta my_vg /dev/fast_dev
 
 # Combine cache pool sub-LVs into a cache pool and specify "writethough".
-Step-3> lvconvert --type cache_pool vg/cachepool \\
+Step-3> lvconvert --type cache-pool vg/cachepool \\
 	--poolmetadata vg/meta --cachemode writethrough -n cachepool
 
 # Combine the cache pool and origin to create a cached LV

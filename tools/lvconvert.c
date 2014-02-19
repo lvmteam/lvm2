@@ -202,7 +202,7 @@ static int _check_conversion_type(struct cmd_context *cmd, const char *type_str)
 	/* FIXME: Check thin-pool and thin more thoroughly! */
 	if (!strcmp(type_str, "snapshot") ||
 	    !strncmp(type_str, "raid", 4) ||
-	    !strcmp(type_str, "cache_pool") || !strcmp(type_str, "cache") ||
+	    !strcmp(type_str, "cache-pool") || !strcmp(type_str, "cache") ||
 	    !strcmp(type_str, "thin-pool") || !strcmp(type_str, "thin"))
 		return 1;
 
@@ -255,7 +255,7 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (!strcmp(type_str, "cache_pool")) {
+	if (!strcmp(type_str, "cache-pool")) {
 		cache_pool = 1;
 		if ((tmp_str = arg_str_value(cmd, cachemode_ARG, NULL))) {
 			if (!strcmp(tmp_str, "writeback"))
@@ -520,7 +520,7 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 			}
 		}
 
-		lp->segtype = get_segtype_from_string(cmd, arg_str_value(cmd, type_ARG, cache_pool ? "cache_pool" : "thin-pool"));
+		lp->segtype = get_segtype_from_string(cmd, arg_str_value(cmd, type_ARG, cache_pool ? "cache-pool" : "thin-pool"));
 		if (!lp->segtype)
 			return_0;
 	} else { /* Mirrors (and some RAID functions) */

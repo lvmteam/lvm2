@@ -532,7 +532,7 @@ in vg00 that will use an existing thin pool "vg00/pool":
 Create a cache pool logical volume that can later be used to cache one
 logical volume.
 .sp
-.B lvcreate --type cache_pool -L 1G -n my_lv_cachepool vg /dev/fast1
+.B lvcreate --type cache-pool -L 1G -n my_lv_cachepool vg /dev/fast1
 
 If there is an existing cache pool logical volume, create the large slow
 device (i.e. the origin) and link it to the supplied cache pool LV,

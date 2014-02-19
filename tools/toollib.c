@@ -1662,7 +1662,7 @@ int get_pool_params(struct cmd_context *cmd,
 {
 	int cache_pool = 0;
 
-	if (!strcmp("cache_pool", arg_str_value(cmd, type_ARG, "none")))
+	if (!strcmp("cache-pool", arg_str_value(cmd, type_ARG, "none")))
 		cache_pool = 1;
 
 	if (!cache_pool && !arg_count(cmd, thinpool_ARG)) {
