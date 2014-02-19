@@ -832,7 +832,7 @@ struct logical_volume *lv_create_single(struct volume_group *vg,
  */
 void lv_set_activation_skip(struct logical_volume *lv, int override_default, int add_skip_flag);
 int lv_activation_skip(struct logical_volume *lv, activation_change_t activate,
-		       int override_lv_skip_flag, int skip);
+		       int override_lv_skip_flag);
 
 /*
  * Functions for layer manipulation

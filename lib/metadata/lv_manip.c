@@ -5673,11 +5673,11 @@ void lv_set_activation_skip(struct logical_volume *lv, int override_default,
  * of the 'skip' arg supplied instead.
  */
 int lv_activation_skip(struct logical_volume *lv, activation_change_t activate,
-		      int override_lv_skip_flag, int skip)
+		       int override_lv_skip_flag)
 {
 	if (!(lv->status & LV_ACTIVATION_SKIP) ||
 	    !is_change_activating(activate) || /* Do not skip deactivation */
-	    (override_lv_skip_flag && !skip))
+	    override_lv_skip_flag)
 		return 0;
 
 	log_verbose("ACTIVATON_SKIP flag set for LV %s/%s, skipping activation.",
@@ -6244,11 +6244,8 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		lp->activate = lv_passes_auto_activation_filter(cmd, lv) ?
 				CHANGE_ALY : CHANGE_ALN;
 
-	if (lv_activation_skip(lv, lp->activate, lp->activation_skip & ACTIVATION_SKIP_IGNORE, 0)) {
-		log_verbose("ACTIVATION_SKIP flag set for LV %s/%s, skipping activation.",
-			    lv->vg->name, lv->name);
+	if (lv_activation_skip(lv, lp->activate, lp->activation_skip & ACTIVATION_SKIP_IGNORE))
 		lp->activate = CHANGE_AN;
-	}
 
 	/*
 	 * For thin pools - deactivate when inactive pool is requested or

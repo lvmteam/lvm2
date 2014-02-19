@@ -1,5 +1,6 @@
 Version 2.02.106 - 
 ====================================
+  Remove (always 0) skip argument from lv_activation_skip().
   Create /dev/disk/by-id/lvm-pv-uuid-<PV_UUID> symlink for each PV via udev.
   lvcreate computes RAID4/5/6 stripes if not given from # of allocatable PVs.
   Fix merging of old snapshot into thin volume origin.
