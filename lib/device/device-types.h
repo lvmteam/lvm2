@@ -28,11 +28,13 @@ typedef struct {
  * The list can be supplemented with devices/types in the config file.
  */
 static const dev_known_type_t _dev_known_types[] = {
-	{"ide", 64, "IDE disk"},
 	{"sd", 16, "SCSI disk"},
+	{"ide", 64, "IDE disk"},
 	{"md", 1, "Multiple Disk (MD/SoftRAID)"},
-	{"mdp", 1, "Partitionable MD"},
 	{"loop", 1, "Loop device"},
+	{"ramdisk", 1, "RAM disk"},
+	{"device-mapper", 1, "Mapped device"},
+	{"mdp", 1, "Partitionable MD"},
 	{"dasd", 4, "DASD disk (IBM S/390, zSeries)"},
 	{"dac960", 8, "DAC960"},
 	{"nbd", 16, "Network Block Device"},
@@ -46,9 +48,7 @@ static const dev_known_type_t _dev_known_types[] = {
 	{"i2o_block", 16, "i2o Block Disk"},
 	{"iseries/vd", 8, "iSeries disks"},
 	{"gnbd", 1, "Network block device"},
-	{"ramdisk", 1, "RAM disk"},
 	{"aoe", 16, "ATA over Ethernet"},
-	{"device-mapper", 1, "Mapped device"},
 	{"xvd", 16, "Xen virtual block device"},
 	{"vdisk", 8, "SUN's LDOM virtual block device"},
 	{"ps3disk", 16, "PlayStation 3 internal disk"},
