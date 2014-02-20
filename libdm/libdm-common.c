@@ -868,12 +868,27 @@ static int _selabel_lookup(const char *path, mode_t mode,
 }
 #endif
 
+#ifdef HAVE_SELINUX
+static int _is_selinux_enabled(void)
+{
+	static int _tested = 0;
+	static int _enabled;
+
+	if (!_tested) {
+		_tested = 1;
+		_enabled = is_selinux_enabled();
+	}
+
+	return _enabled;
+}
+#endif
+
 int dm_prepare_selinux_context(const char *path, mode_t mode)
 {
 #ifdef HAVE_SELINUX
 	security_context_t scontext = NULL;
 
-	if (is_selinux_enabled() <= 0)
+	if (_is_selinux_enabled() <= 0)
 		return 1;
 
 	if (path) {
@@ -901,7 +916,7 @@ int dm_set_selinux_context(const char *path, mode_t mode)
 #ifdef HAVE_SELINUX
 	security_context_t scontext = NULL;
 
-	if (is_selinux_enabled() <= 0)
+	if (_is_selinux_enabled() <= 0)
 		return 1;
 
 	if (!_selabel_lookup(path, mode, &scontext))
