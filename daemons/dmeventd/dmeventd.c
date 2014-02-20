@@ -531,7 +531,8 @@ static int _get_parameters(struct message_data *message_data) {
 	msg->size = strlen(buf) + 1;
 	if (!(msg->data = dm_malloc(msg->size)))
 		goto_out;
-	dm_strncpy(msg->data, buf, msg->size);
+	if (!dm_strncpy(msg->data, buf, msg->size))
+		goto_out;
 	r = 0;
 out:
 	return r;
