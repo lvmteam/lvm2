@@ -259,6 +259,11 @@ fi
 %attr(755,root,root) /usr/sbin/clvmd
 %{_mandir}/man8/clvmd.8.gz
 %{_sysconfdir}/rc.d/init.d/clvmd
+%if %{enable_systemd}
+  %{_unitdir}/lvm2-clvmd.service
+  %{_unitdir}/lvm2-cluster-activation.service
+  %{_unitdir}/../lvm2-cluster-activation
+%endif
 
 %endif
 
@@ -291,6 +296,9 @@ fi
 %attr(755,root,root) /usr/sbin/cmirrord
 %{_mandir}/man8/cmirrord.8.gz
 %{_sysconfdir}/rc.d/init.d/cmirrord
+%if %{enable_systemd}
+  %{_unitdir}/lvm2-cmirrord.service
+%endif
 
 %endif
 
