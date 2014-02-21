@@ -264,9 +264,9 @@ static void _drop_metadata(const char *vgname, int drop_precommitted)
 }
 
 /*
- * Remote node uses this to upgrade precommited metadata to commited state
+ * Remote node uses this to upgrade precommitted metadata to commited state
  * when receives vg_commit notification.
- * (Note that devices can be suspended here, if so, precommited metadata are already read.)
+ * (Note that devices can be suspended here, if so, precommitted metadata are already read.)
  */
 void lvmcache_commit_metadata(const char *vgname)
 {

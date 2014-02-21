@@ -683,7 +683,7 @@ static int _read_raid_params(struct lvcreate_params *lp,
 
 	if (lp->max_recovery_rate &&
 	    (lp->max_recovery_rate < lp->min_recovery_rate)) {
-		log_error("Minumum recovery rate cannot be higher than maximum.");
+		log_error("Minimum recovery rate cannot be higher than maximum.");
 		return 0;
 	}
 	return 1;
