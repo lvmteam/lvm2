@@ -140,7 +140,9 @@ int detach_thin_external_origin(struct lv_segment *seg)
 
 int lv_is_merging_thin_snapshot(const struct logical_volume *lv)
 {
-	return (first_seg(lv)->status & MERGING) ? 1 : 0;
+	struct lv_segment *seg = first_seg(lv);
+
+	return (seg && seg->status & MERGING) ? 1 : 0;
 }
 
 /*

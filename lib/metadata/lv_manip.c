@@ -346,6 +346,11 @@ struct lv_segment *get_only_segment_using_this_lv(struct logical_volume *lv)
 {
 	struct seg_list *sl;
 
+	if (!lv) {
+		log_error(INTERNAL_ERROR "get_only_segment_using_this_lv() called with NULL LV.");
+		return NULL;
+	}
+
 	if (dm_list_size(&lv->segs_using_this_lv) != 1) {
 		log_error("%s is expected to have only one segment using it, "
 			  "while it has %d", lv->name,
@@ -943,6 +948,7 @@ struct alloc_handle {
 	 * and data device allocated together.
 	 */
 	unsigned alloc_and_split_meta;
+	unsigned split_metadata_is_allocated;	/* Metadata has been allocated */
 
 	const struct dm_config_node *cling_tag_list_cn;
 
@@ -1149,10 +1155,16 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 			 * We need 'log_len' extents for each
 			 * RAID device's metadata_area
 			 */
-			ah->new_extents += (ah->log_len * ah->area_multiple);
+			if (!approx_alloc)
+				ah->new_extents += (ah->log_len * ah->area_multiple);
 		} else {
 			ah->log_area_count = 0;
 			ah->log_len = 0;
+		}
+		if (approx_alloc) {
+			ah->new_extents = ah->new_extents * ah->area_multiple / (ah->area_count + ah->parity_count);
+			ah->new_extents = (ah->new_extents / ah->area_multiple) * ah->area_multiple;
+			log_debug("Adjusted allocation request to %" PRIu32 " data extents.", ah->new_extents);
 		}
 	} else if (segtype_is_thin_pool(segtype)) {
 		/*
@@ -1177,13 +1189,17 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 			find_config_tree_bool(cmd, allocation_cache_pool_metadata_require_separate_pvs_CFG, NULL);
 		if (!ah->mirror_logs_separate) {
 			ah->alloc_and_split_meta = 1;
-			ah->new_extents += ah->log_len;
+			if (!approx_alloc)
+				ah->new_extents += ah->log_len;
 		}
 	} else {
 		ah->log_area_count = metadata_area_count;
 		ah->log_len = !metadata_area_count ? 0 :
 			mirror_log_extents(ah->region_size, extent_size,
 					   new_extents / ah->area_multiple);
+		ah->new_extents = ah->new_extents * ah->area_multiple / ah->area_count;
+		ah->new_extents = (ah->new_extents / ah->area_multiple) * ah->area_multiple;
+		log_debug("Adjusted allocation request to %" PRIu32 " data extents.", ah->new_extents);
 	}
 
 	for (s = 0; s < alloc_count; s++)
@@ -1196,6 +1212,7 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 	ah->maximise_cling = find_config_tree_bool(cmd, allocation_maximise_cling_CFG, NULL);
 
 	ah->approx_alloc = approx_alloc;
+
 	return ah;
 }
 
@@ -1216,18 +1233,10 @@ static int _sufficient_pes_free(struct alloc_handle *ah, struct dm_list *pvms,
 	uint32_t free_pes = pv_maps_size(pvms);
 
 	if (total_extents_needed > free_pes) {
-		if (!ah->approx_alloc) {
-			log_error("Insufficient free space: %" PRIu32
-				  " extents needed,"
-				  " but only %" PRIu32 " available",
-				  total_extents_needed, free_pes);
-
-			return 0;
-		}
-		log_verbose("Insufficient free space: %" PRIu32
-			    " extents needed, but only %" PRIu32
-			    " available: amount will be reduced",
-			    total_extents_needed, free_pes);
+		log_error("Insufficient free space: %" PRIu32 " extents needed,"
+			  " but only %" PRIu32 " available",
+			  total_extents_needed, free_pes);
+		return 0;
 	}
 
 	return 1;
@@ -1429,7 +1438,7 @@ static int _alloc_parallel_area(struct alloc_handle *ah, uint32_t max_to_allocat
 		if (area_len > alloc_state->areas[s].used)
 			area_len = alloc_state->areas[s].used;
 
-	len = (ah->alloc_and_split_meta) ? total_area_count * 2 : total_area_count;
+	len = (ah->alloc_and_split_meta && !ah->split_metadata_is_allocated) ? total_area_count * 2 : total_area_count;
 	len *= sizeof(*aa);
 	if (!(aa = dm_pool_alloc(ah->mem, len))) {
 		log_error("alloced_area allocation failed");
@@ -1449,7 +1458,7 @@ static int _alloc_parallel_area(struct alloc_handle *ah, uint32_t max_to_allocat
 		}
 
 		pva = alloc_state->areas[s + ix_log_skip].pva;
-		if (ah->alloc_and_split_meta) {
+		if (ah->alloc_and_split_meta && !ah->split_metadata_is_allocated) {
 			/*
 			 * The metadata area goes at the front of the allocated
 			 * space for now, but could easily go at the end (or
@@ -1475,7 +1484,7 @@ static int _alloc_parallel_area(struct alloc_handle *ah, uint32_t max_to_allocat
 			dm_list_add(&ah->alloced_areas[s], &aa[s].list);
 			s -= ah->area_count + ah->parity_count;
 		}
-		aa[s].len = (ah->alloc_and_split_meta) ? len - ah->log_len : len;
+		aa[s].len = (ah->alloc_and_split_meta && !ah->split_metadata_is_allocated) ? len - ah->log_len : len;
 		/* Skip empty allocations */
 		if (!aa[s].len)
 			continue;
@@ -1493,7 +1502,8 @@ static int _alloc_parallel_area(struct alloc_handle *ah, uint32_t max_to_allocat
 	}
 
 	/* Only need to alloc metadata from the first batch */
-	ah->alloc_and_split_meta = 0;
+	if (ah->alloc_and_split_meta)
+		ah->split_metadata_is_allocated = 1;
 
 	ah->total_area_len += area_len;
 
@@ -1995,7 +2005,8 @@ static void _reset_unreserved(struct dm_list *pvms)
 }
 
 static void _report_needed_allocation_space(struct alloc_handle *ah,
-					    struct alloc_state *alloc_state)
+					    struct alloc_state *alloc_state,
+					    struct dm_list *pvms)
 {
 	const char *metadata_type;
 	uint32_t parallel_areas_count, parallel_area_size;
@@ -2003,7 +2014,7 @@ static void _report_needed_allocation_space(struct alloc_handle *ah,
 
 	parallel_area_size = ah->new_extents - alloc_state->allocated;
 	parallel_area_size /= ah->area_multiple;
-	parallel_area_size -= (ah->alloc_and_split_meta) ? ah->log_len : 0;
+	parallel_area_size -= (ah->alloc_and_split_meta && !ah->split_metadata_is_allocated) ? ah->log_len : 0;
 
 	parallel_areas_count = ah->area_count + ah->parity_count;
 
@@ -2011,14 +2022,16 @@ static void _report_needed_allocation_space(struct alloc_handle *ah,
 	if (ah->alloc_and_split_meta) {
 		metadata_type = "metadata area";
 		metadata_count = parallel_areas_count;
+		if (ah->split_metadata_is_allocated)
+			metadata_size = 0;
 	} else {
 		metadata_type = "mirror log";
 		metadata_count = alloc_state->log_area_count_still_needed;
 	}
 
-	log_debug_alloc("Still need %s%" PRIu32 " total extents:",
+	log_debug_alloc("Still need %s%" PRIu32 " total extents from %" PRIu32 " remaining:",
 			ah->approx_alloc ? "up to " : "",
-			parallel_area_size * parallel_areas_count + metadata_size * metadata_count);
+			parallel_area_size * parallel_areas_count + metadata_size * metadata_count, pv_maps_size(pvms));
 	log_debug_alloc("  %" PRIu32 " (%" PRIu32 " data/%" PRIu32
 			" parity) parallel areas of %" PRIu32 " extents each",
 			parallel_areas_count, ah->area_count, ah->parity_count, parallel_area_size);
@@ -2064,7 +2077,7 @@ static int _find_some_parallel_space(struct alloc_handle *ah, const struct alloc
 	_clear_areas(alloc_state);
 	_reset_unreserved(pvms);
 
-	_report_needed_allocation_space(ah, alloc_state);
+	_report_needed_allocation_space(ah, alloc_state, pvms);
 
 	/* ix holds the number of areas found on other PVs */
 	do {
@@ -2289,11 +2302,11 @@ static int _find_max_parallel_space_for_one_policy(struct alloc_handle *ah, stru
 				 * data together will be split, we must adjust
 				 * the comparison accordingly.
 				 */
-				if (ah->alloc_and_split_meta)
+				if (ah->alloc_and_split_meta && !ah->split_metadata_is_allocated)
 					max_tmp -= ah->log_len;
 				if (max_tmp > (spvs->le + spvs->len) * ah->area_multiple) {
 					max_to_allocate = (spvs->le + spvs->len) * ah->area_multiple - alloc_state->allocated;
-					max_to_allocate += ah->alloc_and_split_meta ? ah->log_len : 0;
+					max_to_allocate += (ah->alloc_and_split_meta && !ah->split_metadata_is_allocated) ? ah->log_len : 0;
 				}
 				parallel_pvs = &spvs->pvs;
 				break;
@@ -2321,7 +2334,7 @@ static int _find_max_parallel_space_for_one_policy(struct alloc_handle *ah, stru
 		} else if (ah->maximise_cling && alloc_parms->alloc == ALLOC_NORMAL &&
 			   !(alloc_parms->flags & A_CLING_TO_ALLOCED))
 			alloc_parms->flags |= A_CLING_TO_ALLOCED;
-	} while ((alloc_parms->alloc != ALLOC_CONTIGUOUS) && alloc_state->allocated != alloc_parms->extents_still_needed && (alloc_parms->flags & A_CAN_SPLIT));
+	} while ((alloc_parms->alloc != ALLOC_CONTIGUOUS) && alloc_state->allocated != alloc_parms->extents_still_needed && (alloc_parms->flags & A_CAN_SPLIT) && (!ah->approx_alloc || pv_maps_size(pvms)));
 
 	return 1;
 }
@@ -2415,7 +2428,7 @@ static int _allocate(struct alloc_handle *ah,
 		old_allocated = alloc_state.allocated;
 		log_debug_alloc("Trying allocation using %s policy.", get_alloc_string(alloc));
 
-		if (!_sufficient_pes_free(ah, pvms, alloc_state.allocated, ah->new_extents))
+		if (!ah->approx_alloc && !_sufficient_pes_free(ah, pvms, alloc_state.allocated, ah->new_extents))
 			goto_out;
 
 		_init_alloc_parms(ah, &alloc_parms, alloc, prev_lvseg,
@@ -2441,12 +2454,19 @@ static int _allocate(struct alloc_handle *ah,
 				  ah->area_count / ah->area_multiple);
 			goto out;
 		}
-		log_verbose("Insufficient suitable %sallocatable extents "
-			    "for logical volume %s: size reduced by %u extents",
+		if (!alloc_state.allocated) {
+			log_error("Insufficient suitable %sallocatable extents "
+				  "found for logical volume %s.",
+				  can_split ? "" : "contiguous ",
+				  lv ? lv->name : "");
+			goto out;
+		}
+		log_verbose("Found fewer %sallocatable extents "
+			    "for logical volume %s than requested: using %" PRIu32 " extents (reduced by %u).",
 			    can_split ? "" : "contiguous ",
 			    lv ? lv->name : "",
-			    (ah->new_extents - alloc_state.allocated) *
-			    ah->area_count / ah->area_multiple);
+			    alloc_state.allocated,
+			    (ah->new_extents - alloc_state.allocated) * ah->area_count / ah->area_multiple);
 		ah->new_extents = alloc_state.allocated;
 	}
 
@@ -3014,6 +3034,12 @@ static int _lv_extend_layered_lv(struct alloc_handle *ah,
 
 /*
  * Entry point for single-step LV allocation + extension.
+ * Extents is the number of logical extents to append to the LV unless
+ * approx_alloc is set when it is an upper limit for the total number of
+ * extents to use from the VG.
+ *
+ * FIXME The approx_alloc raid/stripe conversion should be performed
+ * before calling this function.
  */
 int lv_extend(struct logical_volume *lv,
 	      const struct segment_type *segtype,
@@ -3028,7 +3054,7 @@ int lv_extend(struct logical_volume *lv,
 	struct alloc_handle *ah;
 	uint32_t sub_lv_count;
 
-	log_very_verbose("Extending segment type, %s", segtype->name);
+	log_very_verbose("Adding segment of type %s to LV %s.", segtype->name, lv->name);
 
 	if (segtype_is_virtual(segtype))
 		return lv_add_virtual_segment(lv, 0u, extents, segtype, thin_pool_name);
@@ -3054,11 +3080,8 @@ int lv_extend(struct logical_volume *lv,
 
 	if (ah->approx_alloc) {
 		extents = ah->new_extents;
-		if (segtype_is_raid(segtype)) {
-			log_error("Extents before: %u", extents);
+		if (segtype_is_raid(segtype))
 			extents -= ah->log_len * ah->area_multiple;
-			log_error("Extents after : %u", extents);
-		}
 	}
 
 	if (segtype_is_thin_pool(segtype) || segtype_is_cache_pool(segtype)) {
@@ -6025,7 +6048,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 	}
 
 	if (!seg_is_virtual(lp) &&
-	    vg->free_count < lp->extents) {
+	    vg->free_count < lp->extents && !lp->approx_alloc) {
 		log_error("Volume group \"%s\" has insufficient free space "
 			  "(%u extents): %u required.",
 			  vg->name, vg->free_count, lp->extents);

@@ -363,21 +363,19 @@ static int _update_extents_params(struct volume_group *vg,
 	} else
 		lp->pvh = &vg->pvs;
 
-	if (lcp->percent)
-		lp->approx_alloc = 1;
 	switch(lcp->percent) {
 		case PERCENT_VG:
-			lp->extents = percent_of_extents(lp->extents, vg->extent_count, 0);
+			extents = percent_of_extents(lp->extents, vg->extent_count, 0);
 			break;
 		case PERCENT_FREE:
-			lp->extents = percent_of_extents(lp->extents, vg->free_count, 0);
+			extents = percent_of_extents(lp->extents, vg->free_count, 0);
 			break;
 		case PERCENT_PVS:
 			if (lcp->pv_count) {
 				pv_extent_count = pv_list_extents_free(lp->pvh);
-				lp->extents = percent_of_extents(lp->extents, pv_extent_count, 0);
+				extents = percent_of_extents(lp->extents, pv_extent_count, 0);
 			} else
-				lp->extents = percent_of_extents(lp->extents, vg->extent_count, 0);
+				extents = percent_of_extents(lp->extents, vg->extent_count, 0);
 			break;
 		case PERCENT_LV:
 			log_error("Please express size as %%VG, %%PVS, or "
@@ -394,10 +392,17 @@ static int _update_extents_params(struct volume_group *vg,
 				log_error(INTERNAL_ERROR "Couldn't find origin volume.");
 				return 0;
 			}
-			lp->extents = percent_of_extents(lp->extents, origin->le_count, 0);
+			extents = percent_of_extents(lp->extents, origin->le_count, 0);
 			break;
 		case PERCENT_NONE:
+			extents = lp->extents;
 			break;
+	}
+
+	if (lcp->percent) {
+		lp->approx_alloc = 1;
+		log_verbose("Converted %" PRIu32 "%%%s into %" PRIu32 " extents.", lp->extents, get_percent_string(lcp->percent), extents);
+		lp->extents = extents;
 	}
 
 	if (lp->snapshot && lp->origin && lp->extents) {

@@ -393,9 +393,13 @@ uint64_t lv_size(const struct logical_volume *lv)
 static int _lv_mimage_in_sync(const struct logical_volume *lv)
 {
 	percent_t percent;
-	struct lv_segment *mirror_seg = find_mirror_seg(first_seg(lv));
+	struct lv_segment *seg = first_seg(lv);
+	struct lv_segment *mirror_seg;
 
-	if (!(lv->status & MIRROR_IMAGE) || !mirror_seg)
+	if (seg)
+		mirror_seg = find_mirror_seg(seg);
+
+	if (!(lv->status & MIRROR_IMAGE) || !seg || !mirror_seg)
 		return_0;
 
 	if (!lv_mirror_percent(lv->vg->cmd, mirror_seg->lv, 0, &percent,
@@ -410,7 +414,7 @@ static int _lv_raid_image_in_sync(const struct logical_volume *lv)
 	unsigned s;
 	percent_t percent;
 	char *raid_health;
-	struct lv_segment *raid_seg;
+	struct lv_segment *seg, *raid_seg = NULL;
 
 	/*
 	 * If the LV is not active locally,
@@ -424,7 +428,8 @@ static int _lv_raid_image_in_sync(const struct logical_volume *lv)
 		return 0;
 	}
 
-	raid_seg = get_only_segment_using_this_lv(first_seg(lv)->lv);
+	if ((seg = first_seg(lv)))
+		raid_seg = get_only_segment_using_this_lv(seg->lv);
 	if (!raid_seg) {
 		log_error("Failed to find RAID segment for %s", lv->name);
 		return 0;
@@ -472,7 +477,7 @@ static int _lv_raid_healthy(const struct logical_volume *lv)
 {
 	unsigned s;
 	char *raid_health;
-	struct lv_segment *raid_seg;
+	struct lv_segment *seg, *raid_seg = NULL;
 
 	/*
 	 * If the LV is not active locally,
@@ -488,8 +493,8 @@ static int _lv_raid_healthy(const struct logical_volume *lv)
 
 	if (lv->status & RAID)
 		raid_seg = first_seg(lv);
-	else
-		raid_seg = get_only_segment_using_this_lv(first_seg(lv)->lv);
+	else if ((seg = first_seg(lv)))
+		raid_seg = get_only_segment_using_this_lv(seg->lv);
 
 	if (!raid_seg) {
 		log_error("Failed to find RAID segment for %s", lv->name);
