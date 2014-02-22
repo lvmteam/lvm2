@@ -89,6 +89,7 @@ void release_vg(struct volume_group *vg)
 		return;
 
 	release_vg(vg->vg_ondisk);
+	release_vg(vg->vg_precommitted);
 	_free_vg(vg);
 }
 

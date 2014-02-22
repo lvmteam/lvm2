@@ -856,30 +856,45 @@ int vgcreate_params_validate(struct cmd_context *cmd,
 	return 1;
 }
 
-static int _vg_update_vg_ondisk(struct volume_group *vg)
+/*
+ * Update content of precommitted VG
+ *
+ * TODO: Optimize in the future, since lvmetad needs similar
+ *       config tree processing in lvmetad_vg_update().
+ */
+static int _vg_update_vg_precommitted(struct volume_group *vg)
 {
 	struct dm_config_tree *cft;
-	int pool_locked;
+
+	release_vg(vg->vg_precommitted);
+	vg->vg_precommitted = NULL;
+
+	if (!(cft = export_vg_to_config_tree(vg)))
+		return_0;
+
+	if (!(vg->vg_precommitted = import_vg_from_config_tree(cft, vg->fid)))
+		stack;
+
+	dm_config_destroy(cft);
+
+	return vg->vg_precommitted ? 1 : 0;
+}
+
+static int _vg_update_vg_ondisk(struct volume_group *vg)
+{
+	if (dm_pool_locked(vg->vgmem))
+		return 1;
 
 	if (vg->vg_ondisk || is_orphan_vg(vg->name)) /* we already have it */
 		return 1;
 
-	pool_locked = dm_pool_locked(vg->vgmem);
-	if (pool_locked && !dm_pool_unlock(vg->vgmem, 0))
+	if (!_vg_update_vg_precommitted(vg))
 		return_0;
 
-	cft = export_vg_to_config_tree(vg);
-	if (!cft)
-		return 0;
+	vg->vg_ondisk = vg->vg_precommitted;
+	vg->vg_precommitted = NULL;
 
-	vg->vg_ondisk = import_vg_from_config_tree(cft, vg->fid);
-	dm_config_destroy(cft);
-
-	/* recompute the pool crc */
-	if (pool_locked && !dm_pool_lock(vg->vgmem, 1))
-		return_0;
-
-	return vg->vg_ondisk ? 1 : 0;
+	return 1;
 }
 
 /*
@@ -2687,6 +2702,9 @@ int vg_write(struct volume_group *vg)
 	if (!(vg->fid->fmt->features & FMT_PRECOMMIT) && !lvmetad_vg_update(vg))
 		return_0;
 
+	if (!_vg_update_vg_precommitted(vg)) /* prepare precommited */
+		return_0;
+
 	return 1;
 }
 
@@ -2753,9 +2771,8 @@ int vg_commit(struct volume_group *vg)
 
 		/* This *is* the original now that it's commited. */
 		release_vg(vg->vg_ondisk);
-		vg->vg_ondisk = NULL;
-		if (!_vg_update_vg_ondisk(vg)) /* make a new one for future edits */
-			return_0;
+		vg->vg_ondisk = vg->vg_precommitted;
+		vg->vg_precommitted = NULL;
 	}
 
 	/* If update failed, remove any cached precommitted metadata. */
@@ -2771,6 +2788,9 @@ int vg_commit(struct volume_group *vg)
 void vg_revert(struct volume_group *vg)
 {
 	struct metadata_area *mda;
+
+	release_vg(vg->vg_precommitted);  /* VG is no longer needed */
+	vg->vg_precommitted = NULL;
 
 	dm_list_iterate_items(mda, &vg->fid->metadata_areas_in_use) {
 		if (mda->ops->vg_revert &&
