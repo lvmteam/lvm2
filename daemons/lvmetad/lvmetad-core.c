@@ -1189,7 +1189,7 @@ static int fini(daemon_state *s)
 	return 1;
 }
 
-static void usage(char *prog, FILE *file)
+static void usage(const char *prog, FILE *file)
 {
 	fprintf(file, "Usage:\n"
 		"%s [-V] [-h] [-f] [-l {all|wire|debug}] [-s path]\n\n"
@@ -1204,26 +1204,18 @@ static void usage(char *prog, FILE *file)
 int main(int argc, char *argv[])
 {
 	signed char opt;
-	lvmetad_state ls;
+	lvmetad_state ls = { .log_config = "" };
 	daemon_state s = {
 		.daemon_fini = fini,
 		.daemon_init = init,
 		.handler = handler,
 		.name = "lvmetad",
-		.pidfile = getenv("LVM_LVMETAD_PIDFILE"),
+		.pidfile = getenv("LVM_LVMETAD_PIDFILE") ? : LVMETAD_PIDFILE,
 		.private = &ls,
 		.protocol = "lvmetad",
 		.protocol_version = 1,
-		.socket_path = getenv("LVM_LVMETAD_SOCKET"),
+		.socket_path = getenv("LVM_LVMETAD_SOCKET") ? : LVMETAD_SOCKET,
 	};
-
-	if (!s.pidfile)
-		s.pidfile = LVMETAD_PIDFILE;
-
-	if (!s.socket_path)
-		s.socket_path = LVMETAD_SOCKET;
-
-	ls.log_config = "";
 
 	// use getopt_long
 	while ((opt = getopt(argc, argv, "?fhVl:p:s:")) != EOF) {
@@ -1253,5 +1245,6 @@ int main(int argc, char *argv[])
 	}
 
 	daemon_start(s);
+
 	return 0;
 }
