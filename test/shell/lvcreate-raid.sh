@@ -170,9 +170,6 @@ lvremove -ff $vg
 not lvcreate --type raid1 -l1 $vg $dev1
 not lvcreate --type raid5 -l2 $vg $dev1 $dev2
 not lvcreate --type raid6 -l3 $vg $dev1 $dev2 $dev3 $dev4
-if aux target_at_least dm-raid 1 4 1; then
-    not lvcreate --type raid10 -l2 $vg $dev1 $dev2 $dev3
-fi
 
 # Implicit count comes from #PVs given (always 2 for mirror though)
 lvcreate --type raid1 -l1 -n raid1 $vg $dev1 $dev2
@@ -181,10 +178,6 @@ lvcreate --type raid5 -l2 -n raid5 $vg $dev1 $dev2 $dev3
 lv_devices $vg raid5 3
 lvcreate --type raid6 -l3 -n raid6 $vg $dev1 $dev2 $dev3 $dev4 $dev5
 lv_devices $vg raid6 5
-if aux target_at_least dm-raid 1 4 1; then
-    lvcreate --type raid10 -l2 -n raid10 $vg $dev1 $dev2 $dev3 $dev4
-    lv_devices $vg raid10 4
-fi
 lvremove -ff $vg
 
 # Implicit count comes from total #PVs in VG (always 2 for mirror though)
@@ -194,9 +187,4 @@ lvcreate --type raid5 -l2 -n raid5 $vg
 lv_devices $vg raid5 6
 lvcreate --type raid6 -l3 -n raid6 $vg
 lv_devices $vg raid6 6
-
-if aux target_at_least dm-raid 1 4 1; then
-    lvcreate --type raid10 -l2 -n raid10 $vg
-    lv_devices $vg raid10 6
-fi
 lvremove -ff $vg
