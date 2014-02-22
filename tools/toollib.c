@@ -681,7 +681,7 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 			if (sigint_caught())
 				return_ECMD_FAILED;
 			vgid = sl->str;
-			if (!(vgid) || !(vg_name = lvmcache_vgname_from_vgid(cmd->mem, vgid)))
+			if (!vgid || !(vg_name = lvmcache_vgname_from_vgid(cmd->mem, vgid)))
 				continue;
 			ret_max = _process_one_vg(cmd, vg_name, vgid, &tagsl,
 						  &arg_vgnames,

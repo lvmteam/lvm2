@@ -3134,6 +3134,7 @@ static int _poll_logical_volume(struct cmd_context *cmd, struct logical_volume *
 		log_print_unless_silent("Conversion starts after activation.");
 		return ECMD_PROCESSED;
 	}
+
 	return lvconvert_poll(cmd, lv, wait_completion ? 0 : 1U);
 }
 

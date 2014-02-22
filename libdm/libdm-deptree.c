@@ -1626,7 +1626,9 @@ static int _dm_tree_deactivate_children(struct dm_tree_node *dnode,
 				  info.minor);
 			r = 0;
 			continue;
-		} else if (info.suspended && info.live_table)
+		}
+
+		if (info.suspended && info.live_table)
 			dec_suspended();
 
 		if (child->callback &&
@@ -2705,7 +2707,7 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 				  child->info.minor);
 			/* If the device was not previously active, we might as well remove this node. */
 			if (!child->info.live_table &&
-			    !_deactivate_node(child->name, child->info.major,child->info.minor,
+			    !_deactivate_node(child->name, child->info.major, child->info.minor,
 					      &child->dtree->cookie, child->udev_flags, 0))
 				log_error("Unable to deactivate %s (%" PRIu32
 					  ":%" PRIu32 ")", child->name, child->info.major,
