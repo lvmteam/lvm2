@@ -18,7 +18,7 @@ aux prepare_dmeventd
 lvcreate -aey --type mirror -m 3 --ignoremonitoring -L 1 -n 4way $vg
 lvchange --monitor y $vg/4way
 aux disable_dev "$dev2" "$dev4"
-mkfs.ext3 $DM_DEV_DIR/$vg/4way
+mkfs.ext3 "$DM_DEV_DIR/$vg/4way"
 aux enable_dev "$dev2" "$dev4"
 sleep 3
 lvs -a -o +devices $vg | tee out

@@ -37,10 +37,10 @@ lvremove -f $vg
 
 # Prepare pool and external origin with filesystem
 lvcreate -L10M -V10M -T $vg/pool --name $lv1
-mkfs.ext2 $DM_DEV_DIR/$vg/$lv1
+mkfs.ext2 "$DM_DEV_DIR/$vg/$lv1"
 
 lvcreate -L4M -n $lv2 $vg
-mkfs.ext2 $DM_DEV_DIR/$vg/$lv2
+mkfs.ext2 "$DM_DEV_DIR/$vg/$lv2"
 
 # Fail to create external origin snapshot of rw LV
 not lvcreate -s $vg/$lv2 --thinpool $vg/pool
@@ -90,7 +90,7 @@ check active $vg $lv5
 check active $vg $lv6
 check active $vg $lv7
 
-fsck -n $DM_DEV_DIR/$vg/$lv1
-fsck -n $DM_DEV_DIR/$vg/$lv7
+fsck -n "$DM_DEV_DIR/$vg/$lv1"
+fsck -n "$DM_DEV_DIR/$vg/$lv7"
 
 vgremove -ff $vg

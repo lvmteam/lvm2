@@ -14,7 +14,7 @@
 . lib/test
 
 fill() {
-	dd if=/dev/zero of=$DM_DEV_DIR/$vg1/lvol0 bs=$1 count=1
+	dd if=/dev/zero of="$DM_DEV_DIR/$vg1/lvol0" bs=$1 count=1
 }
 
 cleanup_tail()
@@ -37,8 +37,8 @@ aux lvmconf "activation/snapshot_autoextend_percent = 20" \
             "activation/snapshot_autoextend_threshold = 50"
 
 # Check usability with smallest extent size
-pvcreate --setphysicalvolumesize 4T $DM_DEV_DIR/$vg/$lv
-vgcreate -s 1K $vg1 $DM_DEV_DIR/$vg/$lv
+pvcreate --setphysicalvolumesize 4T "$DM_DEV_DIR/$vg/$lv"
+vgcreate -s 1K $vg1 "$DM_DEV_DIR/$vg/$lv"
 
 # Test removal of opened snapshot
 lvcreate -V50 -L10 -n $lv1 -s $vg1
@@ -52,7 +52,7 @@ lvs -a -o+lv_active $vg1
 
 trap 'cleanup_tail' EXIT
 # Keep device busy (but not mounted) for a while
-sleep 30 < $DM_DEV_DIR/$vg1/$lv1 &
+sleep 30 < "$DM_DEV_DIR/$vg1/$lv1" &
 SLEEP_PID=$!
 
 # give some short time to lock file above
@@ -116,8 +116,8 @@ vgremove -ff $vg1
 if test "$TSIZE" -eq 15P ; then
 
 # Check usability with largest extent size
-pvcreate $DM_DEV_DIR/$vg/$lv
-vgcreate -s 4G $vg1 $DM_DEV_DIR/$vg/$lv
+pvcreate "$DM_DEV_DIR/$vg/$lv"
+vgcreate -s 4G $vg1 "$DM_DEV_DIR/$vg/$lv"
 
 lvcreate -an -Zn -l50%FREE -n $lv1 $vg1
 lvcreate -s -l100%FREE -n $lv2 $vg1/$lv1

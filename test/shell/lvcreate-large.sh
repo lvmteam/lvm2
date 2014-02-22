@@ -25,8 +25,8 @@ lvcreate -s -l 100%FREE -n $lv $vg --virtualsize 1024T
 
 aux extend_filter_LVMTEST
 
-pvcreate $DM_DEV_DIR/$vg/$lv
-vgcreate $vg1 $DM_DEV_DIR/$vg/$lv
+pvcreate "$DM_DEV_DIR/$vg/$lv"
+vgcreate $vg1 "$DM_DEV_DIR/$vg/$lv"
 
 lvcreate -l 100%FREE -n $lv1 $vg1
 check lv_field $vg1/$lv1 size "1024.00t"

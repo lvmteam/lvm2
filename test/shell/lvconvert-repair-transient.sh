@@ -16,7 +16,7 @@ aux prepare_vg 5
 
 lvcreate -aey --type mirror -m 3 --ignoremonitoring -L 1 -n 4way $vg
 aux disable_dev "$dev2" "$dev4"
-mkfs.ext3 $DM_DEV_DIR/$vg/4way &
+mkfs.ext3 "$DM_DEV_DIR/$vg/4way" &
 sleep 1
 aux enable_dev "$dev2" "$dev4"
 echo n | lvconvert --repair $vg/4way 2>&1 | tee 4way.out

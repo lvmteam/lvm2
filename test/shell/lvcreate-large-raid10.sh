@@ -28,8 +28,8 @@ lvcreate -s -l 20%FREE -n $lv5 $vg --virtualsize 256T
 
 aux extend_filter_LVMTEST
 
-pvcreate $DM_DEV_DIR/$vg/$lv[12345]
-vgcreate $vg1 $DM_DEV_DIR/$vg/$lv[12345]
+pvcreate "$DM_DEV_DIR"/$vg/$lv[12345]
+vgcreate $vg1 "$DM_DEV_DIR"/$vg/$lv[12345]
 
 #
 # Create large RAID LVs

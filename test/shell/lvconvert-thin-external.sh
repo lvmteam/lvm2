@@ -64,9 +64,9 @@ lvcreate -L8M -n $lv1 $vg
 not lvconvert --thinpool $vg/$lv1 -T $vg/$lv1
 check lv_field $vg/$lv1 segtype linear
 
-mkfs.ext2 $DM_DEV_DIR/$vg/$lv1
+mkfs.ext2 "$DM_DEV_DIR/$vg/$lv1"
 mkdir mnt
-mount $DM_DEV_DIR/$vg/$lv1 mnt
+mount "$DM_DEV_DIR/$vg/$lv1" mnt
 
 dd if=/dev/zero of=mnt/test1 bs=1M count=1
 
@@ -84,7 +84,7 @@ touch mnt/test
 umount mnt
 
 # check fs is without errors
-fsck -n $DM_DEV_DIR/$vg/$lv1
+fsck -n "$DM_DEV_DIR/$vg/$lv1"
 
 lvchange -aey $vg/extorg
 lvchange -an $vg/$lv1
@@ -93,7 +93,7 @@ check active $vg extorg
 check inactive $vg $lv1
 
 # fsck in read-only mode
-fsck -n $DM_DEV_DIR/$vg/extorg
+fsck -n "$DM_DEV_DIR/$vg/extorg"
 
 not lvresize -l+8 $vg/extorg
 not lvresize -l-4 $vg/extorg

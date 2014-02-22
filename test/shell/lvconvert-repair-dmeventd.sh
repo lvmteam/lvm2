@@ -20,7 +20,7 @@ aux prepare_vg 5
 lvcreate -aey --type mirror -m 3 --ignoremonitoring -L 1 -n 4way $vg
 lvchange --monitor y $vg/4way
 aux disable_dev "$dev2" "$dev4"
-mkfs.ext2 $DM_DEV_DIR/$vg/4way
+mkfs.ext2 "$DM_DEV_DIR/$vg/4way"
 sleep 10 # FIXME: need a "poll" utility, akin to "check"
 aux enable_dev "$dev2" "$dev4"
 check mirror $vg 4way

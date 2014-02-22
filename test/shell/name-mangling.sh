@@ -164,8 +164,8 @@ function check_mangle_cmd()
 # check dmsetup can process path where the last component is not equal dm name (rhbz #797322)
 r=0
 create_dm_dev auto "abc"
-ln -s ${DM_DEV_DIR}/mapper/${name_prefix}abc ${DM_DEV_DIR}/${name_prefix}xyz
-dmsetup status ${DM_DEV_DIR}/${name_prefix}xyz || r=1
+ln -s "$DM_DEV_DIR/mapper/${name_prefix}abc" "$DM_DEV_DIR/${name_prefix}xyz"
+dmsetup status "$DM_DEV_DIR/${name_prefix}xyz" || r=1
 remove_dm_dev auto "abc"
 if [ r = 1 ]; then
 	exit 1

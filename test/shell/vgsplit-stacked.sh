@@ -18,8 +18,8 @@ vgcreate $vg1 "$dev1" "$dev2"
 lvcreate -n $lv1 -l 100%FREE $vg1
 
 #top VG
-pvcreate $DM_DEV_DIR/$vg1/$lv1
-vgcreate $vg $DM_DEV_DIR/$vg1/$lv1 "$dev3"
+pvcreate "$DM_DEV_DIR/$vg1/$lv1"
+vgcreate $vg "$DM_DEV_DIR/$vg1/$lv1" "$dev3"
 
 vgchange -a n $vg $vg1
 

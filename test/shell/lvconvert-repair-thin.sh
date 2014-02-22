@@ -10,7 +10,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-# Test repairing of broken thin pool metadata 
+# Test repairing of broken thin pool metadata
 
 . lib/test
 
@@ -34,8 +34,8 @@ aux prepare_vg 4
 lvcreate -T -L20 -V10 -n $lv1 $vg/pool  "$dev1" "$dev2"
 lvcreate -T -V10 -n $lv2 $vg/pool
 
-mkfs.ext2 $DM_DEV_DIR/$vg/$lv1
-mkfs.ext2 $DM_DEV_DIR/$vg/$lv2
+mkfs.ext2 "$DM_DEV_DIR/$vg/$lv1"
+mkfs.ext2 "$DM_DEV_DIR/$vg/$lv2"
 
 lvcreate -L20 -n repair $vg
 lvcreate -L2 -n fixed $vg
@@ -55,26 +55,26 @@ lvconvert -y -f --poolmetadata $vg/repair --thinpool $vg/pool
 
 lvchange -aey $vg/repair $vg/fixed
 
-#dd if=$DM_DEV_DIR/$vg/repair of=back bs=1M
+#dd if="$DM_DEV_DIR/$vg/repair" of=back bs=1M
 
 # Make some 'repairable' damage??
-dd if=/dev/zero of=$DM_DEV_DIR/$vg/repair bs=1 seek=40960 count=1
+dd if=/dev/zero of="$DM_DEV_DIR/$vg/repair" bs=1 seek=40960 count=1
 
-#dd if=$DM_DEV_DIR/$vg/repair of=back_trashed bs=1M
+#dd if="$DM_DEV_DIR/$vg/repair" of=back_trashed bs=1M
 #not vgchange -ay $vg
 
 #lvconvert --repair $vg/pool
 
 # Using now SHOULD - since thin tools currently do not seem to work
-should not $THIN_CHECK $DM_DEV_DIR/$vg/repair
+should not "$THIN_CHECK" "$DM_DEV_DIR/$vg/repair"
 
-should not $LVM_TEST_THIN_DUMP_CMD $DM_DEV_DIR/$vg/repair | tee dump
+should not "$LVM_TEST_THIN_DUMP_CMD" "$DM_DEV_DIR/$vg/repair" | tee dump
 
-should $LVM_TEST_THIN_REPAIR_CMD -i $DM_DEV_DIR/$vg/repair -o $DM_DEV_DIR/$vg/fixed
+should "$LVM_TEST_THIN_REPAIR_CMD" -i "$DM_DEV_DIR/$vg/repair" -o "$DM_DEV_DIR/$vg/fixed"
 
-should $LVM_TEST_THIN_DUMP_CMD --repair $DM_DEV_DIR/$vg/repair | tee repaired_xml
+should "$LVM_TEST_THIN_DUMP_CMD" --repair "$DM_DEV_DIR/$vg/repair" | tee repaired_xml
 
-should $LVM_TEST_THIN_CHECK_CMD $DM_DEV_DIR/$vg/fixed
+should "$LVM_TEST_THIN_CHECK_CMD" "$DM_DEV_DIR/$vg/fixed"
 
 # Swap repaired metadata back
 lvconvert -y -f --poolmetadata $vg/fixed --thinpool $vg/pool
@@ -83,7 +83,7 @@ lvs -a $vg
 # Activate pool - this should now work
 should vgchange -ay $vg
 
-lvs -a -o+devices $vg 
+lvs -a -o+devices $vg
 dmsetup table
 dmsetup info -c
 dmsetup ls --tree
@@ -99,7 +99,7 @@ dmsetup remove $vg-pool_tmeta || true
 
 dmsetup table
 
-# FIXME: needs  also --yes with double force 
+# FIXME: needs  also --yes with double force
 pvremove --yes -ff "$dev1"
 pvremove --yes -ff "$dev2"
 
