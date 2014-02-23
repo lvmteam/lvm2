@@ -2724,12 +2724,12 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 	}
 
 	if (update_devs_flag ||
-	    (!dnode->info.exists && dnode->callback)) {
+	    (r && !dnode->info.exists && dnode->callback)) {
 		if (!dm_udev_wait(dm_tree_get_cookie(dnode)))
 			stack;
 		dm_tree_set_cookie(dnode, 0);
 
-		if (!dnode->info.exists && dnode->callback &&
+		if (r && !dnode->info.exists && dnode->callback &&
 		    !dnode->callback(dnode, DM_NODE_CALLBACK_PRELOADED,
 				     dnode->callback_data))
 		{

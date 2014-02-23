@@ -1,5 +1,6 @@
 Version 1.02.85 - 
 ===================================
+  Do not call callback when preload fails.
   Wrap is_selinux_enabled() to be called just once.
   Use correctly signed 64b constant when working with raid volumes.
   Exit dmeventd with pidfile cleanup instead of raising SIGKILL on DIE request.
