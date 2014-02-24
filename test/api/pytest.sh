@@ -20,18 +20,19 @@
 # Until fixed - testing always runs with enabled monitoring
 # thus it needs dmeventd
 #
-aux prepare_dmeventd
-test ! -e LOCAL_CLVMD || skip
-test ! -e LOCAL_LVMETAD || skip
-
-#If you change this change the unit test case too.
-aux prepare_pvs 6
 
 #Locate the python binding library to use.
 python_lib=$(find $abs_top_builddir -name lvm.so)
-
 # Unable to test python bindings if library not available
 test -n "$python_lib" || skip
+
+test -e LOCAL_CLVMD && skip
+test -e LOCAL_LVMETAD && skip
+
+aux prepare_dmeventd
+
+#If you change this change the unit test case too.
+aux prepare_pvs 6
 
 export PYTHONPATH=$(dirname $python_lib):$PYTHONPATH
 
