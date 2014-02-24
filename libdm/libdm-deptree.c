@@ -2625,13 +2625,16 @@ out:
 	return r;
 }
 
+/*
+ * Currently try to deactivate only nodes created during preload.
+ * New node is always attached to the front of activated_list
+ */
 static int _dm_tree_revert_activated(struct dm_tree_node *parent)
 {
 	struct dm_tree_node *child;
 
-	dm_list_iterate_back_items_gen(child, &parent->activated, activated_list) {
-		_dm_tree_revert_activated(child);
-		log_debug("Reverting preloaded %s.", child->name);
+	dm_list_iterate_items_gen(child, &parent->activated, activated_list) {
+		log_debug_activation("Reverting %s.", child->name);
 		if (!_deactivate_node(child->name, child->info.major, child->info.minor,
 				      &child->dtree->cookie, child->udev_flags, 0)) {
 			log_error("Unable to deactivate %s (%" PRIu32
@@ -2639,6 +2642,8 @@ static int _dm_tree_revert_activated(struct dm_tree_node *parent)
 				  child->info.minor);
 			return 0;
 		}
+		if (!_dm_tree_revert_activated(child))
+			return_0;
 	}
 
 	return 1;
@@ -2708,9 +2713,10 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 			continue;
 		}
 
-		if (!child->info.live_table)
+		if (!child->info.live_table) {
 			/* Collect newly introduced devices for revert */
-			dm_list_add(&dnode->activated, &child->activated_list);
+			dm_list_add_h(&dnode->activated, &child->activated_list);
+		}
 
 		/* Update cached info */
 		child->info = newinfo;
