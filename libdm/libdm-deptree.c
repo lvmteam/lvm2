@@ -1871,8 +1871,6 @@ int dm_tree_activate_children(struct dm_tree_node *dnode,
 			dnode->props.send_messages = 0; /* messages posted */
 	}
 
-	handle = NULL;
-
 	return r;
 }
 
