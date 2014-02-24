@@ -70,6 +70,13 @@ lv_tree_devices_() {
 		lv_tree_devices_ "$1" "$(lv_field_lv_ $lv data_lv)"
 		lv_tree_devices_ "$1" "$(lv_field_lv_ $lv metadata_lv)"
 		;;
+	cache)
+		lv_tree_devices_ "$1" "$(lv_devices $lv)"
+		;;
+	cache-pool)
+		lv_tree_devices_ "$1" "$(lv_field_lv_ $lv data_lv)"
+		lv_tree_devices_ "$1" "$(lv_field_lv_ $lv metadata_lv)"
+		;;
 	esac
 }
 
