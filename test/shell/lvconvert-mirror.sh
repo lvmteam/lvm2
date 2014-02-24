@@ -176,6 +176,10 @@ lvremove -ff $vg
 # "remove from original mirror (the original is still mirror)"
 lvcreate -aey -l2 --type mirror -m2 -n $lv1 $vg "$dev1" "$dev2" "$dev5" "$dev3:$DEVRANGE"
 lvconvert -m+1 -b $vg/$lv1 "$dev4"
+# FIXME: Extra wait here for mirror upconvert synchronization
+# otherwise we may fail her on parallel upconvert and downconvert
+# lvconvert-mirror-updown.sh tests this errornous case separately
+lvconvert $vg/$lv1
 lvconvert -m-1 $vg/$lv1 "$dev2"
 lvconvert $vg/$lv1
 
