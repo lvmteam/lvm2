@@ -1,5 +1,6 @@
 Version 1.02.85 - 
 ===================================
+  Reuse _node_send_messages() for validation of transaction_id in preload.
   Transaction_id could be lower by one only when messages are prepared.
   Do not call callback when preload fails.
   Wrap is_selinux_enabled() to be called just once.

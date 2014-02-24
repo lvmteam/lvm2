@@ -1478,9 +1478,11 @@ out:
 	return r;
 }
 
+/* For preload pass only validate pool's transaction_id */
 static int _node_send_messages(struct dm_tree_node *dnode,
 			       const char *uuid_prefix,
-			       size_t uuid_prefix_len)
+			       size_t uuid_prefix_len,
+			       int send)
 {
 	struct load_segment *seg;
 	struct thin_message *tmsg;
@@ -1521,6 +1523,9 @@ static int _node_send_messages(struct dm_tree_node *dnode,
 			  trans_id, seg->transaction_id - have_messages);
 		return 0;
 	}
+
+	if (!send)
+		return 1; /* transaction_id is matching */
 
 	dm_list_iterate_items(tmsg, &seg->thin_messages)
 		if (!(_thin_pool_node_message(dnode, tmsg)))
@@ -1865,7 +1870,7 @@ int dm_tree_activate_children(struct dm_tree_node *dnode,
 	 * has to report failure.
 	 */
 	if (r && dnode->props.send_messages &&
-	    !(r = _node_send_messages(dnode, uuid_prefix, uuid_prefix_len)))
+	    !(r = _node_send_messages(dnode, uuid_prefix, uuid_prefix_len, 1)))
 		stack;
 
 	return r;
@@ -2713,6 +2718,18 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 		if (!child->info.live_table) {
 			/* Collect newly introduced devices for revert */
 			dm_list_add_h(&dnode->activated, &child->activated_list);
+
+			/* When creating new node also check transaction_id. */
+			if (child->props.send_messages &&
+			    !_node_send_messages(child, uuid_prefix, uuid_prefix_len, 0)) {
+				stack;
+				if (!dm_udev_wait(dm_tree_get_cookie(dnode)))
+					stack;
+				dm_tree_set_cookie(dnode, 0);
+				(void) _dm_tree_revert_activated(dnode);
+				r = 0;
+				continue;
+			}
 		}
 
 		/* Update cached info */
