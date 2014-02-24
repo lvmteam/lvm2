@@ -32,7 +32,7 @@ wait_for_change_() {
 # Currently it expects 2MB thin metadata and 200MB data volume size
 # Argument specifies how many devices should be created.
 fake_metadata_() {
-	echo '<superblock uuid="" time="1" transaction="0" data_block_size="128" nr_data_blocks="3200">'
+	echo '<superblock uuid="" time="1" transaction="'$2'" data_block_size="128" nr_data_blocks="3200">'
 	for i in $(seq 1 $1)
 	do
 		echo ' <device dev_id="'$i'" mapped_blocks="785" transaction="0" creation_time="0" snap_time="1">'
@@ -56,12 +56,31 @@ vgcreate -s 1M $vg $(cat DEVICES)
 # Testing dmeventd autoresize
 lvcreate -L200M -V1G -n thin -T $vg/pool
 lvcreate -L2M -n $lv1 $vg
+lvchange -an $vg/thin $vg/pool
+
+# Prepare some fake metadata with unmatching id
+# Transaction_id is lower by 1 and there are no message -> ERROR
+fake_metadata_ 10 0 >data
+thin_restore -i data -o "$DM_DEV_DIR/mapper/$vg-$lv1"
+lvconvert -y --thinpool $vg/pool --poolmetadata $vg/$lv1
+not vgchange -ay $vg 2>&1 | tee out
+grep expected out
+
+check inactive $vg pool_tmeta
+
+# Transaction_id is higher by 1
+fake_metadata_ 10 2 >data
+thin_restore -i data -o "$DM_DEV_DIR/mapper/$vg-$lv1"
+lvconvert -y --thinpool $vg/pool --poolmetadata $vg/$lv1
+not vgchange -ay $vg 2>&1 | tee out
+grep expected out
+
+check inactive $vg pool_tmeta
 
 # Prepare some fake metadata prefilled to ~81% (>70%)
-fake_metadata_ 400 >data
-
+fake_metadata_ 400 1 >data
 thin_restore -i data -o "$DM_DEV_DIR/mapper/$vg-$lv1"
-vgchange -an $vg
+
 # Swap volume with restored fake metadata
 lvconvert -y --thinpool $vg/pool --poolmetadata $vg/$lv1
 
@@ -70,3 +89,5 @@ vgchange -ay $vg
 # Check dmeventd resizes metadata
 pre=$(meta_percent_)
 wait_for_change_ $pre
+
+vgremove -f $vg
