@@ -1197,9 +1197,11 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 		ah->log_len = !metadata_area_count ? 0 :
 			mirror_log_extents(ah->region_size, extent_size,
 					   new_extents / ah->area_multiple);
-		ah->new_extents = ah->new_extents * ah->area_multiple / ah->area_count;
-		ah->new_extents = (ah->new_extents / ah->area_multiple) * ah->area_multiple;
-		log_debug("Adjusted allocation request to %" PRIu32 " data extents.", ah->new_extents);
+		if (approx_alloc) {
+			ah->new_extents = ah->new_extents * ah->area_multiple / ah->area_count;
+			ah->new_extents = (ah->new_extents / ah->area_multiple) * ah->area_multiple;
+			log_debug("Adjusted allocation request to %" PRIu32 " data extents.", ah->new_extents);
+		}
 	}
 
 	for (s = 0; s < alloc_count; s++)
@@ -3813,7 +3815,7 @@ static int _lvresize_adjust_extents(struct cmd_context *cmd, struct logical_volu
 {
 	struct volume_group *vg = lv->vg;
 	uint32_t pv_extent_count;
-	uint32_t extents_used;
+	uint32_t extents_used, extents;
 	uint32_t seg_stripes = 0, seg_stripesize = 0, seg_size;
 	uint32_t seg_mirrors = 0;
 	struct lv_segment *seg, *uninitialized_var(mirr_seg);
@@ -3825,24 +3827,24 @@ static int _lvresize_adjust_extents(struct cmd_context *cmd, struct logical_volu
 	/* If percent options were used, convert them into actual numbers of extents */
 	switch (lp->percent) {
 		case PERCENT_VG:
-			lp->extents = percent_of_extents(lp->extents, vg->extent_count,
+			extents = percent_of_extents(lp->extents, vg->extent_count,
 							 (lp->sign != SIGN_MINUS));
 			break;
 		case PERCENT_FREE:
-			lp->extents = percent_of_extents(lp->extents, vg->free_count,
+			extents = percent_of_extents(lp->extents, vg->free_count,
 							 (lp->sign != SIGN_MINUS));
 			break;
 		case PERCENT_LV:
-			lp->extents = percent_of_extents(lp->extents, lv->le_count,
+			extents = percent_of_extents(lp->extents, lv->le_count,
 							 (lp->sign != SIGN_MINUS));
 			break;
 		case PERCENT_PVS:
 			if (lp->argc) {
 				pv_extent_count = pv_list_extents_free(pvh);
-				lp->extents = percent_of_extents(lp->extents, pv_extent_count,
+				extents = percent_of_extents(lp->extents, pv_extent_count,
 								 (lp->sign != SIGN_MINUS));
 			} else
-				lp->extents = percent_of_extents(lp->extents, vg->extent_count,
+				extents = percent_of_extents(lp->extents, vg->extent_count,
 								 (lp->sign != SIGN_MINUS));
 			break;
 		case PERCENT_ORIGIN:
@@ -3850,11 +3852,20 @@ static int _lvresize_adjust_extents(struct cmd_context *cmd, struct logical_volu
 				log_error("Specified LV does not have an origin LV.");
 				return 0;
 			}
-			lp->extents = percent_of_extents(lp->extents, origin_from_cow(lv)->le_count,
+			extents = percent_of_extents(lp->extents, origin_from_cow(lv)->le_count,
 							 (lp->sign != SIGN_MINUS));
 			break;
 		case PERCENT_NONE:
+			extents = lp->extents;
 			break;
+	}
+
+	if (lp->percent != PERCENT_NONE) {
+		log_verbose("Converted %" PRIu32 "%%%s into %" PRIu32 " extents.", lp->extents, get_percent_string(lp->percent), extents);
+		lp->extents = extents;
+		if (lp->sign == SIGN_NONE && (lp->percent != PERCENT_LV && lp->percent != PERCENT_ORIGIN))
+			lp->approx_alloc = 1;
+		/* FIXME Adjust for parallel areas here before processing relative allocations */
 	}
 
 	if (lp->sign == SIGN_PLUS) {
@@ -4213,7 +4224,7 @@ static struct logical_volume *_lvresize_volume(struct cmd_context *cmd,
 			      lp->stripes, lp->stripe_size,
 			      lp->mirrors, first_seg(lv)->region_size,
 			      lp->extents - lv->le_count, NULL,
-			      pvh, alloc, 0))
+			      pvh, alloc, lp->approx_alloc))
 		return_NULL;
 
 	if (lock_lv) {

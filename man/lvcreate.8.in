@@ -223,14 +223,17 @@ is specified.
 .TP
 .IR \fB\-l ", " \fB\-\-extents " " LogicalExtentsNumber [ % { VG | PVS | FREE | ORIGIN }]
 Gives the number of logical extents to allocate for the new
-logical volume.
+logical volume.  The total number of physical extents allocated will be
+greater than this, for example, if the volume is mirrored.
 The number can also be expressed as a percentage of the total space
 in the Volume Group with the suffix \fI%VG\fR, as a percentage of the
 remaining free space in the Volume Group with the suffix \fI%FREE\fR, as a
 percentage of the remaining free space for the specified
 PhysicalVolume(s) with the suffix \fI%PVS\fR, or (for a snapshot) as a
 percentage of the total space in the Origin Logical Volume with the
-suffix \fI%ORIGIN\fR.
+suffix \fI%ORIGIN\fR.  When expressed as a percentage, the number is treated
+as an approximate upper limit for the total number of physical extents
+to be allocated (including extents used by any mirrors, for example).
 .TP
 .IR \fB\-L ", " \fB\-\-size " " LogicalVolumeSize [ bBsSkKmMgGtTpPeE ]
 Gives the size to allocate for the new logical volume.

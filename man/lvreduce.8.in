@@ -51,6 +51,8 @@ Reduce or set the logical volume size in units of logical extents.
 With the \fI-\fP sign the value will be subtracted from
 the logical volume's actual size and without it the value will be taken
 as an absolute size.
+The total number of physical extents freed will be greater than this logical
+value if, for example, the volume is mirrored.
 The number can also be expressed as a percentage of the total space
 in the Volume Group with the suffix \fI%VG\fP, relative to the existing
 size of the Logical Volume with the suffix \fI%LV\fP, as a percentage of the
@@ -59,6 +61,10 @@ a snapshot) as a percentage of the total space in the Origin Logical
 Volume with the suffix \fI%ORIGIN\fP.
 The resulting value for the subtraction is rounded downward, for the absolute
 size it is rounded upward.
+N.B. In a future release, when expressed as a percentage with VG or FREE, the
+number will be treated as an approximate total number of physical extents to be
+freed (including extents used by any mirrors, for example).  The code may
+currently release more space than you might otherwise expect.
 .TP
 .IR \fB\-L ", " \fB\-\-size " [" \- ] LogicalVolumeSize [ bBsSkKmMgGtTpPeE ]
 Reduce or set the logical volume size in units of megabytes.

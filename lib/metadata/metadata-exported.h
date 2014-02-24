@@ -484,6 +484,7 @@ struct lvresize_params {
 	uint64_t poolmetadatasize;
 	sign_t poolmetadatasign;
 	uint32_t poolmetadataextents;
+	int approx_alloc;
 	percent_type_t percent;
 
 	enum {

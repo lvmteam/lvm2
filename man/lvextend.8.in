@@ -45,6 +45,8 @@ Proceed with size extension without prompting.
 Extend or set the logical volume size in units of logical extents.
 With the '\fI+\fP' sign the value is added to the actual size
 of the logical volume and without it, the value is taken as an absolute one.
+The total number of physical extents allocated will be
+greater than this, for example, if the volume is mirrored.
 The number can also be expressed as a percentage of the total space
 in the Volume Group with the suffix \fI%VG\fP, relative to the existing
 size of the Logical Volume with the suffix \fI%LV\fP, of the remaining
@@ -53,6 +55,11 @@ as a percentage of the remaining free space in the Volume Group
 with the suffix \fI%FREE\fP, or (for a snapshot) as a percentage of the total
 space in the Origin Logical Volume with the suffix \fI%ORIGIN\fP.
 The resulting value is rounded upward.
+N.B. In a future release, when expressed as a percentage with PVS, VG or FREE,
+the number will be treated as an approximate upper limit for the total number
+of physical extents to be allocated (including extents used by any mirrors, for
+example).  The code may currently allocate more space than you might otherwise
+expect.
 .TP
 .IR \fB\-L ", " \fB\-\-size " [" + ] LogicalVolumeSize [ bBsSkKmMgGtTpPeE ]
 Extend or set the logical volume size in units of megabytes.

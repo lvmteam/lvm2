@@ -400,6 +400,7 @@ static int _update_extents_params(struct volume_group *vg,
 	}
 
 	if (lcp->percent) {
+		/* FIXME Don't do the adjustment for parallel allocation with PERCENT_ORIGIN! */
 		lp->approx_alloc = 1;
 		log_verbose("Converted %" PRIu32 "%%%s into %" PRIu32 " extents.", lp->extents, get_percent_string(lcp->percent), extents);
 		lp->extents = extents;
