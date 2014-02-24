@@ -977,19 +977,16 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 		}
 	}
 
-	if (activation() && lp->segtype->ops->target_present &&
-	    !lp->segtype->ops->target_present(cmd, NULL, &lp->target_attr)) {
-		log_error("%s: Required device-mapper target(s) not "
-			  "detected in your kernel", lp->segtype->name);
-		return 0;
-	} else if (!strcmp(lp->segtype->name, "raid10")) {
-		uint32_t maj, min, patchlevel;
-		if (!target_version("raid", &maj, &min, &patchlevel)) {
-			log_error("Failed to determine version of RAID kernel module");
+	if (activation() && lp->segtype->ops->target_present) {
+		if (!lp->segtype->ops->target_present(cmd, NULL, &lp->target_attr)) {
+			log_error("%s: Required device-mapper target(s) not detected in your kernel.",
+				  lp->segtype->name);
 			return 0;
 		}
-		if ((maj != 1) || (min < 3)) {
-			log_error("RAID module does not support RAID10");
+
+		if ((strcmp(lp->segtype->name, "raid10") == 0) &&
+		    !(lp->target_attr & RAID_FEATURE_RAID10)) {
+			log_error("RAID module does not support RAID10.");
 			return 0;
 		}
 	}

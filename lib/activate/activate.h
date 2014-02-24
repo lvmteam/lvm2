@@ -67,6 +67,11 @@ enum {
 	THIN_FEATURE_EXTERNAL_ORIGIN_EXTEND	= (1 << 6),
 };
 
+/* raid target attribute flags */
+enum {
+	RAID_FEATURE_RAID10			= (1 << 0), /* version 1.3 */
+};
+
 void set_activation(int activation);
 int activation(void);
 

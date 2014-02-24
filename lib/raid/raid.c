@@ -326,15 +326,45 @@ static int _raid_target_percent(void **target_state,
 
 static int _raid_target_present(struct cmd_context *cmd,
 				const struct lv_segment *seg __attribute__((unused)),
-				unsigned *attributes __attribute__((unused)))
+				unsigned *attributes)
 {
+	/* List of features with their kernel target version */
+	static const struct feature {
+		uint32_t maj;
+		uint32_t min;
+		unsigned raid_feature;
+		const char *feature;
+	} const _features[] = {
+		{ 1, 3, RAID_FEATURE_RAID10, "raid10" },
+	};
+
 	static int _raid_checked = 0;
 	static int _raid_present = 0;
+	static int _raid_attrs = 0;
+	uint32_t maj, min, patchlevel;
+	unsigned i;
 
-	if (!_raid_checked)
+	if (!_raid_checked) {
 		_raid_present = target_present(cmd, "raid", 1);
 
-	_raid_checked = 1;
+		if (!target_version("raid", &maj, &min, &patchlevel)) {
+			log_error("Cannot read target version of RAID kernel module.");
+			return 0;
+		}
+
+		for (i = 0; i < sizeof(_features)/sizeof(*_features); i++)
+			if ((maj > _features[i].maj) ||
+			    (maj == _features[i].maj && min >= _features[i].min))
+				_raid_attrs |= _features[i].raid_feature;
+			else
+				log_very_verbose("Target raid does not support %s.",
+						 _features[i].feature);
+
+		_raid_checked = 1;
+	}
+
+	if (attributes)
+		*attributes = _raid_attrs;
 
 	return _raid_present;
 }
