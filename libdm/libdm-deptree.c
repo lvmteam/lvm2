@@ -1486,6 +1486,7 @@ static int _node_send_messages(struct dm_tree_node *dnode,
 	struct thin_message *tmsg;
 	uint64_t trans_id;
 	const char *uuid;
+	int have_messages;
 
 	if (!dnode->info.exists || (dm_list_size(&dnode->props.segs) != 1))
 		return 1;
@@ -1503,32 +1504,31 @@ static int _node_send_messages(struct dm_tree_node *dnode,
 	}
 
 	if (!_thin_pool_status_transaction_id(dnode, &trans_id))
-		goto_bad;
+		return_0;
 
+	have_messages = !dm_list_empty(&seg->thin_messages) ? 1 : 0;
 	if (trans_id == seg->transaction_id) {
-		if (!dm_list_empty(&seg->thin_messages))
+		dnode->props.send_messages = 0; /* messages already committed */
+		if (have_messages)
 			log_debug_activation("Thin pool transaction_id matches %" PRIu64
 					     ", skipping messages.", trans_id);
-		return 1; /* In sync - skip messages */
+		return 1;
 	}
 
-	if (trans_id != (seg->transaction_id - 1)) {
+	/* Error if there are no stacked messages or id mismatches */
+	if (trans_id != (seg->transaction_id - have_messages)) {
 		log_error("Thin pool transaction_id=%" PRIu64 ", while expected: %" PRIu64 ".",
-			  trans_id, seg->transaction_id - 1);
-		goto bad; /* Nothing to send */
+			  trans_id, seg->transaction_id - have_messages);
+		return 0;
 	}
 
 	dm_list_iterate_items(tmsg, &seg->thin_messages)
 		if (!(_thin_pool_node_message(dnode, tmsg)))
-			goto_bad;
+			return_0;
+
+	dnode->props.send_messages = 0; /* messages posted */
 
 	return 1;
-bad:
-	/* Try to deactivate */
-	if (!(dm_tree_deactivate_children(dnode, uuid_prefix, uuid_prefix_len)))
-		log_error("Failed to deactivate %s", dnode->name);
-
-	return 0;
 }
 
 /*
@@ -1864,12 +1864,9 @@ int dm_tree_activate_children(struct dm_tree_node *dnode,
 	 * resume should continue further, just whole command
 	 * has to report failure.
 	 */
-	if (r && dnode->props.send_messages) {
-		if (!(r = _node_send_messages(dnode, uuid_prefix, uuid_prefix_len)))
-			stack;
-		else
-			dnode->props.send_messages = 0; /* messages posted */
-	}
+	if (r && dnode->props.send_messages &&
+	    !(r = _node_send_messages(dnode, uuid_prefix, uuid_prefix_len)))
+		stack;
 
 	return r;
 }
