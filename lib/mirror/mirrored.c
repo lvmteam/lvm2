@@ -150,7 +150,6 @@ static int _mirrored_text_export(const struct lv_segment *seg, struct formatter 
 
 #ifdef DEVMAPPER_SUPPORT
 static int _block_on_error_available = 0;
-static unsigned _mirror_attributes = 0;
 
 static struct mirror_state *_mirrored_init_target(struct dm_pool *mem,
 					 struct cmd_context *cmd)
@@ -462,6 +461,7 @@ static int _mirrored_target_present(struct cmd_context *cmd,
 {
 	static int _mirrored_checked = 0;
 	static int _mirrored_present = 0;
+	static unsigned _mirror_attributes = 0;
 	uint32_t maj, min, patchlevel;
 	unsigned maj2, min2, patchlevel2;
 	char vsn[80];
@@ -469,6 +469,7 @@ static int _mirrored_target_present(struct cmd_context *cmd,
 	unsigned kmaj, kmin, krel;
 
 	if (!_mirrored_checked) {
+		_mirrored_checked = 1;
 		_mirrored_present = target_present(cmd, "mirror", 1);
 
 		/*
@@ -492,14 +493,14 @@ static int _mirrored_target_present(struct cmd_context *cmd,
 		      sscanf(vsn, "%u.%u.%u", &maj2, &min2, &patchlevel2) == 3 &&
 		      maj2 == 4 && min2 == 5 && patchlevel2 == 0)))	/* RHEL4U3 */
 			_block_on_error_available = 1;
-	}
 
-	/*
-	 * Check only for modules if atttributes requested and no previous check.
-	 * FIXME: Fails incorrectly if cmirror was built into kernel.
-	 */
-	if (attributes) {
-		if (!_mirror_attributes) {
+#ifdef CMIRRORD_PIDFILE
+		/*
+		 * The cluster mirror log daemon must be running,
+		 * otherwise, the kernel module will fail to make
+		 * contact.
+		 */
+		if (dm_daemon_is_running(CMIRRORD_PIDFILE)) {
 			/*
 			 * The dm-log-userspace module was added to the
 			 * 2.6.31 kernel.
@@ -508,31 +509,25 @@ static int _mirrored_target_present(struct cmd_context *cmd,
 			    (sscanf(uts.release, "%u.%u.%u", &kmaj, &kmin, &krel) == 3) &&
 			    KERNEL_VERSION(kmaj, kmin, krel) < KERNEL_VERSION(2, 6, 31)) {
 				if (module_present(cmd, "log-clustered"))
-					_mirror_attributes |= MIRROR_LOG_CLUSTERED;
+				_mirror_attributes |= MIRROR_LOG_CLUSTERED;
 			} else if (module_present(cmd, "log-userspace"))
 				_mirror_attributes |= MIRROR_LOG_CLUSTERED;
 
 			if (!(_mirror_attributes & MIRROR_LOG_CLUSTERED))
-				log_verbose("Cluster mirror log module is not available");
-
-			/*
-			 * The cluster mirror log daemon must be running,
-			 * otherwise, the kernel module will fail to make
-			 * contact.
-			 */
-#ifdef CMIRRORD_PIDFILE
-			if (!dm_daemon_is_running(CMIRRORD_PIDFILE)) {
-				log_verbose("Cluster mirror log daemon is not running");
-				_mirror_attributes &= ~MIRROR_LOG_CLUSTERED;
-			}
+				log_verbose("Cluster mirror log module is not available.");
+		} else
+			log_verbose("Cluster mirror log daemon is not running.");
 #else
-			log_verbose("Cluster mirror log daemon not included in build");
-			_mirror_attributes &= ~MIRROR_LOG_CLUSTERED;
+		log_verbose("Cluster mirror log daemon not included in build.");
 #endif
-		}
-		*attributes = _mirror_attributes;
 	}
-	_mirrored_checked = 1;
+
+	/*
+	 * Check only for modules if atttributes requested and no previous check.
+	 * FIXME: Fails incorrectly if cmirror was built into kernel.
+	 */
+	if (attributes)
+		*attributes = _mirror_attributes;
 
 	return _mirrored_present;
 }

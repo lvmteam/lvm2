@@ -1,5 +1,6 @@
 Version 2.02.106 - 
 ====================================
+  Improve detection of clustered mirror support.
   Enhance raid code with feature flags, for now checks for raid10.
   Move parsing of VG metadata from vg_commit() back to vg_write() (2.02.99)
   Avoid a PV label scan while in a critical section.
