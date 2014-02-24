@@ -233,6 +233,32 @@ static int sub_lv_of(struct logical_volume *lv, const char *lv_name)
 	return sub_lv_of(seg->lv, lv_name);
 }
 
+/*
+ * parent_lv_is_cache_type
+ *
+ * FIXME: This function can be removed when 'pvmove' is supported for
+ *        cache types.
+ *
+ * If this LV is below a cache LV (at any depth), return 1.
+ */
+static int parent_lv_is_cache_type(struct logical_volume *lv)
+{
+	struct lv_segment *seg;
+
+	/* Sub-LVs only ever have one segment using them */
+	if (dm_list_size(&lv->segs_using_this_lv) != 1)
+		return 0;
+
+	if (!(seg = get_only_segment_using_this_lv(lv)))
+		return_0;
+
+	if (lv_is_cache_type(seg->lv))
+		return 1;
+
+	/* Continue up the tree */
+	return parent_lv_is_cache_type(seg->lv);
+}
+
 /* Create new LV with mirror segments for the required copies */
 static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 						struct volume_group *vg,
@@ -341,6 +367,23 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 
 		if (!lv_is_on_pvs(lv, source_pvl))
 			continue;
+
+		if (lv_is_cache_type(lv)) {
+			log_print_unless_silent("Skipping %s LV, %s",
+						lv_is_cache(lv) ? "cache" :
+						lv_is_cache_pool(lv) ?
+						"cache-pool" : "cache-related",
+						lv->name);
+			lv_skipped = 1;
+			continue;
+		}
+
+		if (parent_lv_is_cache_type(lv)) {
+			log_print_unless_silent("Skipping %s because a parent"
+						" is of cache type", lv->name);
+			lv_skipped = 1;
+			continue;
+		}
 
 		/*
 		 * If the VG is clustered, we are unable to handle
