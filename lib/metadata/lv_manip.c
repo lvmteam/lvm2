@@ -4274,6 +4274,11 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 	struct logical_volume *lock_lv = NULL;
 	int inactive = 0;
 
+	if (lv_is_cache_type(lv)) {
+		log_error("Unable to resize logical volumes of cache type.");
+		return 0;
+	}
+
 	if (lp->sizeargs &&
 	    !(lock_lv = _lvresize_volume(cmd, lv, lp, pvh)))
 		return_0;
