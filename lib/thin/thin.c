@@ -215,7 +215,7 @@ static int _thin_pool_text_export(const struct lv_segment *seg, struct formatter
 
 #ifdef DEVMAPPER_SUPPORT
 static int _thin_target_present(struct cmd_context *cmd,
-				const struct lv_segment *seg,
+				const struct lv_segment *seg __attribute__((unused)),
 				unsigned *attributes);
 
 static int _thin_pool_modules_needed(struct dm_pool *mem,
@@ -262,7 +262,7 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 	uint64_t transaction_id = 0;
 	unsigned attr;
 
-	if (!_thin_target_present(cmd, seg, &attr))
+	if (!_thin_target_present(cmd, NULL, &attr))
 		return_0;
 
 	if (!seg->metadata_lv) {
@@ -566,7 +566,7 @@ static int _thin_add_target_line(struct dev_manager *dm,
 			return_0;
 		if (seg->external_lv->size < seg->lv->size) {
 			/* Validate target supports smaller external origin */
-			if (!_thin_target_present(cmd, first_seg(seg->pool_lv), &attr) ||
+			if (!_thin_target_present(cmd, NULL, &attr) ||
 			    !(attr & THIN_FEATURE_EXTERNAL_ORIGIN_EXTEND)) {
 				log_error("Thin target does not support smaller size of external origin LV %s.",
 					  seg->external_lv->name);
@@ -617,7 +617,7 @@ static int _thin_target_percent(void **target_state __attribute__((unused)),
 }
 
 static int _thin_target_present(struct cmd_context *cmd,
-				const struct lv_segment *seg,
+				const struct lv_segment *seg __attribute__((unused)),
 				unsigned *attributes)
 {
 	/* List of features with their kernel target version */
