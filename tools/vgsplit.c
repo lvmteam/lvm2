@@ -14,6 +14,7 @@
  */
 
 #include "tools.h"
+#include "metadata.h"  /* for 'get_only_segment_using_this_lv' */
 
 /* FIXME Why not (lv->vg == vg) ? */
 static int _lv_is_in_vg(struct volume_group *vg, struct logical_volume *lv)
@@ -70,6 +71,10 @@ static int _move_lvs(struct volume_group *vg_from, struct volume_group *vg_to)
 
 		if (lv_is_thin_pool(lv) ||
 		    lv_is_thin_volume(lv))
+			continue;
+
+		if (lv_is_cache(lv) || lv_is_cache_pool(lv))
+			/* further checks by _move_cache() */
 			continue;
 
 		/* Ensure all the PVs used by this LV remain in the same */
@@ -263,6 +268,77 @@ static int _move_thins(struct volume_group *vg_from,
 					return_0;
 			}
 		}
+	}
+
+	return 1;
+}
+
+static int _move_cache(struct volume_group *vg_from,
+		       struct volume_group *vg_to)
+{
+	int is_moving;
+	struct dm_list *lvh, *lvht;
+	struct logical_volume *lv, *data, *meta, *orig;
+	struct lv_segment *seg, *cache_seg;
+
+	dm_list_iterate_safe(lvh, lvht, &vg_from->lvs) {
+		lv = dm_list_item(lvh, struct lv_list)->lv;
+		data = meta = orig = NULL;
+		seg = first_seg(lv);
+
+		if (!lv_is_cache(lv) && !lv_is_cache_pool(lv))
+			continue;
+
+		/*
+		 * FIXME: The code seems to move cache LVs fine, but it
+		 *        hasn't been well tested and it causes problems
+		 *        when just splitting PVs that don't contain
+		 *        cache LVs.
+		 * Waiting for next release before fixing and enabling.
+		 */
+		log_error("Unable to split VG while it contains cache LVs");
+		return 0;
+
+		if (lv_is_cache(lv)) {
+			orig = seg_lv(seg, 0);
+			data = seg_lv(first_seg(seg->pool_lv), 0);
+			meta = first_seg(seg->pool_lv)->metadata_lv;
+			/* Ensure all components are coming along */
+			is_moving = !!_lv_is_in_vg(vg_to, orig);
+		} else {
+			if (!dm_list_empty(&seg->lv->segs_using_this_lv) &&
+			    !(cache_seg = get_only_segment_using_this_lv(seg->lv)))
+				return_0;
+			orig = seg_lv(cache_seg, 0);
+			data = seg_lv(seg, 0);
+			meta = seg->metadata_lv;
+
+			if (_lv_is_in_vg(vg_to, data) ||
+			    _lv_is_in_vg(vg_to, meta))
+				is_moving = 1;
+		}
+
+		if (orig && (!!_lv_is_in_vg(vg_to, orig) != is_moving)) {
+			log_error("Can't split %s and its origin (%s)"
+				  " into separate VGs", lv->name, orig->name);
+			return 0;
+		}
+
+		if (data && (!!_lv_is_in_vg(vg_to, data) != is_moving)) {
+			log_error("Can't split %s and its cache pool"
+				  " data LV (%s) into separate VGs",
+				  lv->name, data->name);
+			return 0;
+		}
+
+		if (meta && (!!_lv_is_in_vg(vg_to, meta) != is_moving)) {
+			log_error("Can't split %s and its cache pool"
+				  " metadata LV (%s) into separate VGs",
+				  lv->name, meta->name);
+			return 0;
+		}
+		if (!_move_one_lv(vg_from, vg_to, lvh))
+			return_0;
 	}
 
 	return 1;
@@ -479,6 +555,9 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 
 	/* Move required pools across */
 	if (!(_move_thins(vg_from, vg_to)))
+		goto_bad;
+
+	if (!(_move_cache(vg_from, vg_to)))
 		goto_bad;
 
 	/* Split metadata areas and check if both vgs have at least one area */
