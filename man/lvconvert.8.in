@@ -131,7 +131,7 @@ lvconvert \- convert a logical volume from linear to mirror or snapshot
 .sp
 .B lvconvert \-\-type cache
 .RB \-\-cachepool
-.IR CachePoolLogicalVolume { Name | Path }
+.IR CachePoolLV { Name | Path }
 .IR LogicalVolume [ Path ]
 .RB [ \-h | \-? | \-\-help ]
 .RB [ \-v | \-\-verbose ]
@@ -170,12 +170,9 @@ arguments is required.
 .BR \-b ", " \-\-background
 Run the daemon in the background.
 .TP
-.BR \-\-cachepool " " \fCachePoolLogicalVolume
-This argument is used when converting a logical volume to a cached
-logical volume.  The CachePoolLogicalVolume is the small and fast
-logical volume that will provide the cache for the large slow logical
-volume that is being converted.  Not that a cache pool LV can only be
-used by one logical volume.
+.BR \-\-cachepool " " \fCachePoolLV
+This argument is necessary when converting a logical volume to a cache LV.
+For more information on cache pool LVs and cache LVs, see \fBlvm\fP(8).
 .TP
 .BR \-m ", " \-\-mirrors " " \fIMirrors
 Specifies the degree of the mirror you wish to create.
@@ -208,8 +205,8 @@ uses this granularity to track which regions are in sync.
 .TP
 .B \-\-type \fISegmentType
 Used to convert a logical volume to another segment type, like cache-pool,
-cache, raid1, mirror.  When converting a logical volume to a cached logical
-volume, the \-\-cachepool argument is required.
+cache, raid1, or thin-pool.  When converting a logical volume to a cache LV,
+the \-\-cachepool argument is required.
 .TP
 .BR \-i ", " \-\-interval " " \fISeconds
 Report progress as a percentage at regular intervals.
@@ -478,16 +475,17 @@ For the read-only external origin use the new name "vg00/external".
 .sp
 .B lvconvert \-\-thinpool vg00/lvpool \-\-originname external -T vg00/origin
 
-Convert an existing logical volume to a cache pool logical volume using the
-given pool metadata LV.
+Convert an existing logical volume to a cache pool LV using the
+given cache metadata LV.
 .sp
-.B lvconvert --type cache-pool vg00/my_lv_data \-\-poolmetadata vg00/my_lv_meta
-.B lvrename vg00/my_lv_data vg00/my_lv_cachepool
+.B lvconvert --type cache-pool --poolmetadata vg00/lvx_meta vg00/lvx_data
+.br
+.B lvrename vg00/lvx_data vg00/lvx_cachepool
 
-Convert an existing logical volume to a cached logical volume using the given
-cachepool.
+Convert an existing logical volume to a cache LV using the given
+cache pool LV.
 .sp
-.B lvconvert \-\-type cache vg00/my_lv \-\-cachepool vg00/my_lv_cachepool
+.B lvconvert \-\-type cache  \-\-cachepool vg00/lvx_cachepool vg00/lvx
 
 .SH SEE ALSO
 .BR lvm (8),

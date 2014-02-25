@@ -160,13 +160,14 @@ Ignore the flag to skip Logical Volumes during activation.
 
 .TP
 .BR \-\-cachemode " " { writeback | writethrough }
-Specifying a cache mode determines when the writes to a cached logical volume
-are considered complete.  When "writeback" is specified, a write is considered
-complete as soon as it is stored in the cache pool (i.e. the smaller faster
-device).  If "writethough" is specified, a write is considered complete only
-when it has been stored in the cache pool and on the origin (i.e. the larger
-slower device).  While "writethrough" may be slower for writes, it is more
-resilient if something should happen to the cache pool device.
+Specifying a cache mode determines when the writes to a cache LV
+are considered complete.  When \fIwriteback\fP is specified, a write is
+considered complete as soon as it is stored in the cache pool LV.
+If \fIwritethough\fP is specified, a write is considered complete only
+when it has been stored in the cache pool LV and on the origin LV.
+While \fIwritethrough\fP may be slower for writes, it is more
+resilient if something should happen to a device associated with the
+cache pool LV.
 
 .TP
 .BR \-c ", " \-\-chunksize " " \fIChunkSize [ \fIbBsSkKmMgG ]
@@ -176,7 +177,7 @@ Default unit is in kilobytes.
 For snapshots the value must be power of 2 between 4KiB and 512KiB
 and the default value is 4.
 .br
-For cache pools the value must be between 32KiB and 1GiB.  The default
+For cache pool LVs the value must be between 32KiB and 1GiB.  The default
 is 64KiB.  Values must be a multiple of 32KiB.
 .br
 For thin pools the value must be between 64KiB and
@@ -415,7 +416,7 @@ as is the case with
 or
 .IR zero .
 Note that the cache segment type requires a dm-cache kernel module version
-1.3.0 or greater or a kernel version 3.14 or newer.
+1.3.0 or greater.
 
 .TP
 .BR \-V ", " \-\-virtualsize " " \fIVirtualSize [ \fIbBsSkKmMgGtTpPeE ]
@@ -532,20 +533,20 @@ in vg00 that will use an existing thin pool "vg00/pool":
 .sp
 .B lvcreate -s --thinpool vg00/pool  origin
 
-Create a cache pool logical volume that can later be used to cache one
+Create a cache pool LV that can later be used to cache one
 logical volume.
 .sp
 .B lvcreate --type cache-pool -L 1G -n my_lv_cachepool vg /dev/fast1
 
-If there is an existing cache pool logical volume, create the large slow
-device (i.e. the origin) and link it to the supplied cache pool LV,
-creating a cache logical volume.
+If there is an existing cache pool LV, create the large slow
+device (i.e. the origin LV) and link it to the supplied cache pool LV,
+creating a cache LV.
 .sp
 .B lvcreate --type cache -L 100G -n my_lv vg/my_lv_cachepool /dev/slow1
 
-If there is an existing logical volume, create the fast and small
-cache pool logical volume and link it to the supplied existing logical
-volume (i.e. the origin), creating a cache logical volume.
+If there is an existing logical volume, create the small and fast
+cache pool LV and link it to the supplied existing logical
+volume (i.e. the origin LV), creating a cache LV.
 .sp
 .B lvcreate --type cache -L 1G -n my_lv_cachepool vg/my_lv /dev/fast1
 

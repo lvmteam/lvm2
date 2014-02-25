@@ -135,7 +135,7 @@ can also be chosen.
 The lv_attr bits are:
 .RS
 .IP 1 3
-Volume type: (C)ached, (m)irrored, (M)irrored without initial sync, (o)rigin,
+Volume type: (C)ache, (m)irrored, (M)irrored without initial sync, (o)rigin,
 (O)rigin with merging snapshot, (r)aid, (R)aid without initial sync,
 (s)napshot, merging (S)napshot, (p)vmove, (v)irtual,
 mirror or raid (i)mage, mirror or raid (I)mage out-of-sync, mirror (l)og device,
