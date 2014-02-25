@@ -11,7 +11,7 @@
 
 . lib/test
 
-aux target_at_least dm-cache 1 2 0 || skip
+aux target_at_least dm-cache 1 3 0 || skip
 
 # Skip in cluster for now, but should test EX mode...
 test -e LOCAL_CLVMD && skip
