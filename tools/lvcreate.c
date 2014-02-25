@@ -769,8 +769,12 @@ static int _read_activation_params(struct lvcreate_params *lp,
 	lp->permission = arg_uint_value(cmd, permission_ARG,
 					LVM_READ | LVM_WRITE);
 
-	/* Must not zero/wipe read only volume */
-	if (!(lp->permission & LVM_WRITE)) {
+	if (lp->snapshot) {
+		/* Snapshot has to zero COW header */
+		lp->zero = 1;
+		lp->wipe_signatures = 0;
+	} else if (!(lp->permission & LVM_WRITE)) {
+		/* Must not zero/wipe read only volume */
 		lp->zero = 0;
 		lp->wipe_signatures = 0;
 	}

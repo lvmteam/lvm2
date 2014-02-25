@@ -131,4 +131,15 @@ vgremove -ff $vg1
 
 fi
 
+lvremove -f $vg
+
+# Check snapshot really deletes COW header for read-only snapshot
+aux lvmconf "allocation/wipe_signatures_when_zeroing_new_lvs = 1"
+lvcreate -L10 -n $lv1 $vg
+lvcreate -s -L10 -n snap $vg/$lv1
+# Populate snapshot with some filesystem signatures
+mkfs.ext4 "$DM_DEV_DIR/$vg/snap"
+lvremove -f $vg/snap
+lvcreate -s -pr -l12 -n snap $vg/$lv1
+
 vgremove -ff $vg
