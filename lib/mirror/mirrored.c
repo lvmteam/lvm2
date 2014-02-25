@@ -465,8 +465,6 @@ static int _mirrored_target_present(struct cmd_context *cmd,
 	uint32_t maj, min, patchlevel;
 	unsigned maj2, min2, patchlevel2;
 	char vsn[80];
-	struct utsname uts;
-	unsigned kmaj, kmin, krel;
 
 	if (!_mirrored_checked) {
 		_mirrored_checked = 1;
@@ -501,6 +499,8 @@ static int _mirrored_target_present(struct cmd_context *cmd,
 		 * contact.
 		 */
 		if (dm_daemon_is_running(CMIRRORD_PIDFILE)) {
+			struct utsname uts;
+			unsigned kmaj, kmin, krel;
 			/*
 			 * The dm-log-userspace module was added to the
 			 * 2.6.31 kernel.
