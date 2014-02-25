@@ -396,11 +396,11 @@ static int _lv_mimage_in_sync(const struct logical_volume *lv)
 	struct lv_segment *seg = first_seg(lv);
 	struct lv_segment *mirror_seg;
 
-	if (seg)
-		mirror_seg = find_mirror_seg(seg);
-
-	if (!(lv->status & MIRROR_IMAGE) || !seg || !mirror_seg)
-		return_0;
+	if (!(lv->status & MIRROR_IMAGE) || !seg ||
+	    !(mirror_seg = find_mirror_seg(seg))) {
+		log_error(INTERNAL_ERROR "Cannot find mirror segment.");
+		return 0;
+	}
 
 	if (!lv_mirror_percent(lv->vg->cmd, mirror_seg->lv, 0, &percent,
 			       NULL))
