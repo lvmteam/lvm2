@@ -21,7 +21,7 @@ struct lvcreate_cmdline_params {
 	percent_type_t percent;
 	uint64_t size;
 	char **pvs;
-	int pv_count;
+	uint32_t pv_count;
 };
 
 static int _set_vg_name(struct lvcreate_params *lp, const char *vg_name)
@@ -1181,7 +1181,7 @@ static int _check_raid_parameters(struct volume_group *vg,
 				  struct lvcreate_params *lp,
 				  struct lvcreate_cmdline_params *lcp)
 {
-	int devs = lcp->pv_count ? lcp->pv_count : dm_list_size(&vg->pvs);
+	unsigned devs = lcp->pv_count ? : dm_list_size(&vg->pvs);
 	struct cmd_context *cmd = vg->cmd;
 
 	/*
