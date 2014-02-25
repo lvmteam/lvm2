@@ -82,6 +82,8 @@ typedef union {
 #define CFG_UNSUPPORTED		0x08
 /* whether the configuration item is customizable by a profile */
 #define CFG_PROFILABLE		0x10
+/* whether the default value is undefned */
+#define CFG_DEFAULT_UNDEFINED	0x20
 
 /* configuration definition item structure */
 typedef struct cfg_def_item {
@@ -109,8 +111,10 @@ typedef enum {
 struct config_def_tree_spec {
 	cfg_def_tree_t type;		/* tree type */
 	uint16_t version;		/* tree at this LVM2 version */
-	int ignoreadvanced;		/* do not include advanced configs */
-	int ignoreunsupported;		/* do not include unsupported configs */
+	int ignoreadvanced:1;		/* do not include advanced configs */
+	int ignoreunsupported:1;	/* do not include unsupported configs */
+	int withcomments:1;		/* include comments */
+	int withversions:1;		/* include versions */
 	uint8_t *check_status;		/* status of last tree check (currently needed for CFG_DEF_TREE_MISSING only) */
 };
 
@@ -163,8 +167,7 @@ int config_file_read_fd(struct dm_config_tree *cft, struct device *dev,
 			checksum_fn_t checksum_fn, uint32_t checksum);
 int config_file_read(struct dm_config_tree *cft);
 struct dm_config_tree *config_file_open_and_read(const char *config_file, config_source_t source);
-int config_write(struct dm_config_tree *cft,
-		 int withcomment, int withversion,
+int config_write(struct dm_config_tree *cft, struct config_def_tree_spec *tree_spec,
 		 const char *file, int argc, char **argv);
 struct dm_config_tree *config_def_create_tree(struct config_def_tree_spec *spec);
 void config_destroy(struct dm_config_tree *cft);

@@ -1086,8 +1086,7 @@ int merge_config_tree(struct cmd_context *cmd, struct dm_config_tree *cft,
 
 struct out_baton {
 	FILE *fp;
-	int withcomment;
-	int withversion;
+	struct config_def_tree_spec *tree_spec;
 };
 
 static int _out_prefix_fn(const struct dm_config_node *cn, const char *line, void *baton)
@@ -1108,7 +1107,7 @@ static int _out_prefix_fn(const struct dm_config_node *cn, const char *line, voi
 
 	cfg_def = cfg_def_get_item_p(cn->id);
 
-	if (out->withcomment) {
+	if (out->tree_spec->withcomments) {
 		path = cfg_def_get_path(cfg_def);
 		fprintf(out->fp, "%s# Configuration %s %s.\n", line, node_type_name, path);
 
@@ -1120,9 +1119,12 @@ static int _out_prefix_fn(const struct dm_config_node *cn, const char *line, voi
 
 		if (cfg_def->flags & CFG_UNSUPPORTED)
 			fprintf(out->fp, "%s# This configuration %s is not officially supported.\n", line, node_type_name);
+
+		if (cfg_def->flags & CFG_DEFAULT_UNDEFINED)
+			fprintf(out->fp, "%s# This configuration %s does not have a default value defined.\n", line, node_type_name);
 	}
 
-	if (out->withversion) {
+	if (out->tree_spec->withversions) {
 		if (dm_snprintf(version, 9, "%u.%u.%u",
 				(cfg_def->since_version & 0xE000) >> 13,
 				(cfg_def->since_version & 0x1E00) >> 9,
@@ -1139,7 +1141,10 @@ static int _out_prefix_fn(const struct dm_config_node *cn, const char *line, voi
 static int _out_line_fn(const struct dm_config_node *cn, const char *line, void *baton)
 {
 	struct out_baton *out = baton;
-	fprintf(out->fp, "%s\n", line);
+	struct cfg_def_item *cfg_def = cfg_def_get_item_p(cn->id);
+
+	fprintf(out->fp, "%s%s\n", (out->tree_spec->type != CFG_DEF_TREE_CURRENT) &&
+				   (cfg_def->flags & CFG_DEFAULT_UNDEFINED) ? "#" : "", line);
 	return 1;
 }
 
@@ -1149,7 +1154,7 @@ static int _out_suffix_fn(const struct dm_config_node *cn, const char *line, voi
 }
 
 int config_write(struct dm_config_tree *cft,
-		 int withcomment, int withversion,
+		 struct config_def_tree_spec *tree_spec,
 		 const char *file, int argc, char **argv)
 {
 	static const struct dm_config_node_out_spec _out_spec = {
@@ -1159,8 +1164,7 @@ int config_write(struct dm_config_tree *cft,
 	};
 	const struct dm_config_node *cn;
 	struct out_baton baton = {
-		.withcomment = withcomment,
-		.withversion = withversion
+		.tree_spec = tree_spec
 	};
 	int r = 1;
 

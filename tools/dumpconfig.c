@@ -193,6 +193,12 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 		goto out;
 	}
 
+	if (arg_count(cmd, withcomments_ARG))
+		tree_spec.withcomments = 1;
+
+	if (arg_count(cmd, withversions_ARG))
+		tree_spec.withversions = 1;
+
 	if (cft_check_handle)
 		tree_spec.check_status = cft_check_handle->status;
 
@@ -202,9 +208,7 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 		goto_out;
 	}
 
-	if (!config_write(cft, arg_count(cmd, withcomments_ARG),
-			  arg_count(cmd, withversions_ARG),
-			  file, argc, argv)) {
+	if (!config_write(cft, &tree_spec, file, argc, argv)) {
 		stack;
 		r = ECMD_FAILED;
 	}

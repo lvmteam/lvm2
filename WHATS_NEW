@@ -1,5 +1,6 @@
 Version 2.02.106 - 
 ====================================
+  Comment out config lines in dumpconfig output without default values defined.
   Improve detection of clustered mirror support.
   Enhance raid code with feature flags, for now checks for raid10.
   Move parsing of VG metadata from vg_commit() back to vg_write() (2.02.99)
