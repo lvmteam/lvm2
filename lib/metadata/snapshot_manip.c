@@ -32,7 +32,26 @@ int lv_is_cow(const struct logical_volume *lv)
 	return (!lv_is_thin_volume(lv) && !lv_is_origin(lv) && lv->snapshot) ? 1 : 0;
 }
 
-static uint64_t _cow_max_size(uint64_t origin_size, uint32_t chunk_size)
+/*
+ * Some kernels have a bug that they may leak space in the snapshot on crash.
+ * If the kernel is buggy, we add some extra space.
+ */
+static uint64_t _cow_extra_chunks(struct cmd_context *cmd, uint64_t n_chunks)
+{
+	const struct segment_type *segtype;
+	unsigned attrs;
+
+	if (activation() &&
+	    (segtype = get_segtype_from_string(cmd, "snapshot")) &&
+	    segtype->ops->target_present &&
+	    segtype->ops->target_present(cmd, NULL, &attrs) &&
+	    (attrs & SNAPSHOT_FEATURE_FIXED_LEAK))
+		return (n_chunks + 63) / 64;
+
+	return 0;
+}
+
+static uint64_t _cow_max_size(struct cmd_context *cmd, uint64_t origin_size, uint32_t chunk_size)
 {
 	/* Snapshot disk layout:
 	 *    COW is divided into chunks
@@ -41,21 +60,22 @@ static uint64_t _cow_max_size(uint64_t origin_size, uint32_t chunk_size)
 	 *        3rd. chunk is the 1st. data chunk
 	 */
 
-	/* Size of metadata for snapshot in sectors */
-	uint64_t mdata_size = ((origin_size + chunk_size - 1) / chunk_size * 16 + 511) >> SECTOR_SHIFT;
+	uint64_t origin_chunks = (origin_size + chunk_size - 1) / chunk_size;
+	uint64_t chunks_per_metadata_area = (uint64_t)chunk_size << (SECTOR_SHIFT - 4);
 
-	/* Sum all chunks - header + metadata size + origin size (aligned on chunk boundary) */
-	uint64_t size = chunk_size +
-		((mdata_size + chunk_size - 1) & ~(uint64_t)(chunk_size - 1)) +
-		((origin_size + chunk_size - 1) & ~(uint64_t)(chunk_size - 1));
+	/*
+	 * Note: if origin_chunks is divisible by chunks_per_metadata_area, we
+	 * need one extra metadata chunk as a terminator.
+	 */
+	uint64_t metadata_chunks = (origin_chunks + chunks_per_metadata_area) / chunks_per_metadata_area;
+	uint64_t n_chunks = 1 + origin_chunks + metadata_chunks;
 
-	/* Does not overflow since size is in sectors (9 bits) */
-	return size;
+	return (n_chunks + _cow_extra_chunks(cmd, n_chunks)) * chunk_size;
 }
 
 uint32_t cow_max_extents(const struct logical_volume *origin, uint32_t chunk_size)
 {
-	uint64_t size = _cow_max_size(origin->size, chunk_size);
+	uint64_t size = _cow_max_size(origin->vg->cmd, origin->size, chunk_size);
 	uint32_t extent_size = origin->vg->extent_size;
 	uint64_t max_size = (uint64_t) MAX_EXTENT_COUNT * extent_size;
 
@@ -71,7 +91,8 @@ uint32_t cow_max_extents(const struct logical_volume *origin, uint32_t chunk_siz
 int lv_is_cow_covering_origin(const struct logical_volume *lv)
 {
 	return lv_is_cow(lv) &&
-		(lv->size >= _cow_max_size(origin_from_cow(lv)->size, find_snapshot(lv)->chunk_size));
+		(lv->size >= _cow_max_size(lv->vg->cmd, origin_from_cow(lv)->size,
+					   find_snapshot(lv)->chunk_size));
 }
 
 int lv_is_visible(const struct logical_volume *lv)

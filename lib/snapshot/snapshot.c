@@ -142,19 +142,30 @@ static int _snap_target_percent(void **target_state __attribute__((unused)),
 
 static int _snap_target_present(struct cmd_context *cmd,
 				const struct lv_segment *seg,
-				unsigned *attributes __attribute__((unused)))
+				unsigned *attributes)
 {
 	static int _snap_checked = 0;
 	static int _snap_merge_checked = 0;
 	static int _snap_present = 0;
 	static int _snap_merge_present = 0;
+	static unsigned _snap_attrs = 0;
+	uint32_t maj, min, patchlevel;
 
 	if (!_snap_checked) {
+		_snap_checked = 1;
 		_snap_present = target_present(cmd, "snapshot", 1) &&
 		    target_present(cmd, "snapshot-origin", 0);
-		_snap_checked = 1;
+
+		if (_snap_present &&
+		    target_version("snapshot", &maj, &min, &patchlevel) &&
+		    (maj > 1 ||
+		     (maj == 1 && (min >= 12 || (min == 10 && patchlevel >= 2)))))
+			_snap_attrs |= SNAPSHOT_FEATURE_FIXED_LEAK;
+		else
+			log_very_verbose("Target snapshot may leak metadata.");
 	}
 
+	/* TODO: test everything at once */
 	if (seg && (seg->status & MERGING)) {
 		if (!_snap_merge_checked) {
 			_snap_merge_present = target_present(cmd, "snapshot-merge", 0);

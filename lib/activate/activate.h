@@ -55,6 +55,11 @@ struct lv_activate_opts {
 /* target attribute flags */
 #define MIRROR_LOG_CLUSTERED	0x00000001U
 
+/* snapshot target attribute flags */
+enum {
+	SNAPSHOT_FEATURE_FIXED_LEAK		= (1 << 0), /* version 1.12 */
+};
+
 /* thin target attribute flags */
 enum {
 	/* bitfields - new features from 1.1 version */

@@ -110,7 +110,7 @@ lvextend --use-policies $vg1/lvol1
 check lv_field $vg1/lvol1 size "18.00k"
 
 lvextend -l+33 $vg1/lvol1
-check lv_field $vg1/lvol1 size "28.00k"
+check lv_field $vg1/lvol1 size "32.00k"
 
 fill 20K
 lvremove -f $vg1
