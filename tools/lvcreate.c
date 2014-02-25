@@ -363,7 +363,7 @@ static int _update_extents_params(struct volume_group *vg,
 	} else
 		lp->pvh = &vg->pvs;
 
-	switch(lcp->percent) {
+	switch (lcp->percent) {
 		case PERCENT_VG:
 			extents = percent_of_extents(lp->extents, vg->extent_count, 0);
 			break;
@@ -397,6 +397,9 @@ static int _update_extents_params(struct volume_group *vg,
 		case PERCENT_NONE:
 			extents = lp->extents;
 			break;
+		default:
+			log_error(INTERNAL_ERROR "Unsupported percent type %u.", lcp->percent);
+			return 0;
 	}
 
 	if (lcp->percent) {

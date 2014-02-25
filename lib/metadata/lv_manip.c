@@ -3858,6 +3858,9 @@ static int _lvresize_adjust_extents(struct cmd_context *cmd, struct logical_volu
 		case PERCENT_NONE:
 			extents = lp->extents;
 			break;
+		default:
+			log_error(INTERNAL_ERROR "Unsupported percent type %u.", lp->percent);
+			return 0;
 	}
 
 	if (lp->percent != PERCENT_NONE) {
