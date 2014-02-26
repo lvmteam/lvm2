@@ -135,8 +135,12 @@ lvcreate -s -pr -l12 -n snap $vg1/$lv
 #dd if="$DM_DEV_DIR/$vg1/snap" of=/dev/null bs=1M count=2
 fsck -n "$DM_DEV_DIR/$vg1/snap"
 
-# This would trigger read of weird percentage for undeleted header
-check lv_field $vg1/snap data_percent "0.00"
+# This test would trigger read of weird percentage for undeleted header
+# And since older snapshot target counts with metadata sectors
+# we have 2 valid results  (unsure about correct version number)
+EXPECT="0.00"
+aux target_at_least dm-snapshot 1 10 0 || EXPECT="66.67"
+check lv_field $vg1/snap data_percent "$EXPECT"
 
 vgremove -ff $vg1
 
