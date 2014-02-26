@@ -159,12 +159,27 @@ retry:
 	daemon_request_destroy(req);
 
 	if (!repl.error && !strcmp(daemon_reply_str(repl, "response", ""), "token_mismatch") &&
-	    try < 2 && !test_mode()) {
-		if (lvmetad_pvscan_all_devs(_lvmetad_cmd, NULL)) {
-			++ try;
-			daemon_reply_destroy(repl);
-			goto retry;
-		}
+	    try < 60 && !test_mode()) {
+		/*
+		 * If another process is trying to scan, they might have the
+		 * same future token id and it's better to wait and avoid doing
+		 * the work multiple times. For the case the future token is
+		 * different, the wait is randomized so that multiple waiting
+		 * processes do not start scanning all at once.
+		 *
+		 * If the token is mismatched because of global_filter changes,
+		 * we re-scan immediately, but if we lose the potential race for
+		 * the update, we back off for a short while (0.2-2 seconds) and
+		 * try again.
+		 */
+		if (!strcmp(daemon_reply_str(repl, "expected", ""), "update in progress") || try % 5)
+			usleep( 50000 + random() % 450000 ); /* 0.05 - 0.5s */
+		else
+			/* If the re-scan fails here, we try again later. */
+			lvmetad_pvscan_all_devs(_lvmetad_cmd, NULL);
+		++ try;
+		daemon_reply_destroy(repl);
+		goto retry;
 	}
 
 	return repl;
