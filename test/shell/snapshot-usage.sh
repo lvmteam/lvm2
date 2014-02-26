@@ -13,6 +13,9 @@
 
 . lib/test
 
+MKFS=mkfs.ext2
+which $MKFS || skip
+
 fill() {
 	dd if=/dev/zero of="$DM_DEV_DIR/$vg1/lvol0" bs=$1 count=1
 }
@@ -110,6 +113,31 @@ lvextend -l+33 $vg1/lvol1
 check lv_field $vg1/lvol1 size "28.00k"
 
 fill 20K
+lvremove -f $vg1
+
+# Check snapshot really deletes COW header for read-only snapshot
+# Test needs special relation between chunk size and extent size
+# This test expects extent size 1K
+aux lvmconf "allocation/wipe_signatures_when_zeroing_new_lvs = 1"
+lvcreate -aey -L4 -n $lv $vg1
+lvcreate -c 8 -s -L1 -n snap $vg1/$lv
+# Populate snapshot
+#dd if=/dev/urandom of="$DM_DEV_DIR/$vg1/$lv" bs=4096 count=10
+$MKFS "$DM_DEV_DIR/$vg1/$lv"
+lvremove -f $vg1/snap
+
+# Undeleted header would trigger attempt to access
+# beyond end of COW device
+# Fails to create when chunk size is different
+lvcreate -s -pr -l12 -n snap $vg1/$lv
+
+# When header is undelete, fails to read snapshot without read errors
+#dd if="$DM_DEV_DIR/$vg1/snap" of=/dev/null bs=1M count=2
+fsck -n "$DM_DEV_DIR/$vg1/snap"
+
+# This would trigger read of weird percentage for undeleted header
+check lv_field $vg1/snap data_percent "0.00"
+
 vgremove -ff $vg1
 
 # Can't test >= 16T devices on 32bit
@@ -130,16 +158,5 @@ check lv_field $vg1/$lv1 origin_size "15.00e"
 vgremove -ff $vg1
 
 fi
-
-lvremove -f $vg
-
-# Check snapshot really deletes COW header for read-only snapshot
-aux lvmconf "allocation/wipe_signatures_when_zeroing_new_lvs = 1"
-lvcreate -L10 -n $lv1 $vg
-lvcreate -s -L10 -n snap $vg/$lv1
-# Populate snapshot with some filesystem signatures
-mkfs.ext4 "$DM_DEV_DIR/$vg/snap"
-lvremove -f $vg/snap
-lvcreate -s -pr -l12 -n snap $vg/$lv1
 
 vgremove -ff $vg
