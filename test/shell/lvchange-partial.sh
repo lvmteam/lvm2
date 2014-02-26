@@ -67,4 +67,5 @@ not lvchange --resync -ay $vg/$lv1
 not lvchange --resync --addtag foo $vg/$lv1
 
 aux enable_dev "$dev1"
-lvremove -ff $vg
+
+vgremove -ff $vg

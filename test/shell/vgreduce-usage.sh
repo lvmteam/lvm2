@@ -87,3 +87,5 @@ aux enable_dev "$dev1"
 pvs -P $(cat DEVICES) # for record
 lvs -P $vg1           # for record
 vgs -P $vg1           # for record
+
+vgremove -ff $vg1

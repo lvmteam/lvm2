@@ -42,3 +42,5 @@ aux enable_dev "$dev1"
 check_
 test -e LOCAL_LVMETAD && lvremove $vg/boo # FIXME trigger a write :-(
 check_ not
+
+vgremove -ff $vg

@@ -26,4 +26,5 @@ lvchange -ay $vg/$lv1 --partial
 lvchange -an $vg/$lv1
 
 aux enable_dev "$dev1"
-lvremove -ff $vg
+
+vgremove -ff $vg

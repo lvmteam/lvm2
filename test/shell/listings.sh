@@ -72,3 +72,5 @@ not diff out out2
 
 aux disable_dev $dev1
 pvs -o +pv_uuid | grep BADBEE-BAAD-BAAD-BAAD-BAAD-BAAD-BADBEE
+
+vgremove -ff $vg

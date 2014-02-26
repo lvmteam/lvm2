@@ -127,7 +127,6 @@ lvremove -ff $vg
 # Attempt to create smaller cache than origin should fail
 lvcreate -l 1 -n $lv1 $vg
 not lvcreate --type cache -l 2 $vg/$lv1
-lvremove -ff $vg
 
 
 # Option testing
@@ -135,3 +134,5 @@ lvremove -ff $vg
 # --cachepolicy
 # --poolmetadatasize
 # --poolmetadataspare
+
+vgremove -ff $vg

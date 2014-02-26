@@ -46,4 +46,5 @@ lvchange -r 512 $vg/$lv
 lvchange -ay $vg/$lv
 check lv_field $vg/$lv lv_read_ahead 256.00k
 check lv_field $vg/$lv lv_kernel_read_ahead 256.00k
-lvremove -ff $vg
+
+vgremove -ff $vg

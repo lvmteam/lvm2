@@ -17,10 +17,12 @@ aux prepare_vg 1 100
 
 # set to "skip" to avoid testing given fs and test warning result
 # i.e. check_reiserfs=skip
+check_ext2=
 check_ext3=
 check_xfs=
 check_reiserfs=
 
+which mkfs.ext2 || check_ext2=${check_ext2:-mkfs.ext2}
 which mkfs.ext3 || check_ext3=${check_ext3:-mkfs.ext3}
 which fsck.ext3 || check_ext3=${check_ext3:-fsck.ext3}
 which mkfs.xfs || check_xfs=${check_xfs:-mkfs.xfs}

@@ -10,4 +10,7 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 . ./shell/lvconvert-mirror-basic.sh
+
 test_many 0
+
+vgremove -ff $vg

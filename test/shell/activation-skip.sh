@@ -30,3 +30,5 @@ get lv_field $vg/$lv1 lv_attr | grep -- "-wi------k"
 
 lvchange -ay -K $vg
 check active $vg $lv1
+
+vgremove -ff $vg

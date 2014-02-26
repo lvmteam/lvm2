@@ -34,3 +34,5 @@ lvremove -ff $vg
 
 # creating 2-way mirror with disklog from 2 PVs fails
 not lvcreate -aey -l2 --type mirror -m1 -n $lv1 $vg "$dev1" "$dev2"
+
+vgremove -ff $vg

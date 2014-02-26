@@ -47,3 +47,5 @@ pvscan --cache $dev1 -aay
 aux lvmconf 'global/use_lvmetad = 0'
 check active $vg1 foo
 aux lvmconf 'global/use_lvmetad = 1'
+
+vgremove -ff $vg1

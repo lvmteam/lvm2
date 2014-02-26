@@ -14,7 +14,6 @@ test_description="ensure that pvmove works with basic options"
 
 . lib/test
 
-which mkfs.ext2 || skip
 which md5sum || skip
 
 # ---------------------------------------------------------------------

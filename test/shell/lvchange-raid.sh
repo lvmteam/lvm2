@@ -357,3 +357,5 @@ for i in "-" "snapshot" "thinpool_data" "thinpool_meta"; do
 	run_checks $vg $lv1 $i
 	lvremove -ff $vg
 done
+
+vgremove -ff $vg

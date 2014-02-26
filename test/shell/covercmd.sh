@@ -122,3 +122,5 @@ lvcreate -l1 -an -Zn $vg3
 vgdisplay -s -A | grep $vg1
 vgdisplay -s -A | grep $vg2
 vgdisplay -s -A | not grep $vg3
+
+vgremove -ff $vg1 $vg2 $vg3

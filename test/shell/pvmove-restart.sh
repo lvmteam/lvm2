@@ -71,3 +71,5 @@ pvmove --abort
 aux delay_dev "$dev3"
 
 lvs -a -o+devices $vg
+
+vgremove -ff $vg

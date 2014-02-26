@@ -89,3 +89,5 @@ repair 'activation { mirror_log_fault_policy = "remove" }'
 check mirror $vg mirror core
 not check lv_exists $vg mirror_mlog
 cleanup "$dev3" "$dev4"
+
+vgremove -ff $vg

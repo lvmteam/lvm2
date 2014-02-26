@@ -102,3 +102,4 @@ not grep $lv3 err
 grep $lv2 err
 not grep $lv4 err
 
+vgremove -ff $vg1 $vg2

@@ -80,3 +80,4 @@ lvremove -ff $vg
 #
 # FIXME: Add tests that specify particular PVs to use for creation
 #
+vgremove -ff $vg

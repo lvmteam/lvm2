@@ -17,3 +17,5 @@ aux prepare_lvmetad
 vgs -vv 2> errs
 cat errs
 grep 'use_lvmetad' errs
+
+vgremove -ff $vg

@@ -27,3 +27,5 @@ not lvcreate -aey --type mirror -m 1 -l 1 -n mirror $vg # write operations fail
 vgextend --restore $vg "$dev1" # restore the missing device
 vgck $vg
 lvcreate -an -Zn --type mirror -m 1 -l 1 -n mirror $vg
+
+vgremove -ff $vg

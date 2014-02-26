@@ -55,4 +55,4 @@ for i in 0 1; do
 	aux wait_for_sync $vg $lv1
 done
 
-lvremove -ff $vg
+vgremove -ff $vg

@@ -71,3 +71,5 @@ lvchange --deltag firstlvtag2 $vg1/$lv1
 lvchange --deltag firstlvtag2 $vg1/$lv1
 check lv_field $vg1/$lv1 tags "firstlvtag1,firstlvtag3"
 check lv_field $vg1/$lv2 tags "secondlvtag1,secondlvtag2,secondlvtag3"
+
+vgremove -ff $vg1

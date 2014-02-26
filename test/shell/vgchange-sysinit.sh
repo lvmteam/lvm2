@@ -50,3 +50,8 @@ vgchange --sysinit -an $vg2
 test ! -b "$DM_DEV_DIR/$vg2/$lv2"
 
 vgchange --ignorelockingfailure -ay $vg2
+
+# TODO maybe also support --ignorelockingfailure ??
+vgremove --config 'global{locking_type=0}' -ff $vg2
+umount "$mount_dir" || true
+vgremove -ff $vg1

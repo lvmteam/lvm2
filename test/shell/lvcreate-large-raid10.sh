@@ -38,6 +38,6 @@ vgcreate $vg1 "$DM_DEV_DIR"/$vg/$lv[12345]
 
 lvcreate --type raid10 -m 1 -i 2 -L 200T -n $lv1 $vg1 --nosync
 check lv_field $vg1/$lv1 size "200.00t"
-lvremove -ff $vg1
+vgremove -ff $vg1
 
-lvremove -ff $vg
+vgremove -ff $vg

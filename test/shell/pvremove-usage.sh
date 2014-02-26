@@ -66,3 +66,5 @@ for mdacp in 0 1 2; do
     pvcreate --metadatacopies $mdacp "$dev1"
     vgextend $vg "$dev1"
 done
+
+vgremove -ff $vg

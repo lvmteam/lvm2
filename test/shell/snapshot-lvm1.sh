@@ -26,3 +26,5 @@ lvcreate -s $vg/origin -n snap_with_lvm1_meta -l4
 
 # Remove volume snapper/snap_with_lvm1_meta
 lvremove -f $vg/snap_with_lvm1_meta
+
+vgremove -ff $vg

@@ -34,3 +34,5 @@ lvs
 
 lvs -a $vg2 -o+devices 2>&1 | tee out
 not grep reappeared out
+
+vgremove -ff $vg1 $vg2

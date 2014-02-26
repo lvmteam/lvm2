@@ -38,3 +38,5 @@ aux enable_dev "$dev1"
 
 # Check removed $lv2 does not reappear
 not check lv_exists $vg $lv2
+
+vgremove -ff $vg

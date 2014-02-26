@@ -31,4 +31,5 @@ lvchange -an $vg/$lv1
 check mirror $vg $lv1 "$dev3"
 lvchange --resync $vg/$lv1
 check mirror $vg $lv1 "$dev3"
-lvremove -ff $vg
+
+vgremove -ff $vg

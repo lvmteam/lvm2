@@ -21,3 +21,5 @@ kill $(cat LOCAL_LVMETAD)
 aux prepare_lvmetad
 
 vgs | grep $vg1
+
+vgremove -ff $vg1

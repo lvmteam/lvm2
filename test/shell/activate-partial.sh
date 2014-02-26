@@ -28,4 +28,4 @@ vgchange -a n --partial $vg
 vgchange -aey --partial $vg
 
 # check vgremove
-vgremove -f $vg
+vgremove -ff $vg

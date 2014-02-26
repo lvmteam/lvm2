@@ -39,3 +39,5 @@ flock_pid=`jobs -p`
 not vgremove --config 'global { wait_for_locks = 0 }' $vg
 test -f $TESTDIR/var/lock/lvm/P_orphans # still running
 kill $flock_pid
+
+vgremove -ff $vg

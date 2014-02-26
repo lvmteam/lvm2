@@ -73,3 +73,5 @@ vgextend $vg "$dev2"
 aux restore_dev "$dev2"
 vgscan $cache
 should check compare_fields vgs $vg vg_mda_count pvs "$dev2" vg_mda_count
+
+vgremove -ff $vg

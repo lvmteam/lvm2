@@ -25,3 +25,5 @@ vgreduce --removemissing $vg
 aux enable_dev "$dev2" "$dev4"
 lvs -a -o +devices $vg
 check mirror $vg 4way "$dev5"
+
+vgremove -ff $vg

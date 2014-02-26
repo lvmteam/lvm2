@@ -23,3 +23,4 @@ lvchange -ay $vg1 --config 'global { use_lvmetad = 0 }' 2>&1 | not grep "Failed 
 aux lvmconf "global/use_lvmetad = 0"
 lvchange -ay $vg1 --config 'global { use_lvmetad = 1 }' 2>&1 | grep "Failed to connect"
 
+vgremove -ff $vg1

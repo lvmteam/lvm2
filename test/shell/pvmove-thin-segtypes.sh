@@ -13,7 +13,6 @@ test_description="ensure pvmove works with thin segment types"
 
 . lib/test
 test -e LOCAL_CLVMD && skip
-which mkfs.ext2 || skip
 which md5sum || skip
 
 aux target_at_least dm-thin-pool 1 8 0 || skip
@@ -65,3 +64,5 @@ check lv_tree_on $vg $lv1 "$dev2" "$dev4"
 check lv_tree_on $vg ${lv1}_foo "$dev5"
 check dev_md5sum $vg $lv1
 lvremove -ff $vg
+
+vgremove -ff $vg

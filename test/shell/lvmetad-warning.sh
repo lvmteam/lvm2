@@ -25,3 +25,5 @@ lvchange -ay $vg1 --sysinit 2>&1 | not grep "Failed to connect"
 aux prepare_lvmetad
 lvchange -ay $vg1 2>&1 | not grep "Failed to connect"
 lvchange -ay $vg1 --sysinit 2>&1 | not grep "Failed to connect"
+
+vgremove -ff $vg

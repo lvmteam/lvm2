@@ -20,7 +20,6 @@ test_description="ensure pvmove works with the cache segment types"
 # stacking complications to consider.
 
 test -e LOCAL_CLVMD && skip
-which mkfs.ext2 || skip
 which md5sum || skip
 
 aux target_at_least dm-cache 1 3 0 || skip

@@ -50,3 +50,5 @@ not vgchange --vgmetadatacopies 2 $vg
 # Ensure that allowed args don't cause disallowed args to get through
 #
 not vgchange -p 10 --addtag foo $vg
+
+vgremove -ff $vg

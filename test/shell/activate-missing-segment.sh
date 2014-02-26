@@ -27,3 +27,5 @@ aux disable_dev "$dev1"
 not vgchange -a y $vg
 vgchange -a y --partial $vg
 check active $vg span
+
+vgremove -ff $vg

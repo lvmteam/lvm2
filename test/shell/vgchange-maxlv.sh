@@ -28,3 +28,5 @@ not lvcreate -n three -l 1 $vg
 vgchange --monitor y $vg
 vgchange -an $vg 2>&1 | tee vgchange.out
 not grep "event server" vgchange.out
+
+vgremove -ff $vg

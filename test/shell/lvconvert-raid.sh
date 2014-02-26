@@ -239,3 +239,5 @@ for i in 4 5 6; do
 
 	lvremove -ff $vg
 done
+
+vgremove -ff $vg

@@ -25,3 +25,5 @@ vgchange -a n $vg $vg1
 
 # this should fail but not segfault, RHBZ 481793.
 not vgsplit $vg $vg1 "$dev3"
+
+vgremove -ff $vg $vg1

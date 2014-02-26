@@ -187,4 +187,5 @@ lvcreate --type raid5 -l2 -n raid5 $vg
 lv_devices $vg raid5 6
 lvcreate --type raid6 -l3 -n raid6 $vg
 lv_devices $vg raid6 6
-lvremove -ff $vg
+
+vgremove -ff $vg

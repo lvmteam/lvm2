@@ -29,3 +29,5 @@ fi
 dd if=/dev/urandom bs=512 seek=2 count=32 of=$dev2
 vgck $vg 2>&1 | tee vgck.out
 grep Incorrect vgck.out
+
+vgremove -ff $vg

@@ -43,3 +43,5 @@ aux notify_lvmetad "$dev1"
 # Verify we can activate / deactivate the LV from both VGs
 lvchange -ay $vg1/$lv1 $vg2/$lv1
 vgchange -an $vg1 $vg2
+
+vgremove -ff $vg1 $vg2

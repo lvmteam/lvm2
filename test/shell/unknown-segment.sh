@@ -32,3 +32,5 @@ vgcfgbackup -f bak2 $vg
 egrep -v 'description|seqno|creation_time|Generated' < bak0.orig > a
 egrep -v 'description|seqno|creation_time|Generated' < bak2 > b
 diff -u a b
+
+vgremove -ff $vg

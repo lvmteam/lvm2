@@ -17,3 +17,5 @@ dmsetup remove -f "$dev1" || true
 finish_udev_transaction
 
 not lvcreate -n "foo" $vg -l 1
+
+vgremove -ff $vg

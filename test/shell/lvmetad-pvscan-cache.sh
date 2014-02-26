@@ -21,3 +21,5 @@ vgs | grep $vg1
 pvscan --cache
 
 vgs | grep $vg1
+
+vgremove -ff $vg1

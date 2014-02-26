@@ -27,6 +27,7 @@ check_lv_field_modules_()
 # Main
 #
 aux have_thin 1 0 0 || skip
+which mkfs.ext4 || skip
 
 aux prepare_pvs 2 64
 
@@ -34,8 +35,8 @@ vgcreate $vg -s 64K $(cat DEVICES)
 
 lvcreate -L10M -V10M -T $vg/pool --name $lv1
 mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
-# create thin snapshot of thin LV
-lvcreate -K -s $vg/$lv1 --name snap
+# create read-only thin snapshot of thin LV
+lvcreate -K -s $vg/$lv1 -pr --name snap
 # check snapshot filesystem was properly frozen before snapping
 fsck -n "$DM_DEV_DIR/$vg/snap"
 lvcreate -K -s $vg/$lv1 --name $lv2

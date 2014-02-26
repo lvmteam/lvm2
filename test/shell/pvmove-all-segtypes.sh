@@ -13,7 +13,6 @@ test_description="ensure pvmove works with all common segment types"
 
 . lib/test
 
-which mkfs.ext2 || skip
 which md5sum || skip
 
 aux prepare_pvs 5 20
@@ -96,3 +95,5 @@ check lv_tree_on $vg ${lv1}_foo "$dev5"
 check dev_md5sum $vg snap
 lvremove -ff $vg
 fi
+
+vgremove -ff $vg

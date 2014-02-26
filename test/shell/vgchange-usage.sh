@@ -42,3 +42,4 @@ not vgchange -l 1 $vg 2>err
 grep "MaxLogicalVolume is less than the current number $lv_count of LVs for"  err
 aux check vg_field $vg max_lv 128
 
+vgremove -ff $vg

@@ -305,3 +305,5 @@ lvchange -an $vg/$lv1
 lvconvert --mirrorlog disk $vg/$lv1 "$dev3:0-1"
 check mirror $vg $lv1 "$dev3"
 lvremove -ff $vg
+
+vgremove -ff $vg

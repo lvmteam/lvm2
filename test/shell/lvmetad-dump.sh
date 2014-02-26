@@ -36,3 +36,5 @@ lvmetad_dump() {
 lvmetad_dump ./lvmetad.socket | tee lvmetad.txt
 
 grep $vg1 lvmetad.txt
+
+vgremove -ff $vg1

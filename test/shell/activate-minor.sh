@@ -21,3 +21,5 @@ lvchange $vg/foo -My --major=255 --minor=123
 lvchange $vg/foo -a y
 dmsetup info $vg-foo | tee info
 egrep "^Major, minor: *[0-9]+, 123" info
+
+vgremove -ff $vg

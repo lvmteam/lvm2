@@ -41,3 +41,5 @@ for deactivate in true false; do
 
 	lvremove -ff $vg
 done
+
+vgremove -ff $vg

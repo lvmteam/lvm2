@@ -41,3 +41,5 @@ check lv_field $vg1/$lv1 size "737.28t"
 lvremove -ff $vg1/$lv1
 
 lvremove -ff $vg/$lv
+
+vgremove -ff $vg

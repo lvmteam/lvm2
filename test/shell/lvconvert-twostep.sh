@@ -26,3 +26,5 @@ test -e LOCAL_CLVMD && exit 0
 # FIXME  mirrored unsupported in cluster
 not lvconvert -m 1 --mirrorlog mirrored $vg/mirror "$dev3" "$dev4" 2>&1 | tee errs
 grep "two steps" errs
+
+vgremove -ff $vg

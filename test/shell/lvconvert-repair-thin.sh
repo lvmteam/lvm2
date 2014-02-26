@@ -114,3 +114,5 @@ should vgremove -ff  $vg
 # Let's do a final forced cleanup
 pvremove --yes -ff "$dev3"
 pvremove --yes -ff "$dev4"
+
+vgremove -ff $vg
