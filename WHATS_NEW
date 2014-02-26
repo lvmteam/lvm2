@@ -1,5 +1,6 @@
 Version 2.02.106 - 
 ====================================
+  Do not allow stripe size to be bigger then extent size for lvresize.
   Zero snapshot COW header when creating read-only snapshot.
   Comment out config lines in dumpconfig output without default values defined.
   Improve detection of clustered mirror support.

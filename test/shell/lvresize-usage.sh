@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (C) 2007-2008 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2007-2014 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -11,7 +11,7 @@
 
 . lib/test
 
-aux prepare_vg 2
+aux prepare_vg 2 80
 
 lvcreate -L 10M -n lv -i2 $vg
 lvresize -l +4 $vg/lv
@@ -19,3 +19,8 @@ lvremove -ff $vg
 
 lvcreate -L 64M -n $lv -i2 $vg
 not lvresize -v -l +4 xxx/$lv
+
+# Check stripe size is reduced to extent size when it's bigger
+ESIZE=$(get vg_field $vg vg_extent_size --units b)
+lvextend -L+64m -i 2 -I$(( ${ESIZE%%B} * 2 ))B $vg/$lv 2>&1 | tee err
+grep "Reducing stripe size" err

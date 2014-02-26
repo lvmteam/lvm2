@@ -95,7 +95,9 @@ Defaults to whatever the last segment of the Logical Volume uses.
 Not applicable to LVs using the original metadata LVM format, which
 must use a single value throughout.
 .br
-StripeSize must be 2^n (n = 2 to 9).
+StripeSize must be 2^n (n = 2 to 9) for metadata in LVM1 format.
+For metadata in LVM2 format, the stripe size may be a larger
+power of 2 but must not exceed the physical extent size.
 .TP
 .B \-\-noudevsync
 Disable udev synchronisation. The

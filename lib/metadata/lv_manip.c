@@ -3406,6 +3406,7 @@ int lv_rename(struct cmd_context *cmd, struct logical_volume *lv,
 
 #define SIZE_BUF 128
 
+/* TODO: unify stripe size validation across source code */
 static int _validate_stripesize(struct cmd_context *cmd,
 				const struct volume_group *vg,
 				struct lvresize_params *lp)
@@ -3419,11 +3420,11 @@ static int _validate_stripesize(struct cmd_context *cmd,
 
 	if (!(vg->fid->fmt->features & FMT_SEGMENTS))
 		log_warn("Varied stripesize not supported. Ignoring.");
-	else if (lp->ac_stripesize_value > (uint64_t) vg->extent_size * 2) {
-		log_error("Reducing stripe size %s to maximum, "
-			  "physical extent size %s",
-			  display_size(cmd,lp->ac_stripesize_value),
-			  display_size(cmd, (uint64_t) vg->extent_size));
+	else if (lp->ac_stripesize_value > vg->extent_size) {
+		log_print_unless_silent("Reducing stripe size %s to maximum, "
+					"physical extent size %s",
+					display_size(cmd, lp->ac_stripesize_value),
+					display_size(cmd, vg->extent_size));
 		lp->stripe_size = vg->extent_size;
 	} else
 		lp->stripe_size = lp->ac_stripesize_value;
