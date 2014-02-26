@@ -1095,7 +1095,8 @@ static response handler(daemon_state s, client_handle h, request r)
 		return daemon_reply_simple("token_mismatch",
 					   "expected = %s", state->token,
 					   "received = %s", token,
-					   "reason = %s", "token mismatch", NULL);
+					   "reason = %s",
+					   "lvmetad cache is invalid due to a global_filter change or due to a running rescan", NULL);
 	}
 	pthread_mutex_unlock(&state->token_lock);
 
