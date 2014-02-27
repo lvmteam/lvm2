@@ -316,6 +316,49 @@ static void _xlate_mdah(struct mda_header *mdah)
 	}
 }
 
+static int _raw_read_mda_header(struct mda_header *mdah, struct device_area *dev_area)
+{
+	if (!dev_open(dev_area->dev))
+		return_0;
+
+	if (!dev_read(dev_area->dev, dev_area->start, MDA_HEADER_SIZE, mdah))
+		return_0;
+
+	if (mdah->checksum_xl != xlate32(calc_crc(INITIAL_CRC, (uint8_t *)mdah->magic,
+						  MDA_HEADER_SIZE -
+						  sizeof(mdah->checksum_xl)))) {
+		log_error("Incorrect metadata area header checksum on %s"
+			  " at offset %"PRIu64, dev_name(dev_area->dev),
+			  dev_area->start);
+		return 0;
+	}
+
+	_xlate_mdah(mdah);
+
+	if (strncmp((char *)mdah->magic, FMTT_MAGIC, sizeof(mdah->magic))) {
+		log_error("Wrong magic number in metadata area header on %s"
+			  " at offset %"PRIu64, dev_name(dev_area->dev),
+			  dev_area->start);
+		return 0;
+	}
+
+	if (mdah->version != FMTT_VERSION) {
+		log_error("Incompatible metadata area header version: %d on %s"
+			  " at offset %"PRIu64, mdah->version,
+			  dev_name(dev_area->dev), dev_area->start);
+		return 0;
+	}
+
+	if (mdah->start != dev_area->start) {
+		log_error("Incorrect start sector in metadata area header: %"
+			  PRIu64" on %s at offset %"PRIu64, mdah->start,
+			  dev_name(dev_area->dev), dev_area->start);
+		return 0;
+	}
+
+	return 1;
+}
+
 struct mda_header *raw_read_mda_header(const struct format_type *fmt,
 				       struct device_area *dev_area)
 {
@@ -326,46 +369,12 @@ struct mda_header *raw_read_mda_header(const struct format_type *fmt,
 		return NULL;
 	}
 
-	if (!dev_read(dev_area->dev, dev_area->start, MDA_HEADER_SIZE, mdah))
-		goto_bad;
-
-	if (mdah->checksum_xl != xlate32(calc_crc(INITIAL_CRC, (uint8_t *)mdah->magic,
-						  MDA_HEADER_SIZE -
-						  sizeof(mdah->checksum_xl)))) {
-		log_error("Incorrect metadata area header checksum on %s"
-			  " at offset %"PRIu64, dev_name(dev_area->dev),
-			  dev_area->start);
-		goto bad;
-	}
-
-	_xlate_mdah(mdah);
-
-	if (strncmp((char *)mdah->magic, FMTT_MAGIC, sizeof(mdah->magic))) {
-		log_error("Wrong magic number in metadata area header on %s"
-			  " at offset %"PRIu64, dev_name(dev_area->dev),
-			  dev_area->start);
-		goto bad;
-	}
-
-	if (mdah->version != FMTT_VERSION) {
-		log_error("Incompatible metadata area header version: %d on %s"
-			  " at offset %"PRIu64, mdah->version,
-			  dev_name(dev_area->dev), dev_area->start);
-		goto bad;
-	}
-
-	if (mdah->start != dev_area->start) {
-		log_error("Incorrect start sector in metadata area header: %"
-			  PRIu64" on %s at offset %"PRIu64, mdah->start,
-			  dev_name(dev_area->dev), dev_area->start);
-		goto bad;
+	if (!_raw_read_mda_header(mdah, dev_area)) {
+		dm_pool_free(fmt->cmd->mem, mdah);
+		return NULL;
 	}
 
 	return mdah;
-
-bad:
-	dm_pool_free(fmt->cmd->mem, mdah);
-	return NULL;
 }
 
 static int _raw_write_mda_header(const struct format_type *fmt,
@@ -1670,6 +1679,10 @@ static int _mda_export_text_raw(struct metadata_area *mda,
 				struct dm_config_node *parent)
 {
 	struct mda_context *mdc = (struct mda_context *) mda->metadata_locn;
+	char mdah[MDA_HEADER_SIZE]; /* temporary */
+
+	if (!mdc || !_raw_read_mda_header(mdah, &mdc->area))
+		return 1; /* pretend the MDA does not exist */
 
 	return config_make_nodes(cft, parent, NULL,
 				 "ignore = %" PRId64, (int64_t) mda_is_ignored(mda),
