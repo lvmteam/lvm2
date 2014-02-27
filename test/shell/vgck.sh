@@ -14,7 +14,7 @@
 aux prepare_vg 3
 lvcreate -n blabla -L 1 $vg
 
-dd if=/dev/urandom bs=512 seek=2 count=32 of=$dev2
+dd if=/dev/urandom bs=512 seek=2 count=32 of="$dev2"
 
 # TODO: aux lvmconf "global/locking_type = 4"
 
@@ -26,7 +26,9 @@ else
     grep "Inconsistent metadata found for VG $vg" vgscan.out
 fi
 
-dd if=/dev/urandom bs=512 seek=2 count=32 of=$dev2
+dd if=/dev/urandom bs=512 seek=2 count=32 of="$dev2"
+aux notify_lvmetad "$dev2"
+
 vgck $vg 2>&1 | tee vgck.out
 grep Incorrect vgck.out
 
