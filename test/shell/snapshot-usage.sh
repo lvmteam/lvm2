@@ -33,6 +33,25 @@ vgcreate -s 4M $vg $(cat DEVICES)
 TSIZE=15P
 aux can_use_16T || TSIZE=15T
 
+# With different snapshot target driver we may obtain different results.
+# Older targets have metadata leak bug which needs extra compenstion.
+# Ancient targets do not even provide separate info for metadata.
+EXPECT1="16.00k"
+EXPECT2="512.00k"
+EXPECT3="32.00k"
+EXPECT4="66.67"
+if aux target_at_least dm-snapshot 1 10 0 ; then
+	# Extra metadata size
+	EXPECT4="0.00"
+
+	if aux target_at_least dm-snapshot 1 12 0 ; then
+		# When fixed leak, expect smaller sizes
+		EXPECT1="12.00k"
+		EXPECT2="384.00k"
+		EXPECT3="28.00k"
+	fi
+fi
+
 lvcreate -s -l 100%FREE -n $lv $vg --virtualsize $TSIZE
 
 aux extend_filter_LVMTEST
@@ -86,12 +105,12 @@ lvcreate -an -Zn -l1 -n $lv1 $vg1
 not lvcreate -s -l1 $vg1/$lv1
 not lvcreate -s -l3 $vg1/$lv1
 lvcreate -s -l30 -n $lv2 $vg1/$lv1
-check lv_field $vg1/$lv2 size "12.00k"
+check lv_field $vg1/$lv2 size "$EXPECT1"
 
 not lvcreate -s -c512 -l512 $vg1/$lv1
 lvcreate -s -c128 -l1700 -n $lv3 $vg1/$lv1
 # 3 * 128
-check lv_field $vg1/$lv3 size "384.00k"
+check lv_field $vg1/$lv3 size "$EXPECT2"
 lvremove -ff $vg1
 
 lvcreate -aey -l20 $vg1
@@ -110,7 +129,7 @@ lvextend --use-policies $vg1/lvol1
 check lv_field $vg1/lvol1 size "18.00k"
 
 lvextend -l+33 $vg1/lvol1
-check lv_field $vg1/lvol1 size "32.00k"
+check lv_field $vg1/lvol1 size "$EXPECT3"
 
 fill 20K
 lvremove -f $vg1
@@ -138,14 +157,12 @@ fsck -n "$DM_DEV_DIR/$vg1/snap"
 # This test would trigger read of weird percentage for undeleted header
 # And since older snapshot target counts with metadata sectors
 # we have 2 valid results  (unsure about correct version number)
-EXPECT="0.00"
-aux target_at_least dm-snapshot 1 10 0 || EXPECT="66.67"
-check lv_field $vg1/snap data_percent "$EXPECT"
+check lv_field $vg1/snap data_percent "$EXPECT4"
 
 vgremove -ff $vg1
 
 # Can't test >= 16T devices on 32bit
-if test "$TSIZE" -eq 15P ; then
+if test "$TSIZE" = 15P ; then
 
 # Check usability with largest extent size
 pvcreate "$DM_DEV_DIR/$vg/$lv"

@@ -46,9 +46,9 @@ static uint64_t _cow_extra_chunks(struct cmd_context *cmd, uint64_t n_chunks)
 	    segtype->ops->target_present &&
 	    segtype->ops->target_present(cmd, NULL, &attrs) &&
 	    (attrs & SNAPSHOT_FEATURE_FIXED_LEAK))
-		return (n_chunks + 63) / 64;
+		return 0;
 
-	return 0;
+	return (n_chunks + 63) / 64;
 }
 
 static uint64_t _cow_max_size(struct cmd_context *cmd, uint64_t origin_size, uint32_t chunk_size)

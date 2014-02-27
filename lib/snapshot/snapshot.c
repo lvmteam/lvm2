@@ -165,6 +165,9 @@ static int _snap_target_present(struct cmd_context *cmd,
 			log_very_verbose("Target snapshot may leak metadata.");
 	}
 
+	if (attributes)
+		*attributes = _snap_attrs;
+
 	/* TODO: test everything at once */
 	if (seg && (seg->status & MERGING)) {
 		if (!_snap_merge_checked) {
