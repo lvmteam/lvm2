@@ -17,7 +17,7 @@ let
      # fc16 lcov is broken and el6 has none... be creative
      prepareImagePhase = ''
       rpm -Uv ${pkgs.fetchurl {
-       url="ftp://ftp.isu.edu.tw/pub/Linux/Fedora/linux/updates/16/i386/lcov-1.9-2.fc16.noarch.rpm";
+       url = "http://archives.fedoraproject.org/pub/archive/fedora/linux/updates/16/i386/lcov-1.9-2.fc16.noarch.rpm";
        sha256 = "0ycdh5mb7p5ll76mqk0p6gpnjskvxxgh3a3bfr1crh94nvpwhp4z"; }}
       dmesg -n 1 # avoid spilling dmesg into the main log, we capture it in harness
      '';
