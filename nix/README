@@ -1,0 +1,13 @@
+This directory contains nix integration for building and testing LVM2 in various
+virtual machine configurations. The *.nix files are written in the nix
+declarative language (see http://nixos.org/nix).
+
+There are two basic use-cases for this integration. First, a hydra instance (see
+http://divine.fi.muni.cz/hydra/project/lvm2 and
+http://divine.fi.muni.cz/~xrockai/lvm-testmatrix.html) builds and tests LVM in
+all the configurations described in default.nix after every push to the git
+repository. Second, any nix-enabled system can very closely reproduce any of
+those test scenarios using the "build.sh" script and an appropriate checkout of
+"nixpkgs" (cf. http://nixos.org/nixpkgs).
+
+(The rest of this document is TODO.)
