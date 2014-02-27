@@ -50,5 +50,3 @@ vgcfgrestore -f data_new $vg
 # Activate and deactivate all of them
 vgchange -ay $vg
 vgchange -an $vg
-
-vgremove -ff $vg
