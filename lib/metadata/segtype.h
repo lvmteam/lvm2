@@ -141,6 +141,9 @@ struct segment_type *init_error_segtype(struct cmd_context *cmd);
 struct segment_type *init_free_segtype(struct cmd_context *cmd);
 struct segment_type *init_unknown_segtype(struct cmd_context *cmd,
 					  const char *name);
+
+#define RAID_FEATURE_RAID10			(1U << 0) /* version 1.3 */
+
 #ifdef RAID_INTERNAL
 int init_raid_segtypes(struct cmd_context *cmd, struct segtype_library *seglib);
 #endif
@@ -148,6 +151,14 @@ int init_raid_segtypes(struct cmd_context *cmd, struct segtype_library *seglib);
 #ifdef REPLICATOR_INTERNAL
 int init_replicator_segtype(struct cmd_context *cmd, struct segtype_library *seglib);
 #endif
+
+#define THIN_FEATURE_DISCARDS			(1U << 0)
+#define THIN_FEATURE_EXTERNAL_ORIGIN		(1U << 1)
+#define THIN_FEATURE_HELD_ROOT			(1U << 2)
+#define THIN_FEATURE_BLOCK_SIZE			(1U << 3)
+#define THIN_FEATURE_DISCARDS_NON_POWER_2	(1U << 4)
+#define THIN_FEATURE_METADATA_RESIZE		(1U << 5)
+#define THIN_FEATURE_EXTERNAL_ORIGIN_EXTEND	(1U << 6)
 
 #ifdef THIN_INTERNAL
 int init_thin_segtypes(struct cmd_context *cmd, struct segtype_library *seglib);
@@ -157,9 +168,13 @@ int init_thin_segtypes(struct cmd_context *cmd, struct segtype_library *seglib);
 int init_cache_segtypes(struct cmd_context *cmd, struct segtype_library *seglib);
 #endif
 
+#define SNAPSHOT_FEATURE_FIXED_LEAK		(1U << 0) /* version 1.12 */
+
 #ifdef SNAPSHOT_INTERNAL
 struct segment_type *init_snapshot_segtype(struct cmd_context *cmd);
 #endif
+
+#define MIRROR_LOG_CLUSTERED			(1U << 0)
 
 #ifdef MIRRORED_INTERNAL
 struct segment_type *init_mirrored_segtype(struct cmd_context *cmd);

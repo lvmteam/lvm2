@@ -52,31 +52,6 @@ struct lv_activate_opts {
 				 * that follows. */
 };
 
-/* target attribute flags */
-#define MIRROR_LOG_CLUSTERED	0x00000001U
-
-/* snapshot target attribute flags */
-enum {
-	SNAPSHOT_FEATURE_FIXED_LEAK		= (1 << 0), /* version 1.12 */
-};
-
-/* thin target attribute flags */
-enum {
-	/* bitfields - new features from 1.1 version */
-	THIN_FEATURE_DISCARDS			= (1 << 0),
-	THIN_FEATURE_EXTERNAL_ORIGIN		= (1 << 1),
-	THIN_FEATURE_HELD_ROOT			= (1 << 2),
-	THIN_FEATURE_BLOCK_SIZE			= (1 << 3),
-	THIN_FEATURE_DISCARDS_NON_POWER_2	= (1 << 4),
-	THIN_FEATURE_METADATA_RESIZE		= (1 << 5),
-	THIN_FEATURE_EXTERNAL_ORIGIN_EXTEND	= (1 << 6),
-};
-
-/* raid target attribute flags */
-enum {
-	RAID_FEATURE_RAID10			= (1 << 0), /* version 1.3 */
-};
-
 void set_activation(int activation);
 int activation(void);
 
