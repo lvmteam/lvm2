@@ -318,10 +318,13 @@ static void _xlate_mdah(struct mda_header *mdah)
 
 static int _raw_read_mda_header(struct mda_header *mdah, struct device_area *dev_area)
 {
-	if (!dev_open(dev_area->dev))
+	if (!dev_open_readonly(dev_area->dev))
 		return_0;
 
 	if (!dev_read(dev_area->dev, dev_area->start, MDA_HEADER_SIZE, mdah))
+		return_0;
+
+	if (!dev_close(dev_area->dev))
 		return_0;
 
 	if (mdah->checksum_xl != xlate32(calc_crc(INITIAL_CRC, (uint8_t *)mdah->magic,
