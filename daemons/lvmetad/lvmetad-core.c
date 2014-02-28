@@ -958,9 +958,13 @@ static response pv_found(lvmetad_state *s, request r)
 	}
 
 	if (vgid_old && (!vgid || strcmp(vgid, vgid_old))) {
+		/* make a copy, because vg_remove_if_missing will deallocate the
+		 * storage behind vgid_old */
+		vgid_old = dm_strdup(vgid_old);
 		lock_vg(s, vgid_old);
 		vg_remove_if_missing(s, vgid_old, 1);
 		unlock_vg(s, vgid_old);
+		dm_free(vgid_old);
 	}
 
 	return daemon_reply_simple("OK",
