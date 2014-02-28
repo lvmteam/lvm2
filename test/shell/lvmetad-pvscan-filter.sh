@@ -15,8 +15,8 @@ test -e LOCAL_LVMETAD || skip
 
 aux prepare_pvs 2
 
-maj=$(($(stat --printf=0x%t "$dev2")))
-min=$(($(stat --printf=0x%T "$dev2")))
+maj=$(($(stat -L --printf=0x%t "$dev2")))
+min=$(($(stat -L --printf=0x%T "$dev2")))
 
 aux hide_dev $dev2
 not pvscan --cache $dev2 2>&1 | grep "not found"
