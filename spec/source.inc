@@ -33,6 +33,9 @@
 
 %global req_udev udev >= 158-1
 %global req_cluster openais >= 1.1.1-1, cman >= 3.0.6-1, corosync >= 1.2.0-1
+
+%global _udevbasedir /lib/udev
+%global _udevdir %{_udevbasedir}/rules.d
 %endif
 
 %if %{fedora} == 16
