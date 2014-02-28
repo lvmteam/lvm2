@@ -29,8 +29,11 @@ which mkfs.xfs || check_xfs=${check_xfs:-mkfs.xfs}
 which xfs_check || {
 	which xfs_repair || check_xfs=${check_xfs:-xfs_repair}
 }
+grep xfs /proc/filesystems || check_xfs=${check_xfs:-no_xfs}
+
 which mkfs.reiserfs || check_reiserfs=${check_reiserfs:-mkfs.reiserfs}
 which reiserfsck || check_reiserfs=${check_reiserfs:-reiserfsck}
+grep reiserfs /proc/filesystems || check_reiserfs=${check_reiserfs:-no_reiserfs}
 
 vg_lv=$vg/$lv1
 vg_lv2=$vg/${lv1}bar
@@ -75,9 +78,9 @@ check_missing()
 	eval local t=$\check_$1
 	test -z "$t" && return 0
 	test "$t" = skip && return 1
-	# trick to get test listed with warning
 	echo "WARNING: fsadm test skipped $1 tests, $t tool is missing."
-	should false;
+	# trick to get test listed with warning
+	# should false;
 	return 1
 }
 
