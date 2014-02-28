@@ -94,7 +94,7 @@ lvmetad_talk() {
     else
 	echo "WARNING: Neither socat nor nc -U seems to be available." 1>&2
 	echo "# failed to contact lvmetad"
-	return 1
+	exit 1
     fi | tee -a lvmetad-talk.txt
 }
 
