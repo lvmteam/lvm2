@@ -14,9 +14,9 @@
 test -e LOCAL_LVMETAD || skip
 aux prepare_devs 2
 pvcreate --metadatatype 1 $dev1
-vgscan --cache
-pvs | grep $dev1
+should vgscan --cache
+pvs | should grep $dev1
 vgcreate --metadatatype 1 $vg1 $dev1
-vgscan --cache
-vgs | grep $vg1
-pvs | grep $dev1
+should vgscan --cache
+vgs | should grep $vg1
+pvs | should grep $dev1
