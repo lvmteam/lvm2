@@ -861,7 +861,7 @@ static response pv_found(lvmetad_state *s, request r)
 	const char *vgid = daemon_request_str(r, "metadata/id", NULL);
 	const char *vgid_old = NULL;
 	struct dm_config_node *pvmeta = dm_config_find_node(r.cft->root, "pvmeta");
-	uint64_t device;
+	uint64_t device, device_old_pvid = 0;
 	struct dm_config_tree *cft, *pvmeta_old_dev = NULL, *pvmeta_old_pvid = NULL;
 	char *old;
 	char *pvid_dup;
@@ -883,9 +883,12 @@ static response pv_found(lvmetad_state *s, request r)
 		dm_hash_remove(s->pvid_to_pvmeta, old);
 		vgid_old = dm_hash_lookup(s->pvid_to_vgid, old);
 	}
-	pvmeta_old_pvid = dm_hash_lookup(s->pvid_to_pvmeta, pvid);
 
-	DEBUGLOG(s, "pv_found %s, vgid = %s, device = %" PRIu64 ", old = %s", pvid, vgid, device, old);
+	if ((pvmeta_old_pvid = dm_hash_lookup(s->pvid_to_pvmeta, pvid)))
+		dm_config_get_uint64(pvmeta_old_pvid->root, "pvmeta/device", &device_old_pvid);
+
+	DEBUGLOG(s, "pv_found %s, vgid = %s, device = %" PRIu64 " (previously %" PRIu64 "), old = %s",
+		 pvid, vgid, device, device_old_pvid, old);
 
 	dm_free(old);
 
@@ -903,6 +906,11 @@ static response pv_found(lvmetad_state *s, request r)
 		return reply_fail("out of memory");
 	}
 
+	if (pvmeta_old_pvid && device != device_old_pvid) {
+		DEBUGLOG(s, "pv %s no longer on device %" PRIu64, pvid, device_old_pvid);
+		dm_hash_remove_binary(s->device_to_pvid, &device_old_pvid, sizeof(device_old_pvid));
+	}
+
 	if (!dm_hash_insert(s->pvid_to_pvmeta, pvid, cft) ||
 	    !dm_hash_insert_binary(s->device_to_pvid, &device, sizeof(device), (void*)pvid_dup)) {
 		dm_hash_remove(s->pvid_to_pvmeta, pvid);
@@ -911,6 +919,7 @@ static response pv_found(lvmetad_state *s, request r)
 		dm_free(pvid_dup);
 		return reply_fail("out of memory");
 	}
+
 	if (pvmeta_old_pvid)
 		dm_config_destroy(pvmeta_old_pvid);
 	if (pvmeta_old_dev && pvmeta_old_dev != pvmeta_old_pvid)
