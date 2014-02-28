@@ -57,7 +57,8 @@ struct volume_group {
 	 * _vg_update_vg_ondisk.
 	 */
 	struct volume_group *vg_ondisk;
-	struct volume_group *vg_precommitted; /* Parsed from precommitted */
+	struct dm_config_tree *cft_precommitted; /* Precommitted metadata */
+	struct volume_group *vg_precommitted; /* Parsed from cft */
 
 	alloc_policy_t alloc;
 	struct profile *profile;

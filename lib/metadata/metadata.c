@@ -864,20 +864,24 @@ int vgcreate_params_validate(struct cmd_context *cmd,
  */
 static int _vg_update_vg_precommitted(struct volume_group *vg)
 {
-	struct dm_config_tree *cft;
-
 	release_vg(vg->vg_precommitted);
 	vg->vg_precommitted = NULL;
 
-	if (!(cft = export_vg_to_config_tree(vg)))
+	if (vg->cft_precommitted) {
+		dm_config_destroy(vg->cft_precommitted);
+		vg->cft_precommitted = NULL;
+	}
+
+	if (!(vg->cft_precommitted = export_vg_to_config_tree(vg)))
 		return_0;
 
-	if (!(vg->vg_precommitted = import_vg_from_config_tree(cft, vg->fid)))
-		stack;
+	if (!(vg->vg_precommitted = import_vg_from_config_tree(vg->cft_precommitted, vg->fid))) {
+		dm_config_destroy(vg->cft_precommitted);
+		vg->cft_precommitted = NULL;
+		return_0;
+	}
 
-	dm_config_destroy(cft);
-
-	return vg->vg_precommitted ? 1 : 0;
+	return 1;
 }
 
 static int _vg_update_vg_ondisk(struct volume_group *vg)
@@ -893,6 +897,10 @@ static int _vg_update_vg_ondisk(struct volume_group *vg)
 
 	vg->vg_ondisk = vg->vg_precommitted;
 	vg->vg_precommitted = NULL;
+	if (vg->cft_precommitted) {
+		dm_config_destroy(vg->cft_precommitted);
+		vg->cft_precommitted = NULL;
+	}
 
 	return 1;
 }
@@ -2695,14 +2703,14 @@ int vg_write(struct volume_group *vg)
 		}
 	}
 
+	if (!_vg_update_vg_precommitted(vg)) /* prepare precommited */
+		return_0;
+
 	/*
 	 * If precommit is not supported, changes take effect immediately.
 	 * FIXME Replace with a more-accurate FMT_COMMIT flag.
 	 */
 	if (!(vg->fid->fmt->features & FMT_PRECOMMIT) && !lvmetad_vg_update(vg))
-		return_0;
-
-	if (!_vg_update_vg_precommitted(vg)) /* prepare precommited */
 		return_0;
 
 	return 1;
@@ -2773,6 +2781,10 @@ int vg_commit(struct volume_group *vg)
 		release_vg(vg->vg_ondisk);
 		vg->vg_ondisk = vg->vg_precommitted;
 		vg->vg_precommitted = NULL;
+		if (vg->cft_precommitted) {
+			dm_config_destroy(vg->cft_precommitted);
+			vg->cft_precommitted = NULL;
+		}
 	}
 
 	/* If update failed, remove any cached precommitted metadata. */
@@ -2791,6 +2803,10 @@ void vg_revert(struct volume_group *vg)
 
 	release_vg(vg->vg_precommitted);  /* VG is no longer needed */
 	vg->vg_precommitted = NULL;
+	if (vg->cft_precommitted) {
+		dm_config_destroy(vg->cft_precommitted);
+		vg->cft_precommitted = NULL;
+	}
 
 	dm_list_iterate_items(mda, &vg->fid->metadata_areas_in_use) {
 		if (mda->ops->vg_revert &&

@@ -468,7 +468,6 @@ int lvmetad_vg_update(struct volume_group *vg)
 	struct pv_list *pvl;
 	struct lvmcache_info *info;
 	struct _fixup_baton baton;
-	struct dm_config_tree *vgmeta;
 
 	if (!vg)
 		return 0;
@@ -476,13 +475,14 @@ int lvmetad_vg_update(struct volume_group *vg)
 	if (!lvmetad_active() || test_mode())
 		return 1; /* fake it */
 
-	if (!(vgmeta = export_vg_to_config_tree(vg)))
-		return_0;
+	if (!vg->cft_precommitted) {
+		log_error(INTERNAL_ERROR "VG update without precommited");
+		return 0;
+	}
 
 	log_debug_lvmetad("Sending lvmetad updated metadata for VG %s (seqno %" PRIu32 ")", vg->name, vg->seqno);
 	reply = _lvmetad_send("vg_update", "vgname = %s", vg->name,
-			      "metadata = %t", vgmeta, NULL);
-	dm_config_destroy(vgmeta);
+			      "metadata = %t", vg->cft_precommitted, NULL);
 
 	if (!_lvmetad_handle_reply(reply, "update VG", vg->name, NULL)) {
 		daemon_reply_destroy(reply);
