@@ -86,6 +86,22 @@ prepare_lvmetad() {
 	echo ok
 }
 
+lvmetad_talk() {
+    if type -p socat >& /dev/null; then
+	socat "unix-connect:$TESTDIR/lvmetad.socket" -
+    elif echo | nc -U "$TESTDIR/lvmetad.socket"; then
+	nc -U "$TESTDIR/lvmetad.socket"
+    else
+	echo "WARNING: Neither socat nor nc -U seems to be available." 1>&2
+	echo "# failed to contact lvmetad"
+	return 1
+    fi | tee -a lvmetad-talk.txt
+}
+
+lvmetad_dump() {
+    (echo 'request="dump"'; echo '##') | lvmetad_talk "$@"
+}
+
 notify_lvmetad() {
 	if test -e LOCAL_LVMETAD; then
 		pvscan --cache "$@" || true
