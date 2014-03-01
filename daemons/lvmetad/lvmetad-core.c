@@ -908,6 +908,7 @@ static response pv_found(lvmetad_state *s, request r)
 
 	if (pvmeta_old_pvid && device != device_old_pvid) {
 		DEBUGLOG(s, "pv %s no longer on device %" PRIu64, pvid, device_old_pvid);
+		dm_free(dm_hash_lookup_binary(s->device_to_pvid, &device_old_pvid, sizeof(device_old_pvid)));
 		dm_hash_remove_binary(s->device_to_pvid, &device_old_pvid, sizeof(device_old_pvid));
 	}
 

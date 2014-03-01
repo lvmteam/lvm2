@@ -1,5 +1,6 @@
 Version 2.02.106 - 
 ====================================
+  Fix memleak when lvmetad discovers PV to appear on another device.
   Fix calculation of maximum size of COW device for snapshot (2.02.99).
   Do not allow stripe size to be bigger then extent size for lvresize.
   Zero snapshot COW header when creating read-only snapshot.
