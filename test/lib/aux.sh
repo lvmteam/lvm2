@@ -87,15 +87,20 @@ prepare_lvmetad() {
 }
 
 lvmetad_talk() {
-    if type -p socat >& /dev/null; then
-	socat "unix-connect:$TESTDIR/lvmetad.socket" -
-    elif echo | nc -U "$TESTDIR/lvmetad.socket"; then
-	nc -U "$TESTDIR/lvmetad.socket"
-    else
-	echo "WARNING: Neither socat nor nc -U seems to be available." 1>&2
-	echo "# failed to contact lvmetad"
-	exit 1
-    fi | tee -a lvmetad-talk.txt
+	local use=nc
+	if type -p socat >& /dev/null; then
+		use=socat
+	elif echo | not nc -U "$TESTDIR/lvmetad.socket" ; then
+		echo "WARNING: Neither socat nor nc -U seems to be available." 1>&2
+		echo "# failed to contact lvmetad"
+		return 1
+	fi
+
+	if test "$use" = nc ; then
+		nc -U "$TESTDIR/lvmetad.socket"
+	else
+		socat "unix-connect:$TESTDIR/lvmetad.socket" -
+	fi | tee -a lvmetad-talk.new
 }
 
 lvmetad_dump() {
