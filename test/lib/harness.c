@@ -25,7 +25,6 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <sys/klog.h>
 #include <time.h>
 #include <unistd.h>
 #include <stdint.h>
@@ -263,23 +262,6 @@ static void drain(int fd, size_t size_limit)
 	}
 }
 
-#define SYSLOG_ACTION_READ_CLEAR     4
-#define SYSLOG_ACTION_CLEAR          5
-
-static void clear_dmesg(void)
-{
-	klogctl(SYSLOG_ACTION_CLEAR, 0, 0);
-}
-
-static void drain_dmesg(void)
-{
-	char buf[16392 + 1];
-	size_t sz = klogctl(SYSLOG_ACTION_READ_CLEAR, buf, sizeof(buf) - 1);
-	buf[sz] = 0;
-	_append_buf(buf, sz);
-}
-
-
 static const char *duration(time_t start, const struct rusage *usage)
 {
 	static char buf[100];
@@ -365,7 +347,6 @@ static void run(int i, char *f) {
 	struct rusage usage;
 	char flavour[512], script[512];
 
-	clear_dmesg();
 	pid = fork();
 	if (pid < 0) {
 		perror("Fork failed.");
@@ -404,17 +385,31 @@ static void run(int i, char *f) {
 		int no_write = 0;
 		int collect_debug = 0;
 		int fd_debuglog = -1;
+		int fd_kmsg = -1;
+		FILE *kmsg;
 
 		//close(fds[1]);
 		testdirdebug[0] = '\0'; /* Capture RUNTESTDIR */
 		snprintf(buf, sizeof(buf), "%s ...", f);
-		printf("Running %-60s ", buf);
+		printf("Running %-60s%c", buf, verbose ? '\n' : ' ');
 		fflush(stdout);
 		snprintf(outpath, sizeof(outpath), "%s/%s.txt", results, f);
 		while ((c = strchr(c, '/')))
 			*c = '_';
 		if (!(outfile = fopen(outpath, "w")))
 			perror("fopen");
+
+		/* Mix-in kernel log message */
+		if (!(kmsg = fopen("/proc/kmsg", "r")))
+			perror("fopen kmsg");
+		else if ((fd_kmsg = fileno(kmsg)) >= 0) {
+			if ((fcntl(fd_kmsg, F_SETFL, O_NONBLOCK ) == -1)) {
+				perror("fcntl kmsg");
+				fclose(kmsg);
+				kmsg = NULL;
+			} else if (fseek(kmsg, 0L, SEEK_END))
+				perror("fseek kmsg");
+		}
 
 		while ((w = wait4(pid, &st, WNOHANG, &usage)) == 0) {
 			if ((fullbuffer && fullbuffer++ == 8000) ||
@@ -459,14 +454,16 @@ static void run(int i, char *f) {
 			}
 			drain(fds[0], INT32_MAX);
 			no_write = 0;
-			drain_dmesg();
+			if (fd_kmsg >= 0)
+				drain(fd_kmsg, INT32_MAX);
 		}
 		if (w != pid) {
 			perror("waitpid");
 			exit(206);
 		}
 		drain(fds[0], INT32_MAX);
-		drain_dmesg();
+		if (fd_kmsg >= 0)
+			drain(fd_kmsg, INT32_MAX);
 		if (die == 2)
 			interrupted(i, f);
 		else if (runaway) {
@@ -487,8 +484,8 @@ static void run(int i, char *f) {
 		} else
 			failed(i, f, st);
 
-		if (fd_debuglog >= 0)
-			close(fd_debuglog);
+		if (kmsg)
+			fclose(kmsg);
 		if (outfile)
 			fclose(outfile);
 		if (fullbuffer)
