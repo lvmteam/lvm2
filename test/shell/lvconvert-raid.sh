@@ -24,8 +24,7 @@ get_image_pvs() {
 ########################################################
 aux target_at_least dm-raid 1 2 0 || skip
 
-# 9 PVs needed for RAID10 testing (3-stripes/2-mirror - replacing 3 devs)
-aux prepare_pvs 9 80
+aux prepare_pvs 5
 vgcreate -s 256k $vg $(cat DEVICES)
 
 ###########################################
@@ -193,43 +192,6 @@ for i in {1..3}; do
 
 		if [ $j -ge $((i + 1)) ]; then
 			# Can't replace all at once.
-			not lvconvert $replace $vg/$lv1
-		else
-			lvconvert $replace $vg/$lv1
-		fi
-	done
-	done
-
-	lvremove -ff $vg
-done
-
-aux skip_if_raid456_replace_broken
-
-# RAID 4/5/6 (can replace up to 'parity' devices)
-for i in 4 5 6; do
-	lvcreate --type raid$i -i 3 -l 3 -n $lv1 $vg
-
-	if [ $i -eq 6 ]; then
-		dev_cnt=5
-		limit=2
-	else
-		dev_cnt=4
-		limit=1
-	fi
-
-	for j in {1..3}; do
-	for o in $(seq 0 $i); do
-		replace=""
-
-		devices=( $(get_image_pvs $vg $lv1) )
-
-		for k in $(seq $j); do
-			index=$((($k + $o) % $dev_cnt))
-			replace="$replace --replace ${devices[$index]}"
-		done
-		aux wait_for_sync $vg $lv1
-
-		if [ $j -gt $limit ]; then
 			not lvconvert $replace $vg/$lv1
 		else
 			lvconvert $replace $vg/$lv1

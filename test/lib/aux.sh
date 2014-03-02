@@ -637,7 +637,7 @@ skip_if_mirror_recovery_broken() {
         if test `uname -r` = 3.3.4-5.fc17.x86_64; then skip; fi
 }
 
-skip_if_raid456_replace_broken() {
+raid456_replace_works() {
 # The way kmem_cache aliasing is done in the kernel is broken.
 # It causes RAID 4/5/6 tests to fail.
 #
@@ -666,8 +666,9 @@ skip_if_raid456_replace_broken() {
 # old instance to be preserved and causes a colision (and thus failure) in
 # kmem_cache_create().  I see this regularly in testing the following
 # kernels:
-        if test `uname -r` = 3.10.11-200.fc19.i686; then skip; fi
-        if test `uname -r` = 3.10.11-200.fc19.x86_64; then skip; fi
+	case $(uname -r) in
+	  3.10.11-200.fc19.i686|3.10.11-200.fc19.x86_64) return 1 ;;
+	esac
 }
 
 udev_wait() {
