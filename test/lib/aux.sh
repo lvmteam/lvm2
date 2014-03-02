@@ -754,7 +754,19 @@ have_readline()
 	echo version | lvm &>/dev/null
 }
 
+dmsetup_wrapped()
+{
+	udev_wait
+	init_udev_transaction
+	dmsetup "$@"
+	finish_udev_transaction
+}
+
 test -f DEVICES && devs=$(cat DEVICES)
 
-#unset LVM_VALGRIND
-"$@"
+if test "$1" = dmsetup; then
+    shift
+    dmsetup_wrapped "$@"
+else
+    "$@"
+fi

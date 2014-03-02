@@ -94,8 +94,8 @@ lvchange -an $vg
 should lvremove -ff $vg
 
 # let's not block PVs with openned _tdata/_tmeta devices
-dmsetup remove $vg-pool_tdata || true
-dmsetup remove $vg-pool_tmeta || true
+aux dmsetup remove $vg-pool_tdata || true
+aux dmsetup remove $vg-pool_tmeta || true
 
 dmsetup table
 
