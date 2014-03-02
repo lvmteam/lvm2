@@ -67,6 +67,13 @@ export DM_DEV_DIR LVM_SYSTEM_DIR DM_ABORT_ON_INTERNAL_ERRORS
 
 echo "$TESTNAME" >TESTNAME
 
+# Report SELinux mode
+if which getenforce &>/dev/null ; then
+	echo "Selinux mode is \"$(getenforce 2>/dev/null)\"."
+else
+	echo "Selinux mode is not installed."
+fi
+
 # Setting up symlink from $i to $TESTDIR/lib
 find "$abs_top_builddir/daemons/dmeventd/plugins/" -name '*.so' \
 	-exec ln -s -t lib "{}" +
@@ -85,6 +92,8 @@ test -n "$LVM_TEST_LVMETAD" && {
 	export LVM_LVMETAD_PIDFILE="$TESTDIR/lvmetad.pid"
 	aux prepare_lvmetad
 }
+
+# Vars for harness
 echo "@TESTDIR=$TESTDIR"
 echo "@PREFIX=$PREFIX"
 
