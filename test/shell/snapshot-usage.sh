@@ -74,7 +74,7 @@ lvs -a -o+lv_active $vg1
 
 trap 'cleanup_tail' EXIT
 # Keep device busy (but not mounted) for a while
-sleep 30 < "$DM_DEV_DIR/$vg1/$lv1" &
+sleep 120 < "$DM_DEV_DIR/$vg1/$lv1" &
 SLEEP_PID=$!
 
 # give some short time to lock file above
