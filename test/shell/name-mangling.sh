@@ -83,9 +83,9 @@ function check_create_and_remove()
 function check_dm_field()
 {
 	local mode=$1
-	local dm_name="$2"
+	local dm_name=$2
 	local field=$3
-	local expected="$4"
+	local expected=$4
 
 	value=$(dmsetup info --rows --noheadings --manglename $mode -c -o $field "${DM_DEV_DIR}/mapper/${PREFIX}$dm_name" 2> err || true)
 
@@ -103,7 +103,7 @@ function check_dm_field()
 function check_expected_names()
 {
 	local mode=$1
-	local dm_name="$2"
+	local dm_name=$2
 	local r=0
 
 	create_dm_dev none "$dm_name"
@@ -122,8 +122,8 @@ function check_expected_names()
 function check_mangle_cmd()
 {
 	local mode=$1
-	local dm_name="$2"
-	local expected="$3"
+	local dm_name=$2
+	local expected=$3
 	local rename_expected=0
 	local r=0
 
@@ -191,7 +191,11 @@ check_expected_names none 'a\x5cx20b' 'a\x5cx20b' 'a\x5cx20b' 'a\x20b'
 
 check_mangle_cmd none 'a b' 'OK'
 check_mangle_cmd none 'a\x20b' 'a b'
-check_mangle_cmd none 'a b\x20c' 'a b c'
+#
+# FIXME: this test leave entry in /dev/mapper dir
+#        and is not detected nor cleaned
+#
+#check_mangle_cmd none 'a b\x20c' 'a b c'
 check_mangle_cmd none 'a\x5cx20b' 'a\x20b'
 
 
