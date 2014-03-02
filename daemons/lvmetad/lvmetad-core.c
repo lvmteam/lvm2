@@ -961,7 +961,7 @@ out_of_mem:
 		lock_vg(s, vgid_old);
 		vg_remove_if_missing(s, vgid_old, 1);
 		unlock_vg(s, vgid_old);
-		dm_free(vgid_old);
+		dm_free((char*)vgid_old);
 	}
 
 	return daemon_reply_simple("OK",
