@@ -1479,6 +1479,11 @@ struct cmd_context *create_toolcontext(unsigned is_long_lived,
 		goto out;
 	}
 
+	if (!(cmd->mem = dm_pool_create("command", 4 * 1024))) {
+		log_error("Command memory pool creation failed");
+		goto out;
+	}
+
 	if (!_init_lvm_conf(cmd))
 		goto_out;
 
@@ -1511,11 +1516,6 @@ struct cmd_context *create_toolcontext(unsigned is_long_lived,
 
 	if (!_init_filters(cmd, 1))
 		goto_out;
-
-	if (!(cmd->mem = dm_pool_create("command", 4 * 1024))) {
-		log_error("Command memory pool creation failed");
-		goto out;
-	}
 
 	memlock_init(cmd);
 
