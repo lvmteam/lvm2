@@ -613,7 +613,6 @@ static int _init_tag_configs(struct cmd_context *cmd)
 
 static int _init_profiles(struct cmd_context *cmd)
 {
-	static char default_dir[PATH_MAX];
 	const char *dir;
 	struct profile_params *pp;
 
@@ -622,15 +621,8 @@ static int _init_profiles(struct cmd_context *cmd)
 		return 0;
 	}
 
-	if (!(dir = find_config_tree_str(cmd, config_profile_dir_CFG, NULL))) {
-		if (dm_snprintf(default_dir, sizeof(default_dir), "%s/%s",
-				cmd->system_dir, DEFAULT_PROFILE_SUBDIR) == -1) {
-			log_error("Couldn't create default profile path '%s/%s'.",
-				  cmd->system_dir, DEFAULT_PROFILE_SUBDIR);
-			return 0;
-		}
-		dir = default_dir;
-	}
+	if (!(dir = find_config_tree_str(cmd, config_profile_dir_CFG, NULL)))
+		return_0;
 
 	pp->dir = dm_pool_strdup(cmd->libmem, dir);
 	dm_list_init(&pp->profiles_to_load);

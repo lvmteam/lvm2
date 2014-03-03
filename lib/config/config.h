@@ -234,5 +234,6 @@ const char *get_default_devices_cache_dir_CFG(struct cmd_context *cmd, struct pr
 const char *get_default_devices_cache_CFG(struct cmd_context *cmd, struct profile *profile);
 const char *get_default_backup_backup_dir_CFG(struct cmd_context *cmd, struct profile *profile);
 const char *get_default_backup_archive_dir_CFG(struct cmd_context *cmd, struct profile *profile);
+const char *get_default_config_profile_dir_CFG(struct cmd_context *cmd, struct profile *profile);
 
 #endif

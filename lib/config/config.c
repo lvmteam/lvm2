@@ -1674,3 +1674,16 @@ const char *get_default_backup_archive_dir_CFG(struct cmd_context *cmd, struct p
 
 	return dm_pool_strdup(cmd->mem, buf);
 }
+
+const char *get_default_config_profile_dir_CFG(struct cmd_context *cmd, struct profile *profile)
+{
+	static char buf[PATH_MAX];
+
+	if (dm_snprintf(buf, sizeof(buf), "%s/%s", cmd->system_dir, DEFAULT_PROFILE_SUBDIR) == -1) {
+		log_error("Couldn't create default profile path '%s/%s'.",
+			  cmd->system_dir, DEFAULT_PROFILE_SUBDIR);
+		return NULL;
+	}
+
+	return dm_pool_strdup(cmd->mem, buf);
+}
