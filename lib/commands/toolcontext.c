@@ -1238,7 +1238,6 @@ static int _init_hostname(struct cmd_context *cmd)
 
 static int _init_backup(struct cmd_context *cmd)
 {
-	static char default_dir[PATH_MAX];
 	uint32_t days, min;
 	const char *dir;
 
@@ -1257,16 +1256,8 @@ static int _init_backup(struct cmd_context *cmd)
 
 	min = (uint32_t) find_config_tree_int(cmd, backup_retain_min_CFG, NULL);
 
-	if (dm_snprintf
-	    (default_dir, sizeof(default_dir), "%s/%s", cmd->system_dir,
-	     DEFAULT_ARCHIVE_SUBDIR) == -1) {
-		log_error("Couldn't create default archive path '%s/%s'.",
-			  cmd->system_dir, DEFAULT_ARCHIVE_SUBDIR);
-		return 0;
-	}
-
 	if (!(dir = find_config_tree_str(cmd, backup_archive_dir_CFG, NULL)))
-		dir = default_dir;
+		return_0;
 
 	if (!archive_init(cmd, dir, days, min,
 			  cmd->default_settings.archive)) {
@@ -1277,16 +1268,8 @@ static int _init_backup(struct cmd_context *cmd)
 	/* set up the backup */
 	cmd->default_settings.backup = find_config_tree_bool(cmd, backup_backup_CFG, NULL);
 
-	if (dm_snprintf
-	    (default_dir, sizeof(default_dir), "%s/%s", cmd->system_dir,
-	     DEFAULT_BACKUP_SUBDIR) == -1) {
-		log_error("Couldn't create default backup path '%s/%s'.",
-			  cmd->system_dir, DEFAULT_BACKUP_SUBDIR);
-		return 0;
-	}
-
 	if (!(dir = find_config_tree_str(cmd, backup_backup_dir_CFG, NULL)))
-		dir = default_dir;
+		return_0;
 
 	if (!backup_init(cmd, dir, cmd->default_settings.backup)) {
 		log_debug("backup_init failed.");

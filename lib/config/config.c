@@ -1648,3 +1648,29 @@ const char *get_default_devices_cache_CFG(struct cmd_context *cmd, struct profil
 	}
 	return dm_pool_strdup(cmd->mem, buf);
 }
+
+const char *get_default_backup_backup_dir_CFG(struct cmd_context *cmd, struct profile *profile)
+{
+	static char buf[PATH_MAX];
+
+	if (dm_snprintf(buf, sizeof(buf), "%s/%s", cmd->system_dir, DEFAULT_BACKUP_SUBDIR) == -1) {
+		log_error("Couldn't create default backup path '%s/%s'.",
+			  cmd->system_dir, DEFAULT_BACKUP_SUBDIR);
+		return NULL;
+	}
+
+	return dm_pool_strdup(cmd->mem, buf);
+}
+
+const char *get_default_backup_archive_dir_CFG(struct cmd_context *cmd, struct profile *profile)
+{
+	static char buf[PATH_MAX];
+
+	if (dm_snprintf (buf, sizeof(buf), "%s/%s", cmd->system_dir, DEFAULT_ARCHIVE_SUBDIR) == -1) {
+		log_error("Couldn't create default archive path '%s/%s'.",
+			  cmd->system_dir, DEFAULT_ARCHIVE_SUBDIR);
+		return NULL;
+	}
+
+	return dm_pool_strdup(cmd->mem, buf);
+}

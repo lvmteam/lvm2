@@ -227,10 +227,12 @@ float find_config_tree_float(struct cmd_context *cmd, int id, struct profile *pr
 int find_config_tree_bool(struct cmd_context *cmd, int id, struct profile *profile);
 
 /*
- * Functions for individual configuration settings for
- * which the default value is evaluated at runtime.
+ * Functions for configuration settings for which the default
+ * value is evaluated at runtime based on command context.
  */
 const char *get_default_devices_cache_dir_CFG(struct cmd_context *cmd, struct profile *profile);
 const char *get_default_devices_cache_CFG(struct cmd_context *cmd, struct profile *profile);
+const char *get_default_backup_backup_dir_CFG(struct cmd_context *cmd, struct profile *profile);
+const char *get_default_backup_archive_dir_CFG(struct cmd_context *cmd, struct profile *profile);
 
 #endif
