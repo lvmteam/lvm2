@@ -100,7 +100,7 @@ lvmetad_talk() {
 		nc -U "$TESTDIR/lvmetad.socket"
 	else
 		socat "unix-connect:$TESTDIR/lvmetad.socket" -
-	fi | tee -a lvmetad-talk.new
+	fi | tee -a lvmetad-talk.txt
 }
 
 lvmetad_dump() {
