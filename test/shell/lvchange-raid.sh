@@ -11,8 +11,6 @@
 
 . lib/test
 
-THIN_POSTFIX=""
-
 # Writemostly has been in every version since the begining
 # Device refresh in 1.5.1 upstream and 1.3.4 < x < 1.4.0 in RHEL6
 # Sync action    in 1.5.0 upstream and 1.3.3 < x < 1.4.0 in RHEL6
@@ -252,7 +250,7 @@ run_recovery_rate_check() {
 	local vg=$1
 	local lv=${2}${THIN_POSTFIX}
 
-	printf "#\n#\n#\n# %s/%s %s: run_recovery_rate_check\n#\n#\n#\n" \
+	printf "#\n#\n#\n# %s/%s (%s): run_recovery_rate_check\n#\n#\n#\n" \
 		 $vg $lv $(get lv_field $vg/$lv segtype -a)
 	lvchange --minrecoveryrate 50 $vg/$lv
 	lvchange --maxrecoveryrate 100 $vg/$lv
@@ -276,13 +274,6 @@ run_checks() {
 		run_refresh_check $1 $2
 		run_recovery_rate_check $1 $2
 	elif [ 'thinpool_data' == $3 ]; then
-		aux have_thin 1 8 0 || return 0
-
-		# RAID works EX in cluster
-		# thinpool works EX in cluster
-		# but they don't work together in a cluster yet
-		#  (nor does thinpool+mirror work in a cluster yet)
-		test -e LOCAL_CLVMD && return 0
 		printf "#\n#\n# run_checks: RAID as thinpool data\n#\n#\n"
 
 # Hey, specifying devices for thin allocation doesn't work
@@ -297,8 +288,6 @@ run_checks() {
 		run_refresh_check $1 $2
 		run_recovery_rate_check $1 $2
 	elif [ 'thinpool_meta' == $3 ]; then
-		aux have_thin 1 8 0 || return 0
-		test -e LOCAL_CLVMD && return 0
 		printf "#\n#\n# run_checks: RAID as thinpool metadata\n#\n#\n"
 
 		lvrename $1/$2 ${2}_meta
@@ -327,35 +316,27 @@ run_checks() {
 	fi
 }
 
+run_types() {
+	for i in $TEST_TYPES ; do
+		lvcreate -n $lv1 $vg -L2M --type "$@"
+		run_checks $vg $lv1 $i
+		lvremove -ff $vg
+	done
+}
+
 ########################################################
 # MAIN
 ########################################################
 
-for i in "-" "snapshot" "thinpool_data" "thinpool_meta"; do
-	lvcreate --type raid1 -m 1 -L 2M -n $lv1 $vg \
-			"$dev1" "$dev2"
-	run_checks $vg $lv1 $i
-	lvremove -ff $vg
+TEST_TYPES="- snapshot"
+# RAID works EX in cluster
+# thinpool works EX in cluster
+# but they don't work together in a cluster yet
+#  (nor does thinpool+mirror work in a cluster yet)
+test ! -e LOCAL_CLVMD -a aux have_thin 1 8 0 && TEST_TYPE="$TEST_TYPES thinpool_data thinpool_meta"
 
-	lvcreate --type raid4 -i 2 -L 2M -n $lv1 $vg \
-			"$dev1" "$dev2" "$dev3" "$dev4"
-	run_checks $vg $lv1 $i
-	lvremove -ff $vg
-
-	lvcreate --type raid5 -i 2 -L 2M -n $lv1 $vg \
-			"$dev1" "$dev2" "$dev3" "$dev4"
-	run_checks $vg $lv1 $i
-	lvremove -ff $vg
-
-	lvcreate --type raid6 -i 3 -L 2M -n $lv1 $vg \
-			"$dev1" "$dev2" "$dev3" "$dev4" "$dev5"
-	run_checks $vg $lv1 $i
-	lvremove -ff $vg
-
-	lvcreate --type raid10 -m 1 -i 2 -L 2M -n $lv1 $vg \
-			"$dev1" "$dev2" "$dev3" "$dev4"
-	run_checks $vg $lv1 $i
-	lvremove -ff $vg
-done
-
-vgremove -ff $vg
+# Implicit test for 'raid1' only
+if test "${TEST_RAID:-raid1}" = raid1 ; then
+	run_types raid1 -m 1 "$dev1" "$dev2"
+	vgremove -ff $vg
+fi
