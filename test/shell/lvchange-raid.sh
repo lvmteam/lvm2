@@ -252,7 +252,7 @@ run_recovery_rate_check() {
 	local vg=$1
 	local lv=${2}${THIN_POSTFIX}
 
-	printf "#\n#\n#\n# %s/%s $(%s): run_recovery_rate_check\n#\n#\n#\n" \
+	printf "#\n#\n#\n# %s/%s %s: run_recovery_rate_check\n#\n#\n#\n" \
 		 $vg $lv $(get lv_field $vg/$lv segtype -a)
 	lvchange --minrecoveryrate 50 $vg/$lv
 	lvchange --maxrecoveryrate 100 $vg/$lv
