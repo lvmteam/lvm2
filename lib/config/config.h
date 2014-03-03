@@ -226,4 +226,11 @@ int64_t find_config_tree_int64(struct cmd_context *cmd, int id, struct profile *
 float find_config_tree_float(struct cmd_context *cmd, int id, struct profile *profile);
 int find_config_tree_bool(struct cmd_context *cmd, int id, struct profile *profile);
 
+/*
+ * Functions for individual configuration settings for
+ * which the default value is evaluated at runtime.
+ */
+const char *get_default_devices_cache_dir_CFG(struct cmd_context *cmd, struct profile *profile);
+const char *get_default_devices_cache_CFG(struct cmd_context *cmd, struct profile *profile);
+
 #endif

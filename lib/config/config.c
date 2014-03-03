@@ -1602,3 +1602,49 @@ int load_pending_profiles(struct cmd_context *cmd)
 
 	return 1;
 }
+
+const char *get_default_devices_cache_dir_CFG(struct cmd_context *cmd, struct profile *profile)
+{
+	static char buf[PATH_MAX];
+
+	if (dm_snprintf(buf, sizeof(buf), "%s/%s/", cmd->system_dir, DEFAULT_CACHE_SUBDIR) < 0) {
+		log_error("Persistent cache directory name too long.");
+		return NULL;
+	}
+
+	return dm_pool_strdup(cmd->mem, buf);
+}
+
+const char *get_default_devices_cache_CFG(struct cmd_context *cmd, struct profile *profile)
+{
+	const char *cache_dir = NULL, *cache_file_prefix = NULL;
+	static char buf[PATH_MAX];
+
+	/*
+	 * If 'cache_dir' or 'cache_file_prefix' is set, ignore 'cache'.
+	*/
+	if (find_config_tree_node(cmd, devices_cache_dir_CFG, profile))
+		cache_dir = find_config_tree_str(cmd, devices_cache_dir_CFG, profile);
+	if (find_config_tree_node(cmd, devices_cache_file_prefix_CFG, profile))
+		cache_file_prefix = find_config_tree_str_allow_empty(cmd, devices_cache_file_prefix_CFG, profile);
+
+	if (cache_dir || cache_file_prefix) {
+		if (dm_snprintf(buf, sizeof(buf),
+				"%s%s%s/%s.cache",
+				cache_dir ? "" : cmd->system_dir,
+				cache_dir ? "" : "/",
+				cache_dir ? : DEFAULT_CACHE_SUBDIR,
+				cache_file_prefix ? : DEFAULT_CACHE_FILE_PREFIX) < 0) {
+			log_error("Persistent cache filename too long.");
+			return NULL;
+		}
+		return dm_pool_strdup(cmd->mem, buf);
+	}
+
+	if (dm_snprintf(buf, sizeof(buf), "%s/%s/%s.cache", cmd->system_dir,
+			DEFAULT_CACHE_SUBDIR, DEFAULT_CACHE_FILE_PREFIX) < 0) {
+		log_error("Persistent cache filename too long.");
+		return NULL;
+	}
+	return dm_pool_strdup(cmd->mem, buf);
+}

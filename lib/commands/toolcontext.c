@@ -893,8 +893,7 @@ bad:
 
 static int _init_filters(struct cmd_context *cmd, unsigned load_persistent_cache)
 {
-	static char cache_file[PATH_MAX];
-	const char *dev_cache = NULL, *cache_dir, *cache_file_prefix;
+	const char *dev_cache;
 	struct dev_filter *f3 = NULL, *f4 = NULL, *toplevel_components[2] = { 0 };
 	struct stat st;
 	const struct dm_config_node *cn;
@@ -907,33 +906,8 @@ static int _init_filters(struct cmd_context *cmd, unsigned load_persistent_cache
 	init_ignore_suspended_devices(find_config_tree_bool(cmd, devices_ignore_suspended_devices_CFG, NULL));
 	init_ignore_lvm_mirrors(find_config_tree_bool(cmd, devices_ignore_lvm_mirrors_CFG, NULL));
 
-	/*
-	 * If 'cache_dir' or 'cache_file_prefix' is set, ignore 'cache'.
-	 */
-	cache_dir = find_config_tree_str(cmd, devices_cache_dir_CFG, NULL);
-	cache_file_prefix = find_config_tree_str(cmd, devices_cache_file_prefix_CFG, NULL);
-
-	if (cache_dir || cache_file_prefix) {
-		if (dm_snprintf(cache_file, sizeof(cache_file),
-		    "%s%s%s/%s.cache",
-		    cache_dir ? "" : cmd->system_dir,
-		    cache_dir ? "" : "/",
-		    cache_dir ? : DEFAULT_CACHE_SUBDIR,
-		    cache_file_prefix ? : DEFAULT_CACHE_FILE_PREFIX) < 0) {
-			log_error("Persistent cache filename too long.");
-			goto bad;
-		}
-	} else if (!(dev_cache = find_config_tree_str(cmd, devices_cache_CFG, NULL)) &&
-		   (dm_snprintf(cache_file, sizeof(cache_file),
-				"%s/%s/%s.cache",
-				cmd->system_dir, DEFAULT_CACHE_SUBDIR,
-				DEFAULT_CACHE_FILE_PREFIX) < 0)) {
-		log_error("Persistent cache filename too long.");
-		goto bad;
-	}
-
-	if (!dev_cache)
-		dev_cache = cache_file;
+	if (!(dev_cache = find_config_tree_str(cmd, devices_cache_CFG, NULL)))
+		goto_bad;
 
 	if (!(f4 = persistent_filter_create(cmd->dev_types, f3, dev_cache))) {
 		log_verbose("Failed to create persistent device filter.");
