@@ -141,7 +141,7 @@ teardown_devs_prefixed() {
 	local need_udev_wait=0
 	init_udev_transaction
 	for dm in $(dm_info name --sort open | grep "$prefix"); do
-		dmsetup remove "$dm" &>/dev/null || remfail=yes
+		dmsetup remove --mangle none "$dm" &>/dev/null || remfail=yes
 		need_udev_wait=1
 	done
 	finish_udev_transaction
@@ -154,7 +154,7 @@ teardown_devs_prefixed() {
 		    test $num_devs -lt $num_remaining_devs -a $num_devs -ne 0; do
 			test "$stray" -eq 0 || echo "Removing $num_devs stray mapped devices with names beginning with $prefix: "
 			for dm in $(dm_info name --sort open | grep "$prefix") ; do
-				dmsetup remove -f "$dm" || true
+				dmsetup remove --mangle none -f "$dm" || true
 			done
 			num_remaining_devs=$num_devs
 		done
