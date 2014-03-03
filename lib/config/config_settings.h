@@ -14,15 +14,24 @@
 
 /*
  * MACROS:
- * cfg_section(id, name, parent, flags, since_version, comment)
- * cfg(id, name, parent, flags, type, default_value, since_version, comment)
- * cfg_array(id, name, parent, flags, types, default_value, since_version, comment)
+ * - define a configuration section:
+ *   cfg_section(id, name, parent, flags, since_version, comment)
+ *
+ * - define a configuration setting of simple type:
+ *   cfg(id, name, parent, flags, type, default_value, since_version, comment)
+ *
+ * - define a configuration array of one or more types:
+ *   cfg_array(id, name, parent, flags, types, default_value, since_version, comment)
+ *
+ * If default value can't be assigned statically because it depends on some
+ * run-time checks or if it depends on other settings already defined,
+ * the configuration setting  or array can be defined with the
+ * "{cfg|cfg_array}_runtime" macro. In this case the  default value
+ * is evaluated by automatically calling "get_default_<id>" function.
+ * See config.h and "function types to evaluate default value at runtime".
+ *
  *
  * VARIABLES:
- * cfg_section:		define a new configuration section
- * cfg:			define a new configuration setting of a simple type
- * cfg_array:		define a new configuration setting of array type
- *
  * id:			unique identifier
  * name:		configuration node name
  * parent:		id of parent configuration node

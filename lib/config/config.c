@@ -62,11 +62,15 @@ struct config_source {
 static struct cfg_def_item _cfg_def_items[CFG_COUNT + 1] = {
 #define cfg_section(id, name, parent, flags, since_version, comment) {id, parent, name, CFG_TYPE_SECTION, {0}, flags, since_version, comment},
 #define cfg(id, name, parent, flags, type, default_value, since_version, comment) {id, parent, name, type, {.v_##type = default_value}, flags, since_version, comment},
+#define cfg_runtime(id, name, parent, flags, type, since_version, comment) {id, parent, name, type, {.fn_##type = get_default_##id}, flags | CFG_DEFAULT_RUN_TIME, since_version, comment},
 #define cfg_array(id, name, parent, flags, types, default_value, since_version, comment) {id, parent, name, CFG_TYPE_ARRAY | types, {.v_CFG_TYPE_STRING = default_value}, flags, since_version, comment},
+#define cfg_array_runtime(id, name, parent, flags, types, since_version, comment) {id, parent, name, CFG_TYPE_ARRAY | types, {.fn_CFG_TYPE_STRING = get_default_##id}, flags | CFG_DEFAULT_RUN_TIME, since_version, comment},
 #include "config_settings.h"
 #undef cfg_section
 #undef cfg
+#undef cfg_runtime
 #undef cfg_array
+#undef cfg_array_runtime
 };
 
 config_source_t config_get_source_type(struct dm_config_tree *cft)
@@ -474,7 +478,8 @@ time_t config_file_timestamp(struct dm_config_tree *cft)
 }
 
 #define cfg_def_get_item_p(id) (&_cfg_def_items[id])
-#define cfg_def_get_default_value(item,type) item->default_value.v_##type
+#define cfg_def_get_default_value(cmd,item,type,profile) ((item->flags & CFG_DEFAULT_RUN_TIME) ? item->default_value.fn_##type(cmd,profile) : item->default_value.v_##type)
+
 
 static int _cfg_def_make_path(char *buf, size_t buf_size, int id, cfg_def_item_t *item, int xlate)
 {
@@ -844,7 +849,7 @@ const char *find_config_tree_str(struct cmd_context *cmd, int id, struct profile
 	if (item->type != CFG_TYPE_STRING)
 		log_error(INTERNAL_ERROR "%s cfg tree element not declared as string.", path);
 
-	str = dm_config_tree_find_str(cmd->cft, path, cfg_def_get_default_value(item, CFG_TYPE_STRING));
+	str = dm_config_tree_find_str(cmd->cft, path, cfg_def_get_default_value(cmd, item, CFG_TYPE_STRING, profile));
 
 	if (profile_applied)
 		remove_config_tree_by_source(cmd, CONFIG_PROFILE);
@@ -870,7 +875,7 @@ const char *find_config_tree_str_allow_empty(struct cmd_context *cmd, int id, st
 	if (!(item->flags & CFG_ALLOW_EMPTY))
 		log_error(INTERNAL_ERROR "%s cfg tree element not declared to allow empty values.", path);
 
-	str = dm_config_tree_find_str_allow_empty(cmd->cft, path, cfg_def_get_default_value(item, CFG_TYPE_STRING));
+	str = dm_config_tree_find_str_allow_empty(cmd->cft, path, cfg_def_get_default_value(cmd, item, CFG_TYPE_STRING, profile));
 
 	if (profile_applied)
 		remove_config_tree_by_source(cmd, CONFIG_PROFILE);
@@ -894,7 +899,7 @@ int find_config_tree_int(struct cmd_context *cmd, int id, struct profile *profil
 	if (item->type != CFG_TYPE_INT)
 		log_error(INTERNAL_ERROR "%s cfg tree element not declared as integer.", path);
 
-	i = dm_config_tree_find_int(cmd->cft, path, cfg_def_get_default_value(item, CFG_TYPE_INT));
+	i = dm_config_tree_find_int(cmd->cft, path, cfg_def_get_default_value(cmd, item, CFG_TYPE_INT, profile));
 
 	if (profile_applied)
 		remove_config_tree_by_source(cmd, CONFIG_PROFILE);
@@ -918,7 +923,7 @@ int64_t find_config_tree_int64(struct cmd_context *cmd, int id, struct profile *
 	if (item->type != CFG_TYPE_INT)
 		log_error(INTERNAL_ERROR "%s cfg tree element not declared as integer.", path);
 
-	i64 = dm_config_tree_find_int64(cmd->cft, path, cfg_def_get_default_value(item, CFG_TYPE_INT));
+	i64 = dm_config_tree_find_int64(cmd->cft, path, cfg_def_get_default_value(cmd, item, CFG_TYPE_INT, profile));
 
 	if (profile_applied)
 		remove_config_tree_by_source(cmd, CONFIG_PROFILE);
@@ -942,7 +947,7 @@ float find_config_tree_float(struct cmd_context *cmd, int id, struct profile *pr
 	if (item->type != CFG_TYPE_FLOAT)
 		log_error(INTERNAL_ERROR "%s cfg tree element not declared as float.", path);
 
-	f = dm_config_tree_find_float(cmd->cft, path, cfg_def_get_default_value(item, CFG_TYPE_FLOAT));
+	f = dm_config_tree_find_float(cmd->cft, path, cfg_def_get_default_value(cmd, item, CFG_TYPE_FLOAT, profile));
 
 	if (profile_applied)
 		remove_config_tree_by_source(cmd, CONFIG_PROFILE);
@@ -966,7 +971,7 @@ int find_config_tree_bool(struct cmd_context *cmd, int id, struct profile *profi
 	if (item->type != CFG_TYPE_BOOL)
 		log_error(INTERNAL_ERROR "%s cfg tree element not declared as boolean.", path);
 
-	b = dm_config_tree_find_bool(cmd->cft, path, cfg_def_get_default_value(item, CFG_TYPE_BOOL));
+	b = dm_config_tree_find_bool(cmd->cft, path, cfg_def_get_default_value(cmd, item, CFG_TYPE_BOOL, profile));
 
 	if (profile_applied)
 		remove_config_tree_by_source(cmd, CONFIG_PROFILE);
@@ -1353,19 +1358,19 @@ static struct dm_config_node *_add_def_node(struct dm_config_tree *cft,
 				break;
 			case CFG_TYPE_BOOL:
 				cn->v->type = DM_CFG_INT;
-				cn->v->v.i = cfg_def_get_default_value(def, CFG_TYPE_BOOL);
+				cn->v->v.i = cfg_def_get_default_value(spec->cmd, def, CFG_TYPE_BOOL, NULL);
 				break;
 			case CFG_TYPE_INT:
 				cn->v->type = DM_CFG_INT;
-				cn->v->v.i = cfg_def_get_default_value(def, CFG_TYPE_INT);
+				cn->v->v.i = cfg_def_get_default_value(spec->cmd, def, CFG_TYPE_INT, NULL);
 				break;
 			case CFG_TYPE_FLOAT:
 				cn->v->type = DM_CFG_FLOAT;
-				cn->v->v.f = cfg_def_get_default_value(def, CFG_TYPE_FLOAT);
+				cn->v->v.f = cfg_def_get_default_value(spec->cmd, def, CFG_TYPE_FLOAT, NULL);
 				break;
 			case CFG_TYPE_STRING:
 				cn->v->type = DM_CFG_STRING;
-				if (!(str = cfg_def_get_default_value(def, CFG_TYPE_STRING)))
+				if (!(str = cfg_def_get_default_value(spec->cmd, def, CFG_TYPE_STRING, NULL)))
 					str = "";
 				cn->v->v.str = str;
 				break;

@@ -97,6 +97,8 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 	struct cft_check_handle *cft_check_handle = NULL;
 	int r = ECMD_PROCESSED;
 
+	tree_spec.cmd = cmd;
+
 	if (arg_count(cmd, configtype_ARG) && arg_count(cmd, validate_ARG)) {
 		log_error("Only one of --type and --validate permitted.");
 		return EINVALID_CMD_LINE;

@@ -63,11 +63,28 @@ typedef enum {
 	CFG_TYPE_STRING =	1 << 5,	/* setting */
 } cfg_def_type_t;
 
+typedef struct cfg_def_item cfg_def_item_t;
+
+/* function types to evaluate default value at runtime */
+typedef int (*t_fn_CFG_TYPE_BOOL) (struct cmd_context *cmd, struct profile *profile);
+typedef int (*t_fn_CFG_TYPE_INT) (struct cmd_context *cmd, struct profile *profile);
+typedef float (*t_fn_CFG_TYPE_FLOAT) (struct cmd_context *cmd, struct profile *profile);
+typedef const char* (*t_fn_CFG_TYPE_STRING) (struct cmd_context *cmd, struct profile *profile);
+typedef const char* (*t_fn_CFG_TYPE_ARRAY) (struct cmd_context *cmd, struct profile *profile);
+
 /* configuration definition item value (for item's default value) */
 typedef union {
+	/* static value - returns a variable */
 	const int v_CFG_TYPE_BOOL, v_CFG_TYPE_INT;
 	const float v_CFG_TYPE_FLOAT;
 	const char *v_CFG_TYPE_STRING, *v_CFG_TYPE_ARRAY;
+
+	/* run-time value - evaluates a function */
+	t_fn_CFG_TYPE_BOOL fn_CFG_TYPE_BOOL;
+	t_fn_CFG_TYPE_INT fn_CFG_TYPE_INT;
+	t_fn_CFG_TYPE_FLOAT fn_CFG_TYPE_FLOAT;
+	t_fn_CFG_TYPE_STRING fn_CFG_TYPE_STRING;
+	t_fn_CFG_TYPE_ARRAY fn_CFG_TYPE_ARRAY;
 } cfg_def_value_t;
 
 /* configuration definition item flags: */
@@ -84,6 +101,8 @@ typedef union {
 #define CFG_PROFILABLE		0x10
 /* whether the default value is undefned */
 #define CFG_DEFAULT_UNDEFINED	0x20
+/* whether the defualt value is calculated during run time */
+#define CFG_DEFAULT_RUN_TIME	0x40
 
 /* configuration definition item structure */
 typedef struct cfg_def_item {
@@ -109,6 +128,7 @@ typedef enum {
 
 /* configuration definition tree specification */
 struct config_def_tree_spec {
+	struct cmd_context *cmd;	/* command context (for run-time defaults */
 	cfg_def_tree_t type;		/* tree type */
 	uint16_t version;		/* tree at this LVM2 version */
 	int ignoreadvanced:1;		/* do not include advanced configs */
@@ -130,11 +150,15 @@ struct config_def_tree_spec {
 enum {
 #define cfg_section(id, name, parent, flags, since_version, comment) id,
 #define cfg(id, name, parent, flags, type, default_value, since_version, comment) id,
+#define cfg_runtime(id, name, parent, flags, type, since_version, comment) id,
 #define cfg_array(id, name, parent, flags, types, default_value, since_version, comment) id,
+#define cfg_array_runtime(id, name, parent, flags, types, since_version, comment) id,
 #include "config_settings.h"
 #undef cfg_section
 #undef cfg
+#undef cfg_runtime
 #undef cfg_array
+#undef cfg_array_runtime
 };
 
 struct profile *add_profile(struct cmd_context *cmd, const char *profile_name);
