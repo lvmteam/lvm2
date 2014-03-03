@@ -1687,3 +1687,8 @@ const char *get_default_config_profile_dir_CFG(struct cmd_context *cmd, struct p
 
 	return dm_pool_strdup(cmd->mem, buf);
 }
+
+const char *get_default_activation_mirror_image_fault_policy_CFG(struct cmd_context *cmd, struct profile *profile)
+{
+	return find_config_tree_str(cmd, activation_mirror_device_fault_policy_CFG, profile);
+}

@@ -1063,8 +1063,6 @@ static void _lvconvert_mirrors_repair_ask(struct cmd_context *cmd,
 
 	if (arg_count(cmd, use_policies_ARG)) {
 		leg_policy = find_config_tree_str(cmd, activation_mirror_image_fault_policy_CFG, NULL);
-		if (!leg_policy)
-			leg_policy = find_config_tree_str(cmd, activation_mirror_device_fault_policy_CFG, NULL);
 		log_policy = find_config_tree_str(cmd, activation_mirror_log_fault_policy_CFG, NULL);
 		*replace_mirrors = strcmp(leg_policy, "remove");
 		*replace_log = strcmp(log_policy, "remove");
