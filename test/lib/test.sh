@@ -67,6 +67,7 @@ export DM_DEV_DIR LVM_SYSTEM_DIR DM_ABORT_ON_INTERNAL_ERRORS
 
 echo "$TESTNAME" >TESTNAME
 
+echo "Kernel is $(uname -a)"
 # Report SELinux mode
 if which getenforce &>/dev/null ; then
 	echo "Selinux mode is \"$(getenforce 2>/dev/null)\"."
