@@ -13,11 +13,13 @@
  */
 
 #define _GNU_SOURCE
+#include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/klog.h>
 #include <sys/resource.h> /* rusage */
 #include <sys/select.h>
 #include <sys/socket.h>
@@ -279,6 +281,22 @@ static int drain_fds(int fd1, int fd2, long timeout)
 	return -1;
 }
 
+#define SYSLOG_ACTION_READ_CLEAR     4
+#define SYSLOG_ACTION_CLEAR          5
+
+static void clear_dmesg(void)
+{
+	klogctl(SYSLOG_ACTION_CLEAR, 0, 0);
+}
+
+static void drain_dmesg(void)
+{
+	char buf[1024 * 1024 + 1];
+	size_t sz = klogctl(SYSLOG_ACTION_READ_CLEAR, buf, sizeof(buf) - 1);
+	buf[sz] = 0;
+	_append_buf(buf, sz);
+}
+
 static const char *duration(time_t start, const struct rusage *usage)
 {
 	static char buf[100];
@@ -398,6 +416,7 @@ static void run(int i, char *f) {
 		struct stat statbuf;
 		int runaway = 0;
 		int no_write = 0;
+		int clobber_dmesg = 0;
 		int collect_debug = 0;
 		int fd_debuglog = -1;
 		int fd_kmsg;
@@ -415,10 +434,13 @@ static void run(int i, char *f) {
 			perror("fopen");
 
 		/* Mix-in kernel log message */
-		if ((fd_kmsg = open("/proc/kmsg", O_RDONLY | O_NONBLOCK)) < 0)
-			perror("open kmsg");
-		else if (lseek(fd_kmsg, 0L, SEEK_END) == (off_t) -1)
-			perror("lseek kmsg");
+		if ((fd_kmsg = open("/dev/kmsg", O_RDONLY | O_NONBLOCK)) < 0) {
+			if (errno != ENOENT) /* Older kernels (<3.5) do not support /dev/kmsg */
+				perror("open /dev/kmsg");
+			else if ((clobber_dmesg = strcmp(getenv("LVM_TEST_CAN_CLOBBER_DMESG") ? : "0", "0")))
+				clear_dmesg();
+		} else if (lseek(fd_kmsg, 0L, SEEK_END) == (off_t) -1)
+			perror("lseek /dev/kmsg");
 
 		while ((w = wait4(pid, &st, WNOHANG, &usage)) == 0) {
 			if ((fullbuffer && fullbuffer++ == 8000) ||
@@ -458,6 +480,8 @@ static void run(int i, char *f) {
 				continue;
 			} else if (ret == (fds[0] + 1))
 				no_write = 0;
+			if (clobber_dmesg)
+				drain_dmesg();
 		}
 		if (w != pid) {
 			perror("waitpid");
@@ -490,6 +514,8 @@ static void run(int i, char *f) {
 
 		if (fd_kmsg >= 0)
 			close(fd_kmsg);
+		else if (clobber_dmesg)
+			drain_dmesg();
 		if (outfile)
 			fclose(outfile);
 		if (fullbuffer)
