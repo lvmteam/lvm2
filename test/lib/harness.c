@@ -441,7 +441,7 @@ static void run(int i, char *f) {
 				perror("open /dev/kmsg");
 		} else if (read(fd_kmsg, NULL, 0) == -1) {
 			/* There is /dev/kmsg, but unreadable -> ignore it (RHEL6?) */
-			perror("read /dev/kmsg");
+			/* Expected error, stay quiet so log looks nice, perror("read /dev/kmsg"); */
 			close(fd_kmsg);
 			fd_kmsg = -1;
 		} else if (lseek(fd_kmsg, 0L, SEEK_END) == (off_t) -1)
