@@ -5771,10 +5771,7 @@ static int _recalculate_pool_chunk_size_with_dev_hints(struct lvcreate_params *l
 
 		min_chunk_size = DM_THIN_MIN_DATA_BLOCK_SIZE;
 		max_chunk_size = DM_THIN_MAX_DATA_BLOCK_SIZE;
-		if (lp->thin_chunk_size_calc_policy == THIN_CHUNK_SIZE_CALC_METHOD_PERFORMANCE)
-			default_chunk_size = DEFAULT_THIN_POOL_CHUNK_SIZE_PERFORMANCE*2;
-		else
-			default_chunk_size = DEFAULT_THIN_POOL_CHUNK_SIZE*2;
+		default_chunk_size = get_default_allocation_thin_pool_chunk_size_CFG(cmd, NULL) * 2;
 	} else if (seg_is_cache_pool(lp)) {
 		if (find_config_tree_int(cmd, allocation_cache_pool_chunk_size_CFG, NULL))
 			goto out;

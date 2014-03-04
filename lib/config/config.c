@@ -1692,3 +1692,22 @@ const char *get_default_activation_mirror_image_fault_policy_CFG(struct cmd_cont
 {
 	return find_config_tree_str(cmd, activation_mirror_device_fault_policy_CFG, profile);
 }
+
+int get_default_allocation_thin_pool_chunk_size_CFG(struct cmd_context *cmd, struct profile *profile)
+{
+	const char *str;
+	uint32_t chunk_size;
+
+	str = find_config_tree_str(cmd, allocation_thin_pool_chunk_size_policy_CFG, profile);
+
+	if (!strcasecmp(str, "generic"))
+		chunk_size = DEFAULT_THIN_POOL_CHUNK_SIZE;
+	else if (!strcasecmp(str, "performance"))
+		chunk_size = DEFAULT_THIN_POOL_CHUNK_SIZE_PERFORMANCE;
+	else {
+		log_error("Thin pool chunk size calculation policy \"%s\" is unrecognised.", str);
+		return 0;
+	}
+
+	return (int) chunk_size;
+}
