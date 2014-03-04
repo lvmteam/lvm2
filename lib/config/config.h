@@ -237,5 +237,6 @@ const char *get_default_backup_archive_dir_CFG(struct cmd_context *cmd, struct p
 const char *get_default_config_profile_dir_CFG(struct cmd_context *cmd, struct profile *profile);
 const char *get_default_activation_mirror_image_fault_policy_CFG(struct cmd_context *cmd, struct profile *profile);
 int get_default_allocation_thin_pool_chunk_size_CFG(struct cmd_context *cmd, struct profile *profile);
+int get_default_allocation_cache_pool_chunk_size_CFG(struct cmd_context *cmd, struct profile *profile);
 
 #endif

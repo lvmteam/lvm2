@@ -5777,7 +5777,7 @@ static int _recalculate_pool_chunk_size_with_dev_hints(struct lvcreate_params *l
 			goto out;
 		min_chunk_size = DM_CACHE_MIN_DATA_BLOCK_SIZE;
 		max_chunk_size = DM_CACHE_MAX_DATA_BLOCK_SIZE;
-		default_chunk_size = DEFAULT_CACHE_POOL_CHUNK_SIZE*2;
+		default_chunk_size = get_default_allocation_cache_pool_chunk_size_CFG(cmd, NULL) * 2;
 	} else {
 		log_error(INTERNAL_ERROR "%s is not a thin pool or cache pool",
 			  pool_lv->name);

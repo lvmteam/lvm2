@@ -1711,3 +1711,8 @@ int get_default_allocation_thin_pool_chunk_size_CFG(struct cmd_context *cmd, str
 
 	return (int) chunk_size;
 }
+
+int get_default_allocation_cache_pool_chunk_size_CFG(struct cmd_context *cmd, struct profile *profile)
+{
+	return DEFAULT_CACHE_POOL_CHUNK_SIZE;
+}
