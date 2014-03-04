@@ -292,9 +292,11 @@ static void clear_dmesg(void)
 static void drain_dmesg(void)
 {
 	char buf[1024 * 1024 + 1];
-	size_t sz = klogctl(SYSLOG_ACTION_READ_CLEAR, buf, sizeof(buf) - 1);
-	buf[sz] = 0;
-	_append_buf(buf, sz);
+	int sz = klogctl(SYSLOG_ACTION_READ_CLEAR, buf, sizeof(buf) - 1);
+	if (sz > 0) {
+		buf[sz] = 0;
+		_append_buf(buf, sz);
+	}
 }
 
 static const char *duration(time_t start, const struct rusage *usage)
@@ -437,10 +439,17 @@ static void run(int i, char *f) {
 		if ((fd_kmsg = open("/dev/kmsg", O_RDONLY | O_NONBLOCK)) < 0) {
 			if (errno != ENOENT) /* Older kernels (<3.5) do not support /dev/kmsg */
 				perror("open /dev/kmsg");
-			else if ((clobber_dmesg = strcmp(getenv("LVM_TEST_CAN_CLOBBER_DMESG") ? : "0", "0")))
-				clear_dmesg();
+		} else if (read(fd_kmsg, NULL, 0) == -1) {
+			/* There is /dev/kmsg, but unreadable -> ignore it (RHEL6?) */
+			perror("read /dev/kmsg");
+			close(fd_kmsg);
+			fd_kmsg = -1;
 		} else if (lseek(fd_kmsg, 0L, SEEK_END) == (off_t) -1)
 			perror("lseek /dev/kmsg");
+
+		if ((fd_kmsg < 0) &&
+		    (clobber_dmesg = strcmp(getenv("LVM_TEST_CAN_CLOBBER_DMESG") ? : "0", "0")))
+			clear_dmesg();
 
 		while ((w = wait4(pid, &st, WNOHANG, &usage)) == 0) {
 			if ((fullbuffer && fullbuffer++ == 8000) ||
