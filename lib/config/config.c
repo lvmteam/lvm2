@@ -478,8 +478,8 @@ time_t config_file_timestamp(struct dm_config_tree *cft)
 }
 
 #define cfg_def_get_item_p(id) (&_cfg_def_items[id])
-#define cfg_def_get_default_value(cmd,item,type,profile) ((item->flags & CFG_DEFAULT_RUN_TIME) ? item->default_value.fn_##type(cmd,profile) : item->default_value.v_##type)
-
+#define cfg_def_get_default_value_hint(cmd,item,type,profile) ((item->flags & CFG_DEFAULT_RUN_TIME) ? item->default_value.fn_##type(cmd,profile) : item->default_value.v_##type)
+#define cfg_def_get_default_value(cmd,item,type,profile) (item->flags & CFG_DEFAULT_UNDEFINED ? 0 : cfg_def_get_default_value_hint(cmd,item,type,profile))
 
 static int _cfg_def_make_path(char *buf, size_t buf_size, int id, cfg_def_item_t *item, int xlate)
 {
@@ -1358,19 +1358,19 @@ static struct dm_config_node *_add_def_node(struct dm_config_tree *cft,
 				break;
 			case CFG_TYPE_BOOL:
 				cn->v->type = DM_CFG_INT;
-				cn->v->v.i = cfg_def_get_default_value(spec->cmd, def, CFG_TYPE_BOOL, NULL);
+				cn->v->v.i = cfg_def_get_default_value_hint(spec->cmd, def, CFG_TYPE_BOOL, NULL);
 				break;
 			case CFG_TYPE_INT:
 				cn->v->type = DM_CFG_INT;
-				cn->v->v.i = cfg_def_get_default_value(spec->cmd, def, CFG_TYPE_INT, NULL);
+				cn->v->v.i = cfg_def_get_default_value_hint(spec->cmd, def, CFG_TYPE_INT, NULL);
 				break;
 			case CFG_TYPE_FLOAT:
 				cn->v->type = DM_CFG_FLOAT;
-				cn->v->v.f = cfg_def_get_default_value(spec->cmd, def, CFG_TYPE_FLOAT, NULL);
+				cn->v->v.f = cfg_def_get_default_value_hint(spec->cmd, def, CFG_TYPE_FLOAT, NULL);
 				break;
 			case CFG_TYPE_STRING:
 				cn->v->type = DM_CFG_STRING;
-				if (!(str = cfg_def_get_default_value(spec->cmd, def, CFG_TYPE_STRING, NULL)))
+				if (!(str = cfg_def_get_default_value_hint(spec->cmd, def, CFG_TYPE_STRING, NULL)))
 					str = "";
 				cn->v->v.str = str;
 				break;
