@@ -984,9 +984,16 @@ static int do_cluster_work(void *data __attribute__((unused)))
 
 	dm_list_iterate_items_safe(entry, tmp, &clog_cpg_list) {
 		r = cpg_dispatch(entry->handle, CS_DISPATCH_ALL);
-		if (r != CS_OK)
-			LOG_ERROR("cpg_dispatch failed: %s",
-				  str_ais_error(r));
+		if (r != CS_OK) {
+			if ((entry->cpg_state == INVALID) &&
+			    (entry->state == LEAVING) &&
+			    (r == CS_ERR_BAD_HANDLE))
+				/* It's ok if we've left the cluster */
+				r = CS_OK;
+			else
+				LOG_ERROR("cpg_dispatch failed: %s",
+					  str_ais_error(r));
+		}
 
 		if (entry->free_me) {
 			free(entry);
