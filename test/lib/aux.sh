@@ -763,9 +763,7 @@ have_readline()
 dmsetup_wrapped()
 {
 	udev_wait
-	init_udev_transaction
 	dmsetup "$@"
-	finish_udev_transaction
 }
 
 test -f DEVICES && devs=$(cat DEVICES)

@@ -15,7 +15,7 @@ CHARACTER_WHITELIST="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456
 FAIL_MIXED_STR="contains mixed mangled and unmangled characters"
 FAIL_MULTI_STR="seems to be mangled more than once"
 FAIL_BLACK_STR="should be mangled but it contains blacklisted characters"
-CORRECT_FORM_STR="name already in correct form"
+CORRECT_FORM_STR="already in correct form"
 RENAMING_STR="renaming to"
 
 function create_dm_dev()
@@ -66,13 +66,13 @@ function check_create_and_remove()
 	test -b "$DM_DEV_DIR/mapper/${PREFIX}$dm_name" && \
 	aux dmsetup remove "${PREFIX}$input_name" $verify_udev --manglename $mode || r=1
 
-	if [ $dm_name = "FAIL_MIXED" ]; then
+	if [ "$dm_name" = "FAIL_MIXED" ]; then
 		r=0
 		grep "$FAILED_MIXED_STR" err || r=1
-	elif [ $dm_name = "FAIL_MULTI" ]; then
+	elif [ "$dm_name" = "FAIL_MULTI" ]; then
 		r=0
 		grep "$FAILED_MULTI_STR" err || r=1
-	elif [ $dm_name = "FAIL_BLACK" ]; then
+	elif [ "$dm_name" = "FAIL_BLACK" ]; then
 		r=0
 		grep "$FAILED_BLACK_STR" err || r=1
 	fi
@@ -164,6 +164,7 @@ r=0
 create_dm_dev auto "abc"
 ln -s "$DM_DEV_DIR/mapper/${PREFIX}abc" "$DM_DEV_DIR/${PREFIX}xyz"
 aux dmsetup status "$DM_DEV_DIR/${PREFIX}xyz" || r=1
+rm -f "$DM_DEV_DIR/${PREFIX}xyz"
 remove_dm_dev auto "abc"
 if [ r = 1 ]; then
 	exit 1
@@ -191,11 +192,7 @@ check_expected_names none 'a\x5cx20b' 'a\x5cx20b' 'a\x5cx20b' 'a\x20b'
 
 check_mangle_cmd none 'a b' 'OK'
 check_mangle_cmd none 'a\x20b' 'a b'
-#
-# FIXME: this test leave entry in /dev/mapper dir
-#        and is not detected nor cleaned
-#
-#check_mangle_cmd none 'a b\x20c' 'a b c'
+check_mangle_cmd none 'a b\x20c' 'a b c'
 check_mangle_cmd none 'a\x5cx20b' 'a\x20b'
 
 
