@@ -19,6 +19,7 @@
 
 # Snapshot should remain unmodified
 check_s_() {
+	rm -f debug.log
 	md5sum -c md5
 	#diff data "$DM_DEV_DIR/$vg/s"
 }
@@ -30,9 +31,9 @@ aux prepare_vg
 # 8M file with some random data
 dd if=/dev/urandom of=data bs=1M count=1
 dd if=data of=data bs=1M count=7 seek=1
-echo "$(md5sum data | cut -d' ' -f1) $DM_DEV_DIR/$vg/s" >md5
+echo "$(md5sum data | cut -d' ' -f1)  $DM_DEV_DIR/$vg/s" >md5
 
-lvcreate -L 8M -n o $vg
+lvcreate -aey -L 8M -n o $vg
 dd if=data of="$DM_DEV_DIR/$vg/o" bs=1M
 
 lvcreate -L 8M -s -n s $vg/o

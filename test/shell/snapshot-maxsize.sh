@@ -18,7 +18,7 @@ aux prepare_pvs 1
 
 vgcreate -s 1K $vg $(cat DEVICES)
 
-lvcreate -L1 -n $lv1 $vg
+lvcreate -aey -L1 -n $lv1 $vg
 # Snapshot should be large enough to handle any writes
 lvcreate -L2 -s $vg/$lv1 -n $lv2
 
