@@ -63,8 +63,6 @@ typedef enum {
 	CFG_TYPE_STRING =	1 << 5,	/* setting */
 } cfg_def_type_t;
 
-typedef struct cfg_def_item cfg_def_item_t;
-
 /* function types to evaluate default value at runtime */
 typedef int (*t_fn_CFG_TYPE_BOOL) (struct cmd_context *cmd, struct profile *profile);
 typedef int (*t_fn_CFG_TYPE_INT) (struct cmd_context *cmd, struct profile *profile);
