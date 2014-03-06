@@ -1318,7 +1318,7 @@ AC_CHECK_HEADERS(getopt.h, AC_DEFINE([HAVE_GETOPTLONG], 1, [Define to 1 if getop
 
 ################################################################################
 dnl -- Check for readline (Shamelessly copied from parted 1.4.17)
-if test x$READLINE != xno; then
+if test "$READLINE" != no; then
 	lvm_saved_libs=$LIBS
 	AC_SEARCH_LIBS([tgetent], [tinfo ncurses curses termcap termlib],
 		READLINE_LIBS=$ac_cv_search_tgetent, [
@@ -1610,7 +1610,6 @@ LVM_LIBAPI=`echo "$VER" | $AWK -F '[[()]]' '{print $2}'`
 ################################################################################
 AC_SUBST(APPLIB)
 AC_SUBST(AWK)
-AC_SUBST(BLKID_LIBS)
 AC_SUBST(BLKID_PC)
 AC_SUBST(BLKID_WIPING)
 AC_SUBST(BUILD_CMIRRORD)
@@ -1713,15 +1712,12 @@ AC_SUBST(THIN)
 AC_SUBST(THIN_CHECK_CMD)
 AC_SUBST(THIN_DUMP_CMD)
 AC_SUBST(THIN_REPAIR_CMD)
-AC_SUBST(UDEV_LIBS)
 AC_SUBST(UDEV_PC)
 AC_SUBST(UDEV_RULES)
 AC_SUBST(UDEV_SYNC)
 AC_SUBST(UDEV_SYSTEMD_BACKGROUND_JOBS)
 AC_SUBST(UDEV_RULE_EXEC_DETECTION)
 AC_SUBST(UDEV_HAS_BUILTIN_BLKID)
-AC_SUBST(CUNIT_LIBS)
-AC_SUBST(CUNIT_CFLAGS)
 AC_SUBST(WRITE_INSTALL)
 AC_SUBST(DMEVENTD_PIDFILE)
 AC_SUBST(LVMETAD_PIDFILE)
