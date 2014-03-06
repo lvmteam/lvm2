@@ -22,7 +22,7 @@
 #include <ctype.h>
 
 #ifdef BLKID_WIPING_SUPPORT
-#include <blkid/blkid.h>
+#include <blkid.h>
 #endif
 
 #include "device-types.h"
