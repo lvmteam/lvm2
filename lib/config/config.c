@@ -1607,7 +1607,7 @@ const char *get_default_devices_cache_dir_CFG(struct cmd_context *cmd, struct pr
 {
 	static char buf[PATH_MAX];
 
-	if (dm_snprintf(buf, sizeof(buf), "%s/%s/", cmd->system_dir, DEFAULT_CACHE_SUBDIR) < 0) {
+	if (dm_snprintf(buf, sizeof(buf), "%s/%s", cmd->system_dir, DEFAULT_CACHE_SUBDIR) < 0) {
 		log_error("Persistent cache directory name too long.");
 		return NULL;
 	}
