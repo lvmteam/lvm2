@@ -20,6 +20,16 @@ fill() {
 	dd if=/dev/zero of="$DM_DEV_DIR/$vg1/lvol0" bs=$1 count=1
 }
 
+# give some short time to lock file above
+wait_for_open_() {
+	for i in $(seq 1 50) ; do
+		test $(dmsetup info --noheadings -c -o open $1) -ne 0 && return
+		sleep 0.1
+	done
+
+	die "$1 expected to be openned, but it's not!"
+}
+
 cleanup_tail()
 {
 	test -z "$SLEEP_PID" || kill $SLEEP_PID
@@ -52,6 +62,7 @@ if aux target_at_least dm-snapshot 1 10 0 ; then
 	fi
 fi
 
+# Automatically activates exclusively in cluster
 lvcreate -s -l 100%FREE -n $lv $vg --virtualsize $TSIZE
 
 aux extend_filter_LVMTEST
@@ -77,8 +88,7 @@ trap 'cleanup_tail' EXIT
 sleep 120 < "$DM_DEV_DIR/$vg1/$lv1" &
 SLEEP_PID=$!
 
-# give some short time to lock file above
-sleep 0.1
+wait_for_open_ "$vg1-$lv1"
 
 # Opened virtual snapshot device is not removable
 # it should retry device removal for a few seconds
@@ -173,7 +183,7 @@ lvcreate -s -l100%FREE -n $lv2 $vg1/$lv1
 check lv_field $vg1/$lv2 size "7.50p"
 lvremove -ff $vg1
 
-lvcreate -aey -V15E -l1 -n $lv1 -s $vg1
+lvcreate -V15E -l1 -n $lv1 -s $vg1
 check lv_field $vg1/$lv1 origin_size "15.00e"
 
 vgremove -ff $vg1
