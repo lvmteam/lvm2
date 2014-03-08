@@ -578,14 +578,12 @@ int main(int argc, char *argv[])
 	local_client_head.callback = clops->cluster_fd_callback;
 
 	/* Add the local socket to the list */
-	newfd = malloc(sizeof(struct local_client));
-	if (!newfd) {
+	if (!(newfd = dm_zalloc(sizeof(struct local_client)))) {
 		child_init_signal_and_exit(DFAIL_MALLOC);
 		/* NOTREACHED */
 	}
 
 	newfd->fd = local_sock;
-	newfd->removeme = 0;
 	newfd->type = LOCAL_RENDEZVOUS;
 	newfd->callback = local_rendezvous_callback;
 	newfd->next = local_client_head.next;
@@ -635,7 +633,7 @@ int main(int argc, char *argv[])
 		 * break of 'clvmd' may access already free memory here.
 		 */
 		safe_close(&(delfd->fd));
-		free(delfd);
+		dm_free(delfd);
 	}
 
 	ret = 0;
@@ -677,8 +675,7 @@ static int local_rendezvous_callback(struct local_client *thisfd, char *buf,
 		return 1;
 
 	if (client_fd >= 0) {
-		newfd = malloc(sizeof(struct local_client));
-		if (!newfd) {
+		if (!(newfd = dm_zalloc(sizeof(struct local_client)))) {
 			if (close(client_fd))
                                 log_sys_error("close", "socket");
 			return 1;
@@ -689,19 +686,7 @@ static int local_rendezvous_callback(struct local_client *thisfd, char *buf,
 
 		newfd->fd = client_fd;
 		newfd->type = LOCAL_SOCK;
-		newfd->xid = 0;
-		newfd->removeme = 0;
 		newfd->callback = local_sock_callback;
-		newfd->bits.localsock.replies = NULL;
-		newfd->bits.localsock.expected_replies = 0;
-		newfd->bits.localsock.cmd = NULL;
-		newfd->bits.localsock.in_progress = FALSE;
-		newfd->bits.localsock.sent_out = FALSE;
-		newfd->bits.localsock.threadid = 0;
-		newfd->bits.localsock.finished = 0;
-		newfd->bits.localsock.cleanup_needed = 0;
-		newfd->bits.localsock.pipe_client = NULL;
-		newfd->bits.localsock.private = NULL;
 		newfd->bits.localsock.all_success = 1;
 		DEBUGLOG("Got new connection on fd %d\n", newfd->fd);
 		*new_client = newfd;

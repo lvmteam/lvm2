@@ -1,5 +1,6 @@
 Version 2.02.106 - 
 ====================================
+  Use dm_zalloc to clear members of clvmd client struct.
   Use BLKID_CFLAGS when compiling with blkid support.
   Use correct rl_completion_func_t typedef for new readline.
   Make lvm 'dumpconfig --type default' complete for it to be consumed by lvm.
