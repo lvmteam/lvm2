@@ -2024,8 +2024,8 @@ static void send_version_message(void)
 static int send_message(void *buf, int msglen, const char *csid, int fd,
 			const char *errtext)
 {
-	int len = 0;
-	int saved_errno = 0;
+	int len;
+	int ptr;
 	struct timespec delay;
 	struct timespec remtime;
 
@@ -2035,43 +2035,26 @@ static int send_message(void *buf, int msglen, const char *csid, int fd,
 	if (csid == NULL || !ISLOCAL_CSID(csid)) {
 		hton_clvm((struct clvm_header *) buf);
 		return clops->cluster_send_message(buf, msglen, csid, errtext);
-	} else {
-		int ptr = 0;
+	}
 
-		/* Make sure it all goes */
-		do {
-			if (retry_cnt > MAX_RETRIES)
-			{
-				errno = saved_errno;
-				log_error("%s", errtext);
-				errno = saved_errno;
-				break;
+	/* Make sure it all goes */
+	for (ptr = 0; ptr < msglen;) {
+		if ((len = write(fd, (char*)buf + ptr, msglen - ptr)) <= 0) {
+			if (errno == EINTR)
+				continue;
+			if ((errno == EAGAIN || errno == EIO || errno == ENOSPC) &&
+			    ++retry_cnt < MAX_RETRIES) {
+				delay.tv_sec = 0;
+				delay.tv_nsec = 100000;
+				remtime.tv_sec = 0;
+				remtime.tv_nsec = 0;
+				(void) nanosleep (&delay, &remtime);
+				continue;
 			}
-
-			len = write(fd, (char*)buf + ptr, msglen - ptr);
-
-			if (len <= 0) {
-				if (errno == EINTR)
-					continue;
-				if (errno == EAGAIN ||
-				    errno == EIO ||
-				    errno == ENOSPC) {
-					saved_errno = errno;
-					retry_cnt++;
-
-					delay.tv_sec = 0;
-					delay.tv_nsec = 100000;
-					remtime.tv_sec = 0;
-					remtime.tv_nsec = 0;
-					(void) nanosleep (&delay, &remtime);
-
-					continue;
-				}
-				log_error("%s", errtext);
-				break;
-			}
-			ptr += len;
-		} while (ptr < msglen);
+			log_error("%s", errtext);
+			break;
+		}
+		ptr += len;
 	}
 	return len;
 }
