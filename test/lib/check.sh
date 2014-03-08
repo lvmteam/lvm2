@@ -60,13 +60,13 @@ lv_err_list_() {
 }
 
 lv_on_diff_() {
-	declare -a devs=("${!1}") # pass in shell array
+	declare -a xdevs=("${!1}") # pass in shell array
 	local expect=( "${@:4}" ) # make an array starting from 4th args...
 	local diff_e
 
 	# Find diff between 2 shell arrays, print them as stdin files
 	printf "%s\n" "${expect[@]}" | sort | uniq >_lv_on_diff1
-	printf "%s\n" "${devs[@]}" >_lv_on_diff2
+	printf "%s\n" "${xdevs[@]}" >_lv_on_diff2
 	diff_e=$(diff _lv_on_diff1 _lv_on_diff2) ||
 		die "LV $2/$3 $(lv_err_list_ "^>" "${diff_e}" found)$(lv_err_list_ "^<" "${diff_e}" "not found")."
 }
