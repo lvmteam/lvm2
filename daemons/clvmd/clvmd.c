@@ -1121,14 +1121,12 @@ static int verify_message(char *buf, int len)
 
 static void dump_message(char *buf, int len)
 {
-	unsigned char row[8];
+	unsigned char row[8] = { 0 };
 	char str[9];
 	int i, j, pos = 0;
 
 	if (len > 128)
 		len = 128;
-
-	memset(row, 0, sizeof(row));
 
 	for (i = 0; i < len; i++) {
 		row[pos++] = buf[i];
@@ -1247,9 +1245,7 @@ static int read_from_local_sock(struct local_client *thisfd)
 	int len;
 	int argslen;
 	int missing_len;
-	char buffer[PIPE_BUF + 1];
-
-	memset(buffer, 0, sizeof(buffer));
+	char buffer[PIPE_BUF + 1] = { 0 };
 
 	len = read(thisfd->fd, buffer, sizeof(buffer) - 1);
 	if (len == -1 && errno == EINTR)
@@ -1982,17 +1978,17 @@ static void send_version_message(void)
 {
 	char message[sizeof(struct clvm_header) + sizeof(int) * 3];
 	struct clvm_header *msg = (struct clvm_header *) message;
-	int version_nums[3];
+	int version_nums[3] = {
+		htonl(CLVMD_MAJOR_VERSION),
+		htonl(CLVMD_MINOR_VERSION),
+		htonl(CLVMD_PATCH_VERSION)
+	};
 
 	msg->cmd = CLVMD_CMD_VERSION;
 	msg->status = 0;
 	msg->flags = 0;
 	msg->clientid = 0;
 	msg->arglen = sizeof(version_nums);
-
-	version_nums[0] = htonl(CLVMD_MAJOR_VERSION);
-	version_nums[1] = htonl(CLVMD_MINOR_VERSION);
-	version_nums[2] = htonl(CLVMD_PATCH_VERSION);
 
 	memcpy(&msg->args, version_nums, sizeof(version_nums));
 
@@ -2379,11 +2375,7 @@ static if_type_t get_cluster_type(void)
 	size_t namelen = sizeof(buf);
 	hdb_handle_t cluster_handle;
 	hdb_handle_t clvmd_handle;
-	confdb_callbacks_t callbacks = {
-		.confdb_key_change_notify_fn = NULL,
-		.confdb_object_create_change_notify_fn = NULL,
-		.confdb_object_delete_change_notify_fn = NULL
-	};
+	confdb_callbacks_t callbacks = { 0 };
 
 	result = confdb_initialize (&handle, &callbacks);
         if (result != CS_OK)
