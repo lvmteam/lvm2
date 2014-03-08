@@ -39,12 +39,12 @@ prepare_clvmd() {
 
 #	lvmconf "activation/monitoring = 1"
 	local run_valgrind=
-	test -z "$LVM_VALGRIND_CLVMD" || run_valgrind="run_valgrind"
+	test "${LVM_VALGRIND_CLVMD:-0}" -eq 0 || run_valgrind="run_valgrind"
 	$run_valgrind lib/clvmd -Isinglenode -d 1 -f &
 	local local_clvmd=$!
 	sleep .3
 	# extra sleep for slow valgrind
-	test -z "$LVM_VALGRIND_CLVMD" || sleep 7
+	test -z "$run_valgrind" || sleep 7
 	# check that it is really running now
 	ps $local_clvmd || die
 	echo $local_clvmd > LOCAL_CLVMD
@@ -77,7 +77,7 @@ prepare_lvmetad() {
 	lvmconf "devices/md_component_detection = 0"
 
 	local run_valgrind=
-	test -z "$LVM_VALGRIND_LVMETAD" || run_valgrind="run_valgrind"
+	test "${LVM_VALGRIND_LVMETAD:-0}" -eq 0 || run_valgrind="run_valgrind"
 
 	echo "preparing lvmetad..."
 	$run_valgrind lvmetad -f "$@" -s "$TESTDIR/lvmetad.socket" -l wire,debug &
