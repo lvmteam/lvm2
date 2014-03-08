@@ -2352,13 +2352,13 @@ static if_type_t parse_cluster_interface(char *ifname)
 
 	if (!strcmp(ifname, "auto"))
 		iface = IF_AUTO;
-	if (!strcmp(ifname, "cman"))
+	else if (!strcmp(ifname, "cman"))
 		iface = IF_CMAN;
-	if (!strcmp(ifname, "openais"))
+	else if (!strcmp(ifname, "openais"))
 		iface = IF_OPENAIS;
-	if (!strcmp(ifname, "corosync"))
+	else if (!strcmp(ifname, "corosync"))
 		iface = IF_COROSYNC;
-	if (!strcmp(ifname, "singlenode"))
+	else if (!strcmp(ifname, "singlenode"))
 		iface = IF_SINGLENODE;
 
 	return iface;
