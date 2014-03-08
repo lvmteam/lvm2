@@ -62,11 +62,14 @@ prepare_dmeventd() {
 
 	lvmconf "activation/monitoring = 1"
 
-	dmeventd -f "$@" &
+	local run_valgrind=
+	test "${LVM_VALGRIND_DMEVENTD:-0}" -eq 0 || run_valgrind="run_valgrind"
+	$run_valgrind dmeventd -f "$@" &
 	echo $! > LOCAL_DMEVENTD
 
 	# FIXME wait for pipe in /var/run instead
-	sleep .3
+	while ! test -e "/var/run/dmeventd.pid"; do echo -n .; sleep .2; done # wait for the socket
+	echo ok
 }
 
 prepare_lvmetad() {
@@ -217,8 +220,7 @@ teardown() {
 
 	echo -n .
 
-	pgrep dmeventd || true
-	test ! -s LOCAL_DMEVENTD || kill -9 "$(cat LOCAL_DMEVENTD)" || true
+	kill_sleep_kill_ LOCAL_DMEVENTD ${LVM_VALGRIND_DMEVENTD:-0}
 
 	echo -n .
 
