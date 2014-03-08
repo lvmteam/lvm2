@@ -671,8 +671,14 @@ raid456_replace_works() {
 # old instance to be preserved and causes a colision (and thus failure) in
 # kmem_cache_create().  I see this regularly in testing the following
 # kernels:
+#
+# This seems to be finaly resolved with this patch:
+# http://www.redhat.com/archives/dm-devel/2014-March/msg00008.html
+# so we need to put here exlusion for kernes which do trace SLUB
+#
 	case $(uname -r) in
 	  3.10.11-200.fc19.i686|3.10.11-200.fc19.x86_64) return 1 ;;
+	  3.13.5-101.fc19.i686.PAE) return 1 ;;
 	esac
 }
 
