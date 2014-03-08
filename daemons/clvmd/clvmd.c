@@ -633,6 +633,7 @@ int main(int argc, char *argv[])
 		 * break of 'clvmd' may access already free memory here.
 		 */
 		safe_close(&(delfd->fd));
+		cmd_client_cleanup(delfd);
 		dm_free(delfd);
 	}
 
