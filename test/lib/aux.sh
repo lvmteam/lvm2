@@ -233,11 +233,6 @@ teardown() {
 	test ${LVM_TEST_PARALLEL:-0} -eq 1 -o -n "$RUNNING_DMEVENTD" || not pgrep dmeventd #&>/dev/null
 }
 
-make_ioerror() {
-	echo 0 10000000 error | dmsetup create -u ${PREFIX}-ioerror ioerror
-	ln -s "$DM_DEV_DIR/mapper/ioerror" "$DM_DEV_DIR/ioerror"
-}
-
 prepare_loop() {
 	local size=${1=32}
 	local i
