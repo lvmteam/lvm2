@@ -192,11 +192,19 @@ teardown_devs() {
 	}
 }
 
+kill_sleep_kill_() {
+	if test -s "$1" ; then
+		if kill -TERM "$(cat $1)" ; then
+			if test "$2" -eq 0 ; then sleep .1 ; else sleep 1 ; fi
+			kill -KILL "$(cat $1)" 2>/dev/null || true
+		fi
+	fi
+}
+
 teardown() {
 	echo -n "## teardown..."
-	test ! -s LOCAL_LVMETAD || \
-	    (kill -TERM "$(cat LOCAL_LVMETAD)" && sleep 1 &&
-	     kill -KILL "$(cat LOCAL_LVMETAD)" 2> /dev/null) || true
+
+	kill_sleep_kill_ LOCAL_LVMETAD ${LVM_VALGRIND_LVMETAD:-0}
 
 	dm_table | not egrep -q "$vg|$vg1|$vg2|$vg3|$vg4" || {
 		# Avoid activation of dmeventd if there is no pid
@@ -205,12 +213,7 @@ teardown() {
 			$vg $vg1 $vg2 $vg3 $vg4 &>/dev/null || rm -f debug.log
 	}
 
-	test -s LOCAL_CLVMD && {
-		kill -INT "$(cat LOCAL_CLVMD)"
-		test -z "$LVM_VALGRIND_CLVMD" || sleep 1
-		sleep .1
-		kill -9 "$(cat LOCAL_CLVMD)" &>/dev/null || true
-	}
+	kill_sleep_kill_ LOCAL_CLVMD ${LVM_VALGRIND_CLVMD:-0}
 
 	echo -n .
 
