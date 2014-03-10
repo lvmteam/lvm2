@@ -632,18 +632,10 @@ static void _no_intr_log(int level, const char *file, int line,
 		return;
 
 	va_start(ap, f);
-
-	if (level < _LOG_WARN)
-		vfprintf(stderr, f, ap);
-	else
-		vprintf(f, ap);
-
+	vfprintf((level < _LOG_WARN) ? stderr : stdout, f, ap);
 	va_end(ap);
 
-	if (level < _LOG_WARN)
-		fprintf(stderr, "\n");
-	else
-		fprintf(stdout, "\n");
+	fputc('\n', (level < _LOG_WARN) ? stderr : stdout);
 }
 
 static sigset_t _unblock_sigalrm(void)
