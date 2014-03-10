@@ -661,6 +661,7 @@ static sigset_t _unblock_sigalrm(void)
 /* Wait on a device until an event occurs. */
 static int _event_wait(struct thread_status *thread, struct dm_task **task)
 {
+	static unsigned _in_event_counter = 0;
 	sigset_t set;
 	int ret = DM_WAIT_RETRY;
 	struct dm_task *dmt;
@@ -677,12 +678,20 @@ static int _event_wait(struct thread_status *thread, struct dm_task **task)
 	    !dm_task_set_event_nr(dmt, thread->event_nr))
 		goto out;
 
+	_lock_mutex();
+	/*
+	 * Check if there are already some waiting events,
+	 * in this case the logging is unmodified.
+	 * TODO: audit libdm thread usage
+	 */
+	if (!_in_event_counter++)
+		dm_log_init(_no_intr_log);
+	_unlock_mutex();
 	/*
 	 * This is so that you can break out of waiting on an event,
 	 * either for a timeout event, or to cancel the thread.
 	 */
 	set = _unblock_sigalrm();
-	dm_log_init(_no_intr_log);
 	errno = 0;
 	if (dm_task_run(dmt)) {
 		thread->current_events |= DM_EVENT_DEVICE_ERROR;
@@ -706,7 +715,10 @@ static int _event_wait(struct thread_status *thread, struct dm_task **task)
 	}
 
 	pthread_sigmask(SIG_SETMASK, &set, NULL);
-	dm_log_init(NULL);
+	_lock_mutex();
+	if (--_in_event_counter == 0)
+		dm_log_init(NULL);
+	_unlock_mutex();
 
       out:
 	if (ret == DM_WAIT_FATAL || ret == DM_WAIT_RETRY) {
