@@ -183,7 +183,6 @@ int do_command(struct local_client *client, struct clvm_header *msg, int msglen,
 	}
 
 	return status;
-
 }
 
 static int lock_vg(struct local_client *client)
