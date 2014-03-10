@@ -724,9 +724,8 @@ static int local_pipe_callback(struct local_client *thisfd, char *buf,
 			log_sys_error("close", "local_pipe");
 
 		/* Clear out the cross-link */
-		if (thisfd->bits.pipe.client != NULL)
-			thisfd->bits.pipe.client->bits.localsock.pipe_client =
-			    NULL;
+		if (thisfd->bits.pipe.client)
+			thisfd->bits.pipe.client->bits.localsock.pipe_client = NULL;
 
 		/* Reap child thread */
 		if (thisfd->bits.pipe.threadid) {
@@ -1811,7 +1810,7 @@ next_pre:
 	}
 	pthread_mutex_unlock(&client->bits.localsock.mutex);
 	DEBUGLOG("Subthread finished\n");
-	pthread_exit((void *) 0);
+	pthread_exit(NULL);
 }
 
 /* Process a command on the local node and store the result */

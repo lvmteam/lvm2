@@ -307,9 +307,8 @@ int do_post_command(struct local_client *client)
 	init_test(0);
 	switch (header->cmd) {
 	case CLVMD_CMD_TEST:
-		status =
-		    sync_unlock("CLVMD_TEST", (int) (long) client->bits.localsock.private);
-		client->bits.localsock.private = 0;
+		status = sync_unlock("CLVMD_TEST", (int) (long) client->bits.localsock.private);
+		client->bits.localsock.private = NULL;
 		break;
 
 	case CLVMD_CMD_LOCK_LV:
@@ -350,7 +349,7 @@ void cmd_client_cleanup(struct local_client *client)
 	}
 
 	dm_hash_destroy(lock_hash);
-	client->bits.localsock.private = 0;
+	client->bits.localsock.private = NULL;
 }
 
 
