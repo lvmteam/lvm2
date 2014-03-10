@@ -1771,16 +1771,11 @@ static __attribute__ ((noreturn)) void *pre_and_post_thread(void *arg)
 		DEBUGLOG("Writing status %d down pipe %d\n", status, pipe_fd);
 
 		/* Tell the parent process we have finished this bit */
-		do {
-			write_status = write(pipe_fd, &status, sizeof(int));
-			if (write_status == sizeof(int))
+		while ((write_status = write(pipe_fd, &status, sizeof(int))) != sizeof(int))
+			if (write_status >=0 || (errno != EINTR && errno != EAGAIN)) {
+				log_error("Error sending to pipe: %m\n");
 				break;
-			if (write_status < 0 &&
-			    (errno == EINTR || errno == EAGAIN))
-				continue;
-			log_error("Error sending to pipe: %m\n");
-			break;
-		} while(1);
+			}
 
 		if (status) {
 			client->bits.localsock.state = POST_COMMAND;
@@ -1803,16 +1798,11 @@ static __attribute__ ((noreturn)) void *pre_and_post_thread(void *arg)
 		status = 0;
 		do_post_command(client);
 
-		do {
-			write_status = write(pipe_fd, &status, sizeof(int));
-			if (write_status == sizeof(int))
+		while ((write_status = write(pipe_fd, &status, sizeof(int))) != sizeof(int))
+			if (write_status >=0 || (errno != EINTR && errno != EAGAIN)) {
+				log_error("Error sending to pipe: %m\n");
 				break;
-			if (write_status < 0 &&
-			    (errno == EINTR || errno == EAGAIN))
-				continue;
-			log_error("Error sending to pipe: %m\n");
-			break;
-		} while(1);
+			}
 next_pre:
 		DEBUGLOG("Waiting for next pre command\n");
 
