@@ -2002,7 +2002,7 @@ static void send_version_message(void)
 static int send_message(void *buf, int msglen, const char *csid, int fd,
 			const char *errtext)
 {
-	int len;
+	int len = 0;
 	int ptr;
 	struct timespec delay;
 	struct timespec remtime;
