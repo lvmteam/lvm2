@@ -614,6 +614,8 @@ static void _unregister_for_timeout(struct thread_status *thread)
 	if (!dm_list_empty(&thread->timeout_list)) {
 		dm_list_del(&thread->timeout_list);
 		dm_list_init(&thread->timeout_list);
+		if (dm_list_empty(&_timeout_registry))
+			pthread_cond_signal(&_timeout_cond);
 	}
 	pthread_mutex_unlock(&_timeout_mutex);
 }
