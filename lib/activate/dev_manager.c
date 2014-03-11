@@ -446,6 +446,12 @@ static int _device_is_usable(struct device *dev, int check_lv_names)
 		    !dm_split_lvm_name(NULL, NULL, &vgname, &lvname, &layer))
 			goto_out;
 
+		if (strlen(uuid) > 68) {
+			log_debug_activation("%s: Reserved uuid %s on internal LV device %s/%s%s%s not usable.",
+					     dev_name(dev), uuid, vgname, lvname, *layer ? "-" : "", layer);
+			goto out;
+		}
+
 		if (lvname && (is_reserved_lvname(lvname) || *layer)) {
 			log_debug_activation("%s: Reserved internal LV device %s/%s%s%s not usable.",
 					     dev_name(dev), vgname, lvname, *layer ? "-" : "", layer);

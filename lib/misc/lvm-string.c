@@ -166,5 +166,8 @@ char *build_dm_uuid(struct dm_pool *mem, const struct logical_volume *lv,
 {
 	const char *lvid = lv->lvid.s;
 
+	if (!layer && lv_is_thin_pool(lv))
+		layer = "pool";
+
 	return dm_build_dm_uuid(mem, UUID_PREFIX, lvid, layer);
 }
