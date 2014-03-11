@@ -267,6 +267,9 @@ int create_pool(struct logical_volume *pool_lv,
 			goto bad;
 		}
 		pool_lv->status &= ~LV_TEMPORARY;
+		/* Deactivates cleared metadata LV */
+		if (!deactivate_lv_local(pool_lv->vg->cmd, pool_lv))
+			goto_bad;
 	}
 
 	if (dm_snprintf(name, sizeof(name), "%s_%s", pool_lv->name,
