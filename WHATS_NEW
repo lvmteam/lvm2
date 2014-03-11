@@ -1,5 +1,6 @@
 Version 2.02.106 - 
 ====================================
+  Do not try to check empty pool with scheduled messages.
   Fix return value in pool_has_message() when quering for any message.
   Cleanup all client resources on clvmd exit.
   Use dm_zalloc to clear members of clvmd client struct.

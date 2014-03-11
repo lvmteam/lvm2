@@ -1790,7 +1790,9 @@ static int _thin_pool_register_callback(struct dev_manager *dm,
 	struct thin_cb_data *data;
 
 	/* Skip metadata testing for unused pool. */
-	if (!first_seg(lv)->transaction_id)
+	if (!first_seg(lv)->transaction_id ||
+	    ((first_seg(lv)->transaction_id == 1) &&
+	     pool_has_message(first_seg(lv), NULL, 0)))
 		return 1;
 
 	if (!(data = dm_pool_alloc(dm->mem, sizeof(*data)))) {
