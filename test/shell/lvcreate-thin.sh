@@ -173,7 +173,9 @@ not lvcreate --chunksize 32 -l1 -T $vg/pool1
 # Too large chunk size (max is 1GB)
 not lvcreate -L4M --chunksize 2G -T $vg/pool1
 
-lvcreate -L4M -V2G --name lv1 -T $vg/pool1
+# Test creation of inactive pool
+lvcreate -an -L4M -T $vg/pool1
+lvcreate -V2G --name lv1 -T $vg/pool1
 # Origin name is not accepted
 not lvcreate -s $vg/lv1 -L4M -V2G --name $vg/lv4
 
