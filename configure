@@ -1624,8 +1624,7 @@ Optional Packages:
   --with-thin-check=PATH  thin_check tool: [[autodetect]]
   --with-thin-dump=PATH   thin_dump tool: [[autodetect]]
   --with-thin-repair=PATH thin_repair tool: [[autodetect]]
-  --with-cache=TYPE       cache support: internal/shared/none
-                          [[TYPE=none]]
+  --with-cache=TYPE       cache support: internal/shared/none [[TYPE=none]]
   --with-ocfdir=DIR       install OCF files in DIR
                           [[PREFIX/lib/ocf/resource.d/lvm2]]
   --with-default-pid-dir=PID_DIR
@@ -10440,7 +10439,7 @@ done
 
 
 ################################################################################
-if test x$READLINE != xno; then
+if test "$READLINE" != no; then
 	lvm_saved_libs=$LIBS
 	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing tgetent" >&5
 $as_echo_n "checking for library containing tgetent... " >&6; }
@@ -11321,10 +11320,6 @@ LVM_PATCHLEVEL=`echo "$VER" | $AWK -F '[(.]' '{print $3}'`
 LVM_LIBAPI=`echo "$VER" | $AWK -F '[()]' '{print $2}'`
 
 ################################################################################
-
-
-
-
 
 
 
