@@ -1,5 +1,6 @@
 Version 2.02.106 - 
 ====================================
+  Fix return value in pool_has_message() when quering for any message.
   Cleanup all client resources on clvmd exit.
   Use dm_zalloc to clear members of clvmd client struct.
   Use BLKID_CFLAGS when compiling with blkid support.

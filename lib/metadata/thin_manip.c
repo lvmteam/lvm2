@@ -160,7 +160,7 @@ int pool_has_message(const struct lv_segment *seg,
 	}
 
 	if (!lv && !device_id)
-		return dm_list_empty(&seg->thin_messages);
+		return !dm_list_empty(&seg->thin_messages);
 
 	dm_list_iterate_items(tmsg, &seg->thin_messages) {
 		switch (tmsg->type) {
