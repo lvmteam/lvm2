@@ -360,13 +360,13 @@ static int _cache_add_target_line(struct dev_manager *dm,
 	struct lv_segment *cache_pool_seg = first_seg(seg->pool_lv);
 	char *metadata_uuid, *data_uuid, *origin_uuid;
 
-	if (!(metadata_uuid = build_dm_uuid(mem, cache_pool_seg->metadata_lv->lvid.s, NULL)))
+	if (!(metadata_uuid = build_dm_uuid(mem, cache_pool_seg->metadata_lv, NULL)))
 		return_0;
 
-	if (!(data_uuid = build_dm_uuid(mem, seg_lv(cache_pool_seg, 0)->lvid.s, NULL)))
+	if (!(data_uuid = build_dm_uuid(mem, seg_lv(cache_pool_seg, 0), NULL)))
 		return_0;
 
-	if (!(origin_uuid = build_dm_uuid(mem, seg_lv(seg, 0)->lvid.s, NULL)))
+	if (!(origin_uuid = build_dm_uuid(mem, seg_lv(seg, 0), NULL)))
 		return_0;
 
 	if (!dm_tree_node_add_cache_target(node, len,

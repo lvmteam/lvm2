@@ -277,13 +277,13 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 		return 0;
 	}
 
-	if (!(metadata_dlid = build_dm_uuid(mem, seg->metadata_lv->lvid.s, NULL))) {
+	if (!(metadata_dlid = build_dm_uuid(mem, seg->metadata_lv, NULL))) {
 		log_error("Failed to build uuid for metadata LV %s.",
 			  seg->metadata_lv->name);
 		return 0;
 	}
 
-	if (!(pool_dlid = build_dm_uuid(mem, seg_lv(seg, 0)->lvid.s, NULL))) {
+	if (!(pool_dlid = build_dm_uuid(mem, seg_lv(seg, 0), NULL))) {
 		log_error("Failed to build uuid for pool LV %s.",
 			  seg_lv(seg, 0)->name);
 		return 0;
@@ -535,7 +535,7 @@ static int _thin_add_target_line(struct dev_manager *dm,
 			  seg->lv->name);
 		return 0;
 	}
-	if (!(pool_dlid = build_dm_uuid(mem, seg->pool_lv->lvid.s, lv_layer(seg->pool_lv)))) {
+	if (!(pool_dlid = build_dm_uuid(mem, seg->pool_lv, lv_layer(seg->pool_lv)))) {
 		log_error("Failed to build uuid for pool LV %s.",
 			  seg->pool_lv->name);
 		return 0;
@@ -573,7 +573,7 @@ static int _thin_add_target_line(struct dev_manager *dm,
 				return 0;
 			}
 		}
-		if (!(external_dlid = build_dm_uuid(mem, seg->external_lv->lvid.s,
+		if (!(external_dlid = build_dm_uuid(mem, seg->external_lv,
 						    lv_layer(seg->external_lv)))) {
 			log_error("Failed to build uuid for external origin LV %s.",
 				  seg->external_lv->name);

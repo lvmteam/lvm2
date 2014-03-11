@@ -1546,7 +1546,7 @@ static char *_build_target_uuid(struct cmd_context *cmd, struct logical_volume *
 	else
 		layer = NULL;
 
-	return build_dm_uuid(cmd->mem, lv->lvid.s, layer);
+	return build_dm_uuid(cmd->mem, lv, layer);
 }
 
 int target_registered_with_dmeventd(struct cmd_context *cmd, const char *dso,

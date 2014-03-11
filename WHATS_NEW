@@ -1,5 +1,6 @@
 Version 2.02.106 - 
 ====================================
+  Update API for internal function build_dm_uuid().
   Do not try to check empty pool with scheduled messages.
   Fix return value in pool_has_message() when quering for any message.
   Cleanup all client resources on clvmd exit.

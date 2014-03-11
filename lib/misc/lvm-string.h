@@ -23,6 +23,7 @@
 #define UUID_PREFIX "LVM-"
 
 struct pool;
+struct logical_volume;
 
 typedef enum name_error { NAME_VALID = 0, NAME_INVALID_EMPTY = -1,
 					NAME_INVALID_HYPEN = -2, NAME_INVALID_DOTS = -3,
@@ -32,7 +33,7 @@ typedef enum name_error { NAME_VALID = 0, NAME_INVALID_EMPTY = -1,
 int emit_to_buffer(char **buffer, size_t *size, const char *fmt, ...)
   __attribute__ ((format(printf, 3, 4)));
 
-char *build_dm_uuid(struct dm_pool *mem, const char *lvid,
+char *build_dm_uuid(struct dm_pool *mem, const struct logical_volume *lvid,
 		    const char *layer);
 
 int validate_name(const char *n);

@@ -15,6 +15,7 @@
 
 #include "lib.h"
 #include "lvm-string.h"
+#include "metadata-exported.h"
 
 #include <ctype.h>
 
@@ -160,8 +161,10 @@ int is_reserved_lvname(const char *name)
 	return rc;
 }
 
-char *build_dm_uuid(struct dm_pool *mem, const char *lvid,
+char *build_dm_uuid(struct dm_pool *mem, const struct logical_volume *lv,
 		    const char *layer)
 {
+	const char *lvid = lv->lvid.s;
+
 	return dm_build_dm_uuid(mem, UUID_PREFIX, lvid, layer);
 }

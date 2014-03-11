@@ -356,14 +356,14 @@ static int _add_log(struct dm_pool *mem, struct lv_segment *seg,
 
 	if (seg->log_lv) {
 		/* If disk log, use its UUID */
-		if (!(log_dlid = build_dm_uuid(mem, seg->log_lv->lvid.s, NULL))) {
+		if (!(log_dlid = build_dm_uuid(mem, seg->log_lv, NULL))) {
 			log_error("Failed to build uuid for log LV %s.",
 				  seg->log_lv->name);
 			return 0;
 		}
 	} else {
 		/* If core log, use mirror's UUID and set DM_CORELOG flag */
-		if (!(log_dlid = build_dm_uuid(mem, seg->lv->lvid.s, NULL))) {
+		if (!(log_dlid = build_dm_uuid(mem, seg->lv, NULL))) {
 			log_error("Failed to build uuid for mirror LV %s.",
 				  seg->lv->name);
 			return 0;
