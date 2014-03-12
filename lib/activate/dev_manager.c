@@ -392,6 +392,27 @@ static int _device_is_usable(struct device *dev, int check_lv_names)
 		goto out;
 	}
 
+	/* Check internal lvm devices */
+	if (check_lv_names &&
+	    uuid && !strncmp(uuid, UUID_PREFIX, sizeof(UUID_PREFIX) - 1)) {
+		if (strlen(uuid) > (sizeof(UUID_PREFIX) + 2 * ID_LEN)) { /* 68 */
+			log_debug_activation("%s: Reserved uuid %s on internal LV device %s not usable.",
+					     dev_name(dev), uuid, name);
+			goto out;
+		}
+
+		if (!(vgname = dm_strdup(name)) ||
+		    !dm_split_lvm_name(NULL, NULL, &vgname, &lvname, &layer))
+			goto_out;
+
+		/* FIXME: fails to handle dev aliases i.e. /dev/dm-5, replace with UUID suffix */
+		if (lvname && (is_reserved_lvname(lvname) || *layer)) {
+			log_debug_activation("%s: Reserved internal LV device %s/%s%s%s not usable.",
+					     dev_name(dev), vgname, lvname, *layer ? "-" : "", layer);
+			goto out;
+		}
+	}
+
 	/* FIXME Also check for mpath no paths */
 	do {
 		next = dm_get_next_target(dmt, next, &start, &length,
@@ -438,26 +459,6 @@ static int _device_is_usable(struct device *dev, int check_lv_names)
 	}
 
 	/* FIXME Also check dependencies? */
-
-	/* Check internal lvm devices */
-	if (check_lv_names &&
-	    uuid && !strncmp(uuid, UUID_PREFIX, sizeof(UUID_PREFIX) - 1)) {
-		if (!(vgname = dm_strdup(name)) ||
-		    !dm_split_lvm_name(NULL, NULL, &vgname, &lvname, &layer))
-			goto_out;
-
-		if (strlen(uuid) > 68) {
-			log_debug_activation("%s: Reserved uuid %s on internal LV device %s/%s%s%s not usable.",
-					     dev_name(dev), uuid, vgname, lvname, *layer ? "-" : "", layer);
-			goto out;
-		}
-
-		if (lvname && (is_reserved_lvname(lvname) || *layer)) {
-			log_debug_activation("%s: Reserved internal LV device %s/%s%s%s not usable.",
-					     dev_name(dev), vgname, lvname, *layer ? "-" : "", layer);
-			goto out;
-		}
-	}
 
 	r = 1;
 
