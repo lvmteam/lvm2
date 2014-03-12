@@ -676,11 +676,8 @@ static int _thin_target_present(struct cmd_context *cmd,
 						continue;
 					}
 					str = cv->v.str;
-					if (!*str) {
-						log_error("Ignoring empty string in config file %s.",
-							  _lvmconf);
+					if (!*str)
 						continue;
-					}
 					for (i = 0; i < sizeof(_features)/sizeof(*_features); i++)
 						if (strcasecmp(str, _features[i].feature) == 0)
 							_feature_mask |= _features[i].thin_feature;
