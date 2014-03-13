@@ -129,7 +129,7 @@ static int generate_unit(const char *dir, int unit)
 	      "# Direct LVM2 activation requires udev to be settled!\n\n"
 	      "[Unit]\n"
 	      "Description=Activation of LVM2 logical volumes\n"
-	      "Documentation=man:lvm(8) man:vgchange(8)\n"
+	      "Documentation=man:lvm2-activation-generator(8)\n"
 	      "SourcePath=/etc/lvm/lvm.conf\n"
 	      "DefaultDependencies=no\n", f);
 

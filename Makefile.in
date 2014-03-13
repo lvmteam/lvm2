@@ -108,6 +108,7 @@ install_initscripts:
 
 install_systemd_generators:
 	$(MAKE) -C scripts install_systemd_generators
+	$(MAKE) -C man install_systemd_generators
 
 install_systemd_units:
 	$(MAKE) -C scripts install_systemd_units
