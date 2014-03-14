@@ -19,10 +19,10 @@ subdir = $(shell pwd|sed 's,.*/,,')
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 top_builddir = @top_builddir@
-abs_srcdir = "@abs_srcdir@"
-abs_builddir = "@abs_builddir@"
-abs_top_builddir = "@abs_top_builddir@"
-abs_top_srcdir = "@abs_top_srcdir@"
+abs_srcdir = @abs_srcdir@
+abs_builddir = @abs_builddir@
+abs_top_builddir = @abs_top_builddir@
+abs_top_srcdir = @abs_top_srcdir@
 
 LVM_TEST_RESULTS ?= results
 export LVM_TEST_THIN_CHECK_CMD?=@THIN_CHECK_CMD@
@@ -66,7 +66,7 @@ help:
 	@echo "  clean			Clean dir."
 	@echo "  help			Display callable targets."
 	@echo -e "\nSupported variables:"
-	@echo "  LVM_TEST_CAN_CLOBBER_DMESG Allow to clobber dmesg buffer without /dev/kmsg."
+	@echo "  LVM_TEST_CAN_CLOBBER_DMESG Allow to clobber dmesg buffer without /dev/kmsg. (1)"
 	@echo "  LVM_TEST_DEVDIR	Set to '/dev' to run on real /dev."
 	@echo "  LVM_TEST_DIR		Where to create test files [$(LVM_TEST_DIR)]."
 	@echo "  LVM_TEST_LOCKING	Normal (1), Cluster (3)."
@@ -78,6 +78,10 @@ help:
 	@echo "  LVM_TEST_THIN_DUMP_CMD   Command for thin_dump   [$(LVM_TEST_THIN_DUMP_CMD)]."
 	@echo "  LVM_TEST_THIN_REPAIR_CMD Command for thin_repair [$(LVM_TEST_THIN_REPAIR_CMD)]."
 	@echo "  LVM_TEST_UNLIMITED	Set to get unlimited test log (>32MB)"
+	@echo "  LVM_VALGRIND		Enable valgrind testing (1,2,3) execs $$"VALGRIND
+	@echo "  LVM_VALGRIND_CLVMD	Enable valgrind testing of clvmd (1)."
+	@echo "  LVM_VALGRIND_DMEVENTD	Enable valgrind testing of dmeventd (1)."
+	@echo "  LVM_VALGRIND_LVMETAD	Enable valgrind testing of lvmetad (1)."
 	@echo "  LVM_VERIFY_UDEV	Default verify state for lvm.conf."
 	@echo "  S			Skip given test (regex)."
 	@echo "  T			Run given test (regex)."
@@ -128,15 +132,15 @@ lib/%: $(srcdir)/lib/%.sh .lib-dir-stamp
 
 lib/paths: $(srcdir)/Makefile.in .lib-dir-stamp
 	$(RM) $@-t
-	echo 'top_srcdir=$(top_srcdir)' >> $@-t
-	echo 'abs_top_builddir=$(abs_top_builddir)' >> $@-t
-	echo 'abs_top_srcdir=$(abs_top_srcdir)' >> $@-t
-	echo 'abs_srcdir=$(abs_srcdir)' >> $@-t
-	echo 'abs_builddir=$(abs_builddir)' >> $@-t
+	echo 'top_srcdir="$(top_srcdir)"' >> $@-t
+	echo 'abs_top_builddir="$(abs_top_builddir)"' >> $@-t
+	echo 'abs_top_srcdir="$(abs_top_srcdir)"' >> $@-t
+	echo 'abs_srcdir="$(abs_srcdir)"' >> $@-t
+	echo 'abs_builddir="$(abs_builddir)"' >> $@-t
 	echo 'export DM_UDEV_SYNCHRONISATION=$(dm_udev_synchronisation)' >> $@-t
 	echo 'export THIN=@THIN@' >> $@-t
-	echo 'export LVMETAD_PIDFILE=@LVMETAD_PIDFILE@' >> $@-t
-	echo 'export DMEVENTD_PIDFILE=@DMEVENTD_PIDFILE@' >> $@-t
+	echo 'export LVMETAD_PIDFILE="@LVMETAD_PIDFILE@"' >> $@-t
+	echo 'export DMEVENTD_PIDFILE="@DMEVENTD_PIDFILE@"' >> $@-t
 	mv $@-t $@
 
 LIB = lib/not lib/should lib/harness \
