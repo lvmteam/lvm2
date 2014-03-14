@@ -68,7 +68,11 @@ prepare_dmeventd() {
 	echo $! > LOCAL_DMEVENTD
 
 	# FIXME wait for pipe in /var/run instead
-	while ! test -e "/run/dmeventd.pid"; do echo -n .; sleep .2; done # wait for the socket
+	for i in $(seq 1 100) ; do
+		test $i -eq 100 && die "Startup of dmeventd is too slow."
+		test -e "${DMEVENTD_PIDFILE}" && break
+		sleep .2
+	done
 	echo ok
 }
 
