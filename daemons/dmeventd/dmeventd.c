@@ -55,6 +55,7 @@
 #  define OOM_SCORE_ADJ_MIN (-1000)
 
 /* Systemd on-demand activation support */
+#  define SD_RUNTIME_UNIT_FILE_DIR DEFAULT_DM_RUN_DIR "/systemd/system/"
 #  define SD_ACTIVATION_ENV_VAR_NAME "SD_ACTIVATION"
 #  define SD_LISTEN_PID_ENV_VAR_NAME "LISTEN_PID"
 #  define SD_LISTEN_FDS_ENV_VAR_NAME "LISTEN_FDS"
@@ -1997,7 +1998,7 @@ static void restart(void)
 	if (version < 2) {
 		/* This check is copied from sd-daemon.c. */
 		struct stat st;
-		if (!lstat("/run/systemd/system/", &st) && !!S_ISDIR(st.st_mode))
+		if (!lstat(SD_RUNTIME_UNIT_FILE_DIR, &st) && !!S_ISDIR(st.st_mode))
 			_systemd_activation = 1;
 	}
 #endif
