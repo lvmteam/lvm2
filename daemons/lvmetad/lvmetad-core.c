@@ -863,7 +863,7 @@ static response pv_found(lvmetad_state *s, request r)
 	struct dm_config_tree *cft, *pvmeta_old_dev = NULL, *pvmeta_old_pvid = NULL;
 	char *old;
 	char *pvid_dup;
-	int complete = 0, orphan = 0;
+	int complete = 0, orphan = 0, changed = 0;
 	int64_t seqno = -1, seqno_old = -1;
 
 	if (!pvid)
@@ -898,10 +898,14 @@ static response pv_found(lvmetad_state *s, request r)
 	if (!(cft->root = dm_config_clone_node(cft, pvmeta, 0)))
                 goto out_of_mem;
 
+	if (pvmeta_old_pvid && compare_config(pvmeta_old_pvid->root, cft->root))
+		changed |= 1;
+
 	if (pvmeta_old_pvid && device != device_old_pvid) {
 		DEBUGLOG(s, "pv %s no longer on device %" PRIu64, pvid, device_old_pvid);
 		dm_free(dm_hash_lookup_binary(s->device_to_pvid, &device_old_pvid, sizeof(device_old_pvid)));
 		dm_hash_remove_binary(s->device_to_pvid, &device_old_pvid, sizeof(device_old_pvid));
+		changed |= 1;
 	}
 
 	if (!dm_hash_insert(s->pvid_to_pvmeta, pvid, cft) ||
@@ -935,6 +939,7 @@ out_of_mem:
 
 		if (!update_metadata(s, vgname, vgid, metadata, &seqno_old))
 			return reply_fail("metadata update failed");
+		changed |= (seqno_old != dm_config_find_int(metadata, "metadata/seqno", -1));
 	} else {
 		lock_pvid_to_vgid(s);
 		vgid = dm_hash_lookup(s->pvid_to_vgid, pvid);
@@ -972,6 +977,7 @@ out_of_mem:
 	return daemon_reply_simple("OK",
 				   "status = %s", orphan ? "orphan" :
 				                     (complete ? "complete" : "partial"),
+				   "changed = %d", changed,
 				   "vgid = %s", vgid ? vgid : "#orphan",
 				   "vgname = %s", vgname ? vgname : "#orphan",
 				   "seqno_before = %"PRId64, seqno_old,
