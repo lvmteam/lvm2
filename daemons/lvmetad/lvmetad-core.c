@@ -863,8 +863,8 @@ static response pv_found(lvmetad_state *s, request r)
 	struct dm_config_tree *cft, *pvmeta_old_dev = NULL, *pvmeta_old_pvid = NULL;
 	char *old;
 	char *pvid_dup;
-	int complete = 0, orphan = 0, changed = 0;
-	int64_t seqno = -1, seqno_old = -1;
+	int complete = 0, orphan = 0;
+	int64_t seqno = -1, seqno_old = -1, changed = 0;
 
 	if (!pvid)
 		return reply_fail("need PV UUID");
