@@ -1,5 +1,7 @@
 Version 2.02.106 - 
 ====================================
+  Issue a VG refresh before autoactivation only if the PV has changed/is new.
+  Add flag to lvmetad protocol to indicate the PV scanned has changed/is new.
   Add man page for lvm2-activation-generator.
   Don't print an error and accept empty value for global/thin_disabled_features.
   Update API for internal function build_dm_uuid().

@@ -95,7 +95,8 @@ static void _pvscan_display_single(struct cmd_context *cmd,
 #define REFRESH_BEFORE_AUTOACTIVATION_RETRY_USLEEP_DELAY 100000
 
 static int _auto_activation_handler(struct cmd_context *cmd,
-				    const char *vgid, int partial,
+				    const char *vgid,
+				    int partial, int changed,
 				    activation_change_t activate)
 {
 	unsigned int refresh_retries = REFRESH_BEFORE_AUTOACTIVATION_RETRIES;
@@ -139,16 +140,18 @@ static int _auto_activation_handler(struct cmd_context *cmd,
 	 *
 	 * Remove this workaround with "refresh_retries" once we have proper locking in!
 	 */
-	while (refresh_retries--) {
-		if (vg_refresh_visible(vg->cmd, vg)) {
-			refresh_done = 1;
-			break;
+	if (changed) {
+		while (refresh_retries--) {
+			if (vg_refresh_visible(vg->cmd, vg)) {
+				refresh_done = 1;
+				break;
+			}
+			usleep(REFRESH_BEFORE_AUTOACTIVATION_RETRY_USLEEP_DELAY);
 		}
-		usleep(REFRESH_BEFORE_AUTOACTIVATION_RETRY_USLEEP_DELAY);
-	}
 
-	if (!refresh_done)
-		log_warn("%s: refresh before autoactivation failed.", vg->name);
+		if (!refresh_done)
+			log_warn("%s: refresh before autoactivation failed.", vg->name);
+	}
 
 	if (!vgchange_activate(vg->cmd, vg, activate)) {
 		log_error("%s: autoactivation failed.", vg->name);

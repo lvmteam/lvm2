@@ -23,7 +23,8 @@ struct dm_config_tree;
 enum activation_change;
 
 typedef int (*activation_handler) (struct cmd_context *cmd,
-				   const char *vgid, int partial,
+				   const char *vgid,
+				   int partial, int changed,
 				   enum activation_change activate);
 
 #ifdef LVMETAD_SUPPORT
