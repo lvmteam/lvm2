@@ -883,14 +883,14 @@ static response pv_found(lvmetad_state *s, request r)
 
 	lock_pvid_to_pvmeta(s);
 
+	if ((pvmeta_old_pvid = dm_hash_lookup(s->pvid_to_pvmeta, pvid)))
+		dm_config_get_uint64(pvmeta_old_pvid->root, "pvmeta/device", &device_old_pvid);
+
 	if ((old = dm_hash_lookup_binary(s->device_to_pvid, &device, sizeof(device)))) {
 		pvmeta_old_dev = dm_hash_lookup(s->pvid_to_pvmeta, old);
 		dm_hash_remove(s->pvid_to_pvmeta, old);
 		vgid_old = dm_hash_lookup(s->pvid_to_vgid, old);
 	}
-
-	if ((pvmeta_old_pvid = dm_hash_lookup(s->pvid_to_pvmeta, pvid)))
-		dm_config_get_uint64(pvmeta_old_pvid->root, "pvmeta/device", &device_old_pvid);
 
 	DEBUGLOG(s, "pv_found %s, vgid = %s, device = %" PRIu64 " (previously %" PRIu64 "), old = %s",
 		 pvid, vgid, device, device_old_pvid, old);
@@ -898,7 +898,7 @@ static response pv_found(lvmetad_state *s, request r)
 	if (!(cft->root = dm_config_clone_node(cft, pvmeta, 0)))
                 goto out_of_mem;
 
-	if (pvmeta_old_pvid && compare_config(pvmeta_old_pvid->root, cft->root))
+	if (!pvmeta_old_pvid || compare_config(pvmeta_old_pvid->root, cft->root))
 		changed |= 1;
 
 	if (pvmeta_old_pvid && device != device_old_pvid) {
