@@ -68,7 +68,7 @@ prepare_dmeventd() {
 	echo $! > LOCAL_DMEVENTD
 
 	# FIXME wait for pipe in /var/run instead
-	while ! test -e "/var/run/dmeventd.pid"; do echo -n .; sleep .2; done # wait for the socket
+	while ! test -e "/run/dmeventd.pid"; do echo -n .; sleep .2; done # wait for the socket
 	echo ok
 }
 
