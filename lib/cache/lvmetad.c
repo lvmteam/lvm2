@@ -749,7 +749,7 @@ int lvmetad_pv_found(const struct id *pvid, struct device *dev, const struct for
 	daemon_reply reply;
 	struct lvmcache_info *info;
 	struct dm_config_tree *pvmeta, *vgmeta;
-	const char *status, *vgid;
+	const char *status, *vgname, *vgid;
 	int64_t changed;
 	int result;
 
@@ -819,12 +819,13 @@ int lvmetad_pv_found(const struct id *pvid, struct device *dev, const struct for
 
 	if (result && handler) {
 		status = daemon_reply_str(reply, "status", "<missing>");
+		vgname = daemon_reply_str(reply, "vgname", "<missing>");
 		vgid = daemon_reply_str(reply, "vgid", "<missing>");
 		changed = daemon_reply_int(reply, "changed", 0);
 		if (!strcmp(status, "partial"))
-			handler(_lvmetad_cmd, vgid, 1, changed, CHANGE_AAY);
+			handler(_lvmetad_cmd, vgname, vgid, 1, changed, CHANGE_AAY);
 		else if (!strcmp(status, "complete"))
-			handler(_lvmetad_cmd, vgid, 0, changed, CHANGE_AAY);
+			handler(_lvmetad_cmd, vgname, vgid, 0, changed, CHANGE_AAY);
 		else if (!strcmp(status, "orphan"))
 			;
 		else

@@ -95,14 +95,13 @@ static void _pvscan_display_single(struct cmd_context *cmd,
 #define REFRESH_BEFORE_AUTOACTIVATION_RETRY_USLEEP_DELAY 100000
 
 static int _auto_activation_handler(struct cmd_context *cmd,
-				    const char *vgid,
+				    const char *vgname, const char *vgid,
 				    int partial, int changed,
 				    activation_change_t activate)
 {
 	unsigned int refresh_retries = REFRESH_BEFORE_AUTOACTIVATION_RETRIES;
 	int refresh_done = 0;
 	struct volume_group *vg;
-	int consistent = 0;
 	struct id vgid_raw;
 	int r = 0;
 
@@ -114,8 +113,12 @@ static int _auto_activation_handler(struct cmd_context *cmd,
 		return_0;
 
 	/* NB. This is safe because we know lvmetad is running and we won't hit disk. */
-	if (!(vg = vg_read_internal(cmd, NULL, (const char *) &vgid_raw, 0, &consistent)))
-	    return 1;
+	vg = vg_read(cmd, vgname, (const char *)&vgid_raw, 0);
+	if (vg_read_error(vg)) {
+		log_error("Failed to read Volume Group \"%s\" (%s) during autoactivation.", vgname, vgid);
+		release_vg(vg);
+		return 0;
+	}
 
 	if (vg_is_clustered(vg)) {
 		r = 1; goto out;
@@ -161,7 +164,7 @@ static int _auto_activation_handler(struct cmd_context *cmd,
 	r = 1;
 
 out:
-	release_vg(vg);
+	unlock_and_release_vg(cmd, vg, vgname);
 	return r;
 }
 

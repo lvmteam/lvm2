@@ -1,5 +1,6 @@
 Version 2.02.106 - 
 ====================================
+  Use VG read lock during 'pvscan --cache -aay' autoactivation.
   Issue a VG refresh before autoactivation only if the PV has changed/is new.
   Add flag to lvmetad protocol to indicate the PV scanned has changed/is new.
   Add man page for lvm2-activation-generator.
