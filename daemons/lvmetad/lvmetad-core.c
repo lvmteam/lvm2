@@ -952,6 +952,11 @@ out_of_mem:
 			return reply_fail("non-orphan VG without metadata encountered");
 		}
 		unlock_vg(s, vgid);
+
+		// TODO: separate vgid->vgname lock
+		lock_vgid_to_metadata(s);
+		vgname = dm_hash_lookup(s->vgid_to_vgname, vgid);
+		unlock_vgid_to_metadata(s);
 	}
 
 	if (vgid_old && (!vgid || strcmp(vgid, vgid_old))) {
@@ -968,6 +973,7 @@ out_of_mem:
 				   "status = %s", orphan ? "orphan" :
 				                     (complete ? "complete" : "partial"),
 				   "vgid = %s", vgid ? vgid : "#orphan",
+				   "vgname = %s", vgname ? vgname : "#orphan",
 				   "seqno_before = %"PRId64, seqno_old,
 				   "seqno_after = %"PRId64, seqno,
 				   NULL);
