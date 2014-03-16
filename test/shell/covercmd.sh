@@ -30,7 +30,7 @@ lvcreate -l 5 -i5 -I256 -n $lv $vg
 if aux have_readline; then
 # test *scan and *display tools
 cat <<EOF | lvm
-pvscan
+pvscan --uuid
 vgscan
 lvscan
 lvmdiskscan
@@ -47,7 +47,7 @@ for i in h b s k m g t p e H B S K M G T P E; do
 	echo pvdisplay --units $i "$dev1"
 done | lvm
 else
-pvscan
+pvscan --uuid
 vgscan
 lvscan
 lvmdiskscan
@@ -85,6 +85,7 @@ done
 
 pvck "$dev1"
 vgck $vg
+vgs -o all $vg
 lvrename $vg $lv $lv-rename
 vgcfgbackup -f backup.$$ $vg
 vgchange -an $vg
