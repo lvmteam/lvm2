@@ -11,6 +11,11 @@
 
 . lib/test
 
+# This test is not using any lvm command
+# so skip duplicate CLMVD and lvmetad test
+test -e LOCAL_CLVMD && skip
+test -e LOCAL_LVMETAD && skip
+
 CHARACTER_WHITELIST="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789#+-.:=@_"
 FAIL_MIXED_STR="contains mixed mangled and unmangled characters"
 FAIL_MULTI_STR="seems to be mangled more than once"
