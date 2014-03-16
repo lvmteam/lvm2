@@ -176,6 +176,9 @@ not lvcreate -L4M --chunksize 2G -T $vg/pool1
 # Test creation of inactive pool
 lvcreate -an -L4M -T $vg/pool1
 lvcreate -V2G --name lv1 -T $vg/pool1
+# Check we are able remove spare volume if we want to
+lvremove -f $vg/lvol0_pmspare
+
 # Origin name is not accepted
 not lvcreate -s $vg/lv1 -L4M -V2G --name $vg/lv4
 
