@@ -681,8 +681,9 @@ raid456_replace_works() {
 # so we need to put here exlusion for kernes which do trace SLUB
 #
 	case $(uname -r) in
-	  3.10.11-200.fc19.i686|3.10.11-200.fc19.x86_64) return 1 ;;
-	  3.13.5-101.fc19.i686.PAE|3.13.6-200.fc20.x86_64) return 1 ;;
+	  3.1[0123].*.fc18.i686*|3.1[0123].*.fc18.x86_64) return 1 ;;
+	  3.1[0123].*.fc19.i686*|3.1[0123].*.fc19.x86_64) return 1 ;;
+	  3.13.*.fc20.i686*|3.13.*.fc20.x86_64) return 1 ;;
 	esac
 }
 
