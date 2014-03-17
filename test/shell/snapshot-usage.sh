@@ -80,12 +80,12 @@ vgcreate -s 1K $vg1 "$DM_DEV_DIR/$vg/$lv"
 lvcreate -V50 -L10 -n $lv1 -s $vg1
 CHECK_ACTIVE="active"
 test ! -e LOCAL_CLVMD || CHECK_ACTIVE="local exclusive"
-check lv_field $vg1/$lv1 lv_active ${CHECK_ACTIVE}
+check lv_field $vg1/$lv1 lv_active "$CHECK_ACTIVE"
 lvchange -an $vg1
 
 # On cluster snapshot gets exclusive activation
 lvchange -ay $vg1
-check lv_field $vg1/$lv1 lv_active ${CHECK_ACTIVE}
+check lv_field $vg1/$lv1 lv_active "$CHECK_ACTIVE"
 
 # Test removal of opened (bug unmounted) snapshot (device busy) for a while
 sleep 120 < "$DM_DEV_DIR/$vg1/$lv1" &
