@@ -20,6 +20,11 @@ activation {
 	thin_pool_autoextend_percent = 20
 }
 
+global {
+	units="h"
+	si_unit_consistency=1
+}
+
 report {
 	aligned=1
 	buffered=1

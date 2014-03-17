@@ -279,6 +279,19 @@ static int _check_config(struct cmd_context *cmd)
 	return 1;
 }
 
+int process_profilable_config(struct cmd_context *cmd) {
+	if (!(cmd->default_settings.unit_factor =
+	      units_to_bytes(find_config_tree_str(cmd, global_units_CFG, NULL),
+			     &cmd->default_settings.unit_type))) {
+		log_error("Invalid units specification");
+		return 0;
+	}
+
+	cmd->si_unit_consistency = find_config_tree_bool(cmd, global_si_unit_consistency_CFG, NULL);
+
+	return 1;
+}
+
 static int _process_config(struct cmd_context *cmd)
 {
 	mode_t old_umask;
@@ -338,13 +351,6 @@ static int _process_config(struct cmd_context *cmd)
 	cmd->auto_set_activation_skip = find_config_tree_bool(cmd, activation_auto_set_activation_skip_CFG, NULL);
 
 	cmd->default_settings.suffix = find_config_tree_bool(cmd, global_suffix_CFG, NULL);
-
-	if (!(cmd->default_settings.unit_factor =
-	      units_to_bytes(find_config_tree_str(cmd, global_units_CFG, NULL),
-			     &cmd->default_settings.unit_type))) {
-		log_error("Invalid units specification");
-		return 0;
-	}
 
 	read_ahead = find_config_tree_str(cmd, activation_readahead_CFG, NULL);
 	if (!strcasecmp(read_ahead, "auto"))
@@ -407,8 +413,6 @@ static int _process_config(struct cmd_context *cmd)
 		}
 	}
 
-	cmd->si_unit_consistency = find_config_tree_bool(cmd, global_si_unit_consistency_CFG, NULL);
-
 	if ((cn = find_config_tree_node(cmd, activation_mlock_filter_CFG, NULL)))
 		for (cv = cn->v; cv; cv = cv->next) 
 			if ((cv->type != DM_CFG_STRING) || !cv->v.str[0]) 
@@ -424,6 +428,9 @@ static int _process_config(struct cmd_context *cmd)
 	}
 	/* LVM stores sizes internally in units of 512-byte sectors. */
 	init_pv_min_size((uint64_t)pv_min_kb * (1024 >> SECTOR_SHIFT));
+
+	if (!process_profilable_config(cmd))
+		return_0;
 
 	init_detect_internal_vg_cache_corruption
 		(find_config_tree_bool(cmd, global_detect_internal_vg_cache_corruption_CFG, NULL));

@@ -1,8 +1,9 @@
 Version 2.02.106 - 
 ====================================
+  Make global/units and global/si_unit_consistency lvm.conf setting profilable.
   Validate minimal chunk size for snapshot COW volume in lvconvert.
   Disallow lvconvert of origin to snapshot COW volume.
-  Make report settings profilable.
+  Make report lvm.conf settings profilable.
   Add existing report settings to lvm.conf.
   Use VG read lock during 'pvscan --cache -aay' autoactivation.
   Issue a VG refresh before autoactivation only if the PV has changed/is new.

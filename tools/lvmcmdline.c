@@ -1137,6 +1137,8 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 			log_error("Failed to apply configuration profile.");
 			return ECMD_FAILED;
 		}
+		if (!process_profilable_config(cmd))
+			return_ECMD_FAILED;
 	}
 
 	if ((ret = _get_settings(cmd)))
