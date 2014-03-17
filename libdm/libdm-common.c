@@ -1073,6 +1073,24 @@ static int _rename_dev_node(const char *old_name, const char *new_name,
 			 oldpath, newpath);
 
 	/* udev may already have renamed the node. Ignore ENOENT. */
+	/* FIXME: when renaming to target mangling mode "none" with udev
+	 * while there are some blacklisted characters in the node name,
+	 * udev will remove the old_node, but fails to properly rename
+	 * to new_node. The libdevmapper code tries to call
+	 * rename(old_node,new_node), but that won't do anything
+	 * since the old node is already removed by udev.
+	 * For example renaming 'a\x20b' to 'a b':
+	 *   - udev removes 'a\x20b'
+	 *   - udev creates 'a' and 'b' (since it considers the ' ' as a delimiter
+	 *   - libdevmapper checks udev has done the rename properly
+	 *   - libdevmapper calls stat(new_node) and it does not see it
+	 *   - libdevmapper calls rename(old_node,new_node)
+	 *   - the rename is a NOP since the old_node does not exist anymore
+	 *
+	 * However, this situation is very rare - why would anyone need
+	 * to rename to an unsupported mode??? So a fix for this would be
+	 * just for completeness.
+	 */
 	if (rename(oldpath, newpath) < 0 && errno != ENOENT) {
 		log_error("Unable to rename device node from '%s' to '%s'",
 			  old_name, new_name);

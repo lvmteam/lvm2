@@ -129,7 +129,7 @@ function check_mangle_cmd()
 
 	create_dm_dev none "$dm_name"
 
-	dmsetup mangle --manglename $mode "${PREFIX}$dm_name" 1>out 2>err || true;
+	dmsetup mangle --manglename $mode --verifyudev "${PREFIX}$dm_name" 1>out 2>err || true;
 
 	if [ "$expected" = "OK" ]; then
 		grep "$CORRECT_FORM_STR" out || r=1
@@ -139,7 +139,30 @@ function check_mangle_cmd()
 		grep "$FAIL_MULTI_STR" err || r=1
 	else
 		rename_expected=1
-		grep -F "$RENAMING_STR ${PREFIX}$expected" out || r=1
+		if grep -F "$RENAMING_STR ${PREFIX}$expected" out; then
+			# Check the old node is really renamed.
+			test -b "$DM_DEV_DIR/mapper/${PREFIX}$dm_name" && r=1
+			# FIXME: when renaming to mode=none with udev, udev will
+			#        remove the old_node, but fails to properly rename
+			#        to new_node. The libdevmapper code tries to call
+			#        rename(old_node,new_node), but that won't do anything
+			#        since the old node is already removed by udev.
+			#        For example renaming 'a\x20b' to 'a b':
+			#          - udev removes 'a\x20b'
+			#          - udev creates 'a' and 'b' (since it considers the ' ' as a delimiter)
+			#          - libdevmapper checks udev has done the rename properly
+			#          - libdevmapper calls stat(new_node) and it does not see it
+			#          - libdevmapper calls rename(old_node,new_node)
+			#          - the rename is a NOP since the old_node does not exist anymore
+			#
+			# Remove this condition once the problem is fixed in libdevmapper.
+			#
+			if [ "$mode" != "none" ]; then
+				test -b "$DM_DEV_DIR/mapper/${PREFIX}$expected" || r=1
+			fi
+		else
+			r=1
+		fi
 	fi
 
 	if [ $r = 0 -a $rename_expected = 1 ]; then
@@ -149,7 +172,7 @@ function check_mangle_cmd()
 		# failed to rename to expected or renamed when it should not - find the new name
 		new_name=$(sed -e "s/.*: $RENAMING_STR //g" out)
 		# try to remove any of the form - falling back to less probable error scenario
-		aux dmsetup remove --verifyudev --manglename none "$new_name" || \
+		remove_dm_dev none "$new_name" || \
 		remove_dm_dev none "$dm_name" || remove_dm_dev none "$expected"
 	else
 		# successfuly done nothing
