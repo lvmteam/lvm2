@@ -1,5 +1,6 @@
 Version 2.02.106 - 
 ====================================
+  Validate minimal chunk size for snapshot COW volume in lvconvert.
   Disallow lvconvert of origin to snapshot COW volume.
   Make report settings profilable.
   Add existing report settings to lvm.conf.
