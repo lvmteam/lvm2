@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (C) 2010-2013 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2010-2014 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -24,8 +24,8 @@ lvcreate -s -c 8k -l 24 -n snapX2 $vg/one
 # Check that snapshots that are too small are caught with correct error.
 not lvcreate -s -c 8k -l 8 -n snapX3 $vg/one 2>&1 | tee lvcreate.out
 not grep "suspend origin one" lvcreate.out
-grep "Unable to create a snapshot" lvcreate.out
+grep "smaller" lvcreate.out
 
 not lvcreate -s -l 4 -n snapB $vg/one 2>&1 | tee lvcreate.out
 not grep "suspend origin one" lvcreate.out
-grep "Unable to create a snapshot" lvcreate.out
+grep "smaller" lvcreate.out
