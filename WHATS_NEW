@@ -1,5 +1,6 @@
 Version 2.02.106 - 
 ====================================
+  Make report settings profilable.
   Add existing report settings to lvm.conf.
   Use VG read lock during 'pvscan --cache -aay' autoactivation.
   Issue a VG refresh before autoactivation only if the PV has changed/is new.
