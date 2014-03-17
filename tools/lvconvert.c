@@ -2038,6 +2038,12 @@ static int _lvconvert_snapshot(struct cmd_context *cmd,
 {
 	struct logical_volume *org;
 
+	if (lv_is_origin(lv)) {
+		/* Unsupported stack */
+		log_error("Unable to convert origin \"%s\" into a snapshot.", lv->name);
+		return 0;
+	}
+
 	if (!(org = find_lv(lv->vg, lp->origin))) {
 		log_error("Couldn't find origin volume '%s'.", lp->origin);
 		return 0;
