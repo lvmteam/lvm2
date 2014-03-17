@@ -20,7 +20,7 @@ fill() {
 	dd if=/dev/zero of="$DM_DEV_DIR/$vg1/lvol0" bs=$1 count=1
 }
 
-# give some short time to lock file above
+# Wait until device is opened
 wait_for_open_() {
 	for i in $(seq 1 50) ; do
 		test $(dmsetup info --noheadings -c -o open $1) -ne 0 && return
@@ -32,8 +32,10 @@ wait_for_open_() {
 
 cleanup_tail()
 {
-	test -z "$SLEEP_PID" || kill $SLEEP_PID
+	test -z "$SLEEP_PID" || kill $SLEEP_PID || true
 	wait
+	vgremove -ff $vg1 || true
+	vgremove -ff $vg
 	aux teardown
 }
 
@@ -69,22 +71,23 @@ aux extend_filter_LVMTEST
 aux lvmconf "activation/snapshot_autoextend_percent = 20" \
             "activation/snapshot_autoextend_threshold = 50"
 
-# Check usability with smallest extent size
+# Check usability with smallest (1k) extent size ($lv has 15P)
 pvcreate --setphysicalvolumesize 4T "$DM_DEV_DIR/$vg/$lv"
+trap 'cleanup_tail' EXIT
 vgcreate -s 1K $vg1 "$DM_DEV_DIR/$vg/$lv"
 
-# Test removal of opened snapshot
+# Test virtual snapshot over /dev/zero
 lvcreate -V50 -L10 -n $lv1 -s $vg1
-
-lvs -a -o+lv_active $vg1
+CHECK_ACTIVE="active"
+test ! -e LOCAL_CLVMD || CHECK_ACTIVE="local exclusive"
+check lv_field $vg1/$lv1 lv_active ${CHECK_ACTIVE}
 lvchange -an $vg1
 
-# Snapshot get exclusive activation
+# On cluster snapshot gets exclusive activation
 lvchange -ay $vg1
-lvs -a -o+lv_active $vg1
+check lv_field $vg1/$lv1 lv_active ${CHECK_ACTIVE}
 
-trap 'cleanup_tail' EXIT
-# Keep device busy (but not mounted) for a while
+# Test removal of opened (bug unmounted) snapshot (device busy) for a while
 sleep 120 < "$DM_DEV_DIR/$vg1/$lv1" &
 SLEEP_PID=$!
 
@@ -100,17 +103,17 @@ SLEEP_PID=
 wait
 
 lvremove -f $vg1/$lv1
-not dmsetup info $vg1-$lv1 >/dev/null || \
-	die "$vg1/$lv1 expected to be removed, but there are mappings!"
+check lv_not_exists $vg1 $lv1
 
 # Check border size
 lvcreate -aey -L4095G $vg1
 lvcreate -s -L100K $vg1/lvol0
 fill 1K
 check lv_field $vg1/lvol1 data_percent "12.00"
+
 lvremove -ff $vg1
 
-# Create 1KB snapshot, no need to be active active here
+# Create 1KB snapshot, does not need to be active here
 lvcreate -an -Zn -l1 -n $lv1 $vg1
 not lvcreate -s -l1 $vg1/$lv1
 not lvcreate -s -l3 $vg1/$lv1
@@ -169,10 +172,10 @@ fsck -n "$DM_DEV_DIR/$vg1/snap"
 # we have 2 valid results  (unsure about correct version number)
 check lv_field $vg1/snap data_percent "$EXPECT4"
 
-vgremove -ff $vg1
-
 # Can't test >= 16T devices on 32bit
 if test "$TSIZE" = 15P ; then
+
+vgremove -ff $vg1
 
 # Check usability with largest extent size
 pvcreate "$DM_DEV_DIR/$vg/$lv"
@@ -186,8 +189,4 @@ lvremove -ff $vg1
 lvcreate -V15E -l1 -n $lv1 -s $vg1
 check lv_field $vg1/$lv1 origin_size "15.00e"
 
-vgremove -ff $vg1
-
 fi
-
-vgremove -ff $vg
