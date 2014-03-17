@@ -2038,6 +2038,11 @@ static int _lvconvert_snapshot(struct cmd_context *cmd,
 {
 	struct logical_volume *org;
 
+	if (lv->status & MIRRORED) {
+		log_error("Unable to convert mirrored LV \"%s\" into a snapshot.", lv->name);
+		return 0;
+	}
+
 	if (lv_is_origin(lv)) {
 		/* Unsupported stack */
 		log_error("Unable to convert origin \"%s\" into a snapshot.", lv->name);
@@ -3039,10 +3044,6 @@ static int _lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 			return ECMD_FAILED;
 		}
 	} else if (lp->snapshot) {
-		if (lv->status & MIRRORED) {
-			log_error("Unable to convert mirrored LV \"%s\" into a snapshot.", lv->name);
-			return ECMD_FAILED;
-		}
 		if (!_lvconvert_snapshot(cmd, lv, lp))
 			return_ECMD_FAILED;
 
