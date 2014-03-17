@@ -180,7 +180,7 @@ teardown_devs() {
 	# NOTE: SCSI_DEBUG_DEV test must come before the LOOP test because
 	# prepare_scsi_debug_dev() also sets LOOP to short-circuit prepare_loop()
 	if test -f SCSI_DEBUG_DEV; then
-		test ${LVM_TEST_PARALLEL:-0} -eq 1 || modprobe -r scsi_debug
+		test "${LVM_TEST_PARALLEL:-0}" -eq 1 || modprobe -r scsi_debug
 	else
 		test ! -f LOOP || losetup -d $(cat LOOP) || true
 		test ! -f LOOPFILE || rm -f $(cat LOOPFILE)
@@ -189,7 +189,7 @@ teardown_devs() {
 	rm -f LOOP
 
 	# Attempt to remove any loop devices that failed to get torn down if earlier tests aborted
-	test ${LVM_TEST_PARALLEL:-0} -eq 1 -o -z "$COMMON_PREFIX" || {
+	test "${LVM_TEST_PARALLEL:-0}" -eq 1 -o -z "$COMMON_PREFIX" || {
 		teardown_devs_prefixed "$COMMON_PREFIX" 1
 		local stray_loops=( $(losetup -a | grep "$COMMON_PREFIX" | cut -d: -f1) )
 		test ${#stray_loops[@]} -eq 0 || {
@@ -239,7 +239,7 @@ teardown() {
 
 	echo "ok"
 
-	test ${LVM_TEST_PARALLEL:-0} -eq 1 -o -n "$RUNNING_DMEVENTD" || not pgrep dmeventd #&>/dev/null
+	test "${LVM_TEST_PARALLEL:-0}" -eq 1 -o -n "$RUNNING_DMEVENTD" || not pgrep dmeventd #&>/dev/null
 }
 
 prepare_loop() {
