@@ -21,6 +21,8 @@
 #include "lv_alloc.h"
 #include "activate.h"
 
+#define SNAPSHOT_MIN_CHUNKS	3       /* Minimum number of chunks in snapshot */
+
 int lv_is_origin(const struct logical_volume *lv)
 {
 	return lv->origin_count ? 1 : 0;
@@ -86,6 +88,20 @@ uint32_t cow_max_extents(const struct logical_volume *origin, uint32_t chunk_siz
 		size = max_size; /* Origin is too big for 100% snapshot anyway */
 
 	return (uint32_t) (size / extent_size);
+}
+
+int cow_has_min_chunks(const struct volume_group *vg, uint32_t cow_extents, uint32_t chunk_size)
+{
+	if (((uint64_t)vg->extent_size * cow_extents) >= (SNAPSHOT_MIN_CHUNKS * chunk_size))
+		return 1;
+
+	log_error("Snapshot volume cannot be smaller than " DM_TO_STRING(SNAPSHOT_MIN_CHUNKS)
+		  " chunks (%u extents, %s).", (unsigned)
+		  (((uint64_t) SNAPSHOT_MIN_CHUNKS * chunk_size +
+		    vg->extent_size - 1) / vg->extent_size),
+		  display_size(vg->cmd, (uint64_t) SNAPSHOT_MIN_CHUNKS * chunk_size));
+
+	return 0;
 }
 
 int lv_is_cow_covering_origin(const struct logical_volume *lv)

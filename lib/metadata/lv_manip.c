@@ -49,8 +49,6 @@ typedef enum {
 #define A_CAN_SPLIT		0x10
 #define A_AREA_COUNT_MATCHES	0x20	/* Existing lvseg has same number of areas as new segment */
 
-#define SNAPSHOT_MIN_CHUNKS	3       /* Minimum number of chunks in snapshot */
-
 /*
  * Constant parameters during a single allocation attempt.
  */
@@ -6054,15 +6052,8 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 	}
 
 	if (lp->snapshot && !seg_is_thin(lp) &&
-	    (((uint64_t)lp->extents * vg->extent_size) <
-	     (SNAPSHOT_MIN_CHUNKS * lp->chunk_size))) {
-		log_error("Unable to create a snapshot smaller than "
-			  DM_TO_STRING(SNAPSHOT_MIN_CHUNKS) " chunks (%u extents, %s).",
-			  (unsigned) (((uint64_t) SNAPSHOT_MIN_CHUNKS * lp->chunk_size +
-				       vg->extent_size - 1) / vg->extent_size),
-			  display_size(cmd, (uint64_t) SNAPSHOT_MIN_CHUNKS * lp->chunk_size));
-		return NULL;
-	}
+	    !cow_has_min_chunks(vg, lp->extents, lp->chunk_size))
+                return NULL;
 
 	if (!seg_is_virtual(lp) &&
 	    vg->free_count < lp->extents && !lp->approx_alloc) {
