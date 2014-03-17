@@ -12,7 +12,7 @@
 . lib/test
 
 which mkfs.ext2 || skip
-aux skip_if_mirror_recovery_broken
+aux mirror_recovery_works || skip
 
 aux prepare_dmeventd
 aux prepare_vg 5

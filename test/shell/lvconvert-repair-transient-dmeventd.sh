@@ -11,7 +11,7 @@
 
 . lib/test
 
-aux skip_if_mirror_recovery_broken
+aux mirror_recovery_works || skip
 aux prepare_vg 5
 aux prepare_dmeventd
 

@@ -641,9 +641,10 @@ api() {
 	"$abs_top_builddir/test/api/wrapper" "$@" && rm -f debug.log
 }
 
-skip_if_mirror_recovery_broken() {
-        if test `uname -r` = 3.3.4-5.fc17.i686; then skip; fi
-        if test `uname -r` = 3.3.4-5.fc17.x86_64; then skip; fi
+mirror_recovery_works() {
+	case $(uname -r) in
+	  3.3.4-5.fc17.i686|3.3.4-5.fc17.x86_64) return 1 ;;
+	esac
 }
 
 raid456_replace_works() {
