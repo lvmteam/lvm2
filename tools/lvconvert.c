@@ -2080,6 +2080,9 @@ static int _lvconvert_snapshot(struct cmd_context *cmd,
 		return 0;
 	}
 
+	if (!archive(lv->vg))
+		return_0;
+
 	if (!vg_add_snapshot(org, lv, NULL, org->le_count, lp->chunk_size)) {
 		log_error("Couldn't create snapshot.");
 		return 0;
@@ -3040,9 +3043,6 @@ static int _lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 			log_error("Unable to convert mirrored LV \"%s\" into a snapshot.", lv->name);
 			return ECMD_FAILED;
 		}
-		if (!archive(lv->vg))
-			return_ECMD_FAILED;
-
 		if (!_lvconvert_snapshot(cmd, lv, lp))
 			return_ECMD_FAILED;
 
