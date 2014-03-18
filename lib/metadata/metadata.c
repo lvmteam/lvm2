@@ -4166,7 +4166,7 @@ static struct volume_group *_vg_lock_and_read(struct cmd_context *cmd, const cha
 		consistent = 0;
 
 	if (!validate_name(vg_name) && !is_orphan_vg(vg_name)) {
-		log_error("Volume group name %s has invalid characters",
+		log_error("Volume group name \"%s\" has invalid characters.",
 			  vg_name);
 		return NULL;
 	}
