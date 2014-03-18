@@ -37,7 +37,7 @@ struct lock_list {
 };
 
 static struct dm_list _lock_list;
-static char _lock_dir[NAME_LEN];
+static char _lock_dir[PATH_MAX];
 static int _prioritise_write_locks;
 
 static sig_t _oldhandler;
