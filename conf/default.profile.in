@@ -24,6 +24,7 @@ global {
 	units="h"
 	si_unit_consistency=1
 	suffix=1
+	lvdisplay_shows_full_device_path=0
 }
 
 report {
