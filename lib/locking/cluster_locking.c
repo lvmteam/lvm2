@@ -301,6 +301,8 @@ static int _cluster_free_request(lvm_response_t * response, int num)
 static int _lock_for_cluster(struct cmd_context *cmd, unsigned char clvmd_cmd,
 			     uint32_t flags, const char *name)
 {
+	/* TODO: convert to global usable solution and move static into cmd */
+	static unsigned char last_clvmd_cmd = 0;
 	int status;
 	int i;
 	char *args;
@@ -360,8 +362,13 @@ static int _lock_for_cluster(struct cmd_context *cmd, unsigned char clvmd_cmd,
 	 * SYNC_NAMES and VG_BACKUP use the VG name directly without prefix.
 	 */
 	if (clvmd_cmd == CLVMD_CMD_SYNC_NAMES) {
-		if (flags & LCK_LOCAL)
+		if (flags & LCK_LOCAL) {
 			node = NODE_LOCAL;
+			if (clvmd_cmd == last_clvmd_cmd) {
+				log_debug("Skipping redundant local sync command.");
+				return 1;
+			}
+		}
 	} else if (clvmd_cmd != CLVMD_CMD_VG_BACKUP) {
 		if (strncmp(name, "P_", 2) &&
 		    (clvmd_cmd == CLVMD_CMD_LOCK_VG ||
@@ -372,6 +379,7 @@ static int _lock_for_cluster(struct cmd_context *cmd, unsigned char clvmd_cmd,
 			node = NODE_REMOTE;
 	}
 
+	last_clvmd_cmd = clvmd_cmd;
 	status = _cluster_request(clvmd_cmd, node, args, len,
 				  &response, &num_responses);
 

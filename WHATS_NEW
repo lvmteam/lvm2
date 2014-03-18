@@ -1,5 +1,6 @@
 Version 2.02.106 - 
 ====================================
+  Skip redundant synchronization calls on local clvmd.
   Use correct PATH_MAX for locking dir path.
   Do not check for backups when when its creation is disabled.
   Don't allow --mergedconfig without --type current in dumpconfig. Fix memleak.
