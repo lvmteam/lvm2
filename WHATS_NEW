@@ -1,5 +1,6 @@
 Version 2.02.106 - 
 ====================================
+  Do not check for backups when when its creation is disabled.
   Don't allow --mergedconfig without --type current in dumpconfig. Fix memleak.
   Make global/lvdisplay_shows_full_device_path lvm.conf setting profilable.
   Make global/{units|si_unit_consistency|suffix} lvm.conf setting profilable.
