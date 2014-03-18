@@ -1,6 +1,6 @@
 Version 2.02.106 - 
 ====================================
-  Make global/units and global/si_unit_consistency lvm.conf setting profilable.
+  Make global/{units|si_unit_consistency|suffix} lvm.conf setting profilable.
   Validate minimal chunk size for snapshot COW volume in lvconvert.
   Disallow lvconvert of origin to snapshot COW volume.
   Make report lvm.conf settings profilable.
