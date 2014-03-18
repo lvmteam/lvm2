@@ -63,12 +63,12 @@ static int _pvdisplay_single(struct cmd_context *cmd,
 	}
 
 	if (pv_status(pv) & EXPORTED_VG)
-		log_print("Physical volume \"%s\" of volume group \"%s\" "
-			  "is exported", pv_name, pv_vg_name(pv));
+		log_print_unless_silent("Physical volume \"%s\" of volume group \"%s\" "
+					"is exported", pv_name, pv_vg_name(pv));
 
 	if (is_orphan(pv))
-		log_print("\"%s\" is a new physical volume of \"%s\"",
-			  pv_name, display_size(cmd, size));
+		log_print_unless_silent("\"%s\" is a new physical volume of \"%s\"",
+					pv_name, display_size(cmd, size));
 
 	if (arg_count(cmd, colon_ARG)) {
 		pvdisplay_colons(pv);
