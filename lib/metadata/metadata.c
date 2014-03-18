@@ -4157,7 +4157,7 @@ static struct volume_group *_vg_lock_and_read(struct cmd_context *cmd, const cha
 			       uint64_t status_flags, uint32_t misc_flags)
 {
 	struct volume_group *vg = NULL;
- 	int consistent = 1;
+	int consistent = 1;
 	int consistent_in;
 	uint32_t failure = 0;
 	int already_locked;
@@ -4279,7 +4279,7 @@ bad:
  * *consistent = 1.
  */
 struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name,
-	      const char *vgid, uint32_t flags)
+			     const char *vgid, uint32_t flags)
 {
 	uint64_t status = UINT64_C(0);
 	uint32_t lock_flags = LCK_VG_READ;

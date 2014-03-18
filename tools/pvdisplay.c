@@ -36,18 +36,18 @@ static int _pvdisplay_single(struct cmd_context *cmd,
 			return ret;
 		}
 
-	 	/*
+		/*
 		 * Replace possibly incomplete PV structure with new one
 		 * allocated in vg_read_internal() path.
 		 */
-		 if (!(pvl = find_pv_in_vg(vg, pv_name))) {
-			 log_error("Unable to find \"%s\" in volume group \"%s\"",
-				   pv_name, vg->name);
-			 ret = ECMD_FAILED;
-			 goto out;
-		 }
+		if (!(pvl = find_pv_in_vg(vg, pv_name))) {
+			log_error("Unable to find \"%s\" in volume group \"%s\"",
+				  pv_name, vg->name);
+			ret = ECMD_FAILED;
+			goto out;
+		}
 
-		 pv = pvl->pv;
+		pv = pvl->pv;
 	}
 
 	if (is_orphan(pv))
