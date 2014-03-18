@@ -1,5 +1,6 @@
 Version 2.02.106 - 
 ====================================
+  Fix memory corruption when pvscan reports long pv names.
   Do not report internal orphan VG names when reporting pvdisplay/pvscan.
   Fix pvdisplay -c man page referencing KB instead of sectors.
   Skip redundant synchronization calls on local clvmd.
