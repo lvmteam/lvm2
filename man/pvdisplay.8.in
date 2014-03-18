@@ -65,7 +65,7 @@ The values are:
 
 * physical volume device name
 * volume group name
-* physical volume size in kilobytes
+* physical volume size in sectors
 * internal physical volume number (obsolete)
 * physical volume status
 * physical volume (not) allocatable
