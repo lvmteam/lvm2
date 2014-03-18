@@ -483,6 +483,11 @@ global {
     # temporarily until you update them.
     si_unit_consistency = 1
 
+    # Whether or not to display unit suffix for sizes. This setting has
+    # no effect if the units are in human-readable form (global/units="h")
+    # in which case the suffix is always displayed.
+    suffix = 1
+
     # Whether or not to communicate with the kernel device-mapper.
     # Set to 0 if you want to use the tools to manipulate LVM metadata 
     # without activating any logical volumes.

@@ -288,6 +288,7 @@ int process_profilable_config(struct cmd_context *cmd) {
 	}
 
 	cmd->si_unit_consistency = find_config_tree_bool(cmd, global_si_unit_consistency_CFG, NULL);
+	cmd->default_settings.suffix = find_config_tree_bool(cmd, global_suffix_CFG, NULL);
 
 	return 1;
 }
@@ -349,8 +350,6 @@ static int _process_config(struct cmd_context *cmd)
 	set_activation(cmd->default_settings.activation);
 
 	cmd->auto_set_activation_skip = find_config_tree_bool(cmd, activation_auto_set_activation_skip_CFG, NULL);
-
-	cmd->default_settings.suffix = find_config_tree_bool(cmd, global_suffix_CFG, NULL);
 
 	read_ahead = find_config_tree_str(cmd, activation_readahead_CFG, NULL);
 	if (!strcasecmp(read_ahead, "auto"))

@@ -23,6 +23,7 @@ activation {
 global {
 	units="h"
 	si_unit_consistency=1
+	suffix=1
 }
 
 report {
