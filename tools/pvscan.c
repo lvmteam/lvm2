@@ -18,8 +18,8 @@
 #include "lvmetad.h"
 #include "lvmcache.h"
 
-int pv_max_name_len = 0;
-int vg_max_name_len = 0;
+unsigned pv_max_name_len = 0;
+unsigned vg_max_name_len = 0;
 
 static void _pvscan_display_single(struct cmd_context *cmd,
 				   struct physical_volume *pv,
@@ -34,7 +34,7 @@ static void _pvscan_display_single(struct cmd_context *cmd,
 
 	/* short listing? */
 	if (arg_count(cmd, short_ARG) > 0) {
-		log_print_unless_silent("%s", pv_dev_name(pv));
+		log_print_unless_silent("%s", pvdevname);
 		return;
 	}
 
@@ -331,10 +331,7 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 
 	uint64_t size_total = 0;
 	uint64_t size_new = 0;
-
-	int len = 0;
-	pv_max_name_len = 0;
-	vg_max_name_len = 0;
+	unsigned len;
 
 	if (arg_count(cmd, cache_ARG))
 		return _pvscan_lvmetad(cmd, argc, argv);
@@ -429,18 +426,15 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 		free_pv_fid(pvl->pv);
 	}
 
-	if (!pvs_found) {
+	if (!pvs_found)
 		log_print_unless_silent("No matching physical volumes found");
-		unlock_vg(cmd, VG_GLOBAL);
-		return ECMD_PROCESSED;
-	}
-
-	log_print_unless_silent("Total: %d [%s] / in use: %d [%s] / in no VG: %d [%s]",
-				pvs_found,
-				display_size(cmd, size_total),
-				pvs_found - new_pvs_found,
-				display_size(cmd, (size_total - size_new)),
-				new_pvs_found, display_size(cmd, size_new));
+	else
+		log_print_unless_silent("Total: %d [%s] / in use: %d [%s] / in no VG: %d [%s]",
+					pvs_found,
+					display_size(cmd, size_total),
+					pvs_found - new_pvs_found,
+					display_size(cmd, (size_total - size_new)),
+					new_pvs_found, display_size(cmd, size_new));
 
 	unlock_vg(cmd, VG_GLOBAL);
 
