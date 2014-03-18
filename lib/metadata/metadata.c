@@ -1408,7 +1408,7 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name,
 		log_warn("WARNING: Forcing physical volume creation on "
 			  "%s%s%s%s", name,
 			  !is_orphan(pv) ? " of volume group \"" : "",
-			  !is_orphan(pv) ? pv_vg_name(pv) : "",
+			  pv_vg_name(pv),
 			  !is_orphan(pv) ? "\"" : "");
 	}
 
