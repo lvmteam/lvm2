@@ -3947,7 +3947,7 @@ int pv_write(struct cmd_context *cmd __attribute__((unused)),
 	if (!allow_non_orphan &&
 	    (!is_orphan_vg(pv->vg_name) || pv->pe_alloc_count)) {
 		log_error("Assertion failed: can't _pv_write non-orphan PV "
-			  "(in VG %s)", pv->vg_name);
+			  "(in VG %s)", pv_vg_name(pv));
 		return 0;
 	}
 

@@ -558,7 +558,7 @@ int pv_resize_single(struct cmd_context *cmd,
 	uint64_t size = 0;
 	int r = 0;
 	const char *pv_name = pv_dev_name(pv);
-	const char *vg_name = pv_vg_name(pv);
+	const char *vg_name = pv->vg_name;
 	struct volume_group *old_vg = vg;
 	int vg_needs_pv_write = 0;
 

@@ -1,5 +1,6 @@
 Version 2.02.106 - 
 ====================================
+  Do not report internal orphan VG names when reporting pvdisplay/pvscan.
   Fix pvdisplay -c man page referencing KB instead of sectors.
   Skip redundant synchronization calls on local clvmd.
   Use correct PATH_MAX for locking dir path.

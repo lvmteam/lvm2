@@ -69,7 +69,8 @@ struct device *pv_dev(const struct physical_volume *pv)
 
 const char *pv_vg_name(const struct physical_volume *pv)
 {
-	return pv_field(pv, vg_name);
+	/* Avoid exposing internal orphan names to users */
+	return (!is_orphan(pv)) ? pv_field(pv, vg_name) : "";
 }
 
 const char *pv_dev_name(const struct physical_volume *pv)

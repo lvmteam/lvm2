@@ -362,7 +362,7 @@ void pvdisplay_colons(const struct physical_volume *pv)
 	}
 
 	log_print("%s:%s:%" PRIu64 ":-1:%" PRIu64 ":%" PRIu64 ":-1:%" PRIu32 ":%u:%u:%u:%s",
-		  pv_dev_name(pv), pv->vg_name, pv->size,
+		  pv_dev_name(pv), pv_vg_name(pv), pv->size,
 		  /* FIXME pv->pv_number, Derive or remove? */
 		  pv->status,	/* FIXME Support old or new format here? */
 		  pv->status & ALLOCATABLE_PV,	/* FIXME remove? */
