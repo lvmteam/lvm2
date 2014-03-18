@@ -429,17 +429,25 @@ struct lvmcache_vginfo *lvmcache_vginfo_from_vgname(const char *vgname, const ch
 	if (!vgname)
 		return lvmcache_vginfo_from_vgid(vgid);
 
-	if (!_vgname_hash)
+	if (!_vgname_hash) {
+		log_debug_cache(INTERNAL_ERROR "Internal cache is no yet initialized.");
 		return NULL;
+	}
 
-	if (!(vginfo = dm_hash_lookup(_vgname_hash, vgname)))
+	if (!(vginfo = dm_hash_lookup(_vgname_hash, vgname))) {
+		log_debug_cache("Metadata cache has no info for vgname: \"%s\"", vgname);
 		return NULL;
+	}
 
 	if (vgid)
 		do
 			if (!strncmp(vgid, vginfo->vgid, ID_LEN))
 				return vginfo;
 		while ((vginfo = vginfo->next));
+
+	if  (!vginfo)
+		log_debug_cache("Metadata cache has not found vgname \"%s\" with vgid \"%s\"",
+				vgname, vgid);
 
 	return vginfo;
 }
@@ -514,15 +522,19 @@ struct lvmcache_vginfo *lvmcache_vginfo_from_vgid(const char *vgid)
 	struct lvmcache_vginfo *vginfo;
 	char id[ID_LEN + 1] __attribute__((aligned(8)));
 
-	if (!_vgid_hash || !vgid)
+	if (!_vgid_hash || !vgid) {
+		log_debug_cache(INTERNAL_ERROR "Internal cache cannot lookup vgid.");
 		return NULL;
+	}
 
 	/* vgid not necessarily NULL-terminated */
 	strncpy(&id[0], vgid, ID_LEN);
 	id[ID_LEN] = '\0';
 
-	if (!(vginfo = dm_hash_lookup(_vgid_hash, id)))
+	if (!(vginfo = dm_hash_lookup(_vgid_hash, id))) {
+		log_debug_cache("Metadata cache has no info for vgid \"%s\"", id);
 		return NULL;
+	}
 
 	return vginfo;
 }
