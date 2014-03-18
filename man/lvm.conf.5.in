@@ -23,12 +23,18 @@ See \fBtags\fP configuration setting description below.
 A profile is a set of selected customizable configuration settings
 that are aimed to achieve a certain characteristics in various
 environments or uses. Normally, the name of the profile should
-reflect that environment or use. LVM itself provides a few predefined
-configuration profiles. Users are allowed to add more profiles
-with different values if needed. For this purpose, there's the \fBdefault.profile\fP
-which contains all settings that are customizable by profiles
-and users are encouraged to copy this profile, then to change the values
-as needed and to remove the settings that are not customized by the new profile.
+reflect that environment or use.
+
+LVM itself provides a few predefined configuration profiles.
+Users are allowed to add more profiles with different values if needed.
+For this purpose, there's the \fBdefault.profile\fP which contains all
+settings that are customizable by profiles. Users are encouraged
+to copy this default profile and edit it as needed. Alternatively,
+the \fBlvm dumpconfig --file <ProfileName.profile> --type profilable <section>\fP
+can be used to generate a configuration with profilable settings for
+given section and save it to new ProfileName.profile (if the section
+is not specified, all profilable settings are reported).
+
 The profiles are stored in #DEFAULT_PROFILE_DIR# directory by default.
 This location can be changed using the \fBconfig/profile_dir\fP setting.
 Each profile configuration is stored in \fBProfileName.profile\fP file

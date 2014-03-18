@@ -978,15 +978,15 @@ activation {
     polling_interval = 15
 }
 
-# Reporting settings.
+# Report settings.
 #
 # report {
     # Align columns on report output.
     # aligned=1
 
     # When buffered reporting is used, the report's content is appended
-    # incrementally for each object being reported until the report is
-    # flushed to output which normally happens at the end of command
+    # incrementally to include each object being reported until the report
+    # is flushed to output which normally happens at the end of command
     # execution. Otherwise, if buffering is not used, each object is
     # reported as soon as its processing is finished.
     # buffered=1

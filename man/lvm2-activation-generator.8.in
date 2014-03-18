@@ -40,7 +40,7 @@ since such LVM volumes are activated automatically as soon as the Volume Group
 is ready (all the Physical Volumes making up the Volume Group are present
 in the system).
 
-The lvm2-activation-generator implements the \fBGenerator Specification\fP
+The lvm2-activation-generator implements the \fBGenerators Specification\fP
 as referenced in \fBsystemd\fP(1).
 .sp
 .SH SEE ALSO
