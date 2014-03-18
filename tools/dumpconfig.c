@@ -126,6 +126,9 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 				  "no effect with --type current");
 			return EINVALID_CMD_LINE;
 		}
+	} else if (arg_count(cmd, mergedconfig_ARG)) {
+		log_error("--mergedconfig has no effect without --type current");
+		return EINVALID_CMD_LINE;
 	}
 
 	if (!_get_vsn(cmd, &tree_spec.version))
