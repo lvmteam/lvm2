@@ -65,10 +65,10 @@ lvremove -ff $vg
 #######################################################
 
 # Not enough drives
-not lvcreate --type raid10 -l2 $vg $dev1 $dev2 $dev3
+not lvcreate --type raid10 -l2 $vg "$dev1" "$dev2" "$dev3"
 
 # Implicit count comes from #PVs given (always 2-way mirror)
-lvcreate --type raid10 -l2 -n raid10 $vg $dev1 $dev2 $dev3 $dev4
+lvcreate --type raid10 -l2 -n raid10 $vg "$dev1" "$dev2" "$dev3" "$dev4"
 lv_devices $vg raid10 4
 lvremove -ff $vg
 

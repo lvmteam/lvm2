@@ -11,29 +11,29 @@ test_description='Test vgs with duplicate vg names'
 
 aux prepare_devs 2
 
-pvcreate $dev1
-pvcreate $dev2
+pvcreate "$dev1"
+pvcreate "$dev2"
 
-aux disable_dev $dev1
-aux disable_dev $dev2
+aux disable_dev "$dev1"
+aux disable_dev "$dev2"
 
-aux enable_dev $dev1
+aux enable_dev "$dev1"
 vgscan
-vgcreate $vg1 $dev1
+vgcreate $vg1 "$dev1"
 UUID1=$(vgs --noheading -o vg_uuid $vg1)
-aux disable_dev $dev1
+aux disable_dev "$dev1"
 
-aux enable_dev $dev2
+aux enable_dev "$dev2"
 vgscan
-vgcreate $vg1 $dev2
+vgcreate $vg1 "$dev2"
 UUID2=$(vgs --noheading -o vg_uuid $vg1)
 
-aux enable_dev $dev1
+aux enable_dev "$dev1"
 # need vgscan after enabling/disabling devs
 # so that the next commands properly see them
 vgscan
-pvs $dev1
-pvs $dev2
+pvs "$dev1"
+pvs "$dev2"
 
 vgs -o+vg_uuid >err
 cat err
@@ -44,19 +44,19 @@ grep $UUID2 err
 # vgs --noheading -o vg_uuid $vg1 >err
 # grep $UUID1 err
 
-aux disable_dev $dev2
+aux disable_dev "$dev2"
 vgs -o+vg_uuid >err
 cat err
 grep $UUID1 err
 not grep $UUID2 err
-aux enable_dev $dev2
+aux enable_dev "$dev2"
 vgscan
 
-aux disable_dev $dev1
+aux disable_dev "$dev1"
 vgs -o+vg_uuid >err
 cat err
 grep $UUID2 err
 not grep $UUID1 err
-aux enable_dev $dev1
+aux enable_dev "$dev1"
 vgscan
 

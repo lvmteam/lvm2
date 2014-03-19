@@ -12,8 +12,8 @@
 . lib/test
 
 aux prepare_devs 2
-pvcreate $dev1
-vgcreate foo $dev1
-pvcreate -ff -y $dev1
+pvcreate "$dev1"
+vgcreate foo "$dev1"
+pvcreate -ff -y "$dev1"
 vgs
-vgcreate foo $dev1
+vgcreate foo "$dev1"

@@ -25,7 +25,7 @@ lv_devices_() {
 	local devs=$(get lv_field $lv devices -a | sed 's/([0-9]*)//g; s/ //g; s/,/ /g')
 
 	for d in $devs; do
-		(echo $devices | grep $d) || return 1
+		(echo "$devices" | grep $d) || return 1
 		devices=$(echo $devices | sed "s/$d//")
 	done
 

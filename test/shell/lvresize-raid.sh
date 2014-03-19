@@ -50,7 +50,7 @@ done
 
 # Bug 1005434
 # Ensure extend is contiguous
-lvcreate --type raid4 -l 2 -i 2 -n $lv1 $vg $dev4 $dev5 $dev6
+lvcreate --type raid4 -l 2 -i 2 -n $lv1 $vg "$dev4" "$dev5" "$dev6"
 lvextend -l +2 --alloc contiguous $vg/$lv1
 check lv_tree_on $vg $lv1 "$dev4" "$dev5" "$dev6"
 

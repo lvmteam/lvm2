@@ -144,7 +144,7 @@ run_syncaction_check() {
 	size=$(get lv_field $vg/${lv}_rimage_1 size -a --units 1k)
 	size=$((${size%\.00k} / 2))
 
-	tmp=$(get pv_field $device mda_size --units 1k)
+	tmp=$(get pv_field "$device" mda_size --units 1k)
 	seek=${tmp%\.00k} # Jump over MDA
 
 	tmp=$(get lv_field $vg/${lv}_rmeta_1 size -a --units 1k)
@@ -156,7 +156,7 @@ run_syncaction_check() {
 	check lv_field $vg/$lv raid_mismatch_count "0"
 
 	# Overwrite the last half of one of the PVs with crap
-	dd if=/dev/urandom of=$device bs=1k count=$size seek=$seek
+	dd if=/dev/urandom of="$device" bs=1k count=$size seek=$seek
 
 	if [ -n "$THIN_POSTFIX" ]; then
 		#

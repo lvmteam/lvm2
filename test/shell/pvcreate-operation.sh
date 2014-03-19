@@ -21,11 +21,11 @@ do
 	if mke2fs "$dev1"; then
 		mount "$dev1" mnt
 		not pvcreate -M$mdatype "$dev1" 2>err
-		grep "Can't open "$dev1" exclusively.  Mounted filesystem?" err
+		grep "Can't open $dev1 exclusively.  Mounted filesystem?" err
 		umount "$dev1"
 		# wipe the filesystem signature for next
 		# pvcreate to not issue any prompts
-		dd if=/dev/zero of=$dev1 bs=1K count=2
+		dd if=/dev/zero of="$dev1" bs=1K count=2
 	fi
 
 # pvcreate (lvm$mdatype) succeeds when run repeatedly (pv not in a vg) (bz178216)
@@ -116,13 +116,13 @@ not pvcreate --uuid $uuid2 --restorefile $backupfile "$dev2"
 
 # vgcfgrestore of a VG containing a PV with zero PEs (bz #820116)
 # (use case: one PV in a VG used solely to keep metadata)
-size_mb=$(($(blockdev --getsz $dev1) / 2048))
-pvcreate --metadatasize $size_mb $dev1
-vgcreate $vg1 $dev1
+size_mb=$(($(blockdev --getsz "$dev1") / 2048))
+pvcreate --metadatasize $size_mb "$dev1"
+vgcreate $vg1 "$dev1"
 vgcfgbackup -f $backupfile
 vgcfgrestore -f $backupfile $vg1
 vgremove -f $vg1
-pvremove -f $dev1
+pvremove -f "$dev1"
 
 # pvcreate rejects non-existent uuid given with restorefile
 not pvcreate --uuid $uuid1 --restorefile $backupfile "$dev1"

@@ -12,9 +12,9 @@
 . lib/test
 
 aux prepare_devs 3
-cp -r $dev1 $DM_DEV_DIR/stray
+cp -r "$dev1" "$DM_DEV_DIR/stray"
 
-vgcreate $vg $dev1 $dev2 $dev3
+vgcreate $vg $(cat DEVICES)
 lvcreate -an -Zn --type mirror -m 1 -l 1 -n mirror $vg
 aux disable_dev "$dev1"
 vgreduce --removemissing --force $vg

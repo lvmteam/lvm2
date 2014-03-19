@@ -13,7 +13,7 @@
 
 aux prepare_vg 3
 
-pvchange --metadataignore y $dev1
+pvchange --metadataignore y "$dev1"
 
 lvcreate -aey --type mirror -m 1 -l 1 -n mirror $vg
 lvchange -a n $vg/mirror

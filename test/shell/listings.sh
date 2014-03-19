@@ -31,7 +31,7 @@ test $(pvs --noheadings -o seg_all,pv_all,lv_all,vg_all $(cat DEVICES) | wc -l) 
 
 vgcreate $vg $(cat DEVICES)
 
-check pv_field $dev1 pv_uuid BADBEE-BAAD-BAAD-BAAD-BAAD-BAAD-BADBEE
+check pv_field "$dev1" pv_uuid BADBEE-BAAD-BAAD-BAAD-BAAD-BAAD-BADBEE
 
 #COMM pvs and vgs report mda_count, mda_free (bz202886, bz247444)
 pvs -o +pv_mda_count,pv_mda_free $(cat DEVICES)
@@ -52,14 +52,14 @@ lvcreate -l4 -s -n $lv2 $vg/$lv1
 test $(lvs --noheadings $vg | wc -l) -eq 2
 # should lvs -a display cow && real devices? (it doesn't)
 test $(lvs -a --noheadings $vg | wc -l)  -eq 2
-dmsetup ls|grep $PREFIX|grep -v "LVMTEST.*pv."
+dmsetup ls | grep "$PREFIX" | grep -v "LVMTEST.*pv."
 lvremove -f $vg/$lv2
 
 #COMM lvs -a displays mirror legs and log
 lvcreate -aey -l4 --type mirror -m2 -n $lv3 $vg
 test $(lvs --noheadings $vg | wc -l) -eq 2
 test $(lvs -a --noheadings $vg | wc -l) -eq 6
-dmsetup ls|grep $PREFIX|grep -v "LVMTEST.*pv."
+dmsetup ls|grep "$PREFIX"|grep -v "LVMTEST.*pv."
 
 #COMM vgs with options from pvs still treats arguments as VGs (bz193543)
 vgs -o pv_name,vg_name $vg
@@ -70,7 +70,7 @@ pvdisplay $(cat DEVICES) >out
 pvdisplay --maps $(cat DEVICES) >out2
 not diff out out2
 
-aux disable_dev $dev1
+aux disable_dev "$dev1"
 pvs -o +pv_uuid | grep BADBEE-BAAD-BAAD-BAAD-BAAD-BAAD-BADBEE
 
 vgremove -ff $vg

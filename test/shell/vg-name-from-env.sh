@@ -11,11 +11,11 @@ test_description='Test the vg name for an lv from env var'
 
 aux prepare_devs 2
 
-pvcreate $dev1
-pvcreate $dev2
+pvcreate "$dev1"
+pvcreate "$dev2"
 
-vgcreate $vg1 $dev1
-vgcreate $vg2 $dev2
+vgcreate $vg1 "$dev1"
+vgcreate $vg2 "$dev2"
 
 export LVM_VG_NAME=$vg1
 

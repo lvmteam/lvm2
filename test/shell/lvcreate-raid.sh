@@ -109,11 +109,11 @@ should check lv_field $vg/raid6 size "72.00m"
 lvremove -ff $vg
 
 # Eat 18 of 37 extents from dev1, leaving 19
-lvcreate -l 18 -n lv $vg $dev1
+lvcreate -l 18 -n lv $vg "$dev1"
 # Using 100% free should take the rest of dev1 and equal from dev2
 # 1 meta takes 1 extent
 # 1 image = 18 extents = 9.00m = lv_size
-lvcreate --type raid1 -m 1 -l 100%FREE -n raid1 $vg $dev1 $dev2
+lvcreate --type raid1 -m 1 -l 100%FREE -n raid1 $vg "$dev1" "$dev2"
 check lv_field $vg/raid1 size "9.00m"
 # Ensure image size is the same as the RAID1 size
 check lv_field $vg/raid1 size `lvs --noheadings -o size $vg/raid1_rimage_0`
@@ -122,7 +122,7 @@ check pv_field "$dev2" pv_free `lvs --noheadings -o size $vg/lv`
 lvremove -ff $vg
 
 # Eat 18 of 37 extents from dev1, leaving 19
-lvcreate -l 18 -n lv $vg $dev1
+lvcreate -l 18 -n lv $vg "$dev1"
 # Using 100% free should take the rest of dev1 and equal amount from the rest
 # 1 meta takes 1 extent
 # 1 image = 18 extents = 9.00m
@@ -134,7 +134,7 @@ check pv_field "$dev6" pv_free `lvs --noheadings -o size $vg/lv`
 lvremove -ff $vg
 
 # Eat 18 of 37 extents from dev1, leaving 19
-lvcreate -l 18 -n lv $vg $dev1
+lvcreate -l 18 -n lv $vg "$dev1"
 # Using 100% free should take the rest of dev1, an equal amount
 # from 2 more devs, and all extents from 3 additional devs
 # 1 meta takes 1 extent
@@ -146,7 +146,7 @@ lvremove -ff $vg
 
 # Let's do some stripe tests too
 # Eat 18 of 37 extents from dev1, leaving 19
-lvcreate -l 18 -n lv $vg $dev1
+lvcreate -l 18 -n lv $vg "$dev1"
 # Using 100% free should take the rest of dev1 and an equal amount from rest
 # 1 image = 19 extents
 # 6 images = 114 extents = 57.00m = lv_size
@@ -155,7 +155,7 @@ check lv_field $vg/stripe size "57.00m"
 lvremove -ff $vg
 
 # Eat 18 of 37 extents from dev1, leaving 19
-lvcreate -l 18 -n lv $vg $dev1
+lvcreate -l 18 -n lv $vg "$dev1"
 # Using 100% free should take the rest of dev1, an equal amount from
 #  one more dev, and all of the remaining 4
 # 1 image = 19+37+37 extents
@@ -168,16 +168,16 @@ lvremove -ff $vg
 #######################################################
 
 # Not enough drives
-not lvcreate --type raid1 -l1 $vg $dev1
-not lvcreate --type raid5 -l2 $vg $dev1 $dev2
-not lvcreate --type raid6 -l3 $vg $dev1 $dev2 $dev3 $dev4
+not lvcreate --type raid1 -l1 $vg "$dev1"
+not lvcreate --type raid5 -l2 $vg "$dev1" "$dev2"
+not lvcreate --type raid6 -l3 $vg "$dev1" "$dev2" "$dev3" "$dev4"
 
 # Implicit count comes from #PVs given (always 2 for mirror though)
-lvcreate --type raid1 -l1 -n raid1 $vg $dev1 $dev2
+lvcreate --type raid1 -l1 -n raid1 $vg "$dev1" "$dev2"
 lv_devices $vg raid1 2
-lvcreate --type raid5 -l2 -n raid5 $vg $dev1 $dev2 $dev3
+lvcreate --type raid5 -l2 -n raid5 $vg "$dev1" "$dev2" "$dev3"
 lv_devices $vg raid5 3
-lvcreate --type raid6 -l3 -n raid6 $vg $dev1 $dev2 $dev3 $dev4 $dev5
+lvcreate --type raid6 -l3 -n raid6 $vg "$dev1" "$dev2" "$dev3" "$dev4" "$dev5"
 lv_devices $vg raid6 5
 lvremove -ff $vg
 

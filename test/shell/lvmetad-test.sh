@@ -13,9 +13,9 @@
 
 aux prepare_pvs 2
 
-vgcreate $vg1 $dev1 $dev2 --test
+vgcreate $vg1 "$dev1" "$dev2" --test
 vgs | not grep $vg1
-vgcreate $vg1 $dev1 $dev2
+vgcreate $vg1 "$dev1" "$dev2"
 vgs | grep $vg1
 
 lvcreate -n bar -l 1 $vg1 --test

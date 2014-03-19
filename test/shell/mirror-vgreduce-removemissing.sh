@@ -126,8 +126,8 @@ check_and_cleanup_lvs_
 #COMM "basic: fail the 2nd mirror image of 2-way mirrored LV"
 prepare_lvs_
 lvcreate -an -Zn -l2 --type mirror -m1 --nosync -n $lv1 $vg "$dev1" "$dev2" "$dev3":$BLOCKS
-mimages_are_on_ $lv1 $dev1 $dev2
-mirrorlog_is_on_ $lv1 $dev3
+mimages_are_on_ $lv1 "$dev1" "$dev2"
+mirrorlog_is_on_ $lv1 "$dev3"
 aux disable_dev "$dev2"
 vgreduce --removemissing --force $vg
 lv_is_linear_ $lv1
@@ -234,7 +234,7 @@ test_3way_mirror_plus_1_fail_3_()
 	lvs -a -o+devices $vg
 	eval local dev=\$dev$n
 	check linear $vg $lv1
-        check lv_on $vg $lv1 $dev
+        check lv_on $vg $lv1 "$dev"
 }
 
 for n in $(seq 1 4); do
@@ -287,7 +287,7 @@ test_2way_mirror_plus_2_fail_3_()
 	vgreduce --removemissing --force $vg
 	lvs -a -o+devices $vg
 	eval local dev=\$dev$n
-	mimages_are_on_ $lv1 $dev || lv_is_on_ $lv1 $dev
+	mimages_are_on_ $lv1 "$dev" || lv_is_on_ $lv1 "$dev"
 	not mirrorlog_is_on_ $lv1 "$dev5"
 }
 

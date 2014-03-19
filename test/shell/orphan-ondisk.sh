@@ -12,4 +12,4 @@
 . lib/test
 
 aux prepare_vg 2
-vgreduce $vg $dev1 2>&1 | not grep -i 'parse error'
+vgreduce $vg "$dev1" 2>&1 | not grep -i 'parse error'
