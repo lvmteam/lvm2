@@ -446,8 +446,8 @@ struct lvmcache_vginfo *lvmcache_vginfo_from_vgname(const char *vgname, const ch
 		while ((vginfo = vginfo->next));
 
 	if  (!vginfo)
-		log_debug_cache("Metadata cache has not found vgname \"%s\" with vgid \"%s\"",
-				vgname, vgid);
+		log_debug_cache("Metadata cache has not found vgname \"%s\" with vgid \"%."
+				DM_TO_STRING(ID_LEN) "s\".", vgname, vgid ? : "");
 
 	return vginfo;
 }
