@@ -109,6 +109,7 @@ static int _init_cluster(void)
 	r = init_comms();
 	if (r) {
 		dm_hash_destroy(_locks);
+		_locks = NULL;
 		return r;
 	}
 
