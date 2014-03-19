@@ -76,7 +76,6 @@ lvchange -an $vg/$lv1
 not lvchange -K -ay $vg/snap
 
 lvs -a -o +tags,thin_id $vg
-dmsetup table
 
 # Test if merge happens
 lvchange -ay $vg/$lv1

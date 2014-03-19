@@ -13,9 +13,7 @@
 
 . lib/test
 
-aux prepare_devs 1
-aux pvcreate -f $dev1
-aux vgcreate $vg $dev1
+aux prepare_vg
 
 # lvcreate wipes signatures when found on newly created LV - test this on "swap".
 # Test all combinatios with -Z{y|n} and -W{y|n} and related lvm.conf settings.
@@ -92,6 +90,4 @@ mkswap "$DM_DEV_DIR/$vg/$lv1"
 blkid -c /dev/null "$DM_DEV_DIR/$vg/$lv1" | grep "swap"
 lvremove -f $vg/$lv1
 
-
-vgremove $vg
-pvremove $dev1
+vgremove -f $vg
