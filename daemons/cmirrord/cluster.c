@@ -985,9 +985,9 @@ static int do_cluster_work(void *data __attribute__((unused)))
 	dm_list_iterate_items_safe(entry, tmp, &clog_cpg_list) {
 		r = cpg_dispatch(entry->handle, CS_DISPATCH_ALL);
 		if (r != CS_OK) {
-			if ((entry->cpg_state == INVALID) &&
-			    (entry->state == LEAVING) &&
-			    (r == CS_ERR_BAD_HANDLE))
+			if ((r == CS_ERR_BAD_HANDLE) &&
+			    ((entry->state == INVALID) ||
+			     (entry->state == LEAVING)))
 				/* It's ok if we've left the cluster */
 				r = CS_OK;
 			else
