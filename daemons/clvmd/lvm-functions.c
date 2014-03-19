@@ -917,6 +917,6 @@ void destroy_lvm(void)
 	if (cmd) {
 		memlock_dec_daemon(cmd);
 		destroy_toolcontext(cmd);
+		cmd = NULL;
 	}
-	cmd = NULL;
 }
