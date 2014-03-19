@@ -91,6 +91,7 @@ int become_daemon(struct cmd_context *cmd, int skip_lvm)
 	strncpy(*cmd->argv, "(lvm2)", strlen(*cmd->argv));
 
 	if (!skip_lvm) {
+		lvmcache_destroy(cmd, 1);
 		reset_locking();
 		if (!lvmcache_init())
 			/* FIXME Clean up properly here */
