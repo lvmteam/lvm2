@@ -47,6 +47,7 @@ static struct cft_check_handle *_get_cft_check_handle(struct cmd_context *cmd, s
 			log_error("Configuration check handle allocation failed.");
 			return NULL;
 		}
+		handle->cmd = cmd;
 		handle->cft = cft;
 		if (cft == cmd->cft)
 			cmd->cft_check_handle = handle;
@@ -67,7 +68,7 @@ static int _do_def_check(struct cmd_context *cmd, struct dm_config_tree *cft,
 	handle->skip_if_checked = 1;
 	handle->suppress_messages = 1;
 
-	config_def_check(cmd, handle);
+	config_def_check(handle);
 	*cft_check_handle = handle;
 
 	return 1;
@@ -155,7 +156,7 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 		cft_check_handle->skip_if_checked = 1;
 		cft_check_handle->suppress_messages = 0;
 
-		if (config_def_check(cmd, cft_check_handle)) {
+		if (config_def_check(cft_check_handle)) {
 			log_print("LVM configuration valid.");
 			goto out;
 		} else {

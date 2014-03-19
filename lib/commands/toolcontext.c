@@ -269,8 +269,9 @@ static int _check_config(struct cmd_context *cmd)
 	}
 
 	cmd->cft_check_handle->cft = cmd->cft;
+	cmd->cft_check_handle->cmd = cmd;
 
-	if (!config_def_check(cmd, cmd->cft_check_handle) &&
+	if (!config_def_check(cmd->cft_check_handle) &&
 	    find_config_tree_bool(cmd, config_abort_on_errors_CFG, NULL)) {
 		log_error("LVM configuration invalid.");
 		return 0;

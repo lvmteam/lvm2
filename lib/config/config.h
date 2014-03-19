@@ -165,6 +165,7 @@ int load_pending_profiles(struct cmd_context *cmd);
 
 /* configuration check handle for each instance of the validation check */
 struct cft_check_handle {
+	struct cmd_context *cmd;	/* command context */
 	struct dm_config_tree *cft;	/* the tree for which the check is done */
 	config_source_t source;		/* configuration source */
 	unsigned force_check:1;		/* force check even if disabled by config/checks setting */
@@ -174,7 +175,7 @@ struct cft_check_handle {
 };
 
 int config_def_get_path(char *buf, size_t buf_size, int id);
-int config_def_check(struct cmd_context *cmd, struct cft_check_handle *handle);
+int config_def_check(struct cft_check_handle *handle);
 
 int override_config_tree_from_string(struct cmd_context *cmd, const char *config_settings);
 int override_config_tree_from_profile(struct cmd_context *cmd, struct profile *profile);
