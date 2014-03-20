@@ -1120,30 +1120,27 @@ static int verify_message(char *buf, int len)
 
 static void dump_message(char *buf, int len)
 {
-	unsigned char row[8] = { 0 };
+	unsigned char row[8];
 	char str[9];
-	int i, j, pos = 0;
+	int i, j = 0;
 
+	str[8] = '\0';
 	if (len > 128)
 		len = 128;
 
-	for (i = 0; i < len; i++) {
-		row[pos++] = buf[i];
+	for (i = 0; i < len; ++i) {
+		row[j] = buf[i];
+		str[j] = (isprint(buf[i])) ? buf[i] : ' ';
 
-		if ((pos == 8) || (i + 1 == len)) {
-			memset(str, 0, sizeof(str));
-
-			for (j = 0; j < 8; j++) {
-				if (isprint(row[j]))
-					str[j] = row[j];
-				else
-					str[j] = ' ';
+		if ((j == 8) || (i + 1 == len)) {
+			for (;j < 8; ++j) {
+				row[j] = 0;
+				str[j] = ' ';
 			}
 
 			log_error("%02x %02x %02x %02x %02x %02x %02x %02x [%s]",
 				  row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], str);
-			pos = 0;
-			memset(row, 0, sizeof(row));
+			j = 0;
 		}
 	}
 }
