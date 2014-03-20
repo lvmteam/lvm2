@@ -567,7 +567,7 @@ int main(int argc, char *argv[])
 
 	if (!clops) {
 		DEBUGLOG("Can't initialise cluster interface\n");
-		log_error("Can't initialise cluster interface\n");
+		log_error("Can't initialise cluster interface.");
 		child_init_signal_and_exit(DFAIL_CLUSTER_IF);
 		/* NOTREACHED */
 	}
@@ -1077,7 +1077,7 @@ static int verify_message(char *buf, int len)
 	struct clvm_header *h = (struct clvm_header *)buf;
 
 	if (len < (int)sizeof(struct clvm_header)) {
-		log_error("verify_message short len %d", len);
+		log_error("verify_message short len %d.", len);
 		return -1;
 	}
 
@@ -1099,19 +1099,19 @@ static int verify_message(char *buf, int len)
 	case CLVMD_CMD_SYNC_NAMES:
 		break;
 	default:
-		log_error("verify_message bad cmd %x", h->cmd);
+		log_error("verify_message bad cmd %x.", h->cmd);
 		return -1;
 	}
 
 	/* TODO: we may be able to narrow len/flags/clientid/arglen checks based on cmd */
 
 	if (h->flags & ~(CLVMD_FLAG_LOCAL | CLVMD_FLAG_SYSTEMLV | CLVMD_FLAG_NODEERRS | CLVMD_FLAG_REMOTE)) {
-		log_error("verify_message bad flags %x", h->flags);
+		log_error("verify_message bad flags %x.", h->flags);
 		return -1;
 	}
 
 	if (h->arglen > max_cluster_message) {
-		log_error("verify_message bad arglen %x max %d", h->arglen, max_cluster_message);
+		log_error("verify_message bad arglen %x max %d.", h->arglen, max_cluster_message);
 		return -1;
 	}
 
@@ -1565,7 +1565,7 @@ static void process_remote_command(struct clvm_header *msg, int msglen, int fd,
 	if (msg->cmd == CLVMD_CMD_GOAWAY) {
 
 		DEBUGLOG("Told to go away by %s\n", nodename);
-		log_error("Told to go away by %s\n", nodename);
+		log_error("Told to go away by %s.", nodename);
 		exit(99);
 	}
 
@@ -1745,7 +1745,7 @@ static __attribute__ ((noreturn)) void *pre_and_post_thread(void *arg)
 		/* Tell the parent process we have finished this bit */
 		while ((write_status = write(pipe_fd, &status, sizeof(int))) != sizeof(int))
 			if (write_status >=0 || (errno != EINTR && errno != EAGAIN)) {
-				log_error("Error sending to pipe: %m\n");
+				log_error("Error sending to pipe: %m");
 				break;
 			}
 
@@ -1771,7 +1771,7 @@ static __attribute__ ((noreturn)) void *pre_and_post_thread(void *arg)
 
 		while ((write_status = write(pipe_fd, &status, sizeof(int))) != sizeof(int))
 			if (write_status >=0 || (errno != EINTR && errno != EAGAIN)) {
-				log_error("Error sending to pipe: %m\n");
+				log_error("Error sending to pipe: %m");
 				break;
 			}
 next_pre:
@@ -1835,7 +1835,7 @@ static int process_reply(const struct clvm_header *msg, int msglen, const char *
 	if (!(client = find_client(msg->clientid))) {
 		DEBUGLOG("Got message for unknown client 0x%x\n",
 			 msg->clientid);
-		log_error("Got message for unknown client 0x%x\n",
+		log_error("Got message for unknown client 0x%x.",
 			  msg->clientid);
 		return -1;
 	}
@@ -2105,7 +2105,7 @@ static int add_to_lvmqueue(struct local_client *client, struct clvm_header *msg,
 
 	if (msglen) {
 		if (!(cmd->msg = dm_malloc(msglen))) {
-			log_error("Unable to allocate buffer space\n");
+			log_error("Unable to allocate buffer space.");
 			dm_free(cmd);
 			return -1;
 		}
@@ -2238,7 +2238,7 @@ void process_message(struct local_client *client, char *buf, int len,
 	if (rv < 0) {
 		memset(nodename, 0, sizeof(nodename));
 		clops->name_from_csid(csid, nodename);
-		log_error("process_message from %s len %d bad verify", nodename, len);
+		log_error("process_message from %s len %d bad verify.", nodename, len);
 		dump_message(buf, len);
 		return;
 	}
