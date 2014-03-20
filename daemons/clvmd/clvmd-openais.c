@@ -197,9 +197,7 @@ static int add_internal_client(int fd, fd_callback_t callback)
 
 	DEBUGLOG("Add_internal_client, fd = %d\n", fd);
 
-	client = calloc(1, sizeof(struct local_client));
-	if (!client)
-	{
+	if (!(client = dm_zalloc(sizeof(*client)))) {
 		DEBUGLOG("malloc failed\n");
 		return -1;
 	}
