@@ -625,7 +625,6 @@ int main(int argc, char *argv[])
 		log_sys_error("pthread_join", "");
 
 	close_local_sock(local_sock);
-	destroy_lvm();
 
 	while ((delfd = local_client_head.next)) {
 		local_client_head.next = delfd->next;
@@ -2101,6 +2100,8 @@ static void *lvm_thread_fn(void *arg)
 		}
 
 	pthread_mutex_unlock(&lvm_thread_mutex);
+
+	destroy_lvm();
 
 	pthread_exit(NULL);
 }
