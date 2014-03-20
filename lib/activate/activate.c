@@ -2348,11 +2348,16 @@ int pv_uses_vg(struct physical_volume *pv,
 
 void activation_release(void)
 {
-	dev_manager_release();
+	if (critical_section())
+		/* May leak stacked operation */
+		log_error("Releasing activation in critical section.");
+
+	fs_unlock(); /* Implicit dev_manager_release(); */
 }
 
 void activation_exit(void)
 {
+	activation_release();
 	dev_manager_exit();
 }
 #endif
