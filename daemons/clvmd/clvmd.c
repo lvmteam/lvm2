@@ -1675,32 +1675,29 @@ static void add_reply_to_list(struct local_client *client, int status,
 {
 	struct node_reply *reply;
 
-	pthread_mutex_lock(&client->bits.localsock.reply_mutex);
-
 	/* Add it to the list of replies */
-	if ((reply = dm_malloc(sizeof(*reply)))) {
-		reply->status = status;
-		clops->name_from_csid(csid, reply->node);
-		DEBUGLOG("Reply from node %s: %d bytes\n", reply->node, len);
-
-		if (len > 0) {
-			if (!(reply->replymsg = dm_malloc(len)))
-				reply->status = ENOMEM;
-			else {
-				memcpy(reply->replymsg, buf, len);
-			}
-		} else {
-			reply->replymsg = NULL;
-		}
-		/* Hook it onto the reply chain */
-		reply->next = client->bits.localsock.replies;
-		client->bits.localsock.replies = reply;
-	} else {
+	if (!(reply = dm_zalloc(sizeof(*reply)))) {
 		/* It's all gone horribly wrong... */
-		pthread_mutex_unlock(&client->bits.localsock.reply_mutex);
 		send_local_reply(client, ENOMEM, client->fd);
 		return;
 	}
+
+	reply->status = status;
+	clops->name_from_csid(csid, reply->node);
+	DEBUGLOG("Reply from node %s: %d bytes\n", reply->node, len);
+
+	if (len > 0) {
+		if (!(reply->replymsg = dm_malloc(len)))
+			reply->status = ENOMEM;
+		else
+			memcpy(reply->replymsg, buf, len);
+	} else
+		reply->replymsg = NULL;
+
+	pthread_mutex_lock(&client->bits.localsock.reply_mutex);
+	/* Hook it onto the reply chain */
+	reply->next = client->bits.localsock.replies;
+	client->bits.localsock.replies = reply;
 	DEBUGLOG("Got %d replies, expecting: %d\n",
 		 client->bits.localsock.num_replies + 1,
 		 client->bits.localsock.expected_replies);
