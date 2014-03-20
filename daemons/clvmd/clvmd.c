@@ -636,6 +636,8 @@ int main(int argc, char *argv[])
 		dm_free(delfd);
 	}
 
+	DEBUGLOG("cluster_closedown\n");
+	destroy_lvhash();
 	clops->cluster_closedown();
 
 	ret = 0;

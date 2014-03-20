@@ -121,8 +121,6 @@ static void _cluster_closedown(void)
 {
 	close_comms();
 
-	DEBUGLOG("cluster_closedown\n");
-	destroy_lvhash();
 	/* If there is any awaited resource, kill it softly */
 	pthread_mutex_lock(&_lock_mutex);
 	dm_hash_destroy(_locks);
