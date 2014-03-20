@@ -445,7 +445,7 @@ void memlock_inc_daemon(struct cmd_context *cmd)
 {
 	++_memlock_count_daemon;
 	if (_memlock_count_daemon == 1 && _critical_section > 0)
-                log_error(INTERNAL_ERROR "_memlock_inc_daemon used in critical section.");
+		log_error(INTERNAL_ERROR "_memlock_inc_daemon used in critical section.");
 	log_debug_mem("memlock_count_daemon inc to %d", _memlock_count_daemon);
 	_lock_mem_if_needed(cmd);
 }
