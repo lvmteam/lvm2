@@ -456,6 +456,11 @@ void memlock_dec_daemon(struct cmd_context *cmd)
 		log_error(INTERNAL_ERROR "_memlock_count_daemon has dropped below 0.");
 	--_memlock_count_daemon;
 	log_debug_mem("memlock_count_daemon dec to %d", _memlock_count_daemon);
+	if (!_memlock_count_daemon && _critical_section && _mem_locked) {
+		log_error("Unlocking daemon memory in critical section.");
+		_unlock_mem(cmd);
+		_mem_locked = 0;
+	}
 	_unlock_mem_if_possible(cmd);
 }
 
