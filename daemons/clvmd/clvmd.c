@@ -1167,7 +1167,7 @@ static int cleanup_zombie(struct local_client *thisfd)
 	if (thisfd->bits.localsock.in_progress) {
 		pthread_kill(thisfd->bits.localsock.threadid, SIGUSR2);
 		if (pthread_mutex_trylock(&thisfd->bits.localsock.mutex))
-			goto bail;
+			return 1;
 		thisfd->bits.localsock.state = POST_COMMAND;
 		pthread_cond_signal(&thisfd->bits.localsock.cond);
 		pthread_mutex_unlock(&thisfd->bits.localsock.mutex);
@@ -1228,8 +1228,6 @@ static int cleanup_zombie(struct local_client *thisfd)
 	safe_close(&(thisfd->fd));
 	thisfd->bits.localsock.cleanup_needed = 0;
 	return 0;
-bail:
-	return 1;
 }
 
 /* Called when we have a read from the local socket.
