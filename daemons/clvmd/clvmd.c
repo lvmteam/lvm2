@@ -89,6 +89,7 @@ static pthread_t lvm_thread;
 /* Stack size 128KiB for thread, must be bigger then DEFAULT_RESERVED_STACK */
 static const size_t STACK_SIZE = 128 * 1024;
 static pthread_attr_t stack_attr;
+static int lvm_thread_exit = 0;
 static pthread_mutex_t lvm_thread_mutex;
 static pthread_cond_t lvm_thread_cond;
 static pthread_barrier_t lvm_start_barrier;
@@ -617,6 +618,7 @@ int main(int argc, char *argv[])
 	main_loop(local_sock, cmd_timeout);
 
 	pthread_mutex_lock(&lvm_thread_mutex);
+	lvm_thread_exit = 1;
 	pthread_cond_signal(&lvm_thread_cond);
 	pthread_mutex_unlock(&lvm_thread_mutex);
 	if ((errno = pthread_join(lvm_thread, NULL)))
@@ -2081,7 +2083,7 @@ static void *lvm_thread_fn(void *arg)
 	/* Now wait for some actual work */
 	pthread_mutex_lock(&lvm_thread_mutex);
 
-	while (!quit) {
+	while (!lvm_thread_exit)
 		if (dm_list_empty(&lvm_cmd_head)) {
 			DEBUGLOG("LVM thread waiting for work\n");
 			pthread_cond_wait(&lvm_thread_cond, &lvm_thread_mutex);
@@ -2097,7 +2099,6 @@ static void *lvm_thread_fn(void *arg)
 
 			pthread_mutex_lock(&lvm_thread_mutex);
 		}
-	}
 
 	pthread_mutex_unlock(&lvm_thread_mutex);
 
@@ -2109,6 +2110,9 @@ static int add_to_lvmqueue(struct local_client *client, struct clvm_header *msg,
 			   int msglen, const char *csid)
 {
 	struct lvm_thread_cmd *cmd;
+
+	if (lvm_thread_exit)
+		return -1; /* We are about to exit */
 
 	cmd = malloc(sizeof(struct lvm_thread_cmd));
 	if (!cmd)
