@@ -1223,11 +1223,6 @@ static int cleanup_zombie(struct local_client *thisfd)
 	/* Free the command buffer */
 	dm_free(thisfd->bits.localsock.cmd);
 
-	/* Clear out the cross-link */
-	if (thisfd->bits.localsock.pipe_client != NULL)
-		thisfd->bits.localsock.pipe_client->bits.pipe.client =
-		    NULL;
-
 	safe_close(&(thisfd->fd));
 	thisfd->bits.localsock.cleanup_needed = 0;
 	return 0;
