@@ -1,5 +1,9 @@
 Version 2.02.106 - 
 ====================================
+  Reindent some clvmd.c code.
+  Use dm_malloc function in clvmd.c.
+  Resolve memory release order for clvmd shutdown.
+  Report error when lvm2 activation is released in critical_section.
   Fix memory corruption when pvscan reports long pv names.
   Do not report internal orphan VG names when reporting pvdisplay/pvscan.
   Fix pvdisplay -c man page referencing KB instead of sectors.
