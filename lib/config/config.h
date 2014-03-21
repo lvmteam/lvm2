@@ -141,6 +141,8 @@ struct config_def_tree_spec {
 #define CFG_USED		0x01
 /* flag to mark the item as valid in a config tree instance during validation */
 #define CFG_VALID		0x02
+/* flag to mark the item as having the value different from default one */
+#define CFG_DIFF		0x04
 
 /*
  * Register ID for each possible item in the configuration tree.
@@ -171,6 +173,7 @@ struct cft_check_handle {
 	unsigned force_check:1;		/* force check even if disabled by config/checks setting */
 	unsigned skip_if_checked:1;	/* skip the check if already done before - return last state */
 	unsigned suppress_messages:1;	/* suppress messages during the check if config item is found invalid */
+	unsigned check_diff:1;		/* check if the value used differs from default one */
 	uint8_t status[CFG_COUNT];	/* flags for each configuration item - the result of the check */
 };
 
