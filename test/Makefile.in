@@ -141,6 +141,7 @@ lib/paths: $(srcdir)/Makefile.in .lib-dir-stamp
 	echo 'export THIN=@THIN@' >> $@-t
 	echo 'export LVMETAD_PIDFILE="@LVMETAD_PIDFILE@"' >> $@-t
 	echo 'export DMEVENTD_PIDFILE="@DMEVENTD_PIDFILE@"' >> $@-t
+	echo 'export CLVMD_PIDFILE="@CLVMD_PIDFILE@"' >> $@-t
 	mv $@-t $@
 
 LIB = lib/not lib/should lib/harness \
