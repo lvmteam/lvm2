@@ -1261,7 +1261,6 @@ static int read_from_local_sock(struct local_client *thisfd)
 
 	/* EOF or error on socket */
 	if (len <= 0) {
-		thisfd->bits.localsock.cleanup_needed = 1;
 		cleanup_zombie(thisfd); /* we ignore errors here */
 		return 0;
 	} else {
@@ -1457,6 +1456,7 @@ static int read_from_local_sock(struct local_client *thisfd)
 		/* Run the pre routine */
 		thisfd->bits.localsock.in_progress = TRUE;
 		thisfd->bits.localsock.state = PRE_COMMAND;
+		thisfd->bits.localsock.cleanup_needed = 1;
 		DEBUGLOG("Creating pre&post thread\n");
 		status = pthread_create(&thisfd->bits.localsock.threadid,
 					&stack_attr, pre_and_post_thread, thisfd);
