@@ -132,7 +132,7 @@ static int open_local_sock(void);
 static void close_local_sock(int local_socket);
 static int check_local_clvmd(void);
 static struct local_client *find_client(int clientid);
-static void main_loop(int local_sock, int cmd_timeout);
+static void main_loop(int cmd_timeout);
 static void be_daemon(int start_timeout);
 static int check_all_clvmds_running(struct local_client *client);
 static int local_rendezvous_callback(struct local_client *thisfd, char *buf,
@@ -615,7 +615,7 @@ int main(int argc, char *argv[])
 	signal(SIGINT, sigterm_handler);
 
 	/* Do some work */
-	main_loop(local_sock, cmd_timeout);
+	main_loop(cmd_timeout);
 
 	pthread_mutex_lock(&lvm_thread_mutex);
 	lvm_thread_exit = 1;
@@ -820,7 +820,7 @@ static void request_timed_out(struct local_client *client)
 }
 
 /* This is where the real work happens */
-static void main_loop(int local_sock, int cmd_timeout)
+static void main_loop(int cmd_timeout)
 {
 	sigset_t ss;
 
