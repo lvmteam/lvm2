@@ -42,7 +42,7 @@ struct lvmcache_vginfo;
 int lvmcache_init(void);
 void lvmcache_allow_reads_with_lvmetad(void);
 
-void lvmcache_destroy(struct cmd_context *cmd, int retain_orphans);
+void lvmcache_destroy(struct cmd_context *cmd, int retain_orphans, int reset);
 
 /* Set full_scan to 1 to reread every filtered device label or
  * 2 to rescan /dev for new devices */

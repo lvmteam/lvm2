@@ -363,7 +363,7 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 
 	if (cmd->filter->wipe)
 		cmd->filter->wipe(cmd->filter);
-	lvmcache_destroy(cmd, 1);
+	lvmcache_destroy(cmd, 1, 0);
 
 	/* populate lvmcache */
 	if (!lvmetad_vg_list_to_lvmcache(cmd))

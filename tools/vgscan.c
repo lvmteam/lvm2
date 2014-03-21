@@ -44,7 +44,7 @@ int vgscan(struct cmd_context *cmd, int argc, char **argv)
 
 	if (cmd->filter->wipe)
 		cmd->filter->wipe(cmd->filter);
-	lvmcache_destroy(cmd, 1);
+	lvmcache_destroy(cmd, 1, 0);
 
 	if (arg_count(cmd, cache_ARG)) {
 		if (lvmetad_active()) {

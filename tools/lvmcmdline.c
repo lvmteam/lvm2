@@ -1185,7 +1185,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
       out:
 	if (test_mode()) {
 		log_verbose("Test mode: Wiping internal cache");
-		lvmcache_destroy(cmd, 1);
+		lvmcache_destroy(cmd, 1, 0);
 	}
 
 	if ((old_cft = remove_config_tree_by_source(cmd, CONFIG_STRING))) {

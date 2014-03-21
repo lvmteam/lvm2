@@ -185,7 +185,7 @@ static int vg_rename_path(struct cmd_context *cmd, const char *old_vg_path,
 	/* FIXME lvmcache corruption - vginfo duplicated instead of renamed */
 	if (cmd->filter->wipe)
 		cmd->filter->wipe(cmd->filter);
-	lvmcache_destroy(cmd, 1);
+	lvmcache_destroy(cmd, 1, 0);
 
 	return 1;
 

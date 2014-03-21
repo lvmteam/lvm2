@@ -1621,7 +1621,7 @@ static void _lvmcache_destroy_lockname(struct dm_hash_node *n)
 			  dm_hash_get_key(_lock_hash, n));
 }
 
-void lvmcache_destroy(struct cmd_context *cmd, int retain_orphans)
+void lvmcache_destroy(struct cmd_context *cmd, int retain_orphans, int reset)
 {
 	struct dm_hash_node *n;
 	log_verbose("Wiping internal VG cache");
@@ -1647,8 +1647,11 @@ void lvmcache_destroy(struct cmd_context *cmd, int retain_orphans)
 	}
 
 	if (_lock_hash) {
-		dm_hash_iterate(n, _lock_hash)
-			_lvmcache_destroy_lockname(n);
+		if (reset)
+			_vg_global_lock_held = 0;
+		else
+			dm_hash_iterate(n, _lock_hash)
+				_lvmcache_destroy_lockname(n);
 		dm_hash_destroy(_lock_hash);
 		_lock_hash = NULL;
 	}
