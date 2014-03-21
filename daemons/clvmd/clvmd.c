@@ -636,6 +636,8 @@ int main(int argc, char *argv[])
 		dm_free(delfd);
 	}
 
+	clops->cluster_closedown();
+
 	ret = 0;
 out:
 	dm_hash_destroy(lvm_params.excl_uuid);
@@ -957,7 +959,6 @@ static void main_loop(int local_sock, int cmd_timeout)
 	}
 
       closedown:
-	clops->cluster_closedown();
 	if (quit)
 		DEBUGLOG("SIGTERM received\n");
 }
