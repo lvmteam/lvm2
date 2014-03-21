@@ -684,6 +684,6 @@ struct cluster_ops *init_openais_cluster(void)
 {
 	if (!_init_cluster())
 		return &_cluster_openais_ops;
-	else
-		return NULL;
+
+	return NULL;
 }

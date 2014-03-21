@@ -268,16 +268,13 @@ static int hold_lock(char *resource, int mode, int flags)
 	}
 	if (lvi) {
 		/* Already exists - convert it */
-		status =
-		    sync_lock(resource, mode, flags, &lvi->lock_id);
+		status = sync_lock(resource, mode, flags, &lvi->lock_id);
 		saved_errno = errno;
 		if (!status)
 			lvi->lock_mode = mode;
-
-		if (status) {
+		else
 			DEBUGLOG("hold_lock. convert to %d failed: %s\n", mode,
 				 strerror(errno));
-		}
 		errno = saved_errno;
 	} else {
 		lvi = malloc(sizeof(struct lv_info));
@@ -607,9 +604,8 @@ int post_lock_lv(unsigned char command, unsigned char lock_flags,
 	    (command & LCK_CLUSTER_VG)) {
 		int oldmode;
 
-		DEBUGLOG
-		    ("post_lock_lv: resource '%s', cmd = %s, flags = %s\n",
-		     resource, decode_locking_cmd(command), decode_flags(lock_flags));
+		DEBUGLOG("post_lock_lv: resource '%s', cmd = %s, flags = %s\n",
+			 resource, decode_locking_cmd(command), decode_flags(lock_flags));
 
 		/* If the lock state is PW then restore it to what it was */
 		oldmode = get_current_lock(resource);
