@@ -1179,29 +1179,20 @@ static int cleanup_zombie(struct local_client *thisfd)
 
 		/* Remove the pipe client */
 		if (thisfd->bits.localsock.pipe_client) {
-			struct local_client *newfd;
-			struct local_client *lastfd = NULL;
-			struct local_client *free_fd = NULL;
+			struct local_client *delfd;
+			struct local_client *lastfd;
 
 			(void) close(thisfd->bits.localsock.pipe_client->fd);	/* Close pipe */
 			(void) close(thisfd->bits.localsock.pipe);
 
 			/* Remove pipe client */
-			for (newfd = &local_client_head; newfd != NULL;
-			     newfd = newfd->next) {
-				if (thisfd->bits.localsock.
-				    pipe_client == newfd) {
-					thisfd->bits.localsock.
-					    pipe_client = NULL;
-
-					lastfd->next = newfd->next;
-					free_fd = newfd;
-					newfd->next = lastfd;
-					dm_free(free_fd);
+			for (lastfd = &local_client_head; (delfd = lastfd->next); lastfd = delfd)
+				if (thisfd->bits.localsock.pipe_client == delfd) {
+					thisfd->bits.localsock.pipe_client = NULL;
+					lastfd->next = delfd->next;
+					dm_free(delfd);
 					break;
 				}
-				lastfd = newfd;
-			}
 		}
 	}
 
