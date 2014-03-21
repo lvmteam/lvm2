@@ -625,18 +625,13 @@ int main(int argc, char *argv[])
 	close_local_sock(local_sock);
 	destroy_lvm();
 
-	for (newfd = local_client_head.next; newfd != NULL;) {
-		delfd = newfd;
-		newfd = newfd->next;
-		if (delfd->fd == local_sock)
-			delfd->fd = -1;
-		/*
-		 * FIXME:
-		 * needs cleanup code from read_from_local_sock() for now
-		 * break of 'clvmd' may access already free memory here.
-		 */
-		safe_close(&(delfd->fd));
-		cmd_client_cleanup(delfd);
+	while ((delfd = local_client_head.next)) {
+		local_client_head.next = delfd->next;
+		/* Failing cleanup_zombie leaks... */
+		if (delfd->type == LOCAL_SOCK && !cleanup_zombie(delfd))
+			cmd_client_cleanup(delfd); /* calls sync_unlock */
+		if (delfd->fd != local_sock)
+			safe_close(&(delfd->fd));
 		dm_free(delfd);
 	}
 
