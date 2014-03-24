@@ -740,6 +740,9 @@ static int _check_value_differs_from_default(struct cft_check_handle *handle,
 					diff = strcmp(str, v->v.str);
 				}
 				break;
+			case DM_CFG_EMPTY_ARRAY:
+				diff = v_def->type != DM_CFG_EMPTY_ARRAY;
+				break;
 			default:
 				log_error(INTERNAL_ERROR "inconsistent state reached in _check_value_differs_from_default");
 				return 0;
