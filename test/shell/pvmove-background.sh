@@ -15,7 +15,7 @@
 
 aux prepare_vg 3
 
-lvcreate -l1 -n $lv1 $vg "$dev1"
+lvcreate -aey -l1 -n $lv1 $vg "$dev1"
 
 lvs -o +devices | grep $dev1
 pvmove -i 1 -b "$dev1" "$dev2"
