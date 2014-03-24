@@ -45,10 +45,7 @@ int lvm1_present(struct cmd_context *cmd)
 		return 0;
 	}
 
-	if (path_exists(path))
-		return 1;
-	else
-		return 0;
+	return (path_exists(path)) ? 1 : 0;
 }
 
 int list_segment_modules(struct dm_pool *mem, const struct lv_segment *seg,
