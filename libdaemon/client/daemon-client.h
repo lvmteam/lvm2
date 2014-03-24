@@ -102,7 +102,7 @@ static inline int64_t daemon_reply_int(daemon_reply r, const char *path, int64_t
 }
 
 static inline const char *daemon_reply_str(daemon_reply r, const char *path, const char *def) {
-	return dm_config_find_str(r.cft->root, path, def);
+	return dm_config_find_str_allow_empty(r.cft->root, path, def);
 }
 
 
