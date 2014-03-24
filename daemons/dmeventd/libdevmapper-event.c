@@ -553,8 +553,8 @@ static struct dm_task *_get_device_info(const struct dm_event_handler *dmevh)
 
 	if (!info.exists) {
 		log_error("_get_device_info: %s%s%s%.0d%s%.0d%s%s: device not found",
-			  dmevh->uuid ? : "", 
-			  (!dmevh->uuid && dmevh->dev_name) ? dmevh->dev_name : "", 
+			  dmevh->uuid ? : "",
+			  (!dmevh->uuid && dmevh->dev_name) ? dmevh->dev_name : "",
 			  (!dmevh->uuid && !dmevh->dev_name && dmevh->major > 0) ? "(" : "",
 			  (!dmevh->uuid && !dmevh->dev_name && dmevh->major > 0) ? dmevh->major : 0,
 			  (!dmevh->uuid && !dmevh->dev_name && dmevh->major > 0) ? ":" : "",
@@ -564,7 +564,6 @@ static struct dm_task *_get_device_info(const struct dm_event_handler *dmevh)
 		goto bad;
 	}
 
-		  
 	return dmt;
 
       bad:
