@@ -688,7 +688,7 @@ static char *_fetch_string(char **src, const int delimiter)
 static int _parse_message(struct dm_event_daemon_message *msg, char **dso_name,
 			 char **uuid, enum dm_event_mask *evmask)
 {
-	char *id = NULL;
+	char *id;
 	char *p = msg->data;
 
 	if ((id = _fetch_string(&p, ' ')) &&
@@ -841,7 +841,7 @@ static char *_skip_string(char *src, const int delimiter)
 
 int dm_event_set_timeout(const char *device_path, uint32_t timeout)
 {
-	struct dm_event_daemon_message msg = { 0, 0, NULL };
+	struct dm_event_daemon_message msg = { 0 };
 
 	if (!device_exists(device_path))
 		return -ENODEV;
@@ -853,7 +853,7 @@ int dm_event_set_timeout(const char *device_path, uint32_t timeout)
 int dm_event_get_timeout(const char *device_path, uint32_t *timeout)
 {
 	int ret;
-	struct dm_event_daemon_message msg = { 0, 0, NULL };
+	struct dm_event_daemon_message msg = { 0 };
 
 	if (!device_exists(device_path))
 		return -ENODEV;
