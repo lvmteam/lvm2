@@ -1619,7 +1619,7 @@ int refresh_toolcontext(struct cmd_context *cmd)
 	cmd->lib_dir = NULL;
 
 	if (!_init_lvm_conf(cmd))
-		return 0;
+		return_0;
 
 	/* Temporary duplicate cft pointer holding lvm.conf - replaced later */
 	cft_tmp = cmd->cft;
@@ -1631,45 +1631,45 @@ int refresh_toolcontext(struct cmd_context *cmd)
 
 	/* Init tags from lvm.conf. */
 	if (!_init_tags(cmd, cft_tmp))
-		return 0;
+		return_0;
 
 	/* Doesn't change cmd->cft */
 	if (!_init_tag_configs(cmd))
-		return 0;
+		return_0;
 
 	/* Merge all the tag config files with lvm.conf, returning a
 	 * fresh cft pointer in place of cft_tmp. */
 	if (!(cmd->cft = _merge_config_files(cmd, cft_tmp)))
-		return 0;
+		return_0;
 
 	/* Finally we can make the proper, fully-merged, cmd->cft */
 	if (cft_cmdline)
 		cmd->cft = dm_config_insert_cascaded_tree(cft_cmdline, cmd->cft);
 
 	if (!_process_config(cmd))
-		return 0;
+		return_0;
 
 	if (!(cmd->dev_types = create_dev_types(cmd->proc_dir,
 						find_config_tree_node(cmd, devices_types_CFG, NULL))))
-		return 0;
+		return_0;
 
 	if (!_init_dev_cache(cmd))
-		return 0;
+		return_0;
 
 	if (!_init_filters(cmd, 0))
-		return 0;
+		return_0;
 
 	if (!_init_formats(cmd))
-		return 0;
+		return_0;
 
 	if (!init_lvmcache_orphans(cmd))
-		return 0;
+		return_0;
 
 	if (!_init_segtypes(cmd))
-		return 0;
+		return_0;
 
 	if (!_init_backup(cmd))
-		return 0;
+		return_0;
 
 	cmd->config_initialized = 1;
 
