@@ -64,13 +64,6 @@ for i in h b s k m g t p e H B S K M G T P E; do
 done
 fi
 
-
-# test vgexport vgimport tools
-vgchange -an $vg
-vgexport $vg
-vgimport $vg
-vgchange -ay $vg
-
 # "-persistent y --major 254 --minor 20"
 # "-persistent n"
 # test various lvm utils

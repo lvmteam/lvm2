@@ -16,6 +16,12 @@ aux prepare_devs 2
 vgcreate --metadatasize 128k $vg1 "$dev1"
 lvcreate -l100%FREE -n $lv1 $vg1
 
+# Test plain vgexport vgimport tools
+vgchange -an $vg1
+vgexport $vg1
+vgimport $vg1
+vgchange -ay $vg1
+
 # Clone the LUN
 dd if="$dev1" of="$dev2" bs=256K count=1
 aux notify_lvmetad "$dev2"
