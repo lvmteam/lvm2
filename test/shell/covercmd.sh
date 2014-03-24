@@ -77,7 +77,6 @@ for i in pr "p rw" an ay "-monitor y" "-monitor n" \
 done
 
 pvck "$dev1"
-vgck $vg
 vgs -o all $vg
 lvrename $vg $lv $lv-rename
 vgcfgbackup -f backup.$$ $vg
@@ -87,7 +86,12 @@ pvremove -y -ff "$dev5"
 not vgcfgrestore  -f backup.$$ $vg
 pvcreate -u $TEST_UUID --restorefile  backup.$$ "$dev5"
 vgremove -f $vg
+
+# test pvresize functionality
+not pvresize
+not pvresize --setphysicalvolumesize -10M "$dev1"
 pvresize --setphysicalvolumesize 10M "$dev1"
+pvresize "$dev1"
 
 # test various errors and obsoleted tools
 not lvmchange
