@@ -114,8 +114,7 @@ void lvmetad_set_token(const struct dm_config_value *filter)
 {
 	int ft = 0;
 
-	if (_lvmetad_token)
-		dm_free(_lvmetad_token);
+	dm_free(_lvmetad_token);
 
 	while (filter && filter->type == DM_CFG_STRING) {
 		ft = calc_crc(ft, (const uint8_t *) filter->v.str, strlen(filter->v.str));

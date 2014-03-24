@@ -169,15 +169,13 @@ static int _clear_dev_from_lvmetad_cache(dev_t devno, int32_t major, int32_t min
 	if (!dm_asprintf(&buf, "%" PRIi32 ":%" PRIi32, major, minor))
 		stack;
 	if (!lvmetad_pv_gone(devno, buf ? : "", handler)) {
-		if (buf)
-			dm_free(buf);
+		dm_free(buf);
 		return 0;
 	}
 
 	log_print_unless_silent("Device %s not found. "
 				"Cleared from lvmetad cache.", buf ? : "");
-	if (buf)
-		dm_free(buf);
+	dm_free(buf);
 
 	return 1;
 }

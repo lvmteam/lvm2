@@ -677,10 +677,8 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 		if (!dev_close(mdac->area.dev))
 			stack;
 
-		if (fidtc->raw_metadata_buf) {
-			dm_free(fidtc->raw_metadata_buf);
-			fidtc->raw_metadata_buf = NULL;
-		}
+		dm_free(fidtc->raw_metadata_buf);
+		fidtc->raw_metadata_buf = NULL;
 	}
 
 	return r;
@@ -766,10 +764,9 @@ static int _vg_commit_raw_rlocn(struct format_instance *fid,
 	if (!precommit) {
 		if (!dev_close(mdac->area.dev))
 			stack;
-		if (fidtc->raw_metadata_buf) {
-			dm_free(fidtc->raw_metadata_buf);
-			fidtc->raw_metadata_buf = NULL;
-		}
+
+		dm_free(fidtc->raw_metadata_buf);
+		fidtc->raw_metadata_buf = NULL;
 	}
 
 	return r;

@@ -700,8 +700,7 @@ static int _parse_message(struct dm_event_daemon_message *msg, char **dso_name,
 		return 0;
 	}
 
-	if (id)
-		dm_free(id);
+	dm_free(id);
 	return -ENOMEM;
 }
 
@@ -863,12 +862,13 @@ int dm_event_get_timeout(const char *device_path, uint32_t *timeout)
 		if (!p) {
 			log_error("malformed reply from dmeventd '%s'\n",
 				  msg.data);
+			dm_free(msg.data);
 			return -EIO;
 		}
 		*timeout = atoi(p);
 	}
-	if (msg.data)
-		dm_free(msg.data);
+	dm_free(msg.data);
+
 	return ret;
 }
 #endif
