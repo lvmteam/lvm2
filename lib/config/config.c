@@ -537,6 +537,97 @@ static void _log_type_error(const char *path, cfg_def_type_t actual,
 					     actual_type_name, expected_type_name);
 }
 
+static struct dm_config_value *_get_def_array_values(struct dm_config_tree *cft,
+						     const cfg_def_item_t *def)
+{
+	char *enc_value, *token, *p, *r;
+	struct dm_config_value *array = NULL, *v = NULL, *oldv = NULL;
+
+	if (!def->default_value.v_CFG_TYPE_STRING) {
+		if (!(array = dm_config_create_value(cft))) {
+			log_error("Failed to create default empty array for %s.", def->name);
+			return NULL;
+		}
+		array->type = DM_CFG_EMPTY_ARRAY;
+		return array;
+	}
+
+	if (!(p = token = enc_value = dm_strdup(def->default_value.v_CFG_TYPE_STRING))) {
+		log_error("_get_def_array_values: dm_strdup failed");
+		return NULL;
+	}
+	/* Proper value always starts with '#'. */
+	if (token[0] != '#')
+		goto bad;
+
+	while (token) {
+		/* Move to type identifier. Error on no char. */
+		token++;
+		if (!token[0])
+			goto bad;
+
+		/* Move to the actual value and decode any "##" into "#". */
+		p = token + 1;
+		while ((p = strchr(p, '#')) && p[1] == '#') {
+			memmove(p, p + 1, strlen(p));
+			p++;
+		}
+		/* Separate the value out of the whole string. */
+		if (p)
+			p[0] = '\0';
+
+		if (!(v = dm_config_create_value(cft))) {
+			log_error("Failed to create default config array value for %s.", def->name);
+			dm_free(enc_value);
+			return NULL;
+		}
+		if (oldv)
+			oldv->next = v;
+		if (!array)
+			array = v;
+
+		switch (toupper(token[0])) {
+			case 'I':
+			case 'B':
+				v->v.i = strtoll(token + 1, &r, 10);
+				if (*r)
+					goto bad;
+				v->type = DM_CFG_INT;
+				break;
+			case 'F':
+				v->v.f = strtod(token + 1, &r);
+				if (*r)
+					goto bad;
+				v->type = DM_CFG_FLOAT;
+				break;
+			case 'S':
+				if (!(r = dm_pool_strdup(cft->mem, token + 1))) {
+					dm_free(enc_value);
+					log_error("Failed to duplicate token for default "
+						  "array value of %s.", def->name);
+					return NULL;
+				}
+				v->v.str = r;
+				v->type = DM_CFG_STRING;
+				break;
+			default:
+				goto bad;
+		}
+
+		oldv = v;
+		token = p;
+	}
+
+	dm_free(enc_value);
+	return array;
+bad:
+	log_error(INTERNAL_ERROR "Default array value malformed for \"%s\", "
+		  "value: \"%s\", token: \"%s\".", def->name,
+		  def->default_value.v_CFG_TYPE_STRING, token);
+	dm_free(enc_value);
+	return NULL;
+}
+
 static int _config_def_check_node_single_value(struct cft_check_handle *handle,
 					       const char *rp, const struct dm_config_value *v,
 					       const cfg_def_item_t *def)
@@ -1212,97 +1303,6 @@ int config_write(struct dm_config_tree *cft,
 	}
 
 	return r;
-}
-
-static struct dm_config_value *_get_def_array_values(struct dm_config_tree *cft,
-						     cfg_def_item_t *def)
-{
-	char *enc_value, *token, *p, *r;
-	struct dm_config_value *array = NULL, *v = NULL, *oldv = NULL;
-
-	if (!def->default_value.v_CFG_TYPE_STRING) {
-		if (!(array = dm_config_create_value(cft))) {
-			log_error("Failed to create default empty array for %s.", def->name);
-			return NULL;
-		}
-		array->type = DM_CFG_EMPTY_ARRAY;
-		return array;
-	}
-
-	if (!(p = token = enc_value = dm_strdup(def->default_value.v_CFG_TYPE_STRING))) {
-		log_error("_get_def_array_values: dm_strdup failed");
-		return NULL;
-	}
-	/* Proper value always starts with '#'. */
-	if (token[0] != '#')
-		goto bad;
-
-	while (token) {
-		/* Move to type identifier. Error on no char. */
-		token++;
-		if (!token[0])
-			goto bad;
-
-		/* Move to the actual value and decode any "##" into "#". */
-		p = token + 1;
-		while ((p = strchr(p, '#')) && p[1] == '#') {
-			memmove(p, p + 1, strlen(p));
-			p++;
-		}
-		/* Separate the value out of the whole string. */
-		if (p)
-			p[0] = '\0';
-
-		if (!(v = dm_config_create_value(cft))) {
-			log_error("Failed to create default config array value for %s.", def->name);
-			dm_free(enc_value);
-			return NULL;
-		}
-		if (oldv)
-			oldv->next = v;
-		if (!array)
-			array = v;
-
-		switch (toupper(token[0])) {
-			case 'I':
-			case 'B':
-				v->v.i = strtoll(token + 1, &r, 10);
-				if (*r)
-					goto bad;
-				v->type = DM_CFG_INT;
-				break;
-			case 'F':
-				v->v.f = strtod(token + 1, &r);
-				if (*r)
-					goto bad;
-				v->type = DM_CFG_FLOAT;
-				break;
-			case 'S':
-				if (!(r = dm_pool_strdup(cft->mem, token + 1))) {
-					dm_free(enc_value);
-					log_error("Failed to duplicate token for default "
-						  "array value of %s.", def->name);
-					return NULL;
-				}
-				v->v.str = r;
-				v->type = DM_CFG_STRING;
-				break;
-			default:
-				goto bad;
-		}
-
-		oldv = v;
-		token = p;
-	}
-
-	dm_free(enc_value);
-	return array;
-bad:
-	log_error(INTERNAL_ERROR "Default array value malformed for \"%s\", "
-		  "value: \"%s\", token: \"%s\".", def->name,
-		  def->default_value.v_CFG_TYPE_STRING, token);
-	dm_free(enc_value);
-	return NULL;
 }
 
 static struct dm_config_node *_add_def_node(struct dm_config_tree *cft,
