@@ -1865,7 +1865,6 @@ static int _create_vg_text_instance(struct format_instance *fid,
 		return 0;
 	}
 
-	fidtc->raw_metadata_buf = NULL;
 	fid->private = (void *) fidtc;
 
 	if (type & FMT_INSTANCE_PRIVATE_MDAS) {
