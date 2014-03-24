@@ -57,7 +57,7 @@ xx(dumpconfig,
    PERMITTED_READ_ONLY,
    "dumpconfig\n"
    "\t[-f|--file filename] \n"
-   "\t[--type {current|default|missing|new|profilable} \n"
+   "\t[--type {current|default|diff|missing|new|profilable} \n"
    "\t[--atversion version]] \n"
    "\t[--ignoreadvanced] \n"
    "\t[--ignoreunsupported] \n"

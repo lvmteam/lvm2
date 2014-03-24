@@ -121,7 +121,8 @@ typedef enum {
 	CFG_DEF_TREE_COMPLETE,		/* CURRENT + MISSING, the tree actually used within execution, not implemented yet */
 	CFG_DEF_TREE_DEFAULT,		/* tree of all possible config nodes with default values */
 	CFG_DEF_TREE_NEW,		/* tree of all new nodes that appeared in given version */
-	CFG_DEF_TREE_PROFILABLE		/* tree of all nodes that are customizable by profiles */
+	CFG_DEF_TREE_PROFILABLE,	/* tree of all nodes that are customizable by profiles */
+	CFG_DEF_TREE_DIFF,		/* tree of all nodes that differ from defaults */
 } cfg_def_tree_t;
 
 /* configuration definition tree specification */

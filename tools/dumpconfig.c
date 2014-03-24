@@ -56,17 +56,22 @@ static struct cft_check_handle *_get_cft_check_handle(struct cmd_context *cmd, s
 	return handle;
 }
 
-static int _do_def_check(struct cmd_context *cmd, struct dm_config_tree *cft,
+static int _do_def_check(struct config_def_tree_spec *spec,
+			 struct dm_config_tree *cft,
 			 struct cft_check_handle **cft_check_handle)
 {
 	struct cft_check_handle *handle;
 
-	if (!(handle = _get_cft_check_handle(cmd, cft)))
+	if (!(handle = _get_cft_check_handle(spec->cmd, cft)))
 		return 0;
 
 	handle->force_check = 1;
-	handle->skip_if_checked = 1;
 	handle->suppress_messages = 1;
+
+	if (spec->type == CFG_DEF_TREE_DIFF)
+		handle->check_diff = 1;
+	else
+		handle->skip_if_checked = 1;
 
 	config_def_check(handle);
 	*cft_check_handle = handle;
@@ -168,14 +173,14 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 
 	if (!strcmp(type, "current")) {
 		tree_spec.type = CFG_DEF_TREE_CURRENT;
-		if (!_do_def_check(cmd, cft, &cft_check_handle)) {
+		if (!_do_def_check(&tree_spec, cft, &cft_check_handle)) {
 			r = ECMD_FAILED;
 			goto_out;
 		}
 	}
 	else if (!strcmp(type, "missing")) {
 		tree_spec.type = CFG_DEF_TREE_MISSING;
-		if (!_do_def_check(cmd, cft, &cft_check_handle)) {
+		if (!_do_def_check(&tree_spec, cft, &cft_check_handle)) {
 			r = ECMD_FAILED;
 			goto_out;
 		}
@@ -183,6 +188,13 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 	else if (!strcmp(type, "default")) {
 		tree_spec.type = CFG_DEF_TREE_DEFAULT;
 		/* default type does not require check status */
+	}
+	else if (!strcmp(type, "diff")) {
+		tree_spec.type = CFG_DEF_TREE_DIFF;
+		if (!_do_def_check(&tree_spec, cft, &cft_check_handle)) {
+			r = ECMD_FAILED;
+			goto_out;
+		}
 	}
 	else if (!strcmp(type, "new")) {
 		tree_spec.type = CFG_DEF_TREE_NEW;
@@ -209,6 +221,7 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 		tree_spec.check_status = cft_check_handle->status;
 
 	if ((tree_spec.type != CFG_DEF_TREE_CURRENT) &&
+	    (tree_spec.type != CFG_DEF_TREE_DIFF) &&
 	    !(cft = config_def_create_tree(&tree_spec))) {
 		r = ECMD_FAILED;
 		goto_out;

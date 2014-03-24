@@ -1283,6 +1283,10 @@ static int _out_prefix_fn(const struct dm_config_node *cn, const char *line, voi
 		return 0;
 	}
 
+	if ((out->tree_spec->type == CFG_DEF_TREE_DIFF) &&
+	    (!(out->tree_spec->check_status[cn->id] & CFG_DIFF)))
+		return 1;
+
 	cfg_def = cfg_def_get_item_p(cn->id);
 
 	if (out->tree_spec->withcomments) {
@@ -1324,7 +1328,12 @@ static int _out_line_fn(const struct dm_config_node *cn, const char *line, void 
 	struct out_baton *out = baton;
 	struct cfg_def_item *cfg_def = cfg_def_get_item_p(cn->id);
 
+	if ((out->tree_spec->type == CFG_DEF_TREE_DIFF) &&
+	    (!(out->tree_spec->check_status[cn->id] & CFG_DIFF)))
+		return 1;
+
 	fprintf(out->fp, "%s%s\n", (out->tree_spec->type != CFG_DEF_TREE_CURRENT) &&
+				   (out->tree_spec->type != CFG_DEF_TREE_DIFF) &&
 				   (cfg_def->flags & CFG_DEFAULT_UNDEFINED) ? "#" : "", line);
 	return 1;
 }
