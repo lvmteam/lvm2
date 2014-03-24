@@ -372,14 +372,13 @@ int daemon_talk(struct dm_event_fifos *fifos,
 	if (!_daemon_write(fifos, msg)) {
 		stack;
 		dm_free(msg->data);
-		msg->data = 0;
+		msg->data = NULL;
 		return -EIO;
 	}
 
 	do {
-
 		dm_free(msg->data);
-		msg->data = 0;
+		msg->data = NULL;
 
 		if (!_daemon_read(fifos, msg)) {
 			stack;
