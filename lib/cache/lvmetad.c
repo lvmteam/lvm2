@@ -142,6 +142,7 @@ static daemon_reply _lvmetad_send(const char *id, ...)
 	daemon_reply repl;
 	daemon_request req;
 	int try = 0;
+	int time = 0, wait;
 
 retry:
 	req = daemon_request_make(id);
@@ -158,7 +159,7 @@ retry:
 	daemon_request_destroy(req);
 
 	if (!repl.error && !strcmp(daemon_reply_str(repl, "response", ""), "token_mismatch") &&
-	    try < 60 && !test_mode()) {
+	    try < 10 && time < 80000000 && !test_mode()) {
 		/*
 		 * If another process is trying to scan, they might have the
 		 * same future token id and it's better to wait and avoid doing
@@ -171,12 +172,15 @@ retry:
 		 * the update, we back off for a short while (0.2-2 seconds) and
 		 * try again.
 		 */
-		if (!strcmp(daemon_reply_str(repl, "expected", ""), "update in progress") || try % 5)
-			usleep( 50000 + random() % 450000 ); /* 0.05 - 0.5s */
-		else
+		if (!strcmp(daemon_reply_str(repl, "expected", ""), "update in progress") || try % 5) {
+			wait = 50000 + random() % 450000; /* 0.05 - 0.5s */
+			time += wait;
+			usleep( wait );
+		} else {
 			/* If the re-scan fails here, we try again later. */
 			lvmetad_pvscan_all_devs(_lvmetad_cmd, NULL);
-		++ try;
+			++ try;
+		}
 		daemon_reply_destroy(repl);
 		goto retry;
 	}
