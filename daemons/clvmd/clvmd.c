@@ -2020,11 +2020,8 @@ static void *lvm_thread_fn(void *arg)
 	/* Now wait for some actual work */
 	pthread_mutex_lock(&lvm_thread_mutex);
 
-	while (!lvm_thread_exit)
-		if (dm_list_empty(&lvm_cmd_head)) {
-			DEBUGLOG("LVM thread waiting for work\n");
-			pthread_cond_wait(&lvm_thread_cond, &lvm_thread_mutex);
-		} else {
+	for (;;) {
+		while (!dm_list_empty(&lvm_cmd_head)) {
 			cmd = dm_list_item(dm_list_first(&lvm_cmd_head),
 					   struct lvm_thread_cmd);
 			dm_list_del(&cmd->list);
@@ -2036,6 +2033,13 @@ static void *lvm_thread_fn(void *arg)
 
 			pthread_mutex_lock(&lvm_thread_mutex);
 		}
+
+		if  (lvm_thread_exit)
+			break;
+
+		DEBUGLOG("LVM thread waiting for work\n");
+		pthread_cond_wait(&lvm_thread_cond, &lvm_thread_mutex);
+	}
 
 	pthread_mutex_unlock(&lvm_thread_mutex);
 	DEBUGLOG("LVM thread exits\n");
@@ -2050,9 +2054,6 @@ static int add_to_lvmqueue(struct local_client *client, struct clvm_header *msg,
 			   int msglen, const char *csid)
 {
 	struct lvm_thread_cmd *cmd;
-
-	if (lvm_thread_exit)
-		return -1; /* We are about to exit */
 
 	if (!(cmd = dm_malloc(sizeof(*cmd))))
 		return ENOMEM;
@@ -2081,6 +2082,12 @@ static int add_to_lvmqueue(struct local_client *client, struct clvm_header *msg,
 	DEBUGLOG("add_to_lvmqueue: cmd=%p. client=%p, msg=%p, len=%d, csid=%p, xid=%d\n",
 		 cmd, client, msg, msglen, csid, cmd->xid);
 	pthread_mutex_lock(&lvm_thread_mutex);
+	if (lvm_thread_exit) {
+		pthread_mutex_unlock(&lvm_thread_mutex);
+		dm_free(cmd->msg);
+		dm_free(cmd);
+		return -1; /* We are about to exit */
+	}
 	dm_list_add(&lvm_cmd_head, &cmd->list);
 	pthread_cond_signal(&lvm_thread_cond);
 	pthread_mutex_unlock(&lvm_thread_mutex);
