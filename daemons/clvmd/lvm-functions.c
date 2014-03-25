@@ -182,6 +182,15 @@ static void remove_info(const char *resource)
 {
 	pthread_mutex_lock(&lv_hash_lock);
 	dm_hash_remove(lv_hash, resource);
+
+	/* When last lock is remove, validate there are not left opened devices */
+	if (!dm_hash_get_first(lv_hash)) {
+		if (dev_cache_check_for_open_devices())
+			log_error(INTERNAL_ERROR "Nothing is locked however there are still opened devices.");
+		if (critical_section())
+			log_error(INTERNAL_ERROR "Nothing is locked however clvmd is left in critical section.");
+	}
+
 	pthread_mutex_unlock(&lv_hash_lock);
 }
 
