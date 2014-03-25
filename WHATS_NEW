@@ -1,5 +1,6 @@
 Version 2.02.106 - 
 ====================================
+  Reinitialise lvmcache properly on fork to fix premature polldaemon exit.
   Add 'lvm dumpconfig --type diff' to show differences from defaults.
   Fix swap signature detection for devices smaller then 2MB.
   Reindent some clvmd.c code.
