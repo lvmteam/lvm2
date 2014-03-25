@@ -206,6 +206,8 @@ log "$TAIL -n 75 /var/log/messages >> \"$dir/messages\" 2>> \"$log\""
 myecho "Gathering /etc/lvm info..."
 log "$LS -laR /etc/lvm >> \"$dir/etc_lvm_listing\" 2>> \"$log\""
 log "$CP -RL --preserve=all /etc/lvm \"$dir/lvm\" 2>> \"$log\""
+log "$LVM dumpconfig --type diff --file \"$dir/config_diff\" 2>> \"$log\""
+log "$LVM dumpconfig --type missing --file \"$dir/config_missing\" 2>> \"$log\""
 
 myecho "Gathering /dev listing..."
 log "$LS -laR /dev >> \"$dir/dev_listing\" 2>> \"$log\""

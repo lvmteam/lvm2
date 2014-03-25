@@ -1,5 +1,6 @@
 Version 2.02.106 - 
 ====================================
+  Include 'lvm dumpconfig --type missing' and '--type diff' output to lvmdump.
   Return failure when specifying negative size for pvresize.
   Fix memory corruption in cmd context refresh if clvmd leaks opened device.
   Reinitialise lvmcache properly on fork to fix premature polldaemon exit.
