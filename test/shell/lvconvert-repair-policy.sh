@@ -30,7 +30,7 @@ repair_() {
 	lvconvert --repair --use-policies --config "$1" $vg/mirror
 }
 
-lvcreate -aey --type mirror -m 1 -L 1 -n mirror $vg
+lvcreate -aey --type mirror -m 1 --ignoremonitoring -l 2 -n mirror $vg "$dev1" "$dev2" "$dev3:0"
 lvchange -a n $vg/mirror
 
 # Fail a leg of a mirror.
