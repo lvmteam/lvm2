@@ -13,11 +13,22 @@
 
 aux prepare_pvs 4
 
+# No automatic backup
+aux lvmconf "backup/backup = 0"
+
 # vgcfgbackup handles similar VG names (bz458941)
 vg1=${PREFIX}vg00
 vg2=${PREFIX}vg01
 vgcreate $vg1 "$dev1"
 vgcreate $vg2 "$dev2"
+
+# Enforces system backup
+test ! -e etc/backup/$vg1
+test ! -e etc/backup/$vg2
+vgcfgbackup
+test -e etc/backup/$vg1
+test -e etc/backup/$vg2
+
 vgcfgbackup -f bak-%s >out
 grep "Volume group \"$vg1\" successfully backed up." out
 grep "Volume group \"$vg2\" successfully backed up." out
