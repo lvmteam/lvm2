@@ -27,11 +27,14 @@ pvcreate --norestorefile -u $TEST_UUID --metadatacopies 0 "$dev5"
 vgcreate $vg $(cat DEVICES)
 lvcreate -l 5 -i5 -I256 -n $lv $vg
 
+lvcreate -l 5 -n $lv1 $vg
+lvcreate -s -l 5 -n $lv2 $vg/$lv1
+
 if aux have_readline; then
 # test *scan and *display tools
 cat <<EOF | lvm
 pvscan --uuid
-vgscan
+vgscan --mknodes
 lvscan
 lvmdiskscan
 vgdisplay --units k $vg
@@ -39,8 +42,11 @@ lvdisplay --units g $vg
 pvdisplay -c "$dev1"
 pvdisplay -s "$dev1"
 vgdisplay -c $vg
+vgdisplay -C $vg
 vgdisplay -s $vg
 lvdisplay -c $vg
+lvdisplay -C $vg
+lvdisplay -m $vg
 EOF
 
 for i in h b s k m g t p e H B S K M G T P E; do
@@ -48,7 +54,7 @@ for i in h b s k m g t p e H B S K M G T P E; do
 done | lvm
 else
 pvscan --uuid
-vgscan
+vgscan --mknodes
 lvscan
 lvmdiskscan
 vgdisplay --units k $vg
@@ -56,18 +62,36 @@ lvdisplay --units g $vg
 pvdisplay -c "$dev1"
 pvdisplay -s "$dev1"
 vgdisplay -c $vg
+vgdisplay -C $vg
 vgdisplay -s $vg
 lvdisplay -c $vg
+lvdisplay -C $vg
+lvdisplay -m $vg
 
 for i in h b s k m g t p e H B S K M G T P E; do
 	pvdisplay --units $i "$dev1"
 done
 fi
 
+not lvdisplay -C -m $vg
+not lvdisplay -c -v $vg
+not lvdisplay --aligned $vg
+not lvdisplay --noheadings $vg
+not lvdisplay --options lv_name $vg
+not lvdisplay --separator : $vg
+not lvdisplay --sort size $vg
+not lvdisplay --unbuffered $vg
+
+not vgdisplay -C -A
+not vgdisplay -C -c
+not vgdisplay -C -s
+not vgdisplay -c -s
+not vgdisplay -A $vg1
+
 # "-persistent y --major 254 --minor 20"
 # "-persistent n"
 # test various lvm utils
-for i in dumpconfig formats segtypes; do
+for i in dumpconfig devtypes formats segtypes tags; do
 	lvm $i
 done
 
@@ -88,8 +112,12 @@ pvcreate -u $TEST_UUID --restorefile  backup.$$ "$dev5"
 vgremove -f $vg
 
 # test pvresize functionality
+# missing params
 not pvresize
+# negative size
 not pvresize --setphysicalvolumesize -10M "$dev1"
+# not existing device
+not pvresize --setphysicalvolumesize 10M "$dev7"
 pvresize --setphysicalvolumesize 10M "$dev1"
 pvresize "$dev1"
 
@@ -98,6 +126,8 @@ not lvmchange
 not lvrename $vg
 not lvrename $vg-xxx
 not lvrename $vg  $vg/$lv-rename $vg/$lv
+not lvscan $vg
+not vgscan $vg
 
 #test vgdisplay -A to select only active VGs
 # all LVs active - VG considered active
