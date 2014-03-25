@@ -1604,7 +1604,8 @@ int refresh_toolcontext(struct cmd_context *cmd)
 		cmd->filter->destroy(cmd->filter);
 		cmd->filter = NULL;
 	}
-	dev_cache_exit();
+	if (!dev_cache_exit())
+		stack;
 	_destroy_dev_types(cmd);
 	_destroy_tags(cmd);
 

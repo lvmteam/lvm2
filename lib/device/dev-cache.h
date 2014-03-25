@@ -36,7 +36,8 @@ struct dev_filter {
  */
 struct cmd_context;
 int dev_cache_init(struct cmd_context *cmd);
-void dev_cache_exit(void);
+int dev_cache_check_for_open_devices(void);
+int dev_cache_exit(void);
 
 /* Trigger(1) or avoid(0) a scan */
 void dev_cache_scan(int do_scan);
