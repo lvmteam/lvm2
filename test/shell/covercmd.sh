@@ -27,7 +27,7 @@ pvcreate --norestorefile -u $TEST_UUID --metadatacopies 0 "$dev5"
 vgcreate $vg $(cat DEVICES)
 lvcreate -l 5 -i5 -I256 -n $lv $vg
 
-lvcreate -l 5 -n $lv1 $vg
+lvcreate -aey -l 5 -n $lv1 $vg
 lvcreate -s -l 5 -n $lv2 $vg/$lv1
 
 if aux have_readline; then
