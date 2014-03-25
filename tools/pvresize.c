@@ -52,7 +52,7 @@ int pvresize(struct cmd_context *cmd, int argc, char **argv)
 
 	if (arg_sign_value(cmd, physicalvolumesize_ARG, SIGN_NONE) == SIGN_MINUS) {
 		log_error("Physical volume size may not be negative");
-		return 0;
+		return EINVALID_CMD_LINE;
 	}
 
 	params.new_size = arg_uint64_value(cmd, physicalvolumesize_ARG,
