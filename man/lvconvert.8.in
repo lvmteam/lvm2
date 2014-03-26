@@ -333,14 +333,23 @@ a suitable value automatically.
 "None" is equivalent to specifying zero.
 .TP
 .B \-\-repair
-Repair a mirror after suffering a disk failure. The mirror will be brought back
-into a consistent state.  By default, the original number of mirrors will be
+Repair a mirror after suffering a disk failure or try to fix thin pool metadata.
+
+The mirror will be brought back into a consistent state.
+By default, the original number of mirrors will be
 restored if possible.  Specify \fB\-y\fP on the command line to skip
 the prompts. Use \fB\-f\fP if you do not want any replacement.
 Additionally, you may use \fB\-\-use\-policies\fP to use the device
 replacement policy specified in \fBlvm.conf\fP(5),
 viz. activation/mirror_log_fault_policy or
 activation/mirror_device_fault_policy.
+
+Thin pool repair automates the use of \fBthin_repair\fP(8) tool.
+Only inactive thin pool volumes can be repaired.
+There is no validation of metadata between kernel and lvm2.
+This requires further manual work.
+After successfull repair the old unmodified metadata are still
+available in \fB<pool>_tmeta<n>\fP LV.
 .TP
 .B \-\-replace \fIPhysicalVolume
 Remove the specified device (\fIPhysicalVolume\fP) and replace it with one
@@ -498,4 +507,5 @@ cache pool LV.
 .BR lvscan (8),
 .BR vgcreate (8),
 .BR thin_dump (8),
+.BR thin_repair (8)
 .BR thin_restore (8)
