@@ -142,7 +142,7 @@ static daemon_reply _lvmetad_send(const char *id, ...)
 	daemon_reply repl;
 	daemon_request req;
 	int try = 0;
-	int time = 0, wait;
+	int time = 0, wait, sleep = 1;
 
 retry:
 	req = daemon_request_make(id);
@@ -172,14 +172,16 @@ retry:
 		 * the update, we back off for a short while (0.2-2 seconds) and
 		 * try again.
 		 */
-		if (!strcmp(daemon_reply_str(repl, "expected", ""), "update in progress") || try % 5) {
+		if (!strcmp(daemon_reply_str(repl, "expected", ""), "update in progress") || sleep) {
 			wait = 50000 + random() % 450000; /* 0.05 - 0.5s */
 			time += wait;
 			usleep( wait );
+			-- sleep;
 		} else {
 			/* If the re-scan fails here, we try again later. */
 			lvmetad_pvscan_all_devs(_lvmetad_cmd, NULL);
 			++ try;
+			sleep = 5;
 		}
 		daemon_reply_destroy(repl);
 		goto retry;
