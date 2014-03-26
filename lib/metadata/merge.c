@@ -231,8 +231,7 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 				     (seg->chunk_size > DM_THIN_MAX_DATA_BLOCK_SIZE))) ||
 				    (seg_is_cache_pool(seg) &&
 				     ((seg->chunk_size < DM_CACHE_MIN_DATA_BLOCK_SIZE) ||
-				     (seg->chunk_size > DM_CACHE_MAX_DATA_BLOCK_SIZE))))
-{
+				     (seg->chunk_size > DM_CACHE_MAX_DATA_BLOCK_SIZE)))) {
 					log_error("LV %s: %spool segment %u has chunk size %u out of range.",
 						  lv->name,
 						  seg_is_thin_pool(seg) ?
