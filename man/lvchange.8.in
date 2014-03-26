@@ -41,7 +41,7 @@ lvchange \- change attributes of a logical volume
 .RB [ \-\-[raid]writebehind
 .IR IOCount ]
 .RB [ \-\-[raid]writemostly
-.IR PhysicalVolume[:{t|n|y}] ]
+.IR PhysicalVolume [ : { t | n | y }]]
 .RB [ \-\-sysinit ]
 .RB [ \-\-noudevsync ]
 .RB [ \-M | \-\-persistent
@@ -166,7 +166,7 @@ If \fIrepair\fP is used, the discrepancies will be corrected as they are
 encountered.  The 'lvs' command can be used to show the number of
 discrepancies found or repaired.
 .TP
-.BR \-\-[raid]writebehind " IOCount"
+.BR \-\-[raid]writebehind " " \fIIOCount
 Specify the maximum number of outstanding writes that are allowed to
 devices in a RAID1 logical volume that are marked as \fIwrite-mostly\fP.
 Once this value is exceeded, writes become synchronous (i.e. all writes
@@ -174,7 +174,7 @@ to the constituent devices must complete before the array signals the
 write has completed).  Setting the value to zero clears the preference
 and allows the system to choose the value arbitrarily.
 .TP
-.BR \-\-[raid]writemostly " PhysicalVolume[:{t|y|n}]"
+.IR \fB\-\-[raid]writemostly " " PhysicalVolume [ : { t | y | n }]
 Mark a device in a RAID1 logical volume as \fIwrite-mostly\fP.  All reads
 to these drives will be avoided unless absolutely necessary.  This keeps
 the number of I/Os to the drive to a minimum.  The default behavior is to

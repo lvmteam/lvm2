@@ -4,14 +4,11 @@ lvmetad \- LVM metadata cache daemon
 .SH SYNOPSIS
 .B lvmetad
 .RB [ \-l
-.RI {all|wire|debug}
-.RB ]
+.RI { all | wire | debug }]
 .RB [ \-p
-.RI pidfile_path
-.RB ]
+.IR pidfile_path ]
 .RB [ \-s
-.RI socket_path
-.RB ]
+.IR socket_path ]
 .RB [ \-f ]
 .RB [ \-h ]
 .RB [ \-V ]
@@ -34,7 +31,7 @@ Don't fork, but run in the foreground.
 .BR \-h ", " \-?
 Show help information.
 .TP
-.BR \-l " {" \fIall | \fIwire | \fIdebug }
+.IR \fB\-l " {" all | wire | debug }
 Select the type of log messages to generate.
 Messages are logged by syslog.  
 Additionally, when -f is given they are also sent to standard error.

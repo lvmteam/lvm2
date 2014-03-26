@@ -60,7 +60,7 @@ lvcreate \- create a logical volume in an existing volume group
 .RB [ \-t | \-\-test ]
 .RB [ \-T | \-\-thin
 .RB [ \-\-cachemode
-.IR { writeback | writethrough }
+.RI { writeback | writethrough }
 .RB [ \-c | \-\-chunksize
 .IR ChunkSize [ bBsSkKmMgG ]]
 .RB [ \-\-discards
@@ -145,7 +145,7 @@ be overridden. If the clustered locking is enabled,
 .IR \fB\-a { a | l } y
 will activate only on the local node.
 .TP
-.IR \fB\-k ", " \fB\-\-setactivationskip " " { y | n }
+.IR \fB\-k ", " \fB\-\-setactivationskip "  {" y | n }
 Controls whether Logical Volumes are persistently flagged to be skipped during
 activation. By default, thin snapshot volumes are flagged for activation skip.
 To activate such volumes, an extra \fB\-K/\-\-ignoreactivationskip\fP option must
@@ -155,11 +155,11 @@ detach the flag for existing volumes. To see whether the flag is attached,
 use \fBlvs\fP command where the state of the flag is reported within
 \fBlv_attr\fP bits.
 .TP
-.IR \fB\-K ", " \fB\-\-ignoreactivationskip
+.BR \-K ", " \-\-ignoreactivationskip
 Ignore the flag to skip Logical Volumes during activation.
 
 .TP
-.BR \-\-cachemode " " { writeback | writethrough }
+.IR \fB\-\-cachemode " " { writeback | writethrough }
 Specifying a cache mode determines when the writes to a cache LV
 are considered complete.  When \fIwriteback\fP is specified, a write is
 considered complete as soon as it is stored in the cache pool LV.

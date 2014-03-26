@@ -91,11 +91,11 @@ lvconvert \- convert a logical volume from linear to mirror or snapshot
 .IR ChunkSize [ bBsSkKmMgG ]]
 .RB [ \-\-discards
 .RI { ignore | nopassdown | passdown }]
-.RB [[ \-\-poolmetadata
-.IR ThinPoolMetadataLogicalVolume { Name | Path }]
+.RB [{ \-\-poolmetadata
+.IR ThinPoolMetadataLogicalVolume { Name | Path }
 |
-.RB [ \-\-poolmetadatasize
-.IR ThinPoolMetadataSize [ bBsSkKmMgG ]]
+.B \-\-poolmetadatasize
+.IR ThinPoolMetadataSize [ bBsSkKmMgG ]}]
 .RB [ \-r | \-\-readahead
 .RI { ReadAheadSectors | auto | none }]
 .RB [ \-\-stripes
@@ -113,24 +113,24 @@ lvconvert \- convert a logical volume from linear to mirror or snapshot
 .RB [ \-v | \-\-verbose ]
 .RB [ \-\-version ]
 .sp
-.B lvconvert \-\-type cache-pool
+.B lvconvert \-\-type \fIcache-pool
 .RB [ \-c | \-\-chunksize
 .IR ChunkSize [ bBsSkKmMgG ]]
 .RB [ \-\-cachemode
 .RI { writeback | writethrough }]
-.RB [[ \-\-poolmetadata
-.IR CachePoolMetadataLogicalVolume { Name | Path }]
+.RB [{ \-\-poolmetadata
+.IR CachePoolMetadataLogicalVolume { Name | Path }
 |
-.RB [ \-\-poolmetadatasize
-.IR CachePoolMetadataSize [ bBsSkKmMgG ]]
+.B \-\-poolmetadatasize
+.IR CachePoolMetadataSize [ bBsSkKmMgG ]}]
 .IR LogicalVolume [ Path ]
 .RI [ PhysicalVolume [ Path ][ :PE [ -PE ]]...]
 .RB [ \-h | \-? | \-\-help ]
 .RB [ \-v | \-\-verbose ]
 .RB [ \-\-version ]
 .sp
-.B lvconvert \-\-type cache
-.RB \-\-cachepool
+.B lvconvert \-\-type \fIcache
+.B \-\-cachepool
 .IR CachePoolLV { Name | Path }
 .IR LogicalVolume [ Path ]
 .RB [ \-h | \-? | \-\-help ]
