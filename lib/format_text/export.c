@@ -450,8 +450,7 @@ static int _print_pvs(struct formatter *f, struct volume_group *vg)
 {
 	struct pv_list *pvl;
 	struct physical_volume *pv;
-	char buffer[4096];
-	char *buf;
+	char buffer[PATH_MAX * 2];
 	const char *name;
 
 	outf(f, "physical_volumes {");
@@ -472,14 +471,13 @@ static int _print_pvs(struct formatter *f, struct volume_group *vg)
 
 		outf(f, "id = \"%s\"", buffer);
 
-		if (!(buf = alloca(dm_escaped_len(pv_dev_name(pv))))) {
-			log_error("temporary stack allocation for device name"
-				  "string failed");
+		if (strlen(pv_dev_name(pv)) >= PATH_MAX) {
+			log_error("pv device name size is out of bounds.");
 			return 0;
 		}
 
 		outhint(f, "device = \"%s\"",
-			dm_escape_double_quotes(buf, pv_dev_name(pv)));
+			dm_escape_double_quotes(buffer, pv_dev_name(pv)));
 		outnl(f);
 
 		if (!_print_flag_config(f, pv->status, PV_FLAGS))
