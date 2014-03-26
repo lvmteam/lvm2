@@ -828,14 +828,14 @@ void vgdisplay_full(const struct volume_group *vg)
 			       (uint64_t) vg->extent_count * vg->extent_size));
 
 	log_print("PE Size               %s",
-		  display_size(vg->cmd, (uint64_t) vg->extent_size));
+		  display_size(vg->cmd, vg->extent_size));
 
 	log_print("Total PE              %u", vg->extent_count);
 
 	log_print("Alloc PE / Size       %u / %s",
 		  vg->extent_count - vg->free_count,
 		  display_size(vg->cmd,
-			       ((uint64_t) vg->extent_count - vg->free_count) *
+			       (uint64_t) (vg->extent_count - vg->free_count) *
 			       vg->extent_size));
 
 	log_print("Free  PE / Size       %u / %s", vg->free_count,
