@@ -3232,7 +3232,7 @@ static int _rename_sub_lv(struct logical_volume *lv,
 		return 0;
 	}
 
-	if (!validate_name(new_name)) {              *
+	if (!validate_name(new_name)) {
 		log_error("Cannot rename \"%s\". New logical volume name \"%s\" is invalid.",
 			  lv->name, new_name);
 		return 0;
