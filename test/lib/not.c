@@ -26,6 +26,14 @@ static int finished(const char *cmd, int status) {
 		if (status)
 			fprintf(stderr, "TEST WARNING: Ignoring command failure.\n");
 		return 0;
+	} else if (!strcmp(cmd, "invalid")) {
+		if (status == 3)
+			return 0;
+		fprintf(stderr, "Test expected exit code 3 (invalid), but got %d.\n", status);
+	} else if (!strcmp(cmd, "fail")) {
+		if (status == 5)
+			return 0;
+		fprintf(stderr, "Test expected exit code 5 (fail), but got %d.\n", status);
 	}
 	return 6;
 }

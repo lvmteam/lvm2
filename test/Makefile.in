@@ -123,6 +123,13 @@ endif
 lib/should: lib/not
 	ln -sf not lib/should
 
+lib/invalid: lib/not
+	ln -sf not lib/invalid
+
+lib/fail: lib/not
+	ln -sf not lib/fail
+
+
 lib/%: lib/%.o .lib-dir-stamp
 	$(CC) $(LDFLAGS) -o $@ $<
 
@@ -144,7 +151,7 @@ lib/paths: $(srcdir)/Makefile.in .lib-dir-stamp
 	echo 'export CLVMD_PIDFILE="@CLVMD_PIDFILE@"' >> $@-t
 	mv $@-t $@
 
-LIB = lib/not lib/should lib/harness \
+LIB = lib/not lib/invalid lib/fail lib/should lib/harness \
       lib/check lib/aux lib/test lib/utils lib/get lib/lvm-wrapper \
       lib/paths
 
