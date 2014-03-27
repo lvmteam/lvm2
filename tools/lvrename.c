@@ -75,16 +75,18 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 	if (strlen(lv_name_new) > maxlen) {
 		log_error("New logical volume path exceeds maximum length "
 			  "of %" PRIsize_t "!", maxlen);
-		return ECMD_FAILED;
+		return EINVALID_CMD_LINE;
 	}
 
 	if (!*lv_name_new) {
 		log_error("New logical volume name may not be blank");
-		return ECMD_FAILED;
+		return EINVALID_CMD_LINE;
 	}
 
-	if (!apply_lvname_restrictions(lv_name_new))
-		return_ECMD_FAILED;
+	if (!apply_lvname_restrictions(lv_name_new)) {
+		stack;
+		return EINVALID_CMD_LINE;
+	}
 
 	if (!validate_name(lv_name_new)) {
 		log_error("New logical volume name \"%s\" is invalid",
