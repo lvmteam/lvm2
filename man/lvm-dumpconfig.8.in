@@ -1,0 +1,97 @@
+.TH "LVM-DUMPCONFIG" "8" "LVM TOOLS #VERSION#" "Red Hat, Inc" "\""
+.SH "NAME"
+lvm-dumpconfig \- dump LVM configuration
+.SH SYNOPSIS
+.B lvm dumpconfig
+.RB [ \-f|\-\-file ]
+.IR filename ]
+.RB [ \-\-type
+.IR {current|default|diff|missing|new|profilable}
+.RB [ \-\-atversion
+.IR version ]
+.RB [ \-\-ignoreadvanced ]
+.RB [ \-\-ignoreunsupported ]
+.RB [ \-\-mergedconfig ]
+.RB [ \-\-validate ]
+.RB [ \-\-withcomments ]
+.RB [ \-\-withversions ]
+.RB [ ConfigurationNode... ]
+
+.SH DESCRIPTION
+lvm dumpconfig produces formatted output with LVM configuration tree.
+
+.SH OPTIONS
+
+.IP "\fB\-f, \-\-file\fP \fI filename"
+Dump configuration to a file named 'filename'.
+
+.IP "\fB\-\-type\fP \fI {current|default|diff|missing|new|profilable}"
+Select the type of configuration to dump. The configuration settings dumped
+have either default values or currently used values assigned based on the
+type selected (if no type is selected, \fB\-\-type current\fP is used
+by default). Whenever a configuration setting with a default value is
+commented out, it means the setting does not have any concrete default
+value defined. All output can be saved and reused as proper \fBlvm.conf\fP(5)
+file.
+.RS
+.IP current 3
+Dump current \fBlvm.conf\fP configuration merged with any \fBtag config\fP
+if used. See also \fBlvm.conf\fP(5) for more info about LVM configuration methods.
+.IP default 3
+Dump all possible configuration settings with default values assigned.
+.IP diff 3
+Dump all configuration settings for which the values used differ from defaults.
+The value assigned for each configuration setting is the value currently used.
+This is actually minimal LVM configuration which can be used without
+a change to current configured behaviour.
+.IP missing 3
+Dump all configuration settings with default values assigned which are
+missing in the configuration currently used and for which LVM automatically
+fallbacks to using these default values.
+.IP new 3
+Dump all new configuration settings introduced in current LVM version
+or specific version as defined by \fB\-\-atversion\fP option.
+.IP profilable 3
+Dump all profilable configuration settings with default values assigned.
+See \fBlvm.conf\fP(5) for more info about \fBprofile config\fP method.
+.RE
+
+.IP "\fB\-\-atversion\fP version"
+Specify an LVM version in x.y.z format where x is the major version,
+the y is the minor version and z is the patchlevel (e.g. 2.2.106).
+When configuration is dumped, the configuration settings recognized
+at this LVM version will be considered only. This can be used
+to dump a configuration that certain LVM version understands and
+which does not contain any newer settings for which LVM would
+issue a warning message when checking the configuration.
+
+.IP "\fB\-\-ignoreadvanced\fP"
+Ignore advanced configuration settings on dump.
+
+.IP "\fB\-\-ignoreunsupported\fP"
+Ignore unsupported configuration settings on dump. These settings are
+either used for debugging purposes only or their support is not yet
+complete and they are not meant to be used in production.
+
+.IP "\fB\-\-mergedconfig\fP"
+When the dumpconfig command is run with the \fB\-\-config\fP option
+(a common option that is recognized by all LVM tools, see also
+\fBlvm\fP(8)), merge this configuration with current configuration
+used (see \fB\-\-type current\fP above). Otherwise, only the
+configuration specified within \fB\-\-config\fP option is dumped.
+
+.IP "\fB\-\-validate\fP"
+Validate current configuration used and exit with appropriate
+return code. The validation is done even if \fBconfig/checks\fP
+\fBlvm.conf\fP(5) option is disabled.
+
+.IP "\fB\-\-withcomments\fP"
+Also dump comments for each configuration node.
+
+.IP "\fB\-\-withversions\fP"
+Also dump a comment containing the version of introduction for
+each configuration node.
+
+.SH SEE ALSO
+.BR lvm (8)
+.BR lvm.conf (5)

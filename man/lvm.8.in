@@ -588,6 +588,7 @@ All tools return a status code of zero on success or non-zero on failure.
 .I $HOME/.lvm_history
 .SH SEE ALSO
 .BR lvm.conf (5),
+.BR lvm\ dumpconfig (8),
 .BR clvmd (8),
 .BR lvchange (8),
 .BR lvcreate (8),
