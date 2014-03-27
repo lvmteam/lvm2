@@ -184,6 +184,7 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 	if (argc) {
 		log_verbose("Using physical volume(s) on command line");
 		for (; opt < argc; opt++) {
+			total++;
 			pv_name = argv[opt];
 			dm_unescape_colons_and_at_signs(pv_name, NULL, NULL);
 			vg_name = find_vgname_from_pvname(cmd, pv_name);
@@ -200,12 +201,12 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 			}
 			pvl = find_pv_in_vg(vg, pv_name);
 			if (!pvl || !pvl->pv) {
+				unlock_and_release_vg(cmd, vg, vg_name);
 				log_error("Unable to find %s in %s",
 					  pv_name, vg_name);
 				continue;
 			}
 
-			total++;
 			done += _pvchange_single(cmd, vg,
 						 pvl->pv, NULL);
 			unlock_and_release_vg(cmd, vg, vg_name);
