@@ -123,6 +123,10 @@ pvresize "$dev1"
 
 # test various errors and obsoleted tools
 not lvmchange
+not lvmsadc
+not lvmsar
+not pvdata
+
 not lvrename $vg
 not lvrename $vg-xxx
 not lvrename $vg  $vg/$lv-rename $vg/$lv
