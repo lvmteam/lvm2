@@ -3225,13 +3225,19 @@ static int _rename_sub_lv(struct cmd_context *cmd,
 	 *	a new name for main LV is "lvol1"
 	 */
 	len = strlen(lv_name_new) + strlen(suffix) + 1;
-	new_name = dm_pool_alloc(cmd->mem, len);
+	new_name = dm_pool_alloc(lv->vg->vgmem, len);
 	if (!new_name) {
 		log_error("Failed to allocate space for new name");
 		return 0;
 	}
 	if (dm_snprintf(new_name, len, "%s%s", lv_name_new, suffix) < 0) {
 		log_error("Failed to create new name");
+		return 0;
+	}
+
+	if (!validate_name(new_name)) {              *
+		log_error("Cannot rename \"%s\". New logical volume name \"%s\" is invalid.",
+			  lv->name, new_name);
 		return 0;
 	}
 
