@@ -78,7 +78,6 @@ should "$LVM_TEST_THIN_CHECK_CMD" "$DM_DEV_DIR/$vg/fixed"
 
 # Swap repaired metadata back
 lvconvert -y -f --poolmetadata $vg/fixed --thinpool $vg/pool
-lvs -a $vg
 
 # Activate pool - this should now work
 should vgchange -ay $vg

@@ -45,29 +45,27 @@ done
 pvcreate --metadatacopies 0 "$dev1"
 pvcreate --metadatacopies 2 "$dev2"
 vgcreate $vg1 "$dev1" "$dev2"
+
 pvchange -u "$dev1"
 pvchange -u "$dev2"
-check pvlv_counts $vg1 2 0 0
-
-# -a needs more params
-not pvchange -a
-# -a is searching for devs, so passing it some is error
-not pvchange -a "$dev1"
-not pvchange -u "$dev1-notfound"
-
+UUID=$(get pv_field "$dev1" uuid)
 pvchange -u --all
+# Checking for different UUID after pvchange
+test "$UUID" != "$(get pv_field "$dev1" uuid)" || die "UUID has not changed!"
 check pvlv_counts $vg1 2 0 0
 
-# "pvchange rejects uuid change under an active lv"
+# '-a' needs more params
+invalid pvchange -a
+# '-a' is searching for devs, so specifying device is invalid
+invalid pvchange -a "$dev1"
+fail pvchange -u "$dev1-notfound"
+
+# pvchange rejects uuid change under an active lv
 lvcreate -l 16 -i 2 -n $lv --alloc anywhere $vg1
 check pvlv_counts $vg1 2 1 0
 not pvchange -u "$dev1"
-lvchange -an $vg1/$lv
-pvchange -u "$dev1"
 
-# "cleanup"
-lvremove -f $vg1/$lv
-vgremove $vg1
+vgremove -f $vg1
 
 # "pvchange reject --addtag to lvm1 pv"
 pvcreate -M1 "$dev1"

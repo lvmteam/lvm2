@@ -26,8 +26,8 @@ _check_mlog()
 	not grep mlog out
 }
 
-aux lvmconf 'allocation/maximise_cling = 0'
-aux lvmconf 'allocation/mirror_logs_require_separate_pvs = 1'
+aux lvmconf "allocation/maximise_cling = 0" \
+	    "allocation/mirror_logs_require_separate_pvs = 1"
 
 # fail multiple devices
 

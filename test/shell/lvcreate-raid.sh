@@ -116,9 +116,9 @@ lvcreate -l 18 -n lv $vg "$dev1"
 lvcreate --type raid1 -m 1 -l 100%FREE -n raid1 $vg "$dev1" "$dev2"
 check lv_field $vg/raid1 size "9.00m"
 # Ensure image size is the same as the RAID1 size
-check lv_field $vg/raid1 size `lvs --noheadings -o size $vg/raid1_rimage_0`
+check lv_field $vg/raid1 size $(get lv_field $vg/raid1_rimage_0 size -a)
 # Amount remaining in dev2 should equal the amount taken by 'lv' in dev1
-check pv_field "$dev2" pv_free `lvs --noheadings -o size $vg/lv`
+check pv_field "$dev2" pv_free $(get lv_field $vg/lv size)
 lvremove -ff $vg
 
 # Eat 18 of 37 extents from dev1, leaving 19
