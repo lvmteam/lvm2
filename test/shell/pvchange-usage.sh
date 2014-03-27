@@ -30,8 +30,10 @@ do
 
 # "vgchange disable/enable allocation for pvs with metadatacopies = $mda (bz452982)"
 	pvchange "$dev1" -x n
+	pvchange "$dev1" -x n   # already disabled
 	check pv_field "$dev1" pv_attr  ---
 	pvchange "$dev1" -x y
+	pvchange "$dev1" -x y   # already enabled
 	check pv_field "$dev1" pv_attr  a--
 
 # 'remove pv'
@@ -46,6 +48,13 @@ vgcreate $vg1 "$dev1" "$dev2"
 pvchange -u "$dev1"
 pvchange -u "$dev2"
 check pvlv_counts $vg1 2 0 0
+
+# -a needs more params
+not pvchange -a
+# -a is searching for devs, so passing it some is error
+not pvchange -a "$dev1"
+not pvchange -u "$dev1-notfound"
+
 pvchange -u --all
 check pvlv_counts $vg1 2 0 0
 
