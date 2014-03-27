@@ -131,6 +131,7 @@ fi
 %{_mandir}/man8/vgscan.8.gz
 %{_mandir}/man8/vgsplit.8.gz
 %{_mandir}/man8/blkdeactivate.8.gz
+%{_mandir}/man8/lvm-dumpconfig.8.gz
 %if %{enable_udev}
  %{_udevdir}/11-dm-lvm.rules
  %if %{have_service lvmetad}
