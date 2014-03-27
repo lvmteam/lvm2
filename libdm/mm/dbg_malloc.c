@@ -205,7 +205,6 @@ int dm_dump_memory_debug(void)
 	unsigned long tot = 0;
 	struct memblock *mb;
 	char str[32];
-	size_t c;
 
 	if (_head)
 		log_very_verbose("You have a memory leak:");
@@ -218,6 +217,8 @@ int dm_dump_memory_debug(void)
 		 */
 		str[0] = '\0';
 #else
+		size_t c;
+
 		for (c = 0; c < sizeof(str) - 1; c++) {
 			if (c >= mb->length)
 				str[c] = ' ';
