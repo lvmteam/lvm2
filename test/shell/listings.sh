@@ -72,5 +72,85 @@ not diff out out2
 
 aux disable_dev "$dev1"
 pvs -o +pv_uuid | grep BADBEE-BAAD-BAAD-BAAD-BAAD-BAAD-BADBEE
+aux enable_dev "$dev1"
+
+if aux have_readline; then
+# test *scan and *display tools
+cat <<EOF | lvm
+vgdisplay --units k $vg
+lvdisplay --units g $vg
+pvdisplay -c "$dev1"
+pvdisplay -s "$dev1"
+vgdisplay -c $vg
+vgdisplay -C $vg
+vgdisplay -s $vg
+lvdisplay -c $vg
+lvdisplay -C $vg
+lvdisplay -m $vg
+EOF
+
+for i in h b s k m g t p e H B S K M G T P E; do
+	echo pvdisplay --units $i "$dev1"
+done | lvm
+else
+pvscan --uuid
+vgscan --mknodes
+lvscan
+lvmdiskscan
+vgdisplay --units k $vg
+lvdisplay --units g $vg
+pvdisplay -c "$dev1"
+pvdisplay -s "$dev1"
+vgdisplay -c $vg
+vgdisplay -C $vg
+vgdisplay -s $vg
+lvdisplay -c $vg
+lvdisplay -C $vg
+lvdisplay -m $vg
+
+for i in h b s k m g t p e H B S K M G T P E; do
+	pvdisplay --units $i "$dev1"
+done
+fi
+
+invalid lvdisplay -C -m $vg
+invalid lvdisplay -c -v $vg
+invalid lvdisplay --aligned $vg
+invalid lvdisplay --noheadings $vg
+invalid lvdisplay --options lv_name $vg
+invalid lvdisplay --separator : $vg
+invalid lvdisplay --sort size $vg
+invalid lvdisplay --unbuffered $vg
+
+
+invalid vgdisplay -C -A
+invalid vgdisplay -C -c
+invalid vgdisplay -C -s
+invalid vgdisplay -c -s
+invalid vgdisplay -A $vg1
 
 vgremove -ff $vg
+
+#test vgdisplay -A to select only active VGs
+# all LVs active - VG considered active
+pvcreate "$dev1" "$dev2" "$dev3"
+
+vgcreate $vg1 "$dev1"
+lvcreate -l1 $vg1
+lvcreate -l1 $vg1
+
+# at least one LV active - VG considered active
+vgcreate $vg2 "$dev2"
+lvcreate -l1 $vg2
+lvcreate -l1 -an -Zn $vg2
+
+# no LVs active - VG considered inactive
+vgcreate $vg3 "$dev3"
+lvcreate -l1 -an -Zn $vg3
+lvcreate -l1 -an -Zn $vg3
+
+vgdisplay -s -A | grep $vg1
+vgdisplay -s -A | grep $vg2
+vgdisplay -s -A | not grep $vg3
+
+vgremove -f $vg1 $vg2 $vg3
