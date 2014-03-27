@@ -1795,7 +1795,7 @@ struct detached_lv_data {
 	int *flush_required;
 };
 
-static int _preload_detached_lv(struct cmd_context *cmd, struct logical_volume *lv, void *data)
+static int _preload_detached_lv(struct logical_volume *lv, void *data)
 {
 	struct detached_lv_data *detached = data;
 	struct lv_list *lvl_pre;
@@ -1897,7 +1897,7 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 		detached.laopts = laopts;
 		detached.flush_required = &flush_required;
 
-		if (!for_each_sub_lv(cmd, ondisk_lv, &_preload_detached_lv, &detached))
+		if (!for_each_sub_lv(ondisk_lv, &_preload_detached_lv, &detached))
 			goto_out;
 
 		/*

@@ -1,5 +1,6 @@
 Version 2.02.106 - 
 ====================================
+  Drop unused cmd pointer for internal function for_each_sub_lv().
   Validate name for renamed sub LVs.
   When lvrename fails on argument parsing return invalid cmd line error (5->3).
   Fix exit code regression in failing pvchange command (2.02.66).
