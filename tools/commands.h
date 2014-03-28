@@ -215,7 +215,7 @@ xx(lvconvert,
    "\t[-d|--debug] [-h|-?|--help] [-v|--verbose]\n\n"
 
    "lvconvert "
-   "--type cache_pool\n"
+   "--type cache-pool\n"
    "\t[--cachemode CacheMode]\n"
    "\t[--chunksize size]\n"
    "\t[--poolmetadata CacheMetadataLogicalVolume[Path] |\n"
