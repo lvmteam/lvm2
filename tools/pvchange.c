@@ -225,6 +225,10 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 			return ECMD_FAILED;
 		}
 
+		/* populate lvmcache */
+		if (!lvmetad_vg_list_to_lvmcache(cmd))
+			stack;
+
 		if ((vgnames = get_vgnames(cmd, 1)) &&
 		    !dm_list_empty(vgnames)) {
 			dm_list_iterate_items(sll, vgnames) {
