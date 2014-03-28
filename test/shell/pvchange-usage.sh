@@ -46,12 +46,20 @@ pvcreate --metadatacopies 0 "$dev1"
 pvcreate --metadatacopies 2 "$dev2"
 vgcreate $vg1 "$dev1" "$dev2"
 
-pvchange -u "$dev1"
-pvchange -u "$dev2"
-UUID=$(get pv_field "$dev1" uuid)
-pvchange -u --all
 # Checking for different UUID after pvchange
-test "$UUID" != "$(get pv_field "$dev1" uuid)" || die "UUID has not changed!"
+UUID1=$(get pv_field "$dev1" uuid)
+pvchange -u "$dev1"
+test "$UUID1" != "$(get pv_field "$dev1" uuid)" || die "UUID has not changed!"
+
+UUID2=$(get pv_field "$dev2" uuid)
+pvchange -u "$dev2"
+test "$UUID2" != "$(get pv_field "$dev2" uuid)" || die "UUID has not changed!"
+
+UUID1=$(get pv_field "$dev1" uuid)
+UUID2=$(get pv_field "$dev2" uuid)
+pvchange -u --all
+test "$UUID1" != "$(get pv_field "$dev1" uuid)" || die "UUID has not changed!"
+test "$UUID2" != "$(get pv_field "$dev2" uuid)" || die "UUID has not changed!"
 check pvlv_counts $vg1 2 0 0
 
 # '-a' needs more params
