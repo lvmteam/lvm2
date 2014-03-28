@@ -18,10 +18,15 @@ vgcreate $vg2 "$dev3" "$dev4" "$dev5"
 
 aux disable_dev "$dev1"
 pvscan
-vgcreate $vg1 "$dev2"
-aux enable_dev "$dev1"
 # dev1 is missing
 fail pvs $(cat DEVICES)
+
+vgcreate $vg1 "$dev2"
+aux enable_dev "$dev1"
+
+pvscan
+# FIXME: above pvscan should not be needed
+pvs "$dev1"
 
 # reappearing device (rhbz 995440)
 lvcreate -aey -m2 --type mirror -l4 --alloc anywhere --corelog -n $lv1 $vg2
