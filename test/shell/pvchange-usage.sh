@@ -13,14 +13,20 @@
 
 . lib/test
 
-aux prepare_devs 4
+check_changed_uuid_() {
+	test "$1" != "$(get pv_field "$2" uuid)" || die "UUID has not changed!"
+}
+
+aux prepare_pvs 4
 
 for mda in 0 1 2
 do
 # "setup pv with metadatacopies = $mda"
-	pvcreate "$dev4"
 	pvcreate --metadatacopies $mda "$dev1"
-	vgcreate $vg1 "$dev1" "$dev4"
+# cannot change allocatability for orphan PVs
+	fail pvchange "$dev1" -x y
+	fail pvchange "$dev1" -x n
+	vgcreate $vg1 "$dev4" "$dev1"
 
 # "pvchange adds/dels tag to pvs with metadatacopies = $mda "
 	pvchange "$dev1" --addtag test$mda
@@ -36,9 +42,16 @@ do
 	pvchange "$dev1" -x y   # already enabled
 	check pv_field "$dev1" pv_attr  a--
 
+# check we are able to change number of managed metadata areas
+	if test $mda -gt 0 ; then
+		pvchange --force --metadataignore y "$dev1"
+	else
+		# already ignored
+		fail pvchange --metadataignore y "$dev1"
+	fi
 # 'remove pv'
 	vgremove $vg1
-	pvremove "$dev1" "$dev4"
+	pvremove "$dev1"
 done
 
 # "pvchange uuid"
@@ -49,18 +62,21 @@ vgcreate $vg1 "$dev1" "$dev2"
 # Checking for different UUID after pvchange
 UUID1=$(get pv_field "$dev1" uuid)
 pvchange -u "$dev1"
-test "$UUID1" != "$(get pv_field "$dev1" uuid)" || die "UUID has not changed!"
+check_changed_uuid_ "$UUID1" "$dev1"
 
 UUID2=$(get pv_field "$dev2" uuid)
 pvchange -u "$dev2"
-test "$UUID2" != "$(get pv_field "$dev2" uuid)" || die "UUID has not changed!"
+check_changed_uuid_ "$UUID2" "$dev2"
 
 UUID1=$(get pv_field "$dev1" uuid)
 UUID2=$(get pv_field "$dev2" uuid)
 pvchange -u --all
-test "$UUID1" != "$(get pv_field "$dev1" uuid)" || die "UUID has not changed!"
-test "$UUID2" != "$(get pv_field "$dev2" uuid)" || die "UUID has not changed!"
+check_changed_uuid_ "$UUID1" "$dev1"
+check_changed_uuid_ "$UUID2" "$dev2"
 check pvlv_counts $vg1 2 0 0
+
+# some args are needed
+invalid pvchange
 
 # '-a' needs more params
 invalid pvchange -a
