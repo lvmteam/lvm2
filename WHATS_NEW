@@ -1,5 +1,6 @@
 Version 2.02.106 - 
 ====================================
+  Report error when running pvscan with free argument (i.e. PV name).
   Fix error message for pvdisplay -c -m and add new for pvdisplay -c -s.
   Return proper invalid cmd when vgimport/exports find error in parameters.
   Obtain list of known VGs for pvchange --all when using lvmetad.

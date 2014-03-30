@@ -334,6 +334,11 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 	if (arg_count(cmd, cache_ARG))
 		return _pvscan_lvmetad(cmd, argc, argv);
 
+	if (argc) {
+		log_error("Too many parameters on command line.");
+		return EINVALID_CMD_LINE;
+	}
+
 	if (arg_count(cmd, activate_ARG)) {
 		log_error("--activate is only valid with --cache.");
 		return EINVALID_CMD_LINE;
