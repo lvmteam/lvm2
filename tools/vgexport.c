@@ -21,7 +21,6 @@ static int vgexport_single(struct cmd_context *cmd __attribute__((unused)),
 			   void *handle __attribute__((unused)))
 {
 	struct pv_list *pvl;
-	struct physical_volume *pv;
 
 	if (lvs_in_vg_activated(vg)) {
 		log_error("Volume group \"%s\" has active logical volumes",
@@ -34,10 +33,8 @@ static int vgexport_single(struct cmd_context *cmd __attribute__((unused)),
 
 	vg->status |= EXPORTED_VG;
 
-	dm_list_iterate_items(pvl, &vg->pvs) {
-		pv = pvl->pv;
-		pv->status |= EXPORTED_VG;
-	}
+	dm_list_iterate_items(pvl, &vg->pvs)
+		pvl->pv->status |= EXPORTED_VG;
 
 	if (!vg_write(vg) || !vg_commit(vg))
 		goto_bad;
