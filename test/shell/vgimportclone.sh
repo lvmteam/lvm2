@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (C) 2010-2011 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2010-2014 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -17,9 +17,27 @@ vgcreate --metadatasize 128k $vg1 "$dev1"
 lvcreate -l100%FREE -n $lv1 $vg1
 
 # Test plain vgexport vgimport tools
+
+# Argument is needed
+invalid vgexport
+invalid vgimport
+# Cannot combine -a and VG name
+invalid vgexport -a $vg
+invalid vgimport -a $vg1
+# Cannot export unknonw VG
+fail vgexport ${vg1}-non
+fail vgimport ${vg1}-non
+# Cannot export VG with active volumes
+fail vgexport $vg1
+
 vgchange -an $vg1
 vgexport $vg1
+# Already exported
+fail vgexport $vg1
+
 vgimport $vg1
+# Already imported
+fail vgimport $vg1
 vgchange -ay $vg1
 
 # Clone the LUN
