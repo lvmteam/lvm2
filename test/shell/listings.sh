@@ -25,6 +25,7 @@ pvcreate --metadatacopies 0 "$dev5"
 
 #COMM bz195276 -- pvs doesn't show PVs until a VG is created
 test $(pvs --noheadings $(cat DEVICES) | wc -l) -eq 5
+pvdisplay
 
 #COMM pvs with segment attributes works even for orphans
 test $(pvs --noheadings -o seg_all,pv_all,lv_all,vg_all $(cat DEVICES) | wc -l) -eq 5
@@ -122,12 +123,35 @@ invalid lvdisplay --separator : $vg
 invalid lvdisplay --sort size $vg
 invalid lvdisplay --unbuffered $vg
 
-
 invalid vgdisplay -C -A
 invalid vgdisplay -C -c
 invalid vgdisplay -C -s
 invalid vgdisplay -c -s
 invalid vgdisplay -A $vg1
+
+invalid pvdisplay -C -A
+invalid pvdisplay -C -c
+invalid pvdisplay -C -m
+invalid pvdisplay -C -s
+invalid pvdisplay -c -m
+invalid pvdisplay -c -s
+invalid pvdisplay --alianed
+invalid pvdisplay --all
+invalid pvdisplay --noheadings
+invalid pvdisplay --options
+invalid pvdisplay --separator :
+invalid pvdisplay --sort size
+invalid pvdisplay --unbuffered
+invalid pvdisplay -A $vg1
+
+# Check exported VG listing
+vgchange -an $vg
+vgexport -a
+pvdisplay --noheadings -C -o attr,name | tee out
+not grep -v "ax-" out
+vgimport -a
+pvdisplay --noheadings -C -o attr,name | tee out
+grep -v "ax-" out
 
 vgremove -ff $vg
 
