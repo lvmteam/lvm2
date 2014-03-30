@@ -98,12 +98,15 @@ int pvdisplay(struct cmd_context *cmd, int argc, char **argv)
 			return EINVALID_CMD_LINE;
 		}
 		return pvs(cmd, argc, argv);
-	} else if (arg_count(cmd, aligned_ARG) ||
-		   arg_count(cmd, all_ARG) ||
-		   arg_count(cmd, noheadings_ARG) ||
-		   arg_count(cmd, options_ARG) ||
-		   arg_count(cmd, separator_ARG) ||
-		   arg_count(cmd, sort_ARG) || arg_count(cmd, unbuffered_ARG)) {
+	}
+
+	if (arg_count(cmd, aligned_ARG) ||
+	    arg_count(cmd, all_ARG) ||
+	    arg_count(cmd, noheadings_ARG) ||
+	    arg_count(cmd, options_ARG) ||
+	    arg_count(cmd, separator_ARG) ||
+	    arg_count(cmd, sort_ARG) ||
+	    arg_count(cmd, unbuffered_ARG)) {
 		log_error("Incompatible options selected");
 		return EINVALID_CMD_LINE;
 	}
