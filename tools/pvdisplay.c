@@ -109,7 +109,12 @@ int pvdisplay(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	if (arg_count(cmd, colon_ARG) && arg_count(cmd, maps_ARG)) {
-		log_error("Option -v not allowed with option -c");
+		log_error("Option -c not allowed with option -m");
+		return EINVALID_CMD_LINE;
+	}
+
+	if (arg_count(cmd, colon_ARG) && arg_count(cmd, short_ARG)) {
+		log_error("Option -c is not allowed with option -s");
 		return EINVALID_CMD_LINE;
 	}
 
