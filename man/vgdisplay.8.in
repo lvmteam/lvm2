@@ -22,7 +22,7 @@ vgdisplay \- display attributes of volume groups
 
 .br
 .B vgdisplay
-.BR \-\-columns | \-C
+.BR \-C | \-\-columns
 .RB [ \-\-aligned ]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-? | \-\-help ]
@@ -53,12 +53,15 @@ volumes and their sizes etc.
 \fBvgs\fP(8) is an alternative that provides the same information
 in the style of \fBps\fP(1).
 .SH OPTIONS
-See \fBlvm\fP(8) for common options and \fBvgs\fP(8) for options given with
-\fB\-\-columns\fP.
+See \fBlvm\fP(8) for common options.
 .TP
 .BR \-A ", " \-\-activevolumegroups
 Only select the active volume groups. The volume group is considered active
 if at least one of its logical volumes is active.
+.TP
+.BR \-C ", " \-\-columns
+Display output in columns, the equivalent of \fBvgs\fP(8). 
+Options listed are the same as options given in \fPvgs\fP(8).
 .TP
 .BR \-c ", " \-\-colon
 Generate colon separated output for easier parsing in scripts or programs.
@@ -97,10 +100,6 @@ information of vgdisplay's activities.
 .TP
 .B \-\-version
 Display version and exit successfully.
-.TP
-.BR \-\-columns | \-C
-Display output in columns, the equivalent of \fBvgs\fP(8). 
-Options listed are the same as options given in \fPvgs\fP(8).
 .SH SEE ALSO
 .BR lvm (8),
 .BR vgs (8),

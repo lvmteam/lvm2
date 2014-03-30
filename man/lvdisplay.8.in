@@ -21,7 +21,7 @@ lvdisplay \- display attributes of a logical volume
 .br
 
 .B lvdisplay
-.BR \-\-columns | \-C
+.BR \-C | \-\-columns
 .RB [ \-\-aligned ]
 .RB [ \-a | \-\-all ]
 .RB [ \-d | \-\-debug ]
@@ -66,6 +66,10 @@ For example, after creating a mirror using
 this option will reveal three internal Logical Volumes, with suffixes
 mimage_0, mimage_1, and mlog.
 .TP
+.BR \-C ", " \-\-columns
+Display output in columns, the equivalent of \fBlvs\fP(8).
+Options listed are the same as options given in \fBlvs\fP(8).
+.TP
 .BR \-c ", " \-\-colon
 Generate colon separated output for easier parsing in scripts or programs.
 N.B. \fBlvs\fP(8) provides considerably more control over the output.
@@ -94,10 +98,6 @@ Display the mapping of logical extents to physical volumes and
 physical extents.  To map physical extents
 to logical extents use:
 .B pvs \-\-segments \-o+lv_name,seg_start_pe,segtype
-.TP
-.BR \-\-columns ", " \-C
-Display output in columns, the equivalent of \fBlvs\fP. Options listed
-are the same as options given in \fBlvs\fP(8).
 .SH Examples
 Shows attributes of that logical volume. If snapshot
 logical volumes have been created for this original logical volume,

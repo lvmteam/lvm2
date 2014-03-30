@@ -22,7 +22,7 @@ pvdisplay \- display attributes of a physical volume
 
 .br
 .B pvdisplay
-.BR \-\-columns | \-C
+.BR \-C | \-\-columns
 .RB [ \-\-aligned ]
 .RB [ \-a | \-\-all ]
 .RB [ \-d | \-\-debug ]
@@ -53,8 +53,12 @@ area and so on.
 \fBpvs\fP(8) is an alternative that provides the same information 
 in the style of \fBps\fP(1).
 .SH OPTIONS
-See \fBlvm\fP for common options and \fBpvs\fP for options given with
-\fB\-\-columns\fP.
+See \fBlvm\fP(8) for common options.
+.TP
+.BR \-C ", " \-\-columns
+Display output in columns, the equivalent of \fBpvs\fP(8).  See
+\fBpvs\fP(8) for a description of other options with this form of
+\fBpvdisplay\fP.
 .TP
 .BR \-c ", " \-\-colon
 Generate colon separated output for easier parsing in scripts or programs.
@@ -83,11 +87,6 @@ Only display the size of the given physical volumes.
 .BR \-m ", " \-\-maps
 Display the mapping of physical extents to logical volumes and
 logical extents.
-.TP
-.BR \-\-columns ", " \-C
-Display output in columns, the equivalent of \fBpvs\fP(8).  See
-\fBpvs\fP(8) for a description of other options with this form of
-\fBpvdisplay\fP.
 .SH SEE ALSO
 .BR lvm (8),
 .BR pvs (8),
