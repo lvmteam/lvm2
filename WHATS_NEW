@@ -1,5 +1,6 @@
 Version 2.02.106 - 
 ====================================
+  Return proper invalid cmd when vgimport/exports find error in parameters.
   Obtain list of known VGs for pvchange --all when using lvmetad.
   Add man page for lvm dumpconfig.
   Drop unused cmd pointer for internal function for_each_sub_lv().

@@ -60,12 +60,12 @@ int vgimport(struct cmd_context *cmd, int argc, char **argv)
 {
 	if (!argc && !arg_count(cmd, all_ARG)) {
 		log_error("Please supply volume groups or use -a for all.");
-		return ECMD_FAILED;
+		return EINVALID_CMD_LINE;
 	}
 
 	if (argc && arg_count(cmd, all_ARG)) {
 		log_error("No arguments permitted when using -a for all.");
-		return ECMD_FAILED;
+		return EINVALID_CMD_LINE;
 	}
 
 	if (arg_count(cmd, force_ARG)) {
