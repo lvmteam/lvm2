@@ -71,10 +71,10 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 		lv_name_new = st + 1;
 
 	/* Check sanity of new name */
-	maxlen = NAME_LEN - strlen(vg_name) - strlen(cmd->dev_dir) - 3;
+	maxlen = NAME_LEN - strlen(vg_name) - 3;
 	if (strlen(lv_name_new) > maxlen) {
-		log_error("New logical volume path exceeds maximum length "
-			  "of %" PRIsize_t "!", maxlen);
+		log_error("New logical volume name \"%s\" may not exceed %"
+			  PRIsize_t " characters.", lv_name_new, maxlen);
 		return EINVALID_CMD_LINE;
 	}
 

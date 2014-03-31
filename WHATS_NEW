@@ -1,5 +1,6 @@
 Version 2.02.106 - 
 ====================================
+  Validate length of new LV name in lvrename to not exceed 127 characters.
   Add explict error message when using lvdisplay -c -m.
   Update man pages for pv/vg/lvdisplay.
   Report error when running pvscan with free argument (i.e. PV name).
