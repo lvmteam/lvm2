@@ -344,7 +344,7 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(cmd, major_ARG) + arg_count(cmd, minor_ARG)) {
+	if (arg_count(cmd, major_ARG) || arg_count(cmd, minor_ARG)) {
 		log_error("--major and --minor are only valid with --cache.");
 		return EINVALID_CMD_LINE;
 	}
