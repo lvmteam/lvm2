@@ -49,8 +49,8 @@ int lvdisplay(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(cmd, colon_ARG) && arg_count(cmd, verbose_ARG)) {
-		log_error("Options -v and -c are incompatible");
+	if (arg_count(cmd, colon_ARG) && arg_count(cmd, maps_ARG)) {
+		log_error("Options -c and -m are incompatible.");
 		return EINVALID_CMD_LINE;
 	}
 

@@ -1,5 +1,6 @@
 Version 2.02.106 - 
 ====================================
+  Add explict error message when using lvdisplay -c -m.
   Update man pages for pv/vg/lvdisplay.
   Report error when running pvscan with free argument (i.e. PV name).
   Fix error message for pvdisplay -c -m and add new for pvdisplay -c -s.
