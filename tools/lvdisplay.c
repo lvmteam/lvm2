@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2006 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2014 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -40,12 +40,15 @@ int lvdisplay(struct cmd_context *cmd, int argc, char **argv)
 			return EINVALID_CMD_LINE;
 		}
 		return lvs(cmd, argc, argv);
-	} else if (arg_count(cmd, aligned_ARG) ||
-		   arg_count(cmd, noheadings_ARG) ||
-		   arg_count(cmd, options_ARG) ||
-		   arg_count(cmd, separator_ARG) ||
-		   arg_count(cmd, sort_ARG) || arg_count(cmd, unbuffered_ARG)) {
-		log_error("Incompatible options selected");
+	}
+
+	if (arg_count(cmd, aligned_ARG) ||
+	    arg_count(cmd, noheadings_ARG) ||
+	    arg_count(cmd, options_ARG) ||
+	    arg_count(cmd, separator_ARG) ||
+	    arg_count(cmd, sort_ARG) ||
+	    arg_count(cmd, unbuffered_ARG)) {
+		log_error("Incompatible options selected.");
 		return EINVALID_CMD_LINE;
 	}
 
@@ -54,6 +57,5 @@ int lvdisplay(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	return process_each_lv(cmd, argc, argv, 0, NULL,
-			       &_lvdisplay_single);
+	return process_each_lv(cmd, argc, argv, 0, NULL, &_lvdisplay_single);
 }
