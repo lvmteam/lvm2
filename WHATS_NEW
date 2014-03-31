@@ -1,5 +1,6 @@
 Version 2.02.106 - 
 ====================================
+  Fail in resume for lvrename will result in failing command.
   Validate length of new LV name in lvrename to not exceed 127 characters.
   Add explict error message when using lvdisplay -c -m.
   Update man pages for pv/vg/lvdisplay.
