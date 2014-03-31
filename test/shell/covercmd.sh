@@ -21,38 +21,31 @@ aux prepare_pvs 5
 pvcreate --metadatacopies 0 "$dev2"
 pvcreate --metadatacopies 0 "$dev3"
 
-pvscan --uuid
-
 # FIXME takes very long time
 #pvck "$dev1"
 
-
 vgcreate $vg $(cat DEVICES)
-not vgscan $vg
-vgscan --mknodes
-vgs -o all $vg
 
 lvcreate -l 5 -i5 -I256 -n $lv $vg
 lvcreate -aey -l 5 -n $lv1 $vg
 lvcreate -s -l 5 -n $lv2 $vg/$lv1
 pvck "$dev1"
 
-not lvscan $vg
-lvscan
-
-lvmdiskscan
-
 # "-persistent y --major 254 --minor 20"
 # "-persistent n"
-for i in pr "p rw" an ay "-monitor y" "-monitor n" \
-        -refresh "-addtag MYTAG" "-deltag MYETAG"; do
+for i in pr "p rw" "-monitor y" "-monitor n" -refresh; do
 	lvchange -$i $vg/$lv
 done
 
 lvrename $vg $lv $lv-rename
-not lvrename $vg
-not lvrename $vg-xxx
-not lvrename $vg $vg/$lv-rename $vg1/$lv
+invalid lvrename $vg
+invalid lvrename $vg $vg/$lv-rename $vg1/$lv
+invalid lvrename $vg/$lv-rename $vg1/$lv $vg
+invalid lvrename $vg/$lv-rename $vg/012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
+invalid lvrename $vg/$lv-rename $vg/""
+invalid lvrename $vg/$lv-rename "$vg/!@#$%"
+invalid lvrename $vg/$lv-rename $vg/$lv-rename
+fail lvrename $vg1/$lv-rename $vg1/$lv
 
 vgremove -f $vg
 
