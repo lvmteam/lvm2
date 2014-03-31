@@ -2336,6 +2336,8 @@ int vg_validate(struct volume_group *vg)
 	unsigned pv_count = 0;
 	unsigned num_snapshots = 0;
 	unsigned spare_count = 0;
+	size_t vg_name_len = strlen(vg->name);
+	size_t dev_name_len;
 	struct validate_hash vhash = { NULL };
 
 	if (vg->alloc == ALLOC_CLING_BY_TAGS) {
@@ -2416,6 +2418,15 @@ int vg_validate(struct volume_group *vg)
 	 */
 	dm_list_iterate_items(lvl, &vg->lvs) {
 		lv_count++;
+
+		dev_name_len = strlen(lvl->lv->name) + vg_name_len + 3;
+		if (dev_name_len >= NAME_LEN) {
+			log_error(INTERNAL_ERROR "LV name \"%s/%s\" length %"
+				  PRIsize_t " is not supported.",
+				  vg->name, lvl->lv->name, dev_name_len);
+			r = 0;
+		}
+
 
 		if (lv_is_cow(lvl->lv))
 			num_snapshots++;
