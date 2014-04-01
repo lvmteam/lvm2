@@ -191,8 +191,9 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 	}
 
 	/* Active volume is needed (writeback only?) */
-	if (!activate_lv(cache_lv->vg->cmd, cache_lv)) {
-		log_error("Failed to active cache %s.", cache_lv->name);
+	if (!lv_is_active_locally(cache_lv) &&
+	    !activate_lv_excl_local(cache_lv->vg->cmd, cache_lv)) {
+		log_error("Failed to active cache locally %s.", cache_lv->name);
 		return 0;
 	}
 
