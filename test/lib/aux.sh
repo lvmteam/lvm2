@@ -632,6 +632,14 @@ profileconf() {
 	mv -f PROFILE_$profile_name etc/profile/$profile_name.profile
 }
 
+prepare_profiles() {
+	test -d etc/profile || mkdir etc/profile
+	for profile_name in $@; do
+		test -L "$abs_top_builddir/test/lib/$profile_name.profile" || skip
+		cp "$abs_top_builddir/test/lib/$profile_name.profile" "etc/profile/$profile_name.profile"
+	done
+}
+
 apitest() {
 	local t=$1
 	shift
