@@ -4688,21 +4688,6 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	} else if (lv_is_thin_volume(lv))
 		pool_lv = first_seg(lv)->pool_lv;
 
-	/*
-	 * If we are removing a cache_pool, we must first unlink
-	 * it from any origins (i.e. remove the cache layer).
-	 *
-	 * If the cache_pool is not linked, we can simply proceed
-	 * to remove it.
-	 */
-	if (lv_is_cache_pool(lv) && !dm_list_empty(&lv->segs_using_this_lv)) {
-		if (!(cache_seg = get_only_segment_using_this_lv(lv)))
-			return_0;
-
-		if (!lv_cache_remove(cache_seg->lv))
-			return_0;
-	}
-
 	if (lv_is_cache_pool_data(lv) || lv_is_cache_pool_metadata(lv)) {
 		log_error("Can't remove logical volume %s used by a cache_pool.",
 			  lv->name);
@@ -4760,8 +4745,18 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 			return_0;
 	}
 
-	/* FIXME Review and fix the snapshot error paths! */
-	if (!deactivate_lv(cmd, lv)) {
+	if (lv_is_cache_pool(lv)) {
+		/* Cache pool removal drops cache layer
+		 * If the cache pool is not linked, we can simply remove it. */
+		if (!dm_list_empty(&lv->segs_using_this_lv)) {
+			if (!(cache_seg = get_only_segment_using_this_lv(lv)))
+				return_0;
+			/* TODO: polling */
+			if (!lv_cache_remove(cache_seg->lv))
+				return_0;
+		}
+	} else if (!deactivate_lv(cmd, lv)) {
+		/* FIXME Review and fix the snapshot error paths! */
 		log_error("Unable to deactivate logical volume \"%s\"",
 			  lv->name);
 		return 0;
