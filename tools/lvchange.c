@@ -933,7 +933,7 @@ static int lvchange_activation_skip(struct logical_volume *lv)
 }
 
 
-static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
+static int _lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 			   void *handle __attribute__((unused)))
 {
 	int doit = 0, docmds = 0;
@@ -1270,5 +1270,5 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 
 	return process_each_lv(cmd, argc, argv,
 			       update ? READ_FOR_UPDATE : 0, NULL,
-			       &lvchange_single);
+			       &_lvchange_single);
 }
