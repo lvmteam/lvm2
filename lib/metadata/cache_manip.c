@@ -185,8 +185,10 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 	struct logical_volume *corigin_lv;
 	struct logical_volume *cache_pool_lv;
 
-	if (!lv_is_cache(cache_lv))
-		return_0;
+	if (!lv_is_cache(cache_lv)) {
+		log_error(INTERNAL_ERROR "LV %s is not cached.", cache_lv->name);
+		return 0;
+	}
 
 	/* Active volume is needed (writeback only?) */
 	if (!activate_lv(cache_lv->vg->cmd, cache_lv)) {
@@ -214,7 +216,7 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 
 	if (strcmp(policy_name, "cleaner")) {
 		/* We must swap in the cleaner to flush the cache */
-		log_error("Flushing cache for %s", cache_lv->name);
+		log_print_unless_silent("Flushing cache for %s.", cache_lv->name);
 
 		/*
 		 * Is there are clean way to free the memory for the name
@@ -240,10 +242,10 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 		if (!lv_cache_block_info(cache_lv, NULL,
 					 &dirty_blocks, NULL, NULL))
 			return_0;
-		log_error("%" PRIu64 " blocks must still be flushed.",
-			  dirty_blocks);
+		log_print_unless_silent("%" PRIu64 " blocks must still be flushed.",
+					dirty_blocks);
 		if (dirty_blocks)
-			sleep(5);
+			sleep(1);
 	} while (dirty_blocks);
 
 	cache_pool_lv = cache_seg->pool_lv;
