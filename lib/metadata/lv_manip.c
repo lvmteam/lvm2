@@ -561,8 +561,7 @@ static int _release_and_discard_lv_segment_area(struct lv_segment *seg, uint32_t
 		return 1;
 	}
 
-	if (seg_is_cache(seg) ||
-	    (seg_lv(seg, s)->status & MIRROR_IMAGE) ||
+	if ((seg_lv(seg, s)->status & MIRROR_IMAGE) ||
 	    (seg_lv(seg, s)->status & THIN_POOL_DATA) ||
 	    (seg_lv(seg, s)->status & CACHE_POOL_DATA)) {
 		if (!lv_reduce(seg_lv(seg, s), area_reduction))
@@ -812,6 +811,10 @@ static int _lv_reduce(struct logical_volume *lv, uint32_t extents, int delete)
 				return_0;
 
 			if (seg->metadata_lv && !lv_remove(seg->metadata_lv))
+				return_0;
+
+			/* Remove cache origin only when removing (not on lv_empty()) */
+			if (delete && seg_is_cache(seg) && !lv_remove(seg_lv(seg, 0)))
 				return_0;
 
 			if (seg->pool_lv && !detach_pool_lv(seg))
