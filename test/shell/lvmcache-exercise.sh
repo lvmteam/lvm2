@@ -24,8 +24,6 @@ fail pvs $(cat DEVICES)
 vgcreate $vg1 "$dev2"
 aux enable_dev "$dev1"
 
-pvscan
-# FIXME: above pvscan should not be needed
 pvs "$dev1"
 
 # reappearing device (rhbz 995440)

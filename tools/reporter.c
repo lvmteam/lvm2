@@ -271,6 +271,9 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 			report_type == LABEL ||
 			report_type == PVSEGS) ? 1 : 0;
 
+	if (args_are_pvs && argc)
+		cmd->filter->wipe(cmd->filter);
+
 	switch (report_type) {
 	case DEVTYPES:
 		keys = find_config_tree_str(cmd, report_devtypes_sort_CFG, NULL);
