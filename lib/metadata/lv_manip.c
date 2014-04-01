@@ -5202,10 +5202,15 @@ int remove_layer_from_lv(struct logical_volume *lv,
 
 	if (!(parent_seg = get_only_segment_using_this_lv(layer_lv))) {
 		log_error("Failed to find layer %s in %s",
-		layer_lv->name, lv->name);
+			  layer_lv->name, lv->name);
 		return 0;
 	}
 	parent = parent_seg->lv;
+	if (parent != lv) {
+		log_error(INTERNAL_ERROR "Wrong layer %s in %s",
+			  layer_lv->name, lv->name);
+		return 0;
+	}
 
 	/*
 	 * Before removal, the layer should be cleaned up,
