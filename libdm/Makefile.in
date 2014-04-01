@@ -37,6 +37,7 @@ INCLUDES = -I$(srcdir)/$(interface) -I$(srcdir)
 ifeq ("@VALGRIND_POOL@", "yes")
 INCLUDES += @VALGRIND_CFLAGS@
 endif
+CFLAGS += $(UDEV_CFLAGS)
 
 ifeq ("@STATIC_LINK@", "yes")
 LIB_STATIC = $(interface)/libdevmapper.a
