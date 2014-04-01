@@ -173,10 +173,10 @@ struct load_segment {
 	char *uuid;			/* Clustered mirror log */
 
 	unsigned core_argc;		/* Cache */
-	char **core_argv;		/* Cache */
-	char *policy_name;		/* Cache */
+	const char *const *core_argv;	/* Cache */
+	const char *policy_name;	/* Cache */
 	unsigned policy_argc;		/* Cache */
-	char **policy_argv;		/* Cache */
+	const char *const *policy_argv;	/* Cache */
 
 	const char *cipher;		/* Crypt */
 	const char *chainmode;		/* Crypt */
@@ -3227,10 +3227,10 @@ int dm_tree_node_add_cache_target(struct dm_tree_node *node,
 				  uint32_t chunk_size,
 				  uint32_t feature_flags, /* DM_CACHE_FEATURE_* */
 				  unsigned core_argc,
-				  char **core_argv,
-				  char *policy_name,
+				  const char *const *core_argv,
+				  const char *policy_name,
 				  unsigned policy_argc,
-				  char **policy_argv)
+				  const char *const *policy_argv)
 {
 	int i;
 	struct load_segment *seg = NULL;

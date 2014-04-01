@@ -179,7 +179,7 @@ static int _cleanup_orphan_lv(struct logical_volume *lv)
 int lv_cache_remove(struct logical_volume *cache_lv)
 {
 	struct cmd_context *cmd = cache_lv->vg->cmd;
-	char *policy_name;
+	const char *policy_name;
 	uint64_t dirty_blocks;
 	struct lv_segment *cache_seg = first_seg(cache_lv);
 	struct logical_volume *corigin_lv;
@@ -220,7 +220,7 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 		 * Is there are clean way to free the memory for the name
 		 * and argv when changing the policy?
 		 */
-		cache_seg->policy_name = (char *)"cleaner";
+		cache_seg->policy_name = "cleaner";
 		cache_seg->policy_argc = 0;
 		cache_seg->policy_argv = NULL;
 

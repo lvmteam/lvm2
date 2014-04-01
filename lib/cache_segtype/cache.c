@@ -110,7 +110,7 @@ static int _cache_pool_text_import(struct lv_segment *seg,
 		if (str &&
 		    (!(argv_str = dm_pool_strdup(mem, str)) ||
 		     ((int)seg->core_argc != dm_split_words(argv_str, seg->core_argc,
-							    0, seg->core_argv))))
+							    0, (char **) seg->core_argv))))
 			return SEG_LOG_ERROR("core_argc and core_argv do"
 					     " not match in");
 	}
@@ -149,7 +149,7 @@ static int _cache_pool_text_import(struct lv_segment *seg,
 		    (!(argv_str = dm_pool_strdup(mem, str)) ||
 		     ((int)seg->policy_argc != dm_split_words(argv_str,
 							      seg->policy_argc,
-							      0, seg->policy_argv))))
+							      0, (char **) seg->policy_argv))))
 			return SEG_LOG_ERROR("policy_argc and policy_argv do"
 					     " not match in");
 	}

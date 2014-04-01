@@ -124,8 +124,8 @@ int lv_cache_block_info(struct logical_volume *lv,
 			uint32_t *chunk_size, uint64_t *dirty_count,
 			uint64_t *used_count, uint64_t *total_count);
 int lv_cache_policy_info(struct logical_volume *lv,
-			 char **policy_name, int *policy_argc,
-			 char ***policy_argv);
+			 const char **policy_name, int *policy_argc,
+			 const char ***policy_argv);
 int lv_thin_pool_percent(const struct logical_volume *lv, int metadata,
 			 percent_t *percent);
 int lv_thin_percent(const struct logical_volume *lv, int mapped,

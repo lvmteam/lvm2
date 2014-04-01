@@ -290,7 +290,7 @@ int lv_cache_block_info(const struct logical_volume *lv,
 }
 int lv_cache_policy_info(const struct logical_volume *lv,
 			 char **policy_name, int *policy_argc,
-			 char ***policy_argv)
+			 const char *const **policy_argv)
 {
 	return 0;
 }
@@ -1055,8 +1055,8 @@ int lv_cache_block_info(struct logical_volume *lv,
 }
 
 int lv_cache_policy_info(struct logical_volume *lv,
-			 char **policy_name, int *policy_argc,
-			 char ***policy_argv)
+			 const char **policy_name, int *policy_argc,
+			 const char ***policy_argv)
 {
 	int i;
 	struct lv_segment *cache_seg;

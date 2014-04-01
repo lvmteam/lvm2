@@ -773,10 +773,10 @@ int dm_tree_node_add_cache_target(struct dm_tree_node *node,
 				  uint32_t chunk_size,
 				  uint32_t feature_flags, /* DM_CACHE_FEATURE_* */
 				  unsigned core_argc,
-				  char **core_argv,
-				  char *policy_name,
+				  const char *const *core_argv,
+				  const char *policy_name,
 				  unsigned policy_argc,
-				  char **policy_argv);
+				  const char *const *policy_argv);
 
 /*
  * Replicator operation mode
