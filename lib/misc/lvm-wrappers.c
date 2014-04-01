@@ -18,6 +18,8 @@
 #include <fcntl.h>
 
 #ifdef UDEV_SYNC_SUPPORT
+#include <libudev.h>
+
 struct udev *_udev;
 
 int udev_init_library_context(void)

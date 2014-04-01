@@ -19,6 +19,9 @@
 #include "config.h"
 #include "toolcontext.h"
 
+#ifdef UDEV_SYNC_SUPPORT
+#include <libudev.h>
+#endif
 #include <unistd.h>
 #include <sys/param.h>
 #include <dirent.h>

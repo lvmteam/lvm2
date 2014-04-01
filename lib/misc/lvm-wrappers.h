@@ -17,7 +17,7 @@
 #define _LVM_WRAPPERS_H
 
 #ifdef UDEV_SYNC_SUPPORT
-#include <libudev.h>
+struct udev;
 struct udev *udev_get_library_context(void);
 #endif
 
