@@ -5228,8 +5228,6 @@ int remove_layer_from_lv(struct logical_volume *lv,
 	    parent->le_count != layer_lv->le_count)
 		return_0;
 
-	//FIXME: why do we empty the parent?  It removes everything below.
-	//This makes the function unusable for 'lv_cache_remove'
 	if (!lv_empty(parent))
 		return_0;
 

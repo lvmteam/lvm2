@@ -113,6 +113,7 @@ int detach_pool_lv(struct lv_segment *seg)
 	if (seg_is_cache(seg)) {
 		if (!remove_seg_from_segs_using_this_lv(seg->pool_lv, seg))
 			return_0;
+		seg->lv->status &= ~CACHE;
 		seg->pool_lv = NULL;
 		return 1;
 	}
