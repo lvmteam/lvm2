@@ -950,6 +950,11 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return EINVALID_CMD_LINE;
 	}
 
+	if (lv_is_cache_pool(lv)) {
+		log_error("Can't change cache pool logical volume.");
+		return ECMD_FAILED;
+	}
+
 	if (lv_is_origin(lv) && !lv_is_thin_volume(lv) &&
 	    (arg_count(cmd, contiguous_ARG) || arg_count(cmd, permission_ARG) ||
 	     arg_count(cmd, readahead_ARG) || arg_count(cmd, persistent_ARG) ||

@@ -1828,6 +1828,16 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	struct dm_tree_node *thin_node;
 	const char *uuid;
 
+	if (lv_is_cache_pool(lv)) {
+		/* origin_only is ignored */
+		/* cache pool is 'meta' LV and does not have a real device node */
+		if (!_add_lv_to_dtree(dm, dtree, seg_lv(first_seg(lv), 0), 0))
+			return_0;
+		if (!_add_lv_to_dtree(dm, dtree, first_seg(lv)->metadata_lv, 0))
+			return_0;
+		return 1;
+	}
+
 	if (!origin_only && !_add_dev_to_dtree(dm, dtree, lv, NULL))
 		return_0;
 
@@ -1917,12 +1927,9 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		if (seg->metadata_lv &&
 		    !_add_lv_to_dtree(dm, dtree, seg->metadata_lv, 0))
 			return_0;
-		if (seg->pool_lv && !dm->skip_external_lv &&
+		if (seg->pool_lv &&
+		    (lv_is_cache_pool(seg->pool_lv) || !dm->skip_external_lv) &&
 		    !_add_lv_to_dtree(dm, dtree, seg->pool_lv, 1)) /* stack */
-			return_0;
-
-		if (seg->pool_lv && lv_is_cache_pool(seg->pool_lv) &&
-		    !_add_lv_to_dtree(dm, dtree, seg->pool_lv, 0))
 			return_0;
 
 		for (s = 0; s < seg->area_count; s++) {
@@ -2494,6 +2501,15 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	uint32_t max_stripe_size = UINT32_C(0);
 	uint32_t read_ahead = lv->read_ahead;
 	uint32_t read_ahead_flags = UINT32_C(0);
+
+	if (lv_is_cache_pool(lv)) {
+		/* cache pool is 'meta' LV and does not have a real device node */
+		if (!_add_new_lv_to_dtree(dm, dtree, seg_lv(first_seg(lv), 0), laopts, NULL))
+			return_0;
+		if (!_add_new_lv_to_dtree(dm, dtree, first_seg(lv)->metadata_lv, laopts, NULL))
+			return_0;
+		return 1;
+	}
 
 	/* FIXME Seek a simpler way to lay out the snapshot-merge tree. */
 

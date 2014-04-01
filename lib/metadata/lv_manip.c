@@ -4714,7 +4714,8 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	/* FIXME Ensure not referred to by another existing LVs */
 	ask_discard = find_config_tree_bool(cmd, devices_issue_discards_CFG, NULL);
 
-	if (lv_info(cmd, lv, 0, &info, 1, 0)) {
+	if (!lv_is_cache_pool(lv) &&
+	    lv_info(cmd, lv, 0, &info, 1, 0)) {
 		if (!lv_check_not_in_use(cmd, lv, &info))
 			return_0;
 
@@ -6290,6 +6291,11 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 
 	if (test_mode()) {
 		log_verbose("Test mode: Skipping activation, zeroing and signature wiping.");
+		goto out;
+	}
+
+	if (lv_is_cache_pool(lv)) {
+		log_verbose("Cache pool is prepared.");
 		goto out;
 	}
 
