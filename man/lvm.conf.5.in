@@ -67,7 +67,7 @@ exactly the same format as used in any LVM configuration file.
 .LP
 When several configuration methods are used at the same time
 and when LVM looks for the value of a particular setting, it traverses
-this cascade from left to right:
+this \fBconfig cascade\fP from left to right:
 \fBdirect config override on command line\fP -> \fBprofile config\fP -> \fBtag config\fP -> \fBlvm.conf\fP.
 No part of this cascade is compulsory. If there's no setting value found at
 the end of the cascade, a default value is used for that setting.

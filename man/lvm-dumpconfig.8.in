@@ -80,10 +80,12 @@ complete and they are not meant to be used in production.
 .TP
 .B \-\-mergedconfig
 When the dumpconfig command is run with the \fB\-\-config\fP option
-(a common option that is recognized by all LVM tools, see also
-\fBlvm\fP(8)), merge this configuration with current configuration
-used (see \fB\-\-type current\fP above). Otherwise, only the
-configuration specified within \fB\-\-config\fP option is dumped.
+and/or \fB\-\-profile\fP option (common options that are recognized
+by all LVM tools, see also \fBlvm\fP(8)), merge the \fB\-\-config\fP
+and/or \fB\-\-profile\fP config with current configuration used
+(see \fB\-\-type current\fP above). Otherwise, only the configuration
+specified within \fB\-\-config\fP or \fB\-\-profile\fP option is dumped
+(see also \fBlvm.conf\fP(5) for more info about \fBconfig cascade\fP).
 
 .TP
 .B \-\-validate
