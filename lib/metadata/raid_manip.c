@@ -840,6 +840,12 @@ static int _raid_extract_images(struct logical_volume *lv, uint32_t new_count,
 	log_verbose("Extracting %u %s from %s/%s", extract,
 		    (extract > 1) ? "images" : "image",
 		    lv->vg->name, lv->name);
+	if (dm_list_size(target_pvs) < extract) {
+		log_error("Unable to remove %d images:  Only %d device%s given.",
+			  extract, dm_list_size(target_pvs),
+			  (dm_list_size(target_pvs) == 1) ? "" : "s");
+		return 0;
+	}
 
 	lvl_array = dm_pool_alloc(lv->vg->vgmem,
 				  sizeof(*lvl_array) * extract * 2);
