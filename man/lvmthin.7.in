@@ -17,18 +17,18 @@ blocks in a thin LV are allocated (during use) from a special "thin pool
 LV".  The thin pool LV contains blocks of physical storage, and blocks in
 thin LVs just reference blocks in the thin pool LV.
 
-A thin pool LV must be created before thin LV's can be created within it.
-A thin pool LV is created by combining two standard LV's: a large data LV
+A thin pool LV must be created before thin LVs can be created within it.
+A thin pool LV is created by combining two standard LVs: a large data LV
 that will hold blocks for thin LVs, and a metadata LV that will hold
 metadata.  The metadata tracks which data blocks belong to each thin LV.
 
 Snapshots of thin LVs are efficient because the data blocks common to a
-thin LV and its snapshot are shared.  Snapshots may be taken of thin LV's
+thin LV and its snapshot are shared.  Snapshots may be taken of thin LVs
 or of other thin snapshots.  Blocks common to recursive snapshots are also
 shared in the thin pool.  There is no limit to or degradation from
 sequences of snapshots.
 
-As thin LV's or snapshot LV's are written to, they consume data blocks in
+As thin LVs or snapshot LVs are written to, they consume data blocks in
 the thin pool.  As free data blocks in the pool decrease, more free blocks
 may need to be supplied.  This is done by extending the thin pool data LV
 with additional physical space from the VG.  Removing thin LVs or
@@ -146,7 +146,7 @@ The primary method for using lvm thin provisioning:
 
    Create a new thin LV from the thin pool LV.
    The thin LV is created with a virtual size.
-   Multiple new thin LV's may be created in the thin pool.
+   Multiple new thin LVs may be created in the thin pool.
    Thin LV names must be unique in the VG.
    The thinpool argument specifies which thin pool will
    contain the ThinLV.
@@ -221,7 +221,7 @@ Automatic pool metadata LV
 .br
 Activation of thin snapshots
 .br
-Removing thin pool LV's, thin LV's and snapshots
+Removing thin pool LVs, thin LVs and snapshots
 .br
 Manually manage free data space of thin pool LV
 .br
@@ -230,6 +230,10 @@ Manually manage free metadata space of a thin pool LV
 Using fstrim to increase free space in a thin pool LV
 .br
 Automatically extend thin pool LV
+.br
+Data space exhaustion
+.br
+Metadata space exhaustion
 .br
 Zeroing
 .br
@@ -348,7 +352,7 @@ If the thin_check command finds a problem with the metadata,
 the thin pool LV is not activated, and the thin pool metadata should
 be repaired.
 
-Command to repair a thin pool LV:
+Command to repair a thin pool:
 .nf
 lvconvert --repair VG/ThinPoolLV
 .fi
@@ -460,7 +464,7 @@ See lvm.conf auto_set_activation_skip to set default usage of
 activation skip.
 
 
-.SS Removing thin pool LV's, thin LV's and snapshots
+.SS Removing thin pool LVs, thin LVs and snapshots
 
 \&
 
@@ -471,7 +475,7 @@ thin LVs and snapshots.
 Removing a thin pool LV removes both the data LV and metadata LV
 and returns the space to the VG.
 
-lvremove of thin pool LV's, thin LV's and snapshots cannot be
+lvremove of thin pool LVs, thin LVs and snapshots cannot be
 reversed with vgcfgrestore.
 
 vgcfgbackup does not back up thin pool metadata.
@@ -486,6 +490,9 @@ with the lvs command.  Free space can be added by extending
 the thin pool LV. 
 
 .nf
+Command to extend thin pool data space:
+lvextend -L Size VG/ThinPoolLV
+
 Example
 
 1. A thin pool LV is using 26.96% of its data blocks.
@@ -513,6 +520,11 @@ fstrim on the file system using a thin LV.
 
 The available metadata space in a thin pool LV can be displayed
 with the lvs -o+metadata_percent command.
+
+Command to extend thin pool metadata space:
+.nf
+lvextend -L Size VG/ThinPoolLV_tmeta
+.fi
 
 Example
 
@@ -637,6 +649,78 @@ If thin_pool_autoextend_threshold is 70 and thin_pool_autoextend_percent is 20,
 whenever a pool exceeds 70% usage, it will be extended by another 20%.
 For a 1G pool, using 700M will trigger a resize to 1.2G. When the usage exceeds
 840M, the pool will be extended to 1.44G, and so on.
+
+
+.SS Data space exhaustion
+
+\&
+
+If thin pool data space is exhausted, writes to thin LVs will be queued
+until the the data space is extended.  Reading is still possible.
+
+When data space is exhausted, the lvs command displays 100 under Data% for
+the thin pool LV:
+
+.nf
+# lvs vg/pool0
+LV     VG           Attr       LSize   Pool  Origin Data%
+pool0  vg           twi-a-tz-- 512.00m              100.00
+.fi
+
+A thin pool can run out of data blocks for any of the following reasons:
+
+1. Automatic extension of the thin pool is disabled, and the thin pool is
+not manually extended.  (Disabling automatic extension is not
+recommended.)
+
+2. The dmeventd daemon is not running and the thin pool is not manually
+extended.  (Disabling dmeventd is not recommended.)
+
+3. Automatic extension of the thin pool is too slow given the rate of
+writes to thin LVs in the pool.  (This can be addressed by tuning the
+thin_pool_autoextend_threshold and thin_pool_autoextend_percent.)
+
+4. The VG does have enough free blocks to extend the thin pool.
+
+The response to data space exhaustion is to extend the thin pool.  This is
+described in the section "Manually manage free data space of thin pool
+LV".
+
+
+.SS Metadata space exhaustion
+
+\&
+
+If thin pool metadata space is exhausted (or a thin pool metadata
+operation fails), errors will be returned for IO operations on thin LVs.
+
+When metadata space is exhausted, the lvs command displays 100 under Meta%
+for the thin pool LV:
+
+.nf
+# lvs -o lv_name,size,data_percent,metadata_percent vg/pool0
+LV    LSize Data%  Meta%
+pool0              100.00
+.fi
+
+The same reasons for thin pool data space exhaustion apply to thin pool
+metadata space.
+
+Metadata space exhaustion can lead to inconsistent thin pool metadata and
+inconsistent file systems, so the response requires offline checking and
+repair.
+
+1. Deactivate the thin pool LV, or reboot the system if this is not possible.
+
+2. Repair thin pool with lvconvert --repair.
+.br
+   See "Metadata check and repair".
+
+3. Extend pool metadata space with lvextend VG/ThinPoolLV_tmeta.
+.br
+   See "Manually manage free metadata space of a thin pool LV".
+
+4. Check and repair file system with fsck.
 
 
 .SS Zeroing
