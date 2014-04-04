@@ -763,26 +763,32 @@ int dev_cache_init(struct cmd_context *cmd)
 	return 0;
 }
 
+/*
+ * Returns number of devices still open.
+ */
 static int _check_for_open_devices(int close_immediate)
 {
 	struct device *dev;
 	struct dm_hash_node *n;
-	int r = 0;
+	int num_open = 0;
 
 	dm_hash_iterate(n, _cache.names) {
 		dev = (struct device *) dm_hash_get_data(_cache.names, n);
 		if (dev->fd >= 0) {
-			log_error("Device '%s' has been left open (%d).",
+			log_error("Device '%s' has been left open (%d remaining references).",
 				  dev_name(dev), dev->open_count);
-			r++;
+			num_open++;
 			if (close_immediate)
 				dev_close_immediate(dev);
 		}
 	}
 
-	return r;
+	return num_open;
 }
 
+/*
+ * Returns number of devices left open.
+ */
 int dev_cache_check_for_open_devices(void)
 {
 	return _check_for_open_devices(0);
@@ -790,11 +796,11 @@ int dev_cache_check_for_open_devices(void)
 
 int dev_cache_exit(void)
 {
-	int cnt = 0;
+	int num_open = 0;
 
 	if (_cache.names)
-		if ((cnt = _check_for_open_devices(1)) > 0)
-			log_error(INTERNAL_ERROR "%d device(s) have been closed.", cnt);
+		if ((num_open = _check_for_open_devices(1)) > 0)
+			log_error(INTERNAL_ERROR "%d device(s) were left open and have been closed.", num_open);
 
 	if (_cache.preferred_names_matcher)
 		_cache.preferred_names_matcher = NULL;
@@ -814,7 +820,7 @@ int dev_cache_exit(void)
 	dm_list_init(&_cache.dirs);
 	dm_list_init(&_cache.files);
 
-	return (cnt == 0);
+	return (!num_open);
 }
 
 int dev_cache_add_dir(const char *path)

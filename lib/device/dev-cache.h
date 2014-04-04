@@ -36,8 +36,11 @@ struct dev_filter {
  */
 struct cmd_context;
 int dev_cache_init(struct cmd_context *cmd);
-int dev_cache_check_for_open_devices(void);
 int dev_cache_exit(void);
+/*
+ * Returns number of open devices.
+ */
+int dev_cache_check_for_open_devices(void);
 
 /* Trigger(1) or avoid(0) a scan */
 void dev_cache_scan(int do_scan);
