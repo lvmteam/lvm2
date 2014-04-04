@@ -299,6 +299,8 @@ static int _move_cache(struct volume_group *vg_from,
 		log_error("Unable to split VG while it contains cache LVs");
 		return 0;
 
+		/* NOTREACHED */
+
 		if (lv_is_cache(lv)) {
 			orig = seg_lv(seg, 0);
 			data = seg_lv(first_seg(seg->pool_lv), 0);
