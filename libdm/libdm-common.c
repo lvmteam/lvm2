@@ -203,8 +203,7 @@ static void _build_dev_path(char *buffer, size_t len, const char *dev_name)
 
 int dm_get_library_version(char *version, size_t size)
 {
-	strncpy(version, DM_LIB_VERSION, size);
-	return 1;
+	return dm_strncpy(version, DM_LIB_VERSION, size);
 }
 
 void inc_suspended(void)

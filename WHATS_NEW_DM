@@ -1,5 +1,6 @@
 Version 1.02.85 - 
 ===================================
+  When buffer for dm_get_library_version() is too small, return error code.
   Always reinitialize _name_mangling_mode in dm_lib_init().
   Add tracking flag about implicitly added devices into dm_tree.
   Stop timeout thread immediately when the last worker thread is finished.
