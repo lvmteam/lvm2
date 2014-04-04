@@ -1,5 +1,7 @@
 Version 2.02.106 - 
 ====================================
+  Add configure --disable-thin_check_needs_check to support old thin_check.
+  Use thin_check --clear-needs-check-flag by default.
   Export lvm_even_rand() for controlled provision of random numbers.
   Add lvmthin man page to section 7.
   Extend internal validation of lv names size is less then 128 chars.
