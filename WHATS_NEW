@@ -1,5 +1,6 @@
 Version 2.02.106 - 
 ====================================
+  Export lvm_even_rand() for controlled provision of random numbers.
   Add lvmthin man page to section 7.
   Extend internal validation of lv names size is less then 128 chars.
   Fail in resume for lvrename will result in failing command.

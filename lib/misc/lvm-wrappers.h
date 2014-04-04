@@ -32,6 +32,11 @@ int lvm_getpagesize(void);
  */
 int read_urandom(void *buf, size_t len);
 
+/*
+ * Return random integer in [0,max) interval
+ */
+unsigned lvm_even_rand(unsigned *seed, unsigned max);
+
 #  ifndef HAVE_SIGINTERRUPT
 #    define siginterrupt(sig, flag) \
 	do { \
