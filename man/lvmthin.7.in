@@ -274,8 +274,10 @@ Example
 # lvconvert --thinpool vg/pool0 --poolmetadata vg/pool0meta
 .fi
 
-See lvm.conf thin_pool_metadata_require_separate_pvs to set
-default PV usage for thin pool creation.
+.BR lvm.conf (5)
+.B thin_pool_metadata_require_separate_pvs
+.br
+controls the default PV usage for thin pool creation.
 
 
 .SS Tolerate device failures using raid
@@ -343,10 +345,16 @@ running fsck on a file system.
 When a thin pool LV is activated, lvm runs the thin_check command
 to check the correctness of the metadata on the pool metadata LV.
 
-To disable the thin_check step, set lvm.conf thin_check_executable to
-an empty string ("").  This is not recommended.
+.BR lvm.conf (5)
+.B thin_check_executable
+.br
+can be set to an empty string ("") to disable the thin_check step.
+This is not recommended.
 
-To set options for the thin_check command, set lvm.conf thin_check_options.
+.BR lvm.conf (5)
+.B thin_check_options
+.br
+controls the command options used for the thin_check command.
 
 If the thin_check command finds a problem with the metadata,
 the thin pool LV is not activated, and the thin pool metadata should
@@ -386,9 +394,6 @@ containing new metadata:
 .nf
 lvconvert --thinpool VG/ThinPoolLV --poolmetadata VG/NewThinMetaLV
 .fi
-
-The path to thin_check, thin_dump and thin_repair commands
-can be set in lvm.conf.
 
 
 .SS Automatic pool metadata LV
@@ -460,8 +465,10 @@ Command to remove the activation skip flag from a snapshot LV:
 lvchange -kn VG/SnapLV
 .fi
 
-See lvm.conf auto_set_activation_skip to set default usage of
-activation skip.
+.BR lvm.conf (5)
+.B auto_set_activation_skip
+.br
+controls the default activation skip setting used by lvcreate.
 
 
 .SS Removing thin pool LVs, thin LVs and snapshots
@@ -630,14 +637,18 @@ of an existing thin pool LV:
 lvchange --monitor {y|n} VG/ThinPoolLV
 .fi
  
-The lvm.conf thin_pool_autoextend_threshold and thin_pool_autoextend_percent
-options define the autoextend behavior.
+.BR lvm.conf (5)
+.B thin_pool_autoextend_threshold thin_pool_autoextend_percent
+.br
+control the default autoextend behavior.
 
-thin_pool_autoextend_threshold is a percentage value that defines when
+thin_pool_autoextend_threshold
+is a percentage value that defines when
 the thin pool LV should be extended.  Setting this to 100 disables
 automatic extention.  The minimum value is 50.
 
-thin_pool_autoextend_percent defines how much extra data space should
+thin_pool_autoextend_percent
+defines how much extra data space should
 be added to the thin pool, in percent of its current size.
 
 Warnings are emitted through syslog when the use of a pool reaches 80%,
@@ -747,7 +758,10 @@ blocks are not zeroed.
 
 Provisioning of large zeroed chunks impacts performance.
 
-See lvm.conf thin_pool_zero to set default zeroing mode.
+.BR lvm.conf (5)
+.B thin_pool_zero
+.br
+controls the default zeroing mode used when creating a thin pool.
 
 
 .SS Discard
@@ -790,7 +804,10 @@ pool0 passdown
 # lvchange --discards ignore vg/pool0
 .fi
 
-See lvm.conf thin_pool_discards to set the default discards mode.
+.BR lvm.conf (5)
+.B thin_pool_discards
+.br
+controls the default discards mode used when creating a thin pool.
 
 
 .SS Chunk size
@@ -815,7 +832,10 @@ Example
 pool0 64.00k
 .fi
 
-See lvm.conf thin_pool_chunk_size to set the default chunk size.
+.BR lvm.conf (5)
+.B thin_pool_chunk_size
+.br
+controls the default chunk size used when creating a thin pool.
 
 
 .SS Size of pool metadata LV
@@ -955,4 +975,17 @@ pool0           vg          twi-a-tz--   8.00m
 [pool0_tmeta]   vg          ewi-ao----   8.00m
 thin1           vg          Vwi-a-tz--   2.00g pool0
 .fi
+
+.SH SEE ALSO
+.BR lvm (8),
+.BR lvm.conf (5),
+.BR lvcreate (8),
+.BR lvconvert (8),
+.BR lvchange (8),
+.BR lvextend (8),
+.BR lvremove (8),
+.BR lvs (8),
+.BR thin_dump (8),
+.BR thin_repair (8)
+.BR thin_restore (8)
 
