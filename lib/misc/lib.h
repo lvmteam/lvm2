@@ -25,17 +25,22 @@
 #define _GNU_SOURCE
 #define _FILE_OFFSET_BITS 64
 
+/* Define some portable printing types */
+#define PRIsize_t "zu"
+#define PRIptrdiff_t "td"
+#define PRIpid_t PRId32
+
 #include "intl.h"
 #include "libdevmapper.h"
-#include "lvm-globals.h"
-#include "lvm-wrappers.h"
-#include "lvm-types.h"
 #include "util.h"
 
 #ifdef DM
 #  include "dm-logging.h"
 #else
 #  include "lvm-logging.h"
+#  include "lvm-globals.h"
+#  include "lvm-wrappers.h"
+#  include "lvm-types.h"
 #endif
 
 #include <errno.h>
