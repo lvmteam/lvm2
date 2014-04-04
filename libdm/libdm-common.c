@@ -91,16 +91,15 @@ void dm_lib_init(void)
 	if (getenv("DM_DISABLE_UDEV"))
 		_udev_disabled = 1;
 
-	env = getenv(DM_DEFAULT_NAME_MANGLING_MODE_ENV_VAR_NAME);
-	if (env && *env) {
+	_name_mangling_mode = DEFAULT_DM_NAME_MANGLING;
+	if ((env = getenv(DM_DEFAULT_NAME_MANGLING_MODE_ENV_VAR_NAME))) {
 		if (!strcasecmp(env, "none"))
 			_name_mangling_mode = DM_STRING_MANGLING_NONE;
 		else if (!strcasecmp(env, "auto"))
 			_name_mangling_mode = DM_STRING_MANGLING_AUTO;
 		else if (!strcasecmp(env, "hex"))
 			_name_mangling_mode = DM_STRING_MANGLING_HEX;
-	} else
-		_name_mangling_mode = DEFAULT_DM_NAME_MANGLING;
+	}
 }
 
 /*
