@@ -380,7 +380,8 @@ static int _open_control(void)
 	if (!_uname())
 		return 0;
 
-	snprintf(control, sizeof(control), "%s/%s", dm_dir(), DM_CONTROL_NODE);
+	if (dm_snprintf(control, sizeof(control), "%s/%s", dm_dir(), DM_CONTROL_NODE) < 0)
+		goto_bad;
 
 	/*
 	 * Prior to 2.6.36 the minor number should be looked up in /proc.
