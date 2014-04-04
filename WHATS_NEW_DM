@@ -1,5 +1,6 @@
 Version 1.02.85 - 
 ===================================
+  Check for sprintf error when building internal device path.
   Check for sprintf error when creating path for dm control node.
   When buffer for dm_get_library_version() is too small, return error code.
   Always reinitialize _name_mangling_mode in dm_lib_init().
