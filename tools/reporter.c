@@ -271,6 +271,9 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 			report_type == LABEL ||
 			report_type == PVSEGS) ? 1 : 0;
 
+	/*
+	 * FIXME Trigger scans based on unrecognised listed devices instead.
+	 */
 	if (args_are_pvs && argc)
 		cmd->filter->wipe(cmd->filter);
 
