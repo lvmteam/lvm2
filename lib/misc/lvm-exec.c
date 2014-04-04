@@ -53,6 +53,11 @@ int exec_cmd(struct cmd_context *cmd, const char *const argv[],
 	int status;
 	char buf[PATH_MAX * 2];
 
+	if (!argv[0]) {
+		log_error(INTERNAL_ERROR "Missing command.");
+		return 0;
+	}
+
 	if (rstatus)
 		*rstatus = -1;
 
@@ -74,8 +79,7 @@ int exec_cmd(struct cmd_context *cmd, const char *const argv[],
 		/* FIXME Fix effect of reset_locking on cache then include this */
 		/* destroy_toolcontext(cmd); */
 		/* FIXME Use execve directly */
-		if (argv[0])
-			execvp(argv[0], (char **) argv);
+		execvp(argv[0], (char **) argv);
 		log_sys_error("execvp", argv[0]);
 		_exit(errno);
 	}
