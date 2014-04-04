@@ -1595,8 +1595,8 @@ int dm_set_sysfs_dir(const char *sysfs_dir)
 		_sysfs_dir[0] = '\0';
 		return 1;
 	}
-	else
-		return _canonicalize_and_set_dir(sysfs_dir, NULL, sizeof _sysfs_dir, _sysfs_dir);
+
+	return _canonicalize_and_set_dir(sysfs_dir, NULL, sizeof _sysfs_dir, _sysfs_dir);
 }
 
 const char *dm_sysfs_dir(void)
