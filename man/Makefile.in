@@ -56,18 +56,26 @@ ifneq ("@CLVMD@", "none")
 else
   MAN8CLUSTER=
 endif
+
 ifeq ("@BUILD_CMIRRORD@", "yes")
   MAN8CLUSTER+=cmirrord.8
 endif
 
+ifneq ("@THIN@", "none")
+  MAN7=lvmthin.7
+else
+  MAN7=
+endif
+
 MAN8DM=dmsetup.8 $(DMEVENTDMAN)
 MAN5DIR=$(mandir)/man5
+MAN7DIR=$(mandir)/man7
 MAN8DIR=$(mandir)/man8
 
 MAN8SYSTEMD_GENERATORS=lvm2-activation-generator.8
 
-CLEAN_TARGETS=$(MAN5) $(MAN8) $(MAN8CLUSTER) $(FSADMMAN) $(BLKDEACTIVATEMAN) $(DMEVENTDMAN) $(MAN8DM)
-DISTCLEAN_TARGETS=fsadm.8 clvmd.8 cmirrord.8 dmeventd.8
+CLEAN_TARGETS=$(MAN5) $(MAN7) $(MAN8) $(MAN8CLUSTER) $(FSADMMAN) $(BLKDEACTIVATEMAN) $(DMEVENTDMAN) $(MAN8DM)
+DISTCLEAN_TARGETS=fsadm.8 clvmd.8 cmirrord.8 dmeventd.8 lvmthin.7 blkdeactivate.8
 
 include $(top_builddir)/make.tmpl
 
@@ -77,13 +85,13 @@ endif
 
 all: man device-mapper
 
-.PHONY: man install_man5 install_man8
+.PHONY: man install_man5 install_man7 install_man8
 
 device-mapper: $(MAN8DM)
 
-man: $(MAN5) $(MAN8) $(MAN8CLUSTER)
+man: $(MAN5) $(MAN7) $(MAN8) $(MAN8CLUSTER)
 
-$(MAN5) $(MAN8) $(MAN8DM) $(MAN8CLUSTER):	Makefile
+$(MAN5) $(MAN7) $(MAN8) $(MAN8DM) $(MAN8CLUSTER):	Makefile
 
 %: %.in
 	@case "$@" in \
@@ -95,11 +103,15 @@ install_man5: $(MAN5)
 	$(INSTALL) -d $(MAN5DIR)
 	$(INSTALL_DATA) $(MAN5) $(MAN5DIR)/
 
+install_man7: $(MAN8)
+	$(INSTALL) -d $(MAN7DIR)
+	$(INSTALL_DATA) $(MAN7) $(MAN7DIR)/
+
 install_man8: $(MAN8)
 	$(INSTALL) -d $(MAN8DIR)
 	$(INSTALL_DATA) $(MAN8) $(MAN8DIR)/
 
-install_lvm2: install_man5 install_man8
+install_lvm2: install_man5 install_man7 install_man8
 
 install_cluster: $(MAN8CLUSTER)
 	$(INSTALL) -d $(MAN8DIR)
