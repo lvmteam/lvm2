@@ -552,6 +552,10 @@
 /* The path to 'thin_check', if available. */
 #undef THIN_CHECK_CMD
 
+/* Define to 1 if the external 'thin_check' tool requires the
+   --clear-needs-check-flag option */
+#undef THIN_CHECK_NEEDS_CHECK
+
 /* The path to 'thin_dump', if available. */
 #undef THIN_DUMP_CMD
 
