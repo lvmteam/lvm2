@@ -2027,7 +2027,7 @@ static int _lv_each_dependency(struct logical_volume *lv,
 		(lv->rdevice && lv != lv->rdevice->slog) ? lv->rdevice->slog : 0,
 		lv->snapshot ? lv->snapshot->origin : 0,
 		lv->snapshot ? lv->snapshot->cow : 0 };
-	for (i = 0; i < sizeof(deps) / sizeof(*deps); ++i) {
+	for (i = 0; i < DM_ARRAY_SIZE(deps); ++i) {
 		if (deps[i] && !fn(deps[i], data))
 			return_0;
 	}

@@ -121,7 +121,7 @@ int main(int argc, char **argv)
         };
 
         int i;
-        for (i = 0; i < sizeof(tests) / sizeof(*tests); i++) {
+        for (i = 0; i < DM_ARRAY_SIZE(tests); ++i) {
                 struct dm_pool *mem = dm_pool_create("bitset test", 1024);
                 assert(mem);
                 tests[i](mem);

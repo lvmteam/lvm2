@@ -176,7 +176,7 @@ static int _maps_line(const struct dm_config_node *cn, lvmlock_t lock,
 	}
 
 	/* always ignored areas */
-	for (i = 0; i < sizeof(_ignore_maps) / sizeof(_ignore_maps[0]); ++i)
+	for (i = 0; i < DM_ARRAY_SIZE(_ignore_maps); ++i)
 		if (strstr(line + pos, _ignore_maps[i])) {
 			log_debug_mem("%s ignore filter '%s' matches '%s': Skipping.",
 				      lock_str, _ignore_maps[i], line);
@@ -186,7 +186,7 @@ static int _maps_line(const struct dm_config_node *cn, lvmlock_t lock,
 	sz = to - from;
 	if (!cn) {
 		/* If no blacklist configured, use an internal set */
-		for (i = 0; i < sizeof(_blacklist_maps) / sizeof(_blacklist_maps[0]); ++i)
+		for (i = 0; i < DM_ARRAY_SIZE(_blacklist_maps); ++i)
 			if (strstr(line + pos, _blacklist_maps[i])) {
 				log_debug_mem("%s default filter '%s' matches '%s': Skipping.",
 					      lock_str, _blacklist_maps[i], line);

@@ -653,7 +653,7 @@ static int _thin_target_present(struct cmd_context *cmd,
 			return 0;
 		}
 
-		for (i = 0; i < sizeof(_features)/sizeof(*_features); i++)
+		for (i = 0; i < DM_ARRAY_SIZE(_features); ++i)
 			if ((maj > _features[i].maj) ||
 			    (maj == _features[i].maj && min >= _features[i].min))
 				_attrs |= _features[i].thin_feature;
@@ -678,13 +678,13 @@ static int _thin_target_present(struct cmd_context *cmd,
 					str = cv->v.str;
 					if (!*str)
 						continue;
-					for (i = 0; i < sizeof(_features)/sizeof(*_features); i++)
+					for (i = 0; i < DM_ARRAY_SIZE(_features); ++i)
 						if (strcasecmp(str, _features[i].feature) == 0)
 							_feature_mask |= _features[i].thin_feature;
 				}
 			}
 			_feature_mask = ~_feature_mask;
-			for (i = 0; i < sizeof(_features)/sizeof(*_features); i++)
+			for (i = 0; i < DM_ARRAY_SIZE(_features); ++i)
 				if ((_attrs & _features[i].thin_feature) &&
 				    !(_feature_mask & _features[i].thin_feature))
 					log_very_verbose("Target %s %s support disabled by %s",
@@ -757,7 +757,7 @@ int init_multiple_segtypes(struct cmd_context *cmd, struct segtype_library *segl
 	struct segment_type *segtype;
 	unsigned i;
 
-	for (i = 0; i < sizeof(reg_segtypes)/sizeof(reg_segtypes[0]); ++i) {
+	for (i = 0; i < DM_ARRAY_SIZE(reg_segtypes); ++i) {
 		segtype = dm_zalloc(sizeof(*segtype));
 
 		if (!segtype) {

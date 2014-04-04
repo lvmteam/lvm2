@@ -352,7 +352,7 @@ static int _raid_target_present(struct cmd_context *cmd,
 			return 0;
 		}
 
-		for (i = 0; i < sizeof(_features)/sizeof(*_features); i++)
+		for (i = 0; i < DM_ARRAY_SIZE(_features); ++i)
 			if ((maj > _features[i].maj) ||
 			    (maj == _features[i].maj && min >= _features[i].min))
 				_raid_attrs |= _features[i].raid_feature;

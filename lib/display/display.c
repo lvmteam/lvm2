@@ -41,7 +41,7 @@ static const struct {
 	ALLOC_INHERIT, "inherit", 'i'}
 };
 
-static const int _num_policies = sizeof(_policies) / sizeof(*_policies);
+static const int _num_policies = DM_ARRAY_SIZE(_policies);
 
 /* Test if the doubles are close enough to be considered equal */
 static int _close_enough(double d1, double d2)

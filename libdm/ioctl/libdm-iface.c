@@ -1822,8 +1822,7 @@ int dm_task_run(struct dm_task *dmt)
 	const char *dev_name = DEV_NAME(dmt);
 	const char *dev_uuid = DEV_UUID(dmt);
 
-	if ((unsigned) dmt->type >=
-	    (sizeof(_cmd_data_v4) / sizeof(*_cmd_data_v4))) {
+	if ((unsigned) dmt->type >= DM_ARRAY_SIZE(_cmd_data_v4)) {
 		log_error(INTERNAL_ERROR "unknown device-mapper task %d",
 			  dmt->type);
 		return 0;

@@ -1479,7 +1479,7 @@ static int _handle_request(struct dm_event_daemon_message *msg,
 		{ DM_EVENT_CMD_GET_PARAMETERS, _get_parameters},
 	}, *req;
 
-	for (req = requests; req < requests + sizeof(requests) / sizeof(struct request); req++)
+	for (req = requests; req < requests + DM_ARRAY_SIZE(requests); ++req)
 		if (req->cmd == msg->cmd)
 			return req->f(message_data);
 

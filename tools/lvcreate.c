@@ -1135,7 +1135,7 @@ static int _check_thin_parameters(struct volume_group *vg, struct lvcreate_param
 			zero_ARG
 		};
 
-		for (i = 0; i < sizeof(_argname)/sizeof(_argname[0]); ++i) {
+		for (i = 0; i < DM_ARRAY_SIZE(_argname); ++i) {
 			if (arg_count(vg->cmd, _argname[i])) {
 				log_error("%s is only available for thin pool creation.",
 					  arg_long_option_name(_argname[i]));
