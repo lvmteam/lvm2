@@ -93,8 +93,8 @@ static const char * const _blacklist_maps[] = {
     "/LC_MESSAGES/",
     "gconv/gconv-modules.cache",
     "/libreadline.so.",	/* not using readline during mlock */
-    "/libncurses.so.",	/* not using readline during mlock */
-    "/libtinfo.so.",	/* not using readline during mlock */
+    "/libncurses.so.",	/* not using ncurses during mlock */
+    "/libtinfo.so.",	/* not using tinfo during mlock */
     "/libdl-",		/* not using dlopen,dlsym during mlock */
     /* "/libdevmapper-event.so" */
 };
