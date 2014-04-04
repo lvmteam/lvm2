@@ -1,5 +1,6 @@
 Version 2.02.106 - 
 ====================================
+  Don't require --major to be specified when using -My option on kernels > 2.4.
   Add configure --disable-thin_check_needs_check to support old thin_check.
   Use thin_check --clear-needs-check-flag by default.
   Export lvm_even_rand() for controlled provision of random numbers.

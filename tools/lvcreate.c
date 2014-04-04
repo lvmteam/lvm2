@@ -804,10 +804,18 @@ static int _read_activation_params(struct lvcreate_params *lp,
 					  "--minor when using -My");
 				return 0;
 			}
-			if (lp->major == -1) {
-				log_error("Please specify major number with "
-					  "--major when using -My");
-				return 0;
+			if (!strncmp(cmd->kernel_vsn, "2.4.", 4)) {
+				if (lp->major == -1) {
+					log_error("Please specify major number with "
+						  "--major when using -My");
+					return 0;
+				}
+			} else {
+				if (lp->major >= 0)
+					log_warn("Ignoring supplied major number - kernel assigns "
+						 "major numbers dynamically. Using major number %d instead.",
+						  cmd->dev_types->device_mapper_major);
+				lp->major = cmd->dev_types->device_mapper_major;
 			}
 			if (!major_minor_valid(cmd, vg->fid->fmt, lp->major, lp->minor))
 				return 0;
