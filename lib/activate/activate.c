@@ -1121,9 +1121,9 @@ int lv_cache_policy_info(struct logical_volume *lv,
 		*policy_argc = status->policy_argc;
 	if (policy_argv) {
 		if (!(*policy_argv =
-		      dm_pool_zalloc(mem, sizeof(char *) * *policy_argc)))
+		      dm_pool_zalloc(mem, sizeof(char *) * status->policy_argc)))
 			return_0;
-		for (i = 0; i < *policy_argc; i++)
+		for (i = 0; i < status->policy_argc; ++i)
 			if (!((*policy_argv)[i] =
 			      dm_pool_strdup(mem, status->policy_argv[i])))
 				return_0;
