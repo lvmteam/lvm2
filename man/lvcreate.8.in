@@ -150,7 +150,7 @@ Controls whether Logical Volumes are persistently flagged to be skipped during
 activation. By default, thin snapshot volumes are flagged for activation skip.
 To activate such volumes, an extra \fB\-K/\-\-ignoreactivationskip\fP option must
 be used. The flag is not applied during deactivation.
-Use \fBlvchange \-k/\-\-setactivationskip {y | n}\fP command to attach or
+Use \fBlvchange \-k/\-\-setactivationskip {y|n}\fP command to attach or
 detach the flag for existing volumes. To see whether the flag is attached,
 use \fBlvs\fP command where the state of the flag is reported within
 \fBlv_attr\fP bits.
@@ -159,7 +159,7 @@ use \fBlvs\fP command where the state of the flag is reported within
 Ignore the flag to skip Logical Volumes during activation.
 
 .TP
-.IR \fB\-\-cachemode " " { writeback | writethrough }
+.IR \fB\-\-cachemode " {" writeback | writethrough }
 Specifying a cache mode determines when the writes to a cache LV
 are considered complete.  When \fIwriteback\fP is specified, a write is
 considered complete as soon as it is stored in the cache pool LV.
