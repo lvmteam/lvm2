@@ -2786,6 +2786,12 @@ static int _tree_action(struct dev_manager *dm, struct logical_volume *lv,
 	char *dlid;
 	int r = 0;
 
+	/* Some LV can be used for top level tree */
+	/* TODO: add more.... */
+	if (lv_is_cache_pool(lv)) {
+		log_error(INTERNAL_ERROR "Cannot create tree for %s.", lv->name);
+		return 0;
+	}
 	/* Some targets may build bigger tree for activation */
 	dm->activation = ((action == PRELOAD) || (action == ACTIVATE));
 	if (!(dtree = _create_partial_dtree(dm, lv, laopts->origin_only)))
