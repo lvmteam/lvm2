@@ -109,6 +109,8 @@ int apply_lvname_restrictions(const char *name)
 	};
 
 	static const char * const _reserved_strings[] = {
+		"_cdata",
+		"_cmeta",
 		"_mlog",
 		"_mimage",
 		"_pmspare",
