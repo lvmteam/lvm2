@@ -150,3 +150,11 @@ lvcreate -L 32m -n $lv -i2 --stripesize 128k --readahead auto $vg
 check lv_field $vg/$lv lv_read_ahead "auto"
 check lv_field $vg/$lv lv_kernel_read_ahead "512.00k"
 lvremove -ff $vg
+
+# prohibited names
+for i in pvmove snapshot ; do
+	invalid lvcreate -l1 -n ${i}1 $vg
+done
+for i in _cdata _cmeta _mimage _mlog _pmspare _tdata _tmeta _vorigin ; do
+	invalid lvcreate -l1 -n s_${i}_1 $vg
+done
