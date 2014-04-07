@@ -1,5 +1,6 @@
 Version 1.02.85 - 
 ===================================
+  Add tracking flag about implicitly added devices into dm_tree.
   Stop timeout thread immediately when the last worker thread is finished.
   Fix dmeventd logging with parallel wait event processing.
   Reuse _node_send_messages() for validation of transaction_id in preload.
