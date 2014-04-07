@@ -268,7 +268,8 @@ void print_log(int level, const char *file, int line, int dm_errno_or_class,
 		if (_duplicated) {
 			if (dm_hash_lookup(_duplicated, message))
 				level = _LOG_NOTICE;
-			(void) dm_hash_insert(_duplicated, message, (void*)1);
+			else
+				(void) dm_hash_insert(_duplicated, message, (void*)1);
 		}
 	}
 
