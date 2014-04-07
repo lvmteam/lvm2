@@ -14,6 +14,7 @@ let
      src = jobs.tarball;
      diskImage = diskFun { extraPackages = extras; };
      memSize = 768;
+
      # fc16 lcov is broken and el6 has none... be creative
      prepareImagePhase = ''
       rpm -Uv ${pkgs.fetchurl {
@@ -21,10 +22,12 @@ let
        sha256 = "0ycdh5mb7p5ll76mqk0p6gpnjskvxxgh3a3bfr1crh94nvpwhp4z"; }}
       dmesg -n 1 # avoid spilling dmesg into the main log, we capture it in harness
      '';
+
      postBuild = ''
+      mkdir -p $out/nix-support
       cd `cat /tmp/build-location`
       mv test/results/list test/results/list-rpm
-      rpm -Uvh /tmp/rpmout/RPMS/*/*.rpm # */
+      ls /tmp/rpmout/RPMS/*/*.rpm | grep -v sysvinit | xargs rpm -Uvh # */
       (/usr/lib/systemd/systemd-udevd || /usr/lib/udev/udevd || /sbin/udevd || find / -xdev -name \*udevd) &
       make check_system QUIET=1 T=${T} || touch $out/nix-support/failed
       mv test/results/list test/results/list-system
@@ -36,6 +39,16 @@ let
       cp -R lcov_reports $out/coverage && \
           echo "report coverage $out/coverage" >> $out/nix-support/hydra-build-products || \
           true # not really fatal, although kinda disappointing
+     '';
+
+     postInstall = ''
+      for i in $out/rpms/*/*.rpm; do
+        if echo $i | grep -vq "\.src\.rpm$"; then
+          echo "file rpm $i" >> $out/nix-support/hydra-build-products
+        else
+          echo "file srpm $i" >> $out/nix-support/hydra-build-products
+        fi
+      done
      '';
    };
 
@@ -137,7 +150,7 @@ let
     imgs = pkgs.vmTools.diskImageFuns //
             mapAttrs (n: a: b: pkgs.vmTools.makeImageFromRPMDist (a // b)) extra_distros;
     rpmdistros = pkgs.vmTools.rpmDistros // extra_distros;
-    rpmbuild = release.rpmBuild;
+    rpmbuild = pkgs.vmTools.buildRPM;
   };
 
   extra_rpms = rec {
