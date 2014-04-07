@@ -2698,8 +2698,11 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 		return 0;
 	}
 
-	/* Allow to have only thinpool active and restore it's active state */
-	activate_pool = lv_is_active(pool_lv);
+	if (segtype_is_cache_pool(lp->segtype))
+		activate_pool = 0; /* Cannot activate cache pool */
+	else
+		/* Allow to have only thinpool active and restore it's active state */
+		activate_pool = lv_is_active(pool_lv);
 
 	/* We are changing target type, so deactivate first */
 	if (!deactivate_lv(cmd, pool_lv)) {
