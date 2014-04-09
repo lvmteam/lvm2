@@ -78,9 +78,6 @@ int do_command(struct local_client *client, struct clvm_header *msg, int msglen,
 	unsigned char lock_cmd;
 	unsigned char lock_flags;
 
-	/* Reset test mode before we start */
-	init_test(0);
-
 	/* Do the command */
 	switch (msg->cmd) {
 		/* Just a test message */
@@ -112,8 +109,6 @@ int do_command(struct local_client *client, struct clvm_header *msg, int msglen,
 		lockname = &args[2];
 		/* Check to see if the VG is in use by LVM1 */
 		status = do_check_lvm1(lockname);
-		if (lock_flags & LCK_TEST_MODE)
-			init_test(1);
 		do_lock_vg(lock_cmd, lock_flags, lockname);
 		break;
 
@@ -122,8 +117,6 @@ int do_command(struct local_client *client, struct clvm_header *msg, int msglen,
 		lock_cmd = args[0];
 		lock_flags = args[1];
 		lockname = &args[2];
-		if (lock_flags & LCK_TEST_MODE)
-			init_test(1);
 		status = do_lock_lv(lock_cmd, lock_flags, lockname);
 		/* Replace EIO with something less scary */
 		if (status == EIO) {
@@ -252,7 +245,6 @@ int do_pre_command(struct local_client *client)
 	int status = 0;
 	char *lockname;
 
-	init_test(0);
 	switch (header->cmd) {
 	case CLVMD_CMD_TEST:
 		status = sync_lock("CLVMD_TEST", LCK_EXCL, 0, &lockid);
@@ -271,8 +263,6 @@ int do_pre_command(struct local_client *client)
 		lock_cmd = args[0];
 		lock_flags = args[1];
 		lockname = &args[2];
-		if (lock_flags & LCK_TEST_MODE)
-			init_test(1);
 		status = pre_lock_lv(lock_cmd, lock_flags, lockname);
 		break;
 
@@ -304,7 +294,6 @@ int do_post_command(struct local_client *client)
 	char *args = header->node + strlen(header->node) + 1;
 	char *lockname;
 
-	init_test(0);
 	switch (header->cmd) {
 	case CLVMD_CMD_TEST:
 		status = sync_unlock("CLVMD_TEST", (int) (long) client->bits.localsock.private);
@@ -315,8 +304,6 @@ int do_post_command(struct local_client *client)
 		lock_cmd = args[0];
 		lock_flags = args[1];
 		lockname = &args[2];
-		if (lock_flags & LCK_TEST_MODE)
-			init_test(1);
 		status = post_lock_lv(lock_cmd, lock_flags, lockname);
 		break;
 

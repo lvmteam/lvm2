@@ -251,9 +251,6 @@ static int hold_lock(char *resource, int mode, int flags)
 	int saved_errno;
 	struct lv_info *lvi;
 
-	if (test_mode())
-		return 0;
-
 	/* Mask off invalid options */
 	flags &= LCKF_NOQUEUE | LCKF_CONVERT;
 
@@ -319,9 +316,6 @@ static int hold_unlock(char *resource)
 	int status;
 	int saved_errno;
 
-	if (test_mode())
-		return 0;
-
 	if (!(lvi = lookup_info(resource))) {
 		DEBUGLOG("hold_unlock, lock not already held\n");
 		return 0;
@@ -381,7 +375,7 @@ static int do_activate_lv(char *resource, unsigned char command, unsigned char l
 	 * Use lock conversion only if requested, to prevent implicit conversion
 	 * of exclusive lock to shared one during activation.
 	 */
-	if (command & LCK_CLUSTER_VG) {
+	if (!test_mode() && command & LCK_CLUSTER_VG) {
 		status = hold_lock(resource, mode, LCKF_NOQUEUE | (lock_flags & LCK_CONVERT ? LCKF_CONVERT:0));
 		if (status) {
 			/* Return an LVM-sensible error for this.
@@ -415,7 +409,7 @@ static int do_activate_lv(char *resource, unsigned char command, unsigned char l
 	return 0;
 
 error:
-	if (oldmode == -1 || oldmode != mode)
+	if (!test_mode() && (oldmode == -1 || oldmode != mode))
 		(void)hold_unlock(resource);
 	return EIO;
 }
@@ -479,7 +473,7 @@ static int do_deactivate_lv(char *resource, unsigned char command, unsigned char
 	if (!lv_deactivate(cmd, resource, NULL))
 		return EIO;
 
-	if (command & LCK_CLUSTER_VG) {
+	if (!test_mode() && command & LCK_CLUSTER_VG) {
 		status = hold_unlock(resource);
 		if (status)
 			return errno;
@@ -526,6 +520,8 @@ int do_lock_lv(unsigned char command, unsigned char lock_flags, char *resource)
 	}
 
 	pthread_mutex_lock(&lvm_lock);
+	init_test((lock_flags & LCK_TEST_MODE) ? 1 : 0);
+
 	if (lock_flags & LCK_MIRROR_NOSYNC_MODE)
 		init_mirror_in_sync(1);
 
@@ -578,6 +574,7 @@ int do_lock_lv(unsigned char command, unsigned char lock_flags, char *resource)
 
 	/* clean the pool for another command */
 	dm_pool_empty(cmd->mem);
+	init_test(0);
 	pthread_mutex_unlock(&lvm_lock);
 
 	DEBUGLOG("Command return is %d, critical_section is %d\n", status, critical_section());
@@ -597,7 +594,8 @@ int pre_lock_lv(unsigned char command, unsigned char lock_flags, char *resource)
 		DEBUGLOG("pre_lock_lv: resource '%s', cmd = %s, flags = %s\n",
 			 resource, decode_locking_cmd(command), decode_flags(lock_flags));
 
-		if (hold_lock(resource, LCK_WRITE, LCKF_NOQUEUE | LCKF_CONVERT))
+		if (!(lock_flags & LCK_TEST_MODE) &&
+		    hold_lock(resource, LCK_WRITE, LCKF_NOQUEUE | LCKF_CONVERT))
 			return errno;
 	}
 	return 0;
@@ -629,11 +627,13 @@ int post_lock_lv(unsigned char command, unsigned char lock_flags,
 			if (!status)
 				return EIO;
 
-			if (lvi.exists) {
-				if (hold_lock(resource, LCK_READ, LCKF_CONVERT))
+			if (!(lock_flags & LCK_TEST_MODE)) {
+				if (lvi.exists) {
+					if (hold_lock(resource, LCK_READ, LCKF_CONVERT))
+						return errno;
+				} else if (hold_unlock(resource))
 					return errno;
-			} else if (hold_unlock(resource))
-				return errno;
+			}
 		}
 	}
 	return 0;
@@ -697,6 +697,8 @@ void do_lock_vg(unsigned char command, unsigned char lock_flags, char *resource)
 	}
 
 	pthread_mutex_lock(&lvm_lock);
+	init_test((lock_flags & LCK_TEST_MODE) ? 1 : 0);
+
 	switch (lock_cmd) {
 		case LCK_VG_COMMIT:
 			DEBUGLOG("vg_commit notification for VG %s\n", vgname);
@@ -711,6 +713,8 @@ void do_lock_vg(unsigned char command, unsigned char lock_flags, char *resource)
 			DEBUGLOG("Invalidating cached metadata for VG %s\n", vgname);
 			lvmcache_drop_metadata(vgname, 0);
 	}
+
+	init_test(0);
 	pthread_mutex_unlock(&lvm_lock);
 }
 

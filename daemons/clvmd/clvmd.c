@@ -1762,7 +1762,6 @@ static int process_local_command(struct clvm_header *msg, int msglen,
 	if (msg->flags & CLVMD_FLAG_REMOTE)
 		status = 0;
 	else
-		/* FIXME: usage of init_test() is unprotected */
 		status = do_command(client, msg, msglen, &replybuf, buflen, &replylen);
 
 	if (status)
