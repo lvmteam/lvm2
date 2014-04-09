@@ -349,7 +349,7 @@ static struct lvmcache_info *_pv_populate_lvmcache(struct cmd_context *cmd,
 
 	i = 0;
 	do {
-		sprintf(da_id, "ea%d", i);
+		sprintf(da_id, "ba%d", i);
 		da = dm_config_find_node(cn->child, da_id);
 		if (da) {
 			if (!dm_config_get_uint64(da->child, "offset", &offset)) return_0;
