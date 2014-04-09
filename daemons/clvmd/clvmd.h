@@ -56,7 +56,7 @@ struct localsock_bits {
 	int cleanup_needed;     /* helper for cleanup_zombie */
 	struct local_client *pipe_client;
 	pthread_t threadid;
-	enum { PRE_COMMAND, POST_COMMAND, QUIT } state;
+	enum { PRE_COMMAND, POST_COMMAND } state;
 	pthread_mutex_t mutex;	/* Main thread and worker synchronisation */
 	pthread_cond_t cond;
 };
