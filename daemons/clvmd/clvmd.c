@@ -1149,8 +1149,6 @@ static int cleanup_zombie(struct local_client *thisfd)
 	DEBUGLOG("EOF on local socket: inprogress=%d\n",
 		 thisfd->bits.localsock.in_progress);
 
-	thisfd->bits.localsock.finished = 1;
-
 	if ((pipe_client = thisfd->bits.localsock.pipe_client))
 		pipe_client = pipe_client->bits.pipe.client;
 
@@ -1161,6 +1159,7 @@ static int cleanup_zombie(struct local_client *thisfd)
 		if (pthread_mutex_trylock(&thisfd->bits.localsock.mutex))
 			return 1;
 		thisfd->bits.localsock.state = POST_COMMAND;
+		thisfd->bits.localsock.finished = 1;
 		pthread_cond_signal(&thisfd->bits.localsock.cond);
 		pthread_mutex_unlock(&thisfd->bits.localsock.mutex);
 
@@ -1173,6 +1172,7 @@ static int cleanup_zombie(struct local_client *thisfd)
 		DEBUGLOG("Waiting for pre&post thread (%p)\n", pipe_client);
 		pthread_mutex_lock(&thisfd->bits.localsock.mutex);
 		thisfd->bits.localsock.state = PRE_COMMAND;
+		thisfd->bits.localsock.finished = 1;
 		pthread_cond_signal(&thisfd->bits.localsock.cond);
 		pthread_mutex_unlock(&thisfd->bits.localsock.mutex);
 
