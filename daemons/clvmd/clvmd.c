@@ -685,6 +685,10 @@ static int local_rendezvous_callback(struct local_client *thisfd, char *buf,
 			return 1;
 		}
 
+		pthread_cond_init(&newfd->bits.localsock.cond, NULL);
+		pthread_mutex_init(&newfd->bits.localsock.mutex, NULL);
+		pthread_mutex_init(&newfd->bits.localsock.reply_mutex, NULL);
+
 		if (fcntl(client_fd, F_SETFD, 1))
 			DEBUGLOG("Setting CLOEXEC on client fd failed: %s\n", strerror(errno));
 
@@ -1179,8 +1183,6 @@ static int cleanup_zombie(struct local_client *thisfd)
 		DEBUGLOG("Joined pre&post thread\n");
 
 		thisfd->bits.localsock.threadid = 0;
-		pthread_cond_destroy(&thisfd->bits.localsock.cond);
-		pthread_mutex_destroy(&thisfd->bits.localsock.mutex);
 
 		/* Remove the pipe client */
 		if (thisfd->bits.localsock.pipe_client) {
@@ -1319,16 +1321,6 @@ static int read_from_local_sock(struct local_client *thisfd)
 			missing_len -= len;
 			argslen += len;
 		}
-	}
-
-	/*
-	 * Initialise and lock the mutex so the subthread will wait
-	 * after finishing the PRE routine
-	 */
-	if (!thisfd->bits.localsock.threadid) {
-		pthread_mutex_init(&thisfd->bits.localsock.mutex, NULL);
-		pthread_cond_init(&thisfd->bits.localsock.cond, NULL);
-		pthread_mutex_init(&thisfd->bits.localsock.reply_mutex, NULL);
 	}
 
 	/* Only run the command if all the cluster nodes are running CLVMD */
@@ -1975,6 +1967,9 @@ static int process_work_item(struct lvm_thread_cmd *cmd)
 	if (cmd->msg == NULL) {
 		DEBUGLOG("process_work_item: free fd %d\n", cmd->client->fd);
 		cmd_client_cleanup(cmd->client);
+		pthread_mutex_destroy(&cmd->client->bits.localsock.reply_mutex);
+		pthread_mutex_destroy(&cmd->client->bits.localsock.mutex);
+		pthread_cond_destroy(&cmd->client->bits.localsock.cond);
 		dm_free(cmd->client);
 		return 0;
 	}

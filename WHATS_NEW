@@ -1,5 +1,6 @@
 Version 2.02.107 - 
 ==================================
+  Shift mutex creation and destroy for localsock in clvmd to correct place.
   Fix usage of --test option in clvmd.
   Skip more libraries to be mlocked in memory.
   Remove LOCKED flag for pvmove replaced with error target.
