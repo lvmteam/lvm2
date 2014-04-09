@@ -187,3 +187,25 @@ for ignore in y n; do
 done
 done
 done
+
+#COMM 'pvcreate sets/aligns bootloader area correctly'
+pvcreate --dataalignment 256k --bootloaderareasize 600k "$dev1"
+# ba_start must be aligned based on dataalignment
+# pe_start starts at next dataalignment multiple
+# ba_size is the whole space in between ba_start and pe_start
+check pv_field "$dev1" ba_start "256.00k"
+check pv_field "$dev1" ba_size "768.00k"
+check pv_field "$dev1" pe_start "1.00m"
+
+aux lvmconf 'global/suffix=0'
+aux lvmconf 'global/units="b"'
+#COMM 'pvcreate with booloader area size - test corner cases
+dev_size=$(pvs -o pv_size --noheadings $dev1)
+pv_size=$[dev_size - 1048576] # device size - 1m pe_start = area for data
+# try to use the whole data area for bootloader area
+pvcreate --bootloaderareasize ${pv_size}b --dataalignment 1048576b "$dev1"
+check pv_field "$dev1" pe_start $dev_size
+check pv_field "$dev1" ba_start 1048576
+check pv_field "$dev1" ba_size ${pv_size}
+not pvcreate --bootloaderareasize $[pv_size + 1] --dataalignment 1048576b "$dev1" 2>err
+grep "Bootloader area with data-aligned start must not exceed device size" err
