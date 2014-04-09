@@ -1,5 +1,6 @@
 Version 2.02.107 - 
 ==================================
+  Use thread-safe ctime_r() for clvmd debug logging.
   Skip adding replies to already finished reply thread.
   Use mutex to check number of replies in request_timed_out() in clvmd.
   Drop usage of extra reply_mutex for localsock in clvmd.

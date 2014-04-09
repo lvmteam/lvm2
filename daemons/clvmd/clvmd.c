@@ -212,12 +212,13 @@ void debuglog(const char *fmt, ...)
 	time_t P;
 	va_list ap;
 	static int syslog_init = 0;
+	char buf_ctime[64];
 
 	switch (clvmd_get_debug()) {
 	case DEBUG_STDERR:
 		va_start(ap,fmt);
 		time(&P);
-		fprintf(stderr, "CLVMD[%x]: %.15s ", (int)pthread_self(), ctime(&P)+4 );
+		fprintf(stderr, "CLVMD[%x]: %.15s ", (int)pthread_self(), ctime_r(&P, buf_ctime) + 4);
 		vfprintf(stderr, fmt, ap);
 		va_end(ap);
 		break;
