@@ -687,7 +687,6 @@ static int local_rendezvous_callback(struct local_client *thisfd, char *buf,
 
 		pthread_cond_init(&newfd->bits.localsock.cond, NULL);
 		pthread_mutex_init(&newfd->bits.localsock.mutex, NULL);
-		pthread_mutex_init(&newfd->bits.localsock.reply_mutex, NULL);
 
 		if (fcntl(client_fd, F_SETFD, 1))
 			DEBUGLOG("Setting CLOEXEC on client fd failed: %s\n", strerror(errno));
@@ -785,13 +784,13 @@ static void timedout_callback(struct local_client *client, const char *csid,
 
 		clops->name_from_csid(csid, nodename);
 		DEBUGLOG("Checking for a reply from %s\n", nodename);
-		pthread_mutex_lock(&client->bits.localsock.reply_mutex);
+		pthread_mutex_lock(&client->bits.localsock.mutex);
 
 		reply = client->bits.localsock.replies;
 		while (reply && strcmp(reply->node, nodename) != 0)
 			reply = reply->next;
 
-		pthread_mutex_unlock(&client->bits.localsock.reply_mutex);
+		pthread_mutex_unlock(&client->bits.localsock.mutex);
 
 		if (!reply) {
 			DEBUGLOG("Node %s timed-out\n", nodename);
@@ -1632,7 +1631,7 @@ static void add_reply_to_list(struct local_client *client, int status,
 	} else
 		reply->replymsg = NULL;
 
-	pthread_mutex_lock(&client->bits.localsock.reply_mutex);
+	pthread_mutex_lock(&client->bits.localsock.mutex);
 	/* Hook it onto the reply chain */
 	reply->next = client->bits.localsock.replies;
 	client->bits.localsock.replies = reply;
@@ -1645,13 +1644,11 @@ static void add_reply_to_list(struct local_client *client, int status,
 	    client->bits.localsock.expected_replies) {
 		/* Post-process the command */
 		if (client->bits.localsock.threadid) {
-			pthread_mutex_lock(&client->bits.localsock.mutex);
 			client->bits.localsock.state = POST_COMMAND;
 			pthread_cond_signal(&client->bits.localsock.cond);
-			pthread_mutex_unlock(&client->bits.localsock.mutex);
 		}
 	}
-	pthread_mutex_unlock(&client->bits.localsock.reply_mutex);
+	pthread_mutex_unlock(&client->bits.localsock.mutex);
 }
 
 /* This is the thread that runs the PRE and post commands for a particular connection */
@@ -1967,7 +1964,6 @@ static int process_work_item(struct lvm_thread_cmd *cmd)
 	if (cmd->msg == NULL) {
 		DEBUGLOG("process_work_item: free fd %d\n", cmd->client->fd);
 		cmd_client_cleanup(cmd->client);
-		pthread_mutex_destroy(&cmd->client->bits.localsock.reply_mutex);
 		pthread_mutex_destroy(&cmd->client->bits.localsock.mutex);
 		pthread_cond_destroy(&cmd->client->bits.localsock.cond);
 		dm_free(cmd->client);

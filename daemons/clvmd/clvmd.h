@@ -59,8 +59,6 @@ struct localsock_bits {
 	enum { PRE_COMMAND, POST_COMMAND, QUIT } state;
 	pthread_mutex_t mutex;	/* Main thread and worker synchronisation */
 	pthread_cond_t cond;
-
-	pthread_mutex_t reply_mutex;	/* Protect reply structure */
 };
 
 /* Entries for PIPE clients */

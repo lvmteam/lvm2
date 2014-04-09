@@ -1,5 +1,6 @@
 Version 2.02.107 - 
 ==================================
+  Drop usage of extra reply_mutex for localsock in clvmd.
   Protect manipulation with finished flag with mutex in clvmd. 
   Shift mutex creation and destroy for localsock in clvmd to correct place.
   Fix usage of --test option in clvmd.
