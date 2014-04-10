@@ -1580,14 +1580,6 @@ int pvcreate_params_validate(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (pp->data_alignment && pp->rp.pe_start != PV_PE_START_CALC) {
-		if (pp->rp.pe_start % pp->data_alignment)
-			log_warn("WARNING: Ignoring data alignment %" PRIu64
-				 " incompatible with --restorefile value (%"
-				 PRIu64").", pp->data_alignment, pp->rp.pe_start);
-		pp->data_alignment = 0;
-	}
-
 	if (arg_sign_value(cmd, dataalignmentoffset_ARG, SIGN_NONE) == SIGN_MINUS) {
 		log_error("Physical volume data alignment offset may not be negative");
 		return 0;
@@ -1599,11 +1591,15 @@ int pvcreate_params_validate(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (pp->data_alignment_offset && pp->rp.pe_start != PV_PE_START_CALC) {
-		log_warn("WARNING: Ignoring data alignment offset %" PRIu64
-			 " incompatible with --restorefile value (%"
-			 PRIu64").", pp->data_alignment_offset, pp->rp.pe_start);
-		pp->data_alignment_offset = 0;
+	if ((pp->data_alignment + pp->data_alignment_offset) &&
+	    (pp->rp.pe_start != PV_PE_START_CALC)) {
+		if ((pp->rp.pe_start % pp->data_alignment) != pp->data_alignment_offset) {
+			log_warn("WARNING: Ignoring data alignment %" PRIu64
+				 " incompatible with restored pe_start value %" PRIu64").",
+				 pp->data_alignment + pp->data_alignment_offset, pp->rp.pe_start);
+			pp->data_alignment = 0;
+			pp->data_alignment_offset = 0;
+		}
 	}
 
 	if (arg_sign_value(cmd, metadatasize_ARG, SIGN_NONE) == SIGN_MINUS) {
