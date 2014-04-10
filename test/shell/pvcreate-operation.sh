@@ -124,6 +124,22 @@ vgcfgrestore -f $backupfile $vg1
 vgremove -f $vg1
 pvremove -f "$dev1"
 
+# pvcreate --restorefile should handle --dataalignment and --dataalignmentoffset
+# and check it's compatible with pe_start value being restored
+# X * dataalignment + dataalignmentoffset == pe_start
+pvcreate --norestorefile --uuid $uuid1 --dataalignment 600k --dataalignmentoffset 32k "$dev1"
+vgcreate $vg1 "$dev1"
+vgcfgbackup -f $backupfile $vg1
+vgremove -ff $vg1
+pvremove -ff "$dev1"
+# the dataalignment and dataalignmentoffset is ignored here since they're incompatible with pe_start
+pvcreate --restorefile $backupfile --uuid $uuid1 --dataalignment 500k --dataalignmentoffset 10k "$dev1" 2> err
+grep "incompatible with restored pe_start value" err
+# 300k is multiple of 600k so this should pass
+pvcreate --restorefile $backupfile --uui $uuid1 --dataalignment 300k --dataalignmentoffset 32k "$dev1" 2> err
+not grep "incompatible with restored pe_start value" err
+rm -f $backupfile
+
 # pvcreate rejects non-existent uuid given with restorefile
 not pvcreate --uuid $uuid1 --restorefile $backupfile "$dev1"
 

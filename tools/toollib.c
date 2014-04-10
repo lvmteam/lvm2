@@ -1593,10 +1593,11 @@ int pvcreate_params_validate(struct cmd_context *cmd,
 
 	if ((pp->data_alignment + pp->data_alignment_offset) &&
 	    (pp->rp.pe_start != PV_PE_START_CALC)) {
-		if ((pp->rp.pe_start % pp->data_alignment) != pp->data_alignment_offset) {
-			log_warn("WARNING: Ignoring data alignment %" PRIu64
-				 " incompatible with restored pe_start value %" PRIu64").",
-				 pp->data_alignment + pp->data_alignment_offset, pp->rp.pe_start);
+		if ((pp->data_alignment ? pp->rp.pe_start % pp->data_alignment : pp->rp.pe_start) != pp->data_alignment_offset) {
+			log_warn("WARNING: Ignoring data alignment %s"
+				 " incompatible with restored pe_start value %s)",
+				 display_size(cmd, pp->data_alignment + pp->data_alignment_offset),
+				 display_size(cmd, pp->rp.pe_start));
 			pp->data_alignment = 0;
 			pp->data_alignment_offset = 0;
 		}
