@@ -1,3 +1,6 @@
+Version 2.02.107 - 
+==================================
+
 Version 2.02.106 - 10th April 2014
 ==================================
   Fix ignored --dataalignment/dataalignment offset for pvcreate --restorefile.
