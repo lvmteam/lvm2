@@ -1,5 +1,5 @@
-Version 2.02.106 - 
-====================================
+Version 2.02.106 - 10th April 2014
+==================================
   Fix ignored --dataalignment/dataalignment offset for pvcreate --restorefile.
   Fix lost information about bootloader area when using lvmetad.
   Don't require --major to be specified when using -My option on kernels > 2.4.
@@ -7,19 +7,17 @@ Version 2.02.106 -
   Use thin_check --clear-needs-check-flag by default.
   Export lvm_even_rand() for controlled provision of random numbers.
   Add lvmthin man page to section 7.
-  Extend internal validation of lv names size is less then 128 chars.
-  Fail in resume for lvrename will result in failing command.
-  Validate length of new LV name in lvrename to not exceed 127 characters.
-  Add explict error message when using lvdisplay -c -m.
-  Update man pages for pv/vg/lvdisplay.
-  Report error when running pvscan with free argument (i.e. PV name).
-  Fix error message for pvdisplay -c -m and add new for pvdisplay -c -s.
-  Return proper invalid cmd when vgimport/exports find error in parameters.
-  Obtain list of known VGs for pvchange --all when using lvmetad.
-  Add man page for lvm dumpconfig.
+  Ensure mapped device names are not too long in vg_validate and lvrename.
+  Ensure resume failure in lvrename results in command failure.
+  Add explicit error message when using lvdisplay -c -m.
+  Report error if superfluous argument (e.g. PV name) supplied to pvscan.
+  Fix error message for pvdisplay -c -m and add one for pvdisplay -c -s.
+  Use EINVALID_CMD_LINE correctly instead of ECMD_FAILED in vgimport/export.
+  Obtain list of known VGs from lvmetad for pvchange --all.
+  Add man page for lvm-dumpconfig to section 8.
   Drop unused cmd pointer for internal function for_each_sub_lv().
   Validate name for renamed sub LVs.
-  When lvrename fails on argument parsing return invalid cmd line error (5->3).
+  When lvrename fails on argument parsing return EINVALID_CMD_LINE.
   Fix exit code regression in failing pvchange command (2.02.66).
   Include 'lvm dumpconfig --type missing' and '--type diff' output to lvmdump.
   Return failure when specifying negative size for pvresize.
@@ -27,7 +25,6 @@ Version 2.02.106 -
   Reinitialise lvmcache properly on fork to fix premature polldaemon exit.
   Add 'lvm dumpconfig --type diff' to show differences from defaults.
   Fix swap signature detection for devices smaller then 2MB.
-  Reindent some clvmd.c code.
   Use dm_malloc function in clvmd.c.
   Resolve memory release order for clvmd shutdown.
   Report error when lvm2 activation is released in critical_section.
