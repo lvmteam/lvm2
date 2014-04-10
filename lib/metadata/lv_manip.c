@@ -873,7 +873,7 @@ int replace_lv_with_error_segment(struct logical_volume *lv)
 	 * an error segment, we should also clear any flags
 	 * that suggest it is anything other than "error".
 	 */
-	lv->status &= ~(MIRRORED|PVMOVE);
+	lv->status &= ~(MIRRORED|PVMOVE|LOCKED);
 
 	/* FIXME: Should we bug if we find a log_lv attached? */
 

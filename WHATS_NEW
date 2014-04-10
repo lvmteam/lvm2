@@ -1,5 +1,6 @@
 Version 2.02.107 - 
 ==================================
+  Remove LOCKED flag for pvmove replaced with error target.
   Return invalid command when specifying negative polling interval.
 
 Version 2.02.106 - 10th April 2014
