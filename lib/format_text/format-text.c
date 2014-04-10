@@ -1536,11 +1536,11 @@ static int _text_pv_initialise(const struct format_type *fmt,
 		/*
 		 * Calculate new PE start and bootloader area start value.
 		 * Make sure both are properly aligned!
-		 * If PE start can't be aligned because EA is taking
+		 * If PE start can't be aligned because BA is taking
 		 * the whole space, make PE start equal to the PV size
 		 * which effectively disables DA - it will have zero size.
 		 * This needs to be done as we can't have a PV without any DA.
-		 * But we still want to support a PV with EA only!
+		 * But we still want to support a PV with BA only!
 		 */
 		if (rp->ba_size) {
 			pv->ba_start = final_alignment;
@@ -1556,7 +1556,7 @@ static int _text_pv_initialise(const struct format_type *fmt,
 		/*
 		 * Try to keep the value of PE start set to a firm value if
 		 * requested. This is useful when restoring existing PE start
-		 * value (e.g. backups). Also, if creating an EA, try to place
+		 * value (e.g. backups). Also, if creating a BA, try to place
 		 * it in between the final alignment and existing PE start
 		 * if possible.
 		 */
