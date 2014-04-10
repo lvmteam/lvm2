@@ -92,9 +92,15 @@ static const char * const _blacklist_maps[] = {
     "locale/locale-archive",
     "/LC_MESSAGES/",
     "gconv/gconv-modules.cache",
-    "/libreadline.so.",	/* not using readline during mlock */
+    "/libblkid.so.",	/* not using lzma during mlock (selinux) */
+    "/liblzma.so.",	/* not using lzma during mlock (selinux) */
     "/libncurses.so.",	/* not using ncurses during mlock */
+    "/libpcre.so.",	/* not using pcre during mlock (selinux) */
+    "/libreadline.so.",	/* not using readline during mlock */
+    "/libselinux.so.",	/* not using selinux during mlock */
+    "/libsepol.so.",	/* not using sepol during mlock */
     "/libtinfo.so.",	/* not using tinfo during mlock */
+    "/libuuid.so.",	/* not using uuid during mlock (blkid) */
     "/libdl-",		/* not using dlopen,dlsym during mlock */
     /* "/libdevmapper-event.so" */
 };
