@@ -1,5 +1,6 @@
 Version 2.02.107 - 
 ==================================
+  Return invalid command when specifying negative polling interval.
 
 Version 2.02.106 - 10th April 2014
 ==================================
