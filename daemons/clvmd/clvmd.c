@@ -779,25 +779,26 @@ static int local_pipe_callback(struct local_client *thisfd, char *buf,
 static void timedout_callback(struct local_client *client, const char *csid,
 			      int node_up)
 {
-	if (node_up) {
-		struct node_reply *reply;
-		char nodename[max_cluster_member_name_len];
+	struct node_reply *reply;
+	char nodename[max_cluster_member_name_len];
 
-		clops->name_from_csid(csid, nodename);
-		DEBUGLOG("Checking for a reply from %s\n", nodename);
-		pthread_mutex_lock(&client->bits.localsock.mutex);
+	if (!node_up)
+		return;
 
-		reply = client->bits.localsock.replies;
-		while (reply && strcmp(reply->node, nodename) != 0)
-			reply = reply->next;
+	clops->name_from_csid(csid, nodename);
+	DEBUGLOG("Checking for a reply from %s\n", nodename);
+	pthread_mutex_lock(&client->bits.localsock.mutex);
 
-		pthread_mutex_unlock(&client->bits.localsock.mutex);
+	reply = client->bits.localsock.replies;
+	while (reply && strcmp(reply->node, nodename) != 0)
+		reply = reply->next;
 
-		if (!reply) {
-			DEBUGLOG("Node %s timed-out\n", nodename);
-			add_reply_to_list(client, ETIMEDOUT, csid,
-					  "Command timed out", 18);
-		}
+	pthread_mutex_unlock(&client->bits.localsock.mutex);
+
+	if (!reply) {
+		DEBUGLOG("Node %s timed-out\n", nodename);
+		add_reply_to_list(client, ETIMEDOUT, csid,
+				  "Command timed out", 18);
 	}
 }
 
