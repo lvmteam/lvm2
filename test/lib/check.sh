@@ -285,7 +285,26 @@ vg_field() {
 lv_field() {
 	local actual=$(get lv_field "$1" "$2" "${@:4}")
 	test "$actual" = "$3" || \
-		die "lv_field: lv=$lv, field=\"$2\", actual=\"$actual\", expected=\"$3\""
+		die "lv_field: lv=$1, field=\"$2\", actual=\"$actual\", expected=\"$3\""
+}
+
+lv_attr_bit() {
+	local actual=$(get lv_field "$2" lv_attr "${@:4}")
+	local offset=$1
+	case "$offset" in
+	  type) offset=0 ;;
+	  perm*) offset=1 ;;
+	  alloc*) offset=2 ;;
+	  fixed*) offset=3 ;;
+	  state) offset=4 ;;
+	  open) offset=5 ;;
+	  target) offset=6 ;;
+	  zero) offset=7 ;;
+	  health) offset=8 ;;
+	  skip) offset=9 ;;
+	esac
+	test "${actual:$offset:1}" = "$3" || \
+		die "lv_attr_bit: lv=$2, ${offset} bit of \"$actual\" is \"${actual:$offset:1}\", but expected \"$3\""
 }
 
 compare_fields() {
