@@ -53,7 +53,7 @@ if test -e LOCAL_CLVMD ; then
 	kill $(cat LOCAL_CLVMD)
 	for i in $(seq 1 100) ; do
 		test $i -eq 100 && die "Shutdown of clvmd is too slow."
-		test -e "$CLVMD_PIDFILE" && break
+		test -e "$CLVMD_PIDFILE" || break
 		sleep .1
 	done # wait for the pid removal
 	aux prepare_clvmd
