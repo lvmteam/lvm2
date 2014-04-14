@@ -1636,21 +1636,25 @@ static void add_reply_to_list(struct local_client *client, int status,
 		reply->replymsg = NULL;
 
 	pthread_mutex_lock(&client->bits.localsock.mutex);
-	/* Hook it onto the reply chain */
-	reply->next = client->bits.localsock.replies;
-	client->bits.localsock.replies = reply;
-	DEBUGLOG("Got %d replies, expecting: %d\n",
-		 client->bits.localsock.num_replies + 1,
-		 client->bits.localsock.expected_replies);
 
-	/* If we have the whole lot then do the post-process */
-	if (++client->bits.localsock.num_replies ==
-	    client->bits.localsock.expected_replies) {
+	if (client->bits.localsock.finished) {
+		dm_free(reply->replymsg);
+		dm_free(reply);
+	} else {
+		/* Hook it onto the reply chain */
+		reply->next = client->bits.localsock.replies;
+		client->bits.localsock.replies = reply;
+
+		/* If we have the whole lot then do the post-process */
 		/* Post-process the command */
-		if (client->bits.localsock.threadid) {
+		if (++client->bits.localsock.num_replies ==
+		    client->bits.localsock.expected_replies) {
 			client->bits.localsock.state = POST_COMMAND;
 			pthread_cond_signal(&client->bits.localsock.cond);
 		}
+		DEBUGLOG("Got %d replies, expecting: %d\n",
+			 client->bits.localsock.num_replies,
+			 client->bits.localsock.expected_replies);
 	}
 	pthread_mutex_unlock(&client->bits.localsock.mutex);
 }
