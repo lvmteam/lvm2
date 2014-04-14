@@ -812,16 +812,20 @@ static void request_timed_out(struct local_client *client)
 	DEBUGLOG("Request timed-out. padding\n");
 	clops->cluster_do_node_callback(client, timedout_callback);
 
-	if (client->bits.localsock.num_replies !=
-	    client->bits.localsock.expected_replies) {
+	if (!client->bits.localsock.threadid)
+		return;
+
+	pthread_mutex_lock(&client->bits.localsock.mutex);
+
+	if (!client->bits.localsock.finished &&
+	    (client->bits.localsock.num_replies !=
+	     client->bits.localsock.expected_replies)) {
 		/* Post-process the command */
-		if (client->bits.localsock.threadid) {
-			pthread_mutex_lock(&client->bits.localsock.mutex);
-			client->bits.localsock.state = POST_COMMAND;
-			pthread_cond_signal(&client->bits.localsock.cond);
-			pthread_mutex_unlock(&client->bits.localsock.mutex);
-		}
+		client->bits.localsock.state = POST_COMMAND;
+		pthread_cond_signal(&client->bits.localsock.cond);
 	}
+
+	pthread_mutex_unlock(&client->bits.localsock.mutex);
 }
 
 /* This is where the real work happens */
