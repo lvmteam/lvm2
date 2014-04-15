@@ -1,5 +1,6 @@
 Version 2.02.107 - 
 ==================================
+  Refactor allocation code to make A_POSITIONAL_FILL explicit.
   Use thread-safe ctime_r() for clvmd debug logging.
   Skip adding replies to already finished reply thread.
   Use mutex to check number of replies in request_timed_out() in clvmd.
