@@ -26,6 +26,7 @@
 //#include "libmultilog.h"
 #include "dm-logging.h"
 
+#include <stdarg.h>
 #include <dlfcn.h>
 #include <errno.h>
 #include <pthread.h>

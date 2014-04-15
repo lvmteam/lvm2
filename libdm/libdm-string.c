@@ -15,6 +15,7 @@
 #include "dmlib.h"
 
 #include <ctype.h>
+#include <stdarg.h>
 
 /*
  * consume characters while they match the predicate function.

@@ -20,6 +20,7 @@
 
 #include <sys/wait.h>
 #include <syslog.h> /* FIXME Replace syslog with multilog */
+#include <stdarg.h>
 /* FIXME Missing openlog? */
 
 /* First warning when snapshot is 80% full. */

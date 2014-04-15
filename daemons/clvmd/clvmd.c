@@ -19,10 +19,6 @@
 
 #include "clvmd-common.h"
 
-#include <pthread.h>
-#include <getopt.h>
-#include <ctype.h>
-
 #include "clvmd-comms.h"
 #include "clvm.h"
 #include "clvmd.h"
@@ -33,6 +29,11 @@
 #ifdef HAVE_COROSYNC_CONFDB_H
 #include <corosync/confdb.h>
 #endif
+
+#include <pthread.h>
+#include <getopt.h>
+#include <ctype.h>
+#include <stdarg.h>
 
 #include <fcntl.h>
 #include <netinet/in.h>

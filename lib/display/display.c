@@ -22,6 +22,7 @@
 #include "defaults.h"
 #include <math.h>  /* fabs() */
 #include <float.h> /* DBL_EPSILON */
+#include <stdarg.h>
 
 #define SIZE_BUF 128
 

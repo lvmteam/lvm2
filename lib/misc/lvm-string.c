@@ -18,6 +18,7 @@
 #include "metadata-exported.h"
 
 #include <ctype.h>
+#include <stdarg.h>
 
 int emit_to_buffer(char **buffer, size_t *size, const char *fmt, ...)
 {

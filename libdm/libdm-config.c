@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <ctype.h>
+#include <stdarg.h>
 
 #define SECTION_B_CHAR '{'
 #define SECTION_E_CHAR '}'
