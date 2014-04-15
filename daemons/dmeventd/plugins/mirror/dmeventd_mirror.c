@@ -14,7 +14,6 @@
 
 #include "lib.h"
 
-#include "lvm2cmd.h"
 #include "libdevmapper-event.h"
 #include "dmeventd_lvm.h"
 #include "defaults.h"
@@ -144,9 +143,9 @@ static int _remove_failed_devices(const char *device)
 	r = dmeventd_lvm2_run(cmd_str);
 
 	syslog(LOG_INFO, "Repair of mirrored device %s %s.", device,
-	       (r == LVM2_COMMAND_SUCCEEDED) ? "finished successfully" : "failed");
+	       (r) ? "finished successfully" : "failed");
 
-	return (r == LVM2_COMMAND_SUCCEEDED) ? 0 : -1;
+	return (r) ? 0 : -1;
 }
 
 void process_event(struct dm_task *dmt,

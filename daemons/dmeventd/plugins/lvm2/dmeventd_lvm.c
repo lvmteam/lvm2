@@ -143,7 +143,7 @@ struct dm_pool *dmeventd_lvm2_pool(void)
 
 int dmeventd_lvm2_run(const char *cmdline)
 {
-	return lvm2_run(_lvm_handle, cmdline);
+	return (lvm2_run(_lvm_handle, cmdline) == LVM2_COMMAND_SUCCEEDED);
 }
 
 int dmeventd_lvm2_command(struct dm_pool *mem, char *buffer, size_t size,

@@ -14,7 +14,6 @@
 
 #include "lib.h"
 
-#include "lvm2cmd.h"
 #include "libdevmapper-event.h"
 #include "dmeventd_lvm.h"
 
@@ -82,7 +81,7 @@ static int _run(const char *cmd, ...)
 
 static int _extend(const char *cmd)
 {
-	return dmeventd_lvm2_run(cmd) == LVM2_COMMAND_SUCCEEDED;
+	return dmeventd_lvm2_run(cmd);
 }
 
 static void _umount(const char *device, int major, int minor)
