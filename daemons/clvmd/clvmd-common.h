@@ -20,14 +20,13 @@
 
 #include "configure.h"
 
+#define _REENTRANT
 #define _GNU_SOURCE
 #define _FILE_OFFSET_BITS 64
 
 #include "libdevmapper.h"
-
 #include "lvm-logging.h"
 
 #include <unistd.h>
-#include <sys/stat.h>
 
 #endif

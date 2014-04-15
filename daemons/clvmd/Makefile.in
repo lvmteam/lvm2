@@ -87,7 +87,6 @@ include $(top_builddir)/make.tmpl
 LVMLIBS += -ldevmapper
 LIBS += $(PTHREAD_LIBS)
 
-DEFS += -D_REENTRANT
 CFLAGS += -fno-strict-aliasing $(EXTRA_EXEC_CFLAGS)
 LDFLAGS += $(EXTRA_EXEC_LDFLAGS)
 
