@@ -259,7 +259,7 @@ if (( $sysreport )); then
 						   lvm2-clvmd.service \
 						   lvm2-cmirrord.service \
 						   > \"$sysreport_dir/systemd_lvm2_services_status\" 2>> \"$log\""
-		log "$SYSTEMCTL list-units -l --no-legend --no-pager > \"$sysreport_dir/systemd_unit_list\" 2>> \"$log\""
+		log "$SYSTEMCTL list-units -l -a --no-legend --no-pager > \"$sysreport_dir/systemd_unit_list\" 2>> \"$log\""
 		for unit in $(cat $sysreport_dir/systemd_unit_list | grep lvm2-pvscan | cut -d " " -f 1); do
 			log "$SYSTEMCTL status -l --no-pager -n $log_lines -o short-precise $unit >> \"$sysreport_dir/systemd_lvm2_pvscan_service_status\""
 		done
