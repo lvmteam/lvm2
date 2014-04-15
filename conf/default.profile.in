@@ -9,24 +9,21 @@
 # Refer to 'man lvm.conf' for further information about profiles and file layout.
 
 allocation {
-	thin_pool_chunk_size_policy = "generic"
-	thin_pool_chunk_size = 64
-	thin_pool_discards = "passdown"
-	thin_pool_zero = 1
+	thin_pool_zero=1
+	thin_pool_discards="passdown"
+	thin_pool_chunk_size_policy="generic"
+#	thin_pool_chunk_size=64
 }
-
-activation {
-	thin_pool_autoextend_threshold = 100
-	thin_pool_autoextend_percent = 20
-}
-
 global {
 	units="h"
 	si_unit_consistency=1
 	suffix=1
 	lvdisplay_shows_full_device_path=0
 }
-
+activation {
+	thin_pool_autoextend_threshold=100
+	thin_pool_autoextend_percent=20
+}
 report {
 	aligned=1
 	buffered=1
