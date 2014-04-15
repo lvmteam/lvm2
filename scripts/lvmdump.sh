@@ -56,11 +56,12 @@ function usage {
 	echo "    -h print this message"
 	echo "    -a advanced collection - warning: if lvm is already hung,"
 	echo "       then this script may hang as well if -a is used"
-	echo "    -m gather LVM metadata from the PVs"
-	echo "    -d <directory> dump into a directory instead of tarball"
 	echo "    -c if running clvmd, gather cluster data as well"
-	echo "    -u gather udev info and context"
+	echo "    -d <directory> dump into a directory instead of tarball"
 	echo "    -l gather lvmetad state if running"
+	echo "    -m gather LVM metadata from the PVs"
+	echo "    -s gather system info and context"
+	echo "    -u gather udev info and context"
 	echo ""
 
 	exit 1
@@ -69,17 +70,18 @@ function usage {
 advanced=0
 clustered=0
 metadata=0
+sysreport=0
 udev=0
-while getopts :acd:hmul opt; do
+while getopts :acd:hlmus opt; do
 	case $opt in 
-		s)      sysreport=1 ;;
 		a)	advanced=1 ;;
 		c)	clustered=1 ;;
 		d)	userdir=$OPTARG ;;
 		h)	usage ;;
-		m)	metadata=1 ;;
-		u)	udev=1 ;;
 		l)	lvmetad=1 ;;
+		m)	metadata=1 ;;
+		s)      sysreport=1 ;;
+		u)	udev=1 ;;
 		:)	echo "$0: $OPTARG requires a value:"; usage ;;
 		\?)     echo "$0: unknown option $OPTARG"; usage ;;
 		*)	usage ;;
@@ -232,6 +234,36 @@ if (( $metadata )); then
 		myecho "  $pv"
 		log "$DD if=$pv \"of=$dir/metadata/$name\" bs=512 count=$pe_start 2>> \"$log\""
 	done
+fi
+
+if (( $sysreport )); then
+	myecho "Gathering system info..."
+
+	sysreport_dir="$dir/sysreport"
+	log_lines=10000
+
+	SYSTEMCTL=$(which systemctl 2>> $log)
+	JOURNALCTL=$(which journalctl 2>> $log)
+
+	if test -z "$SYSTEMCTL"; then
+		myecho "WARNING: systemctl not found"
+	elif test -z "$JOURNALCTL"; then
+		myecho "WARNING: journalctl not found"
+	else
+		log "$MKDIR -p \"$sysreport_dir\""
+		log "$JOURNALCTL -b --no-pager -o short-precise > \"$sysreport_dir/journal_content\" 2>> \"$log\""
+		log "$SYSTEMCTL status -l --no-pager -n $log_lines -o short-precise dm-event.socket dm-event.service \
+						   lvm2-monitor.service \
+						   lvm2-lvmetad.socket lvm2-lvmetad.service \
+						   lvm2-cluster-activation.service \
+						   lvm2-clvmd.service \
+						   lvm2-cmirrord.service \
+						   > \"$sysreport_dir/systemd_lvm2_services_status\" 2>> \"$log\""
+		log "$SYSTEMCTL list-units -l --no-legend --no-pager > \"$sysreport_dir/systemd_unit_list\" 2>> \"$log\""
+		for unit in $(cat $sysreport_dir/systemd_unit_list | grep lvm2-pvscan | cut -d " " -f 1); do
+			log "$SYSTEMCTL status -l --no-pager -n $log_lines -o short-precise $unit >> \"$sysreport_dir/systemd_lvm2_pvscan_service_status\""
+		done
+	fi
 fi
 
 if (( $udev )); then

@@ -10,6 +10,7 @@ lvmdump - create lvm2 information dumps for diagnostic purposes
 .RB [ \-h ]
 .RB [ \-l ]
 .RB [ \-m ]
+.RB [ \-s ]
 .RB [ \-u ]
 .SH DESCRIPTION
 lvmdump is a tool to dump various information concerning LVM2.
@@ -39,6 +40,8 @@ The content of the tarball is as follows:
 - if enabled with \-c, cluster status info
 .br
 - if enabled with \-l, lvmetad state if running
+.br
+- if enabled with \-s, system info and context
 .br
 - if enabled with \-u, udev info and context
 .SH OPTIONS
@@ -71,6 +74,12 @@ Gather LVM metadata from the PVs
 This option generates a 1:1 dump of the metadata area from all PVs visible
 to the system, which can cause the dump to increase in size considerably.
 However, the metadata dump may represent a valuable diagnostic resource.
+.TP
+.B \-s
+Gather system info and context. Currently, this encompasses systemd info
+and context only: overall state of systemd units present in the system,
+more detailed status of units controlling LVM functionality and the content
+of systemd journal for current boot.
 .TP
 .B \-u
 Gather udev info and context: /etc/udev/udev.conf file, udev daemon version
