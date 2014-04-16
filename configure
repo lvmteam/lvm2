@@ -1599,8 +1599,8 @@ Optional Features:
   --enable-lvmetad        enable the LVM Metadata Daemon
   --disable-blkid_wiping  disable libblkid detection of signatures when wiping
                           and use native code instead
-  --enable-udev-systemd-background-jobs
-                          enable udev-systemd protocol to instantiate a
+  --disable-udev-systemd-background-jobs
+                          disable udev-systemd protocol to instantiate a
                           service for background job
   --enable-udev_sync      enable synchronisation with udev processing
   --enable-udev_rules     install rule files needed for udev synchronisation
@@ -9689,7 +9689,7 @@ $as_echo_n "checking whether to use udev-systemd protocol for jobs in background
 if test "${enable_udev_systemd_background_jobs+set}" = set; then :
   enableval=$enable_udev_systemd_background_jobs; UDEV_SYSTEMD_BACKGROUND_JOBS=$enableval
 else
-  UDEV_SYSTEMD_BACKGROUND_JOBS=no
+  UDEV_SYSTEMD_BACKGROUND_JOBS=yes
 fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $UDEV_SYSTEMD_BACKGROUND_JOBS" >&5
