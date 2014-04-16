@@ -51,6 +51,7 @@ DISTCLEAN_TARGETS += config.cache config.log config.status make.tmpl
 include make.tmpl
 
 libdm: include
+libdaemon: include
 lib: libdm libdaemon
 liblvm: lib
 daemons: lib libdaemon tools
