@@ -15,10 +15,6 @@ srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 top_builddir = @top_builddir@
 
-ifeq ("@BUILD_LVMETAD@", "yes")
-  SUBDIRS += lvmetad
-endif
-
 .PHONY: dmeventd clvmd cmirrord lvmetad
 
 ifneq ("@CLVMD@", "none")
@@ -34,6 +30,10 @@ ifeq ("@BUILD_DMEVENTD@", "yes")
 ifneq ("$(CFLOW_CMD)", "")
 daemons.cflow: dmeventd.cflow
 endif
+endif
+
+ifeq ("@BUILD_LVMETAD@", "yes")
+  SUBDIRS += lvmetad
 endif
 
 ifeq ($(MAKECMDGOALS),distclean)
