@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2010-2011 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2010-2014 Red Hat, Inc. All rights reserved.
 #
 # This file is part of LVM2.
 #
@@ -24,7 +24,7 @@ LIB_VERSION = $(LIB_VERSION_LVM)
 
 include $(top_builddir)/make.tmpl
 
-LIBS += @LVM2CMD_LIB@ -ldevmapper $(PTHREAD_LIBS) $(DAEMON_LIBS)
+LIBS += @LVM2CMD_LIB@ -ldevmapper $(PTHREAD_LIBS)
 
 install_lvm2: install_lib_shared
 
