@@ -218,9 +218,9 @@ static pthread_cond_t _timeout_cond = PTHREAD_COND_INITIALIZER;
 static struct thread_status *_alloc_thread_status(const struct message_data *data,
 						  struct dso_data *dso_data)
 {
-	struct thread_status *ret = (typeof(ret)) dm_zalloc(sizeof(*ret));
+	struct thread_status *ret;
 
-	if (!ret)
+	if (!(ret = dm_zalloc(sizeof(*ret))))
 		return NULL;
 
 	if (!(ret->device.uuid = dm_strdup(data->device_uuid))) {
@@ -228,9 +228,6 @@ static struct thread_status *_alloc_thread_status(const struct message_data *dat
 		return NULL;
 	}
 
-	ret->current_task = NULL;
-	ret->device.name = NULL;
-	ret->device.major = ret->device.minor = 0;
 	ret->dso_data = dso_data;
 	ret->events = data->events_field;
 	ret->timeout = data->timeout_secs;
@@ -411,11 +408,7 @@ static int _fill_device_data(struct thread_status *ts)
 	if (!ts->device.uuid)
 		return 0;
 
-	ts->device.name = NULL;
-	ts->device.major = ts->device.minor = 0;
-
-	dmt = dm_task_create(DM_DEVICE_INFO);
-	if (!dmt)
+	if (!(dmt = dm_task_create(DM_DEVICE_INFO)))
 		return 0;
 
 	if (!dm_task_set_uuid(dmt, ts->device.uuid))
@@ -424,8 +417,8 @@ static int _fill_device_data(struct thread_status *ts)
 	if (!dm_task_run(dmt))
 		goto fail;
 
-	ts->device.name = dm_strdup(dm_task_get_name(dmt));
-	if (!ts->device.name)
+	dm_free(ts->device.name);
+	if (!(ts->device.name = dm_strdup(dm_task_get_name(dmt))))
 		goto fail;
 
 	if (!dm_task_get_info(dmt, &dmi))
