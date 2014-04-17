@@ -166,7 +166,7 @@ static int _clear_dev_from_lvmetad_cache(dev_t devno, int32_t major, int32_t min
 {
 	char *buf;
 
-	if (!dm_asprintf(&buf, "%" PRIi32 ":%" PRIi32, major, minor))
+	if (dm_asprintf(&buf, "%" PRIi32 ":%" PRIi32, major, minor) < 0)
 		stack;
 	if (!lvmetad_pv_gone(devno, buf ? : "", handler)) {
 		dm_free(buf);

@@ -124,7 +124,7 @@ void lvmetad_set_token(const struct dm_config_value *filter)
 		filter = filter->next;
 	}
 
-	if (!dm_asprintf(&_lvmetad_token, "filter:%u", ft))
+	if (dm_asprintf(&_lvmetad_token, "filter:%u", ft) < 0)
 		log_warn("WARNING: Failed to set lvmetad token. Out of memory?");
 }
 
