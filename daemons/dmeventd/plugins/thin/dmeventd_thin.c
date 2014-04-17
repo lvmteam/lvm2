@@ -218,7 +218,8 @@ static int _umount_device(char *buffer, unsigned major, unsigned minor,
  */
 static void _umount(struct dm_task *dmt, const char *device)
 {
-	static const size_t MINORS = 4096;
+	/* TODO: Convert to use hash to reduce memory usage */
+	static const size_t MINORS = (1U << 20); /* 20 bit */
 	struct mountinfo_s data = {
 		.device = device,
 	};
