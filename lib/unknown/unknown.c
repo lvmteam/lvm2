@@ -95,7 +95,7 @@ struct segment_type *init_unknown_segtype(struct cmd_context *cmd, const char *n
 
 	segtype->cmd = cmd;
 	segtype->ops = &_unknown_ops;
-	segtype->name = dm_pool_strdup(cmd->mem, name);
+	segtype->name = dm_pool_strdup(cmd->libmem, name);
 	segtype->private = NULL;
 	segtype->flags = SEG_UNKNOWN | SEG_VIRTUAL | SEG_CANNOT_BE_ZEROED;
 

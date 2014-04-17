@@ -1,5 +1,6 @@
 Version 2.02.107 - 
 ==================================
+  Use proper libmem mempool for allocation of unknown segment name.
   Add --readonly to reporting and display tools for lock-free metadata access.
   Add locking_type 5 for dummy locking for tools that do not need any locks.
   Fix _recover_vg() error path when lock conversion fails.

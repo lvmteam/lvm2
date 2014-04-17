@@ -23,6 +23,10 @@ vgcfgrestore -f bak0 $vg
 # we have on-disk metadata with unknown segments now
 not lvchange -aey $vg/$lv1 # check that activation is refused
 
+# try once more to catch invalid memory access with valgrind
+# when clvmd flushes cmd mem pool
+not lvchange -aey $vg/$lv1 # check that activation is refused
+
 vgcfgbackup -f bak1 $vg
 cat bak1
 sed -e 's,unstriped,striped,;s,unmirror,mirror,' -i.orig bak1
