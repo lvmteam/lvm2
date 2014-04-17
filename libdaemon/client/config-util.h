@@ -15,7 +15,6 @@
 #ifndef _LVM_DAEMON_CONFIG_UTIL_H
 #define _LVM_DAEMON_CONFIG_UTIL_H
 
-#include "configure.h"
 #include "libdevmapper.h"
 
 #include <stdarg.h>
@@ -64,4 +63,4 @@ struct dm_config_node *config_make_nodes(struct dm_config_tree *cft,
 					 struct dm_config_node *pre_sib,
 					 ...);
 
-#endif /* _LVM_DAEMON_SHARED_H */
+#endif /* _LVM_DAEMON_CONFIG_UTIL_H */

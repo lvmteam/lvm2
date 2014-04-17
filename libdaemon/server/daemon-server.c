@@ -11,7 +11,6 @@
  */
 
 #include "daemon-io.h"
-#include "config-util.h"
 #include "daemon-server.h"
 #include "daemon-log.h"
 

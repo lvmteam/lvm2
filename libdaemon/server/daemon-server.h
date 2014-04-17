@@ -12,8 +12,8 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef _LVM_DAEMON_COMMON_SERVER_H
-#define _LVM_DAEMON_COMMON_SERVER_H
+#ifndef _LVM_DAEMON_SERVER_H
+#define _LVM_DAEMON_SERVER_H
 
 #include "daemon-client.h"
 

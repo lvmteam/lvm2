@@ -12,8 +12,8 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef _LVM_DAEMON_COMMON_CLIENT_H
-#define _LVM_DAEMON_COMMON_CLIENT_H
+#ifndef _LVM_DAEMON_CLIENT_H
+#define _LVM_DAEMON_CLIENT_H
 
 #include "libdevmapper.h"
 #include "config-util.h"

@@ -13,7 +13,6 @@
  */
 
 #include "daemon-io.h"
-#include "config-util.h"
 #include "daemon-client.h"
 #include "dm-logging.h"
 
@@ -208,4 +207,3 @@ void daemon_request_destroy(daemon_request r) {
 		dm_config_destroy(r.cft);
 	buffer_destroy(&r.buffer);
 }
-

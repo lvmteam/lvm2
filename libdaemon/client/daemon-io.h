@@ -16,16 +16,16 @@
 #define _LVM_DAEMON_IO_H
 
 #include "configure.h"
-#include "config-util.h"
-#include "libdevmapper.h"
 
 #define _REENTRANT
 #define _GNU_SOURCE
 #define _FILE_OFFSET_BITS 64
+
+#include "config-util.h"
 
 /* TODO function names */
 
 int buffer_read(int fd, struct buffer *buffer);
 int buffer_write(int fd, const struct buffer *buffer);
 
-#endif /* _LVM_DAEMON_SHARED_H */
+#endif /* _LVM_DAEMON_IO_H */

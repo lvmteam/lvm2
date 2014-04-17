@@ -12,14 +12,13 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include "daemon-io.h"
+#include "dm-logging.h"
+
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-
-#include "dm-logging.h"
-#include "config-util.h"
-#include "libdevmapper.h"
 
 int buffer_append_vf(struct buffer *buf, va_list ap)
 {
