@@ -65,6 +65,7 @@
  *			that parent nodes are consistent with versioning, no check done
  *			if parent node is older or the same age as any child node!)
  */
+#include "defaults.h"
 
 cfg_section(root_CFG_SECTION, "(root)", root_CFG_SECTION, 0, vsn(0, 0, 0), NULL)
 

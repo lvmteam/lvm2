@@ -19,7 +19,6 @@
 #include "dev-cache.h"
 #include "dev-type.h"
 
-#include <stdio.h>
 #include <limits.h>
 
 /*

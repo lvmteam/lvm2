@@ -16,9 +16,6 @@
 #ifndef _LVM_TYPES_H
 #define _LVM_TYPES_H
 
-#include <sys/types.h>
-#include <inttypes.h>
-
 #include "libdevmapper.h"
 
 struct str_list {

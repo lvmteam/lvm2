@@ -15,10 +15,8 @@
 #include "lib.h"
 #include "toolcontext.h"
 #include "segtype.h"
-#include "display.h"
 #include "text_export.h"
 #include "config.h"
-#include "activate.h"
 
 static const char *_unknown_name(const struct lv_segment *seg)
 {

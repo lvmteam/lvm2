@@ -21,7 +21,6 @@
 #include "text_export.h"
 #include "text_import.h"
 #include "config.h"
-#include "defaults.h"
 #include "lvm-string.h"
 #include "targets.h"
 #include "activate.h"

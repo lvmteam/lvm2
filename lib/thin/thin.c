@@ -13,18 +13,12 @@
  */
 
 #include "lib.h"
-#include "toolcontext.h"
 #include "metadata.h"
 #include "segtype.h"
 #include "text_export.h"
 #include "config.h"
 #include "activate.h"
 #include "str_list.h"
-#include "defaults.h"
-
-#ifdef DMEVENTD
-#  include "libdevmapper-event.h"
-#endif
 
 /* Dm kernel module name for thin provisiong */
 static const char _thin_pool_module[] = "thin-pool";

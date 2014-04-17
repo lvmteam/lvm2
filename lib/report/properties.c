@@ -15,7 +15,6 @@
 #include "lib.h"
 #include "properties.h"
 #include "activate.h"
-#include "lvm-types.h"
 #include "metadata.h"
 
 

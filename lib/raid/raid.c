@@ -13,7 +13,6 @@
  */
 
 #include "lib.h"
-#include "toolcontext.h"
 #include "segtype.h"
 #include "display.h"
 #include "text_export.h"
@@ -25,7 +24,6 @@
 #include "activate.h"
 #include "metadata.h"
 #include "lv_alloc.h"
-#include "defaults.h"
 
 static const char *_raid_name(const struct lv_segment *seg)
 {

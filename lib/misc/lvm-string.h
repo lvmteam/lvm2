@@ -16,12 +16,12 @@
 #ifndef _LVM_STRING_H
 #define _LVM_STRING_H
 
-#include <stdio.h>
-#include <stdarg.h>
-
 #define NAME_LEN 128
 #define UUID_PREFIX "LVM-"
 
+#include <sys/types.h>
+
+struct dm_pool;
 struct pool;
 struct logical_volume;
 

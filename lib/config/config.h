@@ -16,8 +16,7 @@
 #ifndef _LVM_CONFIG_H
 #define _LVM_CONFIG_H
 
-#include "lvm-types.h"
-#include "defaults.h"
+#include "libdevmapper.h"
 
 /* 16 bits: 3 bits for major, 4 bits for minor, 9 bits for patchlevel */
 /* FIXME Max LVM version supported: 7.15.511. Extend bits when needed. */

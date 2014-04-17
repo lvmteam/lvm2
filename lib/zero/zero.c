@@ -13,7 +13,6 @@
  */
 
 #include "lib.h"
-#include "toolcontext.h"
 #include "segtype.h"
 #include "display.h"
 #include "config.h"
