@@ -464,20 +464,17 @@ static int _get_status(struct message_data *message_data)
 {
 	struct dm_event_daemon_message *msg = message_data->msg;
 	struct thread_status *thread;
-	int i, j;
-	int ret = -1;
-	int count = dm_list_size(&_thread_registry);
+	int i = 0, j;
+	int ret = -ENOMEM;
+	int count;
 	int size = 0, current;
-	char *buffers[count];
+	size_t len;
+	char **buffers;
 	char *message;
 
-	dm_free(msg->data);
-
-	for (i = 0; i < count; ++i)
-		buffers[i] = NULL;
-
-	i = 0;
 	_lock_mutex();
+	count = dm_list_size(&_thread_registry);
+	buffers = alloca(sizeof(char*) * count);
 	dm_list_iterate_items(thread, &_thread_registry) {
 		if ((current = dm_asprintf(buffers + i, "0:%d %s %s %u %" PRIu32 ";",
 					   i, thread->dso_data->dso_name,
