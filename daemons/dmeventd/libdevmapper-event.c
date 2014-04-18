@@ -291,7 +291,6 @@ static int _daemon_write(struct dm_event_fifos *fifos,
 	uint32_t *header = alloca(size);
 	char *buf = (char *)header;
 	char drainbuf[128];
-	struct timeval tval = { 0, 0 };
 
 	header[0] = htonl(msg->cmd);
 	header[1] = htonl(msg->size);
@@ -299,9 +298,9 @@ static int _daemon_write(struct dm_event_fifos *fifos,
 
 	/* drain the answer fifo */
 	while (1) {
+		struct timeval tval = { .tv_usec = 100 };
 		FD_ZERO(&fds);
 		FD_SET(fifos->server, &fds);
-		tval.tv_usec = 100;
 		ret = select(fifos->server + 1, &fds, NULL, NULL, &tval);
 		if ((ret < 0) && (errno != EINTR)) {
 			log_error("Unable to talk to event daemon");
