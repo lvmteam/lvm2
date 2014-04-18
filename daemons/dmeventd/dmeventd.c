@@ -1397,18 +1397,27 @@ static int _client_read(struct dm_event_fifos *fifos,
 static int _client_write(struct dm_event_fifos *fifos,
 			struct dm_event_daemon_message *msg)
 {
+	uint32_t temp[2];
 	unsigned bytes = 0;
 	int ret = 0;
 	fd_set fds;
 
-	size_t size = 2 * sizeof(uint32_t) + msg->size;
-	uint32_t *header = alloca(size);
+	size_t size = 2 * sizeof(uint32_t) + ((msg->data) ? msg->size : 0);
+	uint32_t *header = dm_malloc(size);
 	char *buf = (char *)header;
 
-	header[0] = htonl(msg->cmd);
-	header[1] = htonl(msg->size);
-	if (msg->data)
-		memcpy(buf + 2 * sizeof(uint32_t), msg->data, msg->size);
+	if (!header) {
+		/* Reply with ENOMEM message */
+		header = temp;
+		size = sizeof(temp);
+		header[0] = htonl(-ENOMEM);
+		header[1] = 0;
+	} else {
+		header[0] = htonl(msg->cmd);
+		header[1] = htonl((msg->data) ? msg->size : 0);
+		if (msg->data)
+			memcpy(buf + 2 * sizeof(uint32_t), msg->data, msg->size);
+	}
 
 	while (bytes < size) {
 		do {
@@ -1423,7 +1432,10 @@ static int _client_write(struct dm_event_fifos *fifos,
 			break;
 	}
 
-	return bytes == size;
+	if (header != temp)
+		dm_free(header);
+
+	return (bytes == size);
 }
 
 /*
