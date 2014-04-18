@@ -4105,6 +4105,9 @@ int vg_check_status(const struct volume_group *vg, uint64_t status)
 	return !_vg_bad_status_bits(vg, status);
 }
 
+/*
+ * VG is left unlocked on failure
+ */
 static struct volume_group *_recover_vg(struct cmd_context *cmd,
 			 const char *vg_name, const char *vgid)
 {
@@ -4118,11 +4121,14 @@ static struct volume_group *_recover_vg(struct cmd_context *cmd,
 	if (!lock_vol(cmd, vg_name, LCK_VG_WRITE, NULL))
 		return_NULL;
 
-	if (!(vg = vg_read_internal(cmd, vg_name, vgid, 1, &consistent)))
+	if (!(vg = vg_read_internal(cmd, vg_name, vgid, 1, &consistent))) {
+		unlock_vg(cmd, vg_name);
 		return_NULL;
+	}
 
 	if (!consistent) {
 		release_vg(vg);
+		unlock_vg(cmd, vg_name);
 		return_NULL;
 	}
 
@@ -4202,7 +4208,7 @@ static struct volume_group *_vg_lock_and_read(struct cmd_context *cmd, const cha
 			log_error("Recovery of volume group \"%s\" failed.",
 				  vg_name);
 			failure |= FAILED_INCONSISTENT;
-			goto bad;
+			goto bad_no_unlock;
 		}
 	}
 
@@ -4237,6 +4243,7 @@ bad:
 	if (!already_locked && !(misc_flags & READ_WITHOUT_LOCK))
 		unlock_vg(cmd, vg_name);
 
+bad_no_unlock:
 	return _vg_make_handle(cmd, vg, failure);
 }
 
