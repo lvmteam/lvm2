@@ -1417,17 +1417,17 @@ static int _client_write(struct dm_event_fifos *fifos,
 	if (msg->data)
 		memcpy(buf + 2 * sizeof(uint32_t), msg->data, msg->size);
 
-	errno = 0;
-	while (bytes < size && errno != EIO) {
+	while (bytes < size) {
 		do {
 			/* Watch client write FIFO to be ready for output. */
 			FD_ZERO(&fds);
 			FD_SET(fifos->server, &fds);
-		} while (select(fifos->server + 1, NULL, &fds, NULL, NULL) !=
-			 1);
+		} while (select(fifos->server + 1, NULL, &fds, NULL, NULL) != 1);
 
-		ret = write(fifos->server, buf + bytes, size - bytes);
-		bytes += ret > 0 ? ret : 0;
+		if ((ret = write(fifos->server, buf + bytes, size - bytes)) > 0)
+			bytes += ret;
+		else if (errno == EIO)
+			break;
 	}
 
 	return bytes == size;
