@@ -1918,7 +1918,6 @@ static void restart(void)
 	struct dm_event_daemon_message msg = { 0 };
 	int i, count = 0;
 	char *message;
-	int length;
 	int version;
 	const char *e;
 
@@ -1943,16 +1942,12 @@ static void restart(void)
 	if (daemon_talk(&fifos, &msg, DM_EVENT_CMD_GET_STATUS, "-", "-", 0, 0))
 		goto bad;
 
-	message = msg.data;
-	message = strchr(message, ' ');
-	++ message;
-	length = strlen(msg.data);
-	for (i = 0; i < length; ++i) {
+	message = strchr(msg.data, ' ') + 1;
+	for (i = 0; msg.data[i]; ++i)
 		if (msg.data[i] == ';') {
 			msg.data[i] = 0;
 			++count;
 		}
-	}
 
 	if (!(_initial_registrations = dm_malloc(sizeof(char*) * (count + 1)))) {
 		fprintf(stderr, "Memory allocation registration failed.\n");
