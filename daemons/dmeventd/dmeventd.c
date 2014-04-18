@@ -473,25 +473,24 @@ static int _get_status(struct message_data *message_data)
 			_unlock_mutex();
 			goto out;
 		}
-		++ i;
-		size += current;
+		++i;
+		size += current; /* count with trailing '\0' */
 	}
 	_unlock_mutex();
 
-	msg->size = size + strlen(message_data->id) + 1;
-	msg->data = dm_malloc(msg->size);
-	if (!msg->data)
+	len = strlen(message_data->id);
+	msg->size = size + len + 1;
+	dm_free(msg->data);
+	if (!(msg->data = dm_malloc(msg->size)))
 		goto out;
-	*msg->data = 0;
 
-	message = msg->data;
-	strcpy(message, message_data->id);
-	message += strlen(message_data->id);
-	*message = ' ';
-	message ++;
+	memcpy(msg->data, message_data->id, len);
+	message = msg->data + len;
+	*message++ = ' ';
 	for (j = 0; j < i; ++j) {
-		strcpy(message, buffers[j]);
-		message += strlen(buffers[j]);
+		len = strlen(buffers[j]);
+		memcpy(message, buffers[j], len);
+		message += len;
 	}
 
 	ret = 0;
