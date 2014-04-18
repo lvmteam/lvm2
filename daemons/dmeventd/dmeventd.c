@@ -404,6 +404,7 @@ static int _fill_device_data(struct thread_status *ts)
 {
 	struct dm_task *dmt;
 	struct dm_info dmi;
+	int ret = 0;
 
 	if (!ts->device.uuid)
 		return 0;
@@ -426,16 +427,11 @@ static int _fill_device_data(struct thread_status *ts)
 
 	ts->device.major = dmi.major;
 	ts->device.minor = dmi.minor;
-
+	ret = 1;
+fail:
 	dm_task_destroy(dmt);
-	return 1;
 
-      fail:
-	dm_task_destroy(dmt);
-	dm_free(ts->device.name);
-	ts->device.name = NULL;
-
-	return 0;
+	return ret;
 }
 
 /*
