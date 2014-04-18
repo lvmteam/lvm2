@@ -1447,34 +1447,35 @@ static int _client_write(struct dm_event_fifos *fifos,
 static int _handle_request(struct dm_event_daemon_message *msg,
 			  struct message_data *message_data)
 {
-	static struct request {
-		unsigned int cmd;
-		int (*f)(struct message_data *);
-	} requests[] = {
-		{ DM_EVENT_CMD_REGISTER_FOR_EVENT, _register_for_event},
-		{ DM_EVENT_CMD_UNREGISTER_FOR_EVENT, _unregister_for_event},
-		{ DM_EVENT_CMD_GET_REGISTERED_DEVICE, _get_registered_device},
-		{ DM_EVENT_CMD_GET_NEXT_REGISTERED_DEVICE,
-			_get_next_registered_device},
-		{ DM_EVENT_CMD_SET_TIMEOUT, _set_timeout},
-		{ DM_EVENT_CMD_GET_TIMEOUT, _get_timeout},
-		{ DM_EVENT_CMD_ACTIVE, _active},
-		{ DM_EVENT_CMD_GET_STATUS, _get_status},
-		/* dmeventd parameters of running dmeventd,
-		 * returns 'pid=<pid> daemon=<no/yes> exec_method=<direct/systemd>'
-		 * 	pid - pidfile of running dmeventd
-		 * 	daemon - running as a daemon or not (foreground)?
-		 * 	exec_method - "direct" if executed directly or
-		 * 		      "systemd" if executed via systemd
-		 */
-		{ DM_EVENT_CMD_GET_PARAMETERS, _get_parameters},
-	}, *req;
-
-	for (req = requests; req < requests + DM_ARRAY_SIZE(requests); ++req)
-		if (req->cmd == msg->cmd)
-			return req->f(message_data);
-
-	return -EINVAL;
+	switch (msg->cmd) {
+	case DM_EVENT_CMD_REGISTER_FOR_EVENT:
+		return _register_for_event(message_data);
+	case DM_EVENT_CMD_UNREGISTER_FOR_EVENT:
+		return _unregister_for_event(message_data);
+	case DM_EVENT_CMD_GET_REGISTERED_DEVICE:
+		return _get_registered_device(message_data);
+	case DM_EVENT_CMD_GET_NEXT_REGISTERED_DEVICE:
+		return _get_next_registered_device(message_data);
+	case DM_EVENT_CMD_SET_TIMEOUT:
+		return _set_timeout(message_data);
+	case DM_EVENT_CMD_GET_TIMEOUT:
+		return _get_timeout(message_data);
+	case DM_EVENT_CMD_ACTIVE:
+		return _active(message_data);
+	case DM_EVENT_CMD_GET_STATUS:
+		return _get_status(message_data);
+	/* dmeventd parameters of running dmeventd,
+	 * returns 'pid=<pid> daemon=<no/yes> exec_method=<direct/systemd>'
+	 * 	pid - pidfile of running dmeventd
+	 * 	daemon - running as a daemon or not (foreground)?
+	 * 	exec_method - "direct" if executed directly or
+	 * 		      "systemd" if executed via systemd
+	 */
+	case DM_EVENT_CMD_GET_PARAMETERS:
+		return _get_parameters(message_data);
+	default:
+		return -EINVAL;
+	}
 }
 
 /* Process a request passed from the communication thread. */
