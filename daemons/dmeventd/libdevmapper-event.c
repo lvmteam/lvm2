@@ -283,10 +283,9 @@ static int _daemon_read(struct dm_event_fifos *fifos,
 static int _daemon_write(struct dm_event_fifos *fifos,
 			 struct dm_event_daemon_message *msg)
 {
-	unsigned bytes = 0;
-	int ret = 0;
+	int ret;
 	fd_set fds;
-
+	size_t bytes = 0;
 	size_t size = 2 * sizeof(uint32_t) + msg->size;
 	uint32_t *header = alloca(size);
 	char *buf = (char *)header;
@@ -308,7 +307,7 @@ static int _daemon_write(struct dm_event_fifos *fifos,
 		}
 		if (ret == 0)
 			break;
-		ret = read(fifos->server, drainbuf, 127);
+		ret = read(fifos->server, drainbuf, sizeof(drainbuf));
 	}
 
 	while (bytes < size) {
@@ -609,7 +608,7 @@ int dm_event_register_handler(const struct dm_event_handler *dmevh)
 	int ret = 1, err;
 	const char *uuid;
 	struct dm_task *dmt;
-	struct dm_event_daemon_message msg = { 0, 0, NULL };
+	struct dm_event_daemon_message msg = { 0 };
 
 	if (!(dmt = _get_device_info(dmevh)))
 		return_0;
@@ -643,7 +642,7 @@ int dm_event_unregister_handler(const struct dm_event_handler *dmevh)
 	int ret = 1, err;
 	const char *uuid;
 	struct dm_task *dmt;
-	struct dm_event_daemon_message msg = { 0, 0, NULL };
+	struct dm_event_daemon_message msg = { 0 };
 
 	if (!(dmt = _get_device_info(dmevh)))
 		return_0;
@@ -810,7 +809,7 @@ int dm_event_get_registered_device(struct dm_event_handler *dmevh, int next)
 
 int dm_event_get_version(struct dm_event_fifos *fifos, int *version) {
 	char *p;
-	struct dm_event_daemon_message msg = { 0, 0, NULL };
+	struct dm_event_daemon_message msg = { 0 };
 
 	if (daemon_talk(fifos, &msg, DM_EVENT_CMD_HELLO, NULL, NULL, 0, 0))
 		return 0;

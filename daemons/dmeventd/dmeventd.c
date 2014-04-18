@@ -607,6 +607,7 @@ static void _unregister_for_timeout(struct thread_status *thread)
 		dm_list_del(&thread->timeout_list);
 		dm_list_init(&thread->timeout_list);
 		if (dm_list_empty(&_timeout_registry))
+			/* No more work -> wakeup to finish quickly */
 			pthread_cond_signal(&_timeout_cond);
 	}
 	pthread_mutex_unlock(&_timeout_mutex);
@@ -912,11 +913,11 @@ static struct dso_data *_lookup_dso(struct message_data *data)
 	struct dso_data *dso_data, *ret = NULL;
 
 	dm_list_iterate_items(dso_data, &_dso_registry)
-	    if (!strcmp(data->dso_name, dso_data->dso_name)) {
-		_lib_get(dso_data);
-		ret = dso_data;
-		break;
-	}
+		if (!strcmp(data->dso_name, dso_data->dso_name)) {
+			_lib_get(dso_data);
+			ret = dso_data;
+			break;
+		}
 
 	return ret;
 }
@@ -944,7 +945,7 @@ static int lookup_symbols(void *dl, struct dso_data *data)
 static struct dso_data *_load_dso(struct message_data *data)
 {
 	void *dl;
-	struct dso_data *ret = NULL;
+	struct dso_data *ret;
 
 	if (!(dl = dlopen(data->dso_name, RTLD_NOW))) {
 		const char *dlerr = dlerror();
@@ -1251,9 +1252,8 @@ static int _get_timeout(struct message_data *message_data)
 
 	_lock_mutex();
 	if ((thread = _lookup_thread_status(message_data))) {
-		msg->size =
-		    dm_asprintf(&(msg->data), "%s %" PRIu32, message_data->id,
-				thread->timeout);
+		msg->size = dm_asprintf(&(msg->data), "%s %" PRIu32,
+					message_data->id, thread->timeout);
 	} else {
 		msg->data = NULL;
 		msg->size = 0;
@@ -1971,7 +1971,7 @@ static void restart(void)
 		}
 		message += strlen(message) + 1;
 	}
-	_initial_registrations[count] = 0;
+	_initial_registrations[count] = NULL;
 
 	if (version >= 2) {
 		if (daemon_talk(&fifos, &msg, DM_EVENT_CMD_GET_PARAMETERS, "-", "-", 0, 0)) {
