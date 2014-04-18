@@ -154,9 +154,10 @@ fixed (m)inor
 .IP 5 3
 State: (a)ctive, (s)uspended, (I)nvalid snapshot, invalid (S)uspended snapshot,
 snapshot (m)erge failed, suspended snapshot (M)erge failed,
-mapped (d)evice present without tables, mapped device present with (i)nactive table
+mapped (d)evice present without tables, mapped device present with (i)nactive table,
+(X) unknown
 .IP 6 3
-device (o)pen
+device (o)pen, (X) unknown
 .IP 7 3
 Target type: (m)irror, (r)aid, (s)napshot, (t)hin, (u)nknown, (v)irtual.
 This groups logical volumes related to the same kernel target together.  So,
@@ -168,7 +169,8 @@ snapshots of thin volumes using the new thin provisioning driver appear as (t).
 .IP 8 3
 Newly-allocated data blocks are overwritten with blocks of (z)eroes before use.
 .IP 9 3
-Volume Health: (p)artial, (r)efresh needed, (m)ismatches exist, (w)ritemostly.
+Volume Health: (p)artial, (r)efresh needed, (m)ismatches exist, (w)ritemostly,
+(X) unknown.
 (p)artial signifies that one or more of the Physical Volumes this Logical
 Volume uses is missing from the system.  (r)efresh signifies that one or
 more of the Physical Volumes this RAID Logical Volume uses had suffered a

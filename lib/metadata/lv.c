@@ -612,7 +612,10 @@ char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 
 	repstr[3] = (lv->status & FIXED_MINOR) ? 'm' : '-';
 
-	if (lv_info(lv->vg->cmd, lv, 0, &info, 1, 0) && info.exists) {
+	if (!activation()) {
+		repstr[4] = 'X';		/* Unknown */
+		repstr[5] = 'X';		/* Unknown */
+	} else if (lv_info(lv->vg->cmd, lv, 0, &info, 1, 0) && info.exists) {
 		if (info.suspended)
 			repstr[4] = 's';	/* Suspended */
 		else if (info.live_table)
@@ -681,7 +684,9 @@ char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 		repstr[8] = 'p';
 	else if (lv_is_raid_type(lv)) {
 		uint64_t n;
-		if (!_lv_raid_healthy(lv))
+		if (!activation())
+			repstr[8] = 'X';	/* Unknown */
+		else if (!_lv_raid_healthy(lv))
 			repstr[8] = 'r';  /* RAID needs 'r'efresh */
 		else if (lv->status & RAID) {
 			if (lv_raid_mismatch_count(lv, &n) && n)

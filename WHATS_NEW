@@ -1,5 +1,7 @@
 Version 2.02.107 - 
 ==================================
+  Use X for LV attributes that are unknown when activation disabled.
+  Only output lvdisplay 'LV Status' field when activation is enabled.
   Use lvmetad_used() in pvscan instead of config_tree.
   Configure --enable-udev-systemd-background-jobs if not disabled explicitly.
   Add lvmdump -s to collect system info and context (currently systemd only).

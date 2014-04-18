@@ -640,7 +640,7 @@ int lvdisplay_full(struct cmd_context *cmd,
 
 	if (inkernel && info.suspended)
 		log_print("LV Status              suspended");
-	else
+	else if (activation())
 		log_print("LV Status              %savailable",
 			  inkernel ? "" : "NOT ");
 
