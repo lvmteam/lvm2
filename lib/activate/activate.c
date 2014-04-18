@@ -431,7 +431,7 @@ int lv_has_target_type(struct dm_pool *mem, struct logical_volume *lv,
 
 static int _activation = 1;
 
-void set_activation(int act)
+void set_activation(int act, int silent)
 {
 	if (act == _activation)
 		return;
@@ -440,9 +440,12 @@ void set_activation(int act)
 	if (_activation)
 		log_verbose("Activation enabled. Device-mapper kernel "
 			    "driver will be used.");
-	else
+	else if (!silent)
 		log_warn("WARNING: Activation disabled. No device-mapper "
 			  "interaction will be attempted.");
+	else
+		log_verbose("Activation disabled. No device-mapper "
+			    "interaction will be attempted.");
 }
 
 int activation(void)

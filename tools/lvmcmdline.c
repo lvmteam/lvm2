@@ -894,6 +894,13 @@ static int _get_settings(struct cmd_context *cmd)
 	cmd->current_settings.archive = arg_int_value(cmd, autobackup_ARG, cmd->current_settings.archive);
 	cmd->current_settings.backup = arg_int_value(cmd, autobackup_ARG, cmd->current_settings.backup);
 	cmd->current_settings.cache_vgmetadata = cmd->command->flags & CACHE_VGMETADATA ? 1 : 0;
+
+	if (arg_count(cmd, readonly_ARG)) {
+		cmd->current_settings.activation = 0;
+		cmd->current_settings.archive = 0;
+		cmd->current_settings.backup = 0;
+	}
+
 	cmd->partial_activation = 0;
 
 	if (arg_count(cmd, partial_ARG)) {
@@ -1022,7 +1029,7 @@ static void _apply_settings(struct cmd_context *cmd)
 	archive_enable(cmd, cmd->current_settings.archive);
 	backup_enable(cmd, cmd->current_settings.backup);
 
-	set_activation(cmd->current_settings.activation);
+	set_activation(cmd->current_settings.activation, cmd->metadata_read_only);
 
 	cmd->fmt = get_format_by_name(cmd, arg_str_value(cmd, metadatatype_ARG,
 				      cmd->current_settings.fmt_name));
@@ -1141,6 +1148,9 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 			return_ECMD_FAILED;
 	}
 
+	if (arg_count(cmd, readonly_ARG))
+		cmd->metadata_read_only = 1;
+
 	if ((ret = _get_settings(cmd)))
 		goto_out;
 	_apply_settings(cmd);
@@ -1168,7 +1178,13 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 		goto out;
 	}
 
-	if (arg_count(cmd, nolocking_ARG))
+	if (arg_count(cmd, readonly_ARG)) {
+		locking_type = 5;
+		if (lvmetad_used()) {
+			lvmetad_set_active(0);
+			log_verbose("Disabling use of lvmetad because read-only is set.");
+		}
+	} else if (arg_count(cmd, nolocking_ARG))
 		locking_type = 0;
 	else
 		locking_type = -1;

@@ -52,7 +52,7 @@ struct lv_activate_opts {
 				 * that follows. */
 };
 
-void set_activation(int activation);
+void set_activation(int activation, int silent);
 int activation(void);
 
 int driver_version(char *version, size_t size);

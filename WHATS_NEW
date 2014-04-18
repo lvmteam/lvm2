@@ -1,5 +1,7 @@
 Version 2.02.107 - 
 ==================================
+  Add --readonly to reporting and display tools for lock-free metadata access.
+  Add locking_type 5 for dummy locking for tools that do not need any locks.
   Fix _recover_vg() error path when lock conversion fails.
   Use X for LV attributes that are unknown when activation disabled.
   Only output lvdisplay 'LV Status' field when activation is enabled.

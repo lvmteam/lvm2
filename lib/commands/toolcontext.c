@@ -348,7 +348,7 @@ static int _process_config(struct cmd_context *cmd)
 
 	/* activation? */
 	cmd->default_settings.activation = find_config_tree_bool(cmd, global_activation_CFG, NULL);
-	set_activation(cmd->default_settings.activation);
+	set_activation(cmd->default_settings.activation, 0);
 
 	cmd->auto_set_activation_skip = find_config_tree_bool(cmd, activation_auto_set_activation_skip_CFG, NULL);
 

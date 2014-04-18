@@ -223,6 +223,17 @@ Use to avoid exiting with an non-zero status code if the command is run
 without clustered locking and some clustered Volume Groups have to be
 skipped over.
 .TP
+.B \-\-readonly
+Run the command in a special read-only mode which will read on-disk
+metadata without needing to take any locks.  This can be used to peek
+inside metadata used by a virtual machine image while the virtual
+machine is running.
+It can also be used to peek inside the metadata of clustered Volume
+Groups when clustered locking is not configured or running.  No attempt
+will be made to communicate with the device-mapper kernel driver, so
+this option is unable to report whether or not Logical Volumes are 
+actually in use.
+.TP
 .B \-\-addtag \fITag
 Add the tag \fITag\fP to a PV, VG or LV.
 Supply this argument multiple times to add more than one tag at once.

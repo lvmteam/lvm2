@@ -38,8 +38,11 @@ struct locking_type {
 /*
  * Locking types
  */
-int init_no_locking(struct locking_type *locking, struct cmd_context *cmd,
-		    int suppress_messages);
+void init_no_locking(struct locking_type *locking, struct cmd_context *cmd,
+		     int suppress_messages);
+
+void init_dummy_locking(struct locking_type *locking, struct cmd_context *cmd,
+			int suppress_messages);
 
 int init_readonly_locking(struct locking_type *locking, struct cmd_context *cmd,
 			  int suppress_messages);

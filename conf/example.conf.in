@@ -520,6 +520,15 @@ global {
     # Type 3 uses built-in clustered locking.
     # Type 4 uses read-only locking which forbids any operations that might 
     # change metadata.
+    # Type 5 offers dummy locking for tools that do not need any locks.
+    # You should not need to set this directly: the tools will select when
+    # to use it instead of the configured locking_type.  Do not use lvmetad or
+    # the kernel device-mapper driver with this locking type.
+    # It is used by the --readonly option that offers read-only access to
+    # Volume Group metadata that cannot be locked safely because it belongs to
+    # an inaccessible domain and might be in use, for example a virtual machine
+    # image or a disk that is shared by a clustered machine.  
+    #
     # N.B. Don't use lvmetad with locking type 3 as lvmetad is not yet
     # supported in clustered environment. If use_lvmetad=1 and locking_type=3
     # is set at the same time, LVM always issues a warning message about this

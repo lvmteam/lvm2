@@ -284,6 +284,11 @@ int init_locking(int type, struct cmd_context *cmd, int suppress_messages)
 			break;
 		return 1;
 
+	case 5:
+		init_dummy_locking(&_locking, cmd, suppress_messages);
+		log_verbose("Locking disabled for read-only access.");
+		return 1;
+
 	default:
 		log_error("Unknown locking type requested.");
 		return 0;

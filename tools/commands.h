@@ -335,6 +335,7 @@ xx(lvdisplay,
    "\t[-m|--maps]\n"
    "\t[--nosuffix]\n"
    "\t[-P|--partial] " "\n"
+   "\t[--readonly]\n"
    "\t[--units hHbBsSkKmMgGtTpPeE]\n"
    "\t[-v|--verbose]\n"
    "\t[--version]" "\n"
@@ -352,6 +353,7 @@ xx(lvdisplay,
    "\t[-o|--options [+]Field[,Field]]\n"
    "\t[-O|--sort [+|-]key1[,[+|-]key2[,...]]]\n"
    "\t[-P|--partial] " "\n"
+   "\t[--readonly]\n"
    "\t[--segments]\n"
    "\t[--separator Separator]\n"
    "\t[--unbuffered]\n"
@@ -362,8 +364,8 @@ xx(lvdisplay,
 
     aligned_ARG, all_ARG, colon_ARG, columns_ARG, ignorelockingfailure_ARG, 
     ignoreskippedcluster_ARG, maps_ARG, noheadings_ARG, nosuffix_ARG,
-    options_ARG, sort_ARG, partial_ARG, segments_ARG, separator_ARG,
-    unbuffered_ARG, units_ARG)
+    options_ARG, sort_ARG, partial_ARG, readonly_ARG, segments_ARG,
+    separator_ARG, unbuffered_ARG, units_ARG)
 
 xx(lvextend,
    "Add space to a logical volume",
@@ -414,9 +416,10 @@ xx(lvmdiskscan,
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
    "\t[-l|--lvmpartition]\n"
+   "\t[--readonly]\n"
    "\t[--version]" "\n",
 
-   lvmpartition_ARG)
+   lvmpartition_ARG, readonly_ARG)
 
 xx(lvmsadc,
    "Collect activity data",
@@ -539,6 +542,7 @@ xx(lvs,
    "\t[-o|--options [+]Field[,Field]]\n"
    "\t[-O|--sort [+|-]key1[,[+|-]key2[,...]]]\n"
    "\t[-P|--partial] " "\n"
+   "\t[--readonly]\n"
    "\t[--rows]\n"
    "\t[--segments]\n"
    "\t[--separator Separator]\n"
@@ -553,6 +557,7 @@ xx(lvs,
    aligned_ARG, all_ARG, ignorelockingfailure_ARG, ignoreskippedcluster_ARG,
    nameprefixes_ARG,
    noheadings_ARG, nolocking_ARG, nosuffix_ARG, options_ARG, partial_ARG,
+   readonly_ARG,
    rows_ARG, segments_ARG, separator_ARG, sort_ARG, trustcache_ARG,
    unbuffered_ARG, units_ARG, unquoted_ARG)
 
@@ -566,10 +571,12 @@ xx(lvscan,
    "\t[-h|-?|--help] " "\n"
    "\t[--ignorelockingfailure]\n"
    "\t[-P|--partial] " "\n"
+   "\t[--readonly]\n"
    "\t[-v|--verbose] " "\n"
    "\t[--version]\n",
 
-   all_ARG, blockdevice_ARG, ignorelockingfailure_ARG, partial_ARG)
+   all_ARG, blockdevice_ARG, ignorelockingfailure_ARG, partial_ARG,
+   readonly_ARG)
 
 xx(pvchange,
    "Change attributes of physical volume(s)",
@@ -681,6 +688,7 @@ xx(pvdisplay,
    "\t[--ignoreskippedcluster]\n"
    "\t[-m|--maps]\n"
    "\t[--nosuffix]\n"
+   "\t[--readonly]\n"
    "\t[-s|--short]\n"
    "\t[--units hHbBsSkKmMgGtTpPeE]\n"
    "\t[-v|--verbose]\n"
@@ -698,6 +706,7 @@ xx(pvdisplay,
    "\t[--nosuffix]\n"
    "\t[-o|--options [+]Field[,Field]]\n"
    "\t[-O|--sort [+|-]key1[,[+|-]key2[,...]]]\n"
+   "\t[--readonly]\n"
    "\t[--separator Separator]\n"
    "\t[--unbuffered]\n"
    "\t[--units hHbBsSkKmMgGtTpPeE]\n"
@@ -707,7 +716,8 @@ xx(pvdisplay,
 
    aligned_ARG, all_ARG, colon_ARG, columns_ARG, ignorelockingfailure_ARG,
    ignoreskippedcluster_ARG, maps_ARG, noheadings_ARG, nosuffix_ARG,
-   options_ARG, separator_ARG, short_ARG, sort_ARG, unbuffered_ARG, units_ARG)
+   options_ARG, readonly_ARG, separator_ARG, short_ARG, sort_ARG,
+   unbuffered_ARG, units_ARG)
 
 xx(pvmove,
    "Move extents from one physical volume to another",
@@ -763,6 +773,7 @@ xx(pvs,
    "\t[-o|--options [+]Field[,Field]]\n"
    "\t[-O|--sort [+|-]key1[,[+|-]key2[,...]]]\n"
    "\t[-P|--partial] " "\n"
+   "\t[--readonly]\n"
    "\t[--rows]\n"
    "\t[--segments]\n"
    "\t[--separator Separator]\n"
@@ -776,7 +787,7 @@ xx(pvs,
 
    aligned_ARG, all_ARG, ignorelockingfailure_ARG, ignoreskippedcluster_ARG,
    nameprefixes_ARG, noheadings_ARG, nolocking_ARG, nosuffix_ARG, options_ARG,
-   partial_ARG, rows_ARG, segments_ARG, separator_ARG, sort_ARG,
+   partial_ARG, readonly_ARG, rows_ARG, segments_ARG, separator_ARG, sort_ARG,
    trustcache_ARG, unbuffered_ARG, units_ARG, unquoted_ARG)
 
 xx(pvscan,
@@ -790,6 +801,7 @@ xx(pvscan,
    "\t[-h|-?|--help]" "\n"
    "\t[--ignorelockingfailure]\n"
    "\t[-P|--partial] " "\n"
+   "\t[--readonly]\n"
    "\t[-s|--short] " "\n"
    "\t[-u|--uuid] " "\n"
    "\t[-v|--verbose] " "\n"
@@ -797,7 +809,7 @@ xx(pvscan,
 
    activate_ARG, available_ARG, backgroundfork_ARG, cache_ARG,
    exported_ARG, ignorelockingfailure_ARG, major_ARG, minor_ARG,
-   novolumegroup_ARG, partial_ARG, short_ARG, uuid_ARG)
+   novolumegroup_ARG, partial_ARG, readonly_ARG, short_ARG, uuid_ARG)
 
 xx(segtypes,
    "List available segment types",
@@ -818,11 +830,12 @@ xx(vgcfgbackup,
    "\t[-h|-?|--help] " "\n"
    "\t[--ignorelockingfailure]\n"
    "\t[-P|--partial] " "\n"
+   "\t[--readonly]\n"
    "\t[-v|--verbose]" "\n"
    "\t[--version] " "\n"
    "\t[VolumeGroupName...]\n",
 
-   file_ARG, ignorelockingfailure_ARG, partial_ARG)
+   file_ARG, ignorelockingfailure_ARG, partial_ARG, readonly_ARG)
 
 xx(vgcfgrestore,
    "Restore volume group configuration",
@@ -955,6 +968,7 @@ xx(vgdisplay,
    "\t[--ignoreskippedcluster]\n"
    "\t[--nosuffix]\n"
    "\t[-P|--partial] " "\n"
+   "\t[--readonly]\n"
    "\t[--units hHbBsSkKmMgGtTpPeE]\n"
    "\t[--version]" "\n"
    "\t[VolumeGroupName [VolumeGroupName...]]\n"
@@ -970,6 +984,7 @@ xx(vgdisplay,
    "\t[-o|--options [+]Field[,Field]]\n"
    "\t[-O|--sort [+|-]key1[,[+|-]key2[,...]]]\n"
    "\t[-P|--partial] " "\n"
+   "\t[--readonly]\n"
    "\t[--separator Separator]\n"
    "\t[--unbuffered]\n"
    "\t[--units hHbBsSkKmMgGtTpPeE]\n"
@@ -979,8 +994,8 @@ xx(vgdisplay,
 
    activevolumegroups_ARG, aligned_ARG, colon_ARG, columns_ARG,
    ignorelockingfailure_ARG, ignoreskippedcluster_ARG, noheadings_ARG,
-   nosuffix_ARG, options_ARG, partial_ARG, short_ARG, separator_ARG,
-   sort_ARG, unbuffered_ARG, units_ARG)
+   nosuffix_ARG, options_ARG, partial_ARG, readonly_ARG, short_ARG,
+   separator_ARG, sort_ARG, unbuffered_ARG, units_ARG)
 
 xx(vgexport,
    "Unregister volume group(s) from the system",
@@ -1127,6 +1142,7 @@ xx(vgs,
    "\t[-o|--options [+]Field[,Field]]\n"
    "\t[-O|--sort [+|-]key1[,[+|-]key2[,...]]]\n"
    "\t[-P|--partial] " "\n"
+   "\t[--readonly]\n"
    "\t[--rows]\n"
    "\t[--separator Separator]\n"
    "\t[--trustcache]\n"
@@ -1140,6 +1156,7 @@ xx(vgs,
    aligned_ARG, all_ARG, ignorelockingfailure_ARG, ignoreskippedcluster_ARG,
    nameprefixes_ARG,
    noheadings_ARG, nolocking_ARG, nosuffix_ARG, options_ARG, partial_ARG,
+   readonly_ARG,
    rows_ARG, separator_ARG, sort_ARG, trustcache_ARG, unbuffered_ARG, units_ARG,
    unquoted_ARG)
 
