@@ -572,9 +572,8 @@ static int _register_for_timeout(struct thread_status *thread)
 
 	pthread_mutex_lock(&_timeout_mutex);
 
-	thread->next_time = time(NULL) + thread->timeout;
-
 	if (dm_list_empty(&thread->timeout_list)) {
+		thread->next_time = time(NULL) + thread->timeout;
 		dm_list_add(&_timeout_registry, &thread->timeout_list);
 		if (_timeout_running)
 			pthread_cond_signal(&_timeout_cond);
