@@ -503,26 +503,20 @@ static int _get_status(struct message_data *message_data)
 
 static int _get_parameters(struct message_data *message_data) {
 	struct dm_event_daemon_message *msg = message_data->msg;
-	char buf[128];
-	int r = -1;
+	int size;
 
 	dm_free(msg->data);
+	if ((size = dm_asprintf(&msg->data, "%s pid=%d daemon=%s exec_method=%s",
+				message_data->id, getpid(),
+				_foreground ? "no" : "yes",
+				_systemd_activation ? "systemd" : "direct")) < 0) {
+		stack;
+		return -ENOMEM;
+	}
 
-	if (!(dm_snprintf(buf, sizeof(buf), "%s pid=%d daemon=%s exec_method=%s",
-			  message_data->id,
-			  getpid(),
-			  _foreground ? "no" : "yes",
-			  _systemd_activation ? "systemd" : "direct")))
-		goto_out;
+	msg->size = (uint32_t) size;
 
-	msg->size = strlen(buf) + 1;
-	if (!(msg->data = dm_malloc(msg->size)))
-		goto_out;
-	if (!dm_strncpy(msg->data, buf, msg->size))
-		goto_out;
-	r = 0;
-out:
-	return r;
+	return 0;
 }
 
 /* Cleanup at exit. */
