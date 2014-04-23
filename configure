@@ -697,6 +697,7 @@ DMEVENTD
 DL_LIBS
 DEVMAPPER
 DEFAULT_RUN_DIR
+DEFAULT_PID_DIR
 DEFAULT_DM_RUN_DIR
 DEFAULT_LOCK_DIR
 DEFAULT_DATA_ALIGNMENT
@@ -11411,6 +11412,7 @@ LVM_PATCHLEVEL=`echo "$VER" | $AWK -F '[(.]' '{print $3}'`
 LVM_LIBAPI=`echo "$VER" | $AWK -F '[()]' '{print $2}'`
 
 ################################################################################
+
 
 
 

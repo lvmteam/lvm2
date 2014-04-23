@@ -19,7 +19,10 @@ from udev rules (which must be installed for LVM to work correctly when lvmetad
 is in use). Through these notifications, lvmetad has an up-to-date and
 consistent image of the volume groups available in the system.
 
-By default, lvmetad, even if running, is not used by LVM. See \fBlvm.conf\fP(5).
+lvmetad is used by LVM only if it is enabled in \fBlvm.conf\fP(5) by specifying the
+\fBglobal/use_lvmetad\fP setting. If this is not defined in the LVM configuration
+explicitly then default setting is used instead (see the output of
+\fBlvm dumpconfig --type default global/use_lvmetad\fP command).
 .SH OPTIONS
 
 To run the daemon in a test environment both the pidfile_path and the
