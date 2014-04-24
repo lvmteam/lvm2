@@ -177,7 +177,7 @@ CMDS = lvm $(shell cat $(top_builddir)/tools/.commands)
 	ln -fs $(abs_top_builddir)/daemons/lvmetad/lvmetad lib/lvmetad
 	ln -fs $(abs_top_srcdir)/scripts/vgimportclone.sh lib/vgimportclone
 	ln -fs $(abs_top_srcdir)/scripts/fsadm.sh lib/fsadm
-	ln -fs $(abs_top_srcdir)/conf/default.profile lib/default.profile
+	ln -fs $(abs_top_builddir)/conf/default.profile lib/default.profile
 	ln -fs $(abs_top_srcdir)/conf/thin-performance.profile lib/thin-performance.profile
 	touch $@
 
