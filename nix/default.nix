@@ -204,6 +204,7 @@ let
          echo "%define check_commands \\";
          echo "make lcov-reset \\";
          echo "dmsetup targets\\";
+         echo "mkdir -p \$out/nix-support \\";
          echo "make check QUIET=1 T=${T} || touch \$out/nix-support/failed \\"
 	 echo "pwd > /tmp/build-location \\"
 	 echo "touch rpm-no-clean") >> source.inc
