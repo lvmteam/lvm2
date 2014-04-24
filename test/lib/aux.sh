@@ -302,7 +302,7 @@ prepare_scsi_debug_dev() {
 	local DEV_SIZE=$1
 	local SCSI_DEBUG_PARAMS=${@:2}
 
-	test -f "SCSI_DEBUG_DEV" && return 0
+	test ! -f "SCSI_DEBUG_DEV" || return 0
 	test -z "$LOOP"
 	test -n "$DM_DEV_DIR"
 
@@ -311,7 +311,7 @@ prepare_scsi_debug_dev() {
 
 	# Skip test if scsi_debug module is unavailable or is already in use
 	modprobe --dry-run scsi_debug || skip
-	lsmod | grep -q scsi_debug && skip
+	lsmod | not grep -q scsi_debug || skip
 
 	# Create the scsi_debug device and determine the new scsi device's name
 	# NOTE: it will _never_ make sense to pass num_tgts param;
@@ -327,7 +327,7 @@ prepare_scsi_debug_dev() {
 	echo "$SCSI_DEBUG_DEV" > SCSI_DEBUG_DEV
 	echo "$SCSI_DEBUG_DEV" > LOOP
 	# Setting $LOOP provides means for prepare_devs() override
-	test "$LVM_TEST_DEVDIR" != "/dev" && ln -snf "$DEBUG_DEV" "$SCSI_DEBUG_DEV"
+	test "$LVM_TEST_DEVDIR" = "/dev" || ln -snf "$DEBUG_DEV" "$SCSI_DEBUG_DEV"
 }
 
 cleanup_scsi_debug_dev() {
