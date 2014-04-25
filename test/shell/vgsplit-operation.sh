@@ -238,9 +238,9 @@ COMM "vgsplit correctly splits RAID LV into $i VG ($j args)"
 
 		lvcreate -an -Zn -l 64 --type raid5 -i 2 -n $lv1 $vg1
 		if [ $j = PV ]; then
-#		  not vgsplit $vg1 $vg2 "$dev1"
-#		  not vgsplit $vg1 $vg2 "$dev2"
-#		  not vgsplit $vg1 $vg2 "$dev1" "$dev2"
+		  not vgsplit $vg1 $vg2 "$dev1"
+		  not vgsplit $vg1 $vg2 "$dev2"
+		  not vgsplit $vg1 $vg2 "$dev1" "$dev2"
 		  vgsplit $vg1 $vg2 "$dev1" "$dev2" "$dev3"
 		else
 		  vgsplit -n $lv1 $vg1 $vg2
