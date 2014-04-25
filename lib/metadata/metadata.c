@@ -360,14 +360,23 @@ out:
 	return r;
 }
 
-int move_pv(struct volume_group *vg_from, struct volume_group *vg_to,
-	    const char *pv_name)
+int _move_pv(struct volume_group *vg_from, struct volume_group *vg_to,
+	     const char *pv_name, int enforce_pv_from_source)
 {
 	struct physical_volume *pv;
 	struct pv_list *pvl;
 
 	/* FIXME: handle tags */
 	if (!(pvl = find_pv_in_vg(vg_from, pv_name))) {
+		if (!enforce_pv_from_source &&
+		    (pvl = find_pv_in_vg(vg_to, pv_name)))
+			/*
+			 * PV has already been moved.  This can happen if an
+			 * LV is being moved that has multiple sub-LVs on the
+			 * same PV.
+			 */
+			return 1;
+
 		log_error("Physical volume %s not in volume group %s",
 			  pv_name, vg_from->name);
 		return 0;
@@ -389,6 +398,12 @@ int move_pv(struct volume_group *vg_from, struct volume_group *vg_to,
 	vg_to->free_count += pv_pe_count(pv) - pv_pe_alloc_count(pv);
 
 	return 1;
+}
+
+int move_pv(struct volume_group *vg_from, struct volume_group *vg_to,
+	    const char *pv_name)
+{
+	return _move_pv(vg_from, vg_to, pv_name, 1);
 }
 
 int move_pvs_used_by_lv(struct volume_group *vg_from,
@@ -418,8 +433,8 @@ int move_pvs_used_by_lv(struct volume_group *vg_from,
 				return_0;
 		for (s = 0; s < lvseg->area_count; s++) {
 			if (seg_type(lvseg, s) == AREA_PV) {
-				if (!move_pv(vg_from, vg_to,
-					      pv_dev_name(seg_pv(lvseg, s))))
+				if (!_move_pv(vg_from, vg_to,
+					      pv_dev_name(seg_pv(lvseg, s)), 0))
 					return_0;
 			} else if (seg_type(lvseg, s) == AREA_LV) {
 				lv = seg_lv(lvseg, s);
