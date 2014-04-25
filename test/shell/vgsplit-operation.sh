@@ -230,28 +230,6 @@ COMM "vgsplit correctly splits linear LV but not mirror LV into $i VG ($j args)"
 		  check pvlv_counts $vg2 1 1 0
 		fi
 		vgremove -f $vg1 $vg2
-
-if aux target_at_least dm-raid 1 1 0; then
-COMM "vgsplit correctly splits RAID LV into $i VG ($j args)"
-		create_vg_ $vg1 "$dev1" "$dev2" "$dev3"
-		test $i = existing && create_vg_ $vg2 "$dev5"
-
-		lvcreate -an -Zn -l 64 --type raid5 -i 2 -n $lv1 $vg1
-		if [ $j = PV ]; then
-		  not vgsplit $vg1 $vg2 "$dev1"
-		  not vgsplit $vg1 $vg2 "$dev2"
-		  not vgsplit $vg1 $vg2 "$dev1" "$dev2"
-		  vgsplit $vg1 $vg2 "$dev1" "$dev2" "$dev3"
-		else
-		  vgsplit -n $lv1 $vg1 $vg2
-		fi
-		if [ $i = existing ]; then
-		  check pvlv_counts $vg2 4 1 0
-		else
-		  check pvlv_counts $vg2 3 1 0
-		fi
-		vgremove -f $vg2
-fi
 	done
 done
 
