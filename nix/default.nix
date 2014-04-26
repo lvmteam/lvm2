@@ -147,10 +147,10 @@ let
         [ "loop" "dm_mod" "dm_snapshot" "dm_mirror" "dm_zero" "dm_raid" "dm_thin_pool" ]; };
     release = import "${nixpkgs}/pkgs/build-support/release/default.nix" {
       pkgs = pkgs // { vmTools = tools; }; };
-    imgs = pkgs.vmTools.diskImageFuns //
+    imgs = tools.diskImageFuns //
             mapAttrs (n: a: b: pkgs.vmTools.makeImageFromRPMDist (a // b)) extra_distros;
-    rpmdistros = pkgs.vmTools.rpmDistros // extra_distros;
-    rpmbuild = pkgs.vmTools.buildRPM;
+    rpmdistros = tools.rpmDistros // extra_distros;
+    rpmbuild = tools.buildRPM;
   };
 
   extra_rpms = rec {
