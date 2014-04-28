@@ -360,8 +360,8 @@ out:
 	return r;
 }
 
-int _move_pv(struct volume_group *vg_from, struct volume_group *vg_to,
-	     const char *pv_name, int enforce_pv_from_source)
+static int _move_pv(struct volume_group *vg_from, struct volume_group *vg_to,
+		    const char *pv_name, int enforce_pv_from_source)
 {
 	struct physical_volume *pv;
 	struct pv_list *pvl;
