@@ -667,6 +667,10 @@ int lvdisplay_segments(const struct logical_volume *lv)
 
 		log_print("  Type\t\t%s", seg->segtype->ops->name(seg));
 
+		if (seg->segtype->ops->target_monitored)
+			log_print("  Monitoring\t\t%s",
+				  lvseg_monitor_dup(lv->vg->cmd->mem, seg));
+
 		if (seg->segtype->ops->display)
 			seg->segtype->ops->display(seg);
 	}
