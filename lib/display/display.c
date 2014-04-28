@@ -525,7 +525,7 @@ int lvdisplay_full(struct cmd_context *cmd,
 			log_print("LV merged with         %s",
 				  find_snapshot(lv)->lv->name);
 	} else if (lv_is_thin_pool(lv)) {
-		if (inkernel) {
+		if (lv_info(cmd, lv, 1, &info, 1, 1) && info.exists) {
 			thin_data_active = lv_thin_pool_percent(lv, 0, &thin_data_percent);
 			thin_metadata_active = lv_thin_pool_percent(lv, 1, &thin_metadata_percent);
 		}

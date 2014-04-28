@@ -1,5 +1,6 @@
 Version 2.02.107 - 
 ==================================
+  Display thin pool usage even when just thin volume is available.
   Display monitoring status for monitorable segments in 'lvdisplay --maps'.
   Display virtual extents for virtual LVs in 'lvdisplay --maps'.
   Make vgsplit fail cleanly when not all PVs are specified for RAID 4/5/6.
