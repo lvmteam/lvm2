@@ -923,8 +923,8 @@ static int _get_settings(struct cmd_context *cmd)
 
 	if (arg_count(cmd, units_ARG))
 		if (!(cmd->current_settings.unit_factor =
-		      units_to_bytes(arg_str_value(cmd, units_ARG, ""),
-				     &cmd->current_settings.unit_type))) {
+		      dm_units_to_factor(arg_str_value(cmd, units_ARG, ""),
+					 &cmd->current_settings.unit_type, 1, NULL))) {
 			log_error("Invalid units specification");
 			return EINVALID_CMD_LINE;
 		}

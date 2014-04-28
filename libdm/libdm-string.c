@@ -16,6 +16,8 @@
 
 #include <ctype.h>
 #include <stdarg.h>
+#include <math.h>  /* fabs() */
+#include <float.h> /* DBL_EPSILON */
 
 /*
  * consume characters while they match the predicate function.
@@ -433,4 +435,108 @@ int dm_strncpy(char *dest, const char *src, size_t n)
 		dest[n - 1] = '\0';
 
 	return 0;
+}
+
+/* Test if the doubles are close enough to be considered equal */
+static int _close_enough(double d1, double d2)
+{
+	return fabs(d1 - d2) < DBL_EPSILON;
+}
+
+uint64_t dm_units_to_factor(const char *units, char *unit_type,
+			    int strict, char **endptr)
+{
+	char *ptr = NULL;
+	uint64_t v;
+	double custom_value = 0;
+	uint64_t multiplier;
+
+	if (endptr)
+		*endptr = (char *) units;
+
+	if (isdigit(*units)) {
+		custom_value = strtod(units, &ptr);
+		if (ptr == units)
+			return 0;
+		v = (uint64_t) strtoull(units, NULL, 10);
+		if (_close_enough((double) v, custom_value))
+			custom_value = 0;	/* Use integer arithmetic */
+		units = ptr;
+	} else
+		v = 1;
+
+	/* Only one units char permitted in strict mode. */
+	if (strict && units[0] && units[1])
+		return 0;
+
+	if (v == 1)
+		*unit_type = *units;
+	else
+		*unit_type = 'U';
+
+	switch (*units) {
+	case 'h':
+	case 'H':
+		multiplier = v = UINT64_C(1);
+		*unit_type = *units;
+		break;
+	case 'b':
+	case 'B':
+		multiplier = UINT64_C(1);
+		break;
+#define KILO UINT64_C(1024)
+	case 's':
+	case 'S':
+		multiplier = (KILO/2);
+		break;
+	case 'k':
+		multiplier = KILO;
+		break;
+	case 'm':
+		multiplier = KILO * KILO;
+		break;
+	case 'g':
+		multiplier = KILO * KILO * KILO;
+		break;
+	case 't':
+		multiplier = KILO * KILO * KILO * KILO;
+		break;
+	case 'p':
+		multiplier = KILO * KILO * KILO * KILO * KILO;
+		break;
+	case 'e':
+		multiplier = KILO * KILO * KILO * KILO * KILO * KILO;
+		break;
+#undef KILO
+#define KILO UINT64_C(1000)
+	case 'K':
+		multiplier = KILO;
+		break;
+	case 'M':
+		multiplier = KILO * KILO;
+		break;
+	case 'G':
+		multiplier = KILO * KILO * KILO;
+		break;
+	case 'T':
+		multiplier = KILO * KILO * KILO * KILO;
+		break;
+	case 'P':
+		multiplier = KILO * KILO * KILO * KILO * KILO;
+		break;
+	case 'E':
+		multiplier = KILO * KILO * KILO * KILO * KILO * KILO;
+		break;
+#undef KILO
+	default:
+		return 0;
+	}
+
+	if (endptr)
+		*endptr = (char *) units + 1;
+
+	if (_close_enough(custom_value, 0.))
+		return v * multiplier; /* Use integer arithmetic */
+	else
+		return (uint64_t) (custom_value * multiplier);
 }

@@ -282,8 +282,8 @@ static int _check_config(struct cmd_context *cmd)
 
 int process_profilable_config(struct cmd_context *cmd) {
 	if (!(cmd->default_settings.unit_factor =
-	      units_to_bytes(find_config_tree_str(cmd, global_units_CFG, NULL),
-			     &cmd->default_settings.unit_type))) {
+	      dm_units_to_factor(find_config_tree_str(cmd, global_units_CFG, NULL),
+				 &cmd->default_settings.unit_type, 1, NULL))) {
 		log_error("Invalid units specification");
 		return 0;
 	}

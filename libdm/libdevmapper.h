@@ -1454,6 +1454,50 @@ void dm_unescape_colons_and_at_signs(char *src,
  */
 int dm_strncpy(char *dest, const char *src, size_t n);
 
+/*
+ * Recognize unit specifier in the 'units' arg and return a factor
+ * representing that unit. If the 'units' contains a prefix with digits,
+ * the 'units' is considered to be a custom unit.
+ *
+ * Also, set 'unit_type' output arg to the character that represents
+ * the unit specified. The 'unit_type' character equals to the unit
+ * character itself recognized in the 'units' arg for canonical units.
+ * Otherwise, the 'unit_type' character is set to 'U' for custom unit.
+ *
+ * An example for k/K canonical units and 8k/8K custom units:
+ *
+ *   units  unit_type  return value (factor)
+ *   k      k          1024
+ *   K      K          1000
+ *   8k     U          1024*8
+ *   8K     U          1000*8
+ *   etc...
+ *
+ * Recognized units:
+ *
+ *   h/H - human readable (returns 1 for both)
+ *   b/B - byte (returns 1 for both)
+ *   s/S - sector (returns 512 for both)
+ *   k/K - kilo (returns 1024/1000 respectively)
+ *   m/M - mega (returns 1024^2/1000^2 respectively)
+ *   g/G - giga (returns 1024^3/1000^3 respectively)
+ *   t/T - tera (returns 1024^4/1000^4 respectively)
+ *   p/P - peta (returns 1024^5/1000^5 respectively)
+ *   e/E - exa (returns 1024^6/1000^6 respectively)
+ *
+ * Only one units character is allowed in the 'units' arg
+ * if strict mode is enabled by 'strict' arg.
+ *
+ * The 'endptr' output arg, if not NULL, saves the pointer
+ * in the 'units' string which follows the unit specifier
+ * recognized (IOW the position where the parsing of the
+ * unit specifier stopped).
+ *
+ * Returns the unit factor or 0 if no unit is recognized.
+ */
+uint64_t dm_units_to_factor(const char *units, char *unit_type,
+			    int strict, char **endptr);
+
 /**************************
  * file/stream manipulation
  **************************/

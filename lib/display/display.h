@@ -22,8 +22,6 @@
 
 #include <stdint.h>
 
-uint64_t units_to_bytes(const char *units, char *unit_type);
-
 /* Specify size in KB */
 const char *display_size(const struct cmd_context *cmd, uint64_t size);
 const char *display_size_long(const struct cmd_context *cmd, uint64_t size);

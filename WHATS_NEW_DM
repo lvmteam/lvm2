@@ -1,5 +1,6 @@
 Version 1.02.88 - 
 =================================
+  Add dm_units_to_factor for size unit parsing.
   Increase bitset size for minors for thin dmeventd plugin.
 
 Version 1.02.85 - 10th April 2014
