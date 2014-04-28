@@ -661,7 +661,8 @@ int lvdisplay_segments(const struct logical_volume *lv)
 	log_print("--- Segments ---");
 
 	dm_list_iterate_items(seg, &lv->segments) {
-		log_print("Logical extent %u to %u:",
+		log_print("%s extents %u to %u:",
+			  lv_is_virtual(lv) ? "Virtual" : "Logical",
 			  seg->le, seg->le + seg->len - 1);
 
 		log_print("  Type\t\t%s", seg->segtype->ops->name(seg));
