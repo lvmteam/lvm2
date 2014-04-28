@@ -13,6 +13,7 @@
  */
 
 #include "lib.h"
+#include "display.h"
 #include "metadata.h"
 #include "segtype.h"
 #include "text_export.h"
@@ -38,6 +39,20 @@ static unsigned _feature_mask;
 static const char *_thin_pool_name(const struct lv_segment *seg)
 {
 	return seg->segtype->name;
+}
+
+static void _thin_pool_display(const struct lv_segment *seg)
+{
+	log_print("  Chunk size\t\t%s",
+		  display_size(seg->lv->vg->cmd, seg->chunk_size));
+	log_print("  Discards\t\t%s", get_pool_discards_name(seg->discards));
+	log_print("  Thin count\t\t%u",
+		  dm_list_size(&seg->lv->segs_using_this_lv));
+	log_print("  Transaction ID\t%" PRIu64, seg->transaction_id);
+	log_print("  Zero new blocks\t%s",
+		  seg->zero_new_blocks ? "yes" : "no");
+
+	log_print(" ");
 }
 
 static int _thin_pool_add_message(struct lv_segment *seg,
@@ -439,6 +454,13 @@ static const char *_thin_name(const struct lv_segment *seg)
 	return seg->segtype->name;
 }
 
+static void _thin_display(const struct lv_segment *seg)
+{
+	log_print("  Device ID\t\t%u", seg->device_id);
+
+	log_print(" ");
+}
+
 static int _thin_text_import(struct lv_segment *seg,
 			     const struct dm_config_node *sn,
 			     struct dm_hash_table *pv_hash __attribute__((unused)))
@@ -699,6 +721,7 @@ static void _thin_destroy(struct segment_type *segtype)
 
 static struct segtype_handler _thin_pool_ops = {
 	.name = _thin_pool_name,
+	.display = _thin_pool_display,
 	.text_import = _thin_pool_text_import,
 	.text_import_area_count = _thin_pool_text_import_area_count,
 	.text_export = _thin_pool_text_export,
@@ -720,6 +743,7 @@ static struct segtype_handler _thin_pool_ops = {
 
 static struct segtype_handler _thin_ops = {
 	.name = _thin_name,
+	.display = _thin_display,
 	.text_import = _thin_text_import,
 	.text_export = _thin_text_export,
 #ifdef DEVMAPPER_SUPPORT

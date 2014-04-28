@@ -509,7 +509,6 @@ int lvdisplay_full(struct cmd_context *cmd,
 	if (lv_is_thin_volume(lv)) {
 		seg = first_seg(lv);
 		log_print("LV Pool name           %s", seg->pool_lv->name);
-		log_print("LV Thin device ID      %u", seg->device_id);
 		if (seg->origin)
 			log_print("LV Thin origin name    %s",
 				  seg->origin->name);
@@ -531,13 +530,8 @@ int lvdisplay_full(struct cmd_context *cmd,
 		}
 		/* FIXME: display thin_pool targets transid for activated LV as well */
 		seg = first_seg(lv);
-		log_print("LV Pool transaction ID %" PRIu64, seg->transaction_id);
 		log_print("LV Pool metadata       %s", seg->metadata_lv->name);
 		log_print("LV Pool data           %s", seg_lv(seg, 0)->name);
-		log_print("LV Pool chunk size     %s",
-			  display_size(cmd, seg->chunk_size));
-		log_print("LV Zero new blocks     %s",
-			  seg->zero_new_blocks ? "yes" : "no");
 	}
 
 	if (inkernel && info.suspended)
