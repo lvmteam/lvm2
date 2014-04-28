@@ -20,7 +20,6 @@ static int lvscan_single(struct cmd_context *cmd, struct logical_volume *lv,
 {
 	struct lvinfo info;
 	int inkernel, snap_active = 1;
-	struct lv_segment *snap_seg = NULL;
 	percent_t snap_percent;     /* fused, fsize; */
 
 	const char *active_str, *snapshot_str;
@@ -29,17 +28,7 @@ static int lvscan_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return ECMD_PROCESSED;
 
 	inkernel = lv_info(cmd, lv, 0, &info, 0, 0) && info.exists;
-	if (lv_is_origin(lv)) {
-		dm_list_iterate_items_gen(snap_seg, &lv->snapshot_segs,
-				       origin_list) {
-			if (inkernel &&
-			    (snap_active = lv_snapshot_percent(snap_seg->cow,
-							       &snap_percent)))
-				if (snap_percent == PERCENT_INVALID)
-					snap_active = 0;
-		}
-		snap_seg = NULL;
-	} else if (lv_is_cow(lv)) {
+	if (lv_is_cow(lv)) {
 		if (inkernel &&
 		    (snap_active = lv_snapshot_percent(lv, &snap_percent)))
 			if (snap_percent == PERCENT_INVALID)

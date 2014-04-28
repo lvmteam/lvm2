@@ -1,5 +1,6 @@
 Version 2.02.107 - 
 ==================================
+  Show correct availability status for snapshot origin in lvscan.
   Move segment thin pool/volume info into segment display 'lvdisplay --maps'.
   Display thin pool usage even when just thin volume is available.
   Display monitoring status for monitorable segments in 'lvdisplay --maps'.
