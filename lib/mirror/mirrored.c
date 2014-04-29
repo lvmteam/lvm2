@@ -531,7 +531,7 @@ static int _mirrored_target_present(struct cmd_context *cmd,
 	return _mirrored_present;
 }
 
-#ifdef DMEVENTD
+#  ifdef DMEVENTD
 static const char *_get_mirror_dso_path(struct cmd_context *cmd)
 {
 	return get_monitor_dso_path(cmd, find_config_tree_str(cmd, dmeventd_mirror_library_CFG, NULL));
@@ -561,8 +561,7 @@ static int _target_unmonitor_events(struct lv_segment *seg, int events)
 	return _target_set_events(seg, events, 0);
 }
 
-#endif /* DMEVENTD */
-#endif /* DEVMAPPER_SUPPORT */
+#  endif /* DMEVENTD */
 
 static int _mirrored_modules_needed(struct dm_pool *mem,
 				    const struct lv_segment *seg,
@@ -585,6 +584,7 @@ static int _mirrored_modules_needed(struct dm_pool *mem,
 
 	return 1;
 }
+#endif /* DEVMAPPER_SUPPORT */
 
 static void _mirrored_destroy(struct segment_type *segtype)
 {
@@ -602,13 +602,13 @@ static struct segtype_handler _mirrored_ops = {
 	.target_percent = _mirrored_target_percent,
 	.target_present = _mirrored_target_present,
 	.check_transient_status = _mirrored_transient_status,
+	.modules_needed = _mirrored_modules_needed,
 #  ifdef DMEVENTD
 	.target_monitored = _target_registered,
 	.target_monitor_events = _target_monitor_events,
 	.target_unmonitor_events = _target_unmonitor_events,
 #  endif	/* DMEVENTD */
 #endif
-	.modules_needed = _mirrored_modules_needed,
 	.destroy = _mirrored_destroy,
 };
 

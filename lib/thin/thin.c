@@ -729,14 +729,12 @@ static struct segtype_handler _thin_pool_ops = {
 	.add_target_line = _thin_pool_add_target_line,
 	.target_percent = _thin_pool_target_percent,
 	.target_present = _thin_target_present,
+	.modules_needed = _thin_pool_modules_needed,
 #  ifdef DMEVENTD
 	.target_monitored = _target_registered,
 	.target_monitor_events = _target_register_events,
 	.target_unmonitor_events = _target_unregister_events,
 #  endif /* DMEVENTD */
-#endif
-#ifdef DEVMAPPER_SUPPORT
-	.modules_needed = _thin_pool_modules_needed,
 #endif
 	.destroy = _thin_destroy,
 };

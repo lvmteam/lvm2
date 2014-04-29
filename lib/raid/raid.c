@@ -262,18 +262,6 @@ static int _raid_target_status_compatible(const char *type)
 	return (strstr(type, "raid") != NULL);
 }
 
-static int _raid_modules_needed(struct dm_pool *mem,
-				const struct lv_segment *seg __attribute__((unused)),
-				struct dm_list *modules)
-{
-	if (!str_list_add(mem, modules, "raid")) {
-		log_error("raid module string list allocation failed");
-		return 0;
-	}
-
-	return 1;
-}
-
 static void _raid_destroy(struct segment_type *segtype)
 {
 	dm_free((void *) segtype);
@@ -367,7 +355,19 @@ static int _raid_target_present(struct cmd_context *cmd,
 	return _raid_present;
 }
 
-#ifdef DMEVENTD
+static int _raid_modules_needed(struct dm_pool *mem,
+				const struct lv_segment *seg __attribute__((unused)),
+				struct dm_list *modules)
+{
+	if (!str_list_add(mem, modules, "raid")) {
+		log_error("raid module string list allocation failed");
+		return 0;
+	}
+
+	return 1;
+}
+
+#  ifdef DMEVENTD
 static const char *_get_raid_dso_path(struct cmd_context *cmd)
 {
 	const char *config_str = find_config_tree_str(cmd, dmeventd_raid_library_CFG, NULL);
@@ -399,8 +399,9 @@ static int _raid_target_unmonitor_events(struct lv_segment *seg, int events)
 {
 	return _raid_set_events(seg, events, 0);
 }
+#  endif /* DMEVENTD */
 #endif /* DEVMAPPER_SUPPORT */
-#endif /* DMEVENTD */
+
 static struct segtype_handler _raid_ops = {
 	.name = _raid_name,
 	.text_import_area_count = _raid_text_import_area_count,
@@ -411,13 +412,13 @@ static struct segtype_handler _raid_ops = {
 #ifdef DEVMAPPER_SUPPORT
 	.target_percent = _raid_target_percent,
 	.target_present = _raid_target_present,
+	.modules_needed = _raid_modules_needed,
 #  ifdef DMEVENTD
 	.target_monitored = _raid_target_monitored,
 	.target_monitor_events = _raid_target_monitor_events,
 	.target_unmonitor_events = _raid_target_unmonitor_events,
 #  endif        /* DMEVENTD */
 #endif
-	.modules_needed = _raid_modules_needed,
 	.destroy = _raid_destroy,
 };
 
@@ -475,10 +476,10 @@ int init_multiple_segtypes(struct cmd_context *cmd, struct segtype_library *segl
 	int monitored = 0;
 
 #ifdef DEVMAPPER_SUPPORT
-#ifdef DMEVENTD
+#  ifdef DMEVENTD
 	if (_get_raid_dso_path(cmd))
 		monitored = SEG_MONITORED;
-#endif
+#  endif
 #endif
 
 	for (i = 0; i < DM_ARRAY_SIZE(_raid_types); ++i)

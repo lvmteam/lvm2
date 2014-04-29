@@ -63,7 +63,6 @@ static int _errseg_target_present(struct cmd_context *cmd,
 	_errseg_checked = 1;
 	return _errseg_present;
 }
-#endif
 
 static int _errseg_modules_needed(struct dm_pool *mem,
 				  const struct lv_segment *seg __attribute__((unused)),
@@ -76,6 +75,7 @@ static int _errseg_modules_needed(struct dm_pool *mem,
 
 	return 1;
 }
+#endif
 
 static void _errseg_destroy(struct segment_type *segtype)
 {
@@ -88,8 +88,8 @@ static struct segtype_handler _error_ops = {
 #ifdef DEVMAPPER_SUPPORT
 	.add_target_line = _errseg_add_target_line,
 	.target_present = _errseg_target_present,
-#endif
 	.modules_needed = _errseg_modules_needed,
+#endif
 	.destroy = _errseg_destroy,
 };
 
