@@ -200,7 +200,7 @@ int lv_passes_auto_activation_filter(struct cmd_context *cmd, struct logical_vol
 }
 
 #ifndef DEVMAPPER_SUPPORT
-void set_activation(int act)
+void set_activation(int act, int silent)
 {
 	static int warned = 0;
 
@@ -282,15 +282,15 @@ int lv_raid_message(const struct logical_volume *lv, const char *msg)
 {
 	return 0;
 }
-int lv_cache_block_info(const struct logical_volume *lv,
+int lv_cache_block_info(struct logical_volume *lv,
 			uint32_t *chunk_size, uint64_t *dirty_count,
 			uint64_t *used_count, uint64_t *total_count)
 {
 	return 0;
 }
-int lv_cache_policy_info(const struct logical_volume *lv,
-			 char **policy_name, int *policy_argc,
-			 const char *const **policy_argv)
+int lv_cache_policy_info(struct logical_volume *lv,
+			 const char **policy_name, int *policy_argc,
+			 const char ***policy_argv)
 {
 	return 0;
 }
@@ -306,6 +306,10 @@ int lv_thin_percent(const struct logical_volume *lv, int mapped,
 }
 int lv_thin_pool_transaction_id(const struct logical_volume *lv,
 				uint64_t *transaction_id)
+{
+	return 0;
+}
+int lv_thin_device_id(const struct logical_volume *lv, uint32_t *device_id)
 {
 	return 0;
 }
