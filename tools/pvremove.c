@@ -37,6 +37,8 @@ int pvremove(struct cmd_context *cmd, int argc, char **argv)
 			stack;
 			ret = ECMD_FAILED;
 		}
+		if (sigint_caught())
+			return_ECMD_FAILED;
 	}
 
 	return ret;
