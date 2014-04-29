@@ -154,8 +154,7 @@ char *lvseg_monitor_dup(struct dm_pool *mem, const struct lv_segment *seg)
 	else if (!seg_monitored(segm) || (segm->status & PVMOVE))
 		s = "not monitored";
 	else if (lv_info(seg->lv->vg->cmd, seg->lv, 1, &info, 0, 0) && info.exists) {
-		monitored = segm->segtype->ops->
-			target_monitored((struct lv_segment*)segm, &pending);
+		monitored = segm->segtype->ops->target_monitored(segm, &pending);
 		if (pending)
 			s = "pending";
 		else
