@@ -224,7 +224,6 @@ static int _daemon_read(struct dm_event_fifos *fifos,
 	unsigned bytes = 0;
 	int ret, i;
 	fd_set fds;
-	struct timeval tval = { 0, 0 };
 	size_t size = 2 * sizeof(uint32_t);	/* status + size */
 	uint32_t *header = alloca(size);
 	char *buf = (char *)header;
@@ -232,11 +231,10 @@ static int _daemon_read(struct dm_event_fifos *fifos,
 	while (bytes < size) {
 		for (i = 0, ret = 0; (i < 20) && (ret < 1); i++) {
 			/* Watch daemon read FIFO for input. */
+			struct timeval tval = { .tv_sec = 1 };
 			FD_ZERO(&fds);
 			FD_SET(fifos->server, &fds);
-			tval.tv_sec = 1;
-			ret = select(fifos->server + 1, &fds, NULL, NULL,
-				     &tval);
+			ret = select(fifos->server + 1, &fds, NULL, NULL, &tval);
 			if (ret < 0 && errno != EINTR) {
 				log_error("Unable to read from event server");
 				return 0;
