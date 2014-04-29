@@ -125,7 +125,7 @@ install_tmpfiles_configuration:
 	$(INSTALL_DIR) $(tmpfiles_dir)
 	$(INSTALL_DATA) lvm2_tmpfiles_red_hat.conf $(tmpfiles_dir)/lvm2.conf
 
-CLEAN_TARGETS += \
+DIST_TARGETS += \
 	blkdeactivate.sh \
 	blk_availability_init_red_hat \
 	blk_availability_systemd_red_hat.service \
