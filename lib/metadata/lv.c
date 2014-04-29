@@ -613,10 +613,10 @@ char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 
 	repstr[3] = (lv->status & FIXED_MINOR) ? 'm' : '-';
 
-	if (!activation()) {
+	if (!activation() || !lv_info(lv->vg->cmd, lv, 0, &info, 1, 0)) {
 		repstr[4] = 'X';		/* Unknown */
 		repstr[5] = 'X';		/* Unknown */
-	} else if (lv_info(lv->vg->cmd, lv, 0, &info, 1, 0) && info.exists) {
+	} else if (info.exists) {
 		if (info.suspended)
 			repstr[4] = 's';	/* Suspended */
 		else if (info.live_table)
