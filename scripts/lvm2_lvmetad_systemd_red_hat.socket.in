@@ -8,4 +8,4 @@ ListenStream=@DEFAULT_RUN_DIR@/lvmetad.socket
 SocketMode=0600
 
 [Install]
-WantedBy=sockets.target
+WantedBy=sysinit.target
