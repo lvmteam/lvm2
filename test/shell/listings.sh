@@ -73,7 +73,7 @@ lvcreate -T $vg/pool -I4 -i2 -l5 -V1P -n thin
 not dd if=/dev/zero of="$DM_DEV_DIR/$vg/inval" bs=4K
 invalid lvscan "$dev1"
 lvdisplay --maps
-not lvscan --all
+lvscan --all
 
 #COMM vgs with options from pvs still treats arguments as VGs (bz193543)
 vgs -o pv_name,vg_name $vg
