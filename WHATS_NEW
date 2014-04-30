@@ -1,5 +1,6 @@
 Version 2.02.107 - 
 ==================================
+  Don't start dmeventd checking seg_monitor and monitoring is disabled.
   Catch CTRL-c during pvremove prompts.
   Show correct availability status for snapshot origin in lvscan.
   Move segment thin pool/volume info into segment display 'lvdisplay --maps'.
