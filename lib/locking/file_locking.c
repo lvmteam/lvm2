@@ -21,6 +21,7 @@
 #include "defaults.h"
 #include "lvm-file.h"
 #include "lvm-string.h"
+#include "lvm-flock.h"
 #include "lvmcache.h"
 
 #include <limits.h>
@@ -30,237 +31,20 @@
 #include <fcntl.h>
 #include <signal.h>
 
-struct lock_list {
-	struct dm_list list;
-	int lf;
-	char *res;
-};
-
-static struct dm_list _lock_list;
 static char _lock_dir[PATH_MAX];
-static int _prioritise_write_locks;
 
 static sig_t _oldhandler;
 static sigset_t _fullsigset, _intsigset;
 static volatile sig_atomic_t _handler_installed;
 
-/* Drop lock known to be shared with another file descriptor. */
-static void _drop_shared_flock(const char *file, int fd)
-{
-	log_debug_locking("_drop_shared_flock %s.", file);
-
-	if (close(fd) < 0)
-		log_sys_debug("close", file);
-}
-
-static void _undo_flock(const char *file, int fd)
-{
-	struct stat buf1, buf2;
-
-	log_debug_locking("_undo_flock %s", file);
-	if (!flock(fd, LOCK_NB | LOCK_EX) &&
-	    !stat(file, &buf1) &&
-	    !fstat(fd, &buf2) &&
-	    is_same_inode(buf1, buf2))
-		if (unlink(file))
-			log_sys_debug("unlink", file);
-
-	if (close(fd) < 0)
-		log_sys_debug("close", file);
-}
-
-static int _release_lock(const char *file, int unlock)
-{
-	struct lock_list *ll;
-	struct dm_list *llh, *llt;
-
-	dm_list_iterate_safe(llh, llt, &_lock_list) {
-		ll = dm_list_item(llh, struct lock_list);
-
-		if (!file || !strcmp(ll->res, file)) {
-			dm_list_del(llh);
-			if (unlock) {
-				log_very_verbose("Unlocking %s", ll->res);
-				if (flock(ll->lf, LOCK_NB | LOCK_UN))
-					log_sys_debug("flock", ll->res);
-				_undo_flock(ll->res, ll->lf);
-			} else
-				_drop_shared_flock(ll->res, ll->lf);
-
-			dm_free(ll->res);
-			dm_free(llh);
-
-			if (file)
-				return 1;
-		}
-	}
-
-	return 0;
-}
-
 static void _fin_file_locking(void)
 {
-	_release_lock(NULL, 1);
+	release_flocks(1);
 }
 
 static void _reset_file_locking(void)
 {
-	_release_lock(NULL, 0);
-}
-
-static void _remove_ctrl_c_handler(void)
-{
-	siginterrupt(SIGINT, 0);
-	if (!_handler_installed)
-		return;
-
-	_handler_installed = 0;
-
-	sigprocmask(SIG_SETMASK, &_fullsigset, NULL);
-	if (signal(SIGINT, _oldhandler) == SIG_ERR)
-		log_sys_error("signal", "_remove_ctrl_c_handler");
-}
-
-static void _trap_ctrl_c(int sig __attribute__((unused)))
-{
-	_remove_ctrl_c_handler();
-	log_error("CTRL-c detected: giving up waiting for lock");
-}
-
-static void _install_ctrl_c_handler(void)
-{
-	_handler_installed = 1;
-
-	if ((_oldhandler = signal(SIGINT, _trap_ctrl_c)) == SIG_ERR) {
-		_handler_installed = 0;
-		return;
-	}
-
-	sigprocmask(SIG_SETMASK, &_intsigset, NULL);
-	siginterrupt(SIGINT, 1);
-}
-
-static int _do_flock(const char *file, int *fd, int operation, uint32_t nonblock)
-{
-	int r = 1;
-	int old_errno;
-	struct stat buf1, buf2;
-
-	log_debug_locking("_do_flock %s %c%c", file,
-			  operation == LOCK_EX ? 'W' : 'R', nonblock ? ' ' : 'B');
-	do {
-		if ((*fd > -1) && close(*fd))
-			log_sys_debug("close", file);
-
-		if ((*fd = open(file, O_CREAT | O_APPEND | O_RDWR, 0777)) < 0) {
-			log_sys_error("open", file);
-			return 0;
-		}
-
-		if (nonblock)
-			operation |= LOCK_NB;
-		else
-			_install_ctrl_c_handler();
-
-		r = flock(*fd, operation);
-		old_errno = errno;
-		if (!nonblock)
-			_remove_ctrl_c_handler();
-
-		if (r) {
-			errno = old_errno;
-			log_sys_error("flock", file);
-			if (close(*fd))
-				log_sys_debug("close", file);
-			*fd = -1;
-			return 0;
-		}
-
-		if (!stat(file, &buf1) && !fstat(*fd, &buf2) &&
-		    is_same_inode(buf1, buf2))
-			return 1;
-	} while (!nonblock);
-
-	return_0;
-}
-
-#define AUX_LOCK_SUFFIX ":aux"
-
-static int _do_write_priority_flock(const char *file, int *fd, int operation, uint32_t nonblock)
-{
-	int r, fd_aux = -1;
-	char *file_aux = alloca(strlen(file) + sizeof(AUX_LOCK_SUFFIX));
-
-	strcpy(file_aux, file);
-	strcat(file_aux, AUX_LOCK_SUFFIX);
-
-	if ((r = _do_flock(file_aux, &fd_aux, LOCK_EX, 0))) {
-		if (operation == LOCK_EX) {
-			r = _do_flock(file, fd, operation, nonblock);
-			_undo_flock(file_aux, fd_aux);
-		} else {
-			_undo_flock(file_aux, fd_aux);
-			r = _do_flock(file, fd, operation, nonblock);
-		}
-	}
-
-	return r;
-}
-
-static int _lock_file(const char *file, uint32_t flags)
-{
-	int operation;
-	uint32_t nonblock = flags & LCK_NONBLOCK;
-	int r;
-
-	struct lock_list *ll;
-	char state;
-
-	switch (flags & LCK_TYPE_MASK) {
-	case LCK_READ:
-		operation = LOCK_SH;
-		state = 'R';
-		break;
-	case LCK_WRITE:
-		operation = LOCK_EX;
-		state = 'W';
-		break;
-	case LCK_UNLOCK:
-		return _release_lock(file, 1);
-	default:
-		log_error("Unrecognised lock type: %d", flags & LCK_TYPE_MASK);
-		return 0;
-	}
-
-	if (!(ll = dm_malloc(sizeof(struct lock_list))))
-		return_0;
-
-	if (!(ll->res = dm_strdup(file))) {
-		dm_free(ll);
-		return_0;
-	}
-
-	ll->lf = -1;
-
-	log_very_verbose("Locking %s %c%c", ll->res, state,
-			 nonblock ? ' ' : 'B');
-
-	(void) dm_prepare_selinux_context(file, S_IFREG);
-	if (_prioritise_write_locks)
-		r = _do_write_priority_flock(file, &ll->lf, operation, nonblock);
-	else 
-		r = _do_flock(file, &ll->lf, operation, nonblock);
-	(void) dm_prepare_selinux_context(NULL, 0);
-
-	if (r)
-		dm_list_add(&_lock_list, &ll->list);
-	else {
-		dm_free(ll->res);
-		dm_free(ll);
-		stack;
-	}
-
-	return r;
+	release_flocks(0);
 }
 
 static int _file_lock_resource(struct cmd_context *cmd, const char *resource,
@@ -298,7 +82,7 @@ static int _file_lock_resource(struct cmd_context *cmd, const char *resource,
 				return 0;
 			}
 
-		if (!_lock_file(lockfile, flags))
+		if (!lock_file(lockfile, flags))
 			return_0;
 		break;
 	case LCK_LV:
@@ -352,6 +136,8 @@ int init_file_locking(struct locking_type *locking, struct cmd_context *cmd,
 	int r;
 	const char *locking_dir;
 
+	init_flock(cmd);
+
 	locking->lock_resource = _file_lock_resource;
 	locking->reset_locking = _reset_file_locking;
 	locking->fin_locking = _fin_file_locking;
@@ -366,9 +152,6 @@ int init_file_locking(struct locking_type *locking, struct cmd_context *cmd,
 
 	strcpy(_lock_dir, locking_dir);
 
-	_prioritise_write_locks =
-	    find_config_tree_bool(cmd, global_prioritise_write_locks_CFG, NULL);
-
 	(void) dm_prepare_selinux_context(_lock_dir, S_IFDIR);
 	r = dm_create_dir(_lock_dir);
 	(void) dm_prepare_selinux_context(NULL, 0);
@@ -379,8 +162,6 @@ int init_file_locking(struct locking_type *locking, struct cmd_context *cmd,
 	/* Trap a read-only file system */
 	if ((access(_lock_dir, R_OK | W_OK | X_OK) == -1) && (errno == EROFS))
 		return 0;
-
-	dm_list_init(&_lock_list);
 
 	if (sigfillset(&_intsigset) || sigfillset(&_fullsigset)) {
 		log_sys_error_suppress(suppress_messages, "sigfillset",
