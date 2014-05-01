@@ -19,6 +19,7 @@
 #include "toolcontext.h"
 #include "lvm-string.h"
 #include "lvm-file.h"
+#include "lvm-signal.h"
 #include "lvmcache.h"
 #include "lvmetad.h"
 #include "memlock.h"

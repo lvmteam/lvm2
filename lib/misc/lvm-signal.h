@@ -14,7 +14,17 @@
  */
 
 #ifndef _LVM_SIGNAL_H
-#  define _LVM_SIGNAL_H
+#define _LVM_SIGNAL_H
+
 void remove_ctrl_c_handler(void);
 void install_ctrl_c_handler(void);
+
+void sigint_allow(void);
+int sigint_caught(void);
+void sigint_restore(void);
+void sigint_clear(void);
+
+void block_signals(uint32_t flags);
+void unblock_signals(void);
+
 #endif

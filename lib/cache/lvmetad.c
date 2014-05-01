@@ -21,6 +21,7 @@
 #include "lvmetad-client.h"
 #include "format-text.h" // TODO for disk_locn, used as a DA representation
 #include "crc.h"
+#include "lvm-signal.h"
 
 #define SCAN_TIMEOUT_SECONDS	80
 #define MAX_RESCANS		10	/* Maximum number of times to scan all PVs and retry if the daemon returns a token mismatch error */

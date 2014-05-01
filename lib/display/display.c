@@ -20,6 +20,8 @@
 #include "toolcontext.h"
 #include "segtype.h"
 #include "defaults.h"
+#include "lvm-signal.h"
+
 #include <stdarg.h>
 
 #define SIZE_BUF 128

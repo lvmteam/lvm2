@@ -1,5 +1,6 @@
 Version 2.02.107 - 
 ==================================
+  Separate signal handling and flock code out into lib/misc.
   Don't start dmeventd checking seg_monitor and monitoring is disabled.
   Catch CTRL-c during pvremove prompts.
   Show correct availability status for snapshot origin in lvscan.

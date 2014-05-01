@@ -22,147 +22,24 @@
 #include "memlock.h"
 #include "defaults.h"
 #include "lvmcache.h"
+#include "lvm-signal.h"
 
 #include <assert.h>
-#include <signal.h>
 #include <sys/stat.h>
 #include <limits.h>
 #include <unistd.h>
 
 static struct locking_type _locking;
-static sigset_t _oldset;
 
 static int _vg_lock_count = 0;		/* Number of locks held */
 static int _vg_write_lock_held = 0;	/* VG write lock held? */
-static int _signals_blocked = 0;
 static int _blocking_supported = 0;
-
-static volatile sig_atomic_t _sigint_caught = 0;
-static volatile sig_atomic_t _handler_installed;
-static struct sigaction _oldhandler;
-static int _oldmasked;
 
 typedef enum {
         LV_NOOP,
         LV_SUSPEND,
         LV_RESUME
 } lv_operation_t;
-
-static void _catch_sigint(int unused __attribute__((unused)))
-{
-	_sigint_caught = 1;
-}
-
-int sigint_caught(void) {
-	if (_sigint_caught)
-		log_error("Interrupted...");
-
-	return _sigint_caught;
-}
-
-void sigint_clear(void)
-{
-	_sigint_caught = 0;
-}
-
-/*
- * Temporarily allow keyboard interrupts to be intercepted and noted;
- * saves interrupt handler state for sigint_restore().  Users should
- * use the sigint_caught() predicate to check whether interrupt was
- * requested and act appropriately.  Interrupt flags are never
- * cleared automatically by this code, but the tools clear the flag
- * before running each command in lvm_run_command().  All other places
- * where the flag needs to be cleared need to call sigint_clear().
- */
-
-void sigint_allow(void)
-{
-	struct sigaction handler;
-	sigset_t sigs;
-
-	/*
-	 * Do not overwrite the backed-up handler data -
-	 * just increase nesting count.
-	 */
-	if (_handler_installed) {
-		_handler_installed++;
-		return;
-	}
-
-	/* Grab old sigaction for SIGINT: shall not fail. */
-	sigaction(SIGINT, NULL, &handler);
-	handler.sa_flags &= ~SA_RESTART; /* Clear restart flag */
-	handler.sa_handler = _catch_sigint;
-
-	_handler_installed = 1;
-
-	/* Override the signal handler: shall not fail. */
-	sigaction(SIGINT, &handler, &_oldhandler);
-
-	/* Unmask SIGINT.  Remember to mask it again on restore. */
-	sigprocmask(0, NULL, &sigs);
-	if ((_oldmasked = sigismember(&sigs, SIGINT))) {
-		sigdelset(&sigs, SIGINT);
-		sigprocmask(SIG_SETMASK, &sigs, NULL);
-	}
-}
-
-void sigint_restore(void)
-{
-	if (!_handler_installed)
-		return;
-
-	if (_handler_installed > 1) {
-		_handler_installed--;
-		return;
-	}
-
-	/* Nesting count went down to 0. */
-	_handler_installed = 0;
-
-	if (_oldmasked) {
-		sigset_t sigs;
-		sigprocmask(0, NULL, &sigs);
-		sigaddset(&sigs, SIGINT);
-		sigprocmask(SIG_SETMASK, &sigs, NULL);
-	}
-
-	sigaction(SIGINT, &_oldhandler, NULL);
-}
-
-static void _block_signals(uint32_t flags __attribute__((unused)))
-{
-	sigset_t set;
-
-	if (_signals_blocked)
-		return;
-
-	if (sigfillset(&set)) {
-		log_sys_error("sigfillset", "_block_signals");
-		return;
-	}
-
-	if (sigprocmask(SIG_SETMASK, &set, &_oldset)) {
-		log_sys_error("sigprocmask", "_block_signals");
-		return;
-	}
-
-	_signals_blocked = 1;
-}
-
-static void _unblock_signals(void)
-{
-	/* Don't unblock signals while any locks are held */
-	if (!_signals_blocked || _vg_lock_count)
-		return;
-
-	if (sigprocmask(SIG_SETMASK, &_oldset, NULL)) {
-		log_sys_error("sigprocmask", "_block_signals");
-		return;
-	}
-
-	_signals_blocked = 0;
-}
 
 static void _lock_memory(struct cmd_context *cmd, lv_operation_t lv_op)
 {
@@ -180,6 +57,13 @@ static void _unlock_memory(struct cmd_context *cmd, lv_operation_t lv_op)
 
 	if (lv_op == LV_RESUME)
 		critical_section_dec(cmd, "unlocking on resume");
+}
+
+static void _unblock_signals(void)
+{
+	/* Don't unblock signals while any locks are held */
+	if (!_vg_lock_count)
+		unblock_signals();
 }
 
 void reset_locking(void)
@@ -366,7 +250,7 @@ static int _lock_vol(struct cmd_context *cmd, const char *resource,
 	uint32_t lck_scope = flags & LCK_SCOPE_MASK;
 	int ret = 0;
 
-	_block_signals(flags);
+	block_signals(flags);
 	_lock_memory(cmd, lv_op);
 
 	assert(resource);

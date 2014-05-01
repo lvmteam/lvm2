@@ -40,6 +40,7 @@
 #include "locking.h"
 #include "lvm-exec.h"
 #include "lvm-file.h"
+#include "lvm-signal.h"
 #include "lvm-string.h"
 #include "segtype.h"
 #include "str_list.h"

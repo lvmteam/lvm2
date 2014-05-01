@@ -12,11 +12,11 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef _LVM_SIGNAL_H
-#  define _LVM_SIGNAL_H
+#ifndef _LVM_FLOCK_H
+#define _LVM_FLOCK_H
 
 void init_flock(struct cmd_context *cmd);
 int lock_file(const char *file, uint32_t flags);
 void release_flocks(int unlock);
 
-#endif /* _LVM_SIGNAL_H */
+#endif /* _LVM_FLOCK_H */

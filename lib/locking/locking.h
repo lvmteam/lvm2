@@ -213,10 +213,4 @@ int resume_lvs(struct cmd_context *cmd, struct dm_list *lvs);
 int revert_lvs(struct cmd_context *cmd, struct dm_list *lvs);
 int activate_lvs(struct cmd_context *cmd, struct dm_list *lvs, unsigned exclusive);
 
-/* Interrupt handling */
-void sigint_clear(void);
-void sigint_allow(void);
-void sigint_restore(void);
-int sigint_caught(void);
-
 #endif
