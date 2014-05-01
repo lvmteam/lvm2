@@ -18,6 +18,7 @@
 
 void remove_ctrl_c_handler(void);
 void install_ctrl_c_handler(void);
+int init_signals(int suppress_messages);
 
 void sigint_allow(void);
 int sigint_caught(void);

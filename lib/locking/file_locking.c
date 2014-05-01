@@ -33,10 +33,6 @@
 
 static char _lock_dir[PATH_MAX];
 
-static sig_t _oldhandler;
-static sigset_t _fullsigset, _intsigset;
-static volatile sig_atomic_t _handler_installed;
-
 static void _fin_file_locking(void)
 {
 	release_flocks(1);
@@ -163,17 +159,8 @@ int init_file_locking(struct locking_type *locking, struct cmd_context *cmd,
 	if ((access(_lock_dir, R_OK | W_OK | X_OK) == -1) && (errno == EROFS))
 		return 0;
 
-	if (sigfillset(&_intsigset) || sigfillset(&_fullsigset)) {
-		log_sys_error_suppress(suppress_messages, "sigfillset",
-				       "init_file_locking");
-		return 0;
-	}
-
-	if (sigdelset(&_intsigset, SIGINT)) {
-		log_sys_error_suppress(suppress_messages, "sigdelset",
-				       "init_file_locking");
-		return 0;
-	}
+	if (!init_signals(suppress_messages))
+		return_0;
 
 	return 1;
 }

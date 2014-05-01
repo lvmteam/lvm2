@@ -62,6 +62,23 @@ void install_ctrl_c_handler(void)
 	siginterrupt(SIGINT, 1);
 }
 
+int init_signals(int suppress_messages)
+{
+	if (sigfillset(&_intsigset) || sigfillset(&_fullsigset)) {
+		log_sys_error_suppress(suppress_messages, "sigfillset",
+				       "init_signals");
+		return 0;
+	}
+
+	if (sigdelset(&_intsigset, SIGINT)) {
+		log_sys_error_suppress(suppress_messages, "sigdelset",
+				       "init_signals");
+		return 0;
+	}
+
+	return 1;
+}
+
 static void _catch_sigint(int unused __attribute__((unused)))
 {
 	_sigint_caught = 1;
