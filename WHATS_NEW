@@ -1,5 +1,6 @@
 Version 2.02.107 - 
 ==================================
+  Better support for nesting of blocking signals.
   Use only sigaction handler and drop duplicate signal handler.
   Separate signal handling and flock code out into lib/misc.
   Don't start dmeventd checking seg_monitor and monitoring is disabled.

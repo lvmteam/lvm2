@@ -21,9 +21,12 @@
 static sigset_t _oldset;
 static int _signals_blocked = 0;
 static volatile sig_atomic_t _sigint_caught = 0;
-static volatile sig_atomic_t _handler_installed2;
-static struct sigaction _oldhandler2;
-static int _oldmasked;
+static volatile sig_atomic_t _handler_installed;
+
+/* Support 3 level nesting, increase if needed more */
+#define MAX_SIGINTS 3
+static struct sigaction _oldhandler[MAX_SIGINTS];
+static int _oldmasked[MAX_SIGINTS];
 
 static void _catch_sigint(int unused __attribute__((unused)))
 {
@@ -61,10 +64,8 @@ void sigint_allow(void)
 	 * Do not overwrite the backed-up handler data -
 	 * just increase nesting count.
 	 */
-	if (_handler_installed2) {
-		_handler_installed2++;
+	if (++_handler_installed >= MAX_SIGINTS)
 		return;
-	}
 
 	/* Grab old sigaction for SIGINT: shall not fail. */
 	if (sigaction(SIGINT, NULL, &handler))
@@ -73,17 +74,15 @@ void sigint_allow(void)
 	handler.sa_flags &= ~SA_RESTART; /* Clear restart flag */
 	handler.sa_handler = _catch_sigint;
 
-	_handler_installed2 = 1;
-
 	/* Override the signal handler: shall not fail. */
-	if (sigaction(SIGINT, &handler, &_oldhandler2))
+	if (sigaction(SIGINT, &handler, &_oldhandler[_handler_installed  - 1]))
 		log_sys_debug("sigaction", "SIGINT");
 
 	/* Unmask SIGINT.  Remember to mask it again on restore. */
 	if (sigprocmask(0, NULL, &sigs))
 		log_sys_debug("sigprocmask", "");
 
-	if ((_oldmasked = sigismember(&sigs, SIGINT))) {
+	if ((_oldmasked[_handler_installed] = sigismember(&sigs, SIGINT))) {
 		sigdelset(&sigs, SIGINT);
 		if (sigprocmask(SIG_SETMASK, &sigs, NULL))
 			log_sys_debug("sigprocmask", "SIG_SETMASK");
@@ -92,18 +91,12 @@ void sigint_allow(void)
 
 void sigint_restore(void)
 {
-	if (!_handler_installed2)
+	if (!_handler_installed ||
+	    --_handler_installed >= MAX_SIGINTS)
 		return;
 
-	if (_handler_installed2 > 1) {
-		_handler_installed2--;
-		return;
-	}
-
-	/* Nesting count went down to 0. */
-	_handler_installed2 = 0;
-
-	if (_oldmasked) {
+	/* Nesting count went bellow MAX_SIGINTS. */
+	if (_oldmasked[_handler_installed]) {
 		sigset_t sigs;
 		sigprocmask(0, NULL, &sigs);
 		sigaddset(&sigs, SIGINT);
@@ -111,7 +104,7 @@ void sigint_restore(void)
 			log_sys_debug("sigprocmask", "SIG_SETMASK");
 	}
 
-	if (sigaction(SIGINT, &_oldhandler2, NULL))
+	if (sigaction(SIGINT, &_oldhandler[_handler_installed], NULL))
 		log_sys_debug("sigaction", "SIGINT restore");
 }
 
