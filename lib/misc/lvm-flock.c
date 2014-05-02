@@ -111,12 +111,15 @@ static int _do_flock(const char *file, int *fd, int operation, uint32_t nonblock
 		if (nonblock)
 			operation |= LOCK_NB;
 		else
-			install_ctrl_c_handler();
+			sigint_allow();
 
 		r = flock(*fd, operation);
 		old_errno = errno;
-		if (!nonblock)
-			remove_ctrl_c_handler();
+		if (!nonblock) {
+			sigint_restore();
+			if (sigint_caught())
+				log_error("Giving up waiting for lock.");
+		}
 
 		if (r) {
 			errno = old_errno;

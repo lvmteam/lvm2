@@ -18,66 +18,12 @@
 
 #include <signal.h>
 
-static sig_t _oldhandler;
-static sigset_t _fullsigset, _intsigset;
-static volatile sig_atomic_t _handler_installed;
-
 static sigset_t _oldset;
 static int _signals_blocked = 0;
 static volatile sig_atomic_t _sigint_caught = 0;
 static volatile sig_atomic_t _handler_installed2;
 static struct sigaction _oldhandler2;
 static int _oldmasked;
-
-void remove_ctrl_c_handler(void)
-{
-	siginterrupt(SIGINT, 0);
-	if (!_handler_installed)
-		return;
-
-	_handler_installed = 0;
-
-	sigprocmask(SIG_SETMASK, &_fullsigset, NULL);
-	if (signal(SIGINT, _oldhandler) == SIG_ERR)
-		log_sys_error("signal", "_remove_ctrl_c_handler");
-}
-
-static void _trap_ctrl_c(int sig __attribute__((unused)))
-{
-	remove_ctrl_c_handler();
-
-	log_error("CTRL-c detected: giving up waiting for lock");
-}
-
-void install_ctrl_c_handler(void)
-{
-	_handler_installed = 1;
-
-	if ((_oldhandler = signal(SIGINT, _trap_ctrl_c)) == SIG_ERR) {
-		_handler_installed = 0;
-		return;
-	}
-
-	sigprocmask(SIG_SETMASK, &_intsigset, NULL);
-	siginterrupt(SIGINT, 1);
-}
-
-int init_signals(int suppress_messages)
-{
-	if (sigfillset(&_intsigset) || sigfillset(&_fullsigset)) {
-		log_sys_error_suppress(suppress_messages, "sigfillset",
-				       "init_signals");
-		return 0;
-	}
-
-	if (sigdelset(&_intsigset, SIGINT)) {
-		log_sys_error_suppress(suppress_messages, "sigdelset",
-				       "init_signals");
-		return 0;
-	}
-
-	return 1;
-}
 
 static void _catch_sigint(int unused __attribute__((unused)))
 {

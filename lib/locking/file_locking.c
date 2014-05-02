@@ -160,8 +160,5 @@ int init_file_locking(struct locking_type *locking, struct cmd_context *cmd,
 	if ((access(_lock_dir, R_OK | W_OK | X_OK) == -1) && (errno == EROFS))
 		return 0;
 
-	if (!init_signals(suppress_messages))
-		return_0;
-
 	return 1;
 }
