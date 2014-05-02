@@ -67,20 +67,26 @@ void sigint_allow(void)
 	}
 
 	/* Grab old sigaction for SIGINT: shall not fail. */
-	sigaction(SIGINT, NULL, &handler);
+	if (sigaction(SIGINT, NULL, &handler))
+		log_sys_debug("sigaction", "SIGINT");
+
 	handler.sa_flags &= ~SA_RESTART; /* Clear restart flag */
 	handler.sa_handler = _catch_sigint;
 
 	_handler_installed2 = 1;
 
 	/* Override the signal handler: shall not fail. */
-	sigaction(SIGINT, &handler, &_oldhandler2);
+	if (sigaction(SIGINT, &handler, &_oldhandler2))
+		log_sys_debug("sigaction", "SIGINT");
 
 	/* Unmask SIGINT.  Remember to mask it again on restore. */
-	sigprocmask(0, NULL, &sigs);
+	if (sigprocmask(0, NULL, &sigs))
+		log_sys_debug("sigprocmask", "");
+
 	if ((_oldmasked = sigismember(&sigs, SIGINT))) {
 		sigdelset(&sigs, SIGINT);
-		sigprocmask(SIG_SETMASK, &sigs, NULL);
+		if (sigprocmask(SIG_SETMASK, &sigs, NULL))
+			log_sys_debug("sigprocmask", "SIG_SETMASK");
 	}
 }
 
@@ -101,10 +107,12 @@ void sigint_restore(void)
 		sigset_t sigs;
 		sigprocmask(0, NULL, &sigs);
 		sigaddset(&sigs, SIGINT);
-		sigprocmask(SIG_SETMASK, &sigs, NULL);
+		if (sigprocmask(SIG_SETMASK, &sigs, NULL))
+			log_sys_debug("sigprocmask", "SIG_SETMASK");
 	}
 
-	sigaction(SIGINT, &_oldhandler2, NULL);
+	if (sigaction(SIGINT, &_oldhandler2, NULL))
+		log_sys_debug("sigaction", "SIGINT restore");
 }
 
 void block_signals(uint32_t flags __attribute__((unused)))
