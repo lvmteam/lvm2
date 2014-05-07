@@ -304,7 +304,10 @@ static int _determine_cache_argument(struct volume_group *vg,
 			  lp->segtype->name);
 		return 0;
 	}
-
+	if (!lp->origin) {
+		log_error(INTERNAL_ERROR "Origin LV is not defined.");
+		return 0;
+	}
 	if (!(lvl = find_lv_in_vg(vg, lp->origin))) {
 		log_error("LV %s not found in Volume group %s.",
 			  lp->origin, vg->name);

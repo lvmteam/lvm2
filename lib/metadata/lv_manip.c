@@ -5993,6 +5993,10 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 							    "cache-pool")))
 			return_0;
 	} else if (seg_is_thin(lp) && lp->snapshot) {
+		if (!lp->origin) {
+			log_error(INTERNAL_ERROR "Origin LV is not defined.");
+			return 0;
+		}
 		if (!(org = find_lv(vg, lp->origin))) {
 			log_error("Couldn't find origin volume '%s'.",
 				  lp->origin);
