@@ -1907,7 +1907,8 @@ static int _device_has_mounted_fs(char *buffer, unsigned major, unsigned minor,
 	char kernel_dev_name[PATH_MAX];
 
 	if ((major == data->maj) && (minor == data->min)) {
-		if (!dm_device_get_name(major, minor, 1, kernel_dev_name, PATH_MAX)) {
+		if (!dm_device_get_name(major, minor, 1, kernel_dev_name,
+					sizeof(kernel_dev_name))) {
 			stack;
 			*kernel_dev_name = '\0';
 		}
