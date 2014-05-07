@@ -236,7 +236,7 @@ void destroy_lvhash(void)
 		if ((status = sync_unlock(resource, lvi->lock_id)))
 			DEBUGLOG("unlock_all. unlock failed(%d): %s\n",
 				 status,  strerror(errno));
-		free(lvi);
+		dm_free(lvi);
 	}
 
 	dm_hash_destroy(lv_hash);
@@ -286,8 +286,7 @@ static int hold_lock(char *resource, int mode, int flags)
 				 strerror(errno));
 		errno = saved_errno;
 	} else {
-		lvi = malloc(sizeof(struct lv_info));
-		if (!lvi) {
+		if (!(lvi = dm_malloc(sizeof(struct lv_info)))) {
 			errno = ENOMEM;
 			return -1;
 		}
@@ -296,7 +295,7 @@ static int hold_lock(char *resource, int mode, int flags)
 		status = sync_lock(resource, mode, flags & ~LCKF_CONVERT, &lvi->lock_id);
 		saved_errno = errno;
 		if (status) {
-			free(lvi);
+			dm_free(lvi);
 			DEBUGLOG("hold_lock. lock at %d failed: %s\n", mode,
 				 strerror(errno));
 		} else
@@ -326,7 +325,7 @@ static int hold_unlock(char *resource)
 	saved_errno = errno;
 	if (!status) {
 		remove_info(resource);
-		free(lvi);
+		dm_free(lvi);
 	} else {
 		DEBUGLOG("hold_unlock. unlock failed(%d): %s\n", status,
 			 strerror(errno));
