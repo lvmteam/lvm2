@@ -57,7 +57,7 @@ int update_cache_pool_params(struct volume_group *vg, unsigned attr,
 	 * ... plus a good amount of padding (2x) to cover any
 	 * policy hint data that may be added in the future.
 	 */
-	min_meta_size = 16 * (data_extents * vg->extent_size);
+	min_meta_size = (uint64_t)data_extents * vg->extent_size * 16;
 	min_meta_size /= *chunk_size; /* # of Bytes we need */
 	min_meta_size *= 2;              /* plus some padding */
 	min_meta_size /= 512;            /* in sectors */
