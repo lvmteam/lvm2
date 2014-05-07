@@ -323,7 +323,6 @@ static int _determine_cache_argument(struct volume_group *vg,
 		lp->poolmetadataspare = arg_int_value(vg->cmd,
 						      poolmetadataspare_ARG,
 						      DEFAULT_POOL_METADATA_SPARE);
-		lp->origin = lp->origin;
 	}
 
 	return 1;

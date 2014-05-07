@@ -123,7 +123,7 @@ struct logical_volume *lv_cache_create(struct logical_volume *pool,
 		return_NULL;
 
 	cache_lv = origin;
-	if (!(origin = insert_layer_for_lv(cmd, cache_lv, CACHE, "_corig")))
+	if (!insert_layer_for_lv(cmd, cache_lv, CACHE, "_corig"))
 		return_NULL;
 
 	seg = first_seg(cache_lv);
