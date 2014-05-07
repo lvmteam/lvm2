@@ -495,9 +495,10 @@ static int _blkid_wipe(blkid_probe probe, struct device *dev, const char *name,
 	offset_value = strtoll(offset, NULL, 10);
 
 	if (!usage)
-		blkid_probe_lookup_value(probe, "USAGE", &usage, NULL);
-	blkid_probe_lookup_value(probe, "LABEL", &label, NULL);
-	blkid_probe_lookup_value(probe, "UUID", &uuid, NULL);
+		(void) blkid_probe_lookup_value(probe, "USAGE", &usage, NULL);
+	(void) blkid_probe_lookup_value(probe, "LABEL", &label, NULL);
+	(void) blkid_probe_lookup_value(probe, "UUID", &uuid, NULL);
+	/* Return values ignored here, in the worst case we print NULL */
 
 	log_verbose("Found existing signature on %s at offset %s: LABEL=\"%s\" "
 		    "UUID=\"%s\" TYPE=\"%s\" USAGE=\"%s\"",
