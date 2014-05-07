@@ -19,7 +19,6 @@
 #include "locking.h"
 #include "clvm.h"
 #include "clvmd-comms.h"
-#include "lvm-functions.h"
 #include "clvmd.h"
 
 #include <sys/un.h>

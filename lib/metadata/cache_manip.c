@@ -15,18 +15,12 @@
 #include "lib.h"
 #include "metadata.h"
 #include "locking.h"
-#include "pv_map.h"
 #include "lvm-string.h"
 #include "toolcontext.h"
-#include "lv_alloc.h"
-#include "pv_alloc.h"
 #include "display.h"
 #include "segtype.h"
-#include "archiver.h"
 #include "activate.h"
-#include "str_list.h"
 #include "defaults.h"
-#include "lvm-exec.h"
 
 int update_cache_pool_params(struct volume_group *vg, unsigned attr,
 			     int passed_args,

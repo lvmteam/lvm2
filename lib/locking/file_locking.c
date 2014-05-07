@@ -19,7 +19,6 @@
 #include "activate.h"
 #include "config.h"
 #include "defaults.h"
-#include "lvm-file.h"
 #include "lvm-string.h"
 #include "lvm-flock.h"
 #include "lvmcache.h"
@@ -28,7 +27,6 @@
 #include <limits.h>
 #include <unistd.h>
 #include <sys/stat.h>
-#include <sys/file.h>
 #include <fcntl.h>
 #include <signal.h>
 

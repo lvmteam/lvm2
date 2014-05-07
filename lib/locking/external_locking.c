@@ -19,7 +19,6 @@
 #include "sharedlib.h"
 #include "toolcontext.h"
 #include "activate.h"
-#include "locking.h"
 
 static void *_locking_lib = NULL;
 static void (*_reset_fn) (void) = NULL;
