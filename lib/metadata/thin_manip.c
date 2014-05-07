@@ -375,7 +375,10 @@ int update_profilable_pool_params(struct cmd_context *cmd, struct profile *profi
 
 	if (!(passed_args & PASS_ARG_CHUNK_SIZE)) {
 		if (!(*chunk_size = find_config_tree_int(cmd, allocation_thin_pool_chunk_size_CFG, profile) * 2)) {
-			str = find_config_tree_str(cmd, allocation_thin_pool_chunk_size_policy_CFG, profile);
+			if (!(str = find_config_tree_str(cmd, allocation_thin_pool_chunk_size_policy_CFG, profile))) {
+				log_error(INTERNAL_ERROR "Could not find profile.");
+				return 0;
+			}
 			if (!strcasecmp(str, "generic"))
 				*chunk_size_calc_method = THIN_CHUNK_SIZE_CALC_METHOD_GENERIC;
 			else if (!strcasecmp(str, "performance"))
@@ -397,7 +400,10 @@ int update_profilable_pool_params(struct cmd_context *cmd, struct profile *profi
 	}
 
 	if (!(passed_args & PASS_ARG_DISCARDS)) {
-		str = find_config_tree_str(cmd, allocation_thin_pool_discards_CFG, profile);
+		if (!(str = find_config_tree_str(cmd, allocation_thin_pool_discards_CFG, profile))) {
+			log_error(INTERNAL_ERROR "Could not find profile.");
+			return 0;
+		}
 		if (!get_pool_discards(str, discards))
 			return_0;
 	}

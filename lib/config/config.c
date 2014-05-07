@@ -1766,7 +1766,10 @@ int get_default_allocation_thin_pool_chunk_size_CFG(struct cmd_context *cmd, str
 	const char *str;
 	uint32_t chunk_size;
 
-	str = find_config_tree_str(cmd, allocation_thin_pool_chunk_size_policy_CFG, profile);
+	if (!(str = find_config_tree_str(cmd, allocation_thin_pool_chunk_size_policy_CFG, profile))) {
+		log_error(INTERNAL_ERROR "Cannot find profile.");
+		return 0;
+	}
 
 	if (!strcasecmp(str, "generic"))
 		chunk_size = DEFAULT_THIN_POOL_CHUNK_SIZE;
