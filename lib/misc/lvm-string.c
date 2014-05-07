@@ -65,29 +65,29 @@ int validate_tag(const char *n)
 	return 1;
 }
 
-static int _validate_name(const char *n)
+static name_error_t _validate_name(const char *n)
 {
 	register char c;
 	register int len = 0;
 
 	if (!n || !*n)
-		return -1;
+		return NAME_INVALID_EMPTY;
 
 	/* Hyphen used as VG-LV separator - ambiguity if LV starts with it */
 	if (*n == '-')
-		return -2;
+		return NAME_INVALID_HYPEN;
 
 	if ((*n == '.') && (!n[1] || (n[1] == '.' && !n[2]))) /* ".", ".." */
-		return -3;
+		return NAME_INVALID_DOTS;
 
 	while ((len++, c = *n++))
 		if (!isalnum(c) && c != '.' && c != '_' && c != '-' && c != '+')
-			return -4;
+			return NAME_INVALID_CHARSET;
 
 	if (len > NAME_LEN)
-		return -5;
+		return NAME_INVALID_LENGTH;
 
-	return 0;
+	return NAME_VALID;
 }
 
 /*
@@ -98,7 +98,7 @@ static int _validate_name(const char *n)
  */
 int validate_name(const char *n)
 {
-	return (_validate_name(n) < 0 ? 0 : 1);
+	return (_validate_name(n) == NAME_VALID) ? 1 : 0;
 }
 
 static const char *_lvname_has_reserved_prefix(const char *lvname)
