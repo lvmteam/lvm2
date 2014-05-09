@@ -6140,6 +6140,11 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 
 	if (seg_is_thin_volume(lp)) {
 		/* Ensure all stacked messages are submitted */
+		if (!lp->pool) {
+			log_error(INTERNAL_ERROR "Undefined pool for thin volume segment.");
+			return NULL;
+		}
+
 		if (!(lvl = find_lv_in_vg(vg, lp->pool))) {
 			log_error("Unable to find existing pool LV %s in VG %s.",
 				  lp->pool, vg->name);
