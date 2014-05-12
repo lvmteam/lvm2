@@ -7208,8 +7208,6 @@ $as_echo "#define THIN_INTERNAL 1" >>confdefs.h
   *) as_fn_error $? "--with-thin parameter invalid ($THIN)" "$LINENO" 5 ;;
 esac
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether thin_check supports the needs-check flag" >&5
-$as_echo_n "checking whether thin_check supports the needs-check flag... " >&6; }
 # Check whether --enable-thin_check_needs_check was given.
 if test "${enable_thin_check_needs_check+set}" = set; then :
   enableval=$enable_thin_check_needs_check; THIN_CHECK_NEEDS_CHECK=$enableval
@@ -7217,14 +7215,6 @@ else
   THIN_CHECK_NEEDS_CHECK=yes
 fi
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $THIN_CHECK_NEEDS_CHECK" >&5
-$as_echo "$THIN_CHECK_NEEDS_CHECK" >&6; }
-
-if test x$THIN_CHECK_NEEDS_CHECK = xyes; then
-
-$as_echo "#define THIN_CHECK_NEEDS_CHECK 1" >>confdefs.h
-
-fi
 
 # Test if necessary thin tools are available
 # if not - use plain defaults and warn user
@@ -7335,24 +7325,23 @@ fi
 $as_echo "$as_me: WARNING: thin_check not found in path $PATH" >&2;}
 			THIN_CHECK_CMD=/usr/sbin/thin_check
 			THIN_CONFIGURE_WARN=y
-		else
-			if test x$THIN_CHECK_NEEDS_CHECK = xyes; then
-				THIN_CHECK_VSN=`"$THIN_CHECK_CMD" -V 2>/dev/null`
-				THIN_CHECK_VSN_MAJOR=`echo "$THIN_CHECK_VSN" | $AWK -F '.' '{print $1}'`
-				THIN_CHECK_VSN_MINOR=`echo "$THIN_CHECK_VSN" | $AWK -F '.' '{print $2}'`
+		fi
+	fi
+	if test "$THIN_CHECK_NEEDS_CHECK" = yes; then
+		THIN_CHECK_VSN=`"$THIN_CHECK_CMD" -V 2>/dev/null`
+		THIN_CHECK_VSN_MAJOR=`echo "$THIN_CHECK_VSN" | $AWK -F '.' '{print $1}'`
+		THIN_CHECK_VSN_MINOR=`echo "$THIN_CHECK_VSN" | $AWK -F '.' '{print $2}'`
 
-				if test -z "$THIN_CHECK_VSN_MAJOR" -o -z "$THIN_CHECK_VSN_MINOR" ; then
-					{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Found thin_check version \"$THIN_CHECK_VSN\"" >&5
-$as_echo "$as_me: WARNING: Found thin_check version \"$THIN_CHECK_VSN\"" >&2;}
-					THIN_CHECK_VERSION_WARN=y
-				else
-					if test "$THIN_CHECK_VSN_MAJOR" -eq 0 -a "$THIN_CHECK_VSN_MINOR" -lt 3 ; then
-						{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Found thin_check version \"$THIN_CHECK_VSN\"" >&5
-$as_echo "$as_me: WARNING: Found thin_check version \"$THIN_CHECK_VSN\"" >&2;}
-						THIN_CHECK_VERSION_WARN=y
-					fi
-				fi
-			fi
+		if test -z "$THIN_CHECK_VSN_MAJOR" -o -z "$THIN_CHECK_VSN_MINOR"; then
+			{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $THIN_CHECK_CMD: Bad version \"$THIN_CHECK_VSN\" found" >&5
+$as_echo "$as_me: WARNING: $THIN_CHECK_CMD: Bad version \"$THIN_CHECK_VSN\" found" >&2;}
+			THIN_CHECK_VERSION_WARN=y
+			THIN_CHECK_NEEDS_CHECK=no
+		elif test "$THIN_CHECK_VSN_MAJOR" -eq 0 -a "$THIN_CHECK_VSN_MINOR" -lt 3; then
+			{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $THIN_CHECK_CMD: Old version \"$THIN_CHECK_VSN\" found" >&5
+$as_echo "$as_me: WARNING: $THIN_CHECK_CMD: Old version \"$THIN_CHECK_VSN\" found" >&2;}
+			THIN_CHECK_VERSION_WARN=y
+			THIN_CHECK_NEEDS_CHECK=no
 		fi
 	fi
 	# Empty means a config way to ignore thin checking
@@ -7571,6 +7560,16 @@ $as_echo "$as_me: WARNING: thin_repair not found in path $PATH" >&2;}
 	fi
 	;;
 esac
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether thin_check supports the needs-check flag" >&5
+$as_echo_n "checking whether thin_check supports the needs-check flag... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $THIN_CHECK_NEEDS_CHECK" >&5
+$as_echo "$THIN_CHECK_NEEDS_CHECK" >&6; }
+if test "$THIN_CHECK_NEEDS_CHECK" = yes; then
+
+$as_echo "#define THIN_CHECK_NEEDS_CHECK 1" >>confdefs.h
+
+fi
 
 
 cat >>confdefs.h <<_ACEOF
