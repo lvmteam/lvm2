@@ -693,8 +693,10 @@ global {
     # option "-q" is for quiet output.
     # With thin_check version 2.1 or newer you can add "--ignore-non-fatal-errors"
     # to let it pass through ignorable errors and fix them later.
+    # With thin_check version 3.2 or newer you should add
+    # "--clear-needs-check-flag".
     #
-    # thin_check_options = [ "-q" ]
+    # thin_check_options = [ "-q", "--clear-needs-check-flag" ]
 
     # Full path of the utility called to repair a thin metadata device
     # is in a state that allows it to be used.
