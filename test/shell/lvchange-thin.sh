@@ -98,7 +98,7 @@ not lvchange --resync --addtag foo $vg/$lv1
 #
 # Play with tags and activation
 #
-TAG=$(hostname)
+TAG=$(uname -n)
 aux lvmconf 'activation/volume_list = [ "$vg/$lv2", "@mytag", "$vg2" ]'
 
 lvchange -ay $vg/$lv1
