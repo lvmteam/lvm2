@@ -103,7 +103,7 @@ install_man5: $(MAN5)
 	$(INSTALL) -d $(MAN5DIR)
 	$(INSTALL_DATA) $(MAN5) $(MAN5DIR)/
 
-install_man7: $(MAN8)
+install_man7: $(MAN7)
 	$(INSTALL) -d $(MAN7DIR)
 	$(INSTALL_DATA) $(MAN7) $(MAN7DIR)/
 
