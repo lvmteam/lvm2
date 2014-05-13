@@ -376,7 +376,7 @@ int update_profilable_pool_params(struct cmd_context *cmd, struct profile *profi
 	if (!(passed_args & PASS_ARG_CHUNK_SIZE)) {
 		if (!(*chunk_size = find_config_tree_int(cmd, allocation_thin_pool_chunk_size_CFG, profile) * 2)) {
 			if (!(str = find_config_tree_str(cmd, allocation_thin_pool_chunk_size_policy_CFG, profile))) {
-				log_error(INTERNAL_ERROR "Could not find profile.");
+				log_error(INTERNAL_ERROR "Could not find configuration.");
 				return 0;
 			}
 			if (!strcasecmp(str, "generic"))
@@ -401,7 +401,7 @@ int update_profilable_pool_params(struct cmd_context *cmd, struct profile *profi
 
 	if (!(passed_args & PASS_ARG_DISCARDS)) {
 		if (!(str = find_config_tree_str(cmd, allocation_thin_pool_discards_CFG, profile))) {
-			log_error(INTERNAL_ERROR "Could not find profile.");
+			log_error(INTERNAL_ERROR "Could not find configuration.");
 			return 0;
 		}
 		if (!get_pool_discards(str, discards))
