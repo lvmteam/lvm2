@@ -135,7 +135,7 @@ lvremove -ff $vg
 check vg_field $vg lv_count 0
 
 # Create thin snapshot of thinLV
-lvcreate -L10M -V10M -T $vg/pool --name lv1
+lvcreate -L10M -I4 -i2 -V10M -T $vg/pool --name lv1
 mkfs.ext4 "$DM_DEV_DIR/$vg/lv1"
 lvcreate -K -s $vg/lv1 --name snap_lv1
 fsck -n "$DM_DEV_DIR/$vg/snap_lv1"
@@ -145,8 +145,10 @@ lvcreate --type snapshot $vg/lv1 --name lv6
 lvcreate --type snapshot $vg/lv1 --name lv4
 lvcreate --type snapshot $vg/lv1 --name $vg/lv5
 
+lvdisplay --maps $vg
 check_lv_field_modules_ thin-pool,thin lv1 snap_lv1 lv2 lv3 lv4 lv5 lv6
 check vg_field $vg lv_count 8
+
 lvremove -ff $vg
 
 
@@ -162,8 +164,6 @@ check vg_field $vg lv_count 6
 
 lvremove -ff $vg
 check vg_field $vg lv_count 0
-
-lvdisplay $vg
 
 # Fail cases
 # Too small pool size (1 extent 64KB) for given chunk size

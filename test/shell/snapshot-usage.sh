@@ -145,6 +145,7 @@ lvextend -l+33 $vg1/lvol1
 check lv_field $vg1/lvol1 size "$EXPECT3"
 
 fill 20K
+
 lvremove -f $vg1
 
 # Check snapshot really deletes COW header for read-only snapshot
@@ -172,10 +173,11 @@ fsck -n "$DM_DEV_DIR/$vg1/snap"
 # we have 2 valid results  (unsure about correct version number)
 check lv_field $vg1/snap data_percent "$EXPECT4"
 
-# Can't test >= 16T devices on 32bit
-if test "$TSIZE" = 15P ; then
-
 vgremove -ff $vg1
+
+
+# Can't test >= 16T devices on 32bit
+test "$TSIZE" = 15P || exit 0
 
 # Check usability with largest extent size
 pvcreate "$DM_DEV_DIR/$vg/$lv"
@@ -189,4 +191,4 @@ lvremove -ff $vg1
 lvcreate -V15E -l1 -n $lv1 -s $vg1
 check lv_field $vg1/$lv1 origin_size "15.00e"
 
-fi
+vgremove -ff $vg1

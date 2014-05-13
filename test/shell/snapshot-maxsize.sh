@@ -24,8 +24,7 @@ lvcreate -L2 -s $vg/$lv1 -n $lv2
 
 dd if=/dev/zero of="$DM_DEV_DIR/$vg/$lv2" bs=1M count=1
 
-get lv_field $vg/$lv2 lv_attr | tee attrs
-# Snapshot must not be invalid here
-grep -v "....I" attrs
+# Snapshot must not be 'I'nvalid here
+check lv_attr_bit state $vg/$lv2 "a"
 
 vgremove -f $vg
