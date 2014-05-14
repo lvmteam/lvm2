@@ -1,5 +1,6 @@
 Version 2.02.107 - 
 ==================================
+  Take account of parity areas with alloc anywhere in _calc_required_extents.
   Use proper uint64 casting for calculation of cache metadata size.
   Better support for nesting of blocking signals.
   Use only sigaction handler and drop duplicate signal handler.

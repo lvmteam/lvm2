@@ -1432,8 +1432,7 @@ static int _alloc_parallel_area(struct alloc_handle *ah, uint32_t max_to_allocat
 	struct alloced_area *aa;
 	struct pv_area *pva;
 
-	total_area_count = ah->area_count + alloc_state->log_area_count_still_needed;
-	total_area_count += ah->parity_count;
+	total_area_count = ah->area_count + ah->parity_count + alloc_state->log_area_count_still_needed;
 	if (!total_area_count) {
 		log_warn(INTERNAL_ERROR "_alloc_parallel_area called without any allocation to do.");
 		return 1;
@@ -1980,7 +1979,7 @@ static uint32_t _calc_required_extents(struct alloc_handle *ah, struct pv_area *
 	 * reduce amount we're looking for.
 	 */
 	if (alloc == ALLOC_ANYWHERE) {
-		if (ix_pva >= ah->area_count)
+		if (ix_pva >= ah->area_count + ah->parity_count)
 			required = ah->log_len;
 	} else if (required < ah->log_len)
 		required = ah->log_len;
