@@ -880,9 +880,6 @@ char yes_no_prompt(const char *prompt, ...)
 	int c = 0, ret = 0;
 	va_list ap;
 
-	if (silent_mode())
-		return 'n';
-
 	sigint_allow();
 	do {
 		if (c == '\n' || !c) {
@@ -890,6 +887,11 @@ char yes_no_prompt(const char *prompt, ...)
 			vfprintf(stderr, prompt, ap);
 			va_end(ap);
 			fflush(stderr);
+			if (silent_mode()) {
+				fputc('n', stderr);
+				ret = 'n';
+				break;
+			}
 			ret = 0;
 		}
 
@@ -911,7 +913,7 @@ char yes_no_prompt(const char *prompt, ...)
 	sigint_restore();
 
 	if (c != '\n')
-		fprintf(stderr, "\n");
+		fputc('\n', stderr);
 
 	return ret;
 }
