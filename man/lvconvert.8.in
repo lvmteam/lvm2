@@ -162,15 +162,17 @@ Exactly one of
 .BR \-\-replace ,
 .BR \-\-splitsnapshot ,
 .BR \-\-snapshot ,
-.BR \-\-splitmirrors
-or
+.BR \-\-splitmirrors ,
+.BR \-\-thin ,
 .BR \-\-thinpool
+or
+.BR \-\-type
 arguments is required.
 .TP
 .BR \-b ", " \-\-background
 Run the daemon in the background.
 .TP
-.BR \-\-cachepool " " \fCachePoolLV
+.BR \-\-cachepool " " \fICachePoolLV
 This argument is necessary when converting a logical volume to a cache LV.
 For more information on cache pool LVs and cache LVs, see \fBlvm\fP(8).
 .TP
@@ -204,9 +206,15 @@ A mirror is divided into regions of this size (in MB), and the mirror log
 uses this granularity to track which regions are in sync.
 .TP
 .B \-\-type \fISegmentType
-Used to convert a logical volume to another segment type, like cache-pool,
-cache, raid1, or thin-pool.  When converting a logical volume to a cache LV,
-the \-\-cachepool argument is required.
+Used to convert a logical volume to another segment type, like
+.IR cache-pool ,
+.IR cache ,
+.IR raid1 ,
+or
+.IR thin-pool .
+When converting a logical volume to a cache LV, the
+.B \-\-cachepool
+argument is required.
 .TP
 .BR \-i ", " \-\-interval " " \fISeconds
 Report progress as a percentage at regular intervals.
@@ -246,8 +254,9 @@ The inverse of \-\-snapshot.
 .TP
 .B \-s, \-\-snapshot
 Recreates a snapshot from constituent logical volumes (or copies of them) after
-having been separated using \-\-splitsnapshot.  For this to work correctly, no
-changes may be made to the contents of either volume after the split.
+having been separated using \fB\-\-splitsnapshot\fP.
+For this to work correctly, no changes may be made to the contents
+of either volume after the split.
 .TP
 .BR \-c ", " \-\-chunksize " " \fIChunkSize [ \fIbBsSkKmMgG ]
 Gives the size of chunk for snapshot and thin pool logical volumes.
@@ -328,9 +337,9 @@ Default unit is megabytes.
 .TP
 .IR \fB\-r ", " \fB\-\-readahead " {" ReadAheadSectors | auto | none }
 Sets read ahead sector count of thin pool metadata logical volume.
-The default value is "auto" which allows the kernel to choose
+The default value is "\fIauto\fP" which allows the kernel to choose
 a suitable value automatically.
-"None" is equivalent to specifying zero.
+"\fINone\fP" is equivalent to specifying zero.
 .TP
 .B \-\-repair
 Repair a mirror after suffering a disk failure or try to fix thin pool metadata.
@@ -380,9 +389,9 @@ The volume cannot be further modified as long as it is used as an
 external origin volume for unprovisioned areas of any thin logical volume.
 .TP
 .IR \fB\-\-thinpool " " ThinPoolLogicalVolume { Name | Path }
-Changes logical volume into a thin pool volume. The volume
-will store the pool's data.
-Thin pool metadata logical volume can be specified with the option
+Switches logical volume into a thin pool's data volume.
+Content of converted volume is lost.
+Thin pool's metadata logical volume can be specified with the option
 \fB\-\-poolmetadata\fP or allocated with \fB\-\-poolmetadatasize\fP.
 
 .SH Examples

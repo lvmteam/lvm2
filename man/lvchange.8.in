@@ -181,7 +181,7 @@ the number of I/Os to the drive to a minimum.  The default behavior is to
 set the write-mostly attribute for the specified physical volume in the
 logical volume.  It is possible to also remove the write-mostly flag by
 appending a ":n" to the physical volume or to toggle the value by specifying
-":t".  The \fI--writemostly\fP argument can be specified more than one time
+":t".  The \fB--writemostly\fP argument can be specified more than one time
 in a single command; making it possible to toggle the write-mostly attributes
 for all the physical volumes in a logical volume at once.
 .TP
@@ -237,6 +237,10 @@ manually without a clustered lock manager.
 Set zeroing mode for thin pool. Note: already provisioned blocks from pool
 in non-zero mode are not cleared in unwritten parts when setting zero to
 \fIy\fP.
+.SH ENVIRONMENT VARIABLES
+.TP
+.B LVM_SUPPRESS_LOCKING_FAILURE_MESSAGES
+Suppress locking failure messages.
 .SH Examples
 Changes the permission on volume lvol1 in volume group vg00 to be read-only:
 .sp
