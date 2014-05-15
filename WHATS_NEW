@@ -1,5 +1,6 @@
 Version 2.02.107 - 
 ==================================
+  Move cache description from lvm(8) to lvmcache(7) man page.
   Display skipped prompt in silent mode.
   Make reporting commands show help about possible sort keys on '-O help'.
   Add metadata_percent to lvs_cols.

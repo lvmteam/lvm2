@@ -41,6 +41,7 @@ LVMETAD =
 endif
 
 MAN5=lvm.conf.5
+MAN7=
 MAN8=lvm-dumpconfig.8 \
 	lvchange.8 lvconvert.8 lvcreate.8 lvdisplay.8 lvextend.8 lvm.8 \
 	lvmchange.8 lvmconf.8 lvmdiskscan.8 lvmdump.8 lvmsadc.8 lvmsar.8 \
@@ -61,10 +62,12 @@ ifeq ("@BUILD_CMIRRORD@", "yes")
   MAN8CLUSTER+=cmirrord.8
 endif
 
+ifneq ("@CACHE@", "none")
+  MAN7+=lvmcache.7
+endif
+
 ifneq ("@THIN@", "none")
-  MAN7=lvmthin.7
-else
-  MAN7=
+  MAN7+=lvmthin.7
 endif
 
 MAN8DM=dmsetup.8 $(DMEVENTDMAN)
@@ -75,7 +78,7 @@ MAN8DIR=$(mandir)/man8
 MAN8SYSTEMD_GENERATORS=lvm2-activation-generator.8
 
 CLEAN_TARGETS=$(MAN5) $(MAN7) $(MAN8) $(MAN8CLUSTER) $(FSADMMAN) $(BLKDEACTIVATEMAN) $(DMEVENTDMAN) $(MAN8DM)
-DISTCLEAN_TARGETS=fsadm.8 clvmd.8 cmirrord.8 dmeventd.8 lvmthin.7 blkdeactivate.8
+DISTCLEAN_TARGETS=fsadm.8 clvmd.8 cmirrord.8 dmeventd.8 lvmcache.7 lvmthin.7 blkdeactivate.8
 
 include $(top_builddir)/make.tmpl
 
