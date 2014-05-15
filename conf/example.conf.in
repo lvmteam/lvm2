@@ -1040,7 +1040,7 @@ activation {
 
     # Comma separated list of columns to report for 'lvs' command.
     # See 'lvs -o help' for the list of possible fields.
-    # lvs_cols="lv_name,vg_name,lv_attr,lv_size,pool_lv,origin,data_percent,move_pv,mirror_log,copy_percent,convert_lv"
+    # lvs_cols="lv_name,vg_name,lv_attr,lv_size,pool_lv,origin,data_percent,metadata_percent,move_pv,mirror_log,copy_percent,convert_lv"
 
     # Comma separated list of columns to report for 'lvs' command in verbose mode.
     # See 'lvs -o help' for the list of possible fields.
