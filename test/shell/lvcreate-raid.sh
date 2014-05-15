@@ -12,11 +12,7 @@
 . lib/test
 
 lv_devices() {
-	local local_vg=$1
-	local local_lv=$2
-	local count=$3
-
-	[ $count == `lvs --noheadings -o devices $local_vg/$local_lv | sed s/,/' '/g | wc -w` ]
+	test $3 -eq $(get lv_devices $1/$2 | wc -w)
 }
 
 ########################################################
@@ -47,10 +43,10 @@ lvremove -ff $vg
 
 # Create RAID1 (explicit 3-way) - Set min/max recovery rate
 lvcreate --type raid1 -m 2 -l 2 \
-	--minrecoveryrate 50 --maxrecoveryrate 100 \
+	--minrecoveryrate 50 --maxrecoveryrate 1M \
 	-n $lv1 $vg
 check lv_field $vg/$lv1 raid_min_recovery_rate 50
-check lv_field $vg/$lv1 raid_max_recovery_rate 100
+check lv_field $vg/$lv1 raid_max_recovery_rate 1024
 aux wait_for_sync $vg $lv1
 lvremove -ff $vg
 
@@ -70,10 +66,10 @@ for i in raid4 \
 	raid6 raid6_zr raid6_nr raid6_nc; do
 
 	lvcreate --type $i -l 3 -i 3 \
-		--minrecoveryrate 50 --maxrecoveryrate 100 \
+		--minrecoveryrate 50 --maxrecoveryrate 1M \
 		-n $lv1 $vg
 	check lv_field $vg/$lv1 raid_min_recovery_rate 50
-	check lv_field $vg/$lv1 raid_max_recovery_rate 100
+	check lv_field $vg/$lv1 raid_max_recovery_rate 1024
 	aux wait_for_sync $vg $lv1
 	lvremove -ff $vg
 done
@@ -83,86 +79,84 @@ done
 # 6 PVs with 18.5m in each PV.
 # 1 metadata LV = 1 extent   = .5m
 # 1 image = 36+37+37 extents = 55.00m = lv_size
-lvcreate --type raid1 -m 1 -l 100%FREE -n raid1 $vg
+lvcreate --type raid1 -m 1 -l 100%FREE -an -Zn -n raid1 $vg
 check lv_field $vg/raid1 size "55.00m"
 lvremove -ff $vg
 
 # 1 metadata LV = 1 extent
 # 1 image = 36 extents
 # 5 images = 180 extents = 90.00m = lv_size
-lvcreate --type raid5 -i 5 -l 100%FREE -n raid5 $vg
+lvcreate --type raid5 -i 5 -l 100%FREE -an -Zn -n raid5 $vg
 should check lv_field $vg/raid5 size "90.00m"
 #FIXME: Currently allocates incorrectly at 87.50m
 lvremove -ff $vg
 
 # 1 image = 36+37 extents
 # 2 images = 146 extents = 73.00m = lv_size
-lvcreate --type raid5 -i 2 -l 100%FREE -n raid5 $vg
+lvcreate --type raid5 -i 2 -l 100%FREE -an -Zn -n raid5 $vg
 check lv_field $vg/raid5 size "73.00m"
 lvremove -ff $vg
 
 # 1 image = 36 extents
 # 4 images = 144 extents = 72.00m = lv_size
-lvcreate --type raid6 -i 4 -l 100%FREE -n raid6 $vg
+lvcreate --type raid6 -i 4 -l 100%FREE -an -Zn -n raid6 $vg
 should check lv_field $vg/raid6 size "72.00m"
 #FIXME: Currnently allocates incorrectly at 70.00m
 lvremove -ff $vg
 
-# Eat 18 of 37 extents from dev1, leaving 19
-lvcreate -l 18 -n lv $vg "$dev1"
+###
+# For following tests eat 18 of 37 extents from dev1, leaving 19
+lvcreate -l 18 -an -Zn -n eat_space $vg "$dev1"
+EAT_SIZE=$(get lv_field $vg/eat_space size)
+
 # Using 100% free should take the rest of dev1 and equal from dev2
 # 1 meta takes 1 extent
 # 1 image = 18 extents = 9.00m = lv_size
-lvcreate --type raid1 -m 1 -l 100%FREE -n raid1 $vg "$dev1" "$dev2"
+lvcreate --type raid1 -m 1 -l 100%FREE -an -Zn -n raid1 $vg "$dev1" "$dev2"
 check lv_field $vg/raid1 size "9.00m"
 # Ensure image size is the same as the RAID1 size
 check lv_field $vg/raid1 size $(get lv_field $vg/raid1_rimage_0 size -a)
 # Amount remaining in dev2 should equal the amount taken by 'lv' in dev1
-check pv_field "$dev2" pv_free $(get lv_field $vg/lv size)
-lvremove -ff $vg
+check pv_field "$dev2" pv_free "$EAT_SIZE"
+lvremove -ff $vg/raid1
 
-# Eat 18 of 37 extents from dev1, leaving 19
-lvcreate -l 18 -n lv $vg "$dev1"
 # Using 100% free should take the rest of dev1 and equal amount from the rest
 # 1 meta takes 1 extent
 # 1 image = 18 extents = 9.00m
 # 5 images = 90 extents = 45.00m = lv_size
-lvcreate --type raid5 -i 5 -l 100%FREE -n raid5 $vg
+lvcreate --type raid5 -i 5 -l 100%FREE -an -Zn -n raid5 $vg
 check lv_field $vg/raid5 size "45.00m"
 # Amount remaining in dev6 should equal the amount taken by 'lv' in dev1
-check pv_field "$dev6" pv_free `lvs --noheadings -o size $vg/lv`
-lvremove -ff $vg
+check pv_field "$dev6" pv_free "$EAT_SIZE"
+lvremove -ff $vg/raid5
 
-# Eat 18 of 37 extents from dev1, leaving 19
-lvcreate -l 18 -n lv $vg "$dev1"
 # Using 100% free should take the rest of dev1, an equal amount
 # from 2 more devs, and all extents from 3 additional devs
 # 1 meta takes 1 extent
 # 1 image = 18+37 extents
 # 2 images = 110 extents = 55.00m = lv_size
-lvcreate --type raid5 -i 2 -l 100%FREE -n raid5 $vg
+lvcreate --type raid5 -i 2 -l 100%FREE -an -Zn -n raid5 $vg
 check lv_field $vg/raid5 size "55.00m"
-lvremove -ff $vg
+lvremove -ff $vg/raid5
 
 # Let's do some stripe tests too
-# Eat 18 of 37 extents from dev1, leaving 19
-lvcreate -l 18 -n lv $vg "$dev1"
 # Using 100% free should take the rest of dev1 and an equal amount from rest
 # 1 image = 19 extents
 # 6 images = 114 extents = 57.00m = lv_size
-lvcreate -i 6 -l 100%FREE -n stripe $vg
+lvcreate -i 6 -l 100%FREE -an -Zn -n stripe $vg
 check lv_field $vg/stripe size "57.00m"
-lvremove -ff $vg
+lvremove -ff $vg/stripe
 
-# Eat 18 of 37 extents from dev1, leaving 19
-lvcreate -l 18 -n lv $vg "$dev1"
 # Using 100% free should take the rest of dev1, an equal amount from
 #  one more dev, and all of the remaining 4
 # 1 image = 19+37+37 extents
 # 2 images = 186 extents = 93.00m = lv_size
-lvcreate -i 2 -l 100%FREE -n stripe $vg
+lvcreate -i 2 -l 100%FREE -an -Zn -n stripe $vg
 check lv_field $vg/stripe size "93.00m"
+
 lvremove -ff $vg
+# end of use of '$vg/eat_space'
+###
 
 # Create RAID (implicit stripe count based on PV count)
 #######################################################
@@ -173,20 +167,20 @@ not lvcreate --type raid5 -l2 $vg "$dev1" "$dev2"
 not lvcreate --type raid6 -l3 $vg "$dev1" "$dev2" "$dev3" "$dev4"
 
 # Implicit count comes from #PVs given (always 2 for mirror though)
-lvcreate --type raid1 -l1 -n raid1 $vg "$dev1" "$dev2"
+lvcreate --type raid1 -l1 -an -Zn -n raid1 $vg "$dev1" "$dev2"
 lv_devices $vg raid1 2
-lvcreate --type raid5 -l2 -n raid5 $vg "$dev1" "$dev2" "$dev3"
+lvcreate --type raid5 -l2 -an -Zn -n raid5 $vg "$dev1" "$dev2" "$dev3"
 lv_devices $vg raid5 3
-lvcreate --type raid6 -l3 -n raid6 $vg "$dev1" "$dev2" "$dev3" "$dev4" "$dev5"
+lvcreate --type raid6 -l3 -an -Zn -n raid6 $vg "$dev1" "$dev2" "$dev3" "$dev4" "$dev5"
 lv_devices $vg raid6 5
 lvremove -ff $vg
 
 # Implicit count comes from total #PVs in VG (always 2 for mirror though)
-lvcreate --type raid1 -l1 -n raid1 $vg
+lvcreate --type raid1 -l1 -an -Zn -n raid1 $vg
 lv_devices $vg raid1 2
-lvcreate --type raid5 -l2 -n raid5 $vg
+lvcreate --type raid5 -l2 -an -Zn -n raid5 $vg
 lv_devices $vg raid5 6
-lvcreate --type raid6 -l3 -n raid6 $vg
+lvcreate --type raid6 -l3 -an -Zn -n raid6 $vg
 lv_devices $vg raid6 6
 
 vgremove -ff $vg

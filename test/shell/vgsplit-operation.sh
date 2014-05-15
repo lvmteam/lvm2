@@ -278,7 +278,7 @@ vgremove -ff $vg1
 
 COMM "vgsplit fails splitting 1 mirror + 1 striped LV, only striped LV specified"
 create_vg_ $vg1 "$dev1" "$dev2" "$dev3" "$dev4"
-lvcreate -an -Zn -l 16 -n $lv1 --type mirror -m1 $vg1 "$dev1" "$dev2" "$dev3"
+lvcreate -an -Zn -l 16 -n $lv1 --type mirror --nosync -m1 $vg1 "$dev1" "$dev2" "$dev3"
 lvcreate -an -Zn -l 16 -n $lv2 -i 2 $vg1 "$dev3" "$dev4"
 check pvlv_counts $vg1 4 2 0
 not vgsplit -n $lv2 $vg1 $vg2 2>err
@@ -289,7 +289,7 @@ vgremove -f $vg1
 #
 COMM "vgsplit fails, active mirror involved in split"
 create_vg_ $vg1 "$dev1" "$dev2" "$dev3" "$dev4"
-lvcreate -aey -l 16 -n $lv1 --type mirror -m1 $vg1 "$dev1" "$dev2" "$dev3"
+lvcreate -aey -l 16 -n $lv1 --type mirror --nosync -m1 $vg1 "$dev1" "$dev2" "$dev3"
 lvcreate -l 16 -n $lv2 $vg1 "$dev4"
 lvchange -an $vg1/$lv2
 check pvlv_counts $vg1 4 2 0
@@ -299,7 +299,7 @@ vgremove -f $vg1
 
 COMM "vgsplit succeeds, active mirror not involved in split"
 create_vg_ $vg1 "$dev1" "$dev2" "$dev3" "$dev4"
-lvcreate -aey -l 16 -n $lv1 --type mirror -m1 $vg1 "$dev1" "$dev2" "$dev3"
+lvcreate -aey -l 16 -n $lv1 --type mirror --nosync -m1 $vg1 "$dev1" "$dev2" "$dev3"
 lvcreate -l 16 -n $lv2 $vg1 "$dev4"
 lvchange -an $vg1/$lv2
 check pvlv_counts $vg1 4 2 0

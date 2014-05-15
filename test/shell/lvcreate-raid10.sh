@@ -12,11 +12,7 @@
 . lib/test
 
 lv_devices() {
-	local local_vg=$1
-	local local_lv=$2
-	local count=$3
-
-	[ $count == `lvs --noheadings -o devices $local_vg/$local_lv | sed s/,/' '/g | wc -w` ]
+	test $3 -eq $(get lv_devices $1/$2 | wc -w)
 }
 
 ########################################################
@@ -41,10 +37,10 @@ lvremove -ff $vg/$lv1
 
 # 2-way mirror, 2-stripes - Set min/max recovery rate
 lvcreate --type raid10 -m 1 -i 2 -l 2 \
-	--minrecoveryrate 50 --maxrecoveryrate 100 \
+	--minrecoveryrate 50 --maxrecoveryrate 1M \
 	-n $lv1 $vg
 check lv_field $vg/$lv1 raid_min_recovery_rate 50
-check lv_field $vg/$lv1 raid_max_recovery_rate 100
+check lv_field $vg/$lv1 raid_max_recovery_rate 1024
 aux wait_for_sync $vg $lv1
 
 # 2-way mirror, 3-stripes
@@ -57,7 +53,7 @@ lvremove -ff $vg
 # 37 extents / device
 # 1 image = 36 extents (1 for meta)
 # 3 images = 108 extents = 54.00m
-lvcreate --type raid10 -i 3 -l 100%FREE -n raid10 $vg
+lvcreate --type raid10 -i 3 -l 100%FREE -an -Zn -n raid10 $vg
 check lv_field $vg/raid10 size "54.00m"
 lvremove -ff $vg
 
@@ -68,12 +64,12 @@ lvremove -ff $vg
 not lvcreate --type raid10 -l2 $vg "$dev1" "$dev2" "$dev3"
 
 # Implicit count comes from #PVs given (always 2-way mirror)
-lvcreate --type raid10 -l2 -n raid10 $vg "$dev1" "$dev2" "$dev3" "$dev4"
+lvcreate --type raid10 -l2 -an -Zn -n raid10 $vg "$dev1" "$dev2" "$dev3" "$dev4"
 lv_devices $vg raid10 4
 lvremove -ff $vg
 
 # Implicit count comes from total #PVs in VG (always 2 for mirror though)
-lvcreate --type raid10 -l2 -n raid10 $vg
+lvcreate --type raid10 -l2 -an -Zn -n raid10 $vg
 lv_devices $vg raid10 6
 lvremove -ff $vg
 

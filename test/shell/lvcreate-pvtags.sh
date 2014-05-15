@@ -31,10 +31,10 @@ not lvcreate -l4 -i4 $vg @fast
 not lvcreate -l2 -i2 $vg "$DM_DEV_DIR/mapper/pv1"
 
 # lvcreate mirror
-lvcreate -aey -l1 --type mirror -m1 $vg @fast
+lvcreate -aey -l1 --type mirror -m1 --nosync $vg @fast
 
 # lvcreate mirror w/corelog
-lvcreate -aey -l1 --type mirror -m2 --corelog $vg @fast
+lvcreate -aey -l1 --type mirror -m2 --corelog --nosync $vg @fast
 
 # lvcreate mirror w/no free PVs
 not lvcreate -aey -l1 --type mirror -m2 $vg @fast
