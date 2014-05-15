@@ -529,7 +529,8 @@ static int _parse_fields(struct dm_report *rh, const char *format,
 		if (!_field_match(rh, ws, (size_t) (we - ws), report_type_only)) {
 			_display_fields(rh);
 			log_warn(" ");
-			if (strcasecmp(ws, "help") && strcmp(ws, "?"))
+			if (strcasecmp(ws, DM_REPORT_FIELD_RESERVED_NAME_HELP) &&
+			    strcmp(ws, DM_REPORT_FIELD_RESERVED_NAME_HELP_ALT))
 				log_error("Unrecognised field: %.*s",
 					  (int) (we - ws), ws);
 			return 0;
@@ -556,8 +557,12 @@ static int _parse_keys(struct dm_report *rh, const char *keys,
 		while (*we && *we != ',')
 			we++;
 		if (!_key_match(rh, ws, (size_t) (we - ws), report_type_only)) {
-			log_error("dm_report: Unrecognised field: %.*s",
-				  (int) (we - ws), ws);
+			_display_fields(rh);
+			log_warn(" ");
+			if (strcasecmp(ws, DM_REPORT_FIELD_RESERVED_NAME_HELP) &&
+			    strcmp(ws, DM_REPORT_FIELD_RESERVED_NAME_HELP_ALT))
+				log_error("dm_report: Unrecognised field: %.*s",
+					  (int) (we - ws), ws);
 			return 0;
 		}
 	}

@@ -1,5 +1,6 @@
 Version 2.02.107 - 
 ==================================
+  Make reporting commands show help about possible sort keys on '-O help'.
   Add metadata_percent to lvs_cols.
   Take account of parity areas with alloc anywhere in _calc_required_extents.
   Use proper uint64 casting for calculation of cache metadata size.

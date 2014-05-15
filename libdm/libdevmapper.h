@@ -1601,6 +1601,10 @@ struct dm_report_field;
 #define DM_REPORT_FIELD_TYPE_ID_LEN 32
 #define DM_REPORT_FIELD_TYPE_HEADING_LEN 32
 
+/* Reserved field names for special purposes. */
+#define DM_REPORT_FIELD_RESERVED_NAME_HELP "help"  /* shows help */
+#define DM_REPORT_FIELD_RESERVED_NAME_HELP_ALT "?" /* shows help */
+
 struct dm_report;
 struct dm_report_field_type {
 	uint32_t type;		/* object type id */

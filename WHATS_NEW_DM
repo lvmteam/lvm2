@@ -1,5 +1,7 @@
 Version 1.02.88 - 
 =================================
+  Also recognize 'help'/'?' as reserved sort key name to show help.
+  Export recognized DM_REPORT_FIELD_RESERVED_NAME_{HELP,HELP_ALT} to show help.
   Add dm_units_to_factor for size unit parsing.
   Increase bitset size for minors for thin dmeventd plugin.
 
