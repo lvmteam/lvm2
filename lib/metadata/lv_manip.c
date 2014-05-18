@@ -3560,7 +3560,7 @@ static int _fsadm_cmd(struct cmd_context *cmd,
 
 	if (fcmd == FSADM_CMD_RESIZE) {
 		if (dm_snprintf(size_buf, SIZE_BUF, "%" PRIu64 "K",
-				(uint64_t) lp->extents * vg->extent_size / 2) < 0) {
+				(uint64_t) lp->extents * (vg->extent_size / 2)) < 0) {
 			log_error("Couldn't generate new LV size string");
 			return 0;
 		}
