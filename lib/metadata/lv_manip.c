@@ -3166,9 +3166,10 @@ int lv_extend(struct logical_volume *lv,
 				/* FIXME Support --force */
 				if (yes_no_prompt("Do full resync of extended "
 						  "portion of %s/%s?  [y/n]: ",
-						  lv->vg->name, lv->name) == 'y')
-					goto out;
-				r = 0;
+						  lv->vg->name, lv->name) == 'n') {
+					r = 0;
+					goto_out;
+				}
 				goto out;
 			}
 
