@@ -41,10 +41,14 @@ static int _do_def_check(struct config_def_tree_spec *spec,
 	handle->force_check = 1;
 	handle->suppress_messages = 1;
 
-	if (spec->type == CFG_DEF_TREE_DIFF)
+	if (spec->type == CFG_DEF_TREE_DIFF) {
+		if (!handle->check_diff)
+			handle->skip_if_checked = 0;
 		handle->check_diff = 1;
-	else
+	} else {
 		handle->skip_if_checked = 1;
+		handle->check_diff = 0;
+	}
 
 	config_def_check(handle);
 	*cft_check_handle = handle;
