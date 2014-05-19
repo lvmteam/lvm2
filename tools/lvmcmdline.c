@@ -1081,11 +1081,11 @@ static const char *_copy_command_line(struct cmd_context *cmd, int argc, char **
 
 int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 {
+	struct dm_config_tree *config_string_cft, *config_profile_cft;
+	struct profile *profile;
 	int ret = 0;
 	int locking_type;
 	int monitoring;
-	struct dm_config_tree *old_cft;
-	struct profile *profile;
 
 	init_error_message_produced(0);
 
@@ -1124,9 +1124,8 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	if (arg_count(cmd, config_ARG) || !cmd->config_initialized || config_files_changed(cmd)) {
 		/* Reinitialise various settings inc. logging, filters */
 		if (!refresh_toolcontext(cmd)) {
-			old_cft = remove_config_tree_by_source(cmd, CONFIG_STRING);
-			if (old_cft)
-				dm_config_destroy(old_cft);
+			if ((config_string_cft = remove_config_tree_by_source(cmd, CONFIG_STRING)))
+				dm_config_destroy(config_string_cft);
 			log_error("Updated config file invalid. Aborting.");
 			return ECMD_FAILED;
 		}
@@ -1204,8 +1203,13 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 		lvmcache_destroy(cmd, 1, 0);
 	}
 
-	if ((old_cft = remove_config_tree_by_source(cmd, CONFIG_STRING))) {
-		dm_config_destroy(old_cft);
+	if ((config_string_cft = remove_config_tree_by_source(cmd, CONFIG_STRING)))
+		dm_config_destroy(config_string_cft);
+
+	config_profile_cft = remove_config_tree_by_source(cmd, CONFIG_PROFILE);
+	cmd->profile_params->global_profile = NULL;
+
+	if (config_string_cft || config_profile_cft) {
 		/* Move this? */
 		if (!refresh_toolcontext(cmd))
 			stack;

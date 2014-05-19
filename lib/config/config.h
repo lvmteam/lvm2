@@ -41,7 +41,7 @@ struct profile {
 };
 
 struct profile_params {
-	const char *dir;                /* subdir in LVM_SYSTEM_DIR where LVM looks for profiles */
+	char dir[PATH_MAX];             /* subdir in LVM_SYSTEM_DIR where LVM looks for profiles */
 	struct profile *global_profile; /* profile that overrides any other VG/LV-based profile ('--profile' cmd line arg) */
 	struct dm_list profiles_to_load;/* list of profiles which are only added, but still need to be loaded for any use */
 	struct dm_list profiles;	/* list of profiles which are loaded already and which are ready for use */
